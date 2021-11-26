@@ -46,7 +46,7 @@ class ModulesDataView : public DataView {
   void DoFilter() override;
 
  private:
-  [[nodiscard]] orbit_client_data::ModuleData* GetModule(uint32_t row) const {
+  [[nodiscard]] orbit_client_data::ModuleData* GetModuleDataFromRow(int row) const override {
     return start_address_to_module_.at(indices_[row]);
   }
 
@@ -62,7 +62,6 @@ class ModulesDataView : public DataView {
     kColumnFileSize,  // Default sorting column
     kNumColumns
   };
-
 };
 
 }  // namespace orbit_data_views

@@ -140,18 +140,7 @@ std::vector<std::vector<std::string>> CallstackDataView::GetContextMenuWithGroup
 
 void CallstackDataView::OnContextMenu(const std::string& action, int menu_index,
                                       const std::vector<int>& item_indices) {
-  if (action == kMenuActionLoadSymbols) {
-    std::vector<ModuleData*> modules_to_load;
-    for (int i : item_indices) {
-      CallstackDataViewFrame frame = GetFrameFromRow(i);
-      ModuleData* module = frame.module;
-      if (module != nullptr && !module->is_loaded()) {
-        modules_to_load.push_back(module);
-      }
-    }
-    app_->RetrieveModulesAndLoadSymbols(modules_to_load);
-
-  } else if (action == kMenuActionSelect) {
+  if (action == kMenuActionSelect) {
     for (int i : item_indices) {
       CallstackDataViewFrame frame = GetFrameFromRow(i);
       const FunctionInfo* function = frame.function;
@@ -264,12 +253,12 @@ bool CallstackDataView::GetDisplayColor(int row, int /*column*/, unsigned char& 
   return false;
 }
 
-CallstackDataView::CallstackDataViewFrame CallstackDataView::GetFrameFromRow(int row) {
+CallstackDataView::CallstackDataViewFrame CallstackDataView::GetFrameFromRow(int row) const {
   return GetFrameFromIndex(indices_[row]);
 }
 
 CallstackDataView::CallstackDataViewFrame CallstackDataView::GetFrameFromIndex(
-    int index_in_callstack) {
+    int index_in_callstack) const {
   CHECK(index_in_callstack < callstack_.frames_size());
   uint64_t address = callstack_.frames(index_in_callstack);
 

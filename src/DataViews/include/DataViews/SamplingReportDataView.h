@@ -55,10 +55,12 @@ class SamplingReportDataView : public DataView {
   orbit_client_data::SampledFunction& GetSampledFunction(unsigned int row);
   absl::flat_hash_set<const orbit_client_protos::FunctionInfo*> GetFunctionsFromIndices(
       const std::vector<int>& indices);
-  [[nodiscard]] absl::flat_hash_set<std::pair<std::string, std::string>>
-  GetModulePathsAndBuildIdsFromIndices(const std::vector<int>& indices) const;
+  [[nodiscard]] std::optional<std::pair<std::string, std::string>> GetModulePathAndBuildIdFromRow(
+      int row) const;
 
  private:
+  [[nodiscard]] orbit_client_data::ModuleData* GetModuleDataFromRow(int row) const override;
+
   void UpdateSelectedIndicesAndFunctionIds(const std::vector<int>& selected_indices);
   void RestoreSelectedIndicesAfterFunctionsChanged();
   // The callstack view will be updated according to the visible selected addresses and thread id.

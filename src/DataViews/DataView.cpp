@@ -11,6 +11,8 @@
 #include "OrbitBase/File.h"
 #include "OrbitBase/Logging.h"
 
+using orbit_client_data::ModuleData;
+
 namespace orbit_data_views {
 
 std::string FormatValueForCsv(std::string_view value) {
@@ -82,7 +84,9 @@ std::vector<std::vector<std::string>> DataView::GetContextMenuWithGrouping(
 
 void DataView::OnContextMenu(const std::string& action, int /*menu_index*/,
                              const std::vector<int>& item_indices) {
-  if (action == kMenuActionExportToCsv) {
+  if (action == kMenuActionLoadSymbols) {
+    OnLoadSymbolsRequested(item_indices);
+  } else if (action == kMenuActionExportToCsv) {
     OnExportToCsvRequested();
   } else if (action == kMenuActionCopySelection) {
     OnCopySelectionRequested(item_indices);
@@ -97,6 +101,17 @@ std::vector<int> DataView::GetVisibleSelectedIndices() {
     }
   }
   return visible_selected_indices;
+}
+
+void DataView::OnLoadSymbolsRequested(const std::vector<int>& selection) {
+  std::vector<ModuleData*> modules_to_load;
+  for (int index : selection) {
+    ModuleData* module_data = GetModuleDataFromRow(index);
+    if (module_data != nullptr && !module_data->is_loaded()) {
+      modules_to_load.push_back(module_data);
+    }
+  }
+  app_->RetrieveModulesAndLoadSymbols(modules_to_load);
 }
 
 void DataView::OnExportToCsvRequested() {

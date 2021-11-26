@@ -196,36 +196,28 @@ absl::flat_hash_set<const FunctionInfo*> SamplingReportDataView::GetFunctionsFro
   return functions_set;
 }
 
-absl::flat_hash_set<std::pair<std::string, std::string>>
-SamplingReportDataView::GetModulePathsAndBuildIdsFromIndices(
-    const std::vector<int>& indices) const {
-  absl::flat_hash_set<std::pair<std::string, std::string>> module_paths_and_build_ids;
+std::optional<std::pair<std::string, std::string>>
+SamplingReportDataView::GetModulePathAndBuildIdFromRow(int row) const {
   const ProcessData* process = app_->GetCaptureData().process();
   CHECK(process != nullptr);
 
-  for (int index : indices) {
-    const SampledFunction& sampled_function = GetSampledFunction(index);
-    CHECK(sampled_function.absolute_address != 0);
-    auto result = process->FindModuleByAddress(sampled_function.absolute_address);
-    if (result.has_error()) {
-      ERROR("result %s", result.error().message());
-    } else {
-      module_paths_and_build_ids.emplace(result.value().file_path(), result.value().build_id());
-    }
+  const SampledFunction& sampled_function = GetSampledFunction(row);
+  CHECK(sampled_function.absolute_address != 0);
+  auto result = process->FindModuleByAddress(sampled_function.absolute_address);
+  if (result.has_error()) {
+    ERROR("result %s", result.error().message());
+    return std::nullopt;
   }
 
-  return module_paths_and_build_ids;
+  return std::make_pair(result.value().file_path(), result.value().build_id());
 }
 
 std::vector<std::vector<std::string>> SamplingReportDataView::GetContextMenuWithGrouping(
     int clicked_index, const std::vector<int>& selected_indices) {
   bool enable_load = false;
-  for (const auto& [module_path, build_id] :
-       GetModulePathsAndBuildIdsFromIndices(selected_indices)) {
-    const ModuleData* module = app_->GetModuleByPathAndBuildId(module_path, build_id);
-    if (!module->is_loaded()) {
-      enable_load = true;
-    }
+  for (int index : selected_indices) {
+    const ModuleData* module = GetModuleDataFromRow(index);
+    if (module != nullptr && !module->is_loaded()) enable_load = true;
   }
 
   bool enable_select = false;
@@ -271,15 +263,6 @@ void SamplingReportDataView::OnContextMenu(const std::string& action, int menu_i
       app_->DeselectFunction(*function);
       app_->DisableFrameTrack(*function);
     }
-  } else if (action == kMenuActionLoadSymbols) {
-    std::vector<ModuleData*> modules_to_load;
-    for (const auto& [module_path, build_id] : GetModulePathsAndBuildIdsFromIndices(item_indices)) {
-      ModuleData* module = app_->GetMutableModuleByPathAndBuildId(module_path, build_id);
-      if (!module->is_loaded()) {
-        modules_to_load.push_back(module);
-      }
-    }
-    app_->RetrieveModulesAndLoadSymbols(modules_to_load);
   } else if (action == kMenuActionDisassembly) {
     uint32_t pid = app_->GetCaptureData().process_id();
     for (const FunctionInfo* function : GetFunctionsFromIndices(item_indices)) {
@@ -292,6 +275,15 @@ void SamplingReportDataView::OnContextMenu(const std::string& action, int menu_i
   } else {
     DataView::OnContextMenu(action, menu_index, item_indices);
   }
+}
+
+ModuleData* SamplingReportDataView::GetModuleDataFromRow(int row) const {
+  std::optional<std::pair<std::string, std::string>> module_path_and_build_id =
+      GetModulePathAndBuildIdFromRow(row);
+  if (!module_path_and_build_id.has_value()) return nullptr;
+
+  return app_->GetMutableModuleByPathAndBuildId(module_path_and_build_id.value().first,
+                                                module_path_and_build_id.value().second);
 }
 
 void SamplingReportDataView::UpdateSelectedIndicesAndFunctionIds(

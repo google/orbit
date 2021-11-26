@@ -70,8 +70,8 @@ class CallstackDataView : public DataView {
     orbit_client_data::ModuleData* module;
   };
 
-  CallstackDataViewFrame GetFrameFromRow(int row);
-  CallstackDataViewFrame GetFrameFromIndex(int index_in_callstack);
+  CallstackDataViewFrame GetFrameFromRow(int row) const;
+  CallstackDataViewFrame GetFrameFromIndex(int index_in_callstack) const;
 
   enum ColumnIndex {
     kColumnSelected,
@@ -83,6 +83,10 @@ class CallstackDataView : public DataView {
   };
 
  private:
+  [[nodiscard]] orbit_client_data::ModuleData* GetModuleDataFromRow(int row) const override {
+    return GetFrameFromRow(row).module;
+  }
+
   absl::flat_hash_set<uint64_t> functions_to_highlight_;
 };
 
