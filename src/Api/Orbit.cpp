@@ -108,7 +108,7 @@ void orbit_api_initialize_and_set_enabled(OrbitApiT* api,
     std::atomic_thread_fence(std::memory_order_release);
     api->initialized = 1;
   }
-  // By the time we reach this, the "initialized" guard variable has been set to 1 and we know
+  // By the time we reach this, the "initialized" guard variable has been set to 1, and we know
   // that all function pointers have been written to and published to other cores by the use of
   // acquire/release fences. The "enabled" flag serves as a global toggle which is always used in
   // conjunction with the "initialized" flag to determine if the Api is active. See
@@ -116,46 +116,116 @@ void orbit_api_initialize_and_set_enabled(OrbitApiT* api,
   api->enabled = static_cast<uint32_t>(enabled);
 }
 
-void orbit_api_initialize_v0(orbit_api_v0* api) {
-  api->start = &orbit_api_start;
-  api->stop = &orbit_api_stop;
-  api->start_async = &orbit_api_start_async;
-  api->stop_async = &orbit_api_stop_async;
-  api->async_string = &orbit_api_async_string;
-  api->track_int = &orbit_api_track_int;
-  api->track_int64 = &orbit_api_track_int64;
-  api->track_uint = &orbit_api_track_uint;
-  api->track_uint64 = &orbit_api_track_uint64;
-  api->track_float = &orbit_api_track_float;
-  api->track_double = &orbit_api_track_double;
+void orbit_api_initialize_v0(orbit_api_v0* api_v0) {
+  api_v0->start = &orbit_api_start;
+  api_v0->stop = &orbit_api_stop;
+  api_v0->start_async = &orbit_api_start_async;
+  api_v0->stop_async = &orbit_api_stop_async;
+  api_v0->async_string = &orbit_api_async_string;
+  api_v0->track_int = &orbit_api_track_int;
+  api_v0->track_int64 = &orbit_api_track_int64;
+  api_v0->track_uint = &orbit_api_track_uint;
+  api_v0->track_uint64 = &orbit_api_track_uint64;
+  api_v0->track_float = &orbit_api_track_float;
+  api_v0->track_double = &orbit_api_track_double;
 }
 
-void orbit_api_initialize_v1(orbit_api_v1* api) {
-  api->start = &orbit_api_start_v1;
-  api->stop = &orbit_api_stop;
-  api->start_async = &orbit_api_start_async;
-  api->stop_async = &orbit_api_stop_async;
-  api->async_string = &orbit_api_async_string;
-  api->track_int = &orbit_api_track_int;
-  api->track_int64 = &orbit_api_track_int64;
-  api->track_uint = &orbit_api_track_uint;
-  api->track_uint64 = &orbit_api_track_uint64;
-  api->track_float = &orbit_api_track_float;
-  api->track_double = &orbit_api_track_double;
+void orbit_api_initialize_v1(orbit_api_v1* api_v1) {
+  api_v1->start = &orbit_api_start_v1;
+  api_v1->stop = &orbit_api_stop;
+  api_v1->start_async = &orbit_api_start_async;
+  api_v1->stop_async = &orbit_api_stop_async;
+  api_v1->async_string = &orbit_api_async_string;
+  api_v1->track_int = &orbit_api_track_int;
+  api_v1->track_int64 = &orbit_api_track_int64;
+  api_v1->track_uint = &orbit_api_track_uint;
+  api_v1->track_uint64 = &orbit_api_track_uint64;
+  api_v1->track_float = &orbit_api_track_float;
+  api_v1->track_double = &orbit_api_track_double;
 }
 
-void orbit_api_initialize_v2(orbit_api_v2* api) {
-  api->start = &orbit_api_start_v1;
-  api->stop = &orbit_api_stop;
-  api->start_async = &orbit_api_start_async_v1;
-  api->stop_async = &orbit_api_stop_async;
-  api->async_string = &orbit_api_async_string;
-  api->track_int = &orbit_api_track_int;
-  api->track_int64 = &orbit_api_track_int64;
-  api->track_uint = &orbit_api_track_uint;
-  api->track_uint64 = &orbit_api_track_uint64;
-  api->track_float = &orbit_api_track_float;
-  api->track_double = &orbit_api_track_double;
+void orbit_api_initialize_v2(orbit_api_v2* api_v2) {
+  api_v2->start = &orbit_api_start_v1;
+  api_v2->stop = &orbit_api_stop;
+  api_v2->start_async = &orbit_api_start_async_v1;
+  api_v2->stop_async = &orbit_api_stop_async;
+  api_v2->async_string = &orbit_api_async_string;
+  api_v2->track_int = &orbit_api_track_int;
+  api_v2->track_int64 = &orbit_api_track_int64;
+  api_v2->track_uint = &orbit_api_track_uint;
+  api_v2->track_uint64 = &orbit_api_track_uint64;
+  api_v2->track_float = &orbit_api_track_float;
+  api_v2->track_double = &orbit_api_track_double;
+}
+
+__attribute__((ms_abi)) void orbit_api_start_wine_v1(const char* name, orbit_api_color color,
+                                                     uint64_t group_id, uint64_t caller_address) {
+  if (caller_address == kOrbitCallerAddressAuto) {
+    caller_address = ORBIT_GET_CALLER_PC();
+  }
+  orbit_api_start_v1(name, color, group_id, caller_address);
+}
+
+__attribute__((ms_abi)) void orbit_api_stop_wine() { orbit_api_stop(); }
+
+__attribute__((ms_abi)) void orbit_api_start_async_wine_v1(const char* name, uint64_t id,
+                                                           orbit_api_color color,
+                                                           uint64_t caller_address) {
+  if (caller_address == kOrbitCallerAddressAuto) {
+    caller_address = ORBIT_GET_CALLER_PC();
+  }
+  orbit_api_start_async_v1(name, id, color, caller_address);
+}
+
+__attribute__((ms_abi)) void orbit_api_stop_async_wine(uint64_t id) { orbit_api_stop_async(id); }
+
+__attribute__((ms_abi)) void orbit_api_async_string_wine(const char* str, uint64_t id,
+                                                         orbit_api_color color) {
+  orbit_api_async_string(str, id, color);
+}
+
+__attribute__((ms_abi)) void orbit_api_track_int_wine(const char* name, int32_t value,
+                                                      orbit_api_color color) {
+  orbit_api_track_int(name, value, color);
+}
+
+__attribute__((ms_abi)) void orbit_api_track_int64_wine(const char* name, int64_t value,
+                                                        orbit_api_color color) {
+  orbit_api_track_int64(name, value, color);
+}
+
+__attribute__((ms_abi)) void orbit_api_track_uint_wine(const char* name, uint32_t value,
+                                                       orbit_api_color color) {
+  orbit_api_track_uint(name, value, color);
+}
+
+__attribute__((ms_abi)) void orbit_api_track_uint64_wine(const char* name, uint64_t value,
+                                                         orbit_api_color color) {
+  orbit_api_track_uint64(name, value, color);
+}
+
+__attribute__((ms_abi)) void orbit_api_track_float_wine(const char* name, float value,
+                                                        orbit_api_color color) {
+  orbit_api_track_float(name, value, color);
+}
+
+__attribute__((ms_abi)) void orbit_api_track_double_wine(const char* name, double value,
+                                                         orbit_api_color color) {
+  orbit_api_track_double(name, value, color);
+}
+
+void orbit_api_initialize_wine_v2(orbit_api_win_v2* api_wine_v2) {
+  api_wine_v2->start = &orbit_api_start_wine_v1;
+  api_wine_v2->stop = &orbit_api_stop_wine;
+  api_wine_v2->start_async = &orbit_api_start_async_wine_v1;
+  api_wine_v2->stop_async = &orbit_api_stop_async_wine;
+  api_wine_v2->async_string = &orbit_api_async_string_wine;
+  api_wine_v2->track_int = &orbit_api_track_int_wine;
+  api_wine_v2->track_int64 = &orbit_api_track_int64_wine;
+  api_wine_v2->track_uint = &orbit_api_track_uint_wine;
+  api_wine_v2->track_uint64 = &orbit_api_track_uint64_wine;
+  api_wine_v2->track_float = &orbit_api_track_float_wine;
+  api_wine_v2->track_double = &orbit_api_track_double_wine;
 }
 
 }  // namespace
@@ -197,6 +267,38 @@ void orbit_api_set_enabled(uint64_t address, uint64_t api_version, bool enabled)
   // connection, `producer.IsCapturing()` would otherwise always be false with at least the first
   // event (but possibly more), causing it to be missed even if it comes a long time after calling
   // `orbit_api_set_enabled`.
+  GetEventProducer();
+}
+
+void orbit_api_set_enabled_wine(uint64_t address, uint64_t api_version, bool enabled) {
+  LOG("%s Orbit API at address %#x, for Windows", enabled ? "Enabling" : "Disabling", address);
+  static constexpr uint64_t kOrbitApiForWineMinVersion = 2;
+  if (api_version < kOrbitApiForWineMinVersion) {
+    // This is unexpected because `orbit_api_get_function_table_address_win_v#` wasn't present in
+    // Orbit.h before v2.
+    ERROR(
+        "Orbit API version in tracee (%u) is older than the min supported version (%u) for "
+        "Wine.",
+        api_version, kOrbitApiForWineMinVersion);
+    return;
+  }
+
+  if (api_version > kOrbitApiVersion) {
+    ERROR(
+        "Orbit API version in tracee (%u) is newer than the max supported version (%u). "
+        "Some features will be unavailable.",
+        api_version, kOrbitApiVersion);
+  }
+
+  switch (api_version) {
+    case 2: {
+      auto* api_wine = absl::bit_cast<orbit_api_win_v2*>(address);
+      orbit_api_initialize_and_set_enabled(api_wine, &orbit_api_initialize_wine_v2, enabled);
+    } break;
+    default:
+      UNREACHABLE();
+  }
+
   GetEventProducer();
 }
 

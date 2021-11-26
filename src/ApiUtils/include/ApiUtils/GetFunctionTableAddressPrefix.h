@@ -14,6 +14,9 @@ namespace orbit_api_utils {
 static const std::string kOrbitApiGetFunctionTableAddressPrefix{
     "orbit_api_get_function_table_address_v"};
 
+static const std::string kOrbitApiGetFunctionTableAddressWinPrefix{
+    "orbit_api_get_function_table_address_win_v"};
+
 }  // namespace orbit_api_utils
 
 #endif  // API_UTILS_GET_FUNCTION_TABLE_ADDRESS_PREFIX_H_

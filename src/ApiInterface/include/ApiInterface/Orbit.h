@@ -6,6 +6,7 @@
 #define ORBIT_API_INTERFACE_ORBIT_H_
 
 #include <stdbool.h>
+#include <stddef.h>
 #include <stdint.h>
 
 // =================================================================================================
@@ -356,13 +357,47 @@ struct orbit_api_v2 {
   void (*track_double)(const char* name, double value, orbit_api_color color);
 };
 
+#if __cplusplus >= 201103L  // C++11
+#define ORBIT_ASSERT_API_LAYOUT(expression) \
+  static_assert(expression, "struct orbit_api_v2 has an unexpected layout")
+#elif __STDC_VERSION__ >= 201112L  // C11
+#define ORBIT_ASSERT_API_LAYOUT(expression) \
+  _Static_assert(expression, "struct orbit_api_v2 has an unexpected layout")
+#else
+#define ORBIT_ASSERT_API_LAYOUT(expression)
+#endif
+
+ORBIT_ASSERT_API_LAYOUT(sizeof(struct orbit_api_v2) == 96);
+ORBIT_ASSERT_API_LAYOUT(offsetof(struct orbit_api_v2, enabled) == 0);
+ORBIT_ASSERT_API_LAYOUT(offsetof(struct orbit_api_v2, initialized) == 4);
+ORBIT_ASSERT_API_LAYOUT(offsetof(struct orbit_api_v2, start) == 8);
+ORBIT_ASSERT_API_LAYOUT(offsetof(struct orbit_api_v2, stop) == 16);
+ORBIT_ASSERT_API_LAYOUT(offsetof(struct orbit_api_v2, start_async) == 24);
+ORBIT_ASSERT_API_LAYOUT(offsetof(struct orbit_api_v2, stop_async) == 32);
+ORBIT_ASSERT_API_LAYOUT(offsetof(struct orbit_api_v2, async_string) == 40);
+ORBIT_ASSERT_API_LAYOUT(offsetof(struct orbit_api_v2, track_int) == 48);
+ORBIT_ASSERT_API_LAYOUT(offsetof(struct orbit_api_v2, track_int64) == 56);
+ORBIT_ASSERT_API_LAYOUT(offsetof(struct orbit_api_v2, track_uint) == 64);
+ORBIT_ASSERT_API_LAYOUT(offsetof(struct orbit_api_v2, track_uint64) == 72);
+ORBIT_ASSERT_API_LAYOUT(offsetof(struct orbit_api_v2, track_float) == 80);
+ORBIT_ASSERT_API_LAYOUT(offsetof(struct orbit_api_v2, track_double) == 88);
+
 extern struct orbit_api_v2 g_orbit_api;
-extern ORBIT_EXPORT void* orbit_api_get_function_table_address_v2();
 
 // User needs to place "ORBIT_API_INSTANTIATE" in an implementation file.
-#define ORBIT_API_INSTANTIATE      \
+#ifdef _WIN32
+extern ORBIT_EXPORT void* orbit_api_get_function_table_address_win_v2();
+
+#define ORBIT_API_INSTANTIATE         \
+  struct orbit_api_v2 g_orbit_api; \
+  void* orbit_api_get_function_table_address_win_v2() { return &g_orbit_api; }
+#else
+extern ORBIT_EXPORT void* orbit_api_get_function_table_address_v2();
+
+#define ORBIT_API_INSTANTIATE         \
   struct orbit_api_v2 g_orbit_api; \
   void* orbit_api_get_function_table_address_v2() { return &g_orbit_api; }
+#endif  // _WIN32
 
 #ifndef __cplusplus
 // In C, `inline` alone doesn't generate an out-of-line definition, causing a linker error if the
