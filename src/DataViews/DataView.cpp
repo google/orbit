@@ -83,13 +83,7 @@ std::vector<std::vector<std::string>> DataView::GetContextMenuWithGrouping(
 void DataView::OnContextMenu(const std::string& action, int /*menu_index*/,
                              const std::vector<int>& item_indices) {
   if (action == kMenuActionExportToCsv) {
-    std::string save_file = app_->GetSaveFile(".csv");
-    if (!save_file.empty()) {
-      auto result = ExportCsv(save_file);
-      if (result.has_error()) {
-        app_->SendErrorToUi(std::string{kMenuActionExportToCsv}, result.error().message());
-      }
-    }
+    OnExportToCsvRequested();
   } else if (action == kMenuActionCopySelection) {
     OnCopySelectionRequested(item_indices);
   }
@@ -105,11 +99,19 @@ std::vector<int> DataView::GetVisibleSelectedIndices() {
   return visible_selected_indices;
 }
 
-ErrorMessageOr<void> DataView::ExportCsv(const std::filesystem::path& file_path) {
-  ErrorMessageOr<orbit_base::unique_fd> result = orbit_base::OpenFileForWriting(file_path);
+void DataView::OnExportToCsvRequested() {
+  std::string save_file = app_->GetSaveFile(".csv");
+  if (save_file.empty()) return;
+
+  auto send_error = [&](const std::string& error_msg) {
+    app_->SendErrorToUi(std::string{kMenuActionExportToCsv}, error_msg);
+  };
+
+  ErrorMessageOr<orbit_base::unique_fd> result = orbit_base::OpenFileForWriting(save_file);
   if (result.has_error()) {
-    return ErrorMessage{absl::StrFormat("Failed to open \"%s\" file: %s", file_path.string(),
-                                        result.error().message())};
+    send_error(
+        absl::StrFormat("Failed to open \"%s\" file: %s", save_file, result.error().message()));
+    return;
   }
 
   const orbit_base::unique_fd& fd = result.value();
@@ -119,7 +121,6 @@ ErrorMessageOr<void> DataView::ExportCsv(const std::filesystem::path& file_path)
   constexpr const char* kLineSeparator = "\r\n";
 
   size_t num_columns = GetColumns().size();
-
   {
     std::string header_line;
     for (size_t i = 0; i < num_columns; ++i) {
@@ -130,8 +131,9 @@ ErrorMessageOr<void> DataView::ExportCsv(const std::filesystem::path& file_path)
     header_line.append(kLineSeparator);
     auto write_result = orbit_base::WriteFully(fd, header_line);
     if (write_result.has_error()) {
-      return ErrorMessage{absl::StrFormat("Error writing to \"%s\": %s", file_path.string(),
-                                          write_result.error().message())};
+      send_error(absl::StrFormat("Error writing to \"%s\": %s", save_file,
+                                 write_result.error().message()));
+      return;
     }
   }
 
@@ -145,12 +147,11 @@ ErrorMessageOr<void> DataView::ExportCsv(const std::filesystem::path& file_path)
     line.append(kLineSeparator);
     auto write_result = orbit_base::WriteFully(fd, line);
     if (write_result.has_error()) {
-      return ErrorMessage{absl::StrFormat("Error writing to \"%s\": %s", file_path.string(),
-                                          write_result.error().message())};
+      send_error(absl::StrFormat("Error writing to \"%s\": %s", save_file,
+                                 write_result.error().message()));
+      return;
     }
   }
-
-  return outcome::success();
 }
 
 void DataView::OnCopySelectionRequested(const std::vector<int>& selection) {
