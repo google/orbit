@@ -50,7 +50,7 @@ size_t kMaxRelocatedPrologueSize = kSizeOfJmp * 16;
 // before each run. This happens in `InstrumentFunction`. Whenever the code of the trampoline is
 // changed this constant needs to be adjusted as well. There is a CHECK in the code below to make
 // sure this number is correct.
-constexpr uint64_t kOffsetOfFunctionIdInCallToEntryPayload = 109;
+constexpr uint64_t kOffsetOfFunctionIdInCallToEntryPayload = 104;
 
 [[nodiscard]] std::string InstructionBytesAsString(cs_insn* instruction) {
   std::string result;
@@ -188,33 +188,24 @@ void AppendBackupCode(MachineCode& trampoline) {
   }
 }
 
-// Call the entry payload function with the return address, the id of the instrumented function, and
-// the original stack pointer (i.e., address of the return address) as parameters. Care must be
-// taken that the stack be aligned to 16 bytes before calling the entry payload, as required by the
-// calling convention as per section "3.2.2 The Stack Frame" in, again, "System V Application Binary
-// Interface".
-// Then overwrite the return address with `return_trampoline_address`.
-void AppendCallToEntryPayloadAndOverwriteReturnAddress(uint64_t entry_payload_function_address,
-                                                       uint64_t return_trampoline_address,
-                                                       MachineCode& trampoline) {
+// Call the entry payload function with the return address, the id of the instrumented function,
+// the original stack pointer (i.e., address of the return address) and the address of the return
+// trampoline as parameters. Note that the stack is still aligned (compare `AppendBackupCode` above)
+// as required by the calling convention as per section "3.2.2 The Stack Frame" in, again, "System V
+// Application Binary Interface".
+void AppendCallToEntryPayload(uint64_t entry_payload_function_address,
+                              uint64_t return_trampoline_address, MachineCode& trampoline) {
   // At this point rax is the rsp after pushing the general purpose registers, so adding 0x40 gets
   // us the location of the return address (see above in `AppendBackupCode`).
 
   // add rax, 0x40                                   48 83 c0 40
-  // push rax                                        50
-  // sub rsp, 0x08                                   48 83 ec 08
   // mov rdi, (rax)                                  48 8b 38
   // mov rsi, function_id                            48 be function_id
   // mov rdx, rax                                    48 89 c2
+  // mov rcx, return_trampoline_address              48 b9 return_trampoline_address
   // mov rax, entry_payload_function_address         48 b8 addr
   // call rax                                        ff d0
-  // add rsp, 0x08                                   48 83 c4 08
-  // pop rax                                         58
-  // mov rdi, return_trampoline_address              48 bf addr
-  // mov (rax), rdi                                  48 89 38
   trampoline.AppendBytes({0x48, 0x83, 0xc0, 0x40})
-      .AppendBytes({0x50})
-      .AppendBytes({0x48, 0x83, 0xec, 0x08})
       .AppendBytes({0x48, 0x8b, 0x38})
       .AppendBytes({0x48, 0xbe});
   // This fails if the code for the trampoline was changed - see the comment at the declaration of
@@ -224,14 +215,11 @@ void AppendCallToEntryPayloadAndOverwriteReturnAddress(uint64_t entry_payload_fu
   // just a placeholder.
   trampoline.AppendImmediate64(0xDEADBEEFDEADBEEF)
       .AppendBytes({0x48, 0x89, 0xc2})
+      .AppendBytes({0x48, 0xb9})
+      .AppendImmediate64(return_trampoline_address)
       .AppendBytes({0x48, 0xb8})
       .AppendImmediate64(entry_payload_function_address)
-      .AppendBytes({0xff, 0xd0})
-      .AppendBytes({0x48, 0x83, 0xc4, 0x08})
-      .AppendBytes({0x58})
-      .AppendBytes({0x48, 0xbf})
-      .AppendImmediate64(return_trampoline_address)
-      .AppendBytes({0x48, 0x89, 0x38});
+      .AppendBytes({0xff, 0xd0});
 }
 
 void AppendRestoreCode(MachineCode& trampoline) {
@@ -767,8 +755,8 @@ uint64_t GetMaxTrampolineSize() {
   static const uint64_t trampoline_size = []() -> uint64_t {
     MachineCode unused_code;
     AppendBackupCode(unused_code);
-    AppendCallToEntryPayloadAndOverwriteReturnAddress(/*entry_payload_function_address=*/0,
-                                                      /*return_trampoline_address=*/0, unused_code);
+    AppendCallToEntryPayload(/*entry_payload_function_address=*/0,
+                             /*return_trampoline_address=*/0, unused_code);
     AppendRestoreCode(unused_code);
     unused_code.AppendBytes(std::vector<uint8_t>(kMaxRelocatedPrologueSize, 0));
     auto result =
@@ -792,8 +780,7 @@ ErrorMessageOr<uint64_t> CreateTrampoline(pid_t pid, uint64_t function_address,
   MachineCode trampoline;
   // Add code to backup register state, execute the payload and restore the register state.
   AppendBackupCode(trampoline);
-  AppendCallToEntryPayloadAndOverwriteReturnAddress(entry_payload_function_address,
-                                                    return_trampoline_address, trampoline);
+  AppendCallToEntryPayload(entry_payload_function_address, return_trampoline_address, trampoline);
   AppendRestoreCode(trampoline);
 
   // Relocate prologue into trampoline.
