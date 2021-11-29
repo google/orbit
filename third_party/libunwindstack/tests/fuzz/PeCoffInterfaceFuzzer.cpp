@@ -21,12 +21,19 @@
 #include <unwindstack/Memory.h>
 #include <unwindstack/PeCoffInterface.h>
 
-// The most basic fuzzer for PE/COFF parsing. Generates really poor coverage as
-// it is not PE/COFF file structure aware.
-extern "C" int LLVMFuzzerTestOneInput(const uint8_t* data, size_t size) {
+namespace {
+template <typename AddressType>
+void FuzzPeCoffInterface(const uint8_t* data, size_t size) {
   std::shared_ptr<unwindstack::Memory> memory =
       unwindstack::Memory::CreateOfflineMemory(data, 0, size);
-  unwindstack::PeCoffInterface<uint64_t> pe_coff_interface(memory.get());
+  unwindstack::PeCoffInterface<AddressType> pe_coff_interface(memory.get());
   pe_coff_interface.Init();
+}
+}  // namespace
+
+// The most basic fuzzer for PE/COFF parsing, not PE/COFF structure aware.
+extern "C" int LLVMFuzzerTestOneInput(const uint8_t* data, size_t size) {
+  FuzzPeCoffInterface<uint32_t>(data, size);
+  FuzzPeCoffInterface<uint64_t>(data, size);
   return 0;
 }
