@@ -117,7 +117,7 @@ struct RelocatedInstruction {
 // Creates a trampoline for the function at `function_address`. The trampoline is built at
 // `trampoline_address`. The trampoline will call `entry_payload_function_address` with the
 // function's return address, a function id, the address on the stack where the return address is
-// stored and and the address of the return trampoline as parameters. The function id is written
+// stored, and the address of the return trampoline as parameters. The function id is written
 // into the trampoline by `InstrumentFunction`. This is necessary since the function id is not
 // stable across multiple profiling runs. `function` contains the beginning of the function
 // (kMaxFunctionPrologueBackupSize bytes or less if the function shorter). `capstone_handle` is a
