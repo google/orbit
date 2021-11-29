@@ -16,7 +16,7 @@ class TranslationStack {
   void PopTranslation();
   [[nodiscard]] bool IsEmpty() const { return translation_stack_.empty(); }
 
-  [[nodiscard]] Vec3 TransformAndFloorVertex(const Vec3& input) const {
+  [[nodiscard]] Vec3 TranslateAndFloorVertex(const Vec3& input) const {
     const Vec3 result = input + current_translation_;
     return Vec3(floorf(result[0]), floorf(result[1]), result[2]);
   }

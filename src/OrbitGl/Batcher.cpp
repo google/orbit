@@ -53,8 +53,8 @@ static void MoveLineToPixelCenterIfHorizontal(Line& line) {
 void Batcher::AddLine(Vec2 from, Vec2 to, float z, const Color& color, const Color& picking_color,
                       std::unique_ptr<PickingUserData> user_data) {
   Line line;
-  line.start_point = translations_.TransformAndFloorVertex(Vec3(from[0], from[1], z));
-  line.end_point = translations_.TransformAndFloorVertex(Vec3(to[0], to[1], z));
+  line.start_point = translations_.TranslateAndFloorVertex(Vec3(from[0], from[1], z));
+  line.end_point = translations_.TranslateAndFloorVertex(Vec3(to[0], to[1], z));
   // TODO(b/195386885) This is a hack to address the issue that some horizontal lines in the graph
   // tracks are missing. We need a better solution for this issue.
   MoveLineToPixelCenterIfHorizontal(line);
@@ -200,7 +200,7 @@ void Batcher::AddBox(const Box& box, const std::array<Color, 4>& colors, const C
                      std::unique_ptr<PickingUserData> user_data) {
   Box rounded_box = box;
   for (size_t v = 0; v < 4; ++v) {
-    rounded_box.vertices[v] = translations_.TransformAndFloorVertex(rounded_box.vertices[v]);
+    rounded_box.vertices[v] = translations_.TranslateAndFloorVertex(rounded_box.vertices[v]);
   }
   float layer_z_value = rounded_box.vertices[0][2];
   auto& buffer = primitive_buffers_by_layer_[layer_z_value];
@@ -253,7 +253,7 @@ void Batcher::AddTriangle(const Triangle& triangle, const std::array<Color, 3>& 
                           const Color& picking_color, std::unique_ptr<PickingUserData> user_data) {
   Triangle rounded_tri = triangle;
   for (auto& vertex : rounded_tri.vertices) {
-    vertex = translations_.TransformAndFloorVertex(vertex);
+    vertex = translations_.TranslateAndFloorVertex(vertex);
   }
   float layer_z_value = rounded_tri.vertices[0][2];
   auto& buffer = primitive_buffers_by_layer_[layer_z_value];
@@ -269,7 +269,7 @@ void Batcher::AddCircle(const Vec2& position, float radius, float z, Color color
     circle_points_scaled_by_radius.emplace_back(radius * point);
   }
 
-  Vec3 final_position = translations_.TransformAndFloorVertex(Vec3(position[0], position[1], z));
+  Vec3 final_position = translations_.TranslateAndFloorVertex(Vec3(position[0], position[1], z));
 
   Vec3 prev_point(final_position[0], final_position[1] - radius, z);
   Vec3 point_0 = final_position;

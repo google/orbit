@@ -254,7 +254,7 @@ void TextRenderer::AddTextInternal(const char* text, ftgl::vec2* pen,
       float kerning = (i == 0) ? 0.0f : texture_glyph_get_kerning(glyph, text + i - 1);
       pen->x += kerning;
 
-      Vec3 pos0 = translations_.TransformAndFloorVertex(
+      Vec3 pos0 = translations_.TranslateAndFloorVertex(
           Vec3(pen->x + glyph->offset_x, pen->y - glyph->offset_y, z));
       Vec2 pos1 = Vec2(pos0[0] + glyph->width, pos0[1] + glyph->height);
       const float transformed_z = pos0[2];

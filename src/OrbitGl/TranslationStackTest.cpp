@@ -17,15 +17,15 @@ TEST(TranslationStack, PushAndPop) {
   TranslationStack stack;
   EXPECT_TRUE(stack.IsEmpty());
 
-  Vec3 result = stack.TransformAndFloorVertex(orig);
+  Vec3 result = stack.TranslateAndFloorVertex(orig);
   EXPECT_EQ(orig_result, result);
 
   stack.PushTranslation(trans[0], trans[1], trans[2]);
-  result = stack.TransformAndFloorVertex(orig);
+  result = stack.TranslateAndFloorVertex(orig);
   EXPECT_EQ(trans_result, result);
 
   stack.PopTranslation();
-  result = stack.TransformAndFloorVertex(orig);
+  result = stack.TranslateAndFloorVertex(orig);
   EXPECT_EQ(orig_result, result);
 }
 
