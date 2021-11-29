@@ -44,7 +44,7 @@ class BasicPageFaultsTrack : public LineGraphTrack<kBasicPageFaultsTrackDimensio
               const DrawContext& draw_context) override;
 
   void DrawSingleSeriesEntry(
-      Batcher* batcher, uint64_t start_tick, uint64_t end_tick,
+      Batcher& batcher, uint64_t start_tick, uint64_t end_tick,
       const std::array<float, kBasicPageFaultsTrackDimension>& current_normalized_values,
       const std::array<float, kBasicPageFaultsTrackDimension>& next_normalized_values, float z,
       bool is_last) override;

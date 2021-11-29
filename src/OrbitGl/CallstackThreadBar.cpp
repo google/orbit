@@ -94,7 +94,7 @@ void CallstackThreadBar::DoDraw(Batcher& batcher, TextRenderer& text_renderer,
   }
 }
 
-void CallstackThreadBar::DoUpdatePrimitives(Batcher* batcher, TextRenderer& text_renderer,
+void CallstackThreadBar::DoUpdatePrimitives(Batcher& batcher, TextRenderer& text_renderer,
                                             uint64_t min_tick, uint64_t max_tick,
                                             PickingMode picking_mode) {
   ThreadBar::DoUpdatePrimitives(batcher, text_renderer, min_tick, max_tick, picking_mode);
@@ -110,7 +110,7 @@ void CallstackThreadBar::DoUpdatePrimitives(Batcher* batcher, TextRenderer& text
 
   if (!picking) {
     // Sampling Events
-    auto action_on_callstack_events = [=](const CallstackEvent& event) {
+    auto action_on_callstack_events = [&](const CallstackEvent& event) {
       const uint64_t time = event.time();
       CHECK(time >= min_tick && time <= max_tick);
       Vec2 pos(time_graph_->GetWorldFromTick(time), GetPos()[1]);
@@ -119,7 +119,7 @@ void CallstackThreadBar::DoUpdatePrimitives(Batcher* batcher, TextRenderer& text
           CallstackInfo::kComplete) {
         color = kGreyError;
       }
-      batcher->AddVerticalLine(pos, track_height, z, color);
+      batcher.AddVerticalLine(pos, track_height, z, color);
     };
 
     if (GetThreadId() == orbit_base::kAllProcessThreadsTid) {
@@ -135,7 +135,7 @@ void CallstackThreadBar::DoUpdatePrimitives(Batcher* batcher, TextRenderer& text
     selected_color.fill(kGreenSelection);
     for (const CallstackEvent& event : time_graph_->GetSelectedCallstackEvents(GetThreadId())) {
       Vec2 pos(time_graph_->GetWorldFromTick(event.time()), GetPos()[1]);
-      batcher->AddVerticalLine(pos, track_height, z, kGreenSelection);
+      batcher.AddVerticalLine(pos, track_height, z, kGreenSelection);
     }
   } else {
     // Draw boxes instead of lines to make picking easier, even if this may
@@ -143,16 +143,16 @@ void CallstackThreadBar::DoUpdatePrimitives(Batcher* batcher, TextRenderer& text
     constexpr const float kPickingBoxWidth = 9.0f;
     constexpr const float kPickingBoxOffset = (kPickingBoxWidth - 1.0f) / 2.0f;
 
-    auto action_on_callstack_events = [=](const CallstackEvent& event) {
+    auto action_on_callstack_events = [&, this](const CallstackEvent& event) {
       const uint64_t time = event.time();
       CHECK(time >= min_tick && time <= max_tick);
       Vec2 pos(time_graph_->GetWorldFromTick(time) - kPickingBoxOffset, GetPos()[1]);
       Vec2 size(kPickingBoxWidth, track_height);
       auto user_data = std::make_unique<PickingUserData>(
           nullptr,
-          [this, batcher](PickingId id) -> std::string { return GetSampleTooltip(*batcher, id); });
+          [this, &batcher](PickingId id) -> std::string { return GetSampleTooltip(batcher, id); });
       user_data->custom_data_ = &event;
-      batcher->AddShadedBox(pos, size, z, kGreenSelection, std::move(user_data));
+      batcher.AddShadedBox(pos, size, z, kGreenSelection, std::move(user_data));
     };
     if (GetThreadId() == orbit_base::kAllProcessThreadsTid) {
       capture_data_->GetCallstackData().ForEachCallstackEventInTimeRange(

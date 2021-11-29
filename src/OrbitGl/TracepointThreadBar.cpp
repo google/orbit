@@ -52,7 +52,7 @@ void TracepointThreadBar::DoDraw(Batcher& batcher, TextRenderer& text_renderer,
   batcher.AddBox(box, color, shared_from_this());
 }
 
-void TracepointThreadBar::DoUpdatePrimitives(Batcher* batcher, TextRenderer& text_renderer,
+void TracepointThreadBar::DoUpdatePrimitives(Batcher& batcher, TextRenderer& text_renderer,
                                              uint64_t min_tick, uint64_t max_tick,
                                              PickingMode picking_mode) {
   ThreadBar::DoUpdatePrimitives(batcher, text_renderer, min_tick, max_tick, picking_mode);
@@ -76,13 +76,13 @@ void TracepointThreadBar::DoUpdatePrimitives(Batcher* batcher, TextRenderer& tex
           const Vec2 pos(time_graph_->GetWorldFromTick(time), GetPos()[1]);
           if (GetThreadId() == orbit_base::kAllThreadsOfAllProcessesTid) {
             const Color color = tracepoint.pid() == capture_data_->process_id() ? kGrey : kWhite;
-            batcher->AddVerticalLine(pos, -track_height, z, color);
+            batcher.AddVerticalLine(pos, -track_height, z, color);
           } else {
-            batcher->AddVerticalLine(pos, -radius, z, kWhiteTransparent);
-            batcher->AddVerticalLine(Vec2(pos[0], pos[1] - track_height), radius, z,
-                                     kWhiteTransparent);
-            batcher->AddCircle(Vec2(pos[0], pos[1] - track_height / 2), radius, z,
-                               kWhiteTransparent);
+            batcher.AddVerticalLine(pos, -radius, z, kWhiteTransparent);
+            batcher.AddVerticalLine(Vec2(pos[0], pos[1] - track_height), radius, z,
+                                    kWhiteTransparent);
+            batcher.AddCircle(Vec2(pos[0], pos[1] - track_height / 2), radius, z,
+                              kWhiteTransparent);
           }
         });
 
@@ -97,18 +97,17 @@ void TracepointThreadBar::DoUpdatePrimitives(Batcher* batcher, TextRenderer& tex
           Vec2 pos(time_graph_->GetWorldFromTick(time) - kPickingBoxOffset,
                    GetPos()[1] - track_height + 1);
           Vec2 size(kPickingBoxWidth, track_height);
-          auto user_data =
-              std::make_unique<PickingUserData>(nullptr, [&, batcher](PickingId id) -> std::string {
-                return GetTracepointTooltip(batcher, id);
-              });
+          auto user_data = std::make_unique<PickingUserData>(
+              nullptr,
+              [&](PickingId id) -> std::string { return GetTracepointTooltip(batcher, id); });
           user_data->custom_data_ = &tracepoint;
-          batcher->AddShadedBox(pos, size, z, kWhite, std::move(user_data));
+          batcher.AddShadedBox(pos, size, z, kWhite, std::move(user_data));
         });
   }
 }
 
-std::string TracepointThreadBar::GetTracepointTooltip(Batcher* batcher, PickingId id) const {
-  auto* user_data = batcher->GetUserData(id);
+std::string TracepointThreadBar::GetTracepointTooltip(Batcher& batcher, PickingId id) const {
+  auto* user_data = batcher.GetUserData(id);
   CHECK(user_data && user_data->custom_data_);
 
   const auto* tracepoint_event_info =

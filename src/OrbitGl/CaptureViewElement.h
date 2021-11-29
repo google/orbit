@@ -82,13 +82,13 @@ class CaptureViewElement : public Pickable, public AccessibleInterfaceProvider {
   bool visible_ = true;
 
   void Draw(Batcher& batcher, TextRenderer& text_renderer, const DrawContext& draw_context);
-  void UpdatePrimitives(Batcher* batcher, TextRenderer& text_renderer, uint64_t min_tick,
+  void UpdatePrimitives(Batcher& batcher, TextRenderer& text_renderer, uint64_t min_tick,
                         uint64_t max_tick, PickingMode picking_mode);
 
   virtual void DoDraw(Batcher& /*batcher*/, TextRenderer& /*text_renderer*/,
                       const DrawContext& /*draw_context*/) {}
 
-  virtual void DoUpdatePrimitives(Batcher* /*batcher*/, TextRenderer& /*text_renderer*/,
+  virtual void DoUpdatePrimitives(Batcher& /*batcher*/, TextRenderer& /*text_renderer*/,
                                   uint64_t /*min_tick*/, uint64_t /*max_tick*/,
                                   PickingMode /*picking_mode*/) {}
 

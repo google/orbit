@@ -144,8 +144,8 @@ static std::string GetThreadStateDescription(ThreadStateSliceInfo::ThreadState s
   }
 }
 
-std::string ThreadStateBar::GetThreadStateSliceTooltip(Batcher* batcher, PickingId id) const {
-  PickingUserData* user_data = batcher->GetUserData(id);
+std::string ThreadStateBar::GetThreadStateSliceTooltip(Batcher& batcher, PickingId id) const {
+  PickingUserData* user_data = batcher.GetUserData(id);
   if (user_data == nullptr || user_data->custom_data_ == nullptr) {
     return "";
   }
@@ -161,7 +161,7 @@ std::string ThreadStateBar::GetThreadStateSliceTooltip(Batcher* batcher, Picking
       GetThreadStateDescription(thread_state_slice->thread_state()));
 }
 
-void ThreadStateBar::DoUpdatePrimitives(Batcher* batcher, TextRenderer& text_renderer,
+void ThreadStateBar::DoUpdatePrimitives(Batcher& batcher, TextRenderer& text_renderer,
                                         uint64_t min_tick, uint64_t max_tick,
                                         PickingMode picking_mode) {
   ThreadBar::DoUpdatePrimitives(batcher, text_renderer, min_tick, max_tick, picking_mode);
@@ -191,21 +191,20 @@ void ThreadStateBar::DoUpdatePrimitives(Batcher* batcher, TextRenderer& text_ren
 
         const Color color = GetThreadStateColor(slice.thread_state());
 
-        auto user_data = std::make_unique<PickingUserData>(nullptr, [&, batcher](PickingId id) {
-          return GetThreadStateSliceTooltip(batcher, id);
-        });
+        auto user_data = std::make_unique<PickingUserData>(
+            nullptr, [&](PickingId id) { return GetThreadStateSliceTooltip(batcher, id); });
         user_data->custom_data_ = &slice;
 
         if (slice.end_timestamp_ns() - slice.begin_timestamp_ns() > pixel_delta_ns) {
           Box box(pos, size, GlCanvas::kZValueEvent);
-          batcher->AddBox(box, color, std::move(user_data));
+          batcher.AddBox(box, color, std::move(user_data));
         } else {
           // Make this slice cover an entire pixel and don't draw subsequent slices that would
           // coincide with the same pixel.
           // Use AddBox instead of AddVerticalLine as otherwise the tops of Boxes and lines wouldn't
           // be properly aligned.
           Box box(pos, {pixel_width_in_world_coords, size[1]}, GlCanvas::kZValueEvent);
-          batcher->AddBox(box, color, std::move(user_data));
+          batcher.AddBox(box, color, std::move(user_data));
 
           if (pixel_delta_ns != 0) {
             ignore_until_ns =
