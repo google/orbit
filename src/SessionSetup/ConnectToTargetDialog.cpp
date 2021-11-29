@@ -14,6 +14,7 @@
 #include "SessionSetup/ConnectToTargetDialog.h"
 #include "SessionSetup/ServiceDeployManager.h"
 #include "SessionSetup/SessionSetupUtils.h"
+#include "grpcpp/channel.h"
 #include "ui_ConnectToTargetDialog.h"
 
 namespace orbit_session_setup {
@@ -134,7 +135,7 @@ ConnectToTargetDialog::DeployOrbitService(
 }
 
 ErrorMessageOr<std::unique_ptr<orbit_client_data::ProcessData>>
-ConnectToTargetDialog::FindSpecifiedProcess(std::shared_ptr<grpc_impl::Channel> grpc_channel,
+ConnectToTargetDialog::FindSpecifiedProcess(std::shared_ptr<grpc::Channel> grpc_channel,
                                             uint32_t process_id) {
   CHECK(grpc_channel != nullptr);
 

@@ -16,6 +16,7 @@
 #include "OrbitGgp/SshInfo.h"
 #include "QtUtils/MainThreadExecutorImpl.h"
 #include "TargetConfiguration.h"
+#include "grpcpp/channel.h"
 
 namespace Ui {
 class ConnectToTargetDialog;  // IWYU pragma: keep
@@ -50,7 +51,7 @@ class ConnectToTargetDialog : public QDialog {
   struct ConnectionData {
     std::unique_ptr<orbit_client_data::ProcessData> process_data_;
     std::unique_ptr<orbit_session_setup::ServiceDeployManager> service_deploy_manager_;
-    std::shared_ptr<grpc_impl::Channel> grpc_channel_;
+    std::shared_ptr<grpc::Channel> grpc_channel_;
   };
 
   using MaybeSshAndInstanceData =
@@ -66,7 +67,7 @@ class ConnectToTargetDialog : public QDialog {
   [[nodiscard]] ErrorMessageOr<orbit_session_setup::ServiceDeployManager::GrpcPort>
   DeployOrbitService(orbit_session_setup::ServiceDeployManager* service_deploy_manager);
   [[nodiscard]] ErrorMessageOr<std::unique_ptr<orbit_client_data::ProcessData>>
-  FindSpecifiedProcess(std::shared_ptr<grpc_impl::Channel> grpc_channel, uint32_t process_id);
+  FindSpecifiedProcess(std::shared_ptr<grpc::Channel> grpc_channel, uint32_t process_id);
 
   void SetStatusMessage(const QString& message);
   void LogAndDisplayError(const ErrorMessage& message);
