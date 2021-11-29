@@ -559,7 +559,7 @@ void TimeGraph::DoUpdateLayout() {
 
   time_window_us_ = max_time_us_ - min_time_us_;
 
-  track_manager_->UpdateTracksForRendering();
+  track_manager_->UpdateTrackListForRendering();
   UpdateTracksPosition();
 
   SetVerticalScrollingOffset(vertical_scrolling_offset_);

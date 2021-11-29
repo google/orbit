@@ -318,7 +318,7 @@ int TrackManager::FindMovingTrackIndex() {
   return -1;
 }
 
-void TrackManager::UpdateTracksForRendering() {
+void TrackManager::UpdateTrackListForRendering() {
   // Reorder threads if sorting isn't valid or once per second when capturing.
   if (sorting_invalidated_ ||
       (app_ != nullptr && app_->IsCapturing() && last_thread_reorder_.ElapsedMillis() > 1000.0)) {
