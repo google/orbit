@@ -105,7 +105,7 @@ ErrorMessageOr<void> ValidatePath(std::filesystem::path path) {
 
 [[nodiscard]] std::vector<uint8_t> ToByteBuffer(std::string_view str) {
   std::vector<uint8_t> result(str.size() + 1, 0);
-  std::memcpy(result.data(), str.data(), result.size());
+  std::memcpy(result.data(), str.data(), str.size());
   return result;
 }
 
