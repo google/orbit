@@ -46,6 +46,7 @@ using orbit_client_data::CaptureData;
 
 constexpr const char* kTimingDraw = "Draw";
 constexpr const char* kTimingDrawAndUpdatePrimitives = "Draw & Update Primitives";
+constexpr const char* kTimingFrame = "Complete Frame";
 
 class AccessibleCaptureWindow : public AccessibleWidgetBridge {
  public:
@@ -77,6 +78,7 @@ CaptureWindow::CaptureWindow(OrbitApp* app) : GlCanvas(), app_{app} {
   scoped_frame_times_[kTimingDraw] = std::make_unique<orbit_gl::SimpleTimings>(30);
   scoped_frame_times_[kTimingDrawAndUpdatePrimitives] =
       std::make_unique<orbit_gl::SimpleTimings>(30);
+  scoped_frame_times_[kTimingFrame] = std::make_unique<orbit_gl::SimpleTimings>(30);
 
   slider_ = std::make_shared<orbit_gl::GlHorizontalSlider>(viewport_);
   vertical_slider_ = std::make_shared<orbit_gl::GlVerticalSlider>(viewport_);
@@ -438,16 +440,26 @@ void CaptureWindow::Draw() {
     text_renderer_.RenderDebug(&ui_batcher_);
   }
 
-  RenderAllLayers();
-
-  double frame_duration_in_ms = (orbit_base::CaptureTimestampNs() - start_time_ns) / 1000000.0;
   if (picking_mode_ == PickingMode::kNone) {
+    double update_duration_in_ms = (orbit_base::CaptureTimestampNs() - start_time_ns) / 1000000.0;
     if (time_graph_was_redrawn) {
-      scoped_frame_times_[kTimingDrawAndUpdatePrimitives]->PushTimeMs(frame_duration_in_ms);
+      scoped_frame_times_[kTimingDrawAndUpdatePrimitives]->PushTimeMs(update_duration_in_ms);
     } else {
-      scoped_frame_times_[kTimingDraw]->PushTimeMs(frame_duration_in_ms);
+      scoped_frame_times_[kTimingDraw]->PushTimeMs(update_duration_in_ms);
     }
   }
+
+  RenderAllLayers();
+
+  if (picking_mode_ == PickingMode::kNone) {
+    if (last_frame_start_time_ != 0) {
+      double frame_duration_in_ms =
+          (orbit_base::CaptureTimestampNs() - last_frame_start_time_) / 1000000.0;
+      scoped_frame_times_[kTimingFrame]->PushTimeMs(frame_duration_in_ms);
+    }
+  }
+
+  last_frame_start_time_ = orbit_base::CaptureTimestampNs();
 }
 
 void CaptureWindow::UpdateChildrenPosAndSize() {
