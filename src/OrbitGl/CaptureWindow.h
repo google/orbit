@@ -102,6 +102,8 @@ class CaptureWindow : public GlCanvas {
   uint64_t select_start_time_ = 0;
   uint64_t select_stop_time_ = 0;
 
+  uint64_t last_frame_start_time_ = 0;
+
   bool click_was_drag_ = false;
   bool background_clicked_ = false;
 
