@@ -19,7 +19,7 @@
 // clang-format on
 
 #undef VK_LAYER_EXPORT
-#if defined(WIN32)
+#ifdef _WIN32
 #define VK_LAYER_EXPORT extern "C" __declspec(dllexport)
 #else
 #define VK_LAYER_EXPORT extern "C"

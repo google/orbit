@@ -14,7 +14,7 @@ namespace orbit_move_files_to_documents {
 
 MoveFilesDialog::MoveFilesDialog() : QDialog(nullptr), ui_(new Ui::MoveFilesDialog) {
   ui_->setupUi(this);
-#ifdef WIN32
+#ifdef _WIN32
   ui_->label->setText(
       "We are moving captures and presets from %APPDATA%\\OrbitProfiler to Documents\\Orbit. "
       "Please wait...");

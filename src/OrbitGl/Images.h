@@ -4,7 +4,7 @@
 
 /* GIMP RGBA C-Source image dump (inject.c) */
 
-#ifdef WIN32
+#ifdef _WIN32
 #pragma warning(push, 0)
 #endif
 
@@ -2859,6 +2859,6 @@ static const struct {
     "\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0",
 };
 
-#ifdef WIN32
+#ifdef _WIN32
 #pragma warning(pop)
 #endif
