@@ -10,7 +10,7 @@ if [[ $(uname -s) != Linux ]]; then
 fi
 
 conan lock create ${REPO_ROOT}/conanfile.py \
-  -o system_qt=False -o system_mesa=False  \
+  -o system_qt=False \
   -s os=Linux \
   --build=grpc \
   --user=orbitdeps --channel=stable \

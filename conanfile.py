@@ -23,8 +23,7 @@ class OrbitConan(ConanFile):
     description = "C/C++ Performance Profiler"
     settings = "os", "compiler", "build_type", "arch"
     generators = ["cmake_multi"]
-    options = {"system_mesa": [True, False],
-               "system_qt": [True, False], "with_gui": [True, False],
+    options = {"system_qt": [True, False], "with_gui": [True, False],
                "debian_packaging": [True, False],
                "fPIC": [True, False],
                "crashdump_server": "ANY",
@@ -33,8 +32,7 @@ class OrbitConan(ConanFile):
                "run_python_tests": [True, False],
                "build_target": "ANY",
                "deploy_opengl_software_renderer": [True, False]}
-    default_options = {"system_mesa": True,
-                       "system_qt": True, "with_gui": True,
+    default_options = {"system_qt": True, "with_gui": True,
                        "debian_packaging": False,
                        "fPIC": True,
                        "crashdump_server": "",
@@ -71,10 +69,6 @@ class OrbitConan(ConanFile):
         self.build_requires('gtest/1.11.0', force_host_context=True)
 
     def requirements(self):
-        if self.settings.os != "Windows" and self.options.with_gui and not self.options.system_qt and self.options.system_mesa:
-            raise ConanInvalidConfiguration("When disabling system_qt, you also have to "
-                                            "disable system mesa.")
-
         if self.options.deploy_opengl_software_renderer and self.settings.os != "Windows":
             raise ConanInvalidConfiguration("The OpenGL software renderer can only be deployed on Windows")
         if self.options.deploy_opengl_software_renderer and not self.options.with_gui:
@@ -110,9 +104,6 @@ class OrbitConan(ConanFile):
             self.requires("imgui/1.69@bincrafters/stable#0")
             self.requires("libpng/1.6.37@bincrafters/stable#0")
             self.requires("libssh2/1.9.0#df2b6034da12cc5cb68bd3c5c22601bf")
-
-            if not self.options.system_mesa:
-                self.requires("libxi/1.7.10@bincrafters/stable#0")
 
             if not self.options.system_qt:
                 self.requires("qt/5.15.1@{}#e659e981368e4baba1a201b75ddb89b6".format(self._orbit_channel))
