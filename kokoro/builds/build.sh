@@ -49,32 +49,41 @@ if [ -n "$1" ]; then
   fi
 
   function cleanup {
+    if [[ $? != 0 ]]; then
+      # An error occured, we will print out the conan trace:
+      echo -e "\n\n---------- CONAN TRACE ----------"
+      cat ${REPO_ROOT}/build/conan_trace.log
+      echo -e "---------------------------------\n\n"
+    fi
+
     # Delete all unnecessary files from the src/-directory.
     # Kokoro would copy them otherwise before applying the artifacts regex
     echo "Delete all unnecessary files from the src/-directory."
 
     set +e # This is allowed to fail when deleting
     if [ $CONAN_PROFILE == "coverage_clang9" ]; then
-      # In the coverage_clang9 case, we spare the results at build/package and this
-      # script (well, everything under kokoro).
+      # In the coverage_clang9 case, we spare the results at build/package,
+      # the conan trace file, and this script (well, everything under kokoro).
       echo "Cleanup for coverage_clang9"
       find "${MOUNT_POINT}" ! -path "${MOUNT_POINT}" \
                             ! -path "${MOUNT_POINT}/github" \
                             ! -path "${REPO_ROOT}" \
                             ! -path "${REPO_ROOT}/kokoro*" \
                             ! -path "${REPO_ROOT}/build" \
+                            ! -path "${REPO_ROOT}/build/conan_trace.log" \
                             ! -path "${REPO_ROOT}/build/package*"\
                             -delete
       echo "Cleanup for coverage_clang9 done."
     elif [ "${BUILD_TYPE}" == "presubmit" ]; then
-      # In the presubmit case we only spare the testresults (under build/) and this
-      # script (well, everything under kokoro).
+      # In the presubmit case we only spare the testresults (under build/),
+      # the conan trace file, and this script (well, everything under kokoro).
       echo "Cleanup for presubmit."
       find "${MOUNT_POINT}" ! -path "${MOUNT_POINT}" \
                             ! -path "${MOUNT_POINT}/github" \
                             ! -path "${REPO_ROOT}" \
                             ! -path "${REPO_ROOT}/kokoro*" \
                             ! -path "${REPO_ROOT}/build" \
+                            ! -path "${REPO_ROOT}/build/conan_trace.log" \
                             ! -path "${REPO_ROOT}/build/testresults*"\
                             -delete
       echo "Cleanup for presubmit done."
@@ -130,6 +139,9 @@ if [ -n "$1" ]; then
 
   # Building Orbit
   mkdir -p "${REPO_ROOT}/build/"
+
+  # Enabling Conan Tracing
+  export CONAN_TRACE_FILE="${REPO_ROOT}/build/conan_trace.log"
 
   if [[ $CONAN_PROFILE == ggp_* ]]; then
     readonly PACKAGING_OPTION="-o debian_packaging=True"
