@@ -12,6 +12,7 @@
 #include "OrbitBase/Logging.h"
 
 using orbit_client_data::ModuleData;
+using orbit_client_data::ProcessData;
 using orbit_client_protos::FunctionInfo;
 
 namespace orbit_data_views {
@@ -99,6 +100,9 @@ void DataView::OnContextMenu(const std::string& action, int /*menu_index*/,
     OnIteratorRequested(item_indices);
   } else if (action == kMenuActionVerifyFramePointers) {
     OnVerifyFramePointersRequested(item_indices);
+
+  } else if (action == kMenuActionDisassembly) {
+    OnDisassemblyRequested(item_indices);
 
   } else if (action == kMenuActionExportToCsv) {
     OnExportToCsvRequested();
@@ -189,6 +193,16 @@ void DataView::OnVerifyFramePointersRequested(const std::vector<int>& selection)
 
   if (!modules_to_validate.empty()) {
     app_->OnValidateFramePointers(modules_to_validate);
+  }
+}
+
+void DataView::OnDisassemblyRequested(const std::vector<int>& selection) {
+  const ProcessData* process_data = app_->GetTargetProcess();
+  const uint32_t pid =
+      process_data == nullptr ? app_->GetCaptureData().process_id() : process_data->pid();
+  for (int i : selection) {
+    const FunctionInfo* function = GetFunctionInfoFromRow(i);
+    if (function != nullptr) app_->Disassemble(pid, *function);
   }
 }
 

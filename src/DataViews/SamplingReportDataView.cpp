@@ -244,12 +244,7 @@ std::vector<std::vector<std::string>> SamplingReportDataView::GetContextMenuWith
 
 void SamplingReportDataView::OnContextMenu(const std::string& action, int menu_index,
                                            const std::vector<int>& item_indices) {
-  if (action == kMenuActionDisassembly) {
-    uint32_t pid = app_->GetCaptureData().process_id();
-    for (int index : item_indices) {
-      app_->Disassemble(pid, *GetFunctionInfoFromRow(index));
-    }
-  } else if (action == kMenuActionSourceCode) {
+  if (action == kMenuActionSourceCode) {
     for (int index : item_indices) {
       app_->ShowSourceCode(*GetFunctionInfoFromRow(index));
     }
