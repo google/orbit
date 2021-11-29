@@ -49,6 +49,8 @@ class LiveFunctionsDataView : public DataView {
   std::optional<int> GetRowFromFunctionId(uint64_t function_id);
   void AddFunction(uint64_t function_id, orbit_client_protos::FunctionInfo function_info);
 
+  void OnIterateRequested(const std::vector<int>& selection) override;
+
   // Export all events (including the function name, thread name and id, start timestamp, end
   // timestamp, and duration) associated with the selected rows in to a CSV file.
   ErrorMessageOr<void> ExportAllEventsToCsv(const std::filesystem::path& file_path,

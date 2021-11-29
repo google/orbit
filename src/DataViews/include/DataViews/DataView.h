@@ -137,6 +137,7 @@ class DataView {
   virtual void OnUnselectRequested(const std::vector<int>& selection);
   void OnEnableFrameTrackRequested(const std::vector<int>& selection);
   void OnDisableFrameTrackRequested(const std::vector<int>& selection);
+  virtual void OnIterateRequested(const std::vector<int>& /*selection*/) { return; }
   void OnCopySelectionRequested(const std::vector<int>& selection);
   void OnExportToCsvRequested();
 

@@ -272,6 +272,19 @@ std::vector<std::vector<std::string>> LiveFunctionsDataView::GetContextMenuWithG
   return menu;
 }
 
+void LiveFunctionsDataView::OnIterateRequested(const std::vector<int>& selection) {
+  for (int i : selection) {
+    uint64_t instrumented_function_id = GetInstrumentedFunctionId(i);
+    const FunctionInfo* instrumented_function = GetFunctionInfoFromRow(i);
+    const FunctionStats& stats =
+        app_->GetCaptureData().GetFunctionStatsOrDefault(instrumented_function_id);
+    if (stats.count() > 0) {
+      live_functions_->AddIterator(instrumented_function_id, instrumented_function);
+      metrics_uploader_->SendLogEvent(orbit_metrics_uploader::OrbitLogEvent::ORBIT_ITERATOR_ADD);
+    }
+  }
+}
+
 ErrorMessageOr<void> LiveFunctionsDataView::ExportAllEventsToCsv(
     const std::filesystem::path& file_path, const std::vector<int>& item_indices) {
   ErrorMessageOr<orbit_base::unique_fd> result = orbit_base::OpenFileForWriting(file_path);
@@ -357,17 +370,6 @@ void LiveFunctionsDataView::OnContextMenu(const std::string& action, int menu_in
     CHECK(item_indices.size() == 1);
     uint64_t function_id = GetInstrumentedFunctionId(item_indices[0]);
     app_->JumpToTimerAndZoom(function_id, AppInterface::JumpToTimerMode::kMax);
-  } else if (action == kMenuActionIterate) {
-    for (int i : item_indices) {
-      uint64_t instrumented_function_id = GetInstrumentedFunctionId(i);
-      const FunctionInfo* instrumented_function = GetFunctionInfoFromRow(i);
-      const FunctionStats& stats =
-          app_->GetCaptureData().GetFunctionStatsOrDefault(instrumented_function_id);
-      if (stats.count() > 0) {
-        live_functions_->AddIterator(instrumented_function_id, instrumented_function);
-        metrics_uploader_->SendLogEvent(orbit_metrics_uploader::OrbitLogEvent::ORBIT_ITERATOR_ADD);
-      }
-    }
   } else if (action == kMenuActionExportEventsToCsv) {
     std::string save_file = app_->GetSaveFile(".csv");
     if (!save_file.empty()) {
