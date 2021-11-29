@@ -17,7 +17,7 @@ namespace orbit_windows_utils {
 [[nodiscard]] ErrorMessageOr<void> InjectDll(uint32_t pid, std::filesystem::path dll_path);
 
 // Create a thread in a remote process and call specified function. The "parameter" byte buffer is
-// copied to the target process memory and is passed as argument to the thread function.
+// copied to the target's memory and its address is passed to the thread function as argument.
 [[nodiscard]] ErrorMessageOr<void> CreateRemoteThread(uint32_t pid, std::string_view module_name,
                                                       std::string_view function_name,
                                                       std::vector<uint8_t> parameter);

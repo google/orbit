@@ -2,7 +2,7 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#include "WindowsUtils/Injection.h"
+#include "WindowsUtils/DllInjection.h"
 
 #include <absl/base/casts.h>
 #include <absl/strings/match.h>
@@ -22,7 +22,7 @@ namespace orbit_windows_utils {
 
 namespace {
 
-ErrorMessageOr<void*> RemoteWrite(HANDLE process_handle, const std::vector<uint8_t>& buffer) {
+ErrorMessageOr<uint64_t> RemoteWrite(HANDLE process_handle, const std::vector<uint8_t>& buffer) {
   // Allocate memory in target process.
   LPVOID base_address = VirtualAllocEx(process_handle, /*lpAddress=*/0, buffer.size(),
                                        MEM_RESERVE | MEM_COMMIT, PAGE_READWRITE);
@@ -43,7 +43,7 @@ ErrorMessageOr<void*> RemoteWrite(HANDLE process_handle, const std::vector<uint8
     return ErrorMessage("WriteProcessMemory could not write the requested number bytes.");
   }
 
-  return base_address;
+  return absl::bit_cast<uint64_t>(base_address);
 }
 
 template <typename T>
@@ -137,7 +137,7 @@ ErrorMessageOr<void> EnsureModuleIsNotAlreadyLoaded(uint32_t pid, std::string_vi
   ErrorMessageOr<Module> module = FindModule(pid, module_name);
   if (module.has_value()) {
     return ErrorMessage(
-        absl::StrFormat("Module %s is already loaded in process %u", module_name, pid));
+        absl::StrFormat("Module \"%s\" is already loaded in process %u", module_name, pid));
   }
   return outcome::success();
 }
@@ -155,9 +155,10 @@ ErrorMessageOr<void> InjectDll(uint32_t pid, std::filesystem::path dll_path) {
   OUTCOME_TRY(CreateRemoteThread(pid, "kernel32.dll", "LoadLibraryA", ToByteBuffer(dll_name)));
 
   // Find injected dll in target process. Allow for retries as the loading might take some time.
-  OUTCOME_TRY(Module module, FindModule(pid, dll_path.filename().string(), /*num_retries=*/10));
+  constexpr uint32_t kNumRetries = 10;
+  OUTCOME_TRY(Module module, FindModule(pid, dll_path.filename().string(), kNumRetries));
 
-  LOG("Module %s successfully injected in process %u", dll_name, pid);
+  LOG("Module \"%s\" successfully injected in process %u", dll_name, pid);
   return outcome::success();
 }
 
@@ -169,15 +170,15 @@ ErrorMessageOr<void> CreateRemoteThread(uint32_t pid, std::string_view module_na
   orbit_base::unique_resource handle_closer(handle, ::CloseHandle);
 
   // Write parameter to remote process memory.
-  void* parameter_address = nullptr;
+  uint64_t parameter_address = 0;
   if (!parameter.empty()) {
-    OUTCOME_TRY(void* address, RemoteWrite(handle, parameter));
+    OUTCOME_TRY(uint64_t address, RemoteWrite(handle, parameter));
     parameter_address = address;
   }
 
   if (!::CreateRemoteThread(handle, /*lpThreadAttributes=*/0, /*dwStackSize=*/0,
                             absl::bit_cast<LPTHREAD_START_ROUTINE>(function_address),
-                            parameter_address,
+                            absl::bit_cast<LPVOID>(parameter_address),
                             /*dwCreationFlags=*/0, /*lpThreadId=*/0)) {
     return ErrorMessage(absl::StrFormat("CreateRemoteThread failed with error %s",
                                         orbit_base::GetLastErrorAsString()));

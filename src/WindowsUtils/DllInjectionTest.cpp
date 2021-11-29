@@ -12,7 +12,7 @@
 #include "OrbitBase/ThreadUtils.h"
 #include "Test/Path.h"
 #include "TestUtils/TestUtils.h"
-#include "WindowsUtils/Injection.h"
+#include "WindowsUtils/DllInjection.h"
 
 namespace orbit_windows_utils {
 
@@ -22,15 +22,15 @@ namespace {
   return orbit_test::GetTestdataDir() / "libtest.dll";
 }
 
-[[nodiscard]] std::filesystem::path GetNonExistantDllPath() { return "Z:/non_existant_dll.dll"; }
+[[nodiscard]] std::filesystem::path GetNonExistentDllPath() { return "Z:/non_existent_dll.dll"; }
 
 }  // namespace
 
-TEST(Injection, InjectDlInCurrentProcess) {
+TEST(Injection, InjectDllInCurrentProcess) {
   // Injection.
   uint32_t pid = orbit_base::GetCurrentProcessId();
   ErrorMessageOr<void> result = InjectDll(pid, GetTestDllPath());
-  if (result.has_error()) ERROR("Running InjectDlInCurrentProcess: %s", result.error().message());
+  if (result.has_error()) ERROR("Running InjectDllInCurrentProcess: %s", result.error().message());
   EXPECT_FALSE(result.has_error());
 
   // Re-injection.
@@ -51,7 +51,7 @@ TEST(Injection, InjectDlInCurrentProcess) {
 
 TEST(Injection, InjectNonExistantDll) {
   uint32_t pid = orbit_base::GetCurrentProcessId();
-  ErrorMessageOr<void> result = InjectDll(pid, GetNonExistantDllPath());
+  ErrorMessageOr<void> result = InjectDll(pid, GetNonExistentDllPath());
   EXPECT_TRUE(result.has_error());
   EXPECT_THAT(result.error().message(), testing::HasSubstr("Path does not exist"));
 }
