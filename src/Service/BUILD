@@ -68,6 +68,7 @@ orbit_cc_test(
         "//src/OrbitBase",
         "//src/ProducerEventProcessor",
         "@com_github_grpc_grpc//:grpc++",
+        "@com_google_absl//absl/synchronization",
         "@com_google_protobuf//:differencer",
     ],
 )
