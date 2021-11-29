@@ -26,6 +26,7 @@ Once you've activated the virtual environment, install the dependencies:
 
 ```
 pip install absl-py
+pip install psutil
 pip install pywinauto
 ```
 
