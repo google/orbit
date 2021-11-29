@@ -97,7 +97,7 @@ std::string FunctionsDataView::GetValue(int row, int column) {
     return "";
   }
 
-  const FunctionInfo& function = *GetFunction(row);
+  const FunctionInfo& function = *GetFunctionInfoFromRow(row);
 
   switch (column) {
     case kColumnSelected:
@@ -169,7 +169,7 @@ std::vector<std::vector<std::string>> FunctionsDataView::GetContextMenuWithGroup
   bool enable_disable_frame_track = false;
 
   for (int index : selected_indices) {
-    const FunctionInfo& function = *GetFunction(index);
+    const FunctionInfo& function = *GetFunctionInfoFromRow(index);
     enable_select |= !app_->IsFunctionSelected(function) &&
                      orbit_client_data::function_utils::IsFunctionSelectable(function);
     enable_unselect |= app_->IsFunctionSelected(function);
@@ -198,24 +198,9 @@ std::vector<std::vector<std::string>> FunctionsDataView::GetContextMenuWithGroup
 
 void FunctionsDataView::OnContextMenu(const std::string& action, int menu_index,
                                       const std::vector<int>& item_indices) {
-  if (action == kMenuActionSelect) {
+  if (action == kMenuActionEnableFrameTrack) {
     for (int i : item_indices) {
-      app_->SelectFunction(*GetFunction(i));
-    }
-  } else if (action == kMenuActionUnselect) {
-    for (int i : item_indices) {
-      app_->DeselectFunction(*GetFunction(i));
-      // Unhooking a function implies disabling (and removing) the frame
-      // track for this function. While it would be possible to keep the
-      // current frame track in the capture data, this would lead to a
-      // somewhat inconsistent state where the frame track for this function
-      // is enabled for the current capture but disabled for the next one.
-      app_->DisableFrameTrack(*GetFunction(i));
-      app_->RemoveFrameTrack(*GetFunction(i));
-    }
-  } else if (action == kMenuActionEnableFrameTrack) {
-    for (int i : item_indices) {
-      const FunctionInfo& function = *GetFunction(i);
+      const FunctionInfo& function = *GetFunctionInfoFromRow(i);
       // Functions used as frame tracks must be hooked (selected), otherwise the
       // data to produce the frame track will not be captured.
       app_->SelectFunction(function);
@@ -227,16 +212,16 @@ void FunctionsDataView::OnContextMenu(const std::string& action, int menu_index,
       // When we remove a frame track, we do not unhook (deselect) the function as
       // it may have been selected manually (not as part of adding a frame track).
       // However, disable the frame track, so it is not recreated on the next capture.
-      app_->DisableFrameTrack(*GetFunction(i));
-      app_->RemoveFrameTrack(*GetFunction(i));
+      app_->DisableFrameTrack(*GetFunctionInfoFromRow(i));
+      app_->RemoveFrameTrack(*GetFunctionInfoFromRow(i));
     }
   } else if (action == kMenuActionDisassembly) {
     for (int i : item_indices) {
-      app_->Disassemble(app_->GetTargetProcess()->pid(), *GetFunction(i));
+      app_->Disassemble(app_->GetTargetProcess()->pid(), *GetFunctionInfoFromRow(i));
     }
   } else if (action == kMenuActionSourceCode) {
     for (int i : item_indices) {
-      app_->ShowSourceCode(*GetFunction(i));
+      app_->ShowSourceCode(*GetFunctionInfoFromRow(i));
     }
   } else {
     DataView::OnContextMenu(action, menu_index, item_indices);

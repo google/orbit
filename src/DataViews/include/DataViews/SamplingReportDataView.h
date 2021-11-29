@@ -53,13 +53,12 @@ class SamplingReportDataView : public DataView {
   void DoFilter() override;
   const orbit_client_data::SampledFunction& GetSampledFunction(unsigned int row) const;
   orbit_client_data::SampledFunction& GetSampledFunction(unsigned int row);
-  absl::flat_hash_set<const orbit_client_protos::FunctionInfo*> GetFunctionsFromIndices(
-      const std::vector<int>& indices);
   [[nodiscard]] std::optional<std::pair<std::string, std::string>> GetModulePathAndBuildIdFromRow(
       int row) const;
 
  private:
   [[nodiscard]] orbit_client_data::ModuleData* GetModuleDataFromRow(int row) const override;
+  [[nodiscard]] const orbit_client_protos::FunctionInfo* GetFunctionInfoFromRow(int row) override;
 
   void UpdateSelectedIndicesAndFunctionIds(const std::vector<int>& selected_indices);
   void RestoreSelectedIndicesAfterFunctionsChanged();

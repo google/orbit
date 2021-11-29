@@ -140,29 +140,7 @@ std::vector<std::vector<std::string>> CallstackDataView::GetContextMenuWithGroup
 
 void CallstackDataView::OnContextMenu(const std::string& action, int menu_index,
                                       const std::vector<int>& item_indices) {
-  if (action == kMenuActionSelect) {
-    for (int i : item_indices) {
-      CallstackDataViewFrame frame = GetFrameFromRow(i);
-      const FunctionInfo* function = frame.function;
-      // Only hook functions for which we have symbols loaded.
-      if (function != nullptr) {
-        app_->SelectFunction(*function);
-      }
-    }
-
-  } else if (action == kMenuActionUnselect) {
-    for (int i : item_indices) {
-      CallstackDataViewFrame frame = GetFrameFromRow(i);
-      const FunctionInfo* function = frame.function;
-      // If the frame belongs to a function for which no symbol is loaded 'function' is nullptr and
-      // we can skip it since it can't be instrumented.
-      if (function != nullptr) {
-        app_->DeselectFunction(*function);
-        app_->DisableFrameTrack(*function);
-      }
-    }
-
-  } else if (action == kMenuActionDisassembly) {
+  if (action == kMenuActionDisassembly) {
     const uint32_t pid = app_->GetCaptureData().process_id();
     for (int i : item_indices) {
       const FunctionInfo* function = GetFrameFromRow(i).function;

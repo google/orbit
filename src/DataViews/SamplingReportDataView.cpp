@@ -175,25 +175,16 @@ void SamplingReportDataView::DoSort() {
   std::sort(indices_.begin(), indices_.end(), combined_sorter);
 }
 
-absl::flat_hash_set<const FunctionInfo*> SamplingReportDataView::GetFunctionsFromIndices(
-    const std::vector<int>& indices) {
-  absl::flat_hash_set<const FunctionInfo*> functions_set;
+const FunctionInfo* SamplingReportDataView::GetFunctionInfoFromRow(int row) {
   const CaptureData& capture_data = app_->GetCaptureData();
-  for (int index : indices) {
-    SampledFunction& sampled_function = GetSampledFunction(index);
-    if (sampled_function.function == nullptr) {
-      const FunctionInfo* func =
-          capture_data.FindFunctionByAddress(sampled_function.absolute_address, false);
-      sampled_function.function = func;
-    }
-
-    const FunctionInfo* function = sampled_function.function;
-    if (function != nullptr) {
-      functions_set.insert(function);
-    }
+  SampledFunction& sampled_function = GetSampledFunction(row);
+  if (sampled_function.function == nullptr) {
+    const FunctionInfo* func =
+        capture_data.FindFunctionByAddress(sampled_function.absolute_address, false);
+    sampled_function.function = func;
   }
 
-  return functions_set;
+  return sampled_function.function;
 }
 
 std::optional<std::pair<std::string, std::string>>
@@ -225,16 +216,15 @@ std::vector<std::vector<std::string>> SamplingReportDataView::GetContextMenuWith
   bool enable_disassembly = false;
   bool enable_source_code = false;
   if (app_->IsCaptureConnected(app_->GetCaptureData())) {
-    absl::flat_hash_set<const FunctionInfo*> selected_functions =
-        GetFunctionsFromIndices(selected_indices);
-
-    enable_disassembly = !selected_functions.empty();
-    enable_source_code = !selected_functions.empty();
-
-    for (const FunctionInfo* function : selected_functions) {
-      enable_select |= !app_->IsFunctionSelected(*function) &&
-                       orbit_client_data::function_utils::IsFunctionSelectable(*function);
-      enable_unselect |= app_->IsFunctionSelected(*function);
+    for (int index : selected_indices) {
+      const FunctionInfo* function = GetFunctionInfoFromRow(index);
+      if (function != nullptr) {
+        enable_select |= !app_->IsFunctionSelected(*function) &&
+                         orbit_client_data::function_utils::IsFunctionSelectable(*function);
+        enable_unselect |= app_->IsFunctionSelected(*function);
+        enable_disassembly = true;
+        enable_source_code = true;
+      }
     }
   }
 
@@ -254,23 +244,14 @@ std::vector<std::vector<std::string>> SamplingReportDataView::GetContextMenuWith
 
 void SamplingReportDataView::OnContextMenu(const std::string& action, int menu_index,
                                            const std::vector<int>& item_indices) {
-  if (action == kMenuActionSelect) {
-    for (const FunctionInfo* function : GetFunctionsFromIndices(item_indices)) {
-      app_->SelectFunction(*function);
-    }
-  } else if (action == kMenuActionUnselect) {
-    for (const FunctionInfo* function : GetFunctionsFromIndices(item_indices)) {
-      app_->DeselectFunction(*function);
-      app_->DisableFrameTrack(*function);
-    }
-  } else if (action == kMenuActionDisassembly) {
+  if (action == kMenuActionDisassembly) {
     uint32_t pid = app_->GetCaptureData().process_id();
-    for (const FunctionInfo* function : GetFunctionsFromIndices(item_indices)) {
-      app_->Disassemble(pid, *function);
+    for (int index : item_indices) {
+      app_->Disassemble(pid, *GetFunctionInfoFromRow(index));
     }
   } else if (action == kMenuActionSourceCode) {
-    for (const FunctionInfo* function : GetFunctionsFromIndices(item_indices)) {
-      app_->ShowSourceCode(*function);
+    for (int index : item_indices) {
+      app_->ShowSourceCode(*GetFunctionInfoFromRow(index));
     }
   } else {
     DataView::OnContextMenu(action, menu_index, item_indices);

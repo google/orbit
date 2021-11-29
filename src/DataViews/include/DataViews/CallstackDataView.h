@@ -86,6 +86,9 @@ class CallstackDataView : public DataView {
   [[nodiscard]] orbit_client_data::ModuleData* GetModuleDataFromRow(int row) const override {
     return GetFrameFromRow(row).module;
   }
+  [[nodiscard]] const orbit_client_protos::FunctionInfo* GetFunctionInfoFromRow(int row) override {
+    return GetFrameFromRow(row).function;
+  }
 
   absl::flat_hash_set<uint64_t> functions_to_highlight_;
 };
