@@ -187,6 +187,9 @@ ErrorMessageOr<void> CreateRemoteThread(uint32_t pid, std::string_view module_na
   return outcome::success();
 }
 
+// Parse remote module's MS-DOS, NT, and optional headers in order to locate the
+// IMAGE_EXPORT_DIRECTORY structure and find the requested function address.
+// See https://docs.microsoft.com/en-us/windows/win32/debug/pe-format for more info.
 ErrorMessageOr<uint64_t> GetRemoteProcAddress(uint32_t pid, std::string_view module_name,
                                               std::string_view function_name) {
   OUTCOME_TRY(Module module, FindModule(pid, module_name));
