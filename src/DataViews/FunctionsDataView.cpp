@@ -198,24 +198,7 @@ std::vector<std::vector<std::string>> FunctionsDataView::GetContextMenuWithGroup
 
 void FunctionsDataView::OnContextMenu(const std::string& action, int menu_index,
                                       const std::vector<int>& item_indices) {
-  if (action == kMenuActionEnableFrameTrack) {
-    for (int i : item_indices) {
-      const FunctionInfo& function = *GetFunctionInfoFromRow(i);
-      // Functions used as frame tracks must be hooked (selected), otherwise the
-      // data to produce the frame track will not be captured.
-      app_->SelectFunction(function);
-      app_->EnableFrameTrack(function);
-      app_->AddFrameTrack(function);
-    }
-  } else if (action == kMenuActionDisableFrameTrack) {
-    for (int i : item_indices) {
-      // When we remove a frame track, we do not unhook (deselect) the function as
-      // it may have been selected manually (not as part of adding a frame track).
-      // However, disable the frame track, so it is not recreated on the next capture.
-      app_->DisableFrameTrack(*GetFunctionInfoFromRow(i));
-      app_->RemoveFrameTrack(*GetFunctionInfoFromRow(i));
-    }
-  } else if (action == kMenuActionDisassembly) {
+  if (action == kMenuActionDisassembly) {
     for (int i : item_indices) {
       app_->Disassemble(app_->GetTargetProcess()->pid(), *GetFunctionInfoFromRow(i));
     }
