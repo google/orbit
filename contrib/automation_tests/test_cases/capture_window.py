@@ -5,6 +5,7 @@ found in the LICENSE file.
 """
 
 import logging
+import random
 import time
 from fnmatch import fnmatch
 
@@ -14,6 +15,7 @@ from core.common_controls import Track, Table
 from core.orbit_e2e import E2ETestCase, E2ETestSuite, wait_for_condition
 from pywinauto import mouse, keyboard
 from pywinauto.base_wrapper import BaseWrapper
+from pywinauto.keyboard import send_keys
 
 
 class CaptureWindowE2ETestCaseBase(E2ETestCase):
@@ -367,6 +369,37 @@ class Capture(E2ETestCase):
                                   user_space_instrumentation, manual_instrumentation)
         self._take_capture(length_in_seconds)
         self._verify_existence_of_tracks()
+
+
+class CaptureRepeatedly(E2ETestCase):
+    """
+    This test case simulates a user quickly starting and stopping captures by "smashing" the F5 key. Note that the
+    number of captures actually taken is going to be much lower than the number of times F5 was pressed, because
+    starting and stopping a capture takes some times.
+    The test does not verify any behavior, but it will fail if Orbit crashes.
+    """
+
+    def _stop_capture_if_necessary(self):
+        logging.info('Querying if a capture is still running')
+        capture_tab = self.find_control('Group', "CaptureTab")
+        capture_options_button = self.find_control('Button', 'Capture Options', parent=capture_tab)
+        if not capture_options_button.is_enabled():
+            logging.info('A capture is still running: stopping it')
+            toggle_capture_button = self.find_control('Button',
+                                                      'Toggle Capture',
+                                                      parent=capture_tab)
+            toggle_capture_button.click_input()
+
+    def _execute(self, number_of_f5_presses: int):
+        for i in range(number_of_f5_presses):
+            logging.info('Pressing F5 the {}-th time'.format(i + 1))
+            send_keys('{F5}')
+            time.sleep(random.uniform(0.05, 0.1))
+
+        logging.info('Checking that Orbit is still running')
+        self.suite.top_window(force_update=True)
+
+        self._stop_capture_if_necessary()
 
 
 class CheckThreadStates(CaptureWindowE2ETestCaseBase):
