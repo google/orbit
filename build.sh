@@ -16,7 +16,7 @@ fi
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
 
 function create_conan_profile {
-  readonly profile="$1"
+  local readonly profile="$1"
   if ! conan profile show default >/dev/null; then
     conan profile new --detect default || exit $?
   fi
@@ -41,7 +41,7 @@ function create_conan_profile {
 }
 
 function conan_profile_exists {
-  conan profile show $profile >/dev/null 2>&1
+  conan profile show $1 >/dev/null 2>&1
   return $?
 }
 
