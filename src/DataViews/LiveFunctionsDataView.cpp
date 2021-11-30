@@ -300,12 +300,19 @@ void LiveFunctionsDataView::OnJumpToRequested(const std::string& action,
   }
 }
 
-ErrorMessageOr<void> LiveFunctionsDataView::ExportAllEventsToCsv(
-    const std::filesystem::path& file_path, const std::vector<int>& item_indices) {
+void LiveFunctionsDataView::OnExportEventsToCsvRequested(const std::vector<int>& selection) {
+  auto send_error = [&](const std::string& error_msg) {
+    app_->SendErrorToUi("Export all events to CSV", error_msg);
+  };
+
+  std::string file_path = app_->GetSaveFile(".csv");
+  if (file_path.empty()) return;
+
   ErrorMessageOr<orbit_base::unique_fd> result = orbit_base::OpenFileForWriting(file_path);
   if (result.has_error()) {
-    return ErrorMessage{absl::StrFormat("Failed to open \"%s\" file: %s", file_path.string(),
-                                        result.error().message())};
+    send_error(
+        absl::StrFormat("Failed to open \"%s\" file: %s", file_path, result.error().message()));
+    return;
   }
   const orbit_base::unique_fd& fd = result.value();
 
@@ -321,11 +328,12 @@ ErrorMessageOr<void> LiveFunctionsDataView::ExportAllEventsToCsv(
   header_line.append(kLineSeparator);
   auto write_result = orbit_base::WriteFully(fd, header_line);
   if (write_result.has_error()) {
-    return ErrorMessage{absl::StrFormat("Error writing to \"%s\": %s", file_path.string(),
-                                        write_result.error().message())};
+    send_error(
+        absl::StrFormat("Error writing to \"%s\": %s", file_path, write_result.error().message()));
+    return;
   }
 
-  for (int row : item_indices) {
+  for (int row : selection) {
     const FunctionInfo& function = *GetFunctionInfoFromRow(row);
     std::string function_name = orbit_client_data::function_utils::GetDisplayName(function);
 
@@ -347,27 +355,11 @@ ErrorMessageOr<void> LiveFunctionsDataView::ExportAllEventsToCsv(
 
       auto write_result = orbit_base::WriteFully(fd, line);
       if (write_result.has_error()) {
-        return ErrorMessage{absl::StrFormat("Error writing to \"%s\": %s", file_path.string(),
-                                            write_result.error().message())};
+        send_error(absl::StrFormat("Error writing to \"%s\": %s", file_path,
+                                   write_result.error().message()));
+        return;
       }
     }
-  }
-
-  return outcome::success();
-}
-
-void LiveFunctionsDataView::OnContextMenu(const std::string& action, int menu_index,
-                                          const std::vector<int>& item_indices) {
-  if (action == kMenuActionExportEventsToCsv) {
-    std::string save_file = app_->GetSaveFile(".csv");
-    if (!save_file.empty()) {
-      auto result = ExportAllEventsToCsv(save_file, item_indices);
-      if (result.has_error()) {
-        app_->SendErrorToUi("Export all events to CSV", result.error().message());
-      }
-    }
-  } else {
-    DataView::OnContextMenu(action, menu_index, item_indices);
   }
 }
 

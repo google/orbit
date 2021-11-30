@@ -145,6 +145,7 @@ class DataView {
                                  const std::vector<int>& /*selection*/) {}
   void OnCopySelectionRequested(const std::vector<int>& selection);
   void OnExportToCsvRequested();
+  virtual void OnExportEventsToCsvRequested(const std::vector<int>& /*selection*/) {}
 
  protected:
   [[nodiscard]] virtual orbit_client_data::ModuleData* GetModuleDataFromRow(int /*row*/) const {
