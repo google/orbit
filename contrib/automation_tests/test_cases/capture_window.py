@@ -239,6 +239,21 @@ class CollapseTrack(CollapsingTrackBase):
                 track_name, prev_click_height, post_click_height))
 
 
+class CollapseOrExpandAllTracks(CaptureWindowE2ETestCaseBase):
+    """
+    Clicks on the triangle toggles of all tracks.
+    """
+
+    def _execute(self):
+        tracks = self._find_tracks("*")
+        for track in tracks:
+            track = Track(track)
+            triangle_toggle = track.triangle_toggle
+            triangle_toggle.click_input(button_up=False)
+            time.sleep(0.1)
+            triangle_toggle.click_input(button_down=False)
+
+
 class FilterTracks(CaptureWindowE2ETestCaseBase):
     """
     Set a filter in the capture tab
@@ -271,7 +286,7 @@ class Capture(E2ETestCase):
         self.find_control("TabItem", "Capture").click_input()
 
     def _set_capture_options(self, collect_thread_states: bool, collect_system_memory_usage: bool,
-                             user_space_instrumentation: bool):
+                             user_space_instrumentation: bool, manual_instrumentation: bool):
         capture_tab = self.find_control('Group', "CaptureTab")
 
         logging.info('Opening "Capture Options" dialog')
@@ -308,6 +323,13 @@ class Capture(E2ETestCase):
             logging.info('Setting dynamic instrumentation method to "Kernel (Uprobes)".')
             keyboard.send_keys('{UP}{ENTER}')
 
+        manual_instrumentation_checkbox = self.find_control('CheckBox',
+                                                            'Enable Orbit Api in target',
+                                                            parent=capture_options_dialog)
+        if manual_instrumentation_checkbox.get_toggle_state() != manual_instrumentation:
+            logging.info('Toggling "Enable Orbit Api in target" checkbox')
+            manual_instrumentation_checkbox.click_input()
+
         logging.info('Saving "Capture Options"')
         self.find_control('Button', 'OK', parent=capture_options_dialog).click_input()
 
@@ -338,10 +360,11 @@ class Capture(E2ETestCase):
                  length_in_seconds: int = 5,
                  collect_thread_states: bool = False,
                  collect_system_memory_usage: bool = False,
-                 user_space_instrumentation: bool = False):
+                 user_space_instrumentation: bool = False,
+                 manual_instrumentation: bool = False):
         self._show_capture_window()
         self._set_capture_options(collect_thread_states, collect_system_memory_usage,
-                                  user_space_instrumentation)
+                                  user_space_instrumentation, manual_instrumentation)
         self._take_capture(length_in_seconds)
         self._verify_existence_of_tracks()
 
