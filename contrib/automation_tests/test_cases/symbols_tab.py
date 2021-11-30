@@ -58,6 +58,21 @@ class LoadSymbols(E2ETestCase):
         wait_for_condition(lambda: functions_dataview.get_row_count() > 0)
 
 
+class VerifySymbolsLoaded(E2ETestCase):
+
+    def _execute(self, symbol_search_string: str):
+        logging.info('Start verifying symbols with substring %s are loaded', symbol_search_string)
+        functions_dataview = DataViewPanel(self.find_control("Group", "FunctionsDataView"))
+
+        logging.info('Filtering symbols')
+        functions_dataview.filter.set_focus()
+        functions_dataview.filter.set_edit_text('')
+        send_keys(symbol_search_string)
+        logging.info('Verifying at least one symbol with substring %s has been loaded',
+                     symbol_search_string)
+        self.expect_true(functions_dataview.get_row_count() > 1, "Found expected symbol(s)")
+
+
 class FilterAndHookFunction(E2ETestCase):
     """
     Hook a function based on a search string, and verify it is indicated as Hooked in the UI.
