@@ -9,7 +9,7 @@
 
 #include <atomic>
 
-#include "capture.pb.h"
+#include "GrpcProtos/capture.pb.h"
 
 namespace orbit_windows_service {
 
