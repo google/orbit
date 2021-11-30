@@ -812,7 +812,7 @@ void OrbitApp::RenderImGuiDebugUI() {
   ImGui::SetNextWindowPos(ImVec2(0, 0));
   ImGui::PushStyleColor(ImGuiCol_WindowBg, IM_COL32(25, 25, 25, 255));
   ImGui::PushStyleVar(ImGuiStyleVar_WindowRounding, 0.0f);
-  ImGui::Begin("OrbitDebug", nullptr, ImVec2(0, 0), 1.f, window_flags);
+  ImGui::Begin("OrbitDebug", nullptr, window_flags);
 
   if (ImGui::BeginTabBar("DebugTabBar", ImGuiTabBarFlags_None)) {
     if (ImGui::BeginTabItem("CaptureWindow")) {
@@ -844,6 +844,7 @@ void OrbitApp::RenderImGuiDebugUI() {
   ImGui::End();
 
   ImGui::Render();
+  Orbit_ImGui_RenderDrawLists(ImGui::GetDrawData());
   debug_canvas_->RequestRedraw();
 }
 

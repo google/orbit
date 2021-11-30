@@ -259,7 +259,7 @@ void SetupImGuiStyle(bool bStyleDark_, float alpha_) {
   style.Colors[ImGuiCol_Text] = ImVec4(0.00f, 0.00f, 0.00f, 1.00f);
   style.Colors[ImGuiCol_TextDisabled] = ImVec4(0.60f, 0.60f, 0.60f, 1.00f);
   style.Colors[ImGuiCol_WindowBg] = ImVec4(0.94f, 0.94f, 0.94f, 0.94f);
-  style.Colors[ImGuiCol_ChildWindowBg] = ImVec4(0.00f, 0.00f, 0.00f, 0.00f);
+  style.Colors[ImGuiCol_ChildBg] = ImVec4(0.00f, 0.00f, 0.00f, 0.00f);
   // style.Colors[ImGuiCol_PopupBg] = ImVec4( 1.00f, 1.00f, 1.00f, 0.94f );
   style.Colors[ImGuiCol_Border] = ImVec4(0.00f, 0.00f, 0.00f, 0.19f);
   style.Colors[ImGuiCol_BorderShadow] = ImVec4(1.00f, 1.00f, 1.00f, 0.10f);
@@ -299,7 +299,7 @@ void SetupImGuiStyle(bool bStyleDark_, float alpha_) {
   style.Colors[ImGuiCol_PlotHistogram] = ImVec4(0.90f, 0.70f, 0.00f, 1.00f);
   style.Colors[ImGuiCol_PlotHistogramHovered] = ImVec4(1.00f, 0.60f, 0.00f, 1.00f);
   style.Colors[ImGuiCol_TextSelectedBg] = ImVec4(0.26f, 0.59f, 0.98f, 0.35f);
-  style.Colors[ImGuiCol_ModalWindowDarkening] = ImVec4(0.20f, 0.20f, 0.20f, 0.35f);
+  style.Colors[ImGuiCol_ModalWindowDimBg] = ImVec4(0.20f, 0.20f, 0.20f, 0.35f);
 
   if (bStyleDark_) {
     for (int i = 0; i <= ImGuiCol_COUNT; i++) {
@@ -327,6 +327,7 @@ void SetupImGuiStyle(bool bStyleDark_, float alpha_) {
     }
   }
 }
+}  // namespace
 
 void Orbit_ImGui_RenderDrawLists(ImDrawData* draw_data) {
   // Avoid rendering when minimized, scale coordinates for retina displays
@@ -541,12 +542,10 @@ void Orbit_ImGui_RenderDrawLists(ImDrawData* draw_data) {
             static_cast<GLsizei>(last_scissor_box[3]));
 }
 
-ImFont* AddOrbitFont(float pixel_size) {
+static ImFont* AddOrbitFont(float pixel_size) {
   const auto font_file_name = (orbit_base::GetExecutableDir() / "fonts" / "Vera.ttf").string();
   return ImGui::GetIO().Fonts->AddFontFromFileTTF(font_file_name.c_str(), pixel_size);
 }
-
-}  // namespace
 
 void Orbit_ImGui_MouseButtonCallback(ImGuiContext* context, int button, bool down) {
   if (context == nullptr) return;
@@ -612,11 +611,6 @@ bool Orbit_ImGui_Init(uint32_t font_size) {
   io.KeyMap[ImGuiKey_Y] = 89;
   io.KeyMap[ImGuiKey_Z] = 90;
 
-  io.RenderDrawListsFn = Orbit_ImGui_RenderDrawLists;  // Alternatively you can set this to NULL
-                                                       // and call ImGui::GetDrawData() after
-                                                       // ImGui::Render() to get the same
-                                                       // ImDrawData pointer.
-
   SetupImGuiStyle(true, 1.f);
 
   const float kImguiFontOffset = 10.f;
@@ -680,11 +674,10 @@ void OutputWindow::Draw(const char* title, bool* p_opened, ImVec2* a_Size) {
     CanvasSize.x -= 20;
     CanvasSize.y -= 20;
     ImGui::SetNextWindowSize(CanvasSize, ImGuiCond_Always);
-    ImGui::Begin(title, p_opened, CanvasSize, 1.f, WindowFlags);
+    ImGui::Begin(title, p_opened, WindowFlags);
   } else {
     ImGui::SetNextWindowSize(ImVec2(500, 400), ImGuiCond_FirstUseEver);
-    ImVec2 size(400, 400);
-    ImGui::Begin(title, p_opened, size, 1.f, WindowFlags);
+    ImGui::Begin(title, p_opened, WindowFlags);
   }
 
   ImGui::TextUnformatted(Buf.begin());
