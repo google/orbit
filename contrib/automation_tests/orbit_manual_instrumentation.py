@@ -8,7 +8,7 @@ from absl import app
 
 from core.orbit_e2e import E2ETestSuite
 from test_cases.connection_window import FilterAndSelectFirstProcess, ConnectToStadiaInstance
-from test_cases.capture_window import Capture, CheckTimers, VerifyTracksDoNotExist, VerifyTracksExist, CollapseOrExpandAllTracks, FilterTracks
+from test_cases.capture_window import Capture, CheckTimers, VerifyTracksDoNotExist, VerifyTracksExist, ToggleCollapsedStateOfAllTracks, FilterTracks
 from test_cases.symbols_tab import LoadSymbols
 """Test Orbit's manual instrumentation.
 
@@ -47,7 +47,7 @@ def main(argv):
         Capture(manual_instrumentation=True),
         VerifyTracksExist(track_names=tracks),
         FilterTracks(filter_string="OrbitThread_", expected_track_count=3),
-        CollapseOrExpandAllTracks(),
+        ToggleCollapsedStateOfAllTracks(),
         CheckTimers(track_name_filter="OrbitThread_*"),
         # Take another capture without manual instrumentation and assert that the tracks are gone.
         Capture(manual_instrumentation=False),

@@ -239,7 +239,7 @@ class CollapseTrack(CollapsingTrackBase):
                 track_name, prev_click_height, post_click_height))
 
 
-class CollapseOrExpandAllTracks(CaptureWindowE2ETestCaseBase):
+class ToggleCollapsedStateOfAllTracks(CaptureWindowE2ETestCaseBase):
     """
     Clicks on the triangle toggles of all tracks.
     """
