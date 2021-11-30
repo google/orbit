@@ -2391,7 +2391,9 @@ uint64_t OrbitApp::GetGroupIdToHighlight() const {
 }
 
 void OrbitApp::SelectCallstackEvents(const std::vector<CallstackEvent>& selected_callstack_events,
-                                     uint32_t thread_id) {
+                                     bool origin_is_multiple_threads) {
+  data_manager_->SelectCallstackEvents(selected_callstack_events);
+
   const CallstackData& callstack_data = GetCaptureData().GetCallstackData();
   std::unique_ptr<CallstackData> selection_callstack_data = std::make_unique<CallstackData>();
   for (const CallstackEvent& event : selected_callstack_events) {
@@ -2401,7 +2403,7 @@ void OrbitApp::SelectCallstackEvents(const std::vector<CallstackEvent>& selected
   GetMutableCaptureData().set_selection_callstack_data(std::move(selection_callstack_data));
 
   // Generate selection report.
-  bool generate_summary = thread_id == orbit_base::kAllProcessThreadsTid;
+  bool generate_summary = origin_is_multiple_threads;
   PostProcessedSamplingData processed_sampling_data =
       orbit_client_model::CreatePostProcessedSamplingData(
           *GetCaptureData().GetSelectionCallstackData(), GetCaptureData(), generate_summary);
@@ -2412,6 +2414,11 @@ void OrbitApp::SelectCallstackEvents(const std::vector<CallstackEvent>& selected
   SetSelectionReport(std::move(processed_sampling_data),
                      GetCaptureData().GetSelectionCallstackData()->GetUniqueCallstacksCopy(),
                      generate_summary);
+}
+
+const std::vector<orbit_client_protos::CallstackEvent>& OrbitApp::GetSelectedCallstackEvents(
+    uint32_t thread_id) {
+  return data_manager_->GetSelectedCallstackEvents(thread_id);
 }
 
 void OrbitApp::UpdateAfterSymbolLoading() {

@@ -52,6 +52,11 @@ class DataManager final {
   void SelectTracepoint(const orbit_grpc_protos::TracepointInfo& info);
   void DeselectTracepoint(const orbit_grpc_protos::TracepointInfo& info);
 
+  void SelectCallstackEvents(
+      const std::vector<orbit_client_protos::CallstackEvent>& selected_callstack_events);
+  [[nodiscard]] const std::vector<orbit_client_protos::CallstackEvent>& GetSelectedCallstackEvents(
+      uint32_t thread_id);
+
   [[nodiscard]] bool IsTracepointSelected(const orbit_grpc_protos::TracepointInfo& info) const;
 
   [[nodiscard]] const TracepointInfoSet& selected_tracepoints() const;
@@ -174,6 +179,9 @@ class DataManager final {
   bool collect_memory_info_ = false;
   uint64_t memory_sampling_period_ms_ = 10;
   uint64_t memory_warning_threshold_kb_ = 1024 * 1024 * 8;
+
+  absl::flat_hash_map<uint32_t, std::vector<orbit_client_protos::CallstackEvent>>
+      selected_callstack_events_by_thread_id_;
 };
 
 }  // namespace orbit_client_data

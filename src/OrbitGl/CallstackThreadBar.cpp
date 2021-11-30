@@ -133,7 +133,7 @@ void CallstackThreadBar::DoUpdatePrimitives(Batcher& batcher, TextRenderer& text
     // Draw selected events
     std::array<Color, 2> selected_color;
     selected_color.fill(kGreenSelection);
-    for (const CallstackEvent& event : time_graph_->GetSelectedCallstackEvents(GetThreadId())) {
+    for (const CallstackEvent& event : app_->GetSelectedCallstackEvents(GetThreadId())) {
       Vec2 pos(time_graph_->GetWorldFromTick(event.time()), GetPos()[1]);
       batcher.AddVerticalLine(pos, track_height, z, kGreenSelection);
     }
@@ -175,10 +175,26 @@ void CallstackThreadBar::OnPick(int x, int y) {
 }
 
 void CallstackThreadBar::SelectCallstacks() {
-  Vec2& from = mouse_pos_last_click_;
-  Vec2& to = mouse_pos_cur_;
+  Vec2 from = mouse_pos_last_click_;
+  Vec2 to = mouse_pos_cur_;
 
-  time_graph_->SelectCallstacks(from[0], to[0], GetThreadId());
+  if (from > to) {
+    std::swap(from, to);
+  }
+
+  uint64_t t0 = time_graph_->GetTickFromWorld(from[0]);
+  uint64_t t1 = time_graph_->GetTickFromWorld(to[0]);
+
+  int64_t thread_id = GetThreadId();
+  bool thread_id_is_all_threads = thread_id == orbit_base::kAllProcessThreadsTid;
+
+  CHECK(capture_data_);
+  auto selected_callstack_events =
+      thread_id_is_all_threads
+          ? capture_data_->GetCallstackData().GetCallstackEventsInTimeRange(t0, t1)
+          : capture_data_->GetCallstackData().GetCallstackEventsOfTidInTimeRange(thread_id, t0, t1);
+
+  app_->SelectCallstackEvents(selected_callstack_events, thread_id_is_all_threads);
 }
 
 bool CallstackThreadBar::IsEmpty() const {

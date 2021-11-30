@@ -52,9 +52,6 @@ class TimeGraph : public orbit_gl::CaptureViewElement {
 
   void RequestUpdate() override;
 
-  void SelectCallstacks(float world_start, float world_end, uint32_t thread_id);
-  const std::vector<orbit_client_protos::CallstackEvent>& GetSelectedCallstackEvents(uint32_t tid);
-
   void ProcessTimer(const orbit_client_protos::TimerInfo& timer_info,
                     const orbit_grpc_protos::InstrumentedFunction* function);
   void ProcessApiStringEvent(const orbit_client_protos::ApiStringEvent& string_event);
@@ -233,9 +230,6 @@ class TimeGraph : public orbit_gl::CaptureViewElement {
   Batcher batcher_;
 
   std::unique_ptr<TrackManager> track_manager_;
-
-  absl::flat_hash_map<uint32_t, std::vector<orbit_client_protos::CallstackEvent>>
-      selected_callstack_events_per_thread_;
 
   ManualInstrumentationManager* manual_instrumentation_manager_;
   std::unique_ptr<ManualInstrumentationManager::AsyncTimerInfoListener> async_timer_info_listener_;

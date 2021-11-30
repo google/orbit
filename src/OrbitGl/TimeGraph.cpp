@@ -576,35 +576,6 @@ void TimeGraph::UpdateTracksPosition() {
   }
 }
 
-void TimeGraph::SelectCallstacks(float world_start, float world_end, uint32_t thread_id) {
-  if (world_start > world_end) {
-    std::swap(world_end, world_start);
-  }
-
-  uint64_t t0 = GetTickFromWorld(world_start);
-  uint64_t t1 = GetTickFromWorld(world_end);
-
-  CHECK(capture_data_);
-  std::vector<CallstackEvent> selected_callstack_events =
-      (thread_id == orbit_base::kAllProcessThreadsTid)
-          ? capture_data_->GetCallstackData().GetCallstackEventsInTimeRange(t0, t1)
-          : capture_data_->GetCallstackData().GetCallstackEventsOfTidInTimeRange(thread_id, t0, t1);
-
-  selected_callstack_events_per_thread_.clear();
-  for (CallstackEvent& event : selected_callstack_events) {
-    selected_callstack_events_per_thread_[event.thread_id()].emplace_back(event);
-    selected_callstack_events_per_thread_[orbit_base::kAllProcessThreadsTid].emplace_back(event);
-  }
-
-  app_->SelectCallstackEvents(selected_callstack_events, thread_id);
-
-  RequestUpdate();
-}
-
-const std::vector<CallstackEvent>& TimeGraph::GetSelectedCallstackEvents(uint32_t tid) {
-  return selected_callstack_events_per_thread_[tid];
-}
-
 namespace {
 
 [[nodiscard]] std::string GetLabelBetweenIterators(const InstrumentedFunction& function_a,
