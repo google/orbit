@@ -77,13 +77,13 @@ class OrbitConan(ConanFile):
             raise ConanInvalidConfiguration("The OpenGL software renderer cannot be deployed when using a system-provided Qt installation.")
 
         self.requires("abseil/20200923.3")
-        self.requires("bzip2/1.0.8")
+        self.requires("bzip2/1.0.8", override=True)
         self.requires("capstone/4.0.1@{}#0".format(self._orbit_channel))
         self.requires("grpc/1.27.3@{}".format(self._orbit_channel))
-        self.requires("c-ares/1.15.0")
+        self.requires("c-ares/1.15.0", override=True)
         self.requires("llvm-core/12.0.0@{}".format(self._orbit_channel))
-        self.requires("lzma_sdk/19.00@orbitdeps/stable#a7bc173325d7463a0757dee5b08bf7fd")
-        self.requires("openssl/1.1.1k")
+        self.requires("lzma_sdk/19.00@orbitdeps/stable#a7bc173325d7463a0757dee5b08bf7fd", override=True)
+        self.requires("openssl/1.1.1k", override=True)
         self.requires("outcome/2.2.0")
         self.requires(
             "libprotobuf-mutator/20200506@{}#90ce749ca62b40e9c061d20fae4410e0".format(self._orbit_channel))
@@ -92,17 +92,17 @@ class OrbitConan(ConanFile):
                 "libunwindstack-android-dependencies/20210709@{}".format(self._orbit_channel))
             self.requires("volk/1.2.170")
             self.requires("vulkan-headers/1.1.114.0")
-        self.requires("zlib/1.2.11#9e0c292b60ce77402bd9be60dd68266f")
+        self.requires("zlib/1.2.11#9e0c292b60ce77402bd9be60dd68266f", override=True)
 
         if self.options.with_gui and self.options.with_crash_handling:
             self.requires("crashpad/20200624@{}".format(self._orbit_channel))
 
         if self.options.with_gui:
-            self.requires("freetype/2.10.0@bincrafters/stable#0")
+            self.requires("freetype/2.10.0@bincrafters/stable#0", override=True)
             self.requires("freetype-gl/79b03d9@{}".format(self._orbit_channel))
             self.requires("glad/0.1.34")
             self.requires("imgui/1.69@bincrafters/stable#0")
-            self.requires("libpng/1.6.37@bincrafters/stable#0")
+            self.requires("libpng/1.6.37@bincrafters/stable#0", override=True)
             self.requires("libssh2/1.9.0#df2b6034da12cc5cb68bd3c5c22601bf")
 
             if not self.options.system_qt:

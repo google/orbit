@@ -7,23 +7,16 @@
      "1",
      "2",
      "3",
-     "4",
      "8",
      "9",
      "10",
-     "6",
-     "11",
      "12",
      "13",
      "14",
      "15",
-     "5",
      "16",
      "17",
-     "19",
-     "20",
      "21",
-     "18",
      "22",
      "23"
     ],
@@ -40,21 +33,17 @@
     "context": "host"
    },
    "2": {
-    "ref": "bzip2/1.0.8#9c8b632000a52af5af3f045d3a6db12f",
-    "context": "host"
-   },
-   "3": {
     "ref": "capstone/4.0.1@orbitdeps/stable#0",
     "context": "host"
    },
-   "4": {
+   "3": {
     "ref": "grpc/1.27.3@orbitdeps/stable#9c477a16563f75451b0bf3a847eff031",
     "requires": [
      "1",
+     "4",
      "5",
      "6",
-     "7",
-     "8"
+     "7"
     ],
     "build_requires": [
      "42",
@@ -62,96 +51,100 @@
     ],
     "context": "host"
    },
-   "5": {
+   "4": {
     "ref": "zlib/1.2.11#9e0c292b60ce77402bd9be60dd68266f",
     "context": "host"
    },
-   "6": {
+   "5": {
     "ref": "openssl/1.1.1k#3555e93beb1e5904c8f0689e8fce854e",
     "context": "host"
    },
-   "7": {
+   "6": {
     "ref": "protobuf/3.9.1@bincrafters/stable#0",
     "context": "host"
    },
-   "8": {
+   "7": {
     "ref": "c-ares/1.15.0#c527ace6e98705612ec5ee943c6c0bf7",
     "context": "host"
    },
-   "9": {
+   "8": {
     "ref": "llvm-core/12.0.0@orbitdeps/stable#599a7db07d8b489a3a955891176bd92d",
     "requires": [
-     "5"
+     "4"
     ],
     "context": "host"
    },
-   "10": {
-    "ref": "lzma_sdk/19.00@orbitdeps/stable#a7bc173325d7463a0757dee5b08bf7fd",
-    "context": "host"
-   },
-   "11": {
+   "9": {
     "ref": "outcome/2.2.0#81f8926a070f1172386610857402c99a",
     "context": "host"
    },
-   "12": {
+   "10": {
     "ref": "libprotobuf-mutator/20200506@orbitdeps/stable#90ce749ca62b40e9c061d20fae4410e0",
     "requires": [
-     "10",
-     "5",
-     "7"
+     "11",
+     "4",
+     "6"
     ],
     "context": "host"
    },
-   "13": {
+   "11": {
+    "ref": "lzma_sdk/19.00@orbitdeps/stable#a7bc173325d7463a0757dee5b08bf7fd",
+    "context": "host"
+   },
+   "12": {
     "ref": "libunwindstack-android-dependencies/20210709@orbitdeps/stable#6530d7e3b78d909db8a6690ad522a7d3",
     "context": "host"
    },
-   "14": {
+   "13": {
     "ref": "volk/1.2.170#faf80e25f935df05ffb094e31b6cedf7",
     "requires": [
-     "15"
+     "14"
     ],
     "context": "host"
    },
-   "15": {
+   "14": {
     "ref": "vulkan-headers/1.1.114.0#916e0ecdc608715031a7b70078256c2c",
     "context": "host"
    },
-   "16": {
+   "15": {
     "ref": "crashpad/20200624@orbitdeps/stable#ef1544e21a3ad8c0e65d1c0042263bc9",
     "requires": [
-     "6",
-     "5"
+     "5",
+     "4"
+    ],
+    "context": "host"
+   },
+   "16": {
+    "ref": "freetype-gl/79b03d9@orbitdeps/stable#ee29dbd2daa9c8c36f40a4d3e0f9f1bc",
+    "requires": [
+     "17",
+     "18",
+     "4"
     ],
     "context": "host"
    },
    "17": {
-    "ref": "freetype/2.10.0@bincrafters/stable#0",
-    "requires": [
-     "18",
-     "5",
-     "2"
-    ],
+    "ref": "glad/0.1.34#e14ed4e4eabe9f363b4a473d9f1a6333",
     "context": "host"
    },
    "18": {
-    "ref": "libpng/1.6.37@bincrafters/stable#0",
+    "ref": "freetype/2.10.0@bincrafters/stable#0",
     "requires": [
-     "5"
+     "19",
+     "4",
+     "20"
     ],
     "context": "host"
    },
    "19": {
-    "ref": "freetype-gl/79b03d9@orbitdeps/stable#ee29dbd2daa9c8c36f40a4d3e0f9f1bc",
+    "ref": "libpng/1.6.37@bincrafters/stable#0",
     "requires": [
-     "20",
-     "17",
-     "5"
+     "4"
     ],
     "context": "host"
    },
    "20": {
-    "ref": "glad/0.1.34#e14ed4e4eabe9f363b4a473d9f1a6333",
+    "ref": "bzip2/1.0.8#9c8b632000a52af5af3f045d3a6db12f",
     "context": "host"
    },
    "21": {
@@ -161,25 +154,25 @@
    "22": {
     "ref": "libssh2/1.9.0#df2b6034da12cc5cb68bd3c5c22601bf",
     "requires": [
-     "5",
-     "6"
+     "4",
+     "5"
     ],
     "context": "host"
    },
    "23": {
     "ref": "qt/5.15.1@orbitdeps/stable#e659e981368e4baba1a201b75ddb89b6",
     "requires": [
+     "4",
      "5",
-     "6",
      "24",
      "25",
      "31",
-     "17",
+     "18",
      "32",
      "35",
      "36",
      "37",
-     "18",
+     "19",
      "38",
      "39",
      "33",
@@ -191,15 +184,15 @@
    "24": {
     "ref": "pcre2/10.33#54adea8f4f46f14720b65849988c274a",
     "requires": [
-     "5",
-     "2"
+     "4",
+     "20"
     ],
     "context": "host"
    },
    "25": {
     "ref": "glib/2.64.0@bincrafters/stable#0",
     "requires": [
-     "5",
+     "4",
      "26",
      "27",
      "28",
@@ -215,8 +208,8 @@
    "27": {
     "ref": "pcre/8.41#b1c67efc54f003e2c0d15593ef5ee473",
     "requires": [
-     "2",
-     "5"
+     "20",
+     "4"
     ],
     "context": "host"
    },
@@ -242,7 +235,7 @@
    "32": {
     "ref": "fontconfig/2.13.91#f352b873e84bdb407e9d26f10c4d5ace",
     "requires": [
-     "17",
+     "18",
      "33",
      "34"
     ],
@@ -263,7 +256,7 @@
    "36": {
     "ref": "harfbuzz/2.6.8#5733395ae2752d74034dccb6a94e9be8",
     "requires": [
-     "17"
+     "18"
     ],
     "context": "host"
    },
@@ -302,11 +295,11 @@
     "ref": "grpc_codegen/1.27.3@orbitdeps/stable#a0b442cf66941a590b619c88b106f0e5",
     "requires": [
      "1",
-     "8",
-     "6",
      "7",
+     "5",
+     "6",
      "42",
-     "5"
+     "4"
     ],
     "context": "host"
    },
@@ -325,11 +318,11 @@
     "ref": "grpc_codegen/1.27.3@orbitdeps/stable#a0b442cf66941a590b619c88b106f0e5",
     "requires": [
      "1",
-     "8",
-     "6",
      "7",
+     "5",
+     "6",
      "45",
-     "5"
+     "4"
     ],
     "context": "host"
    },
