@@ -21,8 +21,8 @@ target_include_directories(WindowsUtils PRIVATE
 
 target_sources(WindowsUtils PUBLIC
         include/WindowsUtils/AdjustTokenPrivilege.h
-        include/WindowsUtils/FindDebugSymbols.h
         include/WindowsUtils/DllInjection.h
+        include/WindowsUtils/FindDebugSymbols.h
         include/WindowsUtils/ListModules.h
         include/WindowsUtils/ListThreads.h
         include/WindowsUtils/PerformanceCounter.h
@@ -31,8 +31,8 @@ target_sources(WindowsUtils PUBLIC
 
 target_sources(WindowsUtils PRIVATE
         AdjustTokenPrivilege.cpp
-        FindDebugSymbols.cpp
         DllInjection.cpp
+        FindDebugSymbols.cpp
         ListModules.cpp
         ListThreads.cpp
         ProcessList.cpp
@@ -46,8 +46,8 @@ target_link_libraries(WindowsUtils PUBLIC
 add_executable(WindowsUtilsTests)
 
 target_sources(WindowsUtilsTests PRIVATE
-        FindDebugSymbolsTest.cpp
         DllInjectionTest.cpp
+        FindDebugSymbolsTest.cpp
         ListModulesTest.cpp
         ListThreadsTest.cpp
         ProcessListTest.cpp

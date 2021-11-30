@@ -35,7 +35,7 @@ ErrorMessageOr<uint64_t> RemoteWrite(HANDLE process_handle, const std::vector<ui
   size_t num_bytes_written = 0;
   if (!WriteProcessMemory(process_handle, base_address, static_cast<LPCVOID>(buffer.data()),
                           buffer.size(), &num_bytes_written)) {
-    return ErrorMessage(absl::StrFormat("WriteProcessMemory failed with error %s",
+    return ErrorMessage(absl::StrFormat("Error calling WriteProcessMemory: %s",
                                         orbit_base::GetLastErrorAsString()));
   }
 
@@ -47,8 +47,9 @@ ErrorMessageOr<uint64_t> RemoteWrite(HANDLE process_handle, const std::vector<ui
 }
 
 template <typename T>
-ErrorMessageOr<void> RemoteRead(HANDLE process_handle, uint64_t base_address, T& result) {
-  size_t number_of_bytes_read;
+ErrorMessageOr<T> RemoteRead(HANDLE process_handle, uint64_t base_address) {
+  size_t number_of_bytes_read = 0;
+  T result = {0};
   if (!ReadProcessMemory(process_handle, absl::bit_cast<LPCVOID>(base_address), &result, sizeof(T),
                          &number_of_bytes_read)) {
     return ErrorMessage(
@@ -59,32 +60,17 @@ ErrorMessageOr<void> RemoteRead(HANDLE process_handle, uint64_t base_address, T&
     return ErrorMessage("Number of bytes read is not equal to requested size");
   }
 
-  return outcome::success();
+  return result;
 }
 
 ErrorMessageOr<std::string> RemoteReadString(HANDLE process_handle, uint64_t base_address) {
   std::string result;
-  char current_char = 'c';
-  size_t number_of_bytes_read = 0;
-  constexpr size_t read_size = sizeof(current_char);
-
   // We don't know the string length, but it is null terminated. Read one character at a time.
   for (size_t i = 0;; ++i) {
-    LPCVOID address = absl::bit_cast<LPCVOID>(base_address + i);
-    if (!ReadProcessMemory(process_handle, address, &current_char, read_size,
-                           &number_of_bytes_read)) {
-      return ErrorMessage(absl::StrFormat("Error calling ReadProcessMemory: %s",
-                                          orbit_base::GetLastErrorAsString()));
-    }
-
-    if (number_of_bytes_read != read_size) {
-      return ErrorMessage("Number of bytes read is not equal to requested size");
-    }
-
-    if (current_char == '\0') break;
-    result.push_back(current_char);
+    OUTCOME_TRY(auto character, RemoteRead<char>(process_handle, base_address + i));
+    if (character == '\0') break;
+    result.push_back(character);
   }
-
   return result;
 }
 
@@ -118,14 +104,15 @@ ErrorMessageOr<Module> FindModule(uint32_t pid, std::string_view module_name) {
     }
   }
   if (result.size() == 1) return result[0];
-  if (result.size() > 1)
+  if (result.size() > 1) {
     return ErrorMessage(
         absl::StrFormat("Multiple modules with the name \"%s\" found", module_name));
+  }
   return ErrorMessage("Could not find module in target process");
 }
 
-ErrorMessageOr<Module> FindModule(uint32_t pid, std::string_view module_name,
-                                  uint32_t num_retries) {
+ErrorMessageOr<Module> FindModuleWithRetries(uint32_t pid, std::string_view module_name,
+                                             uint32_t num_retries) {
   while (true) {
     ErrorMessageOr<Module> result = FindModule(pid, module_name);
     if (result.has_value() || num_retries-- <= 0) return result;
@@ -156,7 +143,7 @@ ErrorMessageOr<void> InjectDll(uint32_t pid, std::filesystem::path dll_path) {
 
   // Find injected dll in target process. Allow for retries as the loading might take some time.
   constexpr uint32_t kNumRetries = 10;
-  OUTCOME_TRY(Module module, FindModule(pid, dll_path.filename().string(), kNumRetries));
+  OUTCOME_TRY(Module module, FindModuleWithRetries(pid, dll_path.filename().string(), kNumRetries));
 
   LOG("Module \"%s\" successfully injected in process %u", dll_name, pid);
   return outcome::success();
@@ -198,21 +185,19 @@ ErrorMessageOr<uint64_t> GetRemoteProcAddress(uint32_t pid, std::string_view mod
   OUTCOME_TRY(HANDLE handle, GetHandleFromPid(pid));
   orbit_base::unique_resource handle_closer(handle, ::CloseHandle);
 
-  IMAGE_DOS_HEADER image_dos_header = {0};
-  OUTCOME_TRY(RemoteRead(handle, module_base, image_dos_header));
+  OUTCOME_TRY(auto image_dos_header, RemoteRead<IMAGE_DOS_HEADER>(handle, module_base));
   if (image_dos_header.e_magic != IMAGE_DOS_SIGNATURE) {
     return ErrorMessage("IMAGE_DOS_SIGNATURE not found");
   }
 
-  DWORD signature = 0;
   const uint64_t nt_headers_address = module_base + image_dos_header.e_lfanew;
-  OUTCOME_TRY(RemoteRead(handle, nt_headers_address, signature));
+  OUTCOME_TRY(auto signature, RemoteRead<DWORD>(handle, nt_headers_address));
   if (signature != IMAGE_NT_SIGNATURE) {
     return ErrorMessage("IMAGE_NT_SIGNATURE not found");
   }
 
-  IMAGE_FILE_HEADER image_file_header = {0};
-  OUTCOME_TRY(RemoteRead(handle, nt_headers_address + sizeof(signature), image_file_header));
+  OUTCOME_TRY(auto image_file_header,
+              RemoteRead<IMAGE_FILE_HEADER>(handle, nt_headers_address + sizeof(signature)));
 
   IMAGE_DATA_DIRECTORY export_directory = {0};
   uint64_t optional_header_address =
@@ -220,8 +205,8 @@ ErrorMessageOr<uint64_t> GetRemoteProcAddress(uint32_t pid, std::string_view mod
   static_assert(sizeof(IMAGE_OPTIONAL_HEADER64) != sizeof(IMAGE_OPTIONAL_HEADER32));
   if (image_file_header.SizeOfOptionalHeader == sizeof(IMAGE_OPTIONAL_HEADER64)) {
     // 64 bit optional header.
-    IMAGE_OPTIONAL_HEADER64 optional_header_64 = {0};
-    OUTCOME_TRY(RemoteRead(handle, optional_header_address, optional_header_64));
+    OUTCOME_TRY(auto optional_header_64,
+                RemoteRead<IMAGE_OPTIONAL_HEADER64>(handle, optional_header_address));
     if (optional_header_64.Magic != IMAGE_NT_OPTIONAL_HDR64_MAGIC) {
       return ErrorMessage("IMAGE_NT_OPTIONAL_HDR64_MAGIC not found");
     }
@@ -230,8 +215,8 @@ ErrorMessageOr<uint64_t> GetRemoteProcAddress(uint32_t pid, std::string_view mod
     export_directory.Size = optional_header_64.DataDirectory[IMAGE_DIRECTORY_ENTRY_EXPORT].Size;
   } else if (image_file_header.SizeOfOptionalHeader == sizeof(IMAGE_OPTIONAL_HEADER32)) {
     // 32 bit optional header.
-    IMAGE_OPTIONAL_HEADER32 optional_header_32 = {0};
-    OUTCOME_TRY(RemoteRead(handle, optional_header_address, optional_header_32));
+    OUTCOME_TRY(auto optional_header_32,
+                RemoteRead<IMAGE_OPTIONAL_HEADER32>(handle, optional_header_address));
     if (optional_header_32.Magic != IMAGE_NT_OPTIONAL_HDR32_MAGIC) {
       return ErrorMessage("IMAGE_NT_OPTIONAL_HDR32_MAGIC not found");
     }
@@ -242,37 +227,34 @@ ErrorMessageOr<uint64_t> GetRemoteProcAddress(uint32_t pid, std::string_view mod
     return ErrorMessage("Unexpected optional header size");
   }
 
-  IMAGE_EXPORT_DIRECTORY image_export_directory = {0};
   // VirtualAddress actually represents a relative virtual address here.
   const uint64_t export_directory_rva = export_directory.VirtualAddress;
   if (export_directory_rva == 0) {
     return ErrorMessage("Invalid export directory address");
   }
   const uint64_t export_directory_address = module_base + export_directory_rva;
-  OUTCOME_TRY(RemoteRead(handle, export_directory_address, image_export_directory));
+  OUTCOME_TRY(auto image_export_directory,
+              RemoteRead<IMAGE_EXPORT_DIRECTORY>(handle, export_directory_address));
 
   const uint64_t address_of_functions = module_base + image_export_directory.AddressOfFunctions;
   const uint64_t address_of_names = module_base + image_export_directory.AddressOfNames;
   const uint64_t address_of_ordinals = module_base + image_export_directory.AddressOfNameOrdinals;
 
   for (size_t i = 0; i < image_export_directory.NumberOfNames; ++i) {
-    uint32_t name_rva = 0;
-    OUTCOME_TRY(RemoteRead(handle, address_of_names + i * sizeof(name_rva), name_rva));
+    OUTCOME_TRY(auto name_rva,
+                RemoteRead<uint32_t>(handle, address_of_names + i * sizeof(uint32_t)));
     OUTCOME_TRY(std::string read_name, RemoteReadString(handle, module_base + name_rva));
 
     if (absl::EqualsIgnoreCase(read_name, function_name)) {
-      WORD ordinal = 0;
-      OUTCOME_TRY(RemoteRead(handle, address_of_ordinals + i * sizeof(ordinal), ordinal));
-
-      uint32_t function_rva = 0;
-      OUTCOME_TRY(
-          RemoteRead(handle, address_of_functions + ordinal * sizeof(function_rva), function_rva));
+      OUTCOME_TRY(auto ordinal, RemoteRead<WORD>(handle, address_of_ordinals + i * sizeof(WORD)));
+      OUTCOME_TRY(auto function_rva,
+                  RemoteRead<uint32_t>(handle, address_of_functions + ordinal * sizeof(uint32_t)));
       return module_base + function_rva;
     }
   }
 
   return ErrorMessage(
-      absl::StrFormat("Did not find function \"%s\" in module \"%u\"", function_name, module_base));
+      absl::StrFormat("Did not find function \"%s\" in module \"%s\"", function_name, module_name));
 }
 
 }  // namespace orbit_windows_utils

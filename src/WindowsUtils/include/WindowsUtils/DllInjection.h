@@ -2,8 +2,8 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#ifndef WINDOWS_UTILS_INJECTION_H_
-#define WINDOWS_UTILS_INJECTION_H_
+#ifndef WINDOWS_UTILS_DLL_INJECTION_H_
+#define WINDOWS_UTILS_DLL_INJECTION_H_
 
 #include <filesystem>
 #include <string>
@@ -29,4 +29,4 @@ namespace orbit_windows_utils {
 
 }  // namespace orbit_windows_utils
 
-#endif  // WINDOWS_UTILS_INJECTION_H_
+#endif  // WINDOWS_UTILS_DLL_INJECTION_H_

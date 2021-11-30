@@ -16,6 +16,9 @@
 
 namespace orbit_windows_utils {
 
+using orbit_test_utils::HasError;
+using orbit_test_utils::HasNoError;
+
 namespace {
 
 [[nodiscard]] std::filesystem::path GetTestDllPath() {
@@ -26,34 +29,32 @@ namespace {
 
 }  // namespace
 
-TEST(Injection, InjectDllInCurrentProcess) {
+TEST(DllInjection, InjectDllInCurrentProcess) {
   // Injection.
   uint32_t pid = orbit_base::GetCurrentProcessId();
   ErrorMessageOr<void> result = InjectDll(pid, GetTestDllPath());
   if (result.has_error()) ERROR("Running InjectDllInCurrentProcess: %s", result.error().message());
-  EXPECT_FALSE(result.has_error());
+  EXPECT_THAT(result, HasNoError());
 
   // Re-injection.
   result = InjectDll(pid, GetTestDllPath());
-  EXPECT_TRUE(result.has_error());
-  EXPECT_THAT(result.error().message(), testing::HasSubstr("is already loaded in process"));
+  EXPECT_THAT(result, HasError("is already loaded in process"));
 
   // GetRemoteProcAddress.
   ErrorMessageOr<uint64_t> remote_proc_result =
       GetRemoteProcAddress(pid, "libtest.dll", "PrintHelloWorld");
-  EXPECT_TRUE(remote_proc_result.has_value());
+  EXPECT_THAT(remote_proc_result, HasNoError());
 
   // CreateRemoteThread.
   ErrorMessageOr<void> remote_thread_result =
       CreateRemoteThread(pid, "libtest.dll", "PrintHelloWorld", {});
-  EXPECT_FALSE(remote_thread_result.has_error());
+  EXPECT_THAT(remote_thread_result, HasNoError());
 }
 
-TEST(Injection, InjectNonExistantDll) {
+TEST(DllInjection, InjectNonExistentDll) {
   uint32_t pid = orbit_base::GetCurrentProcessId();
   ErrorMessageOr<void> result = InjectDll(pid, GetNonExistentDllPath());
-  EXPECT_TRUE(result.has_error());
-  EXPECT_THAT(result.error().message(), testing::HasSubstr("Path does not exist"));
+  EXPECT_THAT(result, HasError("Path does not exist"));
 }
 
 }  // namespace orbit_windows_utils
