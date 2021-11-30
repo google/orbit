@@ -88,9 +88,7 @@ void CaptureViewElement::SetVisible(bool value) {
 }
 
 void CaptureViewElement::OnPick(int x, int y) {
-  // TODO (b/204422745): Remove dependency to time_graph_->GetVerticalScrollingOffset()
-  mouse_pos_last_click_ =
-      viewport_->ScreenToWorld(Vec2i(x, y)) + Vec2(0, time_graph_->GetVerticalScrollingOffset());
+  mouse_pos_last_click_ = viewport_->ScreenToWorld(Vec2i(x, y));
   picking_offset_ = mouse_pos_last_click_ - pos_;
   mouse_pos_cur_ = mouse_pos_last_click_;
   picked_ = true;
@@ -102,9 +100,7 @@ void CaptureViewElement::OnRelease() {
 }
 
 void CaptureViewElement::OnDrag(int x, int y) {
-  // TODO (b/204422745): Remove dependency to time_graph_->GetVerticalScrollingOffset()
-  mouse_pos_cur_ =
-      viewport_->ScreenToWorld(Vec2i(x, y)) + Vec2(0, time_graph_->GetVerticalScrollingOffset());
+  mouse_pos_cur_ = viewport_->ScreenToWorld(Vec2i(x, y));
   RequestUpdate();
 }
 
@@ -124,7 +120,7 @@ std::vector<CaptureViewElement*> CaptureViewElement::GetChildrenVisibleInViewpor
   for (CaptureViewElement* child : GetNonHiddenChildren()) {
     float child_top_y = child->GetPos()[1];
     float child_bottom_y = child_top_y + child->GetHeight();
-    float screen_top_y = time_graph_->GetVerticalScrollingOffset();
+    float screen_top_y = 0;
     float screen_bottom_y = screen_top_y + viewport_->GetWorldHeight();
     if (child_top_y < screen_bottom_y && child_bottom_y > screen_top_y) {
       result.push_back(child);
