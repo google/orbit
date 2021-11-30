@@ -1,5 +1,5 @@
 """
-Copyright (c) 2020 The Orbit Authors. All rights reserved.
+Copyright (c) 202q The Orbit Authors. All rights reserved.
 Use of this source code is governed by a BSD-style license that can be
 found in the LICENSE file.
 """
@@ -10,7 +10,7 @@ from core.orbit_e2e import E2ETestSuite
 from test_cases.connection_window import FilterAndSelectFirstProcess, ConnectToStadiaInstance
 from test_cases.capture_window import Capture, CheckTimers, VerifyTracksDoNotExist, VerifyTracksExist, CollapseOrExpandAllTracks, FilterTracks
 from test_cases.symbols_tab import LoadSymbols
-"""Instrument a single function in Orbit using pywinauto.
+"""Test Orbit's manual instrumentation.
 
 Before this script is run there needs to be a gamelet reserved and
 "OrbitTestManualInstrumentation 3 10 100000" has to be started. Note that the 
