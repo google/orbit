@@ -138,21 +138,6 @@ std::vector<std::vector<std::string>> CallstackDataView::GetContextMenuWithGroup
   return menu;
 }
 
-void CallstackDataView::OnContextMenu(const std::string& action, int menu_index,
-                                      const std::vector<int>& item_indices) {
-  if (action == kMenuActionSourceCode) {
-    for (int i : item_indices) {
-      const FunctionInfo* function = GetFrameFromRow(i).function;
-      if (function != nullptr) {
-        app_->ShowSourceCode(*function);
-      }
-    }
-
-  } else {
-    DataView::OnContextMenu(action, menu_index, item_indices);
-  }
-}
-
 void CallstackDataView::DoFilter() {
   if (callstack_.frames_size() == 0) {
     return;

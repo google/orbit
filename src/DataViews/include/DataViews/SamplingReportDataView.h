@@ -34,8 +34,6 @@ class SamplingReportDataView : public DataView {
   std::string GetValueForCopy(int row, int column) override;
   const std::string& GetName() { return name_; }
 
-  void OnContextMenu(const std::string& action, int menu_index,
-                     const std::vector<int>& item_indices) override;
   void OnSelect(const std::vector<int>& indices) override;
   void OnRefresh(const std::vector<int>& visible_selected_indices,
                  const RefreshMode& mode) override;

@@ -30,8 +30,6 @@ class CallstackDataView : public DataView {
   std::string GetValue(int row, int column) override;
   std::string GetToolTip(int row, int /*column*/) override;
 
-  void OnContextMenu(const std::string& action, int menu_index,
-                     const std::vector<int>& item_indices) override;
   void OnDataChanged() override;
   void SetCallstack(const orbit_client_protos::CallstackInfo& callstack) {
     callstack_ = callstack;

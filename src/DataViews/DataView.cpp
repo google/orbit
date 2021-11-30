@@ -103,6 +103,8 @@ void DataView::OnContextMenu(const std::string& action, int /*menu_index*/,
 
   } else if (action == kMenuActionDisassembly) {
     OnDisassemblyRequested(item_indices);
+  } else if (action == kMenuActionSourceCode) {
+    OnSourceCodeRequested(item_indices);
 
   } else if (action == kMenuActionExportToCsv) {
     OnExportToCsvRequested();
@@ -203,6 +205,13 @@ void DataView::OnDisassemblyRequested(const std::vector<int>& selection) {
   for (int i : selection) {
     const FunctionInfo* function = GetFunctionInfoFromRow(i);
     if (function != nullptr) app_->Disassemble(pid, *function);
+  }
+}
+
+void DataView::OnSourceCodeRequested(const std::vector<int>& selection) {
+  for (int i : selection) {
+    const FunctionInfo* function = GetFunctionInfoFromRow(i);
+    if (function != nullptr) app_->ShowSourceCode(*function);
   }
 }
 

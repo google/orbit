@@ -343,12 +343,7 @@ ErrorMessageOr<void> LiveFunctionsDataView::ExportAllEventsToCsv(
 
 void LiveFunctionsDataView::OnContextMenu(const std::string& action, int menu_index,
                                           const std::vector<int>& item_indices) {
-  if (action == kMenuActionSourceCode) {
-    for (int i : item_indices) {
-      const FunctionInfo* selected_function = GetFunctionInfoFromRow(i);
-      app_->ShowSourceCode(*selected_function);
-    }
-  } else if (action == kMenuActionJumpToFirst) {
+  if (action == kMenuActionJumpToFirst) {
     CHECK(item_indices.size() == 1);
     auto function_id = GetInstrumentedFunctionId(item_indices[0]);
     app_->JumpToTimerAndZoom(function_id, AppInterface::JumpToTimerMode::kFirst);
