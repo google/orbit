@@ -23,8 +23,8 @@ ABSL_DECLARE_FLAG(bool, devmode);
 
 namespace orbit_windows_service {
 
-using orbit_windows_capture_service::WindowsCaptureService;
 using orbit_capture_service::CaptureStartStopListener;
+using orbit_windows_capture_service::WindowsCaptureService;
 using orbit_windows_process_service::ProcessServiceImpl;
 
 namespace {
