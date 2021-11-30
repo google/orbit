@@ -50,7 +50,6 @@ class TrackManager {
   void RequestTrackSorting() { sorting_invalidated_ = true; };
   void SetFilter(const std::string& filter);
 
-  [[nodiscard]] float GetVisibleTracksTotalHeight() const;
   void UpdateTrackListForRendering();
 
   [[nodiscard]] std::pair<uint64_t, uint64_t> GetTracksMinMaxTimestamps() const;

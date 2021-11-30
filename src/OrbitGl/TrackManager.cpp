@@ -182,18 +182,6 @@ void TrackManager::SetFilter(const std::string& filter) {
   visible_track_list_needs_update_ = true;
 }
 
-// This function assumes visible track list is updated.
-float TrackManager::GetVisibleTracksTotalHeight() const {
-  // Top and Bottom Margin. TODO: Margins should be treated in a different way (http://b/192070555).
-  float total_height = layout_->GetSchedulerTrackOffset() + layout_->GetBottomMargin();
-
-  // Track height including space between them
-  for (auto& track : visible_tracks_) {
-    total_height += (track->GetHeight() + layout_->GetSpaceBetweenTracks());
-  }
-  return total_height;
-}
-
 void TrackManager::UpdateVisibleTrackList() {
   // This function assumes we asked before for a update for the visible track list and that tracks
   // are already sorted (in sorted_tracks_).
