@@ -12,7 +12,7 @@
 #include "OrbitBase/File.h"
 #include "OrbitBase/Logging.h"
 
-#ifdef WIN32
+#ifdef _WIN32
 #include <KnownFolders.h>
 #include <shlobj.h>
 #endif
@@ -84,7 +84,7 @@ std::filesystem::path CreateOrGetDumpDir() {
 }
 
 std::filesystem::path CreateOrGetOrbitAppDataDir() {
-#ifdef WIN32
+#ifdef _WIN32
   std::filesystem::path path = std::filesystem::path(GetEnvVar("APPDATA")) / "OrbitProfiler";
 #else
   std::filesystem::path path = std::filesystem::path(GetEnvVar("HOME")) / ".orbitprofiler";
@@ -94,7 +94,7 @@ std::filesystem::path CreateOrGetOrbitAppDataDir() {
 }
 
 static std::filesystem::path GetDocumentsPath() {
-#ifdef WIN32
+#ifdef _WIN32
   PWSTR ppszPath;
   HRESULT result = SHGetKnownFolderPath(FOLDERID_Documents, 0, nullptr, &ppszPath);
 

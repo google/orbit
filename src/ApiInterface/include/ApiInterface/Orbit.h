@@ -203,13 +203,13 @@
   ORBIT_SCOPE_WITH_COLOR_AND_GROUP_ID(name, col, kOrbitDefaultGroupId)
 #define ORBIT_SCOPE_WITH_GROUP_ID(name, group_id) \
   ORBIT_SCOPE_WITH_COLOR_AND_GROUP_ID(name, kOrbitColorAuto, group_id)
-#ifdef WIN32
+#ifdef _WIN32
 #define ORBIT_SCOPE_WITH_COLOR_AND_GROUP_ID(name, col, group_id) \
   orbit_api::Scope ORBIT_VAR(name, col, group_id)
 #else
 #define ORBIT_SCOPE_WITH_COLOR_AND_GROUP_ID(name, col, group_id) \
   ORBIT_SCOPE_WITH_COLOR_AND_GROUP_ID_INTERNAL(name, col, group_id, ORBIT_VAR)
-#endif  // WIN32
+#endif  // _WIN32
 
 #endif  // __cplusplus
 
@@ -371,7 +371,7 @@ inline bool orbit_api_active() {
 #define ORBIT_UNIQUE(x) ORBIT_CONCAT(x, __COUNTER__)
 #define ORBIT_VAR ORBIT_UNIQUE(ORB)
 
-#ifdef WIN32
+#ifdef _WIN32
 #include <intrin.h>
 
 #pragma intrinsic(_ReturnAddress)
@@ -383,9 +383,9 @@ inline bool orbit_api_active() {
 // To decode the return address, we call `__builtin_extract_return_addr`.
 #define ORBIT_GET_CALLER_PC() \
   reinterpret_cast<uint64_t>(__builtin_extract_return_addr(__builtin_return_address(0)))
-#endif
+#endif  // _WIN32
 
-#ifdef WIN32
+#ifdef _WIN32
 namespace orbit_api {
 struct Scope {
   __declspec(noinline) Scope(const char* name, orbit_api_color color, uint64_t group_id) {
@@ -411,7 +411,7 @@ struct Scope {
   ~Scope() { ORBIT_CALL(stop); }
 };
 }  // namespace orbit_api
-#endif  // WIN32
+#endif  // _WIN32
 
 #endif  // __cplusplus
 
