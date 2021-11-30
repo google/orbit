@@ -16,7 +16,6 @@
 #include "GlUtils.h"
 #include "OrbitBase/Logging.h"
 #include "OrbitBase/ThreadConstants.h"
-#include "TimeGraph.h"
 #include "TimeGraphLayout.h"
 #include "TriangleToggle.h"
 #include "absl/strings/str_format.h"
@@ -29,12 +28,13 @@ constexpr const char* kHwQueueString = "hw queue";
 constexpr const char* kHwExecutionString = "hw execution";
 constexpr const char* kCmdBufferString = "command buffer";
 
-GpuSubmissionTrack::GpuSubmissionTrack(Track* parent, TimeGraph* time_graph,
+GpuSubmissionTrack::GpuSubmissionTrack(Track* parent,
+                                       const orbit_gl::TimelineInfoInterface* timeline_info,
                                        orbit_gl::Viewport* viewport, TimeGraphLayout* layout,
                                        uint64_t timeline_hash, OrbitApp* app,
                                        const orbit_client_data::CaptureData* capture_data,
                                        orbit_client_data::TimerData* timer_data)
-    : TimerTrack(parent, time_graph, viewport, layout, app, capture_data, timer_data),
+    : TimerTrack(parent, timeline_info, viewport, layout, app, capture_data, timer_data),
       timeline_hash_{timeline_hash},
       string_manager_{app->GetStringManager()},
       parent_{parent} {

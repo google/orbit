@@ -21,13 +21,14 @@ static std::array<std::string, kBasicPageFaultsTrackDimension> CreateSeriesName(
 static constexpr uint8_t kTrackValueDecimalDigits = 0;
 static constexpr const char* kTrackValueUnits = "";
 
-BasicPageFaultsTrack::BasicPageFaultsTrack(Track* parent, TimeGraph* time_graph,
+BasicPageFaultsTrack::BasicPageFaultsTrack(Track* parent,
+                                           const orbit_gl::TimelineInfoInterface* timeline_info,
                                            orbit_gl::Viewport* viewport, TimeGraphLayout* layout,
                                            std::string cgroup_name,
                                            uint64_t memory_sampling_period_ms,
                                            const orbit_client_data::CaptureData* capture_data)
     : LineGraphTrack<kBasicPageFaultsTrackDimension>(
-          parent, time_graph, viewport, layout,
+          parent, timeline_info, viewport, layout,
           CreateSeriesName(cgroup_name, capture_data->process_name()), kTrackValueDecimalDigits,
           kTrackValueUnits, capture_data),
       AnnotationTrack(),
@@ -91,8 +92,8 @@ void BasicPageFaultsTrack::DrawSingleSeriesEntry(
   if (current_normalized_values[index_of_series_to_highlight_.value()] == 0) return;
 
   const Color kHightlightingColor(231, 68, 53, 100);
-  float x0 = time_graph_->GetWorldFromTick(start_tick);
-  float width = time_graph_->GetWorldFromTick(end_tick) - x0;
+  float x0 = timeline_info_->GetWorldFromTick(start_tick);
+  float width = timeline_info_->GetWorldFromTick(end_tick) - x0;
   float content_height = GetGraphContentHeight();
   float y0 = GetGraphContentBottomY() - GetGraphContentHeight();
   batcher.AddShadedBox(Vec2(x0, y0), Vec2(width, content_height), z, kHightlightingColor);

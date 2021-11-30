@@ -32,7 +32,7 @@
 #include "Viewport.h"
 
 class OrbitApp;
-class Timegraph;
+class TimeGraph;
 
 // TrackManager is in charge of the active Tracks in Timegraph (their creation, searching, erasing
 // and sorting).

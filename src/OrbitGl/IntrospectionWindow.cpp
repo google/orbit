@@ -7,7 +7,6 @@
 #include "App.h"
 #include "ClientProtos/capture_data.pb.h"
 #include "OrbitBase/Logging.h"
-#include "TimeGraph.h"
 
 using orbit_client_data::CaptureData;
 using orbit_client_protos::TimerInfo;

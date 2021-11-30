@@ -17,7 +17,8 @@ constexpr size_t kCGroupAndProcessMemoryTrackDimension = 4;
 class CGroupAndProcessMemoryTrack final
     : public MemoryTrack<kCGroupAndProcessMemoryTrackDimension> {
  public:
-  explicit CGroupAndProcessMemoryTrack(CaptureViewElement* parent, TimeGraph* time_graph,
+  explicit CGroupAndProcessMemoryTrack(CaptureViewElement* parent,
+                                       const orbit_gl::TimelineInfoInterface* timeline_info,
                                        orbit_gl::Viewport* viewport, TimeGraphLayout* layout,
                                        const std::string& cgroup_name,
                                        const orbit_client_data::CaptureData* capture_data);

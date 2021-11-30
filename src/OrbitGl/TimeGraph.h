@@ -15,7 +15,6 @@
 #include <vector>
 
 #include "AccessibleInterfaceProvider.h"
-#include "AccessibleTimeGraph.h"
 #include "Batcher.h"
 #include "CallstackThreadBar.h"
 #include "CaptureViewElement.h"
@@ -28,6 +27,7 @@
 #include "PickingManager.h"
 #include "TextRenderer.h"
 #include "TimeGraphLayout.h"
+#include "TimelineInfoInterface.h"
 #include "Track.h"
 #include "TrackManager.h"
 #include "Viewport.h"
@@ -35,7 +35,7 @@
 
 class OrbitApp;
 
-class TimeGraph : public orbit_gl::CaptureViewElement {
+class TimeGraph : public orbit_gl::CaptureViewElement, public orbit_gl::TimelineInfoInterface {
  public:
   explicit TimeGraph(AccessibleInterfaceProvider* parent, OrbitApp* app,
                      orbit_gl::Viewport* viewport, orbit_client_data::CaptureData* capture_data,
@@ -61,12 +61,12 @@ class TimeGraph : public orbit_gl::CaptureViewElement {
   [[nodiscard]] TrackManager* GetTrackManager() { return track_manager_.get(); }
 
   [[nodiscard]] float GetTextBoxHeight() const { return layout_.GetTextBoxHeight(); }
-  [[nodiscard]] float GetWorldFromTick(uint64_t time) const;
-  [[nodiscard]] float GetWorldFromUs(double micros) const;
-  [[nodiscard]] uint64_t GetTickFromWorld(float world_x) const;
-  [[nodiscard]] uint64_t GetTickFromUs(double micros) const;
-  [[nodiscard]] double GetUsFromTick(uint64_t time) const;
-  [[nodiscard]] double GetTimeWindowUs() const { return time_window_us_; }
+  [[nodiscard]] float GetWorldFromTick(uint64_t time) const override;
+  [[nodiscard]] float GetWorldFromUs(double micros) const override;
+  [[nodiscard]] uint64_t GetTickFromWorld(float world_x) const override;
+  [[nodiscard]] uint64_t GetTickFromUs(double micros) const override;
+  [[nodiscard]] double GetUsFromTick(uint64_t time) const override;
+  [[nodiscard]] double GetTimeWindowUs() const override { return time_window_us_; }
   void UpdateCaptureMinMaxTimestamps();
 
   void ZoomAll();

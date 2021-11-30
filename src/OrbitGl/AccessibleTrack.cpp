@@ -12,7 +12,6 @@
 #include "AccessibleTimeGraph.h"
 #include "CoreMath.h"
 #include "OrbitBase/Logging.h"
-#include "TimeGraph.h"
 #include "Track.h"
 #include "Viewport.h"
 
@@ -26,8 +25,7 @@ namespace {
 class FakeTrackTab : public CaptureViewElement {
  public:
   explicit FakeTrackTab(Track* track, TimeGraphLayout* layout)
-      : CaptureViewElement(track, track->GetTimeGraph(), track->GetViewport(), layout),
-        track_(track) {
+      : CaptureViewElement(track, track->GetViewport(), layout), track_(track) {
     // Compute and set the size (which would usually be done by the parent). As the position may
     // change, we override the GetPos() function.
     SetWidth(layout_->GetTrackTabWidth());
@@ -52,7 +50,7 @@ class FakeTrackTab : public CaptureViewElement {
 class FakeTimerPane : public CaptureViewElement {
  public:
   explicit FakeTimerPane(Track* track, TimeGraphLayout* layout, CaptureViewElement* track_tab)
-      : CaptureViewElement(track, track->GetTimeGraph(), track->GetViewport(), layout),
+      : CaptureViewElement(track, track->GetViewport(), layout),
         track_(track),
         track_tab_(track_tab) {
     SetWidth(track->GetWidth());

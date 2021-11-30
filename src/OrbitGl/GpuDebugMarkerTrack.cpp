@@ -17,19 +17,19 @@
 #include "GlUtils.h"
 #include "OrbitBase/Logging.h"
 #include "OrbitBase/ThreadConstants.h"
-#include "TimeGraph.h"
 #include "TimeGraphLayout.h"
 #include "TriangleToggle.h"
 #include "absl/strings/str_format.h"
 
 using orbit_client_protos::TimerInfo;
 
-GpuDebugMarkerTrack::GpuDebugMarkerTrack(CaptureViewElement* parent, TimeGraph* time_graph,
+GpuDebugMarkerTrack::GpuDebugMarkerTrack(CaptureViewElement* parent,
+                                         const orbit_gl::TimelineInfoInterface* timeline_info,
                                          orbit_gl::Viewport* viewport, TimeGraphLayout* layout,
                                          uint64_t timeline_hash, OrbitApp* app,
                                          const orbit_client_data::CaptureData* capture_data,
                                          orbit_client_data::TimerData* timer_data)
-    : TimerTrack(parent, time_graph, viewport, layout, app, capture_data, timer_data),
+    : TimerTrack(parent, timeline_info, viewport, layout, app, capture_data, timer_data),
       string_manager_{app->GetStringManager()},
       timeline_hash_{timeline_hash} {
   draw_background_ = false;

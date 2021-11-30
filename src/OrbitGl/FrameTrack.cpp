@@ -18,7 +18,6 @@
 #include "GlCanvas.h"
 #include "GlUtils.h"
 #include "TextRenderer.h"
-#include "TimeGraph.h"
 #include "TimeGraphLayout.h"
 #include "TriangleToggle.h"
 
@@ -56,11 +55,12 @@ float FrameTrack::GetAverageBoxHeight() const {
   return GetMaximumBoxHeight() / GetCappedMaximumToAverageRatio();
 }
 
-FrameTrack::FrameTrack(CaptureViewElement* parent, TimeGraph* time_graph,
+FrameTrack::FrameTrack(CaptureViewElement* parent,
+                       const orbit_gl::TimelineInfoInterface* timeline_info,
                        orbit_gl::Viewport* viewport, TimeGraphLayout* layout,
                        InstrumentedFunction function, OrbitApp* app,
                        const CaptureData* capture_data, orbit_client_data::TimerData* timer_data)
-    : TimerTrack(parent, time_graph, viewport, layout, app, capture_data, timer_data),
+    : TimerTrack(parent, timeline_info, viewport, layout, app, capture_data, timer_data),
       function_(std::move(function)) {
   // TODO(b/169554463): Support manual instrumentation.
 

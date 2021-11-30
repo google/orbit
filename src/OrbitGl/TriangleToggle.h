@@ -18,8 +18,8 @@ class TriangleToggle : public orbit_gl::CaptureViewElement,
                        public std::enable_shared_from_this<TriangleToggle> {
  public:
   using StateChangeHandler = std::function<void(bool)>;
-  explicit TriangleToggle(StateChangeHandler handler, TimeGraph* time_graph,
-                          orbit_gl::Viewport* viewport, TimeGraphLayout* layout, Track* track);
+  explicit TriangleToggle(StateChangeHandler handler, orbit_gl::Viewport* viewport,
+                          TimeGraphLayout* layout, Track* track);
   ~TriangleToggle() override = default;
 
   TriangleToggle() = delete;

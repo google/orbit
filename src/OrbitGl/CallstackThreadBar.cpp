@@ -24,7 +24,6 @@
 #include "OrbitBase/ThreadConstants.h"
 #include "PickingManager.h"
 #include "ShortenStringWithEllipsis.h"
-#include "TimeGraph.h"
 #include "TimeGraphLayout.h"
 #include "Viewport.h"
 
@@ -37,10 +36,11 @@ using orbit_client_protos::CallstackInfo;
 namespace orbit_gl {
 
 CallstackThreadBar::CallstackThreadBar(CaptureViewElement* parent, OrbitApp* app,
-                                       TimeGraph* time_graph, orbit_gl::Viewport* viewport,
-                                       TimeGraphLayout* layout, const CaptureData* capture_data,
-                                       ThreadID thread_id, const Color& color)
-    : ThreadBar(parent, app, time_graph, viewport, layout, capture_data, thread_id, "Callstacks",
+                                       const orbit_gl::TimelineInfoInterface* timeline_info,
+                                       orbit_gl::Viewport* viewport, TimeGraphLayout* layout,
+                                       const CaptureData* capture_data, ThreadID thread_id,
+                                       const Color& color)
+    : ThreadBar(parent, app, timeline_info, viewport, layout, capture_data, thread_id, "Callstacks",
                 color) {}
 
 std::string CallstackThreadBar::GetTooltip() const {
@@ -113,7 +113,7 @@ void CallstackThreadBar::DoUpdatePrimitives(Batcher& batcher, TextRenderer& text
     auto action_on_callstack_events = [&](const CallstackEvent& event) {
       const uint64_t time = event.time();
       CHECK(time >= min_tick && time <= max_tick);
-      Vec2 pos(time_graph_->GetWorldFromTick(time), GetPos()[1]);
+      Vec2 pos(timeline_info_->GetWorldFromTick(time), GetPos()[1]);
       Color color = kWhite;
       if (capture_data_->GetCallstackData().GetCallstack(event.callstack_id())->type() !=
           CallstackInfo::kComplete) {
@@ -134,7 +134,7 @@ void CallstackThreadBar::DoUpdatePrimitives(Batcher& batcher, TextRenderer& text
     std::array<Color, 2> selected_color;
     selected_color.fill(kGreenSelection);
     for (const CallstackEvent& event : app_->GetSelectedCallstackEvents(GetThreadId())) {
-      Vec2 pos(time_graph_->GetWorldFromTick(event.time()), GetPos()[1]);
+      Vec2 pos(timeline_info_->GetWorldFromTick(event.time()), GetPos()[1]);
       batcher.AddVerticalLine(pos, track_height, z, kGreenSelection);
     }
   } else {
@@ -146,7 +146,7 @@ void CallstackThreadBar::DoUpdatePrimitives(Batcher& batcher, TextRenderer& text
     auto action_on_callstack_events = [&, this](const CallstackEvent& event) {
       const uint64_t time = event.time();
       CHECK(time >= min_tick && time <= max_tick);
-      Vec2 pos(time_graph_->GetWorldFromTick(time) - kPickingBoxOffset, GetPos()[1]);
+      Vec2 pos(timeline_info_->GetWorldFromTick(time) - kPickingBoxOffset, GetPos()[1]);
       Vec2 size(kPickingBoxWidth, track_height);
       auto user_data = std::make_unique<PickingUserData>(
           nullptr,
@@ -182,8 +182,8 @@ void CallstackThreadBar::SelectCallstacks() {
     std::swap(from, to);
   }
 
-  uint64_t t0 = time_graph_->GetTickFromWorld(from[0]);
-  uint64_t t1 = time_graph_->GetTickFromWorld(to[0]);
+  uint64_t t0 = timeline_info_->GetTickFromWorld(from[0]);
+  uint64_t t1 = timeline_info_->GetTickFromWorld(to[0]);
 
   int64_t thread_id = GetThreadId();
   bool thread_id_is_all_threads = thread_id == orbit_base::kAllProcessThreadsTid;

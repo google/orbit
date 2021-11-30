@@ -35,7 +35,6 @@
 #include "OrbitBase/Profiling.h"
 #include "OrbitBase/ThreadConstants.h"
 #include "TextRenderer.h"
-#include "TimeGraph.h"
 #include "TimeGraphLayout.h"
 #include "absl/base/casts.h"
 

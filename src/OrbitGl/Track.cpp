@@ -14,24 +14,21 @@
 #include "GlCanvas.h"
 #include "OrbitBase/ThreadUtils.h"
 #include "TextRenderer.h"
-#include "TimeGraph.h"
 #include "TimeGraphLayout.h"
 #include "Viewport.h"
 
 using orbit_client_data::TimerData;
 
-Track::Track(CaptureViewElement* parent, TimeGraph* time_graph, orbit_gl::Viewport* viewport,
-             TimeGraphLayout* layout, const orbit_client_data::CaptureData* capture_data)
-    : CaptureViewElement(parent, time_graph, viewport, layout),
+Track::Track(CaptureViewElement* parent, const orbit_gl::TimelineInfoInterface* timeline_info,
+             orbit_gl::Viewport* viewport, TimeGraphLayout* layout,
+             const orbit_client_data::CaptureData* capture_data)
+    : CaptureViewElement(parent, viewport, layout),
       pinned_{false},
       layout_(layout),
+      timeline_info_(timeline_info),
       capture_data_(capture_data) {
-  // We decrease the size of the collapse toggle per indentation, but as it becomes too small after
-  // 5 indentations, we cap the size here.
-
   collapse_toggle_ = std::make_shared<TriangleToggle>(
-      [this](bool is_collapsed) { OnCollapseToggle(is_collapsed); }, time_graph, viewport, layout,
-      this);
+      [this](bool is_collapsed) { OnCollapseToggle(is_collapsed); }, viewport, layout, this);
 }
 
 std::vector<Vec2> GetRoundedCornerMask(float radius, uint32_t num_sides) {
@@ -257,5 +254,4 @@ void Track::OnDrag(int x, int y) {
   CaptureViewElement::OnDrag(x, y);
 
   SetPos(GetPos()[0], mouse_pos_cur_[1] - picking_offset_[1]);
-  time_graph_->VerticallyMoveIntoView(*this);
 }

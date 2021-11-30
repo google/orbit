@@ -13,12 +13,11 @@
 #include "Batcher.h"
 #include "Geometry.h"
 #include "GlCanvas.h"
-#include "TimeGraph.h"
 #include "Track.h"
 
-TriangleToggle::TriangleToggle(StateChangeHandler handler, TimeGraph* time_graph,
-                               orbit_gl::Viewport* viewport, TimeGraphLayout* layout, Track* track)
-    : CaptureViewElement(track, time_graph, viewport, layout), handler_(std::move(handler)) {}
+TriangleToggle::TriangleToggle(StateChangeHandler handler, orbit_gl::Viewport* viewport,
+                               TimeGraphLayout* layout, Track* track)
+    : CaptureViewElement(track, viewport, layout), handler_(std::move(handler)) {}
 
 void TriangleToggle::DoDraw(Batcher& batcher, TextRenderer& text_renderer,
                             const DrawContext& draw_context) {

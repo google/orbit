@@ -17,7 +17,6 @@
 #include "Geometry.h"
 #include "GlCanvas.h"
 #include "OrbitBase/Logging.h"
-#include "TimeGraph.h"
 #include "Viewport.h"
 
 using orbit_client_data::ThreadID;
@@ -25,12 +24,13 @@ using orbit_client_protos::ThreadStateSliceInfo;
 
 namespace orbit_gl {
 
-ThreadStateBar::ThreadStateBar(CaptureViewElement* parent, OrbitApp* app, TimeGraph* time_graph,
+ThreadStateBar::ThreadStateBar(CaptureViewElement* parent, OrbitApp* app,
+                               const orbit_gl::TimelineInfoInterface* timeline_info,
                                orbit_gl::Viewport* viewport, TimeGraphLayout* layout,
                                const orbit_client_data::CaptureData* capture_data,
                                ThreadID thread_id, const Color& color)
-    : ThreadBar(parent, app, time_graph, viewport, layout, capture_data, thread_id, "ThreadState",
-                color) {}
+    : ThreadBar(parent, app, timeline_info, viewport, layout, capture_data, thread_id,
+                "ThreadState", color) {}
 
 bool ThreadStateBar::IsEmpty() const {
   return capture_data_ == nullptr || !capture_data_->HasThreadStatesForThread(GetThreadId());
@@ -166,9 +166,9 @@ void ThreadStateBar::DoUpdatePrimitives(Batcher& batcher, TextRenderer& text_ren
                                         PickingMode picking_mode) {
   ThreadBar::DoUpdatePrimitives(batcher, text_renderer, min_tick, max_tick, picking_mode);
 
-  const auto time_window_ns = static_cast<uint64_t>(1000 * time_graph_->GetTimeWindowUs());
+  const auto time_window_ns = static_cast<uint64_t>(1000 * timeline_info_->GetTimeWindowUs());
   const uint64_t pixel_delta_ns = time_window_ns / viewport_->WorldToScreen(GetSize())[0];
-  const uint64_t min_time_graph_ns = time_graph_->GetTickFromUs(time_graph_->GetMinTimeUs());
+  const uint64_t min_time_graph_ns = timeline_info_->GetTickFromUs(timeline_info_->GetMinTimeUs());
   const float pixel_width_in_world_coords = viewport_->ScreenToWorld({1, 0})[0];
 
   uint64_t ignore_until_ns = 0;
@@ -182,8 +182,8 @@ void ThreadStateBar::DoUpdatePrimitives(Batcher& batcher, TextRenderer& text_ren
           return;
         }
 
-        const float x0 = time_graph_->GetWorldFromTick(slice.begin_timestamp_ns());
-        const float x1 = time_graph_->GetWorldFromTick(slice.end_timestamp_ns());
+        const float x0 = timeline_info_->GetWorldFromTick(slice.begin_timestamp_ns());
+        const float x1 = timeline_info_->GetWorldFromTick(slice.end_timestamp_ns());
         const float width = x1 - x0;
 
         const Vec2 pos{x0, GetPos()[1]};

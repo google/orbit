@@ -62,7 +62,7 @@ TimeGraph::TimeGraph(AccessibleInterfaceProvider* parent, OrbitApp* app,
     // Note that `GlCanvas` and `TimeGraph` span the bridge to OpenGl content, and `TimeGraph`'s
     // parent needs special handling for accessibility. Thus, we use `nullptr` here and we save the
     // parent in accessible_parent_ which doesn't need to be a CaptureViewElement.
-    : orbit_gl::CaptureViewElement(nullptr, this, viewport, &layout_),
+    : orbit_gl::CaptureViewElement(nullptr, viewport, &layout_),
       accessible_parent_{parent},
       batcher_(BatcherId::kTimeGraph),
       manual_instrumentation_manager_{app->GetManualInstrumentationManager()},

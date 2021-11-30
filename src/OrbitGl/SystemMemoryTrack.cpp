@@ -26,10 +26,11 @@ constexpr uint64_t kMegabytesToBytes = 1024 * 1024;
 }  // namespace
 
 constexpr uint8_t kTrackValueDecimalDigits = 2;
-SystemMemoryTrack::SystemMemoryTrack(CaptureViewElement* parent, TimeGraph* time_graph,
+SystemMemoryTrack::SystemMemoryTrack(CaptureViewElement* parent,
+                                     const orbit_gl::TimelineInfoInterface* timeline_info,
                                      orbit_gl::Viewport* viewport, TimeGraphLayout* layout,
                                      const orbit_client_data::CaptureData* capture_data)
-    : MemoryTrack<kSystemMemoryTrackDimension>(parent, time_graph, viewport, layout, kSeriesName,
+    : MemoryTrack<kSystemMemoryTrackDimension>(parent, timeline_info, viewport, layout, kSeriesName,
                                                kTrackValueDecimalDigits, kTrackValueLabelUnit,
                                                capture_data) {
   // Colors are selected from https://convertingcolors.com/list/avery.html.

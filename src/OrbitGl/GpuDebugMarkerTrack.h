@@ -26,7 +26,8 @@ class TextRenderer;
 // `GpuTrack`.
 class GpuDebugMarkerTrack final : public TimerTrack {
  public:
-  explicit GpuDebugMarkerTrack(CaptureViewElement* parent, TimeGraph* time_graph,
+  explicit GpuDebugMarkerTrack(CaptureViewElement* parent,
+                               const orbit_gl::TimelineInfoInterface* timeline_info,
                                orbit_gl::Viewport* viewport, TimeGraphLayout* layout,
                                uint64_t timeline_hash, OrbitApp* app,
                                const orbit_client_data::CaptureData* capture_data,

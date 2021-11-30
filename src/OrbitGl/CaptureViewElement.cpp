@@ -4,14 +4,14 @@
 
 #include "CaptureViewElement.h"
 
-#include "TimeGraph.h"
+#include "Introspection/Introspection.h"
 #include "Viewport.h"
 
 namespace orbit_gl {
 
-CaptureViewElement::CaptureViewElement(CaptureViewElement* parent, TimeGraph* time_graph,
-                                       orbit_gl::Viewport* viewport, TimeGraphLayout* layout)
-    : viewport_(viewport), layout_(layout), time_graph_(time_graph), parent_(parent) {
+CaptureViewElement::CaptureViewElement(CaptureViewElement* parent, Viewport* viewport,
+                                       TimeGraphLayout* layout)
+    : viewport_(viewport), layout_(layout), parent_(parent) {
   CHECK(layout != nullptr);
 }
 

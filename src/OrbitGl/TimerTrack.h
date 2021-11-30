@@ -50,7 +50,8 @@ struct DrawData {
 
 class TimerTrack : public Track {
  public:
-  explicit TimerTrack(CaptureViewElement* parent, TimeGraph* time_graph,
+  explicit TimerTrack(CaptureViewElement* parent,
+                      const orbit_gl::TimelineInfoInterface* timeline_info,
                       orbit_gl::Viewport* viewport, TimeGraphLayout* layout, OrbitApp* app,
                       const orbit_client_data::CaptureData* capture_data,
                       orbit_client_data::TimerData* timer_data);
@@ -131,9 +132,9 @@ class TimerTrack : public Track {
 
   [[nodiscard]] static internal::DrawData GetDrawData(
       uint64_t min_tick, uint64_t max_tick, float track_pos_x, float track_width, Batcher* batcher,
-      TimeGraph* time_graph, orbit_gl::Viewport* viewport, bool is_collapsed,
-      const orbit_client_protos::TimerInfo* selected_timer, uint64_t highlighted_function_id,
-      uint64_t highlighted_group_id);
+      const orbit_gl::TimelineInfoInterface* timeline_info, orbit_gl::Viewport* viewport,
+      bool is_collapsed, const orbit_client_protos::TimerInfo* selected_timer,
+      uint64_t highlighted_function_id, uint64_t highlighted_group_id);
 
   [[nodiscard]] virtual std::string GetBoxTooltip(const Batcher& batcher, PickingId id) const;
   [[nodiscard]] std::unique_ptr<PickingUserData> CreatePickingUserData(

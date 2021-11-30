@@ -26,7 +26,6 @@
 #include "OrbitBase/ThreadConstants.h"
 #include "OrbitBase/ThreadUtils.h"
 #include "TextRenderer.h"
-#include "TimeGraph.h"
 #include "TimeGraphLayout.h"
 #include "TriangleToggle.h"
 #include "Viewport.h"
@@ -38,22 +37,23 @@ using orbit_client_protos::TimerInfo;
 
 using orbit_grpc_protos::InstrumentedFunction;
 
-ThreadTrack::ThreadTrack(CaptureViewElement* parent, TimeGraph* time_graph,
+ThreadTrack::ThreadTrack(CaptureViewElement* parent,
+                         const orbit_gl::TimelineInfoInterface* timeline_info,
                          orbit_gl::Viewport* viewport, TimeGraphLayout* layout, uint32_t thread_id,
                          OrbitApp* app, const orbit_client_data::CaptureData* capture_data,
                          orbit_client_data::ThreadTrackDataProvider* thread_track_data_provider)
-    : TimerTrack(parent, time_graph, viewport, layout, app, capture_data, nullptr),
+    : TimerTrack(parent, timeline_info, viewport, layout, app, capture_data, nullptr),
       thread_id_{thread_id},
       thread_track_data_provider_{thread_track_data_provider} {
   Color color = TimeGraph::GetThreadColor(thread_id);
   thread_state_bar_ = std::make_shared<orbit_gl::ThreadStateBar>(
-      this, app_, time_graph, viewport, layout, capture_data, thread_id, color);
+      this, app_, timeline_info_, viewport, layout, capture_data, thread_id, color);
 
   event_bar_ = std::make_shared<orbit_gl::CallstackThreadBar>(
-      this, app_, time_graph, viewport, layout, capture_data, thread_id, color);
+      this, app_, timeline_info_, viewport, layout, capture_data, thread_id, color);
 
   tracepoint_bar_ = std::make_shared<orbit_gl::TracepointThreadBar>(
-      this, app_, time_graph, viewport, layout, capture_data, thread_id, color);
+      this, app_, timeline_info_, viewport, layout, capture_data, thread_id, color);
 }
 
 std::string ThreadTrack::GetName() const {
@@ -359,11 +359,11 @@ void ThreadTrack::OnTimer(const TimerInfo& timer_info) {
   thread_track_data_provider_->AddTimer(timer_info);
 }
 
-[[nodiscard]] static std::pair<float, float> GetBoxPosXAndWidth(const internal::DrawData& draw_data,
-                                                                const TimeGraph* time_graph,
-                                                                const TimerInfo& timer_info) {
-  double start_us = time_graph->GetUsFromTick(timer_info.start());
-  double end_us = time_graph->GetUsFromTick(timer_info.end());
+[[nodiscard]] static std::pair<float, float> GetBoxPosXAndWidth(
+    const internal::DrawData& draw_data, const orbit_gl::TimelineInfoInterface* timeline_info,
+    const TimerInfo& timer_info) {
+  double start_us = timeline_info->GetUsFromTick(timer_info.start());
+  double end_us = timeline_info->GetUsFromTick(timer_info.end());
   double elapsed_us = end_us - start_us;
   double normalized_start = start_us * draw_data.inv_time_window;
   double normalized_length = elapsed_us * draw_data.inv_time_window;
@@ -386,7 +386,7 @@ void ThreadTrack::DoUpdatePrimitives(Batcher& batcher, TextRenderer& text_render
   visible_timer_count_ = 0;
 
   const internal::DrawData draw_data =
-      GetDrawData(min_tick, max_tick, GetPos()[0], GetWidth(), &batcher, time_graph_, viewport_,
+      GetDrawData(min_tick, max_tick, GetPos()[0], GetWidth(), &batcher, timeline_info_, viewport_,
                   collapse_toggle_->IsCollapsed(), app_->selected_timer(),
                   app_->GetFunctionIdToHighlight(), app_->GetGroupIdToHighlight());
 
@@ -402,7 +402,7 @@ void ThreadTrack::DoUpdatePrimitives(Batcher& batcher, TextRenderer& text_render
       std::unique_ptr<PickingUserData> user_data = CreatePickingUserData(batcher, *timer_info);
 
       auto box_height = GetDefaultBoxHeight();
-      const auto [pos_x, size_x] = GetBoxPosXAndWidth(draw_data, time_graph_, *timer_info);
+      const auto [pos_x, size_x] = GetBoxPosXAndWidth(draw_data, timeline_info_, *timer_info);
       const Vec2 pos = {pos_x, world_timer_y};
       const Vec2 size = {size_x, box_height};
 

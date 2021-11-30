@@ -9,8 +9,7 @@
 
 #include "OrbitAccessibility/AccessibleInterface.h"
 #include "OrbitBase/Logging.h"
-
-class TimeGraph;
+#include "TimeGraph.h"
 
 namespace orbit_gl {
 

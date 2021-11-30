@@ -16,7 +16,8 @@ constexpr size_t kSystemMemoryTrackDimension = 3;
 
 class SystemMemoryTrack final : public MemoryTrack<kSystemMemoryTrackDimension> {
  public:
-  explicit SystemMemoryTrack(CaptureViewElement* parent, TimeGraph* time_graph,
+  explicit SystemMemoryTrack(CaptureViewElement* parent,
+                             const orbit_gl::TimelineInfoInterface* timeline_info,
                              orbit_gl::Viewport* viewport, TimeGraphLayout* layout,
                              const orbit_client_data::CaptureData* capture_data);
 

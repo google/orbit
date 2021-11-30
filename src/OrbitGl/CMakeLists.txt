@@ -63,6 +63,7 @@ target_sources(
          ThreadTrack.h
          TimeGraph.h
          TimeGraphLayout.h
+         TimelineInfoInterface.h
          Timer.h
          TimerInfosIterator.h
          TimerTrack.h

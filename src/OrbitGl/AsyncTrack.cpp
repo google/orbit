@@ -22,7 +22,6 @@
 #include "ManualInstrumentationManager.h"
 #include "OrbitBase/Logging.h"
 #include "TextRenderer.h"
-#include "TimeGraph.h"
 #include "TimeGraphLayout.h"
 #include "TriangleToggle.h"
 #include "Viewport.h"
@@ -30,11 +29,12 @@
 using orbit_client_protos::TimerInfo;
 using orbit_grpc_protos::InstrumentedFunction;
 
-AsyncTrack::AsyncTrack(CaptureViewElement* parent, TimeGraph* time_graph,
+AsyncTrack::AsyncTrack(CaptureViewElement* parent,
+                       const orbit_gl::TimelineInfoInterface* timeline_info,
                        orbit_gl::Viewport* viewport, TimeGraphLayout* layout, std::string name,
                        OrbitApp* app, const orbit_client_data::CaptureData* capture_data,
                        orbit_client_data::TimerData* timer_data)
-    : TimerTrack(parent, time_graph, viewport, layout, app, capture_data, timer_data),
+    : TimerTrack(parent, timeline_info, viewport, layout, app, capture_data, timer_data),
       name_(std::move(name)) {}
 
 [[nodiscard]] std::string AsyncTrack::GetBoxTooltip(const Batcher& batcher, PickingId id) const {
