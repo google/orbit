@@ -241,7 +241,7 @@ bool TimerTrack::DrawTimer(TextRenderer& text_renderer, const TimerInfo* prev_ti
   return true;
 }
 
-void TimerTrack::DoUpdatePrimitives(Batcher* batcher, TextRenderer& text_renderer,
+void TimerTrack::DoUpdatePrimitives(Batcher& batcher, TextRenderer& text_renderer,
                                     uint64_t min_tick, uint64_t max_tick,
                                     PickingMode picking_mode) {
   Track::DoUpdatePrimitives(batcher, text_renderer, min_tick, max_tick, picking_mode);
@@ -252,7 +252,7 @@ void TimerTrack::DoUpdatePrimitives(Batcher* batcher, TextRenderer& text_rendere
   draw_data.min_tick = min_tick;
   draw_data.max_tick = max_tick;
 
-  draw_data.batcher = batcher;
+  draw_data.batcher = &batcher;
   draw_data.viewport = viewport_;
 
   draw_data.track_start_x = GetPos()[0];

@@ -538,7 +538,7 @@ void TimeGraph::PrepareBatcherAndUpdatePrimitives(PickingMode picking_mode) {
   uint64_t min_tick = GetTickFromUs(min_time_us_);
   uint64_t max_tick = GetTickFromUs(max_time_us_);
 
-  CaptureViewElement::UpdatePrimitives(&batcher_, text_renderer_static_, min_tick, max_tick,
+  CaptureViewElement::UpdatePrimitives(batcher_, text_renderer_static_, min_tick, max_tick,
                                        picking_mode);
 
   batcher_.PopTranslation();

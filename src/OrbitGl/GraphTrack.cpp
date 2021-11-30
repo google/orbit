@@ -81,7 +81,7 @@ void GraphTrack<Dimension>::DoDraw(Batcher& batcher, TextRenderer& text_renderer
 }
 
 template <size_t Dimension>
-void GraphTrack<Dimension>::DoUpdatePrimitives(Batcher* batcher, TextRenderer& text_renderer,
+void GraphTrack<Dimension>::DoUpdatePrimitives(Batcher& batcher, TextRenderer& text_renderer,
                                                uint64_t min_tick, uint64_t max_tick,
                                                PickingMode picking_mode) {
   Track::DoUpdatePrimitives(batcher, text_renderer, min_tick, max_tick, picking_mode);
@@ -93,7 +93,7 @@ void GraphTrack<Dimension>::DoUpdatePrimitives(Batcher* batcher, TextRenderer& t
   Vec2 content_pos = GetPos();
   content_pos[1] += layout_->GetTrackTabHeight();
   Box box(content_pos, Vec2(GetWidth(), content_height + GetLegendHeight()), track_z);
-  batcher->AddBox(box, GetTrackBackgroundColor(), shared_from_this());
+  batcher.AddBox(box, GetTrackBackgroundColor(), shared_from_this());
 
   const bool picking = picking_mode != PickingMode::kNone;
   if (picking) return;
@@ -239,7 +239,7 @@ void GraphTrack<Dimension>::DrawLegend(Batcher& batcher, TextRenderer& text_rend
 }
 
 template <size_t Dimension>
-void GraphTrack<Dimension>::DrawSeries(Batcher* batcher, uint64_t min_tick, uint64_t max_tick,
+void GraphTrack<Dimension>::DrawSeries(Batcher& batcher, uint64_t min_tick, uint64_t max_tick,
                                        float z) {
   auto entries = series_.GetEntriesAffectedByTimeRange(min_tick, max_tick);
   if (entries.empty()) return;
@@ -273,7 +273,7 @@ void GraphTrack<Dimension>::DrawSeries(Batcher* batcher, uint64_t min_tick, uint
 
 template <size_t Dimension>
 void GraphTrack<Dimension>::DrawSingleSeriesEntry(
-    Batcher* batcher, uint64_t start_tick, uint64_t end_tick,
+    Batcher& batcher, uint64_t start_tick, uint64_t end_tick,
     const std::array<float, Dimension>& normalized_cumulative_values, float z) {
   const float x0 = time_graph_->GetWorldFromTick(start_tick);
   const float width = time_graph_->GetWorldFromTick(end_tick) - x0;
@@ -284,7 +284,7 @@ void GraphTrack<Dimension>::DrawSingleSeriesEntry(
   for (size_t i = 0; i < Dimension; ++i) {
     float height = normalized_cumulative_values[i] * content_height - (base_y - y0);
     y0 -= height;
-    batcher->AddShadedBox(Vec2(x0, y0), Vec2(width, height), z, GetColor(i));
+    batcher.AddShadedBox(Vec2(x0, y0), Vec2(width, height), z, GetColor(i));
   }
 }
 

@@ -80,7 +80,7 @@ class ThreadTrack final : public TimerTrack {
   [[nodiscard]] std::vector<CaptureViewElement*> GetAllChildren() const override;
 
  protected:
-  void DoUpdatePrimitives(Batcher* batcher, TextRenderer& text_renderer, uint64_t min_tick,
+  void DoUpdatePrimitives(Batcher& batcher, TextRenderer& text_renderer, uint64_t min_tick,
                           uint64_t max_tick, PickingMode picking_mode) override;
 
   [[nodiscard]] int64_t GetThreadId() const { return thread_id_; }

@@ -80,7 +80,7 @@ void BasicPageFaultsTrack::DoDraw(Batcher& batcher, TextRenderer& text_renderer,
 }
 
 void BasicPageFaultsTrack::DrawSingleSeriesEntry(
-    Batcher* batcher, uint64_t start_tick, uint64_t end_tick,
+    Batcher& batcher, uint64_t start_tick, uint64_t end_tick,
     const std::array<float, kBasicPageFaultsTrackDimension>& current_normalized_values,
     const std::array<float, kBasicPageFaultsTrackDimension>& next_normalized_values, float z,
     bool is_last) {
@@ -95,7 +95,7 @@ void BasicPageFaultsTrack::DrawSingleSeriesEntry(
   float width = time_graph_->GetWorldFromTick(end_tick) - x0;
   float content_height = GetGraphContentHeight();
   float y0 = GetGraphContentBottomY() - GetGraphContentHeight();
-  batcher->AddShadedBox(Vec2(x0, y0), Vec2(width, content_height), z, kHightlightingColor);
+  batcher.AddShadedBox(Vec2(x0, y0), Vec2(width, content_height), z, kHightlightingColor);
 }
 
 bool BasicPageFaultsTrack::IsCollapsed() const {

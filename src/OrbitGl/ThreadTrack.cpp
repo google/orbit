@@ -376,18 +376,17 @@ void ThreadTrack::OnTimer(const TimerInfo& timer_info) {
 // We minimize overdraw when drawing lines for small events by discarding events that would just
 // draw over an already drawn pixel line. When zoomed in enough that all events are drawn as boxes,
 // this has no effect. When zoomed  out, many events will be discarded quickly.
-void ThreadTrack::DoUpdatePrimitives(Batcher* batcher, TextRenderer& text_renderer,
+void ThreadTrack::DoUpdatePrimitives(Batcher& batcher, TextRenderer& text_renderer,
                                      uint64_t min_tick, uint64_t max_tick,
                                      PickingMode /*picking_mode*/) {
   // TODO(b/203181055): The parent class already provides an implementation, but this is completely
   // ignored because ThreadTrack uses the ScopeTree, and TimerTrack doesn't.
   // TimerTrack::DoUpdatePrimitives(batcher, text_renderer, min_tick, max_tick, picking_mode);
 
-  CHECK(batcher);
   visible_timer_count_ = 0;
 
   const internal::DrawData draw_data =
-      GetDrawData(min_tick, max_tick, GetPos()[0], GetWidth(), batcher, time_graph_, viewport_,
+      GetDrawData(min_tick, max_tick, GetPos()[0], GetWidth(), &batcher, time_graph_, viewport_,
                   collapse_toggle_->IsCollapsed(), app_->selected_timer(),
                   app_->GetFunctionIdToHighlight(), app_->GetGroupIdToHighlight());
 
@@ -400,7 +399,7 @@ void ThreadTrack::DoUpdatePrimitives(Batcher* batcher, TextRenderer& text_render
       ++visible_timer_count_;
 
       Color color = GetTimerColor(*timer_info, draw_data);
-      std::unique_ptr<PickingUserData> user_data = CreatePickingUserData(*batcher, *timer_info);
+      std::unique_ptr<PickingUserData> user_data = CreatePickingUserData(batcher, *timer_info);
 
       auto box_height = GetDefaultBoxHeight();
       const auto [pos_x, size_x] = GetBoxPosXAndWidth(draw_data, time_graph_, *timer_info);
@@ -412,9 +411,9 @@ void ThreadTrack::DoUpdatePrimitives(Batcher* batcher, TextRenderer& text_render
         if (!collapse_toggle_->IsCollapsed() && BoxHasRoomForText(text_renderer, size[0])) {
           DrawTimesliceText(text_renderer, *timer_info, draw_data.track_start_x, pos, size);
         }
-        batcher->AddShadedBox(pos, size, draw_data.z, color, std::move(user_data));
+        batcher.AddShadedBox(pos, size, draw_data.z, color, std::move(user_data));
       } else {
-        batcher->AddVerticalLine(pos, box_height, draw_data.z, color, std::move(user_data));
+        batcher.AddVerticalLine(pos, box_height, draw_data.z, color, std::move(user_data));
       }
     }
   }

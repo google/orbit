@@ -32,12 +32,12 @@ void CaptureViewElement::Draw(Batcher& batcher, TextRenderer& text_renderer,
   batcher.PopTranslation();
 }
 
-void CaptureViewElement::UpdatePrimitives(Batcher* batcher, TextRenderer& text_renderer,
+void CaptureViewElement::UpdatePrimitives(Batcher& batcher, TextRenderer& text_renderer,
                                           uint64_t min_tick, uint64_t max_tick,
                                           PickingMode picking_mode) {
   ORBIT_SCOPE_FUNCTION;
 
-  batcher->PushTranslation(0, 0, DetermineZOffset());
+  batcher.PushTranslation(0, 0, DetermineZOffset());
   text_renderer.PushTranslation(0, 0, DetermineZOffset());
 
   DoUpdatePrimitives(batcher, text_renderer, min_tick, max_tick, picking_mode);
@@ -49,7 +49,7 @@ void CaptureViewElement::UpdatePrimitives(Batcher* batcher, TextRenderer& text_r
   }
 
   text_renderer.PopTranslation();
-  batcher->PopTranslation();
+  batcher.PopTranslation();
 }
 
 void CaptureViewElement::UpdateLayout() {

@@ -68,7 +68,7 @@ class GraphTrack : public Track {
   void DoDraw(Batcher& batcher, TextRenderer& text_renderer,
               const DrawContext& draw_context) override;
 
-  void DoUpdatePrimitives(Batcher* batcher, TextRenderer& text_renderer, uint64_t min_tick,
+  void DoUpdatePrimitives(Batcher& batcher, TextRenderer& text_renderer, uint64_t min_tick,
                           uint64_t max_tick, PickingMode picking_mode) override;
 
   [[nodiscard]] virtual Color GetColor(size_t index) const;
@@ -95,7 +95,7 @@ class GraphTrack : public Track {
   virtual void DrawLegend(Batcher& batcher, TextRenderer& text_renderer,
                           const std::array<std::string, Dimension>& series_names,
                           const Color& legend_text_color);
-  virtual void DrawSeries(Batcher* batcher, uint64_t min_tick, uint64_t max_tick, float z);
+  virtual void DrawSeries(Batcher& batcher, uint64_t min_tick, uint64_t max_tick, float z);
 
   [[nodiscard]] double RoundPrecision(double value) {
     return std::round(value * std::pow(10, GetNumberOfDecimalDigits())) /
@@ -106,7 +106,7 @@ class GraphTrack : public Track {
 
  private:
   [[nodiscard]] virtual std::string GetLegendTooltips(size_t legend_index) const = 0;
-  void DrawSingleSeriesEntry(Batcher* batcher, uint64_t start_tick, uint64_t end_tick,
+  void DrawSingleSeriesEntry(Batcher& batcher, uint64_t start_tick, uint64_t end_tick,
                              const std::array<float, Dimension>& normalized_values, float z);
 
   std::optional<std::array<Color, Dimension>> series_colors_;
