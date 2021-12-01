@@ -56,7 +56,14 @@ void Tunnel::Start() {
 }
 
 void Tunnel::Stop() {
-  if (CurrentState() == State::kError) {
+  // Tunnel::Stop is currently called from 2 different locations. 1. When the local_socket_ signals
+  // a disconnect and 2. from ServiceDeployManager::ShutdownTunnel. If 1. happens before 2.,
+  // ShutdownTunnel will wait forever for a stopped signal. This is here solved by emitting
+  // stopped() when the Tunnel is already stopped.
+
+  if (CurrentState() == State::kError || CurrentState() == State::kDone) {
+    // TODO (b/208613682) Tunnel::Stop should return a future and not use the stopped signal anymore
+    emit stopped();
     return;
   }
 
@@ -64,6 +71,9 @@ void Tunnel::Stop() {
     SetState(State::kDone);
     deleteByEventLoop(this, &local_server_);
     channel_ = std::nullopt;
+    // TODO (b/208613682) Tunnel::Stop should return a future and not use the stopped signal anymore
+    emit stopped();
+    return;
   }
 
   if (CurrentState() == State::kServerListening) {
@@ -114,6 +124,7 @@ outcome::result<void> Tunnel::startup() {
     case State::kShutdown:
     case State::kFlushing:
     case State::kSendEOF:
+    case State::kWaitRemoteEOF:
     case State::kClosingChannel:
     case State::kWaitRemoteClosed:
     case State::kDone:
@@ -142,6 +153,11 @@ outcome::result<void> Tunnel::shutdown() {
     }
     case State::kSendEOF: {
       OUTCOME_TRY(channel_->SendEOF());
+      SetState(State::kWaitRemoteEOF);
+      ABSL_FALLTHROUGH_INTENDED;
+    }
+    case State::kWaitRemoteEOF: {
+      OUTCOME_TRY(channel_->WaitRemoteEOF());
       SetState(State::kClosingChannel);
       ABSL_FALLTHROUGH_INTENDED;
     }

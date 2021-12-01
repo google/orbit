@@ -18,7 +18,8 @@ enum class Error {
   kCouldNotListen,
   kRemoteSocketClosed,
   kLocalSocketClosed,
-  kCouldNotOpenFile
+  kCouldNotOpenFile,
+  kOrbitServiceShutdownTimedout
 };
 
 struct ErrorCategory : std::error_category {

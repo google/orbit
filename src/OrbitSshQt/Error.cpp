@@ -24,6 +24,8 @@ std::string ErrorCategory::message(int condition) const {
       return "The local socket was closed.";
     case Error::kCouldNotOpenFile:
       return "Could not open file.";
+    case Error::kOrbitServiceShutdownTimedout:
+      return "Shut down of OrbitService timed out.";
   }
 
   return absl::StrFormat("Unkown error condition: %i.", condition);
