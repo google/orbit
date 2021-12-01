@@ -15,7 +15,7 @@
 
 namespace orbit_data_views {
 
-void CheckSingleAction(const std::vector<std::string>& context_menu, const std::string& action,
+void CheckSingleAction(const std::vector<std::string_view>& context_menu, std::string_view action,
                        ContextMenuEntry menu_entry) {
   switch (menu_entry) {
     case ContextMenuEntry::kEnabled:
@@ -29,7 +29,7 @@ void CheckSingleAction(const std::vector<std::string>& context_menu, const std::
   }
 }
 
-void CheckCopySelectionIsInvoked(const std::vector<std::string>& context_menu,
+void CheckCopySelectionIsInvoked(const std::vector<std::string_view>& context_menu,
                                  const MockAppInterface& app, DataView& view,
                                  const std::string& expected_clipboard) {
   const auto copy_selection_index =
@@ -42,10 +42,9 @@ void CheckCopySelectionIsInvoked(const std::vector<std::string>& context_menu,
   EXPECT_EQ(clipboard, expected_clipboard);
 }
 
-void CheckExportToCsvIsInvoked(const std::vector<std::string>& context_menu,
+void CheckExportToCsvIsInvoked(const std::vector<std::string_view>& context_menu,
                                const MockAppInterface& app, DataView& view,
-                               const std::string& expected_contents,
-                               const std::string& action_name) {
+                               const std::string& expected_contents, std::string_view action_name) {
   const auto action_index =
       std::find(context_menu.begin(), context_menu.end(), action_name) - context_menu.begin();
   ASSERT_LT(action_index, context_menu.size());
@@ -69,10 +68,10 @@ void CheckExportToCsvIsInvoked(const std::vector<std::string>& context_menu,
   EXPECT_EQ(contents_or_error.value(), expected_contents);
 }
 
-std::vector<std::string> FlattenContextMenuWithGrouping(
-    const std::vector<std::vector<std::string>>& menu_with_grouping) {
-  std::vector<std::string> menu;
-  for (const std::vector<std::string>& action_group : menu_with_grouping) {
+std::vector<std::string_view> FlattenContextMenuWithGrouping(
+    const std::vector<std::vector<std::string_view>>& menu_with_grouping) {
+  std::vector<std::string_view> menu;
+  for (const std::vector<std::string_view>& action_group : menu_with_grouping) {
     orbit_base::Append(menu, action_group);
   }
   return menu;

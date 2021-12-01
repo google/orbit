@@ -114,7 +114,7 @@ TEST_F(ModulesDataViewTest, ColumnValuesAreCorrect) {
 
 TEST_F(ModulesDataViewTest, ContextMenuEntriesArePresent) {
   AddModulesByIndices({0});
-  std::vector<std::string> context_menu =
+  std::vector<std::string_view> context_menu =
       FlattenContextMenuWithGrouping(view_.GetContextMenuWithGrouping(0, {0}));
 
   CheckSingleAction(context_menu, "Copy Selection", ContextMenuEntry::kEnabled);
@@ -124,7 +124,7 @@ TEST_F(ModulesDataViewTest, ContextMenuEntriesArePresent) {
 
 TEST_F(ModulesDataViewTest, ContextMenuActionsAreInvoked) {
   AddModulesByIndices({0});
-  std::vector<std::string> context_menu =
+  std::vector<std::string_view> context_menu =
       FlattenContextMenuWithGrouping(view_.GetContextMenuWithGrouping(0, {0}));
   ASSERT_FALSE(context_menu.empty());
 

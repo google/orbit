@@ -282,7 +282,7 @@ TEST_F(SamplingReportDataViewTest, ContextMenuEntriesArePresentCorrectly) {
       });
 
   auto get_context_menu_from_selected_indices =
-      [&](const std::vector<int>& selected_indices) -> std::vector<std::string> {
+      [&](const std::vector<int>& selected_indices) -> std::vector<std::string_view> {
     std::vector<int> selected_rows;
     for (int index : selected_indices) {
       for (int row = 0, row_counts = view_.GetNumElements(); row < row_counts; row++) {
@@ -296,7 +296,7 @@ TEST_F(SamplingReportDataViewTest, ContextMenuEntriesArePresentCorrectly) {
   };
 
   auto verify_context_menu_action_availability = [&](const std::vector<int>& selected_indices) {
-    std::vector<std::string> context_menu =
+    std::vector<std::string_view> context_menu =
         get_context_menu_from_selected_indices(selected_indices);
 
     // Common actions should always be available.
@@ -392,7 +392,7 @@ TEST_F(SamplingReportDataViewTest, ContextMenuActionsAreInvoked) {
           });
 
   AddFunctionsByIndices({0});
-  std::vector<std::string> context_menu =
+  std::vector<std::string_view> context_menu =
       FlattenContextMenuWithGrouping(view_.GetContextMenuWithGrouping(0, {0}));
   ASSERT_FALSE(context_menu.empty());
 

@@ -107,7 +107,7 @@ TEST_F(TracepointsDataViewTest, ContextMenuEntriesArePresentCorrectly) {
       });
 
   auto verify_context_menu_action_availability = [&](const std::vector<int>& selected_indices) {
-    std::vector<std::string> context_menu =
+    std::vector<std::string_view> context_menu =
         FlattenContextMenuWithGrouping(view_.GetContextMenuWithGrouping(0, selected_indices));
 
     // Common actions should always be available.
@@ -143,7 +143,7 @@ TEST_F(TracepointsDataViewTest, ContextMenuActionsAreInvoked) {
       .WillRepeatedly(testing::ReturnPointee(&tracepoint_selected));
 
   SetTracepointsByIndices({0});
-  std::vector<std::string> context_menu =
+  std::vector<std::string_view> context_menu =
       FlattenContextMenuWithGrouping(view_.GetContextMenuWithGrouping(0, {0}));
   ASSERT_FALSE(context_menu.empty());
 

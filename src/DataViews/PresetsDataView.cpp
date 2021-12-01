@@ -148,12 +148,12 @@ void PresetsDataView::DoSort() {
   }
 }
 
-std::vector<std::vector<std::string>> PresetsDataView::GetContextMenuWithGrouping(
+std::vector<std::vector<std::string_view>> PresetsDataView::GetContextMenuWithGrouping(
     int clicked_index, const std::vector<int>& selected_indices) {
   // Note that the UI already enforces a single selection.
   CHECK(selected_indices.size() == 1);
 
-  std::vector<std::string> action_group;
+  std::vector<std::string_view> action_group;
   const PresetFile& preset = GetPreset(selected_indices[0]);
   if (app_->GetPresetLoadState(preset).state != PresetLoadState::kNotLoadable) {
     action_group.emplace_back(kMenuActionLoadPreset);
@@ -161,14 +161,14 @@ std::vector<std::vector<std::string>> PresetsDataView::GetContextMenuWithGroupin
   action_group.emplace_back(kMenuActionDeletePreset);
   action_group.emplace_back(kMenuActionShowInExplorer);
 
-  std::vector<std::vector<std::string>> menu =
+  std::vector<std::vector<std::string_view>> menu =
       DataView::GetContextMenuWithGrouping(clicked_index, selected_indices);
   menu.insert(menu.begin(), action_group);
 
   return menu;
 }
 
-void PresetsDataView::OnContextMenu(const std::string& action, int menu_index,
+void PresetsDataView::OnContextMenu(std::string_view action, int menu_index,
                                     const std::vector<int>& item_indices) {
   // Note that the UI already enforces a single selection.
   CHECK(item_indices.size() == 1);

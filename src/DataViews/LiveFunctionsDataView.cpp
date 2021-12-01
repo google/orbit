@@ -200,7 +200,7 @@ void LiveFunctionsDataView::DoSort() {
   }
 }
 
-std::vector<std::vector<std::string>> LiveFunctionsDataView::GetContextMenuWithGrouping(
+std::vector<std::vector<std::string_view>> LiveFunctionsDataView::GetContextMenuWithGrouping(
     int clicked_index, const std::vector<int>& selected_indices) {
   bool enable_select = false;
   bool enable_unselect = false;
@@ -237,11 +237,11 @@ std::vector<std::vector<std::string>> LiveFunctionsDataView::GetContextMenuWithG
     }
   }
 
-  std::vector<std::vector<std::string>> menu =
+  std::vector<std::vector<std::string_view>> menu =
       DataView::GetContextMenuWithGrouping(clicked_index, selected_indices);
   menu.begin()->push_back(kMenuActionExportEventsToCsv);
 
-  std::vector<std::string> action_group;
+  std::vector<std::string_view> action_group;
   if (enable_iterator) action_group.emplace_back(kMenuActionIterate);
   // For now, these actions only make sense when one function is selected,
   // so we don't show them otherwise.
@@ -323,7 +323,7 @@ ErrorMessageOr<void> LiveFunctionsDataView::ExportAllEventsToCsv(
   return outcome::success();
 }
 
-void LiveFunctionsDataView::OnContextMenu(const std::string& action, int menu_index,
+void LiveFunctionsDataView::OnContextMenu(std::string_view action, int menu_index,
                                           const std::vector<int>& item_indices) {
   const CaptureData& capture_data = app_->GetCaptureData();
   if (action == kMenuActionSelect || action == kMenuActionUnselect ||

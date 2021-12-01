@@ -23,11 +23,11 @@ class TracepointsDataView : public DataView {
 
   const std::vector<Column>& GetColumns() override;
   int GetDefaultSortingColumn() override { return kColumnCategory; }
-  std::vector<std::vector<std::string>> GetContextMenuWithGrouping(
+  std::vector<std::vector<std::string_view>> GetContextMenuWithGrouping(
       int clicked_index, const std::vector<int>& selected_indices) override;
   std::string GetValue(int row, int column) override;
 
-  void OnContextMenu(const std::string& action, int menu_index,
+  void OnContextMenu(std::string_view action, int menu_index,
                      const std::vector<int>& item_indices) override;
 
   void SetTracepoints(const std::vector<orbit_grpc_protos::TracepointInfo>& tracepoints);

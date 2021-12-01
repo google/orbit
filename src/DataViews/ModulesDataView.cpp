@@ -108,7 +108,7 @@ void ModulesDataView::DoSort() {
   }
 }
 
-std::vector<std::vector<std::string>> ModulesDataView::GetContextMenuWithGrouping(
+std::vector<std::vector<std::string_view>> ModulesDataView::GetContextMenuWithGrouping(
     int clicked_index, const std::vector<int>& selected_indices) {
   bool enable_load = false;
   bool enable_verify = false;
@@ -123,20 +123,20 @@ std::vector<std::vector<std::string>> ModulesDataView::GetContextMenuWithGroupin
     }
   }
 
-  std::vector<std::string> action_group;
+  std::vector<std::string_view> action_group;
   if (enable_load) action_group.emplace_back(kMenuActionLoadSymbols);
   if (enable_verify && absl::GetFlag(FLAGS_enable_frame_pointer_validator)) {
     action_group.emplace_back(kMenuActionVerifyFramePointers);
   }
 
-  std::vector<std::vector<std::string>> menu =
+  std::vector<std::vector<std::string_view>> menu =
       DataView::GetContextMenuWithGrouping(clicked_index, selected_indices);
   menu.insert(menu.begin(), action_group);
 
   return menu;
 }
 
-void ModulesDataView::OnContextMenu(const std::string& action, int menu_index,
+void ModulesDataView::OnContextMenu(std::string_view action, int menu_index,
                                     const std::vector<int>& item_indices) {
   if (action == kMenuActionLoadSymbols) {
     std::vector<ModuleData*> modules_to_load;

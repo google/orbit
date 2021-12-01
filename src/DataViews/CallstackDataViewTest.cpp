@@ -312,7 +312,7 @@ TEST_F(CallstackDataViewTest, ContextMenuEntriesArePresentCorrectly) {
       });
 
   auto verify_context_menu_action_availability = [&](std::vector<int> selected_indices) {
-    std::vector<std::string> context_menu =
+    std::vector<std::string_view> context_menu =
         FlattenContextMenuWithGrouping(view_.GetContextMenuWithGrouping(0, selected_indices));
 
     // Common actions should always be available.
@@ -381,7 +381,7 @@ TEST_F(CallstackDataViewTest, ContextMenuActionsAreInvoked) {
 
   constexpr uint64_t kFrameAddress = 0x3140;
   SetCallstackFromFrames({kFrameAddress});
-  std::vector<std::string> context_menu =
+  std::vector<std::string_view> context_menu =
       FlattenContextMenuWithGrouping(view_.GetContextMenuWithGrouping(0, {0}));
   ASSERT_FALSE(context_menu.empty());
 

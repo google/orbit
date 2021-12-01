@@ -68,44 +68,19 @@ void DataView::OnDataChanged() {
   OnSort(sorting_column_, std::optional<SortingOrder>{});
 }
 
-const std::string DataView::kMenuActionLoadSymbols = "Load Symbols";
-const std::string DataView::kMenuActionSelect = "Hook";
-const std::string DataView::kMenuActionUnselect = "Unhook";
-const std::string DataView::kMenuActionEnableFrameTrack = "Enable frame track(s)";
-const std::string DataView::kMenuActionDisableFrameTrack = "Disable frame track(s)";
-const std::string DataView::kMenuActionIterate = "Add iterator(s)";
-
-const std::string DataView::kMenuActionVerifyFramePointers = "Verify Frame Pointers";
-
-const std::string DataView::kMenuActionDisassembly = "Go to Disassembly";
-const std::string DataView::kMenuActionSourceCode = "Go to Source code";
-
-const std::string DataView::kMenuActionJumpToFirst = "Jump to first";
-const std::string DataView::kMenuActionJumpToLast = "Jump to last";
-const std::string DataView::kMenuActionJumpToMin = "Jump to min";
-const std::string DataView::kMenuActionJumpToMax = "Jump to max";
-
-const std::string DataView::kMenuActionLoadPreset = "Load Preset";
-const std::string DataView::kMenuActionDeletePreset = "Delete Preset";
-const std::string DataView::kMenuActionShowInExplorer = "Show in Explorer";
-
-const std::string DataView::kMenuActionCopySelection = "Copy Selection";
-const std::string DataView::kMenuActionExportToCsv = "Export to CSV";
-const std::string DataView::kMenuActionExportEventsToCsv = "Export events to CSV";
-
-std::vector<std::vector<std::string>> DataView::GetContextMenuWithGrouping(
+std::vector<std::vector<std::string_view>> DataView::GetContextMenuWithGrouping(
     int /*clicked_index*/, const std::vector<int>& selected_indices) {
   // GetContextmenuWithGrouping is called when OrbitTreeView::indexAt returns a valid index and
   // hence the selected_indices retrieved from OrbitTreeView::selectionModel()->selectedIndexes()
   // should not be empty.
   CHECK(!selected_indices.empty());
 
-  static std::vector<std::string> default_group = {kMenuActionCopySelection,
-                                                   kMenuActionExportToCsv};
+  static std::vector<std::string_view> default_group = {kMenuActionCopySelection,
+                                                        kMenuActionExportToCsv};
   return {default_group};
 }
 
-void DataView::OnContextMenu(const std::string& action, int /*menu_index*/,
+void DataView::OnContextMenu(std::string_view action, int /*menu_index*/,
                              const std::vector<int>& item_indices) {
   if (action == kMenuActionExportToCsv) {
     std::string save_file = app_->GetSaveFile(".csv");

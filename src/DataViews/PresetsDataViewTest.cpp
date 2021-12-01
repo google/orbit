@@ -241,7 +241,7 @@ TEST_F(PresetsDataViewTest, CheckInvokedContextMenuActions) {
   ASSERT_THAT(date_modified, orbit_test_utils::HasNoError());
 
   view_.SetPresets({preset_file0});
-  std::vector<std::string> context_menu =
+  std::vector<std::string_view> context_menu =
       FlattenContextMenuWithGrouping(view_.GetContextMenuWithGrouping(0, {0}));
   ASSERT_FALSE(context_menu.empty());
 
@@ -330,7 +330,7 @@ TEST_F(PresetsDataViewTest, CheckLoadPresetOnDoubleClick) {
   orbit_preset_file::PresetFile preset_file0{preset_filename0, orbit_client_protos::PresetInfo{}};
 
   view_.SetPresets({preset_file0});
-  std::vector<std::string> context_menu =
+  std::vector<std::string_view> context_menu =
       FlattenContextMenuWithGrouping(view_.GetContextMenuWithGrouping(0, {0}));
   ASSERT_FALSE(context_menu.empty());
 

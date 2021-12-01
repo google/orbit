@@ -101,7 +101,7 @@ const std::string CallstackDataView::kHighlightedFunctionString = "➜ ";
 const std::string CallstackDataView::kHighlightedFunctionBlankString =
     std::string(kHighlightedFunctionString.size(), ' ');
 
-std::vector<std::vector<std::string>> CallstackDataView::GetContextMenuWithGrouping(
+std::vector<std::vector<std::string_view>> CallstackDataView::GetContextMenuWithGrouping(
     int clicked_index, const std::vector<int>& selected_indices) {
   bool enable_load = false;
   bool enable_select = false;
@@ -124,21 +124,21 @@ std::vector<std::vector<std::string>> CallstackDataView::GetContextMenuWithGroup
     }
   }
 
-  std::vector<std::string> action_group;
+  std::vector<std::string_view> action_group;
   if (enable_load) action_group.emplace_back(kMenuActionLoadSymbols);
   if (enable_select) action_group.emplace_back(kMenuActionSelect);
   if (enable_unselect) action_group.emplace_back(kMenuActionUnselect);
   if (enable_disassembly) action_group.emplace_back(kMenuActionDisassembly);
   if (enable_source_code) action_group.emplace_back(kMenuActionSourceCode);
 
-  std::vector<std::vector<std::string>> menu =
+  std::vector<std::vector<std::string_view>> menu =
       DataView::GetContextMenuWithGrouping(clicked_index, selected_indices);
   menu.insert(menu.begin(), action_group);
 
   return menu;
 }
 
-void CallstackDataView::OnContextMenu(const std::string& action, int menu_index,
+void CallstackDataView::OnContextMenu(std::string_view action, int menu_index,
                                       const std::vector<int>& item_indices) {
   if (action == kMenuActionLoadSymbols) {
     std::vector<ModuleData*> modules_to_load;
