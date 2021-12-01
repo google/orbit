@@ -7,6 +7,7 @@
 #include <absl/base/macros.h>
 
 #include <QTimer>
+#include <chrono>
 #include <type_traits>
 #include <utility>
 
@@ -15,7 +16,7 @@
 #include "OrbitSshQt/Error.h"
 
 // Maximum time that the shutdown is allowed to take.
-constexpr const int kShutdownTimeoutMs{2000};
+constexpr const std::chrono::milliseconds kShutdownTimeoutMs{2000};
 
 namespace orbit_ssh_qt {
 

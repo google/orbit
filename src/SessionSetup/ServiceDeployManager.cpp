@@ -695,20 +695,32 @@ void ServiceDeployManager::Shutdown() {
   SCOPED_TIMED_LOG("ServiceDeployManager::Shutdown");
   DeferToBackgroundThreadAndWait(this, [this]() {
     if (sftp_channel_ != nullptr) {
-      (void)ShutdownSftpChannel(sftp_channel_.get());
+      outcome::result<void> shutdown_result = ShutdownSftpChannel(sftp_channel_.get());
+      if (shutdown_result.has_error()) {
+        ERROR("Unable to ShutdownSftpChannel: %s", shutdown_result.error().message());
+      }
       sftp_channel_.reset();
     }
     if (grpc_tunnel_.has_value()) {
-      (void)ShutdownTunnel(&grpc_tunnel_.value());
+      outcome::result<void> shutdown_result = ShutdownTunnel(&grpc_tunnel_.value());
+      if (shutdown_result.has_error()) {
+        ERROR("Unable to ShutdownTunnel: %s", shutdown_result.error().message());
+      }
       grpc_tunnel_ = std::nullopt;
     }
     ssh_watchdog_timer_.stop();
     if (orbit_service_task_.has_value()) {
-      (void)ShutdownTask(&orbit_service_task_.value());
+      outcome::result<void> shutdown_result = ShutdownTask(&orbit_service_task_.value());
+      if (shutdown_result.has_error()) {
+        ERROR("Unable to ShutdownTask: %s", shutdown_result.error().message());
+      }
       orbit_service_task_ = std::nullopt;
     }
     if (session_.has_value()) {
-      (void)ShutdownSession(&session_.value());
+      outcome::result<void> shutdown_result = ShutdownSession(&session_.value());
+      if (shutdown_result.has_error()) {
+        ERROR("Unable to ShutdownSession: %s", shutdown_result.error().message());
+      }
       session_ = std::nullopt;
     }
   });

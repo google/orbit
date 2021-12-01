@@ -56,7 +56,13 @@ void Tunnel::Start() {
 }
 
 void Tunnel::Stop() {
+  // Tunnel::Stop is currently called from 2 different locations. 1. When the local_socket_ signals
+  // a disconnect and 2. from ServiceDeployManager::ShutdownTunnel. If 1. happens before 2.,
+  // ShutdownTunnel will wait forever for a stopped signal. This is here solved by emitting
+  // stopped() when the Tunnel is already stopped.
+
   if (CurrentState() == State::kError || CurrentState() == State::kDone) {
+    // TODO (b/208613682) Tunnel::Stop should return a future and not use the stopped signal anymore
     emit stopped();
     return;
   }
@@ -65,6 +71,7 @@ void Tunnel::Stop() {
     SetState(State::kDone);
     deleteByEventLoop(this, &local_server_);
     channel_ = std::nullopt;
+    // TODO (b/208613682) Tunnel::Stop should return a future and not use the stopped signal anymore
     emit stopped();
     return;
   }
