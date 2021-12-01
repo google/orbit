@@ -1,5 +1,5 @@
 """
-Copyright (c) 2020 The Orbit Authors. All rights reserved.
+Copyright (c) 2021 The Orbit Authors. All rights reserved.
 Use of this source code is governed by a BSD-style license that can be
 found in the LICENSE file.
 """
@@ -17,11 +17,52 @@ def wait_for_main_window(application: Application):
     wait_for_condition(lambda: application.top_window().class_name() == "OrbitMainWindow", 30)
 
 
+def wait_for_connection_window(application: Application):
+    wait_for_condition(lambda: application.top_window().class_name() == "orbit_session_setup::SessionSetupDialog", 30)
+
+
 def _get_number_of_instances_in_list(test_case: E2ETestCase) -> int:
     instance_list = test_case.find_control('Table', 'InstanceList')
     instance_count = instance_list.item_count()
     logging.info('Found %s rows in the instance list', instance_count)
     return instance_count
+
+
+class LoadCapture(E2ETestCase):
+    """
+    Opens a given capture file. The argument `capture_file_path` specifies the full path to the capture file.
+    It raises an exception if the capture does not exists. Also waits until the capture is loaded.
+    """
+
+    def _execute(self, capture_file_path: str):
+        # Lets ensure that we are actually in the connection window, as this test might also be executed after the
+        # main window has been opened.
+        wait_for_connection_window(self.suite.application)
+        self.suite.top_window(force_update=True)
+        logging.info('Start loading to a capture.')
+        connect_radio = self.find_control('RadioButton', 'LoadCapture')
+        connect_radio.click_input()
+
+        others_button = self.find_control('Button', '...')
+        others_button.click_input()
+
+        file_name_edit = self.find_control('Edit', 'File name:')
+        file_name_edit.set_edit_text(capture_file_path)
+
+        logging.info(f'Trying to loading to load capture file: {capture_file_path}')
+        start_session_button = self.find_control('Button', 'Start Session')
+        start_session_button.click_input()
+
+        # Unless the file does not exist, Orbit's main window will open next and contain the "Loading capture" dialog.
+        wait_for_main_window(self.suite.application)
+        # As there is a new top window (Orbit main window), we need to update the top window.
+        self.suite.top_window(force_update=True)
+
+        logging.info("Waiting for capture to load...")
+        wait_for_condition(lambda: self.find_control(
+            'Window', 'Loading capture', raise_on_failure=False) is None,
+                           max_seconds=120)
+        logging.info("Capture Loading finished")
 
 
 class ConnectToStadiaInstance(E2ETestCase):
