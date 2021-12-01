@@ -15,4 +15,4 @@ OrbitProfiler:deploy_opengl_software_renderer=True
 &: ninja/1.10.2
 
 [env]
-CONAN_CMAKE_GENERATOR=Ninja
+&: CONAN_CMAKE_GENERATOR=Ninja

@@ -7,4 +7,4 @@ build_type=Release
 &: ninja/1.10.2
 
 [env]
-CONAN_CMAKE_GENERATOR=Ninja
+&: CONAN_CMAKE_GENERATOR=Ninja
