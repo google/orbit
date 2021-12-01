@@ -101,7 +101,7 @@ class OrbitConan(ConanFile):
             self.requires("freetype/2.10.0@bincrafters/stable#0", override=True)
             self.requires("freetype-gl/79b03d9@{}".format(self._orbit_channel))
             self.requires("glad/0.1.34")
-            self.requires("imgui/1.69@bincrafters/stable#0")
+            self.requires("imgui/1.85")
             self.requires("libpng/1.6.37@bincrafters/stable#0", override=True)
             self.requires("libssh2/1.9.0#df2b6034da12cc5cb68bd3c5c22601bf")
 

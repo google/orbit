@@ -58,6 +58,8 @@ IMGUI_API void Orbit_ImGui_KeyCallback(ImGuiContext* context, int key, bool down
                                        bool shift, bool alt);
 IMGUI_API void Orbit_ImGui_CharCallback(ImGuiContext* context, unsigned int c);
 
+void Orbit_ImGui_RenderDrawLists(ImDrawData* draw_data);
+
 struct ScopeImguiContext {
   explicit ScopeImguiContext(ImGuiContext* a_State) : m_ImGuiContext(nullptr) {
     ImGuiContext* state = static_cast<ImGuiContext*>(ImGui::GetCurrentContext());
@@ -123,7 +125,7 @@ struct DebugWindow {
       ImGui::TextUnformatted(Buf.begin());
     }
 
-    if (ScrollToBottom) ImGui::SetScrollHere(1.0f);
+    if (ScrollToBottom) ImGui::SetScrollHereY(1.0f);
     ScrollToBottom = false;
 
     ImGui::EndChild();
@@ -159,7 +161,7 @@ class LogWindow {
       }
     }
 
-    if (ScrollToBottom) ImGui::SetScrollHere(1.0f);
+    if (ScrollToBottom) ImGui::SetScrollHereY(1.0f);
     ScrollToBottom = false;
     ImGui::EndChild();
     ImGui::End();
@@ -199,11 +201,10 @@ struct VizWindow {
       CanvasSize.x -= 20;
       CanvasSize.y -= 20;
       ImGui::SetNextWindowSize(CanvasSize, ImGuiCond_Always);
-      ImGui::Begin(title, p_opened, CanvasSize, 1.f, WindowFlags);
+      ImGui::Begin(title, p_opened, WindowFlags);
     } else {
       ImGui::SetNextWindowSize(ImVec2(500, 400), ImGuiCond_FirstUseEver);
-      ImVec2 size(400, 400);
-      ImGui::Begin(title, p_opened, size, 1.f, WindowFlags);
+      ImGui::Begin(title, p_opened, WindowFlags);
     }
 
     if (ImGui::Button("Clear")) Clear();
@@ -228,7 +229,7 @@ struct VizWindow {
       ImGui::TextUnformatted(Buf.begin());
     }
 
-    if (ScrollToBottom) ImGui::SetScrollHere(1.0f);
+    if (ScrollToBottom) ImGui::SetScrollHereY(1.0f);
     ScrollToBottom = false;
 
     ImGui::EndChild();
