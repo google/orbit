@@ -82,12 +82,6 @@ class SamplingReportDataView : public DataView {
     kColumnUnwindErrors,
     kNumColumns
   };
-
-  static const std::string kMenuActionLoadSymbols;
-  static const std::string kMenuActionSelect;
-  static const std::string kMenuActionUnselect;
-  static const std::string kMenuActionDisassembly;
-  static const std::string kMenuActionSourceCode;
 };
 
 }  // namespace orbit_data_views

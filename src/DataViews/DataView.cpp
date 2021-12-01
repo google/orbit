@@ -68,9 +68,6 @@ void DataView::OnDataChanged() {
   OnSort(sorting_column_, std::optional<SortingOrder>{});
 }
 
-const std::string DataView::kMenuActionCopySelection = "Copy Selection";
-const std::string DataView::kMenuActionExportToCsv = "Export to CSV";
-
 std::vector<std::vector<std::string>> DataView::GetContextMenuWithGrouping(
     int /*clicked_index*/, const std::vector<int>& selected_indices) {
   // GetContextmenuWithGrouping is called when OrbitTreeView::indexAt returns a valid index and
@@ -78,8 +75,8 @@ std::vector<std::vector<std::string>> DataView::GetContextMenuWithGrouping(
   // should not be empty.
   CHECK(!selected_indices.empty());
 
-  static std::vector<std::string> default_group = {kMenuActionCopySelection,
-                                                   kMenuActionExportToCsv};
+  static std::vector<std::string> default_group = {std::string{kMenuActionCopySelection},
+                                                   std::string{kMenuActionExportToCsv}};
   return {default_group};
 }
 

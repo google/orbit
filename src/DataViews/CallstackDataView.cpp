@@ -97,11 +97,6 @@ std::string CallstackDataView::GetToolTip(int row, int /*column*/) {
   return "";
 }
 
-const std::string CallstackDataView::kMenuActionLoadSymbols = "Load Symbols";
-const std::string CallstackDataView::kMenuActionSelect = "Hook";
-const std::string CallstackDataView::kMenuActionUnselect = "Unhook";
-const std::string CallstackDataView::kMenuActionDisassembly = "Go to Disassembly";
-const std::string CallstackDataView::kMenuActionSourceCode = "Go to Source code";
 const std::string CallstackDataView::kHighlightedFunctionString = "➜ ";
 const std::string CallstackDataView::kHighlightedFunctionBlankString =
     std::string(kHighlightedFunctionString.size(), ' ');
@@ -130,11 +125,11 @@ std::vector<std::vector<std::string>> CallstackDataView::GetContextMenuWithGroup
   }
 
   std::vector<std::string> action_group;
-  if (enable_load) action_group.emplace_back(kMenuActionLoadSymbols);
-  if (enable_select) action_group.emplace_back(kMenuActionSelect);
-  if (enable_unselect) action_group.emplace_back(kMenuActionUnselect);
-  if (enable_disassembly) action_group.emplace_back(kMenuActionDisassembly);
-  if (enable_source_code) action_group.emplace_back(kMenuActionSourceCode);
+  if (enable_load) action_group.emplace_back(std::string{kMenuActionLoadSymbols});
+  if (enable_select) action_group.emplace_back(std::string{kMenuActionSelect});
+  if (enable_unselect) action_group.emplace_back(std::string{kMenuActionUnselect});
+  if (enable_disassembly) action_group.emplace_back(std::string{kMenuActionDisassembly});
+  if (enable_source_code) action_group.emplace_back(std::string{kMenuActionSourceCode});
 
   std::vector<std::vector<std::string>> menu =
       DataView::GetContextMenuWithGrouping(clicked_index, selected_indices);

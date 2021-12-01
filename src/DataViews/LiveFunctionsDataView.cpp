@@ -200,19 +200,6 @@ void LiveFunctionsDataView::DoSort() {
   }
 }
 
-const std::string LiveFunctionsDataView::kMenuActionSelect = "Hook";
-const std::string LiveFunctionsDataView::kMenuActionUnselect = "Unhook";
-const std::string LiveFunctionsDataView::kMenuActionDisassembly = "Go to Disassembly";
-const std::string LiveFunctionsDataView::kMenuActionSourceCode = "Go to Source code";
-const std::string LiveFunctionsDataView::kMenuActionEnableFrameTrack = "Enable frame track(s)";
-const std::string LiveFunctionsDataView::kMenuActionDisableFrameTrack = "Disable frame track(s)";
-const std::string LiveFunctionsDataView::kMenuActionIterate = "Add iterator(s)";
-const std::string LiveFunctionsDataView::kMenuActionJumpToFirst = "Jump to first";
-const std::string LiveFunctionsDataView::kMenuActionJumpToLast = "Jump to last";
-const std::string LiveFunctionsDataView::kMenuActionJumpToMin = "Jump to min";
-const std::string LiveFunctionsDataView::kMenuActionJumpToMax = "Jump to max";
-const std::string LiveFunctionsDataView::kMenuActionExportEventsToCsv = "Export events to CSV";
-
 std::vector<std::vector<std::string>> LiveFunctionsDataView::GetContextMenuWithGrouping(
     int clicked_index, const std::vector<int>& selected_indices) {
   bool enable_select = false;
@@ -252,29 +239,34 @@ std::vector<std::vector<std::string>> LiveFunctionsDataView::GetContextMenuWithG
 
   std::vector<std::vector<std::string>> menu =
       DataView::GetContextMenuWithGrouping(clicked_index, selected_indices);
-  menu.begin()->push_back(kMenuActionExportEventsToCsv);
+  menu.begin()->push_back(std::string{kMenuActionExportEventsToCsv});
 
   std::vector<std::string> action_group;
-  if (enable_iterator) action_group.emplace_back(kMenuActionIterate);
+  if (enable_iterator) action_group.emplace_back(std::string{kMenuActionIterate});
   // For now, these actions only make sense when one function is selected,
   // so we don't show them otherwise.
   if (selected_indices.size() == 1) {
     uint64_t instrumented_function_id = GetInstrumentedFunctionId(selected_indices[0]);
     const FunctionStats& stats = capture_data.GetFunctionStatsOrDefault(instrumented_function_id);
     if (stats.count() > 0) {
-      action_group.insert(action_group.end(), {kMenuActionJumpToFirst, kMenuActionJumpToLast,
-                                               kMenuActionJumpToMin, kMenuActionJumpToMax});
+      action_group.insert(action_group.end(),
+                          {std::string{kMenuActionJumpToFirst}, std::string{kMenuActionJumpToLast},
+                           std::string{kMenuActionJumpToMin}, std::string{kMenuActionJumpToMax}});
     }
   }
   menu.insert(menu.begin(), action_group);
 
   action_group.clear();
-  if (enable_select) action_group.emplace_back(kMenuActionSelect);
-  if (enable_unselect) action_group.emplace_back(kMenuActionUnselect);
-  if (enable_disassembly) action_group.emplace_back(kMenuActionDisassembly);
-  if (enable_source_code) action_group.emplace_back(kMenuActionSourceCode);
-  if (enable_enable_frame_track) action_group.emplace_back(kMenuActionEnableFrameTrack);
-  if (enable_disable_frame_track) action_group.emplace_back(kMenuActionDisableFrameTrack);
+  if (enable_select) action_group.emplace_back(std::string{kMenuActionSelect});
+  if (enable_unselect) action_group.emplace_back(std::string{kMenuActionUnselect});
+  if (enable_disassembly) action_group.emplace_back(std::string{kMenuActionDisassembly});
+  if (enable_source_code) action_group.emplace_back(std::string{kMenuActionSourceCode});
+  if (enable_enable_frame_track) {
+    action_group.emplace_back(std::string{kMenuActionEnableFrameTrack});
+  }
+  if (enable_disable_frame_track) {
+    action_group.emplace_back(std::string{kMenuActionDisableFrameTrack});
+  }
   menu.insert(menu.begin(), action_group);
 
   return menu;

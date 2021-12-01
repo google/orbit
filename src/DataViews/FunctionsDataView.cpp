@@ -161,13 +161,6 @@ void FunctionsDataView::DoSort() {
   }
 }
 
-const std::string FunctionsDataView::kMenuActionSelect = "Hook";
-const std::string FunctionsDataView::kMenuActionUnselect = "Unhook";
-const std::string FunctionsDataView::kMenuActionDisassembly = "Go to Disassembly";
-const std::string FunctionsDataView::kMenuActionSourceCode = "Go to Source code";
-const std::string FunctionsDataView::kMenuActionEnableFrameTrack = "Enable frame track(s)";
-const std::string FunctionsDataView::kMenuActionDisableFrameTrack = "Disable frame track(s)";
-
 std::vector<std::vector<std::string>> FunctionsDataView::GetContextMenuWithGrouping(
     int clicked_index, const std::vector<int>& selected_indices) {
   bool enable_select = false;
@@ -185,12 +178,16 @@ std::vector<std::vector<std::string>> FunctionsDataView::GetContextMenuWithGroup
   }
 
   std::vector<std::string> action_group;
-  if (enable_select) action_group.emplace_back(kMenuActionSelect);
-  if (enable_unselect) action_group.emplace_back(kMenuActionUnselect);
-  action_group.emplace_back(kMenuActionDisassembly);
-  action_group.emplace_back(kMenuActionSourceCode);
-  if (enable_enable_frame_track) action_group.emplace_back(kMenuActionEnableFrameTrack);
-  if (enable_disable_frame_track) action_group.emplace_back(kMenuActionDisableFrameTrack);
+  if (enable_select) action_group.emplace_back(std::string{kMenuActionSelect});
+  if (enable_unselect) action_group.emplace_back(std::string{kMenuActionUnselect});
+  action_group.emplace_back(std::string{kMenuActionDisassembly});
+  action_group.emplace_back(std::string{kMenuActionSourceCode});
+  if (enable_enable_frame_track) {
+    action_group.emplace_back(std::string{kMenuActionEnableFrameTrack});
+  }
+  if (enable_disable_frame_track) {
+    action_group.emplace_back(std::string{kMenuActionDisableFrameTrack});
+  }
 
   std::vector<std::vector<std::string>> menu =
       DataView::GetContextMenuWithGrouping(clicked_index, selected_indices);

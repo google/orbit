@@ -82,12 +82,6 @@ class CallstackDataView : public DataView {
     kNumColumns
   };
 
-  static const std::string kMenuActionLoadSymbols;
-  static const std::string kMenuActionSelect;
-  static const std::string kMenuActionUnselect;
-  static const std::string kMenuActionDisassembly;
-  static const std::string kMenuActionSourceCode;
-
  private:
   absl::flat_hash_set<uint64_t> functions_to_highlight_;
 };

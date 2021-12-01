@@ -26,6 +26,35 @@ enum class RefreshMode { kOnFilter, kOnSort, kOther };
 
 namespace orbit_data_views {
 
+// Hooking related actions
+constexpr std::string_view kMenuActionLoadSymbols = "Load Symbols";
+constexpr std::string_view kMenuActionSelect = "Hook";
+constexpr std::string_view kMenuActionUnselect = "Unhook";
+constexpr std::string_view kMenuActionEnableFrameTrack = "Enable frame track(s)";
+constexpr std::string_view kMenuActionDisableFrameTrack = "Disable frame track(s)";
+constexpr std::string_view kMenuActionIterate = "Add iterator(s)";
+
+constexpr std::string_view kMenuActionVerifyFramePointers = "Verify Frame Pointers";
+
+constexpr std::string_view kMenuActionDisassembly = "Go to Disassembly";
+constexpr std::string_view kMenuActionSourceCode = "Go to Source code";
+
+// Navigating related actions
+constexpr std::string_view kMenuActionJumpToFirst = "Jump to first";
+constexpr std::string_view kMenuActionJumpToLast = "Jump to last";
+constexpr std::string_view kMenuActionJumpToMin = "Jump to min";
+constexpr std::string_view kMenuActionJumpToMax = "Jump to max";
+
+// Preset related actions
+constexpr std::string_view kMenuActionLoadPreset = "Load Preset";
+constexpr std::string_view kMenuActionDeletePreset = "Delete Preset";
+constexpr std::string_view kMenuActionShowInExplorer = "Show in Explorer";
+
+// Exporting relate actions
+constexpr std::string_view kMenuActionCopySelection = "Copy Selection";
+constexpr std::string_view kMenuActionExportToCsv = "Export to CSV";
+constexpr std::string_view kMenuActionExportEventsToCsv = "Export events to CSV";
+
 // Values in the DataView may contain commas, for example, functions with arguments. We quote all
 // values in the output and also escape quotes (with a second quote) in values to ensure the CSV
 // files can be imported correctly in spreadsheet applications. The formatting follows the
@@ -117,9 +146,6 @@ class DataView {
   int update_period_ms_;
   absl::flat_hash_set<int> selected_indices_;
   DataViewType type_;
-
-  static const std::string kMenuActionCopySelection;
-  static const std::string kMenuActionExportToCsv;
 
   orbit_data_views::AppInterface* app_ = nullptr;
 };

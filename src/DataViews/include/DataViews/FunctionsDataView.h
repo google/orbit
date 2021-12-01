@@ -54,13 +54,6 @@ class FunctionsDataView : public DataView {
     kNumColumns
   };
 
-  static const std::string kMenuActionSelect;
-  static const std::string kMenuActionUnselect;
-  static const std::string kMenuActionDisassembly;
-  static const std::string kMenuActionSourceCode;
-  static const std::string kMenuActionEnableFrameTrack;
-  static const std::string kMenuActionDisableFrameTrack;
-
  private:
   static bool ShouldShowSelectedFunctionIcon(AppInterface* app,
                                              const orbit_client_protos::FunctionInfo& function);
