@@ -15,7 +15,7 @@ namespace orbit_data_views {
 
 enum class ContextMenuEntry { kEnabled, kDisabled };
 
-void CheckSingleAction(const std::vector<std::string>& context_menu, const std::string& action,
+void CheckSingleAction(const std::vector<std::string>& context_menu, std::string_view action,
                        ContextMenuEntry menu_entry);
 
 void CheckCopySelectionIsInvoked(const std::vector<std::string>& context_menu,
@@ -25,7 +25,7 @@ void CheckCopySelectionIsInvoked(const std::vector<std::string>& context_menu,
 void CheckExportToCsvIsInvoked(const std::vector<std::string>& context_menu,
                                const MockAppInterface& app, DataView& view,
                                const std::string& expected_contents,
-                               const std::string& action_name = "Export to CSV");
+                               std::string_view action_name = kMenuActionExportToCsv);
 
 std::vector<std::string> FlattenContextMenuWithGrouping(
     const std::vector<std::vector<std::string>>& menu_with_grouping);

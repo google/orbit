@@ -87,7 +87,7 @@ void DataView::OnContextMenu(const std::string& action, int /*menu_index*/,
     if (!save_file.empty()) {
       auto result = ExportCsv(save_file);
       if (result.has_error()) {
-        app_->SendErrorToUi("Export to CSV", result.error().message());
+        app_->SendErrorToUi(std::string{kMenuActionExportToCsv}, result.error().message());
       }
     }
   } else if (action == kMenuActionCopySelection) {

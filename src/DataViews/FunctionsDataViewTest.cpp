@@ -28,6 +28,14 @@ using orbit_data_views::CheckExportToCsvIsInvoked;
 using orbit_data_views::CheckSingleAction;
 using orbit_data_views::ContextMenuEntry;
 using orbit_data_views::FlattenContextMenuWithGrouping;
+using orbit_data_views::kMenuActionCopySelection;
+using orbit_data_views::kMenuActionDisableFrameTrack;
+using orbit_data_views::kMenuActionDisassembly;
+using orbit_data_views::kMenuActionEnableFrameTrack;
+using orbit_data_views::kMenuActionExportToCsv;
+using orbit_data_views::kMenuActionSelect;
+using orbit_data_views::kMenuActionSourceCode;
+using orbit_data_views::kMenuActionUnselect;
 
 namespace {
 struct FunctionsDataViewTest : public testing::Test {
@@ -384,12 +392,12 @@ TEST_F(FunctionsDataViewTest, ContextMenuEntriesChangeOnFunctionState) {
         FlattenContextMenuWithGrouping(view_.GetContextMenuWithGrouping(0, selected_indices));
 
     // Common actions should always be available.
-    CheckSingleAction(context_menu, "Copy Selection", ContextMenuEntry::kEnabled);
-    CheckSingleAction(context_menu, "Export to CSV", ContextMenuEntry::kEnabled);
+    CheckSingleAction(context_menu, kMenuActionCopySelection, ContextMenuEntry::kEnabled);
+    CheckSingleAction(context_menu, kMenuActionExportToCsv, ContextMenuEntry::kEnabled);
 
     // Source code and disassembly actions are also always available.
-    CheckSingleAction(context_menu, "Go to Source code", ContextMenuEntry::kEnabled);
-    CheckSingleAction(context_menu, "Go to Disassembly", ContextMenuEntry::kEnabled);
+    CheckSingleAction(context_menu, kMenuActionSourceCode, ContextMenuEntry::kEnabled);
+    CheckSingleAction(context_menu, kMenuActionDisassembly, ContextMenuEntry::kEnabled);
 
     // Hook action is available if and only if there is an unselected function. Unhook action is
     // available if and only if there is a selected instrumented function.
@@ -413,10 +421,10 @@ TEST_F(FunctionsDataViewTest, ContextMenuEntriesChangeOnFunctionState) {
         enable_frametrack = ContextMenuEntry::kEnabled;
       }
     }
-    CheckSingleAction(context_menu, "Hook", select);
-    CheckSingleAction(context_menu, "Unhook", unselect);
-    CheckSingleAction(context_menu, "Enable frame track(s)", enable_frametrack);
-    CheckSingleAction(context_menu, "Disable frame track(s)", disable_frametrack);
+    CheckSingleAction(context_menu, kMenuActionSelect, select);
+    CheckSingleAction(context_menu, kMenuActionUnselect, unselect);
+    CheckSingleAction(context_menu, kMenuActionEnableFrameTrack, enable_frametrack);
+    CheckSingleAction(context_menu, kMenuActionDisableFrameTrack, disable_frametrack);
   };
 
   verify_context_menu_action_availability({0});
@@ -581,27 +589,27 @@ TEST_F(FunctionsDataViewTest, ContextMenuActionsCallCorrespondingFunctionsInAppI
   };
 
   EXPECT_CALL(app_, SelectFunction).Times(1).WillRepeatedly(match_function);
-  view_.OnContextMenu("Hook", 0, {0});
+  view_.OnContextMenu(std::string{kMenuActionSelect}, 0, {0});
 
   EXPECT_CALL(app_, DeselectFunction).Times(1).WillRepeatedly(match_function);
   EXPECT_CALL(app_, DisableFrameTrack).Times(1).WillRepeatedly(match_function);
   EXPECT_CALL(app_, RemoveFrameTrack(testing::A<const orbit_client_protos::FunctionInfo&>()))
       .Times(1)
       .WillRepeatedly(match_function);
-  view_.OnContextMenu("Unhook", 0, {0});
+  view_.OnContextMenu(std::string{kMenuActionUnselect}, 0, {0});
 
   EXPECT_CALL(app_, SelectFunction).Times(1).WillRepeatedly(match_function);
   EXPECT_CALL(app_, EnableFrameTrack).Times(1).WillRepeatedly(match_function);
   EXPECT_CALL(app_, AddFrameTrack(testing::A<const orbit_client_protos::FunctionInfo&>()))
       .Times(1)
       .WillRepeatedly(match_function);
-  view_.OnContextMenu("Enable frame track(s)", 0, {0});
+  view_.OnContextMenu(std::string{kMenuActionEnableFrameTrack}, 0, {0});
 
   EXPECT_CALL(app_, DisableFrameTrack).Times(1).WillRepeatedly(match_function);
   EXPECT_CALL(app_, RemoveFrameTrack(testing::A<const orbit_client_protos::FunctionInfo&>()))
       .Times(1)
       .WillRepeatedly(match_function);
-  view_.OnContextMenu("Disable frame track(s)", 0, {0});
+  view_.OnContextMenu(std::string{kMenuActionDisableFrameTrack}, 0, {0});
 
   constexpr int kRandomPid = 4242;
   orbit_grpc_protos::ProcessInfo process_info{};
@@ -615,10 +623,10 @@ TEST_F(FunctionsDataViewTest, ContextMenuActionsCallCorrespondingFunctionsInAppI
         EXPECT_EQ(pid, kRandomPid);
         match_function(function);
       });
-  view_.OnContextMenu("Go to Disassembly", 0, {0});
+  view_.OnContextMenu(std::string{kMenuActionDisassembly}, 0, {0});
 
   EXPECT_CALL(app_, ShowSourceCode).Times(1).WillRepeatedly(match_function);
-  view_.OnContextMenu("Go to Source code", 0, {0});
+  view_.OnContextMenu(std::string{kMenuActionSourceCode}, 0, {0});
 }
 
 TEST_F(FunctionsDataViewTest, FilteringByFunctionName) {
