@@ -380,7 +380,7 @@ TEST_F(FunctionsDataViewTest, ContextMenuEntriesChangeOnFunctionState) {
   view_.AddFunctions({&functions_[0], &functions_[1], &functions_[2]});
 
   auto verify_context_menu_action_availability = [&](std::vector<int> selected_indices) {
-    std::vector<std::string_view> context_menu =
+    std::vector<std::string> context_menu =
         FlattenContextMenuWithGrouping(view_.GetContextMenuWithGrouping(0, selected_indices));
 
     // Common actions should always be available.
@@ -443,7 +443,7 @@ TEST_F(FunctionsDataViewTest, GenericDataExportFunctionShowCorrectData) {
 
   view_.AddFunctions({&functions_[0]});
 
-  std::vector<std::string_view> context_menu =
+  std::vector<std::string> context_menu =
       FlattenContextMenuWithGrouping(view_.GetContextMenuWithGrouping(0, {0}));
 
   // Copy Selection

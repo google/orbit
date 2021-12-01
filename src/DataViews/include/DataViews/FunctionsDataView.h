@@ -26,12 +26,12 @@ class FunctionsDataView : public DataView {
 
   const std::vector<Column>& GetColumns() override;
   int GetDefaultSortingColumn() override { return kColumnAddressInModule; }
-  std::vector<std::vector<std::string_view>> GetContextMenuWithGrouping(
+  std::vector<std::vector<std::string>> GetContextMenuWithGrouping(
       int clicked_index, const std::vector<int>& selected_indices) override;
   std::string GetValue(int row, int column) override;
   std::string GetLabel() override { return "Functions"; }
 
-  void OnContextMenu(std::string_view action, int menu_index,
+  void OnContextMenu(const std::string& action, int menu_index,
                      const std::vector<int>& item_indices) override;
   void AddFunctions(std::vector<const orbit_client_protos::FunctionInfo*> functions);
   void ClearFunctions();

@@ -217,7 +217,7 @@ SamplingReportDataView::GetModulePathsAndBuildIdsFromIndices(
   return module_paths_and_build_ids;
 }
 
-std::vector<std::vector<std::string_view>> SamplingReportDataView::GetContextMenuWithGrouping(
+std::vector<std::vector<std::string>> SamplingReportDataView::GetContextMenuWithGrouping(
     int clicked_index, const std::vector<int>& selected_indices) {
   bool enable_load = false;
   for (const auto& [module_path, build_id] :
@@ -246,21 +246,21 @@ std::vector<std::vector<std::string_view>> SamplingReportDataView::GetContextMen
     }
   }
 
-  std::vector<std::string_view> action_group;
+  std::vector<std::string> action_group;
   if (enable_load) action_group.emplace_back(kMenuActionLoadSymbols);
   if (enable_select) action_group.emplace_back(kMenuActionSelect);
   if (enable_unselect) action_group.emplace_back(kMenuActionUnselect);
   if (enable_disassembly) action_group.emplace_back(kMenuActionDisassembly);
   if (enable_source_code) action_group.emplace_back(kMenuActionSourceCode);
 
-  std::vector<std::vector<std::string_view>> menu =
+  std::vector<std::vector<std::string>> menu =
       DataView::GetContextMenuWithGrouping(clicked_index, selected_indices);
   menu.insert(menu.begin(), action_group);
 
   return menu;
 }
 
-void SamplingReportDataView::OnContextMenu(std::string_view action, int menu_index,
+void SamplingReportDataView::OnContextMenu(const std::string& action, int menu_index,
                                            const std::vector<int>& item_indices) {
   if (action == kMenuActionSelect) {
     for (const FunctionInfo* function : GetFunctionsFromIndices(item_indices)) {

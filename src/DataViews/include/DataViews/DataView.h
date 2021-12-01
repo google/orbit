@@ -26,35 +26,6 @@ enum class RefreshMode { kOnFilter, kOnSort, kOther };
 
 namespace orbit_data_views {
 
-// Hooking related actions
-constexpr std::string_view kMenuActionLoadSymbols = "Load Symbols";
-constexpr std::string_view kMenuActionSelect = "Hook";
-constexpr std::string_view kMenuActionUnselect = "Unhook";
-constexpr std::string_view kMenuActionEnableFrameTrack = "Enable frame track(s)";
-constexpr std::string_view kMenuActionDisableFrameTrack = "Disable frame track(s)";
-constexpr std::string_view kMenuActionIterate = "Add iterator(s)";
-
-constexpr std::string_view kMenuActionVerifyFramePointers = "Verify Frame Pointers";
-
-constexpr std::string_view kMenuActionDisassembly = "Go to Disassembly";
-constexpr std::string_view kMenuActionSourceCode = "Go to Source code";
-
-// Navigating related actions
-constexpr std::string_view kMenuActionJumpToFirst = "Jump to first";
-constexpr std::string_view kMenuActionJumpToLast = "Jump to last";
-constexpr std::string_view kMenuActionJumpToMin = "Jump to min";
-constexpr std::string_view kMenuActionJumpToMax = "Jump to max";
-
-// Preset related actions
-constexpr std::string_view kMenuActionLoadPreset = "Load Preset";
-constexpr std::string_view kMenuActionDeletePreset = "Delete Preset";
-constexpr std::string_view kMenuActionShowInExplorer = "Show in Explorer";
-
-// Exporting relate actions
-constexpr std::string_view kMenuActionCopySelection = "Copy Selection";
-constexpr std::string_view kMenuActionExportToCsv = "Export to CSV";
-constexpr std::string_view kMenuActionExportEventsToCsv = "Export events to CSV";
-
 // Values in the DataView may contain commas, for example, functions with arguments. We quote all
 // values in the output and also escape quotes (with a second quote) in values to ensure the CSV
 // files can be imported correctly in spreadsheet applications. The formatting follows the
@@ -86,7 +57,7 @@ class DataView {
   virtual const std::vector<Column>& GetColumns() = 0;
   virtual bool IsSortingAllowed() { return true; }
   virtual int GetDefaultSortingColumn() { return 0; }
-  virtual std::vector<std::vector<std::string_view>> GetContextMenuWithGrouping(
+  virtual std::vector<std::vector<std::string>> GetContextMenuWithGrouping(
       int clicked_index, const std::vector<int>& selected_indices);
   virtual size_t GetNumElements() { return indices_.size(); }
   virtual std::string GetValue(int /*row*/, int /*column*/) { return ""; }
@@ -104,7 +75,7 @@ class DataView {
                          const RefreshMode& /*mode*/) {}
 
   void OnSort(int column, std::optional<SortingOrder> new_order);
-  virtual void OnContextMenu(std::string_view action, int menu_index,
+  virtual void OnContextMenu(const std::string& action, int menu_index,
                              const std::vector<int>& item_indices);
   virtual void OnSelect(const std::vector<int>& /*indices*/) {}
   // This method returns the intersection of selected indices and visible indices. The returned
@@ -132,6 +103,35 @@ class DataView {
   int GetUpdatePeriodMs() const { return update_period_ms_; }
   [[nodiscard]] DataViewType GetType() const { return type_; }
   [[nodiscard]] virtual bool ResetOnRefresh() const { return true; }
+
+  // Hooking related actions
+  static const std::string kMenuActionLoadSymbols;
+  static const std::string kMenuActionSelect;
+  static const std::string kMenuActionUnselect;
+  static const std::string kMenuActionEnableFrameTrack;
+  static const std::string kMenuActionDisableFrameTrack;
+  static const std::string kMenuActionIterate;
+
+  static const std::string kMenuActionVerifyFramePointers;
+
+  static const std::string kMenuActionDisassembly;
+  static const std::string kMenuActionSourceCode;
+
+  // Navigating related actions
+  static const std::string kMenuActionJumpToFirst;
+  static const std::string kMenuActionJumpToLast;
+  static const std::string kMenuActionJumpToMin;
+  static const std::string kMenuActionJumpToMax;
+
+  // Preset related actions
+  static const std::string kMenuActionLoadPreset;
+  static const std::string kMenuActionDeletePreset;
+  static const std::string kMenuActionShowInExplorer;
+
+  // Exporting relate actions
+  static const std::string kMenuActionCopySelection;
+  static const std::string kMenuActionExportToCsv;
+  static const std::string kMenuActionExportEventsToCsv;
 
  protected:
   void InitSortingOrders();

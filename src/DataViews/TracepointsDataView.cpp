@@ -101,7 +101,7 @@ void TracepointsDataView::DoFilter() {
   indices_ = std::move(indices);
 }
 
-std::vector<std::vector<std::string_view>> TracepointsDataView::GetContextMenuWithGrouping(
+std::vector<std::vector<std::string>> TracepointsDataView::GetContextMenuWithGrouping(
     int clicked_index, const std::vector<int>& selected_indices) {
   bool enable_select = false;
   bool enable_unselect = false;
@@ -111,18 +111,18 @@ std::vector<std::vector<std::string_view>> TracepointsDataView::GetContextMenuWi
     enable_unselect |= app_->IsTracepointSelected(tracepoint);
   }
 
-  std::vector<std::string_view> action_group;
+  std::vector<std::string> action_group;
   if (enable_select) action_group.emplace_back(kMenuActionSelect);
   if (enable_unselect) action_group.emplace_back(kMenuActionUnselect);
 
-  std::vector<std::vector<std::string_view>> menu =
+  std::vector<std::vector<std::string>> menu =
       DataView::GetContextMenuWithGrouping(clicked_index, selected_indices);
   menu.insert(menu.begin(), action_group);
 
   return menu;
 }
 
-void TracepointsDataView::OnContextMenu(std::string_view action, int menu_index,
+void TracepointsDataView::OnContextMenu(const std::string& action, int menu_index,
                                         const std::vector<int>& item_indices) {
   if (action == kMenuActionSelect) {
     for (int i : item_indices) {

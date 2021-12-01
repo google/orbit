@@ -24,11 +24,11 @@ class ModulesDataView : public DataView {
 
   const std::vector<Column>& GetColumns() override;
   int GetDefaultSortingColumn() override { return kColumnFileSize; }
-  std::vector<std::vector<std::string_view>> GetContextMenuWithGrouping(
+  std::vector<std::vector<std::string>> GetContextMenuWithGrouping(
       int clicked_index, const std::vector<int>& selected_indices) override;
   std::string GetValue(int row, int column) override;
 
-  void OnContextMenu(std::string_view action, int menu_index,
+  void OnContextMenu(const std::string& action, int menu_index,
                      const std::vector<int>& item_indices) override;
   void OnDoubleClicked(int index) override;
   bool WantsDisplayColor() override { return true; }
@@ -62,6 +62,7 @@ class ModulesDataView : public DataView {
     kColumnFileSize,  // Default sorting column
     kNumColumns
   };
+
 };
 
 }  // namespace orbit_data_views
