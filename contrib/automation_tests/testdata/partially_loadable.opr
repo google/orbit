@@ -1,0 +1,13 @@
+# ORBIT preset file
+modules {
+  key: "/mnt/developer/hello_ggp_standalone_other_name"
+  value {
+    function_names: "DrawFrame"
+  }
+}
+modules {
+  key: "/usr/local/cloudcast/lib/libc-2.24.so"
+  value {
+    function_names: "__GI___clock_gettime"
+  }
+}

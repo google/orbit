@@ -1,0 +1,7 @@
+# ORBIT preset file
+modules {
+  key: "/mnt/developer/hello_ggp_standalone_other_name"
+  value {
+    function_names: "DrawFrame"
+  }
+}

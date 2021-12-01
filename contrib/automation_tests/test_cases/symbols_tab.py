@@ -4,6 +4,7 @@ Use of this source code is governed by a BSD-style license that can be
 found in the LICENSE file.
 """
 
+import enum
 import logging
 import os
 
@@ -56,6 +57,25 @@ class LoadSymbols(E2ETestCase):
 
         functions_dataview = DataViewPanel(self.find_control("Group", "FunctionsDataView"))
         wait_for_condition(lambda: functions_dataview.get_row_count() > 0)
+
+
+class VerifyModuleLoaded(E2ETestCase):
+    """
+    Verifies wether a module with the give search string is loaded.
+    """
+
+    def _execute(self, module_search_string: str, expect_loaded: bool = True):
+        _show_symbols_and_functions_tabs(self.suite.top_window())
+
+        logging.info('Start verifying module %s is %s.', module_search_string,
+                     "loaded" if expect_loaded else "not loaded")
+        modules_dataview = DataViewPanel(self.find_control("Group", "ModulesDataView"))
+        wait_for_condition(lambda: modules_dataview.get_row_count() > 0, 100)
+        modules_dataview.filter.set_focus()
+        modules_dataview.filter.set_edit_text('')
+        send_keys(module_search_string)
+        wait_for_condition(lambda: modules_dataview.get_row_count() > 0)
+        self.expect_true('*' in modules_dataview.get_item_at(0, 0).texts()[0], 'Module is loaded.')
 
 
 class VerifySymbolsLoaded(E2ETestCase):
@@ -124,6 +144,26 @@ class FilterAndEnableFrameTrackForFunction(E2ETestCase):
         wait_for_condition(lambda: '✓ F' in functions_dataview.get_item_at(0, 0).texts()[0])
 
 
+class UnhookAllFunctions(E2ETestCase):
+    """
+    Unhook all functions.
+    """
+
+    def _execute(self):
+        _show_symbols_and_functions_tabs(self.suite.top_window())
+
+        functions_dataview = DataViewPanel(self.find_control("Group", "FunctionsDataView"))
+        logging.info('Waiting for function list to be populated...')
+        wait_for_condition(lambda: functions_dataview.get_row_count() > 0, 100)
+        functions_dataview.filter.set_focus()
+        functions_dataview.filter.set_edit_text('')
+        functions_dataview.get_item_at(0, 0).click_input('left')
+        # Hit Ctrl+a to select all functions.
+        send_keys('^a')
+        functions_dataview.get_item_at(0, 0).click_input('right')
+        self.find_context_menu_item('Unhook').click_input()
+
+
 class FilterAndHookMultipleFunctions(E2ETestCase):
     """
     Hook multiple functions based on a search string, and verify it is indicated as hooked in the UI.
@@ -153,7 +193,8 @@ class FilterAndHookMultipleFunctions(E2ETestCase):
 class LoadAndVerifyHelloGgpPreset(E2ETestCase):
     """
     Load the predefined E2E test preset and verify if has been applied correctly.
-    TODO: This may need to be updated
+    TODO: This can be removed when orbit_load_preset.py is removed (it is replaced by
+    orbit_load_preset_2.py).
     """
 
     def _execute(self):
@@ -208,6 +249,101 @@ class LoadAndVerifyHelloGgpPreset(E2ETestCase):
                          'GgpIssueFrameToken is marked as hooked')
 
         return True
+
+
+class VerifyFunctionHooked(E2ETestCase):
+    """
+    Verfify wether or not function is hooked in the functions table in the symbols tab.
+    """
+
+    def _execute(self, function_search_string: str, expect_hooked: bool = True):
+        _show_symbols_and_functions_tabs(self.suite.top_window())
+
+        functions_dataview = DataViewPanel(self.find_control("Group", "FunctionsDataView"))
+        functions_dataview.filter.set_focus()
+        functions_dataview.filter.set_edit_text('')
+        send_keys(function_search_string)
+        row = functions_dataview.find_first_item_row(function_search_string, 1)
+        if expect_hooked:
+            self.expect_true('✓' in functions_dataview.get_item_at(row, 0).texts()[0],
+                             'Function is marked as hooked.')
+        else:
+            self.expect_true('✓' not in functions_dataview.get_item_at(row, 0).texts()[0],
+                             'Function is not marked as hooked.')
+
+
+class PresetStatus(enum.Enum):
+    LOADABLE = "loadable"
+    PARTIALLY_LOADABLE = "partially loadable"
+    NOT_LOADABLE = "not loadable"
+
+
+class VerifyPresetStatus(E2ETestCase):
+    """
+    Verfify wether preset is loadable, partially loadable or not loadable.
+    """
+
+    def _execute(self, preset_name: str, expected_status: PresetStatus):
+        _show_symbols_and_functions_tabs(self.suite.top_window())
+
+        presets_panel = DataViewPanel(self.find_control('Group', 'PresetsDataView'))
+        preset_row = presets_panel.find_first_item_row(preset_name, 1, True)
+        self.expect_true(preset_row is not None, 'Found preset.')
+        status_text = presets_panel.get_item_at(preset_row, 0).texts()[0]
+        if expected_status is PresetStatus.LOADABLE:
+            self.expect_true('Yes' in status_text, 'Preset is loadable.')
+        if expected_status is PresetStatus.PARTIALLY_LOADABLE:
+            self.expect_true('Partially' in status_text, 'Preset is partially loadable.')
+        if expected_status is PresetStatus.NOT_LOADABLE:
+            self.expect_true('No' in status_text, 'Preset is not loadable.')
+
+
+class LoadPreset(E2ETestCase):
+    """
+    Load preset with given name.
+    """
+
+    def _execute(self, preset_name: str):
+        _show_symbols_and_functions_tabs(self.suite.top_window())
+
+        presets_panel = DataViewPanel(self.find_control('Group', 'PresetsDataView'))
+        preset_row = presets_panel.find_first_item_row(preset_name, 1, True)
+        self.expect_true(preset_row is not None, 'Found preset.')
+        status_text = presets_panel.get_item_at(preset_row, 0).texts()[0]
+
+        if 'No' in status_text:
+            app_menu = self.suite.top_window().descendants(control_type="MenuBar")[1]
+            app_menu.item_by_path("File->Open Preset...").click_input()
+            dialog = self.suite.top_window().child_window(title_re="Select a file*")
+            dialog.FileNameEdit.type_keys(preset_name)
+            dialog.FileNameEdit.type_keys('{DOWN}{ENTER}')
+
+            message_box = self.suite.top_window().child_window(title_re="Preset loading failed*")
+            self.expect_true(message_box is not None, 'Message box found.')
+            message_box.Ok.click()
+        else:
+            presets_panel.get_item_at(preset_row, 0).click_input(button='right')
+            self.find_context_menu_item('Load Preset').click_input()
+            logging.info('Loaded preset: %s', preset_name)
+
+            if 'Partially' in status_text:
+                message_box = self.suite.top_window().child_window(
+                    title_re="Preset only partially loaded*")
+                self.expect_true(message_box is not None, 'Message box found.')
+                message_box.Ok.click()
+
+
+class SavePreset(E2ETestCase):
+    """
+    Save current state in preset.
+    """
+
+    def _execute(self, preset_name: str):
+        app_menu = self.suite.top_window().descendants(control_type="MenuBar")[1]
+        app_menu.item_by_path("File->Save Preset As ...").click_input()
+        dialog = self.suite.top_window().child_window(title_re="Specify*")
+        dialog.FileNameCombo.type_keys(preset_name)
+        dialog.Save.click()
 
 
 class ShowSourceCode(E2ETestCase):

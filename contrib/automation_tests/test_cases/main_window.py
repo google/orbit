@@ -5,10 +5,11 @@ found in the LICENSE file.
 """
 
 import logging
+import time
 
 from pywinauto.base_wrapper import BaseWrapper
 
-from core.orbit_e2e import E2ETestCase
+from core.orbit_e2e import E2ETestCase, wait_for_condition
 
 
 class MoveTab(E2ETestCase):
@@ -68,3 +69,18 @@ class MoveTab(E2ETestCase):
         self.expect_eq(tab_item.parent(), right_tab_bar, "Tab is parented under the right pane")
         self.expect_true(
             self.find_control("Group", name=tab_name).is_visible(), "Functions tab is visible")
+
+
+class EndSession(E2ETestCase):
+    """
+    Click menu entry to end session.
+    """
+
+    def _execute(self):
+        time.sleep(1)
+        app_menu = self.suite.top_window().descendants(control_type="MenuBar")[1]
+        app_menu.item_by_path("File->End Session").click_input()
+        wait_for_condition(
+            lambda: self.suite.application.top_window().class_name() ==
+            "orbit_session_setup::SessionSetupDialog", 30)
+        self.suite.top_window(force_update=True)
