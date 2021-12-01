@@ -11,3 +11,15 @@ target_sources(ApiInterface INTERFACE
 
 target_include_directories(ApiInterface INTERFACE
         ${CMAKE_CURRENT_LIST_DIR}/include)
+
+
+# This needs to be an executable because we also need to verify linking.
+add_executable(ApiHeaderBuildsInCTest)
+
+target_include_directories(ApiHeaderBuildsInCTest PRIVATE
+        ${CMAKE_CURRENT_LIST_DIR}/include/ApiInterface)
+
+target_sources(ApiHeaderBuildsInCTest PRIVATE
+        BuildInCMain.c
+        BuildInCWithInstantiateInAnotherFile.c
+        BuildInCWithInstantiateInThisFile.c)

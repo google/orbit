@@ -282,8 +282,16 @@
 #include <atomic>
 #define ORBIT_THREAD_FENCE_ACQUIRE() std::atomic_thread_fence(std::memory_order_acquire)
 #else
+#if __STDC_VERSION__ >= 201112L
 #include <stdatomic.h>
 #define ORBIT_THREAD_FENCE_ACQUIRE() atomic_thread_fence(memory_order_acquire)
+#elif defined(_WIN32)
+#include <windows.h>
+// In this case we only have a full (read and write) barrier available.
+#define ORBIT_THREAD_FENCE_ACQUIRE() MemoryBarrier()
+#else
+#define ORBIT_THREAD_FENCE_ACQUIRE() __ATOMIC_ACQUIRE
+#endif
 #endif
 
 #ifdef __linux
@@ -320,8 +328,8 @@ typedef enum {
   kOrbitColorBlueGrey = 0x607d8bff
 } orbit_api_color;
 
-constexpr uint64_t kOrbitDefaultGroupId = 0;
-constexpr uint64_t kOrbitCallerAddressAuto = 0;
+enum { kOrbitDefaultGroupId = 0ULL };
+enum { kOrbitCallerAddressAuto = 0ULL };
 
 enum { kOrbitApiVersion = 1 };
 
@@ -350,7 +358,13 @@ extern ORBIT_EXPORT void* orbit_api_get_function_table_address_v1();
   struct orbit_api_v1 g_orbit_api_v1; \
   void* orbit_api_get_function_table_address_v1() { return &g_orbit_api_v1; }
 
-inline bool orbit_api_active() {
+#ifndef __cplusplus
+// In C, `inline` alone doesn't generate an out-of-line definition, causing a linker error if the
+// function is not inlined. We need to make the function `static`.
+static
+#endif
+    inline bool
+    orbit_api_active() {
   bool initialized = g_orbit_api_v1.initialized;
   ORBIT_THREAD_FENCE_ACQUIRE();
   return initialized && g_orbit_api_v1.enabled;
