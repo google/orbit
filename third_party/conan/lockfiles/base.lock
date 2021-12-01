@@ -33,7 +33,7 @@
     "context": "host"
    },
    "2": {
-    "ref": "capstone/4.0.1@orbitdeps/stable#0",
+    "ref": "capstone/4.0.2#cca937faace33ad573bbc57501468a0e",
     "context": "host"
    },
    "3": {
