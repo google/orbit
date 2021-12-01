@@ -91,6 +91,17 @@ TimeGraph::~TimeGraph() {
   manual_instrumentation_manager_->RemoveAsyncTimerListener(async_timer_info_listener_.get());
 }
 
+float TimeGraph::GetHeight() const {
+  // Top and Bottom Margin. TODO: Margins should be treated in a different way (http://b/192070555).
+  float total_height = layout_.GetSchedulerTrackOffset() + layout_.GetBottomMargin();
+
+  // Track height including space between them
+  for (auto& track : GetNonHiddenChildren()) {
+    total_height += (track->GetHeight() + layout_.GetSpaceBetweenTracks());
+  }
+  return total_height;
+}
+
 void TimeGraph::UpdateCaptureMinMaxTimestamps() {
   auto [tracks_min_time, tracks_max_time] = track_manager_->GetTracksMinMaxTimestamps();
 
