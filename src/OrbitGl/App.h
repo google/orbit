@@ -449,8 +449,12 @@ class OrbitApp final : public DataViewFactory,
   [[nodiscard]] uint64_t GetFunctionIdToHighlight() const;
   [[nodiscard]] uint64_t GetGroupIdToHighlight() const;
 
+  // origin_is_multiple_threads defines if the selection is specific to a single thread,
+  // or spans across multiple threads.
   void SelectCallstackEvents(
       const std::vector<orbit_client_protos::CallstackEvent>& selected_callstack_events,
+      bool origin_is_multiple_threads);
+  [[nodiscard]] const std::vector<orbit_client_protos::CallstackEvent>& GetSelectedCallstackEvents(
       uint32_t thread_id);
 
   void SelectTracepoint(const orbit_grpc_protos::TracepointInfo& info) override;
