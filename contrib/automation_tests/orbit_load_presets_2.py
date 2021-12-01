@@ -12,7 +12,7 @@ from test_cases.symbols_tab import FilterAndHookFunction, SavePreset, UnhookAllF
 from test_cases.capture_window import Capture
 from test_cases.live_tab import VerifyFunctionCallCount
 from test_cases.main_window import EndSession
-"""Apply two presets in Orbit using pywinauto.
+"""Verify preset functionality in Orbit works as expected.
 
 Before this script is run there needs to be a gamelet reserved and
 "hello_ggp_standalone" has to be started. Four presets named:
@@ -23,7 +23,7 @@ Before this script is run there needs to be a gamelet reserved and
   not_loadable.opr
 
 need to exist in the preset folder. The first two are hooking the functions
-indicated by their name. THese are created with Orbit 1.68 so this is testing
+indicated by their name. These are created with Orbit 1.68 so this is testing
 compatibility as well. The two others are partially loadable and not loadable
 when hello_ggp is profiled. Details are in the inline comments below.
 
