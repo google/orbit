@@ -5,7 +5,6 @@ found in the LICENSE file.
 """
 
 import logging
-import time
 
 from pywinauto.application import Application
 from pywinauto.keyboard import send_keys
@@ -13,12 +12,13 @@ from pywinauto.keyboard import send_keys
 from core.orbit_e2e import E2ETestCase, wait_for_condition
 
 
-def wait_for_main_window(application: Application):
-    wait_for_condition(lambda: application.top_window().class_name() == "OrbitMainWindow", 30)
+def _wait_for_main_window(application: Application):
+    wait_for_condition(lambda: application.top_window().class_name() == "OrbitMainWindow", max_seconds=30)
 
 
-def wait_for_connection_window(application: Application):
-    wait_for_condition(lambda: application.top_window().class_name() == "orbit_session_setup::SessionSetupDialog", 30)
+def _wait_for_connection_window(application: Application):
+    wait_for_condition(lambda: application.top_window().class_name() == "orbit_session_setup::SessionSetupDialog",
+                       max_seconds=30)
 
 
 def _get_number_of_instances_in_list(test_case: E2ETestCase) -> int:
@@ -37,9 +37,9 @@ class LoadCapture(E2ETestCase):
     def _execute(self, capture_file_path: str):
         # Lets ensure that we are actually in the connection window, as this test might also be executed after the
         # main window has been opened.
-        wait_for_connection_window(self.suite.application)
+        _wait_for_connection_window(self.suite.application)
         self.suite.top_window(force_update=True)
-        logging.info('Start loading to a capture.')
+        logging.info('Starting to load a capture.')
         connect_radio = self.find_control('RadioButton', 'LoadCapture')
         connect_radio.click_input()
 
@@ -49,12 +49,12 @@ class LoadCapture(E2ETestCase):
         file_name_edit = self.find_control('Edit', 'File name:')
         file_name_edit.set_edit_text(capture_file_path)
 
-        logging.info(f'Trying to loading to load capture file: {capture_file_path}')
+        logging.info(f'Trying to load capture file: {capture_file_path}')
         start_session_button = self.find_control('Button', 'Start Session')
         start_session_button.click_input()
 
         # Unless the file does not exist, Orbit's main window will open next and contain the "Loading capture" dialog.
-        wait_for_main_window(self.suite.application)
+        _wait_for_main_window(self.suite.application)
         # As there is a new top window (Orbit main window), we need to update the top window.
         self.suite.top_window(force_update=True)
 
@@ -261,7 +261,7 @@ class FilterAndSelectFirstProcess(E2ETestCase):
 
         logging.info('Process selected, continuing to main window...')
         process_list.children(control_type='DataItem')[0].double_click_input()
-        wait_for_main_window(self.suite.application)
+        _wait_for_main_window(self.suite.application)
         window = self.suite.top_window(True)
         self.expect_eq(window.class_name(), "OrbitMainWindow", 'Main window is visible')
         window.maximize()
