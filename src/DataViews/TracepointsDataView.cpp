@@ -112,8 +112,8 @@ std::vector<std::vector<std::string>> TracepointsDataView::GetContextMenuWithGro
   }
 
   std::vector<std::string> action_group;
-  if (enable_select) action_group.emplace_back(kMenuActionSelect);
-  if (enable_unselect) action_group.emplace_back(kMenuActionUnselect);
+  if (enable_select) action_group.emplace_back(std::string{kMenuActionSelect});
+  if (enable_unselect) action_group.emplace_back(std::string{kMenuActionUnselect});
 
   std::vector<std::vector<std::string>> menu =
       DataView::GetContextMenuWithGrouping(clicked_index, selected_indices);

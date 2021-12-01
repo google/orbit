@@ -156,10 +156,10 @@ std::vector<std::vector<std::string>> PresetsDataView::GetContextMenuWithGroupin
   std::vector<std::string> action_group;
   const PresetFile& preset = GetPreset(selected_indices[0]);
   if (app_->GetPresetLoadState(preset).state != PresetLoadState::kNotLoadable) {
-    action_group.emplace_back(kMenuActionLoadPreset);
+    action_group.emplace_back(std::string{kMenuActionLoadPreset});
   }
-  action_group.emplace_back(kMenuActionDeletePreset);
-  action_group.emplace_back(kMenuActionShowInExplorer);
+  action_group.emplace_back(std::string{kMenuActionDeletePreset});
+  action_group.emplace_back(std::string{kMenuActionShowInExplorer});
 
   std::vector<std::vector<std::string>> menu =
       DataView::GetContextMenuWithGrouping(clicked_index, selected_indices);

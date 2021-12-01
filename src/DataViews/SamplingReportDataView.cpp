@@ -247,11 +247,11 @@ std::vector<std::vector<std::string>> SamplingReportDataView::GetContextMenuWith
   }
 
   std::vector<std::string> action_group;
-  if (enable_load) action_group.emplace_back(kMenuActionLoadSymbols);
-  if (enable_select) action_group.emplace_back(kMenuActionSelect);
-  if (enable_unselect) action_group.emplace_back(kMenuActionUnselect);
-  if (enable_disassembly) action_group.emplace_back(kMenuActionDisassembly);
-  if (enable_source_code) action_group.emplace_back(kMenuActionSourceCode);
+  if (enable_load) action_group.emplace_back(std::string{kMenuActionLoadSymbols});
+  if (enable_select) action_group.emplace_back(std::string{kMenuActionSelect});
+  if (enable_unselect) action_group.emplace_back(std::string{kMenuActionUnselect});
+  if (enable_disassembly) action_group.emplace_back(std::string{kMenuActionDisassembly});
+  if (enable_source_code) action_group.emplace_back(std::string{kMenuActionSourceCode});
 
   std::vector<std::vector<std::string>> menu =
       DataView::GetContextMenuWithGrouping(clicked_index, selected_indices);

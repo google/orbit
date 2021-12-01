@@ -178,12 +178,16 @@ std::vector<std::vector<std::string>> FunctionsDataView::GetContextMenuWithGroup
   }
 
   std::vector<std::string> action_group;
-  if (enable_select) action_group.emplace_back(kMenuActionSelect);
-  if (enable_unselect) action_group.emplace_back(kMenuActionUnselect);
-  action_group.emplace_back(kMenuActionDisassembly);
-  action_group.emplace_back(kMenuActionSourceCode);
-  if (enable_enable_frame_track) action_group.emplace_back(kMenuActionEnableFrameTrack);
-  if (enable_disable_frame_track) action_group.emplace_back(kMenuActionDisableFrameTrack);
+  if (enable_select) action_group.emplace_back(std::string{kMenuActionSelect});
+  if (enable_unselect) action_group.emplace_back(std::string{kMenuActionUnselect});
+  action_group.emplace_back(std::string{kMenuActionDisassembly});
+  action_group.emplace_back(std::string{kMenuActionSourceCode});
+  if (enable_enable_frame_track) {
+    action_group.emplace_back(std::string{kMenuActionEnableFrameTrack});
+  }
+  if (enable_disable_frame_track) {
+    action_group.emplace_back(std::string{kMenuActionDisableFrameTrack});
+  }
 
   std::vector<std::vector<std::string>> menu =
       DataView::GetContextMenuWithGrouping(clicked_index, selected_indices);
