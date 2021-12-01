@@ -1,0 +1,7 @@
+# ORBIT preset file
+modules {
+  key: "/mnt/developer/hello_ggp_standalone"
+  value {
+    function_names: "GgpIssueFrameToken"
+  }
+}
