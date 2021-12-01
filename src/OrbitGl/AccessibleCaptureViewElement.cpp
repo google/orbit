@@ -21,7 +21,6 @@ orbit_accessibility::AccessibilityRect AccessibleCaptureViewElement::AccessibleR
   const Viewport* viewport = capture_view_element_->GetViewport();
 
   Vec2 pos = capture_view_element_->GetPos();
-  pos[1] -= capture_view_element_->GetTimeGraph()->GetVerticalScrollingOffset();
   Vec2 size = capture_view_element_->GetSize();
 
   Vec2i screen_pos = viewport->WorldToScreen(pos);

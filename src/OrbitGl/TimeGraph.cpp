@@ -234,7 +234,7 @@ void TimeGraph::VerticallyMoveIntoView(const TimerInfo& timer_info) {
 
 // Move vertically the view to make a Track fully visible.
 void TimeGraph::VerticallyMoveIntoView(Track& track) {
-  float pos = track.GetPos()[1];
+  float pos = track.GetPos()[1] + vertical_scrolling_offset_;
   float height = track.GetHeight();
 
   float max_vertical_scrolling_offset = pos;
@@ -530,9 +530,6 @@ void TimeGraph::PrepareBatcherAndUpdatePrimitives(PickingMode picking_mode) {
 
   batcher_.StartNewFrame();
 
-  text_renderer_static_.PushTranslation(0, -vertical_scrolling_offset_);
-  batcher_.PushTranslation(0, -vertical_scrolling_offset_);
-
   text_renderer_static_.Clear();
 
   uint64_t min_tick = GetTickFromUs(min_time_us_);
@@ -540,9 +537,6 @@ void TimeGraph::PrepareBatcherAndUpdatePrimitives(PickingMode picking_mode) {
 
   CaptureViewElement::UpdatePrimitives(batcher_, text_renderer_static_, min_tick, max_tick,
                                        picking_mode);
-
-  batcher_.PopTranslation();
-  text_renderer_static_.PopTranslation();
 
   if (!absl::GetFlag(FLAGS_enforce_full_redraw)) {
     update_primitives_requested_ = false;
@@ -562,13 +556,15 @@ void TimeGraph::DoUpdateLayout() {
   track_manager_->UpdateTrackListForRendering();
   UpdateTracksPosition();
 
+  // This is called to make sure the current scrolling value is correctly clamped
+  // in case any changes in track visibility occured before
   SetVerticalScrollingOffset(vertical_scrolling_offset_);
 }
 
 void TimeGraph::UpdateTracksPosition() {
   const float track_pos_x = GetPos()[0];
 
-  float current_y = layout_.GetSchedulerTrackOffset();
+  float current_y = layout_.GetSchedulerTrackOffset() - vertical_scrolling_offset_;
 
   // Track height including space between them
   for (auto& track : track_manager_->GetVisibleTracks()) {
@@ -686,7 +682,7 @@ void TimeGraph::DrawOverlay(Batcher& batcher, TextRenderer& text_renderer,
   float world_start_x = 0;
   float world_width = GetWidth();
 
-  float world_start_y = vertical_scrolling_offset_;
+  float world_start_y = 0;
   float world_height = viewport_->GetWorldHeight();
 
   double inv_time_window = 1.0 / GetTimeWindowUs();
@@ -803,7 +799,7 @@ void TimeGraph::DrawIncompleteDataIntervals(Batcher& batcher, PickingMode pickin
     }
   }
 
-  const float world_start_y = vertical_scrolling_offset_;
+  const float world_start_y = 0;
   const float world_height = viewport_->GetWorldHeight();
 
   // Actually draw the ranges.
@@ -956,14 +952,8 @@ void TimeGraph::DrawAllElements(Batcher& batcher, TextRenderer& text_renderer,
                                 PickingMode& picking_mode, uint64_t current_mouse_time_ns) {
   const bool picking = picking_mode != PickingMode::kNone;
 
-  text_renderer.PushTranslation(0, -vertical_scrolling_offset_);
-  batcher.PushTranslation(0, -vertical_scrolling_offset_);
-
   DrawContext context{current_mouse_time_ns, picking_mode};
   Draw(batcher, text_renderer, context);
-
-  batcher.PopTranslation();
-  text_renderer.PopTranslation();
 
   if ((!picking && update_primitives_requested_) || picking) {
     PrepareBatcherAndUpdatePrimitives(picking_mode);
