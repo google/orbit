@@ -158,7 +158,8 @@ class UnhookAllFunctions(E2ETestCase):
         functions_dataview.filter.set_focus()
         functions_dataview.filter.set_edit_text('')
         functions_dataview.get_item_at(0, 0).click_input('left')
-        send_keys('^a^c')
+        # Hit Ctrl+a to select all functions.
+        send_keys('^a')
         functions_dataview.get_item_at(0, 0).click_input('right')
         self.find_context_menu_item('Unhook').click_input()
 
