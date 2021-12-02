@@ -183,10 +183,7 @@ void TrackManager::SetFilter(const std::string& filter) {
 }
 
 void TrackManager::UpdateVisibleTrackList() {
-  // This function assumes we asked before for a update for the visible track list and that tracks
-  // are already sorted (in sorted_tracks_).
   CHECK(visible_track_list_needs_update_);
-  CHECK(!sorting_invalidated_);
 
   visible_track_list_needs_update_ = false;
   visible_tracks_.clear();

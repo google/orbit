@@ -93,6 +93,7 @@ class TrackManager {
   void UpdateMovingTrackPositionInVisibleTracks();
   void SortTracks();
   [[nodiscard]] std::vector<ThreadTrack*> GetSortedThreadTracks();
+  // Filter tracks that are already sorted in sorted_tracks_.
   void UpdateVisibleTrackList();
 
   void AddTrack(const std::shared_ptr<Track>& track);
