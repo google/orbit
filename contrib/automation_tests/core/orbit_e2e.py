@@ -5,10 +5,12 @@ found in the LICENSE file.
 """
 
 import logging
+import os.path
 from typing import Iterable, Callable
 from copy import deepcopy
 import time
 import psutil
+import pywinauto
 
 from absl import flags
 from pywinauto import Application, timings
@@ -108,6 +110,14 @@ class E2ETestCase:
                                  text,
                                  parent=self.suite.application.top_window(),
                                  raise_on_failure=raise_on_failure)
+
+    def orbit_path(self):
+        """
+        Returns the root dir of the running "Orbit.exe". Throws an exception if there is no "Orbit.exe" running.
+        """
+        running_processes = pywinauto.application.process_get_modules()
+        orbit_exe_path = [path for pid, path, cmd in running_processes if "Orbit.exe" in path].pop()
+        return os.path.dirname(orbit_exe_path)
 
     def _execute(self, **kwargs):
         """
