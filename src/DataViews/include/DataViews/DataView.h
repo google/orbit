@@ -127,11 +127,12 @@ class DataView {
   virtual bool ScrollToBottom() { return false; }
   virtual bool SkipTimer() { return false; }
   virtual ErrorMessageOr<void> ExportCsv(const std::filesystem::path& file_path);
-  virtual void CopySelection(const std::vector<int>& selection);
 
   int GetUpdatePeriodMs() const { return update_period_ms_; }
   [[nodiscard]] DataViewType GetType() const { return type_; }
   [[nodiscard]] virtual bool ResetOnRefresh() const { return true; }
+
+  void OnCopySelectionRequested(const std::vector<int>& selection);
 
  protected:
   void InitSortingOrders();

@@ -91,7 +91,7 @@ void DataView::OnContextMenu(const std::string& action, int /*menu_index*/,
       }
     }
   } else if (action == kMenuActionCopySelection) {
-    CopySelection(item_indices);
+    OnCopySelectionRequested(item_indices);
   }
 }
 
@@ -153,7 +153,7 @@ ErrorMessageOr<void> DataView::ExportCsv(const std::filesystem::path& file_path)
   return outcome::success();
 }
 
-void DataView::CopySelection(const std::vector<int>& selection) {
+void DataView::OnCopySelectionRequested(const std::vector<int>& selection) {
   constexpr const char* kFieldSeparator = "\t";
   constexpr const char* kLineSeparator = "\n";
 
