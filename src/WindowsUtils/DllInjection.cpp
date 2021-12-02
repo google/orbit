@@ -28,7 +28,7 @@ ErrorMessageOr<uint64_t> RemoteWrite(HANDLE process_handle, const std::vector<ui
                                        MEM_RESERVE | MEM_COMMIT, PAGE_READWRITE);
   if (base_address == nullptr) {
     return ErrorMessage(
-        absl::StrFormat("VirtualAllocEx failed with error %s", orbit_base::GetLastErrorAsString()));
+        absl::StrFormat("Error calling VirtualAllocEx: %s", orbit_base::GetLastErrorAsString()));
   }
 
   // Write in allocated remote memory.
@@ -167,7 +167,7 @@ ErrorMessageOr<void> CreateRemoteThread(uint32_t pid, std::string_view module_na
                             absl::bit_cast<LPTHREAD_START_ROUTINE>(function_address),
                             absl::bit_cast<LPVOID>(parameter_address),
                             /*dwCreationFlags=*/0, /*lpThreadId=*/0)) {
-    return ErrorMessage(absl::StrFormat("CreateRemoteThread failed with error %s",
+    return ErrorMessage(absl::StrFormat("Error calling CreateRemoteThread: %s",
                                         orbit_base::GetLastErrorAsString()));
   }
 

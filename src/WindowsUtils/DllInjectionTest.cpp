@@ -33,7 +33,6 @@ TEST(DllInjection, InjectDllInCurrentProcess) {
   // Injection.
   uint32_t pid = orbit_base::GetCurrentProcessId();
   ErrorMessageOr<void> result = InjectDll(pid, GetTestDllPath());
-  if (result.has_error()) ERROR("Running InjectDllInCurrentProcess: %s", result.error().message());
   EXPECT_THAT(result, HasNoError());
 
   // Re-injection.
