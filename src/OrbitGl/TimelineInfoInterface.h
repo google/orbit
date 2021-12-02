@@ -11,6 +11,8 @@ namespace orbit_gl {
 
 class TimelineInfoInterface {
  public:
+  virtual ~TimelineInfoInterface() = default;
+
   [[nodiscard]] virtual float GetWorldFromTick(uint64_t time) const = 0;
   [[nodiscard]] virtual float GetWorldFromUs(double micros) const = 0;
   [[nodiscard]] virtual uint64_t GetTickFromWorld(float world_x) const = 0;

@@ -35,7 +35,8 @@
 
 class OrbitApp;
 
-class TimeGraph : public orbit_gl::CaptureViewElement, public orbit_gl::TimelineInfoInterface {
+class TimeGraph final : public orbit_gl::CaptureViewElement,
+                        public orbit_gl::TimelineInfoInterface {
  public:
   explicit TimeGraph(AccessibleInterfaceProvider* parent, OrbitApp* app,
                      orbit_gl::Viewport* viewport, orbit_client_data::CaptureData* capture_data,
