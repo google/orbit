@@ -97,6 +97,7 @@ void CallstackThreadBar::DoDraw(Batcher& batcher, TextRenderer& text_renderer,
 void CallstackThreadBar::DoUpdatePrimitives(Batcher& batcher, TextRenderer& text_renderer,
                                             uint64_t min_tick, uint64_t max_tick,
                                             PickingMode picking_mode) {
+  ORBIT_SCOPE_WITH_COLOR("CallstackThreadBar::DoUpdatePrimitives", kOrbitColorLightBlue);
   ThreadBar::DoUpdatePrimitives(batcher, text_renderer, min_tick, max_tick, picking_mode);
 
   float z = GlCanvas::kZValueEvent;

@@ -205,6 +205,13 @@ std::string FrameTrack::GetBoxTooltip(const Batcher& batcher, PickingId id) cons
           TicksToDuration(timer_info->start(), timer_info->end())));
 }
 
+void FrameTrack::DoUpdatePrimitives(Batcher& batcher, TextRenderer& text_renderer,
+                                    uint64_t min_tick, uint64_t max_tick,
+                                    PickingMode picking_mode) {
+  ORBIT_SCOPE_WITH_COLOR("FrameTrack::DoUpdatePrimitives", kOrbitColorAmber);
+  TimerTrack::DoUpdatePrimitives(batcher, text_renderer, min_tick, max_tick, picking_mode);
+}
+
 void FrameTrack::DoDraw(Batcher& batcher, TextRenderer& text_renderer,
                         const DrawContext& draw_context) {
   TimerTrack::DoDraw(batcher, text_renderer, draw_context);

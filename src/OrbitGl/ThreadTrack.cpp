@@ -382,7 +382,7 @@ void ThreadTrack::DoUpdatePrimitives(Batcher& batcher, TextRenderer& text_render
   // TODO(b/203181055): The parent class already provides an implementation, but this is completely
   // ignored because ThreadTrack uses the ScopeTree, and TimerTrack doesn't.
   // TimerTrack::DoUpdatePrimitives(batcher, text_renderer, min_tick, max_tick, picking_mode);
-
+  ORBIT_SCOPE_WITH_COLOR("ThreadTrack::DoUpdatePrimitives", kOrbitColorYellow);
   visible_timer_count_ = 0;
 
   const internal::DrawData draw_data =

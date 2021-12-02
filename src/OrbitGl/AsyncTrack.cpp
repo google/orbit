@@ -83,6 +83,13 @@ void AsyncTrack::OnTimer(const orbit_client_protos::TimerInfo& timer_info) {
   TimerTrack::OnTimer(new_timer_info);
 }
 
+void AsyncTrack::DoUpdatePrimitives(Batcher& batcher, TextRenderer& text_renderer,
+                                    uint64_t min_tick, uint64_t max_tick,
+                                    PickingMode picking_mode) {
+  ORBIT_SCOPE_WITH_COLOR("AsyncTrack::DoUpdatePrimitives", kOrbitColorDeepPurple);
+  TimerTrack::DoUpdatePrimitives(batcher, text_renderer, min_tick, max_tick, picking_mode);
+}
+
 float AsyncTrack::GetDefaultBoxHeight() const {
   auto box_height = layout_->GetTextBoxHeight();
   if (collapse_toggle_->IsCollapsed() && GetDepth() > 0) {

@@ -244,6 +244,7 @@ bool TimerTrack::DrawTimer(TextRenderer& text_renderer, const TimerInfo* prev_ti
 void TimerTrack::DoUpdatePrimitives(Batcher& batcher, TextRenderer& text_renderer,
                                     uint64_t min_tick, uint64_t max_tick,
                                     PickingMode picking_mode) {
+  ORBIT_SCOPE_WITH_COLOR("TimerTrack::DoUpdatePrimitives", kOrbitColorOrange);
   Track::DoUpdatePrimitives(batcher, text_renderer, min_tick, max_tick, picking_mode);
 
   visible_timer_count_ = 0;

@@ -44,6 +44,8 @@ class SchedulerTrack final : public TimerTrack {
       uint64_t start_ns, uint64_t end_ns) const;
 
  protected:
+  void DoUpdatePrimitives(Batcher& batcher, TextRenderer& text_renderer, uint64_t min_tick,
+                          uint64_t max_tick, PickingMode picking_mode) override;
   [[nodiscard]] bool IsTimerActive(const orbit_client_protos::TimerInfo& timer_info) const override;
   [[nodiscard]] Color GetTimerColor(const orbit_client_protos::TimerInfo& timer_info,
                                     bool is_selected, bool is_highlighted,
