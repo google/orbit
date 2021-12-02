@@ -35,6 +35,20 @@ using orbit_data_views::CheckExportToCsvIsInvoked;
 using orbit_data_views::CheckSingleAction;
 using orbit_data_views::ContextMenuEntry;
 using orbit_data_views::FlattenContextMenuWithGrouping;
+using orbit_data_views::kMenuActionCopySelection;
+using orbit_data_views::kMenuActionDisableFrameTrack;
+using orbit_data_views::kMenuActionDisassembly;
+using orbit_data_views::kMenuActionEnableFrameTrack;
+using orbit_data_views::kMenuActionExportEventsToCsv;
+using orbit_data_views::kMenuActionExportToCsv;
+using orbit_data_views::kMenuActionIterate;
+using orbit_data_views::kMenuActionJumpToFirst;
+using orbit_data_views::kMenuActionJumpToLast;
+using orbit_data_views::kMenuActionJumpToMax;
+using orbit_data_views::kMenuActionJumpToMin;
+using orbit_data_views::kMenuActionSelect;
+using orbit_data_views::kMenuActionSourceCode;
+using orbit_data_views::kMenuActionUnselect;
 using orbit_grpc_protos::InstrumentedFunction;
 using orbit_grpc_protos::ModuleInfo;
 
@@ -268,15 +282,15 @@ TEST_F(LiveFunctionsDataViewTest, ContextMenuEntriesArePresentCorrectly) {
         FlattenContextMenuWithGrouping(view_.GetContextMenuWithGrouping(0, selected_indices));
 
     // Common actions should always be available.
-    CheckSingleAction(context_menu, "Copy Selection", ContextMenuEntry::kEnabled);
-    CheckSingleAction(context_menu, "Export to CSV", ContextMenuEntry::kEnabled);
-    CheckSingleAction(context_menu, "Export events to CSV", ContextMenuEntry::kEnabled);
+    CheckSingleAction(context_menu, kMenuActionCopySelection, ContextMenuEntry::kEnabled);
+    CheckSingleAction(context_menu, kMenuActionExportToCsv, ContextMenuEntry::kEnabled);
+    CheckSingleAction(context_menu, kMenuActionExportEventsToCsv, ContextMenuEntry::kEnabled);
 
     // Source code and disassembly actions are availble if and only if capture is connected.
     ContextMenuEntry source_code_or_disassembly =
         capture_connected ? ContextMenuEntry::kEnabled : ContextMenuEntry::kDisabled;
-    CheckSingleAction(context_menu, "Go to Source code", source_code_or_disassembly);
-    CheckSingleAction(context_menu, "Go to Disassembly", source_code_or_disassembly);
+    CheckSingleAction(context_menu, kMenuActionSourceCode, source_code_or_disassembly);
+    CheckSingleAction(context_menu, kMenuActionDisassembly, source_code_or_disassembly);
 
     // Add iterators action is only available if some function has non-zero counts.
     int total_counts = 0;
@@ -285,16 +299,16 @@ TEST_F(LiveFunctionsDataViewTest, ContextMenuEntriesArePresentCorrectly) {
     }
     ContextMenuEntry add_iterators =
         total_counts > 0 ? ContextMenuEntry::kEnabled : ContextMenuEntry::kDisabled;
-    CheckSingleAction(context_menu, "Add iterator(s)", add_iterators);
+    CheckSingleAction(context_menu, kMenuActionIterate, add_iterators);
 
     // Jump actions are only available for single selection with non-zero counts.
     ContextMenuEntry jump_to_direction = selected_indices.size() == 1 && total_counts > 0
                                              ? ContextMenuEntry::kEnabled
                                              : ContextMenuEntry::kDisabled;
-    CheckSingleAction(context_menu, "Jump to first", jump_to_direction);
-    CheckSingleAction(context_menu, "Jump to last", jump_to_direction);
-    CheckSingleAction(context_menu, "Jump to min", jump_to_direction);
-    CheckSingleAction(context_menu, "Jump to max", jump_to_direction);
+    CheckSingleAction(context_menu, kMenuActionJumpToFirst, jump_to_direction);
+    CheckSingleAction(context_menu, kMenuActionJumpToLast, jump_to_direction);
+    CheckSingleAction(context_menu, kMenuActionJumpToMin, jump_to_direction);
+    CheckSingleAction(context_menu, kMenuActionJumpToMax, jump_to_direction);
 
     // Hook action is available if and only if 1) capture is connected and 2) there is an unselected
     // instrumented function. Unhook action is available if and only if 1) capture is connected and
@@ -310,8 +324,8 @@ TEST_F(LiveFunctionsDataViewTest, ContextMenuEntriesArePresentCorrectly) {
         }
       }
     }
-    CheckSingleAction(context_menu, "Hook", select);
-    CheckSingleAction(context_menu, "Unhook", unselect);
+    CheckSingleAction(context_menu, kMenuActionSelect, select);
+    CheckSingleAction(context_menu, kMenuActionUnselect, unselect);
 
     // Enable frametrack action is available if and only if there is an instrumented function with
     // frametrack not yet enabled, disable frametrack action is available if and only if there is an
@@ -325,8 +339,8 @@ TEST_F(LiveFunctionsDataViewTest, ContextMenuEntriesArePresentCorrectly) {
         enable_frametrack = ContextMenuEntry::kEnabled;
       }
     }
-    CheckSingleAction(context_menu, "Enable frame track(s)", enable_frametrack);
-    CheckSingleAction(context_menu, "Disable frame track(s)", disable_frametrack);
+    CheckSingleAction(context_menu, kMenuActionEnableFrameTrack, enable_frametrack);
+    CheckSingleAction(context_menu, kMenuActionDisableFrameTrack, disable_frametrack);
   };
 
   capture_connected = false;
@@ -420,13 +434,14 @@ TEST_F(LiveFunctionsDataViewTest, ContextMenuActionsAreInvoked) {
                                            kThreadIds[kThreadIndices[i]], kStarts[i], kEnds[i],
                                            kEnds[i] - kStarts[i]);
     }
-    CheckExportToCsvIsInvoked(context_menu, app_, view_, expected_contents, "Export events to CSV");
+    CheckExportToCsvIsInvoked(context_menu, app_, view_, expected_contents,
+                              kMenuActionExportEventsToCsv);
   }
 
   // Go to Disassembly
   {
     const auto disassembly_index =
-        std::find(context_menu.begin(), context_menu.end(), "Go to Disassembly") -
+        std::find(context_menu.begin(), context_menu.end(), kMenuActionDisassembly) -
         context_menu.begin();
     ASSERT_LT(disassembly_index, context_menu.size());
 
@@ -435,26 +450,29 @@ TEST_F(LiveFunctionsDataViewTest, ContextMenuActionsAreInvoked) {
         .WillOnce([&](int32_t /*pid*/, const FunctionInfo& function) {
           EXPECT_EQ(function.name(), kNames[0]);
         });
-    view_.OnContextMenu("Go to Disassembly", static_cast<int>(disassembly_index), {0});
+    view_.OnContextMenu(std::string{kMenuActionDisassembly}, static_cast<int>(disassembly_index),
+                        {0});
   }
 
   // Go to Source code
   {
     const auto source_code_index =
-        std::find(context_menu.begin(), context_menu.end(), "Go to Source code") -
+        std::find(context_menu.begin(), context_menu.end(), kMenuActionSourceCode) -
         context_menu.begin();
     ASSERT_LT(source_code_index, context_menu.size());
 
     EXPECT_CALL(app_, ShowSourceCode).Times(1).WillOnce([&](const FunctionInfo& function) {
       EXPECT_EQ(function.name(), kNames[0]);
     });
-    view_.OnContextMenu("Go to Source code", static_cast<int>(source_code_index), {0});
+    view_.OnContextMenu(std::string{kMenuActionSourceCode}, static_cast<int>(source_code_index),
+                        {0});
   }
 
   // Jump to first
   {
     const auto jump_to_first_index =
-        std::find(context_menu.begin(), context_menu.end(), "Jump to first") - context_menu.begin();
+        std::find(context_menu.begin(), context_menu.end(), kMenuActionJumpToFirst) -
+        context_menu.begin();
     ASSERT_LT(jump_to_first_index, context_menu.size());
 
     EXPECT_CALL(app_, JumpToTimerAndZoom)
@@ -462,13 +480,15 @@ TEST_F(LiveFunctionsDataViewTest, ContextMenuActionsAreInvoked) {
         .WillOnce([](uint64_t /*function_id*/, JumpToTimerMode selection_mode) {
           EXPECT_EQ(selection_mode, JumpToTimerMode::kFirst);
         });
-    view_.OnContextMenu("Jump to first", static_cast<int>(jump_to_first_index), {0});
+    view_.OnContextMenu(std::string{kMenuActionJumpToFirst}, static_cast<int>(jump_to_first_index),
+                        {0});
   }
 
   // Jump to last
   {
     const auto jump_to_last_index =
-        std::find(context_menu.begin(), context_menu.end(), "Jump to last") - context_menu.begin();
+        std::find(context_menu.begin(), context_menu.end(), kMenuActionJumpToLast) -
+        context_menu.begin();
     ASSERT_LT(jump_to_last_index, context_menu.size());
 
     EXPECT_CALL(app_, JumpToTimerAndZoom)
@@ -476,13 +496,15 @@ TEST_F(LiveFunctionsDataViewTest, ContextMenuActionsAreInvoked) {
         .WillOnce([](uint64_t /*function_id*/, JumpToTimerMode selection_mode) {
           EXPECT_EQ(selection_mode, JumpToTimerMode::kLast);
         });
-    view_.OnContextMenu("Jump to last", static_cast<int>(jump_to_last_index), {0});
+    view_.OnContextMenu(std::string{kMenuActionJumpToLast}, static_cast<int>(jump_to_last_index),
+                        {0});
   }
 
   // Jump to min
   {
     const auto jump_to_min_index =
-        std::find(context_menu.begin(), context_menu.end(), "Jump to min") - context_menu.begin();
+        std::find(context_menu.begin(), context_menu.end(), kMenuActionJumpToMin) -
+        context_menu.begin();
     ASSERT_LT(jump_to_min_index, context_menu.size());
 
     EXPECT_CALL(app_, JumpToTimerAndZoom)
@@ -490,13 +512,15 @@ TEST_F(LiveFunctionsDataViewTest, ContextMenuActionsAreInvoked) {
         .WillOnce([](uint64_t /*function_id*/, JumpToTimerMode selection_mode) {
           EXPECT_EQ(selection_mode, JumpToTimerMode::kMin);
         });
-    view_.OnContextMenu("Jump to min", static_cast<int>(jump_to_min_index), {0});
+    view_.OnContextMenu(std::string{kMenuActionJumpToMin}, static_cast<int>(jump_to_min_index),
+                        {0});
   }
 
   // Jump to max
   {
     const auto jump_to_max_index =
-        std::find(context_menu.begin(), context_menu.end(), "Jump to max") - context_menu.begin();
+        std::find(context_menu.begin(), context_menu.end(), kMenuActionJumpToMax) -
+        context_menu.begin();
     ASSERT_LT(jump_to_max_index, context_menu.size());
 
     EXPECT_CALL(app_, JumpToTimerAndZoom)
@@ -504,13 +528,14 @@ TEST_F(LiveFunctionsDataViewTest, ContextMenuActionsAreInvoked) {
         .WillOnce([](uint64_t /*function_id*/, JumpToTimerMode selection_mode) {
           EXPECT_EQ(selection_mode, JumpToTimerMode::kMax);
         });
-    view_.OnContextMenu("Jump to max", static_cast<int>(jump_to_max_index), {0});
+    view_.OnContextMenu(std::string{kMenuActionJumpToMax}, static_cast<int>(jump_to_max_index),
+                        {0});
   }
 
   // Add iterator(s)
   {
     const auto add_iterators_index =
-        std::find(context_menu.begin(), context_menu.end(), "Add iterator(s)") -
+        std::find(context_menu.begin(), context_menu.end(), kMenuActionIterate) -
         context_menu.begin();
     ASSERT_LT(add_iterators_index, context_menu.size());
 
@@ -520,25 +545,26 @@ TEST_F(LiveFunctionsDataViewTest, ContextMenuActionsAreInvoked) {
           EXPECT_EQ(instrumented_function_id, kFunctionIds[0]);
           EXPECT_EQ(function->name(), kNames[0]);
         });
-    view_.OnContextMenu("Add iterator(s)", static_cast<int>(add_iterators_index), {0});
+    view_.OnContextMenu(std::string{kMenuActionIterate}, static_cast<int>(add_iterators_index),
+                        {0});
   }
 
   // Hook
   {
-    const auto hook_index =
-        std::find(context_menu.begin(), context_menu.end(), "Hook") - context_menu.begin();
+    const auto hook_index = std::find(context_menu.begin(), context_menu.end(), kMenuActionSelect) -
+                            context_menu.begin();
     ASSERT_LT(hook_index, context_menu.size());
 
     EXPECT_CALL(app_, SelectFunction).Times(1).WillOnce([&](const FunctionInfo& function) {
       EXPECT_EQ(function.name(), kNames[0]);
     });
-    view_.OnContextMenu("Hook", static_cast<int>(hook_index), {0});
+    view_.OnContextMenu(std::string{kMenuActionSelect}, static_cast<int>(hook_index), {0});
   }
 
   // Enable frame track(s)
   {
     const auto enable_frame_track_index =
-        std::find(context_menu.begin(), context_menu.end(), "Enable frame track(s)") -
+        std::find(context_menu.begin(), context_menu.end(), kMenuActionEnableFrameTrack) -
         context_menu.begin();
     ASSERT_LT(enable_frame_track_index, context_menu.size());
 
@@ -549,7 +575,8 @@ TEST_F(LiveFunctionsDataViewTest, ContextMenuActionsAreInvoked) {
     EXPECT_CALL(app_, AddFrameTrack(testing::An<uint64_t>()))
         .Times(1)
         .WillOnce([&](uint64_t function_id) { EXPECT_EQ(function_id, kFunctionIds[0]); });
-    view_.OnContextMenu("Enable frame track(s)", static_cast<int>(enable_frame_track_index), {0});
+    view_.OnContextMenu(std::string{kMenuActionEnableFrameTrack},
+                        static_cast<int>(enable_frame_track_index), {0});
   }
 
   function_selected = true;
@@ -561,7 +588,8 @@ TEST_F(LiveFunctionsDataViewTest, ContextMenuActionsAreInvoked) {
   // Unhook
   {
     const auto unhook_index =
-        std::find(context_menu.begin(), context_menu.end(), "Unhook") - context_menu.begin();
+        std::find(context_menu.begin(), context_menu.end(), kMenuActionUnselect) -
+        context_menu.begin();
     ASSERT_LT(unhook_index, context_menu.size());
 
     EXPECT_CALL(app_, DeselectFunction).Times(1).WillOnce([&](const FunctionInfo& function) {
@@ -571,13 +599,13 @@ TEST_F(LiveFunctionsDataViewTest, ContextMenuActionsAreInvoked) {
     EXPECT_CALL(app_, RemoveFrameTrack(testing::An<const FunctionInfo&>()))
         .Times(1)
         .WillOnce([&](const FunctionInfo& function) { EXPECT_EQ(function.name(), kNames[0]); });
-    view_.OnContextMenu("Unhook", static_cast<int>(unhook_index), {0});
+    view_.OnContextMenu(std::string{kMenuActionUnselect}, static_cast<int>(unhook_index), {0});
   }
 
   // Disable frame track(s)
   {
     const auto disable_frame_track_index =
-        std::find(context_menu.begin(), context_menu.end(), "Disable frame track(s)") -
+        std::find(context_menu.begin(), context_menu.end(), kMenuActionDisableFrameTrack) -
         context_menu.begin();
     ASSERT_LT(disable_frame_track_index, context_menu.size());
 
@@ -587,7 +615,8 @@ TEST_F(LiveFunctionsDataViewTest, ContextMenuActionsAreInvoked) {
     EXPECT_CALL(app_, RemoveFrameTrack(testing::An<uint64_t>()))
         .Times(1)
         .WillOnce([&](uint64_t function_id) { EXPECT_EQ(function_id, kFunctionIds[0]); });
-    view_.OnContextMenu("Disable frame track(s)", static_cast<int>(disable_frame_track_index), {0});
+    view_.OnContextMenu(std::string{kMenuActionDisableFrameTrack},
+                        static_cast<int>(disable_frame_track_index), {0});
   }
 }
 

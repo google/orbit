@@ -16,6 +16,10 @@ using orbit_data_views::CheckExportToCsvIsInvoked;
 using orbit_data_views::CheckSingleAction;
 using orbit_data_views::ContextMenuEntry;
 using orbit_data_views::FlattenContextMenuWithGrouping;
+using orbit_data_views::kMenuActionCopySelection;
+using orbit_data_views::kMenuActionExportToCsv;
+using orbit_data_views::kMenuActionSelect;
+using orbit_data_views::kMenuActionUnselect;
 using orbit_grpc_protos::TracepointInfo;
 
 namespace {
@@ -111,8 +115,8 @@ TEST_F(TracepointsDataViewTest, ContextMenuEntriesArePresentCorrectly) {
         FlattenContextMenuWithGrouping(view_.GetContextMenuWithGrouping(0, selected_indices));
 
     // Common actions should always be available.
-    CheckSingleAction(context_menu, "Copy Selection", ContextMenuEntry::kEnabled);
-    CheckSingleAction(context_menu, "Export to CSV", ContextMenuEntry::kEnabled);
+    CheckSingleAction(context_menu, kMenuActionCopySelection, ContextMenuEntry::kEnabled);
+    CheckSingleAction(context_menu, kMenuActionExportToCsv, ContextMenuEntry::kEnabled);
 
     // Unhook action is available if and only if there are selected tracepoints.
     // Hook action is available if and only if there are unselected tracepoints.
@@ -125,8 +129,8 @@ TEST_F(TracepointsDataViewTest, ContextMenuEntriesArePresentCorrectly) {
         select = ContextMenuEntry::kEnabled;
       }
     }
-    CheckSingleAction(context_menu, "Unhook", unselect);
-    CheckSingleAction(context_menu, "Hook", select);
+    CheckSingleAction(context_menu, kMenuActionUnselect, unselect);
+    CheckSingleAction(context_menu, kMenuActionSelect, select);
   };
 
   SetTracepointsByIndices({0, 1, 2});
@@ -169,14 +173,14 @@ TEST_F(TracepointsDataViewTest, ContextMenuActionsAreInvoked) {
 
   // Hook
   {
-    const auto hook_index =
-        std::find(context_menu.begin(), context_menu.end(), "Hook") - context_menu.begin();
+    const auto hook_index = std::find(context_menu.begin(), context_menu.end(), kMenuActionSelect) -
+                            context_menu.begin();
     ASSERT_LT(hook_index, context_menu.size());
 
     EXPECT_CALL(app_, SelectTracepoint).Times(1).WillOnce([&](const TracepointInfo& tracepoint) {
       EXPECT_EQ(tracepoint.name(), kTracepointNames[0]);
     });
-    view_.OnContextMenu("Hook", static_cast<int>(hook_index), {0});
+    view_.OnContextMenu(std::string{kMenuActionSelect}, static_cast<int>(hook_index), {0});
   }
 
   tracepoint_selected = true;
@@ -186,13 +190,14 @@ TEST_F(TracepointsDataViewTest, ContextMenuActionsAreInvoked) {
   // Unhook
   {
     const auto unhook_index =
-        std::find(context_menu.begin(), context_menu.end(), "Unhook") - context_menu.begin();
+        std::find(context_menu.begin(), context_menu.end(), kMenuActionUnselect) -
+        context_menu.begin();
     ASSERT_LT(unhook_index, context_menu.size());
 
     EXPECT_CALL(app_, DeselectTracepoint).Times(1).WillOnce([&](const TracepointInfo& tracepoint) {
       EXPECT_EQ(tracepoint.name(), kTracepointNames[0]);
     });
-    view_.OnContextMenu("Unhook", static_cast<int>(unhook_index), {0});
+    view_.OnContextMenu(std::string{kMenuActionUnselect}, static_cast<int>(unhook_index), {0});
   }
 }
 

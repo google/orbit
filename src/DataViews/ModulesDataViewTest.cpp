@@ -23,6 +23,9 @@ using orbit_data_views::CheckCopySelectionIsInvoked;
 using orbit_data_views::CheckExportToCsvIsInvoked;
 using orbit_data_views::ContextMenuEntry;
 using orbit_data_views::FlattenContextMenuWithGrouping;
+using orbit_data_views::kMenuActionCopySelection;
+using orbit_data_views::kMenuActionExportToCsv;
+using orbit_data_views::kMenuActionLoadSymbols;
 using orbit_grpc_protos::ModuleInfo;
 
 namespace {
@@ -117,9 +120,9 @@ TEST_F(ModulesDataViewTest, ContextMenuEntriesArePresent) {
   std::vector<std::string> context_menu =
       FlattenContextMenuWithGrouping(view_.GetContextMenuWithGrouping(0, {0}));
 
-  CheckSingleAction(context_menu, "Copy Selection", ContextMenuEntry::kEnabled);
-  CheckSingleAction(context_menu, "Export to CSV", ContextMenuEntry::kEnabled);
-  CheckSingleAction(context_menu, "Load Symbols", ContextMenuEntry::kEnabled);
+  CheckSingleAction(context_menu, kMenuActionCopySelection, ContextMenuEntry::kEnabled);
+  CheckSingleAction(context_menu, kMenuActionExportToCsv, ContextMenuEntry::kEnabled);
+  CheckSingleAction(context_menu, kMenuActionLoadSymbols, ContextMenuEntry::kEnabled);
 }
 
 TEST_F(ModulesDataViewTest, ContextMenuActionsAreInvoked) {
@@ -131,13 +134,15 @@ TEST_F(ModulesDataViewTest, ContextMenuActionsAreInvoked) {
   // Load Symbols
   {
     const auto load_symbols_index =
-        std::find(context_menu.begin(), context_menu.end(), "Load Symbols") - context_menu.begin();
+        std::find(context_menu.begin(), context_menu.end(), kMenuActionLoadSymbols) -
+        context_menu.begin();
     ASSERT_LT(load_symbols_index, context_menu.size());
 
     EXPECT_CALL(app_, RetrieveModulesAndLoadSymbols)
         .Times(1)
         .WillOnce(testing::Return(orbit_base::Future<void>{}));
-    view_.OnContextMenu("Load Symbols", static_cast<int>(load_symbols_index), {0});
+    view_.OnContextMenu(std::string{kMenuActionLoadSymbols}, static_cast<int>(load_symbols_index),
+                        {0});
   }
 
   // Copy Selection
