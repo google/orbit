@@ -126,13 +126,13 @@ class DataView {
   virtual void LinkDataView(DataView* /*data_view*/) {}
   virtual bool ScrollToBottom() { return false; }
   virtual bool SkipTimer() { return false; }
-  virtual ErrorMessageOr<void> ExportCsv(const std::filesystem::path& file_path);
 
   int GetUpdatePeriodMs() const { return update_period_ms_; }
   [[nodiscard]] DataViewType GetType() const { return type_; }
   [[nodiscard]] virtual bool ResetOnRefresh() const { return true; }
 
   void OnCopySelectionRequested(const std::vector<int>& selection);
+  void OnExportToCsvRequested();
 
  protected:
   void InitSortingOrders();
