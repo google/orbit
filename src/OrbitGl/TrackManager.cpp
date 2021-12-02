@@ -254,6 +254,8 @@ void TrackManager::UpdateMovingTrackPositionInVisibleTracks() {
 
   if (moving_track_previous_position != -1) {
     Track* moving_track = visible_tracks_[moving_track_previous_position];
+    time_graph_->VerticallyMoveIntoView(*moving_track);
+
     visible_tracks_.erase(visible_tracks_.begin() + moving_track_previous_position);
 
     int moving_track_current_position = -1;

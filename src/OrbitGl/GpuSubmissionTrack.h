@@ -29,8 +29,9 @@ class TextRenderer;
 // This track is meant to be used as a subtrack of `GpuTrack`.
 class GpuSubmissionTrack : public TimerTrack {
  public:
-  explicit GpuSubmissionTrack(Track* parent, TimeGraph* time_graph, orbit_gl::Viewport* viewport,
-                              TimeGraphLayout* layout, uint64_t timeline_hash, OrbitApp* app,
+  explicit GpuSubmissionTrack(Track* parent, const orbit_gl::TimelineInfoInterface* timeline_info,
+                              orbit_gl::Viewport* viewport, TimeGraphLayout* layout,
+                              uint64_t timeline_hash, OrbitApp* app,
                               const orbit_client_data::CaptureData* capture_data,
                               orbit_client_data::TimerData* timer_data);
   ~GpuSubmissionTrack() override = default;

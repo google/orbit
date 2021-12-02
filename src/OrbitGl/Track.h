@@ -25,6 +25,7 @@
 #include "OrbitBase/Profiling.h"
 #include "TextRenderer.h"
 #include "TimeGraphLayout.h"
+#include "TimelineInfoInterface.h"
 #include "TriangleToggle.h"
 #include "Viewport.h"
 
@@ -49,8 +50,9 @@ class Track : public orbit_gl::CaptureViewElement, public std::enable_shared_fro
       Type::kGpuTrack,    Type::kGraphTrack,      Type::kSchedulerTrack, Type::kAsyncTrack,
       Type::kMemoryTrack, Type::kPageFaultsTrack, Type::kUnknown};
 
-  explicit Track(CaptureViewElement* parent, TimeGraph* time_graph, orbit_gl::Viewport* viewport,
-                 TimeGraphLayout* layout, const orbit_client_data::CaptureData* capture_data);
+  explicit Track(CaptureViewElement* parent, const orbit_gl::TimelineInfoInterface* timeline_info,
+                 orbit_gl::Viewport* viewport, TimeGraphLayout* layout,
+                 const orbit_client_data::CaptureData* capture_data);
   ~Track() override = default;
 
   void OnDrag(int x, int y) override;
@@ -129,7 +131,7 @@ class Track : public orbit_gl::CaptureViewElement, public std::enable_shared_fro
   std::shared_ptr<TriangleToggle> collapse_toggle_;
 
   TimeGraphLayout* layout_;
-
+  const orbit_gl::TimelineInfoInterface* timeline_info_;
   const orbit_client_data::CaptureData* capture_data_ = nullptr;
 };
 

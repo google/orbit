@@ -12,6 +12,7 @@
 #include "CaptureViewElement.h"
 #include "ClientData/CaptureData.h"
 #include "TimeGraphLayout.h"
+#include "TimelineInfoInterface.h"
 
 class OrbitApp;
 
@@ -19,12 +20,14 @@ namespace orbit_gl {
 
 class ThreadBar : public CaptureViewElement, public std::enable_shared_from_this<ThreadBar> {
  public:
-  explicit ThreadBar(CaptureViewElement* parent, OrbitApp* app, TimeGraph* time_graph,
+  explicit ThreadBar(CaptureViewElement* parent, OrbitApp* app,
+                     const orbit_gl::TimelineInfoInterface* timeline_info,
                      orbit_gl::Viewport* viewport, TimeGraphLayout* layout,
                      const orbit_client_data::CaptureData* capture_data, int64_t thread_id,
                      std::string name, const Color& color)
-      : CaptureViewElement(parent, time_graph, viewport, layout),
+      : CaptureViewElement(parent, viewport, layout),
         app_(app),
+        timeline_info_(timeline_info),
         capture_data_(capture_data),
         thread_id_(thread_id),
         name_(std::move(name)),
@@ -44,6 +47,7 @@ class ThreadBar : public CaptureViewElement, public std::enable_shared_from_this
   [[nodiscard]] virtual Color GetColor() const { return color_; }
 
   OrbitApp* app_;
+  const orbit_gl::TimelineInfoInterface* timeline_info_;
   const orbit_client_data::CaptureData* capture_data_;
 
  private:

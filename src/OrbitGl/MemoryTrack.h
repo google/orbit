@@ -19,12 +19,13 @@ namespace orbit_gl {
 template <size_t Dimension>
 class MemoryTrack : public GraphTrack<Dimension>, public AnnotationTrack {
  public:
-  explicit MemoryTrack(CaptureViewElement* parent, TimeGraph* time_graph,
+  explicit MemoryTrack(CaptureViewElement* parent,
+                       const orbit_gl::TimelineInfoInterface* timeline_info,
                        orbit_gl::Viewport* viewport, TimeGraphLayout* layout,
                        std::array<std::string, Dimension> series_names,
                        uint8_t series_value_decimal_digits, std::string series_value_units,
                        const orbit_client_data::CaptureData* capture_data)
-      : GraphTrack<Dimension>(parent, time_graph, viewport, layout, series_names,
+      : GraphTrack<Dimension>(parent, timeline_info, viewport, layout, series_names,
                               series_value_decimal_digits, std::move(series_value_units),
                               capture_data),
         AnnotationTrack() {

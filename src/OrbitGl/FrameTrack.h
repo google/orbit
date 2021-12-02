@@ -24,7 +24,8 @@ class OrbitApp;
 
 class FrameTrack : public TimerTrack {
  public:
-  explicit FrameTrack(CaptureViewElement* parent, TimeGraph* time_graph,
+  explicit FrameTrack(CaptureViewElement* parent,
+                      const orbit_gl::TimelineInfoInterface* timeline_info,
                       orbit_gl::Viewport* viewport, TimeGraphLayout* layout,
                       orbit_grpc_protos::InstrumentedFunction function, OrbitApp* app,
                       const orbit_client_data::CaptureData* capture_data,

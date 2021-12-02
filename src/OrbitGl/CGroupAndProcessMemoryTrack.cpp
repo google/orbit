@@ -33,11 +33,11 @@ static std::array<std::string, kCGroupAndProcessMemoryTrackDimension> CreateSeri
 static constexpr uint8_t kTrackValueDecimalDigits = 2;
 
 CGroupAndProcessMemoryTrack::CGroupAndProcessMemoryTrack(
-    CaptureViewElement* parent, TimeGraph* time_graph, orbit_gl::Viewport* viewport,
-    TimeGraphLayout* layout, const std::string& cgroup_name,
+    CaptureViewElement* parent, const orbit_gl::TimelineInfoInterface* timeline_info,
+    orbit_gl::Viewport* viewport, TimeGraphLayout* layout, const std::string& cgroup_name,
     const orbit_client_data::CaptureData* capture_data)
     : MemoryTrack<kCGroupAndProcessMemoryTrackDimension>(
-          parent, time_graph, viewport, layout,
+          parent, timeline_info, viewport, layout,
           CreateSeriesName(cgroup_name, capture_data->process_name()), kTrackValueDecimalDigits,
           kTrackValueLabelUnit, capture_data),
       cgroup_name_(cgroup_name) {

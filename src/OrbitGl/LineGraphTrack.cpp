@@ -12,7 +12,6 @@
 
 #include "Geometry.h"
 #include "TextRenderer.h"
-#include "TimeGraph.h"
 #include "TimeGraphLayout.h"
 
 namespace orbit_gl {
@@ -93,8 +92,8 @@ void LineGraphTrack<Dimension>::DrawSingleSeriesEntry(
     const std::array<float, Dimension>& current_normalized_values,
     const std::array<float, Dimension>& next_normalized_values, float z, bool is_last) {
   constexpr float kDotRadius = 2.f;
-  float x0 = this->time_graph_->GetWorldFromTick(start_tick);
-  float x1 = this->time_graph_->GetWorldFromTick(end_tick);
+  float x0 = this->timeline_info_->GetWorldFromTick(start_tick);
+  float x1 = this->timeline_info_->GetWorldFromTick(end_tick);
   float content_height = this->GetGraphContentHeight();
   float base_y = this->GetGraphContentBottomY();
 

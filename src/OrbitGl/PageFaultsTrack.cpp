@@ -9,7 +9,6 @@
 #include "Geometry.h"
 #include "GrpcProtos/Constants.h"
 #include "TextRenderer.h"
-#include "TimeGraph.h"
 #include "TimeGraphLayout.h"
 #include "Viewport.h"
 
@@ -20,16 +19,17 @@ using orbit_capture_client::CaptureEventProcessor;
 using orbit_grpc_protos::kMissingInfo;
 }  // namespace
 
-PageFaultsTrack::PageFaultsTrack(CaptureViewElement* parent, TimeGraph* time_graph,
+PageFaultsTrack::PageFaultsTrack(CaptureViewElement* parent,
+                                 const orbit_gl::TimelineInfoInterface* timeline_info,
                                  orbit_gl::Viewport* viewport, TimeGraphLayout* layout,
                                  const std::string& cgroup_name, uint64_t memory_sampling_period_ms,
                                  const orbit_client_data::CaptureData* capture_data)
-    : Track(parent, time_graph, viewport, layout, capture_data),
+    : Track(parent, timeline_info, viewport, layout, capture_data),
       major_page_faults_track_{
-          std::make_shared<MajorPageFaultsTrack>(this, time_graph, viewport, layout, cgroup_name,
+          std::make_shared<MajorPageFaultsTrack>(this, timeline_info, viewport, layout, cgroup_name,
                                                  memory_sampling_period_ms, capture_data)},
       minor_page_faults_track_{
-          std::make_shared<MinorPageFaultsTrack>(this, time_graph, viewport, layout, cgroup_name,
+          std::make_shared<MinorPageFaultsTrack>(this, timeline_info, viewport, layout, cgroup_name,
                                                  memory_sampling_period_ms, capture_data)} {
   // PageFaults track is collapsed by default. The major and minor page faults subtracks are
   // expanded by default, but not shown while the page faults track is collapsed.

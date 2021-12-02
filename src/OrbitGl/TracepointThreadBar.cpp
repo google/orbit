@@ -22,19 +22,18 @@
 #include "GrpcProtos/tracepoint.pb.h"
 #include "OrbitBase/Logging.h"
 #include "OrbitBase/ThreadConstants.h"
-#include "TimeGraph.h"
 #include "TimeGraphLayout.h"
 #include "Viewport.h"
 
 namespace orbit_gl {
 
 TracepointThreadBar::TracepointThreadBar(CaptureViewElement* parent, OrbitApp* app,
-                                         TimeGraph* time_graph, orbit_gl::Viewport* viewport,
-                                         TimeGraphLayout* layout,
+                                         const orbit_gl::TimelineInfoInterface* timeline_info,
+                                         orbit_gl::Viewport* viewport, TimeGraphLayout* layout,
                                          const orbit_client_data::CaptureData* capture_data,
                                          uint32_t thread_id, const Color& color)
-    : ThreadBar(parent, app, time_graph, viewport, layout, capture_data, thread_id, "Tracepoints",
-                color) {}
+    : ThreadBar(parent, app, timeline_info, viewport, layout, capture_data, thread_id,
+                "Tracepoints", color) {}
 
 void TracepointThreadBar::DoDraw(Batcher& batcher, TextRenderer& text_renderer,
                                  const DrawContext& draw_context) {
@@ -73,7 +72,7 @@ void TracepointThreadBar::DoUpdatePrimitives(Batcher& batcher, TextRenderer& tex
         [&](const orbit_client_protos::TracepointEventInfo& tracepoint) {
           uint64_t time = tracepoint.time();
           float radius = track_height / 4;
-          const Vec2 pos(time_graph_->GetWorldFromTick(time), GetPos()[1]);
+          const Vec2 pos(timeline_info_->GetWorldFromTick(time), GetPos()[1]);
           if (GetThreadId() == orbit_base::kAllThreadsOfAllProcessesTid) {
             const Color color = tracepoint.pid() == capture_data_->process_id() ? kGrey : kWhite;
             batcher.AddVerticalLine(pos, -track_height, z, color);
@@ -94,7 +93,7 @@ void TracepointThreadBar::DoUpdatePrimitives(Batcher& batcher, TextRenderer& tex
         GetThreadId(), min_tick, max_tick,
         [&](const orbit_client_protos::TracepointEventInfo& tracepoint) {
           uint64_t time = tracepoint.time();
-          Vec2 pos(time_graph_->GetWorldFromTick(time) - kPickingBoxOffset,
+          Vec2 pos(timeline_info_->GetWorldFromTick(time) - kPickingBoxOffset,
                    GetPos()[1] - track_height + 1);
           Vec2 size(kPickingBoxWidth, track_height);
           auto user_data = std::make_unique<PickingUserData>(

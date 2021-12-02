@@ -21,7 +21,8 @@
 template <size_t Dimension>
 class GraphTrack : public Track {
  public:
-  explicit GraphTrack(CaptureViewElement* parent, TimeGraph* time_graph,
+  explicit GraphTrack(CaptureViewElement* parent,
+                      const orbit_gl::TimelineInfoInterface* timeline_info,
                       orbit_gl::Viewport* viewport, TimeGraphLayout* layout,
                       std::array<std::string, Dimension> series_names,
                       uint8_t series_value_decimal_digits, std::string series_value_unit,

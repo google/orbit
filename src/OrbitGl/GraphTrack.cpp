@@ -26,13 +26,14 @@ constexpr const float kBoxHeightMultiplier = 1.5f;
 }  // namespace
 
 template <size_t Dimension>
-GraphTrack<Dimension>::GraphTrack(CaptureViewElement* parent, TimeGraph* time_graph,
+GraphTrack<Dimension>::GraphTrack(CaptureViewElement* parent,
+                                  const orbit_gl::TimelineInfoInterface* timeline_info,
                                   orbit_gl::Viewport* viewport, TimeGraphLayout* layout,
                                   std::array<std::string, Dimension> series_names,
                                   uint8_t series_value_decimal_digits,
                                   std::string series_value_units,
                                   const orbit_client_data::CaptureData* capture_data)
-    : Track(parent, time_graph, viewport, layout, capture_data),
+    : Track(parent, timeline_info, viewport, layout, capture_data),
       series_{series_names, series_value_decimal_digits, std::move(series_value_units)} {}
 
 template <size_t Dimension>
@@ -66,7 +67,7 @@ void GraphTrack<Dimension>::DoDraw(Batcher& batcher, TextRenderer& text_renderer
       series_.GetPreviousOrFirstEntry(draw_context.current_mouse_time_ns);
   uint64_t first_time = series_.StartTimeInNs();
   uint64_t label_time = std::max(draw_context.current_mouse_time_ns, first_time);
-  float point_x = time_graph_->GetWorldFromTick(label_time);
+  float point_x = timeline_info_->GetWorldFromTick(label_time);
   float point_y = GetLabelYFromValues(values);
   std::string text = GetLabelTextFromValues(values);
   const Color kBlack(0, 0, 0, 255);
@@ -275,8 +276,8 @@ template <size_t Dimension>
 void GraphTrack<Dimension>::DrawSingleSeriesEntry(
     Batcher& batcher, uint64_t start_tick, uint64_t end_tick,
     const std::array<float, Dimension>& normalized_cumulative_values, float z) {
-  const float x0 = time_graph_->GetWorldFromTick(start_tick);
-  const float width = time_graph_->GetWorldFromTick(end_tick) - x0;
+  const float x0 = timeline_info_->GetWorldFromTick(start_tick);
+  const float width = timeline_info_->GetWorldFromTick(end_tick) - x0;
   const float content_height = GetGraphContentHeight();
   const float base_y = GetGraphContentBottomY();
   float y0 = base_y;

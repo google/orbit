@@ -25,7 +25,6 @@
 #include "OrbitAccessibility/AccessibleWidgetBridge.h"
 #include "PickingManager.h"
 #include "TextRenderer.h"
-#include "TimeGraph.h"
 #include "Timer.h"
 #include "Viewport.h"
 

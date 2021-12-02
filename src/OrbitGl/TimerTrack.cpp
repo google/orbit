@@ -20,7 +20,6 @@
 #include "ClientProtos/capture_data.pb.h"
 #include "DisplayFormats/DisplayFormats.h"
 #include "GlCanvas.h"
-#include "TimeGraph.h"
 #include "TimeGraphLayout.h"
 #include "TriangleToggle.h"
 #include "Viewport.h"
@@ -33,10 +32,11 @@ using orbit_client_protos::TimerInfo;
 
 const Color TimerTrack::kHighlightColor = Color(100, 181, 246, 255);
 
-TimerTrack::TimerTrack(CaptureViewElement* parent, TimeGraph* time_graph,
+TimerTrack::TimerTrack(CaptureViewElement* parent,
+                       const orbit_gl::TimelineInfoInterface* timeline_info,
                        orbit_gl::Viewport* viewport, TimeGraphLayout* layout, OrbitApp* app,
                        const orbit_client_data::CaptureData* capture_data, TimerData* timer_data)
-    : Track(parent, time_graph, viewport, layout, capture_data),
+    : Track(parent, timeline_info, viewport, layout, capture_data),
       app_{app},
       timer_data_{timer_data} {}
 
@@ -116,9 +116,9 @@ bool TimerTrack::DrawTimer(TextRenderer& text_renderer, const TimerInfo* prev_ti
     return false;
   if (!TimerFilter(*current_timer_info)) return false;
 
-  double start_us = time_graph_->GetUsFromTick(current_timer_info->start());
+  double start_us = timeline_info_->GetUsFromTick(current_timer_info->start());
   double start_or_prev_end_us = start_us;
-  double end_us = time_graph_->GetUsFromTick(current_timer_info->end());
+  double end_us = timeline_info_->GetUsFromTick(current_timer_info->end());
   double end_or_next_start_us = end_us;
 
   float world_timer_y = GetYFromTimer(*current_timer_info);
@@ -137,7 +137,7 @@ bool TimerTrack::DrawTimer(TextRenderer& text_renderer, const TimerInfo* prev_ti
       if (prev_timer_info->end() > current_timer_info->start() &&
           prev_timer_info->end() <= current_timer_info->end() &&
           prev_timer_info->type() == current_timer_info->type()) {
-        start_or_prev_end_us = time_graph_->GetUsFromTick(prev_timer_info->end());
+        start_or_prev_end_us = timeline_info_->GetUsFromTick(prev_timer_info->end());
       }
     }
   }
@@ -154,7 +154,7 @@ bool TimerTrack::DrawTimer(TextRenderer& text_renderer, const TimerInfo* prev_ti
       if (current_timer_info->end() > next_timer_info->start() &&
           current_timer_info->end() <= next_timer_info->end() &&
           next_timer_info->type() == current_timer_info->type()) {
-        end_or_next_start_us = time_graph_->GetUsFromTick(next_timer_info->start());
+        end_or_next_start_us = timeline_info_->GetUsFromTick(next_timer_info->start());
       }
     }
   }
@@ -257,7 +257,7 @@ void TimerTrack::DoUpdatePrimitives(Batcher& batcher, TextRenderer& text_rendere
 
   draw_data.track_start_x = GetPos()[0];
   draw_data.track_width = GetWidth();
-  draw_data.inv_time_window = 1.0 / time_graph_->GetTimeWindowUs();
+  draw_data.inv_time_window = 1.0 / timeline_info_->GetTimeWindowUs();
   draw_data.is_collapsed = IsCollapsed();
 
   draw_data.z = GlCanvas::kZValueBox;
@@ -271,10 +271,10 @@ void TimerTrack::DoUpdatePrimitives(Batcher& batcher, TextRenderer& text_rendere
   // events that would just draw over an already drawn line. When zoomed in
   // enough that all events are drawn as boxes, this has no effect. When zoomed
   // out, many events will be discarded quickly.
-  uint64_t time_window_ns = static_cast<uint64_t>(1000 * time_graph_->GetTimeWindowUs());
+  uint64_t time_window_ns = static_cast<uint64_t>(1000 * timeline_info_->GetTimeWindowUs());
   draw_data.ns_per_pixel =
       static_cast<double>(time_window_ns) / viewport_->WorldToScreen({GetWidth(), 0})[0];
-  draw_data.min_timegraph_tick = time_graph_->GetTickFromUs(time_graph_->GetMinTimeUs());
+  draw_data.min_timegraph_tick = timeline_info_->GetTickFromUs(timeline_info_->GetMinTimeUs());
 
   for (const TimerChain* chain : chains) {
     CHECK(chain != nullptr);
@@ -365,8 +365,8 @@ float TimerTrack::GetHeaderHeight() const {
 
 internal::DrawData TimerTrack::GetDrawData(uint64_t min_tick, uint64_t max_tick, float track_pos_x,
                                            float track_width, Batcher* batcher,
-                                           TimeGraph* time_graph, orbit_gl::Viewport* viewport,
-                                           bool is_collapsed,
+                                           const orbit_gl::TimelineInfoInterface* timeline_info,
+                                           orbit_gl::Viewport* viewport, bool is_collapsed,
                                            const orbit_client_protos::TimerInfo* selected_timer,
                                            uint64_t highlighted_function_id,
                                            uint64_t highlighted_group_id) {
@@ -377,17 +377,17 @@ internal::DrawData TimerTrack::GetDrawData(uint64_t min_tick, uint64_t max_tick,
   draw_data.viewport = viewport;
   draw_data.track_start_x = track_pos_x;
   draw_data.track_width = track_width;
-  draw_data.inv_time_window = 1.0 / time_graph->GetTimeWindowUs();
+  draw_data.inv_time_window = 1.0 / timeline_info->GetTimeWindowUs();
   draw_data.is_collapsed = is_collapsed;
   draw_data.z = GlCanvas::kZValueBox;
   draw_data.selected_timer = selected_timer;
   draw_data.highlighted_function_id = highlighted_function_id;
   draw_data.highlighted_group_id = highlighted_group_id;
 
-  uint64_t time_window_ns = static_cast<uint64_t>(1000 * time_graph->GetTimeWindowUs());
+  uint64_t time_window_ns = static_cast<uint64_t>(1000 * timeline_info->GetTimeWindowUs());
   draw_data.ns_per_pixel =
       static_cast<double>(time_window_ns) / viewport->WorldToScreen({track_width, 0})[0];
-  draw_data.min_timegraph_tick = time_graph->GetTickFromUs(time_graph->GetMinTimeUs());
+  draw_data.min_timegraph_tick = timeline_info->GetTickFromUs(timeline_info->GetMinTimeUs());
   return draw_data;
 }
 

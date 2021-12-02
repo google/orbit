@@ -10,9 +10,9 @@ namespace orbit_gl {
 
 class UnitTestCaptureViewLeafElement : public CaptureViewElement {
  public:
-  explicit UnitTestCaptureViewLeafElement(CaptureViewElement* parent, TimeGraph* time_graph,
-                                          Viewport* viewport, TimeGraphLayout* layout)
-      : CaptureViewElement(parent, time_graph, viewport, layout) {}
+  explicit UnitTestCaptureViewLeafElement(CaptureViewElement* parent, Viewport* viewport,
+                                          TimeGraphLayout* layout)
+      : CaptureViewElement(parent, viewport, layout) {}
 
   [[nodiscard]] float GetHeight() const override { return 10; }
 
@@ -25,13 +25,12 @@ class UnitTestCaptureViewLeafElement : public CaptureViewElement {
 
 class UnitTestCaptureViewContainerElement : public CaptureViewElement {
  public:
-  explicit UnitTestCaptureViewContainerElement(CaptureViewElement* parent, TimeGraph* time_graph,
-                                               Viewport* viewport, TimeGraphLayout* layout,
-                                               int children_to_create = 0)
-      : CaptureViewElement(parent, time_graph, viewport, layout) {
+  explicit UnitTestCaptureViewContainerElement(CaptureViewElement* parent, Viewport* viewport,
+                                               TimeGraphLayout* layout, int children_to_create = 0)
+      : CaptureViewElement(parent, viewport, layout) {
     for (int i = 0; i < children_to_create; ++i) {
       children_.emplace_back(
-          std::make_unique<UnitTestCaptureViewLeafElement>(this, time_graph, viewport, layout));
+          std::make_unique<UnitTestCaptureViewLeafElement>(this, viewport, layout));
     }
   }
 
@@ -63,7 +62,7 @@ class UnitTestCaptureViewContainerElement : public CaptureViewElement {
 TEST(CaptureViewElementTesterTest, PassesAllTestsOnExistingElement) {
   const int kChildCount = 2;
   CaptureViewElementTester tester;
-  UnitTestCaptureViewContainerElement container_elem(nullptr, nullptr, tester.GetViewport(),
+  UnitTestCaptureViewContainerElement container_elem(nullptr, tester.GetViewport(),
                                                      tester.GetLayout(), kChildCount);
   tester.RunTests(&container_elem);
 }

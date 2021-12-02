@@ -11,22 +11,18 @@
 #include "PickingManager.h"
 #include "TextRenderer.h"
 #include "TimeGraphLayout.h"
+#include "TimelineInfoInterface.h"
 #include "Viewport.h"
-
-class TimeGraph;
 
 namespace orbit_gl {
 
 /* Base class for UI elements drawn underneath the capture window. */
 class CaptureViewElement : public Pickable, public AccessibleInterfaceProvider {
  public:
-  explicit CaptureViewElement(CaptureViewElement* parent, TimeGraph* time_graph,
-                              orbit_gl::Viewport* viewport, TimeGraphLayout* layout);
+  explicit CaptureViewElement(CaptureViewElement* parent, Viewport* viewport,
+                              TimeGraphLayout* layout);
 
   void UpdateLayout();
-
-  [[nodiscard]] TimeGraph* GetTimeGraph() { return time_graph_; }
-  [[nodiscard]] const TimeGraph* GetTimeGraph() const { return time_graph_; }
 
   [[nodiscard]] orbit_gl::Viewport* GetViewport() const { return viewport_; }
 
@@ -72,8 +68,6 @@ class CaptureViewElement : public Pickable, public AccessibleInterfaceProvider {
 
   orbit_gl::Viewport* viewport_;
   TimeGraphLayout* layout_;
-
-  TimeGraph* time_graph_;
 
   Vec2 mouse_pos_last_click_;
   Vec2 mouse_pos_cur_;

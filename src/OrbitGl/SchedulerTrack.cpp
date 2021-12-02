@@ -14,7 +14,6 @@
 #include "ClientProtos/capture_data.pb.h"
 #include "OrbitBase/Logging.h"
 #include "OrbitBase/ThreadConstants.h"
-#include "TimeGraph.h"
 #include "TimeGraphLayout.h"
 #include "Viewport.h"
 
@@ -24,11 +23,12 @@ const Color kInactiveColor(100, 100, 100, 255);
 const Color kSamePidColor(140, 140, 140, 255);
 const Color kSelectionColor(0, 128, 255, 255);
 
-SchedulerTrack::SchedulerTrack(CaptureViewElement* parent, TimeGraph* time_graph,
+SchedulerTrack::SchedulerTrack(CaptureViewElement* parent,
+                               const orbit_gl::TimelineInfoInterface* timeline_info,
                                orbit_gl::Viewport* viewport, TimeGraphLayout* layout, OrbitApp* app,
                                const orbit_client_data::CaptureData* capture_data,
                                orbit_client_data::TimerData* timer_data)
-    : TimerTrack(parent, time_graph, viewport, layout, app, capture_data, timer_data),
+    : TimerTrack(parent, timeline_info, viewport, layout, app, capture_data, timer_data),
       num_cores_{0} {
   SetPinned(false);
 }
