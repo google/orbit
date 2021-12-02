@@ -156,10 +156,20 @@ if [ -n "$1" ]; then
     readonly BUILD_OPTION="--build outdated"
   fi
 
+
+  if  [[ $OS == "windows" ]]; then
+    BUILD_PROFILE="msvc2019_release"
+  elif [[ $PUBLIC_BUILD == "yes" ]]; then
+    BUILD_PROFILE="gcc10_release"
+  else
+    BUILD_PROFILE="clang7_release"
+  fi
+
   echo "Invoking conan lock."
   conan lock create "${REPO_ROOT}/conanfile.py" --user=orbitdeps --channel=stable \
     ${BUILD_OPTION} \
-    --lockfile="${REPO_ROOT}/third_party/conan/lockfiles/base.lock" -pr ${CONAN_PROFILE} \
+    --lockfile="${REPO_ROOT}/third_party/conan/lockfiles/base.lock" \
+    -pr:h ${CONAN_PROFILE} -pr:b ${BUILD_PROFILE} \
     -o crashdump_server="$CRASHDUMP_SERVER" $PACKAGING_OPTION \
     --lockfile-out="${REPO_ROOT}/build/conan.lock"
 

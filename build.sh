@@ -15,6 +15,12 @@ fi
 
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
 
+if [ "$(uname -s)" == "Linux" ]; then
+  readonly OS="linux"
+else
+  readonly OS="windows"
+fi
+
 function create_conan_profile {
   local readonly profile="$1"
   if ! conan profile show default >/dev/null; then
@@ -45,6 +51,21 @@ function conan_profile_exists {
   return $?
 }
 
+if conan remote list | grep -qE '^artifactory:'; then
+  # Internally we use the clang9_release/msvc2019_release profile to compile our build tools because we can be sure
+  # these compilers will be available (on their dedicated platforms) and we have all packages prebuilt for these
+  # profiles.
+  if [[ $OS == "windows" ]]; then
+    readonly build_profile="msvc2019_release"
+  else
+    readonly build_profile="clang9_release"
+  fi
+else
+  # In all other cases we fall back to the default profile which should always refer to a valid available compiler.
+  readonly build_profile="default_release"
+  conan_profile_exists "$build_profile" || create_conan_profile "$build_profile"
+fi
+
 
 for profile in ${profiles[@]}; do
   if [ "$profile" == "default_release" -o "$profile" == "default_debug" -o "$profile" == "default_relwithdebinfo" ]; then
@@ -54,7 +75,8 @@ for profile in ${profiles[@]}; do
   mkdir -p build_$profile/ || exit $?
   conan lock create "$DIR/conanfile.py" --user=orbitdeps --channel=stable \
     --build=outdated \
-    --lockfile="$DIR/third_party/conan/lockfiles/base.lock" -pr $profile \
+    --lockfile="$DIR/third_party/conan/lockfiles/base.lock" \
+    -pr:h $profile -pr:b $build_profile \
     --lockfile-out=build_$profile/conan.lock || exit $?
   conan install -if build_$profile/ --build outdated --lockfile=build_$profile/conan.lock "$DIR" || exit $?
   conan build -bf build_$profile/ "$DIR" || exit $?

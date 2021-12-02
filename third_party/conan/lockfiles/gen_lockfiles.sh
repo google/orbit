@@ -12,7 +12,7 @@ fi
 conan lock create ${REPO_ROOT}/conanfile.py \
   -o system_qt=False \
   -s os=Linux \
-  --build=grpc \
   --user=orbitdeps --channel=stable \
   --lockfile-out=${REPO_ROOT}/third_party/conan/lockfiles/base.lock \
-  --base
+  --base \
+  -pr:h clang9_relwithdebinfo -pr:b clang9_release

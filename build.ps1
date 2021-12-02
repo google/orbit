@@ -55,6 +55,18 @@ function conan_create_profile($profile) {
   }
 }
 
+if ((& conan remote list) | Select-String -Pattern "^artifactory:" -quiet) {
+  # Internally we use the msvc2019_release profile to compile our build tools because we can be sure this
+  # compiler will be available and we have all packages prebuilt for this profile.
+  $build_profile = "msvc2019_release"
+} else {
+  # In all other cases we fall back to the default profile which should always refer to a valid available compiler.
+  $build_profile = "default_release"
+  if (-not (conan_profile_exists $build_profile)) {
+   conan_create_profile $build_profile
+  }
+}
+
 $profiles = if ($args.Count) { $args } else { @("default_relwithdebinfo") }
 
 foreach ($profile in $profiles) {
@@ -69,7 +81,8 @@ foreach ($profile in $profiles) {
 
   & $conan.Path lock create "$PSScriptRoot\conanfile.py" --user=orbitdeps --channel=stable `
     --build=outdated `
-    --lockfile="$PSScriptRoot\third_party\conan\lockfiles\base.lock" -u -pr $profile `
+    --lockfile="$PSScriptRoot\third_party\conan\lockfiles\base.lock" `
+     -pr:h $profile -pr:b $build_profile `
     --lockfile-out=.\build_$profile\conan.lock
   if ($LastExitCode -ne 0) {
     Throw "Error while running conan lock create."

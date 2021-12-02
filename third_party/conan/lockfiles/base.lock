@@ -21,9 +21,10 @@
      "24"
     ],
     "build_requires": [
-     "44",
-     "46",
-     "47"
+     "41",
+     "43",
+     "49",
+     "50"
     ],
     "path": "../../../conanfile.py",
     "context": "host"
@@ -44,10 +45,6 @@
      "5",
      "6",
      "7"
-    ],
-    "build_requires": [
-     "41",
-     "43"
     ],
     "context": "host"
    },
@@ -276,50 +273,51 @@
     "requires": [
      "42"
     ],
-    "context": "host"
+    "context": "build"
    },
    "42": {
     "ref": "protobuf/3.9.1@bincrafters/stable#0",
-    "context": "host"
+    "context": "build"
    },
    "43": {
     "ref": "grpc_codegen/1.27.3@orbitdeps/stable#a0b442cf66941a590b619c88b106f0e5",
     "requires": [
-     "1",
-     "7",
-     "5",
-     "6",
+     "44",
+     "45",
+     "46",
+     "47",
      "41",
-     "4"
+     "48"
     ],
-    "context": "host"
+    "context": "build"
    },
    "44": {
-    "ref": "protoc_installer/3.9.1@bincrafters/stable#0",
-    "requires": [
-     "45"
-    ],
-    "context": "host"
+    "ref": "abseil/20200923.3#b2d602ea9f45c5bb738956d0f7aafa3d",
+    "context": "build"
    },
    "45": {
-    "ref": "protobuf/3.9.1@bincrafters/stable#0",
-    "context": "host"
+    "ref": "c-ares/1.15.0#c527ace6e98705612ec5ee943c6c0bf7",
+    "context": "build"
    },
    "46": {
-    "ref": "grpc_codegen/1.27.3@orbitdeps/stable#a0b442cf66941a590b619c88b106f0e5",
-    "requires": [
-     "1",
-     "7",
-     "5",
-     "6",
-     "44",
-     "4"
-    ],
-    "context": "host"
+    "ref": "openssl/1.1.1k#3555e93beb1e5904c8f0689e8fce854e",
+    "context": "build"
    },
    "47": {
+    "ref": "protobuf/3.9.1@bincrafters/stable#0",
+    "context": "build"
+   },
+   "48": {
+    "ref": "zlib/1.2.11#9e0c292b60ce77402bd9be60dd68266f",
+    "context": "build"
+   },
+   "49": {
     "ref": "gtest/1.11.0#088aa58a3c2115519f99667eee50d0a1",
     "context": "host"
+   },
+   "50": {
+    "ref": "cmake_installer/3.16.3@conan/stable#0",
+    "context": "build"
    }
   },
   "revisions_enabled": true
