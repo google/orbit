@@ -66,6 +66,13 @@ std::vector<CaptureViewElement*> PageFaultsTrack::GetAllChildren() const {
   return result;
 }
 
+void PageFaultsTrack::DoUpdatePrimitives(Batcher& batcher, TextRenderer& text_renderer,
+                                         uint64_t min_tick, uint64_t max_tick,
+                                         PickingMode picking_mode) {
+  ORBIT_SCOPE("PageFaultsTrack::DoUpdatePrimitives");
+  Track::DoUpdatePrimitives(batcher, text_renderer, min_tick, max_tick, picking_mode);
+}
+
 void PageFaultsTrack::UpdatePositionOfSubtracks() {
   const Vec2 pos = GetPos();
   if (collapse_toggle_->IsCollapsed()) {

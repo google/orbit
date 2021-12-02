@@ -164,6 +164,7 @@ std::string ThreadStateBar::GetThreadStateSliceTooltip(Batcher& batcher, Picking
 void ThreadStateBar::DoUpdatePrimitives(Batcher& batcher, TextRenderer& text_renderer,
                                         uint64_t min_tick, uint64_t max_tick,
                                         PickingMode picking_mode) {
+  ORBIT_SCOPE_WITH_COLOR("ThreadStateBar::DoUpdatePrimitives", kOrbitColorTeal);
   ThreadBar::DoUpdatePrimitives(batcher, text_renderer, min_tick, max_tick, picking_mode);
 
   const auto time_window_ns = static_cast<uint64_t>(1000 * time_graph_->GetTimeWindowUs());

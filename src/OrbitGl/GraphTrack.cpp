@@ -84,6 +84,7 @@ template <size_t Dimension>
 void GraphTrack<Dimension>::DoUpdatePrimitives(Batcher& batcher, TextRenderer& text_renderer,
                                                uint64_t min_tick, uint64_t max_tick,
                                                PickingMode picking_mode) {
+  ORBIT_SCOPE_WITH_COLOR("GraphTrack<Dimension>::DoUpdatePrimitives", kOrbitColorBlueGrey);
   Track::DoUpdatePrimitives(batcher, text_renderer, min_tick, max_tick, picking_mode);
 
   float track_z = GlCanvas::kZValueTrack;

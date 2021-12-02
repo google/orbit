@@ -55,6 +55,7 @@ void TracepointThreadBar::DoDraw(Batcher& batcher, TextRenderer& text_renderer,
 void TracepointThreadBar::DoUpdatePrimitives(Batcher& batcher, TextRenderer& text_renderer,
                                              uint64_t min_tick, uint64_t max_tick,
                                              PickingMode picking_mode) {
+  ORBIT_SCOPE_WITH_COLOR("TracepointThreadBar::DoUpdatePrimitives", kOrbitColorIndigo);
   ThreadBar::DoUpdatePrimitives(batcher, text_renderer, min_tick, max_tick, picking_mode);
 
   float z = GlCanvas::kZValueEvent;
