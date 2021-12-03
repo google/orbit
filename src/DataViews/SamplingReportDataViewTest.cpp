@@ -265,10 +265,10 @@ TEST_F(SamplingReportDataViewTest, ColumnSelectedShowsRightResults) {
 
 TEST_F(SamplingReportDataViewTest, ContextMenuEntriesArePresentCorrectly) {
   EXPECT_CALL(app_, GetCaptureData).WillRepeatedly(testing::ReturnRef(*capture_data_));
-  EXPECT_CALL(app_, GetModuleByPathAndBuildId)
+  EXPECT_CALL(app_, GetMutableModuleByPathAndBuildId)
       .WillRepeatedly(
-          [&](const std::string& module_path, const std::string& build_id) -> const ModuleData* {
-            return module_manager_.GetModuleByPathAndBuildId(module_path, build_id);
+          [&](const std::string& module_path, const std::string& build_id) -> ModuleData* {
+            return module_manager_.GetMutableModuleByPathAndBuildId(module_path, build_id);
           });
 
   bool capture_connected;
@@ -348,8 +348,8 @@ TEST_F(SamplingReportDataViewTest, ContextMenuEntriesArePresentCorrectly) {
     CheckSingleAction(context_menu, kMenuActionSelect, select);
     CheckSingleAction(context_menu, kMenuActionUnselect, unselect);
 
-    // Find indices that SamplingReportDataView::GetModulePathsAndBuildIdsFromIndices can find
-    // matching module path and build id pair.
+    // Find indices that SamplingReportDataView::GetModulePathAndBuildIdFromRow can find matching
+    // module path and build id pair.
     std::vector<int> selected_indices_with_matching_module;
     for (int index : selected_indices) {
       // Sampled function 3's absolute address does not match any module
@@ -357,7 +357,7 @@ TEST_F(SamplingReportDataViewTest, ContextMenuEntriesArePresentCorrectly) {
     }
 
     // Load symbols action is available if and only if: in all the module path and build id pairs
-    // returned by SamplingReportDataView::GetModulePathsAndBuildIdsFromIndices, there is one pair
+    // returned by SamplingReportDataView::GetModulePathAndBuildIdFromRow, there is one pair
     // corresponds to a module that is not loaded yet.
     ContextMenuEntry load_symbols = ContextMenuEntry::kDisabled;
     for (int index : selected_indices_with_matching_module) {
@@ -392,10 +392,10 @@ TEST_F(SamplingReportDataViewTest, ContextMenuActionsAreInvoked) {
   EXPECT_CALL(app_, IsCaptureConnected).WillRepeatedly(testing::Return(true));
   EXPECT_CALL(app_, IsFunctionSelected(testing::A<const orbit_client_protos::FunctionInfo&>()))
       .WillRepeatedly(testing::ReturnPointee(&function_selected));
-  EXPECT_CALL(app_, GetModuleByPathAndBuildId)
+  EXPECT_CALL(app_, GetMutableModuleByPathAndBuildId)
       .WillRepeatedly(
-          [&](const std::string& module_path, const std::string& build_id) -> const ModuleData* {
-            return module_manager_.GetModuleByPathAndBuildId(module_path, build_id);
+          [&](const std::string& module_path, const std::string& build_id) -> ModuleData* {
+            return module_manager_.GetMutableModuleByPathAndBuildId(module_path, build_id);
           });
 
   AddFunctionsByIndices({0});

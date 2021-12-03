@@ -113,7 +113,7 @@ std::vector<std::vector<std::string>> ModulesDataView::GetContextMenuWithGroupin
   bool enable_load = false;
   bool enable_verify = false;
   for (int index : selected_indices) {
-    const ModuleData* module = GetModule(index);
+    const ModuleData* module = GetModuleDataFromRow(index);
     if (!module->is_loaded()) {
       enable_load = true;
     }
@@ -138,21 +138,11 @@ std::vector<std::vector<std::string>> ModulesDataView::GetContextMenuWithGroupin
 
 void ModulesDataView::OnContextMenu(const std::string& action, int menu_index,
                                     const std::vector<int>& item_indices) {
-  if (action == kMenuActionLoadSymbols) {
-    std::vector<ModuleData*> modules_to_load;
-    for (int index : item_indices) {
-      ModuleData* module_data = GetModule(index);
-      if (!module_data->is_loaded()) {
-        modules_to_load.push_back(module_data);
-      }
-    }
-    app_->RetrieveModulesAndLoadSymbols(modules_to_load);
-
-  } else if (action == kMenuActionVerifyFramePointers) {
+  if (action == kMenuActionVerifyFramePointers) {
     std::vector<const ModuleData*> modules_to_validate;
     modules_to_validate.reserve(item_indices.size());
     for (int index : item_indices) {
-      const ModuleData* module = GetModule(index);
+      const ModuleData* module = GetModuleDataFromRow(index);
       modules_to_validate.push_back(module);
     }
 
@@ -165,7 +155,7 @@ void ModulesDataView::OnContextMenu(const std::string& action, int menu_index,
 }
 
 void ModulesDataView::OnDoubleClicked(int index) {
-  ModuleData* module_data = GetModule(index);
+  ModuleData* module_data = GetModuleDataFromRow(index);
   if (!module_data->is_loaded()) {
     std::vector<ModuleData*> modules_to_load = {module_data};
     app_->RetrieveModulesAndLoadSymbols(modules_to_load);
@@ -236,7 +226,7 @@ void ModulesDataView::OnRefreshButtonClicked() {
 
 bool ModulesDataView::GetDisplayColor(int row, int /*column*/, unsigned char& red,
                                       unsigned char& green, unsigned char& blue) {
-  const ModuleData* module = GetModule(row);
+  const ModuleData* module = GetModuleDataFromRow(row);
   if (module->is_loaded()) {
     red = 42;
     green = 218;

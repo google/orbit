@@ -17,6 +17,7 @@
 #include <utility>
 #include <vector>
 
+#include "ClientData/ModuleData.h"
 #include "DataViews/AppInterface.h"
 #include "DataViews/DataViewType.h"
 #include "OrbitBase/Logging.h"
@@ -131,10 +132,15 @@ class DataView {
   [[nodiscard]] DataViewType GetType() const { return type_; }
   [[nodiscard]] virtual bool ResetOnRefresh() const { return true; }
 
+  void OnLoadSymbolsRequested(const std::vector<int>& selection);
   void OnCopySelectionRequested(const std::vector<int>& selection);
   void OnExportToCsvRequested();
 
  protected:
+  [[nodiscard]] virtual orbit_client_data::ModuleData* GetModuleDataFromRow(int /*row*/) const {
+    return nullptr;
+  }
+
   void InitSortingOrders();
   virtual void DoSort() {}
   virtual void DoFilter() {}
