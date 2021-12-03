@@ -36,6 +36,7 @@ class LoadCapture(E2ETestCase):
     The given path can be either
       (*) absolute, in which case it is taken as is, or
       (*) relative, in which case it is interpreted relative to `automation_tests` directory.
+    If `expect_fail` is true, the test checks for an error dialog after loading the capture and closes the dialog.
     It raises an exception if the capture does not exists. Also waits until the capture is loaded.
     """
 
