@@ -29,7 +29,7 @@
 // ORBIT_DOUBLE: Graph double values.
 //
 // Colors:
-// Note that all of the macros above have a "_WITH_COLOR" variant that allow users to specify
+// Note that all of the macros above have a "_WITH_COLOR" variant that allows users to specify
 // a custom color for time slices, async strings and graph elements. A set of predefined colors can
 // be found below, see "orbit_api_color". Set custom colors with the "orbit_api_color(0xff0000ff)"
 // syntax (rgba).
@@ -54,9 +54,11 @@
 // Overview:
 // ORBIT_SCOPE will profile the time between "now" and the end of the current scope.
 //
-// Note:
-// We limit the maximum number of characters of the "name" parameter to "kMaxEventStringSize". This
-// limitation may be lifted as we roll out a new dynamic instrumentation implementation.
+// Group id:
+// This macro also has a "_WITH_GROUP_ID" and a "_WITH_COLOR_AND_GROUP_ID" variant that allows users
+// to specify a group id. Scopes with the same group id are associated to each other, such that
+// selecting one scope in Orbit highlights all the other scopes that are associated to the selected
+// one.
 //
 // Example Usage: Profile sections of a function:
 //
@@ -72,8 +74,10 @@
 // }
 //
 // Parameters:
-// name: [const char*] Label to be displayed on current time slice (kMaxEventStringSize characters).
+// name: [const char*] Label to be displayed on current time slice.
 // col: [orbit_api_color] User-defined color for the current time slice (see orbit_api_color below).
+// group_id: [uint64_t] User-defined non-zero id that associates the current time slice with all the
+//           other time slices with the same id.
 //
 //
 // =================================================================================================
@@ -83,12 +87,15 @@
 // Overview:
 // Profile the time between ORBIT_START and ORBIT_STOP.
 //
-// Notes:
-// 1. ORBIT_START and ORBIT_STOP need to be in the same scope. For start and stop operations that
-//    need to happen in different scopes or threads, use ORBIT_ASYNC_START/ORBIT_ASYNC_STOP.
+// Note:
+// ORBIT_START and its matching ORBIT_STOP need to happen in the same thread. For start and stop
+// operations that happen in different threads use ORBIT_ASYNC_START/ORBIT_ASYNC_STOP.
 //
-// 2. We limit the maximum number of characters of the "name" parameter to "kMaxEventStringSize".
-//    This limitation may be lifted as we roll out a new dynamic instrumentation implementation.
+// Group id:
+// The ORBIT_START macro also has a "_WITH_GROUP_ID" and a "_WITH_COLOR_AND_GROUP_ID" variant that
+// allows users to specify a group id. Time slices with the same group id are associated to each
+// other, such that selecting one slice in Orbit highlights all the other slices that are associated
+// to the selected one.
 //
 // Example Usage: Profile sections of a function:
 //
@@ -104,9 +111,11 @@
 //   ORBIT_STOP();
 // }
 //
-// Parameters:
-// name: [const char*] Label to be displayed on current time slice (kMaxEventStringSize characters).
+// Parameters of ORBIT_START:
+// name: [const char*] Label to be displayed on the current time slice.
 // col: [orbit_api_color] User-defined color for the current time slice (see orbit_api_color below).
+// group_id: [uint64_t] User-defined non-zero id that associates the current time slice with all the
+//           other time slices with the same id.
 //
 //
 // =================================================================================================
@@ -119,9 +128,7 @@
 // do not represent hierarchical information.
 //
 // Note:
-// We limit the maximum number of characters of the "name" parameter to "kMaxEventStringSize". This
-// limitation may be lifted as we roll out a new dynamic instrumentation implementation.
-// It is possible however to add per-time-slice strings using the ASYNC_STRING macro.
+// It is possible to add per-time-slice strings using the ORBIT_ASYNC_STRING macro (see below).
 //
 // Example usage: Tracking "File IO" operations.
 // Thread 1: ORBIT_START_ASYNC("File IO", unique_64_bit_id);  // File IO request site.
@@ -130,11 +137,15 @@
 // Result: Multiple time slices labeled with the results of "io_request->GetFileName()" will appear
 //         on a single "async" track named "File IO".
 //
-// Parameters:
+// Parameters of ORBIT_START_ASYNC:
 // name: [const char*] Name of the *track* that will display the async events in Orbit.
-// id: [uint64_t] A user-provided unique id for the time slice. This unique id is used to match the
+// id: [uint64_t] User-provided *unique* id for the time slice. This unique id is used to match the
 //     ORBIT_START_ASYNC and ORBIT_STOP_ASYNC calls. An id needs to be unique for the current track.
 // col: [orbit_api_color] User-defined color for the current time slice (see orbit_api_color below).
+//
+// Parameters of ORBIT_STOP_ASYNC:
+// id: [uint64_t] User-provided *unique* id for the time slice. This unique id is used to match the
+//     ORBIT_START_ASYNC and ORBIT_STOP_ASYNC calls. An id needs to be unique for the current track.
 //
 //
 // =================================================================================================
@@ -143,10 +154,6 @@
 //
 // Overview:
 // Provide additional string to be displayed on the time slice corresponding to "id".
-//
-// Note: There is a performance overhead incurred by using the ASYNC_STRING macro. The arbitrarily
-//       long input string will be chunked into substrings of "kMaxEventStringSize" length that will
-//       individually be emitted as multiple profiling events.
 //
 // Example usage: Tracking "File IO" operations.
 // Thread 1: ORBIT_START_ASYNC("File IO", unique_64_bit_id);  // File IO request site.
@@ -157,7 +164,7 @@
 //
 // Parameters:
 // str: [const char*] String of arbitrary length to display in the time slice corresponding to "id".
-// id: [uint64_t] A user-provided unique id for the time slice.
+// id: [uint64_t] User-provided unique id for the time slice.
 // col: [orbit_api_color] User-defined color for the current string (see orbit_api_color below).
 //
 //
@@ -167,10 +174,6 @@
 //
 // Overview:
 // Send values to be plotted over time in a track uniquely identified by "name".
-//
-// Note:
-// We limit the maximum number of characters of the "name" parameter to "kMaxEventStringSize". This
-// limitation may be lifted as we roll out a new dynamic instrumentation implementation.
 //
 // Example usage: Graph the state of interesting variables over time:
 //
@@ -182,8 +185,8 @@
 //   ORBIT_UINT64("Live Allocations", MemManager::GetNumLiveAllocs());
 // }
 // Result: Given that instances have unique names, as many variable tracks as there are unique
-//         instances will be created and they will graph their individual instance health over time.
-//         A single "Live Allocations" track will be created and will graph the the result of
+//         instances will be created, and they will graph their individual instance health over
+//         time. A single "Live Allocations" track will be created and will graph the result of
 //         "MemManager::GetNumLiveAllocs()" over time.
 //
 // Parameters:
