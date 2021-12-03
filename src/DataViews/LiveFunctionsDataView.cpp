@@ -368,20 +368,6 @@ void LiveFunctionsDataView::OnContextMenu(const std::string& action, int menu_in
         metrics_uploader_->SendLogEvent(orbit_metrics_uploader::OrbitLogEvent::ORBIT_ITERATOR_ADD);
       }
     }
-  } else if (action == kMenuActionEnableFrameTrack) {
-    for (int i : item_indices) {
-      const FunctionInfo& function = *GetFunctionInfoFromRow(i);
-      if (app_->IsCaptureConnected(capture_data)) {
-        app_->SelectFunction(function);
-      }
-      app_->EnableFrameTrack(function);
-      app_->AddFrameTrack(GetInstrumentedFunctionId(i));
-    }
-  } else if (action == kMenuActionDisableFrameTrack) {
-    for (int i : item_indices) {
-      app_->DisableFrameTrack(*GetFunctionInfoFromRow(i));
-      app_->RemoveFrameTrack(GetInstrumentedFunctionId(i));
-    }
   } else if (action == kMenuActionExportEventsToCsv) {
     std::string save_file = app_->GetSaveFile(".csv");
     if (!save_file.empty()) {

@@ -572,9 +572,9 @@ TEST_F(LiveFunctionsDataViewTest, ContextMenuActionsAreInvoked) {
       EXPECT_EQ(function.name(), kNames[0]);
     });
     EXPECT_CALL(app_, EnableFrameTrack).Times(1);
-    EXPECT_CALL(app_, AddFrameTrack(testing::An<uint64_t>()))
+    EXPECT_CALL(app_, AddFrameTrack(testing::A<const orbit_client_protos::FunctionInfo&>()))
         .Times(1)
-        .WillOnce([&](uint64_t function_id) { EXPECT_EQ(function_id, kFunctionIds[0]); });
+        .WillOnce([&](const FunctionInfo& function) { EXPECT_EQ(function.name(), kNames[0]); });
     view_.OnContextMenu(std::string{kMenuActionEnableFrameTrack},
                         static_cast<int>(enable_frame_track_index), {0});
   }
@@ -612,9 +612,9 @@ TEST_F(LiveFunctionsDataViewTest, ContextMenuActionsAreInvoked) {
     EXPECT_CALL(app_, DisableFrameTrack).Times(1).WillOnce([&](const FunctionInfo& function) {
       EXPECT_EQ(function.name(), kNames[0]);
     });
-    EXPECT_CALL(app_, RemoveFrameTrack(testing::An<uint64_t>()))
+    EXPECT_CALL(app_, RemoveFrameTrack(testing::An<const FunctionInfo&>()))
         .Times(1)
-        .WillOnce([&](uint64_t function_id) { EXPECT_EQ(function_id, kFunctionIds[0]); });
+        .WillOnce([&](const FunctionInfo& function) { EXPECT_EQ(function.name(), kNames[0]); });
     view_.OnContextMenu(std::string{kMenuActionDisableFrameTrack},
                         static_cast<int>(disable_frame_track_index), {0});
   }

@@ -577,9 +577,11 @@ TEST_F(FunctionsDataViewTest, ContextMenuActionsCallCorrespondingFunctionsInAppI
   EXPECT_CALL(app_, IsFrameTrackEnabled)
       .Times(testing::AnyNumber())
       .WillRepeatedly(testing::Return(false));
-  EXPECT_CALL(app_, HasCaptureData)
-      .Times(testing::AnyNumber())
-      .WillRepeatedly(testing::Return(false));
+
+  orbit_client_data::CaptureData capture_data{
+      nullptr, {}, std::nullopt, {}, CaptureData::DataSource::kLiveCapture};
+  EXPECT_CALL(app_, GetCaptureData).WillRepeatedly(testing::ReturnPointee(&capture_data));
+  EXPECT_CALL(app_, IsCaptureConnected).WillRepeatedly(testing::Return(true));
 
   view_.AddFunctions({&functions_[0]});
 
