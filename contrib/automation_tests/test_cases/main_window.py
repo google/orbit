@@ -12,17 +12,6 @@ from pywinauto.base_wrapper import BaseWrapper
 from core.orbit_e2e import E2ETestCase, wait_for_condition
 
 
-class VerifyModalWindowExistsAndClickOkay(E2ETestCase):
-    """
-     Looks for a window called `window_name` and click on the "OK" button. Fails if the window does not exists.
-     """
-
-    def _execute(self, window_name: str):
-        self.find_control('Window', window_name)
-        ok_button = self.find_control('Button', 'OK')
-        ok_button.click_input()
-
-
 class MoveTab(E2ETestCase):
     """
     Move a tab from the right widget to the left, and back again. Verify the position after each move.

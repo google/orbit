@@ -7,10 +7,8 @@ from absl import app
 
 from core.orbit_e2e import E2ETestSuite
 from test_cases.connection_window import LoadCapture
-from test_cases.main_window import VerifyModalWindowExistsAndClickOkay
 from test_cases.live_tab import AddIterator, VerifyFunctionCallCount
-from test_cases.capture_window import CheckTimers, CollapseTrack, ExpandTrack, FilterTracks, CheckThreadStates, \
-    ToggleCollapsedStateOfAllTracks
+from test_cases.capture_window import CheckTimers, FilterTracks, CheckThreadStates, ToggleCollapsedStateOfAllTracks
 
 """Verify loading a capture in Orbit using pywinauto.
 
@@ -34,9 +32,8 @@ This automation script covers a basic workflow:
 
 def main(argv):
     test_cases = [
-        LoadCapture(capture_file_path="automation_tests\\test_data\\OrbitTest_1-64.orbit"),
-        VerifyModalWindowExistsAndClickOkay(window_name="Error while loading capture"),
-        LoadCapture(capture_file_path="automation_tests\\test_data\\OrbitTest_1-72.orbit"),
+        LoadCapture(capture_file_path="test_data\\OrbitTest_1-64.orbit", expect_fail=True),
+        LoadCapture(capture_file_path="test_data\\OrbitTest_1-72.orbit"),
 
         FilterTracks(filter_string="Scheduler", expected_track_count=1),
         CheckTimers(track_name_filter='Scheduler*'),
@@ -59,14 +56,8 @@ def main(argv):
         CheckTimers(track_name_filter="ORBIT_Start_ASYNC_TEST"),
 
         FilterTracks(filter_string="Page", expected_track_count=1),
-        ExpandTrack(expected_name="Page Faults"),
-        CollapseTrack(expected_name="Page Faults"),
         FilterTracks(filter_string="System", expected_track_count=1),
-        ExpandTrack(expected_name="Memory Usage: System (MB)"),
-        CollapseTrack(expected_name="Memory Usage: System (MB)"),
         FilterTracks(filter_string="CGroup", expected_track_count=1),
-        ExpandTrack(expected_name="Memory Usage: CGroup (MB)"),
-        CollapseTrack(expected_name="Memory Usage: CGroup (MB)"),
 
         FilterTracks(filter_string=""),
 
