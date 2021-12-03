@@ -5,12 +5,10 @@ found in the LICENSE file.
 """
 
 import logging
-import os.path
 from typing import Iterable, Callable
 from copy import deepcopy
 import time
 import psutil
-import pywinauto
 
 from absl import flags
 from pywinauto import Application, timings
