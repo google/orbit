@@ -1,5 +1,5 @@
 """
-Copyright (c) 2020 The Orbit Authors. All rights reserved.
+Copyright (c) 2021 The Orbit Authors. All rights reserved.
 Use of this source code is governed by a BSD-style license that can be
 found in the LICENSE file.
 """
@@ -18,10 +18,10 @@ There is no prerequisites before this script is run.
 
 The script requires absl and pywinauto. Since pywinauto requires the bitness of
 the python installation to match the bitness of the program under test it needs
-to by run from 64 bit python.
+to be run from 64 bit python.
 
 This automation script covers a basic workflow:
- - load an old, unsupported capture
+ - load an old, unsupported capture and verify this fails with a message
  - load a supported capture
  - verify that the scheduler track is present and contains timers
  - verify that the frame track is present and contains timers
@@ -34,9 +34,9 @@ This automation script covers a basic workflow:
 
 def main(argv):
     test_cases = [
-        LoadCapture(relative_capture_file_path="automation_tests\\test_data\\OrbitTest_1-64.orbit"),
+        LoadCapture(capture_file_path="automation_tests\\test_data\\OrbitTest_1-64.orbit"),
         VerifyModalWindowExistsAndClickOkay(window_name="Error while loading capture"),
-        LoadCapture(relative_capture_file_path="automation_tests\\test_data\\OrbitTest_1-72.orbit"),
+        LoadCapture(capture_file_path="automation_tests\\test_data\\OrbitTest_1-72.orbit"),
 
         FilterTracks(filter_string="Scheduler", expected_track_count=1),
         CheckTimers(track_name_filter='Scheduler*'),
@@ -55,7 +55,7 @@ def main(argv):
 
         FilterTracks(filter_string="ORBIT_ASYNC_TASKS", expected_track_count=1),
         CheckTimers(track_name_filter="ORBIT_ASYNC_TASKS"),
-        FilterTracks(filter_string="ORBIT_Start_ASYNC_TEST", expected_track_count=1),
+        FilterTracks(filter_string="ORBIT_START_ASYNC_TEST", expected_track_count=1),
         CheckTimers(track_name_filter="ORBIT_Start_ASYNC_TEST"),
 
         FilterTracks(filter_string="Page", expected_track_count=1),

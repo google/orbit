@@ -32,11 +32,14 @@ def _get_number_of_instances_in_list(test_case: E2ETestCase) -> int:
 
 class LoadCapture(E2ETestCase):
     """
-    Opens a given capture file. The argument `capture_file_path` specifies the full path to the capture file.
+    Opens a given capture file. The argument `capture_file_path` specifies the path to the capture file.
+    The given path can be either
+      (*) absolute, in which case it is taken as is, or
+      (*) relative, in which case it is interpreted relative to be directory of the running Orbit.exe.
     It raises an exception if the capture does not exists. Also waits until the capture is loaded.
     """
 
-    def _execute(self, absolute_capture_file_path=None, relative_capture_file_path=None):
+    def _execute(self, capture_file_path: str):
         # Lets ensure that we are actually in the connection window, as this test might also be executed after the
         # main window has been opened.
         _wait_for_connection_window(self.suite.application)
@@ -50,12 +53,10 @@ class LoadCapture(E2ETestCase):
 
         file_name_edit = self.find_control('Edit', 'File name:')
 
-        if absolute_capture_file_path is not None:
-            capture_file_path = absolute_capture_file_path
-        else:
-            assert (relative_capture_file_path is not None)
+        if not os.path.isabs(capture_file_path):
             orbit_path = self.orbit_path()
-            capture_file_path = os.path.join(orbit_path, relative_capture_file_path)
+            capture_file_path = os.path.join(orbit_path, capture_file_path)
+
         file_name_edit.set_edit_text(capture_file_path)
 
         logging.info(f'Trying to load capture file: {capture_file_path}')

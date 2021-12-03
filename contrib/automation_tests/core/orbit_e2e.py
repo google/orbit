@@ -111,12 +111,13 @@ class E2ETestCase:
                                  parent=self.suite.application.top_window(),
                                  raise_on_failure=raise_on_failure)
 
-    def orbit_path(self):
+    @staticmethod
+    def orbit_path():
         """
         Returns the root dir of the running "Orbit.exe". Throws an exception if there is no "Orbit.exe" running.
         """
         running_processes = pywinauto.application.process_get_modules()
-        orbit_exe_path = [path for pid, path, cmd in running_processes if "Orbit.exe" in path].pop()
+        orbit_exe_path = [path for unused_pid, path, unused_cmd in running_processes if "Orbit.exe" in path].pop()
         return os.path.dirname(orbit_exe_path)
 
     def _execute(self, **kwargs):
