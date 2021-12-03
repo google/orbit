@@ -310,11 +310,10 @@ TEST_F(SamplingReportDataViewTest, ContextMenuEntriesArePresentCorrectly) {
     CheckSingleAction(context_menu, kMenuActionCopySelection, ContextMenuEntry::kEnabled);
     CheckSingleAction(context_menu, kMenuActionExportToCsv, ContextMenuEntry::kEnabled);
 
-    // Find indices that SamplingReportDataView::GetFunctionsFromIndices can find matching
-    // functions.
+    // Find indices that SamplingReportDataView::GetFunctionInfoFromRow can find matching functions.
     std::vector<int> selected_indices_with_matching_function;
     for (int index : selected_indices) {
-      // SamplingReportDataView::GetFunctionsFromIndices cannot find matching FunctionInfo for
+      // SamplingReportDataView::GetFunctionInfoFromRow cannot find matching FunctionInfo for
       // sampled function 2 & 3 as:
       // * sampled function 2's corresponding module is not loaded yet
       // * sampled function 3's absolute address does not match any module and function.
@@ -322,7 +321,7 @@ TEST_F(SamplingReportDataViewTest, ContextMenuEntriesArePresentCorrectly) {
     }
 
     // Source code and disassembly actions are availble if and only if 1) capture is connected and
-    // 2) selected_functions = GetFunctionsFromIndices(selected_indices) is not empty.
+    // 2) exist an index that GetFunctionInfoFromRow can find matching function.
     ContextMenuEntry source_code_or_disassembly =
         capture_connected && !selected_indices_with_matching_function.empty()
             ? ContextMenuEntry::kEnabled
@@ -330,10 +329,10 @@ TEST_F(SamplingReportDataViewTest, ContextMenuEntriesArePresentCorrectly) {
     CheckSingleAction(context_menu, kMenuActionSourceCode, source_code_or_disassembly);
     CheckSingleAction(context_menu, kMenuActionDisassembly, source_code_or_disassembly);
 
-    // Hook action is available if and only if 1) capture is connected and 2) selected_functions =
-    // GetFunctionsFromIndices(selected_indices) contains a unselected function.
-    // Unhook action is available if and only if 1) capture is connected and 2) selected_functions =
-    // GetFunctionsFromIndices(selected_indices) contains a selected function.
+    // Hook action is available if and only if 1) capture is connected and 2) exist an index so that
+    // the function returned by GetFunctionInfoFromRow(index) is selected.
+    // Unhook action is available if and only if 1) capture is connected and 2) exist an index so
+    // that the function returned by GetFunctionInfoFromRow(index) is selected.
     ContextMenuEntry select = ContextMenuEntry::kDisabled;
     ContextMenuEntry unselect = ContextMenuEntry::kDisabled;
     if (capture_connected) {

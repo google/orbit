@@ -39,9 +39,6 @@ class FunctionsDataView : public DataView {
  protected:
   void DoSort() override;
   void DoFilter() override;
-  [[nodiscard]] const orbit_client_protos::FunctionInfo* GetFunction(int row) const {
-    return functions_[indices_[row]];
-  }
 
   std::vector<std::string> filter_tokens_;
 
@@ -55,6 +52,10 @@ class FunctionsDataView : public DataView {
   };
 
  private:
+  [[nodiscard]] const orbit_client_protos::FunctionInfo* GetFunctionInfoFromRow(int row) override {
+    return functions_[indices_[row]];
+  }
+
   static bool ShouldShowSelectedFunctionIcon(AppInterface* app,
                                              const orbit_client_protos::FunctionInfo& function);
   static bool ShouldShowFrameTrackIcon(AppInterface* app,

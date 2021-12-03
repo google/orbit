@@ -58,8 +58,6 @@ class LiveFunctionsDataView : public DataView {
   void DoFilter() override;
   void DoSort() override;
   [[nodiscard]] uint64_t GetInstrumentedFunctionId(uint32_t row) const;
-  [[nodiscard]] const orbit_client_protos::FunctionInfo& GetInstrumentedFunction(
-      uint32_t row) const;
   [[nodiscard]] std::optional<orbit_client_protos::FunctionInfo>
   CreateFunctionInfoFromInstrumentedFunction(
       const orbit_grpc_protos::InstrumentedFunction& instrumented_function);
@@ -84,6 +82,8 @@ class LiveFunctionsDataView : public DataView {
   };
 
  private:
+  [[nodiscard]] const orbit_client_protos::FunctionInfo* GetFunctionInfoFromRow(int row) override;
+
   orbit_metrics_uploader::MetricsUploader* metrics_uploader_;
 };
 

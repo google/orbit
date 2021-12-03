@@ -133,11 +133,17 @@ class DataView {
   [[nodiscard]] virtual bool ResetOnRefresh() const { return true; }
 
   void OnLoadSymbolsRequested(const std::vector<int>& selection);
+  virtual void OnSelectRequested(const std::vector<int>& selection);
+  virtual void OnUnselectRequested(const std::vector<int>& selection);
   void OnCopySelectionRequested(const std::vector<int>& selection);
   void OnExportToCsvRequested();
 
  protected:
   [[nodiscard]] virtual orbit_client_data::ModuleData* GetModuleDataFromRow(int /*row*/) const {
+    return nullptr;
+  }
+  [[nodiscard]] virtual const orbit_client_protos::FunctionInfo* GetFunctionInfoFromRow(
+      int /*row*/) {
     return nullptr;
   }
 

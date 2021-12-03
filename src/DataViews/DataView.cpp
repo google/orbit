@@ -12,6 +12,7 @@
 #include "OrbitBase/Logging.h"
 
 using orbit_client_data::ModuleData;
+using orbit_client_protos::FunctionInfo;
 
 namespace orbit_data_views {
 
@@ -86,6 +87,10 @@ void DataView::OnContextMenu(const std::string& action, int /*menu_index*/,
                              const std::vector<int>& item_indices) {
   if (action == kMenuActionLoadSymbols) {
     OnLoadSymbolsRequested(item_indices);
+  } else if (action == kMenuActionSelect) {
+    OnSelectRequested(item_indices);
+  } else if (action == kMenuActionUnselect) {
+    OnUnselectRequested(item_indices);
   } else if (action == kMenuActionExportToCsv) {
     OnExportToCsvRequested();
   } else if (action == kMenuActionCopySelection) {
@@ -112,6 +117,33 @@ void DataView::OnLoadSymbolsRequested(const std::vector<int>& selection) {
     }
   }
   app_->RetrieveModulesAndLoadSymbols(modules_to_load);
+}
+
+void DataView::OnSelectRequested(const std::vector<int>& selection) {
+  for (int i : selection) {
+    const FunctionInfo* function = GetFunctionInfoFromRow(i);
+    // Only hook functions for which we have symbols loaded.
+    if (function != nullptr) {
+      app_->SelectFunction(*function);
+    }
+  }
+}
+
+void DataView::OnUnselectRequested(const std::vector<int>& selection) {
+  for (int i : selection) {
+    const FunctionInfo* function = GetFunctionInfoFromRow(i);
+    // If the frame belongs to a function for which no symbol is loaded 'function' is nullptr and
+    // we can skip it since it can't be instrumented.
+    if (function != nullptr) {
+      app_->DeselectFunction(*function);
+      // Unhooking a function implies disabling (and removing) the frame track for this function.
+      // While it would be possible to keep the current frame track in the capture data, this would
+      // lead to a somewhat inconsistent state where the frame track for this function is enabled
+      // for the current capture but disabled for the next one.
+      app_->DisableFrameTrack(*function);
+      app_->RemoveFrameTrack(*function);
+    }
+  }
 }
 
 void DataView::OnExportToCsvRequested() {
