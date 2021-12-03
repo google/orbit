@@ -238,7 +238,7 @@ if [ -n "$1" ]; then
     cp -v LICENSE Orbit/LICENSE.txt
     cp -av "${REPO_ROOT}/contrib/automation_tests" Orbit
     cp -v "${REPO_ROOT}/src/ApiInterface/include/ApiInterface/Orbit.h" Orbit/
-    zip -r Orbit.zip Orbit/
+    zip -r OrbitUI.zip Orbit/
     rm -rf Orbit/
     popd > /dev/null
   fi
