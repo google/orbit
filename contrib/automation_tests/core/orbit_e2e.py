@@ -152,10 +152,17 @@ class E2ETestSuite:
         self._test_name = test_name
         self._dev_mode = dev_mode or flags.FLAGS.dev_mode
         self._test_cases = test_cases[:]
+        self._shared_data = {}
 
     name = property(lambda self: self._test_name)
     application = property(lambda self: self._application)
     dev_mode = property(lambda self: self._dev_mode)
+
+    """
+    Used to store data shared across test cases of the same suite. Can be used to e.g. persist timings or results
+    from previously executed test cases within the same suite.
+    """
+    shared_data = property(lambda self: self._shared_data)
 
     def top_window(self, force_update=False):
         if force_update or not self._top_window:
