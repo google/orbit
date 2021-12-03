@@ -122,18 +122,15 @@ std::vector<std::vector<std::string>> TracepointsDataView::GetContextMenuWithGro
   return menu;
 }
 
-void TracepointsDataView::OnContextMenu(const std::string& action, int menu_index,
-                                        const std::vector<int>& item_indices) {
-  if (action == kMenuActionSelect) {
-    for (int i : item_indices) {
-      app_->SelectTracepoint(GetTracepoint(i));
-    }
-  } else if (action == kMenuActionUnselect) {
-    for (int i : item_indices) {
-      app_->DeselectTracepoint(GetTracepoint(i));
-    }
-  } else {
-    DataView::OnContextMenu(action, menu_index, item_indices);
+void TracepointsDataView::OnSelectRequested(const std::vector<int>& selection) {
+  for (int i : selection) {
+    app_->SelectTracepoint(GetTracepoint(i));
+  }
+}
+
+void TracepointsDataView::OnUnselectRequested(const std::vector<int>& selection) {
+  for (int i : selection) {
+    app_->DeselectTracepoint(GetTracepoint(i));
   }
 }
 

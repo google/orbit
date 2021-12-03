@@ -27,8 +27,8 @@ class TracepointsDataView : public DataView {
       int clicked_index, const std::vector<int>& selected_indices) override;
   std::string GetValue(int row, int column) override;
 
-  void OnContextMenu(const std::string& action, int menu_index,
-                     const std::vector<int>& item_indices) override;
+  void OnSelectRequested(const std::vector<int>& selection) override;
+  void OnUnselectRequested(const std::vector<int>& selection) override;
 
   void SetTracepoints(const std::vector<orbit_grpc_protos::TracepointInfo>& tracepoints);
 

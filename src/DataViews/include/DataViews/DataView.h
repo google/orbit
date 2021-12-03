@@ -133,8 +133,8 @@ class DataView {
   [[nodiscard]] virtual bool ResetOnRefresh() const { return true; }
 
   void OnLoadSymbolsRequested(const std::vector<int>& selection);
-  void OnSelectRequested(const std::vector<int>& selection);
-  void OnUnselectRequested(const std::vector<int>& selection);
+  virtual void OnSelectRequested(const std::vector<int>& selection);
+  virtual void OnUnselectRequested(const std::vector<int>& selection);
   void OnCopySelectionRequested(const std::vector<int>& selection);
   void OnExportToCsvRequested();
 
