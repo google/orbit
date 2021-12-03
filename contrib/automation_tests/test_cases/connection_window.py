@@ -5,7 +5,9 @@ found in the LICENSE file.
 """
 
 import logging
+import os
 
+import pywinauto
 from pywinauto.application import Application
 from pywinauto.keyboard import send_keys
 
@@ -30,11 +32,15 @@ def _get_number_of_instances_in_list(test_case: E2ETestCase) -> int:
 
 class LoadCapture(E2ETestCase):
     """
-    Opens a given capture file. The argument `capture_file_path` specifies the full path to the capture file.
+    Opens a given capture file. The argument `capture_file_path` specifies the path to the capture file.
+    The given path can be either
+      (*) absolute, in which case it is taken as is, or
+      (*) relative, in which case it is interpreted relative to `automation_tests` directory.
+    If `expect_fail` is true, the test checks for an error dialog after loading the capture and closes the dialog.
     It raises an exception if the capture does not exists. Also waits until the capture is loaded.
     """
 
-    def _execute(self, capture_file_path: str):
+    def _execute(self, capture_file_path: str, expect_fail=False):
         # Lets ensure that we are actually in the connection window, as this test might also be executed after the
         # main window has been opened.
         _wait_for_connection_window(self.suite.application)
@@ -47,6 +53,11 @@ class LoadCapture(E2ETestCase):
         others_button.click_input()
 
         file_name_edit = self.find_control('Edit', 'File name:')
+
+        if not os.path.isabs(capture_file_path):
+            automation_tests_dir = os.path.join(os.path.dirname(__file__), '..')
+            capture_file_path = os.path.join(automation_tests_dir, capture_file_path)
+
         file_name_edit.set_edit_text(capture_file_path)
 
         logging.info(f'Trying to load capture file: {capture_file_path}')
@@ -63,6 +74,11 @@ class LoadCapture(E2ETestCase):
             'Window', 'Loading capture', raise_on_failure=False) is None,
                            max_seconds=120)
         logging.info("Capture Loading finished")
+
+        if expect_fail:
+            self.find_control('Window', 'Error while loading capture')
+            ok_button = self.find_control('Button', 'OK')
+            ok_button.click_input()
 
 
 class ConnectToStadiaInstance(E2ETestCase):
@@ -139,7 +155,7 @@ class RefreshStadiaInstanceList(E2ETestCase):
 
         wait_for_condition(
             lambda: self.find_control('Group', 'InstanceListOverlay', raise_on_failure=False) is
-            None, 100)
+                    None, 100)
         logging.info('Loading done, overlay is hidden')
         self.expect_true(_get_number_of_instances_in_list(self) >= 1, 'Found at least one instance')
 
@@ -163,7 +179,7 @@ class SelectProjectAndVerifyItHasAtLeastOneInstance(E2ETestCase):
         # After project changing, loading takes place. Wait until the overlay is hidden
         wait_for_condition(
             lambda: self.find_control('Group', 'InstanceListOverlay', raise_on_failure=False) is
-            None, 100)
+                    None, 100)
         logging.info('Successfully selected project ' + project_name +
                      'and waited until loading is done')
         self.expect_true(_get_number_of_instances_in_list(self) >= 1, 'Found at least one instance')
@@ -186,7 +202,7 @@ class SelectNextProject(E2ETestCase):
         # After project changing, loading takes place. Wait until the overlay is hidden
         wait_for_condition(
             lambda: self.find_control('Group', 'InstanceListOverlay', raise_on_failure=False) is
-            None, 100)
+                    None, 100)
         logging.info('Successfully selected next project')
 
 
@@ -202,7 +218,7 @@ class TestAllInstancesCheckbox(E2ETestCase):
         # First wait until all loading is done.
         wait_for_condition(
             lambda: self.find_control('Group', 'InstanceListOverlay', raise_on_failure=False) is
-            None, 100)
+                    None, 100)
         check_box = self.find_control('CheckBox', 'AllInstancesCheckBox')
         logging.info('Found checkbox')
 
@@ -212,7 +228,7 @@ class TestAllInstancesCheckbox(E2ETestCase):
         logging.info('Clicked All Instances check box, waiting until loading is done')
         wait_for_condition(
             lambda: self.find_control('Group', 'InstanceListOverlay', raise_on_failure=False) is
-            None, 100)
+                    None, 100)
         self.expect_true(instance_count <= _get_number_of_instances_in_list(self),
                          'Instance list contains at least same amount of instances as before.')
         logging.info('Loading successful, instance number increased')
@@ -220,7 +236,7 @@ class TestAllInstancesCheckbox(E2ETestCase):
         check_box.click_input()
         wait_for_condition(
             lambda: self.find_control('Group', 'InstanceListOverlay', raise_on_failure=False) is
-            None, 100)
+                    None, 100)
         self.expect_true(
             _get_number_of_instances_in_list(self) >= 1,
             'Instance list contains at least one instance')
