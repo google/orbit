@@ -1693,6 +1693,9 @@ void OrbitMainWindow::ShowSourceCode(
     code_viewer_dialog->SetOwningHeatmap(kHeatmapAreaWidth, std::move(*maybe_code_report));
   }
 
+  // This ensure the dialog will be closed at the latest when the session ends.
+  QObject::connect(this, &QObject::destroyed, code_viewer_dialog.get(), &QDialog::close);
+
   code_viewer_dialog->GoToLineNumber(line_number);
   orbit_code_viewer::OpenAndDeleteOnClose(std::move(code_viewer_dialog));
 }
@@ -1715,6 +1718,9 @@ void OrbitMainWindow::ShowDisassembly(const orbit_client_protos::FunctionInfo& f
     dialog->EnableHeatmap(kHeatmapAreaWidth);
     dialog->SetEnableSampleCounters(true);
   }
+
+  // This ensure the dialog will be closed at the latest when the session ends.
+  QObject::connect(this, &QObject::destroyed, dialog.get(), &QDialog::close);
 
   QPointer<orbit_qt::AnnotatingSourceCodeDialog> dialog_ptr =
       OpenAndDeleteOnClose(std::move(dialog));
