@@ -55,7 +55,7 @@
 // ORBIT_SCOPE will profile the time between "now" and the end of the current scope.
 //
 // Group id:
-// This macro also has a "_WITH_GROUP_ID" and a "_WITH_COLOR_AND_GROUP_ID" version that allows users
+// This macro also has a "_WITH_GROUP_ID" and a "_WITH_COLOR_AND_GROUP_ID" variant that allows users
 // to specify a group id. Scopes with the same group id are associated to each other, such that
 // selecting one scope in Orbit highlights all the other scopes that are associated to the selected
 // one.
@@ -92,7 +92,7 @@
 // operations that happen in different threads use ORBIT_ASYNC_START/ORBIT_ASYNC_STOP.
 //
 // Group id:
-// The ORBIT_START macro also has a "_WITH_GROUP_ID" and a "_WITH_COLOR_AND_GROUP_ID" version that
+// The ORBIT_START macro also has a "_WITH_GROUP_ID" and a "_WITH_COLOR_AND_GROUP_ID" variant that
 // allows users to specify a group id. Time slices with the same group id are associated to each
 // other, such that selecting one slice in Orbit highlights all the other slices that are associated
 // to the selected one.
