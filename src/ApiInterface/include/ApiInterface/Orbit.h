@@ -6,6 +6,7 @@
 #define ORBIT_API_INTERFACE_ORBIT_H_
 
 #include <stdbool.h>
+#include <stddef.h>
 #include <stdint.h>
 
 // =================================================================================================
@@ -206,7 +207,7 @@
   ORBIT_SCOPE_WITH_COLOR_AND_GROUP_ID(name, col, kOrbitDefaultGroupId)
 #define ORBIT_SCOPE_WITH_GROUP_ID(name, group_id) \
   ORBIT_SCOPE_WITH_COLOR_AND_GROUP_ID(name, kOrbitColorAuto, group_id)
-#ifdef _WIN32
+#if defined(_WIN32) || defined(__i386__)
 #define ORBIT_SCOPE_WITH_COLOR_AND_GROUP_ID(name, col, group_id) \
   orbit_api::Scope ORBIT_VAR(name, col, group_id)
 #else
@@ -299,11 +300,23 @@
 #endif
 #endif
 
-#ifdef __linux
-#define ORBIT_EXPORT __attribute__((visibility("default")))
-#else
+#ifdef _WIN32
 #define ORBIT_EXPORT __declspec(dllexport)
+#define ORBIT_NOINLINE __declspec(noinline)
+#ifndef _WIN64
+#define ORBIT_CDECL_ON_32BIT __cdecl
+#else
+#define ORBIT_CDECL_ON_32BIT
 #endif
+#else
+#define ORBIT_EXPORT __attribute__((visibility("default")))
+#define ORBIT_NOINLINE __attribute__((noinline))
+#ifdef __i386__
+#define ORBIT_CDECL_ON_32BIT __attribute__((cdecl))
+#else
+#define ORBIT_CDECL_ON_32BIT
+#endif
+#endif  // _WIN32
 
 #ifdef __cplusplus
 extern "C" {
@@ -341,28 +354,96 @@ enum { kOrbitApiVersion = 2 };
 struct orbit_api_v2 {
   uint32_t enabled;
   uint32_t initialized;
-  void (*start)(const char* name, orbit_api_color color, uint64_t group_id,
-                uint64_t caller_address);
-  void (*stop)();
-  void (*start_async)(const char* name, uint64_t id, orbit_api_color color,
-                      uint64_t caller_address);
-  void (*stop_async)(uint64_t id);
-  void (*async_string)(const char* str, uint64_t id, orbit_api_color color);
-  void (*track_int)(const char* name, int value, orbit_api_color color);
-  void (*track_int64)(const char* name, int64_t value, orbit_api_color color);
-  void (*track_uint)(const char* name, uint32_t value, orbit_api_color color);
-  void (*track_uint64)(const char* name, uint64_t value, orbit_api_color color);
-  void (*track_float)(const char* name, float value, orbit_api_color color);
-  void (*track_double)(const char* name, double value, orbit_api_color color);
+  ORBIT_CDECL_ON_32BIT void (*start)(const char* name, orbit_api_color color, uint64_t group_id,
+                                     uint64_t caller_address);
+  ORBIT_CDECL_ON_32BIT void (*stop)();
+  ORBIT_CDECL_ON_32BIT void (*start_async)(const char* name, uint64_t id, orbit_api_color color,
+                                           uint64_t caller_address);
+  ORBIT_CDECL_ON_32BIT void (*stop_async)(uint64_t id);
+  ORBIT_CDECL_ON_32BIT void (*async_string)(const char* str, uint64_t id, orbit_api_color color);
+  ORBIT_CDECL_ON_32BIT void (*track_int)(const char* name, int value, orbit_api_color color);
+  ORBIT_CDECL_ON_32BIT void (*track_int64)(const char* name, int64_t value, orbit_api_color color);
+  ORBIT_CDECL_ON_32BIT void (*track_uint)(const char* name, uint32_t value, orbit_api_color color);
+  ORBIT_CDECL_ON_32BIT void (*track_uint64)(const char* name, uint64_t value,
+                                            orbit_api_color color);
+  ORBIT_CDECL_ON_32BIT void (*track_float)(const char* name, float value, orbit_api_color color);
+  ORBIT_CDECL_ON_32BIT void (*track_double)(const char* name, double value, orbit_api_color color);
 };
 
+#if __cplusplus >= 201103L  // C++11
+#define ORBIT_ASSERT_API_LAYOUT(expression) \
+  static_assert(expression, "orbit_api_v2 has an unexpected layout")
+#elif __STDC_VERSION__ >= 201112L  // C11
+#define ORBIT_ASSERT_API_LAYOUT(expression) \
+  _Static_assert(expression, "orbit_api_v2 has an unexpected layout")
+#else
+#define ORBIT_ASSERT_API_LAYOUT(expression)
+#endif
+
+#if defined(_WIN64) || defined(__x86_64__)
+ORBIT_ASSERT_API_LAYOUT(sizeof(struct orbit_api_v2) == 96);
+ORBIT_ASSERT_API_LAYOUT(offsetof(struct orbit_api_v2, enabled) == 0);
+ORBIT_ASSERT_API_LAYOUT(offsetof(struct orbit_api_v2, initialized) == 4);
+ORBIT_ASSERT_API_LAYOUT(offsetof(struct orbit_api_v2, start) == 8);
+ORBIT_ASSERT_API_LAYOUT(offsetof(struct orbit_api_v2, stop) == 16);
+ORBIT_ASSERT_API_LAYOUT(offsetof(struct orbit_api_v2, start_async) == 24);
+ORBIT_ASSERT_API_LAYOUT(offsetof(struct orbit_api_v2, stop_async) == 32);
+ORBIT_ASSERT_API_LAYOUT(offsetof(struct orbit_api_v2, async_string) == 40);
+ORBIT_ASSERT_API_LAYOUT(offsetof(struct orbit_api_v2, track_int) == 48);
+ORBIT_ASSERT_API_LAYOUT(offsetof(struct orbit_api_v2, track_int64) == 56);
+ORBIT_ASSERT_API_LAYOUT(offsetof(struct orbit_api_v2, track_uint) == 64);
+ORBIT_ASSERT_API_LAYOUT(offsetof(struct orbit_api_v2, track_uint64) == 72);
+ORBIT_ASSERT_API_LAYOUT(offsetof(struct orbit_api_v2, track_float) == 80);
+ORBIT_ASSERT_API_LAYOUT(offsetof(struct orbit_api_v2, track_double) == 88);
+#elif defined(_WIN32) || defined(__i386__)
+ORBIT_ASSERT_API_LAYOUT(sizeof(struct orbit_api_v2) == 52);
+ORBIT_ASSERT_API_LAYOUT(offsetof(struct orbit_api_v2, enabled) == 0);
+ORBIT_ASSERT_API_LAYOUT(offsetof(struct orbit_api_v2, initialized) == 4);
+ORBIT_ASSERT_API_LAYOUT(offsetof(struct orbit_api_v2, start) == 8);
+ORBIT_ASSERT_API_LAYOUT(offsetof(struct orbit_api_v2, stop) == 12);
+ORBIT_ASSERT_API_LAYOUT(offsetof(struct orbit_api_v2, start_async) == 16);
+ORBIT_ASSERT_API_LAYOUT(offsetof(struct orbit_api_v2, stop_async) == 20);
+ORBIT_ASSERT_API_LAYOUT(offsetof(struct orbit_api_v2, async_string) == 24);
+ORBIT_ASSERT_API_LAYOUT(offsetof(struct orbit_api_v2, track_int) == 28);
+ORBIT_ASSERT_API_LAYOUT(offsetof(struct orbit_api_v2, track_int64) == 32);
+ORBIT_ASSERT_API_LAYOUT(offsetof(struct orbit_api_v2, track_uint) == 36);
+ORBIT_ASSERT_API_LAYOUT(offsetof(struct orbit_api_v2, track_uint64) == 40);
+ORBIT_ASSERT_API_LAYOUT(offsetof(struct orbit_api_v2, track_float) == 44);
+ORBIT_ASSERT_API_LAYOUT(offsetof(struct orbit_api_v2, track_double) == 48);
+#else
+#error Platform not supported.
+#endif
+
 extern struct orbit_api_v2 g_orbit_api_v2;
-extern ORBIT_EXPORT void* orbit_api_get_function_table_address_v2();
 
 // User needs to place "ORBIT_API_INSTANTIATE" in an implementation file.
+#ifdef _WIN64
+extern ORBIT_EXPORT void* orbit_api_get_function_table_address_win_v2();
+#define ORBIT_API_INSTANTIATE         \
+  struct orbit_api_v2 g_orbit_api_v2; \
+  void* orbit_api_get_function_table_address_win_v2() { return &g_orbit_api_v2; }
+#elif defined(_WIN32)
+extern ORBIT_EXPORT void* orbit_api_get_function_table_address_win32_v2();
+#define ORBIT_API_INSTANTIATE                                                  \
+  struct orbit_api_v2 g_orbit_api_v2;                                          \
+  ORBIT_CDECL_ON_32BIT void* orbit_api_get_function_table_address_win32_v2() { \
+    return &g_orbit_api_v2;                                                    \
+  }
+#elif defined(__x86_64__)
+extern ORBIT_EXPORT void* orbit_api_get_function_table_address_v2();
 #define ORBIT_API_INSTANTIATE         \
   struct orbit_api_v2 g_orbit_api_v2; \
   void* orbit_api_get_function_table_address_v2() { return &g_orbit_api_v2; }
+#elif defined(__i386__)
+extern ORBIT_EXPORT void* orbit_api_get_function_table_address_unix32_v2();
+#define ORBIT_API_INSTANTIATE                                                   \
+  struct orbit_api_v2 g_orbit_api_v2;                                           \
+  ORBIT_CDECL_ON_32BIT void* orbit_api_get_function_table_address_unix32_v2() { \
+    return &g_orbit_api_v2;                                                     \
+  }
+#else
+#error Platform not supported.
+#endif
 
 #ifndef __cplusplus
 // In C, `inline` alone doesn't generate an out-of-line definition, causing a linker error if the
@@ -393,9 +474,7 @@ static
 
 #ifdef _WIN32
 #include <intrin.h>
-
 #pragma intrinsic(_ReturnAddress)
-
 #define ORBIT_GET_CALLER_PC() reinterpret_cast<uint64_t>(_ReturnAddress())
 #else
 // `__builtin_return_address(0)` will return us the (possibly encoded) return address of the current
@@ -405,10 +484,10 @@ static
   reinterpret_cast<uint64_t>(__builtin_extract_return_addr(__builtin_return_address(0)))
 #endif  // _WIN32
 
-#ifdef _WIN32
+#if defined(_WIN32) || defined(__i386__)
 namespace orbit_api {
 struct Scope {
-  __declspec(noinline) Scope(const char* name, orbit_api_color color, uint64_t group_id) {
+  ORBIT_NOINLINE Scope(const char* name, orbit_api_color color, uint64_t group_id) {
     uint64_t return_address = ORBIT_GET_CALLER_PC();
     ORBIT_CALL(start, name, color, group_id, return_address);
   }

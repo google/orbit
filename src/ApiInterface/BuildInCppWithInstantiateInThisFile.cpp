@@ -5,4 +5,9 @@
 #include "Orbit.h"
 #include "UseOrbitApiForBuildTests.h"
 
-void BuildInCWithInstantiateInAnotherFile(void) { USE_ORBIT_API_EXCEPT_SCOPE }
+ORBIT_API_INSTANTIATE
+
+void BuildInCppWithInstantiateInThisFile() {
+  USE_ORBIT_API_SCOPE
+  USE_ORBIT_API_EXCEPT_SCOPE
+}
