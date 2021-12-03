@@ -13,8 +13,7 @@ from test_cases.capture_window import CheckTimers, FilterTracks, CheckThreadStat
 
 """Verify loading a capture in Orbit using pywinauto.
 
-Before this script is run there needs to be a gamelet reserved and
-"hello_ggp_standalone" has to be started. Also Orbit needs to be started.
+Before this script is run Orbit needs to be started.
 
 The script requires absl and pywinauto. Since pywinauto requires the bitness of
 the python installation to match the bitness of the program under test it needs
