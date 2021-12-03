@@ -8,11 +8,13 @@ from absl import app
 from core.orbit_e2e import E2ETestSuite
 from test_cases.connection_window import LoadCapture
 from test_cases.live_tab import AddIterator, VerifyFunctionCallCount
-from test_cases.capture_window import CheckTimers, FilterTracks, CheckThreadStates, ToggleCollapsedStateOfAllTracks
+from test_cases.capture_window import CheckTimers, FilterTracks, CheckThreadStates, ToggleCollapsedStateOfAllTracks, \
+    VerifyTracksExist
 
 """Verify loading a capture in Orbit using pywinauto.
 
-There is no prerequisites before this script is run.
+Before this script is run there needs to be a gamelet reserved and
+"hello_ggp_standalone" has to be started. Also Orbit needs to be started.
 
 The script requires absl and pywinauto. Since pywinauto requires the bitness of
 the python installation to match the bitness of the program under test it needs
@@ -53,13 +55,10 @@ def main(argv):
         FilterTracks(filter_string="ORBIT_ASYNC_TASKS", expected_track_count=1),
         CheckTimers(track_name_filter="ORBIT_ASYNC_TASKS"),
         FilterTracks(filter_string="ORBIT_START_ASYNC_TEST", expected_track_count=1),
-        CheckTimers(track_name_filter="ORBIT_Start_ASYNC_TEST"),
-
-        FilterTracks(filter_string="Page", expected_track_count=1),
-        FilterTracks(filter_string="System", expected_track_count=1),
-        FilterTracks(filter_string="CGroup", expected_track_count=1),
+        CheckTimers(track_name_filter="ORBIT_START_ASYNC_TEST"),
 
         FilterTracks(filter_string=""),
+        VerifyTracksExist(track_names=["Page*", "*System*", "*CGroup*"], allow_duplicates=True),
 
         AddIterator(function_name="TestFunc2"),
         VerifyFunctionCallCount(function_name='TestFunc2', min_calls=1257, max_calls=1257)
