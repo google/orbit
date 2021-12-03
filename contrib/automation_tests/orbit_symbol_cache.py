@@ -11,7 +11,8 @@ from test_cases.connection_window import FilterAndSelectFirstProcess, ConnectToS
 from test_cases.symbols_tab import LoadAllSymbolsAndVerifyCache, ClearSymbolCache, LoadSymbols, ReplaceFileInSymbolCache
 from test_cases.main_window import EndSession
 
-"""Test symbol loading with and without local caching.
+"""
+Test symbol loading with and without local caching.
 
 Before this script is run there needs to be a gamelet reserved and
 "hello_ggp_standalone" has to be started. 
@@ -25,7 +26,7 @@ This automation script covers a basic workflow:
  - delete the symbol cache
  - load all symbols, store loading times, verify symbol files exist in cache
  - restart session
- - load all symbols again, loading times should have increased significantly
+ - load all symbols again, loading times should have decreased significantly
  - restart session
  - load libggp, measure loading time (we can't measure a single module loading time before)
  - invalidate symbols for libggp by replacing the cache file with another file

@@ -34,16 +34,17 @@ def _show_symbols_and_functions_tabs(top_window):
 
 def _find_and_close_error_dialog(top_window) -> str or None:
     window = find_control(top_window, 'Window', 'Error loading symbols', raise_on_failure=False)
-    if window is not None:
-        error_message = find_control(window, 'Text').texts()[0]
-        re_result = re.search('for module "(.+?)"', error_message)
-        if not re_result:
-            return None
-        logging.info("Found error dialog with message {message}, closing.".format(message=error_message))
-        find_control(window, 'Button').click_input()
-        return re_result[1]
-    else:
+    if window is None:
         return None
+
+    error_message = find_control(window, 'Text').texts()[0]
+    module_path_search_result = re.search('for module "(.+?)"', error_message)
+    if not module_path_search_result:
+        return None
+
+    logging.info("Found error dialog with message {message}, closing.".format(message=error_message))
+    find_control(window, 'Button').click_input()
+    return module_path_search_result[1]
 
 
 class DurationDiffMixin(ABC):
@@ -69,34 +70,34 @@ class DurationDiffMixin(ABC):
     def expect_eq(self, left, right, msg):
         pass
 
-    def _check_and_update_duration(self, storage_key: str, total_duration: float, expected_difference: float):
+    def _check_and_update_duration(self, storage_key: str, current_duration: float, expected_difference: float):
         """
         Compare the current duration with the previous run, and fail if it exceeds the defined bounds.
         :param storage_key: Unique key to store the duration within the test suite, used to persist the data across
             multiple tests (uses `self.suite.shared_data`)
-        :param total_duration: The duration of the current run
+        :param current_duration: The duration of the current run
         :param expected_difference: Expected difference in seconds. If negative, the current run must be at least
             this much *faster* than the previous run. If positive, the current run must be at least this much *slower*.
             Violating those conditions will result in test failure.
         """
         last_duration = self.suite.shared_data.get(storage_key, None)
-        self.suite.shared_data[storage_key] = total_duration
+        self.suite.shared_data[storage_key] = current_duration
 
         if expected_difference is not None and last_duration is not None:
             if expected_difference < 0:
-                self.expect_true(total_duration <= last_duration + expected_difference,
+                self.expect_true(current_duration <= last_duration + expected_difference,
                                  "Expected symbol loading time to be at least {diff:.2f}s faster than the last run. "
                                  "Last run duration: {last:.2f}s, current run duration: {cur:.2f}s".format(
                                      diff=-expected_difference,
                                      last=last_duration,
-                                     cur=total_duration))
+                                     cur=current_duration))
             else:
-                self.expect_true(total_duration >= last_duration + expected_difference,
+                self.expect_true(current_duration >= last_duration + expected_difference,
                                  "Expected symbol loading time to be at least {diff:.2f}s slower than the last run. "
                                  "Last run duration: {last:.2f}s, current run duration: {cur:.2f}s".format(
                                      diff=expected_difference,
                                      last=last_duration,
-                                     cur=total_duration))
+                                     cur=current_duration))
 
 
 ModulesLoadingResult = namedtuple("LoadingResult", ["time", "errors"])
