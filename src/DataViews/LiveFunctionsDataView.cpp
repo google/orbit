@@ -242,7 +242,7 @@ std::vector<std::vector<std::string>> LiveFunctionsDataView::GetContextMenuWithG
   menu.begin()->push_back(std::string{kMenuActionExportEventsToCsv});
 
   std::vector<std::string> action_group;
-  if (enable_iterator) action_group.emplace_back(std::string{kMenuActionIterate});
+  if (enable_iterator) action_group.emplace_back(std::string{kMenuActionAddIterator});
   // For now, these actions only make sense when one function is selected,
   // so we don't show them otherwise.
   if (selected_indices.size() == 1) {
@@ -272,7 +272,7 @@ std::vector<std::vector<std::string>> LiveFunctionsDataView::GetContextMenuWithG
   return menu;
 }
 
-void LiveFunctionsDataView::OnIterateRequested(const std::vector<int>& selection) {
+void LiveFunctionsDataView::OnIteratorRequested(const std::vector<int>& selection) {
   for (int i : selection) {
     uint64_t instrumented_function_id = GetInstrumentedFunctionId(i);
     const FunctionInfo* instrumented_function = GetFunctionInfoFromRow(i);

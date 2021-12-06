@@ -33,7 +33,7 @@ constexpr std::string_view kMenuActionSelect = "Hook";
 constexpr std::string_view kMenuActionUnselect = "Unhook";
 constexpr std::string_view kMenuActionEnableFrameTrack = "Enable frame track(s)";
 constexpr std::string_view kMenuActionDisableFrameTrack = "Disable frame track(s)";
-constexpr std::string_view kMenuActionIterate = "Add iterator(s)";
+constexpr std::string_view kMenuActionAddIterator = "Add iterator(s)";
 
 constexpr std::string_view kMenuActionVerifyFramePointers = "Verify Frame Pointers";
 
@@ -137,7 +137,7 @@ class DataView {
   virtual void OnUnselectRequested(const std::vector<int>& selection);
   void OnEnableFrameTrackRequested(const std::vector<int>& selection);
   void OnDisableFrameTrackRequested(const std::vector<int>& selection);
-  virtual void OnIterateRequested(const std::vector<int>& /*selection*/) { return; }
+  virtual void OnIteratorRequested(const std::vector<int>& /*selection*/) { return; }
   void OnCopySelectionRequested(const std::vector<int>& selection);
   void OnExportToCsvRequested();
 

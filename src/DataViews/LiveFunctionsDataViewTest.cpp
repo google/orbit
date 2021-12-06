@@ -35,13 +35,13 @@ using orbit_data_views::CheckExportToCsvIsInvoked;
 using orbit_data_views::CheckSingleAction;
 using orbit_data_views::ContextMenuEntry;
 using orbit_data_views::FlattenContextMenuWithGrouping;
+using orbit_data_views::kMenuActionAddIterator;
 using orbit_data_views::kMenuActionCopySelection;
 using orbit_data_views::kMenuActionDisableFrameTrack;
 using orbit_data_views::kMenuActionDisassembly;
 using orbit_data_views::kMenuActionEnableFrameTrack;
 using orbit_data_views::kMenuActionExportEventsToCsv;
 using orbit_data_views::kMenuActionExportToCsv;
-using orbit_data_views::kMenuActionIterate;
 using orbit_data_views::kMenuActionJumpToFirst;
 using orbit_data_views::kMenuActionJumpToLast;
 using orbit_data_views::kMenuActionJumpToMax;
@@ -299,7 +299,7 @@ TEST_F(LiveFunctionsDataViewTest, ContextMenuEntriesArePresentCorrectly) {
     }
     ContextMenuEntry add_iterators =
         total_counts > 0 ? ContextMenuEntry::kEnabled : ContextMenuEntry::kDisabled;
-    CheckSingleAction(context_menu, kMenuActionIterate, add_iterators);
+    CheckSingleAction(context_menu, kMenuActionAddIterator, add_iterators);
 
     // Jump actions are only available for single selection with non-zero counts.
     ContextMenuEntry jump_to_direction = selected_indices.size() == 1 && total_counts > 0
@@ -535,7 +535,7 @@ TEST_F(LiveFunctionsDataViewTest, ContextMenuActionsAreInvoked) {
   // Add iterator(s)
   {
     const auto add_iterators_index =
-        std::find(context_menu.begin(), context_menu.end(), kMenuActionIterate) -
+        std::find(context_menu.begin(), context_menu.end(), kMenuActionAddIterator) -
         context_menu.begin();
     ASSERT_LT(add_iterators_index, context_menu.size());
 
@@ -545,7 +545,7 @@ TEST_F(LiveFunctionsDataViewTest, ContextMenuActionsAreInvoked) {
           EXPECT_EQ(instrumented_function_id, kFunctionIds[0]);
           EXPECT_EQ(function->name(), kNames[0]);
         });
-    view_.OnContextMenu(std::string{kMenuActionIterate}, static_cast<int>(add_iterators_index),
+    view_.OnContextMenu(std::string{kMenuActionAddIterator}, static_cast<int>(add_iterators_index),
                         {0});
   }
 
