@@ -31,8 +31,6 @@ class FunctionsDataView : public DataView {
   std::string GetValue(int row, int column) override;
   std::string GetLabel() override { return "Functions"; }
 
-  void OnContextMenu(const std::string& action, int menu_index,
-                     const std::vector<int>& item_indices) override;
   void AddFunctions(std::vector<const orbit_client_protos::FunctionInfo*> functions);
   void ClearFunctions();
 

@@ -196,17 +196,6 @@ std::vector<std::vector<std::string>> FunctionsDataView::GetContextMenuWithGroup
   return menu;
 }
 
-void FunctionsDataView::OnContextMenu(const std::string& action, int menu_index,
-                                      const std::vector<int>& item_indices) {
-  if (action == kMenuActionSourceCode) {
-    for (int i : item_indices) {
-      app_->ShowSourceCode(*GetFunctionInfoFromRow(i));
-    }
-  } else {
-    DataView::OnContextMenu(action, menu_index, item_indices);
-  }
-}
-
 void FunctionsDataView::DoFilter() {
   filter_tokens_ = absl::StrSplit(absl::AsciiStrToLower(filter_), ' ');
 

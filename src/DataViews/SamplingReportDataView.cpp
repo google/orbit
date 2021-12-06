@@ -242,17 +242,6 @@ std::vector<std::vector<std::string>> SamplingReportDataView::GetContextMenuWith
   return menu;
 }
 
-void SamplingReportDataView::OnContextMenu(const std::string& action, int menu_index,
-                                           const std::vector<int>& item_indices) {
-  if (action == kMenuActionSourceCode) {
-    for (int index : item_indices) {
-      app_->ShowSourceCode(*GetFunctionInfoFromRow(index));
-    }
-  } else {
-    DataView::OnContextMenu(action, menu_index, item_indices);
-  }
-}
-
 ModuleData* SamplingReportDataView::GetModuleDataFromRow(int row) const {
   std::optional<std::pair<std::string, std::string>> module_path_and_build_id =
       GetModulePathAndBuildIdFromRow(row);
