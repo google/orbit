@@ -156,19 +156,44 @@ if [ -n "$1" ]; then
     readonly BUILD_OPTION="--build outdated"
   fi
 
-  echo "Invoking conan lock."
-  conan lock create "${REPO_ROOT}/conanfile.py" --user=orbitdeps --channel=stable \
-    ${BUILD_OPTION} \
-    --lockfile="${REPO_ROOT}/third_party/conan/lockfiles/base.lock" -pr ${CONAN_PROFILE} \
-    -o crashdump_server="$CRASHDUMP_SERVER" $PACKAGING_OPTION \
-    --lockfile-out="${REPO_ROOT}/build/conan.lock"
+  RET=1
+  RETRIES=4
 
-  echo "Installs the requirements (conan install)."
-  conan install -if "${REPO_ROOT}/build/" \
+  until [ ${RET} -eq 0 ]; do
+    RETRIES=$(($RETRIES - 1))
+    if [ $RETRIES -eq 0 ]; then
+      echo "Number of conan lock retries exceeded. Exiting..."
+      exit 1
+    fi
+
+    echo "Invoking conan lock."
+    conan lock create "${REPO_ROOT}/conanfile.py" --user=orbitdeps --channel=stable \
+      ${BUILD_OPTION} \
+      --lockfile="${REPO_ROOT}/third_party/conan/lockfiles/base.lock" -pr ${CONAN_PROFILE} \
+      -o crashdump_server="$CRASHDUMP_SERVER" $PACKAGING_OPTION \
+      --lockfile-out="${REPO_ROOT}/build/conan.lock" || true
+    RET=$?
+  done
+
+  RET=1
+  RETRIES=4
+
+  until [ ${RET} -eq 0 ]; do
+    RETRIES=$(($RETRIES - 1))
+    if [ $RETRIES -eq 0 ]; then
+      echo "Number of conan install retries exceeded. Exiting..."
+      exit 1
+    fi
+
+    echo "Installs the requirements (conan install)."
+    conan install -if "${REPO_ROOT}/build/" \
           ${BUILD_OPTION} \
           --lockfile="${REPO_ROOT}/build/conan.lock" \
-          "${REPO_ROOT}" | sed 's/^crashdump_server=.*$/crashump_server=<<hidden>>/'
-  echo "Starting the build (conan build)."
+          "${REPO_ROOT}" | sed 's/^crashdump_server=.*$/crashump_server=<<hidden>>/' || true
+    echo "Starting the build (conan build)."
+    RET=${PIPESTATUS[0]}
+  done
+
   conan build -bf "${REPO_ROOT}/build/" "${REPO_ROOT}"
 
   if [[ $CONAN_PROFILE != "iwyu" && $CONAN_PROFILE != "coverage_clang9" ]]; then
