@@ -285,6 +285,21 @@ void LiveFunctionsDataView::OnIteratorRequested(const std::vector<int>& selectio
   }
 }
 
+void LiveFunctionsDataView::OnJumpToRequested(const std::string& action,
+                                              const std::vector<int>& selection) {
+  CHECK(selection.size() == 1);
+  auto function_id = GetInstrumentedFunctionId(selection[0]);
+  if (action == kMenuActionJumpToFirst) {
+    app_->JumpToTimerAndZoom(function_id, AppInterface::JumpToTimerMode::kFirst);
+  } else if (action == kMenuActionJumpToLast) {
+    app_->JumpToTimerAndZoom(function_id, AppInterface::JumpToTimerMode::kLast);
+  } else if (action == kMenuActionJumpToMin) {
+    app_->JumpToTimerAndZoom(function_id, AppInterface::JumpToTimerMode::kMin);
+  } else if (action == kMenuActionJumpToMax) {
+    app_->JumpToTimerAndZoom(function_id, AppInterface::JumpToTimerMode::kMax);
+  }
+}
+
 ErrorMessageOr<void> LiveFunctionsDataView::ExportAllEventsToCsv(
     const std::filesystem::path& file_path, const std::vector<int>& item_indices) {
   ErrorMessageOr<orbit_base::unique_fd> result = orbit_base::OpenFileForWriting(file_path);
@@ -343,23 +358,7 @@ ErrorMessageOr<void> LiveFunctionsDataView::ExportAllEventsToCsv(
 
 void LiveFunctionsDataView::OnContextMenu(const std::string& action, int menu_index,
                                           const std::vector<int>& item_indices) {
-  if (action == kMenuActionJumpToFirst) {
-    CHECK(item_indices.size() == 1);
-    auto function_id = GetInstrumentedFunctionId(item_indices[0]);
-    app_->JumpToTimerAndZoom(function_id, AppInterface::JumpToTimerMode::kFirst);
-  } else if (action == kMenuActionJumpToLast) {
-    CHECK(item_indices.size() == 1);
-    auto function_id = GetInstrumentedFunctionId(item_indices[0]);
-    app_->JumpToTimerAndZoom(function_id, AppInterface::JumpToTimerMode::kLast);
-  } else if (action == kMenuActionJumpToMin) {
-    CHECK(item_indices.size() == 1);
-    uint64_t function_id = GetInstrumentedFunctionId(item_indices[0]);
-    app_->JumpToTimerAndZoom(function_id, AppInterface::JumpToTimerMode::kMin);
-  } else if (action == kMenuActionJumpToMax) {
-    CHECK(item_indices.size() == 1);
-    uint64_t function_id = GetInstrumentedFunctionId(item_indices[0]);
-    app_->JumpToTimerAndZoom(function_id, AppInterface::JumpToTimerMode::kMax);
-  } else if (action == kMenuActionExportEventsToCsv) {
+  if (action == kMenuActionExportEventsToCsv) {
     std::string save_file = app_->GetSaveFile(".csv");
     if (!save_file.empty()) {
       auto result = ExportAllEventsToCsv(save_file, item_indices);
