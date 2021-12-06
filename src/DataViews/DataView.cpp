@@ -106,6 +106,10 @@ void DataView::OnContextMenu(const std::string& action, int /*menu_index*/,
   } else if (action == kMenuActionSourceCode) {
     OnSourceCodeRequested(item_indices);
 
+  } else if (action == kMenuActionJumpToFirst || action == kMenuActionJumpToLast ||
+             action == kMenuActionJumpToMin || action == kMenuActionJumpToMax) {
+    OnJumpToRequested(action, item_indices);
+
   } else if (action == kMenuActionExportToCsv) {
     OnExportToCsvRequested();
   } else if (action == kMenuActionCopySelection) {

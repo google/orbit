@@ -141,6 +141,10 @@ class DataView {
   void OnVerifyFramePointersRequested(const std::vector<int>& selection);
   void OnDisassemblyRequested(const std::vector<int>& selection);
   void OnSourceCodeRequested(const std::vector<int>& selection);
+  virtual void OnJumpToRequested(const std::string& /*action*/,
+                                 const std::vector<int>& /*selection*/) {
+    return;
+  }
   void OnCopySelectionRequested(const std::vector<int>& selection);
   void OnExportToCsvRequested();
 
