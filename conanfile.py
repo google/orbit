@@ -11,7 +11,9 @@ from conans.errors import ConanInvalidConfiguration
 import os
 import shutil
 from io import StringIO
+from contrib.python import conan_helpers
 from contrib.jupyter import build as build_python
+import csv
 
 
 class OrbitConan(ConanFile):
@@ -20,7 +22,7 @@ class OrbitConan(ConanFile):
     url = "https://github.com/pierricgimmig/orbitprofiler.git"
     description = "C/C++ Performance Profiler"
     settings = "os", "compiler", "build_type", "arch"
-    generators = ["cmake_multi", "cmake_find_package_multi"]
+    generators = ["cmake_multi"]
     options = {"system_qt": [True, False], "with_gui": [True, False],
                "debian_packaging": [True, False],
                "fPIC": [True, False],
@@ -96,15 +98,15 @@ class OrbitConan(ConanFile):
             self.requires("crashpad/20200624@{}".format(self._orbit_channel))
 
         if self.options.with_gui:
-            self.requires("freetype/2.10.4", override=True)
+            self.requires("freetype/2.10.0@bincrafters/stable#0", override=True)
             self.requires("freetype-gl/79b03d9@{}".format(self._orbit_channel))
             self.requires("glad/0.1.34")
             self.requires("imgui/1.85")
-            self.requires("libpng/1.6.37", override=True)
+            self.requires("libpng/1.6.37@bincrafters/stable#0", override=True)
             self.requires("libssh2/1.9.0#df2b6034da12cc5cb68bd3c5c22601bf")
 
             if not self.options.system_qt:
-                self.requires("qt/5.15.2")
+                self.requires("qt/5.15.1@{}#e659e981368e4baba1a201b75ddb89b6".format(self._orbit_channel))
 
         if self.options.deploy_opengl_software_renderer:
             self.requires("llvmpipe/21.0.3@{}#fd5932d6a7fa5fb0af5045eb53c02d18".format(self._orbit_channel))
@@ -131,14 +133,22 @@ class OrbitConan(ConanFile):
         if self.options.with_gui:
 
             if not self.options.system_qt:
+                self.options["qt"].qtwebengine = True
+                self.options["qt"].qtwebchannel = True
+                self.options["qt"].qtwebsockets = True
                 self.options["qt"].shared = True
                 self.options["qt"].with_sqlite3 = False
                 self.options["qt"].with_mysql = False
                 self.options["qt"].with_pq = False
                 self.options["qt"].with_odbc = False
+                self.options["qt"].with_sdl2 = False
+                self.options["qt"].with_openal = False
 
                 if self.settings.os == "Windows":
                     self.options["qt"].qttools = True
+                    self.options["qt"].with_glib = False
+                    self.options["qt"].with_harfbuzz = False
+                    self.options["qt"].opengl = "dynamic"
 
 
     def build(self):
@@ -199,6 +209,28 @@ class OrbitConan(ConanFile):
         self.copy("LICENSE*", dst="licenses", folder=True, ignore_case=True, excludes=excludes)
         self.copy("LICENCE*", dst="licenses", folder=True, ignore_case=True, excludes=excludes)
 
+        if not self.options.system_qt:
+            chromium_licenses = conan_helpers.gather_chromium_licenses(self.deps_cpp_info["qt"].rootpath)
+            chromium_licenses.sort(key=lambda license_info: license_info["name"].lower())
+
+            with open(os.path.join(self.install_folder, "NOTICE.Chromium.csv"), "w") as fd:
+                writer = csv.DictWriter(fd, fieldnames=["name", "url", "license"], extrasaction='ignore')
+                writer.writeheader()
+
+                for license in chromium_licenses:
+                    writer.writerow(license)
+
+            with open(os.path.join(self.install_folder, "NOTICE.Chromium"), "w") as fd:
+                for license in chromium_licenses:
+                    fd.write("================================================================================\n")
+                    fd.write("Name: {}\n".format(license["name"]))
+                    fd.write("URL: {}\n\n".format(license.get("url", "")))
+                    fd.write(open(license["license file"], 'r').read())
+                    fd.write("\n\n")
+
+                fd.write("================================================================================\n")
+
+
 
     def package(self):
         if self.options.debian_packaging:
@@ -255,6 +287,8 @@ chmod -v 4775 /opt/developer/tools/OrbitService
         self.copy("crashpad_handler", src="bin/", dst="bin")
         self.copy("crashpad_handler.exe", src="bin/", dst="bin")
         self.copy("NOTICE")
+        self.copy("NOTICE.Chromium")
+        self.copy("NOTICE.Chromium.csv")
         self.copy("LICENSE")
         self.copy("liborbit.so", src="lib/", dst="lib")
         self.copy("liborbituserspaceinstrumentation.so", src="lib/", dst="lib")
