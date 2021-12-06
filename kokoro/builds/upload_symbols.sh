@@ -70,6 +70,8 @@ function upload_symbol_file {
 }
 
 function upload_debug_symbols {
+  set -x 
+
   local api_key=$1
   local bin_folder=$2
   local lib_folder=$3
@@ -78,6 +80,9 @@ function upload_debug_symbols {
   if [ ! -d breakpad/symbols ]; then
     mkdir breakpad/symbols
   fi
+
+  ls $bin_folder
+  ls $lib_folder
 
   if [ "$(uname -s)" == "Linux" ]; then
     upload_symbol_file $api_key $bin_folder/OrbitService

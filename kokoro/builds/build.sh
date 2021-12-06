@@ -180,13 +180,9 @@ if [ -n "$1" ]; then
   fi
 
   # Uploading symbols to the symbol server
-  if [ "${BUILD_TYPE}" == "release" ] \
-     || [ "${BUILD_TYPE}" == "nightly" ] \
-     || [ "${BUILD_TYPE}" == "continuous_on_release_branch" ]; then
-    echo "Uploading symbols to the symbol server."
-    api_key=$(get_api_key "${OAUTH_TOKEN_HEADER}")
-    upload_debug_symbols "${api_key}" "${REPO_ROOT}/build/bin" "${REPO_ROOT}/build/lib"
-  fi
+  echo "Uploading symbols to the symbol server."
+  api_key=$(get_api_key "${OAUTH_TOKEN_HEADER}")
+  upload_debug_symbols "${api_key}" "${REPO_ROOT}/build/bin" "${REPO_ROOT}/build/lib"
 
   # Signing the debian package
   if [ -f "${KEYSTORE_PATH}/74938_SigningPrivateGpg" ] && [[ $CONAN_PROFILE == ggp_* ]]; then
