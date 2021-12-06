@@ -7,6 +7,7 @@
 
 #include <absl/strings/match.h>
 #include <sys/types.h>
+#include <sys/utsname.h>
 #include <unistd.h>
 
 #include <string>
@@ -27,6 +28,8 @@ namespace orbit_linux_tracing_integration_tests {
   ORBIT_ERROR("Root required for this test");
   return false;
 }
+
+[[nodiscard]] bool CheckIsStadiaInstance();
 
 [[nodiscard]] std::filesystem::path GetExecutableBinaryPath(pid_t pid);
 

@@ -30,6 +30,8 @@ struct IntegrationTestPuppetConstants {
 
   constexpr static uint64_t kFrameCount = 60;
 
+  constexpr static uint64_t kRssIncreaseB = 100ULL * 1024 * 1024;
+
   constexpr static const char* kUseOrbitApiFunctionName = "UseOrbitApi";
   constexpr static uint64_t kOrbitApiUsageCount = 5;
   constexpr static const char* kOrbitApiScopeName = "Scope";
@@ -68,6 +70,7 @@ struct IntegrationTestPuppetConstants {
   constexpr static const char* kDlopenCommand = "dlopen";
   constexpr static const char* kVulkanTutorialCommand = "VulkanTutorial";
   constexpr static const char* kOrbitApiCommand = "OrbitApi";
+  constexpr static const char* kIncreaseRssCommand = "AllocateMemory";
 
   constexpr static const char* kDoneResponse = "DONE";
 };

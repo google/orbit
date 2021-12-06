@@ -15,6 +15,23 @@
 
 namespace orbit_linux_tracing_integration_tests {
 
+[[nodiscard]] static std::string ReadUnameKernelRelease() {
+  utsname utsname{};
+  int uname_result = uname(&utsname);
+  ORBIT_CHECK(uname_result == 0);
+  return utsname.release;
+}
+
+bool CheckIsStadiaInstance() {
+  std::string release = ReadUnameKernelRelease();
+  if (absl::StrContains(release, "-ggp-")) {
+    return true;
+  }
+
+  ORBIT_ERROR("Stadia instance required for this test (but kernel release is \"%s\")", release);
+  return false;
+}
+
 std::filesystem::path GetExecutableBinaryPath(pid_t pid) {
   auto error_or_executable_path =
       orbit_base::GetExecutablePath(orbit_base::FromNativeProcessId(pid));

@@ -24,7 +24,6 @@ namespace orbit_memory_tracing {
 namespace {
 
 using orbit_grpc_protos::CGroupMemoryUsage;
-using orbit_grpc_protos::kMissingInfo;
 using orbit_grpc_protos::MemoryUsageEvent;
 using orbit_grpc_protos::ProcessMemoryUsage;
 using orbit_grpc_protos::ProducerCaptureEvent;
@@ -126,7 +125,7 @@ class MemoryTracingIntegrationTestFixture {
 
 void VerifyOrderAndContentOfEvents(const std::vector<ProducerCaptureEvent>& events,
                                    uint64_t sampling_period_ns) {
-  const uint64_t kMemoryEventsTimeDifferenceTolerace =
+  const uint64_t kMemoryEventsTimeDifferenceTolerance =
       static_cast<uint64_t>(sampling_period_ns * 0.2);
   uint64_t previous_memory_usage_event_timestamp_ns = 0;
 
@@ -179,7 +178,7 @@ void VerifyOrderAndContentOfEvents(const std::vector<ProducerCaptureEvent>& even
     // Verify that the memory events in the same memory_usage_event are sampled at very close time.
     uint64_t max_timestamp = *std::max_element(timestamps.begin(), timestamps.end());
     uint64_t min_timestamp = *std::min_element(timestamps.begin(), timestamps.end());
-    EXPECT_LE(max_timestamp - min_timestamp, kMemoryEventsTimeDifferenceTolerace);
+    EXPECT_LE(max_timestamp - min_timestamp, kMemoryEventsTimeDifferenceTolerance);
   }
 }
 
