@@ -17,6 +17,10 @@ extern "C" int TrivialFunction();
 extern "C" uint64_t TrivialSum(uint64_t p0, uint64_t p1, uint64_t p2, uint64_t p3, uint64_t p4,
                                uint64_t p5);
 
+// Also returns the sum of the parameters, but it uses the Microsoft x64 calling convention.
+extern "C" __attribute__((ms_abi)) uint64_t TrivialSumWithMsAbi(uint64_t p0, uint64_t p1,
+                                                                uint64_t p2, uint64_t p3);
+
 // Payload called on entry of an instrumented function. Needs to record the return address of the
 // function (in order to have it available in `ExitPayload`) and the stack pointer (i.e., the
 // address of the return address). `function_id` is the id of the instrumented function.

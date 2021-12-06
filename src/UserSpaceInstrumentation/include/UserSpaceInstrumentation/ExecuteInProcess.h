@@ -32,6 +32,14 @@ namespace orbit_user_space_instrumentation {
                                                         uint64_t param_3 = 0, uint64_t param_4 = 0,
                                                         uint64_t param_5 = 0, uint64_t param_6 = 0);
 
+// Like ExecuteInProcess, but the function is assumed to have Microsoft x64 calling convention. This
+// can be used when the target process was built for Windows (e.g., it is running under Wine).
+// We only allow four parameters for now as the Microsoft x64 calling convention only passes four in
+// registers, and none of the functions that we are going to call accept more than four.
+[[nodiscard]] ErrorMessageOr<uint64_t> ExecuteInProcessWithMicrosoftCallingConvention(
+    pid_t pid, void* function_address, uint64_t param_1 = 0, uint64_t param_2 = 0,
+    uint64_t param_3 = 0, uint64_t param_4 = 0);
+
 }  // namespace orbit_user_space_instrumentation
 
 #endif  // USER_SPACE_INSTRUMENTATION_EXECUTE_IN_PROCESS_H_
