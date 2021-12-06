@@ -198,11 +198,7 @@ std::vector<std::vector<std::string>> FunctionsDataView::GetContextMenuWithGroup
 
 void FunctionsDataView::OnContextMenu(const std::string& action, int menu_index,
                                       const std::vector<int>& item_indices) {
-  if (action == kMenuActionDisassembly) {
-    for (int i : item_indices) {
-      app_->Disassemble(app_->GetTargetProcess()->pid(), *GetFunctionInfoFromRow(i));
-    }
-  } else if (action == kMenuActionSourceCode) {
+  if (action == kMenuActionSourceCode) {
     for (int i : item_indices) {
       app_->ShowSourceCode(*GetFunctionInfoFromRow(i));
     }

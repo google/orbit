@@ -343,16 +343,10 @@ ErrorMessageOr<void> LiveFunctionsDataView::ExportAllEventsToCsv(
 
 void LiveFunctionsDataView::OnContextMenu(const std::string& action, int menu_index,
                                           const std::vector<int>& item_indices) {
-  const CaptureData& capture_data = app_->GetCaptureData();
-  if (action == kMenuActionDisassembly || action == kMenuActionSourceCode) {
+  if (action == kMenuActionSourceCode) {
     for (int i : item_indices) {
-      const FunctionInfo& selected_function = *GetFunctionInfoFromRow(i);
-      if (action == kMenuActionDisassembly) {
-        uint32_t pid = capture_data.process_id();
-        app_->Disassemble(pid, selected_function);
-      } else if (action == kMenuActionSourceCode) {
-        app_->ShowSourceCode(selected_function);
-      }
+      const FunctionInfo* selected_function = GetFunctionInfoFromRow(i);
+      app_->ShowSourceCode(*selected_function);
     }
   } else if (action == kMenuActionJumpToFirst) {
     CHECK(item_indices.size() == 1);

@@ -140,16 +140,7 @@ std::vector<std::vector<std::string>> CallstackDataView::GetContextMenuWithGroup
 
 void CallstackDataView::OnContextMenu(const std::string& action, int menu_index,
                                       const std::vector<int>& item_indices) {
-  if (action == kMenuActionDisassembly) {
-    const uint32_t pid = app_->GetCaptureData().process_id();
-    for (int i : item_indices) {
-      const FunctionInfo* function = GetFrameFromRow(i).function;
-      if (function != nullptr) {
-        app_->Disassemble(pid, *function);
-      }
-    }
-
-  } else if (action == kMenuActionSourceCode) {
+  if (action == kMenuActionSourceCode) {
     for (int i : item_indices) {
       const FunctionInfo* function = GetFrameFromRow(i).function;
       if (function != nullptr) {
