@@ -33,8 +33,6 @@ class PresetsDataView : public DataView {
   std::string GetLabel() override { return "Presets"; }
 
   void OnDataChanged() override;
-  void OnContextMenu(const std::string& action, int menu_index,
-                     const std::vector<int>& item_indices) override;
   void OnDoubleClicked(int index) override;
 
   bool WantsDisplayColor() override { return true; }
@@ -42,6 +40,10 @@ class PresetsDataView : public DataView {
                        unsigned char& /*green*/, unsigned char& /*blue*/) override;
 
   void SetPresets(std::vector<orbit_preset_file::PresetFile> presets);
+
+  void OnLoadPresetRequested(const std::vector<int>& selection) override;
+  void OnDeletePresetRequested(const std::vector<int>& selection) override;
+  void OnShowInExplorerRequested(const std::vector<int>& selection) override;
 
  protected:
   struct ModuleView {

@@ -105,8 +105,8 @@ class DataView {
                          const RefreshMode& /*mode*/) {}
 
   void OnSort(int column, std::optional<SortingOrder> new_order);
-  virtual void OnContextMenu(const std::string& action, int menu_index,
-                             const std::vector<int>& item_indices);
+  void OnContextMenu(const std::string& action, int menu_index,
+                     const std::vector<int>& item_indices);
   virtual void OnSelect(const std::vector<int>& /*indices*/) {}
   // This method returns the intersection of selected indices and visible indices. The returned
   // value contains 0 or 1 index for a DataView with single selection, and contains 0 or
@@ -143,6 +143,9 @@ class DataView {
   void OnSourceCodeRequested(const std::vector<int>& selection);
   virtual void OnJumpToRequested(const std::string& /*action*/,
                                  const std::vector<int>& /*selection*/) {}
+  virtual void OnLoadPresetRequested(const std::vector<int>& /*selection*/) {}
+  virtual void OnDeletePresetRequested(const std::vector<int>& /*selection*/) {}
+  virtual void OnShowInExplorerRequested(const std::vector<int>& /*selection*/) {}
   void OnCopySelectionRequested(const std::vector<int>& selection);
   void OnExportToCsvRequested();
   virtual void OnExportEventsToCsvRequested(const std::vector<int>& /*selection*/) {}

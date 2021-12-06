@@ -168,39 +168,32 @@ std::vector<std::vector<std::string>> PresetsDataView::GetContextMenuWithGroupin
   return menu;
 }
 
-void PresetsDataView::OnContextMenu(const std::string& action, int menu_index,
-                                    const std::vector<int>& item_indices) {
-  // Note that the UI already enforces a single selection.
-  CHECK(item_indices.size() == 1);
+void PresetsDataView::OnLoadPresetRequested(const std::vector<int>& selection) {
+  const PresetFile& preset = GetPreset(selection[0]);
+  app_->LoadPreset(preset);
+}
 
-  if (action == kMenuActionLoadPreset) {
-    const PresetFile& preset = GetPreset(item_indices[0]);
-    app_->LoadPreset(preset);
-
-  } else if (action == kMenuActionDeletePreset) {
-    orbit_metrics_uploader::ScopedMetric metric{
-        metrics_uploader_, orbit_metrics_uploader::OrbitLogEvent::ORBIT_PRESET_DELETE};
-    int row = item_indices[0];
-    const PresetFile& preset = GetPreset(row);
-    const std::string& filename = preset.file_path().string();
-    int ret = remove(filename.c_str());
-    if (ret == 0) {
-      presets_.erase(presets_.begin() + indices_[row]);
-      OnDataChanged();
-    } else {
-      ERROR("Deleting preset \"%s\": %s", filename, SafeStrerror(errno));
-      metric.SetStatusCode(orbit_metrics_uploader::OrbitLogEvent::INTERNAL_ERROR);
-      app_->SendErrorToUi("Error deleting preset",
-                          absl::StrFormat("Could not delete preset \"%s\".", filename));
-    }
-
-  } else if (action == kMenuActionShowInExplorer) {
-    const PresetFile& preset = GetPreset(item_indices[0]);
-    app_->ShowPresetInExplorer(preset);
-
+void PresetsDataView::OnDeletePresetRequested(const std::vector<int>& selection) {
+  orbit_metrics_uploader::ScopedMetric metric{
+      metrics_uploader_, orbit_metrics_uploader::OrbitLogEvent::ORBIT_PRESET_DELETE};
+  int row = selection[0];
+  const PresetFile& preset = GetPreset(row);
+  const std::string& filename = preset.file_path().string();
+  int ret = remove(filename.c_str());
+  if (ret == 0) {
+    presets_.erase(presets_.begin() + indices_[row]);
+    OnDataChanged();
   } else {
-    DataView::OnContextMenu(action, menu_index, item_indices);
+    ERROR("Deleting preset \"%s\": %s", filename, SafeStrerror(errno));
+    metric.SetStatusCode(orbit_metrics_uploader::OrbitLogEvent::INTERNAL_ERROR);
+    app_->SendErrorToUi("Error deleting preset",
+                        absl::StrFormat("Could not delete preset \"%s\".", filename));
   }
+}
+
+void PresetsDataView::OnShowInExplorerRequested(const std::vector<int>& selection) {
+  const PresetFile& preset = GetPreset(selection[0]);
+  app_->ShowPresetInExplorer(preset);
 }
 
 void PresetsDataView::OnDoubleClicked(int index) {
