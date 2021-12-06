@@ -6,7 +6,7 @@ found in the LICENSE file.
 
 import logging
 
-from core.orbit_e2e import E2ETestCase, find_control
+from core.orbit_e2e import E2ETestCase, find_control, OrbitE2EError
 
 
 def _show_and_get_symbol_location_ui(top_window):
@@ -45,7 +45,7 @@ class AddSymbolLocation(E2ETestCase):
             if item.texts()[0] == location:
                 return
 
-        self.expect_true(False, "Found symbol file location {} in the list".format(location))
+        raise OrbitE2EError("Found symbol file location {} in the list".format(location))
 
 
 class ClearAllSymbolLocations(E2ETestCase):
