@@ -97,6 +97,8 @@ void DataView::OnContextMenu(const std::string& action, int /*menu_index*/,
     OnDisableFrameTrackRequested(item_indices);
   } else if (action == kMenuActionAddIterator) {
     OnIteratorRequested(item_indices);
+  } else if (action == kMenuActionVerifyFramePointers) {
+    OnVerifyFramePointersRequested(item_indices);
 
   } else if (action == kMenuActionExportToCsv) {
     OnExportToCsvRequested();
@@ -174,6 +176,19 @@ void DataView::OnDisableFrameTrackRequested(const std::vector<int>& selection) {
     // However, disable the frame track, so it is not recreated on the next capture.
     app_->DisableFrameTrack(function);
     app_->RemoveFrameTrack(function);
+  }
+}
+
+void DataView::OnVerifyFramePointersRequested(const std::vector<int>& selection) {
+  std::vector<const ModuleData*> modules_to_validate;
+  modules_to_validate.reserve(selection.size());
+  for (int i : selection) {
+    const ModuleData* module = GetModuleDataFromRow(i);
+    modules_to_validate.push_back(module);
+  }
+
+  if (!modules_to_validate.empty()) {
+    app_->OnValidateFramePointers(modules_to_validate);
   }
 }
 

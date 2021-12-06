@@ -136,24 +136,6 @@ std::vector<std::vector<std::string>> ModulesDataView::GetContextMenuWithGroupin
   return menu;
 }
 
-void ModulesDataView::OnContextMenu(const std::string& action, int menu_index,
-                                    const std::vector<int>& item_indices) {
-  if (action == kMenuActionVerifyFramePointers) {
-    std::vector<const ModuleData*> modules_to_validate;
-    modules_to_validate.reserve(item_indices.size());
-    for (int index : item_indices) {
-      const ModuleData* module = GetModuleDataFromRow(index);
-      modules_to_validate.push_back(module);
-    }
-
-    if (!modules_to_validate.empty()) {
-      app_->OnValidateFramePointers(modules_to_validate);
-    }
-  } else {
-    DataView::OnContextMenu(action, menu_index, item_indices);
-  }
-}
-
 void ModulesDataView::OnDoubleClicked(int index) {
   ModuleData* module_data = GetModuleDataFromRow(index);
   if (!module_data->is_loaded()) {

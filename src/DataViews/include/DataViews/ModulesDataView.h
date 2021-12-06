@@ -28,8 +28,6 @@ class ModulesDataView : public DataView {
       int clicked_index, const std::vector<int>& selected_indices) override;
   std::string GetValue(int row, int column) override;
 
-  void OnContextMenu(const std::string& action, int menu_index,
-                     const std::vector<int>& item_indices) override;
   void OnDoubleClicked(int index) override;
   bool WantsDisplayColor() override { return true; }
   bool GetDisplayColor(int row, int column, unsigned char& red, unsigned char& green,
