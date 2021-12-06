@@ -226,8 +226,7 @@ def wait_for_condition(any_callable: Callable,
             else:
                 pass
         time.sleep(interval)
-    if raise_exceptions:
-        raise OrbitE2EError('Wait time exceeded')
+    raise OrbitE2EError('Wait time exceeded')
 
 
 def find_control(parent: BaseWrapper,

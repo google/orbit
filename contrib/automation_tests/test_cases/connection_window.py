@@ -90,7 +90,7 @@ class LoadLatestCapture(E2ETestCase):
     It raises an exception if no capture was found at all.
     """
 
-    def _execute(self, filter_strings: str or List[str] or Iterable[str]):
+    def _execute(self, filter_strings: str or Iterable[str]):
         if isinstance(filter_strings, str):
             filter_strings = [filter_strings]
         connect_radio = self.find_control('RadioButton', 'LoadCapture')
@@ -102,8 +102,9 @@ class LoadLatestCapture(E2ETestCase):
             filter_capture_files.set_edit_text(filter_string)
 
             capture_file_list = self.find_control('Table', 'CaptureFileList')
-            wait_for_condition(lambda: capture_file_list.item_count() > 0, 30, raise_exceptions=False)
-            if capture_file_list.item_count() == 0:
+            try:
+                wait_for_condition(lambda: capture_file_list.item_count() > 0, 30)
+            except OrbitE2EError:
                 continue
             succeeded = True
             capture_file_list.children(control_type='DataItem')[0].double_click_input()

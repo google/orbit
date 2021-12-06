@@ -18,6 +18,7 @@ from test_cases.main_window import EndSession
 
 Before this script is run there needs to be a gamelet reserved and
 "hello_ggp_standalone" has to be started. Further, Orbit needs to be started.
+Also, the captures directory should be cleared.
 
 The script requires absl and pywinauto. Since pywinauto requires the bitness of
 the python installation to match the bitness of the program under test it needs
@@ -37,6 +38,10 @@ This automation script covers a basic workflow:
 
 
 def main(argv):
+    # During the tests, we want to verify that captures get automatically saved. We will do so by filtering the recent
+    # captures list with the current date (in addition to also deleting old captures before this script runs). However,
+    # if it is around midnight when this code gets executed and we store the date string, it can be that the capture
+    # actually gets taken on the next day. Therefore, we will also check for the next day.
     today = date.today()
     tomorrow = today + timedelta(days=1)
     today_string = today.strftime("%Y_%m_%d")
@@ -71,14 +76,16 @@ def main(argv):
         AddIterator(function_name="TestFunc2"),
         VerifyFunctionCallCount(function_name="TestFunc2", min_calls=1257, max_calls=1257),
 
-        # Let's take a capture of the current version and verify this can be still loaded
+        # Let's take a capture with the current version and verify this can be loaded
         EndSession(),
         ConnectToStadiaInstance(),
         FilterAndSelectFirstProcess(process_filter="hello_ggp"),
         Capture(),
         VerifyTracksExist(track_names="hello_ggp_stand*", allow_duplicates=True),
         EndSession(),
-        # If we took the capture around midnight, we need to ensure to also look for the next day
+        # If we took the capture around midnight, we need to ensure to also look for the next day. Remember, the strings
+        # get created before the tests run. Thus the `today_string` might be actually from the day before the capture
+        # gets auto-saved.
         LoadLatestCapture(filter_strings=[f"hello_ggp_stand_{today_string}", f"hello_ggp_stand_{tomorrow_string}"]),
         VerifyTracksExist(track_names="hello_ggp_stand*", allow_duplicates=True)
     ]
