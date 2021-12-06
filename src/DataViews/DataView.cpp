@@ -95,6 +95,9 @@ void DataView::OnContextMenu(const std::string& action, int /*menu_index*/,
     OnEnableFrameTrackRequested(item_indices);
   } else if (action == kMenuActionDisableFrameTrack) {
     OnDisableFrameTrackRequested(item_indices);
+  } else if (action == kMenuActionAddIterator) {
+    OnIteratorRequested(item_indices);
+
   } else if (action == kMenuActionExportToCsv) {
     OnExportToCsvRequested();
   } else if (action == kMenuActionCopySelection) {

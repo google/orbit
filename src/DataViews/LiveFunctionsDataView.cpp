@@ -242,7 +242,7 @@ std::vector<std::vector<std::string>> LiveFunctionsDataView::GetContextMenuWithG
   menu.begin()->push_back(std::string{kMenuActionExportEventsToCsv});
 
   std::vector<std::string> action_group;
-  if (enable_iterator) action_group.emplace_back(std::string{kMenuActionIterate});
+  if (enable_iterator) action_group.emplace_back(std::string{kMenuActionAddIterator});
   // For now, these actions only make sense when one function is selected,
   // so we don't show them otherwise.
   if (selected_indices.size() == 1) {
@@ -270,6 +270,19 @@ std::vector<std::vector<std::string>> LiveFunctionsDataView::GetContextMenuWithG
   menu.insert(menu.begin(), action_group);
 
   return menu;
+}
+
+void LiveFunctionsDataView::OnIteratorRequested(const std::vector<int>& selection) {
+  for (int i : selection) {
+    uint64_t instrumented_function_id = GetInstrumentedFunctionId(i);
+    const FunctionInfo* instrumented_function = GetFunctionInfoFromRow(i);
+    const FunctionStats& stats =
+        app_->GetCaptureData().GetFunctionStatsOrDefault(instrumented_function_id);
+    if (stats.count() > 0) {
+      live_functions_->AddIterator(instrumented_function_id, instrumented_function);
+      metrics_uploader_->SendLogEvent(orbit_metrics_uploader::OrbitLogEvent::ORBIT_ITERATOR_ADD);
+    }
+  }
 }
 
 ErrorMessageOr<void> LiveFunctionsDataView::ExportAllEventsToCsv(
@@ -357,17 +370,6 @@ void LiveFunctionsDataView::OnContextMenu(const std::string& action, int menu_in
     CHECK(item_indices.size() == 1);
     uint64_t function_id = GetInstrumentedFunctionId(item_indices[0]);
     app_->JumpToTimerAndZoom(function_id, AppInterface::JumpToTimerMode::kMax);
-  } else if (action == kMenuActionIterate) {
-    for (int i : item_indices) {
-      uint64_t instrumented_function_id = GetInstrumentedFunctionId(i);
-      const FunctionInfo* instrumented_function = GetFunctionInfoFromRow(i);
-      const FunctionStats& stats =
-          app_->GetCaptureData().GetFunctionStatsOrDefault(instrumented_function_id);
-      if (stats.count() > 0) {
-        live_functions_->AddIterator(instrumented_function_id, instrumented_function);
-        metrics_uploader_->SendLogEvent(orbit_metrics_uploader::OrbitLogEvent::ORBIT_ITERATOR_ADD);
-      }
-    }
   } else if (action == kMenuActionExportEventsToCsv) {
     std::string save_file = app_->GetSaveFile(".csv");
     if (!save_file.empty()) {
