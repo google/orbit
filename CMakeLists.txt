@@ -69,7 +69,6 @@ set(CRASHDUMP_SERVER "" CACHE STRING "Setting this option will enable uploading 
 set(CMAKE_CXX_STANDARD 17)
 
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake")
-list(APPEND CMAKE_PREFIX_PATH "${CMAKE_BINARY_DIR}")
 
 include(${CMAKE_BINARY_DIR}/conanbuildinfo_multi.cmake)
 conan_basic_setup(TARGETS)
@@ -101,7 +100,11 @@ if(WITH_GUI)
     COMPONENTS Core
                Network
                Test
-               Widgets)
+               Widgets
+               WebEngine
+               WebEngineWidgets
+               WebSockets
+               WebChannel)
   find_package(qtpropertybrowser REQUIRED)
 endif()
 
