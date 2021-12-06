@@ -4,16 +4,20 @@ Use of this source code is governed by a BSD-style license that can be
 found in the LICENSE file.
 """
 from absl import app
+from datetime import date, timedelta
 
 from core.orbit_e2e import E2ETestSuite
-from test_cases.connection_window import LoadCapture
+from test_cases.capture_window import Capture, CheckTimers, CheckThreadStates, FilterTracks, \
+    ToggleCollapsedStateOfAllTracks, VerifyTracksExist
+from test_cases.connection_window import ConnectToStadiaInstance, FilterAndSelectFirstProcess, LoadCapture, \
+    LoadLatestCapture
 from test_cases.live_tab import AddIterator, VerifyFunctionCallCount
-from test_cases.capture_window import CheckTimers, FilterTracks, CheckThreadStates, ToggleCollapsedStateOfAllTracks, \
-    VerifyTracksExist
+from test_cases.main_window import EndSession
 
 """Verify loading a capture in Orbit using pywinauto.
 
-Before this script is run Orbit needs to be started.
+Before this script is run there needs to be a gamelet reserved and
+"hello_ggp_standalone" has to be started. Further, Orbit needs to be started.
 
 The script requires absl and pywinauto. Since pywinauto requires the bitness of
 the python installation to match the bitness of the program under test it needs
@@ -28,10 +32,15 @@ This automation script covers a basic workflow:
  - verify that the memory tracks are present
  - verify that an iterator can be added to "TestFunc2"
  - verify that "TestFunc2" was called exactly 1257 times
+ - take a capture and verify there is a corresponding capture in the latest captures list which contains the tracks
 """
 
 
 def main(argv):
+    today = date.today()
+    tomorrow = today + timedelta(days=1)
+    today_string = today.strftime("%Y_%m_%d")
+    tomorrow_string = tomorrow.strftime("%Y_%m_%d")
     test_cases = [
         LoadCapture(capture_file_path="test_data\\OrbitTest_1-64.orbit", expect_fail=True),
         LoadCapture(capture_file_path="test_data\\OrbitTest_1-72.orbit"),
@@ -60,7 +69,18 @@ def main(argv):
         VerifyTracksExist(track_names=["Page*", "*System*", "*CGroup*"], allow_duplicates=True),
 
         AddIterator(function_name="TestFunc2"),
-        VerifyFunctionCallCount(function_name='TestFunc2', min_calls=1257, max_calls=1257)
+        VerifyFunctionCallCount(function_name="TestFunc2", min_calls=1257, max_calls=1257),
+
+        # Let's take a capture of the current version and verify this can be still loaded
+        EndSession(),
+        ConnectToStadiaInstance(),
+        FilterAndSelectFirstProcess(process_filter="hello_ggp"),
+        Capture(),
+        VerifyTracksExist(track_names="hello_ggp_stand*", allow_duplicates=True),
+        EndSession(),
+        # If we took the capture around midnight, we need to ensure to also look for the next day
+        LoadLatestCapture(filter_strings=[f"hello_ggp_stand_{today_string}", f"hello_ggp_stand_{tomorrow_string}"]),
+        VerifyTracksExist(track_names="hello_ggp_stand*", allow_duplicates=True)
     ]
     suite = E2ETestSuite(test_name="Capture Loading", test_cases=test_cases)
     suite.execute()
