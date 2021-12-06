@@ -39,8 +39,6 @@ class LiveFunctionsDataView : public DataView {
   void UpdateSelectedFunctionId();
 
   void OnSelect(const std::vector<int>& rows) override;
-  void OnContextMenu(const std::string& action, int menu_index,
-                     const std::vector<int>& item_indices) override;
   void OnDataChanged() override;
   void OnTimer() override;
   void OnRefresh(const std::vector<int>& visible_selected_indices,
@@ -51,11 +49,9 @@ class LiveFunctionsDataView : public DataView {
 
   void OnIteratorRequested(const std::vector<int>& selection) override;
   void OnJumpToRequested(const std::string& action, const std::vector<int>& selection) override;
-
   // Export all events (including the function name, thread name and id, start timestamp, end
   // timestamp, and duration) associated with the selected rows in to a CSV file.
-  ErrorMessageOr<void> ExportAllEventsToCsv(const std::filesystem::path& file_path,
-                                            const std::vector<int>& item_indices);
+  void OnExportEventsToCsvRequested(const std::vector<int>& selection) override;
 
  protected:
   void DoFilter() override;

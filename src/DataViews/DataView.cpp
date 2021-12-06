@@ -114,6 +114,8 @@ void DataView::OnContextMenu(const std::string& action, int /*menu_index*/,
     OnExportToCsvRequested();
   } else if (action == kMenuActionCopySelection) {
     OnCopySelectionRequested(item_indices);
+  } else if (action == kMenuActionExportEventsToCsv) {
+    OnExportEventsToCsvRequested(item_indices);
   }
 }
 
