@@ -134,21 +134,28 @@ class PeCoffMemory {
   uint64_t cur_offset_;
 };
 
-template <typename AddressTypeArg>
 class PeCoffInterface {
+ public:
+  virtual ~PeCoffInterface() = default;
+
+  virtual bool Init(int64_t* load_bias) = 0;
+  virtual ErrorData LastError() const = 0;
+  virtual DwarfSection* DebugFrameSection() = 0;
+};
+
+template <typename AddressTypeArg>
+class PeCoffInterfaceImpl : public PeCoffInterface {
   static_assert(std::is_same_v<AddressTypeArg, uint32_t> ||
                     std::is_same_v<AddressTypeArg, uint64_t>,
                 "AddressTypeArg must be an unsigned integer and either 4-bytes or 8-bytes");
 
  public:
-  explicit PeCoffInterface(Memory* memory) : memory_(memory), coff_memory_(memory) {}
-  virtual ~PeCoffInterface() {}
-  bool Init();
-  ErrorData LastError() const { return last_error_; }
-
+  explicit PeCoffInterfaceImpl(Memory* memory) : memory_(memory), coff_memory_(memory) {}
+  virtual ~PeCoffInterfaceImpl() = default;
+  bool Init(int64_t* load_bias) override;
+  ErrorData LastError() const override { return last_error_; }
+  DwarfSection* DebugFrameSection() override { return debug_frame_.get(); }
   using AddressType = AddressTypeArg;
-
-  DwarfSection* DebugFrameSection() { return debug_frame_.get(); }
 
  private:
   Memory* memory_;
@@ -194,8 +201,8 @@ class PeCoffInterface {
   bool InitDebugFrameSection();
 };
 
-using PeCoffInterface32 = PeCoffInterface<uint32_t>;
-using PeCoffInterface64 = PeCoffInterface<uint64_t>;
+using PeCoffInterface32 = PeCoffInterfaceImpl<uint32_t>;
+using PeCoffInterface64 = PeCoffInterfaceImpl<uint64_t>;
 
 }  // namespace unwindstack
 

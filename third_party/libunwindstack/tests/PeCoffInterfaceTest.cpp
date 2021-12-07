@@ -34,6 +34,7 @@ namespace unwindstack {
 constexpr size_t kDosHeaderSizeInBytes = 0x40;
 constexpr uint64_t kDebugFrameSectionFileOffset = 0x2000;
 constexpr uint64_t kDebugFrameSectionSize = 0x200;
+constexpr int64_t kLoadBiasFake = 0x3100;
 
 // Needed for static_asserts that depend on the template parameter. Just a
 // plain `false` in the static_assert will cause compilation to fail.
@@ -60,8 +61,10 @@ class PeCoffInterfaceTest : public ::testing::Test {
   void InitPeCoffInterfaceFromFile() {
     if constexpr (sizeof(typename PeCoffInterfaceType::AddressType) == 8) {
       memory_ = ReadFile("libtest.dll");
+      expected_load_bias_in_file_ = 0x62640000;
     } else if constexpr (sizeof(typename PeCoffInterfaceType::AddressType) == 4) {
       memory_ = ReadFile("libtest32.dll");
+      expected_load_bias_in_file_ = 0x67b40000;
     } else {
       static_assert(kDependentFalse<PeCoffInterfaceType>, "AddressType size must be 4 or 8 bytes");
     }
@@ -199,7 +202,8 @@ class PeCoffInterfaceTest : public ::testing::Test {
       offset = SetData32(offset, 0);
     }
 
-    offset = SetMax64(offset, 0, sizeof(typename PeCoffInterfaceType::AddressType));
+    // image_base
+    offset = SetMax64(offset, kLoadBiasFake, sizeof(typename PeCoffInterfaceType::AddressType));
 
     offset = SetData32(offset, 0x1000);  // sect_alignment
     offset = SetData32(offset, 0x200);   // file_alignment
@@ -328,6 +332,8 @@ class PeCoffInterfaceTest : public ::testing::Test {
 
   uint64_t optional_header_num_data_dirs_offset_;
 
+  int64_t expected_load_bias_in_file_;
+
   std::vector<std::pair<uint64_t, std::string>> section_names_in_string_table_;
 };
 
@@ -339,18 +345,23 @@ TYPED_TEST_SUITE(PeCoffInterfaceTest, Implementations);
 TYPED_TEST(PeCoffInterfaceTest, init_for_coff_file) {
   this->InitPeCoffInterfaceFromFile();
   TypeParam coff(this->memory_.get());
-  ASSERT_TRUE(coff.Init());
+  int64_t load_bias;
+  ASSERT_TRUE(coff.Init(&load_bias));
+  EXPECT_EQ(load_bias, this->expected_load_bias_in_file_);
 }
 
 TYPED_TEST(PeCoffInterfaceTest, init_for_coff_file_fake) {
   this->InitPeCoffInterfaceFake();
   TypeParam coff(&this->memory_fake_);
-  ASSERT_TRUE(coff.Init());
+  int64_t load_bias;
+  ASSERT_TRUE(coff.Init(&load_bias));
+  EXPECT_EQ(load_bias, kLoadBiasFake);
 }
 
 TYPED_TEST(PeCoffInterfaceTest, dos_header_parsing_fails_empty_memory) {
   TypeParam coff(&this->memory_fake_);
-  ASSERT_FALSE(coff.Init());
+  int64_t load_bias;
+  ASSERT_FALSE(coff.Init(&load_bias));
   EXPECT_EQ(ERROR_MEMORY_INVALID, coff.LastError().code);
 }
 
@@ -358,7 +369,8 @@ TYPED_TEST(PeCoffInterfaceTest, dos_header_parsing_fails_invalid_memory_at_unuse
   this->InitPeCoffInterfaceFake();
   this->memory_fake_.ClearMemory(0x30, 1);
   TypeParam coff(&this->memory_fake_);
-  ASSERT_FALSE(coff.Init());
+  int64_t load_bias;
+  ASSERT_FALSE(coff.Init(&load_bias));
   EXPECT_EQ(ERROR_MEMORY_INVALID, coff.LastError().code);
 }
 
@@ -366,7 +378,8 @@ TYPED_TEST(PeCoffInterfaceTest, dos_header_parsing_fails_invalid_memory_at_new_h
   this->InitPeCoffInterfaceFake();
   this->memory_fake_.ClearMemory(0x3c, 1);
   TypeParam coff(&this->memory_fake_);
-  ASSERT_FALSE(coff.Init());
+  int64_t load_bias;
+  ASSERT_FALSE(coff.Init(&load_bias));
   EXPECT_EQ(ERROR_MEMORY_INVALID, coff.LastError().code);
 }
 
@@ -375,7 +388,8 @@ TYPED_TEST(PeCoffInterfaceTest, dos_header_parsing_fails_wrong_magic_number) {
   // Correct magic number is 0x5a4d
   this->memory_fake_.SetData16(0, 0x5a4c);
   TypeParam coff(&this->memory_fake_);
-  ASSERT_FALSE(coff.Init());
+  int64_t load_bias;
+  ASSERT_FALSE(coff.Init(&load_bias));
   EXPECT_EQ(ERROR_INVALID_COFF, coff.LastError().code);
 }
 
@@ -383,7 +397,8 @@ TYPED_TEST(PeCoffInterfaceTest, new_header_parsing_fails_invalid_memory) {
   this->InitPeCoffInterfaceFake();
   this->memory_fake_.ClearMemory(0x1000, 1);
   TypeParam coff(&this->memory_fake_);
-  ASSERT_FALSE(coff.Init());
+  int64_t load_bias;
+  ASSERT_FALSE(coff.Init(&load_bias));
   EXPECT_EQ(ERROR_MEMORY_INVALID, coff.LastError().code);
 }
 
@@ -392,7 +407,8 @@ TYPED_TEST(PeCoffInterfaceTest, new_header_parsing_fails_wrong_pe_signature) {
   // Correct PE signature is 0x00004550
   this->SetData32(0x1000, 0x00004551);
   TypeParam coff(&this->memory_fake_);
-  ASSERT_FALSE(coff.Init());
+  int64_t load_bias;
+  ASSERT_FALSE(coff.Init(&load_bias));
   EXPECT_EQ(ERROR_INVALID_COFF, coff.LastError().code);
 }
 
@@ -402,7 +418,8 @@ TYPED_TEST(PeCoffInterfaceTest, coff_header_parsing_fails_invalid_memory) {
   constexpr uint16_t kCoffHeaderStart = 0x1004;
   this->memory_fake_.ClearMemory(kCoffHeaderStart, 1);
   TypeParam coff(&this->memory_fake_);
-  ASSERT_FALSE(coff.Init());
+  int64_t load_bias;
+  ASSERT_FALSE(coff.Init(&load_bias));
   EXPECT_EQ(ERROR_MEMORY_INVALID, coff.LastError().code);
 }
 
@@ -411,7 +428,8 @@ TYPED_TEST(PeCoffInterfaceTest, optional_header_parsing_fails_wrong_magic_number
   // 0x010b would be a correct choice
   this->SetData16(this->optional_header_start_offset_, 0x010a);
   TypeParam coff(&this->memory_fake_);
-  ASSERT_FALSE(coff.Init());
+  int64_t load_bias;
+  ASSERT_FALSE(coff.Init(&load_bias));
   EXPECT_EQ(ERROR_INVALID_COFF, coff.LastError().code);
 }
 
@@ -421,7 +439,8 @@ TYPED_TEST(PeCoffInterfaceTest, optional_header_parsing_fails_invalid_memory_sta
   this->memory_fake_.ClearMemory(this->optional_header_start_offset_, 1);
 
   TypeParam coff(&this->memory_fake_);
-  ASSERT_FALSE(coff.Init());
+  int64_t load_bias;
+  ASSERT_FALSE(coff.Init(&load_bias));
   EXPECT_EQ(ERROR_MEMORY_INVALID, coff.LastError().code);
 }
 
@@ -431,7 +450,8 @@ TYPED_TEST(PeCoffInterfaceTest, optional_header_parsing_fails_invalid_memory_end
   this->memory_fake_.ClearMemory(this->optional_header_start_offset_, 1);
 
   TypeParam coff(&this->memory_fake_);
-  ASSERT_FALSE(coff.Init());
+  int64_t load_bias;
+  ASSERT_FALSE(coff.Init(&load_bias));
   EXPECT_EQ(ERROR_MEMORY_INVALID, coff.LastError().code);
 }
 
@@ -443,7 +463,8 @@ TYPED_TEST(PeCoffInterfaceTest, optional_header_parsing_fails_incorrect_header_s
   this->SetData16(this->optional_header_size_offset_, correct_header_size + 1);
 
   TypeParam coff(&this->memory_fake_);
-  ASSERT_FALSE(coff.Init());
+  int64_t load_bias;
+  ASSERT_FALSE(coff.Init(&load_bias));
   EXPECT_EQ(ERROR_INVALID_COFF, coff.LastError().code);
 }
 
@@ -455,7 +476,8 @@ TYPED_TEST(PeCoffInterfaceTest, optional_header_parsing_fails_incorrect_num_data
   this->SetData32(this->optional_header_num_data_dirs_offset_, correct_num + 1);
 
   TypeParam coff(&this->memory_fake_);
-  ASSERT_FALSE(coff.Init());
+  int64_t load_bias;
+  ASSERT_FALSE(coff.Init(&load_bias));
   EXPECT_EQ(ERROR_INVALID_COFF, coff.LastError().code);
 }
 
@@ -464,7 +486,8 @@ TYPED_TEST(PeCoffInterfaceTest, section_headers_parsing_fails_invalid_memory) {
   this->SetData16(this->coff_header_nsects_offset_, 1);
 
   TypeParam coff(&this->memory_fake_);
-  ASSERT_FALSE(coff.Init());
+  int64_t load_bias;
+  ASSERT_FALSE(coff.Init(&load_bias));
   EXPECT_EQ(ERROR_MEMORY_INVALID, coff.LastError().code);
 }
 
@@ -478,7 +501,8 @@ TYPED_TEST(PeCoffInterfaceTest,
   this->memory_fake_.ClearMemory(section_headers_offset + kSectionNameInHeaderSize, 1);
 
   TypeParam coff(&this->memory_fake_);
-  ASSERT_FALSE(coff.Init());
+  int64_t load_bias;
+  ASSERT_FALSE(coff.Init(&load_bias));
   EXPECT_EQ(ERROR_MEMORY_INVALID, coff.LastError().code);
 }
 
@@ -489,7 +513,8 @@ TYPED_TEST(PeCoffInterfaceTest,
   this->SetData16(this->coff_header_nsects_offset_, 1);
 
   TypeParam coff(&this->memory_fake_);
-  ASSERT_FALSE(coff.Init());
+  int64_t load_bias;
+  ASSERT_FALSE(coff.Init(&load_bias));
   EXPECT_EQ(ERROR_INVALID_COFF, coff.LastError().code);
 }
 
@@ -502,7 +527,8 @@ TYPED_TEST(PeCoffInterfaceTest, section_headers_parsing_fails_missing_string_tab
   this->SetData16(this->coff_header_nsects_offset_, 1);
 
   TypeParam coff(&this->memory_fake_);
-  ASSERT_FALSE(coff.Init());
+  int64_t load_bias;
+  ASSERT_FALSE(coff.Init(&load_bias));
   EXPECT_EQ(ERROR_MEMORY_INVALID, coff.LastError().code);
 }
 
@@ -512,14 +538,16 @@ TYPED_TEST(PeCoffInterfaceTest, section_headers_parsing_fails_no_text_section) {
   this->SetData16(this->coff_header_nsects_offset_, 1);
 
   TypeParam coff(&this->memory_fake_);
-  ASSERT_FALSE(coff.Init());
+  int64_t load_bias;
+  ASSERT_FALSE(coff.Init(&load_bias));
   EXPECT_EQ(ERROR_INVALID_COFF, coff.LastError().code);
 }
 
 TYPED_TEST(PeCoffInterfaceTest, debug_frame_section_parsed_correctly) {
   this->InitPeCoffInterfaceFake();
   TypeParam coff(&this->memory_fake_);
-  ASSERT_TRUE(coff.Init());
+  int64_t load_bias;
+  ASSERT_TRUE(coff.Init(&load_bias));
 
   const DwarfFde* dwarf_fde = coff.DebugFrameSection()->GetFdeFromPc(0x2100);
   ASSERT_NE(dwarf_fde, nullptr);
@@ -538,14 +566,16 @@ using PeCoffInterface64Test = PeCoffInterfaceTest<PeCoffInterface64>;
 TEST_F(PeCoffInterface32Test, init_64_fails_for_coff_32_fake) {
   InitPeCoffInterfaceFake();
   PeCoffInterface64 coff(&memory_fake_);
-  ASSERT_FALSE(coff.Init());
+  int64_t load_bias;
+  ASSERT_FALSE(coff.Init(&load_bias));
   EXPECT_EQ(ERROR_UNSUPPORTED, coff.LastError().code);
 }
 
 TEST_F(PeCoffInterface64Test, init_32_fails_for_coff_64_fake) {
   InitPeCoffInterfaceFake();
   PeCoffInterface32 coff(&memory_fake_);
-  ASSERT_FALSE(coff.Init());
+  int64_t load_bias;
+  ASSERT_FALSE(coff.Init(&load_bias));
   EXPECT_EQ(ERROR_UNSUPPORTED, coff.LastError().code);
 }
 
@@ -555,7 +585,8 @@ TEST_F(PeCoffInterface32Test, optional_header_parsing_fails_invalid_memory_at_da
   this->memory_fake_.ClearMemory(kDataOffsetAddress, 1);
 
   PeCoffInterface32 coff(&memory_fake_);
-  ASSERT_FALSE(coff.Init());
+  int64_t load_bias;
+  ASSERT_FALSE(coff.Init(&load_bias));
   EXPECT_EQ(ERROR_MEMORY_INVALID, coff.LastError().code);
 }
 
@@ -565,7 +596,8 @@ TEST_F(PeCoffInterface32Test, optional_header_parsing_fails_invalid_memory_end_3
   this->memory_fake_.ClearMemory(kAfterDataOffset, 1);
 
   PeCoffInterface32 coff(&memory_fake_);
-  ASSERT_FALSE(coff.Init());
+  int64_t load_bias;
+  ASSERT_FALSE(coff.Init(&load_bias));
   EXPECT_EQ(ERROR_MEMORY_INVALID, coff.LastError().code);
 }
 
@@ -575,7 +607,8 @@ TEST_F(PeCoffInterface64Test, optional_header_parsing_fails_invalid_memory_end_6
   this->memory_fake_.ClearMemory(kAfterDataOffset, 1);
 
   PeCoffInterface64 coff(&memory_fake_);
-  ASSERT_FALSE(coff.Init());
+  int64_t load_bias;
+  ASSERT_FALSE(coff.Init(&load_bias));
   EXPECT_EQ(ERROR_MEMORY_INVALID, coff.LastError().code);
 }
 
@@ -585,7 +618,8 @@ TEST_F(PeCoffInterface32Test, optional_header_parsing_fails_invalid_memory_data_
   this->memory_fake_.ClearMemory(kDataDirOffset, 1);
 
   PeCoffInterface32 coff(&memory_fake_);
-  ASSERT_FALSE(coff.Init());
+  int64_t load_bias;
+  ASSERT_FALSE(coff.Init(&load_bias));
   EXPECT_EQ(ERROR_MEMORY_INVALID, coff.LastError().code);
 }
 
@@ -595,7 +629,8 @@ TEST_F(PeCoffInterface64Test, optional_header_parsing_fails_invalid_memory_data_
   this->memory_fake_.ClearMemory(kDataDirOffset, 1);
 
   PeCoffInterface64 coff(&memory_fake_);
-  ASSERT_FALSE(coff.Init());
+  int64_t load_bias;
+  ASSERT_FALSE(coff.Init(&load_bias));
   EXPECT_EQ(ERROR_MEMORY_INVALID, coff.LastError().code);
 }
 
