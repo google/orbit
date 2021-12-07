@@ -4,6 +4,36 @@
 
 $conan_version_required = "1.40.3"
 
+function Check-Conan-Version-Sufficient {
+  $version = $args[0]
+  $required = $args[1]
+
+  $version_major = $version.split(".")[0] -as [int]
+  $required_major = $required.split(".")[0] -as [int]
+  if ($required_major -gt $version_major) {
+    return 1
+  }
+  if ($required_major -lt $version_major) {
+    return 0
+  }
+
+  $version_minor = $version.split(".")[1] -as [int]
+  $required_minor = $required.split(".")[1] -as [int]
+  if ($required_minor -gt $version_minor) {
+    return 1
+  }
+  if ($required_minor -lt $version_minor) {
+    return 0
+  }
+
+  $version_patch = $version.split(".")[2] -as [int]
+  $required_patch = $required.split(".")[2] -as [int]
+  if ($required_patch -gt $version_patch) {
+    return 1
+  }
+  return 0
+}
+
 $conan = Get-Command -ErrorAction Ignore conan
 
 if (!$conan) {
@@ -39,9 +69,9 @@ You can call 'pip3 show -f conan' to figure out where conan.exe was placed.
 
   $conan_version = (& $conan.Path --version).split(" ")[2]
 
-  if ($conan_version -lt $conan_version_required) {
+  $sufficient = Check-Conan-Version-Sufficient $conan_version $conan_version_required
+  if ($sufficient -ne 0) {
     Write-Host "Your conan version $conan_version is too old. Let's try to update it."
-
     Try {
       $pip3 = Get-Command pip3
       & $pip3.Path install --upgrade conan==$conan_version_required
