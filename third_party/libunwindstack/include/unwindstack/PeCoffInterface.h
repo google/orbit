@@ -139,8 +139,13 @@ class PeCoffInterface {
   virtual ~PeCoffInterface() = default;
 
   virtual bool Init(int64_t* load_bias) = 0;
-  virtual ErrorData LastError() const = 0;
+  virtual const ErrorData& last_error() = 0;
+  virtual ErrorCode LastErrorCode() = 0;
+  virtual uint64_t LastErrorAddress() = 0;
   virtual DwarfSection* DebugFrameSection() = 0;
+  virtual uint64_t GetRelPc(uint64_t pc, uint64_t map_start) const = 0;
+  virtual bool Step(uint64_t rel_pc, Regs* regs, Memory* process_memory, bool* finished,
+                    bool* is_signal_frame) = 0;
 };
 
 template <typename AddressTypeArg>
@@ -153,11 +158,19 @@ class PeCoffInterfaceImpl : public PeCoffInterface {
   explicit PeCoffInterfaceImpl(Memory* memory) : memory_(memory), coff_memory_(memory) {}
   virtual ~PeCoffInterfaceImpl() = default;
   bool Init(int64_t* load_bias) override;
-  ErrorData LastError() const override { return last_error_; }
+
+  const ErrorData& last_error() override { return last_error_; }
+  ErrorCode LastErrorCode() override { return last_error_.code; }
+  uint64_t LastErrorAddress() override { return last_error_.address; }
+
   DwarfSection* DebugFrameSection() override { return debug_frame_.get(); }
+  uint64_t GetRelPc(uint64_t pc, uint64_t map_start) const override;
+  bool Step(uint64_t rel_pc, Regs* regs, Memory* process_memory, bool* finished,
+            bool* is_signal_frame) override;
+
   using AddressType = AddressTypeArg;
 
- private:
+ protected:
   Memory* memory_;
   PeCoffMemory coff_memory_;
 

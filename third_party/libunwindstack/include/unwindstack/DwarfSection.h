@@ -107,7 +107,8 @@ class DwarfSection {
 
   virtual uint64_t AdjustPcFromFde(uint64_t pc) = 0;
 
-  bool Step(uint64_t pc, Regs* regs, Memory* process_memory, bool* finished, bool* is_signal_frame);
+  virtual bool Step(uint64_t pc, Regs* regs, Memory* process_memory, bool* finished,
+                    bool* is_signal_frame);
 
  protected:
   DwarfMemory memory_;
