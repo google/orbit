@@ -98,7 +98,7 @@ bool PeCoffMemory::GetFully(void* dst, size_t size) {
 }
 
 template <typename AddressType>
-bool PeCoffInterface<AddressType>::ParseDosHeader(uint64_t offset) {
+bool PeCoffInterfaceImpl<AddressType>::ParseDosHeader(uint64_t offset) {
   coff_memory_.set_cur_offset(offset);
   if (!coff_memory_.Get16(&dos_header_.e_magic)) {
     last_error_.code = ERROR_MEMORY_INVALID;
@@ -132,7 +132,7 @@ bool PeCoffInterface<AddressType>::ParseDosHeader(uint64_t offset) {
 }
 
 template <typename AddressType>
-bool PeCoffInterface<AddressType>::ParseNewHeader(uint64_t offset) {
+bool PeCoffInterfaceImpl<AddressType>::ParseNewHeader(uint64_t offset) {
   coff_memory_.set_cur_offset(offset);
   uint32_t pe_signature;
   if (!coff_memory_.Get32(&pe_signature)) {
@@ -150,7 +150,7 @@ bool PeCoffInterface<AddressType>::ParseNewHeader(uint64_t offset) {
 }
 
 template <typename AddressType>
-bool PeCoffInterface<AddressType>::ParseCoffHeader(uint64_t offset) {
+bool PeCoffInterfaceImpl<AddressType>::ParseCoffHeader(uint64_t offset) {
   coff_memory_.set_cur_offset(offset);
   if (!coff_memory_.Get16(&coff_header_.machine) || !coff_memory_.Get16(&coff_header_.nsects) ||
       !coff_memory_.Get32(&coff_header_.modtime) || !coff_memory_.Get32(&coff_header_.symoff) ||
@@ -165,7 +165,7 @@ bool PeCoffInterface<AddressType>::ParseCoffHeader(uint64_t offset) {
 }
 
 template <typename AddressType>
-bool PeCoffInterface<AddressType>::ParseOptionalHeader(uint64_t offset) {
+bool PeCoffInterfaceImpl<AddressType>::ParseOptionalHeader(uint64_t offset) {
   const uint64_t optional_header_start_offset = offset;
 
   coff_memory_.set_cur_offset(offset);
@@ -269,7 +269,7 @@ bool PeCoffInterface<AddressType>::ParseOptionalHeader(uint64_t offset) {
 }
 
 template <typename AddressType>
-bool PeCoffInterface<AddressType>::ParseSectionHeaders(uint64_t offset) {
+bool PeCoffInterfaceImpl<AddressType>::ParseSectionHeaders(uint64_t offset) {
   const uint16_t num_sections = coff_header_.nsects;
 
   coff_memory_.set_cur_offset(offset);
@@ -304,8 +304,8 @@ bool PeCoffInterface<AddressType>::ParseSectionHeaders(uint64_t offset) {
 }
 
 template <typename AddressType>
-bool PeCoffInterface<AddressType>::GetSectionName(const std::string& parsed_section_name_string,
-                                                  std::string* result) {
+bool PeCoffInterfaceImpl<AddressType>::GetSectionName(const std::string& parsed_section_name_string,
+                                                      std::string* result) {
   uint64_t offset = 0;
   if (!android::base::ParseUint<uint64_t>(parsed_section_name_string.c_str(), &offset)) {
     Log::Error("Failed to parse section name as integer: %s", parsed_section_name_string.c_str());
@@ -330,7 +330,7 @@ bool PeCoffInterface<AddressType>::GetSectionName(const std::string& parsed_sect
 }
 
 template <typename AddressType>
-bool PeCoffInterface<AddressType>::InitSections() {
+bool PeCoffInterfaceImpl<AddressType>::InitSections() {
   for (const auto& section_header : parsed_section_headers_) {
     Section section;
     const std::string header_name(section_header.name.data(), section_header.name.size());
@@ -375,7 +375,7 @@ bool PeCoffInterface<AddressType>::InitSections() {
 }
 
 template <typename AddressType>
-bool PeCoffInterface<AddressType>::InitDebugFrameSection() {
+bool PeCoffInterfaceImpl<AddressType>::InitDebugFrameSection() {
   CHECK(debug_frame_section_data_.has_value());
 
   debug_frame_.reset(new DwarfDebugFrame<AddressType>(memory_));
@@ -395,7 +395,7 @@ bool PeCoffInterface<AddressType>::InitDebugFrameSection() {
 }
 
 template <typename AddressType>
-bool PeCoffInterface<AddressType>::ParseAllHeaders() {
+bool PeCoffInterfaceImpl<AddressType>::ParseAllHeaders() {
   if (!ParseDosHeader(0x0)) {
     return false;
   }
@@ -417,7 +417,7 @@ bool PeCoffInterface<AddressType>::ParseAllHeaders() {
 }
 
 template <typename AddressType>
-bool PeCoffInterface<AddressType>::Init() {
+bool PeCoffInterfaceImpl<AddressType>::Init(int64_t* load_bias) {
   if (!ParseAllHeaders()) {
     return false;
   }
@@ -430,10 +430,15 @@ bool PeCoffInterface<AddressType>::Init() {
     return false;
   }
 
+  if (optional_header_.image_base > static_cast<uint64_t>(std::numeric_limits<int64_t>::max())) {
+    Log::Error("Value of ImageBase in PE/COFF file is too large.");
+    return false;
+  }
+  *load_bias = static_cast<int64_t>(optional_header_.image_base);
   return true;
 }
 
 // Instantiate all of the needed template functions.
-template class PeCoffInterface<uint32_t>;
-template class PeCoffInterface<uint64_t>;
+template class PeCoffInterfaceImpl<uint32_t>;
+template class PeCoffInterfaceImpl<uint64_t>;
 }  // namespace unwindstack

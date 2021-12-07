@@ -26,8 +26,9 @@ template <typename AddressType>
 void FuzzPeCoffInterface(const uint8_t* data, size_t size) {
   std::shared_ptr<unwindstack::Memory> memory =
       unwindstack::Memory::CreateOfflineMemory(data, 0, size);
-  unwindstack::PeCoffInterface<AddressType> pe_coff_interface(memory.get());
-  pe_coff_interface.Init();
+  unwindstack::PeCoffInterfaceImpl<AddressType> pe_coff_interface(memory.get());
+  int64_t load_bias;
+  pe_coff_interface.Init(&load_bias);
 }
 }  // namespace
 
