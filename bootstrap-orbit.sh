@@ -78,11 +78,11 @@ EOF
 fi # IGNORE_SYS_REQ
 
 function check_conan_version_sufficient() {
-  VERSION=$1
-  REQUIRED=$2
+  local VERSION=$1
+  local REQUIRED=$2
 
-  VERSION_MAJOR="$(echo "$VERSION" | cut -d'.' -f1)"
-  REQUIRED_MAJOR="$(echo "$REQUIRED" | cut -d'.' -f1)"
+  local VERSION_MAJOR="$(echo "$VERSION" | cut -d'.' -f1)"
+  local REQUIRED_MAJOR="$(echo "$REQUIRED" | cut -d'.' -f1)"
   if [ "$REQUIRED_MAJOR" -gt "$VERSION_MAJOR" ]; then
     return 1
   fi
@@ -90,8 +90,8 @@ function check_conan_version_sufficient() {
     return 0
   fi
 
-  VERSION_MINOR="$(echo "$VERSION" | cut -d'.' -f2)"
-  REQUIRED_MINOR="$(echo "$REQUIRED" | cut -d'.' -f2)"
+  local VERSION_MINOR="$(echo "$VERSION" | cut -d'.' -f2)"
+  local REQUIRED_MINOR="$(echo "$REQUIRED" | cut -d'.' -f2)"
   if [ "$REQUIRED_MINOR" -gt "$VERSION_MINOR" ]; then
     return 1
   fi
@@ -99,8 +99,8 @@ function check_conan_version_sufficient() {
     return 0
   fi
 
-  VERSION_PATCH="$(echo "$VERSION" | cut -d'.' -f3)"
-  REQUIRED_PATCH="$(echo "$REQUIRED" | cut -d'.' -f3)"
+  local VERSION_PATCH="$(echo "$VERSION" | cut -d'.' -f3)"
+  local REQUIRED_PATCH="$(echo "$REQUIRED" | cut -d'.' -f3)"
   if [ "$REQUIRED_PATCH" -gt "$VERSION_PATCH" ]; then
     return 1
   fi
