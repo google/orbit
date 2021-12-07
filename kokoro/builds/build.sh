@@ -167,12 +167,12 @@ if [ -n "$1" ]; then
     fi
 
     echo "Invoking conan lock."
+    RET=0
     conan lock create "${REPO_ROOT}/conanfile.py" --user=orbitdeps --channel=stable \
       ${BUILD_OPTION} \
       --lockfile="${REPO_ROOT}/third_party/conan/lockfiles/base.lock" -pr ${CONAN_PROFILE} \
       -o crashdump_server="$CRASHDUMP_SERVER" $PACKAGING_OPTION \
-      --lockfile-out="${REPO_ROOT}/build/conan.lock" || true
-    RET=$?
+      --lockfile-out="${REPO_ROOT}/build/conan.lock" || RET=$?
   done
 
   RET=1
@@ -186,14 +186,14 @@ if [ -n "$1" ]; then
     fi
 
     echo "Installs the requirements (conan install)."
+    RET=0
     conan install -if "${REPO_ROOT}/build/" \
           ${BUILD_OPTION} \
           --lockfile="${REPO_ROOT}/build/conan.lock" \
-          "${REPO_ROOT}" | sed 's/^crashdump_server=.*$/crashump_server=<<hidden>>/' || true
-    echo "Starting the build (conan build)."
-    RET=${PIPESTATUS[0]}
+          "${REPO_ROOT}" | sed 's/^crashdump_server=.*$/crashump_server=<<hidden>>/' || RET=${PIPESTATUS[0]}
   done
 
+  echo "Starting the build (conan build)."
   conan build -bf "${REPO_ROOT}/build/" "${REPO_ROOT}"
 
   if [[ $CONAN_PROFILE != "iwyu" && $CONAN_PROFILE != "coverage_clang9" ]]; then
