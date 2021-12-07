@@ -7,11 +7,11 @@ found in the LICENSE file.
 import logging
 import os
 
-import pywinauto
+from typing import List, Iterable
 from pywinauto.application import Application
 from pywinauto.keyboard import send_keys
 
-from core.orbit_e2e import E2ETestCase, wait_for_condition
+from core.orbit_e2e import E2ETestCase, OrbitE2EError, wait_for_condition
 
 
 def _wait_for_main_window(application: Application):
@@ -79,6 +79,44 @@ class LoadCapture(E2ETestCase):
             self.find_control('Window', 'Error while loading capture')
             ok_button = self.find_control('Button', 'OK')
             ok_button.click_input()
+
+
+class LoadLatestCapture(E2ETestCase):
+    """
+    Opens the most recent capture that matches the first given `filter_strings`. The filter strings get processed in
+    order, and the next filter string is used if no capture was found for a particular string. Also it waits until the
+    capture is loaded.
+
+    It raises an exception if no capture was found at all.
+    """
+
+    def _execute(self, filter_strings: str or Iterable[str]):
+        if isinstance(filter_strings, str):
+            filter_strings = [filter_strings]
+        connect_radio = self.find_control('RadioButton', 'LoadCapture')
+        connect_radio.click_input()
+
+        filter_capture_files = self.find_control('Edit', 'FilterCaptureFiles')
+        succeeded = False
+        for filter_string in filter_strings:
+            filter_capture_files.set_edit_text(filter_string)
+
+            capture_file_list = self.find_control('Table', 'CaptureFileList')
+            try:
+                wait_for_condition(lambda: capture_file_list.item_count() > 0, 30)
+            except OrbitE2EError:
+                continue
+            succeeded = True
+            capture_file_list.children(control_type='DataItem')[0].double_click_input()
+
+            # Unless the file does not exist, Orbit's main window will open and contain the "Loading capture" dialog.
+            _wait_for_main_window(self.suite.application)
+            # As there is a new top window (Orbit main window), we need to update the top window.
+            self.suite.top_window(force_update=True)
+            break
+
+        if not succeeded:
+            raise OrbitE2EError(f'Did not find any capture in filter strings: "{filter_strings}"')
 
 
 class ConnectToStadiaInstance(E2ETestCase):
