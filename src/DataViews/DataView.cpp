@@ -110,6 +110,13 @@ void DataView::OnContextMenu(const std::string& action, int /*menu_index*/,
              action == kMenuActionJumpToMin || action == kMenuActionJumpToMax) {
     OnJumpToRequested(action, item_indices);
 
+  } else if (action == kMenuActionLoadPreset) {
+    OnLoadPresetRequested(item_indices);
+  } else if (action == kMenuActionDeletePreset) {
+    OnDeletePresetRequested(item_indices);
+  } else if (action == kMenuActionShowInExplorer) {
+    OnShowInExplorerRequested(item_indices);
+
   } else if (action == kMenuActionExportToCsv) {
     OnExportToCsvRequested();
   } else if (action == kMenuActionCopySelection) {
