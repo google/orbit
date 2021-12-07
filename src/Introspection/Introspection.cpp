@@ -27,8 +27,9 @@ ABSL_CONST_INIT static absl::Mutex global_introspection_mutex(absl::kConstInit);
 ABSL_CONST_INIT static IntrospectionListener* global_introspection_listener
     ABSL_GUARDED_BY(global_introspection_mutex) = nullptr;
 
-// Tracing uses the same function table used by the Orbit API, but specifies its own functions.
-orbit_api_v2 g_orbit_api_v2;
+// Introspection uses the same function table used by the Orbit API, but specifies its own
+// functions.
+orbit_api_v2 g_orbit_api;
 
 namespace orbit_introspection {
 
@@ -198,21 +199,21 @@ void orbit_api_track_double(const char* name, double value, orbit_api_color colo
 namespace orbit_introspection {
 
 void InitializeIntrospection() {
-  if (g_orbit_api_v2.initialized != 0) return;
-  g_orbit_api_v2.start = &orbit_api_start_v1;
-  g_orbit_api_v2.stop = &orbit_api_stop;
-  g_orbit_api_v2.start_async = &orbit_api_start_async_v1;
-  g_orbit_api_v2.stop_async = &orbit_api_stop_async;
-  g_orbit_api_v2.async_string = &orbit_api_async_string;
-  g_orbit_api_v2.track_int = &orbit_api_track_int;
-  g_orbit_api_v2.track_int64 = &orbit_api_track_int64;
-  g_orbit_api_v2.track_uint = &orbit_api_track_uint;
-  g_orbit_api_v2.track_uint64 = &orbit_api_track_uint64;
-  g_orbit_api_v2.track_float = &orbit_api_track_float;
-  g_orbit_api_v2.track_double = &orbit_api_track_double;
+  if (g_orbit_api.initialized != 0) return;
+  g_orbit_api.start = &orbit_api_start_v1;
+  g_orbit_api.stop = &orbit_api_stop;
+  g_orbit_api.start_async = &orbit_api_start_async_v1;
+  g_orbit_api.stop_async = &orbit_api_stop_async;
+  g_orbit_api.async_string = &orbit_api_async_string;
+  g_orbit_api.track_int = &orbit_api_track_int;
+  g_orbit_api.track_int64 = &orbit_api_track_int64;
+  g_orbit_api.track_uint = &orbit_api_track_uint;
+  g_orbit_api.track_uint64 = &orbit_api_track_uint64;
+  g_orbit_api.track_float = &orbit_api_track_float;
+  g_orbit_api.track_double = &orbit_api_track_double;
   std::atomic_thread_fence(std::memory_order_release);
-  g_orbit_api_v2.initialized = 1;
-  g_orbit_api_v2.enabled = 1;
+  g_orbit_api.initialized = 1;
+  g_orbit_api.enabled = 1;
 }
 
 }  // namespace orbit_introspection
