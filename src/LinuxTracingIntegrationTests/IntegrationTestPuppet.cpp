@@ -22,9 +22,9 @@
 // This executable is used by LinuxTracingIntegrationTest to test the generation of specific
 // perf_event_open events. The behavior is controlled by commands sent on standard input.
 
-// Hack: Don't use ORBIT_API_INSTANTIATE as it would redefine `struct orbit_api_v1 g_orbit_api_v1`,
+// Hack: Don't use ORBIT_API_INSTANTIATE as it would redefine `struct orbit_api_v2 g_orbit_api_v2`,
 // which is already defined by the Introspection target.
-void* orbit_api_get_function_table_address_v1() { return &g_orbit_api_v1; }
+void* orbit_api_get_function_table_address_v2() { return &g_orbit_api_v2; }
 
 namespace orbit_linux_tracing_integration_tests {
 

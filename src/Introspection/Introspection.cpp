@@ -28,7 +28,7 @@ ABSL_CONST_INIT static IntrospectionListener* global_introspection_listener
     ABSL_GUARDED_BY(global_introspection_mutex) = nullptr;
 
 // Tracing uses the same function table used by the Orbit API, but specifies its own functions.
-orbit_api_v1 g_orbit_api_v1;
+orbit_api_v2 g_orbit_api_v2;
 
 namespace orbit_introspection {
 
@@ -118,14 +118,16 @@ void orbit_api_stop() {
   IntrospectionListener::DeferApiEventProcessing(api_scope_stop);
 }
 
-void orbit_api_start_async(const char* name, uint64_t id, orbit_api_color color) {
+void orbit_api_start_async_v1(const char* name, uint64_t id, orbit_api_color color,
+                              uint64_t caller_address) {
   uint32_t process_id = orbit_base::GetCurrentProcessId();
   uint32_t thread_id = orbit_base::GetCurrentThreadId();
   uint64_t timestamp_ns = orbit_base::CaptureTimestampNs();
-  uint64_t return_address = ORBIT_GET_CALLER_PC();
+  if (caller_address == kOrbitCallerAddressAuto) {
+    caller_address = ORBIT_GET_CALLER_PC();
+  }
   orbit_api::ApiScopeStartAsync api_scope_start_async{process_id, thread_id, timestamp_ns,  name,
-                                                      id,         color,     return_address};
-
+                                                      id,         color,     caller_address};
   IntrospectionListener::DeferApiEventProcessing(api_scope_start_async);
 }
 
@@ -196,21 +198,21 @@ void orbit_api_track_double(const char* name, double value, orbit_api_color colo
 namespace orbit_introspection {
 
 void InitializeIntrospection() {
-  if (g_orbit_api_v1.initialized != 0) return;
-  g_orbit_api_v1.start = &orbit_api_start_v1;
-  g_orbit_api_v1.stop = &orbit_api_stop;
-  g_orbit_api_v1.start_async = &orbit_api_start_async;
-  g_orbit_api_v1.stop_async = &orbit_api_stop_async;
-  g_orbit_api_v1.async_string = &orbit_api_async_string;
-  g_orbit_api_v1.track_int = &orbit_api_track_int;
-  g_orbit_api_v1.track_int64 = &orbit_api_track_int64;
-  g_orbit_api_v1.track_uint = &orbit_api_track_uint;
-  g_orbit_api_v1.track_uint64 = &orbit_api_track_uint64;
-  g_orbit_api_v1.track_float = &orbit_api_track_float;
-  g_orbit_api_v1.track_double = &orbit_api_track_double;
+  if (g_orbit_api_v2.initialized != 0) return;
+  g_orbit_api_v2.start = &orbit_api_start_v1;
+  g_orbit_api_v2.stop = &orbit_api_stop;
+  g_orbit_api_v2.start_async = &orbit_api_start_async_v1;
+  g_orbit_api_v2.stop_async = &orbit_api_stop_async;
+  g_orbit_api_v2.async_string = &orbit_api_async_string;
+  g_orbit_api_v2.track_int = &orbit_api_track_int;
+  g_orbit_api_v2.track_int64 = &orbit_api_track_int64;
+  g_orbit_api_v2.track_uint = &orbit_api_track_uint;
+  g_orbit_api_v2.track_uint64 = &orbit_api_track_uint64;
+  g_orbit_api_v2.track_float = &orbit_api_track_float;
+  g_orbit_api_v2.track_double = &orbit_api_track_double;
   std::atomic_thread_fence(std::memory_order_release);
-  g_orbit_api_v1.initialized = 1;
-  g_orbit_api_v1.enabled = 1;
+  g_orbit_api_v2.initialized = 1;
+  g_orbit_api_v2.enabled = 1;
 }
 
 }  // namespace orbit_introspection

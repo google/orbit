@@ -219,7 +219,8 @@
 #define ORBIT_START(name) \
   ORBIT_CALL(start, name, kOrbitColorAuto, kOrbitDefaultGroupId, kOrbitCallerAddressAuto)
 #define ORBIT_STOP() ORBIT_CALL(stop, )
-#define ORBIT_START_ASYNC(name, id) ORBIT_CALL(start_async, name, id, kOrbitColorAuto)
+#define ORBIT_START_ASYNC(name, id) \
+  ORBIT_CALL(start_async, name, id, kOrbitColorAuto, kOrbitCallerAddressAuto)
 #define ORBIT_STOP_ASYNC(id) ORBIT_CALL(stop_async, id)
 #define ORBIT_ASYNC_STRING(string, id) ORBIT_CALL(async_string, string, id, kOrbitColorAuto)
 #define ORBIT_INT(name, value) ORBIT_CALL(track_int, name, value, kOrbitColorAuto)
@@ -231,7 +232,8 @@
 
 #define ORBIT_START_WITH_COLOR(name, color) \
   ORBIT_CALL(start, name, color, kOrbitDefaultGroupId, kOrbitCallerAddressAuto)
-#define ORBIT_START_ASYNC_WITH_COLOR(name, id, color) ORBIT_CALL(start_async, name, id, color)
+#define ORBIT_START_ASYNC_WITH_COLOR(name, id, color) \
+  ORBIT_CALL(start_async, name, id, color, kOrbitCallerAddressAuto)
 #define ORBIT_ASYNC_STRING_WITH_COLOR(string, id, color) ORBIT_CALL(async_string, string, id, color)
 #define ORBIT_INT_WITH_COLOR(name, value, color) ORBIT_CALL(track_int, name, value, color)
 #define ORBIT_INT64_WITH_COLOR(name, value, color) ORBIT_CALL(track_int64, name, value, color)
@@ -334,15 +336,16 @@ typedef enum {
 enum { kOrbitDefaultGroupId = 0ULL };
 enum { kOrbitCallerAddressAuto = 0ULL };
 
-enum { kOrbitApiVersion = 1 };
+enum { kOrbitApiVersion = 2 };
 
-struct orbit_api_v1 {
+struct orbit_api_v2 {
   uint32_t enabled;
   uint32_t initialized;
   void (*start)(const char* name, orbit_api_color color, uint64_t group_id,
                 uint64_t caller_address);
   void (*stop)();
-  void (*start_async)(const char* name, uint64_t id, orbit_api_color color);
+  void (*start_async)(const char* name, uint64_t id, orbit_api_color color,
+                      uint64_t caller_address);
   void (*stop_async)(uint64_t id);
   void (*async_string)(const char* str, uint64_t id, orbit_api_color color);
   void (*track_int)(const char* name, int value, orbit_api_color color);
@@ -353,13 +356,13 @@ struct orbit_api_v1 {
   void (*track_double)(const char* name, double value, orbit_api_color color);
 };
 
-extern struct orbit_api_v1 g_orbit_api_v1;
-extern ORBIT_EXPORT void* orbit_api_get_function_table_address_v1();
+extern struct orbit_api_v2 g_orbit_api_v2;
+extern ORBIT_EXPORT void* orbit_api_get_function_table_address_v2();
 
 // User needs to place "ORBIT_API_INSTANTIATE" in an implementation file.
 #define ORBIT_API_INSTANTIATE         \
-  struct orbit_api_v1 g_orbit_api_v1; \
-  void* orbit_api_get_function_table_address_v1() { return &g_orbit_api_v1; }
+  struct orbit_api_v2 g_orbit_api_v2; \
+  void* orbit_api_get_function_table_address_v2() { return &g_orbit_api_v2; }
 
 #ifndef __cplusplus
 // In C, `inline` alone doesn't generate an out-of-line definition, causing a linker error if the
@@ -368,15 +371,15 @@ static
 #endif
     inline bool
     orbit_api_active() {
-  bool initialized = g_orbit_api_v1.initialized;
+  bool initialized = g_orbit_api_v2.initialized;
   ORBIT_THREAD_FENCE_ACQUIRE();
-  return initialized && g_orbit_api_v1.enabled;
+  return initialized && g_orbit_api_v2.enabled;
 }
 
 #define ORBIT_CALL(function_name, ...)                      \
   do {                                                      \
-    if (orbit_api_active() && g_orbit_api_v1.function_name) \
-      g_orbit_api_v1.function_name(__VA_ARGS__);            \
+    if (orbit_api_active() && g_orbit_api_v2.function_name) \
+      g_orbit_api_v2.function_name(__VA_ARGS__);            \
   } while (0)
 
 #ifdef __cplusplus
