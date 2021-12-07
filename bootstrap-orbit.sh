@@ -77,6 +77,36 @@ EOF
   fi # which dpkg-query
 fi # IGNORE_SYS_REQ
 
+function check_conan_version_sufficient() {
+  VERSION=$1
+  REQUIRED=$2
+
+  VERSION_MAJOR="$(echo "$VERSION" | cut -d'.' -f1)"
+  REQUIRED_MAJOR="$(echo "$REQUIRED" | cut -d'.' -f1)"
+  if [ "$REQUIRED_MAJOR" -gt "$VERSION_MAJOR" ]; then
+    return 1
+  fi
+  if [ "$REQUIRED_MAJOR" -lt "$VERSION_MAJOR" ]; then
+    return 0
+  fi
+
+  VERSION_MINOR="$(echo "$VERSION" | cut -d'.' -f2)"
+  REQUIRED_MINOR="$(echo "$REQUIRED" | cut -d'.' -f2)"
+  if [ "$REQUIRED_MINOR" -gt "$VERSION_MINOR" ]; then
+    return 1
+  fi
+  if [ "$REQUIRED_MINOR" -lt "$VERSION_MINOR" ]; then
+    return 0
+  fi
+
+  VERSION_PATCH="$(echo "$VERSION" | cut -d'.' -f3)"
+  REQUIRED_PATCH="$(echo "$REQUIRED" | cut -d'.' -f3)"
+  if [ "$REQUIRED_PATCH" -gt "$VERSION_PATCH" ]; then
+    return 1
+  fi
+  return 0
+}
+
 echo "Checking if conan is available..."
 which conan >/dev/null
 if [ $? -ne 0 ]; then
@@ -98,7 +128,8 @@ else
   echo "Found conan. Checking version..."
   CONAN_VERSION="$(conan --version | cut -d' ' -f3)"
   
-  if [[ "$CONAN_VERSION" < "$CONAN_VERSION_REQUIRED" ]]; then
+  check_conan_version_sufficient "$CONAN_VERSION" "$CONAN_VERSION_REQUIRED"
+  if [ $? -ne 0 ]; then
     echo "Your conan version $CONAN_VERSION is too old. I will try to update..."
     pip3 install --upgrade --user conan=="$CONAN_VERSION_REQUIRED"
     if [ $? -ne 0 ]; then
@@ -108,7 +139,7 @@ else
     fi
     echo "Conan updated finished."
   else
-    echo "Conan's version fulfills the requirements. Continuing..."
+    echo "Conan's version $CONAN_VERSION fulfills the requirements. Continuing..."
   fi
 fi
 
