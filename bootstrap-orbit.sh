@@ -4,6 +4,8 @@
 # Use of this source code is governed by a BSD-style license that can be
 # found in the LICENSE file.
 
+CONAN_VERSION_REQUIRED="1.40.3"
+
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
 
 OPTIONS=$(getopt -o "" -l "force-public-remotes,assume-linux,assume-windows,ignore-system-requirements,dont-compile" -- "$@")
@@ -79,7 +81,7 @@ echo "Checking if conan is available..."
 which conan >/dev/null
 if [ $? -ne 0 ]; then
   echo "Couldn't find conan. Trying to install via pip..."
-  pip3 install --user conan==1.40.3 || exit $?
+  pip3 install --user conan=="$CONAN_VERSION_REQUIRED" || exit $?
 
   which conan >/dev/null
   if [ $? -ne 0 ]; then
@@ -95,18 +97,13 @@ if [ $? -ne 0 ]; then
 else
   echo "Found conan. Checking version..."
   CONAN_VERSION="$(conan --version | cut -d' ' -f3)"
-  CONAN_VERSION_MAJOR="$(echo "$CONAN_VERSION" | cut -d'.' -f1)"
-  CONAN_VERSION_MINOR="$(echo "$CONAN_VERSION" | cut -d'.' -f2)"
-
-  CONAN_VERSION_MAJOR_REQUIRED=1
-  CONAN_VERSION_MINOR_MIN=36
-
-  if [ "$CONAN_VERSION_MAJOR" -eq $CONAN_VERSION_MAJOR_REQUIRED -a "$CONAN_VERSION_MINOR" -lt $CONAN_VERSION_MINOR_MIN ]; then
+  
+  if [[ "$CONAN_VERSION" < "$CONAN_VERSION_REQUIRED" ]]; then
     echo "Your conan version $CONAN_VERSION is too old. I will try to update..."
-    pip3 install --upgrade --user conan==1.40.3
+    pip3 install --upgrade --user conan=="$CONAN_VERSION_REQUIRED"
     if [ $? -ne 0 ]; then
       echo "The upgrade of your conan installation failed. Probably because conan was not installed by this script."
-      echo "Please manually update conan to at least version $CONAN_VERSION_MAJOR_REQUIRED.$CONAN_VERSION_MINOR_MIN."
+      echo "Please manually update conan to at least version $CONAN_VERSION_REQUIRED."
       exit 2
     fi
     echo "Conan updated finished."
