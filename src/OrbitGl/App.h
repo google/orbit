@@ -303,7 +303,7 @@ class OrbitApp final : public DataViewFactory,
     clipboard_callback_ = std::move(callback);
   }
   using SecureCopyCallback =
-      std::function<ErrorMessageOr<void>(std::string_view, std::string_view)>;
+      std::function<orbit_base::Future<ErrorMessageOr<void>>(std::string_view, std::string_view)>;
   void SetSecureCopyCallback(SecureCopyCallback callback) {
     secure_copy_callback_ = std::move(callback);
   }

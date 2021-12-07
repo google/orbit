@@ -1593,9 +1593,9 @@ orbit_base::Future<ErrorMessageOr<std::filesystem::path>> OrbitApp::RetrieveModu
                                                   {absl::GetFlag(FLAGS_instance_symbols_folder)});
       });
 
-  auto download_file =
-      [this, module_file_path, scoped_status = std::move(scoped_status)](
-          ErrorMessageOr<std::string> result) mutable -> ErrorMessageOr<std::filesystem::path> {
+  auto download_file = [this, module_file_path, scoped_status = std::move(scoped_status)](
+                           ErrorMessageOr<std::string> result) mutable
+      -> orbit_base::Future<ErrorMessageOr<std::filesystem::path>> {
     if (result.has_error()) return result.error();
 
     const std::string& debug_file_path = result.value();
@@ -1608,17 +1608,24 @@ orbit_base::Future<ErrorMessageOr<std::filesystem::path>> OrbitApp::RetrieveModu
         absl::StrFormat(R"(Copying debug info file for "%s" from remote: "%s"...)",
                         module_file_path, debug_file_path));
     SCOPED_TIMED_LOG("Copying \"%s\"", debug_file_path);
-    auto scp_result = secure_copy_callback_(debug_file_path, local_debug_file_path.string());
+    orbit_base::Future<ErrorMessageOr<void>> copy_result =
+        secure_copy_callback_(debug_file_path, local_debug_file_path.string());
 
-    if (scp_result.has_error()) {
-      return ErrorMessage{absl::StrFormat("Could not copy debug info file from the remote: %s",
-                                          scp_result.error().message())};
-    }
-
-    return local_debug_file_path;
+    orbit_base::ImmediateExecutor immediate_executor{};
+    return copy_result.Then(
+        &immediate_executor,
+        [local_debug_file_path](
+            ErrorMessageOr<void> sftp_result) -> ErrorMessageOr<std::filesystem::path> {
+          if (sftp_result.has_error()) {
+            return ErrorMessage{
+                absl::StrFormat("Could not copy debug info file from the remote: %s",
+                                sftp_result.error().message())};
+          }
+          return local_debug_file_path;
+        });
   };
 
-  return check_file_on_remote.Then(main_thread_executor_, std::move(download_file));
+  return UnwrapFuture(check_file_on_remote.Then(main_thread_executor_, std::move(download_file)));
 }
 
 orbit_base::Future<void> OrbitApp::RetrieveModulesAndLoadSymbols(

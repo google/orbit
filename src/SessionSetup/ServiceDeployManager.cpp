@@ -300,20 +300,18 @@ outcome::result<void> ServiceDeployManager::CopyOrbitServicePackage() {
   return outcome::success();
 }
 
-ErrorMessageOr<void> ServiceDeployManager::CopyFileToLocal(std::string source,
-                                                           std::string destination) {
+orbit_base::Future<ErrorMessageOr<void>> ServiceDeployManager::CopyFileToLocal(
+    std::string source, std::string destination) {
   orbit_base::Promise<ErrorMessageOr<void>> promise;
   auto future = promise.GetFuture();
 
-  DeferToBackgroundThreadAndWait(
-      this, [this, source = std::move(source), destination = std::move(destination),
-             promise = std::move(promise)]() mutable {
-        promise.SetResult(CopyFileToLocalImpl(source, destination));
-      });
+  QMetaObject::invokeMethod(this,
+                            [this, source = std::move(source), destination = std::move(destination),
+                             promise = std::move(promise)]() mutable {
+                              promise.SetResult(CopyFileToLocalImpl(source, destination));
+                            });
 
-  if (!future.IsFinished()) return ErrorMessage{"Copy operation was aborted."};
-
-  return future.Get();
+  return future;
 }
 
 ErrorMessageOr<void> ServiceDeployManager::CopyFileToLocalImpl(std::string_view source,

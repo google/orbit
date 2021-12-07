@@ -20,6 +20,7 @@
 
 #include "DeploymentConfigurations.h"
 #include "MetricsUploader/MetricsUploader.h"
+#include "OrbitBase/Future.h"
 #include "OrbitBase/Result.h"
 #include "OrbitSsh/Context.h"
 #include "OrbitSsh/Credentials.h"
@@ -49,7 +50,8 @@ class ServiceDeployManager : public QObject {
       orbit_metrics_uploader::MetricsUploader* metrics_uploader = nullptr);
 
   // This method copies remote source file to local destination.
-  ErrorMessageOr<void> CopyFileToLocal(std::string source, std::string destination);
+  orbit_base::Future<ErrorMessageOr<void>> CopyFileToLocal(std::string source,
+                                                           std::string destination);
 
   void Shutdown();
   void Cancel();
