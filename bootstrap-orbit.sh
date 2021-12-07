@@ -128,8 +128,7 @@ else
   echo "Found conan. Checking version..."
   CONAN_VERSION="$(conan --version | cut -d' ' -f3)"
   
-  check_conan_version_sufficient "$CONAN_VERSION" "$CONAN_VERSION_REQUIRED"
-  if [ $? -ne 0 ]; then
+  if ! check_conan_version_sufficient "$CONAN_VERSION" "$CONAN_VERSION_REQUIRED"; then
     echo "Your conan version $CONAN_VERSION is too old. I will try to update..."
     pip3 install --upgrade --user conan=="$CONAN_VERSION_REQUIRED"
     if [ $? -ne 0 ]; then
