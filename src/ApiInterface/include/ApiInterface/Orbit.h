@@ -385,6 +385,8 @@ ORBIT_ASSERT_API_LAYOUT(offsetof(struct orbit_api_v2, track_double) == 88);
 extern struct orbit_api_v2 g_orbit_api;
 
 // User needs to place "ORBIT_API_INSTANTIATE" in an implementation file.
+// We use a different name per platform for the "orbit_api_get_function_table_address..." function,
+// so that we can easily distinguish what platform the binary was built for.
 #ifdef _WIN32
 extern ORBIT_EXPORT void* orbit_api_get_function_table_address_win_v2();
 

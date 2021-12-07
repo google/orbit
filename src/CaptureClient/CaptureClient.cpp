@@ -94,6 +94,7 @@ Future<ErrorMessageOr<CaptureListener::CaptureOutcome>> CaptureClient::Capture(
 // the Api after having injected liborbit.so.
 [[nodiscard]] static std::vector<ApiFunction> FindApiFunctions(
     const orbit_client_data::ModuleManager& module_manager) {
+  // We have a different function name for each supported platform.
   static const std::vector<std::string> kOrbitApiGetFunctionTableAddressPrefixes{
       orbit_api_utils::kOrbitApiGetFunctionTableAddressPrefix,
       orbit_api_utils::kOrbitApiGetFunctionTableAddressWinPrefix};
