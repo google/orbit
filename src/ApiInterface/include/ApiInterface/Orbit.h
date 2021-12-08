@@ -38,7 +38,7 @@
 // To integrate the manual instrumentation API in your code base, simply include this header file
 // and place the ORBIT_API_INSTANTIATE macro in an implementation file. Orbit will automatically
 // deploy and dynamically load liborbit.so into the target process. Orbit will then write the proper
-// function addresses into the "g_orbit_api_v<N>" table.
+// function addresses into the "g_orbit_api" table.
 //
 // NOTE: To enable manual instrumentation, please make sure that:
 //       1. The "Enable Orbit Api in target" checkbox is ticked in the "Capture Options" dialog.
@@ -356,13 +356,13 @@ struct orbit_api_v2 {
   void (*track_double)(const char* name, double value, orbit_api_color color);
 };
 
-extern struct orbit_api_v2 g_orbit_api_v2;
+extern struct orbit_api_v2 g_orbit_api;
 extern ORBIT_EXPORT void* orbit_api_get_function_table_address_v2();
 
 // User needs to place "ORBIT_API_INSTANTIATE" in an implementation file.
-#define ORBIT_API_INSTANTIATE         \
-  struct orbit_api_v2 g_orbit_api_v2; \
-  void* orbit_api_get_function_table_address_v2() { return &g_orbit_api_v2; }
+#define ORBIT_API_INSTANTIATE      \
+  struct orbit_api_v2 g_orbit_api; \
+  void* orbit_api_get_function_table_address_v2() { return &g_orbit_api; }
 
 #ifndef __cplusplus
 // In C, `inline` alone doesn't generate an out-of-line definition, causing a linker error if the
@@ -371,15 +371,14 @@ static
 #endif
     inline bool
     orbit_api_active() {
-  bool initialized = g_orbit_api_v2.initialized;
+  bool initialized = g_orbit_api.initialized;
   ORBIT_THREAD_FENCE_ACQUIRE();
-  return initialized && g_orbit_api_v2.enabled;
+  return initialized && g_orbit_api.enabled;
 }
 
-#define ORBIT_CALL(function_name, ...)                      \
-  do {                                                      \
-    if (orbit_api_active() && g_orbit_api_v2.function_name) \
-      g_orbit_api_v2.function_name(__VA_ARGS__);            \
+#define ORBIT_CALL(function_name, ...)                                                           \
+  do {                                                                                           \
+    if (orbit_api_active() && g_orbit_api.function_name) g_orbit_api.function_name(__VA_ARGS__); \
   } while (0)
 
 #ifdef __cplusplus
