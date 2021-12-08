@@ -2,6 +2,38 @@
 # Use of this source code is governed by a BSD-style license that can be
 # found in the LICENSE file.
 
+$conan_version_required = "1.40.3"
+
+function Check-Conan-Version-Sufficient {
+  $version = $args[0]
+  $required = $args[1]
+
+  $version_major = $version.split(".")[0] -as [int]
+  $required_major = $required.split(".")[0] -as [int]
+  if ($required_major -gt $version_major) {
+    return 1
+  }
+  if ($required_major -lt $version_major) {
+    return 0
+  }
+
+  $version_minor = $version.split(".")[1] -as [int]
+  $required_minor = $required.split(".")[1] -as [int]
+  if ($required_minor -gt $version_minor) {
+    return 1
+  }
+  if ($required_minor -lt $version_minor) {
+    return 0
+  }
+
+  $version_patch = $version.split(".")[2] -as [int]
+  $required_patch = $required.split(".")[2] -as [int]
+  if ($required_patch -gt $version_patch) {
+    return 1
+  }
+  return 0
+}
+
 $conan = Get-Command -ErrorAction Ignore conan
 
 if (!$conan) {
@@ -18,7 +50,7 @@ it available in the path.
 "@
   }
 
-  & $pip3.Path install conan==1.40.3
+  & $pip3.Path install conan==$conan_version_required
   if ($LastExitCode -ne 0) {
     Throw "Error while installing conan via pip3."
   }
@@ -36,21 +68,16 @@ You can call 'pip3 show -f conan' to figure out where conan.exe was placed.
   Write-Host "Conan found. Checking version..."
 
   $conan_version = (& $conan.Path --version).split(" ")[2]
-  $conan_version_major = $conan_version.split(".")[0] -as [int]
-  $conan_version_minor = $conan_version.split(".")[1] -as [int]
 
-  $conan_version_major_required = 1
-  $conan_version_minor_min = 36
-
-  if ($conan_version_major -eq $conan_version_major_required -and $conan_version_minor -lt $conan_version_minor_min) {
+  $sufficient = Check-Conan-Version-Sufficient $conan_version $conan_version_required
+  if ($sufficient -ne 0) {
     Write-Host "Your conan version $conan_version is too old. Let's try to update it."
-
     Try {
       $pip3 = Get-Command pip3
-      & $pip3.Path install --upgrade conan==1.40.3
+      & $pip3.Path install --upgrade conan==$conan_version_required
     } Catch {
       Throw "Error while upgrading conan via pip3. Probably you have conan installed differently." + 
-            " Please manually update conan to a at least version $conan_version_major_required.$conan_version_minor_min."
+            " Please manually update conan to a at least version $conan_version_required"
     }
 
     Write-Host "Successfully updated conan!"
