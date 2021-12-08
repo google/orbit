@@ -45,8 +45,10 @@ struct orbit_api_v1 {
   void (*track_double)(const char* name, double value, orbit_api_color color);
 };
 
-// And these are the equivalents built on Linux of the result of building Orbit.h on Windows. They
-// include previous versions, but also the current version.
+// And these are the versions that resulted from building Orbit.h on Windows, but defined on Linux
+// in a way that yields the same result. They include previous versions, but also the current
+// version, because we want the Windows layout to be available to us in liborbit.so when dealing
+// with a Windows binary running on Wine.
 
 struct orbit_api_win_v2 {
   uint32_t enabled;
