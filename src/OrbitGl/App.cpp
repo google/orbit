@@ -1607,20 +1607,25 @@ orbit_base::Future<ErrorMessageOr<std::filesystem::path>> OrbitApp::RetrieveModu
     scoped_status.UpdateMessage(
         absl::StrFormat(R"(Copying debug info file for "%s" from remote: "%s"...)",
                         module_file_path, debug_file_path));
-    SCOPED_TIMED_LOG("Copying \"%s\"", debug_file_path);
+    const std::chrono::time_point<std::chrono::steady_clock> copy_begin =
+        std::chrono::steady_clock::now();
+    LOG("Copying \"%s\" started", debug_file_path);
     orbit_base::Future<ErrorMessageOr<void>> copy_result =
         secure_copy_callback_(debug_file_path, local_debug_file_path.string());
 
     orbit_base::ImmediateExecutor immediate_executor{};
     return copy_result.Then(
         &immediate_executor,
-        [local_debug_file_path](
-            ErrorMessageOr<void> sftp_result) -> ErrorMessageOr<std::filesystem::path> {
+        [debug_file_path, local_debug_file_path, scoped_status = std::move(scoped_status),
+         copy_begin](ErrorMessageOr<void> sftp_result) -> ErrorMessageOr<std::filesystem::path> {
           if (sftp_result.has_error()) {
             return ErrorMessage{
                 absl::StrFormat("Could not copy debug info file from the remote: %s",
                                 sftp_result.error().message())};
           }
+          const auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(
+              std::chrono::steady_clock::now() - copy_begin);
+          LOG("Copying \"%s\" took %.3f ms", debug_file_path, duration.count());
           return local_debug_file_path;
         });
   };
