@@ -9,10 +9,16 @@
 
 namespace orbit_api_utils {
 
-// This is the prefix of the function declared in Orbit.h that we need to call in the tracee after
-// having loaded liborbit.so into it.
+// These are the possible prefixes, depending on the platform, of the function declared in Orbit.h
+// that we need to call in the tracee after having loaded liborbit.so into it.
+
+// This is the prefix on Linux.
 static const std::string kOrbitApiGetFunctionTableAddressPrefix{
     "orbit_api_get_function_table_address_v"};
+
+// This is the prefix on Windows.
+static const std::string kOrbitApiGetFunctionTableAddressWinPrefix{
+    "orbit_api_get_function_table_address_win_v"};
 
 }  // namespace orbit_api_utils
 

@@ -94,20 +94,27 @@ Future<ErrorMessageOr<CaptureListener::CaptureOutcome>> CaptureClient::Capture(
 // the Api after having injected liborbit.so.
 [[nodiscard]] static std::vector<ApiFunction> FindApiFunctions(
     const orbit_client_data::ModuleManager& module_manager) {
+  // We have a different function name for each supported platform.
+  static const std::vector<std::string> kOrbitApiGetFunctionTableAddressPrefixes{
+      orbit_api_utils::kOrbitApiGetFunctionTableAddressPrefix,
+      orbit_api_utils::kOrbitApiGetFunctionTableAddressWinPrefix};
   std::vector<ApiFunction> api_functions;
   for (const ModuleData* module_data : module_manager.GetAllModuleData()) {
-    for (size_t i = 0; i <= kOrbitApiVersion; ++i) {
-      std::string function_name =
-          absl::StrFormat("%s%u", orbit_api_utils::kOrbitApiGetFunctionTableAddressPrefix, i);
-      const FunctionInfo* function_info = module_data->FindFunctionFromPrettyName(function_name);
-      if (function_info == nullptr) continue;
-      ApiFunction api_function;
-      api_function.set_module_path(function_info->module_path());
-      api_function.set_module_build_id(function_info->module_build_id());
-      api_function.set_address(function_info->address());
-      api_function.set_name(function_name);
-      api_function.set_api_version(i);
-      api_functions.emplace_back(api_function);
+    for (const std::string& orbit_api_get_function_table_address_prefix :
+         kOrbitApiGetFunctionTableAddressPrefixes) {
+      for (size_t i = 0; i <= kOrbitApiVersion; ++i) {
+        std::string function_name =
+            absl::StrFormat("%s%u", orbit_api_get_function_table_address_prefix, i);
+        const FunctionInfo* function_info = module_data->FindFunctionFromPrettyName(function_name);
+        if (function_info == nullptr) continue;
+        ApiFunction api_function;
+        api_function.set_module_path(function_info->module_path());
+        api_function.set_module_build_id(function_info->module_build_id());
+        api_function.set_address(function_info->address());
+        api_function.set_name(function_name);
+        api_function.set_api_version(i);
+        api_functions.emplace_back(api_function);
+      }
     }
   }
   return api_functions;
