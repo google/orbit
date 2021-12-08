@@ -6,6 +6,7 @@
 #include <unistd.h>
 
 #include <filesystem>
+#include <optional>
 #include <set>
 #include <thread>
 

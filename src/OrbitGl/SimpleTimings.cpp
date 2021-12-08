@@ -4,7 +4,10 @@
 
 #include "SimpleTimings.h"
 
+#include <stddef.h>
+
 #include <algorithm>
+#include <limits>
 
 namespace orbit_gl {
 SimpleTimings::SimpleTimings(size_t num_timings_to_store)

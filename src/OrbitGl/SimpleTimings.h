@@ -5,8 +5,9 @@
 #ifndef ORBIT_GL_SIMPLE_TIMINGS_H_
 #define ORBIT_GL_SIMPLE_TIMINGS_H_
 
-#include <vector>
+#include <stddef.h>
 
+#include <vector>
 namespace orbit_gl {
 
 class SimpleTimings {
