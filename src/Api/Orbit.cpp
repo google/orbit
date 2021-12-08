@@ -218,18 +218,18 @@ __attribute__((ms_abi)) void orbit_api_track_double_wine(const char* name, doubl
   orbit_api_track_double(name, value, color);
 }
 
-void orbit_api_initialize_wine_v2(orbit_api_win_v2* api_wine_v2) {
-  api_wine_v2->start = &orbit_api_start_wine_v1;
-  api_wine_v2->stop = &orbit_api_stop_wine;
-  api_wine_v2->start_async = &orbit_api_start_async_wine_v1;
-  api_wine_v2->stop_async = &orbit_api_stop_async_wine;
-  api_wine_v2->async_string = &orbit_api_async_string_wine;
-  api_wine_v2->track_int = &orbit_api_track_int_wine;
-  api_wine_v2->track_int64 = &orbit_api_track_int64_wine;
-  api_wine_v2->track_uint = &orbit_api_track_uint_wine;
-  api_wine_v2->track_uint64 = &orbit_api_track_uint64_wine;
-  api_wine_v2->track_float = &orbit_api_track_float_wine;
-  api_wine_v2->track_double = &orbit_api_track_double_wine;
+void orbit_api_initialize_wine_v2(orbit_api_win_v2* api_win_v2) {
+  api_win_v2->start = &orbit_api_start_wine_v1;
+  api_win_v2->stop = &orbit_api_stop_wine;
+  api_win_v2->start_async = &orbit_api_start_async_wine_v1;
+  api_win_v2->stop_async = &orbit_api_stop_async_wine;
+  api_win_v2->async_string = &orbit_api_async_string_wine;
+  api_win_v2->track_int = &orbit_api_track_int_wine;
+  api_win_v2->track_int64 = &orbit_api_track_int64_wine;
+  api_win_v2->track_uint = &orbit_api_track_uint_wine;
+  api_win_v2->track_uint64 = &orbit_api_track_uint64_wine;
+  api_win_v2->track_float = &orbit_api_track_float_wine;
+  api_win_v2->track_double = &orbit_api_track_double_wine;
 }
 
 }  // namespace
@@ -296,8 +296,8 @@ void orbit_api_set_enabled_wine(uint64_t address, uint64_t api_version, bool ena
 
   switch (api_version) {
     case 2: {
-      auto* api_wine = absl::bit_cast<orbit_api_win_v2*>(address);
-      orbit_api_initialize_and_set_enabled(api_wine, &orbit_api_initialize_wine_v2, enabled);
+      auto* api_win = absl::bit_cast<orbit_api_win_v2*>(address);
+      orbit_api_initialize_and_set_enabled(api_win, &orbit_api_initialize_wine_v2, enabled);
     } break;
     default:
       UNREACHABLE();
