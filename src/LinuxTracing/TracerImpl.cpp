@@ -72,22 +72,26 @@ TracerImpl::TracerImpl(
       listener_{listener} {
   CHECK(listener_ != nullptr);
 
-  if (unwinding_method_ != CaptureOptions::kUndefined) {
-    uint32_t stack_dump_size = capture_options.stack_dump_size();
-    if (stack_dump_size > kMaxStackSampleUserSize || stack_dump_size == 0) {
-      ERROR("Invalid sample stack dump size: %u; Reassigning to default: %u", stack_dump_size,
-            kMaxStackSampleUserSize);
+  uint32_t stack_dump_size = capture_options.stack_dump_size();
+  if (stack_dump_size == std::numeric_limits<uint16_t>::max()) {
+    if (unwinding_method_ == CaptureOptions::kDwarf) {
+      LOG("No sample stack dump size was set; Assigning to default: %u", kMaxStackSampleUserSize);
       stack_dump_size = kMaxStackSampleUserSize;
+    } else if (unwinding_method_ == CaptureOptions::kFramePointers) {
+      stack_dump_size = kMaxStackSampleUserSizeFramePointer;
     }
-    stack_dump_size_ = static_cast<uint16_t>(stack_dump_size);
-    std::optional<uint64_t> sampling_period_ns =
-        ComputeSamplingPeriodNs(capture_options.samples_per_second());
-    FAIL_IF(!sampling_period_ns.has_value(), "Invalid sampling rate: %.1f",
-            capture_options.samples_per_second());
-    sampling_period_ns_ = sampling_period_ns.value();
-  } else {
-    sampling_period_ns_ = 0;
+  } else if (stack_dump_size > kMaxStackSampleUserSize || stack_dump_size == 0) {
+    ERROR("Invalid sample stack dump size: %u; Reassigning to default: %u", stack_dump_size,
+          kMaxStackSampleUserSize);
+    stack_dump_size = kMaxStackSampleUserSize;
   }
+  stack_dump_size_ = static_cast<uint16_t>(stack_dump_size);
+  std::optional<uint64_t> sampling_period_ns =
+      ComputeSamplingPeriodNs(capture_options.samples_per_second());
+  if (!sampling_period_ns.has_value()) {
+    sampling_period_ns = 0;
+  }
+  sampling_period_ns_ = sampling_period_ns.value();
 
   instrumented_functions_.reserve(capture_options.instrumented_functions_size());
 
@@ -338,6 +342,10 @@ bool TracerImpl::OpenMmapTask(const std::vector<int32_t>& cpus) {
 
 bool TracerImpl::OpenSampling(const std::vector<int32_t>& cpus) {
   ORBIT_SCOPE_FUNCTION;
+  CHECK(sampling_period_ns_ > 0);
+  CHECK(unwinding_method_ == CaptureOptions::kFramePointers ||
+        unwinding_method_ == CaptureOptions::kDwarf);
+
   std::vector<int> sampling_tracing_fds;
   std::vector<PerfEventRingBuffer> sampling_ring_buffers;
   for (int32_t cpu : cpus) {
@@ -656,8 +664,7 @@ void TracerImpl::Startup() {
   // enough, it doesn't need to have been enabled).
   InitUprobesEventVisitor();
 
-  if (unwinding_method_ == CaptureOptions::kFramePointers ||
-      unwinding_method_ == CaptureOptions::kDwarf) {
+  if (sampling_period_ns_ > 0) {
     if (bool opened = OpenSampling(cpuset_cpus); !opened) {
       perf_event_open_error_details.emplace_back("sampling");
       perf_event_open_errors = true;

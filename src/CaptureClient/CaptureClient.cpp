@@ -144,14 +144,10 @@ ErrorMessageOr<CaptureListener::CaptureOutcome> CaptureClient::CaptureSync(
   CaptureOptions* capture_options = request.mutable_capture_options();
   capture_options->set_trace_context_switches(collect_scheduling_info);
   capture_options->set_pid(process_id);
-  if (samples_per_second == 0) {
-    capture_options->set_unwinding_method(CaptureOptions::kUndefined);
-  } else {
-    capture_options->set_samples_per_second(samples_per_second);
-    capture_options->set_stack_dump_size(stack_dump_size);
-    CHECK(unwinding_method != CaptureOptions::kUndefined);
-    capture_options->set_unwinding_method(unwinding_method);
-  }
+  CHECK(unwinding_method != CaptureOptions::kUndefined);
+  capture_options->set_unwinding_method(unwinding_method);
+  capture_options->set_stack_dump_size(stack_dump_size);
+  capture_options->set_samples_per_second(samples_per_second);
 
   capture_options->set_collect_memory_info(collect_memory_info);
   constexpr const uint64_t kMsToNs = 1'000'000;
