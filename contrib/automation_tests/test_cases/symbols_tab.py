@@ -157,21 +157,23 @@ class LoadAllSymbolsAndVerifyCache(E2ETestCase, DurationDiffMixin):
         self.find_context_menu_item('Load Symbols').click_input()
 
     def _verify_all_modules_are_cached(self, modules: List[Module]):
-        modules = [module for module in modules if module.is_loaded]
-        module_set = set(modules)
-        logging.info('Verifying cache for {num} modules'.format(num=len(module_set)))
+        loaded_modules = [module for module in modules if module.is_loaded]
+        module_set = set(loaded_modules)
+        logging.info('Verifying cache. Found {total} modules in total, {loaded} of which are loaded'.
+                     format(total=len(modules), loaded=len(loaded_modules)))
 
         cached_files = [file for file in os.listdir(CACHE_LOCATION)]
         cached_file_set = set(cached_files)
 
-        for module in modules:
+        for module in loaded_modules:
             expected_filename = module.path.replace("/", "_")
             self.expect_true(expected_filename in cached_file_set,
                              'Module {expected} found in cache'.format(expected=expected_filename))
             module_set.remove(module)
             cached_file_set.remove(expected_filename)
 
-        self.expect_eq(0, len(module_set), 'All successfully loaded modules are cached')
+        self.expect_eq(0, len(module_set), 'All successfully loaded modules are cached. Modules not found in cache: {}'
+                       .format([module.name for module in module_set]))
 
     def _verify_all_errors_were_raised(self, all_modules: List[Module], errors: List[str]):
         modules_not_loaded = set([module.path for module in all_modules if not module.is_loaded])
@@ -189,6 +191,8 @@ class LoadAllSymbolsAndVerifyCache(E2ETestCase, DurationDiffMixin):
 
         while assume_loading_complete < num_assumptions_to_be_safe:
             start_time = time.time()
+
+            time.sleep(1)
 
             # Since there is no "loading completed" feedback, give orbit some time to update the status message or
             # show an error dialog. Then check if any of those is visible.
