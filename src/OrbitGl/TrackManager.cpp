@@ -58,8 +58,9 @@ std::vector<Track*> TrackManager::GetAllTracks() const {
   for (const auto& track : all_tracks_) {
     tracks.push_back(track.get());
   }
-  for (const auto& track : frame_tracks_) {
-    tracks.push_back(track.second.get());
+
+  for (const auto track : GetFrameTracks()) {
+    tracks.push_back(track);
   }
   return tracks;
 }
