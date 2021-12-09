@@ -73,6 +73,10 @@ AddressRange AddressRangeFromString(const std::string& string_address) {
 }  // namespace
 
 TEST(AccessTraceesMemoryTest, ReadFailures) {
+  /* copybara:insert(Test fails once in a while in threadsafe death test style)
+  GTEST_FLAG_SET(death_test_style, "fast");
+  */
+
   pid_t pid = fork();
   CHECK(pid != -1);
   if (pid == 0) {
@@ -123,6 +127,10 @@ TEST(AccessTraceesMemoryTest, ReadFailures) {
 }
 
 TEST(AccessTraceesMemoryTest, WriteFailures) {
+  /* copybara:insert(Test fails once in a while in threadsafe death test style)
+  GTEST_FLAG_SET(death_test_style, "fast");
+  */
+
   pid_t pid = fork();
   CHECK(pid != -1);
   if (pid == 0) {
