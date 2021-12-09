@@ -26,6 +26,7 @@
 #include "OrbitBase/Future.h"
 #include "OrbitBase/Logging.h"
 #include "OrbitBase/Promise.h"
+#include "OrbitBase/Result.h"
 #include "OrbitSsh/AddrAndPort.h"
 #include "OrbitSshQt/ScopedConnection.h"
 #include "OrbitSshQt/Session.h"
@@ -305,57 +306,91 @@ orbit_base::Future<ErrorMessageOr<void>> ServiceDeployManager::CopyFileToLocal(
   orbit_base::Promise<ErrorMessageOr<void>> promise;
   auto future = promise.GetFuture();
 
+  // This schedules the call of `CopyFileToLocalImpl` on the background thread.
   QMetaObject::invokeMethod(this,
                             [this, source = std::move(source), destination = std::move(destination),
                              promise = std::move(promise)]() mutable {
-                              promise.SetResult(CopyFileToLocalImpl(source, destination));
+                              CopyFileToLocalImpl(std::move(promise), source, destination);
                             });
 
   return future;
 }
 
-ErrorMessageOr<void> ServiceDeployManager::CopyFileToLocalImpl(std::string_view source,
-                                                               std::string_view destination) {
+void ServiceDeployManager::CopyFileToLocalImpl(orbit_base::Promise<ErrorMessageOr<void>> promise,
+                                               std::string_view source,
+                                               std::string_view destination) {
   CHECK(QThread::currentThread() == thread());
+
+  if (copy_file_operation_in_progress_) {
+    waiting_copy_operations_.emplace_back([this, promise = std::move(promise),
+                                           source = std::string{source},
+                                           destination = std::string{destination}]() mutable {
+      CopyFileToLocalImpl(std::move(promise), source, destination);
+    });
+    return;
+  }
+
+  copy_file_operation_in_progress_ = true;
+
   LOG("Copying remote \"%s\" to local \"%s\"", source, destination);
 
-  auto sftp_channel = StartSftpChannel();
+  // NOLINTNEXTLINE - Unfortunately we have to fall back to a raw `new` here.
+  auto operation =
+      new orbit_ssh_qt::SftpCopyToLocalOperation{&session_.value(), sftp_channel_.get()};
 
-  if (!sftp_channel) {
-    return ErrorMessage(
-        absl::StrFormat(R"(Unable to start sftp channel to copy the remote "%s" to "%s": %s)",
-                        source, destination, sftp_channel.error().message()));
-  }
+  // Making operation a child of the ServiceDeployManager ensures it will be deleted at the latest
+  // when ServiceDeployManager gets deleted. That's important when the copy procedure gets aborted
+  // and both callbacks below won't be executed.
+  operation->setParent(this);
 
-  orbit_ssh_qt::SftpCopyToLocalOperation operation{&session_.value(), sftp_channel.value().get()};
+  // The finish handler handles both the error and the success case and will be triggered
+  // from the ::stopped and ::errorOccured signals (see below).
+  // By having a single handler we don't need to worry about sharing resources that are not supposed
+  // to be shared like the promise.
+  auto finish_handler = [this, promise = std::move(promise), source = std::string{source},
+                         destination = std::string{destination},
+                         operation](ErrorMessageOr<void> result) mutable {
+    if (promise.HasResult()) return;
 
-  orbit_qt_utils::EventLoop loop{};
-  auto quit_handler =
-      ConnectQuitHandler(&loop, &operation, &orbit_ssh_qt::SftpCopyToLocalOperation::stopped);
-  auto error_handler = ConnectErrorHandler(&loop, &operation,
-                                           &orbit_ssh_qt::SftpCopyToLocalOperation::errorOccurred);
-  auto cancel_handler = ConnectCancelHandler(&loop, this);
+    operation->deleteLater();  // We can't just call `delete operation;` here because that also
+                               // triggers the deletion of this closure object. Instead we queue a
+                               // job on the event queue for deleting it later.
 
-  operation.CopyFileToLocal(source, destination);
+    copy_file_operation_in_progress_ = false;
 
-  auto result = loop.exec();
-  if (!result) {
-    return ErrorMessage(absl::StrFormat(R"(Error copying remote "%s" to "%s": %s)", source,
-                                        destination, result.error().message()));
-  }
+    if (!waiting_copy_operations_.empty()) {
+      // This calls the copy operation from the event loop in the background thread
+      QMetaObject::invokeMethod(this, std::move(waiting_copy_operations_.front()),
+                                Qt::QueuedConnection);
+      waiting_copy_operations_.pop_front();
+    }
 
-  auto sftp_channel_shutdown_result = ShutdownSftpChannel(sftp_channel.value().get());
+    if (result.has_error()) {
+      promise.SetResult(
+          ErrorMessage{absl::StrFormat(R"(Error copying remote "%s" to "%s": %s)", source,
+                                       destination, result.error().message())});
+      return;
+    }
 
-  if (!sftp_channel_shutdown_result) {
-    std::string sftp_error_message =
-        absl::StrFormat(R"(Error closing sftp channel (after copied remote "%s" to "%s": %s))",
-                        source, destination, sftp_channel_shutdown_result.error().message());
-    ERROR("%s", sftp_error_message);
-    return ErrorMessage(
-        absl::StrFormat("Download of file %s failed: %s", source, sftp_error_message));
-  }
+    promise.SetResult(outcome::success());
+  };
 
-  return outcome::success();
+  // Since we need to call the finish handler from two different slots and it's not copyable,
+  // we first have to move the handler into a shared_ptr which we can share between the two slots.
+  // This will also take care of lifetime management since the finish handler closure will get
+  // deleted when the `operation` object gets deleted.
+  auto shared_finish_handler =
+      std::make_shared<decltype(finish_handler)>(std::move(finish_handler));
+
+  QObject::connect(operation, &orbit_ssh_qt::SftpCopyToLocalOperation::stopped,
+                   [shared_finish_handler]() { (*shared_finish_handler)(outcome::success()); });
+
+  QObject::connect(operation, &orbit_ssh_qt::SftpCopyToLocalOperation::errorOccurred,
+                   [shared_finish_handler](std::error_code error_code) {
+                     (*shared_finish_handler)(ErrorMessage{error_code.message()});
+                   });
+
+  operation->CopyFileToLocal(source, destination);
 }
 
 outcome::result<void> ServiceDeployManager::CopyOrbitServiceExecutable(

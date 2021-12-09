@@ -12,6 +12,7 @@
 #include <QString>
 #include <QThread>
 #include <QTimer>
+#include <deque>
 #include <memory>
 #include <optional>
 #include <string>
@@ -20,7 +21,9 @@
 
 #include "DeploymentConfigurations.h"
 #include "MetricsUploader/MetricsUploader.h"
+#include "OrbitBase/AnyInvocable.h"
 #include "OrbitBase/Future.h"
+#include "OrbitBase/Promise.h"
 #include "OrbitBase/Result.h"
 #include "OrbitSsh/Context.h"
 #include "OrbitSsh/Credentials.h"
@@ -96,7 +99,14 @@ class ServiceDeployManager : public QObject {
       const std::string& source, const std::string& dest,
       orbit_ssh_qt::SftpCopyToRemoteOperation::FileMode dest_mode);
 
-  ErrorMessageOr<void> CopyFileToLocalImpl(std::string_view source, std::string_view destination);
+  // TODO(http://b/209807583): With our current integration of libssh2 we can only ever have one
+  // copy operation at the same time, so we have a bool indicating an ongoing operation and a queue
+  // with waiting operations. Since this all happens in one thread, no synchronization is needed.
+  bool copy_file_operation_in_progress_ = false;
+  std::deque<orbit_base::AnyInvocable<void()>> waiting_copy_operations_;
+
+  void CopyFileToLocalImpl(orbit_base::Promise<ErrorMessageOr<void>> promise,
+                           std::string_view source, std::string_view destination);
   outcome::result<GrpcPort> ExecImpl();
 
   void StartWatchdog();
