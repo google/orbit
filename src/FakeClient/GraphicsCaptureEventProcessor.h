@@ -56,11 +56,14 @@ class GraphicsCaptureEventProcessor : public orbit_capture_client::CaptureEventP
     CalculateCpuStats();
     CalculateGpuStats();
     std::filesystem::path file_path(absl::GetFlag(FLAGS_output_path));
-    WriteToCsvFile(file_path.append(kCpuFrameTimeFilename).string(), cpu_time_distribution_,
-                   cpu_avg_frame_time_ms_, frame_start_boundary_timestamps_.size() - 1);
-    file_path.assign(absl::GetFlag(FLAGS_output_path));
-    WriteToCsvFile(file_path.append(kGpuFrameTimeFilename).string(), gpu_time_distribution_,
-                   gpu_avg_frame_time_ms_, frame_start_boundary_timestamps_.size());
+    std::string cpu_file_path = file_path.append(kCpuFrameTimeFilename).string();
+    LOG("Writing CPU results to \"%s\"", cpu_file_path);
+    WriteToCsvFile(cpu_file_path, cpu_time_distribution_, cpu_avg_frame_time_ms_,
+                   frame_start_boundary_timestamps_.size() - 1);
+    std::string gpu_file_path = file_path.append(kGpuFrameTimeFilename).string();
+    LOG("Writing GPU results to \"%s\"", gpu_file_path);
+    WriteToCsvFile(gpu_file_path, gpu_time_distribution_, gpu_avg_frame_time_ms_,
+                   frame_start_boundary_timestamps_.size());
   }
 
  private:
@@ -90,9 +93,13 @@ class GraphicsCaptureEventProcessor : public orbit_capture_client::CaptureEventP
 
   void CalculateGpuStats() {
     LOG("Calculating GPU Times");
+    LOG("Calculating frame durations");
     CalculateGpuFrameDurations();
+    LOG("Generating duration distribution");
     GenerateGpuDurationDistribution();
+    LOG("Calculating average frame time");
     CalculateGpuAvgFrameTime();
+    LOG("Finished calculating GPU times");
   }
 
   void CalculateGpuFrameDurations() {
@@ -190,9 +197,13 @@ class GraphicsCaptureEventProcessor : public orbit_capture_client::CaptureEventP
     FAIL_IF(frame_boundary_count <= 2,
             "Not enough calls to vkQueuePresentKHR to calculate CPU frame times.");
 
+    LOG("Calculating frame durations");
     CalculateCpuFrameDurations();
+    LOG("Generating duration distribution");
     GenerateCpuDurationDistribution();
+    LOG("Calculating average frame times");
     CalculateCpuAvgFrameTime();
+    LOG("Finished calculating CPU times");
   }
 
   void CalculateCpuFrameDurations() {
