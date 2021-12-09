@@ -5,6 +5,7 @@
 #ifndef CLIENT_DATA_TIMESTAMP_INTERVAL_SET_H_
 #define CLIENT_DATA_TIMESTAMP_INTERVAL_SET_H_
 
+#include <stddef.h>
 #include <stdint.h>
 
 #include <set>
