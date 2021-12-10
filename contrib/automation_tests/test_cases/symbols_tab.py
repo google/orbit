@@ -33,7 +33,7 @@ def _show_symbols_and_functions_tabs(top_window):
 
 
 def _find_and_close_error_dialog(top_window) -> str or None:
-    window = find_control(top_window, 'Window', 'Error loading symbols', raise_on_failure=False)
+    window = find_control(top_window, 'Window', 'Error loading symbols', recurse=False, raise_on_failure=False)
     if window is None:
         return None
 
@@ -136,16 +136,15 @@ class LoadAllSymbolsAndVerifyCache(E2ETestCase, DurationDiffMixin):
         self._modules_dataview = DataViewPanel(self.find_control("Group", "ModulesDataView"))
         self._load_all_modules()
 
-        start_time = time.time()
         modules_loading_result = self._wait_for_loading_and_collect_errors()
-        total_duration = time.time() - start_time
 
-        self._check_and_update_duration("load_all_modules_duration", total_duration, expected_duration_difference)
+        self._check_and_update_duration("load_all_modules_duration", modules_loading_result.time,
+                                        expected_duration_difference)
 
         modules = self._gather_module_states()
         self._verify_all_modules_are_cached(modules)
         self._verify_all_errors_were_raised(modules, modules_loading_result.errors)
-        logging.info("Done. Loading time: {time}s, module errors: {errors}".format(
+        logging.info("Done. Loading time: {time:.2f}s, module errors: {errors}".format(
             time=modules_loading_result.time, errors=modules_loading_result.errors))
 
     def _load_all_modules(self):
@@ -199,7 +198,7 @@ class LoadAllSymbolsAndVerifyCache(E2ETestCase, DurationDiffMixin):
             # If not, try a few more times to make sure we didn't just accidentally query the UI while the status
             # message was being updated.
             error_module = _find_and_close_error_dialog(self.suite.top_window())
-            status_message = self.find_control('StatusBar').texts()[0]
+            status_message = self.find_control('StatusBar', recurse=False).texts()[0]
             if "Copying debug info file" not in status_message and "Loading symbols" not in status_message:
                 status_message = None
 
