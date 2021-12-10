@@ -421,7 +421,6 @@ class CheckThreadStates(CaptureWindowE2ETestCaseBase):
 class CheckTimers(CaptureWindowE2ETestCaseBase):
 
     def _check_all_tracks(self, tracks, expect_exists):
-        logging.info('Checking for timers in {} tracks'.format(len(tracks)))
         for track in tracks:
             track = Track(track)
             if expect_exists:
@@ -432,7 +431,6 @@ class CheckTimers(CaptureWindowE2ETestCaseBase):
                                  'Track "{}" has no timers pane'.format(track.name))
 
     def _check_at_least_one_track(self, track_name_filter, tracks, expect_exists):
-        logging.info('Checking for timers in at least one of {} tracks'.format(len(tracks)))
         satisfying_count = 0
         for track in tracks:
             track = Track(track)
@@ -451,6 +449,7 @@ class CheckTimers(CaptureWindowE2ETestCaseBase):
                  recursive: bool = False):
         tracks = self._find_tracks(track_name_filter, recursive)
         self.expect_true(len(tracks) > 0, 'Found tracks matching "{}"'.format(track_name_filter))
+        logging.info('Checking timers in {} tracks'.format(len(tracks)))
         if require_all:
             self._check_all_tracks(tracks, expect_exists)
         else:
