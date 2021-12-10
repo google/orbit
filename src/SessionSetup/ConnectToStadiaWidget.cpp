@@ -388,6 +388,10 @@ void ConnectToStadiaWidget::OnInstancesLoaded(QVector<orbit_ggp::Instance> insta
 
 void ConnectToStadiaWidget::OnSshInfoLoaded(ErrorMessageOr<orbit_ggp::SshInfo> ssh_info_result,
                                             std::string instance_id) {
+  if (!selected_instance_.has_value() ||
+      selected_instance_.value().id.toStdString() != instance_id) {
+    return;
+  }
   if (ssh_info_result.has_error()) {
     std::string error_message =
         absl::StrFormat("Unable to load encryption credentials for instance with id %s: %s",
