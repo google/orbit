@@ -39,7 +39,7 @@ function(DoGenerateVersionFile OUTPUT_FILE INPUT_FILE GIT_COMMIT_STATE_FILE
          COMMIT_HASH)
   file(WRITE "${GIT_COMMIT_STATE_FILE}" "${COMMIT_HASH}")
   execute_process(
-    COMMAND "${GIT_COMMAND}" "describe" "--tags" "--always"
+    COMMAND "${GIT_COMMAND}" "describe" "--always"
     WORKING_DIRECTORY "${CMAKE_CURRENT_LIST_DIR}"
     OUTPUT_VARIABLE VERSION_STRING
     OUTPUT_STRIP_TRAILING_WHITESPACE)
