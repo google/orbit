@@ -56,6 +56,7 @@ class KrabsTracer {
   krabs::kernel::thread_provider thread_provider_;
   krabs::kernel::context_switch_provider context_switch_provider_;
   krabs::kernel_provider stack_walk_provider_;
+  EVENT_TRACE_LOGFILE log_file_ = {0};
 };
 
 }  // namespace orbit_windows_tracing
