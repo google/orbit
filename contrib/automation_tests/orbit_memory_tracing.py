@@ -12,8 +12,7 @@ from test_cases.capture_window import Capture, VerifyTracksExist, SetAndCheckMem
 from test_cases.connection_window import FilterAndSelectFirstProcess, ConnectToStadiaInstance
 """Smoke test for the memory tracing and visualization using pywinauto.
 
-This automation script covers a basic workflow:
- - start Orbit, connect to a gamelet, and then select a process
+This automation script covers a basic workflow:, connect to a gamelet, and then select a process
  - enable memory tracing, set and validate the memory sampling period
  - enable memory tracing, take a capture and verify the presence of memory tracks & page faults track
  - disable memory tracing, take a capture and verify that memory tracks & page faults track are gone

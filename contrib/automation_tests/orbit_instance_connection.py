@@ -20,7 +20,6 @@ the python installation to match the bitness of the program under test, it needs
 to be run from 64 bit python.
 
 This automation script does the following:
- - Start Orbit
  - Connect to the first instance in the list
  - Disconnect from that instance and verify correct overlay behaviour and 
     that instances exist after the disconnect

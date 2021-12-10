@@ -20,7 +20,6 @@ the python installation to match the bitness of the program under test, it needs
 to be run from 64 bit python.
 
 This automation script covers the following workflow:
- - start Orbit
  - connect to a gamelet
  - select a process
  - load symbols for some modules

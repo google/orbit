@@ -32,7 +32,6 @@ assumptions about its inner workings. Our assumption here is that
 libggp I hope this assumption is weak enought to never become false.
 
 This automation script covers a basic workflow:
- - start Orbit
  - connect to a gamelet
  - select a process and load debug symbols for libggp
  - instrument "GgpIssueFrameToken_v*"
