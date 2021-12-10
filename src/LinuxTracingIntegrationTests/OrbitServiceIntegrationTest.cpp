@@ -276,8 +276,6 @@ static void VerifyFunctionCallsOfOuterAndInnerFunction(
 }
 
 TEST(OrbitServiceIntegrationTest, FunctionCallsWithUserSpaceInstrumentation) {
-  // TODO(b/205939288): Re-enable this test once this bug has been fixed again.
-  GTEST_SKIP();
   if (!CheckIsRunningAsRoot()) {
     GTEST_SKIP();
   }
@@ -289,6 +287,14 @@ TEST(OrbitServiceIntegrationTest, FunctionCallsWithUserSpaceInstrumentation) {
   constexpr uint64_t kInnerFunctionId = 2;
   AddPuppetOuterAndInnerFunctionToCaptureOptions(&capture_options, fixture.GetPuppetPidNative(),
                                                  kOuterFunctionId, kInnerFunctionId);
+
+  // Take an initial capture so that the communication between the target and OrbitService gets
+  // initialized and we don't lose any event at the beginning of the next capture.
+  // TODO(b/205939288): Remove this extra capture once this bug has been fixed again.
+  LOG("Taking an initial capture to initialize CaptureEventProducer in the target");
+  (void)fixture.CaptureAndGetEvents(PuppetConstants::kCallOuterFunctionCommand, capture_options);
+
+  LOG("Taking the capture that we are actually going to verify");
   std::vector<ClientCaptureEvent> events =
       fixture.CaptureAndGetEvents(PuppetConstants::kCallOuterFunctionCommand, capture_options);
 
@@ -338,8 +344,6 @@ static std::pair<uint64_t, uint64_t> GetUseOrbitApiFunctionVirtualAddressRange(p
 }
 
 TEST(OrbitServiceIntegrationTest, OrbitApi) {
-  // TODO(b/206359125): Re-enable this test once this bug has been fixed again.
-  GTEST_SKIP();
   if (!CheckIsRunningAsRoot()) {
     GTEST_SKIP();
   }
@@ -350,6 +354,13 @@ TEST(OrbitServiceIntegrationTest, OrbitApi) {
   const std::pair<uint64_t, uint64_t>& use_orbit_api_virtual_address_range =
       GetUseOrbitApiFunctionVirtualAddressRange(fixture.GetPuppetPidNative());
 
+  // Take an initial capture so that the communication between the target and OrbitService gets
+  // initialized and we don't lose any event at the beginning of the next capture.
+  // TODO(b/206359125): Remove this extra capture once this bug has been fixed again.
+  LOG("Taking an initial capture to initialize CaptureEventProducer in the target");
+  (void)fixture.CaptureAndGetEvents(PuppetConstants::kOrbitApiCommand, capture_options);
+
+  LOG("Taking the capture that we are actually going to verify");
   std::vector<ClientCaptureEvent> events =
       fixture.CaptureAndGetEvents(PuppetConstants::kOrbitApiCommand, capture_options);
 
