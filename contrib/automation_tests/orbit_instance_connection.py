@@ -16,11 +16,10 @@ from test_cases.connection_window import (ConnectToStadiaInstance, DisconnectFro
 Before this script is run there needs to be a gamelet reserved.
 
 The script requires absl and pywinauto. Since pywinauto requires the bitness of
-the python installation to match the bitness of the program under test it needs
-to by run from 64 bit python.
+the python installation to match the bitness of the program under test, it needs
+to be run from 64 bit python.
 
 This automation script does the following:
- - Start Orbit
  - Connect to the first instance in the list
  - Disconnect from that instance and verify correct overlay behaviour and 
     that instances exist after the disconnect

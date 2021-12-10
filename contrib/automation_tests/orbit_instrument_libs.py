@@ -17,8 +17,8 @@ Before this script is run there needs to be a gamelet reserved and
 "hello_ggp_standalone" has to be started.
 
 The script requires absl and pywinauto. Since pywinauto requires the bitness of
-the python installation to match the bitness of the program under test it needs
-to by run from 64 bit python.
+the python installation to match the bitness of the program under test, it needs
+to be run from 64 bit python.
 
 This test is verifying that symbols from libggp are loadable and that functions 
 in the binary can be instrumented. 
@@ -32,7 +32,6 @@ assumptions about its inner workings. Our assumption here is that
 libggp I hope this assumption is weak enought to never become false.
 
 This automation script covers a basic workflow:
- - start Orbit
  - connect to a gamelet
  - select a process and load debug symbols for libggp
  - instrument "GgpIssueFrameToken_v*"

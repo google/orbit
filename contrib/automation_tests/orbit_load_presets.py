@@ -18,8 +18,8 @@ draw_frame_in_hello_ggp_1_68.opr and ggp_issue_frame_token_in_hello_ggp_1_68.opr
 preset folder.
 
 The script requires absl and pywinauto. Since pywinauto requires the bitness of
-the python installation to match the bitness of the program under test it needs
-to by run from  64 bit python.
+the python installation to match the bitness of the program under test, it needs
+to be run from  64 bit python.
 """
 
 

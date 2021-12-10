@@ -16,11 +16,10 @@ Before this script is run there needs to be a gamelet reserved and
 "hello_ggp_standalone" has to be started.
 
 The script requires absl and pywinauto. Since pywinauto requires the bitness of
-the python installation to match the bitness of the program under test it needs
-to by run from 64 bit python.
+the python installation to match the bitness of the program under test, it needs
+to be run from 64 bit python.
 
 This automation script covers the following workflow:
- - start Orbit
  - connect to a gamelet
  - select a process
  - load symbols for some modules

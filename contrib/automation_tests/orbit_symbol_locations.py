@@ -21,7 +21,7 @@ Before this script is run there needs to be a gamelet reserved and
 Test data needs to be available in  "testdata/symbol_location_tests" (part of our git repo).
 
 The script requires absl and pywinauto. Since pywinauto requires the bitness of
-the python installation to match the bitness of the program under test it needs
+the python installation to match the bitness of the program under test, it needs
 to be run from 64 bit python.
 
 This automation script covers a basic workflow:

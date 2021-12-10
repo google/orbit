@@ -28,8 +28,8 @@ compatibility as well. The two others are partially loadable and not loadable
 when hello_ggp is profiled. Details are in the inline comments below.
 
 The script requires absl and pywinauto. Since pywinauto requires the bitness of
-the python installation to match the bitness of the program under test it needs
-to by run from  64 bit python.
+the python installation to match the bitness of the program under test, it needs
+to be run from  64 bit python.
 """
 
 
