@@ -23,7 +23,8 @@ class OrbitService {
   explicit OrbitService(uint16_t grpc_port, bool dev_mode)
       : grpc_port_{grpc_port}, dev_mode_{dev_mode} {}
 
-  [[nodiscard]] int Run(std::atomic<bool>* exit_requested);
+  [[nodiscard]] int Run();
+  [[nodiscard]] static std::string GetLogFilePath();
 
  private:
   [[nodiscard]] bool IsSshWatchdogActive() { return last_stdin_message_ != std::nullopt; }

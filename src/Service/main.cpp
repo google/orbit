@@ -21,46 +21,16 @@ ABSL_FLAG(uint64_t, grpc_port, 44765, "gRPC server port");
 
 ABSL_FLAG(bool, devmode, false, "Enable developer mode");
 
-namespace {
-std::atomic<bool> exit_requested;
-
-void SigintHandler(int signum) {
-  if (signum == SIGINT) {
-    exit_requested = true;
-  }
-}
-
-void InstallSigintHandler() {
-  struct sigaction act {};
-  act.sa_handler = SigintHandler;
-  sigemptyset(&act.sa_mask);
-  act.sa_flags = 0;
-  act.sa_restorer = nullptr;
-  sigaction(SIGINT, &act, nullptr);
-}
-
-std::string GetLogFilePath() {
-  std::filesystem::path var_log{"/var/log"};
-  std::filesystem::create_directory(var_log);
-  const std::string log_file_path = var_log / "OrbitService.log";
-  return log_file_path;
-}
-
-}  // namespace
-
 int main(int argc, char** argv) {
-  orbit_base::InitLogFile(GetLogFilePath());
+  orbit_base::InitLogFile(orbit_service::OrbitService::GetLogFilePath());
 
   absl::SetProgramUsageMessage("Orbit CPU Profiler Service");
   absl::SetFlagsUsageConfig(absl::FlagsUsageConfig{{}, {}, {}, &orbit_version::GetBuildReport, {}});
   absl::ParseCommandLine(argc, argv);
 
-  InstallSigintHandler();
-
   uint16_t grpc_port = absl::GetFlag(FLAGS_grpc_port);
   bool dev_mode = absl::GetFlag(FLAGS_devmode);
 
-  exit_requested = false;
   orbit_service::OrbitService service{grpc_port, dev_mode};
-  return service.Run(&exit_requested);
+  return service.Run();
 }

@@ -8,36 +8,24 @@
 #include <errno.h>
 #include <grpcpp/grpcpp.h>
 #include <grpcpp/security/server_credentials.h>
-#include <sys/stat.h>
 
 #include <string>
 
 #include "GrpcProtos/capture.pb.h"
 #include "OrbitBase/Logging.h"
-#include "OrbitBase/SafeStrerror.h"
 
 namespace orbit_service {
 
-bool ProducerSideServer::BuildAndStart(std::string_view unix_domain_socket_path) {
+bool ProducerSideServer::BuildAndStart(std::string uri) {
   CHECK(server_ == nullptr);
 
   grpc::ServerBuilder builder;
-  builder.AddListeningPort(absl::StrFormat("unix:%s", unix_domain_socket_path),
-                           grpc::InsecureServerCredentials());
+  builder.AddListeningPort(uri, grpc::InsecureServerCredentials());
 
   builder.RegisterService(&producer_side_service_);
 
   server_ = builder.BuildAndStart();
   if (server_ == nullptr) {
-    return false;
-  }
-
-  // When OrbitService runs as root, also allow non-root producers
-  // (e.g., the game) to communicate over the Unix domain socket.
-  if (chmod(std::string{unix_domain_socket_path}.c_str(), 0777) != 0) {
-    ERROR("Changing mode bits to 777 of \"%s\": %s", unix_domain_socket_path, SafeStrerror(errno));
-    server_->Shutdown();
-    server_->Wait();
     return false;
   }
 

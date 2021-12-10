@@ -21,8 +21,6 @@ target_sources(CaptureService PRIVATE
         CommonProducerCaptureEventBuilders.cpp)
 
 target_link_libraries(CaptureService PUBLIC
-        ApiLoader
-        ApiUtils
         ProducerEventProcessor
         GrpcProtos
         Introspection

@@ -19,10 +19,10 @@
 namespace orbit_service {
 
 // Wrapper around a grpc::Server that registers the service ProducerSideServiceImpl
-// and listens on a Unix domain socket.
+// and listens on a socket.
 class ProducerSideServer final : public orbit_capture_service::CaptureStartStopListener {
  public:
-  bool BuildAndStart(std::string_view unix_domain_socket_path);
+  bool BuildAndStart(std::string uri);
   void ShutdownAndWait();
 
   void OnCaptureStartRequested(
