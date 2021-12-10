@@ -15,8 +15,8 @@ Before this script is run there needs to be a gamelet reserved and
 "UE4Game.elf" has to be started with the "--orbit" option.
 
 The script requires absl and pywinauto. Since pywinauto requires the bitness of
-the python installation to match the bitness of the program under test it needs
-to by run from 64 bit python.
+the python installation to match the bitness of the program under test, it needs
+to be run from 64 bit python.
 
 This automation script covers a basic workflow:
  - start Orbit

@@ -24,8 +24,8 @@ example is needed. The path to this file can be given by the command line
 argument "--source_code_file". It needs to be an absolute path!
 
 The script requires absl and pywinauto. Since pywinauto requires the bitness of
-the python installation to match the bitness of the program under test it needs
-to by run from 64 bit python.
+the python installation to match the bitness of the program under test, it needs
+to be run from 64 bit python.
 
 This automation script covers a basic workflow:
  - start Orbit
