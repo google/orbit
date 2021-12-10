@@ -179,9 +179,7 @@ void DataView::OnEnableFrameTrackRequested(const std::vector<int>& selection) {
     const FunctionInfo& function = *GetFunctionInfoFromRow(i);
     // Functions used as frame tracks must be hooked (selected), otherwise the
     // data to produce the frame track will not be captured.
-    if (app_->IsCaptureConnected(app_->GetCaptureData())) {
-      app_->SelectFunction(function);
-    }
+    app_->SelectFunction(function);
     app_->EnableFrameTrack(function);
     app_->AddFrameTrack(function);
   }
