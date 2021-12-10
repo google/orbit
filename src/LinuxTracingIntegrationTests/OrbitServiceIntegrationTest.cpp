@@ -276,6 +276,8 @@ static void VerifyFunctionCallsOfOuterAndInnerFunction(
 }
 
 TEST(OrbitServiceIntegrationTest, FunctionCallsWithUserSpaceInstrumentation) {
+  // TODO(b/205939288): Re-enable this test once this bug has been fixed again.
+  GTEST_SKIP();
   if (!CheckIsRunningAsRoot()) {
     GTEST_SKIP();
   }
@@ -336,6 +338,8 @@ static std::pair<uint64_t, uint64_t> GetUseOrbitApiFunctionVirtualAddressRange(p
 }
 
 TEST(OrbitServiceIntegrationTest, OrbitApi) {
+  // TODO(b/206359125): Re-enable this test once this bug has been fixed again.
+  GTEST_SKIP();
   if (!CheckIsRunningAsRoot()) {
     GTEST_SKIP();
   }

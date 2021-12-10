@@ -107,7 +107,9 @@ void StartNewCapture() {
   // establish the connection, GetCaptureEventProducer().IsCapturing() would otherwise always be
   // false in the first call to EntryPayload, which would cause the first function call to be missed
   // even if the time between StartNewCapture() and the first function call is large.
-  GetCaptureEventProducer();
+  // TODO(b/205939288): The fix involving calling GetCaptureEventProducer() here was removed because
+  //  of b/209560448 (we could have interrupted a malloc, which is not re-entrant, so we need to
+  //  avoid any memory allocation). Re-add the call once we have a solution to allow re-entrancy.
 }
 
 void EntryPayload(uint64_t return_address, uint64_t function_id, uint64_t stack_pointer,

@@ -13,14 +13,14 @@
 #include "OrbitBase/ThreadUtils.h"
 
 namespace {
-orbit_api::LockFreeApiEventProducer& GetEventProducer() {
+orbit_api::LockFreeApiEventProducer& GetCaptureEventProducer() {
   static orbit_api::LockFreeApiEventProducer producer;
   return producer;
 }
 
 template <typename Event, typename... Types>
 void EnqueueApiEvent(Types... args) {
-  orbit_api::LockFreeApiEventProducer& producer = GetEventProducer();
+  orbit_api::LockFreeApiEventProducer& producer = GetCaptureEventProducer();
 
   if (!producer.IsCapturing()) return;
 
@@ -271,7 +271,9 @@ void orbit_api_set_enabled(uint64_t address, uint64_t api_version, bool enabled)
   // connection, `producer.IsCapturing()` would otherwise always be false with at least the first
   // event (but possibly more), causing it to be missed even if it comes a long time after calling
   // `orbit_api_set_enabled`.
-  GetEventProducer();
+  // TODO(b/206359125): The fix involving calling GetCaptureEventProducer() here was removed because
+  //  of b/209560448 (we could have interrupted a malloc, which is not re-entrant, so we need to
+  //  avoid any memory allocation). Re-add the call once we have a solution to allow re-entrancy.
 }
 
 void orbit_api_set_enabled_wine(uint64_t address, uint64_t api_version, bool enabled) {
@@ -303,7 +305,7 @@ void orbit_api_set_enabled_wine(uint64_t address, uint64_t api_version, bool ena
       UNREACHABLE();
   }
 
-  GetEventProducer();
+  // TODO(b/206359125): Re-add GetCaptureEventProducer() once possible. See above.
 }
 
 }  // extern "C"
