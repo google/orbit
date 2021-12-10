@@ -60,6 +60,7 @@ class GraphicsCaptureEventProcessor : public orbit_capture_client::CaptureEventP
     LOG("Writing CPU results to \"%s\"", cpu_file_path);
     WriteToCsvFile(cpu_file_path, cpu_time_distribution_, cpu_avg_frame_time_ms_,
                    frame_start_boundary_timestamps_.size() - 1);
+    file_path.assign(absl::GetFlag(FLAGS_output_path));
     std::string gpu_file_path = file_path.append(kGpuFrameTimeFilename).string();
     LOG("Writing GPU results to \"%s\"", gpu_file_path);
     WriteToCsvFile(gpu_file_path, gpu_time_distribution_, gpu_avg_frame_time_ms_,
