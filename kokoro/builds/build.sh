@@ -107,7 +107,7 @@ if [ -n "$1" ]; then
   set +e
   if [ "$BUILD_TYPE" = "release" ] \
      && [ -z "${ORBIT_BYPASS_RELEASE_CHECK}" ] \
-     && ! git -C "${REPO_ROOT}" describe --tags --exact-match > /dev/null; then
+     && ! git -C "${REPO_ROOT}" describe --exact-match > /dev/null; then
     echo -n "We are currently conducting a release build, but we aren't on a tag."
     echo    " Aborting the build..."
     echo -n "Maybe you missed pushing the release version tag?"
