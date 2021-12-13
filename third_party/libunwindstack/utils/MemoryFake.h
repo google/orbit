@@ -61,7 +61,7 @@ class MemoryFake : public Memory {
     }
   }
 
-  void Clear() { data_.clear(); }
+  void Clear() override { data_.clear(); }
 
  private:
   std::unordered_map<uint64_t, uint8_t> data_;

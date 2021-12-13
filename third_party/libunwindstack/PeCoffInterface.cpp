@@ -21,6 +21,7 @@
 #include <unwindstack/Error.h>
 #include <unwindstack/Log.h>
 #include <unwindstack/Memory.h>
+#include <unwindstack/Regs.h>
 #include "Check.h"
 #include "DwarfDebugFrame.h"
 
@@ -436,6 +437,25 @@ bool PeCoffInterfaceImpl<AddressType>::Init(int64_t* load_bias) {
   }
   *load_bias = static_cast<int64_t>(optional_header_.image_base);
   return true;
+}
+
+template <typename AddressType>
+uint64_t PeCoffInterfaceImpl<AddressType>::GetRelPc(uint64_t pc, uint64_t map_start) const {
+  if (!text_section_data_.has_value()) {
+    return 0;
+  }
+  return pc - map_start + optional_header_.image_base + text_section_data_->executable_offset;
+}
+
+template <typename AddressType>
+bool PeCoffInterfaceImpl<AddressType>::Step(uint64_t rel_pc, Regs* regs, Memory* process_memory,
+                                            bool* finished, bool* is_signal_frame) {
+  // Try the debug_frame first since it contains the most specific and comprehensive unwind
+  // information.
+  if (debug_frame_ && debug_frame_->Step(rel_pc, regs, process_memory, finished, is_signal_frame)) {
+    return true;
+  }
+  return false;
 }
 
 // Instantiate all of the needed template functions.
