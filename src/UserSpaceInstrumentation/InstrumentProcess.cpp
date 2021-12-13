@@ -5,6 +5,7 @@
 #include "UserSpaceInstrumentation/InstrumentProcess.h"
 
 #include <absl/base/casts.h>
+#include <absl/container/flat_hash_set.h>
 #include <dlfcn.h>
 #include <unistd.h>
 
@@ -64,6 +65,13 @@ bool ProcessWithPidExists(pid_t pid) {
   auto result = orbit_base::FileExists(pid_dirname);
   FAIL_IF(result.has_error(), "Accessing \"%s\" failed: %s", pid_dirname, result.error().message());
   return result.value();
+}
+
+bool IsBlacklisted(std::string_view function_name) {
+  static const absl::flat_hash_set<std::string> kBlacklist{
+      "__GI___libc_malloc", "__GI___libc_free", "get_free_list",
+      "malloc_consolidate", "sysmalloc",        "_int_malloc"};
+  return kBlacklist.contains(function_name);
 }
 
 }  // namespace
@@ -257,6 +265,9 @@ InstrumentedProcess::InstrumentFunctions(const CaptureOptions& capture_options) 
   InstrumentationManager::InstrumentationResult result;
   for (const auto& function : capture_options.instrumented_functions()) {
     const uint64_t function_id = function.function_id();
+    if (IsBlacklisted(function.function_name())) {
+      continue;
+    }
     constexpr uint64_t kMaxFunctionPrologueBackupSize = 20;
     const uint64_t backup_size = std::min(kMaxFunctionPrologueBackupSize, function.function_size());
     if (backup_size == 0) {
