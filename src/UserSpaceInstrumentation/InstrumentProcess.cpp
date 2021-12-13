@@ -270,9 +270,11 @@ InstrumentedProcess::InstrumentFunctions(const CaptureOptions& capture_options) 
   for (const auto& function : capture_options.instrumented_functions()) {
     const uint64_t function_id = function.function_id();
     if (IsBlocklisted(function.function_name())) {
-      result.function_ids_to_error_messages[function_id] =
-          absl::StrFormat("Can't instrument function \"%s\" since it used internally by Orbit.",
+      const std::string message =
+          absl::StrFormat("Can't instrument function \"%s\" since it is used internally by Orbit.",
                           function.function_name());
+      ERROR("%s", message);
+      result.function_ids_to_error_messages[function_id] = message;
       continue;
     }
     constexpr uint64_t kMaxFunctionPrologueBackupSize = 20;
