@@ -71,11 +71,11 @@ bool ProcessWithPidExists(pid_t pid) {
 // a situation where instrumenting the functions below would lead to a recursive call into the
 // instrumentation. We just silently skip these and leave instrumenting them to the kernel/uprobe
 // fallback.
-bool IsBlacklisted(std::string_view function_name) {
-  static const absl::flat_hash_set<std::string> kBlacklist{
+bool IsBlocklisted(std::string_view function_name) {
+  static const absl::flat_hash_set<std::string> kBlocklist{
       "__GI___libc_malloc", "__GI___libc_free", "get_free_list",
       "malloc_consolidate", "sysmalloc",        "_int_malloc"};
-  return kBlacklist.contains(function_name);
+  return kBlocklist.contains(function_name);
 }
 
 }  // namespace
@@ -269,7 +269,10 @@ InstrumentedProcess::InstrumentFunctions(const CaptureOptions& capture_options) 
   InstrumentationManager::InstrumentationResult result;
   for (const auto& function : capture_options.instrumented_functions()) {
     const uint64_t function_id = function.function_id();
-    if (IsBlacklisted(function.function_name())) {
+    if (IsBlocklisted(function.function_name())) {
+      result.function_ids_to_error_messages[function_id] =
+          absl::StrFormat("Can't instrument function \"%s\" since it used internally by Orbit.",
+                          function.function_name());
       continue;
     }
     constexpr uint64_t kMaxFunctionPrologueBackupSize = 20;
