@@ -26,8 +26,7 @@ struct IntegrationTestPuppetConstants {
 
   constexpr static const char* kNewThreadName = "Thread Name";
 
-  constexpr static const char* kSharedObjectFileName =
-      "libIntegrationTestPuppetSharedObject.so";
+  constexpr static const char* kSharedObjectFileName = "libIntegrationTestPuppetSharedObject.so";
 
   constexpr static uint64_t kFrameCount = 60;
 
