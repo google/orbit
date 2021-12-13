@@ -5,6 +5,7 @@
 #include "UserSpaceInstrumentation/InstrumentProcess.h"
 
 #include <absl/base/casts.h>
+#include <absl/container/flat_hash_set.h>
 #include <dlfcn.h>
 #include <unistd.h>
 
@@ -64,6 +65,16 @@ bool ProcessWithPidExists(pid_t pid) {
   auto result = orbit_base::FileExists(pid_dirname);
   FAIL_IF(result.has_error(), "Accessing \"%s\" failed: %s", pid_dirname, result.error().message());
   return result.value();
+}
+
+// We need to initialize some thread local memory when entering the payload functions. This leads to
+// a situation where instrumenting the functions below would lead to a recursive call into the
+// instrumentation. We just skip these and leave instrumenting them to the kernel/uprobe fallback.
+bool IsBlocklisted(std::string_view function_name) {
+  static const absl::flat_hash_set<std::string> kBlocklist{
+      "__GI___libc_malloc", "__GI___libc_free", "get_free_list",
+      "malloc_consolidate", "sysmalloc",        "_int_malloc"};
+  return kBlocklist.contains(function_name);
 }
 
 }  // namespace
@@ -257,6 +268,14 @@ InstrumentedProcess::InstrumentFunctions(const CaptureOptions& capture_options) 
   InstrumentationManager::InstrumentationResult result;
   for (const auto& function : capture_options.instrumented_functions()) {
     const uint64_t function_id = function.function_id();
+    if (IsBlocklisted(function.function_name())) {
+      const std::string message =
+          absl::StrFormat("Can't instrument function \"%s\" since it is used internally by Orbit.",
+                          function.function_name());
+      ERROR("%s", message);
+      result.function_ids_to_error_messages[function_id] = message;
+      continue;
+    }
     constexpr uint64_t kMaxFunctionPrologueBackupSize = 20;
     const uint64_t backup_size = std::min(kMaxFunctionPrologueBackupSize, function.function_size());
     if (backup_size == 0) {
