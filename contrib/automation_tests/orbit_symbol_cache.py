@@ -43,7 +43,7 @@ def main(argv):
         LoadAllSymbolsAndVerifyCache(),
         EndSession(),
         FilterAndSelectFirstProcess(process_filter='hello_ggp'),
-        LoadAllSymbolsAndVerifyCache(expected_duration_difference=-15),
+        LoadAllSymbolsAndVerifyCache(expected_duration_difference_ratio=0.5),
         EndSession(),
         FilterAndSelectFirstProcess(process_filter='hello_ggp'),
         LoadSymbols(module_search_string="libggp"),
@@ -51,7 +51,7 @@ def main(argv):
         FilterAndSelectFirstProcess(process_filter='hello_ggp'),
         ReplaceFileInSymbolCache(src="_mnt_developer_hello_ggp_standalone",
                                  file_to_replace="_usr_local_cloudcast_lib_libggp.so"),
-        LoadSymbols(module_search_string="libggp", expected_duration_difference=5)
+        LoadSymbols(module_search_string="libggp", expected_duration_difference_ratio=1.25)
 
     ]
     suite = E2ETestSuite(test_name="Symbol loading and caching", test_cases=test_cases)

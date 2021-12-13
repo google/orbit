@@ -70,32 +70,35 @@ class DurationDiffMixin(ABC):
     def expect_eq(self, left, right, msg):
         pass
 
-    def _check_and_update_duration(self, storage_key: str, current_duration: float, expected_difference: float):
+    def _check_and_update_duration(self, storage_key: str, current_duration: float, expected_difference_ratio: float):
         """
         Compare the current duration with the previous run, and fail if it exceeds the defined bounds.
         :param storage_key: Unique key to store the duration within the test suite, used to persist the data across
             multiple tests (uses `self.suite.shared_data`)
         :param current_duration: The duration of the current run
-        :param expected_difference: Expected difference in seconds. If negative, the current run must be at least
-            this much *faster* than the previous run. If positive, the current run must be at least this much *slower*.
+        :param expected_difference_ratio: Expected difference as ratio relative to the previously stored value.
+            If < 1.0, the current run must take *at most* expected_difference_ratio * previous_time.
+            If >= 1.0, the current run must take *at least* expected_difference_ratio * previous_time.
+            If None, this will only update the stored value.
             Violating those conditions will result in test failure.
         """
         last_duration = self.suite.shared_data.get(storage_key, None)
         self.suite.shared_data[storage_key] = current_duration
 
-        if expected_difference is not None and last_duration is not None:
-            if expected_difference < 0:
-                self.expect_true(current_duration <= last_duration + expected_difference,
-                                 "Expected symbol loading time to be at least {diff:.2f}s faster than the last run. "
+        if expected_difference_ratio is not None and last_duration is not None:
+            expected_duration = last_duration * expected_difference_ratio
+            if expected_difference_ratio < 1.0:
+                self.expect_true(current_duration <= expected_duration,
+                                 "Expected symbol loading time to be at most {expected:.2f}s."
                                  "Last run duration: {last:.2f}s, current run duration: {cur:.2f}s".format(
-                                     diff=-expected_difference,
+                                     expected=expected_duration,
                                      last=last_duration,
                                      cur=current_duration))
             else:
-                self.expect_true(current_duration >= last_duration + expected_difference,
-                                 "Expected symbol loading time to be at least {diff:.2f}s slower than the last run. "
+                self.expect_true(current_duration >= expected_duration,
+                                 "Expected symbol loading time to be at least {expected:.2f}s."
                                  "Last run duration: {last:.2f}s, current run duration: {cur:.2f}s".format(
-                                     diff=expected_difference,
+                                     expected=expected_duration,
                                      last=last_duration,
                                      cur=current_duration))
 
@@ -128,7 +131,7 @@ class LoadAllSymbolsAndVerifyCache(E2ETestCase, DurationDiffMixin):
         super().__init__(**kwargs)
         self._modules_dataview = None
 
-    def _execute(self, expected_duration_difference: float = None):
+    def _execute(self, expected_duration_difference_ratio: float = None):
         """
         :param expected_duration_difference: @see DurationDiffMixin._check_and_update_duration
         """
@@ -139,7 +142,7 @@ class LoadAllSymbolsAndVerifyCache(E2ETestCase, DurationDiffMixin):
         modules_loading_result = self._wait_for_loading_and_collect_errors()
 
         self._check_and_update_duration("load_all_modules_duration", modules_loading_result.time,
-                                        expected_duration_difference)
+                                        expected_duration_difference_ratio)
 
         modules = self._gather_module_states()
         self._verify_all_modules_are_cached(modules)
@@ -243,7 +246,7 @@ class LoadSymbols(E2ETestCase, DurationDiffMixin):
     Selection is done be filtering the module list and loading the first remaining row.
     """
 
-    def _execute(self, module_search_string: str, expected_duration_difference: float = None, expect_fail=False):
+    def _execute(self, module_search_string: str, expected_duration_difference_ratio: float = None, expect_fail=False):
         """
         :param module_search_string: String to enter in the module filter field, the first entry in the list of
             remaining modules will be loaded
@@ -277,7 +280,7 @@ class LoadSymbols(E2ETestCase, DurationDiffMixin):
             wait_for_condition(lambda: modules_dataview.get_item_at(0, 0).texts()[0] == "*", 100)
         total_time = time.time() - start_time
         self._check_and_update_duration("load_symbols_" + module_search_string, total_time,
-                                        expected_duration_difference)
+                                        expected_duration_difference_ratio)
 
         VerifySymbolsLoaded(symbol_search_string=module_search_string, expect_loaded=not expect_fail).execute(
             self.suite)
