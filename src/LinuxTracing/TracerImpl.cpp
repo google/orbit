@@ -54,7 +54,7 @@ static std::optional<uint64_t> ComputeSamplingPeriodNs(double sampling_frequency
   double period_ns_dbl = 1'000'000'000 / sampling_frequency;
   if (period_ns_dbl > 0 &&
       period_ns_dbl <= static_cast<double>(std::numeric_limits<uint64_t>::max())) {
-    return std::optional<uint64_t>(period_ns_dbl);
+    return period_ns_dbl;
   }
   return std::nullopt;
 }
@@ -74,24 +74,24 @@ TracerImpl::TracerImpl(
 
   uint32_t stack_dump_size = capture_options.stack_dump_size();
   if (stack_dump_size == std::numeric_limits<uint16_t>::max()) {
-    if (unwinding_method_ == CaptureOptions::kDwarf) {
-      LOG("No sample stack dump size was set; Assigning to default: %u", kMaxStackSampleUserSize);
-      stack_dump_size = kMaxStackSampleUserSize;
-    } else if (unwinding_method_ == CaptureOptions::kFramePointers) {
-      stack_dump_size = kMaxStackSampleUserSizeFramePointer;
-    }
-  } else if (stack_dump_size > kMaxStackSampleUserSize || stack_dump_size == 0) {
+    constexpr uint16_t kDefaultStackSampleUserSizeFramePointer = 512;
+    stack_dump_size = (unwinding_method_ == CaptureOptions::kDwarf)
+                          ? kMaxStackSampleUserSize
+                          : kDefaultStackSampleUserSizeFramePointer;
+    LOG("No sample stack dump size was set; Assigning to default: %u", stack_dump_size);
+  } else if (stack_dump_size > kMaxStackSampleUserSize ||
+             stack_dump_size == 0 /*TODO(b/210439638)*/) {
     ERROR("Invalid sample stack dump size: %u; Reassigning to default: %u", stack_dump_size,
           kMaxStackSampleUserSize);
     stack_dump_size = kMaxStackSampleUserSize;
   }
   stack_dump_size_ = static_cast<uint16_t>(stack_dump_size);
-  std::optional<uint64_t> sampling_period_ns =
-      ComputeSamplingPeriodNs(capture_options.samples_per_second());
-  if (!sampling_period_ns.has_value()) {
-    sampling_period_ns = 0;
+
+  if (capture_options.samples_per_second() == 0) {
+    sampling_period_ns_ = std::nullopt;
+  } else {
+    sampling_period_ns_ = ComputeSamplingPeriodNs(capture_options.samples_per_second());
   }
-  sampling_period_ns_ = sampling_period_ns.value();
 
   instrumented_functions_.reserve(capture_options.instrumented_functions_size());
 
@@ -342,7 +342,7 @@ bool TracerImpl::OpenMmapTask(const std::vector<int32_t>& cpus) {
 
 bool TracerImpl::OpenSampling(const std::vector<int32_t>& cpus) {
   ORBIT_SCOPE_FUNCTION;
-  CHECK(sampling_period_ns_ > 0);
+  CHECK(sampling_period_ns_.has_value());
   CHECK(unwinding_method_ == CaptureOptions::kFramePointers ||
         unwinding_method_ == CaptureOptions::kDwarf);
 
@@ -352,10 +352,12 @@ bool TracerImpl::OpenSampling(const std::vector<int32_t>& cpus) {
     int sampling_fd;
     switch (unwinding_method_) {
       case CaptureOptions::kFramePointers:
-        sampling_fd = callchain_sample_event_open(sampling_period_ns_, -1, cpu, stack_dump_size_);
+        sampling_fd =
+            callchain_sample_event_open(sampling_period_ns_.value(), -1, cpu, stack_dump_size_);
         break;
       case CaptureOptions::kDwarf:
-        sampling_fd = stack_sample_event_open(sampling_period_ns_, -1, cpu, stack_dump_size_);
+        sampling_fd =
+            stack_sample_event_open(sampling_period_ns_.value(), -1, cpu, stack_dump_size_);
         break;
       case CaptureOptions::kUndefined:
       default:
@@ -664,7 +666,7 @@ void TracerImpl::Startup() {
   // enough, it doesn't need to have been enabled).
   InitUprobesEventVisitor();
 
-  if (sampling_period_ns_ > 0) {
+  if (sampling_period_ns_.has_value()) {
     if (bool opened = OpenSampling(cpuset_cpus); !opened) {
       perf_event_open_error_details.emplace_back("sampling");
       perf_event_open_errors = true;

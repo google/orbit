@@ -105,9 +105,9 @@ static constexpr uint16_t SAMPLE_STACK_USER_SIZE_8BYTES = 8;
 // of the entire record the kernel is willing to return is (1u << 16u) - 8.
 // If we want the size we pass to coincide with the size we get, we need to pass
 // a lower value. For the current layout of perf_event_stack_sample_fixed, the maximum
-// size is 65312. We leave some extra room with our flag (see `ClientFlags.cpp`).
+// size is 65312. However, we leave some extra room here.
+// See also `ClientFlags.cpp`.
 static constexpr uint16_t kMaxStackSampleUserSize = 65000;
-static constexpr uint16_t kMaxStackSampleUserSizeFramePointer = 512;
 
 // perf_event_open for context switches.
 int context_switch_event_open(pid_t pid, int32_t cpu);

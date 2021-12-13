@@ -188,7 +188,7 @@ OrbitMainWindow::OrbitMainWindow(TargetConfiguration target_configuration,
 
   if (FLAGS_stack_dump_size.IsSpecifiedOnCommandLine()) {
     uint16_t stack_dump_size = absl::GetFlag(FLAGS_stack_dump_size);
-    CHECK(stack_dump_size <= 65000 && stack_dump_size > 0);
+    CHECK(stack_dump_size != std::numeric_limits<uint16_t>::max());
     app_->SetStackDumpSize(stack_dump_size);
   } else {
     app_->SetStackDumpSize(std::numeric_limits<uint16_t>::max());
@@ -1113,16 +1113,20 @@ void OrbitMainWindow::LoadCaptureOptionsIntoApp() {
     app_->SetSamplesPerSecond(0.0);
   }
 
-  UnwindingMethod unwinding_method = static_cast<UnwindingMethod>(
-      settings
-          .value(kCallstackUnwindingMethodSettingKey,
-                 static_cast<int>(kCallstackUnwindingMethodDefaultValue))
-          .toInt());
-  if (!app_->IsDevMode() || (unwinding_method != CaptureOptions::kDwarf &&
-                             unwinding_method != CaptureOptions::kFramePointers)) {
-    unwinding_method = kCallstackUnwindingMethodDefaultValue;
+  if (!app_->IsDevMode()) {
+    app_->SetUnwindingMethod(kCallstackUnwindingMethodDefaultValue);
+  } else {
+    UnwindingMethod unwinding_method = static_cast<UnwindingMethod>(
+        settings
+            .value(kCallstackUnwindingMethodSettingKey,
+                   static_cast<int>(kCallstackUnwindingMethodDefaultValue))
+            .toInt());
+    if (unwinding_method != CaptureOptions::kDwarf &&
+        unwinding_method != CaptureOptions::kFramePointers) {
+      ERROR("Unknown unwinding method specified; Using default unwinding method");
+      app_->SetUnwindingMethod(kCallstackUnwindingMethodDefaultValue);
+    }
   }
-  app_->SetUnwindingMethod(unwinding_method);
 
   app_->SetCollectSchedulerInfo(settings.value(kCollectSchedulerInfoSettingKey, true).toBool());
   app_->SetCollectThreadStates(settings.value(kCollectThreadStatesSettingKey, false).toBool());
