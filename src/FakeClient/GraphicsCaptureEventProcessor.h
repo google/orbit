@@ -152,7 +152,7 @@ class GraphicsCaptureEventProcessor : public orbit_capture_client::CaptureEventP
       const uint64_t begin_timestamp_ns = command_buffers_timestamps[i].begin;
       const uint64_t end_timestamp_ns = command_buffers_timestamps[i].end;
       const uint64_t duration_ns = end_timestamp_ns - begin_timestamp_ns;
-      LOG("CommandBuffer #%u: Start %u - End %u - Duration %u(ns)", i, begin_timestamp_ns,
+      LOG("CommandBuffer #%u: Start: %u End: %u Duration: %u(ns)", i, begin_timestamp_ns,
           end_timestamp_ns, duration_ns);
     }
   }
