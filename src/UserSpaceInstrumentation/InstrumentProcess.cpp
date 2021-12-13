@@ -67,6 +67,10 @@ bool ProcessWithPidExists(pid_t pid) {
   return result.value();
 }
 
+// We need to initialize some thread local memory when entering the payload functions. This leads to
+// a situation where instrumenting the functions below would lead to a recursive call into the
+// instrumentation. We just silently skip these and leave instrumenting them to the kernel/uprobe
+// fallback.
 bool IsBlacklisted(std::string_view function_name) {
   static const absl::flat_hash_set<std::string> kBlacklist{
       "__GI___libc_malloc", "__GI___libc_free", "get_free_list",
