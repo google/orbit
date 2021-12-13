@@ -135,7 +135,25 @@ class GraphicsCaptureEventProcessor : public orbit_capture_client::CaptureEventP
       }
 
       uint64_t frame_time_ns = CalculateFrameGpuTime(command_buffer_timestamps);
-      frame_gpu_durations_ns_.emplace_back(frame_time_ns);
+      uint64_t frame_time_ms = frame_time_ns / 1000000;
+      if (frame_time_ms > kMaxTimeMs) {
+        LOG("Frame with a duration of %u(ms) is bigger than %d(ms)", frame_time_ms, kMaxTimeMs);
+        LOG("Dumping frame command buffers timestamps...");
+        PrintCommandBufferTimestamps(command_buffer_timestamps);
+      } else {
+        frame_gpu_durations_ns_.emplace_back(frame_time_ns);
+      }
+    }
+  }
+
+  static void PrintCommandBufferTimestamps(
+      const std::vector<CommandBufferTimestamps>& command_buffers_timestamps) {
+    for (size_t i = 0; i < command_buffers_timestamps.size(); ++i) {
+      const uint64_t begin_timestamp_ns = command_buffers_timestamps[i].begin;
+      const uint64_t end_timestamp_ns = command_buffers_timestamps[i].end;
+      const uint64_t duration_ns = end_timestamp_ns - begin_timestamp_ns;
+      LOG("CommandBuffer #%u: Start %u - End %u - Duration %u(ns)", i, begin_timestamp_ns,
+          end_timestamp_ns, duration_ns);
     }
   }
 
