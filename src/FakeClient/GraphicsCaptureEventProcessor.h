@@ -233,9 +233,9 @@ class GraphicsCaptureEventProcessor : public orbit_capture_client::CaptureEventP
   template <typename Distribution>
   static void UpdateFrameDurationDistribution(uint64_t frame_time_ns, Distribution& distribution) {
     if (frame_time_ns > 0) {
-      double frame_time_ms = frame_time_ns / 1.0e6;
-      int distribution_index = std::max(0, std::min(static_cast<int>(frame_time_ms), kMaxTimeMs));
-      ++distribution[distribution_index];
+      uint64_t frame_time_ms_floor = frame_time_ns / 1000000;
+      uint64_t index = std::min(frame_time_ms_floor, static_cast<uint64_t>(kMaxTimeMs));
+      ++distribution[index];
     }
   }
 
