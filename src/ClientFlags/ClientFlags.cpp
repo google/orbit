@@ -6,6 +6,7 @@
 
 #include <cstdint>
 #include <string>
+#include <vector>
 
 ABSL_FLAG(bool, devmode, false, "Enable developer mode in the client's UI");
 
@@ -58,6 +59,8 @@ ABSL_FLAG(std::string, connection_target, "",
           "connection setup and open the main window instead. If either the instance or the "
           "process ID can't be found or deployment is aborted by the user Orbit will exit "
           "with return code -1 immediately.");
+ABSL_FLAG(std::vector<std::string>, additional_symbol_paths, {},
+          "Additional local symbol locations (comma-separated)");
 
 // Clears QSettings. This is intended for e2e tests.
 ABSL_FLAG(bool, clear_settings, false,

@@ -213,6 +213,13 @@ orbit_metrics_uploader::CaptureStartData CreateCaptureStartData(
   return capture_start_data;
 }
 
+std::vector<std::filesystem::path> GetAllSymbolPaths() {
+  std::vector<std::filesystem::path> all_paths = orbit_symbol_paths::LoadPaths();
+  std::vector<std::string> temp_paths = absl::GetFlag(FLAGS_additional_symbol_paths);
+  all_paths.insert(all_paths.end(), temp_paths.begin(), temp_paths.end());
+  return all_paths;
+}
+
 }  // namespace
 
 bool DoZoom = false;
@@ -1763,8 +1770,7 @@ orbit_base::Future<ErrorMessageOr<std::filesystem::path>> OrbitApp::RetrieveModu
         const auto debuglink = elf_file.value()->GetGnuDebugLinkInfo().value();
         ErrorMessageOr<std::filesystem::path> local_debuginfo_path =
             symbol_helper_.FindDebugInfoFileLocally(debuglink.path.filename().string(),
-                                                    debuglink.crc32_checksum,
-                                                    orbit_symbol_paths::LoadPaths());
+                                                    debuglink.crc32_checksum, GetAllSymbolPaths());
         if (local_debuginfo_path.has_error()) {
           return ErrorMessage{absl::StrFormat(
               "Module \"%s\" doesn't include debug info, and a separate "
@@ -1791,7 +1797,7 @@ static ErrorMessageOr<std::filesystem::path> FindModuleLocallyImpl(
 
   std::string error_message;
   {
-    std::vector<fs::path> search_paths = orbit_symbol_paths::LoadPaths();
+    std::vector<fs::path> search_paths = GetAllSymbolPaths();
     fs::path module_path(module_data.file_path());
     search_paths.emplace_back(module_path.parent_path());
 
