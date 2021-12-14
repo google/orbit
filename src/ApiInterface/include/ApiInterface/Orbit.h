@@ -140,13 +140,13 @@
 //
 // Parameters of ORBIT_START_ASYNC:
 // name: [const char*] Name of the *track* that will display the async events in Orbit.
-// id: [uint64_t] User-provided *unique* id for the time slice. This unique id is used to match the
-//     ORBIT_START_ASYNC and ORBIT_STOP_ASYNC calls. An id needs to be unique for the current track.
+// id: [uint64_t] User-provided globally *unique* id for the time slice. This id is used to match
+//     the ORBIT_START_ASYNC and ORBIT_STOP_ASYNC calls. An id needs to be unique across all tracks.
 // col: [orbit_api_color] User-defined color for the current time slice (see orbit_api_color below).
 //
 // Parameters of ORBIT_STOP_ASYNC:
-// id: [uint64_t] User-provided *unique* id for the time slice. This unique id is used to match the
-//     ORBIT_START_ASYNC and ORBIT_STOP_ASYNC calls. An id needs to be unique for the current track.
+// id: [uint64_t] User-provided globally *unique* id for the time slice. This id is used to match
+//     the ORBIT_START_ASYNC and ORBIT_STOP_ASYNC calls. An id needs to be unique across all tracks.
 //
 //
 // =================================================================================================
