@@ -4,8 +4,12 @@
 
 #include "OrbitBase/Profiling.h"
 
+#include <absl/strings/str_format.h>
+
 #include <algorithm>
 #include <limits>
+
+#include "OrbitBase/Logging.h"
 
 namespace orbit_base {
 uint64_t EstimateClockResolution() {
@@ -38,4 +42,17 @@ uint64_t EstimateClockResolution() {
   }
   return minimum_resolution_found;
 }
+
+uint64_t EstimateAndLogClockResolution() {
+  // We expect the value to be in the order of 35-100 nanoseconds.
+  uint64_t clock_resolution_ns = orbit_base::EstimateClockResolution();
+  if (clock_resolution_ns > 0) {
+    LOG("Clock resolution: %d (ns)", clock_resolution_ns);
+  } else {
+    ERROR("Failed to estimate clock resolution");
+  }
+
+  return clock_resolution_ns;
+}
+
 }  // namespace orbit_base

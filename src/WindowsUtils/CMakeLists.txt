@@ -25,7 +25,6 @@ target_sources(WindowsUtils PUBLIC
         include/WindowsUtils/FindDebugSymbols.h
         include/WindowsUtils/ListModules.h
         include/WindowsUtils/ListThreads.h
-        include/WindowsUtils/PerformanceCounter.h
         include/WindowsUtils/ProcessList.h
         include/WindowsUtils/ReadProcessMemory.h)
 

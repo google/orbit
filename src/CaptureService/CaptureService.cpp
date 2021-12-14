@@ -28,17 +28,7 @@ namespace orbit_capture_service {
 
 CaptureService::CaptureService() {
   // We want to estimate clock resolution once, not at the beginning of every capture.
-  EstimateAndLogClockResolution();
-}
-
-void CaptureService::EstimateAndLogClockResolution() {
-  // We expect the value to be small, ~35 nanoseconds.
-  clock_resolution_ns_ = orbit_base::EstimateClockResolution();
-  if (clock_resolution_ns_ > 0) {
-    LOG("Clock resolution: %d (ns)", clock_resolution_ns_);
-  } else {
-    ERROR("Failed to estimate clock resolution");
-  }
+  clock_resolution_ns_ = orbit_base::EstimateAndLogClockResolution();
 }
 
 void CaptureService::AddCaptureStartStopListener(CaptureStartStopListener* listener) {

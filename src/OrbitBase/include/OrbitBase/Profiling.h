@@ -5,10 +5,12 @@
 #ifndef ORBIT_BASE_PROFILING_H_
 #define ORBIT_BASE_PROFILING_H_
 
-#ifdef _WIN32
-#include <chrono>
-#else
 #include <stdint.h>
+
+#ifdef _WIN32
+#include <Windows.h>
+#include <profileapi.h>
+#else
 #include <time.h>
 #endif
 
@@ -21,9 +23,26 @@ namespace orbit_base {
 
 #ifdef _WIN32
 
+// Retrieves the period of the performance counter from a call to "QueryPerformanceFrequency()".
+// From Microsoft's documentation: "The frequency of the performance counter is fixed at system boot
+// and is consistent across all processors. Therefore, the frequency need only be queried upon
+// application initialization, and the result can be cached." A typical value is 100ns.
+[[nodiscard]] inline uint64_t GetPerformanceCounterPeriodNs() {
+  LARGE_INTEGER frequency;
+  QueryPerformanceFrequency(&frequency);
+  return 1'000'000'000 / frequency.QuadPart;
+}
+
+// Converts a "raw" timestamp retrieved from "QueryPerformanceCounter()" to nanoseconds.
+[[nodiscard]] inline uint64_t RawTimestampToNs(uint64_t raw_timestamp) {
+  static uint64_t performance_counter_period_ns_ = GetPerformanceCounterPeriodNs();
+  return raw_timestamp * performance_counter_period_ns_;
+}
+
 [[nodiscard]] inline uint64_t CaptureTimestampNs() {
-  auto time_since_epoch = std::chrono::steady_clock::now().time_since_epoch();
-  return std::chrono::duration_cast<std::chrono::nanoseconds>(time_since_epoch).count();
+  LARGE_INTEGER ticks;
+  QueryPerformanceCounter(&ticks);
+  return RawTimestampToNs(ticks.QuadPart);
 }
 
 #else
@@ -42,6 +61,9 @@ constexpr clockid_t kOrbitCaptureClock = CLOCK_MONOTONIC;
 // Estimates the clock resolution for debugging purposes. Should only be used to display this
 // information to the user or log it.
 [[nodiscard]] uint64_t EstimateClockResolution();
+
+// Print result of "EstimateClockResolution()" to log and return resolution value.
+[[nodiscard]] uint64_t EstimateAndLogClockResolution();
 
 }  // namespace orbit_base
 
