@@ -54,7 +54,7 @@ class E2ETestCase:
                 (self.suite.name, self.__class__.__name__, description))
 
     def expect_eq(self, left, right, description):
-        self.expect_true(left == right, description)
+        self.expect_true(left == right, description + " (got {}, expected {})".format(left, right))
 
     def find_control(self,
                      control_type=None,
