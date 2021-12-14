@@ -138,7 +138,7 @@ class TracerImpl : public Tracer {
 
   bool trace_context_switches_;
   pid_t target_pid_;
-  uint64_t sampling_period_ns_;
+  std::optional<uint64_t> sampling_period_ns_;
   uint16_t stack_dump_size_;
   orbit_grpc_protos::CaptureOptions::UnwindingMethod unwinding_method_;
   std::vector<Function> instrumented_functions_;
