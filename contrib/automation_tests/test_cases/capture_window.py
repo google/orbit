@@ -276,9 +276,7 @@ class FilterTracks(CaptureWindowE2ETestCaseBase):
         keyboard.send_keys(filter_string)
 
         if expected_track_count is not None:
-            self.expect_true(
-                len(self._find_tracks()) == expected_track_count,
-                '# of tracks matches {}'.format(expected_track_count))
+            wait_for_condition(lambda: len(self._find_tracks()) == expected_track_count)
 
 
 class Capture(E2ETestCase):
