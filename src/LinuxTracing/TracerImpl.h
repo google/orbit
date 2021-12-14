@@ -136,9 +136,6 @@ class TracerImpl : public Tracer {
   static constexpr uint32_t IDLE_TIME_ON_EMPTY_RING_BUFFERS_US = 5000;
   static constexpr uint32_t IDLE_TIME_ON_EMPTY_DEFERRED_EVENTS_US = 5000;
 
-  // If sampling is disabled, we set `sampling_period_ns` to this constant.
-  static constexpr uint64_t kNoSamplingPeriodNs = 0;
-
   bool trace_context_switches_;
   pid_t target_pid_;
   std::optional<uint64_t> sampling_period_ns_;

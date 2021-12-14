@@ -78,10 +78,11 @@ TracerImpl::TracerImpl(
     stack_dump_size = (unwinding_method_ == CaptureOptions::kDwarf)
                           ? kMaxStackSampleUserSize
                           : kDefaultStackSampleUserSizeFramePointer;
-    LOG("No sample stack dump size was set; Assigning to default: %u", stack_dump_size);
-  } else if (stack_dump_size > kMaxStackSampleUserSize ||
-             stack_dump_size == 0 /*TODO(b/210439638)*/) {
-    ERROR("Invalid sample stack dump size: %u; Reassigning to default: %u", stack_dump_size,
+    LOG("No sample stack dump size was set; assigning to default: %u", stack_dump_size);
+  } else if (stack_dump_size > kMaxStackSampleUserSize || stack_dump_size == 0) {
+    // TODO(b/210439638): Support a stack_dump_size of 0. It might be valid for frame pointer
+    //  sampling without leaf function patching.
+    ERROR("Invalid sample stack dump size: %u; reassigning to default: %u", stack_dump_size,
           kMaxStackSampleUserSize);
     stack_dump_size = kMaxStackSampleUserSize;
   }
