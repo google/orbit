@@ -9,6 +9,7 @@
 
 #include <cstdint>
 #include <string>
+#include <vector>
 
 ABSL_DECLARE_FLAG(bool, devmode);
 
@@ -54,6 +55,7 @@ ABSL_DECLARE_FLAG(bool, enforce_full_redraw);
 
 // VSI
 ABSL_DECLARE_FLAG(std::string, connection_target);
+ABSL_DECLARE_FLAG(std::vector<std::string>, additional_symbol_paths);
 
 // Clears QSettings. This is intended for e2e tests.
 ABSL_DECLARE_FLAG(bool, clear_settings);
