@@ -252,7 +252,7 @@ class GraphicsCaptureEventProcessor : public orbit_capture_client::CaptureEventP
   static void UpdateFrameDurationDistribution(uint64_t frame_time_ns, Distribution& distribution) {
     if (frame_time_ns > 0) {
       uint64_t frame_time_ms_floor = frame_time_ns / 1000000;
-      uint64_t index = std::min(frame_time_ms_floor, static_cast<uint64_t>(kMaxTimeMs));
+      uint64_t index = std::min(frame_time_ms_floor, kMaxTimeMs);
       ++distribution[index];
     }
   }
@@ -286,7 +286,7 @@ class GraphicsCaptureEventProcessor : public orbit_capture_client::CaptureEventP
   static constexpr uint64_t kQueuePresentFunctionId = std::numeric_limits<uint64_t>::max();
 
  private:
-  static constexpr int kMaxTimeMs = 1023;  // This is an arbitrary number
+  static constexpr uint64_t kMaxTimeMs = 1023;  // This is an arbitrary number
   static constexpr const char* kCpuFrameTimeFilename = "cpu_frame_times.txt";
   static constexpr const char* kGpuFrameTimeFilename = "gpu_frame_times.txt";
 
