@@ -86,11 +86,12 @@ void ApiEventProcessor::ProcessApiEventLegacy(const orbit_api::ApiEvent& api_eve
 }
 
 void ApiEventProcessor::ProcessStartEventLegacy(const orbit_api::ApiEvent& api_event) {
-  synchronous_event_stack_by_tid_[api_event.tid].emplace_back(api_event);
+  synchronous_legacy_event_stack_by_tid_[api_event.tid].emplace_back(api_event);
 }
 
 void ApiEventProcessor::ProcessStopEventLegacy(const orbit_api::ApiEvent& api_event) {
-  std::vector<orbit_api::ApiEvent>& event_stack = synchronous_event_stack_by_tid_[api_event.tid];
+  std::vector<orbit_api::ApiEvent>& event_stack =
+      synchronous_legacy_event_stack_by_tid_[api_event.tid];
   if (event_stack.empty()) {
     // We received a stop event with no matching start event, which is possible if the capture was
     // started between the event's start and stop times.
@@ -122,18 +123,18 @@ void ApiEventProcessor::ProcessStopEventLegacy(const orbit_api::ApiEvent& api_ev
 
 void ApiEventProcessor::ProcessAsyncStartEventLegacy(const orbit_api::ApiEvent& api_event) {
   const uint64_t event_id = api_event.encoded_event.event.data;
-  asynchronous_events_by_id_[event_id] = api_event;
+  asynchronous_legacy_events_by_id_[event_id] = api_event;
 }
 
 void ApiEventProcessor::ProcessAsyncStopEventLegacy(const orbit_api::ApiEvent& api_event) {
   const uint64_t event_id = api_event.encoded_event.event.data;
-  if (asynchronous_events_by_id_.count(event_id) == 0) {
+  if (asynchronous_legacy_events_by_id_.count(event_id) == 0) {
     // We received a stop event with no matching start event, which is possible if the capture was
     // started between the event's start and stop times.
     return;
   }
 
-  orbit_api::ApiEvent& start_event = asynchronous_events_by_id_[event_id];
+  orbit_api::ApiEvent& start_event = asynchronous_legacy_events_by_id_[event_id];
   TimerInfo timer_info;
   timer_info.set_start(start_event.timestamp_ns);
   timer_info.set_end(api_event.timestamp_ns);
@@ -152,7 +153,7 @@ void ApiEventProcessor::ProcessAsyncStopEventLegacy(const orbit_api::ApiEvent& a
 
   capture_listener_->OnTimer(timer_info);
 
-  asynchronous_events_by_id_.erase(event_id);
+  asynchronous_legacy_events_by_id_.erase(event_id);
 }
 
 void ApiEventProcessor::ProcessStringEventLegacy(const orbit_api::ApiEvent& api_event) {
@@ -281,7 +282,7 @@ void ApiEventProcessor::ProcessApiScopeStopAsync(
   timer_info.set_api_scope_name(DecodeString(start_event));
 
   capture_listener_->OnTimer(timer_info);
-  asynchronous_events_by_id_.erase(event_id);
+  asynchronous_scopes_by_id_.erase(event_id);
 }
 
 void ApiEventProcessor::ProcessApiStringEvent(

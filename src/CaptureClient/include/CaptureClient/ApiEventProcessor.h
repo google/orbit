@@ -13,7 +13,7 @@
 
 namespace orbit_capture_client {
 
-// The ApiEventProcessor is responsible for processing orbit_grpc_protos::ApiEvent events and
+// The ApiEventProcessor is responsible for processing all the orbit_grpc_protos::Api... events and
 // transforming them into TimerInfo objects that are relayed to a CaptureListener. Internal state
 // is maintained to cache "start" events until a corresponding "stop" event is received. The pair
 // is then used to create a single TimerInfo object. "Tracking" events don't need to be cached
@@ -21,9 +21,11 @@ namespace orbit_capture_client {
 class ApiEventProcessor {
  public:
   explicit ApiEventProcessor(CaptureListener* listener);
+
   // The new manual instrumentation events (see below) could not use `ApiEvent`, so this is
   // deprecated. The methods for the concrete (new) events should be used instead.
   [[deprecated]] void ProcessApiEventLegacy(const orbit_grpc_protos::ApiEvent& grpc_api_event);
+
   void ProcessApiScopeStart(const orbit_grpc_protos::ApiScopeStart& api_scope_start);
   void ProcessApiScopeStartAsync(
       const orbit_grpc_protos::ApiScopeStartAsync& grpc_api_scope_start_async);
@@ -48,11 +50,12 @@ class ApiEventProcessor {
   [[deprecated]] void ProcessStringEventLegacy(const orbit_api::ApiEvent& api_event);
 
   CaptureListener* capture_listener_ = nullptr;
-  absl::flat_hash_map<int32_t, std::vector<orbit_api::ApiEvent>> synchronous_event_stack_by_tid_;
+  absl::flat_hash_map<int32_t, std::vector<orbit_api::ApiEvent>>
+      synchronous_legacy_event_stack_by_tid_;
   absl::flat_hash_map<int32_t, std::vector<orbit_grpc_protos::ApiScopeStart>>
       synchronous_scopes_stack_by_tid_;
-  absl::flat_hash_map<int32_t, orbit_api::ApiEvent> asynchronous_events_by_id_;
-  absl::flat_hash_map<int32_t, orbit_grpc_protos::ApiScopeStartAsync> asynchronous_scopes_by_id_;
+  absl::flat_hash_map<uint64_t, orbit_api::ApiEvent> asynchronous_legacy_events_by_id_;
+  absl::flat_hash_map<uint64_t, orbit_grpc_protos::ApiScopeStartAsync> asynchronous_scopes_by_id_;
 };
 
 }  // namespace orbit_capture_client
