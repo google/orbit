@@ -158,11 +158,9 @@ void ApiEventProcessor::ProcessAsyncStopEventLegacy(const orbit_api::ApiEvent& a
 
 void ApiEventProcessor::ProcessStringEventLegacy(const orbit_api::ApiEvent& api_event) {
   ApiStringEvent api_string_event;
-  api_string_event.set_process_id(api_event.pid);
-  api_string_event.set_thread_id(api_event.tid);
-  api_string_event.set_timestamp_ns(api_event.timestamp_ns);
   api_string_event.set_async_scope_id(api_event.encoded_event.event.data);
   api_string_event.set_name(api_event.encoded_event.event.name);
+  api_string_event.set_should_concatenate(true);
   capture_listener_->OnApiStringEvent(api_string_event);
 }
 
@@ -288,11 +286,9 @@ void ApiEventProcessor::ProcessApiScopeStopAsync(
 void ApiEventProcessor::ProcessApiStringEvent(
     const orbit_grpc_protos::ApiStringEvent& grpc_api_string_event) {
   ApiStringEvent api_string_event;
-  api_string_event.set_process_id(grpc_api_string_event.pid());
-  api_string_event.set_thread_id(grpc_api_string_event.tid());
-  api_string_event.set_timestamp_ns(grpc_api_string_event.timestamp_ns());
   api_string_event.set_async_scope_id(grpc_api_string_event.id());
   api_string_event.set_name(DecodeString(grpc_api_string_event));
+  api_string_event.set_should_concatenate(false);
   capture_listener_->OnApiStringEvent(api_string_event);
 }
 

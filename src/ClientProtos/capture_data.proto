@@ -175,12 +175,16 @@ message TimerInfo {
 }
 
 message ApiStringEvent {
-  uint32 process_id = 1;
-  uint32 thread_id = 2;
-  uint64 timestamp_ns = 3;
+  reserved 1, 2, 3;
 
   uint64 async_scope_id = 4;
   string name = 5;
+  // The old manual instrumentation (orbit_grpc_protos::ApiEvent) allowed
+  // arbitrarily long strings by concatenating strings associated with the same
+  // async_scope_id. This is no longer the case because
+  // orbit_grpc_protos::ApiStringEvent already supports arbitrarily long
+  // strings.
+  bool should_concatenate = 6;
 }
 
 message ApiTrackValue {
