@@ -75,20 +75,9 @@ TimeGraph::TimeGraph(AccessibleInterfaceProvider* parent, OrbitApp* app,
   track_manager_ = std::make_unique<TrackManager>(this, viewport_, &GetLayout(), app, capture_data);
   track_manager_->GetOrCreateSchedulerTrack();
 
-  async_timer_info_listener_ =
-      std::make_unique<ManualInstrumentationManager::AsyncTimerInfoListener>(
-          [this](const std::string& name, const TimerInfo& timer_info) {
-            ProcessAsyncTimer(name, timer_info);
-          });
-  manual_instrumentation_manager_->AddAsyncTimerListener(async_timer_info_listener_.get());
-
   if (absl::GetFlag(FLAGS_enforce_full_redraw)) {
     RequestUpdate();
   }
-}
-
-TimeGraph::~TimeGraph() {
-  manual_instrumentation_manager_->RemoveAsyncTimerListener(async_timer_info_listener_.get());
 }
 
 float TimeGraph::GetHeight() const {
@@ -324,7 +313,7 @@ void TimeGraph::ProcessTimer(const TimerInfo& timer_info, const InstrumentedFunc
       break;
     }
     case TimerInfo::kApiScopeAsync: {
-      manual_instrumentation_manager_->ProcessAsyncTimer(timer_info);
+      ProcessAsyncTimer(timer_info);
       break;
     }
     default:
@@ -410,7 +399,8 @@ void TimeGraph::ProcessPageFaultsTrackingTimer(const TimerInfo& timer_info) {
   track->OnTimer(timer_info);
 }
 
-void TimeGraph::ProcessAsyncTimer(const std::string& track_name, const TimerInfo& timer_info) {
+void TimeGraph::ProcessAsyncTimer(const TimerInfo& timer_info) {
+  const std::string& track_name = timer_info.api_scope_name();
   AsyncTrack* track = track_manager_->GetOrCreateAsyncTrack(track_name);
   track->OnTimer(timer_info);
 }
