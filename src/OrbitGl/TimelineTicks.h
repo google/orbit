@@ -15,15 +15,16 @@ constexpr uint64_t kSecondToNano = 1000 * 1000 * 1000;
 constexpr uint64_t kMinuteToNano = 60 * kSecondToNano;
 constexpr uint64_t kHourToNano = 60 * kMinuteToNano;
 
+// TimelineTicks class manages the logic about the ticks, scale and visible timestamps in the
+// timeline.
 class TimelineTicks {
-  enum class TickType { MajorTick, MinorTick };
-
  public:
+  enum class TickType { kMajorTick, kMinorTick };
   TimelineTicks();
 
   // For now, only major ticks.
-  [[nodiscard]] std::vector<std::pair<TickType, uint64_t> > GetTicks(uint64_t start_ns,
-                                                                     uint64_t end_ns) const;
+  [[nodiscard]] std::vector<std::pair<TickType, uint64_t> > GetAllTicks(uint64_t start_ns,
+                                                                        uint64_t end_ns) const;
   [[nodiscard]] std::vector<uint64_t> GetMajorTicks(uint64_t start_ns, uint64_t end_ns) const;
 
  private:

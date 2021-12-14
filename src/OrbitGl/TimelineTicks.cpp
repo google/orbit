@@ -3,6 +3,8 @@
 // found in the LICENSE file.
 #include "TimelineTicks.h"
 
+#include "OrbitBase/Logging.h"
+
 namespace orbit_gl {
 
 TimelineTicks::TimelineTicks() {
@@ -39,22 +41,22 @@ TimelineTicks::TimelineTicks() {
   }
 }
 
-std::vector<std::pair<TimelineTicks::TickType, uint64_t> > TimelineTicks::GetTicks(
+std::vector<std::pair<TimelineTicks::TickType, uint64_t> > TimelineTicks::GetAllTicks(
     uint64_t start_ns, uint64_t end_ns) const {
   std::vector<std::pair<TickType, uint64_t> > ticks;
   uint64_t scale = GetScale(end_ns - start_ns);
   uint64_t first_major_tick = ((start_ns + scale - 1) / scale) * scale;
   // TODO(b/208447247): Include MinorTicks.
   for (uint64_t major_tick = first_major_tick; major_tick <= end_ns; major_tick += scale) {
-    ticks.push_back(std::make_pair(TickType::MajorTick, major_tick));
+    ticks.push_back(std::make_pair(TickType::kMajorTick, major_tick));
   }
   return ticks;
 }
 
 std::vector<uint64_t> TimelineTicks::GetMajorTicks(uint64_t start_ns, uint64_t end_ns) const {
   std::vector<uint64_t> major_ticks;
-  for (auto [tick_type, timestamp_ns] : GetTicks(start_ns, end_ns)) {
-    if (tick_type == TickType::MajorTick) {
+  for (auto [tick_type, timestamp_ns] : GetAllTicks(start_ns, end_ns)) {
+    if (tick_type == TickType::kMajorTick) {
       major_ticks.push_back(timestamp_ns);
     }
   }
@@ -63,7 +65,9 @@ std::vector<uint64_t> TimelineTicks::GetMajorTicks(uint64_t start_ns, uint64_t e
 
 uint64_t TimelineTicks::GetScale(uint64_t time_range_ns) const {
   // Biggest scale smaller than half the total range.
-  return *--scales_.upper_bound(time_range_ns / 2);
+  uint64_t half_time_range_ns = time_range_ns / 2;
+  CHECK(half_time_range_ns > 0);
+  return *std::prev(scales_.upper_bound(time_range_ns / 2));
 }
 
 }  // namespace orbit_gl
