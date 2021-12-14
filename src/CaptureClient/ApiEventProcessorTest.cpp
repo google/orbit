@@ -378,6 +378,60 @@ TEST_F(ApiEventProcessorTest, AsyncScopes) {
   EXPECT_TRUE(MessageDifferencer::Equivalent(expected_timer_0, actual_timers[2]));
 }
 
+TEST_F(ApiEventProcessorTest, AsyncScopesOverwrittenStartAndRepeatedStop) {
+  auto start0 =
+      CreateStartScopeAsync("AsyncTrack", 1, kProcessId, kThreadId1, kId1, kAddressInFunction);
+  auto start1 =
+      CreateStartScopeAsync("AsyncTrack", 2, kProcessId, kThreadId1, kId1, kAddressInFunction);
+  auto stop0 = CreateStopScopeAsync(3, kProcessId, kThreadId1, kId1);
+  auto stop1 = CreateStopScopeAsync(4, kProcessId, kThreadId1, kId1);
+
+  orbit_client_protos::TimerInfo actual_timer;
+  EXPECT_CALL(capture_listener_, OnTimer)
+      .Times(1)
+      .WillRepeatedly(Invoke([&actual_timer](const TimerInfo& timer) { actual_timer = timer; }));
+
+  api_event_processor_.ProcessApiScopeStartAsync(start0);
+  api_event_processor_.ProcessApiScopeStartAsync(start1);
+  api_event_processor_.ProcessApiScopeStopAsync(stop0);
+  api_event_processor_.ProcessApiScopeStopAsync(stop1);
+
+  EXPECT_TRUE(MessageDifferencer::Equivalent(
+      actual_timer, CreateTimerInfo(2, 3, kProcessId, kThreadId1, "AsyncTrack", 0, 0, kId1,
+                                    kAddressInFunction, TimerInfo::kApiScopeAsync)));
+}
+
+TEST_F(ApiEventProcessorTest, AsyncScopesWithIdsDifferingOnlyInUpperHalf) {
+  static constexpr uint64_t kShortId = 0x1D;
+  static constexpr uint64_t kLongId = 0xFF0000001D;
+  auto start0 =
+      CreateStartScopeAsync("AsyncTrack", 1, kProcessId, kThreadId1, kShortId, kAddressInFunction);
+  auto start1 =
+      CreateStartScopeAsync("AsyncTrack", 2, kProcessId, kThreadId1, kLongId, kAddressInFunction);
+  auto stop1 = CreateStopScopeAsync(3, kProcessId, kThreadId1, kLongId);
+  auto stop0 = CreateStopScopeAsync(4, kProcessId, kThreadId1, kShortId);
+
+  std::vector<orbit_client_protos::TimerInfo> actual_timers;
+  EXPECT_CALL(capture_listener_, OnTimer)
+      .Times(2)
+      .WillRepeatedly(
+          Invoke([&actual_timers](const TimerInfo& timer) { actual_timers.push_back(timer); }));
+
+  api_event_processor_.ProcessApiScopeStartAsync(start0);
+  api_event_processor_.ProcessApiScopeStartAsync(start1);
+
+  api_event_processor_.ProcessApiScopeStopAsync(stop1);
+  api_event_processor_.ProcessApiScopeStopAsync(stop0);
+
+  ASSERT_THAT(actual_timers.size(), 2);
+  EXPECT_TRUE(MessageDifferencer::Equivalent(
+      actual_timers[0], CreateTimerInfo(2, 3, kProcessId, kThreadId1, "AsyncTrack", 0, 0, kLongId,
+                                        kAddressInFunction, TimerInfo::kApiScopeAsync)));
+  EXPECT_TRUE(MessageDifferencer::Equivalent(
+      actual_timers[1], CreateTimerInfo(1, 4, kProcessId, kThreadId1, "AsyncTrack", 0, 0, kShortId,
+                                        kAddressInFunction, TimerInfo::kApiScopeAsync)));
+}
+
 TEST_F(ApiEventProcessorTest, StringEvent) {
   auto string_event = CreateStringEvent(1, kProcessId, kThreadId1, kId1, "Some string for this id");
 
