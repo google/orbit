@@ -9,21 +9,23 @@ project(OrbitServiceLib)
 
 add_library(OrbitServiceLib STATIC)
 
-if(WIN32)
-set(PLATFORM_DIR "Windows")
-else()
-set(PLATFORM_DIR "Linux")
-endif()
-
 target_sources(OrbitServiceLib PRIVATE
         OrbitGrpcServer.h
         OrbitService.h
         ProducerSideServer.cpp
         ProducerSideServer.h
         ProducerSideServiceImpl.cpp
-        ProducerSideServiceImpl.h
-        ${PLATFORM_DIR}/OrbitGrpcServer.cpp
-        ${PLATFORM_DIR}/OrbitService.cpp)
+        ProducerSideServiceImpl.h)
+
+if(WIN32)
+target_sources(OrbitServiceLib PRIVATE
+        OrbitGrpcServerWindows.cpp
+        OrbitServiceWindows.cpp)
+else()
+target_sources(OrbitServiceLib PRIVATE
+        OrbitGrpcServerLinux.cpp
+        OrbitServiceLinux.cpp)
+endif()
 
 target_include_directories(OrbitServiceLib PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 
