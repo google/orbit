@@ -26,13 +26,14 @@ void ManualInstrumentationManager::RemoveAsyncTimerListener(AsyncTimerInfoListen
 
 void ManualInstrumentationManager::ProcessStringEvent(
     const orbit_client_protos::ApiStringEvent& string_event) {
-  // A string can be sent in chunks so we append the current value to any existing one.
-  uint64_t event_id = string_event.async_scope_id();
-  auto result = string_manager_.Get(event_id);
-  if (result.has_value()) {
-    string_manager_.AddOrReplace(event_id, result.value() + string_event.name());
-  } else {
+  const uint64_t event_id = string_event.async_scope_id();
+  if (!string_event.should_concatenate()) {
     string_manager_.AddOrReplace(event_id, string_event.name());
+  } else {
+    // In the legacy implementation of manual instrumentation, a string could be sent in chunks, so
+    // in that case we append the current value to any existing one.
+    std::string previous_string = string_manager_.Get(event_id).value_or("");
+    string_manager_.AddOrReplace(event_id, previous_string + string_event.name());
   }
 }
 

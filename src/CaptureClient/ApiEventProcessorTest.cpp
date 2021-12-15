@@ -161,17 +161,12 @@ class ApiEventProcessorTest : public ::testing::Test {
     return result;
   }
 
-  static orbit_client_protos::ApiStringEvent CreateClientStringEvent(uint64_t timestamp_ns,
-                                                                     int32_t process_id,
-                                                                     int32_t thread_id, uint64_t id,
-                                                                     const char* name) {
+  static orbit_client_protos::ApiStringEvent CreateClientStringEvent(uint64_t id, const char* name,
+                                                                     bool should_concatenate) {
     orbit_client_protos::ApiStringEvent result;
-    result.set_timestamp_ns(timestamp_ns);
-    result.set_process_id(process_id);
-    result.set_thread_id(thread_id);
     result.set_async_scope_id(id);
     result.set_name(name);
-
+    result.set_should_concatenate(should_concatenate);
     return result;
   }
 
@@ -436,7 +431,7 @@ TEST_F(ApiEventProcessorTest, StringEvent) {
   auto string_event = CreateStringEvent(1, kProcessId, kThreadId1, kId1, "Some string for this id");
 
   auto expected_string_event =
-      CreateClientStringEvent(1, kProcessId, kThreadId1, kId1, "Some string for this id");
+      CreateClientStringEvent(kId1, "Some string for this id", /*should_concatenate=*/false);
 
   orbit_client_protos::ApiStringEvent actual_string_event;
   EXPECT_CALL(capture_listener_, OnApiStringEvent)
@@ -689,7 +684,7 @@ TEST_F(ApiEventProcessorTest, StringEventLegacy) {
                                            "Some string for this id", kId1);
 
   auto expected_string_event =
-      CreateClientStringEvent(1, kProcessId, kThreadId1, kId1, "Some string for this id");
+      CreateClientStringEvent(kId1, "Some string for this id", /*should_concatenate=*/true);
 
   orbit_client_protos::ApiStringEvent actual_string_event;
   EXPECT_CALL(capture_listener_, OnApiStringEvent)
