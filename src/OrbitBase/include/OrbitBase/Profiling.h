@@ -34,7 +34,7 @@ namespace orbit_base {
 }
 
 // Converts a "raw" timestamp retrieved from "QueryPerformanceCounter()" to nanoseconds.
-[[nodiscard]] inline uint64_t RawTimestampToNs(uint64_t raw_timestamp) {
+[[nodiscard]] inline uint64_t PerformanceCounterToNs(uint64_t raw_timestamp) {
   static uint64_t performance_counter_period_ns_ = GetPerformanceCounterPeriodNs();
   return raw_timestamp * performance_counter_period_ns_;
 }
@@ -42,7 +42,7 @@ namespace orbit_base {
 [[nodiscard]] inline uint64_t CaptureTimestampNs() {
   LARGE_INTEGER ticks;
   QueryPerformanceCounter(&ticks);
-  return RawTimestampToNs(ticks.QuadPart);
+  return PerformanceCounterToNs(ticks.QuadPart);
 }
 
 #else
