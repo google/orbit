@@ -13,11 +13,21 @@
 #include <utility>
 
 #include "CaptureService/CaptureStartStopListener.h"
+
+#ifdef __linux
+
 #include "CrashService/CrashServiceImpl.h"
 #include "FramePointerValidatorService/FramePointerValidatorServiceImpl.h"
 #include "LinuxCaptureService/LinuxCaptureService.h"
 #include "ProcessService/ProcessServiceImpl.h"
 #include "TracepointService/TracepointServiceImpl.h"
+
+#else
+
+#include "WindowsCaptureService/WindowsCaptureService.h"
+#include "WindowsProcessService/ProcessServiceImpl.h"
+
+#endif
 
 namespace orbit_service {
 
@@ -40,12 +50,19 @@ class OrbitGrpcServerImpl final : public OrbitGrpcServer {
       orbit_capture_service::CaptureStartStopListener* listener) override;
 
  private:
+
+ #ifdef __linux
   orbit_linux_capture_service::LinuxCaptureService capture_service_;
   orbit_process_service::ProcessServiceImpl process_service_;
   orbit_tracepoint_service::TracepointServiceImpl tracepoint_service_;
   orbit_frame_pointer_validator_service::FramePointerValidatorServiceImpl
       frame_pointer_validator_service_;
   orbit_crash_service::CrashServiceImpl crash_service_;
+#else
+  orbit_windows_capture_service::WindowsCaptureService capture_service_;
+  orbit_windows_process_service::ProcessServiceImpl process_service_;
+#endif
+
   std::unique_ptr<grpc::Server> server_;
 };
 
@@ -58,11 +75,14 @@ bool OrbitGrpcServerImpl::Init(std::string_view server_address, bool dev_mode) {
   builder.AddListeningPort(std::string(server_address), grpc::InsecureServerCredentials());
   builder.RegisterService(&capture_service_);
   builder.RegisterService(&process_service_);
+
+#ifdef __linux
   builder.RegisterService(&tracepoint_service_);
   builder.RegisterService(&frame_pointer_validator_service_);
   if (dev_mode) {
     builder.RegisterService(&crash_service_);
   }
+#endif
 
   server_ = builder.BuildAndStart();
 

@@ -17,6 +17,11 @@
 #include "absl/flags/usage.h"
 #include "absl/flags/usage_config.h"
 
+#ifdef WIN32
+#include "OrbitBase/ExecutablePath.h"
+#include "OrbitBase/GetLastError.h"
+#endif
+
 ABSL_FLAG(uint64_t, grpc_port, 44765, "gRPC server port");
 
 ABSL_FLAG(bool, devmode, false, "Enable developer mode");
@@ -42,13 +47,6 @@ void InstallSigintHandler() {
   sigaction(SIGINT, &act, nullptr);
 }
 
-std::string GetLogFilePath() {
-  std::filesystem::path var_log{"/var/log"};
-  std::filesystem::create_directory(var_log);
-  const std::string log_file_path = var_log / "OrbitService.log";
-  return log_file_path;
-}
-
 #else
 
 BOOL WINAPI CtrlHandler(DWORD event_type) {
@@ -63,17 +61,28 @@ BOOL WINAPI CtrlHandler(DWORD event_type) {
 }
 
 void InstallSigintHandler() {
-if (!SetConsoleCtrlHandler(CtrlHandler, TRUE)) {
+  if (!SetConsoleCtrlHandler(CtrlHandler, TRUE)) {
     ERROR("Calling SetConsoleCtrlHandler: %s", orbit_base::GetLastErrorAsString());
   }
 }
 
 #endif
 
+std::filesystem::path GetLogFilePath() {
+#ifdef WIN32
+  std::filesystem::path log_dir = orbit_base::GetExecutablePath() / "logs";
+#else
+  std::filesystem::path log_dir = "/var/log";
+#endif
+  std::error_code ec;
+  std::filesystem::create_directory(log_dir, ec);
+  return log_dir / "OrbitService.log";
+}
+
 }  // namespace
 
 int main(int argc, char** argv) {
-  orbit_base::InitLogFile(orbit_service::OrbitService::GetLogFilePath());
+  orbit_base::InitLogFile(GetLogFilePath());
 
   absl::SetProgramUsageMessage("Orbit CPU Profiler Service");
   absl::SetFlagsUsageConfig(absl::FlagsUsageConfig{{}, {}, {}, &orbit_version::GetBuildReport, {}});
