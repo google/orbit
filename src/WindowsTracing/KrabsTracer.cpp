@@ -128,7 +128,8 @@ void KrabsTracer::OnThreadEvent(const EVENT_RECORD& record, const krabs::trace_c
       krabs::parser parser(schema);
       uint32_t old_tid = parser.parse<uint32_t>(L"OldThreadId");
       uint32_t new_tid = parser.parse<uint32_t>(L"NewThreadId");
-      uint64_t timestamp_ns = orbit_base::RawTimestampToNs(record.EventHeader.TimeStamp.QuadPart);
+      uint64_t timestamp_ns =
+          orbit_base::PerformanceCounterToNs(record.EventHeader.TimeStamp.QuadPart);
       uint16_t cpu = record.BufferContext.ProcessorIndex;
       context_switch_manager_->ProcessContextSwitch(cpu, old_tid, new_tid, timestamp_ns);
     } break;
@@ -164,7 +165,8 @@ void KrabsTracer::OnStackWalkEvent(const EVENT_RECORD& record,
   FullCallstackSample sample;
   sample.set_pid(pid);
   sample.set_tid(parser.parse<uint32_t>(L"StackThread"));
-  sample.set_timestamp_ns(orbit_base::RawTimestampToNs(record.EventHeader.TimeStamp.QuadPart));
+  sample.set_timestamp_ns(
+      orbit_base::PerformanceCounterToNs(record.EventHeader.TimeStamp.QuadPart));
 
   Callstack* callstack = sample.mutable_callstack();
   callstack->set_type(Callstack::kComplete);
