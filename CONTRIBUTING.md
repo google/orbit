@@ -49,7 +49,7 @@ Commit messages must follow the following rules:
 * Separated from subject line by blank line
 * Wrapped to 72 characters
 * Explain *what* and *why* rather than *how*
-* Add a `Test:` stanza describing how to test the change. Examples may be `Test: run OrbitBaseUnitTests` or `Test: start orbit, capture, save, restart orbit, load capture, see that it did not crash`.
+* Add a Test: stanza describing how the change was tested. Examples may be `Test: run OrbitBaseUnitTests` or `Test: start orbit, capture, save, restart orbit, load capture, see that it did not crash`.
 * If possible add a `Bug:` stanza at the end of the commit message to link to existing bugs/issues. Make sure to include http:// - it helps tools recognize the link and let git log reader open it without copy and pasting it first. Example: `Bug: http://b/42`
 
 
