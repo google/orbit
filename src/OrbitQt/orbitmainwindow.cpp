@@ -1121,11 +1121,11 @@ void OrbitMainWindow::LoadCaptureOptionsIntoApp() {
             .value(kCallstackUnwindingMethodSettingKey,
                    static_cast<int>(kCallstackUnwindingMethodDefaultValue))
             .toInt());
-    if (unwinding_method != CaptureOptions::kDwarf &&
-        unwinding_method != CaptureOptions::kFramePointers) {
+    if (unwinding_method == CaptureOptions::kUndefined) {
       ERROR("Unknown unwinding method specified; Using default unwinding method");
-      app_->SetUnwindingMethod(kCallstackUnwindingMethodDefaultValue);
+      unwinding_method = kCallstackUnwindingMethodDefaultValue;
     }
+    app_->SetUnwindingMethod(unwinding_method);
   }
 
   app_->SetCollectSchedulerInfo(settings.value(kCollectSchedulerInfoSettingKey, true).toBool());
