@@ -154,23 +154,6 @@ std::unique_ptr<ProducerSideServer> BuildAndStartProducerSideServer() {
   return producer_side_server;
 }
 
-std::atomic<bool> exit_requested = false;
-
-void SigintHandler(int signum) {
-  if (signum == SIGINT) {
-    exit_requested = true;
-  }
-}
-
-void InstallSigintHandler() {
-  struct sigaction act {};
-  act.sa_handler = SigintHandler;
-  sigemptyset(&act.sa_mask);
-  act.sa_flags = 0;
-  act.sa_restorer = nullptr;
-  sigaction(SIGINT, &act, nullptr);
-}
-
 }  // namespace
 
 std::string OrbitService::GetLogFilePath() {
@@ -180,7 +163,7 @@ std::string OrbitService::GetLogFilePath() {
   return log_file_path;
 }
 
-int OrbitService::Run() {
+int OrbitService::Run(std::atomic<bool>* exit_requested) {
   InstallSigintHandler();
   PrintInstanceVersions();
   LOG("Running Orbit Service version %s", orbit_version::GetVersionString());
@@ -209,7 +192,7 @@ int OrbitService::Run() {
   int return_code = 0;
 
   // Wait for exit_request or for the watchdog to expire.
-  while (!exit_requested) {
+  while (!(*exit_requested)) {
     std::string stdin_data = ReadStdIn();
     // If ssh sends EOF, end main loop.
     if (feof(stdin) != 0) {

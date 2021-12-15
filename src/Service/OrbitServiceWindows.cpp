@@ -26,19 +26,6 @@ namespace orbit_service {
 
 namespace {
 
-std::atomic<bool> exit_requested = false;
-
-BOOL WINAPI CtrlHandler(DWORD event_type) {
-  // Handle the CTRL-C signal.
-  if (event_type == CTRL_C_EVENT || event_type == CTRL_CLOSE_EVENT) {
-    exit_requested = true;
-    return TRUE;
-  }
-
-  // Pass other signals to the next handler.
-  return false;
-}
-
 std::unique_ptr<OrbitGrpcServer> CreateGrpcServer(uint16_t grpc_port, bool dev_mode) {
   std::string grpc_address = absl::StrFormat("127.0.0.1:%d", grpc_port);
   LOG("Starting gRPC server at %s", grpc_address);
@@ -72,10 +59,7 @@ std::string OrbitService::GetLogFilePath() {
   return log_file_path.string();
 }
 
-int OrbitService::Run() {
-  if (!SetConsoleCtrlHandler(CtrlHandler, TRUE)) {
-    ERROR("Calling SetConsoleCtrlHandler: %s", orbit_base::GetLastErrorAsString());
-  }
+int OrbitService::Run(std::atomic<bool>* exit_requested) {
   LOG("Running Orbit Service version %s", orbit_version::GetVersionString());
 #ifndef NDEBUG
   LOG("**********************************");
@@ -98,7 +82,7 @@ int OrbitService::Run() {
   grpc_server->AddCaptureStartStopListener(producer_side_server.get());
 
   // Wait for exit_request.
-  while (!exit_requested) {
+  while (!(*exit_requested)) {
     std::this_thread::sleep_for(std::chrono::seconds{1});
   }
 
