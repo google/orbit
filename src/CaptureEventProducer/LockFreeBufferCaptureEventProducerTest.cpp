@@ -9,6 +9,7 @@
 #include <gtest/gtest.h>
 #include <stdint.h>
 
+#include <atomic>
 #include <chrono>
 #include <memory>
 #include <optional>
@@ -91,7 +92,7 @@ TEST_F(LockFreeBufferCaptureEventProducerTest, EnqueueIntermediateEventIfCapturi
   std::this_thread::sleep_for(kWaitMessagesSentDuration);
   EXPECT_TRUE(buffer_producer_->IsCapturing());
 
-  int32_t capture_events_received_count = 0;
+  std::atomic<uint64_t> capture_events_received_count = 0;
   ON_CALL(*fake_service_, OnCaptureEventsReceived)
       .WillByDefault([&capture_events_received_count](
                          const std::vector<orbit_grpc_protos::ProducerCaptureEvent>& events) {
@@ -143,7 +144,7 @@ TEST_F(LockFreeBufferCaptureEventProducerTest, EnqueueIntermediateEvent) {
   std::this_thread::sleep_for(kWaitMessagesSentDuration);
   EXPECT_TRUE(buffer_producer_->IsCapturing());
 
-  int32_t capture_events_received_count = 0;
+  std::atomic<uint64_t> capture_events_received_count = 0;
   ON_CALL(*fake_service_, OnCaptureEventsReceived)
       .WillByDefault([&capture_events_received_count](
                          const std::vector<orbit_grpc_protos::ProducerCaptureEvent>& events) {
@@ -199,7 +200,7 @@ TEST_F(LockFreeBufferCaptureEventProducerTest, DuplicatedCommands) {
   std::this_thread::sleep_for(kWaitMessagesSentDuration);
   EXPECT_TRUE(buffer_producer_->IsCapturing());
 
-  int32_t capture_events_received_count = 0;
+  std::atomic<uint64_t> capture_events_received_count = 0;
   ON_CALL(*fake_service_, OnCaptureEventsReceived)
       .WillByDefault([&capture_events_received_count](
                          const std::vector<orbit_grpc_protos::ProducerCaptureEvent>& events) {
@@ -300,7 +301,7 @@ TEST_F(LockFreeBufferCaptureEventProducerTest, ServiceDisconnects) {
   std::this_thread::sleep_for(kWaitMessagesSentDuration);
   EXPECT_TRUE(buffer_producer_->IsCapturing());
 
-  int32_t capture_events_received_count = 0;
+  std::atomic<uint64_t> capture_events_received_count = 0;
   ON_CALL(*fake_service_, OnCaptureEventsReceived)
       .WillByDefault([&capture_events_received_count](
                          const std::vector<orbit_grpc_protos::ProducerCaptureEvent>& events) {
@@ -340,7 +341,7 @@ TEST_F(LockFreeBufferCaptureEventProducerTest, DisconnectAndReconnect) {
   std::this_thread::sleep_for(kWaitMessagesSentDuration);
   EXPECT_TRUE(buffer_producer_->IsCapturing());
 
-  int32_t capture_events_received_count = 0;
+  std::atomic<uint64_t> capture_events_received_count = 0;
   ON_CALL(*fake_service_, OnCaptureEventsReceived)
       .WillByDefault([&capture_events_received_count](
                          const std::vector<orbit_grpc_protos::ProducerCaptureEvent>& events) {
