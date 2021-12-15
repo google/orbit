@@ -50,8 +50,7 @@ class OrbitGrpcServerImpl final : public OrbitGrpcServer {
       orbit_capture_service::CaptureStartStopListener* listener) override;
 
  private:
-
- #ifdef __linux
+#ifdef __linux
   orbit_linux_capture_service::LinuxCaptureService capture_service_;
   orbit_process_service::ProcessServiceImpl process_service_;
   orbit_tracepoint_service::TracepointServiceImpl tracepoint_service_;
