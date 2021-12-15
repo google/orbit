@@ -102,8 +102,7 @@ bool DwarfSectionImpl<AddressType>::FillInCieHeader(DwarfCie* cie) {
     }
 
     cie->cfa_instructions_end = memory_.cur_offset() + length64;
-    // TODO(b/192012848): This is wrong. We need to propagate pointer size here.
-    cie->fde_address_encoding = DW_EH_PE_udata8;
+    cie->fde_address_encoding = AddressEncodingType<AddressType>::kEncodingType;
 
     uint64_t cie_id;
     if (!memory_.ReadBytes(&cie_id, sizeof(cie_id))) {
@@ -119,8 +118,7 @@ bool DwarfSectionImpl<AddressType>::FillInCieHeader(DwarfCie* cie) {
   } else {
     // 32 bit Cie
     cie->cfa_instructions_end = memory_.cur_offset() + length32;
-    // TODO(b/192012848): This is wrong. We need to propagate pointer size here.
-    cie->fde_address_encoding = DW_EH_PE_udata4;
+    cie->fde_address_encoding = AddressEncodingType<AddressType>::kEncodingType;
 
     uint32_t cie_id;
     if (!memory_.ReadBytes(&cie_id, sizeof(cie_id))) {
@@ -434,7 +432,8 @@ bool DwarfSectionImpl<AddressType>::EvalRegister(const DwarfLocation* loc, uint3
   Memory* regular_memory = eval_info->regular_memory;
   switch (loc->type) {
     case DWARF_LOCATION_OFFSET:
-      if (!regular_memory->ReadFully(eval_info->cfa + loc->values[0], reg_ptr, sizeof(AddressType))) {
+      if (!regular_memory->ReadFully(eval_info->cfa + loc->values[0], reg_ptr,
+                                     sizeof(AddressType))) {
         last_error_.code = DWARF_ERROR_MEMORY_INVALID;
         last_error_.address = eval_info->cfa + loc->values[0];
         return false;
@@ -674,7 +673,7 @@ bool DwarfSectionImpl<AddressType>::GetNextCieOrFde(uint64_t& next_entries_offse
 
     if (value64 == cie64_value_) {
       entry_is_cie = true;
-      cie_fde_encoding = DW_EH_PE_udata8;
+      cie_fde_encoding = AddressEncodingType<AddressType>::kEncodingType;
     } else {
       cie_offset = GetCieOffsetFromFde64(value64);
     }
@@ -690,7 +689,7 @@ bool DwarfSectionImpl<AddressType>::GetNextCieOrFde(uint64_t& next_entries_offse
 
     if (value32 == cie32_value_) {
       entry_is_cie = true;
-      cie_fde_encoding = DW_EH_PE_udata4;
+      cie_fde_encoding = AddressEncodingType<AddressType>::kEncodingType;
     } else {
       cie_offset = GetCieOffsetFromFde32(value32);
     }

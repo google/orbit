@@ -304,17 +304,31 @@ template <typename PeCoffInterfaceType>
 uint64_t PeCoffFake<PeCoffInterfaceType>::SetDebugFrameSectionAtOffset(uint64_t offset) {
   CHECK(memory_);
   uint64_t initial_offset = offset;
-  // CIE 32
-  offset = SetData32(offset, 0xfc);        // length
-  offset = SetData32(offset, 0xffffffff);  // CIE_id
-  memory_->SetMemory(offset, std::vector<uint8_t>{1, '\0', 0, 0, 1});
+  // CIE 32 information.
+  offset = SetData32(offset, 0xfc);
+  offset = SetData32(offset, 0xffffffff);
 
-  // FDE 32
+  std::vector<uint8_t> data{
+      1,               // version
+      'z', 'R', '\0',  // augmentation string
+      16,              // code alignment factor
+      32,              // data alignment factor
+      2,               // return address register
+      1,               // augmentation data length, ULEB128
+      0x03             // augmentation data (DW_EH_PE_udata4)
+  };
+  memory_->SetMemory(offset, data);
+
+  // FDE 32 information.
   offset = initial_offset + 0x100;
   offset = SetData32(offset, 0xfc);
   offset = SetData32(offset, 0);
   offset = SetData32(offset, 0x2100);
   offset = SetData32(offset, 0x400);
+
+  // Augmentation size, ULEB128 encoding, must be present as 'z' is present in the
+  // augmentation string.
+  offset = SetData8(offset, 0x0);
   return offset;
 }
 
