@@ -11,16 +11,16 @@
 
 namespace orbit_gl {
 
-constexpr uint64_t kSecondToNano = 1000 * 1000 * 1000;
-constexpr uint64_t kMinuteToNano = 60 * kSecondToNano;
-constexpr uint64_t kHourToNano = 60 * kMinuteToNano;
+constexpr uint64_t kNanosecondsPerSecond = 1000 * 1000 * 1000;
+constexpr uint64_t kNanosecondsPerMinute = 60 * kNanosecondsPerSecond;
+constexpr uint64_t kNanosecondsPerHour = 60 * kNanosecondsPerMinute;
 
 // TimelineTicks class manages the logic about the ticks, scale and visible timestamps in the
 // timeline.
 class TimelineTicks {
  public:
   enum class TickType { kMajorTick, kMinorTick };
-  TimelineTicks();
+  TimelineTicks() {}
 
   // For now, only major ticks.
   [[nodiscard]] std::vector<std::pair<TickType, uint64_t> > GetAllTicks(uint64_t start_ns,
@@ -29,7 +29,6 @@ class TimelineTicks {
 
  private:
   uint64_t GetScale(uint64_t time_range_ns) const;
-  std::set<uint64_t> scales_;
 };
 
 }  // namespace orbit_gl

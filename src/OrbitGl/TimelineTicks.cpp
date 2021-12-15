@@ -7,44 +7,50 @@
 
 namespace orbit_gl {
 
-TimelineTicks::TimelineTicks() {
-  // We are inserting a set of possible scales.
+std::set<uint64_t> GenerateScales() {
+  std::set<uint64_t> scales;
 
   // Scales under 1 second.
   uint64_t scale_ns = 1;
-  scales_.insert(scale_ns);
+  scales.insert(scale_ns);
   for (int i = 0; i < 9; i++) {
     scale_ns *= 10;
-    scales_.insert(scale_ns / 2);
-    scales_.insert(scale_ns);
+    scales.insert(scale_ns / 2);
+    scales.insert(scale_ns);
   }
 
   // Second and minute scales
-  scales_.insert(5 * kSecondToNano);
-  scales_.insert(10 * kSecondToNano);
-  scales_.insert(15 * kSecondToNano);
-  scales_.insert(30 * kSecondToNano);
-  scales_.insert(1 * kMinuteToNano);
-  scales_.insert(5 * kMinuteToNano);
-  scales_.insert(10 * kMinuteToNano);
-  scales_.insert(15 * kMinuteToNano);
-  scales_.insert(30 * kMinuteToNano);
+  scales.insert(5 * kNanosecondsPerSecond);
+  scales.insert(10 * kNanosecondsPerSecond);
+  scales.insert(15 * kNanosecondsPerSecond);
+  scales.insert(30 * kNanosecondsPerSecond);
+  scales.insert(1 * kNanosecondsPerMinute);
+  scales.insert(5 * kNanosecondsPerMinute);
+  scales.insert(10 * kNanosecondsPerMinute);
+  scales.insert(15 * kNanosecondsPerMinute);
+  scales.insert(30 * kNanosecondsPerMinute);
 
   // Hour scales
-  scale_ns = kHourToNano;
-  scales_.insert(scale_ns);
+  scale_ns = kNanosecondsPerHour;
+  scales.insert(scale_ns);
   // Maximum scale: 1000 hours (more than a month).
   for (int i = 0; i < 3; i++) {
     scale_ns *= 10;
-    scales_.insert(scale_ns / 2);
-    scales_.insert(scale_ns);
+    scales.insert(scale_ns / 2);
+    scales.insert(scale_ns);
   }
+  return scales;
 }
+
+const std::set<uint64_t> kTimelineScales = GenerateScales();
 
 std::vector<std::pair<TimelineTicks::TickType, uint64_t> > TimelineTicks::GetAllTicks(
     uint64_t start_ns, uint64_t end_ns) const {
   std::vector<std::pair<TickType, uint64_t> > ticks;
-  uint64_t scale = GetScale(end_ns - start_ns);
+  if (end_ns <= start_ns) return ticks;
+
+  uint64_t scale = GetScale(end_ns + 1 - start_ns);
+
   uint64_t first_major_tick = ((start_ns + scale - 1) / scale) * scale;
   // TODO(b/208447247): Include MinorTicks.
   for (uint64_t major_tick = first_major_tick; major_tick <= end_ns; major_tick += scale) {
@@ -63,11 +69,11 @@ std::vector<uint64_t> TimelineTicks::GetMajorTicks(uint64_t start_ns, uint64_t e
   return major_ticks;
 }
 
-uint64_t TimelineTicks::GetScale(uint64_t time_range_ns) const {
-  // Biggest scale smaller than half the total range.
-  uint64_t half_time_range_ns = time_range_ns / 2;
-  CHECK(half_time_range_ns > 0);
-  return *std::prev(scales_.upper_bound(time_range_ns / 2));
+uint64_t TimelineTicks::GetScale(uint64_t visible_ns) const {
+  // Biggest scale smaller than half the total range, as we want to see at least 2 major ticks.
+  uint64_t half_visible_ns = visible_ns / 2;
+  CHECK(half_visible_ns > 0);
+  return *std::prev(kTimelineScales.upper_bound(half_visible_ns));
 }
 
 }  // namespace orbit_gl
