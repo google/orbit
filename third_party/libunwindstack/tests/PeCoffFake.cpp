@@ -16,6 +16,7 @@
 
 #include "PeCoffFake.h"
 
+#include <limits>
 #include <memory>
 #include <vector>
 
