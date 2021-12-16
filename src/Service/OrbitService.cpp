@@ -153,9 +153,9 @@ std::unique_ptr<ProducerSideServer> BuildAndStartProducerSideServer() {
 
   std::string unix_socket_path(orbit_producer_side_channel::kProducerSideUnixDomainSocketPath);
 
-  auto producer_side_server = std::make_unique<ProducerSideServer>();
   LOG("Starting producer-side server at %s", unix_socket_path);
   std::string uri = absl::StrFormat("unix:%s", unix_socket_path);
+  auto producer_side_server = BuildAndStartProducerSideServer(uri);
 
   // When OrbitService runs as root, also allow non-root producers
   // (e.g., the game) to communicate over the Unix domain socket.
@@ -165,7 +165,7 @@ std::unique_ptr<ProducerSideServer> BuildAndStartProducerSideServer() {
     return nullptr;
   }
 
-  return BuildAndStartProducerSideServer(uri);
+  return producer_side_server;
 }
 #endif
 
