@@ -30,24 +30,7 @@ namespace {
 
 std::atomic<bool> exit_requested;
 
-#ifdef __linux
-
-void SigintHandler(int signum) {
-  if (signum == SIGINT) {
-    exit_requested = true;
-  }
-}
-
-void InstallSigintHandler() {
-  struct sigaction act {};
-  act.sa_handler = SigintHandler;
-  sigemptyset(&act.sa_mask);
-  act.sa_flags = 0;
-  act.sa_restorer = nullptr;
-  sigaction(SIGINT, &act, nullptr);
-}
-
-#else
+#ifdef WIN32
 
 BOOL WINAPI CtrlHandler(DWORD event_type) {
   // Handle the CTRL-C signal.
@@ -64,6 +47,23 @@ void InstallSigintHandler() {
   if (!SetConsoleCtrlHandler(CtrlHandler, TRUE)) {
     ERROR("Calling SetConsoleCtrlHandler: %s", orbit_base::GetLastErrorAsString());
   }
+}
+
+#else
+
+void SigintHandler(int signum) {
+  if (signum == SIGINT) {
+    exit_requested = true;
+  }
+}
+
+void InstallSigintHandler() {
+  struct sigaction act {};
+  act.sa_handler = SigintHandler;
+  sigemptyset(&act.sa_mask);
+  act.sa_flags = 0;
+  act.sa_restorer = nullptr;
+  sigaction(SIGINT, &act, nullptr);
 }
 
 #endif

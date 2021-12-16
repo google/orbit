@@ -122,7 +122,7 @@ std::unique_ptr<OrbitGrpcServer> CreateGrpcServer(uint16_t grpc_port, bool dev_m
   return grpc_server;
 }
 
-std::unique_ptr<ProducerSideServer> BuildAndStartProducerSideServer(std::string uri) {
+std::unique_ptr<ProducerSideServer> BuildAndStartProducerSideServerWithUri(std::string uri) {
   auto producer_side_server = std::make_unique<ProducerSideServer>();
   LOG("Starting producer-side server at %s", uri);
   if (!producer_side_server->BuildAndStart(uri)) {
@@ -133,12 +133,8 @@ std::unique_ptr<ProducerSideServer> BuildAndStartProducerSideServer(std::string 
   return producer_side_server;
 }
 
-#ifdef WIN32
-std::unique_ptr<ProducerSideServer> BuildAndStartProducerSideServer() {
-  constexpr const char* kProducerSideServerUri = "127.0.0.1:1789";
-  return BuildAndStartProducerSideServer(kProducerSideServerUri);
-}
-#else
+#ifdef __linux
+
 std::unique_ptr<ProducerSideServer> BuildAndStartProducerSideServer() {
   const std::filesystem::path unix_domain_socket_dir =
       std::filesystem::path{orbit_producer_side_channel::kProducerSideUnixDomainSocketPath}
@@ -153,10 +149,6 @@ std::unique_ptr<ProducerSideServer> BuildAndStartProducerSideServer() {
 
   std::string unix_socket_path(orbit_producer_side_channel::kProducerSideUnixDomainSocketPath);
 
-  LOG("Starting producer-side server at %s", unix_socket_path);
-  std::string uri = absl::StrFormat("unix:%s", unix_socket_path);
-  auto producer_side_server = BuildAndStartProducerSideServer(uri);
-
   // When OrbitService runs as root, also allow non-root producers
   // (e.g., the game) to communicate over the Unix domain socket.
   if (chmod(unix_socket_path.c_str(), 0777) != 0) {
@@ -165,8 +157,18 @@ std::unique_ptr<ProducerSideServer> BuildAndStartProducerSideServer() {
     return nullptr;
   }
 
-  return producer_side_server;
+  auto producer_side_server = std::make_unique<ProducerSideServer>();
+  std::string uri = absl::StrFormat("unix:%s", unix_socket_path);
+  return BuildAndStartProducerSideServerWithUri(uri);
 }
+
+#else
+
+std::unique_ptr<ProducerSideServer> BuildAndStartProducerSideServer() {
+  constexpr const char* kProducerSideServerUri = "127.0.0.1:1789";
+  return BuildAndStartProducerSideServerWithUri(kProducerSideServerUri);
+}
+
 #endif
 
 }  // namespace
@@ -205,6 +207,7 @@ int OrbitService::Run(std::atomic<bool>* exit_requested) {
 
   // Wait for exit_request or for the watchdog to expire.
   while (!(*exit_requested)) {
+    // TODO(b/211035029): Port SSH watchdog to Windows.
 #ifdef __linux
     std::string stdin_data = ReadStdIn();
     // If ssh sends EOF, end main loop.
