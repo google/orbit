@@ -229,7 +229,7 @@ void TimeGraph::HorizontallyMoveIntoView(VisibilityType vis_type, const TimerInf
 }
 
 void TimeGraph::VerticallyMoveIntoView(const TimerInfo& timer_info) {
-  VerticallyMoveIntoView(*track_manager_->GetOrCreateThreadTrack(timer_info.thread_id()));
+  VerticallyMoveIntoView(*track_manager_->GetOrCreateTrackFromTimerInfo(timer_info));
 }
 
 // Move vertically the view to make a Track fully visible.
