@@ -135,8 +135,8 @@ std::unique_ptr<ProducerSideServer> BuildAndStartProducerSideServer(std::string 
 
 #ifdef WIN32
 std::unique_ptr<ProducerSideServer> BuildAndStartProducerSideServer() {
-  constexpr const char* kUri = "127.0.0.1:1789";
-  return BuildAndStartProducerSideServer(kUri);
+  constexpr const char* kProducerSideServerUri = "127.0.0.1:1789";
+  return BuildAndStartProducerSideServer(kProducerSideServerUri);
 }
 #else
 std::unique_ptr<ProducerSideServer> BuildAndStartProducerSideServer() {

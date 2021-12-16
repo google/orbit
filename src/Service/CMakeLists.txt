@@ -10,10 +10,10 @@ project(OrbitServiceLib)
 add_library(OrbitServiceLib STATIC)
 
 target_sources(OrbitServiceLib PRIVATE
-        OrbitGrpcServer.h
         OrbitGrpcServer.cpp
-        OrbitService.h
+        OrbitGrpcServer.h
         OrbitService.cpp
+        OrbitService.h
         ProducerSideServer.cpp
         ProducerSideServer.h
         ProducerSideServiceImpl.cpp
