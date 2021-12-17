@@ -75,8 +75,8 @@ target_link_libraries(OrbitServiceIntegrationTests PRIVATE
         IntegrationTestCommons
         ObjectUtils
         OrbitBase
+        OrbitServiceLib
         OrbitVersion
-        ServiceLib
         GTest::GTest
         GTest::Main
         CONAN_PKG::abseil)

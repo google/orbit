@@ -19,7 +19,7 @@ target_include_directories(CaptureEventProducer PRIVATE ${CMAKE_CURRENT_SOURCE_D
 target_link_libraries(CaptureEventProducer PUBLIC
         GrpcProtos
         OrbitBase
-        ServiceLib
+        OrbitServiceLib
         concurrentqueue::concurrentqueue
         CONAN_PKG::abseil)
 

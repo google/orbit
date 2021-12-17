@@ -8,7 +8,8 @@
 #include <absl/strings/str_format.h>
 #include <absl/strings/strip.h>
 #include <fcntl.h>
-#include <unistd.h>
+#include <stdint.h>
+#include <sys/stat.h>
 
 #include <chrono>
 #include <cinttypes>
@@ -21,6 +22,7 @@
 #include "OrbitBase/ExecuteCommand.h"
 #include "OrbitBase/Logging.h"
 #include "OrbitBase/ReadFileToString.h"
+#include "OrbitBase/SafeStrerror.h"
 #include "OrbitGrpcServer.h"
 #include "OrbitVersion/OrbitVersion.h"
 #include "ProducerSideChannel/ProducerSideChannel.h"
@@ -28,7 +30,10 @@
 
 namespace orbit_service {
 
-static void PrintInstanceVersions() {
+namespace {
+
+#ifdef __linux
+void PrintInstanceVersions() {
   {
     constexpr const char* kKernelVersionCommand = "uname -a";
     std::optional<std::string> version = orbit_base::ExecuteCommand(kKernelVersionCommand);
@@ -83,8 +88,9 @@ static void PrintInstanceVersions() {
     }
   }
 }
+#endif
 
-static std::string ReadStdIn() {
+std::string ReadStdIn() {
   int tmp = fgetc(stdin);
   if (tmp == -1) return "";
 
@@ -97,15 +103,14 @@ static std::string ReadStdIn() {
   return result;
 }
 
-static bool IsSshConnectionAlive(
-    std::chrono::time_point<std::chrono::steady_clock> last_ssh_message,
-    const int timeout_in_seconds) {
+bool IsSshConnectionAlive(std::chrono::time_point<std::chrono::steady_clock> last_ssh_message,
+                          const int timeout_in_seconds) {
   return std::chrono::duration_cast<std::chrono::seconds>(std::chrono::steady_clock::now() -
                                                           last_ssh_message)
              .count() < timeout_in_seconds;
 }
 
-static std::unique_ptr<OrbitGrpcServer> CreateGrpcServer(uint16_t grpc_port, bool dev_mode) {
+std::unique_ptr<OrbitGrpcServer> CreateGrpcServer(uint16_t grpc_port, bool dev_mode) {
   std::string grpc_address = absl::StrFormat("127.0.0.1:%d", grpc_port);
   LOG("Starting gRPC server at %s", grpc_address);
   std::unique_ptr<OrbitGrpcServer> grpc_server = OrbitGrpcServer::Create(grpc_address, dev_mode);
@@ -117,7 +122,20 @@ static std::unique_ptr<OrbitGrpcServer> CreateGrpcServer(uint16_t grpc_port, boo
   return grpc_server;
 }
 
-static std::unique_ptr<ProducerSideServer> BuildAndStartProducerSideServer() {
+std::unique_ptr<ProducerSideServer> BuildAndStartProducerSideServerWithUri(std::string uri) {
+  auto producer_side_server = std::make_unique<ProducerSideServer>();
+  LOG("Starting producer-side server at %s", uri);
+  if (!producer_side_server->BuildAndStart(uri)) {
+    ERROR("Unable to start producer-side server");
+    return nullptr;
+  }
+  LOG("Producer-side server is running");
+  return producer_side_server;
+}
+
+#ifdef __linux
+
+std::unique_ptr<ProducerSideServer> BuildAndStartProducerSideServer() {
   const std::filesystem::path unix_domain_socket_dir =
       std::filesystem::path{orbit_producer_side_channel::kProducerSideUnixDomainSocketPath}
           .parent_path();
@@ -129,20 +147,37 @@ static std::unique_ptr<ProducerSideServer> BuildAndStartProducerSideServer() {
     return nullptr;
   }
 
-  auto producer_side_server = std::make_unique<ProducerSideServer>();
-  LOG("Starting producer-side server at %s",
-      orbit_producer_side_channel::kProducerSideUnixDomainSocketPath);
-  if (!producer_side_server->BuildAndStart(
-          orbit_producer_side_channel::kProducerSideUnixDomainSocketPath)) {
-    ERROR("Unable to start producer-side server");
+  std::string unix_socket_path(orbit_producer_side_channel::kProducerSideUnixDomainSocketPath);
+  std::string uri = absl::StrFormat("unix:%s", unix_socket_path);
+  auto producer_side_server = BuildAndStartProducerSideServerWithUri(uri);
+
+  // When OrbitService runs as root, also allow non-root producers
+  // (e.g., the game) to communicate over the Unix domain socket.
+  if (chmod(unix_socket_path.c_str(), 0777) != 0) {
+    ERROR("Changing mode bits to 777 of \"%s\": %s", unix_socket_path, SafeStrerror(errno));
+    producer_side_server->ShutdownAndWait();
     return nullptr;
   }
-  LOG("Producer-side server is running");
+
   return producer_side_server;
 }
 
+#else
+
+std::unique_ptr<ProducerSideServer> BuildAndStartProducerSideServer() {
+  constexpr const char* kProducerSideServerUri = "127.0.0.1:1789";
+  return BuildAndStartProducerSideServerWithUri(kProducerSideServerUri);
+}
+
+#endif
+
+}  // namespace
+
 int OrbitService::Run(std::atomic<bool>* exit_requested) {
+#ifdef __linux
   PrintInstanceVersions();
+#endif
+
   LOG("Running Orbit Service version %s", orbit_version::GetVersionString());
 #ifndef NDEBUG
   LOG("**********************************");
@@ -163,13 +198,17 @@ int OrbitService::Run(std::atomic<bool>* exit_requested) {
   }
   grpc_server->AddCaptureStartStopListener(producer_side_server.get());
 
+#ifdef __linux
   // Make stdin non-blocking.
   fcntl(STDIN_FILENO, F_SETFL, O_NONBLOCK);
+#endif
 
   int return_code = 0;
 
   // Wait for exit_request or for the watchdog to expire.
   while (!(*exit_requested)) {
+    // TODO(b/211035029): Port SSH watchdog to Windows.
+#ifdef __linux
     std::string stdin_data = ReadStdIn();
     // If ssh sends EOF, end main loop.
     if (feof(stdin) != 0) {
@@ -188,6 +227,7 @@ int OrbitService::Run(std::atomic<bool>* exit_requested) {
         break;
       }
     }
+#endif
 
     std::this_thread::sleep_for(std::chrono::milliseconds{200});
   }

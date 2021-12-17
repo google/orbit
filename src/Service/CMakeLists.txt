@@ -5,11 +5,11 @@
 # To make OrbitAsioServer and OrbitGrpcServer available for fuzz-testing
 # the target OrbitServiceLib was introduced. OrbitService still exists,
 # but only builds main.cpp and links to OrbitServiceLib.
-project(ServiceLib)
+project(OrbitServiceLib)
 
-add_library(ServiceLib STATIC)
+add_library(OrbitServiceLib STATIC)
 
-target_sources(ServiceLib PRIVATE
+target_sources(OrbitServiceLib PRIVATE
         OrbitGrpcServer.cpp
         OrbitGrpcServer.h
         OrbitService.cpp
@@ -19,25 +19,30 @@ target_sources(ServiceLib PRIVATE
         ProducerSideServiceImpl.cpp
         ProducerSideServiceImpl.h)
 
-if(CMAKE_CXX_COMPILER_ID MATCHES "MSVC")
-  set_target_properties(ServiceLib PROPERTIES COMPILE_FLAGS /wd4127)
-endif()
+target_include_directories(OrbitServiceLib PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 
-target_include_directories(ServiceLib PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
+target_link_libraries(OrbitServiceLib PUBLIC
+        GrpcProtos
+        OrbitVersion
+        ProducerSideChannel
+)
 
-target_link_libraries(ServiceLib PUBLIC
+if(WIN32)
+target_link_libraries(OrbitServiceLib PUBLIC
+        WindowsCaptureService
+        WindowsProcessService)
+else()
+target_link_libraries(OrbitServiceLib PUBLIC
         CrashService
         FramePointerValidatorService
-        GrpcProtos
         LinuxCaptureService
-        OrbitVersion
         ProcessService
-        ProducerSideChannel
         TracepointService)
+endif()
 
 project(OrbitService)
 add_executable(OrbitService main.cpp)
-target_link_libraries(OrbitService PRIVATE ServiceLib)
+target_link_libraries(OrbitService PRIVATE OrbitServiceLib)
 
 strip_symbols(OrbitService)
 
@@ -47,7 +52,7 @@ target_sources(ServiceTests PRIVATE
         ProducerSideServiceImplTest.cpp)
 
 target_link_libraries(ServiceTests PRIVATE
-        ServiceLib
+        OrbitServiceLib
         TestUtils
         GTest::Main)
 
