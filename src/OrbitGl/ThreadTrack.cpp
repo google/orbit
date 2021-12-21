@@ -66,7 +66,7 @@ std::string ThreadTrack::GetName() const {
   return capture_data_->GetThreadName(thread_id);
 }
 
-constexpr std::string_view kAllThreads = " (all_threads)";
+constexpr std::string_view kAllThreads = " (all threads)";
 std::string ThreadTrack::GetLabel() const {
   auto thread_id = GetThreadId();
   auto name = GetName();
