@@ -187,9 +187,11 @@ ErrorMessageOr<void> ProcessListImpl::Refresh() {
   } while (Process32Next(process_snap_handle, &process_entry));
 
   // Erase stale processes.
-  for (auto& [pid, process_info] : process_infos_) {
-    if (!process_info.is_process_alive) {
-      process_infos_.erase(pid);
+  for (auto it = process_infos_.begin(), end = process_infos_.end(); it != end;) {
+    // `erase()` will invalidate `it`, so advance `it` first.
+    auto copy_it = it++;
+    if (!copy_it->second.is_process_alive) {
+      process_infos_.erase(copy_it);
     }
   }
 
