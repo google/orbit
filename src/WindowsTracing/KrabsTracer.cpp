@@ -25,6 +25,8 @@ KrabsTracer::KrabsTracer(orbit_grpc_protos::CaptureOptions capture_options,
                          TracerListener* listener)
     : capture_options_(std::move(capture_options)),
       listener_(listener),
+      target_pid_(capture_options_.pid()),
+
       trace_(KERNEL_LOGGER_NAME),
       stack_walk_provider_(EVENT_TRACE_FLAG_PROFILE, krabs::guids::stack_walk) {
   SetTraceProperties();
