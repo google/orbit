@@ -29,7 +29,7 @@
     "context": "host"
    },
    "1": {
-    "ref": "abseil/20200923.3#b2d602ea9f45c5bb738956d0f7aafa3d",
+    "ref": "abseil/20211102.0#469a22da5f3d4beeb200450447aa5d04",
     "context": "host"
    },
    "2": {
@@ -37,7 +37,7 @@
     "context": "host"
    },
    "3": {
-    "ref": "grpc/1.27.3@orbitdeps/stable#9c477a16563f75451b0bf3a847eff031",
+    "ref": "grpc/1.27.3@orbitdeps/stable#a472630a84e8d771b2fde1d42cda30be",
     "requires": [
      "1",
      "4",
@@ -292,7 +292,7 @@
     "context": "host"
    },
    "44": {
-    "ref": "grpc_codegen/1.27.3@orbitdeps/stable#a0b442cf66941a590b619c88b106f0e5",
+    "ref": "grpc_codegen/1.27.3@orbitdeps/stable#e6981be5c11893598e76709c7d77db43",
     "requires": [
      "1",
      "7",
@@ -315,7 +315,7 @@
     "context": "host"
    },
    "47": {
-    "ref": "grpc_codegen/1.27.3@orbitdeps/stable#a0b442cf66941a590b619c88b106f0e5",
+    "ref": "grpc_codegen/1.27.3@orbitdeps/stable#e6981be5c11893598e76709c7d77db43",
     "requires": [
      "1",
      "7",
