@@ -279,6 +279,19 @@ class FilterTracks(CaptureWindowE2ETestCaseBase):
             wait_for_condition(lambda: len(self._find_tracks()) == expected_track_count)
 
 
+class ZoomOut(CaptureWindowE2ETestCaseBase):
+    """
+    Zooms the capture view out all the way so that the entire capture is visible.
+    """
+
+    def _execute(self):
+        logging.info('Zooming out the capture window')
+        self._time_graph.click_input()
+        # This should be enough so that we can zoom all the way out from any zoom level with any capture duration.
+        for i in range(200):
+            send_keys("s")
+
+
 class Capture(E2ETestCase):
 
     def _show_capture_window(self):
@@ -437,13 +450,18 @@ class CheckTimers(CaptureWindowE2ETestCaseBase):
             elif not expect_exists and track.timers is None:
                 satisfying_count += 1
         if expect_exists:
-            self.expect_true(satisfying_count > 0,
-                             'At least one track matching "{}" has timers pane'.format(track_name_filter))
+            self.expect_true(
+                satisfying_count > 0,
+                'At least one track matching "{}" has timers pane'.format(track_name_filter))
         else:
-            self.expect_true(satisfying_count > 0,
-                             'At least one track matching "{}" has no timers pane'.format(track_name_filter))
+            self.expect_true(
+                satisfying_count > 0,
+                'At least one track matching "{}" has no timers pane'.format(track_name_filter))
 
-    def _execute(self, track_name_filter: str, expect_exists: bool = True, require_all: bool = True,
+    def _execute(self,
+                 track_name_filter: str,
+                 expect_exists: bool = True,
+                 require_all: bool = True,
                  recursive: bool = False):
         tracks = self._find_tracks(track_name_filter, recursive)
         self.expect_true(len(tracks) > 0, 'Found tracks matching "{}"'.format(track_name_filter))
@@ -468,6 +486,22 @@ class CheckCallstacks(CaptureWindowE2ETestCaseBase):
             else:
                 self.expect_true(track.callstacks is None,
                                  'Track "{}" has no callstacks pane'.format(track.name))
+
+
+class SelectAllCallstacks(CaptureWindowE2ETestCaseBase):
+
+    def _execute(self, track_name_filter: str):
+        tracks = self._find_tracks(track_name_filter)
+        self.expect_true(
+            len(tracks) == 1, 'Found exactly one track matching "{}"'.format(track_name_filter))
+        track = Track(tracks[0])
+        self.expect_true(track.callstacks is not None,
+                         'Track "{}" has callstacks pane'.format(track.name))
+
+        logging.info('Selecting all visible callstacks in track "{}"'.format(track.name))
+        callstacks = track.callstacks
+        rect = callstacks.rectangle()
+        callstacks.drag_mouse_input(src=(rect.left, rect.top + 5), dst=(rect.right, rect.top + 5))
 
 
 class SetAndCheckMemorySamplingPeriod(E2ETestCase):

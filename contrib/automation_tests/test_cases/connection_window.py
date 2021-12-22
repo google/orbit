@@ -289,14 +289,14 @@ class FilterAndSelectFirstProcess(E2ETestCase):
     def _execute(self, process_filter):
         # Finding FilterProcesses/ProcessList occationally throws from within pywinauto. This is not
         # understood. The while loop with the try/except block is a workaround for that.
-        while (True):
+        while True:
             try:
                 filter_edit = self.find_control('Edit', 'FilterProcesses')
                 break
             except KeyError:
                 logging.info('Find FilterProcesses failed. Try again.')
 
-        while (True):
+        while True:
             try:
                 process_list = self.find_control('Table', 'ProcessList')
                 break
