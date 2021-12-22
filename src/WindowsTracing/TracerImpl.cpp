@@ -8,10 +8,14 @@
 #include "OrbitBase/Logging.h"
 #include "OrbitBase/Profiling.h"
 #include "WindowsUtils/ListModules.h"
+#include "WindowsUtils/ListThreads.h"
 
 using orbit_grpc_protos::ModuleInfo;
 using orbit_grpc_protos::ModulesSnapshot;
+using orbit_grpc_protos::ThreadName;
+using orbit_grpc_protos::ThreadNamesSnapshot;
 using orbit_windows_utils::Module;
+using orbit_windows_utils::Thread;
 
 namespace orbit_windows_tracing {
 
@@ -21,6 +25,7 @@ TracerImpl::TracerImpl(orbit_grpc_protos::CaptureOptions capture_options, Tracer
 void TracerImpl::Start() {
   CHECK(krabs_tracer_ == nullptr);
   SendModulesSnapshot();
+  SendThreadNamesSnapshot();
   krabs_tracer_ = std::make_unique<KrabsTracer>(capture_options_, listener_);
   krabs_tracer_->Start();
 }
@@ -53,6 +58,28 @@ void TracerImpl::SendModulesSnapshot() {
   }
 
   listener_->OnModulesSnapshot(std::move(modules_snapshot));
+}
+
+void TracerImpl::SendThreadNamesSnapshot() {
+  uint64_t timestamp = orbit_base::CaptureTimestampNs();
+  ThreadNamesSnapshot thread_names_snapshot;
+  thread_names_snapshot.set_timestamp_ns(timestamp);
+
+  std::vector<Thread> threads = orbit_windows_utils::ListAllThreads();
+  if (threads.empty()) {
+    ERROR("Unable to list threads");
+    return;
+  }
+
+  for (const Thread& thread : threads) {
+    ThreadName* thread_name = thread_names_snapshot.add_thread_names();
+    thread_name->set_pid(thread.pid);
+    thread_name->set_tid(thread.tid);
+    thread_name->set_name(thread.name);
+    thread_name->set_timestamp_ns(timestamp);
+  }
+
+  listener_->OnThreadNamesSnapshot(std::move(thread_names_snapshot));
 }
 
 }  // namespace orbit_windows_tracing

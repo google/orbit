@@ -24,6 +24,7 @@ class TracerImpl : public Tracer {
 
  private:
   void SendModulesSnapshot();
+  void SendThreadNamesSnapshot();
 
  private:
   orbit_grpc_protos::CaptureOptions capture_options_;
