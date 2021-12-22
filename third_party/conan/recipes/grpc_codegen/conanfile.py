@@ -29,7 +29,7 @@ class grpcConan(ConanFile):
     _build_subfolder = "build_subfolder"
 
     requires = (
-        "abseil/20200923.3",
+        "abseil/20211102.0",
         "c-ares/1.15.0",
         "openssl/1.1.1k",
         "protobuf/3.9.1@bincrafters/stable",

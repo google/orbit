@@ -76,7 +76,7 @@ class OrbitConan(ConanFile):
         if self.options.deploy_opengl_software_renderer and self.options.system_qt:
             raise ConanInvalidConfiguration("The OpenGL software renderer cannot be deployed when using a system-provided Qt installation.")
 
-        self.requires("abseil/20200923.3")
+        self.requires("abseil/20211102.0")
         self.requires("bzip2/1.0.8", override=True)
         self.requires("capstone/4.0.1@{}#0".format(self._orbit_channel))
         self.requires("grpc/1.27.3@{}".format(self._orbit_channel))
