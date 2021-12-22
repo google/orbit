@@ -18,6 +18,8 @@ target_sources(LinuxCaptureService PRIVATE
         LinuxCaptureService.cpp
         MemoryInfoHandler.cpp
         MemoryInfoHandler.h
+        MemoryWatchdog.cpp
+        MemoryWatchdog.h
         TracingHandler.cpp
         TracingHandler.h
         UserSpaceInstrumentationAddressesImpl.h)
@@ -38,6 +40,7 @@ target_link_libraries(LinuxCaptureService PUBLIC
 add_executable(LinuxCaptureServiceTests)
 
 target_sources(LinuxCaptureServiceTests PRIVATE
+        MemoryWatchdogTest.cpp
         UserSpaceInstrumentationAddressesImplTest.cpp)
 
 target_link_libraries(LinuxCaptureServiceTests PRIVATE
