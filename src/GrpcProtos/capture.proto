@@ -640,6 +640,7 @@ message ThreadNamesSnapshot {
 message CaptureFinished {
   enum Status {
     kSuccessful = 0;
+    kInterruptedByService = 2;
     kFailed = 1;
   };
 

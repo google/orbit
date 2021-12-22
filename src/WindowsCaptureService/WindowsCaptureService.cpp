@@ -33,7 +33,7 @@ grpc::Status WindowsCaptureService::Capture(
   tracing_handler.Start(request.capture_options());
   WaitForStopCaptureRequestFromClient(reader_writer);
   tracing_handler.Stop();
-  FinalizeEventProcessing();
+  FinalizeEventProcessing(StopCaptureReason::kClientStop);
 
   TerminateCapture();
 

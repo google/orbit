@@ -11,6 +11,7 @@
 #include <stdint.h>
 
 #include <algorithm>
+#include <optional>
 #include <thread>
 #include <utility>
 #include <vector>
@@ -22,6 +23,7 @@
 #include "GrpcProtos/capture.pb.h"
 #include "Introspection/Introspection.h"
 #include "MemoryInfoHandler.h"
+#include "MemoryWatchdog.h"
 #include "OrbitBase/ExecutablePath.h"
 #include "OrbitBase/Logging.h"
 #include "OrbitBase/MakeUniqueForOverwrite.h"
@@ -147,6 +149,90 @@ class ProducerEventProcessorHijackingFunctionEntryExitForLinuxTracing
 
 }  // namespace
 
+orbit_capture_service::CaptureService::StopCaptureReason
+LinuxCaptureService::WaitForStopCaptureRequestOrMemoryThresholdExceeded(
+    grpc::ServerReaderWriter<orbit_grpc_protos::CaptureResponse, orbit_grpc_protos::CaptureRequest>*
+        reader_writer) {
+  // wait_for_stop_capture_request_thread_ below outlives this method, hence the shared pointers.
+  auto stop_capture_mutex = std::make_shared<absl::Mutex>();
+  auto stop_capture = std::make_shared<bool>(false);
+  auto stop_capture_reason = std::make_shared<std::optional<StopCaptureReason>>();
+
+  static const std::optional<uint64_t> mem_total_bytes = ReadMemTotalInBytesFromProcMeminfo();
+  std::thread memory_watchdog_thread;
+  if (!mem_total_bytes.has_value()) {
+    ERROR("Could not start memory watchdog because total physical memory is unknown");
+  } else {
+    uint64_t watchdog_threshold_bytes = mem_total_bytes.value() / 2;
+    static constexpr absl::Duration kWatchdogPollInterval = absl::Seconds(1);
+    LOG("Starting memory watchdog with threshold %u B because total physical memory is %u B",
+        watchdog_threshold_bytes, mem_total_bytes.value());
+
+    memory_watchdog_thread = std::thread{
+        [watchdog_threshold_bytes, stop_capture_mutex, stop_capture, stop_capture_reason] {
+          while (true) {
+            {
+              absl::MutexLock lock{&*stop_capture_mutex};
+              if (stop_capture_mutex->AwaitWithTimeout(absl::Condition(&*stop_capture),
+                                                       kWatchdogPollInterval)) {
+                LOG("Stopping memory watchdog as the capture was stopped");
+                break;
+              }
+            }
+
+            // Repeatedly poll `/proc/[pid]/stat` for the resident set size (rss) of the current
+            // process.
+            std::optional<uint64_t> rss_bytes = ReadRssInBytesFromProcPidStat();
+            if (!rss_bytes.has_value()) {
+              ERROR_ONCE("Reading resident set size of the current process");
+              continue;
+            }
+            if (rss_bytes.value() > watchdog_threshold_bytes) {
+              LOG("Memory threshold exceeded: stopping capture (and stopping memory watchdog)");
+              absl::MutexLock lock{&*stop_capture_mutex};
+              *stop_capture = true;
+              *stop_capture_reason = StopCaptureReason::kMemoryWatchdog;
+              break;
+            }
+          }
+        }};
+  }
+
+  // ServerReaderWriter::Read blocks until the client has called WritesDone, or until we finish the
+  // gRPC (before the client has called WritesDone). In the latter case, the Read unblocks *after*
+  // LinuxCaptureService::Capture has returned, so we need to keep the thread around and join it at
+  // a later time (we don't want to just detach it).
+  wait_for_stop_capture_request_thread_ =
+      std::thread{[reader_writer, stop_capture_mutex, stop_capture, stop_capture_reason] {
+        orbit_grpc_protos::CaptureRequest request;
+        // The client asks for the capture to be stopped by calling WritesDone. At that point, this
+        // call to Read will return false. In the meantime, it blocks if no message is received.
+        // Read also unblocks and returns false if the gRPC finishes.
+        while (reader_writer->Read(&request)) {
+        }
+
+        absl::MutexLock lock{&*stop_capture_mutex};
+        if (!*stop_capture) {
+          LOG("Client finished writing on Capture's gRPC stream: stopping capture");
+          *stop_capture = true;
+          *stop_capture_reason = StopCaptureReason::kClientStop;
+        } else {
+          LOG("Client finished writing on Capture's gRPC stream or the RPC has already finished; "
+              "the capture was already stopped");
+        }
+      }};
+
+  stop_capture_mutex->LockWhen(absl::Condition(&*stop_capture));
+  CHECK(stop_capture_reason->has_value());
+  StopCaptureReason stop_capture_reason_to_return = stop_capture_reason->value();
+  stop_capture_mutex->Unlock();
+
+  if (memory_watchdog_thread.joinable()) {
+    memory_watchdog_thread.join();
+  }
+  return stop_capture_reason_to_return;
+}
+
 grpc::Status LinuxCaptureService::Capture(
     grpc::ServerContext* /*context*/,
     grpc::ServerReaderWriter<CaptureResponse, CaptureRequest>* reader_writer) {
@@ -154,6 +240,9 @@ grpc::Status LinuxCaptureService::Capture(
 
   if (grpc::Status result = InitializeCapture(reader_writer); !result.ok()) {
     return result;
+  }
+  if (wait_for_stop_capture_request_thread_.joinable()) {
+    wait_for_stop_capture_request_thread_.join();
   }
 
   TracingHandler tracing_handler{producer_event_processor_.get()};
@@ -252,7 +341,8 @@ grpc::Status LinuxCaptureService::Capture(
     listener->OnCaptureStartRequested(request.capture_options(), &function_entry_exit_hijacker);
   }
 
-  WaitForStopCaptureRequestFromClient(reader_writer);
+  StopCaptureReason stop_capture_reason =
+      WaitForStopCaptureRequestOrMemoryThresholdExceeded(reader_writer);
 
   // Disable Orbit API in tracee.
   if (capture_options.enable_api()) {
@@ -290,7 +380,7 @@ grpc::Status LinuxCaptureService::Capture(
   // The destructor of IntrospectionListener takes care of actually disabling introspection.
   introspection_listener.reset();
 
-  FinalizeEventProcessing();
+  FinalizeEventProcessing(stop_capture_reason);
 
   TerminateCapture();
 

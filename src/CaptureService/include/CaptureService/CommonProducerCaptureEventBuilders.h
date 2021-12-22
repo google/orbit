@@ -19,7 +19,10 @@ namespace orbit_capture_service {
     const orbit_grpc_protos::CaptureOptions& capture_options, absl::Time capture_start_time,
     uint64_t capture_start_timestamp_ns);
 
-[[nodiscard]] orbit_grpc_protos::ProducerCaptureEvent CreateCaptureFinishedEvent();
+[[nodiscard]] orbit_grpc_protos::ProducerCaptureEvent CreateSuccessfulCaptureFinishedEvent();
+
+[[nodiscard]] orbit_grpc_protos::ProducerCaptureEvent
+CreateMemoryThresholdExceededCaptureFinishedEvent();
 
 [[nodiscard]] orbit_grpc_protos::ProducerCaptureEvent CreateClockResolutionEvent(
     uint64_t timestamp_ns, uint64_t resolution_ns);
