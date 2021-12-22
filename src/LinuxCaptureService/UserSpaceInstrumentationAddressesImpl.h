@@ -2,8 +2,8 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#ifndef CAPTURE_SERVICE_USER_SPACE_INSTRUMENTATION_ADDRESSES_IMPL_H_
-#define CAPTURE_SERVICE_USER_SPACE_INSTRUMENTATION_ADDRESSES_IMPL_H_
+#ifndef LINUX_CAPTURE_SERVICE_USER_SPACE_INSTRUMENTATION_ADDRESSES_IMPL_H_
+#define LINUX_CAPTURE_SERVICE_USER_SPACE_INSTRUMENTATION_ADDRESSES_IMPL_H_
 
 #include <algorithm>
 #include <vector>
@@ -52,4 +52,4 @@ class UserSpaceInstrumentationAddressesImpl final
 
 }  // namespace orbit_linux_capture_service
 
-#endif  // CAPTURE_SERVICE_USER_SPACE_INSTRUMENTATION_ADDRESSES_IMPL_H_
+#endif  // LINUX_CAPTURE_SERVICE_USER_SPACE_INSTRUMENTATION_ADDRESSES_IMPL_H_

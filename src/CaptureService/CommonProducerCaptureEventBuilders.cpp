@@ -8,7 +8,6 @@
 
 #include "GrpcProtos/capture.pb.h"
 #include "GrpcProtos/services.grpc.pb.h"
-#include "Introspection/Introspection.h"
 #include "ObjectUtils/CoffFile.h"
 #include "ObjectUtils/ElfFile.h"
 #include "OrbitBase/ExecutablePath.h"
@@ -19,8 +18,6 @@
 
 using orbit_grpc_protos::CaptureFinished;
 using orbit_grpc_protos::CaptureOptions;
-using orbit_grpc_protos::CaptureRequest;
-using orbit_grpc_protos::CaptureResponse;
 using orbit_grpc_protos::CaptureStarted;
 using orbit_grpc_protos::ProducerCaptureEvent;
 

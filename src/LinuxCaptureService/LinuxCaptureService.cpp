@@ -257,7 +257,7 @@ grpc::Status LinuxCaptureService::Capture(
     listener->OnCaptureStartRequested(request.capture_options(), &function_entry_exit_hijacker);
   }
 
-  WaitForEndCaptureRequestFromClient(reader_writer);
+  WaitForStopCaptureRequestFromClient(reader_writer);
 
   // Disable Orbit API in tracee.
   if (capture_options.enable_api()) {

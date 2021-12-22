@@ -31,7 +31,7 @@ grpc::Status WindowsCaptureService::Capture(
   StartEventProcessing(request.capture_options());
   TracingHandler tracing_handler{producer_event_processor_.get()};
   tracing_handler.Start(request.capture_options());
-  WaitForEndCaptureRequestFromClient(reader_writer);
+  WaitForStopCaptureRequestFromClient(reader_writer);
   tracing_handler.Stop();
   FinalizeEventProcessing();
 

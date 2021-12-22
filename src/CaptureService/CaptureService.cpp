@@ -5,21 +5,16 @@
 #include "CaptureService/CaptureService.h"
 
 #include <absl/time/time.h>
-#include <stdint.h>
 
 #include "CaptureService/CommonProducerCaptureEventBuilders.h"
 #include "GrpcProtos/Constants.h"
 #include "GrpcProtos/capture.pb.h"
-#include "Introspection/Introspection.h"
 #include "OrbitBase/Logging.h"
 #include "OrbitBase/Profiling.h"
 
-using orbit_grpc_protos::CaptureFinished;
 using orbit_grpc_protos::CaptureOptions;
 using orbit_grpc_protos::CaptureRequest;
 using orbit_grpc_protos::CaptureResponse;
-using orbit_grpc_protos::CaptureStarted;
-using orbit_grpc_protos::ProducerCaptureEvent;
 
 using orbit_producer_event_processor::GrpcClientCaptureEventCollector;
 using orbit_producer_event_processor::ProducerEventProcessor;
@@ -81,7 +76,7 @@ CaptureRequest CaptureService::WaitForStartCaptureRequestFromClient(
   return request;
 }
 
-void CaptureService::WaitForEndCaptureRequestFromClient(
+void CaptureService::WaitForStopCaptureRequestFromClient(
     grpc::ServerReaderWriter<orbit_grpc_protos::CaptureResponse, orbit_grpc_protos::CaptureRequest>*
         reader_writer) {
   orbit_grpc_protos::CaptureRequest request;

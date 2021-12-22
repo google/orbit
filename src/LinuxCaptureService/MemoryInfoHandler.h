@@ -2,8 +2,8 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#ifndef CAPTURE_SERVICE_MEMORY_INFO_HANDLER_H_
-#define CAPTURE_SERVICE_MEMORY_INFO_HANDLER_H_
+#ifndef LINUX_CAPTURE_SERVICE_MEMORY_INFO_HANDLER_H_
+#define LINUX_CAPTURE_SERVICE_MEMORY_INFO_HANDLER_H_
 
 #include "GrpcProtos/capture.pb.h"
 #include "MemoryTracing/MemoryInfoListener.h"
@@ -45,4 +45,4 @@ class MemoryInfoHandler : public orbit_memory_tracing::MemoryInfoListener {
 
 }  // namespace orbit_linux_capture_service
 
-#endif  // CAPTURE_SERVICE_MEMORY_INFO_HANDLER_H_
+#endif  // LINUX_CAPTURE_SERVICE_MEMORY_INFO_HANDLER_H_

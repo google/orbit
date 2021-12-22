@@ -54,13 +54,6 @@ void MemoryInfoProducer::Run() {
   }
 }
 
-void SystemMemoryInfoProducerRunFn(MemoryInfoListener* listener, int32_t /*pid*/) {
-  ErrorMessageOr<SystemMemoryUsage> system_memory_usage = GetSystemMemoryUsage();
-  if (system_memory_usage.has_value()) {
-    listener->OnSystemMemoryUsage(system_memory_usage.value());
-  }
-}
-
 std::unique_ptr<MemoryInfoProducer> CreateSystemMemoryInfoProducer(MemoryInfoListener* listener,
                                                                    uint64_t sampling_period_ns,
                                                                    int32_t pid) {
