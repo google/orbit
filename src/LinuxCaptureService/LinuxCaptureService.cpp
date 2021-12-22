@@ -5,13 +5,12 @@
 #include "LinuxCaptureService/LinuxCaptureService.h"
 
 #include <absl/container/flat_hash_set.h>
-#include <absl/strings/str_cat.h>
+#include <absl/strings/str_format.h>
 #include <absl/synchronization/mutex.h>
 #include <absl/time/time.h>
 #include <stdint.h>
 
 #include <algorithm>
-#include <limits>
 #include <thread>
 #include <utility>
 #include <vector>
@@ -23,7 +22,6 @@
 #include "GrpcProtos/capture.pb.h"
 #include "Introspection/Introspection.h"
 #include "MemoryInfoHandler.h"
-#include "ObjectUtils/ElfFile.h"
 #include "OrbitBase/ExecutablePath.h"
 #include "OrbitBase/Logging.h"
 #include "OrbitBase/MakeUniqueForOverwrite.h"
