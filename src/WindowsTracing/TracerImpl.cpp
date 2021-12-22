@@ -64,13 +64,13 @@ void TracerImpl::SendThreadNamesSnapshot() {
   uint64_t timestamp = orbit_base::CaptureTimestampNs();
   ThreadNamesSnapshot thread_names_snapshot;
   thread_names_snapshot.set_timestamp_ns(timestamp);
-  
+
   std::vector<Thread> threads = orbit_windows_utils::ListAllThreads();
   if (threads.empty()) {
     ERROR("Unable to list threads");
     return;
   }
-  
+
   for (const Thread& thread : threads) {
     ThreadName* thread_name = thread_names_snapshot.add_thread_names();
     thread_name->set_pid(thread.pid);
