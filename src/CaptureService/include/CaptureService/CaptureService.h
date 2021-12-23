@@ -24,13 +24,7 @@ namespace orbit_capture_service {
 // functionality shared by the platform-specific capture services.
 class CaptureService : public orbit_grpc_protos::CaptureService::Service {
  public:
-  virtual ~CaptureService() = default;
   CaptureService();
-
-  virtual grpc::Status Capture(
-      grpc::ServerContext* context,
-      grpc::ServerReaderWriter<orbit_grpc_protos::CaptureResponse,
-                               orbit_grpc_protos::CaptureRequest>* reader_writer) = 0;
 
   void AddCaptureStartStopListener(CaptureStartStopListener* listener);
   void RemoveCaptureStartStopListener(CaptureStartStopListener* listener);
@@ -41,11 +35,11 @@ class CaptureService : public orbit_grpc_protos::CaptureService::Service {
                                orbit_grpc_protos::CaptureRequest>* reader_writer);
   void TerminateCapture();
 
-  orbit_grpc_protos::CaptureRequest WaitForStartCaptureRequestFromClient(
+  static orbit_grpc_protos::CaptureRequest WaitForStartCaptureRequestFromClient(
       grpc::ServerReaderWriter<orbit_grpc_protos::CaptureResponse,
                                orbit_grpc_protos::CaptureRequest>* reader_writer);
 
-  void WaitForEndCaptureRequestFromClient(
+  static void WaitForStopCaptureRequestFromClient(
       grpc::ServerReaderWriter<orbit_grpc_protos::CaptureResponse,
                                orbit_grpc_protos::CaptureRequest>* reader_writer);
 
@@ -60,8 +54,6 @@ class CaptureService : public orbit_grpc_protos::CaptureService::Service {
   uint64_t capture_start_timestamp_ns_ = 0;
 
  private:
-  void EstimateAndLogClockResolution();
-
   uint64_t clock_resolution_ns_ = 0;
   absl::Mutex capture_mutex_;
   bool is_capturing ABSL_GUARDED_BY(capture_mutex_) = false;

@@ -2,8 +2,8 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#ifndef CAPTURE_SERVICE_LINUX_TRACING_HANDLER_H_
-#define CAPTURE_SERVICE_LINUX_TRACING_HANDLER_H_
+#ifndef LINUX_CAPTURE_SERVICE_LINUX_TRACING_HANDLER_H_
+#define LINUX_CAPTURE_SERVICE_LINUX_TRACING_HANDLER_H_
 
 #include <absl/container/flat_hash_map.h>
 #include <absl/container/flat_hash_set.h>
@@ -76,4 +76,4 @@ class TracingHandler : public orbit_linux_tracing::TracerListener {
 
 }  // namespace orbit_linux_capture_service
 
-#endif  // CAPTURE_SERVICE_LINUX_TRACING_HANDLER_H_
+#endif  // LINUX_CAPTURE_SERVICE_LINUX_TRACING_HANDLER_H_

@@ -5,13 +5,12 @@
 #include "LinuxCaptureService/LinuxCaptureService.h"
 
 #include <absl/container/flat_hash_set.h>
-#include <absl/strings/str_cat.h>
+#include <absl/strings/str_format.h>
 #include <absl/synchronization/mutex.h>
 #include <absl/time/time.h>
 #include <stdint.h>
 
 #include <algorithm>
-#include <limits>
 #include <thread>
 #include <utility>
 #include <vector>
@@ -23,7 +22,6 @@
 #include "GrpcProtos/capture.pb.h"
 #include "Introspection/Introspection.h"
 #include "MemoryInfoHandler.h"
-#include "ObjectUtils/ElfFile.h"
 #include "OrbitBase/ExecutablePath.h"
 #include "OrbitBase/Logging.h"
 #include "OrbitBase/MakeUniqueForOverwrite.h"
@@ -34,14 +32,11 @@
 #include "TracingHandler.h"
 #include "UserSpaceInstrumentationAddressesImpl.h"
 
-using orbit_grpc_protos::CaptureFinished;
 using orbit_grpc_protos::CaptureOptions;
 using orbit_grpc_protos::CaptureRequest;
 using orbit_grpc_protos::CaptureResponse;
-using orbit_grpc_protos::CaptureStarted;
 using orbit_grpc_protos::ProducerCaptureEvent;
 
-using orbit_producer_event_processor::GrpcClientCaptureEventCollector;
 using orbit_producer_event_processor::ProducerEventProcessor;
 
 using orbit_capture_service::CaptureStartStopListener;
@@ -257,7 +252,7 @@ grpc::Status LinuxCaptureService::Capture(
     listener->OnCaptureStartRequested(request.capture_options(), &function_entry_exit_hijacker);
   }
 
-  WaitForEndCaptureRequestFromClient(reader_writer);
+  WaitForStopCaptureRequestFromClient(reader_writer);
 
   // Disable Orbit API in tracee.
   if (capture_options.enable_api()) {
