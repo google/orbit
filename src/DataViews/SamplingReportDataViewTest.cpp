@@ -184,6 +184,7 @@ class SamplingReportDataViewTest : public testing::Test {
  public:
   explicit SamplingReportDataViewTest()
       : view_{&app_}, capture_data_(GenerateTestCaptureData(&module_manager_)) {
+    view_.Init();
     for (size_t i = 0; i < kNumFunctions; i++) {
       SampledFunction sampled_function;
       sampled_function.absolute_address = kSampledAbsoluteAddresses[i];

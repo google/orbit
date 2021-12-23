@@ -156,6 +156,7 @@ class LiveFunctionsDataViewTest : public testing::Test {
   explicit LiveFunctionsDataViewTest()
       : view_{&live_functions_, &app_, &metrics_uploader_},
         capture_data_(GenerateTestCaptureData(&module_manager_)) {
+    view_.Init();
     for (size_t i = 0; i < kNumFunctions; i++) {
       FunctionInfo function;
       function.set_name(kNames[i]);

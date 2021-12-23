@@ -58,6 +58,7 @@ std::string GetExpectedDisplayFileSizeByIndex(size_t index) {
 class ModulesDataViewTest : public testing::Test {
  public:
   explicit ModulesDataViewTest() : view_{&app_} {
+    view_.Init();
     for (size_t i = 0; i < kNumModules; i++) {
       ModuleInMemory module_in_memory{kStartAddresses[i], kEndAddresses[i], kFilePaths[i],
                                       kBuildIds[i]};

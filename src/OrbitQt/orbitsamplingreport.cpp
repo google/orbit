@@ -57,6 +57,7 @@ void OrbitSamplingReport::Initialize(orbit_data_views::DataView* callstack_data_
   sampling_report_->SetUiRefreshFunc([&]() { this->RefreshCallstackView(); });
 
   for (orbit_data_views::SamplingReportDataView& report_data_view : report->GetThreadReports()) {
+    ORBIT_SCOPE("SamplingReportDataView tab creation");
     auto* tab = new QWidget();
     tab->setObjectName(QStringLiteral("tab"));
 
@@ -79,7 +80,10 @@ void OrbitSamplingReport::Initialize(orbit_data_views::DataView* callstack_data_
     treeView->setObjectName(QStringLiteral("treeView"));
     gridLayout_2->addWidget(treeView, 0, 0, 1, 1);
     treeView->Initialize(&report_data_view, SelectionType::kExtended, FontType::kDefault);
-    treeView->GetTreeView()->header()->resizeSections(QHeaderView::ResizeToContents);
+    {
+      ORBIT_SCOPE("resizeSections");
+      treeView->GetTreeView()->header()->resizeSections(QHeaderView::ResizeToContents);
+    }
     treeView->GetTreeView()->SetIsMultiSelection(true);
 
     treeView->Link(ui_->CallstackTreeView);
