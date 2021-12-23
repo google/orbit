@@ -6,6 +6,7 @@
 
 #include <absl/base/casts.h>
 #include <absl/strings/str_format.h>
+#include <absl/types/span.h>
 
 #include <cstring>
 #include <string>
@@ -28,34 +29,54 @@ constexpr uint64_t kCodeScratchPadSize = 1024;
 
 constexpr const char* kLibcSoname = "libc.so.6";
 constexpr const char* kLibdlSoname = "libdl.so.2";
-constexpr const char* kDlopenInLibdl = "dlopen";
-constexpr const char* kDlopenInLibc = "__libc_dlopen_mode";
-constexpr const char* kDlsymInLibdl = "dlsym";
-constexpr const char* kDlsymInLibc = "__libc_dlsym";
-constexpr const char* kDlcloseInLibdl = "dlclose";
-constexpr const char* kDlcloseInLibc = "__libc_dlclose";
+
+// Represents a symbol (function) in a module.
+// The member variables are string views as these are meant to be kept as constexpr constants.
+struct FunctionLocatorView {
+  std::string_view module_name;
+  std::string_view function_name;
+};
+
+constexpr FunctionLocatorView kDlopenInLibdl{kLibdlSoname, "dlopen"};
+constexpr FunctionLocatorView kDlopenInLibc{kLibcSoname, "dlopen"};
+constexpr FunctionLocatorView kDlopenFallbackInLibc{kLibcSoname, "__libc_dlopen_mode"};
+
+constexpr FunctionLocatorView kDlsymInLibdl{kLibdlSoname, "dlsym"};
+constexpr FunctionLocatorView kDlsymInLibc{kLibcSoname, "dlsym"};
+constexpr FunctionLocatorView kDlsymFallbackInLibc{kLibcSoname, "__libc_dlsym"};
+
+constexpr FunctionLocatorView kDlcloseInLibdl{kLibdlSoname, "dlclose"};
+constexpr FunctionLocatorView kDlcloseInLibc{kLibcSoname, "dlclose"};
+constexpr FunctionLocatorView kDlcloseFallbackInLibc{kLibcSoname, "__libc_dlclose"};
 
 // Returns the absolute virtual address of a function in a module of a process as
-// FindFunctionAddress does but accepts a fallback symbol if the primary one cannot be resolved.
-ErrorMessageOr<uint64_t> FindFunctionAddressWithFallback(pid_t pid, std::string_view module,
-                                                         std::string_view function,
-                                                         std::string_view fallback_module,
-                                                         std::string_view fallback_function) {
-  ErrorMessageOr<uint64_t> primary_address_or_error = FindFunctionAddress(pid, module, function);
-  if (primary_address_or_error.has_value()) {
-    return primary_address_or_error.value();
-  }
-  ErrorMessageOr<uint64_t> fallback_address_or_error =
-      FindFunctionAddress(pid, fallback_module, fallback_function);
-  if (fallback_address_or_error.has_value()) {
-    return fallback_address_or_error.value();
+// FindFunctionAddress, does but accepts a list of module and function names and returns
+// the address of the first found function.
+ErrorMessageOr<uint64_t> FindFunctionAddressWithFallback(
+    pid_t pid, absl::Span<const FunctionLocatorView> function_locators) {
+  std::string error_message;
+
+  for (const auto& function_locator : function_locators) {
+    ErrorMessageOr<uint64_t> address_or_error =
+        FindFunctionAddress(pid, function_locator.module_name, function_locator.function_name);
+    if (address_or_error.has_value()) {
+      return address_or_error.value();
+    }
+
+    if (error_message.empty()) {
+      error_message.append(
+          absl::StrFormat(R"(Failed to load symbol "%s" from module "%s" with error: "%s")",
+                          function_locator.function_name, function_locator.module_name,
+                          address_or_error.error().message()));
+    } else {
+      error_message.append(absl::StrFormat(
+          "\nAlso failed to load fallback symbol \"%s\" from module \"%s\" with error: \"%s\"",
+          function_locator.function_name, function_locator.module_name,
+          address_or_error.error().message()));
+    }
   }
 
-  return ErrorMessage(absl::StrFormat(
-      "Failed to load symbol \"%s\" from module \"%s\" with error: \"%s\"\nAnd also "
-      "failed to load fallback symbol \"%s\" from module \"%s\" with error: \"%s\"",
-      function, module, primary_address_or_error.error().message(), fallback_function,
-      fallback_module, fallback_address_or_error.error().message()));
+  return ErrorMessage(error_message);
 }
 
 }  // namespace
@@ -73,9 +94,9 @@ ErrorMessageOr<uint64_t> FindFunctionAddressWithFallback(pid_t pid, std::string_
   }
 
   // Figure out address of dlopen.
-  OUTCOME_TRY(auto&& dlopen_address,
-              FindFunctionAddressWithFallback(pid, kLibdlSoname, kDlopenInLibdl, kLibcSoname,
-                                              kDlopenInLibc));
+  OUTCOME_TRY(
+      auto&& dlopen_address,
+      FindFunctionAddressWithFallback(pid, {kDlopenInLibdl, kDlopenInLibc, kDlopenFallbackInLibc}));
 
   // Allocate small memory area in the tracee. This is used for the code and the path name.
   const uint64_t path_length = path.string().length() + 1;  // Include terminating zero.
@@ -126,9 +147,8 @@ ErrorMessageOr<uint64_t> FindFunctionAddressWithFallback(pid_t pid, std::string_
 [[nodiscard]] ErrorMessageOr<void*> DlsymInTracee(pid_t pid, void* handle,
                                                   std::string_view symbol) {
   // Figure out address of dlsym.
-  OUTCOME_TRY(
-      auto&& dlsym_address,
-      FindFunctionAddressWithFallback(pid, kLibdlSoname, kDlsymInLibdl, kLibcSoname, kDlsymInLibc));
+  OUTCOME_TRY(auto&& dlsym_address, FindFunctionAddressWithFallback(
+                                        pid, {kDlsymInLibdl, kDlsymInLibc, kDlsymFallbackInLibc}));
 
   // Allocate small memory area in the tracee. This is used for the code and the symbol name.
   const size_t symbol_name_length = symbol.length() + 1;  // include terminating zero
@@ -179,8 +199,8 @@ ErrorMessageOr<uint64_t> FindFunctionAddressWithFallback(pid_t pid, std::string_
 [[nodiscard]] ErrorMessageOr<void> DlcloseInTracee(pid_t pid, void* handle) {
   // Figure out address of dlclose.
   OUTCOME_TRY(auto&& dlclose_address,
-              FindFunctionAddressWithFallback(pid, kLibdlSoname, kDlcloseInLibdl, kLibcSoname,
-                                              kDlcloseInLibc));
+              FindFunctionAddressWithFallback(
+                  pid, {kDlcloseInLibdl, kDlcloseInLibc, kDlcloseFallbackInLibc}));
 
   // Allocate small memory area in the tracee.
   auto code_memory_or_error = AutomaticMemoryInTracee::Create(pid, 0, kCodeScratchPadSize);
