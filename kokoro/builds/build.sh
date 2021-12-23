@@ -13,6 +13,7 @@ if [ -z "${CONAN_PROFILE}" ]; then
   # Profile mappings. Use that for testing different profiles
   # without changing the Kokoro config.
   declare -A profile_mapping=( \
+    [clang9_debug]="clang11_release"
   )
 
   CONAN_PROFILE="${profile_mapping[${CONAN_PROFILE}]-${CONAN_PROFILE}}"
