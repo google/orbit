@@ -45,6 +45,7 @@ void SamplingReport::FillReport() {
 
   for (const ThreadSampleData& thread_sample_data : sample_data) {
     orbit_data_views::SamplingReportDataView thread_report{app_};
+    thread_report.Init();
     thread_report.SetSampledFunctions(thread_sample_data.sampled_functions);
     thread_report.SetThreadID(thread_sample_data.thread_id);
     thread_report.SetSamplingReport(this);

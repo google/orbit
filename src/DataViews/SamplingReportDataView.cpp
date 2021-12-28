@@ -119,6 +119,7 @@ std::string SamplingReportDataView::GetValueForCopy(int row, int column) {
   }
 
 void SamplingReportDataView::DoSort() {
+  ORBIT_SCOPE("SamplingReportDataView::DoSort");
   bool ascending = sorting_orders_[sorting_column_] == SortingOrder::kAscending;
   std::function<bool(int a, int b)> sorter = nullptr;
 

@@ -43,6 +43,7 @@ struct FunctionsDataViewTest : public testing::Test {
   explicit FunctionsDataViewTest()
       : thread_pool_{orbit_base::ThreadPool::Create(4, 4, absl::Milliseconds(50))},
         view_{&app_, thread_pool_.get()} {
+    view_.Init();
     orbit_client_protos::FunctionInfo function0;
     function0.set_name("foo");
     function0.set_pretty_name("void foo()");
@@ -66,7 +67,7 @@ struct FunctionsDataViewTest : public testing::Test {
     function2.set_pretty_name("operator==(A const&, A const&)");
     function2.set_module_path("/somewhere/else/module");
     function2.set_module_build_id("buildid3");
-    function2.set_address(0x33);
+    function2.set_address(0x330);
     function2.set_size(66);
     functions_.emplace_back(std::move(function2));
 

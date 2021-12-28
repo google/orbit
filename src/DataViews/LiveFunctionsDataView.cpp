@@ -50,7 +50,6 @@ LiveFunctionsDataView::LiveFunctionsDataView(
       selected_function_id_(orbit_grpc_protos::kInvalidFunctionId),
       metrics_uploader_(metrics_uploader) {
   update_period_ms_ = 300;
-  LiveFunctionsDataView::OnDataChanged();
 }
 
 const std::vector<DataView::Column>& LiveFunctionsDataView::GetColumns() {

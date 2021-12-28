@@ -25,8 +25,10 @@ std::string FormatValueForCsv(std::string_view value) {
   return result;
 }
 
+void DataView::Init() { InitSortingOrders(); }
+
 void DataView::InitSortingOrders() {
-  sorting_orders_.clear();
+  CHECK(sorting_orders_.empty());
   for (const auto& column : GetColumns()) {
     sorting_orders_.push_back(column.initial_order);
   }
@@ -35,24 +37,24 @@ void DataView::InitSortingOrders() {
 }
 
 void DataView::OnSort(int column, std::optional<SortingOrder> new_order) {
-  if (column < 0) {
-    return;
-  }
+  ORBIT_SCOPE_FUNCTION;
 
   if (!IsSortingAllowed()) {
     return;
   }
 
-  if (sorting_orders_.empty()) {
-    InitSortingOrders();
-  }
+  CHECK(column > 0);
+  CHECK(static_cast<size_t>(column) < sorting_orders_.size());
 
   sorting_column_ = column;
   if (new_order.has_value()) {
     sorting_orders_[column] = new_order.value();
   }
 
-  DoSort();
+  {
+    ORBIT_SCOPE(absl::StrFormat("DoSort column[%i]", sorting_column_).c_str());
+    DoSort();
+  }
 }
 
 void DataView::OnFilter(const std::string& filter) {
@@ -68,6 +70,7 @@ void DataView::SetUiFilterString(const std::string& filter) {
 }
 
 void DataView::OnDataChanged() {
+  ORBIT_SCOPE_FUNCTION;
   DoFilter();
   OnSort(sorting_column_, std::optional<SortingOrder>{});
 }

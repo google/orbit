@@ -50,7 +50,7 @@ namespace orbit_data_views {
 
 class PresetsDataViewTest : public testing::Test {
  public:
-  explicit PresetsDataViewTest() : view_{&app_, &metrics_uploader_} {}
+  explicit PresetsDataViewTest() : view_{&app_, &metrics_uploader_} { view_.Init(); }
 
  protected:
   orbit_metrics_uploader::MetricsUploaderStub metrics_uploader_;
@@ -146,8 +146,8 @@ TEST_F(PresetsDataViewTest, ViewIsUpdatedAfterSetPresets) {
 
   view_.SetPresets({preset_file1, preset_file0});
   EXPECT_EQ(view_.GetNumElements(), 2);
-  EXPECT_EQ(view_.GetValue(0, 1), preset_filename1.filename().string());
-  EXPECT_EQ(view_.GetValue(1, 1), preset_filename0.filename().string());
+  EXPECT_EQ(view_.GetValue(0, 1), preset_filename0.filename().string());
+  EXPECT_EQ(view_.GetValue(1, 1), preset_filename1.filename().string());
 }
 
 TEST_F(PresetsDataViewTest, CheckListingOfModulesPerPreset) {

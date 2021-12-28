@@ -58,17 +58,22 @@ OrbitTreeView::OrbitTreeView(QWidget* parent) : QTreeView(parent) {
 void OrbitTreeView::Initialize(orbit_data_views::DataView* data_view, SelectionType selection_type,
                                FontType font_type, bool uniform_row_height,
                                QFlags<Qt::AlignmentFlag> text_alignment) {
+  ORBIT_SCOPE("OrbitTreeView::Initialize");
   setUniformRowHeights(uniform_row_height);
 
   model_ = std::make_unique<OrbitTableModel>(data_view, /*parent=*/nullptr, text_alignment);
   setModel(model_.get());
-  header()->resizeSections(QHeaderView::ResizeToContents);
+  {
+    ORBIT_SCOPE("resizeSections");
+    header()->resizeSections(QHeaderView::ResizeToContents);
+  }
 
   if (!model_->IsSortingAllowed()) {
     // Don't do setSortingEnabled(model_->IsSortingAllowed()); as with true it
     // forces a sort by the first column.
     setSortingEnabled(false);
   } else {
+    ORBIT_SCOPE("sortByColumn");
     std::pair<int, Qt::SortOrder> column_and_order = model_->GetDefaultSortingColumnAndOrder();
     sortByColumn(column_and_order.first, column_and_order.second);
   }

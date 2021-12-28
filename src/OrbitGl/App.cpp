@@ -118,6 +118,13 @@ using orbit_client_protos::TimerInfo;
 using orbit_client_services::CrashManager;
 using orbit_client_services::TracepointServiceClient;
 
+using orbit_data_views::CallstackDataView;
+using orbit_data_views::DataView;
+using orbit_data_views::FunctionsDataView;
+using orbit_data_views::ModulesDataView;
+using orbit_data_views::PresetsDataView;
+using orbit_data_views::TracepointsDataView;
+
 using orbit_gl::MainWindowInterface;
 
 using orbit_grpc_protos::CaptureFinished;
@@ -2493,30 +2500,29 @@ orbit_data_views::DataView* OrbitApp::GetOrCreateDataView(DataViewType type) {
   switch (type) {
     case DataViewType::kFunctions:
       if (!functions_data_view_) {
-        functions_data_view_ = std::make_unique<orbit_data_views::FunctionsDataView>(
-            this, core_count_sized_thread_pool_.get());
+        functions_data_view_ =
+            DataView::CreateAndInit<FunctionsDataView>(this, core_count_sized_thread_pool_.get());
         panels_.push_back(functions_data_view_.get());
       }
       return functions_data_view_.get();
 
     case DataViewType::kCallstack:
       if (!callstack_data_view_) {
-        callstack_data_view_ = std::make_unique<orbit_data_views::CallstackDataView>(this);
+        callstack_data_view_ = DataView::CreateAndInit<CallstackDataView>(this);
         panels_.push_back(callstack_data_view_.get());
       }
       return callstack_data_view_.get();
 
     case DataViewType::kModules:
       if (!modules_data_view_) {
-        modules_data_view_ = std::make_unique<orbit_data_views::ModulesDataView>(this);
+        modules_data_view_ = DataView::CreateAndInit<ModulesDataView>(this);
         panels_.push_back(modules_data_view_.get());
       }
       return modules_data_view_.get();
 
     case DataViewType::kPresets:
       if (!presets_data_view_) {
-        presets_data_view_ =
-            std::make_unique<orbit_data_views::PresetsDataView>(this, metrics_uploader_);
+        presets_data_view_ = DataView::CreateAndInit<PresetsDataView>(this, metrics_uploader_);
         panels_.push_back(presets_data_view_.get());
       }
       return presets_data_view_.get();
@@ -2533,7 +2539,7 @@ orbit_data_views::DataView* OrbitApp::GetOrCreateDataView(DataViewType type) {
 
     case DataViewType::kTracepoints:
       if (!tracepoints_data_view_) {
-        tracepoints_data_view_ = std::make_unique<orbit_data_views::TracepointsDataView>(this);
+        tracepoints_data_view_ = DataView::CreateAndInit<TracepointsDataView>(this);
         panels_.push_back(tracepoints_data_view_.get());
       }
       return tracepoints_data_view_.get();
@@ -2546,7 +2552,7 @@ orbit_data_views::DataView* OrbitApp::GetOrCreateDataView(DataViewType type) {
 
 orbit_data_views::DataView* OrbitApp::GetOrCreateSelectionCallstackDataView() {
   if (selection_callstack_data_view_ == nullptr) {
-    selection_callstack_data_view_ = std::make_unique<orbit_data_views::CallstackDataView>(this);
+    selection_callstack_data_view_ = DataView::CreateAndInit<CallstackDataView>(this);
     panels_.push_back(selection_callstack_data_view_.get());
   }
   return selection_callstack_data_view_.get();

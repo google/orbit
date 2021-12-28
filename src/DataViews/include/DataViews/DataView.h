@@ -81,6 +81,17 @@ class DataView {
   explicit DataView(DataViewType type, AppInterface* app)
       : update_period_ms_(-1), type_(type), app_{app} {}
 
+  // Calls virtual initialization methods, therefore cannot be called from the constructor.
+  void Init();
+
+  // Creates a DataView and calls the Init() method after construction.
+  template <typename DataViewT, typename... Args>
+  [[nodiscard]] static std::unique_ptr<DataViewT> CreateAndInit(Args&&... args) {
+    auto data_view = std::make_unique<DataViewT>(std::forward<Args>(args)...);
+    data_view->Init();
+    return data_view;
+  }
+
   virtual ~DataView() = default;
 
   virtual void SetAsMainInstance() {}

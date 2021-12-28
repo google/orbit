@@ -41,6 +41,7 @@ const std::array<std::string, kNumTracepoints> kTracepointNames{"sys_enter_kill"
 class TracepointsDataViewTest : public testing::Test {
  public:
   explicit TracepointsDataViewTest() : view_{&app_} {
+    view_.Init();
     for (size_t i = 0; i < kNumTracepoints; i++) {
       TracepointInfo tracepoint;
       tracepoint.set_category(kTracepointCategories[i]);
