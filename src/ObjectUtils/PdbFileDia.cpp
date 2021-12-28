@@ -93,10 +93,11 @@ ErrorMessageOr<orbit_grpc_protos::ModuleSymbols> PdbFileDia::LoadDebugSymbols() 
   ModuleSymbols module_symbols;
   module_symbols.set_load_bias(object_file_info_.load_bias);
   module_symbols.set_symbols_file_path(file_path_.string());
-  CComPtr<IDiaSymbol> dia_symbol;
+  IDiaSymbol* dia_symbol = nullptr;
   ULONG celt = 0;
 
   while (SUCCEEDED(dia_enum_symbols->Next(1, &dia_symbol, &celt)) && (celt == 1)) {
+    CComPtr<IDiaSymbol> dia_symbol_com_ptr = dia_symbol;
     SymbolInfo symbol_info;
 
     BSTR function_name = {};
