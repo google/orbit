@@ -83,22 +83,23 @@ class VerifyTopDownContentForLoadedCapture(E2ETestCase):
                     tree_view_table.get_item_at(i, j).window_text(), expectation,
                     "Top-down view's cell ({}, {}) is '{}'".format(i, j, expectation))
 
-    def _execute(self, selection_tab: bool = False):
+    def _switch_to_tab(self, selection_tab: bool = False):
         if not selection_tab:
             self.find_control('TabItem', 'Top-Down').click_input()
             logging.info("Switched to 'Top-Down' tab")
-            tab = self.find_control('Group', 'topDownTab')
+            return self.find_control('Group', 'topDownTab')
         else:
             self.find_control('TabItem', 'Top-Down (selection)').click_input()
             logging.info("Switched to 'Top-Down (selection)' tab")
-            tab = self.find_control('Group', 'selectionTopDownTab')
+            return self.find_control('Group', 'selectionTopDownTab')
 
-        tree_view_table = Table(find_control(tab, 'Tree'))
-
+    def _verify_columns(self, tree_view_table):
         self.expect_eq(tree_view_table.get_column_count(), 6, "Top-down view has 6 columns")
 
-        expected_thread_count = 20
-        self._verify_row_count(tree_view_table, expected_thread_count)
+    EXPECTED_THREAD_COUNT = 20
+
+    def _verify_rows_when_tree_collapsed(self, tree_view_table):
+        self._verify_row_count(tree_view_table, self.EXPECTED_THREAD_COUNT)
 
         expectations = [
             ["OrbitTest (all threads)", "100.00% (1583)", "", "", "", ""],
@@ -107,11 +108,12 @@ class VerifyTopDownContentForLoadedCapture(E2ETestCase):
         self._verify_first_rows(tree_view_table, expectations)
         logging.info("Verified content of top-down view when all threads are collapsed")
 
+    def _verify_rows_when_thread_expanded(self, tree_view_table):
         logging.info("Expanding a thread of the top-down view")
         tree_view_table.get_item_at(1, 0).double_click_input()
         expected_first_thread_child_count = 2
         self._verify_row_count(tree_view_table,
-                               expected_thread_count + expected_first_thread_child_count)
+                               self.EXPECTED_THREAD_COUNT + expected_first_thread_child_count)
 
         expectations = [
             ["OrbitTest (all threads)", "100.00% (1583)", "", "", "", ""],
@@ -122,12 +124,13 @@ class VerifyTopDownContentForLoadedCapture(E2ETestCase):
         self._verify_first_rows(tree_view_table, expectations)
         logging.info("Verified content of top-down view when one thread is expanded")
 
+    def _verify_rows_when_thread_recursively_expanded(self, tree_view_table):
         logging.info("Recursively expanding a thread of the top-down view")
         tree_view_table.get_item_at(1, 0).click_input(button='right')
         self.find_context_menu_item('Expand recursively').click_input()
         expected_first_thread_descendant_count = 19
         self._verify_row_count(tree_view_table,
-                               expected_thread_count + expected_first_thread_descendant_count)
+                               self.EXPECTED_THREAD_COUNT + expected_first_thread_descendant_count)
 
         expectations = [
             ["OrbitTest (all threads)", "100.00% (1583)", "", "", "", ""],
@@ -145,6 +148,7 @@ class VerifyTopDownContentForLoadedCapture(E2ETestCase):
         self._verify_first_rows(tree_view_table, expectations)
         logging.info("Verified content of top-down view when one thread is recursively expanded")
 
+    def _verify_rows_when_tree_expanded(self, tree_view_table):
         logging.info("Expanding the entire top-down view")
         tree_view_table.get_item_at(0, 0).click_input(button='right')
         self.find_context_menu_item('Expand all').click_input()
@@ -169,6 +173,7 @@ class VerifyTopDownContentForLoadedCapture(E2ETestCase):
         self._verify_first_rows(tree_view_table, expectations)
         logging.info("Verified content of top-down view when it is completely expanded")
 
+    def _verify_rows_on_search(self, tab, tree_view_table):
         search_term = 'fputs'
         logging.info("Searching top-down view for '{}'".format(search_term))
         search_bar = find_control(parent=tab, control_type='Edit', name='filter')
@@ -192,3 +197,14 @@ class VerifyTopDownContentForLoadedCapture(E2ETestCase):
         self.expect_eq(search_item_count, 2,
                        "Searching top-down view for '{}' produces two results".format(search_term))
         logging.info("Verified result of searching top-down view for '{}'".format(search_term))
+
+    def _execute(self, selection_tab: bool = False):
+        tab = self._switch_to_tab(selection_tab)
+        tree_view_table = Table(find_control(tab, 'Tree'))
+
+        self._verify_columns(tree_view_table)
+        self._verify_rows_when_tree_collapsed(tree_view_table)
+        self._verify_rows_when_thread_expanded(tree_view_table)
+        self._verify_rows_when_thread_recursively_expanded(tree_view_table)
+        self._verify_rows_when_tree_expanded(tree_view_table)
+        self._verify_rows_on_search(tab, tree_view_table)
