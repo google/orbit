@@ -47,8 +47,8 @@ def main(argv):
     today_string = today.strftime("%Y_%m_%d")
     tomorrow_string = tomorrow.strftime("%Y_%m_%d")
     test_cases = [
-        LoadCapture(capture_file_path="test_data\\OrbitTest_1-64.orbit", expect_fail=True),
-        LoadCapture(capture_file_path="test_data\\OrbitTest_1-72.orbit"),
+        LoadCapture(capture_file_path="testdata\\OrbitTest_1-64.orbit", expect_fail=True),
+        LoadCapture(capture_file_path="testdata\\OrbitTest_1-72.orbit"),
 
         FilterTracks(filter_string="Scheduler", expected_track_count=1),
         CheckTimers(track_name_filter='Scheduler*'),
