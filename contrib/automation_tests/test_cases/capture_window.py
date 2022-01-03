@@ -489,6 +489,10 @@ class CheckCallstacks(CaptureWindowE2ETestCaseBase):
 
 
 class SelectAllCallstacks(CaptureWindowE2ETestCaseBase):
+    """
+    Select all currently visible callstacks (based on the current visible section of the capture) from the track with
+    the specified name.
+    """
 
     def _execute(self, track_name_filter: str):
         tracks = self._find_tracks(track_name_filter)
@@ -502,6 +506,17 @@ class SelectAllCallstacks(CaptureWindowE2ETestCaseBase):
         callstacks = track.callstacks
         rect = callstacks.rectangle()
         callstacks.drag_mouse_input(src=(rect.left, rect.top + 5), dst=(rect.right, rect.top + 5))
+
+        self.expect_true(
+            self.find_control('TabItem', 'Sampling (selection)').is_enabled(),
+            "'Sampling (selection)' tab is enabled")
+        self.expect_true(
+            self.find_control('TabItem', 'Top-Down (selection)').is_enabled(),
+            "'Top-Down (selection)' tab is enabled")
+        self.expect_true(
+            self.find_control('TabItem', 'Bottom-Up (selection)').is_enabled(),
+            "'Bottom-Up (selection)' tab is enabled")
+        logging.info("Verified that '(selection)' tabs are enabled")
 
 
 class SetAndCheckMemorySamplingPeriod(E2ETestCase):

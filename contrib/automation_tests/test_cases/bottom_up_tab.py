@@ -9,6 +9,7 @@ import time
 from core.common_controls import Table
 from core.orbit_e2e import E2ETestCase, find_control
 from pywinauto.keyboard import send_keys
+from typing import Sequence
 
 
 class VerifyHelloGgpBottomUpContents(E2ETestCase):
@@ -44,12 +45,17 @@ class VerifyHelloGgpBottomUpContents(E2ETestCase):
 
 
 class VerifyBottomUpContentForLoadedCapture(E2ETestCase):
+    """
+    Verify the content of the bottom-up view for the capture loaded from "OrbitTest_1-72.orbit".
+    In particular, we verify the number of rows and the content of the first rows when the tree is expanded in a few
+    different ways. Then we search for a function and verify that the tree is expanded to show it.
+    """
 
     def _verify_row_count(self, tree_view_table: Table, expected_rows: int):
         self.expect_eq(tree_view_table.get_row_count(), expected_rows,
                        "Bottom-up view has {} rows".format(expected_rows))
 
-    def _verify_first_rows(self, tree_view_table: Table, expectations: list[list[str]],
+    def _verify_first_rows(self, tree_view_table: Table, expectations: Sequence[Sequence[str]],
                            hidden_columns: set[int]):
         for i in range(len(expectations)):
             for j in range(len(expectations[i])):
