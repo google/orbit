@@ -7,6 +7,7 @@
 #include <grpcpp/support/channel_arguments.h>
 #include <gtest/gtest.h>
 
+#include <atomic>
 #include <thread>
 
 #include "GrpcProtos/capture.pb.h"
@@ -86,7 +87,7 @@ class GrpcClientCaptureEventCollectorTest : public testing::Test {
 }  // namespace
 
 TEST_F(GrpcClientCaptureEventCollectorTest, AllEventsAreSent) {
-  uint64_t actual_event_count = 0;
+  std::atomic<uint64_t> actual_event_count = 0;
   EXPECT_CALL(mock_reader_writer_, OnCaptureResponse)
       // While normally we expect a single CaptureResponse, the events could still be split across
       // two CaptureResponses.
@@ -103,7 +104,7 @@ TEST_F(GrpcClientCaptureEventCollectorTest, AllEventsAreSent) {
 }
 
 TEST_F(GrpcClientCaptureEventCollectorTest, ManyEventsAreSplitAcrossMultipleCaptureResponses) {
-  uint64_t actual_event_count = 0;
+  std::atomic<uint64_t> actual_event_count = 0;
   EXPECT_CALL(mock_reader_writer_, OnCaptureResponse)
       // This depends on the values of kSendEventCountInterval (5000) in
       // GrpcClientCaptureEventCollector::SenderThread, and of
@@ -123,7 +124,7 @@ TEST_F(GrpcClientCaptureEventCollectorTest, ManyEventsAreSplitAcrossMultipleCapt
 }
 
 TEST_F(GrpcClientCaptureEventCollectorTest, CaptureResponsesAreSentPeriodicallyEvenIfSmall) {
-  uint64_t actual_event_count = 0;
+  std::atomic<uint64_t> actual_event_count = 0;
   EXPECT_CALL(mock_reader_writer_, OnCaptureResponse)
       .Times(2)
       .WillRepeatedly([&actual_event_count](const CaptureResponse& capture_response) {
@@ -139,7 +140,7 @@ TEST_F(GrpcClientCaptureEventCollectorTest, CaptureResponsesAreSentPeriodicallyE
 }
 
 TEST_F(GrpcClientCaptureEventCollectorTest, AllCaptureResponsesSentShortlyAfterStopAndWait) {
-  uint64_t actual_event_count = 0;
+  std::atomic<uint64_t> actual_event_count = 0;
   EXPECT_CALL(mock_reader_writer_, OnCaptureResponse)
       .Times(testing::Between(1, 2))
       .WillRepeatedly([&actual_event_count](const CaptureResponse& capture_response) {
