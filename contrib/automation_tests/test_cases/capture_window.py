@@ -258,7 +258,9 @@ class ToggleCollapsedStateOfAllTracks(CaptureWindowE2ETestCaseBase):
 
 class FilterTracks(CaptureWindowE2ETestCaseBase):
     """
-    Set a filter in the capture tab
+    Set a filter in the capture tab.
+    Note that this uses pywinauto's `keyboard.send_keys`, so certain special characters need to be escaped by enclosing
+    them in {}.
     """
 
     def _execute(self, filter_string: str = "", expected_track_count=None):
