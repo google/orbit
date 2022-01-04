@@ -9,7 +9,7 @@ import time
 from core.common_controls import Table
 from core.orbit_e2e import E2ETestCase, find_control
 from pywinauto.keyboard import send_keys
-from typing import Sequence
+from typing import Sequence, Set
 
 
 class VerifyHelloGgpBottomUpContents(E2ETestCase):
@@ -56,7 +56,7 @@ class VerifyBottomUpContentForLoadedCapture(E2ETestCase):
                        "Bottom-up view has {} rows".format(expected_rows))
 
     def _verify_first_rows(self, tree_view_table: Table, expectations: Sequence[Sequence[str]],
-                           hidden_columns: set[int]):
+                           hidden_columns: Set[int]):
         for i in range(len(expectations)):
             for j in range(len(expectations[i])):
                 if j in hidden_columns:
