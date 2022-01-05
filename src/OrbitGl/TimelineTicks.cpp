@@ -7,7 +7,7 @@
 
 namespace orbit_gl {
 
-std::set<uint64_t> GenerateScales() {
+static std::set<uint64_t> GenerateScales() {
   std::set<uint64_t> scales;
 
   // Scales under 1 second.
