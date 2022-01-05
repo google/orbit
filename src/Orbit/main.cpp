@@ -91,7 +91,7 @@ static std::optional<orbit_session_setup::TargetConfiguration> ConnectToSpecifie
 
   auto connection_target = connection_target_result.value();
   orbit_session_setup::ConnectToTargetDialog dialog(
-      &connection_artifacts, connection_target.instance_id_, connection_target.process_id_,
+      &connection_artifacts, connection_target.instance_id_or_name_, connection_target.process_id_,
       metrics_uploader);
   return dialog.Exec();
 }
