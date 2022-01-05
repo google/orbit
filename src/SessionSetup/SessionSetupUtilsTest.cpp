@@ -31,7 +31,7 @@ TEST(SessionSetupUtils, CredentialsFromSshInfoWorksCorrectly) {
   EXPECT_EQ(info.user.toStdString(), credentials.user);
 }
 
-TEST(SessionSetupUtils, ConnectionTargetFromValidInstanceID) {
+TEST(SessionSetupUtils, ConnectionTargetFromValidInstanceId) {
   const QString instance_id = "some/i-nstanc-3/id123";
   const uint32_t pid = 1234;
 
