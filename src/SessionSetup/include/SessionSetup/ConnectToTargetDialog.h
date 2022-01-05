@@ -44,7 +44,7 @@ class ConnectToTargetDialog : public QDialog {
 
   SshConnectionArtifacts* ssh_connection_artifacts_;
 
-  QString instance_id_;
+  QString instance_id_or_name_;
   uint32_t process_id_;
   orbit_metrics_uploader::MetricsUploader* metrics_uploader_;
 

@@ -31,19 +31,35 @@ TEST(SessionSetupUtils, CredentialsFromSshInfoWorksCorrectly) {
   EXPECT_EQ(info.user.toStdString(), credentials.user);
 }
 
-TEST(SessionSetupUtils, ConnectionTargetFromString) {
-  const QString instance = "some/i-nstanc-3/id123";
+TEST(SessionSetupUtils, ConnectionTargetFromValidInstanceId) {
+  const QString instance_id = "some/i-nstanc-3/id123";
   const uint32_t pid = 1234;
 
   // Correct format: "pid@instance_id", where PID is a uint32_t
-  const QString target_string = QString("%1@%2").arg(QString::number(pid), instance);
+  QString target_string = QString("%1@%2").arg(QString::number(pid), instance_id);
+  const auto result = ConnectionTarget::FromString(target_string);
+  EXPECT_TRUE(result.has_value());
+  if (result.has_value()) {
+    EXPECT_EQ(result.value().instance_id_or_name_.toStdString(), instance_id.toStdString());
+    EXPECT_EQ(result.value().process_id_, pid);
+  }
+}
+
+TEST(SessionSetupUtils, ConnectionTargetFromValidInstanceName) {
+  const QString instance_name = "somename-1";
+  const uint32_t pid = 1234;
+
+  // Correct format: "pid@instance_name", where PID is a uint32_t
+  const QString target_string = QString("%1@%2").arg(QString::number(pid), instance_name);
   auto result = ConnectionTarget::FromString(target_string);
   EXPECT_TRUE(result.has_value());
   if (result.has_value()) {
-    EXPECT_EQ(result.value().instance_id_.toStdString(), instance.toStdString());
+    EXPECT_EQ(result.value().instance_id_or_name_.toStdString(), instance_name.toStdString());
     EXPECT_EQ(result.value().process_id_, pid);
   }
+}
 
+TEST(SessionSetupUtils, ErrorRaisedOnInvalidTarget) {
   // Fail-tests for multiple incorrect formats
   EXPECT_FALSE(ConnectionTarget::FromString("no/id/found").has_value());
   EXPECT_FALSE(ConnectionTarget::FromString("invalid_pid@valid/i-nstanc-3/id").has_value());

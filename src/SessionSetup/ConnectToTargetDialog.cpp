@@ -20,27 +20,27 @@
 namespace orbit_session_setup {
 
 ConnectToTargetDialog::ConnectToTargetDialog(
-    SshConnectionArtifacts* ssh_connection_artifacts, const QString& instance_id,
+    SshConnectionArtifacts* ssh_connection_artifacts, const QString& instance_id_or_name,
     uint32_t process_id, orbit_metrics_uploader::MetricsUploader* metrics_uploader, QWidget* parent)
     : QDialog{parent, Qt::Window},
       ui_(std::make_unique<Ui::ConnectToTargetDialog>()),
       ssh_connection_artifacts_(ssh_connection_artifacts),
-      instance_id_(instance_id),
+      instance_id_or_name_(instance_id_or_name),
       process_id_(process_id),
       metrics_uploader_(metrics_uploader),
       main_thread_executor_(orbit_qt_utils::MainThreadExecutorImpl::Create()) {
   CHECK(ssh_connection_artifacts != nullptr);
 
   ui_->setupUi(this);
-  ui_->instanceIdLabel->setText(instance_id);
+  ui_->instanceIdLabel->setText(instance_id_or_name);
   ui_->processIdLabel->setText(QString::number(process_id));
 }
 
 ConnectToTargetDialog::~ConnectToTargetDialog() {}
 
 std::optional<TargetConfiguration> ConnectToTargetDialog::Exec() {
-  LOG("Trying to establish a connection to specified target %s:%d", instance_id_.toStdString(),
-      process_id_);
+  LOG("Trying to establish a connection to specified target %s:%d",
+      instance_id_or_name_.toStdString(), process_id_);
 
   auto ggp_client_result = orbit_ggp::CreateClient();
   if (ggp_client_result.has_error()) {
@@ -51,8 +51,8 @@ std::optional<TargetConfiguration> ConnectToTargetDialog::Exec() {
 
   SetStatusMessage("Loading encryption credentials for instance...");
 
-  auto process_future = ggp_client_->GetSshInfoAsync(instance_id_, std::nullopt);
-  auto instance_future = ggp_client_->DescribeInstanceAsync(instance_id_);
+  auto process_future = ggp_client_->GetSshInfoAsync(instance_id_or_name_, std::nullopt);
+  auto instance_future = ggp_client_->DescribeInstanceAsync(instance_id_or_name_);
   auto joined_future = orbit_base::JoinFutures(process_future, instance_future);
 
   std::optional<TargetConfiguration> target;
@@ -102,7 +102,7 @@ ErrorMessageOr<StadiaTarget> ConnectToTargetDialog::OnAsyncDataAvailable(
 
 StadiaTarget ConnectToTargetDialog::CreateTarget(ConnectionData result,
                                                  orbit_ggp::Instance instance) const {
-  CHECK(instance.id == instance_id_);
+  CHECK(instance.id == instance_id_or_name_ || instance.display_name == instance_id_or_name_);
   CHECK(result.grpc_channel_ != nullptr);
   CHECK(result.service_deploy_manager_ != nullptr);
   CHECK(result.process_data_ != nullptr);

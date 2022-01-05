@@ -19,10 +19,10 @@ namespace orbit_session_setup {
 [[nodiscard]] std::shared_ptr<grpc::Channel> CreateGrpcChannel(uint16_t port);
 
 struct ConnectionTarget {
-  QString instance_id_;
+  QString instance_id_or_name_;
   uint32_t process_id_;
 
-  // Split a target given as "<pid>@<instance_id>" into its components
+  // Split a target given as "<pid>@<instance>" into its components
   [[nodiscard]] static std::optional<ConnectionTarget> FromString(const QString& connection_target);
 };
 
