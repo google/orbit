@@ -11,7 +11,7 @@ from test_cases.bottom_up_tab import VerifyBottomUpContentForLoadedCapture
 from test_cases.capture_window import FilterTracks, SelectAllCallstacks, ZoomOut
 from test_cases.connection_window import LoadCapture
 from test_cases.top_down_tab import VerifyTopDownContentForLoadedCapture
-"""Inspect the top-down view in Orbit using pywinauto.
+"""Verify top-down and bottom-up view of a known capture.
 
 Before this script is run Orbit needs to be started.
 
@@ -22,10 +22,14 @@ to be run from 64 bit python.
 This automation script covers a basic workflow:
  - load a known capture
  - verify the content of the top-down view
+ - verify searching the top-down view
  - verify the content of the bottom-up view
+ - verify searching the bottom-up view
  - select all callstacks using the "(all threads)" track
  - verify the content of the top-down view for the selection
+ - verify searching the top-down view of the selection
  - verify the content of the bottom-up view for the selection
+ - verify searching the bottom-up view of the selection
 """
 
 
