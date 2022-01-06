@@ -86,4 +86,10 @@ TEST_F(MemoryRangesTest, read_across_ranges) {
   }
 }
 
+TEST_F(MemoryRangesTest, duplicate_last_addr) {
+  MemoryRanges ranges;
+  ASSERT_TRUE(ranges.Insert(new MemoryRange(nullptr, 0x1000, 0x2000, 0x1000)));
+  ASSERT_FALSE(ranges.Insert(new MemoryRange(nullptr, 0x2000, 0x1000, 0x2000)));
+}
+
 }  // namespace unwindstack

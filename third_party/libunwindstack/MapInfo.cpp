@@ -237,12 +237,15 @@ Memory* MapInfo::CreateMemory(const std::shared_ptr<Memory>& process_memory) {
   // the r-x section, which is not quite the right information.
   set_object_start_offset(prev_real_map->offset());
 
-  MemoryRanges* ranges = new MemoryRanges;
-  ranges->Insert(new MemoryRange(process_memory, prev_real_map->start(),
-                                 prev_real_map->end() - prev_real_map->start(), 0));
-  ranges->Insert(new MemoryRange(process_memory, start(), end() - start(), object_offset()));
-
-  return ranges;
+  std::unique_ptr<MemoryRanges> ranges(new MemoryRanges);
+  if (!ranges->Insert(new MemoryRange(process_memory, prev_real_map->start(),
+                                      prev_real_map->end() - prev_real_map->start(), 0))) {
+    return nullptr;
+  }
+  if (!ranges->Insert(new MemoryRange(process_memory, start(), end() - start(), object_offset()))) {
+    return nullptr;
+  }
+  return ranges.release();
 }
 
 class ScopedObjectCacheLock {
