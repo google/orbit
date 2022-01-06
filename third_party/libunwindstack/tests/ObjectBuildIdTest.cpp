@@ -21,12 +21,12 @@
 
 namespace unwindstack {
 
-TEST(ObjectTest, get_printable_build_id_empty) {
+TEST(ObjectBuildIdTest, get_printable_build_id_empty) {
   std::string empty;
   ASSERT_EQ("", Object::GetPrintableBuildID(empty));
 }
 
-TEST(ObjectTest, get_printable_build_id_check) {
+TEST(ObjectBuildIdTest, get_printable_build_id_check) {
   std::string empty = {'\xff', '\x45', '\x40', '\x0f'};
   ASSERT_EQ("ff45400f", Object::GetPrintableBuildID(empty));
 }

@@ -257,8 +257,8 @@ target_sources(libunwindstack_tests PRIVATE
   tests/MemoryTest.cpp
   tests/MemoryThreadCacheTest.cpp
   tests/MemoryXzTest.cpp
+  tests/ObjectBuildIdTest.cpp
   tests/ObjectCacheTest.cpp
-  tests/ObjectTest.cpp
   tests/PeCoffInterfaceTest.cpp
   tests/PeCoffFake.cpp
   tests/PeCoffRuntimeFunctionsTest.cpp
