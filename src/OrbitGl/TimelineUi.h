@@ -20,6 +20,8 @@ class TimelineUi : public CaptureViewElement {
 
   [[nodiscard]] float GetHeight() const override { return layout_->GetTimeBarHeight(); }
 
+  std::unique_ptr<orbit_accessibility::AccessibleInterface> CreateAccessibleInterface() override;
+
  private:
   void DoUpdatePrimitives(Batcher& batcher, TextRenderer& text_renderer, uint64_t min_tick,
                           uint64_t max_tick, PickingMode picking_mode) override;
