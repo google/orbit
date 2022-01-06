@@ -66,6 +66,7 @@ class TimeGraph final : public orbit_gl::CaptureViewElement,
   [[nodiscard]] uint64_t GetTickFromWorld(float world_x) const override;
   [[nodiscard]] uint64_t GetTickFromUs(double micros) const override;
   [[nodiscard]] double GetUsFromTick(uint64_t time) const override;
+  [[nodiscard]] uint64_t GetNsSinceStart(uint64_t time) const override;
   [[nodiscard]] double GetTimeWindowUs() const override { return time_window_us_; }
   [[nodiscard]] double GetMinTimeUs() const override { return min_time_us_; }
   [[nodiscard]] double GetMaxTimeUs() const override { return max_time_us_; }

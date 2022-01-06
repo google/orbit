@@ -1,0 +1,36 @@
+// Copyright (c) 2021 The Orbit Authors. All rights reserved.
+// Use of this source code is governed by a BSD-style license that can be
+// found in the LICENSE file.
+
+#ifndef ORBIT_GL_TIMELINE_UI_H_
+#define ORBIT_GL_TIMELINE_UI_H_
+
+#include "CaptureViewElement.h"
+#include "TimelineInfoInterface.h"
+#include "TimelineTicks.h"
+
+namespace orbit_gl {
+
+class TimelineUI : public CaptureViewElement {
+ public:
+  explicit TimelineUI(CaptureViewElement* parent, const TimelineInfoInterface* timeline_info,
+                      Viewport* viewport, TimeGraphLayout* layout)
+      : CaptureViewElement(parent, viewport, layout), timeline_info_interface_(timeline_info) {}
+
+  [[nodiscard]] float GetHeight() const override { return layout_->GetTimeBarHeight(); }
+
+ private:
+  void DoUpdatePrimitives(Batcher& batcher, TextRenderer& text_renderer, uint64_t min_tick,
+                          uint64_t max_tick, PickingMode picking_mode) override;
+  void RenderLines(Batcher& batcher, uint64_t min_timestamp_ns, uint64_t max_timestamp_ns);
+  void RenderLabels(TextRenderer& text_renderer, uint64_t min_timestamp_ns,
+                    uint64_t max_timestamp_ns);
+  void RenderBackground(Batcher& batcher);
+
+  const TimelineInfoInterface* timeline_info_interface_;
+  TimelineTicks timeline_ticks_;
+};
+
+}  // namespace orbit_gl
+
+#endif  // ORBIT_GL_TIMELINE_UI_H_
