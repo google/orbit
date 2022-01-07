@@ -58,7 +58,6 @@ cc_library(
         "Global.cpp",
         "GlobalDebugImpl.h",
         "JitDebug.cpp",
-        "LocalUnwinder.cpp",
         "LogStdout.cpp",
         "MapInfo.cpp",
         "Maps.cpp",

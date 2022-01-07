@@ -43,7 +43,6 @@ target_sources(libunwindstack_common PRIVATE
   Global.cpp
   GlobalDebugImpl.h
   JitDebug.cpp
-  LocalUnwinder.cpp
 
   # LogAndroid is needed in the tests, while the lib needs LogStdout.
   # So we compile the `_common` target without both.
@@ -112,7 +111,6 @@ target_sources(libunwindstack_common PUBLIC
   include/unwindstack/Error.h
   include/unwindstack/Global.h
   include/unwindstack/JitDebug.h
-  include/unwindstack/LocalUnwinder.h
   include/unwindstack/Log.h
   include/unwindstack/MachineArm.h
   include/unwindstack/MachineArm64.h
@@ -228,11 +226,6 @@ target_sources(libunwindstack_tests PRIVATE
   tests/GlobalTest.cpp
   tests/IsolatedSettings.cpp
   tests/JitDebugTest.cpp
-
-  # LocalUnwinderTests are broken and need to be investigated,
-  # but we currently don't use this part of the library.
-  # tests/LocalUnwinderTest.cpp
-
   tests/LocalUpdatableMapsTest.cpp
   tests/LogFake.cpp
   tests/MapInfoCreateMemoryTest.cpp

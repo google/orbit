@@ -14,29 +14,8 @@
  * limitations under the License.
  */
 
-#include <unwindstack/LocalUnwinder.h>
-
-#include <vector>
-
-extern "C" void TestlibLevel4(void* unwinder_data, void* frame_data) {
-  unwindstack::LocalUnwinder* unwinder =
-      reinterpret_cast<unwindstack::LocalUnwinder*>(unwinder_data);
-  std::vector<unwindstack::LocalFrameData>* frame_info =
-      reinterpret_cast<std::vector<unwindstack::LocalFrameData>*>(frame_data);
-  unwinder->Unwind(frame_info, 256);
-}
-
-extern "C" void TestlibLevel3(void* unwinder_data, void* frame_data) {
-  TestlibLevel4(unwinder_data, frame_data);
-}
-
-extern "C" void TestlibLevel2(void* unwinder_data, void* frame_data) {
-  TestlibLevel3(unwinder_data, frame_data);
-}
-
-extern "C" void TestlibLevel1(void* unwinder_data, void* frame_data) {
-  TestlibLevel2(unwinder_data, frame_data);
-}
+#include <stdint.h>
+#include <stdlib.h>
 
 // The loop in this function is only guaranteed to not be optimized away by the compiler
 // if optimizations are turned off. This is partially because the compiler doesn't have
