@@ -64,6 +64,7 @@ target_sources(
          TimeGraph.h
          TimeGraphLayout.h
          TimelineInfoInterface.h
+         TimelineTicks.h
          Timer.h
          TimerInfosIterator.h
          TimerTrack.h
@@ -123,6 +124,7 @@ target_sources(
           TextRenderer.cpp
           TimeGraph.cpp
           TimeGraphLayout.cpp
+          TimelineTicks.cpp
           TimerInfosIterator.cpp
           TimerTrack.cpp
           ThreadBar.cpp
@@ -198,6 +200,7 @@ target_sources(OrbitGlTests PRIVATE
                SimpleTimingsTest.cpp
                SliderTest.cpp
                ShortenStringWithEllipsisTest.cpp
+               TimelineTicksTest.cpp
                TimerInfosIteratorTest.cpp
                TranslationStackTest.cpp
                ThreadTrackTest.cpp
