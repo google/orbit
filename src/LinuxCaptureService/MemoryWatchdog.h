@@ -5,9 +5,10 @@
 #ifndef LINUX_CAPTURE_SERVICE_MEMORY_WATCHDOG_H_
 #define LINUX_CAPTURE_SERVICE_MEMORY_WATCHDOG_H_
 
+#include <stdint.h>
+
 #include <optional>
 #include <string_view>
-#include <thread>
 
 namespace orbit_linux_capture_service {
 
