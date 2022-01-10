@@ -158,45 +158,40 @@ LinuxCaptureService::WaitForStopCaptureRequestOrMemoryThresholdExceeded(
   auto stop_capture = std::make_shared<bool>(false);
   auto stop_capture_reason = std::make_shared<std::optional<StopCaptureReason>>();
 
-  static const std::optional<uint64_t> mem_total_bytes = ReadMemTotalInBytesFromProcMeminfo();
+  static const uint64_t mem_total_bytes = GetPhysicalMemoryInBytes();
   std::thread memory_watchdog_thread;
-  if (!mem_total_bytes.has_value()) {
-    ERROR("Could not start memory watchdog because total physical memory is unknown");
-  } else {
-    uint64_t watchdog_threshold_bytes = mem_total_bytes.value() / 2;
-    static constexpr absl::Duration kWatchdogPollInterval = absl::Seconds(1);
-    LOG("Starting memory watchdog with threshold %u B because total physical memory is %u B",
-        watchdog_threshold_bytes, mem_total_bytes.value());
-
-    memory_watchdog_thread = std::thread{
-        [watchdog_threshold_bytes, stop_capture_mutex, stop_capture, stop_capture_reason] {
-          while (true) {
-            {
-              absl::MutexLock lock{&*stop_capture_mutex};
-              if (stop_capture_mutex->AwaitWithTimeout(absl::Condition(&*stop_capture),
-                                                       kWatchdogPollInterval)) {
-                LOG("Stopping memory watchdog as the capture was stopped");
-                break;
-              }
-            }
-
-            // Repeatedly poll `/proc/[pid]/stat` for the resident set size (rss) of the current
-            // process.
-            std::optional<uint64_t> rss_bytes = ReadRssInBytesFromProcPidStat();
-            if (!rss_bytes.has_value()) {
-              ERROR_ONCE("Reading resident set size of the current process");
-              continue;
-            }
-            if (rss_bytes.value() > watchdog_threshold_bytes) {
-              LOG("Memory threshold exceeded: stopping capture (and stopping memory watchdog)");
-              absl::MutexLock lock{&*stop_capture_mutex};
-              *stop_capture = true;
-              *stop_capture_reason = StopCaptureReason::kMemoryWatchdog;
+  uint64_t watchdog_threshold_bytes = mem_total_bytes / 2;
+  static constexpr absl::Duration kWatchdogPollInterval = absl::Seconds(1);
+  LOG("Starting memory watchdog with threshold %u B because total physical memory is %u B",
+      watchdog_threshold_bytes, mem_total_bytes);
+  memory_watchdog_thread = std::thread{
+      [watchdog_threshold_bytes, stop_capture_mutex, stop_capture, stop_capture_reason] {
+        while (true) {
+          {
+            absl::MutexLock lock{&*stop_capture_mutex};
+            if (stop_capture_mutex->AwaitWithTimeout(absl::Condition(&*stop_capture),
+                                                     kWatchdogPollInterval)) {
+              LOG("Stopping memory watchdog as the capture was stopped");
               break;
             }
           }
-        }};
-  }
+
+          // Repeatedly poll `/proc/[pid]/stat` for the resident set size (rss) of the current
+          // process.
+          std::optional<uint64_t> rss_bytes = ReadRssInBytesFromProcPidStat();
+          if (!rss_bytes.has_value()) {
+            ERROR_ONCE("Reading resident set size of the current process");
+            continue;
+          }
+          if (rss_bytes.value() > watchdog_threshold_bytes) {
+            LOG("Memory threshold exceeded: stopping capture (and stopping memory watchdog)");
+            absl::MutexLock lock{&*stop_capture_mutex};
+            *stop_capture = true;
+            *stop_capture_reason = StopCaptureReason::kMemoryWatchdog;
+            break;
+          }
+        }
+      }};
 
   // ServerReaderWriter::Read blocks until the client has called WritesDone, or until we finish the
   // gRPC (before the client has called WritesDone). In the latter case, the Read unblocks *after*
