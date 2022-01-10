@@ -14,54 +14,11 @@
 
 namespace orbit_linux_capture_service {
 
-std::optional<uint64_t> ExtractMemTotalInKbFromProcMeminfo(std::string_view proc_meminfo) {
-  std::string line;
-  for (size_t i = 0; i <= proc_meminfo.size(); ++i) {
-    if (i == proc_meminfo.size() || proc_meminfo[i] == '\n') {
-      if (!absl::StartsWith(line, "MemTotal:")) {
-        line.clear();
-        continue;
-      }
-
-      std::vector<std::string_view> splits = absl::StrSplit(line, ' ', absl::SkipWhitespace{});
-      if (splits.size() < 3 || splits[2] != "kB") {
-        ERROR("Extracting MemTotal from \"%s\"", line);
-        return std::nullopt;
-      }
-
-      uint64_t mem_total_kb;
-      if (!absl::SimpleAtoi(splits[1], &mem_total_kb)) {
-        ERROR("Parsing MemTotal \"%s\"", splits[1]);
-        return std::nullopt;
-      }
-
-      return mem_total_kb;
-    }
-
-    line.push_back(proc_meminfo[i]);
-  }
-
-  ERROR("Could not find MemTotal in file");
-  return std::nullopt;
-}
-
-std::optional<uint64_t> ReadMemTotalInBytesFromProcMeminfo() {
-  static constexpr std::string_view kProcMeminfoFilename = "/proc/meminfo";
-
-  ErrorMessageOr<std::string> error_or_meminfo = orbit_base::ReadFileToString(kProcMeminfoFilename);
-  if (error_or_meminfo.has_error()) {
-    ERROR("Reading \"%s\": %s", kProcMeminfoFilename, error_or_meminfo.error().message());
-    return std::nullopt;
-  }
-
-  std::optional<uint64_t> mem_total_kb =
-      ExtractMemTotalInKbFromProcMeminfo(error_or_meminfo.value());
-  if (!mem_total_kb.has_value()) {
-    ERROR("Extracting MemTotal from \"%s\"", kProcMeminfoFilename);
-    return std::nullopt;
-  }
-
-  return mem_total_kb.value() * 1024;
+uint64_t GetPhysicalMemoryInBytes() {
+  static uint64_t physical_pages = sysconf(_SC_PHYS_PAGES);
+  static uint64_t page_size_bytes = sysconf(_SC_PAGESIZE);
+  static uint64_t physical_memory_bytes = physical_pages * page_size_bytes;
+  return physical_memory_bytes;
 }
 
 std::optional<uint64_t> ExtractRssInPagesFromProcPidStat(std::string_view proc_pid_stat) {

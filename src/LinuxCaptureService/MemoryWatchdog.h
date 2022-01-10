@@ -12,17 +12,13 @@
 
 namespace orbit_linux_capture_service {
 
+[[nodiscard]] uint64_t GetPhysicalMemoryInBytes();
+
 // In header file for testing.
 [[nodiscard]] std::optional<uint64_t> ExtractRssInPagesFromProcPidStat(
     std::string_view proc_pid_stat);
 
 [[nodiscard]] std::optional<uint64_t> ReadRssInBytesFromProcPidStat();
-
-// In header file for testing.
-[[nodiscard]] std::optional<uint64_t> ExtractMemTotalInKbFromProcMeminfo(
-    std::string_view proc_meminfo);
-
-[[nodiscard]] std::optional<uint64_t> ReadMemTotalInBytesFromProcMeminfo();
 
 }  // namespace orbit_linux_capture_service
 

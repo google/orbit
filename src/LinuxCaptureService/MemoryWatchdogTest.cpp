@@ -11,71 +11,9 @@
 
 namespace orbit_linux_capture_service {
 
-TEST(MemoryWatchdog, ExtractMemTotalInKbFromProcMeminfoReturnsValueWhenMemTotalIsWellFormed) {
-  std::optional<uint64_t> mem_total_kb;
-
-  mem_total_kb = ExtractMemTotalInKbFromProcMeminfo("MemTotal: 1234 kB");
-  ASSERT_TRUE(mem_total_kb.has_value());
-  EXPECT_EQ(mem_total_kb, 1234);
-
-  mem_total_kb = ExtractMemTotalInKbFromProcMeminfo("MemTotal: 1234 kB\n");
-  ASSERT_TRUE(mem_total_kb.has_value());
-  EXPECT_EQ(mem_total_kb, 1234);
-
-  mem_total_kb = ExtractMemTotalInKbFromProcMeminfo("\nMemTotal: 1234 kB");
-  ASSERT_TRUE(mem_total_kb.has_value());
-  EXPECT_EQ(mem_total_kb, 1234);
-
-  mem_total_kb = ExtractMemTotalInKbFromProcMeminfo("NOISE\nMemTotal: 1234 kB");
-  ASSERT_TRUE(mem_total_kb.has_value());
-  EXPECT_EQ(mem_total_kb, 1234);
-
-  mem_total_kb = ExtractMemTotalInKbFromProcMeminfo("MemTotal: 1234 kB\nNOISE");
-  ASSERT_TRUE(mem_total_kb.has_value());
-  EXPECT_EQ(mem_total_kb, 1234);
-
-  mem_total_kb = ExtractMemTotalInKbFromProcMeminfo("NOISE\nMemTotal: 1234 kB\nNOISE");
-  ASSERT_TRUE(mem_total_kb.has_value());
-  EXPECT_EQ(mem_total_kb, 1234);
-}
-
-TEST(MemoryWatchdog, ExtractMemTotalInKbFromProcMeminfoReturnsNulloptWhenMemTotalIsMalformed) {
-  std::optional<uint64_t> mem_total_kb;
-
-  mem_total_kb = ExtractMemTotalInKbFromProcMeminfo("MemTotal:");
-  EXPECT_FALSE(mem_total_kb.has_value());
-
-  mem_total_kb = ExtractMemTotalInKbFromProcMeminfo("MemTotal: 1234");
-  EXPECT_FALSE(mem_total_kb.has_value());
-
-  mem_total_kb = ExtractMemTotalInKbFromProcMeminfo("MemTotal: 1234 MB");
-  EXPECT_FALSE(mem_total_kb.has_value());
-
-  mem_total_kb = ExtractMemTotalInKbFromProcMeminfo("MemTotal: abc kB");
-  EXPECT_FALSE(mem_total_kb.has_value());
-}
-
-TEST(MemoryWatchdog, ExtractMemTotalInKbFromProcMeminfoReturnsNulloptWhenMemTotalIsNotPresent) {
-  std::optional<uint64_t> mem_total_kb;
-
-  mem_total_kb = ExtractMemTotalInKbFromProcMeminfo("");
-  EXPECT_FALSE(mem_total_kb.has_value());
-
-  mem_total_kb = ExtractMemTotalInKbFromProcMeminfo("\n");
-  EXPECT_FALSE(mem_total_kb.has_value());
-
-  mem_total_kb = ExtractMemTotalInKbFromProcMeminfo("MemFree: 1234 kB");
-  EXPECT_FALSE(mem_total_kb.has_value());
-}
-
-TEST(MemoryWatchdog, ReadMemTotalInBytesFromProcMeminfoReturnsReasonableValues) {
-  std::optional<uint64_t> mem_total = ReadMemTotalInBytesFromProcMeminfo();
-  ASSERT_TRUE(mem_total.has_value());
-  EXPECT_GE(mem_total.value(), 1024ULL * 1024 * 1024);
-
-  std::optional<uint64_t> mem_total2 = ReadMemTotalInBytesFromProcMeminfo();
-  ASSERT_TRUE(mem_total2.has_value());
-  EXPECT_EQ(mem_total2.value(), mem_total.value());
+TEST(MemoryWatchdog, GetPhysicalMemoryInBytesReturnsReasonableValues) {
+  uint64_t mem_total = GetPhysicalMemoryInBytes();
+  EXPECT_GE(mem_total, 1024ULL * 1024 * 1024);
 }
 
 TEST(MemoryWatchdog, ExtractRssInPagesFromProcPidStatReturnsValueWhenRssIsWellFormed) {
