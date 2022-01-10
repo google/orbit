@@ -76,7 +76,7 @@ class TimeGraph final : public orbit_gl::CaptureViewElement,
   void Zoom(const orbit_client_protos::TimerInfo& timer_info);
   void Zoom(uint64_t min, uint64_t max);
   void ZoomTime(float zoom_value, double mouse_ratio);
-  void VerticalZoom(float zoom_value, float mouse_normalized_y_position);
+  void VerticalZoom(float zoom_value, float mouse_screen_y_position);
   void SetMinMax(double min_time_us, double max_time_us);
   void PanTime(int initial_x, int current_x, int width, double initial_time);
   enum class VisibilityType {

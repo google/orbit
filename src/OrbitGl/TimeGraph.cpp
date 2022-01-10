@@ -151,24 +151,26 @@ void TimeGraph::ZoomTime(float zoom_value, double mouse_ratio) {
   SetMinMax(min_time_us, max_time_us);
 }
 
-void TimeGraph::VerticalZoom(float zoom_value, float mouse_normalized_y_position) {
+void TimeGraph::VerticalZoom(float zoom_value, float mouse_screen_y_position) {
   constexpr float kIncrementRatio = 0.1f;
-
-  const float ratio = (zoom_value > 0) ? (1 + kIncrementRatio) : (1 / (1 + kIncrementRatio));
+  const float proposed_ratio =
+      (zoom_value < 0) ? (1 + kIncrementRatio) : (1 / (1 + kIncrementRatio));
 
   // We have to scale every item in the layout.
   const float old_scale = layout_.GetScale();
-  layout_.SetScale(old_scale / ratio);
+  layout_.SetScale(old_scale * proposed_ratio);
+
+  // As we have maximum/minimum scale, the real ratio might be different than the proposed one.
+  const float real_ratio = layout_.GetScale() / old_scale;
 
   // Adjust the scrolling offset such that the point under the mouse stays the same if possible.
   // For this, calculate the "global" position (including scaling and scrolling offset) of the point
   // underneath the mouse with the old and new scaling, and adjust the scrolling to have them match.
-  const float offset_from_top_in_world = viewport_->GetWorldHeight() * mouse_normalized_y_position;
-  const float mouse_y_including_scrolling =
-      (offset_from_top_in_world + vertical_scrolling_offset_) / old_scale;
-  const float new_scrolling_offset =
-      mouse_y_including_scrolling * layout_.GetScale() - offset_from_top_in_world;
-  SetVerticalScrollingOffset(new_scrolling_offset);
+  const float mouse_old_y_world_position = mouse_screen_y_position + vertical_scrolling_offset_;
+  // Everything scales.
+  const float mouse_new_y_world_position = mouse_old_y_world_position * real_ratio;
+
+  SetVerticalScrollingOffset(mouse_new_y_world_position - mouse_screen_y_position);
 }
 
 void TimeGraph::SetMinMax(double min_time_us, double max_time_us) {
