@@ -12,8 +12,7 @@
 namespace orbit_linux_capture_service {
 
 TEST(MemoryWatchdog, GetPhysicalMemoryInBytesReturnsReasonableValues) {
-  uint64_t mem_total = GetPhysicalMemoryInBytes();
-  EXPECT_GE(mem_total, 1024ULL * 1024 * 1024);
+  EXPECT_GE(GetPhysicalMemoryInBytes(), 1024ULL * 1024 * 1024);
 }
 
 TEST(MemoryWatchdog, ExtractRssInPagesFromProcPidStatReturnsValueWhenRssIsWellFormed) {
