@@ -267,7 +267,7 @@ void CaptureWindow::Zoom(ZoomDirection dir, int delta) {
         break;
       }
       case ZoomDirection::kVertical: {
-        time_graph_->VerticalZoom(delta_float, mouse_move_pos_screen_[1]);
+        time_graph_->VerticalZoom(delta_float, viewport_->ScreenToWorld(mouse_move_pos_screen_)[1]);
       }
     }
   }
