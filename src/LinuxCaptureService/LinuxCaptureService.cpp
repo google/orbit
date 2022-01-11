@@ -161,7 +161,6 @@ LinuxCaptureService::WaitForStopCaptureRequestOrMemoryThresholdExceeded(
   static const uint64_t mem_total_bytes = GetPhysicalMemoryInBytes();
   std::thread memory_watchdog_thread;
   uint64_t watchdog_threshold_bytes = mem_total_bytes / 2;
-  static constexpr absl::Duration kWatchdogPollInterval = absl::Seconds(1);
   LOG("Starting memory watchdog with threshold %u B because total physical memory is %u B",
       watchdog_threshold_bytes, mem_total_bytes);
   memory_watchdog_thread = std::thread{
@@ -169,6 +168,7 @@ LinuxCaptureService::WaitForStopCaptureRequestOrMemoryThresholdExceeded(
         while (true) {
           {
             absl::MutexLock lock{&*stop_capture_mutex};
+            static constexpr absl::Duration kWatchdogPollInterval = absl::Seconds(1);
             if (stop_capture_mutex->AwaitWithTimeout(absl::Condition(&*stop_capture),
                                                      kWatchdogPollInterval)) {
               LOG("Stopping memory watchdog as the capture was stopped");
