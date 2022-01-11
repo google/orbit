@@ -38,6 +38,7 @@
 
 #include "App.h"
 #include "CallTreeViewItemModel.h"
+#include "ClientData/CallstackEvent.h"
 #include "ClientData/CaptureData.h"
 #include "ClientData/FunctionUtils.h"
 #include "ClientData/ModuleAndFunctionLookup.h"
@@ -321,6 +322,7 @@ const QString CallTreeWidget::kActionSelect = QStringLiteral("&Hook");
 const QString CallTreeWidget::kActionDeselect = QStringLiteral("&Unhook");
 const QString CallTreeWidget::kActionDisassembly = QStringLiteral("Go to &Disassembly");
 const QString CallTreeWidget::kActionSourceCode = QStringLiteral("Go to &Source Code");
+const QString CallTreeWidget::kActionSelectCallstacks = QStringLiteral("Select these callstacks");
 const QString CallTreeWidget::kActionCopySelection = QStringLiteral("Copy Selection");
 
 static void ExpandRecursively(QTreeView* tree_view, const QModelIndex& index) {
@@ -402,6 +404,51 @@ static std::vector<const FunctionInfo*> GetFunctionsFromIndices(
   return std::vector<const FunctionInfo*>(functions_set.begin(), functions_set.end());
 }
 
+namespace {
+struct QModelIndexHash {
+  size_t operator()(const QModelIndex& o) const {
+    // These are the values used in QModelIndex::operator==.
+    return absl::HashOf(o.row(), o.column(), o.internalId(), o.model());
+  }
+};
+}  // namespace
+
+static void GetCallstackEventsUnderSelectionInternal(
+    const QModelIndex& index,
+    absl::flat_hash_set<orbit_client_data::CallstackEvent>* callstack_events,
+    absl::flat_hash_set<QModelIndex, QModelIndexHash>* indices_already_visited) {
+  indices_already_visited->emplace(index);
+
+  const auto* index_callstack_events =
+      index.data(CallTreeViewItemModel::kExclusiveCallstackEventsRole)
+          .value<const std::vector<orbit_client_data::CallstackEvent>*>();
+  for (const orbit_client_data::CallstackEvent& index_callstack_event : *index_callstack_events) {
+    callstack_events->emplace(index_callstack_event);
+  }
+
+  for (int i = 0; i < index.model()->rowCount(index); ++i) {
+    const QModelIndex& child = index.child(i, 0);
+    if (!indices_already_visited->contains(child)) {
+      GetCallstackEventsUnderSelectionInternal(child, callstack_events, indices_already_visited);
+    }
+  }
+}
+
+static absl::flat_hash_set<orbit_client_data::CallstackEvent> GetCallstackEventsUnderSelection(
+    const std::vector<QModelIndex>& indices) {
+  // We can have duplicate CallstackEvents in the selection, e.g., with the top-down view when
+  // selecting both from the "(all threads)" tree and other single-thread trees. Hence the set.
+  absl::flat_hash_set<orbit_client_data::CallstackEvent> callstack_events;
+  // Prevent visiting nodes multiple times when the selection contains more than one row.
+  absl::flat_hash_set<QModelIndex, QModelIndexHash> indices_already_visited;
+  for (const QModelIndex& index : indices) {
+    if (!indices_already_visited.contains(index)) {
+      GetCallstackEventsUnderSelectionInternal(index, &callstack_events, &indices_already_visited);
+    }
+  }
+  return callstack_events;
+}
+
 void CallTreeWidget::OnCustomContextMenuRequested(const QPoint& point) {
   if (app_ == nullptr) {
     return;
@@ -461,6 +508,7 @@ void CallTreeWidget::OnCustomContextMenuRequested(const QPoint& point) {
     }
   }
 
+  bool enable_select_callstacks = ui_->callTreeTreeView->selectionModel()->hasSelection();
   bool enable_copy = ui_->callTreeTreeView->selectionModel()->hasSelection();
 
   QMenu menu{ui_->callTreeTreeView};
@@ -476,6 +524,7 @@ void CallTreeWidget::OnCustomContextMenuRequested(const QPoint& point) {
   menu.addAction(kActionDeselect)->setEnabled(enable_deselect);
   menu.addAction(kActionDisassembly)->setEnabled(enable_disassembly);
   menu.addAction(kActionSourceCode)->setEnabled(enable_source_code);
+  menu.addAction(kActionSelectCallstacks)->setEnabled(enable_select_callstacks);
   menu.addSeparator();
   menu.addAction(kActionCopySelection)->setEnabled(enable_copy);
 
@@ -518,6 +567,19 @@ void CallTreeWidget::OnCustomContextMenuRequested(const QPoint& point) {
     for (const FunctionInfo* function : functions) {
       app_->ShowSourceCode(*function);
     }
+  } else if (action->text() == kActionSelectCallstacks) {
+    absl::flat_hash_set<orbit_client_data::CallstackEvent> selected_callstack_events =
+        GetCallstackEventsUnderSelection(selected_tree_indices);
+    ORBIT_CHECK(!selected_callstack_events.empty());
+    bool origin_is_multiple_threads =
+        std::any_of(selected_callstack_events.begin(), selected_callstack_events.end(),
+                    [first_callstack_event = *selected_callstack_events.begin()](
+                        const orbit_client_data::CallstackEvent& callstack_event) -> bool {
+                      return callstack_event.thread_id() != first_callstack_event.thread_id();
+                    });
+    app_->SelectCallstackEvents(
+        {selected_callstack_events.begin(), selected_callstack_events.end()},
+        origin_is_multiple_threads);
   } else if (action->text() == kActionCopySelection) {
     app_->SetClipboard(BuildStringFromIndices(
         ui_->callTreeTreeView, ui_->callTreeTreeView->selectionModel()->selectedIndexes()));

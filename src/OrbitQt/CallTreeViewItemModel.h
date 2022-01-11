@@ -15,6 +15,8 @@
 
 #include "CallTreeView.h"
 
+Q_DECLARE_METATYPE(const std::vector<orbit_client_data::CallstackEvent>*)
+
 class CallTreeViewItemModel : public QAbstractItemModel {
   Q_OBJECT
 
@@ -44,6 +46,7 @@ class CallTreeViewItemModel : public QAbstractItemModel {
   static const int kModulePathRole = Qt::UserRole + 1;
   static const int kModuleBuildIdRole = Qt::UserRole + 2;
   static const int kCopyableValueRole = Qt::UserRole + 3;
+  static const int kExclusiveCallstackEventsRole = Qt::UserRole + 4;
 
  private:
   [[nodiscard]] QVariant GetDisplayRoleData(const QModelIndex& index) const;
@@ -53,6 +56,7 @@ class CallTreeViewItemModel : public QAbstractItemModel {
   [[nodiscard]] QVariant GetModulePathRoleData(const QModelIndex& index) const;
   [[nodiscard]] QVariant GetModuleBuildIdRoleData(const QModelIndex& index) const;
   [[nodiscard]] QVariant GetCopyableValueRoleData(const QModelIndex& index) const;
+  [[nodiscard]] static QVariant GetExclusiveCallstackEventsRoleData(const QModelIndex& index);
 
   std::unique_ptr<CallTreeView> call_tree_view_;
 };

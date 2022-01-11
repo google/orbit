@@ -227,6 +227,12 @@ QVariant CallTreeViewItemModel::GetCopyableValueRoleData(const QModelIndex& inde
   return GetDisplayRoleData(index);
 }
 
+QVariant CallTreeViewItemModel::GetExclusiveCallstackEventsRoleData(const QModelIndex& index) {
+  ORBIT_CHECK(index.isValid());
+  auto* item = static_cast<CallTreeNode*>(index.internalPointer());
+  return QVariant::fromValue(&item->exclusive_callstack_events());
+}
+
 QVariant CallTreeViewItemModel::data(const QModelIndex& index, int role) const {
   if (!index.isValid()) {
     return QVariant();
@@ -248,6 +254,8 @@ QVariant CallTreeViewItemModel::data(const QModelIndex& index, int role) const {
       return GetModuleBuildIdRoleData(index);
     case kCopyableValueRole:
       return GetCopyableValueRoleData(index);
+    case kExclusiveCallstackEventsRole:
+      return GetExclusiveCallstackEventsRoleData(index);
   }
   return QVariant();
 }

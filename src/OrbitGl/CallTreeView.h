@@ -68,10 +68,23 @@ class CallTreeNode {
     return 100.0f * sample_count() / parent_->sample_count();
   }
 
-  [[nodiscard]] uint64_t GetExclusiveSampleCount() const;
+  [[nodiscard]] uint64_t GetExclusiveSampleCount() const {
+    return exclusive_callstack_events_.size();
+  }
 
   [[nodiscard]] float GetExclusivePercent(uint64_t total_sample_count) const {
     return 100.0f * GetExclusiveSampleCount() / total_sample_count;
+  }
+
+  void AddExclusiveCallstackEvents(
+      const std::vector<orbit_client_data::CallstackEvent>& callstack_events) {
+    exclusive_callstack_events_.insert(exclusive_callstack_events_.end(), callstack_events.begin(),
+                                       callstack_events.end());
+  }
+
+  [[nodiscard]] const std::vector<orbit_client_data::CallstackEvent>& exclusive_callstack_events()
+      const {
+    return exclusive_callstack_events_;
   }
 
  private:
@@ -85,6 +98,7 @@ class CallTreeNode {
 
   CallTreeNode* parent_;
   uint64_t sample_count_ = 0;
+  std::vector<orbit_client_data::CallstackEvent> exclusive_callstack_events_;
 
   // Filled lazily when children() is called, invalidated when children are invalidated.
   mutable std::optional<std::vector<const CallTreeNode*>> children_cache_;
