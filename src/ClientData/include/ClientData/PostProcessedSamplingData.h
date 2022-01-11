@@ -13,6 +13,7 @@
 #include <utility>
 #include <vector>
 
+#include "ClientData/CallstackEvent.h"
 #include "ClientData/CallstackTypes.h"
 #include "ClientProtos/capture_data.pb.h"
 #include "OrbitBase/ThreadConstants.h"
@@ -41,7 +42,8 @@ struct ThreadSampleData {
 
   ThreadID thread_id = 0;
   uint32_t samples_count = 0;
-  absl::flat_hash_map<uint64_t, uint32_t> sampled_callstack_id_to_count;
+  absl::flat_hash_map<uint64_t, std::vector<orbit_client_data::CallstackEvent>>
+      sampled_callstack_id_to_events;
   absl::flat_hash_map<uint64_t, uint32_t> sampled_address_to_count;
   absl::flat_hash_map<uint64_t, uint32_t> resolved_address_to_count;
   absl::flat_hash_map<uint64_t, uint32_t> resolved_address_to_exclusive_count;
