@@ -167,9 +167,9 @@ LinuxCaptureService::WaitForStopCaptureRequestOrMemoryThresholdExceeded(
       [watchdog_threshold_bytes, stop_capture_mutex, stop_capture, stop_capture_reason] {
         while (true) {
           {
-            absl::MutexLock lock{&*stop_capture_mutex};
+            absl::MutexLock lock{stop_capture_mutex.get()};
             static constexpr absl::Duration kWatchdogPollInterval = absl::Seconds(1);
-            if (stop_capture_mutex->AwaitWithTimeout(absl::Condition(&*stop_capture),
+            if (stop_capture_mutex->AwaitWithTimeout(absl::Condition(stop_capture.get()),
                                                      kWatchdogPollInterval)) {
               LOG("Stopping memory watchdog as the capture was stopped");
               break;
@@ -185,7 +185,7 @@ LinuxCaptureService::WaitForStopCaptureRequestOrMemoryThresholdExceeded(
           }
           if (rss_bytes.value() > watchdog_threshold_bytes) {
             LOG("Memory threshold exceeded: stopping capture (and stopping memory watchdog)");
-            absl::MutexLock lock{&*stop_capture_mutex};
+            absl::MutexLock lock{stop_capture_mutex.get()};
             *stop_capture = true;
             *stop_capture_reason = StopCaptureReason::kMemoryWatchdog;
             break;
@@ -206,7 +206,7 @@ LinuxCaptureService::WaitForStopCaptureRequestOrMemoryThresholdExceeded(
         while (reader_writer->Read(&request)) {
         }
 
-        absl::MutexLock lock{&*stop_capture_mutex};
+        absl::MutexLock lock{stop_capture_mutex.get()};
         if (!*stop_capture) {
           LOG("Client finished writing on Capture's gRPC stream: stopping capture");
           *stop_capture = true;
@@ -217,7 +217,7 @@ LinuxCaptureService::WaitForStopCaptureRequestOrMemoryThresholdExceeded(
         }
       }};
 
-  stop_capture_mutex->LockWhen(absl::Condition(&*stop_capture));
+  stop_capture_mutex->LockWhen(absl::Condition(stop_capture.get()));
   CHECK(stop_capture_reason->has_value());
   StopCaptureReason stop_capture_reason_to_return = stop_capture_reason->value();
   stop_capture_mutex->Unlock();
