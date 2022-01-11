@@ -180,7 +180,7 @@ LinuxCaptureService::WaitForStopCaptureRequestOrMemoryThresholdExceeded(
           // process.
           std::optional<uint64_t> rss_bytes = ReadRssInBytesFromProcPidStat();
           if (!rss_bytes.has_value()) {
-            ERROR_ONCE("Reading resident set size of the current process");
+            ERROR_ONCE("Reading resident set size of OrbitService");
             continue;
           }
           if (rss_bytes.value() > watchdog_threshold_bytes) {
