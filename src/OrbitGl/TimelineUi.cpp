@@ -11,11 +11,11 @@
 namespace orbit_gl {
 
 void TimelineUi::RenderLines(Batcher& batcher, uint64_t min_timestamp_ns,
-                             uint64_t max_timestamp_ns) {
+                             uint64_t max_timestamp_ns) const {
   const Color kMajorTickColor(255, 255, 255, 255);
   const Color kMinorTickColor(150, 150, 150, 255);
   constexpr int kPixelMargin = 1;
-  const float kTicksHeight = GetHeight() - kPixelMargin;
+  const float ticks_height = GetHeight() - kPixelMargin;
 
   for (auto& [tick_type, tick_ns] :
        timeline_ticks_.GetAllTicks(min_timestamp_ns, max_timestamp_ns)) {
@@ -24,13 +24,13 @@ void TimelineUi::RenderLines(Batcher& batcher, uint64_t min_timestamp_ns,
     int screen_x = viewport_->WorldToScreen(Vec2(world_x, 0))[0];
     // TODO(b/208447247): Assure no overlap between minor ticks and labels.
     batcher.AddVerticalLine(
-        Vec2(screen_x, GetPos()[1]), kTicksHeight, GlCanvas::kZValueTimeBar,
+        Vec2(screen_x, GetPos()[1]), ticks_height, GlCanvas::kZValueTimeBar,
         tick_type == TimelineTicks::TickType::kMajorTick ? kMajorTickColor : kMinorTickColor);
   }
 }
 
 void TimelineUi::RenderLabels(TextRenderer& text_renderer, uint64_t min_timestamp_ns,
-                              uint64_t max_timestamp_ns) {
+                              uint64_t max_timestamp_ns) const {
   const float kLabelMarginLeft = 4;
   const float kLabelMarginBottom = 2;
   for (uint64_t tick_ns : timeline_ticks_.GetMajorTicks(min_timestamp_ns, max_timestamp_ns)) {
@@ -47,7 +47,7 @@ void TimelineUi::RenderLabels(TextRenderer& text_renderer, uint64_t min_timestam
   }
 }
 
-void TimelineUi::RenderBackground(Batcher& batcher) {
+void TimelineUi::RenderBackground(Batcher& batcher) const {
   Vec2 pos = GetPos();
   Vec2 size = GetSize();
   Box background_box(GetPos(), GetSize(), GlCanvas::kZValueTimeBarBg);
