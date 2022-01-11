@@ -65,6 +65,7 @@ target_sources(
          TimeGraphLayout.h
          TimelineInfoInterface.h
          TimelineTicks.h
+         TimelineUi.h
          Timer.h
          TimerInfosIterator.h
          TimerTrack.h
@@ -125,6 +126,7 @@ target_sources(
           TimeGraph.cpp
           TimeGraphLayout.cpp
           TimelineTicks.cpp
+          TimelineUi.cpp
           TimerInfosIterator.cpp
           TimerTrack.cpp
           ThreadBar.cpp

@@ -18,6 +18,7 @@ class TimelineInfoInterface {
   [[nodiscard]] virtual uint64_t GetTickFromWorld(float world_x) const = 0;
   [[nodiscard]] virtual uint64_t GetTickFromUs(double micros) const = 0;
   [[nodiscard]] virtual double GetUsFromTick(uint64_t time) const = 0;
+  [[nodiscard]] virtual uint64_t GetNsSinceStart(uint64_t tick) const = 0;
   [[nodiscard]] virtual double GetTimeWindowUs() const = 0;
 
   [[nodiscard]] virtual double GetMinTimeUs() const = 0;

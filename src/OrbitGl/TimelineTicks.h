@@ -11,6 +11,7 @@
 
 namespace orbit_gl {
 
+constexpr uint64_t kNanosecondsPerMicrosecond = 1000;
 constexpr uint64_t kNanosecondsPerSecond = 1000 * 1000 * 1000;
 constexpr uint64_t kNanosecondsPerMinute = 60 * kNanosecondsPerSecond;
 constexpr uint64_t kNanosecondsPerHour = 60 * kNanosecondsPerMinute;

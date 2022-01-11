@@ -436,6 +436,8 @@ double TimeGraph::GetUsFromTick(uint64_t time) const {
   return TicksToMicroseconds(capture_min_timestamp_, time) - min_time_us_;
 }
 
+uint64_t TimeGraph::GetNsSinceStart(uint64_t time) const { return time - capture_min_timestamp_; }
+
 uint64_t TimeGraph::GetTickFromWorld(float world_x) const {
   double ratio = GetWidth() > 0 ? static_cast<double>(world_x / GetWidth()) : 0;
   auto time_span_ns = static_cast<uint64_t>(1000 * GetTime(ratio));
