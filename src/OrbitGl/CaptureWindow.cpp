@@ -267,9 +267,7 @@ void CaptureWindow::Zoom(ZoomDirection dir, int delta) {
         break;
       }
       case ZoomDirection::kVertical: {
-        float mouse_ratio = static_cast<float>(mouse_move_pos_screen_[1]) /
-                            static_cast<float>(viewport_.GetScreenHeight());
-        time_graph_->VerticalZoom(delta_float, mouse_ratio);
+        time_graph_->VerticalZoom(delta_float, viewport_.ScreenToWorld(mouse_move_pos_screen_)[1]);
       }
     }
   }
