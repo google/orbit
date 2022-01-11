@@ -183,7 +183,7 @@ LinuxCaptureService::WaitForStopCaptureRequestOrMemoryThresholdExceeded(
       }};
 
   static const uint64_t mem_total_bytes = GetPhysicalMemoryInBytes();
-  uint64_t watchdog_threshold_bytes = mem_total_bytes / 2;
+  static const uint64_t watchdog_threshold_bytes = mem_total_bytes / 2;
   LOG("Starting memory watchdog with threshold %u B because total physical memory is %u B",
       watchdog_threshold_bytes, mem_total_bytes);
   while (true) {
