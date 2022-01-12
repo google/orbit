@@ -41,7 +41,8 @@ class TestDwarfEhFrameWithHdr : public DwarfEhFrameWithHdr<TypeParam> {
   void TestSetTableEntrySize(size_t size) { this->table_entry_size_ = size; }
 
   void TestSetFdeCount(uint64_t count) { this->fde_count_ = count; }
-  void TestSetFdeInfo(uint64_t index, const typename DwarfEhFrameWithHdr<TypeParam>::FdeInfo& info) {
+  void TestSetFdeInfo(uint64_t index,
+                      const typename DwarfEhFrameWithHdr<TypeParam>::FdeInfo& info) {
     this->fde_info_[index] = info;
   }
 
@@ -270,7 +271,23 @@ TYPED_TEST_P(DwarfEhFrameWithHdrTest, GetFdes) {
   // CIE 32 information.
   this->memory_.SetData32(0x1300, 0xfc);
   this->memory_.SetData32(0x1304, 0);
-  this->memory_.SetMemory(0x1308, std::vector<uint8_t>{1, '\0', 0, 0, 0});
+  constexpr uint64_t kCieDataOffset = 0x1308;
+
+  // We force size of target address pointers to 4 bytes using augmentation data to avoid
+  // failures due to incorrect .eh_frame section parsing (which uses a fixed "4" as the
+  // value size), which is not easily fixed due to side effects for other cases. In practice,
+  // .eh_frame encoding typically (always?) is DW_EH_PE_pcrel | DW_EH_PE_sdata4 (0x1b), which
+  // thus uses a size of 4 bytes.
+  std::vector<uint8_t> data{
+      1,                // version
+      'z',  'R', '\0',  // augmentation string
+      4,                // code alignment factor
+      8,                // data alignment factor
+      0x20,             // return address register
+      1,                // augmentation data length, ULEB128
+      0x03              // augmentation data (DW_EH_PE_udata4)
+  };
+  this->memory_.SetMemory(kCieDataOffset, data);
 
   // FDE 32 information.
   // pc 0x5500 - 0x5700
@@ -278,24 +295,28 @@ TYPED_TEST_P(DwarfEhFrameWithHdrTest, GetFdes) {
   this->memory_.SetData32(0x1404, 0x104);
   this->memory_.SetData32(0x1408, 0x40f8);
   this->memory_.SetData32(0x140c, 0x200);
+  this->memory_.SetData8(0x1410, 0x0);
 
   // pc 0x4600 - 0x4800
   this->memory_.SetData32(0x1500, 0xfc);
   this->memory_.SetData32(0x1504, 0x204);
   this->memory_.SetData32(0x1508, 0x30f8);
   this->memory_.SetData32(0x150c, 0x200);
+  this->memory_.SetData8(0x1510, 0x0);
 
   // pc 0x7700 - 0x7900
   this->memory_.SetData32(0x1600, 0xfc);
   this->memory_.SetData32(0x1604, 0x304);
   this->memory_.SetData32(0x1608, 0x60f8);
   this->memory_.SetData32(0x160c, 0x200);
+  this->memory_.SetData8(0x1610, 0x0);
 
   // pc 0x6800 - 0x6a00
   this->memory_.SetData32(0x1700, 0xfc);
   this->memory_.SetData32(0x1704, 0x404);
   this->memory_.SetData32(0x1708, 0x50f8);
   this->memory_.SetData32(0x170c, 0x200);
+  this->memory_.SetData8(0x1710, 0x0);
 
   ASSERT_TRUE(this->eh_frame_->Init(0x1000, 0x100, 0));
 
@@ -459,18 +480,36 @@ TYPED_TEST_P(DwarfEhFrameWithHdrTest, GetFdeOffsetFromPc_search) {
 TYPED_TEST_P(DwarfEhFrameWithHdrTest, GetCieFde32) {
   // CIE 32 information.
   this->memory_.SetData32(0xf000, 0x100);
+  // Indicates this is a cie for eh_frame.
   this->memory_.SetData32(0xf004, 0);
-  this->memory_.SetMemory(0xf008, std::vector<uint8_t>{1, '\0', 4, 8, 0x20});
+  constexpr uint64_t kCieDataOffset = 0xf008;
+
+  // We force size of target address pointers to 4 bytes using augmentation data to avoid
+  // failures due to incorrect .eh_frame section parsing (which uses a fixed "4" as the
+  // value size), which is not easily fixed due to side effects for other cases. In practice,
+  // .eh_frame encoding typically (always?) is DW_EH_PE_pcrel | DW_EH_PE_sdata4 (0x1b), which
+  // thus uses a size of 4 bytes.
+  std::vector<uint8_t> data{
+      1,                // version
+      'z',  'R', '\0',  // augmentation string
+      4,                // code alignment factor
+      8,                // data alignment factor
+      0x20,             // return address register
+      1,                // augmentation data length, ULEB128
+      0x03              // augmentation data (DW_EH_PE_udata4)
+  };
+  this->memory_.SetMemory(kCieDataOffset, data);
 
   // FDE 32 information.
   this->memory_.SetData32(0x14000, 0x20);
   this->memory_.SetData32(0x14004, 0x5004);
   this->memory_.SetData32(0x14008, 0x9000);
   this->memory_.SetData32(0x1400c, 0x100);
+  this->memory_.SetData8(0x14010, 0x0);
 
   const DwarfFde* fde = this->eh_frame_->GetFdeFromOffset(0x14000);
   ASSERT_TRUE(fde != nullptr);
-  EXPECT_EQ(0x14010U, fde->cfa_instructions_offset);
+  EXPECT_EQ(0x14010U + 1, fde->cfa_instructions_offset);
   EXPECT_EQ(0x14024U, fde->cfa_instructions_end);
   EXPECT_EQ(0x1d008U, fde->pc_start);
   EXPECT_EQ(0x1d108U, fde->pc_end);
@@ -482,10 +521,12 @@ TYPED_TEST_P(DwarfEhFrameWithHdrTest, GetCieFde32) {
   EXPECT_EQ(DW_EH_PE_udata4, fde->cie->fde_address_encoding);
   EXPECT_EQ(DW_EH_PE_omit, fde->cie->lsda_encoding);
   EXPECT_EQ(0U, fde->cie->segment_size);
-  EXPECT_EQ(1U, fde->cie->augmentation_string.size());
-  EXPECT_EQ('\0', fde->cie->augmentation_string[0]);
+  EXPECT_EQ(3U, fde->cie->augmentation_string.size());
+  EXPECT_EQ('z', fde->cie->augmentation_string[0]);
+  EXPECT_EQ('R', fde->cie->augmentation_string[1]);
+  EXPECT_EQ('\0', fde->cie->augmentation_string[2]);
   EXPECT_EQ(0U, fde->cie->personality_handler);
-  EXPECT_EQ(0xf00dU, fde->cie->cfa_instructions_offset);
+  EXPECT_EQ(kCieDataOffset + data.size(), fde->cie->cfa_instructions_offset);
   EXPECT_EQ(0xf104U, fde->cie->cfa_instructions_end);
   EXPECT_EQ(4U, fde->cie->code_alignment_factor);
   EXPECT_EQ(8, fde->cie->data_alignment_factor);
@@ -497,33 +538,52 @@ TYPED_TEST_P(DwarfEhFrameWithHdrTest, GetCieFde64) {
   this->memory_.SetData32(0x6000, 0xffffffff);
   this->memory_.SetData64(0x6004, 0x100);
   this->memory_.SetData64(0x600c, 0);
-  this->memory_.SetMemory(0x6014, std::vector<uint8_t>{1, '\0', 4, 8, 0x20});
+
+  // We force size of target address pointers to 4 bytes using augmentation data to avoid
+  // failures due to incorrect .eh_frame section parsing (which uses a fixed "4" as the
+  // value size), which is not easily fixed due to side effects for other cases. In practice,
+  // .eh_frame encoding typically (always?) is DW_EH_PE_pcrel | DW_EH_PE_sdata4 (0x1b), which
+  // thus uses a size of 4 bytes.
+  constexpr uint64_t kCieDataOffset = 0x6014;
+  std::vector<uint8_t> data{
+      1,                // version
+      'z',  'R', '\0',  // augmentation string
+      4,                // code alignment factor
+      8,                // data alignment factor
+      0x20,             // return address register
+      1,                // augmentation data length, ULEB128
+      0x03              // augmentation data (DW_EH_PE_udata4)
+  };
+  this->memory_.SetMemory(kCieDataOffset, data);
 
   // FDE 64 information.
   this->memory_.SetData32(0x8000, 0xffffffff);
   this->memory_.SetData64(0x8004, 0x200);
   this->memory_.SetData64(0x800c, 0x200c);
-  this->memory_.SetData64(0x8014, 0x5000);
-  this->memory_.SetData64(0x801c, 0x300);
+  this->memory_.SetData32(0x8014, 0x5000);
+  this->memory_.SetData32(0x8018, 0x300);
+  this->memory_.SetData8(0x801c, 0x0);
 
   const DwarfFde* fde = this->eh_frame_->GetFdeFromOffset(0x8000);
   ASSERT_TRUE(fde != nullptr);
-  EXPECT_EQ(0x8024U, fde->cfa_instructions_offset);
+  EXPECT_EQ(0x801c + 1, fde->cfa_instructions_offset);
   EXPECT_EQ(0x820cU, fde->cfa_instructions_end);
-  EXPECT_EQ(0xd018U, fde->pc_start);
-  EXPECT_EQ(0xd318U, fde->pc_end);
+  EXPECT_EQ(0x8014 + 0x5000, fde->pc_start);
+  EXPECT_EQ(0x8014 + 0x5000 + 0x300, fde->pc_end);
   EXPECT_EQ(0x6000U, fde->cie_offset);
   EXPECT_EQ(0U, fde->lsda_address);
 
   ASSERT_TRUE(fde->cie != nullptr);
   EXPECT_EQ(1U, fde->cie->version);
-  EXPECT_EQ(DW_EH_PE_udata8, fde->cie->fde_address_encoding);
+  EXPECT_EQ(DW_EH_PE_udata4, fde->cie->fde_address_encoding);
   EXPECT_EQ(DW_EH_PE_omit, fde->cie->lsda_encoding);
   EXPECT_EQ(0U, fde->cie->segment_size);
-  EXPECT_EQ(1U, fde->cie->augmentation_string.size());
-  EXPECT_EQ('\0', fde->cie->augmentation_string[0]);
+  EXPECT_EQ(3U, fde->cie->augmentation_string.size());
+  EXPECT_EQ('z', fde->cie->augmentation_string[0]);
+  EXPECT_EQ('R', fde->cie->augmentation_string[1]);
+  EXPECT_EQ('\0', fde->cie->augmentation_string[2]);
   EXPECT_EQ(0U, fde->cie->personality_handler);
-  EXPECT_EQ(0x6019U, fde->cie->cfa_instructions_offset);
+  EXPECT_EQ(0x6014 + data.size(), fde->cie->cfa_instructions_offset);
   EXPECT_EQ(0x610cU, fde->cie->cfa_instructions_end);
   EXPECT_EQ(4U, fde->cie->code_alignment_factor);
   EXPECT_EQ(8, fde->cie->data_alignment_factor);
@@ -552,6 +612,7 @@ REGISTER_TYPED_TEST_SUITE_P(DwarfEhFrameWithHdrTest, Init, Init_non_zero_load_bi
                             GetCieFde32, GetCieFde64, GetFdeFromPc_fde_not_found);
 
 typedef ::testing::Types<uint32_t, uint64_t> DwarfEhFrameWithHdrTestTypes;
-INSTANTIATE_TYPED_TEST_SUITE_P(Libunwindstack, DwarfEhFrameWithHdrTest, DwarfEhFrameWithHdrTestTypes);
+INSTANTIATE_TYPED_TEST_SUITE_P(Libunwindstack, DwarfEhFrameWithHdrTest,
+                               DwarfEhFrameWithHdrTestTypes);
 
 }  // namespace unwindstack

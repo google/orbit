@@ -46,6 +46,27 @@ enum DwarfEncoding : uint8_t {
   DW_EH_PE_block = 0x0f,
 };
 
+// Needed for static_asserts that depend on the template parameter. Just a
+// plain `false` in the static_assert will cause compilation to fail.
+template <typename>
+inline constexpr bool kDependentFalse = false;
+
+template <typename AddressType>
+struct AddressEncodingType {
+  static_assert(kDependentFalse<AddressType>,
+                "You can only use either the uin32_t or uint64_t specializations.");
+};
+
+template <>
+struct AddressEncodingType<uint32_t> {
+  static constexpr DwarfEncoding kEncodingType = DW_EH_PE_udata4;
+};
+
+template <>
+struct AddressEncodingType<uint64_t> {
+  static constexpr DwarfEncoding kEncodingType = DW_EH_PE_udata8;
+};
+
 }  // namespace unwindstack
 
 #endif  // _LIBUNWINDSTACK_DWARF_ENCODING_H

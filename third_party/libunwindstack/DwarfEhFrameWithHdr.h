@@ -45,10 +45,12 @@ class DwarfEhFrameWithHdr : public DwarfSectionImpl<AddressType> {
   virtual ~DwarfEhFrameWithHdr() = default;
 
   uint64_t GetCieOffsetFromFde32(uint32_t pointer) override {
+    // The "4" is the size of the CIE_id entry, which is 4 bytes for DWARF32.
     return memory_.cur_offset() - pointer - 4;
   }
 
   uint64_t GetCieOffsetFromFde64(uint64_t pointer) override {
+    // The "8" is the size of the CIE_id entry, which is 8 bytes for DWARF64.
     return memory_.cur_offset() - pointer - 8;
   }
 
