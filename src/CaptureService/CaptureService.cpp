@@ -15,6 +15,7 @@
 using orbit_grpc_protos::CaptureOptions;
 using orbit_grpc_protos::CaptureRequest;
 using orbit_grpc_protos::CaptureResponse;
+using orbit_grpc_protos::ProducerCaptureEvent;
 
 using orbit_producer_event_processor::GrpcClientCaptureEventCollector;
 using orbit_producer_event_processor::ProducerEventProcessor;
@@ -40,11 +41,11 @@ grpc::Status CaptureService::InitializeCapture(
     grpc::ServerReaderWriter<CaptureResponse, CaptureRequest>* reader_writer) {
   {
     absl::MutexLock lock(&capture_mutex_);
-    if (is_capturing) {
+    if (is_capturing_) {
       return grpc::Status(grpc::StatusCode::ALREADY_EXISTS,
                           "Cannot start capture because another capture is already in progress");
     }
-    is_capturing = true;
+    is_capturing_ = true;
   }
 
   grpc_client_capture_event_collector_ =
@@ -62,7 +63,7 @@ void CaptureService::TerminateCapture() {
   capture_start_timestamp_ns_ = 0;
 
   absl::MutexLock lock(&capture_mutex_);
-  is_capturing = false;
+  is_capturing_ = false;
 }
 
 CaptureRequest CaptureService::WaitForStartCaptureRequestFromClient(
@@ -102,9 +103,18 @@ void CaptureService::StartEventProcessing(const CaptureOptions& capture_options)
                                               capture_start_timestamp_ns_, clock_resolution_ns_));
 }
 
-void CaptureService::FinalizeEventProcessing() {
+void CaptureService::FinalizeEventProcessing(StopCaptureReason stop_capture_reason) {
+  ProducerCaptureEvent capture_finished;
+  switch (stop_capture_reason) {
+    case StopCaptureReason::kClientStop:
+      capture_finished = CreateSuccessfulCaptureFinishedEvent();
+      break;
+    case StopCaptureReason::kMemoryWatchdog:
+      capture_finished = CreateMemoryThresholdExceededCaptureFinishedEvent();
+      break;
+  }
   producer_event_processor_->ProcessEvent(orbit_grpc_protos::kRootProducerId,
-                                          orbit_capture_service::CreateCaptureFinishedEvent());
+                                          std::move(capture_finished));
 
   grpc_client_capture_event_collector_->StopAndWait();
   LOG("Finished handling gRPC call to Capture: all capture data has been sent");

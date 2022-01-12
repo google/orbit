@@ -277,18 +277,27 @@ OrbitApp::~OrbitApp() {
 }
 
 void OrbitApp::OnCaptureFinished(const CaptureFinished& capture_finished) {
+  LOG("CaptureFinished received: status=%s, error_message=\"%s\"",
+      CaptureFinished::Status_Name(capture_finished.status()), capture_finished.error_message());
   main_thread_executor_->Schedule([this, capture_finished]() {
     switch (capture_finished.status()) {
       case orbit_grpc_protos::CaptureFinished::kSuccessful: {
         main_window_->AppendToCaptureLog(MainWindowInterface::CaptureLogSeverity::kInfo,
                                          GetCaptureTime(), "Capture finished.");
       } break;
+      case orbit_grpc_protos::CaptureFinished::kInterruptedByService: {
+        std::string full_message =
+            absl::StrFormat("Capture interrupted prematurely by OrbitService: %s",
+                            capture_finished.error_message());
+        SendWarningToUi("Capture interrupted", full_message);
+        main_window_->AppendToCaptureLog(MainWindowInterface::CaptureLogSeverity::kSevereWarning,
+                                         GetCaptureTime(), full_message);
+      } break;
       case orbit_grpc_protos::CaptureFinished::kFailed: {
-        SendErrorToUi("Capture Failed", capture_finished.error_message());
-        ERROR("Capture Finished with error: %s", capture_finished.error_message());
+        SendErrorToUi("Capture failed", capture_finished.error_message());
         main_window_->AppendToCaptureLog(
             MainWindowInterface::CaptureLogSeverity::kError, GetCaptureTime(),
-            absl::StrFormat("Capture finished with error: %s.", capture_finished.error_message()));
+            absl::StrFormat("Capture failed with error: %s.", capture_finished.error_message()));
       } break;
       case orbit_grpc_protos::
           CaptureFinished_Status_CaptureFinished_Status_INT_MIN_SENTINEL_DO_NOT_USE_:

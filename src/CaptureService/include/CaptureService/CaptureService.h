@@ -20,7 +20,7 @@
 
 namespace orbit_capture_service {
 
-// CaptureService is an abstract class derived from the grpc capture service. It holds common
+// CaptureService is an abstract class derived from the gRPC capture service. It holds common
 // functionality shared by the platform-specific capture services.
 class CaptureService : public orbit_grpc_protos::CaptureService::Service {
  public:
@@ -44,7 +44,8 @@ class CaptureService : public orbit_grpc_protos::CaptureService::Service {
                                orbit_grpc_protos::CaptureRequest>* reader_writer);
 
   void StartEventProcessing(const orbit_grpc_protos::CaptureOptions& capture_options);
-  void FinalizeEventProcessing();
+  enum class StopCaptureReason { kClientStop, kMemoryWatchdog };
+  void FinalizeEventProcessing(StopCaptureReason stop_capture_reason);
 
   std::unique_ptr<orbit_producer_event_processor::GrpcClientCaptureEventCollector>
       grpc_client_capture_event_collector_;
@@ -56,7 +57,7 @@ class CaptureService : public orbit_grpc_protos::CaptureService::Service {
  private:
   uint64_t clock_resolution_ns_ = 0;
   absl::Mutex capture_mutex_;
-  bool is_capturing ABSL_GUARDED_BY(capture_mutex_) = false;
+  bool is_capturing_ ABSL_GUARDED_BY(capture_mutex_) = false;
 };
 
 }  // namespace orbit_capture_service

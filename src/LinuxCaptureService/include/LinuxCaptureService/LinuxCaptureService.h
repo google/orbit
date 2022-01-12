@@ -10,6 +10,7 @@
 
 #include <atomic>
 #include <memory>
+#include <thread>
 
 #include "CaptureService/CaptureService.h"
 #include "GrpcProtos/services.grpc.pb.h"
@@ -27,6 +28,12 @@ class LinuxCaptureService final : public orbit_capture_service::CaptureService {
     instrumentation_manager_ = orbit_user_space_instrumentation::InstrumentationManager::Create();
   }
 
+  ~LinuxCaptureService() override {
+    if (wait_for_stop_capture_request_thread_.joinable()) {
+      wait_for_stop_capture_request_thread_.join();
+    }
+  }
+
   grpc::Status Capture(
       grpc::ServerContext* context,
       grpc::ServerReaderWriter<orbit_grpc_protos::CaptureResponse,
@@ -35,6 +42,15 @@ class LinuxCaptureService final : public orbit_capture_service::CaptureService {
  private:
   std::unique_ptr<orbit_user_space_instrumentation::InstrumentationManager>
       instrumentation_manager_;
+
+  // This method returns when the first of the following happens:
+  // - The client calls WritesDone on reader_writer (similar to
+  //   CaptureService::WaitForStopCaptureRequestFromClient);
+  // - MemoryWatchdog calls OnThresholdExceeded.
+  [[nodiscard]] StopCaptureReason WaitForStopCaptureRequestOrMemoryThresholdExceeded(
+      grpc::ServerReaderWriter<orbit_grpc_protos::CaptureResponse,
+                               orbit_grpc_protos::CaptureRequest>* reader_writer);
+  std::thread wait_for_stop_capture_request_thread_;
 };
 
 }  // namespace orbit_linux_capture_service

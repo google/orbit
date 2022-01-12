@@ -82,10 +82,18 @@ ProducerCaptureEvent CreateCaptureStartedEvent(const CaptureOptions& capture_opt
   return event;
 }
 
-ProducerCaptureEvent CreateCaptureFinishedEvent() {
+ProducerCaptureEvent CreateSuccessfulCaptureFinishedEvent() {
   ProducerCaptureEvent event;
   CaptureFinished* capture_finished = event.mutable_capture_finished();
   capture_finished->set_status(CaptureFinished::kSuccessful);
+  return event;
+}
+
+ProducerCaptureEvent CreateMemoryThresholdExceededCaptureFinishedEvent() {
+  ProducerCaptureEvent event;
+  CaptureFinished* capture_finished = event.mutable_capture_finished();
+  capture_finished->set_status(CaptureFinished::kInterruptedByService);
+  capture_finished->set_error_message("OrbitService was using too much memory.");
   return event;
 }
 
