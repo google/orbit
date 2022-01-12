@@ -7,8 +7,6 @@
 
 #include "AccessibleCaptureViewElement.h"
 
-class TimelineUi;
-
 namespace orbit_gl {
 
 /*
@@ -16,8 +14,8 @@ namespace orbit_gl {
  */
 class AccessibleTimeline : public AccessibleCaptureViewElement {
  public:
-  explicit AccessibleTimeline(TimelineUi* timeline_ui)
-      : AccessibleCaptureViewElement(timeline_ui){};
+  explicit AccessibleTimeline(CaptureViewElement* timeline)
+      : AccessibleCaptureViewElement(timeline){};
 
   [[nodiscard]] int AccessibleChildCount() const override { return 0; }
   [[nodiscard]] const orbit_accessibility::AccessibleInterface* AccessibleChild(
@@ -27,9 +25,7 @@ class AccessibleTimeline : public AccessibleCaptureViewElement {
 
   [[nodiscard]] std::string AccessibleName() const override { return "Timeline"; }
   [[nodiscard]] orbit_accessibility::AccessibilityRole AccessibleRole() const override {
-    return orbit_accessibility::AccessibilityRole::Graphic;  // TODO: FlorianR, is this correct,
-                                                             // should I use Focusable or create a
-                                                             // new constant?
+    return orbit_accessibility::AccessibilityRole::Pane;
   }
 };
 
