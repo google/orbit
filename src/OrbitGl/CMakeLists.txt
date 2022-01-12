@@ -13,6 +13,7 @@ target_sources(
          AccessibleInterfaceProvider.h
          AccessibleThreadBar.h
          AccessibleTimeGraph.h
+         AccessibleTimeline.h
          AccessibleTrack.h
          AccessibleTriangleToggle.h
          AnnotationTrack.h

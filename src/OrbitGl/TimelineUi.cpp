@@ -4,6 +4,7 @@
 
 #include "TimelineUi.h"
 
+#include "AccessibleTimeline.h"
 #include "DisplayFormats/DisplayFormats.h"
 #include "GlCanvas.h"
 #include "TimelineTicks.h"
@@ -65,6 +66,10 @@ void TimelineUi::DoUpdatePrimitives(Batcher& batcher, TextRenderer& text_rendere
   uint64_t max_timestamp_ns = timeline_info_interface_->GetNsSinceStart(max_tick);
   RenderLines(batcher, min_timestamp_ns, max_timestamp_ns);
   RenderLabels(text_renderer, min_timestamp_ns, max_timestamp_ns);
+}
+
+std::unique_ptr<orbit_accessibility::AccessibleInterface> TimelineUi::CreateAccessibleInterface() {
+  return std::make_unique<AccessibleTimeline>(this);
 }
 
 }  // namespace orbit_gl
