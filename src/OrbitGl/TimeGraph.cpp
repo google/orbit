@@ -174,6 +174,8 @@ void TimeGraph::VerticalZoom(float zoom_value, float mouse_world_y_pos) {
   SetVerticalScrollingOffset(mouse_new_y_global_position - mouse_world_y_pos);
 }
 
+// TODO(b/214280802): include SetMinMax in the TimelineInfoInterface, so the scrollbar could call
+// it.
 void TimeGraph::SetMinMax(double min_time_us, double max_time_us) {
   constexpr double kTimeGraphMinTimeWindowsUs = 0.1; /* 100 ns */
   const double desired_time_window =
