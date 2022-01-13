@@ -38,10 +38,10 @@ class TrackTypeItemModel : public QAbstractTableModel {
   [[nodiscard]] int rowCount(const QModelIndex& parent = {}) const override;
   [[nodiscard]] Qt::ItemFlags flags(const QModelIndex& index) const override;
 
-  void SetTrackManager(TrackManager* track_manager);
+  void SetTrackManager(orbit_gl::TrackManager* track_manager);
 
  private:
-  TrackManager* track_manager_ = nullptr;
+  orbit_gl::TrackManager* track_manager_ = nullptr;
   std::vector<Track::Type> known_track_types_;
 
   QString GetTrackTypeDisplayName(Track::Type track_type) const;

@@ -345,7 +345,7 @@ void OrbitApp::OnCaptureStarted(const orbit_grpc_protos::CaptureStarted& capture
             std::make_unique<CaptureData>(module_manager_.get(), capture_started, file_path,
                                           std::move(frame_track_function_ids), data_source_);
         capture_window_->CreateTimeGraph(capture_data_.get());
-        TrackManager* track_manager = GetMutableTimeGraph()->GetTrackManager();
+        orbit_gl::TrackManager* track_manager = GetMutableTimeGraph()->GetTrackManager();
         track_manager->SetIsDataFromSavedCapture(data_source_ ==
                                                  CaptureData::DataSource::kLoadedCapture);
         if (had_capture) {

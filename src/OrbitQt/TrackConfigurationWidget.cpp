@@ -20,7 +20,7 @@ TrackConfigurationWidget::TrackConfigurationWidget(QWidget* parent)
 
 TrackConfigurationWidget::~TrackConfigurationWidget() = default;
 
-void TrackConfigurationWidget::SetTrackManager(TrackManager* track_manager) {
+void TrackConfigurationWidget::SetTrackManager(orbit_gl::TrackManager* track_manager) {
   track_type_item_model_.SetTrackManager(track_manager);
 }
 

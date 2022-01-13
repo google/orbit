@@ -34,14 +34,11 @@
 
 using orbit_client_data::CallstackData;
 using orbit_client_protos::TimerInfo;
-using orbit_gl::CGroupAndProcessMemoryTrack;
-using orbit_gl::PageFaultsTrack;
-using orbit_gl::SystemMemoryTrack;
-using orbit_gl::VariableTrack;
 
-TrackManager::TrackManager(TimeGraph* time_graph, orbit_gl::Viewport* viewport,
-                           TimeGraphLayout* layout, OrbitApp* app,
-                           orbit_client_data::CaptureData* capture_data)
+namespace orbit_gl {
+
+TrackManager::TrackManager(TimeGraph* time_graph, Viewport* viewport, TimeGraphLayout* layout,
+                           OrbitApp* app, orbit_client_data::CaptureData* capture_data)
     : time_graph_(time_graph),
       viewport_(viewport),
       layout_(layout),
@@ -569,3 +566,5 @@ std::pair<uint64_t, uint64_t> TrackManager::GetTracksMinMaxTimestamps() const {
   }
   return std::make_pair(min_time, max_time);
 }
+
+}  // namespace orbit_gl

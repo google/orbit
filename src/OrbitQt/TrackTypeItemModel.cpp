@@ -104,7 +104,7 @@ Qt::ItemFlags TrackTypeItemModel::flags(const QModelIndex& index) const {
   return flags;
 }
 
-void TrackTypeItemModel::SetTrackManager(TrackManager* track_manager) {
+void TrackTypeItemModel::SetTrackManager(orbit_gl::TrackManager* track_manager) {
   int row_count = rowCount();
   if (row_count > 0) {
     beginRemoveRows({}, 0, rowCount() - 1);

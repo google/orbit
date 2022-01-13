@@ -34,13 +34,14 @@
 class OrbitApp;
 class TimeGraph;
 
+namespace orbit_gl {
+
 // TrackManager is in charge of the active Tracks in Timegraph (their creation, searching, erasing
 // and sorting).
 class TrackManager {
  public:
-  explicit TrackManager(TimeGraph* time_graph, orbit_gl::Viewport* viewport,
-                        TimeGraphLayout* layout, OrbitApp* app,
-                        orbit_client_data::CaptureData* capture_data);
+  explicit TrackManager(TimeGraph* time_graph, Viewport* viewport, TimeGraphLayout* layout,
+                        OrbitApp* app, orbit_client_data::CaptureData* capture_data);
 
   [[nodiscard]] std::vector<Track*> GetAllTracks() const;
   [[nodiscard]] std::vector<Track*> GetVisibleTracks() const { return visible_tracks_; }
@@ -61,21 +62,21 @@ class TrackManager {
   SchedulerTrack* GetOrCreateSchedulerTrack();
   ThreadTrack* GetOrCreateThreadTrack(uint32_t tid);
   GpuTrack* GetOrCreateGpuTrack(uint64_t timeline_hash);
-  orbit_gl::VariableTrack* GetOrCreateVariableTrack(const std::string& name);
+  VariableTrack* GetOrCreateVariableTrack(const std::string& name);
   AsyncTrack* GetOrCreateAsyncTrack(const std::string& name);
   FrameTrack* GetOrCreateFrameTrack(const orbit_grpc_protos::InstrumentedFunction& function);
-  [[nodiscard]] orbit_gl::SystemMemoryTrack* GetSystemMemoryTrack() const {
+  [[nodiscard]] SystemMemoryTrack* GetSystemMemoryTrack() const {
     return system_memory_track_.get();
   }
-  [[nodiscard]] orbit_gl::SystemMemoryTrack* CreateAndGetSystemMemoryTrack();
-  [[nodiscard]] orbit_gl::CGroupAndProcessMemoryTrack* GetCGroupAndProcessMemoryTrack() const {
+  [[nodiscard]] SystemMemoryTrack* CreateAndGetSystemMemoryTrack();
+  [[nodiscard]] CGroupAndProcessMemoryTrack* GetCGroupAndProcessMemoryTrack() const {
     return cgroup_and_process_memory_track_.get();
   }
-  [[nodiscard]] orbit_gl::CGroupAndProcessMemoryTrack* CreateAndGetCGroupAndProcessMemoryTrack(
+  [[nodiscard]] CGroupAndProcessMemoryTrack* CreateAndGetCGroupAndProcessMemoryTrack(
       const std::string& cgroup_name);
-  orbit_gl::PageFaultsTrack* GetPageFaultsTrack() const { return page_faults_track_.get(); }
-  orbit_gl::PageFaultsTrack* CreateAndGetPageFaultsTrack(const std::string& cgroup_name,
-                                                         uint64_t memory_sampling_period_ms);
+  PageFaultsTrack* GetPageFaultsTrack() const { return page_faults_track_.get(); }
+  PageFaultsTrack* CreateAndGetPageFaultsTrack(const std::string& cgroup_name,
+                                               uint64_t memory_sampling_period_ms);
 
   [[nodiscard]] bool GetIsDataFromSavedCapture() const { return data_from_saved_capture_; }
   void SetIsDataFromSavedCapture(bool value) { data_from_saved_capture_ = value; }
@@ -105,7 +106,7 @@ class TrackManager {
   std::vector<std::shared_ptr<Track>> all_tracks_;
   absl::flat_hash_map<uint32_t, std::shared_ptr<ThreadTrack>> thread_tracks_;
   std::map<std::string, std::shared_ptr<AsyncTrack>> async_tracks_;
-  std::map<std::string, std::shared_ptr<orbit_gl::VariableTrack>> variable_tracks_;
+  std::map<std::string, std::shared_ptr<VariableTrack>> variable_tracks_;
   // Mapping from timeline to GPU tracks. Timeline name is used for stable ordering. In particular
   // we want the marker tracks next to their queue track. E.g. "gfx" and "gfx_markers" should appear
   // next to each other.
@@ -113,12 +114,12 @@ class TrackManager {
   // Mapping from function address to frame tracks.
   std::map<uint64_t, std::shared_ptr<FrameTrack>> frame_tracks_;
   std::shared_ptr<SchedulerTrack> scheduler_track_;
-  std::shared_ptr<orbit_gl::SystemMemoryTrack> system_memory_track_;
-  std::shared_ptr<orbit_gl::CGroupAndProcessMemoryTrack> cgroup_and_process_memory_track_;
-  std::shared_ptr<orbit_gl::PageFaultsTrack> page_faults_track_;
+  std::shared_ptr<SystemMemoryTrack> system_memory_track_;
+  std::shared_ptr<CGroupAndProcessMemoryTrack> cgroup_and_process_memory_track_;
+  std::shared_ptr<PageFaultsTrack> page_faults_track_;
 
   TimeGraph* time_graph_;
-  orbit_gl::Viewport* viewport_;
+  Viewport* viewport_;
   TimeGraphLayout* layout_;
 
   std::vector<Track*> sorted_tracks_;
@@ -136,5 +137,7 @@ class TrackManager {
   bool data_from_saved_capture_ = false;
   absl::flat_hash_map<Track::Type, bool> track_type_visibility_;
 };
+
+}  // namespace orbit_gl
 
 #endif  // ORBIT_GL_TRACK_MANAGER_H_

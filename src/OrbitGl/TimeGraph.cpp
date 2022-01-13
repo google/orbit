@@ -52,6 +52,7 @@ using orbit_client_protos::TimerInfo;
 using orbit_gl::CGroupAndProcessMemoryTrack;
 using orbit_gl::PageFaultsTrack;
 using orbit_gl::SystemMemoryTrack;
+using orbit_gl::TrackManager;
 using orbit_gl::VariableTrack;
 
 using orbit_grpc_protos::InstrumentedFunction;

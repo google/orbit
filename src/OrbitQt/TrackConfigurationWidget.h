@@ -23,7 +23,7 @@ class TrackConfigurationWidget : public QWidget {
  public:
   explicit TrackConfigurationWidget(QWidget* parent = nullptr);
   ~TrackConfigurationWidget() override;
-  void SetTrackManager(TrackManager* track_manager);
+  void SetTrackManager(orbit_gl::TrackManager* track_manager);
 
  private:
   std::unique_ptr<Ui::TrackConfigurationWidget> ui_;
