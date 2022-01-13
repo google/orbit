@@ -241,6 +241,7 @@ std::vector<ThreadTrack*> TrackManager::GetSortedThreadTracks() {
   return sorted_tracks;
 }
 
+// TODO(b/214280810): Move it to TrackContainer, as well as everything related with Ordered Tracks.
 void TrackManager::UpdateMovingTrackPositionInVisibleTracks() {
   // This updates the position of the currently moving track in both the sorted_tracks_
   // and the visible_tracks_ array. The moving track is inserted after the first track
@@ -556,6 +557,7 @@ PageFaultsTrack* TrackManager::CreateAndGetPageFaultsTrack(const std::string& cg
   return GetPageFaultsTrack();
 }
 
+// TODO(b/177200020): Move to TrackContainer after assuring to have only one thread in the UI.
 std::pair<uint64_t, uint64_t> TrackManager::GetTracksMinMaxTimestamps() const {
   uint64_t min_time = std::numeric_limits<uint64_t>::max();
   uint64_t max_time = std::numeric_limits<uint64_t>::min();
