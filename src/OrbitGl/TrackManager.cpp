@@ -212,9 +212,7 @@ void TrackManager::UpdateVisibleTrackList() {
       }
     }
   }
-  if (time_graph_ != nullptr) {
-    time_graph_->RequestUpdate();
-  }
+  time_graph_->RequestUpdate();
 }
 
 std::vector<ThreadTrack*> TrackManager::GetSortedThreadTracks() {
@@ -356,9 +354,7 @@ void TrackManager::RemoveFrameTrack(uint64_t function_id) {
 
 void TrackManager::SetTrackTypeVisibility(Track::Type type, bool value) {
   track_type_visibility_[type] = value;
-  if (time_graph_ != nullptr) {
-    time_graph_->RequestUpdate();
-  }
+  time_graph_->RequestUpdate();
   visible_track_list_needs_update_ = true;
 }
 
@@ -373,9 +369,7 @@ const absl::flat_hash_map<Track::Type, bool> TrackManager::GetAllTrackTypesVisib
 void TrackManager::RestoreAllTrackTypesVisibility(
     const absl::flat_hash_map<Track::Type, bool>& values) {
   track_type_visibility_ = values;
-  if (time_graph_ != nullptr) {
-    time_graph_->RequestUpdate();
-  }
+  time_graph_->RequestUpdate();
   visible_track_list_needs_update_ = true;
 }
 
