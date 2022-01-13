@@ -680,9 +680,10 @@ void OrbitMainWindow::UpdateCaptureStateDependentWidgets() {
   }
 
   if (has_data) {
-    TrackManager* track_manager = dynamic_cast<CaptureWindow*>(ui->CaptureGLWidget->GetCanvas())
-                                      ->GetTimeGraph()
-                                      ->GetTrackManager();
+    orbit_gl::TrackManager* track_manager =
+        dynamic_cast<CaptureWindow*>(ui->CaptureGLWidget->GetCanvas())
+            ->GetTimeGraph()
+            ->GetTrackManager();
     ui->trackConfig->SetTrackManager(track_manager);
   }
 }

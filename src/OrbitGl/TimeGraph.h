@@ -58,7 +58,7 @@ class TimeGraph final : public orbit_gl::CaptureViewElement,
   [[nodiscard]] const orbit_client_data::CaptureData* GetCaptureData() const {
     return capture_data_;
   }
-  [[nodiscard]] TrackManager* GetTrackManager() { return track_manager_.get(); }
+  [[nodiscard]] orbit_gl::TrackManager* GetTrackManager() { return track_manager_.get(); }
 
   [[nodiscard]] float GetTextBoxHeight() const { return layout_.GetTextBoxHeight(); }
   [[nodiscard]] float GetWorldFromTick(uint64_t time) const override;
@@ -228,7 +228,7 @@ class TimeGraph final : public orbit_gl::CaptureViewElement,
 
   Batcher batcher_;
 
-  std::unique_ptr<TrackManager> track_manager_;
+  std::unique_ptr<orbit_gl::TrackManager> track_manager_;
 
   ManualInstrumentationManager* manual_instrumentation_manager_;
   const orbit_client_data::CaptureData* capture_data_ = nullptr;
