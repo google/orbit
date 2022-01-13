@@ -165,6 +165,27 @@ TYPED_TEST_P(DwarfSectionImplTest, Eval_bad_regs) {
   EXPECT_EQ(DWARF_ERROR_ILLEGAL_VALUE, this->section_->LastErrorCode());
 }
 
+TYPED_TEST_P(DwarfSectionImplTest, Eval_large_column_value_works) {
+  DwarfCie cie{.version = 3, .return_address_register = 32};
+  RegsImplFake<TypeParam> regs(10);
+  DwarfLocations loc_regs;
+
+  regs.set_pc(0x100);
+  regs.set_sp(0x2000);
+
+  regs[8] = 0x20;
+  regs[9] = 0x3000;
+
+  loc_regs[32] = DwarfLocation{DWARF_LOCATION_REGISTER, {8, 0}};
+  loc_regs[CFA_REG] = DwarfLocation{DWARF_LOCATION_REGISTER, {9, 0}};
+
+  bool finished;
+  ASSERT_TRUE(this->section_->Eval(&cie, &this->memory_, loc_regs, &regs, &finished));
+
+  EXPECT_EQ(0x20U, regs.pc());
+  EXPECT_EQ(0x3000U, regs.sp());
+}
+
 TYPED_TEST_P(DwarfSectionImplTest, Eval_no_cfa) {
   DwarfCie cie{.return_address_register = 5};
   RegsImplFake<TypeParam> regs(10);
@@ -585,14 +606,15 @@ TYPED_TEST_P(DwarfSectionImplTest, Log) {
 REGISTER_TYPED_TEST_SUITE_P(DwarfSectionImplTest, GetCieFromOffset_fail_should_not_cache,
                             GetFdeFromOffset_fail_should_not_cache, Eval_cfa_expr_eval_fail,
                             Eval_cfa_expr_no_stack, Eval_cfa_expr_is_register, Eval_cfa_expr,
-                            Eval_cfa_val_expr, Eval_bad_regs, Eval_no_cfa, Eval_cfa_bad,
-                            Eval_cfa_register_prev, Eval_cfa_register_from_value,
-                            Eval_double_indirection, Eval_register_reference_chain, Eval_dex_pc,
-                            Eval_invalid_register, Eval_different_reg_locations,
-                            Eval_return_address_undefined, Eval_pc_zero, Eval_return_address,
-                            Eval_ignore_large_reg_loc, Eval_reg_expr, Eval_reg_val_expr,
-                            Eval_pseudo_register_invalid, Eval_pseudo_register,
-                            GetCfaLocationInfo_cie_not_cached, GetCfaLocationInfo_cie_cached, Log);
+                            Eval_cfa_val_expr, Eval_bad_regs, Eval_large_column_value_works,
+                            Eval_no_cfa, Eval_cfa_bad, Eval_cfa_register_prev,
+                            Eval_cfa_register_from_value, Eval_double_indirection,
+                            Eval_register_reference_chain, Eval_dex_pc, Eval_invalid_register,
+                            Eval_different_reg_locations, Eval_return_address_undefined,
+                            Eval_pc_zero, Eval_return_address, Eval_ignore_large_reg_loc,
+                            Eval_reg_expr, Eval_reg_val_expr, Eval_pseudo_register_invalid,
+                            Eval_pseudo_register, GetCfaLocationInfo_cie_not_cached,
+                            GetCfaLocationInfo_cie_cached, Log);
 
 typedef ::testing::Types<uint32_t, uint64_t> DwarfSectionImplTestTypes;
 INSTANTIATE_TYPED_TEST_SUITE_P(Libunwindstack, DwarfSectionImplTest, DwarfSectionImplTestTypes);
