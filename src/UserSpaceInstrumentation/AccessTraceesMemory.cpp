@@ -53,13 +53,19 @@ using orbit_base::ReadFileToString;
   return outcome::success();
 }
 
-[[nodiscard]] ErrorMessageOr<AddressRange> GetFirstExecutableMemoryRegion(
+[[nodiscard]] ErrorMessageOr<AddressRange> GetExistingExecutableMemoryRegion(
     pid_t pid, uint64_t exclude_address) {
   OUTCOME_TRY(auto&& maps, ReadFileToString(absl::StrFormat("/proc/%d/maps", pid)));
   const std::vector<std::string> lines = absl::StrSplit(maps, '\n', absl::SkipEmpty());
-  for (const auto& line : lines) {
-    const std::vector<std::string> tokens = absl::StrSplit(line, ' ', absl::SkipEmpty());
+  // We pick the executable memory region with the highest address. This is to work around
+  // http://b/214052981, which sees Proton use a seccomp filter to trap all syscalls coming from low
+  // addresses, i.e., where it has loaded Windows DLLs and the game's .exe.
+  for (auto line_it = lines.rbegin(); line_it != lines.rend(); ++line_it) {
+    const std::string& line = *line_it;
+    const std::vector<std::string> tokens = absl::StrSplit(line, ' ', absl::SkipWhitespace());
     if (tokens.size() < 2 || tokens[1].size() != 4 || tokens[1][2] != 'x') continue;
+    // Writing to [vsyscall] fails with EIO (Input/output error).
+    if (tokens.size() >= 6 && tokens[5] == "[vsyscall]") continue;
     const std::vector<std::string> addresses = absl::StrSplit(tokens[0], '-');
     if (addresses.size() != 2) continue;
     AddressRange result;

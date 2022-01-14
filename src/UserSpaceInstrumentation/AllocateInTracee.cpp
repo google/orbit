@@ -49,7 +49,7 @@ namespace {
   }
 
   // Get an executable memory region.
-  auto memory_region_or_error = GetFirstExecutableMemoryRegion(pid, exclude_address);
+  auto memory_region_or_error = GetExistingExecutableMemoryRegion(pid, exclude_address);
   if (memory_region_or_error.has_error()) {
     return ErrorMessage(absl::StrFormat("Failed to find executable memory region: \"%s\"",
                                         memory_region_or_error.error().message()));
