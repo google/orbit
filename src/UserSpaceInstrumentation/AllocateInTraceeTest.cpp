@@ -93,7 +93,7 @@ TEST(AllocateInTraceeTest, AllocateAndFree) {
 
   // Allocation fails for non page aligned address.
   my_memory_or_error = MemoryInTracee::Create(pid, 1, kMemorySize);
-  EXPECT_THAT(my_memory_or_error, HasError("but got memory at a different adress"));
+  EXPECT_THAT(my_memory_or_error, HasError("but got memory at a different address"));
 
   // Allocation fails for ridiculous size.
   my_memory_or_error = MemoryInTracee::Create(pid, 1, 1ull << 63);
