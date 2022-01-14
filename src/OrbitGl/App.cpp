@@ -1889,6 +1889,15 @@ orbit_base::Future<ErrorMessageOr<void>> OrbitApp::LoadSymbols(
     return it->second;
   }
 
+  // This additional check is here to avoid a race condition. See http://b/205002963 for details.
+  const ModuleData* module_data = GetModuleByPathAndBuildId(module_file_path, module_build_id);
+  if (module_data->is_loaded()) {
+    ERROR(
+        "LoadSymbols was called with the symbols for module '%s' (buildid = '%s') already loaded.",
+        module_file_path, module_build_id);
+    return ErrorMessageOr<void>{outcome::success()};
+  }
+
   auto scoped_status = CreateScopedStatus(absl::StrFormat(
       R"(Loading symbols for "%s" from file "%s"...)", module_file_path, symbols_path.string()));
 
