@@ -63,6 +63,8 @@ class RegsFake : public Regs {
 
   Regs* Clone() override { return nullptr; }
 
+  void OverrideTotalRegs(uint16_t total_regs) override { total_regs_ = total_regs; }
+
  private:
   ArchEnum fake_arch_ = ARCH_UNKNOWN;
   uint64_t fake_pc_ = 0;

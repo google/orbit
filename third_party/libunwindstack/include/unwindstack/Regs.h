@@ -78,6 +78,7 @@ class Regs {
 
   virtual void IterateRegisters(std::function<void(const char*, uint64_t)>) = 0;
 
+  virtual void OverrideTotalRegs(uint16_t total_regs) = 0;
   uint16_t total_regs() { return total_regs_; }
 
   virtual Regs* Clone() = 0;
@@ -103,6 +104,11 @@ class RegsImpl : public Regs {
   inline AddressType& operator[](size_t reg) { return regs_[reg]; }
 
   void* RawData() override { return regs_.data(); }
+
+  void OverrideTotalRegs(uint16_t total_regs) override {
+    total_regs_ = total_regs;
+    regs_.resize(total_regs_);
+  }
 
   virtual void IterateRegisters(std::function<void(const char*, uint64_t)> fn) override {
     for (size_t i = 0; i < regs_.size(); ++i) {

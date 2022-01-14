@@ -491,10 +491,19 @@ template <typename AddressType>
 bool DwarfSectionImpl<AddressType>::Eval(const DwarfCie* cie, Memory* regular_memory,
                                          const DwarfLocations& loc_regs, Regs* regs,
                                          bool* finished) {
-  RegsImpl<AddressType>* cur_regs = reinterpret_cast<RegsImpl<AddressType>*>(regs);
-  if (cie->return_address_register >= cur_regs->total_regs()) {
+  // We do not allow DWARF column numbers ("virtual register") larger than 32, which is the largest
+  // value we have seen in practice. This value also avoids a clash with numbers for pseudo
+  // registers in the ARM64 case.
+  constexpr uint64_t kDwarfColumnMax = 32;
+  if (cie->return_address_register > kDwarfColumnMax) {
     last_error_.code = DWARF_ERROR_ILLEGAL_VALUE;
     return false;
+  }
+  RegsImpl<AddressType>* cur_regs = reinterpret_cast<RegsImpl<AddressType>*>(regs);
+  if (cie->return_address_register >= cur_regs->total_regs()) {
+    // Above we check against kDwarfColumnMax, so we know that the value fits into a uint16_t.
+    uint16_t dwarf_column_number = static_cast<uint16_t>(cie->return_address_register);
+    cur_regs->OverrideTotalRegs(dwarf_column_number + 1);
   }
 
   // Get the cfa value;
