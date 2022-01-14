@@ -205,7 +205,7 @@ TEST(AccessTraceesMemoryTest, ReadWriteRestore) {
   // Stop the child process using our tooling.
   CHECK(!AttachAndStopProcess(pid).has_error());
 
-  auto memory_region_or_error = GetFirstExecutableMemoryRegion(pid);
+  auto memory_region_or_error = GetExistingExecutableMemoryRegion(pid);
   CHECK(memory_region_or_error.has_value());
   const uint64_t address = memory_region_or_error.value().start;
 

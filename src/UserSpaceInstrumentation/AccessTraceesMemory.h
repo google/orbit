@@ -26,13 +26,13 @@ namespace orbit_user_space_instrumentation {
 [[nodiscard]] ErrorMessageOr<void> WriteTraceesMemory(pid_t pid, uint64_t start_address,
                                                       const std::vector<uint8_t>& bytes);
 
-// Returns the address range of the first executable memory region. In every case I encountered this
-// was the second line in the `maps` file corresponding to the code of the process we look at.
-// However we don't really care. So keeping it general and just searching for an executable region
-// is probably helping stability.
+// Returns the address range of an executable memory region. One options is usually the second line
+// in the `maps` file corresponding to the code of the process we look at. However we don't really
+// care. So keeping it general and just searching for an executable region is probably helping
+// stability.
 // Optionally one can specify `exclude_address`. This prevents the method from returning an address
 // range containing `exclude_address`.
-[[nodiscard]] ErrorMessageOr<AddressRange> GetFirstExecutableMemoryRegion(
+[[nodiscard]] ErrorMessageOr<AddressRange> GetExistingExecutableMemoryRegion(
     pid_t pid, uint64_t exclude_address = 0);
 
 }  // namespace orbit_user_space_instrumentation
