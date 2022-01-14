@@ -865,7 +865,7 @@ void MoveInstructionPointersOutOfOverwrittenCode(
     RegisterState registers;
     ErrorMessageOr<void> backup_or_error = registers.BackupRegisters(tid);
     FAIL_IF(backup_or_error.has_error(),
-            "Failed to read registers in MoveInstructionPointersOutOfOverwrittenCode: \"%s\"",
+            "Failed to read registers in MoveInstructionPointersOutOfOverwrittenCode: %s",
             backup_or_error.error().message());
     const uint64_t rip = registers.GetGeneralPurposeRegisters()->x86_64.rip;
     auto relocation = relocation_map.find(rip);
@@ -873,7 +873,7 @@ void MoveInstructionPointersOutOfOverwrittenCode(
       registers.GetGeneralPurposeRegisters()->x86_64.rip = relocation->second;
       ErrorMessageOr<void> restore_or_error = registers.RestoreRegisters();
       FAIL_IF(restore_or_error.has_error(),
-              "Failed to write registers in MoveInstructionPointersOutOfOverwrittenCode: \"%s\"",
+              "Failed to write registers in MoveInstructionPointersOutOfOverwrittenCode: %s",
               restore_or_error.error().message());
     }
   }

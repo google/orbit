@@ -70,7 +70,7 @@ ErrorMessageOr<uint64_t> FindFunctionAddressWithFallback(
                           address_or_error.error().message()));
     } else {
       error_message.append(absl::StrFormat(
-          "\nAlso failed to load fallback symbol \"%s\" from module \"%s\" with error: \"%s\"",
+          "\nAlso failed to load fallback symbol \"%s\" from module \"%s\" with error: %s",
           function_locator.function_name, function_locator.module_name,
           address_or_error.error().message()));
     }
@@ -86,11 +86,11 @@ ErrorMessageOr<uint64_t> FindFunctionAddressWithFallback(
   // Make sure file exists.
   auto file_exists_or_error = orbit_base::FileExists(path);
   if (file_exists_or_error.has_error()) {
-    return ErrorMessage(absl::StrFormat("Unable to access library at: \"%s\": %s", path,
+    return ErrorMessage(absl::StrFormat("Unable to access library at \"%s\": %s", path,
                                         file_exists_or_error.error().message()));
   }
   if (!file_exists_or_error.value()) {
-    return ErrorMessage(absl::StrFormat("Library does not exist at: \"%s\"", path));
+    return ErrorMessage(absl::StrFormat("Library does not exist at \"%s\"", path));
   }
 
   // Figure out address of dlopen.
