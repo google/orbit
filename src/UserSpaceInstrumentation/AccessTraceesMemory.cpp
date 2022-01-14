@@ -64,8 +64,8 @@ using orbit_base::ReadFileToString;
     const std::string& line = *line_it;
     const std::vector<std::string> tokens = absl::StrSplit(line, ' ', absl::SkipWhitespace());
     if (tokens.size() < 2 || tokens[1].size() != 4 || tokens[1][2] != 'x') continue;
-    // Writing to [vsyscall] fails with EIO (Input/output error).
-    if (tokens.size() >= 6 && tokens[5] == "[vsyscall]") continue;
+    // Writing to [vsyscall] or [uprobes] fails with EIO (Input/output error).
+    if (tokens.size() >= 6 && (tokens[5] == "[vsyscall]" || tokens[5] == "[uprobes]")) continue;
     const std::vector<std::string> addresses = absl::StrSplit(tokens[0], '-');
     if (addresses.size() != 2) continue;
     AddressRange result;
