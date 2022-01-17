@@ -62,10 +62,10 @@ constexpr const char* kLogTimeFormat = "%Y-%m-%dT%H:%M:%E6S";
 #define ORBIT_UNREACHABLE() ORBIT_FATAL("Unreachable code")
 
 #if defined(__GNUC__) || defined(__clang__)
-#define LIKELY(cond) __builtin_expect(!!(cond), 1)
+#define ORBIT_LIKELY(cond) __builtin_expect(!!(cond), 1)
 #define UNLIKELY(cond) __builtin_expect(!!(cond), 0)
 #else
-#define LIKELY(cond) (!!(cond))
+#define ORBIT_LIKELY(cond) (!!(cond))
 #define UNLIKELY(cond) (!!(cond))
 #endif
 
