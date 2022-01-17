@@ -163,7 +163,7 @@ void PerfEventRingBuffer::ReadAtOffsetFromTail(void* dest, uint64_t offset_from_
     memcpy(static_cast<uint8_t*>(dest) + (ring_buffer_size_ - index_mod_size), ring_buffer_,
            count - (ring_buffer_size_ - index_mod_size));
   } else {
-    FATAL("Control shouldn't reach here");
+    ORBIT_FATAL("Control shouldn't reach here");
   }
 }
 

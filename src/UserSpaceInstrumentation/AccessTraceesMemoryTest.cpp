@@ -37,13 +37,13 @@ AddressRange AddressRangeFromString(const std::string& string_address) {
   AddressRange result;
   const std::vector<std::string> addresses = absl::StrSplit(string_address, '-');
   if (addresses.size() != 2) {
-    FATAL("Not an address range: %s", string_address);
+    ORBIT_FATAL("Not an address range: %s", string_address);
   }
   if (!absl::numbers_internal::safe_strtou64_base(addresses[0], &result.start, 16)) {
-    FATAL("Not a number: %s", addresses[0]);
+    ORBIT_FATAL("Not a number: %s", addresses[0]);
   }
   if (!absl::numbers_internal::safe_strtou64_base(addresses[1], &result.end, 16)) {
-    FATAL("Not a number: %s", addresses[1]);
+    ORBIT_FATAL("Not a number: %s", addresses[1]);
   }
   return result;
 }

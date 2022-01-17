@@ -61,7 +61,7 @@ AddressRange GetFunctionAbsoluteAddressRangeOrDie(std::string_view function_name
     if (result.has_value()) return result.value();
   }
 
-  FATAL("GetFunctionAbsoluteAddressRangeOrDie hasn't found a function '%s'", function_name);
+  ORBIT_FATAL("GetFunctionAbsoluteAddressRangeOrDie hasn't found a function '%s'", function_name);
 }
 
 static ErrorMessageOr<AddressRange> FindFunctionRelativeAddressInModule(
@@ -97,7 +97,7 @@ FunctionLocation FindFunctionOrDie(std::string_view function_name) {
     auto result = FindFunctionRelativeAddressInModule(function_name, module.file_path());
     if (result.has_value()) return FunctionLocation{module.file_path(), result.value()};
   }
-  FATAL("FindFunctionOrDie hasn't found a function '%s'", function_name);
+  ORBIT_FATAL("FindFunctionOrDie hasn't found a function '%s'", function_name);
 }
 
 void DumpDisassembly(const std::vector<uint8_t>& code, uint64_t start_address) {

@@ -53,13 +53,13 @@ constexpr const char* kLogTimeFormat = "%Y-%m-%dT%H:%M:%E6S";
 
 #define ORBIT_ERROR_ONCE(format, ...) ORBIT_LOG_ONCE("Error: " format, ##__VA_ARGS__)
 
-#define FATAL(format, ...)                      \
+#define ORBIT_FATAL(format, ...)                \
   do {                                          \
     ORBIT_LOG("Fatal: " format, ##__VA_ARGS__); \
     PLATFORM_ABORT();                           \
   } while (0)
 
-#define UNREACHABLE() FATAL("Unreachable code")
+#define UNREACHABLE() ORBIT_FATAL("Unreachable code")
 
 #if defined(__GNUC__) || defined(__clang__)
 #define LIKELY(cond) __builtin_expect(!!(cond), 1)
@@ -69,11 +69,11 @@ constexpr const char* kLogTimeFormat = "%Y-%m-%dT%H:%M:%E6S";
 #define UNLIKELY(cond) (!!(cond))
 #endif
 
-#define FAIL_IF(condition, format, ...) \
-  do {                                  \
-    if (UNLIKELY(condition)) {          \
-      FATAL(format, ##__VA_ARGS__);     \
-    }                                   \
+#define FAIL_IF(condition, format, ...)   \
+  do {                                    \
+    if (UNLIKELY(condition)) {            \
+      ORBIT_FATAL(format, ##__VA_ARGS__); \
+    }                                     \
   } while (0)
 
 #define CHECK(assertion)                         \

@@ -42,8 +42,8 @@ static std::string GetEnvVar(const char* variable_name) {
 static void CreateDirectoryOrDie(const std::filesystem::path& directory) {
   auto create_directory_result = orbit_base::CreateDirectory(directory);
   if (create_directory_result.has_error()) {
-    FATAL("Unable to create directory \"%s\": %s", directory.string(),
-          create_directory_result.error().message());
+    ORBIT_FATAL("Unable to create directory \"%s\": %s", directory.string(),
+                create_directory_result.error().message());
   }
 }
 

@@ -76,12 +76,12 @@ ErrorMessageOr<uint64_t> ExecuteMachineCode(MemoryInTracee& code_memory, const M
   registers_for_execution.GetGeneralPurposeRegisters()->x86_64.orig_rax = -1;
   OUTCOME_TRY(registers_for_execution.RestoreRegisters());
   if (ptrace(PTRACE_CONT, pid, 0, 0) != 0) {
-    FATAL("Unable to continue tracee with PTRACE_CONT.");
+    ORBIT_FATAL("Unable to continue tracee with PTRACE_CONT.");
   }
   int status = 0;
   pid_t waited = waitpid(pid, &status, 0);
   if (waited != pid || !WIFSTOPPED(status) || WSTOPSIG(status) != SIGTRAP) {
-    FATAL(
+    ORBIT_FATAL(
         "Failed to wait for sigtrap after PTRACE_CONT. Expected pid: %d Pid returned from waitpid: "
         "%d status: %u, WIFSTOPPED: %u, WSTOPSIG: %u",
         pid, waited, status, WIFSTOPPED(status), WSTOPSIG(status));

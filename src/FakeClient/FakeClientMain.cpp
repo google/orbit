@@ -456,7 +456,7 @@ int main(int argc, char* argv[]) {
 
   auto capture_outcome_or_error = capture_outcome_future.Get();
   if (capture_outcome_or_error.has_error()) {
-    FATAL("Capture failed: %s", capture_outcome_or_error.error().message());
+    ORBIT_FATAL("Capture failed: %s", capture_outcome_or_error.error().message());
   }
   thread_pool->ShutdownAndWait();
 

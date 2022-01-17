@@ -116,12 +116,13 @@ namespace {
   // Clean up memory and registers.
   auto restore_memory_result = WriteTraceesMemory(pid, start_address, backup_or_error.value());
   if (restore_memory_result.has_error()) {
-    FATAL("Unable to restore memory state of tracee: %s", restore_memory_result.error().message());
+    ORBIT_FATAL("Unable to restore memory state of tracee: %s",
+                restore_memory_result.error().message());
   }
   restore_registers_result = original_registers.RestoreRegisters();
   if (restore_registers_result.has_error()) {
-    FATAL("Unable to restore register state of tracee: %s",
-          restore_registers_result.error().message());
+    ORBIT_FATAL("Unable to restore register state of tracee: %s",
+                restore_registers_result.error().message());
   }
 
   return result;

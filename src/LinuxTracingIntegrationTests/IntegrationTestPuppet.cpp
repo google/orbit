@@ -89,13 +89,14 @@ static void LoadSoWithDlopenAndCallFunction() {
     ORBIT_ERROR("Unable to open \"%s\": %s", library_path, dlerror());
   }
   if (handle == nullptr) {
-    FATAL("Unable to find \"%s\"", kSoFileName);
+    ORBIT_FATAL("Unable to find \"%s\"", kSoFileName);
   }
 
   using function_type = double (*)();
   auto function = absl::bit_cast<function_type>(dlsym(handle, kFunctionName));
   if (function == nullptr) {
-    FATAL("Unable to find function \"%s\" in \"%s\": %s", kFunctionName, kSoFileName, dlerror());
+    ORBIT_FATAL("Unable to find function \"%s\" in \"%s\": %s", kFunctionName, kSoFileName,
+                dlerror());
   }
 
   ORBIT_LOG("Function call completed: %f", function());

@@ -64,7 +64,7 @@ int main(int argc, char** argv) {
   }
 
   if (absl::GetFlag(FLAGS_pid) == 0) {
-    FATAL("pid to capture not provided; set using -pid");
+    ORBIT_FATAL("pid to capture not provided; set using -pid");
   }
 
   ClientGgpOptions options;
@@ -92,7 +92,7 @@ int main(int argc, char** argv) {
   auto start_capture_result = client_ggp.RequestStartCapture(thread_pool.get());
   if (start_capture_result.has_error()) {
     thread_pool->ShutdownAndWait();
-    FATAL("Unable to start capture: %s", start_capture_result.error().message());
+    ORBIT_FATAL("Unable to start capture: %s", start_capture_result.error().message());
   }
 
   // Captures for the period of time requested
@@ -104,7 +104,7 @@ int main(int argc, char** argv) {
   // Requests to stop the capture and waits for thread to finish
   if (!client_ggp.StopCapture()) {
     thread_pool->ShutdownAndWait();
-    FATAL("Unable to stop the capture; exiting");
+    ORBIT_FATAL("Unable to stop the capture; exiting");
   }
 
   ORBIT_LOG("Shut down the thread and wait for it to finish");

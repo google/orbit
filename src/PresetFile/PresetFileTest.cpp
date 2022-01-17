@@ -21,7 +21,7 @@ using orbit_client_protos::PresetModuleLegacy;
 static TemporaryFile CreateTemporaryFileOrDie() {
   auto temporary_file_or_error = TemporaryFile::Create();
   if (temporary_file_or_error.has_error()) {
-    FATAL("Unable to create temporary file: %s", temporary_file_or_error.error().message());
+    ORBIT_FATAL("Unable to create temporary file: %s", temporary_file_or_error.error().message());
   }
 
   return std::move(temporary_file_or_error.value());

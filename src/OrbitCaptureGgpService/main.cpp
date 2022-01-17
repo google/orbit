@@ -59,7 +59,7 @@ int main(int argc, char** argv) {
   }
 
   if (!absl::GetFlag(FLAGS_pid)) {
-    FATAL("pid to capture not provided; set using -pid");
+    ORBIT_FATAL("pid to capture not provided; set using -pid");
   }
 
   // Start the service and waits for calls from the game

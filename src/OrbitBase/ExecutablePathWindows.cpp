@@ -20,13 +20,13 @@ std::filesystem::path GetExecutablePath() {
   constexpr uint32_t kMaxPath = 2048;
   char exe_file_name[kMaxPath] = {0};
   if (!GetModuleFileNameA(/*hModule=*/nullptr, exe_file_name, kMaxPath)) {
-    FATAL("GetModuleFileName failed with: %s", GetLastErrorAsString());
+    ORBIT_FATAL("GetModuleFileName failed with: %s", GetLastErrorAsString());
   }
 
   // Clean up "../" inside full path
   char exe_full_path[kMaxPath] = {0};
   if (!GetFullPathNameA(exe_file_name, kMaxPath, exe_full_path, nullptr)) {
-    FATAL("GetFullPathNameA failed with: %s", GetLastErrorAsString());
+    ORBIT_FATAL("GetFullPathNameA failed with: %s", GetLastErrorAsString());
   }
 
   return std::filesystem::path(exe_full_path);

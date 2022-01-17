@@ -2552,14 +2552,14 @@ orbit_data_views::DataView* OrbitApp::GetOrCreateDataView(DataViewType type) {
       return presets_data_view_.get();
 
     case DataViewType::kSampling:
-      FATAL(
+      ORBIT_FATAL(
           "DataViewType::kSampling Data View construction is not supported by"
           "the factory.");
     case DataViewType::kLiveFunctions:
-      FATAL("DataViewType::kLiveFunctions should not be used with the factory.");
+      ORBIT_FATAL("DataViewType::kLiveFunctions should not be used with the factory.");
 
     case DataViewType::kAll:
-      FATAL("DataViewType::kAll should not be used with the factory.");
+      ORBIT_FATAL("DataViewType::kAll should not be used with the factory.");
 
     case DataViewType::kTracepoints:
       if (!tracepoints_data_view_) {
@@ -2569,9 +2569,9 @@ orbit_data_views::DataView* OrbitApp::GetOrCreateDataView(DataViewType type) {
       return tracepoints_data_view_.get();
 
     case DataViewType::kInvalid:
-      FATAL("DataViewType::kInvalid should not be used with the factory.");
+      ORBIT_FATAL("DataViewType::kInvalid should not be used with the factory.");
   }
-  FATAL("Unreachable");
+  ORBIT_FATAL("Unreachable");
 }
 
 orbit_data_views::DataView* OrbitApp::GetOrCreateSelectionCallstackDataView() {

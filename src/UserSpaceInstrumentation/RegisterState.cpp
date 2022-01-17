@@ -93,7 +93,7 @@ ErrorMessageOr<void> RegisterState::BackupRegisters(pid_t tid) {
   } else if (iov.iov_len == sizeof(GeneralPurposeRegisters64)) {
     bitness_ = Bitness::k64Bit;
   } else {
-    FATAL("Bitness is neither 32 or 64 bit.");
+    ORBIT_FATAL("Bitness is neither 32 or 64 bit.");
   }
 
   auto xsave_area_size = GetXSaveAreaSize();

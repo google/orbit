@@ -80,7 +80,7 @@ static bool CheckShader(GLuint handle, const char* desc) {
     ORBIT_LOG("Log from shader compilation: %s", buf.begin());
   }
   if (static_cast<GLboolean>(status) == GL_FALSE) {
-    FATAL("Orbit_ImGui_CreateDeviceObjects: failed to compile %s!", desc);
+    ORBIT_FATAL("Orbit_ImGui_CreateDeviceObjects: failed to compile %s!", desc);
   }
   return static_cast<GLboolean>(status) == GL_TRUE;
 }
@@ -98,7 +98,7 @@ static bool CheckProgram(GLuint handle, const char* desc) {
     ORBIT_LOG("Log from shader program linking: %s", buf.begin());
   }
   if (static_cast<GLboolean>(status) == GL_FALSE) {
-    FATAL("Orbit_ImGui_CreateDeviceObjects: failed to link %s!", desc);
+    ORBIT_FATAL("Orbit_ImGui_CreateDeviceObjects: failed to link %s!", desc);
   }
   return static_cast<GLboolean>(status) == GL_TRUE;
 }
