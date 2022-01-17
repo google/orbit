@@ -233,6 +233,45 @@ in the `include` directory) even if that code shouldn't be used by other
 modules, we use the top-level namespace `orbit_module_name_internal` instead.
 This is *not* nested inside `orbit_module_name`.
 
+### File system structure
+Each module gets its own subdirectory under `src/`. The subdirectory's name
+should be spelled in camel-case, i.e. `src/ModuleName`. All public header
+files go into a separate include subdirectory `include/ModuleName`, i.e.
+the full path looks like `src/ModuleName/include/ModuleName/PublicHeader.h`.
+
+Note that the module's name appears twice in this path.
+They will be included relative to the `include/` subdirectory, i.e.
+`#include "ModuleName/PublicHeader.h"`.
+
+CPP files and private header files go directly into the module's subdirectory,
+i.e. `src/ModuleName/MyClass.cpp`.
+
+### Tests
+Unit test files go into the root directory of the module. They should be named after
+the component they are testing - followed by the suffix `Test`,
+i.e. `src/ModuleName/MyClassTest.cpp`.
+
+### Fuzzers
+Similar to unit tests, fuzzers are also named after the component they are fuzzing
+with the suffix `Fuzzer`, .i.e. `src/ModuleName/MyClassFuzzer.cpp`.
+
+### Platform-specific code
+We try to keep platform-specific code out of header files and maintain a
+platform-agnostic header for inclusion. The platform-specific implementations
+go into separate files, suffixed by the platform name, i.e. `MyClassWindows.cpp`
+or `MyClassLinux.cpp`.
+
+It's not always possible to keep the header entirely platform-agnostic. If some
+distinctions need to be made, you can use preprocessor macros, i.e.:
+
+```
+#ifdef _WIN32
+#include <winsock2.h>
+#else
+#include <sys/socket.h>
+#endif
+```
+
 ## FAQ
 
 ### What's the difference between `bootstrap-orbit.{sh,ps1}` and `build.{sh,ps1}`?
