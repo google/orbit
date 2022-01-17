@@ -84,7 +84,7 @@ void ProcessData::UpdateModuleInfos(absl::Span<const ModuleInfo> module_infos) {
 
   // Files saved with Orbit 1.65 may have intersecting maps, this is why we use DCHECK here
   // instead of CHECK
-  DCHECK(IsModuleMapValid(start_address_to_module_in_memory_));
+  ORBIT_DCHECK(IsModuleMapValid(start_address_to_module_in_memory_));
 }
 
 std::vector<std::string> ProcessData::FindModuleBuildIdsByPath(

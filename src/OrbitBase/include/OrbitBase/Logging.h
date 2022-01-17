@@ -85,10 +85,10 @@ constexpr const char* kLogTimeFormat = "%Y-%m-%dT%H:%M:%E6S";
   } while (0)
 
 #ifndef NDEBUG
-#define DCHECK(assertion) ORBIT_CHECK(assertion)
+#define ORBIT_DCHECK(assertion) ORBIT_CHECK(assertion)
 #else
-#define DCHECK(assertion) \
-  do {                    \
+#define ORBIT_DCHECK(assertion) \
+  do {                          \
   } while (0 && (assertion))
 #endif
 

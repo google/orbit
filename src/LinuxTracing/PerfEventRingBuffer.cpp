@@ -102,17 +102,17 @@ PerfEventRingBuffer::~PerfEventRingBuffer() {
 }
 
 bool PerfEventRingBuffer::HasNewData() {
-  DCHECK(IsOpen());
+  ORBIT_DCHECK(IsOpen());
   uint64_t head = ReadRingBufferHead(metadata_page_);
-  DCHECK((metadata_page_->data_tail == head) ||
-         (head >= metadata_page_->data_tail + sizeof(perf_event_header)));
+  ORBIT_DCHECK((metadata_page_->data_tail == head) ||
+               (head >= metadata_page_->data_tail + sizeof(perf_event_header)));
   return head > metadata_page_->data_tail;
 }
 
 void PerfEventRingBuffer::ReadHeader(perf_event_header* header) {
   ReadAtTail(header, sizeof(perf_event_header));
-  DCHECK(header->type != 0);
-  DCHECK(metadata_page_->data_tail + header->size <= ReadRingBufferHead(metadata_page_));
+  ORBIT_DCHECK(header->type != 0);
+  ORBIT_DCHECK(metadata_page_->data_tail + header->size <= ReadRingBufferHead(metadata_page_));
 }
 
 void PerfEventRingBuffer::SkipRecord(const perf_event_header& header) {
@@ -128,7 +128,7 @@ void PerfEventRingBuffer::ConsumeRawRecord(const perf_event_header& header, void
 
 void PerfEventRingBuffer::ReadAtOffsetFromTail(void* dest, uint64_t offset_from_tail,
                                                uint64_t count) {
-  DCHECK(IsOpen());
+  ORBIT_DCHECK(IsOpen());
 
   uint64_t head = ReadRingBufferHead(metadata_page_);
   if (offset_from_tail + count > head - metadata_page_->data_tail) {
