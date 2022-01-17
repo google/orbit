@@ -624,7 +624,7 @@ TEST_F(SamplingReportDataViewTest, ColumnSortingShowsRightResults) {
                       case orbit_data_views::DataView::SortingOrder::kDescending:
                         return lhs[column] > rhs[column];
                       default:
-                        UNREACHABLE();
+                        ORBIT_UNREACHABLE();
                     }
                   });
         break;
@@ -642,12 +642,12 @@ TEST_F(SamplingReportDataViewTest, ColumnSortingShowsRightResults) {
                 case orbit_data_views::DataView::SortingOrder::kDescending:
                   return string_to_raw_value.at(lhs[column]) > string_to_raw_value.at(rhs[column]);
                 default:
-                  UNREACHABLE();
+                  ORBIT_UNREACHABLE();
               }
             });
         break;
       default:
-        UNREACHABLE();
+        ORBIT_UNREACHABLE();
     }
 
     for (size_t index = 0; index < view_entries.size(); ++index) {

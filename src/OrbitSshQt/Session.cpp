@@ -62,7 +62,7 @@ outcome::result<void> Session::startup() {
     case State::kAboutToDisconnect:
     case State::kDone:
     case State::kError:
-      UNREACHABLE();
+      ORBIT_UNREACHABLE();
   }
 
   return outcome::success();
@@ -79,7 +79,7 @@ outcome::result<void> Session::shutdown() {
     case State::kMatchedKnownHosts:
     case State::kStarted:
     case State::kConnected:
-      UNREACHABLE();
+      ORBIT_UNREACHABLE();
     case State::kShutdown:
     case State::kAboutToDisconnect: {
       OUTCOME_TRY(session_->Disconnect());
@@ -92,7 +92,7 @@ outcome::result<void> Session::shutdown() {
     case State::kDone:
       break;
     case State::kError:
-      UNREACHABLE();
+      ORBIT_UNREACHABLE();
   }
 
   return outcome::success();

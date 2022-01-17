@@ -305,7 +305,7 @@ void OrbitApp::OnCaptureFinished(const CaptureFinished& capture_finished) {
         [[fallthrough]];
       case orbit_grpc_protos::
           CaptureFinished_Status_CaptureFinished_Status_INT_MAX_SENTINEL_DO_NOT_USE_:
-        UNREACHABLE();
+        ORBIT_UNREACHABLE();
         break;
     }
   });

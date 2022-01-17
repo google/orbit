@@ -53,7 +53,7 @@ QVariant ItemModel::data(const QModelIndex& idx, int role) const {
       case Column::kCreated:
         return capture_file_info.Created();
       case Column::kEnd:
-        UNREACHABLE();
+        ORBIT_UNREACHABLE();
     }
   }
 
@@ -80,9 +80,9 @@ QVariant ItemModel::headerData(int section, Qt::Orientation orientation, int rol
     case Column::kCreated:
       return "Created";
     case Column::kEnd:
-      UNREACHABLE();
+      ORBIT_UNREACHABLE();
   }
-  UNREACHABLE();
+  ORBIT_UNREACHABLE();
 }
 
 }  // namespace orbit_capture_file_info

@@ -624,9 +624,9 @@ void ProducerEventProcessorImpl::ProcessEvent(uint64_t producer_id, ProducerCapt
       ProcessFunctionCallAndTransferOwnership(event.release_function_call());
       break;
     case ProducerCaptureEvent::kFunctionEntry:
-      UNREACHABLE();
+      ORBIT_UNREACHABLE();
     case ProducerCaptureEvent::kFunctionExit:
-      UNREACHABLE();
+      ORBIT_UNREACHABLE();
     case ProducerCaptureEvent::kGpuQueueSubmission:
       ProcessGpuQueueSubmissionAndTransferOwnership(producer_id,
                                                     event.release_gpu_queue_submission());
@@ -673,7 +673,7 @@ void ProducerEventProcessorImpl::ProcessEvent(uint64_t producer_id, ProducerCapt
           event.release_warning_instrumenting_with_user_space_instrumentation_event());
       break;
     case ProducerCaptureEvent::EVENT_NOT_SET:
-      UNREACHABLE();
+      ORBIT_UNREACHABLE();
   }
 }
 

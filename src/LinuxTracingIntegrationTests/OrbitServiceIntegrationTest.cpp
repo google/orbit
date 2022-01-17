@@ -340,7 +340,7 @@ static std::pair<uint64_t, uint64_t> GetUseOrbitApiFunctionVirtualAddressRange(p
       return {virtual_address_start, virtual_address_end};
     }
   }
-  UNREACHABLE();
+  ORBIT_UNREACHABLE();
 }
 
 TEST(OrbitServiceIntegrationTest, OrbitApi) {
@@ -383,7 +383,7 @@ TEST(OrbitServiceIntegrationTest, OrbitApi) {
   for (const ClientCaptureEvent& event : events) {
     switch (event.event_case()) {
       case ClientCaptureEvent::kApiEvent:
-        UNREACHABLE();
+        ORBIT_UNREACHABLE();
 
       case ClientCaptureEvent::kApiScopeStart: {
         const orbit_grpc_protos::ApiScopeStart& api_scope_start = event.api_scope_start();
@@ -589,7 +589,7 @@ TEST(OrbitServiceIntegrationTest, OrbitApi) {
       } break;
 
       case ClientCaptureEvent::EVENT_NOT_SET:
-        UNREACHABLE();
+        ORBIT_UNREACHABLE();
       default:
         break;
     }

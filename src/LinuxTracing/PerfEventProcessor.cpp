@@ -74,7 +74,7 @@ std::optional<DiscardedPerfEvent> PerfEventProcessor::HandleOutOfOrderEvent(
     };
     last_discarded_begin_ = discarded_begin;
   } else {
-    UNREACHABLE();
+    ORBIT_UNREACHABLE();
   }
 
   last_discarded_end_ = discarded_end;

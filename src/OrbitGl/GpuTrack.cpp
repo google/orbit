@@ -78,7 +78,7 @@ void GpuTrack::OnTimer(const TimerInfo& timer_info) {
       marker_track_->OnTimer(timer_info);
       break;
     default:
-      UNREACHABLE();
+      ORBIT_UNREACHABLE();
   }
 }
 
@@ -143,7 +143,7 @@ const TimerInfo* GpuTrack::GetLeft(const TimerInfo& timer_info) const {
     case TimerInfo::kGpuDebugMarker:
       return marker_track_->GetLeft(timer_info);
     default:
-      UNREACHABLE();
+      ORBIT_UNREACHABLE();
   }
 }
 
@@ -156,7 +156,7 @@ const TimerInfo* GpuTrack::GetRight(const TimerInfo& timer_info) const {
     case TimerInfo::kGpuDebugMarker:
       return marker_track_->GetRight(timer_info);
     default:
-      UNREACHABLE();
+      ORBIT_UNREACHABLE();
   }
 }
 
@@ -169,7 +169,7 @@ const TimerInfo* GpuTrack::GetUp(const TimerInfo& timer_info) const {
     case TimerInfo::kGpuDebugMarker:
       return marker_track_->GetUp(timer_info);
     default:
-      UNREACHABLE();
+      ORBIT_UNREACHABLE();
   }
 }
 
@@ -182,6 +182,6 @@ const TimerInfo* GpuTrack::GetDown(const TimerInfo& timer_info) const {
     case TimerInfo::kGpuDebugMarker:
       return marker_track_->GetDown(timer_info);
     default:
-      UNREACHABLE();
+      ORBIT_UNREACHABLE();
   }
 }

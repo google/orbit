@@ -81,7 +81,7 @@ void ApiEventProcessor::ProcessApiEventLegacy(const orbit_api::ApiEvent& api_eve
       ProcessTrackingEventLegacy(api_event);
       break;
     case orbit_api::kNone:
-      UNREACHABLE();
+      ORBIT_UNREACHABLE();
   }
 }
 
@@ -202,7 +202,7 @@ void ApiEventProcessor::ProcessTrackingEventLegacy(const orbit_api::ApiEvent& ap
     case orbit_api::kScopeStartAsync:
     case orbit_api::kScopeStopAsync:
     case orbit_api::kString:
-      UNREACHABLE();
+      ORBIT_UNREACHABLE();
   }
 
   capture_listener_->OnApiTrackValue(api_track_value);

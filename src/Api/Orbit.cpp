@@ -263,7 +263,7 @@ void orbit_api_set_enabled(uint64_t address, uint64_t api_version, bool enabled)
       orbit_api_initialize_and_set_enabled(api_v2, &orbit_api_initialize_v2, enabled);
     } break;
     default:
-      UNREACHABLE();
+      ORBIT_UNREACHABLE();
   }
 
   // Initialize `LockFreeApiEventProducer` and establish the connection to OrbitService now instead
@@ -303,7 +303,7 @@ void orbit_api_set_enabled_wine(uint64_t address, uint64_t api_version, bool ena
       orbit_api_initialize_and_set_enabled(api_win, &orbit_api_initialize_wine_v2, enabled);
     } break;
     default:
-      UNREACHABLE();
+      ORBIT_UNREACHABLE();
   }
 
   // TODO(b/206359125): Re-add GetCaptureEventProducer() once possible. See above.

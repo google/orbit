@@ -434,7 +434,7 @@ int main(int argc, char* argv[]) {
           std::make_unique<orbit_fake_client::GraphicsCaptureEventProcessor>();
       break;
     default:
-      UNREACHABLE();
+      ORBIT_UNREACHABLE();
   }
 
   auto capture_outcome_future = capture_client.Capture(

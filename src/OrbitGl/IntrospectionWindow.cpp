@@ -94,7 +94,7 @@ void HandleCaptureEvent(const orbit_api::ApiTrackUint64& track_uint64,
 // constructable. However, that state is never expected to be called in the visitor.
 void HandleCaptureEvent(const std::monostate& /*unused*/,
                         orbit_capture_client::ApiEventProcessor* /*unused*/) {
-  UNREACHABLE();
+  ORBIT_UNREACHABLE();
 }
 
 class IntrospectionCaptureListener : public orbit_capture_client::CaptureListener {
@@ -120,73 +120,77 @@ class IntrospectionCaptureListener : public orbit_capture_client::CaptureListene
   void OnCaptureStarted(const orbit_grpc_protos::CaptureStarted& /*capture_started*/,
                         std::optional<std::filesystem::path> /*file_path*/,
                         absl::flat_hash_set<uint64_t> /*frame_track_function_ids*/) override {
-    UNREACHABLE();
+    ORBIT_UNREACHABLE();
   }
   void OnCaptureFinished(const orbit_grpc_protos::CaptureFinished& /*capture_finished*/) override {
-    UNREACHABLE();
+    ORBIT_UNREACHABLE();
   }
-  void OnKeyAndString(uint64_t /*key*/, std::string /*str*/) override { UNREACHABLE(); }
+  void OnKeyAndString(uint64_t /*key*/, std::string /*str*/) override { ORBIT_UNREACHABLE(); }
   void OnUniqueCallstack(uint64_t /*callstack_id*/,
                          orbit_client_protos::CallstackInfo /*callstack*/) override {
-    UNREACHABLE();
+    ORBIT_UNREACHABLE();
   }
   void OnCallstackEvent(orbit_client_protos::CallstackEvent /*callstack_event*/) override {
-    UNREACHABLE();
+    ORBIT_UNREACHABLE();
   }
-  void OnThreadName(uint32_t /*thread_id*/, std::string /*thread_name*/) override { UNREACHABLE(); }
+  void OnThreadName(uint32_t /*thread_id*/, std::string /*thread_name*/) override {
+    ORBIT_UNREACHABLE();
+  }
   void OnThreadStateSlice(
       orbit_client_protos::ThreadStateSliceInfo /*thread_state_slice*/) override {
-    UNREACHABLE();
+    ORBIT_UNREACHABLE();
   }
   void OnAddressInfo(orbit_client_protos::LinuxAddressInfo /*address_info*/) override {
-    UNREACHABLE();
+    ORBIT_UNREACHABLE();
   }
   void OnUniqueTracepointInfo(uint64_t /*key*/,
                               orbit_grpc_protos::TracepointInfo /*tracepoint_info*/) override {
-    UNREACHABLE();
+    ORBIT_UNREACHABLE();
   }
   void OnTracepointEvent(
       orbit_client_protos::TracepointEventInfo /*tracepoint_event_info*/) override {
-    UNREACHABLE();
+    ORBIT_UNREACHABLE();
   }
   void OnModuleUpdate(uint64_t /*timestamp_ns*/,
                       orbit_grpc_protos::ModuleInfo /*module_info*/) override {
-    UNREACHABLE();
+    ORBIT_UNREACHABLE();
   }
   void OnModulesSnapshot(uint64_t /*timestamp_ns*/,
                          std::vector<orbit_grpc_protos::ModuleInfo> /*module_infos*/) override {
-    UNREACHABLE();
+    ORBIT_UNREACHABLE();
   }
-  void OnWarningEvent(orbit_grpc_protos::WarningEvent /*warning_event*/) override { UNREACHABLE(); }
+  void OnWarningEvent(orbit_grpc_protos::WarningEvent /*warning_event*/) override {
+    ORBIT_UNREACHABLE();
+  }
   void OnClockResolutionEvent(
       orbit_grpc_protos::ClockResolutionEvent /*clock_resolution_event*/) override {
-    UNREACHABLE();
+    ORBIT_UNREACHABLE();
   }
   void OnErrorsWithPerfEventOpenEvent(
       orbit_grpc_protos::ErrorsWithPerfEventOpenEvent /*errors_with_perf_event_open_event*/)
       override {
-    UNREACHABLE();
+    ORBIT_UNREACHABLE();
   }
   void OnErrorEnablingOrbitApiEvent(
       orbit_grpc_protos::ErrorEnablingOrbitApiEvent /*error_enabling_orbit_api_event*/) override {
-    UNREACHABLE();
+    ORBIT_UNREACHABLE();
   }
   void OnErrorEnablingUserSpaceInstrumentationEvent(
       orbit_grpc_protos::ErrorEnablingUserSpaceInstrumentationEvent /*error_event*/) override {
-    UNREACHABLE();
+    ORBIT_UNREACHABLE();
   }
   void OnWarningInstrumentingWithUserSpaceInstrumentationEvent(
       orbit_grpc_protos::WarningInstrumentingWithUserSpaceInstrumentationEvent /*warning_event*/)
       override {
-    UNREACHABLE();
+    ORBIT_UNREACHABLE();
   }
   void OnLostPerfRecordsEvent(
       orbit_grpc_protos::LostPerfRecordsEvent /*lost_perf_records_event*/) override {
-    UNREACHABLE();
+    ORBIT_UNREACHABLE();
   }
   void OnOutOfOrderEventsDiscardedEvent(orbit_grpc_protos::OutOfOrderEventsDiscardedEvent
                                         /*out_of_order_events_discarded_event*/) override {
-    UNREACHABLE();
+    ORBIT_UNREACHABLE();
   }
 
   IntrospectionWindow* introspection_window_;

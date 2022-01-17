@@ -299,10 +299,10 @@ const PickingUserData* Batcher::GetUserData(PickingId id) const {
     case PickingType::kPickable:
       return nullptr;
     case PickingType::kCount:
-      UNREACHABLE();
+      ORBIT_UNREACHABLE();
   }
 
-  UNREACHABLE();
+  ORBIT_UNREACHABLE();
 }
 
 PickingUserData* Batcher::GetUserData(PickingId id) {

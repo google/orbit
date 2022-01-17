@@ -174,7 +174,7 @@ int RunUiInstance(const DeploymentConfiguration& deployment_configuration,
       continue;
     }
 
-    UNREACHABLE();
+    ORBIT_UNREACHABLE();
   }
 
   return 0;

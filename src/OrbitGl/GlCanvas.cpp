@@ -100,7 +100,7 @@ std::unique_ptr<GlCanvas> GlCanvas::Create(CanvasType canvas_type, OrbitApp* app
     case CanvasType::kDebug:
       return std::make_unique<GlCanvas>();
     default:
-      UNREACHABLE();
+      ORBIT_UNREACHABLE();
   }
 }
 

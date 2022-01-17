@@ -91,7 +91,7 @@ QVariant InstanceItemModel::headerData(int section, Qt::Orientation orientation,
     case Columns::kState:
       return QLatin1String("State");
     case Columns::kEnd:
-      UNREACHABLE();
+      ORBIT_UNREACHABLE();
       return {};
   }
 

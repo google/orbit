@@ -310,7 +310,7 @@ void ProducerSideServiceImpl::SendCommandsThread(
             return;
           }
         } else {
-          UNREACHABLE();
+          ORBIT_UNREACHABLE();
         }
       } break;
 
@@ -326,7 +326,7 @@ void ProducerSideServiceImpl::SendCommandsThread(
             return;
           }
         } else {
-          UNREACHABLE();
+          ORBIT_UNREACHABLE();
         }
       } break;
 
@@ -342,7 +342,7 @@ void ProducerSideServiceImpl::SendCommandsThread(
             return;
           }
         } else {
-          UNREACHABLE();
+          ORBIT_UNREACHABLE();
         }
         break;
     }

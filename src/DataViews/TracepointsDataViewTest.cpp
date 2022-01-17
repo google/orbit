@@ -250,7 +250,7 @@ TEST_F(TracepointsDataViewTest, ColumnSortingShowsRightResults) {
                   case orbit_data_views::DataView::SortingOrder::kDescending:
                     return lhs[column] > rhs[column];
                   default:
-                    UNREACHABLE();
+                    ORBIT_UNREACHABLE();
                 }
               });
 

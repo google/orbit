@@ -425,7 +425,7 @@ Track* TrackManager::GetOrCreateTrackFromTimerInfo(const TimerInfo& timer_info) 
       return GetPageFaultsTrack();
     case orbit_client_protos::TimerInfo_Type_TimerInfo_Type_INT_MIN_SENTINEL_DO_NOT_USE_:
     case orbit_client_protos::TimerInfo_Type_TimerInfo_Type_INT_MAX_SENTINEL_DO_NOT_USE_:
-      UNREACHABLE();
+      ORBIT_UNREACHABLE();
   }
   return nullptr;
 }

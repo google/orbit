@@ -222,7 +222,7 @@ class SubmissionTrackerTest : public ::testing::Test {
         *absl::bit_cast<uint64_t*>(data) = kTimestamp7;
         break;
       default:
-        UNREACHABLE();
+        ORBIT_UNREACHABLE();
     }
     return VK_SUCCESS;
   };
@@ -1153,7 +1153,7 @@ TEST_F(SubmissionTrackerTest, CanRetrieveNestedDebugMarkerTimestampsForAComplete
     if (str == text_inner) {
       return expected_text_key_inner;
     }
-    UNREACHABLE();
+    ORBIT_UNREACHABLE();
   };
   EXPECT_CALL(*producer_, InternStringIfNecessaryAndGetKey)
       .Times(2)
@@ -1232,7 +1232,7 @@ TEST_F(SubmissionTrackerTest,
     if (str == text_inner) {
       return expected_text_key_inner;
     }
-    UNREACHABLE();
+    ORBIT_UNREACHABLE();
   };
   EXPECT_CALL(*producer_, InternStringIfNecessaryAndGetKey)
       .Times(2)
@@ -1579,7 +1579,7 @@ TEST_F(SubmissionTrackerTest, CanLimitNestedDebugMarkerDepthPerCommandBuffer) {
     if (str == text_outer) {
       return expected_text_key_outer;
     }
-    UNREACHABLE();
+    ORBIT_UNREACHABLE();
   };
   EXPECT_CALL(*producer_, InternStringIfNecessaryAndGetKey)
       .Times(1)

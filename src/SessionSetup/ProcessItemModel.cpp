@@ -41,7 +41,7 @@ QVariant ProcessItemModel::data(const QModelIndex& idx, int role) const {
       case Column::kCpu:
         return QString("%1 %").arg(process.cpu_usage(), 0, 'f', 1);
       case Column::kEnd:
-        UNREACHABLE();
+        ORBIT_UNREACHABLE();
     }
   }
 
@@ -56,7 +56,7 @@ QVariant ProcessItemModel::data(const QModelIndex& idx, int role) const {
       case Column::kCpu:
         return process.cpu_usage();
       case Column::kEnd:
-        UNREACHABLE();
+        ORBIT_UNREACHABLE();
     }
   }
 
@@ -75,7 +75,7 @@ QVariant ProcessItemModel::data(const QModelIndex& idx, int role) const {
       case Column::kCpu:
         return QVariant(Qt::AlignVCenter | Qt::AlignRight);
       case Column::kEnd:
-        UNREACHABLE();
+        ORBIT_UNREACHABLE();
     }
   }
 
@@ -96,7 +96,7 @@ QVariant ProcessItemModel::headerData(int section, Qt::Orientation orientation, 
       case Column::kCpu:
         return "CPU %";
       case Column::kEnd:
-        UNREACHABLE();
+        ORBIT_UNREACHABLE();
     }
   }
   return {};

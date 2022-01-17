@@ -363,7 +363,7 @@ bool TracerImpl::OpenSampling(const std::vector<int32_t>& cpus) {
         break;
       case CaptureOptions::kUndefined:
       default:
-        UNREACHABLE();
+        ORBIT_UNREACHABLE();
         CloseFileDescriptors(sampling_tracing_fds);
         return false;
     }
@@ -1301,7 +1301,7 @@ uint64_t TracerImpl::ProcessThrottleUnthrottleEventAndReturnTimestamp(
                 ring_buffer->GetName(), timestamp_ns);
       break;
     default:
-      UNREACHABLE();
+      ORBIT_UNREACHABLE();
   }
 
   return timestamp_ns;

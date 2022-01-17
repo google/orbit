@@ -581,7 +581,7 @@ void CaptureEventProcessorForListener::ProcessThreadStateSlice(
       slice_info.set_thread_state(ThreadStateSliceInfo::kIdle);
       break;
     default:
-      UNREACHABLE();
+      ORBIT_UNREACHABLE();
   }
   slice_info.set_begin_timestamp_ns(thread_state_slice.end_timestamp_ns() -
                                     thread_state_slice.duration_ns());
@@ -645,7 +645,7 @@ void CaptureEventProcessorForListener::SendCallstackToListenerIfNecessary(
       [[fallthrough]];
     case orbit_grpc_protos::
         Callstack_CallstackType_Callstack_CallstackType_INT_MAX_SENTINEL_DO_NOT_USE_:
-      UNREACHABLE();
+      ORBIT_UNREACHABLE();
   }
 
   capture_listener_->OnUniqueCallstack(callstack_id, callstack_info);

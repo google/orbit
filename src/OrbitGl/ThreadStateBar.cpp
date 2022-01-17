@@ -85,7 +85,7 @@ static Color GetThreadStateColor(ThreadStateSliceInfo::ThreadState state) {
     case ThreadStateSliceInfo::kIdle:
       return kBrown500;
     default:
-      UNREACHABLE();
+      ORBIT_UNREACHABLE();
   }
 }
 
@@ -112,7 +112,7 @@ static std::string GetThreadStateName(ThreadStateSliceInfo::ThreadState state) {
     case ThreadStateSliceInfo::kIdle:
       return "Idle";
     default:
-      UNREACHABLE();
+      ORBIT_UNREACHABLE();
   }
 }
 
@@ -140,7 +140,7 @@ static std::string GetThreadStateDescription(ThreadStateSliceInfo::ThreadState s
     case ThreadStateSliceInfo::kIdle:
       return "Idle kernel thread.";
     default:
-      UNREACHABLE();
+      ORBIT_UNREACHABLE();
   }
 }
 

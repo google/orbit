@@ -653,7 +653,7 @@ Batcher& CaptureWindow::GetBatcherById(BatcherId batcher_id) {
     case BatcherId::kUi:
       return ui_batcher_;
     default:
-      UNREACHABLE();
+      ORBIT_UNREACHABLE();
   }
 }
 

@@ -175,7 +175,7 @@ void FillProducerCaptureEventFromApiEvent(const ApiTrackUint64& track_uint64,
 void FillProducerCaptureEventFromApiEvent(
     const std::monostate& /*monostate*/,
     orbit_grpc_protos::ProducerCaptureEvent* /*capture_event*/) {
-  UNREACHABLE();
+  ORBIT_UNREACHABLE();
 }
 
 }  // namespace orbit_api

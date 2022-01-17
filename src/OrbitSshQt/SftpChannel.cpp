@@ -67,7 +67,7 @@ outcome::result<void> SftpChannel::shutdown() {
     case State::kNoChannel:
     case State::kStarted:
     case State::kChannelInitialized:
-      UNREACHABLE();
+      ORBIT_UNREACHABLE();
     case State::kShutdown:
     case State::kClosingChannel:
       if (sftp_) {
@@ -81,7 +81,7 @@ outcome::result<void> SftpChannel::shutdown() {
       about_to_shutdown_connection_ = std::nullopt;
       break;
     case State::kError:
-      UNREACHABLE();
+      ORBIT_UNREACHABLE();
   }
 
   return outcome::success();

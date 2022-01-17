@@ -36,7 +36,7 @@ std::string MinorPageFaultsTrack::GetLegendTooltips(size_t legend_index) const {
           "<i>/proc/vmstat</i>.",
           memory_sampling_period_ms_);
     default:
-      UNREACHABLE();
+      ORBIT_UNREACHABLE();
   }
 }
 

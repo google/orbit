@@ -129,7 +129,7 @@ outcome::result<void> Tunnel::startup() {
     case State::kWaitRemoteClosed:
     case State::kDone:
     case State::kError:
-      UNREACHABLE();
+      ORBIT_UNREACHABLE();
   }
   return outcome::success();
 }
@@ -141,7 +141,7 @@ outcome::result<void> Tunnel::shutdown() {
     case State::kChannelInitialized:
     case State::kStarted:
     case State::kServerListening:
-      UNREACHABLE();
+      ORBIT_UNREACHABLE();
     case State::kShutdown:
     case State::kFlushing: {
       OUTCOME_TRY(writeToChannel());
@@ -177,7 +177,7 @@ outcome::result<void> Tunnel::shutdown() {
     case State::kDone:
       break;
     case State::kError:
-      UNREACHABLE();
+      ORBIT_UNREACHABLE();
   }
 
   return outcome::success();

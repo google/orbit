@@ -322,7 +322,7 @@ void TimeGraph::ProcessTimer(const TimerInfo& timer_info, const InstrumentedFunc
       break;
     }
     default:
-      UNREACHABLE();
+      ORBIT_UNREACHABLE();
   }
 
   RequestUpdate();
@@ -357,7 +357,7 @@ void TimeGraph::ProcessApiTrackValueEvent(const orbit_client_protos::ApiTrackVal
       track->AddValue(time, track_event.data_uint64());
       break;
     default:
-      UNREACHABLE();
+      ORBIT_UNREACHABLE();
   }
 }
 
@@ -842,7 +842,7 @@ void TimeGraph::JumpToNeighborTimer(const TimerInfo* from, JumpDirection jump_di
         break;
       default:
         // Other choices are not implemented.
-        UNREACHABLE();
+        ORBIT_UNREACHABLE();
     }
   }
   if (jump_direction == JumpDirection::kNext) {
@@ -857,7 +857,7 @@ void TimeGraph::JumpToNeighborTimer(const TimerInfo* from, JumpDirection jump_di
         goal = FindNextFunctionCall(function_id, current_time, thread_id);
         break;
       default:
-        UNREACHABLE();
+        ORBIT_UNREACHABLE();
     }
   }
   if (jump_direction == JumpDirection::kTop) {

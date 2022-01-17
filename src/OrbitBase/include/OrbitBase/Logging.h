@@ -59,7 +59,7 @@ constexpr const char* kLogTimeFormat = "%Y-%m-%dT%H:%M:%E6S";
     PLATFORM_ABORT();                           \
   } while (0)
 
-#define UNREACHABLE() ORBIT_FATAL("Unreachable code")
+#define ORBIT_UNREACHABLE() ORBIT_FATAL("Unreachable code")
 
 #if defined(__GNUC__) || defined(__clang__)
 #define LIKELY(cond) __builtin_expect(!!(cond), 1)

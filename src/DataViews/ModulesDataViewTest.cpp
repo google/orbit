@@ -248,7 +248,7 @@ TEST_F(ModulesDataViewTest, ColumnSortingShowsRightResults) {
                   case orbit_data_views::DataView::SortingOrder::kDescending:
                     return lhs[column_index] > rhs[column_index];
                   default:
-                    UNREACHABLE();
+                    ORBIT_UNREACHABLE();
                 }
               });
 

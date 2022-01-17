@@ -609,7 +609,7 @@ void OrbitMainWindow::CreateTabBarContextMenu(QTabWidget* tab_widget, int tab_in
     move_action.setText(QString("Move \"") + tab_widget->tabText(tab_index) + "\" to left pane");
     other_widget = ui->MainTabWidget;
   } else {
-    UNREACHABLE();
+    ORBIT_UNREACHABLE();
   }
 
   move_action.setEnabled(tab_widget->count() > 0);

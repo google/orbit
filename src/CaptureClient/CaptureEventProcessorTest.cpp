@@ -214,7 +214,7 @@ static void ExpectCallstackSamplesEqual(const CallstackEvent& actual_callstack_e
       [[fallthrough]];
     case orbit_grpc_protos::
         Callstack_CallstackType_Callstack_CallstackType_INT_MAX_SENTINEL_DO_NOT_USE_:
-      UNREACHABLE();
+      ORBIT_UNREACHABLE();
   }
 }
 

@@ -136,7 +136,7 @@ class ProducerEventProcessorHijackingFunctionEntryExitForLinuxTracing
         tracing_handler_->ProcessFunctionExit(event.function_exit());
         break;
       case ProducerCaptureEvent::EVENT_NOT_SET:
-        UNREACHABLE();
+        ORBIT_UNREACHABLE();
       default:
         producer_event_processor_->ProcessEvent(producer_id, std::move(event));
     }

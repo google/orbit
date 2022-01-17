@@ -78,7 +78,7 @@ QVariant TrackTypeItemModel::headerData(int section, Qt::Orientation orientation
       case Column::kName:
         return "Track Type";
       case Column::kEnd:
-        UNREACHABLE();
+        ORBIT_UNREACHABLE();
     }
   }
   return {};
@@ -139,10 +139,10 @@ QString TrackTypeItemModel::GetTrackTypeDisplayName(Track::Type track_type) cons
     case Track::Type::kTimerTrack:
       [[fallthrough]];
     case Track::Type::kUnknown:
-      UNREACHABLE();
+      ORBIT_UNREACHABLE();
   };
 
-  UNREACHABLE();
+  ORBIT_UNREACHABLE();
 }
 
 }  // namespace orbit_qt

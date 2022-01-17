@@ -121,7 +121,7 @@ bool CaptureFileOutputStreamImpl::IsOpen() {
       return fd_.valid();
   }
 
-  UNREACHABLE();
+  ORBIT_UNREACHABLE();
 }
 
 void CaptureFileOutputStreamImpl::CloseAndTryRemoveFileAfterError() {
