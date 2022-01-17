@@ -69,11 +69,11 @@ constexpr const char* kLogTimeFormat = "%Y-%m-%dT%H:%M:%E6S";
 #define ORBIT_UNLIKELY(cond) (!!(cond))
 #endif
 
-#define FAIL_IF(condition, format, ...)   \
-  do {                                    \
-    if (ORBIT_UNLIKELY(condition)) {      \
-      ORBIT_FATAL(format, ##__VA_ARGS__); \
-    }                                     \
+#define ORBIT_FAIL_IF(condition, format, ...) \
+  do {                                        \
+    if (ORBIT_UNLIKELY(condition)) {          \
+      ORBIT_FATAL(format, ##__VA_ARGS__);     \
+    }                                         \
   } while (0)
 
 #define CHECK(assertion)                         \

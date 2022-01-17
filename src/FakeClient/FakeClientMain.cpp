@@ -74,7 +74,7 @@ void ManipulateModuleManagerAndSelectedFunctionsToAddInstrumentedFunctionFromOff
     uint64_t function_id) {
   ErrorMessageOr<std::unique_ptr<orbit_object_utils::ElfFile>> error_or_elf_file =
       orbit_object_utils::CreateElfFile(std::filesystem::path{file_path});
-  FAIL_IF(error_or_elf_file.has_error(), "%s", error_or_elf_file.error().message());
+  ORBIT_FAIL_IF(error_or_elf_file.has_error(), "%s", error_or_elf_file.error().message());
   std::unique_ptr<orbit_object_utils::ElfFile>& elf_file = error_or_elf_file.value();
   std::string build_id = elf_file->GetBuildId();
   uint64_t load_bias = elf_file->GetLoadBias();
@@ -101,7 +101,7 @@ void ManipulateModuleManagerAndSelectedFunctionsToAddInstrumentedFunctionFromFun
     uint64_t function_id) {
   ErrorMessageOr<std::unique_ptr<orbit_object_utils::ElfFile>> error_or_elf_file =
       orbit_object_utils::CreateElfFile(std::filesystem::path{file_path});
-  FAIL_IF(error_or_elf_file.has_error(), "%s", error_or_elf_file.error().message());
+  ORBIT_FAIL_IF(error_or_elf_file.has_error(), "%s", error_or_elf_file.error().message());
   std::unique_ptr<orbit_object_utils::ElfFile>& elf_file = error_or_elf_file.value();
   std::string build_id = elf_file->GetBuildId();
   uint64_t executable_segment_offset = elf_file->GetExecutableSegmentOffset();
@@ -115,7 +115,7 @@ void ManipulateModuleManagerAndSelectedFunctionsToAddInstrumentedFunctionFromFun
   CHECK(module_manager->AddOrUpdateModules({module_info}).empty());
 
   ErrorMessageOr<orbit_grpc_protos::ModuleSymbols> symbols_or_error = elf_file->LoadDebugSymbols();
-  FAIL_IF(symbols_or_error.has_error(), "%s", symbols_or_error.error().message());
+  ORBIT_FAIL_IF(symbols_or_error.has_error(), "%s", symbols_or_error.error().message());
   orbit_grpc_protos::ModuleSymbols& symbols = symbols_or_error.value();
 
   std::optional<orbit_grpc_protos::SymbolInfo> symbol = std::nullopt;
@@ -125,8 +125,8 @@ void ManipulateModuleManagerAndSelectedFunctionsToAddInstrumentedFunctionFromFun
       break;
     }
   }
-  FAIL_IF(!symbol.has_value(), "Could not find function \"%s\" in module \"%s\"",
-          demangled_function_name, file_path);
+  ORBIT_FAIL_IF(!symbol.has_value(), "Could not find function \"%s\" in module \"%s\"",
+                demangled_function_name, file_path);
 
   orbit_client_protos::FunctionInfo function_info;
   function_info.set_name(symbol->name());
@@ -159,7 +159,7 @@ std::optional<orbit_grpc_protos::ModuleSymbols> FindAndLoadDebugSymbols(
 
   for (const std::filesystem::path& candidate_path : candidate_paths) {
     ErrorMessageOr<bool> error_or_exists = orbit_base::FileExists(candidate_path);
-    FAIL_IF(error_or_exists.has_error(), "%s", error_or_exists.error().message());
+    ORBIT_FAIL_IF(error_or_exists.has_error(), "%s", error_or_exists.error().message());
     if (!error_or_exists.value()) {
       continue;
     }
@@ -193,7 +193,7 @@ void ManipulateModuleManagerToAddFunctionFromFunctionPrefixInSymtabIfExists(
     const std::string& demangled_function_prefix) {
   ErrorMessageOr<std::unique_ptr<orbit_object_utils::ElfFile>> error_or_elf_file =
       orbit_object_utils::CreateElfFile(std::filesystem::path{file_path});
-  FAIL_IF(error_or_elf_file.has_error(), "%s", error_or_elf_file.error().message());
+  ORBIT_FAIL_IF(error_or_elf_file.has_error(), "%s", error_or_elf_file.error().message());
   std::unique_ptr<orbit_object_utils::ElfFile>& elf_file = error_or_elf_file.value();
   std::string build_id = elf_file->GetBuildId();
   uint64_t load_bias = elf_file->GetLoadBias();
@@ -242,11 +242,11 @@ void ManipulateModuleManagerToAddFunctionFromFunctionPrefixInSymtabIfExists(
 
 uint32_t ReadPidFromFile(const std::string& file_path) {
   ErrorMessageOr<std::string> pid_string = orbit_base::ReadFileToString(file_path);
-  FAIL_IF(pid_string.has_error(), "Reading from \"%s\": %s", file_path,
-          pid_string.error().message());
+  ORBIT_FAIL_IF(pid_string.has_error(), "Reading from \"%s\": %s", file_path,
+                pid_string.error().message());
   uint32_t process_id = 0;
-  FAIL_IF(!absl::SimpleAtoi<uint32_t>(pid_string.value(), &process_id),
-          "Failed to read the PID from \"%s\"", file_path);
+  ORBIT_FAIL_IF(!absl::SimpleAtoi<uint32_t>(pid_string.value(), &process_id),
+                "Failed to read the PID from \"%s\"", file_path);
   return process_id;
 }
 
@@ -255,10 +255,10 @@ void WaitForFileModification(const std::string& file_path) {
   int wd = -1;
 
   inotify_fd = inotify_init();
-  FAIL_IF(inotify_fd == -1, "Failed to initialize inotify");
+  ORBIT_FAIL_IF(inotify_fd == -1, "Failed to initialize inotify");
 
   wd = inotify_add_watch(inotify_fd, file_path.c_str(), IN_MODIFY);
-  FAIL_IF(wd == -1, "Failed to watch \"%s\"", file_path);
+  ORBIT_FAIL_IF(wd == -1, "Failed to watch \"%s\"", file_path);
   ORBIT_LOG("Started to watch \"%s\"", file_path);
 
   // Wait for the first modify event received to read its PID
@@ -269,7 +269,7 @@ void WaitForFileModification(const std::string& file_path) {
   char buffer[kMaxBufferSize];
   while (offset < kMinReadSize) {
     ssize_t bytes_read = read(inotify_fd, buffer + offset, kMaxBufferSize - offset);
-    FAIL_IF(bytes_read == -1, "Failed to read watch event");
+    ORBIT_FAIL_IF(bytes_read == -1, "Failed to read watch event");
     offset += bytes_read;
   }
 
@@ -296,20 +296,21 @@ int main(int argc, char* argv[]) {
 
   ORBIT_LOG("Starting Client");
   uint32_t duration_s = absl::GetFlag(FLAGS_duration);
-  FAIL_IF(duration_s == 0, "Specified a zero-length duration");
-  FAIL_IF((absl::GetFlag(FLAGS_instrument_path).empty()) !=
-              (absl::GetFlag(FLAGS_instrument_offset) == 0),
-          "Binary path and offset of the function to instrument need to be specified together");
+  ORBIT_FAIL_IF(duration_s == 0, "Specified a zero-length duration");
+  ORBIT_FAIL_IF(
+      (absl::GetFlag(FLAGS_instrument_path).empty()) !=
+          (absl::GetFlag(FLAGS_instrument_offset) == 0),
+      "Binary path and offset of the function to instrument need to be specified together");
 
   uint32_t process_id = absl::GetFlag(FLAGS_pid);
   if (process_id == 0) {
     const std::string pid_file_path = absl::GetFlag(FLAGS_pid_file_path);
-    FAIL_IF(pid_file_path.empty(), "A PID or a path to a file is needed.");
+    ORBIT_FAIL_IF(pid_file_path.empty(), "A PID or a path to a file is needed.");
     WaitForFileModification(pid_file_path);
     process_id = ReadPidFromFile(pid_file_path);
   }
   ORBIT_LOG("process_id=%d", process_id);
-  FAIL_IF(process_id == 0, "PID to capture not specified");
+  ORBIT_FAIL_IF(process_id == 0, "PID to capture not specified");
 
   uint16_t samples_per_second = absl::GetFlag(FLAGS_sampling_rate);
   ORBIT_LOG("samples_per_second=%u", samples_per_second);
@@ -321,8 +322,9 @@ int main(int argc, char* argv[]) {
 
   std::string file_path = absl::GetFlag(FLAGS_instrument_path);
   uint64_t file_offset = absl::GetFlag(FLAGS_instrument_offset);
-  FAIL_IF((file_path.empty()) != (file_offset == 0),
-          "Binary path and offset of the function to instrument need to be specified together");
+  ORBIT_FAIL_IF(
+      (file_path.empty()) != (file_offset == 0),
+      "Binary path and offset of the function to instrument need to be specified together");
   bool instrument_function = !file_path.empty() && file_offset != 0;
   uint64_t function_size = absl::GetFlag(FLAGS_instrument_size);
   DynamicInstrumentationMethod instrumentation_method =
@@ -334,7 +336,7 @@ int main(int argc, char* argv[]) {
     ORBIT_LOG("file_path=%s", file_path);
     ORBIT_LOG("file_offset=%#x", file_offset);
     if (instrumentation_method == CaptureOptions::kUserSpaceInstrumentation) {
-      FAIL_IF(function_size == 0, "User space instrumentation requires the function size");
+      ORBIT_FAIL_IF(function_size == 0, "User space instrumentation requires the function size");
       ORBIT_LOG("function_size=%d", function_size);
     }
   }
@@ -384,7 +386,7 @@ int main(int argc, char* argv[]) {
   if (enable_api) {
     ErrorMessageOr<std::vector<orbit_grpc_protos::ModuleInfo>> modules_or_error =
         orbit_object_utils::ReadModules(process_id);
-    FAIL_IF(modules_or_error.has_error(), "%s", modules_or_error.error().message());
+    ORBIT_FAIL_IF(modules_or_error.has_error(), "%s", modules_or_error.error().message());
     for (const orbit_grpc_protos::ModuleInfo& module : modules_or_error.value()) {
       ManipulateModuleManagerToAddFunctionFromFunctionPrefixInSymtabIfExists(
           &module_manager, module.file_path(),
@@ -405,7 +407,7 @@ int main(int argc, char* argv[]) {
 
     ErrorMessageOr<std::vector<orbit_grpc_protos::ModuleInfo>> modules_or_error =
         orbit_object_utils::ReadModules(process_id);
-    FAIL_IF(modules_or_error.has_error(), "%s", modules_or_error.error().message());
+    ORBIT_FAIL_IF(modules_or_error.has_error(), "%s", modules_or_error.error().message());
     std::string libvulkan_file_path;
     for (const orbit_grpc_protos::ModuleInfo& module : modules_or_error.value()) {
       if (module.soname() == kGgpvlkModuleName) {

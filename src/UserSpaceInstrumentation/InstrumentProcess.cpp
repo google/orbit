@@ -63,7 +63,8 @@ ErrorMessageOr<std::filesystem::path> GetLibraryPath() {
 bool ProcessWithPidExists(pid_t pid) {
   const std::string pid_dirname = absl::StrFormat("/proc/%d", pid);
   auto result = orbit_base::FileExists(pid_dirname);
-  FAIL_IF(result.has_error(), "Accessing \"%s\" failed: %s", pid_dirname, result.error().message());
+  ORBIT_FAIL_IF(result.has_error(), "Accessing \"%s\" failed: %s", pid_dirname,
+                result.error().message());
   return result.value();
 }
 
@@ -370,7 +371,7 @@ ErrorMessageOr<void> InstrumentedProcess::UninstrumentFunctions() {
                               trampoline_data.function_data.begin() +
                                   (trampoline_data.address_after_prologue - function_address));
     auto write_result_or_error = WriteTraceesMemory(pid_, function_address, code);
-    FAIL_IF(write_result_or_error.has_error(), "%s", write_result_or_error.error().message());
+    ORBIT_FAIL_IF(write_result_or_error.has_error(), "%s", write_result_or_error.error().message());
   }
   return outcome::success();
 }
@@ -457,7 +458,7 @@ std::unique_ptr<InstrumentationManager> InstrumentationManager::Create() {
   static std::mutex mutex;
   std::unique_lock<std::mutex> lock(mutex);
   static bool first_call = true;
-  FAIL_IF(!first_call, "InstrumentationManager should be globally unique.");
+  ORBIT_FAIL_IF(!first_call, "InstrumentationManager should be globally unique.");
   first_call = false;
   return std::unique_ptr<InstrumentationManager>(new InstrumentationManager());
 }

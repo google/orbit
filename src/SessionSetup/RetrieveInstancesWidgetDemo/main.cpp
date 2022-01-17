@@ -27,7 +27,7 @@ int main(int argc, char* argv[]) {
   QCoreApplication::setApplicationName(kApplicationName);
 
   ErrorMessageOr<std::unique_ptr<Client>> client_or_error = orbit_ggp::CreateClient();
-  FAIL_IF(client_or_error.has_error(), "%s", client_or_error.error().message());
+  ORBIT_FAIL_IF(client_or_error.has_error(), "%s", client_or_error.error().message());
   Client* client_ptr = client_or_error.value().get();
 
   std::shared_ptr<orbit_qt_utils::MainThreadExecutorImpl> executor{

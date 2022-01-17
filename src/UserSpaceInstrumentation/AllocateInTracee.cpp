@@ -153,8 +153,8 @@ ErrorMessageOr<std::unique_ptr<MemoryInTracee>> MemoryInTracee::Create(pid_t pid
 
   if (address != 0 && result->GetAddress() != address) {
     auto free_memory_result = result->Free();
-    FAIL_IF(free_memory_result.has_error(), "Unable to free previously allocated memory: %s",
-            free_memory_result.error().message());
+    ORBIT_FAIL_IF(free_memory_result.has_error(), "Unable to free previously allocated memory: %s",
+                  free_memory_result.error().message());
     return ErrorMessage(
         absl::StrFormat("MemoryInTracee wanted to allocate memory at %#x but got memory at a "
                         "different address: %#x. The memory has been freed again.",
@@ -240,8 +240,8 @@ ErrorMessageOr<std::unique_ptr<AutomaticMemoryInTracee>> AutomaticMemoryInTracee
 
   if (address != 0 && result->GetAddress() != address) {
     auto free_memory_result = result->Free();
-    FAIL_IF(free_memory_result.has_error(), "Unable to free previously allocated memory: %s",
-            free_memory_result.error().message());
+    ORBIT_FAIL_IF(free_memory_result.has_error(), "Unable to free previously allocated memory: %s",
+                  free_memory_result.error().message());
     return ErrorMessage(absl::StrFormat(
         "AutomaticMemoryInTracee wanted to allocate memory at %#x but got memory at a "
         "different address: %#x. The memory has been freed again.",

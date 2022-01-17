@@ -305,7 +305,7 @@ void AppendRestoreCode(MachineCode& trampoline) {
     csh capstone_handle, absl::flat_hash_map<uint64_t, uint64_t>& global_relocation_map,
     MachineCode& trampoline) {
   cs_insn* instruction = cs_malloc(capstone_handle);
-  FAIL_IF(instruction == nullptr, "Failed to allocate memory for capstone disassembler.");
+  ORBIT_FAIL_IF(instruction == nullptr, "Failed to allocate memory for capstone disassembler.");
   orbit_base::unique_resource scope_exit{instruction,
                                          [](cs_insn* instruction) { cs_free(instruction, 1); }};
   std::vector<uint8_t> trampoline_code;
@@ -527,9 +527,9 @@ ErrorMessageOr<AddressRange> FindAddressRangeForTrampoline(
   constexpr uint64_t kMax64BitAddress = UINT64_MAX;
   const uint64_t page_size = sysconf(_SC_PAGE_SIZE);
 
-  FAIL_IF(unavailable_ranges.empty() || unavailable_ranges[0].start != 0,
-          "First entry at unavailable_ranges needs to start at zero. Use result of "
-          "GetUnavailableAddressRanges.");
+  ORBIT_FAIL_IF(unavailable_ranges.empty() || unavailable_ranges[0].start != 0,
+                "First entry at unavailable_ranges needs to start at zero. Use result of "
+                "GetUnavailableAddressRanges.");
 
   // Try to fit an interval of length `size` below `code_range`.
   auto optional_range_index = LowestIntersectingAddressRange(unavailable_ranges, code_range);
@@ -864,17 +864,17 @@ void MoveInstructionPointersOutOfOverwrittenCode(
   for (pid_t tid : tids) {
     RegisterState registers;
     ErrorMessageOr<void> backup_or_error = registers.BackupRegisters(tid);
-    FAIL_IF(backup_or_error.has_error(),
-            "Failed to read registers in MoveInstructionPointersOutOfOverwrittenCode: %s",
-            backup_or_error.error().message());
+    ORBIT_FAIL_IF(backup_or_error.has_error(),
+                  "Failed to read registers in MoveInstructionPointersOutOfOverwrittenCode: %s",
+                  backup_or_error.error().message());
     const uint64_t rip = registers.GetGeneralPurposeRegisters()->x86_64.rip;
     auto relocation = relocation_map.find(rip);
     if (relocation != relocation_map.end()) {
       registers.GetGeneralPurposeRegisters()->x86_64.rip = relocation->second;
       ErrorMessageOr<void> restore_or_error = registers.RestoreRegisters();
-      FAIL_IF(restore_or_error.has_error(),
-              "Failed to write registers in MoveInstructionPointersOutOfOverwrittenCode: %s",
-              restore_or_error.error().message());
+      ORBIT_FAIL_IF(restore_or_error.has_error(),
+                    "Failed to write registers in MoveInstructionPointersOutOfOverwrittenCode: %s",
+                    restore_or_error.error().message());
     }
   }
 }

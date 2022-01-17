@@ -644,11 +644,12 @@ class VulkanLayerController {
     uint32_t pid = orbit_base::GetCurrentProcessId();
     ORBIT_LOG("Writing PID of %u to \"%s\"", pid, pid_file);
     ErrorMessageOr<orbit_base::unique_fd> error_or_file = orbit_base::OpenFileForWriting(pid_file);
-    FAIL_IF(error_or_file.has_error(), "Opening \"%s\": %s", pid_file,
-            error_or_file.error().message());
+    ORBIT_FAIL_IF(error_or_file.has_error(), "Opening \"%s\": %s", pid_file,
+                  error_or_file.error().message());
     ErrorMessageOr<void> result =
         orbit_base::WriteFully(error_or_file.value(), absl::StrFormat("%d", pid));
-    FAIL_IF(result.has_error(), "Writing PID to \"%s\": %s", pid_file, result.error().message());
+    ORBIT_FAIL_IF(result.has_error(), "Writing PID to \"%s\": %s", pid_file,
+                  result.error().message());
   }
 
   void CloseVulkanLayerProducerIfNecessary() {
@@ -696,8 +697,9 @@ class VulkanLayerController {
         }
       }
 
-      FAIL_IF(!extension_supported,
-              "Orbit's Vulkan layer requires the %s extension to be supported.", extension_name);
+      ORBIT_FAIL_IF(!extension_supported,
+                    "Orbit's Vulkan layer requires the %s extension to be supported.",
+                    extension_name);
       output->emplace_back(extension_name);
     }
   }

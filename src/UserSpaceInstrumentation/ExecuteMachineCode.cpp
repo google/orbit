@@ -22,15 +22,16 @@ namespace {
 // obviously. That's what the *OrDie methods below are for.
 void RestoreRegistersOrDie(RegisterState& register_state) {
   auto result = register_state.RestoreRegisters();
-  FAIL_IF(result.has_error(), "Unable to restore register state in tracee: %s",
-          result.error().message());
+  ORBIT_FAIL_IF(result.has_error(), "Unable to restore register state in tracee: %s",
+                result.error().message());
 }
 
 uint64_t GetReturnValueOrDie(pid_t pid) {
   RegisterState return_value_registers;
   auto result_return_value = return_value_registers.BackupRegisters(pid);
-  FAIL_IF(result_return_value.has_error(), "Unable to read registers after function called: %s",
-          result_return_value.error().message());
+  ORBIT_FAIL_IF(result_return_value.has_error(),
+                "Unable to read registers after function called: %s",
+                result_return_value.error().message());
   return return_value_registers.GetGeneralPurposeRegisters()->x86_64.rax;
 }
 

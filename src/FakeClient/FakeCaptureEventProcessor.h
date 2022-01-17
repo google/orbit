@@ -45,16 +45,16 @@ class FakeCaptureEventProcessor : public orbit_capture_client::CaptureEventProce
       ORBIT_LOG("Events received: %u", event_count_);
       ErrorMessageOr<void> event_count_write_result = orbit_base::WriteStringToFile(
           file_path / kEventCountFilename, std::to_string(event_count_));
-      FAIL_IF(event_count_write_result.has_error(), "Writing to \"%s\": %s", kEventCountFilename,
-              event_count_write_result.error().message());
+      ORBIT_FAIL_IF(event_count_write_result.has_error(), "Writing to \"%s\": %s",
+                    kEventCountFilename, event_count_write_result.error().message());
     }
 
     {
       ORBIT_LOG("Bytes received: %u", byte_count_);
       ErrorMessageOr<void> byte_count_write_result = orbit_base::WriteStringToFile(
           file_path / kByteCountFilename, std::to_string(byte_count_));
-      FAIL_IF(byte_count_write_result.has_error(), "Writing to \"%s\": %s", kByteCountFilename,
-              byte_count_write_result.error().message());
+      ORBIT_FAIL_IF(byte_count_write_result.has_error(), "Writing to \"%s\": %s",
+                    kByteCountFilename, byte_count_write_result.error().message());
     }
 
     {
@@ -69,8 +69,8 @@ class FakeCaptureEventProcessor : public orbit_capture_client::CaptureEventProce
       }
       ErrorMessageOr<void> frame_time_write_result =
           orbit_base::WriteStringToFile(file_path / kFrameTimeFilename, frame_time_ms_string);
-      FAIL_IF(frame_time_write_result.has_error(), "Writing to \"%s\": %s", kFrameTimeFilename,
-              frame_time_write_result.error().message());
+      ORBIT_FAIL_IF(frame_time_write_result.has_error(), "Writing to \"%s\": %s",
+                    kFrameTimeFilename, frame_time_write_result.error().message());
     }
   }
 

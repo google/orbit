@@ -214,8 +214,8 @@ class GraphicsCaptureEventProcessor : public orbit_capture_client::CaptureEventP
     ORBIT_LOG("Calculating CPU Times");
 
     uint64_t frame_boundary_count = frame_start_boundary_timestamps_.size();
-    FAIL_IF(frame_boundary_count <= 2,
-            "Not enough calls to vkQueuePresentKHR to calculate CPU frame times.");
+    ORBIT_FAIL_IF(frame_boundary_count <= 2,
+                  "Not enough calls to vkQueuePresentKHR to calculate CPU frame times.");
 
     ORBIT_LOG("Calculating frame durations");
     CalculateCpuFrameDurations();
@@ -278,8 +278,8 @@ class GraphicsCaptureEventProcessor : public orbit_capture_client::CaptureEventP
     absl::StrAppend(&output, "\n");
 
     ErrorMessageOr<void> frame_time_write_result = orbit_base::WriteStringToFile(filename, output);
-    FAIL_IF(frame_time_write_result.has_error(), "Writing to \"%s\": %s", filename,
-            frame_time_write_result.error().message());
+    ORBIT_FAIL_IF(frame_time_write_result.has_error(), "Writing to \"%s\": %s", filename,
+                  frame_time_write_result.error().message());
   }
 
   // Instrument a function with this function id in order for GraphicsCaptureEventProcessor to use
