@@ -262,7 +262,7 @@ go into separate files, suffixed by the platform name, i.e. `MyClassWindows.cpp`
 or `MyClassLinux.cpp`.
 
 It's not always possible to keep the header entirely platform-agnostic. If some
-distinctions need to be made, you can use preprocessor macros, i.e.:
+distinctions need to be made, you can use preprocessor macros, e.g.:
 
 ```
 #ifdef _WIN32
