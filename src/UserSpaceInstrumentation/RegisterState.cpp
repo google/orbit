@@ -84,7 +84,7 @@ ErrorMessageOr<void> RegisterState::BackupRegisters(pid_t tid) {
   iov.iov_len = sizeof(GeneralPurposeRegisters);
   auto result = ptrace(PTRACE_GETREGSET, tid, NT_PRSTATUS, &iov);
   if (result == -1) {
-    return ErrorMessage(absl::StrFormat("PTRACE_GETREGS, NT_PRSTATUS failed with errno: %d: \"%s\"",
+    return ErrorMessage(absl::StrFormat("PTRACE_GETREGS, NT_PRSTATUS failed with errno: %d: %s",
                                         errno, SafeStrerror(errno)));
   }
 
@@ -106,8 +106,8 @@ ErrorMessageOr<void> RegisterState::BackupRegisters(pid_t tid) {
   iov.iov_base = xsave_area_.data();
   result = ptrace(PTRACE_GETREGSET, tid, NT_X86_XSTATE, &iov);
   if (result == -1) {
-    return ErrorMessage(absl::StrFormat(
-        "PTRACE_GETREGS, NT_X86_XSTATE failed with errno: %d: \"%s\"", errno, SafeStrerror(errno)));
+    return ErrorMessage(absl::StrFormat("PTRACE_GETREGS, NT_X86_XSTATE failed with errno: %d: %s",
+                                        errno, SafeStrerror(errno)));
   }
 
   auto avx_offset = GetAvxOffset();
@@ -129,8 +129,8 @@ ErrorMessageOr<void> RegisterState::RestoreRegisters() {
   auto result = ptrace(PTRACE_SETREGSET, tid_, NT_PRSTATUS, &iov);
   if (result == -1) {
     return ErrorMessage(
-        absl::StrFormat("PTRACE_SETREGSET failed to write NT_PRSTATUS with errno: %d: \"%s\"",
-                        errno, SafeStrerror(errno)));
+        absl::StrFormat("PTRACE_SETREGSET failed to write NT_PRSTATUS with errno: %d: %s", errno,
+                        SafeStrerror(errno)));
   }
 
   iov.iov_len = xsave_area_.size();
@@ -138,8 +138,8 @@ ErrorMessageOr<void> RegisterState::RestoreRegisters() {
   result = ptrace(PTRACE_SETREGSET, tid_, NT_X86_XSTATE, &iov);
   if (result == -1) {
     return ErrorMessage(
-        absl::StrFormat("PTRACE_SETREGSET failed to write NT_X86_XSTATE with errno: %d: \"%s\"",
-                        errno, SafeStrerror(errno)));
+        absl::StrFormat("PTRACE_SETREGSET failed to write NT_X86_XSTATE with errno: %d: %s", errno,
+                        SafeStrerror(errno)));
   }
   return outcome::success();
 }

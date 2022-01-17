@@ -40,7 +40,7 @@ namespace {
   RegisterState original_registers;
   auto register_backup_result = original_registers.BackupRegisters(pid);
   if (register_backup_result.has_error()) {
-    return ErrorMessage(absl::StrFormat("Failed to backup original register state: \"%s\"",
+    return ErrorMessage(absl::StrFormat("Failed to backup original register state: %s",
                                         register_backup_result.error().message()));
   }
   if (original_registers.GetBitness() != RegisterState::Bitness::k64Bit) {
@@ -51,7 +51,7 @@ namespace {
   // Get an executable memory region.
   auto memory_region_or_error = GetExistingExecutableMemoryRegion(pid, exclude_address);
   if (memory_region_or_error.has_error()) {
-    return ErrorMessage(absl::StrFormat("Failed to find executable memory region: \"%s\"",
+    return ErrorMessage(absl::StrFormat("Failed to find executable memory region: %s",
                                         memory_region_or_error.error().message()));
   }
   const uint64_t start_address = memory_region_or_error.value().start;
@@ -59,14 +59,14 @@ namespace {
   // Backup first 8 bytes.
   auto backup_or_error = ReadTraceesMemory(pid, start_address, 8);
   if (backup_or_error.has_error()) {
-    return ErrorMessage(absl::StrFormat("Failed to read from tracee's memory: \"%s\"",
+    return ErrorMessage(absl::StrFormat("Failed to read from tracee's memory: %s",
                                         backup_or_error.error().message()));
   }
 
   // Write `syscall` into memory. Machine code is `0x0f05`.
   auto write_code_result = WriteTraceesMemory(pid, start_address, std::vector<uint8_t>{0x0f, 0x05});
   if (write_code_result.has_error()) {
-    return ErrorMessage(absl::StrFormat("Failed to write to tracee's memory: \"%s\"",
+    return ErrorMessage(absl::StrFormat("Failed to write to tracee's memory: %s",
                                         write_code_result.error().message()));
   }
 
@@ -84,7 +84,7 @@ namespace {
   registers_for_syscall.GetGeneralPurposeRegisters()->x86_64.r9 = arg_5;
   auto restore_registers_result = registers_for_syscall.RestoreRegisters();
   if (restore_registers_result.has_error()) {
-    return ErrorMessage(absl::StrFormat("Failed to set registers with syscall parameters: \"%s\"",
+    return ErrorMessage(absl::StrFormat("Failed to set registers with syscall parameters: %s",
                                         restore_registers_result.error().message()));
   }
 
@@ -102,7 +102,7 @@ namespace {
   RegisterState return_value;
   auto return_value_result = return_value.BackupRegisters(pid);
   if (return_value_result.has_error()) {
-    return ErrorMessage(absl::StrFormat("Failed to get registers with mmap result: \"%s\"",
+    return ErrorMessage(absl::StrFormat("Failed to get registers with mmap result: %s",
                                         return_value_result.error().message()));
   }
   const uint64_t result = return_value.GetGeneralPurposeRegisters()->x86_64.rax;
@@ -116,12 +116,11 @@ namespace {
   // Clean up memory and registers.
   auto restore_memory_result = WriteTraceesMemory(pid, start_address, backup_or_error.value());
   if (restore_memory_result.has_error()) {
-    FATAL("Unable to restore memory state of tracee: \"%s\"",
-          restore_memory_result.error().message());
+    FATAL("Unable to restore memory state of tracee: %s", restore_memory_result.error().message());
   }
   restore_registers_result = original_registers.RestoreRegisters();
   if (restore_registers_result.has_error()) {
-    FATAL("Unable to restore register state of tracee: \"%s\"",
+    FATAL("Unable to restore register state of tracee: %s",
           restore_registers_result.error().message());
   }
 
@@ -143,9 +142,9 @@ ErrorMessageOr<std::unique_ptr<MemoryInTracee>> MemoryInTracee::Create(pid_t pid
                                          MAP_PRIVATE | MAP_ANONYMOUS, static_cast<uint64_t>(-1), 0,
                                          /*exclude_address=*/0);
   if (result_or_error.has_error()) {
-    return ErrorMessage(absl::StrFormat(
-        "Failed to execute mmap syscall with parameters address=%#x size=%u: \"%s\"", address, size,
-        result_or_error.error().message()));
+    return ErrorMessage(
+        absl::StrFormat("Failed to execute mmap syscall with parameters address=%#x size=%u: %s",
+                        address, size, result_or_error.error().message()));
   }
 
   std::unique_ptr<MemoryInTracee> result(
@@ -153,11 +152,11 @@ ErrorMessageOr<std::unique_ptr<MemoryInTracee>> MemoryInTracee::Create(pid_t pid
 
   if (address != 0 && result->GetAddress() != address) {
     auto free_memory_result = result->Free();
-    FAIL_IF(free_memory_result.has_error(), "Unable to free proviously allocated memory: \"%s\"",
+    FAIL_IF(free_memory_result.has_error(), "Unable to free previously allocated memory: %s",
             free_memory_result.error().message());
     return ErrorMessage(
         absl::StrFormat("MemoryInTracee wanted to allocate memory at %#x but got memory at a "
-                        "different adress: %#x. The memory has been freed again.",
+                        "different address: %#x. The memory has been freed again.",
                         address, result->GetAddress()));
   }
 
@@ -171,8 +170,8 @@ ErrorMessageOr<void> MemoryInTracee::Free() {
   auto result_or_error =
       SyscallInTracee(pid_, kSyscallNumberMunmap, address_, size_, 0, 0, 0, 0, address_);
   if (result_or_error.has_error()) {
-    return ErrorMessage(absl::StrFormat("Failed to execute munmap syscall: \"%s\"",
-                                        result_or_error.error().message()));
+    return ErrorMessage(
+        absl::StrFormat("Failed to execute munmap syscall: %s", result_or_error.error().message()));
   }
   pid_ = -1;
   address_ = 0;
@@ -191,7 +190,7 @@ ErrorMessageOr<void> MemoryInTracee::EnsureMemoryExecutable() {
       SyscallInTracee(pid_, kSyscallNumberMprotect, address_, size_, PROT_EXEC, 0, 0, 0, 0);
   if (result_or_error.has_error()) {
     return ErrorMessage(absl::StrFormat(
-        "Failed to execute mprotect syscall with parameters address=%#x size=%u: \"%s\"", address_,
+        "Failed to execute mprotect syscall with parameters address=%#x size=%u: %s", address_,
         size_, result_or_error.error().message()));
   }
 
@@ -209,7 +208,7 @@ ErrorMessageOr<void> MemoryInTracee::EnsureMemoryWritable() {
       SyscallInTracee(pid_, kSyscallNumberMprotect, address_, size_, PROT_WRITE, 0, 0, 0, 0);
   if (result_or_error.has_error()) {
     return ErrorMessage(absl::StrFormat(
-        "Failed to execute mprotect syscall with parameters address=%#x size=%u: \"%s\"", address_,
+        "Failed to execute mprotect syscall with parameters address=%#x size=%u: %s", address_,
         size_, result_or_error.error().message()));
   }
 
@@ -230,9 +229,9 @@ ErrorMessageOr<std::unique_ptr<AutomaticMemoryInTracee>> AutomaticMemoryInTracee
                                          MAP_PRIVATE | MAP_ANONYMOUS, static_cast<uint64_t>(-1), 0,
                                          /*exclude_address=*/0);
   if (result_or_error.has_error()) {
-    return ErrorMessage(absl::StrFormat(
-        "Failed to execute mmap syscall with parameters address=%#x size=%u: \"%s\"", address, size,
-        result_or_error.error().message()));
+    return ErrorMessage(
+        absl::StrFormat("Failed to execute mmap syscall with parameters address=%#x size=%u: %s",
+                        address, size, result_or_error.error().message()));
   }
 
   std::unique_ptr<AutomaticMemoryInTracee> result(new AutomaticMemoryInTracee(
@@ -240,11 +239,11 @@ ErrorMessageOr<std::unique_ptr<AutomaticMemoryInTracee>> AutomaticMemoryInTracee
 
   if (address != 0 && result->GetAddress() != address) {
     auto free_memory_result = result->Free();
-    FAIL_IF(free_memory_result.has_error(), "Unable to free proviously allocated memory: \"%s\"",
+    FAIL_IF(free_memory_result.has_error(), "Unable to free previously allocated memory: %s",
             free_memory_result.error().message());
     return ErrorMessage(absl::StrFormat(
         "AutomaticMemoryInTracee wanted to allocate memory at %#x but got memory at a "
-        "different adress: %#x. The memory has been freed again.",
+        "different address: %#x. The memory has been freed again.",
         address, result->GetAddress()));
   }
 

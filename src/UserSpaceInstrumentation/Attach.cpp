@@ -36,7 +36,7 @@ namespace {
       return false;
     }
     return ErrorMessage(
-        absl::StrFormat("PTRACE_ATTACH failed for %d: \"%s\"", tid, SafeStrerror(errno)));
+        absl::StrFormat("PTRACE_ATTACH failed for %d: %s", tid, SafeStrerror(errno)));
   }
   // Wait for the traced thread to stop. Timeout after one second.
   constexpr int kMaxAttempts = 1000;
@@ -44,7 +44,7 @@ namespace {
     int stat_val = 0;
     const int waitpid_result = waitpid(tid, &stat_val, WNOHANG);
     if (waitpid_result == -1) {
-      return ErrorMessage(absl::StrFormat("Wait for thread to get traced failed for tid %d: \"%s\"",
+      return ErrorMessage(absl::StrFormat("Wait for thread to get traced failed for tid %d: %s",
                                           tid, SafeStrerror(errno)));
     }
     if (waitpid_result > 0) {
@@ -122,8 +122,8 @@ ErrorMessageOr<void> DetachAndContinueProcess(pid_t pid) {
   auto tids = GetTidsOfProcess(pid);
   for (auto tid : tids) {
     if (ptrace(PTRACE_DETACH, tid, nullptr, nullptr) == -1) {
-      return ErrorMessage(absl::StrFormat("Error while detaching from thread %d: \"%s\"", tid,
-                                          SafeStrerror(errno)));
+      return ErrorMessage(
+          absl::StrFormat("Error while detaching from thread %d: %s", tid, SafeStrerror(errno)));
     }
   }
   return outcome::success();
