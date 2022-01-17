@@ -63,22 +63,22 @@ constexpr const char* kLogTimeFormat = "%Y-%m-%dT%H:%M:%E6S";
 
 #if defined(__GNUC__) || defined(__clang__)
 #define ORBIT_LIKELY(cond) __builtin_expect(!!(cond), 1)
-#define UNLIKELY(cond) __builtin_expect(!!(cond), 0)
+#define ORBIT_UNLIKELY(cond) __builtin_expect(!!(cond), 0)
 #else
 #define ORBIT_LIKELY(cond) (!!(cond))
-#define UNLIKELY(cond) (!!(cond))
+#define ORBIT_UNLIKELY(cond) (!!(cond))
 #endif
 
 #define FAIL_IF(condition, format, ...)   \
   do {                                    \
-    if (UNLIKELY(condition)) {            \
+    if (ORBIT_UNLIKELY(condition)) {      \
       ORBIT_FATAL(format, ##__VA_ARGS__); \
     }                                     \
   } while (0)
 
 #define CHECK(assertion)                         \
   do {                                           \
-    if (UNLIKELY(!(assertion))) {                \
+    if (ORBIT_UNLIKELY(!(assertion))) {          \
       ORBIT_LOG("Check failed: %s", #assertion); \
       PLATFORM_ABORT();                          \
     }                                            \
