@@ -30,7 +30,7 @@ std::vector<Module> ListModules(uint32_t pid) {
   // Take a snapshot of all modules in the specified process.
   module_snap_handle = CreateToolhelp32Snapshot(TH32CS_SNAPMODULE, pid);
   if (module_snap_handle == INVALID_HANDLE_VALUE) {
-    ERROR("Calling CreateToolhelp32Snapshot for modules");
+    ORBIT_ERROR("Calling CreateToolhelp32Snapshot for modules");
     return {};
   }
   orbit_base::unique_resource handle{module_snap_handle, ::CloseHandle};
@@ -38,7 +38,7 @@ std::vector<Module> ListModules(uint32_t pid) {
   // Retrieve information about the first module.
   module_entry.dwSize = sizeof(MODULEENTRY32);
   if (!Module32First(module_snap_handle, &module_entry)) {
-    ERROR("Calling Module32First for pid %u", pid);
+    ORBIT_ERROR("Calling Module32First for pid %u", pid);
     return {};
   }
 
@@ -54,7 +54,8 @@ std::vector<Module> ListModules(uint32_t pid) {
     if (coff_file_or_error.has_value()) {
       build_id = coff_file_or_error.value()->GetBuildId();
     } else {
-      ERROR("Could not create Coff file for module \"%s\", build-id will be empty", module_path);
+      ORBIT_ERROR("Could not create Coff file for module \"%s\", build-id will be empty",
+                  module_path);
     }
 
     Module& module = modules.emplace_back();

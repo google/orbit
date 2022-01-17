@@ -258,7 +258,7 @@ grpc::Status CaptureServiceImpl::Capture(
     grpc::ServerReaderWriter<CaptureResponse, CaptureRequest>* reader_writer) {
   orbit_base::SetCurrentThreadName("CSImpl::Capture");
   if (is_capturing) {
-    ERROR("Cannot start capture because another capture is already in progress");
+    ORBIT_ERROR("Cannot start capture because another capture is already in progress");
     return grpc::Status(grpc::StatusCode::ALREADY_EXISTS,
                         "Cannot start capture because another capture is already in progress.");
   }

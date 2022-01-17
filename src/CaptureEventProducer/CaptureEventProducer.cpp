@@ -70,13 +70,13 @@ bool CaptureEventProducer::SendCaptureEvents(
   {
     absl::ReaderMutexLock lock{&context_and_stream_mutex_};
     if (stream_ == nullptr) {
-      ERROR("Sending BufferedCaptureEvents to ProducerSideService: not connected");
+      ORBIT_ERROR("Sending BufferedCaptureEvents to ProducerSideService: not connected");
       return false;
     }
     write_succeeded = stream_->Write(send_events_request);
   }
   if (!write_succeeded) {
-    ERROR("Sending BufferedCaptureEvents to ProducerSideService");
+    ORBIT_ERROR("Sending BufferedCaptureEvents to ProducerSideService");
   }
   return write_succeeded;
 }
@@ -94,7 +94,7 @@ bool CaptureEventProducer::NotifyAllEventsSent() {
   {
     absl::ReaderMutexLock lock{&context_and_stream_mutex_};
     if (stream_ == nullptr) {
-      ERROR("Sending AllEventsSent to ProducerSideService: not connected");
+      ORBIT_ERROR("Sending AllEventsSent to ProducerSideService: not connected");
       return false;
     }
     write_succeeded = stream_->Write(all_events_sent_request);
@@ -102,7 +102,7 @@ bool CaptureEventProducer::NotifyAllEventsSent() {
   if (write_succeeded) {
     ORBIT_LOG("Sent AllEventsSent to ProducerSideService");
   } else {
-    ERROR("Sending AllEventsSent to ProducerSideService");
+    ORBIT_ERROR("Sending AllEventsSent to ProducerSideService");
   }
   return write_succeeded;
 }
@@ -127,7 +127,7 @@ void CaptureEventProducer::ConnectAndReceiveCommandsThread() {
     }
 
     if (stream_ == nullptr) {
-      ERROR(
+      ORBIT_ERROR(
           "Calling ReceiveCommandsAndSendEvents to establish "
           "gRPC connection with ProducerSideService");
       // This is the reason why we protect shutdown_requested_ with an absl::Mutex instead
@@ -149,7 +149,7 @@ void CaptureEventProducer::ConnectAndReceiveCommandsThread() {
         read_succeeded = stream_->Read(&response);
       }
       if (!read_succeeded) {
-        ERROR("Receiving ReceiveCommandsAndSendEventsResponse from ProducerSideService");
+        ORBIT_ERROR("Receiving ReceiveCommandsAndSendEventsResponse from ProducerSideService");
         if (last_command_ == ReceiveCommandsAndSendEventsResponse::kStartCaptureCommand) {
           last_command_ = ReceiveCommandsAndSendEventsResponse::kStopCaptureCommand;
           OnCaptureStop();
@@ -217,7 +217,7 @@ void CaptureEventProducer::ConnectAndReceiveCommandsThread() {
         } break;
 
         case ReceiveCommandsAndSendEventsResponse::COMMAND_NOT_SET: {
-          ERROR("ProducerSideService sent COMMAND_NOT_SET");
+          ORBIT_ERROR("ProducerSideService sent COMMAND_NOT_SET");
         } break;
       }
     }

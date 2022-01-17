@@ -60,7 +60,7 @@ void KrabsTracer::EnableProviders() {
 
 void KrabsTracer::SetIsSystemProfilePrivilegeEnabled(bool value) {
   auto result = orbit_windows_utils::AdjustTokenPrivilege(SE_SYSTEM_PROFILE_NAME, value);
-  if (result.has_error()) ERROR("%s", result.error().message());
+  if (result.has_error()) ORBIT_ERROR("%s", result.error().message());
 }
 
 void KrabsTracer::SetupStackTracing() {

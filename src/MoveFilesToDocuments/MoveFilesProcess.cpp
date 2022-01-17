@@ -33,7 +33,7 @@ void MoveFilesProcess::Start() {
 void MoveFilesProcess::RequestInterruption() { interruption_requested_ = true; }
 
 void MoveFilesProcess::ReportError(const std::string& error_message) {
-  ERROR("%s", error_message);
+  ORBIT_ERROR("%s", error_message);
   emit generalError(QString::fromStdString(error_message));
 }
 

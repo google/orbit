@@ -35,7 +35,7 @@ void Task::Start() {
 void Task::Stop() {
   QTimer::singleShot(kShutdownTimeoutMs, this, [this]() {
     if (state_ < State::kChannelClosed) {
-      ERROR("Task shutdown timed out");
+      ORBIT_ERROR("Task shutdown timed out");
       SetError(Error::kOrbitServiceShutdownTimedout);
     }
   });

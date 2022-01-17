@@ -74,7 +74,7 @@ int main(int argc, char** argv) {
         exit = true;
         break;
       default:
-        ERROR("Option selected not valid. Try again");
+        ORBIT_ERROR("Option selected not valid. Try again");
     }
   }
 

@@ -44,7 +44,7 @@ void TracerImpl::SendModulesSnapshot() {
 
   std::vector<Module> modules = orbit_windows_utils::ListModules(pid);
   if (modules.empty()) {
-    ERROR("Unable to load modules for %u", pid);
+    ORBIT_ERROR("Unable to load modules for %u", pid);
     return;
   }
 
@@ -67,7 +67,7 @@ void TracerImpl::SendThreadNamesSnapshot() {
 
   std::vector<Thread> threads = orbit_windows_utils::ListAllThreads();
   if (threads.empty()) {
-    ERROR("Unable to list threads");
+    ORBIT_ERROR("Unable to list threads");
     return;
   }
 

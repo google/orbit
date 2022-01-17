@@ -114,7 +114,7 @@ ErrorMessageOr<std::vector<ModuleInfo>> ParseMaps(std::string_view proc_maps_dat
     ErrorMessageOr<ModuleInfo> module_info_or_error = CreateModule(module_path, start, end);
 
     if (module_info_or_error.has_error()) {
-      ERROR("Unable to create module: %s", module_info_or_error.error().message());
+      ORBIT_ERROR("Unable to create module: %s", module_info_or_error.error().message());
       continue;
     }
 

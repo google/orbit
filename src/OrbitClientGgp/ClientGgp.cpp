@@ -71,7 +71,7 @@ using UnwindingMethod = orbit_grpc_protos::CaptureOptions::UnwindingMethod;
 
 bool ClientGgp::InitClient() {
   if (options_.grpc_server_address.empty()) {
-    ERROR("gRPC server address not provided");
+    ORBIT_ERROR("gRPC server address not provided");
     return false;
   }
 
@@ -82,7 +82,7 @@ bool ClientGgp::InitClient() {
   grpc_channel_ = grpc::CreateCustomChannel(options_.grpc_server_address,
                                             grpc::InsecureChannelCredentials(), channel_arguments);
   if (!grpc_channel_) {
-    ERROR("Unable to create GRPC channel to %s", options_.grpc_server_address);
+    ORBIT_ERROR("Unable to create GRPC channel to %s", options_.grpc_server_address);
     return false;
   }
   ORBIT_LOG("Created GRPC channel to %s", options_.grpc_server_address);
@@ -126,7 +126,7 @@ ErrorMessageOr<void> ClientGgp::RequestStartCapture(orbit_base::ThreadPool* thre
 
   OUTCOME_TRY(auto&& event_processor, CaptureEventProcessor::CreateSaveToFileProcessor(
                                           GenerateFilePath(), [](const ErrorMessage& error) {
-                                            ERROR("%s", error.message());
+                                            ORBIT_ERROR("%s", error.message());
                                           }));
 
   Future<ErrorMessageOr<CaptureListener::CaptureOutcome>> result = capture_client_->Capture(
@@ -142,7 +142,7 @@ ErrorMessageOr<void> ClientGgp::RequestStartCapture(orbit_base::ThreadPool* thre
 
   result.Then(&executor, [](ErrorMessageOr<CaptureListener::CaptureOutcome> result) {
     if (!result.has_value()) {
-      ERROR("Capture failed: %s", result.error().message());
+      ORBIT_ERROR("Capture failed: %s", result.error().message());
     }
 
     // We do not send try aborting capture - it cannot be cancelled.
@@ -241,14 +241,15 @@ bool ClientGgp::InitCapture() {
   ErrorMessageOr<std::unique_ptr<ProcessData>> target_process_result =
       GetOrbitProcessByPid(options_.capture_pid);
   if (target_process_result.has_error()) {
-    ERROR("Not able to set target process: %s", target_process_result.error().message());
+    ORBIT_ERROR("Not able to set target process: %s", target_process_result.error().message());
     return false;
   }
   target_process_ = std::move(target_process_result.value());
   // Load the module and symbols
   ErrorMessageOr<void> result = LoadModuleAndSymbols();
   if (result.has_error()) {
-    ERROR("Not possible to finish loading the module and symbols: %s", result.error().message());
+    ORBIT_ERROR("Not possible to finish loading the module and symbols: %s",
+                result.error().message());
     return false;
   }
   // Load selected functions
@@ -277,8 +278,8 @@ void ClientGgp::InformUsedSelectedCaptureFunctions(
   if (capture_functions_used.size() != options_.capture_functions.size()) {
     for (const std::string& selected_function : options_.capture_functions) {
       if (!capture_functions_used.contains(selected_function)) {
-        ERROR("Function matching %s not found; will not be hooked in the capture",
-              selected_function);
+        ORBIT_ERROR("Function matching %s not found; will not be hooked in the capture",
+                    selected_function);
       }
     }
   } else {

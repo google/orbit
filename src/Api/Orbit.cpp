@@ -243,7 +243,7 @@ void orbit_api_set_enabled(uint64_t address, uint64_t api_version, bool enabled)
   ORBIT_LOG("%s Orbit API at address %#x, version %u", enabled ? "Enabling" : "Disabling", address,
             api_version);
   if (api_version > kOrbitApiVersion) {
-    ERROR(
+    ORBIT_ERROR(
         "Orbit API version in tracee (%u) is newer than the max supported version (%u). "
         "Some features will be unavailable.",
         api_version, kOrbitApiVersion);
@@ -283,7 +283,7 @@ void orbit_api_set_enabled_wine(uint64_t address, uint64_t api_version, bool ena
   if (api_version < kOrbitApiForWineMinVersion) {
     // This is unexpected because `orbit_api_get_function_table_address_win_v#` wasn't present in
     // Orbit.h before v2.
-    ERROR(
+    ORBIT_ERROR(
         "Orbit API version in tracee (%u) is older than the min supported version (%u) for "
         "Wine.",
         api_version, kOrbitApiForWineMinVersion);
@@ -291,7 +291,7 @@ void orbit_api_set_enabled_wine(uint64_t address, uint64_t api_version, bool ena
   }
 
   if (api_version > kOrbitApiVersion) {
-    ERROR(
+    ORBIT_ERROR(
         "Orbit API version in tracee (%u) is newer than the max supported version (%u). "
         "Some features will be unavailable.",
         api_version, kOrbitApiVersion);

@@ -65,8 +65,9 @@ Callstack::CallstackType LeafFunctionCallManager::PatchCallerOfLeafFunction(
       libunwindstack_result.frames();
 
   if (libunwindstack_callstack.empty()) {
-    ERROR("Discarding sample as DWARF-based unwinding resulted in empty callstack (error: %s)",
-          LibunwindstackUnwinder::LibunwindstackErrorString(libunwindstack_result.error_code()));
+    ORBIT_ERROR(
+        "Discarding sample as DWARF-based unwinding resulted in empty callstack (error: %s)",
+        LibunwindstackUnwinder::LibunwindstackErrorString(libunwindstack_result.error_code()));
     return Callstack::kStackTopDwarfUnwindingError;
   }
 

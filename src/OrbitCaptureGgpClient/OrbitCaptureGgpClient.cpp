@@ -53,7 +53,7 @@ CaptureClientGgpClient::CaptureClientGgpClient(const std::string& grpc_server_ad
 int CaptureClientGgpClient::StartCapture() {
   ErrorMessageOr<void> result = pimpl->StartCapture();
   if (result.has_error()) {
-    ERROR("Not possible to start capture: %s", result.error().message());
+    ORBIT_ERROR("Not possible to start capture: %s", result.error().message());
     return 0;
   }
   return 1;
@@ -62,7 +62,7 @@ int CaptureClientGgpClient::StartCapture() {
 int CaptureClientGgpClient::StopCapture() {
   ErrorMessageOr<void> result = pimpl->StopCapture();
   if (result.has_error()) {
-    ERROR("Not possible to stop or save capture: %s", result.error().message());
+    ORBIT_ERROR("Not possible to stop or save capture: %s", result.error().message());
     return 0;
   }
   return 1;
@@ -72,7 +72,7 @@ int CaptureClientGgpClient::UpdateSelectedFunctions(
     const std::vector<std::string>& selected_functions) {
   ErrorMessageOr<void> result = pimpl->UpdateSelectedFunctions(selected_functions);
   if (result.has_error()) {
-    ERROR("Not possible to update functions %s", result.error().message());
+    ORBIT_ERROR("Not possible to update functions %s", result.error().message());
     return 0;
   }
   return 1;
@@ -92,7 +92,7 @@ void CaptureClientGgpClient::CaptureClientGgpClientImpl::SetupGrpcClient(
   std::shared_ptr<::grpc::Channel> grpc_channel = grpc::CreateCustomChannel(
       grpc_server_address, grpc::InsecureChannelCredentials(), channel_arguments);
   if (!grpc_channel) {
-    ERROR("Unable to create GRPC channel to %s", grpc_server_address);
+    ORBIT_ERROR("Unable to create GRPC channel to %s", grpc_server_address);
     return;
   }
   ORBIT_LOG("Created GRPC channel to %s", grpc_server_address);
@@ -108,8 +108,8 @@ ErrorMessageOr<void> CaptureClientGgpClient::CaptureClientGgpClientImpl::StartCa
   Status status = capture_client_ggp_service_->StartCapture(context.get(), request, &response);
 
   if (!status.ok()) {
-    ERROR("gRPC call to StartCapture failed: %s (error_code=%d)", status.error_message(),
-          status.error_code());
+    ORBIT_ERROR("gRPC call to StartCapture failed: %s (error_code=%d)", status.error_message(),
+                status.error_code());
     return ErrorMessage(status.error_message());
   }
   ORBIT_LOG("Capture started");
@@ -123,8 +123,8 @@ ErrorMessageOr<void> CaptureClientGgpClient::CaptureClientGgpClientImpl::StopCap
 
   Status status = capture_client_ggp_service_->StopCapture(context.get(), request, &response);
   if (!status.ok()) {
-    ERROR("gRPC call to StopCapture failed: %s (error_code=%d)", status.error_message(),
-          status.error_code());
+    ORBIT_ERROR("gRPC call to StopCapture failed: %s (error_code=%d)", status.error_message(),
+                status.error_code());
     return ErrorMessage(status.error_message());
   }
   ORBIT_LOG("Capture finished");
@@ -143,8 +143,8 @@ ErrorMessageOr<void> CaptureClientGgpClient::CaptureClientGgpClientImpl::UpdateS
   Status status =
       capture_client_ggp_service_->UpdateSelectedFunctions(context.get(), request, &response);
   if (!status.ok()) {
-    ERROR("gRPC call to UpdateSelectedFunctions failed: %s (error_code=%d)", status.error_message(),
-          status.error_code());
+    ORBIT_ERROR("gRPC call to UpdateSelectedFunctions failed: %s (error_code=%d)",
+                status.error_message(), status.error_code());
     return ErrorMessage(status.error_message());
   }
   ORBIT_LOG("Functions updated");

@@ -86,7 +86,7 @@ static void LoadSoWithDlopenAndCallFunction() {
     if (handle != nullptr) {
       break;
     }
-    ERROR("Unable to open \"%s\": %s", library_path, dlerror());
+    ORBIT_ERROR("Unable to open \"%s\": %s", library_path, dlerror());
   }
   if (handle == nullptr) {
     FATAL("Unable to find \"%s\"", kSoFileName);
@@ -186,7 +186,7 @@ int IntegrationTestPuppetMain() {
     } else if (command == PuppetConstants::kOrbitApiCommand) {
       UseOrbitApi();
     } else {
-      ERROR("Unknown command: %s", command);
+      ORBIT_ERROR("Unknown command: %s", command);
       continue;
     }
 

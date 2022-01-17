@@ -167,7 +167,7 @@ std::optional<orbit_grpc_protos::ModuleSymbols> FindAndLoadDebugSymbols(
     ErrorMessageOr<std::unique_ptr<orbit_object_utils::ElfFile>> error_or_elf_file =
         orbit_object_utils::CreateElfFile(candidate_path);
     if (error_or_elf_file.has_error()) {
-      ERROR("%s", error_or_elf_file.error().message());
+      ORBIT_ERROR("%s", error_or_elf_file.error().message());
       continue;
     }
     std::unique_ptr<orbit_object_utils::ElfFile>& elf_file = error_or_elf_file.value();
@@ -184,7 +184,7 @@ std::optional<orbit_grpc_protos::ModuleSymbols> FindAndLoadDebugSymbols(
     return symbols_or_error.value();
   }
 
-  ERROR("Could not find debug symbols of module \"%s\"", file_name.string());
+  ORBIT_ERROR("Could not find debug symbols of module \"%s\"", file_name.string());
   return std::nullopt;
 }
 
@@ -220,8 +220,8 @@ void ManipulateModuleManagerToAddFunctionFromFunctionPrefixInSymtabIfExists(
     }
   }
   if (!symbol.has_value()) {
-    ERROR("Could not find function with prefix \"%s\" in module \"%s\"", demangled_function_prefix,
-          elf_file->GetName());
+    ORBIT_ERROR("Could not find function with prefix \"%s\" in module \"%s\"",
+                demangled_function_prefix, elf_file->GetName());
     return;
   }
   ORBIT_LOG("Found function \"%s\" in module \"%s\"", symbol->name(), elf_file->GetName());

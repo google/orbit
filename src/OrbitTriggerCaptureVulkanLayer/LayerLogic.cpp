@@ -26,7 +26,7 @@ constexpr uint16_t kGrpcPort = 44767;
 void LayerLogic::StartOrbitCaptureService() {
   pid_t pid = fork();
   if (pid < 0) {
-    ERROR("Fork failed; not able to start Orbit capture service");
+    ORBIT_ERROR("Fork failed; not able to start Orbit capture service");
   } else if (pid == 0) {
     ORBIT_LOG("Starting Orbit capture service");
     std::string game_pid_str = absl::StrFormat("%d", getppid());

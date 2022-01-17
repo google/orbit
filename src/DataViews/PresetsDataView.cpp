@@ -52,7 +52,7 @@ std::string GetLoadStateString(orbit_data_views::AppInterface* app, const Preset
 std::string GetDateModifiedString(const PresetFile& preset) {
   auto datetime_or_error = orbit_base::GetFileDateModified(preset.file_path());
   if (datetime_or_error.has_error()) {
-    ERROR("%s", datetime_or_error.error().message());
+    ORBIT_ERROR("%s", datetime_or_error.error().message());
     return "";
   }
 
@@ -184,7 +184,7 @@ void PresetsDataView::OnDeletePresetRequested(const std::vector<int>& selection)
     presets_.erase(presets_.begin() + indices_[row]);
     OnDataChanged();
   } else {
-    ERROR("Deleting preset \"%s\": %s", filename, SafeStrerror(errno));
+    ORBIT_ERROR("Deleting preset \"%s\": %s", filename, SafeStrerror(errno));
     metric.SetStatusCode(orbit_metrics_uploader::OrbitLogEvent::INTERNAL_ERROR);
     app_->SendErrorToUi("Error deleting preset",
                         absl::StrFormat("Could not delete preset \"%s\".", filename));

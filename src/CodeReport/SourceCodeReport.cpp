@@ -29,12 +29,12 @@ SourceCodeReport::SourceCodeReport(std::string_view source_file,
 
     const auto& current_line_info = maybe_current_line_info.value();
     if (source_file != current_line_info.source_file()) {
-      ERROR(
+      ORBIT_ERROR(
           "Was trying to gather sampling data for function \"%s\" but the debug information "
           "tells me the function address %#x is defined in a different source file.",
           function.pretty_name(), function.address() + offset);
-      ERROR("Expected: %s", source_file);
-      ERROR("Actual: %s", current_line_info.source_file());
+      ORBIT_ERROR("Expected: %s", source_file);
+      ORBIT_ERROR("Actual: %s", current_line_info.source_file());
       continue;
     }
 

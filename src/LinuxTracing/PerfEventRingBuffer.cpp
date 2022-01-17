@@ -96,7 +96,7 @@ PerfEventRingBuffer::~PerfEventRingBuffer() {
   if (metadata_page_ != nullptr) {
     int munmap_ret = munmap(metadata_page_, mmap_length_);
     if (munmap_ret != 0) {
-      ERROR("munmap: %s", SafeStrerror(errno));
+      ORBIT_ERROR("munmap: %s", SafeStrerror(errno));
     }
   }
 }
@@ -132,14 +132,14 @@ void PerfEventRingBuffer::ReadAtOffsetFromTail(void* dest, uint64_t offset_from_
 
   uint64_t head = ReadRingBufferHead(metadata_page_);
   if (offset_from_tail + count > head - metadata_page_->data_tail) {
-    ERROR("Reading more data than it is available from ring buffer '%s'", name_.c_str());
+    ORBIT_ERROR("Reading more data than it is available from ring buffer '%s'", name_.c_str());
   } else if (offset_from_tail + count > ring_buffer_size_) {
-    ERROR("Reading more than the size of ring buffer '%s'", name_.c_str());
+    ORBIT_ERROR("Reading more than the size of ring buffer '%s'", name_.c_str());
   } else if (head > metadata_page_->data_tail + ring_buffer_size_) {
     // If mmap has been called with PROT_WRITE and
     // perf_event_mmap_page::data_tail is used properly, this should not happen,
     // as the kernel would not overwrite unread data.
-    ERROR("Too slow reading from ring buffer '%s'", name_.c_str());
+    ORBIT_ERROR("Too slow reading from ring buffer '%s'", name_.c_str());
   }
 
   const uint64_t index = metadata_page_->data_tail + offset_from_tail;

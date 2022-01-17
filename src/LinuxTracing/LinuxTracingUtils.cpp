@@ -49,14 +49,15 @@ std::optional<char> GetThreadState(pid_t tid) {
 
   ErrorMessageOr<std::string> file_content_or_error = orbit_base::ReadFileToString(stat);
   if (file_content_or_error.has_error()) {
-    ERROR("Could not open \"%s\": %s", stat.string(), file_content_or_error.error().message());
+    ORBIT_ERROR("Could not open \"%s\": %s", stat.string(),
+                file_content_or_error.error().message());
     return std::nullopt;
   }
 
   std::vector<std::string> lines =
       absl::StrSplit(file_content_or_error.value(), absl::MaxSplits('\n', 1));
   if (lines.empty()) {
-    ERROR("Empty \"%s\" file", stat.string());
+    ORBIT_ERROR("Empty \"%s\" file", stat.string());
     return std::nullopt;
   }
   std::string first_line = lines.at(0);
@@ -175,14 +176,14 @@ int GetTracepointId(const char* tracepoint_category, const char* tracepoint_name
 
   ErrorMessageOr<std::string> file_content_or_error = orbit_base::ReadFileToString(filename);
   if (file_content_or_error.has_error()) {
-    ERROR("Reading tracepoint id of %s:%s: %s", tracepoint_category, tracepoint_name,
-          file_content_or_error.error().message());
+    ORBIT_ERROR("Reading tracepoint id of %s:%s: %s", tracepoint_category, tracepoint_name,
+                file_content_or_error.error().message());
     return -1;
   }
 
   int tp_id = -1;
   if (!absl::SimpleAtoi(file_content_or_error.value(), &tp_id)) {
-    ERROR("Parsing tracepoint id for: %s:%s", tracepoint_category, tracepoint_name);
+    ORBIT_ERROR("Parsing tracepoint id for: %s:%s", tracepoint_category, tracepoint_name);
     return -1;
   }
   return tp_id;
@@ -192,7 +193,7 @@ uint64_t GetMaxOpenFilesHardLimit() {
   rlimit limit{};
   int ret = getrlimit(RLIMIT_NOFILE, &limit);
   if (ret != 0) {
-    ERROR("getrlimit: %s", SafeStrerror(errno));
+    ORBIT_ERROR("getrlimit: %s", SafeStrerror(errno));
     return 0;
   }
   return limit.rlim_max;
@@ -206,7 +207,7 @@ bool SetMaxOpenFilesSoftLimit(uint64_t soft_limit) {
   rlimit limit{soft_limit, hard_limit};
   int ret = setrlimit(RLIMIT_NOFILE, &limit);
   if (ret != 0) {
-    ERROR("setrlimit: %s", SafeStrerror(errno));
+    ORBIT_ERROR("setrlimit: %s", SafeStrerror(errno));
     return false;
   }
   return true;

@@ -41,7 +41,7 @@ void UploaderClientCaptureEventCollector::Stop() {
   CHECK(output_stream_ != nullptr);
   auto close_result = output_stream_->Close();
   if (close_result.has_error()) {
-    ERROR("Closing output stream: %s", close_result.error().message());
+    ORBIT_ERROR("Closing output stream: %s", close_result.error().message());
   }
 }
 

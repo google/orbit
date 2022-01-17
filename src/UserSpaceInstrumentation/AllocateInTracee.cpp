@@ -254,7 +254,7 @@ AutomaticMemoryInTracee::~AutomaticMemoryInTracee() {
   if (pid_ == -1) return;  // Freed manually already.
   auto result = Free();
   if (result.has_error()) {
-    ERROR("Unable to free memory in tracee: %s", result.error().message());
+    ORBIT_ERROR("Unable to free memory in tracee: %s", result.error().message());
   }
 }
 

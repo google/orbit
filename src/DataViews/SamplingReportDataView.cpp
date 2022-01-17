@@ -197,7 +197,7 @@ SamplingReportDataView::GetModulePathAndBuildIdFromRow(int row) const {
   CHECK(sampled_function.absolute_address != 0);
   auto result = process->FindModuleByAddress(sampled_function.absolute_address);
   if (result.has_error()) {
-    ERROR("result %s", result.error().message());
+    ORBIT_ERROR("result %s", result.error().message());
     return std::nullopt;
   }
 

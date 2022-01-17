@@ -53,7 +53,7 @@ std::vector<fs::path> ReadSymbolsFile(const fs::path& file_name) {
   std::error_code error;
   bool file_exists = fs::exists(file_name, error);
   if (error) {
-    ERROR("Unable to stat \"%s\":%s", file_name.string(), error.message());
+    ORBIT_ERROR("Unable to stat \"%s\":%s", file_name.string(), error.message());
     return {};
   }
 
@@ -75,7 +75,7 @@ std::vector<fs::path> ReadSymbolsFile(const fs::path& file_name) {
     );
 
     if (result.has_error()) {
-      ERROR("Unable to create symbols file: %s", result.error().message());
+      ORBIT_ERROR("Unable to create symbols file: %s", result.error().message());
     }
     // Since file is empty - return empty list
     return {};
@@ -84,7 +84,7 @@ std::vector<fs::path> ReadSymbolsFile(const fs::path& file_name) {
   std::vector<fs::path> directories;
   ErrorMessageOr<std::string> file_content_or_error = orbit_base::ReadFileToString(file_name);
   if (file_content_or_error.has_error()) {
-    ERROR("%s", file_content_or_error.error().message());
+    ORBIT_ERROR("%s", file_content_or_error.error().message());
     return {};
   }
 
@@ -102,12 +102,12 @@ std::vector<fs::path> ReadSymbolsFile(const fs::path& file_name) {
     const fs::path dir = line;
     bool is_directory = fs::is_directory(dir, error);
     if (error) {
-      ERROR("Unable to stat \"%s\": %s (skipping)", dir.string(), error.message());
+      ORBIT_ERROR("Unable to stat \"%s\": %s (skipping)", dir.string(), error.message());
       continue;
     }
 
     if (!is_directory) {
-      ERROR("\"%s\" is not a directory (skipping)", dir.string());
+      ORBIT_ERROR("\"%s\" is not a directory (skipping)", dir.string());
       continue;
     }
 
@@ -217,7 +217,7 @@ ErrorMessageOr<fs::path> SymbolHelper::FindSymbolsFileLocally(
     std::error_code error;
     bool exists = fs::exists(symbols_path, error);
     if (error) {
-      ERROR("Unable to stat \"%s\": %s", symbols_path.string(), error.message());
+      ORBIT_ERROR("Unable to stat \"%s\": %s", symbols_path.string(), error.message());
       continue;
     }
 
@@ -276,7 +276,7 @@ fs::path SymbolHelper::GenerateCachedFileName(const fs::path& file_path) const {
   std::error_code error;
   bool exists = fs::exists(debuginfo_file_path, error);
   if (error) {
-    ERROR("Unable to stat \"%s\": %s", debuginfo_file_path.string(), error.message());
+    ORBIT_ERROR("Unable to stat \"%s\": %s", debuginfo_file_path.string(), error.message());
     return false;
   }
 

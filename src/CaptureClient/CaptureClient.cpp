@@ -199,7 +199,7 @@ ErrorMessageOr<CaptureListener::CaptureOutcome> CaptureClient::CaptureSync(
     }
   }
   if (!request_write_succeeded) {
-    ERROR("Sending CaptureRequest on Capture's gRPC stream");
+    ORBIT_ERROR("Sending CaptureRequest on Capture's gRPC stream");
     ErrorMessageOr<void> finish_result = FinishCapture();
     std::string error_string =
         absl::StrFormat("Error sending capture request.%s",
@@ -274,7 +274,7 @@ bool CaptureClient::StopCapture() {
     // but in this case since we failed to notify the service we pull emergency
     // stop plug. Setting this flag forces capture thread to exit as soon
     // as it notices that it was set.
-    ERROR(
+    ORBIT_ERROR(
         "WritesDone on Capture's gRPC stream failed: unable to finish the "
         "capture in orderly manner, initiating emergency stop");
     writes_done_failed_ = true;
@@ -329,7 +329,7 @@ ErrorMessageOr<void> CaptureClient::FinishCapture() {
   }
 
   if (!status.ok()) {
-    ERROR("Finishing gRPC call to Capture: %s", status.error_message());
+    ORBIT_ERROR("Finishing gRPC call to Capture: %s", status.error_message());
     return ErrorMessage{status.error_message()};
   }
   return outcome::success();

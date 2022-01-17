@@ -238,7 +238,7 @@ void CaptureEventProcessorForListener::ProcessEvent(const ClientCaptureEvent& ev
       ProcessCaptureFinished(event.capture_finished());
       break;
     case ClientCaptureEvent::EVENT_NOT_SET:
-      ERROR("CaptureEvent::EVENT_NOT_SET read from Capture's gRPC stream");
+      ORBIT_ERROR("CaptureEvent::EVENT_NOT_SET read from Capture's gRPC stream");
       break;
     default:
       break;
@@ -275,7 +275,7 @@ void CaptureEventProcessorForListener::ProcessSchedulingSlice(
 void CaptureEventProcessorForListener::ProcessInternedCallstack(
     InternedCallstack interned_callstack) {
   if (callstack_intern_pool.contains(interned_callstack.key())) {
-    ERROR("Overwriting InternedCallstack with key %llu", interned_callstack.key());
+    ORBIT_ERROR("Overwriting InternedCallstack with key %llu", interned_callstack.key());
   }
   callstack_intern_pool.emplace(interned_callstack.key(),
                                 std::move(*interned_callstack.mutable_intern()));
@@ -323,7 +323,7 @@ void CaptureEventProcessorForListener::ProcessFunctionCall(const FunctionCall& f
 
 void CaptureEventProcessorForListener::ProcessInternedString(InternedString interned_string) {
   if (string_intern_pool_.contains(interned_string.key())) {
-    ERROR("Overwriting InternedString with key %llu", interned_string.key());
+    ORBIT_ERROR("Overwriting InternedString with key %llu", interned_string.key());
   }
   capture_listener_->OnKeyAndString(interned_string.key(), interned_string.intern());
   string_intern_pool_.emplace(interned_string.key(), std::move(*interned_string.mutable_intern()));

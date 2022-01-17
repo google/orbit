@@ -134,7 +134,7 @@ ErrorMessageOr<void> PresetFile::SaveToFile() const {
   if (write_result.has_error()) {
     std::string error_message = absl::StrFormat(
         "Failed to save preset to \"%s\": %s", file_path_.string(), write_result.error().message());
-    ERROR("%s", error_message);
+    ORBIT_ERROR("%s", error_message);
     return ErrorMessage(error_message);
   }
 
@@ -147,7 +147,7 @@ ErrorMessageOr<void> PresetFile::SaveToFile() const {
   if (write_result.has_error()) {
     std::string error_message = absl::StrFormat(
         "Failed to save preset to \"%s\": %s", file_path_.string(), write_result.error().message());
-    ERROR("%s", error_message);
+    ORBIT_ERROR("%s", error_message);
     return ErrorMessage(error_message);
   }
 

@@ -160,7 +160,7 @@ void ConnectToTargetDialog::SetStatusMessage(const QString& message) {
 }
 
 void ConnectToTargetDialog::LogAndDisplayError(const ErrorMessage& message) {
-  ERROR("%s", message.message());
+  ORBIT_ERROR("%s", message.message());
   QMessageBox::critical(nullptr, QApplication::applicationName(),
                         QString::fromStdString(message.message()));
 }

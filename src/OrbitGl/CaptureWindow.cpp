@@ -244,7 +244,7 @@ bool CaptureWindow::RightUp() {
   if (app_->IsDevMode()) {
     auto result = selection_stats_.Generate(this, select_start_time_, select_stop_time_);
     if (result.has_error()) {
-      ERROR("%s", result.error().message());
+      ORBIT_ERROR("%s", result.error().message());
     }
   }
 
@@ -533,7 +533,7 @@ void CaptureWindow::RenderAllLayers() {
   auto it = std::unique(all_layers.begin(), all_layers.end());
   all_layers.resize(std::distance(all_layers.begin(), it));
   if (all_layers.size() > GlCanvas::kMaxNumberRealZLayers) {
-    ERROR("Too many z-layers. The current number is %d", all_layers.size());
+    ORBIT_ERROR("Too many z-layers. The current number is %d", all_layers.size());
   }
 
   for (float layer : all_layers) {

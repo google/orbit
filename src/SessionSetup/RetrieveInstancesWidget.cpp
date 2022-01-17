@@ -169,7 +169,7 @@ void RetrieveInstancesWidget::OnInitialLoadingReturnedSuccess(
 void RetrieveInstancesWidget::OnInstancesLoadingReturned(
     const ErrorMessageOr<QVector<Instance>>& loading_result) {
   if (loading_result.has_error()) {
-    ERROR("instance loading returned with error: %s", loading_result.error().message());
+    ORBIT_ERROR("instance loading returned with error: %s", loading_result.error().message());
     QMessageBox::critical(this, QCoreApplication::applicationName(),
                           QString::fromStdString(loading_result.error().message()));
     emit LoadingFailed();

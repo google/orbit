@@ -30,7 +30,7 @@ outcome::result<Channel> Channel::OpenChannel(Session* session) {
 
   const auto [last_errno, error_message] = LibSsh2SessionLastError(session->GetRawSessionPtr());
   if (last_errno != LIBSSH2_ERROR_EAGAIN) {
-    ERROR("Unable to open Channel, last session error message: %s", error_message);
+    ORBIT_ERROR("Unable to open Channel, last session error message: %s", error_message);
   }
   return static_cast<Error>(last_errno);
 }
@@ -46,7 +46,7 @@ outcome::result<Channel> Channel::OpenTcpIpTunnel(Session* session,
 
   const auto [last_errno, error_message] = LibSsh2SessionLastError(session->GetRawSessionPtr());
   if (last_errno != LIBSSH2_ERROR_EAGAIN) {
-    ERROR("Unable to open TcpIpTunnel, last session error message: %s", error_message);
+    ORBIT_ERROR("Unable to open TcpIpTunnel, last session error message: %s", error_message);
   }
   return static_cast<Error>(last_errno);
 }

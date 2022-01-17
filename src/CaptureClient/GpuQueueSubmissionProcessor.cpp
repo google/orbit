@@ -354,7 +354,7 @@ std::vector<TimerInfo> GpuQueueSubmissionProcessor::ProcessGpuDebugMarkers(
         // contains no command buffer timers). If we don't have a matching submission for the
         // "begin" marker, we have to discard the entire marker.
         if (matching_begin_submission == nullptr) {
-          ERROR("Discarding debug marker timer.");
+          ORBIT_ERROR("Discarding debug marker timer.");
           continue;
         }
         begin_submission_first_command_buffer =

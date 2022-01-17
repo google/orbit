@@ -55,8 +55,8 @@ namespace {
     return true;
   }
 
-  ERROR("Root or max perf_event_paranoid %d (actual is %d) required for this test",
-        max_perf_event_paranoid, perf_event_paranoid);
+  ORBIT_ERROR("Root or max perf_event_paranoid %d (actual is %d) required for this test",
+              max_perf_event_paranoid, perf_event_paranoid);
   return false;
 }
 
@@ -73,7 +73,7 @@ namespace {
     return true;
   }
 
-  ERROR("Stadia instance required for this test (but kernel release is \"%s\")", release);
+  ORBIT_ERROR("Stadia instance required for this test (but kernel release is \"%s\")", release);
   return false;
 }
 

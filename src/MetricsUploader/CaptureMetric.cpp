@@ -72,12 +72,12 @@ bool CaptureMetric::SendCaptureSucceeded(std::chrono::milliseconds duration_in_m
   status_code_ = OrbitLogEvent::SUCCESS;
 
   if (file_path_.empty()) {
-    ERROR("Unable to determine capture file size for metrics. File path is empty");
+    ORBIT_ERROR("Unable to determine capture file size for metrics. File path is empty");
   } else {
     ErrorMessageOr<uint64_t> file_size = orbit_base::FileSize(file_path_);
     if (file_size.has_error()) {
-      ERROR("Unable to determine capture file size for metrics. File: \"%s\"; error: %s",
-            file_path_.string(), file_size.error().message());
+      ORBIT_ERROR("Unable to determine capture file size for metrics. File: \"%s\"; error: %s",
+                  file_path_.string(), file_size.error().message());
     } else {
       capture_data_.set_file_size(file_size.value());
     }

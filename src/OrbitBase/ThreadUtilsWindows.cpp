@@ -67,7 +67,7 @@ template <typename FunctionPrototypeT>
 static FunctionPrototypeT GetProcAddress(const std::string& library, const std::string& procedure) {
   HMODULE module_handle = LoadLibraryA(library.c_str());
   if (module_handle == nullptr) {
-    ERROR("Could not find procedure %s in %s", procedure, library);
+    ORBIT_ERROR("Could not find procedure %s in %s", procedure, library);
     return nullptr;
   }
   return reinterpret_cast<FunctionPrototypeT>(::GetProcAddress(module_handle, procedure.c_str()));
@@ -83,14 +83,14 @@ std::string GetThreadNameNative(uint32_t tid) {
   static auto get_thread_description =
       GetProcAddress<HRESULT(WINAPI*)(HANDLE, PWSTR*)>("kernel32.dll", "GetThreadDescription");
   if (get_thread_description == nullptr) {
-    ERROR("Getting thread name from id %u with proc[%llx]", tid, get_thread_description);
+    ORBIT_ERROR("Getting thread name from id %u with proc[%llx]", tid, get_thread_description);
     return kEmptyString;
   }
 
   // Get thread handle from tid.
   HANDLE thread_handle = OpenThread(THREAD_QUERY_LIMITED_INFORMATION, FALSE, tid);
   if (thread_handle == nullptr) {
-    ERROR("Retrieving thread handle for tid %u", tid);
+    ORBIT_ERROR("Retrieving thread handle for tid %u", tid);
     return kEmptyString;
   }
 
@@ -103,7 +103,7 @@ std::string GetThreadNameNative(uint32_t tid) {
     return thread_name;
   }
 
-  ERROR("Getting thread name from id %u with proc[%llx]", tid, get_thread_description);
+  ORBIT_ERROR("Getting thread name from id %u with proc[%llx]", tid, get_thread_description);
   return kEmptyString;
 }
 
@@ -113,7 +113,7 @@ void SetCurrentThreadName(const char* name) {
   std::wstring wide_name(name, name + strlen(name));
   if (set_thread_description == nullptr ||
       !SUCCEEDED((*set_thread_description)(GetCurrentThread(), wide_name.c_str()))) {
-    ERROR("Setting thread name %s with proc[%llx]", name, set_thread_description);
+    ORBIT_ERROR("Setting thread name %s with proc[%llx]", name, set_thread_description);
   }
 }
 

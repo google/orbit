@@ -141,7 +141,7 @@ void UprobesUnwindingVisitor::Visit(uint64_t event_timestamp,
   if (libunwindstack_result.frames().empty()) {
     // Even with unwinding errors this is not expected because we should at least get the program
     // counter. Do nothing in case this doesn't hold for a reason we don't know.
-    ERROR("Unwound callstack has no frames");
+    ORBIT_ERROR("Unwound callstack has no frames");
     return;
   }
 
@@ -235,7 +235,7 @@ void UprobesUnwindingVisitor::Visit(uint64_t event_timestamp,
   // The top of a callchain is always inside the kernel code and we don't expect samples to be only
   // inside the kernel. Do nothing in case this happens anyway for some reason.
   if (event_data.GetCallchainSize() <= 1) {
-    ERROR("Callchain has only %lu frames", event_data.GetCallchainSize());
+    ORBIT_ERROR("Callchain has only %lu frames", event_data.GetCallchainSize());
     return;
   }
 
@@ -393,11 +393,11 @@ void UprobesUnwindingVisitor::OnUprobes(
     uint32_t last_uprobe_cpu = std::get<2>(uprobe_sps_ips_cpus.back());
     uprobe_sps_ips_cpus.pop_back();
     if (sp > last_uprobe_sp) {
-      ERROR("MISSING URETPROBE OR DUPLICATE UPROBE");
+      ORBIT_ERROR("MISSING URETPROBE OR DUPLICATE UPROBE");
       return;
     }
     if (sp == last_uprobe_sp && ip == last_uprobe_ip && cpu != last_uprobe_cpu) {
-      ERROR("Duplicate uprobe on thread migration");
+      ORBIT_ERROR("Duplicate uprobe on thread migration");
       return;
     }
   }
@@ -494,7 +494,7 @@ void UprobesUnwindingVisitor::Visit(uint64_t event_timestamp, const MmapPerfEven
       orbit_object_utils::CreateModule(event_data.filename, event_data.address,
                                        event_data.address + event_data.length);
   if (module_info_or_error.has_error()) {
-    ERROR("Unable to create module: %s", module_info_or_error.error().message());
+    ORBIT_ERROR("Unable to create module: %s", module_info_or_error.error().message());
     return;
   }
 

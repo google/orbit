@@ -35,7 +35,7 @@ FramePointerValidatorClient::FramePointerValidatorClient(
 
 void FramePointerValidatorClient::AnalyzeModules(const std::vector<const ModuleData*>& modules) {
   if (modules.empty()) {
-    ERROR("No module to validate, cancelling");
+    ORBIT_ERROR("No module to validate, cancelling");
     return;
   }
 

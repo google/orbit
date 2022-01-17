@@ -37,20 +37,21 @@ void LayerOptions::Init() {
   // Config is a proto text file
   int config_file_descriptor = open(kConfigFileName, O_RDONLY);
   if (config_file_descriptor < 0) {
-    ERROR("Not being able to open file: %s. Default values will be used", SafeStrerror(errno));
+    ORBIT_ERROR("Not being able to open file: %s. Default values will be used",
+                SafeStrerror(errno));
     return;
   }
 
   google::protobuf::io::FileInputStream config_file_stream(config_file_descriptor);
   if (!google::protobuf::TextFormat::Parse(&config_file_stream, &layer_config_)) {
-    ERROR("Parsing vulkan layer config file. Default values will be used");
+    ORBIT_ERROR("Parsing vulkan layer config file. Default values will be used");
     layer_config_.Clear();
   } else {
     ORBIT_LOG("Config data loaded successfully");
   }
 
   if (close(config_file_descriptor) < 0) {
-    ERROR("Closing config file: %s", SafeStrerror(errno));
+    ORBIT_ERROR("Closing config file: %s", SafeStrerror(errno));
   }
 }
 

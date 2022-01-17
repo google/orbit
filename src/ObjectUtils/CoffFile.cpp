@@ -118,7 +118,7 @@ bool CoffFileImpl::HasDebugSymbols() const { return has_debug_info_ && !AreDebug
 bool CoffFileImpl::AreDebugSymbolsEmpty() const {
   const auto dwarf_context = llvm::DWARFContext::create(*owning_binary_.getBinary());
   if (dwarf_context == nullptr) {
-    ERROR("Could not create DWARF context.");
+    ORBIT_ERROR("Could not create DWARF context.");
     return true;
   }
 

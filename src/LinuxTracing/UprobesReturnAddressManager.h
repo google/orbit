@@ -119,7 +119,7 @@ class UprobesReturnAddressManager {
       //     some uprobes);
       //  2. When some events are lost or processed out of order.
       if (!frames_to_patch.empty()) {
-        ERROR(
+        ORBIT_ERROR(
             "Discarding sample in a dynamically instrumented function as all information is "
             "missing (tid=%d)",
             tid);
@@ -149,7 +149,7 @@ class UprobesReturnAddressManager {
     // This is the same situation as above, but we have at least some open dynamically instrumented
     // functions.
     if (num_unique_open_functions < frames_to_patch.size()) {
-      ERROR(
+      ORBIT_ERROR(
           "Discarding sample in a dynamically instrumented function as some information is "
           "missing (tid=%d)",
           tid);
@@ -158,7 +158,7 @@ class UprobesReturnAddressManager {
     // In cases of lost events, or out of order processing, there might be wrong open dynamically
     // instrumented functions. So we need to discard the event.
     if (num_unique_open_functions > frames_to_patch.size() + 1) {
-      ERROR(
+      ORBIT_ERROR(
           "Discarding sample in a dynamically instrumented function as some information is "
           "incorrect (tid=%d)",
           tid);

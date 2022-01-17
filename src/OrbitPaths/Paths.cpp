@@ -106,7 +106,8 @@ static std::filesystem::path GetDocumentsPath() {
         nullptr, GetLastError(), MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
         reinterpret_cast<LPSTR>(&error_string), 0, nullptr);
     std::filesystem::path path = std::filesystem::path(GetEnvVar("USERPROFILE")) / "Documents";
-    ERROR("Retrieving path to Documents (defaulting to \"%s\"): %s", path.string(), error_string);
+    ORBIT_ERROR("Retrieving path to Documents (defaulting to \"%s\"): %s", path.string(),
+                error_string);
     LocalFree(error_string);
     return path;
   }

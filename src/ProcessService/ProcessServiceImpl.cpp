@@ -90,8 +90,8 @@ Status ProcessServiceImpl::GetProcessMemory(ServerContext* /*context*/,
   }
 
   response->mutable_memory()->resize(0);
-  ERROR("GetProcessMemory: reading %lu bytes from address %#lx of process %u", size,
-        request->address(), request->pid());
+  ORBIT_ERROR("GetProcessMemory: reading %lu bytes from address %#lx of process %u", size,
+              request->address(), request->pid());
   return Status(StatusCode::PERMISSION_DENIED,
                 absl::StrFormat("Could not read %lu bytes from address %#lx of process %u", size,
                                 request->address(), request->pid()));

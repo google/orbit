@@ -108,7 +108,7 @@ static outcome::result<T> MapError(outcome::result<T> result, Error new_error) {
     return result;
   } else {
     const auto new_error_code = make_error_code(new_error);
-    ERROR("%s: %s", new_error_code.message().c_str(), result.error().message().c_str());
+    ORBIT_ERROR("%s: %s", new_error_code.message().c_str(), result.error().message().c_str());
     return outcome::failure(new_error_code);
   }
 }
@@ -536,7 +536,7 @@ outcome::result<void> ServiceDeployManager::InstallOrbitServicePackage() {
     } else {
       // TODO(antonrohr) use stderr message once its implemented in
       // OrbitSshQt::Task
-      ERROR("Unable to install install OrbitService package, exit code: %d", exit_code);
+      ORBIT_ERROR("Unable to install install OrbitService package, exit code: %d", exit_code);
       loop.error(make_error_code(Error::kCouldNotInstallPackage));
     }
   });
@@ -605,7 +605,7 @@ outcome::result<ServiceDeployManager::GrpcPort> ServiceDeployManager::Exec(
       ORBIT_LOG("OrbitService deployment has been aborted by the user");
     } else {
       connect_metric.SetStatusCode(orbit_metrics_uploader::OrbitLogEvent::INTERNAL_ERROR);
-      ERROR("OrbitService deployment failed, error: %s", result.error().message());
+      ORBIT_ERROR("OrbitService deployment failed, error: %s", result.error().message());
     }
   } else {
     ORBIT_LOG("Deployment successful, grpc_port: %d", result.value().grpc_port);
@@ -662,7 +662,7 @@ outcome::result<ServiceDeployManager::GrpcPort> ServiceDeployManager::ExecImpl()
       StartTunnel(&grpc_tunnel_, grpc_port_.grpc_port);
   int retry = 3;
   while (retry > 0 && local_grpc_port_result.has_error()) {
-    ERROR("Failed to establish tunnel. Trying again in 500ms");
+    ORBIT_ERROR("Failed to establish tunnel. Trying again in 500ms");
     std::this_thread::sleep_for(std::chrono::milliseconds{500});
     local_grpc_port_result = StartTunnel(&grpc_tunnel_, grpc_port_.grpc_port);
     retry--;
@@ -732,14 +732,14 @@ void ServiceDeployManager::Shutdown() {
     if (sftp_channel_ != nullptr) {
       outcome::result<void> shutdown_result = ShutdownSftpChannel(sftp_channel_.get());
       if (shutdown_result.has_error()) {
-        ERROR("Unable to ShutdownSftpChannel: %s", shutdown_result.error().message());
+        ORBIT_ERROR("Unable to ShutdownSftpChannel: %s", shutdown_result.error().message());
       }
       sftp_channel_.reset();
     }
     if (grpc_tunnel_.has_value()) {
       outcome::result<void> shutdown_result = ShutdownTunnel(&grpc_tunnel_.value());
       if (shutdown_result.has_error()) {
-        ERROR("Unable to ShutdownTunnel: %s", shutdown_result.error().message());
+        ORBIT_ERROR("Unable to ShutdownTunnel: %s", shutdown_result.error().message());
       }
       grpc_tunnel_ = std::nullopt;
     }
@@ -747,14 +747,14 @@ void ServiceDeployManager::Shutdown() {
     if (orbit_service_task_.has_value()) {
       outcome::result<void> shutdown_result = ShutdownTask(&orbit_service_task_.value());
       if (shutdown_result.has_error()) {
-        ERROR("Unable to ShutdownTask: %s", shutdown_result.error().message());
+        ORBIT_ERROR("Unable to ShutdownTask: %s", shutdown_result.error().message());
       }
       orbit_service_task_ = std::nullopt;
     }
     if (session_.has_value()) {
       outcome::result<void> shutdown_result = ShutdownSession(&session_.value());
       if (shutdown_result.has_error()) {
-        ERROR("Unable to ShutdownSession: %s", shutdown_result.error().message());
+        ORBIT_ERROR("Unable to ShutdownSession: %s", shutdown_result.error().message());
       }
       session_ = std::nullopt;
     }

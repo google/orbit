@@ -21,7 +21,8 @@ outcome::result<Sftp> Sftp::Init(Session* session) {
   if (result == nullptr) {
     const auto [last_errno, error_message] = LibSsh2SessionLastError(session->GetRawSessionPtr());
     if (last_errno != LIBSSH2_ERROR_EAGAIN) {
-      ERROR("Call to ligssh2_sftp_init() failed. Last session error message: %s", error_message);
+      ORBIT_ERROR("Call to ligssh2_sftp_init() failed. Last session error message: %s",
+                  error_message);
     }
     return static_cast<Error>(last_errno);
   }

@@ -82,8 +82,8 @@ TracerImpl::TracerImpl(
   } else if (stack_dump_size > kMaxStackSampleUserSize || stack_dump_size == 0) {
     // TODO(b/210439638): Support a stack_dump_size of 0. It might be valid for frame pointer
     //  sampling without leaf function patching.
-    ERROR("Invalid sample stack dump size: %u; reassigning to default: %u", stack_dump_size,
-          kMaxStackSampleUserSize);
+    ORBIT_ERROR("Invalid sample stack dump size: %u; reassigning to default: %u", stack_dump_size,
+                kMaxStackSampleUserSize);
     stack_dump_size = kMaxStackSampleUserSize;
   }
   stack_dump_size_ = static_cast<uint16_t>(stack_dump_size);
@@ -196,7 +196,8 @@ bool TracerImpl::OpenUprobes(const orbit_linux_tracing::Function& function,
       fd = uprobes_retaddr_event_open(module, offset, /*pid=*/-1, cpu);
     }
     if (fd < 0) {
-      ERROR("Opening uprobe %s+%#x on cpu %d", function.file_path(), function.file_offset(), cpu);
+      ORBIT_ERROR("Opening uprobe %s+%#x on cpu %d", function.file_path(), function.file_offset(),
+                  cpu);
       return false;
     }
     (*fds_per_cpu)[cpu] = fd;
@@ -218,8 +219,8 @@ bool TracerImpl::OpenUretprobes(const orbit_linux_tracing::Function& function,
       fd = uretprobes_event_open(module, offset, /*pid=*/-1, cpu);
     }
     if (fd < 0) {
-      ERROR("Opening uretprobe %s+%#x on cpu %d", function.file_path(), function.file_offset(),
-            cpu);
+      ORBIT_ERROR("Opening uretprobe %s+%#x on cpu %d", function.file_path(),
+                  function.file_offset(), cpu);
       return false;
     }
     (*fds_per_cpu)[cpu] = fd;
@@ -326,7 +327,7 @@ bool TracerImpl::OpenMmapTask(const std::vector<int32_t>& cpus) {
       mmap_task_tracing_fds.push_back(mmap_task_fd);
       mmap_task_ring_buffers.push_back(std::move(mmap_task_ring_buffer));
     } else {
-      ERROR("Opening mmap, fork, and exit events for cpu %d", cpu);
+      ORBIT_ERROR("Opening mmap, fork, and exit events for cpu %d", cpu);
       CloseFileDescriptors(mmap_task_tracing_fds);
       return false;
     }
@@ -374,7 +375,7 @@ bool TracerImpl::OpenSampling(const std::vector<int32_t>& cpus) {
       sampling_tracing_fds.push_back(sampling_fd);
       sampling_ring_buffers.push_back(std::move(sampling_ring_buffer));
     } else {
-      ERROR("Opening sampling for cpu %d", cpu);
+      ORBIT_ERROR("Opening sampling for cpu %d", cpu);
       CloseFileDescriptors(sampling_tracing_fds);
       return false;
     }
@@ -451,7 +452,8 @@ static bool OpenFileDescriptorsAndRingBuffersForAllTracepoints(
     for (int32_t cpu : cpus) {
       int tracepoint_fd = tracepoint_event_open(tracepoint_category, tracepoint_name, -1, cpu);
       if (tracepoint_fd == -1) {
-        ERROR("Opening %s:%s tracepoint for cpu %d", tracepoint_category, tracepoint_name, cpu);
+        ORBIT_ERROR("Opening %s:%s tracepoint for cpu %d", tracepoint_category, tracepoint_name,
+                    cpu);
         tracepoint_event_open_errors = true;
         break;
       }
@@ -632,7 +634,7 @@ void TracerImpl::Startup() {
   // will be scheduled on.
   std::vector<int32_t> cpuset_cpus = GetCpusetCpus(target_pid_);
   if (cpuset_cpus.empty()) {
-    ERROR("Could not read cpuset");
+    ORBIT_ERROR("Could not read cpuset");
     cpuset_cpus = all_cpus;
   }
 
@@ -703,7 +705,7 @@ void TracerImpl::Startup() {
   }
 
   if (perf_event_open_errors) {
-    ERROR("With perf_event_open: did you forget to run as root?");
+    ORBIT_ERROR("With perf_event_open: did you forget to run as root?");
     ORBIT_LOG("In particular, there were errors with opening %s",
               absl::StrJoin(perf_event_open_error_details, ", "));
     orbit_grpc_protos::ErrorsWithPerfEventOpenEvent errors_with_perf_event_open_event;
@@ -730,7 +732,8 @@ void TracerImpl::Startup() {
     *modules_snapshot.mutable_modules() = {modules.begin(), modules.end()};
     listener_->OnModulesSnapshot(std::move(modules_snapshot));
   } else {
-    ERROR("Unable to load modules for %d: %s", target_pid_, modules_or_error.error().message());
+    ORBIT_ERROR("Unable to load modules for %d: %s", target_pid_,
+                modules_or_error.error().message());
   }
 
   // Get the initial thread names to notify the listener_.
@@ -799,10 +802,11 @@ void TracerImpl::ProcessOneRecord(PerfEventRingBuffer* ring_buffer) {
   // perf_event_type in linux/perf_event.h.
   switch (header.type) {
     case PERF_RECORD_SWITCH:
-      ERROR("Unexpected PERF_RECORD_SWITCH in ring buffer '%s'", ring_buffer->GetName());
+      ORBIT_ERROR("Unexpected PERF_RECORD_SWITCH in ring buffer '%s'", ring_buffer->GetName());
       break;
     case PERF_RECORD_SWITCH_CPU_WIDE:
-      ERROR("Unexpected PERF_RECORD_SWITCH_CPU_WIDE in ring buffer '%s'", ring_buffer->GetName());
+      ORBIT_ERROR("Unexpected PERF_RECORD_SWITCH_CPU_WIDE in ring buffer '%s'",
+                  ring_buffer->GetName());
       break;
     case PERF_RECORD_FORK:
       event_timestamp_ns = ProcessForkEventAndReturnTimestamp(header, ring_buffer);
@@ -824,8 +828,8 @@ void TracerImpl::ProcessOneRecord(PerfEventRingBuffer* ring_buffer) {
       event_timestamp_ns = ProcessThrottleUnthrottleEventAndReturnTimestamp(header, ring_buffer);
       break;
     default:
-      ERROR("Unexpected perf_event_header::type in ring buffer '%s': %u", ring_buffer->GetName(),
-            header.type);
+      ORBIT_ERROR("Unexpected perf_event_header::type in ring buffer '%s': %u",
+                  ring_buffer->GetName(), header.type);
       ring_buffer->SkipRecord(header);
       break;
   }
@@ -1235,7 +1239,7 @@ uint64_t TracerImpl::ProcessSampleEventAndReturnTimestamp(const perf_event_heade
 
     listener_->OnTracepointEvent(std::move(tracepoint_event));
   } else {
-    ERROR("PERF_EVENT_SAMPLE with unexpected stream_id: %lu", stream_id);
+    ORBIT_ERROR("PERF_EVENT_SAMPLE with unexpected stream_id: %lu", stream_id);
     ring_buffer->SkipRecord(header);
   }
 
@@ -1261,7 +1265,7 @@ uint64_t TracerImpl::ProcessLostEventAndReturnTimestamp(const perf_event_header&
   if (fd_previous_timestamp_ns == 0) {
     // This shouldn't happen because PERF_RECORD_LOST is reported when a ring buffer is full, which
     // means that there were other events in the same ring buffers, and they have already been read.
-    ERROR("Unknown previous timestamp for ring buffer '%s'", ring_buffer->GetName());
+    ORBIT_ERROR("Unknown previous timestamp for ring buffer '%s'", ring_buffer->GetName());
     return timestamp;
   }
 

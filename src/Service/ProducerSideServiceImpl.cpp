@@ -54,7 +54,7 @@ void ProducerSideServiceImpl::OnCaptureStopRequested() {
     if (service_state_.producers_remaining == 0) {
       ORBIT_LOG("All CaptureEventProducers have finished sending their CaptureEvents");
     } else {
-      ERROR(
+      ORBIT_ERROR(
           "Stopped receiving CaptureEvents from CaptureEventProducers "
           "even if not all have sent all their CaptureEvents");
     }
@@ -151,7 +151,7 @@ static bool SendStartCaptureCommand(
   orbit_grpc_protos::ReceiveCommandsAndSendEventsResponse command;
   *command.mutable_start_capture_command()->mutable_capture_options() = std::move(capture_options);
   if (!stream->Write(command)) {
-    ERROR("Sending StartCaptureCommand to CaptureEventProducer");
+    ORBIT_ERROR("Sending StartCaptureCommand to CaptureEventProducer");
     ORBIT_LOG("Terminating call to ReceiveCommandsAndSendEvents as Write failed");
     // Cause Read in ReceiveEventsThread to also fail if for some reason it hasn't already.
     context->TryCancel();
@@ -168,7 +168,7 @@ static bool SendStopCaptureCommand(
   orbit_grpc_protos::ReceiveCommandsAndSendEventsResponse command;
   command.mutable_stop_capture_command();
   if (!stream->Write(command)) {
-    ERROR("Sending StopCaptureCommand to CaptureEventProducer");
+    ORBIT_ERROR("Sending StopCaptureCommand to CaptureEventProducer");
     ORBIT_LOG("Terminating call to ReceiveCommandsAndSendEvents as Write failed");
     // Cause Read in ReceiveEventsThread to also fail if for some reason it hasn't already.
     context->TryCancel();
@@ -185,7 +185,7 @@ static bool SendCaptureFinishedCommand(
   orbit_grpc_protos::ReceiveCommandsAndSendEventsResponse command;
   command.mutable_capture_finished_command();
   if (!stream->Write(command)) {
-    ERROR("Sending CaptureFinishedCommand to CaptureEventProducer");
+    ORBIT_ERROR("Sending CaptureFinishedCommand to CaptureEventProducer");
     ORBIT_LOG("Terminating call to ReceiveCommandsAndSendEvents as Write failed");
     // Cause Read in ReceiveEventsThread to also fail if for some reason it hasn't already.
     context->TryCancel();
@@ -406,7 +406,7 @@ void ProducerSideServiceImpl::ReceiveEventsThread(
         absl::MutexLock lock{&service_state_mutex_};
         switch (service_state_.capture_status) {
           case CaptureStatus::kCaptureStarted: {
-            ERROR("CaptureEventProducer sent AllEventsSent while still capturing");
+            ORBIT_ERROR("CaptureEventProducer sent AllEventsSent while still capturing");
             // Even if we weren't waiting for the AllEventsSent message yet,
             // still keep track of the fact that we have already received it.
             if (!*all_events_sent_received) {
@@ -424,18 +424,18 @@ void ProducerSideServiceImpl::ReceiveEventsThread(
           } break;
 
           case CaptureStatus::kCaptureFinished: {
-            ERROR("CaptureEventProducer sent AllEventsSent after the capture had finished");
+            ORBIT_ERROR("CaptureEventProducer sent AllEventsSent after the capture had finished");
           } break;
         }
       } break;
 
       case orbit_grpc_protos::ReceiveCommandsAndSendEventsRequest::EVENT_NOT_SET: {
-        ERROR("CaptureEventProducer sent EVENT_NOT_SET");
+        ORBIT_ERROR("CaptureEventProducer sent EVENT_NOT_SET");
       } break;
     }
   }
 
-  ERROR("Receiving ReceiveCommandsAndSendEventsRequest from CaptureEventProducer");
+  ORBIT_ERROR("Receiving ReceiveCommandsAndSendEventsRequest from CaptureEventProducer");
   {
     absl::MutexLock lock{&service_state_mutex_};
     // Producer has disconnected: treat this as if it had sent all its CaptureEvents.

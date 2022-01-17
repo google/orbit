@@ -68,7 +68,7 @@ std::string GetThreadNameNative(pid_t tid) {
   std::string comm_filename = absl::StrFormat("/proc/%d/comm", tid);
   ErrorMessageOr<std::string> comm_content = ReadFileToString(comm_filename);
   if (!comm_content.has_value()) {
-    ERROR("Getting thread name for tid %d: %s", tid, comm_content.error().message());
+    ORBIT_ERROR("Getting thread name for tid %d: %s", tid, comm_content.error().message());
     return "";
   }
   if (!comm_content.value().empty() && comm_content.value().back() == '\n') {
@@ -86,7 +86,7 @@ void SetCurrentThreadName(const char* thread_name) {
 
   int result = pthread_setname_np(pthread_self(), thread_name);
   if (result != 0) {
-    ERROR("Setting thread name for tid %d. Error %d", GetCurrentThreadIdNative(), result);
+    ORBIT_ERROR("Setting thread name for tid %d. Error %d", GetCurrentThreadIdNative(), result);
   }
 }
 

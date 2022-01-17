@@ -20,7 +20,7 @@ static bool IsRegularFile(const std::filesystem::path& target_path) {
   std::error_code error{};
   if (fs::is_regular_file(target_path, error)) return true;
   if (error.value() != 0) {
-    ERROR("Failed to 'stat' the file \"%s\": %s", target_path.string(), error.message());
+    ORBIT_ERROR("Failed to 'stat' the file \"%s\": %s", target_path.string(), error.message());
   }
   return false;
 }

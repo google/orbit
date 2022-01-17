@@ -8,6 +8,8 @@
 #include <absl/strings/ascii.h>
 #include <windows.h>
 
+#include "OrbitBase/Logging.h"
+
 namespace orbit_base {
 
 std::string GetLastErrorAsString() {
@@ -30,7 +32,7 @@ std::string GetLastErrorAsString() {
       /*Arguments=*/nullptr);
 
   if (buffer == nullptr) {
-    ERROR("Calling FormatMessageA in GetLastErrorAsString");
+    ORBIT_ERROR("Calling FormatMessageA in GetLastErrorAsString");
     return {};
   }
 

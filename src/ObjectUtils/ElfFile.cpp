@@ -174,7 +174,7 @@ ErrorMessageOr<void> ElfFileImpl<ElfT>::InitDynamicEntries() {
     auto error_message =
         absl::StrFormat("Unable to get dynamic entries from \"%s\": %s", file_path_.string(),
                         llvm::toString(dynamic_entries_or_error.takeError()));
-    ERROR("%s (ignored)", error_message);
+    ORBIT_ERROR("%s (ignored)", error_message);
     // Apparently empty dynamic section results in error - we are going to ignore it.
     return outcome::success();
   }
@@ -210,7 +210,7 @@ ErrorMessageOr<void> ElfFileImpl<ElfT>::InitDynamicEntries() {
     auto error_message =
         absl::StrFormat("Unable to get last byte address of dynamic string table \"%s\": %s",
                         file_path_.string(), llvm::toString(strtab_last_byte_or_error.takeError()));
-    ERROR("%s", error_message);
+    ORBIT_ERROR("%s", error_message);
     return ErrorMessage{error_message};
   }
 
@@ -219,14 +219,14 @@ ErrorMessageOr<void> ElfFileImpl<ElfT>::InitDynamicEntries() {
         "Soname offset is out of bounds of the string table (file=\"%s\", offset=%u "
         "strtab size=%u)",
         file_path_.string(), soname_offset.value(), dynamic_string_table_size.value());
-    ERROR("%s", error_message);
+    ORBIT_ERROR("%s", error_message);
     return ErrorMessage{error_message};
   }
 
   if (*strtab_last_byte_or_error.get() != 0) {
     auto error_message = absl::StrFormat(
         "Dynamic string table is not null-termintated (file=\"%s\")", file_path_.string());
-    ERROR("%s", error_message);
+    ORBIT_ERROR("%s", error_message);
     return ErrorMessage{error_message};
   }
 
@@ -235,7 +235,7 @@ ErrorMessageOr<void> ElfFileImpl<ElfT>::InitDynamicEntries() {
     auto error_message =
         absl::StrFormat("Unable to get dynamic string table from DT_STRTAB in \"%s\": %s",
                         file_path_.string(), llvm::toString(strtab_addr_or_error.takeError()));
-    ERROR("%s", error_message);
+    ORBIT_ERROR("%s", error_message);
     return ErrorMessage{error_message};
   }
 
@@ -252,7 +252,7 @@ ErrorMessageOr<void> ElfFileImpl<ElfT>::InitSections() {
   if (!sections_or_error) {
     auto error_message = absl::StrFormat("Unable to load sections: %s",
                                          llvm::toString(sections_or_error.takeError()));
-    ERROR("%s", error_message);
+    ORBIT_ERROR("%s", error_message);
     return ErrorMessage{error_message};
   }
 
@@ -422,7 +422,7 @@ ErrorMessageOr<void> ElfFileImpl<ElfT>::InitProgramHeaders() {
     std::string error = absl::StrFormat(
         "Unable to get load bias of ELF file: \"%s\". Error loading program headers: %s",
         file_path_.string(), llvm::toString(range.takeError()));
-    ERROR("%s", error);
+    ORBIT_ERROR("%s", error);
     return ErrorMessage(std::move(error));
   }
 
@@ -444,7 +444,7 @@ ErrorMessageOr<void> ElfFileImpl<ElfT>::InitProgramHeaders() {
   std::string error = absl::StrFormat(
       "Unable to get load bias of ELF file: \"%s\". No executable PT_LOAD segment found.",
       file_path_.string());
-  ERROR("%s", error);
+  ORBIT_ERROR("%s", error);
   return ErrorMessage(std::move(error));
 }
 

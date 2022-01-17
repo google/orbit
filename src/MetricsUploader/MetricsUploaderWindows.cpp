@@ -98,7 +98,7 @@ MetricsUploaderImpl::~MetricsUploaderImpl() {
   if (nullptr != shutdown_connection_addr_) {
     Result result = shutdown_connection_addr_();
     if (result != kNoError) {
-      ERROR("Error while closing connection: %s", GetErrorMessage(result));
+      ORBIT_ERROR("Error while closing connection: %s", GetErrorMessage(result));
     }
   }
   // Here FreeLibrary should be called. However, calling it on go-shared library leads to crash.
@@ -113,13 +113,13 @@ std::unique_ptr<MetricsUploader> MetricsUploader::CreateMetricsUploader(std::str
   HMODULE metrics_uploader_client_dll;
   if (GetModuleHandleExA(GET_MODULE_HANDLE_EX_FLAG_UNCHANGED_REFCOUNT, client_name.c_str(),
                          &metrics_uploader_client_dll) != 0) {
-    ERROR("MetricsUploader is already created");
+    ORBIT_ERROR("MetricsUploader is already created");
     return std::make_unique<MetricsUploaderStub>();
   }
 
   auto uuid_result = GenerateUUID();
   if (uuid_result.has_error()) {
-    ERROR("%s", uuid_result.error().message());
+    ORBIT_ERROR("%s", uuid_result.error().message());
     return std::make_unique<MetricsUploaderStub>();
   }
   std::string session_uuid = uuid_result.value();
@@ -127,7 +127,7 @@ std::unique_ptr<MetricsUploader> MetricsUploader::CreateMetricsUploader(std::str
 
   metrics_uploader_client_dll = LoadLibraryA(client_name.c_str());
   if (metrics_uploader_client_dll == nullptr) {
-    ERROR("Metrics uploader client library is not found");
+    ORBIT_ERROR("Metrics uploader client library is not found");
     return std::make_unique<MetricsUploaderStub>();
   }
 
@@ -138,7 +138,7 @@ std::unique_ptr<MetricsUploader> MetricsUploader::CreateMetricsUploader(std::str
     // to crash. This should be revisited as soon as the issue in golang is fixed.
     //
     // FreeLibrary(metrics_uploader_client_dll);
-    ERROR("%s function not found", kSetupConnectionFunctionName);
+    ORBIT_ERROR("%s function not found", kSetupConnectionFunctionName);
     return std::make_unique<MetricsUploaderStub>();
   }
 
@@ -146,7 +146,7 @@ std::unique_ptr<MetricsUploader> MetricsUploader::CreateMetricsUploader(std::str
       GetProcAddress(metrics_uploader_client_dll, kShutdownConnectionFunctionName));
   if (nullptr == shutdown_connection_addr) {
     // FreeLibrary(metrics_uploader_client_dll);
-    ERROR("%s function not found", kShutdownConnectionFunctionName);
+    ORBIT_ERROR("%s function not found", kShutdownConnectionFunctionName);
     return std::make_unique<MetricsUploaderStub>();
   }
 
@@ -154,7 +154,7 @@ std::unique_ptr<MetricsUploader> MetricsUploader::CreateMetricsUploader(std::str
       GetProcAddress(metrics_uploader_client_dll, kSendLogEventFunctionName));
   if (nullptr == send_log_event_addr) {
     // FreeLibrary(metrics_uploader_client_dll);
-    ERROR("%s function not found", kSendLogEventFunctionName);
+    ORBIT_ERROR("%s function not found", kSendLogEventFunctionName);
     return std::make_unique<MetricsUploaderStub>();
   }
 
@@ -164,11 +164,11 @@ std::unique_ptr<MetricsUploader> MetricsUploader::CreateMetricsUploader(std::str
     if (result != kCannotOpenConnection) {
       Result shutdown_result = shutdown_connection_addr();
       if (shutdown_result != kNoError) {
-        ERROR("Error while closing connection: %s", GetErrorMessage(shutdown_result));
+        ORBIT_ERROR("Error while closing connection: %s", GetErrorMessage(shutdown_result));
       }
     }
     // FreeLibrary(metrics_uploader_client_dll);
-    ERROR("Error while starting the metrics uploader client: %s", GetErrorMessage(result));
+    ORBIT_ERROR("Error while starting the metrics uploader client: %s", GetErrorMessage(result));
     return std::make_unique<MetricsUploaderStub>();
   }
 
@@ -201,7 +201,7 @@ ErrorMessageOr<std::string> GenerateUUID() {
 
 bool MetricsUploaderImpl::FillAndSendLogEvent(OrbitLogEvent partial_filled_event) const {
   if (send_log_event_addr_ == nullptr) {
-    ERROR("Unable to send metric, send_log_event_addr_ is nullptr");
+    ORBIT_ERROR("Unable to send metric, send_log_event_addr_ is nullptr");
     return false;
   }
 
@@ -214,7 +214,7 @@ bool MetricsUploaderImpl::FillAndSendLogEvent(OrbitLogEvent partial_filled_event
 
   Result result = send_log_event_addr_(buffer.data(), message_size);
   if (result != kNoError) {
-    ERROR("Unable to send metrics event: %s", GetErrorMessage(result));
+    ORBIT_ERROR("Unable to send metrics event: %s", GetErrorMessage(result));
     return false;
   }
 

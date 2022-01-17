@@ -49,7 +49,7 @@ uint64_t EstimateAndLogClockResolution() {
   if (clock_resolution_ns > 0) {
     ORBIT_LOG("Clock resolution: %d (ns)", clock_resolution_ns);
   } else {
-    ERROR("Failed to estimate clock resolution");
+    ORBIT_ERROR("Failed to estimate clock resolution");
   }
 
   return clock_resolution_ns;

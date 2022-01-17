@@ -248,7 +248,7 @@ grpc::Status LinuxCaptureService::Capture(
   if (capture_options.enable_api()) {
     auto result = orbit_api_loader::EnableApiInTracee(capture_options);
     if (result.has_error()) {
-      ERROR("Enabling Orbit Api: %s", result.error().message());
+      ORBIT_ERROR("Enabling Orbit Api: %s", result.error().message());
       error_enabling_orbit_api =
           absl::StrFormat("Could not enable Orbit API: %s", result.error().message());
     }
@@ -270,7 +270,7 @@ grpc::Status LinuxCaptureService::Capture(
     if (result_or_error.has_error()) {
       error_enabling_user_space_instrumentation = absl::StrFormat(
           "Could not enable user space instrumentation: %s", result_or_error.error().message());
-      ERROR("%s", error_enabling_user_space_instrumentation.value());
+      ORBIT_ERROR("%s", error_enabling_user_space_instrumentation.value());
     } else {
       FilterOutInstrumentedFunctionsFromCaptureOptions(
           result_or_error.value().instrumented_function_ids, linux_tracing_capture_options);
@@ -337,7 +337,7 @@ grpc::Status LinuxCaptureService::Capture(
   if (capture_options.enable_api()) {
     auto result = orbit_api_loader::DisableApiInTracee(capture_options);
     if (result.has_error()) {
-      ERROR("Disabling Orbit Api: %s", result.error().message());
+      ORBIT_ERROR("Disabling Orbit Api: %s", result.error().message());
       producer_event_processor_->ProcessEvent(
           orbit_grpc_protos::kRootProducerId,
           orbit_capture_service::CreateWarningEvent(
@@ -353,7 +353,7 @@ grpc::Status LinuxCaptureService::Capture(
     const pid_t target_process_id = orbit_base::ToNativeProcessId(capture_options.pid());
     auto result_tmp = instrumentation_manager_->UninstrumentProcess(target_process_id);
     if (result_tmp.has_error()) {
-      ERROR("Disabling user space instrumentation: %s", result_tmp.error().message());
+      ORBIT_ERROR("Disabling user space instrumentation: %s", result_tmp.error().message());
       producer_event_processor_->ProcessEvent(
           orbit_grpc_protos::kRootProducerId,
           orbit_capture_service::CreateWarningEvent(

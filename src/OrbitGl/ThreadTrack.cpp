@@ -293,8 +293,8 @@ std::string ThreadTrack::GetTimesliceText(const TimerInfo& timer_info) const {
     return absl::StrFormat("%s %s %s", timer_info.api_scope_name(), extra_info.c_str(), time);
   }
 
-  ERROR("Unexpected case in ThreadTrack::SetTimesliceText: function=\"%s\", type=%d",
-        func->function_name(), static_cast<int>(timer_info.type()));
+  ORBIT_ERROR("Unexpected case in ThreadTrack::SetTimesliceText: function=\"%s\", type=%d",
+              func->function_name(), static_cast<int>(timer_info.type()));
   return "";
 }
 

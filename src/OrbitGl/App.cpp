@@ -529,7 +529,7 @@ void OrbitApp::UpdateModulesAbortCaptureIfModuleWithoutBuildIdNeedsReload(
         "compile flags (or removing \"-Wl,--build-id=none\" from them).",
         module_paths);
     SendErrorToUi("Capture Error", error_message);
-    ERROR("%s", error_message);
+    ORBIT_ERROR("%s", error_message);
     main_thread_executor_->Schedule([this] { AbortCapture(); });
   }
 }
@@ -744,7 +744,7 @@ void OrbitApp::PostInit(bool is_connected) {
     ErrorMessageOr<std::vector<TracepointInfo>> result = tracepoint_manager->GetTracepointList();
 
     if (result.has_error()) {
-      ERROR("Error retrieving tracepoints: %s", result.error().message());
+      ORBIT_ERROR("Error retrieving tracepoints: %s", result.error().message());
       SendErrorToUi("Error retrieving tracepoints", result.error().message());
       return;
     }
@@ -764,7 +764,8 @@ static std::vector<std::filesystem::path> ListRegularFilesWithExtension(
   std::error_code error;
   auto directory_iterator = std::filesystem::directory_iterator(directory, error);
   if (error) {
-    ERROR("Unable to list files in directory \"%s\": %s", directory.string(), error.message());
+    ORBIT_ERROR("Unable to list files in directory \"%s\": %s", directory.string(),
+                error.message());
     return {};
   }
 
@@ -772,15 +773,15 @@ static std::vector<std::filesystem::path> ListRegularFilesWithExtension(
             end = std::filesystem::end(directory_iterator);
        it != end; it.increment(error)) {
     if (error) {
-      ERROR("Iterating directory \"%s\": %s (increment failed, stopping)", directory.string(),
-            error.message());
+      ORBIT_ERROR("Iterating directory \"%s\": %s (increment failed, stopping)", directory.string(),
+                  error.message());
       break;
     }
 
     const auto& path = it->path();
     bool is_regular_file = std::filesystem::is_regular_file(path, error);
     if (error) {
-      ERROR("Unable to stat \"%s\": %s (ignoring)", path.string(), error.message());
+      ORBIT_ERROR("Unable to stat \"%s\": %s (ignoring)", path.string(), error.message());
       continue;
     }
 
@@ -805,8 +806,8 @@ void OrbitApp::ListPresets() {
   for (const std::filesystem::path& filename : preset_filenames) {
     ErrorMessageOr<PresetFile> preset_result = ReadPresetFromFile(filename);
     if (preset_result.has_error()) {
-      ERROR("Loading preset from \"%s\" failed: %s", filename.string(),
-            preset_result.error().message());
+      ORBIT_ERROR("Loading preset from \"%s\" failed: %s", filename.string(),
+                  preset_result.error().message());
       continue;
     }
 
@@ -1329,8 +1330,8 @@ static std::unique_ptr<CaptureEventProcessor> CreateCaptureEventProcessor(
   while (true) {
     auto file_exists_or_error = orbit_base::FileExists(file_path);
     if (file_exists_or_error.has_error()) {
-      ERROR("Unable to check for existence of \"%s\": %s", file_path.string(),
-            file_exists_or_error.error().message());
+      ORBIT_ERROR("Unable to check for existence of \"%s\": %s", file_path.string(),
+                  file_exists_or_error.error().message());
       break;
     }
 
@@ -1445,7 +1446,7 @@ void OrbitApp::StartCapture() {
       this, process->name(), frame_track_function_ids, [this](const ErrorMessage& error) {
         capture_data_->reset_file_path();
         SendErrorToUi("Error saving capture", error.message());
-        ERROR("%s", error.message());
+        ORBIT_ERROR("%s", error.message());
       });
 
   Future<ErrorMessageOr<CaptureOutcome>> capture_result = capture_client_->Capture(
@@ -1895,7 +1896,7 @@ orbit_base::Future<ErrorMessageOr<void>> OrbitApp::LoadSymbols(
   // This additional check is here to avoid a race condition. See http://b/205002963 for details.
   const ModuleData* module_data = GetModuleByPathAndBuildId(module_file_path, module_build_id);
   if (module_data->is_loaded()) {
-    ERROR(
+    ORBIT_ERROR(
         "LoadSymbols was called with the symbols for module '%s' (buildid = '%s') already loaded.",
         module_file_path, module_build_id);
     return ErrorMessageOr<void>{outcome::success()};
@@ -1947,8 +1948,8 @@ ErrorMessageOr<std::vector<const ModuleData*>> OrbitApp::GetLoadedModulesByPath(
     const ModuleData* module_data =
         module_manager_->GetModuleByPathAndBuildId(module_path.string(), build_id);
     if (module_data == nullptr) {
-      ERROR("Module \"%s\" was loaded by the process, but is not part of module manager",
-            module_path.string());
+      ORBIT_ERROR("Module \"%s\" was loaded by the process, but is not part of module manager",
+                  module_path.string());
       crash_handler_->DumpWithoutCrash();
       return ErrorMessage{"Unexpected error while loading preset."};
     }
@@ -1976,12 +1977,12 @@ orbit_base::Future<ErrorMessageOr<void>> OrbitApp::LoadPresetModule(
 
   // TODO(b/191240539): Ask the user which build_id they prefer.
   if (modules_data.size() > 1) {
-    ERROR("Found multiple build_ids (%s) for module \"%s\", will choose the first one",
-          absl::StrJoin(modules_data, ", ",
-                        [](std::string* out, const ModuleData* module_data) {
-                          out->append(module_data->build_id());
-                        }),
-          module_path.string());
+    ORBIT_ERROR("Found multiple build_ids (%s) for module \"%s\", will choose the first one",
+                absl::StrJoin(modules_data, ", ",
+                              [](std::string* out, const ModuleData* module_data) {
+                                out->append(module_data->build_id());
+                              }),
+                module_path.string());
   }
 
   CHECK(!modules_data.empty());
@@ -2016,8 +2017,8 @@ void OrbitApp::SelectFunctionsFromHashes(const ModuleData* module,
     const orbit_client_protos::FunctionInfo* const function_info =
         module->FindFunctionFromHash(function_hash);
     if (function_info == nullptr) {
-      ERROR("Could not find function hash %#x in module \"%s\"", function_hash,
-            module->file_path());
+      ORBIT_ERROR("Could not find function hash %#x in module \"%s\"", function_hash,
+                  module->file_path());
       continue;
     }
     SelectFunction(*function_info);
@@ -2030,7 +2031,8 @@ void OrbitApp::SelectFunctionsByName(const ModuleData* module,
     const orbit_client_protos::FunctionInfo* const function_info =
         module->FindFunctionFromPrettyName(function_name);
     if (function_info == nullptr) {
-      ERROR("Could not find function \"%s\" in module \"%s\"", function_name, module->file_path());
+      ORBIT_ERROR("Could not find function \"%s\" in module \"%s\"", function_name,
+                  module->file_path());
       continue;
     }
     SelectFunction(*function_info);
@@ -2043,8 +2045,8 @@ void OrbitApp::EnableFrameTracksFromHashes(const ModuleData* module,
     const orbit_client_protos::FunctionInfo* const function_info =
         module->FindFunctionFromHash(function_hash);
     if (function_info == nullptr) {
-      ERROR("Could not find function hash %#x in module \"%s\"", function_hash,
-            module->file_path());
+      ORBIT_ERROR("Could not find function hash %#x in module \"%s\"", function_hash,
+                  module->file_path());
       continue;
     }
     EnableFrameTrack(*function_info);
@@ -2057,7 +2059,8 @@ void OrbitApp::EnableFrameTracksByName(const ModuleData* module,
     const orbit_client_protos::FunctionInfo* const function_info =
         module->FindFunctionFromPrettyName(function_name);
     if (function_info == nullptr) {
-      ERROR("Could not find function \"%s\" in module \"%s\"", function_name, module->file_path());
+      ORBIT_ERROR("Could not find function \"%s\" in module \"%s\"", function_name,
+                  module->file_path());
       continue;
     }
     EnableFrameTrack(*function_info);
@@ -2114,8 +2117,8 @@ void OrbitApp::LoadPreset(const PresetFile& preset_file) {
       // Then if load was successful and the preset is in old format - convert it to new one.
       auto convertion_result = ConvertPresetToNewFormatIfNecessary(preset_file);
       if (convertion_result.has_error()) {
-        ERROR("Unable to convert preset file \"%s\" to new file format: %s",
-              preset_file.file_path().string(), convertion_result.error().message());
+        ORBIT_ERROR("Unable to convert preset file \"%s\" to new file format: %s",
+                    preset_file.file_path().string(), convertion_result.error().message());
       }
     }
 
@@ -2180,7 +2183,7 @@ void OrbitApp::UpdateProcessAndModuleList() {
         if (result.has_error()) {
           std::string error_message =
               absl::StrFormat("Error retrieving modules: %s", result.error().message());
-          ERROR("%s", error_message);
+          ORBIT_ERROR("%s", error_message);
           SendErrorToUi("%s", error_message);
         }
       });
@@ -2825,8 +2828,8 @@ ErrorMessageOr<void> OrbitApp::ConvertPresetToNewFormatIfNecessary(const PresetF
          preset_file.GetSelectedFunctionHashesForModuleLegacy(module_path)) {
       const auto* function_info = module_data->FindFunctionFromHash(function_hash);
       if (function_info == nullptr) {
-        ERROR("Could not find function hash %#x in module \"%s\"", function_hash,
-              module_path.string());
+        ORBIT_ERROR("Could not find function hash %#x in module \"%s\"", function_hash,
+                    module_path.string());
         continue;
       }
       module_info.add_function_names(function_info->pretty_name());
@@ -2836,8 +2839,8 @@ ErrorMessageOr<void> OrbitApp::ConvertPresetToNewFormatIfNecessary(const PresetF
          preset_file.GetFrameTrackFunctionHashesForModuleLegacy(module_path)) {
       const auto* function_info = module_data->FindFunctionFromHash(function_hash);
       if (function_info == nullptr) {
-        ERROR("Could not find function hash %#x in module \"%s\"", function_hash,
-              module_path.string());
+        ORBIT_ERROR("Could not find function hash %#x in module \"%s\"", function_hash,
+                    module_path.string());
         continue;
       }
       module_info.add_frame_track_function_names(function_info->pretty_name());
@@ -2860,8 +2863,8 @@ ErrorMessageOr<void> OrbitApp::ConvertPresetToNewFormatIfNecessary(const PresetF
   if (save_to_file_result.has_error()) {
     // restore the backup
     if (rename(backup_file_path.c_str(), file_path.c_str()) == -1) {
-      ERROR(R"(Unable to rename "%s" to "%s": %s)", file_path, backup_file_path,
-            SafeStrerror(errno));
+      ORBIT_ERROR(R"(Unable to rename "%s" to "%s": %s)", file_path, backup_file_path,
+                  SafeStrerror(errno));
     }
 
     return save_to_file_result.error();

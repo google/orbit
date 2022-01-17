@@ -128,7 +128,7 @@ void CaptureFileOutputStreamImpl::CloseAndTryRemoveFileAfterError() {
   Reset();
 
   if (output_type_ == OutputType::kFile && remove(path_.string().c_str()) == -1) {
-    ERROR("Unable to remove \"%s\": %s", path_.string(), SafeStrerror(errno));
+    ORBIT_ERROR("Unable to remove \"%s\": %s", path_.string(), SafeStrerror(errno));
   }
 }
 

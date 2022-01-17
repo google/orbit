@@ -35,7 +35,7 @@ void OrbitCaptureGgpService::RunServer() {
   std::unique_ptr<Server> server(builder.BuildAndStart());
 
   if (server == nullptr) {
-    ERROR("Unable to start gRPC server");
+    ORBIT_ERROR("Unable to start gRPC server");
     return;
   }
 

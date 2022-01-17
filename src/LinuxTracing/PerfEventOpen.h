@@ -27,28 +27,28 @@ namespace orbit_linux_tracing {
 inline void perf_event_reset(int file_descriptor) {
   int ret = ioctl(file_descriptor, PERF_EVENT_IOC_RESET, 0);
   if (ret != 0) {
-    ERROR("PERF_EVENT_IOC_RESET: %s", SafeStrerror(errno));
+    ORBIT_ERROR("PERF_EVENT_IOC_RESET: %s", SafeStrerror(errno));
   }
 }
 
 inline void perf_event_enable(int file_descriptor) {
   int ret = ioctl(file_descriptor, PERF_EVENT_IOC_ENABLE, 0);
   if (ret != 0) {
-    ERROR("PERF_EVENT_IOC_ENABLE: %s", SafeStrerror(errno));
+    ORBIT_ERROR("PERF_EVENT_IOC_ENABLE: %s", SafeStrerror(errno));
   }
 }
 
 inline void perf_event_disable(int file_descriptor) {
   int ret = ioctl(file_descriptor, PERF_EVENT_IOC_DISABLE, 0);
   if (ret != 0) {
-    ERROR("PERF_EVENT_IOC_DISABLE: %s", SafeStrerror(errno));
+    ORBIT_ERROR("PERF_EVENT_IOC_DISABLE: %s", SafeStrerror(errno));
   }
 }
 
 inline void perf_event_redirect(int from_fd, int to_fd) {
   int ret = ioctl(from_fd, PERF_EVENT_IOC_SET_OUTPUT, to_fd);
   if (ret != 0) {
-    ERROR("PERF_EVENT_IOC_SET_OUTPUT: %s", SafeStrerror(errno));
+    ORBIT_ERROR("PERF_EVENT_IOC_SET_OUTPUT: %s", SafeStrerror(errno));
   }
 }
 
@@ -56,7 +56,7 @@ inline uint64_t perf_event_get_id(int file_descriptor) {
   uint64_t id;
   int ret = ioctl(file_descriptor, PERF_EVENT_IOC_ID, &id);
   if (ret != 0) {
-    ERROR("PERF_EVENT_IOC_ID: %s", SafeStrerror(errno));
+    ORBIT_ERROR("PERF_EVENT_IOC_ID: %s", SafeStrerror(errno));
     return 0;
   }
   return id;

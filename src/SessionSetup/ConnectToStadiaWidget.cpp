@@ -356,7 +356,7 @@ void ConnectToStadiaWidget::OnErrorOccurred(const QString& message) {
   if (IsActive()) {
     QMessageBox::critical(this, QApplication::applicationName(), message);
   } else {
-    ERROR("%s", message.toStdString());
+    ORBIT_ERROR("%s", message.toStdString());
   }
 }
 
@@ -396,7 +396,7 @@ void ConnectToStadiaWidget::OnSshInfoLoaded(ErrorMessageOr<orbit_ggp::SshInfo> s
     std::string error_message =
         absl::StrFormat("Unable to load encryption credentials for instance with id %s: %s",
                         instance_id, ssh_info_result.error().message());
-    ERROR("%s", error_message);
+    ORBIT_ERROR("%s", error_message);
     emit ErrorOccurred(QString::fromStdString(error_message));
     return;
   }

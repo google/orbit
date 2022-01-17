@@ -40,7 +40,7 @@ void PrintInstanceVersions() {
     if (version.has_value()) {
       ORBIT_LOG("%s: %s", kKernelVersionCommand, absl::StripSuffix(version.value(), "\n"));
     } else {
-      ERROR("Could not execute \"%s\"", kKernelVersionCommand);
+      ORBIT_ERROR("Could not execute \"%s\"", kKernelVersionCommand);
     }
   }
 
@@ -50,7 +50,7 @@ void PrintInstanceVersions() {
     if (version.has_value()) {
       ORBIT_LOG("%s:\n%s", kVersionFilePath, absl::StripSuffix(version.value(), "\n"));
     } else {
-      ERROR("%s", version.error().message());
+      ORBIT_ERROR("%s", version.error().message());
     }
   }
 
@@ -60,7 +60,7 @@ void PrintInstanceVersions() {
     if (version.has_value()) {
       ORBIT_LOG("%s:\n%s", kBaseVersionFilePath, absl::StripSuffix(version.value(), "\n"));
     } else {
-      ERROR("%s", version.error().message());
+      ORBIT_ERROR("%s", version.error().message());
     }
   }
 
@@ -70,7 +70,7 @@ void PrintInstanceVersions() {
     if (version.has_value()) {
       ORBIT_LOG("%s:\n%s", kInstanceVersionFilePath, absl::StripSuffix(version.value(), "\n"));
     } else {
-      ERROR("%s", version.error().message());
+      ORBIT_ERROR("%s", version.error().message());
     }
   }
 
@@ -84,7 +84,7 @@ void PrintInstanceVersions() {
     if (!stripped_version.empty()) {
       ORBIT_LOG("%s: %s", kDriverVersionCommand, stripped_version);
     } else {
-      ERROR("Could not execute \"%s\"", kDriverVersionCommand);
+      ORBIT_ERROR("Could not execute \"%s\"", kDriverVersionCommand);
     }
   }
 }
@@ -115,7 +115,7 @@ std::unique_ptr<OrbitGrpcServer> CreateGrpcServer(uint16_t grpc_port, bool dev_m
   ORBIT_LOG("Starting gRPC server at %s", grpc_address);
   std::unique_ptr<OrbitGrpcServer> grpc_server = OrbitGrpcServer::Create(grpc_address, dev_mode);
   if (grpc_server == nullptr) {
-    ERROR("Unable to start gRPC server");
+    ORBIT_ERROR("Unable to start gRPC server");
     return nullptr;
   }
   ORBIT_LOG("gRPC server is running");
@@ -126,7 +126,7 @@ std::unique_ptr<ProducerSideServer> BuildAndStartProducerSideServerWithUri(std::
   auto producer_side_server = std::make_unique<ProducerSideServer>();
   ORBIT_LOG("Starting producer-side server at %s", uri);
   if (!producer_side_server->BuildAndStart(uri)) {
-    ERROR("Unable to start producer-side server");
+    ORBIT_ERROR("Unable to start producer-side server");
     return nullptr;
   }
   ORBIT_LOG("Producer-side server is running");
@@ -142,8 +142,8 @@ std::unique_ptr<ProducerSideServer> BuildAndStartProducerSideServer() {
   std::error_code error_code;
   std::filesystem::create_directories(unix_domain_socket_dir, error_code);
   if (error_code) {
-    ERROR("Unable to create directory for socket for producer-side server: %s",
-          error_code.message());
+    ORBIT_ERROR("Unable to create directory for socket for producer-side server: %s",
+                error_code.message());
     return nullptr;
   }
 
@@ -154,7 +154,7 @@ std::unique_ptr<ProducerSideServer> BuildAndStartProducerSideServer() {
   // When OrbitService runs as root, also allow non-root producers
   // (e.g., the game) to communicate over the Unix domain socket.
   if (chmod(unix_socket_path.c_str(), 0777) != 0) {
-    ERROR("Changing mode bits to 777 of \"%s\": %s", unix_socket_path, SafeStrerror(errno));
+    ORBIT_ERROR("Changing mode bits to 777 of \"%s\": %s", unix_socket_path, SafeStrerror(errno));
     producer_side_server->ShutdownAndWait();
     return nullptr;
   }
@@ -187,13 +187,13 @@ int OrbitService::Run(std::atomic<bool>* exit_requested) {
 
   std::unique_ptr<OrbitGrpcServer> grpc_server = CreateGrpcServer(grpc_port_, dev_mode_);
   if (grpc_server == nullptr) {
-    ERROR("Unable to create gRPC server.");
+    ORBIT_ERROR("Unable to create gRPC server.");
     return -1;
   }
 
   std::unique_ptr<ProducerSideServer> producer_side_server = BuildAndStartProducerSideServer();
   if (producer_side_server == nullptr) {
-    ERROR("Unable to build and start ProducerSideServer.");
+    ORBIT_ERROR("Unable to build and start ProducerSideServer.");
     return -1;
   }
   grpc_server->AddCaptureStartStopListener(producer_side_server.get());
@@ -222,7 +222,7 @@ int OrbitService::Run(std::atomic<bool>* exit_requested) {
       }
 
       if (!IsSshConnectionAlive(last_stdin_message_.value(), kWatchdogTimeoutInSeconds)) {
-        ERROR("Connection is not alive (watchdog timed out). Exiting main loop.");
+        ORBIT_ERROR("Connection is not alive (watchdog timed out). Exiting main loop.");
         return_code = -1;
         break;
       }

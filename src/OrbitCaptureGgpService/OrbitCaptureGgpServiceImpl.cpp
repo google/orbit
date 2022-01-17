@@ -57,7 +57,7 @@ void CaptureClientGgpServiceImpl::InitClientGgp() {
 
   client_ggp_ = std::make_unique<ClientGgp>(std::move(client_ggp_options));
   if (!client_ggp_->InitClient()) {
-    ERROR("Not possible to initialise client");
+    ORBIT_ERROR("Not possible to initialise client");
     return;
   }
   ORBIT_LOG("ClientGgp Initialised");

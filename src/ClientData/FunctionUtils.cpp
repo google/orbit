@@ -48,7 +48,7 @@ std::optional<uint64_t> GetAbsoluteAddress(const orbit_client_protos::FunctionIn
   }
 
   if (page_aligned_base_addresses.size() > 1) {
-    ERROR(
+    ORBIT_ERROR(
         "Found multiple mappings for \"%s\" with build_id=%s [%s]: "
         "will use the first one as a base address",
         module.file_path(), module.build_id(),

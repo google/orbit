@@ -189,7 +189,7 @@ ErrorMessageOr<std::unique_ptr<InstrumentedProcess>> InstrumentedProcess::Create
   OUTCOME_TRY(AttachAndStopProcess(pid));
   orbit_base::unique_resource detach_on_exit{pid, [](int32_t pid) {
                                                if (DetachAndContinueProcess(pid).has_error()) {
-                                                 ERROR("Detaching from %i", pid);
+                                                 ORBIT_ERROR("Detaching from %i", pid);
                                                }
                                              }};
 
@@ -242,7 +242,7 @@ InstrumentedProcess::InstrumentFunctions(const CaptureOptions& capture_options) 
   OUTCOME_TRY(auto&& already_attached_tids, AttachAndStopProcess(pid_));
   orbit_base::unique_resource detach_on_exit{pid_, [](int32_t pid) {
                                                if (DetachAndContinueProcess(pid).has_error()) {
-                                                 ERROR("Detaching from %i", pid);
+                                                 ORBIT_ERROR("Detaching from %i", pid);
                                                }
                                              }};
   // Init Capstone disassembler.
@@ -272,7 +272,7 @@ InstrumentedProcess::InstrumentFunctions(const CaptureOptions& capture_options) 
       const std::string message =
           absl::StrFormat("Can't instrument function \"%s\" since it is used internally by Orbit.",
                           function.function_name());
-      ERROR("%s", message);
+      ORBIT_ERROR("%s", message);
       result.function_ids_to_error_messages[function_id] = message;
       continue;
     }
@@ -281,7 +281,7 @@ InstrumentedProcess::InstrumentFunctions(const CaptureOptions& capture_options) 
     if (backup_size == 0) {
       const std::string message = absl::StrFormat(
           "Can't instrument function \"%s\" since it has size zero.", function.function_name());
-      ERROR("%s", message);
+      ORBIT_ERROR("%s", message);
       result.function_ids_to_error_messages[function_id] = message;
       continue;
     }
@@ -295,8 +295,8 @@ InstrumentedProcess::InstrumentFunctions(const CaptureOptions& capture_options) 
         const AddressRange module_address_range(module.address_start(), module.address_end());
         auto trampoline_address_or_error = GetTrampolineMemory(module_address_range);
         if (trampoline_address_or_error.has_error()) {
-          ERROR("Failed to allocate memory for trampoline: %s",
-                trampoline_address_or_error.error().message());
+          ORBIT_ERROR("Failed to allocate memory for trampoline: %s",
+                      trampoline_address_or_error.error().message());
           continue;
         }
         const uint64_t trampoline_address = trampoline_address_or_error.value();
@@ -312,7 +312,7 @@ InstrumentedProcess::InstrumentFunctions(const CaptureOptions& capture_options) 
           const std::string message = absl::StrFormat(
               "Can't instrument function \"%s\". Failed to create trampoline: %s",
               function.function_name(), address_after_prologue_or_error.error().message());
-          ERROR("%s", message);
+          ORBIT_ERROR("%s", message);
           result.function_ids_to_error_messages[function_id] = message;
           OUTCOME_TRY(ReleaseMostRecentlyAllocatedTrampolineMemory(module_address_range));
           continue;
@@ -333,7 +333,7 @@ InstrumentedProcess::InstrumentFunctions(const CaptureOptions& capture_options) 
         const std::string message =
             absl::StrFormat("Can't instrument function \"%s\": %s", function.function_name(),
                             result_or_error.error().message());
-        ERROR("%s", message);
+        ORBIT_ERROR("%s", message);
         result.function_ids_to_error_messages[function_id] = message;
       } else {
         addresses_of_instrumented_functions_.insert(function_address);
@@ -358,7 +358,7 @@ ErrorMessageOr<void> InstrumentedProcess::UninstrumentFunctions() {
   OUTCOME_TRY(AttachAndStopProcess(pid_));
   orbit_base::unique_resource detach_on_exit{pid_, [](int32_t pid) {
                                                if (DetachAndContinueProcess(pid).has_error()) {
-                                                 ERROR("Detaching from %i", pid);
+                                                 ORBIT_ERROR("Detaching from %i", pid);
                                                }
                                              }};
   for (uint64_t function_address : addresses_of_instrumented_functions_) {

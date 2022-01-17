@@ -43,11 +43,7 @@ constexpr const char* kLogTimeFormat = "%Y-%m-%dT%H:%M:%E6S";
     PLATFORM_LOG(formatted_log__.c_str());                                                   \
   } while (0)
 
-#if defined(_WIN32) && defined(ERROR)
-#undef ERROR
-#endif
-
-#define ERROR(format, ...) ORBIT_LOG("Error: " format, ##__VA_ARGS__)
+#define ORBIT_ERROR(format, ...) ORBIT_LOG("Error: " format, ##__VA_ARGS__)
 
 #define LOG_ONCE(format, ...)                                                         \
   do {                                                                                \

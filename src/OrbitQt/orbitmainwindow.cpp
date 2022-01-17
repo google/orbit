@@ -211,8 +211,8 @@ OrbitMainWindow::OrbitMainWindow(TargetConfiguration target_configuration,
   ErrorMessageOr<bool> symbol_paths_file_has_depr_note =
       orbit_symbols::FileStartsWithDeprecationNote(orbit_paths::GetSymbolsFilePath());
   if (symbol_paths_file_has_depr_note.has_error()) {
-    ERROR("Unable to check SymbolPaths.txt file for depreciation note, error: %s",
-          symbol_paths_file_has_depr_note.error().message());
+    ORBIT_ERROR("Unable to check SymbolPaths.txt file for depreciation note, error: %s",
+                symbol_paths_file_has_depr_note.error().message());
     return;
   }
 
@@ -248,8 +248,8 @@ OrbitMainWindow::OrbitMainWindow(TargetConfiguration target_configuration,
   ErrorMessageOr<void> add_depr_note_result =
       orbit_symbols::AddDeprecationNoteToFile(orbit_paths::GetSymbolsFilePath());
   if (add_depr_note_result.has_error()) {
-    ERROR("Unable to add deprecation note to SymbolPaths.txt, error: %s",
-          add_depr_note_result.error().message());
+    ORBIT_ERROR("Unable to add deprecation note to SymbolPaths.txt, error: %s",
+                add_depr_note_result.error().message());
   }
 }
 
@@ -1102,9 +1102,9 @@ void OrbitMainWindow::LoadCaptureOptionsIntoApp() {
         settings.value(kCallstackSamplingPeriodMsSettingKey, kCallstackSamplingPeriodMsDefaultValue)
             .toDouble(&conversion_succeeded);
     if (!conversion_succeeded || sampling_period_ms <= 0.0) {
-      ERROR("Invalid value for setting \"%s\", resetting to %.1f",
-            kCallstackSamplingPeriodMsSettingKey.toStdString(),
-            kCallstackSamplingPeriodMsDefaultValue);
+      ORBIT_ERROR("Invalid value for setting \"%s\", resetting to %.1f",
+                  kCallstackSamplingPeriodMsSettingKey.toStdString(),
+                  kCallstackSamplingPeriodMsDefaultValue);
       settings.setValue(kCallstackSamplingPeriodMsSettingKey,
                         kCallstackSamplingPeriodMsDefaultValue);
       sampling_period_ms = kCallstackSamplingPeriodMsDefaultValue;
@@ -1123,7 +1123,7 @@ void OrbitMainWindow::LoadCaptureOptionsIntoApp() {
                    static_cast<int>(kCallstackUnwindingMethodDefaultValue))
             .toInt());
     if (unwinding_method == CaptureOptions::kUndefined) {
-      ERROR("Unknown unwinding method specified; Using default unwinding method");
+      ORBIT_ERROR("Unknown unwinding method specified; Using default unwinding method");
       unwinding_method = kCallstackUnwindingMethodDefaultValue;
     }
     app_->SetUnwindingMethod(unwinding_method);
