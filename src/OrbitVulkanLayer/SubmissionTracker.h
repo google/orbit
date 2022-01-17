@@ -250,7 +250,7 @@ class SubmissionTracker : public VulkanLayerProducer::CaptureStatusListener {
       return;
     }
     if (!command_buffer_to_state_.contains(command_buffer)) {
-      ERROR_ONCE(
+      ORBIT_ERROR_ONCE(
           "Calling vkEndCommandBuffer on a command buffer that is in the initial state "
           "(i.e. either freshly allocated or reset with vkResetCommandBuffer).");
       return;
@@ -273,7 +273,7 @@ class SubmissionTracker : public VulkanLayerProducer::CaptureStatusListener {
     bool marker_depth_exceeds_maximum;
     {
       if (!command_buffer_to_state_.contains(command_buffer)) {
-        ERROR_ONCE(
+        ORBIT_ERROR_ONCE(
             "Calling vkCmdDebugMarkerBeginEXT/vkCmdBeginDebugUtilsLabelEXT on a command buffer "
             "that is in the initial state (i.e. either freshly allocated or reset with "
             "vkResetCommandBuffer).");
@@ -308,7 +308,7 @@ class SubmissionTracker : public VulkanLayerProducer::CaptureStatusListener {
     bool marker_depth_exceeds_maximum;
 
     if (!command_buffer_to_state_.contains(command_buffer)) {
-      ERROR_ONCE(
+      ORBIT_ERROR_ONCE(
           "Calling vkCmdDebugMarkerEndEXT/vkCmdEndDebugUtilsLabelEXT on a command buffer "
           "that is in the initial state (i.e. either freshly allocated or reset with "
           "vkResetCommandBuffer).");
@@ -905,7 +905,7 @@ class SubmissionTracker : public VulkanLayerProducer::CaptureStatusListener {
     CHECK(query_slots_not_needed_to_read != nullptr);
 
     if (!command_buffer_to_state_.contains(command_buffer)) {
-      ERROR_ONCE(
+      ORBIT_ERROR_ONCE(
           "Calling vkQueueSubmit on a command buffer that is in the initial state (i.e. "
           "either freshly allocated or reset with vkResetCommandBuffer).");
       return;
@@ -962,7 +962,7 @@ class SubmissionTracker : public VulkanLayerProducer::CaptureStatusListener {
     CHECK(marker_slots_not_needed_to_read != nullptr);
 
     if (!command_buffer_to_state_.contains(command_buffer)) {
-      ERROR_ONCE(
+      ORBIT_ERROR_ONCE(
           "Calling vkQueueSubmit on a command buffer that is in the initial state (i.e. "
           "either freshly allocated or reset with vkResetCommandBuffer).");
       return;

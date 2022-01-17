@@ -51,7 +51,7 @@ constexpr const char* kLogTimeFormat = "%Y-%m-%dT%H:%M:%E6S";
     std::call_once(already_logged_flag, [&]() { ORBIT_LOG(format, ##__VA_ARGS__); }); \
   } while (0)
 
-#define ERROR_ONCE(format, ...) ORBIT_LOG_ONCE("Error: " format, ##__VA_ARGS__)
+#define ORBIT_ERROR_ONCE(format, ...) ORBIT_LOG_ONCE("Error: " format, ##__VA_ARGS__)
 
 #define FATAL(format, ...)                      \
   do {                                          \

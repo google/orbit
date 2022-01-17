@@ -40,7 +40,7 @@ std::optional<uint64_t> ExtractRssInPagesFromProcPidStat(std::string_view proc_p
 
   uint64_t rss_pages;
   if (!absl::SimpleAtoi(rss_string, &rss_pages)) {
-    ERROR_ONCE("Parsing rss \"%s\"", rss_string);
+    ORBIT_ERROR_ONCE("Parsing rss \"%s\"", rss_string);
     return std::nullopt;
   }
   return rss_pages;
@@ -52,13 +52,13 @@ std::optional<uint64_t> ReadRssInBytesFromProcPidStat() {
 
   ErrorMessageOr<std::string> error_or_stat = orbit_base::ReadFileToString(proc_pid_stat_filename);
   if (error_or_stat.has_error()) {
-    ERROR_ONCE("Reading \"%s\": %s", proc_pid_stat_filename, error_or_stat.error().message());
+    ORBIT_ERROR_ONCE("Reading \"%s\": %s", proc_pid_stat_filename, error_or_stat.error().message());
     return std::nullopt;
   }
 
   std::optional<uint64_t> rss_pages = ExtractRssInPagesFromProcPidStat(error_or_stat.value());
   if (!rss_pages.has_value()) {
-    ERROR_ONCE("Extracting rss from \"%s\"", proc_pid_stat_filename);
+    ORBIT_ERROR_ONCE("Extracting rss from \"%s\"", proc_pid_stat_filename);
     return std::nullopt;
   }
 

@@ -201,7 +201,7 @@ LinuxCaptureService::WaitForStopCaptureRequestOrMemoryThresholdExceeded(
     // Repeatedly poll the resident set size (rss) of the current process (OrbitService).
     std::optional<uint64_t> rss_bytes = ReadRssInBytesFromProcPidStat();
     if (!rss_bytes.has_value()) {
-      ERROR_ONCE("Reading resident set size of OrbitService");
+      ORBIT_ERROR_ONCE("Reading resident set size of OrbitService");
       continue;
     }
     if (rss_bytes.value() > watchdog_threshold_bytes) {
