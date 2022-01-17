@@ -235,7 +235,7 @@ This is *not* nested inside `orbit_module_name`.
 
 ### File system structure
 Each module gets its own subdirectory under `src/`. The subdirectory's name
-should be spelled in camel-case, i.e. `src/ModuleName`. All public header
+should be spelled in camel case, i.e. `src/ModuleName`. All public header
 files go into a separate include subdirectory `include/ModuleName`, i.e.
 the full path looks like `src/ModuleName/include/ModuleName/PublicHeader.h`.
 
