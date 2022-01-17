@@ -92,19 +92,21 @@ constexpr const char* kLogTimeFormat = "%Y-%m-%dT%H:%M:%E6S";
   } while (0 && (assertion))
 #endif
 
-#define SCOPED_TIMED_LOG_CONCAT_INDIRECT_(a, b) a##b
-#define SCOPED_TIMED_LOG_CONCAT_(a, b) SCOPED_TIMED_LOG_CONCAT_INDIRECT_(a, b)
+#define ORBIT_INTERNAL_SCOPED_TIMED_LOG_CONCAT_INDIRECT(a, b) a##b
+#define ORBIT_INTERNAL_SCOPED_TIMED_LOG_CONCAT(a, b) \
+  ORBIT_INTERNAL_SCOPED_TIMED_LOG_CONCAT_INDIRECT(a, b)
 
 // Declare the class inside the macro so that file:line are the ones where SCOPED_TIMED_LOG is used.
 #define SCOPED_TIMED_LOG(format, ...)                                                          \
-  class SCOPED_TIMED_LOG_CONCAT_(ScopedTimedLog, __LINE__) {                                   \
+  class ORBIT_INTERNAL_SCOPED_TIMED_LOG_CONCAT(ScopedTimedLog, __LINE__) {                     \
    public:                                                                                     \
-    explicit SCOPED_TIMED_LOG_CONCAT_(ScopedTimedLog, __LINE__)(std::string && message)        \
+    explicit ORBIT_INTERNAL_SCOPED_TIMED_LOG_CONCAT(ScopedTimedLog,                            \
+                                                    __LINE__)(std::string && message)          \
         : message_{std::move(message)}, begin_{std::chrono::steady_clock::now()} {             \
       ORBIT_LOG("%s started", message_);                                                       \
     }                                                                                          \
                                                                                                \
-    ~SCOPED_TIMED_LOG_CONCAT_(ScopedTimedLog, __LINE__)() {                                    \
+    ~ORBIT_INTERNAL_SCOPED_TIMED_LOG_CONCAT(ScopedTimedLog, __LINE__)() {                      \
       auto end = std::chrono::steady_clock::now();                                             \
       auto duration =                                                                          \
           std::chrono::duration_cast<std::chrono::duration<double, std::milli>>(end - begin_); \
@@ -114,7 +116,7 @@ constexpr const char* kLogTimeFormat = "%Y-%m-%dT%H:%M:%E6S";
    private:                                                                                    \
     std::string message_;                                                                      \
     std::chrono::time_point<std::chrono::steady_clock> begin_;                                 \
-  } SCOPED_TIMED_LOG_CONCAT_(scoped_timed_log_, __LINE__) {                                    \
+  } ORBIT_INTERNAL_SCOPED_TIMED_LOG_CONCAT(scoped_timed_log_, __LINE__) {                      \
     absl::StrFormat(format, ##__VA_ARGS__)                                                     \
   }
 
