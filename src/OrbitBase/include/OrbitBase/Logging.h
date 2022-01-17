@@ -40,7 +40,7 @@ constexpr const char* kLogTimeFormat = "%Y-%m-%dT%H:%M:%E6S";
     std::string time__ = absl::FormatTime(kLogTimeFormat, absl::Now(), absl::UTCTimeZone()); \
     std::string formatted_log__ =                                                            \
         absl::StrFormat("[%s] [%40s] " format "\n", time__, file_and_line__, ##__VA_ARGS__); \
-    PLATFORM_LOG(formatted_log__.c_str());                                                   \
+    ORBIT_INTERNAL_PLATFORM_LOG(formatted_log__.c_str());                                    \
   } while (0)
 
 #define ORBIT_ERROR(format, ...) ORBIT_LOG("Error: " format, ##__VA_ARGS__)
@@ -126,15 +126,15 @@ constexpr const char* kLogTimeFormat = "%Y-%m-%dT%H:%M:%E6S";
 namespace orbit_base {
 struct FuzzingException {};
 }  // namespace orbit_base
-#define PLATFORM_LOG(message) (void)(message)  // No logging in fuzzing mode.
+#define ORBIT_INTERNAL_PLATFORM_LOG(message) (void)(message)  // No logging in fuzzing mode.
 #define PLATFORM_ABORT() \
   throw orbit_base::FuzzingException {}
 #elif defined(_WIN32)
-#define PLATFORM_LOG(message)       \
-  do {                              \
-    fprintf(stderr, "%s", message); \
-    OutputDebugStringA(message);    \
-    orbit_base::LogToFile(message); \
+#define ORBIT_INTERNAL_PLATFORM_LOG(message) \
+  do {                                       \
+    fprintf(stderr, "%s", message);          \
+    OutputDebugStringA(message);             \
+    orbit_base::LogToFile(message);          \
   } while (0)
 #define PLATFORM_ABORT() \
   do {                   \
@@ -142,10 +142,10 @@ struct FuzzingException {};
     abort();             \
   } while (0)
 #else
-#define PLATFORM_LOG(message)       \
-  do {                              \
-    fprintf(stderr, "%s", message); \
-    orbit_base::LogToFile(message); \
+#define ORBIT_INTERNAL_PLATFORM_LOG(message) \
+  do {                                       \
+    fprintf(stderr, "%s", message);          \
+    orbit_base::LogToFile(message);          \
   } while (0)
 #define PLATFORM_ABORT() abort()
 #endif

@@ -73,7 +73,8 @@ void PrintAsOrbitService(const std::string& buffer) {
   std::vector<std::string_view> lines = absl::StrSplit(buffer, '\n');
   for (const auto& line : lines) {
     if (!line.empty()) {
-      PLATFORM_LOG(absl::StrFormat("[                OrbitService] %s\n", line).c_str());
+      ORBIT_INTERNAL_PLATFORM_LOG(
+          absl::StrFormat("[                OrbitService] %s\n", line).c_str());
     }
   }
 };
