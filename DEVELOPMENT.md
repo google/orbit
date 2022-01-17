@@ -253,7 +253,7 @@ i.e. `src/ModuleName/MyClassTest.cpp`.
 
 ### Fuzzers
 Similar to unit tests, fuzzers are also named after the component they are fuzzing
-with the suffix `Fuzzer`, .i.e. `src/ModuleName/MyClassFuzzer.cpp`.
+with the suffix `Fuzzer`, i.e. `src/ModuleName/MyClassFuzzer.cpp`.
 
 ### Platform-specific code
 We try to keep platform-specific code out of header files and maintain a
