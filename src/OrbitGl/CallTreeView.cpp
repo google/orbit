@@ -175,7 +175,7 @@ std::unique_ptr<CallTreeView> CallTreeView::CreateTopDownViewFromPostProcessedSa
     const PostProcessedSamplingData& post_processed_sampling_data,
     const CaptureData& capture_data) {
   ORBIT_SCOPE_FUNCTION;
-  SCOPED_TIMED_LOG("CreateTopDownViewFromPostProcessedSamplingData");
+  ORBIT_SCOPED_TIMED_LOG("CreateTopDownViewFromPostProcessedSamplingData");
 
   auto top_down_view = std::make_unique<CallTreeView>();
   const std::string& process_name = capture_data.process_name();
@@ -250,7 +250,7 @@ std::unique_ptr<CallTreeView> CallTreeView::CreateBottomUpViewFromPostProcessedS
     const PostProcessedSamplingData& post_processed_sampling_data,
     const CaptureData& capture_data) {
   ORBIT_SCOPE_FUNCTION;
-  SCOPED_TIMED_LOG("CreateBottomUpViewFromPostProcessedSamplingData");
+  ORBIT_SCOPED_TIMED_LOG("CreateBottomUpViewFromPostProcessedSamplingData");
 
   auto bottom_up_view = std::make_unique<CallTreeView>();
   const std::string& process_name = capture_data.process_name();

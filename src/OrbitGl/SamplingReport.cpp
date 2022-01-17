@@ -28,7 +28,7 @@ SamplingReport::SamplingReport(
       has_summary_{has_summary},
       app_{app} {
   ORBIT_SCOPE_FUNCTION;
-  SCOPED_TIMED_LOG("SamplingReport::SamplingReport");
+  ORBIT_SCOPED_TIMED_LOG("SamplingReport::SamplingReport");
   FillReport();
 }
 

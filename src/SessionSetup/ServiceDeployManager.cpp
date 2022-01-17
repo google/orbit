@@ -265,7 +265,7 @@ outcome::result<void> ServiceDeployManager::CopyFileToRemote(
 
 outcome::result<void> ServiceDeployManager::ShutdownSftpChannel(
     orbit_ssh_qt::SftpChannel* sftp_channel) {
-  SCOPED_TIMED_LOG("ServiceDeployManager::ShutdownSftpChannel");
+  ORBIT_SCOPED_TIMED_LOG("ServiceDeployManager::ShutdownSftpChannel");
   ORBIT_CHECK(QThread::currentThread() == thread());
   ORBIT_CHECK(sftp_channel != nullptr);
 
@@ -682,7 +682,7 @@ void ServiceDeployManager::handleSocketError(std::error_code e) {
 }
 
 outcome::result<void> ServiceDeployManager::ShutdownTunnel(orbit_ssh_qt::Tunnel* tunnel) {
-  SCOPED_TIMED_LOG("ServiceDeployManager::StopTunnel");
+  ORBIT_SCOPED_TIMED_LOG("ServiceDeployManager::StopTunnel");
   ORBIT_CHECK(tunnel != nullptr);
 
   orbit_qt_utils::EventLoop loop{};
@@ -697,7 +697,7 @@ outcome::result<void> ServiceDeployManager::ShutdownTunnel(orbit_ssh_qt::Tunnel*
 }
 
 outcome::result<void> ServiceDeployManager::ShutdownTask(orbit_ssh_qt::Task* task) {
-  SCOPED_TIMED_LOG("ServiceDeployManager::ShutdownOrbitService");
+  ORBIT_SCOPED_TIMED_LOG("ServiceDeployManager::ShutdownOrbitService");
   ORBIT_CHECK(task != nullptr);
 
   orbit_qt_utils::EventLoop loop{};
@@ -712,7 +712,7 @@ outcome::result<void> ServiceDeployManager::ShutdownTask(orbit_ssh_qt::Task* tas
 }
 
 outcome::result<void> ServiceDeployManager::ShutdownSession(orbit_ssh_qt::Session* session) {
-  SCOPED_TIMED_LOG("ServiceDeployManager::ShutdownSession");
+  ORBIT_SCOPED_TIMED_LOG("ServiceDeployManager::ShutdownSession");
   ORBIT_CHECK(session != nullptr);
 
   orbit_qt_utils::EventLoop loop{};
@@ -727,7 +727,7 @@ outcome::result<void> ServiceDeployManager::ShutdownSession(orbit_ssh_qt::Sessio
 }
 
 void ServiceDeployManager::Shutdown() {
-  SCOPED_TIMED_LOG("ServiceDeployManager::Shutdown");
+  ORBIT_SCOPED_TIMED_LOG("ServiceDeployManager::Shutdown");
   DeferToBackgroundThreadAndWait(this, [this]() {
     if (sftp_channel_ != nullptr) {
       outcome::result<void> shutdown_result = ShutdownSftpChannel(sftp_channel_.get());

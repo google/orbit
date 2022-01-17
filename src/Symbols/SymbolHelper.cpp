@@ -260,7 +260,7 @@ ErrorMessageOr<fs::path> SymbolHelper::FindSymbolsFileLocally(
 ErrorMessageOr<ModuleSymbols> SymbolHelper::LoadSymbolsFromFile(
     const fs::path& file_path, const ObjectFileInfo& object_file_info) {
   ORBIT_SCOPE_FUNCTION;
-  SCOPED_TIMED_LOG("LoadSymbolsFromFile: %s", file_path.string());
+  ORBIT_SCOPED_TIMED_LOG("LoadSymbolsFromFile: %s", file_path.string());
 
   OUTCOME_TRY(auto symbols_file, CreateSymbolsFile(file_path, object_file_info));
   return symbols_file->LoadDebugSymbols();

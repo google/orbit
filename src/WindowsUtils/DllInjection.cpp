@@ -133,7 +133,7 @@ ErrorMessageOr<void> EnsureModuleIsNotAlreadyLoaded(uint32_t pid, std::string_vi
 
 ErrorMessageOr<void> InjectDll(uint32_t pid, std::filesystem::path dll_path) {
   const std::string dll_name = dll_path.string();
-  SCOPED_TIMED_LOG("Injecting dll \"%s\" in process %u", dll_name, pid);
+  ORBIT_SCOPED_TIMED_LOG("Injecting dll \"%s\" in process %u", dll_name, pid);
 
   OUTCOME_TRY(ValidatePath(dll_path));
   OUTCOME_TRY(EnsureModuleIsNotAlreadyLoaded(pid, dll_path.filename().string()));

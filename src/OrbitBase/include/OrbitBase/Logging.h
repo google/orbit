@@ -96,8 +96,9 @@ constexpr const char* kLogTimeFormat = "%Y-%m-%dT%H:%M:%E6S";
 #define ORBIT_INTERNAL_SCOPED_TIMED_LOG_CONCAT(a, b) \
   ORBIT_INTERNAL_SCOPED_TIMED_LOG_CONCAT_INDIRECT(a, b)
 
-// Declare the class inside the macro so that file:line are the ones where SCOPED_TIMED_LOG is used.
-#define SCOPED_TIMED_LOG(format, ...)                                                          \
+// Declare the class inside the macro so that file:line are the ones where ORBIT_SCOPED_TIMED_LOG is
+// used.
+#define ORBIT_SCOPED_TIMED_LOG(format, ...)                                                    \
   class ORBIT_INTERNAL_SCOPED_TIMED_LOG_CONCAT(ScopedTimedLog, __LINE__) {                     \
    public:                                                                                     \
     explicit ORBIT_INTERNAL_SCOPED_TIMED_LOG_CONCAT(ScopedTimedLog,                            \
