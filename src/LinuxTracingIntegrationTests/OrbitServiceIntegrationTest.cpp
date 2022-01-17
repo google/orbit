@@ -41,12 +41,12 @@ namespace {
 constexpr uint16_t kOrbitServicePort = 44765;
 
 int OrbitServiceMain() {
-  LOG("OrbitService started");
+  ORBIT_LOG("OrbitService started");
   std::atomic<bool> exit_requested = false;
   // OrbitService's loop terminates when EOF is received, no need to manipulate exit_requested.
   int exit_code =
       orbit_service::OrbitService{kOrbitServicePort, /*dev_mode=*/false}.Run(&exit_requested);
-  LOG("OrbitService finished with exit code %d", exit_code);
+  ORBIT_LOG("OrbitService finished with exit code %d", exit_code);
   return exit_code;
 }
 
@@ -109,7 +109,7 @@ class OrbitServiceIntegrationTestFixture {
 
     {
       absl::ReaderMutexLock lock{&capture_reader_writer_mutex_};
-      LOG("Stopping capture");
+      ORBIT_LOG("Stopping capture");
       bool writes_done_succeeded = capture_reader_writer_->WritesDone();
       CHECK(writes_done_succeeded);
     }
@@ -136,7 +136,7 @@ class OrbitServiceIntegrationTestFixture {
     {
       absl::WriterMutexLock lock{&capture_reader_writer_mutex_};
       CHECK(capture_reader_writer_ == nullptr);
-      LOG("Starting capture");
+      ORBIT_LOG("Starting capture");
       capture_reader_writer_ = capture_service->Capture(&context);
     }
     {
@@ -147,7 +147,7 @@ class OrbitServiceIntegrationTestFixture {
       CHECK(write_capture_request_result);
     }
 
-    LOG("Receiving events");
+    ORBIT_LOG("Receiving events");
     while (true) {
       orbit_grpc_protos::CaptureResponse capture_response;
       bool read_capture_response_result;
@@ -166,7 +166,7 @@ class OrbitServiceIntegrationTestFixture {
       }
     }
 
-    LOG("Capture finished");
+    ORBIT_LOG("Capture finished");
     {
       absl::WriterMutexLock lock{&capture_reader_writer_mutex_};
       CHECK(capture_reader_writer_ != nullptr);
@@ -179,7 +179,7 @@ class OrbitServiceIntegrationTestFixture {
     capture_events_mutex_.Await(absl::Condition(
         +[](std::vector<ClientCaptureEvent>* capture_events) { return !capture_events->empty(); },
         &capture_events_));
-    LOG("First ClientCaptureEvent received");
+    ORBIT_LOG("First ClientCaptureEvent received");
   }
 
   ChildProcess puppet_;
@@ -291,10 +291,10 @@ TEST(OrbitServiceIntegrationTest, FunctionCallsWithUserSpaceInstrumentation) {
   // Take an initial capture so that the communication between the target and OrbitService gets
   // initialized and we don't lose any event at the beginning of the next capture.
   // TODO(b/205939288): Remove this extra capture once this bug has been fixed again.
-  LOG("Taking an initial capture to initialize CaptureEventProducer in the target");
+  ORBIT_LOG("Taking an initial capture to initialize CaptureEventProducer in the target");
   (void)fixture.CaptureAndGetEvents(PuppetConstants::kCallOuterFunctionCommand, capture_options);
 
-  LOG("Taking the capture that we are actually going to verify");
+  ORBIT_LOG("Taking the capture that we are actually going to verify");
   std::vector<ClientCaptureEvent> events =
       fixture.CaptureAndGetEvents(PuppetConstants::kCallOuterFunctionCommand, capture_options);
 
@@ -357,10 +357,10 @@ TEST(OrbitServiceIntegrationTest, OrbitApi) {
   // Take an initial capture so that the communication between the target and OrbitService gets
   // initialized and we don't lose any event at the beginning of the next capture.
   // TODO(b/206359125): Remove this extra capture once this bug has been fixed again.
-  LOG("Taking an initial capture to initialize CaptureEventProducer in the target");
+  ORBIT_LOG("Taking an initial capture to initialize CaptureEventProducer in the target");
   (void)fixture.CaptureAndGetEvents(PuppetConstants::kOrbitApiCommand, capture_options);
 
-  LOG("Taking the capture that we are actually going to verify");
+  ORBIT_LOG("Taking the capture that we are actually going to verify");
   std::vector<ClientCaptureEvent> events =
       fixture.CaptureAndGetEvents(PuppetConstants::kOrbitApiCommand, capture_options);
 

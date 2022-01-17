@@ -114,7 +114,7 @@ static std::filesystem::path GetDocumentsPath() {
   std::wstring wpath = ppszPath;
   CoTaskMemFree(ppszPath);
   std::filesystem::path path{wpath};
-  LOG("Path to Documents: %s", path.string());
+  ORBIT_LOG("Path to Documents: %s", path.string());
   return path;
 #else
   return std::filesystem::path(GetEnvVar("HOME")) / "Documents";

@@ -145,7 +145,7 @@ ErrorMessageOr<void> InjectDll(uint32_t pid, std::filesystem::path dll_path) {
   constexpr uint32_t kNumRetries = 10;
   OUTCOME_TRY(Module module, FindModuleWithRetries(pid, dll_path.filename().string(), kNumRetries));
 
-  LOG("Module \"%s\" successfully injected in process %u", dll_name, pid);
+  ORBIT_LOG("Module \"%s\" successfully injected in process %u", dll_name, pid);
   return outcome::success();
 }
 

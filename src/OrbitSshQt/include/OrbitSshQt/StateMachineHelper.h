@@ -92,10 +92,10 @@ namespace orbit_ssh_qt {
       case State::kInitial:
         FATAL("Should not happen!");
       case State::kStarting:
-        LOG("About to start!");
+        ORBIT_LOG("About to start!");
         SetState(State::kStarted);
       case State::kStarted:
-        LOG("started!")
+        ORBIT_LOG("started!")
         break;
       case State::kShutdown:
       case State::kDone:
@@ -128,10 +128,10 @@ namespace orbit_ssh_qt {
       case State::kStarted:
         FATAL("Should not happen!");
       case State::kShutdown:
-        LOG("about to shut down!");
+        ORBIT_LOG("about to shut down!");
         SetState(State::kDone);
       case State::kDone:
-        LOG("shutted down!");
+        ORBIT_LOG("shutted down!");
         break;
       case State::kError:
         FATAL("Should not happen!");

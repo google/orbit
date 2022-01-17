@@ -231,7 +231,8 @@ void CallstackData::UpdateCallstackTypeBasedOnMajorityStart() {
     // to agree on the "correct" outermost frame.
     static constexpr double kFilterSupermajorityThreshold = 0.75;
     if (majority_outer_frame_count < count_for_this_thread * kFilterSupermajorityThreshold) {
-      LOG("Skipping filtering CallstackEvents for tid %d: majority outer frame has only %lu "
+      ORBIT_LOG(
+          "Skipping filtering CallstackEvents for tid %d: majority outer frame has only %lu "
           "occurrences out of %lu",
           tid, majority_outer_frame_count, count_for_this_thread);
       continue;
@@ -275,7 +276,8 @@ void CallstackData::UpdateCallstackTypeBasedOnMajorityStart() {
   }
 
   uint32_t callstack_event_count = GetCallstackEventsCount();
-  LOG("Filtered %u CallstackInfos of %u (%.2f%%), affecting %u CallstackEvents of %u (%.2f%%)",
+  ORBIT_LOG(
+      "Filtered %u CallstackInfos of %u (%.2f%%), affecting %u CallstackEvents of %u (%.2f%%)",
       callstack_ids_to_filter.size(), unique_callstacks_.size(),
       100.0f * callstack_ids_to_filter.size() / unique_callstacks_.size(), affected_event_count,
       callstack_event_count, 100.0f * affected_event_count / callstack_event_count);

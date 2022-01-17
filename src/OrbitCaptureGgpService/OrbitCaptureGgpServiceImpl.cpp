@@ -46,7 +46,7 @@ CaptureClientGgpServiceImpl::CaptureClientGgpServiceImpl()
 }
 
 void CaptureClientGgpServiceImpl::InitClientGgp() {
-  LOG("Initialise ClientGgp");
+  ORBIT_LOG("Initialise ClientGgp");
   ClientGgpOptions client_ggp_options;
   uint64_t orbit_service_grpc_port = absl::GetFlag(FLAGS_orbit_service_grpc_port);
   client_ggp_options.grpc_server_address = absl::StrFormat("127.0.0.1:%d", orbit_service_grpc_port);
@@ -60,13 +60,13 @@ void CaptureClientGgpServiceImpl::InitClientGgp() {
     ERROR("Not possible to initialise client");
     return;
   }
-  LOG("ClientGgp Initialised");
+  ORBIT_LOG("ClientGgp Initialised");
 }
 
 Status CaptureClientGgpServiceImpl::StartCapture(ServerContext* /*context*/,
                                                  const StartCaptureRequest* /*request*/,
                                                  StartCaptureResponse* /*response*/) {
-  LOG("Start capture grpc call received");
+  ORBIT_LOG("Start capture grpc call received");
   if (CaptureIsRunning()) {
     return Status(StatusCode::INTERNAL, "A capture is already running");
   }
@@ -82,7 +82,7 @@ Status CaptureClientGgpServiceImpl::StartCapture(ServerContext* /*context*/,
 Status CaptureClientGgpServiceImpl::StopCapture(grpc::ServerContext* /*context*/,
                                                 const StopCaptureRequest* /*request*/,
                                                 StopCaptureResponse* /*response*/) {
-  LOG("Stop capture grpc call received");
+  ORBIT_LOG("Stop capture grpc call received");
   if (!client_ggp_->StopCapture()) {
     return Status(StatusCode::INTERNAL, "Not possible to stop the capture");
   }
@@ -95,7 +95,7 @@ Status CaptureClientGgpServiceImpl::StopCapture(grpc::ServerContext* /*context*/
 Status CaptureClientGgpServiceImpl::UpdateSelectedFunctions(
     grpc::ServerContext* /*context*/, const UpdateSelectedFunctionsRequest* request,
     UpdateSelectedFunctionsResponse* /* response */) {
-  LOG("UpdateSelectedFunctions grpc call received");
+  ORBIT_LOG("UpdateSelectedFunctions grpc call received");
   std::vector<std::string> capture_functions;
   for (const auto& function : request->functions()) {
     capture_functions.push_back(function);
@@ -108,7 +108,7 @@ Status CaptureClientGgpServiceImpl::UpdateSelectedFunctions(
 Status CaptureClientGgpServiceImpl::ShutdownService(grpc::ServerContext* /*context*/,
                                                     const ShutdownServiceRequest* /*request*/,
                                                     ShutdownServiceResponse* /*response*/) {
-  LOG("Shutdown grpc call received");
+  ORBIT_LOG("Shutdown grpc call received");
   Shutdown();
   return Status::OK;
 }
@@ -116,14 +116,14 @@ Status CaptureClientGgpServiceImpl::ShutdownService(grpc::ServerContext* /*conte
 void CaptureClientGgpServiceImpl::Shutdown() {
   if (CaptureIsRunning()) {
     if (!client_ggp_->StopCapture()) {
-      LOG("Not possible to stop the capture");
+      ORBIT_LOG("Not possible to stop the capture");
     }
   }
-  LOG("Shut down the thread and wait for it to finish");
+  ORBIT_LOG("Shut down the thread and wait for it to finish");
   thread_pool_->ShutdownAndWait();
   shutdown_finished_ = true;
 
-  LOG("All done");
+  ORBIT_LOG("All done");
 }
 
 bool CaptureClientGgpServiceImpl::CaptureIsRunning() {

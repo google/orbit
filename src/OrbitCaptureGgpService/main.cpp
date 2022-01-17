@@ -38,7 +38,7 @@ std::string GetLogFilePath(const std::string& log_directory) {
   std::filesystem::path log_directory_path{log_directory};
   std::filesystem::create_directory(log_directory_path);
   const std::string log_file_path = log_directory_path / "OrbitCaptureGgpService.log";
-  LOG("Log file: %s", log_file_path);
+  ORBIT_LOG("Log file: %s", log_file_path);
   return log_file_path;
 }
 
@@ -49,9 +49,9 @@ int main(int argc, char** argv) {
   absl::SetFlagsUsageConfig(absl::FlagsUsageConfig{{}, {}, {}, &orbit_version::GetBuildReport, {}});
   absl::ParseCommandLine(argc, argv);
 
-  LOG("------------------------------------");
-  LOG("OrbitCaptureGgpService started");
-  LOG("------------------------------------");
+  ORBIT_LOG("------------------------------------");
+  ORBIT_LOG("OrbitCaptureGgpService started");
+  ORBIT_LOG("------------------------------------");
 
   const std::string log_directory = absl::GetFlag(FLAGS_log_directory);
   if (!log_directory.empty()) {

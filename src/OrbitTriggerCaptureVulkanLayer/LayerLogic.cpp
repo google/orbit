@@ -28,7 +28,7 @@ void LayerLogic::StartOrbitCaptureService() {
   if (pid < 0) {
     ERROR("Fork failed; not able to start Orbit capture service");
   } else if (pid == 0) {
-    LOG("Starting Orbit capture service");
+    ORBIT_LOG("Starting Orbit capture service");
     std::string game_pid_str = absl::StrFormat("%d", getppid());
     std::vector<std::string> argv_str = layer_options_.BuildOrbitCaptureServiceArgv(game_pid_str);
 
@@ -44,8 +44,8 @@ void LayerLogic::StartOrbitCaptureService() {
     for (auto const& arg : argv) {
       absl::StrAppendFormat(&log_message, " %s", arg);
     }
-    LOG("%s", log_message);
-    LOG("%d arguments", argv.size());
+    ORBIT_LOG("%s", log_message);
+    ORBIT_LOG("%d arguments", argv.size());
 
     execv(argv[0], argv.data());
   }
@@ -55,7 +55,7 @@ void LayerLogic::Init() {
   // Although this method is expected to be called just once, we include a flag to make sure the
   // gRPC service and client are not initialized more than once.
   if (!data_initialized_) {
-    LOG("Making initializations required in the layer");
+    ORBIT_LOG("Making initializations required in the layer");
 
     // Initialize and load data from config file
     layer_options_.Init();
@@ -98,8 +98,8 @@ void LayerLogic::ProcessQueuePresentKHR() {
     auto frame_time = std::chrono::duration_cast<std::chrono::duration<double, std::milli>>(
         current_time - last_frame_time_);
     if (std::isgreater(frame_time.count(), layer_options_.GetFrameTimeThresholdMilliseconds())) {
-      LOG("Time frame is %fms and exceeds the %fms threshold; starting capture", frame_time.count(),
-          layer_options_.GetFrameTimeThresholdMilliseconds());
+      ORBIT_LOG("Time frame is %fms and exceeds the %fms threshold; starting capture",
+                frame_time.count(), layer_options_.GetFrameTimeThresholdMilliseconds());
       RunCapture();
     }
   } else {
@@ -107,8 +107,8 @@ void LayerLogic::ProcessQueuePresentKHR() {
     auto capture_time = std::chrono::duration_cast<std::chrono::duration<int64_t>>(
         current_time - capture_started_time_);
     if (capture_time.count() >= layer_options_.GetCaptureLengthSeconds()) {
-      LOG("Capture has been running for %ds; stopping it",
-          layer_options_.GetCaptureLengthSeconds());
+      ORBIT_LOG("Capture has been running for %ds; stopping it",
+                layer_options_.GetCaptureLengthSeconds());
       StopCapture();
     }
   }

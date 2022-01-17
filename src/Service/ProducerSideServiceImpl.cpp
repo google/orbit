@@ -24,7 +24,7 @@ void ProducerSideServiceImpl::OnCaptureStartRequested(
     orbit_grpc_protos::CaptureOptions capture_options,
     orbit_producer_event_processor::ProducerEventProcessor* producer_event_processor) {
   CHECK(producer_event_processor != nullptr);
-  LOG("About to send StartCaptureCommand to CaptureEventProducers (if any)");
+  ORBIT_LOG("About to send StartCaptureCommand to CaptureEventProducers (if any)");
   {
     absl::WriterMutexLock lock{&producer_event_processor_mutex_};
     producer_event_processor_ = producer_event_processor;
@@ -37,7 +37,7 @@ void ProducerSideServiceImpl::OnCaptureStartRequested(
 }
 
 void ProducerSideServiceImpl::OnCaptureStopRequested() {
-  LOG("About to send StopCaptureCommand to CaptureEventProducers (if any)");
+  ORBIT_LOG("About to send StopCaptureCommand to CaptureEventProducers (if any)");
   {
     absl::MutexLock lock{&service_state_mutex_};
     service_state_.capture_status = CaptureStatus::kCaptureStopping;
@@ -52,13 +52,13 @@ void ProducerSideServiceImpl::OnCaptureStopRequested() {
         absl::Milliseconds(static_cast<int64_t>(max_wait_for_all_events_sent_ms_)));
     CHECK(service_state_.producers_remaining >= 0);
     if (service_state_.producers_remaining == 0) {
-      LOG("All CaptureEventProducers have finished sending their CaptureEvents");
+      ORBIT_LOG("All CaptureEventProducers have finished sending their CaptureEvents");
     } else {
       ERROR(
           "Stopped receiving CaptureEvents from CaptureEventProducers "
           "even if not all have sent all their CaptureEvents");
     }
-    LOG("About to send CaptureFinishedCommand to CaptureEventProducers (if any)");
+    ORBIT_LOG("About to send CaptureFinishedCommand to CaptureEventProducers (if any)");
     service_state_.capture_status = CaptureStatus::kCaptureFinished;
     service_state_.capture_options = std::nullopt;
     service_state_.producers_remaining = 0;
@@ -77,7 +77,7 @@ void ProducerSideServiceImpl::OnExitRequest() {
     service_state_.capture_options = std::nullopt;
   }
 
-  LOG("Attempting to disconnect from CaptureEventProducers as exit was requested");
+  ORBIT_LOG("Attempting to disconnect from CaptureEventProducers as exit was requested");
   {
     absl::MutexLock lock{&server_contexts_mutex_};
     for (grpc::ServerContext* context : server_contexts_) {
@@ -96,7 +96,7 @@ grpc::Status ProducerSideServiceImpl::ReceiveCommandsAndSendEvents(
     ::grpc::ServerContext* context,
     ::grpc::ServerReaderWriter< ::orbit_grpc_protos::ReceiveCommandsAndSendEventsResponse,
                                 ::orbit_grpc_protos::ReceiveCommandsAndSendEventsRequest>* stream) {
-  LOG("A CaptureEventProducer has connected calling ReceiveCommandsAndSendEvents");
+  ORBIT_LOG("A CaptureEventProducer has connected calling ReceiveCommandsAndSendEvents");
 
   {
     absl::MutexLock lock{&server_contexts_mutex_};
@@ -139,7 +139,7 @@ grpc::Status ProducerSideServiceImpl::ReceiveCommandsAndSendEvents(
     server_contexts_.erase(context);
   }
 
-  LOG("Finished handling ReceiveCommandsAndSendEvents for a CaptureEventProducer");
+  ORBIT_LOG("Finished handling ReceiveCommandsAndSendEvents for a CaptureEventProducer");
   return grpc::Status::OK;
 }
 
@@ -152,12 +152,12 @@ static bool SendStartCaptureCommand(
   *command.mutable_start_capture_command()->mutable_capture_options() = std::move(capture_options);
   if (!stream->Write(command)) {
     ERROR("Sending StartCaptureCommand to CaptureEventProducer");
-    LOG("Terminating call to ReceiveCommandsAndSendEvents as Write failed");
+    ORBIT_LOG("Terminating call to ReceiveCommandsAndSendEvents as Write failed");
     // Cause Read in ReceiveEventsThread to also fail if for some reason it hasn't already.
     context->TryCancel();
     return false;
   }
-  LOG("Sent StartCaptureCommand to CaptureEventProducer");
+  ORBIT_LOG("Sent StartCaptureCommand to CaptureEventProducer");
   return true;
 }
 
@@ -169,12 +169,12 @@ static bool SendStopCaptureCommand(
   command.mutable_stop_capture_command();
   if (!stream->Write(command)) {
     ERROR("Sending StopCaptureCommand to CaptureEventProducer");
-    LOG("Terminating call to ReceiveCommandsAndSendEvents as Write failed");
+    ORBIT_LOG("Terminating call to ReceiveCommandsAndSendEvents as Write failed");
     // Cause Read in ReceiveEventsThread to also fail if for some reason it hasn't already.
     context->TryCancel();
     return false;
   }
-  LOG("Sent StopCaptureCommand to CaptureEventProducer");
+  ORBIT_LOG("Sent StopCaptureCommand to CaptureEventProducer");
   return true;
 }
 
@@ -186,12 +186,12 @@ static bool SendCaptureFinishedCommand(
   command.mutable_capture_finished_command();
   if (!stream->Write(command)) {
     ERROR("Sending CaptureFinishedCommand to CaptureEventProducer");
-    LOG("Terminating call to ReceiveCommandsAndSendEvents as Write failed");
+    ORBIT_LOG("Terminating call to ReceiveCommandsAndSendEvents as Write failed");
     // Cause Read in ReceiveEventsThread to also fail if for some reason it hasn't already.
     context->TryCancel();
     return false;
   }
-  LOG("Sent CaptureFinishedCommand to CaptureEventProducer");
+  ORBIT_LOG("Sent CaptureFinishedCommand to CaptureEventProducer");
   return true;
 }
 
@@ -402,7 +402,7 @@ void ProducerSideServiceImpl::ReceiveEventsThread(
       } break;
 
       case orbit_grpc_protos::ReceiveCommandsAndSendEventsRequest::kAllEventsSent: {
-        LOG("Received AllEventsSent from CaptureEventProducer");
+        ORBIT_LOG("Received AllEventsSent from CaptureEventProducer");
         absl::MutexLock lock{&service_state_mutex_};
         switch (service_state_.capture_status) {
           case CaptureStatus::kCaptureStarted: {

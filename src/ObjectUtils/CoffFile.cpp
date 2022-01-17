@@ -182,7 +182,7 @@ ErrorMessageOr<PdbDebugInfo> CoffFileImpl::GetDebugPdbInfo() const {
 std::string CoffFileImpl::GetBuildId() const {
   ErrorMessageOr<PdbDebugInfo> pdb_debug_info = GetDebugPdbInfo();
   if (pdb_debug_info.has_error()) {
-    LOG("WARNING: No PDB debug info found, cannot form build id (ignoring).");
+    ORBIT_LOG("WARNING: No PDB debug info found, cannot form build id (ignoring).");
     return "";
   }
   return ComputeWindowsBuildId(pdb_debug_info.value().guid, pdb_debug_info.value().age);

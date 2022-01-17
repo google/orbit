@@ -47,7 +47,7 @@ std::string GetLogFilePath(const std::string& log_directory) {
   std::filesystem::path log_directory_path{log_directory};
   std::filesystem::create_directory(log_directory_path);
   std::filesystem::path log_file_path = log_directory_path / "OrbitClientGgp.log";
-  LOG("Log file: %s", log_file_path);
+  ORBIT_LOG("Log file: %s", log_file_path);
   return log_file_path;
 }
 
@@ -97,9 +97,9 @@ int main(int argc, char** argv) {
 
   // Captures for the period of time requested
   uint32_t capture_length = absl::GetFlag(FLAGS_capture_length);
-  LOG("Go to sleep for %d seconds", capture_length);
+  ORBIT_LOG("Go to sleep for %d seconds", capture_length);
   absl::SleepFor(absl::Seconds(capture_length));
-  LOG("Back from sleep");
+  ORBIT_LOG("Back from sleep");
 
   // Requests to stop the capture and waits for thread to finish
   if (!client_ggp.StopCapture()) {
@@ -107,9 +107,9 @@ int main(int argc, char** argv) {
     FATAL("Unable to stop the capture; exiting");
   }
 
-  LOG("Shut down the thread and wait for it to finish");
+  ORBIT_LOG("Shut down the thread and wait for it to finish");
   thread_pool->ShutdownAndWait();
 
-  LOG("All done");
+  ORBIT_LOG("All done");
   return 0;
 }

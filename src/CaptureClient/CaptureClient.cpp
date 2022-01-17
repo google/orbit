@@ -66,7 +66,7 @@ Future<ErrorMessageOr<CaptureListener::CaptureOutcome>> CaptureClient::Capture(
   }
 
   state_ = State::kStarting;
-  LOG("State is now kStarting");
+  ORBIT_LOG("State is now kStarting");
 
   auto capture_result = thread_pool->Schedule(
       [this, process_id, &module_manager, selected_functions = std::move(selected_functions),
@@ -206,7 +206,7 @@ ErrorMessageOr<CaptureListener::CaptureOutcome> CaptureClient::CaptureSync(
                         finish_result.has_error() ? ("\n" + finish_result.error().message()) : "");
     return ErrorMessage{error_string};
   }
-  LOG("Sent CaptureRequest on Capture's gRPC stream: asking to start capturing");
+  ORBIT_LOG("Sent CaptureRequest on Capture's gRPC stream: asking to start capturing");
 
   while (!writes_done_failed_ && !try_abort_) {
     CaptureResponse response;
@@ -224,19 +224,21 @@ ErrorMessageOr<CaptureListener::CaptureOutcome> CaptureClient::CaptureSync(
 
   ErrorMessageOr<void> finish_result = FinishCapture();
   if (try_abort_) {
-    LOG("TryCancel on Capture's gRPC context was called: Read on Capture's gRPC stream failed");
+    ORBIT_LOG(
+        "TryCancel on Capture's gRPC context was called: Read on Capture's gRPC stream failed");
     return CaptureListener::CaptureOutcome::kCancelled;
   }
 
   if (writes_done_failed_) {
-    LOG("WritesDone on Capture's gRPC stream failed: stop reading and try to finish the gRPC call");
+    ORBIT_LOG(
+        "WritesDone on Capture's gRPC stream failed: stop reading and try to finish the gRPC call");
     std::string error_string = absl::StrFormat(
         "Unable to finish the capture in orderly manner, performing emergency stop.%s",
         finish_result.has_error() ? ("\n" + finish_result.error().message()) : "");
     return ErrorMessage{error_string};
   }
 
-  LOG("Finished reading from Capture's gRPC stream: all capture data has been received");
+  ORBIT_LOG("Finished reading from Capture's gRPC stream: all capture data has been received");
   if (finish_result.has_error()) {
     return ErrorMessage{absl::StrFormat(
         "Unable to finish the capture in an orderly manner. The following error occurred: %s",
@@ -249,16 +251,16 @@ bool CaptureClient::StopCapture() {
   {
     absl::MutexLock lock(&state_mutex_);
     if (state_ == State::kStarting) {
-      LOG("StopCapture ignored, because it is starting and cannot be stopped at this stage.");
+      ORBIT_LOG("StopCapture ignored, because it is starting and cannot be stopped at this stage.");
       return false;
     }
 
     if (state_ != State::kStarted) {
-      LOG("StopCapture ignored, because it is already stopping or stopped");
+      ORBIT_LOG("StopCapture ignored, because it is already stopping or stopped");
       return false;
     }
     state_ = State::kStopping;
-    LOG("State is now kStopping");
+    ORBIT_LOG("State is now kStopping");
   }
 
   bool writes_done_succeeded;
@@ -277,7 +279,7 @@ bool CaptureClient::StopCapture() {
         "capture in orderly manner, initiating emergency stop");
     writes_done_failed_ = true;
   } else {
-    LOG("Finished writing on Capture's gRPC stream: asking to stop capturing");
+    ORBIT_LOG("Finished writing on Capture's gRPC stream: asking to stop capturing");
   }
 
   return true;
@@ -287,10 +289,10 @@ bool CaptureClient::AbortCaptureAndWait(int64_t max_wait_ms) {
   {
     absl::ReaderMutexLock lock{&context_and_stream_mutex_};
     if (client_context_ == nullptr) {
-      LOG("AbortCaptureAndWait ignored: no ClientContext to TryCancel");
+      ORBIT_LOG("AbortCaptureAndWait ignored: no ClientContext to TryCancel");
       return false;
     }
-    LOG("Calling TryCancel on Capture's gRPC context: aborting the capture");
+    ORBIT_LOG("Calling TryCancel on Capture's gRPC context: aborting the capture");
     try_abort_ = true;
     client_context_->TryCancel();  // reader_writer_->Read in Capture should then fail
   }
@@ -323,7 +325,7 @@ ErrorMessageOr<void> CaptureClient::FinishCapture() {
   {
     absl::MutexLock lock(&state_mutex_);
     state_ = State::kStopped;
-    LOG("State is now kStopped");
+    ORBIT_LOG("State is now kStopped");
   }
 
   if (!status.ok()) {
@@ -341,7 +343,7 @@ void CaptureClient::ProcessEvents(
     if (event.event_case() == ClientCaptureEvent::kCaptureStarted) {
       absl::MutexLock lock{&state_mutex_};
       state_ = State::kStarted;
-      LOG("State is now kStarted");
+      ORBIT_LOG("State is now kStarted");
     }
   }
 }

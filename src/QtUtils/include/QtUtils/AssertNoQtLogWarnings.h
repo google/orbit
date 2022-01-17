@@ -30,10 +30,12 @@ class AssertNoQtLogWarnings {
     const char* function = context.function ? context.function : "";
     switch (type) {
       case QtDebugMsg:
-        LOG("Qt debug message: %s (%s:%u, %s)", localMsg.constData(), file, context.line, function);
+        ORBIT_LOG("Qt debug message: %s (%s:%u, %s)", localMsg.constData(), file, context.line,
+                  function);
         break;
       case QtInfoMsg:
-        LOG("Qt info message: %s (%s:%u, %s)", localMsg.constData(), file, context.line, function);
+        ORBIT_LOG("Qt info message: %s (%s:%u, %s)", localMsg.constData(), file, context.line,
+                  function);
         break;
       case QtWarningMsg:
         EXPECT_EQ(false, NO_WARNING_MSG) << msg.toStdString();

@@ -509,7 +509,7 @@ TEST(LinuxTracingIntegrationTest, SchedulingSlices) {
     last_out_timestamp_ns = scheduling_slice.out_timestamp_ns();
   }
 
-  LOG("scheduling_slice_count=%lu", scheduling_slice_count);
+  ORBIT_LOG("scheduling_slice_count=%lu", scheduling_slice_count);
   // "- 1" as it is the expected number of SchedulingSlices *only between* the first and last sleep.
   EXPECT_GE(scheduling_slice_count, PuppetConstants::kSleepCount - 1);
 }
@@ -668,7 +668,8 @@ void VerifyCallstackSamplesWithOuterAndInnerFunction(
     ASSERT_EQ(callstack_sample.tid(), pid);
 
     if (callstack_sample.callstack().type() != orbit_grpc_protos::Callstack::kComplete) {
-      LOG("callstack_sample.callstack().type() == %s",
+      ORBIT_LOG(
+          "callstack_sample.callstack().type() == %s",
           orbit_grpc_protos::Callstack::CallstackType_Name(callstack_sample.callstack().type()));
       continue;
     }
@@ -706,8 +707,8 @@ void VerifyCallstackSamplesWithOuterAndInnerFunction(
 
   ASSERT_GT(matching_callstack_count, 0);
   CHECK(first_matching_callstack_timestamp_ns <= last_matching_callstack_timestamp_ns);
-  LOG("Found %lu of the expected callstacks over %.0f ms", matching_callstack_count,
-      (last_matching_callstack_timestamp_ns - first_matching_callstack_timestamp_ns) / 1e6);
+  ORBIT_LOG("Found %lu of the expected callstacks over %.0f ms", matching_callstack_count,
+            (last_matching_callstack_timestamp_ns - first_matching_callstack_timestamp_ns) / 1e6);
   constexpr double kMinExpectedScheduledRelativeTime = 0.67;
   const auto min_expected_matching_callstack_count = static_cast<uint64_t>(
       floor((last_matching_callstack_timestamp_ns - first_matching_callstack_timestamp_ns) / 1e9 *
@@ -933,9 +934,9 @@ TEST(LinuxTracingIntegrationTest, ThreadStateSlices) {
     last_end_timestamp_ns = thread_state_slice.end_timestamp_ns();
   }
 
-  LOG("running_slice_count=%lu", running_slice_count);
-  LOG("runnable_slice_count=%lu", runnable_slice_count);
-  LOG("interruptible_sleep_slice_count=%lu", interruptible_sleep_slice_count);
+  ORBIT_LOG("running_slice_count=%lu", running_slice_count);
+  ORBIT_LOG("runnable_slice_count=%lu", runnable_slice_count);
+  ORBIT_LOG("interruptible_sleep_slice_count=%lu", interruptible_sleep_slice_count);
   // "- 1" as these are the expected numbers of kRunning and kRunnable ThreadStateSlices *only
   // between* the first and last sleep.
   EXPECT_GE(running_slice_count, PuppetConstants::kSleepCount - 1);
@@ -1063,7 +1064,7 @@ TEST(LinuxTracingIntegrationTest, GpuJobs) {
       break;
     }
   }
-  LOG("another_process_used_gpu=%d", another_process_used_gpu);
+  ORBIT_LOG("another_process_used_gpu=%d", another_process_used_gpu);
 
   uint64_t gpu_job_count = 0;
   for (const auto& event : events) {
@@ -1100,7 +1101,7 @@ TEST(LinuxTracingIntegrationTest, GpuJobs) {
     ++gpu_job_count;
   }
 
-  LOG("gpu_job_count=%lu", gpu_job_count);
+  ORBIT_LOG("gpu_job_count=%lu", gpu_job_count);
   EXPECT_GE(gpu_job_count, PuppetConstants::kFrameCount);
 }
 

@@ -277,8 +277,9 @@ OrbitApp::~OrbitApp() {
 }
 
 void OrbitApp::OnCaptureFinished(const CaptureFinished& capture_finished) {
-  LOG("CaptureFinished received: status=%s, error_message=\"%s\"",
-      CaptureFinished::Status_Name(capture_finished.status()), capture_finished.error_message());
+  ORBIT_LOG("CaptureFinished received: status=%s, error_message=\"%s\"",
+            CaptureFinished::Status_Name(capture_finished.status()),
+            capture_finished.error_message());
   main_thread_executor_->Schedule([this, capture_finished]() {
     switch (capture_finished.status()) {
       case orbit_grpc_protos::CaptureFinished::kSuccessful: {
@@ -399,8 +400,8 @@ Future<void> OrbitApp::OnCaptureComplete() {
       orbit_client_model::CreatePostProcessedSamplingData(GetCaptureData().GetCallstackData(),
                                                           GetCaptureData());
 
-  LOG("The capture contains %u intervals with incomplete data",
-      GetCaptureData().incomplete_data_intervals().size());
+  ORBIT_LOG("The capture contains %u intervals with incomplete data",
+            GetCaptureData().incomplete_data_intervals().size());
 
   return main_thread_executor_->Schedule(
       [this, sampling_profiler = std::move(post_processed_sampling_data)]() mutable {
@@ -1622,7 +1623,8 @@ orbit_base::Future<ErrorMessageOr<std::filesystem::path>> OrbitApp::RetrieveModu
     if (result.has_error()) return result.error();
 
     const std::string& debug_file_path = result.value();
-    LOG("Found symbols file on the remote: \"%s\" - loading it using scp...", debug_file_path);
+    ORBIT_LOG("Found symbols file on the remote: \"%s\" - loading it using scp...",
+              debug_file_path);
 
     const std::filesystem::path local_debug_file_path =
         symbol_helper_.GenerateCachedFileName(module_file_path);
@@ -1632,7 +1634,7 @@ orbit_base::Future<ErrorMessageOr<std::filesystem::path>> OrbitApp::RetrieveModu
                         module_file_path, debug_file_path));
     const std::chrono::time_point<std::chrono::steady_clock> copy_begin =
         std::chrono::steady_clock::now();
-    LOG("Copying \"%s\" started", debug_file_path);
+    ORBIT_LOG("Copying \"%s\" started", debug_file_path);
     orbit_base::Future<ErrorMessageOr<void>> copy_result =
         secure_copy_callback_(debug_file_path, local_debug_file_path.string());
 
@@ -1648,7 +1650,7 @@ orbit_base::Future<ErrorMessageOr<std::filesystem::path>> OrbitApp::RetrieveModu
           }
           const auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(
               std::chrono::steady_clock::now() - copy_begin);
-          LOG("Copying \"%s\" took %.3f ms", debug_file_path, duration.count());
+          ORBIT_LOG("Copying \"%s\" took %.3f ms", debug_file_path, duration.count());
           return local_debug_file_path;
         });
   };
@@ -1821,7 +1823,8 @@ static ErrorMessageOr<std::filesystem::path> FindModuleLocallyImpl(
         symbol_helper.FindSymbolsFileLocally(module_data.file_path(), module_data.build_id(),
                                              module_data.object_file_type(), search_paths);
     if (symbols_path.has_value()) {
-      LOG("Found symbols for module \"%s\" in user provided symbol folder. Symbols filename: "
+      ORBIT_LOG(
+          "Found symbols for module \"%s\" in user provided symbol folder. Symbols filename: "
           "\"%s\"",
           module_data.file_path(), symbols_path.value().string());
       return symbols_path.value();
@@ -1832,8 +1835,8 @@ static ErrorMessageOr<std::filesystem::path> FindModuleLocallyImpl(
     const auto symbols_path =
         symbol_helper.FindSymbolsInCache(module_data.file_path(), module_data.build_id());
     if (symbols_path.has_value()) {
-      LOG("Found symbols for module \"%s\" in cache. Symbols filename: \"%s\"",
-          module_data.file_path(), symbols_path.value().string());
+      ORBIT_LOG("Found symbols for module \"%s\" in cache. Symbols filename: \"%s\"",
+                module_data.file_path(), symbols_path.value().string());
       return symbols_path.value();
     }
     error_message += "\n* " + symbols_path.error().message();
@@ -1842,7 +1845,7 @@ static ErrorMessageOr<std::filesystem::path> FindModuleLocallyImpl(
     const auto symbols_included_in_module = orbit_symbols::SymbolHelper::VerifySymbolsFile(
         module_data.file_path(), module_data.build_id());
     if (symbols_included_in_module.has_value()) {
-      LOG("Found symbols included in module: \"%s\"", module_data.file_path());
+      ORBIT_LOG("Found symbols included in module: \"%s\"", module_data.file_path());
       return module_data.file_path();
     }
     error_message += "\n* Symbols are not included in module file: " +
@@ -1851,7 +1854,7 @@ static ErrorMessageOr<std::filesystem::path> FindModuleLocallyImpl(
 
   error_message = absl::StrFormat("Did not find local symbols for module \"%s\": %s",
                                   module_data.file_path(), error_message);
-  LOG("%s", error_message);
+  ORBIT_LOG("%s", error_message);
   return ErrorMessage(error_message);
 }
 
@@ -1872,8 +1875,8 @@ void OrbitApp::AddSymbols(const std::filesystem::path& module_file_path,
   if (selected_process != nullptr &&
       selected_process->IsModuleLoadedByProcess(module_data->file_path())) {
     functions_data_view_->AddFunctions(module_data->GetFunctions());
-    LOG("Added loaded function symbols for module \"%s\" to the functions tab",
-        module_data->file_path());
+    ORBIT_LOG("Added loaded function symbols for module \"%s\" to the functions tab",
+              module_data->file_path());
   }
 
   UpdateAfterSymbolLoading();
@@ -1925,7 +1928,7 @@ orbit_base::Future<ErrorMessageOr<void>> OrbitApp::LoadSymbols(
         absl::StrFormat(R"(Successfully loaded %d symbols for "%s")",
                         symbols_result.value().symbol_infos_size(), module_file_path);
     scoped_status.UpdateMessage(message);
-    LOG("%s", message);
+    ORBIT_LOG("%s", message);
     return outcome::success();
   };
 
@@ -2266,10 +2269,10 @@ orbit_base::Future<std::vector<ErrorMessageOr<void>>> OrbitApp::ReloadModules(
                                                    frame_tracks = std::move(frame_tracks)]() {
               // (D) Re-hook functions which had been hooked before.
               SelectFunctionsFromHashes(module_to_reload, hooked_functions);
-              LOG("Auto hooked functions in module \"%s\"", module_to_reload->file_path());
+              ORBIT_LOG("Auto hooked functions in module \"%s\"", module_to_reload->file_path());
 
               EnableFrameTracksFromHashes(module_to_reload, frame_tracks);
-              LOG("Added frame tracks in module \"%s\"", module_to_reload->file_path());
+              ORBIT_LOG("Added frame tracks in module \"%s\"", module_to_reload->file_path());
             });
     reloaded_modules.emplace_back(std::move(reloaded_module));
   }
@@ -2318,8 +2321,8 @@ void OrbitApp::SetMaxLocalMarkerDepthPerCommandBuffer(
 }
 
 void OrbitApp::SelectFunction(const orbit_client_protos::FunctionInfo& func) {
-  LOG("Selected %s (address_=%#x, loaded_module_path_=%s)", func.pretty_name(), func.address(),
-      func.module_path());
+  ORBIT_LOG("Selected %s (address_=%#x, loaded_module_path_=%s)", func.pretty_name(),
+            func.address(), func.module_path());
   data_manager_->SelectFunction(func);
 }
 
@@ -2804,7 +2807,7 @@ ErrorMessageOr<void> OrbitApp::ConvertPresetToNewFormatIfNecessary(const PresetF
     return outcome::success();
   }
 
-  LOG("Converting preset file \"%s\" to new format.", preset_file.file_path().string());
+  ORBIT_LOG("Converting preset file \"%s\" to new format.", preset_file.file_path().string());
 
   // Convert first
   PresetInfo new_info;
@@ -2903,7 +2906,8 @@ void OrbitApp::TrySaveUserDefinedCaptureInfo() {
 
   const auto& file_path = GetCaptureData().file_path();
   if (!file_path.has_value()) {
-    LOG("Warning: capture is not backed by a file, skipping the save of UserDefinedCaptureInfo");
+    ORBIT_LOG(
+        "Warning: capture is not backed by a file, skipping the save of UserDefinedCaptureInfo");
     return;
   }
 
@@ -2913,7 +2917,7 @@ void OrbitApp::TrySaveUserDefinedCaptureInfo() {
       frame_track_function_ids.begin(), frame_track_function_ids.end()};
   thread_pool_->Schedule([this, capture_info = std::move(capture_info),
                           file_path = file_path.value()] {
-    LOG("Saving user defined capture info to \"%s\"", file_path.string());
+    ORBIT_LOG("Saving user defined capture info to \"%s\"", file_path.string());
     auto write_result = orbit_capture_file::WriteUserData(file_path, capture_info);
     if (write_result.has_error()) {
       SendErrorToUi("Save failed", absl::StrFormat("Save to \"%s\" failed: %s", file_path.string(),

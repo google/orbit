@@ -36,7 +36,7 @@ void CaptureEventProducer::ShutdownAndWait() {
   {
     absl::ReaderMutexLock lock{&context_and_stream_mutex_};
     if (context_ != nullptr) {
-      LOG("Attempting to disconnect from ProducerSideService as exit was requested");
+      ORBIT_LOG("Attempting to disconnect from ProducerSideService as exit was requested");
       context_->TryCancel();
     }
   }
@@ -100,7 +100,7 @@ bool CaptureEventProducer::NotifyAllEventsSent() {
     write_succeeded = stream_->Write(all_events_sent_request);
   }
   if (write_succeeded) {
-    LOG("Sent AllEventsSent to ProducerSideService");
+    ORBIT_LOG("Sent AllEventsSent to ProducerSideService");
   } else {
     ERROR("Sending AllEventsSent to ProducerSideService");
   }
@@ -139,7 +139,7 @@ void CaptureEventProducer::ConnectAndReceiveCommandsThread() {
       shutdown_requested_mutex_.ReaderUnlock();
       continue;
     }
-    LOG("Called ReceiveCommandsAndSendEvents on ProducerSideService");
+    ORBIT_LOG("Called ReceiveCommandsAndSendEvents on ProducerSideService");
 
     while (true) {
       ReceiveCommandsAndSendEventsResponse response;
@@ -159,7 +159,7 @@ void CaptureEventProducer::ConnectAndReceiveCommandsThread() {
           last_command_ = ReceiveCommandsAndSendEventsResponse::kCaptureFinishedCommand;
           OnCaptureFinished();
         }
-        LOG("Terminating call to ReceiveCommandsAndSendEvents");
+        ORBIT_LOG("Terminating call to ReceiveCommandsAndSendEvents");
         {
           absl::WriterMutexLock lock{&context_and_stream_mutex_};
           stream_->Finish().IgnoreError();
@@ -177,7 +177,7 @@ void CaptureEventProducer::ConnectAndReceiveCommandsThread() {
 
       switch (response.command_case()) {
         case ReceiveCommandsAndSendEventsResponse::kStartCaptureCommand: {
-          LOG("ProducerSideService sent StartCaptureCommand");
+          ORBIT_LOG("ProducerSideService sent StartCaptureCommand");
           if (last_command_ == ReceiveCommandsAndSendEventsResponse::kCaptureFinishedCommand) {
             last_command_ = ReceiveCommandsAndSendEventsResponse::kStartCaptureCommand;
             OnCaptureStart(response.start_capture_command().capture_options());
@@ -190,7 +190,7 @@ void CaptureEventProducer::ConnectAndReceiveCommandsThread() {
         } break;
 
         case ReceiveCommandsAndSendEventsResponse::kStopCaptureCommand: {
-          LOG("ProducerSideService sent StopCaptureCommand");
+          ORBIT_LOG("ProducerSideService sent StopCaptureCommand");
           if (last_command_ == ReceiveCommandsAndSendEventsResponse::kStartCaptureCommand) {
             last_command_ = ReceiveCommandsAndSendEventsResponse::kStopCaptureCommand;
             OnCaptureStop();
@@ -204,7 +204,7 @@ void CaptureEventProducer::ConnectAndReceiveCommandsThread() {
         } break;
 
         case ReceiveCommandsAndSendEventsResponse::kCaptureFinishedCommand: {
-          LOG("ProducerSideService sent CaptureFinishedCommand");
+          ORBIT_LOG("ProducerSideService sent CaptureFinishedCommand");
           if (last_command_ == ReceiveCommandsAndSendEventsResponse::kStopCaptureCommand) {
             last_command_ = ReceiveCommandsAndSendEventsResponse::kCaptureFinishedCommand;
             OnCaptureFinished();

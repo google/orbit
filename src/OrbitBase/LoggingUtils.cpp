@@ -79,7 +79,7 @@ std::vector<std::filesystem::path> FindOldLogFiles(
     ErrorMessageOr<absl::Time> timestamp_or_error =
         ParseLogFileTimestamp(log_file_path.filename().string());
     if (timestamp_or_error.has_error()) {
-      LOG("Warning: %s", timestamp_or_error.error().message());
+      ORBIT_LOG("Warning: %s", timestamp_or_error.error().message());
       continue;
     }
     if (timestamp_or_error.value() < expiration_time) {

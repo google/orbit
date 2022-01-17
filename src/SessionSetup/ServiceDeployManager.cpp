@@ -132,7 +132,7 @@ ServiceDeployManager::ServiceDeployManager(const DeploymentConfiguration* deploy
 
   QObject::connect(
       this, &ServiceDeployManager::statusMessage, this, [](const QString& status_message) {
-        LOG("ServiceDeployManager status message: \"%s\"", status_message.toStdString());
+        ORBIT_LOG("ServiceDeployManager status message: \"%s\"", status_message.toStdString());
       });
 }
 
@@ -170,11 +170,11 @@ outcome::result<bool> ServiceDeployManager::CheckIfInstalled() {
   orbit_qt_utils::EventLoop loop{};
   QObject::connect(&check_if_installed_task, &orbit_ssh_qt::Task::readyReadStdOut, this,
                    [&check_if_installed_task]() {
-                     LOG("CheckIfInstalled stdout: %s", check_if_installed_task.ReadStdOut());
+                     ORBIT_LOG("CheckIfInstalled stdout: %s", check_if_installed_task.ReadStdOut());
                    });
   QObject::connect(&check_if_installed_task, &orbit_ssh_qt::Task::readyReadStdErr, this,
                    [&check_if_installed_task]() {
-                     LOG("CheckIfInstalled stderr: %s", check_if_installed_task.ReadStdErr());
+                     ORBIT_LOG("CheckIfInstalled stderr: %s", check_if_installed_task.ReadStdErr());
                    });
   QObject::connect(&check_if_installed_task, &orbit_ssh_qt::Task::finished, &loop,
                    &orbit_qt_utils::EventLoop::exit);
@@ -187,7 +187,7 @@ outcome::result<bool> ServiceDeployManager::CheckIfInstalled() {
   check_if_installed_task.Start();
 
   OUTCOME_TRY(auto&& result, loop.exec());
-  LOG("CheckIfInstalled task returned exit code: %d", result);
+  ORBIT_LOG("CheckIfInstalled task returned exit code: %d", result);
   if (result == 0) {
     // Already installed
     emit statusMessage("The correct version of OrbitService is already installed.");
@@ -202,7 +202,7 @@ outcome::result<uint16_t> ServiceDeployManager::StartTunnel(
     std::optional<orbit_ssh_qt::Tunnel>* tunnel, uint16_t port) {
   CHECK(QThread::currentThread() == thread());
   emit statusMessage("Setting up port forwarding...");
-  LOG("Setting up tunnel on port %d", port);
+  ORBIT_LOG("Setting up tunnel on port %d", port);
 
   tunnel->emplace(&session_.value(), kLocalhost, port, this);
 
@@ -256,7 +256,7 @@ outcome::result<void> ServiceDeployManager::CopyFileToRemote(
 
   auto cancel_handler = ConnectCancelHandler(&loop, this);
 
-  LOG("About to start copying from %s to %s...", source, dest);
+  ORBIT_LOG("About to start copying from %s to %s...", source, dest);
   operation.CopyFileToRemote(source, dest, dest_mode);
 
   OUTCOME_TRY(loop.exec());
@@ -332,7 +332,7 @@ void ServiceDeployManager::CopyFileToLocalImpl(orbit_base::Promise<ErrorMessageO
 
   copy_file_operation_in_progress_ = true;
 
-  LOG("Copying remote \"%s\" to local \"%s\"", source, destination);
+  ORBIT_LOG("Copying remote \"%s\" to local \"%s\"", source, destination);
 
   // NOLINTNEXTLINE - Unfortunately we have to fall back to a raw `new` here.
   auto operation =
@@ -470,9 +470,10 @@ outcome::result<void> ServiceDeployManager::StartOrbitService() {
   OUTCOME_TRY(loop.exec());
   QObject::connect(&orbit_service_task_.value(), &orbit_ssh_qt::Task::errorOccurred, this,
                    &ServiceDeployManager::handleSocketError);
-  QObject::connect(
-      &orbit_service_task_.value(), &orbit_ssh_qt::Task::finished, this,
-      [](int exit_code) { LOG("The OrbitService Task finished with exit code: %d", exit_code); });
+  QObject::connect(&orbit_service_task_.value(), &orbit_ssh_qt::Task::finished, this,
+                   [](int exit_code) {
+                     ORBIT_LOG("The OrbitService Task finished with exit code: %d", exit_code);
+                   });
   return outcome::success();
 }
 
@@ -512,9 +513,10 @@ outcome::result<void> ServiceDeployManager::StartOrbitServicePrivileged(
   OUTCOME_TRY(loop.exec());
   QObject::connect(&orbit_service_task_.value(), &orbit_ssh_qt::Task::errorOccurred, this,
                    &ServiceDeployManager::handleSocketError);
-  QObject::connect(
-      &orbit_service_task_.value(), &orbit_ssh_qt::Task::finished, this,
-      [](int exit_code) { LOG("The OrbitService Task finished with exit code: %d", exit_code); });
+  QObject::connect(&orbit_service_task_.value(), &orbit_ssh_qt::Task::finished, this,
+                   [](int exit_code) {
+                     ORBIT_LOG("The OrbitService Task finished with exit code: %d", exit_code);
+                   });
   return outcome::success();
 }
 
@@ -600,13 +602,13 @@ outcome::result<ServiceDeployManager::GrpcPort> ServiceDeployManager::Exec(
   if (!result.has_value()) {
     if (result.error() == make_error_code(Error::kUserCanceledServiceDeployment)) {
       connect_metric.SetStatusCode(orbit_metrics_uploader::OrbitLogEvent::CANCELLED);
-      LOG("OrbitService deployment has been aborted by the user");
+      ORBIT_LOG("OrbitService deployment has been aborted by the user");
     } else {
       connect_metric.SetStatusCode(orbit_metrics_uploader::OrbitLogEvent::INTERNAL_ERROR);
       ERROR("OrbitService deployment failed, error: %s", result.error().message());
     }
   } else {
-    LOG("Deployment successful, grpc_port: %d", result.value().grpc_port);
+    ORBIT_LOG("Deployment successful, grpc_port: %d", result.value().grpc_port);
   }
 
   return result;
@@ -670,12 +672,12 @@ outcome::result<ServiceDeployManager::GrpcPort> ServiceDeployManager::ExecImpl()
 
   emit statusMessage("Successfully set up port forwarding!");
 
-  LOG("Local port for gRPC is %d", local_grpc_port);
+  ORBIT_LOG("Local port for gRPC is %d", local_grpc_port);
   return outcome::success(GrpcPort{local_grpc_port});
 }
 
 void ServiceDeployManager::handleSocketError(std::error_code e) {
-  LOG("Socket error: %s", e.message());
+  ORBIT_LOG("Socket error: %s", e.message());
   emit socketErrorOccurred(e);
 }
 

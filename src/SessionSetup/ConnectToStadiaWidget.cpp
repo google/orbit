@@ -401,7 +401,7 @@ void ConnectToStadiaWidget::OnSshInfoLoaded(ErrorMessageOr<orbit_ggp::SshInfo> s
     return;
   }
 
-  LOG("Received ssh info for instance with id: %s", instance_id);
+  ORBIT_LOG("Received ssh info for instance with id: %s", instance_id);
 
   orbit_ggp::SshInfo& ssh_info{ssh_info_result.value()};
   instance_credentials_.emplace(instance_id, CredentialsFromSshInfo(ssh_info));

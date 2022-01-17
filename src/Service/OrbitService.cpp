@@ -38,7 +38,7 @@ void PrintInstanceVersions() {
     constexpr const char* kKernelVersionCommand = "uname -a";
     std::optional<std::string> version = orbit_base::ExecuteCommand(kKernelVersionCommand);
     if (version.has_value()) {
-      LOG("%s: %s", kKernelVersionCommand, absl::StripSuffix(version.value(), "\n"));
+      ORBIT_LOG("%s: %s", kKernelVersionCommand, absl::StripSuffix(version.value(), "\n"));
     } else {
       ERROR("Could not execute \"%s\"", kKernelVersionCommand);
     }
@@ -48,7 +48,7 @@ void PrintInstanceVersions() {
     constexpr const char* kVersionFilePath = "/usr/local/cloudcast/VERSION";
     ErrorMessageOr<std::string> version = orbit_base::ReadFileToString(kVersionFilePath);
     if (version.has_value()) {
-      LOG("%s:\n%s", kVersionFilePath, absl::StripSuffix(version.value(), "\n"));
+      ORBIT_LOG("%s:\n%s", kVersionFilePath, absl::StripSuffix(version.value(), "\n"));
     } else {
       ERROR("%s", version.error().message());
     }
@@ -58,7 +58,7 @@ void PrintInstanceVersions() {
     constexpr const char* kBaseVersionFilePath = "/usr/local/cloudcast/BASE_VERSION";
     ErrorMessageOr<std::string> version = orbit_base::ReadFileToString(kBaseVersionFilePath);
     if (version.has_value()) {
-      LOG("%s:\n%s", kBaseVersionFilePath, absl::StripSuffix(version.value(), "\n"));
+      ORBIT_LOG("%s:\n%s", kBaseVersionFilePath, absl::StripSuffix(version.value(), "\n"));
     } else {
       ERROR("%s", version.error().message());
     }
@@ -68,7 +68,7 @@ void PrintInstanceVersions() {
     constexpr const char* kInstanceVersionFilePath = "/usr/local/cloudcast/INSTANCE_VERSION";
     ErrorMessageOr<std::string> version = orbit_base::ReadFileToString(kInstanceVersionFilePath);
     if (version.has_value()) {
-      LOG("%s:\n%s", kInstanceVersionFilePath, absl::StripSuffix(version.value(), "\n"));
+      ORBIT_LOG("%s:\n%s", kInstanceVersionFilePath, absl::StripSuffix(version.value(), "\n"));
     } else {
       ERROR("%s", version.error().message());
     }
@@ -82,7 +82,7 @@ void PrintInstanceVersions() {
       stripped_version = absl::StripSuffix(version.value(), "\n");
     }
     if (!stripped_version.empty()) {
-      LOG("%s: %s", kDriverVersionCommand, stripped_version);
+      ORBIT_LOG("%s: %s", kDriverVersionCommand, stripped_version);
     } else {
       ERROR("Could not execute \"%s\"", kDriverVersionCommand);
     }
@@ -112,24 +112,24 @@ bool IsSshConnectionAlive(std::chrono::time_point<std::chrono::steady_clock> las
 
 std::unique_ptr<OrbitGrpcServer> CreateGrpcServer(uint16_t grpc_port, bool dev_mode) {
   std::string grpc_address = absl::StrFormat("127.0.0.1:%d", grpc_port);
-  LOG("Starting gRPC server at %s", grpc_address);
+  ORBIT_LOG("Starting gRPC server at %s", grpc_address);
   std::unique_ptr<OrbitGrpcServer> grpc_server = OrbitGrpcServer::Create(grpc_address, dev_mode);
   if (grpc_server == nullptr) {
     ERROR("Unable to start gRPC server");
     return nullptr;
   }
-  LOG("gRPC server is running");
+  ORBIT_LOG("gRPC server is running");
   return grpc_server;
 }
 
 std::unique_ptr<ProducerSideServer> BuildAndStartProducerSideServerWithUri(std::string uri) {
   auto producer_side_server = std::make_unique<ProducerSideServer>();
-  LOG("Starting producer-side server at %s", uri);
+  ORBIT_LOG("Starting producer-side server at %s", uri);
   if (!producer_side_server->BuildAndStart(uri)) {
     ERROR("Unable to start producer-side server");
     return nullptr;
   }
-  LOG("Producer-side server is running");
+  ORBIT_LOG("Producer-side server is running");
   return producer_side_server;
 }
 
@@ -178,11 +178,11 @@ int OrbitService::Run(std::atomic<bool>* exit_requested) {
   PrintInstanceVersions();
 #endif
 
-  LOG("Running Orbit Service version %s", orbit_version::GetVersionString());
+  ORBIT_LOG("Running Orbit Service version %s", orbit_version::GetVersionString());
 #ifndef NDEBUG
-  LOG("**********************************");
-  LOG("Orbit Service is running in DEBUG!");
-  LOG("**********************************");
+  ORBIT_LOG("**********************************");
+  ORBIT_LOG("Orbit Service is running in DEBUG!");
+  ORBIT_LOG("**********************************");
 #endif
 
   std::unique_ptr<OrbitGrpcServer> grpc_server = CreateGrpcServer(grpc_port_, dev_mode_);
@@ -212,7 +212,7 @@ int OrbitService::Run(std::atomic<bool>* exit_requested) {
     std::string stdin_data = ReadStdIn();
     // If ssh sends EOF, end main loop.
     if (feof(stdin) != 0) {
-      LOG("Received EOF on stdin. Exiting main loop.");
+      ORBIT_LOG("Received EOF on stdin. Exiting main loop.");
       break;
     }
 

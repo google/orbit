@@ -92,7 +92,7 @@ void LogStacktrace() {
     if (absl::Symbolize(raw_stack[i], buf.data(), buf.size())) {
       symbol = buf.data();
     }
-    LOG("  %p: %s\n", raw_stack[i], symbol);
+    ORBIT_LOG("  %p: %s\n", raw_stack[i], symbol);
   }
 }
 

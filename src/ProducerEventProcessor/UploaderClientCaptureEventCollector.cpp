@@ -25,13 +25,13 @@ UploaderClientCaptureEventCollector::UploaderClientCaptureEventCollector() {
 }
 
 UploaderClientCaptureEventCollector::~UploaderClientCaptureEventCollector() {
-  LOG("Total number of events uploaded: %u", total_uploaded_event_count_);
-  LOG("Total number of bytes uploaded: %u", total_uploaded_data_bytes_);
+  ORBIT_LOG("Total number of events uploaded: %u", total_uploaded_event_count_);
+  ORBIT_LOG("Total number of bytes uploaded: %u", total_uploaded_data_bytes_);
 
   if (total_uploaded_event_count_ > 0) {
     float average_bytes = static_cast<float>(total_uploaded_data_bytes_) /
                           static_cast<float>(total_uploaded_event_count_);
-    LOG("Average number of bytes per event: %.2f", average_bytes);
+    ORBIT_LOG("Average number of bytes per event: %.2f", average_bytes);
   }
 }
 

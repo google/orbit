@@ -81,13 +81,13 @@ void GrpcClientCaptureEventCollector::StopAndWait() {
 GrpcClientCaptureEventCollector::~GrpcClientCaptureEventCollector() {
   CHECK(!sender_thread_.joinable());
 
-  LOG("Total number of events sent: %u", total_number_of_events_sent_);
-  LOG("Total number of bytes sent: %u", total_number_of_bytes_sent_);
+  ORBIT_LOG("Total number of events sent: %u", total_number_of_events_sent_);
+  ORBIT_LOG("Total number of bytes sent: %u", total_number_of_bytes_sent_);
 
   if (total_number_of_events_sent_ > 0) {
     float average_bytes = static_cast<float>(total_number_of_bytes_sent_) /
                           static_cast<float>(total_number_of_events_sent_);
-    LOG("Average number of bytes per event: %.2f", average_bytes);
+    ORBIT_LOG("Average number of bytes per event: %.2f", average_bytes);
   }
 }
 

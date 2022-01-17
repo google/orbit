@@ -28,7 +28,7 @@ void OrbitCaptureGgpService::RunServer() {
   grpc::EnableDefaultHealthCheckService(true);
   grpc::reflection::InitProtoReflectionServerBuilderPlugin();
 
-  LOG("Starting gRPC capture ggp server at %s", server_address);
+  ORBIT_LOG("Starting gRPC capture ggp server at %s", server_address);
   ServerBuilder builder;
   builder.AddListeningPort(server_address, grpc::InsecureServerCredentials());
   builder.RegisterService(&ggp_capture_service);
@@ -47,7 +47,7 @@ void OrbitCaptureGgpService::RunServer() {
     server->Shutdown();
   });
 
-  LOG("Capture ggp server listening on %s", server_address);
+  ORBIT_LOG("Capture ggp server listening on %s", server_address);
   server->Wait();
   server_shutdown_watcher.join();
 }

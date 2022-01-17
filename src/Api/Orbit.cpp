@@ -240,8 +240,8 @@ extern "C" {
 // for all api function tables. It is also called on every capture stop to disable the api so that
 // the api calls early out at the call site.
 void orbit_api_set_enabled(uint64_t address, uint64_t api_version, bool enabled) {
-  LOG("%s Orbit API at address %#x, version %u", enabled ? "Enabling" : "Disabling", address,
-      api_version);
+  ORBIT_LOG("%s Orbit API at address %#x, version %u", enabled ? "Enabling" : "Disabling", address,
+            api_version);
   if (api_version > kOrbitApiVersion) {
     ERROR(
         "Orbit API version in tracee (%u) is newer than the max supported version (%u). "
@@ -277,7 +277,8 @@ void orbit_api_set_enabled(uint64_t address, uint64_t api_version, bool enabled)
 }
 
 void orbit_api_set_enabled_wine(uint64_t address, uint64_t api_version, bool enabled) {
-  LOG("%s Orbit API at address %#x, for Windows", enabled ? "Enabling" : "Disabling", address);
+  ORBIT_LOG("%s Orbit API at address %#x, for Windows", enabled ? "Enabling" : "Disabling",
+            address);
   static constexpr uint64_t kOrbitApiForWineMinVersion = 2;
   if (api_version < kOrbitApiForWineMinVersion) {
     // This is unexpected because `orbit_api_get_function_table_address_win_v#` wasn't present in

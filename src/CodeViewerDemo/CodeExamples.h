@@ -173,15 +173,15 @@ class GrpcCaptureEventSender final : public CaptureEventSender {
   }
 
   ~GrpcCaptureEventSender() override {
-    LOG("Total number of events sent: %lu", total_number_of_events_sent_);
-    LOG("Total number of bytes sent: %lu", total_number_of_bytes_sent_);
+    ORBIT_LOG("Total number of events sent: %lu", total_number_of_events_sent_);
+    ORBIT_LOG("Total number of bytes sent: %lu", total_number_of_bytes_sent_);
 
     // Ensure we can divide by 0.f safely.
     static_assert(std::numeric_limits<float>::is_iec559);
     float average_bytes =
         static_cast<float>(total_number_of_bytes_sent_) / total_number_of_events_sent_;
 
-    LOG("Average number of bytes per event: %.2f", average_bytes);
+    ORBIT_LOG("Average number of bytes per event: %.2f", average_bytes);
   }
 
   void SendEvents(std::vector<orbit_grpc_protos::CaptureEvent>&& events) override {
@@ -238,13 +238,13 @@ static void StopTracingHandlerAndCaptureStartStopListenersInParallel(
 
   stop_threads.emplace_back([&tracing_handler] {
     tracing_handler->Stop();
-    LOG("TracingHandler stopped: perf_event_open tracing is done");
+    ORBIT_LOG("TracingHandler stopped: perf_event_open tracing is done");
   });
 
   for (CaptureStartStopListener* listener : *capture_start_stop_listeners) {
     stop_threads.emplace_back([&listener] {
       listener->OnCaptureStopRequested();
-      LOG("CaptureStartStopListener stopped: one or more producers finished capturing");
+      ORBIT_LOG("CaptureStartStopListener stopped: one or more producers finished capturing");
     });
   }
 
@@ -270,7 +270,7 @@ grpc::Status CaptureServiceImpl::Capture(
 
   CaptureRequest request;
   reader_writer->Read(&request);
-  LOG("Read CaptureRequest from Capture's gRPC stream: starting capture");
+  ORBIT_LOG("Read CaptureRequest from Capture's gRPC stream: starting capture");
 
   tracing_handler.Start(std::move(*request.mutable_capture_options()));
   for (CaptureStartStopListener* listener : capture_start_stop_listeners_) {
@@ -282,13 +282,13 @@ grpc::Status CaptureServiceImpl::Capture(
   // In the meantime, it blocks if no message is received.
   while (reader_writer->Read(&request)) {
   }
-  LOG("Client finished writing on Capture's gRPC stream: stopping capture");
+  ORBIT_LOG("Client finished writing on Capture's gRPC stream: stopping capture");
 
   StopTracingHandlerAndCaptureStartStopListenersInParallel(&tracing_handler,
                                                            &capture_start_stop_listeners_);
 
   capture_event_buffer.StopAndWait();
-  LOG("Finished handling gRPC call to Capture: all capture data has been sent");
+  ORBIT_LOG("Finished handling gRPC call to Capture: all capture data has been sent");
   is_capturing = false;
   return grpc::Status::OK;
 }

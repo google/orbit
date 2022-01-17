@@ -179,8 +179,8 @@ std::optional<orbit_grpc_protos::ModuleSymbols> FindAndLoadDebugSymbols(
       continue;
     }
 
-    LOG("Loaded debug symbols of module \"%s\" from \"%s\"", file_name.string(),
-        elf_file->GetName());
+    ORBIT_LOG("Loaded debug symbols of module \"%s\" from \"%s\"", file_name.string(),
+              elf_file->GetName());
     return symbols_or_error.value();
   }
 
@@ -224,7 +224,7 @@ void ManipulateModuleManagerToAddFunctionFromFunctionPrefixInSymtabIfExists(
           elf_file->GetName());
     return;
   }
-  LOG("Found function \"%s\" in module \"%s\"", symbol->name(), elf_file->GetName());
+  ORBIT_LOG("Found function \"%s\" in module \"%s\"", symbol->name(), elf_file->GetName());
 
   orbit_grpc_protos::SymbolInfo symbol_info;
   symbol_info.set_name(symbol->name());
@@ -259,7 +259,7 @@ void WaitForFileModification(const std::string& file_path) {
 
   wd = inotify_add_watch(inotify_fd, file_path.c_str(), IN_MODIFY);
   FAIL_IF(wd == -1, "Failed to watch \"%s\"", file_path);
-  LOG("Started to watch \"%s\"", file_path);
+  ORBIT_LOG("Started to watch \"%s\"", file_path);
 
   // Wait for the first modify event received to read its PID
   constexpr ssize_t kMaxBufferSize = 1024;
@@ -277,7 +277,7 @@ void WaitForFileModification(const std::string& file_path) {
   CHECK(event->wd == wd);
 
   close(inotify_fd);
-  LOG("Stopped watching \"%s\"", file_path);
+  ORBIT_LOG("Stopped watching \"%s\"", file_path);
 }
 
 }  // namespace
@@ -294,7 +294,7 @@ int main(int argc, char* argv[]) {
   absl::SetProgramUsageMessage("Orbit fake client for testing");
   absl::ParseCommandLine(argc, argv);
 
-  LOG("Starting Client");
+  ORBIT_LOG("Starting Client");
   uint32_t duration_s = absl::GetFlag(FLAGS_duration);
   FAIL_IF(duration_s == 0, "Specified a zero-length duration");
   FAIL_IF((absl::GetFlag(FLAGS_instrument_path).empty()) !=
@@ -308,16 +308,16 @@ int main(int argc, char* argv[]) {
     WaitForFileModification(pid_file_path);
     process_id = ReadPidFromFile(pid_file_path);
   }
-  LOG("process_id=%d", process_id);
+  ORBIT_LOG("process_id=%d", process_id);
   FAIL_IF(process_id == 0, "PID to capture not specified");
 
   uint16_t samples_per_second = absl::GetFlag(FLAGS_sampling_rate);
-  LOG("samples_per_second=%u", samples_per_second);
+  ORBIT_LOG("samples_per_second=%u", samples_per_second);
   constexpr uint16_t kStackDumpSize = 65000;
   const UnwindingMethod unwinding_method =
       absl::GetFlag(FLAGS_frame_pointers) ? CaptureOptions::kFramePointers : CaptureOptions::kDwarf;
-  LOG("unwinding_method=%s",
-      unwinding_method == CaptureOptions::kFramePointers ? "Frame pointers" : "DWARF");
+  ORBIT_LOG("unwinding_method=%s",
+            unwinding_method == CaptureOptions::kFramePointers ? "Frame pointers" : "DWARF");
 
   std::string file_path = absl::GetFlag(FLAGS_instrument_path);
   uint64_t file_offset = absl::GetFlag(FLAGS_instrument_offset);
@@ -328,42 +328,42 @@ int main(int argc, char* argv[]) {
   DynamicInstrumentationMethod instrumentation_method =
       absl::GetFlag(FLAGS_user_space_instrumentation) ? CaptureOptions::kUserSpaceInstrumentation
                                                       : CaptureOptions::kKernelUprobes;
-  LOG("user_space_instrumentation=%d",
-      instrumentation_method == CaptureOptions::kUserSpaceInstrumentation);
+  ORBIT_LOG("user_space_instrumentation=%d",
+            instrumentation_method == CaptureOptions::kUserSpaceInstrumentation);
   if (instrument_function) {
-    LOG("file_path=%s", file_path);
-    LOG("file_offset=%#x", file_offset);
+    ORBIT_LOG("file_path=%s", file_path);
+    ORBIT_LOG("file_offset=%#x", file_offset);
     if (instrumentation_method == CaptureOptions::kUserSpaceInstrumentation) {
       FAIL_IF(function_size == 0, "User space instrumentation requires the function size");
-      LOG("function_size=%d", function_size);
+      ORBIT_LOG("function_size=%d", function_size);
     }
   }
   constexpr bool kAlwaysRecordArguments = false;
   constexpr bool kRecordReturnValues = false;
 
   bool collect_scheduling_info = absl::GetFlag(FLAGS_scheduling);
-  LOG("collect_scheduling_info=%d", collect_scheduling_info);
+  ORBIT_LOG("collect_scheduling_info=%d", collect_scheduling_info);
   bool collect_thread_state = absl::GetFlag(FLAGS_thread_state);
-  LOG("collect_thread_state=%d", collect_thread_state);
+  ORBIT_LOG("collect_thread_state=%d", collect_thread_state);
   bool collect_gpu_jobs = absl::GetFlag(FLAGS_gpu_jobs);
-  LOG("collect_gpu_jobs=%d", collect_gpu_jobs);
+  ORBIT_LOG("collect_gpu_jobs=%d", collect_gpu_jobs);
   bool enable_api = absl::GetFlag(FLAGS_orbit_api);
-  LOG("enable_api=%d", enable_api);
+  ORBIT_LOG("enable_api=%d", enable_api);
   constexpr bool kEnableIntrospection = false;
   constexpr uint64_t kMaxLocalMarkerDepthPerCommandBuffer = std::numeric_limits<uint64_t>::max();
   bool collect_memory_info = absl::GetFlag(FLAGS_memory_sampling_rate) > 0;
-  LOG("collect_memory_info=%d", collect_memory_info);
+  ORBIT_LOG("collect_memory_info=%d", collect_memory_info);
   uint64_t memory_sampling_period_ms = 0;
   if (collect_memory_info) {
     memory_sampling_period_ms = 1'000 / absl::GetFlag(FLAGS_memory_sampling_rate);
-    LOG("memory_sampling_period_ms=%u", memory_sampling_period_ms);
+    ORBIT_LOG("memory_sampling_period_ms=%u", memory_sampling_period_ms);
   }
 
   uint32_t grpc_port = absl::GetFlag(FLAGS_port);
   std::string service_address = absl::StrFormat("127.0.0.1:%d", grpc_port);
   std::shared_ptr<grpc::Channel> grpc_channel =
       grpc::CreateChannel(service_address, grpc::InsecureChannelCredentials());
-  LOG("service_address=%s", service_address);
+  ORBIT_LOG("service_address=%s", service_address);
   CHECK(grpc_channel != nullptr);
 
   InstallSigintHandler();
@@ -393,7 +393,7 @@ int main(int argc, char* argv[]) {
   }
 
   const bool calculate_frame_time = absl::GetFlag(FLAGS_frame_time);
-  LOG("frame_time=%d", calculate_frame_time);
+  ORBIT_LOG("frame_time=%d", calculate_frame_time);
   if (calculate_frame_time) {
     // Instrument vkQueuePresentKHR, if possible.
     // Some application don't call libVulkan library directly; instead, they just query the
@@ -414,13 +414,13 @@ int main(int argc, char* argv[]) {
       }
     }
     if (!libvulkan_file_path.empty()) {
-      LOG("%s found: instrumenting %s", kGgpvlkModuleName, kQueuePresentFunctionName);
+      ORBIT_LOG("%s found: instrumenting %s", kGgpvlkModuleName, kQueuePresentFunctionName);
       ManipulateModuleManagerAndSelectedFunctionsToAddInstrumentedFunctionFromFunctionNameInDebugSymbols(
           &module_manager, &selected_functions, libvulkan_file_path, kQueuePresentFunctionName,
           orbit_fake_client::FakeCaptureEventProcessor::kFrameBoundaryFunctionId);
-      LOG("%s instrumented", kQueuePresentFunctionName);
+      ORBIT_LOG("%s instrumented", kQueuePresentFunctionName);
     } else {
-      LOG("%s not found", kGgpvlkModuleName);
+      ORBIT_LOG("%s not found", kGgpvlkModuleName);
     }
   }
 
@@ -444,7 +444,7 @@ int main(int argc, char* argv[]) {
       collect_gpu_jobs, enable_api, kEnableIntrospection, instrumentation_method,
       kMaxLocalMarkerDepthPerCommandBuffer, collect_memory_info, memory_sampling_period_ms,
       std::move(capture_event_processor));
-  LOG("Asked to start capture");
+  ORBIT_LOG("Asked to start capture");
 
   absl::Time start_time = absl::Now();
   while (!exit_requested && absl::Now() < start_time + absl::Seconds(duration_s)) {
@@ -452,7 +452,7 @@ int main(int argc, char* argv[]) {
     CHECK(!capture_outcome_future.IsFinished());
   }
   CHECK(capture_client.StopCapture());
-  LOG("Asked to stop capture");
+  ORBIT_LOG("Asked to stop capture");
 
   auto capture_outcome_or_error = capture_outcome_future.Get();
   if (capture_outcome_or_error.has_error()) {
@@ -462,6 +462,6 @@ int main(int argc, char* argv[]) {
 
   CHECK(capture_outcome_or_error.value() ==
         orbit_capture_client::CaptureListener::CaptureOutcome::kComplete);
-  LOG("Capture completed");
+  ORBIT_LOG("Capture completed");
   return 0;
 }

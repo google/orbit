@@ -35,8 +35,8 @@ void MemoryTrack<Dimension>::TrySetValueUpperBound(const std::string& pretty_lab
                                                    double raw_value) {
   double max_series_value = GraphTrack<Dimension>::GetGraphMaxValue();
   if (raw_value < max_series_value) {
-    LOG("Fail to set MemoryTrack value upper bound: input value %f < maximum series value %f",
-        raw_value, max_series_value);
+    ORBIT_LOG("Fail to set MemoryTrack value upper bound: input value %f < maximum series value %f",
+              raw_value, max_series_value);
     return;
   }
   this->SetValueUpperBound(pretty_label, raw_value);
@@ -47,8 +47,8 @@ void MemoryTrack<Dimension>::TrySetValueLowerBound(const std::string& pretty_lab
                                                    double raw_value) {
   double min_series_value = GraphTrack<Dimension>::GetGraphMinValue();
   if (raw_value > min_series_value) {
-    LOG("Fail to set MemoryTrack value lower bound: input value %f > minimum series value %f",
-        raw_value, min_series_value);
+    ORBIT_LOG("Fail to set MemoryTrack value lower bound: input value %f > minimum series value %f",
+              raw_value, min_series_value);
     return;
   }
   this->SetValueLowerBound(pretty_label, raw_value);

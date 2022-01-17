@@ -30,7 +30,7 @@ void OffscreenRenderingVulkanTutorial::StopAsync() {
 }
 
 void OffscreenRenderingVulkanTutorial::InitVulkan() {
-  LOG("InitVulkan");
+  ORBIT_LOG("InitVulkan");
   // To simplify our dependencies, we don't link to Vulkan, but we use volk instead:
   // https://github.com/zeux/volk
   CHECK_VK_SUCCESS(volkInitialize());
@@ -56,7 +56,7 @@ void OffscreenRenderingVulkanTutorial::InitVulkan() {
 }
 
 void OffscreenRenderingVulkanTutorial::MainLoop(uint64_t frame_count) {
-  LOG("MainLoop");
+  ORBIT_LOG("MainLoop");
   for (uint64_t frame = 0; frame < frame_count; ++frame) {
     absl::Time next_frame_time = absl::Now() + absl::Microseconds(16667);
     DrawFrame();
@@ -73,7 +73,7 @@ void OffscreenRenderingVulkanTutorial::MainLoop(uint64_t frame_count) {
 }
 
 void OffscreenRenderingVulkanTutorial::CleanUp() {
-  LOG("CleanUp");
+  ORBIT_LOG("CleanUp");
   vkDestroyFence(device_, fence_, nullptr);
   // Command buffers will be automatically freed when their command pool is destroyed, so we don't
   // need an explicit cleanup.
@@ -244,7 +244,7 @@ void OffscreenRenderingVulkanTutorial::CreateOffscreenImage() {
   }
 
   CHECK(image_format_ != VkFormat::VK_FORMAT_UNDEFINED);
-  LOG("image_format_=%d", image_format_);
+  ORBIT_LOG("image_format_=%d", image_format_);
   create_info.format = image_format_;
   CHECK_VK_SUCCESS(vkCreateImage(device_, &create_info, nullptr, &image_));
 
@@ -262,7 +262,7 @@ void OffscreenRenderingVulkanTutorial::CreateOffscreenImage() {
   // Since we don't have any requirement on the *properties* of the memory, simply choose the
   // lowest-indexed memory type.
   uint32_t memory_type_index = __builtin_ctz(memory_requirements.memoryTypeBits);
-  LOG("memory_type_index=%d", memory_type_index);
+  ORBIT_LOG("memory_type_index=%d", memory_type_index);
 
   VkMemoryAllocateInfo allocate_info{
       .sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO,

@@ -319,8 +319,8 @@ ErrorMessageOr<SymbolInfo> ElfFileImpl<ElfT>::CreateSymbolInfo(
 
   llvm::Expected<uint32_t> maybe_flags = symbol_ref.getFlags();
   if (!maybe_flags) {
-    LOG("WARNING: Flags are not set for symbol \"%s\" in \"%s\", skipping. Details: %s", name,
-        file_path_.string(), llvm::toString(maybe_flags.takeError()));
+    ORBIT_LOG("WARNING: Flags are not set for symbol \"%s\" in \"%s\", skipping. Details: %s", name,
+              file_path_.string(), llvm::toString(maybe_flags.takeError()));
     return ErrorMessage(absl::StrFormat(R"(Flags are not set for symbol "%s" in "%s", skipping.)",
                                         name, file_path_.string()));
   }
@@ -332,8 +332,8 @@ ErrorMessageOr<SymbolInfo> ElfFileImpl<ElfT>::CreateSymbolInfo(
   // Unknown type - skip and generate a warning.
   llvm::Expected<llvm::object::SymbolRef::Type> maybe_type = symbol_ref.getType();
   if (!maybe_type) {
-    LOG("WARNING: Type is not set for symbol \"%s\" in \"%s\", skipping. Details: %s", name,
-        file_path_.string(), llvm::toString(maybe_type.takeError()));
+    ORBIT_LOG("WARNING: Type is not set for symbol \"%s\" in \"%s\", skipping. Details: %s", name,
+              file_path_.string(), llvm::toString(maybe_type.takeError()));
     return ErrorMessage(absl::StrFormat(R"(Type is not set for symbol "%s" in "%s", skipping.)",
                                         name, file_path_.string()));
   }
@@ -344,8 +344,8 @@ ErrorMessageOr<SymbolInfo> ElfFileImpl<ElfT>::CreateSymbolInfo(
 
   llvm::Expected<uint64_t> maybe_value = symbol_ref.getValue();
   if (!maybe_value) {
-    LOG("WARNING: Address is not set for symbol \"%s\" in \"%s\", skipping. Details: %s", name,
-        file_path_.string(), llvm::toString(maybe_value.takeError()));
+    ORBIT_LOG("WARNING: Address is not set for symbol \"%s\" in \"%s\", skipping. Details: %s",
+              name, file_path_.string(), llvm::toString(maybe_value.takeError()));
     return ErrorMessage(absl::StrFormat(R"(Address is not set for symbol "%s" in "%s", skipping.)",
                                         name, file_path_.string()));
   }

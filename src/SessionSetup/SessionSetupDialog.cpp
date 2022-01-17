@@ -460,7 +460,7 @@ void SessionSetupDialog::OnProcessListUpdate(
     if (process_ != nullptr) {
       bool success = TrySelectProcessByName(process_->name());
       if (success) {
-        LOG("Selected remembered process with name: %s", process_->name());
+        ORBIT_LOG("Selected remembered process with name: %s", process_->name());
         return;
       }
     }
@@ -468,8 +468,8 @@ void SessionSetupDialog::OnProcessListUpdate(
     if (!absl::GetFlag(FLAGS_process_name).empty()) {
       bool success = TrySelectProcessByName(absl::GetFlag(FLAGS_process_name));
       if (success) {
-        LOG("Selected process with name: %s (provided via --process_name flag)",
-            absl::GetFlag(FLAGS_process_name));
+        ORBIT_LOG("Selected process with name: %s (provided via --process_name flag)",
+                  absl::GetFlag(FLAGS_process_name));
         accept();
         return;
       }

@@ -28,7 +28,7 @@
 
 constexpr const char* kLogTimeFormat = "%Y-%m-%dT%H:%M:%E6S";
 
-#define LOG(format, ...)                                                                     \
+#define ORBIT_LOG(format, ...)                                                               \
   do {                                                                                       \
     std::filesystem::path path__ = std::filesystem::path(__FILE__);                          \
     std::string file__;                                                                      \
@@ -47,20 +47,20 @@ constexpr const char* kLogTimeFormat = "%Y-%m-%dT%H:%M:%E6S";
 #undef ERROR
 #endif
 
-#define ERROR(format, ...) LOG("Error: " format, ##__VA_ARGS__)
+#define ERROR(format, ...) ORBIT_LOG("Error: " format, ##__VA_ARGS__)
 
-#define LOG_ONCE(format, ...)                                                   \
-  do {                                                                          \
-    static std::once_flag already_logged_flag;                                  \
-    std::call_once(already_logged_flag, [&]() { LOG(format, ##__VA_ARGS__); }); \
+#define LOG_ONCE(format, ...)                                                         \
+  do {                                                                                \
+    static std::once_flag already_logged_flag;                                        \
+    std::call_once(already_logged_flag, [&]() { ORBIT_LOG(format, ##__VA_ARGS__); }); \
   } while (0)
 
 #define ERROR_ONCE(format, ...) LOG_ONCE("Error: " format, ##__VA_ARGS__)
 
-#define FATAL(format, ...)                \
-  do {                                    \
-    LOG("Fatal: " format, ##__VA_ARGS__); \
-    PLATFORM_ABORT();                     \
+#define FATAL(format, ...)                      \
+  do {                                          \
+    ORBIT_LOG("Fatal: " format, ##__VA_ARGS__); \
+    PLATFORM_ABORT();                           \
   } while (0)
 
 #define UNREACHABLE() FATAL("Unreachable code")
@@ -80,12 +80,12 @@ constexpr const char* kLogTimeFormat = "%Y-%m-%dT%H:%M:%E6S";
     }                                   \
   } while (0)
 
-#define CHECK(assertion)                   \
-  do {                                     \
-    if (UNLIKELY(!(assertion))) {          \
-      LOG("Check failed: %s", #assertion); \
-      PLATFORM_ABORT();                    \
-    }                                      \
+#define CHECK(assertion)                         \
+  do {                                           \
+    if (UNLIKELY(!(assertion))) {                \
+      ORBIT_LOG("Check failed: %s", #assertion); \
+      PLATFORM_ABORT();                          \
+    }                                            \
   } while (0)
 
 #ifndef NDEBUG
@@ -105,14 +105,14 @@ constexpr const char* kLogTimeFormat = "%Y-%m-%dT%H:%M:%E6S";
    public:                                                                                     \
     explicit SCOPED_TIMED_LOG_CONCAT_(ScopedTimedLog, __LINE__)(std::string && message)        \
         : message_{std::move(message)}, begin_{std::chrono::steady_clock::now()} {             \
-      LOG("%s started", message_);                                                             \
+      ORBIT_LOG("%s started", message_);                                                       \
     }                                                                                          \
                                                                                                \
     ~SCOPED_TIMED_LOG_CONCAT_(ScopedTimedLog, __LINE__)() {                                    \
       auto end = std::chrono::steady_clock::now();                                             \
       auto duration =                                                                          \
           std::chrono::duration_cast<std::chrono::duration<double, std::milli>>(end - begin_); \
-      LOG("%s took %.3f ms", message_, duration.count());                                      \
+      ORBIT_LOG("%s took %.3f ms", message_, duration.count());                                \
     }                                                                                          \
                                                                                                \
    private:                                                                                    \

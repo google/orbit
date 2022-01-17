@@ -95,7 +95,7 @@ void CaptureClientGgpClient::CaptureClientGgpClientImpl::SetupGrpcClient(
     ERROR("Unable to create GRPC channel to %s", grpc_server_address);
     return;
   }
-  LOG("Created GRPC channel to %s", grpc_server_address);
+  ORBIT_LOG("Created GRPC channel to %s", grpc_server_address);
 
   capture_client_ggp_service_ = orbit_grpc_protos::CaptureClientGgpService::NewStub(grpc_channel);
 }
@@ -112,7 +112,7 @@ ErrorMessageOr<void> CaptureClientGgpClient::CaptureClientGgpClientImpl::StartCa
           status.error_code());
     return ErrorMessage(status.error_message());
   }
-  LOG("Capture started");
+  ORBIT_LOG("Capture started");
   return outcome::success();
 }
 
@@ -127,7 +127,7 @@ ErrorMessageOr<void> CaptureClientGgpClient::CaptureClientGgpClientImpl::StopCap
           status.error_code());
     return ErrorMessage(status.error_message());
   }
-  LOG("Capture finished");
+  ORBIT_LOG("Capture finished");
   return outcome::success();
 }
 
@@ -147,7 +147,7 @@ ErrorMessageOr<void> CaptureClientGgpClient::CaptureClientGgpClientImpl::UpdateS
           status.error_code());
     return ErrorMessage(status.error_message());
   }
-  LOG("Functions updated");
+  ORBIT_LOG("Functions updated");
   return outcome::success();
 }
 

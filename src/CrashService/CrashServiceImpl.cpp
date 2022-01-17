@@ -16,7 +16,7 @@ static void InfiniteRecursion(int num) {
   if (num != 1) {
     InfiniteRecursion(num);
   }
-  LOG("%i", num);
+  ORBIT_LOG("%i", num);
 }
 
 grpc::Status CrashServiceImpl::CrashOrbitService(grpc::ServerContext* /*context*/,

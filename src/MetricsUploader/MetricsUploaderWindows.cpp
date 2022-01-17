@@ -123,7 +123,7 @@ std::unique_ptr<MetricsUploader> MetricsUploader::CreateMetricsUploader(std::str
     return std::make_unique<MetricsUploaderStub>();
   }
   std::string session_uuid = uuid_result.value();
-  LOG("Session UUID for metrics: %s", session_uuid);
+  ORBIT_LOG("Session UUID for metrics: %s", session_uuid);
 
   metrics_uploader_client_dll = LoadLibraryA(client_name.c_str());
   if (metrics_uploader_client_dll == nullptr) {
@@ -172,7 +172,7 @@ std::unique_ptr<MetricsUploader> MetricsUploader::CreateMetricsUploader(std::str
     return std::make_unique<MetricsUploaderStub>();
   }
 
-  LOG("MetricsUploader was initialized successfully");
+  ORBIT_LOG("MetricsUploader was initialized successfully");
   return std::make_unique<MetricsUploaderImpl>(client_name, session_uuid, send_log_event_addr,
                                                shutdown_connection_addr,
                                                metrics_uploader_client_dll);

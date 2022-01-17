@@ -63,7 +63,7 @@ Status ProcessServiceImpl::GetModuleList(ServerContext* /*context*/,
                                          const GetModuleListRequest* request,
                                          GetModuleListResponse* response) {
   pid_t pid = orbit_base::ToNativeProcessId(request->process_id());
-  LOG("Sending modules for process %d", pid);
+  ORBIT_LOG("Sending modules for process %d", pid);
 
   const auto module_infos = orbit_object_utils::ReadModules(pid);
   if (module_infos.has_error()) {

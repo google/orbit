@@ -73,7 +73,7 @@ CaptureRequest CaptureService::WaitForStartCaptureRequestFromClient(
   // This call is blocking.
   reader_writer->Read(&request);
 
-  LOG("Read CaptureRequest from Capture's gRPC stream: starting capture");
+  ORBIT_LOG("Read CaptureRequest from Capture's gRPC stream: starting capture");
   return request;
 }
 
@@ -85,7 +85,7 @@ void CaptureService::WaitForStopCaptureRequestFromClient(
   // to Read will return false. In the meantime, it blocks if no message is received.
   while (reader_writer->Read(&request)) {
   }
-  LOG("Client finished writing on Capture's gRPC stream: stopping capture");
+  ORBIT_LOG("Client finished writing on Capture's gRPC stream: stopping capture");
 }
 
 void CaptureService::StartEventProcessing(const CaptureOptions& capture_options) {
@@ -117,7 +117,7 @@ void CaptureService::FinalizeEventProcessing(StopCaptureReason stop_capture_reas
                                           std::move(capture_finished));
 
   grpc_client_capture_event_collector_->StopAndWait();
-  LOG("Finished handling gRPC call to Capture: all capture data has been sent");
+  ORBIT_LOG("Finished handling gRPC call to Capture: all capture data has been sent");
 }
 
 }  // namespace orbit_capture_service

@@ -200,7 +200,7 @@ void ModulesDataView::UpdateModules(const ProcessData* process) {
 void ModulesDataView::OnRefreshButtonClicked() {
   const ProcessData* process = app_->GetTargetProcess();
   if (process == nullptr) {
-    LOG("Unable to refresh module list, no process selected");
+    ORBIT_LOG("Unable to refresh module list, no process selected");
     return;
   }
   app_->UpdateProcessAndModuleList();

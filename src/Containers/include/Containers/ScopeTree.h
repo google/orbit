@@ -75,7 +75,7 @@ class ScopeTree {
  public:
   ScopeTree();
   void Insert(ScopeT* scope);
-  void Print() const { LOG("%s", ToString()); }
+  void Print() const { ORBIT_LOG("%s", ToString()); }
   std::string ToString() const;
 
   using ScopeNodeT = ScopeNode<ScopeT>;

@@ -182,17 +182,17 @@ void KrabsTracer::OnStackWalkEvent(const EVENT_RECORD& record,
 
 void KrabsTracer::OutputStats() {
   krabs::trace_stats trace_stats = trace_.query_stats();
-  LOG("--- ETW stats ---");
-  LOG("Number of buffers: %u", trace_stats.buffersCount);
-  LOG("Free buffers: %u", trace_stats.buffersFree);
-  LOG("Buffers written: %u", trace_stats.buffersWritten);
-  LOG("Buffers lost: %u", trace_stats.buffersLost);
-  LOG("Events total (handled+lost): %u", trace_stats.eventsTotal);
-  LOG("Events handled: %u", trace_stats.eventsHandled);
-  LOG("Events lost: %u", trace_stats.eventsLost);
-  LOG("--- KrabsTracer stats ---");
-  LOG("Number of stack events: %u", stats_.num_stack_events);
-  LOG("Number of stack events for target pid: %u", stats_.num_stack_events_for_target_pid);
+  ORBIT_LOG("--- ETW stats ---");
+  ORBIT_LOG("Number of buffers: %u", trace_stats.buffersCount);
+  ORBIT_LOG("Free buffers: %u", trace_stats.buffersFree);
+  ORBIT_LOG("Buffers written: %u", trace_stats.buffersWritten);
+  ORBIT_LOG("Buffers lost: %u", trace_stats.buffersLost);
+  ORBIT_LOG("Events total (handled+lost): %u", trace_stats.eventsTotal);
+  ORBIT_LOG("Events handled: %u", trace_stats.eventsHandled);
+  ORBIT_LOG("Events lost: %u", trace_stats.eventsLost);
+  ORBIT_LOG("--- KrabsTracer stats ---");
+  ORBIT_LOG("Number of stack events: %u", stats_.num_stack_events);
+  ORBIT_LOG("Number of stack events for target pid: %u", stats_.num_stack_events_for_target_pid);
   context_switch_manager_->OutputStats();
 }
 

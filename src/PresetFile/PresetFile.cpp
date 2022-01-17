@@ -128,7 +128,7 @@ ErrorMessageOr<void> PresetFile::SaveToFile() const {
   CHECK(!is_legacy_format_);
 
   OUTCOME_TRY(auto&& fd, orbit_base::OpenFileForWriting(file_path_));
-  LOG("Saving preset to \"%s\"", file_path_.string());
+  ORBIT_LOG("Saving preset to \"%s\"", file_path_.string());
 
   auto write_result = orbit_base::WriteFully(fd, kPresetFileSignature);
   if (write_result.has_error()) {

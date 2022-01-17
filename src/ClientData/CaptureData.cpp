@@ -334,8 +334,8 @@ void CaptureData::EnableFrameTrack(uint64_t instrumented_function_id) {
   if (frame_track_function_ids_.contains(instrumented_function_id)) {
     const auto* function = GetInstrumentedFunctionById(instrumented_function_id);
     CHECK(function != nullptr);
-    LOG("Warning: Frame track for instrumented function \"%s\" is already enabled",
-        function->function_name());
+    ORBIT_LOG("Warning: Frame track for instrumented function \"%s\" is already enabled",
+              function->function_name());
     return;
   }
   frame_track_function_ids_.insert(instrumented_function_id);

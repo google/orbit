@@ -46,7 +46,7 @@ LayerLogic layer_logic;
 VkResult VKAPI_CALL
 OrbitCaptureClientCreateInstance(const VkInstanceCreateInfo* instance_create_info,
                                  const VkAllocationCallbacks* allocator, VkInstance* instance) {
-  LOG("OrbitCaptureClientCreateInstance called");
+  ORBIT_LOG("OrbitCaptureClientCreateInstance called");
   auto* layer_instance_create_info =
       absl::bit_cast<VkLayerInstanceCreateInfo*>(instance_create_info->pNext);
 
@@ -82,7 +82,7 @@ OrbitCaptureClientCreateInstance(const VkInstanceCreateInfo* instance_create_inf
 
 void VKAPI_CALL OrbitCaptureClientDestroyInstance(VkInstance instance,
                                                   const VkAllocationCallbacks* /*allocator*/) {
-  LOG("OrbitCaptureClientDestroyInstance called");
+  ORBIT_LOG("OrbitCaptureClientDestroyInstance called");
   absl::WriterMutexLock lock(&layer_mutex);
   // Cleaning up the data initialized in the layer before the instance is destroyed. This method is
   // expected to be called before exiting the program so the data is not longer needed.

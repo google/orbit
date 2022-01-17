@@ -144,7 +144,7 @@ outcome::result<void> Socket::WaitDisconnect() {
 
   if (data.empty()) return outcome::success();
 
-  LOG("Received data after sending shutdown on socket (%d bytes)", data.length());
+  ORBIT_LOG("Received data after sending shutdown on socket (%d bytes)", data.length());
   return GetLastError();
 }
 

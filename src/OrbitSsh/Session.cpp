@@ -36,7 +36,7 @@ void LogFileContents(const std::filesystem::path& file_path) {
     return;
   }
 
-  LOG("Contents of file \"%s\":\n%s", file_path.string(), file_content_or_error.value());
+  ORBIT_LOG("Contents of file \"%s\":\n%s", file_path.string(), file_content_or_error.value());
 }
 
 }  // namespace

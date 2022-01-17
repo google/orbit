@@ -39,8 +39,8 @@ ConnectToTargetDialog::ConnectToTargetDialog(
 ConnectToTargetDialog::~ConnectToTargetDialog() {}
 
 std::optional<TargetConfiguration> ConnectToTargetDialog::Exec() {
-  LOG("Trying to establish a connection to specified target %s:%d",
-      instance_id_or_name_.toStdString(), process_id_);
+  ORBIT_LOG("Trying to establish a connection to specified target %s:%d",
+            instance_id_or_name_.toStdString(), process_id_);
 
   auto ggp_client_result = orbit_ggp::CreateClient();
   if (ggp_client_result.has_error()) {

@@ -78,7 +78,7 @@ TracerImpl::TracerImpl(
     stack_dump_size = (unwinding_method_ == CaptureOptions::kDwarf)
                           ? kMaxStackSampleUserSize
                           : kDefaultStackSampleUserSizeFramePointer;
-    LOG("No sample stack dump size was set; assigning to default: %u", stack_dump_size);
+    ORBIT_LOG("No sample stack dump size was set; assigning to default: %u", stack_dump_size);
   } else if (stack_dump_size > kMaxStackSampleUserSize || stack_dump_size == 0) {
     // TODO(b/210439638): Support a stack_dump_size of 0. It might be valid for frame pointer
     //  sampling without leaf function patching.
@@ -693,7 +693,7 @@ void TracerImpl::Startup() {
     if (OpenGpuTracepoints(all_cpus)) {
       InitGpuTracepointEventVisitor();
     } else {
-      LOG("There were errors opening GPU tracepoint events");
+      ORBIT_LOG("There were errors opening GPU tracepoint events");
     }
   }
 
@@ -704,8 +704,8 @@ void TracerImpl::Startup() {
 
   if (perf_event_open_errors) {
     ERROR("With perf_event_open: did you forget to run as root?");
-    LOG("In particular, there were errors with opening %s",
-        absl::StrJoin(perf_event_open_error_details, ", "));
+    ORBIT_LOG("In particular, there were errors with opening %s",
+              absl::StrJoin(perf_event_open_error_details, ", "));
     orbit_grpc_protos::ErrorsWithPerfEventOpenEvent errors_with_perf_event_open_event;
     errors_with_perf_event_open_event.set_timestamp_ns(orbit_base::CaptureTimestampNs());
     for (std::string& detail : perf_event_open_error_details) {
@@ -1289,12 +1289,12 @@ uint64_t TracerImpl::ProcessThrottleUnthrottleEventAndReturnTimestamp(
   // Simply log throttle/unthrottle events. If they are generated, they are quite low frequency.
   switch (header.type) {
     case PERF_RECORD_THROTTLE:
-      LOG("PERF_RECORD_THROTTLE in ring buffer '%s' at timestamp %u", ring_buffer->GetName(),
-          timestamp_ns);
+      ORBIT_LOG("PERF_RECORD_THROTTLE in ring buffer '%s' at timestamp %u", ring_buffer->GetName(),
+                timestamp_ns);
       break;
     case PERF_RECORD_UNTHROTTLE:
-      LOG("PERF_RECORD_UNTHROTTLE in ring buffer '%s' at timestamp %u", ring_buffer->GetName(),
-          timestamp_ns);
+      ORBIT_LOG("PERF_RECORD_UNTHROTTLE in ring buffer '%s' at timestamp %u",
+                ring_buffer->GetName(), timestamp_ns);
       break;
     default:
       UNREACHABLE();
@@ -1413,26 +1413,29 @@ void TracerImpl::PrintStatsIfTimerElapsed() {
       static_cast<double>(timestamp_ns - stats_.event_count_begin_ns) / NS_PER_SECOND;
   CHECK(actual_window_s > 0.0);
 
-  LOG("Events per second (and total) last %.3f s:", actual_window_s);
-  LOG("  sched switches: %.0f/s (%lu)", stats_.sched_switch_count / actual_window_s,
-      stats_.sched_switch_count);
-  LOG("  samples: %.0f/s (%lu)", stats_.sample_count / actual_window_s, stats_.sample_count);
-  LOG("  u(ret)probes: %.0f/s (%lu)", stats_.uprobes_count / actual_window_s, stats_.uprobes_count);
-  LOG("  gpu events: %.0f/s (%lu)", stats_.gpu_events_count / actual_window_s,
-      stats_.gpu_events_count);
+  ORBIT_LOG("Events per second (and total) last %.3f s:", actual_window_s);
+  ORBIT_LOG("  sched switches: %.0f/s (%lu)", stats_.sched_switch_count / actual_window_s,
+            stats_.sched_switch_count);
+  ORBIT_LOG("  samples: %.0f/s (%lu)", stats_.sample_count / actual_window_s, stats_.sample_count);
+  ORBIT_LOG("  u(ret)probes: %.0f/s (%lu)", stats_.uprobes_count / actual_window_s,
+            stats_.uprobes_count);
+  ORBIT_LOG("  gpu events: %.0f/s (%lu)", stats_.gpu_events_count / actual_window_s,
+            stats_.gpu_events_count);
 
   if (stats_.lost_count_per_buffer.empty()) {
-    LOG("  lost: %.0f/s (%lu)", stats_.lost_count / actual_window_s, stats_.lost_count);
+    ORBIT_LOG("  lost: %.0f/s (%lu)", stats_.lost_count / actual_window_s, stats_.lost_count);
   } else {
-    LOG("  LOST: %.0f/s (%lu), of which:", stats_.lost_count / actual_window_s, stats_.lost_count);
+    ORBIT_LOG("  LOST: %.0f/s (%lu), of which:", stats_.lost_count / actual_window_s,
+              stats_.lost_count);
     for (const auto& buffer_and_lost_count : stats_.lost_count_per_buffer) {
-      LOG("    from %s: %.0f/s (%lu)", buffer_and_lost_count.first->GetName().c_str(),
-          buffer_and_lost_count.second / actual_window_s, buffer_and_lost_count.second);
+      ORBIT_LOG("    from %s: %.0f/s (%lu)", buffer_and_lost_count.first->GetName().c_str(),
+                buffer_and_lost_count.second / actual_window_s, buffer_and_lost_count.second);
     }
   }
 
   uint64_t discarded_out_of_order_count = stats_.discarded_out_of_order_count;
-  LOG("  %s: %.0f/s (%lu)",
+  ORBIT_LOG(
+      "  %s: %.0f/s (%lu)",
       discarded_out_of_order_count == 0 ? "discarded as out of order" : "DISCARDED AS OUT OF ORDER",
       discarded_out_of_order_count / actual_window_s, discarded_out_of_order_count);
 
@@ -1440,17 +1443,17 @@ void TracerImpl::PrintStatsIfTimerElapsed() {
   static_assert(std::numeric_limits<double>::is_iec559);
 
   uint64_t unwind_error_count = stats_.unwind_error_count;
-  LOG("  unwind errors: %.0f/s (%lu) [%.1f%%]", unwind_error_count / actual_window_s,
-      unwind_error_count, 100.0 * unwind_error_count / stats_.sample_count);
+  ORBIT_LOG("  unwind errors: %.0f/s (%lu) [%.1f%%]", unwind_error_count / actual_window_s,
+            unwind_error_count, 100.0 * unwind_error_count / stats_.sample_count);
   uint64_t discarded_samples_in_uretprobes_count = stats_.samples_in_uretprobes_count;
-  LOG("  samples in u(ret)probes: %.0f/s (%lu) [%.1f%%]",
-      discarded_samples_in_uretprobes_count / actual_window_s,
-      discarded_samples_in_uretprobes_count,
-      100.0 * discarded_samples_in_uretprobes_count / stats_.sample_count);
+  ORBIT_LOG("  samples in u(ret)probes: %.0f/s (%lu) [%.1f%%]",
+            discarded_samples_in_uretprobes_count / actual_window_s,
+            discarded_samples_in_uretprobes_count,
+            100.0 * discarded_samples_in_uretprobes_count / stats_.sample_count);
 
   uint64_t thread_state_count = stats_.thread_state_count;
-  LOG("  target's thread states: %.0f/s (%lu)", thread_state_count / actual_window_s,
-      thread_state_count);
+  ORBIT_LOG("  target's thread states: %.0f/s (%lu)", thread_state_count / actual_window_s,
+            thread_state_count);
   stats_.Reset();
 }
 

@@ -630,7 +630,7 @@ class VulkanLayerController {
     absl::MutexLock lock{&vulkan_layer_producer_mutex_};
     if (vulkan_layer_producer_ == nullptr) {
       vulkan_layer_producer_ = std::make_unique<VulkanLayerProducerImpl>();
-      LOG("Bringing up VulkanLayerProducer");
+      ORBIT_LOG("Bringing up VulkanLayerProducer");
       vulkan_layer_producer_->BringUp(orbit_producer_side_channel::CreateProducerSideChannel());
       submission_tracker_.SetVulkanLayerProducer(vulkan_layer_producer_.get());
     }
@@ -642,7 +642,7 @@ class VulkanLayerController {
       return;
     }
     uint32_t pid = orbit_base::GetCurrentProcessId();
-    LOG("Writing PID of %u to \"%s\"", pid, pid_file);
+    ORBIT_LOG("Writing PID of %u to \"%s\"", pid, pid_file);
     ErrorMessageOr<orbit_base::unique_fd> error_or_file = orbit_base::OpenFileForWriting(pid_file);
     FAIL_IF(error_or_file.has_error(), "Opening \"%s\": %s", pid_file,
             error_or_file.error().message());
@@ -656,7 +656,7 @@ class VulkanLayerController {
     if (vulkan_layer_producer_ != nullptr) {
       // TODO: Only do this when DestroyInstance has been called the same number of times as
       //  CreateInstance.
-      LOG("Taking down VulkanLayerProducer");
+      ORBIT_LOG("Taking down VulkanLayerProducer");
       vulkan_layer_producer_->TakeDown();
       submission_tracker_.SetVulkanLayerProducer(nullptr);
       vulkan_layer_producer_.reset();

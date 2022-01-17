@@ -62,7 +62,7 @@ void MoveFilesProcess::TryMoveFilesAndRemoveDirIfNeeded(const std::filesystem::p
     if (interruption_requested_) return;
     const auto& file_name = file_path.filename();
     const auto& new_file_path = dest_dir / file_name;
-    LOG("Moving \"%s\" to \"%s\"...", file_path.string(), new_file_path.string());
+    ORBIT_LOG("Moving \"%s\" to \"%s\"...", file_path.string(), new_file_path.string());
     emit moveFileStarted(QString::fromStdString(file_path.string()));
     auto move_result = orbit_base::MoveFile(file_path, new_file_path);
     if (move_result.has_error()) {

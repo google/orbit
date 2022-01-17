@@ -43,13 +43,13 @@ bool ModuleData::UpdateIfChangedAndUnload(ModuleInfo info) {
 
   module_info_ = std::move(info);
 
-  LOG("WARNING: Module \"%s\" changed and will to be updated (it does not have build_id).",
-      file_path());
+  ORBIT_LOG("WARNING: Module \"%s\" changed and will to be updated (it does not have build_id).",
+            file_path());
 
   if (!is_loaded_) return false;
 
-  LOG("Module %s contained symbols. Because the module changed, those are now removed.",
-      file_path());
+  ORBIT_LOG("Module %s contained symbols. Because the module changed, those are now removed.",
+            file_path());
   functions_.clear();
   hash_to_function_map_.clear();
   is_loaded_ = false;
@@ -137,10 +137,12 @@ void ModuleData::AddSymbols(const orbit_grpc_protos::ModuleSymbols& module_symbo
     }
   }
   if (address_reuse_counter != 0) {
-    LOG("Warning: %d absolute addresses are used by more than one symbol", address_reuse_counter);
+    ORBIT_LOG("Warning: %d absolute addresses are used by more than one symbol",
+              address_reuse_counter);
   }
   if (name_reuse_counter != 0) {
-    LOG("Warning: %d function name collisions happened (functions with the same demangled name). "
+    ORBIT_LOG(
+        "Warning: %d function name collisions happened (functions with the same demangled name). "
         "This is currently not supported by presets, since the presets are based on the demangled "
         "name.",
         name_reuse_counter);

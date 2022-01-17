@@ -1392,7 +1392,7 @@ void InfiniteRecursion(int num) {
     InfiniteRecursion(num);
   }
 
-  LOG("num=%d", num);
+  ORBIT_LOG("num=%d", num);
 }
 
 void OrbitMainWindow::on_actionStackOverflow_triggered() { InfiniteRecursion(0); }
@@ -1766,5 +1766,6 @@ void OrbitMainWindow::AppendToCaptureLog(CaptureLogSeverity severity, absl::Dura
   std::string pretty_time = orbit_display_formats::GetDisplayTime(capture_time);
   ui->captureLogTextEdit->append(
       QString::fromStdString(absl::StrFormat("%s\t%s", pretty_time, message)));
-  LOG("\"%s  %s\" with severity %s added to the capture log", pretty_time, message, severity_name);
+  ORBIT_LOG("\"%s  %s\" with severity %s added to the capture log", pretty_time, message,
+            severity_name);
 }

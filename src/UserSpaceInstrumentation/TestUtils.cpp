@@ -121,11 +121,11 @@ void DumpDisassembly(const std::vector<uint8_t>& code, uint64_t start_address) {
           absl::StrCat(machine_code, j == 0 ? absl::StrFormat("%#0.2x", instruction[i].bytes[j])
                                             : absl::StrFormat(" %0.2x", instruction[i].bytes[j]));
     }
-    LOG("%#x:\t%-12s %s , %s", instruction[i].address, instruction[i].mnemonic,
-        instruction[i].op_str, machine_code);
+    ORBIT_LOG("%#x:\t%-12s %s , %s", instruction[i].address, instruction[i].mnemonic,
+              instruction[i].op_str, machine_code);
   }
   // Print out the next offset, after the last instruction.
-  LOG("%#x:", instruction[i - 1].address + instruction[i - 1].size);
+  ORBIT_LOG("%#x:", instruction[i - 1].address + instruction[i - 1].size);
   cs_free(instruction, count);
 }
 
