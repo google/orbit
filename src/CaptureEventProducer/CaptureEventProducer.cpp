@@ -18,10 +18,10 @@ using orbit_grpc_protos::ReceiveCommandsAndSendEventsResponse;
 namespace orbit_capture_event_producer {
 
 void CaptureEventProducer::BuildAndStart(const std::shared_ptr<grpc::Channel>& channel) {
-  CHECK(channel != nullptr);
+  ORBIT_CHECK(channel != nullptr);
 
   producer_side_service_stub_ = ProducerSideService::NewStub(channel);
-  CHECK(producer_side_service_stub_ != nullptr);
+  ORBIT_CHECK(producer_side_service_stub_ != nullptr);
 
   connect_and_receive_commands_thread_ = std::thread{[this] { ConnectAndReceiveCommandsThread(); }};
 }
@@ -29,19 +29,19 @@ void CaptureEventProducer::BuildAndStart(const std::shared_ptr<grpc::Channel>& c
 void CaptureEventProducer::ShutdownAndWait() {
   {
     absl::WriterMutexLock lock{&shutdown_requested_mutex_};
-    CHECK(!shutdown_requested_);
+    ORBIT_CHECK(!shutdown_requested_);
     shutdown_requested_ = true;
   }
 
   {
     absl::ReaderMutexLock lock{&context_and_stream_mutex_};
     if (context_ != nullptr) {
-      LOG("Attempting to disconnect from ProducerSideService as exit was requested");
+      ORBIT_LOG("Attempting to disconnect from ProducerSideService as exit was requested");
       context_->TryCancel();
     }
   }
 
-  CHECK(connect_and_receive_commands_thread_.joinable());
+  ORBIT_CHECK(connect_and_receive_commands_thread_.joinable());
   connect_and_receive_commands_thread_.join();
 
   producer_side_service_stub_.reset();
@@ -55,37 +55,37 @@ void CaptureEventProducer::ShutdownAndWait() {
 
 bool CaptureEventProducer::SendCaptureEvents(
     const orbit_grpc_protos::ReceiveCommandsAndSendEventsRequest& send_events_request) {
-  CHECK(send_events_request.event_case() ==
-        orbit_grpc_protos::ReceiveCommandsAndSendEventsRequest::kBufferedCaptureEvents);
+  ORBIT_CHECK(send_events_request.event_case() ==
+              orbit_grpc_protos::ReceiveCommandsAndSendEventsRequest::kBufferedCaptureEvents);
 
-  CHECK(producer_side_service_stub_ != nullptr);
+  ORBIT_CHECK(producer_side_service_stub_ != nullptr);
   {
     // Acquiring the mutex just for the CHECK might seem expensive,
     // but the gRPC call that follows is orders of magnitude slower.
     absl::ReaderMutexLock lock{&shutdown_requested_mutex_};
-    CHECK(!shutdown_requested_);
+    ORBIT_CHECK(!shutdown_requested_);
   }
 
   bool write_succeeded;
   {
     absl::ReaderMutexLock lock{&context_and_stream_mutex_};
     if (stream_ == nullptr) {
-      ERROR("Sending BufferedCaptureEvents to ProducerSideService: not connected");
+      ORBIT_ERROR("Sending BufferedCaptureEvents to ProducerSideService: not connected");
       return false;
     }
     write_succeeded = stream_->Write(send_events_request);
   }
   if (!write_succeeded) {
-    ERROR("Sending BufferedCaptureEvents to ProducerSideService");
+    ORBIT_ERROR("Sending BufferedCaptureEvents to ProducerSideService");
   }
   return write_succeeded;
 }
 
 bool CaptureEventProducer::NotifyAllEventsSent() {
-  CHECK(producer_side_service_stub_ != nullptr);
+  ORBIT_CHECK(producer_side_service_stub_ != nullptr);
   {
     absl::ReaderMutexLock lock{&shutdown_requested_mutex_};
-    CHECK(!shutdown_requested_);
+    ORBIT_CHECK(!shutdown_requested_);
   }
 
   orbit_grpc_protos::ReceiveCommandsAndSendEventsRequest all_events_sent_request;
@@ -94,21 +94,21 @@ bool CaptureEventProducer::NotifyAllEventsSent() {
   {
     absl::ReaderMutexLock lock{&context_and_stream_mutex_};
     if (stream_ == nullptr) {
-      ERROR("Sending AllEventsSent to ProducerSideService: not connected");
+      ORBIT_ERROR("Sending AllEventsSent to ProducerSideService: not connected");
       return false;
     }
     write_succeeded = stream_->Write(all_events_sent_request);
   }
   if (write_succeeded) {
-    LOG("Sent AllEventsSent to ProducerSideService");
+    ORBIT_LOG("Sent AllEventsSent to ProducerSideService");
   } else {
-    ERROR("Sending AllEventsSent to ProducerSideService");
+    ORBIT_ERROR("Sending AllEventsSent to ProducerSideService");
   }
   return write_succeeded;
 }
 
 void CaptureEventProducer::ConnectAndReceiveCommandsThread() {
-  CHECK(producer_side_service_stub_ != nullptr);
+  ORBIT_CHECK(producer_side_service_stub_ != nullptr);
 
   while (true) {
     {
@@ -127,7 +127,7 @@ void CaptureEventProducer::ConnectAndReceiveCommandsThread() {
     }
 
     if (stream_ == nullptr) {
-      ERROR(
+      ORBIT_ERROR(
           "Calling ReceiveCommandsAndSendEvents to establish "
           "gRPC connection with ProducerSideService");
       // This is the reason why we protect shutdown_requested_ with an absl::Mutex instead
@@ -139,7 +139,7 @@ void CaptureEventProducer::ConnectAndReceiveCommandsThread() {
       shutdown_requested_mutex_.ReaderUnlock();
       continue;
     }
-    LOG("Called ReceiveCommandsAndSendEvents on ProducerSideService");
+    ORBIT_LOG("Called ReceiveCommandsAndSendEvents on ProducerSideService");
 
     while (true) {
       ReceiveCommandsAndSendEventsResponse response;
@@ -149,7 +149,7 @@ void CaptureEventProducer::ConnectAndReceiveCommandsThread() {
         read_succeeded = stream_->Read(&response);
       }
       if (!read_succeeded) {
-        ERROR("Receiving ReceiveCommandsAndSendEventsResponse from ProducerSideService");
+        ORBIT_ERROR("Receiving ReceiveCommandsAndSendEventsResponse from ProducerSideService");
         if (last_command_ == ReceiveCommandsAndSendEventsResponse::kStartCaptureCommand) {
           last_command_ = ReceiveCommandsAndSendEventsResponse::kStopCaptureCommand;
           OnCaptureStop();
@@ -159,7 +159,7 @@ void CaptureEventProducer::ConnectAndReceiveCommandsThread() {
           last_command_ = ReceiveCommandsAndSendEventsResponse::kCaptureFinishedCommand;
           OnCaptureFinished();
         }
-        LOG("Terminating call to ReceiveCommandsAndSendEvents");
+        ORBIT_LOG("Terminating call to ReceiveCommandsAndSendEvents");
         {
           absl::WriterMutexLock lock{&context_and_stream_mutex_};
           stream_->Finish().IgnoreError();
@@ -177,7 +177,7 @@ void CaptureEventProducer::ConnectAndReceiveCommandsThread() {
 
       switch (response.command_case()) {
         case ReceiveCommandsAndSendEventsResponse::kStartCaptureCommand: {
-          LOG("ProducerSideService sent StartCaptureCommand");
+          ORBIT_LOG("ProducerSideService sent StartCaptureCommand");
           if (last_command_ == ReceiveCommandsAndSendEventsResponse::kCaptureFinishedCommand) {
             last_command_ = ReceiveCommandsAndSendEventsResponse::kStartCaptureCommand;
             OnCaptureStart(response.start_capture_command().capture_options());
@@ -190,7 +190,7 @@ void CaptureEventProducer::ConnectAndReceiveCommandsThread() {
         } break;
 
         case ReceiveCommandsAndSendEventsResponse::kStopCaptureCommand: {
-          LOG("ProducerSideService sent StopCaptureCommand");
+          ORBIT_LOG("ProducerSideService sent StopCaptureCommand");
           if (last_command_ == ReceiveCommandsAndSendEventsResponse::kStartCaptureCommand) {
             last_command_ = ReceiveCommandsAndSendEventsResponse::kStopCaptureCommand;
             OnCaptureStop();
@@ -204,7 +204,7 @@ void CaptureEventProducer::ConnectAndReceiveCommandsThread() {
         } break;
 
         case ReceiveCommandsAndSendEventsResponse::kCaptureFinishedCommand: {
-          LOG("ProducerSideService sent CaptureFinishedCommand");
+          ORBIT_LOG("ProducerSideService sent CaptureFinishedCommand");
           if (last_command_ == ReceiveCommandsAndSendEventsResponse::kStopCaptureCommand) {
             last_command_ = ReceiveCommandsAndSendEventsResponse::kCaptureFinishedCommand;
             OnCaptureFinished();
@@ -217,7 +217,7 @@ void CaptureEventProducer::ConnectAndReceiveCommandsThread() {
         } break;
 
         case ReceiveCommandsAndSendEventsResponse::COMMAND_NOT_SET: {
-          ERROR("ProducerSideService sent COMMAND_NOT_SET");
+          ORBIT_ERROR("ProducerSideService sent COMMAND_NOT_SET");
         } break;
       }
     }

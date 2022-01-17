@@ -73,7 +73,7 @@ ErrorMessageOr<std::filesystem::path> FindDebugSymbols(
     ErrorMessageOr<bool> file_exists = orbit_base::FileExists(search_path);
 
     if (file_exists.has_error()) {
-      ERROR("%s", file_exists.error().message());
+      ORBIT_ERROR("%s", file_exists.error().message());
       error_messages.emplace_back(file_exists.error().message());
       continue;
     }

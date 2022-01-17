@@ -62,7 +62,7 @@ void SaveToFileEventProcessor::ReportError(const ErrorMessage& error) {
 }
 
 void SaveToFileEventProcessor::ProcessEvent(const ClientCaptureEvent& event) {
-  CHECK(output_stream_ != nullptr);
+  ORBIT_CHECK(output_stream_ != nullptr);
 
   if (state_ == State::kCaptureFinished) {
     ReportError(ErrorMessage{"Unexpected event after CaptureFinished event"});
@@ -71,7 +71,7 @@ void SaveToFileEventProcessor::ProcessEvent(const ClientCaptureEvent& event) {
 
   if (state_ == State::kErrorReported) return;
 
-  CHECK(output_stream_->IsOpen());
+  ORBIT_CHECK(output_stream_->IsOpen());
 
   auto write_result = output_stream_->WriteCaptureEvent(event);
   if (write_result.has_error()) {

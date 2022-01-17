@@ -89,7 +89,7 @@ ErrorMessageOr<std::string> ProcessManagerImpl::FindDebugInfoFile(
 }
 
 void ProcessManagerImpl::Start() {
-  CHECK(!worker_thread_.joinable());
+  ORBIT_CHECK(!worker_thread_.joinable());
   worker_thread_ = std::thread([this] { WorkerFunction(); });
 }
 
@@ -140,7 +140,7 @@ ErrorMessageOr<std::string> ProcessManagerImpl::LoadNullTerminatedString(uint32_
     const std::string& str = error_or_string.value();
     if (str.find('\0') == std::string::npos) {
       const char* error_msg = "Remote string is not null terminated";
-      ERROR("%s: %s", error_msg, str.c_str());
+      ORBIT_ERROR("%s: %s", error_msg, str.c_str());
       return ErrorMessage(error_msg);
     }
 

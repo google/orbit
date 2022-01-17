@@ -357,7 +357,7 @@ void OrbitTreeView::columnResized(int column, int /*oldSize*/, int newSize) {
   // proper event filtering magic that will let us differentiate between direct and indirect column
   // resizing.
   if (maintain_user_column_ratios_ && column_ratios_.size()) {
-    CHECK(column < static_cast<int>(column_ratios_.size()));
+    ORBIT_CHECK(column < static_cast<int>(column_ratios_.size()));
     column_ratios_[column] = static_cast<float>(newSize) / size().width();
   }
 }

@@ -42,7 +42,7 @@ AsyncTrack::AsyncTrack(CaptureViewElement* parent,
   if (timer_info == nullptr) return "";
   auto* manual_inst_manager = app_->GetManualInstrumentationManager();
 
-  CHECK(timer_info->type() == TimerInfo::kApiScopeAsync);
+  ORBIT_CHECK(timer_info->type() == TimerInfo::kApiScopeAsync);
 
   uint64_t event_id = timer_info->api_async_scope_id();
   std::string label = manual_inst_manager->GetString(event_id);
@@ -99,7 +99,7 @@ float AsyncTrack::GetDefaultBoxHeight() const {
 }
 
 std::string AsyncTrack::GetTimesliceText(const TimerInfo& timer_info) const {
-  CHECK(timer_info.type() == TimerInfo::kApiScopeAsync);
+  ORBIT_CHECK(timer_info.type() == TimerInfo::kApiScopeAsync);
   std::string time = GetDisplayTime(timer_info);
   uint64_t event_id = timer_info.api_async_scope_id();
   std::string name = app_->GetManualInstrumentationManager()->GetString(event_id);
@@ -108,7 +108,7 @@ std::string AsyncTrack::GetTimesliceText(const TimerInfo& timer_info) const {
 
 Color AsyncTrack::GetTimerColor(const TimerInfo& timer_info, bool is_selected, bool is_highlighted,
                                 const internal::DrawData& /*draw_data*/) const {
-  CHECK(timer_info.type() == TimerInfo::kApiScopeAsync);
+  ORBIT_CHECK(timer_info.type() == TimerInfo::kApiScopeAsync);
   const Color kInactiveColor(100, 100, 100, 255);
   const Color kSelectionColor(0, 128, 255, 255);
   if (is_highlighted) {
@@ -122,10 +122,10 @@ Color AsyncTrack::GetTimerColor(const TimerInfo& timer_info, bool is_selected, b
   }
 
   if (timer_info.has_color()) {
-    CHECK(timer_info.color().red() < 256);
-    CHECK(timer_info.color().green() < 256);
-    CHECK(timer_info.color().blue() < 256);
-    CHECK(timer_info.color().alpha() < 256);
+    ORBIT_CHECK(timer_info.color().red() < 256);
+    ORBIT_CHECK(timer_info.color().green() < 256);
+    ORBIT_CHECK(timer_info.color().blue() < 256);
+    ORBIT_CHECK(timer_info.color().alpha() < 256);
     return Color(static_cast<uint8_t>(timer_info.color().red()),
                  static_cast<uint8_t>(timer_info.color().green()),
                  static_cast<uint8_t>(timer_info.color().blue()),

@@ -75,14 +75,15 @@ std::optional<Jiffies> GetCumulativeCpuTimeFromProcess(pid_t pid) {
 
   ErrorMessageOr<std::string> file_content_or_error = orbit_base::ReadFileToString(stat);
   if (file_content_or_error.has_error()) {
-    ERROR("Could not read \"%s\": %s", stat.string(), file_content_or_error.error().message());
+    ORBIT_ERROR("Could not read \"%s\": %s", stat.string(),
+                file_content_or_error.error().message());
     return std::nullopt;
   }
 
   std::vector<std::string> lines =
       absl::StrSplit(file_content_or_error.value(), absl::MaxSplits('\n', 1));
   if (lines.empty()) {
-    ERROR("\"%s\" file is empty", stat.string());
+    ORBIT_ERROR("\"%s\" file is empty", stat.string());
     return std::nullopt;
   }
 
@@ -125,7 +126,7 @@ std::optional<Jiffies> GetCumulativeCpuTimeFromProcess(pid_t pid) {
 std::optional<TotalCpuTime> GetCumulativeTotalCpuTime() {
   ErrorMessageOr<std::string> stat_content_or_error = orbit_base::ReadFileToString("/proc/stat");
   if (stat_content_or_error.has_error()) {
-    ERROR("%s", stat_content_or_error.error().message());
+    ORBIT_ERROR("%s", stat_content_or_error.error().message());
     return std::nullopt;
   }
 
@@ -282,7 +283,7 @@ ErrorMessageOr<fs::path> FindSymbolsFilePath(
     ErrorMessageOr<bool> file_exists = orbit_base::FileExists(search_path);
 
     if (file_exists.has_error()) {
-      ERROR("%s", file_exists.error().message());
+      ORBIT_ERROR("%s", file_exists.error().message());
       error_messages.emplace_back(file_exists.error().message());
       continue;
     }

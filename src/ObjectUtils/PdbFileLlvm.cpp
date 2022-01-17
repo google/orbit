@@ -74,7 +74,7 @@ PdbFileLlvm::PdbFileLlvm(std::filesystem::path file_path, const ObjectFileInfo& 
 
   llvm::Expected<llvm::pdb::DbiStream&> debug_info_stream = pdb_file.getPDBDbiStream();
   // Given that we check hasPDBDbiStream above, we must get a DbiStream here.
-  CHECK(debug_info_stream);
+  ORBIT_CHECK(debug_info_stream);
 
   const llvm::pdb::DbiModuleList& modules = debug_info_stream->modules();
 

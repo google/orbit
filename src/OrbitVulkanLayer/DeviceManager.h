@@ -35,11 +35,11 @@ class DeviceManager {
 
   void TrackLogicalDevice(VkPhysicalDevice physical_device, VkDevice logical_device) {
     absl::WriterMutexLock lock(&mutex_);
-    CHECK(!logical_device_to_physical_device_.contains(logical_device));
+    ORBIT_CHECK(!logical_device_to_physical_device_.contains(logical_device));
     logical_device_to_physical_device_[logical_device] = physical_device;
 
-    CHECK(!physical_device_to_logical_devices_.contains(physical_device) ||
-          !physical_device_to_logical_devices_.at(physical_device).contains(logical_device));
+    ORBIT_CHECK(!physical_device_to_logical_devices_.contains(physical_device) ||
+                !physical_device_to_logical_devices_.at(physical_device).contains(logical_device));
     if (!physical_device_to_logical_devices_.contains(physical_device)) {
       physical_device_to_logical_devices_[physical_device] = {logical_device};
     } else {
@@ -57,20 +57,20 @@ class DeviceManager {
 
   [[nodiscard]] VkPhysicalDevice GetPhysicalDeviceOfLogicalDevice(VkDevice logical_device) {
     absl::ReaderMutexLock lock(&mutex_);
-    CHECK(logical_device_to_physical_device_.contains(logical_device));
+    ORBIT_CHECK(logical_device_to_physical_device_.contains(logical_device));
     return logical_device_to_physical_device_.at(logical_device);
   }
 
   void UntrackLogicalDevice(VkDevice logical_device) {
     absl::WriterMutexLock lock(&mutex_);
-    CHECK(logical_device_to_physical_device_.contains(logical_device));
+    ORBIT_CHECK(logical_device_to_physical_device_.contains(logical_device));
     VkPhysicalDevice physical_device = logical_device_to_physical_device_.at(logical_device);
     logical_device_to_physical_device_.erase(logical_device);
 
-    CHECK(physical_device_to_logical_devices_.contains(physical_device));
+    ORBIT_CHECK(physical_device_to_logical_devices_.contains(physical_device));
     absl::flat_hash_set<VkDevice>& logical_devices =
         physical_device_to_logical_devices_.at(physical_device);
-    CHECK(logical_devices.contains(logical_device));
+    ORBIT_CHECK(logical_devices.contains(logical_device));
     logical_devices.erase(logical_device);
 
     if (!logical_devices.empty()) {
@@ -83,7 +83,7 @@ class DeviceManager {
   [[nodiscard]] VkPhysicalDeviceProperties GetPhysicalDeviceProperties(
       VkPhysicalDevice physical_device) {
     absl::ReaderMutexLock lock(&mutex_);
-    CHECK(physical_device_to_properties_.contains(physical_device));
+    ORBIT_CHECK(physical_device_to_properties_.contains(physical_device));
     return physical_device_to_properties_.at(physical_device);
   }
 

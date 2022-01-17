@@ -76,7 +76,7 @@ class ModulesDataViewTest : public testing::Test {
   void AddModulesByIndices(const std::vector<size_t>& indices) {
     std::set index_set(indices.begin(), indices.end());
     for (size_t index : index_set) {
-      CHECK(index < kNumModules);
+      ORBIT_CHECK(index < kNumModules);
       view_.AddModule(
           modules_in_memory_[index].start(),
           module_manager_.GetMutableModuleByPathAndBuildId(modules_in_memory_[index].file_path(),
@@ -248,7 +248,7 @@ TEST_F(ModulesDataViewTest, ColumnSortingShowsRightResults) {
                   case orbit_data_views::DataView::SortingOrder::kDescending:
                     return lhs[column_index] > rhs[column_index];
                   default:
-                    UNREACHABLE();
+                    ORBIT_UNREACHABLE();
                 }
               });
 

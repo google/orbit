@@ -100,7 +100,7 @@ std::unique_ptr<GlCanvas> GlCanvas::Create(CanvasType canvas_type, OrbitApp* app
     case CanvasType::kDebug:
       return std::make_unique<GlCanvas>();
     default:
-      UNREACHABLE();
+      ORBIT_UNREACHABLE();
   }
 }
 
@@ -241,7 +241,7 @@ void GlCanvas::CleanupGlState() { glPopAttrib(); }
 
 void GlCanvas::Render(int width, int height) {
   ORBIT_SCOPE("GlCanvas::Render");
-  CHECK(width == viewport_.GetScreenWidth() && height == viewport_.GetScreenHeight());
+  ORBIT_CHECK(width == viewport_.GetScreenWidth() && height == viewport_.GetScreenHeight());
 
   if (!IsRedrawNeeded()) {
     return;

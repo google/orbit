@@ -18,10 +18,10 @@ int TrackTypeItemModel::columnCount(const QModelIndex& parent) const {
 }
 
 QVariant TrackTypeItemModel::data(const QModelIndex& idx, int role) const {
-  CHECK(idx.isValid());
-  CHECK(idx.model() == static_cast<const QAbstractItemModel*>(this));
-  CHECK(idx.row() >= 0 && idx.row() < static_cast<int>(known_track_types_.size()));
-  CHECK(idx.column() >= 0 && idx.column() < static_cast<int>(Column::kEnd));
+  ORBIT_CHECK(idx.isValid());
+  ORBIT_CHECK(idx.model() == static_cast<const QAbstractItemModel*>(this));
+  ORBIT_CHECK(idx.row() >= 0 && idx.row() < static_cast<int>(known_track_types_.size()));
+  ORBIT_CHECK(idx.column() >= 0 && idx.column() < static_cast<int>(Column::kEnd));
 
   Track::Type track_type = known_track_types_.at(idx.row());
   Column col = static_cast<Column>(idx.column());
@@ -45,10 +45,10 @@ QVariant TrackTypeItemModel::data(const QModelIndex& idx, int role) const {
 }
 
 bool TrackTypeItemModel::setData(const QModelIndex& idx, const QVariant& value, int role) {
-  CHECK(idx.isValid());
-  CHECK(idx.model() == static_cast<const QAbstractItemModel*>(this));
-  CHECK(idx.row() >= 0 && idx.row() < static_cast<int>(known_track_types_.size()));
-  CHECK(idx.column() >= 0 && idx.column() < static_cast<int>(Column::kEnd));
+  ORBIT_CHECK(idx.isValid());
+  ORBIT_CHECK(idx.model() == static_cast<const QAbstractItemModel*>(this));
+  ORBIT_CHECK(idx.row() >= 0 && idx.row() < static_cast<int>(known_track_types_.size()));
+  ORBIT_CHECK(idx.column() >= 0 && idx.column() < static_cast<int>(Column::kEnd));
 
   Track::Type track_type = known_track_types_.at(idx.row());
   Column col = static_cast<Column>(idx.column());
@@ -78,7 +78,7 @@ QVariant TrackTypeItemModel::headerData(int section, Qt::Orientation orientation
       case Column::kName:
         return "Track Type";
       case Column::kEnd:
-        UNREACHABLE();
+        ORBIT_UNREACHABLE();
     }
   }
   return {};
@@ -139,10 +139,10 @@ QString TrackTypeItemModel::GetTrackTypeDisplayName(Track::Type track_type) cons
     case Track::Type::kTimerTrack:
       [[fallthrough]];
     case Track::Type::kUnknown:
-      UNREACHABLE();
+      ORBIT_UNREACHABLE();
   };
 
-  UNREACHABLE();
+  ORBIT_UNREACHABLE();
 }
 
 }  // namespace orbit_qt

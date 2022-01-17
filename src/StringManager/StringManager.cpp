@@ -17,7 +17,7 @@ bool StringManager::AddIfNotPresent(uint64_t key, std::string_view str) {
   absl::MutexLock lock{&mutex_};
   bool inserted = key_to_string_.emplace(key, str).second;
   if (!inserted) {
-    ERROR("String collision for key: %u and string: %s", key, str);
+    ORBIT_ERROR("String collision for key: %u and string: %s", key, str);
   }
   return inserted;
 }

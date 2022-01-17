@@ -28,7 +28,7 @@ std::vector<Thread> ListThreads(uint32_t pid) {
   uint64_t timestamp_ns = orbit_base::CaptureTimestampNs();
   thread_snap_handle = CreateToolhelp32Snapshot(TH32CS_SNAPTHREAD, 0);
   if (thread_snap_handle == INVALID_HANDLE_VALUE) {
-    ERROR("Calling CreateToolhelp32Snapshot for threads");
+    ORBIT_ERROR("Calling CreateToolhelp32Snapshot for threads");
     return {};
   }
   orbit_base::unique_resource handle{thread_snap_handle, ::CloseHandle};
@@ -36,7 +36,7 @@ std::vector<Thread> ListThreads(uint32_t pid) {
   // Retrieve information about the first thread.
   thread_entry.dwSize = sizeof(THREADENTRY32);
   if (!Thread32First(thread_snap_handle, &thread_entry)) {
-    ERROR("Calling Thread32First for pid %u", pid);
+    ORBIT_ERROR("Calling Thread32First for pid %u", pid);
     return {};
   }
 

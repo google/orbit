@@ -33,8 +33,8 @@ ErrorMessageOr<std::vector<TracepointInfo>> TracepointServiceClient::GetTracepoi
     const std::string& error_message =
         absl::StrFormat("gRPC call to GetTracepointList failed: %s (error_code=%d)",
                         status.error_message(), status.error_code());
-    ERROR("gRPC call to GetTracepointList failed: %s (error_code=%d)", status.error_message(),
-          status.error_code());
+    ORBIT_ERROR("gRPC call to GetTracepointList failed: %s (error_code=%d)", status.error_message(),
+                status.error_code());
     return ErrorMessage(error_message);
   }
 

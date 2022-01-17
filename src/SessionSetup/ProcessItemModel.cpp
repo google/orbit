@@ -21,10 +21,10 @@ int ProcessItemModel::columnCount(const QModelIndex& parent) const {
 }
 
 QVariant ProcessItemModel::data(const QModelIndex& idx, int role) const {
-  CHECK(idx.isValid());
-  CHECK(idx.model() == static_cast<const QAbstractItemModel*>(this));
-  CHECK(idx.row() >= 0 && idx.row() < static_cast<int>(processes_.size()));
-  CHECK(idx.column() >= 0 && idx.column() < static_cast<int>(Column::kEnd));
+  ORBIT_CHECK(idx.isValid());
+  ORBIT_CHECK(idx.model() == static_cast<const QAbstractItemModel*>(this));
+  ORBIT_CHECK(idx.row() >= 0 && idx.row() < static_cast<int>(processes_.size()));
+  ORBIT_CHECK(idx.column() >= 0 && idx.column() < static_cast<int>(Column::kEnd));
 
   const auto& process = processes_[idx.row()];
 
@@ -41,7 +41,7 @@ QVariant ProcessItemModel::data(const QModelIndex& idx, int role) const {
       case Column::kCpu:
         return QString("%1 %").arg(process.cpu_usage(), 0, 'f', 1);
       case Column::kEnd:
-        UNREACHABLE();
+        ORBIT_UNREACHABLE();
     }
   }
 
@@ -56,7 +56,7 @@ QVariant ProcessItemModel::data(const QModelIndex& idx, int role) const {
       case Column::kCpu:
         return process.cpu_usage();
       case Column::kEnd:
-        UNREACHABLE();
+        ORBIT_UNREACHABLE();
     }
   }
 
@@ -75,7 +75,7 @@ QVariant ProcessItemModel::data(const QModelIndex& idx, int role) const {
       case Column::kCpu:
         return QVariant(Qt::AlignVCenter | Qt::AlignRight);
       case Column::kEnd:
-        UNREACHABLE();
+        ORBIT_UNREACHABLE();
     }
   }
 
@@ -96,7 +96,7 @@ QVariant ProcessItemModel::headerData(int section, Qt::Orientation orientation, 
       case Column::kCpu:
         return "CPU %";
       case Column::kEnd:
-        UNREACHABLE();
+        ORBIT_UNREACHABLE();
     }
   }
   return {};
@@ -154,12 +154,12 @@ void ProcessItemModel::SetProcesses(std::vector<ProcessInfo> new_processes) {
   if (old_iter == processes_.end() && new_iter != new_processes.end()) {
     beginInsertRows({}, processes_.size(), new_processes.size() - 1);
     std::copy(new_iter, new_processes.end(), std::back_inserter(processes_));
-    CHECK(processes_.size() == new_processes.size());
+    ORBIT_CHECK(processes_.size() == new_processes.size());
     endInsertRows();
   } else if (old_iter != processes_.end() && new_iter == new_processes.end()) {
     beginRemoveRows({}, new_processes.size(), processes_.size() - 1);
     processes_.erase(old_iter, processes_.end());
-    CHECK(processes_.size() == new_processes.size());
+    ORBIT_CHECK(processes_.size() == new_processes.size());
     endRemoveRows();
   }
 }

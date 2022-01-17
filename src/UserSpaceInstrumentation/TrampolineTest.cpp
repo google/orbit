@@ -269,7 +269,7 @@ TEST(TrampolineTest, FindAddressRangeForTrampoline) {
 
 TEST(TrampolineTest, AllocateMemoryForTrampolines) {
   pid_t pid = fork();
-  CHECK(pid != -1);
+  ORBIT_CHECK(pid != -1);
   if (pid == 0) {
     prctl(PR_SET_PDEATHSIG, SIGTERM);
 
@@ -284,12 +284,12 @@ TEST(TrampolineTest, AllocateMemoryForTrampolines) {
   }
 
   // Stop the process using our tooling.
-  CHECK(AttachAndStopProcess(pid).has_value());
+  ORBIT_CHECK(AttachAndStopProcess(pid).has_value());
 
   // Find the address range of the code for `DoubleAndIncrement`. For the purpose of this test we
   // just take the entire address space taken up by `UserSpaceInstrumentationTests`.
   auto modules_or_error = orbit_object_utils::ReadModules(pid);
-  CHECK(!modules_or_error.has_error());
+  ORBIT_CHECK(!modules_or_error.has_error());
 
   auto& modules = modules_or_error.value();
   const auto module = std::find_if(modules.begin(), modules.end(), [&](const auto& module) {
@@ -306,14 +306,14 @@ TEST(TrampolineTest, AllocateMemoryForTrampolines) {
 
   // Check that the tracee is functional: Continue, stop again, free the allocated memory, then run
   // briefly again.
-  CHECK(DetachAndContinueProcess(pid).has_value());
-  CHECK(AttachAndStopProcess(pid).has_value());
+  ORBIT_CHECK(DetachAndContinueProcess(pid).has_value());
+  ORBIT_CHECK(AttachAndStopProcess(pid).has_value());
   ASSERT_THAT(memory_or_error.value()->Free(), HasNoError());
-  CHECK(DetachAndContinueProcess(pid).has_value());
-  CHECK(AttachAndStopProcess(pid).has_value());
+  ORBIT_CHECK(DetachAndContinueProcess(pid).has_value());
+  ORBIT_CHECK(AttachAndStopProcess(pid).has_value());
 
   // Detach and end child.
-  CHECK(DetachAndContinueProcess(pid).has_value());
+  ORBIT_CHECK(DetachAndContinueProcess(pid).has_value());
   kill(pid, SIGKILL);
   waitpid(pid, nullptr, 0);
 }
@@ -350,18 +350,18 @@ TEST(TrampolineTest, AddressDifferenceAsInt32) {
 class RelocateInstructionTest : public testing::Test {
  protected:
   void SetUp() override {
-    CHECK(cs_open(CS_ARCH_X86, CS_MODE_64, &capstone_handle_) == CS_ERR_OK);
-    CHECK(cs_option(capstone_handle_, CS_OPT_DETAIL, CS_OPT_ON) == CS_ERR_OK);
+    ORBIT_CHECK(cs_open(CS_ARCH_X86, CS_MODE_64, &capstone_handle_) == CS_ERR_OK);
+    ORBIT_CHECK(cs_option(capstone_handle_, CS_OPT_DETAIL, CS_OPT_ON) == CS_ERR_OK);
     instruction_ = cs_malloc(capstone_handle_);
-    CHECK(instruction_ != nullptr);
+    ORBIT_CHECK(instruction_ != nullptr);
   }
 
   void Disassemble(const MachineCode& code) {
     const uint8_t* code_pointer = code.GetResultAsVector().data();
     size_t code_size = code.GetResultAsVector().size();
     uint64_t disassemble_address = 0;
-    CHECK(cs_disasm_iter(capstone_handle_, &code_pointer, &code_size, &disassemble_address,
-                         instruction_));
+    ORBIT_CHECK(cs_disasm_iter(capstone_handle_, &code_pointer, &code_size, &disassemble_address,
+                               instruction_));
   }
 
   void TearDown() override {
@@ -547,9 +547,9 @@ class InstrumentFunctionTest : public testing::Test {
   void SetUp() override {
     // Init Capstone disassembler.
     cs_err error_code = cs_open(CS_ARCH_X86, CS_MODE_64, &capstone_handle_);
-    CHECK(error_code == CS_ERR_OK);
+    ORBIT_CHECK(error_code == CS_ERR_OK);
     error_code = cs_option(capstone_handle_, CS_OPT_DETAIL, CS_OPT_ON);
-    CHECK(error_code == CS_ERR_OK);
+    ORBIT_CHECK(error_code == CS_ERR_OK);
 
     max_trampoline_size_ = GetMaxTrampolineSize();
   }
@@ -558,7 +558,7 @@ class InstrumentFunctionTest : public testing::Test {
     function_name_ = function_name;
 
     pid_ = fork();
-    CHECK(pid_ != -1);
+    ORBIT_CHECK(pid_ != -1);
     if (pid_ == 0) {
       prctl(PR_SET_PDEATHSIG, SIGTERM);
 
@@ -578,7 +578,7 @@ class InstrumentFunctionTest : public testing::Test {
   void PrepareInstrumentation(std::string_view entry_payload_function_name,
                               std::string_view exit_payload_function_name) {
     // Stop the child process using our tooling.
-    CHECK(AttachAndStopProcess(pid_).has_value());
+    ORBIT_CHECK(AttachAndStopProcess(pid_).has_value());
 
     auto library_path_or_error = GetTestLibLibraryPath();
     ASSERT_THAT(library_path_or_error, HasNoError());
@@ -586,18 +586,18 @@ class InstrumentFunctionTest : public testing::Test {
 
     // Inject the payload for the instrumentation.
     auto library_handle_or_error = DlopenInTracee(pid_, library_path, RTLD_NOW);
-    CHECK(library_handle_or_error.has_value());
+    ORBIT_CHECK(library_handle_or_error.has_value());
     void* library_handle = library_handle_or_error.value();
 
     auto entry_payload_function_address_or_error =
         DlsymInTracee(pid_, library_handle, entry_payload_function_name);
-    CHECK(entry_payload_function_address_or_error.has_value());
+    ORBIT_CHECK(entry_payload_function_address_or_error.has_value());
     entry_payload_function_address_ =
         absl::bit_cast<uint64_t>(entry_payload_function_address_or_error.value());
 
     auto exit_payload_function_address_or_error =
         DlsymInTracee(pid_, library_handle, exit_payload_function_name);
-    CHECK(exit_payload_function_address_or_error.has_value());
+    ORBIT_CHECK(exit_payload_function_address_or_error.has_value());
     exit_payload_function_address_ =
         absl::bit_cast<uint64_t>(exit_payload_function_address_or_error.value());
 
@@ -609,45 +609,45 @@ class InstrumentFunctionTest : public testing::Test {
     // Get memory for the trampoline.
     auto trampoline_or_error =
         AllocateMemoryForTrampolines(pid_, address_range_code, max_trampoline_size_);
-    CHECK(!trampoline_or_error.has_error());
+    ORBIT_CHECK(!trampoline_or_error.has_error());
     trampoline_memory_ = std::move(trampoline_or_error.value());
     trampoline_address_ = trampoline_memory_->GetAddress();
 
     // Get memory for return trampoline and create the return trampoline.
     auto return_trampoline_or_error = MemoryInTracee::Create(pid_, 0, GetReturnTrampolineSize());
-    CHECK(!return_trampoline_or_error.has_error());
+    ORBIT_CHECK(!return_trampoline_or_error.has_error());
     return_trampoline_address_ = return_trampoline_or_error.value()->GetAddress();
     auto result =
         CreateReturnTrampoline(pid_, exit_payload_function_address_, return_trampoline_address_);
-    CHECK(!result.has_error());
-    CHECK(!return_trampoline_or_error.value()->EnsureMemoryExecutable().has_error());
+    ORBIT_CHECK(!result.has_error());
+    ORBIT_CHECK(!return_trampoline_or_error.value()->EnsureMemoryExecutable().has_error());
 
     // Copy the beginning of the function over into this process.
     constexpr uint64_t kMaxFunctionPrologueBackupSize = 20;
     const uint64_t bytes_to_copy = std::min(size_of_function, kMaxFunctionPrologueBackupSize);
     ErrorMessageOr<std::vector<uint8_t>> function_backup =
         ReadTraceesMemory(pid_, function_address_, bytes_to_copy);
-    CHECK(function_backup.has_value());
+    ORBIT_CHECK(function_backup.has_value());
     function_code_ = function_backup.value();
   }
 
   // Runs the child for a millisecond to assert it is still working fine, stops it, removes the
   // instrumentation, restarts and stops it again.
   void RestartAndRemoveInstrumentation() {
-    CHECK(!trampoline_memory_->EnsureMemoryExecutable().has_error());
+    ORBIT_CHECK(!trampoline_memory_->EnsureMemoryExecutable().has_error());
 
     MoveInstructionPointersOutOfOverwrittenCode(pid_, relocation_map_);
 
-    CHECK(!DetachAndContinueProcess(pid_).has_error());
+    ORBIT_CHECK(!DetachAndContinueProcess(pid_).has_error());
     std::this_thread::sleep_for(std::chrono::milliseconds(1));
-    CHECK(AttachAndStopProcess(pid_).has_value());
+    ORBIT_CHECK(AttachAndStopProcess(pid_).has_value());
 
     auto write_result_or_error = WriteTraceesMemory(pid_, function_address_, function_code_);
-    CHECK(!write_result_or_error.has_error());
+    ORBIT_CHECK(!write_result_or_error.has_error());
 
-    CHECK(!DetachAndContinueProcess(pid_).has_error());
+    ORBIT_CHECK(!DetachAndContinueProcess(pid_).has_error());
     std::this_thread::sleep_for(std::chrono::milliseconds(1));
-    CHECK(AttachAndStopProcess(pid_).has_value());
+    ORBIT_CHECK(AttachAndStopProcess(pid_).has_value());
   }
 
   void TearDown() override {
@@ -655,7 +655,7 @@ class InstrumentFunctionTest : public testing::Test {
 
     // Detach and end child.
     if (pid_ != -1) {
-      CHECK(!DetachAndContinueProcess(pid_).has_error());
+      ORBIT_CHECK(!DetachAndContinueProcess(pid_).has_error());
       kill(pid_, SIGKILL);
       waitpid(pid_, nullptr, 0);
     }
@@ -939,7 +939,7 @@ TEST_F(InstrumentFunctionTest, Loop) {
 // Check-fails if any parameter is not zero.
 extern "C" int CheckIntParameters(u_int64_t p0, u_int64_t p1, u_int64_t p2, u_int64_t p3,
                                   u_int64_t p4, u_int64_t p5, u_int64_t p6, u_int64_t p7) {
-  CHECK(p0 == 0 && p1 == 0 && p2 == 0 && p3 == 0 && p4 == 0 && p5 == 0 && p6 == 0 && p7 == 0);
+  ORBIT_CHECK(p0 == 0 && p1 == 0 && p2 == 0 && p3 == 0 && p4 == 0 && p5 == 0 && p6 == 0 && p7 == 0);
   return 0;
 }
 
@@ -950,7 +950,7 @@ extern "C" int CheckIntParameters(u_int64_t p0, u_int64_t p1, u_int64_t p2, u_in
 TEST_F(InstrumentFunctionTest, CheckIntParameters) {
   function_name_ = "CheckIntParameters";
   pid_ = fork();
-  CHECK(pid_ != -1);
+  ORBIT_CHECK(pid_ != -1);
   if (pid_ == 0) {
     prctl(PR_SET_PDEATHSIG, SIGTERM);
 
@@ -976,15 +976,15 @@ TEST_F(InstrumentFunctionTest, CheckIntParameters) {
 // Check-fails if any parameter is not zero.
 extern "C" int CheckFloatParameters(float p0, float p1, float p2, float p3, float p4, float p5,
                                     float p6, float p7) {
-  CHECK(p0 == 0.f && p1 == 0.f && p2 == 0.f && p3 == 0.f && p4 == 0.f && p5 == 0.f && p6 == 0.f &&
-        p7 == 0.f);
+  ORBIT_CHECK(p0 == 0.f && p1 == 0.f && p2 == 0.f && p3 == 0.f && p4 == 0.f && p5 == 0.f &&
+              p6 == 0.f && p7 == 0.f);
   return 0;
 }
 
 TEST_F(InstrumentFunctionTest, CheckFloatParameters) {
   function_name_ = "CheckFloatParameters";
   pid_ = fork();
-  CHECK(pid_ != -1);
+  ORBIT_CHECK(pid_ != -1);
   if (pid_ == 0) {
     prctl(PR_SET_PDEATHSIG, SIGTERM);
 
@@ -1010,17 +1010,17 @@ TEST_F(InstrumentFunctionTest, CheckFloatParameters) {
 // Check-fails if any parameter is not zero.
 extern "C" int CheckM256iParameters(__m256i p0, __m256i p1, __m256i p2, __m256i p3, __m256i p4,
                                     __m256i p5, __m256i p6, __m256i p7) {
-  CHECK(_mm256_extract_epi64(p0, 0) == 0 && _mm256_extract_epi64(p1, 0) == 0 &&
-        _mm256_extract_epi64(p2, 0) == 0 && _mm256_extract_epi64(p3, 0) == 0 &&
-        _mm256_extract_epi64(p4, 0) == 0 && _mm256_extract_epi64(p5, 0) == 0 &&
-        _mm256_extract_epi64(p6, 0) == 0 && _mm256_extract_epi64(p7, 0) == 0);
+  ORBIT_CHECK(_mm256_extract_epi64(p0, 0) == 0 && _mm256_extract_epi64(p1, 0) == 0 &&
+              _mm256_extract_epi64(p2, 0) == 0 && _mm256_extract_epi64(p3, 0) == 0 &&
+              _mm256_extract_epi64(p4, 0) == 0 && _mm256_extract_epi64(p5, 0) == 0 &&
+              _mm256_extract_epi64(p6, 0) == 0 && _mm256_extract_epi64(p7, 0) == 0);
   return 0;
 }
 
 TEST_F(InstrumentFunctionTest, CheckM256iParameters) {
   function_name_ = "CheckM256iParameters";
   pid_ = fork();
-  CHECK(pid_ != -1);
+  ORBIT_CHECK(pid_ != -1);
   if (pid_ == 0) {
     prctl(PR_SET_PDEATHSIG, SIGTERM);
 

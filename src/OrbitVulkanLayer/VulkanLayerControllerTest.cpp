@@ -371,7 +371,7 @@ TEST_F(
       .Times(2)
       .WillRepeatedly(Invoke([](const char* /*layer_name*/, uint32_t* property_count,
                                 VkExtensionProperties* properties) -> VkResult {
-        CHECK(property_count != nullptr);
+        ORBIT_CHECK(property_count != nullptr);
         if (properties == nullptr) {
           *property_count = 1;
           return VK_SUCCESS;
@@ -451,7 +451,7 @@ TEST_F(
       .Times(2)
       .WillRepeatedly(Invoke([](const char* /*layer_name*/, uint32_t* property_count,
                                 VkExtensionProperties* properties) -> VkResult {
-        CHECK(property_count != nullptr);
+        ORBIT_CHECK(property_count != nullptr);
         if (properties == nullptr) {
           *property_count = 1;
           return VK_SUCCESS;
@@ -519,7 +519,7 @@ TEST_F(VulkanLayerControllerTest, WillDumpPidOnCreateInstance) {
   EXPECT_CALL(*vulkan_wrapper, CallVkEnumerateInstanceExtensionProperties)
       .WillRepeatedly(Invoke([](const char* /*layer_name*/, uint32_t* property_count,
                                 VkExtensionProperties* properties) -> VkResult {
-        CHECK(property_count != nullptr);
+        ORBIT_CHECK(property_count != nullptr);
         if (properties == nullptr) {
           *property_count = 1;
           return VK_SUCCESS;
@@ -572,7 +572,7 @@ TEST_F(VulkanLayerControllerTest, DumpProcessIdFailsOnCreateInstanceByNonExisten
   EXPECT_CALL(*vulkan_wrapper, CallVkEnumerateInstanceExtensionProperties)
       .WillRepeatedly(Invoke([](const char* /*layer_name*/, uint32_t* property_count,
                                 VkExtensionProperties* properties) -> VkResult {
-        CHECK(property_count != nullptr);
+        ORBIT_CHECK(property_count != nullptr);
         if (properties == nullptr) {
           *property_count = 1;
           return VK_SUCCESS;
@@ -621,7 +621,7 @@ TEST_F(VulkanLayerControllerTest, DumpProcessIdFailsOnCreateInstanceByInvalidFil
   EXPECT_CALL(*vulkan_wrapper, CallVkEnumerateInstanceExtensionProperties)
       .WillRepeatedly(Invoke([](const char* /*layer_name*/, uint32_t* property_count,
                                 VkExtensionProperties* properties) -> VkResult {
-        CHECK(property_count != nullptr);
+        ORBIT_CHECK(property_count != nullptr);
         if (properties == nullptr) {
           *property_count = 1;
           return VK_SUCCESS;
@@ -717,7 +717,7 @@ TEST_F(
       kFakeEnumerateDeviceExtensionProperties =
           +[](VkPhysicalDevice /*physical_device*/, const char* /*layer_name*/,
               uint32_t* property_count, VkExtensionProperties* properties) -> VkResult {
-    CHECK(property_count != nullptr);
+    ORBIT_CHECK(property_count != nullptr);
     if (properties == nullptr) {
       *property_count = 1;
       return VK_SUCCESS;
@@ -794,7 +794,7 @@ TEST_F(VulkanLayerControllerTest,
       kFakeEnumerateDeviceExtensionProperties =
           +[](VkPhysicalDevice /*physical_device*/, const char* /*layer_name*/,
               uint32_t* property_count, VkExtensionProperties* properties) -> VkResult {
-    CHECK(property_count != nullptr);
+    ORBIT_CHECK(property_count != nullptr);
     if (properties == nullptr) {
       *property_count = 1;
       return VK_SUCCESS;

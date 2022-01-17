@@ -178,10 +178,10 @@ bool ThreadTrack::IsTrackSelected() const {
     if (!timer_info.has_color()) {
       return std::nullopt;
     }
-    CHECK(timer_info.color().red() < 256);
-    CHECK(timer_info.color().green() < 256);
-    CHECK(timer_info.color().blue() < 256);
-    CHECK(timer_info.color().alpha() < 256);
+    ORBIT_CHECK(timer_info.color().red() < 256);
+    ORBIT_CHECK(timer_info.color().green() < 256);
+    ORBIT_CHECK(timer_info.color().blue() < 256);
+    ORBIT_CHECK(timer_info.color().alpha() < 256);
     return Color(static_cast<uint8_t>(timer_info.color().red()),
                  static_cast<uint8_t>(timer_info.color().green()),
                  static_cast<uint8_t>(timer_info.color().blue()),
@@ -293,8 +293,8 @@ std::string ThreadTrack::GetTimesliceText(const TimerInfo& timer_info) const {
     return absl::StrFormat("%s %s %s", timer_info.api_scope_name(), extra_info.c_str(), time);
   }
 
-  ERROR("Unexpected case in ThreadTrack::SetTimesliceText: function=\"%s\", type=%d",
-        func->function_name(), static_cast<int>(timer_info.type()));
+  ORBIT_ERROR("Unexpected case in ThreadTrack::SetTimesliceText: function=\"%s\", type=%d",
+              func->function_name(), static_cast<int>(timer_info.type()));
   return "";
 }
 

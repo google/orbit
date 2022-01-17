@@ -21,7 +21,7 @@ static std::optional<pid_t> ProcEntryToPid(const std::filesystem::directory_entr
   std::error_code error;
   bool is_directory = entry.is_directory(error);
   if (error) {
-    ERROR("Unable to stat \"%s\": %s", entry.path(), error.message());
+    ORBIT_ERROR("Unable to stat \"%s\": %s", entry.path(), error.message());
     return std::nullopt;
   }
 
@@ -45,7 +45,7 @@ std::vector<pid_t> GetAllPids() {
   std::error_code error;
   fs::directory_iterator proc{"/proc", error};
   if (error) {
-    ERROR("Unable to ls /proc: %s", error.message());
+    ORBIT_ERROR("Unable to ls /proc: %s", error.message());
     return {};
   }
 
@@ -53,7 +53,7 @@ std::vector<pid_t> GetAllPids() {
 
   for (auto it = fs::begin(proc), end = fs::end(proc); it != end; it.increment(error)) {
     if (error) {
-      ERROR("directory_iterator::increment failed with: %s (stopping)", error.message());
+      ORBIT_ERROR("directory_iterator::increment failed with: %s (stopping)", error.message());
       break;
     }
     auto pid = ProcEntryToPid(*it);
@@ -70,7 +70,7 @@ std::vector<pid_t> GetTidsOfProcess(pid_t pid) {
   fs::directory_iterator proc_pid_task{fs::path{"/proc"} / std::to_string(pid) / "task", error};
   if (error) {
     // The process with id `pid` could have stopped existing.
-    ERROR("Getting tids of threads of process %d: %s", pid, error.message());
+    ORBIT_ERROR("Getting tids of threads of process %d: %s", pid, error.message());
     return {};
   }
 
@@ -78,7 +78,7 @@ std::vector<pid_t> GetTidsOfProcess(pid_t pid) {
   for (auto it = fs::begin(proc_pid_task), end = fs::end(proc_pid_task); it != end;
        it.increment(error)) {
     if (error) {
-      ERROR("directory_iterator::increment failed with: %s (stopping)", error.message());
+      ORBIT_ERROR("directory_iterator::increment failed with: %s (stopping)", error.message());
       break;
     }
     if (auto tid = ProcEntryToPid(*it); tid.has_value()) {

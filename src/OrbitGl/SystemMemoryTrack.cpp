@@ -86,7 +86,7 @@ std::string SystemMemoryTrack::GetLegendTooltips(size_t legend_index) const {
       return "<b>Physical memory not used by the system</b><br/><br/>"
              "Derived from the <i>MemFree</i> field in file <i>/proc/meminfo</i>";
     default:
-      UNREACHABLE();
+      ORBIT_UNREACHABLE();
   }
 }
 

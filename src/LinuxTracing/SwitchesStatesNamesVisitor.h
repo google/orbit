@@ -37,7 +37,7 @@ namespace orbit_linux_tracing {
 class SwitchesStatesNamesVisitor : public PerfEventVisitor {
  public:
   explicit SwitchesStatesNamesVisitor(TracerListener* listener) : listener_{listener} {
-    CHECK(listener_ != nullptr);
+    ORBIT_CHECK(listener_ != nullptr);
   }
 
   void SetThreadStateCounter(std::atomic<uint64_t>* thread_state_counter) {

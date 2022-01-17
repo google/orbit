@@ -56,7 +56,7 @@ void SchedulerTrack::DoUpdatePrimitives(Batcher& batcher, TextRenderer& text_ren
 bool SchedulerTrack::IsTimerActive(const TimerInfo& timer_info) const {
   bool is_same_tid_as_selected = timer_info.thread_id() == app_->selected_thread_id();
 
-  CHECK(capture_data_ != nullptr);
+  ORBIT_CHECK(capture_data_ != nullptr);
   uint32_t capture_process_id = capture_data_->process_id();
   bool is_same_pid_as_target =
       capture_process_id == 0 || capture_process_id == timer_info.process_id();
@@ -116,7 +116,7 @@ std::string SchedulerTrack::GetBoxTooltip(const Batcher& batcher, PickingId id) 
     return "";
   }
 
-  CHECK(capture_data_ != nullptr);
+  ORBIT_CHECK(capture_data_ != nullptr);
   return absl::StrFormat(
       "<b>CPU Core activity</b><br/>"
       "<br/>"

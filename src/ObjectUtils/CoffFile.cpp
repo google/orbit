@@ -83,7 +83,7 @@ static void FillDebugSymbolsFromDWARF(llvm::DWARFContext* dwarf_context,
         // The method getName will fallback to ShortName if LinkageName is
         // not present, so this should never return an empty name.
         std::string name(full_die.getName(llvm::DINameKind::LinkageName));
-        CHECK(!name.empty());
+        ORBIT_CHECK(!name.empty());
         symbol_info.set_name(name);
         symbol_info.set_demangled_name(llvm::demangle(name));
         symbol_info.set_address(low_pc);
@@ -118,7 +118,7 @@ bool CoffFileImpl::HasDebugSymbols() const { return has_debug_info_ && !AreDebug
 bool CoffFileImpl::AreDebugSymbolsEmpty() const {
   const auto dwarf_context = llvm::DWARFContext::create(*owning_binary_.getBinary());
   if (dwarf_context == nullptr) {
-    ERROR("Could not create DWARF context.");
+    ORBIT_ERROR("Could not create DWARF context.");
     return true;
   }
 
@@ -144,7 +144,7 @@ std::string CoffFileImpl::GetName() const { return file_path_.filename().string(
 
 uint64_t CoffFileImpl::GetLoadBias() const { return object_file_->getImageBase(); }
 uint64_t CoffFileImpl::GetExecutableSegmentOffset() const {
-  CHECK(object_file_->is64());
+  ORBIT_CHECK(object_file_->is64());
   return object_file_->getPE32PlusHeader()->BaseOfCode;
 }
 
@@ -156,7 +156,7 @@ ErrorMessageOr<PdbDebugInfo> CoffFileImpl::GetDebugPdbInfo() const {
   llvm::StringRef pdb_file_path;
 
   // If 'this' was successfully created with CreateCoffFile, 'object_file_' cannot be nullptr.
-  CHECK(object_file_ != nullptr);
+  ORBIT_CHECK(object_file_ != nullptr);
 
   llvm::Error error = object_file_->getDebugPDBInfo(debug_info, pdb_file_path);
   if (error) {
@@ -169,7 +169,7 @@ ErrorMessageOr<PdbDebugInfo> CoffFileImpl::GetDebugPdbInfo() const {
   }
   // Only support PDB 70 until we learn otherwise.
   constexpr uint32_t kPdb70Signature = 0x53445352;
-  CHECK(debug_info->PDB70.CVSignature == kPdb70Signature);
+  ORBIT_CHECK(debug_info->PDB70.CVSignature == kPdb70Signature);
 
   PdbDebugInfo pdb_debug_info;
   pdb_debug_info.pdb_file_path = pdb_file_path.str();
@@ -182,7 +182,7 @@ ErrorMessageOr<PdbDebugInfo> CoffFileImpl::GetDebugPdbInfo() const {
 std::string CoffFileImpl::GetBuildId() const {
   ErrorMessageOr<PdbDebugInfo> pdb_debug_info = GetDebugPdbInfo();
   if (pdb_debug_info.has_error()) {
-    LOG("WARNING: No PDB debug info found, cannot form build id (ignoring).");
+    ORBIT_LOG("WARNING: No PDB debug info found, cannot form build id (ignoring).");
     return "";
   }
   return ComputeWindowsBuildId(pdb_debug_info.value().guid, pdb_debug_info.value().age);

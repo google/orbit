@@ -37,7 +37,7 @@ void PickingManager::Reset() {
 }
 
 std::shared_ptr<Pickable> PickingManager::GetPickableFromId(PickingId id) const {
-  CHECK(id.type == PickingType::kPickable);
+  ORBIT_CHECK(id.type == PickingType::kPickable);
 
   absl::MutexLock lock(&mutex_);
   auto it = pid_pickable_map_.find(id.element_id);

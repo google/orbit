@@ -18,7 +18,7 @@ TEST(Path, AllAutoCreatedDirsExist) {
 
   for (auto fn : test_fns) {
     std::filesystem::path path = fn();
-    LOG("Testing existence of \"%s\"", path.string());
+    ORBIT_LOG("Testing existence of \"%s\"", path.string());
     EXPECT_TRUE(std::filesystem::is_directory(path));
   }
 }
@@ -28,7 +28,7 @@ TEST(Paths, AllDirsOfFilesExist) {
 
   for (auto fn : test_fns) {
     std::filesystem::path path = fn().parent_path();
-    LOG("Testing existence of \"%s\"", path.string());
+    ORBIT_LOG("Testing existence of \"%s\"", path.string());
     EXPECT_TRUE(std::filesystem::is_directory(path));
   }
 }

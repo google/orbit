@@ -37,7 +37,7 @@ enum class ProtState { kWrite, kExec, kAny };
 // segment at `address`.
 [[nodiscard]] bool ProcessHasMapAtAddress(pid_t pid, uint64_t address, ProtState state) {
   auto maps_or_error = ReadFileToString(absl::StrFormat("/proc/%d/maps", pid));
-  CHECK(maps_or_error.has_value());
+  ORBIT_CHECK(maps_or_error.has_value());
   std::vector<std::string> lines = absl::StrSplit(maps_or_error.value(), '\n', absl::SkipEmpty());
   for (const auto& line : lines) {
     std::vector<std::string> tokens = absl::StrSplit(line, ' ', absl::SkipEmpty());
@@ -71,7 +71,7 @@ enum class ProtState { kWrite, kExec, kAny };
 
 TEST(AllocateInTraceeTest, AllocateAndFree) {
   pid_t pid = fork();
-  CHECK(pid != -1);
+  ORBIT_CHECK(pid != -1);
   if (pid == 0) {
     prctl(PR_SET_PDEATHSIG, SIGTERM);
 
@@ -84,7 +84,7 @@ TEST(AllocateInTraceeTest, AllocateAndFree) {
   }
 
   // Stop the process using our tooling.
-  CHECK(!AttachAndStopProcess(pid).has_error());
+  ORBIT_CHECK(!AttachAndStopProcess(pid).has_error());
 
   // Allocation fails for invalid process.
   constexpr uint64_t kMemorySize = 1024 * 1024;
@@ -109,9 +109,9 @@ TEST(AllocateInTraceeTest, AllocateAndFree) {
 
   // Allocate a megabyte at a low memory position.
   auto mmap_min_addr_or_error = ReadFileToString("/proc/sys/vm/mmap_min_addr");
-  CHECK(mmap_min_addr_or_error.has_value());
+  ORBIT_CHECK(mmap_min_addr_or_error.has_value());
   uint64_t mmap_min_addr = 0;
-  CHECK(absl::SimpleAtoi(mmap_min_addr_or_error.value(), &mmap_min_addr));
+  ORBIT_CHECK(absl::SimpleAtoi(mmap_min_addr_or_error.value(), &mmap_min_addr));
   my_memory_or_error = MemoryInTracee::Create(pid, mmap_min_addr, kMemorySize);
   ASSERT_THAT(my_memory_or_error, HasNoError());
   auto my_memory = std::move(my_memory_or_error.value());
@@ -131,14 +131,14 @@ TEST(AllocateInTraceeTest, AllocateAndFree) {
   EXPECT_FALSE(ProcessHasMapAtAddress(pid, address, ProtState::kAny));
 
   // Detach and end child.
-  CHECK(!DetachAndContinueProcess(pid).has_error());
+  ORBIT_CHECK(!DetachAndContinueProcess(pid).has_error());
   kill(pid, SIGKILL);
   waitpid(pid, nullptr, 0);
 }
 
 TEST(AllocateInTraceeTest, AutomaticAllocateAndFree) {
   pid_t pid = fork();
-  CHECK(pid != -1);
+  ORBIT_CHECK(pid != -1);
   if (pid == 0) {
     prctl(PR_SET_PDEATHSIG, SIGTERM);
 
@@ -151,7 +151,7 @@ TEST(AllocateInTraceeTest, AutomaticAllocateAndFree) {
   }
 
   // Stop the process using our tooling.
-  CHECK(!AttachAndStopProcess(pid).has_error());
+  ORBIT_CHECK(!AttachAndStopProcess(pid).has_error());
 
   constexpr uint64_t kMemorySize = 1024 * 1024;
   uint64_t address = 0;
@@ -165,7 +165,7 @@ TEST(AllocateInTraceeTest, AutomaticAllocateAndFree) {
   EXPECT_FALSE(ProcessHasMapAtAddress(pid, address, ProtState::kAny));
 
   // Detach and end child.
-  CHECK(!DetachAndContinueProcess(pid).has_error());
+  ORBIT_CHECK(!DetachAndContinueProcess(pid).has_error());
   kill(pid, SIGKILL);
   waitpid(pid, nullptr, 0);
 }

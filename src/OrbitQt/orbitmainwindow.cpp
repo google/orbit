@@ -188,7 +188,7 @@ OrbitMainWindow::OrbitMainWindow(TargetConfiguration target_configuration,
 
   if (FLAGS_stack_dump_size.IsSpecifiedOnCommandLine()) {
     uint16_t stack_dump_size = absl::GetFlag(FLAGS_stack_dump_size);
-    CHECK(stack_dump_size != std::numeric_limits<uint16_t>::max());
+    ORBIT_CHECK(stack_dump_size != std::numeric_limits<uint16_t>::max());
     app_->SetStackDumpSize(stack_dump_size);
   } else {
     app_->SetStackDumpSize(std::numeric_limits<uint16_t>::max());
@@ -211,8 +211,8 @@ OrbitMainWindow::OrbitMainWindow(TargetConfiguration target_configuration,
   ErrorMessageOr<bool> symbol_paths_file_has_depr_note =
       orbit_symbols::FileStartsWithDeprecationNote(orbit_paths::GetSymbolsFilePath());
   if (symbol_paths_file_has_depr_note.has_error()) {
-    ERROR("Unable to check SymbolPaths.txt file for depreciation note, error: %s",
-          symbol_paths_file_has_depr_note.error().message());
+    ORBIT_ERROR("Unable to check SymbolPaths.txt file for depreciation note, error: %s",
+                symbol_paths_file_has_depr_note.error().message());
     return;
   }
 
@@ -248,8 +248,8 @@ OrbitMainWindow::OrbitMainWindow(TargetConfiguration target_configuration,
   ErrorMessageOr<void> add_depr_note_result =
       orbit_symbols::AddDeprecationNoteToFile(orbit_paths::GetSymbolsFilePath());
   if (add_depr_note_result.has_error()) {
-    ERROR("Unable to add deprecation note to SymbolPaths.txt, error: %s",
-          add_depr_note_result.error().message());
+    ORBIT_ERROR("Unable to add deprecation note to SymbolPaths.txt, error: %s",
+                add_depr_note_result.error().message());
   }
 }
 
@@ -609,7 +609,7 @@ void OrbitMainWindow::CreateTabBarContextMenu(QTabWidget* tab_widget, int tab_in
     move_action.setText(QString("Move \"") + tab_widget->tabText(tab_index) + "\" to left pane");
     other_widget = ui->MainTabWidget;
   } else {
-    UNREACHABLE();
+    ORBIT_UNREACHABLE();
   }
 
   move_action.setEnabled(tab_widget->count() > 0);
@@ -631,7 +631,7 @@ void OrbitMainWindow::CreateTabBarContextMenu(QTabWidget* tab_widget, int tab_in
 void OrbitMainWindow::UpdateCaptureStateDependentWidgets() {
   auto set_tab_enabled = [this](QWidget* widget, bool enabled) -> void {
     QTabWidget* tab_widget = FindParentTabWidget(widget);
-    CHECK(tab_widget != nullptr);
+    ORBIT_CHECK(tab_widget != nullptr);
     tab_widget->setTabEnabled(tab_widget->indexOf(widget), enabled);
   };
 
@@ -1102,9 +1102,9 @@ void OrbitMainWindow::LoadCaptureOptionsIntoApp() {
         settings.value(kCallstackSamplingPeriodMsSettingKey, kCallstackSamplingPeriodMsDefaultValue)
             .toDouble(&conversion_succeeded);
     if (!conversion_succeeded || sampling_period_ms <= 0.0) {
-      ERROR("Invalid value for setting \"%s\", resetting to %.1f",
-            kCallstackSamplingPeriodMsSettingKey.toStdString(),
-            kCallstackSamplingPeriodMsDefaultValue);
+      ORBIT_ERROR("Invalid value for setting \"%s\", resetting to %.1f",
+                  kCallstackSamplingPeriodMsSettingKey.toStdString(),
+                  kCallstackSamplingPeriodMsDefaultValue);
       settings.setValue(kCallstackSamplingPeriodMsSettingKey,
                         kCallstackSamplingPeriodMsDefaultValue);
       sampling_period_ms = kCallstackSamplingPeriodMsDefaultValue;
@@ -1123,7 +1123,7 @@ void OrbitMainWindow::LoadCaptureOptionsIntoApp() {
                    static_cast<int>(kCallstackUnwindingMethodDefaultValue))
             .toInt());
     if (unwinding_method == CaptureOptions::kUndefined) {
-      ERROR("Unknown unwinding method specified; Using default unwinding method");
+      ORBIT_ERROR("Unknown unwinding method specified; Using default unwinding method");
       unwinding_method = kCallstackUnwindingMethodDefaultValue;
     }
     app_->SetUnwindingMethod(unwinding_method);
@@ -1250,7 +1250,7 @@ void OrbitMainWindow::on_actionCaptureOptions_triggered() {
 
 void OrbitMainWindow::on_actionHelp_toggled(bool checked) {
   auto* capture_window = dynamic_cast<CaptureWindow*>(ui->CaptureGLWidget->GetCanvas());
-  CHECK(capture_window != nullptr);
+  ORBIT_CHECK(capture_window != nullptr);
   capture_window->set_draw_help(checked);
 }
 
@@ -1283,7 +1283,7 @@ void OrbitMainWindow::OnTimerSelectionChanged(const orbit_client_protos::TimerIn
   if (timer_info) {
     uint64_t function_id = timer_info->function_id();
     const auto live_functions_controller = ui->liveFunctions->GetLiveFunctionsController();
-    CHECK(live_functions_controller.has_value());
+    ORBIT_CHECK(live_functions_controller.has_value());
     orbit_data_views::LiveFunctionsDataView& live_functions_data_view =
         live_functions_controller.value()->GetDataView();
     selected_row = live_functions_data_view.GetRowFromFunctionId(function_id);
@@ -1307,7 +1307,7 @@ void OrbitMainWindow::on_actionOpen_Capture_triggered() {
 }
 
 void OrbitMainWindow::on_actionRename_Capture_File_triggered() {
-  CHECK(target_label_->GetFilePath().has_value());
+  ORBIT_CHECK(target_label_->GetFilePath().has_value());
   const std::filesystem::path& current_file_path = target_label_->GetFilePath().value();
   QString file_path =
       QFileDialog::getSaveFileName(this, "Rename or Move capture...",
@@ -1385,14 +1385,14 @@ void OrbitMainWindow::OpenCapture(const std::string& filepath) {
   FindParentTabWidget(ui->CaptureTab)->setCurrentWidget(ui->CaptureTab);
 }
 
-void OrbitMainWindow::on_actionCheckFalse_triggered() { CHECK(false); }
+void OrbitMainWindow::on_actionCheckFalse_triggered() { ORBIT_CHECK(false); }
 
 void InfiniteRecursion(int num) {
   if (num != 1) {
     InfiniteRecursion(num);
   }
 
-  LOG("num=%d", num);
+  ORBIT_LOG("num=%d", num);
 }
 
 void OrbitMainWindow::on_actionStackOverflow_triggered() { InfiniteRecursion(0); }
@@ -1498,7 +1498,7 @@ void OrbitMainWindow::closeEvent(QCloseEvent* event) {
 }
 
 void OrbitMainWindow::OnStadiaConnectionError(std::error_code error) {
-  CHECK(std::holds_alternative<StadiaTarget>(target_configuration_));
+  ORBIT_CHECK(std::holds_alternative<StadiaTarget>(target_configuration_));
   const StadiaTarget& target = std::get<StadiaTarget>(target_configuration_);
 
   target.GetProcessManager()->SetProcessListUpdateListener(nullptr);
@@ -1521,7 +1521,7 @@ void OrbitMainWindow::SetTarget(const StadiaTarget& target) {
   ServiceDeployManager* service_deploy_manager = connection->GetServiceDeployManager();
   app_->SetSecureCopyCallback([service_deploy_manager](std::string_view source,
                                                        std::string_view destination) {
-    CHECK(service_deploy_manager != nullptr);
+    ORBIT_CHECK(service_deploy_manager != nullptr);
     return service_deploy_manager->CopyFileToLocal(std::string{source}, std::string{destination});
   });
 
@@ -1697,7 +1697,7 @@ void OrbitMainWindow::ShowSourceCode(
   constexpr orbit_code_viewer::FontSizeInEm kHeatmapAreaWidth{1.3f};
 
   if (maybe_code_report.has_value()) {
-    CHECK(maybe_code_report->get() != nullptr);
+    ORBIT_CHECK(maybe_code_report->get() != nullptr);
     code_viewer_dialog->SetEnableSampleCounters(true);
     code_viewer_dialog->SetOwningHeatmap(kHeatmapAreaWidth, std::move(*maybe_code_report));
   }
@@ -1766,5 +1766,6 @@ void OrbitMainWindow::AppendToCaptureLog(CaptureLogSeverity severity, absl::Dura
   std::string pretty_time = orbit_display_formats::GetDisplayTime(capture_time);
   ui->captureLogTextEdit->append(
       QString::fromStdString(absl::StrFormat("%s\t%s", pretty_time, message)));
-  LOG("\"%s  %s\" with severity %s added to the capture log", pretty_time, message, severity_name);
+  ORBIT_LOG("\"%s  %s\" with severity %s added to the capture log", pretty_time, message,
+            severity_name);
 }

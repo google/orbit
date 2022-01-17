@@ -26,7 +26,7 @@ namespace orbit_base {
 // std::cout << int_ptr; // Prints 0, since `other` does not hold an `int`.
 //
 // std::unique_ptr<int>* unique_int_ptr = any_movable_cast<std::unique_ptr<int>>(&other);
-// CHECK(unique_int_ptr != nulllptr);
+// ORBIT_CHECK(unique_int_ptr != nulllptr);
 // std::cout << **unique_int_ptr; // Prints "42"
 class AnyMovable {
   struct Base {

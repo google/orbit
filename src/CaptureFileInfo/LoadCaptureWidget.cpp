@@ -77,7 +77,7 @@ LoadCaptureWidget::LoadCaptureWidget(QWidget* parent)
                      // column. The column does not matter, so column 0 is used.
                      const QModelIndex index = selected.indexes().at(0);
 
-                     CHECK(index.data(Qt::UserRole).canConvert<QString>());
+                     ORBIT_CHECK(index.data(Qt::UserRole).canConvert<QString>());
 
                      emit FileSelected(index.data(Qt::UserRole).value<QString>().toStdString());
                    });

@@ -26,9 +26,9 @@ uint32_t ThreadSampleData::GetCountForAddress(uint64_t address) const {
 const orbit_client_protos::CallstackInfo& PostProcessedSamplingData::GetResolvedCallstack(
     uint64_t sampled_callstack_id) const {
   auto resolved_callstack_id_it = original_id_to_resolved_callstack_id_.find(sampled_callstack_id);
-  CHECK(resolved_callstack_id_it != original_id_to_resolved_callstack_id_.end());
+  ORBIT_CHECK(resolved_callstack_id_it != original_id_to_resolved_callstack_id_.end());
   auto resolved_callstack_it = id_to_resolved_callstack_.find(resolved_callstack_id_it->second);
-  CHECK(resolved_callstack_it != id_to_resolved_callstack_.end());
+  ORBIT_CHECK(resolved_callstack_it != id_to_resolved_callstack_.end());
   return resolved_callstack_it->second;
 }
 
@@ -118,7 +118,7 @@ uint32_t PostProcessedSamplingData::GetCountOfFunction(uint64_t function_address
 
   uint32_t result = 0;
   for (const auto& [tid, thread_sample_data] : thread_id_to_sample_data_) {
-    CHECK(tid != orbit_base::kAllProcessThreadsTid);  // Because GetSummary() == nullptr
+    ORBIT_CHECK(tid != orbit_base::kAllProcessThreadsTid);  // Because GetSummary() == nullptr
 
     auto count_it = thread_sample_data.resolved_address_to_count.find(function_address);
     if (count_it != thread_sample_data.resolved_address_to_count.end()) {

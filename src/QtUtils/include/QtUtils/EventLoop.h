@@ -38,7 +38,7 @@ class EventLoop : public QObject {
       (void)loop_.exec(flags);
     }
 
-    CHECK(result_ != std::nullopt);
+    ORBIT_CHECK(result_ != std::nullopt);
 
     auto result = result_.value();
     result_ = std::nullopt;

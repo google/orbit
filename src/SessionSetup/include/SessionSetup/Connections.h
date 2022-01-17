@@ -37,8 +37,8 @@ class SshConnectionArtifacts {
       : ssh_context_(ssh_context),
         grpc_port_(grpc_port),
         deployment_configuration_(deployment_configuration) {
-    CHECK(ssh_context != nullptr);
-    CHECK(deployment_configuration != nullptr);
+    ORBIT_CHECK(ssh_context != nullptr);
+    ORBIT_CHECK(deployment_configuration != nullptr);
   }
 
   [[nodiscard]] const orbit_ssh::Context* GetSshContext() const { return ssh_context_; }
@@ -70,8 +70,8 @@ class StadiaConnection {
       : instance_(std::move(instance)),
         service_deploy_manager_(std::move(service_deploy_manager)),
         grpc_channel_(std::move(grpc_channel)) {
-    CHECK(service_deploy_manager_ != nullptr);
-    CHECK(grpc_channel_ != nullptr);
+    ORBIT_CHECK(service_deploy_manager_ != nullptr);
+    ORBIT_CHECK(grpc_channel_ != nullptr);
   }
   [[nodiscard]] const orbit_ggp::Instance& GetInstance() const { return instance_; }
   [[nodiscard]] ServiceDeployManager* GetServiceDeployManager() const {
@@ -97,7 +97,7 @@ class LocalConnection {
  public:
   explicit LocalConnection(std::shared_ptr<grpc::Channel>&& grpc_channel)
       : grpc_channel_(std::move(grpc_channel)) {
-    CHECK(grpc_channel_ != nullptr);
+    ORBIT_CHECK(grpc_channel_ != nullptr);
   }
   [[nodiscard]] const std::shared_ptr<grpc::Channel>& GetGrpcChannel() const {
     return grpc_channel_;

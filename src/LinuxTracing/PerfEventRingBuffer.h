@@ -35,7 +35,7 @@ class PerfEventRingBuffer {
 
   template <typename T>
   void ConsumeRecord(const perf_event_header& header, T* record) {
-    CHECK(header.size == sizeof(T));
+    ORBIT_CHECK(header.size == sizeof(T));
     ConsumeRawRecord(header, record);
   }
 

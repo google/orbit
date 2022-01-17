@@ -23,7 +23,7 @@ using orbit_grpc_protos::ThreadStateSlice;
 void SwitchesStatesNamesVisitor::ProcessInitialTidToPidAssociation(pid_t tid, pid_t pid) {
   bool new_insertion = tid_to_pid_association_.insert_or_assign(tid, pid).second;
   if (!new_insertion) {
-    ERROR("Overwriting previous pid for tid %d with initial pid %d", tid, pid);
+    ORBIT_ERROR("Overwriting previous pid for tid %d with initial pid %d", tid, pid);
   }
 }
 
@@ -33,7 +33,7 @@ void SwitchesStatesNamesVisitor::Visit(uint64_t /*event_timestamp*/,
   pid_t tid = event_data.tid;
   bool new_insertion = tid_to_pid_association_.insert_or_assign(tid, pid).second;
   if (!new_insertion) {
-    ERROR("Overwriting previous pid for tid %d with pid %d from PERF_RECORD_FORK", tid, pid);
+    ORBIT_ERROR("Overwriting previous pid for tid %d with pid %d from PERF_RECORD_FORK", tid, pid);
   }
 }
 
@@ -82,7 +82,7 @@ void SwitchesStatesNamesVisitor::ProcessInitialState(uint64_t timestamp_ns, pid_
 
   std::optional<ThreadStateSlice::ThreadState> initial_state = GetThreadStateFromChar(state_char);
   if (!initial_state.has_value()) {
-    ERROR("Parsing thread state char '%c' for tid %d", state_char, tid);
+    ORBIT_ERROR("Parsing thread state char '%c' for tid %d", state_char, tid);
     return;
   }
   state_manager_.OnInitialState(timestamp_ns, tid, initial_state.value());
@@ -125,7 +125,7 @@ void SwitchesStatesNamesVisitor::Visit(uint64_t event_timestamp,
         prev_pid, event_data.prev_tid, event_data.cpu, event_timestamp);
     if (scheduling_slice.has_value()) {
       if (scheduling_slice->pid() == orbit_base::kInvalidProcessId) {
-        ERROR("SchedulingSlice with unknown pid");
+        ORBIT_ERROR("SchedulingSlice with unknown pid");
       }
       listener_->OnSchedulingSlice(std::move(scheduling_slice.value()));
     }
@@ -244,8 +244,8 @@ std::optional<ThreadStateSlice::ThreadState> SwitchesStatesNamesVisitor::GetThre
 // https://github.com/torvalds/linux/blob/master/fs/proc/array.c.
 ThreadStateSlice::ThreadState SwitchesStatesNamesVisitor::GetThreadStateFromBits(uint64_t bits) {
   if (__builtin_popcountl(bits & 0xFF) > 1) {
-    ERROR("The thread state mask %#lx is a combination of states, reporting only the first",
-          bits & 0xFF);
+    ORBIT_ERROR("The thread state mask %#lx is a combination of states, reporting only the first",
+                bits & 0xFF);
   }
   if ((bits & 0x01) != 0) return ThreadStateSlice::kInterruptibleSleep;
   if ((bits & 0x02) != 0) return ThreadStateSlice::kUninterruptibleSleep;

@@ -16,7 +16,7 @@ const orbit_accessibility::AccessibleInterface* AccessibleCaptureViewElement::Ac
   return parent->GetOrCreateAccessibleInterface();
 }
 orbit_accessibility::AccessibilityRect AccessibleCaptureViewElement::AccessibleRect() const {
-  CHECK(capture_view_element_ != nullptr);
+  ORBIT_CHECK(capture_view_element_ != nullptr);
   const Viewport* viewport = capture_view_element_->GetViewport();
 
   Vec2 pos = capture_view_element_->GetPos();

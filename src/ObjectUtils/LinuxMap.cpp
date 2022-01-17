@@ -71,7 +71,7 @@ ErrorMessageOr<ModuleInfo> CreateModule(const std::filesystem::path& module_path
 
   if (object_file_or_error.value()->IsElf()) {
     auto* elf_file = dynamic_cast<ElfFile*>((object_file_or_error.value().get()));
-    CHECK(elf_file != nullptr);
+    ORBIT_CHECK(elf_file != nullptr);
     module_info.set_soname(elf_file->GetSoname());
     module_info.set_object_file_type(ModuleInfo::kElfFile);
   } else if (object_file_or_error.value()->IsCoff()) {
@@ -114,7 +114,7 @@ ErrorMessageOr<std::vector<ModuleInfo>> ParseMaps(std::string_view proc_maps_dat
     ErrorMessageOr<ModuleInfo> module_info_or_error = CreateModule(module_path, start, end);
 
     if (module_info_or_error.has_error()) {
-      ERROR("Unable to create module: %s", module_info_or_error.error().message());
+      ORBIT_ERROR("Unable to create module: %s", module_info_or_error.error().message());
       continue;
     }
 

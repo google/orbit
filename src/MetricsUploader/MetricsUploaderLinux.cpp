@@ -10,7 +10,7 @@
 namespace orbit_metrics_uploader {
 
 std::unique_ptr<MetricsUploader> MetricsUploader::CreateMetricsUploader(std::string) {
-  ERROR("MetricsUploader is not implemented on Linux");
+  ORBIT_ERROR("MetricsUploader is not implemented on Linux");
   return std::make_unique<MetricsUploaderStub>();
 }
 

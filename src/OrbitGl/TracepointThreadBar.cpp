@@ -65,7 +65,7 @@ void TracepointThreadBar::DoUpdatePrimitives(Batcher& batcher, TextRenderer& tex
   const Color kWhiteTransparent(255, 255, 255, 190);
   const Color kGrey(128, 128, 128, 255);
 
-  CHECK(capture_data_ != nullptr);
+  ORBIT_CHECK(capture_data_ != nullptr);
 
   if (!picking) {
     capture_data_->ForEachTracepointEventOfThreadInTimeRange(
@@ -108,14 +108,14 @@ void TracepointThreadBar::DoUpdatePrimitives(Batcher& batcher, TextRenderer& tex
 
 std::string TracepointThreadBar::GetTracepointTooltip(Batcher& batcher, PickingId id) const {
   auto* user_data = batcher.GetUserData(id);
-  CHECK(user_data && user_data->custom_data_);
+  ORBIT_CHECK(user_data && user_data->custom_data_);
 
   const auto* tracepoint_event_info =
       static_cast<const orbit_client_protos::TracepointEventInfo*>(user_data->custom_data_);
 
   uint64_t tracepoint_info_key = tracepoint_event_info->tracepoint_info_key();
 
-  CHECK(capture_data_ != nullptr);
+  ORBIT_CHECK(capture_data_ != nullptr);
 
   orbit_grpc_protos::TracepointInfo tracepoint_info =
       capture_data_->GetTracepointInfo(tracepoint_info_key);

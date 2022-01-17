@@ -13,7 +13,7 @@ class AccessibleCaptureViewElement : public orbit_accessibility::AccessibleInter
  public:
   explicit AccessibleCaptureViewElement(const CaptureViewElement* capture_view_element)
       : capture_view_element_(capture_view_element) {
-    CHECK(capture_view_element != nullptr);
+    ORBIT_CHECK(capture_view_element != nullptr);
   }
 
   [[nodiscard]] const AccessibleInterface* AccessibleParent() const override;

@@ -12,13 +12,13 @@
 namespace orbit_capture_file {
 
 bool BufferOutputStream::Write(const void* data, int size) {
-  CHECK(data != nullptr);
-  CHECK(size >= 0);
+  ORBIT_CHECK(data != nullptr);
+  ORBIT_CHECK(size >= 0);
   absl::MutexLock lock{&mutex_};
 
   size_t old_size = buffer_.size();
   size_t new_size = old_size + size;
-  CHECK(new_size > old_size);
+  ORBIT_CHECK(new_size > old_size);
 
   buffer_.resize(new_size);
   std::memcpy(buffer_.data() + old_size, data, size);

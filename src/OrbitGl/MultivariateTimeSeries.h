@@ -61,12 +61,12 @@ class MultivariateTimeSeries {
 
   [[nodiscard]] uint64_t StartTimeInNs() const {
     absl::MutexLock lock(&mutex_);
-    CHECK(!time_to_series_values_.empty());
+    ORBIT_CHECK(!time_to_series_values_.empty());
     return time_to_series_values_.begin()->first;
   }
   [[nodiscard]] uint64_t EndTimeInNs() const {
     absl::MutexLock lock(&mutex_);
-    CHECK(!time_to_series_values_.empty());
+    ORBIT_CHECK(!time_to_series_values_.empty());
     return time_to_series_values_.rbegin()->first;
   }
 
@@ -114,7 +114,7 @@ class MultivariateTimeSeries {
  private:
   [[nodiscard]] TimeSeriesEntryIter GetPreviousOrFirstEntryIterator(uint64_t time) const
       ABSL_EXCLUSIVE_LOCKS_REQUIRED(mutex_) {
-    CHECK(!time_to_series_values_.empty());
+    ORBIT_CHECK(!time_to_series_values_.empty());
 
     auto iterator_lower = time_to_series_values_.upper_bound(time);
     if (iterator_lower != time_to_series_values_.begin()) --iterator_lower;
@@ -123,7 +123,7 @@ class MultivariateTimeSeries {
 
   [[nodiscard]] TimeSeriesEntryIter GetNextOrLastEntryIterator(uint64_t time) const
       ABSL_EXCLUSIVE_LOCKS_REQUIRED(mutex_) {
-    CHECK(!time_to_series_values_.empty());
+    ORBIT_CHECK(!time_to_series_values_.empty());
 
     auto iterator_higher = time_to_series_values_.lower_bound(time);
     if (iterator_higher == time_to_series_values_.end()) --iterator_higher;

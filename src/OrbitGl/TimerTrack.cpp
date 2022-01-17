@@ -105,8 +105,8 @@ bool TimerTrack::DrawTimer(TextRenderer& text_renderer, const TimerInfo* prev_ti
                            const TimerInfo* next_timer_info, const internal::DrawData& draw_data,
                            const TimerInfo* current_timer_info, uint64_t* min_ignore,
                            uint64_t* max_ignore) {
-  CHECK(min_ignore != nullptr);
-  CHECK(max_ignore != nullptr);
+  ORBIT_CHECK(min_ignore != nullptr);
+  ORBIT_CHECK(max_ignore != nullptr);
   if (current_timer_info == nullptr) return false;
   if (draw_data.min_tick > current_timer_info->end() ||
       draw_data.max_tick < current_timer_info->start()) {
@@ -278,7 +278,7 @@ void TimerTrack::DoUpdatePrimitives(Batcher& batcher, TextRenderer& text_rendere
   draw_data.min_timegraph_tick = timeline_info_->GetTickFromUs(timeline_info_->GetMinTimeUs());
 
   for (const TimerChain* chain : chains) {
-    CHECK(chain != nullptr);
+    ORBIT_CHECK(chain != nullptr);
     // In order to draw overlaps correctly, we need for every text box to be drawn (current),
     // its previous and next text box. In order to avoid looking ahead for the next text (which is
     // error-prone), we are doing just one traversal of the text boxes, while keeping track of the

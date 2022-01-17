@@ -28,7 +28,7 @@ class SharedStateJoin {
     output.reserve(results.size());
     std::transform(results.begin(), results.end(), std::back_inserter(output),
                    [](std::optional<T>& element) {
-                     CHECK(element.has_value());
+                     ORBIT_CHECK(element.has_value());
                      return *std::move(element);
                    });
     results.clear();
@@ -74,7 +74,7 @@ class SharedStateJoinTuple {
   template <std::size_t... Indexes>
   void SetResultsInPromiseImpl(std::index_sequence<Indexes...> /* indexes */)
       ABSL_EXCLUSIVE_LOCKS_REQUIRED(mutex) {
-    CHECK(std::get<Indexes>(results) && ...);
+    ORBIT_CHECK(std::get<Indexes>(results) && ...);
     auto finished_tuple = std::make_tuple(std::move(std::get<Indexes>(results).value())...);
     (std::get<Indexes>(results).reset(), ...);
     promise.SetResult(std::move(finished_tuple));
@@ -107,7 +107,7 @@ class SharedStateJoinTuple {
 template <typename... Args, std::size_t... Indexes>
 orbit_base::Future<std::tuple<Args...>> JoinFuturesTupleImpl(
     orbit_base::Future<Args>... futures, std::index_sequence<Indexes...> /* indexes */) {
-  CHECK(futures.IsValid() && ...);
+  ORBIT_CHECK(futures.IsValid() && ...);
 
   auto shared_state = std::make_shared<orbit_base_internal::SharedStateJoinTuple<Args...>>();
 
@@ -140,7 +140,7 @@ Future<std::vector<T>> JoinFutures(absl::Span<const Future<T>> futures) {
 
   for (auto it = futures.begin(); it != futures.end(); ++it) {
     const auto& future = *it;
-    CHECK(future.IsValid());
+    ORBIT_CHECK(future.IsValid());
 
     const size_t index = it - futures.begin();
     RegisterContinuationOrCallDirectly(future, [shared_state, index](const T& argument) {

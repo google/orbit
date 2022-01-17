@@ -42,8 +42,8 @@ static std::string GetEnvVar(const char* variable_name) {
 static void CreateDirectoryOrDie(const std::filesystem::path& directory) {
   auto create_directory_result = orbit_base::CreateDirectory(directory);
   if (create_directory_result.has_error()) {
-    FATAL("Unable to create directory \"%s\": %s", directory.string(),
-          create_directory_result.error().message());
+    ORBIT_FATAL("Unable to create directory \"%s\": %s", directory.string(),
+                create_directory_result.error().message());
   }
 }
 
@@ -106,7 +106,8 @@ static std::filesystem::path GetDocumentsPath() {
         nullptr, GetLastError(), MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
         reinterpret_cast<LPSTR>(&error_string), 0, nullptr);
     std::filesystem::path path = std::filesystem::path(GetEnvVar("USERPROFILE")) / "Documents";
-    ERROR("Retrieving path to Documents (defaulting to \"%s\"): %s", path.string(), error_string);
+    ORBIT_ERROR("Retrieving path to Documents (defaulting to \"%s\"): %s", path.string(),
+                error_string);
     LocalFree(error_string);
     return path;
   }
@@ -114,7 +115,7 @@ static std::filesystem::path GetDocumentsPath() {
   std::wstring wpath = ppszPath;
   CoTaskMemFree(ppszPath);
   std::filesystem::path path{wpath};
-  LOG("Path to Documents: %s", path.string());
+  ORBIT_LOG("Path to Documents: %s", path.string());
   return path;
 #else
   return std::filesystem::path(GetEnvVar("HOME")) / "Documents";

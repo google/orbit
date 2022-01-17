@@ -75,7 +75,7 @@ ErrorMessageOr<Process> Process::FromPid(uint32_t pid) {
   if (cpu_time && total_cpu_time) {
     process.UpdateCpuUsage(cpu_time.value(), total_cpu_time.value());
   } else {
-    LOG("Could not update the CPU usage of process %u", process.process_info().pid());
+    ORBIT_LOG("Could not update the CPU usage of process %u", process.process_info().pid());
   }
 
   // "The command-line arguments appear [...] as a set of strings
@@ -100,8 +100,8 @@ ErrorMessageOr<Process> Process::FromPid(uint32_t pid) {
       process.process_info_.set_is_64_bit(elf_file.value()->Is64Bit());
       process.process_info_.set_build_id(elf_file.value()->GetBuildId());
     } else {
-      LOG("Warning: Unable to parse the executable \"%s\" as elf file. (pid: %u): %s",
-          file_path_result.value(), pid, elf_file.error().message());
+      ORBIT_LOG("Warning: Unable to parse the executable \"%s\" as elf file. (pid: %u): %s",
+                file_path_result.value(), pid, elf_file.error().message());
     }
   }
 

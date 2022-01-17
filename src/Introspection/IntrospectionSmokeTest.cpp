@@ -33,28 +33,36 @@ inline int32_t RetrieveThreadId(const orbit_api::ApiScopeStop& scope_stop) {
   return scope_stop.meta_data.tid;
 }
 inline int32_t RetrieveThreadId(const orbit_api::ApiScopeStartAsync& /*scope_start_async*/) {
-  UNREACHABLE();
+  ORBIT_UNREACHABLE();
 }
 inline int32_t RetrieveThreadId(const orbit_api::ApiScopeStopAsync& /*scope_stop_async*/) {
-  UNREACHABLE();
+  ORBIT_UNREACHABLE();
 }
 inline int32_t RetrieveThreadId(const orbit_api::ApiStringEvent& /*string_event*/) {
-  UNREACHABLE();
+  ORBIT_UNREACHABLE();
 }
 inline int32_t RetrieveThreadId(const orbit_api::ApiTrackDouble& /*track_double*/) {
-  UNREACHABLE();
+  ORBIT_UNREACHABLE();
 }
-inline int32_t RetrieveThreadId(const orbit_api::ApiTrackFloat& /*track_float*/) { UNREACHABLE(); }
-inline int32_t RetrieveThreadId(const orbit_api::ApiTrackInt& /*track_int*/) { UNREACHABLE(); }
-inline int32_t RetrieveThreadId(const orbit_api::ApiTrackInt64& /*track_int64*/) { UNREACHABLE(); }
-inline int32_t RetrieveThreadId(const orbit_api::ApiTrackUint& /*track_uint*/) { UNREACHABLE(); }
+inline int32_t RetrieveThreadId(const orbit_api::ApiTrackFloat& /*track_float*/) {
+  ORBIT_UNREACHABLE();
+}
+inline int32_t RetrieveThreadId(const orbit_api::ApiTrackInt& /*track_int*/) {
+  ORBIT_UNREACHABLE();
+}
+inline int32_t RetrieveThreadId(const orbit_api::ApiTrackInt64& /*track_int64*/) {
+  ORBIT_UNREACHABLE();
+}
+inline int32_t RetrieveThreadId(const orbit_api::ApiTrackUint& /*track_uint*/) {
+  ORBIT_UNREACHABLE();
+}
 inline int32_t RetrieveThreadId(const orbit_api::ApiTrackUint64& /*track_uint64*/) {
-  UNREACHABLE();
+  ORBIT_UNREACHABLE();
 }
 
 // The variant type `ApiEventVariant` requires to contain `std::monostate` in order to be default-
 // constructable. However, that state is never expected to be called in the visitor.
-inline int32_t RetrieveThreadId(const std::monostate& /*unused*/) { UNREACHABLE(); }
+inline int32_t RetrieveThreadId(const std::monostate& /*unused*/) { ORBIT_UNREACHABLE(); }
 }  // namespace
 
 TEST(Tracing, Scopes) {

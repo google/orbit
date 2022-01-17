@@ -26,9 +26,9 @@ int InstanceItemModel::columnCount(const QModelIndex& parent) const {
 }
 
 QVariant InstanceItemModel::data(const QModelIndex& index, int role) const {
-  CHECK(index.isValid());
-  CHECK(index.model() == this);
-  CHECK(index.row() < instances_.size());  // instances_.size());
+  ORBIT_CHECK(index.isValid());
+  ORBIT_CHECK(index.model() == this);
+  ORBIT_CHECK(index.row() < instances_.size());  // instances_.size());
 
   const Instance& current_instance = instances_[index.row()];
 
@@ -52,11 +52,11 @@ QVariant InstanceItemModel::data(const QModelIndex& index, int role) const {
     case Columns::kState:
       return current_instance.state;
     case Columns::kEnd:
-      CHECK(false);
+      ORBIT_CHECK(false);
       return {};
   }
 
-  CHECK(false);  // That means, someone (me?) forgot a column.
+  ORBIT_CHECK(false);  // That means, someone (me?) forgot a column.
   return {};
 }
 
@@ -91,11 +91,11 @@ QVariant InstanceItemModel::headerData(int section, Qt::Orientation orientation,
     case Columns::kState:
       return QLatin1String("State");
     case Columns::kEnd:
-      UNREACHABLE();
+      ORBIT_UNREACHABLE();
       return {};
   }
 
-  CHECK(false);
+  ORBIT_CHECK(false);
   return {};
 }
 
@@ -140,12 +140,12 @@ void InstanceItemModel::SetInstances(QVector<Instance> new_instances) {
   if (old_iter == old_instances.end() && new_iter != new_instances.end()) {
     beginInsertRows({}, old_instances.size(), new_instances.size() - 1);
     std::copy(new_iter, new_instances.end(), std::back_inserter(old_instances));
-    CHECK(old_instances.size() == new_instances.size());
+    ORBIT_CHECK(old_instances.size() == new_instances.size());
     endInsertRows();
   } else if (old_iter != old_instances.end() && new_iter == new_instances.end()) {
     beginRemoveRows({}, new_instances.size(), old_instances.size() - 1);
     old_instances.erase(old_iter, old_instances.end());
-    CHECK(old_instances.size() == new_instances.size());
+    ORBIT_CHECK(old_instances.size() == new_instances.size());
     endRemoveRows();
   }
 }

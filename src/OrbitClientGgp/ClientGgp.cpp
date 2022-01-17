@@ -71,7 +71,7 @@ using UnwindingMethod = orbit_grpc_protos::CaptureOptions::UnwindingMethod;
 
 bool ClientGgp::InitClient() {
   if (options_.grpc_server_address.empty()) {
-    ERROR("gRPC server address not provided");
+    ORBIT_ERROR("gRPC server address not provided");
     return false;
   }
 
@@ -82,10 +82,10 @@ bool ClientGgp::InitClient() {
   grpc_channel_ = grpc::CreateCustomChannel(options_.grpc_server_address,
                                             grpc::InsecureChannelCredentials(), channel_arguments);
   if (!grpc_channel_) {
-    ERROR("Unable to create GRPC channel to %s", options_.grpc_server_address);
+    ORBIT_ERROR("Unable to create GRPC channel to %s", options_.grpc_server_address);
     return false;
   }
-  LOG("Created GRPC channel to %s", options_.grpc_server_address);
+  ORBIT_LOG("Created GRPC channel to %s", options_.grpc_server_address);
 
   process_client_ = std::make_unique<orbit_client_services::ProcessClient>(grpc_channel_);
 
@@ -107,7 +107,7 @@ ErrorMessageOr<void> ClientGgp::RequestStartCapture(orbit_base::ThreadPool* thre
         "No process selected. Please choose a target process for the capture."};
   }
 
-  LOG("Capture pid %d", pid);
+  ORBIT_LOG("Capture pid %d", pid);
   TracepointInfoSet selected_tracepoints;
   const UnwindingMethod unwinding_method =
       options_.use_framepointer_unwinding ? CaptureOptions::kFramePointers : CaptureOptions::kDwarf;
@@ -122,11 +122,11 @@ ErrorMessageOr<void> ClientGgp::RequestStartCapture(orbit_base::ThreadPool* thre
 
   std::filesystem::path file_path = GenerateFilePath();
 
-  LOG("Saving capture to \"%s\"", file_path.string());
+  ORBIT_LOG("Saving capture to \"%s\"", file_path.string());
 
   OUTCOME_TRY(auto&& event_processor, CaptureEventProcessor::CreateSaveToFileProcessor(
                                           GenerateFilePath(), [](const ErrorMessage& error) {
-                                            ERROR("%s", error.message());
+                                            ORBIT_ERROR("%s", error.message());
                                           }));
 
   Future<ErrorMessageOr<CaptureListener::CaptureOutcome>> result = capture_client_->Capture(
@@ -142,18 +142,18 @@ ErrorMessageOr<void> ClientGgp::RequestStartCapture(orbit_base::ThreadPool* thre
 
   result.Then(&executor, [](ErrorMessageOr<CaptureListener::CaptureOutcome> result) {
     if (!result.has_value()) {
-      ERROR("Capture failed: %s", result.error().message());
+      ORBIT_ERROR("Capture failed: %s", result.error().message());
     }
 
     // We do not send try aborting capture - it cannot be cancelled.
-    CHECK(result.value() == CaptureListener::CaptureOutcome::kComplete);
+    ORBIT_CHECK(result.value() == CaptureListener::CaptureOutcome::kComplete);
   });
 
   return outcome::success();
 }
 
 bool ClientGgp::StopCapture() {
-  LOG("Request to stop capture");
+  ORBIT_LOG("Request to stop capture");
   return capture_client_->StopCapture();
 }
 
@@ -174,20 +174,20 @@ std::filesystem::path ClientGgp::GenerateFilePath() {
 ErrorMessageOr<std::unique_ptr<ProcessData>> ClientGgp::GetOrbitProcessByPid(uint32_t pid) {
   // We retrieve the information of the process to later get the module corresponding to its binary
   OUTCOME_TRY(auto&& process_infos, process_client_->GetProcessList());
-  LOG("List of processes:");
+  ORBIT_LOG("List of processes:");
   for (const ProcessInfo& info : process_infos) {
-    LOG("pid:%d, name:%s, path:%s, is64:%d", info.pid(), info.name(), info.full_path(),
-        info.is_64_bit());
+    ORBIT_LOG("pid:%d, name:%s, path:%s, is64:%d", info.pid(), info.name(), info.full_path(),
+              info.is_64_bit());
   }
   auto process_it = find_if(process_infos.begin(), process_infos.end(),
                             [&pid](const ProcessInfo& info) { return info.pid() == pid; });
   if (process_it == process_infos.end()) {
     return ErrorMessage(absl::StrFormat("Error: Process with pid %d not found", pid));
   }
-  LOG("Found process by pid, set target process");
+  ORBIT_LOG("Found process by pid, set target process");
   auto process = std::make_unique<ProcessData>(*process_it);
-  LOG("Process info: pid:%d, name:%s, path:%s, is64:%d", process->pid(), process->name(),
-      process->full_path(), process->is_64_bit());
+  ORBIT_LOG("Process info: pid:%d, name:%s, path:%s, is64:%d", process->pid(), process->name(),
+            process->full_path(), process->is_64_bit());
   return process;
 }
 
@@ -195,19 +195,19 @@ ErrorMessageOr<void> ClientGgp::LoadModuleAndSymbols() {
   // Load modules for target_process_
   OUTCOME_TRY(auto&& module_infos, process_client_->LoadModuleList(target_process_->pid()));
 
-  LOG("List of modules");
+  ORBIT_LOG("List of modules");
   std::string target_process_build_id;
   for (const ModuleInfo& info : module_infos) {
     // TODO(dimitry): eventually we want to get build_id directly from ProcessData
     if (info.file_path() == target_process_->full_path()) {
       target_process_build_id = info.build_id();
     }
-    LOG("name:%s, path:%s, size:%d, address_start:%d. address_end:%d, build_id:%s", info.name(),
-        info.file_path(), info.file_size(), info.address_start(), info.address_end(),
-        info.build_id());
+    ORBIT_LOG("name:%s, path:%s, size:%d, address_start:%d. address_end:%d, build_id:%s",
+              info.name(), info.file_path(), info.file_size(), info.address_start(),
+              info.address_end(), info.build_id());
   }
 
-  CHECK(module_manager_.AddOrUpdateModules(module_infos).empty());
+  ORBIT_CHECK(module_manager_.AddOrUpdateModules(module_infos).empty());
 
   // Process name can be arbitrary so we use the path to find the module corresponding to the binary
   // of target_process_
@@ -216,19 +216,19 @@ ErrorMessageOr<void> ClientGgp::LoadModuleAndSymbols() {
   if (main_module_ == nullptr) {
     return ErrorMessage("Error: Module corresponding to process binary not found");
   }
-  LOG("Found module correspondent to process binary");
-  LOG("Module info: name:%s, path:%s, size:%d, build_id:%s", main_module_->name(),
-      main_module_->file_path(), main_module_->file_size(), main_module_->build_id());
+  ORBIT_LOG("Found module correspondent to process binary");
+  ORBIT_LOG("Module info: name:%s, path:%s, size:%d, build_id:%s", main_module_->name(),
+            main_module_->file_path(), main_module_->file_size(), main_module_->build_id());
 
   target_process_->UpdateModuleInfos(module_infos);
 
   // Load symbols for the module
   const std::string& module_path = main_module_->file_path();
-  LOG("Looking for debug info file for %s", module_path);
+  ORBIT_LOG("Looking for debug info file for %s", module_path);
   OUTCOME_TRY(auto&& main_executable_debug_file,
               process_client_->FindDebugInfoFile(module_path, {}));
-  LOG("Found file: %s", main_executable_debug_file);
-  LOG("Loading symbols");
+  ORBIT_LOG("Found file: %s", main_executable_debug_file);
+  ORBIT_LOG("Loading symbols");
   orbit_object_utils::ObjectFileInfo object_file_info{main_module_->load_bias(),
                                                       main_module_->executable_segment_offset()};
   OUTCOME_TRY(auto&& symbols, orbit_symbols::SymbolHelper::LoadSymbolsFromFile(
@@ -241,14 +241,15 @@ bool ClientGgp::InitCapture() {
   ErrorMessageOr<std::unique_ptr<ProcessData>> target_process_result =
       GetOrbitProcessByPid(options_.capture_pid);
   if (target_process_result.has_error()) {
-    ERROR("Not able to set target process: %s", target_process_result.error().message());
+    ORBIT_ERROR("Not able to set target process: %s", target_process_result.error().message());
     return false;
   }
   target_process_ = std::move(target_process_result.value());
   // Load the module and symbols
   ErrorMessageOr<void> result = LoadModuleAndSymbols();
   if (result.has_error()) {
-    ERROR("Not possible to finish loading the module and symbols: %s", result.error().message());
+    ORBIT_ERROR("Not possible to finish loading the module and symbols: %s",
+                result.error().message());
     return false;
   }
   // Load selected functions
@@ -259,16 +260,16 @@ bool ClientGgp::InitCapture() {
 void ClientGgp::LoadSelectedFunctions() {
   // Load selected functions if provided
   if (!options_.capture_functions.empty()) {
-    LOG("Loading selected functions");
+    ORBIT_LOG("Loading selected functions");
     selected_functions_ = GetSelectedFunctions();
     if (!selected_functions_.empty()) {
-      LOG("List of selected functions to hook in the capture:");
+      ORBIT_LOG("List of selected functions to hook in the capture:");
       for (auto const& [address, selected_function] : selected_functions_) {
-        LOG("%d %s", address, selected_function.pretty_name());
+        ORBIT_LOG("%d %s", address, selected_function.pretty_name());
       }
     }
   } else {
-    LOG("No functions provided; no functions hooked in the capture");
+    ORBIT_LOG("No functions provided; no functions hooked in the capture");
   }
 }
 
@@ -277,12 +278,12 @@ void ClientGgp::InformUsedSelectedCaptureFunctions(
   if (capture_functions_used.size() != options_.capture_functions.size()) {
     for (const std::string& selected_function : options_.capture_functions) {
       if (!capture_functions_used.contains(selected_function)) {
-        ERROR("Function matching %s not found; will not be hooked in the capture",
-              selected_function);
+        ORBIT_ERROR("Function matching %s not found; will not be hooked in the capture",
+                    selected_function);
       }
     }
   } else {
-    LOG("All functions provided had at least a match");
+    ORBIT_LOG("All functions provided had at least a match");
   }
 }
 

@@ -17,7 +17,7 @@ namespace orbit_user_space_instrumentation {
 
 TEST(FindFunctionAddressTest, FindFunctionAddress) {
   pid_t pid = fork();
-  CHECK(pid != -1);
+  ORBIT_CHECK(pid != -1);
   if (pid == 0) {
     prctl(PR_SET_PDEATHSIG, SIGTERM);
 
@@ -29,7 +29,7 @@ TEST(FindFunctionAddressTest, FindFunctionAddress) {
   }
 
   // Stop the child process using our tooling.
-  CHECK(AttachAndStopProcess(pid).has_value());
+  ORBIT_CHECK(AttachAndStopProcess(pid).has_value());
 
   auto function_address_or_error = FindFunctionAddress(pid, "libc.so.6", "printf");
   ASSERT_TRUE(function_address_or_error.has_value()) << function_address_or_error.error().message();
@@ -50,7 +50,7 @@ TEST(FindFunctionAddressTest, FindFunctionAddress) {
       absl::StrContains(function_address_or_error.error().message(), "Unable to open file"));
 
   // Detach and end child.
-  CHECK(!DetachAndContinueProcess(pid).has_error());
+  ORBIT_CHECK(!DetachAndContinueProcess(pid).has_error());
   kill(pid, SIGKILL);
   waitpid(pid, nullptr, 0);
 }

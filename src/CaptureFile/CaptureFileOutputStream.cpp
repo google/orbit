@@ -66,7 +66,7 @@ ErrorMessageOr<void> CaptureFileOutputStreamImpl::Initialize() {
   // Prepare the protobuf stream to use to write to capture section.
   switch (output_type_) {
     case OutputType::kBuffer: {
-      CHECK(output_buffer_ != nullptr);
+      ORBIT_CHECK(output_buffer_ != nullptr);
 
       zero_copy_output_stream_ =
           std::make_unique<google::protobuf::io::CopyingOutputStreamAdaptor>(output_buffer_);
@@ -76,7 +76,7 @@ ErrorMessageOr<void> CaptureFileOutputStreamImpl::Initialize() {
       auto fd_or_error = orbit_base::OpenNewFileForWriting(path_);
       if (fd_or_error.has_error()) return fd_or_error.error();
       fd_ = std::move(fd_or_error.value());
-      CHECK(fd_.valid());
+      ORBIT_CHECK(fd_.valid());
 
       zero_copy_output_stream_ =
           std::make_unique<google::protobuf::io::FileOutputStream>(fd_.get());
@@ -121,21 +121,21 @@ bool CaptureFileOutputStreamImpl::IsOpen() {
       return fd_.valid();
   }
 
-  UNREACHABLE();
+  ORBIT_UNREACHABLE();
 }
 
 void CaptureFileOutputStreamImpl::CloseAndTryRemoveFileAfterError() {
   Reset();
 
   if (output_type_ == OutputType::kFile && remove(path_.string().c_str()) == -1) {
-    ERROR("Unable to remove \"%s\": %s", path_.string(), SafeStrerror(errno));
+    ORBIT_ERROR("Unable to remove \"%s\": %s", path_.string(), SafeStrerror(errno));
   }
 }
 
 std::string_view CaptureFileOutputStreamImpl::GetErrorFromOutputStream() const {
   // There should not be any write error in the case of `OutputType::kBuffer` as we do not limit the
   // buffer size of BufferOutputStream.
-  CHECK(output_type_ == OutputType::kFile);
+  ORBIT_CHECK(output_type_ == OutputType::kFile);
   auto file_output_stream =
       static_cast<google::protobuf::io::FileOutputStream*>(zero_copy_output_stream_.get());
   return SafeStrerror(file_output_stream->GetErrno());
@@ -152,8 +152,8 @@ ErrorMessage CaptureFileOutputStreamImpl::HandleWriteError(const char* section_n
 
 ErrorMessageOr<void> CaptureFileOutputStreamImpl::WriteCaptureEvent(
     const orbit_grpc_protos::ClientCaptureEvent& event) {
-  CHECK(coded_output_.has_value());
-  CHECK(zero_copy_output_stream_ != nullptr);
+  ORBIT_CHECK(coded_output_.has_value());
+  ORBIT_CHECK(zero_copy_output_stream_ != nullptr);
 
   uint32_t event_size = event.ByteSizeLong();
   coded_output_->WriteVarint32(event_size);
@@ -165,7 +165,7 @@ ErrorMessageOr<void> CaptureFileOutputStreamImpl::WriteCaptureEvent(
 }
 
 ErrorMessageOr<void> CaptureFileOutputStreamImpl::WriteHeader() {
-  CHECK(coded_output_.has_value());
+  ORBIT_CHECK(coded_output_.has_value());
 
   std::string header{kFileSignature};
   header.append(std::string_view(absl::bit_cast<char*>(&kFileVersion), sizeof(kFileVersion)));
@@ -181,7 +181,7 @@ ErrorMessageOr<void> CaptureFileOutputStreamImpl::WriteHeader() {
   header.append(std::string_view(absl::bit_cast<char*>(&additional_section_list_offset),
                                  sizeof(additional_section_list_offset)));
 
-  CHECK(capture_section_offset == header.size());
+  ORBIT_CHECK(capture_section_offset == header.size());
 
   coded_output_->WriteString(header);
   if (coded_output_->HadError()) {
@@ -208,7 +208,7 @@ std::unique_ptr<CaptureFileOutputStream> CaptureFileOutputStream::Create(
     BufferOutputStream* output_buffer) {
   auto implementation = std::make_unique<CaptureFileOutputStreamImpl>(output_buffer);
   auto init_result = implementation->Initialize();
-  CHECK(!init_result.has_error());
+  ORBIT_CHECK(!init_result.has_error());
 
   return implementation;
 }

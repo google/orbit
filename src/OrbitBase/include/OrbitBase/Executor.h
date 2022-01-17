@@ -56,7 +56,7 @@ class Executor : public std::enable_shared_from_this<Executor> {
   // Note: The continuation is only executed if `*this` is still alive when `future` completes.
   template <typename T, typename F>
   auto ScheduleAfter(const orbit_base::Future<T>& future, F&& functor) {
-    CHECK(future.IsValid());
+    ORBIT_CHECK(future.IsValid());
 
     using ReturnType = typename orbit_base::ContinuationReturnType<T, F>::Type;
 
@@ -80,7 +80,7 @@ class Executor : public std::enable_shared_from_this<Executor> {
             // iterator under the hood and this lambda will only be executed if the executor is
             // still alive.
             auto functor = orbit_base::any_movable_cast<std::decay_t<F>>(&*function_reference);
-            CHECK(functor != nullptr);
+            ORBIT_CHECK(functor != nullptr);
             std::apply([&](auto... args) { helper.Call(*functor, args...); }, std::move(argument));
             waiting_continuations_.erase(function_reference);
           };
@@ -107,7 +107,7 @@ class Executor : public std::enable_shared_from_this<Executor> {
   // Note: The continuation is only executed if `*this` is still alive when `future` completes.
   template <typename T, typename F>
   auto ScheduleAfterIfSuccess(const orbit_base::Future<ErrorMessageOr<T>>& future, F&& functor) {
-    CHECK(future.IsValid());
+    ORBIT_CHECK(future.IsValid());
 
     using ContinuationReturnType = typename orbit_base::ContinuationReturnType<T, F>::Type;
     using PromiseReturnType =
@@ -139,7 +139,7 @@ class Executor : public std::enable_shared_from_this<Executor> {
       auto success_function_wrapper = [this, function_reference, promise = std::move(promise),
                                        argument]() mutable {
         auto functor = orbit_base::any_movable_cast<std::decay_t<F>>(&*function_reference);
-        CHECK(functor != nullptr);
+        ORBIT_CHECK(functor != nullptr);
 
         orbit_base::HandleErrorAndSetResultInPromise<PromiseReturnType> helper{&promise};
         helper.Call(*functor, argument);

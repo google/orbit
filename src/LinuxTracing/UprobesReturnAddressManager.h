@@ -47,7 +47,7 @@ class UprobesReturnAddressManager {
     }
 
     std::vector<OpenFunction>& stack_of_open_functions = tid_to_stack_of_open_functions_.at(tid);
-    CHECK(!stack_of_open_functions.empty());
+    ORBIT_CHECK(!stack_of_open_functions.empty());
     stack_of_open_functions.pop_back();
     if (stack_of_open_functions.empty()) {
       tid_to_stack_of_open_functions_.erase(tid);
@@ -61,7 +61,7 @@ class UprobesReturnAddressManager {
     }
 
     std::vector<OpenFunction>& stack_of_open_functions = tid_to_stack_of_open_functions_.at(tid);
-    CHECK(!stack_of_open_functions.empty());
+    ORBIT_CHECK(!stack_of_open_functions.empty());
 
     // Apply saved return addresses in reverse order, from the last called function. In case two
     // return addresses are hijacked at the same stack pointer (e.g., in case of tail-call
@@ -91,9 +91,9 @@ class UprobesReturnAddressManager {
   // addresses saved by uprobes or user space instrumentation on function entry.
   virtual bool PatchCallchain(pid_t tid, uint64_t* callchain, uint64_t callchain_size,
                               LibunwindstackMaps* maps) {
-    CHECK(callchain_size > 0);
-    CHECK(callchain != nullptr);
-    CHECK(maps != nullptr);
+    ORBIT_CHECK(callchain_size > 0);
+    ORBIT_CHECK(callchain != nullptr);
+    ORBIT_CHECK(maps != nullptr);
 
     std::vector<uint64_t> frames_to_patch;
     for (uint64_t i = 0; i < callchain_size; i++) {
@@ -119,7 +119,7 @@ class UprobesReturnAddressManager {
       //     some uprobes);
       //  2. When some events are lost or processed out of order.
       if (!frames_to_patch.empty()) {
-        ERROR(
+        ORBIT_ERROR(
             "Discarding sample in a dynamically instrumented function as all information is "
             "missing (tid=%d)",
             tid);
@@ -129,7 +129,7 @@ class UprobesReturnAddressManager {
     }
 
     std::vector<OpenFunction>& stack_of_open_functions = tid_to_stack_of_open_functions_.at(tid);
-    CHECK(!stack_of_open_functions.empty());
+    ORBIT_CHECK(!stack_of_open_functions.empty());
 
     size_t num_unique_open_functions = 0;
     uint64_t prev_open_function_stack_pointer = -1;
@@ -149,7 +149,7 @@ class UprobesReturnAddressManager {
     // This is the same situation as above, but we have at least some open dynamically instrumented
     // functions.
     if (num_unique_open_functions < frames_to_patch.size()) {
-      ERROR(
+      ORBIT_ERROR(
           "Discarding sample in a dynamically instrumented function as some information is "
           "missing (tid=%d)",
           tid);
@@ -158,7 +158,7 @@ class UprobesReturnAddressManager {
     // In cases of lost events, or out of order processing, there might be wrong open dynamically
     // instrumented functions. So we need to discard the event.
     if (num_unique_open_functions > frames_to_patch.size() + 1) {
-      ERROR(
+      ORBIT_ERROR(
           "Discarding sample in a dynamically instrumented function as some information is "
           "incorrect (tid=%d)",
           tid);
@@ -205,7 +205,7 @@ class UprobesReturnAddressManager {
       callchain[frame_to_patch] = open_function.return_address;
       frames_to_patch_it++;
     }
-    CHECK(frames_to_patch_it == frames_to_patch.rend());
+    ORBIT_CHECK(frames_to_patch_it == frames_to_patch.rend());
     return true;
   }
 

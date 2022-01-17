@@ -21,16 +21,16 @@ using orbit_grpc_protos::ThreadName;
 using orbit_grpc_protos::kWindowsTracingProducerId;
 
 void TracingHandler::Start(CaptureOptions capture_options) {
-  CHECK(tracer_ == nullptr);
+  ORBIT_CHECK(tracer_ == nullptr);
   tracer_ = orbit_windows_tracing::Tracer::Create(std::move(capture_options), this);
   tracer_->Start();
 }
 
 void TracingHandler::Stop() {
-  CHECK(tracer_ != nullptr);
+  ORBIT_CHECK(tracer_ != nullptr);
   tracer_->Stop();
   tracer_.reset();
-  LOG("Windows TracingHandler stopped: ETW tracing is done");
+  ORBIT_LOG("Windows TracingHandler stopped: ETW tracing is done");
 }
 
 void TracingHandler::OnSchedulingSlice(SchedulingSlice scheduling_slice) {

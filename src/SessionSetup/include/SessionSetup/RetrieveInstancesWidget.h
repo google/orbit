@@ -36,7 +36,7 @@ class RetrieveInstancesWidget : public QWidget {
   }
   void SetMetricsUploader(orbit_metrics_uploader::MetricsUploader* metrics_uploader) {
     metrics_uploader_ = metrics_uploader;
-    CHECK(retrieve_instances_ != nullptr);
+    ORBIT_CHECK(retrieve_instances_ != nullptr);
     retrieve_instances_->SetMetricsUploader(metrics_uploader);
   }
 

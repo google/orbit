@@ -109,8 +109,8 @@ LibunwindstackResult LibunwindstackUnwinderImpl::Unwind(
 
 #ifndef NDEBUG
   if (unwinder.LastErrorCode() != 0) {
-    ERROR("%s at %#016lx", LibunwindstackErrorString(unwinder.LastErrorCode()),
-          unwinder.LastErrorAddress());
+    ORBIT_ERROR("%s at %#016lx", LibunwindstackErrorString(unwinder.LastErrorCode()),
+                unwinder.LastErrorAddress());
   }
 #endif
 

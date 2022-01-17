@@ -197,7 +197,7 @@ void CaptureWindow::HandlePickedElement(PickingMode picking_mode, PickingId pick
 }
 
 void CaptureWindow::SelectTimer(const TimerInfo* timer_info) {
-  CHECK(time_graph_ != nullptr);
+  ORBIT_CHECK(time_graph_ != nullptr);
   if (timer_info == nullptr) return;
 
   app_->SelectTimer(timer_info);
@@ -244,7 +244,7 @@ bool CaptureWindow::RightUp() {
   if (app_->IsDevMode()) {
     auto result = selection_stats_.Generate(this, select_start_time_, select_stop_time_);
     if (result.has_error()) {
-      ERROR("%s", result.error().message());
+      ORBIT_ERROR("%s", result.error().message());
     }
   }
 
@@ -533,7 +533,7 @@ void CaptureWindow::RenderAllLayers() {
   auto it = std::unique(all_layers.begin(), all_layers.end());
   all_layers.resize(std::distance(all_layers.begin(), it));
   if (all_layers.size() > GlCanvas::kMaxNumberRealZLayers) {
-    ERROR("Too many z-layers. The current number is %d", all_layers.size());
+    ORBIT_ERROR("Too many z-layers. The current number is %d", all_layers.size());
   }
 
   for (float layer : all_layers) {
@@ -648,12 +648,12 @@ void CaptureWindow::CreateTimeGraph(CaptureData* capture_data) {
 Batcher& CaptureWindow::GetBatcherById(BatcherId batcher_id) {
   switch (batcher_id) {
     case BatcherId::kTimeGraph:
-      CHECK(time_graph_ != nullptr);
+      ORBIT_CHECK(time_graph_ != nullptr);
       return time_graph_->GetBatcher();
     case BatcherId::kUi:
       return ui_batcher_;
     default:
-      UNREACHABLE();
+      ORBIT_UNREACHABLE();
   }
 }
 

@@ -43,7 +43,7 @@ class ImmediateExecutor {
 
   template <typename T, typename F>
   auto ScheduleAfter(const Future<T>& future, F&& invocable) {
-    CHECK(future.IsValid());
+    ORBIT_CHECK(future.IsValid());
 
     using ReturnType = typename ContinuationReturnType<T, F>::Type;
     orbit_base::Promise<ReturnType> promise{};
@@ -61,7 +61,7 @@ class ImmediateExecutor {
 
   template <typename T, typename F>
   auto ScheduleAfterIfSuccess(const Future<ErrorMessageOr<T>>& future, F&& invocable) {
-    CHECK(future.IsValid());
+    ORBIT_CHECK(future.IsValid());
 
     using ResultType = typename ContinuationReturnType<T, F>::Type;
     using ReturnType = typename EnsureWrappedInErrorMessageOr<ResultType>::Type;

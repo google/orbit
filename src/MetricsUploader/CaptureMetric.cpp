@@ -16,7 +16,7 @@ namespace orbit_metrics_uploader {
 
 CaptureMetric::CaptureMetric(MetricsUploader* uploader, const CaptureStartData& start_data)
     : uploader_(uploader), start_(std::chrono::steady_clock::now()) {
-  CHECK(uploader_ != nullptr);
+  ORBIT_CHECK(uploader_ != nullptr);
   capture_data_.set_number_of_instrumented_functions(start_data.number_of_instrumented_functions);
   capture_data_.set_number_of_frame_tracks(start_data.number_of_frame_tracks);
   capture_data_.set_thread_states(start_data.thread_states);
@@ -72,12 +72,12 @@ bool CaptureMetric::SendCaptureSucceeded(std::chrono::milliseconds duration_in_m
   status_code_ = OrbitLogEvent::SUCCESS;
 
   if (file_path_.empty()) {
-    ERROR("Unable to determine capture file size for metrics. File path is empty");
+    ORBIT_ERROR("Unable to determine capture file size for metrics. File path is empty");
   } else {
     ErrorMessageOr<uint64_t> file_size = orbit_base::FileSize(file_path_);
     if (file_size.has_error()) {
-      ERROR("Unable to determine capture file size for metrics. File: \"%s\"; error: %s",
-            file_path_.string(), file_size.error().message());
+      ORBIT_ERROR("Unable to determine capture file size for metrics. File: \"%s\"; error: %s",
+                  file_path_.string(), file_size.error().message());
     } else {
       capture_data_.set_file_size(file_size.value());
     }

@@ -63,10 +63,10 @@ PerfEventRingBuffer::PerfEventRingBuffer(int perf_event_fd, uint64_t size_kb, st
 
   // The first page, just before the ring buffer, is the metadata page.
   metadata_page_ = static_cast<perf_event_mmap_page*>(mmap_address);
-  CHECK(metadata_page_->data_size == ring_buffer_size_);
+  ORBIT_CHECK(metadata_page_->data_size == ring_buffer_size_);
 
   ring_buffer_ = static_cast<char*>(mmap_address) + metadata_page_->data_offset;
-  CHECK(metadata_page_->data_offset == GetPageSize());
+  ORBIT_CHECK(metadata_page_->data_offset == GetPageSize());
 }
 
 PerfEventRingBuffer::PerfEventRingBuffer(PerfEventRingBuffer&& o) {
@@ -96,23 +96,23 @@ PerfEventRingBuffer::~PerfEventRingBuffer() {
   if (metadata_page_ != nullptr) {
     int munmap_ret = munmap(metadata_page_, mmap_length_);
     if (munmap_ret != 0) {
-      ERROR("munmap: %s", SafeStrerror(errno));
+      ORBIT_ERROR("munmap: %s", SafeStrerror(errno));
     }
   }
 }
 
 bool PerfEventRingBuffer::HasNewData() {
-  DCHECK(IsOpen());
+  ORBIT_DCHECK(IsOpen());
   uint64_t head = ReadRingBufferHead(metadata_page_);
-  DCHECK((metadata_page_->data_tail == head) ||
-         (head >= metadata_page_->data_tail + sizeof(perf_event_header)));
+  ORBIT_DCHECK((metadata_page_->data_tail == head) ||
+               (head >= metadata_page_->data_tail + sizeof(perf_event_header)));
   return head > metadata_page_->data_tail;
 }
 
 void PerfEventRingBuffer::ReadHeader(perf_event_header* header) {
   ReadAtTail(header, sizeof(perf_event_header));
-  DCHECK(header->type != 0);
-  DCHECK(metadata_page_->data_tail + header->size <= ReadRingBufferHead(metadata_page_));
+  ORBIT_DCHECK(header->type != 0);
+  ORBIT_DCHECK(metadata_page_->data_tail + header->size <= ReadRingBufferHead(metadata_page_));
 }
 
 void PerfEventRingBuffer::SkipRecord(const perf_event_header& header) {
@@ -128,18 +128,18 @@ void PerfEventRingBuffer::ConsumeRawRecord(const perf_event_header& header, void
 
 void PerfEventRingBuffer::ReadAtOffsetFromTail(void* dest, uint64_t offset_from_tail,
                                                uint64_t count) {
-  DCHECK(IsOpen());
+  ORBIT_DCHECK(IsOpen());
 
   uint64_t head = ReadRingBufferHead(metadata_page_);
   if (offset_from_tail + count > head - metadata_page_->data_tail) {
-    ERROR("Reading more data than it is available from ring buffer '%s'", name_.c_str());
+    ORBIT_ERROR("Reading more data than it is available from ring buffer '%s'", name_.c_str());
   } else if (offset_from_tail + count > ring_buffer_size_) {
-    ERROR("Reading more than the size of ring buffer '%s'", name_.c_str());
+    ORBIT_ERROR("Reading more than the size of ring buffer '%s'", name_.c_str());
   } else if (head > metadata_page_->data_tail + ring_buffer_size_) {
     // If mmap has been called with PROT_WRITE and
     // perf_event_mmap_page::data_tail is used properly, this should not happen,
     // as the kernel would not overwrite unread data.
-    ERROR("Too slow reading from ring buffer '%s'", name_.c_str());
+    ORBIT_ERROR("Too slow reading from ring buffer '%s'", name_.c_str());
   }
 
   const uint64_t index = metadata_page_->data_tail + offset_from_tail;
@@ -163,7 +163,7 @@ void PerfEventRingBuffer::ReadAtOffsetFromTail(void* dest, uint64_t offset_from_
     memcpy(static_cast<uint8_t*>(dest) + (ring_buffer_size_ - index_mod_size), ring_buffer_,
            count - (ring_buffer_size_ - index_mod_size));
   } else {
-    FATAL("Control shouldn't reach here");
+    ORBIT_FATAL("Control shouldn't reach here");
   }
 }
 

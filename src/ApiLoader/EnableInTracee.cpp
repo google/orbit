@@ -50,12 +50,14 @@ ErrorMessageOr<absl::flat_hash_map<std::string, ModuleInfo>> GetModulesByPathFor
     const absl::flat_hash_map<std::string, ModuleInfo>& modules_by_path) {
   auto module_info_it = modules_by_path.find(api_function.module_path());
   if (module_info_it == modules_by_path.end()) {
-    ERROR("Could not find module \"%s\" when initializing Orbit Api.", api_function.module_path());
+    ORBIT_ERROR("Could not find module \"%s\" when initializing Orbit Api.",
+                api_function.module_path());
     return nullptr;
   }
   const ModuleInfo& module_info = module_info_it->second;
   if (module_info.build_id() != api_function.module_build_id()) {
-    ERROR("Build-id mismatch for \"%s\" when initializing Orbit Api", api_function.module_path());
+    ORBIT_ERROR("Build-id mismatch for \"%s\" when initializing Orbit Api",
+                api_function.module_path());
     return nullptr;
   }
 
@@ -79,9 +81,9 @@ ErrorMessageOr<std::string> GetLibOrbitPath() {
 }
 
 ErrorMessageOr<void> SetApiEnabledInTracee(const CaptureOptions& capture_options, bool enabled) {
-  SCOPED_TIMED_LOG("%s Api in tracee", enabled ? "Enabling" : "Disabling");
+  ORBIT_SCOPED_TIMED_LOG("%s Api in tracee", enabled ? "Enabling" : "Disabling");
   if (capture_options.api_functions().empty()) {
-    LOG("No api table to initialize");
+    ORBIT_LOG("No api table to initialize");
     return outcome::success();
   }
 
@@ -92,7 +94,7 @@ ErrorMessageOr<void> SetApiEnabledInTracee(const CaptureOptions& capture_options
   // Make sure we resume the target process, even on early-outs.
   orbit_base::unique_resource scope_exit{pid, [](int32_t pid) {
                                            if (DetachAndContinueProcess(pid).has_error()) {
-                                             ERROR("Detaching from %i", pid);
+                                             ORBIT_ERROR("Detaching from %i", pid);
                                            }
                                          }};
 
@@ -110,8 +112,8 @@ ErrorMessageOr<void> SetApiEnabledInTracee(const CaptureOptions& capture_options
   OUTCOME_TRY(auto&& modules_by_path, GetModulesByPathForPid(pid));
   for (const ApiFunction& api_function : capture_options.api_functions()) {
     // Filter api functions.
-    CHECK(absl::StartsWith(api_function.name(), kOrbitApiGetFunctionTableAddressPrefix) ||
-          absl::StartsWith(api_function.name(), kOrbitApiGetFunctionTableAddressWinPrefix));
+    ORBIT_CHECK(absl::StartsWith(api_function.name(), kOrbitApiGetFunctionTableAddressPrefix) ||
+                absl::StartsWith(api_function.name(), kOrbitApiGetFunctionTableAddressWinPrefix));
 
     // Get ModuleInfo associated with function.
     const ModuleInfo* module_info = FindModuleInfoForApiFunction(api_function, modules_by_path);
@@ -133,7 +135,7 @@ ErrorMessageOr<void> SetApiEnabledInTracee(const CaptureOptions& capture_options
       OUTCOME_TRY(function_table_address,
                   ExecuteInProcessWithMicrosoftCallingConvention(pid, api_function_address));
     } else {
-      UNREACHABLE();
+      ORBIT_UNREACHABLE();
     }
 
     // Call "orbit_api_set_enabled" in tracee.
@@ -146,7 +148,7 @@ ErrorMessageOr<void> SetApiEnabledInTracee(const CaptureOptions& capture_options
       OUTCOME_TRY(ExecuteInProcess(pid, orbit_api_set_enabled_wine_function, function_table_address,
                                    api_function.api_version(), enabled ? 1 : 0));
     } else {
-      UNREACHABLE();
+      ORBIT_UNREACHABLE();
     }
 
     // `orbit_api_set_enabled` could spawn new threads (and will, the first time it's called). Stop

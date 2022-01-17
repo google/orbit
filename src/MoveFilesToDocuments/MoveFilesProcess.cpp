@@ -33,7 +33,7 @@ void MoveFilesProcess::Start() {
 void MoveFilesProcess::RequestInterruption() { interruption_requested_ = true; }
 
 void MoveFilesProcess::ReportError(const std::string& error_message) {
-  ERROR("%s", error_message);
+  ORBIT_ERROR("%s", error_message);
   emit generalError(QString::fromStdString(error_message));
 }
 
@@ -62,7 +62,7 @@ void MoveFilesProcess::TryMoveFilesAndRemoveDirIfNeeded(const std::filesystem::p
     if (interruption_requested_) return;
     const auto& file_name = file_path.filename();
     const auto& new_file_path = dest_dir / file_name;
-    LOG("Moving \"%s\" to \"%s\"...", file_path.string(), new_file_path.string());
+    ORBIT_LOG("Moving \"%s\" to \"%s\"...", file_path.string(), new_file_path.string());
     emit moveFileStarted(QString::fromStdString(file_path.string()));
     auto move_result = orbit_base::MoveFile(file_path, new_file_path);
     if (move_result.has_error()) {
@@ -82,7 +82,7 @@ void MoveFilesProcess::TryMoveFilesAndRemoveDirIfNeeded(const std::filesystem::p
 }
 
 void MoveFilesProcess::Run() {
-  CHECK(QThread::currentThread() == thread());
+  ORBIT_CHECK(QThread::currentThread() == thread());
   TryMoveFilesAndRemoveDirIfNeeded(orbit_paths::GetPresetDirPriorTo1_66(),
                                    orbit_paths::CreateOrGetPresetDir());
   TryMoveFilesAndRemoveDirIfNeeded(orbit_paths::GetCaptureDirPriorTo1_66(),

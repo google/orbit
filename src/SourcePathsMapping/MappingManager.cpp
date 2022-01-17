@@ -59,8 +59,8 @@ void InferAndAppendSourcePathsMapping(const std::filesystem::path& source_path,
   std::optional<orbit_source_paths_mapping::Mapping> maybe_mapping =
       orbit_source_paths_mapping::InferMappingFromExample(source_path, target_path);
   if (!maybe_mapping.has_value()) {
-    ERROR("Unable to infer a mapping from \"%s\" to \"%s\"", source_path.string(),
-          target_path.string());
+    ORBIT_ERROR("Unable to infer a mapping from \"%s\" to \"%s\"", source_path.string(),
+                target_path.string());
     return;
   }
 

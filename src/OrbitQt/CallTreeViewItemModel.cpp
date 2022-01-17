@@ -23,7 +23,7 @@ CallTreeViewItemModel::CallTreeViewItemModel(std::unique_ptr<CallTreeView> call_
     : QAbstractItemModel{parent}, call_tree_view_{std::move(call_tree_view)} {}
 
 QVariant CallTreeViewItemModel::GetDisplayRoleData(const QModelIndex& index) const {
-  CHECK(index.isValid());
+  ORBIT_CHECK(index.isValid());
   auto* item = static_cast<CallTreeNode*>(index.internalPointer());
   auto* thread_item = dynamic_cast<CallTreeThread*>(item);
   auto* function_item = dynamic_cast<CallTreeFunction*>(item);
@@ -96,7 +96,7 @@ QVariant CallTreeViewItemModel::GetDisplayRoleData(const QModelIndex& index) con
 }
 
 QVariant CallTreeViewItemModel::GetEditRoleData(const QModelIndex& index) const {
-  CHECK(index.isValid());
+  ORBIT_CHECK(index.isValid());
   auto* item = static_cast<CallTreeNode*>(index.internalPointer());
   auto* thread_item = dynamic_cast<CallTreeThread*>(item);
   auto* function_item = dynamic_cast<CallTreeFunction*>(item);
@@ -143,7 +143,7 @@ QVariant CallTreeViewItemModel::GetEditRoleData(const QModelIndex& index) const 
 }
 
 QVariant CallTreeViewItemModel::GetToolTipRoleData(const QModelIndex& index) const {
-  CHECK(index.isValid());
+  ORBIT_CHECK(index.isValid());
   auto* item = static_cast<CallTreeNode*>(index.internalPointer());
   auto* function_item = dynamic_cast<CallTreeFunction*>(item);
   if (function_item != nullptr) {
@@ -158,7 +158,7 @@ QVariant CallTreeViewItemModel::GetToolTipRoleData(const QModelIndex& index) con
 }
 
 QVariant CallTreeViewItemModel::GetForegroundRoleData(const QModelIndex& index) const {
-  CHECK(index.isValid());
+  ORBIT_CHECK(index.isValid());
   auto* item = static_cast<CallTreeNode*>(index.internalPointer());
   auto* unwind_errors_item = dynamic_cast<CallTreeUnwindErrors*>(item);
   if (unwind_errors_item != nullptr && index.column() == kThreadOrFunction) {
@@ -169,7 +169,7 @@ QVariant CallTreeViewItemModel::GetForegroundRoleData(const QModelIndex& index) 
 }
 
 QVariant CallTreeViewItemModel::GetModulePathRoleData(const QModelIndex& index) const {
-  CHECK(index.isValid());
+  ORBIT_CHECK(index.isValid());
   auto* item = static_cast<CallTreeNode*>(index.internalPointer());
   auto* function_item = dynamic_cast<CallTreeFunction*>(item);
   if (function_item != nullptr) {
@@ -179,7 +179,7 @@ QVariant CallTreeViewItemModel::GetModulePathRoleData(const QModelIndex& index) 
 }
 
 QVariant CallTreeViewItemModel::GetModuleBuildIdRoleData(const QModelIndex& index) const {
-  CHECK(index.isValid());
+  ORBIT_CHECK(index.isValid());
   auto* item = static_cast<CallTreeNode*>(index.internalPointer());
   auto* function_item = dynamic_cast<CallTreeFunction*>(item);
   if (function_item != nullptr) {
@@ -191,7 +191,7 @@ QVariant CallTreeViewItemModel::GetModuleBuildIdRoleData(const QModelIndex& inde
 // For columns with two values, a percentage and a raw number, only copy the percentage, so that it
 // can be interpreted as a number by a spreadsheet.
 QVariant CallTreeViewItemModel::GetCopyableValueRoleData(const QModelIndex& index) const {
-  CHECK(index.isValid());
+  ORBIT_CHECK(index.isValid());
   auto* item = static_cast<CallTreeNode*>(index.internalPointer());
   auto* thread_item = dynamic_cast<CallTreeThread*>(item);
   auto* function_item = dynamic_cast<CallTreeFunction*>(item);

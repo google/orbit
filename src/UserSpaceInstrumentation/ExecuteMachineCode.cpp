@@ -22,15 +22,16 @@ namespace {
 // obviously. That's what the *OrDie methods below are for.
 void RestoreRegistersOrDie(RegisterState& register_state) {
   auto result = register_state.RestoreRegisters();
-  FAIL_IF(result.has_error(), "Unable to restore register state in tracee: %s",
-          result.error().message());
+  ORBIT_FAIL_IF(result.has_error(), "Unable to restore register state in tracee: %s",
+                result.error().message());
 }
 
 uint64_t GetReturnValueOrDie(pid_t pid) {
   RegisterState return_value_registers;
   auto result_return_value = return_value_registers.BackupRegisters(pid);
-  FAIL_IF(result_return_value.has_error(), "Unable to read registers after function called: %s",
-          result_return_value.error().message());
+  ORBIT_FAIL_IF(result_return_value.has_error(),
+                "Unable to read registers after function called: %s",
+                result_return_value.error().message());
   return return_value_registers.GetGeneralPurposeRegisters()->x86_64.rax;
 }
 
@@ -76,12 +77,12 @@ ErrorMessageOr<uint64_t> ExecuteMachineCode(MemoryInTracee& code_memory, const M
   registers_for_execution.GetGeneralPurposeRegisters()->x86_64.orig_rax = -1;
   OUTCOME_TRY(registers_for_execution.RestoreRegisters());
   if (ptrace(PTRACE_CONT, pid, 0, 0) != 0) {
-    FATAL("Unable to continue tracee with PTRACE_CONT.");
+    ORBIT_FATAL("Unable to continue tracee with PTRACE_CONT.");
   }
   int status = 0;
   pid_t waited = waitpid(pid, &status, 0);
   if (waited != pid || !WIFSTOPPED(status) || WSTOPSIG(status) != SIGTRAP) {
-    FATAL(
+    ORBIT_FATAL(
         "Failed to wait for sigtrap after PTRACE_CONT. Expected pid: %d Pid returned from waitpid: "
         "%d status: %u, WIFSTOPPED: %u, WSTOPSIG: %u",
         pid, waited, status, WIFSTOPPED(status), WSTOPSIG(status));

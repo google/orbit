@@ -107,13 +107,13 @@ void CallstackThreadBar::DoUpdatePrimitives(Batcher& batcher, TextRenderer& text
   const Color kWhite(255, 255, 255, 255);
   const Color kGreenSelection(0, 255, 0, 255);
   const Color kGreyError(160, 160, 160, 255);
-  CHECK(capture_data_ != nullptr);
+  ORBIT_CHECK(capture_data_ != nullptr);
 
   if (!picking) {
     // Sampling Events
     auto action_on_callstack_events = [&](const CallstackEvent& event) {
       const uint64_t time = event.time();
-      CHECK(time >= min_tick && time <= max_tick);
+      ORBIT_CHECK(time >= min_tick && time <= max_tick);
       Vec2 pos(timeline_info_->GetWorldFromTick(time), GetPos()[1]);
       Color color = kWhite;
       if (capture_data_->GetCallstackData().GetCallstack(event.callstack_id())->type() !=
@@ -146,7 +146,7 @@ void CallstackThreadBar::DoUpdatePrimitives(Batcher& batcher, TextRenderer& text
 
     auto action_on_callstack_events = [&, this](const CallstackEvent& event) {
       const uint64_t time = event.time();
-      CHECK(time >= min_tick && time <= max_tick);
+      ORBIT_CHECK(time >= min_tick && time <= max_tick);
       Vec2 pos(timeline_info_->GetWorldFromTick(time) - kPickingBoxOffset, GetPos()[1]);
       Vec2 size(kPickingBoxWidth, track_height);
       auto user_data = std::make_unique<PickingUserData>(
@@ -189,7 +189,7 @@ void CallstackThreadBar::SelectCallstacks() {
   int64_t thread_id = GetThreadId();
   bool thread_id_is_all_threads = thread_id == orbit_base::kAllProcessThreadsTid;
 
-  CHECK(capture_data_);
+  ORBIT_CHECK(capture_data_);
   auto selected_callstack_events =
       thread_id_is_all_threads
           ? capture_data_->GetCallstackData().GetCallstackEventsInTimeRange(t0, t1)
@@ -213,7 +213,7 @@ bool CallstackThreadBar::IsEmpty() const {
 [[nodiscard]] std::string CallstackThreadBar::SafeGetFormattedFunctionName(
     const orbit_client_protos::CallstackInfo& callstack, int frame_index,
     int max_line_length) const {
-  CHECK(capture_data_ != nullptr);
+  ORBIT_CHECK(capture_data_ != nullptr);
   if (frame_index >= callstack.frames_size()) {
     return std::string("<i>") + CaptureData::kUnknownFunctionOrModuleName + "</i>";
   }
@@ -264,7 +264,7 @@ std::string CallstackThreadBar::GetSampleTooltip(const Batcher& batcher, Picking
     return unknown_return_text;
   }
 
-  CHECK(capture_data_ != nullptr);
+  ORBIT_CHECK(capture_data_ != nullptr);
   const CallstackData& callstack_data = capture_data_->GetCallstackData();
   const auto* callstack_event = static_cast<const CallstackEvent*>(user_data->custom_data_);
 

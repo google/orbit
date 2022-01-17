@@ -28,7 +28,7 @@
 
 constexpr const char* kLogTimeFormat = "%Y-%m-%dT%H:%M:%E6S";
 
-#define LOG(format, ...)                                                                     \
+#define ORBIT_LOG(format, ...)                                                               \
   do {                                                                                       \
     std::filesystem::path path__ = std::filesystem::path(__FILE__);                          \
     std::string file__;                                                                      \
@@ -40,85 +40,84 @@ constexpr const char* kLogTimeFormat = "%Y-%m-%dT%H:%M:%E6S";
     std::string time__ = absl::FormatTime(kLogTimeFormat, absl::Now(), absl::UTCTimeZone()); \
     std::string formatted_log__ =                                                            \
         absl::StrFormat("[%s] [%40s] " format "\n", time__, file_and_line__, ##__VA_ARGS__); \
-    PLATFORM_LOG(formatted_log__.c_str());                                                   \
+    ORBIT_INTERNAL_PLATFORM_LOG(formatted_log__.c_str());                                    \
   } while (0)
 
-#if defined(_WIN32) && defined(ERROR)
-#undef ERROR
-#endif
+#define ORBIT_ERROR(format, ...) ORBIT_LOG("Error: " format, ##__VA_ARGS__)
 
-#define ERROR(format, ...) LOG("Error: " format, ##__VA_ARGS__)
-
-#define LOG_ONCE(format, ...)                                                   \
-  do {                                                                          \
-    static std::once_flag already_logged_flag;                                  \
-    std::call_once(already_logged_flag, [&]() { LOG(format, ##__VA_ARGS__); }); \
+#define ORBIT_LOG_ONCE(format, ...)                                                   \
+  do {                                                                                \
+    static std::once_flag already_logged_flag;                                        \
+    std::call_once(already_logged_flag, [&]() { ORBIT_LOG(format, ##__VA_ARGS__); }); \
   } while (0)
 
-#define ERROR_ONCE(format, ...) LOG_ONCE("Error: " format, ##__VA_ARGS__)
+#define ORBIT_ERROR_ONCE(format, ...) ORBIT_LOG_ONCE("Error: " format, ##__VA_ARGS__)
 
-#define FATAL(format, ...)                \
-  do {                                    \
-    LOG("Fatal: " format, ##__VA_ARGS__); \
-    PLATFORM_ABORT();                     \
+#define ORBIT_FATAL(format, ...)                \
+  do {                                          \
+    ORBIT_LOG("Fatal: " format, ##__VA_ARGS__); \
+    ORBIT_INTERNAL_PLATFORM_ABORT();            \
   } while (0)
 
-#define UNREACHABLE() FATAL("Unreachable code")
+#define ORBIT_UNREACHABLE() ORBIT_FATAL("Unreachable code")
 
 #if defined(__GNUC__) || defined(__clang__)
-#define LIKELY(cond) __builtin_expect(!!(cond), 1)
-#define UNLIKELY(cond) __builtin_expect(!!(cond), 0)
+#define ORBIT_LIKELY(cond) __builtin_expect(!!(cond), 1)
+#define ORBIT_UNLIKELY(cond) __builtin_expect(!!(cond), 0)
 #else
-#define LIKELY(cond) (!!(cond))
-#define UNLIKELY(cond) (!!(cond))
+#define ORBIT_LIKELY(cond) (!!(cond))
+#define ORBIT_UNLIKELY(cond) (!!(cond))
 #endif
 
-#define FAIL_IF(condition, format, ...) \
-  do {                                  \
-    if (UNLIKELY(condition)) {          \
-      FATAL(format, ##__VA_ARGS__);     \
-    }                                   \
+#define ORBIT_FAIL_IF(condition, format, ...) \
+  do {                                        \
+    if (ORBIT_UNLIKELY(condition)) {          \
+      ORBIT_FATAL(format, ##__VA_ARGS__);     \
+    }                                         \
   } while (0)
 
-#define CHECK(assertion)                   \
-  do {                                     \
-    if (UNLIKELY(!(assertion))) {          \
-      LOG("Check failed: %s", #assertion); \
-      PLATFORM_ABORT();                    \
-    }                                      \
+#define ORBIT_CHECK(assertion)                   \
+  do {                                           \
+    if (ORBIT_UNLIKELY(!(assertion))) {          \
+      ORBIT_LOG("Check failed: %s", #assertion); \
+      ORBIT_INTERNAL_PLATFORM_ABORT();           \
+    }                                            \
   } while (0)
 
 #ifndef NDEBUG
-#define DCHECK(assertion) CHECK(assertion)
+#define ORBIT_DCHECK(assertion) ORBIT_CHECK(assertion)
 #else
-#define DCHECK(assertion) \
-  do {                    \
+#define ORBIT_DCHECK(assertion) \
+  do {                          \
   } while (0 && (assertion))
 #endif
 
-#define SCOPED_TIMED_LOG_CONCAT_INDIRECT_(a, b) a##b
-#define SCOPED_TIMED_LOG_CONCAT_(a, b) SCOPED_TIMED_LOG_CONCAT_INDIRECT_(a, b)
+#define ORBIT_INTERNAL_SCOPED_TIMED_LOG_CONCAT_INDIRECT(a, b) a##b
+#define ORBIT_INTERNAL_SCOPED_TIMED_LOG_CONCAT(a, b) \
+  ORBIT_INTERNAL_SCOPED_TIMED_LOG_CONCAT_INDIRECT(a, b)
 
-// Declare the class inside the macro so that file:line are the ones where SCOPED_TIMED_LOG is used.
-#define SCOPED_TIMED_LOG(format, ...)                                                          \
-  class SCOPED_TIMED_LOG_CONCAT_(ScopedTimedLog, __LINE__) {                                   \
+// Declare the class inside the macro so that file:line are the ones where ORBIT_SCOPED_TIMED_LOG is
+// used.
+#define ORBIT_SCOPED_TIMED_LOG(format, ...)                                                    \
+  class ORBIT_INTERNAL_SCOPED_TIMED_LOG_CONCAT(ScopedTimedLog, __LINE__) {                     \
    public:                                                                                     \
-    explicit SCOPED_TIMED_LOG_CONCAT_(ScopedTimedLog, __LINE__)(std::string && message)        \
+    explicit ORBIT_INTERNAL_SCOPED_TIMED_LOG_CONCAT(ScopedTimedLog,                            \
+                                                    __LINE__)(std::string && message)          \
         : message_{std::move(message)}, begin_{std::chrono::steady_clock::now()} {             \
-      LOG("%s started", message_);                                                             \
+      ORBIT_LOG("%s started", message_);                                                       \
     }                                                                                          \
                                                                                                \
-    ~SCOPED_TIMED_LOG_CONCAT_(ScopedTimedLog, __LINE__)() {                                    \
+    ~ORBIT_INTERNAL_SCOPED_TIMED_LOG_CONCAT(ScopedTimedLog, __LINE__)() {                      \
       auto end = std::chrono::steady_clock::now();                                             \
       auto duration =                                                                          \
           std::chrono::duration_cast<std::chrono::duration<double, std::milli>>(end - begin_); \
-      LOG("%s took %.3f ms", message_, duration.count());                                      \
+      ORBIT_LOG("%s took %.3f ms", message_, duration.count());                                \
     }                                                                                          \
                                                                                                \
    private:                                                                                    \
     std::string message_;                                                                      \
     std::chrono::time_point<std::chrono::steady_clock> begin_;                                 \
-  } SCOPED_TIMED_LOG_CONCAT_(scoped_timed_log_, __LINE__) {                                    \
+  } ORBIT_INTERNAL_SCOPED_TIMED_LOG_CONCAT(scoped_timed_log_, __LINE__) {                      \
     absl::StrFormat(format, ##__VA_ARGS__)                                                     \
   }
 
@@ -127,28 +126,28 @@ constexpr const char* kLogTimeFormat = "%Y-%m-%dT%H:%M:%E6S";
 namespace orbit_base {
 struct FuzzingException {};
 }  // namespace orbit_base
-#define PLATFORM_LOG(message) (void)(message)  // No logging in fuzzing mode.
-#define PLATFORM_ABORT() \
+#define ORBIT_INTERNAL_PLATFORM_LOG(message) (void)(message)  // No logging in fuzzing mode.
+#define ORBIT_INTERNAL_PLATFORM_ABORT() \
   throw orbit_base::FuzzingException {}
 #elif defined(_WIN32)
-#define PLATFORM_LOG(message)       \
-  do {                              \
-    fprintf(stderr, "%s", message); \
-    OutputDebugStringA(message);    \
-    orbit_base::LogToFile(message); \
+#define ORBIT_INTERNAL_PLATFORM_LOG(message) \
+  do {                                       \
+    fprintf(stderr, "%s", message);          \
+    OutputDebugStringA(message);             \
+    orbit_base::LogToFile(message);          \
   } while (0)
-#define PLATFORM_ABORT() \
-  do {                   \
-    __debugbreak();      \
-    abort();             \
+#define ORBIT_INTERNAL_PLATFORM_ABORT() \
+  do {                                  \
+    __debugbreak();                     \
+    abort();                            \
   } while (0)
 #else
-#define PLATFORM_LOG(message)       \
-  do {                              \
-    fprintf(stderr, "%s", message); \
-    orbit_base::LogToFile(message); \
+#define ORBIT_INTERNAL_PLATFORM_LOG(message) \
+  do {                                       \
+    fprintf(stderr, "%s", message);          \
+    orbit_base::LogToFile(message);          \
   } while (0)
-#define PLATFORM_ABORT() abort()
+#define ORBIT_INTERNAL_PLATFORM_ABORT() abort()
 #endif
 
 #ifdef __clang__

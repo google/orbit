@@ -55,12 +55,12 @@ class UprobesUnwindingVisitor : public PerfEventVisitor {
         unwinder_{unwinder},
         leaf_function_call_manager_{leaf_function_call_manager},
         user_space_instrumentation_addresses_{user_space_instrumentation_addresses} {
-    CHECK(listener_ != nullptr);
-    CHECK(function_call_manager_ != nullptr);
-    CHECK(return_address_manager_ != nullptr);
-    CHECK(current_maps_ != nullptr);
-    CHECK(unwinder_ != nullptr);
-    CHECK(leaf_function_call_manager_ != nullptr);
+    ORBIT_CHECK(listener_ != nullptr);
+    ORBIT_CHECK(function_call_manager_ != nullptr);
+    ORBIT_CHECK(return_address_manager_ != nullptr);
+    ORBIT_CHECK(current_maps_ != nullptr);
+    ORBIT_CHECK(unwinder_ != nullptr);
+    ORBIT_CHECK(leaf_function_call_manager_ != nullptr);
   }
 
   UprobesUnwindingVisitor(const UprobesUnwindingVisitor&) = delete;

@@ -24,7 +24,7 @@ namespace {
 // Create a file at path.
 void Touch(const fs::path& path) {
   if (ErrorMessageOr<void> result = orbit_base::WriteStringToFile(path, "\n"); result.has_error()) {
-    ERROR("%s", result.error().message());
+    ORBIT_ERROR("%s", result.error().message());
   }
 }
 
@@ -33,20 +33,20 @@ void Touch(const fs::path& path) {
 TestProcess::TestProcess() {
   {
     auto temporary_file_or_error = orbit_base::TemporaryFile::Create();
-    CHECK(temporary_file_or_error.has_value());
+    ORBIT_CHECK(temporary_file_or_error.has_value());
     flag_file_run_child_.emplace(std::move(temporary_file_or_error.value()));
   }
 
   {
     auto temporary_file_or_error = orbit_base::TemporaryFile::Create();
-    CHECK(temporary_file_or_error.has_value());
+    ORBIT_CHECK(temporary_file_or_error.has_value());
     flag_file_child_started_.emplace(std::move(temporary_file_or_error.value()));
   }
 
   Touch(flag_file_run_child_->file_path());
   flag_file_child_started_->CloseAndRemove();
   pid_ = fork();
-  CHECK(pid_ != -1);
+  ORBIT_CHECK(pid_ != -1);
   // Start the workload and have the parent wait for the startup to complete.
   if (pid_ == 0) {
     Workload();
@@ -54,7 +54,7 @@ TestProcess::TestProcess() {
   }
   std::error_code error;
   while (!fs::exists(flag_file_child_started_->file_path(), error)) {
-    CHECK(!error);
+    ORBIT_CHECK(!error);
   };
 }
 
@@ -62,7 +62,7 @@ TestProcess::~TestProcess() {
   flag_file_run_child_->CloseAndRemove();
   int status;
   waitpid(pid_, &status, 0);
-  CHECK(WIFEXITED(status));
+  ORBIT_CHECK(WIFEXITED(status));
 }
 
 void TestProcess::Worker() {
@@ -82,10 +82,10 @@ void TestProcess::Workload() {
   std::vector<std::thread> threads;
   std::error_code error;
   while (fs::exists(flag_file_run_child_->file_path(), error) || !threads.empty()) {
-    CHECK(!error);
+    ORBIT_CHECK(!error);
     // Spawn as many threads as there are missing.
     while (threads.size() < kNumThreads && fs::exists(flag_file_run_child_->file_path(), error)) {
-      CHECK(!error);
+      ORBIT_CHECK(!error);
       threads.emplace_back(std::thread(&TestProcess::Worker, this));
     }
     Touch(flag_file_child_started_->file_path());

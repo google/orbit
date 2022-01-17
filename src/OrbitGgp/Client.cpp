@@ -79,8 +79,8 @@ ErrorMessageOr<std::unique_ptr<Client>> CreateClient(QString ggp_program,
       error_message.append(absl::StrFormat(", ggp error message: \"%s\"", ggp_stderr));
     }
 
-    LOG("%s", error_message);
-    LOG("ggp stdout: \"%s\"", QString(ggp_process.readAllStandardOutput()).toStdString());
+    ORBIT_LOG("%s", error_message);
+    ORBIT_LOG("ggp stdout: \"%s\"", QString(ggp_process.readAllStandardOutput()).toStdString());
     return ErrorMessage{error_message};
   }
 

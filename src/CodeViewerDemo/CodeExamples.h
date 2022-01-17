@@ -39,7 +39,7 @@ inline const QString testing_example =
   int CaptureServiceImpl::Capture(); // Function from other class
   a = absl::Milliseconds(20); // method that we don't have to highlight
   int QSyntaxHighlighter::PlayInteger;
-  CHECK(false); // no lowercase regex
+  ORBIT_CHECK(false); // no lowercase regex
 
   // Preprocessor + <> unit tests
   #include <iostream>
@@ -52,7 +52,7 @@ inline const QString testing_example =
   "Hola mundo\n"
   "I'm an \"only\" string"
   "I'm 2" + "strings"
-  "CHECK(false)\\\\"
+  "ORBIT_CHECK(false)\\\\"
   "Multi\
   Line"
 
@@ -103,7 +103,7 @@ class SenderThreadCaptureEventBuffer final : public CaptureEventBuffer {
  public:
   explicit SenderThreadCaptureEventBuffer(CaptureEventSender* event_sender)
       : capture_event_sender_{event_sender} {
-    CHECK(capture_event_sender_ != nullptr);
+    ORBIT_CHECK(capture_event_sender_ != nullptr);
     sender_thread_ = std::thread{[this] { SenderThread(); }};
   }
 
@@ -116,7 +116,7 @@ class SenderThreadCaptureEventBuffer final : public CaptureEventBuffer {
   }
 
   void StopAndWait() {
-    CHECK(sender_thread_.joinable());
+    ORBIT_CHECK(sender_thread_.joinable());
     {
       // Protect stop_requested_ with event_buffer_mutex_ so that we can use stop_requested_
       // in Conditions for Await/LockWhen (specifically, in SenderThread).
@@ -126,7 +126,7 @@ class SenderThreadCaptureEventBuffer final : public CaptureEventBuffer {
     sender_thread_.join();
   }
 
-  ~SenderThreadCaptureEventBuffer() override { CHECK(!sender_thread_.joinable()); }
+  ~SenderThreadCaptureEventBuffer() override { ORBIT_CHECK(!sender_thread_.joinable()); }
 
  private:
   void SenderThread() {
@@ -169,19 +169,19 @@ class GrpcCaptureEventSender final : public CaptureEventSender {
   explicit GrpcCaptureEventSender(
       grpc::ServerReaderWriter<CaptureResponse, CaptureRequest>* reader_writer)
       : reader_writer_{reader_writer} {
-    CHECK(reader_writer_ != nullptr);
+    ORBIT_CHECK(reader_writer_ != nullptr);
   }
 
   ~GrpcCaptureEventSender() override {
-    LOG("Total number of events sent: %lu", total_number_of_events_sent_);
-    LOG("Total number of bytes sent: %lu", total_number_of_bytes_sent_);
+    ORBIT_LOG("Total number of events sent: %lu", total_number_of_events_sent_);
+    ORBIT_LOG("Total number of bytes sent: %lu", total_number_of_bytes_sent_);
 
     // Ensure we can divide by 0.f safely.
     static_assert(std::numeric_limits<float>::is_iec559);
     float average_bytes =
         static_cast<float>(total_number_of_bytes_sent_) / total_number_of_events_sent_;
 
-    LOG("Average number of bytes per event: %.2f", average_bytes);
+    ORBIT_LOG("Average number of bytes per event: %.2f", average_bytes);
   }
 
   void SendEvents(std::vector<orbit_grpc_protos::CaptureEvent>&& events) override {
@@ -238,13 +238,13 @@ static void StopTracingHandlerAndCaptureStartStopListenersInParallel(
 
   stop_threads.emplace_back([&tracing_handler] {
     tracing_handler->Stop();
-    LOG("TracingHandler stopped: perf_event_open tracing is done");
+    ORBIT_LOG("TracingHandler stopped: perf_event_open tracing is done");
   });
 
   for (CaptureStartStopListener* listener : *capture_start_stop_listeners) {
     stop_threads.emplace_back([&listener] {
       listener->OnCaptureStopRequested();
-      LOG("CaptureStartStopListener stopped: one or more producers finished capturing");
+      ORBIT_LOG("CaptureStartStopListener stopped: one or more producers finished capturing");
     });
   }
 
@@ -258,7 +258,7 @@ grpc::Status CaptureServiceImpl::Capture(
     grpc::ServerReaderWriter<CaptureResponse, CaptureRequest>* reader_writer) {
   orbit_base::SetCurrentThreadName("CSImpl::Capture");
   if (is_capturing) {
-    ERROR("Cannot start capture because another capture is already in progress");
+    ORBIT_ERROR("Cannot start capture because another capture is already in progress");
     return grpc::Status(grpc::StatusCode::ALREADY_EXISTS,
                         "Cannot start capture because another capture is already in progress.");
   }
@@ -270,7 +270,7 @@ grpc::Status CaptureServiceImpl::Capture(
 
   CaptureRequest request;
   reader_writer->Read(&request);
-  LOG("Read CaptureRequest from Capture's gRPC stream: starting capture");
+  ORBIT_LOG("Read CaptureRequest from Capture's gRPC stream: starting capture");
 
   tracing_handler.Start(std::move(*request.mutable_capture_options()));
   for (CaptureStartStopListener* listener : capture_start_stop_listeners_) {
@@ -282,25 +282,25 @@ grpc::Status CaptureServiceImpl::Capture(
   // In the meantime, it blocks if no message is received.
   while (reader_writer->Read(&request)) {
   }
-  LOG("Client finished writing on Capture's gRPC stream: stopping capture");
+  ORBIT_LOG("Client finished writing on Capture's gRPC stream: stopping capture");
 
   StopTracingHandlerAndCaptureStartStopListenersInParallel(&tracing_handler,
                                                            &capture_start_stop_listeners_);
 
   capture_event_buffer.StopAndWait();
-  LOG("Finished handling gRPC call to Capture: all capture data has been sent");
+  ORBIT_LOG("Finished handling gRPC call to Capture: all capture data has been sent");
   is_capturing = false;
   return grpc::Status::OK;
 }
 
 void CaptureServiceImpl::AddCaptureStartStopListener(CaptureStartStopListener* listener) {
   bool new_insertion = capture_start_stop_listeners_.insert(listener).second;
-  CHECK(new_insertion);
+  ORBIT_CHECK(new_insertion);
 }
 
 void CaptureServiceImpl::RemoveCaptureStartStopListener(CaptureStartStopListener* listener) {
   bool was_removed = capture_start_stop_listeners_.erase(listener) > 0;
-  CHECK(was_removed);
+  ORBIT_CHECK(was_removed);
 }
 
 }  // namespace orbit_service

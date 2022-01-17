@@ -23,9 +23,9 @@ void PerfEventQueue::PushEvent(PerfEvent&& event) {
              queue_it != queues_of_events_ordered_in_stream_.end()) {
     const std::unique_ptr<std::queue<PerfEvent>>& queue = queue_it->second;
 
-    CHECK(!queue->empty());
+    ORBIT_CHECK(!queue->empty());
     // Fundamental assumption: events from the same file descriptor come already in order.
-    CHECK(event.timestamp >= queue->back().timestamp);
+    ORBIT_CHECK(event.timestamp >= queue->back().timestamp);
     queue->push(std::move(event));
   } else {
     queue_it = queues_of_events_ordered_in_stream_
@@ -49,12 +49,12 @@ const PerfEvent& PerfEventQueue::TopEvent() {
   // top of the two queues. In case those two events have the exact same timestamp, return the one
   // at the top of priority_queue_of_events_not_ordered_in_stream_ (and do the same in PopEvent).
   if (priority_queue_of_events_not_ordered_in_stream_.empty()) {
-    CHECK(!heap_of_queues_of_events_ordered_in_stream_.empty());
-    CHECK(!heap_of_queues_of_events_ordered_in_stream_.front()->empty());
+    ORBIT_CHECK(!heap_of_queues_of_events_ordered_in_stream_.empty());
+    ORBIT_CHECK(!heap_of_queues_of_events_ordered_in_stream_.front()->empty());
     return heap_of_queues_of_events_ordered_in_stream_.front()->front();
   }
   if (heap_of_queues_of_events_ordered_in_stream_.empty()) {
-    CHECK(!priority_queue_of_events_not_ordered_in_stream_.empty());
+    ORBIT_CHECK(!priority_queue_of_events_not_ordered_in_stream_.empty());
     return priority_queue_of_events_not_ordered_in_stream_.top();
   }
   return (heap_of_queues_of_events_ordered_in_stream_.front()->front().timestamp <

@@ -2,11 +2,12 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#include "OrbitBase/GetLastError.h"
-
 #include <absl/base/casts.h>
 #include <absl/strings/ascii.h>
 #include <windows.h>
+
+#include "OrbitBase/GetLastError.h"
+#include "OrbitBase/Logging.h"
 
 namespace orbit_base {
 
@@ -30,7 +31,7 @@ std::string GetLastErrorAsString() {
       /*Arguments=*/nullptr);
 
   if (buffer == nullptr) {
-    ERROR("Calling FormatMessageA in GetLastErrorAsString");
+    ORBIT_ERROR("Calling FormatMessageA in GetLastErrorAsString");
     return {};
   }
 

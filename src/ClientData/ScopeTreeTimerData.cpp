@@ -24,7 +24,7 @@ void ScopeTreeTimerData::OnCaptureComplete() {
 
   std::vector<const TimerChain*> timer_chains = timer_data_.GetChains();
   for (const TimerChain* timer_chain : timer_chains) {
-    CHECK(timer_chain != nullptr);
+    ORBIT_CHECK(timer_chain != nullptr);
     absl::MutexLock lock(&scope_tree_mutex_);
     for (const auto& block : *timer_chain) {
       for (size_t k = 0; k < block.size(); ++k) {

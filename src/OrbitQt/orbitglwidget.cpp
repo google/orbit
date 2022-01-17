@@ -35,8 +35,8 @@
 
 OrbitGLWidget::OrbitGLWidget(QWidget* parent) : QOpenGLWidget(parent) {
   QSurfaceFormat requested_format = QSurfaceFormat::defaultFormat();
-  LOG("OpenGL version requested: %i.%i", requested_format.majorVersion(),
-      requested_format.minorVersion());
+  ORBIT_LOG("OpenGL version requested: %i.%i", requested_format.majorVersion(),
+            requested_format.minorVersion());
   gl_canvas_ = nullptr;
   debug_logger_ = nullptr;
   setFocusPolicy(Qt::WheelFocus);
@@ -78,7 +78,7 @@ void OrbitGLWidget::initializeGL() {
 #if ORBIT_DEBUG_OPEN_GL
   debug_logger_ = new QOpenGLDebugLogger(this);
   if (debug_logger_->initialize()) {
-    LOG("GL_DEBUG Debug Logger %s", debug_logger_->metaObject()->className());
+    ORBIT_LOG("GL_DEBUG Debug Logger %s", debug_logger_->metaObject()->className());
     connect(debug_logger_, SIGNAL(messageLogged(QOpenGLDebugMessage)), this,
             SLOT(messageLogged(QOpenGLDebugMessage)));
     debug_logger_->startLogging(QOpenGLDebugLogger::SynchronousLogging);
@@ -116,7 +116,7 @@ void OrbitGLWidget::PrintContextInformation() {
     CASE(CompatibilityProfile);
   }
 #undef CASE
-  LOG(R"(glType="%s", glVersion="%s", glProfile="%s")", glType, glVersion, glProfile);
+  ORBIT_LOG(R"(glType="%s", glVersion="%s", glProfile="%s")", glType, glVersion, glProfile);
 }
 
 void OrbitGLWidget::messageLogged(const QOpenGLDebugMessage& msg) {
@@ -185,14 +185,14 @@ void OrbitGLWidget::messageLogged(const QOpenGLDebugMessage& msg) {
 #undef CASE
 
   error += ")";
-  LOG("%s\n%s", qPrintable(error), qPrintable(msg.message()));
+  ORBIT_LOG("%s\n%s", qPrintable(error), qPrintable(msg.message()));
 }
 
 void OrbitGLWidget::resizeGL(int w, int h) {
   if (gl_canvas_) {
     gl_canvas_->Resize(w, h);
-    CHECK(this->geometry().width() == w);
-    CHECK(this->geometry().height() == h);
+    ORBIT_CHECK(this->geometry().width() == w);
+    ORBIT_CHECK(this->geometry().height() == h);
   }
 }
 

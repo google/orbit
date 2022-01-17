@@ -43,7 +43,7 @@ class LockFreeBufferCaptureEventProducer : public CaptureEventProducer {
   void ShutdownAndWait() final {
     shutdown_requested_ = true;
 
-    CHECK(forwarder_thread_.joinable());
+    ORBIT_CHECK(forwarder_thread_.joinable());
     forwarder_thread_.join();
 
     CaptureEventProducer::ShutdownAndWait();
@@ -147,7 +147,7 @@ class LockFreeBufferCaptureEventProducer : public CaptureEventProducer {
           }
 
           if (!SendCaptureEvents(*send_request)) {
-            ERROR("Forwarding %lu CaptureEvents", dequeued_event_count);
+            ORBIT_ERROR("Forwarding %lu CaptureEvents", dequeued_event_count);
             break;
           }
         }
@@ -156,7 +156,7 @@ class LockFreeBufferCaptureEventProducer : public CaptureEventProducer {
           // lock_free_queue_ is now empty and status_ == kShouldNotifyAllEventsSent,
           // send AllEventsSent. status_ has already been changed to kShouldDropEvents.
           if (!NotifyAllEventsSent()) {
-            ERROR("Notifying that all CaptureEvents have been sent");
+            ORBIT_ERROR("Notifying that all CaptureEvents have been sent");
           }
           break;
         }

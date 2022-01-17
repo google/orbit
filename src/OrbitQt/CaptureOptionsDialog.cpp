@@ -73,7 +73,7 @@ double CaptureOptionsDialog::GetSamplingPeriodMs() const {
 
 void CaptureOptionsDialog::SetUnwindingMethod(UnwindingMethod unwinding_method) {
   int index = ui_->unwindingMethodComboBox->findData(static_cast<int>(unwinding_method));
-  CHECK(index >= 0);
+  ORBIT_CHECK(index >= 0);
   return ui_->unwindingMethodComboBox->setCurrentIndex(index);
 }
 
@@ -113,7 +113,7 @@ bool CaptureOptionsDialog::GetEnableApi() const { return ui_->apiCheckBox->isChe
 
 void CaptureOptionsDialog::SetDynamicInstrumentationMethod(DynamicInstrumentationMethod method) {
   const int index = ui_->dynamicInstrumentationMethodComboBox->findData(static_cast<int>(method));
-  CHECK(index >= 0);
+  ORBIT_CHECK(index >= 0);
   ui_->dynamicInstrumentationMethodComboBox->setCurrentIndex(index);
 }
 
@@ -145,10 +145,10 @@ void CaptureOptionsDialog::SetMaxLocalMarkerDepthPerCommandBuffer(
 }
 
 uint64_t CaptureOptionsDialog::GetMaxLocalMarkerDepthPerCommandBuffer() const {
-  CHECK(!ui_->localMarkerDepthLineEdit->text().isEmpty());
+  ORBIT_CHECK(!ui_->localMarkerDepthLineEdit->text().isEmpty());
   bool valid = false;
   uint64_t result = ui_->localMarkerDepthLineEdit->text().toULongLong(&valid);
-  CHECK(valid);
+  ORBIT_CHECK(valid);
   return result;
 }
 
@@ -179,11 +179,11 @@ void CaptureOptionsDialog::ResetMemorySamplingPeriodMsLineEditWhenEmpty() {
 }
 
 uint64_t CaptureOptionsDialog::GetMemorySamplingPeriodMs() const {
-  CHECK(!ui_->memorySamplingPeriodMsLineEdit->text().isEmpty());
+  ORBIT_CHECK(!ui_->memorySamplingPeriodMsLineEdit->text().isEmpty());
   bool valid = false;
   uint64_t memory_sampling_period_ms =
       ui_->memorySamplingPeriodMsLineEdit->text().toULongLong(&valid);
-  CHECK(valid);
+  ORBIT_CHECK(valid);
   return memory_sampling_period_ms;
 }
 
@@ -200,10 +200,10 @@ void CaptureOptionsDialog::ResetMemoryWarningThresholdKbLineEditWhenEmpty() {
 }
 
 uint64_t CaptureOptionsDialog::GetMemoryWarningThresholdKb() const {
-  CHECK(!ui_->memoryWarningThresholdKbLineEdit->text().isEmpty());
+  ORBIT_CHECK(!ui_->memoryWarningThresholdKbLineEdit->text().isEmpty());
   bool valid = false;
   uint64_t result = ui_->memoryWarningThresholdKbLineEdit->text().toULongLong(&valid);
-  CHECK(valid);
+  ORBIT_CHECK(valid);
   return result;
 }
 

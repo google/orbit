@@ -222,7 +222,7 @@ class SubmissionTrackerTest : public ::testing::Test {
         *absl::bit_cast<uint64_t*>(data) = kTimestamp7;
         break;
       default:
-        UNREACHABLE();
+        ORBIT_UNREACHABLE();
     }
     return VK_SUCCESS;
   };
@@ -610,7 +610,7 @@ TEST_F(SubmissionTrackerTest, WillRetryCompletingSubmissionsWhenTimestampQueryFa
   // VkCommandBuffer's that are different, which is needed for this test.
   std::array<VkCommandBuffer, 2> command_buffers{absl::bit_cast<VkCommandBuffer>(1L),
                                                  absl::bit_cast<VkCommandBuffer>(2L)};
-  CHECK(command_buffers[0] != command_buffers[1]);
+  ORBIT_CHECK(command_buffers[0] != command_buffers[1]);
 
   tracker_.TrackCommandBuffers(device_, command_pool_, &command_buffers[0], 2);
   tracker_.MarkCommandBufferBegin(command_buffers[0]);
@@ -1153,7 +1153,7 @@ TEST_F(SubmissionTrackerTest, CanRetrieveNestedDebugMarkerTimestampsForAComplete
     if (str == text_inner) {
       return expected_text_key_inner;
     }
-    UNREACHABLE();
+    ORBIT_UNREACHABLE();
   };
   EXPECT_CALL(*producer_, InternStringIfNecessaryAndGetKey)
       .Times(2)
@@ -1232,7 +1232,7 @@ TEST_F(SubmissionTrackerTest,
     if (str == text_inner) {
       return expected_text_key_inner;
     }
-    UNREACHABLE();
+    ORBIT_UNREACHABLE();
   };
   EXPECT_CALL(*producer_, InternStringIfNecessaryAndGetKey)
       .Times(2)
@@ -1579,7 +1579,7 @@ TEST_F(SubmissionTrackerTest, CanLimitNestedDebugMarkerDepthPerCommandBuffer) {
     if (str == text_outer) {
       return expected_text_key_outer;
     }
-    UNREACHABLE();
+    ORBIT_UNREACHABLE();
   };
   EXPECT_CALL(*producer_, InternStringIfNecessaryAndGetKey)
       .Times(1)

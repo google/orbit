@@ -27,7 +27,7 @@ class FileFragmentInputStream : public google::protobuf::io::ZeroCopyInputStream
         file_fragments_end_{file_offset + size},
         buffer_(block_size),
         current_position_{file_offset} {
-    CHECK(size > 0);
+    ORBIT_CHECK(size > 0);
   }
 
   // Obtains a chunk of data from the stream.

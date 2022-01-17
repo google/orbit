@@ -75,7 +75,7 @@ ErrorMessageOr<ino_t> GetInodeFromFilePath(const std::string& file_path) {
 
 void OpenUseAndCloseLibrary(pid_t pid) {
   // Stop the child process using our tooling.
-  CHECK(!AttachAndStopProcess(pid).has_error());
+  ORBIT_CHECK(!AttachAndStopProcess(pid).has_error());
 
   auto library_path_or_error = GetTestLibLibraryPath();
   ASSERT_THAT(library_path_or_error, HasNoError());
@@ -128,14 +128,14 @@ void OpenUseAndCloseLibrary(pid_t pid) {
   EXPECT_THAT(IsInodeInMapsFile(inode_of_library.value(), pid),
               orbit_test_utils::HasValue(Eq(false)));
 
-  CHECK(!DetachAndContinueProcess(pid).has_error());
+  ORBIT_CHECK(!DetachAndContinueProcess(pid).has_error());
 }
 
 }  // namespace
 
 TEST(InjectLibraryInTraceeTest, OpenUseAndCloseLibraryInUserCode) {
   pid_t pid = fork();
-  CHECK(pid != -1);
+  ORBIT_CHECK(pid != -1);
   if (pid == 0) {
     prctl(PR_SET_PDEATHSIG, SIGTERM);
 
@@ -155,7 +155,7 @@ TEST(InjectLibraryInTraceeTest, OpenUseAndCloseLibraryInUserCode) {
 
 TEST(InjectLibraryInTraceeTest, OpenUseAndCloseLibraryInSyscall) {
   pid_t pid = fork();
-  CHECK(pid != -1);
+  ORBIT_CHECK(pid != -1);
   if (pid == 0) {
     prctl(PR_SET_PDEATHSIG, SIGTERM);
 
@@ -174,7 +174,7 @@ TEST(InjectLibraryInTraceeTest, OpenUseAndCloseLibraryInSyscall) {
 
 TEST(InjectLibraryInTraceeTest, NonExistingLibrary) {
   pid_t pid = fork();
-  CHECK(pid != -1);
+  ORBIT_CHECK(pid != -1);
   if (pid == 0) {
     prctl(PR_SET_PDEATHSIG, SIGTERM);
 
@@ -185,7 +185,7 @@ TEST(InjectLibraryInTraceeTest, NonExistingLibrary) {
   }
 
   // Stop the child process using our tooling.
-  CHECK(!AttachAndStopProcess(pid).has_error());
+  ORBIT_CHECK(!AttachAndStopProcess(pid).has_error());
 
   // Try to load non existing dynamic lib into tracee.
   const std::string kNonExistingLibName = "libNotFound.so";
@@ -193,7 +193,7 @@ TEST(InjectLibraryInTraceeTest, NonExistingLibrary) {
   ASSERT_THAT(library_handle_or_error, HasError("Library does not exist at"));
 
   // Continue child process.
-  CHECK(!DetachAndContinueProcess(pid).has_error());
+  ORBIT_CHECK(!DetachAndContinueProcess(pid).has_error());
 
   // End child process.
   kill(pid, SIGKILL);

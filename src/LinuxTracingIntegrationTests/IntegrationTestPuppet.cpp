@@ -39,7 +39,8 @@ static void SleepRepeatedly() {
 extern "C" __attribute__((noinline)) double InnerFunctionToInstrument(uint64_t di, uint64_t si,
                                                                       uint64_t dx, uint64_t cx,
                                                                       uint64_t r8, uint64_t r9) {
-  LOG("InnerFunctionToInstrument called with args: %u, %u, %u, %u, %u, %u", di, si, dx, cx, r8, r9);
+  ORBIT_LOG("InnerFunctionToInstrument called with args: %u, %u, %u, %u, %u, %u", di, si, dx, cx,
+            r8, r9);
   double result = 1;
   for (size_t i = 0; i < 1'000'000; ++i) {
     result = 1 / (2 + result);
@@ -49,12 +50,13 @@ extern "C" __attribute__((noinline)) double InnerFunctionToInstrument(uint64_t d
 
 extern "C" __attribute__((noinline)) uint64_t OuterFunctionToInstrument() {
   for (uint64_t i = 0; i < PuppetConstants::kInnerFunctionCallCount; ++i) {
-    LOG("InnerFunctionToInstrument returned: %f",
-        InnerFunctionToInstrument(
-            PuppetConstants::kInnerFunctionCallArgs[0], PuppetConstants::kInnerFunctionCallArgs[1],
-            PuppetConstants::kInnerFunctionCallArgs[2], PuppetConstants::kInnerFunctionCallArgs[3],
-            PuppetConstants::kInnerFunctionCallArgs[4],
-            PuppetConstants::kInnerFunctionCallArgs[5]));
+    ORBIT_LOG("InnerFunctionToInstrument returned: %f",
+              InnerFunctionToInstrument(PuppetConstants::kInnerFunctionCallArgs[0],
+                                        PuppetConstants::kInnerFunctionCallArgs[1],
+                                        PuppetConstants::kInnerFunctionCallArgs[2],
+                                        PuppetConstants::kInnerFunctionCallArgs[3],
+                                        PuppetConstants::kInnerFunctionCallArgs[4],
+                                        PuppetConstants::kInnerFunctionCallArgs[5]));
   }
   return PuppetConstants::kOuterFunctionReturnValue;
 }
@@ -62,7 +64,7 @@ extern "C" __attribute__((noinline)) uint64_t OuterFunctionToInstrument() {
 static void CallOuterFunctionToInstrument() {
   for (uint64_t i = 0; i < PuppetConstants::kOuterFunctionCallCount; ++i) {
     uint64_t result = OuterFunctionToInstrument();
-    LOG("OuterFunctionToInstrument returned: %#x", result);
+    ORBIT_LOG("OuterFunctionToInstrument returned: %#x", result);
   }
 }
 
@@ -84,19 +86,20 @@ static void LoadSoWithDlopenAndCallFunction() {
     if (handle != nullptr) {
       break;
     }
-    ERROR("Unable to open \"%s\": %s", library_path, dlerror());
+    ORBIT_ERROR("Unable to open \"%s\": %s", library_path, dlerror());
   }
   if (handle == nullptr) {
-    FATAL("Unable to find \"%s\"", kSoFileName);
+    ORBIT_FATAL("Unable to find \"%s\"", kSoFileName);
   }
 
   using function_type = double (*)();
   auto function = absl::bit_cast<function_type>(dlsym(handle, kFunctionName));
   if (function == nullptr) {
-    FATAL("Unable to find function \"%s\" in \"%s\": %s", kFunctionName, kSoFileName, dlerror());
+    ORBIT_FATAL("Unable to find function \"%s\" in \"%s\": %s", kFunctionName, kSoFileName,
+                dlerror());
   }
 
-  LOG("Function call completed: %f", function());
+  ORBIT_LOG("Function call completed: %f", function());
 }
 
 static void RunVulkanTutorial() {
@@ -106,7 +109,7 @@ static void RunVulkanTutorial() {
 
 extern "C" __attribute__((noinline)) void UseOrbitApi() {
   for (uint64_t i = 0; i < PuppetConstants::kOrbitApiUsageCount; ++i) {
-    LOG("Using OrbitApi");
+    ORBIT_LOG("Using OrbitApi");
     constexpr absl::Duration kDelayBetweenEvents = absl::Microseconds(100);
     {
       ORBIT_SCOPE_WITH_COLOR_AND_GROUP_ID(
@@ -162,7 +165,7 @@ extern "C" __attribute__((noinline)) void UseOrbitApi() {
 }
 
 int IntegrationTestPuppetMain() {
-  LOG("Puppet started");
+  ORBIT_LOG("Puppet started");
   while (!!std::cin && !std::cin.eof()) {
     std::string command;
     std::getline(std::cin, command);
@@ -170,7 +173,7 @@ int IntegrationTestPuppetMain() {
       continue;
     }
 
-    LOG("Puppet received command: %s", command);
+    ORBIT_LOG("Puppet received command: %s", command);
     if (command == PuppetConstants::kSleepCommand) {
       SleepRepeatedly();
     } else if (command == PuppetConstants::kCallOuterFunctionCommand) {
@@ -184,13 +187,13 @@ int IntegrationTestPuppetMain() {
     } else if (command == PuppetConstants::kOrbitApiCommand) {
       UseOrbitApi();
     } else {
-      ERROR("Unknown command: %s", command);
+      ORBIT_ERROR("Unknown command: %s", command);
       continue;
     }
 
     std::cout << PuppetConstants::kDoneResponse << std::endl;
   }
-  LOG("Puppet finished");
+  ORBIT_LOG("Puppet finished");
   return 0;
 }
 

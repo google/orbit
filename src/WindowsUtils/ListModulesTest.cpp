@@ -26,7 +26,7 @@ static std::string GetCurrentModuleName() {
   HMODULE module_handle = NULL;
   GetModuleHandleEx(GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS, (LPCTSTR)GetCurrentModuleName,
                     &module_handle);
-  CHECK(module_handle);
+  ORBIT_CHECK(module_handle);
   char module_name[MAX_PATH] = {0};
   GetModuleFileNameA(module_handle, module_name, MAX_PATH);
   return module_name;

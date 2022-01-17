@@ -9,8 +9,8 @@ namespace orbit_capture_file_internal {
 using orbit_base::ReadFullyAtOffset;
 
 bool FileFragmentInputStream::Next(const void** data, int* size) {
-  CHECK(data != nullptr);
-  CHECK(size != nullptr);
+  ORBIT_CHECK(data != nullptr);
+  ORBIT_CHECK(size != nullptr);
 
   if (last_error_.has_value()) return false;
 
@@ -38,7 +38,7 @@ bool FileFragmentInputStream::Next(const void** data, int* size) {
 }
 
 void FileFragmentInputStream::BackUp(int count) {
-  CHECK(count >= 0);
+  ORBIT_CHECK(count >= 0);
   if (static_cast<size_t>(count) > current_position_) {
     current_position_ = file_fragments_start_;
     return;
@@ -48,7 +48,7 @@ void FileFragmentInputStream::BackUp(int count) {
 }
 
 bool FileFragmentInputStream::Skip(int count) {
-  CHECK(count >= 0);
+  ORBIT_CHECK(count >= 0);
 
   if (last_error_.has_value()) return false;
 

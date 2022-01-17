@@ -239,7 +239,7 @@ void TargetLabel::OpenContainingFolder() {
   if (!file_path_.has_value()) return;
   QUrl url = QUrl::fromLocalFile(QString::fromStdString(file_path_->parent_path().string()));
   if (!QDesktopServices::openUrl(url)) {
-    ERROR("Opening containing folder of \"%s\"", file_path_->string());
+    ORBIT_ERROR("Opening containing folder of \"%s\"", file_path_->string());
   }
 }
 
