@@ -56,7 +56,7 @@ constexpr const char* kLogTimeFormat = "%Y-%m-%dT%H:%M:%E6S";
 #define ORBIT_FATAL(format, ...)                \
   do {                                          \
     ORBIT_LOG("Fatal: " format, ##__VA_ARGS__); \
-    PLATFORM_ABORT();                           \
+    ORBIT_INTERNAL_PLATFORM_ABORT();            \
   } while (0)
 
 #define ORBIT_UNREACHABLE() ORBIT_FATAL("Unreachable code")
@@ -80,7 +80,7 @@ constexpr const char* kLogTimeFormat = "%Y-%m-%dT%H:%M:%E6S";
   do {                                           \
     if (ORBIT_UNLIKELY(!(assertion))) {          \
       ORBIT_LOG("Check failed: %s", #assertion); \
-      PLATFORM_ABORT();                          \
+      ORBIT_INTERNAL_PLATFORM_ABORT();           \
     }                                            \
   } while (0)
 
@@ -127,7 +127,7 @@ namespace orbit_base {
 struct FuzzingException {};
 }  // namespace orbit_base
 #define ORBIT_INTERNAL_PLATFORM_LOG(message) (void)(message)  // No logging in fuzzing mode.
-#define PLATFORM_ABORT() \
+#define ORBIT_INTERNAL_PLATFORM_ABORT() \
   throw orbit_base::FuzzingException {}
 #elif defined(_WIN32)
 #define ORBIT_INTERNAL_PLATFORM_LOG(message) \
@@ -136,10 +136,10 @@ struct FuzzingException {};
     OutputDebugStringA(message);             \
     orbit_base::LogToFile(message);          \
   } while (0)
-#define PLATFORM_ABORT() \
-  do {                   \
-    __debugbreak();      \
-    abort();             \
+#define ORBIT_INTERNAL_PLATFORM_ABORT() \
+  do {                                  \
+    __debugbreak();                     \
+    abort();                            \
   } while (0)
 #else
 #define ORBIT_INTERNAL_PLATFORM_LOG(message) \
@@ -147,7 +147,7 @@ struct FuzzingException {};
     fprintf(stderr, "%s", message);          \
     orbit_base::LogToFile(message);          \
   } while (0)
-#define PLATFORM_ABORT() abort()
+#define ORBIT_INTERNAL_PLATFORM_ABORT() abort()
 #endif
 
 #ifdef __clang__

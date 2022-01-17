@@ -52,7 +52,7 @@ void InitLogFile(const std::filesystem::path& path) {
   // which tries to lock on the same mutex a second time. This will
   // lead to an error since the mutex is not recursive.
   if (log_file.get() != nullptr) {
-    PLATFORM_ABORT();
+    ORBIT_INTERNAL_PLATFORM_ABORT();
   }
 
   // TEMP_FAILURE_RETRY for FILE*
