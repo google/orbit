@@ -75,7 +75,7 @@ void TutorialOverlay::InitAllStepsFromUi() {
   steps_.clear();
   for (int i = 0; i < ui_->tabWidget->count(); ++i) {
     const std::string tab_name = ui_->tabWidget->widget(i)->objectName().toStdString();
-    CHECK(steps_.find(tab_name) == steps_.end());
+    ORBIT_CHECK(steps_.find(tab_name) == steps_.end());
     steps_[tab_name] = InitializeStep(i);
   }
 }
@@ -119,9 +119,9 @@ void TutorialOverlay::CreateProgressIndicators() {
 }
 
 void TutorialOverlay::UpdateProgressIndicators() {
-  CHECK(HasActiveStep());
+  ORBIT_CHECK(HasActiveStep());
   int active_step = GetActiveSection().active_step_index;
-  CHECK(active_step >= 0 && static_cast<size_t>(active_step) < progress_indicators_.size());
+  ORBIT_CHECK(active_step >= 0 && static_cast<size_t>(active_step) < progress_indicators_.size());
   progress_indicators_[active_step]->setChecked(true);
 }
 
@@ -163,7 +163,7 @@ void TutorialOverlay::StartSection(const std::string& section) {
   }
 
   auto it = sections_.find(section);
-  CHECK(it != sections_.end());
+  ORBIT_CHECK(it != sections_.end());
 
   active_section_ = it;
   it->second.active_step_index = it->second.step_names.empty() ? -1 : 0;
@@ -176,7 +176,7 @@ void TutorialOverlay::AddSection(std::string section_name, std::string title,
                                  std::vector<std::string> step_names) {
   Section section;
   for (auto& name : step_names) {
-    CHECK(StepExists(name));
+    ORBIT_CHECK(StepExists(name));
   }
   section.step_names = std::move(step_names);
   section.title = std::move(title);
@@ -255,12 +255,12 @@ bool TutorialOverlay::eventFilter(QObject*, QEvent* event) {
 
 void TutorialOverlay::SetupStep(const std::string& ui_tab_name, StepSetup step_setup) {
   auto it = steps_.find(ui_tab_name);
-  CHECK(it != steps_.end());
+  ORBIT_CHECK(it != steps_.end());
   it->second.setup = step_setup;
 }
 
 const TutorialOverlay::StepSetup& TutorialOverlay::GetStep(const std::string& name) const {
-  CHECK(StepExists(name));
+  ORBIT_CHECK(StepExists(name));
   auto it = steps_.find(name);
   return it->second.setup;
 }
@@ -402,10 +402,10 @@ bool TutorialOverlay::HasActiveStep() const {
 }
 
 const TutorialOverlay::Step& TutorialOverlay::GetActiveStep() const {
-  CHECK(HasActiveStep());
+  ORBIT_CHECK(HasActiveStep());
   auto& section = GetActiveSection();
   auto it = steps_.find(section.step_names[section.active_step_index]);
-  CHECK(it != steps_.end());
+  ORBIT_CHECK(it != steps_.end());
 
   return it->second;
 }
@@ -416,7 +416,7 @@ TutorialOverlay::Step& TutorialOverlay::GetActiveStep() {
 }
 
 const TutorialOverlay::Section& TutorialOverlay::GetActiveSection() const {
-  CHECK(HasActiveSection());
+  ORBIT_CHECK(HasActiveSection());
   return active_section_->second;
 }
 
@@ -426,12 +426,12 @@ TutorialOverlay::Section& TutorialOverlay::GetActiveSection() {
 }
 
 bool TutorialOverlay::ActiveStepIsFirstInSection() const {
-  CHECK(HasActiveSection());
+  ORBIT_CHECK(HasActiveSection());
   return GetActiveSection().active_step_index == 0;
 }
 
 bool TutorialOverlay::ActiveStepIsLastInSection() const {
-  CHECK(HasActiveSection());
+  ORBIT_CHECK(HasActiveSection());
   return static_cast<size_t>(GetActiveSection().active_step_index) ==
          GetActiveSection().step_names.size() - 1;
 }

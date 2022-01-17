@@ -191,10 +191,10 @@ const FunctionInfo* SamplingReportDataView::GetFunctionInfoFromRow(int row) {
 std::optional<std::pair<std::string, std::string>>
 SamplingReportDataView::GetModulePathAndBuildIdFromRow(int row) const {
   const ProcessData* process = app_->GetCaptureData().process();
-  CHECK(process != nullptr);
+  ORBIT_CHECK(process != nullptr);
 
   const SampledFunction& sampled_function = GetSampledFunction(row);
-  CHECK(sampled_function.absolute_address != 0);
+  ORBIT_CHECK(sampled_function.absolute_address != 0);
   auto result = process->FindModuleByAddress(sampled_function.absolute_address);
   if (result.has_error()) {
     ORBIT_ERROR("result %s", result.error().message());

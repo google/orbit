@@ -43,7 +43,7 @@ class LockFreeBufferCaptureEventProducer : public CaptureEventProducer {
   void ShutdownAndWait() final {
     shutdown_requested_ = true;
 
-    CHECK(forwarder_thread_.joinable());
+    ORBIT_CHECK(forwarder_thread_.joinable());
     forwarder_thread_.join();
 
     CaptureEventProducer::ShutdownAndWait();

@@ -174,7 +174,7 @@ void ThreadStateBar::DoUpdatePrimitives(Batcher& batcher, TextRenderer& text_ren
 
   uint64_t ignore_until_ns = 0;
 
-  CHECK(capture_data_ != nullptr);
+  ORBIT_CHECK(capture_data_ != nullptr);
   capture_data_->ForEachThreadStateSliceIntersectingTimeRange(
       GetThreadId(), min_tick, max_tick, [&](const ThreadStateSliceInfo& slice) {
         if (slice.end_timestamp_ns() <= ignore_until_ns) {

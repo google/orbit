@@ -14,8 +14,8 @@ Viewport::Viewport(int width, int height)
     : screen_width_(width), screen_height_(height), world_width_(width), world_height_(height) {}
 
 void Viewport::Resize(int width, int height) {
-  CHECK(width > 0);
-  CHECK(height > 0);
+  ORBIT_CHECK(width > 0);
+  ORBIT_CHECK(height > 0);
 
   if (width == screen_width_ && height == screen_height_) return;
 

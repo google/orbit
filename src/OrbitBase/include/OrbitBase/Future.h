@@ -85,7 +85,7 @@ class InternalFutureBase {
   }
 
   void Wait() const {
-    CHECK(IsValid());
+    ORBIT_CHECK(IsValid());
     absl::MutexLock lock{&this->shared_state_->mutex};
     this->shared_state_->mutex.Await(absl::Condition(
         +[](const std::shared_ptr<SharedState<T>>* shared_state) ABSL_EXCLUSIVE_LOCKS_REQUIRED(

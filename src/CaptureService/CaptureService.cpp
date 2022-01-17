@@ -29,12 +29,12 @@ CaptureService::CaptureService() {
 
 void CaptureService::AddCaptureStartStopListener(CaptureStartStopListener* listener) {
   bool new_insertion = capture_start_stop_listeners_.insert(listener).second;
-  CHECK(new_insertion);
+  ORBIT_CHECK(new_insertion);
 }
 
 void CaptureService::RemoveCaptureStartStopListener(CaptureStartStopListener* listener) {
   bool was_removed = capture_start_stop_listeners_.erase(listener) > 0;
-  CHECK(was_removed);
+  ORBIT_CHECK(was_removed);
 }
 
 grpc::Status CaptureService::InitializeCapture(

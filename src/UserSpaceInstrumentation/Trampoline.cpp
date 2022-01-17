@@ -210,7 +210,7 @@ void AppendCallToEntryPayload(uint64_t entry_payload_function_address,
       .AppendBytes({0x48, 0xbe});
   // This fails if the code for the trampoline was changed - see the comment at the declaration of
   // kOffsetOfFunctionIdInCallToEntryPayload above.
-  CHECK(trampoline.GetResultAsVector().size() == kOffsetOfFunctionIdInCallToEntryPayload);
+  ORBIT_CHECK(trampoline.GetResultAsVector().size() == kOffsetOfFunctionIdInCallToEntryPayload);
   // The value of function id will be overwritten by every call to `InstrumentFunction`. This is
   // just a placeholder.
   trampoline.AppendImmediate64(0xDEADBEEFDEADBEEF)
@@ -508,7 +508,7 @@ ErrorMessageOr<std::vector<AddressRange>> GetUnavailableAddressRanges(pid_t pid)
         !safe_strtou64_base(addresses[1], &address_end, 16)) {
       continue;
     }
-    CHECK(address_begin < address_end);
+    ORBIT_CHECK(address_begin < address_end);
     // Join with previous segment ...
     if (result.back().end == address_begin) {
       result.back().end = address_end;
@@ -761,7 +761,7 @@ uint64_t GetMaxTrampolineSize() {
     unused_code.AppendBytes(std::vector<uint8_t>(kMaxRelocatedPrologueSize, 0));
     auto result =
         AppendJumpBackCode(/*address_after_prologue=*/0, /*trampoline_address=*/0, unused_code);
-    CHECK(!result.has_error());
+    ORBIT_CHECK(!result.has_error());
 
     // Round up to the next multiple of 32 so we get aligned jump targets at the beginning of the
     // each trampoline.

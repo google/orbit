@@ -23,7 +23,7 @@ Future<void> JoinFutures(absl::Span<const Future<void>> futures) {
   shared_state->incomplete_futures = futures.size();
 
   for (const auto& future : futures) {
-    CHECK(future.IsValid());
+    ORBIT_CHECK(future.IsValid());
     orbit_base::FutureRegisterContinuationResult const result =
         future.RegisterContinuation([shared_state]() {
           absl::MutexLock lock{&shared_state->mutex};

@@ -11,7 +11,7 @@
 #include "VulkanTutorialFragmentShader.h"
 #include "VulkanTutorialVertexShader.h"
 
-#define CHECK_VK_SUCCESS(call) CHECK((call) == VK_SUCCESS)
+#define CHECK_VK_SUCCESS(call) ORBIT_CHECK((call) == VK_SUCCESS)
 
 namespace orbit_vulkan_tutorial {
 
@@ -99,7 +99,7 @@ void OffscreenRenderingVulkanTutorial::CreateInstance() {
       .apiVersion = VK_API_VERSION_1_1,
   };
 
-  CHECK(AreValidationLayersSupported());
+  ORBIT_CHECK(AreValidationLayersSupported());
   VkInstanceCreateInfo create_info{
       .sType = VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO,
       .pApplicationInfo = &app_info,
@@ -142,7 +142,7 @@ bool OffscreenRenderingVulkanTutorial::AreValidationLayersSupported() {
 void OffscreenRenderingVulkanTutorial::PickPhysicalDevice() {
   uint32_t physical_device_count = 0;
   CHECK_VK_SUCCESS(vkEnumeratePhysicalDevices(instance_, &physical_device_count, nullptr));
-  CHECK(physical_device_count > 0);
+  ORBIT_CHECK(physical_device_count > 0);
 
   std::vector<VkPhysicalDevice> physical_devices(physical_device_count);
   vkEnumeratePhysicalDevices(instance_, &physical_device_count, physical_devices.data());
@@ -154,7 +154,7 @@ void OffscreenRenderingVulkanTutorial::PickPhysicalDevice() {
     }
   }
 
-  CHECK(physical_device_ != VK_NULL_HANDLE);
+  ORBIT_CHECK(physical_device_ != VK_NULL_HANDLE);
 }
 
 bool OffscreenRenderingVulkanTutorial::IsPhysicalDeviceSuitable(
@@ -243,7 +243,7 @@ void OffscreenRenderingVulkanTutorial::CreateOffscreenImage() {
     }
   }
 
-  CHECK(image_format_ != VkFormat::VK_FORMAT_UNDEFINED);
+  ORBIT_CHECK(image_format_ != VkFormat::VK_FORMAT_UNDEFINED);
   ORBIT_LOG("image_format_=%d", image_format_);
   create_info.format = image_format_;
   CHECK_VK_SUCCESS(vkCreateImage(device_, &create_info, nullptr, &image_));
@@ -253,7 +253,7 @@ void OffscreenRenderingVulkanTutorial::CreateOffscreenImage() {
 
   VkMemoryRequirements memory_requirements{};
   vkGetImageMemoryRequirements(device_, image_, &memory_requirements);
-  CHECK(memory_requirements.memoryTypeBits != 0);
+  ORBIT_CHECK(memory_requirements.memoryTypeBits != 0);
 
   // "memoryTypeBits is a bitmask and contains one bit set for every supported memory type for the
   // resource. Bit i is set if and only if the memory type i in the

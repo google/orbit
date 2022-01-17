@@ -191,8 +191,8 @@ void OrbitGLWidget::messageLogged(const QOpenGLDebugMessage& msg) {
 void OrbitGLWidget::resizeGL(int w, int h) {
   if (gl_canvas_) {
     gl_canvas_->Resize(w, h);
-    CHECK(this->geometry().width() == w);
-    CHECK(this->geometry().height() == h);
+    ORBIT_CHECK(this->geometry().width() == w);
+    ORBIT_CHECK(this->geometry().height() == h);
   }
 }
 

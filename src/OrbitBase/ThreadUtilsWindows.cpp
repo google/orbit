@@ -41,23 +41,23 @@ uint32_t GetCurrentThreadIdNative() {
 uint32_t GetCurrentProcessIdNative() { return ::GetCurrentProcessId(); }
 
 uint32_t FromNativeThreadId(uint32_t tid) {
-  CHECK(IsMultipleOfFour(tid) || tid == kInvalidWindowsThreadId);
+  ORBIT_CHECK(IsMultipleOfFour(tid) || tid == kInvalidWindowsThreadId);
   return tid != kInvalidWindowsThreadId ? tid : orbit_base::kInvalidThreadId;
 }
 
 uint32_t FromNativeProcessId(uint32_t pid) {
   bool is_invalid_pid = (pid == kInvalidWindowsProcessId_0 || pid == kInvalidWindowsProcessId_1);
-  CHECK(IsMultipleOfFour(pid) || is_invalid_pid);
+  ORBIT_CHECK(IsMultipleOfFour(pid) || is_invalid_pid);
   return !is_invalid_pid ? pid : orbit_base::kInvalidProcessId;
 }
 
 uint32_t ToNativeThreadId(uint32_t tid) {
-  CHECK(IsMultipleOfFour(tid) || tid == orbit_base::kInvalidThreadId);
+  ORBIT_CHECK(IsMultipleOfFour(tid) || tid == orbit_base::kInvalidThreadId);
   return tid != orbit_base::kInvalidThreadId ? tid : kInvalidWindowsThreadId;
 }
 
 uint32_t ToNativeProcessId(uint32_t pid) {
-  CHECK(IsMultipleOfFour(pid) || pid == orbit_base::kInvalidProcessId);
+  ORBIT_CHECK(IsMultipleOfFour(pid) || pid == orbit_base::kInvalidProcessId);
   return pid != orbit_base::kInvalidProcessId ? pid : kInvalidWindowsProcessId_0;
 }
 

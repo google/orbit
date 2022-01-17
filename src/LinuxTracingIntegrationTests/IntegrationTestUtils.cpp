@@ -18,7 +18,7 @@ namespace orbit_linux_tracing_integration_tests {
 std::filesystem::path GetExecutableBinaryPath(pid_t pid) {
   auto error_or_executable_path =
       orbit_base::GetExecutablePath(orbit_base::FromNativeProcessId(pid));
-  CHECK(error_or_executable_path.has_value());
+  ORBIT_CHECK(error_or_executable_path.has_value());
   return error_or_executable_path.value();
 }
 
@@ -26,17 +26,17 @@ orbit_grpc_protos::ModuleSymbols GetExecutableBinaryModuleSymbols(pid_t pid) {
   const std::filesystem::path& executable_path = GetExecutableBinaryPath(pid);
 
   auto error_or_elf_file = orbit_object_utils::CreateElfFile(executable_path.string());
-  CHECK(error_or_elf_file.has_value());
+  ORBIT_CHECK(error_or_elf_file.has_value());
   const std::unique_ptr<orbit_object_utils::ElfFile>& elf_file = error_or_elf_file.value();
 
   auto error_or_module = elf_file->LoadDebugSymbols();
-  CHECK(error_or_module.has_value());
+  ORBIT_CHECK(error_or_module.has_value());
   return error_or_module.value();
 }
 
 orbit_grpc_protos::ModuleInfo GetExecutableBinaryModuleInfo(pid_t pid) {
   auto error_or_module_infos = orbit_object_utils::ReadModules(pid);
-  CHECK(error_or_module_infos.has_value());
+  ORBIT_CHECK(error_or_module_infos.has_value());
   const std::vector<orbit_grpc_protos::ModuleInfo>& module_infos = error_or_module_infos.value();
 
   const std::filesystem::path& executable_path = GetExecutableBinaryPath(pid);
@@ -48,7 +48,7 @@ orbit_grpc_protos::ModuleInfo GetExecutableBinaryModuleInfo(pid_t pid) {
       break;
     }
   }
-  CHECK(executable_module_info != nullptr);
+  ORBIT_CHECK(executable_module_info != nullptr);
   return *executable_module_info;
 }
 

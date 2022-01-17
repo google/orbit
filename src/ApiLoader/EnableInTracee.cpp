@@ -112,8 +112,8 @@ ErrorMessageOr<void> SetApiEnabledInTracee(const CaptureOptions& capture_options
   OUTCOME_TRY(auto&& modules_by_path, GetModulesByPathForPid(pid));
   for (const ApiFunction& api_function : capture_options.api_functions()) {
     // Filter api functions.
-    CHECK(absl::StartsWith(api_function.name(), kOrbitApiGetFunctionTableAddressPrefix) ||
-          absl::StartsWith(api_function.name(), kOrbitApiGetFunctionTableAddressWinPrefix));
+    ORBIT_CHECK(absl::StartsWith(api_function.name(), kOrbitApiGetFunctionTableAddressPrefix) ||
+                absl::StartsWith(api_function.name(), kOrbitApiGetFunctionTableAddressWinPrefix));
 
     // Get ModuleInfo associated with function.
     const ModuleInfo* module_info = FindModuleInfoForApiFunction(api_function, modules_by_path);

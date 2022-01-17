@@ -18,10 +18,10 @@ using orbit_grpc_protos::ReceiveCommandsAndSendEventsResponse;
 namespace orbit_capture_event_producer {
 
 void CaptureEventProducer::BuildAndStart(const std::shared_ptr<grpc::Channel>& channel) {
-  CHECK(channel != nullptr);
+  ORBIT_CHECK(channel != nullptr);
 
   producer_side_service_stub_ = ProducerSideService::NewStub(channel);
-  CHECK(producer_side_service_stub_ != nullptr);
+  ORBIT_CHECK(producer_side_service_stub_ != nullptr);
 
   connect_and_receive_commands_thread_ = std::thread{[this] { ConnectAndReceiveCommandsThread(); }};
 }
@@ -29,7 +29,7 @@ void CaptureEventProducer::BuildAndStart(const std::shared_ptr<grpc::Channel>& c
 void CaptureEventProducer::ShutdownAndWait() {
   {
     absl::WriterMutexLock lock{&shutdown_requested_mutex_};
-    CHECK(!shutdown_requested_);
+    ORBIT_CHECK(!shutdown_requested_);
     shutdown_requested_ = true;
   }
 
@@ -41,7 +41,7 @@ void CaptureEventProducer::ShutdownAndWait() {
     }
   }
 
-  CHECK(connect_and_receive_commands_thread_.joinable());
+  ORBIT_CHECK(connect_and_receive_commands_thread_.joinable());
   connect_and_receive_commands_thread_.join();
 
   producer_side_service_stub_.reset();
@@ -55,15 +55,15 @@ void CaptureEventProducer::ShutdownAndWait() {
 
 bool CaptureEventProducer::SendCaptureEvents(
     const orbit_grpc_protos::ReceiveCommandsAndSendEventsRequest& send_events_request) {
-  CHECK(send_events_request.event_case() ==
-        orbit_grpc_protos::ReceiveCommandsAndSendEventsRequest::kBufferedCaptureEvents);
+  ORBIT_CHECK(send_events_request.event_case() ==
+              orbit_grpc_protos::ReceiveCommandsAndSendEventsRequest::kBufferedCaptureEvents);
 
-  CHECK(producer_side_service_stub_ != nullptr);
+  ORBIT_CHECK(producer_side_service_stub_ != nullptr);
   {
     // Acquiring the mutex just for the CHECK might seem expensive,
     // but the gRPC call that follows is orders of magnitude slower.
     absl::ReaderMutexLock lock{&shutdown_requested_mutex_};
-    CHECK(!shutdown_requested_);
+    ORBIT_CHECK(!shutdown_requested_);
   }
 
   bool write_succeeded;
@@ -82,10 +82,10 @@ bool CaptureEventProducer::SendCaptureEvents(
 }
 
 bool CaptureEventProducer::NotifyAllEventsSent() {
-  CHECK(producer_side_service_stub_ != nullptr);
+  ORBIT_CHECK(producer_side_service_stub_ != nullptr);
   {
     absl::ReaderMutexLock lock{&shutdown_requested_mutex_};
-    CHECK(!shutdown_requested_);
+    ORBIT_CHECK(!shutdown_requested_);
   }
 
   orbit_grpc_protos::ReceiveCommandsAndSendEventsRequest all_events_sent_request;
@@ -108,7 +108,7 @@ bool CaptureEventProducer::NotifyAllEventsSent() {
 }
 
 void CaptureEventProducer::ConnectAndReceiveCommandsThread() {
-  CHECK(producer_side_service_stub_ != nullptr);
+  ORBIT_CHECK(producer_side_service_stub_ != nullptr);
 
   while (true) {
     {

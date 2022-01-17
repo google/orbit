@@ -241,7 +241,7 @@ void GlCanvas::CleanupGlState() { glPopAttrib(); }
 
 void GlCanvas::Render(int width, int height) {
   ORBIT_SCOPE("GlCanvas::Render");
-  CHECK(width == viewport_.GetScreenWidth() && height == viewport_.GetScreenHeight());
+  ORBIT_CHECK(width == viewport_.GetScreenWidth() && height == viewport_.GetScreenHeight());
 
   if (!IsRedrawNeeded()) {
     return;

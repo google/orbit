@@ -120,7 +120,7 @@ ErrorMessageOr<void> RegisterState::BackupRegisters(pid_t tid) {
 
 ErrorMessageOr<void> RegisterState::RestoreRegisters() {
   // BackupRegisters needs to be called before RestoreRegisters.
-  CHECK(tid_ != -1);
+  ORBIT_CHECK(tid_ != -1);
 
   iovec iov;
   iov.iov_base = &general_purpose_registers_;

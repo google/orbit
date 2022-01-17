@@ -239,7 +239,7 @@ OrbitApp::OrbitApp(orbit_gl::MainWindowInterface* main_window,
       main_thread_executor_(main_thread_executor),
       crash_handler_(crash_handler),
       metrics_uploader_(metrics_uploader) {
-  CHECK(main_window_ != nullptr);
+  ORBIT_CHECK(main_window_ != nullptr);
 
   thread_pool_ = orbit_base::ThreadPool::Create(
       /*thread_pool_min_size=*/4, /*thread_pool_max_size=*/256, /*thread_ttl=*/absl::Seconds(1),
@@ -252,7 +252,7 @@ OrbitApp::OrbitApp(orbit_gl::MainWindowInterface* main_window,
   const unsigned number_of_logical_cores = std::thread::hardware_concurrency();
   // std::thread::hardware_concurrency may return 0 on unsupported platforms but that shouldn't
   // occur on standard Linux or Windows.
-  CHECK(number_of_logical_cores > 0);
+  ORBIT_CHECK(number_of_logical_cores > 0);
 
   core_count_sized_thread_pool_ = orbit_base::ThreadPool::Create(
       /*thread_pool_min_size=*/number_of_logical_cores,
@@ -356,11 +356,11 @@ void OrbitApp::OnCaptureStarted(const orbit_grpc_protos::CaptureStarted& capture
         frame_track_online_processor_ =
             orbit_gl::FrameTrackOnlineProcessor(GetCaptureData(), GetMutableTimeGraph());
 
-        CHECK(capture_started_callback_ != nullptr);
+        ORBIT_CHECK(capture_started_callback_ != nullptr);
         capture_started_callback_(file_path);
 
         if (!capture_data_->instrumented_functions().empty()) {
-          CHECK(select_live_tab_callback_);
+          ORBIT_CHECK(select_live_tab_callback_);
           select_live_tab_callback_();
         }
 
@@ -416,7 +416,7 @@ Future<void> OrbitApp::OnCaptureComplete() {
         SetTopDownView(GetCaptureData());
         SetBottomUpView(GetCaptureData());
 
-        CHECK(capture_stopped_callback_);
+        ORBIT_CHECK(capture_stopped_callback_);
         capture_stopped_callback_();
 
         FireRefreshCallbacks();
@@ -426,7 +426,7 @@ Future<void> OrbitApp::OnCaptureComplete() {
 Future<void> OrbitApp::OnCaptureCancelled() {
   return main_thread_executor_->Schedule([this]() mutable {
     ORBIT_SCOPE("OnCaptureCancelled");
-    CHECK(capture_failed_callback_);
+    ORBIT_CHECK(capture_failed_callback_);
     capture_failed_callback_();
 
     ClearCapture();
@@ -437,7 +437,7 @@ Future<void> OrbitApp::OnCaptureFailed(ErrorMessage error_message) {
   return main_thread_executor_->Schedule(
       [this, error_message = std::move(error_message)]() mutable {
         ORBIT_SCOPE("OnCaptureFailed");
-        CHECK(capture_failed_callback_);
+        ORBIT_CHECK(capture_failed_callback_);
         capture_failed_callback_();
 
         ClearCapture();
@@ -715,7 +715,7 @@ std::unique_ptr<OrbitApp> OrbitApp::Create(
 
 void OrbitApp::PostInit(bool is_connected) {
   if (is_connected) {
-    CHECK(process_manager_ != nullptr);
+    ORBIT_CHECK(process_manager_ != nullptr);
 
     capture_client_ = std::make_unique<CaptureClient>(grpc_channel_);
 
@@ -825,8 +825,8 @@ void OrbitApp::RefreshCaptureView() {
 }
 
 void OrbitApp::RenderImGuiDebugUI() {
-  CHECK(debug_canvas_ != nullptr);
-  CHECK(capture_window_ != nullptr);
+  ORBIT_CHECK(debug_canvas_ != nullptr);
+  ORBIT_CHECK(capture_window_ != nullptr);
   ScopeImguiContext context(debug_canvas_->GetImGuiContext());
   Orbit_ImGui_NewFrame(debug_canvas_);
 
@@ -874,10 +874,10 @@ void OrbitApp::RenderImGuiDebugUI() {
 }
 
 void OrbitApp::Disassemble(uint32_t pid, const FunctionInfo& function) {
-  CHECK(process_ != nullptr);
+  ORBIT_CHECK(process_ != nullptr);
   const ModuleData* module = module_manager_->GetModuleByPathAndBuildId(function.module_path(),
                                                                         function.module_build_id());
-  CHECK(module != nullptr);
+  ORBIT_CHECK(module != nullptr);
   const bool is_64_bit = process_->is_64_bit();
   std::optional<uint64_t> absolute_address =
       orbit_client_data::function_utils::GetAbsoluteAddress(function, *process_, *module);
@@ -997,20 +997,20 @@ void OrbitApp::MainTick() {
 }
 
 void OrbitApp::SetCaptureWindow(CaptureWindow* capture) {
-  CHECK(capture_window_ == nullptr);
+  ORBIT_CHECK(capture_window_ == nullptr);
   capture_window_ = capture;
   capture_window_->set_draw_help(false);
 }
 
 void OrbitApp::SetDebugCanvas(GlCanvas* debug_canvas) {
-  CHECK(debug_canvas_ == nullptr);
+  ORBIT_CHECK(debug_canvas_ == nullptr);
   debug_canvas_ = debug_canvas;
   debug_canvas_->EnableImGui();
   debug_canvas_->AddRenderCallback([this]() { RenderImGuiDebugUI(); });
 }
 
 void OrbitApp::SetIntrospectionWindow(IntrospectionWindow* introspection_window) {
-  CHECK(introspection_window_ == nullptr);
+  ORBIT_CHECK(introspection_window_ == nullptr);
   introspection_window_ = introspection_window;
 }
 
@@ -1037,7 +1037,7 @@ void OrbitApp::SetSamplingReport(
 
   auto report = std::make_shared<SamplingReport>(this, std::move(post_processed_sampling_data),
                                                  std::move(unique_callstacks));
-  CHECK(sampling_reports_callback_);
+  ORBIT_CHECK(sampling_reports_callback_);
   orbit_data_views::DataView* callstack_data_view = GetOrCreateDataView(DataViewType::kCallstack);
   sampling_reports_callback_(callstack_data_view, report);
 
@@ -1048,7 +1048,7 @@ void OrbitApp::SetSelectionReport(
     PostProcessedSamplingData post_processed_sampling_data,
     absl::flat_hash_map<uint64_t, std::shared_ptr<CallstackInfo>> unique_callstacks,
     bool has_summary) {
-  CHECK(selection_report_callback_);
+  ORBIT_CHECK(selection_report_callback_);
   // clear old selection report
   if (selection_report_ != nullptr) {
     selection_report_->ClearReport();
@@ -1065,7 +1065,7 @@ void OrbitApp::SetSelectionReport(
 
 void OrbitApp::SetTopDownView(const CaptureData& capture_data) {
   ORBIT_SCOPE_FUNCTION;
-  CHECK(top_down_view_callback_);
+  ORBIT_CHECK(top_down_view_callback_);
   std::unique_ptr<CallTreeView> top_down_view =
       CallTreeView::CreateTopDownViewFromPostProcessedSamplingData(
           capture_data.post_processed_sampling_data(), capture_data);
@@ -1073,14 +1073,14 @@ void OrbitApp::SetTopDownView(const CaptureData& capture_data) {
 }
 
 void OrbitApp::ClearTopDownView() {
-  CHECK(top_down_view_callback_);
+  ORBIT_CHECK(top_down_view_callback_);
   top_down_view_callback_(std::make_unique<CallTreeView>());
 }
 
 void OrbitApp::SetSelectionTopDownView(
     const PostProcessedSamplingData& selection_post_processed_data,
     const CaptureData& capture_data) {
-  CHECK(selection_top_down_view_callback_);
+  ORBIT_CHECK(selection_top_down_view_callback_);
   std::unique_ptr<CallTreeView> selection_top_down_view =
       CallTreeView::CreateTopDownViewFromPostProcessedSamplingData(selection_post_processed_data,
                                                                    capture_data);
@@ -1088,13 +1088,13 @@ void OrbitApp::SetSelectionTopDownView(
 }
 
 void OrbitApp::ClearSelectionTopDownView() {
-  CHECK(selection_top_down_view_callback_);
+  ORBIT_CHECK(selection_top_down_view_callback_);
   selection_top_down_view_callback_(std::make_unique<CallTreeView>());
 }
 
 void OrbitApp::SetBottomUpView(const CaptureData& capture_data) {
   ORBIT_SCOPE_FUNCTION;
-  CHECK(bottom_up_view_callback_);
+  ORBIT_CHECK(bottom_up_view_callback_);
   std::unique_ptr<CallTreeView> bottom_up_view =
       CallTreeView::CreateBottomUpViewFromPostProcessedSamplingData(
           capture_data.post_processed_sampling_data(), capture_data);
@@ -1102,14 +1102,14 @@ void OrbitApp::SetBottomUpView(const CaptureData& capture_data) {
 }
 
 void OrbitApp::ClearBottomUpView() {
-  CHECK(bottom_up_view_callback_);
+  ORBIT_CHECK(bottom_up_view_callback_);
   bottom_up_view_callback_(std::make_unique<CallTreeView>());
 }
 
 void OrbitApp::SetSelectionBottomUpView(
     const PostProcessedSamplingData& selection_post_processed_data,
     const CaptureData& capture_data) {
-  CHECK(selection_bottom_up_view_callback_);
+  ORBIT_CHECK(selection_bottom_up_view_callback_);
   std::unique_ptr<CallTreeView> selection_bottom_up_view =
       CallTreeView::CreateBottomUpViewFromPostProcessedSamplingData(selection_post_processed_data,
                                                                     capture_data);
@@ -1117,7 +1117,7 @@ void OrbitApp::SetSelectionBottomUpView(
 }
 
 void OrbitApp::ClearSelectionBottomUpView() {
-  CHECK(selection_bottom_up_view_callback_);
+  ORBIT_CHECK(selection_bottom_up_view_callback_);
   selection_bottom_up_view_callback_(std::make_unique<CallTreeView>());
 }
 
@@ -1140,12 +1140,12 @@ absl::Duration OrbitApp::GetCaptureTimeAt(uint64_t timestamp_ns) const {
 }
 
 std::string OrbitApp::GetSaveFile(const std::string& extension) const {
-  CHECK(save_file_callback_);
+  ORBIT_CHECK(save_file_callback_);
   return save_file_callback_(extension);
 }
 
 void OrbitApp::SetClipboard(const std::string& text) {
-  CHECK(clipboard_callback_);
+  ORBIT_CHECK(clipboard_callback_);
   clipboard_callback_(text);
 }
 
@@ -1314,7 +1314,7 @@ void OrbitApp::FireRefreshCallbacks(DataViewType type) {
     }
   }
 
-  CHECK(refresh_callback_);
+  ORBIT_CHECK(refresh_callback_);
   refresh_callback_(type);
 }
 
@@ -1440,7 +1440,7 @@ void OrbitApp::StartCapture() {
 
   metrics_capture_complete_data_ = orbit_metrics_uploader::CaptureCompleteData{};
 
-  CHECK(capture_client_ != nullptr);
+  ORBIT_CHECK(capture_client_ != nullptr);
 
   auto capture_event_processor = CreateCaptureEventProcessor(
       this, process->name(), frame_track_function_ids, [this](const ErrorMessage& error) {
@@ -1502,7 +1502,7 @@ void OrbitApp::StopCapture() {
   metrics_uploader_->SendLogEvent(orbit_metrics_uploader::OrbitLogEvent::ORBIT_CAPTURE_DURATION,
                                   capture_time_ms);
 
-  CHECK(capture_stop_requested_callback_);
+  ORBIT_CHECK(capture_stop_requested_callback_);
   capture_stop_requested_callback_();
 }
 
@@ -1514,7 +1514,7 @@ void OrbitApp::AbortCapture() {
     return;
   }
 
-  CHECK(capture_stop_requested_callback_);
+  ORBIT_CHECK(capture_stop_requested_callback_);
   capture_stop_requested_callback_();
 }
 
@@ -1532,7 +1532,7 @@ void OrbitApp::ClearCapture() {
 
   UpdateAfterCaptureCleared();
 
-  CHECK(capture_cleared_callback_);
+  ORBIT_CHECK(capture_cleared_callback_);
   capture_cleared_callback_();
 
   FireRefreshCallbacks();
@@ -1562,7 +1562,7 @@ bool OrbitApp::IsCaptureConnected(const CaptureData& capture) const {
   if (selected_process == nullptr) return false;
 
   const ProcessData* capture_process = capture.process();
-  CHECK(capture_process != nullptr);
+  ORBIT_CHECK(capture_process != nullptr);
 
   return selected_process->pid() == capture_process->pid() &&
          selected_process->full_path() == capture_process->full_path();
@@ -1585,21 +1585,21 @@ void OrbitApp::SendTooltipToUi(const std::string& tooltip) {
 
 void OrbitApp::SendInfoToUi(const std::string& title, const std::string& text) {
   main_thread_executor_->Schedule([this, title, text] {
-    CHECK(info_message_callback_);
+    ORBIT_CHECK(info_message_callback_);
     info_message_callback_(title, text);
   });
 }
 
 void OrbitApp::SendWarningToUi(const std::string& title, const std::string& text) {
   main_thread_executor_->Schedule([this, title, text] {
-    CHECK(warning_message_callback_);
+    ORBIT_CHECK(warning_message_callback_);
     warning_message_callback_(title, text);
   });
 }
 
 void OrbitApp::SendErrorToUi(const std::string& title, const std::string& text) {
   main_thread_executor_->Schedule([this, title, text] {
-    CHECK(error_message_callback_);
+    ORBIT_CHECK(error_message_callback_);
     error_message_callback_(title, text);
   });
 }
@@ -1985,7 +1985,7 @@ orbit_base::Future<ErrorMessageOr<void>> OrbitApp::LoadPresetModule(
                 module_path.string());
   }
 
-  CHECK(!modules_data.empty());
+  ORBIT_CHECK(!modules_data.empty());
   const ModuleData* module_data = modules_data.at(0);
 
   auto handle_hooks_and_frame_tracks =
@@ -2208,7 +2208,7 @@ orbit_base::Future<std::vector<ErrorMessageOr<void>>> OrbitApp::ReloadModules(
     absl::Span<const ModuleInfo> module_infos) {
   ProcessData* process = GetMutableTargetProcess();
 
-  CHECK(process != nullptr);
+  ORBIT_CHECK(process != nullptr);
   process->UpdateModuleInfos(module_infos);
 
   // Updating the list of loaded modules (in memory) of a process, can mean that a process has
@@ -2405,7 +2405,7 @@ void OrbitApp::SelectTimer(const orbit_client_protos::TimerInfo* timer_info) {
   uint64_t group_id = timer_info != nullptr ? timer_info->group_id() : kOrbitDefaultGroupId;
   data_manager_->set_highlighted_group_id(group_id);
 
-  CHECK(timer_selected_callback_);
+  ORBIT_CHECK(timer_selected_callback_);
   timer_selected_callback_(timer_info);
   RequestUpdatePrimitives();
 }
@@ -2605,8 +2605,8 @@ bool OrbitApp::IsLoadingCapture() const {
 }
 
 ScopedStatus OrbitApp::CreateScopedStatus(const std::string& initial_message) {
-  CHECK(std::this_thread::get_id() == main_thread_id_);
-  CHECK(status_listener_ != nullptr);
+  ORBIT_CHECK(std::this_thread::get_id() == main_thread_id_);
+  ORBIT_CHECK(status_listener_ != nullptr);
   return ScopedStatus{GetMainThreadExecutor()->weak_from_this(), status_listener_, initial_message};
 }
 
@@ -2647,8 +2647,8 @@ void OrbitApp::AddFrameTrack(const FunctionInfo& function) {
 }
 
 void OrbitApp::AddFrameTrack(uint64_t instrumented_function_id) {
-  CHECK(instrumented_function_id != 0);
-  CHECK(std::this_thread::get_id() == main_thread_id_);
+  ORBIT_CHECK(instrumented_function_id != 0);
+  ORBIT_CHECK(std::this_thread::get_id() == main_thread_id_);
   if (!HasCaptureData()) {
     return;
   }
@@ -2697,7 +2697,7 @@ void OrbitApp::RemoveFrameTrack(const FunctionInfo& function) {
 }
 
 void OrbitApp::RemoveFrameTrack(uint64_t instrumented_function_id) {
-  CHECK(std::this_thread::get_id() == main_thread_id_);
+  ORBIT_CHECK(std::this_thread::get_id() == main_thread_id_);
 
   // We can only remove the frame track from the capture data if we have capture data and
   // the frame track is actually enabled in the capture data.
@@ -2751,8 +2751,8 @@ std::vector<const TimerInfo*> OrbitApp::GetAllTimersForHookedFunction(uint64_t f
 }
 
 void OrbitApp::RefreshFrameTracks() {
-  CHECK(HasCaptureData());
-  CHECK(std::this_thread::get_id() == main_thread_id_);
+  ORBIT_CHECK(HasCaptureData());
+  ORBIT_CHECK(std::this_thread::get_id() == main_thread_id_);
   for (const auto& function_id : GetCaptureData().frame_track_function_ids()) {
     GetMutableTimeGraph()->RemoveFrameTrack(function_id);
     AddFrameTrackTimers(function_id);
@@ -2761,7 +2761,7 @@ void OrbitApp::RefreshFrameTracks() {
 }
 
 void OrbitApp::AddFrameTrackTimers(uint64_t instrumented_function_id) {
-  CHECK(HasCaptureData());
+  ORBIT_CHECK(HasCaptureData());
   const FunctionStats& stats = GetCaptureData().GetFunctionStatsOrDefault(instrumented_function_id);
   if (stats.count() == 0) {
     return;
@@ -2785,7 +2785,7 @@ void OrbitApp::AddFrameTrackTimers(uint64_t instrumented_function_id) {
 
   const InstrumentedFunction* function =
       GetCaptureData().GetInstrumentedFunctionById(instrumented_function_id);
-  CHECK(function != nullptr);
+  ORBIT_CHECK(function != nullptr);
 
   for (size_t k = 0; k < all_start_times.size() - 1; ++k) {
     TimerInfo frame_timer;
@@ -2796,7 +2796,7 @@ void OrbitApp::AddFrameTrackTimers(uint64_t instrumented_function_id) {
 }
 
 void OrbitApp::SetTargetProcess(ProcessData* process) {
-  CHECK(process != nullptr);
+  ORBIT_CHECK(process != nullptr);
 
   if (process != process_) {
     data_manager_->ClearSelectedFunctions();
@@ -2900,8 +2900,8 @@ void OrbitApp::CaptureMetricProcessTimer(const orbit_client_protos::TimerInfo& t
 }
 
 void OrbitApp::TrySaveUserDefinedCaptureInfo() {
-  CHECK(std::this_thread::get_id() == main_thread_id_);
-  CHECK(HasCaptureData());
+  ORBIT_CHECK(std::this_thread::get_id() == main_thread_id_);
+  ORBIT_CHECK(HasCaptureData());
   if (IsCapturing()) {
     // We are going to save it at the end of capture anyways.
     return;

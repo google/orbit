@@ -108,7 +108,7 @@ void SamplingReport::OnSelectAddresses(const absl::flat_hash_set<uint64_t>& addr
 }
 
 void SamplingReport::IncrementCallstackIndex() {
-  CHECK(HasCallstacks());
+  ORBIT_CHECK(HasCallstacks());
   size_t max_index = selected_sorted_callstack_report_->callstack_counts.size() - 1;
   if (++selected_callstack_index_ > max_index) {
     selected_callstack_index_ = 0;
@@ -118,7 +118,7 @@ void SamplingReport::IncrementCallstackIndex() {
 }
 
 void SamplingReport::DecrementCallstackIndex() {
-  CHECK(HasCallstacks());
+  ORBIT_CHECK(HasCallstacks());
   size_t max_index = selected_sorted_callstack_report_->callstack_counts.size() - 1;
   if (selected_callstack_index_ == 0) {
     selected_callstack_index_ = max_index;
@@ -141,7 +141,7 @@ std::string SamplingReport::GetSelectedCallstackString() const {
   uint64_t callstack_id =
       selected_sorted_callstack_report_->callstack_counts[selected_callstack_index_].callstack_id;
   auto callstack_it = unique_callstacks_.find(callstack_id);
-  CHECK(callstack_it != unique_callstacks_.end());
+  ORBIT_CHECK(callstack_it != unique_callstacks_.end());
   CallstackInfo::CallstackType callstack_type = callstack_it->second->type();
 
   std::string type_string = (callstack_type == CallstackInfo::kComplete) ? "" : "  -  Unwind error";
@@ -156,7 +156,7 @@ void SamplingReport::OnCallstackIndexChanged(size_t index) {
     const CallstackCount& cs = selected_sorted_callstack_report_->callstack_counts[index];
     selected_callstack_index_ = index;
     auto it = unique_callstacks_.find(cs.callstack_id);
-    CHECK(it != unique_callstacks_.end());
+    ORBIT_CHECK(it != unique_callstacks_.end());
     callstack_data_view_->SetCallstack(*it->second);
     callstack_data_view_->SetFunctionsToHighlight(selected_addresses_);
   } else {

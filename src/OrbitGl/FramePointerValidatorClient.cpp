@@ -45,7 +45,7 @@ void FramePointerValidatorClient::AnalyzeModules(const std::vector<const ModuleD
   for (const ModuleData* module : modules) {
     ValidateFramePointersRequest request;
     ValidateFramePointersResponse response;
-    CHECK(module != nullptr);
+    ORBIT_CHECK(module != nullptr);
 
     std::vector<const FunctionInfo*> functions = module->GetFunctions();
     request.set_module_path(module->file_path());

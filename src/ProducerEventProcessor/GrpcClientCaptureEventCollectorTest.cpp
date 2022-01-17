@@ -68,7 +68,7 @@ class GrpcClientCaptureEventCollectorTest : public testing::Test {
   }
 
   void CallStopAndWaitEarly() {
-    CHECK(!stop_and_wait_called_);
+    ORBIT_CHECK(!stop_and_wait_called_);
     collector_.StopAndWait();
     stop_and_wait_called_ = true;
   }

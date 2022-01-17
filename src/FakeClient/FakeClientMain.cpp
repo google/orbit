@@ -84,7 +84,7 @@ void ManipulateModuleManagerAndSelectedFunctionsToAddInstrumentedFunctionFromOff
   module_info.set_build_id(build_id);
   module_info.set_load_bias(load_bias);
   module_info.set_executable_segment_offset(elf_file->GetExecutableSegmentOffset());
-  CHECK(module_manager->AddOrUpdateModules({module_info}).empty());
+  ORBIT_CHECK(module_manager->AddOrUpdateModules({module_info}).empty());
 
   orbit_client_protos::FunctionInfo function_info;
   function_info.set_module_path(file_path);
@@ -112,7 +112,7 @@ void ManipulateModuleManagerAndSelectedFunctionsToAddInstrumentedFunctionFromFun
   module_info.set_build_id(build_id);
   module_info.set_load_bias(elf_file->GetLoadBias());
   module_info.set_executable_segment_offset(executable_segment_offset);
-  CHECK(module_manager->AddOrUpdateModules({module_info}).empty());
+  ORBIT_CHECK(module_manager->AddOrUpdateModules({module_info}).empty());
 
   ErrorMessageOr<orbit_grpc_protos::ModuleSymbols> symbols_or_error = elf_file->LoadDebugSymbols();
   ORBIT_FAIL_IF(symbols_or_error.has_error(), "%s", symbols_or_error.error().message());
@@ -204,7 +204,7 @@ void ManipulateModuleManagerToAddFunctionFromFunctionPrefixInSymtabIfExists(
   module_info.set_build_id(build_id);
   module_info.set_load_bias(load_bias);
   module_info.set_executable_segment_offset(elf_file->GetExecutableSegmentOffset());
-  CHECK(module_manager->AddOrUpdateModules({module_info}).empty());
+  ORBIT_CHECK(module_manager->AddOrUpdateModules({module_info}).empty());
 
   std::optional<orbit_grpc_protos::ModuleSymbols> symbols_opt = FindAndLoadDebugSymbols(file_path);
   if (!symbols_opt.has_value()) {
@@ -274,7 +274,7 @@ void WaitForFileModification(const std::string& file_path) {
   }
 
   inotify_event* event = reinterpret_cast<inotify_event*>(buffer);
-  CHECK(event->wd == wd);
+  ORBIT_CHECK(event->wd == wd);
 
   close(inotify_fd);
   ORBIT_LOG("Stopped watching \"%s\"", file_path);
@@ -366,7 +366,7 @@ int main(int argc, char* argv[]) {
   std::shared_ptr<grpc::Channel> grpc_channel =
       grpc::CreateChannel(service_address, grpc::InsecureChannelCredentials());
   ORBIT_LOG("service_address=%s", service_address);
-  CHECK(grpc_channel != nullptr);
+  ORBIT_CHECK(grpc_channel != nullptr);
 
   InstallSigintHandler();
 
@@ -451,9 +451,9 @@ int main(int argc, char* argv[]) {
   absl::Time start_time = absl::Now();
   while (!exit_requested && absl::Now() < start_time + absl::Seconds(duration_s)) {
     std::this_thread::sleep_for(std::chrono::milliseconds{100});
-    CHECK(!capture_outcome_future.IsFinished());
+    ORBIT_CHECK(!capture_outcome_future.IsFinished());
   }
-  CHECK(capture_client.StopCapture());
+  ORBIT_CHECK(capture_client.StopCapture());
   ORBIT_LOG("Asked to stop capture");
 
   auto capture_outcome_or_error = capture_outcome_future.Get();
@@ -462,8 +462,8 @@ int main(int argc, char* argv[]) {
   }
   thread_pool->ShutdownAndWait();
 
-  CHECK(capture_outcome_or_error.value() ==
-        orbit_capture_client::CaptureListener::CaptureOutcome::kComplete);
+  ORBIT_CHECK(capture_outcome_or_error.value() ==
+              orbit_capture_client::CaptureListener::CaptureOutcome::kComplete);
   ORBIT_LOG("Capture completed");
   return 0;
 }

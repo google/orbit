@@ -197,7 +197,7 @@ void CaptureWindow::HandlePickedElement(PickingMode picking_mode, PickingId pick
 }
 
 void CaptureWindow::SelectTimer(const TimerInfo* timer_info) {
-  CHECK(time_graph_ != nullptr);
+  ORBIT_CHECK(time_graph_ != nullptr);
   if (timer_info == nullptr) return;
 
   app_->SelectTimer(timer_info);
@@ -648,7 +648,7 @@ void CaptureWindow::CreateTimeGraph(CaptureData* capture_data) {
 Batcher& CaptureWindow::GetBatcherById(BatcherId batcher_id) {
   switch (batcher_id) {
     case BatcherId::kTimeGraph:
-      CHECK(time_graph_ != nullptr);
+      ORBIT_CHECK(time_graph_ != nullptr);
       return time_graph_->GetBatcher();
     case BatcherId::kUi:
       return ui_batcher_;

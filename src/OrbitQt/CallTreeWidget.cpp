@@ -70,7 +70,7 @@ CallTreeWidget::CallTreeWidget(QWidget* parent)
 
 void CallTreeWidget::SetCallTreeView(std::unique_ptr<CallTreeView> call_tree_view,
                                      std::unique_ptr<QIdentityProxyModel> hide_values_proxy_model) {
-  CHECK(app_ != nullptr);
+  ORBIT_CHECK(app_ != nullptr);
 
   model_ = std::make_unique<CallTreeViewItemModel>(std::move(call_tree_view));
 

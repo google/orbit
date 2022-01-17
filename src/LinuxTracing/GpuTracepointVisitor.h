@@ -23,7 +23,7 @@ namespace orbit_linux_tracing {
 class GpuTracepointVisitor : public PerfEventVisitor {
  public:
   explicit GpuTracepointVisitor(TracerListener* listener) : listener_{listener} {
-    CHECK(listener_ != nullptr);
+    ORBIT_CHECK(listener_ != nullptr);
   }
 
   void Visit(uint64_t event_timestamp, const AmdgpuCsIoctlPerfEventData& event_data) override;

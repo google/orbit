@@ -213,7 +213,7 @@ CallstackDataView::CallstackDataViewFrame CallstackDataView::GetFrameFromRow(int
 
 CallstackDataView::CallstackDataViewFrame CallstackDataView::GetFrameFromIndex(
     int index_in_callstack) const {
-  CHECK(index_in_callstack < callstack_.frames_size());
+  ORBIT_CHECK(index_in_callstack < callstack_.frames_size());
   uint64_t address = callstack_.frames(index_in_callstack);
 
   CaptureData& capture_data = app_->GetMutableCaptureData();

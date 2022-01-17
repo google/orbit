@@ -76,7 +76,7 @@ class InternPool final {
 
     uint64_t new_id = id_counter_++;
     auto [unused_it, inserted] = entry_to_id_.insert_or_assign(entry, new_id);
-    CHECK(inserted);
+    ORBIT_CHECK(inserted);
     return std::make_pair(new_id, true);
   }
 
@@ -255,7 +255,7 @@ void ProducerEventProcessorImpl::ProcessCallstackSampleAndTransferOwnership(
   auto it = producer_interned_callstack_id_to_client_callstack_id_.find(
       {producer_id, callstack_sample->callstack_id()});
   // TODO(b/180235290): replace with error message
-  CHECK(it != producer_interned_callstack_id_to_client_callstack_id_.end());
+  ORBIT_CHECK(it != producer_interned_callstack_id_to_client_callstack_id_.end());
   callstack_sample->set_callstack_id(it->second);
 
   ClientCaptureEvent event;
@@ -412,7 +412,7 @@ void ProducerEventProcessorImpl::ProcessGpuQueueSubmissionAndTransferOwnership(
   for (GpuDebugMarker& mutable_marker : *gpu_queue_submission->mutable_completed_markers()) {
     auto it = producer_interned_string_id_to_client_string_id_.find(
         {producer_id, mutable_marker.text_key()});
-    CHECK(it != producer_interned_string_id_to_client_string_id_.end());
+    ORBIT_CHECK(it != producer_interned_string_id_to_client_string_id_.end());
     mutable_marker.set_text_key(it->second);
   }
 
@@ -424,7 +424,7 @@ void ProducerEventProcessorImpl::ProcessGpuQueueSubmissionAndTransferOwnership(
 void ProducerEventProcessorImpl::ProcessInternedCallstack(uint64_t producer_id,
                                                           InternedCallstack* interned_callstack) {
   // TODO(b/180235290): replace with error message
-  CHECK(!producer_interned_callstack_id_to_client_callstack_id_.contains(
+  ORBIT_CHECK(!producer_interned_callstack_id_to_client_callstack_id_.contains(
       {producer_id, interned_callstack->key()}));
 
   std::pair<std::vector<uint64_t>, Callstack::CallstackType> callstack_data{
@@ -449,7 +449,7 @@ void ProducerEventProcessorImpl::ProcessInternedCallstack(uint64_t producer_id,
 void ProducerEventProcessorImpl::ProcessInternedString(uint64_t producer_id,
                                                        InternedString* interned_string) {
   // TODO(b/180235290): replace with error message
-  CHECK(!producer_interned_string_id_to_client_string_id_.contains(
+  ORBIT_CHECK(!producer_interned_string_id_to_client_string_id_.contains(
       {producer_id, interned_string->key()}));
 
   auto [client_string_id, assigned] = string_pool_.GetOrAssignId(interned_string->intern());

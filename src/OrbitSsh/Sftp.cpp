@@ -15,7 +15,7 @@
 namespace orbit_ssh {
 
 outcome::result<Sftp> Sftp::Init(Session* session) {
-  CHECK(session);
+  ORBIT_CHECK(session);
   auto* const result = libssh2_sftp_init(session->GetRawSessionPtr());
 
   if (result == nullptr) {
@@ -31,7 +31,7 @@ outcome::result<Sftp> Sftp::Init(Session* session) {
 }
 
 outcome::result<void> Sftp::Shutdown() {
-  CHECK(raw_sftp_ptr_);
+  ORBIT_CHECK(raw_sftp_ptr_);
   const auto result = libssh2_sftp_shutdown(raw_sftp_ptr_.get());
 
   if (result < 0) {

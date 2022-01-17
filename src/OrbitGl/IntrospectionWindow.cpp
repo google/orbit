@@ -101,7 +101,7 @@ class IntrospectionCaptureListener : public orbit_capture_client::CaptureListene
  public:
   explicit IntrospectionCaptureListener(IntrospectionWindow* introspection_window)
       : introspection_window_{introspection_window} {
-    CHECK(introspection_window_ != nullptr);
+    ORBIT_CHECK(introspection_window_ != nullptr);
   }
 
  private:
@@ -225,7 +225,7 @@ const char* IntrospectionWindow::GetHelpText() const {
 bool IntrospectionWindow::IsIntrospecting() const { return introspection_listener_ != nullptr; }
 
 void IntrospectionWindow::StartIntrospection() {
-  CHECK(!IsIntrospecting());
+  ORBIT_CHECK(!IsIntrospecting());
   set_draw_help(false);
   CreateTimeGraph(capture_data_.get());
   introspection_listener_ = std::make_unique<orbit_introspection::IntrospectionListener>(

@@ -207,7 +207,7 @@ class SamplingReportDataViewTest : public testing::Test {
   void AddFunctionsByIndices(const std::vector<size_t>& indices) {
     std::vector<SampledFunction> functions_to_add;
     for (size_t index : indices) {
-      CHECK(index < kNumFunctions);
+      ORBIT_CHECK(index < kNumFunctions);
       functions_to_add.push_back(sampled_functions_[index]);
     }
 

@@ -117,7 +117,7 @@ ErrorMessageOr<void> WriteFully(const unique_fd& fd, const void* data, size_t si
     bytes_left -= bytes_written;
   }
 
-  CHECK(bytes_left == 0);
+  ORBIT_CHECK(bytes_left == 0);
   return outcome::success();
 }
 

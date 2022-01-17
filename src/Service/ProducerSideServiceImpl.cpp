@@ -23,7 +23,7 @@ using orbit_grpc_protos::ProducerCaptureEvent;
 void ProducerSideServiceImpl::OnCaptureStartRequested(
     orbit_grpc_protos::CaptureOptions capture_options,
     orbit_producer_event_processor::ProducerEventProcessor* producer_event_processor) {
-  CHECK(producer_event_processor != nullptr);
+  ORBIT_CHECK(producer_event_processor != nullptr);
   ORBIT_LOG("About to send StartCaptureCommand to CaptureEventProducers (if any)");
   {
     absl::WriterMutexLock lock{&producer_event_processor_mutex_};
@@ -50,7 +50,7 @@ void ProducerSideServiceImpl::OnCaptureStopRequested() {
             },
             &service_state_),
         absl::Milliseconds(static_cast<int64_t>(max_wait_for_all_events_sent_ms_)));
-    CHECK(service_state_.producers_remaining >= 0);
+    ORBIT_CHECK(service_state_.producers_remaining >= 0);
     if (service_state_.producers_remaining == 0) {
       ORBIT_LOG("All CaptureEventProducers have finished sending their CaptureEvents");
     } else {
@@ -299,7 +299,7 @@ void ProducerSideServiceImpl::SendCommandsThread(
     // in case this thread missed an intermediate change of service_state_.capture_status.
     switch (curr_capture_status) {
       case CaptureStatus::kCaptureStarted: {
-        CHECK(curr_capture_options.has_value());
+        ORBIT_CHECK(curr_capture_options.has_value());
         if (prev_capture_status == CaptureStatus::kCaptureFinished) {
           if (!SendStartCaptureCommand(context, stream, curr_capture_options.value())) {
             return;
@@ -315,7 +315,7 @@ void ProducerSideServiceImpl::SendCommandsThread(
       } break;
 
       case CaptureStatus::kCaptureStopping: {
-        CHECK(curr_capture_options.has_value());
+        ORBIT_CHECK(curr_capture_options.has_value());
         if (prev_capture_status == CaptureStatus::kCaptureStarted) {
           if (!SendStopCaptureCommand(context, stream)) {
             return;
@@ -331,7 +331,7 @@ void ProducerSideServiceImpl::SendCommandsThread(
       } break;
 
       case CaptureStatus::kCaptureFinished:
-        CHECK(!curr_capture_options.has_value());
+        ORBIT_CHECK(!curr_capture_options.has_value());
         if (prev_capture_status == CaptureStatus::kCaptureStopping) {
           if (!SendCaptureFinishedCommand(context, stream)) {
             return;

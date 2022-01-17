@@ -39,7 +39,7 @@ inline const QString testing_example =
   int CaptureServiceImpl::Capture(); // Function from other class
   a = absl::Milliseconds(20); // method that we don't have to highlight
   int QSyntaxHighlighter::PlayInteger;
-  CHECK(false); // no lowercase regex
+  ORBIT_CHECK(false); // no lowercase regex
 
   // Preprocessor + <> unit tests
   #include <iostream>
@@ -52,7 +52,7 @@ inline const QString testing_example =
   "Hola mundo\n"
   "I'm an \"only\" string"
   "I'm 2" + "strings"
-  "CHECK(false)\\\\"
+  "ORBIT_CHECK(false)\\\\"
   "Multi\
   Line"
 
@@ -103,7 +103,7 @@ class SenderThreadCaptureEventBuffer final : public CaptureEventBuffer {
  public:
   explicit SenderThreadCaptureEventBuffer(CaptureEventSender* event_sender)
       : capture_event_sender_{event_sender} {
-    CHECK(capture_event_sender_ != nullptr);
+    ORBIT_CHECK(capture_event_sender_ != nullptr);
     sender_thread_ = std::thread{[this] { SenderThread(); }};
   }
 
@@ -116,7 +116,7 @@ class SenderThreadCaptureEventBuffer final : public CaptureEventBuffer {
   }
 
   void StopAndWait() {
-    CHECK(sender_thread_.joinable());
+    ORBIT_CHECK(sender_thread_.joinable());
     {
       // Protect stop_requested_ with event_buffer_mutex_ so that we can use stop_requested_
       // in Conditions for Await/LockWhen (specifically, in SenderThread).
@@ -126,7 +126,7 @@ class SenderThreadCaptureEventBuffer final : public CaptureEventBuffer {
     sender_thread_.join();
   }
 
-  ~SenderThreadCaptureEventBuffer() override { CHECK(!sender_thread_.joinable()); }
+  ~SenderThreadCaptureEventBuffer() override { ORBIT_CHECK(!sender_thread_.joinable()); }
 
  private:
   void SenderThread() {
@@ -169,7 +169,7 @@ class GrpcCaptureEventSender final : public CaptureEventSender {
   explicit GrpcCaptureEventSender(
       grpc::ServerReaderWriter<CaptureResponse, CaptureRequest>* reader_writer)
       : reader_writer_{reader_writer} {
-    CHECK(reader_writer_ != nullptr);
+    ORBIT_CHECK(reader_writer_ != nullptr);
   }
 
   ~GrpcCaptureEventSender() override {
@@ -295,12 +295,12 @@ grpc::Status CaptureServiceImpl::Capture(
 
 void CaptureServiceImpl::AddCaptureStartStopListener(CaptureStartStopListener* listener) {
   bool new_insertion = capture_start_stop_listeners_.insert(listener).second;
-  CHECK(new_insertion);
+  ORBIT_CHECK(new_insertion);
 }
 
 void CaptureServiceImpl::RemoveCaptureStartStopListener(CaptureStartStopListener* listener) {
   bool was_removed = capture_start_stop_listeners_.erase(listener) > 0;
-  CHECK(was_removed);
+  ORBIT_CHECK(was_removed);
 }
 
 }  // namespace orbit_service

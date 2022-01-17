@@ -57,7 +57,7 @@ std::optional<uint64_t> GetAbsoluteAddress(const orbit_client_protos::FunctionIn
         }));
   }
 
-  CHECK(!page_aligned_base_addresses.empty());
+  ORBIT_CHECK(!page_aligned_base_addresses.empty());
 
   return orbit_object_utils::SymbolVirtualAddressToAbsoluteAddress(
       func.address(), page_aligned_base_addresses.at(0), module.load_bias(),

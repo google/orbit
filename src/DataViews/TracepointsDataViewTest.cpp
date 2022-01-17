@@ -54,7 +54,7 @@ class TracepointsDataViewTest : public testing::Test {
   void SetTracepointsByIndices(const std::vector<size_t>& indices) {
     std::vector<TracepointInfo> tracepoints_to_add;
     for (size_t index : indices) {
-      CHECK(index < kNumTracepoints);
+      ORBIT_CHECK(index < kNumTracepoints);
       tracepoints_to_add.push_back(tracepoints_[index]);
     }
 

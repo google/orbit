@@ -178,10 +178,10 @@ bool ThreadTrack::IsTrackSelected() const {
     if (!timer_info.has_color()) {
       return std::nullopt;
     }
-    CHECK(timer_info.color().red() < 256);
-    CHECK(timer_info.color().green() < 256);
-    CHECK(timer_info.color().blue() < 256);
-    CHECK(timer_info.color().alpha() < 256);
+    ORBIT_CHECK(timer_info.color().red() < 256);
+    ORBIT_CHECK(timer_info.color().green() < 256);
+    ORBIT_CHECK(timer_info.color().blue() < 256);
+    ORBIT_CHECK(timer_info.color().alpha() < 256);
     return Color(static_cast<uint8_t>(timer_info.color().red()),
                  static_cast<uint8_t>(timer_info.color().green()),
                  static_cast<uint8_t>(timer_info.color().blue()),

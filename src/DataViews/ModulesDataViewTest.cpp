@@ -76,7 +76,7 @@ class ModulesDataViewTest : public testing::Test {
   void AddModulesByIndices(const std::vector<size_t>& indices) {
     std::set index_set(indices.begin(), indices.end());
     for (size_t index : index_set) {
-      CHECK(index < kNumModules);
+      ORBIT_CHECK(index < kNumModules);
       view_.AddModule(
           modules_in_memory_[index].start(),
           module_manager_.GetMutableModuleByPathAndBuildId(modules_in_memory_[index].file_path(),

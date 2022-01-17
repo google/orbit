@@ -13,7 +13,9 @@ AccessibleInterfaceRegistry& AccessibleInterfaceRegistry::Get() {
   return registry;
 }
 
-AccessibleInterfaceRegistry::~AccessibleInterfaceRegistry() { CHECK(interfaces_.size() == 0); }
+AccessibleInterfaceRegistry::~AccessibleInterfaceRegistry() {
+  ORBIT_CHECK(interfaces_.size() == 0);
+}
 
 void AccessibleInterfaceRegistry::Register(AccessibleInterface* iface) {
   if (!interfaces_.contains(iface)) {
@@ -25,7 +27,7 @@ void AccessibleInterfaceRegistry::Register(AccessibleInterface* iface) {
 }
 
 void AccessibleInterfaceRegistry::Unregister(AccessibleInterface* iface) {
-  CHECK(interfaces_.contains(iface));
+  ORBIT_CHECK(interfaces_.contains(iface));
   interfaces_.erase(iface);
   if (on_unregistered_ != nullptr) {
     on_unregistered_(iface);
@@ -33,12 +35,12 @@ void AccessibleInterfaceRegistry::Unregister(AccessibleInterface* iface) {
 }
 
 void AccessibleInterfaceRegistry::SetOnRegisterCallback(Callback callback) {
-  CHECK(on_registered_ == nullptr);
+  ORBIT_CHECK(on_registered_ == nullptr);
   on_registered_ = callback;
 }
 
 void AccessibleInterfaceRegistry::SetOnUnregisterCallback(Callback callback) {
-  CHECK(on_unregistered_ == nullptr);
+  ORBIT_CHECK(on_unregistered_ == nullptr);
   on_unregistered_ = callback;
 }
 

@@ -133,7 +133,7 @@ QAccessibleInterface* AdapterRegistry::InterfaceWrapperFactory(const QString& cl
                                                                QObject* object) {
   if (classname == QLatin1String("orbit_qt::OrbitGlInterfaceWrapper")) {
     auto iface_obj = static_cast<OrbitGlInterfaceWrapper*>(object);
-    CHECK(!all_interfaces_map_.contains(iface_obj->GetInterface()));
+    ORBIT_CHECK(!all_interfaces_map_.contains(iface_obj->GetInterface()));
     auto wrapper = std::make_unique<OrbitGlInterfaceWrapper>(iface_obj->GetInterface());
     QAccessibleInterface* result = new AccessibilityAdapter(iface_obj->GetInterface(), object);
     RegisterAdapter(iface_obj->GetInterface(), result);
@@ -169,7 +169,7 @@ QAccessibleInterface* AdapterRegistry::GetOrCreateAdapter(const AccessibleInterf
 
   auto wrapper = std::make_unique<OrbitGlInterfaceWrapper>(iface);
   QAccessibleInterface* result = QAccessible::queryAccessibleInterface(wrapper.get());
-  CHECK(result != nullptr);
+  ORBIT_CHECK(result != nullptr);
   RegisterAdapter(iface, result);
   managed_adapters_.emplace(iface, std::move(wrapper));
   return result;
@@ -242,12 +242,12 @@ class OrbitGlWidgetAccessible : public QAccessibleWidget {
 
 OrbitGlWidgetAccessible::OrbitGlWidgetAccessible(OrbitGLWidget* widget)
     : QAccessibleWidget(widget, QAccessible::Role::Graphic, "CaptureWindow") {
-  CHECK(widget != nullptr);
+  ORBIT_CHECK(widget != nullptr);
   /* TODO(b/175676123): For some reason setting an accessible name for the Canvas results in
    * a memory access exception during runtime when accessibility is queried. This also happens when
    * the accessibleName is explicitely set to "" in Qt Designer, which this check can't catch...
    */
-  CHECK(widget->accessibleName() == "");
+  ORBIT_CHECK(widget->accessibleName() == "");
   AdapterRegistry::Get().RegisterAdapter(
       static_cast<OrbitGLWidget*>(widget)->GetCanvas()->GetOrCreateAccessibleInterface(), this);
 }

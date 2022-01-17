@@ -100,7 +100,7 @@ Status ProcessServiceImpl::GetProcessMemory(ServerContext* /*context*/,
 Status ProcessServiceImpl::GetDebugInfoFile(ServerContext* /*context*/,
                                             const GetDebugInfoFileRequest* request,
                                             GetDebugInfoFileResponse* response) {
-  CHECK(request != nullptr);
+  ORBIT_CHECK(request != nullptr);
   const auto symbols_path = FindSymbolsFilePath(*request);
   if (symbols_path.has_error()) {
     return Status(StatusCode::NOT_FOUND, symbols_path.error().message());

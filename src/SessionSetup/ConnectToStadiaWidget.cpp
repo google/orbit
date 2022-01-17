@@ -128,7 +128,7 @@ void ConnectToStadiaWidget::SetActive(bool value) {
 
 void ConnectToStadiaWidget::SetSshConnectionArtifacts(
     SshConnectionArtifacts* ssh_connection_artifacts) {
-  CHECK(ssh_connection_artifacts != nullptr);
+  ORBIT_CHECK(ssh_connection_artifacts != nullptr);
   ssh_connection_artifacts_ = ssh_connection_artifacts;
 }
 
@@ -147,7 +147,7 @@ void ConnectToStadiaWidget::SetConnection(StadiaConnection connection) {
 }
 
 void ConnectToStadiaWidget::Start() {
-  CHECK(ssh_connection_artifacts_ != nullptr);
+  ORBIT_CHECK(ssh_connection_artifacts_ != nullptr);
 
   auto client_result = orbit_ggp::CreateClient();
   if (client_result.has_error()) {
@@ -272,7 +272,7 @@ void ConnectToStadiaWidget::SetupStateMachine() {
 }
 
 void ConnectToStadiaWidget::LoadCredentials() {
-  CHECK(selected_instance_.has_value());
+  ORBIT_CHECK(selected_instance_.has_value());
 
   const std::string instance_id{selected_instance_->id.toStdString()};
 
@@ -289,11 +289,11 @@ void ConnectToStadiaWidget::LoadCredentials() {
 }
 
 void ConnectToStadiaWidget::DeployOrbitService() {
-  CHECK(ssh_connection_artifacts_ != nullptr);
-  CHECK(service_deploy_manager_ == nullptr);
-  CHECK(selected_instance_.has_value());
+  ORBIT_CHECK(ssh_connection_artifacts_ != nullptr);
+  ORBIT_CHECK(service_deploy_manager_ == nullptr);
+  ORBIT_CHECK(selected_instance_.has_value());
   const std::string instance_id = selected_instance_->id.toStdString();
-  CHECK(instance_credentials_.contains(instance_id));
+  ORBIT_CHECK(instance_credentials_.contains(instance_id));
 
   const Credentials& credentials{instance_credentials_.at(instance_id)};
 
@@ -329,9 +329,9 @@ void ConnectToStadiaWidget::DeployOrbitService() {
                                .arg(QString::fromStdString(error.message())));
       });
 
-  CHECK(grpc_channel_ == nullptr);
+  ORBIT_CHECK(grpc_channel_ == nullptr);
   grpc_channel_ = CreateGrpcChannel(deployment_result.value().grpc_port);
-  CHECK(grpc_channel_ != nullptr);
+  ORBIT_CHECK(grpc_channel_ != nullptr);
 
   emit Connected();
 }
@@ -371,7 +371,7 @@ void ConnectToStadiaWidget::OnSelectionChanged(const QModelIndex& current) {
 void ConnectToStadiaWidget::UpdateRememberInstance(bool value) {
   QSettings settings;
   if (value) {
-    CHECK(selected_instance_ != std::nullopt);
+    ORBIT_CHECK(selected_instance_ != std::nullopt);
     settings.setValue(kRememberChosenInstance, selected_instance_->id);
   } else {
     settings.remove(kRememberChosenInstance);
@@ -427,7 +427,7 @@ void ConnectToStadiaWidget::TrySelectRememberedInstance() {
 bool ConnectToStadiaWidget::IsActive() const { return ui_->contentFrame->isEnabled(); }
 
 void ConnectToStadiaWidget::Connect() {
-  CHECK(selected_instance_.has_value());
+  ORBIT_CHECK(selected_instance_.has_value());
 
   auto account_result = GetAccountSync();
   if (account_result.has_error()) {

@@ -16,7 +16,7 @@ namespace orbit_metrics_uploader {
 
 CaptureMetric::CaptureMetric(MetricsUploader* uploader, const CaptureStartData& start_data)
     : uploader_(uploader), start_(std::chrono::steady_clock::now()) {
-  CHECK(uploader_ != nullptr);
+  ORBIT_CHECK(uploader_ != nullptr);
   capture_data_.set_number_of_instrumented_functions(start_data.number_of_instrumented_functions);
   capture_data_.set_number_of_frame_tracks(start_data.number_of_frame_tracks);
   capture_data_.set_thread_states(start_data.thread_states);

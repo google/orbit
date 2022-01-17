@@ -21,7 +21,7 @@ namespace orbit_client_data {
 
 void CallstackData::AddCallstackEvent(CallstackEvent callstack_event) {
   std::lock_guard<std::recursive_mutex> lock(mutex_);
-  CHECK(unique_callstacks_.contains(callstack_event.callstack_id()));
+  ORBIT_CHECK(unique_callstacks_.contains(callstack_event.callstack_id()));
   RegisterTime(callstack_event.time());
   callstack_events_by_tid_[callstack_event.thread_id()][callstack_event.time()] =
       std::move(callstack_event);
@@ -111,7 +111,7 @@ void CallstackData::ForEachCallstackEventInTimeRange(
     uint64_t min_timestamp, uint64_t max_timestamp,
     const std::function<void(const orbit_client_protos::CallstackEvent&)>& action) const {
   std::lock_guard<std::recursive_mutex> lock(mutex_);
-  CHECK(min_timestamp <= max_timestamp);
+  ORBIT_CHECK(min_timestamp <= max_timestamp);
   for (const auto& [unused_tid, events] : callstack_events_by_tid_) {
     for (auto event_it = events.lower_bound(min_timestamp);
          event_it != events.upper_bound(max_timestamp); ++event_it) {
@@ -124,7 +124,7 @@ void CallstackData::ForEachCallstackEventOfTidInTimeRange(
     uint32_t tid, uint64_t min_timestamp, uint64_t max_timestamp,
     const std::function<void(const orbit_client_protos::CallstackEvent&)>& action) const {
   std::lock_guard<std::recursive_mutex> lock(mutex_);
-  CHECK(min_timestamp <= max_timestamp);
+  ORBIT_CHECK(min_timestamp <= max_timestamp);
   const auto& tid_and_events_it = callstack_events_by_tid_.find(tid);
   if (tid_and_events_it == callstack_events_by_tid_.end()) {
     return;
@@ -201,14 +201,14 @@ void CallstackData::UpdateCallstackTypeBasedOnMajorityStart() {
     absl::flat_hash_map<uint64_t, uint64_t> count_by_outer_frame;
     for (const auto& [unused_timestamp_ns, event] : timestamps_and_callstack_events) {
       const CallstackInfo& callstack = *unique_callstacks_.at(event.callstack_id());
-      CHECK(callstack.type() != CallstackInfo::kFilteredByMajorityOutermostFrame);
+      ORBIT_CHECK(callstack.type() != CallstackInfo::kFilteredByMajorityOutermostFrame);
       if (callstack.type() != CallstackInfo::kComplete) {
         continue;
       }
       ++count_for_this_thread;
 
       const auto& frames = callstack.frames();
-      CHECK(!frames.empty());
+      ORBIT_CHECK(!frames.empty());
       uint64_t outer_frame = *frames.rbegin();
       ++count_by_outer_frame[outer_frame];
     }
@@ -220,7 +220,7 @@ void CallstackData::UpdateCallstackTypeBasedOnMajorityStart() {
     uint64_t majority_outer_frame = 0;
     uint64_t majority_outer_frame_count = 0;
     for (const auto& outer_frame_and_count : count_by_outer_frame) {
-      CHECK(outer_frame_and_count.second > 0);
+      ORBIT_CHECK(outer_frame_and_count.second > 0);
       if (outer_frame_and_count.second > majority_outer_frame_count) {
         majority_outer_frame = outer_frame_and_count.first;
         majority_outer_frame_count = outer_frame_and_count.second;
@@ -244,13 +244,13 @@ void CallstackData::UpdateCallstackTypeBasedOnMajorityStart() {
     // CallstackEvent will also be affected.
     for (const auto& [unused_timestamp_ns, event] : timestamps_and_callstack_events) {
       const CallstackInfo& callstack = *unique_callstacks_.at(event.callstack_id());
-      CHECK(callstack.type() != CallstackInfo::kFilteredByMajorityOutermostFrame);
+      ORBIT_CHECK(callstack.type() != CallstackInfo::kFilteredByMajorityOutermostFrame);
       if (callstack.type() != CallstackInfo::kComplete) {
         continue;
       }
 
       const auto& frames = unique_callstacks_.at(event.callstack_id())->frames();
-      CHECK(!frames.empty());
+      ORBIT_CHECK(!frames.empty());
       if (*frames.rbegin() != majority_outer_frame) {
         callstack_ids_to_filter.insert(event.callstack_id());
       }
@@ -260,7 +260,7 @@ void CallstackData::UpdateCallstackTypeBasedOnMajorityStart() {
   // Change the type of the recorded CallstackInfos.
   for (uint64_t callstack_id_to_filter : callstack_ids_to_filter) {
     CallstackInfo* callstack = unique_callstacks_.at(callstack_id_to_filter).get();
-    CHECK(callstack->type() == CallstackInfo::kComplete);
+    ORBIT_CHECK(callstack->type() == CallstackInfo::kComplete);
     callstack->set_type(CallstackInfo::kFilteredByMajorityOutermostFrame);
   }
 

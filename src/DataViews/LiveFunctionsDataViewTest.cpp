@@ -171,7 +171,7 @@ class LiveFunctionsDataViewTest : public testing::Test {
   void AddFunctionsByIndices(const std::vector<size_t>& indices) {
     std::set index_set(indices.begin(), indices.end());
     for (size_t index : index_set) {
-      CHECK(index < kNumFunctions);
+      ORBIT_CHECK(index < kNumFunctions);
       view_.AddFunction(kFunctionIds[index], functions_.at(kFunctionIds[index]));
     }
   }

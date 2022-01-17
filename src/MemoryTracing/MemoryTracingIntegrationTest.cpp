@@ -60,10 +60,10 @@ class MemoryTracingIntegrationTestFixture {
       : memory_sampling_period_ns_(memory_sampling_period_ns) {}
 
   void StartTracing() {
-    CHECK(!listener_.has_value());
-    CHECK(system_memory_info_producer_ == nullptr);
-    CHECK(cgroup_memory_info_producer_ == nullptr);
-    CHECK(process_memory_info_producer_ == nullptr);
+    ORBIT_CHECK(!listener_.has_value());
+    ORBIT_CHECK(system_memory_info_producer_ == nullptr);
+    ORBIT_CHECK(cgroup_memory_info_producer_ == nullptr);
+    ORBIT_CHECK(process_memory_info_producer_ == nullptr);
 
     listener_.emplace();
     listener_->SetSamplingStartTimestampNs(orbit_base::CaptureTimestampNs());
@@ -88,10 +88,10 @@ class MemoryTracingIntegrationTestFixture {
   }
 
   [[nodiscard]] std::vector<ProducerCaptureEvent> StopTracingAndGetEvents() {
-    CHECK(listener_.has_value());
-    CHECK(system_memory_info_producer_ != nullptr);
-    CHECK(cgroup_memory_info_producer_ != nullptr);
-    CHECK(process_memory_info_producer_ != nullptr);
+    ORBIT_CHECK(listener_.has_value());
+    ORBIT_CHECK(system_memory_info_producer_ != nullptr);
+    ORBIT_CHECK(cgroup_memory_info_producer_ != nullptr);
+    ORBIT_CHECK(process_memory_info_producer_ != nullptr);
 
     system_memory_info_producer_->Stop();
     system_memory_info_producer_.reset();
@@ -117,7 +117,7 @@ class MemoryTracingIntegrationTestFixture {
 
 [[nodiscard]] std::vector<ProducerCaptureEvent> TraceAndGetEvents(
     MemoryTracingIntegrationTestFixture* fixture, absl::Duration tracing_period) {
-  CHECK(fixture != nullptr);
+  ORBIT_CHECK(fixture != nullptr);
 
   fixture->StartTracing();
   absl::SleepFor(tracing_period);

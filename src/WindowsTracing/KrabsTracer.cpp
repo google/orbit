@@ -66,7 +66,7 @@ void KrabsTracer::SetIsSystemProfilePrivilegeEnabled(bool value) {
 void KrabsTracer::SetupStackTracing() {
   // Set sampling frequency for ETW trace. Note that the session handle must be 0.
   const double frequency = capture_options_.samples_per_second();
-  CHECK(frequency >= 0);
+  ORBIT_CHECK(frequency >= 0);
   if (frequency == 0) return;
   double period_ns = 1'000'000'000.0 / frequency;
   static uint64_t performance_counter_period_ns = orbit_base::GetPerformanceCounterPeriodNs();
@@ -74,7 +74,7 @@ void KrabsTracer::SetupStackTracing() {
   interval.Interval = static_cast<ULONG>(period_ns / performance_counter_period_ns);
   ULONG status = TraceSetInformation(/*SessionHandle=*/0, TraceSampledProfileIntervalInfo,
                                      (void*)&interval, sizeof(TRACE_PROFILE_INTERVAL));
-  CHECK(status == ERROR_SUCCESS);
+  ORBIT_CHECK(status == ERROR_SUCCESS);
 
   // Initialize ETW stack tracing. Note that this must be executed after trace_.open() as
   // set_trace_information needs a valid session handle.
@@ -85,7 +85,7 @@ void KrabsTracer::SetupStackTracing() {
 }
 
 void KrabsTracer::Start() {
-  CHECK(trace_thread_ == nullptr);
+  ORBIT_CHECK(trace_thread_ == nullptr);
   context_switch_manager_ = std::make_unique<ContextSwitchManager>(listener_);
   SetIsSystemProfilePrivilegeEnabled(true);
   trace_.open();
@@ -94,7 +94,7 @@ void KrabsTracer::Start() {
 }
 
 void KrabsTracer::Stop() {
-  CHECK(trace_thread_ != nullptr && trace_thread_->joinable());
+  ORBIT_CHECK(trace_thread_ != nullptr && trace_thread_->joinable());
   trace_.stop();
   trace_thread_->join();
   trace_thread_ = nullptr;
@@ -157,12 +157,12 @@ void KrabsTracer::OnStackWalkEvent(const EVENT_RECORD& record,
 
   // Get callstack addresses. The first address is at offset 16, see stackwalk-event doc above.
   constexpr uint32_t kStackDataOffset = 16;
-  CHECK(record.UserDataLength >= kStackDataOffset);
+  ORBIT_CHECK(record.UserDataLength >= kStackDataOffset);
   const uint8_t* buffer_start = absl::bit_cast<uint8_t*>(record.UserData);
   const uint8_t* buffer_end = buffer_start + record.UserDataLength;
   const uint8_t* stack_data = buffer_start + kStackDataOffset;
   uint32_t depth = (buffer_end - stack_data) / sizeof(void*);
-  CHECK(stack_data + depth * sizeof(void*) == buffer_end);
+  ORBIT_CHECK(stack_data + depth * sizeof(void*) == buffer_end);
 
   FullCallstackSample sample;
   sample.set_pid(pid);

@@ -67,7 +67,7 @@ class VulkanLayerController {
                                           const VkAllocationCallbacks* allocator,
                                           VkInstance* instance) {
     // The specification ensures that the create_info pointer is not nullptr.
-    CHECK(create_info != nullptr);
+    ORBIT_CHECK(create_info != nullptr);
 
     auto* layer_create_info = absl::bit_cast<VkLayerInstanceCreateInfo*>(create_info->pNext);
 
@@ -209,7 +209,7 @@ class VulkanLayerController {
 
   void OnDestroyInstance(VkInstance instance, const VkAllocationCallbacks* allocator) {
     PFN_vkDestroyInstance destroy_instance_function = dispatch_table_.DestroyInstance(instance);
-    CHECK(destroy_instance_function != nullptr);
+    ORBIT_CHECK(destroy_instance_function != nullptr);
     dispatch_table_.RemoveInstanceDispatchTable(instance);
 
     destroy_instance_function(instance, allocator);
@@ -219,7 +219,7 @@ class VulkanLayerController {
 
   void OnDestroyDevice(VkDevice device, const VkAllocationCallbacks* allocator) {
     PFN_vkDestroyDevice destroy_device_function = dispatch_table_.DestroyDevice(device);
-    CHECK(destroy_device_function != nullptr);
+    ORBIT_CHECK(destroy_device_function != nullptr);
     device_manager_.UntrackLogicalDevice(device);
     timer_query_pool_.DestroyTimerQueryPool(device);
     dispatch_table_.RemoveDeviceDispatchTable(device);
@@ -323,7 +323,7 @@ class VulkanLayerController {
     }
 
     // Specified by the standard.
-    CHECK(label_info != nullptr);
+    ORBIT_CHECK(label_info != nullptr);
     submission_tracker_.MarkDebugMarkerBegin(command_buffer, label_info->pLabelName,
                                              {
                                                  .red = label_info->color[0],
@@ -347,7 +347,7 @@ class VulkanLayerController {
     }
 
     // Specified by the standard.
-    CHECK(marker_info != nullptr);
+    ORBIT_CHECK(marker_info != nullptr);
     submission_tracker_.MarkDebugMarkerBegin(command_buffer, marker_info->pMarkerName,
                                              {
                                                  .red = marker_info->color[0],
@@ -516,7 +516,7 @@ class VulkanLayerController {
       return VK_ERROR_LAYER_NOT_PRESENT;
     }
 
-    CHECK(property_count != nullptr);
+    ORBIT_CHECK(property_count != nullptr);
     if (property_count != nullptr) {
       *property_count = kImplementedInstanceExtensions.size();
     }
@@ -684,11 +684,11 @@ class VulkanLayerController {
       bool extension_supported = false;
       uint32_t count = 0;
       VkResult result = enumerate_extension_properties_function(&count, nullptr);
-      CHECK(result == VK_SUCCESS);
+      ORBIT_CHECK(result == VK_SUCCESS);
 
       std::vector<VkExtensionProperties> extension_properties(count);
       result = enumerate_extension_properties_function(&count, extension_properties.data());
-      CHECK(result == VK_SUCCESS);
+      ORBIT_CHECK(result == VK_SUCCESS);
 
       for (const auto& properties : extension_properties) {
         if (strcmp(properties.extensionName, extension_name) == 0) {

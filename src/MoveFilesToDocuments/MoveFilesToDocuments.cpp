@@ -58,7 +58,7 @@ void TryMoveSavedDataLocationIfNeeded() {
 
   QObject::connect(&process, &MoveFilesProcess::generalError, &dialog,
                    [&dialog, main_thread_id](const QString& error_message) {
-                     CHECK(main_thread_id == std::this_thread::get_id());
+                     ORBIT_CHECK(main_thread_id == std::this_thread::get_id());
                      dialog.AddText(absl::StrFormat("Error: %s", error_message.toStdString()));
                    });
 
@@ -66,39 +66,39 @@ void TryMoveSavedDataLocationIfNeeded() {
       &process, &MoveFilesProcess::moveDirectoryStarted, &dialog,
       [&dialog, main_thread_id](const QString& from_dir_path, const QString& to_dir_path,
                                 quint64 number_of_files) {
-        CHECK(main_thread_id == std::this_thread::get_id());
+        ORBIT_CHECK(main_thread_id == std::this_thread::get_id());
         dialog.AddText(absl::StrFormat(R"(Moving %d files from "%s" to "%s"...)", number_of_files,
                                        from_dir_path.toStdString(), to_dir_path.toStdString()));
       });
 
   QObject::connect(&process, &MoveFilesProcess::moveDirectoryDone, &dialog,
                    [&dialog, main_thread_id]() {
-                     CHECK(main_thread_id == std::this_thread::get_id());
+                     ORBIT_CHECK(main_thread_id == std::this_thread::get_id());
                      dialog.AddText("Done.\n");
                    });
 
   QObject::connect(
       &process, &MoveFilesProcess::moveFileStarted, &dialog,
       [&dialog, main_thread_id](const QString& from_path) {
-        CHECK(main_thread_id == std::this_thread::get_id());
+        ORBIT_CHECK(main_thread_id == std::this_thread::get_id());
         dialog.AddText(absl::StrFormat("        Moving \"%s\"...", from_path.toStdString()));
       });
 
   QObject::connect(&process, &MoveFilesProcess::moveFileDone, &dialog, [&dialog, main_thread_id]() {
-    CHECK(main_thread_id == std::this_thread::get_id());
+    ORBIT_CHECK(main_thread_id == std::this_thread::get_id());
     dialog.AddText("        Done.");
   });
 
   QObject::connect(&process, &MoveFilesProcess::processFinished, &dialog,
                    [&dialog, main_thread_id]() {
-                     CHECK(main_thread_id == std::this_thread::get_id());
+                     ORBIT_CHECK(main_thread_id == std::this_thread::get_id());
                      dialog.AddText("Finished.");
                      dialog.OnMoveFinished();
                    });
 
   QObject::connect(&process, &MoveFilesProcess::processInterrupted, &dialog,
                    [&dialog, main_thread_id]() {
-                     CHECK(main_thread_id == std::this_thread::get_id());
+                     ORBIT_CHECK(main_thread_id == std::this_thread::get_id());
                      dialog.AddText("Interrupted.");
                      dialog.OnMoveInterrupted();
                    });

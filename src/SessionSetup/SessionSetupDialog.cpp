@@ -85,8 +85,8 @@ SessionSetupDialog::SessionSetupDialog(SshConnectionArtifacts* ssh_connection_ar
       state_local_processes_loading_(&state_local_connected_),
       state_local_process_selected_(&state_local_connected_),
       state_local_no_process_selected_(&state_local_connected_) {
-  CHECK(ssh_connection_artifacts != nullptr);
-  CHECK(metrics_uploader_ != nullptr);
+  ORBIT_CHECK(ssh_connection_artifacts != nullptr);
+  ORBIT_CHECK(metrics_uploader_ != nullptr);
 
   ui_->setupUi(this);
   ui_->stadiaWidget->SetMetricsUploader(metrics_uploader);
@@ -206,7 +206,7 @@ void SessionSetupDialog::ProcessSelectionChanged(const QModelIndex& current) {
     return;
   }
 
-  CHECK(current.data(Qt::UserRole).canConvert<const ProcessInfo*>());
+  ORBIT_CHECK(current.data(Qt::UserRole).canConvert<const ProcessInfo*>());
   process_ = std::make_unique<orbit_client_data::ProcessData>(
       *current.data(Qt::UserRole).value<const ProcessInfo*>());
   emit ProcessSelected();
@@ -278,8 +278,8 @@ void SessionSetupDialog::SetupStadiaStates() {
   state_stadia_process_selected_.addTransition(this, &SessionSetupDialog::NoProcessSelected,
                                                &state_stadia_no_process_selected_);
   QObject::connect(&state_stadia_process_selected_, &QState::entered, this, [this] {
-    CHECK(process_ != nullptr);
-    CHECK(ui_->stadiaWidget->GetSelectedInstance().has_value());
+    ORBIT_CHECK(process_ != nullptr);
+    ORBIT_CHECK(ui_->stadiaWidget->GetSelectedInstance().has_value());
     ui_->targetLabel->ChangeToStadiaTarget(*process_,
                                            ui_->stadiaWidget->GetSelectedInstance().value());
   });
@@ -354,7 +354,7 @@ void SessionSetupDialog::SetupLocalStates() {
   state_local_process_selected_.addTransition(this, &SessionSetupDialog::NoProcessSelected,
                                               &state_local_no_process_selected_);
   QObject::connect(&state_local_process_selected_, &QState::entered, this, [this] {
-    CHECK(process_ != nullptr);
+    ORBIT_CHECK(process_ != nullptr);
     ui_->targetLabel->ChangeToLocalTarget(*process_);
   });
   QObject::connect(&state_local_process_selected_, &QState::exited, ui_->targetLabel,
@@ -403,7 +403,7 @@ void SessionSetupDialog::TearDownProcessManager() {
 }
 
 void SessionSetupDialog::SetupProcessManager(const std::shared_ptr<grpc::Channel>& grpc_channel) {
-  CHECK(grpc_channel != nullptr);
+  ORBIT_CHECK(grpc_channel != nullptr);
 
   if (process_manager_ != nullptr) return;
 

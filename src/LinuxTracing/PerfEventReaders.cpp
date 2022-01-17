@@ -25,9 +25,9 @@ namespace orbit_linux_tracing {
 
 void ReadPerfSampleIdAll(PerfEventRingBuffer* ring_buffer, const perf_event_header& header,
                          perf_event_sample_id_tid_time_streamid_cpu* sample_id) {
-  CHECK(sample_id != nullptr);
-  CHECK(header.size >
-        sizeof(perf_event_header) + sizeof(perf_event_sample_id_tid_time_streamid_cpu));
+  ORBIT_CHECK(sample_id != nullptr);
+  ORBIT_CHECK(header.size >
+              sizeof(perf_event_header) + sizeof(perf_event_sample_id_tid_time_streamid_cpu));
   // sample_id_all is always the last field in the event
   uint64_t offset = header.size - sizeof(perf_event_sample_id_tid_time_streamid_cpu);
   ring_buffer->ReadValueAtOffset(sample_id, offset);
@@ -99,7 +99,7 @@ MmapPerfEvent ConsumeMmapPerfEvent(PerfEventRingBuffer* ring_buffer,
   // read filename
   size_t filename_offset = sizeof(perf_event_mmap_up_to_pgoff);
   // strictly > because filename is null-terminated string
-  CHECK(header.size > (filename_offset + sizeof(perf_event_sample_id_tid_time_streamid_cpu)));
+  ORBIT_CHECK(header.size > (filename_offset + sizeof(perf_event_sample_id_tid_time_streamid_cpu)));
   size_t filename_size =
       header.size - filename_offset - sizeof(perf_event_sample_id_tid_time_streamid_cpu);
   std::vector<char> filename_vector(filename_size);
@@ -270,14 +270,14 @@ GenericTracepointPerfEvent ConsumeGenericTracepointPerfEvent(PerfEventRingBuffer
 
 SchedWakeupPerfEvent ConsumeSchedWakeupPerfEvent(PerfEventRingBuffer* ring_buffer,
                                                  const perf_event_header& header) {
-  CHECK(header.size >= sizeof(perf_event_raw_sample_fixed));
+  ORBIT_CHECK(header.size >= sizeof(perf_event_raw_sample_fixed));
   perf_event_raw_sample_fixed ring_buffer_record;
   ring_buffer->ReadRawAtOffset(&ring_buffer_record, 0, sizeof(perf_event_raw_sample_fixed));
 
   // The last fields of the sched:sched_wakeup tracepoint aren't always the same, depending on the
   // kernel version. Fortunately we only need the first fields, which are always the same, so only
   // read those. See `sched_wakeup_tracepoint_fixed`.
-  CHECK(ring_buffer_record.size >= sizeof(sched_wakeup_tracepoint_fixed));
+  ORBIT_CHECK(ring_buffer_record.size >= sizeof(sched_wakeup_tracepoint_fixed));
   sched_wakeup_tracepoint_fixed sched_wakeup;
   ring_buffer->ReadRawAtOffset(
       &sched_wakeup,

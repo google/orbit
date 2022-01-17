@@ -28,7 +28,7 @@ std::string FormatValueForCsv(std::string_view value) {
 void DataView::Init() { InitSortingOrders(); }
 
 void DataView::InitSortingOrders() {
-  CHECK(sorting_orders_.empty());
+  ORBIT_CHECK(sorting_orders_.empty());
   for (const auto& column : GetColumns()) {
     sorting_orders_.push_back(column.initial_order);
   }
@@ -43,8 +43,8 @@ void DataView::OnSort(int column, std::optional<SortingOrder> new_order) {
     return;
   }
 
-  CHECK(column > 0);
-  CHECK(static_cast<size_t>(column) < sorting_orders_.size());
+  ORBIT_CHECK(column > 0);
+  ORBIT_CHECK(static_cast<size_t>(column) < sorting_orders_.size());
 
   sorting_column_ = column;
   if (new_order.has_value()) {
@@ -80,7 +80,7 @@ std::vector<std::vector<std::string>> DataView::GetContextMenuWithGrouping(
   // GetContextmenuWithGrouping is called when OrbitTreeView::indexAt returns a valid index and
   // hence the selected_indices retrieved from OrbitTreeView::selectionModel()->selectedIndexes()
   // should not be empty.
-  CHECK(!selected_indices.empty());
+  ORBIT_CHECK(!selected_indices.empty());
 
   static std::vector<std::string> default_group = {std::string{kMenuActionCopySelection},
                                                    std::string{kMenuActionExportToCsv}};

@@ -116,7 +116,7 @@ ErrorMessageOr<void> CaptureFileImpl::CalculateCaptureSectionSize() {
   // Otherwise it ends at the start of the next section or at the section list
   uint64_t min_section_offset = std::numeric_limits<uint64_t>::max();
 
-  CHECK(!section_list_.empty());
+  ORBIT_CHECK(!section_list_.empty());
 
   for (const auto& section : section_list_) {
     if (section.offset < min_section_offset) {
@@ -128,7 +128,7 @@ ErrorMessageOr<void> CaptureFileImpl::CalculateCaptureSectionSize() {
     min_section_offset = std::min(min_section_offset, header_.section_list_offset);
   }
 
-  CHECK(min_section_offset < std::numeric_limits<uint64_t>::max());
+  ORBIT_CHECK(min_section_offset < std::numeric_limits<uint64_t>::max());
 
   capture_section_size_ = min_section_offset - header_.capture_section_offset;
 
@@ -183,10 +183,10 @@ ErrorMessageOr<void> CaptureFileImpl::ReadHeader() {
 ErrorMessageOr<void> CaptureFileImpl::WriteToSection(uint64_t section_number,
                                                      uint64_t offset_in_section, const void* data,
                                                      size_t size) {
-  CHECK(section_number < section_list_.size());
+  ORBIT_CHECK(section_number < section_list_.size());
 
   const CaptureFileSection& section = section_list_[section_number];
-  CHECK(offset_in_section + size <= section.size);
+  ORBIT_CHECK(offset_in_section + size <= section.size);
 
   OUTCOME_TRY(orbit_base::WriteFullyAtOffset(fd_, data, size, section.offset + offset_in_section));
 
@@ -222,7 +222,7 @@ ErrorMessageOr<uint64_t> CaptureFileImpl::AddUserDataSection(uint64_t section_si
   // If we don't have any additional sections or if there are any sections starting after
   // section_list move section list to the end of the file.
   if (header_.section_list_offset == 0 || IsThereSectionWithOffsetAfterSectionList()) {
-    CHECK(section_list.empty());
+    ORBIT_CHECK(section_list.empty());
     OUTCOME_TRY(auto&& end_of_file, GetEndOfFileOffset(fd_));
     section_list_offset = orbit_base::AlignUp<8>(end_of_file);
   }
@@ -260,10 +260,10 @@ ErrorMessageOr<uint64_t> CaptureFileImpl::AddUserDataSection(uint64_t section_si
 ErrorMessageOr<void> CaptureFileImpl::ReadFromSection(uint64_t section_number,
                                                       uint64_t offset_in_section, void* data,
                                                       size_t size) {
-  CHECK(section_number < section_list_.size());
+  ORBIT_CHECK(section_number < section_list_.size());
 
   const CaptureFileSection& section = section_list_[section_number];
-  CHECK(offset_in_section + size <= section.size);
+  ORBIT_CHECK(offset_in_section + size <= section.size);
 
   OUTCOME_TRY(auto&& bytes_read,
               orbit_base::ReadFullyAtOffset(fd_, data, size, section.offset + offset_in_section));
@@ -287,7 +287,7 @@ std::unique_ptr<ProtoSectionInputStream> CaptureFileImpl::CreateCaptureSectionIn
 
 std::unique_ptr<ProtoSectionInputStream> CaptureFileImpl::CreateProtoSectionInputStream(
     uint64_t section_number) {
-  CHECK(section_number < section_list_.size());
+  ORBIT_CHECK(section_number < section_list_.size());
   const auto& section_info = section_list_[section_number];
 
   return std::make_unique<orbit_capture_file_internal::ProtoSectionInputStreamImpl>(
@@ -309,7 +309,7 @@ const std::filesystem::path& CaptureFileImpl::GetFilePath() const { return file_
 ErrorMessageOr<void> orbit_capture_file::CaptureFileImpl::ExtendSection(uint64_t section_number,
                                                                         size_t new_size) {
   // Currently we do it only for last section of the file.
-  CHECK(section_number < section_list_.size());
+  ORBIT_CHECK(section_number < section_list_.size());
 
   const CaptureFileSection& section = section_list_[section_number];
   if (section.size >= new_size) {

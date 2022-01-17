@@ -63,7 +63,7 @@ class ScopedStatus final {
   ~ScopedStatus() { reset(); }
 
   void UpdateMessage(const std::string& message) {
-    CHECK(data_ != nullptr);
+    ORBIT_CHECK(data_ != nullptr);
     if (std::this_thread::get_id() == data_->main_thread_id) {
       data_->status_listener->UpdateStatus(data_->status_id, message);
     } else {

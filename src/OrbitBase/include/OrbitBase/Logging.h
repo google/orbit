@@ -76,7 +76,7 @@ constexpr const char* kLogTimeFormat = "%Y-%m-%dT%H:%M:%E6S";
     }                                         \
   } while (0)
 
-#define CHECK(assertion)                         \
+#define ORBIT_CHECK(assertion)                   \
   do {                                           \
     if (ORBIT_UNLIKELY(!(assertion))) {          \
       ORBIT_LOG("Check failed: %s", #assertion); \
@@ -85,7 +85,7 @@ constexpr const char* kLogTimeFormat = "%Y-%m-%dT%H:%M:%E6S";
   } while (0)
 
 #ifndef NDEBUG
-#define DCHECK(assertion) CHECK(assertion)
+#define DCHECK(assertion) ORBIT_CHECK(assertion)
 #else
 #define DCHECK(assertion) \
   do {                    \

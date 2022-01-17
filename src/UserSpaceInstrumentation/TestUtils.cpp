@@ -38,7 +38,7 @@ static ErrorMessageOr<AddressRange> FindFunctionAbsoluteAddressInModule(
 
 AddressRange GetFunctionAbsoluteAddressRangeOrDie(std::string_view function_name) {
   auto modules_or_error = orbit_object_utils::ReadModules(getpid());
-  CHECK(!modules_or_error.has_error());
+  ORBIT_CHECK(!modules_or_error.has_error());
   auto& modules = modules_or_error.value();
 
   // We check the main module first because it's most likely to find the function there.
@@ -79,7 +79,7 @@ static ErrorMessageOr<AddressRange> FindFunctionRelativeAddressInModule(
 
 FunctionLocation FindFunctionOrDie(std::string_view function_name) {
   auto modules_or_error = orbit_object_utils::ReadModules(getpid());
-  CHECK(!modules_or_error.has_error());
+  ORBIT_CHECK(!modules_or_error.has_error());
   auto& modules = modules_or_error.value();
 
   // We check the main module first because it's most likely to find the function there.
@@ -104,9 +104,9 @@ void DumpDisassembly(const std::vector<uint8_t>& code, uint64_t start_address) {
   // Init Capstone disassembler.
   csh capstone_handle = 0;
   cs_err error_code = cs_open(CS_ARCH_X86, CS_MODE_64, &capstone_handle);
-  CHECK(error_code == CS_ERR_OK);
+  ORBIT_CHECK(error_code == CS_ERR_OK);
   error_code = cs_option(capstone_handle, CS_OPT_DETAIL, CS_OPT_ON);
-  CHECK(error_code == CS_ERR_OK);
+  ORBIT_CHECK(error_code == CS_ERR_OK);
   orbit_base::unique_resource close_on_exit{
       &capstone_handle, [](csh* capstone_handle) { cs_close(capstone_handle); }};
 

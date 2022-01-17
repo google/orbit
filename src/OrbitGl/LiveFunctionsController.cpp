@@ -238,11 +238,11 @@ uint64_t LiveFunctionsController::GetStartTime(uint64_t index) const {
 }
 
 uint64_t LiveFunctionsController::GetCaptureMin() const {
-  CHECK(app_ != nullptr);
+  ORBIT_CHECK(app_ != nullptr);
   return app_->GetTimeGraph()->GetCaptureMin();
 }
 uint64_t LiveFunctionsController::GetCaptureMax() const {
-  CHECK(app_ != nullptr);
+  ORBIT_CHECK(app_ != nullptr);
   return app_->GetTimeGraph()->GetCaptureMax();
 }
 

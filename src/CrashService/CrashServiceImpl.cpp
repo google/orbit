@@ -24,7 +24,7 @@ grpc::Status CrashServiceImpl::CrashOrbitService(grpc::ServerContext* /*context*
                                                  CrashOrbitServiceResponse* /*response*/) {
   switch (request->crash_type()) {
     case CrashOrbitServiceRequest::CHECK_FALSE: {
-      CHECK(false);
+      ORBIT_CHECK(false);
       break;
     }
     case CrashOrbitServiceRequest::STACK_OVERFLOW: {

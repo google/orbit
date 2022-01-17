@@ -112,7 +112,7 @@ TaskNewtaskPerfEvent MakeFakeTaskNewtaskPerfEvent(pid_t new_tid, const char* com
               .new_tid = new_tid,
           },
   };
-  CHECK(strlen(comm) < 16);
+  ORBIT_CHECK(strlen(comm) < 16);
   strncpy(event.data.comm, comm, 16);
   return event;
 }
@@ -126,7 +126,7 @@ TaskRenamePerfEvent MakeFakeTaskRenamePerfEvent(pid_t renamed_tid, const char* n
               .renamed_tid = renamed_tid,
           },
   };
-  CHECK(strlen(new_comm) < 16);
+  ORBIT_CHECK(strlen(new_comm) < 16);
   strncpy(event.data.newcomm, new_comm, 16);
   return event;
 }

@@ -33,7 +33,7 @@ using orbit_grpc_protos::FunctionCall;
 
 static void SendFullAddressInfoToListener(TracerListener* listener,
                                           const unwindstack::FrameData& libunwindstack_frame) {
-  CHECK(listener != nullptr);
+  ORBIT_CHECK(listener != nullptr);
 
   FullAddressInfo address_info;
   address_info.set_absolute_address(libunwindstack_frame.pc);
@@ -52,7 +52,7 @@ static void SendFullAddressInfoToListener(TracerListener* listener,
 // corresponding unwinding error.
 static void SendUprobesFullAddressInfoToListener(
     TracerListener* listener, const unwindstack::FrameData& libunwindstack_frame) {
-  CHECK(listener != nullptr);
+  ORBIT_CHECK(listener != nullptr);
 
   FullAddressInfo address_info;
   address_info.set_absolute_address(libunwindstack_frame.pc);
@@ -66,7 +66,7 @@ static void SendUprobesFullAddressInfoToListener(
 static bool CallstackIsInUserSpaceInstrumentation(
     const std::vector<unwindstack::FrameData>& frames,
     const UserSpaceInstrumentationAddresses& user_space_instrumentation_addresses) {
-  CHECK(!frames.empty());
+  ORBIT_CHECK(!frames.empty());
 
   // This case is for a sample falling directly inside a user space instrumentation trampoline.
   if (user_space_instrumentation_addresses.IsInEntryOrReturnTrampoline(frames.front().pc)) {
@@ -97,7 +97,7 @@ static bool CallstackIsInUserSpaceInstrumentation(
 static bool CallchainIsInUserSpaceInstrumentation(
     const uint64_t* callchain, uint64_t callchain_size, LibunwindstackMaps& maps,
     const UserSpaceInstrumentationAddresses& user_space_instrumentation_addresses) {
-  CHECK(callchain_size >= 2);
+  ORBIT_CHECK(callchain_size >= 2);
 
   // This case is for a sample falling directly inside a user space instrumentation trampoline.
   if (user_space_instrumentation_addresses.IsInEntryOrReturnTrampoline(callchain[1])) {
@@ -128,8 +128,8 @@ static bool CallchainIsInUserSpaceInstrumentation(
 
 void UprobesUnwindingVisitor::Visit(uint64_t event_timestamp,
                                     const StackSamplePerfEventData& event_data) {
-  CHECK(listener_ != nullptr);
-  CHECK(current_maps_ != nullptr);
+  ORBIT_CHECK(listener_ != nullptr);
+  ORBIT_CHECK(current_maps_ != nullptr);
 
   return_address_manager_->PatchSample(event_data.tid, event_data.GetRegisters()[PERF_REG_X86_SP],
                                        event_data.GetMutableStackData(), event_data.GetStackSize());
@@ -223,14 +223,14 @@ void UprobesUnwindingVisitor::Visit(uint64_t event_timestamp,
     }
   }
 
-  CHECK(!callstack->pcs().empty());
+  ORBIT_CHECK(!callstack->pcs().empty());
   listener_->OnCallstackSample(std::move(sample));
 }
 
 void UprobesUnwindingVisitor::Visit(uint64_t event_timestamp,
                                     const CallchainSamplePerfEventData& event_data) {
-  CHECK(listener_ != nullptr);
-  CHECK(current_maps_ != nullptr);
+  ORBIT_CHECK(listener_ != nullptr);
+  ORBIT_CHECK(current_maps_ != nullptr);
 
   // The top of a callchain is always inside the kernel code and we don't expect samples to be only
   // inside the kernel. Do nothing in case this happens anyway for some reason.
@@ -365,7 +365,7 @@ void UprobesUnwindingVisitor::Visit(uint64_t event_timestamp,
     callstack->add_pcs(event_data.GetCallchain()[frame_index] - 1);
   }
 
-  CHECK(!callstack->pcs().empty());
+  ORBIT_CHECK(!callstack->pcs().empty());
   listener_->OnCallstackSample(std::move(sample));
 }
 
@@ -373,7 +373,7 @@ void UprobesUnwindingVisitor::OnUprobes(
     uint64_t timestamp_ns, pid_t tid, uint32_t cpu, uint64_t sp, uint64_t ip,
     uint64_t return_address, std::optional<perf_event_sample_regs_user_sp_ip_arguments> registers,
     uint64_t function_id) {
-  CHECK(listener_ != nullptr);
+  ORBIT_CHECK(listener_ != nullptr);
 
   // We are seeing that, on thread migration, uprobe events can sometimes be
   // duplicated: the duplicate uprobe event will have the same stack pointer and
@@ -423,7 +423,7 @@ void UprobesUnwindingVisitor::Visit(uint64_t event_timestamp,
 
 void UprobesUnwindingVisitor::OnUretprobes(uint64_t timestamp_ns, pid_t pid, pid_t tid,
                                            std::optional<uint64_t> ax) {
-  CHECK(listener_ != nullptr);
+  ORBIT_CHECK(listener_ != nullptr);
 
   // Duplicate uprobe detection.
   std::vector<std::tuple<uint64_t, uint64_t, uint32_t>>& uprobe_sps_ips_cpus =
@@ -472,8 +472,8 @@ void UprobesUnwindingVisitor::Visit(uint64_t event_timestamp,
 }
 
 void UprobesUnwindingVisitor::Visit(uint64_t event_timestamp, const MmapPerfEventData& event_data) {
-  CHECK(listener_ != nullptr);
-  CHECK(current_maps_ != nullptr);
+  ORBIT_CHECK(listener_ != nullptr);
+  ORBIT_CHECK(current_maps_ != nullptr);
 
   // Obviously the uprobes map cannot be successfully processed by orbit_object_utils::CreateModule,
   // but it's important that current_maps_ contain it.

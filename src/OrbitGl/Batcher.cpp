@@ -23,7 +23,7 @@ void Batcher::AddLine(Vec2 from, Vec2 to, float z, const Color& color,
 
 void Batcher::AddLine(Vec2 from, Vec2 to, float z, const Color& color,
                       std::shared_ptr<Pickable> pickable) {
-  CHECK(picking_manager_ != nullptr);
+  ORBIT_CHECK(picking_manager_ != nullptr);
 
   Color picking_color = picking_manager_->GetPickableColor(pickable, batcher_id_);
 
@@ -37,7 +37,7 @@ void Batcher::AddVerticalLine(Vec2 pos, float size, float z, const Color& color,
 
 void Batcher::AddVerticalLine(Vec2 pos, float size, float z, const Color& color,
                               std::shared_ptr<Pickable> pickable) {
-  CHECK(picking_manager_ != nullptr);
+  ORBIT_CHECK(picking_manager_ != nullptr);
 
   Color picking_color = picking_manager_->GetPickableColor(pickable, batcher_id_);
 
@@ -80,7 +80,7 @@ void Batcher::AddBox(const Box& box, const Color& color,
 }
 
 void Batcher::AddBox(const Box& box, const Color& color, std::shared_ptr<Pickable> pickable) {
-  CHECK(picking_manager_ != nullptr);
+  ORBIT_CHECK(picking_manager_ != nullptr);
 
   Color picking_color = picking_manager_->GetPickableColor(pickable, batcher_id_);
   std::array<Color, 4> colors;
@@ -219,7 +219,7 @@ void Batcher::AddTriangle(const Triangle& triangle, const Color& color,
 
 void Batcher::AddTriangle(const Triangle& triangle, const Color& color,
                           std::shared_ptr<Pickable> pickable) {
-  CHECK(picking_manager_ != nullptr);
+  ORBIT_CHECK(picking_manager_ != nullptr);
 
   Color picking_color = picking_manager_->GetPickableColor(pickable, batcher_id_);
 
@@ -285,8 +285,8 @@ void Batcher::AddCircle(const Vec2& position, float radius, float z, Color color
 }
 
 const PickingUserData* Batcher::GetUserData(PickingId id) const {
-  CHECK(id.element_id >= 0);
-  CHECK(id.batcher_id == batcher_id_);
+  ORBIT_CHECK(id.element_id >= 0);
+  ORBIT_CHECK(id.batcher_id == batcher_id_);
 
   switch (id.type) {
     case PickingType::kInvalid:
@@ -294,7 +294,7 @@ const PickingUserData* Batcher::GetUserData(PickingId id) const {
     case PickingType::kBox:
     case PickingType::kTriangle:
     case PickingType::kLine:
-      CHECK(id.element_id < user_data_.size());
+      ORBIT_CHECK(id.element_id < user_data_.size());
       return user_data_[id.element_id].get();
     case PickingType::kPickable:
       return nullptr;
@@ -361,7 +361,7 @@ void Batcher::ResetElements() {
 }
 
 void Batcher::StartNewFrame() {
-  CHECK(translations_.IsEmpty());
+  ORBIT_CHECK(translations_.IsEmpty());
   ResetElements();
   user_data_.clear();
 }

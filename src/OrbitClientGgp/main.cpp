@@ -76,7 +76,7 @@ int main(int argc, char** argv) {
   options.capture_file_directory = absl::GetFlag(FLAGS_file_directory);
   options.samples_per_second = absl::GetFlag(FLAGS_sampling_rate);
   uint16_t stack_dump_size = absl::GetFlag(FLAGS_stack_dump_size);
-  CHECK(stack_dump_size <= 65000);
+  ORBIT_CHECK(stack_dump_size <= 65000);
   options.stack_dump_size = stack_dump_size;
   options.use_framepointer_unwinding = absl::GetFlag(FLAGS_frame_pointer_unwinding);
 

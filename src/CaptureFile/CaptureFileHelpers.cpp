@@ -24,7 +24,7 @@ ErrorMessageOr<void> WriteUserData(
   google::protobuf::io::CodedOutputStream coded_output_stream{&array_output_stream};
   coded_output_stream.WriteVarint32(message_size);
   // We do not expect any errors from CodedOutputStream backed by ArrayOutputStream of correct size
-  CHECK(user_defined_capture_info.SerializeToCodedStream(&coded_output_stream));
+  ORBIT_CHECK(user_defined_capture_info.SerializeToCodedStream(&coded_output_stream));
 
   auto section_index = capture_file->FindSectionByType(kSectionTypeUserData);
   if (section_index.has_value()) {

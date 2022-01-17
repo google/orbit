@@ -77,8 +77,8 @@ bool PresetFile::IsLegacyFileFormat() const { return is_legacy_format_; }
 
 std::vector<uint64_t> PresetFile::GetSelectedFunctionHashesForModuleLegacy(
     const std::filesystem::path& module_path) const {
-  CHECK(IsLegacyFileFormat());
-  CHECK(preset_info_legacy_.path_to_module().contains(module_path.string()));
+  ORBIT_CHECK(IsLegacyFileFormat());
+  ORBIT_CHECK(preset_info_legacy_.path_to_module().contains(module_path.string()));
   const auto& function_hashes =
       preset_info_legacy_.path_to_module().at(module_path.string()).function_hashes();
   return {function_hashes.begin(), function_hashes.end()};
@@ -86,8 +86,8 @@ std::vector<uint64_t> PresetFile::GetSelectedFunctionHashesForModuleLegacy(
 
 std::vector<uint64_t> PresetFile::GetFrameTrackFunctionHashesForModuleLegacy(
     const std::filesystem::path& module_path) const {
-  CHECK(IsLegacyFileFormat());
-  CHECK(preset_info_legacy_.path_to_module().contains(module_path.string()));
+  ORBIT_CHECK(IsLegacyFileFormat());
+  ORBIT_CHECK(preset_info_legacy_.path_to_module().contains(module_path.string()));
   const auto& frame_track_function_hashes =
       preset_info_legacy_.path_to_module().at(module_path.string()).frame_track_function_hashes();
   return {frame_track_function_hashes.begin(), frame_track_function_hashes.end()};
@@ -95,16 +95,16 @@ std::vector<uint64_t> PresetFile::GetFrameTrackFunctionHashesForModuleLegacy(
 
 std::vector<std::string> PresetFile::GetSelectedFunctionNamesForModule(
     const std::filesystem::path& module_path) const {
-  CHECK(!IsLegacyFileFormat());
-  CHECK(preset_info_.modules().contains(module_path.string()));
+  ORBIT_CHECK(!IsLegacyFileFormat());
+  ORBIT_CHECK(preset_info_.modules().contains(module_path.string()));
   const auto& function_names = preset_info_.modules().at(module_path.string()).function_names();
   return {function_names.begin(), function_names.end()};
 }
 
 std::vector<std::string> PresetFile::GetFrameTrackFunctionNamesForModule(
     const std::filesystem::path& module_path) const {
-  CHECK(!IsLegacyFileFormat());
-  CHECK(preset_info_.modules().contains(module_path.string()));
+  ORBIT_CHECK(!IsLegacyFileFormat());
+  ORBIT_CHECK(preset_info_.modules().contains(module_path.string()));
   const auto& function_names =
       preset_info_.modules().at(module_path.string()).frame_track_function_names();
   return {function_names.begin(), function_names.end()};
@@ -125,7 +125,7 @@ ErrorMessageOr<PresetFile> ReadPresetFromFile(const std::filesystem::path& file_
 }
 
 ErrorMessageOr<void> PresetFile::SaveToFile() const {
-  CHECK(!is_legacy_format_);
+  ORBIT_CHECK(!is_legacy_format_);
 
   OUTCOME_TRY(auto&& fd, orbit_base::OpenFileForWriting(file_path_));
   ORBIT_LOG("Saving preset to \"%s\"", file_path_.string());

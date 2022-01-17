@@ -17,7 +17,7 @@
 namespace orbit_service {
 
 bool ProducerSideServer::BuildAndStart(std::string uri) {
-  CHECK(server_ == nullptr);
+  ORBIT_CHECK(server_ == nullptr);
 
   grpc::ServerBuilder builder;
   builder.AddListeningPort(uri, grpc::InsecureServerCredentials());
@@ -33,7 +33,7 @@ bool ProducerSideServer::BuildAndStart(std::string uri) {
 }
 
 void ProducerSideServer::ShutdownAndWait() {
-  CHECK(server_ != nullptr);
+  ORBIT_CHECK(server_ != nullptr);
   producer_side_service_.OnExitRequest();
   server_->Shutdown();
   server_->Wait();

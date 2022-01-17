@@ -23,7 +23,7 @@ TracerImpl::TracerImpl(orbit_grpc_protos::CaptureOptions capture_options, Tracer
     : capture_options_(std::move(capture_options)), listener_(listener) {}
 
 void TracerImpl::Start() {
-  CHECK(krabs_tracer_ == nullptr);
+  ORBIT_CHECK(krabs_tracer_ == nullptr);
   SendModulesSnapshot();
   SendThreadNamesSnapshot();
   krabs_tracer_ = std::make_unique<KrabsTracer>(capture_options_, listener_);
@@ -31,7 +31,7 @@ void TracerImpl::Start() {
 }
 
 void TracerImpl::Stop() {
-  CHECK(krabs_tracer_ != nullptr);
+  ORBIT_CHECK(krabs_tracer_ != nullptr);
   krabs_tracer_->Stop();
   krabs_tracer_ = nullptr;
 }

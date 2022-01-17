@@ -42,8 +42,8 @@ void MemoryInfoProducer::SetExitRequested(bool exit_requested) {
 void MemoryInfoProducer::Run() {
   orbit_base::SetCurrentThreadName(thread_name_.c_str());
 
-  CHECK(listener_ != nullptr);
-  CHECK(pid_ != kMissingInfo);
+  ORBIT_CHECK(listener_ != nullptr);
+  ORBIT_CHECK(pid_ != kMissingInfo);
 
   absl::Time scheduled_time = absl::Now();
   absl::MutexLock lock(&exit_requested_mutex_);

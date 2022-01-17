@@ -151,7 +151,7 @@ void PresetsDataView::DoSort() {
 std::vector<std::vector<std::string>> PresetsDataView::GetContextMenuWithGrouping(
     int clicked_index, const std::vector<int>& selected_indices) {
   // Note that the UI already enforces a single selection.
-  CHECK(selected_indices.size() == 1);
+  ORBIT_CHECK(selected_indices.size() == 1);
 
   std::vector<std::string> action_group;
   const PresetFile& preset = GetPreset(selected_indices[0]);

@@ -37,11 +37,11 @@ namespace {
 
 [[nodiscard]] int ReadPerfEventParanoid() {
   auto error_or_content = orbit_base::ReadFileToString("/proc/sys/kernel/perf_event_paranoid");
-  CHECK(error_or_content.has_value());
+  ORBIT_CHECK(error_or_content.has_value());
   const std::string& content = error_or_content.value();
   int perf_event_paranoid = 2;
   bool atoi_succeeded = absl::SimpleAtoi(content, &perf_event_paranoid);
-  CHECK(atoi_succeeded);
+  ORBIT_CHECK(atoi_succeeded);
   return perf_event_paranoid;
 }
 
@@ -63,7 +63,7 @@ namespace {
 [[nodiscard]] std::string ReadUnameKernelRelease() {
   utsname utsname{};
   int uname_result = uname(&utsname);
-  CHECK(uname_result == 0);
+  ORBIT_CHECK(uname_result == 0);
   return utsname.release;
 }
 
@@ -268,12 +268,12 @@ class LinuxTracingIntegrationTestFixture {
 
   void StartTracingAndWaitForTracingLoopStarted(
       const orbit_grpc_protos::CaptureOptions& capture_options) {
-    CHECK(tracer_ == nullptr);
-    CHECK(!listener_.has_value());
+    ORBIT_CHECK(tracer_ == nullptr);
+    ORBIT_CHECK(!listener_.has_value());
 
     if (IsRunningAsRoot()) {
       // Needed for BufferTracerListener::WaitForAtLeastOneSchedulingSlice().
-      CHECK(capture_options.trace_context_switches());
+      ORBIT_CHECK(capture_options.trace_context_switches());
     }
 
     listener_.emplace();
@@ -295,8 +295,8 @@ class LinuxTracingIntegrationTestFixture {
   }
 
   [[nodiscard]] std::vector<orbit_grpc_protos::ProducerCaptureEvent> StopTracingAndGetEvents() {
-    CHECK(tracer_ != nullptr);
-    CHECK(listener_.has_value());
+    ORBIT_CHECK(tracer_ != nullptr);
+    ORBIT_CHECK(listener_.has_value());
     tracer_->Stop();
     tracer_.reset();
     std::vector<orbit_grpc_protos::ProducerCaptureEvent> events = listener_->GetAndClearEvents();
@@ -315,7 +315,7 @@ using PuppetConstants = IntegrationTestPuppetConstants;
 [[nodiscard]] std::vector<orbit_grpc_protos::ProducerCaptureEvent> TraceAndGetEvents(
     LinuxTracingIntegrationTestFixture* fixture, std::string_view command,
     std::optional<orbit_grpc_protos::CaptureOptions> capture_options = std::nullopt) {
-  CHECK(fixture != nullptr);
+  ORBIT_CHECK(fixture != nullptr);
   if (!capture_options.has_value()) {
     capture_options = fixture->BuildDefaultCaptureOptions();
   }
@@ -564,7 +564,8 @@ GetOuterAndInnerFunctionVirtualAddressRanges(pid_t pid) {
   uint64_t inner_function_virtual_address_end = 0;
   for (const orbit_grpc_protos::SymbolInfo& symbol : module_symbols.symbol_infos()) {
     if (symbol.name() == PuppetConstants::kOuterFunctionName) {
-      CHECK(outer_function_virtual_address_start == 0 && outer_function_virtual_address_end == 0);
+      ORBIT_CHECK(outer_function_virtual_address_start == 0 &&
+                  outer_function_virtual_address_end == 0);
       outer_function_virtual_address_start =
           orbit_object_utils::SymbolVirtualAddressToAbsoluteAddress(
               symbol.address(), module_info.address_start(), module_info.load_bias(),
@@ -573,7 +574,8 @@ GetOuterAndInnerFunctionVirtualAddressRanges(pid_t pid) {
     }
 
     if (symbol.name() == PuppetConstants::kInnerFunctionName) {
-      CHECK(inner_function_virtual_address_start == 0 && inner_function_virtual_address_end == 0);
+      ORBIT_CHECK(inner_function_virtual_address_start == 0 &&
+                  inner_function_virtual_address_end == 0);
       inner_function_virtual_address_start =
           orbit_object_utils::SymbolVirtualAddressToAbsoluteAddress(
               symbol.address(), module_info.address_start(), module_info.load_bias(),
@@ -581,10 +583,10 @@ GetOuterAndInnerFunctionVirtualAddressRanges(pid_t pid) {
       inner_function_virtual_address_end = inner_function_virtual_address_start + symbol.size() - 1;
     }
   }
-  CHECK(outer_function_virtual_address_start != 0);
-  CHECK(outer_function_virtual_address_end != 0);
-  CHECK(inner_function_virtual_address_start != 0);
-  CHECK(inner_function_virtual_address_end != 0);
+  ORBIT_CHECK(outer_function_virtual_address_start != 0);
+  ORBIT_CHECK(outer_function_virtual_address_end != 0);
+  ORBIT_CHECK(inner_function_virtual_address_start != 0);
+  ORBIT_CHECK(inner_function_virtual_address_end != 0);
   return std::make_pair(
       std::make_pair(outer_function_virtual_address_start, outer_function_virtual_address_end),
       std::make_pair(inner_function_virtual_address_start, inner_function_virtual_address_end));
@@ -706,7 +708,7 @@ void VerifyCallstackSamplesWithOuterAndInnerFunction(
   }
 
   ASSERT_GT(matching_callstack_count, 0);
-  CHECK(first_matching_callstack_timestamp_ns <= last_matching_callstack_timestamp_ns);
+  ORBIT_CHECK(first_matching_callstack_timestamp_ns <= last_matching_callstack_timestamp_ns);
   ORBIT_LOG("Found %lu of the expected callstacks over %.0f ms", matching_callstack_count,
             (last_matching_callstack_timestamp_ns - first_matching_callstack_timestamp_ns) / 1e6);
   constexpr double kMinExpectedScheduledRelativeTime = 0.67;

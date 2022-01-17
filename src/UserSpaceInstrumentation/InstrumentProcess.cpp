@@ -201,7 +201,7 @@ ErrorMessageOr<std::unique_ptr<InstrumentedProcess>> InstrumentedProcess::Create
                                         library_path_or_error.error().message()));
   }
   const std::filesystem::path library_path = library_path_or_error.value();
-  CHECK(library_path.is_absolute());
+  ORBIT_CHECK(library_path.is_absolute());
   process->injected_library_path_ = std::filesystem::canonical(library_path);
 
   auto library_handle_or_error = DlopenInTracee(pid, library_path, RTLD_NOW);

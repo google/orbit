@@ -70,7 +70,7 @@ TracerImpl::TracerImpl(
       trace_gpu_driver_{capture_options.trace_gpu_driver()},
       user_space_instrumentation_addresses_{std::move(user_space_instrumentation_addresses)},
       listener_{listener} {
-  CHECK(listener_ != nullptr);
+  ORBIT_CHECK(listener_ != nullptr);
 
   uint32_t stack_dump_size = capture_options.stack_dump_size();
   if (stack_dump_size == std::numeric_limits<uint16_t>::max()) {
@@ -120,7 +120,7 @@ void TracerImpl::Start() {
 
 void TracerImpl::Stop() {
   stop_run_thread_ = true;
-  CHECK(run_thread_.joinable());
+  ORBIT_CHECK(run_thread_.joinable());
   run_thread_.join();
 }
 
@@ -344,9 +344,9 @@ bool TracerImpl::OpenMmapTask(const std::vector<int32_t>& cpus) {
 
 bool TracerImpl::OpenSampling(const std::vector<int32_t>& cpus) {
   ORBIT_SCOPE_FUNCTION;
-  CHECK(sampling_period_ns_.has_value());
-  CHECK(unwinding_method_ == CaptureOptions::kFramePointers ||
-        unwinding_method_ == CaptureOptions::kDwarf);
+  ORBIT_CHECK(sampling_period_ns_.has_value());
+  ORBIT_CHECK(unwinding_method_ == CaptureOptions::kFramePointers ||
+              unwinding_method_ == CaptureOptions::kDwarf);
 
   std::vector<int> sampling_tracing_fds;
   std::vector<PerfEventRingBuffer> sampling_ring_buffers;
@@ -988,16 +988,16 @@ uint64_t TracerImpl::ProcessSampleEventAndReturnTimestamp(const perf_event_heade
   bool is_dma_fence_signaled_event = dma_fence_signaled_ids_.contains(stream_id);
   bool is_user_instrumented_tracepoint = ids_to_tracepoint_info_.contains(stream_id);
 
-  CHECK(is_uprobe + is_uretprobe + is_stack_sample + is_callchain_sample + is_task_newtask +
-            is_task_rename + is_sched_switch + is_sched_wakeup + is_amdgpu_cs_ioctl_event +
-            is_amdgpu_sched_run_job_event + is_dma_fence_signaled_event +
-            is_user_instrumented_tracepoint <=
-        1);
+  ORBIT_CHECK(is_uprobe + is_uretprobe + is_stack_sample + is_callchain_sample + is_task_newtask +
+                  is_task_rename + is_sched_switch + is_sched_wakeup + is_amdgpu_cs_ioctl_event +
+                  is_amdgpu_sched_run_job_event + is_dma_fence_signaled_event +
+                  is_user_instrumented_tracepoint <=
+              1);
 
   int fd = ring_buffer->GetFileDescriptor();
 
   if (is_uprobe) {
-    CHECK(header.size == sizeof(perf_event_sp_ip_8bytes_sample));
+    ORBIT_CHECK(header.size == sizeof(perf_event_sp_ip_8bytes_sample));
     perf_event_sp_ip_8bytes_sample ring_buffer_record;
     ring_buffer->ConsumeRecord(header, &ring_buffer_record);
 
@@ -1025,7 +1025,7 @@ uint64_t TracerImpl::ProcessSampleEventAndReturnTimestamp(const perf_event_heade
     ++stats_.uprobes_count;
 
   } else if (is_uprobe_with_args) {
-    CHECK(header.size == sizeof(perf_event_sp_ip_arguments_8bytes_sample));
+    ORBIT_CHECK(header.size == sizeof(perf_event_sp_ip_arguments_8bytes_sample));
     perf_event_sp_ip_arguments_8bytes_sample ring_buffer_record;
     ring_buffer->ConsumeRecord(header, &ring_buffer_record);
 
@@ -1052,7 +1052,7 @@ uint64_t TracerImpl::ProcessSampleEventAndReturnTimestamp(const perf_event_heade
     ++stats_.uprobes_count;
 
   } else if (is_uretprobe) {
-    CHECK(header.size == sizeof(perf_event_empty_sample));
+    ORBIT_CHECK(header.size == sizeof(perf_event_empty_sample));
     perf_event_empty_sample ring_buffer_record;
     ring_buffer->ConsumeRecord(header, &ring_buffer_record);
 
@@ -1074,7 +1074,7 @@ uint64_t TracerImpl::ProcessSampleEventAndReturnTimestamp(const perf_event_heade
     ++stats_.uprobes_count;
 
   } else if (is_uretprobe_with_retval) {
-    CHECK(header.size == sizeof(perf_event_ax_sample));
+    ORBIT_CHECK(header.size == sizeof(perf_event_ax_sample));
     perf_event_ax_sample ring_buffer_record;
     ring_buffer->ConsumeRecord(header, &ring_buffer_record);
 
@@ -1137,7 +1137,7 @@ uint64_t TracerImpl::ProcessSampleEventAndReturnTimestamp(const perf_event_heade
     ++stats_.sample_count;
 
   } else if (is_task_newtask) {
-    CHECK(header.size == sizeof(perf_event_raw_sample<task_newtask_tracepoint>));
+    ORBIT_CHECK(header.size == sizeof(perf_event_raw_sample<task_newtask_tracepoint>));
     perf_event_raw_sample<task_newtask_tracepoint> ring_buffer_record;
     ring_buffer->ConsumeRecord(header, &ring_buffer_record);
     TaskNewtaskPerfEvent event{
@@ -1157,7 +1157,7 @@ uint64_t TracerImpl::ProcessSampleEventAndReturnTimestamp(const perf_event_heade
     DeferEvent(event);
 
   } else if (is_task_rename) {
-    CHECK(header.size == sizeof(perf_event_raw_sample<task_rename_tracepoint>));
+    ORBIT_CHECK(header.size == sizeof(perf_event_raw_sample<task_rename_tracepoint>));
     perf_event_raw_sample<task_rename_tracepoint> ring_buffer_record;
     ring_buffer->ConsumeRecord(header, &ring_buffer_record);
 
@@ -1176,7 +1176,7 @@ uint64_t TracerImpl::ProcessSampleEventAndReturnTimestamp(const perf_event_heade
     DeferEvent(event);
 
   } else if (is_sched_switch) {
-    CHECK(header.size == sizeof(perf_event_raw_sample<sched_switch_tracepoint>));
+    ORBIT_CHECK(header.size == sizeof(perf_event_raw_sample<sched_switch_tracepoint>));
     perf_event_raw_sample<sched_switch_tracepoint> ring_buffer_record;
     ring_buffer->ConsumeRecord(header, &ring_buffer_record);
 
@@ -1415,7 +1415,7 @@ void TracerImpl::PrintStatsIfTimerElapsed() {
 
   double actual_window_s =
       static_cast<double>(timestamp_ns - stats_.event_count_begin_ns) / NS_PER_SECOND;
-  CHECK(actual_window_s > 0.0);
+  ORBIT_CHECK(actual_window_s > 0.0);
 
   ORBIT_LOG("Events per second (and total) last %.3f s:", actual_window_s);
   ORBIT_LOG("  sched switches: %.0f/s (%lu)", stats_.sched_switch_count / actual_window_s,

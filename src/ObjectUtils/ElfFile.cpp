@@ -490,7 +490,7 @@ const std::filesystem::path& ElfFileImpl<ElfT>::GetFilePath() const {
 
 template <typename ElfT>
 ErrorMessageOr<LineInfo> orbit_object_utils::ElfFileImpl<ElfT>::GetLineInfo(uint64_t address) {
-  CHECK(has_debug_info_section_);
+  ORBIT_CHECK(has_debug_info_section_);
   auto line_info_or_error =
       symbolizer_.symbolizeInlinedCode(std::string{object_file_->getFileName()},
                                        {address, llvm::object::SectionedAddress::UndefSection});

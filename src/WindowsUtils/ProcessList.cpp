@@ -58,7 +58,7 @@ namespace {
 [[nodiscard]] inline uint64_t FileTimeDiffNs(FILETIME file_time_0, FILETIME file_time_1) {
   uint64_t t_0 = FiletimeToUint64(file_time_0);
   uint64_t t_1 = FiletimeToUint64(file_time_1);
-  CHECK(t_1 >= t_0);
+  ORBIT_CHECK(t_1 >= t_0);
   constexpr uint64_t kIntervalNs = 100;
   return (t_1 - t_0) * kIntervalNs;
 }

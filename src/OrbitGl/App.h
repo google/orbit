@@ -122,11 +122,11 @@ class OrbitApp final : public DataViewFactory,
   void ClearCapture();
   [[nodiscard]] bool HasCaptureData() const override { return capture_data_ != nullptr; }
   [[nodiscard]] orbit_client_data::CaptureData& GetMutableCaptureData() override {
-    CHECK(capture_data_ != nullptr);
+    ORBIT_CHECK(capture_data_ != nullptr);
     return *capture_data_;
   }
   [[nodiscard]] const orbit_client_data::CaptureData& GetCaptureData() const override {
-    CHECK(capture_data_ != nullptr);
+    ORBIT_CHECK(capture_data_ != nullptr);
     return *capture_data_;
   }
 
@@ -182,11 +182,11 @@ class OrbitApp final : public DataViewFactory,
 
   void SetCaptureWindow(CaptureWindow* capture);
   [[nodiscard]] const TimeGraph* GetTimeGraph() const {
-    CHECK(capture_window_ != nullptr);
+    ORBIT_CHECK(capture_window_ != nullptr);
     return capture_window_->GetTimeGraph();
   }
   [[nodiscard]] TimeGraph* GetMutableTimeGraph() {
-    CHECK(capture_window_ != nullptr);
+    ORBIT_CHECK(capture_window_ != nullptr);
     return capture_window_->GetTimeGraph();
   }
   void SetDebugCanvas(GlCanvas* debug_canvas);
@@ -358,13 +358,13 @@ class OrbitApp final : public DataViewFactory,
   void CrashOrbitService(orbit_grpc_protos::CrashOrbitServiceRequest_CrashType crash_type);
 
   void SetGrpcChannel(std::shared_ptr<grpc::Channel> grpc_channel) {
-    CHECK(grpc_channel_ == nullptr);
-    CHECK(grpc_channel != nullptr);
+    ORBIT_CHECK(grpc_channel_ == nullptr);
+    ORBIT_CHECK(grpc_channel != nullptr);
     grpc_channel_ = std::move(grpc_channel);
   }
   void SetProcessManager(orbit_client_services::ProcessManager* process_manager) {
-    CHECK(process_manager_ == nullptr);
-    CHECK(process_manager != nullptr);
+    ORBIT_CHECK(process_manager_ == nullptr);
+    ORBIT_CHECK(process_manager != nullptr);
     process_manager_ = process_manager;
   }
   void SetTargetProcess(orbit_client_data::ProcessData* process);

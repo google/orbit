@@ -63,10 +63,10 @@ PerfEventRingBuffer::PerfEventRingBuffer(int perf_event_fd, uint64_t size_kb, st
 
   // The first page, just before the ring buffer, is the metadata page.
   metadata_page_ = static_cast<perf_event_mmap_page*>(mmap_address);
-  CHECK(metadata_page_->data_size == ring_buffer_size_);
+  ORBIT_CHECK(metadata_page_->data_size == ring_buffer_size_);
 
   ring_buffer_ = static_cast<char*>(mmap_address) + metadata_page_->data_offset;
-  CHECK(metadata_page_->data_offset == GetPageSize());
+  ORBIT_CHECK(metadata_page_->data_offset == GetPageSize());
 }
 
 PerfEventRingBuffer::PerfEventRingBuffer(PerfEventRingBuffer&& o) {

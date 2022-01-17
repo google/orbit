@@ -31,7 +31,7 @@ class ExecuteInProcessTest : public testing::Test {
  protected:
   ExecuteInProcessTest() {
     pid_ = fork();
-    CHECK(pid_ != -1);
+    ORBIT_CHECK(pid_ != -1);
     if (pid_ == 0) {
       prctl(PR_SET_PDEATHSIG, SIGTERM);
 
@@ -42,22 +42,22 @@ class ExecuteInProcessTest : public testing::Test {
       }
     }
 
-    CHECK(!AttachAndStopProcess(pid_).has_error());
+    ORBIT_CHECK(!AttachAndStopProcess(pid_).has_error());
 
     auto library_path_or_error = GetTestLibLibraryPath();
-    CHECK(library_path_or_error.has_value());
+    ORBIT_CHECK(library_path_or_error.has_value());
     std::filesystem::path library_path = std::move(library_path_or_error.value());
 
     // Load dynamic lib into tracee.
     auto library_handle_or_error = DlopenInTracee(pid_, library_path, RTLD_NOW);
-    CHECK(library_handle_or_error.has_value());
+    ORBIT_CHECK(library_handle_or_error.has_value());
     library_handle_ = library_handle_or_error.value();
   }
 
   ~ExecuteInProcessTest() override {
     // Cleanup, detach and end child.
-    CHECK(!DlcloseInTracee(pid_, library_handle_).has_error());
-    CHECK(!DetachAndContinueProcess(pid_).has_error());
+    ORBIT_CHECK(!DlcloseInTracee(pid_, library_handle_).has_error());
+    ORBIT_CHECK(!DetachAndContinueProcess(pid_).has_error());
     kill(pid_, SIGKILL);
     waitpid(pid_, nullptr, 0);
   }

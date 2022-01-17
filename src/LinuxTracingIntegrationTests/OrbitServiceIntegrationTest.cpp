@@ -99,19 +99,19 @@ class OrbitServiceIntegrationTestFixture {
 
  private:
   void StartCapture(CaptureOptions capture_options) {
-    CHECK(!capture_thread_.joinable());
+    ORBIT_CHECK(!capture_thread_.joinable());
     capture_thread_ = std::thread(&OrbitServiceIntegrationTestFixture::CaptureThread, this,
                                   std::move(capture_options));
   }
 
   [[nodiscard]] std::vector<ClientCaptureEvent> StopCaptureAndGetEvents() {
-    CHECK(capture_thread_.joinable());
+    ORBIT_CHECK(capture_thread_.joinable());
 
     {
       absl::ReaderMutexLock lock{&capture_reader_writer_mutex_};
       ORBIT_LOG("Stopping capture");
       bool writes_done_succeeded = capture_reader_writer_->WritesDone();
-      CHECK(writes_done_succeeded);
+      ORBIT_CHECK(writes_done_succeeded);
     }
 
     capture_thread_.join();
@@ -135,7 +135,7 @@ class OrbitServiceIntegrationTestFixture {
 
     {
       absl::WriterMutexLock lock{&capture_reader_writer_mutex_};
-      CHECK(capture_reader_writer_ == nullptr);
+      ORBIT_CHECK(capture_reader_writer_ == nullptr);
       ORBIT_LOG("Starting capture");
       capture_reader_writer_ = capture_service->Capture(&context);
     }
@@ -144,7 +144,7 @@ class OrbitServiceIntegrationTestFixture {
       orbit_grpc_protos::CaptureRequest capture_request;
       *capture_request.mutable_capture_options() = std::move(capture_options);
       bool write_capture_request_result = capture_reader_writer_->Write(capture_request);
-      CHECK(write_capture_request_result);
+      ORBIT_CHECK(write_capture_request_result);
     }
 
     ORBIT_LOG("Receiving events");
@@ -169,7 +169,7 @@ class OrbitServiceIntegrationTestFixture {
     ORBIT_LOG("Capture finished");
     {
       absl::WriterMutexLock lock{&capture_reader_writer_mutex_};
-      CHECK(capture_reader_writer_ != nullptr);
+      ORBIT_CHECK(capture_reader_writer_ != nullptr);
       capture_reader_writer_ = nullptr;
     }
   }
@@ -324,7 +324,7 @@ static void AddOrbitApiToCaptureOptions(orbit_grpc_protos::CaptureOptions* captu
       break;
     }
   }
-  CHECK(capture_options->api_functions_size() == 1);
+  ORBIT_CHECK(capture_options->api_functions_size() == 1);
 }
 
 static std::pair<uint64_t, uint64_t> GetUseOrbitApiFunctionVirtualAddressRange(pid_t pid) {

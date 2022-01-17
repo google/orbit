@@ -79,7 +79,7 @@ void ProcessData::UpdateModuleInfos(absl::Span<const ModuleInfo> module_infos) {
     const auto [unused_it, success] = start_address_to_module_in_memory_.try_emplace(
         module_info.address_start(), module_info.address_start(), module_info.address_end(),
         module_info.file_path(), module_info.build_id());
-    CHECK(success);
+    ORBIT_CHECK(success);
   }
 
   // Files saved with Orbit 1.65 may have intersecting maps, this is why we use DCHECK here
@@ -124,7 +124,7 @@ void ProcessData::AddOrUpdateModuleInfo(const ModuleInfo& module_info) {
   start_address_to_module_in_memory_.insert_or_assign(module_info.address_start(),
                                                       module_in_memory);
 
-  CHECK(IsModuleMapValid(start_address_to_module_in_memory_));
+  ORBIT_CHECK(IsModuleMapValid(start_address_to_module_in_memory_));
 }
 
 ErrorMessageOr<ModuleInMemory> ProcessData::FindModuleByAddress(uint64_t absolute_address) const {
@@ -144,7 +144,7 @@ ErrorMessageOr<ModuleInMemory> ProcessData::FindModuleByAddress(uint64_t absolut
 
   --it;
   const ModuleInMemory& module_in_memory = it->second;
-  CHECK(absolute_address >= module_in_memory.start());
+  ORBIT_CHECK(absolute_address >= module_in_memory.start());
   if (absolute_address >= module_in_memory.end()) return not_found_error;
 
   return module_in_memory;

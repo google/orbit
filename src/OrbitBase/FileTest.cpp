@@ -105,7 +105,7 @@ TEST(File, OpenExistingFileForReadWrite) {
 
 TEST(File, WriteFullySmoke) {
   auto temporary_file_or_error = TemporaryFile::Create();
-  CHECK(temporary_file_or_error.has_value());
+  ORBIT_CHECK(temporary_file_or_error.has_value());
   TemporaryFile temporary_file = std::move(temporary_file_or_error.value());
 
   // Write buffer into file.
@@ -126,7 +126,7 @@ TEST(File, WriteFullySmoke) {
 
 TEST(File, WriteFullyAtOffsetSmoke) {
   auto temporary_file_or_error = TemporaryFile::Create();
-  CHECK(temporary_file_or_error.has_value());
+  ORBIT_CHECK(temporary_file_or_error.has_value());
   TemporaryFile temporary_file = std::move(temporary_file_or_error.value());
 
   // Write at the beginning of the previously empty file.
@@ -201,9 +201,9 @@ TEST(File, ReadFullySmoke) {
 
 TEST(File, ReadFullyAtOffsetSmoke) {
   const auto fd_or_error = OpenFileForReading(orbit_test::GetTestdataDir() / "textfile.bin");
-  CHECK(!fd_or_error.has_error());
+  ORBIT_CHECK(!fd_or_error.has_error());
   const auto& fd = fd_or_error.value();
-  CHECK(fd.valid());
+  ORBIT_CHECK(fd.valid());
   std::array<char, 64> buf{};
 
   // Read at beginning of file.

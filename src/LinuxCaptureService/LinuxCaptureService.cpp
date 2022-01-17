@@ -217,7 +217,7 @@ LinuxCaptureService::WaitForStopCaptureRequestOrMemoryThresholdExceeded(
   // memory threshold was exceeded. So at that point we can proceed with stopping the capture.
   {
     absl::MutexLock lock{stop_capture_mutex.get()};
-    CHECK(stop_capture_reason->has_value());
+    ORBIT_CHECK(stop_capture_reason->has_value());
     return stop_capture_reason->value();
   }
 }

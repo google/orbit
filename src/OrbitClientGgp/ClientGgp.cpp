@@ -146,7 +146,7 @@ ErrorMessageOr<void> ClientGgp::RequestStartCapture(orbit_base::ThreadPool* thre
     }
 
     // We do not send try aborting capture - it cannot be cancelled.
-    CHECK(result.value() == CaptureListener::CaptureOutcome::kComplete);
+    ORBIT_CHECK(result.value() == CaptureListener::CaptureOutcome::kComplete);
   });
 
   return outcome::success();
@@ -207,7 +207,7 @@ ErrorMessageOr<void> ClientGgp::LoadModuleAndSymbols() {
               info.address_end(), info.build_id());
   }
 
-  CHECK(module_manager_.AddOrUpdateModules(module_infos).empty());
+  ORBIT_CHECK(module_manager_.AddOrUpdateModules(module_infos).empty());
 
   // Process name can be arbitrary so we use the path to find the module corresponding to the binary
   // of target_process_

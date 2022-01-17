@@ -32,14 +32,14 @@ bool ModuleData::NeedsUpdate(const orbit_grpc_protos::ModuleInfo& info) const {
 bool ModuleData::UpdateIfChangedAndUnload(ModuleInfo info) {
   absl::MutexLock lock(&mutex_);
 
-  CHECK(file_path() == info.file_path());
-  CHECK(build_id() == info.build_id());
-  CHECK(object_file_type() == info.object_file_type());
+  ORBIT_CHECK(file_path() == info.file_path());
+  ORBIT_CHECK(build_id() == info.build_id());
+  ORBIT_CHECK(object_file_type() == info.object_file_type());
 
   if (!NeedsUpdate(info)) return false;
 
   // The update only makes sense if build_id is empty.
-  CHECK(build_id().empty());
+  ORBIT_CHECK(build_id().empty());
 
   module_info_ = std::move(info);
 
@@ -60,14 +60,14 @@ bool ModuleData::UpdateIfChangedAndUnload(ModuleInfo info) {
 bool ModuleData::UpdateIfChangedAndNotLoaded(orbit_grpc_protos::ModuleInfo info) {
   absl::MutexLock lock(&mutex_);
 
-  CHECK(file_path() == info.file_path());
-  CHECK(build_id() == info.build_id());
-  CHECK(object_file_type() == info.object_file_type());
+  ORBIT_CHECK(file_path() == info.file_path());
+  ORBIT_CHECK(build_id() == info.build_id());
+  ORBIT_CHECK(object_file_type() == info.object_file_type());
 
   if (!NeedsUpdate(info)) return true;
 
   // The update only makes sense if build_id is empty.
-  CHECK(build_id().empty());
+  ORBIT_CHECK(build_id().empty());
 
   if (is_loaded_) return false;
 
@@ -96,7 +96,7 @@ const FunctionInfo* ModuleData::FindFunctionByElfAddress(uint64_t elf_address,
 
   --it;
   FunctionInfo* function = it->second.get();
-  CHECK(function->address() <= elf_address);
+  ORBIT_CHECK(function->address() <= elf_address);
 
   if (function->address() + function->size() < elf_address) return nullptr;
 
@@ -105,7 +105,7 @@ const FunctionInfo* ModuleData::FindFunctionByElfAddress(uint64_t elf_address,
 
 void ModuleData::AddSymbols(const orbit_grpc_protos::ModuleSymbols& module_symbols) {
   absl::MutexLock lock(&mutex_);
-  CHECK(!is_loaded_);
+  ORBIT_CHECK(!is_loaded_);
 
   uint32_t address_reuse_counter = 0;
   uint32_t name_reuse_counter = 0;
@@ -122,7 +122,7 @@ void ModuleData::AddSymbols(const orbit_grpc_protos::ModuleSymbols& module_symbo
     // __cxxabiv1::__class_type_info::~__class_type_info()
     // __cxxabiv1::__pbase_type_info::~__pbase_type_info()
     if (success_functions) {
-      CHECK(!function->pretty_name().empty());
+      ORBIT_CHECK(!function->pretty_name().empty());
       // Be careful about the scope, the key is a string_view. This is done to avoid name
       // duplication.
       bool success_function_name =

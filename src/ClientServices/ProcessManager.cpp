@@ -89,7 +89,7 @@ ErrorMessageOr<std::string> ProcessManagerImpl::FindDebugInfoFile(
 }
 
 void ProcessManagerImpl::Start() {
-  CHECK(!worker_thread_.joinable());
+  ORBIT_CHECK(!worker_thread_.joinable());
   worker_thread_ = std::thread([this] { WorkerFunction(); });
 }
 

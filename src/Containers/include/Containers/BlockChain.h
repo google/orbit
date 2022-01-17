@@ -49,7 +49,7 @@ class Block final {
   // Returns block the element was inserted to.
   template <class... Args>
   T& emplace_back(Args&&... args) {
-    CHECK(size() < Size);
+    ORBIT_CHECK(size() < Size);
     return data_.emplace_back(std::forward<Args>(args)...);
   }
 

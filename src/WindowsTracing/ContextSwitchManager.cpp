@@ -36,7 +36,7 @@ void ContextSwitchManager::ProcessContextSwitch(uint16_t cpu, uint32_t old_tid, 
     return;
   }
 
-  CHECK(new_context_switch.timestamp_ns >= last_context_switch->timestamp_ns);
+  ORBIT_CHECK(new_context_switch.timestamp_ns >= last_context_switch->timestamp_ns);
 
   if (last_context_switch->new_tid == new_context_switch.old_tid) {
     orbit_grpc_protos::SchedulingSlice scheduling_slice;

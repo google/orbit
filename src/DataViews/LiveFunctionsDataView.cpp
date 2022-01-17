@@ -151,7 +151,7 @@ void LiveFunctionsDataView::OnSelect(const std::vector<int>& rows) {
 
 void LiveFunctionsDataView::DoSort() {
   if (!app_->HasCaptureData()) {
-    CHECK(functions_.empty());
+    ORBIT_CHECK(functions_.empty());
     return;
   }
   bool ascending = sorting_orders_[sorting_column_] == SortingOrder::kAscending;
@@ -286,7 +286,7 @@ void LiveFunctionsDataView::OnIteratorRequested(const std::vector<int>& selectio
 
 void LiveFunctionsDataView::OnJumpToRequested(const std::string& action,
                                               const std::vector<int>& selection) {
-  CHECK(selection.size() == 1);
+  ORBIT_CHECK(selection.size() == 1);
   auto function_id = GetInstrumentedFunctionId(selection[0]);
   if (action == kMenuActionJumpToFirst) {
     app_->JumpToTimerAndZoom(function_id, AppInterface::JumpToTimerMode::kFirst);
@@ -364,7 +364,7 @@ void LiveFunctionsDataView::OnExportEventsToCsvRequested(const std::vector<int>&
 
 void LiveFunctionsDataView::DoFilter() {
   if (!app_->HasCaptureData()) {
-    CHECK(functions_.empty());
+    ORBIT_CHECK(functions_.empty());
     return;
   }
   std::vector<uint64_t> indices;
@@ -457,13 +457,13 @@ void LiveFunctionsDataView::OnRefresh(const std::vector<int>& visible_selected_i
 }
 
 uint64_t LiveFunctionsDataView::GetInstrumentedFunctionId(uint32_t row) const {
-  CHECK(row < indices_.size());
+  ORBIT_CHECK(row < indices_.size());
   return indices_[row];
 }
 
 const FunctionInfo* LiveFunctionsDataView::GetFunctionInfoFromRow(int row) {
-  CHECK(static_cast<unsigned int>(row) < indices_.size());
-  CHECK(functions_.find(indices_[row]) != functions_.end());
+  ORBIT_CHECK(static_cast<unsigned int>(row) < indices_.size());
+  ORBIT_CHECK(functions_.find(indices_[row]) != functions_.end());
   return &functions_.at(indices_[row]);
 }
 

@@ -593,8 +593,8 @@ void CaptureEventProcessorForListener::ProcessThreadStateSlice(
 }
 
 void CaptureEventProcessorForListener::ProcessAddressInfo(const AddressInfo& address_info) {
-  CHECK(string_intern_pool_.contains(address_info.function_name_key()));
-  CHECK(string_intern_pool_.contains(address_info.module_name_key()));
+  ORBIT_CHECK(string_intern_pool_.contains(address_info.function_name_key()));
+  ORBIT_CHECK(string_intern_pool_.contains(address_info.module_name_key()));
   std::string function_name = string_intern_pool_.at(address_info.function_name_key());
   std::string module_name = string_intern_pool_.at(address_info.module_name_key());
 

@@ -23,7 +23,7 @@ void TracepointData::EmplaceTracepointEvent(uint64_t time, uint64_t tracepoint_h
 
   orbit_client_protos::TracepointEventInfo event;
   event.set_time(time);
-  CHECK(HasTracepointKey(tracepoint_hash));
+  ORBIT_CHECK(HasTracepointKey(tracepoint_hash));
   event.set_tracepoint_info_key(tracepoint_hash);
   event.set_tid(thread_id);
   event.set_pid(process_id);

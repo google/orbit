@@ -188,7 +188,7 @@ OrbitMainWindow::OrbitMainWindow(TargetConfiguration target_configuration,
 
   if (FLAGS_stack_dump_size.IsSpecifiedOnCommandLine()) {
     uint16_t stack_dump_size = absl::GetFlag(FLAGS_stack_dump_size);
-    CHECK(stack_dump_size != std::numeric_limits<uint16_t>::max());
+    ORBIT_CHECK(stack_dump_size != std::numeric_limits<uint16_t>::max());
     app_->SetStackDumpSize(stack_dump_size);
   } else {
     app_->SetStackDumpSize(std::numeric_limits<uint16_t>::max());
@@ -631,7 +631,7 @@ void OrbitMainWindow::CreateTabBarContextMenu(QTabWidget* tab_widget, int tab_in
 void OrbitMainWindow::UpdateCaptureStateDependentWidgets() {
   auto set_tab_enabled = [this](QWidget* widget, bool enabled) -> void {
     QTabWidget* tab_widget = FindParentTabWidget(widget);
-    CHECK(tab_widget != nullptr);
+    ORBIT_CHECK(tab_widget != nullptr);
     tab_widget->setTabEnabled(tab_widget->indexOf(widget), enabled);
   };
 
@@ -1250,7 +1250,7 @@ void OrbitMainWindow::on_actionCaptureOptions_triggered() {
 
 void OrbitMainWindow::on_actionHelp_toggled(bool checked) {
   auto* capture_window = dynamic_cast<CaptureWindow*>(ui->CaptureGLWidget->GetCanvas());
-  CHECK(capture_window != nullptr);
+  ORBIT_CHECK(capture_window != nullptr);
   capture_window->set_draw_help(checked);
 }
 
@@ -1283,7 +1283,7 @@ void OrbitMainWindow::OnTimerSelectionChanged(const orbit_client_protos::TimerIn
   if (timer_info) {
     uint64_t function_id = timer_info->function_id();
     const auto live_functions_controller = ui->liveFunctions->GetLiveFunctionsController();
-    CHECK(live_functions_controller.has_value());
+    ORBIT_CHECK(live_functions_controller.has_value());
     orbit_data_views::LiveFunctionsDataView& live_functions_data_view =
         live_functions_controller.value()->GetDataView();
     selected_row = live_functions_data_view.GetRowFromFunctionId(function_id);
@@ -1307,7 +1307,7 @@ void OrbitMainWindow::on_actionOpen_Capture_triggered() {
 }
 
 void OrbitMainWindow::on_actionRename_Capture_File_triggered() {
-  CHECK(target_label_->GetFilePath().has_value());
+  ORBIT_CHECK(target_label_->GetFilePath().has_value());
   const std::filesystem::path& current_file_path = target_label_->GetFilePath().value();
   QString file_path =
       QFileDialog::getSaveFileName(this, "Rename or Move capture...",
@@ -1385,7 +1385,7 @@ void OrbitMainWindow::OpenCapture(const std::string& filepath) {
   FindParentTabWidget(ui->CaptureTab)->setCurrentWidget(ui->CaptureTab);
 }
 
-void OrbitMainWindow::on_actionCheckFalse_triggered() { CHECK(false); }
+void OrbitMainWindow::on_actionCheckFalse_triggered() { ORBIT_CHECK(false); }
 
 void InfiniteRecursion(int num) {
   if (num != 1) {
@@ -1498,7 +1498,7 @@ void OrbitMainWindow::closeEvent(QCloseEvent* event) {
 }
 
 void OrbitMainWindow::OnStadiaConnectionError(std::error_code error) {
-  CHECK(std::holds_alternative<StadiaTarget>(target_configuration_));
+  ORBIT_CHECK(std::holds_alternative<StadiaTarget>(target_configuration_));
   const StadiaTarget& target = std::get<StadiaTarget>(target_configuration_);
 
   target.GetProcessManager()->SetProcessListUpdateListener(nullptr);
@@ -1521,7 +1521,7 @@ void OrbitMainWindow::SetTarget(const StadiaTarget& target) {
   ServiceDeployManager* service_deploy_manager = connection->GetServiceDeployManager();
   app_->SetSecureCopyCallback([service_deploy_manager](std::string_view source,
                                                        std::string_view destination) {
-    CHECK(service_deploy_manager != nullptr);
+    ORBIT_CHECK(service_deploy_manager != nullptr);
     return service_deploy_manager->CopyFileToLocal(std::string{source}, std::string{destination});
   });
 
@@ -1697,7 +1697,7 @@ void OrbitMainWindow::ShowSourceCode(
   constexpr orbit_code_viewer::FontSizeInEm kHeatmapAreaWidth{1.3f};
 
   if (maybe_code_report.has_value()) {
-    CHECK(maybe_code_report->get() != nullptr);
+    ORBIT_CHECK(maybe_code_report->get() != nullptr);
     code_viewer_dialog->SetEnableSampleCounters(true);
     code_viewer_dialog->SetOwningHeatmap(kHeatmapAreaWidth, std::move(*maybe_code_report));
   }

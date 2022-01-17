@@ -27,7 +27,7 @@ using orbit_grpc_protos::ThreadStateSlice;
 
 void ThreadStateManager::OnInitialState(uint64_t timestamp_ns, pid_t tid,
                                         ThreadStateSlice::ThreadState state) {
-  CHECK(!tid_open_states_.contains(tid));
+  ORBIT_CHECK(!tid_open_states_.contains(tid));
   tid_open_states_.emplace(tid, OpenState{state, timestamp_ns});
 }
 

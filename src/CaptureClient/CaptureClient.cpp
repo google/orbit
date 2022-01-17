@@ -134,8 +134,8 @@ ErrorMessageOr<CaptureListener::CaptureOutcome> CaptureClient::CaptureSync(
   try_abort_ = false;
   {
     absl::WriterMutexLock lock{&context_and_stream_mutex_};
-    CHECK(client_context_ == nullptr);
-    CHECK(reader_writer_ == nullptr);
+    ORBIT_CHECK(client_context_ == nullptr);
+    ORBIT_CHECK(reader_writer_ == nullptr);
     client_context_ = std::make_unique<grpc::ClientContext>();
     reader_writer_ = capture_service_->Capture(client_context_.get());
   }
@@ -144,7 +144,7 @@ ErrorMessageOr<CaptureListener::CaptureOutcome> CaptureClient::CaptureSync(
   CaptureOptions* capture_options = request.mutable_capture_options();
   capture_options->set_trace_context_switches(collect_scheduling_info);
   capture_options->set_pid(process_id);
-  CHECK(unwinding_method != CaptureOptions::kUndefined);
+  ORBIT_CHECK(unwinding_method != CaptureOptions::kUndefined);
   capture_options->set_unwinding_method(unwinding_method);
   capture_options->set_stack_dump_size(stack_dump_size);
   capture_options->set_samples_per_second(samples_per_second);
@@ -163,7 +163,7 @@ ErrorMessageOr<CaptureListener::CaptureOutcome> CaptureClient::CaptureSync(
     instrumented_function->set_file_path(function.module_path());
     const ModuleData* module = module_manager.GetModuleByPathAndBuildId(function.module_path(),
                                                                         function.module_build_id());
-    CHECK(module != nullptr);
+    ORBIT_CHECK(module != nullptr);
     instrumented_function->set_file_offset(
         orbit_client_data::function_utils::Offset(function, *module));
     instrumented_function->set_file_build_id(function.module_build_id());
@@ -183,8 +183,8 @@ ErrorMessageOr<CaptureListener::CaptureOutcome> CaptureClient::CaptureSync(
 
   capture_options->set_enable_api(enable_api);
   capture_options->set_enable_introspection(enable_introspection);
-  CHECK(dynamic_instrumentation_method == CaptureOptions::kKernelUprobes ||
-        dynamic_instrumentation_method == CaptureOptions::kUserSpaceInstrumentation);
+  ORBIT_CHECK(dynamic_instrumentation_method == CaptureOptions::kKernelUprobes ||
+              dynamic_instrumentation_method == CaptureOptions::kUserSpaceInstrumentation);
   capture_options->set_dynamic_instrumentation_method(dynamic_instrumentation_method);
 
   auto api_functions = FindApiFunctions(module_manager);
@@ -266,7 +266,7 @@ bool CaptureClient::StopCapture() {
   bool writes_done_succeeded;
   {
     absl::ReaderMutexLock lock{&context_and_stream_mutex_};
-    CHECK(reader_writer_ != nullptr);
+    ORBIT_CHECK(reader_writer_ != nullptr);
     writes_done_succeeded = reader_writer_->WritesDone();
   }
   if (!writes_done_succeeded) {
@@ -315,10 +315,10 @@ ErrorMessageOr<void> CaptureClient::FinishCapture() {
   grpc::Status status;
   {
     absl::WriterMutexLock lock{&context_and_stream_mutex_};
-    CHECK(reader_writer_ != nullptr);
+    ORBIT_CHECK(reader_writer_ != nullptr);
     status = reader_writer_->Finish();
     reader_writer_.reset();
-    CHECK(client_context_ != nullptr);
+    ORBIT_CHECK(client_context_ != nullptr);
     client_context_.reset();
   }
 

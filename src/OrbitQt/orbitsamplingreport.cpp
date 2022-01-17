@@ -109,13 +109,13 @@ void OrbitSamplingReport::Deinitialize() {
 }
 
 void OrbitSamplingReport::on_NextCallstackButton_clicked() {
-  CHECK(sampling_report_ != nullptr);
+  ORBIT_CHECK(sampling_report_ != nullptr);
   sampling_report_->IncrementCallstackIndex();
   RefreshCallstackView();
 }
 
 void OrbitSamplingReport::on_PreviousCallstackButton_clicked() {
-  CHECK(sampling_report_ != nullptr);
+  ORBIT_CHECK(sampling_report_ != nullptr);
   sampling_report_->DecrementCallstackIndex();
   RefreshCallstackView();
 }

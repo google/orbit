@@ -46,7 +46,7 @@ std::optional<DiscardedPerfEvent> PerfEventProcessor::HandleOutOfOrderEvent(
 
   std::optional<DiscardedPerfEvent> optional_discarded_event = std::nullopt;
 
-  CHECK(discarded_end >= last_discarded_end_);
+  ORBIT_CHECK(discarded_end >= last_discarded_end_);
   if (discarded_end == last_discarded_end_ && discarded_begin < last_discarded_begin_) {
     optional_discarded_event = optional_discarded_event = DiscardedPerfEvent{
         .timestamp = discarded_end,
@@ -85,12 +85,12 @@ std::optional<DiscardedPerfEvent> PerfEventProcessor::HandleOutOfOrderEvent(
 }
 
 void PerfEventProcessor::ProcessAllEvents() {
-  CHECK(!visitors_.empty());
+  ORBIT_CHECK(!visitors_.empty());
   while (event_queue_.HasEvent()) {
     const PerfEvent& event = event_queue_.TopEvent();
     // Events are guaranteed to be processed in order of timestamp
     // as out-of-order events are discarded in AddEvent.
-    CHECK(event.timestamp >= last_processed_timestamp_ns_);
+    ORBIT_CHECK(event.timestamp >= last_processed_timestamp_ns_);
     last_processed_timestamp_ns_ = event.timestamp;
     for (PerfEventVisitor* visitor : visitors_) {
       event.Accept(visitor);
@@ -100,7 +100,7 @@ void PerfEventProcessor::ProcessAllEvents() {
 }
 
 void PerfEventProcessor::ProcessOldEvents() {
-  CHECK(!visitors_.empty());
+  ORBIT_CHECK(!visitors_.empty());
   const uint64_t current_timestamp_ns = orbit_base::CaptureTimestampNs();
 
   while (event_queue_.HasEvent()) {
@@ -113,7 +113,7 @@ void PerfEventProcessor::ProcessOldEvents() {
     }
     // Events are guaranteed to be processed in order of timestamp
     // as out-of-order events are discarded in AddEvent.
-    CHECK(timestamp >= last_processed_timestamp_ns_);
+    ORBIT_CHECK(timestamp >= last_processed_timestamp_ns_);
     last_processed_timestamp_ns_ = timestamp;
 
     for (PerfEventVisitor* visitor : visitors_) {

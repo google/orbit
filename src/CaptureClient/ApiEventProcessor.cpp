@@ -36,7 +36,7 @@ void EncodedColorToColor(uint32_t encoded_color, orbit_client_protos::Color* col
 }  // namespace
 
 ApiEventProcessor::ApiEventProcessor(CaptureListener* listener) : capture_listener_(listener) {
-  CHECK(listener != nullptr);
+  ORBIT_CHECK(listener != nullptr);
 }
 
 void ApiEventProcessor::ProcessApiEventLegacy(const orbit_grpc_protos::ApiEvent& grpc_api_event) {

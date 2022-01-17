@@ -23,7 +23,7 @@ using orbit_test_utils::HasError;
 // registers and verifies the modifications done by the parent. The exit code indicates the outcome
 // of that verification.
 void Child() {
-  CHECK(ptrace(PTRACE_TRACEME, 0, nullptr, 0) != -1);
+  ORBIT_CHECK(ptrace(PTRACE_TRACEME, 0, nullptr, 0) != -1);
 
   uint64_t rax = 0xaabbccdd;
   std::array<uint8_t, 32> avx_bytes;
@@ -60,7 +60,7 @@ void Child() {
 
 TEST(RegisterStateTest, BackupModifyRestore) {
   pid_t pid = fork();
-  CHECK(pid != -1);
+  ORBIT_CHECK(pid != -1);
   if (pid == 0) {
     Child();
   }
@@ -68,9 +68,9 @@ TEST(RegisterStateTest, BackupModifyRestore) {
   // Wait for child to break.
   int status = 0;
   pid_t waited = waitpid(pid, &status, 0);
-  CHECK(waited == pid);
-  CHECK(WIFSTOPPED(status));
-  CHECK(WSTOPSIG(status) == SIGTRAP);
+  ORBIT_CHECK(waited == pid);
+  ORBIT_CHECK(WIFSTOPPED(status));
+  ORBIT_CHECK(WSTOPSIG(status) == SIGTRAP);
 
   // Read child's registers and check values.
   RegisterState state;
@@ -94,12 +94,12 @@ TEST(RegisterStateTest, BackupModifyRestore) {
   EXPECT_TRUE(state.RestoreRegisters().has_value());
 
   // Continue child.
-  CHECK(ptrace(PT_CONTINUE, pid, 1, 0) == 0);
+  ORBIT_CHECK(ptrace(PT_CONTINUE, pid, 1, 0) == 0);
 
   // Wait for the child to exit. Exit status is zero if the modified registers could be verified.
   waited = waitpid(pid, &status, 0);
-  CHECK(waited == pid);
-  CHECK(WIFEXITED(status));
+  ORBIT_CHECK(waited == pid);
+  ORBIT_CHECK(WIFEXITED(status));
   EXPECT_EQ(WEXITSTATUS(status), 0);
 
   // After the process exited we get errors when backing up / restoring registers.

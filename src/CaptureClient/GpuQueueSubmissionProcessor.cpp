@@ -159,7 +159,7 @@ std::vector<TimerInfo> GpuQueueSubmissionProcessor::ProcessGpuQueueSubmissionWit
         get_string_hash_and_send_to_listener_if_necessary) {
   std::vector<TimerInfo> result;
   uint64_t timeline_key = matching_gpu_job.timeline_key();
-  CHECK(string_intern_pool.contains(timeline_key));
+  ORBIT_CHECK(string_intern_pool.contains(timeline_key));
   std::string timeline = string_intern_pool.at(timeline_key);
 
   std::optional<GpuCommandBuffer> first_command_buffer =
@@ -195,17 +195,17 @@ bool GpuQueueSubmissionProcessor::HasUnprocessedBeginMarkers(
           post_submission_timestamp)) {
     return false;
   }
-  CHECK(tid_to_post_submission_time_to_num_begin_markers_.at(thread_id).at(
-            post_submission_timestamp) > 0);
+  ORBIT_CHECK(tid_to_post_submission_time_to_num_begin_markers_.at(thread_id).at(
+                  post_submission_timestamp) > 0);
   return true;
 }
 
 void GpuQueueSubmissionProcessor::DecrementUnprocessedBeginMarkers(
     uint32_t thread_id, uint64_t submission_timestamp, uint64_t post_submission_timestamp) {
-  CHECK(tid_to_post_submission_time_to_num_begin_markers_.contains(thread_id));
+  ORBIT_CHECK(tid_to_post_submission_time_to_num_begin_markers_.contains(thread_id));
   auto& post_submission_time_to_num_begin_markers =
       tid_to_post_submission_time_to_num_begin_markers_.at(thread_id);
-  CHECK(post_submission_time_to_num_begin_markers.contains(post_submission_timestamp));
+  ORBIT_CHECK(post_submission_time_to_num_begin_markers.contains(post_submission_timestamp));
   uint64_t new_num = post_submission_time_to_num_begin_markers.at(post_submission_timestamp) - 1;
   post_submission_time_to_num_begin_markers.at(post_submission_timestamp) = new_num;
   if (new_num == 0) {
@@ -261,7 +261,7 @@ std::vector<TimerInfo> GpuQueueSubmissionProcessor::ProcessGpuCommandBuffers(
 
   for (const auto& submit_info : gpu_queue_submission.submit_infos()) {
     for (const auto& command_buffer : submit_info.command_buffers()) {
-      CHECK(first_command_buffer != std::nullopt);
+      ORBIT_CHECK(first_command_buffer != std::nullopt);
       TimerInfo command_buffer_timer;
       if (command_buffer.begin_gpu_timestamp_ns() != 0) {
         command_buffer_timer.set_start(command_buffer.begin_gpu_timestamp_ns() -
@@ -319,7 +319,7 @@ std::vector<TimerInfo> GpuQueueSubmissionProcessor::ProcessGpuDebugMarkers(
       begin_markers_to_decrement;
 
   for (const auto& completed_marker : gpu_queue_submission.completed_markers()) {
-    CHECK(first_command_buffer != std::nullopt);
+    ORBIT_CHECK(first_command_buffer != std::nullopt);
     TimerInfo marker_timer;
 
     // If we've recorded the submission that contains the begin marker, we'll retrieve this
@@ -360,7 +360,7 @@ std::vector<TimerInfo> GpuQueueSubmissionProcessor::ProcessGpuDebugMarkers(
         begin_submission_first_command_buffer =
             ExtractFirstCommandBuffer(*matching_begin_submission);
       }
-      CHECK(begin_submission_first_command_buffer.has_value());
+      ORBIT_CHECK(begin_submission_first_command_buffer.has_value());
 
       const GpuJob* matching_begin_job = FindMatchingGpuJob(
           begin_marker_thread_id, begin_marker_meta_info.pre_submission_cpu_timestamp(),
@@ -419,7 +419,7 @@ std::vector<TimerInfo> GpuQueueSubmissionProcessor::ProcessGpuDebugMarkers(
 
     // We have special handling for DXVK instrumentation that have an encoded group_id in their
     // label.
-    CHECK(string_intern_pool.contains(text_key));
+    ORBIT_CHECK(string_intern_pool.contains(text_key));
     const std::string& text = string_intern_pool.at(text_key);
     uint64_t group_id = 0;
     if (TryExtractDXVKVulkanGroupIdFromDebugLabel(text, &group_id)) {

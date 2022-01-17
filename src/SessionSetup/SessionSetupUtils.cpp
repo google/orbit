@@ -25,7 +25,7 @@ std::shared_ptr<grpc::Channel> CreateGrpcChannel(uint16_t port) {
   ORBIT_LOG("Starting gRPC channel to: %s", grpc_server_address);
   std::shared_ptr<grpc::Channel> result = grpc::CreateCustomChannel(
       grpc_server_address, grpc::InsecureChannelCredentials(), grpc::ChannelArguments());
-  CHECK(result != nullptr);
+  ORBIT_CHECK(result != nullptr);
   return result;
 }
 
