@@ -8,7 +8,8 @@ from absl import app
 
 from core.orbit_e2e import E2ETestSuite
 from test_cases.connection_window import FilterAndSelectFirstProcess, ConnectToStadiaInstance
-from test_cases.symbols_tab import LoadAllSymbolsAndVerifyCache, ClearSymbolCache, LoadSymbols, ReplaceFileInSymbolCache
+from test_cases.symbols_tab import LoadAllSymbolsAndVerifyCache, ClearSymbolCache, LoadSymbols, \
+    ForceAndVerifySymbolUpdate
 from test_cases.main_window import EndSession
 
 """
@@ -26,12 +27,13 @@ This automation script covers a basic workflow:
  - delete the symbol cache
  - load all symbols, store loading times, verify symbol files exist in cache
  - restart session
- - load all symbols again, loading times should have decreased significantly
+ - load all symbols again, loading times should have decreased. (This has a *very* high threshold for failure
+    as we can't rely on the timing on the test infrastructure. As long as it's 1% faster, it passes.)
  - restart session
  - load libggp, measure loading time (we can't measure a single module loading time before)
  - invalidate symbols for libggp by replacing the cache file with another file
  - restart session
- - load libggp, loading time should be significantly longer
+ - load libggp, loading time should have increased (as above, as long as it's 5% faster, it passes.)
 """
 
 
@@ -43,15 +45,14 @@ def main(argv):
         LoadAllSymbolsAndVerifyCache(),
         EndSession(),
         FilterAndSelectFirstProcess(process_filter='hello_ggp'),
-        LoadAllSymbolsAndVerifyCache(expected_duration_difference_ratio=0.5),
+        LoadAllSymbolsAndVerifyCache(expected_duration_difference_ratio=0.99),
         EndSession(),
         FilterAndSelectFirstProcess(process_filter='hello_ggp'),
         LoadSymbols(module_search_string="libggp"),
         EndSession(),
         FilterAndSelectFirstProcess(process_filter='hello_ggp'),
-        ReplaceFileInSymbolCache(src="_mnt_developer_hello_ggp_standalone",
-                                 file_to_replace="_usr_local_cloudcast_lib_libggp.so"),
-        LoadSymbols(module_search_string="libggp", expected_duration_difference_ratio=1.25)
+        ForceAndVerifySymbolUpdate(full_module_path="/user/local/cloudcast/lib/libggp.so",
+                                   replace_with_module="/mnt/developer/hello_ggp_standalone")
 
     ]
     suite = E2ETestSuite(test_name="Symbol loading and caching", test_cases=test_cases)
