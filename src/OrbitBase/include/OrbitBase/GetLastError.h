@@ -9,7 +9,9 @@
 
 namespace orbit_base {
 
+#ifdef _WIN32
 [[nodiscard]] std::string GetLastErrorAsString();
+#endif
 
 }  // namespace orbit_base
 
