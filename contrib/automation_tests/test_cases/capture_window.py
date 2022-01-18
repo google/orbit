@@ -347,16 +347,19 @@ class Capture(E2ETestCase):
         logging.info('Saving "Capture Options"')
         self.find_control('Button', 'OK', parent=capture_options_dialog).click_input()
 
-    def _take_capture(self, length_in_seconds: int):
+    def _take_capture(self, length_in_seconds: int, expect_interrupted_by_service: bool):
         capture_tab = self.find_control('Group', "CaptureTab")
         toggle_capture_button = self.find_control('Button', 'Toggle Capture', parent=capture_tab)
 
         logging.info('Starting to capture for {} seconds'.format(length_in_seconds))
         toggle_capture_button.click_input()
-        time.sleep(length_in_seconds)
-        logging.info('Stopping capture')
-        toggle_capture_button.click_input()
-        self._wait_for_capture_completion()
+
+        if expect_interrupted_by_service:
+            self._verify_capture_interrupted()
+        else:
+            logging.info('Stopping capture')
+            toggle_capture_button.click_input()
+            self._wait_for_capture_completion()
 
     def _verify_existence_of_tracks(self):
         logging.info("Verifying existence of at least one track...")
@@ -370,16 +373,25 @@ class Capture(E2ETestCase):
                            max_seconds=120)
         logging.info("Capturing finished")
 
+    def _verify_capture_interrupted(self):
+        logging.info("Verifying that the capture was stopped by OrbitService")
+        wait_for_condition(lambda: self.find_control(
+            'Window', 'Capture interrupted', recurse=False, raise_on_failure=False) is not None,
+                           max_seconds=300)
+        dialog = self.find_control('Window', 'Capture interrupted')
+        self.find_control('Button', 'OK', parent=dialog).click_input()
+
     def _execute(self,
                  length_in_seconds: int = 5,
                  collect_thread_states: bool = False,
                  collect_system_memory_usage: bool = False,
                  user_space_instrumentation: bool = False,
-                 manual_instrumentation: bool = False):
+                 manual_instrumentation: bool = False,
+                 expect_interrupted_by_service: bool = False):
         self._show_capture_window()
         self._set_capture_options(collect_thread_states, collect_system_memory_usage,
                                   user_space_instrumentation, manual_instrumentation)
-        self._take_capture(length_in_seconds)
+        self._take_capture(length_in_seconds, expect_interrupted_by_service)
         self._verify_existence_of_tracks()
 
 
