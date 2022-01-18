@@ -1,0 +1,44 @@
+# Copyright (c) 2021 The Orbit Authors. All rights reserved.
+# Use of this source code is governed by a BSD-style license that can be
+# found in the LICENSE file.
+
+FROM ubuntu:20.04
+
+ADD llvm-snapshot.gpg.key /root/
+
+RUN useradd -Ums /bin/bash conan \
+    && apt-get -qq update \
+    && DEBIAN_FRONTEND=noninteractive \
+        apt-get install -y --no-install-recommends \
+        gpg \
+        gpg-agent \
+        software-properties-common `# Needed for apt-add-repository` \
+    && apt-key add /root/llvm-snapshot.gpg.key \
+    && apt-add-repository "deb http://apt.llvm.org/focal/ llvm-toolchain-focal-11 main" \
+    && apt-get -qq update \
+    && DEBIAN_FRONTEND=noninteractive \
+        apt-get install -y --no-install-recommends \
+        clang-11 \
+        cmake \
+        curl \
+        git \
+        jq \
+        libglu1-mesa-dev \
+        libqt5webchannel5-dev \
+        libqt5websockets5-dev \
+        libxi-dev \
+        libxmu-dev \
+        make \
+        mesa-common-dev \
+        ninja-build \
+        python2.7 \
+        python3-pip \
+        python-is-python2 \
+        qtbase5-dev \
+        qtwebengine5-dev \
+        zip \
+    && python3 -m pip install conan==1.40.3 \
+    && rm -rf /var/lib/apt/lists/*
+
+USER conan
+WORKDIR /home/conan
