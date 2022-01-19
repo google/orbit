@@ -11,7 +11,6 @@ import re
 import time
 from collections import namedtuple
 from typing import List
-from abc import ABC, abstractmethod
 
 from absl import flags
 
@@ -47,62 +46,6 @@ def _find_and_close_error_dialog(top_window) -> str or None:
     return module_path_search_result[1]
 
 
-class DurationDiffMixin(ABC):
-    """
-    Provides utility methods to store and compare durations between runs, and fails the test if a certain threshold
-    of duration difference is exceeded between runs.
-
-    For example, this is used to measure symbol loading times from cold and warm caches, and verify that warm cache
-    loading is significantly faster.
-
-    Usage:
-    - Inherit your E2ETestCase from this mixin
-    - Use time.time() to record start times and duration
-    - Where needed, call `self._check_and_update_duration` to store the current duration and fail the test if applicable
-    """
-    suite = None
-
-    @abstractmethod
-    def expect_true(self, cond, msg):
-        pass
-
-    @abstractmethod
-    def expect_eq(self, left, right, msg):
-        pass
-
-    def _check_and_update_duration(self, storage_key: str, current_duration: float, expected_difference_ratio: float):
-        """
-        Compare the current duration with the previous run, and fail if it exceeds the defined bounds.
-        :param storage_key: Unique key to store the duration within the test suite, used to persist the data across
-            multiple tests (uses `self.suite.shared_data`)
-        :param current_duration: The duration of the current run
-        :param expected_difference_ratio: Expected difference as ratio relative to the previously stored value.
-            If < 1.0, the current run must take *at most* expected_difference_ratio * previous_time.
-            If >= 1.0, the current run must take *at least* expected_difference_ratio * previous_time.
-            If None, this will only update the stored value.
-            Violating those conditions will result in test failure.
-        """
-        last_duration = self.suite.shared_data.get(storage_key, None)
-        self.suite.shared_data[storage_key] = current_duration
-
-        if expected_difference_ratio is not None and last_duration is not None:
-            expected_duration = last_duration * expected_difference_ratio
-            if expected_difference_ratio < 1.0:
-                self.expect_true(current_duration <= expected_duration,
-                                 "Expected symbol loading time to be at most {expected:.2f}s."
-                                 "Last run duration: {last:.2f}s, current run duration: {cur:.2f}s".format(
-                                     expected=expected_duration,
-                                     last=last_duration,
-                                     cur=current_duration))
-            else:
-                self.expect_true(current_duration >= expected_duration,
-                                 "Expected symbol loading time to be at least {expected:.2f}s."
-                                 "Last run duration: {last:.2f}s, current run duration: {cur:.2f}s".format(
-                                     expected=expected_duration,
-                                     last=last_duration,
-                                     cur=current_duration))
-
-
 ModulesLoadingResult = namedtuple("LoadingResult", ["time", "errors"])
 
 
@@ -120,7 +63,7 @@ class ClearSymbolCache(E2ETestCase):
         self.expect_true(not os.listdir(CACHE_LOCATION), 'Cache is empty')
 
 
-class LoadAllSymbolsAndVerifyCache(E2ETestCase, DurationDiffMixin):
+class LoadAllSymbolsAndVerifyCache(E2ETestCase):
     """
     Loads all symbol files at once and checks if all of them exist in the cache. In addition, this test measures the
     total duration of symbol loading (estimated), and can fail if the duration differs from the previous run by
@@ -133,7 +76,13 @@ class LoadAllSymbolsAndVerifyCache(E2ETestCase, DurationDiffMixin):
 
     def _execute(self, expected_duration_difference_ratio: float = None):
         """
-        :param expected_duration_difference: @see DurationDiffMixin._check_and_update_duration
+        :param expected_duration_difference_ratio: Expected difference as ratio relative to the previously stored value.
+            If < 1.0, the current run must take *at most* expected_difference_ratio * previous_time.
+            If >= 1.0, the current run must take *at least* expected_difference_ratio * previous_time.
+            If None, this will only update the stored value.
+            If no stored value is present from a previous run, the parameter will be treated as None, and cannot fail
+            the test.
+            Violating those conditions will result in test failure.
         """
         _show_symbols_and_functions_tabs(self.suite.top_window())
         self._modules_dataview = DataViewPanel(self.find_control("Group", "ModulesDataView"))
@@ -226,19 +175,63 @@ class LoadAllSymbolsAndVerifyCache(E2ETestCase, DurationDiffMixin):
 
         return result
 
+    def _check_and_update_duration(self, storage_key: str, current_duration: float, expected_difference_ratio: float):
+        """
+        Compare the current duration with the previous run, and fail if it exceeds the defined bounds.
+        :param storage_key: Unique key to store the duration within the test suite, used to persist the data across
+            multiple tests (uses `self.suite.shared_data`)
+        :param current_duration: The duration of the current run
+        :param expected_difference_ratio: @see documentation of the same parameter in _execute
+        """
+        last_duration = self.suite.shared_data.get(storage_key, None)
+        self.suite.shared_data[storage_key] = current_duration
 
-class ReplaceFileInSymbolCache(E2ETestCase):
+        if expected_difference_ratio is not None and last_duration is not None:
+            expected_duration = last_duration * expected_difference_ratio
+            if expected_difference_ratio < 1.0:
+                self.expect_true(current_duration <= expected_duration,
+                                 "Expected symbol loading time to be at most {expected:.2f}s."
+                                 "Last run duration: {last:.2f}s, current run duration: {cur:.2f}s".format(
+                                     expected=expected_duration,
+                                     last=last_duration,
+                                     cur=current_duration))
+            else:
+                self.expect_true(current_duration >= expected_duration,
+                                 "Expected symbol loading time to be at least {expected:.2f}s."
+                                 "Last run duration: {last:.2f}s, current run duration: {cur:.2f}s".format(
+                                     expected=expected_duration,
+                                     last=last_duration,
+                                     cur=current_duration))
+
+
+class ForceAndVerifySymbolUpdate(E2ETestCase):
     """
     Replace a symbol file in the cache with another file from the cache. This is used to "invalidate" symbols files
-    and verify that they are downloaded again.
+    and verify that they are downloaded again. Then, load symbols for the replaced file and confirm that the cached
+    file has changed.
     """
 
-    def _execute(self, file_to_replace, src):
-        os.unlink(os.path.join(CACHE_LOCATION, file_to_replace))
-        os.rename(os.path.join(CACHE_LOCATION, src), os.path.join(CACHE_LOCATION, file_to_replace))
+    def __execute(self, full_module_path: str, replace_with_module: str):
+        """
+        :param full_module_path: Path to the module on the gamelet
+        :param replace_with_module: Path to another module that is used as a replacement.
+
+        Both modules need to exist in the local cache.
+        """
+        dst_module = os.path.join(CACHE_LOCATION, full_module_path.replace("/", "_"))
+        src_module = os.path.join(CACHE_LOCATION, replace_with_module.replace("/", "_"))
+        old_size = os.stat(dst_module).st_size
+
+        os.unlink(os.path.join(CACHE_LOCATION, dst_module))
+        os.rename(os.path.join(CACHE_LOCATION, src_module), dst_module)
+        assert(os.stat(dst_module).st_size != old_size)
+
+        LoadSymbols(module_search_string=full_module_path).execute(self.suite)
+        self.expect_true(os.stat(dst_module).st_size != old_size,
+                         "Module %s has changed in cache after loading symbols" % full_module_path)
 
 
-class LoadSymbols(E2ETestCase, DurationDiffMixin):
+class LoadSymbols(E2ETestCase):
     """
     Load specified modules, wait until the UI marks them as loaded, and verifies the functions list is
     non-empty.
@@ -246,11 +239,10 @@ class LoadSymbols(E2ETestCase, DurationDiffMixin):
     Selection is done be filtering the module list and loading the first remaining row.
     """
 
-    def _execute(self, module_search_string: str, expected_duration_difference_ratio: float = None, expect_fail=False):
+    def _execute(self, module_search_string: str, expect_fail=False):
         """
         :param module_search_string: String to enter in the module filter field, the first entry in the list of
             remaining modules will be loaded
-        :param expected_duration_difference: @see DurationDiffMixin._check_and_update_duration
         :param expect_fail: If True, the test will succeed if loading symbols results in an error message
         """
         _show_symbols_and_functions_tabs(self.suite.top_window())
@@ -273,14 +265,10 @@ class LoadSymbols(E2ETestCase, DurationDiffMixin):
         logging.info('Waiting for * to indicate loaded modules')
 
         # The Loading column which should get filled with the "*" is the first column (0)
-        start_time = time.time()
         if expect_fail:
             wait_for_condition(lambda: _find_and_close_error_dialog(self.suite.top_window()) is not None)
         else:
             wait_for_condition(lambda: modules_dataview.get_item_at(0, 0).texts()[0] == "*", 100)
-        total_time = time.time() - start_time
-        self._check_and_update_duration("load_symbols_" + module_search_string, total_time,
-                                        expected_duration_difference_ratio)
 
         VerifySymbolsLoaded(symbol_search_string=module_search_string, expect_loaded=not expect_fail).execute(
             self.suite)
