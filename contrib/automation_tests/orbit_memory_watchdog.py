@@ -8,7 +8,7 @@ from absl import app
 
 from core.orbit_e2e import E2ETestSuite
 from test_cases.connection_window import FilterAndSelectFirstProcess, ConnectToStadiaInstance
-from test_cases.capture_window import Capture
+from test_cases.capture_window import CaptureAndWaitForInterruptedWarning
 from test_cases.symbols_tab import LoadSymbols, FilterAndHookFunction
 """Test that OrbitService stops the capture when it is using too much memory.
 
@@ -33,8 +33,7 @@ def main(argv):
         FilterAndSelectFirstProcess(process_filter="call_foo_repeat"),
         LoadSymbols(module_search_string="call_foo_repeatedly"),
         FilterAndHookFunction(function_search_string="foo{(}{)}"),
-        Capture(user_space_instrumentation=True,
-                expect_interrupted_by_service=True)
+        CaptureAndWaitForInterruptedWarning(user_space_instrumentation=True)
     ]
     suite = E2ETestSuite(test_name="Memory watchdog", test_cases=test_cases)
     suite.execute()

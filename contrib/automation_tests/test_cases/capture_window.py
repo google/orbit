@@ -293,7 +293,7 @@ class ZoomOut(CaptureWindowE2ETestCaseBase):
             send_keys("s")
 
 
-class Capture(E2ETestCase):
+class CaptureE2ETestCaseBase(E2ETestCase):
 
     def _show_capture_window(self):
         logging.info('Showing capture window')
@@ -347,25 +347,30 @@ class Capture(E2ETestCase):
         logging.info('Saving "Capture Options"')
         self.find_control('Button', 'OK', parent=capture_options_dialog).click_input()
 
-    def _take_capture(self, length_in_seconds: int, expect_interrupted_by_service: bool):
+    def _toggle_capture(self):
         capture_tab = self.find_control('Group', "CaptureTab")
         toggle_capture_button = self.find_control('Button', 'Toggle Capture', parent=capture_tab)
-
-        logging.info('Starting to capture for {} seconds'.format(length_in_seconds))
         toggle_capture_button.click_input()
 
-        if expect_interrupted_by_service:
-            self._verify_capture_interrupted()
-        else:
-            time.sleep(length_in_seconds)
-            logging.info('Stopping capture')
-            toggle_capture_button.click_input()
-            self._wait_for_capture_completion()
+    def _set_up_and_start_capture(self, collect_thread_states: bool,
+                                  collect_system_memory_usage: bool,
+                                  user_space_instrumentation: bool, manual_instrumentation: bool):
+        self._show_capture_window()
+        self._set_capture_options(collect_thread_states, collect_system_memory_usage,
+                                  user_space_instrumentation, manual_instrumentation)
+        logging.info('Starting to capture')
+        self._toggle_capture()
 
     def _verify_existence_of_tracks(self):
         logging.info("Verifying existence of at least one track...")
         time_graph = self.find_control('Image', name='TimeGraph')
         self.expect_true(len(time_graph.children()), 'Time graph exists and has at least one child')
+
+    def _verify_capture(self):
+        self._verify_existence_of_tracks()
+
+
+class Capture(CaptureE2ETestCaseBase):
 
     def _wait_for_capture_completion(self):
         logging.info("Waiting for capture to finalize...")
@@ -374,7 +379,28 @@ class Capture(E2ETestCase):
                            max_seconds=120)
         logging.info("Capturing finished")
 
-    def _verify_capture_interrupted(self):
+    def _stop_capture(self):
+        logging.info('Stopping capture')
+        self._toggle_capture()
+        self._wait_for_capture_completion()
+
+    def _execute(self,
+                 length_in_seconds: int = 5,
+                 collect_thread_states: bool = False,
+                 collect_system_memory_usage: bool = False,
+                 user_space_instrumentation: bool = False,
+                 manual_instrumentation: bool = False):
+        self._set_up_and_start_capture(collect_thread_states, collect_system_memory_usage,
+                                       user_space_instrumentation, manual_instrumentation)
+        logging.info('Capturing for {} seconds'.format(length_in_seconds))
+        time.sleep(length_in_seconds)
+        self._stop_capture()
+        self._verify_capture()
+
+
+class CaptureAndWaitForInterruptedWarning(CaptureE2ETestCaseBase):
+
+    def _wait_and_verify_capture_interrupted(self):
         logging.info("Verifying that the capture was stopped by OrbitService")
         wait_for_condition(lambda: self.find_control(
             'Window', 'Capture interrupted', recurse=False, raise_on_failure=False) is not None,
@@ -383,17 +409,14 @@ class Capture(E2ETestCase):
         self.find_control('Button', 'OK', parent=dialog).click_input()
 
     def _execute(self,
-                 length_in_seconds: int = 5,
                  collect_thread_states: bool = False,
                  collect_system_memory_usage: bool = False,
                  user_space_instrumentation: bool = False,
-                 manual_instrumentation: bool = False,
-                 expect_interrupted_by_service: bool = False):
-        self._show_capture_window()
-        self._set_capture_options(collect_thread_states, collect_system_memory_usage,
-                                  user_space_instrumentation, manual_instrumentation)
-        self._take_capture(length_in_seconds, expect_interrupted_by_service)
-        self._verify_existence_of_tracks()
+                 manual_instrumentation: bool = False):
+        self._set_up_and_start_capture(collect_thread_states, collect_system_memory_usage,
+                                       user_space_instrumentation, manual_instrumentation)
+        self._wait_and_verify_capture_interrupted()
+        self._verify_capture()
 
 
 class CaptureRepeatedly(E2ETestCase):
