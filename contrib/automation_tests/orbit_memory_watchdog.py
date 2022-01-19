@@ -33,8 +33,7 @@ def main(argv):
         FilterAndSelectFirstProcess(process_filter="call_foo_repeat"),
         LoadSymbols(module_search_string="call_foo_repeatedly"),
         FilterAndHookFunction(function_search_string="foo{(}{)}"),
-        Capture(length_in_seconds=60,
-                user_space_instrumentation=True,
+        Capture(user_space_instrumentation=True,
                 expect_interrupted_by_service=True)
     ]
     suite = E2ETestSuite(test_name="Memory watchdog", test_cases=test_cases)

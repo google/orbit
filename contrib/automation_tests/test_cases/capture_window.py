@@ -357,6 +357,7 @@ class Capture(E2ETestCase):
         if expect_interrupted_by_service:
             self._verify_capture_interrupted()
         else:
+            time.sleep(length_in_seconds)
             logging.info('Stopping capture')
             toggle_capture_button.click_input()
             self._wait_for_capture_completion()
