@@ -130,7 +130,7 @@ ErrorMessageOr<SystemMemoryUsage> GetSystemMemoryUsage() {
       UpdateSystemMemoryUsageFromMemInfo(reading_result.value(), &system_memory_usage);
   if (updating_result.has_error()) {
     ORBIT_ERROR("Updating SystemMemoryUsage from %s: %s", kSystemMemoryUsageFilename,
-          updating_result.error().message());
+                updating_result.error().message());
   }
 
   const std::string kSystemPageFaultsFilename = "/proc/vmstat";
@@ -142,7 +142,7 @@ ErrorMessageOr<SystemMemoryUsage> GetSystemMemoryUsage() {
   updating_result = UpdateSystemMemoryUsageFromVmStat(reading_result.value(), &system_memory_usage);
   if (updating_result.has_error()) {
     ORBIT_ERROR("Updating SystemMemoryUsage from %s: %s", kSystemPageFaultsFilename,
-          updating_result.error().message());
+                updating_result.error().message());
   }
 
   return system_memory_usage;
@@ -230,7 +230,7 @@ ErrorMessageOr<ProcessMemoryUsage> GetProcessMemoryUsage(pid_t pid) {
       UpdateProcessMemoryUsageFromProcessStat(reading_result.value(), &process_memory_usage);
   if (updating_result.has_error()) {
     ORBIT_ERROR("Updating ProcessMemoryUsage from %s: %s", kProcessPageFaultsFilename,
-          updating_result.error().message());
+                updating_result.error().message());
   }
 
   const std::string kProcessMemoryUsageFilename = absl::StrFormat("/proc/%u/status", pid);
@@ -243,7 +243,7 @@ ErrorMessageOr<ProcessMemoryUsage> GetProcessMemoryUsage(pid_t pid) {
       ExtractRssAnonFromProcessStatus(reading_result.value());
   if (extracting_result.has_error()) {
     ORBIT_ERROR("Extracting process RssAnon from %s: %s", kProcessMemoryUsageFilename,
-          extracting_result.error().message());
+                extracting_result.error().message());
   } else {
     process_memory_usage.set_rss_anon_kb(extracting_result.value());
   }
@@ -374,7 +374,7 @@ ErrorMessageOr<CGroupMemoryUsage> GetCGroupMemoryUsage(pid_t pid) {
       UpdateCGroupMemoryUsageFromMemoryLimitInBytes(reading_result.value(), &cgroup_memory_usage);
   if (updating_result.has_error()) {
     ORBIT_ERROR("Updating CGroupMemoryUsage from %s: %s", kCGroupMemoryLimitFilename,
-          updating_result.error().message());
+                updating_result.error().message());
   }
 
   const std::string kCGroupMemoryUsageAndPageFaultsFilename =
@@ -388,7 +388,7 @@ ErrorMessageOr<CGroupMemoryUsage> GetCGroupMemoryUsage(pid_t pid) {
       UpdateCGroupMemoryUsageFromMemoryStat(reading_result.value(), &cgroup_memory_usage);
   if (updating_result.has_error()) {
     ORBIT_ERROR("Updating CGroupMemoryUsage from %s: %s", kCGroupMemoryUsageAndPageFaultsFilename,
-          updating_result.error().message());
+                updating_result.error().message());
   }
 
   return cgroup_memory_usage;
