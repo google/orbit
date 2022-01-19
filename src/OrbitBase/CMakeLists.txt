@@ -65,7 +65,7 @@ target_sources(OrbitBase PRIVATE
 
 target_sources(OrbitBase PRIVATE
         ExecutablePathWindows.cpp
-        GetLastError.cpp
+        GetLastErrorWindows.cpp
         ThreadUtilsWindows.cpp)
 else()
 target_sources(OrbitBase PRIVATE

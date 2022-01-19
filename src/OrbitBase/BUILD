@@ -10,9 +10,6 @@ licenses(["notice"])
 
 orbit_cc_library(
     name = "OrbitBase",
-    exclude = [
-        "GetLastError.cpp",  # Windows-only
-    ],
     deps = [
         "@com_github_ned14_outcome//outcome",
         "@com_google_absl//absl/base:core_headers",
