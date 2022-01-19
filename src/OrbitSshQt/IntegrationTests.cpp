@@ -98,7 +98,7 @@ TEST(OrbitSshQtTests, IntegrationTest) {
   });
 
   QObject::connect(&session, &orbit_ssh_qt::Session::started, &session, [&]() {
-    LOG("Session connected. Starting task...");
+    ORBIT_LOG("Session connected. Starting task...");
     task.Start();
     CheckCheckpoint(Checkpoint::kSessionStarted);
   });
@@ -109,7 +109,7 @@ TEST(OrbitSshQtTests, IntegrationTest) {
                    [&]() { data_sink.append(task.ReadStdOut()); });
 
   QObject::connect(&task, &orbit_ssh_qt::Task::started, &loop, [&]() {
-    LOG("process started. Starting tunnel...");
+    ORBIT_LOG("process started. Starting tunnel...");
     task.Write("Data in reverse direction!");
     tunnel.Start();
     CheckCheckpoint(Checkpoint::kTaskStarted);
@@ -150,13 +150,13 @@ TEST(OrbitSshQtTests, IntegrationTest) {
   };
 
   QObject::connect(&client, &QTcpSocket::connected, &loop, [&]() {
-    LOG("TCP Socket connected. Writing data...");
+    ORBIT_LOG("TCP Socket connected. Writing data...");
     write_bytes(write_bytes);
     CheckCheckpoint(Checkpoint::kSocketConnected);
   });
 
   QObject::connect(&tunnel, &orbit_ssh_qt::Tunnel::started, &loop, [&]() {
-    LOG("Tunnel opened. Connecting tcp client...");
+    ORBIT_LOG("Tunnel opened. Connecting tcp client...");
     client.connectToHost("127.0.0.1", tunnel.GetListenPort());
     CheckCheckpoint(Checkpoint::kTunnelStarted);
   });
@@ -171,7 +171,7 @@ TEST(OrbitSshQtTests, IntegrationTest) {
     temp_file->write("This is a test content!\nSecond line.");
     temp_file->close();
 
-    LOG("Sftp channel opened! Starting file copy...");
+    ORBIT_LOG("Sftp channel opened! Starting file copy...");
     sftp_op.CopyFileToRemote(temp_file->fileName().toStdString(), "/tmp/temporary_file.txt",
                              orbit_ssh_qt::SftpCopyToRemoteOperation::FileMode::kUserWritable);
     CheckCheckpoint(Checkpoint::kSftpChannelStarted);
@@ -184,7 +184,7 @@ TEST(OrbitSshQtTests, IntegrationTest) {
                    });
 
   QObject::connect(&sftp_channel, &orbit_ssh_qt::SftpChannel::stopped, &loop, [&]() {
-    LOG("Sftp channel closed!");
+    ORBIT_LOG("Sftp channel closed!");
     loop.quit();
     CheckCheckpoint(Checkpoint::kSftpChannelStopped);
   });
@@ -198,13 +198,13 @@ TEST(OrbitSshQtTests, IntegrationTest) {
                    });
 
   QObject::connect(&sftp_op, &orbit_ssh_qt::SftpCopyToRemoteOperation::stopped, &loop, [&]() {
-    LOG("Sftp file copy finished!");
+    ORBIT_LOG("Sftp file copy finished!");
     sftp_channel.Stop();
     CheckCheckpoint(Checkpoint::kSftpOperationStopped);
   });
 
   session.ConnectToServer(creds);
-  LOG("connect to server");
+  ORBIT_LOG("connect to server");
   QTimer::singleShot(std::chrono::seconds{5}, &loop, [&]() {
     loop.quit();
     FAIL() << "Timeout occurred. The whole integration test should be done in 5 "
@@ -240,9 +240,9 @@ TEST(OrbitSshQtTests, CopyToLocalTest) {
   orbit_ssh_qt::SftpCopyToLocalOperation sftp_copy_to_local{&session, &channel};
 
   session.ConnectToServer(creds);
-  LOG("connect to server");
+  ORBIT_LOG("connect to server");
   QObject::connect(&session, &orbit_ssh_qt::Session::started, &session, [&]() {
-    LOG("Session connected. Starting channel...");
+    ORBIT_LOG("Session connected. Starting channel...");
     channel.Start();
   });
 
@@ -253,18 +253,18 @@ TEST(OrbitSshQtTests, CopyToLocalTest) {
     file_name = temp_file.fileName().toStdString();
     temp_file.remove();
 
-    LOG("Sftp channel opened! Starting file copy to \"%s\"...", file_name);
+    ORBIT_LOG("Sftp channel opened! Starting file copy to \"%s\"...", file_name);
     sftp_copy_to_local.CopyFileToLocal("/proc/cpuinfo", file_name);
   });
 
   QObject::connect(&channel, &orbit_ssh_qt::SftpChannel::stopped, &loop, [&]() {
-    LOG("Sftp channel closed!");
+    ORBIT_LOG("Sftp channel closed!");
     loop.quit();
   });
 
   QObject::connect(&sftp_copy_to_local, &orbit_ssh_qt::SftpCopyToLocalOperation::stopped, &loop,
                    [&]() {
-                     LOG("Sftp file copy finished!");
+                     ORBIT_LOG("Sftp file copy finished!");
                      channel.Stop();
                    });
 

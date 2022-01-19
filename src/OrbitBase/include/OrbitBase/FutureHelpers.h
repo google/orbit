@@ -38,7 +38,7 @@ template <typename T>
 
 template <typename T>
 [[nodiscard]] inline Future<T> UnwrapFuture(const Future<Future<T>>& outer_future) {
-  CHECK(outer_future.IsValid());
+  ORBIT_CHECK(outer_future.IsValid());
 
   // A quick explanation what's happening here:
   // We have an outer and a inner future. When the outer future completes, the inner
@@ -61,7 +61,7 @@ template <typename T>
 }
 
 [[nodiscard]] inline Future<void> UnwrapFuture(const Future<Future<void>>& outer_future) {
-  CHECK(outer_future.IsValid());
+  ORBIT_CHECK(outer_future.IsValid());
 
   auto promise = std::make_shared<Promise<void>>();
 

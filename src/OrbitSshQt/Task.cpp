@@ -35,7 +35,7 @@ void Task::Start() {
 void Task::Stop() {
   QTimer::singleShot(kShutdownTimeoutMs, this, [this]() {
     if (state_ < State::kChannelClosed) {
-      ERROR("Task shutdown timed out");
+      ORBIT_ERROR("Task shutdown timed out");
       SetError(Error::kOrbitServiceShutdownTimedout);
     }
   });
@@ -171,7 +171,7 @@ outcome::result<void> Task::startup() {
     case State::kWaitChannelClosed:
     case State::kChannelClosed:
     case State::kError:
-      UNREACHABLE();
+      ORBIT_UNREACHABLE();
   }
 
   return outcome::success();
@@ -184,7 +184,7 @@ outcome::result<void> Task::shutdown() {
     case State::kChannelInitialized:
     case State::kStarted:
     case State::kCommandRunning:
-      UNREACHABLE();
+      ORBIT_UNREACHABLE();
 
     case State::kShutdown:
     case State::kSignalEOF: {
@@ -216,7 +216,7 @@ outcome::result<void> Task::shutdown() {
       channel_ = std::nullopt;
       break;
     case State::kError:
-      UNREACHABLE();
+      ORBIT_UNREACHABLE();
   }
 
   return outcome::success();

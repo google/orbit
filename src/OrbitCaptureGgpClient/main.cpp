@@ -49,11 +49,11 @@ int main(int argc, char** argv) {
     std::cin >> i;
     switch (i) {
       case kStartCaptureCommand:
-        LOG("Chosen %d: Start capture", i);
+        ORBIT_LOG("Chosen %d: Start capture", i);
         ggp_capture_client.StartCapture();
         break;
       case kStopAndSaveCaptureCommand:
-        LOG("Chosen %d: Stop and save capture", i);
+        ORBIT_LOG("Chosen %d: Stop and save capture", i);
         ggp_capture_client.StopCapture();
         break;
       case kUpdateSelectedFunctionsCommand: {
@@ -70,11 +70,11 @@ int main(int argc, char** argv) {
         break;
       }
       case kShutdownServiceCommand:
-        LOG("Chosen %d: Shutdown service and exit", i);
+        ORBIT_LOG("Chosen %d: Shutdown service and exit", i);
         exit = true;
         break;
       default:
-        ERROR("Option selected not valid. Try again");
+        ORBIT_ERROR("Option selected not valid. Try again");
     }
   }
 

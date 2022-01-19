@@ -70,8 +70,8 @@ std::unique_ptr<RetrieveInstances> RetrieveInstances::Create(
 RetrieveInstancesImpl::RetrieveInstancesImpl(Client* ggp_client,
                                              MainThreadExecutor* main_thread_executor)
     : ggp_client_(ggp_client), main_thread_executor_(main_thread_executor) {
-  CHECK(ggp_client != nullptr);
-  CHECK(main_thread_executor != nullptr);
+  ORBIT_CHECK(ggp_client != nullptr);
+  ORBIT_CHECK(main_thread_executor != nullptr);
 }
 
 Future<ErrorMessageOr<QVector<Instance>>> RetrieveInstancesImpl::LoadInstances(

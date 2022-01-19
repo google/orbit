@@ -27,7 +27,7 @@ std::vector<std::filesystem::path> ListFilesRecursivelyIgnoreErrors(
   std::error_code error;
   auto directory_iterator = std::filesystem::recursive_directory_iterator(dir, error);
   if (error) {
-    ERROR("Unable to open directory \"%s\": %s", dir.string(), error.message());
+    ORBIT_ERROR("Unable to open directory \"%s\": %s", dir.string(), error.message());
     return {};
   }
 
@@ -35,14 +35,14 @@ std::vector<std::filesystem::path> ListFilesRecursivelyIgnoreErrors(
             end = std::filesystem::end(directory_iterator);
        it != end; it.increment(error)) {
     if (error) {
-      ERROR("directory_iterator::increment failed for \"%s\": %s (stopping)", dir.string(),
-            error.message());
+      ORBIT_ERROR("directory_iterator::increment failed for \"%s\": %s (stopping)", dir.string(),
+                  error.message());
       break;
     }
 
     bool is_regular_file = it->is_regular_file(error);
     if (error) {
-      ERROR("Unable to stat \"%s\": %s (will ignore)", it->path().string(), error.message());
+      ORBIT_ERROR("Unable to stat \"%s\": %s (will ignore)", it->path().string(), error.message());
       continue;
     }
 
@@ -79,7 +79,7 @@ std::vector<std::filesystem::path> FindOldLogFiles(
     ErrorMessageOr<absl::Time> timestamp_or_error =
         ParseLogFileTimestamp(log_file_path.filename().string());
     if (timestamp_or_error.has_error()) {
-      LOG("Warning: %s", timestamp_or_error.error().message());
+      ORBIT_LOG("Warning: %s", timestamp_or_error.error().message());
       continue;
     }
     if (timestamp_or_error.value() < expiration_time) {

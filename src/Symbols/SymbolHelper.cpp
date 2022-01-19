@@ -53,7 +53,7 @@ std::vector<fs::path> ReadSymbolsFile(const fs::path& file_name) {
   std::error_code error;
   bool file_exists = fs::exists(file_name, error);
   if (error) {
-    ERROR("Unable to stat \"%s\":%s", file_name.string(), error.message());
+    ORBIT_ERROR("Unable to stat \"%s\":%s", file_name.string(), error.message());
     return {};
   }
 
@@ -75,7 +75,7 @@ std::vector<fs::path> ReadSymbolsFile(const fs::path& file_name) {
     );
 
     if (result.has_error()) {
-      ERROR("Unable to create symbols file: %s", result.error().message());
+      ORBIT_ERROR("Unable to create symbols file: %s", result.error().message());
     }
     // Since file is empty - return empty list
     return {};
@@ -84,7 +84,7 @@ std::vector<fs::path> ReadSymbolsFile(const fs::path& file_name) {
   std::vector<fs::path> directories;
   ErrorMessageOr<std::string> file_content_or_error = orbit_base::ReadFileToString(file_name);
   if (file_content_or_error.has_error()) {
-    ERROR("%s", file_content_or_error.error().message());
+    ORBIT_ERROR("%s", file_content_or_error.error().message());
     return {};
   }
 
@@ -102,12 +102,12 @@ std::vector<fs::path> ReadSymbolsFile(const fs::path& file_name) {
     const fs::path dir = line;
     bool is_directory = fs::is_directory(dir, error);
     if (error) {
-      ERROR("Unable to stat \"%s\": %s (skipping)", dir.string(), error.message());
+      ORBIT_ERROR("Unable to stat \"%s\": %s (skipping)", dir.string(), error.message());
       continue;
     }
 
     if (!is_directory) {
-      ERROR("\"%s\" is not a directory (skipping)", dir.string());
+      ORBIT_ERROR("\"%s\" is not a directory (skipping)", dir.string());
       continue;
     }
 
@@ -123,7 +123,7 @@ static std::vector<fs::path> FindStructuredDebugDirectories() {
     std::error_code error{};
     if (!std::filesystem::is_directory(dir, error)) return;
     directories.emplace_back(std::move(dir));
-    LOG("Found structured debug store: %s", directories.back().string());
+    ORBIT_LOG("Found structured debug store: %s", directories.back().string());
   };
 
 #ifndef _WIN32
@@ -189,7 +189,7 @@ ErrorMessageOr<fs::path> SymbolHelper::FindSymbolsFileLocally(
     for (const auto& structured_debug_directory : structured_debug_directories_) {
       auto result = FindDebugInfoFileInDebugStore(structured_debug_directory, build_id);
       if (result.has_value()) return result;
-      LOG("Debug file search was unsuccessful: %s", result.error().message());
+      ORBIT_LOG("Debug file search was unsuccessful: %s", result.error().message());
     }
   }
 
@@ -212,12 +212,12 @@ ErrorMessageOr<fs::path> SymbolHelper::FindSymbolsFileLocally(
     search_paths.insert(directory / filename);
   }
 
-  LOG("Trying to find symbols for module: \"%s\"", module_path.string());
+  ORBIT_LOG("Trying to find symbols for module: \"%s\"", module_path.string());
   for (const auto& symbols_path : search_paths) {
     std::error_code error;
     bool exists = fs::exists(symbols_path, error);
     if (error) {
-      ERROR("Unable to stat \"%s\": %s", symbols_path.string(), error.message());
+      ORBIT_ERROR("Unable to stat \"%s\": %s", symbols_path.string(), error.message());
       continue;
     }
 
@@ -225,13 +225,13 @@ ErrorMessageOr<fs::path> SymbolHelper::FindSymbolsFileLocally(
 
     const auto verification_result = VerifySymbolsFile(symbols_path, build_id);
     if (verification_result.has_error()) {
-      LOG("Existing file \"%s\" is not the symbols file for module \"%s\", error: %s",
-          symbols_path.string(), module_path.string(), verification_result.error().message());
+      ORBIT_LOG("Existing file \"%s\" is not the symbols file for module \"%s\", error: %s",
+                symbols_path.string(), module_path.string(), verification_result.error().message());
       continue;
     }
 
-    LOG("Found debug info for module \"%s\" -> \"%s\"", module_path.string(),
-        symbols_path.string());
+    ORBIT_LOG("Found debug info for module \"%s\" -> \"%s\"", module_path.string(),
+              symbols_path.string());
     return symbols_path;
   }
 
@@ -260,7 +260,7 @@ ErrorMessageOr<fs::path> SymbolHelper::FindSymbolsFileLocally(
 ErrorMessageOr<ModuleSymbols> SymbolHelper::LoadSymbolsFromFile(
     const fs::path& file_path, const ObjectFileInfo& object_file_info) {
   ORBIT_SCOPE_FUNCTION;
-  SCOPED_TIMED_LOG("LoadSymbolsFromFile: %s", file_path.string());
+  ORBIT_SCOPED_TIMED_LOG("LoadSymbolsFromFile: %s", file_path.string());
 
   OUTCOME_TRY(auto symbols_file, CreateSymbolsFile(file_path, object_file_info));
   return symbols_file->LoadDebugSymbols();
@@ -276,7 +276,7 @@ fs::path SymbolHelper::GenerateCachedFileName(const fs::path& file_path) const {
   std::error_code error;
   bool exists = fs::exists(debuginfo_file_path, error);
   if (error) {
-    ERROR("Unable to stat \"%s\": %s", debuginfo_file_path.string(), error.message());
+    ORBIT_ERROR("Unable to stat \"%s\": %s", debuginfo_file_path.string(), error.message());
     return false;
   }
 
@@ -284,19 +284,20 @@ fs::path SymbolHelper::GenerateCachedFileName(const fs::path& file_path) const {
 
   const auto checksum_or_error = ElfFile::CalculateDebuglinkChecksum(debuginfo_file_path);
   if (checksum_or_error.has_error()) {
-    LOG("Unable to calculate checksum of \"%s\": \"%s\"", debuginfo_file_path.filename().string(),
-        checksum_or_error.error().message());
+    ORBIT_LOG("Unable to calculate checksum of \"%s\": \"%s\"",
+              debuginfo_file_path.filename().string(), checksum_or_error.error().message());
     return false;
   }
 
   if (checksum_or_error.value() != checksum) {
-    LOG("Found file with matching name \"%s\", but the checksums do not match. Expected: %#x. "
+    ORBIT_LOG(
+        "Found file with matching name \"%s\", but the checksums do not match. Expected: %#x. "
         "Actual: %#x",
         debuginfo_file_path.string(), checksum, checksum_or_error.value());
     return false;
   }
 
-  LOG("Found debug info in file \"%s\"", debuginfo_file_path.string());
+  ORBIT_LOG("Found debug info in file \"%s\"", debuginfo_file_path.string());
   return true;
 }
 
@@ -307,7 +308,7 @@ ErrorMessageOr<fs::path> SymbolHelper::FindDebugInfoFileLocally(
     search_paths.insert(directory / filename);
   }
 
-  LOG("Trying to find debuginfo file with filename \"%s\"", filename);
+  ORBIT_LOG("Trying to find debuginfo file with filename \"%s\"", filename);
   for (const auto& debuginfo_file_path : search_paths) {
     if (IsMatchingDebugInfoFile(debuginfo_file_path, checksum)) return debuginfo_file_path;
   }

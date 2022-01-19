@@ -28,7 +28,7 @@ std::optional<std::vector<CodeBlock>> FramePointerValidator::GetFpoFunctions(
   cs_mode mode = is_64_bit ? CS_MODE_64 : CS_MODE_32;
   csh temp_handle;
   if (cs_open(CS_ARCH_X86, mode, &temp_handle) != CS_ERR_OK) {
-    ERROR("Unable to open capstone.");
+    ORBIT_ERROR("Unable to open capstone.");
     return {};
   }
   orbit_base::unique_resource handle{temp_handle, [](csh handle) { cs_close(&handle); }};
@@ -37,7 +37,7 @@ std::optional<std::vector<CodeBlock>> FramePointerValidator::GetFpoFunctions(
 
   ErrorMessageOr<std::string> binary_or_error = orbit_base::ReadFileToString(file_name);
   if (binary_or_error.has_error()) {
-    ERROR("%s", binary_or_error.error().message());
+    ORBIT_ERROR("%s", binary_or_error.error().message());
     return {};
   }
 

@@ -83,7 +83,7 @@ void RetrieveInstancesWidget::SetupStateMachine() {
 }
 
 void RetrieveInstancesWidget::Start() {
-  CHECK(retrieve_instances_ != nullptr);
+  ORBIT_CHECK(retrieve_instances_ != nullptr);
   state_machine_.setInitialState(&s_loading_);
   state_machine_.start();
 
@@ -99,7 +99,7 @@ InstanceListScope RetrieveInstancesWidget::GetSelectedInstanceListScope() const 
 }
 
 void RetrieveInstancesWidget::InitialLoad(const std::optional<Project>& remembered_project) {
-  CHECK(ui_->projectComboBox->count() == 0);
+  ORBIT_CHECK(ui_->projectComboBox->count() == 0);
   emit LoadingStarted();
   ScopedMetric metric{metrics_uploader_, OrbitLogEvent::ORBIT_INSTANCES_INITIAL_LOAD};
   retrieve_instances_->LoadProjectsAndInstances(remembered_project, GetSelectedInstanceListScope())
@@ -129,7 +129,7 @@ void RetrieveInstancesWidget::InitialLoad(const std::optional<Project>& remember
 
 void RetrieveInstancesWidget::OnInitialLoadingReturnedSuccess(
     LoadProjectsAndInstancesResult initial_load_result) {
-  CHECK(ui_->projectComboBox->count() == 0);
+  ORBIT_CHECK(ui_->projectComboBox->count() == 0);
 
   // From here on the projectComboBox is filled. To not trigger currentIndexChanged signals, the
   // signals of projectComboBox are blocked until the end of this function.
@@ -169,7 +169,7 @@ void RetrieveInstancesWidget::OnInitialLoadingReturnedSuccess(
 void RetrieveInstancesWidget::OnInstancesLoadingReturned(
     const ErrorMessageOr<QVector<Instance>>& loading_result) {
   if (loading_result.has_error()) {
-    ERROR("instance loading returned with error: %s", loading_result.error().message());
+    ORBIT_ERROR("instance loading returned with error: %s", loading_result.error().message());
     QMessageBox::critical(this, QCoreApplication::applicationName(),
                           QString::fromStdString(loading_result.error().message()));
     emit LoadingFailed();

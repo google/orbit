@@ -46,7 +46,7 @@ std::string MajorPageFaultsTrack::GetLegendTooltips(size_t legend_index) const {
           "Derived from the <i>pgmajfault</i> field in file <i>/proc/vmstat</i>.",
           memory_sampling_period_ms_);
     default:
-      UNREACHABLE();
+      ORBIT_UNREACHABLE();
   }
 }
 

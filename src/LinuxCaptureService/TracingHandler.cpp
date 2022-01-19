@@ -30,7 +30,7 @@ using orbit_grpc_protos::kLinuxTracingProducerId;
 void TracingHandler::Start(
     const CaptureOptions& capture_options,
     std::unique_ptr<UserSpaceInstrumentationAddressesImpl> user_space_instrumentation_addresses) {
-  CHECK(tracer_ == nullptr);
+  ORBIT_CHECK(tracer_ == nullptr);
 
   tracer_ = orbit_linux_tracing::Tracer::Create(
       capture_options, std::move(user_space_instrumentation_addresses), this);
@@ -38,7 +38,7 @@ void TracingHandler::Start(
 }
 
 void TracingHandler::Stop() {
-  CHECK(tracer_ != nullptr);
+  ORBIT_CHECK(tracer_ != nullptr);
   tracer_->Stop();
   // tracer_ is not reset as FunctionEntry and FunctionExit events could still arrive afterwards. In
   // that case the Tracer will simply not process them.

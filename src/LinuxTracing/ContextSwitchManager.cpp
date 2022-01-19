@@ -32,7 +32,7 @@ std::optional<SchedulingSlice> ContextSwitchManager::ProcessContextSwitchOut(
   pid_t open_tid = open_switch_it->second.tid;
   uint64_t open_timestamp_ns = open_switch_it->second.timestamp_ns;
 
-  CHECK(timestamp_ns >= open_timestamp_ns);
+  ORBIT_CHECK(timestamp_ns >= open_timestamp_ns);
 
   // Remove the OpenSwitchIn for this core before returning, as it will have been processed.
   open_switches_by_core_.erase(core);

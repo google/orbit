@@ -37,13 +37,13 @@ AddressRange AddressRangeFromString(const std::string& string_address) {
   AddressRange result;
   const std::vector<std::string> addresses = absl::StrSplit(string_address, '-');
   if (addresses.size() != 2) {
-    FATAL("Not an address range: %s", string_address);
+    ORBIT_FATAL("Not an address range: %s", string_address);
   }
   if (!absl::numbers_internal::safe_strtou64_base(addresses[0], &result.start, 16)) {
-    FATAL("Not a number: %s", addresses[0]);
+    ORBIT_FATAL("Not a number: %s", addresses[0]);
   }
   if (!absl::numbers_internal::safe_strtou64_base(addresses[1], &result.end, 16)) {
-    FATAL("Not a number: %s", addresses[1]);
+    ORBIT_FATAL("Not a number: %s", addresses[1]);
   }
   return result;
 }
@@ -78,7 +78,7 @@ TEST(AccessTraceesMemoryTest, ReadFailures) {
   */
 
   pid_t pid = fork();
-  CHECK(pid != -1);
+  ORBIT_CHECK(pid != -1);
   if (pid == 0) {
     prctl(PR_SET_PDEATHSIG, SIGTERM);
 
@@ -91,10 +91,10 @@ TEST(AccessTraceesMemoryTest, ReadFailures) {
   }
 
   // Stop the child process using our tooling.
-  CHECK(!AttachAndStopProcess(pid).has_error());
+  ORBIT_CHECK(!AttachAndStopProcess(pid).has_error());
 
   auto continuous_range_or_error = GetFirstContinuousAddressRange(pid);
-  CHECK(continuous_range_or_error.has_value());
+  ORBIT_CHECK(continuous_range_or_error.has_value());
   const auto continuous_range = continuous_range_or_error.value();
   const uint64_t address = continuous_range.start;
 
@@ -121,7 +121,7 @@ TEST(AccessTraceesMemoryTest, ReadFailures) {
   EXPECT_THAT(result, HasError("Input/output error"));
 
   // Detach and end child.
-  CHECK(!DetachAndContinueProcess(pid).has_error());
+  ORBIT_CHECK(!DetachAndContinueProcess(pid).has_error());
   kill(pid, SIGKILL);
   waitpid(pid, nullptr, 0);
 }
@@ -132,7 +132,7 @@ TEST(AccessTraceesMemoryTest, WriteFailures) {
   */
 
   pid_t pid = fork();
-  CHECK(pid != -1);
+  ORBIT_CHECK(pid != -1);
   if (pid == 0) {
     prctl(PR_SET_PDEATHSIG, SIGTERM);
 
@@ -145,10 +145,10 @@ TEST(AccessTraceesMemoryTest, WriteFailures) {
   }
 
   // Stop the child process using our tooling.
-  CHECK(!AttachAndStopProcess(pid).has_error());
+  ORBIT_CHECK(!AttachAndStopProcess(pid).has_error());
 
   auto continuous_range_or_error = GetFirstContinuousAddressRange(pid);
-  CHECK(continuous_range_or_error.has_value());
+  ORBIT_CHECK(continuous_range_or_error.has_value());
   const auto continuous_range = continuous_range_or_error.value();
   const uint64_t address = continuous_range.start;
 
@@ -157,7 +157,7 @@ TEST(AccessTraceesMemoryTest, WriteFailures) {
 
   // Backup.
   auto backup = ReadTraceesMemory(pid, address, length);
-  CHECK(backup.has_value());
+  ORBIT_CHECK(backup.has_value());
 
   // Good write.
   std::vector<uint8_t> bytes(length, 0);
@@ -182,15 +182,15 @@ TEST(AccessTraceesMemoryTest, WriteFailures) {
   EXPECT_THAT(result, HasError("Input/output error"));
 
   // Restore, detach and end child.
-  CHECK(!WriteTraceesMemory(pid, address, backup.value()).has_error());
-  CHECK(!DetachAndContinueProcess(pid).has_error());
+  ORBIT_CHECK(!WriteTraceesMemory(pid, address, backup.value()).has_error());
+  ORBIT_CHECK(!DetachAndContinueProcess(pid).has_error());
   kill(pid, SIGKILL);
   waitpid(pid, nullptr, 0);
 }
 
 TEST(AccessTraceesMemoryTest, ReadWriteRestore) {
   pid_t pid = fork();
-  CHECK(pid != -1);
+  ORBIT_CHECK(pid != -1);
   if (pid == 0) {
     prctl(PR_SET_PDEATHSIG, SIGTERM);
 
@@ -203,10 +203,10 @@ TEST(AccessTraceesMemoryTest, ReadWriteRestore) {
   }
 
   // Stop the child process using our tooling.
-  CHECK(!AttachAndStopProcess(pid).has_error());
+  ORBIT_CHECK(!AttachAndStopProcess(pid).has_error());
 
   auto memory_region_or_error = GetExistingExecutableMemoryRegion(pid);
-  CHECK(memory_region_or_error.has_value());
+  ORBIT_CHECK(memory_region_or_error.has_value());
   const uint64_t address = memory_region_or_error.value().start;
 
   constexpr uint64_t kMemorySize = 4 * 1024;
@@ -226,8 +226,8 @@ TEST(AccessTraceesMemoryTest, ReadWriteRestore) {
   EXPECT_EQ(new_data, read_back_or_error.value());
 
   // Restore, detach and end child.
-  CHECK(WriteTraceesMemory(pid, address, backup.value()).has_value());
-  CHECK(!DetachAndContinueProcess(pid).has_error());
+  ORBIT_CHECK(WriteTraceesMemory(pid, address, backup.value()).has_value());
+  ORBIT_CHECK(!DetachAndContinueProcess(pid).has_error());
   kill(pid, SIGKILL);
   waitpid(pid, nullptr, 0);
 }

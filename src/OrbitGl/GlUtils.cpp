@@ -48,6 +48,6 @@ void CheckGlError() {
   GLenum error_code = glGetError();
   if (error_code != GL_NO_ERROR) {
     const char* error_string = GetGlError(error_code);
-    LOG("OpenGL ERROR : %s", error_string);
+    ORBIT_LOG("OpenGL ERROR : %s", error_string);
   }
 }

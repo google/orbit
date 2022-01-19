@@ -1216,8 +1216,8 @@ TEST_F(UprobesUnwindingVisitorTest, VisitPatchableCallchainSampleSendsCompleteCa
   auto fake_patch_callchain = [](pid_t /*tid*/, uint64_t* callchain, uint64_t callchain_size,
                                  orbit_linux_tracing::LibunwindstackMaps *
                                  /*maps*/) -> bool {
-    CHECK(callchain != nullptr);
-    CHECK(callchain_size == 4);
+    ORBIT_CHECK(callchain != nullptr);
+    ORBIT_CHECK(callchain_size == 4);
     callchain[2] = kTargetAddress2 + 1;
     return true;
   };
@@ -1304,7 +1304,7 @@ TEST_F(UprobesUnwindingVisitorTest,
                                                LibunwindstackMaps* /*maps*/,
                                                orbit_linux_tracing::LibunwindstackUnwinder *
                                                /*unwinder*/) -> Callstack::CallstackType {
-    CHECK(event_data != nullptr);
+    ORBIT_CHECK(event_data != nullptr);
     std::vector<uint64_t> patched_callchain;
     EXPECT_THAT(event_data->CopyOfIpsAsVector(),
                 ElementsAre(kKernelAddress, kTargetAddress1, kTargetAddress3 + 1));

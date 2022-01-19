@@ -112,7 +112,7 @@ void TextRenderer::Init() {
 }
 
 ftgl::texture_font_t* TextRenderer::GetFont(uint32_t size) {
-  CHECK(!fonts_by_size_.empty());
+  ORBIT_CHECK(!fonts_by_size_.empty());
   if (fonts_by_size_.count(size) == 0) {
     auto iterator_next = fonts_by_size_.upper_bound(size);
     // If there isn't that font_size in the map, we will search for the next one or previous one

@@ -29,7 +29,7 @@ ConnectToTargetDialog::ConnectToTargetDialog(
       process_id_(process_id),
       metrics_uploader_(metrics_uploader),
       main_thread_executor_(orbit_qt_utils::MainThreadExecutorImpl::Create()) {
-  CHECK(ssh_connection_artifacts != nullptr);
+  ORBIT_CHECK(ssh_connection_artifacts != nullptr);
 
   ui_->setupUi(this);
   ui_->instanceIdLabel->setText(instance_id_or_name);
@@ -39,8 +39,8 @@ ConnectToTargetDialog::ConnectToTargetDialog(
 ConnectToTargetDialog::~ConnectToTargetDialog() {}
 
 std::optional<TargetConfiguration> ConnectToTargetDialog::Exec() {
-  LOG("Trying to establish a connection to specified target %s:%d",
-      instance_id_or_name_.toStdString(), process_id_);
+  ORBIT_LOG("Trying to establish a connection to specified target %s:%d",
+            instance_id_or_name_.toStdString(), process_id_);
 
   auto ggp_client_result = orbit_ggp::CreateClient();
   if (ggp_client_result.has_error()) {
@@ -102,10 +102,10 @@ ErrorMessageOr<StadiaTarget> ConnectToTargetDialog::OnAsyncDataAvailable(
 
 StadiaTarget ConnectToTargetDialog::CreateTarget(ConnectionData result,
                                                  orbit_ggp::Instance instance) const {
-  CHECK(instance.id == instance_id_or_name_ || instance.display_name == instance_id_or_name_);
-  CHECK(result.grpc_channel_ != nullptr);
-  CHECK(result.service_deploy_manager_ != nullptr);
-  CHECK(result.process_data_ != nullptr);
+  ORBIT_CHECK(instance.id == instance_id_or_name_ || instance.display_name == instance_id_or_name_);
+  ORBIT_CHECK(result.grpc_channel_ != nullptr);
+  ORBIT_CHECK(result.service_deploy_manager_ != nullptr);
+  ORBIT_CHECK(result.process_data_ != nullptr);
 
   auto process_manager =
       orbit_client_services::ProcessManager::Create(result.grpc_channel_, absl::Milliseconds(1000));
@@ -137,7 +137,7 @@ ConnectToTargetDialog::DeployOrbitService(
 ErrorMessageOr<std::unique_ptr<orbit_client_data::ProcessData>>
 ConnectToTargetDialog::FindSpecifiedProcess(std::shared_ptr<grpc::Channel> grpc_channel,
                                             uint32_t process_id) {
-  CHECK(grpc_channel != nullptr);
+  ORBIT_CHECK(grpc_channel != nullptr);
 
   orbit_client_services::ProcessClient client(grpc_channel);
   auto process_list = client.GetProcessList();
@@ -160,7 +160,7 @@ void ConnectToTargetDialog::SetStatusMessage(const QString& message) {
 }
 
 void ConnectToTargetDialog::LogAndDisplayError(const ErrorMessage& message) {
-  ERROR("%s", message.message());
+  ORBIT_ERROR("%s", message.message());
   QMessageBox::critical(nullptr, QApplication::applicationName(),
                         QString::fromStdString(message.message()));
 }

@@ -50,7 +50,7 @@ CallTreeThread* CallTreeNode::GetThreadOrNull(uint32_t thread_id) {
 CallTreeThread* CallTreeNode::AddAndGetThread(uint32_t thread_id, std::string thread_name) {
   const auto& [it, inserted] = thread_children_.try_emplace(
       thread_id, CallTreeThread{thread_id, std::move(thread_name), this});
-  CHECK(inserted);
+  ORBIT_CHECK(inserted);
   children_cache_.reset();
   return &it->second;
 }
@@ -71,7 +71,7 @@ CallTreeFunction* CallTreeNode::AddAndGetFunction(uint64_t function_absolute_add
       function_absolute_address,
       CallTreeFunction{function_absolute_address, std::move(function_name), std::move(module_path),
                        std::move(module_build_id), this});
-  CHECK(inserted);
+  ORBIT_CHECK(inserted);
   children_cache_.reset();
   return &it->second;
 }
@@ -79,7 +79,7 @@ CallTreeFunction* CallTreeNode::AddAndGetFunction(uint64_t function_absolute_add
 CallTreeUnwindErrors* CallTreeNode::GetUnwindErrorsOrNull() { return unwind_errors_child_.get(); }
 
 CallTreeUnwindErrors* CallTreeNode::AddAndGetUnwindErrors() {
-  CHECK(unwind_errors_child_ == nullptr);
+  ORBIT_CHECK(unwind_errors_child_ == nullptr);
   unwind_errors_child_ = std::make_unique<CallTreeUnwindErrors>(this);
   children_cache_.reset();
   return unwind_errors_child_.get();
@@ -144,7 +144,7 @@ static void AddUnwindErrorToTopDownThread(CallTreeThread* thread_node,
   }
   unwind_errors_node->IncreaseSampleCount(callstack_sample_count);
 
-  CHECK(!resolved_callstack.frames().empty());
+  ORBIT_CHECK(!resolved_callstack.frames().empty());
   // Only use the innermost frame for unwind errors.
   uint64_t frame = resolved_callstack.frames(0);
   const std::string& function_name = capture_data.GetFunctionNameByAddress(frame);
@@ -175,7 +175,7 @@ std::unique_ptr<CallTreeView> CallTreeView::CreateTopDownViewFromPostProcessedSa
     const PostProcessedSamplingData& post_processed_sampling_data,
     const CaptureData& capture_data) {
   ORBIT_SCOPE_FUNCTION;
-  SCOPED_TIMED_LOG("CreateTopDownViewFromPostProcessedSamplingData");
+  ORBIT_SCOPED_TIMED_LOG("CreateTopDownViewFromPostProcessedSamplingData");
 
   auto top_down_view = std::make_unique<CallTreeView>();
   const std::string& process_name = capture_data.process_name();
@@ -228,7 +228,7 @@ std::unique_ptr<CallTreeView> CallTreeView::CreateTopDownViewFromPostProcessedSa
 [[nodiscard]] static CallTreeUnwindErrors* AddUnwindErrorToBottomUpViewAndReturnUnwindingErrorsNode(
     CallTreeView* bottom_up_view, const CallstackInfo& resolved_callstack,
     uint64_t callstack_sample_count, const CaptureData& capture_data) {
-  CHECK(!resolved_callstack.frames().empty());
+  ORBIT_CHECK(!resolved_callstack.frames().empty());
   // Only use the innermost frame for unwind errors.
   uint64_t frame = resolved_callstack.frames(0);
   const std::string& function_name = capture_data.GetFunctionNameByAddress(frame);
@@ -250,7 +250,7 @@ std::unique_ptr<CallTreeView> CallTreeView::CreateBottomUpViewFromPostProcessedS
     const PostProcessedSamplingData& post_processed_sampling_data,
     const CaptureData& capture_data) {
   ORBIT_SCOPE_FUNCTION;
-  SCOPED_TIMED_LOG("CreateBottomUpViewFromPostProcessedSamplingData");
+  ORBIT_SCOPED_TIMED_LOG("CreateBottomUpViewFromPostProcessedSamplingData");
 
   auto bottom_up_view = std::make_unique<CallTreeView>();
   const std::string& process_name = capture_data.process_name();

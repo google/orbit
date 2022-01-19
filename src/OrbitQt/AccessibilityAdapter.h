@@ -52,7 +52,7 @@ class OrbitGlInterfaceWrapper : public QObject {
 
 class AdapterRegistry {
  public:
-  ~AdapterRegistry() { CHECK(all_interfaces_map_.size() == 0); }
+  ~AdapterRegistry() { ORBIT_CHECK(all_interfaces_map_.size() == 0); }
   AdapterRegistry(const AdapterRegistry&) = delete;
   AdapterRegistry(AdapterRegistry&&) = delete;
   AdapterRegistry& operator=(const AdapterRegistry&) = delete;

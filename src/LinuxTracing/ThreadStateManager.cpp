@@ -27,7 +27,7 @@ using orbit_grpc_protos::ThreadStateSlice;
 
 void ThreadStateManager::OnInitialState(uint64_t timestamp_ns, pid_t tid,
                                         ThreadStateSlice::ThreadState state) {
-  CHECK(!tid_open_states_.contains(tid));
+  ORBIT_CHECK(!tid_open_states_.contains(tid));
   tid_open_states_.emplace(tid, OpenState{state, timestamp_ns});
 }
 
@@ -37,7 +37,7 @@ void ThreadStateManager::OnNewTask(uint64_t timestamp_ns, pid_t tid) {
   if (auto open_state_it = tid_open_states_.find(tid);
       open_state_it != tid_open_states_.end() &&
       timestamp_ns >= open_state_it->second.begin_timestamp_ns) {
-    ERROR("Processed task:task_newtask but thread %d was already known", tid);
+    ORBIT_ERROR("Processed task:task_newtask but thread %d was already known", tid);
     return;
   }
   tid_open_states_.insert_or_assign(tid, OpenState{kNewState, timestamp_ns});
@@ -49,7 +49,7 @@ std::optional<ThreadStateSlice> ThreadStateManager::OnSchedWakeup(uint64_t times
 
   auto open_state_it = tid_open_states_.find(tid);
   if (open_state_it == tid_open_states_.end()) {
-    ERROR("Processed sched:sched_wakeup but previous state of thread %d is unknown", tid);
+    ORBIT_ERROR("Processed sched:sched_wakeup but previous state of thread %d is unknown", tid);
     tid_open_states_.insert_or_assign(tid, OpenState{kNewState, timestamp_ns});
     return std::nullopt;
   }
@@ -69,8 +69,8 @@ std::optional<ThreadStateSlice> ThreadStateManager::OnSchedWakeup(uint64_t times
 
   if (open_state.state == ThreadStateSlice::kZombie ||
       open_state.state == ThreadStateSlice::kDead) {
-    ERROR("Processed sched:sched_wakeup for thread %d but unexpected previous state %s", tid,
-          ThreadStateSlice::ThreadState_Name(open_state.state));
+    ORBIT_ERROR("Processed sched:sched_wakeup for thread %d but unexpected previous state %s", tid,
+                ThreadStateSlice::ThreadState_Name(open_state.state));
   }
 
   ThreadStateSlice slice;
@@ -88,7 +88,7 @@ std::optional<ThreadStateSlice> ThreadStateManager::OnSchedSwitchIn(uint64_t tim
 
   auto open_state_it = tid_open_states_.find(tid);
   if (open_state_it == tid_open_states_.end()) {
-    ERROR("Processed sched:sched_switch(in) but previous state of thread %d is unknown", tid);
+    ORBIT_ERROR("Processed sched:sched_switch(in) but previous state of thread %d is unknown", tid);
     tid_open_states_.insert_or_assign(tid, OpenState{kNewState, timestamp_ns});
     return std::nullopt;
   }
@@ -121,7 +121,8 @@ std::optional<ThreadStateSlice> ThreadStateManager::OnSchedSwitchOut(
     uint64_t timestamp_ns, pid_t tid, ThreadStateSlice::ThreadState new_state) {
   auto open_state_it = tid_open_states_.find(tid);
   if (open_state_it == tid_open_states_.end()) {
-    ERROR("Processed sched:sched_switch(out) but previous state of thread %d is unknown", tid);
+    ORBIT_ERROR("Processed sched:sched_switch(out) but previous state of thread %d is unknown",
+                tid);
     tid_open_states_.insert_or_assign(tid, OpenState{new_state, timestamp_ns});
     return std::nullopt;
   }
@@ -141,8 +142,8 @@ std::optional<ThreadStateSlice> ThreadStateManager::OnSchedSwitchOut(
   }
 
   if (adjusted_open_state_state != ThreadStateSlice::kRunning) {
-    ERROR("Processed sched:sched_switch(out) for thread %d but unexpected previous state %s", tid,
-          ThreadStateSlice::ThreadState_Name(adjusted_open_state_state));
+    ORBIT_ERROR("Processed sched:sched_switch(out) for thread %d but unexpected previous state %s",
+                tid, ThreadStateSlice::ThreadState_Name(adjusted_open_state_state));
     if (adjusted_open_state_state == new_state) {
       // No state change: do nothing and don't overwrite the previous begin timestamp.
       return std::nullopt;

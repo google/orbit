@@ -162,7 +162,7 @@ bool FunctionFramePointerValidator::IsLeafFunction() {
 
 bool FunctionFramePointerValidator::Validate() {
   if (instructions_count_ == 0) {
-    ERROR("Failed to disassemble given code!");
+    ORBIT_ERROR("Failed to disassemble given code!");
     return false;
   }
   bool validated = IsLeafFunction() || (instructions_count_ >= 4 && ValidateFramePointers());

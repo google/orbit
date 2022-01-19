@@ -48,8 +48,8 @@ class DispatchTable {
     void* key = GetDispatchTableKey(dispatchable_object);
     {
       absl::ReaderMutexLock lock(&mutex_);
-      CHECK(device_dispatch_table_.contains(key));
-      CHECK(device_dispatch_table_.at(key).DestroyDevice != nullptr);
+      ORBIT_CHECK(device_dispatch_table_.contains(key));
+      ORBIT_CHECK(device_dispatch_table_.at(key).DestroyDevice != nullptr);
       return device_dispatch_table_.at(key).DestroyDevice;
     }
   }
@@ -59,8 +59,8 @@ class DispatchTable {
     void* key = GetDispatchTableKey(dispatchable_object);
     {
       absl::ReaderMutexLock lock(&mutex_);
-      CHECK(instance_dispatch_table_.contains(key));
-      CHECK(instance_dispatch_table_.at(key).DestroyInstance != nullptr);
+      ORBIT_CHECK(instance_dispatch_table_.contains(key));
+      ORBIT_CHECK(instance_dispatch_table_.at(key).DestroyInstance != nullptr);
       return instance_dispatch_table_.at(key).DestroyInstance;
     }
   }
@@ -71,8 +71,8 @@ class DispatchTable {
     void* key = GetDispatchTableKey(dispatchable_object);
     {
       absl::ReaderMutexLock lock(&mutex_);
-      CHECK(instance_dispatch_table_.contains(key));
-      CHECK(instance_dispatch_table_.at(key).EnumerateDeviceExtensionProperties != nullptr);
+      ORBIT_CHECK(instance_dispatch_table_.contains(key));
+      ORBIT_CHECK(instance_dispatch_table_.at(key).EnumerateDeviceExtensionProperties != nullptr);
       return instance_dispatch_table_.at(key).EnumerateDeviceExtensionProperties;
     }
   }
@@ -83,8 +83,8 @@ class DispatchTable {
     void* key = GetDispatchTableKey(dispatchable_object);
     {
       absl::ReaderMutexLock lock(&mutex_);
-      CHECK(instance_dispatch_table_.contains(key));
-      CHECK(instance_dispatch_table_.at(key).GetPhysicalDeviceProperties != nullptr);
+      ORBIT_CHECK(instance_dispatch_table_.contains(key));
+      ORBIT_CHECK(instance_dispatch_table_.at(key).GetPhysicalDeviceProperties != nullptr);
       return instance_dispatch_table_.at(key).GetPhysicalDeviceProperties;
     }
   }
@@ -94,8 +94,8 @@ class DispatchTable {
     void* key = GetDispatchTableKey(dispatchable_object);
     {
       absl::ReaderMutexLock lock(&mutex_);
-      CHECK(instance_dispatch_table_.contains(key));
-      CHECK(instance_dispatch_table_.at(key).GetInstanceProcAddr != nullptr);
+      ORBIT_CHECK(instance_dispatch_table_.contains(key));
+      ORBIT_CHECK(instance_dispatch_table_.at(key).GetInstanceProcAddr != nullptr);
       return instance_dispatch_table_.at(key).GetInstanceProcAddr;
     }
   }
@@ -105,8 +105,8 @@ class DispatchTable {
     void* key = GetDispatchTableKey(dispatchable_object);
     {
       absl::ReaderMutexLock lock(&mutex_);
-      CHECK(device_dispatch_table_.contains(key));
-      CHECK(device_dispatch_table_.at(key).GetDeviceProcAddr != nullptr);
+      ORBIT_CHECK(device_dispatch_table_.contains(key));
+      ORBIT_CHECK(device_dispatch_table_.at(key).GetDeviceProcAddr != nullptr);
       return device_dispatch_table_.at(key).GetDeviceProcAddr;
     }
   }
@@ -116,8 +116,8 @@ class DispatchTable {
     void* key = GetDispatchTableKey(dispatchable_object);
     {
       absl::ReaderMutexLock lock(&mutex_);
-      CHECK(device_dispatch_table_.contains(key));
-      CHECK(device_dispatch_table_.at(key).ResetCommandPool != nullptr);
+      ORBIT_CHECK(device_dispatch_table_.contains(key));
+      ORBIT_CHECK(device_dispatch_table_.at(key).ResetCommandPool != nullptr);
       return device_dispatch_table_.at(key).ResetCommandPool;
     }
   }
@@ -127,8 +127,8 @@ class DispatchTable {
     void* key = GetDispatchTableKey(dispatchable_object);
     {
       absl::ReaderMutexLock lock(&mutex_);
-      CHECK(device_dispatch_table_.contains(key));
-      CHECK(device_dispatch_table_.at(key).AllocateCommandBuffers != nullptr);
+      ORBIT_CHECK(device_dispatch_table_.contains(key));
+      ORBIT_CHECK(device_dispatch_table_.at(key).AllocateCommandBuffers != nullptr);
       return device_dispatch_table_.at(key).AllocateCommandBuffers;
     }
   }
@@ -138,8 +138,8 @@ class DispatchTable {
     void* key = GetDispatchTableKey(dispatchable_object);
     {
       absl::ReaderMutexLock lock(&mutex_);
-      CHECK(device_dispatch_table_.contains(key));
-      CHECK(device_dispatch_table_.at(key).FreeCommandBuffers != nullptr);
+      ORBIT_CHECK(device_dispatch_table_.contains(key));
+      ORBIT_CHECK(device_dispatch_table_.at(key).FreeCommandBuffers != nullptr);
       return device_dispatch_table_.at(key).FreeCommandBuffers;
     }
   }
@@ -149,8 +149,8 @@ class DispatchTable {
     void* key = GetDispatchTableKey(dispatchable_object);
     {
       absl::ReaderMutexLock lock(&mutex_);
-      CHECK(device_dispatch_table_.contains(key));
-      CHECK(device_dispatch_table_.at(key).BeginCommandBuffer != nullptr);
+      ORBIT_CHECK(device_dispatch_table_.contains(key));
+      ORBIT_CHECK(device_dispatch_table_.at(key).BeginCommandBuffer != nullptr);
       return device_dispatch_table_.at(key).BeginCommandBuffer;
     }
   }
@@ -160,8 +160,8 @@ class DispatchTable {
     void* key = GetDispatchTableKey(dispatchable_object);
     {
       absl::ReaderMutexLock lock(&mutex_);
-      CHECK(device_dispatch_table_.contains(key));
-      CHECK(device_dispatch_table_.at(key).EndCommandBuffer != nullptr);
+      ORBIT_CHECK(device_dispatch_table_.contains(key));
+      ORBIT_CHECK(device_dispatch_table_.at(key).EndCommandBuffer != nullptr);
       return device_dispatch_table_.at(key).EndCommandBuffer;
     }
   }
@@ -171,8 +171,8 @@ class DispatchTable {
     void* key = GetDispatchTableKey(dispatchable_object);
     {
       absl::ReaderMutexLock lock(&mutex_);
-      CHECK(device_dispatch_table_.contains(key));
-      CHECK(device_dispatch_table_.at(key).ResetCommandBuffer != nullptr);
+      ORBIT_CHECK(device_dispatch_table_.contains(key));
+      ORBIT_CHECK(device_dispatch_table_.at(key).ResetCommandBuffer != nullptr);
       return device_dispatch_table_.at(key).ResetCommandBuffer;
     }
   }
@@ -182,8 +182,8 @@ class DispatchTable {
     void* key = GetDispatchTableKey(dispatchable_object);
     {
       absl::ReaderMutexLock lock(&mutex_);
-      CHECK(device_dispatch_table_.contains(key));
-      CHECK(device_dispatch_table_.at(key).GetDeviceQueue != nullptr);
+      ORBIT_CHECK(device_dispatch_table_.contains(key));
+      ORBIT_CHECK(device_dispatch_table_.at(key).GetDeviceQueue != nullptr);
       return device_dispatch_table_.at(key).GetDeviceQueue;
     }
   }
@@ -193,8 +193,8 @@ class DispatchTable {
     void* key = GetDispatchTableKey(dispatchable_object);
     {
       absl::ReaderMutexLock lock(&mutex_);
-      CHECK(device_dispatch_table_.contains(key));
-      CHECK(device_dispatch_table_.at(key).GetDeviceQueue2 != nullptr);
+      ORBIT_CHECK(device_dispatch_table_.contains(key));
+      ORBIT_CHECK(device_dispatch_table_.at(key).GetDeviceQueue2 != nullptr);
       return device_dispatch_table_.at(key).GetDeviceQueue2;
     }
   }
@@ -204,8 +204,8 @@ class DispatchTable {
     void* key = GetDispatchTableKey(dispatchable_object);
     {
       absl::ReaderMutexLock lock(&mutex_);
-      CHECK(device_dispatch_table_.contains(key));
-      CHECK(device_dispatch_table_.at(key).QueueSubmit != nullptr);
+      ORBIT_CHECK(device_dispatch_table_.contains(key));
+      ORBIT_CHECK(device_dispatch_table_.at(key).QueueSubmit != nullptr);
       return device_dispatch_table_.at(key).QueueSubmit;
     }
   }
@@ -215,8 +215,8 @@ class DispatchTable {
     void* key = GetDispatchTableKey(dispatchable_object);
     {
       absl::ReaderMutexLock lock(&mutex_);
-      CHECK(device_dispatch_table_.contains(key));
-      CHECK(device_dispatch_table_.at(key).QueuePresentKHR != nullptr);
+      ORBIT_CHECK(device_dispatch_table_.contains(key));
+      ORBIT_CHECK(device_dispatch_table_.at(key).QueuePresentKHR != nullptr);
       return device_dispatch_table_.at(key).QueuePresentKHR;
     }
   }
@@ -226,8 +226,8 @@ class DispatchTable {
     void* key = GetDispatchTableKey(dispatchable_object);
     {
       absl::ReaderMutexLock lock(&mutex_);
-      CHECK(device_dispatch_table_.contains(key));
-      CHECK(device_dispatch_table_.at(key).CreateQueryPool != nullptr);
+      ORBIT_CHECK(device_dispatch_table_.contains(key));
+      ORBIT_CHECK(device_dispatch_table_.at(key).CreateQueryPool != nullptr);
       return device_dispatch_table_.at(key).CreateQueryPool;
     }
   }
@@ -237,8 +237,8 @@ class DispatchTable {
     void* key = GetDispatchTableKey(dispatchable_object);
     {
       absl::ReaderMutexLock lock(&mutex_);
-      CHECK(device_dispatch_table_.contains(key));
-      CHECK(device_dispatch_table_.at(key).DestroyQueryPool != nullptr);
+      ORBIT_CHECK(device_dispatch_table_.contains(key));
+      ORBIT_CHECK(device_dispatch_table_.at(key).DestroyQueryPool != nullptr);
       return device_dispatch_table_.at(key).DestroyQueryPool;
     }
   }
@@ -248,8 +248,8 @@ class DispatchTable {
     void* key = GetDispatchTableKey(dispatchable_object);
     {
       absl::ReaderMutexLock lock(&mutex_);
-      CHECK(device_dispatch_table_.contains(key));
-      CHECK(device_dispatch_table_.at(key).ResetQueryPoolEXT != nullptr);
+      ORBIT_CHECK(device_dispatch_table_.contains(key));
+      ORBIT_CHECK(device_dispatch_table_.at(key).ResetQueryPoolEXT != nullptr);
       return device_dispatch_table_.at(key).ResetQueryPoolEXT;
     }
   }
@@ -259,8 +259,8 @@ class DispatchTable {
     void* key = GetDispatchTableKey(dispatchable_object);
     {
       absl::ReaderMutexLock lock(&mutex_);
-      CHECK(device_dispatch_table_.contains(key));
-      CHECK(device_dispatch_table_.at(key).GetQueryPoolResults != nullptr);
+      ORBIT_CHECK(device_dispatch_table_.contains(key));
+      ORBIT_CHECK(device_dispatch_table_.at(key).GetQueryPoolResults != nullptr);
       return device_dispatch_table_.at(key).GetQueryPoolResults;
     }
   }
@@ -270,8 +270,8 @@ class DispatchTable {
     void* key = GetDispatchTableKey(dispatchable_object);
     {
       absl::ReaderMutexLock lock(&mutex_);
-      CHECK(device_dispatch_table_.contains(key));
-      CHECK(device_dispatch_table_.at(key).CmdWriteTimestamp != nullptr);
+      ORBIT_CHECK(device_dispatch_table_.contains(key));
+      ORBIT_CHECK(device_dispatch_table_.at(key).CmdWriteTimestamp != nullptr);
       return device_dispatch_table_.at(key).CmdWriteTimestamp;
     }
   }
@@ -284,8 +284,8 @@ class DispatchTable {
     void* key = GetDispatchTableKey(dispatchable_object);
     {
       absl::ReaderMutexLock lock(&mutex_);
-      CHECK(device_dispatch_table_.contains(key));
-      CHECK(device_dispatch_table_.at(key).CmdDebugMarkerBeginEXT != nullptr);
+      ORBIT_CHECK(device_dispatch_table_.contains(key));
+      ORBIT_CHECK(device_dispatch_table_.at(key).CmdDebugMarkerBeginEXT != nullptr);
       return device_dispatch_table_.at(key).CmdDebugMarkerBeginEXT;
     }
   }
@@ -295,8 +295,8 @@ class DispatchTable {
     void* key = GetDispatchTableKey(dispatchable_object);
     {
       absl::ReaderMutexLock lock(&mutex_);
-      CHECK(device_dispatch_table_.contains(key));
-      CHECK(device_dispatch_table_.at(key).CmdDebugMarkerEndEXT != nullptr);
+      ORBIT_CHECK(device_dispatch_table_.contains(key));
+      ORBIT_CHECK(device_dispatch_table_.at(key).CmdDebugMarkerEndEXT != nullptr);
       return device_dispatch_table_.at(key).CmdDebugMarkerEndEXT;
     }
   }
@@ -306,8 +306,8 @@ class DispatchTable {
     void* key = GetDispatchTableKey(dispatchable_object);
     {
       absl::ReaderMutexLock lock(&mutex_);
-      CHECK(device_dispatch_table_.contains(key));
-      CHECK(device_dispatch_table_.at(key).CmdDebugMarkerInsertEXT != nullptr);
+      ORBIT_CHECK(device_dispatch_table_.contains(key));
+      ORBIT_CHECK(device_dispatch_table_.at(key).CmdDebugMarkerInsertEXT != nullptr);
       return device_dispatch_table_.at(key).CmdDebugMarkerInsertEXT;
     }
   }
@@ -318,8 +318,8 @@ class DispatchTable {
     void* key = GetDispatchTableKey(dispatchable_object);
     {
       absl::ReaderMutexLock lock(&mutex_);
-      CHECK(device_dispatch_table_.contains(key));
-      CHECK(device_dispatch_table_.at(key).DebugMarkerSetObjectTagEXT != nullptr);
+      ORBIT_CHECK(device_dispatch_table_.contains(key));
+      ORBIT_CHECK(device_dispatch_table_.at(key).DebugMarkerSetObjectTagEXT != nullptr);
       return device_dispatch_table_.at(key).DebugMarkerSetObjectTagEXT;
     }
   }
@@ -330,8 +330,8 @@ class DispatchTable {
     void* key = GetDispatchTableKey(dispatchable_object);
     {
       absl::ReaderMutexLock lock(&mutex_);
-      CHECK(device_dispatch_table_.contains(key));
-      CHECK(device_dispatch_table_.at(key).DebugMarkerSetObjectNameEXT != nullptr);
+      ORBIT_CHECK(device_dispatch_table_.contains(key));
+      ORBIT_CHECK(device_dispatch_table_.at(key).DebugMarkerSetObjectNameEXT != nullptr);
       return device_dispatch_table_.at(key).DebugMarkerSetObjectNameEXT;
     }
   }
@@ -341,7 +341,7 @@ class DispatchTable {
     void* key = GetDispatchTableKey(dispatchable_object);
     {
       absl::ReaderMutexLock lock(&mutex_);
-      CHECK(device_supports_debug_marker_extension_.contains(key));
+      ORBIT_CHECK(device_supports_debug_marker_extension_.contains(key));
       return device_supports_debug_marker_extension_.at(key);
     }
   }
@@ -355,8 +355,8 @@ class DispatchTable {
     void* key = GetDispatchTableKey(dispatchable_object);
     {
       absl::ReaderMutexLock lock(&mutex_);
-      CHECK(device_dispatch_table_.contains(key));
-      CHECK(device_dispatch_table_.at(key).CmdBeginDebugUtilsLabelEXT != nullptr);
+      ORBIT_CHECK(device_dispatch_table_.contains(key));
+      ORBIT_CHECK(device_dispatch_table_.at(key).CmdBeginDebugUtilsLabelEXT != nullptr);
       return device_dispatch_table_.at(key).CmdBeginDebugUtilsLabelEXT;
     }
   }
@@ -366,8 +366,8 @@ class DispatchTable {
     void* key = GetDispatchTableKey(dispatchable_object);
     {
       absl::ReaderMutexLock lock(&mutex_);
-      CHECK(device_dispatch_table_.contains(key));
-      CHECK(device_dispatch_table_.at(key).CmdEndDebugUtilsLabelEXT != nullptr);
+      ORBIT_CHECK(device_dispatch_table_.contains(key));
+      ORBIT_CHECK(device_dispatch_table_.at(key).CmdEndDebugUtilsLabelEXT != nullptr);
       return device_dispatch_table_.at(key).CmdEndDebugUtilsLabelEXT;
     }
   }
@@ -378,8 +378,8 @@ class DispatchTable {
     void* key = GetDispatchTableKey(dispatchable_object);
     {
       absl::ReaderMutexLock lock(&mutex_);
-      CHECK(device_dispatch_table_.contains(key));
-      CHECK(device_dispatch_table_.at(key).CmdInsertDebugUtilsLabelEXT != nullptr);
+      ORBIT_CHECK(device_dispatch_table_.contains(key));
+      ORBIT_CHECK(device_dispatch_table_.at(key).CmdInsertDebugUtilsLabelEXT != nullptr);
       return device_dispatch_table_.at(key).CmdInsertDebugUtilsLabelEXT;
     }
   }
@@ -390,8 +390,8 @@ class DispatchTable {
     void* key = GetDispatchTableKey(dispatchable_object);
     {
       absl::ReaderMutexLock lock(&mutex_);
-      CHECK(device_dispatch_table_.contains(key));
-      CHECK(device_dispatch_table_.at(key).SetDebugUtilsObjectNameEXT != nullptr);
+      ORBIT_CHECK(device_dispatch_table_.contains(key));
+      ORBIT_CHECK(device_dispatch_table_.at(key).SetDebugUtilsObjectNameEXT != nullptr);
       return device_dispatch_table_.at(key).SetDebugUtilsObjectNameEXT;
     }
   }
@@ -401,8 +401,8 @@ class DispatchTable {
     void* key = GetDispatchTableKey(dispatchable_object);
     {
       absl::ReaderMutexLock lock(&mutex_);
-      CHECK(device_dispatch_table_.contains(key));
-      CHECK(device_dispatch_table_.at(key).SetDebugUtilsObjectTagEXT != nullptr);
+      ORBIT_CHECK(device_dispatch_table_.contains(key));
+      ORBIT_CHECK(device_dispatch_table_.at(key).SetDebugUtilsObjectTagEXT != nullptr);
       return device_dispatch_table_.at(key).SetDebugUtilsObjectTagEXT;
     }
   }
@@ -413,8 +413,8 @@ class DispatchTable {
     void* key = GetDispatchTableKey(dispatchable_object);
     {
       absl::ReaderMutexLock lock(&mutex_);
-      CHECK(device_dispatch_table_.contains(key));
-      CHECK(device_dispatch_table_.at(key).QueueBeginDebugUtilsLabelEXT != nullptr);
+      ORBIT_CHECK(device_dispatch_table_.contains(key));
+      ORBIT_CHECK(device_dispatch_table_.at(key).QueueBeginDebugUtilsLabelEXT != nullptr);
       return device_dispatch_table_.at(key).QueueBeginDebugUtilsLabelEXT;
     }
   }
@@ -425,8 +425,8 @@ class DispatchTable {
     void* key = GetDispatchTableKey(dispatchable_object);
     {
       absl::ReaderMutexLock lock(&mutex_);
-      CHECK(device_dispatch_table_.contains(key));
-      CHECK(device_dispatch_table_.at(key).QueueEndDebugUtilsLabelEXT != nullptr);
+      ORBIT_CHECK(device_dispatch_table_.contains(key));
+      ORBIT_CHECK(device_dispatch_table_.at(key).QueueEndDebugUtilsLabelEXT != nullptr);
       return device_dispatch_table_.at(key).QueueEndDebugUtilsLabelEXT;
     }
   }
@@ -437,8 +437,8 @@ class DispatchTable {
     void* key = GetDispatchTableKey(dispatchable_object);
     {
       absl::ReaderMutexLock lock(&mutex_);
-      CHECK(device_dispatch_table_.contains(key));
-      CHECK(device_dispatch_table_.at(key).QueueInsertDebugUtilsLabelEXT != nullptr);
+      ORBIT_CHECK(device_dispatch_table_.contains(key));
+      ORBIT_CHECK(device_dispatch_table_.at(key).QueueInsertDebugUtilsLabelEXT != nullptr);
       return device_dispatch_table_.at(key).QueueInsertDebugUtilsLabelEXT;
     }
   }
@@ -449,8 +449,8 @@ class DispatchTable {
     void* key = GetDispatchTableKey(dispatchable_object);
     {
       absl::ReaderMutexLock lock(&mutex_);
-      CHECK(instance_dispatch_table_.contains(key));
-      CHECK(instance_dispatch_table_.at(key).CreateDebugUtilsMessengerEXT != nullptr);
+      ORBIT_CHECK(instance_dispatch_table_.contains(key));
+      ORBIT_CHECK(instance_dispatch_table_.at(key).CreateDebugUtilsMessengerEXT != nullptr);
       return instance_dispatch_table_.at(key).CreateDebugUtilsMessengerEXT;
     }
   }
@@ -461,8 +461,8 @@ class DispatchTable {
     void* key = GetDispatchTableKey(dispatchable_object);
     {
       absl::ReaderMutexLock lock(&mutex_);
-      CHECK(instance_dispatch_table_.contains(key));
-      CHECK(instance_dispatch_table_.at(key).DestroyDebugUtilsMessengerEXT != nullptr);
+      ORBIT_CHECK(instance_dispatch_table_.contains(key));
+      ORBIT_CHECK(instance_dispatch_table_.at(key).DestroyDebugUtilsMessengerEXT != nullptr);
       return instance_dispatch_table_.at(key).DestroyDebugUtilsMessengerEXT;
     }
   }
@@ -473,8 +473,8 @@ class DispatchTable {
     void* key = GetDispatchTableKey(dispatchable_object);
     {
       absl::ReaderMutexLock lock(&mutex_);
-      CHECK(instance_dispatch_table_.contains(key));
-      CHECK(instance_dispatch_table_.at(key).SubmitDebugUtilsMessageEXT != nullptr);
+      ORBIT_CHECK(instance_dispatch_table_.contains(key));
+      ORBIT_CHECK(instance_dispatch_table_.at(key).SubmitDebugUtilsMessageEXT != nullptr);
       return instance_dispatch_table_.at(key).SubmitDebugUtilsMessageEXT;
     }
   }
@@ -484,7 +484,7 @@ class DispatchTable {
     void* key = GetDispatchTableKey(dispatchable_object);
     {
       absl::ReaderMutexLock lock(&mutex_);
-      CHECK(device_supports_debug_utils_extension_.contains(key));
+      ORBIT_CHECK(device_supports_debug_utils_extension_.contains(key));
       return device_supports_debug_utils_extension_.at(key);
     }
   }
@@ -493,7 +493,7 @@ class DispatchTable {
     void* key = GetDispatchTableKey(instance);
     {
       absl::ReaderMutexLock lock(&mutex_);
-      CHECK(instance_supports_debug_utils_extension_.contains(key));
+      ORBIT_CHECK(instance_supports_debug_utils_extension_.contains(key));
       return instance_supports_debug_utils_extension_.at(key);
     }
   }
@@ -507,8 +507,8 @@ class DispatchTable {
     void* key = GetDispatchTableKey(dispatchable_object);
     {
       absl::ReaderMutexLock lock(&mutex_);
-      CHECK(instance_dispatch_table_.contains(key));
-      CHECK(instance_dispatch_table_.at(key).CreateDebugReportCallbackEXT != nullptr);
+      ORBIT_CHECK(instance_dispatch_table_.contains(key));
+      ORBIT_CHECK(instance_dispatch_table_.at(key).CreateDebugReportCallbackEXT != nullptr);
       return instance_dispatch_table_.at(key).CreateDebugReportCallbackEXT;
     }
   }
@@ -519,8 +519,8 @@ class DispatchTable {
     void* key = GetDispatchTableKey(dispatchable_object);
     {
       absl::ReaderMutexLock lock(&mutex_);
-      CHECK(instance_dispatch_table_.contains(key));
-      CHECK(instance_dispatch_table_.at(key).DestroyDebugReportCallbackEXT != nullptr);
+      ORBIT_CHECK(instance_dispatch_table_.contains(key));
+      ORBIT_CHECK(instance_dispatch_table_.at(key).DestroyDebugReportCallbackEXT != nullptr);
       return instance_dispatch_table_.at(key).DestroyDebugReportCallbackEXT;
     }
   }
@@ -530,8 +530,8 @@ class DispatchTable {
     void* key = GetDispatchTableKey(dispatchable_object);
     {
       absl::ReaderMutexLock lock(&mutex_);
-      CHECK(instance_dispatch_table_.contains(key));
-      CHECK(instance_dispatch_table_.at(key).DebugReportMessageEXT != nullptr);
+      ORBIT_CHECK(instance_dispatch_table_.contains(key));
+      ORBIT_CHECK(instance_dispatch_table_.at(key).DebugReportMessageEXT != nullptr);
       return instance_dispatch_table_.at(key).DebugReportMessageEXT;
     }
   }
@@ -540,7 +540,7 @@ class DispatchTable {
     void* key = GetDispatchTableKey(instance);
     {
       absl::ReaderMutexLock lock(&mutex_);
-      CHECK(instance_supports_debug_report_extension_.contains(key));
+      ORBIT_CHECK(instance_supports_debug_report_extension_.contains(key));
       return instance_supports_debug_report_extension_.at(key);
     }
   }
@@ -550,7 +550,7 @@ class DispatchTable {
     void* key = GetDispatchTableKey(instance_dispatchable_object);
     {
       absl::ReaderMutexLock lock(&mutex_);
-      CHECK(instance_dispatchable_object_to_instance_.contains(key));
+      ORBIT_CHECK(instance_dispatchable_object_to_instance_.contains(key));
       return instance_dispatchable_object_to_instance_.at(key);
     }
   }

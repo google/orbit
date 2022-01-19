@@ -70,7 +70,7 @@ TracerImpl::TracerImpl(
       trace_gpu_driver_{capture_options.trace_gpu_driver()},
       user_space_instrumentation_addresses_{std::move(user_space_instrumentation_addresses)},
       listener_{listener} {
-  CHECK(listener_ != nullptr);
+  ORBIT_CHECK(listener_ != nullptr);
 
   uint32_t stack_dump_size = capture_options.stack_dump_size();
   if (stack_dump_size == std::numeric_limits<uint16_t>::max()) {
@@ -78,12 +78,12 @@ TracerImpl::TracerImpl(
     stack_dump_size = (unwinding_method_ == CaptureOptions::kDwarf)
                           ? kMaxStackSampleUserSize
                           : kDefaultStackSampleUserSizeFramePointer;
-    LOG("No sample stack dump size was set; assigning to default: %u", stack_dump_size);
+    ORBIT_LOG("No sample stack dump size was set; assigning to default: %u", stack_dump_size);
   } else if (stack_dump_size > kMaxStackSampleUserSize || stack_dump_size == 0) {
     // TODO(b/210439638): Support a stack_dump_size of 0. It might be valid for frame pointer
     //  sampling without leaf function patching.
-    ERROR("Invalid sample stack dump size: %u; reassigning to default: %u", stack_dump_size,
-          kMaxStackSampleUserSize);
+    ORBIT_ERROR("Invalid sample stack dump size: %u; reassigning to default: %u", stack_dump_size,
+                kMaxStackSampleUserSize);
     stack_dump_size = kMaxStackSampleUserSize;
   }
   stack_dump_size_ = static_cast<uint16_t>(stack_dump_size);
@@ -120,7 +120,7 @@ void TracerImpl::Start() {
 
 void TracerImpl::Stop() {
   stop_run_thread_ = true;
-  CHECK(run_thread_.joinable());
+  ORBIT_CHECK(run_thread_.joinable());
   run_thread_.join();
 }
 
@@ -196,7 +196,8 @@ bool TracerImpl::OpenUprobes(const orbit_linux_tracing::Function& function,
       fd = uprobes_retaddr_event_open(module, offset, /*pid=*/-1, cpu);
     }
     if (fd < 0) {
-      ERROR("Opening uprobe %s+%#x on cpu %d", function.file_path(), function.file_offset(), cpu);
+      ORBIT_ERROR("Opening uprobe %s+%#x on cpu %d", function.file_path(), function.file_offset(),
+                  cpu);
       return false;
     }
     (*fds_per_cpu)[cpu] = fd;
@@ -218,8 +219,8 @@ bool TracerImpl::OpenUretprobes(const orbit_linux_tracing::Function& function,
       fd = uretprobes_event_open(module, offset, /*pid=*/-1, cpu);
     }
     if (fd < 0) {
-      ERROR("Opening uretprobe %s+%#x on cpu %d", function.file_path(), function.file_offset(),
-            cpu);
+      ORBIT_ERROR("Opening uretprobe %s+%#x on cpu %d", function.file_path(),
+                  function.file_offset(), cpu);
       return false;
     }
     (*fds_per_cpu)[cpu] = fd;
@@ -326,7 +327,7 @@ bool TracerImpl::OpenMmapTask(const std::vector<int32_t>& cpus) {
       mmap_task_tracing_fds.push_back(mmap_task_fd);
       mmap_task_ring_buffers.push_back(std::move(mmap_task_ring_buffer));
     } else {
-      ERROR("Opening mmap, fork, and exit events for cpu %d", cpu);
+      ORBIT_ERROR("Opening mmap, fork, and exit events for cpu %d", cpu);
       CloseFileDescriptors(mmap_task_tracing_fds);
       return false;
     }
@@ -343,9 +344,9 @@ bool TracerImpl::OpenMmapTask(const std::vector<int32_t>& cpus) {
 
 bool TracerImpl::OpenSampling(const std::vector<int32_t>& cpus) {
   ORBIT_SCOPE_FUNCTION;
-  CHECK(sampling_period_ns_.has_value());
-  CHECK(unwinding_method_ == CaptureOptions::kFramePointers ||
-        unwinding_method_ == CaptureOptions::kDwarf);
+  ORBIT_CHECK(sampling_period_ns_.has_value());
+  ORBIT_CHECK(unwinding_method_ == CaptureOptions::kFramePointers ||
+              unwinding_method_ == CaptureOptions::kDwarf);
 
   std::vector<int> sampling_tracing_fds;
   std::vector<PerfEventRingBuffer> sampling_ring_buffers;
@@ -362,7 +363,7 @@ bool TracerImpl::OpenSampling(const std::vector<int32_t>& cpus) {
         break;
       case CaptureOptions::kUndefined:
       default:
-        UNREACHABLE();
+        ORBIT_UNREACHABLE();
         CloseFileDescriptors(sampling_tracing_fds);
         return false;
     }
@@ -374,7 +375,7 @@ bool TracerImpl::OpenSampling(const std::vector<int32_t>& cpus) {
       sampling_tracing_fds.push_back(sampling_fd);
       sampling_ring_buffers.push_back(std::move(sampling_ring_buffer));
     } else {
-      ERROR("Opening sampling for cpu %d", cpu);
+      ORBIT_ERROR("Opening sampling for cpu %d", cpu);
       CloseFileDescriptors(sampling_tracing_fds);
       return false;
     }
@@ -451,7 +452,8 @@ static bool OpenFileDescriptorsAndRingBuffersForAllTracepoints(
     for (int32_t cpu : cpus) {
       int tracepoint_fd = tracepoint_event_open(tracepoint_category, tracepoint_name, -1, cpu);
       if (tracepoint_fd == -1) {
-        ERROR("Opening %s:%s tracepoint for cpu %d", tracepoint_category, tracepoint_name, cpu);
+        ORBIT_ERROR("Opening %s:%s tracepoint for cpu %d", tracepoint_category, tracepoint_name,
+                    cpu);
         tracepoint_event_open_errors = true;
         break;
       }
@@ -632,7 +634,7 @@ void TracerImpl::Startup() {
   // will be scheduled on.
   std::vector<int32_t> cpuset_cpus = GetCpusetCpus(target_pid_);
   if (cpuset_cpus.empty()) {
-    ERROR("Could not read cpuset");
+    ORBIT_ERROR("Could not read cpuset");
     cpuset_cpus = all_cpus;
   }
 
@@ -693,7 +695,7 @@ void TracerImpl::Startup() {
     if (OpenGpuTracepoints(all_cpus)) {
       InitGpuTracepointEventVisitor();
     } else {
-      LOG("There were errors opening GPU tracepoint events");
+      ORBIT_LOG("There were errors opening GPU tracepoint events");
     }
   }
 
@@ -703,9 +705,9 @@ void TracerImpl::Startup() {
   }
 
   if (perf_event_open_errors) {
-    ERROR("With perf_event_open: did you forget to run as root?");
-    LOG("In particular, there were errors with opening %s",
-        absl::StrJoin(perf_event_open_error_details, ", "));
+    ORBIT_ERROR("With perf_event_open: did you forget to run as root?");
+    ORBIT_LOG("In particular, there were errors with opening %s",
+              absl::StrJoin(perf_event_open_error_details, ", "));
     orbit_grpc_protos::ErrorsWithPerfEventOpenEvent errors_with_perf_event_open_event;
     errors_with_perf_event_open_event.set_timestamp_ns(orbit_base::CaptureTimestampNs());
     for (std::string& detail : perf_event_open_error_details) {
@@ -730,7 +732,8 @@ void TracerImpl::Startup() {
     *modules_snapshot.mutable_modules() = {modules.begin(), modules.end()};
     listener_->OnModulesSnapshot(std::move(modules_snapshot));
   } else {
-    ERROR("Unable to load modules for %d: %s", target_pid_, modules_or_error.error().message());
+    ORBIT_ERROR("Unable to load modules for %d: %s", target_pid_,
+                modules_or_error.error().message());
   }
 
   // Get the initial thread names to notify the listener_.
@@ -780,7 +783,7 @@ void TracerImpl::Shutdown() {
     ORBIT_SCOPE_WITH_COLOR(
         absl::StrFormat("Closing %d file descriptors", tracing_fds_.size()).c_str(),
         kOrbitColorRed);
-    SCOPED_TIMED_LOG("Closing %d file descriptors", tracing_fds_.size());
+    ORBIT_SCOPED_TIMED_LOG("Closing %d file descriptors", tracing_fds_.size());
     for (int fd : tracing_fds_) {
       ORBIT_SCOPE("Closing fd");
       close(fd);
@@ -799,10 +802,11 @@ void TracerImpl::ProcessOneRecord(PerfEventRingBuffer* ring_buffer) {
   // perf_event_type in linux/perf_event.h.
   switch (header.type) {
     case PERF_RECORD_SWITCH:
-      ERROR("Unexpected PERF_RECORD_SWITCH in ring buffer '%s'", ring_buffer->GetName());
+      ORBIT_ERROR("Unexpected PERF_RECORD_SWITCH in ring buffer '%s'", ring_buffer->GetName());
       break;
     case PERF_RECORD_SWITCH_CPU_WIDE:
-      ERROR("Unexpected PERF_RECORD_SWITCH_CPU_WIDE in ring buffer '%s'", ring_buffer->GetName());
+      ORBIT_ERROR("Unexpected PERF_RECORD_SWITCH_CPU_WIDE in ring buffer '%s'",
+                  ring_buffer->GetName());
       break;
     case PERF_RECORD_FORK:
       event_timestamp_ns = ProcessForkEventAndReturnTimestamp(header, ring_buffer);
@@ -824,8 +828,8 @@ void TracerImpl::ProcessOneRecord(PerfEventRingBuffer* ring_buffer) {
       event_timestamp_ns = ProcessThrottleUnthrottleEventAndReturnTimestamp(header, ring_buffer);
       break;
     default:
-      ERROR("Unexpected perf_event_header::type in ring buffer '%s': %u", ring_buffer->GetName(),
-            header.type);
+      ORBIT_ERROR("Unexpected perf_event_header::type in ring buffer '%s': %u",
+                  ring_buffer->GetName(), header.type);
       ring_buffer->SkipRecord(header);
       break;
   }
@@ -984,16 +988,16 @@ uint64_t TracerImpl::ProcessSampleEventAndReturnTimestamp(const perf_event_heade
   bool is_dma_fence_signaled_event = dma_fence_signaled_ids_.contains(stream_id);
   bool is_user_instrumented_tracepoint = ids_to_tracepoint_info_.contains(stream_id);
 
-  CHECK(is_uprobe + is_uretprobe + is_stack_sample + is_callchain_sample + is_task_newtask +
-            is_task_rename + is_sched_switch + is_sched_wakeup + is_amdgpu_cs_ioctl_event +
-            is_amdgpu_sched_run_job_event + is_dma_fence_signaled_event +
-            is_user_instrumented_tracepoint <=
-        1);
+  ORBIT_CHECK(is_uprobe + is_uretprobe + is_stack_sample + is_callchain_sample + is_task_newtask +
+                  is_task_rename + is_sched_switch + is_sched_wakeup + is_amdgpu_cs_ioctl_event +
+                  is_amdgpu_sched_run_job_event + is_dma_fence_signaled_event +
+                  is_user_instrumented_tracepoint <=
+              1);
 
   int fd = ring_buffer->GetFileDescriptor();
 
   if (is_uprobe) {
-    CHECK(header.size == sizeof(perf_event_sp_ip_8bytes_sample));
+    ORBIT_CHECK(header.size == sizeof(perf_event_sp_ip_8bytes_sample));
     perf_event_sp_ip_8bytes_sample ring_buffer_record;
     ring_buffer->ConsumeRecord(header, &ring_buffer_record);
 
@@ -1021,7 +1025,7 @@ uint64_t TracerImpl::ProcessSampleEventAndReturnTimestamp(const perf_event_heade
     ++stats_.uprobes_count;
 
   } else if (is_uprobe_with_args) {
-    CHECK(header.size == sizeof(perf_event_sp_ip_arguments_8bytes_sample));
+    ORBIT_CHECK(header.size == sizeof(perf_event_sp_ip_arguments_8bytes_sample));
     perf_event_sp_ip_arguments_8bytes_sample ring_buffer_record;
     ring_buffer->ConsumeRecord(header, &ring_buffer_record);
 
@@ -1048,7 +1052,7 @@ uint64_t TracerImpl::ProcessSampleEventAndReturnTimestamp(const perf_event_heade
     ++stats_.uprobes_count;
 
   } else if (is_uretprobe) {
-    CHECK(header.size == sizeof(perf_event_empty_sample));
+    ORBIT_CHECK(header.size == sizeof(perf_event_empty_sample));
     perf_event_empty_sample ring_buffer_record;
     ring_buffer->ConsumeRecord(header, &ring_buffer_record);
 
@@ -1070,7 +1074,7 @@ uint64_t TracerImpl::ProcessSampleEventAndReturnTimestamp(const perf_event_heade
     ++stats_.uprobes_count;
 
   } else if (is_uretprobe_with_retval) {
-    CHECK(header.size == sizeof(perf_event_ax_sample));
+    ORBIT_CHECK(header.size == sizeof(perf_event_ax_sample));
     perf_event_ax_sample ring_buffer_record;
     ring_buffer->ConsumeRecord(header, &ring_buffer_record);
 
@@ -1133,7 +1137,7 @@ uint64_t TracerImpl::ProcessSampleEventAndReturnTimestamp(const perf_event_heade
     ++stats_.sample_count;
 
   } else if (is_task_newtask) {
-    CHECK(header.size == sizeof(perf_event_raw_sample<task_newtask_tracepoint>));
+    ORBIT_CHECK(header.size == sizeof(perf_event_raw_sample<task_newtask_tracepoint>));
     perf_event_raw_sample<task_newtask_tracepoint> ring_buffer_record;
     ring_buffer->ConsumeRecord(header, &ring_buffer_record);
     TaskNewtaskPerfEvent event{
@@ -1153,7 +1157,7 @@ uint64_t TracerImpl::ProcessSampleEventAndReturnTimestamp(const perf_event_heade
     DeferEvent(event);
 
   } else if (is_task_rename) {
-    CHECK(header.size == sizeof(perf_event_raw_sample<task_rename_tracepoint>));
+    ORBIT_CHECK(header.size == sizeof(perf_event_raw_sample<task_rename_tracepoint>));
     perf_event_raw_sample<task_rename_tracepoint> ring_buffer_record;
     ring_buffer->ConsumeRecord(header, &ring_buffer_record);
 
@@ -1172,7 +1176,7 @@ uint64_t TracerImpl::ProcessSampleEventAndReturnTimestamp(const perf_event_heade
     DeferEvent(event);
 
   } else if (is_sched_switch) {
-    CHECK(header.size == sizeof(perf_event_raw_sample<sched_switch_tracepoint>));
+    ORBIT_CHECK(header.size == sizeof(perf_event_raw_sample<sched_switch_tracepoint>));
     perf_event_raw_sample<sched_switch_tracepoint> ring_buffer_record;
     ring_buffer->ConsumeRecord(header, &ring_buffer_record);
 
@@ -1235,7 +1239,7 @@ uint64_t TracerImpl::ProcessSampleEventAndReturnTimestamp(const perf_event_heade
 
     listener_->OnTracepointEvent(std::move(tracepoint_event));
   } else {
-    ERROR("PERF_EVENT_SAMPLE with unexpected stream_id: %lu", stream_id);
+    ORBIT_ERROR("PERF_EVENT_SAMPLE with unexpected stream_id: %lu", stream_id);
     ring_buffer->SkipRecord(header);
   }
 
@@ -1261,7 +1265,7 @@ uint64_t TracerImpl::ProcessLostEventAndReturnTimestamp(const perf_event_header&
   if (fd_previous_timestamp_ns == 0) {
     // This shouldn't happen because PERF_RECORD_LOST is reported when a ring buffer is full, which
     // means that there were other events in the same ring buffers, and they have already been read.
-    ERROR("Unknown previous timestamp for ring buffer '%s'", ring_buffer->GetName());
+    ORBIT_ERROR("Unknown previous timestamp for ring buffer '%s'", ring_buffer->GetName());
     return timestamp;
   }
 
@@ -1289,15 +1293,15 @@ uint64_t TracerImpl::ProcessThrottleUnthrottleEventAndReturnTimestamp(
   // Simply log throttle/unthrottle events. If they are generated, they are quite low frequency.
   switch (header.type) {
     case PERF_RECORD_THROTTLE:
-      LOG("PERF_RECORD_THROTTLE in ring buffer '%s' at timestamp %u", ring_buffer->GetName(),
-          timestamp_ns);
+      ORBIT_LOG("PERF_RECORD_THROTTLE in ring buffer '%s' at timestamp %u", ring_buffer->GetName(),
+                timestamp_ns);
       break;
     case PERF_RECORD_UNTHROTTLE:
-      LOG("PERF_RECORD_UNTHROTTLE in ring buffer '%s' at timestamp %u", ring_buffer->GetName(),
-          timestamp_ns);
+      ORBIT_LOG("PERF_RECORD_UNTHROTTLE in ring buffer '%s' at timestamp %u",
+                ring_buffer->GetName(), timestamp_ns);
       break;
     default:
-      UNREACHABLE();
+      ORBIT_UNREACHABLE();
   }
 
   return timestamp_ns;
@@ -1411,28 +1415,31 @@ void TracerImpl::PrintStatsIfTimerElapsed() {
 
   double actual_window_s =
       static_cast<double>(timestamp_ns - stats_.event_count_begin_ns) / NS_PER_SECOND;
-  CHECK(actual_window_s > 0.0);
+  ORBIT_CHECK(actual_window_s > 0.0);
 
-  LOG("Events per second (and total) last %.3f s:", actual_window_s);
-  LOG("  sched switches: %.0f/s (%lu)", stats_.sched_switch_count / actual_window_s,
-      stats_.sched_switch_count);
-  LOG("  samples: %.0f/s (%lu)", stats_.sample_count / actual_window_s, stats_.sample_count);
-  LOG("  u(ret)probes: %.0f/s (%lu)", stats_.uprobes_count / actual_window_s, stats_.uprobes_count);
-  LOG("  gpu events: %.0f/s (%lu)", stats_.gpu_events_count / actual_window_s,
-      stats_.gpu_events_count);
+  ORBIT_LOG("Events per second (and total) last %.3f s:", actual_window_s);
+  ORBIT_LOG("  sched switches: %.0f/s (%lu)", stats_.sched_switch_count / actual_window_s,
+            stats_.sched_switch_count);
+  ORBIT_LOG("  samples: %.0f/s (%lu)", stats_.sample_count / actual_window_s, stats_.sample_count);
+  ORBIT_LOG("  u(ret)probes: %.0f/s (%lu)", stats_.uprobes_count / actual_window_s,
+            stats_.uprobes_count);
+  ORBIT_LOG("  gpu events: %.0f/s (%lu)", stats_.gpu_events_count / actual_window_s,
+            stats_.gpu_events_count);
 
   if (stats_.lost_count_per_buffer.empty()) {
-    LOG("  lost: %.0f/s (%lu)", stats_.lost_count / actual_window_s, stats_.lost_count);
+    ORBIT_LOG("  lost: %.0f/s (%lu)", stats_.lost_count / actual_window_s, stats_.lost_count);
   } else {
-    LOG("  LOST: %.0f/s (%lu), of which:", stats_.lost_count / actual_window_s, stats_.lost_count);
+    ORBIT_LOG("  LOST: %.0f/s (%lu), of which:", stats_.lost_count / actual_window_s,
+              stats_.lost_count);
     for (const auto& buffer_and_lost_count : stats_.lost_count_per_buffer) {
-      LOG("    from %s: %.0f/s (%lu)", buffer_and_lost_count.first->GetName().c_str(),
-          buffer_and_lost_count.second / actual_window_s, buffer_and_lost_count.second);
+      ORBIT_LOG("    from %s: %.0f/s (%lu)", buffer_and_lost_count.first->GetName().c_str(),
+                buffer_and_lost_count.second / actual_window_s, buffer_and_lost_count.second);
     }
   }
 
   uint64_t discarded_out_of_order_count = stats_.discarded_out_of_order_count;
-  LOG("  %s: %.0f/s (%lu)",
+  ORBIT_LOG(
+      "  %s: %.0f/s (%lu)",
       discarded_out_of_order_count == 0 ? "discarded as out of order" : "DISCARDED AS OUT OF ORDER",
       discarded_out_of_order_count / actual_window_s, discarded_out_of_order_count);
 
@@ -1440,17 +1447,17 @@ void TracerImpl::PrintStatsIfTimerElapsed() {
   static_assert(std::numeric_limits<double>::is_iec559);
 
   uint64_t unwind_error_count = stats_.unwind_error_count;
-  LOG("  unwind errors: %.0f/s (%lu) [%.1f%%]", unwind_error_count / actual_window_s,
-      unwind_error_count, 100.0 * unwind_error_count / stats_.sample_count);
+  ORBIT_LOG("  unwind errors: %.0f/s (%lu) [%.1f%%]", unwind_error_count / actual_window_s,
+            unwind_error_count, 100.0 * unwind_error_count / stats_.sample_count);
   uint64_t discarded_samples_in_uretprobes_count = stats_.samples_in_uretprobes_count;
-  LOG("  samples in u(ret)probes: %.0f/s (%lu) [%.1f%%]",
-      discarded_samples_in_uretprobes_count / actual_window_s,
-      discarded_samples_in_uretprobes_count,
-      100.0 * discarded_samples_in_uretprobes_count / stats_.sample_count);
+  ORBIT_LOG("  samples in u(ret)probes: %.0f/s (%lu) [%.1f%%]",
+            discarded_samples_in_uretprobes_count / actual_window_s,
+            discarded_samples_in_uretprobes_count,
+            100.0 * discarded_samples_in_uretprobes_count / stats_.sample_count);
 
   uint64_t thread_state_count = stats_.thread_state_count;
-  LOG("  target's thread states: %.0f/s (%lu)", thread_state_count / actual_window_s,
-      thread_state_count);
+  ORBIT_LOG("  target's thread states: %.0f/s (%lu)", thread_state_count / actual_window_s,
+            thread_state_count);
   stats_.Reset();
 }
 

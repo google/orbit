@@ -38,8 +38,8 @@ namespace {
   if (IsWow64Process(process_handle, &is_32_bit_process_on_64_bit_os) != 0) {
     return is_32_bit_process_on_64_bit_os != TRUE;
   }
-  ERROR("Calling IsWow64Process for pid %u: %s", GetProcessId(process_handle),
-        orbit_base::GetLastErrorAsString());
+  ORBIT_ERROR("Calling IsWow64Process for pid %u: %s", GetProcessId(process_handle),
+              orbit_base::GetLastErrorAsString());
   return std::nullopt;
 }
 
@@ -58,7 +58,7 @@ namespace {
 [[nodiscard]] inline uint64_t FileTimeDiffNs(FILETIME file_time_0, FILETIME file_time_1) {
   uint64_t t_0 = FiletimeToUint64(file_time_0);
   uint64_t t_1 = FiletimeToUint64(file_time_1);
-  CHECK(t_1 >= t_0);
+  ORBIT_CHECK(t_1 >= t_0);
   constexpr uint64_t kIntervalNs = 100;
   return (t_1 - t_0) * kIntervalNs;
 }
@@ -160,8 +160,8 @@ ErrorMessageOr<void> ProcessListImpl::Refresh() {
       if (handle == nullptr) {
         // "System" processes cannot be opened, track errors to skip further OpenProcess calls.
         process_info.open_process_error = ::GetLastError();
-        ERROR("Calling OpenProcess for %s[%u]: %s", process_name, pid,
-              orbit_base::GetLastErrorAsString());
+        ORBIT_ERROR("Calling OpenProcess for %s[%u]: %s", process_name, pid,
+                    orbit_base::GetLastErrorAsString());
       } else {
         std::optional<bool> result = Is64Bit(handle);
         if (result.has_value()) {
@@ -170,7 +170,7 @@ ErrorMessageOr<void> ProcessListImpl::Refresh() {
 
         DWORD buffer_size = sizeof(full_path);
         if (QueryFullProcessImageNameA(handle, 0, full_path, &buffer_size) == 0) {
-          ERROR("Calling GetModuleFileNameExA for pid %u", pid);
+          ORBIT_ERROR("Calling GetModuleFileNameExA for pid %u", pid);
         }
       }
 
@@ -214,8 +214,8 @@ void ProcessListImpl::UpdateCpuUsage() {
 
     if (process_handle == nullptr) {
       process_info.open_process_error = ::GetLastError();
-      ERROR("Calling OpenProcess for %s[%u]: %s", process.name, pid,
-            orbit_base::GetLastErrorAsString());
+      ORBIT_ERROR("Calling OpenProcess for %s[%u]: %s", process.name, pid,
+                  orbit_base::GetLastErrorAsString());
       continue;
     }
 
@@ -225,8 +225,8 @@ void ProcessListImpl::UpdateCpuUsage() {
     FILETIME user_file_time = {};
     if (GetProcessTimes(process_handle, &creation_file_time, &exit_file_time, &kernel_file_time,
                         &user_file_time) == FALSE) {
-      ERROR("Calling GetProcessTimes for %s[%u]: %s", process.name, process.pid,
-            orbit_base::GetLastErrorAsString());
+      ORBIT_ERROR("Calling GetProcessTimes for %s[%u]: %s", process.name, process.pid,
+                  orbit_base::GetLastErrorAsString());
       continue;
     }
 
@@ -253,7 +253,7 @@ std::unique_ptr<ProcessList> ProcessList::Create() {
   auto process_list = std::make_unique<ProcessListImpl>();
   ErrorMessageOr<void> result = process_list->Refresh();
   if (result.has_error()) {
-    ERROR("Refreshing process list: %s", result.error().message());
+    ORBIT_ERROR("Refreshing process list: %s", result.error().message());
   }
   return std::move(process_list);
 }

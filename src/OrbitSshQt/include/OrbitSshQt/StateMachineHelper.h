@@ -90,17 +90,17 @@ namespace orbit_ssh_qt {
     outcome::result<void> startup() {
       switch(CurrentState()) {
       case State::kInitial:
-        FATAL("Should not happen!");
+        ORBIT_FATAL("Should not happen!");
       case State::kStarting:
-        LOG("About to start!");
+        ORBIT_LOG("About to start!");
         SetState(State::kStarted);
       case State::kStarted:
-        LOG("started!")
+        ORBIT_LOG("started!")
         break;
       case State::kShutdown:
       case State::kDone:
       case State::kError:
-        FATAL("Should not happen!");
+        ORBIT_FATAL("Should not happen!");
       }
 
       return outcome::success();
@@ -110,12 +110,12 @@ namespace orbit_ssh_qt {
       switch(CurrentState()) {
       case State::kInitial:
       case State::kStarting:
-        FATAL("Should not happen!");
+        ORBIT_FATAL("Should not happen!");
       case State::kStarted:
       case State::kShutdown:
       case State::kDone:
       case State::kError:
-        FATAL("Should not happen!");
+        ORBIT_FATAL("Should not happen!");
       }
 
       return outcome::success();
@@ -126,15 +126,15 @@ namespace orbit_ssh_qt {
       case State::kInitial:
       case State::kStarting:
       case State::kStarted:
-        FATAL("Should not happen!");
+        ORBIT_FATAL("Should not happen!");
       case State::kShutdown:
-        LOG("about to shut down!");
+        ORBIT_LOG("about to shut down!");
         SetState(State::kDone);
       case State::kDone:
-        LOG("shutted down!");
+        ORBIT_LOG("shutted down!");
         break;
       case State::kError:
-        FATAL("Should not happen!");
+        ORBIT_FATAL("Should not happen!");
       }
 
       return outcome::success();

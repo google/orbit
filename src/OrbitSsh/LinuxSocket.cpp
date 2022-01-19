@@ -51,7 +51,7 @@ outcome::result<Socket> Socket::Accept() const {
 }
 
 void Socket::PrintWithLastError(const std::string& message) {
-  ERROR("%s: %s", message.c_str(), SafeStrerror(errno));
+  ORBIT_ERROR("%s: %s", message.c_str(), SafeStrerror(errno));
 }
 
 outcome::result<void> Socket::Shutdown() const {

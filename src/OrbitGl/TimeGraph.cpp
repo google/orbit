@@ -127,7 +127,7 @@ double TimeGraph::GetCaptureTimeSpanUs() const {
       capture_min_timestamp_ == std::numeric_limits<uint64_t>::max()) {
     return 0.0;
   }
-  CHECK(capture_min_timestamp_ <= capture_max_timestamp_);
+  ORBIT_CHECK(capture_min_timestamp_ <= capture_max_timestamp_);
   return TicksToMicroseconds(capture_min_timestamp_, capture_max_timestamp_);
 }
 
@@ -322,7 +322,7 @@ void TimeGraph::ProcessTimer(const TimerInfo& timer_info, const InstrumentedFunc
       break;
     }
     default:
-      UNREACHABLE();
+      ORBIT_UNREACHABLE();
   }
 
   RequestUpdate();
@@ -357,7 +357,7 @@ void TimeGraph::ProcessApiTrackValueEvent(const orbit_client_protos::ApiTrackVal
       track->AddValue(time, track_event.data_uint64());
       break;
     default:
-      UNREACHABLE();
+      ORBIT_UNREACHABLE();
   }
 }
 
@@ -400,7 +400,7 @@ void TimeGraph::ProcessPageFaultsTrackingTimer(const TimerInfo& timer_info) {
     uint64_t memory_sampling_period_ms = app_->GetMemorySamplingPeriodMs();
     track = track_manager_->CreateAndGetPageFaultsTrack(cgroup_name, memory_sampling_period_ms);
   }
-  CHECK(track != nullptr);
+  ORBIT_CHECK(track != nullptr);
   track->OnTimer(timer_info);
 }
 
@@ -457,7 +457,7 @@ uint64_t TimeGraph::GetTickFromUs(double micros) const {
 // Select a timer_info. Also move the view in order to assure that the timer_info and its track are
 // visible.
 void TimeGraph::SelectAndMakeVisible(const TimerInfo* timer_info) {
-  CHECK(timer_info != nullptr);
+  ORBIT_CHECK(timer_info != nullptr);
   app_->SelectTimer(timer_info);
   HorizontallyMoveIntoView(VisibilityType::kPartlyVisible, *timer_info);
   VerticallyMoveIntoView(*timer_info);
@@ -493,7 +493,7 @@ const TimerInfo* TimeGraph::FindNextFunctionCall(uint64_t function_address, uint
   uint64_t goal_time = std::numeric_limits<uint64_t>::max();
   std::vector<const TimerChain*> chains = GetAllThreadTrackTimerChains();
   for (const TimerChain* chain : chains) {
-    CHECK(chain != nullptr);
+    ORBIT_CHECK(chain != nullptr);
     for (const auto& block : *chain) {
       if (!block.Intersects(current_time, goal_time)) continue;
       for (uint64_t i = 0; i < block.size(); i++) {
@@ -516,7 +516,7 @@ std::vector<const TimerInfo*> TimeGraph::GetAllTimersForHookedFunction(
   std::vector<const TimerInfo*> timers;
   std::vector<const TimerChain*> chains = GetAllThreadTrackTimerChains();
   for (const TimerChain* chain : chains) {
-    CHECK(chain != nullptr);
+    ORBIT_CHECK(chain != nullptr);
     for (const auto& block : *chain) {
       for (uint64_t i = 0; i < block.size(); i++) {
         const TimerInfo& timer = block[i];
@@ -534,7 +534,7 @@ void TimeGraph::RequestUpdate() {
 
 void TimeGraph::PrepareBatcherAndUpdatePrimitives(PickingMode picking_mode) {
   ORBIT_SCOPE_FUNCTION;
-  CHECK(app_->GetStringManager() != nullptr);
+  ORBIT_CHECK(app_->GetStringManager() != nullptr);
 
   batcher_.StartNewFrame();
 
@@ -690,8 +690,8 @@ void TimeGraph::DrawOverlay(Batcher& batcher, TextRenderer& text_renderer,
 
     uint64_t id_a = timers[k - 1].first;
     uint64_t id_b = timers[k].first;
-    CHECK(iterator_id_to_function_id_.find(id_a) != iterator_id_to_function_id_.end());
-    CHECK(iterator_id_to_function_id_.find(id_b) != iterator_id_to_function_id_.end());
+    ORBIT_CHECK(iterator_id_to_function_id_.find(id_a) != iterator_id_to_function_id_.end());
+    ORBIT_CHECK(iterator_id_to_function_id_.find(id_b) != iterator_id_to_function_id_.end());
     uint64_t function_a_id = iterator_id_to_function_id_.at(id_a);
     uint64_t function_b_id = iterator_id_to_function_id_.at(id_b);
     const CaptureData& capture_data = app_->GetCaptureData();
@@ -699,8 +699,8 @@ void TimeGraph::DrawOverlay(Batcher& batcher, TextRenderer& text_renderer,
         capture_data.GetInstrumentedFunctionById(function_a_id);
     const InstrumentedFunction* function_b =
         capture_data.GetInstrumentedFunctionById(function_b_id);
-    CHECK(function_a != nullptr);
-    CHECK(function_b != nullptr);
+    ORBIT_CHECK(function_a != nullptr);
+    ORBIT_CHECK(function_b != nullptr);
     const std::string& label = GetLabelBetweenIterators(*function_a, *function_b);
     const std::string& time = GetTimeString(*timers[k - 1].second, *timers[k].second);
 
@@ -810,7 +810,7 @@ void TimeGraph::SetThreadFilter(const std::string& filter) {
 }
 
 void TimeGraph::SelectAndZoom(const TimerInfo* timer_info) {
-  CHECK(timer_info);
+  ORBIT_CHECK(timer_info);
   Zoom(*timer_info);
   SelectAndMakeVisible(timer_info);
 }
@@ -842,7 +842,7 @@ void TimeGraph::JumpToNeighborTimer(const TimerInfo* from, JumpDirection jump_di
         break;
       default:
         // Other choices are not implemented.
-        UNREACHABLE();
+        ORBIT_UNREACHABLE();
     }
   }
   if (jump_direction == JumpDirection::kNext) {
@@ -857,7 +857,7 @@ void TimeGraph::JumpToNeighborTimer(const TimerInfo* from, JumpDirection jump_di
         goal = FindNextFunctionCall(function_id, current_time, thread_id);
         break;
       default:
-        UNREACHABLE();
+        ORBIT_UNREACHABLE();
     }
   }
   if (jump_direction == JumpDirection::kTop) {

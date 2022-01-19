@@ -33,7 +33,7 @@ std::vector<ModuleData*> ModuleManager::AddOrUpdateModules(
     auto module_it = module_map_.find(module_id);
     if (module_it == module_map_.end()) {
       const bool success = module_map_.try_emplace(module_id, module_info).second;
-      CHECK(success);
+      ORBIT_CHECK(success);
     } else {
       ModuleData& module = module_it->second;
       if (module.UpdateIfChangedAndUnload(module_info)) {
@@ -56,7 +56,7 @@ std::vector<ModuleData*> ModuleManager::AddOrUpdateNotLoadedModules(
     auto module_it = module_map_.find(module_id);
     if (module_it == module_map_.end()) {
       const bool success = module_map_.try_emplace(module_id, module_info).second;
-      CHECK(success);
+      ORBIT_CHECK(success);
     } else {
       ModuleData& module = module_it->second;
       if (!module.UpdateIfChangedAndNotLoaded(module_info)) {

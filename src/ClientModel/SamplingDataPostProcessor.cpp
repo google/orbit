@@ -135,7 +135,7 @@ PostProcessedSamplingData SamplingDataPostProcessor::ProcessSamples(
   // Unique call stacks and per thread data
   callstack_data.ForEachCallstackEvent(
       [this, &callstack_data, generate_summary](const CallstackEvent& event) {
-        CHECK(callstack_data.HasCallstack(event.callstack_id()));
+        ORBIT_CHECK(callstack_data.HasCallstack(event.callstack_id()));
         const orbit_client_protos::CallstackInfo* callstack_info =
             callstack_data.GetCallstack(event.callstack_id());
 
@@ -143,7 +143,7 @@ PostProcessedSamplingData SamplingDataPostProcessor::ProcessSamples(
         // only one known to be correct. Note that, in the vast majority of cases, the innermost
         // frame is also the only one available.
         absl::flat_hash_set<uint64_t> unique_frames;
-        CHECK(!callstack_info->frames().empty());
+        ORBIT_CHECK(!callstack_info->frames().empty());
         if (callstack_info->type() == CallstackInfo::kComplete) {
           for (uint64_t frame : callstack_info->frames()) {
             unique_frames.insert(frame);
@@ -183,7 +183,7 @@ PostProcessedSamplingData SamplingDataPostProcessor::ProcessSamples(
       const CallstackInfo& resolved_callstack = id_to_resolved_callstack_[resolved_callstack_id];
 
       // "Exclusive" stat.
-      CHECK(!resolved_callstack.frames().empty());
+      ORBIT_CHECK(!resolved_callstack.frames().empty());
       thread_sample_data->resolved_address_to_exclusive_count[resolved_callstack.frames(0)] +=
           callstack_count;
 
@@ -255,7 +255,7 @@ void SamplingDataPostProcessor::ResolveCallstacks(const CallstackData& callstack
         MapAddressToFunctionAddress(address, capture_data);
       }
       auto function_address_it = exact_address_to_function_address_.find(address);
-      CHECK(function_address_it != exact_address_to_function_address_.end());
+      ORBIT_CHECK(function_address_it != exact_address_to_function_address_.end());
       resolved_callstack_frames.push_back(function_address_it->second);
     }
 
@@ -280,7 +280,7 @@ void SamplingDataPostProcessor::ResolveCallstacks(const CallstackData& callstack
         resolved_callstack_frames, resolved_callstack_type});
     if (it == resolved_callstack_to_id_.end()) {
       resolved_callstack_id = callstack_id;
-      CHECK(!id_to_resolved_callstack_.contains(resolved_callstack_id));
+      ORBIT_CHECK(!id_to_resolved_callstack_.contains(resolved_callstack_id));
 
       CallstackInfo resolved_callstack;
       *resolved_callstack.mutable_frames() = {resolved_callstack_frames.begin(),

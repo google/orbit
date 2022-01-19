@@ -106,7 +106,7 @@ std::string CGroupAndProcessMemoryTrack::GetLegendTooltips(size_t legend_index) 
           "<i>/sys/fs/cgroup/memory/$0/memory.limit_in_bytes</i>",
           cgroup_name_);
     default:
-      UNREACHABLE();
+      ORBIT_UNREACHABLE();
   }
 }
 

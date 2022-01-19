@@ -27,8 +27,8 @@ class StadiaTarget {
       : connection_(std::move(connection)),
         process_manager_(std::move(process_manager)),
         process_(std::move(process)) {
-    CHECK(process_manager_ != nullptr);
-    CHECK(process_ != nullptr);
+    ORBIT_CHECK(process_manager_ != nullptr);
+    ORBIT_CHECK(process_ != nullptr);
   }
   [[nodiscard]] const StadiaConnection* GetConnection() const { return &connection_; }
   [[nodiscard]] orbit_client_services::ProcessManager* GetProcessManager() const {
@@ -59,8 +59,8 @@ class LocalTarget {
       : connection_(connection),
         process_manager_(std::move(process_manager)),
         process_(std::move(process)) {
-    CHECK(process_manager_ != nullptr);
-    CHECK(process_ != nullptr);
+    ORBIT_CHECK(process_manager_ != nullptr);
+    ORBIT_CHECK(process_ != nullptr);
   }
   [[nodiscard]] const LocalConnection* GetConnection() const { return &connection_; }
   [[nodiscard]] orbit_client_services::ProcessManager* GetProcessManager() const {

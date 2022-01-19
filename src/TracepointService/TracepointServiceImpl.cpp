@@ -14,7 +14,7 @@ namespace orbit_tracepoint_service {
 grpc::Status TracepointServiceImpl::GetTracepointList(grpc::ServerContext* /*context*/,
                                                       const GetTracepointListRequest* /*request*/,
                                                       GetTracepointListResponse* response) {
-  LOG("Sending tracepoints");
+  ORBIT_LOG("Sending tracepoints");
 
   const auto tracepoint_infos = ReadTracepoints();
   if (tracepoint_infos.has_error()) {

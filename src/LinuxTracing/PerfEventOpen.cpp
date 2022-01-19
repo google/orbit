@@ -34,7 +34,7 @@ perf_event_attr generic_event_attr() {
 int generic_event_open(perf_event_attr* attr, pid_t pid, int32_t cpu) {
   int fd = perf_event_open(attr, pid, cpu, -1, PERF_FLAG_FD_CLOEXEC);
   if (fd == -1) {
-    ERROR("perf_event_open: %s", SafeStrerror(errno));
+    ORBIT_ERROR("perf_event_open: %s", SafeStrerror(errno));
   }
   return fd;
 }
@@ -153,14 +153,14 @@ void* perf_event_open_mmap_ring_buffer(int fd, uint64_t mmap_length) {
   // The size of the ring buffer excluding the metadata page must be a power of
   // two number of pages.
   if (mmap_length < GetPageSize() || __builtin_popcountl(mmap_length - GetPageSize()) != 1) {
-    ERROR("mmap length for perf_event_open not 1+2^n pages: %lu", mmap_length);
+    ORBIT_ERROR("mmap length for perf_event_open not 1+2^n pages: %lu", mmap_length);
     return nullptr;
   }
 
   // Use mmap to get access to the ring buffer.
   void* mmap_ret = mmap(nullptr, mmap_length, PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0);
   if (mmap_ret == MAP_FAILED) {
-    ERROR("mmap: %s", SafeStrerror(errno));
+    ORBIT_ERROR("mmap: %s", SafeStrerror(errno));
     return nullptr;
   }
 

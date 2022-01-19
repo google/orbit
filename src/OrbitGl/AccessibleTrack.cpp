@@ -96,7 +96,7 @@ const AccessibleInterface* AccessibleTrackTab::AccessibleChild(int /*unused*/) c
 }
 
 std::string AccessibleTrackTab::AccessibleName() const {
-  CHECK(track_ != nullptr);
+  ORBIT_CHECK(track_ != nullptr);
   return track_->GetName() + "_tab";
 }
 
@@ -110,7 +110,7 @@ AccessibleTrack::AccessibleTrack(Track* track, TimeGraphLayout* layout)
       fake_timers_pane_(std::make_unique<FakeTimerPane>(track, layout, fake_tab_.get())) {}
 
 int AccessibleTrack::AccessibleChildCount() const {
-  CHECK(track_ != nullptr);
+  ORBIT_CHECK(track_ != nullptr);
 
   // Only expose the "Timer" pane if any timers were rendered in the visible field
   if (track_->GetVisiblePrimitiveCount() > 0) {
@@ -121,7 +121,7 @@ int AccessibleTrack::AccessibleChildCount() const {
 }
 
 const AccessibleInterface* AccessibleTrack::AccessibleChild(int index) const {
-  CHECK(track_ != nullptr);
+  ORBIT_CHECK(track_ != nullptr);
 
   // The first child is the "virtual" tab.
   if (index == 0) {
@@ -146,12 +146,12 @@ const AccessibleInterface* AccessibleTrack::AccessibleChild(int index) const {
 }
 
 std::string AccessibleTrack::AccessibleName() const {
-  CHECK(track_ != nullptr);
+  ORBIT_CHECK(track_ != nullptr);
   return track_->GetName();
 }
 
 AccessibilityState AccessibleTrack::AccessibleState() const {
-  CHECK(track_ != nullptr);
+  ORBIT_CHECK(track_ != nullptr);
 
   using State = AccessibilityState;
 

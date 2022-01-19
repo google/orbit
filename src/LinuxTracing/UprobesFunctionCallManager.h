@@ -43,7 +43,7 @@ class UprobesFunctionCallManager {
     std::vector<OpenFunction>& stack_of_open_functions = tid_to_stack_of_open_functions_.at(tid);
 
     // As we erase the stack for this thread as soon as it becomes empty.
-    CHECK(!stack_of_open_functions.empty());
+    ORBIT_CHECK(!stack_of_open_functions.empty());
     OpenFunction& open_function = stack_of_open_functions.back();
 
     orbit_grpc_protos::FunctionCall function_call;

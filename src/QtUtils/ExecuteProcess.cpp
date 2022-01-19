@@ -50,7 +50,7 @@ Future<ErrorMessageOr<QByteArray>> ExecuteProcess(const QString& program,
             process_description, QMetaEnum::fromType<QProcess::ProcessError>().valueToKey(error),
             process->readAllStandardOutput().toStdString(),
             process->readAllStandardError().toStdString());
-        ERROR("%s", error_message);
+        ORBIT_ERROR("%s", error_message);
 
         promise->SetResult(ErrorMessage{error_message});
       });
@@ -78,7 +78,7 @@ Future<ErrorMessageOr<QByteArray>> ExecuteProcess(const QString& program,
             "Process \"%s\" failed with exit code: %d,\nstdout:\n%s\nstderr:\n%s\n",
             process_description, exit_code, process->readAllStandardOutput().toStdString(),
             process->readAllStandardError().toStdString())};
-        ERROR("%s", error_message);
+        ORBIT_ERROR("%s", error_message);
         promise->SetResult(ErrorMessage{error_message});
         return;
       });
@@ -92,7 +92,7 @@ Future<ErrorMessageOr<QByteArray>> ExecuteProcess(const QString& program,
           std::string error_message{
               absl::StrFormat("Process \"%s\" killed because the parent object was destroyed.",
                               process_description)};
-          ERROR("%s", error_message);
+          ORBIT_ERROR("%s", error_message);
           promise->SetResult(ErrorMessage{error_message});
           // Killing the process results in errorOccured signal getting emitted. The process is then
           // deleted in the errorOccured signal handler
@@ -115,7 +115,7 @@ Future<ErrorMessageOr<QByteArray>> ExecuteProcess(const QString& program,
 
         std::string error_message{absl::StrFormat("Process \"%s\" timed out after %dms",
                                                   process_description, timeout_in_ms)};
-        ERROR("%s", error_message);
+        ORBIT_ERROR("%s", error_message);
         promise->SetResult(ErrorMessage{error_message});
         // Killing the process results in errorOccured signal getting emitted. The process is then
         // deleted in the errorOccured signal handler

@@ -12,7 +12,7 @@ namespace orbit_gl {
 CaptureViewElement::CaptureViewElement(CaptureViewElement* parent, Viewport* viewport,
                                        TimeGraphLayout* layout)
     : viewport_(viewport), layout_(layout), parent_(parent) {
-  CHECK(layout != nullptr);
+  ORBIT_CHECK(layout != nullptr);
 }
 
 void CaptureViewElement::Draw(Batcher& batcher, TextRenderer& text_renderer,

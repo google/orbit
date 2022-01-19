@@ -44,7 +44,7 @@ IntrospectionListener::IntrospectionListener(IntrospectionEventCallback callback
 
   // Activate listener (only one listener instance is supported).
   absl::MutexLock lock(&global_introspection_mutex);
-  CHECK(!IsActive());
+  ORBIT_CHECK(!IsActive());
   InitializeIntrospection();
   global_introspection_listener = this;
   active_ = true;
@@ -58,7 +58,7 @@ IntrospectionListener::~IntrospectionListener() {
   // new events on the already shut down thread pool.
   {
     absl::MutexLock lock(&global_introspection_mutex);
-    CHECK(IsActive());
+    ORBIT_CHECK(IsActive());
     shutdown_initiated_ = true;
   }
   // Purge deferred scopes.

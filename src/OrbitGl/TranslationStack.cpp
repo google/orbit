@@ -13,7 +13,7 @@ void orbit_gl::TranslationStack::PushTranslation(float x, float y, float z) {
 }
 
 void orbit_gl::TranslationStack::PopTranslation() {
-  CHECK(!translation_stack_.empty());
+  ORBIT_CHECK(!translation_stack_.empty());
   current_translation_ = translation_stack_.back();
   translation_stack_.pop_back();
 }

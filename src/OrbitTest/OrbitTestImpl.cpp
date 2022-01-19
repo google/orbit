@@ -127,7 +127,7 @@ static void ExecuteTask(uint32_t id) {
 void OrbitTestImpl::OutputOrbitApiState() {
   while (!exit_requested_) {
     std::this_thread::sleep_for(std::chrono::milliseconds(1000));
-    LOG("g_orbit_api.enabled = %u", g_orbit_api.enabled);
+    ORBIT_LOG("g_orbit_api.enabled = %u", g_orbit_api.enabled);
   }
 }
 

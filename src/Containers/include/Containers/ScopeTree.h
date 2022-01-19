@@ -75,7 +75,7 @@ class ScopeTree {
  public:
   ScopeTree();
   void Insert(ScopeT* scope);
-  void Print() const { LOG("%s", ToString()); }
+  void Print() const { ORBIT_LOG("%s", ToString()); }
   std::string ToString() const;
 
   using ScopeNodeT = ScopeNode<ScopeT>;
@@ -134,7 +134,7 @@ const ScopeNode<ScopeT>* ScopeTree<ScopeT>::FindScopeNode(const ScopeT& scope) c
 template <typename ScopeT>
 const ScopeT* ScopeTree<ScopeT>::FindParent(const ScopeT& scope) const {
   const ScopeNode<ScopeT>* node = FindScopeNode(scope);
-  CHECK(node != nullptr);
+  ORBIT_CHECK(node != nullptr);
   if (node->Parent() == root_) return nullptr;
   return node->Parent()->GetScope();
 }
@@ -142,7 +142,7 @@ const ScopeT* ScopeTree<ScopeT>::FindParent(const ScopeT& scope) const {
 template <typename ScopeT>
 const ScopeT* ScopeTree<ScopeT>::FindFirstChild(const ScopeT& scope) const {
   const ScopeNode<ScopeT>* node = FindScopeNode(scope);
-  CHECK(node != nullptr);
+  ORBIT_CHECK(node != nullptr);
   const auto children = node->GetChildrenByStartTime();
   if (children.empty()) return nullptr;
   return children.begin()->second->GetScope();
@@ -187,7 +187,7 @@ const ScopeT* ScopeTree<ScopeT>::FindFirstScopeAtOrAfterTime(uint32_t depth, uin
 template <typename ScopeT>
 const ScopeT* ScopeTree<ScopeT>::FindNextScopeAtDepth(const ScopeT& scope) const {
   const ScopeNode<ScopeT>* node = FindScopeNode(scope);
-  CHECK(node != nullptr);
+  ORBIT_CHECK(node != nullptr);
   auto nodes_at_depth = GetOrderedNodesByDepth().at(node->Depth());
   auto node_it = nodes_at_depth.upper_bound(node->Start());
   if (node_it == nodes_at_depth.end()) return nullptr;
@@ -197,7 +197,7 @@ const ScopeT* ScopeTree<ScopeT>::FindNextScopeAtDepth(const ScopeT& scope) const
 template <typename ScopeT>
 const ScopeT* ScopeTree<ScopeT>::FindPreviousScopeAtDepth(const ScopeT& scope) const {
   const ScopeNode<ScopeT>* node = FindScopeNode(scope);
-  CHECK(node != nullptr);
+  ORBIT_CHECK(node != nullptr);
   auto nodes_at_depth = GetOrderedNodesByDepth().at(node->Depth());
   auto node_it = nodes_at_depth.lower_bound(node->Start());
   if (node_it == nodes_at_depth.begin()) return nullptr;
@@ -277,7 +277,7 @@ size_t ScopeNode<ScopeT>::CountNodesInSubtree() const {
 
 template <typename ScopeT>
 void ScopeNode<ScopeT>::CountNodesInSubtree(const ScopeNode* node, size_t* count) {
-  CHECK(count != nullptr);
+  ORBIT_CHECK(count != nullptr);
   ++(*count);
   for (const auto [unused_time, child] : node->GetChildrenByStartTime()) {
     CountNodesInSubtree(child, count);
@@ -294,7 +294,7 @@ std::set<const ScopeNode<ScopeT>*> ScopeNode<ScopeT>::GetAllNodesInSubtree() con
 template <typename ScopeT>
 void ScopeNode<ScopeT>::GetAllNodesInSubtree(const ScopeNode* node,
                                              std::set<const ScopeNode*>* node_set) {
-  CHECK(node_set != nullptr);
+  ORBIT_CHECK(node_set != nullptr);
   node_set->insert(node);
   for (const auto [unused_time, child] : node->GetChildrenByStartTime()) {
     GetAllNodesInSubtree(child, node_set);

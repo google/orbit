@@ -88,7 +88,7 @@ TEST(InstrumentProcessTest, FailToInstrumentAlreadyAttached) {
   }
 
   const pid_t pid = fork();
-  CHECK(pid != -1);
+  ORBIT_CHECK(pid != -1);
   if (pid == 0) {
     prctl(PR_SET_PDEATHSIG, SIGTERM);
 
@@ -101,7 +101,7 @@ TEST(InstrumentProcessTest, FailToInstrumentAlreadyAttached) {
 
   // We spawn another child and wait for it to trace `pid`. Then we can't attach.
   const pid_t pid_tracer = fork();
-  CHECK(pid_tracer != -1);
+  ORBIT_CHECK(pid_tracer != -1);
   if (pid_tracer == 0) {
     prctl(PR_SET_PDEATHSIG, SIGTERM);
 
@@ -115,7 +115,7 @@ TEST(InstrumentProcessTest, FailToInstrumentAlreadyAttached) {
   bool already_tracing = false;
   while (!already_tracing) {
     auto tracer_pid_or_error = orbit_base::GetTracerPidOfProcess(pid);
-    CHECK(!tracer_pid_or_error.has_error());
+    ORBIT_CHECK(!tracer_pid_or_error.has_error());
     already_tracing = tracer_pid_or_error.value() != 0;
   }
 
@@ -174,7 +174,7 @@ TEST(InstrumentProcessTest, Instrument) {
   InstrumentationManager* instrumentation_manager = GetInstrumentationManager();
 
   const pid_t pid_process_1 = fork();
-  CHECK(pid_process_1 != -1);
+  ORBIT_CHECK(pid_process_1 != -1);
   if (pid_process_1 == 0) {
     prctl(PR_SET_PDEATHSIG, SIGTERM);
 
@@ -202,7 +202,7 @@ TEST(InstrumentProcessTest, Instrument) {
   // Just do the same thing with another process to trigger the code path deleting the data for the
   // first. Also Instrument / Uninstrument repeatedly.
   const pid_t pid_process_2 = fork();
-  CHECK(pid_process_2 != -1);
+  ORBIT_CHECK(pid_process_2 != -1);
   if (pid_process_2 == 0) {
     prctl(PR_SET_PDEATHSIG, SIGTERM);
 
@@ -238,7 +238,7 @@ TEST(InstrumentProcessTest, GetErrorMessage) {
   InstrumentationManager* instrumentation_manager = GetInstrumentationManager();
 
   const pid_t pid = fork();
-  CHECK(pid != -1);
+  ORBIT_CHECK(pid != -1);
   if (pid == 0) {
     prctl(PR_SET_PDEATHSIG, SIGTERM);
 

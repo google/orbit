@@ -16,7 +16,7 @@ namespace orbit_gl {
 class TimeGraphAccessibility : public orbit_accessibility::AccessibleInterface {
  public:
   explicit TimeGraphAccessibility(TimeGraph* time_graph) : time_graph_(time_graph) {
-    CHECK(time_graph != nullptr);
+    ORBIT_CHECK(time_graph != nullptr);
   }
   [[nodiscard]] int AccessibleChildCount() const override;
   [[nodiscard]] const orbit_accessibility::AccessibleInterface* AccessibleChild(

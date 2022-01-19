@@ -36,7 +36,7 @@ void ContextSwitchManager::ProcessContextSwitch(uint16_t cpu, uint32_t old_tid, 
     return;
   }
 
-  CHECK(new_context_switch.timestamp_ns >= last_context_switch->timestamp_ns);
+  ORBIT_CHECK(new_context_switch.timestamp_ns >= last_context_switch->timestamp_ns);
 
   if (last_context_switch->new_tid == new_context_switch.old_tid) {
     orbit_grpc_protos::SchedulingSlice scheduling_slice;
@@ -64,14 +64,14 @@ void ContextSwitchManager::ProcessContextSwitch(uint16_t cpu, uint32_t old_tid, 
 }
 
 void ContextSwitchManager::OutputStats() {
-  LOG("--- ContextSwitchManager stats ---");
-  LOG("Number of processed cpu events: %u", stats_.num_processed_cpu_events_);
-  LOG("Number of processed thread events: %u", stats_.num_processed_thread_events_);
-  LOG("Number of thread mismatches: %u", stats_.num_tid_mismatches_);
-  LOG("Number of scheduling slices: %u", stats_.num_scheduling_slices);
-  LOG("Number of scheduling slices with invalid pid: %u",
-      stats_.num_scheduling_slices_with_invalid_pid);
-  LOG("Number of unique tids without pid: %u", stats_.tid_witout_pid_set_.size());
+  ORBIT_LOG("--- ContextSwitchManager stats ---");
+  ORBIT_LOG("Number of processed cpu events: %u", stats_.num_processed_cpu_events_);
+  ORBIT_LOG("Number of processed thread events: %u", stats_.num_processed_thread_events_);
+  ORBIT_LOG("Number of thread mismatches: %u", stats_.num_tid_mismatches_);
+  ORBIT_LOG("Number of scheduling slices: %u", stats_.num_scheduling_slices);
+  ORBIT_LOG("Number of scheduling slices with invalid pid: %u",
+            stats_.num_scheduling_slices_with_invalid_pid);
+  ORBIT_LOG("Number of unique tids without pid: %u", stats_.tid_witout_pid_set_.size());
 }
 
 }  // namespace orbit_windows_tracing

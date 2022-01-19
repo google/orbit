@@ -29,7 +29,7 @@ void AddPuppetOuterAndInnerFunctionToCaptureOptions(
   bool inner_function_symbol_found = false;
   for (const orbit_grpc_protos::SymbolInfo& symbol : module_symbols.symbol_infos()) {
     if (symbol.name() == PuppetConstants::kOuterFunctionName) {
-      CHECK(!outer_function_symbol_found);
+      ORBIT_CHECK(!outer_function_symbol_found);
       outer_function_symbol_found = true;
       orbit_grpc_protos::InstrumentedFunction instrumented_function;
       instrumented_function.set_file_path(executable_path);
@@ -42,7 +42,7 @@ void AddPuppetOuterAndInnerFunctionToCaptureOptions(
     }
 
     if (symbol.name() == PuppetConstants::kInnerFunctionName) {
-      CHECK(!inner_function_symbol_found);
+      ORBIT_CHECK(!inner_function_symbol_found);
       inner_function_symbol_found = true;
       orbit_grpc_protos::InstrumentedFunction instrumented_function;
       instrumented_function.set_file_path(executable_path);
@@ -54,8 +54,8 @@ void AddPuppetOuterAndInnerFunctionToCaptureOptions(
       capture_options->mutable_instrumented_functions()->Add(std::move(instrumented_function));
     }
   }
-  CHECK(outer_function_symbol_found);
-  CHECK(inner_function_symbol_found);
+  ORBIT_CHECK(outer_function_symbol_found);
+  ORBIT_CHECK(inner_function_symbol_found);
 }
 
 void VerifyFunctionCallsOfPuppetOuterAndInnerFunction(

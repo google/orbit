@@ -54,7 +54,7 @@ class unique_fd {
   [[nodiscard]] constexpr bool valid() const { return fd_ != kInvalidFd; }
 
   [[nodiscard]] int get() const {
-    CHECK(valid());
+    ORBIT_CHECK(valid());
     return fd_;
   }
 

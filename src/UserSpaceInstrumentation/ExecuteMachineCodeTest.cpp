@@ -24,7 +24,7 @@ using orbit_test_utils::HasNoError;
 
 TEST(ExecuteMachineCodeTest, ExecuteMachineCode) {
   pid_t pid = fork();
-  CHECK(pid != -1);
+  ORBIT_CHECK(pid != -1);
   if (pid == 0) {
     prctl(PR_SET_PDEATHSIG, SIGTERM);
 
@@ -36,13 +36,13 @@ TEST(ExecuteMachineCodeTest, ExecuteMachineCode) {
   }
 
   // Stop the child process using our tooling.
-  CHECK(!AttachAndStopProcess(pid).has_error());
+  ORBIT_CHECK(!AttachAndStopProcess(pid).has_error());
 
   {
     // Allocate a small chunk of memory.
     constexpr uint64_t kScratchPadSize = 1024;
     auto memory_or_error = AutomaticMemoryInTracee::Create(pid, 0, kScratchPadSize);
-    CHECK(memory_or_error.has_value());
+    ORBIT_CHECK(memory_or_error.has_value());
     auto memory = std::move(memory_or_error.value());
 
     // This code moves a constant into rax and enters a breakpoint. The value in rax is interpreted
@@ -57,7 +57,7 @@ TEST(ExecuteMachineCodeTest, ExecuteMachineCode) {
   }
 
   // Cleanup, end child process.
-  CHECK(!DetachAndContinueProcess(pid).has_error());
+  ORBIT_CHECK(!DetachAndContinueProcess(pid).has_error());
   kill(pid, SIGKILL);
   waitpid(pid, nullptr, 0);
 }

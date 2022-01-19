@@ -116,12 +116,13 @@ namespace {
   // Clean up memory and registers.
   auto restore_memory_result = WriteTraceesMemory(pid, start_address, backup_or_error.value());
   if (restore_memory_result.has_error()) {
-    FATAL("Unable to restore memory state of tracee: %s", restore_memory_result.error().message());
+    ORBIT_FATAL("Unable to restore memory state of tracee: %s",
+                restore_memory_result.error().message());
   }
   restore_registers_result = original_registers.RestoreRegisters();
   if (restore_registers_result.has_error()) {
-    FATAL("Unable to restore register state of tracee: %s",
-          restore_registers_result.error().message());
+    ORBIT_FATAL("Unable to restore register state of tracee: %s",
+                restore_registers_result.error().message());
   }
 
   return result;
@@ -152,8 +153,8 @@ ErrorMessageOr<std::unique_ptr<MemoryInTracee>> MemoryInTracee::Create(pid_t pid
 
   if (address != 0 && result->GetAddress() != address) {
     auto free_memory_result = result->Free();
-    FAIL_IF(free_memory_result.has_error(), "Unable to free previously allocated memory: %s",
-            free_memory_result.error().message());
+    ORBIT_FAIL_IF(free_memory_result.has_error(), "Unable to free previously allocated memory: %s",
+                  free_memory_result.error().message());
     return ErrorMessage(
         absl::StrFormat("MemoryInTracee wanted to allocate memory at %#x but got memory at a "
                         "different address: %#x. The memory has been freed again.",
@@ -239,8 +240,8 @@ ErrorMessageOr<std::unique_ptr<AutomaticMemoryInTracee>> AutomaticMemoryInTracee
 
   if (address != 0 && result->GetAddress() != address) {
     auto free_memory_result = result->Free();
-    FAIL_IF(free_memory_result.has_error(), "Unable to free previously allocated memory: %s",
-            free_memory_result.error().message());
+    ORBIT_FAIL_IF(free_memory_result.has_error(), "Unable to free previously allocated memory: %s",
+                  free_memory_result.error().message());
     return ErrorMessage(absl::StrFormat(
         "AutomaticMemoryInTracee wanted to allocate memory at %#x but got memory at a "
         "different address: %#x. The memory has been freed again.",
@@ -254,7 +255,7 @@ AutomaticMemoryInTracee::~AutomaticMemoryInTracee() {
   if (pid_ == -1) return;  // Freed manually already.
   auto result = Free();
   if (result.has_error()) {
-    ERROR("Unable to free memory in tracee: %s", result.error().message());
+    ORBIT_ERROR("Unable to free memory in tracee: %s", result.error().message());
   }
 }
 

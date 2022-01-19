@@ -174,7 +174,7 @@ ErrorMessageOr<void> ElfFileImpl<ElfT>::InitDynamicEntries() {
     auto error_message =
         absl::StrFormat("Unable to get dynamic entries from \"%s\": %s", file_path_.string(),
                         llvm::toString(dynamic_entries_or_error.takeError()));
-    ERROR("%s (ignored)", error_message);
+    ORBIT_ERROR("%s (ignored)", error_message);
     // Apparently empty dynamic section results in error - we are going to ignore it.
     return outcome::success();
   }
@@ -210,7 +210,7 @@ ErrorMessageOr<void> ElfFileImpl<ElfT>::InitDynamicEntries() {
     auto error_message =
         absl::StrFormat("Unable to get last byte address of dynamic string table \"%s\": %s",
                         file_path_.string(), llvm::toString(strtab_last_byte_or_error.takeError()));
-    ERROR("%s", error_message);
+    ORBIT_ERROR("%s", error_message);
     return ErrorMessage{error_message};
   }
 
@@ -219,14 +219,14 @@ ErrorMessageOr<void> ElfFileImpl<ElfT>::InitDynamicEntries() {
         "Soname offset is out of bounds of the string table (file=\"%s\", offset=%u "
         "strtab size=%u)",
         file_path_.string(), soname_offset.value(), dynamic_string_table_size.value());
-    ERROR("%s", error_message);
+    ORBIT_ERROR("%s", error_message);
     return ErrorMessage{error_message};
   }
 
   if (*strtab_last_byte_or_error.get() != 0) {
     auto error_message = absl::StrFormat(
         "Dynamic string table is not null-termintated (file=\"%s\")", file_path_.string());
-    ERROR("%s", error_message);
+    ORBIT_ERROR("%s", error_message);
     return ErrorMessage{error_message};
   }
 
@@ -235,7 +235,7 @@ ErrorMessageOr<void> ElfFileImpl<ElfT>::InitDynamicEntries() {
     auto error_message =
         absl::StrFormat("Unable to get dynamic string table from DT_STRTAB in \"%s\": %s",
                         file_path_.string(), llvm::toString(strtab_addr_or_error.takeError()));
-    ERROR("%s", error_message);
+    ORBIT_ERROR("%s", error_message);
     return ErrorMessage{error_message};
   }
 
@@ -252,7 +252,7 @@ ErrorMessageOr<void> ElfFileImpl<ElfT>::InitSections() {
   if (!sections_or_error) {
     auto error_message = absl::StrFormat("Unable to load sections: %s",
                                          llvm::toString(sections_or_error.takeError()));
-    ERROR("%s", error_message);
+    ORBIT_ERROR("%s", error_message);
     return ErrorMessage{error_message};
   }
 
@@ -319,8 +319,8 @@ ErrorMessageOr<SymbolInfo> ElfFileImpl<ElfT>::CreateSymbolInfo(
 
   llvm::Expected<uint32_t> maybe_flags = symbol_ref.getFlags();
   if (!maybe_flags) {
-    LOG("WARNING: Flags are not set for symbol \"%s\" in \"%s\", skipping. Details: %s", name,
-        file_path_.string(), llvm::toString(maybe_flags.takeError()));
+    ORBIT_LOG("WARNING: Flags are not set for symbol \"%s\" in \"%s\", skipping. Details: %s", name,
+              file_path_.string(), llvm::toString(maybe_flags.takeError()));
     return ErrorMessage(absl::StrFormat(R"(Flags are not set for symbol "%s" in "%s", skipping.)",
                                         name, file_path_.string()));
   }
@@ -332,8 +332,8 @@ ErrorMessageOr<SymbolInfo> ElfFileImpl<ElfT>::CreateSymbolInfo(
   // Unknown type - skip and generate a warning.
   llvm::Expected<llvm::object::SymbolRef::Type> maybe_type = symbol_ref.getType();
   if (!maybe_type) {
-    LOG("WARNING: Type is not set for symbol \"%s\" in \"%s\", skipping. Details: %s", name,
-        file_path_.string(), llvm::toString(maybe_type.takeError()));
+    ORBIT_LOG("WARNING: Type is not set for symbol \"%s\" in \"%s\", skipping. Details: %s", name,
+              file_path_.string(), llvm::toString(maybe_type.takeError()));
     return ErrorMessage(absl::StrFormat(R"(Type is not set for symbol "%s" in "%s", skipping.)",
                                         name, file_path_.string()));
   }
@@ -344,8 +344,8 @@ ErrorMessageOr<SymbolInfo> ElfFileImpl<ElfT>::CreateSymbolInfo(
 
   llvm::Expected<uint64_t> maybe_value = symbol_ref.getValue();
   if (!maybe_value) {
-    LOG("WARNING: Address is not set for symbol \"%s\" in \"%s\", skipping. Details: %s", name,
-        file_path_.string(), llvm::toString(maybe_value.takeError()));
+    ORBIT_LOG("WARNING: Address is not set for symbol \"%s\" in \"%s\", skipping. Details: %s",
+              name, file_path_.string(), llvm::toString(maybe_value.takeError()));
     return ErrorMessage(absl::StrFormat(R"(Address is not set for symbol "%s" in "%s", skipping.)",
                                         name, file_path_.string()));
   }
@@ -422,7 +422,7 @@ ErrorMessageOr<void> ElfFileImpl<ElfT>::InitProgramHeaders() {
     std::string error = absl::StrFormat(
         "Unable to get load bias of ELF file: \"%s\". Error loading program headers: %s",
         file_path_.string(), llvm::toString(range.takeError()));
-    ERROR("%s", error);
+    ORBIT_ERROR("%s", error);
     return ErrorMessage(std::move(error));
   }
 
@@ -444,7 +444,7 @@ ErrorMessageOr<void> ElfFileImpl<ElfT>::InitProgramHeaders() {
   std::string error = absl::StrFormat(
       "Unable to get load bias of ELF file: \"%s\". No executable PT_LOAD segment found.",
       file_path_.string());
-  ERROR("%s", error);
+  ORBIT_ERROR("%s", error);
   return ErrorMessage(std::move(error));
 }
 
@@ -490,7 +490,7 @@ const std::filesystem::path& ElfFileImpl<ElfT>::GetFilePath() const {
 
 template <typename ElfT>
 ErrorMessageOr<LineInfo> orbit_object_utils::ElfFileImpl<ElfT>::GetLineInfo(uint64_t address) {
-  CHECK(has_debug_info_section_);
+  ORBIT_CHECK(has_debug_info_section_);
   auto line_info_or_error =
       symbolizer_.symbolizeInlinedCode(std::string{object_file_->getFileName()},
                                        {address, llvm::object::SectionedAddress::UndefSection});

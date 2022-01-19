@@ -57,12 +57,12 @@ class GraphicsCaptureEventProcessor : public orbit_capture_client::CaptureEventP
     CalculateGpuStats();
     std::filesystem::path file_path(absl::GetFlag(FLAGS_output_path));
     std::string cpu_file_path = file_path.append(kCpuFrameTimeFilename).string();
-    LOG("Writing CPU results to \"%s\"", cpu_file_path);
+    ORBIT_LOG("Writing CPU results to \"%s\"", cpu_file_path);
     WriteToCsvFile(cpu_file_path, cpu_time_distribution_, cpu_avg_frame_time_ms_,
                    frame_start_boundary_timestamps_.size() - 1);
     file_path.assign(absl::GetFlag(FLAGS_output_path));
     std::string gpu_file_path = file_path.append(kGpuFrameTimeFilename).string();
-    LOG("Writing GPU results to \"%s\"", gpu_file_path);
+    ORBIT_LOG("Writing GPU results to \"%s\"", gpu_file_path);
     WriteToCsvFile(gpu_file_path, gpu_time_distribution_, gpu_avg_frame_time_ms_,
                    frame_start_boundary_timestamps_.size());
   }
@@ -93,14 +93,14 @@ class GraphicsCaptureEventProcessor : public orbit_capture_client::CaptureEventP
   }
 
   void CalculateGpuStats() {
-    LOG("Calculating GPU Times");
-    LOG("Calculating frame durations");
+    ORBIT_LOG("Calculating GPU Times");
+    ORBIT_LOG("Calculating frame durations");
     CalculateGpuFrameDurations();
-    LOG("Generating duration distribution");
+    ORBIT_LOG("Generating duration distribution");
     GenerateGpuDurationDistribution();
-    LOG("Calculating average frame time");
+    ORBIT_LOG("Calculating average frame time");
     CalculateGpuAvgFrameTime();
-    LOG("Finished calculating GPU times");
+    ORBIT_LOG("Finished calculating GPU times");
   }
 
   void CalculateGpuFrameDurations() {
@@ -137,8 +137,9 @@ class GraphicsCaptureEventProcessor : public orbit_capture_client::CaptureEventP
       uint64_t frame_time_ns = CalculateFrameGpuTime(command_buffer_timestamps);
       uint64_t frame_time_ms = frame_time_ns / 1000000;
       if (frame_time_ms > kMaxTimeMs) {
-        LOG("Frame with a duration of %u(ms) is bigger than %d(ms)", frame_time_ms, kMaxTimeMs);
-        LOG("Dumping frame command buffers timestamps...");
+        ORBIT_LOG("Frame with a duration of %u(ms) is bigger than %d(ms)", frame_time_ms,
+                  kMaxTimeMs);
+        ORBIT_LOG("Dumping frame command buffers timestamps...");
         PrintCommandBufferTimestamps(command_buffer_timestamps);
       } else {
         frame_gpu_durations_ns_.emplace_back(frame_time_ns);
@@ -152,8 +153,8 @@ class GraphicsCaptureEventProcessor : public orbit_capture_client::CaptureEventP
       const uint64_t begin_timestamp_ns = command_buffers_timestamps[i].begin;
       const uint64_t end_timestamp_ns = command_buffers_timestamps[i].end;
       const uint64_t duration_ns = end_timestamp_ns - begin_timestamp_ns;
-      LOG("CommandBuffer #%u: Start: %u End: %u Duration: %u(ns)", i, begin_timestamp_ns,
-          end_timestamp_ns, duration_ns);
+      ORBIT_LOG("CommandBuffer #%u: Start: %u End: %u Duration: %u(ns)", i, begin_timestamp_ns,
+                end_timestamp_ns, duration_ns);
     }
   }
 
@@ -210,19 +211,19 @@ class GraphicsCaptureEventProcessor : public orbit_capture_client::CaptureEventP
   }
 
   void CalculateCpuStats() {
-    LOG("Calculating CPU Times");
+    ORBIT_LOG("Calculating CPU Times");
 
     uint64_t frame_boundary_count = frame_start_boundary_timestamps_.size();
-    FAIL_IF(frame_boundary_count <= 2,
-            "Not enough calls to vkQueuePresentKHR to calculate CPU frame times.");
+    ORBIT_FAIL_IF(frame_boundary_count <= 2,
+                  "Not enough calls to vkQueuePresentKHR to calculate CPU frame times.");
 
-    LOG("Calculating frame durations");
+    ORBIT_LOG("Calculating frame durations");
     CalculateCpuFrameDurations();
-    LOG("Generating duration distribution");
+    ORBIT_LOG("Generating duration distribution");
     GenerateCpuDurationDistribution();
-    LOG("Calculating average frame times");
+    ORBIT_LOG("Calculating average frame times");
     CalculateCpuAvgFrameTime();
-    LOG("Finished calculating CPU times");
+    ORBIT_LOG("Finished calculating CPU times");
   }
 
   void CalculateCpuFrameDurations() {
@@ -277,8 +278,8 @@ class GraphicsCaptureEventProcessor : public orbit_capture_client::CaptureEventP
     absl::StrAppend(&output, "\n");
 
     ErrorMessageOr<void> frame_time_write_result = orbit_base::WriteStringToFile(filename, output);
-    FAIL_IF(frame_time_write_result.has_error(), "Writing to \"%s\": %s", filename,
-            frame_time_write_result.error().message());
+    ORBIT_FAIL_IF(frame_time_write_result.has_error(), "Writing to \"%s\": %s", filename,
+                  frame_time_write_result.error().message());
   }
 
   // Instrument a function with this function id in order for GraphicsCaptureEventProcessor to use

@@ -38,22 +38,22 @@ void DispatchTable::CreateInstanceDispatchTable(
   void* key = GetDispatchTableKey(instance);
   {
     absl::WriterMutexLock lock(&mutex_);
-    CHECK(!instance_dispatch_table_.contains(key));
+    ORBIT_CHECK(!instance_dispatch_table_.contains(key));
     instance_dispatch_table_[key] = dispatch_table;
 
-    CHECK(!instance_supports_debug_utils_extension_.contains(key));
+    ORBIT_CHECK(!instance_supports_debug_utils_extension_.contains(key));
     instance_supports_debug_utils_extension_[key] =
         dispatch_table.CreateDebugUtilsMessengerEXT != nullptr &&
         dispatch_table.DestroyDebugUtilsMessengerEXT != nullptr &&
         dispatch_table.SubmitDebugUtilsMessageEXT != nullptr;
 
-    CHECK(!instance_supports_debug_report_extension_.contains(key));
+    ORBIT_CHECK(!instance_supports_debug_report_extension_.contains(key));
     instance_supports_debug_report_extension_[key] =
         dispatch_table.CreateDebugReportCallbackEXT != nullptr &&
         dispatch_table.DestroyDebugReportCallbackEXT != nullptr &&
         dispatch_table.DebugReportMessageEXT != nullptr;
 
-    CHECK(!instance_dispatchable_object_to_instance_.contains(key));
+    ORBIT_CHECK(!instance_dispatchable_object_to_instance_.contains(key));
     instance_dispatchable_object_to_instance_[key] = instance;
   }
 }
@@ -62,16 +62,16 @@ void DispatchTable::RemoveInstanceDispatchTable(VkInstance instance) {
   void* key = GetDispatchTableKey(instance);
   {
     absl::WriterMutexLock lock(&mutex_);
-    CHECK(instance_dispatch_table_.contains(key));
+    ORBIT_CHECK(instance_dispatch_table_.contains(key));
     instance_dispatch_table_.erase(key);
 
-    CHECK(instance_supports_debug_utils_extension_.contains(key));
+    ORBIT_CHECK(instance_supports_debug_utils_extension_.contains(key));
     instance_supports_debug_utils_extension_.erase(key);
 
-    CHECK(instance_supports_debug_report_extension_.contains(key));
+    ORBIT_CHECK(instance_supports_debug_report_extension_.contains(key));
     instance_supports_debug_report_extension_.erase(key);
 
-    CHECK(instance_dispatchable_object_to_instance_.contains(key));
+    ORBIT_CHECK(instance_dispatchable_object_to_instance_.contains(key));
     instance_dispatchable_object_to_instance_.erase(key);
   }
 }
@@ -155,10 +155,10 @@ void DispatchTable::CreateDeviceDispatchTable(
   void* key = GetDispatchTableKey(device);
   {
     absl::WriterMutexLock lock(&mutex_);
-    CHECK(!device_dispatch_table_.contains(key));
+    ORBIT_CHECK(!device_dispatch_table_.contains(key));
     device_dispatch_table_[key] = dispatch_table;
 
-    CHECK(!device_supports_debug_utils_extension_.contains(key));
+    ORBIT_CHECK(!device_supports_debug_utils_extension_.contains(key));
     device_supports_debug_utils_extension_[key] =
         dispatch_table.CmdBeginDebugUtilsLabelEXT != nullptr &&
         dispatch_table.CmdEndDebugUtilsLabelEXT != nullptr &&
@@ -169,7 +169,7 @@ void DispatchTable::CreateDeviceDispatchTable(
         dispatch_table.QueueInsertDebugUtilsLabelEXT != nullptr &&
         dispatch_table.CmdInsertDebugUtilsLabelEXT != nullptr;
 
-    CHECK(!device_supports_debug_marker_extension_.contains(key));
+    ORBIT_CHECK(!device_supports_debug_marker_extension_.contains(key));
     device_supports_debug_marker_extension_[key] =
         dispatch_table.CmdDebugMarkerBeginEXT != nullptr &&
         dispatch_table.CmdDebugMarkerEndEXT != nullptr &&
@@ -184,13 +184,13 @@ void DispatchTable::RemoveDeviceDispatchTable(VkDevice device) {
   {
     absl::WriterMutexLock lock(&mutex_);
 
-    CHECK(device_dispatch_table_.contains(key));
+    ORBIT_CHECK(device_dispatch_table_.contains(key));
     device_dispatch_table_.erase(key);
 
-    CHECK(device_supports_debug_utils_extension_.contains(key));
+    ORBIT_CHECK(device_supports_debug_utils_extension_.contains(key));
     device_supports_debug_utils_extension_.erase(key);
 
-    CHECK(device_supports_debug_marker_extension_.contains(key));
+    ORBIT_CHECK(device_supports_debug_marker_extension_.contains(key));
     device_supports_debug_marker_extension_.erase(key);
   }
 }

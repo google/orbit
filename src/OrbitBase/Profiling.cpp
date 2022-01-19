@@ -47,9 +47,9 @@ uint64_t EstimateAndLogClockResolution() {
   // We expect the value to be in the order of 35-100 nanoseconds.
   uint64_t clock_resolution_ns = orbit_base::EstimateClockResolution();
   if (clock_resolution_ns > 0) {
-    LOG("Clock resolution: %d (ns)", clock_resolution_ns);
+    ORBIT_LOG("Clock resolution: %d (ns)", clock_resolution_ns);
   } else {
-    ERROR("Failed to estimate clock resolution");
+    ORBIT_ERROR("Failed to estimate clock resolution");
   }
 
   return clock_resolution_ns;

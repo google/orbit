@@ -26,7 +26,7 @@ using orbit_base::ReadFileToString;
 [[nodiscard]] ErrorMessageOr<std::vector<uint8_t>> ReadTraceesMemory(pid_t pid,
                                                                      uint64_t start_address,
                                                                      uint64_t length) {
-  CHECK(length != 0);
+  ORBIT_CHECK(length != 0);
 
   OUTCOME_TRY(auto&& fd, orbit_base::OpenFileForReading(absl::StrFormat("/proc/%d/mem", pid)));
 
@@ -44,7 +44,7 @@ using orbit_base::ReadFileToString;
 
 [[nodiscard]] ErrorMessageOr<void> WriteTraceesMemory(pid_t pid, uint64_t start_address,
                                                       const std::vector<uint8_t>& bytes) {
-  CHECK(!bytes.empty());
+  ORBIT_CHECK(!bytes.empty());
 
   OUTCOME_TRY(auto&& fd, orbit_base::OpenFileForWriting(absl::StrFormat("/proc/%d/mem", pid)));
 

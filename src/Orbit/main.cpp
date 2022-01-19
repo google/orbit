@@ -82,7 +82,7 @@ static std::optional<orbit_session_setup::TargetConfiguration> ConnectToSpecifie
   auto connection_target_result =
       orbit_session_setup::ConnectionTarget::FromString(connection_target_string);
   if (!connection_target_result.has_value()) {
-    ERROR(
+    ORBIT_ERROR(
         "Invalid connection target parameter was specified. Expected format: pid@instance_id, got "
         "\"%s\"",
         connection_target_string.toStdString());
@@ -174,7 +174,7 @@ int RunUiInstance(const DeploymentConfiguration& deployment_configuration,
       continue;
     }
 
-    UNREACHABLE();
+    ORBIT_UNREACHABLE();
   }
 
   return 0;
@@ -191,7 +191,8 @@ static bool DevModeEnabledViaEnvironmentVariable() {
 
 static void LogAndMaybeWarnAboutClockResolution() {
   uint64_t estimated_clock_resolution = orbit_base::EstimateClockResolution();
-  LOG("%s", absl::StrFormat("Clock resolution on client: %d (ns)", estimated_clock_resolution));
+  ORBIT_LOG("%s",
+            absl::StrFormat("Clock resolution on client: %d (ns)", estimated_clock_resolution));
 
   // Since a low clock resolution on the client only affects our own introspection and logging
   // timings, we only show a warning dialogue when running in devmode.
@@ -216,17 +217,17 @@ static void LogAndMaybeWarnAboutClockResolution() {
 static void ClearSourcePathsMappings() {
   orbit_source_paths_mapping::MappingManager mapping_manager{};
   mapping_manager.SetMappings({});
-  LOG("Cleared the saved source paths mappings.");
+  ORBIT_LOG("Cleared the saved source paths mappings.");
 }
 
 // Put the command line into the log.
 static void LogCommandLine(int argc, char* argv[]) {
-  LOG("Command line invoking Orbit:");
-  LOG("%s", argv[0]);
+  ORBIT_LOG("Command line invoking Orbit:");
+  ORBIT_LOG("%s", argv[0]);
   for (int i = 1; i < argc; i++) {
-    LOG("  %s", argv[i]);
+    ORBIT_LOG("  %s", argv[i]);
   }
-  LOG("");
+  ORBIT_LOG("");
 }
 
 int main(int argc, char* argv[]) {
@@ -246,13 +247,13 @@ int main(int argc, char* argv[]) {
 
   std::filesystem::path log_file{orbit_paths::GetLogFilePath()};
   orbit_base::InitLogFile(log_file);
-  LOG("You are running Orbit Profiler version %s", orbit_version::GetVersionString());
+  ORBIT_LOG("You are running Orbit Profiler version %s", orbit_version::GetVersionString());
   LogCommandLine(argc, argv);
   ErrorMessageOr<void> remove_old_log_result =
       orbit_base::TryRemoveOldLogFiles(orbit_paths::CreateOrGetLogDir());
   if (remove_old_log_result.has_error()) {
-    LOG("Warning: Unable to remove some old log files:\n%s",
-        remove_old_log_result.error().message());
+    ORBIT_LOG("Warning: Unable to remove some old log files:\n%s",
+              remove_old_log_result.error().message());
   }
 
 #if __linux__
@@ -317,8 +318,8 @@ int main(int argc, char* argv[]) {
     return -1;
   }
 
-  LOG("Detected OpenGL version: %i.%i %s", open_gl_version->major, open_gl_version->minor,
-      open_gl_version->is_opengl_es ? "OpenGL ES" : "OpenGL");
+  ORBIT_LOG("Detected OpenGL version: %i.%i %s", open_gl_version->major, open_gl_version->minor,
+            open_gl_version->is_opengl_es ? "OpenGL ES" : "OpenGL");
 
   if (open_gl_version->is_opengl_es) {
     DisplayErrorToUser(
@@ -355,7 +356,8 @@ int main(int argc, char* argv[]) {
   const std::string& connection_target = absl::GetFlag(FLAGS_connection_target);
 
   if (capture_file_paths.size() > 0 && !connection_target.empty()) {
-    LOG("Aborting startup: User specified a connection target and one or multiple capture files at "
+    ORBIT_LOG(
+        "Aborting startup: User specified a connection target and one or multiple capture files at "
         "the same time.");
     DisplayErrorToUser(
         QString("Invalid combination of startup flags: Specify either one or multiple capture "

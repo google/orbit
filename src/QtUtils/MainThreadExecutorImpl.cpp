@@ -42,7 +42,7 @@ MainThreadExecutor::WaitResult MapToWaitResult(orbit_qt_utils::FutureWatcher::Re
       return WaitResult::kTimedOut;
   }
 
-  UNREACHABLE();
+  ORBIT_UNREACHABLE();
 }
 
 MainThreadExecutor::WaitResult MainThreadExecutorImpl::WaitFor(

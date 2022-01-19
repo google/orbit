@@ -101,7 +101,7 @@ outcome::result<void> SftpCopyToLocalOperation::startup() {
     case State::kDone:
       break;
     case State::kError:
-      UNREACHABLE();
+      ORBIT_UNREACHABLE();
   };
 
   return outcome::success();

@@ -556,7 +556,7 @@ LargestOccurringLineNumbers SetAnnotatingContentInDocument(
        current_block != document->end() && current_annotating_line != annotating_lines.end();
        current_block = current_block.next()) {
     const auto metadata = static_cast<const Metadata*>(current_block.userData());
-    CHECK(metadata != nullptr);
+    ORBIT_CHECK(metadata != nullptr);
 
     if (metadata->line_number == current_annotating_line->reference_line) {
       // That means the annotating line needs to go in front of the current block

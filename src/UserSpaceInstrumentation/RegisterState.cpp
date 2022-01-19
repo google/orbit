@@ -93,7 +93,7 @@ ErrorMessageOr<void> RegisterState::BackupRegisters(pid_t tid) {
   } else if (iov.iov_len == sizeof(GeneralPurposeRegisters64)) {
     bitness_ = Bitness::k64Bit;
   } else {
-    FATAL("Bitness is neither 32 or 64 bit.");
+    ORBIT_FATAL("Bitness is neither 32 or 64 bit.");
   }
 
   auto xsave_area_size = GetXSaveAreaSize();
@@ -120,7 +120,7 @@ ErrorMessageOr<void> RegisterState::BackupRegisters(pid_t tid) {
 
 ErrorMessageOr<void> RegisterState::RestoreRegisters() {
   // BackupRegisters needs to be called before RestoreRegisters.
-  CHECK(tid_ != -1);
+  ORBIT_CHECK(tid_ != -1);
 
   iovec iov;
   iov.iov_base = &general_purpose_registers_;

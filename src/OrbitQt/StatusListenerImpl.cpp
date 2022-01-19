@@ -25,7 +25,7 @@ uint64_t StatusListenerImpl::AddStatus(std::string message) {
 }
 
 void StatusListenerImpl::ClearStatus(uint64_t status_id) {
-  CHECK(status_messages_.count(status_id) == 1);
+  ORBIT_CHECK(status_messages_.count(status_id) == 1);
   status_messages_.erase(status_id);
   status_id_stack_.erase(std::remove(status_id_stack_.begin(), status_id_stack_.end(), status_id),
                          status_id_stack_.end());
@@ -39,9 +39,9 @@ void StatusListenerImpl::ClearStatus(uint64_t status_id) {
 }
 
 void StatusListenerImpl::UpdateStatus(uint64_t status_id, std::string message) {
-  CHECK(status_messages_.count(status_id) == 1);
+  ORBIT_CHECK(status_messages_.count(status_id) == 1);
   auto it = std::find(status_id_stack_.begin(), status_id_stack_.end(), status_id);
-  CHECK(it != status_id_stack_.end());
+  ORBIT_CHECK(it != status_id_stack_.end());
 
   status_id_stack_.erase(it);
   status_id_stack_.push_back(status_id);
@@ -55,6 +55,6 @@ std::unique_ptr<StatusListener> StatusListenerImpl::Create(QStatusBar* status_ba
 }
 
 uint64_t StatusListenerImpl::GetNextId() {
-  CHECK(next_id_ < std::numeric_limits<uint64_t>::max());
+  ORBIT_CHECK(next_id_ < std::numeric_limits<uint64_t>::max());
   return next_id_++;
 }

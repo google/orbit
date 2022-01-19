@@ -129,7 +129,7 @@ outcome::result<void> Tunnel::startup() {
     case State::kWaitRemoteClosed:
     case State::kDone:
     case State::kError:
-      UNREACHABLE();
+      ORBIT_UNREACHABLE();
   }
   return outcome::success();
 }
@@ -141,7 +141,7 @@ outcome::result<void> Tunnel::shutdown() {
     case State::kChannelInitialized:
     case State::kStarted:
     case State::kServerListening:
-      UNREACHABLE();
+      ORBIT_UNREACHABLE();
     case State::kShutdown:
     case State::kFlushing: {
       OUTCOME_TRY(writeToChannel());
@@ -177,7 +177,7 @@ outcome::result<void> Tunnel::shutdown() {
     case State::kDone:
       break;
     case State::kError:
-      UNREACHABLE();
+      ORBIT_UNREACHABLE();
   }
 
   return outcome::success();
@@ -210,7 +210,7 @@ outcome::result<void> Tunnel::readFromChannel() {
     if (bytes_written == -1) {
       SetError(Error::kLocalSocketClosed);
     } else {
-      CHECK(static_cast<size_t>(bytes_written) <= read_buffer_.size());
+      ORBIT_CHECK(static_cast<size_t>(bytes_written) <= read_buffer_.size());
       read_buffer_.erase(read_buffer_.begin(), read_buffer_.begin() + bytes_written);
     }
   }
@@ -223,7 +223,7 @@ outcome::result<void> Tunnel::writeToChannel() {
   if (!write_buffer_.empty()) {
     const std::string_view buffer_view{write_buffer_.data(), write_buffer_.size()};
     OUTCOME_TRY(auto&& bytes_written, channel_->Write(buffer_view));
-    CHECK(static_cast<size_t>(bytes_written) <= write_buffer_.size());
+    ORBIT_CHECK(static_cast<size_t>(bytes_written) <= write_buffer_.size());
     write_buffer_.erase(write_buffer_.begin(), write_buffer_.begin() + bytes_written);
     ORBIT_UINT64("writeToChannel bytes written", bytes_written);
   }

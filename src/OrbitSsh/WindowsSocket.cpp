@@ -12,7 +12,7 @@ outcome::result<Socket> Socket::Create(int domain, int type, int protocol) {
   WSADATA wsadata;
   int err = WSAStartup(MAKEWORD(2, 0), &wsadata);
   if (err != 0) {
-    ERROR("WSAStartup failed with error: %d", err);
+    ORBIT_ERROR("WSAStartup failed with error: %d", err);
   }
 
   Descriptor descriptor = socket(domain, type, protocol);
@@ -52,7 +52,7 @@ void Socket::PrintWithLastError(const std::string& message) {
       FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS,
       nullptr, WSAGetLastError(), MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
       reinterpret_cast<LPWSTR>(&error_string), 0, nullptr);
-  ERROR("%s: %s", message.c_str(), error_string);
+  ORBIT_ERROR("%s: %s", message.c_str(), error_string);
   LocalFree(error_string);
 }
 

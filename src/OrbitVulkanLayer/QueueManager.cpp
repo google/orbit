@@ -10,13 +10,13 @@ namespace orbit_vulkan_layer {
 
 void QueueManager::TrackQueue(VkQueue queue, VkDevice device) {
   absl::WriterMutexLock lock(&mutex_);
-  CHECK(!queue_to_device_.contains(queue) || queue_to_device_.at(queue) == device);
+  ORBIT_CHECK(!queue_to_device_.contains(queue) || queue_to_device_.at(queue) == device);
   queue_to_device_.emplace(queue, device);
 }
 
 VkDevice QueueManager::GetDeviceOfQueue(VkQueue queue) {
   absl::ReaderMutexLock lock(&mutex_);
-  CHECK(queue_to_device_.contains(queue));
+  ORBIT_CHECK(queue_to_device_.contains(queue));
   return queue_to_device_.at(queue);
 }
 }  // namespace orbit_vulkan_layer

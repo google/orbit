@@ -100,7 +100,7 @@ TimerChain* TimerData::GetOrCreateTimerChain(uint64_t depth) {
   }
 
   auto [inserted_it, inserted] = timers_.insert_or_assign(depth, std::make_unique<TimerChain>());
-  CHECK(inserted);
+  ORBIT_CHECK(inserted);
   return inserted_it->second.get();
 }
 

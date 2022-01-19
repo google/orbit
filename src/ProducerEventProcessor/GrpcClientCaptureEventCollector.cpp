@@ -35,7 +35,7 @@ GrpcClientCaptureEventCollector::GrpcClientCaptureEventCollector(
     grpc::ServerReaderWriterInterface<orbit_grpc_protos::CaptureResponse,
                                       orbit_grpc_protos::CaptureRequest>* reader_writer)
     : reader_writer_{reader_writer} {
-  CHECK(reader_writer_ != nullptr);
+  ORBIT_CHECK(reader_writer_ != nullptr);
 
   InitializeArenaOfCaptureResponses(&arena_of_capture_responses_being_built_,
                                     &initial_block_of_first_arena_);
@@ -68,7 +68,7 @@ void GrpcClientCaptureEventCollector::AddEvent(ClientCaptureEvent&& event) {
 }
 
 void GrpcClientCaptureEventCollector::StopAndWait() {
-  CHECK(sender_thread_.joinable());
+  ORBIT_CHECK(sender_thread_.joinable());
   {
     // Protect stop_requested_ with mutex_ so that we can use stop_requested_ in Conditions for
     // Await/LockWhen (specifically, in SenderThread).
@@ -79,15 +79,15 @@ void GrpcClientCaptureEventCollector::StopAndWait() {
 }
 
 GrpcClientCaptureEventCollector::~GrpcClientCaptureEventCollector() {
-  CHECK(!sender_thread_.joinable());
+  ORBIT_CHECK(!sender_thread_.joinable());
 
-  LOG("Total number of events sent: %u", total_number_of_events_sent_);
-  LOG("Total number of bytes sent: %u", total_number_of_bytes_sent_);
+  ORBIT_LOG("Total number of events sent: %u", total_number_of_events_sent_);
+  ORBIT_LOG("Total number of bytes sent: %u", total_number_of_bytes_sent_);
 
   if (total_number_of_events_sent_ > 0) {
     float average_bytes = static_cast<float>(total_number_of_bytes_sent_) /
                           static_cast<float>(total_number_of_events_sent_);
-    LOG("Average number of bytes per event: %.2f", average_bytes);
+    ORBIT_LOG("Average number of bytes per event: %.2f", average_bytes);
   }
 }
 
@@ -138,7 +138,7 @@ void GrpcClientCaptureEventCollector::SenderThread() {
     for (CaptureResponse* capture_response : capture_responses_to_send_) {
       // Record statistics on event count and byte size for this CaptureResponse.
       int capture_response_event_count = capture_response->capture_events_size();
-      CHECK(capture_response_event_count > 0);
+      ORBIT_CHECK(capture_response_event_count > 0);
       ORBIT_INT("Number of CaptureEvents in CaptureResponse", capture_response_event_count);
 
       uint64_t capture_response_bytes = capture_response->ByteSizeLong();
@@ -158,7 +158,7 @@ void GrpcClientCaptureEventCollector::SenderThread() {
     {
       ORBIT_UINT64("Number of buffered CaptureEvents sent", number_of_events_sent);
 
-      CHECK(number_of_events_sent > 0);
+      ORBIT_CHECK(number_of_events_sent > 0);
       [[maybe_unused]] const float average_bytes =
           static_cast<float>(number_of_bytes_sent) / static_cast<float>(number_of_events_sent);
       ORBIT_FLOAT("Average bytes per CaptureEvent", average_bytes);

@@ -92,18 +92,18 @@ static void StopInternalProducersAndCaptureStartStopListenersInParallel(
 
   stop_threads.emplace_back([&tracing_handler] {
     tracing_handler->Stop();
-    LOG("TracingHandler stopped: perf_event_open tracing is done");
+    ORBIT_LOG("TracingHandler stopped: perf_event_open tracing is done");
   });
 
   stop_threads.emplace_back([&memory_info_handler] {
     memory_info_handler->Stop();
-    LOG("MemoryInfoHandler stopped: memory usage information collection is done");
+    ORBIT_LOG("MemoryInfoHandler stopped: memory usage information collection is done");
   });
 
   for (CaptureStartStopListener* listener : *capture_start_stop_listeners) {
     stop_threads.emplace_back([&listener] {
       listener->OnCaptureStopRequested();
-      LOG("CaptureStartStopListener stopped: one or more producers finished capturing");
+      ORBIT_LOG("CaptureStartStopListener stopped: one or more producers finished capturing");
     });
   }
 
@@ -136,7 +136,7 @@ class ProducerEventProcessorHijackingFunctionEntryExitForLinuxTracing
         tracing_handler_->ProcessFunctionExit(event.function_exit());
         break;
       case ProducerCaptureEvent::EVENT_NOT_SET:
-        UNREACHABLE();
+        ORBIT_UNREACHABLE();
       default:
         producer_event_processor_->ProcessEvent(producer_id, std::move(event));
     }
@@ -173,26 +173,27 @@ LinuxCaptureService::WaitForStopCaptureRequestOrMemoryThresholdExceeded(
 
         absl::MutexLock lock{stop_capture_mutex.get()};
         if (!*stop_capture) {
-          LOG("Client finished writing on Capture's gRPC stream: stopping capture");
+          ORBIT_LOG("Client finished writing on Capture's gRPC stream: stopping capture");
           *stop_capture = true;
           *stop_capture_reason = StopCaptureReason::kClientStop;
         } else {
-          LOG("Client finished writing on Capture's gRPC stream or the RPC has already finished; "
+          ORBIT_LOG(
+              "Client finished writing on Capture's gRPC stream or the RPC has already finished; "
               "the capture was already stopped");
         }
       }};
 
   static const uint64_t mem_total_bytes = GetPhysicalMemoryInBytes();
   static const uint64_t watchdog_threshold_bytes = mem_total_bytes / 2;
-  LOG("Starting memory watchdog with threshold %u B because total physical memory is %u B",
-      watchdog_threshold_bytes, mem_total_bytes);
+  ORBIT_LOG("Starting memory watchdog with threshold %u B because total physical memory is %u B",
+            watchdog_threshold_bytes, mem_total_bytes);
   while (true) {
     {
       absl::MutexLock lock{stop_capture_mutex.get()};
       static constexpr absl::Duration kWatchdogPollInterval = absl::Seconds(1);
       if (stop_capture_mutex->AwaitWithTimeout(absl::Condition(stop_capture.get()),
                                                kWatchdogPollInterval)) {
-        LOG("Stopping memory watchdog as the capture was stopped");
+        ORBIT_LOG("Stopping memory watchdog as the capture was stopped");
         break;
       }
     }
@@ -200,11 +201,11 @@ LinuxCaptureService::WaitForStopCaptureRequestOrMemoryThresholdExceeded(
     // Repeatedly poll the resident set size (rss) of the current process (OrbitService).
     std::optional<uint64_t> rss_bytes = ReadRssInBytesFromProcPidStat();
     if (!rss_bytes.has_value()) {
-      ERROR_ONCE("Reading resident set size of OrbitService");
+      ORBIT_ERROR_ONCE("Reading resident set size of OrbitService");
       continue;
     }
     if (rss_bytes.value() > watchdog_threshold_bytes) {
-      LOG("Memory threshold exceeded: stopping capture (and stopping memory watchdog)");
+      ORBIT_LOG("Memory threshold exceeded: stopping capture (and stopping memory watchdog)");
       absl::MutexLock lock{stop_capture_mutex.get()};
       *stop_capture = true;
       *stop_capture_reason = StopCaptureReason::kMemoryWatchdog;
@@ -216,7 +217,7 @@ LinuxCaptureService::WaitForStopCaptureRequestOrMemoryThresholdExceeded(
   // memory threshold was exceeded. So at that point we can proceed with stopping the capture.
   {
     absl::MutexLock lock{stop_capture_mutex.get()};
-    CHECK(stop_capture_reason->has_value());
+    ORBIT_CHECK(stop_capture_reason->has_value());
     return stop_capture_reason->value();
   }
 }
@@ -247,7 +248,7 @@ grpc::Status LinuxCaptureService::Capture(
   if (capture_options.enable_api()) {
     auto result = orbit_api_loader::EnableApiInTracee(capture_options);
     if (result.has_error()) {
-      ERROR("Enabling Orbit Api: %s", result.error().message());
+      ORBIT_ERROR("Enabling Orbit Api: %s", result.error().message());
       error_enabling_orbit_api =
           absl::StrFormat("Could not enable Orbit API: %s", result.error().message());
     }
@@ -269,14 +270,14 @@ grpc::Status LinuxCaptureService::Capture(
     if (result_or_error.has_error()) {
       error_enabling_user_space_instrumentation = absl::StrFormat(
           "Could not enable user space instrumentation: %s", result_or_error.error().message());
-      ERROR("%s", error_enabling_user_space_instrumentation.value());
+      ORBIT_ERROR("%s", error_enabling_user_space_instrumentation.value());
     } else {
       FilterOutInstrumentedFunctionsFromCaptureOptions(
           result_or_error.value().instrumented_function_ids, linux_tracing_capture_options);
 
-      LOG("User space instrumentation enabled for %u out of %u instrumented functions.",
-          result_or_error.value().instrumented_function_ids.size(),
-          capture_options.instrumented_functions_size());
+      ORBIT_LOG("User space instrumentation enabled for %u out of %u instrumented functions.",
+                result_or_error.value().instrumented_function_ids.size(),
+                capture_options.instrumented_functions_size());
 
       if (!result_or_error.value().function_ids_to_error_messages.empty()) {
         info_from_enabling_user_space_instrumentation =
@@ -336,7 +337,7 @@ grpc::Status LinuxCaptureService::Capture(
   if (capture_options.enable_api()) {
     auto result = orbit_api_loader::DisableApiInTracee(capture_options);
     if (result.has_error()) {
-      ERROR("Disabling Orbit Api: %s", result.error().message());
+      ORBIT_ERROR("Disabling Orbit Api: %s", result.error().message());
       producer_event_processor_->ProcessEvent(
           orbit_grpc_protos::kRootProducerId,
           orbit_capture_service::CreateWarningEvent(
@@ -352,7 +353,7 @@ grpc::Status LinuxCaptureService::Capture(
     const pid_t target_process_id = orbit_base::ToNativeProcessId(capture_options.pid());
     auto result_tmp = instrumentation_manager_->UninstrumentProcess(target_process_id);
     if (result_tmp.has_error()) {
-      ERROR("Disabling user space instrumentation: %s", result_tmp.error().message());
+      ORBIT_ERROR("Disabling user space instrumentation: %s", result_tmp.error().message());
       producer_event_processor_->ProcessEvent(
           orbit_grpc_protos::kRootProducerId,
           orbit_capture_service::CreateWarningEvent(

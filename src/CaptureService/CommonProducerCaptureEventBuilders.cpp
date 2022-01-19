@@ -66,11 +66,11 @@ ProducerCaptureEvent CreateCaptureStartedEvent(const CaptureOptions& capture_opt
     if (build_id_or_error.has_value()) {
       capture_started->set_executable_build_id(build_id_or_error.value());
     } else {
-      ERROR("Unable to find build id for module \"%s\": %s", executable_path.string(),
-            build_id_or_error.error().message());
+      ORBIT_ERROR("Unable to find build id for module \"%s\": %s", executable_path.string(),
+                  build_id_or_error.error().message());
     }
   } else {
-    ERROR("%s", executable_path_or_error.error().message());
+    ORBIT_ERROR("%s", executable_path_or_error.error().message());
   }
 
   capture_started->set_capture_start_unix_time_ns(absl::ToUnixNanos(capture_start_time));

@@ -121,7 +121,7 @@ void CaptureData::OnCaptureComplete() {
 
   for (const orbit_client_data::TimerChain* chain :
        thread_track_data_provider_->GetAllThreadTimerChains()) {
-    CHECK(chain);
+    ORBIT_CHECK(chain);
     for (const orbit_client_data::TimerBlock& block : *chain) {
       for (uint64_t i = 0; i < block.size(); i++) {
         const orbit_client_protos::TimerInfo& timer_info = block[i];
@@ -333,9 +333,9 @@ std::string CaptureData::process_name() const { return process_.name(); }
 void CaptureData::EnableFrameTrack(uint64_t instrumented_function_id) {
   if (frame_track_function_ids_.contains(instrumented_function_id)) {
     const auto* function = GetInstrumentedFunctionById(instrumented_function_id);
-    CHECK(function != nullptr);
-    LOG("Warning: Frame track for instrumented function \"%s\" is already enabled",
-        function->function_name());
+    ORBIT_CHECK(function != nullptr);
+    ORBIT_LOG("Warning: Frame track for instrumented function \"%s\" is already enabled",
+              function->function_name());
     return;
   }
   frame_track_function_ids_.insert(instrumented_function_id);

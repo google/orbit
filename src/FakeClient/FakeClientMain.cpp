@@ -74,7 +74,7 @@ void ManipulateModuleManagerAndSelectedFunctionsToAddInstrumentedFunctionFromOff
     uint64_t function_id) {
   ErrorMessageOr<std::unique_ptr<orbit_object_utils::ElfFile>> error_or_elf_file =
       orbit_object_utils::CreateElfFile(std::filesystem::path{file_path});
-  FAIL_IF(error_or_elf_file.has_error(), "%s", error_or_elf_file.error().message());
+  ORBIT_FAIL_IF(error_or_elf_file.has_error(), "%s", error_or_elf_file.error().message());
   std::unique_ptr<orbit_object_utils::ElfFile>& elf_file = error_or_elf_file.value();
   std::string build_id = elf_file->GetBuildId();
   uint64_t load_bias = elf_file->GetLoadBias();
@@ -84,7 +84,7 @@ void ManipulateModuleManagerAndSelectedFunctionsToAddInstrumentedFunctionFromOff
   module_info.set_build_id(build_id);
   module_info.set_load_bias(load_bias);
   module_info.set_executable_segment_offset(elf_file->GetExecutableSegmentOffset());
-  CHECK(module_manager->AddOrUpdateModules({module_info}).empty());
+  ORBIT_CHECK(module_manager->AddOrUpdateModules({module_info}).empty());
 
   orbit_client_protos::FunctionInfo function_info;
   function_info.set_module_path(file_path);
@@ -101,7 +101,7 @@ void ManipulateModuleManagerAndSelectedFunctionsToAddInstrumentedFunctionFromFun
     uint64_t function_id) {
   ErrorMessageOr<std::unique_ptr<orbit_object_utils::ElfFile>> error_or_elf_file =
       orbit_object_utils::CreateElfFile(std::filesystem::path{file_path});
-  FAIL_IF(error_or_elf_file.has_error(), "%s", error_or_elf_file.error().message());
+  ORBIT_FAIL_IF(error_or_elf_file.has_error(), "%s", error_or_elf_file.error().message());
   std::unique_ptr<orbit_object_utils::ElfFile>& elf_file = error_or_elf_file.value();
   std::string build_id = elf_file->GetBuildId();
   uint64_t executable_segment_offset = elf_file->GetExecutableSegmentOffset();
@@ -112,10 +112,10 @@ void ManipulateModuleManagerAndSelectedFunctionsToAddInstrumentedFunctionFromFun
   module_info.set_build_id(build_id);
   module_info.set_load_bias(elf_file->GetLoadBias());
   module_info.set_executable_segment_offset(executable_segment_offset);
-  CHECK(module_manager->AddOrUpdateModules({module_info}).empty());
+  ORBIT_CHECK(module_manager->AddOrUpdateModules({module_info}).empty());
 
   ErrorMessageOr<orbit_grpc_protos::ModuleSymbols> symbols_or_error = elf_file->LoadDebugSymbols();
-  FAIL_IF(symbols_or_error.has_error(), "%s", symbols_or_error.error().message());
+  ORBIT_FAIL_IF(symbols_or_error.has_error(), "%s", symbols_or_error.error().message());
   orbit_grpc_protos::ModuleSymbols& symbols = symbols_or_error.value();
 
   std::optional<orbit_grpc_protos::SymbolInfo> symbol = std::nullopt;
@@ -125,8 +125,8 @@ void ManipulateModuleManagerAndSelectedFunctionsToAddInstrumentedFunctionFromFun
       break;
     }
   }
-  FAIL_IF(!symbol.has_value(), "Could not find function \"%s\" in module \"%s\"",
-          demangled_function_name, file_path);
+  ORBIT_FAIL_IF(!symbol.has_value(), "Could not find function \"%s\" in module \"%s\"",
+                demangled_function_name, file_path);
 
   orbit_client_protos::FunctionInfo function_info;
   function_info.set_name(symbol->name());
@@ -159,7 +159,7 @@ std::optional<orbit_grpc_protos::ModuleSymbols> FindAndLoadDebugSymbols(
 
   for (const std::filesystem::path& candidate_path : candidate_paths) {
     ErrorMessageOr<bool> error_or_exists = orbit_base::FileExists(candidate_path);
-    FAIL_IF(error_or_exists.has_error(), "%s", error_or_exists.error().message());
+    ORBIT_FAIL_IF(error_or_exists.has_error(), "%s", error_or_exists.error().message());
     if (!error_or_exists.value()) {
       continue;
     }
@@ -167,7 +167,7 @@ std::optional<orbit_grpc_protos::ModuleSymbols> FindAndLoadDebugSymbols(
     ErrorMessageOr<std::unique_ptr<orbit_object_utils::ElfFile>> error_or_elf_file =
         orbit_object_utils::CreateElfFile(candidate_path);
     if (error_or_elf_file.has_error()) {
-      ERROR("%s", error_or_elf_file.error().message());
+      ORBIT_ERROR("%s", error_or_elf_file.error().message());
       continue;
     }
     std::unique_ptr<orbit_object_utils::ElfFile>& elf_file = error_or_elf_file.value();
@@ -179,12 +179,12 @@ std::optional<orbit_grpc_protos::ModuleSymbols> FindAndLoadDebugSymbols(
       continue;
     }
 
-    LOG("Loaded debug symbols of module \"%s\" from \"%s\"", file_name.string(),
-        elf_file->GetName());
+    ORBIT_LOG("Loaded debug symbols of module \"%s\" from \"%s\"", file_name.string(),
+              elf_file->GetName());
     return symbols_or_error.value();
   }
 
-  ERROR("Could not find debug symbols of module \"%s\"", file_name.string());
+  ORBIT_ERROR("Could not find debug symbols of module \"%s\"", file_name.string());
   return std::nullopt;
 }
 
@@ -193,7 +193,7 @@ void ManipulateModuleManagerToAddFunctionFromFunctionPrefixInSymtabIfExists(
     const std::string& demangled_function_prefix) {
   ErrorMessageOr<std::unique_ptr<orbit_object_utils::ElfFile>> error_or_elf_file =
       orbit_object_utils::CreateElfFile(std::filesystem::path{file_path});
-  FAIL_IF(error_or_elf_file.has_error(), "%s", error_or_elf_file.error().message());
+  ORBIT_FAIL_IF(error_or_elf_file.has_error(), "%s", error_or_elf_file.error().message());
   std::unique_ptr<orbit_object_utils::ElfFile>& elf_file = error_or_elf_file.value();
   std::string build_id = elf_file->GetBuildId();
   uint64_t load_bias = elf_file->GetLoadBias();
@@ -204,7 +204,7 @@ void ManipulateModuleManagerToAddFunctionFromFunctionPrefixInSymtabIfExists(
   module_info.set_build_id(build_id);
   module_info.set_load_bias(load_bias);
   module_info.set_executable_segment_offset(elf_file->GetExecutableSegmentOffset());
-  CHECK(module_manager->AddOrUpdateModules({module_info}).empty());
+  ORBIT_CHECK(module_manager->AddOrUpdateModules({module_info}).empty());
 
   std::optional<orbit_grpc_protos::ModuleSymbols> symbols_opt = FindAndLoadDebugSymbols(file_path);
   if (!symbols_opt.has_value()) {
@@ -220,11 +220,11 @@ void ManipulateModuleManagerToAddFunctionFromFunctionPrefixInSymtabIfExists(
     }
   }
   if (!symbol.has_value()) {
-    ERROR("Could not find function with prefix \"%s\" in module \"%s\"", demangled_function_prefix,
-          elf_file->GetName());
+    ORBIT_ERROR("Could not find function with prefix \"%s\" in module \"%s\"",
+                demangled_function_prefix, elf_file->GetName());
     return;
   }
-  LOG("Found function \"%s\" in module \"%s\"", symbol->name(), elf_file->GetName());
+  ORBIT_LOG("Found function \"%s\" in module \"%s\"", symbol->name(), elf_file->GetName());
 
   orbit_grpc_protos::SymbolInfo symbol_info;
   symbol_info.set_name(symbol->name());
@@ -242,11 +242,11 @@ void ManipulateModuleManagerToAddFunctionFromFunctionPrefixInSymtabIfExists(
 
 uint32_t ReadPidFromFile(const std::string& file_path) {
   ErrorMessageOr<std::string> pid_string = orbit_base::ReadFileToString(file_path);
-  FAIL_IF(pid_string.has_error(), "Reading from \"%s\": %s", file_path,
-          pid_string.error().message());
+  ORBIT_FAIL_IF(pid_string.has_error(), "Reading from \"%s\": %s", file_path,
+                pid_string.error().message());
   uint32_t process_id = 0;
-  FAIL_IF(!absl::SimpleAtoi<uint32_t>(pid_string.value(), &process_id),
-          "Failed to read the PID from \"%s\"", file_path);
+  ORBIT_FAIL_IF(!absl::SimpleAtoi<uint32_t>(pid_string.value(), &process_id),
+                "Failed to read the PID from \"%s\"", file_path);
   return process_id;
 }
 
@@ -255,11 +255,11 @@ void WaitForFileModification(const std::string& file_path) {
   int wd = -1;
 
   inotify_fd = inotify_init();
-  FAIL_IF(inotify_fd == -1, "Failed to initialize inotify");
+  ORBIT_FAIL_IF(inotify_fd == -1, "Failed to initialize inotify");
 
   wd = inotify_add_watch(inotify_fd, file_path.c_str(), IN_MODIFY);
-  FAIL_IF(wd == -1, "Failed to watch \"%s\"", file_path);
-  LOG("Started to watch \"%s\"", file_path);
+  ORBIT_FAIL_IF(wd == -1, "Failed to watch \"%s\"", file_path);
+  ORBIT_LOG("Started to watch \"%s\"", file_path);
 
   // Wait for the first modify event received to read its PID
   constexpr ssize_t kMaxBufferSize = 1024;
@@ -269,15 +269,15 @@ void WaitForFileModification(const std::string& file_path) {
   char buffer[kMaxBufferSize];
   while (offset < kMinReadSize) {
     ssize_t bytes_read = read(inotify_fd, buffer + offset, kMaxBufferSize - offset);
-    FAIL_IF(bytes_read == -1, "Failed to read watch event");
+    ORBIT_FAIL_IF(bytes_read == -1, "Failed to read watch event");
     offset += bytes_read;
   }
 
   inotify_event* event = reinterpret_cast<inotify_event*>(buffer);
-  CHECK(event->wd == wd);
+  ORBIT_CHECK(event->wd == wd);
 
   close(inotify_fd);
-  LOG("Stopped watching \"%s\"", file_path);
+  ORBIT_LOG("Stopped watching \"%s\"", file_path);
 }
 
 }  // namespace
@@ -294,77 +294,79 @@ int main(int argc, char* argv[]) {
   absl::SetProgramUsageMessage("Orbit fake client for testing");
   absl::ParseCommandLine(argc, argv);
 
-  LOG("Starting Client");
+  ORBIT_LOG("Starting Client");
   uint32_t duration_s = absl::GetFlag(FLAGS_duration);
-  FAIL_IF(duration_s == 0, "Specified a zero-length duration");
-  FAIL_IF((absl::GetFlag(FLAGS_instrument_path).empty()) !=
-              (absl::GetFlag(FLAGS_instrument_offset) == 0),
-          "Binary path and offset of the function to instrument need to be specified together");
+  ORBIT_FAIL_IF(duration_s == 0, "Specified a zero-length duration");
+  ORBIT_FAIL_IF(
+      (absl::GetFlag(FLAGS_instrument_path).empty()) !=
+          (absl::GetFlag(FLAGS_instrument_offset) == 0),
+      "Binary path and offset of the function to instrument need to be specified together");
 
   uint32_t process_id = absl::GetFlag(FLAGS_pid);
   if (process_id == 0) {
     const std::string pid_file_path = absl::GetFlag(FLAGS_pid_file_path);
-    FAIL_IF(pid_file_path.empty(), "A PID or a path to a file is needed.");
+    ORBIT_FAIL_IF(pid_file_path.empty(), "A PID or a path to a file is needed.");
     WaitForFileModification(pid_file_path);
     process_id = ReadPidFromFile(pid_file_path);
   }
-  LOG("process_id=%d", process_id);
-  FAIL_IF(process_id == 0, "PID to capture not specified");
+  ORBIT_LOG("process_id=%d", process_id);
+  ORBIT_FAIL_IF(process_id == 0, "PID to capture not specified");
 
   uint16_t samples_per_second = absl::GetFlag(FLAGS_sampling_rate);
-  LOG("samples_per_second=%u", samples_per_second);
+  ORBIT_LOG("samples_per_second=%u", samples_per_second);
   constexpr uint16_t kStackDumpSize = 65000;
   const UnwindingMethod unwinding_method =
       absl::GetFlag(FLAGS_frame_pointers) ? CaptureOptions::kFramePointers : CaptureOptions::kDwarf;
-  LOG("unwinding_method=%s",
-      unwinding_method == CaptureOptions::kFramePointers ? "Frame pointers" : "DWARF");
+  ORBIT_LOG("unwinding_method=%s",
+            unwinding_method == CaptureOptions::kFramePointers ? "Frame pointers" : "DWARF");
 
   std::string file_path = absl::GetFlag(FLAGS_instrument_path);
   uint64_t file_offset = absl::GetFlag(FLAGS_instrument_offset);
-  FAIL_IF((file_path.empty()) != (file_offset == 0),
-          "Binary path and offset of the function to instrument need to be specified together");
+  ORBIT_FAIL_IF(
+      (file_path.empty()) != (file_offset == 0),
+      "Binary path and offset of the function to instrument need to be specified together");
   bool instrument_function = !file_path.empty() && file_offset != 0;
   uint64_t function_size = absl::GetFlag(FLAGS_instrument_size);
   DynamicInstrumentationMethod instrumentation_method =
       absl::GetFlag(FLAGS_user_space_instrumentation) ? CaptureOptions::kUserSpaceInstrumentation
                                                       : CaptureOptions::kKernelUprobes;
-  LOG("user_space_instrumentation=%d",
-      instrumentation_method == CaptureOptions::kUserSpaceInstrumentation);
+  ORBIT_LOG("user_space_instrumentation=%d",
+            instrumentation_method == CaptureOptions::kUserSpaceInstrumentation);
   if (instrument_function) {
-    LOG("file_path=%s", file_path);
-    LOG("file_offset=%#x", file_offset);
+    ORBIT_LOG("file_path=%s", file_path);
+    ORBIT_LOG("file_offset=%#x", file_offset);
     if (instrumentation_method == CaptureOptions::kUserSpaceInstrumentation) {
-      FAIL_IF(function_size == 0, "User space instrumentation requires the function size");
-      LOG("function_size=%d", function_size);
+      ORBIT_FAIL_IF(function_size == 0, "User space instrumentation requires the function size");
+      ORBIT_LOG("function_size=%d", function_size);
     }
   }
   constexpr bool kAlwaysRecordArguments = false;
   constexpr bool kRecordReturnValues = false;
 
   bool collect_scheduling_info = absl::GetFlag(FLAGS_scheduling);
-  LOG("collect_scheduling_info=%d", collect_scheduling_info);
+  ORBIT_LOG("collect_scheduling_info=%d", collect_scheduling_info);
   bool collect_thread_state = absl::GetFlag(FLAGS_thread_state);
-  LOG("collect_thread_state=%d", collect_thread_state);
+  ORBIT_LOG("collect_thread_state=%d", collect_thread_state);
   bool collect_gpu_jobs = absl::GetFlag(FLAGS_gpu_jobs);
-  LOG("collect_gpu_jobs=%d", collect_gpu_jobs);
+  ORBIT_LOG("collect_gpu_jobs=%d", collect_gpu_jobs);
   bool enable_api = absl::GetFlag(FLAGS_orbit_api);
-  LOG("enable_api=%d", enable_api);
+  ORBIT_LOG("enable_api=%d", enable_api);
   constexpr bool kEnableIntrospection = false;
   constexpr uint64_t kMaxLocalMarkerDepthPerCommandBuffer = std::numeric_limits<uint64_t>::max();
   bool collect_memory_info = absl::GetFlag(FLAGS_memory_sampling_rate) > 0;
-  LOG("collect_memory_info=%d", collect_memory_info);
+  ORBIT_LOG("collect_memory_info=%d", collect_memory_info);
   uint64_t memory_sampling_period_ms = 0;
   if (collect_memory_info) {
     memory_sampling_period_ms = 1'000 / absl::GetFlag(FLAGS_memory_sampling_rate);
-    LOG("memory_sampling_period_ms=%u", memory_sampling_period_ms);
+    ORBIT_LOG("memory_sampling_period_ms=%u", memory_sampling_period_ms);
   }
 
   uint32_t grpc_port = absl::GetFlag(FLAGS_port);
   std::string service_address = absl::StrFormat("127.0.0.1:%d", grpc_port);
   std::shared_ptr<grpc::Channel> grpc_channel =
       grpc::CreateChannel(service_address, grpc::InsecureChannelCredentials());
-  LOG("service_address=%s", service_address);
-  CHECK(grpc_channel != nullptr);
+  ORBIT_LOG("service_address=%s", service_address);
+  ORBIT_CHECK(grpc_channel != nullptr);
 
   InstallSigintHandler();
 
@@ -384,7 +386,7 @@ int main(int argc, char* argv[]) {
   if (enable_api) {
     ErrorMessageOr<std::vector<orbit_grpc_protos::ModuleInfo>> modules_or_error =
         orbit_object_utils::ReadModules(process_id);
-    FAIL_IF(modules_or_error.has_error(), "%s", modules_or_error.error().message());
+    ORBIT_FAIL_IF(modules_or_error.has_error(), "%s", modules_or_error.error().message());
     for (const orbit_grpc_protos::ModuleInfo& module : modules_or_error.value()) {
       ManipulateModuleManagerToAddFunctionFromFunctionPrefixInSymtabIfExists(
           &module_manager, module.file_path(),
@@ -393,7 +395,7 @@ int main(int argc, char* argv[]) {
   }
 
   const bool calculate_frame_time = absl::GetFlag(FLAGS_frame_time);
-  LOG("frame_time=%d", calculate_frame_time);
+  ORBIT_LOG("frame_time=%d", calculate_frame_time);
   if (calculate_frame_time) {
     // Instrument vkQueuePresentKHR, if possible.
     // Some application don't call libVulkan library directly; instead, they just query the
@@ -405,7 +407,7 @@ int main(int argc, char* argv[]) {
 
     ErrorMessageOr<std::vector<orbit_grpc_protos::ModuleInfo>> modules_or_error =
         orbit_object_utils::ReadModules(process_id);
-    FAIL_IF(modules_or_error.has_error(), "%s", modules_or_error.error().message());
+    ORBIT_FAIL_IF(modules_or_error.has_error(), "%s", modules_or_error.error().message());
     std::string libvulkan_file_path;
     for (const orbit_grpc_protos::ModuleInfo& module : modules_or_error.value()) {
       if (module.soname() == kGgpvlkModuleName) {
@@ -414,13 +416,13 @@ int main(int argc, char* argv[]) {
       }
     }
     if (!libvulkan_file_path.empty()) {
-      LOG("%s found: instrumenting %s", kGgpvlkModuleName, kQueuePresentFunctionName);
+      ORBIT_LOG("%s found: instrumenting %s", kGgpvlkModuleName, kQueuePresentFunctionName);
       ManipulateModuleManagerAndSelectedFunctionsToAddInstrumentedFunctionFromFunctionNameInDebugSymbols(
           &module_manager, &selected_functions, libvulkan_file_path, kQueuePresentFunctionName,
           orbit_fake_client::FakeCaptureEventProcessor::kFrameBoundaryFunctionId);
-      LOG("%s instrumented", kQueuePresentFunctionName);
+      ORBIT_LOG("%s instrumented", kQueuePresentFunctionName);
     } else {
-      LOG("%s not found", kGgpvlkModuleName);
+      ORBIT_LOG("%s not found", kGgpvlkModuleName);
     }
   }
 
@@ -434,7 +436,7 @@ int main(int argc, char* argv[]) {
           std::make_unique<orbit_fake_client::GraphicsCaptureEventProcessor>();
       break;
     default:
-      UNREACHABLE();
+      ORBIT_UNREACHABLE();
   }
 
   auto capture_outcome_future = capture_client.Capture(
@@ -444,24 +446,24 @@ int main(int argc, char* argv[]) {
       collect_gpu_jobs, enable_api, kEnableIntrospection, instrumentation_method,
       kMaxLocalMarkerDepthPerCommandBuffer, collect_memory_info, memory_sampling_period_ms,
       std::move(capture_event_processor));
-  LOG("Asked to start capture");
+  ORBIT_LOG("Asked to start capture");
 
   absl::Time start_time = absl::Now();
   while (!exit_requested && absl::Now() < start_time + absl::Seconds(duration_s)) {
     std::this_thread::sleep_for(std::chrono::milliseconds{100});
-    CHECK(!capture_outcome_future.IsFinished());
+    ORBIT_CHECK(!capture_outcome_future.IsFinished());
   }
-  CHECK(capture_client.StopCapture());
-  LOG("Asked to stop capture");
+  ORBIT_CHECK(capture_client.StopCapture());
+  ORBIT_LOG("Asked to stop capture");
 
   auto capture_outcome_or_error = capture_outcome_future.Get();
   if (capture_outcome_or_error.has_error()) {
-    FATAL("Capture failed: %s", capture_outcome_or_error.error().message());
+    ORBIT_FATAL("Capture failed: %s", capture_outcome_or_error.error().message());
   }
   thread_pool->ShutdownAndWait();
 
-  CHECK(capture_outcome_or_error.value() ==
-        orbit_capture_client::CaptureListener::CaptureOutcome::kComplete);
-  LOG("Capture completed");
+  ORBIT_CHECK(capture_outcome_or_error.value() ==
+              orbit_capture_client::CaptureListener::CaptureOutcome::kComplete);
+  ORBIT_LOG("Capture completed");
   return 0;
 }

@@ -21,17 +21,17 @@ void MemoryInfoHandler::Start(orbit_grpc_protos::CaptureOptions capture_options)
 
   const pid_t pid = orbit_base::ToNativeProcessId(capture_options.pid());
 
-  CHECK(system_memory_info_producer_ == nullptr);
+  ORBIT_CHECK(system_memory_info_producer_ == nullptr);
   system_memory_info_producer_ = orbit_memory_tracing::CreateSystemMemoryInfoProducer(
       this, capture_options.memory_sampling_period_ns(), pid);
   system_memory_info_producer_->Start();
 
-  CHECK(cgroup_memory_info_producer_ == nullptr);
+  ORBIT_CHECK(cgroup_memory_info_producer_ == nullptr);
   cgroup_memory_info_producer_ = orbit_memory_tracing::CreateCGroupMemoryInfoProducer(
       this, capture_options.memory_sampling_period_ns(), pid);
   cgroup_memory_info_producer_->Start();
 
-  CHECK(process_memory_info_producer_ == nullptr);
+  ORBIT_CHECK(process_memory_info_producer_ == nullptr);
   process_memory_info_producer_ = orbit_memory_tracing::CreateProcessMemoryInfoProducer(
       this, capture_options.memory_sampling_period_ns(), pid);
   process_memory_info_producer_->Start();

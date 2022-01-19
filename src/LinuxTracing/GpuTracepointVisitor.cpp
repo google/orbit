@@ -103,7 +103,7 @@ void GpuTracepointVisitor::CreateGpuJobAndSendToListenerIfComplete(const Key& ke
   gpu_job.set_dma_fence_signaled_time_ns(dma_it->second.timestamp_ns);
   gpu_job.set_timeline(cs_it->second.timeline);
 
-  CHECK(listener_ != nullptr);
+  ORBIT_CHECK(listener_ != nullptr);
   listener_->OnGpuJob(std::move(gpu_job));
 
   // We need to update the timestamp when the last GPU job so far seen

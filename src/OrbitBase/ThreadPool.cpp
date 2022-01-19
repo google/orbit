@@ -60,10 +60,10 @@ ThreadPoolImpl::ThreadPoolImpl(size_t thread_pool_min_size, size_t thread_pool_m
       idle_threads_(0),
       shutdown_initiated_(false),
       run_action_(std::move(run_action)) {
-  CHECK(thread_pool_min_size > 0);
-  CHECK(thread_pool_max_size >= thread_pool_min_size);
+  ORBIT_CHECK(thread_pool_min_size > 0);
+  ORBIT_CHECK(thread_pool_max_size >= thread_pool_min_size);
   // Ttl should not be too small
-  CHECK(thread_ttl / absl::Nanoseconds(1) >= 1000);
+  ORBIT_CHECK(thread_ttl / absl::Nanoseconds(1) >= 1000);
 
   absl::MutexLock lock(&mutex_);
   for (size_t i = 0; i < thread_pool_min_size; ++i) {
@@ -72,11 +72,11 @@ ThreadPoolImpl::ThreadPoolImpl(size_t thread_pool_min_size, size_t thread_pool_m
 }
 
 void ThreadPoolImpl::CreateWorker() {
-  CHECK(!shutdown_initiated_);
+  ORBIT_CHECK(!shutdown_initiated_);
   idle_threads_++;
   std::thread thread([this] { WorkerFunction(); });
   std::thread::id thread_id = thread.get_id();
-  CHECK(!worker_threads_.contains(thread_id));
+  ORBIT_CHECK(!worker_threads_.contains(thread_id));
   worker_threads_.insert_or_assign(thread_id, std::move(thread));
 }
 
@@ -87,7 +87,7 @@ void ThreadPoolImpl::ScheduleImpl(std::unique_ptr<Action> action) {
           : std::move(action);
 
   absl::MutexLock lock(&mutex_);
-  CHECK(!shutdown_initiated_);
+  ORBIT_CHECK(!shutdown_initiated_);
 
   scheduled_actions_.push_back(std::move(wrapped_action));
   if (idle_threads_ < scheduled_actions_.size() && worker_threads_.size() < thread_pool_max_size_) {
@@ -122,7 +122,7 @@ void ThreadPoolImpl::Shutdown() {
 
 void ThreadPoolImpl::Wait() {
   absl::MutexLock lock(&mutex_);
-  CHECK(shutdown_initiated_);
+  ORBIT_CHECK(shutdown_initiated_);
   // First wait until all worker threads finished their work
   // and moved to finished_threads_ list.
   mutex_.Await(
@@ -166,14 +166,14 @@ void ThreadPoolImpl::WorkerFunction() {
     absl::MutexLock lock(&mutex_);
     std::unique_ptr<Action> action = TakeAction();
 
-    CHECK(idle_threads_ > 0);  // Sanity check
+    ORBIT_CHECK(idle_threads_ > 0);  // Sanity check
     --idle_threads_;
 
     if (!action) {
       // Move this thread from the worker_threads_ to finished_threads_.
       std::thread::id thread_id = std::this_thread::get_id();
       auto it = worker_threads_.find(thread_id);
-      CHECK(it != worker_threads_.end());
+      ORBIT_CHECK(it != worker_threads_.end());
       finished_threads_.push_back(std::move(it->second));
       worker_threads_.erase(it);
       break;

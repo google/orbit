@@ -22,7 +22,7 @@ class MemoryInfoHandler : public orbit_memory_tracing::MemoryInfoListener {
   explicit MemoryInfoHandler(
       orbit_producer_event_processor::ProducerEventProcessor* producer_event_processor)
       : producer_event_processor_{producer_event_processor} {
-    CHECK(producer_event_processor_ != nullptr);
+    ORBIT_CHECK(producer_event_processor_ != nullptr);
   }
 
   ~MemoryInfoHandler() override = default;

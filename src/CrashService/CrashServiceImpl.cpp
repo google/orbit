@@ -16,7 +16,7 @@ static void InfiniteRecursion(int num) {
   if (num != 1) {
     InfiniteRecursion(num);
   }
-  LOG("%i", num);
+  ORBIT_LOG("%i", num);
 }
 
 grpc::Status CrashServiceImpl::CrashOrbitService(grpc::ServerContext* /*context*/,
@@ -24,7 +24,7 @@ grpc::Status CrashServiceImpl::CrashOrbitService(grpc::ServerContext* /*context*
                                                  CrashOrbitServiceResponse* /*response*/) {
   switch (request->crash_type()) {
     case CrashOrbitServiceRequest::CHECK_FALSE: {
-      CHECK(false);
+      ORBIT_CHECK(false);
       break;
     }
     case CrashOrbitServiceRequest::STACK_OVERFLOW: {

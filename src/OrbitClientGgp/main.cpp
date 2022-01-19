@@ -47,7 +47,7 @@ std::string GetLogFilePath(const std::string& log_directory) {
   std::filesystem::path log_directory_path{log_directory};
   std::filesystem::create_directory(log_directory_path);
   std::filesystem::path log_file_path = log_directory_path / "OrbitClientGgp.log";
-  LOG("Log file: %s", log_file_path);
+  ORBIT_LOG("Log file: %s", log_file_path);
   return log_file_path;
 }
 
@@ -64,7 +64,7 @@ int main(int argc, char** argv) {
   }
 
   if (absl::GetFlag(FLAGS_pid) == 0) {
-    FATAL("pid to capture not provided; set using -pid");
+    ORBIT_FATAL("pid to capture not provided; set using -pid");
   }
 
   ClientGgpOptions options;
@@ -76,7 +76,7 @@ int main(int argc, char** argv) {
   options.capture_file_directory = absl::GetFlag(FLAGS_file_directory);
   options.samples_per_second = absl::GetFlag(FLAGS_sampling_rate);
   uint16_t stack_dump_size = absl::GetFlag(FLAGS_stack_dump_size);
-  CHECK(stack_dump_size <= 65000);
+  ORBIT_CHECK(stack_dump_size <= 65000);
   options.stack_dump_size = stack_dump_size;
   options.use_framepointer_unwinding = absl::GetFlag(FLAGS_frame_pointer_unwinding);
 
@@ -92,24 +92,24 @@ int main(int argc, char** argv) {
   auto start_capture_result = client_ggp.RequestStartCapture(thread_pool.get());
   if (start_capture_result.has_error()) {
     thread_pool->ShutdownAndWait();
-    FATAL("Unable to start capture: %s", start_capture_result.error().message());
+    ORBIT_FATAL("Unable to start capture: %s", start_capture_result.error().message());
   }
 
   // Captures for the period of time requested
   uint32_t capture_length = absl::GetFlag(FLAGS_capture_length);
-  LOG("Go to sleep for %d seconds", capture_length);
+  ORBIT_LOG("Go to sleep for %d seconds", capture_length);
   absl::SleepFor(absl::Seconds(capture_length));
-  LOG("Back from sleep");
+  ORBIT_LOG("Back from sleep");
 
   // Requests to stop the capture and waits for thread to finish
   if (!client_ggp.StopCapture()) {
     thread_pool->ShutdownAndWait();
-    FATAL("Unable to stop the capture; exiting");
+    ORBIT_FATAL("Unable to stop the capture; exiting");
   }
 
-  LOG("Shut down the thread and wait for it to finish");
+  ORBIT_LOG("Shut down the thread and wait for it to finish");
   thread_pool->ShutdownAndWait();
 
-  LOG("All done");
+  ORBIT_LOG("All done");
   return 0;
 }

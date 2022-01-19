@@ -240,10 +240,10 @@ extern "C" {
 // for all api function tables. It is also called on every capture stop to disable the api so that
 // the api calls early out at the call site.
 void orbit_api_set_enabled(uint64_t address, uint64_t api_version, bool enabled) {
-  LOG("%s Orbit API at address %#x, version %u", enabled ? "Enabling" : "Disabling", address,
-      api_version);
+  ORBIT_LOG("%s Orbit API at address %#x, version %u", enabled ? "Enabling" : "Disabling", address,
+            api_version);
   if (api_version > kOrbitApiVersion) {
-    ERROR(
+    ORBIT_ERROR(
         "Orbit API version in tracee (%u) is newer than the max supported version (%u). "
         "Some features will be unavailable.",
         api_version, kOrbitApiVersion);
@@ -263,7 +263,7 @@ void orbit_api_set_enabled(uint64_t address, uint64_t api_version, bool enabled)
       orbit_api_initialize_and_set_enabled(api_v2, &orbit_api_initialize_v2, enabled);
     } break;
     default:
-      UNREACHABLE();
+      ORBIT_UNREACHABLE();
   }
 
   // Initialize `LockFreeApiEventProducer` and establish the connection to OrbitService now instead
@@ -277,12 +277,13 @@ void orbit_api_set_enabled(uint64_t address, uint64_t api_version, bool enabled)
 }
 
 void orbit_api_set_enabled_wine(uint64_t address, uint64_t api_version, bool enabled) {
-  LOG("%s Orbit API at address %#x, for Windows", enabled ? "Enabling" : "Disabling", address);
+  ORBIT_LOG("%s Orbit API at address %#x, for Windows", enabled ? "Enabling" : "Disabling",
+            address);
   static constexpr uint64_t kOrbitApiForWineMinVersion = 2;
   if (api_version < kOrbitApiForWineMinVersion) {
     // This is unexpected because `orbit_api_get_function_table_address_win_v#` wasn't present in
     // Orbit.h before v2.
-    ERROR(
+    ORBIT_ERROR(
         "Orbit API version in tracee (%u) is older than the min supported version (%u) for "
         "Wine.",
         api_version, kOrbitApiForWineMinVersion);
@@ -290,7 +291,7 @@ void orbit_api_set_enabled_wine(uint64_t address, uint64_t api_version, bool ena
   }
 
   if (api_version > kOrbitApiVersion) {
-    ERROR(
+    ORBIT_ERROR(
         "Orbit API version in tracee (%u) is newer than the max supported version (%u). "
         "Some features will be unavailable.",
         api_version, kOrbitApiVersion);
@@ -302,7 +303,7 @@ void orbit_api_set_enabled_wine(uint64_t address, uint64_t api_version, bool ena
       orbit_api_initialize_and_set_enabled(api_win, &orbit_api_initialize_wine_v2, enabled);
     } break;
     default:
-      UNREACHABLE();
+      ORBIT_UNREACHABLE();
   }
 
   // TODO(b/206359125): Re-add GetCaptureEventProducer() once possible. See above.

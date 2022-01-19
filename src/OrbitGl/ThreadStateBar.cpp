@@ -85,7 +85,7 @@ static Color GetThreadStateColor(ThreadStateSliceInfo::ThreadState state) {
     case ThreadStateSliceInfo::kIdle:
       return kBrown500;
     default:
-      UNREACHABLE();
+      ORBIT_UNREACHABLE();
   }
 }
 
@@ -112,7 +112,7 @@ static std::string GetThreadStateName(ThreadStateSliceInfo::ThreadState state) {
     case ThreadStateSliceInfo::kIdle:
       return "Idle";
     default:
-      UNREACHABLE();
+      ORBIT_UNREACHABLE();
   }
 }
 
@@ -140,7 +140,7 @@ static std::string GetThreadStateDescription(ThreadStateSliceInfo::ThreadState s
     case ThreadStateSliceInfo::kIdle:
       return "Idle kernel thread.";
     default:
-      UNREACHABLE();
+      ORBIT_UNREACHABLE();
   }
 }
 
@@ -174,7 +174,7 @@ void ThreadStateBar::DoUpdatePrimitives(Batcher& batcher, TextRenderer& text_ren
 
   uint64_t ignore_until_ns = 0;
 
-  CHECK(capture_data_ != nullptr);
+  ORBIT_CHECK(capture_data_ != nullptr);
   capture_data_->ForEachThreadStateSliceIntersectingTimeRange(
       GetThreadId(), min_tick, max_tick, [&](const ThreadStateSliceInfo& slice) {
         if (slice.end_timestamp_ns() <= ignore_until_ns) {

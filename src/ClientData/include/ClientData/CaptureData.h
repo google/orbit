@@ -212,7 +212,7 @@ class CaptureData {
 
   [[nodiscard]] const orbit_client_data::PostProcessedSamplingData& post_processed_sampling_data()
       const {
-    CHECK(post_processed_sampling_data_.has_value());
+    ORBIT_CHECK(post_processed_sampling_data_.has_value());
     return post_processed_sampling_data_.value();
   }
 

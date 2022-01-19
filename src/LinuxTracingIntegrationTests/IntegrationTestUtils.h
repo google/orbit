@@ -24,7 +24,7 @@ namespace orbit_linux_tracing_integration_tests {
     return true;
   }
 
-  ERROR("Root required for this test");
+  ORBIT_ERROR("Root required for this test");
   return false;
 }
 

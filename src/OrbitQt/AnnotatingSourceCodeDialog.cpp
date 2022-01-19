@@ -121,8 +121,8 @@ void AnnotatingSourceCodeDialog::LoadSourceCode() {
 void AnnotatingSourceCodeDialog::HandleDebugInfo(
     const ErrorMessageOr<std::filesystem::path>& local_file_path_or_error) {
   if (local_file_path_or_error.has_error()) {
-    LOG("Error while loading debug information for the disassembly view: %s",
-        local_file_path_or_error.error().message());
+    ORBIT_LOG("Error while loading debug information for the disassembly view: %s",
+              local_file_path_or_error.error().message());
 
     SetStatusMessage(QString::fromStdString(local_file_path_or_error.error().message()), "Hide");
     awaited_button_action_ = ButtonAction::kHide;

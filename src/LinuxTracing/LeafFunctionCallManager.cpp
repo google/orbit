@@ -41,10 +41,10 @@ using orbit_grpc_protos::Callstack;
 Callstack::CallstackType LeafFunctionCallManager::PatchCallerOfLeafFunction(
     const CallchainSamplePerfEventData* event_data, LibunwindstackMaps* current_maps,
     LibunwindstackUnwinder* unwinder) {
-  CHECK(event_data != nullptr);
-  CHECK(current_maps != nullptr);
-  CHECK(unwinder != nullptr);
-  CHECK(event_data->GetCallchainSize() > 2);
+  ORBIT_CHECK(event_data != nullptr);
+  ORBIT_CHECK(current_maps != nullptr);
+  ORBIT_CHECK(unwinder != nullptr);
+  ORBIT_CHECK(event_data->GetCallchainSize() > 2);
 
   uint64_t rbp = event_data->GetRegisters()[PERF_REG_X86_BP];
   uint64_t rsp = event_data->GetRegisters()[PERF_REG_X86_SP];
@@ -65,8 +65,9 @@ Callstack::CallstackType LeafFunctionCallManager::PatchCallerOfLeafFunction(
       libunwindstack_result.frames();
 
   if (libunwindstack_callstack.empty()) {
-    ERROR("Discarding sample as DWARF-based unwinding resulted in empty callstack (error: %s)",
-          LibunwindstackUnwinder::LibunwindstackErrorString(libunwindstack_result.error_code()));
+    ORBIT_ERROR(
+        "Discarding sample as DWARF-based unwinding resulted in empty callstack (error: %s)",
+        LibunwindstackUnwinder::LibunwindstackErrorString(libunwindstack_result.error_code()));
     return Callstack::kStackTopDwarfUnwindingError;
   }
 
@@ -84,7 +85,7 @@ Callstack::CallstackType LeafFunctionCallManager::PatchCallerOfLeafFunction(
   }
 
   const std::vector<uint64_t> original_callchain = event_data->CopyOfIpsAsVector();
-  CHECK(original_callchain.size() > 2);
+  ORBIT_CHECK(original_callchain.size() > 2);
 
   std::vector<uint64_t> result;
   result.reserve(original_callchain.size() + 1);
@@ -92,7 +93,7 @@ Callstack::CallstackType LeafFunctionCallManager::PatchCallerOfLeafFunction(
     result.push_back(original_callchain[i]);
   }
 
-  CHECK(libunwindstack_callstack.size() == 2);
+  ORBIT_CHECK(libunwindstack_callstack.size() == 2);
   uint64_t libunwindstack_leaf_caller_pc = libunwindstack_callstack[1].pc;
 
   // If the caller is not executable, we have an unwinding error.

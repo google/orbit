@@ -63,7 +63,7 @@ Status ProcessServiceImpl::GetModuleList(ServerContext* /*context*/,
                                          const GetModuleListRequest* request,
                                          GetModuleListResponse* response) {
   pid_t pid = orbit_base::ToNativeProcessId(request->process_id());
-  LOG("Sending modules for process %d", pid);
+  ORBIT_LOG("Sending modules for process %d", pid);
 
   const auto module_infos = orbit_object_utils::ReadModules(pid);
   if (module_infos.has_error()) {
@@ -90,8 +90,8 @@ Status ProcessServiceImpl::GetProcessMemory(ServerContext* /*context*/,
   }
 
   response->mutable_memory()->resize(0);
-  ERROR("GetProcessMemory: reading %lu bytes from address %#lx of process %u", size,
-        request->address(), request->pid());
+  ORBIT_ERROR("GetProcessMemory: reading %lu bytes from address %#lx of process %u", size,
+              request->address(), request->pid());
   return Status(StatusCode::PERMISSION_DENIED,
                 absl::StrFormat("Could not read %lu bytes from address %#lx of process %u", size,
                                 request->address(), request->pid()));
@@ -100,7 +100,7 @@ Status ProcessServiceImpl::GetProcessMemory(ServerContext* /*context*/,
 Status ProcessServiceImpl::GetDebugInfoFile(ServerContext* /*context*/,
                                             const GetDebugInfoFileRequest* request,
                                             GetDebugInfoFileResponse* response) {
-  CHECK(request != nullptr);
+  ORBIT_CHECK(request != nullptr);
   const auto symbols_path = FindSymbolsFilePath(*request);
   if (symbols_path.has_error()) {
     return Status(StatusCode::NOT_FOUND, symbols_path.error().message());

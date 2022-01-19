@@ -25,7 +25,7 @@ OverlayWidget::~OverlayWidget() = default;
 
 OverlayWidget::OverlayWidget(QWidget* parent)
     : QWidget(parent), ui_(std::make_unique<Ui::OverlayWidget>()) {
-  CHECK(parent != nullptr);
+  ORBIT_CHECK(parent != nullptr);
   parent->installEventFilter(this);
   ui_->setupUi(this);
   ui_->cancelButton->setEnabled(true);

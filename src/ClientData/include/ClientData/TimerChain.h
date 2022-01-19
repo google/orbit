@@ -37,7 +37,7 @@ class TimerBlock {
   // Append a new element to the end of the block using placement-new.
   template <class... Args>
   const orbit_client_protos::TimerInfo& emplace_back(Args&&... args) {
-    CHECK(size() < kBlockSize);
+    ORBIT_CHECK(size() < kBlockSize);
     const orbit_client_protos::TimerInfo& timer_info =
         data_.emplace_back(std::forward<Args>(args)...);
     min_timestamp_ = std::min(timer_info.start(), min_timestamp_);
@@ -131,7 +131,7 @@ class TimerChain {
 
  private:
   void AllocateNewBlock() {
-    CHECK(current_->next_ == nullptr);
+    ORBIT_CHECK(current_->next_ == nullptr);
     current_->next_ = new TimerBlock(current_);
     current_ = current_->next_;
     ++num_blocks_;

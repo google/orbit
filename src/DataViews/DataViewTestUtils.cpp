@@ -25,7 +25,7 @@ void CheckSingleAction(const std::vector<std::string>& context_menu, std::string
       EXPECT_THAT(context_menu, testing::Not(testing::Contains(action)));
       return;
     default:
-      UNREACHABLE();
+      ORBIT_UNREACHABLE();
   }
 }
 

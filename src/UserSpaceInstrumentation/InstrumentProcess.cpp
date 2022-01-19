@@ -63,7 +63,8 @@ ErrorMessageOr<std::filesystem::path> GetLibraryPath() {
 bool ProcessWithPidExists(pid_t pid) {
   const std::string pid_dirname = absl::StrFormat("/proc/%d", pid);
   auto result = orbit_base::FileExists(pid_dirname);
-  FAIL_IF(result.has_error(), "Accessing \"%s\" failed: %s", pid_dirname, result.error().message());
+  ORBIT_FAIL_IF(result.has_error(), "Accessing \"%s\" failed: %s", pid_dirname,
+                result.error().message());
   return result.value();
 }
 
@@ -189,7 +190,7 @@ ErrorMessageOr<std::unique_ptr<InstrumentedProcess>> InstrumentedProcess::Create
   OUTCOME_TRY(AttachAndStopProcess(pid));
   orbit_base::unique_resource detach_on_exit{pid, [](int32_t pid) {
                                                if (DetachAndContinueProcess(pid).has_error()) {
-                                                 ERROR("Detaching from %i", pid);
+                                                 ORBIT_ERROR("Detaching from %i", pid);
                                                }
                                              }};
 
@@ -200,7 +201,7 @@ ErrorMessageOr<std::unique_ptr<InstrumentedProcess>> InstrumentedProcess::Create
                                         library_path_or_error.error().message()));
   }
   const std::filesystem::path library_path = library_path_or_error.value();
-  CHECK(library_path.is_absolute());
+  ORBIT_CHECK(library_path.is_absolute());
   process->injected_library_path_ = std::filesystem::canonical(library_path);
 
   auto library_handle_or_error = DlopenInTracee(pid, library_path, RTLD_NOW);
@@ -242,7 +243,7 @@ InstrumentedProcess::InstrumentFunctions(const CaptureOptions& capture_options) 
   OUTCOME_TRY(auto&& already_attached_tids, AttachAndStopProcess(pid_));
   orbit_base::unique_resource detach_on_exit{pid_, [](int32_t pid) {
                                                if (DetachAndContinueProcess(pid).has_error()) {
-                                                 ERROR("Detaching from %i", pid);
+                                                 ORBIT_ERROR("Detaching from %i", pid);
                                                }
                                              }};
   // Init Capstone disassembler.
@@ -272,7 +273,7 @@ InstrumentedProcess::InstrumentFunctions(const CaptureOptions& capture_options) 
       const std::string message =
           absl::StrFormat("Can't instrument function \"%s\" since it is used internally by Orbit.",
                           function.function_name());
-      ERROR("%s", message);
+      ORBIT_ERROR("%s", message);
       result.function_ids_to_error_messages[function_id] = message;
       continue;
     }
@@ -281,7 +282,7 @@ InstrumentedProcess::InstrumentFunctions(const CaptureOptions& capture_options) 
     if (backup_size == 0) {
       const std::string message = absl::StrFormat(
           "Can't instrument function \"%s\" since it has size zero.", function.function_name());
-      ERROR("%s", message);
+      ORBIT_ERROR("%s", message);
       result.function_ids_to_error_messages[function_id] = message;
       continue;
     }
@@ -295,8 +296,8 @@ InstrumentedProcess::InstrumentFunctions(const CaptureOptions& capture_options) 
         const AddressRange module_address_range(module.address_start(), module.address_end());
         auto trampoline_address_or_error = GetTrampolineMemory(module_address_range);
         if (trampoline_address_or_error.has_error()) {
-          ERROR("Failed to allocate memory for trampoline: %s",
-                trampoline_address_or_error.error().message());
+          ORBIT_ERROR("Failed to allocate memory for trampoline: %s",
+                      trampoline_address_or_error.error().message());
           continue;
         }
         const uint64_t trampoline_address = trampoline_address_or_error.value();
@@ -312,7 +313,7 @@ InstrumentedProcess::InstrumentFunctions(const CaptureOptions& capture_options) 
           const std::string message = absl::StrFormat(
               "Can't instrument function \"%s\". Failed to create trampoline: %s",
               function.function_name(), address_after_prologue_or_error.error().message());
-          ERROR("%s", message);
+          ORBIT_ERROR("%s", message);
           result.function_ids_to_error_messages[function_id] = message;
           OUTCOME_TRY(ReleaseMostRecentlyAllocatedTrampolineMemory(module_address_range));
           continue;
@@ -333,7 +334,7 @@ InstrumentedProcess::InstrumentFunctions(const CaptureOptions& capture_options) 
         const std::string message =
             absl::StrFormat("Can't instrument function \"%s\": %s", function.function_name(),
                             result_or_error.error().message());
-        ERROR("%s", message);
+        ORBIT_ERROR("%s", message);
         result.function_ids_to_error_messages[function_id] = message;
       } else {
         addresses_of_instrumented_functions_.insert(function_address);
@@ -358,7 +359,7 @@ ErrorMessageOr<void> InstrumentedProcess::UninstrumentFunctions() {
   OUTCOME_TRY(AttachAndStopProcess(pid_));
   orbit_base::unique_resource detach_on_exit{pid_, [](int32_t pid) {
                                                if (DetachAndContinueProcess(pid).has_error()) {
-                                                 ERROR("Detaching from %i", pid);
+                                                 ORBIT_ERROR("Detaching from %i", pid);
                                                }
                                              }};
   for (uint64_t function_address : addresses_of_instrumented_functions_) {
@@ -370,7 +371,7 @@ ErrorMessageOr<void> InstrumentedProcess::UninstrumentFunctions() {
                               trampoline_data.function_data.begin() +
                                   (trampoline_data.address_after_prologue - function_address));
     auto write_result_or_error = WriteTraceesMemory(pid_, function_address, code);
-    FAIL_IF(write_result_or_error.has_error(), "%s", write_result_or_error.error().message());
+    ORBIT_FAIL_IF(write_result_or_error.has_error(), "%s", write_result_or_error.error().message());
   }
   return outcome::success();
 }
@@ -457,7 +458,7 @@ std::unique_ptr<InstrumentationManager> InstrumentationManager::Create() {
   static std::mutex mutex;
   std::unique_lock<std::mutex> lock(mutex);
   static bool first_call = true;
-  FAIL_IF(!first_call, "InstrumentationManager should be globally unique.");
+  ORBIT_FAIL_IF(!first_call, "InstrumentationManager should be globally unique.");
   first_call = false;
   return std::unique_ptr<InstrumentationManager>(new InstrumentationManager());
 }

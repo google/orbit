@@ -66,7 +66,7 @@ TEST(FramePointerValidator, GetFpoFunctions) {
                                                    return symbol_offset == code_block.offset();
                                                  });
 
-                   CHECK(symbol_it != symbol_infos.end());
+                   ORBIT_CHECK(symbol_it != symbol_infos.end());
                    return (*symbol_it).demangled_name();
                  });
 

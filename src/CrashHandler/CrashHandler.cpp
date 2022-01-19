@@ -36,7 +36,7 @@ namespace orbit_crash_handler {
 CrashHandler::CrashHandler(const std::string& dump_path, const std::string& handler_path,
                            const std::string& crash_server_url,
                            const std::vector<std::string>& attachments) {
-  CHECK(!is_init_);
+  ORBIT_CHECK(!is_init_);
   is_init_ = true;
 
   // Creates a new CrashpadClient instance that directs crashes to crashpad

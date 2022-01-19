@@ -44,7 +44,7 @@ TrackManager::TrackManager(TimeGraph* time_graph, Viewport* viewport, TimeGraphL
       layout_(layout),
       capture_data_{capture_data},
       app_{app} {
-  CHECK(capture_data != nullptr);
+  ORBIT_CHECK(capture_data != nullptr);
   for (Track::Type type : Track::kAllTrackTypes) {
     track_type_visibility_[type] = true;
   }
@@ -181,7 +181,7 @@ void TrackManager::SetFilter(const std::string& filter) {
 }
 
 void TrackManager::UpdateVisibleTrackList() {
-  CHECK(visible_track_list_needs_update_);
+  ORBIT_CHECK(visible_track_list_needs_update_);
 
   visible_track_list_needs_update_ = false;
   visible_tracks_.clear();
@@ -425,7 +425,7 @@ Track* TrackManager::GetOrCreateTrackFromTimerInfo(const TimerInfo& timer_info) 
       return GetPageFaultsTrack();
     case orbit_client_protos::TimerInfo_Type_TimerInfo_Type_INT_MIN_SENTINEL_DO_NOT_USE_:
     case orbit_client_protos::TimerInfo_Type_TimerInfo_Type_INT_MAX_SENTINEL_DO_NOT_USE_:
-      UNREACHABLE();
+      ORBIT_UNREACHABLE();
   }
   return nullptr;
 }

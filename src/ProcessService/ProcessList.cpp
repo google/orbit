@@ -38,7 +38,7 @@ ErrorMessageOr<void> ProcessList::Refresh() {
 
     bool is_directory = it->is_directory(error);
     if (error) {
-      ERROR("Unable to stat \"%s\" directory entry: %s", it->path(), error.message());
+      ORBIT_ERROR("Unable to stat \"%s\" directory entry: %s", it->path(), error.message());
       continue;
     }
 
@@ -62,7 +62,7 @@ ErrorMessageOr<void> ProcessList::Refresh() {
       } else {
         // We don't fail in this case. This could be a permission problem which might occur when not
         // running as root.
-        ERROR("Could not update the CPU usage of process %d", process.key());
+        ORBIT_ERROR("Could not update the CPU usage of process %d", process.key());
       }
 
       updated_processes.insert(std::move(process));
@@ -74,8 +74,8 @@ ErrorMessageOr<void> ProcessList::Refresh() {
     if (process_or_error.has_error()) {
       // We don't fail in this case. This could be a permission problem which is restricted to a
       // small amount of processes.
-      ERROR("Could not create process list entry for pid %u: %s", pid,
-            process_or_error.error().message());
+      ORBIT_ERROR("Could not create process list entry for pid %u: %s", pid,
+                  process_or_error.error().message());
       continue;
     }
 

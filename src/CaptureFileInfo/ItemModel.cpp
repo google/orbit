@@ -33,10 +33,10 @@ int ItemModel::rowCount(const QModelIndex& parent) const {
 }
 
 QVariant ItemModel::data(const QModelIndex& idx, int role) const {
-  CHECK(idx.isValid());
-  CHECK(idx.model() == this);
-  CHECK(idx.row() >= 0 && idx.row() < static_cast<int>(capture_files_.size()));
-  CHECK(idx.column() >= 0 && idx.column() < static_cast<int>(Column::kEnd));
+  ORBIT_CHECK(idx.isValid());
+  ORBIT_CHECK(idx.model() == this);
+  ORBIT_CHECK(idx.row() >= 0 && idx.row() < static_cast<int>(capture_files_.size()));
+  ORBIT_CHECK(idx.column() >= 0 && idx.column() < static_cast<int>(Column::kEnd));
 
   const CaptureFileInfo& capture_file_info = capture_files_.at(idx.row());
 
@@ -53,7 +53,7 @@ QVariant ItemModel::data(const QModelIndex& idx, int role) const {
       case Column::kCreated:
         return capture_file_info.Created();
       case Column::kEnd:
-        UNREACHABLE();
+        ORBIT_UNREACHABLE();
     }
   }
 
@@ -80,9 +80,9 @@ QVariant ItemModel::headerData(int section, Qt::Orientation orientation, int rol
     case Column::kCreated:
       return "Created";
     case Column::kEnd:
-      UNREACHABLE();
+      ORBIT_UNREACHABLE();
   }
-  UNREACHABLE();
+  ORBIT_UNREACHABLE();
 }
 
 }  // namespace orbit_capture_file_info

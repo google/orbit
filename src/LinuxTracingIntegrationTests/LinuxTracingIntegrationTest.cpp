@@ -37,11 +37,11 @@ namespace {
 
 [[nodiscard]] int ReadPerfEventParanoid() {
   auto error_or_content = orbit_base::ReadFileToString("/proc/sys/kernel/perf_event_paranoid");
-  CHECK(error_or_content.has_value());
+  ORBIT_CHECK(error_or_content.has_value());
   const std::string& content = error_or_content.value();
   int perf_event_paranoid = 2;
   bool atoi_succeeded = absl::SimpleAtoi(content, &perf_event_paranoid);
-  CHECK(atoi_succeeded);
+  ORBIT_CHECK(atoi_succeeded);
   return perf_event_paranoid;
 }
 
@@ -55,15 +55,15 @@ namespace {
     return true;
   }
 
-  ERROR("Root or max perf_event_paranoid %d (actual is %d) required for this test",
-        max_perf_event_paranoid, perf_event_paranoid);
+  ORBIT_ERROR("Root or max perf_event_paranoid %d (actual is %d) required for this test",
+              max_perf_event_paranoid, perf_event_paranoid);
   return false;
 }
 
 [[nodiscard]] std::string ReadUnameKernelRelease() {
   utsname utsname{};
   int uname_result = uname(&utsname);
-  CHECK(uname_result == 0);
+  ORBIT_CHECK(uname_result == 0);
   return utsname.release;
 }
 
@@ -73,7 +73,7 @@ namespace {
     return true;
   }
 
-  ERROR("Stadia instance required for this test (but kernel release is \"%s\")", release);
+  ORBIT_ERROR("Stadia instance required for this test (but kernel release is \"%s\")", release);
   return false;
 }
 
@@ -268,12 +268,12 @@ class LinuxTracingIntegrationTestFixture {
 
   void StartTracingAndWaitForTracingLoopStarted(
       const orbit_grpc_protos::CaptureOptions& capture_options) {
-    CHECK(tracer_ == nullptr);
-    CHECK(!listener_.has_value());
+    ORBIT_CHECK(tracer_ == nullptr);
+    ORBIT_CHECK(!listener_.has_value());
 
     if (IsRunningAsRoot()) {
       // Needed for BufferTracerListener::WaitForAtLeastOneSchedulingSlice().
-      CHECK(capture_options.trace_context_switches());
+      ORBIT_CHECK(capture_options.trace_context_switches());
     }
 
     listener_.emplace();
@@ -295,8 +295,8 @@ class LinuxTracingIntegrationTestFixture {
   }
 
   [[nodiscard]] std::vector<orbit_grpc_protos::ProducerCaptureEvent> StopTracingAndGetEvents() {
-    CHECK(tracer_ != nullptr);
-    CHECK(listener_.has_value());
+    ORBIT_CHECK(tracer_ != nullptr);
+    ORBIT_CHECK(listener_.has_value());
     tracer_->Stop();
     tracer_.reset();
     std::vector<orbit_grpc_protos::ProducerCaptureEvent> events = listener_->GetAndClearEvents();
@@ -315,7 +315,7 @@ using PuppetConstants = IntegrationTestPuppetConstants;
 [[nodiscard]] std::vector<orbit_grpc_protos::ProducerCaptureEvent> TraceAndGetEvents(
     LinuxTracingIntegrationTestFixture* fixture, std::string_view command,
     std::optional<orbit_grpc_protos::CaptureOptions> capture_options = std::nullopt) {
-  CHECK(fixture != nullptr);
+  ORBIT_CHECK(fixture != nullptr);
   if (!capture_options.has_value()) {
     capture_options = fixture->BuildDefaultCaptureOptions();
   }
@@ -338,41 +338,41 @@ void VerifyOrderOfAllEvents(const std::vector<orbit_grpc_protos::ProducerCapture
     switch (event.event_case()) {
       case orbit_grpc_protos::ProducerCaptureEvent::kApiEvent:
         // TracingHandler does not send this event.
-        UNREACHABLE();
+        ORBIT_UNREACHABLE();
       case orbit_grpc_protos::ProducerCaptureEvent::kApiScopeStart:
-        UNREACHABLE();
+        ORBIT_UNREACHABLE();
       case orbit_grpc_protos::ProducerCaptureEvent::kApiScopeStartAsync:
-        UNREACHABLE();
+        ORBIT_UNREACHABLE();
       case orbit_grpc_protos::ProducerCaptureEvent::kApiScopeStop:
-        UNREACHABLE();
+        ORBIT_UNREACHABLE();
       case orbit_grpc_protos::ProducerCaptureEvent::kApiScopeStopAsync:
-        UNREACHABLE();
+        ORBIT_UNREACHABLE();
       case orbit_grpc_protos::ProducerCaptureEvent::kApiStringEvent:
-        UNREACHABLE();
+        ORBIT_UNREACHABLE();
       case orbit_grpc_protos::ProducerCaptureEvent::kApiTrackDouble:
-        UNREACHABLE();
+        ORBIT_UNREACHABLE();
       case orbit_grpc_protos::ProducerCaptureEvent::kApiTrackFloat:
-        UNREACHABLE();
+        ORBIT_UNREACHABLE();
       case orbit_grpc_protos::ProducerCaptureEvent::kApiTrackInt:
-        UNREACHABLE();
+        ORBIT_UNREACHABLE();
       case orbit_grpc_protos::ProducerCaptureEvent::kApiTrackInt64:
-        UNREACHABLE();
+        ORBIT_UNREACHABLE();
       case orbit_grpc_protos::ProducerCaptureEvent::kApiTrackUint:
-        UNREACHABLE();
+        ORBIT_UNREACHABLE();
       case orbit_grpc_protos::ProducerCaptureEvent::kApiTrackUint64:
-        UNREACHABLE();
+        ORBIT_UNREACHABLE();
       case orbit_grpc_protos::ProducerCaptureEvent::kCallstackSample:
-        UNREACHABLE();
+        ORBIT_UNREACHABLE();
       case orbit_grpc_protos::ProducerCaptureEvent::kCaptureFinished:
-        UNREACHABLE();
+        ORBIT_UNREACHABLE();
       case orbit_grpc_protos::ProducerCaptureEvent::kCaptureStarted:
-        UNREACHABLE();
+        ORBIT_UNREACHABLE();
       case orbit_grpc_protos::ProducerCaptureEvent::kClockResolutionEvent:
-        UNREACHABLE();
+        ORBIT_UNREACHABLE();
       case orbit_grpc_protos::ProducerCaptureEvent::kErrorEnablingOrbitApiEvent:
-        UNREACHABLE();
+        ORBIT_UNREACHABLE();
       case orbit_grpc_protos::ProducerCaptureEvent::kErrorEnablingUserSpaceInstrumentationEvent:
-        UNREACHABLE();
+        ORBIT_UNREACHABLE();
       case orbit_grpc_protos::ProducerCaptureEvent::kErrorsWithPerfEventOpenEvent:
         EXPECT_GE(event.errors_with_perf_event_open_event().timestamp_ns(),
                   previous_event_timestamp_ns);
@@ -390,28 +390,28 @@ void VerifyOrderOfAllEvents(const std::vector<orbit_grpc_protos::ProducerCapture
         previous_event_timestamp_ns = event.full_gpu_job().dma_fence_signaled_time_ns();
         break;
       case orbit_grpc_protos::ProducerCaptureEvent::kFullTracepointEvent:
-        UNREACHABLE();
+        ORBIT_UNREACHABLE();
       case orbit_grpc_protos::ProducerCaptureEvent::kFunctionCall:
         EXPECT_GE(event.function_call().end_timestamp_ns(), previous_event_timestamp_ns);
         previous_event_timestamp_ns = event.function_call().end_timestamp_ns();
         break;
       case orbit_grpc_protos::ProducerCaptureEvent::kFunctionEntry:
-        UNREACHABLE();
+        ORBIT_UNREACHABLE();
       case orbit_grpc_protos::ProducerCaptureEvent::kFunctionExit:
-        UNREACHABLE();
+        ORBIT_UNREACHABLE();
       case orbit_grpc_protos::ProducerCaptureEvent::kGpuQueueSubmission:
-        UNREACHABLE();
+        ORBIT_UNREACHABLE();
       case orbit_grpc_protos::ProducerCaptureEvent::kInternedCallstack:
-        UNREACHABLE();
+        ORBIT_UNREACHABLE();
       case orbit_grpc_protos::ProducerCaptureEvent::kInternedString:
-        UNREACHABLE();
+        ORBIT_UNREACHABLE();
       case orbit_grpc_protos::ProducerCaptureEvent::kLostPerfRecordsEvent:
         EXPECT_GE(event.lost_perf_records_event().end_timestamp_ns(), previous_event_timestamp_ns);
         previous_event_timestamp_ns = event.lost_perf_records_event().end_timestamp_ns();
         break;
       case orbit_grpc_protos::ProducerCaptureEvent::kMemoryUsageEvent:
         // Cases of memory events are tested in MemoryTracingIntegrationTest.
-        UNREACHABLE();
+        ORBIT_UNREACHABLE();
       case orbit_grpc_protos::ProducerCaptureEvent::kModulesSnapshot:
         EXPECT_GE(event.modules_snapshot().timestamp_ns(), previous_event_timestamp_ns);
         previous_event_timestamp_ns = event.modules_snapshot().timestamp_ns();
@@ -443,12 +443,12 @@ void VerifyOrderOfAllEvents(const std::vector<orbit_grpc_protos::ProducerCapture
         previous_event_timestamp_ns = event.thread_state_slice().end_timestamp_ns();
         break;
       case orbit_grpc_protos::ProducerCaptureEvent::kWarningEvent:
-        UNREACHABLE();
+        ORBIT_UNREACHABLE();
       case orbit_grpc_protos::ProducerCaptureEvent::
           kWarningInstrumentingWithUserSpaceInstrumentationEvent:
-        UNREACHABLE();
+        ORBIT_UNREACHABLE();
       case orbit_grpc_protos::ProducerCaptureEvent::EVENT_NOT_SET:
-        UNREACHABLE();
+        ORBIT_UNREACHABLE();
     }
   }
 }
@@ -509,7 +509,7 @@ TEST(LinuxTracingIntegrationTest, SchedulingSlices) {
     last_out_timestamp_ns = scheduling_slice.out_timestamp_ns();
   }
 
-  LOG("scheduling_slice_count=%lu", scheduling_slice_count);
+  ORBIT_LOG("scheduling_slice_count=%lu", scheduling_slice_count);
   // "- 1" as it is the expected number of SchedulingSlices *only between* the first and last sleep.
   EXPECT_GE(scheduling_slice_count, PuppetConstants::kSleepCount - 1);
 }
@@ -564,7 +564,8 @@ GetOuterAndInnerFunctionVirtualAddressRanges(pid_t pid) {
   uint64_t inner_function_virtual_address_end = 0;
   for (const orbit_grpc_protos::SymbolInfo& symbol : module_symbols.symbol_infos()) {
     if (symbol.name() == PuppetConstants::kOuterFunctionName) {
-      CHECK(outer_function_virtual_address_start == 0 && outer_function_virtual_address_end == 0);
+      ORBIT_CHECK(outer_function_virtual_address_start == 0 &&
+                  outer_function_virtual_address_end == 0);
       outer_function_virtual_address_start =
           orbit_object_utils::SymbolVirtualAddressToAbsoluteAddress(
               symbol.address(), module_info.address_start(), module_info.load_bias(),
@@ -573,7 +574,8 @@ GetOuterAndInnerFunctionVirtualAddressRanges(pid_t pid) {
     }
 
     if (symbol.name() == PuppetConstants::kInnerFunctionName) {
-      CHECK(inner_function_virtual_address_start == 0 && inner_function_virtual_address_end == 0);
+      ORBIT_CHECK(inner_function_virtual_address_start == 0 &&
+                  inner_function_virtual_address_end == 0);
       inner_function_virtual_address_start =
           orbit_object_utils::SymbolVirtualAddressToAbsoluteAddress(
               symbol.address(), module_info.address_start(), module_info.load_bias(),
@@ -581,10 +583,10 @@ GetOuterAndInnerFunctionVirtualAddressRanges(pid_t pid) {
       inner_function_virtual_address_end = inner_function_virtual_address_start + symbol.size() - 1;
     }
   }
-  CHECK(outer_function_virtual_address_start != 0);
-  CHECK(outer_function_virtual_address_end != 0);
-  CHECK(inner_function_virtual_address_start != 0);
-  CHECK(inner_function_virtual_address_end != 0);
+  ORBIT_CHECK(outer_function_virtual_address_start != 0);
+  ORBIT_CHECK(outer_function_virtual_address_end != 0);
+  ORBIT_CHECK(inner_function_virtual_address_start != 0);
+  ORBIT_CHECK(inner_function_virtual_address_end != 0);
   return std::make_pair(
       std::make_pair(outer_function_virtual_address_start, outer_function_virtual_address_end),
       std::make_pair(inner_function_virtual_address_start, inner_function_virtual_address_end));
@@ -668,7 +670,8 @@ void VerifyCallstackSamplesWithOuterAndInnerFunction(
     ASSERT_EQ(callstack_sample.tid(), pid);
 
     if (callstack_sample.callstack().type() != orbit_grpc_protos::Callstack::kComplete) {
-      LOG("callstack_sample.callstack().type() == %s",
+      ORBIT_LOG(
+          "callstack_sample.callstack().type() == %s",
           orbit_grpc_protos::Callstack::CallstackType_Name(callstack_sample.callstack().type()));
       continue;
     }
@@ -705,9 +708,9 @@ void VerifyCallstackSamplesWithOuterAndInnerFunction(
   }
 
   ASSERT_GT(matching_callstack_count, 0);
-  CHECK(first_matching_callstack_timestamp_ns <= last_matching_callstack_timestamp_ns);
-  LOG("Found %lu of the expected callstacks over %.0f ms", matching_callstack_count,
-      (last_matching_callstack_timestamp_ns - first_matching_callstack_timestamp_ns) / 1e6);
+  ORBIT_CHECK(first_matching_callstack_timestamp_ns <= last_matching_callstack_timestamp_ns);
+  ORBIT_LOG("Found %lu of the expected callstacks over %.0f ms", matching_callstack_count,
+            (last_matching_callstack_timestamp_ns - first_matching_callstack_timestamp_ns) / 1e6);
   constexpr double kMinExpectedScheduledRelativeTime = 0.67;
   const auto min_expected_matching_callstack_count = static_cast<uint64_t>(
       floor((last_matching_callstack_timestamp_ns - first_matching_callstack_timestamp_ns) / 1e9 *
@@ -933,9 +936,9 @@ TEST(LinuxTracingIntegrationTest, ThreadStateSlices) {
     last_end_timestamp_ns = thread_state_slice.end_timestamp_ns();
   }
 
-  LOG("running_slice_count=%lu", running_slice_count);
-  LOG("runnable_slice_count=%lu", runnable_slice_count);
-  LOG("interruptible_sleep_slice_count=%lu", interruptible_sleep_slice_count);
+  ORBIT_LOG("running_slice_count=%lu", running_slice_count);
+  ORBIT_LOG("runnable_slice_count=%lu", runnable_slice_count);
+  ORBIT_LOG("interruptible_sleep_slice_count=%lu", interruptible_sleep_slice_count);
   // "- 1" as these are the expected numbers of kRunning and kRunnable ThreadStateSlices *only
   // between* the first and last sleep.
   EXPECT_GE(running_slice_count, PuppetConstants::kSleepCount - 1);
@@ -1063,7 +1066,7 @@ TEST(LinuxTracingIntegrationTest, GpuJobs) {
       break;
     }
   }
-  LOG("another_process_used_gpu=%d", another_process_used_gpu);
+  ORBIT_LOG("another_process_used_gpu=%d", another_process_used_gpu);
 
   uint64_t gpu_job_count = 0;
   for (const auto& event : events) {
@@ -1100,7 +1103,7 @@ TEST(LinuxTracingIntegrationTest, GpuJobs) {
     ++gpu_job_count;
   }
 
-  LOG("gpu_job_count=%lu", gpu_job_count);
+  ORBIT_LOG("gpu_job_count=%lu", gpu_job_count);
   EXPECT_GE(gpu_job_count, PuppetConstants::kFrameCount);
 }
 

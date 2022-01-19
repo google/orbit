@@ -22,7 +22,7 @@ std::filesystem::path GetExecutablePath() {
   char buffer[PATH_MAX];
   ssize_t length = readlink("/proc/self/exe", buffer, sizeof(buffer));
   if (length == -1) {
-    FATAL("Unable to readlink /proc/self/exe: %s", SafeStrerror(errno));
+    ORBIT_FATAL("Unable to readlink /proc/self/exe: %s", SafeStrerror(errno));
   }
 
   return std::filesystem::path(std::string(buffer, length));

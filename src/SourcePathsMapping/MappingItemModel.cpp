@@ -34,8 +34,8 @@ Qt::ItemFlags MappingItemModel::flags(const QModelIndex& index) const {
 }
 
 QVariant MappingItemModel::data(const QModelIndex& index, int role) const {
-  CHECK(index.model() == this);
-  CHECK(index.row() < static_cast<int>(mappings_.size()));
+  ORBIT_CHECK(index.model() == this);
+  ORBIT_CHECK(index.row() < static_cast<int>(mappings_.size()));
 
   const auto& mapping = mappings_.at(index.row());
 
@@ -64,8 +64,8 @@ QVariant MappingItemModel::headerData(int section, Qt::Orientation orientation, 
 
 bool MappingItemModel::moveRows(const QModelIndex& source_parent, int source_row, int count,
                                 const QModelIndex& destination_parent, int destination_child) {
-  CHECK(!source_parent.isValid());
-  CHECK(!destination_parent.isValid());
+  ORBIT_CHECK(!source_parent.isValid());
+  ORBIT_CHECK(!destination_parent.isValid());
   // We don't have to support moving more than a single row.
   if (count != 1) return false;
 
@@ -99,8 +99,8 @@ bool MappingItemModel::RemoveRows(int row, int count, const QModelIndex& parent)
 }
 
 bool MappingItemModel::setData(const QModelIndex& idx, const QVariant& value, int role) {
-  CHECK(idx.isValid());
-  CHECK(idx.model() == this);
+  ORBIT_CHECK(idx.isValid());
+  ORBIT_CHECK(idx.model() == this);
 
   if (role != Qt::EditRole) return false;
   if (!value.canConvert<Mapping>()) return false;

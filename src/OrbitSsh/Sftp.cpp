@@ -15,13 +15,14 @@
 namespace orbit_ssh {
 
 outcome::result<Sftp> Sftp::Init(Session* session) {
-  CHECK(session);
+  ORBIT_CHECK(session);
   auto* const result = libssh2_sftp_init(session->GetRawSessionPtr());
 
   if (result == nullptr) {
     const auto [last_errno, error_message] = LibSsh2SessionLastError(session->GetRawSessionPtr());
     if (last_errno != LIBSSH2_ERROR_EAGAIN) {
-      ERROR("Call to ligssh2_sftp_init() failed. Last session error message: %s", error_message);
+      ORBIT_ERROR("Call to ligssh2_sftp_init() failed. Last session error message: %s",
+                  error_message);
     }
     return static_cast<Error>(last_errno);
   }
@@ -30,7 +31,7 @@ outcome::result<Sftp> Sftp::Init(Session* session) {
 }
 
 outcome::result<void> Sftp::Shutdown() {
-  CHECK(raw_sftp_ptr_);
+  ORBIT_CHECK(raw_sftp_ptr_);
   const auto result = libssh2_sftp_shutdown(raw_sftp_ptr_.get());
 
   if (result < 0) {

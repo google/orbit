@@ -42,19 +42,19 @@ class FakeCaptureEventProcessor : public orbit_capture_client::CaptureEventProce
   ~FakeCaptureEventProcessor() override {
     std::filesystem::path file_path(absl::GetFlag(FLAGS_output_path));
     {
-      LOG("Events received: %u", event_count_);
+      ORBIT_LOG("Events received: %u", event_count_);
       ErrorMessageOr<void> event_count_write_result = orbit_base::WriteStringToFile(
           file_path / kEventCountFilename, std::to_string(event_count_));
-      FAIL_IF(event_count_write_result.has_error(), "Writing to \"%s\": %s", kEventCountFilename,
-              event_count_write_result.error().message());
+      ORBIT_FAIL_IF(event_count_write_result.has_error(), "Writing to \"%s\": %s",
+                    kEventCountFilename, event_count_write_result.error().message());
     }
 
     {
-      LOG("Bytes received: %u", byte_count_);
+      ORBIT_LOG("Bytes received: %u", byte_count_);
       ErrorMessageOr<void> byte_count_write_result = orbit_base::WriteStringToFile(
           file_path / kByteCountFilename, std::to_string(byte_count_));
-      FAIL_IF(byte_count_write_result.has_error(), "Writing to \"%s\": %s", kByteCountFilename,
-              byte_count_write_result.error().message());
+      ORBIT_FAIL_IF(byte_count_write_result.has_error(), "Writing to \"%s\": %s",
+                    kByteCountFilename, byte_count_write_result.error().message());
     }
 
     {
@@ -65,12 +65,12 @@ class FakeCaptureEventProcessor : public orbit_capture_client::CaptureEventProce
                                                    frame_boundary_min_timestamp_ns_) /
                                1'000'000.0 / static_cast<double>(frame_boundary_count_ - 1);
         frame_time_ms_string = absl::StrFormat("%.3f", frame_time_ms);
-        LOG("Avg. frame time (ms): %s", frame_time_ms_string);
+        ORBIT_LOG("Avg. frame time (ms): %s", frame_time_ms_string);
       }
       ErrorMessageOr<void> frame_time_write_result =
           orbit_base::WriteStringToFile(file_path / kFrameTimeFilename, frame_time_ms_string);
-      FAIL_IF(frame_time_write_result.has_error(), "Writing to \"%s\": %s", kFrameTimeFilename,
-              frame_time_write_result.error().message());
+      ORBIT_FAIL_IF(frame_time_write_result.has_error(), "Writing to \"%s\": %s",
+                    kFrameTimeFilename, frame_time_write_result.error().message());
     }
   }
 

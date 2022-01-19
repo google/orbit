@@ -38,7 +38,7 @@ static ErrorMessageOr<AddressRange> FindFunctionAbsoluteAddressInModule(
 
 AddressRange GetFunctionAbsoluteAddressRangeOrDie(std::string_view function_name) {
   auto modules_or_error = orbit_object_utils::ReadModules(getpid());
-  CHECK(!modules_or_error.has_error());
+  ORBIT_CHECK(!modules_or_error.has_error());
   auto& modules = modules_or_error.value();
 
   // We check the main module first because it's most likely to find the function there.
@@ -61,7 +61,7 @@ AddressRange GetFunctionAbsoluteAddressRangeOrDie(std::string_view function_name
     if (result.has_value()) return result.value();
   }
 
-  FATAL("GetFunctionAbsoluteAddressRangeOrDie hasn't found a function '%s'", function_name);
+  ORBIT_FATAL("GetFunctionAbsoluteAddressRangeOrDie hasn't found a function '%s'", function_name);
 }
 
 static ErrorMessageOr<AddressRange> FindFunctionRelativeAddressInModule(
@@ -79,7 +79,7 @@ static ErrorMessageOr<AddressRange> FindFunctionRelativeAddressInModule(
 
 FunctionLocation FindFunctionOrDie(std::string_view function_name) {
   auto modules_or_error = orbit_object_utils::ReadModules(getpid());
-  CHECK(!modules_or_error.has_error());
+  ORBIT_CHECK(!modules_or_error.has_error());
   auto& modules = modules_or_error.value();
 
   // We check the main module first because it's most likely to find the function there.
@@ -97,16 +97,16 @@ FunctionLocation FindFunctionOrDie(std::string_view function_name) {
     auto result = FindFunctionRelativeAddressInModule(function_name, module.file_path());
     if (result.has_value()) return FunctionLocation{module.file_path(), result.value()};
   }
-  FATAL("FindFunctionOrDie hasn't found a function '%s'", function_name);
+  ORBIT_FATAL("FindFunctionOrDie hasn't found a function '%s'", function_name);
 }
 
 void DumpDisassembly(const std::vector<uint8_t>& code, uint64_t start_address) {
   // Init Capstone disassembler.
   csh capstone_handle = 0;
   cs_err error_code = cs_open(CS_ARCH_X86, CS_MODE_64, &capstone_handle);
-  CHECK(error_code == CS_ERR_OK);
+  ORBIT_CHECK(error_code == CS_ERR_OK);
   error_code = cs_option(capstone_handle, CS_OPT_DETAIL, CS_OPT_ON);
-  CHECK(error_code == CS_ERR_OK);
+  ORBIT_CHECK(error_code == CS_ERR_OK);
   orbit_base::unique_resource close_on_exit{
       &capstone_handle, [](csh* capstone_handle) { cs_close(capstone_handle); }};
 
@@ -121,11 +121,11 @@ void DumpDisassembly(const std::vector<uint8_t>& code, uint64_t start_address) {
           absl::StrCat(machine_code, j == 0 ? absl::StrFormat("%#0.2x", instruction[i].bytes[j])
                                             : absl::StrFormat(" %0.2x", instruction[i].bytes[j]));
     }
-    LOG("%#x:\t%-12s %s , %s", instruction[i].address, instruction[i].mnemonic,
-        instruction[i].op_str, machine_code);
+    ORBIT_LOG("%#x:\t%-12s %s , %s", instruction[i].address, instruction[i].mnemonic,
+              instruction[i].op_str, machine_code);
   }
   // Print out the next offset, after the last instruction.
-  LOG("%#x:", instruction[i - 1].address + instruction[i - 1].size);
+  ORBIT_LOG("%#x:", instruction[i - 1].address + instruction[i - 1].size);
   cs_free(instruction, count);
 }
 
