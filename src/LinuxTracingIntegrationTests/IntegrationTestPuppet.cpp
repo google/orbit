@@ -164,6 +164,15 @@ extern "C" __attribute__((noinline)) void UseOrbitApi() {
   }
 }
 
+void IncreaseRssCommand() {
+  void* ptr = malloc(PuppetConstants::kRssIncreaseB);  // NOLINT
+  ORBIT_CHECK(ptr != nullptr);
+  auto* typed_ptr = static_cast<volatile uint64_t*>(ptr);
+  for (uint64_t i = 0; i < PuppetConstants::kRssIncreaseB / sizeof(uint64_t); ++i) {
+    typed_ptr[i] = i;
+  }
+}
+
 int IntegrationTestPuppetMain() {
   ORBIT_LOG("Puppet started");
   while (!!std::cin && !std::cin.eof()) {
@@ -186,6 +195,8 @@ int IntegrationTestPuppetMain() {
       RunVulkanTutorial();
     } else if (command == PuppetConstants::kOrbitApiCommand) {
       UseOrbitApi();
+    } else if (command == PuppetConstants::kIncreaseRssCommand) {
+      IncreaseRssCommand();
     } else {
       ORBIT_ERROR("Unknown command: %s", command);
       continue;

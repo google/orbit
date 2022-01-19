@@ -129,7 +129,7 @@ ErrorMessageOr<SystemMemoryUsage> GetSystemMemoryUsage() {
   ErrorMessageOr<void> updating_result =
       UpdateSystemMemoryUsageFromMemInfo(reading_result.value(), &system_memory_usage);
   if (updating_result.has_error()) {
-    ORBIT_ERROR("Error while updating SystemMemoryUsage from %s: %s", kSystemMemoryUsageFilename,
+    ORBIT_ERROR("Updating SystemMemoryUsage from %s: %s", kSystemMemoryUsageFilename,
                 updating_result.error().message());
   }
 
@@ -141,7 +141,7 @@ ErrorMessageOr<SystemMemoryUsage> GetSystemMemoryUsage() {
   }
   updating_result = UpdateSystemMemoryUsageFromVmStat(reading_result.value(), &system_memory_usage);
   if (updating_result.has_error()) {
-    ORBIT_ERROR("Error while updating SystemMemoryUsage from %s: %s", kSystemPageFaultsFilename,
+    ORBIT_ERROR("Updating SystemMemoryUsage from %s: %s", kSystemPageFaultsFilename,
                 updating_result.error().message());
   }
 
@@ -229,7 +229,7 @@ ErrorMessageOr<ProcessMemoryUsage> GetProcessMemoryUsage(pid_t pid) {
   ErrorMessageOr<void> updating_result =
       UpdateProcessMemoryUsageFromProcessStat(reading_result.value(), &process_memory_usage);
   if (updating_result.has_error()) {
-    ORBIT_ERROR("Error while updating ProcessMemoryUsage from %s: %s", kProcessPageFaultsFilename,
+    ORBIT_ERROR("Updating ProcessMemoryUsage from %s: %s", kProcessPageFaultsFilename,
                 updating_result.error().message());
   }
 
@@ -242,7 +242,7 @@ ErrorMessageOr<ProcessMemoryUsage> GetProcessMemoryUsage(pid_t pid) {
   ErrorMessageOr<int64_t> extracting_result =
       ExtractRssAnonFromProcessStatus(reading_result.value());
   if (extracting_result.has_error()) {
-    ORBIT_ERROR("Error while extracting process RssAnon from %s: %s", kProcessMemoryUsageFilename,
+    ORBIT_ERROR("Extracting process RssAnon from %s: %s", kProcessMemoryUsageFilename,
                 extracting_result.error().message());
   } else {
     process_memory_usage.set_rss_anon_kb(extracting_result.value());
@@ -272,7 +272,7 @@ std::string GetProcessMemoryCGroupName(std::string_view cgroup_content) {
   std::vector<std::string> lines = absl::StrSplit(cgroup_content, '\n', absl::SkipEmpty());
   for (std::string_view line : lines) {
     std::vector<std::string> splits = absl::StrSplit(line, absl::MaxSplits(':', 2));
-    // If find the memory cgroup, return the cgroup name without the leading "/".
+    // If we find the memory cgroup, return the cgroup name without the leading "/".
     if (splits.size() == 3 && splits[1] == "memory") return splits[2].substr(1);
   }
 
@@ -373,7 +373,7 @@ ErrorMessageOr<CGroupMemoryUsage> GetCGroupMemoryUsage(pid_t pid) {
   ErrorMessageOr<void> updating_result =
       UpdateCGroupMemoryUsageFromMemoryLimitInBytes(reading_result.value(), &cgroup_memory_usage);
   if (updating_result.has_error()) {
-    ORBIT_ERROR("Error while updating CGroupMemoryUsage from %s: %s", kCGroupMemoryLimitFilename,
+    ORBIT_ERROR("Updating CGroupMemoryUsage from %s: %s", kCGroupMemoryLimitFilename,
                 updating_result.error().message());
   }
 
@@ -387,8 +387,8 @@ ErrorMessageOr<CGroupMemoryUsage> GetCGroupMemoryUsage(pid_t pid) {
   updating_result =
       UpdateCGroupMemoryUsageFromMemoryStat(reading_result.value(), &cgroup_memory_usage);
   if (updating_result.has_error()) {
-    ORBIT_ERROR("Error while updating CGroupMemoryUsage from %s: %s",
-                kCGroupMemoryUsageAndPageFaultsFilename, updating_result.error().message());
+    ORBIT_ERROR("Updating CGroupMemoryUsage from %s: %s", kCGroupMemoryUsageAndPageFaultsFilename,
+                updating_result.error().message());
   }
 
   return cgroup_memory_usage;

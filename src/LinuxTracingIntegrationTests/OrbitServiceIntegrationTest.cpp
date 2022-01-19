@@ -608,4 +608,172 @@ TEST(OrbitServiceIntegrationTest, OrbitApi) {
   EXPECT_EQ(api_track_double_count, PuppetConstants::kOrbitApiUsageCount);
 }
 
+TEST(OrbitServiceIntegrationTest, MemoryTracing) {
+  // Memory tracing won't work if the target doesn't have a memory cgroup. See http://b/208998708.
+  if (!CheckIsStadiaInstance()) {
+    GTEST_SKIP();
+  }
+  if (!CheckIsRunningAsRoot()) {
+    GTEST_SKIP();
+  }
+
+  OrbitServiceIntegrationTestFixture fixture;
+  CaptureOptions capture_options = fixture.BuildDefaultCaptureOptions();
+  capture_options.set_collect_memory_info(true);
+  constexpr uint64_t kMemorySamplingPeriodNs = 10'000'000;
+  capture_options.set_memory_sampling_period_ns(kMemorySamplingPeriodNs);
+  std::vector<ClientCaptureEvent> events =
+      fixture.CaptureAndGetEvents(PuppetConstants::kIncreaseRssCommand, capture_options);
+  VerifyInitialAndFinalEvents(events, capture_options);
+  VerifyErrorEvents(events);
+
+  uint64_t memory_usage_event_count = 0;
+  uint64_t initial_memory_usage_timestamp_ns = 0;
+  uint64_t previous_memory_usage_timestamp_ns = 0;
+  int64_t previous_system_total_kb = 0;
+  std::string previous_cgroup_name;
+  int64_t previous_cgroup_limit = 0;
+
+  int64_t initial_process_rss_anon_kb = 0;
+  int64_t initial_cgroup_rss = 0;
+  int64_t previous_process_rss_anon_kb = 0;
+  int64_t previous_cgroup_rss = 0;
+  for (const ClientCaptureEvent& event : events) {
+    if (!event.has_memory_usage_event()) {
+      continue;
+    }
+
+    ++memory_usage_event_count;
+    const orbit_grpc_protos::MemoryUsageEvent& memory_usage_event = event.memory_usage_event();
+
+    ASSERT_TRUE(memory_usage_event.has_system_memory_usage());
+    const orbit_grpc_protos::SystemMemoryUsage& system_memory_usage_event =
+        memory_usage_event.system_memory_usage();
+    ASSERT_TRUE(memory_usage_event.has_process_memory_usage());
+    const orbit_grpc_protos::ProcessMemoryUsage& process_memory_usage_event =
+        memory_usage_event.process_memory_usage();
+    ASSERT_TRUE(memory_usage_event.has_cgroup_memory_usage());
+    const orbit_grpc_protos::CGroupMemoryUsage& cgroup_memory_usage_event =
+        memory_usage_event.cgroup_memory_usage();
+
+    // Basic expectations.
+    EXPECT_GT(memory_usage_event.timestamp_ns(), 0);
+    EXPECT_GT(system_memory_usage_event.timestamp_ns(), 0);
+    EXPECT_GT(system_memory_usage_event.total_kb(), 0);
+    EXPECT_GT(system_memory_usage_event.free_kb(), 0);
+    EXPECT_GT(system_memory_usage_event.available_kb(), 0);
+    EXPECT_GT(system_memory_usage_event.buffers_kb(), 0);
+    EXPECT_GT(system_memory_usage_event.cached_kb(), 0);
+    EXPECT_GT(system_memory_usage_event.pgfault(), 0);
+    EXPECT_GT(system_memory_usage_event.pgmajfault(), 0);
+    EXPECT_GT(process_memory_usage_event.pid(), 0);
+    EXPECT_GT(process_memory_usage_event.timestamp_ns(), 0);
+    EXPECT_GT(process_memory_usage_event.minflt(), 0);
+    EXPECT_GE(process_memory_usage_event.majflt(), 0);
+    EXPECT_GT(process_memory_usage_event.rss_anon_kb(), 0);
+    EXPECT_GT(cgroup_memory_usage_event.timestamp_ns(), 0);
+    EXPECT_GT(cgroup_memory_usage_event.limit_bytes(), 0);
+    EXPECT_GT(cgroup_memory_usage_event.rss_bytes(), 0);
+    EXPECT_GT(cgroup_memory_usage_event.mapped_file_bytes(), 0);
+    EXPECT_GT(cgroup_memory_usage_event.pgfault(), 0);
+    EXPECT_GE(cgroup_memory_usage_event.pgmajfault(), 0);
+    EXPECT_GE(cgroup_memory_usage_event.unevictable_bytes(), 0);
+    EXPECT_GT(cgroup_memory_usage_event.inactive_anon_bytes(), 0);
+    EXPECT_GE(cgroup_memory_usage_event.active_anon_bytes(), 0);
+    EXPECT_GE(cgroup_memory_usage_event.inactive_file_bytes(), 0);
+    EXPECT_GT(cgroup_memory_usage_event.active_file_bytes(), 0);
+
+    // Expect MemoryUsageEvents to be in order.
+    EXPECT_GT(memory_usage_event.timestamp_ns(), previous_memory_usage_timestamp_ns);
+
+    // The events should be synchronized correctly.
+    EXPECT_GE(memory_usage_event.timestamp_ns(),
+              std::min({system_memory_usage_event.timestamp_ns(),
+                        process_memory_usage_event.timestamp_ns(),
+                        cgroup_memory_usage_event.timestamp_ns()}));
+    EXPECT_LE(memory_usage_event.timestamp_ns(),
+              std::max({system_memory_usage_event.timestamp_ns(),
+                        process_memory_usage_event.timestamp_ns(),
+                        cgroup_memory_usage_event.timestamp_ns()}));
+    EXPECT_LE(std::max({system_memory_usage_event.timestamp_ns(),
+                        process_memory_usage_event.timestamp_ns(),
+                        cgroup_memory_usage_event.timestamp_ns()}) -
+                  std::min({system_memory_usage_event.timestamp_ns(),
+                            process_memory_usage_event.timestamp_ns(),
+                            cgroup_memory_usage_event.timestamp_ns()}),
+              kMemorySamplingPeriodNs);
+
+    if (initial_memory_usage_timestamp_ns == 0) {
+      initial_memory_usage_timestamp_ns = memory_usage_event.timestamp_ns();
+    }
+    previous_memory_usage_timestamp_ns = memory_usage_event.timestamp_ns();
+
+    // The total memory (MemTotal) should be constant and reasonably large.
+    constexpr int64_t kMinExpectedSystemTotal = 1024LL * 1024 * 1024;
+    EXPECT_GE(system_memory_usage_event.total_kb() * 1024, kMinExpectedSystemTotal);
+    if (previous_system_total_kb != 0) {
+      EXPECT_EQ(system_memory_usage_event.total_kb(), previous_system_total_kb);
+    }
+    previous_system_total_kb = system_memory_usage_event.total_kb();
+
+    // MemFree and MemAvailable should be reasonably large.
+    constexpr int64_t kMinExpectedSystemFree = 1024LL * 1024 * 1024;
+    EXPECT_GE(system_memory_usage_event.free_kb() * 1024, kMinExpectedSystemFree);
+    EXPECT_LT(system_memory_usage_event.free_kb(), system_memory_usage_event.total_kb());
+    constexpr int64_t kMinExpectedSystemAvailable = 1024LL * 1024 * 1024;
+    EXPECT_GE(system_memory_usage_event.available_kb() * 1024, kMinExpectedSystemAvailable);
+    EXPECT_LT(system_memory_usage_event.available_kb(), system_memory_usage_event.total_kb());
+
+    EXPECT_EQ(process_memory_usage_event.pid(), fixture.GetPuppetPid());
+
+    // The name of the memory cgroup should be constant and not empty.
+    EXPECT_NE(cgroup_memory_usage_event.cgroup_name(), "");
+    if (!previous_cgroup_name.empty()) {
+      EXPECT_EQ(previous_cgroup_name, cgroup_memory_usage_event.cgroup_name());
+    }
+    previous_cgroup_name = cgroup_memory_usage_event.cgroup_name();
+
+    // The memory limit of the cgroup should be constant and reasonably large.
+    constexpr int64_t kMinExpectedCgroupMemoryLimit = 1024LL * 1024 * 1024;
+    EXPECT_GE(cgroup_memory_usage_event.limit_bytes(), kMinExpectedCgroupMemoryLimit);
+    if (previous_cgroup_limit != 0) {
+      EXPECT_EQ(cgroup_memory_usage_event.limit_bytes(), previous_cgroup_limit);
+    }
+    previous_cgroup_limit = cgroup_memory_usage_event.limit_bytes();
+
+    // Expect an increase in resident set size of the process and the cgroup as the puppet executes
+    // the command.
+    if (initial_process_rss_anon_kb == 0) {
+      EXPECT_EQ(initial_cgroup_rss, 0);
+      initial_process_rss_anon_kb = process_memory_usage_event.rss_anon_kb();
+      initial_cgroup_rss = cgroup_memory_usage_event.rss_bytes();
+    }
+    if (previous_process_rss_anon_kb != 0) {
+      EXPECT_NE(previous_cgroup_rss, 0);
+      EXPECT_GE(process_memory_usage_event.rss_anon_kb(), previous_process_rss_anon_kb);
+      EXPECT_GE(cgroup_memory_usage_event.rss_bytes(), previous_cgroup_rss);
+    }
+    previous_process_rss_anon_kb = process_memory_usage_event.rss_anon_kb();
+    previous_cgroup_rss = cgroup_memory_usage_event.rss_bytes();
+  }
+
+  // Verify the memory sampling period.
+  ASSERT_GT(memory_usage_event_count, 1);
+  uint64_t avg_memory_event_period_ns =
+      (previous_memory_usage_timestamp_ns - initial_memory_usage_timestamp_ns) /
+      memory_usage_event_count;
+  constexpr uint64_t kMinExpectedMemoryEventPeriodNs = kMemorySamplingPeriodNs / 10 * 9;
+  constexpr uint64_t kMaxExpectedMemoryEventPeriodNs = kMemorySamplingPeriodNs / 10 * 11;
+  EXPECT_GE(avg_memory_event_period_ns, kMinExpectedMemoryEventPeriodNs);
+  EXPECT_LE(avg_memory_event_period_ns, kMaxExpectedMemoryEventPeriodNs);
+
+  // Verify that the increase in resident set size was recorded.
+  constexpr uint64_t kRssIncreaseTolerance = PuppetConstants::kRssIncreaseB / 10;
+  EXPECT_GE(
+      previous_process_rss_anon_kb * 1024,
+      initial_process_rss_anon_kb * 1024 + PuppetConstants::kRssIncreaseB - kRssIncreaseTolerance);
+  EXPECT_GE(previous_cgroup_rss,
+            initial_cgroup_rss + PuppetConstants::kRssIncreaseB - kRssIncreaseTolerance);
+}
+
 }  // namespace orbit_linux_tracing_integration_tests

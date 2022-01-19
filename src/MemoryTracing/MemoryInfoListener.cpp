@@ -13,7 +13,7 @@ namespace orbit_memory_tracing {
          sampling_period_ns;
 }
 
-// This method compute the arithmetic mean of input timestamps.
+// This method computes the arithmetic mean of input timestamps.
 [[nodiscard]] static uint64_t GetSynchronizedSamplingTimestamp(
     const std::vector<uint64_t>& sampling_timestamps) {
   uint64_t offset = *std::min_element(sampling_timestamps.begin(), sampling_timestamps.end());

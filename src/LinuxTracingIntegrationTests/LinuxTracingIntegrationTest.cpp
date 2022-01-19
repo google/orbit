@@ -11,7 +11,6 @@
 #include <gtest/gtest.h>
 #include <stdint.h>
 #include <sys/types.h>
-#include <sys/utsname.h>
 #include <unistd.h>
 
 #include <array>
@@ -57,23 +56,6 @@ namespace {
 
   ORBIT_ERROR("Root or max perf_event_paranoid %d (actual is %d) required for this test",
               max_perf_event_paranoid, perf_event_paranoid);
-  return false;
-}
-
-[[nodiscard]] std::string ReadUnameKernelRelease() {
-  utsname utsname{};
-  int uname_result = uname(&utsname);
-  ORBIT_CHECK(uname_result == 0);
-  return utsname.release;
-}
-
-[[nodiscard]] bool CheckIsStadiaInstance() {
-  std::string release = ReadUnameKernelRelease();
-  if (absl::StrContains(release, "-ggp-")) {
-    return true;
-  }
-
-  ORBIT_ERROR("Stadia instance required for this test (but kernel release is \"%s\")", release);
   return false;
 }
 
