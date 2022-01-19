@@ -43,7 +43,7 @@ void DataView::OnSort(int column, std::optional<SortingOrder> new_order) {
     return;
   }
 
-  ORBIT_CHECK(column > 0);
+  ORBIT_CHECK(column >= 0);
   ORBIT_CHECK(static_cast<size_t>(column) < sorting_orders_.size());
 
   sorting_column_ = column;
