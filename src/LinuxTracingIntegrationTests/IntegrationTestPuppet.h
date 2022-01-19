@@ -30,6 +30,7 @@ struct IntegrationTestPuppetConstants {
 
   constexpr static uint64_t kFrameCount = 60;
 
+  // Large enough to be well measurable.
   constexpr static uint64_t kRssIncreaseB = 100ULL * 1024 * 1024;
 
   constexpr static const char* kUseOrbitApiFunctionName = "UseOrbitApi";
