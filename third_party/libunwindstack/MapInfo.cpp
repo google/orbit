@@ -121,7 +121,11 @@ Memory* MapInfo::GetFileMemory() {
   // and reinit to that size. This is needed because the dynamic linker
   // only maps in a portion of the original elf, and never the symbol
   // file data.
-  uint64_t map_size = end() - start();
+  //
+  // For maps with MAPS_FLAGS_JIT_SYMFILE_MAP, the map range is for a JIT function,
+  // which can be smaller than elf header size. So make sure map_size is large enough
+  // to read elf header.
+  uint64_t map_size = std::max<uint64_t>(end() - start(), sizeof(ElfTypes64::Ehdr));
   if (!memory->Init(name(), offset(), map_size)) {
     return nullptr;
   }
