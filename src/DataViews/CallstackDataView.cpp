@@ -216,9 +216,9 @@ CallstackDataView::CallstackDataViewFrame CallstackDataView::GetFrameFromIndex(
   ORBIT_CHECK(index_in_callstack < callstack_.frames_size());
   uint64_t address = callstack_.frames(index_in_callstack);
 
-  CaptureData& capture_data = app_->GetMutableCaptureData();
+  const CaptureData& capture_data = app_->GetCaptureData();
   const FunctionInfo* function = capture_data.FindFunctionByAddress(address, false);
-  ModuleData* module = capture_data.FindMutableModuleByAddress(address);
+  const ModuleData* module = capture_data.FindModuleByAddress(address);
 
   if (function != nullptr) {
     return CallstackDataViewFrame(address, function, module);

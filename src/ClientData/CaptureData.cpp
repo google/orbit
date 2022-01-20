@@ -319,13 +319,6 @@ const FunctionInfo* CaptureData::FindFunctionByAddress(uint64_t absolute_address
                                                                       absolute_address);
 }
 
-[[nodiscard]] ModuleData* CaptureData::FindMutableModuleByAddress(uint64_t absolute_address) {
-  const auto result = process_.FindModuleByAddress(absolute_address);
-  if (result.has_error()) return nullptr;
-  return module_manager_->GetMutableModuleByModuleInMemoryAndAbsoluteAddress(result.value(),
-                                                                             absolute_address);
-}
-
 uint32_t CaptureData::process_id() const { return process_.pid(); }
 
 std::string CaptureData::process_name() const { return process_.name(); }
