@@ -21,16 +21,23 @@ namespace unwindstack {
 bool PeCoffRuntimeFunctions::Init(uint64_t pdata_begin, uint64_t pdata_end) {
   // Since pdata_begin and pdata_end are read from the file, we can't CHECK here.
   if (pdata_end < pdata_begin) {
+    last_error_.code = ERROR_INVALID_COFF;
     return false;
   }
   const uint64_t pdata_size = pdata_end - pdata_begin;
   if (pdata_size % sizeof(RuntimeFunction) != 0) {
+    last_error_.code = ERROR_INVALID_COFF;
     return false;
   }
 
   runtime_functions_.resize(pdata_size / sizeof(RuntimeFunction));
   pe_coff_memory_->set_cur_offset(pdata_begin);
-  return pe_coff_memory_->GetFully(static_cast<void*>(&runtime_functions_[0]), pdata_size);
+  if (!pe_coff_memory_->GetFully(static_cast<void*>(&runtime_functions_[0]), pdata_size)) {
+    last_error_.code = ERROR_MEMORY_INVALID;
+    last_error_.address = pe_coff_memory_->cur_offset();
+    return false;
+  }
+  return true;
 }
 
 // Binary search on the vector of runtime functions, which are guaranteed to be sorted per

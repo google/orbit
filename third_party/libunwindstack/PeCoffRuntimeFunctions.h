@@ -17,9 +17,9 @@
 #ifndef _LIBUNWINDSTACK_PE_COFF_RUNTIME_FUNCTIONS_H
 #define _LIBUNWINDSTACK_PE_COFF_RUNTIME_FUNCTIONS_H
 
-#include <unordered_map>
 #include <vector>
 
+#include "unwindstack/Error.h"
 #include "unwindstack/PeCoffInterface.h"
 
 namespace unwindstack {
@@ -35,13 +35,16 @@ struct RuntimeFunction {
 // The RUNTIME_FUNCTION struct, and thus PeCoffRuntimeFunctions, is only used on x86_64.
 class PeCoffRuntimeFunctions {
  public:
-  PeCoffRuntimeFunctions(PeCoffMemory* pe_coff_memory) : pe_coff_memory_(pe_coff_memory) {}
+  explicit PeCoffRuntimeFunctions(PeCoffMemory* pe_coff_memory) : pe_coff_memory_(pe_coff_memory) {}
 
   bool Init(uint64_t pdata_begin, uint64_t pdata_end);
   bool FindRuntimeFunction(uint64_t pc_rva, RuntimeFunction* runtime_function) const;
+  ErrorData GetLastError() const { return last_error_; }
 
  private:
   PeCoffMemory* pe_coff_memory_;
+
+  ErrorData last_error_{ERROR_NONE, 0};
 
   std::vector<RuntimeFunction> runtime_functions_;
 };

@@ -16,6 +16,7 @@
 
 #include <unwindstack/PeCoffInterface.h>
 #include "PeCoffRuntimeFunctions.h"
+#include "unwindstack/Error.h"
 #include "utils/MemoryFake.h"
 
 #include <gtest/gtest.h>
@@ -59,12 +60,14 @@ TEST_F(PeCoffRuntimeFunctionsTest, init_fails_due_to_bad_section_bounds) {
   PeCoffMemory pe_coff_memory(GetMemoryFake());
   PeCoffRuntimeFunctions runtime_functions(&pe_coff_memory);
   EXPECT_FALSE(runtime_functions.Init(0x5000, 0x4000));
+  EXPECT_EQ(ERROR_INVALID_COFF, runtime_functions.GetLastError().code);
 }
 
 TEST_F(PeCoffRuntimeFunctionsTest, init_fails_due_to_incongruent_section_bounds) {
   PeCoffMemory pe_coff_memory(GetMemoryFake());
   PeCoffRuntimeFunctions runtime_functions(&pe_coff_memory);
   EXPECT_FALSE(runtime_functions.Init(0x5000, 0x5004));
+  EXPECT_EQ(ERROR_INVALID_COFF, runtime_functions.GetLastError().code);
 }
 
 TEST_F(PeCoffRuntimeFunctionsTest, init_fails_due_to_bad_memory) {
@@ -72,6 +75,8 @@ TEST_F(PeCoffRuntimeFunctionsTest, init_fails_due_to_bad_memory) {
   PeCoffMemory pe_coff_memory(GetMemoryFake());
   PeCoffRuntimeFunctions runtime_functions(&pe_coff_memory);
   EXPECT_FALSE(runtime_functions.Init(0x5000, 0x5000 + 3 * sizeof(uint32_t)));
+  EXPECT_EQ(ERROR_MEMORY_INVALID, runtime_functions.GetLastError().code);
+  EXPECT_EQ(0x5000, runtime_functions.GetLastError().address);
 }
 
 TEST_F(PeCoffRuntimeFunctionsTest, find_function_at_the_start) {
