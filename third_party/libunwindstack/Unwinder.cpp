@@ -151,7 +151,11 @@ void Unwinder::Unwind(const std::vector<std::string>* initial_map_names_to_skip,
     if (map_info == nullptr) {
       step_pc = regs_->pc();
       rel_pc = step_pc;
-      last_error_.code = ERROR_INVALID_MAP;
+      // If we get invalid map via return_address_attempt, don't hide error for the previous frame.
+      if (!return_address_attempt || last_error_.code == ERROR_NONE) {
+        last_error_.code = ERROR_INVALID_MAP;
+        last_error_.address = step_pc;
+      }
       object = nullptr;
     } else {
       if (ShouldStop(map_suffixes_to_ignore, map_info->name())) {

@@ -887,6 +887,32 @@ TEST_F(UnwinderTest, speculative_frame_check_with_no_frames) {
   ASSERT_EQ(0U, unwinder.NumFrames());
 }
 
+// Verify that a speculative frame mapping to invalid map doesn't hide error
+// for the previous frame.
+TEST_F(UnwinderTest, speculative_frame_to_invalid_map_not_hide_prev_error) {
+  regs_.set_pc(0x100000);
+  regs_.set_sp(0x10000);
+  regs_.FakeSetReturnAddress(0x4);
+  regs_.FakeSetReturnAddressValid(true);
+
+  Unwinder unwinder(64, maps_.get(), &regs_, process_memory_);
+  unwinder.Unwind();
+  EXPECT_EQ(ERROR_INVALID_ELF, unwinder.LastErrorCode());
+  EXPECT_EQ(WARNING_NONE, unwinder.warnings());
+  EXPECT_FALSE(unwinder.object_from_memory_not_file());
+
+  ASSERT_EQ(1U, unwinder.NumFrames());
+
+  auto* frame = &unwinder.frames()[0];
+  EXPECT_EQ(0U, frame->num);
+  EXPECT_EQ(0x300U, frame->rel_pc);
+  EXPECT_EQ(0x100000U, frame->pc);
+  EXPECT_EQ(0x10000U, frame->sp);
+  EXPECT_EQ("", frame->function_name);
+  EXPECT_EQ(0U, frame->function_offset);
+  ASSERT_TRUE(frame->map_info != nullptr);
+}
+
 // Verify that an unwind stops when a frame is in given suffix.
 TEST_F(UnwinderTest, map_ignore_suffixes) {
   ElfInterfaceFake::FakePushFunctionData(FunctionData("Frame0", 0));
