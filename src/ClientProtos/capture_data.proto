@@ -4,8 +4,6 @@
 
 syntax = "proto3";
 
-import "user_defined_capture_info.proto";
-
 package orbit_client_protos;
 
 message FunctionStats {
@@ -114,28 +112,6 @@ message LinuxAddressInfo {
   uint64 offset_in_function = 4;
 }
 
-message CaptureHeader {
-  string version = 1;
-}
-
-message CaptureInfo {
-  reserved 1, 2, 3, 6;
-  map<uint64, FunctionInfo> instrumented_functions = 16;
-  map<int32, string> thread_names = 4;
-  repeated ThreadStateSliceInfo thread_state_slices = 12;
-  repeated LinuxAddressInfo address_infos = 5;
-  map<uint64, CallstackInfo> callstacks = 17;
-  repeated CallstackEvent callstack_events = 7;
-  map<uint64, string> key_to_string = 8;
-  // TODO(kuebler): consider removing this field completely.
-  map<uint64, FunctionStats> function_stats = 9;
-  repeated TracepointInfo tracepoint_infos = 10;
-  repeated TracepointEventInfo tracepoint_event_infos = 11;
-  ProcessInfo process = 13;
-  repeated ModuleInfo modules = 14;
-  UserDefinedCaptureInfo user_defined_capture_info = 15;
-}
-
 message TimerInfo {
   // NextID: 18
   uint64 start = 1;
@@ -210,11 +186,4 @@ message Color {
   uint32 green = 2;
   uint32 blue = 3;
   uint32 alpha = 4;
-}
-
-// libprotobuf-mutator needs a single proto with all the data
-message CaptureDeserializerFuzzerInfo {
-  CaptureInfo capture_info = 1;
-  repeated TimerInfo timers = 2;
-  string filename = 3;
 }
