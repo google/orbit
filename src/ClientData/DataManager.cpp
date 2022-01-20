@@ -106,23 +106,6 @@ void DataManager::DeselectTracepoint(const TracepointInfo& info) {
   selected_tracepoints_.erase(info);
 }
 
-void DataManager::SelectCallstackEvents(
-    const std::vector<orbit_client_protos::CallstackEvent>& selected_callstack_events) {
-  ORBIT_CHECK(std::this_thread::get_id() == main_thread_id_);
-  selected_callstack_events_by_thread_id_.clear();
-
-  for (const auto& event : selected_callstack_events) {
-    selected_callstack_events_by_thread_id_[event.thread_id()].emplace_back(event);
-    selected_callstack_events_by_thread_id_[orbit_base::kAllProcessThreadsTid].emplace_back(event);
-  }
-}
-
-const std::vector<orbit_client_protos::CallstackEvent>& DataManager::GetSelectedCallstackEvents(
-    uint32_t thread_id) {
-  ORBIT_CHECK(std::this_thread::get_id() == main_thread_id_);
-  return selected_callstack_events_by_thread_id_[thread_id];
-}
-
 bool DataManager::IsTracepointSelected(const TracepointInfo& info) const {
   return selected_tracepoints_.contains(info);
 }

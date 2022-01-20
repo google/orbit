@@ -454,8 +454,6 @@ class OrbitApp final : public DataViewFactory,
   void SelectCallstackEvents(
       const std::vector<orbit_client_protos::CallstackEvent>& selected_callstack_events,
       bool origin_is_multiple_threads);
-  [[nodiscard]] const std::vector<orbit_client_protos::CallstackEvent>& GetSelectedCallstackEvents(
-      uint32_t thread_id);
 
   void SelectTracepoint(const orbit_grpc_protos::TracepointInfo& info) override;
   void DeselectTracepoint(const orbit_grpc_protos::TracepointInfo& tracepoint) override;

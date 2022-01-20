@@ -23,10 +23,8 @@
 
 namespace orbit_client_data {
 
-// This class is responsible for storing and
-// navigating data on the client side. Note that
-// every method of this class should be called
-// on the main thread.
+// This class is responsible for storing and navigating data on the client side.
+// Note that every method of this class should be called on the main thread.
 class DataManager final {
  public:
   explicit DataManager(std::thread::id thread_id = std::this_thread::get_id())
@@ -52,11 +50,6 @@ class DataManager final {
   void SelectTracepoint(const orbit_grpc_protos::TracepointInfo& info);
   void DeselectTracepoint(const orbit_grpc_protos::TracepointInfo& info);
 
-  void SelectCallstackEvents(
-      const std::vector<orbit_client_protos::CallstackEvent>& selected_callstack_events);
-  [[nodiscard]] const std::vector<orbit_client_protos::CallstackEvent>& GetSelectedCallstackEvents(
-      uint32_t thread_id);
-
   [[nodiscard]] bool IsTracepointSelected(const orbit_grpc_protos::TracepointInfo& info) const;
 
   [[nodiscard]] const TracepointInfoSet& selected_tracepoints() const;
@@ -70,9 +63,6 @@ class DataManager final {
     user_defined_capture_data_ = user_defined_capture_data;
   }
   [[nodiscard]] const UserDefinedCaptureData& user_defined_capture_data() const {
-    return user_defined_capture_data_;
-  }
-  [[nodiscard]] UserDefinedCaptureData& mutable_user_defined_capture_data() {
     return user_defined_capture_data_;
   }
 
@@ -179,9 +169,6 @@ class DataManager final {
   bool collect_memory_info_ = false;
   uint64_t memory_sampling_period_ms_ = 10;
   uint64_t memory_warning_threshold_kb_ = 1024 * 1024 * 8;
-
-  absl::flat_hash_map<uint32_t, std::vector<orbit_client_protos::CallstackEvent>>
-      selected_callstack_events_by_thread_id_;
 };
 
 }  // namespace orbit_client_data
