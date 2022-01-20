@@ -257,7 +257,7 @@ TEST_F(CallstackDataViewTest, ColumnValuesAreCorrect) {
 TEST_F(CallstackDataViewTest, ColumnSelectedShowsRightResults) {
   bool function_selected;
   EXPECT_CALL(app_, HasCaptureData).WillRepeatedly(testing::Return(true));
-  EXPECT_CALL(app_, GetMutableCaptureData).WillRepeatedly(testing::ReturnRef(*capture_data_));
+  EXPECT_CALL(app_, GetCaptureData).WillRepeatedly(testing::ReturnRef(*capture_data_));
   EXPECT_CALL(app_, IsFunctionSelected(testing::A<const orbit_client_protos::FunctionInfo&>()))
       .WillRepeatedly(testing::ReturnPointee(&function_selected));
 

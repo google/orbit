@@ -162,7 +162,8 @@ class DataView {
   virtual void OnExportEventsToCsvRequested(const std::vector<int>& /*selection*/) {}
 
  protected:
-  [[nodiscard]] virtual orbit_client_data::ModuleData* GetModuleDataFromRow(int /*row*/) const {
+  [[nodiscard]] virtual const orbit_client_data::ModuleData* GetModuleDataFromRow(
+      int /*row*/) const {
     return nullptr;
   }
   [[nodiscard]] virtual const orbit_client_protos::FunctionInfo* GetFunctionInfoFromRow(

@@ -56,16 +56,16 @@ class CallstackDataView : public DataView {
 
   struct CallstackDataViewFrame {
     CallstackDataViewFrame(uint64_t address, const orbit_client_protos::FunctionInfo* function,
-                           orbit_client_data::ModuleData* module)
+                           const orbit_client_data::ModuleData* module)
         : address(address), function(function), module(module) {}
     CallstackDataViewFrame(uint64_t address, std::string fallback_name,
-                           orbit_client_data::ModuleData* module)
+                           const orbit_client_data::ModuleData* module)
         : address(address), fallback_name(std::move(fallback_name)), module(module) {}
 
     uint64_t address = 0;
     const orbit_client_protos::FunctionInfo* function = nullptr;
     std::string fallback_name;
-    orbit_client_data::ModuleData* module;
+    const orbit_client_data::ModuleData* module;
   };
 
   CallstackDataViewFrame GetFrameFromRow(int row) const;
@@ -81,7 +81,7 @@ class CallstackDataView : public DataView {
   };
 
  private:
-  [[nodiscard]] orbit_client_data::ModuleData* GetModuleDataFromRow(int row) const override {
+  [[nodiscard]] const orbit_client_data::ModuleData* GetModuleDataFromRow(int row) const override {
     return GetFrameFromRow(row).module;
   }
   [[nodiscard]] const orbit_client_protos::FunctionInfo* GetFunctionInfoFromRow(int row) override {

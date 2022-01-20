@@ -140,9 +140,9 @@ std::vector<int> DataView::GetVisibleSelectedIndices() {
 }
 
 void DataView::OnLoadSymbolsRequested(const std::vector<int>& selection) {
-  std::vector<ModuleData*> modules_to_load;
+  std::vector<const ModuleData*> modules_to_load;
   for (int index : selection) {
-    ModuleData* module_data = GetModuleDataFromRow(index);
+    const ModuleData* module_data = GetModuleDataFromRow(index);
     if (module_data != nullptr && !module_data->is_loaded()) {
       modules_to_load.push_back(module_data);
     }
