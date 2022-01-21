@@ -2,8 +2,8 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#ifndef ORBIT_BASE_THREAD_CONSTANTS_H
-#define ORBIT_BASE_THREAD_CONSTANTS_H
+#ifndef ORBIT_BASE_THREAD_CONSTANTS_H_
+#define ORBIT_BASE_THREAD_CONSTANTS_H_
 
 #include <cstdint>
 
@@ -29,4 +29,4 @@ static constexpr uint32_t kAllThreadsOfAllProcessesTid = -2;
 static constexpr uint32_t kNotTargetProcessTid = -3;
 }  // namespace orbit_base
 
-#endif  // ORBIT_BASE_THREAD_CONSTANTS_H
+#endif  // ORBIT_BASE_THREAD_CONSTANTS_H_

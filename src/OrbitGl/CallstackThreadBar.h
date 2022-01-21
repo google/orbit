@@ -61,4 +61,4 @@ class CallstackThreadBar : public ThreadBar {
 
 }  // namespace orbit_gl
 
-#endif  // ORBIT_GL_EVENT_TRACK_H_
+#endif  // ORBIT_GL_CALLSTACK_THREAD_BAR_H_

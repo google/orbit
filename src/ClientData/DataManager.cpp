@@ -32,6 +32,11 @@ void DataManager::DeselectFunction(const FunctionInfo& function) {
   selected_functions_.erase(function);
 }
 
+void DataManager::ClearSelectedFunctions() {
+  ORBIT_CHECK(std::this_thread::get_id() == main_thread_id_);
+  selected_functions_.clear();
+}
+
 void DataManager::set_visible_function_ids(absl::flat_hash_set<uint64_t> visible_function_ids) {
   ORBIT_CHECK(std::this_thread::get_id() == main_thread_id_);
   visible_function_ids_ = std::move(visible_function_ids);
@@ -52,6 +57,21 @@ void DataManager::set_selected_thread_id(uint32_t thread_id) {
   selected_thread_id_ = thread_id;
 }
 
+void DataManager::set_selected_timer(const orbit_client_protos::TimerInfo* timer_info) {
+  ORBIT_CHECK(std::this_thread::get_id() == main_thread_id_);
+  selected_timer_ = timer_info;
+}
+
+bool DataManager::IsFunctionSelected(const FunctionInfo& function) const {
+  ORBIT_CHECK(std::this_thread::get_id() == main_thread_id_);
+  return selected_functions_.contains(function);
+}
+
+std::vector<FunctionInfo> DataManager::GetSelectedFunctions() const {
+  ORBIT_CHECK(std::this_thread::get_id() == main_thread_id_);
+  return {selected_functions_.begin(), selected_functions_.end()};
+}
+
 bool DataManager::IsFunctionVisible(uint64_t function_id) const {
   ORBIT_CHECK(std::this_thread::get_id() == main_thread_id_);
   return visible_function_ids_.contains(function_id);
@@ -67,7 +87,7 @@ uint64_t DataManager::highlighted_group_id() const {
   return highlighted_group_id_;
 }
 
-int32_t DataManager::selected_thread_id() const {
+uint32_t DataManager::selected_thread_id() const {
   ORBIT_CHECK(std::this_thread::get_id() == main_thread_id_);
   return selected_thread_id_;
 }
@@ -77,28 +97,11 @@ const orbit_client_protos::TimerInfo* DataManager::selected_timer() const {
   return selected_timer_;
 }
 
-void DataManager::set_selected_timer(const orbit_client_protos::TimerInfo* timer_info) {
-  ORBIT_CHECK(std::this_thread::get_id() == main_thread_id_);
-  selected_timer_ = timer_info;
-}
-
-void DataManager::ClearSelectedFunctions() {
-  ORBIT_CHECK(std::this_thread::get_id() == main_thread_id_);
-  selected_functions_.clear();
-}
-
-bool DataManager::IsFunctionSelected(const FunctionInfo& function) const {
-  ORBIT_CHECK(std::this_thread::get_id() == main_thread_id_);
-  return selected_functions_.contains(function);
-}
-
-std::vector<FunctionInfo> DataManager::GetSelectedFunctions() const {
-  ORBIT_CHECK(std::this_thread::get_id() == main_thread_id_);
-  return std::vector<FunctionInfo>(selected_functions_.begin(), selected_functions_.end());
-}
-
 void DataManager::SelectTracepoint(const TracepointInfo& info) {
-  if (!IsTracepointSelected(info)) selected_tracepoints_.emplace(info);
+  ORBIT_CHECK(std::this_thread::get_id() == main_thread_id_);
+  if (!IsTracepointSelected(info)) {
+    selected_tracepoints_.emplace(info);
+  }
 }
 
 void DataManager::DeselectTracepoint(const TracepointInfo& info) {
@@ -107,23 +110,170 @@ void DataManager::DeselectTracepoint(const TracepointInfo& info) {
 }
 
 bool DataManager::IsTracepointSelected(const TracepointInfo& info) const {
+  ORBIT_CHECK(std::this_thread::get_id() == main_thread_id_);
   return selected_tracepoints_.contains(info);
 }
 
-const TracepointInfoSet& DataManager::selected_tracepoints() const { return selected_tracepoints_; }
+const TracepointInfoSet& DataManager::selected_tracepoints() const {
+  ORBIT_CHECK(std::this_thread::get_id() == main_thread_id_);
+  return selected_tracepoints_;
+}
 
 void DataManager::EnableFrameTrack(const FunctionInfo& function) {
+  ORBIT_CHECK(std::this_thread::get_id() == main_thread_id_);
   user_defined_capture_data_.InsertFrameTrack(function);
 }
 
 void DataManager::DisableFrameTrack(const FunctionInfo& function) {
+  ORBIT_CHECK(std::this_thread::get_id() == main_thread_id_);
   user_defined_capture_data_.EraseFrameTrack(function);
 }
 
 [[nodiscard]] bool DataManager::IsFrameTrackEnabled(const FunctionInfo& function) const {
+  ORBIT_CHECK(std::this_thread::get_id() == main_thread_id_);
   return user_defined_capture_data_.ContainsFrameTrack(function);
 }
 
-void DataManager::ClearUserDefinedCaptureData() { user_defined_capture_data_.Clear(); }
+void DataManager::ClearUserDefinedCaptureData() {
+  ORBIT_CHECK(std::this_thread::get_id() == main_thread_id_);
+  user_defined_capture_data_.Clear();
+}
+
+const UserDefinedCaptureData& DataManager::user_defined_capture_data() const {
+  ORBIT_CHECK(std::this_thread::get_id() == main_thread_id_);
+  return user_defined_capture_data_;
+}
+
+void DataManager::set_collect_scheduler_info(bool collect_scheduler_info) {
+  ORBIT_CHECK(std::this_thread::get_id() == main_thread_id_);
+  collect_scheduler_info_ = collect_scheduler_info;
+}
+
+bool DataManager::collect_scheduler_info() const {
+  ORBIT_CHECK(std::this_thread::get_id() == main_thread_id_);
+  return collect_scheduler_info_;
+}
+
+void DataManager::set_collect_thread_states(bool collect_thread_states) {
+  ORBIT_CHECK(std::this_thread::get_id() == main_thread_id_);
+  collect_thread_states_ = collect_thread_states;
+}
+
+bool DataManager::collect_thread_states() const {
+  ORBIT_CHECK(std::this_thread::get_id() == main_thread_id_);
+  return collect_thread_states_;
+}
+
+void DataManager::set_trace_gpu_submissions(bool trace_gpu_submissions) {
+  ORBIT_CHECK(std::this_thread::get_id() == main_thread_id_);
+  trace_gpu_submissions_ = trace_gpu_submissions;
+}
+
+bool DataManager::trace_gpu_submissions() const {
+  ORBIT_CHECK(std::this_thread::get_id() == main_thread_id_);
+  return trace_gpu_submissions_;
+}
+
+void DataManager::set_enable_api(bool enable_api) {
+  ORBIT_CHECK(std::this_thread::get_id() == main_thread_id_);
+  enable_api_ = enable_api;
+}
+
+bool DataManager::enable_api() const {
+  ORBIT_CHECK(std::this_thread::get_id() == main_thread_id_);
+  return enable_api_;
+}
+
+void DataManager::set_enable_introspection(bool enable_introspection) {
+  ORBIT_CHECK(std::this_thread::get_id() == main_thread_id_);
+  enable_introspection_ = enable_introspection;
+}
+
+bool DataManager::enable_introspection() const {
+  ORBIT_CHECK(std::this_thread::get_id() == main_thread_id_);
+  return enable_introspection_;
+}
+
+void DataManager::set_dynamic_instrumentation_method(
+    orbit_grpc_protos::CaptureOptions::DynamicInstrumentationMethod method) {
+  ORBIT_CHECK(std::this_thread::get_id() == main_thread_id_);
+  dynamic_instrumentation_method_ = method;
+}
+
+orbit_grpc_protos::CaptureOptions::DynamicInstrumentationMethod
+DataManager::dynamic_instrumentation_method() const {
+  ORBIT_CHECK(std::this_thread::get_id() == main_thread_id_);
+  return dynamic_instrumentation_method_;
+}
+
+void DataManager::set_samples_per_second(double samples_per_second) {
+  ORBIT_CHECK(std::this_thread::get_id() == main_thread_id_);
+  samples_per_second_ = samples_per_second;
+}
+double DataManager::samples_per_second() const {
+  ORBIT_CHECK(std::this_thread::get_id() == main_thread_id_);
+  return samples_per_second_;
+}
+
+void DataManager::set_stack_dump_size(uint16_t stack_dump_size) {
+  ORBIT_CHECK(std::this_thread::get_id() == main_thread_id_);
+  stack_dump_size_ = stack_dump_size;
+}
+
+uint16_t DataManager::stack_dump_size() const {
+  ORBIT_CHECK(std::this_thread::get_id() == main_thread_id_);
+  return stack_dump_size_;
+}
+
+void DataManager::set_unwinding_method(orbit_grpc_protos::CaptureOptions::UnwindingMethod method) {
+  ORBIT_CHECK(std::this_thread::get_id() == main_thread_id_);
+  unwinding_method_ = method;
+}
+
+orbit_grpc_protos::CaptureOptions::UnwindingMethod DataManager::unwinding_method() const {
+  ORBIT_CHECK(std::this_thread::get_id() == main_thread_id_);
+  return unwinding_method_;
+}
+
+void DataManager::set_max_local_marker_depth_per_command_buffer(
+    uint64_t max_local_marker_depth_per_command_buffer) {
+  ORBIT_CHECK(std::this_thread::get_id() == main_thread_id_);
+  max_local_marker_depth_per_command_buffer_ = max_local_marker_depth_per_command_buffer;
+}
+
+uint64_t DataManager::max_local_marker_depth_per_command_buffer() const {
+  ORBIT_CHECK(std::this_thread::get_id() == main_thread_id_);
+  return max_local_marker_depth_per_command_buffer_;
+}
+
+void DataManager::set_collect_memory_info(bool collect_memory_info) {
+  ORBIT_CHECK(std::this_thread::get_id() == main_thread_id_);
+  collect_memory_info_ = collect_memory_info;
+}
+
+bool DataManager::collect_memory_info() const {
+  ORBIT_CHECK(std::this_thread::get_id() == main_thread_id_);
+  return collect_memory_info_;
+}
+
+void DataManager::set_memory_sampling_period_ms(uint64_t memory_sampling_period_ms) {
+  ORBIT_CHECK(std::this_thread::get_id() == main_thread_id_);
+  memory_sampling_period_ms_ = memory_sampling_period_ms;
+}
+
+uint64_t DataManager::memory_sampling_period_ms() const {
+  ORBIT_CHECK(std::this_thread::get_id() == main_thread_id_);
+  return memory_sampling_period_ms_;
+}
+
+void DataManager::set_memory_warning_threshold_kb(uint64_t memory_warning_threshold_kb) {
+  ORBIT_CHECK(std::this_thread::get_id() == main_thread_id_);
+  memory_warning_threshold_kb_ = memory_warning_threshold_kb;
+}
+
+uint64_t DataManager::memory_warning_threshold_kb() const {
+  ORBIT_CHECK(std::this_thread::get_id() == main_thread_id_);
+  return memory_warning_threshold_kb_;
+}
 
 }  // namespace orbit_client_data
