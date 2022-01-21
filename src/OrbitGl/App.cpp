@@ -1394,8 +1394,8 @@ void OrbitApp::StartCapture() {
   bool collect_scheduling_info = !IsDevMode() || data_manager_->collect_scheduler_info();
   bool collect_thread_states = data_manager_->collect_thread_states();
   bool collect_gpu_jobs = !IsDevMode() || data_manager_->trace_gpu_submissions();
-  bool enable_api = data_manager_->get_enable_api();
-  bool enable_introspection = IsDevMode() && data_manager_->get_enable_introspection();
+  bool enable_api = data_manager_->enable_api();
+  bool enable_introspection = IsDevMode() && data_manager_->enable_introspection();
   const DynamicInstrumentationMethod dynamic_instrumentation_method =
       data_manager_->dynamic_instrumentation_method();
   double samples_per_second = data_manager_->samples_per_second();
