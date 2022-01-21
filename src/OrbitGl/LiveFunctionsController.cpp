@@ -55,6 +55,7 @@ const orbit_client_protos::TimerInfo* SnapToClosestStart(TimeGraph* time_graph,
                                                          uint64_t function_id) {
   double min_us = time_graph->GetMinTimeUs();
   double max_us = time_graph->GetMaxTimeUs();
+  orbit_gl::TrackContainer* track_container = time_graph->GetTrackContainer();
   double center_us = 0.5 * max_us + 0.5 * min_us;
   uint64_t center = time_graph->GetTickFromUs(center_us);
 
@@ -63,12 +64,12 @@ const orbit_client_protos::TimerInfo* SnapToClosestStart(TimeGraph* time_graph,
   // included in the timerange that we search). Note that FindNextFunctionCall
   // uses the end marker of the timer as a timestamp.
   const orbit_client_protos::TimerInfo* timer_info =
-      time_graph->FindNextFunctionCall(function_id, center - 1);
+      track_container->FindNextFunctionCall(function_id, center - 1);
 
   // If we cannot find a next function call, then the closest one is the first
   // call we find before center.
   if (!timer_info) {
-    return time_graph->FindPreviousFunctionCall(function_id, center);
+    return track_container->FindPreviousFunctionCall(function_id, center);
   }
 
   // We have to consider the case where center falls to the right of the start
@@ -77,7 +78,7 @@ const orbit_client_protos::TimerInfo* SnapToClosestStart(TimeGraph* time_graph,
   // using the start marker to measure the distance.
   if (timer_info->start() <= center) {
     const orbit_client_protos::TimerInfo* next_timer_info =
-        time_graph->FindNextFunctionCall(function_id, timer_info->end());
+        track_container->FindNextFunctionCall(function_id, timer_info->end());
     if (!next_timer_info) {
       return timer_info;
     }
@@ -88,7 +89,7 @@ const orbit_client_protos::TimerInfo* SnapToClosestStart(TimeGraph* time_graph,
   // The center is to the left of 'box', so the closest box is either 'box' or
   // the next box to the left of the center.
   const orbit_client_protos::TimerInfo* previous_timer_info =
-      time_graph->FindPreviousFunctionCall(function_id, timer_info->start());
+      track_container->FindPreviousFunctionCall(function_id, timer_info->start());
 
   if (!previous_timer_info) {
     return timer_info;
@@ -113,8 +114,8 @@ void LiveFunctionsController::Move() {
     app_->GetMutableTimeGraph()->HorizontallyMoveIntoView(TimeGraph::VisibilityType::kFullyVisible,
                                                           min_max.first, min_max.second, 0.5);
   }
-  app_->GetMutableTimeGraph()->SetIteratorOverlayData(current_timer_infos_,
-                                                      iterator_id_to_function_id_);
+  app_->GetMutableTimeGraph()->GetTrackContainer()->SetIteratorOverlayData(
+      current_timer_infos_, iterator_id_to_function_id_);
 }
 
 bool LiveFunctionsController::OnAllNextButton() {
@@ -126,7 +127,8 @@ bool LiveFunctionsController::OnAllNextButton() {
     const orbit_client_protos::TimerInfo* current_timer_info =
         current_timer_infos_.find(it.first)->second;
     const orbit_client_protos::TimerInfo* timer_info =
-        app_->GetMutableTimeGraph()->FindNextFunctionCall(function_id, current_timer_info->end());
+        app_->GetMutableTimeGraph()->GetTrackContainer()->FindNextFunctionCall(
+            function_id, current_timer_info->end());
     if (timer_info == nullptr) {
       return false;
     }
@@ -153,8 +155,8 @@ bool LiveFunctionsController::OnAllPreviousButton() {
     const orbit_client_protos::TimerInfo* current_timer_info =
         current_timer_infos_.find(it.first)->second;
     const orbit_client_protos::TimerInfo* timer_info =
-        app_->GetMutableTimeGraph()->FindPreviousFunctionCall(function_id,
-                                                              current_timer_info->end());
+        app_->GetMutableTimeGraph()->GetTrackContainer()->FindPreviousFunctionCall(
+            function_id, current_timer_info->end());
     if (timer_info == nullptr) {
       return false;
     }
@@ -174,8 +176,8 @@ bool LiveFunctionsController::OnAllPreviousButton() {
 
 void LiveFunctionsController::OnNextButton(uint64_t id) {
   const orbit_client_protos::TimerInfo* timer_info =
-      app_->GetMutableTimeGraph()->FindNextFunctionCall(iterator_id_to_function_id_[id],
-                                                        current_timer_infos_[id]->end());
+      app_->GetMutableTimeGraph()->GetTrackContainer()->FindNextFunctionCall(
+          iterator_id_to_function_id_[id], current_timer_infos_[id]->end());
   // If text_box is nullptr, then we have reached the right end of the timeline.
   if (timer_info != nullptr) {
     current_timer_infos_[id] = timer_info;
@@ -185,8 +187,8 @@ void LiveFunctionsController::OnNextButton(uint64_t id) {
 }
 void LiveFunctionsController::OnPreviousButton(uint64_t id) {
   const orbit_client_protos::TimerInfo* timer_info =
-      app_->GetMutableTimeGraph()->FindPreviousFunctionCall(iterator_id_to_function_id_[id],
-                                                            current_timer_infos_[id]->end());
+      app_->GetMutableTimeGraph()->GetTrackContainer()->FindPreviousFunctionCall(
+          iterator_id_to_function_id_[id], current_timer_infos_[id]->end());
   // If text_box is nullptr, then we have reached the left end of the timeline.
   if (timer_info != nullptr) {
     current_timer_infos_[id] = timer_info;
@@ -251,7 +253,7 @@ void LiveFunctionsController::Reset() {
   current_timer_infos_.clear();
   TimeGraph* time_graph = app_->GetMutableTimeGraph();
   if (time_graph != nullptr) {
-    app_->GetMutableTimeGraph()->SetIteratorOverlayData({}, {});
+    app_->GetMutableTimeGraph()->GetTrackContainer()->SetIteratorOverlayData({}, {});
   }
   id_to_select_ = orbit_grpc_protos::kInvalidFunctionId;
 }

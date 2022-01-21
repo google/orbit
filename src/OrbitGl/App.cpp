@@ -2583,7 +2583,7 @@ orbit_data_views::DataView* OrbitApp::GetOrCreateSelectionCallstackDataView() {
 }
 
 void OrbitApp::FilterTracks(const std::string& filter) {
-  GetMutableTimeGraph()->SetThreadFilter(filter);
+  GetMutableTimeGraph()->GetTrackContainer()->SetThreadFilter(filter);
 }
 
 void OrbitApp::CrashOrbitService(CrashOrbitServiceRequest_CrashType crash_type) {
@@ -2704,7 +2704,7 @@ void OrbitApp::RemoveFrameTrack(uint64_t instrumented_function_id) {
   if (HasCaptureData() && GetCaptureData().IsFrameTrackEnabled(instrumented_function_id)) {
     frame_track_online_processor_.RemoveFrameTrack(instrumented_function_id);
     GetMutableCaptureData().DisableFrameTrack(instrumented_function_id);
-    GetMutableTimeGraph()->RemoveFrameTrack(instrumented_function_id);
+    GetMutableTimeGraph()->GetTrackContainer()->RemoveFrameTrack(instrumented_function_id);
     TrySaveUserDefinedCaptureInfo();
   }
 }
@@ -2714,32 +2714,32 @@ bool OrbitApp::IsFrameTrackEnabled(const FunctionInfo& function) const {
 }
 
 bool OrbitApp::HasFrameTrackInCaptureData(uint64_t instrumented_function_id) const {
-  return GetTimeGraph()->HasFrameTrack(instrumented_function_id);
+  return GetTimeGraph()->GetTrackContainer()->HasFrameTrack(instrumented_function_id);
 }
 
 void OrbitApp::JumpToTimerAndZoom(uint64_t function_id, JumpToTimerMode selection_mode) {
   switch (selection_mode) {
     case JumpToTimerMode::kFirst: {
-      const auto* first_timer = GetMutableTimeGraph()->FindNextFunctionCall(
+      const auto* first_timer = GetMutableTimeGraph()->GetTrackContainer()->FindNextFunctionCall(
           function_id, std::numeric_limits<uint64_t>::lowest());
       if (first_timer != nullptr) GetMutableTimeGraph()->SelectAndZoom(first_timer);
       break;
     }
     case JumpToTimerMode::kLast: {
-      const auto* last_timer = GetMutableTimeGraph()->FindPreviousFunctionCall(
+      const auto* last_timer = GetMutableTimeGraph()->GetTrackContainer()->FindPreviousFunctionCall(
           function_id, std::numeric_limits<uint64_t>::max());
       if (last_timer != nullptr) GetMutableTimeGraph()->SelectAndZoom(last_timer);
       break;
     }
     case JumpToTimerMode::kMin: {
       auto [min_timer, unused_max_timer] =
-          GetMutableTimeGraph()->GetMinMaxTimerInfoForFunction(function_id);
+          GetMutableTimeGraph()->GetTrackContainer()->GetMinMaxTimerInfoForFunction(function_id);
       if (min_timer != nullptr) GetMutableTimeGraph()->SelectAndZoom(min_timer);
       break;
     }
     case JumpToTimerMode::kMax: {
       auto [unused_min_timer, max_timer] =
-          GetMutableTimeGraph()->GetMinMaxTimerInfoForFunction(function_id);
+          GetMutableTimeGraph()->GetTrackContainer()->GetMinMaxTimerInfoForFunction(function_id);
       if (max_timer != nullptr) GetMutableTimeGraph()->SelectAndZoom(max_timer);
       break;
     }
@@ -2747,14 +2747,14 @@ void OrbitApp::JumpToTimerAndZoom(uint64_t function_id, JumpToTimerMode selectio
 }
 
 std::vector<const TimerInfo*> OrbitApp::GetAllTimersForHookedFunction(uint64_t function_id) const {
-  return GetTimeGraph()->GetAllTimersForHookedFunction(function_id);
+  return GetTimeGraph()->GetTrackContainer()->GetAllTimersForHookedFunction(function_id);
 }
 
 void OrbitApp::RefreshFrameTracks() {
   ORBIT_CHECK(HasCaptureData());
   ORBIT_CHECK(std::this_thread::get_id() == main_thread_id_);
   for (const auto& function_id : GetCaptureData().frame_track_function_ids()) {
-    GetMutableTimeGraph()->RemoveFrameTrack(function_id);
+    GetMutableTimeGraph()->GetTrackContainer()->RemoveFrameTrack(function_id);
     AddFrameTrackTimers(function_id);
   }
   GetMutableTimeGraph()->GetTrackManager()->RequestTrackSorting();
@@ -2767,7 +2767,8 @@ void OrbitApp::AddFrameTrackTimers(uint64_t instrumented_function_id) {
     return;
   }
 
-  std::vector<const TimerChain*> chains = GetMutableTimeGraph()->GetAllThreadTrackTimerChains();
+  std::vector<const TimerChain*> chains =
+      GetMutableTimeGraph()->GetTrackContainer()->GetAllThreadTrackTimerChains();
 
   std::vector<uint64_t> all_start_times;
 

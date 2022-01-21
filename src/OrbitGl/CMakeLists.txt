@@ -15,6 +15,7 @@ target_sources(
          AccessibleTimeGraph.h
          AccessibleTimeline.h
          AccessibleTrack.h
+         AccessibleTrackContainer.h
          AccessibleTriangleToggle.h
          AnnotationTrack.h
          App.h
@@ -70,12 +71,13 @@ target_sources(
          Timer.h
          TimerInfosIterator.h
          TimerTrack.h
-         Track.h
-         TrackManager.h
-         TriangleToggle.h
          TracepointThreadBar.h
+         Track.h
+         TrackContainer.h
+         TrackManager.h
          TrackTestData.h
          TranslationStack.h
+         TriangleToggle.h
          VariableTrack.h
          Viewport.h)
 
@@ -86,6 +88,7 @@ target_sources(
           AccessibleThreadBar.cpp
           AccessibleTimeGraph.cpp
           AccessibleTrack.cpp
+          AccessibleTrackContainer.cpp
           AccessibleTriangleToggle.cpp
           AnnotationTrack.cpp
           App.cpp
@@ -133,12 +136,13 @@ target_sources(
           ThreadBar.cpp
           ThreadStateBar.cpp
           ThreadTrack.cpp
+          TracepointThreadBar.cpp
           Track.cpp
+          TrackContainer.cpp
           TrackManager.cpp
+          TrackTestData.cpp
           TranslationStack.cpp
           TriangleToggle.cpp
-          TracepointThreadBar.cpp
-          TrackTestData.cpp
           Viewport.cpp)
 
 target_include_directories(OrbitGl PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
