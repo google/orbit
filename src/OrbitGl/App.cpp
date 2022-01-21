@@ -2446,7 +2446,6 @@ void OrbitApp::SelectCallstackEvents(const std::vector<CallstackEvent>& selected
   for (const CallstackEvent& event : selected_callstack_events) {
     selection_callstack_data->AddCallstackFromKnownCallstackData(event, callstack_data);
   }
-  // TODO: this might live on the data_manager
   GetMutableCaptureData().set_selection_callstack_data(std::move(selection_callstack_data));
 
   // Generate selection report.

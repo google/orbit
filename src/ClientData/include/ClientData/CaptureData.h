@@ -251,7 +251,8 @@ class CaptureData {
   absl::flat_hash_map<uint64_t, orbit_grpc_protos::InstrumentedFunction> instrumented_functions_;
 
   orbit_client_data::CallstackData callstack_data_;
-  // selection_callstack_data_ is subset of callstack_data_
+  // selection_callstack_data_ is subset of callstack_data_.
+  // TODO(b/215667641): The callstack selection should be stored in the DataManager.
   std::unique_ptr<orbit_client_data::CallstackData> selection_callstack_data_;
 
   TracepointData tracepoint_data_;
