@@ -110,7 +110,7 @@ void CallstackThreadBar::DoUpdatePrimitives(Batcher& batcher, TextRenderer& text
   ORBIT_CHECK(capture_data_ != nullptr);
 
   if (!picking) {
-    // Sampling Events
+    // Draw all callstack samples.
     auto action_on_callstack_events = [&](const CallstackEvent& event) {
       const uint64_t time = event.time();
       ORBIT_CHECK(time >= min_tick && time <= max_tick);
@@ -131,12 +131,22 @@ void CallstackThreadBar::DoUpdatePrimitives(Batcher& batcher, TextRenderer& text
           GetThreadId(), min_tick, max_tick, action_on_callstack_events);
     }
 
-    // Draw selected events
-    std::array<Color, 2> selected_color;
-    selected_color.fill(kGreenSelection);
-    for (const CallstackEvent& event : app_->GetSelectedCallstackEvents(GetThreadId())) {
+    // Draw selected callstack samples.
+    auto action_on_selected_callstack_events = [&](const CallstackEvent& event) {
+      const uint64_t time = event.time();
+      ORBIT_CHECK(time >= min_tick && time <= max_tick);
       Vec2 pos(timeline_info_->GetWorldFromTick(event.time()), GetPos()[1]);
       batcher.AddVerticalLine(pos, track_height, z, kGreenSelection);
+    };
+    const orbit_client_data::CallstackData* selection_callstack_data =
+        capture_data_->GetSelectionCallstackData();
+    ORBIT_CHECK(selection_callstack_data != nullptr);
+    if (GetThreadId() == orbit_base::kAllProcessThreadsTid) {
+      selection_callstack_data->ForEachCallstackEventInTimeRange(
+          min_tick, max_tick, action_on_selected_callstack_events);
+    } else {
+      selection_callstack_data->ForEachCallstackEventOfTidInTimeRange(
+          GetThreadId(), min_tick, max_tick, action_on_selected_callstack_events);
     }
   } else {
     // Draw boxes instead of lines to make picking easier, even if this may

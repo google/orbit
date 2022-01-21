@@ -50,9 +50,9 @@ class CaptureData {
                        absl::flat_hash_set<uint64_t> frame_track_function_ids,
                        DataSource data_source);
 
-  // We can not copy the unique_ptr, so we can not copy this object.
-  CaptureData& operator=(const CaptureData& other) = delete;
+  // We cannot copy the unique_ptr, so we cannot copy this object.
   CaptureData(const CaptureData& other) = delete;
+  CaptureData& operator=(const CaptureData& other) = delete;
 
   CaptureData(CaptureData&& other) = delete;
   CaptureData& operator=(CaptureData&& other) = delete;
@@ -136,11 +136,6 @@ class CaptureData {
   void ForEachThreadStateSliceIntersectingTimeRange(
       uint32_t thread_id, uint64_t min_timestamp, uint64_t max_timestamp,
       const std::function<void(const orbit_client_protos::ThreadStateSliceInfo&)>& action) const;
-
-  [[nodiscard]] const absl::flat_hash_map<uint64_t, orbit_client_protos::FunctionStats>&
-  functions_stats() const {
-    return functions_stats_;
-  }
 
   [[nodiscard]] const orbit_client_protos::FunctionStats& GetFunctionStatsOrDefault(
       uint64_t instrumented_function_id) const;
@@ -256,7 +251,8 @@ class CaptureData {
   absl::flat_hash_map<uint64_t, orbit_grpc_protos::InstrumentedFunction> instrumented_functions_;
 
   orbit_client_data::CallstackData callstack_data_;
-  // selection_callstack_data_ is subset of callstack_data_
+  // selection_callstack_data_ is subset of callstack_data_.
+  // TODO(b/215667641): The callstack selection should be stored in the DataManager.
   std::unique_ptr<orbit_client_data::CallstackData> selection_callstack_data_;
 
   TracepointData tracepoint_data_;
