@@ -2,6 +2,8 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
+#include "TrackContainer.h"
+
 #include <GteVector.h>
 #include <absl/container/flat_hash_map.h>
 #include <absl/flags/flag.h>
@@ -10,12 +12,10 @@
 #include <stddef.h>
 
 #include <algorithm>
-#include <limits>
 #include <utility>
 
 #include "AccessibleTrackContainer.h"
 #include "App.h"
-#include "CGroupAndProcessMemoryTrack.h"
 #include "CaptureClient/CaptureEventProcessor.h"
 #include "ClientData/FunctionUtils.h"
 #include "ClientFlags/ClientFlags.h"
@@ -27,10 +27,7 @@
 #include "Introspection/Introspection.h"
 #include "OrbitBase/Append.h"
 #include "OrbitBase/Logging.h"
-#include "PageFaultsTrack.h"
 #include "PickingManager.h"
-#include "SchedulerTrack.h"
-#include "SystemMemoryTrack.h"
 #include "TrackManager.h"
 #include "VariableTrack.h"
 

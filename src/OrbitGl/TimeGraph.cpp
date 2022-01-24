@@ -25,7 +25,6 @@
 #include "GpuTrack.h"
 #include "GrpcProtos/Constants.h"
 #include "Introspection/Introspection.h"
-#include "ManualInstrumentationManager.h"
 #include "OrbitBase/Append.h"
 #include "OrbitBase/Logging.h"
 #include "PageFaultsTrack.h"
