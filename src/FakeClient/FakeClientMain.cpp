@@ -335,9 +335,9 @@ int main(int argc, char* argv[]) {
     ORBIT_LOG("file_path=%s", file_path);
     ORBIT_LOG("file_offset=%#x", file_offset);
     if (instrumentation_method == CaptureOptions::kUserSpaceInstrumentation) {
-      ORBIT_FAIL_IF(function_size == -1, "User space instrumentation requires the function size.");
+      ORBIT_FAIL_IF(function_size == -1, "User space instrumentation requires the function size");
       ORBIT_LOG("function_size=%d", function_size);
-      ORBIT_FAIL_IF(function_name.empty(), "User space instrumentation requires the function name.");
+      ORBIT_FAIL_IF(function_name.empty(), "User space instrumentation requires the function name");
       ORBIT_LOG("function_name=%s", function_name);
     }
   }
