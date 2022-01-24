@@ -130,6 +130,16 @@ class OrbitApp final : public DataViewFactory,
     return *capture_data_;
   }
 
+  [[nodiscard]] const orbit_client_data::ModuleManager* GetModuleManager() const override {
+    ORBIT_CHECK(module_manager_ != nullptr);
+    return module_manager_.get();
+  }
+
+  [[nodiscard]] orbit_client_data::ModuleManager* GetMutableModuleManager() override {
+    ORBIT_CHECK(module_manager_ != nullptr);
+    return module_manager_.get();
+  }
+
   [[nodiscard]] bool HasSampleSelection() const {
     return selection_report_ != nullptr && selection_report_->HasSamples();
   }

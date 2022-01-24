@@ -47,7 +47,7 @@ class TrackTypeItemModelTest : public ::testing::Test {
   std::unique_ptr<orbit_client_data::CaptureData> capture_data_ =
       orbit_gl::TrackTestData::GenerateTestCaptureData();
   orbit_gl::TrackManager track_manager_ =
-      orbit_gl::TrackManager(nullptr, nullptr, &layout_, nullptr, capture_data_.get());
+      orbit_gl::TrackManager(nullptr, nullptr, &layout_, nullptr, nullptr, capture_data_.get());
 };
 
 TEST_F(TrackTypeItemModelTest, QtBasicTests) {

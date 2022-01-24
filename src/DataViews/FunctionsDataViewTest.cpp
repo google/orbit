@@ -37,6 +37,9 @@ using orbit_data_views::kMenuActionSelect;
 using orbit_data_views::kMenuActionSourceCode;
 using orbit_data_views::kMenuActionUnselect;
 
+using ::testing::_;
+using ::testing::Return;
+
 namespace {
 struct FunctionsDataViewTest : public testing::Test {
  public:
@@ -277,6 +280,7 @@ TEST_F(FunctionsDataViewTest, FrameTrackSelectionAppearsInFirstColumnWhenACaptur
   // data structures and manager objects.
 
   orbit_client_data::ModuleManager module_manager{};
+  EXPECT_CALL(app_, GetModuleManager()).WillRepeatedly(Return(&module_manager));
   (void)module_manager.AddOrUpdateModules({module_infos_[0]});
   ASSERT_EQ(module_manager.GetAllModuleData().size(), 1);
 
@@ -314,7 +318,7 @@ TEST_F(FunctionsDataViewTest, FrameTrackSelectionAppearsInFirstColumnWhenACaptur
   EXPECT_CALL(app_, HasCaptureData).Times(2).WillRepeatedly(testing::Return(true));
 
   orbit_client_data::CaptureData capture_data{
-      &module_manager, capture_started, std::nullopt, {}, CaptureData::DataSource::kLiveCapture};
+      capture_started, std::nullopt, {}, CaptureData::DataSource::kLiveCapture};
   EXPECT_CALL(app_, GetCaptureData).Times(2).WillRepeatedly(testing::ReturnPointee(&capture_data));
 
   // Note that `CaptureData` also keeps a list of enabled frame track function ids, but this list is
@@ -580,7 +584,7 @@ TEST_F(FunctionsDataViewTest, ContextMenuActionsCallCorrespondingFunctionsInAppI
       .WillRepeatedly(testing::Return(false));
 
   orbit_client_data::CaptureData capture_data{
-      nullptr, {}, std::nullopt, {}, CaptureData::DataSource::kLiveCapture};
+      {}, std::nullopt, {}, CaptureData::DataSource::kLiveCapture};
   EXPECT_CALL(app_, GetCaptureData).WillRepeatedly(testing::ReturnPointee(&capture_data));
   EXPECT_CALL(app_, IsCaptureConnected).WillRepeatedly(testing::Return(true));
 

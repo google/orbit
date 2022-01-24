@@ -15,6 +15,7 @@
 
 #include "ClientData/CaptureData.h"
 #include "ClientData/FunctionUtils.h"
+#include "ClientData/ModuleAndFunctionLookUp.h"
 #include "ClientProtos/capture_data.pb.h"
 #include "DataViews/DataViewType.h"
 #include "DataViews/FunctionsDataView.h"
@@ -23,6 +24,7 @@
 
 using orbit_client_data::CaptureData;
 using orbit_client_data::ModuleData;
+using orbit_client_data::ModuleManager;
 
 using orbit_client_protos::CallstackInfo;
 using orbit_client_protos::FunctionInfo;
@@ -76,7 +78,10 @@ std::string CallstackDataView::GetValue(int row, int column) {
         return module->name();
       }
       const CaptureData& capture_data = app_->GetCaptureData();
-      return std::filesystem::path(capture_data.GetModulePathByAddress(frame.address))
+      const ModuleManager* module_manager = app_->GetModuleManager();
+      return std::filesystem::path(
+                 orbit_client_data::GetModulePathByAddress(capture_data.process(), module_manager,
+                                                           &capture_data, frame.address))
           .filename()
           .string();
     }
@@ -182,12 +187,14 @@ void CallstackDataView::OnDataChanged() {
 void CallstackDataView::SetFunctionsToHighlight(
     const absl::flat_hash_set<uint64_t>& absolute_addresses) {
   const CaptureData& capture_data = app_->GetCaptureData();
+  const ModuleManager* module_manager = app_->GetModuleManager();
   functions_to_highlight_.clear();
 
-  for (int index : indices_) {
+  for (uint64_t index : indices_) {
     CallstackDataViewFrame frame = GetFrameFromIndex(index);
     std::optional<uint64_t> callstack_function_absolute_address =
-        capture_data.FindFunctionAbsoluteAddressByInstructionAbsoluteAddress(frame.address);
+        orbit_client_data::FindFunctionAbsoluteAddressByInstructionAbsoluteAddress(
+            capture_data.process(), module_manager, &capture_data, frame.address);
     if (callstack_function_absolute_address.has_value() &&
         absolute_addresses.contains(callstack_function_absolute_address.value())) {
       functions_to_highlight_.insert(frame.address);
@@ -217,13 +224,17 @@ CallstackDataView::CallstackDataViewFrame CallstackDataView::GetFrameFromIndex(
   uint64_t address = callstack_.frames(index_in_callstack);
 
   const CaptureData& capture_data = app_->GetCaptureData();
-  const FunctionInfo* function = capture_data.FindFunctionByAddress(address, false);
-  const ModuleData* module = capture_data.FindModuleByAddress(address);
+  ModuleManager* module_manager = app_->GetMutableModuleManager();
+  const FunctionInfo* function = orbit_client_data::FindFunctionByAddress(
+      capture_data.process(), module_manager, address, false);
+  const ModuleData* module = orbit_client_data::FindModuleByAddress(capture_data.process(),
+                                                                     module_manager, address);
 
   if (function != nullptr) {
     return CallstackDataViewFrame(address, function, module);
   }
-  const std::string& fallback_name = capture_data.GetFunctionNameByAddress(address);
+  const std::string& fallback_name = orbit_client_data::GetFunctionNameByAddress(
+      capture_data.process(), module_manager, &capture_data, address);
   return CallstackDataViewFrame(address, fallback_name, module);
 }
 

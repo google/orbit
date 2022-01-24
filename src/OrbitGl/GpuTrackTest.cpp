@@ -11,7 +11,7 @@ using orbit_gl::MapGpuTimelineToTrackLabel;
 TEST(GpuTrack, CaptureViewElementWorksAsIntended) {
   orbit_gl::CaptureViewElementTester tester;
   GpuTrack track = GpuTrack(nullptr, nullptr, tester.GetViewport(), tester.GetLayout(), 0, nullptr,
-                            nullptr, nullptr, nullptr);
+                            nullptr, nullptr, nullptr, nullptr);
   // Expect submission track, marker track, and collapse toggle
   EXPECT_EQ(3ull, track.GetAllChildren().size());
   tester.RunTests(&track);

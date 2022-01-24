@@ -30,7 +30,7 @@ namespace {
 using orbit_client_data::CaptureData;
 
 std::unique_ptr<CaptureData> GenerateTestCaptureData() {
-  auto capture_data = std::make_unique<CaptureData>(nullptr, orbit_grpc_protos::CaptureStarted{},
+  auto capture_data = std::make_unique<CaptureData>(orbit_grpc_protos::CaptureStarted{},
                                                     std::nullopt, absl::flat_hash_set<uint64_t>{},
                                                     CaptureData::DataSource::kLiveCapture);
 
@@ -76,10 +76,10 @@ TEST(CallTreeViewItemModel, AbstractItemModelTesterFilledModel) {
   std::unique_ptr<CaptureData> capture_data = GenerateTestCaptureData();
   orbit_client_data::PostProcessedSamplingData sampling_data =
       orbit_client_model::CreatePostProcessedSamplingData(capture_data->GetCallstackData(),
-                                                          *capture_data);
+                                                          *capture_data, nullptr);
 
-  auto call_tree_view =
-      CallTreeView::CreateTopDownViewFromPostProcessedSamplingData(sampling_data, *capture_data);
+  auto call_tree_view = CallTreeView::CreateTopDownViewFromPostProcessedSamplingData(
+      sampling_data, nullptr, *capture_data);
 
   CallTreeViewItemModel model{std::move(call_tree_view)};
 
@@ -93,10 +93,10 @@ TEST(CallTreeViewItemModel, SummaryItem) {
     bool generate_summary = false;
 
     orbit_client_data::PostProcessedSamplingData sampling_data =
-        orbit_client_model::CreatePostProcessedSamplingData(capture_data->GetCallstackData(),
-                                                            *capture_data, generate_summary);
-    auto call_tree_view =
-        CallTreeView::CreateTopDownViewFromPostProcessedSamplingData(sampling_data, *capture_data);
+        orbit_client_model::CreatePostProcessedSamplingData(
+            capture_data->GetCallstackData(), *capture_data, nullptr, generate_summary);
+    auto call_tree_view = CallTreeView::CreateTopDownViewFromPostProcessedSamplingData(
+        sampling_data, nullptr, *capture_data);
 
     CallTreeViewItemModel model{std::move(call_tree_view)};
 
@@ -106,10 +106,10 @@ TEST(CallTreeViewItemModel, SummaryItem) {
   {
     bool generate_summary = true;
     orbit_client_data::PostProcessedSamplingData sampling_data =
-        orbit_client_model::CreatePostProcessedSamplingData(capture_data->GetCallstackData(),
-                                                            *capture_data, generate_summary);
-    auto call_tree_view =
-        CallTreeView::CreateTopDownViewFromPostProcessedSamplingData(sampling_data, *capture_data);
+        orbit_client_model::CreatePostProcessedSamplingData(
+            capture_data->GetCallstackData(), *capture_data, nullptr, generate_summary);
+    auto call_tree_view = CallTreeView::CreateTopDownViewFromPostProcessedSamplingData(
+        sampling_data, nullptr, *capture_data);
 
     CallTreeViewItemModel model{std::move(call_tree_view)};
 
@@ -123,10 +123,10 @@ TEST(CallTreeViewItemModel, GetDisplayRoleData) {
   // is not tested here
   orbit_client_data::PostProcessedSamplingData sampling_data =
       orbit_client_model::CreatePostProcessedSamplingData(capture_data->GetCallstackData(),
-                                                          *capture_data, false);
+                                                          *capture_data, nullptr, false);
 
-  auto call_tree_view =
-      CallTreeView::CreateTopDownViewFromPostProcessedSamplingData(sampling_data, *capture_data);
+  auto call_tree_view = CallTreeView::CreateTopDownViewFromPostProcessedSamplingData(
+      sampling_data, nullptr, *capture_data);
 
   CallTreeViewItemModel model{std::move(call_tree_view)};
 
@@ -208,10 +208,10 @@ TEST(CallTreeViewItemModel, GetEditRoleData) {
   // is not tested here
   orbit_client_data::PostProcessedSamplingData sampling_data =
       orbit_client_model::CreatePostProcessedSamplingData(capture_data->GetCallstackData(),
-                                                          *capture_data, false);
+                                                          *capture_data, nullptr, false);
 
-  auto call_tree_view =
-      CallTreeView::CreateTopDownViewFromPostProcessedSamplingData(sampling_data, *capture_data);
+  auto call_tree_view = CallTreeView::CreateTopDownViewFromPostProcessedSamplingData(
+      sampling_data, nullptr, *capture_data);
 
   CallTreeViewItemModel model{std::move(call_tree_view)};
 

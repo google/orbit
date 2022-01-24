@@ -30,10 +30,11 @@ namespace orbit_gl {
 TracepointThreadBar::TracepointThreadBar(CaptureViewElement* parent, OrbitApp* app,
                                          const orbit_gl::TimelineInfoInterface* timeline_info,
                                          orbit_gl::Viewport* viewport, TimeGraphLayout* layout,
+                                         const orbit_client_data::ModuleManager* module_manager,
                                          const orbit_client_data::CaptureData* capture_data,
                                          uint32_t thread_id, const Color& color)
-    : ThreadBar(parent, app, timeline_info, viewport, layout, capture_data, thread_id,
-                "Tracepoints", color) {}
+    : ThreadBar(parent, app, timeline_info, viewport, layout, module_manager, capture_data,
+                thread_id, "Tracepoints", color) {}
 
 void TracepointThreadBar::DoDraw(Batcher& batcher, TextRenderer& text_renderer,
                                  const DrawContext& draw_context) {

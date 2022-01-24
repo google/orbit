@@ -27,6 +27,7 @@ class ThreadStateBar final : public ThreadBar {
   explicit ThreadStateBar(CaptureViewElement* parent, OrbitApp* app,
                           const orbit_gl::TimelineInfoInterface* timeline_info,
                           orbit_gl::Viewport* viewport, TimeGraphLayout* layout,
+                          const orbit_client_data::ModuleManager* module_manager,
                           const orbit_client_data::CaptureData* capture_data,
                           orbit_client_data::ThreadID thread_id, const Color& color);
 

@@ -41,7 +41,8 @@ namespace orbit_gl {
 class TrackManager {
  public:
   explicit TrackManager(TimeGraph* time_graph, Viewport* viewport, TimeGraphLayout* layout,
-                        OrbitApp* app, orbit_client_data::CaptureData* capture_data);
+                        OrbitApp* app, const orbit_client_data::ModuleManager* module_manager,
+                        orbit_client_data::CaptureData* capture_data);
 
   [[nodiscard]] std::vector<Track*> GetAllTracks() const;
   [[nodiscard]] std::vector<Track*> GetVisibleTracks() const { return visible_tracks_; }
@@ -130,6 +131,7 @@ class TrackManager {
   std::string filter_;
   std::vector<Track*> visible_tracks_;
 
+  const orbit_client_data::ModuleManager* module_manager_;
   orbit_client_data::CaptureData* capture_data_ = nullptr;
 
   OrbitApp* app_ = nullptr;

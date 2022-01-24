@@ -40,6 +40,7 @@
 #include "CallTreeViewItemModel.h"
 #include "ClientData/CaptureData.h"
 #include "ClientData/FunctionUtils.h"
+#include "ClientData/ModuleAndFunctionLookUp.h"
 #include "ClientData/ModuleData.h"
 #include "ClientProtos/capture_data.pb.h"
 #include "CopyKeySequenceEnabledTreeView.h"
@@ -48,6 +49,7 @@
 
 using orbit_client_data::CaptureData;
 using orbit_client_data::ModuleData;
+using orbit_client_data::ModuleManager;
 
 using orbit_client_protos::FunctionInfo;
 
@@ -384,13 +386,15 @@ static std::vector<const FunctionInfo*> GetFunctionsFromIndices(
     OrbitApp* app, const std::vector<QModelIndex>& indices) {
   absl::flat_hash_set<const FunctionInfo*> functions_set;
   const CaptureData& capture_data = app->GetCaptureData();
+  const ModuleManager* module_manager = app->GetModuleManager();
   for (const auto& index : indices) {
     uint64_t absolute_address =
         index.model()
             ->index(index.row(), CallTreeViewItemModel::kFunctionAddress, index.parent())
             .data(Qt::EditRole)
             .toLongLong();
-    const FunctionInfo* function = capture_data.FindFunctionByAddress(absolute_address, false);
+    const FunctionInfo* function = orbit_client_data::FindFunctionByAddress(
+        capture_data.process(), module_manager, absolute_address, false);
     if (function != nullptr) {
       functions_set.insert(function);
     }

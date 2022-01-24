@@ -16,6 +16,7 @@
 #include "Batcher.h"
 #include "CaptureViewElement.h"
 #include "ClientData/CaptureData.h"
+#include "ClientData/ModuleManager.h"
 #include "ClientData/TimerChain.h"
 #include "ClientData/TimerData.h"
 #include "ClientProtos/capture_data.pb.h"
@@ -52,6 +53,7 @@ class Track : public orbit_gl::CaptureViewElement, public std::enable_shared_fro
 
   explicit Track(CaptureViewElement* parent, const orbit_gl::TimelineInfoInterface* timeline_info,
                  orbit_gl::Viewport* viewport, TimeGraphLayout* layout,
+                 const orbit_client_data::ModuleManager* module_manager,
                  const orbit_client_data::CaptureData* capture_data);
   ~Track() override = default;
 
@@ -132,6 +134,7 @@ class Track : public orbit_gl::CaptureViewElement, public std::enable_shared_fro
 
   TimeGraphLayout* layout_;
   const orbit_gl::TimelineInfoInterface* timeline_info_;
+  const orbit_client_data::ModuleManager* module_manager_ = nullptr;
   const orbit_client_data::CaptureData* capture_data_ = nullptr;
 };
 

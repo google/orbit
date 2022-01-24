@@ -35,8 +35,9 @@ const Color TimerTrack::kHighlightColor = Color(100, 181, 246, 255);
 TimerTrack::TimerTrack(CaptureViewElement* parent,
                        const orbit_gl::TimelineInfoInterface* timeline_info,
                        orbit_gl::Viewport* viewport, TimeGraphLayout* layout, OrbitApp* app,
+                       const orbit_client_data::ModuleManager* module_manager,
                        const orbit_client_data::CaptureData* capture_data, TimerData* timer_data)
-    : Track(parent, timeline_info, viewport, layout, capture_data),
+    : Track(parent, timeline_info, viewport, layout, module_manager, capture_data),
       app_{app},
       timer_data_{timer_data} {}
 

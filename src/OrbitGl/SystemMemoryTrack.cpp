@@ -29,10 +29,11 @@ constexpr uint8_t kTrackValueDecimalDigits = 2;
 SystemMemoryTrack::SystemMemoryTrack(CaptureViewElement* parent,
                                      const orbit_gl::TimelineInfoInterface* timeline_info,
                                      orbit_gl::Viewport* viewport, TimeGraphLayout* layout,
+                                     const orbit_client_data::ModuleManager* module_manager,
                                      const orbit_client_data::CaptureData* capture_data)
     : MemoryTrack<kSystemMemoryTrackDimension>(parent, timeline_info, viewport, layout, kSeriesName,
                                                kTrackValueDecimalDigits, kTrackValueLabelUnit,
-                                               capture_data) {
+                                               module_manager, capture_data) {
   // Colors are selected from https://convertingcolors.com/list/avery.html.
   // Use reddish colors for different used memories, yellowish colors for different cached memories
   // and greenish colors for different unused memories.

@@ -18,6 +18,7 @@
 
 #include "ClientData/CaptureData.h"
 #include "ClientData/FunctionUtils.h"
+#include "ClientData/ModuleAndFunctionLookUp.h"
 #include "ClientData/ModuleData.h"
 #include "ClientData/ProcessData.h"
 #include "CompareAscendingOrDescending.h"
@@ -29,8 +30,7 @@
 #include "OrbitBase/ThreadPool.h"
 
 using orbit_client_data::CaptureData;
-using orbit_client_data::ModuleData;
-using orbit_client_data::ProcessData;
+using orbit_client_data::ModuleManager;
 using orbit_client_protos::FunctionInfo;
 
 namespace orbit_data_views {
@@ -71,8 +71,9 @@ bool FunctionsDataView::ShouldShowFrameTrackIcon(AppInterface* app, const Functi
   }
 
   const CaptureData& capture_data = app->GetCaptureData();
+  const ModuleManager* module_manager = app->GetModuleManager();
   std::optional<uint64_t> instrumented_function_id =
-      capture_data.FindInstrumentedFunctionIdSlow(function);
+      orbit_client_data::FindInstrumentedFunctionIdSlow(module_manager, &capture_data, function);
 
   return instrumented_function_id &&
          app->HasFrameTrackInCaptureData(instrumented_function_id.value());

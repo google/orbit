@@ -39,7 +39,8 @@ class GpuTrack : public Track {
   explicit GpuTrack(CaptureViewElement* parent,
                     const orbit_gl::TimelineInfoInterface* timeline_info,
                     orbit_gl::Viewport* viewport, TimeGraphLayout* layout, uint64_t timeline_hash,
-                    OrbitApp* app, const orbit_client_data::CaptureData* capture_data,
+                    OrbitApp* app, const orbit_client_data::ModuleManager* module_manager,
+                    const orbit_client_data::CaptureData* capture_data,
                     orbit_client_data::TimerData* submission_timer_data,
                     orbit_client_data::TimerData* marker_timer_data);
 

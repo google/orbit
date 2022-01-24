@@ -52,6 +52,9 @@ using orbit_data_views::kMenuActionUnselect;
 using orbit_grpc_protos::InstrumentedFunction;
 using orbit_grpc_protos::ModuleInfo;
 
+using ::testing::_;
+using ::testing::Return;
+
 namespace {
 
 constexpr size_t kNumFunctions = 3;
@@ -128,9 +131,9 @@ std::unique_ptr<CaptureData> GenerateTestCaptureData(
         orbit_client_data::function_utils::Offset(function, *module_data));
   }
 
-  auto capture_data = std::make_unique<CaptureData>(module_manager, capture_started, std::nullopt,
-                                                    absl::flat_hash_set<uint64_t>{},
-                                                    CaptureData::DataSource::kLiveCapture);
+  auto capture_data =
+      std::make_unique<CaptureData>(capture_started, std::nullopt, absl::flat_hash_set<uint64_t>{},
+                                    CaptureData::DataSource::kLiveCapture);
 
   for (size_t i = 0; i < kNumFunctions; i++) {
     FunctionStats stats;
@@ -156,6 +159,9 @@ class LiveFunctionsDataViewTest : public testing::Test {
   explicit LiveFunctionsDataViewTest()
       : view_{&live_functions_, &app_, &metrics_uploader_},
         capture_data_(GenerateTestCaptureData(&module_manager_)) {
+    EXPECT_CALL(app_, GetModuleManager()).WillRepeatedly(Return(&module_manager_));
+    EXPECT_CALL(app_, GetMutableModuleManager()).WillRepeatedly(Return(&module_manager_));
+
     view_.Init();
     for (size_t i = 0; i < kNumFunctions; i++) {
       FunctionInfo function;

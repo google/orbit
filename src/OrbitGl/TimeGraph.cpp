@@ -73,7 +73,8 @@ TimeGraph::TimeGraph(AccessibleInterfaceProvider* parent, OrbitApp* app,
   text_renderer_static_.Init();
   text_renderer_static_.SetViewport(viewport);
   batcher_.SetPickingManager(picking_manager);
-  track_manager_ = std::make_unique<TrackManager>(this, viewport_, &GetLayout(), app, capture_data);
+  track_manager_ = std::make_unique<TrackManager>(this, viewport_, &GetLayout(), app,
+                                                  app->GetModuleManager(), capture_data);
   track_manager_->GetOrCreateSchedulerTrack();
 
   if (absl::GetFlag(FLAGS_enforce_full_redraw)) {

@@ -19,6 +19,7 @@ class SystemMemoryTrack final : public MemoryTrack<kSystemMemoryTrackDimension> 
   explicit SystemMemoryTrack(CaptureViewElement* parent,
                              const orbit_gl::TimelineInfoInterface* timeline_info,
                              orbit_gl::Viewport* viewport, TimeGraphLayout* layout,
+                             const orbit_client_data::ModuleManager* module_manager,
                              const orbit_client_data::CaptureData* capture_data);
 
   [[nodiscard]] std::string GetName() const override;

@@ -9,6 +9,7 @@
 #include <vector>
 
 #include "ClientData/CaptureData.h"
+#include "ClientData/ModuleAndFunctionLookUp.h"
 #include "ClientData/ModuleManager.h"
 #include "ClientModel/SamplingDataPostProcessor.h"
 #include "ClientProtos/capture_data.pb.h"
@@ -134,8 +135,7 @@ class SamplingDataPostProcessorTest : public ::testing::Test {
 
   void TearDown() override {}
 
-  ModuleManager module_manager_;
-  CaptureData capture_data_{&module_manager_, CaptureStarted{}, std::filesystem::path{},
+  CaptureData capture_data_{CaptureStarted{}, std::filesystem::path{},
                             absl::flat_hash_set<uint64_t>{}, CaptureData::DataSource::kLiveCapture};
 
   void AddCallstackInfo(uint64_t callstack_id, const std::vector<uint64_t>& callstack_frames,
@@ -344,12 +344,12 @@ class SamplingDataPostProcessorTest : public ::testing::Test {
   }
 
   void CreatePostProcessedSamplingDataWithoutSummary() {
-    ppsd_ = CreatePostProcessedSamplingData(capture_data_.GetCallstackData(), capture_data_,
+    ppsd_ = CreatePostProcessedSamplingData(capture_data_.GetCallstackData(), capture_data_, {},
                                             /*generate_summary=*/false);
   }
 
   void CreatePostProcessedSamplingDataWithSummary() {
-    ppsd_ = CreatePostProcessedSamplingData(capture_data_.GetCallstackData(), capture_data_,
+    ppsd_ = CreatePostProcessedSamplingData(capture_data_.GetCallstackData(), capture_data_, {},
                                             /*generate_summary=*/true);
   }
 
@@ -594,27 +594,28 @@ class SamplingDataPostProcessorTest : public ::testing::Test {
                                      std::make_pair(5, kFunction3Instruction1AbsoluteAddress),
                                      std::make_pair(1, kFunction3Instruction2AbsoluteAddress),
                                      std::make_pair(1, kFunction4Instruction1AbsoluteAddress)));
-    EXPECT_THAT(actual_thread_sample_data.sampled_functions,
-                UnorderedElementsAre(SampledFunctionEq(MakeSampledFunction(
-                                         CaptureData::kUnknownFunctionOrModuleName,
-                                         CaptureData::kUnknownFunctionOrModuleName, 0, 0.0f, 5,
-                                         100.0f, 0, 0.0f, kFunction1Instruction1AbsoluteAddress)),
-                                     SampledFunctionEq(MakeSampledFunction(
-                                         CaptureData::kUnknownFunctionOrModuleName,
-                                         CaptureData::kUnknownFunctionOrModuleName, 0, 0.0f, 3,
-                                         60.0f, 0, 0.0f, kFunction2Instruction1AbsoluteAddress)),
-                                     SampledFunctionEq(MakeSampledFunction(
-                                         CaptureData::kUnknownFunctionOrModuleName,
-                                         CaptureData::kUnknownFunctionOrModuleName, 3, 60.0f, 5,
-                                         100.0f, 0, 0.0f, kFunction3Instruction1AbsoluteAddress)),
-                                     SampledFunctionEq(MakeSampledFunction(
-                                         CaptureData::kUnknownFunctionOrModuleName,
-                                         CaptureData::kUnknownFunctionOrModuleName, 1, 20.0f, 1,
-                                         20.0f, 0, 0.0f, kFunction3Instruction2AbsoluteAddress)),
-                                     SampledFunctionEq(MakeSampledFunction(
-                                         CaptureData::kUnknownFunctionOrModuleName,
-                                         CaptureData::kUnknownFunctionOrModuleName, 1, 20.0f, 1,
-                                         20.0f, 0, 0.0f, kFunction4Instruction1AbsoluteAddress))));
+    EXPECT_THAT(
+        actual_thread_sample_data.sampled_functions,
+        UnorderedElementsAre(SampledFunctionEq(MakeSampledFunction(
+                                 orbit_client_data::kUnknownFunctionOrModuleName,
+                                 orbit_client_data::kUnknownFunctionOrModuleName, 0, 0.0f, 5,
+                                 100.0f, 0, 0.0f, kFunction1Instruction1AbsoluteAddress)),
+                             SampledFunctionEq(MakeSampledFunction(
+                                 orbit_client_data::kUnknownFunctionOrModuleName,
+                                 orbit_client_data::kUnknownFunctionOrModuleName, 0, 0.0f, 3, 60.0f,
+                                 0, 0.0f, kFunction2Instruction1AbsoluteAddress)),
+                             SampledFunctionEq(MakeSampledFunction(
+                                 orbit_client_data::kUnknownFunctionOrModuleName,
+                                 orbit_client_data::kUnknownFunctionOrModuleName, 3, 60.0f, 5,
+                                 100.0f, 0, 0.0f, kFunction3Instruction1AbsoluteAddress)),
+                             SampledFunctionEq(MakeSampledFunction(
+                                 orbit_client_data::kUnknownFunctionOrModuleName,
+                                 orbit_client_data::kUnknownFunctionOrModuleName, 1, 20.0f, 1,
+                                 20.0f, 0, 0.0f, kFunction3Instruction2AbsoluteAddress)),
+                             SampledFunctionEq(MakeSampledFunction(
+                                 orbit_client_data::kUnknownFunctionOrModuleName,
+                                 orbit_client_data::kUnknownFunctionOrModuleName, 1, 20.0f, 1,
+                                 20.0f, 0, 0.0f, kFunction4Instruction1AbsoluteAddress))));
   }
 
   static void VerifyThreadSampleDataForCallstackEventsInThreadId1(

@@ -14,6 +14,7 @@
 #include "Batcher.h"
 #include "ClientData/CaptureData.h"
 #include "ClientData/FunctionUtils.h"
+#include "ClientData/ModuleAndFunctionLookUp.h"
 #include "ClientProtos/capture_data.pb.h"
 #include "DisplayFormats/DisplayFormats.h"
 #include "GlCanvas.h"
@@ -32,9 +33,11 @@ using orbit_grpc_protos::InstrumentedFunction;
 AsyncTrack::AsyncTrack(CaptureViewElement* parent,
                        const orbit_gl::TimelineInfoInterface* timeline_info,
                        orbit_gl::Viewport* viewport, TimeGraphLayout* layout, std::string name,
-                       OrbitApp* app, const orbit_client_data::CaptureData* capture_data,
+                       OrbitApp* app, const orbit_client_data::ModuleManager* module_manager,
+                       const orbit_client_data::CaptureData* capture_data,
                        orbit_client_data::TimerData* timer_data)
-    : TimerTrack(parent, timeline_info, viewport, layout, app, capture_data, timer_data),
+    : TimerTrack(parent, timeline_info, viewport, layout, app, module_manager, capture_data,
+                 timer_data),
       name_(std::move(name)) {}
 
 [[nodiscard]] std::string AsyncTrack::GetBoxTooltip(const Batcher& batcher, PickingId id) const {
@@ -47,13 +50,13 @@ AsyncTrack::AsyncTrack(CaptureViewElement* parent,
   uint64_t event_id = timer_info->api_async_scope_id();
   std::string label = manual_inst_manager->GetString(event_id);
 
-  std::string function_name =
-      capture_data_->GetFunctionNameByAddress(timer_info->address_in_function());
+  std::string function_name = orbit_client_data::GetFunctionNameByAddress(
+      capture_data_->process(), module_manager_, capture_data_, timer_info->address_in_function());
 
-  std::string module_name = orbit_client_data::CaptureData::kUnknownFunctionOrModuleName;
+  std::string module_name = orbit_client_data::kUnknownFunctionOrModuleName;
   if (timer_info->address_in_function() != 0) {
-    const orbit_client_data::ModuleData* module =
-        capture_data_->FindModuleByAddress(timer_info->address_in_function());
+    const orbit_client_data::ModuleData* module = orbit_client_data::FindModuleByAddress(
+        capture_data_->process(), module_manager_, timer_info->address_in_function());
     if (module != nullptr) {
       module_name = module->name();
     }

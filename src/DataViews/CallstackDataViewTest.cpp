@@ -12,6 +12,7 @@
 
 #include "ClientData/CaptureData.h"
 #include "ClientData/FunctionUtils.h"
+#include "ClientData/ModuleAndFunctionLookUp.h"
 #include "ClientData/ProcessData.h"
 #include "ClientProtos/capture_data.pb.h"
 #include "DataViewTestUtils.h"
@@ -45,6 +46,9 @@ using orbit_data_views::kMenuActionSourceCode;
 using orbit_data_views::kMenuActionUnselect;
 using orbit_data_views::MockAppInterface;
 using orbit_grpc_protos::ModuleInfo;
+
+using ::testing::_;
+using ::testing::Return;
 
 namespace {
 
@@ -126,9 +130,9 @@ std::unique_ptr<CaptureData> GenerateTestCaptureData(
   capture_started.set_process_id(kProcessId);
   capture_started.set_executable_path(kExecutablePath);
 
-  auto capture_data = std::make_unique<CaptureData>(module_manager, capture_started, std::nullopt,
-                                                    absl::flat_hash_set<uint64_t>{},
-                                                    CaptureData::DataSource::kLiveCapture);
+  auto capture_data =
+      std::make_unique<CaptureData>(capture_started, std::nullopt, absl::flat_hash_set<uint64_t>{},
+                                    CaptureData::DataSource::kLiveCapture);
   ProcessData* process = capture_data.get()->mutable_process();
   process->UpdateModuleInfos(modules);
 
@@ -138,7 +142,10 @@ std::unique_ptr<CaptureData> GenerateTestCaptureData(
 class CallstackDataViewTest : public testing::Test {
  public:
   explicit CallstackDataViewTest()
-      : view_{&app_}, capture_data_(GenerateTestCaptureData(&module_manager_)) {}
+      : view_{&app_}, capture_data_(GenerateTestCaptureData(&module_manager_)) {
+    EXPECT_CALL(app_, GetModuleManager()).WillRepeatedly(Return(&module_manager_));
+    EXPECT_CALL(app_, GetMutableModuleManager()).WillRepeatedly(Return(&module_manager_));
+  }
 
   void SetCallstackFromFrames(std::vector<uint64_t> callstack_frames) {
     orbit_client_protos::CallstackInfo callstack_info;
@@ -148,13 +155,16 @@ class CallstackDataViewTest : public testing::Test {
   }
 
   std::string GetModulePathByAddressFromCaptureData(uint64_t frame_address) {
-    return std::filesystem::path(capture_data_.get()->GetModulePathByAddress(frame_address))
+    return std::filesystem::path(
+               orbit_client_data::GetModulePathByAddress(capture_data_->process(), &module_manager_,
+                                                         capture_data_.get(), frame_address))
         .filename()
         .string();
   }
 
   std::string GetFunctionFallbackNameByAddress(uint64_t frame_address) {
-    return capture_data_.get()->GetFunctionNameByAddress(frame_address);
+    return orbit_client_data::GetFunctionNameByAddress(capture_data_->process(), &module_manager_,
+                                                       capture_data_.get(), frame_address);
   }
 
  protected:

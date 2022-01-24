@@ -25,11 +25,12 @@ class VariableTrack final : public LineGraphTrack<kVariableTrackDimension> {
   explicit VariableTrack(CaptureViewElement* parent,
                          const orbit_gl::TimelineInfoInterface* timeline_info,
                          orbit_gl::Viewport* viewport, TimeGraphLayout* layout, std::string name,
+                         const orbit_client_data::ModuleManager* module_manager,
                          const orbit_client_data::CaptureData* capture_data)
       : LineGraphTrack<kVariableTrackDimension>(parent, timeline_info, viewport, layout,
                                                 std::array<std::string, kVariableTrackDimension>{},
                                                 kTrackValueDecimalDigits, kTrackValueUnits,
-                                                capture_data),
+                                                module_manager, capture_data),
         name_{std::move(name)} {
     SetSeriesColors(kVariableTrackColor);
   }

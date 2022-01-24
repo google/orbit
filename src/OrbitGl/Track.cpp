@@ -21,11 +21,13 @@ using orbit_client_data::TimerData;
 
 Track::Track(CaptureViewElement* parent, const orbit_gl::TimelineInfoInterface* timeline_info,
              orbit_gl::Viewport* viewport, TimeGraphLayout* layout,
+             const orbit_client_data::ModuleManager* module_manager,
              const orbit_client_data::CaptureData* capture_data)
     : CaptureViewElement(parent, viewport, layout),
       pinned_{false},
       layout_(layout),
       timeline_info_(timeline_info),
+      module_manager_(module_manager),
       capture_data_(capture_data) {
   collapse_toggle_ = std::make_shared<TriangleToggle>(
       [this](bool is_collapsed) { OnCollapseToggle(is_collapsed); }, viewport, layout, this);

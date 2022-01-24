@@ -15,6 +15,7 @@
 #include <vector>
 
 #include "ClientData/CallstackTypes.h"
+#include "ClientData/ModuleAndFunctionLookUp.h"
 #include "ClientProtos/capture_data.pb.h"
 #include "OrbitBase/Logging.h"
 #include "OrbitBase/ThreadConstants.h"
@@ -23,6 +24,7 @@
 
 using orbit_client_data::CallstackData;
 using orbit_client_data::CaptureData;
+using orbit_client_data::ModuleManager;
 using orbit_client_data::PostProcessedSamplingData;
 using orbit_client_data::SampledFunction;
 using orbit_client_data::ThreadID;
@@ -98,16 +100,21 @@ class SamplingDataPostProcessor {
   SamplingDataPostProcessor& operator=(SamplingDataPostProcessor&& other) = default;
 
   PostProcessedSamplingData ProcessSamples(const CallstackData& callstack_data,
-                                           const CaptureData& capture_data, bool generate_summary);
+                                           const CaptureData& capture_data,
+                                           const ModuleManager* module_manager,
+                                           bool generate_summary);
 
  private:
   void SortByThreadUsage();
 
-  void ResolveCallstacks(const CallstackData& callstack_data, const CaptureData& capture_data);
+  void ResolveCallstacks(const CallstackData& callstack_data, const CaptureData& capture_data,
+                         const ModuleManager* module_manager);
 
-  void MapAddressToFunctionAddress(uint64_t absolute_address, const CaptureData& capture_data);
+  void MapAddressToFunctionAddress(uint64_t absolute_address, const CaptureData& capture_data,
+                                   const ModuleManager* module_manager);
 
-  void FillThreadSampleDataSampleReports(const CaptureData& capture_data);
+  void FillThreadSampleDataSampleReports(const CaptureData& capture_data,
+                                         const ModuleManager* module_manager);
 
   // Filled by ProcessSamples.
   absl::flat_hash_map<ThreadID, ThreadSampleData> thread_id_to_sample_data_;
@@ -125,13 +132,16 @@ class SamplingDataPostProcessor {
 
 PostProcessedSamplingData CreatePostProcessedSamplingData(const CallstackData& callstack_data,
                                                           const CaptureData& capture_data,
+                                                          const ModuleManager* module_manager,
                                                           bool generate_summary) {
-  return SamplingDataPostProcessor{}.ProcessSamples(callstack_data, capture_data, generate_summary);
+  return SamplingDataPostProcessor{}.ProcessSamples(callstack_data, capture_data, module_manager,
+                                                    generate_summary);
 }
 
 namespace {
 PostProcessedSamplingData SamplingDataPostProcessor::ProcessSamples(
-    const CallstackData& callstack_data, const CaptureData& capture_data, bool generate_summary) {
+    const CallstackData& callstack_data, const CaptureData& capture_data,
+    const ModuleManager* module_manager, bool generate_summary) {
   // Unique call stacks and per thread data
   callstack_data.ForEachCallstackEvent(
       [this, &callstack_data, generate_summary](const CallstackEvent& event) {
@@ -171,7 +181,7 @@ PostProcessedSamplingData SamplingDataPostProcessor::ProcessSamples(
         }
       });
 
-  ResolveCallstacks(callstack_data, capture_data);
+  ResolveCallstacks(callstack_data, capture_data, module_manager);
 
   for (auto& sample_data_it : thread_id_to_sample_data_) {
     ThreadSampleData* thread_sample_data = &sample_data_it.second;
@@ -217,7 +227,7 @@ PostProcessedSamplingData SamplingDataPostProcessor::ProcessSamples(
     }
   }
 
-  FillThreadSampleDataSampleReports(capture_data);
+  FillThreadSampleDataSampleReports(capture_data, module_manager);
 
   SortByThreadUsage();
 
@@ -243,16 +253,17 @@ void SamplingDataPostProcessor::SortByThreadUsage() {
 }
 
 void SamplingDataPostProcessor::ResolveCallstacks(const CallstackData& callstack_data,
-                                                  const CaptureData& capture_data) {
-  callstack_data.ForEachUniqueCallstack([this, &capture_data](uint64_t callstack_id,
-                                                              const CallstackInfo& callstack) {
+                                                  const CaptureData& capture_data,
+                                                  const ModuleManager* module_manager) {
+  callstack_data.ForEachUniqueCallstack([this, &capture_data, module_manager](
+                                            uint64_t callstack_id, const CallstackInfo& callstack) {
     // A "resolved callstack" is a callstack where every address is replaced by the start address of
     // the function (if known).
     std::vector<uint64_t> resolved_callstack_frames;
 
     for (uint64_t address : callstack.frames()) {
       if (!exact_address_to_function_address_.contains(address)) {
-        MapAddressToFunctionAddress(address, capture_data);
+        MapAddressToFunctionAddress(address, capture_data, module_manager);
       }
       auto function_address_it = exact_address_to_function_address_.find(address);
       ORBIT_CHECK(function_address_it != exact_address_to_function_address_.end());
@@ -300,18 +311,21 @@ void SamplingDataPostProcessor::ResolveCallstacks(const CallstackData& callstack
 }
 
 void SamplingDataPostProcessor::MapAddressToFunctionAddress(uint64_t absolute_address,
-                                                            const CaptureData& capture_data) {
+                                                            const CaptureData& capture_data,
+                                                            const ModuleManager* module_manager) {
   // SamplingDataPostProcessor relies heavily on the association between address and function
   // address held by exact_address_to_function_address_, otherwise each address is considered a
   // different function. We are storing this mapping for faster lookup.
   std::optional<uint64_t> absolute_function_address_option =
-      capture_data.FindFunctionAbsoluteAddressByInstructionAbsoluteAddress(absolute_address);
+      orbit_client_data::FindFunctionAbsoluteAddressByInstructionAbsoluteAddress(
+          capture_data.process(), module_manager, &capture_data, absolute_address);
   uint64_t absolute_function_address = absolute_function_address_option.value_or(absolute_address);
 
   exact_address_to_function_address_[absolute_address] = absolute_function_address;
 }
 
-void SamplingDataPostProcessor::FillThreadSampleDataSampleReports(const CaptureData& capture_data) {
+void SamplingDataPostProcessor::FillThreadSampleDataSampleReports(
+    const CaptureData& capture_data, const ModuleManager* module_manager) {
   for (auto& data : thread_id_to_sample_data_) {
     ThreadSampleData* thread_sample_data = &data.second;
     std::vector<SampledFunction>* sampled_functions = &thread_sample_data->sampled_functions;
@@ -322,7 +336,8 @@ void SamplingDataPostProcessor::FillThreadSampleDataSampleReports(const CaptureD
       uint64_t absolute_address = sorted_it->second;
 
       SampledFunction function;
-      function.name = capture_data.GetFunctionNameByAddress(absolute_address);
+      function.name = orbit_client_data::GetFunctionNameByAddress(
+          capture_data.process(), module_manager, &capture_data, absolute_address);
 
       function.inclusive = num_occurrences;
       function.inclusive_percent = 100.f * num_occurrences / thread_sample_data->samples_count;
@@ -344,7 +359,8 @@ void SamplingDataPostProcessor::FillThreadSampleDataSampleReports(const CaptureD
         function.unwind_errors_percent = 100.f * it->second / thread_sample_data->samples_count;
       }
       function.absolute_address = absolute_address;
-      function.module_path = capture_data.GetModulePathByAddress(absolute_address);
+      function.module_path = orbit_client_data::GetModulePathByAddress(
+          capture_data.process(), module_manager, &capture_data, absolute_address);
 
       sampled_functions->push_back(function);
     }

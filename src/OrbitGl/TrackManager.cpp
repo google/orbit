@@ -38,10 +38,12 @@ using orbit_client_protos::TimerInfo;
 namespace orbit_gl {
 
 TrackManager::TrackManager(TimeGraph* time_graph, Viewport* viewport, TimeGraphLayout* layout,
-                           OrbitApp* app, orbit_client_data::CaptureData* capture_data)
+                           OrbitApp* app, const orbit_client_data::ModuleManager* module_manager,
+                           orbit_client_data::CaptureData* capture_data)
     : time_graph_(time_graph),
       viewport_(viewport),
       layout_(layout),
+      module_manager_(module_manager),
       capture_data_{capture_data},
       app_{app} {
   ORBIT_CHECK(capture_data != nullptr);
@@ -434,8 +436,9 @@ SchedulerTrack* TrackManager::GetOrCreateSchedulerTrack() {
   std::lock_guard<std::recursive_mutex> lock(mutex_);
   if (scheduler_track_ == nullptr) {
     auto [unused, timer_data] = capture_data_->CreateTimerData();
-    scheduler_track_ = std::make_shared<SchedulerTrack>(time_graph_, time_graph_, viewport_,
-                                                        layout_, app_, capture_data_, timer_data);
+    scheduler_track_ =
+        std::make_shared<SchedulerTrack>(time_graph_, time_graph_, viewport_, layout_, app_,
+                                         module_manager_, capture_data_, timer_data);
     AddTrack(scheduler_track_);
   }
   return scheduler_track_.get();
@@ -447,8 +450,9 @@ ThreadTrack* TrackManager::GetOrCreateThreadTrack(uint32_t tid) {
   if (track == nullptr) {
     auto thread_track_data_provider = capture_data_->GetThreadTrackDataProvider();
     thread_track_data_provider->CreateScopeTreeTimerData(tid);
-    track = std::make_shared<ThreadTrack>(time_graph_, time_graph_, viewport_, layout_, tid, app_,
-                                          capture_data_, thread_track_data_provider);
+    track =
+        std::make_shared<ThreadTrack>(time_graph_, time_graph_, viewport_, layout_, tid, app_,
+                                      module_manager_, capture_data_, thread_track_data_provider);
     thread_tracks_[tid] = track;
     AddTrack(track);
   }
@@ -463,9 +467,9 @@ GpuTrack* TrackManager::GetOrCreateGpuTrack(uint64_t timeline_hash) {
   if (track == nullptr) {
     auto [unused1, submission_timer_data] = capture_data_->CreateTimerData();
     auto [unused2, marker_timer_data] = capture_data_->CreateTimerData();
-    track =
-        std::make_shared<GpuTrack>(time_graph_, time_graph_, viewport_, layout_, timeline_hash,
-                                   app_, capture_data_, submission_timer_data, marker_timer_data);
+    track = std::make_shared<GpuTrack>(time_graph_, time_graph_, viewport_, layout_, timeline_hash,
+                                       app_, module_manager_, capture_data_, submission_timer_data,
+                                       marker_timer_data);
     gpu_tracks_[timeline] = track;
     AddTrack(track);
   }
@@ -477,7 +481,7 @@ VariableTrack* TrackManager::GetOrCreateVariableTrack(const std::string& name) {
   std::shared_ptr<VariableTrack> track = variable_tracks_[name];
   if (track == nullptr) {
     track = std::make_shared<VariableTrack>(time_graph_, time_graph_, viewport_, layout_, name,
-                                            capture_data_);
+                                            module_manager_, capture_data_);
     variable_tracks_[name] = track;
     AddTrack(track);
   }
@@ -490,7 +494,7 @@ AsyncTrack* TrackManager::GetOrCreateAsyncTrack(const std::string& name) {
   if (track == nullptr) {
     auto [unused, timer_data] = capture_data_->CreateTimerData();
     track = std::make_shared<AsyncTrack>(time_graph_, time_graph_, viewport_, layout_, name, app_,
-                                         capture_data_, timer_data);
+                                         module_manager_, capture_data_, timer_data);
     async_tracks_[name] = track;
     AddTrack(track);
   }
@@ -508,7 +512,7 @@ FrameTrack* TrackManager::GetOrCreateFrameTrack(
 
   auto [unused, timer_data] = capture_data_->CreateTimerData();
   auto track = std::make_shared<FrameTrack>(time_graph_, time_graph_, viewport_, layout_, function,
-                                            app_, capture_data_, timer_data);
+                                            app_, module_manager_, capture_data_, timer_data);
 
   // Normally we would call AddTrack(track) here, but frame tracks are removable by users
   // and therefore cannot be simply thrown into the flat vector of tracks. Also, we don't want to
@@ -522,8 +526,8 @@ FrameTrack* TrackManager::GetOrCreateFrameTrack(
 SystemMemoryTrack* TrackManager::CreateAndGetSystemMemoryTrack() {
   std::lock_guard<std::recursive_mutex> lock(mutex_);
   if (system_memory_track_ == nullptr) {
-    system_memory_track_ = std::make_shared<SystemMemoryTrack>(time_graph_, time_graph_, viewport_,
-                                                               layout_, capture_data_);
+    system_memory_track_ = std::make_shared<SystemMemoryTrack>(
+        time_graph_, time_graph_, viewport_, layout_, module_manager_, capture_data_);
     AddTrack(system_memory_track_);
   }
 
@@ -535,7 +539,7 @@ CGroupAndProcessMemoryTrack* TrackManager::CreateAndGetCGroupAndProcessMemoryTra
   std::lock_guard<std::recursive_mutex> lock(mutex_);
   if (cgroup_and_process_memory_track_ == nullptr) {
     cgroup_and_process_memory_track_ = std::make_shared<CGroupAndProcessMemoryTrack>(
-        time_graph_, time_graph_, viewport_, layout_, cgroup_name, capture_data_);
+        time_graph_, time_graph_, viewport_, layout_, cgroup_name, module_manager_, capture_data_);
     AddTrack(cgroup_and_process_memory_track_);
   }
 
@@ -546,9 +550,9 @@ PageFaultsTrack* TrackManager::CreateAndGetPageFaultsTrack(const std::string& cg
                                                            uint64_t memory_sampling_period_ms) {
   std::lock_guard<std::recursive_mutex> lock(mutex_);
   if (page_faults_track_ == nullptr) {
-    page_faults_track_ =
-        std::make_shared<PageFaultsTrack>(time_graph_, time_graph_, viewport_, layout_, cgroup_name,
-                                          memory_sampling_period_ms, capture_data_);
+    page_faults_track_ = std::make_shared<PageFaultsTrack>(
+        time_graph_, time_graph_, viewport_, layout_, cgroup_name, memory_sampling_period_ms,
+        module_manager_, capture_data_);
     AddTrack(page_faults_track_);
   }
   return GetPageFaultsTrack();
