@@ -53,7 +53,6 @@ TrackContainer::TrackContainer(CaptureViewElement* parent, TimelineInfoInterface
       track_manager_{
           std::make_unique<TrackManager>(this, timeline_info, viewport, layout, app, capture_data)},
       capture_data_{capture_data},
-      thread_track_data_provider_(capture_data->GetThreadTrackDataProvider()),
       timeline_info_(timeline_info) {
   track_manager_->GetOrCreateSchedulerTrack();
 }
@@ -96,81 +95,12 @@ void TrackContainer::VerticallyMoveIntoView(const Track& track) {
                                         max_vertical_scrolling_offset));
 }
 
-std::vector<const TimerChain*> TrackContainer::GetAllThreadTrackTimerChains() const {
-  return thread_track_data_provider_->GetAllThreadTimerChains();
-}
-
 int TrackContainer::GetNumVisiblePrimitives() const {
   int num_visible_primitives = 0;
   for (auto track : track_manager_->GetAllTracks()) {
     num_visible_primitives += track->GetVisiblePrimitiveCount();
   }
   return num_visible_primitives;
-}
-
-const TimerInfo* TrackContainer::FindPreviousFunctionCall(uint64_t function_address,
-                                                          uint64_t current_time,
-                                                          std::optional<uint32_t> thread_id) const {
-  const TimerInfo* previous_timer = nullptr;
-  uint64_t goal_time = std::numeric_limits<uint64_t>::lowest();
-  std::vector<const TimerChain*> chains = GetAllThreadTrackTimerChains();
-  for (const TimerChain* chain : chains) {
-    for (const auto& block : *chain) {
-      if (!block.Intersects(goal_time, current_time)) continue;
-      for (uint64_t i = 0; i < block.size(); i++) {
-        const TimerInfo& timer_info = block[i];
-        auto timer_end_time = timer_info.end();
-        if ((timer_info.function_id() == function_address) &&
-            (!thread_id || thread_id.value() == timer_info.thread_id()) &&
-            (timer_end_time < current_time) && (goal_time < timer_end_time)) {
-          previous_timer = &timer_info;
-          goal_time = timer_end_time;
-        }
-      }
-    }
-  }
-  return previous_timer;
-}
-
-const TimerInfo* TrackContainer::FindNextFunctionCall(uint64_t function_address,
-                                                      uint64_t current_time,
-                                                      std::optional<uint32_t> thread_id) const {
-  const TimerInfo* next_timer = nullptr;
-  uint64_t goal_time = std::numeric_limits<uint64_t>::max();
-  std::vector<const TimerChain*> chains = GetAllThreadTrackTimerChains();
-  for (const TimerChain* chain : chains) {
-    ORBIT_CHECK(chain != nullptr);
-    for (const auto& block : *chain) {
-      if (!block.Intersects(current_time, goal_time)) continue;
-      for (uint64_t i = 0; i < block.size(); i++) {
-        const TimerInfo& timer_info = block[i];
-        auto timer_end_time = timer_info.end();
-        if ((timer_info.function_id() == function_address) &&
-            (!thread_id || thread_id.value() == timer_info.thread_id()) &&
-            (timer_end_time > current_time) && (goal_time > timer_end_time)) {
-          next_timer = &timer_info;
-          goal_time = timer_end_time;
-        }
-      }
-    }
-  }
-  return next_timer;
-}
-
-std::vector<const TimerInfo*> TrackContainer::GetAllTimersForHookedFunction(
-    uint64_t function_address) const {
-  std::vector<const TimerInfo*> timers;
-  std::vector<const TimerChain*> chains = GetAllThreadTrackTimerChains();
-  for (const TimerChain* chain : chains) {
-    ORBIT_CHECK(chain != nullptr);
-    for (const auto& block : *chain) {
-      for (uint64_t i = 0; i < block.size(); i++) {
-        const TimerInfo& timer = block[i];
-        if (timer.function_id() == function_address) timers.push_back(&timer);
-      }
-    }
-  }
-  return timers;
 }
 
 void TrackContainer::DoUpdateLayout() {
@@ -444,30 +374,6 @@ const TimerInfo* TrackContainer::FindDown(const TimerInfo& from) {
   Track* track = track_manager_->GetOrCreateTrackFromTimerInfo(from);
   if (track == nullptr) return nullptr;
   return track->GetDown(from);
-}
-
-std::pair<const TimerInfo*, const TimerInfo*> TrackContainer::GetMinMaxTimerInfoForFunction(
-    uint64_t function_id) const {
-  const TimerInfo* min_timer = nullptr;
-  const TimerInfo* max_timer = nullptr;
-  std::vector<const TimerChain*> chains = GetAllThreadTrackTimerChains();
-  for (const TimerChain* chain : chains) {
-    for (const auto& block : *chain) {
-      for (size_t i = 0; i < block.size(); i++) {
-        const TimerInfo& timer_info = block[i];
-        if (timer_info.function_id() != function_id) continue;
-
-        uint64_t elapsed_nanos = timer_info.end() - timer_info.start();
-        if (min_timer == nullptr || elapsed_nanos < (min_timer->end() - min_timer->start())) {
-          min_timer = &timer_info;
-        }
-        if (max_timer == nullptr || elapsed_nanos > (max_timer->end() - max_timer->start())) {
-          max_timer = &timer_info;
-        }
-      }
-    }
-  }
-  return std::make_pair(min_timer, max_timer);
 }
 
 void TrackContainer::DoDraw(Batcher& batcher, TextRenderer& text_renderer,

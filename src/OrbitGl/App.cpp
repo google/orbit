@@ -2720,26 +2720,26 @@ bool OrbitApp::HasFrameTrackInCaptureData(uint64_t instrumented_function_id) con
 void OrbitApp::JumpToTimerAndZoom(uint64_t function_id, JumpToTimerMode selection_mode) {
   switch (selection_mode) {
     case JumpToTimerMode::kFirst: {
-      const auto* first_timer = GetMutableTimeGraph()->GetTrackContainer()->FindNextFunctionCall(
+      const auto* first_timer = GetMutableTimeGraph()->FindNextFunctionCall(
           function_id, std::numeric_limits<uint64_t>::lowest());
       if (first_timer != nullptr) GetMutableTimeGraph()->SelectAndZoom(first_timer);
       break;
     }
     case JumpToTimerMode::kLast: {
-      const auto* last_timer = GetMutableTimeGraph()->GetTrackContainer()->FindPreviousFunctionCall(
+      const auto* last_timer = GetMutableTimeGraph()->FindPreviousFunctionCall(
           function_id, std::numeric_limits<uint64_t>::max());
       if (last_timer != nullptr) GetMutableTimeGraph()->SelectAndZoom(last_timer);
       break;
     }
     case JumpToTimerMode::kMin: {
       auto [min_timer, unused_max_timer] =
-          GetMutableTimeGraph()->GetTrackContainer()->GetMinMaxTimerInfoForFunction(function_id);
+          GetMutableTimeGraph()->GetMinMaxTimerInfoForFunction(function_id);
       if (min_timer != nullptr) GetMutableTimeGraph()->SelectAndZoom(min_timer);
       break;
     }
     case JumpToTimerMode::kMax: {
       auto [unused_min_timer, max_timer] =
-          GetMutableTimeGraph()->GetTrackContainer()->GetMinMaxTimerInfoForFunction(function_id);
+          GetMutableTimeGraph()->GetMinMaxTimerInfoForFunction(function_id);
       if (max_timer != nullptr) GetMutableTimeGraph()->SelectAndZoom(max_timer);
       break;
     }
@@ -2747,7 +2747,7 @@ void OrbitApp::JumpToTimerAndZoom(uint64_t function_id, JumpToTimerMode selectio
 }
 
 std::vector<const TimerInfo*> OrbitApp::GetAllTimersForHookedFunction(uint64_t function_id) const {
-  return GetTimeGraph()->GetTrackContainer()->GetAllTimersForHookedFunction(function_id);
+  return GetTimeGraph()->GetAllTimersForHookedFunction(function_id);
 }
 
 void OrbitApp::RefreshFrameTracks() {
@@ -2767,8 +2767,7 @@ void OrbitApp::AddFrameTrackTimers(uint64_t instrumented_function_id) {
     return;
   }
 
-  std::vector<const TimerChain*> chains =
-      GetMutableTimeGraph()->GetTrackContainer()->GetAllThreadTrackTimerChains();
+  std::vector<const TimerChain*> chains = GetMutableTimeGraph()->GetAllThreadTrackTimerChains();
 
   std::vector<uint64_t> all_start_times;
 

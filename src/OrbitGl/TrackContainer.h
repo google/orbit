@@ -32,27 +32,13 @@ class TrackContainer final : public CaptureViewElement {
   [[nodiscard]] float GetHeight() const override;
 
   [[nodiscard]] TrackManager* GetTrackManager() { return track_manager_.get(); }
-  [[nodiscard]] orbit_client_data::ThreadTrackDataProvider* GetCaptureDataProvider() {
-    return thread_track_data_provider_;
-  }
 
   void VerticalZoom(float real_ratio, float mouse_screen_y_position);
   void VerticallyMoveIntoView(const orbit_client_protos::TimerInfo& timer_info);
   void VerticallyMoveIntoView(const Track& track);
 
-  [[nodiscard]] const orbit_client_protos::TimerInfo* FindPreviousFunctionCall(
-      uint64_t function_address, uint64_t current_time,
-      std::optional<uint32_t> thread_id = std::nullopt) const;
-  [[nodiscard]] const orbit_client_protos::TimerInfo* FindNextFunctionCall(
-      uint64_t function_address, uint64_t current_time,
-      std::optional<uint32_t> thread_id = std::nullopt) const;
-  [[nodiscard]] std::vector<const orbit_client_protos::TimerInfo*> GetAllTimersForHookedFunction(
-      uint64_t function_address) const;
-
   void SetThreadFilter(const std::string& filter);
 
-  [[nodiscard]] std::vector<const orbit_client_data::TimerChain*> GetAllThreadTrackTimerChains()
-      const;
   [[nodiscard]] int GetNumVisiblePrimitives() const;
 
   [[nodiscard]] const orbit_client_protos::TimerInfo* FindPrevious(
@@ -63,9 +49,6 @@ class TrackContainer final : public CaptureViewElement {
       const orbit_client_protos::TimerInfo& from);
   [[nodiscard]] const orbit_client_protos::TimerInfo* FindDown(
       const orbit_client_protos::TimerInfo& from);
-  [[nodiscard]] std::pair<const orbit_client_protos::TimerInfo*,
-                          const orbit_client_protos::TimerInfo*>
-  GetMinMaxTimerInfoForFunction(uint64_t function_id) const;
 
   void SetIteratorOverlayData(
       const absl::flat_hash_map<uint64_t, const orbit_client_protos::TimerInfo*>&
@@ -111,7 +94,6 @@ class TrackContainer final : public CaptureViewElement {
   std::unique_ptr<TrackManager> track_manager_;
 
   const orbit_client_data::CaptureData* capture_data_ = nullptr;
-  orbit_client_data::ThreadTrackDataProvider* thread_track_data_provider_ = nullptr;
 
   const TimelineInfoInterface* timeline_info_;
 };
