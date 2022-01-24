@@ -4,15 +4,31 @@
 
 #include "CodeReport/Disassembler.h"
 
+#include <ObjectUtils/Address.h>
+#include <absl/strings/numbers.h>
 #include <absl/strings/str_format.h>
 #include <absl/strings/str_replace.h>
 #include <capstone/capstone.h>
 
 #include <algorithm>
-#include <cstdint>
+
+#include "ClientData/FunctionUtils.h"
+#include "ClientData/ModuleAndFunctionLookup.h"
 
 namespace orbit_code_report {
-void Disassembler::Disassemble(const void* machine_code, size_t size, uint64_t address,
+namespace {
+bool IsCallInstruction(const cs_insn& instruction) {
+  for (uint8_t i = 0; i < instruction.detail->groups_count; i++) {
+    if (instruction.detail->groups[i] == X86_GRP_CALL) {
+      return true;
+    }
+  }
+  return false;
+}
+}  // namespace
+void Disassembler::Disassemble(orbit_client_data::ProcessData& process,
+                               orbit_client_data::ModuleManager& module_manager,
+                               const void* machine_code, size_t size, uint64_t address,
                                bool is_64bit) {
   csh handle = 0;
   cs_arch arch = CS_ARCH_X86;
@@ -24,10 +40,12 @@ void Disassembler::Disassemble(const void* machine_code, size_t size, uint64_t a
   AddLine(absl::StrFormat("Platform: %s",
                           is_64bit ? "X86 64 (Intel syntax)" : "X86 32 (Intel syntax)"));
   err = cs_open(arch, mode, &handle);
-  if (err) {
+  if (err != CS_ERR_OK) {
     AddLine(absl::StrFormat("Failed on cs_open() with error returned: %u", err));
     return;
   }
+
+  cs_option(handle, CS_OPT_DETAIL, CS_OPT_ON);
 
   count = cs_disasm(handle, static_cast<const uint8_t*>(machine_code), size, address, 0, &insn);
 
@@ -35,9 +53,28 @@ void Disassembler::Disassemble(const void* machine_code, size_t size, uint64_t a
     size_t j;
 
     for (j = 0; j < count; j++) {
-      AddLine(
-          absl::StrFormat("0x%llx:\t%-12s %s", insn[j].address, insn[j].mnemonic, insn[j].op_str),
-          insn[j].address);
+      if (IsCallInstruction(insn[j])) {
+        uint64_t callee_address = 0;
+        const orbit_client_protos::FunctionInfo* callee = nullptr;
+        if (absl::numbers_internal::safe_strtou64_base(insn[j].op_str, &callee_address, 16)) {
+          callee = orbit_client_data::FindFunctionByAddress(process, module_manager, callee_address,
+                                                            false);
+        }
+        if (callee != nullptr) {
+          AddLine(absl::StrFormat("0x%llx:\t%-12s %s (%s)", insn[j].address, insn[j].mnemonic,
+                                  insn[j].op_str,
+                                  orbit_client_data::function_utils::GetDisplayName(*callee)),
+                  insn[j].address);
+        } else {
+          AddLine(absl::StrFormat("0x%llx:\t%-12s %s ([%s])", insn[j].address, insn[j].mnemonic,
+                                  insn[j].op_str, orbit_client_data::kUnknownFunctionOrModuleName),
+                  insn[j].address);
+        }
+      } else {
+        AddLine(
+            absl::StrFormat("0x%llx:\t%-12s %s", insn[j].address, insn[j].mnemonic, insn[j].op_str),
+            insn[j].address);
+      }
     }
 
     // Print out the next offset, after the last instruction.

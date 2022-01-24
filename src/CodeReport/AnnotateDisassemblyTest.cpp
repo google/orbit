@@ -58,7 +58,10 @@ static void TestSimple(bool windows_line_endings) {
   function_info.set_size(kMainFunctionInstructions.size());
 
   orbit_code_report::Disassembler disassembler{};
-  disassembler.Disassemble(static_cast<const void*>(kMainFunctionInstructions.data()),
+  orbit_client_data::ProcessData process;
+  orbit_client_data::ModuleManager module_manager;
+  disassembler.Disassemble(process, module_manager,
+                           static_cast<const void*>(kMainFunctionInstructions.data()),
                            kMainFunctionInstructions.size(), 0x401140, true);
   orbit_code_report::DisassemblyReport report{std::move(disassembler), kAddressOfMainFunction};
 

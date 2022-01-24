@@ -25,7 +25,7 @@ constexpr std::string_view kFibonacciAssembly =
     "\x85\xdb\x74\x14\x83\xfb\x01\x74\x0f\x8d\x7b\xff\x83\xeb\x02\xe8\xe5\xff\xff\xff\x01\xc5\xeb"
     "\xe8\x8d\x44\x1d\x00\x5a\x5b\x5d\xc3\x01\x1f\x80\x00\x00\x00\x00"sv;
 
-constexpr std::string_view kFibonacciDisassembled =
+constexpr std::string_view kFibonacciDisassembledNoSymbolsLoaded =
     "Platform: X86 64 (Intel syntax)\n"  // Line 0
     "0x401020:\txor          eax, eax\n"
     "0x401022:\tret          \n"
@@ -42,7 +42,37 @@ constexpr std::string_view kFibonacciDisassembled =
     "0x40103e:\tje           0x40104f\n"
     "0x401040:\tlea          edi, [rbx - 1]\n"
     "0x401043:\tsub          ebx, 2\n"
-    "0x401046:\tcall         0x401030\n"
+    "0x401046:\tcall         0x401030 ([???])\n"
+    "0x40104b:\tadd          ebp, eax\n"
+    "0x40104d:\tjmp          0x401037\n"
+    "0x40104f:\tlea          eax, [rbp + rbx]\n"
+    "0x401053:\tpop          rdx\n"
+    "0x401054:\tpop          rbx\n"
+    "0x401055:\tpop          rbp\n"
+    "0x401056:\tret          \n"
+    "0x401057:\tadd          dword ptr [rdi], ebx\n"  // Line 24
+    "0x401059:\tadd          byte ptr [rax], 0\n"
+    "0x40105c:\tadd          byte ptr [rax], al\n"
+    "0x40105e:\n\n"sv;  // Line 27 & 28
+
+constexpr std::string_view kFibonacciDisassembledWithSymbolsLoaded =
+    "Platform: X86 64 (Intel syntax)\n"  // Line 0
+    "0x401020:\txor          eax, eax\n"
+    "0x401022:\tret          \n"
+    "0x401023:\tnop          word ptr cs:[rax + rax]\n"
+    "0x40102d:\tnop          dword ptr [rax]\n"  // Line 4
+    "0x401030:\tpush         rbp\n"
+    "0x401031:\txor          ebp, ebp\n"
+    "0x401033:\tpush         rbx\n"
+    "0x401034:\tmov          ebx, edi\n"
+    "0x401036:\tpush         rcx\n"
+    "0x401037:\ttest         ebx, ebx\n"
+    "0x401039:\tje           0x40104f\n"
+    "0x40103b:\tcmp          ebx, 1\n"  // Line 12
+    "0x40103e:\tje           0x40104f\n"
+    "0x401040:\tlea          edi, [rbx - 1]\n"
+    "0x401043:\tsub          ebx, 2\n"
+    "0x401046:\tcall         0x401030 (int fib(int))\n"
     "0x40104b:\tadd          ebp, eax\n"
     "0x40104d:\tjmp          0x401037\n"
     "0x40104f:\tlea          eax, [rbp + rbx]\n"

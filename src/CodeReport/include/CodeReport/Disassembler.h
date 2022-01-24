@@ -5,6 +5,7 @@
 #ifndef CODE_REPORT_DISASSEMBLER_H_
 #define CODE_REPORT_DISASSEMBLER_H_
 
+#include <absl/container/flat_hash_map.h>
 #include <stddef.h>
 #include <stdint.h>
 
@@ -12,12 +13,15 @@
 #include <string>
 #include <vector>
 
-#include "absl/container/flat_hash_map.h"
+#include "ClientData/ModuleManager.h"
+#include "ClientData/ProcessData.h"
 
 namespace orbit_code_report {
 class Disassembler {
  public:
-  void Disassemble(const void* machine_code, size_t size, uint64_t address, bool is_64bit);
+  void Disassemble(orbit_client_data::ProcessData& process,
+                   orbit_client_data::ModuleManager& module_manager, const void* machine_code,
+                   size_t size, uint64_t address, bool is_64bit);
   void AddLine(std::string, std::optional<uint64_t> address = std::nullopt);
 
   [[nodiscard]] const std::string& GetResult() const { return result_; }
