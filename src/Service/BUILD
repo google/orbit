@@ -25,7 +25,6 @@ orbit_cc_library(
         "//src/GrpcProtos:code_block_cc_proto",
         "//src/GrpcProtos:module_cc_proto",
         "//src/GrpcProtos:process_cc_proto",
-        "//src/GrpcProtos:producer_side_services_cc_proto",
         "//src/GrpcProtos:services_cc_grpc_proto",
         "//src/GrpcProtos:services_cc_proto",
         "//src/GrpcProtos:tracepoint_cc_proto",
@@ -38,6 +37,7 @@ orbit_cc_library(
         "//src/OrbitVersion",
         "//src/ProcessService",
         "//src/ProducerSideChannel",
+        "//src/ProducerSideService",
         "//src/TracepointService",
         "//src/UserSpaceInstrumentation",
         "@com_github_grpc_grpc//:grpc",
@@ -52,24 +52,6 @@ orbit_cc_library(
         "@com_google_absl//absl/synchronization",
         "@com_google_absl//absl/time",
         "@com_google_protobuf//:arena",
-    ],
-)
-
-orbit_cc_test(
-    name = "ServiceTests",
-    deps = [
-        ":Service",
-        "//src/GrpcProtos",
-        "//src/GrpcProtos:capture_cc_proto",
-        "//src/GrpcProtos:producer_side_services_cc_grpc_proto",
-        "//src/GrpcProtos:producer_side_services_cc_proto",
-        "//src/GrpcProtos:services_cc_proto",
-        "//src/GrpcProtos:tracepoint_cc_proto",
-        "//src/OrbitBase",
-        "//src/ProducerEventProcessor",
-        "@com_github_grpc_grpc//:grpc++",
-        "@com_google_absl//absl/synchronization",
-        "@com_google_protobuf//:differencer",
     ],
 )
 
