@@ -70,20 +70,6 @@ MATCHER_P(SampledFunctionEq, that, "") {
   return SampledFunctionsAreEqual(lhs, rhs);
 }
 
-MATCHER_P(ThreadSampleDataEq, that, "") {
-  const ThreadSampleData& lhs = arg;
-  const ThreadSampleData& rhs = that;
-  return lhs.thread_id == rhs.thread_id && lhs.samples_count == rhs.samples_count &&
-         lhs.sampled_callstack_id_to_count == rhs.sampled_callstack_id_to_count &&
-         lhs.sampled_address_to_count == rhs.sampled_address_to_count &&
-         lhs.resolved_address_to_count == rhs.resolved_address_to_count &&
-         lhs.resolved_address_to_exclusive_count == rhs.resolved_address_to_exclusive_count &&
-         lhs.sorted_count_to_resolved_address == rhs.sorted_count_to_resolved_address &&
-         std::equal(lhs.sampled_functions.begin(), lhs.sampled_functions.end(),
-                    rhs.sampled_functions.begin(), rhs.sampled_functions.end(),
-                    SampledFunctionsAreEqual);
-}
-
 SortedCallstackReport MakeSortedCallstackReport(
     const std::vector<std::pair<int, uint64_t>>& counts_and_callstack_ids) {
   SortedCallstackReport report{};
@@ -454,7 +440,7 @@ class SamplingDataPostProcessorTest : public ::testing::Test {
   }
 
   static void VerifyThreadSampleDataForCallstackEventsAllInTheSameThread(
-      const ThreadSampleData& actual_thread_sample_data, int32_t expected_thread_id) {
+      const ThreadSampleData& actual_thread_sample_data, uint32_t expected_thread_id) {
     EXPECT_EQ(actual_thread_sample_data.thread_id, expected_thread_id);
     EXPECT_EQ(actual_thread_sample_data.samples_count, 5);
     EXPECT_THAT(
@@ -494,7 +480,7 @@ class SamplingDataPostProcessorTest : public ::testing::Test {
   }
 
   static void VerifyThreadSampleDataForCallstackEventsAllInTheSameThreadWithMixedCallstackTypes(
-      const ThreadSampleData& actual_thread_sample_data, int32_t expected_thread_id) {
+      const ThreadSampleData& actual_thread_sample_data, uint32_t expected_thread_id) {
     EXPECT_EQ(actual_thread_sample_data.thread_id, expected_thread_id);
     EXPECT_EQ(actual_thread_sample_data.samples_count, 5);
     EXPECT_THAT(
@@ -535,7 +521,7 @@ class SamplingDataPostProcessorTest : public ::testing::Test {
 
   static void
   VerifyThreadSampleDataForCallstackEventsAllInTheSameThreadWithOnlyNonCompleteCallstackInfos(
-      const ThreadSampleData& actual_thread_sample_data, int32_t expected_thread_id) {
+      const ThreadSampleData& actual_thread_sample_data, uint32_t expected_thread_id) {
     EXPECT_EQ(actual_thread_sample_data.thread_id, expected_thread_id);
     EXPECT_EQ(actual_thread_sample_data.samples_count, 5);
     EXPECT_THAT(
@@ -565,7 +551,7 @@ class SamplingDataPostProcessorTest : public ::testing::Test {
   }
 
   static void VerifyThreadSampleDataForCallstackEventsAllInTheSameThreadWithoutAddressInfos(
-      const ThreadSampleData& actual_thread_sample_data, int32_t expected_thread_id) {
+      const ThreadSampleData& actual_thread_sample_data, uint32_t expected_thread_id) {
     EXPECT_EQ(actual_thread_sample_data.thread_id, expected_thread_id);
     EXPECT_EQ(actual_thread_sample_data.samples_count, 5);
     EXPECT_THAT(
@@ -1293,7 +1279,7 @@ TEST_F(SamplingDataPostProcessorTest, EmptyCallstackDataWithoutSummaryWithoutEve
 
   VerifyNoCallstackInfos();
 
-  EXPECT_EQ(ppsd_.GetThreadSampleData().size(), 0);
+  EXPECT_EQ(ppsd_.GetSortedThreadSampleData().size(), 0);
   EXPECT_EQ(ppsd_.GetSummary(), nullptr);
 
   VerifyEmptySortedCallstackReport(orbit_base::kAllProcessThreadsTid);
@@ -1305,7 +1291,7 @@ TEST_F(SamplingDataPostProcessorTest, EmptyCallstackDataWithSummaryWithoutEvenAd
 
   VerifyNoCallstackInfos();
 
-  EXPECT_EQ(ppsd_.GetThreadSampleData().size(), 0);
+  EXPECT_EQ(ppsd_.GetSortedThreadSampleData().size(), 0);
   EXPECT_EQ(ppsd_.GetSummary(), nullptr);
 
   VerifyEmptySortedCallstackReport(orbit_base::kAllProcessThreadsTid);
@@ -1319,7 +1305,7 @@ TEST_F(SamplingDataPostProcessorTest, EmptyCallstackDataWithoutSummary) {
 
   VerifyNoCallstackInfos();
 
-  EXPECT_EQ(ppsd_.GetThreadSampleData().size(), 0);
+  EXPECT_EQ(ppsd_.GetSortedThreadSampleData().size(), 0);
   EXPECT_EQ(ppsd_.GetSummary(), nullptr);
 
   VerifyEmptySortedCallstackReport(orbit_base::kAllProcessThreadsTid);
@@ -1333,7 +1319,7 @@ TEST_F(SamplingDataPostProcessorTest, EmptyCallstackDataWithSummary) {
 
   VerifyNoCallstackInfos();
 
-  EXPECT_EQ(ppsd_.GetThreadSampleData().size(), 0);
+  EXPECT_EQ(ppsd_.GetSortedThreadSampleData().size(), 0);
   EXPECT_EQ(ppsd_.GetSummary(), nullptr);
 
   VerifyEmptySortedCallstackReport(orbit_base::kAllProcessThreadsTid);
@@ -1358,7 +1344,7 @@ TEST_F(SamplingDataPostProcessorTest, CallstackInfosButNoCallstackEvents) {
 
   VerifyAllCallstackInfos(CallstackInfo::kComplete);
 
-  EXPECT_EQ(ppsd_.GetThreadSampleData().size(), 0);
+  EXPECT_EQ(ppsd_.GetSortedThreadSampleData().size(), 0);
   EXPECT_EQ(ppsd_.GetSummary(), nullptr);
 
   VerifyEmptySortedCallstackReport(orbit_base::kAllProcessThreadsTid);
@@ -1375,12 +1361,12 @@ TEST_F(SamplingDataPostProcessorTest, OneThreadWithoutSummary) {
 
   VerifyAllCallstackInfos(CallstackInfo::kComplete);
 
-  EXPECT_EQ(ppsd_.GetThreadSampleData().size(), 1);
+  EXPECT_EQ(ppsd_.GetSortedThreadSampleData().size(), 1);
   EXPECT_EQ(ppsd_.GetSummary(), nullptr);
 
   ASSERT_NE(ppsd_.GetThreadSampleDataByThreadId(kThreadId1), nullptr);
-  EXPECT_THAT(ppsd_.GetThreadSampleData(),
-              ElementsAre(ThreadSampleDataEq(*ppsd_.GetThreadSampleDataByThreadId(kThreadId1))));
+  EXPECT_THAT(ppsd_.GetSortedThreadSampleData(),
+              ElementsAre(ppsd_.GetThreadSampleDataByThreadId(kThreadId1)));
 
   VerifyThreadSampleDataForCallstackEventsAllInTheSameThread(
       *ppsd_.GetThreadSampleDataByThreadId(kThreadId1), kThreadId1);
@@ -1402,17 +1388,15 @@ TEST_F(SamplingDataPostProcessorTest, OneThreadWithSummary) {
 
   VerifyAllCallstackInfos(CallstackInfo::kComplete);
 
-  EXPECT_EQ(ppsd_.GetThreadSampleData().size(), 2);
+  EXPECT_EQ(ppsd_.GetSortedThreadSampleData().size(), 2);
   ASSERT_NE(ppsd_.GetSummary(), nullptr);
 
   ASSERT_NE(ppsd_.GetThreadSampleDataByThreadId(orbit_base::kAllProcessThreadsTid), nullptr);
   ASSERT_NE(ppsd_.GetThreadSampleDataByThreadId(kThreadId1), nullptr);
   EXPECT_EQ(ppsd_.GetSummary(),
             ppsd_.GetThreadSampleDataByThreadId(orbit_base::kAllProcessThreadsTid));
-  EXPECT_THAT(
-      ppsd_.GetThreadSampleData(),
-      UnorderedElementsAre(ThreadSampleDataEq(*ppsd_.GetSummary()),
-                           ThreadSampleDataEq(*ppsd_.GetThreadSampleDataByThreadId(kThreadId1))));
+  EXPECT_THAT(ppsd_.GetSortedThreadSampleData(),
+              ElementsAre(ppsd_.GetSummary(), ppsd_.GetThreadSampleDataByThreadId(kThreadId1)));
 
   VerifyThreadSampleDataForCallstackEventsAllInTheSameThread(*ppsd_.GetSummary(),
                                                              orbit_base::kAllProcessThreadsTid);
@@ -1437,17 +1421,15 @@ TEST_F(SamplingDataPostProcessorTest, OneThreadWithSummaryWithOnlyNonCompleteCal
 
   VerifyAllCallstackInfos(CallstackInfo::kDwarfUnwindingError);
 
-  EXPECT_EQ(ppsd_.GetThreadSampleData().size(), 2);
+  EXPECT_EQ(ppsd_.GetSortedThreadSampleData().size(), 2);
   ASSERT_NE(ppsd_.GetSummary(), nullptr);
 
   ASSERT_NE(ppsd_.GetThreadSampleDataByThreadId(orbit_base::kAllProcessThreadsTid), nullptr);
   ASSERT_NE(ppsd_.GetThreadSampleDataByThreadId(kThreadId1), nullptr);
   EXPECT_EQ(ppsd_.GetSummary(),
             ppsd_.GetThreadSampleDataByThreadId(orbit_base::kAllProcessThreadsTid));
-  EXPECT_THAT(
-      ppsd_.GetThreadSampleData(),
-      UnorderedElementsAre(ThreadSampleDataEq(*ppsd_.GetSummary()),
-                           ThreadSampleDataEq(*ppsd_.GetThreadSampleDataByThreadId(kThreadId1))));
+  EXPECT_THAT(ppsd_.GetSortedThreadSampleData(),
+              ElementsAre(ppsd_.GetSummary(), ppsd_.GetThreadSampleDataByThreadId(kThreadId1)));
 
   VerifyThreadSampleDataForCallstackEventsAllInTheSameThreadWithOnlyNonCompleteCallstackInfos(
       *ppsd_.GetSummary(), orbit_base::kAllProcessThreadsTid);
@@ -1473,12 +1455,12 @@ TEST_F(SamplingDataPostProcessorTest, OneThreadWithoutSummaryWithMixedCallstackT
 
   VerifyAllCallstackInfosWithMixedCallstackTypes();
 
-  EXPECT_EQ(ppsd_.GetThreadSampleData().size(), 1);
+  EXPECT_EQ(ppsd_.GetSortedThreadSampleData().size(), 1);
   EXPECT_EQ(ppsd_.GetSummary(), nullptr);
 
   ASSERT_NE(ppsd_.GetThreadSampleDataByThreadId(kThreadId1), nullptr);
-  EXPECT_THAT(ppsd_.GetThreadSampleData(),
-              ElementsAre(ThreadSampleDataEq(*ppsd_.GetThreadSampleDataByThreadId(kThreadId1))));
+  EXPECT_THAT(ppsd_.GetSortedThreadSampleData(),
+              ElementsAre(ppsd_.GetThreadSampleDataByThreadId(kThreadId1)));
 
   VerifyThreadSampleDataForCallstackEventsAllInTheSameThreadWithMixedCallstackTypes(
       *ppsd_.GetThreadSampleDataByThreadId(kThreadId1), kThreadId1);
@@ -1501,17 +1483,15 @@ TEST_F(SamplingDataPostProcessorTest, OneThreadWithSummaryWithMixedCallstackType
 
   VerifyAllCallstackInfosWithMixedCallstackTypes();
 
-  EXPECT_EQ(ppsd_.GetThreadSampleData().size(), 2);
+  EXPECT_EQ(ppsd_.GetSortedThreadSampleData().size(), 2);
   ASSERT_NE(ppsd_.GetSummary(), nullptr);
 
   ASSERT_NE(ppsd_.GetThreadSampleDataByThreadId(orbit_base::kAllProcessThreadsTid), nullptr);
   ASSERT_NE(ppsd_.GetThreadSampleDataByThreadId(kThreadId1), nullptr);
   EXPECT_EQ(ppsd_.GetSummary(),
             ppsd_.GetThreadSampleDataByThreadId(orbit_base::kAllProcessThreadsTid));
-  EXPECT_THAT(
-      ppsd_.GetThreadSampleData(),
-      UnorderedElementsAre(ThreadSampleDataEq(*ppsd_.GetSummary()),
-                           ThreadSampleDataEq(*ppsd_.GetThreadSampleDataByThreadId(kThreadId1))));
+  EXPECT_THAT(ppsd_.GetSortedThreadSampleData(),
+              ElementsAre(ppsd_.GetSummary(), ppsd_.GetThreadSampleDataByThreadId(kThreadId1)));
 
   VerifyThreadSampleDataForCallstackEventsAllInTheSameThreadWithMixedCallstackTypes(
       *ppsd_.GetSummary(), orbit_base::kAllProcessThreadsTid);
@@ -1537,17 +1517,15 @@ TEST_F(SamplingDataPostProcessorTest, OneThreadWithSummaryWithoutAddressInfos) {
 
   VerifyAllCallstackInfoWithoutAddressInfos(CallstackInfo::kComplete);
 
-  EXPECT_EQ(ppsd_.GetThreadSampleData().size(), 2);
+  EXPECT_EQ(ppsd_.GetSortedThreadSampleData().size(), 2);
   ASSERT_NE(ppsd_.GetSummary(), nullptr);
 
   ASSERT_NE(ppsd_.GetThreadSampleDataByThreadId(orbit_base::kAllProcessThreadsTid), nullptr);
   ASSERT_NE(ppsd_.GetThreadSampleDataByThreadId(kThreadId1), nullptr);
   EXPECT_EQ(ppsd_.GetSummary(),
             ppsd_.GetThreadSampleDataByThreadId(orbit_base::kAllProcessThreadsTid));
-  EXPECT_THAT(
-      ppsd_.GetThreadSampleData(),
-      UnorderedElementsAre(ThreadSampleDataEq(*ppsd_.GetSummary()),
-                           ThreadSampleDataEq(*ppsd_.GetThreadSampleDataByThreadId(kThreadId1))));
+  EXPECT_THAT(ppsd_.GetSortedThreadSampleData(),
+              ElementsAre(ppsd_.GetSummary(), ppsd_.GetThreadSampleDataByThreadId(kThreadId1)));
 
   VerifyThreadSampleDataForCallstackEventsAllInTheSameThreadWithoutAddressInfos(
       *ppsd_.GetSummary(), orbit_base::kAllProcessThreadsTid);
@@ -1572,14 +1550,14 @@ TEST_F(SamplingDataPostProcessorTest, TwoThreadsWithoutSummary) {
 
   VerifyAllCallstackInfos(CallstackInfo::kComplete);
 
-  EXPECT_EQ(ppsd_.GetThreadSampleData().size(), 2);
+  EXPECT_EQ(ppsd_.GetSortedThreadSampleData().size(), 2);
   EXPECT_EQ(ppsd_.GetSummary(), nullptr);
 
   ASSERT_NE(ppsd_.GetThreadSampleDataByThreadId(kThreadId1), nullptr);
   ASSERT_NE(ppsd_.GetThreadSampleDataByThreadId(kThreadId2), nullptr);
-  EXPECT_THAT(ppsd_.GetThreadSampleData(),
-              ElementsAre(ThreadSampleDataEq(*ppsd_.GetThreadSampleDataByThreadId(kThreadId2)),
-                          ThreadSampleDataEq(*ppsd_.GetThreadSampleDataByThreadId(kThreadId1))));
+  EXPECT_THAT(ppsd_.GetSortedThreadSampleData(),
+              ElementsAre(ppsd_.GetThreadSampleDataByThreadId(kThreadId2),
+                          ppsd_.GetThreadSampleDataByThreadId(kThreadId1)));
 
   VerifyThreadSampleDataForCallstackEventsInThreadId1(
       *ppsd_.GetThreadSampleDataByThreadId(kThreadId1));
@@ -1604,15 +1582,14 @@ TEST_F(SamplingDataPostProcessorTest, TwoThreadsWithSummary) {
 
   VerifyAllCallstackInfos(CallstackInfo::kComplete);
 
-  EXPECT_EQ(ppsd_.GetThreadSampleData().size(), 3);
+  EXPECT_EQ(ppsd_.GetSortedThreadSampleData().size(), 3);
   ASSERT_NE(ppsd_.GetSummary(), nullptr);
 
   ASSERT_NE(ppsd_.GetThreadSampleDataByThreadId(kThreadId1), nullptr);
   ASSERT_NE(ppsd_.GetThreadSampleDataByThreadId(kThreadId2), nullptr);
-  EXPECT_THAT(ppsd_.GetThreadSampleData(),
-              ElementsAre(ThreadSampleDataEq(*ppsd_.GetSummary()),
-                          ThreadSampleDataEq(*ppsd_.GetThreadSampleDataByThreadId(kThreadId2)),
-                          ThreadSampleDataEq(*ppsd_.GetThreadSampleDataByThreadId(kThreadId1))));
+  EXPECT_THAT(ppsd_.GetSortedThreadSampleData(),
+              ElementsAre(ppsd_.GetSummary(), ppsd_.GetThreadSampleDataByThreadId(kThreadId2),
+                          ppsd_.GetThreadSampleDataByThreadId(kThreadId1)));
 
   VerifyThreadSampleDataForCallstackEventsAllInTheSameThread(*ppsd_.GetSummary(),
                                                              orbit_base::kAllProcessThreadsTid);
@@ -1640,14 +1617,14 @@ TEST_F(SamplingDataPostProcessorTest, TwoThreadsWithoutSummaryWithMixedCallstack
 
   VerifyAllCallstackInfosWithMixedCallstackTypes();
 
-  EXPECT_EQ(ppsd_.GetThreadSampleData().size(), 2);
+  EXPECT_EQ(ppsd_.GetSortedThreadSampleData().size(), 2);
   EXPECT_EQ(ppsd_.GetSummary(), nullptr);
 
   ASSERT_NE(ppsd_.GetThreadSampleDataByThreadId(kThreadId1), nullptr);
   ASSERT_NE(ppsd_.GetThreadSampleDataByThreadId(kThreadId2), nullptr);
-  EXPECT_THAT(ppsd_.GetThreadSampleData(),
-              ElementsAre(ThreadSampleDataEq(*ppsd_.GetThreadSampleDataByThreadId(kThreadId2)),
-                          ThreadSampleDataEq(*ppsd_.GetThreadSampleDataByThreadId(kThreadId1))));
+  EXPECT_THAT(ppsd_.GetSortedThreadSampleData(),
+              ElementsAre(ppsd_.GetThreadSampleDataByThreadId(kThreadId2),
+                          ppsd_.GetThreadSampleDataByThreadId(kThreadId1)));
 
   VerifyThreadSampleDataForCallstackEventsInThreadId1WithMixedCallstackTypes(
       *ppsd_.GetThreadSampleDataByThreadId(kThreadId1));
@@ -1672,15 +1649,14 @@ TEST_F(SamplingDataPostProcessorTest, TwoThreadsWithSummaryWithMixedCallstackTyp
 
   VerifyAllCallstackInfosWithMixedCallstackTypes();
 
-  EXPECT_EQ(ppsd_.GetThreadSampleData().size(), 3);
+  EXPECT_EQ(ppsd_.GetSortedThreadSampleData().size(), 3);
   ASSERT_NE(ppsd_.GetSummary(), nullptr);
 
   ASSERT_NE(ppsd_.GetThreadSampleDataByThreadId(kThreadId1), nullptr);
   ASSERT_NE(ppsd_.GetThreadSampleDataByThreadId(kThreadId2), nullptr);
-  EXPECT_THAT(ppsd_.GetThreadSampleData(),
-              ElementsAre(ThreadSampleDataEq(*ppsd_.GetSummary()),
-                          ThreadSampleDataEq(*ppsd_.GetThreadSampleDataByThreadId(kThreadId2)),
-                          ThreadSampleDataEq(*ppsd_.GetThreadSampleDataByThreadId(kThreadId1))));
+  EXPECT_THAT(ppsd_.GetSortedThreadSampleData(),
+              ElementsAre(ppsd_.GetSummary(), ppsd_.GetThreadSampleDataByThreadId(kThreadId2),
+                          ppsd_.GetThreadSampleDataByThreadId(kThreadId1)));
 
   VerifyThreadSampleDataForCallstackEventsAllInTheSameThreadWithMixedCallstackTypes(
       *ppsd_.GetSummary(), orbit_base::kAllProcessThreadsTid);

@@ -181,12 +181,12 @@ std::unique_ptr<CallTreeView> CallTreeView::CreateTopDownViewFromPostProcessedSa
   const std::string& process_name = capture_data.process_name();
   const absl::flat_hash_map<uint32_t, std::string>& thread_names = capture_data.thread_names();
 
-  for (const ThreadSampleData& thread_sample_data :
-       post_processed_sampling_data.GetThreadSampleData()) {
-    const uint32_t tid = thread_sample_data.thread_id;
+  for (const ThreadSampleData* thread_sample_data :
+       post_processed_sampling_data.GetSortedThreadSampleData()) {
+    const uint32_t tid = thread_sample_data->thread_id;
 
     for (const auto& [callstack_id, sample_count] :
-         thread_sample_data.sampled_callstack_id_to_count) {
+         thread_sample_data->sampled_callstack_id_to_count) {
       const CallstackInfo& resolved_callstack =
           post_processed_sampling_data.GetResolvedCallstack(callstack_id);
 
@@ -256,15 +256,15 @@ std::unique_ptr<CallTreeView> CallTreeView::CreateBottomUpViewFromPostProcessedS
   const std::string& process_name = capture_data.process_name();
   const absl::flat_hash_map<uint32_t, std::string>& thread_names = capture_data.thread_names();
 
-  for (const ThreadSampleData& thread_sample_data :
-       post_processed_sampling_data.GetThreadSampleData()) {
-    const uint32_t tid = thread_sample_data.thread_id;
+  for (const ThreadSampleData* thread_sample_data :
+       post_processed_sampling_data.GetSortedThreadSampleData()) {
+    const uint32_t tid = thread_sample_data->thread_id;
     if (tid == orbit_base::kAllProcessThreadsTid) {
       continue;
     }
 
     for (const auto& [callstack_id, sample_count] :
-         thread_sample_data.sampled_callstack_id_to_count) {
+         thread_sample_data->sampled_callstack_id_to_count) {
       const CallstackInfo& resolved_callstack =
           post_processed_sampling_data.GetResolvedCallstack(callstack_id);
 
