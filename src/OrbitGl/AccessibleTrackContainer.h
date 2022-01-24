@@ -25,7 +25,7 @@ class AccessibleTrackContainer : public AccessibleCaptureViewElement {
 
   [[nodiscard]] std::string AccessibleName() const override { return "Track Container"; }
   [[nodiscard]] orbit_accessibility::AccessibilityRole AccessibleRole() const override {
-    return orbit_accessibility::AccessibilityRole::Grouping;  // TODO: FlorianR, is this correct?
+    return orbit_accessibility::AccessibilityRole::Pane;
   }
   [[nodiscard]] orbit_accessibility::AccessibilityState AccessibleState() const override;
 

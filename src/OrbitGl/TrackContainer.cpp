@@ -50,11 +50,11 @@ TrackContainer::TrackContainer(CaptureViewElement* parent, TimelineInfoInterface
                                Viewport* viewport, TimeGraphLayout* layout, OrbitApp* app,
                                CaptureData* capture_data)
     : CaptureViewElement(parent, viewport, &layout_),
+      track_manager_{
+          std::make_unique<TrackManager>(this, timeline_info, viewport, layout, app, capture_data)},
       capture_data_{capture_data},
       thread_track_data_provider_(capture_data->GetThreadTrackDataProvider()),
       timeline_info_(timeline_info) {
-  track_manager_ =
-      std::make_unique<TrackManager>(this, timeline_info, viewport, layout, app, capture_data);
   track_manager_->GetOrCreateSchedulerTrack();
 }
 
@@ -85,7 +85,7 @@ void TrackContainer::VerticallyMoveIntoView(const TimerInfo& timer_info) {
 }
 
 // Move vertically the view to make a Track fully visible.
-void TrackContainer::VerticallyMoveIntoView(Track& track) {
+void TrackContainer::VerticallyMoveIntoView(const Track& track) {
   float pos = track.GetPos()[1] + vertical_scrolling_offset_;
   float height = track.GetHeight();
 
@@ -235,9 +235,10 @@ void TrackContainer::DrawIteratorBox(Batcher& batcher, TextRenderer& text_render
   const Color kBlack(0, 0, 0, 255);
   float text_width = text_renderer.AddTextTrailingCharsPrioritized(
       text.c_str(), pos[0], text_box_y + layout_.GetTextOffset(), GlCanvas::kZValueTextUi,
-      {GetLayout().GetFontSize(), kBlack, max_size}, time.length());
+      {layout_.GetFontSize(), kBlack, max_size}, time.length());
 
-  Vec2 white_box_size(std::min(static_cast<float>(text_width), max_size), GetTextBoxHeight());
+  float box_height = layout_.GetTextBoxHeight();
+  Vec2 white_box_size(std::min(static_cast<float>(text_width), max_size), box_height);
   Vec2 white_box_position(pos[0], text_box_y);
 
   Box white_box(white_box_position, white_box_size, GlCanvas::kZValueOverlayTextBackground);
@@ -245,8 +246,8 @@ void TrackContainer::DrawIteratorBox(Batcher& batcher, TextRenderer& text_render
   const Color kWhite(255, 255, 255, 255);
   batcher.AddBox(white_box, kWhite);
 
-  Vec2 line_from(pos[0] + white_box_size[0], white_box_position[1] + GetTextBoxHeight() / 2.f);
-  Vec2 line_to(pos[0] + size[0], white_box_position[1] + GetTextBoxHeight() / 2.f);
+  Vec2 line_from(pos[0] + white_box_size[0], white_box_position[1] + box_height / 2.f);
+  Vec2 line_to(pos[0] + size[0], white_box_position[1] + box_height / 2.f);
   batcher.AddLine(line_from, line_to, GlCanvas::kZValueOverlay, Color(255, 255, 255, 255));
 }
 

@@ -31,19 +31,14 @@ class TrackContainer final : public CaptureViewElement {
 
   [[nodiscard]] float GetHeight() const override;
 
-  [[nodiscard]] const orbit_client_data::CaptureData* GetCaptureData() const {
-    return capture_data_;
-  }
   [[nodiscard]] TrackManager* GetTrackManager() { return track_manager_.get(); }
   [[nodiscard]] orbit_client_data::ThreadTrackDataProvider* GetCaptureDataProvider() {
     return thread_track_data_provider_;
   }
 
-  [[nodiscard]] float GetTextBoxHeight() const { return layout_.GetTextBoxHeight(); }
-
   void VerticalZoom(float real_ratio, float mouse_screen_y_position);
   void VerticallyMoveIntoView(const orbit_client_protos::TimerInfo& timer_info);
-  void VerticallyMoveIntoView(Track& track);
+  void VerticallyMoveIntoView(const Track& track);
 
   [[nodiscard]] const orbit_client_protos::TimerInfo* FindPreviousFunctionCall(
       uint64_t function_address, uint64_t current_time,
@@ -59,9 +54,6 @@ class TrackContainer final : public CaptureViewElement {
   [[nodiscard]] std::vector<const orbit_client_data::TimerChain*> GetAllThreadTrackTimerChains()
       const;
   [[nodiscard]] int GetNumVisiblePrimitives() const;
-
-  [[nodiscard]] const TimeGraphLayout& GetLayout() const { return layout_; }
-  [[nodiscard]] TimeGraphLayout& GetLayout() { return layout_; }
 
   [[nodiscard]] const orbit_client_protos::TimerInfo* FindPrevious(
       const orbit_client_protos::TimerInfo& from);
