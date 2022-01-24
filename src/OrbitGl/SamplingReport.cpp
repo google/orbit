@@ -20,11 +20,11 @@ using orbit_client_data::ThreadSampleData;
 using orbit_client_protos::CallstackInfo;
 
 SamplingReport::SamplingReport(
-    OrbitApp* app, PostProcessedSamplingData post_processed_sampling_data,
-    absl::flat_hash_map<uint64_t, std::shared_ptr<CallstackInfo>> unique_callstacks,
+    OrbitApp* app, const orbit_client_data::CallstackData* callstack_data,
+    const orbit_client_data::PostProcessedSamplingData* post_processed_sampling_data,
     bool has_summary)
-    : post_processed_sampling_data_{std::move(post_processed_sampling_data)},
-      unique_callstacks_{std::move(unique_callstacks)},
+    : callstack_data_{callstack_data},
+      post_processed_sampling_data_{post_processed_sampling_data},
       has_summary_{has_summary},
       app_{app} {
   ORBIT_SCOPE_FUNCTION;
@@ -42,7 +42,7 @@ void SamplingReport::ClearReport() {
 
 void SamplingReport::FillReport() {
   const std::vector<const ThreadSampleData*>& sample_data =
-      post_processed_sampling_data_.GetSortedThreadSampleData();
+      post_processed_sampling_data_->GetSortedThreadSampleData();
 
   for (const ThreadSampleData* thread_sample_data : sample_data) {
     orbit_data_views::SamplingReportDataView thread_report{app_};
@@ -50,7 +50,7 @@ void SamplingReport::FillReport() {
     thread_report.SetSampledFunctions(thread_sample_data->sampled_functions);
     thread_report.SetThreadID(thread_sample_data->thread_id);
     thread_report.SetSamplingReport(this);
-    thread_reports_.push_back(std::move(thread_report));
+    thread_data_views_.push_back(std::move(thread_report));
   }
 }
 
@@ -61,7 +61,7 @@ void SamplingReport::UpdateDisplayedCallstack() {
   }
 
   selected_sorted_callstack_report_ =
-      post_processed_sampling_data_.GetSortedCallstackReportFromFunctionAddresses(
+      post_processed_sampling_data_->GetSortedCallstackReportFromFunctionAddresses(
           std::vector<uint64_t>(selected_addresses_.begin(), selected_addresses_.end()),
           selected_thread_id_);
   if (selected_sorted_callstack_report_->callstack_counts.empty()) {
@@ -72,15 +72,15 @@ void SamplingReport::UpdateDisplayedCallstack() {
 }
 
 void SamplingReport::UpdateReport(
-    PostProcessedSamplingData post_processed_sampling_data,
-    absl::flat_hash_map<uint64_t, std::shared_ptr<CallstackInfo>> unique_callstacks) {
-  unique_callstacks_ = std::move(unique_callstacks);
-  post_processed_sampling_data_ = std::move(post_processed_sampling_data);
+    const orbit_client_data::CallstackData* callstack_data,
+    const orbit_client_data::PostProcessedSamplingData* post_processed_sampling_data) {
+  callstack_data_ = callstack_data;
+  post_processed_sampling_data_ = post_processed_sampling_data;
 
-  for (orbit_data_views::SamplingReportDataView& thread_report : thread_reports_) {
+  for (orbit_data_views::SamplingReportDataView& thread_report : thread_data_views_) {
     ThreadID thread_id = thread_report.GetThreadID();
     const ThreadSampleData* thread_sample_data =
-        post_processed_sampling_data_.GetThreadSampleDataByThreadId(thread_id);
+        post_processed_sampling_data_->GetThreadSampleDataByThreadId(thread_id);
     if (thread_sample_data != nullptr) {
       thread_report.SetSampledFunctions(thread_sample_data->sampled_functions);
     }
@@ -141,9 +141,9 @@ std::string SamplingReport::GetSelectedCallstackString() const {
 
   uint64_t callstack_id =
       selected_sorted_callstack_report_->callstack_counts[selected_callstack_index_].callstack_id;
-  auto callstack_it = unique_callstacks_.find(callstack_id);
-  ORBIT_CHECK(callstack_it != unique_callstacks_.end());
-  CallstackInfo::CallstackType callstack_type = callstack_it->second->type();
+  const orbit_client_protos::CallstackInfo* callstack = callstack_data_->GetCallstack(callstack_id);
+  ORBIT_CHECK(callstack != nullptr);
+  CallstackInfo::CallstackType callstack_type = callstack->type();
 
   std::string type_string = (callstack_type == CallstackInfo::kComplete) ? "" : "  -  Unwind error";
   return absl::StrFormat(
@@ -154,11 +154,13 @@ std::string SamplingReport::GetSelectedCallstackString() const {
 
 void SamplingReport::OnCallstackIndexChanged(size_t index) {
   if (index < selected_sorted_callstack_report_->callstack_counts.size()) {
-    const CallstackCount& cs = selected_sorted_callstack_report_->callstack_counts[index];
+    const CallstackCount& callstack_count =
+        selected_sorted_callstack_report_->callstack_counts[index];
     selected_callstack_index_ = index;
-    auto it = unique_callstacks_.find(cs.callstack_id);
-    ORBIT_CHECK(it != unique_callstacks_.end());
-    callstack_data_view_->SetCallstack(*it->second);
+    const orbit_client_protos::CallstackInfo* callstack =
+        callstack_data_->GetCallstack(callstack_count.callstack_id);
+    ORBIT_CHECK(callstack != nullptr);
+    callstack_data_view_->SetCallstack(*callstack);
     callstack_data_view_->SetFunctionsToHighlight(selected_addresses_);
   } else {
     selected_callstack_index_ = 0;

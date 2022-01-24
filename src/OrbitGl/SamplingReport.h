@@ -29,16 +29,15 @@ class OrbitApp;
 class SamplingReport : public orbit_data_views::SamplingReportInterface {
  public:
   explicit SamplingReport(
-      OrbitApp* app, orbit_client_data::PostProcessedSamplingData post_processed_sampling_data,
-      absl::flat_hash_map<uint64_t, std::shared_ptr<orbit_client_protos::CallstackInfo>>
-          unique_callstacks,
+      OrbitApp* app, const orbit_client_data::CallstackData* callstack_data,
+      const orbit_client_data::PostProcessedSamplingData* post_processed_sampling_data,
       bool has_summary = true);
   void UpdateReport(
-      orbit_client_data::PostProcessedSamplingData post_processed_sampling_data,
-      absl::flat_hash_map<uint64_t, std::shared_ptr<orbit_client_protos::CallstackInfo>>
-          unique_callstacks);
-  [[nodiscard]] std::vector<orbit_data_views::SamplingReportDataView>& GetThreadReports() {
-    return thread_reports_;
+      const orbit_client_data::CallstackData* callstack_data,
+      const orbit_client_data::PostProcessedSamplingData* post_processed_sampling_data);
+
+  [[nodiscard]] std::vector<orbit_data_views::SamplingReportDataView>& GetThreadDataViews() {
+    return thread_data_views_;
   };
   void SetCallstackDataView(orbit_data_views::CallstackDataView* data_view) override {
     callstack_data_view_ = data_view;
@@ -50,7 +49,7 @@ class SamplingReport : public orbit_data_views::SamplingReportInterface {
   [[nodiscard]] std::string GetSelectedCallstackString() const;
   void SetUiRefreshFunc(std::function<void()> func) { ui_refresh_func_ = std::move(func); };
   [[nodiscard]] bool HasCallstacks() const { return selected_sorted_callstack_report_ != nullptr; };
-  [[nodiscard]] bool HasSamples() const { return !thread_reports_.empty(); }
+  [[nodiscard]] bool HasSamples() const { return !thread_data_views_.empty(); }
   [[nodiscard]] bool has_summary() const { return has_summary_; }
   void ClearReport();
 
@@ -59,10 +58,10 @@ class SamplingReport : public orbit_data_views::SamplingReportInterface {
   void OnCallstackIndexChanged(size_t index);
   void UpdateDisplayedCallstack();
 
-  orbit_client_data::PostProcessedSamplingData post_processed_sampling_data_;
-  absl::flat_hash_map<uint64_t, std::shared_ptr<orbit_client_protos::CallstackInfo>>
-      unique_callstacks_;
-  std::vector<orbit_data_views::SamplingReportDataView> thread_reports_;
+  const orbit_client_data::CallstackData* callstack_data_;
+  const orbit_client_data::PostProcessedSamplingData* post_processed_sampling_data_;
+
+  std::vector<orbit_data_views::SamplingReportDataView> thread_data_views_;
   orbit_data_views::CallstackDataView* callstack_data_view_ = nullptr;
 
   absl::flat_hash_set<uint64_t> selected_addresses_;

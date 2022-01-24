@@ -56,7 +56,7 @@ void OrbitSamplingReport::Initialize(orbit_data_views::DataView* callstack_data_
 
   sampling_report_->SetUiRefreshFunc([&]() { this->RefreshCallstackView(); });
 
-  for (orbit_data_views::SamplingReportDataView& report_data_view : report->GetThreadReports()) {
+  for (orbit_data_views::SamplingReportDataView& report_data_view : report->GetThreadDataViews()) {
     ORBIT_SCOPE("SamplingReportDataView tab creation");
     auto* tab = new QWidget();
     tab->setObjectName(QStringLiteral("tab"));
