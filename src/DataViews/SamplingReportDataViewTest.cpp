@@ -9,7 +9,7 @@
 #include <algorithm>
 
 #include "ClientData/CaptureData.h"
-#include "ClientData/ModuleAndFunctionLookUp.h"
+#include "ClientData/ModuleAndFunctionLookup.h"
 #include "ClientData/ModuleData.h"
 #include "ClientData/ModuleManager.h"
 #include "ClientData/PostProcessedSamplingData.h"
@@ -146,14 +146,14 @@ std::string GetExpectedDisplayAddressByIndex(size_t index) {
 
 std::string GetExpectedDisplayFunctionNameByIndex(size_t index, const ModuleManager* module_manager,
                                                   CaptureData& capture_data) {
-  return orbit_client_data::GetFunctionNameByAddress(
-      capture_data.process(), module_manager, &capture_data, kSampledAbsoluteAddresses[index]);
+  return orbit_client_data::GetFunctionNameByAddress(*module_manager, capture_data,
+                                                     kSampledAbsoluteAddresses[index]);
 }
 
 std::string GetExpectedDisplayModuleNameByIndex(size_t index, const ModuleManager* module_manager,
                                                 CaptureData& capture_data) {
   std::string module_path = orbit_client_data::GetModulePathByAddress(
-      capture_data.process(), module_manager, &capture_data, kSampledAbsoluteAddresses[index]);
+      *module_manager, capture_data, kSampledAbsoluteAddresses[index]);
   return std::filesystem::path(module_path).filename().string();
 }
 
@@ -202,11 +202,9 @@ class SamplingReportDataViewTest : public testing::Test {
       SampledFunction sampled_function;
       sampled_function.absolute_address = kSampledAbsoluteAddresses[i];
       sampled_function.name = orbit_client_data::GetFunctionNameByAddress(
-          capture_data_->process(), &module_manager_, capture_data_.get(),
-          kSampledAbsoluteAddresses[i]);
+          module_manager_, *capture_data_, kSampledAbsoluteAddresses[i]);
       sampled_function.module_path = orbit_client_data::GetModulePathByAddress(
-          capture_data_->process(), &module_manager_, capture_data_.get(),
-          kSampledAbsoluteAddresses[i]);
+          module_manager_, *capture_data_, kSampledAbsoluteAddresses[i]);
       sampled_function.exclusive = kSampledExclusives[i];
       sampled_function.exclusive_percent = kSampledExclusivePercents[i];
       sampled_function.inclusive = kSampledInclusives[i];

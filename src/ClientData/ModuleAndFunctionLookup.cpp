@@ -2,7 +2,7 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#include "ClientData/ModuleAndFunctionLookUp.h"
+#include "ClientData/ModuleAndFunctionLookup.h"
 
 #include <ClientData/CaptureData.h>
 #include <ClientData/FunctionUtils.h>
@@ -15,13 +15,13 @@ namespace orbit_client_data {
 namespace {
 [[nodiscard]] std::optional<uint64_t>
 FindFunctionAbsoluteAddressByInstructionAbsoluteAddressUsingModulesInMemory(
-    const ProcessData* process, const ModuleManager* module_manager, uint64_t absolute_address) {
-  const auto module_or_error = process->FindModuleByAddress(absolute_address);
+    const ProcessData& process, const ModuleManager& module_manager, uint64_t absolute_address) {
+  const auto module_or_error = process.FindModuleByAddress(absolute_address);
   if (module_or_error.has_error()) return std::nullopt;
   const auto& module_in_memory = module_or_error.value();
   const uint64_t module_base_address = module_in_memory.start();
 
-  const ModuleData* module = module_manager->GetModuleByModuleInMemoryAndAbsoluteAddress(
+  const ModuleData* module = module_manager.GetModuleByModuleInMemoryAndAbsoluteAddress(
       module_in_memory, absolute_address);
   if (module == nullptr) return std::nullopt;
 
@@ -37,24 +37,23 @@ FindFunctionAbsoluteAddressByInstructionAbsoluteAddressUsingModulesInMemory(
 
 [[nodiscard]] std::optional<uint64_t>
 FindFunctionAbsoluteAddressByInstructionAbsoluteAddressUsingAddressInfo(
-    const CaptureData* capture_data, uint64_t absolute_address) {
-  const LinuxAddressInfo* address_info = capture_data->GetAddressInfo(absolute_address);
+    const CaptureData& capture_data, uint64_t absolute_address) {
+  const LinuxAddressInfo* address_info = capture_data.GetAddressInfo(absolute_address);
   if (address_info == nullptr) return std::nullopt;
 
   return absolute_address - address_info->offset_in_function();
 }
 }  // namespace
 
-const std::string& GetFunctionNameByAddress(const ProcessData* process,
-                                            const ModuleManager* module_manager,
-                                            const CaptureData* capture_data,
+const std::string& GetFunctionNameByAddress(const ModuleManager& module_manager,
+                                            const CaptureData& capture_data,
                                             uint64_t absolute_address) {
-  const FunctionInfo* function =
-      FindFunctionByAddress(process, module_manager, absolute_address, false);
+  const FunctionInfo* function = FindFunctionByAddress(*capture_data.process(), module_manager,
+                                                       absolute_address, /*is_exact=*/false);
   if (function != nullptr) {
     return orbit_client_data::function_utils::GetDisplayName(*function);
   }
-  const LinuxAddressInfo* address_info = capture_data->GetAddressInfo(absolute_address);
+  const LinuxAddressInfo* address_info = capture_data.GetAddressInfo(absolute_address);
   if (address_info == nullptr) {
     return kUnknownFunctionOrModuleName;
   }
@@ -70,10 +69,10 @@ const std::string& GetFunctionNameByAddress(const ProcessData* process,
 // been loaded) use (for now) the LinuxAddressInfo that is collected for every address in a
 // callstack.
 std::optional<uint64_t> FindFunctionAbsoluteAddressByInstructionAbsoluteAddress(
-    const ProcessData* process, const ModuleManager* module_manager,
-    const CaptureData* capture_data, uint64_t absolute_address) {
+    const ModuleManager& module_manager, const CaptureData& capture_data,
+    uint64_t absolute_address) {
   auto result = FindFunctionAbsoluteAddressByInstructionAbsoluteAddressUsingModulesInMemory(
-      process, module_manager, absolute_address);
+      *capture_data.process(), module_manager, absolute_address);
   if (result.has_value()) {
     return result;
   }
@@ -81,11 +80,11 @@ std::optional<uint64_t> FindFunctionAbsoluteAddressByInstructionAbsoluteAddress(
                                                                                  absolute_address);
 }
 
-const FunctionInfo* FindFunctionByModulePathBuildIdAndOffset(const ModuleManager* module_manager,
+const FunctionInfo* FindFunctionByModulePathBuildIdAndOffset(const ModuleManager& module_manager,
                                                              const std::string& module_path,
                                                              const std::string& build_id,
                                                              uint64_t offset) {
-  const ModuleData* module_data = module_manager->GetModuleByPathAndBuildId(module_path, build_id);
+  const ModuleData* module_data = module_manager.GetModuleByPathAndBuildId(module_path, build_id);
   if (module_data == nullptr) {
     return nullptr;
   }
@@ -95,8 +94,8 @@ const FunctionInfo* FindFunctionByModulePathBuildIdAndOffset(const ModuleManager
   return module_data->FindFunctionByElfAddress(address, true);
 }
 
-std::optional<std::string> FindModuleBuildIdByAddress(const ProcessData* process,
-                                                      const ModuleManager* module_manager,
+std::optional<std::string> FindModuleBuildIdByAddress(const ProcessData& process,
+                                                      const ModuleManager& module_manager,
                                                       uint64_t absolute_address) {
   const ModuleData* module_data = FindModuleByAddress(process, module_manager, absolute_address);
   if (module_data == nullptr) {
@@ -105,16 +104,16 @@ std::optional<std::string> FindModuleBuildIdByAddress(const ProcessData* process
   return module_data->build_id();
 }
 
-const std::string& GetModulePathByAddress(const ProcessData* process,
-                                          const ModuleManager* module_manager,
-                                          const CaptureData* capture_data,
+const std::string& GetModulePathByAddress(const ModuleManager& module_manager,
+                                          const CaptureData& capture_data,
                                           uint64_t absolute_address) {
-  const ModuleData* module_data = FindModuleByAddress(process, module_manager, absolute_address);
+  const ModuleData* module_data =
+      FindModuleByAddress(*capture_data.process(), module_manager, absolute_address);
   if (module_data != nullptr) {
     return module_data->file_path();
   }
 
-  const LinuxAddressInfo* address_info = capture_data->GetAddressInfo(absolute_address);
+  const LinuxAddressInfo* address_info = capture_data.GetAddressInfo(absolute_address);
   if (address_info == nullptr) {
     return kUnknownFunctionOrModuleName;
   }
@@ -125,15 +124,15 @@ const std::string& GetModulePathByAddress(const ProcessData* process,
   return module_path;
 }
 
-const FunctionInfo* FindFunctionByAddress(const ProcessData* process,
-                                          const ModuleManager* module_manager,
+const FunctionInfo* FindFunctionByAddress(const ProcessData& process,
+                                          const ModuleManager& module_manager,
                                           uint64_t absolute_address, bool is_exact) {
-  const auto module_or_error = process->FindModuleByAddress(absolute_address);
+  const auto module_or_error = process.FindModuleByAddress(absolute_address);
   if (module_or_error.has_error()) return nullptr;
   const auto& module_in_memory = module_or_error.value();
   const uint64_t module_base_address = module_in_memory.start();
 
-  const ModuleData* module = module_manager->GetModuleByModuleInMemoryAndAbsoluteAddress(
+  const ModuleData* module = module_manager.GetModuleByModuleInMemoryAndAbsoluteAddress(
       module_in_memory, absolute_address);
   if (module == nullptr) return nullptr;
 
@@ -142,21 +141,21 @@ const FunctionInfo* FindFunctionByAddress(const ProcessData* process,
   return module->FindFunctionByOffset(offset, is_exact);
 }
 
-[[nodiscard]] const ModuleData* FindModuleByAddress(const ProcessData* process,
-                                                    const ModuleManager* module_manager,
+[[nodiscard]] const ModuleData* FindModuleByAddress(const ProcessData& process,
+                                                    const ModuleManager& module_manager,
                                                     uint64_t absolute_address) {
-  const auto result = process->FindModuleByAddress(absolute_address);
+  const auto result = process.FindModuleByAddress(absolute_address);
   if (result.has_error()) return nullptr;
-  return module_manager->GetModuleByModuleInMemoryAndAbsoluteAddress(result.value(),
-                                                                     absolute_address);
+  return module_manager.GetModuleByModuleInMemoryAndAbsoluteAddress(result.value(),
+                                                                    absolute_address);
 }
 
 std::optional<uint64_t> FindInstrumentedFunctionIdSlow(
-    const ModuleManager* module_manager, const CaptureData* capture_data,
+    const ModuleManager& module_manager, const CaptureData& capture_data,
     const orbit_client_protos::FunctionInfo& function) {
   const ModuleData* module =
-      module_manager->GetModuleByPathAndBuildId(function.module_path(), function.module_build_id());
-  for (const auto& it : capture_data->instrumented_functions()) {
+      module_manager.GetModuleByPathAndBuildId(function.module_path(), function.module_build_id());
+  for (const auto& it : capture_data.instrumented_functions()) {
     const auto& target_function = it.second;
     if (target_function.file_path() == function.module_path() &&
         target_function.file_offset() ==

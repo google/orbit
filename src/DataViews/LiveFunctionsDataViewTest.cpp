@@ -52,7 +52,6 @@ using orbit_data_views::kMenuActionUnselect;
 using orbit_grpc_protos::InstrumentedFunction;
 using orbit_grpc_protos::ModuleInfo;
 
-using ::testing::_;
 using ::testing::Return;
 
 namespace {

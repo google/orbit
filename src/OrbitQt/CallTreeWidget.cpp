@@ -40,7 +40,7 @@
 #include "CallTreeViewItemModel.h"
 #include "ClientData/CaptureData.h"
 #include "ClientData/FunctionUtils.h"
-#include "ClientData/ModuleAndFunctionLookUp.h"
+#include "ClientData/ModuleAndFunctionLookup.h"
 #include "ClientData/ModuleData.h"
 #include "ClientProtos/capture_data.pb.h"
 #include "CopyKeySequenceEnabledTreeView.h"
@@ -394,7 +394,7 @@ static std::vector<const FunctionInfo*> GetFunctionsFromIndices(
             .data(Qt::EditRole)
             .toLongLong();
     const FunctionInfo* function = orbit_client_data::FindFunctionByAddress(
-        capture_data.process(), module_manager, absolute_address, false);
+        *capture_data.process(), *module_manager, absolute_address, false);
     if (function != nullptr) {
       functions_set.insert(function);
     }

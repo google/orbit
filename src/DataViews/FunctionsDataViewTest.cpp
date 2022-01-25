@@ -37,7 +37,6 @@ using orbit_data_views::kMenuActionSelect;
 using orbit_data_views::kMenuActionSourceCode;
 using orbit_data_views::kMenuActionUnselect;
 
-using ::testing::_;
 using ::testing::Return;
 
 namespace {

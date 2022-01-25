@@ -20,7 +20,7 @@
 
 #include "ClientData/CaptureData.h"
 #include "ClientData/FunctionUtils.h"
-#include "ClientData/ModuleAndFunctionLookUp.h"
+#include "ClientData/ModuleAndFunctionLookup.h"
 #include "ClientData/ModuleData.h"
 #include "ClientData/ProcessData.h"
 #include "CompareAscendingOrDescending.h"
@@ -184,7 +184,7 @@ const FunctionInfo* SamplingReportDataView::GetFunctionInfoFromRow(int row) {
   SampledFunction& sampled_function = GetSampledFunction(row);
   if (sampled_function.function == nullptr) {
     const FunctionInfo* func = orbit_client_data::FindFunctionByAddress(
-        capture_data.process(), module_manager, sampled_function.absolute_address, false);
+        *capture_data.process(), *module_manager, sampled_function.absolute_address, false);
     sampled_function.function = func;
   }
 

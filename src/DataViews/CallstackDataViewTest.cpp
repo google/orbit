@@ -12,7 +12,7 @@
 
 #include "ClientData/CaptureData.h"
 #include "ClientData/FunctionUtils.h"
-#include "ClientData/ModuleAndFunctionLookUp.h"
+#include "ClientData/ModuleAndFunctionLookup.h"
 #include "ClientData/ProcessData.h"
 #include "ClientProtos/capture_data.pb.h"
 #include "DataViewTestUtils.h"
@@ -47,7 +47,6 @@ using orbit_data_views::kMenuActionUnselect;
 using orbit_data_views::MockAppInterface;
 using orbit_grpc_protos::ModuleInfo;
 
-using ::testing::_;
 using ::testing::Return;
 
 namespace {
@@ -155,16 +154,15 @@ class CallstackDataViewTest : public testing::Test {
   }
 
   std::string GetModulePathByAddressFromCaptureData(uint64_t frame_address) {
-    return std::filesystem::path(
-               orbit_client_data::GetModulePathByAddress(capture_data_->process(), &module_manager_,
-                                                         capture_data_.get(), frame_address))
+    return std::filesystem::path(orbit_client_data::GetModulePathByAddress(
+                                     module_manager_, *capture_data_, frame_address))
         .filename()
         .string();
   }
 
   std::string GetFunctionFallbackNameByAddress(uint64_t frame_address) {
-    return orbit_client_data::GetFunctionNameByAddress(capture_data_->process(), &module_manager_,
-                                                       capture_data_.get(), frame_address);
+    return orbit_client_data::GetFunctionNameByAddress(module_manager_, *capture_data_,
+                                                       frame_address);
   }
 
  protected:

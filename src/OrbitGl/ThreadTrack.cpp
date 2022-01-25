@@ -17,7 +17,7 @@
 #include "Batcher.h"
 #include "ClientData/CaptureData.h"
 #include "ClientData/FunctionUtils.h"
-#include "ClientData/ModuleAndFunctionLookUp.h"
+#include "ClientData/ModuleAndFunctionLookup.h"
 #include "ClientData/TimerChain.h"
 #include "ClientProtos/capture_data.pb.h"
 #include "DisplayFormats/DisplayFormats.h"
@@ -140,13 +140,12 @@ std::string ThreadTrack::GetBoxTooltip(const Batcher& batcher, PickingId id) con
     function_name = label;
   } else if (timer_info->address_in_function() != 0) {
     const auto* module = orbit_client_data::FindModuleByAddress(
-        capture_data_->process(), module_manager_, timer_info->address_in_function());
+        *capture_data_->process(), *module_manager_, timer_info->address_in_function());
     if (module != nullptr) {
       module_name = module->name();
     }
 
-    function_name = orbit_client_data::GetFunctionNameByAddress(capture_data_->process(),
-                                                                module_manager_, capture_data_,
+    function_name = orbit_client_data::GetFunctionNameByAddress(*module_manager_, *capture_data_,
                                                                 timer_info->address_in_function());
   }
 

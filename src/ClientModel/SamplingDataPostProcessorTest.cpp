@@ -9,7 +9,7 @@
 #include <vector>
 
 #include "ClientData/CaptureData.h"
-#include "ClientData/ModuleAndFunctionLookUp.h"
+#include "ClientData/ModuleAndFunctionLookup.h"
 #include "ClientData/ModuleManager.h"
 #include "ClientModel/SamplingDataPostProcessor.h"
 #include "ClientProtos/capture_data.pb.h"
@@ -344,12 +344,16 @@ class SamplingDataPostProcessorTest : public ::testing::Test {
   }
 
   void CreatePostProcessedSamplingDataWithoutSummary() {
-    ppsd_ = CreatePostProcessedSamplingData(capture_data_.GetCallstackData(), capture_data_, {},
+    orbit_client_data::ModuleManager module_manager{};
+    ppsd_ = CreatePostProcessedSamplingData(capture_data_.GetCallstackData(), capture_data_,
+                                            module_manager,
                                             /*generate_summary=*/false);
   }
 
   void CreatePostProcessedSamplingDataWithSummary() {
-    ppsd_ = CreatePostProcessedSamplingData(capture_data_.GetCallstackData(), capture_data_, {},
+    orbit_client_data::ModuleManager module_manager{};
+    ppsd_ = CreatePostProcessedSamplingData(capture_data_.GetCallstackData(), capture_data_,
+                                            module_manager,
                                             /*generate_summary=*/true);
   }
 

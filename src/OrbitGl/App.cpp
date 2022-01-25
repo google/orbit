@@ -35,7 +35,7 @@
 #include "CaptureWindow.h"
 #include "ClientData/CallstackData.h"
 #include "ClientData/FunctionUtils.h"
-#include "ClientData/ModuleAndFunctionLookUp.h"
+#include "ClientData/ModuleAndFunctionLookup.h"
 #include "ClientData/ModuleData.h"
 #include "ClientData/ModuleManager.h"
 #include "ClientData/PostProcessedSamplingData.h"
@@ -398,7 +398,7 @@ Future<void> OrbitApp::OnCaptureComplete() {
   GetMutableCaptureData().FilterBrokenCallstacks();
   PostProcessedSamplingData post_processed_sampling_data =
       orbit_client_model::CreatePostProcessedSamplingData(GetCaptureData().GetCallstackData(),
-                                                          GetCaptureData(), module_manager_.get());
+                                                          GetCaptureData(), *module_manager_);
 
   ORBIT_LOG("The capture contains %u intervals with incomplete data",
             GetCaptureData().incomplete_data_intervals().size());
@@ -2452,7 +2452,7 @@ void OrbitApp::SelectCallstackEvents(const std::vector<CallstackEvent>& selected
   bool generate_summary = origin_is_multiple_threads;
   PostProcessedSamplingData processed_sampling_data =
       orbit_client_model::CreatePostProcessedSamplingData(
-          *GetCaptureData().GetSelectionCallstackData(), GetCaptureData(), module_manager_.get(),
+          *GetCaptureData().GetSelectionCallstackData(), GetCaptureData(), *module_manager_,
           generate_summary);
 
   SetSelectionTopDownView(processed_sampling_data, GetCaptureData());
@@ -2472,7 +2472,7 @@ void OrbitApp::UpdateAfterSymbolLoading() {
   if (sampling_report_ != nullptr) {
     PostProcessedSamplingData post_processed_sampling_data =
         orbit_client_model::CreatePostProcessedSamplingData(capture_data.GetCallstackData(),
-                                                            capture_data, module_manager_.get());
+                                                            capture_data, *module_manager_);
     sampling_report_->UpdateReport(post_processed_sampling_data,
                                    capture_data.GetCallstackData().GetUniqueCallstacksCopy());
     GetMutableCaptureData().set_post_processed_sampling_data(post_processed_sampling_data);
@@ -2486,7 +2486,7 @@ void OrbitApp::UpdateAfterSymbolLoading() {
 
   PostProcessedSamplingData selection_post_processed_sampling_data =
       orbit_client_model::CreatePostProcessedSamplingData(*capture_data.GetSelectionCallstackData(),
-                                                          capture_data, module_manager_.get(),
+                                                          capture_data, *module_manager_,
                                                           selection_report_->has_summary());
 
   SetSelectionTopDownView(selection_post_processed_sampling_data, capture_data);
@@ -2629,8 +2629,7 @@ void OrbitApp::AddFrameTrack(const FunctionInfo& function) {
   }
 
   std::optional<uint64_t> instrumented_function_id =
-      orbit_client_data::FindInstrumentedFunctionIdSlow(module_manager_.get(), capture_data_.get(),
-                                                        function);
+      orbit_client_data::FindInstrumentedFunctionIdSlow(*module_manager_, *capture_data_, function);
   // If the function is not instrumented - ignore it. This happens when user
   // enables frame tracks for a not instrumented function from the function list.
   if (!instrumented_function_id) {
@@ -2680,8 +2679,7 @@ void OrbitApp::RemoveFrameTrack(const FunctionInfo& function) {
   }
 
   std::optional<uint64_t> instrumented_function_id =
-      orbit_client_data::FindInstrumentedFunctionIdSlow(module_manager_.get(), capture_data_.get(),
-                                                        function);
+      orbit_client_data::FindInstrumentedFunctionIdSlow(*module_manager_, *capture_data_, function);
   // If the function is not instrumented - ignore it. This happens when user
   // enables frame tracks for a not instrumented function from the function list.
   if (!instrumented_function_id) {

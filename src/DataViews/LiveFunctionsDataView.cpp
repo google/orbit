@@ -19,7 +19,7 @@
 
 #include "ClientData/CaptureData.h"
 #include "ClientData/FunctionUtils.h"
-#include "ClientData/ModuleAndFunctionLookUp.h"
+#include "ClientData/ModuleAndFunctionLookup.h"
 #include "ClientProtos/capture_data.pb.h"
 #include "CompareAscendingOrDescending.h"
 #include "DataViews/DataViewType.h"
@@ -424,7 +424,7 @@ void LiveFunctionsDataView::OnDataChanged() {
     const ModuleManager* module_manager = app_->GetModuleManager();
     const FunctionInfo* function_info_from_capture_data =
         orbit_client_data::FindFunctionByModulePathBuildIdAndOffset(
-            module_manager, instrumented_function.file_path(),
+            *module_manager, instrumented_function.file_path(),
             instrumented_function.file_build_id(), instrumented_function.file_offset());
 
     // This could happen because module has not yet been updated, it also

@@ -17,7 +17,7 @@
 #include "Batcher.h"
 #include "ClientData/CallstackData.h"
 #include "ClientData/CaptureData.h"
-#include "ClientData/ModuleAndFunctionLookUp.h"
+#include "ClientData/ModuleAndFunctionLookup.h"
 #include "ClientProtos/capture_data.pb.h"
 #include "Geometry.h"
 #include "GlCanvas.h"
@@ -231,8 +231,8 @@ bool CallstackThreadBar::IsEmpty() const {
   }
 
   const uint64_t addr = callstack.frames(frame_index);
-  const std::string& function_name = orbit_client_data::GetFunctionNameByAddress(
-      capture_data_->process(), module_manager_, capture_data_, addr);
+  const std::string& function_name =
+      orbit_client_data::GetFunctionNameByAddress(*module_manager_, *capture_data_, addr);
   if (function_name == orbit_client_data::kUnknownFunctionOrModuleName) {
     return std::string("<i>") + absl::StrFormat("[unknown@%#x]", addr) + "</i>";
   }
