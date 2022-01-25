@@ -13,11 +13,7 @@ target_sources(OrbitServiceLib PRIVATE
         OrbitGrpcServer.cpp
         OrbitGrpcServer.h
         OrbitService.cpp
-        OrbitService.h
-        ProducerSideServer.cpp
-        ProducerSideServer.h
-        ProducerSideServiceImpl.cpp
-        ProducerSideServiceImpl.h)
+        OrbitService.h)
 
 target_include_directories(OrbitServiceLib PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 
@@ -25,6 +21,7 @@ target_link_libraries(OrbitServiceLib PUBLIC
         GrpcProtos
         OrbitVersion
         ProducerSideChannel
+        ProducerSideService
 )
 
 if(WIN32)
@@ -45,15 +42,3 @@ add_executable(OrbitService main.cpp)
 target_link_libraries(OrbitService PRIVATE OrbitServiceLib)
 
 strip_symbols(OrbitService)
-
-add_executable(ServiceTests)
-
-target_sources(ServiceTests PRIVATE
-        ProducerSideServiceImplTest.cpp)
-
-target_link_libraries(ServiceTests PRIVATE
-        OrbitServiceLib
-        TestUtils
-        GTest::Main)
-
-register_test(ServiceTests PROPERTIES TIMEOUT 10)

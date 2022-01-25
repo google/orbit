@@ -1,4 +1,4 @@
-// Copyright (c) 2020 The Orbit Authors. All rights reserved.
+// Copyright (c) 2022 The Orbit Authors. All rights reserved.
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
@@ -19,9 +19,9 @@
 #include "GrpcProtos/producer_side_services.grpc.pb.h"
 #include "GrpcProtos/producer_side_services.pb.h"
 #include "ProducerEventProcessor/ProducerEventProcessor.h"
-#include "ProducerSideServiceImpl.h"
+#include "ProducerSideService/ProducerSideServiceImpl.h"
 
-namespace orbit_service {
+namespace orbit_producer_side_service {
 
 namespace {
 
@@ -519,4 +519,4 @@ TEST_F(ProducerSideServiceImplTest, ProducerDisconnectsMidCapture) {
 }
 
 }  // namespace
-}  // namespace orbit_service
+}  // namespace orbit_producer_side_service

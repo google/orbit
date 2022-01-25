@@ -1,9 +1,9 @@
-// Copyright (c) 2020 The Orbit Authors. All rights reserved.
+// Copyright (c) 2022 The Orbit Authors. All rights reserved.
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#ifndef ORBIT_SERVICE_TARGET_SIDE_SERVER_H_
-#define ORBIT_SERVICE_TARGET_SIDE_SERVER_H_
+#ifndef ORBIT_PRODUCER_SIDE_SERVICE_PRODUCER_SIDE_SERVER_H_
+#define ORBIT_PRODUCER_SIDE_SERVICE_PRODUCER_SIDE_SERVER_H_
 
 #include <grpcpp/grpcpp.h>
 
@@ -14,9 +14,9 @@
 #include "GrpcProtos/capture.pb.h"
 #include "OrbitBase/Logging.h"
 #include "ProducerEventProcessor/ProducerEventProcessor.h"
-#include "ProducerSideServiceImpl.h"
+#include "ProducerSideService/ProducerSideServiceImpl.h"
 
-namespace orbit_service {
+namespace orbit_producer_side_service {
 
 // Wrapper around a grpc::Server that registers the service ProducerSideServiceImpl
 // and listens on a socket.
@@ -35,6 +35,6 @@ class ProducerSideServer final : public orbit_capture_service::CaptureStartStopL
   std::unique_ptr<grpc::Server> server_;
 };
 
-}  // namespace orbit_service
+}  // namespace orbit_producer_side_service
 
-#endif  // ORBIT_SERVICE_TARGET_SIDE_SERVER_H_
+#endif  // ORBIT_PRODUCER_SIDE_SERVICE_PRODUCER_SIDE_SERVER_H_

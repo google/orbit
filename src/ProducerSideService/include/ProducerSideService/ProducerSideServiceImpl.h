@@ -1,9 +1,9 @@
-// Copyright (c) 2020 The Orbit Authors. All rights reserved.
+// Copyright (c) 2022 The Orbit Authors. All rights reserved.
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#ifndef ORBIT_SERVICE_PRODUCER_SIDE_SERVICE_IMPL_H_
-#define ORBIT_SERVICE_PRODUCER_SIDE_SERVICE_IMPL_H_
+#ifndef ORBIT_PRODUCER_SIDE_SERVICE_PRODUCER_SIDE_SERVICE_IMPL_H_
+#define ORBIT_PRODUCER_SIDE_SERVICE_PRODUCER_SIDE_SERVICE_IMPL_H_
 
 #include <absl/base/thread_annotations.h>
 #include <absl/container/flat_hash_set.h>
@@ -20,7 +20,7 @@
 #include "GrpcProtos/producer_side_services.pb.h"
 #include "ProducerEventProcessor/ProducerEventProcessor.h"
 
-namespace orbit_service {
+namespace orbit_producer_side_service {
 
 // This class implements the gRPC service ProducerSideService, and in particular its only RPC
 // ReceiveCommandsAndSendEvents, through which producers of CaptureEvents connect to OrbitService.
@@ -99,6 +99,6 @@ class ProducerSideServiceImpl final : public orbit_grpc_protos::ProducerSideServ
   uint64_t max_wait_for_all_events_sent_ms_ = 10'000;
 };
 
-}  // namespace orbit_service
+}  // namespace orbit_producer_side_service
 
-#endif  // ORBIT_SERVICE_PRODUCER_SIDE_SERVICE_IMPL_H_
+#endif  // ORBIT_PRODUCER_SIDE_SERVICE_PRODUCER_SIDE_SERVICE_IMPL_H_
