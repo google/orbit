@@ -43,8 +43,9 @@ ABSL_FLAG(uint16_t, sampling_rate, 1000,
           "Callstack sampling rate in samples per second (0: no sampling)");
 ABSL_FLAG(bool, frame_pointers, false, "Use frame pointers for unwinding");
 ABSL_FLAG(std::string, instrument_path, "", "Path of the binary of the function to instrument");
+ABSL_FLAG(std::string, instrument_name, "", "Name of the function to instrument");
 ABSL_FLAG(uint64_t, instrument_offset, 0, "Offset in the binary of the function to instrument");
-ABSL_FLAG(uint64_t, instrument_size, 0, "Size in bytes of the function to instrument");
+ABSL_FLAG(int64_t, instrument_size, -1, "Size in bytes of the function to instrument");
 ABSL_FLAG(bool, user_space_instrumentation, false,
           "Use user space instrumentation instead of uprobes");
 ABSL_FLAG(bool, scheduling, true, "Collect scheduling information");

@@ -70,8 +70,8 @@ void InstallSigintHandler() {
 void ManipulateModuleManagerAndSelectedFunctionsToAddInstrumentedFunctionFromOffset(
     orbit_client_data::ModuleManager* module_manager,
     absl::flat_hash_map<uint64_t, orbit_client_protos::FunctionInfo>* selected_functions,
-    const std::string& file_path, uint64_t file_offset, uint64_t function_size,
-    uint64_t function_id) {
+    const std::string& file_path, const std::string& function_name, uint64_t file_offset,
+    uint64_t function_size, uint64_t function_id) {
   ErrorMessageOr<std::unique_ptr<orbit_object_utils::ElfFile>> error_or_elf_file =
       orbit_object_utils::CreateElfFile(std::filesystem::path{file_path});
   ORBIT_FAIL_IF(error_or_elf_file.has_error(), "%s", error_or_elf_file.error().message());
@@ -87,6 +87,7 @@ void ManipulateModuleManagerAndSelectedFunctionsToAddInstrumentedFunctionFromOff
   ORBIT_CHECK(module_manager->AddOrUpdateModules({module_info}).empty());
 
   orbit_client_protos::FunctionInfo function_info;
+  function_info.set_pretty_name(function_name);
   function_info.set_module_path(file_path);
   function_info.set_module_build_id(build_id);
   function_info.set_address(load_bias + file_offset);
@@ -322,11 +323,9 @@ int main(int argc, char* argv[]) {
 
   std::string file_path = absl::GetFlag(FLAGS_instrument_path);
   uint64_t file_offset = absl::GetFlag(FLAGS_instrument_offset);
-  ORBIT_FAIL_IF(
-      (file_path.empty()) != (file_offset == 0),
-      "Binary path and offset of the function to instrument need to be specified together");
   bool instrument_function = !file_path.empty() && file_offset != 0;
-  uint64_t function_size = absl::GetFlag(FLAGS_instrument_size);
+  const int64_t function_size = absl::GetFlag(FLAGS_instrument_size);
+  const std::string function_name = absl::GetFlag(FLAGS_instrument_name);
   DynamicInstrumentationMethod instrumentation_method =
       absl::GetFlag(FLAGS_user_space_instrumentation) ? CaptureOptions::kUserSpaceInstrumentation
                                                       : CaptureOptions::kKernelUprobes;
@@ -336,8 +335,10 @@ int main(int argc, char* argv[]) {
     ORBIT_LOG("file_path=%s", file_path);
     ORBIT_LOG("file_offset=%#x", file_offset);
     if (instrumentation_method == CaptureOptions::kUserSpaceInstrumentation) {
-      ORBIT_FAIL_IF(function_size == 0, "User space instrumentation requires the function size");
+      ORBIT_FAIL_IF(function_size == -1, "User space instrumentation requires the function size");
       ORBIT_LOG("function_size=%d", function_size);
+      ORBIT_FAIL_IF(function_name.empty(), "User space instrumentation requires the function name");
+      ORBIT_LOG("function_name=%s", function_name);
     }
   }
   constexpr bool kAlwaysRecordArguments = false;
@@ -379,7 +380,7 @@ int main(int argc, char* argv[]) {
   if (instrument_function) {
     constexpr uint64_t kInstrumentedFunctionId = 1;
     ManipulateModuleManagerAndSelectedFunctionsToAddInstrumentedFunctionFromOffset(
-        &module_manager, &selected_functions, file_path, file_offset, function_size,
+        &module_manager, &selected_functions, file_path, function_name, file_offset, function_size,
         kInstrumentedFunctionId);
   }
 

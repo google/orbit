@@ -72,9 +72,22 @@ bool ProcessWithPidExists(pid_t pid) {
 // a situation where instrumenting the functions below would lead to a recursive call into the
 // instrumentation. We just skip these and leave instrumenting them to the kernel/uprobe fallback.
 bool IsBlocklisted(std::string_view function_name) {
-  static const absl::flat_hash_set<std::string> kBlocklist{
-      "__GI___libc_malloc", "__GI___libc_free", "get_free_list",
-      "malloc_consolidate", "sysmalloc",        "_int_malloc"};
+  static const absl::flat_hash_set<std::string> kBlocklist{"__GI___libc_malloc",
+                                                           "__GI___libc_free",
+                                                           "get_free_list",
+                                                           "malloc_consolidate",
+                                                           "sysmalloc",
+                                                           "_int_malloc",
+                                                           "__libc_enable_asynccancel",
+                                                           "__GI___ctype_init",
+                                                           "__GI___mprotect",
+                                                           "__munmap",
+                                                           "new_heap",
+                                                           "__get_nprocs",
+                                                           "__get_nprocs_conf",
+                                                           "__strtoul",
+                                                           "arena_get2.part.3",
+                                                           "next_line"};
   return kBlocklist.contains(function_name);
 }
 
