@@ -23,12 +23,15 @@ SamplingReport::SamplingReport(
     OrbitApp* app, const orbit_client_data::CallstackData* callstack_data,
     const orbit_client_data::PostProcessedSamplingData* post_processed_sampling_data,
     bool has_summary)
-    : callstack_data_{callstack_data},
+    : app_{app},
+      callstack_data_{callstack_data},
       post_processed_sampling_data_{post_processed_sampling_data},
-      has_summary_{has_summary},
-      app_{app} {
+      has_summary_{has_summary} {
   ORBIT_SCOPE_FUNCTION;
   ORBIT_SCOPED_TIMED_LOG("SamplingReport::SamplingReport");
+  ORBIT_CHECK(callstack_data_ != nullptr);
+  ORBIT_CHECK(post_processed_sampling_data_ != nullptr);
+  ORBIT_CHECK(app_ != nullptr);
   FillReport();
 }
 

@@ -58,6 +58,7 @@ class SamplingReport : public orbit_data_views::SamplingReportInterface {
   void OnCallstackIndexChanged(size_t index);
   void UpdateDisplayedCallstack();
 
+  OrbitApp* app_ = nullptr;
   const orbit_client_data::CallstackData* callstack_data_;
   const orbit_client_data::PostProcessedSamplingData* post_processed_sampling_data_;
 
@@ -71,7 +72,6 @@ class SamplingReport : public orbit_data_views::SamplingReportInterface {
   size_t selected_callstack_index_ = 0;
   std::function<void()> ui_refresh_func_;
   bool has_summary_;
-  OrbitApp* app_ = nullptr;
 };
 
 #endif  // ORBIT_GL_SAMPLING_REPORT_H_
