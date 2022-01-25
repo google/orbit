@@ -57,7 +57,7 @@ class GrpcClientCaptureEventCollectorTest : public testing::Test {
  protected:
   void TearDown() override {
     if (!stop_and_wait_called_) {
-      collector_.StopAndWait();
+      collector_.OnStopAndWaitRequestedByExternal();
     }
   }
 
@@ -69,7 +69,7 @@ class GrpcClientCaptureEventCollectorTest : public testing::Test {
 
   void CallStopAndWaitEarly() {
     ORBIT_CHECK(!stop_and_wait_called_);
-    collector_.StopAndWait();
+    collector_.OnStopAndWaitRequestedByExternal();
     stop_and_wait_called_ = true;
   }
 

@@ -15,6 +15,7 @@ class ClientCaptureEventCollector {
  public:
   virtual ~ClientCaptureEventCollector() = default;
   virtual void AddEvent(orbit_grpc_protos::ClientCaptureEvent&& event) = 0;
+  virtual void OnStopAndWaitRequestedByExternal() = 0;
 };
 
 }  // namespace orbit_producer_event_processor

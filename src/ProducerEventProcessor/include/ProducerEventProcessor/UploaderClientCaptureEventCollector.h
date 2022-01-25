@@ -34,6 +34,10 @@ class UploaderClientCaptureEventCollector final
   // file, and then buffer the converted data.
   void AddEvent(orbit_grpc_protos::ClientCaptureEvent&& event) override;
 
+  // Do nothing when stop and wait are requested by external. This collector will stop automatically
+  // after receiving and processing the `CaptureFinishedEvent`.
+  void OnStopAndWaitRequestedByExternal() override {}
+
   // Functions needed by the `CaptureUploader` to upload data.
   [[nodiscard]] orbit_capture_uploader::DataReadiness DetermineDataReadiness() override;
   // Try to read no more than `max_bytes` data in to the buffer pointed to by `dest`. Returns the

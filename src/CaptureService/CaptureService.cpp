@@ -116,7 +116,7 @@ void CaptureService::FinalizeEventProcessing(StopCaptureReason stop_capture_reas
   producer_event_processor_->ProcessEvent(orbit_grpc_protos::kRootProducerId,
                                           std::move(capture_finished));
 
-  grpc_client_capture_event_collector_->StopAndWait();
+  grpc_client_capture_event_collector_->OnStopAndWaitRequestedByExternal();
   ORBIT_LOG("Finished handling gRPC call to Capture: all capture data has been sent");
 }
 
