@@ -31,6 +31,7 @@ CaptureData::CaptureData(ModuleManager* module_manager, const CaptureStarted& ca
                          absl::flat_hash_set<uint64_t> frame_track_function_ids,
                          DataSource data_source)
     : module_manager_{module_manager},
+      memory_sampling_period_ns_(capture_started.capture_options().memory_sampling_period_ns()),
       selection_callstack_data_(std::make_unique<CallstackData>()),
       frame_track_function_ids_{std::move(frame_track_function_ids)},
       file_path_{std::move(file_path)},
