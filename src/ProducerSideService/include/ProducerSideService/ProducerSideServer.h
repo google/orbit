@@ -2,8 +2,8 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#ifndef ORBIT_PRODUCER_SIDE_SERVICE_TARGET_SIDE_SERVER_H_
-#define ORBIT_PRODUCER_SIDE_SERVICE_TARGET_SIDE_SERVER_H_
+#ifndef ORBIT_PRODUCER_SIDE_SERVICE_PRODUCER_SIDE_SERVER_H_
+#define ORBIT_PRODUCER_SIDE_SERVICE_PRODUCER_SIDE_SERVER_H_
 
 #include <grpcpp/grpcpp.h>
 
@@ -37,4 +37,4 @@ class ProducerSideServer final : public orbit_capture_service::CaptureStartStopL
 
 }  // namespace orbit_producer_side_service
 
-#endif  // ORBIT_PRODUCER_SIDE_SERVICE_TARGET_SIDE_SERVER_H_
+#endif  // ORBIT_PRODUCER_SIDE_SERVICE_PRODUCER_SIDE_SERVER_H_
