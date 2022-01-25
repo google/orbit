@@ -15,6 +15,7 @@
 #include <vector>
 
 #include "CallstackTypes.h"
+#include "ClientData/CallstackEvent.h"
 #include "ClientProtos/capture_data.pb.h"
 #include "absl/container/flat_hash_map.h"
 
@@ -33,31 +34,31 @@ class CallstackData {
 
   // Assume that callstack_event.callstack_hash is filled correctly and the
   // Callstack with the corresponding id is already in unique_callstacks_.
-  void AddCallstackEvent(orbit_client_protos::CallstackEvent callstack_event);
+  void AddCallstackEvent(orbit_client_data::CallstackEvent callstack_event);
   void AddUniqueCallstack(uint64_t callstack_id, orbit_client_protos::CallstackInfo callstack);
-  void AddCallstackFromKnownCallstackData(const orbit_client_protos::CallstackEvent& event,
+  void AddCallstackFromKnownCallstackData(const orbit_client_data::CallstackEvent& event,
                                           const CallstackData& known_callstack_data);
 
   [[nodiscard]] uint32_t GetCallstackEventsCount() const;
 
-  [[nodiscard]] std::vector<orbit_client_protos::CallstackEvent> GetCallstackEventsInTimeRange(
+  [[nodiscard]] std::vector<orbit_client_data::CallstackEvent> GetCallstackEventsInTimeRange(
       uint64_t time_begin, uint64_t time_end) const;
 
   [[nodiscard]] uint32_t GetCallstackEventsOfTidCount(uint32_t thread_id) const;
 
-  [[nodiscard]] std::vector<orbit_client_protos::CallstackEvent> GetCallstackEventsOfTidInTimeRange(
+  [[nodiscard]] std::vector<orbit_client_data::CallstackEvent> GetCallstackEventsOfTidInTimeRange(
       uint32_t tid, uint64_t time_begin, uint64_t time_end) const;
 
   void ForEachCallstackEvent(
-      const std::function<void(const orbit_client_protos::CallstackEvent&)>& action) const;
+      const std::function<void(const orbit_client_data::CallstackEvent&)>& action) const;
 
   void ForEachCallstackEventInTimeRange(
       uint64_t min_timestamp, uint64_t max_timestamp,
-      const std::function<void(const orbit_client_protos::CallstackEvent&)>& action) const;
+      const std::function<void(const orbit_client_data::CallstackEvent&)>& action) const;
 
   void ForEachCallstackEventOfTidInTimeRange(
       uint32_t tid, uint64_t min_timestamp, uint64_t max_timestamp,
-      const std::function<void(const orbit_client_protos::CallstackEvent&)>& action) const;
+      const std::function<void(const orbit_client_data::CallstackEvent&)>& action) const;
 
   [[nodiscard]] uint64_t max_time() const {
     std::lock_guard<std::recursive_mutex> lock(mutex_);
@@ -94,7 +95,7 @@ class CallstackData {
   mutable std::recursive_mutex mutex_;
   absl::flat_hash_map<uint64_t, std::shared_ptr<orbit_client_protos::CallstackInfo>>
       unique_callstacks_;
-  absl::flat_hash_map<uint32_t, std::map<uint64_t, orbit_client_protos::CallstackEvent>>
+  absl::flat_hash_map<uint32_t, std::map<uint64_t, orbit_client_data::CallstackEvent>>
       callstack_events_by_tid_;
 
   uint64_t max_time_ = 0;

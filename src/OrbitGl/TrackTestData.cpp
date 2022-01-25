@@ -4,6 +4,8 @@
 
 #include "TrackTestData.h"
 
+#include "ClientData/CallstackEvent.h"
+
 using orbit_client_data::CaptureData;
 
 namespace orbit_gl {
@@ -29,10 +31,8 @@ std::unique_ptr<CaptureData> TrackTestData::GenerateTestCaptureData() {
   capture_data->AddUniqueCallstack(kCallstackId, std::move(callstack_info));
 
   // CallstackEvent
-  orbit_client_protos::CallstackEvent callstack_event;
-  callstack_event.set_callstack_id(kCallstackId);
-  callstack_event.set_thread_id(kThreadId);
-  capture_data->AddCallstackEvent(std::move(callstack_event));
+  orbit_client_data::CallstackEvent callstack_event{1234, kCallstackId, kThreadId};
+  capture_data->AddCallstackEvent(callstack_event);
 
   capture_data->AddOrAssignThreadName(kThreadId, kThreadName);
   capture_data->AddOrAssignThreadName(kTimerOnlyThreadId, kTimerOnlyThreadName);

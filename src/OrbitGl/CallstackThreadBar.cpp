@@ -29,9 +29,9 @@
 #include "Viewport.h"
 
 using orbit_client_data::CallstackData;
+using orbit_client_data::CallstackEvent;
 using orbit_client_data::CaptureData;
 using orbit_client_data::ThreadID;
-using orbit_client_protos::CallstackEvent;
 using orbit_client_protos::CallstackInfo;
 
 namespace orbit_gl {
@@ -114,7 +114,7 @@ void CallstackThreadBar::DoUpdatePrimitives(Batcher& batcher, TextRenderer& text
   if (!picking) {
     // Draw all callstack samples.
     auto action_on_callstack_events = [&](const CallstackEvent& event) {
-      const uint64_t time = event.time();
+      const uint64_t time = event.timestamp_ns();
       ORBIT_CHECK(time >= min_tick && time <= max_tick);
       Vec2 pos(timeline_info_->GetWorldFromTick(time), GetPos()[1]);
       Color color = kWhite;
@@ -135,9 +135,9 @@ void CallstackThreadBar::DoUpdatePrimitives(Batcher& batcher, TextRenderer& text
 
     // Draw selected callstack samples.
     auto action_on_selected_callstack_events = [&](const CallstackEvent& event) {
-      const uint64_t time = event.time();
+      const uint64_t time = event.timestamp_ns();
       ORBIT_CHECK(time >= min_tick && time <= max_tick);
-      Vec2 pos(timeline_info_->GetWorldFromTick(event.time()), GetPos()[1]);
+      Vec2 pos(timeline_info_->GetWorldFromTick(event.timestamp_ns()), GetPos()[1]);
       batcher.AddVerticalLine(pos, track_height, z, kGreenSelection);
     };
     const orbit_client_data::CallstackData& selection_callstack_data =
@@ -156,7 +156,7 @@ void CallstackThreadBar::DoUpdatePrimitives(Batcher& batcher, TextRenderer& text
     constexpr const float kPickingBoxOffset = (kPickingBoxWidth - 1.0f) / 2.0f;
 
     auto action_on_callstack_events = [&, this](const CallstackEvent& event) {
-      const uint64_t time = event.time();
+      const uint64_t time = event.timestamp_ns();
       ORBIT_CHECK(time >= min_tick && time <= max_tick);
       Vec2 pos(timeline_info_->GetWorldFromTick(time) - kPickingBoxOffset, GetPos()[1]);
       Vec2 size(kPickingBoxWidth, track_height);

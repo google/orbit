@@ -23,6 +23,7 @@
 
 #include "CaptureClient/CaptureClient.h"
 #include "CaptureClient/CaptureListener.h"
+#include "ClientData/CallstackEvent.h"
 #include "ClientData/FunctionUtils.h"
 #include "ClientData/ProcessData.h"
 #include "ClientData/UserDefinedCaptureData.h"
@@ -49,11 +50,11 @@ using orbit_capture_client::CaptureClient;
 using orbit_capture_client::CaptureEventProcessor;
 using orbit_capture_client::CaptureListener;
 
+using orbit_client_data::CallstackEvent;
 using orbit_client_data::CaptureData;
 using orbit_client_data::ProcessData;
 using orbit_client_data::TracepointInfoSet;
 
-using orbit_client_protos::CallstackEvent;
 using orbit_client_protos::CallstackInfo;
 using orbit_client_protos::FunctionInfo;
 using orbit_client_protos::LinuxAddressInfo;

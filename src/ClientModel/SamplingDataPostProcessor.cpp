@@ -14,6 +14,7 @@
 #include <utility>
 #include <vector>
 
+#include "ClientData/CallstackEvent.h"
 #include "ClientData/CallstackTypes.h"
 #include "ClientData/ModuleAndFunctionLookup.h"
 #include "ClientProtos/capture_data.pb.h"
@@ -23,6 +24,7 @@
 #include "absl/container/flat_hash_set.h"
 
 using orbit_client_data::CallstackData;
+using orbit_client_data::CallstackEvent;
 using orbit_client_data::CaptureData;
 using orbit_client_data::ModuleManager;
 using orbit_client_data::PostProcessedSamplingData;
@@ -30,7 +32,6 @@ using orbit_client_data::SampledFunction;
 using orbit_client_data::ThreadID;
 using orbit_client_data::ThreadSampleData;
 
-using orbit_client_protos::CallstackEvent;
 using orbit_client_protos::CallstackInfo;
 
 namespace orbit_client_model {

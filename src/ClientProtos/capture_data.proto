@@ -45,12 +45,6 @@ message FunctionInfo {
   uint64 size = 7;
 }
 
-message CallstackEvent {
-  uint64 time = 1;
-  uint64 callstack_id = 2;
-  uint32 thread_id = 3;
-}
-
 message CallstackInfo {
   repeated uint64 frames = 1;
 

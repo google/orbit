@@ -10,6 +10,7 @@
 
 #include "CallTreeView.h"
 #include "CallTreeViewItemModel.h"
+#include "ClientData/CallstackEvent.h"
 #include "ClientData/CaptureData.h"
 #include "ClientData/PostProcessedSamplingData.h"
 #include "ClientModel/SamplingDataPostProcessor.h"
@@ -50,10 +51,8 @@ std::unique_ptr<CaptureData> GenerateTestCaptureData() {
   capture_data->AddUniqueCallstack(kCallstackId, std::move(callstack_info));
 
   // CallstackEvent
-  orbit_client_protos::CallstackEvent callstack_event;
-  callstack_event.set_callstack_id(kCallstackId);
-  callstack_event.set_thread_id(kThreadId);
-  capture_data->AddCallstackEvent(std::move(callstack_event));
+  orbit_client_data::CallstackEvent callstack_event{1234, kCallstackId, kThreadId};
+  capture_data->AddCallstackEvent(callstack_event);
 
   capture_data->AddOrAssignThreadName(kThreadId, kThreadName);
 

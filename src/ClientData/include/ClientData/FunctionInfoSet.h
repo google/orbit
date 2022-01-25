@@ -36,11 +36,6 @@ using FunctionInfoSet =
     absl::flat_hash_set<orbit_client_protos::FunctionInfo, internal::HashFunctionInfo,
                         internal::EqualFunctionInfo>;
 
-template <class V>
-using FunctionInfoMap =
-    absl::flat_hash_map<orbit_client_protos::FunctionInfo, V, internal::HashFunctionInfo,
-                        internal::EqualFunctionInfo>;
-
 }  // namespace orbit_client_data
 
 #endif  // CLIENT_DATA_FUNCTION_INFO_SET_H_

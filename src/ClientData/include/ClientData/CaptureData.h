@@ -21,6 +21,7 @@
 #include <vector>
 
 #include "ClientData/CallstackData.h"
+#include "ClientData/CallstackEvent.h"
 #include "ClientData/FunctionInfoSet.h"
 #include "ClientData/ModuleData.h"
 #include "ClientData/ModuleManager.h"
@@ -151,7 +152,7 @@ class CaptureData {
     callstack_data_.AddUniqueCallstack(callstack_id, std::move(callstack));
   }
 
-  void AddCallstackEvent(orbit_client_protos::CallstackEvent callstack_event) {
+  void AddCallstackEvent(orbit_client_data::CallstackEvent callstack_event) {
     callstack_data_.AddCallstackEvent(std::move(callstack_event));
   }
 
