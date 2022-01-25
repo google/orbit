@@ -854,22 +854,23 @@ void OrbitMainWindow::OnNewSamplingReport(orbit_data_views::DataView* callstack_
   //  * Report is non-empty
   //  * Sampling-tab is not in the same widget as the capture tab
   //  * Live-tab isn't selected in the same widget as the sampling tab
+  bool has_samples = sampling_report != nullptr && sampling_report->HasSamples();
   QTabWidget* sampling_tab_parent = FindParentTabWidget(ui->samplingTab);
-  if (sampling_report->HasSamples() &&
-      (FindParentTabWidget(ui->CaptureTab) != sampling_tab_parent) &&
+  if (has_samples && (FindParentTabWidget(ui->CaptureTab) != sampling_tab_parent) &&
       (sampling_tab_parent->currentWidget() != ui->liveTab)) {
     sampling_tab_parent->setCurrentWidget(ui->samplingTab);
   }
 }
 
-void OrbitMainWindow::OnNewSelectionReport(orbit_data_views::DataView* callstack_data_view,
-                                           const std::shared_ptr<SamplingReport>& sampling_report) {
+void OrbitMainWindow::OnNewSelectionReport(
+    orbit_data_views::DataView* callstack_data_view,
+    const std::shared_ptr<SamplingReport>& selection_report) {
   ui->selectionGridLayout->removeWidget(ui->selectionReport);
   delete ui->selectionReport;
-  bool has_samples = sampling_report->HasSamples();
+  bool has_samples = selection_report != nullptr && selection_report->HasSamples();
 
   ui->selectionReport = new OrbitSamplingReport(ui->selectionSamplingTab);
-  ui->selectionReport->Initialize(callstack_data_view, sampling_report);
+  ui->selectionReport->Initialize(callstack_data_view, selection_report);
   ui->selectionGridLayout->addWidget(ui->selectionReport, 0, 0, 1, 1);
 
   UpdateActiveTabsAfterSelection(has_samples);

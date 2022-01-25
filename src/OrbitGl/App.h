@@ -204,14 +204,14 @@ class OrbitApp final : public DataViewFactory,
   void StopIntrospection();
 
   void SetSamplingReport(
-      orbit_client_data::PostProcessedSamplingData post_processed_sampling_data,
-      absl::flat_hash_map<uint64_t, std::shared_ptr<orbit_client_protos::CallstackInfo>>
-          unique_callstacks);
+      const orbit_client_data::CallstackData* callstack_data,
+      const orbit_client_data::PostProcessedSamplingData* post_processed_sampling_data);
+  void ClearSamplingReport();
   void SetSelectionReport(
-      orbit_client_data::PostProcessedSamplingData post_processed_sampling_data,
-      absl::flat_hash_map<uint64_t, std::shared_ptr<orbit_client_protos::CallstackInfo>>
-          unique_callstacks,
+      const orbit_client_data::CallstackData* selection_callstack_data,
+      const orbit_client_data::PostProcessedSamplingData* selection_post_processed_sampling_data,
       bool has_summary);
+  void ClearSelectionReport();
   void SetTopDownView(const orbit_client_data::CaptureData& capture_data);
   void ClearTopDownView();
   void SetSelectionTopDownView(

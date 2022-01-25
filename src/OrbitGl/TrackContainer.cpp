@@ -56,14 +56,19 @@ TrackContainer::TrackContainer(CaptureViewElement* parent, TimelineInfoInterface
 }
 
 float TrackContainer::GetHeight() const {
+  // The entire TimeGraph without the horizontal slider and the timeline.
+  return viewport_->GetWorldHeight() - layout_.GetBottomMargin();
+}
+
+float TrackContainer::GetVisibleTracksTotalHeight() const {
   // Top and Bottom Margin. TODO: Margins should be treated in a different way (http://b/192070555).
-  float total_height = layout_.GetSchedulerTrackOffset() + layout_.GetBottomMargin();
+  float visible_tracks_total_height = layout_.GetSchedulerTrackOffset() + layout_.GetBottomMargin();
 
   // Track height including space between them
   for (auto& track : GetNonHiddenChildren()) {
-    total_height += (track->GetHeight() + layout_.GetSpaceBetweenTracks());
+    visible_tracks_total_height += (track->GetHeight() + layout_.GetSpaceBetweenTracks());
   }
-  return total_height;
+  return visible_tracks_total_height;
 }
 
 void TrackContainer::VerticalZoom(float real_ratio, float mouse_screen_y_position) {
@@ -391,7 +396,8 @@ void TrackContainer::DoDraw(Batcher& batcher, TextRenderer& text_renderer,
 }
 
 void TrackContainer::SetVerticalScrollingOffset(float value) {
-  float clamped_value = std::max(std::min(value, GetHeight() - viewport_->GetWorldHeight()), 0.f);
+  float clamped_value =
+      std::max(std::min(value, GetVisibleTracksTotalHeight() - viewport_->GetWorldHeight()), 0.f);
   if (clamped_value == vertical_scrolling_offset_) return;
 
   vertical_scrolling_offset_ = clamped_value;

@@ -31,6 +31,7 @@ class TrackContainer final : public CaptureViewElement {
                           orbit_client_data::CaptureData* capture_data);
 
   [[nodiscard]] float GetHeight() const override;
+  [[nodiscard]] float GetVisibleTracksTotalHeight() const;
 
   [[nodiscard]] TrackManager* GetTrackManager() { return track_manager_.get(); }
 

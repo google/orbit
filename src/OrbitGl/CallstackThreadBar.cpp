@@ -140,14 +140,13 @@ void CallstackThreadBar::DoUpdatePrimitives(Batcher& batcher, TextRenderer& text
       Vec2 pos(timeline_info_->GetWorldFromTick(event.time()), GetPos()[1]);
       batcher.AddVerticalLine(pos, track_height, z, kGreenSelection);
     };
-    const orbit_client_data::CallstackData* selection_callstack_data =
-        capture_data_->GetSelectionCallstackData();
-    ORBIT_CHECK(selection_callstack_data != nullptr);
+    const orbit_client_data::CallstackData& selection_callstack_data =
+        capture_data_->selection_callstack_data();
     if (GetThreadId() == orbit_base::kAllProcessThreadsTid) {
-      selection_callstack_data->ForEachCallstackEventInTimeRange(
+      selection_callstack_data.ForEachCallstackEventInTimeRange(
           min_tick, max_tick, action_on_selected_callstack_events);
     } else {
-      selection_callstack_data->ForEachCallstackEventOfTidInTimeRange(
+      selection_callstack_data.ForEachCallstackEventOfTidInTimeRange(
           GetThreadId(), min_tick, max_tick, action_on_selected_callstack_events);
     }
   } else {
