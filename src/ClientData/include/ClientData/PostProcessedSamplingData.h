@@ -15,6 +15,7 @@
 
 #include "ClientData/CallstackTypes.h"
 #include "ClientProtos/capture_data.pb.h"
+#include "OrbitBase/ThreadConstants.h"
 #include "absl/container/flat_hash_map.h"
 #include "absl/container/flat_hash_set.h"
 
@@ -73,14 +74,12 @@ class PostProcessedSamplingData {
       absl::flat_hash_map<uint64_t, orbit_client_protos::CallstackInfo> id_to_resolved_callstack,
       absl::flat_hash_map<uint64_t, uint64_t> original_id_to_resolved_callstack_id,
       absl::flat_hash_map<uint64_t, absl::flat_hash_set<uint64_t>>
-          function_address_to_sampled_callstack_ids,
-      std::vector<ThreadSampleData> sorted_thread_sample_data)
+          function_address_to_sampled_callstack_ids)
       : thread_id_to_sample_data_{std::move(thread_id_to_sample_data)},
         id_to_resolved_callstack_{std::move(id_to_resolved_callstack)},
         original_id_to_resolved_callstack_id_{std::move(original_id_to_resolved_callstack_id)},
         function_address_to_sampled_callstack_ids_{
-            std::move(function_address_to_sampled_callstack_ids)},
-        sorted_thread_sample_data_{std::move(sorted_thread_sample_data)} {};
+            std::move(function_address_to_sampled_callstack_ids)} {};
 
   ~PostProcessedSamplingData() = default;
 
@@ -94,11 +93,9 @@ class PostProcessedSamplingData {
 
   [[nodiscard]] std::unique_ptr<SortedCallstackReport>
   GetSortedCallstackReportFromFunctionAddresses(const std::vector<uint64_t>& function_addresses,
-                                                ThreadID thread_id) const;
+                                                uint32_t thread_id) const;
 
-  [[nodiscard]] const std::vector<ThreadSampleData>& GetThreadSampleData() const {
-    return sorted_thread_sample_data_;
-  }
+  [[nodiscard]] std::vector<const ThreadSampleData*> GetSortedThreadSampleData() const;
   [[nodiscard]] const ThreadSampleData* GetThreadSampleDataByThreadId(uint32_t thread_id) const;
 
   [[nodiscard]] const ThreadSampleData* GetSummary() const;
@@ -106,14 +103,13 @@ class PostProcessedSamplingData {
 
  private:
   [[nodiscard]] std::multimap<int, uint64_t> GetCallstacksFromFunctionAddresses(
-      const std::vector<uint64_t>& function_addresses, ThreadID thread_id) const;
+      const std::vector<uint64_t>& function_addresses, uint32_t thread_id) const;
 
-  absl::flat_hash_map<ThreadID, ThreadSampleData> thread_id_to_sample_data_;
+  absl::flat_hash_map<uint32_t, ThreadSampleData> thread_id_to_sample_data_;
   absl::flat_hash_map<uint64_t, orbit_client_protos::CallstackInfo> id_to_resolved_callstack_;
   absl::flat_hash_map<uint64_t, uint64_t> original_id_to_resolved_callstack_id_;
   absl::flat_hash_map<uint64_t, absl::flat_hash_set<uint64_t>>
       function_address_to_sampled_callstack_ids_;
-  std::vector<ThreadSampleData> sorted_thread_sample_data_;
 };
 
 }  // namespace orbit_client_data

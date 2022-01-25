@@ -32,6 +32,27 @@ const orbit_client_protos::CallstackInfo& PostProcessedSamplingData::GetResolved
   return resolved_callstack_it->second;
 }
 
+std::vector<const ThreadSampleData*> PostProcessedSamplingData::GetSortedThreadSampleData() const {
+  std::vector<const ThreadSampleData*> sorted_thread_sample_data;
+  for (const auto& [unused_tid, thread_sample_data] : thread_id_to_sample_data_) {
+    sorted_thread_sample_data.emplace_back(&thread_sample_data);
+  }
+
+  std::sort(sorted_thread_sample_data.begin(), sorted_thread_sample_data.end(),
+            [](const ThreadSampleData* lhs, const ThreadSampleData* rhs) {
+              // Make sure the ThreadSampleData associated with "all threads" is first even if we
+              // only have one thread.
+              uint32_t lhs_samples_count = (lhs->thread_id == orbit_base::kAllProcessThreadsTid)
+                                               ? std::numeric_limits<uint32_t>::max()
+                                               : lhs->samples_count;
+              uint32_t rhs_samples_count = (rhs->thread_id == orbit_base::kAllProcessThreadsTid)
+                                               ? std::numeric_limits<uint32_t>::max()
+                                               : rhs->samples_count;
+              return lhs_samples_count > rhs_samples_count;
+            });
+  return sorted_thread_sample_data;
+}
+
 static std::multimap<int, uint64_t> SortCallstacksByCount(const ThreadSampleData& data,
                                                           const std::set<uint64_t>& callstacks) {
   std::multimap<int, uint64_t> sorted_callstacks;
@@ -47,7 +68,7 @@ static std::multimap<int, uint64_t> SortCallstacksByCount(const ThreadSampleData
 }
 
 std::multimap<int, uint64_t> PostProcessedSamplingData::GetCallstacksFromFunctionAddresses(
-    const std::vector<uint64_t>& function_addresses, ThreadID thread_id) const {
+    const std::vector<uint64_t>& function_addresses, uint32_t thread_id) const {
   const auto& sample_data_it = thread_id_to_sample_data_.find(thread_id);
   if (sample_data_it == thread_id_to_sample_data_.end()) {
     return {};
@@ -69,7 +90,7 @@ std::multimap<int, uint64_t> PostProcessedSamplingData::GetCallstacksFromFunctio
 
 std::unique_ptr<SortedCallstackReport>
 PostProcessedSamplingData::GetSortedCallstackReportFromFunctionAddresses(
-    const std::vector<uint64_t>& function_addresses, ThreadID thread_id) const {
+    const std::vector<uint64_t>& function_addresses, uint32_t thread_id) const {
   std::unique_ptr<SortedCallstackReport> report = std::make_unique<SortedCallstackReport>();
   std::multimap<int, uint64_t> count_to_callstack_id =
       GetCallstacksFromFunctionAddresses(function_addresses, thread_id);

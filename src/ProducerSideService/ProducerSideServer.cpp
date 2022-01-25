@@ -1,8 +1,8 @@
-// Copyright (c) 2020 The Orbit Authors. All rights reserved.
+// Copyright (c) 2022 The Orbit Authors. All rights reserved.
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#include "ProducerSideServer.h"
+#include "ProducerSideService/ProducerSideServer.h"
 
 #include <absl/strings/str_format.h>
 #include <errno.h>
@@ -14,7 +14,7 @@
 #include "GrpcProtos/capture.pb.h"
 #include "OrbitBase/Logging.h"
 
-namespace orbit_service {
+namespace orbit_producer_side_service {
 
 bool ProducerSideServer::BuildAndStart(std::string uri) {
   ORBIT_CHECK(server_ == nullptr);
@@ -50,4 +50,4 @@ void ProducerSideServer::OnCaptureStopRequested() {
   producer_side_service_.OnCaptureStopRequested();
 }
 
-}  // namespace orbit_service
+}  // namespace orbit_producer_side_service

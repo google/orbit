@@ -105,8 +105,6 @@ class SamplingDataPostProcessor {
                                            bool generate_summary);
 
  private:
-  void SortByThreadUsage();
-
   void ResolveCallstacks(const CallstackData& callstack_data, const CaptureData& capture_data,
                          const ModuleManager& module_manager);
 
@@ -125,7 +123,6 @@ class SamplingDataPostProcessor {
   absl::flat_hash_map<uint64_t, absl::flat_hash_set<uint64_t>>
       function_address_to_sampled_callstack_ids_;
   absl::flat_hash_map<uint64_t, uint64_t> exact_address_to_function_address_;
-  std::vector<ThreadSampleData> sorted_thread_sample_data_;
 };
 
 }  // namespace
@@ -163,6 +160,7 @@ PostProcessedSamplingData SamplingDataPostProcessor::ProcessSamples(
         }
 
         ThreadSampleData* thread_sample_data = &thread_id_to_sample_data_[event.thread_id()];
+        thread_sample_data->thread_id = event.thread_id();
         thread_sample_data->samples_count++;
         thread_sample_data->sampled_callstack_id_to_count[event.callstack_id()]++;
         for (uint64_t frame : unique_frames) {
@@ -174,6 +172,7 @@ PostProcessedSamplingData SamplingDataPostProcessor::ProcessSamples(
         }
         ThreadSampleData* all_thread_sample_data =
             &thread_id_to_sample_data_[orbit_base::kAllProcessThreadsTid];
+        all_thread_sample_data->thread_id = orbit_base::kAllProcessThreadsTid;
         all_thread_sample_data->samples_count++;
         all_thread_sample_data->sampled_callstack_id_to_count[event.callstack_id()]++;
         for (uint64_t frame : unique_frames) {
@@ -229,27 +228,10 @@ PostProcessedSamplingData SamplingDataPostProcessor::ProcessSamples(
 
   FillThreadSampleDataSampleReports(capture_data, module_manager);
 
-  SortByThreadUsage();
-
-  return PostProcessedSamplingData(
-      std::move(thread_id_to_sample_data_), std::move(id_to_resolved_callstack_),
-      std::move(original_id_to_resolved_callstack_id_),
-      std::move(function_address_to_sampled_callstack_ids_), std::move(sorted_thread_sample_data_));
-}
-
-void SamplingDataPostProcessor::SortByThreadUsage() {
-  sorted_thread_sample_data_.reserve(thread_id_to_sample_data_.size());
-
-  for (auto& pair : thread_id_to_sample_data_) {
-    ThreadSampleData& data = pair.second;
-    data.thread_id = pair.first;
-    sorted_thread_sample_data_.push_back(data);
-  }
-
-  sort(sorted_thread_sample_data_.begin(), sorted_thread_sample_data_.end(),
-       [](const ThreadSampleData& a, const ThreadSampleData& b) {
-         return a.samples_count > b.samples_count;
-       });
+  return PostProcessedSamplingData(std::move(thread_id_to_sample_data_),
+                                   std::move(id_to_resolved_callstack_),
+                                   std::move(original_id_to_resolved_callstack_id_),
+                                   std::move(function_address_to_sampled_callstack_ids_));
 }
 
 void SamplingDataPostProcessor::ResolveCallstacks(const CallstackData& callstack_data,

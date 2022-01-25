@@ -113,8 +113,8 @@ void LiveFunctionsController::Move() {
     app_->GetMutableTimeGraph()->HorizontallyMoveIntoView(TimeGraph::VisibilityType::kFullyVisible,
                                                           min_max.first, min_max.second, 0.5);
   }
-  app_->GetMutableTimeGraph()->SetIteratorOverlayData(current_timer_infos_,
-                                                      iterator_id_to_function_id_);
+  app_->GetMutableTimeGraph()->GetTrackContainer()->SetIteratorOverlayData(
+      current_timer_infos_, iterator_id_to_function_id_);
 }
 
 bool LiveFunctionsController::OnAllNextButton() {
@@ -251,7 +251,7 @@ void LiveFunctionsController::Reset() {
   current_timer_infos_.clear();
   TimeGraph* time_graph = app_->GetMutableTimeGraph();
   if (time_graph != nullptr) {
-    app_->GetMutableTimeGraph()->SetIteratorOverlayData({}, {});
+    app_->GetMutableTimeGraph()->GetTrackContainer()->SetIteratorOverlayData({}, {});
   }
   id_to_select_ = orbit_grpc_protos::kInvalidFunctionId;
 }

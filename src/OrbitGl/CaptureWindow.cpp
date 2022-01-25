@@ -120,8 +120,8 @@ void CaptureWindow::MouseMoved(int x, int y, bool left, bool right, bool middle)
   if (left && !picking_manager_.IsDragging() && !app_->IsCapturing()) {
     Vec2i mouse_click_screen = viewport_.WorldToScreen(mouse_click_pos_world_);
     Vec2 mouse_pos_world = viewport_.ScreenToWorld({x, y});
-    time_graph_->SetVerticalScrollingOffset(timegraph_click_scrolling_offset_ +
-                                            mouse_click_pos_world_[1] - mouse_pos_world[1]);
+    time_graph_->GetTrackContainer()->SetVerticalScrollingOffset(
+        track_container_click_scrolling_offset_ + mouse_click_pos_world_[1] - mouse_pos_world[1]);
     time_graph_->PanTime(mouse_click_screen[0], x, viewport_.GetScreenWidth(), ref_time_click_);
 
     click_was_drag_ = true;
@@ -140,7 +140,8 @@ void CaptureWindow::LeftDown(int x, int y) {
 
   if (time_graph_ == nullptr) return;
   ref_time_click_ = time_graph_->GetTime(static_cast<double>(x) / viewport_.GetScreenWidth());
-  timegraph_click_scrolling_offset_ = time_graph_->GetVerticalScrollingOffset();
+  track_container_click_scrolling_offset_ =
+      time_graph_->GetTrackContainer()->GetVerticalScrollingOffset();
 }
 
 void CaptureWindow::LeftUp() {
@@ -558,7 +559,7 @@ void CaptureWindow::UpdateVerticalScroll(float ratio) {
   if (time_graph_ == nullptr) return;
   float range = std::max(0.f, time_graph_->GetHeight() - viewport_.GetWorldHeight());
   float new_scrolling_offset = ratio * range;
-  time_graph_->SetVerticalScrollingOffset(new_scrolling_offset);
+  time_graph_->GetTrackContainer()->SetVerticalScrollingOffset(new_scrolling_offset);
 }
 
 void CaptureWindow::UpdateHorizontalZoom(float normalized_start, float normalized_end) {
@@ -602,7 +603,8 @@ void CaptureWindow::ProcessSliderMouseMoveEvents(int x, int y) {
 void CaptureWindow::UpdateVerticalSliderFromWorld() {
   if (time_graph_ == nullptr) return;
   float max = std::max(0.f, time_graph_->GetHeight() - viewport_.GetWorldHeight());
-  float pos_ratio = max > 0 ? time_graph_->GetVerticalScrollingOffset() / max : 0.f;
+  float pos_ratio =
+      max > 0 ? time_graph_->GetTrackContainer()->GetVerticalScrollingOffset() / max : 0.f;
   float size_ratio =
       time_graph_->GetHeight() > 0 ? viewport_.GetWorldHeight() / time_graph_->GetHeight() : 1.f;
   int slider_width = static_cast<int>(time_graph_->GetLayout().GetSliderWidth());
@@ -688,7 +690,7 @@ void CaptureWindow::RenderImGuiDebugUI() {
     IMGUI_VAR_TO_TEXT(mouse_move_pos_screen_[0]);
     IMGUI_VAR_TO_TEXT(mouse_move_pos_screen_[1]);
     if (time_graph_ != nullptr) {
-      IMGUI_VAR_TO_TEXT(time_graph_->GetNumVisiblePrimitives());
+      IMGUI_VAR_TO_TEXT(time_graph_->GetTrackContainer()->GetNumVisiblePrimitives());
       IMGUI_VAR_TO_TEXT(time_graph_->GetTrackManager()->GetAllTracks().size());
       IMGUI_VAR_TO_TEXT(time_graph_->GetMinTimeUs());
       IMGUI_VAR_TO_TEXT(time_graph_->GetMaxTimeUs());

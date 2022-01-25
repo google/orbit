@@ -32,16 +32,18 @@
 #include "Viewport.h"
 
 class OrbitApp;
-class TimeGraph;
 
 namespace orbit_gl {
+
+class TrackContainer;
 
 // TrackManager is in charge of the active Tracks in Timegraph (their creation, searching, erasing
 // and sorting).
 class TrackManager {
  public:
-  explicit TrackManager(TimeGraph* time_graph, Viewport* viewport, TimeGraphLayout* layout,
-                        OrbitApp* app, const orbit_client_data::ModuleManager* module_manager,
+  explicit TrackManager(TrackContainer* track_container, TimelineInfoInterface* timeline_info,
+                        Viewport* viewport, TimeGraphLayout* layout, OrbitApp* app,
+                        const orbit_client_data::ModuleManager* module_manager,
                         orbit_client_data::CaptureData* capture_data);
 
   [[nodiscard]] std::vector<Track*> GetAllTracks() const;
@@ -119,7 +121,6 @@ class TrackManager {
   std::shared_ptr<CGroupAndProcessMemoryTrack> cgroup_and_process_memory_track_;
   std::shared_ptr<PageFaultsTrack> page_faults_track_;
 
-  TimeGraph* time_graph_;
   Viewport* viewport_;
   TimeGraphLayout* layout_;
 
@@ -135,6 +136,8 @@ class TrackManager {
   orbit_client_data::CaptureData* capture_data_ = nullptr;
 
   OrbitApp* app_ = nullptr;
+  TrackContainer* track_container_ = nullptr;
+  TimelineInfoInterface* timeline_info_ = nullptr;
 
   bool data_from_saved_capture_ = false;
   absl::flat_hash_map<Track::Type, bool> track_type_visibility_;

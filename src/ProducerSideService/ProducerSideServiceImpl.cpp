@@ -1,8 +1,8 @@
-// Copyright (c) 2020 The Orbit Authors. All rights reserved.
+// Copyright (c) 2022 The Orbit Authors. All rights reserved.
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#include "ProducerSideServiceImpl.h"
+#include "ProducerSideService/ProducerSideServiceImpl.h"
 
 #include <absl/synchronization/mutex.h>
 #include <absl/time/time.h>
@@ -16,7 +16,7 @@
 #include "OrbitBase/MakeUniqueForOverwrite.h"
 #include "OrbitBase/ThreadUtils.h"
 
-namespace orbit_service {
+namespace orbit_producer_side_service {
 
 using orbit_grpc_protos::ProducerCaptureEvent;
 
@@ -448,4 +448,4 @@ void ProducerSideServiceImpl::ReceiveEventsThread(
   }
 }
 
-}  // namespace orbit_service
+}  // namespace orbit_producer_side_service

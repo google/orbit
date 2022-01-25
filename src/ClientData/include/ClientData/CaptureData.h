@@ -61,6 +61,8 @@ class CaptureData {
     return instrumented_functions_;
   }
 
+  [[nodiscard]] uint64_t memory_sampling_period_ns() const { return memory_sampling_period_ns_; }
+
   [[nodiscard]] const orbit_grpc_protos::InstrumentedFunction* GetInstrumentedFunctionById(
       uint64_t function_id) const;
 
@@ -224,6 +226,7 @@ class CaptureData {
  private:
   orbit_client_data::ProcessData process_;
   absl::flat_hash_map<uint64_t, orbit_grpc_protos::InstrumentedFunction> instrumented_functions_;
+  uint64_t memory_sampling_period_ns_;
 
   orbit_client_data::CallstackData callstack_data_;
   // selection_callstack_data_ is subset of callstack_data_.

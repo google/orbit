@@ -31,13 +31,16 @@ AccessibilityState TimeGraphAccessibility::AccessibleState() const {
 }
 
 int TimeGraphAccessibility::AccessibleChildCount() const {
-  return time_graph_->GetTrackManager()->GetVisibleTracks().size();
+  // TODO(b/208431620): Include the Timeline as another children.
+  return 1;  // TrackContainer
 }
 
 const AccessibleInterface* TimeGraphAccessibility::AccessibleChild(int index) const {
-  return time_graph_->GetTrackManager()
-      ->GetVisibleTracks()[index]
-      ->GetOrCreateAccessibleInterface();
+  // TODO(b/208431620): Include the Timeline as another children.
+  if (index == 0) {
+    return time_graph_->GetTrackContainer()->GetOrCreateAccessibleInterface();
+  }
+  return nullptr;
 }
 
 const AccessibleInterface* TimeGraphAccessibility::AccessibleParent() const {

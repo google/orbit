@@ -41,13 +41,14 @@ void SamplingReport::ClearReport() {
 }
 
 void SamplingReport::FillReport() {
-  const auto& sample_data = post_processed_sampling_data_.GetThreadSampleData();
+  const std::vector<const ThreadSampleData*>& sample_data =
+      post_processed_sampling_data_.GetSortedThreadSampleData();
 
-  for (const ThreadSampleData& thread_sample_data : sample_data) {
+  for (const ThreadSampleData* thread_sample_data : sample_data) {
     orbit_data_views::SamplingReportDataView thread_report{app_};
     thread_report.Init();
-    thread_report.SetSampledFunctions(thread_sample_data.sampled_functions);
-    thread_report.SetThreadID(thread_sample_data.thread_id);
+    thread_report.SetSampledFunctions(thread_sample_data->sampled_functions);
+    thread_report.SetThreadID(thread_sample_data->thread_id);
     thread_report.SetSamplingReport(this);
     thread_reports_.push_back(std::move(thread_report));
   }
