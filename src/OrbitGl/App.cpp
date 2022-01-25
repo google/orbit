@@ -408,7 +408,8 @@ Future<void> OrbitApp::OnCaptureComplete() {
         ORBIT_SCOPE("OnCaptureComplete");
         TrySaveUserDefinedCaptureInfo();
         RefreshFrameTracks();
-        GetMutableCaptureData().set_post_processed_sampling_data(post_processed_sampling_data);
+        GetMutableCaptureData().set_post_processed_sampling_data(
+            std::move(post_processed_sampling_data));
         RefreshCaptureView();
 
         SetSamplingReport(&GetCaptureData().GetCallstackData(),
