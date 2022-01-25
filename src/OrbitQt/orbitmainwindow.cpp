@@ -1145,10 +1145,11 @@ void OrbitMainWindow::LoadCaptureOptionsIntoApp() {
   }
   app_->SetDynamicInstrumentationMethod(instrumentation_method);
 
-  app_->SetCollectMemoryInfo(settings.value(kCollectMemoryInfoSettingKey, false).toBool());
+  bool collect_memory_info = settings.value(kCollectMemoryInfoSettingKey, false).toBool();
+  app_->SetCollectMemoryInfo(collect_memory_info);
   uint64_t memory_sampling_period_ms = kMemorySamplingPeriodMsDefaultValue;
   uint64_t memory_warning_threshold_kb = kMemoryWarningThresholdKbDefaultValue;
-  if (app_->GetCollectMemoryInfo()) {
+  if (collect_memory_info) {
     memory_sampling_period_ms = settings
                                     .value(kMemorySamplingPeriodMsSettingKey,
                                            QVariant::fromValue(kMemorySamplingPeriodMsDefaultValue))

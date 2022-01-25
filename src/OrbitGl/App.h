@@ -404,17 +404,17 @@ class OrbitApp final : public DataViewFactory,
   void SetStackDumpSize(uint16_t stack_dump_size);
   void SetUnwindingMethod(orbit_grpc_protos::CaptureOptions::UnwindingMethod unwinding_method);
   void SetMaxLocalMarkerDepthPerCommandBuffer(uint64_t max_local_marker_depth_per_command_buffer);
-
   void SetCollectMemoryInfo(bool collect_memory_info) {
     data_manager_->set_collect_memory_info(collect_memory_info);
   }
-  [[nodiscard]] bool GetCollectMemoryInfo() const { return data_manager_->collect_memory_info(); }
   void SetMemorySamplingPeriodMs(uint64_t memory_sampling_period_ms) {
     data_manager_->set_memory_sampling_period_ms(memory_sampling_period_ms);
   }
+
   [[nodiscard]] uint64_t GetMemorySamplingPeriodMs() const {
-    return data_manager_->memory_sampling_period_ms();
+    return capture_data_->memory_sampling_period_ns() / 1'000'000;
   }
+
   void SetMemoryWarningThresholdKb(uint64_t memory_warning_threshold_kb) {
     data_manager_->set_memory_warning_threshold_kb(memory_warning_threshold_kb);
   }
