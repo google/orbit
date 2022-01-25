@@ -17,6 +17,7 @@
 #include "Batcher.h"
 #include "ClientData/CaptureData.h"
 #include "ClientData/FunctionUtils.h"
+#include "ClientData/ModuleAndFunctionLookup.h"
 #include "ClientData/TimerChain.h"
 #include "ClientProtos/capture_data.pb.h"
 #include "DisplayFormats/DisplayFormats.h"
@@ -40,20 +41,22 @@ using orbit_grpc_protos::InstrumentedFunction;
 ThreadTrack::ThreadTrack(CaptureViewElement* parent,
                          const orbit_gl::TimelineInfoInterface* timeline_info,
                          orbit_gl::Viewport* viewport, TimeGraphLayout* layout, uint32_t thread_id,
-                         OrbitApp* app, const orbit_client_data::CaptureData* capture_data,
+                         OrbitApp* app, const orbit_client_data::ModuleManager* module_manager,
+                         const orbit_client_data::CaptureData* capture_data,
                          orbit_client_data::ThreadTrackDataProvider* thread_track_data_provider)
-    : TimerTrack(parent, timeline_info, viewport, layout, app, capture_data, nullptr),
+    : TimerTrack(parent, timeline_info, viewport, layout, app, module_manager, capture_data,
+                 nullptr),
       thread_id_{thread_id},
       thread_track_data_provider_{thread_track_data_provider} {
   Color color = TimeGraph::GetThreadColor(thread_id);
   thread_state_bar_ = std::make_shared<orbit_gl::ThreadStateBar>(
-      this, app_, timeline_info_, viewport, layout, capture_data, thread_id, color);
+      this, app_, timeline_info_, viewport, layout, module_manager, capture_data, thread_id, color);
 
   event_bar_ = std::make_shared<orbit_gl::CallstackThreadBar>(
-      this, app_, timeline_info_, viewport, layout, capture_data, thread_id, color);
+      this, app_, timeline_info_, viewport, layout, module_manager, capture_data, thread_id, color);
 
   tracepoint_bar_ = std::make_shared<orbit_gl::TracepointThreadBar>(
-      this, app_, timeline_info_, viewport, layout, capture_data, thread_id, color);
+      this, app_, timeline_info_, viewport, layout, module_manager, capture_data, thread_id, color);
 }
 
 std::string ThreadTrack::GetName() const {
@@ -130,18 +133,20 @@ std::string ThreadTrack::GetBoxTooltip(const Batcher& batcher, PickingId id) con
     label = func->function_name();
   }
 
-  std::string module_name = orbit_client_data::CaptureData::kUnknownFunctionOrModuleName;
-  std::string function_name = orbit_client_data::CaptureData::kUnknownFunctionOrModuleName;
+  std::string module_name = orbit_client_data::kUnknownFunctionOrModuleName;
+  std::string function_name = orbit_client_data::kUnknownFunctionOrModuleName;
   if (func != nullptr) {
     module_name = orbit_client_data::function_utils::GetLoadedModuleNameByPath(func->file_path());
     function_name = label;
   } else if (timer_info->address_in_function() != 0) {
-    const auto* module = capture_data_->FindModuleByAddress(timer_info->address_in_function());
+    const auto* module = orbit_client_data::FindModuleByAddress(
+        *capture_data_->process(), *module_manager_, timer_info->address_in_function());
     if (module != nullptr) {
       module_name = module->name();
     }
 
-    function_name = capture_data_->GetFunctionNameByAddress(timer_info->address_in_function());
+    function_name = orbit_client_data::GetFunctionNameByAddress(*module_manager_, *capture_data_,
+                                                                timer_info->address_in_function());
   }
 
   std::string result = absl::StrFormat(

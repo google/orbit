@@ -26,6 +26,7 @@ class GraphTrack : public Track {
                       orbit_gl::Viewport* viewport, TimeGraphLayout* layout,
                       std::array<std::string, Dimension> series_names,
                       uint8_t series_value_decimal_digits, std::string series_value_unit,
+                      const orbit_client_data::ModuleManager* module_manager,
                       const orbit_client_data::CaptureData* capture_data);
 
   [[nodiscard]] Type GetType() const override { return Type::kGraphTrack; }

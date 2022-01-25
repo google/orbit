@@ -67,6 +67,8 @@ class AppInterface {
 
   [[nodiscard]] virtual bool HasCaptureData() const = 0;
   [[nodiscard]] virtual const orbit_client_data::CaptureData& GetCaptureData() const = 0;
+  [[nodiscard]] virtual const orbit_client_data::ModuleManager* GetModuleManager() const = 0;
+  [[nodiscard]] virtual orbit_client_data::ModuleManager* GetMutableModuleManager() = 0;
 
   // Functions needed by ModulesDataView
   virtual void OnValidateFramePointers(

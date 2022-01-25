@@ -27,9 +27,11 @@ GpuDebugMarkerTrack::GpuDebugMarkerTrack(CaptureViewElement* parent,
                                          const orbit_gl::TimelineInfoInterface* timeline_info,
                                          orbit_gl::Viewport* viewport, TimeGraphLayout* layout,
                                          uint64_t timeline_hash, OrbitApp* app,
+                                         const orbit_client_data::ModuleManager* module_manager,
                                          const orbit_client_data::CaptureData* capture_data,
                                          orbit_client_data::TimerData* timer_data)
-    : TimerTrack(parent, timeline_info, viewport, layout, app, capture_data, timer_data),
+    : TimerTrack(parent, timeline_info, viewport, layout, app, module_manager, capture_data,
+                 timer_data),
       string_manager_{app->GetStringManager()},
       timeline_hash_{timeline_hash} {
   draw_background_ = false;

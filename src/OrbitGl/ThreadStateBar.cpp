@@ -27,10 +27,11 @@ namespace orbit_gl {
 ThreadStateBar::ThreadStateBar(CaptureViewElement* parent, OrbitApp* app,
                                const orbit_gl::TimelineInfoInterface* timeline_info,
                                orbit_gl::Viewport* viewport, TimeGraphLayout* layout,
+                               const orbit_client_data::ModuleManager* module_manager,
                                const orbit_client_data::CaptureData* capture_data,
                                ThreadID thread_id, const Color& color)
-    : ThreadBar(parent, app, timeline_info, viewport, layout, capture_data, thread_id,
-                "ThreadState", color) {}
+    : ThreadBar(parent, app, timeline_info, viewport, layout, module_manager, capture_data,
+                thread_id, "ThreadState", color) {}
 
 bool ThreadStateBar::IsEmpty() const {
   return capture_data_ == nullptr || !capture_data_->HasThreadStatesForThread(GetThreadId());

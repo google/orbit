@@ -20,6 +20,7 @@ class TracepointThreadBar : public ThreadBar {
   explicit TracepointThreadBar(CaptureViewElement* parent, OrbitApp* app,
                                const orbit_gl::TimelineInfoInterface* timeline_info,
                                orbit_gl::Viewport* viewport, TimeGraphLayout* layout,
+                               const orbit_client_data::ModuleManager* module_manager,
                                const orbit_client_data::CaptureData* capture_data,
                                uint32_t thread_id, const Color& color);
 

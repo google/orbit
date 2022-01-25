@@ -19,6 +19,7 @@
 
 #include "ClientData/CaptureData.h"
 #include "ClientData/FunctionUtils.h"
+#include "ClientData/ModuleAndFunctionLookup.h"
 #include "ClientProtos/capture_data.pb.h"
 #include "CompareAscendingOrDescending.h"
 #include "DataViews/DataViewType.h"
@@ -33,6 +34,7 @@
 
 using orbit_client_data::CaptureData;
 using orbit_client_data::ModuleData;
+using orbit_client_data::ModuleManager;
 
 using orbit_client_protos::FunctionInfo;
 using orbit_client_protos::FunctionStats;
@@ -419,10 +421,11 @@ void LiveFunctionsDataView::OnDataChanged() {
   const absl::flat_hash_map<uint64_t, orbit_grpc_protos::InstrumentedFunction>&
       instrumented_functions = app_->GetCaptureData().instrumented_functions();
   for (const auto& [function_id, instrumented_function] : instrumented_functions) {
+    const ModuleManager* module_manager = app_->GetModuleManager();
     const FunctionInfo* function_info_from_capture_data =
-        app_->GetCaptureData().FindFunctionByModulePathBuildIdAndOffset(
-            instrumented_function.file_path(), instrumented_function.file_build_id(),
-            instrumented_function.file_offset());
+        orbit_client_data::FindFunctionByModulePathBuildIdAndOffset(
+            *module_manager, instrumented_function.file_path(),
+            instrumented_function.file_build_id(), instrumented_function.file_offset());
 
     // This could happen because module has not yet been updated, it also
     // happens when loading capture. In which case we will try to construct

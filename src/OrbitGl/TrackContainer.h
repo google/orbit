@@ -27,6 +27,7 @@ class TrackContainer final : public CaptureViewElement {
  public:
   explicit TrackContainer(CaptureViewElement* parent, TimelineInfoInterface* timeline_info,
                           Viewport* viewport, TimeGraphLayout* layout, OrbitApp* app,
+                          const orbit_client_data::ModuleManager* module_manager,
                           orbit_client_data::CaptureData* capture_data);
 
   [[nodiscard]] float GetHeight() const override;

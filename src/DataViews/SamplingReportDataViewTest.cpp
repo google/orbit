@@ -9,7 +9,9 @@
 #include <algorithm>
 
 #include "ClientData/CaptureData.h"
+#include "ClientData/ModuleAndFunctionLookup.h"
 #include "ClientData/ModuleData.h"
+#include "ClientData/ModuleManager.h"
 #include "ClientData/PostProcessedSamplingData.h"
 #include "ClientData/ProcessData.h"
 #include "ClientProtos/capture_data.pb.h"
@@ -23,6 +25,7 @@
 
 using orbit_client_data::CaptureData;
 using orbit_client_data::ModuleData;
+using orbit_client_data::ModuleManager;
 using orbit_client_data::ProcessData;
 using orbit_client_data::SampledFunction;
 using orbit_client_protos::FunctionInfo;
@@ -39,6 +42,9 @@ using orbit_data_views::kMenuActionSelect;
 using orbit_data_views::kMenuActionSourceCode;
 using orbit_data_views::kMenuActionUnselect;
 using orbit_grpc_protos::ModuleInfo;
+
+using ::testing::_;
+using ::testing::Return;
 
 namespace {
 
@@ -125,9 +131,9 @@ std::unique_ptr<CaptureData> GenerateTestCaptureData(
   capture_started.set_process_id(kProcessId);
   capture_started.set_executable_path(kExecutablePath);
 
-  auto capture_data = std::make_unique<CaptureData>(module_manager, capture_started, std::nullopt,
-                                                    absl::flat_hash_set<uint64_t>{},
-                                                    CaptureData::DataSource::kLiveCapture);
+  auto capture_data =
+      std::make_unique<CaptureData>(capture_started, std::nullopt, absl::flat_hash_set<uint64_t>{},
+                                    CaptureData::DataSource::kLiveCapture);
   ProcessData* process = capture_data.get()->mutable_process();
   process->UpdateModuleInfos(modules);
 
@@ -138,12 +144,16 @@ std::string GetExpectedDisplayAddressByIndex(size_t index) {
   return absl::StrFormat("%#llx", kSampledAbsoluteAddresses[index]);
 }
 
-std::string GetExpectedDisplayFunctionNameByIndex(size_t index, CaptureData& capture_data) {
-  return capture_data.GetFunctionNameByAddress(kSampledAbsoluteAddresses[index]);
+std::string GetExpectedDisplayFunctionNameByIndex(size_t index, const ModuleManager& module_manager,
+                                                  const CaptureData& capture_data) {
+  return orbit_client_data::GetFunctionNameByAddress(module_manager, capture_data,
+                                                     kSampledAbsoluteAddresses[index]);
 }
 
-std::string GetExpectedDisplayModuleNameByIndex(size_t index, CaptureData& capture_data) {
-  std::string module_path = capture_data.GetModulePathByAddress(kSampledAbsoluteAddresses[index]);
+std::string GetExpectedDisplayModuleNameByIndex(size_t index, const ModuleManager& module_manager,
+                                                const CaptureData& capture_data) {
+  std::string module_path = orbit_client_data::GetModulePathByAddress(
+      module_manager, capture_data, kSampledAbsoluteAddresses[index]);
   return std::filesystem::path(module_path).filename().string();
 }
 
@@ -184,13 +194,17 @@ class SamplingReportDataViewTest : public testing::Test {
  public:
   explicit SamplingReportDataViewTest()
       : view_{&app_}, capture_data_(GenerateTestCaptureData(&module_manager_)) {
+    EXPECT_CALL(app_, GetModuleManager()).WillRepeatedly(Return(&module_manager_));
+    EXPECT_CALL(app_, GetMutableModuleManager()).WillRepeatedly(Return(&module_manager_));
+
     view_.Init();
     for (size_t i = 0; i < kNumFunctions; i++) {
       SampledFunction sampled_function;
       sampled_function.absolute_address = kSampledAbsoluteAddresses[i];
-      sampled_function.name = capture_data_->GetFunctionNameByAddress(kSampledAbsoluteAddresses[i]);
-      sampled_function.module_path =
-          capture_data_->GetModulePathByAddress(kSampledAbsoluteAddresses[i]);
+      sampled_function.name = orbit_client_data::GetFunctionNameByAddress(
+          module_manager_, *capture_data_, kSampledAbsoluteAddresses[i]);
+      sampled_function.module_path = orbit_client_data::GetModulePathByAddress(
+          module_manager_, *capture_data_, kSampledAbsoluteAddresses[i]);
       sampled_function.exclusive = kSampledExclusives[i];
       sampled_function.exclusive_percent = kSampledExclusivePercents[i];
       sampled_function.inclusive = kSampledInclusives[i];
@@ -244,9 +258,9 @@ TEST_F(SamplingReportDataViewTest, ColumnValuesAreCorrect) {
   // The selected column will be tested separately.
   EXPECT_EQ(view_.GetValue(0, kColumnAddress), GetExpectedDisplayAddressByIndex(0));
   EXPECT_EQ(view_.GetValue(0, kColumnFunctionName),
-            GetExpectedDisplayFunctionNameByIndex(0, *capture_data_));
+            GetExpectedDisplayFunctionNameByIndex(0, module_manager_, *capture_data_));
   EXPECT_EQ(view_.GetValue(0, kColumnModuleName),
-            GetExpectedDisplayModuleNameByIndex(0, *capture_data_));
+            GetExpectedDisplayModuleNameByIndex(0, module_manager_, *capture_data_));
   EXPECT_EQ(view_.GetValue(0, kColumnExclusive), GetExpectedDisplayExclusiveByIndex(0));
   EXPECT_EQ(view_.GetValue(0, kColumnInclusive), GetExpectedDisplayInclusiveByIndex(0));
   EXPECT_EQ(view_.GetValue(0, kColumnUnwindErrors), GetExpectedDisplayUnwindErrorsByIndex(0));
@@ -408,10 +422,10 @@ TEST_F(SamplingReportDataViewTest, ContextMenuActionsAreInvoked) {
     std::string expected_clipboard = absl::StrFormat(
         "Hooked\tName\tInclusive\tExclusive\tModule\tAddress\tUnwind errors\n"
         "\t%s\t%s\t%s\t%s\t%s\t%s\n",
-        GetExpectedDisplayFunctionNameByIndex(0, *capture_data_),
+        GetExpectedDisplayFunctionNameByIndex(0, module_manager_, *capture_data_),
         GetExpectedDisplayInclusiveByIndex(0, true), GetExpectedDisplayExclusiveByIndex(0, true),
-        GetExpectedDisplayModuleNameByIndex(0, *capture_data_), GetExpectedDisplayAddressByIndex(0),
-        GetExpectedDisplayUnwindErrorsByIndex(0, true));
+        GetExpectedDisplayModuleNameByIndex(0, module_manager_, *capture_data_),
+        GetExpectedDisplayAddressByIndex(0), GetExpectedDisplayUnwindErrorsByIndex(0, true));
     CheckCopySelectionIsInvoked(context_menu, app_, view_, expected_clipboard);
   }
 
@@ -422,10 +436,10 @@ TEST_F(SamplingReportDataViewTest, ContextMenuActionsAreInvoked) {
         "\r\n"
         R"("","%s","%s","%s","%s","%s","%s")"
         "\r\n",
-        GetExpectedDisplayFunctionNameByIndex(0, *capture_data_),
+        GetExpectedDisplayFunctionNameByIndex(0, module_manager_, *capture_data_),
         GetExpectedDisplayInclusiveByIndex(0, true), GetExpectedDisplayExclusiveByIndex(0, true),
-        GetExpectedDisplayModuleNameByIndex(0, *capture_data_), GetExpectedDisplayAddressByIndex(0),
-        GetExpectedDisplayUnwindErrorsByIndex(0, true));
+        GetExpectedDisplayModuleNameByIndex(0, module_manager_, *capture_data_),
+        GetExpectedDisplayAddressByIndex(0), GetExpectedDisplayUnwindErrorsByIndex(0, true));
     CheckExportToCsvIsInvoked(context_menu, app_, view_, expected_contents);
   }
 
@@ -566,8 +580,9 @@ TEST_F(SamplingReportDataViewTest, FilteringShowsRightResults) {
     EXPECT_EQ(view_.GetNumElements(), 2);
     EXPECT_THAT(
         (std::array{view_.GetValue(0, kColumnModuleName), view_.GetValue(1, kColumnModuleName)}),
-        testing::UnorderedElementsAre(GetExpectedDisplayModuleNameByIndex(0, *capture_data_),
-                                      GetExpectedDisplayModuleNameByIndex(2, *capture_data_)));
+        testing::UnorderedElementsAre(
+            GetExpectedDisplayModuleNameByIndex(0, module_manager_, *capture_data_),
+            GetExpectedDisplayModuleNameByIndex(2, module_manager_, *capture_data_)));
   }
 
   // Filtering by module name with multiple tokens separated by " ".
@@ -575,7 +590,7 @@ TEST_F(SamplingReportDataViewTest, FilteringShowsRightResults) {
     view_.OnFilter("foo module");
     EXPECT_EQ(view_.GetNumElements(), 1);
     EXPECT_EQ(view_.GetValue(0, kColumnModuleName),
-              GetExpectedDisplayModuleNameByIndex(0, *capture_data_));
+              GetExpectedDisplayModuleNameByIndex(0, module_manager_, *capture_data_));
   }
 
   // No matching result
@@ -595,8 +610,10 @@ TEST_F(SamplingReportDataViewTest, ColumnSortingShowsRightResults) {
   absl::flat_hash_map<std::string, uint64_t> string_to_raw_value;
   for (size_t i = 0; i < view_.GetNumElements(); i++) {
     ViewRowEntry entry;
-    entry[kColumnFunctionName] = GetExpectedDisplayFunctionNameByIndex(i, *capture_data_);
-    entry[kColumnModuleName] = GetExpectedDisplayModuleNameByIndex(i, *capture_data_);
+    entry[kColumnFunctionName] =
+        GetExpectedDisplayFunctionNameByIndex(i, module_manager_, *capture_data_);
+    entry[kColumnModuleName] =
+        GetExpectedDisplayModuleNameByIndex(i, module_manager_, *capture_data_);
     entry[kColumnExclusive] = GetExpectedDisplayExclusiveByIndex(i);
     string_to_raw_value.insert_or_assign(entry[kColumnExclusive], kSampledExclusives[i]);
     entry[kColumnInclusive] = GetExpectedDisplayInclusiveByIndex(i);

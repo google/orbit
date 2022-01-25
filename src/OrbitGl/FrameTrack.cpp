@@ -59,8 +59,10 @@ FrameTrack::FrameTrack(CaptureViewElement* parent,
                        const orbit_gl::TimelineInfoInterface* timeline_info,
                        orbit_gl::Viewport* viewport, TimeGraphLayout* layout,
                        InstrumentedFunction function, OrbitApp* app,
+                       const orbit_client_data::ModuleManager* module_manager,
                        const CaptureData* capture_data, orbit_client_data::TimerData* timer_data)
-    : TimerTrack(parent, timeline_info, viewport, layout, app, capture_data, timer_data),
+    : TimerTrack(parent, timeline_info, viewport, layout, app, module_manager, capture_data,
+                 timer_data),
       function_(std::move(function)) {
   // TODO(b/169554463): Support manual instrumentation.
 

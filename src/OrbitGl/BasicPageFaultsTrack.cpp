@@ -26,11 +26,12 @@ BasicPageFaultsTrack::BasicPageFaultsTrack(Track* parent,
                                            orbit_gl::Viewport* viewport, TimeGraphLayout* layout,
                                            std::string cgroup_name,
                                            uint64_t memory_sampling_period_ms,
+                                           const orbit_client_data::ModuleManager* module_manager,
                                            const orbit_client_data::CaptureData* capture_data)
     : LineGraphTrack<kBasicPageFaultsTrackDimension>(
           parent, timeline_info, viewport, layout,
           CreateSeriesName(cgroup_name, capture_data->process_name()), kTrackValueDecimalDigits,
-          kTrackValueUnits, capture_data),
+          kTrackValueUnits, module_manager, capture_data),
       AnnotationTrack(),
       cgroup_name_(std::move(cgroup_name)),
       memory_sampling_period_ms_(memory_sampling_period_ms),

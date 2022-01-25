@@ -20,6 +20,7 @@
 
 #include "ClientData/CaptureData.h"
 #include "ClientData/FunctionUtils.h"
+#include "ClientData/ModuleAndFunctionLookup.h"
 #include "ClientData/ModuleData.h"
 #include "ClientData/ProcessData.h"
 #include "CompareAscendingOrDescending.h"
@@ -32,6 +33,7 @@
 
 using orbit_client_data::CaptureData;
 using orbit_client_data::ModuleData;
+using orbit_client_data::ModuleManager;
 using orbit_client_data::ProcessData;
 using orbit_client_data::SampledFunction;
 using orbit_client_data::ThreadID;
@@ -178,10 +180,11 @@ void SamplingReportDataView::DoSort() {
 
 const FunctionInfo* SamplingReportDataView::GetFunctionInfoFromRow(int row) {
   const CaptureData& capture_data = app_->GetCaptureData();
+  const ModuleManager* module_manager = app_->GetModuleManager();
   SampledFunction& sampled_function = GetSampledFunction(row);
   if (sampled_function.function == nullptr) {
-    const FunctionInfo* func =
-        capture_data.FindFunctionByAddress(sampled_function.absolute_address, false);
+    const FunctionInfo* func = orbit_client_data::FindFunctionByAddress(
+        *capture_data.process(), *module_manager, sampled_function.absolute_address, false);
     sampled_function.function = func;
   }
 

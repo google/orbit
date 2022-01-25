@@ -18,6 +18,7 @@ target_sources(ClientData PUBLIC
         include/ClientData/DataManager.h
         include/ClientData/FunctionInfoSet.h
         include/ClientData/FunctionUtils.h
+        include/ClientData/ModuleAndFunctionLookup.h
         include/ClientData/ModuleData.h
         include/ClientData/ModuleManager.h
         include/ClientData/PostProcessedSamplingData.h
@@ -40,6 +41,7 @@ target_sources(ClientData PRIVATE
         CaptureData.cpp
         DataManager.cpp
         FunctionUtils.cpp
+        ModuleAndFunctionLookup.cpp
         ModuleData.cpp
         ModuleManager.cpp
         PostProcessedSamplingData.cpp

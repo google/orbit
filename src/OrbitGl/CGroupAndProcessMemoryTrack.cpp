@@ -35,11 +35,12 @@ static constexpr uint8_t kTrackValueDecimalDigits = 2;
 CGroupAndProcessMemoryTrack::CGroupAndProcessMemoryTrack(
     CaptureViewElement* parent, const orbit_gl::TimelineInfoInterface* timeline_info,
     orbit_gl::Viewport* viewport, TimeGraphLayout* layout, const std::string& cgroup_name,
+    const orbit_client_data::ModuleManager* module_manager,
     const orbit_client_data::CaptureData* capture_data)
     : MemoryTrack<kCGroupAndProcessMemoryTrackDimension>(
           parent, timeline_info, viewport, layout,
           CreateSeriesName(cgroup_name, capture_data->process_name()), kTrackValueDecimalDigits,
-          kTrackValueLabelUnit, capture_data),
+          kTrackValueLabelUnit, module_manager, capture_data),
       cgroup_name_(cgroup_name) {
   // Colors are selected from https://convertingcolors.com/list/avery.html.
   // Use reddish colors for different used memories, yellowish colors for different cached memories

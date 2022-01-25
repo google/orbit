@@ -43,6 +43,7 @@ class TrackManager {
  public:
   explicit TrackManager(TrackContainer* track_container, TimelineInfoInterface* timeline_info,
                         Viewport* viewport, TimeGraphLayout* layout, OrbitApp* app,
+                        const orbit_client_data::ModuleManager* module_manager,
                         orbit_client_data::CaptureData* capture_data);
 
   [[nodiscard]] std::vector<Track*> GetAllTracks() const;
@@ -131,6 +132,7 @@ class TrackManager {
   std::string filter_;
   std::vector<Track*> visible_tracks_;
 
+  const orbit_client_data::ModuleManager* module_manager_;
   orbit_client_data::CaptureData* capture_data_ = nullptr;
 
   OrbitApp* app_ = nullptr;

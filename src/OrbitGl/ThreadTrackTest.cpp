@@ -14,7 +14,7 @@ TEST(ThreadTrack, CaptureViewElementWorksAsIntended) {
   std::unique_ptr<orbit_client_data::CaptureData> test_data =
       TrackTestData::GenerateTestCaptureData();
   ThreadTrack track(nullptr, nullptr, tester.GetViewport(), tester.GetLayout(), -1, nullptr,
-                    test_data.get(), nullptr);
+                    nullptr, test_data.get(), nullptr);
   // Expect thread states, samples, tracepoints, and collapse toggle
   EXPECT_EQ(4ull, track.GetAllChildren().size());
   tester.RunTests(&track);

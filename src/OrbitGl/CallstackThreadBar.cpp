@@ -17,6 +17,7 @@
 #include "Batcher.h"
 #include "ClientData/CallstackData.h"
 #include "ClientData/CaptureData.h"
+#include "ClientData/ModuleAndFunctionLookup.h"
 #include "ClientProtos/capture_data.pb.h"
 #include "Geometry.h"
 #include "GlCanvas.h"
@@ -38,10 +39,11 @@ namespace orbit_gl {
 CallstackThreadBar::CallstackThreadBar(CaptureViewElement* parent, OrbitApp* app,
                                        const orbit_gl::TimelineInfoInterface* timeline_info,
                                        orbit_gl::Viewport* viewport, TimeGraphLayout* layout,
+                                       const orbit_client_data::ModuleManager* module_manager,
                                        const CaptureData* capture_data, ThreadID thread_id,
                                        const Color& color)
-    : ThreadBar(parent, app, timeline_info, viewport, layout, capture_data, thread_id, "Callstacks",
-                color) {}
+    : ThreadBar(parent, app, timeline_info, viewport, layout, module_manager, capture_data,
+                thread_id, "Callstacks", color) {}
 
 std::string CallstackThreadBar::GetTooltip() const {
   return "Left-click and drag to select samples";
@@ -224,12 +226,13 @@ bool CallstackThreadBar::IsEmpty() const {
     int max_line_length) const {
   ORBIT_CHECK(capture_data_ != nullptr);
   if (frame_index >= callstack.frames_size()) {
-    return std::string("<i>") + CaptureData::kUnknownFunctionOrModuleName + "</i>";
+    return std::string("<i>") + orbit_client_data::kUnknownFunctionOrModuleName + "</i>";
   }
 
   const uint64_t addr = callstack.frames(frame_index);
-  const std::string& function_name = capture_data_->GetFunctionNameByAddress(addr);
-  if (function_name == CaptureData::kUnknownFunctionOrModuleName) {
+  const std::string& function_name =
+      orbit_client_data::GetFunctionNameByAddress(*module_manager_, *capture_data_, addr);
+  if (function_name == orbit_client_data::kUnknownFunctionOrModuleName) {
     return std::string("<i>") + absl::StrFormat("[unknown@%#x]", addr) + "</i>";
   }
 

@@ -52,6 +52,8 @@ class MockAppInterface : public AppInterface {
   MOCK_METHOD(bool, HasCaptureData, (), (const));
   MOCK_METHOD(orbit_client_data::CaptureData&, GetMutableCaptureData, ());
   MOCK_METHOD(const orbit_client_data::CaptureData&, GetCaptureData, (), (const));
+  MOCK_METHOD(const orbit_client_data::ModuleManager*, GetModuleManager, (), (const));
+  MOCK_METHOD(orbit_client_data::ModuleManager*, GetMutableModuleManager, (), ());
 
   MOCK_METHOD(void, OnValidateFramePointers, (std::vector<const orbit_client_data::ModuleData*>));
   MOCK_METHOD(void, UpdateProcessAndModuleList, ());

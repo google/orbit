@@ -36,6 +36,7 @@ namespace orbit_gl {
 using orbit_capture_client::CaptureEventProcessor;
 
 using orbit_client_data::CaptureData;
+using orbit_client_data::ModuleManager;
 using orbit_client_data::TimerChain;
 using orbit_client_protos::ApiTrackValue;
 using orbit_client_protos::CallstackEvent;
@@ -45,10 +46,10 @@ using orbit_grpc_protos::InstrumentedFunction;
 
 TrackContainer::TrackContainer(CaptureViewElement* parent, TimelineInfoInterface* timeline_info,
                                Viewport* viewport, TimeGraphLayout* layout, OrbitApp* app,
-                               CaptureData* capture_data)
+                               const ModuleManager* module_manager, CaptureData* capture_data)
     : CaptureViewElement(parent, viewport, &layout_),
-      track_manager_{
-          std::make_unique<TrackManager>(this, timeline_info, viewport, layout, app, capture_data)},
+      track_manager_{std::make_unique<TrackManager>(this, timeline_info, viewport, layout, app,
+                                                    module_manager, capture_data)},
       capture_data_{capture_data},
       timeline_info_(timeline_info) {
   track_manager_->GetOrCreateSchedulerTrack();

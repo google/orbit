@@ -24,7 +24,8 @@ class TrackManagerTest : public ::testing::Test {
  public:
   explicit TrackManagerTest()
       : capture_data_(TrackTestData::GenerateTestCaptureData()),
-        track_manager_(nullptr, nullptr, nullptr, &layout_, nullptr, capture_data_.get()) {}
+        track_manager_(nullptr, nullptr, nullptr, &layout_, nullptr, nullptr, capture_data_.get()) {
+  }
 
  protected:
   void CreateAndFillTracks() {

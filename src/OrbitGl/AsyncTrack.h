@@ -27,7 +27,8 @@ class AsyncTrack final : public TimerTrack {
   explicit AsyncTrack(CaptureViewElement* parent,
                       const orbit_gl::TimelineInfoInterface* timeline_info,
                       orbit_gl::Viewport* viewport, TimeGraphLayout* layout, std::string name,
-                      OrbitApp* app, const orbit_client_data::CaptureData* capture_data,
+                      OrbitApp* app, const orbit_client_data::ModuleManager* module_manager,
+                      const orbit_client_data::CaptureData* capture_data,
                       orbit_client_data::TimerData* timer_data);
 
   [[nodiscard]] std::string GetName() const override { return name_; };
