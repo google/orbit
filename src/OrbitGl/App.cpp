@@ -1068,7 +1068,7 @@ void OrbitApp::SetTopDownView(const CaptureData& capture_data) {
   ORBIT_CHECK(top_down_view_callback_);
   std::unique_ptr<CallTreeView> top_down_view =
       CallTreeView::CreateTopDownViewFromPostProcessedSamplingData(
-          capture_data.post_processed_sampling_data(), module_manager_.get(), capture_data);
+          capture_data.post_processed_sampling_data(), *module_manager_, capture_data);
   top_down_view_callback_(std::move(top_down_view));
 }
 
@@ -1082,8 +1082,8 @@ void OrbitApp::SetSelectionTopDownView(
     const CaptureData& capture_data) {
   ORBIT_CHECK(selection_top_down_view_callback_);
   std::unique_ptr<CallTreeView> selection_top_down_view =
-      CallTreeView::CreateTopDownViewFromPostProcessedSamplingData(
-          selection_post_processed_data, module_manager_.get(), capture_data);
+      CallTreeView::CreateTopDownViewFromPostProcessedSamplingData(selection_post_processed_data,
+                                                                   *module_manager_, capture_data);
   selection_top_down_view_callback_(std::move(selection_top_down_view));
 }
 
@@ -1097,7 +1097,7 @@ void OrbitApp::SetBottomUpView(const CaptureData& capture_data) {
   ORBIT_CHECK(bottom_up_view_callback_);
   std::unique_ptr<CallTreeView> bottom_up_view =
       CallTreeView::CreateBottomUpViewFromPostProcessedSamplingData(
-          capture_data.post_processed_sampling_data(), module_manager_.get(), capture_data);
+          capture_data.post_processed_sampling_data(), *module_manager_, capture_data);
   bottom_up_view_callback_(std::move(bottom_up_view));
 }
 
@@ -1111,8 +1111,8 @@ void OrbitApp::SetSelectionBottomUpView(
     const CaptureData& capture_data) {
   ORBIT_CHECK(selection_bottom_up_view_callback_);
   std::unique_ptr<CallTreeView> selection_bottom_up_view =
-      CallTreeView::CreateBottomUpViewFromPostProcessedSamplingData(
-          selection_post_processed_data, module_manager_.get(), capture_data);
+      CallTreeView::CreateBottomUpViewFromPostProcessedSamplingData(selection_post_processed_data,
+                                                                    *module_manager_, capture_data);
   selection_bottom_up_view_callback_(std::move(selection_bottom_up_view));
 }
 
