@@ -174,12 +174,6 @@ void CallstackData::ForEachUniqueCallstack(
   }
 }
 
-absl::flat_hash_map<uint64_t, std::shared_ptr<orbit_client_protos::CallstackInfo>>
-CallstackData::GetUniqueCallstacksCopy() const {
-  std::lock_guard<std::recursive_mutex> lock(mutex_);
-  return unique_callstacks_;
-}
-
 std::shared_ptr<orbit_client_protos::CallstackInfo> CallstackData::GetCallstackPtr(
     uint64_t callstack_id) const {
   auto it = unique_callstacks_.find(callstack_id);

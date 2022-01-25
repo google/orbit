@@ -77,7 +77,7 @@ class OrbitMainWindow final : public QMainWindow, public orbit_gl::MainWindowInt
   void OnNewSamplingReport(orbit_data_views::DataView* callstack_data_view,
                            const std::shared_ptr<class SamplingReport>& sampling_report);
   void OnNewSelectionReport(orbit_data_views::DataView* callstack_data_view,
-                            const std::shared_ptr<class SamplingReport>& sampling_report);
+                            const std::shared_ptr<class SamplingReport>& selection_report);
 
   void OnNewTopDownView(std::unique_ptr<CallTreeView> top_down_view);
   void OnNewSelectionTopDownView(std::unique_ptr<CallTreeView> selection_top_down_view);

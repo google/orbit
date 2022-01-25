@@ -77,9 +77,6 @@ class CallstackData {
       const std::function<void(uint64_t callstack_id,
                                const orbit_client_protos::CallstackInfo& callstack)>& action) const;
 
-  [[nodiscard]] absl::flat_hash_map<uint64_t, std::shared_ptr<orbit_client_protos::CallstackInfo>>
-  GetUniqueCallstacksCopy() const;
-
   // Assuming that, for each thread, the outermost frame of each callstack is always the same,
   // update the type of all the kComplete callstacks that have the outermost frame not matching the
   // majority outermost frame. This is a way to filter unwinding errors that were not reported as
@@ -97,7 +94,7 @@ class CallstackData {
   mutable std::recursive_mutex mutex_;
   absl::flat_hash_map<uint64_t, std::shared_ptr<orbit_client_protos::CallstackInfo>>
       unique_callstacks_;
-  absl::flat_hash_map<int32_t, std::map<uint64_t, orbit_client_protos::CallstackEvent>>
+  absl::flat_hash_map<uint32_t, std::map<uint64_t, orbit_client_protos::CallstackEvent>>
       callstack_events_by_tid_;
 
   uint64_t max_time_ = 0;

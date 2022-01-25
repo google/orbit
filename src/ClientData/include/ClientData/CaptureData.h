@@ -57,6 +57,9 @@ class CaptureData {
   CaptureData(CaptureData&& other) = delete;
   CaptureData& operator=(CaptureData&& other) = delete;
 
+  [[nodiscard]] const orbit_client_data::ProcessData* process() const { return &process_; }
+  [[nodiscard]] orbit_client_data::ProcessData* mutable_process() { return &process_; }
+
   [[nodiscard]] const absl::flat_hash_map<uint64_t, orbit_grpc_protos::InstrumentedFunction>&
   instrumented_functions() const {
     return instrumented_functions_;
@@ -115,12 +118,6 @@ class CaptureData {
 
   void AddOrAssignThreadName(uint32_t thread_id, std::string thread_name) {
     thread_names_.insert_or_assign(thread_id, std::move(thread_name));
-  }
-
-  [[nodiscard]] const absl::flat_hash_map<uint32_t,
-                                          std::vector<orbit_client_protos::ThreadStateSliceInfo>>&
-  thread_state_slices() const {
-    return thread_state_slices_;
   }
 
   [[nodiscard]] bool HasThreadStatesForThread(uint32_t tid) const {
@@ -189,18 +186,6 @@ class CaptureData {
                                             is_same_pid_as_target);
   }
 
-  [[nodiscard]] const orbit_client_data::CallstackData* GetSelectionCallstackData() const {
-    return selection_callstack_data_.get();
-  };
-
-  void set_selection_callstack_data(
-      std::unique_ptr<orbit_client_data::CallstackData> selection_callstack_data) {
-    selection_callstack_data_ = std::move(selection_callstack_data);
-  }
-
-  [[nodiscard]] const orbit_client_data::ProcessData* process() const { return &process_; }
-  [[nodiscard]] orbit_client_data::ProcessData* mutable_process() { return &process_; }
-
   [[nodiscard]] bool has_post_processed_sampling_data() const {
     return post_processed_sampling_data_.has_value();
   }
@@ -214,6 +199,27 @@ class CaptureData {
   void set_post_processed_sampling_data(
       orbit_client_data::PostProcessedSamplingData post_processed_sampling_data) {
     post_processed_sampling_data_ = std::move(post_processed_sampling_data);
+  }
+
+  [[nodiscard]] const orbit_client_data::CallstackData& selection_callstack_data() const {
+    ORBIT_CHECK(selection_callstack_data_ != nullptr);
+    return *selection_callstack_data_;
+  };
+
+  void set_selection_callstack_data(
+      std::unique_ptr<orbit_client_data::CallstackData> selection_callstack_data) {
+    selection_callstack_data_ = std::move(selection_callstack_data);
+  }
+
+  [[nodiscard]] const orbit_client_data::PostProcessedSamplingData&
+  selection_post_processed_sampling_data() const {
+    ORBIT_CHECK(selection_post_processed_sampling_data_.has_value());
+    return selection_post_processed_sampling_data_.value();
+  }
+
+  void set_selection_post_processed_sampling_data(
+      orbit_client_data::PostProcessedSamplingData selection_post_processed_sampling_data) {
+    selection_post_processed_sampling_data_ = std::move(selection_post_processed_sampling_data);
   }
 
   [[nodiscard]] const orbit_client_data::TimestampIntervalSet& incomplete_data_intervals() const {
@@ -254,13 +260,14 @@ class CaptureData {
   uint64_t memory_sampling_period_ns_;
 
   orbit_client_data::CallstackData callstack_data_;
+  std::optional<PostProcessedSamplingData> post_processed_sampling_data_;
+
   // selection_callstack_data_ is subset of callstack_data_.
   // TODO(b/215667641): The callstack selection should be stored in the DataManager.
   std::unique_ptr<orbit_client_data::CallstackData> selection_callstack_data_;
+  std::optional<PostProcessedSamplingData> selection_post_processed_sampling_data_;
 
   TracepointData tracepoint_data_;
-
-  std::optional<PostProcessedSamplingData> post_processed_sampling_data_;
 
   absl::flat_hash_map<uint64_t, orbit_client_protos::LinuxAddressInfo> address_infos_;
 
