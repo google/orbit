@@ -421,8 +421,6 @@ void CaptureWindow::Draw() {
   RenderSelectionOverlay();
 
   if (picking_mode_ == PickingMode::kNone) {
-    RenderTimeBar();
-
     Vec2 pos = viewport_.ScreenToWorld(Vec2i(mouse_move_pos_screen_[0], 0));
     // Vertical green line at mouse x position
     ui_batcher_.AddVerticalLine(pos, viewport_.GetWorldHeight(), kZValueUi, Color(0, 255, 0, 127));
@@ -508,16 +506,6 @@ void CaptureWindow::DrawScreenSpace() {
 
   Box box(Vec2(margin_x0, 0), Vec2(margin_x1 - margin_x0, canvas_height), GlCanvas::kZValueMargin);
   ui_batcher_.AddBox(box, kBackgroundColor);
-
-  // Time bar background
-  if (time_graph_->GetCaptureTimeSpanUs() > 0) {
-    Box background_box(
-        Vec2(0, viewport_.GetScreenHeight() - time_graph_->GetLayout().GetSliderWidth() -
-                    time_graph_->GetLayout().GetTimeBarHeight()),
-        Vec2(viewport_.GetScreenWidth(), time_graph_->GetLayout().GetTimeBarHeight()),
-        GlCanvas::kZValueTimeBarBg);
-    ui_batcher_.AddBox(background_box, kTimeBarBackgroundColor);
-  }
 }
 
 void CaptureWindow::RenderAllLayers() {
@@ -797,46 +785,6 @@ inline double GetIncrementMs(double milli_seconds) {
     return kHour;
   }
   return kDay;
-}
-
-void CaptureWindow::RenderTimeBar() {
-  if (time_graph_ == nullptr) return;
-  static int num_time_points = 10;
-
-  if (time_graph_->GetCaptureTimeSpanUs() > 0) {
-    const float time_bar_height = time_graph_->GetLayout().GetTimeBarHeight();
-
-    double millis = time_graph_->GetCurrentTimeSpanUs() * 0.001;
-    double incr = millis / float(num_time_points - 1);
-    double unit = GetIncrementMs(incr);
-    double norm_inc = static_cast<int>((incr + unit) / unit) * unit;
-    double start_ms = time_graph_->GetMinTimeUs() * 0.001;
-    double norm_start_us = 1000.0 * static_cast<int>(start_ms / norm_inc) * norm_inc;
-
-    static constexpr int kPixelMargin = 2;
-    int screen_y =
-        viewport_.GetScreenHeight() - static_cast<int>(time_bar_height) - slider_->GetPixelHeight();
-    Vec2 world_pos = viewport_.ScreenToWorld(Vec2i(0, screen_y));
-
-    float height = time_bar_height - kPixelMargin;
-    float x_margin = viewport_.ScreenToWorld({4, 0})[0];
-
-    for (int i = 0; i < num_time_points; ++i) {
-      double current_micros = norm_start_us + i * 1000 * norm_inc;
-      if (current_micros < 0) continue;
-
-      std::string text = orbit_display_formats::GetDisplayTime(absl::Microseconds(current_micros));
-      float world_x = time_graph_->GetWorldFromUs(current_micros);
-      text_renderer_.AddText(text.c_str(), world_x + x_margin, world_pos[1] + height,
-                             GlCanvas::kZValueTimeBar,
-                             {time_graph_->GetLayout().GetFontSize(), Color(255, 255, 255, 255),
-                              -1.f, TextRenderer::HAlign::Left, TextRenderer::VAlign::Bottom});
-      int screen_x = viewport_.WorldToScreen(Vec2(world_x, 0))[0];
-
-      ui_batcher_.AddVerticalLine(Vec2(screen_x, screen_y), height, GlCanvas::kZValueTimeBar,
-                                  Color(255, 255, 255, 255));
-    }
-  }
 }
 
 void CaptureWindow::RenderSelectionOverlay() {

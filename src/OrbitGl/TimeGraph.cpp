@@ -68,6 +68,7 @@ TimeGraph::TimeGraph(AccessibleInterfaceProvider* parent, OrbitApp* app,
   batcher_.SetPickingManager(picking_manager);
   track_container_ = std::make_unique<orbit_gl::TrackContainer>(
       this, this, viewport, &layout_, app, app->GetModuleManager(), capture_data);
+  timeline_ui_ = std::make_unique<orbit_gl::TimelineUi>(this, this, viewport, &layout_);
 
   if (absl::GetFlag(FLAGS_enforce_full_redraw)) {
     RequestUpdate();
@@ -529,6 +530,7 @@ void TimeGraph::PrepareBatcherAndUpdatePrimitives(PickingMode picking_mode) {
   uint64_t min_tick = GetTickFromUs(min_time_us_);
   uint64_t max_tick = GetTickFromUs(max_time_us_);
 
+  timeline_ui_->SetPos(0, track_container_->GetHeight());
   CaptureViewElement::UpdatePrimitives(batcher_, text_renderer_static_, min_tick, max_tick,
                                        picking_mode);
 
@@ -650,11 +652,11 @@ bool TimeGraph::IsVisible(VisibilityType vis_type, uint64_t min, uint64_t max) c
 }
 
 std::vector<orbit_gl::CaptureViewElement*> TimeGraph::GetAllChildren() const {
-  return {GetTrackContainer()};
+  return {GetTrackContainer(), GetTimelineUi()};
 }
 
 std::vector<orbit_gl::CaptureViewElement*> TimeGraph::GetNonHiddenChildren() const {
-  return {GetTrackContainer()};
+  return {GetTrackContainer(), GetTimelineUi()};
 }
 
 std::unique_ptr<orbit_accessibility::AccessibleInterface> TimeGraph::CreateAccessibleInterface() {
