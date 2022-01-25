@@ -143,13 +143,13 @@ class CallTreeView : public CallTreeNode {
  public:
   [[nodiscard]] static std::unique_ptr<CallTreeView> CreateTopDownViewFromPostProcessedSamplingData(
       const orbit_client_data::PostProcessedSamplingData& post_processed_sampling_data,
-      const orbit_client_data::ModuleManager* module_manager,
+      const orbit_client_data::ModuleManager& module_manager,
       const orbit_client_data::CaptureData& capture_data);
 
   [[nodiscard]] static std::unique_ptr<CallTreeView>
   CreateBottomUpViewFromPostProcessedSamplingData(
       const orbit_client_data::PostProcessedSamplingData& post_processed_sampling_data,
-      const orbit_client_data::ModuleManager* module_manager,
+      const orbit_client_data::ModuleManager& module_manager,
       const orbit_client_data::CaptureData& capture_data);
 
   CallTreeView() : CallTreeNode{nullptr} {}

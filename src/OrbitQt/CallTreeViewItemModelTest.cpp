@@ -80,7 +80,7 @@ TEST(CallTreeViewItemModel, AbstractItemModelTesterFilledModel) {
                                                           *capture_data, module_manager);
 
   auto call_tree_view = CallTreeView::CreateTopDownViewFromPostProcessedSamplingData(
-      sampling_data, nullptr, *capture_data);
+      sampling_data, module_manager, *capture_data);
 
   CallTreeViewItemModel model{std::move(call_tree_view)};
 
@@ -98,7 +98,7 @@ TEST(CallTreeViewItemModel, SummaryItem) {
         orbit_client_model::CreatePostProcessedSamplingData(
             capture_data->GetCallstackData(), *capture_data, module_manager, generate_summary);
     auto call_tree_view = CallTreeView::CreateTopDownViewFromPostProcessedSamplingData(
-        sampling_data, nullptr, *capture_data);
+        sampling_data, module_manager, *capture_data);
 
     CallTreeViewItemModel model{std::move(call_tree_view)};
 
@@ -112,7 +112,7 @@ TEST(CallTreeViewItemModel, SummaryItem) {
         orbit_client_model::CreatePostProcessedSamplingData(
             capture_data->GetCallstackData(), *capture_data, module_manager, generate_summary);
     auto call_tree_view = CallTreeView::CreateTopDownViewFromPostProcessedSamplingData(
-        sampling_data, nullptr, *capture_data);
+        sampling_data, module_manager, *capture_data);
 
     CallTreeViewItemModel model{std::move(call_tree_view)};
 
@@ -130,7 +130,7 @@ TEST(CallTreeViewItemModel, GetDisplayRoleData) {
                                                           *capture_data, module_manager, false);
 
   auto call_tree_view = CallTreeView::CreateTopDownViewFromPostProcessedSamplingData(
-      sampling_data, nullptr, *capture_data);
+      sampling_data, module_manager, *capture_data);
 
   CallTreeViewItemModel model{std::move(call_tree_view)};
 
@@ -216,7 +216,7 @@ TEST(CallTreeViewItemModel, GetEditRoleData) {
                                                           *capture_data, module_manager, false);
 
   auto call_tree_view = CallTreeView::CreateTopDownViewFromPostProcessedSamplingData(
-      sampling_data, nullptr, *capture_data);
+      sampling_data, module_manager, *capture_data);
 
   CallTreeViewItemModel model{std::move(call_tree_view)};
 

@@ -91,7 +91,7 @@ const FunctionInfo* FindFunctionByModulePathBuildIdAndOffset(const ModuleManager
 
   uint64_t address = module_data->load_bias() + offset;
 
-  return module_data->FindFunctionByElfAddress(address, true);
+  return module_data->FindFunctionByElfAddress(address, /*is_exact=*/true);
 }
 
 std::optional<std::string> FindModuleBuildIdByAddress(const ProcessData& process,
