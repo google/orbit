@@ -557,7 +557,8 @@ void CaptureWindow::UpdateHorizontalScroll(float ratio) {
 
 void CaptureWindow::UpdateVerticalScroll(float ratio) {
   if (time_graph_ == nullptr) return;
-  float range = std::max(0.f, time_graph_->GetHeight() - viewport_.GetWorldHeight());
+  float range = std::max(0.f, time_graph_->GetTrackContainer()->GetVisibleTracksTotalHeight() -
+                                  viewport_.GetWorldHeight());
   float new_scrolling_offset = ratio * range;
   time_graph_->GetTrackContainer()->SetVerticalScrollingOffset(new_scrolling_offset);
 }
@@ -602,11 +603,12 @@ void CaptureWindow::ProcessSliderMouseMoveEvents(int x, int y) {
 
 void CaptureWindow::UpdateVerticalSliderFromWorld() {
   if (time_graph_ == nullptr) return;
-  float max = std::max(0.f, time_graph_->GetHeight() - viewport_.GetWorldHeight());
+  float visible_tracks_height = time_graph_->GetTrackContainer()->GetVisibleTracksTotalHeight();
+  float max = std::max(0.f, visible_tracks_height - viewport_.GetWorldHeight());
   float pos_ratio =
       max > 0 ? time_graph_->GetTrackContainer()->GetVerticalScrollingOffset() / max : 0.f;
   float size_ratio =
-      time_graph_->GetHeight() > 0 ? viewport_.GetWorldHeight() / time_graph_->GetHeight() : 1.f;
+      visible_tracks_height > 0 ? viewport_.GetWorldHeight() / visible_tracks_height : 1.f;
   int slider_width = static_cast<int>(time_graph_->GetLayout().GetSliderWidth());
   vertical_slider_->SetPixelHeight(slider_width);
   vertical_slider_->SetNormalizedPosition(pos_ratio);
