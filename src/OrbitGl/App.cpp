@@ -2575,7 +2575,7 @@ orbit_data_views::DataView* OrbitApp::GetOrCreateSelectionCallstackDataView() {
 }
 
 void OrbitApp::FilterTracks(const std::string& filter) {
-  GetMutableTimeGraph()->SetThreadFilter(filter);
+  GetMutableTimeGraph()->GetTrackContainer()->SetThreadFilter(filter);
 }
 
 void OrbitApp::CrashOrbitService(CrashOrbitServiceRequest_CrashType crash_type) {
@@ -2696,7 +2696,7 @@ void OrbitApp::RemoveFrameTrack(uint64_t instrumented_function_id) {
   if (HasCaptureData() && GetCaptureData().IsFrameTrackEnabled(instrumented_function_id)) {
     frame_track_online_processor_.RemoveFrameTrack(instrumented_function_id);
     GetMutableCaptureData().DisableFrameTrack(instrumented_function_id);
-    GetMutableTimeGraph()->RemoveFrameTrack(instrumented_function_id);
+    GetMutableTimeGraph()->GetTrackContainer()->RemoveFrameTrack(instrumented_function_id);
     TrySaveUserDefinedCaptureInfo();
   }
 }
@@ -2706,7 +2706,7 @@ bool OrbitApp::IsFrameTrackEnabled(const FunctionInfo& function) const {
 }
 
 bool OrbitApp::HasFrameTrackInCaptureData(uint64_t instrumented_function_id) const {
-  return GetTimeGraph()->HasFrameTrack(instrumented_function_id);
+  return GetTimeGraph()->GetTrackContainer()->HasFrameTrack(instrumented_function_id);
 }
 
 void OrbitApp::JumpToTimerAndZoom(uint64_t function_id, JumpToTimerMode selection_mode) {
@@ -2746,7 +2746,7 @@ void OrbitApp::RefreshFrameTracks() {
   ORBIT_CHECK(HasCaptureData());
   ORBIT_CHECK(std::this_thread::get_id() == main_thread_id_);
   for (const auto& function_id : GetCaptureData().frame_track_function_ids()) {
-    GetMutableTimeGraph()->RemoveFrameTrack(function_id);
+    GetMutableTimeGraph()->GetTrackContainer()->RemoveFrameTrack(function_id);
     AddFrameTrackTimers(function_id);
   }
   GetMutableTimeGraph()->GetTrackManager()->RequestTrackSorting();
