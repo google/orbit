@@ -68,8 +68,8 @@ TimeGraph::TimeGraph(AccessibleInterfaceProvider* parent, OrbitApp* app,
   batcher_.SetPickingManager(picking_manager);
   track_container_ = std::make_unique<orbit_gl::TrackContainer>(
       this, this, viewport, &layout_, app, app->GetModuleManager(), capture_data);
-  timeline_ui_ = std::make_unique<orbit_gl::TimelineUi>(this, this, viewport, &layout_);
-
+  timeline_ui_ = std::make_unique<orbit_gl::TimelineUi>(
+      /*parent=*/this, /*timeline_info_interface=*/this, viewport, &layout_);
   if (absl::GetFlag(FLAGS_enforce_full_redraw)) {
     RequestUpdate();
   }
