@@ -29,16 +29,17 @@ class CaptureWindowE2ETestCaseBase(E2ETestCase):
 
     def execute(self, suite: E2ETestSuite):
         self._time_graph = self.find_control('Image', name='TimeGraph', parent=suite.top_window())
+        self._track_container = self._time_graph.children()[0]
         super().execute(suite=suite)
 
     def _find_tracks(self, name_filter: str = None, recursive: bool = False):
         if not recursive:
-            tracks = self._time_graph.children()
+            tracks = self._track_container.children()
             if name_filter is not None:
                 tracks = filter(lambda track: fnmatch(track.texts()[0], name_filter), tracks)
             return list(tracks)
 
-        work_list = self._time_graph.children()
+        work_list = self._track_container.children()
         tracks = list()
 
         while work_list:
@@ -364,7 +365,8 @@ class CaptureE2ETestCaseBase(E2ETestCase):
     def _verify_existence_of_tracks(self):
         logging.info("Verifying existence of at least one track...")
         time_graph = self.find_control('Image', name='TimeGraph')
-        self.expect_true(len(time_graph.children()), 'Time graph exists and has at least one child')
+        track_container = time_graph.children()[0]
+        self.expect_true(len(track_container.children()), 'Track container exists and has at least one child')
 
     def _verify_capture(self):
         self._verify_existence_of_tracks()
