@@ -99,48 +99,6 @@ MATCHER_P(CallstackIdToCallstackEventsEq, that, "") {
   return CallstackIdToCallstackEventPairsAreEqual(lhs, rhs);
 }
 
-MATCHER_P(ThreadSampleDataEq, that, "") {
-  const ThreadSampleData& lhs = arg;
-  const ThreadSampleData& rhs = that;
-
-  // Compare sampled_callstack_id_to_events.
-  auto sampled_callstack_id_to_event_pair_less =
-      [](const std::pair<uint64_t, std::vector<CallstackEvent>>& l,
-         const std::pair<uint64_t, std::vector<CallstackEvent>>& r) { return l.first < r.first; };
-
-  std::vector<std::pair<uint64_t, std::vector<CallstackEvent>>>
-      lhs_sampled_callstack_id_to_event_pairs;
-  for (const auto& [callstack_id, events] : lhs.sampled_callstack_id_to_events) {
-    lhs_sampled_callstack_id_to_event_pairs.emplace_back(callstack_id, events);
-  }
-  std::sort(lhs_sampled_callstack_id_to_event_pairs.begin(),
-            lhs_sampled_callstack_id_to_event_pairs.end(), sampled_callstack_id_to_event_pair_less);
-  std::vector<std::pair<uint64_t, std::vector<CallstackEvent>>>
-      rhs_sampled_callstack_id_to_event_pairs;
-  for (const auto& [callstack_id, events] : rhs.sampled_callstack_id_to_events) {
-    rhs_sampled_callstack_id_to_event_pairs.emplace_back(callstack_id, events);
-  }
-  std::sort(rhs_sampled_callstack_id_to_event_pairs.begin(),
-            rhs_sampled_callstack_id_to_event_pairs.end(), sampled_callstack_id_to_event_pair_less);
-  if (!std::equal(lhs_sampled_callstack_id_to_event_pairs.begin(),
-                  lhs_sampled_callstack_id_to_event_pairs.end(),
-                  rhs_sampled_callstack_id_to_event_pairs.begin(),
-                  rhs_sampled_callstack_id_to_event_pairs.end(),
-                  CallstackIdToCallstackEventPairsAreEqual)) {
-    return false;
-  }
-
-  // Compare the rest.
-  return lhs.thread_id == rhs.thread_id && lhs.samples_count == rhs.samples_count &&
-         lhs.sampled_address_to_count == rhs.sampled_address_to_count &&
-         lhs.resolved_address_to_count == rhs.resolved_address_to_count &&
-         lhs.resolved_address_to_exclusive_count == rhs.resolved_address_to_exclusive_count &&
-         lhs.sorted_count_to_resolved_address == rhs.sorted_count_to_resolved_address &&
-         std::equal(lhs.sampled_functions.begin(), lhs.sampled_functions.end(),
-                    rhs.sampled_functions.begin(), rhs.sampled_functions.end(),
-                    SampledFunctionsAreEqual);
-}
-
 SortedCallstackReport MakeSortedCallstackReport(
     const std::vector<std::pair<int, uint64_t>>& counts_and_callstack_ids) {
   SortedCallstackReport report{};
