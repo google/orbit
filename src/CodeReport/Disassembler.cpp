@@ -53,28 +53,35 @@ void Disassembler::Disassemble(orbit_client_data::ProcessData& process,
     size_t j;
 
     for (j = 0; j < count; j++) {
+      cs_insn* current_instruction = &insn[j];
       if (IsCallInstruction(insn[j])) {
-        uint64_t callee_address = 0;
         const orbit_client_protos::FunctionInfo* callee = nullptr;
-        if (absl::numbers_internal::safe_strtou64_base(insn[j].op_str, &callee_address, 16)) {
-          callee = orbit_client_data::FindFunctionByAddress(process, module_manager, callee_address,
-                                                            false);
+
+        int immediate_operands_count = cs_op_count(handle, current_instruction, X86_OP_IMM);
+        if (immediate_operands_count == 1) {
+          int index = cs_op_index(handle, current_instruction, X86_OP_IMM, 1);
+          uint64_t immediate_operand = current_instruction->detail->x86.operands[index].imm;
+          callee = orbit_client_data::FindFunctionByAddress(process, module_manager,
+                                                            immediate_operand, /*is_exact=*/false);
         }
+
         if (callee != nullptr) {
-          AddLine(absl::StrFormat("0x%llx:\t%-12s %s (%s)", insn[j].address, insn[j].mnemonic,
-                                  insn[j].op_str,
+          AddLine(absl::StrFormat("0x%llx:\t%-12s %s (%s)", current_instruction->address,
+                                  current_instruction->mnemonic, current_instruction->op_str,
                                   orbit_client_data::function_utils::GetDisplayName(*callee)),
-                  insn[j].address);
-        } else {
-          AddLine(absl::StrFormat("0x%llx:\t%-12s %s ([%s])", insn[j].address, insn[j].mnemonic,
-                                  insn[j].op_str, orbit_client_data::kUnknownFunctionOrModuleName),
-                  insn[j].address);
+                  current_instruction->address);
+          continue;
         }
-      } else {
-        AddLine(
-            absl::StrFormat("0x%llx:\t%-12s %s", insn[j].address, insn[j].mnemonic, insn[j].op_str),
-            insn[j].address);
+        AddLine(absl::StrFormat("0x%llx:\t%-12s %s (%s)", current_instruction->address,
+                                current_instruction->mnemonic, current_instruction->op_str,
+                                orbit_client_data::kUnknownFunctionOrModuleName),
+                insn[j].address);
+        continue;
       }
+
+      AddLine(absl::StrFormat("0x%llx:\t%-12s %s", current_instruction->address,
+                              current_instruction->mnemonic, current_instruction->op_str),
+              current_instruction->address);
     }
 
     // Print out the next offset, after the last instruction.

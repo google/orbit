@@ -42,7 +42,7 @@ constexpr std::string_view kFibonacciDisassembledNoSymbolsLoaded =
     "0x40103e:\tje           0x40104f\n"
     "0x401040:\tlea          edi, [rbx - 1]\n"
     "0x401043:\tsub          ebx, 2\n"
-    "0x401046:\tcall         0x401030 ([???])\n"
+    "0x401046:\tcall         0x401030 (\?\?\?)\n"
     "0x40104b:\tadd          ebp, eax\n"
     "0x40104d:\tjmp          0x401037\n"
     "0x40104f:\tlea          eax, [rbp + rbx]\n"
