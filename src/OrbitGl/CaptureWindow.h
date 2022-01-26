@@ -76,7 +76,6 @@ class CaptureWindow : public GlCanvas {
   orbit_gl::GlSlider* FindSliderUnderMouseCursor(int x, int y);
 
   void RenderHelpUi();
-  void RenderTimeBar();
   void RenderSelectionOverlay();
   void SelectTimer(const orbit_client_protos::TimerInfo* timer_info);
 

@@ -21,6 +21,7 @@
 #include "TextRenderer.h"
 #include "TimeGraphLayout.h"
 #include "TimelineInfoInterface.h"
+#include "TimelineUi.h"
 #include "TrackContainer.h"
 #include "Viewport.h"
 
@@ -53,6 +54,7 @@ class TimeGraph final : public orbit_gl::CaptureViewElement,
   [[nodiscard]] orbit_gl::TrackContainer* GetTrackContainer() const {
     return track_container_.get();
   }
+  [[nodiscard]] orbit_gl::TimelineUi* GetTimelineUi() const { return timeline_ui_.get(); }
   [[nodiscard]] orbit_gl::TrackManager* GetTrackManager() const {
     return track_container_->GetTrackManager();
   }
@@ -183,6 +185,7 @@ class TimeGraph final : public orbit_gl::CaptureViewElement,
   Batcher batcher_;
 
   std::unique_ptr<orbit_gl::TrackContainer> track_container_;
+  std::unique_ptr<orbit_gl::TimelineUi> timeline_ui_;
 
   ManualInstrumentationManager* manual_instrumentation_manager_;
   orbit_client_data::ThreadTrackDataProvider* thread_track_data_provider_ = nullptr;
