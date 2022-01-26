@@ -9,6 +9,8 @@
 
 namespace orbit_client_data {
 
+// This class is used on the client to represent a callstack sample on a certain thread at a certain
+// timestamp. The actual callstack is referenced by the callstack id.
 class CallstackEvent {
  public:
   CallstackEvent() = delete;
