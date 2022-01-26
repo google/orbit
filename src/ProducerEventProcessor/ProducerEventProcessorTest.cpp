@@ -77,6 +77,7 @@ namespace {
 class MockClientCaptureEventCollector : public ClientCaptureEventCollector {
  public:
   MOCK_METHOD(void, AddEvent, (orbit_grpc_protos::ClientCaptureEvent && /*event*/), (override));
+  MOCK_METHOD(void, StopAndWait, (), (override));
 };
 
 constexpr uint64_t kDefaultProducerId = 31;

@@ -35,10 +35,12 @@ UploaderClientCaptureEventCollector::~UploaderClientCaptureEventCollector() {
   }
 }
 
-void UploaderClientCaptureEventCollector::Stop() {
+void UploaderClientCaptureEventCollector::StopAndWait() {
   absl::MutexLock lock{&mutex_};
 
   ORBIT_CHECK(output_stream_ != nullptr);
+  if (!output_stream_->IsOpen()) return;
+
   auto close_result = output_stream_->Close();
   if (close_result.has_error()) {
     ORBIT_ERROR("Closing output stream: %s", close_result.error().message());
@@ -46,23 +48,17 @@ void UploaderClientCaptureEventCollector::Stop() {
 }
 
 void UploaderClientCaptureEventCollector::AddEvent(ClientCaptureEvent&& event) {
-  {
-    absl::MutexLock lock{&mutex_};
+  absl::MutexLock lock{&mutex_};
 
-    // The output stream gets closed when processing the `CaptureFinishedEvent`. Drop events
-    // received after closing the output stream.
-    ORBIT_CHECK(output_stream_ != nullptr);
-    if (!output_stream_->IsOpen()) return;
+  // Drop events received after closing the output stream.
+  ORBIT_CHECK(output_stream_ != nullptr);
+  if (!output_stream_->IsOpen()) return;
 
-    auto write_result = output_stream_->WriteCaptureEvent(event);
-    ORBIT_CHECK(!write_result.has_error());
+  auto write_result = output_stream_->WriteCaptureEvent(event);
+  ORBIT_CHECK(!write_result.has_error());
 
-    ++buffered_event_count_;
-    buffered_event_bytes_ += event.ByteSizeLong();
-  }
-
-  // Close output stream after processing the `CaptureFinishedEvent`.
-  if (event.event_case() == ClientCaptureEvent::kCaptureFinished) Stop();
+  ++buffered_event_count_;
+  buffered_event_bytes_ += event.ByteSizeLong();
 }
 
 DataReadiness UploaderClientCaptureEventCollector::DetermineDataReadiness() {
@@ -104,8 +100,8 @@ DataReadiness UploaderClientCaptureEventCollector::DetermineDataReadiness() {
   }
 
   // If no new data is filled into `capture_data_to_upload_` and the capture is not finished, return
-  // `kWaitingForData`. Note that `output_stream_` will be closed immediately after processing the
-  // CaptureFinishedEvent, and all the buffered data in `output_stream_` will be flushed to
+  // `kWaitingForData`. Note that `output_stream_` will be closed immediately when `StopAndWait` is
+  // called to stop capturing, and all the buffered data in `output_stream_` will be flushed to
   // `capture_data_buffer_stream_`. And this last piece of data should already be taken away by
   // previous call of `capture_data_buffer_stream_.TakeBuffer()` when we find `output_stream_` is
   // closed here.

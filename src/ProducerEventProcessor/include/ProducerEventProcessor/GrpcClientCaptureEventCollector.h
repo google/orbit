@@ -29,7 +29,7 @@ class GrpcClientCaptureEventCollector final : public ClientCaptureEventCollector
 
   void AddEvent(orbit_grpc_protos::ClientCaptureEvent&& event) override;
 
-  void StopAndWait();
+  void StopAndWait() override;
 
   ~GrpcClientCaptureEventCollector() override;
 
