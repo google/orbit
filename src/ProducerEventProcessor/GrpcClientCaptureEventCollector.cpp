@@ -67,7 +67,7 @@ void GrpcClientCaptureEventCollector::AddEvent(ClientCaptureEvent&& event) {
   capture_responses_being_built_.back()->mutable_capture_events()->Add(std::move(event));
 }
 
-void GrpcClientCaptureEventCollector::OnStopAndWaitRequestedByExternal() {
+void GrpcClientCaptureEventCollector::StopAndWait() {
   ORBIT_CHECK(sender_thread_.joinable());
   {
     // Protect stop_requested_ with mutex_ so that we can use stop_requested_ in Conditions for

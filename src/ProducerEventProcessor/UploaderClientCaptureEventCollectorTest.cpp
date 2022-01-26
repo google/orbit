@@ -78,6 +78,7 @@ class UploaderClientCaptureEventCollectorTest : public testing::Test {
     }
 
     collector_.AddEvent(CreateCaptureFinishedEvent());
+    collector_.StopAndWait();
 
     absl::MutexLock lock{&produce_finished_mutex_};
     produce_finished_ = true;
