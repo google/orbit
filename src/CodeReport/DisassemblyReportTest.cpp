@@ -19,7 +19,10 @@ TEST(DisassemblyReport, Empty) {
   // We expect all counters to be 0 and not to crash when poking.
 
   orbit_code_report::Disassembler disassembler{};
-  disassembler.Disassemble(static_cast<const void*>(kFibonacciAssembly.data()),
+  orbit_client_data::ProcessData process;
+  orbit_client_data::ModuleManager module_manager;
+  disassembler.Disassemble(process, module_manager,
+                           static_cast<const void*>(kFibonacciAssembly.data()),
                            kFibonacciAssembly.size(), kFibonacciAbsoluteAddress, true);
 
   orbit_code_report::DisassemblyReport disassembly_report{disassembler, kFibonacciAbsoluteAddress};
@@ -53,7 +56,10 @@ TEST(DisassemblyReport, Simple) {
   // This creates a simple DisassemblyReport with samples in three different locations.
 
   orbit_code_report::Disassembler disassembler{};
-  disassembler.Disassemble(static_cast<const void*>(kFibonacciAssembly.data()),
+  orbit_client_data::ProcessData process;
+  orbit_client_data::ModuleManager module_manager;
+  disassembler.Disassemble(process, module_manager,
+                           static_cast<const void*>(kFibonacciAssembly.data()),
                            kFibonacciAssembly.size(), kFibonacciAbsoluteAddress, true);
 
   constexpr size_t kFunctionCount = 7;

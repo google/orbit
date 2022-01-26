@@ -23,9 +23,10 @@ const QColor kOpcodeColor{0xf8, 0xc5, 0x55};
 const QColor kNumberColor{0xf0, 0x8d, 0x49};
 const QColor kRegisterColor{0x7e, 0xc6, 0x99};
 const QColor kKeywordColor{0xcc, 0x99, 0xcd};
+const QColor kCallTargetColor{0x80, 0x80, 0x00};
 
 namespace AssemblyRegex {
-const QRegularExpression kCaracterRegex{"\\S"};
+const QRegularExpression kCharacterRegex{"\\S"};
 const QRegularExpression kNumberRegex{"\\s(0x)?[\\da-f]+\\b"};
 const QRegularExpression kProgramCounterRegex{"^0x[0-9a-f]+:"};
 const QRegularExpression kOpCodeRegex{
@@ -213,6 +214,7 @@ const QRegularExpression kRegisterRegex{
 const QRegularExpression kKeywordRegex{"\\b(?:ptr|[xy]mmword|[sdq]?word|byte)\\b"};
 const QRegularExpression kCommentRegex{";.*$"};
 const QRegularExpression kPlatformRegex{"^Platform:.*$"};
+const QRegularExpression kCallTargetRegex{"(?<=\\()(.*?\\(.*?\\)+|\\?\\?\\?)(?=\\))"};
 }  // namespace AssemblyRegex
 }  // namespace
 
@@ -247,7 +249,7 @@ void HighlightAnnotatingBlock(
     }
   };
 
-  apply(AssemblyRegex::kCaracterRegex, default_color);
+  apply(AssemblyRegex::kCharacterRegex, default_color);
 }
 
 void HighlightBlockAssembly(
@@ -270,5 +272,6 @@ void HighlightBlockAssembly(
   apply(AssemblyRegex::kKeywordRegex, kKeywordColor);
   apply(AssemblyRegex::kCommentRegex, kCommentColor);
   apply(AssemblyRegex::kPlatformRegex, kPlatformColor);
+  apply(AssemblyRegex::kCallTargetRegex, kCallTargetColor);
 }
 }  // namespace orbit_syntax_highlighter
