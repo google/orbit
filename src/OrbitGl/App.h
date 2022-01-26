@@ -158,7 +158,7 @@ class OrbitApp final : public DataViewFactory,
   void OnKeyAndString(uint64_t key, std::string str) override;
   void OnUniqueCallstack(uint64_t callstack_id,
                          orbit_client_protos::CallstackInfo callstack) override;
-  void OnCallstackEvent(orbit_client_protos::CallstackEvent callstack_event) override;
+  void OnCallstackEvent(orbit_client_data::CallstackEvent callstack_event) override;
   void OnThreadName(uint32_t thread_id, std::string thread_name) override;
   void OnThreadStateSlice(orbit_client_protos::ThreadStateSliceInfo thread_state_slice) override;
   void OnAddressInfo(orbit_client_protos::LinuxAddressInfo address_info) override;
@@ -462,7 +462,7 @@ class OrbitApp final : public DataViewFactory,
   // origin_is_multiple_threads defines if the selection is specific to a single thread,
   // or spans across multiple threads.
   void SelectCallstackEvents(
-      const std::vector<orbit_client_protos::CallstackEvent>& selected_callstack_events,
+      const std::vector<orbit_client_data::CallstackEvent>& selected_callstack_events,
       bool origin_is_multiple_threads);
 
   void SelectTracepoint(const orbit_grpc_protos::TracepointInfo& info) override;

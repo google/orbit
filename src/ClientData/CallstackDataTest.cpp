@@ -11,9 +11,10 @@
 #include <vector>
 
 #include "ClientData/CallstackData.h"
+#include "ClientData/CallstackEvent.h"
 #include "ClientProtos/capture_data.pb.h"
 
-using orbit_client_protos::CallstackEvent;
+using orbit_client_data::CallstackEvent;
 using orbit_client_protos::CallstackInfo;
 
 namespace orbit_client_data {
@@ -21,7 +22,7 @@ namespace orbit_client_data {
 MATCHER(CallstackEventEq, "") {
   const CallstackEvent& a = std::get<0>(arg);
   const CallstackEvent& b = std::get<1>(arg);
-  return a.time() == b.time() && a.callstack_id() == b.callstack_id() &&
+  return a.timestamp_ns() == b.timestamp_ns() && a.callstack_id() == b.callstack_id() &&
          a.thread_id() == b.thread_id();
 }
 
@@ -69,73 +70,43 @@ TEST(CallstackData, FilterCallstackEventsBasedOnMajorityStart) {
   callstack_data.AddUniqueCallstack(non_complete_cs_id, non_complete_cs);
 
   const uint64_t time1 = 142;
-  CallstackEvent event1;
-  event1.set_time(time1);
-  event1.set_thread_id(tid);
-  event1.set_callstack_id(cs1_id);
+  CallstackEvent event1{time1, cs1_id, tid};
   callstack_data.AddCallstackEvent(event1);
 
   const uint64_t time2 = 242;
-  CallstackEvent event2;
-  event2.set_time(time2);
-  event2.set_thread_id(tid);
-  event2.set_callstack_id(broken_cs_id);
+  CallstackEvent event2{time2, broken_cs_id, tid};
   callstack_data.AddCallstackEvent(event2);
 
   const uint64_t time3 = 342;
-  CallstackEvent event3;
-  event3.set_time(time3);
-  event3.set_thread_id(tid);
-  event3.set_callstack_id(cs2_id);
+  CallstackEvent event3{time3, cs2_id, tid};
   callstack_data.AddCallstackEvent(event3);
 
   const uint64_t time4 = 442;
-  CallstackEvent event4;
-  event4.set_time(time4);
-  event4.set_thread_id(tid);
-  event4.set_callstack_id(cs1_id);
+  CallstackEvent event4{time4, cs1_id, tid};
   callstack_data.AddCallstackEvent(event4);
 
   const uint64_t time5 = 542;
-  CallstackEvent event5;
-  event5.set_time(time5);
-  event5.set_thread_id(tid);
-  event5.set_callstack_id(non_complete_cs_id);
+  CallstackEvent event5{time5, non_complete_cs_id, tid};
   callstack_data.AddCallstackEvent(event5);
 
   const uint64_t time6 = 143;
-  CallstackEvent event6;
-  event6.set_time(time6);
-  event6.set_thread_id(tid_with_no_complete);
-  event6.set_callstack_id(broken_cs_id);
+  CallstackEvent event6{time6, broken_cs_id, tid_with_no_complete};
   callstack_data.AddCallstackEvent(event6);
 
   const uint64_t time7 = 243;
-  CallstackEvent event7;
-  event7.set_time(time7);
-  event7.set_thread_id(tid_with_no_complete);
-  event7.set_callstack_id(non_complete_cs_id);
+  CallstackEvent event7{time7, non_complete_cs_id, tid_with_no_complete};
   callstack_data.AddCallstackEvent(event7);
 
   const uint64_t time8 = 144;
-  CallstackEvent event8;
-  event8.set_time(time8);
-  event8.set_thread_id(tid_without_supermajority);
-  event8.set_callstack_id(cs1_id);
+  CallstackEvent event8{time8, cs1_id, tid_without_supermajority};
   callstack_data.AddCallstackEvent(event8);
 
   const uint64_t time9 = 244;
-  CallstackEvent event9;
-  event9.set_time(time9);
-  event9.set_thread_id(tid_without_supermajority);
-  event9.set_callstack_id(broken_cs_id);
+  CallstackEvent event9{time9, broken_cs_id, tid_without_supermajority};
   callstack_data.AddCallstackEvent(event9);
 
   const uint64_t time10 = 344;
-  CallstackEvent event10;
-  event10.set_time(time10);
-  event10.set_thread_id(tid_without_supermajority);
-  event10.set_callstack_id(non_complete_cs_id);
+  CallstackEvent event10{time10, non_complete_cs_id, tid_without_supermajority};
   callstack_data.AddCallstackEvent(event10);
 
   callstack_data.UpdateCallstackTypeBasedOnMajorityStart();

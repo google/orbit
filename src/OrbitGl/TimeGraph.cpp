@@ -17,6 +17,7 @@
 #include "AsyncTrack.h"
 #include "CGroupAndProcessMemoryTrack.h"
 #include "CaptureClient/CaptureEventProcessor.h"
+#include "ClientData/CallstackEvent.h"
 #include "ClientData/FunctionUtils.h"
 #include "ClientFlags/ClientFlags.h"
 #include "FrameTrack.h"
@@ -36,10 +37,10 @@
 
 using orbit_capture_client::CaptureEventProcessor;
 
+using orbit_client_data::CallstackEvent;
 using orbit_client_data::CaptureData;
 using orbit_client_data::TimerChain;
 using orbit_client_protos::ApiTrackValue;
-using orbit_client_protos::CallstackEvent;
 using orbit_client_protos::TimerInfo;
 
 using orbit_gl::CGroupAndProcessMemoryTrack;

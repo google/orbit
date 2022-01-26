@@ -8,6 +8,7 @@
 
 #include <vector>
 
+#include "ClientData/CallstackEvent.h"
 #include "ClientData/CaptureData.h"
 #include "ClientData/ModuleAndFunctionLookup.h"
 #include "ClientData/ModuleManager.h"
@@ -16,6 +17,7 @@
 #include "OrbitBase/ThreadConstants.h"
 
 using orbit_client_data::CallstackCount;
+using orbit_client_data::CallstackEvent;
 using orbit_client_data::CaptureData;
 using orbit_client_data::ModuleManager;
 using orbit_client_data::PostProcessedSamplingData;
@@ -23,7 +25,6 @@ using orbit_client_data::SampledFunction;
 using orbit_client_data::SortedCallstackReport;
 using orbit_client_data::ThreadSampleData;
 
-using orbit_client_protos::CallstackEvent;
 using orbit_client_protos::CallstackInfo;
 using orbit_client_protos::LinuxAddressInfo;
 
@@ -134,11 +135,8 @@ class SamplingDataPostProcessorTest : public ::testing::Test {
 
   void AddCallstackEvent(uint64_t callstack_id, uint32_t thread_id) {
     current_callstack_timestamp_ns_ += 100;
-    CallstackEvent callstack_event;
-    callstack_event.set_time(current_callstack_timestamp_ns_);
-    callstack_event.set_callstack_id(callstack_id);
-    callstack_event.set_thread_id(thread_id);
-    capture_data_.AddCallstackEvent(std::move(callstack_event));
+    CallstackEvent callstack_event{current_callstack_timestamp_ns_, callstack_id, thread_id};
+    capture_data_.AddCallstackEvent(callstack_event);
   }
 
   void AddAddressInfo(std::string module_path, std::string function_name, uint64_t absolute_address,
