@@ -197,8 +197,8 @@ std::unique_ptr<CallTreeView> CallTreeView::CreateTopDownViewFromPostProcessedSa
        post_processed_sampling_data.GetSortedThreadSampleData()) {
     const uint32_t tid = thread_sample_data->thread_id;
 
-    for (const auto& [callstack_id, sample_count] :
-         thread_sample_data->sampled_callstack_id_to_count) {
+    for (const auto& [callstack_id, events] : thread_sample_data->sampled_callstack_id_to_events) {
+      uint64_t sample_count = events.size();
       const CallstackInfo& resolved_callstack =
           post_processed_sampling_data.GetResolvedCallstack(callstack_id);
 
@@ -287,8 +287,8 @@ std::unique_ptr<CallTreeView> CallTreeView::CreateBottomUpViewFromPostProcessedS
       continue;
     }
 
-    for (const auto& [callstack_id, sample_count] :
-         thread_sample_data->sampled_callstack_id_to_count) {
+    for (const auto& [callstack_id, events] : thread_sample_data->sampled_callstack_id_to_events) {
+      uint64_t sample_count = events.size();
       const CallstackInfo& resolved_callstack =
           post_processed_sampling_data.GetResolvedCallstack(callstack_id);
 

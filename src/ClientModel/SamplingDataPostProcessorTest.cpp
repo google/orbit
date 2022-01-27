@@ -72,6 +72,33 @@ MATCHER_P(SampledFunctionEq, that, "") {
   return SampledFunctionsAreEqual(lhs, rhs);
 }
 
+bool CallstackIdToCallstackEventPairsAreEqual(
+    const std::pair<uint64_t, std::vector<CallstackEvent>>& lhs,
+    const std::pair<uint64_t, std::vector<CallstackEvent>>& rhs) {
+  auto callstack_events_less = [](const CallstackEvent& lhs, const CallstackEvent& rhs) {
+    return std::make_tuple(lhs.timestamp_ns(), lhs.callstack_id(), lhs.thread_id()) <
+           std::make_tuple(rhs.timestamp_ns(), rhs.callstack_id(), rhs.thread_id());
+  };
+  auto callstack_events_equal = [](const CallstackEvent& lhs, const CallstackEvent& rhs) {
+    return std::make_tuple(lhs.timestamp_ns(), lhs.callstack_id(), lhs.thread_id()) ==
+           std::make_tuple(rhs.timestamp_ns(), rhs.callstack_id(), rhs.thread_id());
+  };
+
+  std::vector<CallstackEvent> lhs_events = lhs.second;
+  std::sort(lhs_events.begin(), lhs_events.end(), callstack_events_less);
+  std::vector<CallstackEvent> rhs_events = rhs.second;
+  std::sort(rhs_events.begin(), rhs_events.end(), callstack_events_less);
+  return lhs.first == rhs.first &&
+         std::equal(lhs_events.begin(), lhs_events.end(), rhs_events.begin(), rhs_events.end(),
+                    callstack_events_equal);
+};
+
+MATCHER_P(CallstackIdToCallstackEventsEq, that, "") {
+  const std::pair<uint64_t, std::vector<CallstackEvent>>& lhs = arg;
+  const std::pair<uint64_t, std::vector<CallstackEvent>>& rhs = that;
+  return CallstackIdToCallstackEventPairsAreEqual(lhs, rhs);
+}
+
 SortedCallstackReport MakeSortedCallstackReport(
     const std::vector<std::pair<int, uint64_t>>& counts_and_callstack_ids) {
   SortedCallstackReport report{};
@@ -410,7 +437,7 @@ class SamplingDataPostProcessorTest : public ::testing::Test {
     }
   }
 
-  void VerifyAllCallstackInfoWithoutAddressInfos(
+  void VerifyAllCallstackInfosWithoutAddressInfos(
       CallstackInfo::CallstackType expected_callstack_type) {
     {
       const orbit_client_protos::CallstackInfo& resolved_callstack_1 =
@@ -446,9 +473,17 @@ class SamplingDataPostProcessorTest : public ::testing::Test {
     EXPECT_EQ(actual_thread_sample_data.thread_id, expected_thread_id);
     EXPECT_EQ(actual_thread_sample_data.samples_count, 5);
     EXPECT_THAT(
-        actual_thread_sample_data.sampled_callstack_id_to_count,
-        UnorderedElementsAre(std::make_pair(kCallstack1Id, 2), std::make_pair(kCallstack2Id, 1),
-                             std::make_pair(kCallstack3Id, 1), std::make_pair(kCallstack4Id, 1)));
+        actual_thread_sample_data.sampled_callstack_id_to_events,
+        UnorderedElementsAre(
+            CallstackIdToCallstackEventsEq(std::make_pair(
+                kCallstack1Id, std::vector<CallstackEvent>{{100, kCallstack1Id, kThreadId1},
+                                                           {200, kCallstack1Id, kThreadId1}})),
+            CallstackIdToCallstackEventsEq(std::make_pair(
+                kCallstack2Id, std::vector<CallstackEvent>{{300, kCallstack2Id, kThreadId1}})),
+            CallstackIdToCallstackEventsEq(std::make_pair(
+                kCallstack3Id, std::vector<CallstackEvent>{{400, kCallstack3Id, kThreadId1}})),
+            CallstackIdToCallstackEventsEq(std::make_pair(
+                kCallstack4Id, std::vector<CallstackEvent>{{500, kCallstack4Id, kThreadId1}}))));
     EXPECT_THAT(actual_thread_sample_data.sampled_address_to_count,
                 UnorderedElementsAre(std::make_pair(kFunction1Instruction1AbsoluteAddress, 5),
                                      std::make_pair(kFunction2Instruction1AbsoluteAddress, 3),
@@ -486,9 +521,19 @@ class SamplingDataPostProcessorTest : public ::testing::Test {
     EXPECT_EQ(actual_thread_sample_data.thread_id, expected_thread_id);
     EXPECT_EQ(actual_thread_sample_data.samples_count, 5);
     EXPECT_THAT(
-        actual_thread_sample_data.sampled_callstack_id_to_count,
-        UnorderedElementsAre(std::make_pair(kCallstack1Id, 2), std::make_pair(kCallstack2Id, 1),
-                             std::make_pair(kCallstack3Id, 1), std::make_pair(kCallstack4Id, 1)));
+        actual_thread_sample_data.sampled_callstack_id_to_events,
+        UnorderedElementsAre(
+            CallstackIdToCallstackEventsEq(std::make_pair(
+                kCallstack1Id,
+                std::vector<CallstackEvent>{CallstackEvent{100, kCallstack1Id, kThreadId1},
+                                            CallstackEvent{200, kCallstack1Id, kThreadId1}})),
+            CallstackIdToCallstackEventsEq(std::make_pair(
+                kCallstack2Id, std::vector<CallstackEvent>{{300, kCallstack2Id, kThreadId1}})),
+            CallstackIdToCallstackEventsEq(std::make_pair(
+                kCallstack3Id, std::vector<CallstackEvent>{{400, kCallstack3Id, kThreadId1}})),
+            CallstackIdToCallstackEventsEq(std::make_pair(
+                kCallstack4Id,
+                std::vector<CallstackEvent>{CallstackEvent{500, kCallstack4Id, kThreadId1}}))));
     EXPECT_THAT(actual_thread_sample_data.sampled_address_to_count,
                 UnorderedElementsAre(std::make_pair(kFunction1Instruction1AbsoluteAddress, 2),
                                      std::make_pair(kFunction2Instruction1AbsoluteAddress, 1),
@@ -527,9 +572,17 @@ class SamplingDataPostProcessorTest : public ::testing::Test {
     EXPECT_EQ(actual_thread_sample_data.thread_id, expected_thread_id);
     EXPECT_EQ(actual_thread_sample_data.samples_count, 5);
     EXPECT_THAT(
-        actual_thread_sample_data.sampled_callstack_id_to_count,
-        UnorderedElementsAre(std::make_pair(kCallstack1Id, 2), std::make_pair(kCallstack2Id, 1),
-                             std::make_pair(kCallstack3Id, 1), std::make_pair(kCallstack4Id, 1)));
+        actual_thread_sample_data.sampled_callstack_id_to_events,
+        UnorderedElementsAre(
+            CallstackIdToCallstackEventsEq(std::make_pair(
+                kCallstack1Id, std::vector<CallstackEvent>{{100, kCallstack1Id, kThreadId1},
+                                                           {200, kCallstack1Id, kThreadId1}})),
+            CallstackIdToCallstackEventsEq(std::make_pair(
+                kCallstack2Id, std::vector<CallstackEvent>{{300, kCallstack2Id, kThreadId1}})),
+            CallstackIdToCallstackEventsEq(std::make_pair(
+                kCallstack3Id, std::vector<CallstackEvent>{{400, kCallstack3Id, kThreadId1}})),
+            CallstackIdToCallstackEventsEq(std::make_pair(
+                kCallstack4Id, std::vector<CallstackEvent>{{500, kCallstack4Id, kThreadId1}}))));
     EXPECT_THAT(actual_thread_sample_data.sampled_address_to_count,
                 UnorderedElementsAre(std::make_pair(kFunction3Instruction1AbsoluteAddress, 3),
                                      std::make_pair(kFunction3Instruction2AbsoluteAddress, 1),
@@ -557,9 +610,17 @@ class SamplingDataPostProcessorTest : public ::testing::Test {
     EXPECT_EQ(actual_thread_sample_data.thread_id, expected_thread_id);
     EXPECT_EQ(actual_thread_sample_data.samples_count, 5);
     EXPECT_THAT(
-        actual_thread_sample_data.sampled_callstack_id_to_count,
-        UnorderedElementsAre(std::make_pair(kCallstack1Id, 2), std::make_pair(kCallstack2Id, 1),
-                             std::make_pair(kCallstack3Id, 1), std::make_pair(kCallstack4Id, 1)));
+        actual_thread_sample_data.sampled_callstack_id_to_events,
+        UnorderedElementsAre(
+            CallstackIdToCallstackEventsEq(std::make_pair(
+                kCallstack1Id, std::vector<CallstackEvent>{{100, kCallstack1Id, kThreadId1},
+                                                           {200, kCallstack1Id, kThreadId1}})),
+            CallstackIdToCallstackEventsEq(std::make_pair(
+                kCallstack2Id, std::vector<CallstackEvent>{{300, kCallstack2Id, kThreadId1}})),
+            CallstackIdToCallstackEventsEq(std::make_pair(
+                kCallstack3Id, std::vector<CallstackEvent>{{400, kCallstack3Id, kThreadId1}})),
+            CallstackIdToCallstackEventsEq(std::make_pair(
+                kCallstack4Id, std::vector<CallstackEvent>{{500, kCallstack4Id, kThreadId1}}))));
     EXPECT_THAT(actual_thread_sample_data.sampled_address_to_count,
                 UnorderedElementsAre(std::make_pair(kFunction1Instruction1AbsoluteAddress, 5),
                                      std::make_pair(kFunction2Instruction1AbsoluteAddress, 3),
@@ -611,8 +672,12 @@ class SamplingDataPostProcessorTest : public ::testing::Test {
     EXPECT_EQ(actual_thread_sample_data.thread_id, kThreadId1);
     EXPECT_EQ(actual_thread_sample_data.samples_count, 2);
     EXPECT_THAT(
-        actual_thread_sample_data.sampled_callstack_id_to_count,
-        UnorderedElementsAre(std::make_pair(kCallstack1Id, 1), std::make_pair(kCallstack2Id, 1)));
+        actual_thread_sample_data.sampled_callstack_id_to_events,
+        UnorderedElementsAre(
+            CallstackIdToCallstackEventsEq(std::make_pair(
+                kCallstack1Id, std::vector<CallstackEvent>{{100, kCallstack1Id, kThreadId1}})),
+            CallstackIdToCallstackEventsEq(std::make_pair(
+                kCallstack2Id, std::vector<CallstackEvent>{{200, kCallstack2Id, kThreadId1}}))));
     EXPECT_THAT(actual_thread_sample_data.sampled_address_to_count,
                 UnorderedElementsAre(std::make_pair(kFunction1Instruction1AbsoluteAddress, 2),
                                      std::make_pair(kFunction2Instruction1AbsoluteAddress, 2),
@@ -649,9 +714,14 @@ class SamplingDataPostProcessorTest : public ::testing::Test {
     EXPECT_EQ(actual_thread_sample_data.thread_id, kThreadId2);
     EXPECT_EQ(actual_thread_sample_data.samples_count, 3);
     EXPECT_THAT(
-        actual_thread_sample_data.sampled_callstack_id_to_count,
-        UnorderedElementsAre(std::make_pair(kCallstack1Id, 1), std::make_pair(kCallstack3Id, 1),
-                             std::make_pair(kCallstack4Id, 1)));
+        actual_thread_sample_data.sampled_callstack_id_to_events,
+        UnorderedElementsAre(
+            CallstackIdToCallstackEventsEq(std::make_pair(
+                kCallstack1Id, std::vector<CallstackEvent>{{300, kCallstack1Id, kThreadId2}})),
+            CallstackIdToCallstackEventsEq(std::make_pair(
+                kCallstack3Id, std::vector<CallstackEvent>{{400, kCallstack3Id, kThreadId2}})),
+            CallstackIdToCallstackEventsEq(std::make_pair(
+                kCallstack4Id, std::vector<CallstackEvent>{{500, kCallstack4Id, kThreadId2}}))));
     EXPECT_THAT(actual_thread_sample_data.sampled_address_to_count,
                 UnorderedElementsAre(std::make_pair(kFunction1Instruction1AbsoluteAddress, 3),
                                      std::make_pair(kFunction2Instruction1AbsoluteAddress, 1),
@@ -679,13 +749,65 @@ class SamplingDataPostProcessorTest : public ::testing::Test {
                                                   0, 0.0f, kFunction3StartAbsoluteAddress))));
   }
 
+  static void VerifySummaryThreadSampleDataForCallstackEventsInThreadId1And2(
+      const ThreadSampleData& actual_thread_sample_data, uint32_t expected_thread_id) {
+    EXPECT_EQ(actual_thread_sample_data.thread_id, expected_thread_id);
+    EXPECT_THAT(
+        actual_thread_sample_data.sampled_callstack_id_to_events,
+        UnorderedElementsAre(
+            CallstackIdToCallstackEventsEq(std::make_pair(
+                kCallstack1Id, std::vector<CallstackEvent>{{100, kCallstack1Id, kThreadId1},
+                                                           {300, kCallstack1Id, kThreadId2}})),
+            CallstackIdToCallstackEventsEq(std::make_pair(
+                kCallstack2Id, std::vector<CallstackEvent>{{200, kCallstack2Id, kThreadId1}})),
+            CallstackIdToCallstackEventsEq(std::make_pair(
+                kCallstack3Id, std::vector<CallstackEvent>{{400, kCallstack3Id, kThreadId2}})),
+            CallstackIdToCallstackEventsEq(std::make_pair(
+                kCallstack4Id, std::vector<CallstackEvent>{{500, kCallstack4Id, kThreadId2}}))));
+    EXPECT_EQ(actual_thread_sample_data.samples_count, 5);
+    EXPECT_THAT(actual_thread_sample_data.sampled_address_to_count,
+                UnorderedElementsAre(std::make_pair(kFunction1Instruction1AbsoluteAddress, 5),
+                                     std::make_pair(kFunction2Instruction1AbsoluteAddress, 3),
+                                     std::make_pair(kFunction3Instruction1AbsoluteAddress, 5),
+                                     std::make_pair(kFunction3Instruction2AbsoluteAddress, 1),
+                                     std::make_pair(kFunction4Instruction1AbsoluteAddress, 1)));
+    EXPECT_THAT(actual_thread_sample_data.resolved_address_to_count,
+                UnorderedElementsAre(std::make_pair(kFunction1StartAbsoluteAddress, 5),
+                                     std::make_pair(kFunction2StartAbsoluteAddress, 3),
+                                     std::make_pair(kFunction3StartAbsoluteAddress, 5),
+                                     std::make_pair(kFunction4StartAbsoluteAddress, 1)));
+    EXPECT_THAT(actual_thread_sample_data.resolved_address_to_exclusive_count,
+                UnorderedElementsAre(std::make_pair(kFunction3StartAbsoluteAddress, 4),
+                                     std::make_pair(kFunction4StartAbsoluteAddress, 1)));
+    EXPECT_THAT(actual_thread_sample_data.sorted_count_to_resolved_address,
+                UnorderedElementsAre(std::make_pair(5, kFunction1StartAbsoluteAddress),
+                                     std::make_pair(3, kFunction2StartAbsoluteAddress),
+                                     std::make_pair(5, kFunction3StartAbsoluteAddress),
+                                     std::make_pair(1, kFunction4StartAbsoluteAddress)));
+    EXPECT_THAT(
+        actual_thread_sample_data.sampled_functions,
+        UnorderedElementsAre(
+            SampledFunctionEq(MakeSampledFunction(kFunction1Name, kModulePath, 0, 0.0f, 5, 100.0f,
+                                                  0, 0.0f, kFunction1StartAbsoluteAddress)),
+            SampledFunctionEq(MakeSampledFunction(kFunction2Name, kModulePath, 0, 0.0f, 3, 60.0f, 0,
+                                                  0.0f, kFunction2StartAbsoluteAddress)),
+            SampledFunctionEq(MakeSampledFunction(kFunction3Name, kModulePath, 4, 80.0f, 5, 100.0f,
+                                                  0, 0.0f, kFunction3StartAbsoluteAddress)),
+            SampledFunctionEq(MakeSampledFunction(kFunction4Name, kModulePath, 1, 20.0f, 1, 20.0f,
+                                                  0, 0.0f, kFunction4StartAbsoluteAddress))));
+  }
+
   static void VerifyThreadSampleDataForCallstackEventsInThreadId1WithMixedCallstackTypes(
       const ThreadSampleData& actual_thread_sample_data) {
     EXPECT_EQ(actual_thread_sample_data.thread_id, kThreadId1);
     EXPECT_EQ(actual_thread_sample_data.samples_count, 2);
     EXPECT_THAT(
-        actual_thread_sample_data.sampled_callstack_id_to_count,
-        UnorderedElementsAre(std::make_pair(kCallstack1Id, 1), std::make_pair(kCallstack2Id, 1)));
+        actual_thread_sample_data.sampled_callstack_id_to_events,
+        UnorderedElementsAre(
+            CallstackIdToCallstackEventsEq(std::make_pair(
+                kCallstack1Id, std::vector<CallstackEvent>{{100, kCallstack1Id, kThreadId1}})),
+            CallstackIdToCallstackEventsEq(std::make_pair(
+                kCallstack2Id, std::vector<CallstackEvent>{{200, kCallstack2Id, kThreadId1}}))));
     EXPECT_THAT(actual_thread_sample_data.sampled_address_to_count,
                 UnorderedElementsAre(std::make_pair(kFunction1Instruction1AbsoluteAddress, 1),
                                      std::make_pair(kFunction2Instruction1AbsoluteAddress, 1),
@@ -722,9 +844,14 @@ class SamplingDataPostProcessorTest : public ::testing::Test {
     EXPECT_EQ(actual_thread_sample_data.thread_id, kThreadId2);
     EXPECT_EQ(actual_thread_sample_data.samples_count, 3);
     EXPECT_THAT(
-        actual_thread_sample_data.sampled_callstack_id_to_count,
-        UnorderedElementsAre(std::make_pair(kCallstack1Id, 1), std::make_pair(kCallstack3Id, 1),
-                             std::make_pair(kCallstack4Id, 1)));
+        actual_thread_sample_data.sampled_callstack_id_to_events,
+        UnorderedElementsAre(
+            CallstackIdToCallstackEventsEq(std::make_pair(
+                kCallstack1Id, std::vector<CallstackEvent>{{300, kCallstack1Id, kThreadId2}})),
+            CallstackIdToCallstackEventsEq(std::make_pair(
+                kCallstack3Id, std::vector<CallstackEvent>{{400, kCallstack3Id, kThreadId2}})),
+            CallstackIdToCallstackEventsEq(std::make_pair(
+                kCallstack4Id, std::vector<CallstackEvent>{{500, kCallstack4Id, kThreadId2}}))));
     EXPECT_THAT(actual_thread_sample_data.sampled_address_to_count,
                 UnorderedElementsAre(std::make_pair(kFunction1Instruction1AbsoluteAddress, 1),
                                      std::make_pair(kFunction3Instruction1AbsoluteAddress, 3),
@@ -744,6 +871,54 @@ class SamplingDataPostProcessorTest : public ::testing::Test {
                                      SampledFunctionEq(MakeSampledFunction(
                                          kFunction3Name, kModulePath, 3, 100.0f, 3, 100.0f, 2,
                                          2 * 100.0f / 3, kFunction3StartAbsoluteAddress))));
+  }
+
+  static void VerifyThreadSampleDataForCallstackEventsInThreadId1And2WithMixedCallstackTypes(
+      const ThreadSampleData& actual_thread_sample_data, uint32_t expected_thread_id) {
+    EXPECT_EQ(actual_thread_sample_data.thread_id, expected_thread_id);
+    EXPECT_EQ(actual_thread_sample_data.samples_count, 5);
+    EXPECT_THAT(
+        actual_thread_sample_data.sampled_callstack_id_to_events,
+        UnorderedElementsAre(
+            CallstackIdToCallstackEventsEq(std::make_pair(
+                kCallstack1Id, std::vector<CallstackEvent>{{100, kCallstack1Id, kThreadId1},
+                                                           {300, kCallstack1Id, kThreadId2}})),
+            CallstackIdToCallstackEventsEq(std::make_pair(
+                kCallstack2Id, std::vector<CallstackEvent>{{200, kCallstack2Id, kThreadId1}})),
+            CallstackIdToCallstackEventsEq(std::make_pair(
+                kCallstack3Id, std::vector<CallstackEvent>{{400, kCallstack3Id, kThreadId2}})),
+            CallstackIdToCallstackEventsEq(std::make_pair(
+                kCallstack4Id, std::vector<CallstackEvent>{{500, kCallstack4Id, kThreadId2}}))));
+    EXPECT_THAT(actual_thread_sample_data.sampled_address_to_count,
+                UnorderedElementsAre(std::make_pair(kFunction1Instruction1AbsoluteAddress, 2),
+                                     std::make_pair(kFunction2Instruction1AbsoluteAddress, 1),
+                                     std::make_pair(kFunction3Instruction1AbsoluteAddress, 5),
+                                     std::make_pair(kFunction3Instruction2AbsoluteAddress, 1),
+                                     std::make_pair(kFunction4Instruction1AbsoluteAddress, 1)));
+    EXPECT_THAT(actual_thread_sample_data.resolved_address_to_count,
+                UnorderedElementsAre(std::make_pair(kFunction1StartAbsoluteAddress, 2),
+                                     std::make_pair(kFunction2StartAbsoluteAddress, 1),
+                                     std::make_pair(kFunction3StartAbsoluteAddress, 5),
+                                     std::make_pair(kFunction4StartAbsoluteAddress, 1)));
+    EXPECT_THAT(actual_thread_sample_data.resolved_address_to_exclusive_count,
+                UnorderedElementsAre(std::make_pair(kFunction3StartAbsoluteAddress, 4),
+                                     std::make_pair(kFunction4StartAbsoluteAddress, 1)));
+    EXPECT_THAT(actual_thread_sample_data.sorted_count_to_resolved_address,
+                UnorderedElementsAre(std::make_pair(2, kFunction1StartAbsoluteAddress),
+                                     std::make_pair(1, kFunction2StartAbsoluteAddress),
+                                     std::make_pair(5, kFunction3StartAbsoluteAddress),
+                                     std::make_pair(1, kFunction4StartAbsoluteAddress)));
+    EXPECT_THAT(
+        actual_thread_sample_data.sampled_functions,
+        UnorderedElementsAre(
+            SampledFunctionEq(MakeSampledFunction(kFunction1Name, kModulePath, 0, 0.0f, 2, 40.0f, 0,
+                                                  0.0f, kFunction1StartAbsoluteAddress)),
+            SampledFunctionEq(MakeSampledFunction(kFunction2Name, kModulePath, 0, 0.0f, 1, 20.0f, 0,
+                                                  0.0f, kFunction2StartAbsoluteAddress)),
+            SampledFunctionEq(MakeSampledFunction(kFunction3Name, kModulePath, 4, 80.0f, 5, 100.0f,
+                                                  3, 60.0f, kFunction3StartAbsoluteAddress)),
+            SampledFunctionEq(MakeSampledFunction(kFunction4Name, kModulePath, 1, 20.0f, 1, 20.0f,
+                                                  0, 0.0f, kFunction4StartAbsoluteAddress))));
   }
 
   void VerifyGetCountOfFunction() {
@@ -1518,7 +1693,7 @@ TEST_F(SamplingDataPostProcessorTest, OneThreadWithSummaryWithoutAddressInfos) {
 
   CreatePostProcessedSamplingDataWithSummary();
 
-  VerifyAllCallstackInfoWithoutAddressInfos(CallstackInfo::kComplete);
+  VerifyAllCallstackInfosWithoutAddressInfos(CallstackInfo::kComplete);
 
   EXPECT_EQ(ppsd_.GetSortedThreadSampleData().size(), 2);
   ASSERT_NE(ppsd_.GetSummary(), nullptr);
@@ -1594,8 +1769,8 @@ TEST_F(SamplingDataPostProcessorTest, TwoThreadsWithSummary) {
               ElementsAre(ppsd_.GetSummary(), ppsd_.GetThreadSampleDataByThreadId(kThreadId2),
                           ppsd_.GetThreadSampleDataByThreadId(kThreadId1)));
 
-  VerifyThreadSampleDataForCallstackEventsAllInTheSameThread(*ppsd_.GetSummary(),
-                                                             orbit_base::kAllProcessThreadsTid);
+  VerifySummaryThreadSampleDataForCallstackEventsInThreadId1And2(*ppsd_.GetSummary(),
+                                                                 orbit_base::kAllProcessThreadsTid);
   VerifyThreadSampleDataForCallstackEventsInThreadId1(
       *ppsd_.GetThreadSampleDataByThreadId(kThreadId1));
   VerifyThreadSampleDataForCallstackEventsInThreadId2(
@@ -1661,7 +1836,7 @@ TEST_F(SamplingDataPostProcessorTest, TwoThreadsWithSummaryWithMixedCallstackTyp
               ElementsAre(ppsd_.GetSummary(), ppsd_.GetThreadSampleDataByThreadId(kThreadId2),
                           ppsd_.GetThreadSampleDataByThreadId(kThreadId1)));
 
-  VerifyThreadSampleDataForCallstackEventsAllInTheSameThreadWithMixedCallstackTypes(
+  VerifyThreadSampleDataForCallstackEventsInThreadId1And2WithMixedCallstackTypes(
       *ppsd_.GetSummary(), orbit_base::kAllProcessThreadsTid);
   VerifyThreadSampleDataForCallstackEventsInThreadId1WithMixedCallstackTypes(
       *ppsd_.GetThreadSampleDataByThreadId(kThreadId1));

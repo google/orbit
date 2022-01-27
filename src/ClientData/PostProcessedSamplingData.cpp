@@ -57,9 +57,9 @@ static std::multimap<int, uint64_t> SortCallstacksByCount(const ThreadSampleData
                                                           const std::set<uint64_t>& callstacks) {
   std::multimap<int, uint64_t> sorted_callstacks;
   for (uint64_t id : callstacks) {
-    auto it = data.sampled_callstack_id_to_count.find(id);
-    if (it != data.sampled_callstack_id_to_count.end()) {
-      int count = it->second;
+    auto it = data.sampled_callstack_id_to_events.find(id);
+    if (it != data.sampled_callstack_id_to_events.end()) {
+      int count = it->second.size();
       sorted_callstacks.insert(std::make_pair(count, id));
     }
   }

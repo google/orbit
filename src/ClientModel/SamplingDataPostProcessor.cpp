@@ -132,6 +132,7 @@ PostProcessedSamplingData CreatePostProcessedSamplingData(const CallstackData& c
                                                           const CaptureData& capture_data,
                                                           const ModuleManager& module_manager,
                                                           bool generate_summary) {
+  ORBIT_SCOPED_TIMED_LOG("CreatePostProcessedSamplingData");
   return SamplingDataPostProcessor{}.ProcessSamples(callstack_data, capture_data, module_manager,
                                                     generate_summary);
 }
@@ -141,45 +142,46 @@ PostProcessedSamplingData SamplingDataPostProcessor::ProcessSamples(
     const CallstackData& callstack_data, const CaptureData& capture_data,
     const ModuleManager& module_manager, bool generate_summary) {
   // Unique call stacks and per thread data
-  callstack_data.ForEachCallstackEvent(
-      [this, &callstack_data, generate_summary](const CallstackEvent& event) {
-        ORBIT_CHECK(callstack_data.HasCallstack(event.callstack_id()));
-        const orbit_client_protos::CallstackInfo* callstack_info =
-            callstack_data.GetCallstack(event.callstack_id());
+  callstack_data.ForEachCallstackEvent([this, &callstack_data,
+                                        generate_summary](const CallstackEvent& event) {
+    ORBIT_CHECK(callstack_data.HasCallstack(event.callstack_id()));
+    const orbit_client_protos::CallstackInfo* callstack_info =
+        callstack_data.GetCallstack(event.callstack_id());
 
-        // For non-kComplete callstacks, only use the innermost frame for statistics, as it's the
-        // only one known to be correct. Note that, in the vast majority of cases, the innermost
-        // frame is also the only one available.
-        absl::flat_hash_set<uint64_t> unique_frames;
-        ORBIT_CHECK(!callstack_info->frames().empty());
-        if (callstack_info->type() == CallstackInfo::kComplete) {
-          for (uint64_t frame : callstack_info->frames()) {
-            unique_frames.insert(frame);
-          }
-        } else {
-          unique_frames.insert(callstack_info->frames(0));
-        }
+    // For non-kComplete callstacks, only use the innermost frame for statistics, as it's the
+    // only one known to be correct. Note that, in the vast majority of cases, the innermost
+    // frame is also the only one available.
+    absl::flat_hash_set<uint64_t> unique_frames;
+    ORBIT_CHECK(!callstack_info->frames().empty());
+    if (callstack_info->type() == CallstackInfo::kComplete) {
+      for (uint64_t frame : callstack_info->frames()) {
+        unique_frames.insert(frame);
+      }
+    } else {
+      unique_frames.insert(callstack_info->frames(0));
+    }
 
-        ThreadSampleData* thread_sample_data = &thread_id_to_sample_data_[event.thread_id()];
-        thread_sample_data->thread_id = event.thread_id();
-        thread_sample_data->samples_count++;
-        thread_sample_data->sampled_callstack_id_to_count[event.callstack_id()]++;
-        for (uint64_t frame : unique_frames) {
-          thread_sample_data->sampled_address_to_count[frame]++;
-        }
+    ThreadSampleData* thread_sample_data = &thread_id_to_sample_data_[event.thread_id()];
+    thread_sample_data->thread_id = event.thread_id();
+    thread_sample_data->samples_count++;
+    thread_sample_data->sampled_callstack_id_to_events[event.callstack_id()].emplace_back(event);
+    for (uint64_t frame : unique_frames) {
+      thread_sample_data->sampled_address_to_count[frame]++;
+    }
 
-        if (!generate_summary) {
-          return;
-        }
-        ThreadSampleData* all_thread_sample_data =
-            &thread_id_to_sample_data_[orbit_base::kAllProcessThreadsTid];
-        all_thread_sample_data->thread_id = orbit_base::kAllProcessThreadsTid;
-        all_thread_sample_data->samples_count++;
-        all_thread_sample_data->sampled_callstack_id_to_count[event.callstack_id()]++;
-        for (uint64_t frame : unique_frames) {
-          all_thread_sample_data->sampled_address_to_count[frame]++;
-        }
-      });
+    if (!generate_summary) {
+      return;
+    }
+    ThreadSampleData* all_thread_sample_data =
+        &thread_id_to_sample_data_[orbit_base::kAllProcessThreadsTid];
+    all_thread_sample_data->thread_id = orbit_base::kAllProcessThreadsTid;
+    all_thread_sample_data->samples_count++;
+    all_thread_sample_data->sampled_callstack_id_to_events[event.callstack_id()].emplace_back(
+        event);
+    for (uint64_t frame : unique_frames) {
+      all_thread_sample_data->sampled_address_to_count[frame]++;
+    }
+  });
 
   ResolveCallstacks(callstack_data, capture_data, module_manager);
 
@@ -187,8 +189,9 @@ PostProcessedSamplingData SamplingDataPostProcessor::ProcessSamples(
     ThreadSampleData* thread_sample_data = &sample_data_it.second;
 
     // Address count per sample per thread
-    for (const auto& [sampled_callstack_id, callstack_count] :
-         thread_sample_data->sampled_callstack_id_to_count) {
+    for (const auto& [sampled_callstack_id, callstack_events] :
+         thread_sample_data->sampled_callstack_id_to_events) {
+      uint64_t callstack_count = callstack_events.size();
       uint64_t resolved_callstack_id = original_id_to_resolved_callstack_id_[sampled_callstack_id];
       const CallstackInfo& resolved_callstack = id_to_resolved_callstack_[resolved_callstack_id];
 
