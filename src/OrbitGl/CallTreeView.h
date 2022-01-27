@@ -98,6 +98,7 @@ class CallTreeNode {
 
   CallTreeNode* parent_;
   uint64_t sample_count_ = 0;
+  // Note that we are copying the CallstackEvents into the tree.
   std::vector<orbit_client_data::CallstackEvent> exclusive_callstack_events_;
 
   // Filled lazily when children() is called, invalidated when children are invalidated.
