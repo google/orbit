@@ -413,7 +413,7 @@ struct QModelIndexHash {
 };
 }  // namespace
 
-static void GetCallstackEventsUnderSelectionInternal(
+static void GetCallstackEventsUnderSelectionRecursively(
     const QModelIndex& index,
     absl::flat_hash_set<orbit_client_data::CallstackEvent>* callstack_events,
     absl::flat_hash_set<QModelIndex, QModelIndexHash>* indices_already_visited) {
@@ -429,7 +429,7 @@ static void GetCallstackEventsUnderSelectionInternal(
   for (int i = 0; i < index.model()->rowCount(index); ++i) {
     const QModelIndex& child = index.child(i, 0);
     if (!indices_already_visited->contains(child)) {
-      GetCallstackEventsUnderSelectionInternal(child, callstack_events, indices_already_visited);
+      GetCallstackEventsUnderSelectionRecursively(child, callstack_events, indices_already_visited);
     }
   }
 }
@@ -443,7 +443,8 @@ static absl::flat_hash_set<orbit_client_data::CallstackEvent> GetCallstackEvents
   absl::flat_hash_set<QModelIndex, QModelIndexHash> indices_already_visited;
   for (const QModelIndex& index : indices) {
     if (!indices_already_visited.contains(index)) {
-      GetCallstackEventsUnderSelectionInternal(index, &callstack_events, &indices_already_visited);
+      GetCallstackEventsUnderSelectionRecursively(index, &callstack_events,
+                                                  &indices_already_visited);
     }
   }
   return callstack_events;
