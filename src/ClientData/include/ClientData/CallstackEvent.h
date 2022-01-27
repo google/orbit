@@ -21,22 +21,25 @@ class CallstackEvent {
   [[nodiscard]] uint64_t callstack_id() const { return callstack_id_; }
   [[nodiscard]] uint32_t thread_id() const { return thread_id_; }
 
+  friend bool operator==(const CallstackEvent& lhs, const CallstackEvent& rhs) {
+    return lhs.timestamp_ns() == rhs.timestamp_ns() && lhs.callstack_id() == rhs.callstack_id() &&
+           lhs.thread_id() == rhs.thread_id();
+  }
+
+  friend bool operator!=(const CallstackEvent& lhs, const CallstackEvent& rhs) {
+    return !(lhs == rhs);
+  }
+
+  template <typename H>
+  friend H AbslHashValue(H h, const orbit_client_data::CallstackEvent& o) {
+    return H::combine(std::move(h), o.timestamp_ns(), o.callstack_id(), o.thread_id());
+  }
+
  private:
   uint64_t timestamp_ns_;
   uint64_t callstack_id_;
   uint32_t thread_id_;
 };
-
-inline bool operator==(const orbit_client_data::CallstackEvent& lhs,
-                       const orbit_client_data::CallstackEvent& rhs) {
-  return lhs.timestamp_ns() == rhs.timestamp_ns() && lhs.callstack_id() == rhs.callstack_id() &&
-         lhs.thread_id() == rhs.thread_id();
-}
-
-template <typename H>
-H AbslHashValue(H h, const orbit_client_data::CallstackEvent& o) {
-  return H::combine(std::move(h), o.timestamp_ns(), o.callstack_id(), o.thread_id());
-}
 
 }  // namespace orbit_client_data
 

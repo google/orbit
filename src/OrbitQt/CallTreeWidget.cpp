@@ -579,6 +579,8 @@ void CallTreeWidget::OnCustomContextMenuRequested(const QPoint& point) {
                       return callstack_event.thread_id() != first_callstack_event.thread_id();
                     });
     app_->SelectCallstackEvents(
+        // This copies the content of the absl::flat_hash_set into a std::vector. We consider this
+        // fine in order to keep OrbitApp::SelectCallstackEvents as simple as it is now.
         {selected_callstack_events.begin(), selected_callstack_events.end()},
         origin_is_multiple_threads);
   } else if (action->text() == kActionCopySelection) {
