@@ -42,6 +42,7 @@ using orbit_grpc_protos::ProducerCaptureEvent;
 using orbit_producer_event_processor::ProducerEventProcessor;
 
 using orbit_capture_service::CaptureStartStopListener;
+using orbit_capture_service::StopCaptureReason;
 
 namespace orbit_linux_capture_service {
 
@@ -149,8 +150,7 @@ class ProducerEventProcessorHijackingFunctionEntryExitForLinuxTracing
 
 }  // namespace
 
-orbit_capture_service::CaptureService::StopCaptureReason
-LinuxCaptureService::WaitForStopCaptureRequestOrMemoryThresholdExceeded(
+StopCaptureReason LinuxCaptureService::WaitForStopCaptureRequestOrMemoryThresholdExceeded(
     grpc::ServerReaderWriter<orbit_grpc_protos::CaptureResponse, orbit_grpc_protos::CaptureRequest>*
         reader_writer) {
   // wait_for_stop_capture_request_thread_ below outlives this method, hence the shared pointers.
@@ -234,10 +234,10 @@ grpc::Status LinuxCaptureService::Capture(
     wait_for_stop_capture_request_thread_.join();
   }
 
-  TracingHandler tracing_handler{producer_event_processor_.get()};
+  TracingHandler tracing_handler{meta_data_.producer_event_processor.get()};
   ProducerEventProcessorHijackingFunctionEntryExitForLinuxTracing function_entry_exit_hijacker{
-      producer_event_processor_.get(), &tracing_handler};
-  MemoryInfoHandler memory_info_handler{producer_event_processor_.get()};
+      meta_data_.producer_event_processor.get(), &tracing_handler};
+  MemoryInfoHandler memory_info_handler{meta_data_.producer_event_processor.get()};
 
   CaptureRequest request = WaitForStartCaptureRequestFromClient(reader_writer);
 
@@ -282,7 +282,7 @@ grpc::Status LinuxCaptureService::Capture(
       if (!result_or_error.value().function_ids_to_error_messages.empty()) {
         info_from_enabling_user_space_instrumentation =
             orbit_capture_service::CreateWarningInstrumentingWithUserSpaceInstrumentationEvent(
-                capture_start_timestamp_ns_,
+                meta_data_.capture_start_timestamp_ns,
                 result_or_error.value().function_ids_to_error_messages);
       }
 
@@ -294,39 +294,39 @@ grpc::Status LinuxCaptureService::Capture(
     }
   }
 
-  StartEventProcessing(capture_options);
+  StartEventProcessing(capture_options, meta_data_);
 
   if (error_enabling_orbit_api.has_value()) {
-    producer_event_processor_->ProcessEvent(
+    meta_data_.producer_event_processor->ProcessEvent(
         orbit_grpc_protos::kRootProducerId,
         orbit_capture_service::CreateErrorEnablingOrbitApiEvent(
-            capture_start_timestamp_ns_, std::move(error_enabling_orbit_api.value())));
+            meta_data_.capture_start_timestamp_ns, std::move(error_enabling_orbit_api.value())));
   }
 
   if (error_enabling_user_space_instrumentation.has_value()) {
-    producer_event_processor_->ProcessEvent(
+    meta_data_.producer_event_processor->ProcessEvent(
         orbit_grpc_protos::kRootProducerId,
         orbit_capture_service::CreateErrorEnablingUserSpaceInstrumentationEvent(
-            capture_start_timestamp_ns_,
+            meta_data_.capture_start_timestamp_ns,
             std::move(error_enabling_user_space_instrumentation.value())));
   }
 
   if (info_from_enabling_user_space_instrumentation.has_value()) {
-    producer_event_processor_->ProcessEvent(
+    meta_data_.producer_event_processor->ProcessEvent(
         orbit_grpc_protos::kRootProducerId,
         std::move(info_from_enabling_user_space_instrumentation.value()));
   }
 
   std::unique_ptr<orbit_introspection::IntrospectionListener> introspection_listener;
   if (capture_options.enable_introspection()) {
-    introspection_listener = CreateIntrospectionListener(producer_event_processor_.get());
+    introspection_listener = CreateIntrospectionListener(meta_data_.producer_event_processor.get());
   }
 
   tracing_handler.Start(linux_tracing_capture_options,
                         std::move(user_space_instrumentation_addresses));
 
   memory_info_handler.Start(request.capture_options());
-  for (CaptureStartStopListener* listener : capture_start_stop_listeners_) {
+  for (CaptureStartStopListener* listener : meta_data_.capture_start_stop_listeners) {
     listener->OnCaptureStartRequested(request.capture_options(), &function_entry_exit_hijacker);
   }
 
@@ -338,7 +338,7 @@ grpc::Status LinuxCaptureService::Capture(
     auto result = orbit_api_loader::DisableApiInTracee(capture_options);
     if (result.has_error()) {
       ORBIT_ERROR("Disabling Orbit Api: %s", result.error().message());
-      producer_event_processor_->ProcessEvent(
+      meta_data_.producer_event_processor->ProcessEvent(
           orbit_grpc_protos::kRootProducerId,
           orbit_capture_service::CreateWarningEvent(
               orbit_base::CaptureTimestampNs(),
@@ -354,7 +354,7 @@ grpc::Status LinuxCaptureService::Capture(
     auto result_tmp = instrumentation_manager_->UninstrumentProcess(target_process_id);
     if (result_tmp.has_error()) {
       ORBIT_ERROR("Disabling user space instrumentation: %s", result_tmp.error().message());
-      producer_event_processor_->ProcessEvent(
+      meta_data_.producer_event_processor->ProcessEvent(
           orbit_grpc_protos::kRootProducerId,
           orbit_capture_service::CreateWarningEvent(
               orbit_base::CaptureTimestampNs(),
@@ -364,12 +364,12 @@ grpc::Status LinuxCaptureService::Capture(
   }
 
   StopInternalProducersAndCaptureStartStopListenersInParallel(
-      &tracing_handler, &memory_info_handler, &capture_start_stop_listeners_);
+      &tracing_handler, &memory_info_handler, &meta_data_.capture_start_stop_listeners);
 
   // The destructor of IntrospectionListener takes care of actually disabling introspection.
   introspection_listener.reset();
 
-  FinalizeEventProcessing(stop_capture_reason);
+  FinalizeEventProcessing(stop_capture_reason, meta_data_);
 
   TerminateCapture();
 

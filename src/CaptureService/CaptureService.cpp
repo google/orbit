@@ -24,17 +24,7 @@ namespace orbit_capture_service {
 
 CaptureService::CaptureService() {
   // We want to estimate clock resolution once, not at the beginning of every capture.
-  clock_resolution_ns_ = orbit_base::EstimateAndLogClockResolution();
-}
-
-void CaptureService::AddCaptureStartStopListener(CaptureStartStopListener* listener) {
-  bool new_insertion = capture_start_stop_listeners_.insert(listener).second;
-  ORBIT_CHECK(new_insertion);
-}
-
-void CaptureService::RemoveCaptureStartStopListener(CaptureStartStopListener* listener) {
-  bool was_removed = capture_start_stop_listeners_.erase(listener) > 0;
-  ORBIT_CHECK(was_removed);
+  meta_data_.clock_resolution_ns = orbit_base::EstimateAndLogClockResolution();
 }
 
 grpc::Status CaptureService::InitializeCapture(
@@ -48,19 +38,13 @@ grpc::Status CaptureService::InitializeCapture(
     is_capturing_ = true;
   }
 
-  grpc_client_capture_event_collector_ =
-      std::make_unique<GrpcClientCaptureEventCollector>(reader_writer);
-
-  producer_event_processor_ =
-      ProducerEventProcessor::Create(grpc_client_capture_event_collector_.get());
+  meta_data_.Init(std::make_unique<GrpcClientCaptureEventCollector>(reader_writer));
 
   return grpc::Status::OK;
 }
 
 void CaptureService::TerminateCapture() {
-  producer_event_processor_.reset();
-  grpc_client_capture_event_collector_.reset();
-  capture_start_timestamp_ns_ = 0;
+  meta_data_.Reset();
 
   absl::MutexLock lock(&capture_mutex_);
   is_capturing_ = false;
@@ -86,38 +70,6 @@ void CaptureService::WaitForStopCaptureRequestFromClient(
   while (reader_writer->Read(&request)) {
   }
   ORBIT_LOG("Client finished writing on Capture's gRPC stream: stopping capture");
-}
-
-void CaptureService::StartEventProcessing(const CaptureOptions& capture_options) {
-  // These are not in precise sync but they do not have to be.
-  absl::Time capture_start_time = absl::Now();
-  capture_start_timestamp_ns_ = orbit_base::CaptureTimestampNs();
-
-  producer_event_processor_->ProcessEvent(
-      orbit_grpc_protos::kRootProducerId,
-      orbit_capture_service::CreateCaptureStartedEvent(capture_options, capture_start_time,
-                                                       capture_start_timestamp_ns_));
-
-  producer_event_processor_->ProcessEvent(orbit_grpc_protos::kRootProducerId,
-                                          orbit_capture_service::CreateClockResolutionEvent(
-                                              capture_start_timestamp_ns_, clock_resolution_ns_));
-}
-
-void CaptureService::FinalizeEventProcessing(StopCaptureReason stop_capture_reason) {
-  ProducerCaptureEvent capture_finished;
-  switch (stop_capture_reason) {
-    case StopCaptureReason::kClientStop:
-      capture_finished = CreateSuccessfulCaptureFinishedEvent();
-      break;
-    case StopCaptureReason::kMemoryWatchdog:
-      capture_finished = CreateMemoryThresholdExceededCaptureFinishedEvent();
-      break;
-  }
-  producer_event_processor_->ProcessEvent(orbit_grpc_protos::kRootProducerId,
-                                          std::move(capture_finished));
-
-  grpc_client_capture_event_collector_->StopAndWait();
-  ORBIT_LOG("Finished handling gRPC call to Capture: all capture data has been sent");
 }
 
 }  // namespace orbit_capture_service

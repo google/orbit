@@ -13,6 +13,7 @@
 #include <thread>
 
 #include "CaptureService/CaptureService.h"
+#include "CaptureService/CaptureServiceUtils.h"
 #include "GrpcProtos/services.grpc.pb.h"
 #include "GrpcProtos/services.pb.h"
 #include "OrbitBase/Logging.h"
@@ -47,7 +48,8 @@ class LinuxCaptureService final : public orbit_capture_service::CaptureService {
   // - The client calls WritesDone on reader_writer (similar to
   //   CaptureService::WaitForStopCaptureRequestFromClient);
   // - MemoryWatchdog calls OnThresholdExceeded.
-  [[nodiscard]] StopCaptureReason WaitForStopCaptureRequestOrMemoryThresholdExceeded(
+  [[nodiscard]] orbit_capture_service::StopCaptureReason
+  WaitForStopCaptureRequestOrMemoryThresholdExceeded(
       grpc::ServerReaderWriter<orbit_grpc_protos::CaptureResponse,
                                orbit_grpc_protos::CaptureRequest>* reader_writer);
   std::thread wait_for_stop_capture_request_thread_;

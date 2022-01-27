@@ -11,6 +11,7 @@
 
 #include <memory>
 
+#include "CaptureService/CaptureServiceUtils.h"
 #include "CaptureStartStopListener.h"
 #include "GrpcProtos/services.grpc.pb.h"
 #include "GrpcProtos/services.pb.h"
@@ -26,8 +27,12 @@ class CaptureService : public orbit_grpc_protos::CaptureService::Service {
  public:
   CaptureService();
 
-  void AddCaptureStartStopListener(CaptureStartStopListener* listener);
-  void RemoveCaptureStartStopListener(CaptureStartStopListener* listener);
+  void AddCaptureStartStopListener(CaptureStartStopListener* listener) {
+    meta_data_.AddCaptureStartStopListener(listener);
+  }
+  void RemoveCaptureStartStopListener(CaptureStartStopListener* listener) {
+    meta_data_.RemoveCaptureStartStopListener(listener);
+  }
 
  protected:
   grpc::Status InitializeCapture(
@@ -43,19 +48,9 @@ class CaptureService : public orbit_grpc_protos::CaptureService::Service {
       grpc::ServerReaderWriter<orbit_grpc_protos::CaptureResponse,
                                orbit_grpc_protos::CaptureRequest>* reader_writer);
 
-  void StartEventProcessing(const orbit_grpc_protos::CaptureOptions& capture_options);
-  enum class StopCaptureReason { kClientStop, kMemoryWatchdog };
-  void FinalizeEventProcessing(StopCaptureReason stop_capture_reason);
-
-  std::unique_ptr<orbit_producer_event_processor::GrpcClientCaptureEventCollector>
-      grpc_client_capture_event_collector_;
-  std::unique_ptr<orbit_producer_event_processor::ProducerEventProcessor> producer_event_processor_;
-
-  absl::flat_hash_set<CaptureStartStopListener*> capture_start_stop_listeners_;
-  uint64_t capture_start_timestamp_ns_ = 0;
+  CaptureServiceMetaData meta_data_;
 
  private:
-  uint64_t clock_resolution_ns_ = 0;
   absl::Mutex capture_mutex_;
   bool is_capturing_ ABSL_GUARDED_BY(capture_mutex_) = false;
 };
