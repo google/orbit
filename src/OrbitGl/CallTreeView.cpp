@@ -87,17 +87,6 @@ CallTreeUnwindErrors* CallTreeNode::AddAndGetUnwindErrors() {
   return unwind_errors_child_.get();
 }
 
-uint64_t CallTreeNode::GetExclusiveSampleCount() const {
-  uint64_t children_sample_count = 0;
-  for (const auto& address_and_function : function_children_) {
-    children_sample_count += address_and_function.second.sample_count();
-  }
-  for (const auto& tid_and_thread : thread_children_) {
-    children_sample_count += tid_and_thread.second.sample_count();
-  }
-  return sample_count() - children_sample_count;
-}
-
 [[nodiscard]] static CallTreeFunction* GetOrCreateFunctionNode(CallTreeNode* current_node,
                                                                uint64_t frame,
                                                                const std::string& function_name,
@@ -117,11 +106,12 @@ uint64_t CallTreeNode::GetExclusiveSampleCount() const {
   return function_node;
 }
 
-static void AddCallstackToTopDownThread(CallTreeThread* thread_node,
-                                        const CallstackInfo& resolved_callstack,
-                                        uint64_t callstack_sample_count,
-                                        const ModuleManager& module_manager,
-                                        const CaptureData& capture_data) {
+static void AddCallstackToTopDownThread(
+    CallTreeThread* thread_node, const CallstackInfo& resolved_callstack,
+    const std::vector<orbit_client_data::CallstackEvent>& callstack_events,
+    const ModuleManager& module_manager, const CaptureData& capture_data) {
+  uint64_t callstack_sample_count = callstack_events.size();
+
   CallTreeNode* current_thread_or_function = thread_node;
   for (auto frame_it = resolved_callstack.frames().rbegin();
        frame_it != resolved_callstack.frames().rend(); ++frame_it) {
@@ -139,17 +129,18 @@ static void AddCallstackToTopDownThread(CallTreeThread* thread_node,
     function_node->IncreaseSampleCount(callstack_sample_count);
     current_thread_or_function = function_node;
   }
+  current_thread_or_function->AddExclusiveCallstackEvents(callstack_events);
 }
 
-static void AddUnwindErrorToTopDownThread(CallTreeThread* thread_node,
-                                          const CallstackInfo& resolved_callstack,
-                                          uint64_t callstack_sample_count,
-                                          const ModuleManager& module_manager,
-                                          const CaptureData& capture_data) {
+static void AddUnwindErrorToTopDownThread(
+    CallTreeThread* thread_node, const CallstackInfo& resolved_callstack,
+    const std::vector<orbit_client_data::CallstackEvent>& callstack_events,
+    const ModuleManager& module_manager, const CaptureData& capture_data) {
   CallTreeUnwindErrors* unwind_errors_node = thread_node->GetUnwindErrorsOrNull();
   if (unwind_errors_node == nullptr) {
     unwind_errors_node = thread_node->AddAndGetUnwindErrors();
   }
+  uint64_t callstack_sample_count = callstack_events.size();
   unwind_errors_node->IncreaseSampleCount(callstack_sample_count);
 
   ORBIT_CHECK(!resolved_callstack.frames().empty());
@@ -165,6 +156,7 @@ static void AddUnwindErrorToTopDownThread(CallTreeThread* thread_node,
   CallTreeFunction* function_node = GetOrCreateFunctionNode(
       unwind_errors_node, frame, function_name, module_path, module_build_id);
   function_node->IncreaseSampleCount(callstack_sample_count);
+  function_node->AddExclusiveCallstackEvents(callstack_events);
 }
 
 [[nodiscard]] static CallTreeThread* GetOrCreateThreadNode(
@@ -197,10 +189,9 @@ std::unique_ptr<CallTreeView> CallTreeView::CreateTopDownViewFromPostProcessedSa
        post_processed_sampling_data.GetSortedThreadSampleData()) {
     const uint32_t tid = thread_sample_data->thread_id;
 
-    for (const auto& [callstack_id, events] : thread_sample_data->sampled_callstack_id_to_events) {
-      uint64_t sample_count = events.size();
-      const CallstackInfo& resolved_callstack =
-          post_processed_sampling_data.GetResolvedCallstack(callstack_id);
+    for (const auto& [callstack_id, callstack_events] :
+         thread_sample_data->sampled_callstack_id_to_events) {
+      uint64_t sample_count = callstack_events.size();
 
       // Don't count samples from the all-thread case again.
       if (tid != orbit_base::kAllProcessThreadsTid) {
@@ -211,12 +202,14 @@ std::unique_ptr<CallTreeView> CallTreeView::CreateTopDownViewFromPostProcessedSa
           GetOrCreateThreadNode(top_down_view.get(), tid, process_name, thread_names);
       thread_node->IncreaseSampleCount(sample_count);
 
+      const CallstackInfo& resolved_callstack =
+          post_processed_sampling_data.GetResolvedCallstack(callstack_id);
       if (resolved_callstack.type() == CallstackInfo::kComplete) {
-        AddCallstackToTopDownThread(thread_node, resolved_callstack, sample_count, module_manager,
-                                    capture_data);
+        AddCallstackToTopDownThread(thread_node, resolved_callstack, callstack_events,
+                                    module_manager, capture_data);
       } else {
-        AddUnwindErrorToTopDownThread(thread_node, resolved_callstack, sample_count, module_manager,
-                                      capture_data);
+        AddUnwindErrorToTopDownThread(thread_node, resolved_callstack, callstack_events,
+                                      module_manager, capture_data);
       }
     }
   }
@@ -287,13 +280,13 @@ std::unique_ptr<CallTreeView> CallTreeView::CreateBottomUpViewFromPostProcessedS
       continue;
     }
 
-    for (const auto& [callstack_id, events] : thread_sample_data->sampled_callstack_id_to_events) {
-      uint64_t sample_count = events.size();
-      const CallstackInfo& resolved_callstack =
-          post_processed_sampling_data.GetResolvedCallstack(callstack_id);
-
+    for (const auto& [callstack_id, callstack_events] :
+         thread_sample_data->sampled_callstack_id_to_events) {
+      uint64_t sample_count = callstack_events.size();
       bottom_up_view->IncreaseSampleCount(sample_count);
 
+      const CallstackInfo& resolved_callstack =
+          post_processed_sampling_data.GetResolvedCallstack(callstack_id);
       CallTreeNode* last_node;
       if (resolved_callstack.type() == CallstackInfo::kComplete) {
         last_node = AddReversedCallstackToBottomUpViewAndReturnLastFunction(
@@ -305,6 +298,7 @@ std::unique_ptr<CallTreeView> CallTreeView::CreateBottomUpViewFromPostProcessedS
       CallTreeThread* thread_node =
           GetOrCreateThreadNode(last_node, tid, process_name, thread_names);
       thread_node->IncreaseSampleCount(sample_count);
+      thread_node->AddExclusiveCallstackEvents(callstack_events);
     }
   }
 
