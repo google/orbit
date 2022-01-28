@@ -135,20 +135,21 @@ ErrorMessageOr<ModuleInMemory> ProcessData::FindModuleByAddress(uint64_t absolut
                         absolute_address, process_info_.name()));
   }
 
+  static constexpr const char* kNotFoundErrorFormat{
+      "Unable to find module for address %016x: No module loaded at this address by process %s"};
+
   auto it = start_address_to_module_in_memory_.upper_bound(absolute_address);
   if (it == start_address_to_module_in_memory_.begin()) {
-    return ErrorMessage{absl::StrFormat(
-        "Unable to find module for address %016x: No module loaded at this address by process %s",
-        absolute_address, process_info_.name())};
+    return ErrorMessage{
+        absl::StrFormat(kNotFoundErrorFormat, absolute_address, process_info_.name())};
   }
 
   --it;
   const ModuleInMemory& module_in_memory = it->second;
   ORBIT_CHECK(absolute_address >= module_in_memory.start());
   if (absolute_address >= module_in_memory.end()) {
-    return ErrorMessage{absl::StrFormat(
-        "Unable to find module for address %016x: No module loaded at this address by process %s",
-        absolute_address, process_info_.name())};
+    return ErrorMessage{
+        absl::StrFormat(kNotFoundErrorFormat, absolute_address, process_info_.name())};
   }
 
   return module_in_memory;
