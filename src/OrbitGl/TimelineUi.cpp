@@ -14,7 +14,7 @@ namespace orbit_gl {
 void TimelineUi::RenderLines(Batcher& batcher, uint64_t min_timestamp_ns,
                              uint64_t max_timestamp_ns) const {
   const Color kMajorTickColor(255, 255, 255, 255);
-  const Color kMinorTickColor(150, 150, 150, 255);
+  const Color kMinorTickColor(120, 120, 120, 255);
   constexpr int kPixelMargin = 1;
   const float ticks_height = GetHeight() - kPixelMargin;
 

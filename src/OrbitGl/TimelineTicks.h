@@ -31,7 +31,8 @@ class TimelineTicks {
   [[nodiscard]] int GetTimestampNumDigitsPrecision(uint64_t timestamp_ns) const;
 
  private:
-  uint64_t GetScale(uint64_t time_range_ns) const;
+  [[nodiscard]] uint64_t GetScale(uint64_t time_range_ns) const;
+  [[nodiscard]] uint64_t GetPreviousScale(uint64_t tick_scale) const;
 };
 
 }  // namespace orbit_gl
