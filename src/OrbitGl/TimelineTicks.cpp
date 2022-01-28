@@ -8,38 +8,39 @@
 namespace orbit_gl {
 
 static std::set<uint64_t> GenerateScales() {
-  std::set<uint64_t> scales;
+  // 10^x for each unit and middle points.
+  std::set<uint64_t> scales_only_10_x;
 
   // Scales under 1 second.
   uint64_t scale_ns = 1;
-  scales.insert(scale_ns);
   for (int i = 0; i < 9; i++) {
+    scales_only_10_x.insert(scale_ns);
     scale_ns *= 10;
-    scales.insert(scale_ns / 2);
-    scales.insert(scale_ns);
   }
 
   // Second and minute scales
-  scales.insert(5 * kNanosecondsPerSecond);
-  scales.insert(10 * kNanosecondsPerSecond);
-  scales.insert(15 * kNanosecondsPerSecond);
-  scales.insert(30 * kNanosecondsPerSecond);
-  scales.insert(1 * kNanosecondsPerMinute);
-  scales.insert(5 * kNanosecondsPerMinute);
-  scales.insert(10 * kNanosecondsPerMinute);
-  scales.insert(15 * kNanosecondsPerMinute);
-  scales.insert(30 * kNanosecondsPerMinute);
+  scales_only_10_x.insert(1 * kNanosecondsPerSecond);
+  scales_only_10_x.insert(10 * kNanosecondsPerSecond);
+  scales_only_10_x.insert(1 * kNanosecondsPerMinute);
+  scales_only_10_x.insert(10 * kNanosecondsPerMinute);
 
   // Hour scales
   scale_ns = kNanosecondsPerHour;
-  scales.insert(scale_ns);
   // Maximum scale: 1000 hours (more than a month).
-  for (int i = 0; i < 3; i++) {
+  for (int i = 0; i < 4; i++) {
+    scales_only_10_x.insert(scale_ns);
     scale_ns *= 10;
-    scales.insert(scale_ns / 2);
-    scales.insert(scale_ns);
   }
-  return scales;
+
+  std::set<uint64_t> scales_including_middle_points;
+  for (auto scale : scales_only_10_x) {
+    if (scale > 1) {
+      scales_including_middle_points.insert(scale / 2);
+    }
+    scales_including_middle_points.insert(scale);
+  }
+
+  return scales_including_middle_points;
 }
 
 const std::set<uint64_t> kTimelineScales = GenerateScales();
