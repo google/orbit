@@ -29,8 +29,9 @@ const std::string kUnknownFunctionOrModuleName{"???"};
                                                         const CaptureData& capture_data,
                                                         uint64_t absolute_address);
 
-[[nodiscard]] std::optional<std::string> FindModuleBuildIdByAddress(
-    const ProcessData& process, const ModuleManager& module_manager, uint64_t absolute_address);
+[[nodiscard]] std::pair<const std::string&, std::optional<std::string>>
+FindModulePathAndBuildIdByAddress(const ModuleManager& module_manager,
+                                  const CaptureData& capture_data, uint64_t absolute_address);
 
 [[nodiscard]] const orbit_client_protos::FunctionInfo* FindFunctionByAddress(
     const ProcessData& process, const ModuleManager& module_manager, uint64_t absolute_address,
