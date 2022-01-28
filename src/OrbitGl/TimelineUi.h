@@ -26,7 +26,7 @@ class TimelineUi : public CaptureViewElement {
   void DoUpdatePrimitives(Batcher& batcher, TextRenderer& text_renderer, uint64_t min_tick,
                           uint64_t max_tick, PickingMode picking_mode) override;
   void RenderLines(Batcher& batcher, uint64_t min_timestamp_ns, uint64_t max_timestamp_ns) const;
-  void RenderLabels(TextRenderer& text_renderer, uint64_t min_timestamp_ns,
+  void RenderLabels(Batcher& batcher, TextRenderer& text_renderer, uint64_t min_timestamp_ns,
                     uint64_t max_timestamp_ns) const;
   void RenderBackground(Batcher& batcher) const;
 
