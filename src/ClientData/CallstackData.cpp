@@ -54,7 +54,7 @@ std::vector<orbit_client_data::CallstackEvent> CallstackData::GetCallstackEvents
   std::lock_guard<std::recursive_mutex> lock(mutex_);
   std::vector<CallstackEvent> callstack_events;
   for (const auto& tid_and_events : callstack_events_by_tid_) {
-    const std::map<uint64_t, CallstackEvent>& events = tid_and_events.second;
+    const absl::btree_map<uint64_t, CallstackEvent>& events = tid_and_events.second;
     for (auto event_it = events.lower_bound(time_begin); event_it != events.end(); ++event_it) {
       uint64_t time = event_it->first;
       if (time < time_end) {
@@ -86,7 +86,7 @@ std::vector<CallstackEvent> CallstackData::GetCallstackEventsOfTidInTimeRange(
     return callstack_events;
   }
 
-  const std::map<uint64_t, CallstackEvent>& events = tid_and_events_it->second;
+  const absl::btree_map<uint64_t, CallstackEvent>& events = tid_and_events_it->second;
   for (auto event_it = events.lower_bound(time_begin); event_it != events.end(); ++event_it) {
     uint64_t time = event_it->first;
     if (time < time_end) {

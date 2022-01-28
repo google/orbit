@@ -5,6 +5,8 @@
 #ifndef CLIENT_DATA_CALLSTACK_DATA_H_
 #define CLIENT_DATA_CALLSTACK_DATA_H_
 
+#include <absl/container/btree_map.h>
+#include <absl/container/flat_hash_map.h>
 #include <stdint.h>
 
 #include <functional>
@@ -17,7 +19,6 @@
 #include "CallstackTypes.h"
 #include "ClientData/CallstackEvent.h"
 #include "ClientProtos/capture_data.pb.h"
-#include "absl/container/flat_hash_map.h"
 
 namespace orbit_client_data {
 
@@ -95,7 +96,7 @@ class CallstackData {
   mutable std::recursive_mutex mutex_;
   absl::flat_hash_map<uint64_t, std::shared_ptr<orbit_client_protos::CallstackInfo>>
       unique_callstacks_;
-  absl::flat_hash_map<uint32_t, std::map<uint64_t, orbit_client_data::CallstackEvent>>
+  absl::flat_hash_map<uint32_t, absl::btree_map<uint64_t, orbit_client_data::CallstackEvent>>
       callstack_events_by_tid_;
 
   uint64_t max_time_ = 0;
