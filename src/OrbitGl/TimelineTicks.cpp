@@ -7,8 +7,8 @@
 
 namespace orbit_gl {
 
+// 10^x for each unit and middle points.
 static std::set<uint64_t> GenerateScales() {
-  // 10^x for each unit and middle points.
   std::set<uint64_t> scales_only_10_x;
 
   // Scales under 1 second.
