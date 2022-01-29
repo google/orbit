@@ -45,8 +45,8 @@ std::string GetDisplayTime(absl::Duration duration) {
   return absl::StrFormat("%.3f days", absl::ToDoubleHours(duration) / kHoursInOneDay);
 }
 
-std::string ToStringAtLeastTwoDigits(int number) {
-  return std::to_string(number / 10) + std::to_string(number % 10);
+[[nodiscard]] std::string ToStringAtLeastTwoDigits(int number) {
+  return number < 10 ? absl::StrFormat("0%i", number) : std::to_string(number);
 }
 
 std::string GetDisplayISOTimestamp(absl::Duration timestamp, int num_digits_precision,
@@ -80,7 +80,7 @@ std::string GetDisplayISOTimestamp(absl::Duration timestamp, int num_digits_prec
   // Parts of a second
   label += ".";
   absl::Duration precision_level = absl::Seconds(1);
-  for (int i = 0; i < num_digits_precision; i++) {
+  for (int i = 0; i < num_digits_precision; ++i) {
     precision_level /= 10;
     label += std::to_string(absl::IDivDuration(timestamp, precision_level, &timestamp));
   }
