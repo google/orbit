@@ -17,6 +17,7 @@
 #ifndef _LIBUNWINDSTACK_PE_COFF_UNWIND_INFOS_H
 #define _LIBUNWINDSTACK_PE_COFF_UNWIND_INFOS_H
 
+#include <string.h>
 #include <unordered_map>
 #include <vector>
 
@@ -33,6 +34,8 @@ union UnwindCode {
   } code_and_op;
   uint16_t frame_offset;
 
+  UnwindCode() { memset(this, 0, sizeof(UnwindCode)); }
+
   uint8_t GetUnwindOp() const { return code_and_op.unwind_op_and_op_info & 0x0f; }
   uint8_t GetOpInfo() const { return (code_and_op.unwind_op_and_op_info >> 4) & 0x0f; }
 };
@@ -46,15 +49,15 @@ static_assert(sizeof(UnwindCode) == 2);
 // https://docs.microsoft.com/en-us/cpp/build/exception-handling-x64?view=msvc-160#struct-unwind_info
 struct UnwindInfo {
   // Low 3 bits are the version, other 5 bits are the flags.
-  uint8_t version_and_flags;
-  uint8_t prolog_size;
-  uint8_t num_codes;
+  uint8_t version_and_flags = 0;
+  uint8_t prolog_size = 0;
+  uint8_t num_codes = 0;
   // Low 4 bits frame register, second 4 bits frame register offset.
-  uint8_t frame_register_and_offset;
+  uint8_t frame_register_and_offset = 0;
   std::vector<UnwindCode> unwind_codes;
 
-  uint64_t exception_handler_address;
-  RuntimeFunction chained_info;
+  uint64_t exception_handler_address = 0;
+  RuntimeFunction chained_info{0, 0, 0};
 
   uint8_t GetVersion() const { return version_and_flags & 0x07; }
   uint8_t GetFlags() const { return (version_and_flags >> 3) & 0x1f; }
