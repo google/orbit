@@ -12,12 +12,14 @@ target_include_directories(CaptureService PRIVATE
         ${CMAKE_CURRENT_LIST_DIR})
 
 target_sources(CaptureService PUBLIC
+        include/CaptureService/Capturer.h
         include/CaptureService/CaptureService.h
         include/CaptureService/CaptureServiceUtils.h
         include/CaptureService/CaptureStartStopListener.h
         include/CaptureService/CommonProducerCaptureEventBuilders.h)
 
 target_sources(CaptureService PRIVATE
+        Capturer.cpp
         CaptureService.cpp
         CaptureServiceUtils.cpp
         CommonProducerCaptureEventBuilders.cpp)
