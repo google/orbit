@@ -43,10 +43,10 @@ TEST(DisplayFormats, GetDisplayISOTimestamp) {
   EXPECT_EQ(GetDisplayISOTimestamp(absl::Nanoseconds(12'345'600), 7), "00.0123456");
   EXPECT_EQ(GetDisplayISOTimestamp(absl::Nanoseconds(12'345'600'000ULL), 4), "12.3456");
   EXPECT_EQ(GetDisplayISOTimestamp(absl::Nanoseconds(60 * 12'345'600'000ULL), 3), "12:20.736");
-  EXPECT_EQ(GetDisplayISOTimestamp(absl::Nanoseconds(60 * 60 * 12'345'600'000ULL), 2),
-            "12:20:44.16");
-  EXPECT_EQ(GetDisplayISOTimestamp(absl::Nanoseconds(10 * 60 * 60 * 12'345'000'000ULL), 0),
-            "123:27:00");
+  EXPECT_EQ(GetDisplayISOTimestamp(absl::Nanoseconds(60 * 1'000'000'000ULL + 234'000'000), 3),
+            "01:00.234");
+  EXPECT_EQ(GetDisplayISOTimestamp(absl::Nanoseconds(60 * 60 * 1'000'000'000ULL), 5),
+            "01:00:00.00000");
 
   // Long Captures tests
   EXPECT_EQ(GetDisplayISOTimestamp(absl::Milliseconds(450), 2, absl::Seconds(27)), "00.45");
