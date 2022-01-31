@@ -26,26 +26,23 @@ TEST(TimelineTicks, GetMajorTicks) {
                                    1 * kNanosecondsPerMinute));
 }
 
-bool CheckTicks(uint64_t start_ns, uint64_t end_ns, std::set<uint64_t> major_ticks,
-                std::set<uint64_t> minor_ticks) {
+static void CheckTicks(uint64_t start_ns, uint64_t end_ns, const std::set<uint64_t>& major_ticks,
+                       const std::set<uint64_t>& minor_ticks) {
   TimelineTicks timeline_ticks;
   auto all_ticks = timeline_ticks.GetAllTicks(start_ns, end_ns);
-  if (all_ticks.size() != major_ticks.size() + minor_ticks.size()) return false;
+  EXPECT_EQ(all_ticks.size(), major_ticks.size() + minor_ticks.size());
   for (auto& [tick_type, timestamp_ns] : all_ticks) {
-    if (tick_type == TimelineTicks::TickType::kMajorTick && major_ticks.count(timestamp_ns) == 0) {
-      return false;
-    }
-    if (tick_type == TimelineTicks::TickType::kMinorTick && minor_ticks.count(timestamp_ns) == 0) {
-      return false;
-    }
+    EXPECT_FALSE(tick_type == TimelineTicks::TickType::kMajorTick &&
+                 major_ticks.count(timestamp_ns) == 0);
+    EXPECT_FALSE(tick_type == TimelineTicks::TickType::kMinorTick &&
+                 minor_ticks.count(timestamp_ns) == 0);
   }
-  return true;
 }
 
 TEST(TimelineTicks, GetAllTicks) {
   CheckTicks(0, 20, {0, 10, 20}, {5, 15});
-  CheckTicks(0, 299, {0, 100, 200}, {50, 150});
-  CheckTicks(1, 299, {100, 200}, {50, 150});
+  CheckTicks(0, 299, {0, 100, 200}, {50, 150, 250});
+  CheckTicks(1, 299, {100, 200}, {50, 150, 250});
   CheckTicks(50, 248, {50, 100, 150, 200},
              {60, 70, 80, 90, 110, 120, 130, 140, 160, 170, 180, 190, 210, 220, 230, 240});
   CheckTicks(40 * kNanosecondsPerSecond, 1 * kNanosecondsPerMinute,

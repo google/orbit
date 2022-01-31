@@ -50,8 +50,9 @@ std::vector<std::pair<TimelineTicks::TickType, uint64_t> > TimelineTicks::GetAll
   std::vector<std::pair<TickType, uint64_t> > ticks;
   if (end_ns <= start_ns) return ticks;
 
-  uint64_t major_scale = GetScale(end_ns + 1 - start_ns);
-  uint64_t minor_scale = GetPreviousScale(major_scale);
+  uint64_t visible_ns = end_ns + 1 - start_ns;
+  uint64_t major_scale = GetMajorTicksScale(visible_ns);
+  uint64_t minor_scale = GetMinorTicksScale(visible_ns);
 
   uint64_t first_tick = ((start_ns + minor_scale - 1) / minor_scale) * minor_scale;
   for (uint64_t tick = first_tick; tick <= end_ns; tick += minor_scale) {
@@ -82,13 +83,16 @@ int TimelineTicks::GetTimestampNumDigitsPrecision(uint64_t timestamp_ns) const {
     }
   }
   return kMaxDigitsPrecision;
+}
 
-  uint64_t TimelineTicks::GetPreviousScale(uint64_t tick_scale) const {
-    if (tick_scale <= 1) return 1;
-    return *std::prev(kTimelineScales.lower_bound(tick_scale));
-  }
+uint64_t TimelineTicks::GetMinorTicksScale(uint64_t visible_ns) const {
+  uint64_t major_scale = GetMajorTicksScale(visible_ns);
+  // For consistency, minor ticks scale is the next finer scale than the one used for major ticks.
+  if (major_scale <= 1) return 1;
+  return *std::prev(kTimelineScales.lower_bound(major_scale));
+}
 
-uint64_t TimelineTicks::GetScale(uint64_t visible_ns) const {
+uint64_t TimelineTicks::GetMajorTicksScale(uint64_t visible_ns) const {
   // Biggest scale smaller than half the total range, as we want to see at least 2 major ticks.
   uint64_t half_visible_ns = visible_ns / 2;
   ORBIT_CHECK(half_visible_ns > 0);
