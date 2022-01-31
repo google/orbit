@@ -87,7 +87,11 @@ bool IsBlocklisted(std::string_view function_name) {
                                                            "__get_nprocs_conf",
                                                            "__strtoul",
                                                            "arena_get2.part.3",
-                                                           "next_line"};
+                                                           "next_line",
+                                                           "__GI___libc_alloca_cutoff",
+                                                           "start_thread",
+                                                           "__pthread_enable_asynccancel",
+                                                           "__errno_location"};
   return kBlocklist.contains(function_name);
 }
 
