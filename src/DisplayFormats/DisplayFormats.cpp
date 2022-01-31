@@ -45,4 +45,50 @@ std::string GetDisplayTime(absl::Duration duration) {
   return absl::StrFormat("%.3f days", absl::ToDoubleHours(duration) / kHoursInOneDay);
 }
 
+[[nodiscard]] std::string ToStringAtLeastTwoDigits(int number) {
+  return number < 10 ? absl::StrFormat("0%i", number) : std::to_string(number);
+}
+
+std::string GetDisplayISOTimestamp(absl::Duration timestamp, int num_digits_precision,
+                                   absl::Duration total_capture_duration) {
+  std::string label;
+  // Hours, minutes and seconds
+  if (total_capture_duration >= absl::Hours(1)) {
+    int64_t hours = absl::ToInt64Hours(timestamp);
+    label += ToStringAtLeastTwoDigits(hours) + ":";
+    timestamp -= absl::Hours(hours);
+  }
+
+  if (total_capture_duration >= absl::Minutes(1)) {
+    int64_t minutes = absl::ToInt64Minutes(timestamp);
+    label += ToStringAtLeastTwoDigits(minutes) + ":";
+    timestamp -= absl::Minutes(minutes);
+  }
+
+  int64_t seconds = absl::ToInt64Seconds(timestamp);
+  label += ToStringAtLeastTwoDigits(seconds);
+  timestamp -= absl::Seconds(seconds);
+
+  if (num_digits_precision == 0) {
+    // Special case. If we are only showing seconds, let's add an 's';
+    if (label.size() <= 2) {
+      label += 's';
+    }
+    return label;
+  }
+
+  // Parts of a second
+  label += ".";
+  absl::Duration precision_level = absl::Seconds(1);
+  for (int i = 0; i < num_digits_precision; ++i) {
+    precision_level /= 10;
+    label += std::to_string(absl::IDivDuration(timestamp, precision_level, &timestamp));
+  }
+  return label;
+}
+
+std::string GetDisplayISOTimestamp(absl::Duration timestamp, int num_digits_precision) {
+  return GetDisplayISOTimestamp(timestamp, num_digits_precision, timestamp);
+}
+
 }  // namespace orbit_display_formats

@@ -9,9 +9,13 @@
 
 namespace orbit_display_formats {
 
-std::string GetDisplaySize(uint64_t size_bytes);
+[[nodiscard]] std::string GetDisplaySize(uint64_t size_bytes);
 
-std::string GetDisplayTime(absl::Duration duration);
+[[nodiscard]] std::string GetDisplayTime(absl::Duration duration);
+[[nodiscard]] std::string GetDisplayISOTimestamp(absl::Duration timestamp, int num_digits_precision,
+                                                 absl::Duration total_capture_duration);
+[[nodiscard]] std::string GetDisplayISOTimestamp(absl::Duration timestamp,
+                                                 int num_digits_precision);
 
 }  // namespace orbit_display_formats
 
