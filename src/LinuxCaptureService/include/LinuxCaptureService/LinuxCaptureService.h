@@ -12,7 +12,7 @@
 #include <memory>
 #include <thread>
 
-#include "CaptureService/CaptureService.h"
+#include "CaptureService/Capturer.h"
 #include "GrpcProtos/services.grpc.pb.h"
 #include "GrpcProtos/services.pb.h"
 #include "OrbitBase/Logging.h"
@@ -22,7 +22,8 @@
 namespace orbit_linux_capture_service {
 
 // Linux implementation of the grpc capture service.
-class LinuxCaptureService final : public orbit_capture_service::CaptureService {
+class LinuxCaptureService final : public orbit_capture_service::Capturer,
+                                  public orbit_grpc_protos::CaptureService::Service {
  public:
   LinuxCaptureService() {
     instrumentation_manager_ = orbit_user_space_instrumentation::InstrumentationManager::Create();

@@ -40,6 +40,7 @@ using orbit_grpc_protos::CaptureRequest;
 using orbit_grpc_protos::CaptureResponse;
 using orbit_grpc_protos::ProducerCaptureEvent;
 
+using orbit_producer_event_processor::GrpcClientCaptureEventCollector;
 using orbit_producer_event_processor::ProducerEventProcessor;
 
 using orbit_capture_service::CaptureStartStopListener;
@@ -150,7 +151,7 @@ class ProducerEventProcessorHijackingFunctionEntryExitForLinuxTracing
 
 }  // namespace
 
-orbit_capture_service::CaptureService::StopCaptureReason
+orbit_capture_service::Capturer::StopCaptureReason
 LinuxCaptureService::WaitForStopCaptureRequestOrMemoryThresholdExceeded(
     grpc::ServerReaderWriter<orbit_grpc_protos::CaptureResponse, orbit_grpc_protos::CaptureRequest>*
         reader_writer) {
@@ -228,8 +229,10 @@ grpc::Status LinuxCaptureService::Capture(
     grpc::ServerReaderWriter<CaptureResponse, CaptureRequest>* reader_writer) {
   orbit_base::SetCurrentThreadName("CSImpl::Capture");
 
-  if (grpc::Status result = InitializeCapture(reader_writer); !result.ok()) {
-    return result;
+  if (ErrorMessageOr<void> result =
+          InitializeCapture(std::make_unique<GrpcClientCaptureEventCollector>(reader_writer));
+      result.has_error()) {
+    return grpc::Status(grpc::StatusCode::ALREADY_EXISTS, result.error().message());
   }
   if (wait_for_stop_capture_request_thread_.joinable()) {
     wait_for_stop_capture_request_thread_.join();
