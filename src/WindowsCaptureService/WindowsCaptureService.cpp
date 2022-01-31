@@ -6,13 +6,13 @@
 
 #include <stdint.h>
 
+#include "CaptureService/CaptureServiceUtils.h"
 #include "GrpcProtos/capture.pb.h"
 #include "OrbitBase/ThreadUtils.h"
 #include "TracingHandler.h"
 
 namespace orbit_windows_capture_service {
 
-using orbit_grpc_protos::CaptureOptions;
 using orbit_grpc_protos::CaptureRequest;
 using orbit_grpc_protos::CaptureResponse;
 
@@ -26,12 +26,13 @@ grpc::Status WindowsCaptureService::Capture(
     return result;
   }
 
-  CaptureRequest request = WaitForStartCaptureRequestFromClient(reader_writer);
+  CaptureRequest request =
+      orbit_capture_service::WaitForStartCaptureRequestFromClient(reader_writer);
 
   StartEventProcessing(request.capture_options());
   TracingHandler tracing_handler{producer_event_processor_.get()};
   tracing_handler.Start(request.capture_options());
-  WaitForStopCaptureRequestFromClient(reader_writer);
+  orbit_capture_service::WaitForStopCaptureRequestFromClient(reader_writer);
   tracing_handler.Stop();
   FinalizeEventProcessing(StopCaptureReason::kClientStop);
 

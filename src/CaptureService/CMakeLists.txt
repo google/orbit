@@ -13,11 +13,13 @@ target_include_directories(CaptureService PRIVATE
 
 target_sources(CaptureService PUBLIC
         include/CaptureService/CaptureService.h
+        include/CaptureService/CaptureServiceUtils.h
         include/CaptureService/CaptureStartStopListener.h
         include/CaptureService/CommonProducerCaptureEventBuilders.h)
 
 target_sources(CaptureService PRIVATE
         CaptureService.cpp
+        CaptureServiceUtils.cpp
         CommonProducerCaptureEventBuilders.cpp)
 
 target_link_libraries(CaptureService PUBLIC

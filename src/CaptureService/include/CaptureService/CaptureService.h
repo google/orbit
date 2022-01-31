@@ -35,14 +35,6 @@ class CaptureService : public orbit_grpc_protos::CaptureService::Service {
                                orbit_grpc_protos::CaptureRequest>* reader_writer);
   void TerminateCapture();
 
-  static orbit_grpc_protos::CaptureRequest WaitForStartCaptureRequestFromClient(
-      grpc::ServerReaderWriter<orbit_grpc_protos::CaptureResponse,
-                               orbit_grpc_protos::CaptureRequest>* reader_writer);
-
-  static void WaitForStopCaptureRequestFromClient(
-      grpc::ServerReaderWriter<orbit_grpc_protos::CaptureResponse,
-                               orbit_grpc_protos::CaptureRequest>* reader_writer);
-
   void StartEventProcessing(const orbit_grpc_protos::CaptureOptions& capture_options);
   enum class StopCaptureReason { kClientStop, kMemoryWatchdog };
   void FinalizeEventProcessing(StopCaptureReason stop_capture_reason);

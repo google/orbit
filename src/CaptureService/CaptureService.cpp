@@ -66,28 +66,6 @@ void CaptureService::TerminateCapture() {
   is_capturing_ = false;
 }
 
-CaptureRequest CaptureService::WaitForStartCaptureRequestFromClient(
-    grpc::ServerReaderWriter<orbit_grpc_protos::CaptureResponse, orbit_grpc_protos::CaptureRequest>*
-        reader_writer) {
-  CaptureRequest request;
-  // This call is blocking.
-  reader_writer->Read(&request);
-
-  ORBIT_LOG("Read CaptureRequest from Capture's gRPC stream: starting capture");
-  return request;
-}
-
-void CaptureService::WaitForStopCaptureRequestFromClient(
-    grpc::ServerReaderWriter<orbit_grpc_protos::CaptureResponse, orbit_grpc_protos::CaptureRequest>*
-        reader_writer) {
-  orbit_grpc_protos::CaptureRequest request;
-  // The client asks for the capture to be stopped by calling WritesDone. At that point, this call
-  // to Read will return false. In the meantime, it blocks if no message is received.
-  while (reader_writer->Read(&request)) {
-  }
-  ORBIT_LOG("Client finished writing on Capture's gRPC stream: stopping capture");
-}
-
 void CaptureService::StartEventProcessing(const CaptureOptions& capture_options) {
   // These are not in precise sync but they do not have to be.
   absl::Time capture_start_time = absl::Now();

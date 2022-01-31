@@ -18,6 +18,7 @@
 
 #include "ApiLoader/EnableInTracee.h"
 #include "ApiUtils/Event.h"
+#include "CaptureService/CaptureServiceUtils.h"
 #include "CaptureService/CommonProducerCaptureEventBuilders.h"
 #include "GrpcProtos/Constants.h"
 #include "GrpcProtos/capture.pb.h"
@@ -239,7 +240,8 @@ grpc::Status LinuxCaptureService::Capture(
       producer_event_processor_.get(), &tracing_handler};
   MemoryInfoHandler memory_info_handler{producer_event_processor_.get()};
 
-  CaptureRequest request = WaitForStartCaptureRequestFromClient(reader_writer);
+  CaptureRequest request =
+      orbit_capture_service::WaitForStartCaptureRequestFromClient(reader_writer);
 
   const CaptureOptions& capture_options = request.capture_options();
 
