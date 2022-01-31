@@ -31,7 +31,6 @@
 #include "OrbitBase/ReadFileToString.h"
 #include "OrbitBase/Result.h"
 #include "OrbitBase/WriteStringToFile.h"
-#include "Symbols/SymbolUtils.h"
 
 using orbit_grpc_protos::ModuleSymbols;
 
