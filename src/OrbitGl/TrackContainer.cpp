@@ -105,7 +105,7 @@ void TrackContainer::DoUpdateLayout() {
 void TrackContainer::UpdateTracksPosition() {
   const float track_pos_x = GetPos()[0];
 
-  float current_y = layout_->GetSchedulerTrackOffset() - vertical_scrolling_offset_;
+  float current_y = GetPos()[1] + layout_->GetSchedulerTrackOffset() - vertical_scrolling_offset_;
 
   // Track height including space between them
   for (auto& track : track_manager_->GetVisibleTracks()) {
