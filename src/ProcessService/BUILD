@@ -18,6 +18,7 @@ orbit_cc_library(
         "//src/GrpcProtos:tracepoint_cc_proto",
         "//src/ObjectUtils",
         "//src/OrbitBase",
+        "//src/Symbols",
         "@com_github_grpc_grpc//:grpc",
         "@com_github_grpc_grpc//:grpc++",
         "@com_google_absl//absl/base",
