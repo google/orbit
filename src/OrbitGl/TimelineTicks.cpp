@@ -69,19 +69,15 @@ std::vector<uint64_t> TimelineTicks::GetMajorTicks(uint64_t start_ns, uint64_t e
   return major_ticks;
 }
 
-int TimelineTicks::GetTimestampsNumDigitsPrecision(uint64_t start_ns, uint64_t end_ns) const {
+int TimelineTicks::GetTimestampNumDigitsPrecision(uint64_t timestamp_ns) const {
   constexpr int kMaxDigitsPrecision = 9;  // 1ns = 0.000'000'001s
 
   uint64_t current_precision_ns = kNanosecondsPerSecond;
   for (int num_digits = 0; num_digits < kMaxDigitsPrecision;
        num_digits++, current_precision_ns /= 10) {
-    bool precision_is_enough = true;
-    for (uint64_t timestamp : GetMajorTicks(start_ns, end_ns)) {
-      if (timestamp % current_precision_ns != 0) {
-        precision_is_enough = false;
-      }
+    if (timestamp_ns % current_precision_ns == 0) {
+      return num_digits;
     }
-    if (precision_is_enough) return num_digits;
   }
   return kMaxDigitsPrecision;
 }

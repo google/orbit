@@ -26,24 +26,20 @@ TEST(TimelineTicks, GetMajorTicks) {
                                    1 * kNanosecondsPerMinute));
 }
 
-TEST(TimelineTicks, GetTimestampsNumDigitsPrecision) {
+TEST(TimelineTicks, GetTimestampNumDigitsPrecision) {
   TimelineTicks timeline_ticks;
 
-  EXPECT_EQ(timeline_ticks.GetTimestampsNumDigitsPrecision(0, 20), 8);   // 10ns = 0.000'000'01s
-  EXPECT_EQ(timeline_ticks.GetTimestampsNumDigitsPrecision(0, 299), 7);  // 100ns = 0.000'000'1s
-  EXPECT_EQ(timeline_ticks.GetTimestampsNumDigitsPrecision(1, 299), 7);
-  EXPECT_EQ(timeline_ticks.GetTimestampsNumDigitsPrecision(50, 249), 7);
-  EXPECT_EQ(timeline_ticks.GetTimestampsNumDigitsPrecision(50, 248), 8);
-  EXPECT_EQ(timeline_ticks.GetTimestampsNumDigitsPrecision(40 * kNanosecondsPerMicrosecond,
-                                                           100 * kNanosecondsPerMicrosecond),
-            5);  // 0.01 ms = 0.000'01s
-  EXPECT_EQ(timeline_ticks.GetTimestampsNumDigitsPrecision(1 * kNanosecondsPerSecond,
-                                                           6 * kNanosecondsPerSecond),
+  EXPECT_EQ(timeline_ticks.GetTimestampNumDigitsPrecision(10), 8);   // 10ns = 0.000'000'01s
+  EXPECT_EQ(timeline_ticks.GetTimestampNumDigitsPrecision(200), 7);  // 200ns = 0.000'000'2s
+  EXPECT_EQ(timeline_ticks.GetTimestampNumDigitsPrecision(297), 9);
+  EXPECT_EQ(timeline_ticks.GetTimestampNumDigitsPrecision(40 * kNanosecondsPerMicrosecond),
+            5);  // 0.040 ms = 0.000'04s
+  EXPECT_EQ(timeline_ticks.GetTimestampNumDigitsPrecision(1 * kNanosecondsPerSecond), 0);
+  EXPECT_EQ(timeline_ticks.GetTimestampNumDigitsPrecision(1 * kNanosecondsPerMinute), 0);
+  EXPECT_EQ(timeline_ticks.GetTimestampNumDigitsPrecision(3 * kNanosecondsPerHour +
+                                                          2 * kNanosecondsPerSecond),
             0);
-
-  EXPECT_EQ(timeline_ticks.GetTimestampsNumDigitsPrecision(1 * kNanosecondsPerMinute,
-                                                           5 * kNanosecondsPerMinute),
-            0);
+  EXPECT_EQ(timeline_ticks.GetTimestampNumDigitsPrecision(3 * kNanosecondsPerHour + 10), 8);
 }
 
 }  // namespace orbit_gl
