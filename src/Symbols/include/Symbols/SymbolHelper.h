@@ -26,7 +26,7 @@ namespace orbit_symbols {
 
 class SymbolHelper {
  public:
-  SymbolHelper();
+  explicit SymbolHelper(fs::path cache_directory);
   explicit SymbolHelper(fs::path cache_directory,
                         std::vector<fs::path> structured_debug_directories)
       : cache_directory_(std::move(cache_directory)),

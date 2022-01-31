@@ -73,6 +73,7 @@
 #include "OrbitBase/Logging.h"
 #include "OrbitBase/Result.h"
 #include "OrbitBase/ThreadPool.h"
+#include "OrbitPaths/Paths.h"
 #include "SamplingReport.h"
 #include "ScopedStatus.h"
 #include "StatusListener.h"
@@ -608,7 +609,7 @@ class OrbitApp final : public DataViewFactory,
   std::unique_ptr<orbit_client_services::CrashManager> crash_manager_;
   std::unique_ptr<ManualInstrumentationManager> manual_instrumentation_manager_;
 
-  const orbit_symbols::SymbolHelper symbol_helper_;
+  const orbit_symbols::SymbolHelper symbol_helper_{orbit_paths::CreateOrGetCacheDir()};
 
   StatusListener* status_listener_ = nullptr;
 
