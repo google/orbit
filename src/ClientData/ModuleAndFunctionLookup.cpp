@@ -94,16 +94,6 @@ const FunctionInfo* FindFunctionByModulePathBuildIdAndOffset(const ModuleManager
   return module_data->FindFunctionByElfAddress(address, /*is_exact=*/true);
 }
 
-std::optional<std::string> FindModuleBuildIdByAddress(const ProcessData& process,
-                                                      const ModuleManager& module_manager,
-                                                      uint64_t absolute_address) {
-  const ModuleData* module_data = FindModuleByAddress(process, module_manager, absolute_address);
-  if (module_data == nullptr) {
-    return std::nullopt;
-  }
-  return module_data->build_id();
-}
-
 const std::string& GetModulePathByAddress(const ModuleManager& module_manager,
                                           const CaptureData& capture_data,
                                           uint64_t absolute_address) {
@@ -122,6 +112,26 @@ const std::string& GetModulePathByAddress(const ModuleManager& module_manager,
     return kUnknownFunctionOrModuleName;
   }
   return module_path;
+}
+
+std::pair<const std::string&, std::optional<std::string>> FindModulePathAndBuildIdByAddress(
+    const ModuleManager& module_manager, const CaptureData& capture_data,
+    uint64_t absolute_address) {
+  const ModuleData* module_data =
+      FindModuleByAddress(*capture_data.process(), module_manager, absolute_address);
+  if (module_data != nullptr) {
+    return {module_data->file_path(), module_data->build_id()};
+  }
+
+  const LinuxAddressInfo* address_info = capture_data.GetAddressInfo(absolute_address);
+  if (address_info == nullptr) {
+    return {kUnknownFunctionOrModuleName, std::nullopt};
+  }
+  const std::string& module_path = address_info->module_path();
+  if (module_path.empty()) {
+    return {kUnknownFunctionOrModuleName, std::nullopt};
+  }
+  return {module_path, std::nullopt};
 }
 
 const FunctionInfo* FindFunctionByAddress(const ProcessData& process,

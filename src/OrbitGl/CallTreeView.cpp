@@ -118,14 +118,12 @@ static void AddCallstackToTopDownThread(
     uint64_t frame = *frame_it;
     const std::string& function_name =
         orbit_client_data::GetFunctionNameByAddress(module_manager, capture_data, frame);
-    const std::string& module_path =
-        orbit_client_data::GetModulePathByAddress(module_manager, capture_data, frame);
-    const std::string module_build_id = orbit_client_data::FindModuleBuildIdByAddress(
-                                            *capture_data.process(), module_manager, frame)
-                                            .value_or("");
+    const auto& [module_path, module_build_id] =
+        orbit_client_data::FindModulePathAndBuildIdByAddress(module_manager, capture_data, frame);
 
-    CallTreeFunction* function_node = GetOrCreateFunctionNode(
-        current_thread_or_function, frame, function_name, module_path, module_build_id);
+    CallTreeFunction* function_node =
+        GetOrCreateFunctionNode(current_thread_or_function, frame, function_name, module_path,
+                                module_build_id.value_or(""));
     function_node->IncreaseSampleCount(callstack_sample_count);
     current_thread_or_function = function_node;
   }
@@ -148,13 +146,10 @@ static void AddUnwindErrorToTopDownThread(
   uint64_t frame = resolved_callstack.frames(0);
   const std::string& function_name =
       orbit_client_data::GetFunctionNameByAddress(module_manager, capture_data, frame);
-  const std::string& module_path =
-      orbit_client_data::GetModulePathByAddress(module_manager, capture_data, frame);
-  const std::string module_build_id =
-      orbit_client_data::FindModuleBuildIdByAddress(*capture_data.process(), module_manager, frame)
-          .value_or("");
+  const auto& [module_path, module_build_id] =
+      orbit_client_data::FindModulePathAndBuildIdByAddress(module_manager, capture_data, frame);
   CallTreeFunction* function_node = GetOrCreateFunctionNode(
-      unwind_errors_node, frame, function_name, module_path, module_build_id);
+      unwind_errors_node, frame, function_name, module_path, module_build_id.value_or(""));
   function_node->IncreaseSampleCount(callstack_sample_count);
   function_node->AddExclusiveCallstackEvents(callstack_events);
 }
@@ -224,13 +219,11 @@ std::unique_ptr<CallTreeView> CallTreeView::CreateTopDownViewFromPostProcessedSa
   for (uint64_t frame : resolved_callstack.frames()) {
     const std::string& function_name =
         orbit_client_data::GetFunctionNameByAddress(module_manager, capture_data, frame);
-    const std::string& module_path =
-        orbit_client_data::GetModulePathByAddress(module_manager, capture_data, frame);
-    const std::string module_build_id = orbit_client_data::FindModuleBuildIdByAddress(
-                                            *capture_data.process(), module_manager, frame)
-                                            .value_or("");
-    CallTreeFunction* function_node =
-        GetOrCreateFunctionNode(current_node, frame, function_name, module_path, module_build_id);
+    const auto& [module_path, module_build_id] =
+        orbit_client_data::FindModulePathAndBuildIdByAddress(module_manager, capture_data, frame);
+
+    CallTreeFunction* function_node = GetOrCreateFunctionNode(
+        current_node, frame, function_name, module_path, module_build_id.value_or(""));
     function_node->IncreaseSampleCount(callstack_sample_count);
     current_node = function_node;
   }
@@ -246,13 +239,10 @@ std::unique_ptr<CallTreeView> CallTreeView::CreateTopDownViewFromPostProcessedSa
   uint64_t frame = resolved_callstack.frames(0);
   const std::string& function_name =
       orbit_client_data::GetFunctionNameByAddress(module_manager, capture_data, frame);
-  const std::string& module_path =
-      orbit_client_data::GetModulePathByAddress(module_manager, capture_data, frame);
-  const std::string module_build_id =
-      orbit_client_data::FindModuleBuildIdByAddress(*capture_data.process(), module_manager, frame)
-          .value_or("");
-  CallTreeFunction* function_node =
-      GetOrCreateFunctionNode(bottom_up_view, frame, function_name, module_path, module_build_id);
+  const auto& [module_path, module_build_id] =
+      orbit_client_data::FindModulePathAndBuildIdByAddress(module_manager, capture_data, frame);
+  CallTreeFunction* function_node = GetOrCreateFunctionNode(
+      bottom_up_view, frame, function_name, module_path, module_build_id.value_or(""));
   function_node->IncreaseSampleCount(callstack_sample_count);
 
   CallTreeUnwindErrors* unwind_errors_node = function_node->GetUnwindErrorsOrNull();
