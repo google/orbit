@@ -4,26 +4,30 @@
 
 #include "WindowsCaptureService/WindowsCaptureService.h"
 
+#include <grpcpp/grpcpp.h>
 #include <stdint.h>
 
 #include "CaptureService/CaptureServiceUtils.h"
 #include "GrpcProtos/capture.pb.h"
 #include "OrbitBase/ThreadUtils.h"
+#include "ProducerEventProcessor/GrpcClientCaptureEventCollector.h"
 #include "TracingHandler.h"
 
 namespace orbit_windows_capture_service {
 
 using orbit_grpc_protos::CaptureRequest;
 using orbit_grpc_protos::CaptureResponse;
+using orbit_producer_event_processor::GrpcClientCaptureEventCollector;
 
 grpc::Status WindowsCaptureService::Capture(
     grpc::ServerContext*,
     grpc::ServerReaderWriter<CaptureResponse, CaptureRequest>* reader_writer) {
   orbit_base::SetCurrentThreadName("WinCS::Capture");
 
-  grpc::Status result = InitializeCapture(reader_writer);
-  if (!result.ok()) {
-    return result;
+  if (ErrorMessageOr<void> result =
+          InitializeCapture(std::make_unique<GrpcClientCaptureEventCollector>(reader_writer));
+      result.has_error()) {
+    return grpc::Status(grpc::StatusCode::ALREADY_EXISTS, result.error().message());
   }
 
   CaptureRequest request =
