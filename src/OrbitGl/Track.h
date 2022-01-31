@@ -132,7 +132,6 @@ class Track : public orbit_gl::CaptureViewElement, public std::enable_shared_fro
   Type type_ = Type::kUnknown;
   std::shared_ptr<TriangleToggle> collapse_toggle_;
 
-  TimeGraphLayout* layout_;
   const orbit_gl::TimelineInfoInterface* timeline_info_;
   const orbit_client_data::ModuleManager* module_manager_ = nullptr;
   const orbit_client_data::CaptureData* capture_data_ = nullptr;

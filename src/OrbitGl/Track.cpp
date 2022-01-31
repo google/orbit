@@ -25,7 +25,6 @@ Track::Track(CaptureViewElement* parent, const orbit_gl::TimelineInfoInterface* 
              const orbit_client_data::CaptureData* capture_data)
     : CaptureViewElement(parent, viewport, layout),
       pinned_{false},
-      layout_(layout),
       timeline_info_(timeline_info),
       module_manager_(module_manager),
       capture_data_(capture_data) {
