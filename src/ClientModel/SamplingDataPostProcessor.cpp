@@ -144,29 +144,37 @@ PostProcessedSamplingData SamplingDataPostProcessor::ProcessSamples(
   // Unique call stacks and per thread data
   callstack_data.ForEachCallstackEvent([this, &callstack_data,
                                         generate_summary](const CallstackEvent& event) {
-    ORBIT_CHECK(callstack_data.HasCallstack(event.callstack_id()));
     const orbit_client_protos::CallstackInfo* callstack_info =
         callstack_data.GetCallstack(event.callstack_id());
+    ORBIT_CHECK(callstack_info != nullptr);
 
-    // For non-kComplete callstacks, only use the innermost frame for statistics, as it's the
-    // only one known to be correct. Note that, in the vast majority of cases, the innermost
-    // frame is also the only one available.
-    absl::flat_hash_set<uint64_t> unique_frames;
+    std::vector<uint64_t> sorted_frames;
     ORBIT_CHECK(!callstack_info->frames().empty());
     if (callstack_info->type() == CallstackInfo::kComplete) {
       for (uint64_t frame : callstack_info->frames()) {
-        unique_frames.insert(frame);
+        sorted_frames.push_back(frame);
       }
     } else {
-      unique_frames.insert(callstack_info->frames(0));
+      // For non-kComplete callstacks, only use the innermost frame for statistics, as it's the only
+      // one known to be correct. Note that, in the vast majority of cases, the innermost frame is
+      // also the only one available.
+      sorted_frames.push_back(callstack_info->frames(0));
     }
+
+    // We need to consider duplicated frames (because of recursion) only once. We should use a set
+    // for better time complexity but sorting and comparing adjacent elements is faster in practice
+    // for a number of elements in the order of the number of frames in a callstack.
+    std::sort(sorted_frames.begin(), sorted_frames.end());
 
     ThreadSampleData* thread_sample_data = &thread_id_to_sample_data_[event.thread_id()];
     thread_sample_data->thread_id = event.thread_id();
     thread_sample_data->samples_count++;
     thread_sample_data->sampled_callstack_id_to_events[event.callstack_id()].emplace_back(event);
-    for (uint64_t frame : unique_frames) {
-      thread_sample_data->sampled_address_to_count[frame]++;
+    for (size_t i = 0; i < sorted_frames.size(); ++i) {
+      if (i != 0 && sorted_frames[i] == sorted_frames[i - 1]) {
+        continue;
+      }
+      thread_sample_data->sampled_address_to_count[sorted_frames[i]]++;
     }
 
     if (!generate_summary) {
@@ -178,8 +186,11 @@ PostProcessedSamplingData SamplingDataPostProcessor::ProcessSamples(
     all_thread_sample_data->samples_count++;
     all_thread_sample_data->sampled_callstack_id_to_events[event.callstack_id()].emplace_back(
         event);
-    for (uint64_t frame : unique_frames) {
-      all_thread_sample_data->sampled_address_to_count[frame]++;
+    for (size_t i = 0; i < sorted_frames.size(); ++i) {
+      if (i != 0 && sorted_frames[i] == sorted_frames[i - 1]) {
+        continue;
+      }
+      all_thread_sample_data->sampled_address_to_count[sorted_frames[i]]++;
     }
   });
 
