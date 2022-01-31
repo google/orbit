@@ -26,4 +26,20 @@ TEST(TimelineTicks, GetMajorTicks) {
                                    1 * kNanosecondsPerMinute));
 }
 
+TEST(TimelineTicks, GetTimestampNumDigitsPrecision) {
+  TimelineTicks timeline_ticks;
+
+  EXPECT_EQ(timeline_ticks.GetTimestampNumDigitsPrecision(10), 8);   // 10ns = 0.000'000'01s
+  EXPECT_EQ(timeline_ticks.GetTimestampNumDigitsPrecision(200), 7);  // 200ns = 0.000'000'2s
+  EXPECT_EQ(timeline_ticks.GetTimestampNumDigitsPrecision(297), 9);
+  EXPECT_EQ(timeline_ticks.GetTimestampNumDigitsPrecision(40 * kNanosecondsPerMicrosecond),
+            5);  // 0.040 ms = 0.000'04s
+  EXPECT_EQ(timeline_ticks.GetTimestampNumDigitsPrecision(1 * kNanosecondsPerSecond), 0);
+  EXPECT_EQ(timeline_ticks.GetTimestampNumDigitsPrecision(1 * kNanosecondsPerMinute), 0);
+  EXPECT_EQ(timeline_ticks.GetTimestampNumDigitsPrecision(3 * kNanosecondsPerHour +
+                                                          2 * kNanosecondsPerSecond),
+            0);
+  EXPECT_EQ(timeline_ticks.GetTimestampNumDigitsPrecision(3 * kNanosecondsPerHour + 10), 8);
+}
+
 }  // namespace orbit_gl

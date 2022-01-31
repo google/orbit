@@ -27,6 +27,8 @@ class TimelineTicks {
   [[nodiscard]] std::vector<std::pair<TickType, uint64_t> > GetAllTicks(uint64_t start_ns,
                                                                         uint64_t end_ns) const;
   [[nodiscard]] std::vector<uint64_t> GetMajorTicks(uint64_t start_ns, uint64_t end_ns) const;
+  // Number of digits needed to show precisely parts of a second in a timestamp.
+  [[nodiscard]] int GetTimestampNumDigitsPrecision(uint64_t timestamp_ns) const;
 
  private:
   uint64_t GetScale(uint64_t time_range_ns) const;
