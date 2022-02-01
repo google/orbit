@@ -7,7 +7,6 @@
 #include <grpcpp/grpcpp.h>
 #include <stdint.h>
 
-#include "CaptureService/CaptureServiceUtils.h"
 #include "CaptureService/ClientCaptureEventCollectorBuilderImpl.h"
 #include "CaptureService/StartStopCaptureRequestWaiterImpl.h"
 #include "GrpcProtos/capture.pb.h"
