@@ -48,11 +48,6 @@ TrackContainer::TrackContainer(CaptureViewElement* parent, TimelineInfoInterface
   track_manager_->GetOrCreateSchedulerTrack();
 }
 
-float TrackContainer::GetHeight() const {
-  // The entire TimeGraph without the horizontal slider and the timeline.
-  return viewport_->GetWorldHeight() - layout_->GetBottomMargin();
-}
-
 float TrackContainer::GetVisibleTracksTotalHeight() const {
   // Top and Bottom Margin. TODO: Margins should be treated in a different way (http://b/192070555).
   float visible_tracks_total_height =
@@ -83,11 +78,9 @@ void TrackContainer::VerticallyMoveIntoView(const TimerInfo& timer_info) {
 // Move vertically the view to make a Track fully visible.
 void TrackContainer::VerticallyMoveIntoView(const Track& track) {
   float pos = track.GetPos()[1] + vertical_scrolling_offset_;
-  float height = track.GetHeight();
 
   float max_vertical_scrolling_offset = pos;
-  float min_vertical_scrolling_offset =
-      pos + height - viewport_->GetWorldHeight() + layout_->GetBottomMargin();
+  float min_vertical_scrolling_offset = pos + track.GetHeight() - GetHeight();
   SetVerticalScrollingOffset(std::clamp(vertical_scrolling_offset_, min_vertical_scrolling_offset,
                                         max_vertical_scrolling_offset));
 }
@@ -199,11 +192,11 @@ void TrackContainer::DrawOverlay(Batcher& batcher, TextRenderer& text_renderer,
   std::vector<float> x_coords;
   x_coords.reserve(timers.size());
 
-  float world_start_x = 0;
-  float world_width = GetWidth();
+  float world_start_x = GetPos()[0];
+  float width = GetWidth();
 
-  float world_start_y = 0;
-  float world_height = viewport_->GetWorldHeight();
+  float world_start_y = GetPos()[1];
+  float height = GetHeight();
 
   double inv_time_window = 1.0 / timeline_info_->GetTimeWindowUs();
 
@@ -213,12 +206,12 @@ void TrackContainer::DrawOverlay(Batcher& batcher, TextRenderer& text_renderer,
 
     double start_us = timeline_info_->GetUsFromTick(timer_info->start());
     double normalized_start = start_us * inv_time_window;
-    auto world_timer_x = static_cast<float>(world_start_x + normalized_start * world_width);
+    auto world_timer_x = static_cast<float>(world_start_x + normalized_start * width);
 
     Vec2 pos(world_timer_x, world_start_y);
     x_coords.push_back(pos[0]);
 
-    batcher.AddVerticalLine(pos, world_height, GlCanvas::kZValueOverlay,
+    batcher.AddVerticalLine(pos, height, GlCanvas::kZValueOverlay,
                             TimeGraph::GetThreadColor(timer_info->thread_id()));
   }
 
@@ -226,7 +219,7 @@ void TrackContainer::DrawOverlay(Batcher& batcher, TextRenderer& text_renderer,
   for (size_t k = 1; k < timers.size(); ++k) {
     Vec2 pos(x_coords[k - 1], world_start_y);
     float size_x = x_coords[k] - pos[0];
-    Vec2 size(size_x, world_height);
+    Vec2 size(size_x, height);
     Color color = GetIteratorBoxColor(k - 1);
 
     uint64_t id_a = timers[k - 1].first;
@@ -244,16 +237,12 @@ void TrackContainer::DrawOverlay(Batcher& batcher, TextRenderer& text_renderer,
     const std::string& label = GetLabelBetweenIterators(*function_a, *function_b);
     const std::string& time = GetTimeString(*timers[k - 1].second, *timers[k].second);
 
-    // Distance from the bottom where we don't want to draw.
-    float bottom_margin = layout_->GetBottomMargin();
-
     // The height of text is chosen such that the text of the last box drawn is
-    // at pos[1] + bottom_margin (lowest possible position) and the height of
-    // the box showing the overall time (see below) is at pos[1] + (world_height
-    // / 2.f), corresponding to the case k == 0 in the formula for 'text_y'.
-    float height_per_text = ((world_height / 2.f) - bottom_margin) /
-                            static_cast<float>(iterator_timer_info_.size() - 1);
-    float text_y = pos[1] + (world_height / 2.f) + static_cast<float>(k) * height_per_text -
+    // at pos[1] (lowest possible position) and the height of the box showing the overall time (see
+    // below) is at pos[1] + (height / 2.f), corresponding to the case k == 0 in the formula for
+    // 'text_y'.
+    float height_per_text = ((height / 2.f)) / static_cast<float>(iterator_timer_info_.size() - 1);
+    float text_y = pos[1] + (height / 2.f) + static_cast<float>(k) * height_per_text -
                    layout_->GetTextBoxHeight();
 
     DrawIteratorBox(batcher, text_renderer, pos, size, color, label, time, text_y);
@@ -266,12 +255,12 @@ void TrackContainer::DrawOverlay(Batcher& batcher, TextRenderer& text_renderer,
 
     Vec2 pos(x_coords[0], world_start_y);
     float size_x = x_coords[last_index] - pos[0];
-    Vec2 size(size_x, world_height);
+    Vec2 size(size_x, height);
 
     std::string time = GetTimeString(*timers[0].second, *timers[last_index].second);
     std::string label("Total");
 
-    float text_y = pos[1] + (world_height / 2.f);
+    float text_y = pos[1] + (height / 2.f);
 
     // We do not want the overall box to add any color, so we just set alpha to
     // 0.

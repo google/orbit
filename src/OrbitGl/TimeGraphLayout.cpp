@@ -101,8 +101,8 @@ float TimeGraphLayout::GetCollapseButtonSize(int indentation_level) const {
 
 float TimeGraphLayout::GetBottomMargin() const {
   // The bottom consists of the slider (where we have to take the width, as it
-  // is rotated), and the time bar.
-  return GetSliderWidth() + GetTimeBarHeight();
+  // is rotated).
+  return GetSliderWidth();
 }
 
 float TimeGraphLayout::GetEventTrackHeightFromTid(uint32_t tid) const {
