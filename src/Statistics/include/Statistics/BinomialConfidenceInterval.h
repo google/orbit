@@ -25,8 +25,8 @@ class WilsonBinomialConfidenceIntervalEstimator : public BinomialConfidenceInter
   [[nodiscard]] BinomialConfidenceInterval Estimate(float ratio, uint32_t trials) const override;
 
  private:
-  constexpr static double kNormalQuantile =
-      1.959963985;  // (1 - 0.05/2)-quantile of the standard normal distribution.
+  // (1 - 0.05/2)-quantile of the standard normal distribution.
+  constexpr static double kNormalQuantile = 1.959963985;
   constexpr static double kNormalQuantile2 = kNormalQuantile * kNormalQuantile;
 };
 
