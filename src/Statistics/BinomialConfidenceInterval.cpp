@@ -4,8 +4,6 @@
 
 #include "Statistics/BinomialConfidenceInterval.h"
 
-#include <linux/limits.h>
-
 #include <cmath>
 #include <cstdint>
 
