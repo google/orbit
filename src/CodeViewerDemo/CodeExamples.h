@@ -351,7 +351,7 @@ inline const QString x86Assembly_example = R"(Platform: X86 64 (Intel syntax)
 0x557e1f8091d4:	sub          rsp, 0x10
 0x557e1f8091d8:	mov          rax, qword ptr fs:[0x28]
 0x557e1f8091e1:	mov          qword ptr [rbp - 8], rax
-0x557e1f8091e2:	call         0x123 (bbb::foo())
+0x557e1f8091e2:	call         0x123 (bbb::foo() const)
 0x557e1f8091e3:	call         0x123 (bbb::foo<int a, std::function<void (int)>>(int, std::function<void (B)>))
 0x55da67cf3ee4:	call         0x55da686727c0 ([???])
 0x557e1f8091e5:	xorps        xmm0, xmm0
