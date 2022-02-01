@@ -77,11 +77,7 @@ TimeGraph::TimeGraph(AccessibleInterfaceProvider* parent, OrbitApp* app,
 }
 
 float TimeGraph::GetHeight() const {
-  float total_height = 0.;
-  for (orbit_gl::CaptureViewElement* capture_view_element : GetNonHiddenChildren()) {
-    total_height += capture_view_element->GetHeight();
-  }
-  return total_height;
+  return viewport_->GetWorldHeight() - layout_.GetBottomMargin();
 }
 
 void TimeGraph::UpdateCaptureMinMaxTimestamps() {
@@ -531,7 +527,6 @@ void TimeGraph::PrepareBatcherAndUpdatePrimitives(PickingMode picking_mode) {
   uint64_t min_tick = GetTickFromUs(min_time_us_);
   uint64_t max_tick = GetTickFromUs(max_time_us_);
 
-  timeline_ui_->SetPos(0, track_container_->GetHeight());
   CaptureViewElement::UpdatePrimitives(batcher_, text_renderer_static_, min_tick, max_tick,
                                        picking_mode);
 
@@ -549,6 +544,12 @@ void TimeGraph::DoUpdateLayout() {
       std::max(capture_max_timestamp_, capture_data_->GetCallstackData().max_time());
 
   time_window_us_ = max_time_us_ - min_time_us_;
+
+  // Update position and size of children.
+  track_container_->SetPos(GetPos()[0], GetPos()[1]);
+  // TrackContainer height is the free space of the screen.
+  track_container_->SetHeight(GetHeight() - timeline_ui_->GetHeight());
+  timeline_ui_->SetPos(GetPos()[0], GetPos()[1] + track_container_->GetHeight());
 }
 
 void TimeGraph::SelectAndZoom(const TimerInfo* timer_info) {

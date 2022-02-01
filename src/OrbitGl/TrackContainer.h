@@ -30,7 +30,8 @@ class TrackContainer final : public CaptureViewElement {
                           const orbit_client_data::ModuleManager* module_manager,
                           orbit_client_data::CaptureData* capture_data);
 
-  [[nodiscard]] float GetHeight() const override;
+  [[nodiscard]] float GetHeight() const override { return height_; };
+  void SetHeight(float height) { height_ = height; }
   [[nodiscard]] float GetVisibleTracksTotalHeight() const;
 
   [[nodiscard]] TrackManager* GetTrackManager() { return track_manager_.get(); }
@@ -87,6 +88,7 @@ class TrackContainer final : public CaptureViewElement {
   absl::flat_hash_map<uint64_t, uint64_t> iterator_id_to_function_id_;
 
   float vertical_scrolling_offset_ = 0;
+  float height_ = 0;
 
   std::unique_ptr<TrackManager> track_manager_;
 
