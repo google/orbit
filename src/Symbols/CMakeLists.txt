@@ -16,8 +16,7 @@ target_link_libraries(Symbols PUBLIC
         GrpcProtos
         Introspection
         ObjectUtils
-        OrbitBase
-        OrbitPaths)
+        OrbitBase)
 
 
 add_executable(SymbolsTests)
