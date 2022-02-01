@@ -8,35 +8,45 @@
 #include <stdint.h>
 
 #include "CaptureService/CaptureServiceUtils.h"
+#include "CaptureService/ClientCaptureEventCollectorBuilderImpl.h"
+#include "CaptureService/StartStopCaptureRequestWaiterImpl.h"
 #include "GrpcProtos/capture.pb.h"
 #include "OrbitBase/ThreadUtils.h"
-#include "ProducerEventProcessor/GrpcClientCaptureEventCollector.h"
 #include "TracingHandler.h"
 
 namespace orbit_windows_capture_service {
 
+using orbit_grpc_protos::CaptureOptions;
 using orbit_grpc_protos::CaptureRequest;
 using orbit_grpc_protos::CaptureResponse;
-using orbit_producer_event_processor::GrpcClientCaptureEventCollector;
 
 grpc::Status WindowsCaptureService::Capture(
     grpc::ServerContext*,
     grpc::ServerReaderWriter<CaptureResponse, CaptureRequest>* reader_writer) {
   orbit_base::SetCurrentThreadName("WinCS::Capture");
 
-  if (ErrorMessageOr<void> result =
-          InitializeCapture(std::make_unique<GrpcClientCaptureEventCollector>(reader_writer));
-      result.has_error()) {
-    return grpc::Status(grpc::StatusCode::ALREADY_EXISTS, result.error().message());
+  orbit_capture_service::ClientCaptureEventCollectorBuilderImpl
+      client_capture_event_collector_builder{reader_writer};
+
+  // shared_ptr because it might outlive this method. See wait_for_stop_capture_request_thread_ in
+  // WaitForStopCaptureRequestOrMemoryThresholdExceeded.
+  auto start_stop_capture_request_waiter =
+      std::make_shared<orbit_capture_service::StartStopCaptureRequestWaiterImpl>(reader_writer);
+
+  if (CaptureServiceBase::CaptureInitializationResult result =
+          InitializeCapture(&client_capture_event_collector_builder);
+      result == CaptureServiceBase::CaptureInitializationResult::kAlreadyInProgress) {
+    return {grpc::StatusCode::ALREADY_EXISTS,
+            "Cannot start capture because another capture is already in progress"};
   }
 
-  CaptureRequest request =
-      orbit_capture_service::WaitForStartCaptureRequestFromClient(reader_writer);
+  const CaptureOptions& capture_options =
+      start_stop_capture_request_waiter->WaitForStartCaptureRequest();
 
-  StartEventProcessing(request.capture_options());
+  StartEventProcessing(capture_options);
   TracingHandler tracing_handler{producer_event_processor_.get()};
-  tracing_handler.Start(request.capture_options());
-  orbit_capture_service::WaitForStopCaptureRequestFromClient(reader_writer);
+  tracing_handler.Start(capture_options);
+  start_stop_capture_request_waiter->WaitForStopCaptureRequest();
   tracing_handler.Stop();
   FinalizeEventProcessing(StopCaptureReason::kClientStop);
 

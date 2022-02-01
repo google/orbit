@@ -34,20 +34,20 @@ void CaptureServiceBase::RemoveCaptureStartStopListener(CaptureStartStopListener
   ORBIT_CHECK(was_removed);
 }
 
-ErrorMessageOr<void> CaptureServiceBase::InitializeCapture(
-    std::unique_ptr<ClientCaptureEventCollector> client_capture_event_collector) {
+CaptureServiceBase::CaptureInitializationResult CaptureServiceBase::InitializeCapture(
+    ClientCaptureEventCollectorBuilder* client_capture_event_collector_builder) {
   {
     absl::MutexLock lock(&capture_mutex_);
     if (is_capturing_) {
-      return ErrorMessage("Cannot start capture because another capture is already in progress");
+      return CaptureInitializationResult::kAlreadyInProgress;
     }
     is_capturing_ = true;
   }
 
-  ORBIT_CHECK(client_capture_event_collector != nullptr);
-  client_capture_event_collector_.reset(client_capture_event_collector.release());
+  client_capture_event_collector_ =
+      client_capture_event_collector_builder->BuildClientCaptureEventCollector();
   producer_event_processor_ = ProducerEventProcessor::Create(client_capture_event_collector_.get());
-  return outcome::success();
+  return CaptureInitializationResult::kSuccess;
 }
 
 void CaptureServiceBase::TerminateCapture() {

@@ -8,6 +8,7 @@
 #include <absl/container/flat_hash_set.h>
 #include <absl/synchronization/mutex.h>
 
+#include "CaptureService/ClientCaptureEventCollectorBuilder.h"
 #include "CaptureStartStopListener.h"
 #include "GrpcProtos/capture.pb.h"
 #include "OrbitBase/Result.h"
@@ -26,9 +27,9 @@ class CaptureServiceBase {
   void RemoveCaptureStartStopListener(CaptureStartStopListener* listener);
 
  protected:
-  ErrorMessageOr<void> InitializeCapture(
-      std::unique_ptr<orbit_producer_event_processor::ClientCaptureEventCollector>
-          client_capture_event_collector);
+  enum class CaptureInitializationResult { kSuccess, kAlreadyInProgress };
+  [[nodiscard]] CaptureInitializationResult InitializeCapture(
+      ClientCaptureEventCollectorBuilder* client_capture_event_collector_builder);
   void TerminateCapture();
 
   void StartEventProcessing(const orbit_grpc_protos::CaptureOptions& capture_options);
