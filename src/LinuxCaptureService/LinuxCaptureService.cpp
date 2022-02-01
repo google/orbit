@@ -151,7 +151,7 @@ class ProducerEventProcessorHijackingFunctionEntryExitForLinuxTracing
 
 }  // namespace
 
-orbit_capture_service::Capturer::StopCaptureReason
+orbit_capture_service::CaptureServiceBase::StopCaptureReason
 LinuxCaptureService::WaitForStopCaptureRequestOrMemoryThresholdExceeded(
     grpc::ServerReaderWriter<orbit_grpc_protos::CaptureResponse, orbit_grpc_protos::CaptureRequest>*
         reader_writer) {

@@ -2,8 +2,8 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#ifndef CAPTURE_SERVICE_CAPTURER_H_
-#define CAPTURE_SERVICE_CAPTURER_H_
+#ifndef CAPTURE_SERVICE_CAPTURE_SERVICE_BASE_H_
+#define CAPTURE_SERVICE_CAPTURE_SERVICE_BASE_H_
 
 #include <absl/container/flat_hash_set.h>
 #include <absl/synchronization/mutex.h>
@@ -16,11 +16,11 @@
 
 namespace orbit_capture_service {
 
-// Capturer holds common functionality that does not depend on gRPC and can be shared by the
-// platform-specific native orbit capture services and the cloud collector.
-class Capturer {
+// CaptureServiceBase holds common functionality that does not depend on gRPC and can be shared by
+// the platform-specific native orbit capture services and the cloud collector.
+class CaptureServiceBase {
  public:
-  Capturer();
+  CaptureServiceBase();
 
   void AddCaptureStartStopListener(CaptureStartStopListener* listener);
   void RemoveCaptureStartStopListener(CaptureStartStopListener* listener);
@@ -50,4 +50,4 @@ class Capturer {
 
 }  // namespace orbit_capture_service
 
-#endif  // CAPTURE_SERVICE_CAPTURER_H_
+#endif  // CAPTURE_SERVICE_CAPTURE_SERVICE_BASE_H_

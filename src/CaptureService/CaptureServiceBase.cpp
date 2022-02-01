@@ -2,7 +2,7 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#include "CaptureService/Capturer.h"
+#include "CaptureService/CaptureServiceBase.h"
 
 #include <absl/time/time.h>
 
@@ -19,22 +19,22 @@ using orbit_producer_event_processor::ProducerEventProcessor;
 
 namespace orbit_capture_service {
 
-Capturer::Capturer() {
+CaptureServiceBase::CaptureServiceBase() {
   // We want to estimate clock resolution once, not at the beginning of every capture.
   clock_resolution_ns_ = orbit_base::EstimateAndLogClockResolution();
 }
 
-void Capturer::AddCaptureStartStopListener(CaptureStartStopListener* listener) {
+void CaptureServiceBase::AddCaptureStartStopListener(CaptureStartStopListener* listener) {
   bool new_insertion = capture_start_stop_listeners_.insert(listener).second;
   ORBIT_CHECK(new_insertion);
 }
 
-void Capturer::RemoveCaptureStartStopListener(CaptureStartStopListener* listener) {
+void CaptureServiceBase::RemoveCaptureStartStopListener(CaptureStartStopListener* listener) {
   bool was_removed = capture_start_stop_listeners_.erase(listener) > 0;
   ORBIT_CHECK(was_removed);
 }
 
-ErrorMessageOr<void> Capturer::InitializeCapture(
+ErrorMessageOr<void> CaptureServiceBase::InitializeCapture(
     std::unique_ptr<ClientCaptureEventCollector> client_capture_event_collector) {
   {
     absl::MutexLock lock(&capture_mutex_);
@@ -50,7 +50,7 @@ ErrorMessageOr<void> Capturer::InitializeCapture(
   return outcome::success();
 }
 
-void Capturer::TerminateCapture() {
+void CaptureServiceBase::TerminateCapture() {
   producer_event_processor_.reset();
   client_capture_event_collector_.reset();
   capture_start_timestamp_ns_ = 0;
@@ -59,7 +59,7 @@ void Capturer::TerminateCapture() {
   is_capturing_ = false;
 }
 
-void Capturer::StartEventProcessing(const CaptureOptions& capture_options) {
+void CaptureServiceBase::StartEventProcessing(const CaptureOptions& capture_options) {
   // These are not in precise sync but they do not have to be.
   absl::Time capture_start_time = absl::Now();
   capture_start_timestamp_ns_ = orbit_base::CaptureTimestampNs();
@@ -74,7 +74,7 @@ void Capturer::StartEventProcessing(const CaptureOptions& capture_options) {
                                               capture_start_timestamp_ns_, clock_resolution_ns_));
 }
 
-void Capturer::FinalizeEventProcessing(StopCaptureReason stop_capture_reason) {
+void CaptureServiceBase::FinalizeEventProcessing(StopCaptureReason stop_capture_reason) {
   ProducerCaptureEvent capture_finished;
   switch (stop_capture_reason) {
     case StopCaptureReason::kClientStop:
