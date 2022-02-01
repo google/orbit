@@ -150,7 +150,6 @@ class TimeGraph final : public orbit_gl::CaptureViewElement,
   [[nodiscard]] uint64_t GetCaptureMax() const { return capture_max_timestamp_; }
 
   [[nodiscard]] std::vector<CaptureViewElement*> GetAllChildren() const override;
-  [[nodiscard]] std::vector<CaptureViewElement*> GetNonHiddenChildren() const override;
 
   [[nodiscard]] AccessibleInterfaceProvider* GetAccessibleParent() const {
     return accessible_parent_;
@@ -159,6 +158,7 @@ class TimeGraph final : public orbit_gl::CaptureViewElement,
  protected:
   void PrepareBatcherAndUpdatePrimitives(PickingMode picking_mode);
   void DoUpdateLayout() override;
+  void UpdateChildrenPosAndSize();
 
   [[nodiscard]] std::unique_ptr<orbit_accessibility::AccessibleInterface>
   CreateAccessibleInterface() override;
