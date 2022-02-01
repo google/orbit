@@ -33,6 +33,7 @@
 #include "OrbitBase/ReadFileToString.h"
 #include "OrbitBase/Result.h"
 #include "OrbitBase/ThreadUtils.h"
+#include "Symbols/SymbolUtils.h"
 #include "absl/strings/str_format.h"
 
 namespace orbit_process_service {
@@ -259,22 +260,17 @@ ErrorMessageOr<fs::path> FindSymbolsFilePath(
                             additional_search_directories.end());
   search_directories.push_back(object_file_or_error.value()->GetFilePath().parent_path());
 
-  // 5. The file extensions for symbols files are .debug for elf files and .pdb for coff files. Only
-  // files with following formats are considered `module.sym_ext`, `module.mod_ext.sym_ext` and
-  // `module.mod_ext`. (`mod_ext` is the module file extension, usually .elf, .so, .exe or .dll;
-  // `sym_ext` is either .debug or .pdb)
-  std::string sym_ext = object_file_or_error.value()->IsElf() ? ".debug" : ".pdb";
-  const fs::path& filename = module_path.filename();
-  fs::path filename_dot_sym_ext = filename;
-  filename_dot_sym_ext.replace_extension(sym_ext);
-  fs::path filename_plus_sym_ext = filename;
-  filename_plus_sym_ext.replace_extension(filename.extension().string() + sym_ext);
+  // 5. Search in the directories for all the allowed symbol filenames
+  orbit_grpc_protos::ModuleInfo::ObjectFileType object_file_type =
+      object_file_or_error.value()->IsElf() ? orbit_grpc_protos::ModuleInfo::kElfFile
+                                            : orbit_grpc_protos::ModuleInfo::kCoffFile;
 
   std::set<fs::path> search_paths;
   for (const auto& directory : search_directories) {
-    search_paths.insert(directory / filename_dot_sym_ext);
-    search_paths.insert(directory / filename_plus_sym_ext);
-    search_paths.insert(directory / filename);
+    for (const auto& filename :
+         orbit_symbols::GetStandardSymbolFilenamesForModule(module_path, object_file_type)) {
+      search_paths.insert(directory / filename);
+    }
   }
 
   std::vector<std::string> error_messages;

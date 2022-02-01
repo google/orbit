@@ -27,7 +27,8 @@ target_sources(ProcessService PRIVATE
 target_link_libraries(ProcessService PUBLIC
         GrpcProtos
         ObjectUtils
-        OrbitBase)
+        OrbitBase
+        Symbols)
 
 add_executable(ProcessServiceTests)
 
