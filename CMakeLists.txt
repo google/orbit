@@ -194,6 +194,7 @@ add_subdirectory(src/ProducerSideService)
 add_subdirectory(src/Service)
 add_subdirectory(src/StringManager)
 add_subdirectory(src/Symbols)
+add_subdirectory(src/Statistics)
 add_subdirectory(src/Test)
 add_subdirectory(src/TestUtils)
 
