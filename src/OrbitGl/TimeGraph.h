@@ -68,6 +68,7 @@ class TimeGraph final : public orbit_gl::CaptureViewElement,
   [[nodiscard]] double GetTimeWindowUs() const override { return time_window_us_; }
   [[nodiscard]] double GetMinTimeUs() const override { return min_time_us_; }
   [[nodiscard]] double GetMaxTimeUs() const override { return max_time_us_; }
+  [[nodiscard]] uint64_t GetCaptureTimeSpanNs() const override;
 
   void UpdateCaptureMinMaxTimestamps();
 
@@ -111,7 +112,6 @@ class TimeGraph final : public orbit_gl::CaptureViewElement,
 
   void SelectAndZoom(const orbit_client_protos::TimerInfo* timer_info);
   [[nodiscard]] double GetCaptureTimeSpanUs() const;
-  [[nodiscard]] double GetCurrentTimeSpanUs() const;
   [[nodiscard]] bool IsRedrawNeeded() const { return update_primitives_requested_; }
 
   [[nodiscard]] bool IsFullyVisible(uint64_t min, uint64_t max) const;

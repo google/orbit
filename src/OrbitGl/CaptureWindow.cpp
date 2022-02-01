@@ -487,7 +487,7 @@ void CaptureWindow::UpdateChildrenPosAndSize() {
 void CaptureWindow::DrawScreenSpace() {
   ORBIT_SCOPE("CaptureWindow::DrawScreenSpace");
   if (time_graph_ == nullptr) return;
-  double time_span = time_graph_->GetCaptureTimeSpanUs();
+  uint64_t time_span = time_graph_->GetCaptureTimeSpanNs();
 
   Color col = slider_->GetBarColor();
   auto canvas_height = static_cast<float>(viewport_.GetScreenHeight());

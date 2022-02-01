@@ -109,17 +109,7 @@ void TimeGraph::Zoom(uint64_t min, uint64_t max) {
 
 void TimeGraph::Zoom(const TimerInfo& timer_info) { Zoom(timer_info.start(), timer_info.end()); }
 
-double TimeGraph::GetCaptureTimeSpanUs() const {
-  // Do we have an empty capture?
-  if (capture_max_timestamp_ == 0 &&
-      capture_min_timestamp_ == std::numeric_limits<uint64_t>::max()) {
-    return 0.0;
-  }
-  ORBIT_CHECK(capture_min_timestamp_ <= capture_max_timestamp_);
-  return TicksToMicroseconds(capture_min_timestamp_, capture_max_timestamp_);
-}
-
-double TimeGraph::GetCurrentTimeSpanUs() const { return max_time_us_ - min_time_us_; }
+double TimeGraph::GetCaptureTimeSpanUs() const { return GetCaptureTimeSpanNs() * 0.001; }
 
 void TimeGraph::ZoomTime(float zoom_value, double mouse_ratio) {
   static double increment_ratio = 0.1;
@@ -408,6 +398,16 @@ uint64_t TimeGraph::GetTickFromWorld(float world_x) const {
 uint64_t TimeGraph::GetTickFromUs(double micros) const {
   auto nanos = static_cast<uint64_t>(1000 * micros);
   return capture_min_timestamp_ + nanos;
+}
+
+uint64_t TimeGraph::GetCaptureTimeSpanNs() const {
+  // Do we have an empty capture?
+  if (capture_max_timestamp_ == 0 &&
+      capture_min_timestamp_ == std::numeric_limits<uint64_t>::max()) {
+    return 0;
+  }
+  ORBIT_CHECK(capture_min_timestamp_ <= capture_max_timestamp_);
+  return capture_max_timestamp_ - capture_min_timestamp_;
 }
 
 // Select a timer_info. Also move the view in order to assure that the timer_info and its track are
