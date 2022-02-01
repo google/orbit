@@ -40,7 +40,7 @@ using orbit_grpc_protos::InstrumentedFunction;
 TrackContainer::TrackContainer(CaptureViewElement* parent, TimelineInfoInterface* timeline_info,
                                Viewport* viewport, TimeGraphLayout* layout, OrbitApp* app,
                                const ModuleManager* module_manager, CaptureData* capture_data)
-    : CaptureViewElement(parent, viewport, &layout_),
+    : CaptureViewElement(parent, viewport, layout),
       track_manager_{std::make_unique<TrackManager>(this, timeline_info, viewport, layout, app,
                                                     module_manager, capture_data)},
       capture_data_{capture_data},
@@ -50,16 +50,17 @@ TrackContainer::TrackContainer(CaptureViewElement* parent, TimelineInfoInterface
 
 float TrackContainer::GetHeight() const {
   // The entire TimeGraph without the horizontal slider and the timeline.
-  return viewport_->GetWorldHeight() - layout_.GetBottomMargin();
+  return viewport_->GetWorldHeight() - layout_->GetBottomMargin();
 }
 
 float TrackContainer::GetVisibleTracksTotalHeight() const {
   // Top and Bottom Margin. TODO: Margins should be treated in a different way (http://b/192070555).
-  float visible_tracks_total_height = layout_.GetSchedulerTrackOffset() + layout_.GetBottomMargin();
+  float visible_tracks_total_height =
+      layout_->GetSchedulerTrackOffset() + layout_->GetBottomMargin();
 
   // Track height including space between them
   for (auto& track : GetNonHiddenChildren()) {
-    visible_tracks_total_height += (track->GetHeight() + layout_.GetSpaceBetweenTracks());
+    visible_tracks_total_height += (track->GetHeight() + layout_->GetSpaceBetweenTracks());
   }
   return visible_tracks_total_height;
 }
@@ -86,7 +87,7 @@ void TrackContainer::VerticallyMoveIntoView(const Track& track) {
 
   float max_vertical_scrolling_offset = pos;
   float min_vertical_scrolling_offset =
-      pos + height - viewport_->GetWorldHeight() + layout_.GetBottomMargin();
+      pos + height - viewport_->GetWorldHeight() + layout_->GetBottomMargin();
   SetVerticalScrollingOffset(std::clamp(vertical_scrolling_offset_, min_vertical_scrolling_offset,
                                         max_vertical_scrolling_offset));
 }
@@ -111,7 +112,7 @@ void TrackContainer::DoUpdateLayout() {
 void TrackContainer::UpdateTracksPosition() {
   const float track_pos_x = GetPos()[0];
 
-  float current_y = layout_.GetSchedulerTrackOffset() - vertical_scrolling_offset_;
+  float current_y = layout_->GetSchedulerTrackOffset() - vertical_scrolling_offset_;
 
   // Track height including space between them
   for (auto& track : track_manager_->GetVisibleTracks()) {
@@ -119,7 +120,7 @@ void TrackContainer::UpdateTracksPosition() {
       track->SetPos(track_pos_x, current_y);
     }
     track->SetWidth(GetWidth());
-    current_y += (track->GetHeight() + layout_.GetSpaceBetweenTracks());
+    current_y += (track->GetHeight() + layout_->GetSpaceBetweenTracks());
   }
 }
 
@@ -160,10 +161,10 @@ void TrackContainer::DrawIteratorBox(Batcher& batcher, TextRenderer& text_render
 
   const Color kBlack(0, 0, 0, 255);
   float text_width = text_renderer.AddTextTrailingCharsPrioritized(
-      text.c_str(), pos[0], text_box_y + layout_.GetTextOffset(), GlCanvas::kZValueTextUi,
-      {layout_.GetFontSize(), kBlack, max_size}, time.length());
+      text.c_str(), pos[0], text_box_y + layout_->GetTextOffset(), GlCanvas::kZValueTextUi,
+      {layout_->GetFontSize(), kBlack, max_size}, time.length());
 
-  float box_height = layout_.GetTextBoxHeight();
+  float box_height = layout_->GetTextBoxHeight();
   Vec2 white_box_size(std::min(static_cast<float>(text_width), max_size), box_height);
   Vec2 white_box_position(pos[0], text_box_y);
 
@@ -244,7 +245,7 @@ void TrackContainer::DrawOverlay(Batcher& batcher, TextRenderer& text_renderer,
     const std::string& time = GetTimeString(*timers[k - 1].second, *timers[k].second);
 
     // Distance from the bottom where we don't want to draw.
-    float bottom_margin = layout_.GetBottomMargin();
+    float bottom_margin = layout_->GetBottomMargin();
 
     // The height of text is chosen such that the text of the last box drawn is
     // at pos[1] + bottom_margin (lowest possible position) and the height of
@@ -253,7 +254,7 @@ void TrackContainer::DrawOverlay(Batcher& batcher, TextRenderer& text_renderer,
     float height_per_text = ((world_height / 2.f) - bottom_margin) /
                             static_cast<float>(iterator_timer_info_.size() - 1);
     float text_y = pos[1] + (world_height / 2.f) + static_cast<float>(k) * height_per_text -
-                   layout_.GetTextBoxHeight();
+                   layout_->GetTextBoxHeight();
 
     DrawIteratorBox(batcher, text_renderer, pos, size, color, label, time, text_y);
   }

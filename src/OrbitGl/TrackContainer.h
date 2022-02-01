@@ -88,7 +88,6 @@ class TrackContainer final : public CaptureViewElement {
 
   float vertical_scrolling_offset_ = 0;
 
-  TimeGraphLayout layout_;
   std::unique_ptr<TrackManager> track_manager_;
 
   const orbit_client_data::CaptureData* capture_data_ = nullptr;
