@@ -50,6 +50,7 @@ std::vector<std::pair<TimelineTicks::TickType, uint64_t> > TimelineTicks::GetAll
   std::vector<std::pair<TickType, uint64_t> > ticks;
   if (end_ns <= start_ns) return ticks;
 
+  // We are including both borders (start_ns and end_ns) as visible points in time.
   uint64_t visible_ns = end_ns + 1 - start_ns;
   uint64_t major_scale = GetMajorTicksScale(visible_ns);
   uint64_t minor_scale = GetMinorTicksScale(visible_ns);
@@ -87,7 +88,7 @@ int TimelineTicks::GetTimestampNumDigitsPrecision(uint64_t timestamp_ns) const {
 
 uint64_t TimelineTicks::GetMinorTicksScale(uint64_t visible_ns) const {
   uint64_t major_scale = GetMajorTicksScale(visible_ns);
-  // For consistency, minor ticks scale is the next finer scale than the one used for major ticks.
+  // For consistency, minor ticks scale is the next finer scale after the one used for major ticks.
   if (major_scale <= 1) return 1;
   return *std::prev(kTimelineScales.lower_bound(major_scale));
 }
