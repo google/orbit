@@ -37,29 +37,28 @@ void CaptureService::RemoveCaptureStartStopListener(CaptureStartStopListener* li
   ORBIT_CHECK(was_removed);
 }
 
-grpc::Status CaptureService::InitializeCapture(
-    grpc::ServerReaderWriter<CaptureResponse, CaptureRequest>* reader_writer) {
+CaptureService::CaptureInitializationResult CaptureService::InitializeCapture(
+    ClientCaptureEventCollectorBuilder* client_capture_event_collector_builder) {
   {
     absl::MutexLock lock(&capture_mutex_);
     if (is_capturing_) {
-      return grpc::Status(grpc::StatusCode::ALREADY_EXISTS,
-                          "Cannot start capture because another capture is already in progress");
+      return CaptureInitializationResult::kAlreadyInProgress;
     }
     is_capturing_ = true;
   }
 
-  grpc_client_capture_event_collector_ =
-      std::make_unique<GrpcClientCaptureEventCollector>(reader_writer);
+  client_capture_event_collector_ =
+      client_capture_event_collector_builder->BuildClientCaptureEventCollector();
 
   producer_event_processor_ =
-      ProducerEventProcessor::Create(grpc_client_capture_event_collector_.get());
+      ProducerEventProcessor::Create(client_capture_event_collector_.get());
 
-  return grpc::Status::OK;
+  return CaptureInitializationResult::kSuccess;
 }
 
 void CaptureService::TerminateCapture() {
   producer_event_processor_.reset();
-  grpc_client_capture_event_collector_.reset();
+  client_capture_event_collector_.reset();
   capture_start_timestamp_ns_ = 0;
 
   absl::MutexLock lock(&capture_mutex_);
@@ -116,7 +115,7 @@ void CaptureService::FinalizeEventProcessing(StopCaptureReason stop_capture_reas
   producer_event_processor_->ProcessEvent(orbit_grpc_protos::kRootProducerId,
                                           std::move(capture_finished));
 
-  grpc_client_capture_event_collector_->StopAndWait();
+  client_capture_event_collector_->StopAndWait();
   ORBIT_LOG("Finished handling gRPC call to Capture: all capture data has been sent");
 }
 

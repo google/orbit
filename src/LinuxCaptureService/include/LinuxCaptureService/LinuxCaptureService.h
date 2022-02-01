@@ -39,6 +39,10 @@ class LinuxCaptureService final : public orbit_capture_service::CaptureService {
       grpc::ServerReaderWriter<orbit_grpc_protos::CaptureResponse,
                                orbit_grpc_protos::CaptureRequest>* reader_writer) override;
 
+  CaptureService::CaptureInitializationResult DoCapture(
+      ClientCaptureEventCollectorBuilder* client_capture_event_collector_builder,
+      const std::shared_ptr<StartStopCaptureRequestWaiter>& start_stop_capture_request_waiter);
+
  private:
   std::unique_ptr<orbit_user_space_instrumentation::InstrumentationManager>
       instrumentation_manager_;
@@ -48,8 +52,8 @@ class LinuxCaptureService final : public orbit_capture_service::CaptureService {
   //   CaptureService::WaitForStopCaptureRequestFromClient);
   // - MemoryWatchdog calls OnThresholdExceeded.
   [[nodiscard]] StopCaptureReason WaitForStopCaptureRequestOrMemoryThresholdExceeded(
-      grpc::ServerReaderWriter<orbit_grpc_protos::CaptureResponse,
-                               orbit_grpc_protos::CaptureRequest>* reader_writer);
+      const std::shared_ptr<LinuxCaptureService::StartStopCaptureRequestWaiter>&
+          start_stop_capture_request_waiter);
   std::thread wait_for_stop_capture_request_thread_;
 };
 

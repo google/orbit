@@ -30,9 +30,24 @@ class CaptureService : public orbit_grpc_protos::CaptureService::Service {
   void RemoveCaptureStartStopListener(CaptureStartStopListener* listener);
 
  protected:
-  grpc::Status InitializeCapture(
-      grpc::ServerReaderWriter<orbit_grpc_protos::CaptureResponse,
-                               orbit_grpc_protos::CaptureRequest>* reader_writer);
+  enum class CaptureInitializationResult { kSuccess, kAlreadyInProgress };
+
+  class ClientCaptureEventCollectorBuilder {
+   public:
+    virtual ~ClientCaptureEventCollectorBuilder() = default;
+    virtual std::unique_ptr<orbit_producer_event_processor::ClientCaptureEventCollector>
+    BuildClientCaptureEventCollector() = 0;
+  };
+
+  class StartStopCaptureRequestWaiter {
+   public:
+    virtual ~StartStopCaptureRequestWaiter() = default;
+    virtual orbit_grpc_protos::CaptureOptions WaitForStartCaptureRequest() = 0;
+    virtual void WaitForStopCaptureRequest() = 0;
+  };
+
+  [[nodiscard]] CaptureInitializationResult InitializeCapture(
+      ClientCaptureEventCollectorBuilder* client_capture_event_collector_builder);
   void TerminateCapture();
 
   static orbit_grpc_protos::CaptureRequest WaitForStartCaptureRequestFromClient(
@@ -47,8 +62,8 @@ class CaptureService : public orbit_grpc_protos::CaptureService::Service {
   enum class StopCaptureReason { kClientStop, kMemoryWatchdog };
   void FinalizeEventProcessing(StopCaptureReason stop_capture_reason);
 
-  std::unique_ptr<orbit_producer_event_processor::GrpcClientCaptureEventCollector>
-      grpc_client_capture_event_collector_;
+  std::unique_ptr<orbit_producer_event_processor::ClientCaptureEventCollector>
+      client_capture_event_collector_;
   std::unique_ptr<orbit_producer_event_processor::ProducerEventProcessor> producer_event_processor_;
 
   absl::flat_hash_set<CaptureStartStopListener*> capture_start_stop_listeners_;
