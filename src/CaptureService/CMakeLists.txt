@@ -15,6 +15,8 @@ target_sources(CaptureService PUBLIC
         include/CaptureService/CaptureServiceBase.h
         include/CaptureService/CaptureServiceUtils.h
         include/CaptureService/CaptureStartStopListener.h
+        include/CaptureService/ClientCaptureEventCollectorBuilder.h
+        include/CaptureService/ClientCaptureEventCollectorBuilderImpl.h
         include/CaptureService/CommonProducerCaptureEventBuilders.h)
 
 target_sources(CaptureService PRIVATE
