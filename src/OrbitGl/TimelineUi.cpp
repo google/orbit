@@ -4,7 +4,10 @@
 
 #include "TimelineUi.h"
 
+#include <absl/flags/flag.h>
+
 #include "AccessibleTimeline.h"
+#include "ClientFlags/ClientFlags.h"
 #include "DisplayFormats/DisplayFormats.h"
 #include "GlCanvas.h"
 #include "TimelineTicks.h"
@@ -35,16 +38,30 @@ void TimelineUi::RenderLabels(Batcher& batcher, TextRenderer& text_renderer,
   const float kLabelMarginBottom = 2;
 
   float previous_label_end_x = std::numeric_limits<float>::lowest();
-  for (uint64_t tick_ns : timeline_ticks_.GetMajorTicks(min_timestamp_ns, max_timestamp_ns)) {
-    // TODO (b/170712621): Test the new format (ISO 8601) to draw timestamps.
-    std::string text = orbit_display_formats::GetDisplayTime(absl::Nanoseconds(tick_ns));
+  std::vector<uint64_t> all_major_ticks =
+      timeline_ticks_.GetMajorTicks(min_timestamp_ns, max_timestamp_ns);
 
+  int max_precision = 0;
+  for (uint64_t tick : all_major_ticks) {
+    max_precision = std::max(max_precision, timeline_ticks_.GetTimestampNumDigitsPrecision(tick));
+  }
+
+  for (uint64_t tick_ns : all_major_ticks) {
+    std::string label;
+    // TODO(http://b/170712621): Remove this flag when we decide which timestamp format we will use.
+    if (absl::GetFlag(FLAGS_iso_timestamps)) {
+      label = orbit_display_formats::GetDisplayISOTimestamp(
+          absl::Nanoseconds(tick_ns), max_precision,
+          absl::Nanoseconds(timeline_info_interface_->GetCaptureTimeSpanNs()));
+    } else {
+      label = orbit_display_formats::GetDisplayTime(absl::Nanoseconds(tick_ns));
+    }
     float world_x = timeline_info_interface_->GetWorldFromUs(
         tick_ns / static_cast<double>(kNanosecondsPerMicrosecond));
     if (world_x > previous_label_end_x) {
       Vec2 pos, size;
       float label_bottom_y = GetPos()[1] + GetHeight() - kLabelMarginBottom;
-      text_renderer.AddText(text.c_str(), world_x + kLabelMarginLeft, label_bottom_y,
+      text_renderer.AddText(label.c_str(), world_x + kLabelMarginLeft, label_bottom_y,
                             GlCanvas::kZValueTimeBar,
                             {layout_->GetFontSize(), Color(255, 255, 255, 255), -1.f,
                              TextRenderer::HAlign::Left, TextRenderer::VAlign::Bottom},

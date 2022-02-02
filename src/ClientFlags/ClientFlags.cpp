@@ -65,3 +65,6 @@ ABSL_FLAG(std::vector<std::string>, additional_symbol_paths, {},
 // Clears QSettings. This is intended for e2e tests.
 ABSL_FLAG(bool, clear_settings, false,
           "Clears user defined settings. This includes symbol locations and source path mappings.");
+
+// TODO(http://b/170712621): Remove this flag when we decide which timestamp format we will use.
+ABSL_FLAG(bool, iso_timestamps, true, "Show timestamps using ISO-8601 format.");
