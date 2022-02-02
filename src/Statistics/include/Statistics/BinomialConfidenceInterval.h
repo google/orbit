@@ -18,7 +18,7 @@ struct BinomialConfidenceInterval {
 // and the total number of trials
 class BinomialConfidenceIntervalEstimator {
  public:
-  // `ratio` is the proportion of succesfull trials and should be between 0 and 1.
+  // `ratio` is the proportion of successful trials and should be between 0 and 1.
   [[nodiscard]] virtual BinomialConfidenceInterval Estimate(float ratio, uint32_t trials) const = 0;
   virtual ~BinomialConfidenceIntervalEstimator() = default;
 };
