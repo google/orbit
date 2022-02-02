@@ -29,7 +29,7 @@ class CaptureWindowE2ETestCaseBase(E2ETestCase):
 
     def execute(self, suite: E2ETestSuite):
         self._time_graph = self.find_control('Image', name='TimeGraph', parent=suite.top_window())
-        self._track_container = self._time_graph.children()[0]
+        self._track_container = self._time_graph.children()[1]
         super().execute(suite=suite)
 
     def _find_tracks(self, name_filter: str = None, recursive: bool = False):
@@ -365,7 +365,7 @@ class CaptureE2ETestCaseBase(E2ETestCase):
     def _verify_existence_of_tracks(self):
         logging.info("Verifying existence of at least one track...")
         time_graph = self.find_control('Image', name='TimeGraph')
-        track_container = time_graph.children()[0]
+        track_container = time_graph.children()[1]
         self.expect_true(len(track_container.children()), 'Track container exists and has at least one child')
 
     def _verify_capture(self):
