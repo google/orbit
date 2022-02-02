@@ -41,9 +41,10 @@ void TimelineUi::RenderLabels(Batcher& batcher, TextRenderer& text_renderer,
   std::vector<uint64_t> all_major_ticks =
       timeline_ticks_.GetMajorTicks(min_timestamp_ns, max_timestamp_ns);
 
-  int max_precision = 0;
+  int number_of_decimal_places_needed = 0;
   for (uint64_t tick : all_major_ticks) {
-    max_precision = std::max(max_precision, timeline_ticks_.GetTimestampNumDigitsPrecision(tick));
+    number_of_decimal_places_needed = std::max(
+        number_of_decimal_places_needed, timeline_ticks_.GetTimestampNumDigitsPrecision(tick));
   }
 
   for (uint64_t tick_ns : all_major_ticks) {
@@ -51,7 +52,7 @@ void TimelineUi::RenderLabels(Batcher& batcher, TextRenderer& text_renderer,
     // TODO(http://b/170712621): Remove this flag when we decide which timestamp format we will use.
     if (absl::GetFlag(FLAGS_iso_timestamps)) {
       label = orbit_display_formats::GetDisplayISOTimestamp(
-          absl::Nanoseconds(tick_ns), max_precision,
+          absl::Nanoseconds(tick_ns), number_of_decimal_places_needed,
           absl::Nanoseconds(timeline_info_interface_->GetCaptureTimeSpanNs()));
     } else {
       label = orbit_display_formats::GetDisplayTime(absl::Nanoseconds(tick_ns));
