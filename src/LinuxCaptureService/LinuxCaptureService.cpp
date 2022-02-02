@@ -19,6 +19,8 @@
 #include "ApiLoader/EnableInTracee.h"
 #include "ApiUtils/Event.h"
 #include "CaptureService/CommonProducerCaptureEventBuilders.h"
+#include "CaptureService/GrpcClientCaptureEventCollectorBuilder.h"
+#include "CaptureService/GrpcStartStopCaptureRequestWaiter.h"
 #include "GrpcProtos/Constants.h"
 #include "GrpcProtos/capture.pb.h"
 #include "Introspection/Introspection.h"
@@ -29,7 +31,6 @@
 #include "OrbitBase/MakeUniqueForOverwrite.h"
 #include "OrbitBase/Profiling.h"
 #include "OrbitVersion/OrbitVersion.h"
-#include "ProducerEventProcessor/GrpcClientCaptureEventCollector.h"
 #include "ProducerEventProcessor/ProducerEventProcessor.h"
 #include "TracingHandler.h"
 #include "UserSpaceInstrumentationAddressesImpl.h"
@@ -149,10 +150,10 @@ class ProducerEventProcessorHijackingFunctionEntryExitForLinuxTracing
 
 }  // namespace
 
-orbit_capture_service::CaptureService::StopCaptureReason
+orbit_capture_service::CaptureServiceBase::StopCaptureReason
 LinuxCaptureService::WaitForStopCaptureRequestOrMemoryThresholdExceeded(
-    grpc::ServerReaderWriter<orbit_grpc_protos::CaptureResponse, orbit_grpc_protos::CaptureRequest>*
-        reader_writer) {
+    const std::shared_ptr<orbit_capture_service::StartStopCaptureRequestWaiter>&
+        start_stop_capture_request_waiter) {
   // wait_for_stop_capture_request_thread_ below outlives this method, hence the shared pointers.
   auto stop_capture_mutex = std::make_shared<absl::Mutex>();
   auto stop_capture = std::make_shared<bool>(false);
@@ -162,14 +163,9 @@ LinuxCaptureService::WaitForStopCaptureRequestOrMemoryThresholdExceeded(
   // gRPC (before the client has called WritesDone). In the latter case, the Read unblocks *after*
   // LinuxCaptureService::Capture has returned, so we need to keep the thread around and join it at
   // a later time (we don't want to just detach it).
-  wait_for_stop_capture_request_thread_ =
-      std::thread{[reader_writer, stop_capture_mutex, stop_capture, stop_capture_reason] {
-        orbit_grpc_protos::CaptureRequest request;
-        // The client asks for the capture to be stopped by calling WritesDone. At that point, this
-        // call to Read will return false. In the meantime, it blocks if no message is received.
-        // Read also unblocks and returns false if the gRPC finishes.
-        while (reader_writer->Read(&request)) {
-        }
+  wait_for_stop_capture_request_thread_ = std::thread{
+      [start_stop_capture_request_waiter, stop_capture_mutex, stop_capture, stop_capture_reason] {
+        start_stop_capture_request_waiter->WaitForStopCaptureRequest();
 
         absl::MutexLock lock{stop_capture_mutex.get()};
         if (!*stop_capture) {
@@ -227,9 +223,26 @@ grpc::Status LinuxCaptureService::Capture(
     grpc::ServerReaderWriter<CaptureResponse, CaptureRequest>* reader_writer) {
   orbit_base::SetCurrentThreadName("CSImpl::Capture");
 
-  if (grpc::Status result = InitializeCapture(reader_writer); !result.ok()) {
-    return result;
+  std::unique_ptr<orbit_capture_service::ClientCaptureEventCollectorBuilder>
+      client_capture_event_collector_builder =
+          orbit_capture_service::CreateGrpcClientCaptureEventCollectorBuilder(reader_writer);
+
+  // shared_ptr because it might outlive this method. See wait_for_stop_capture_request_thread_ in
+  // WaitForStopCaptureRequestOrMemoryThresholdExceeded.
+  std::shared_ptr<orbit_capture_service::StartStopCaptureRequestWaiter>
+      start_stop_capture_request_waiter =
+          orbit_capture_service::CreateGrpcStartStopCaptureRequestWaiter(reader_writer);
+
+  CaptureServiceBase::CaptureInitializationResult initialization_result =
+      InitializeCapture(client_capture_event_collector_builder.get());
+  switch (initialization_result) {
+    case CaptureInitializationResult::kSuccess:
+      break;
+    case CaptureInitializationResult::kAlreadyInProgress:
+      return {grpc::StatusCode::ALREADY_EXISTS,
+              "Cannot start capture because another capture is already in progress"};
   }
+
   if (wait_for_stop_capture_request_thread_.joinable()) {
     wait_for_stop_capture_request_thread_.join();
   }
@@ -239,9 +252,8 @@ grpc::Status LinuxCaptureService::Capture(
       producer_event_processor_.get(), &tracing_handler};
   MemoryInfoHandler memory_info_handler{producer_event_processor_.get()};
 
-  CaptureRequest request = WaitForStartCaptureRequestFromClient(reader_writer);
-
-  const CaptureOptions& capture_options = request.capture_options();
+  const CaptureOptions& capture_options =
+      start_stop_capture_request_waiter->WaitForStartCaptureRequest();
 
   // Enable Orbit API in tracee.
   std::optional<std::string> error_enabling_orbit_api;
@@ -325,13 +337,13 @@ grpc::Status LinuxCaptureService::Capture(
   tracing_handler.Start(linux_tracing_capture_options,
                         std::move(user_space_instrumentation_addresses));
 
-  memory_info_handler.Start(request.capture_options());
+  memory_info_handler.Start(capture_options);
   for (CaptureStartStopListener* listener : capture_start_stop_listeners_) {
-    listener->OnCaptureStartRequested(request.capture_options(), &function_entry_exit_hijacker);
+    listener->OnCaptureStartRequested(capture_options, &function_entry_exit_hijacker);
   }
 
   StopCaptureReason stop_capture_reason =
-      WaitForStopCaptureRequestOrMemoryThresholdExceeded(reader_writer);
+      WaitForStopCaptureRequestOrMemoryThresholdExceeded(start_stop_capture_request_waiter);
 
   // Disable Orbit API in tracee.
   if (capture_options.enable_api()) {

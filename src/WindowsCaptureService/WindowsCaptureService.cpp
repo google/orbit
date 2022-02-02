@@ -4,8 +4,11 @@
 
 #include "WindowsCaptureService/WindowsCaptureService.h"
 
+#include <grpcpp/grpcpp.h>
 #include <stdint.h>
 
+#include "CaptureService/GrpcClientCaptureEventCollectorBuilder.h"
+#include "CaptureService/GrpcStartStopCaptureRequestWaiter.h"
 #include "GrpcProtos/capture.pb.h"
 #include "OrbitBase/ThreadUtils.h"
 #include "TracingHandler.h"
@@ -21,17 +24,31 @@ grpc::Status WindowsCaptureService::Capture(
     grpc::ServerReaderWriter<CaptureResponse, CaptureRequest>* reader_writer) {
   orbit_base::SetCurrentThreadName("WinCS::Capture");
 
-  grpc::Status result = InitializeCapture(reader_writer);
-  if (!result.ok()) {
-    return result;
+  std::unique_ptr<orbit_capture_service::ClientCaptureEventCollectorBuilder>
+      client_capture_event_collector_builder =
+          orbit_capture_service::CreateGrpcClientCaptureEventCollectorBuilder(reader_writer);
+
+  std::shared_ptr<orbit_capture_service::StartStopCaptureRequestWaiter>
+      start_stop_capture_request_waiter =
+          orbit_capture_service::CreateGrpcStartStopCaptureRequestWaiter(reader_writer);
+
+  CaptureServiceBase::CaptureInitializationResult initialization_result =
+      InitializeCapture(client_capture_event_collector_builder.get());
+  switch (initialization_result) {
+    case CaptureInitializationResult::kSuccess:
+      break;
+    case CaptureInitializationResult::kAlreadyInProgress:
+      return {grpc::StatusCode::ALREADY_EXISTS,
+              "Cannot start capture because another capture is already in progress"};
   }
 
-  CaptureRequest request = WaitForStartCaptureRequestFromClient(reader_writer);
+  const CaptureOptions& capture_options =
+      start_stop_capture_request_waiter->WaitForStartCaptureRequest();
 
-  StartEventProcessing(request.capture_options());
+  StartEventProcessing(capture_options);
   TracingHandler tracing_handler{producer_event_processor_.get()};
-  tracing_handler.Start(request.capture_options());
-  WaitForStopCaptureRequestFromClient(reader_writer);
+  tracing_handler.Start(capture_options);
+  start_stop_capture_request_waiter->WaitForStopCaptureRequest();
   tracing_handler.Stop();
   FinalizeEventProcessing(StopCaptureReason::kClientStop);
 

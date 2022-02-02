@@ -12,13 +12,19 @@ target_include_directories(CaptureService PRIVATE
         ${CMAKE_CURRENT_LIST_DIR})
 
 target_sources(CaptureService PUBLIC
-        include/CaptureService/CaptureService.h
+        include/CaptureService/CaptureServiceBase.h
         include/CaptureService/CaptureStartStopListener.h
-        include/CaptureService/CommonProducerCaptureEventBuilders.h)
+        include/CaptureService/ClientCaptureEventCollectorBuilder.h
+        include/CaptureService/CommonProducerCaptureEventBuilders.h
+        include/CaptureService/GrpcClientCaptureEventCollectorBuilder.h
+        include/CaptureService/GrpcStartStopCaptureRequestWaiter.h
+        include/CaptureService/StartStopCaptureRequestWaiter.h)
 
 target_sources(CaptureService PRIVATE
-        CaptureService.cpp
-        CommonProducerCaptureEventBuilders.cpp)
+        CaptureServiceBase.cpp
+        CommonProducerCaptureEventBuilders.cpp
+        GrpcClientCaptureEventCollectorBuilder.cpp
+        GrpcStartStopCaptureRequestWaiter.cpp)
 
 target_link_libraries(CaptureService PUBLIC
         ProducerEventProcessor
