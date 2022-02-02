@@ -1141,8 +1141,7 @@ void OrbitApp::ClearSelectionBottomUpView() {
 
 absl::Duration OrbitApp::GetCaptureTime() const {
   const TimeGraph* time_graph = GetTimeGraph();
-  double time = (time_graph == nullptr) ? 0 : time_graph->GetCaptureTimeSpanUs();
-  return absl::Microseconds(time);
+  return absl::Nanoseconds((time_graph == nullptr) ? 0 : time_graph->GetCaptureTimeSpanNs());
 }
 
 absl::Duration OrbitApp::GetCaptureTimeAt(uint64_t timestamp_ns) const {
@@ -1494,15 +1493,14 @@ void OrbitApp::StartCapture() {
             capture_metric.SendCaptureCancelled();
             return;
           case CaptureListener::CaptureOutcome::kComplete:
-            OnCaptureComplete().Then(main_thread_executor_, [this, capture_metric = std::move(
-                                                                       capture_metric)]() mutable {
-              auto capture_time_us =
-                  std::chrono::duration<double, std::micro>(GetTimeGraph()->GetCaptureTimeSpanUs());
-              auto capture_time_ms =
-                  std::chrono::duration_cast<std::chrono::milliseconds>(capture_time_us);
-              capture_metric.SetCaptureCompleteData(metrics_capture_complete_data_);
-              capture_metric.SendCaptureSucceeded(capture_time_ms);
-            });
+            OnCaptureComplete().Then(
+                main_thread_executor_,
+                [this, capture_metric = std::move(capture_metric)]() mutable {
+                  auto capture_time = absl::Nanoseconds(GetTimeGraph()->GetCaptureTimeSpanNs());
+                  auto capture_time_ms = ToChronoMilliseconds(capture_time);
+                  capture_metric.SetCaptureCompleteData(metrics_capture_complete_data_);
+                  capture_metric.SendCaptureSucceeded(capture_time_ms);
+                });
 
             return;
         }
@@ -1514,9 +1512,8 @@ void OrbitApp::StopCapture() {
     return;
   }
 
-  auto capture_time_us =
-      std::chrono::duration<double, std::micro>(GetTimeGraph()->GetCaptureTimeSpanUs());
-  auto capture_time_ms = std::chrono::duration_cast<std::chrono::milliseconds>(capture_time_us);
+  auto capture_time = absl::Nanoseconds(GetTimeGraph()->GetCaptureTimeSpanUs());
+  auto capture_time_ms = ToChronoMilliseconds(capture_time);
   metrics_uploader_->SendLogEvent(orbit_metrics_uploader::OrbitLogEvent::ORBIT_CAPTURE_DURATION,
                                   capture_time_ms);
 
