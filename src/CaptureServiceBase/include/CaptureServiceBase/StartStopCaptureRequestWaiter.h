@@ -2,12 +2,12 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#ifndef CAPTURE_SERVICE_START_STOP_CAPTURE_REQUEST_WAITER_H_
-#define CAPTURE_SERVICE_START_STOP_CAPTURE_REQUEST_WAITER_H_
+#ifndef CAPTURE_SERVICE_BASE_START_STOP_CAPTURE_REQUEST_WAITER_H_
+#define CAPTURE_SERVICE_BASE_START_STOP_CAPTURE_REQUEST_WAITER_H_
 
 #include "GrpcProtos/capture.pb.h"
 
-namespace orbit_capture_service {
+namespace orbit_capture_service_base {
 
 // This is mimicking the behavior of `ServerReaderWriter`. Native orbit capture services can still
 // implement it with `ServerReaderWriter` and the cloud collector can implement it in a gRPC-free
@@ -19,6 +19,6 @@ class StartStopCaptureRequestWaiter {
   virtual void WaitForStopCaptureRequest() = 0;
 };
 
-}  // namespace orbit_capture_service
+}  // namespace orbit_capture_service_base
 
-#endif  // CAPTURE_SERVICE_START_STOP_CAPTURE_REQUEST_WAITER_H_
+#endif  // CAPTURE_SERVICE_BASE_START_STOP_CAPTURE_REQUEST_WAITER_H_

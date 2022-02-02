@@ -20,7 +20,7 @@ target_sources(ProducerSideService PRIVATE
         ProducerSideServiceImpl.cpp)
 
 target_link_libraries(ProducerSideService PUBLIC
-        CaptureService
+        CaptureServiceBase
         GrpcProtos)
 
 add_executable(ProducerSideServiceTests)

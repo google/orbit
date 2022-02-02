@@ -18,9 +18,9 @@
 
 #include "ApiLoader/EnableInTracee.h"
 #include "ApiUtils/Event.h"
-#include "CaptureService/CommonProducerCaptureEventBuilders.h"
-#include "CaptureService/GrpcClientCaptureEventCollectorBuilder.h"
-#include "CaptureService/GrpcStartStopCaptureRequestWaiter.h"
+#include "CaptureServiceBase/CommonProducerCaptureEventBuilders.h"
+#include "CaptureServiceBase/GrpcClientCaptureEventCollectorBuilder.h"
+#include "CaptureServiceBase/GrpcStartStopCaptureRequestWaiter.h"
 #include "GrpcProtos/Constants.h"
 #include "GrpcProtos/capture.pb.h"
 #include "Introspection/Introspection.h"
@@ -42,7 +42,7 @@ using orbit_grpc_protos::ProducerCaptureEvent;
 
 using orbit_producer_event_processor::ProducerEventProcessor;
 
-using orbit_capture_service::CaptureStartStopListener;
+using orbit_capture_service_base::CaptureStartStopListener;
 
 namespace orbit_linux_capture_service {
 
@@ -150,9 +150,9 @@ class ProducerEventProcessorHijackingFunctionEntryExitForLinuxTracing
 
 }  // namespace
 
-orbit_capture_service::CaptureServiceBase::StopCaptureReason
+orbit_capture_service_base::CaptureServiceBase::StopCaptureReason
 LinuxCaptureService::WaitForStopCaptureRequestOrMemoryThresholdExceeded(
-    const std::shared_ptr<orbit_capture_service::StartStopCaptureRequestWaiter>&
+    const std::shared_ptr<orbit_capture_service_base::StartStopCaptureRequestWaiter>&
         start_stop_capture_request_waiter) {
   // wait_for_stop_capture_request_thread_ below outlives this method, hence the shared pointers.
   auto stop_capture_mutex = std::make_shared<absl::Mutex>();
@@ -223,15 +223,15 @@ grpc::Status LinuxCaptureService::Capture(
     grpc::ServerReaderWriter<CaptureResponse, CaptureRequest>* reader_writer) {
   orbit_base::SetCurrentThreadName("CSImpl::Capture");
 
-  std::unique_ptr<orbit_capture_service::ClientCaptureEventCollectorBuilder>
+  std::unique_ptr<orbit_capture_service_base::ClientCaptureEventCollectorBuilder>
       client_capture_event_collector_builder =
-          orbit_capture_service::CreateGrpcClientCaptureEventCollectorBuilder(reader_writer);
+          orbit_capture_service_base::CreateGrpcClientCaptureEventCollectorBuilder(reader_writer);
 
   // shared_ptr because it might outlive this method. See wait_for_stop_capture_request_thread_ in
   // WaitForStopCaptureRequestOrMemoryThresholdExceeded.
-  std::shared_ptr<orbit_capture_service::StartStopCaptureRequestWaiter>
+  std::shared_ptr<orbit_capture_service_base::StartStopCaptureRequestWaiter>
       start_stop_capture_request_waiter =
-          orbit_capture_service::CreateGrpcStartStopCaptureRequestWaiter(reader_writer);
+          orbit_capture_service_base::CreateGrpcStartStopCaptureRequestWaiter(reader_writer);
 
   CaptureServiceBase::CaptureInitializationResult initialization_result =
       InitializeCapture(client_capture_event_collector_builder.get());
@@ -293,7 +293,7 @@ grpc::Status LinuxCaptureService::Capture(
 
       if (!result_or_error.value().function_ids_to_error_messages.empty()) {
         info_from_enabling_user_space_instrumentation =
-            orbit_capture_service::CreateWarningInstrumentingWithUserSpaceInstrumentationEvent(
+            orbit_capture_service_base::CreateWarningInstrumentingWithUserSpaceInstrumentationEvent(
                 capture_start_timestamp_ns_,
                 result_or_error.value().function_ids_to_error_messages);
       }
@@ -311,14 +311,14 @@ grpc::Status LinuxCaptureService::Capture(
   if (error_enabling_orbit_api.has_value()) {
     producer_event_processor_->ProcessEvent(
         orbit_grpc_protos::kRootProducerId,
-        orbit_capture_service::CreateErrorEnablingOrbitApiEvent(
+        orbit_capture_service_base::CreateErrorEnablingOrbitApiEvent(
             capture_start_timestamp_ns_, std::move(error_enabling_orbit_api.value())));
   }
 
   if (error_enabling_user_space_instrumentation.has_value()) {
     producer_event_processor_->ProcessEvent(
         orbit_grpc_protos::kRootProducerId,
-        orbit_capture_service::CreateErrorEnablingUserSpaceInstrumentationEvent(
+        orbit_capture_service_base::CreateErrorEnablingUserSpaceInstrumentationEvent(
             capture_start_timestamp_ns_,
             std::move(error_enabling_user_space_instrumentation.value())));
   }
@@ -352,7 +352,7 @@ grpc::Status LinuxCaptureService::Capture(
       ORBIT_ERROR("Disabling Orbit Api: %s", result.error().message());
       producer_event_processor_->ProcessEvent(
           orbit_grpc_protos::kRootProducerId,
-          orbit_capture_service::CreateWarningEvent(
+          orbit_capture_service_base::CreateWarningEvent(
               orbit_base::CaptureTimestampNs(),
               absl::StrFormat("Could not disable Orbit API: %s", result.error().message())));
     }
@@ -368,7 +368,7 @@ grpc::Status LinuxCaptureService::Capture(
       ORBIT_ERROR("Disabling user space instrumentation: %s", result_tmp.error().message());
       producer_event_processor_->ProcessEvent(
           orbit_grpc_protos::kRootProducerId,
-          orbit_capture_service::CreateWarningEvent(
+          orbit_capture_service_base::CreateWarningEvent(
               orbit_base::CaptureTimestampNs(),
               absl::StrFormat("Could not disable user space instrumentation: %s",
                               result_tmp.error().message())));

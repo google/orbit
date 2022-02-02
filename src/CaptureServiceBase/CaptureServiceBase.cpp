@@ -2,11 +2,11 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#include "CaptureService/CaptureServiceBase.h"
+#include "CaptureServiceBase/CaptureServiceBase.h"
 
 #include <absl/time/time.h>
 
-#include "CaptureService/CommonProducerCaptureEventBuilders.h"
+#include "CaptureServiceBase/CommonProducerCaptureEventBuilders.h"
 #include "GrpcProtos/Constants.h"
 #include "OrbitBase/Logging.h"
 
@@ -16,7 +16,7 @@ using orbit_grpc_protos::ProducerCaptureEvent;
 using orbit_producer_event_processor::ClientCaptureEventCollector;
 using orbit_producer_event_processor::ProducerEventProcessor;
 
-namespace orbit_capture_service {
+namespace orbit_capture_service_base {
 
 void CaptureServiceBase::AddCaptureStartStopListener(CaptureStartStopListener* listener) {
   bool new_insertion = capture_start_stop_listeners_.insert(listener).second;
@@ -60,12 +60,11 @@ void CaptureServiceBase::StartEventProcessing(const CaptureOptions& capture_opti
 
   producer_event_processor_->ProcessEvent(
       orbit_grpc_protos::kRootProducerId,
-      orbit_capture_service::CreateCaptureStartedEvent(capture_options, capture_start_time,
-                                                       capture_start_timestamp_ns_));
+      CreateCaptureStartedEvent(capture_options, capture_start_time, capture_start_timestamp_ns_));
 
-  producer_event_processor_->ProcessEvent(orbit_grpc_protos::kRootProducerId,
-                                          orbit_capture_service::CreateClockResolutionEvent(
-                                              capture_start_timestamp_ns_, clock_resolution_ns_));
+  producer_event_processor_->ProcessEvent(
+      orbit_grpc_protos::kRootProducerId,
+      CreateClockResolutionEvent(capture_start_timestamp_ns_, clock_resolution_ns_));
 }
 
 void CaptureServiceBase::FinalizeEventProcessing(StopCaptureReason stop_capture_reason) {
@@ -85,4 +84,4 @@ void CaptureServiceBase::FinalizeEventProcessing(StopCaptureReason stop_capture_
   ORBIT_LOG("Finished processing CaptureFinisedEvent");
 }
 
-}  // namespace orbit_capture_service
+}  // namespace orbit_capture_service_base

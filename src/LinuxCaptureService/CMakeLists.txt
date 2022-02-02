@@ -27,7 +27,7 @@ target_sources(LinuxCaptureService PRIVATE
 target_link_libraries(LinuxCaptureService PUBLIC
         ApiLoader
         ApiUtils
-        CaptureService
+        CaptureServiceBase
         ProducerEventProcessor
         GrpcProtos
         Introspection

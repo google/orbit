@@ -2,13 +2,13 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#ifndef CAPTURE_SERVICE_CAPTURE_SERVICE_BASE_H_
-#define CAPTURE_SERVICE_CAPTURE_SERVICE_BASE_H_
+#ifndef CAPTURE_SERVICE_BASE_CAPTURE_SERVICE_BASE_H_
+#define CAPTURE_SERVICE_BASE_CAPTURE_SERVICE_BASE_H_
 
 #include <absl/container/flat_hash_set.h>
 #include <absl/synchronization/mutex.h>
 
-#include "CaptureService/ClientCaptureEventCollectorBuilder.h"
+#include "CaptureServiceBase/ClientCaptureEventCollectorBuilder.h"
 #include "CaptureStartStopListener.h"
 #include "GrpcProtos/capture.pb.h"
 #include "OrbitBase/Profiling.h"
@@ -16,7 +16,7 @@
 #include "ProducerEventProcessor/ClientCaptureEventCollector.h"
 #include "ProducerEventProcessor/ProducerEventProcessor.h"
 
-namespace orbit_capture_service {
+namespace orbit_capture_service_base {
 
 // CaptureServiceBase holds common functionality that does not depend on gRPC and can be shared by
 // the platform-specific native orbit capture services and the cloud collector.
@@ -50,6 +50,6 @@ class CaptureServiceBase {
   bool is_capturing_ ABSL_GUARDED_BY(capture_mutex_) = false;
 };
 
-}  // namespace orbit_capture_service
+}  // namespace orbit_capture_service_base
 
-#endif  // CAPTURE_SERVICE_CAPTURE_SERVICE_BASE_H_
+#endif  // CAPTURE_SERVICE_BASE_CAPTURE_SERVICE_BASE_H_

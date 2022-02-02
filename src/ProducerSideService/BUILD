@@ -11,7 +11,7 @@ licenses(["notice"])
 orbit_cc_library(
     name = "ProducerSideService",
     deps = [
-        "//src/CaptureService",
+        "//src/CaptureServiceBase",
         "//src/GrpcProtos",
         "//src/GrpcProtos:capture_cc_proto",
         "//src/GrpcProtos:producer_side_services_cc_proto",
