@@ -545,11 +545,25 @@ void TimeGraph::DoUpdateLayout() {
 
   time_window_us_ = max_time_us_ - min_time_us_;
 
-  // Update position and size of children.
-  track_container_->SetPos(GetPos()[0], GetPos()[1]);
-  // TrackContainer height is the free space of the screen.
-  track_container_->SetHeight(GetHeight() - timeline_ui_->GetHeight());
-  timeline_ui_->SetPos(GetPos()[0], GetPos()[1] + track_container_->GetHeight());
+  UpdateChildrenPosAndContainerSize();
+}
+
+void TimeGraph::UpdateChildrenPosAndContainerSize() {
+  // Special case: TimeGraph will set TrackContainer height based on its free space.
+  float total_height_without_track_container = 0;
+  for (orbit_gl::CaptureViewElement* child : GetNonHiddenChildren()) {
+    if (child != track_container_.get()) {
+      total_height_without_track_container += child->GetHeight();
+    }
+  }
+  track_container_->SetHeight(GetHeight() - total_height_without_track_container);
+
+  // Update position of visible children.
+  float current_pos_y = GetPos()[1];
+  for (orbit_gl::CaptureViewElement* child : GetNonHiddenChildren()) {
+    child->SetPos(GetPos()[0], current_pos_y);
+    current_pos_y += child->GetHeight();
+  }
 }
 
 void TimeGraph::SelectAndZoom(const TimerInfo* timer_info) {
@@ -654,10 +668,6 @@ bool TimeGraph::IsVisible(VisibilityType vis_type, uint64_t min, uint64_t max) c
 }
 
 std::vector<orbit_gl::CaptureViewElement*> TimeGraph::GetAllChildren() const {
-  return {GetTrackContainer(), GetTimelineUi()};
-}
-
-std::vector<orbit_gl::CaptureViewElement*> TimeGraph::GetNonHiddenChildren() const {
   return {GetTrackContainer(), GetTimelineUi()};
 }
 
