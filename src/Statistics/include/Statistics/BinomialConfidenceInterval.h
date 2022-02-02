@@ -2,8 +2,8 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#ifndef STATISTICS_BINOMIALCONFIDENCEINTERVAL_H_
-#define STATISTICS_BINOMIALCONFIDENCEINTERVAL_H_
+#ifndef STATISTICS_BINOMIAL_CONFIDENCE_INTERVAL_H_
+#define STATISTICS_BINOMIAL_CONFIDENCE_INTERVAL_H_
 
 #include <cstdint>
 
@@ -31,4 +31,4 @@ class WilsonBinomialConfidenceIntervalEstimator : public BinomialConfidenceInter
 
 }  // namespace orbit_statistics
 
-#endif  // STATISTICS_BINOMIALCONFIDENCEINTERVAL_H_
+#endif  // STATISTICS_BINOMIAL_CONFIDENCE_INTERVAL_H_
