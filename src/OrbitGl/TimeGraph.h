@@ -158,7 +158,7 @@ class TimeGraph final : public orbit_gl::CaptureViewElement,
  protected:
   void PrepareBatcherAndUpdatePrimitives(PickingMode picking_mode);
   void DoUpdateLayout() override;
-  void UpdateChildrenPosAndSize();
+  void UpdateChildrenPosAndContainerSize();
 
   [[nodiscard]] std::unique_ptr<orbit_accessibility::AccessibleInterface>
   CreateAccessibleInterface() override;

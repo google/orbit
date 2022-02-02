@@ -545,24 +545,24 @@ void TimeGraph::DoUpdateLayout() {
 
   time_window_us_ = max_time_us_ - min_time_us_;
 
-  UpdateChildrenPosAndSize();
+  UpdateChildrenPosAndContainerSize();
 }
 
-void TimeGraph::UpdateChildrenPosAndSize() {
+void TimeGraph::UpdateChildrenPosAndContainerSize() {
   // Special case: TimeGraph will set TrackContainer height based on its free space.
   float total_height_without_track_container = 0;
-  for (orbit_gl::CaptureViewElement* children : GetNonHiddenChildren()) {
-    if (children != track_container_.get()) {
-      total_height_without_track_container += children->GetHeight();
+  for (orbit_gl::CaptureViewElement* child : GetNonHiddenChildren()) {
+    if (child != track_container_.get()) {
+      total_height_without_track_container += child->GetHeight();
     }
   }
   track_container_->SetHeight(GetHeight() - total_height_without_track_container);
 
   // Update position of visible children.
   float current_pos_y = GetPos()[1];
-  for (orbit_gl::CaptureViewElement* children : GetNonHiddenChildren()) {
-    children->SetPos(GetPos()[0], current_pos_y);
-    current_pos_y += children->GetHeight();
+  for (orbit_gl::CaptureViewElement* child : GetNonHiddenChildren()) {
+    child->SetPos(GetPos()[0], current_pos_y);
+    current_pos_y += child->GetHeight();
   }
 }
 
