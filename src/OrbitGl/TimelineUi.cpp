@@ -34,7 +34,6 @@ void TimelineUi::RenderLabels(Batcher& batcher, TextRenderer& text_renderer,
                               uint64_t min_timestamp_ns, uint64_t max_timestamp_ns) const {
   const float kLabelMarginLeft = 4;
   const float kLabelMarginRight = 2;
-  const float kLabelMarginBottom = 2;
   const float kPixelMargin = 1;
 
   float previous_label_end_x = std::numeric_limits<float>::lowest();
@@ -61,12 +60,11 @@ void TimelineUi::RenderLabels(Batcher& batcher, TextRenderer& text_renderer,
         tick_ns / static_cast<double>(kNanosecondsPerMicrosecond));
     if (world_x > previous_label_end_x + kLabelMarginRight + kPixelMargin) {
       Vec2 pos, size;
-      float label_bottom_y =
-          GetPos()[1] + (GetHeight() + layout_->GetFontSize()) / 2 - kLabelMarginBottom;
-      text_renderer.AddText(label.c_str(), world_x + kLabelMarginLeft, label_bottom_y,
+      float label_middle_y = GetPos()[1] + GetHeight() / 2;
+      text_renderer.AddText(label.c_str(), world_x + kLabelMarginLeft, label_middle_y,
                             GlCanvas::kZValueTimeBar,
                             {layout_->GetFontSize(), Color(255, 255, 255, 255), -1.f,
-                             TextRenderer::HAlign::Left, TextRenderer::VAlign::Bottom},
+                             TextRenderer::HAlign::Left, TextRenderer::VAlign::Middle},
                             &pos, &size);
       previous_label_end_x = pos[0] + size[0];
 
