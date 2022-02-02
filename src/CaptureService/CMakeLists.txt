@@ -16,14 +16,13 @@ target_sources(CaptureService PUBLIC
         include/CaptureService/CaptureStartStopListener.h
         include/CaptureService/ClientCaptureEventCollectorBuilder.h
         include/CaptureService/CommonProducerCaptureEventBuilders.h
-        include/CaptureService/StartStopCaptureRequestWaiter.h
-        include/CaptureService/StartStopCaptureRequestWaiterImpl.h)
+        include/CaptureService/StartStopCaptureRequestWaiter.h)
 
 target_sources(CaptureService PRIVATE
         CaptureServiceBase.cpp
         ClientCaptureEventCollectorBuilder.cpp
         CommonProducerCaptureEventBuilders.cpp
-        StartStopCaptureRequestWaiterImpl.cpp)
+        StartStopCaptureRequestWaiter.cpp)
 
 target_link_libraries(CaptureService PUBLIC
         ProducerEventProcessor
