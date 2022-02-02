@@ -43,6 +43,7 @@ class TimeGraphLayout {
   float GetRightMargin() const { return right_margin_; }
   float GetSchedulerTrackOffset() const { return scheduler_track_offset_; }
   float GetSpaceBetweenTracks() const { return space_between_tracks_ * scale_; }
+  float GetSpaceBetweenContainers() const { return space_between_containers_ * scale_; }
   float GetSpaceBetweenCores() const { return space_between_cores_ * scale_; }
   float GetSpaceBetweenGpuDepths() const { return space_between_gpu_depths_ * scale_; }
   float GetSpaceBetweenTracksAndThread() const { return space_between_tracks_and_thread_ * scale_; }
@@ -89,6 +90,7 @@ class TimeGraphLayout {
   float space_between_cores_;
   float space_between_gpu_depths_;
   float space_between_tracks_;
+  float space_between_containers_;
   float space_between_tracks_and_thread_;
   float space_between_subtracks_;
   float space_between_thread_blocks_;

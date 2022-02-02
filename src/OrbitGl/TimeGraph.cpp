@@ -553,7 +553,8 @@ void TimeGraph::UpdateChildrenPosAndContainerSize() {
   float total_height_without_track_container = 0;
   for (orbit_gl::CaptureViewElement* child : GetNonHiddenChildren()) {
     if (child != track_container_.get()) {
-      total_height_without_track_container += child->GetHeight();
+      total_height_without_track_container +=
+          child->GetHeight() + layout_.GetSpaceBetweenContainers();
     }
   }
   track_container_->SetHeight(GetHeight() - total_height_without_track_container);
@@ -562,7 +563,8 @@ void TimeGraph::UpdateChildrenPosAndContainerSize() {
   float current_pos_y = GetPos()[1];
   for (orbit_gl::CaptureViewElement* child : GetNonHiddenChildren()) {
     child->SetPos(GetPos()[0], current_pos_y);
-    current_pos_y += child->GetHeight();
+    current_pos_y += child->GetHeight() + layout_.GetSpaceBetweenContainers();
+    ;
   }
 }
 
@@ -634,9 +636,21 @@ void TimeGraph::DrawAllElements(Batcher& batcher, TextRenderer& text_renderer,
 
   DrawContext context{current_mouse_time_ns, picking_mode};
   Draw(batcher, text_renderer, context);
+  DrawChildrenSeparator(batcher);
 
   if ((!picking && update_primitives_requested_) || picking) {
     PrepareBatcherAndUpdatePrimitives(picking_mode);
+  }
+}
+
+void TimeGraph::DrawChildrenSeparator(Batcher& batcher) {
+  auto child_list = GetNonHiddenChildren();
+  for (unsigned i = 1; i < child_list.size(); i++) {
+    Vec2 child_pos = child_list[i]->GetPos();
+    Vec2 separator_pos = Vec2(child_pos[0], child_pos[1] - layout_.GetSpaceBetweenContainers());
+    Vec2 separator_size = Vec2(GetSize()[0], layout_.GetSpaceBetweenContainers());
+    batcher.AddBox(Box(separator_pos, separator_size, GlCanvas::kZValueOverlay),
+                   GlCanvas::kBackgroundColor);
   }
 }
 

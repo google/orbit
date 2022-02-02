@@ -20,6 +20,7 @@ TimeGraphLayout::TimeGraphLayout() {
   space_between_cores_ = 2.f;
   space_between_gpu_depths_ = 2.f;
   space_between_tracks_ = 10.f;
+  space_between_containers_ = 10.f;
   space_between_tracks_and_thread_ = 5.f;
   space_between_subtracks_ = 0.f;
   space_between_thread_blocks_ = 35.f;
@@ -62,6 +63,7 @@ bool TimeGraphLayout::DrawProperties() {
   FLOAT_SLIDER(space_between_cores_);
   FLOAT_SLIDER(space_between_gpu_depths_);
   FLOAT_SLIDER(space_between_tracks_);
+  FLOAT_SLIDER(space_between_containers_);
   FLOAT_SLIDER(space_between_tracks_and_thread_);
   FLOAT_SLIDER(space_between_subtracks_);
   FLOAT_SLIDER(space_between_thread_blocks_);
