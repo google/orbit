@@ -7,8 +7,8 @@
 #include <grpcpp/grpcpp.h>
 #include <stdint.h>
 
-#include "CaptureService/ClientCaptureEventCollectorBuilder.h"
-#include "CaptureService/StartStopCaptureRequestWaiter.h"
+#include "CaptureService/GrpcClientCaptureEventCollectorBuilder.h"
+#include "CaptureService/GrpcStartStopCaptureRequestWaiter.h"
 #include "GrpcProtos/capture.pb.h"
 #include "OrbitBase/ThreadUtils.h"
 #include "TracingHandler.h"

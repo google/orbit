@@ -18,9 +18,9 @@
 
 #include "ApiLoader/EnableInTracee.h"
 #include "ApiUtils/Event.h"
-#include "CaptureService/ClientCaptureEventCollectorBuilder.h"
 #include "CaptureService/CommonProducerCaptureEventBuilders.h"
-#include "CaptureService/StartStopCaptureRequestWaiter.h"
+#include "CaptureService/GrpcClientCaptureEventCollectorBuilder.h"
+#include "CaptureService/GrpcStartStopCaptureRequestWaiter.h"
 #include "GrpcProtos/Constants.h"
 #include "GrpcProtos/capture.pb.h"
 #include "Introspection/Introspection.h"
