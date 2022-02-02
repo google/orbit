@@ -15,14 +15,14 @@ target_include_directories(Statistics PUBLIC
 target_sources(Statistics PRIVATE
                 BinomialConfidenceInterval.cpp)
 
-add_executable(WilsonBinomialConfidenceIntervalEstimatorTests)
+add_executable(StatisticsTests)
 
-target_sources(WilsonBinomialConfidenceIntervalEstimatorTests PRIVATE
-          WilsonBinomialConfidenceIntervalEstimatorTests.cpp)
+target_sources(StatisticsTests PRIVATE
+          WilsonBinomialConfidenceIntervalEstimatorTest.cpp)
 
 target_link_libraries(
-  WilsonBinomialConfidenceIntervalEstimatorTests
+  StatisticsTests
   PRIVATE Statistics
           GTest::Main)
 
-register_test(WilsonBinomialConfidenceIntervalEstimatorTests)
+register_test(StatisticsTests)

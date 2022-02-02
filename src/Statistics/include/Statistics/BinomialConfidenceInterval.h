@@ -2,7 +2,8 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#pragma once
+#ifndef STATISTICS_BINOMIALCONFIDENCEINTERVAL_H_
+#define STATISTICS_BINOMIALCONFIDENCEINTERVAL_H_
 
 #include <cstdint>
 
@@ -13,8 +14,11 @@ struct BinomialConfidenceInterval {
   float upper;
 };
 
+// Estimates the Binomial proportion confidence interval given the proportion of successful trials
+// and the total number of trials
 class BinomialConfidenceIntervalEstimator {
  public:
+  // `ratio` is the proportion of succesfull trials and should be between 0 and 1.
   [[nodiscard]] virtual BinomialConfidenceInterval Estimate(float ratio, uint32_t trials) const = 0;
   virtual ~BinomialConfidenceIntervalEstimator() = default;
 };
@@ -23,11 +27,8 @@ class BinomialConfidenceIntervalEstimator {
 class WilsonBinomialConfidenceIntervalEstimator : public BinomialConfidenceIntervalEstimator {
  public:
   [[nodiscard]] BinomialConfidenceInterval Estimate(float ratio, uint32_t trials) const override;
-
- private:
-  // (1 - 0.05/2)-quantile of the standard normal distribution.
-  constexpr static double kNormalQuantile = 1.959963985;
-  constexpr static double kNormalQuantile2 = kNormalQuantile * kNormalQuantile;
 };
 
 }  // namespace orbit_statistics
+
+#endif  // STATISTICS_BINOMIALCONFIDENCEINTERVAL_H_
