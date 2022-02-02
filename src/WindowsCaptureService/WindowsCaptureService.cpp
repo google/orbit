@@ -7,7 +7,7 @@
 #include <grpcpp/grpcpp.h>
 #include <stdint.h>
 
-#include "CaptureService/GrpcClientCaptureEventCollectorBuilder.h"
+#include "CaptureService/ClientCaptureEventCollectorBuilder.h"
 #include "CaptureService/StartStopCaptureRequestWaiterImpl.h"
 #include "GrpcProtos/capture.pb.h"
 #include "OrbitBase/ThreadUtils.h"
@@ -24,14 +24,15 @@ grpc::Status WindowsCaptureService::Capture(
     grpc::ServerReaderWriter<CaptureResponse, CaptureRequest>* reader_writer) {
   orbit_base::SetCurrentThreadName("WinCS::Capture");
 
-  orbit_capture_service::GrpcClientCaptureEventCollectorBuilder
-      client_capture_event_collector_builder{reader_writer};
+  std::unique_ptr<orbit_capture_service::ClientCaptureEventCollectorBuilder>
+      client_capture_event_collector_builder =
+          orbit_capture_service::CreateGrpcClientCaptureEventCollectorBuilder(reader_writer);
 
   auto start_stop_capture_request_waiter =
       std::make_shared<orbit_capture_service::StartStopCaptureRequestWaiterImpl>(reader_writer);
 
   CaptureServiceBase::CaptureInitializationResult initialization_result =
-      InitializeCapture(&client_capture_event_collector_builder);
+      InitializeCapture(client_capture_event_collector_builder.get());
   switch (initialization_result) {
     case CaptureInitializationResult::kSuccess:
       break;
