@@ -16,10 +16,8 @@ namespace orbit_gl {
 
 void TimelineUi::RenderLines(Batcher& batcher, uint64_t min_timestamp_ns,
                              uint64_t max_timestamp_ns) const {
-  const Color kMajorTickColor(255, 255, 255, 255);
-  const Color kMinorTickColor(120, 120, 120, 255);
-  constexpr int kPixelMargin = 1;
-  const float ticks_height = GetHeight() - kPixelMargin;
+  const Color kMajorTickColor(255, 254, 253, 255);
+  const Color kMinorTickColor(63, 62, 63, 255);
 
   for (auto& [tick_type, tick_ns] :
        timeline_ticks_.GetAllTicks(min_timestamp_ns, max_timestamp_ns)) {
@@ -27,7 +25,7 @@ void TimelineUi::RenderLines(Batcher& batcher, uint64_t min_timestamp_ns,
         tick_ns / static_cast<double>(kNanosecondsPerMicrosecond));
     int screen_x = viewport_->WorldToScreen(Vec2(world_x, 0))[0];
     batcher.AddVerticalLine(
-        Vec2(screen_x, GetPos()[1]), ticks_height, GlCanvas::kZValueTimeBarBg,
+        Vec2(screen_x, GetPos()[1]), GetHeight(), GlCanvas::kZValueTimeBarBg,
         tick_type == TimelineTicks::TickType::kMajorTick ? kMajorTickColor : kMinorTickColor);
   }
 }
@@ -35,7 +33,9 @@ void TimelineUi::RenderLines(Batcher& batcher, uint64_t min_timestamp_ns,
 void TimelineUi::RenderLabels(Batcher& batcher, TextRenderer& text_renderer,
                               uint64_t min_timestamp_ns, uint64_t max_timestamp_ns) const {
   const float kLabelMarginLeft = 4;
+  const float kLabelMarginRight = 2;
   const float kLabelMarginBottom = 2;
+  const float kPixelMargin = 1;
 
   float previous_label_end_x = std::numeric_limits<float>::lowest();
   std::vector<uint64_t> all_major_ticks =
@@ -59,15 +59,22 @@ void TimelineUi::RenderLabels(Batcher& batcher, TextRenderer& text_renderer,
     }
     float world_x = timeline_info_interface_->GetWorldFromUs(
         tick_ns / static_cast<double>(kNanosecondsPerMicrosecond));
-    if (world_x > previous_label_end_x) {
+    if (world_x > previous_label_end_x + kLabelMarginRight + kPixelMargin) {
       Vec2 pos, size;
-      float label_bottom_y = GetPos()[1] + GetHeight() - kLabelMarginBottom;
+      float label_bottom_y =
+          GetPos()[1] + (GetHeight() + layout_->GetFontSize()) / 2 - kLabelMarginBottom;
       text_renderer.AddText(label.c_str(), world_x + kLabelMarginLeft, label_bottom_y,
                             GlCanvas::kZValueTimeBar,
                             {layout_->GetFontSize(), Color(255, 255, 255, 255), -1.f,
                              TextRenderer::HAlign::Left, TextRenderer::VAlign::Bottom},
                             &pos, &size);
       previous_label_end_x = pos[0] + size[0];
+
+      // Box between labels and ticks, so they don't overlap.
+      const float kBackgroundBoxVerticalMargin = 4;
+      size[0] += kLabelMarginRight;
+      pos[1] = pos[1] - kBackgroundBoxVerticalMargin;
+      size[1] = size[1] + 2 * kBackgroundBoxVerticalMargin;
       Box background_box(pos, size, GlCanvas::kZValueTimeBar);
       batcher.AddBox(background_box, GlCanvas::kTimeBarBackgroundColor);
     }
