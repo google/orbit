@@ -2,8 +2,8 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#ifndef CAPTURE_SERVICE_CLIENT_CAPTURE_EVENT_COLLECTOR_BUILDER_IMPL_H_
-#define CAPTURE_SERVICE_CLIENT_CAPTURE_EVENT_COLLECTOR_BUILDER_IMPL_H_
+#ifndef CAPTURE_SERVICE_GRPC_CLIENT_CAPTURE_EVENT_COLLECTOR_BUILDER_H_
+#define CAPTURE_SERVICE_GRPC_CLIENT_CAPTURE_EVENT_COLLECTOR_BUILDER_H_
 
 #include <grpcpp/grpcpp.h>
 
@@ -15,9 +15,11 @@
 
 namespace orbit_capture_service {
 
-class ClientCaptureEventCollectorBuilderImpl : public ClientCaptureEventCollectorBuilder {
+// A `ClientCaptureEventCollectorBuilder` implementation to build `GrpcClientCaptureEventCollector`
+// with `ServerReaderWriter` for the native orbit capture services.
+class GrpcClientCaptureEventCollectorBuilder : public ClientCaptureEventCollectorBuilder {
  public:
-  explicit ClientCaptureEventCollectorBuilderImpl(
+  explicit GrpcClientCaptureEventCollectorBuilder(
       grpc::ServerReaderWriter<orbit_grpc_protos::CaptureResponse,
                                orbit_grpc_protos::CaptureRequest>* reader_writer)
       : reader_writer_{reader_writer} {}
@@ -35,4 +37,4 @@ class ClientCaptureEventCollectorBuilderImpl : public ClientCaptureEventCollecto
 
 }  // namespace orbit_capture_service
 
-#endif  // CAPTURE_SERVICE_CLIENT_CAPTURE_EVENT_COLLECTOR_BUILDER_IMPL_H_
+#endif  // CAPTURE_SERVICE_GRPC_CLIENT_CAPTURE_EVENT_COLLECTOR_BUILDER_H_

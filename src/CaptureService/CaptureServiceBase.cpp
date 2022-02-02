@@ -9,7 +9,6 @@
 #include "CaptureService/CommonProducerCaptureEventBuilders.h"
 #include "GrpcProtos/Constants.h"
 #include "OrbitBase/Logging.h"
-#include "OrbitBase/Profiling.h"
 
 using orbit_grpc_protos::CaptureOptions;
 using orbit_grpc_protos::ProducerCaptureEvent;
@@ -18,11 +17,6 @@ using orbit_producer_event_processor::ClientCaptureEventCollector;
 using orbit_producer_event_processor::ProducerEventProcessor;
 
 namespace orbit_capture_service {
-
-CaptureServiceBase::CaptureServiceBase() {
-  // We want to estimate clock resolution once, not at the beginning of every capture.
-  clock_resolution_ns_ = orbit_base::EstimateAndLogClockResolution();
-}
 
 void CaptureServiceBase::AddCaptureStartStopListener(CaptureStartStopListener* listener) {
   bool new_insertion = capture_start_stop_listeners_.insert(listener).second;

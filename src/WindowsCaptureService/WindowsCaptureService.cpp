@@ -7,7 +7,7 @@
 #include <grpcpp/grpcpp.h>
 #include <stdint.h>
 
-#include "CaptureService/ClientCaptureEventCollectorBuilderImpl.h"
+#include "CaptureService/GrpcClientCaptureEventCollectorBuilder.h"
 #include "CaptureService/StartStopCaptureRequestWaiterImpl.h"
 #include "GrpcProtos/capture.pb.h"
 #include "OrbitBase/ThreadUtils.h"
@@ -24,19 +24,20 @@ grpc::Status WindowsCaptureService::Capture(
     grpc::ServerReaderWriter<CaptureResponse, CaptureRequest>* reader_writer) {
   orbit_base::SetCurrentThreadName("WinCS::Capture");
 
-  orbit_capture_service::ClientCaptureEventCollectorBuilderImpl
+  orbit_capture_service::GrpcClientCaptureEventCollectorBuilder
       client_capture_event_collector_builder{reader_writer};
 
-  // shared_ptr because it might outlive this method. See wait_for_stop_capture_request_thread_ in
-  // WaitForStopCaptureRequestOrMemoryThresholdExceeded.
   auto start_stop_capture_request_waiter =
       std::make_shared<orbit_capture_service::StartStopCaptureRequestWaiterImpl>(reader_writer);
 
-  if (CaptureServiceBase::CaptureInitializationResult result =
-          InitializeCapture(&client_capture_event_collector_builder);
-      result == CaptureServiceBase::CaptureInitializationResult::kAlreadyInProgress) {
-    return {grpc::StatusCode::ALREADY_EXISTS,
-            "Cannot start capture because another capture is already in progress"};
+  CaptureServiceBase::CaptureInitializationResult initialization_result =
+      InitializeCapture(&client_capture_event_collector_builder);
+  switch (initialization_result) {
+    case CaptureInitializationResult::kSuccess:
+      break;
+    case CaptureInitializationResult::kAlreadyInProgress:
+      return {grpc::StatusCode::ALREADY_EXISTS,
+              "Cannot start capture because another capture is already in progress"};
   }
 
   const CaptureOptions& capture_options =

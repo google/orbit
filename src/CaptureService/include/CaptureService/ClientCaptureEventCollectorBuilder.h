@@ -9,6 +9,9 @@
 
 namespace orbit_capture_service {
 
+// This is a gRPC-free interface for building `ClientCaptureEventCollector`. Native orbit capture
+// services and the cloud collector will have their own implementations to build either a
+// `GrpcClientCaptureEventCollector` or a `UploaderClientCaptureEventCollector`.
 class ClientCaptureEventCollectorBuilder {
  public:
   virtual ~ClientCaptureEventCollectorBuilder() = default;

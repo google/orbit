@@ -18,8 +18,8 @@
 
 #include "ApiLoader/EnableInTracee.h"
 #include "ApiUtils/Event.h"
-#include "CaptureService/ClientCaptureEventCollectorBuilderImpl.h"
 #include "CaptureService/CommonProducerCaptureEventBuilders.h"
+#include "CaptureService/GrpcClientCaptureEventCollectorBuilder.h"
 #include "CaptureService/StartStopCaptureRequestWaiterImpl.h"
 #include "GrpcProtos/Constants.h"
 #include "GrpcProtos/capture.pb.h"
@@ -223,7 +223,7 @@ grpc::Status LinuxCaptureService::Capture(
     grpc::ServerReaderWriter<CaptureResponse, CaptureRequest>* reader_writer) {
   orbit_base::SetCurrentThreadName("CSImpl::Capture");
 
-  orbit_capture_service::ClientCaptureEventCollectorBuilderImpl
+  orbit_capture_service::GrpcClientCaptureEventCollectorBuilder
       client_capture_event_collector_builder{reader_writer};
 
   // shared_ptr because it might outlive this method. See wait_for_stop_capture_request_thread_ in
@@ -231,11 +231,14 @@ grpc::Status LinuxCaptureService::Capture(
   auto start_stop_capture_request_waiter =
       std::make_shared<orbit_capture_service::StartStopCaptureRequestWaiterImpl>(reader_writer);
 
-  if (CaptureServiceBase::CaptureInitializationResult result =
-          InitializeCapture(&client_capture_event_collector_builder);
-      result == CaptureServiceBase::CaptureInitializationResult::kAlreadyInProgress) {
-    return {grpc::StatusCode::ALREADY_EXISTS,
-            "Cannot start capture because another capture is already in progress"};
+  CaptureServiceBase::CaptureInitializationResult initialization_result =
+      InitializeCapture(&client_capture_event_collector_builder);
+  switch (initialization_result) {
+    case CaptureInitializationResult::kSuccess:
+      break;
+    case CaptureInitializationResult::kAlreadyInProgress:
+      return {grpc::StatusCode::ALREADY_EXISTS,
+              "Cannot start capture because another capture is already in progress"};
   }
 
   if (wait_for_stop_capture_request_thread_.joinable()) {
@@ -249,7 +252,6 @@ grpc::Status LinuxCaptureService::Capture(
 
   const CaptureOptions& capture_options =
       start_stop_capture_request_waiter->WaitForStartCaptureRequest();
-  ORBIT_LOG("Read CaptureRequest from Capture's gRPC stream: starting capture");
 
   // Enable Orbit API in tracee.
   std::optional<std::string> error_enabling_orbit_api;

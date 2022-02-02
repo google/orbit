@@ -11,6 +11,7 @@
 #include "CaptureService/ClientCaptureEventCollectorBuilder.h"
 #include "CaptureStartStopListener.h"
 #include "GrpcProtos/capture.pb.h"
+#include "OrbitBase/Profiling.h"
 #include "OrbitBase/Result.h"
 #include "ProducerEventProcessor/ClientCaptureEventCollector.h"
 #include "ProducerEventProcessor/ProducerEventProcessor.h"
@@ -21,19 +22,18 @@ namespace orbit_capture_service {
 // the platform-specific native orbit capture services and the cloud collector.
 class CaptureServiceBase {
  public:
-  CaptureServiceBase();
-
   void AddCaptureStartStopListener(CaptureStartStopListener* listener);
   void RemoveCaptureStartStopListener(CaptureStartStopListener* listener);
 
  protected:
   enum class CaptureInitializationResult { kSuccess, kAlreadyInProgress };
+  enum class StopCaptureReason { kClientStop, kMemoryWatchdog };
+
   [[nodiscard]] CaptureInitializationResult InitializeCapture(
       ClientCaptureEventCollectorBuilder* client_capture_event_collector_builder);
   void TerminateCapture();
 
   void StartEventProcessing(const orbit_grpc_protos::CaptureOptions& capture_options);
-  enum class StopCaptureReason { kClientStop, kMemoryWatchdog };
   void FinalizeEventProcessing(StopCaptureReason stop_capture_reason);
 
   std::unique_ptr<orbit_producer_event_processor::ClientCaptureEventCollector>
@@ -44,7 +44,8 @@ class CaptureServiceBase {
   uint64_t capture_start_timestamp_ns_ = 0;
 
  private:
-  uint64_t clock_resolution_ns_ = 0;
+  // We estimate clock resolution only once, not at the beginning of every capture.
+  uint64_t clock_resolution_ns_ = orbit_base::EstimateAndLogClockResolution();
   absl::Mutex capture_mutex_;
   bool is_capturing_ ABSL_GUARDED_BY(capture_mutex_) = false;
 };
