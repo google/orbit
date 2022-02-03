@@ -36,16 +36,21 @@ void TimelineUi::RenderLabels(Batcher& batcher, TextRenderer& text_renderer,
   const float kLabelMarginRight = 2;
   const float kPixelMargin = 1;
 
-  float previous_label_end_x = std::numeric_limits<float>::lowest();
   std::vector<uint64_t> all_major_ticks =
       timeline_ticks_.GetMajorTicks(min_timestamp_ns, max_timestamp_ns);
+  // The label of the previous major tick could be also partially visible.
+  std::optional<uint64_t> previous_major_tick =
+      timeline_ticks_.GetPreviousMajorTick(min_timestamp_ns, max_timestamp_ns);
+  if (previous_major_tick.has_value()) {
+    all_major_ticks.insert(all_major_ticks.begin(), previous_major_tick.value());
+  }
 
   int number_of_decimal_places_needed = 0;
   for (uint64_t tick : all_major_ticks) {
     number_of_decimal_places_needed = std::max(
         number_of_decimal_places_needed, timeline_ticks_.GetTimestampNumDigitsPrecision(tick));
   }
-
+  float previous_label_end_x = std::numeric_limits<float>::lowest();
   for (uint64_t tick_ns : all_major_ticks) {
     std::string label;
     // TODO(http://b/170712621): Remove this flag when we decide which timestamp format we will use.

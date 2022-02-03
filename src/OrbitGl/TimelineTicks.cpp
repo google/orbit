@@ -3,6 +3,8 @@
 // found in the LICENSE file.
 #include "TimelineTicks.h"
 
+#include <optional>
+
 #include "OrbitBase/Logging.h"
 
 namespace orbit_gl {
@@ -71,6 +73,18 @@ std::vector<uint64_t> TimelineTicks::GetMajorTicks(uint64_t start_ns, uint64_t e
     }
   }
   return major_ticks;
+}
+
+std::optional<uint64_t> TimelineTicks::GetPreviousMajorTick(uint64_t start_ns,
+                                                            uint64_t end_ns) const {
+  std::vector<uint64_t> major_ticks = GetMajorTicks(start_ns, end_ns);
+  ORBIT_CHECK(major_ticks.size() != 0);
+
+  uint64_t major_tick_scale = GetMajorTicksScale(end_ns + 1 - start_ns);
+  if (major_ticks[0] < major_tick_scale) {
+    return std::nullopt;
+  }
+  return major_ticks[0] - major_tick_scale;
 }
 
 int TimelineTicks::GetTimestampNumDigitsPrecision(uint64_t timestamp_ns) const {
