@@ -62,26 +62,21 @@ namespace {
   }
   const std::vector<uint8_t> backup = std::move(backup_or_error.value());
 
-  orbit_base::unique_resource restore_memory_and_registers_on_return{
-      pid, [start_address, backup, &original_registers](pid_t pid) {
-        auto restore_memory_result = WriteTraceesMemory(pid, start_address, backup);
-        if (restore_memory_result.has_error()) {
-          ORBIT_FATAL("Unable to restore memory state of tracee: %s",
-                      restore_memory_result.error().message());
-        }
-        auto restore_registers_result = original_registers.RestoreRegisters();
-        if (restore_registers_result.has_error()) {
-          ORBIT_FATAL("Unable to restore register state of tracee: %s",
-                      restore_registers_result.error().message());
-        }
-      }};
-
   // Write `syscall` into memory. Machine code is `0x0f05`.
   auto write_code_result = WriteTraceesMemory(pid, start_address, std::vector<uint8_t>{0x0f, 0x05});
   if (write_code_result.has_error()) {
     return ErrorMessage(absl::StrFormat("Failed to write to tracee's memory: %s",
                                         write_code_result.error().message()));
   }
+
+  std::shared_ptr<void> restore_memory_on_return{
+      nullptr, [pid, start_address, backup](void* /*ptr*/) {
+        auto restore_memory_result = WriteTraceesMemory(pid, start_address, backup);
+        if (restore_memory_result.has_error()) {
+          ORBIT_FATAL("Unable to restore memory state of tracee: %s",
+                      restore_memory_result.error().message());
+        }
+      }};
 
   // Move instruction pointer to the `syscall` and fill registers with parameters.
   RegisterState registers_for_syscall = original_registers;
@@ -100,6 +95,15 @@ namespace {
     return ErrorMessage(absl::StrFormat("Failed to set registers with syscall parameters: %s",
                                         restore_registers_result.error().message()));
   }
+
+  std::shared_ptr<void> restore_registers_on_return{
+      nullptr, [&original_registers](void* /*ptr*/) {
+        auto restore_registers_result = original_registers.RestoreRegisters();
+        if (restore_registers_result.has_error()) {
+          ORBIT_FATAL("Unable to restore register state of tracee: %s",
+                      restore_registers_result.error().message());
+        }
+      }};
 
   // Single step to execute the syscall.
   if (ptrace(PTRACE_SINGLESTEP, pid, 0, 0) != 0) {
