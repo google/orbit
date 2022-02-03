@@ -40,7 +40,7 @@ TimeGraphLayout::TimeGraphLayout() {
   toolbar_icon_height_ = 24.f;
   generic_fixed_spacer_width_ = 10.f;
   scale_ = 1.f;
-  time_bar_height_ = 15.f;
+  time_bar_height_ = 30.f;
   font_size_ = 14;
 };
 
