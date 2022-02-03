@@ -68,7 +68,7 @@ void TimelineUi::RenderLabels(Batcher& batcher, TextRenderer& text_renderer,
                             &pos, &size);
       previous_label_end_x = pos[0] + size[0];
 
-      // Box between labels and ticks, so they don't overlap.
+      // Box behind the label to hide the ticks behind it.
       const float kBackgroundBoxVerticalMargin = 4;
       size[0] += kLabelMarginRight;
       pos[1] = pos[1] - kBackgroundBoxVerticalMargin;
