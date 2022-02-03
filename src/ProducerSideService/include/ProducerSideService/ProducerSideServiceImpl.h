@@ -13,7 +13,7 @@
 
 #include <atomic>
 
-#include "CaptureService/CaptureStartStopListener.h"
+#include "CaptureServiceBase/CaptureStartStopListener.h"
 #include "GrpcProtos/Constants.h"
 #include "GrpcProtos/capture.pb.h"
 #include "GrpcProtos/producer_side_services.grpc.pb.h"
@@ -31,7 +31,7 @@ namespace orbit_producer_side_service {
 // allows to specify a timeout for that method.
 // OnExitRequest disconnects all producers, preparing this service for shutdown.
 class ProducerSideServiceImpl final : public orbit_grpc_protos::ProducerSideService::Service,
-                                      public orbit_capture_service::CaptureStartStopListener {
+                                      public orbit_capture_service_base::CaptureStartStopListener {
  public:
   // This method causes the StartCaptureCommand to be sent to connected producers
   // (but if it's called multiple times in a row, the command will only be sent once).

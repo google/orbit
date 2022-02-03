@@ -2,13 +2,13 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#ifndef CAPTURE_SERVICE_CAPTURE_START_STOP_LISTENER_H_
-#define CAPTURE_SERVICE_CAPTURE_START_STOP_LISTENER_H_
+#ifndef CAPTURE_SERVICE_BASE_CAPTURE_START_STOP_LISTENER_H_
+#define CAPTURE_SERVICE_BASE_CAPTURE_START_STOP_LISTENER_H_
 
 #include "GrpcProtos/capture.pb.h"
 #include "ProducerEventProcessor/ProducerEventProcessor.h"
 
-namespace orbit_capture_service {
+namespace orbit_capture_service_base {
 
 // This interface is used to propagate requests received by CaptureServiceImpl to start and stop
 // the capture, together with the CaptureOptions and the CaptureEventBuffer where to add the
@@ -25,6 +25,6 @@ class CaptureStartStopListener {
   virtual void OnCaptureStopRequested() = 0;
 };
 
-}  // namespace orbit_capture_service
+}  // namespace orbit_capture_service_base
 
-#endif  // CAPTURE_SERVICE_CAPTURE_START_STOP_LISTENER_H_
+#endif  // CAPTURE_SERVICE_BASE_CAPTURE_START_STOP_LISTENER_H_

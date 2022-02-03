@@ -13,7 +13,7 @@ orbit_cc_library(
     deps = [
         "//src/ApiLoader",
         "//src/ApiUtils",
-        "//src/CaptureService",
+        "//src/CaptureServiceBase",
         "//src/GrpcProtos",
         "//src/GrpcProtos:capture_cc_proto",
         "//src/Introspection",

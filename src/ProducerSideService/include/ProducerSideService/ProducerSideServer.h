@@ -10,7 +10,7 @@
 #include <memory>
 #include <string_view>
 
-#include "CaptureService/CaptureStartStopListener.h"
+#include "CaptureServiceBase/CaptureStartStopListener.h"
 #include "GrpcProtos/capture.pb.h"
 #include "OrbitBase/Logging.h"
 #include "ProducerEventProcessor/ProducerEventProcessor.h"
@@ -20,7 +20,7 @@ namespace orbit_producer_side_service {
 
 // Wrapper around a grpc::Server that registers the service ProducerSideServiceImpl
 // and listens on a socket.
-class ProducerSideServer final : public orbit_capture_service::CaptureStartStopListener {
+class ProducerSideServer final : public orbit_capture_service_base::CaptureStartStopListener {
  public:
   bool BuildAndStart(std::string uri);
   void ShutdownAndWait();

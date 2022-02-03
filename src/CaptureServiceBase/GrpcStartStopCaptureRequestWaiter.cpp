@@ -2,7 +2,7 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#include "CaptureService/GrpcStartStopCaptureRequestWaiter.h"
+#include "CaptureServiceBase/GrpcStartStopCaptureRequestWaiter.h"
 
 #include "OrbitBase/Logging.h"
 
@@ -10,7 +10,7 @@ using orbit_grpc_protos::CaptureOptions;
 using orbit_grpc_protos::CaptureRequest;
 using orbit_grpc_protos::CaptureResponse;
 
-namespace orbit_capture_service {
+namespace orbit_capture_service_base {
 
 // A `StartStopCaptureRequestWaiter` implementation with `ServerReaderWriter` for the native orbit
 // capture services.
@@ -48,4 +48,4 @@ std::shared_ptr<StartStopCaptureRequestWaiter> CreateGrpcStartStopCaptureRequest
   return std::make_shared<GrpcStartStopCaptureRequestWaiter>(reader_writer);
 }
 
-}  // namespace orbit_capture_service
+}  // namespace orbit_capture_service_base

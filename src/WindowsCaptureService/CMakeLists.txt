@@ -21,7 +21,7 @@ target_sources(WindowsCaptureService PRIVATE
 
 target_link_libraries(WindowsCaptureService PUBLIC
         ApiUtils
-        CaptureService
+        CaptureServiceBase
         ProducerEventProcessor
         GrpcProtos
         Introspection

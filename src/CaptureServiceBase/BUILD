@@ -9,7 +9,7 @@ package(default_visibility = ["//:__subpackages__"])
 licenses(["notice"])
 
 orbit_cc_library(
-    name = "CaptureService",
+    name = "CaptureServiceBase",
     deps = [
         "//src/ApiLoader",
         "//src/ApiUtils",
@@ -32,8 +32,8 @@ orbit_cc_library(
 )
 
 orbit_cc_test(
-    name = "CaptureServiceTests",
+    name = "CaptureServiceBaseTests",
     deps = [
-        ":CaptureService",
+        ":CaptureServiceBase",
     ],
 )

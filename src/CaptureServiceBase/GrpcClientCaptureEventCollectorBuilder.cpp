@@ -2,14 +2,14 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#include "CaptureService/GrpcClientCaptureEventCollectorBuilder.h"
+#include "CaptureServiceBase/GrpcClientCaptureEventCollectorBuilder.h"
 
 #include "ProducerEventProcessor/GrpcClientCaptureEventCollector.h"
 
 using orbit_grpc_protos::CaptureRequest;
 using orbit_grpc_protos::CaptureResponse;
 
-namespace orbit_capture_service {
+namespace orbit_capture_service_base {
 
 // A `ClientCaptureEventCollectorBuilder` implementation to build `GrpcClientCaptureEventCollector`
 // with `ServerReaderWriter` for the native orbit capture services.
@@ -34,4 +34,4 @@ std::unique_ptr<ClientCaptureEventCollectorBuilder> CreateGrpcClientCaptureEvent
   return std::make_unique<GrpcClientCaptureEventCollectorBuilder>(reader_writer);
 }
 
-}  // namespace orbit_capture_service
+}  // namespace orbit_capture_service_base

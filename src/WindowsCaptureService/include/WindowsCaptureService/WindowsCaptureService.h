@@ -5,13 +5,13 @@
 #ifndef WINDOWS_CAPTURE_SERVICE_WINDOWS_CAPTURE_SERVICE_H_
 #define WINDOWS_CAPTURE_SERVICE_WINDOWS_CAPTURE_SERVICE_H_
 
-#include "CaptureService/CaptureServiceBase.h"
+#include "CaptureServiceBase/CaptureServiceBase.h"
 #include "GrpcProtos/services.grpc.pb.h"
 
 namespace orbit_windows_capture_service {
 
 // Windows implementation of the grpc capture service.
-class WindowsCaptureService final : public orbit_capture_service::CaptureServiceBase,
+class WindowsCaptureService final : public orbit_capture_service_base::CaptureServiceBase,
                                     public orbit_grpc_protos::CaptureService::Service {
  public:
   grpc::Status Capture(

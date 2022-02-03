@@ -2,8 +2,8 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#ifndef CAPTURE_SERVICE_COMMON_PRODUCER_CAPTURE_EVENT_BUILDERS_H_
-#define CAPTURE_SERVICE_COMMON_PRODUCER_CAPTURE_EVENT_BUILDERS_H_
+#ifndef CAPTURE_SERVICE_BASE_COMMON_PRODUCER_CAPTURE_EVENT_BUILDERS_H_
+#define CAPTURE_SERVICE_BASE_COMMON_PRODUCER_CAPTURE_EVENT_BUILDERS_H_
 
 #include <absl/container/flat_hash_map.h>
 #include <absl/time/time.h>
@@ -13,7 +13,7 @@
 
 #include "GrpcProtos/capture.pb.h"
 
-namespace orbit_capture_service {
+namespace orbit_capture_service_base {
 
 [[nodiscard]] orbit_grpc_protos::ProducerCaptureEvent CreateCaptureStartedEvent(
     const orbit_grpc_protos::CaptureOptions& capture_options, absl::Time capture_start_time,
@@ -41,6 +41,6 @@ CreateWarningInstrumentingWithUserSpaceInstrumentationEvent(
 [[nodiscard]] orbit_grpc_protos::ProducerCaptureEvent CreateWarningEvent(uint64_t timestamp_ns,
                                                                          std::string message);
 
-}  // namespace orbit_capture_service
+}  // namespace orbit_capture_service_base
 
-#endif  // CAPTURE_SERVICE_COMMON_PRODUCER_CAPTURE_EVENT_BUILDERS_H_
+#endif  // CAPTURE_SERVICE_BASE_COMMON_PRODUCER_CAPTURE_EVENT_BUILDERS_H_
