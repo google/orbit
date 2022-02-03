@@ -68,7 +68,7 @@ bool PeCoffUnwindInfos::ParseUnwindInfoAtOffset(uint64_t offset, UnwindInfo* unw
     return false;
   }
 
-  if (unwind_info->GetFlags() & 0x04) {  // Chained unwind info.
+  if (unwind_info->HasChainedInfo()) {
     // For alignment purposes, the unwind codes array always has an even number of entries,
     // with the last one potentially being unused (as indicated by num_codes). To find the
     // chained function (which is a RUNTIME_FUNCTION struct), we therefore need to round

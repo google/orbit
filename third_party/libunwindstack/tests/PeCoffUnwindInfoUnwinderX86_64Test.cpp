@@ -33,7 +33,9 @@ namespace unwindstack {
 class PeCoffUnwindInfoUnwinderX86_64Test : public ::testing::Test {
  public:
   PeCoffUnwindInfoUnwinderX86_64Test()
-      : unwinder_(new PeCoffMemory(new MemoryFake)), process_mem_fake_(new MemoryFake) {}
+      : object_file_memory_fake_(new MemoryFake),
+        unwinder_(new PeCoffMemory(object_file_memory_fake_.get())),
+        process_mem_fake_(new MemoryFake) {}
   ~PeCoffUnwindInfoUnwinderX86_64Test() {}
 
   // See
@@ -108,6 +110,9 @@ class PeCoffUnwindInfoUnwinderX86_64Test : public ::testing::Test {
     bool use_frame_pointer = false;
     UnwindInfoRegister frame_pointer_register = RBP;
     uint8_t frame_pointer_offset = 0;
+
+    bool has_chained_info = false;
+    uint32_t chained_info_offset = 0;
   };
 
   uint8_t PackUnwindOpAndOpInfo(UnwindOpCode op_code, uint8_t op_info) {
@@ -300,8 +305,15 @@ class PeCoffUnwindInfoUnwinderX86_64Test : public ::testing::Test {
                       UnwindInfo* unwind_info) {
     UnwindInfo new_unwind_info;
 
-    stack_pointer_ -= sizeof(uint64_t);
-    process_mem_fake_->SetData64(stack_pointer_, options.return_address);
+    // Unwind info that has chained info does not represent an actual function call using the 'call'
+    // instruction. The chain can have multiple links and the final chained info is called "primary
+    // unwind info" (this represents an actual function call with pushed return address). An example
+    // where chained info occurs is tail call optimization where the inner function call is carried
+    // out using a 'jmp' instruction.
+    if (!options.has_chained_info) {
+      stack_pointer_ -= sizeof(uint64_t);
+      process_mem_fake_->SetData64(stack_pointer_, options.return_address);
+    }
 
     std::vector<UnwindCode> unwind_codes;
     AddPushedRegisters(pushed_registers, &unwind_codes);
@@ -310,8 +322,12 @@ class PeCoffUnwindInfoUnwinderX86_64Test : public ::testing::Test {
     AddSavedXmm128Registers(saved_xmm128_registers, &unwind_codes);
     AddFramePointerRegisterOp(options, &unwind_codes);
 
-    // TODO: Chained info.
     uint8_t flags = 0x00;
+    if (options.has_chained_info) {
+      // To get the flags, this value will be shifted right by 3. To get chained info,
+      // after shifting, this value must be 0x04.
+      flags |= 0x04 << 3;
+    }
     uint8_t version_and_flags = flags | 0x01;
 
     new_unwind_info.version_and_flags = version_and_flags;
@@ -333,13 +349,47 @@ class PeCoffUnwindInfoUnwinderX86_64Test : public ::testing::Test {
     new_unwind_info.unwind_codes = unwind_codes;
     new_unwind_info.exception_handler_address = 0L;
 
-    // TODO: Chained info.
-    new_unwind_info.chained_info = RuntimeFunction{0, 0, 0};
+    if (options.has_chained_info) {
+      new_unwind_info.chained_info = RuntimeFunction{0, 0, options.chained_info_offset};
+    }
 
     *unwind_info = new_unwind_info;
   }
 
+  uint64_t WriteUnwindInfoToFakeObjectFile(uint32_t file_offset, const UnwindInfo& unwind_info) {
+    uint64_t offset = file_offset;
+    object_file_memory_fake_->SetData8(offset, unwind_info.version_and_flags);
+    offset += sizeof(uint8_t);
+    object_file_memory_fake_->SetData8(offset, unwind_info.prolog_size);
+    offset += sizeof(uint8_t);
+    object_file_memory_fake_->SetData8(offset, unwind_info.num_codes);
+    offset += sizeof(uint8_t);
+    object_file_memory_fake_->SetData8(offset, unwind_info.frame_register_and_offset);
+    offset += sizeof(uint8_t);
+    for (const auto& unwind_code : unwind_info.unwind_codes) {
+      object_file_memory_fake_->SetData16(offset, unwind_code.frame_offset);
+      offset += sizeof(uint16_t);
+    }
+    // If the number of unwind codes is not even, add padding per specification.
+    if (unwind_info.unwind_codes.size() % 2 != 0) {
+      object_file_memory_fake_->SetData16(offset, 0x0000);
+      offset += sizeof(uint16_t);
+    }
+
+    if (unwind_info.HasChainedInfo()) {
+      object_file_memory_fake_->SetData32(offset, unwind_info.chained_info.start_address);
+      offset += sizeof(uint32_t);
+      object_file_memory_fake_->SetData32(offset, unwind_info.chained_info.end_address);
+      offset += sizeof(uint32_t);
+      object_file_memory_fake_->SetData32(offset, unwind_info.chained_info.unwind_info_offset);
+      offset += sizeof(uint32_t);
+    }
+
+    return offset;
+  }
+
  protected:
+  std::unique_ptr<MemoryFake> object_file_memory_fake_;
   PeCoffUnwindInfoUnwinderX86_64 unwinder_;
   std::unique_ptr<MemoryFake> process_mem_fake_;
 
@@ -1003,6 +1053,106 @@ TEST_F(PeCoffUnwindInfoUnwinderX86_64Test,
   EXPECT_TRUE(unwinder_.Eval(process_mem_fake_.get(), &regs, unwind_info, 0, &frame_pointer,
                              &frame_pointer_used));
   EXPECT_EQ(regs.sp(), stack_pointer_);
+}
+
+TEST_F(PeCoffUnwindInfoUnwinderX86_64Test, succeeds_with_correct_chained_info) {
+  constexpr uint64_t kReturnAddress = 0x2000;
+  constexpr uint32_t kAllocation = 1024;
+
+  std::vector<PushOp> push_ops;
+  push_ops.emplace_back(PushOp{RDI, 0x100});
+  push_ops.emplace_back(PushOp{RSI, 0x200});
+  push_ops.emplace_back(PushOp{R12, 0x300});
+
+  std::vector<SaveOp> save_ops;
+  save_ops.emplace_back(SaveOp{RBX, 0x400, 0x20});
+  save_ops.emplace_back(SaveOp{R13, 0x500, 0x30});
+  save_ops.emplace_back(SaveOp{R14, 0x600, 0x40});
+
+  UnwindInfo chained_info;
+  StackFrameOptions options_chained;
+  options_chained.return_address = kReturnAddress;
+  options_chained.stack_allocation = kAllocation;
+  PushStackFrame(options_chained, push_ops, save_ops, {}, &chained_info);
+  EXPECT_EQ(3 + 2 * 3 + 2, chained_info.num_codes);
+
+  constexpr uint32_t kChainedInfoOffset = 0x3000;
+
+  WriteUnwindInfoToFakeObjectFile(kChainedInfoOffset, chained_info);
+
+  UnwindInfo unwind_info;
+  StackFrameOptions options;
+  options.has_chained_info = true;
+  options.stack_allocation = kAllocation;
+  options.chained_info_offset = kChainedInfoOffset;
+  PushStackFrame(options, {}, {}, {}, &unwind_info);
+  EXPECT_EQ(2, unwind_info.num_codes);
+
+  RegsX86_64 regs;
+  uint64_t code_offset = unwind_info.prolog_size;
+  uint64_t frame_pointer = 0;
+  bool frame_pointer_used = false;
+
+  regs.set_sp(stack_pointer_);
+
+  EXPECT_TRUE(unwinder_.Eval(process_mem_fake_.get(), &regs, unwind_info, code_offset,
+                             &frame_pointer, &frame_pointer_used));
+  EXPECT_FALSE(frame_pointer_used);
+  EXPECT_EQ(regs.sp(), stack_pointer_ + 2 * kAllocation + 3 * sizeof(uint64_t));
+
+  // Validate that stack pointer points to the return address.
+  uint64_t return_address;
+  ASSERT_TRUE(process_mem_fake_->Read64(regs.sp(), &return_address));
+  EXPECT_EQ(return_address, kReturnAddress);
+
+  // Validate stored registers.
+  EXPECT_EQ(regs[X86_64Reg::X86_64_REG_RDI], 0x100);
+  EXPECT_EQ(regs[X86_64Reg::X86_64_REG_RSI], 0x200);
+  EXPECT_EQ(regs[X86_64Reg::X86_64_REG_R12], 0x300);
+  EXPECT_EQ(regs[X86_64Reg::X86_64_REG_RBX], 0x400);
+  EXPECT_EQ(regs[X86_64Reg::X86_64_REG_R13], 0x500);
+  EXPECT_EQ(regs[X86_64Reg::X86_64_REG_R14], 0x600);
+
+  // Also validate that we skip the inner unwind info successfully if code offset is before the
+  // unwind op. The chained info still must be executed in its entirety.
+  regs.set_sp(stack_pointer_);
+  EXPECT_TRUE(unwinder_.Eval(process_mem_fake_.get(), &regs, unwind_info, 0, &frame_pointer,
+                             &frame_pointer_used));
+  EXPECT_EQ(regs.sp(), stack_pointer_ + kAllocation + 3 * sizeof(uint64_t));
+}
+
+TEST_F(PeCoffUnwindInfoUnwinderX86_64Test, fails_with_incorrect_chained_info_offset) {
+  constexpr uint64_t kReturnAddress = 0x2000;
+  constexpr uint32_t kAllocation = 1024;
+
+  UnwindInfo chained_info;
+  StackFrameOptions options_chained;
+  options_chained.return_address = kReturnAddress;
+  options_chained.stack_allocation = kAllocation;
+  PushStackFrame(options_chained, {}, {}, {}, &chained_info);
+  EXPECT_EQ(2, chained_info.num_codes);
+
+  constexpr uint32_t kChainedInfoOffset = 0x3000;
+  constexpr uint32_t kIncorrectChainedInfoOffset = 0x4000;
+  WriteUnwindInfoToFakeObjectFile(kChainedInfoOffset, chained_info);
+
+  UnwindInfo unwind_info;
+  StackFrameOptions options;
+  options.has_chained_info = true;
+  options.stack_allocation = kAllocation;
+  options.chained_info_offset = kIncorrectChainedInfoOffset;
+  PushStackFrame(options, {}, {}, {}, &unwind_info);
+  EXPECT_EQ(2, unwind_info.num_codes);
+
+  RegsX86_64 regs;
+  uint64_t code_offset = unwind_info.prolog_size;
+  uint64_t frame_pointer = 0;
+  bool frame_pointer_used = false;
+
+  regs.set_sp(stack_pointer_);
+
+  EXPECT_FALSE(unwinder_.Eval(process_mem_fake_.get(), &regs, unwind_info, code_offset,
+                              &frame_pointer, &frame_pointer_used));
 }
 
 }  // namespace unwindstack
