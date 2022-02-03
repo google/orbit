@@ -29,6 +29,7 @@ class TimeGraphLayout {
   float GetTrackLabelOffsetX() const { return track_label_offset_x_; }
   float GetSliderWidth() const { return slider_width_; }
   float GetTimeBarHeight() const { return time_bar_height_; }
+  float GetTimeBarMargin() const { return time_bar_margin_; }
   float GetTrackTabWidth() const { return track_tab_width_; }
   float GetTrackTabHeight() const { return track_tab_height_ * scale_; }
   float GetTrackTabOffset() const { return track_tab_offset_; }
@@ -43,7 +44,6 @@ class TimeGraphLayout {
   float GetRightMargin() const { return right_margin_; }
   float GetSchedulerTrackOffset() const { return scheduler_track_offset_; }
   float GetSpaceBetweenTracks() const { return space_between_tracks_ * scale_; }
-  float GetSpaceBetweenContainers() const { return space_between_containers_ * scale_; }
   float GetSpaceBetweenCores() const { return space_between_cores_ * scale_; }
   float GetSpaceBetweenGpuDepths() const { return space_between_gpu_depths_ * scale_; }
   float GetSpaceBetweenTracksAndThread() const { return space_between_tracks_and_thread_ * scale_; }
@@ -72,6 +72,7 @@ class TimeGraphLayout {
   float track_label_offset_x_;
   float slider_width_;
   float time_bar_height_;
+  float time_bar_margin_;
   float track_tab_width_;
   float track_tab_height_;
   float track_tab_offset_;
@@ -90,7 +91,6 @@ class TimeGraphLayout {
   float space_between_cores_;
   float space_between_gpu_depths_;
   float space_between_tracks_;
-  float space_between_containers_;
   float space_between_tracks_and_thread_;
   float space_between_subtracks_;
   float space_between_thread_blocks_;

@@ -38,7 +38,6 @@ class TimeGraph final : public orbit_gl::CaptureViewElement,
 
   void DrawAllElements(Batcher& batcher, TextRenderer& text_renderer, PickingMode& picking_mode,
                        uint64_t current_mouse_time_ns);
-  void DrawChildrenSeparator(Batcher& batcher);
   void DrawText(float layer);
 
   void RequestUpdate() override;

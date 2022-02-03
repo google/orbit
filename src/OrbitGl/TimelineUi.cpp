@@ -25,7 +25,7 @@ void TimelineUi::RenderLines(Batcher& batcher, uint64_t min_timestamp_ns,
         tick_ns / static_cast<double>(kNanosecondsPerMicrosecond));
     int screen_x = viewport_->WorldToScreen(Vec2(world_x, 0))[0];
     batcher.AddVerticalLine(
-        Vec2(screen_x, GetPos()[1]), GetHeight(), GlCanvas::kZValueTimeBarBg,
+        Vec2(screen_x, GetPos()[1]), GetHeightWithoutMargin(), GlCanvas::kZValueTimeBarBg,
         tick_type == TimelineTicks::TickType::kMajorTick ? kMajorTickColor : kMinorTickColor);
   }
 }
@@ -60,7 +60,7 @@ void TimelineUi::RenderLabels(Batcher& batcher, TextRenderer& text_renderer,
         tick_ns / static_cast<double>(kNanosecondsPerMicrosecond));
     if (world_x > previous_label_end_x + kLabelMarginRight + kPixelMargin) {
       Vec2 pos, size;
-      float label_middle_y = GetPos()[1] + GetHeight() / 2;
+      float label_middle_y = GetPos()[1] + GetHeightWithoutMargin() / 2;
       text_renderer.AddText(label.c_str(), world_x + kLabelMarginLeft, label_middle_y,
                             GlCanvas::kZValueTimeBar,
                             {layout_->GetFontSize(), Color(255, 255, 255, 255), -1.f,
@@ -79,8 +79,16 @@ void TimelineUi::RenderLabels(Batcher& batcher, TextRenderer& text_renderer,
   }
 }
 
+void TimelineUi::RenderMargin(Batcher& batcher) const {
+  Vec2 margin_pos = Vec2(GetPos()[0], GetPos()[1] + GetHeightWithoutMargin());
+  Vec2 margin_size = Vec2(GetSize()[0], GetMarginHeight());
+  batcher.AddBox(Box(margin_pos, margin_size, GlCanvas::kZValueOverlay),
+                 GlCanvas::kBackgroundColor);
+}
+
 void TimelineUi::RenderBackground(Batcher& batcher) const {
-  Box background_box(GetPos(), GetSize(), GlCanvas::kZValueTimeBarBg);
+  Box background_box(GetPos(), Vec2(GetWidth(), GetHeightWithoutMargin()),
+                     GlCanvas::kZValueTimeBarBg);
   batcher.AddBox(background_box, GlCanvas::kTimeBarBackgroundColor);
 }
 
@@ -95,6 +103,8 @@ void TimelineUi::DoUpdatePrimitives(Batcher& batcher, TextRenderer& text_rendere
   uint64_t max_timestamp_ns = timeline_info_interface_->GetNsSinceStart(max_tick);
   RenderLines(batcher, min_timestamp_ns, max_timestamp_ns);
   RenderLabels(batcher, text_renderer, min_timestamp_ns, max_timestamp_ns);
+  // TODO(http://b/217719000): Hack needed to not draw tracks on timeline's margin.
+  RenderMargin(batcher);
 }
 
 std::unique_ptr<orbit_accessibility::AccessibleInterface> TimelineUi::CreateAccessibleInterface() {
