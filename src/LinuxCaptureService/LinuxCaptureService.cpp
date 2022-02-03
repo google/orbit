@@ -6,6 +6,7 @@
 
 #include "CaptureServiceBase/GrpcClientCaptureEventCollectorBuilder.h"
 #include "CaptureServiceBase/GrpcStartStopCaptureRequestWaiter.h"
+#include "OrbitBase/Logging.h"
 #include "OrbitBase/ThreadUtils.h"
 
 namespace orbit_linux_capture_service {
@@ -33,6 +34,8 @@ grpc::Status LinuxCaptureService::Capture(
       return {grpc::StatusCode::ALREADY_EXISTS,
               "Cannot start capture because another capture is already in progress"};
   }
+
+  ORBIT_UNREACHABLE();
 }
 
 }  // namespace orbit_linux_capture_service
