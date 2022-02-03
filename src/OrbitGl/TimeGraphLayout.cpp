@@ -41,6 +41,7 @@ TimeGraphLayout::TimeGraphLayout() {
   generic_fixed_spacer_width_ = 10.f;
   scale_ = 1.f;
   time_bar_height_ = 30.f;
+  time_bar_margin_ = 10.f;
   font_size_ = 14;
 };
 
@@ -67,6 +68,7 @@ bool TimeGraphLayout::DrawProperties() {
   FLOAT_SLIDER(space_between_thread_blocks_);
   FLOAT_SLIDER(slider_width_);
   FLOAT_SLIDER(time_bar_height_);
+  FLOAT_SLIDER(time_bar_margin_);
   FLOAT_SLIDER(track_tab_height_);
   FLOAT_SLIDER(track_tab_offset_);
   FLOAT_SLIDER(track_indent_offset_);
