@@ -40,9 +40,8 @@ class TimeGraphLayout {
   float GetRoundingNumSides() const { return rounding_num_sides_; }
   float GetTextOffset() const { return text_offset_ * scale_; }
   float GetBottomMargin() const;
-  float GetTopMargin() const { return GetSchedulerTrackOffset(); }
+  float GetTracksTopMargin() const { return GetTimeBarHeight() + GetTimeBarMargin(); }
   float GetRightMargin() const { return right_margin_; }
-  float GetSchedulerTrackOffset() const { return scheduler_track_offset_; }
   float GetSpaceBetweenTracks() const { return space_between_tracks_ * scale_; }
   float GetSpaceBetweenCores() const { return space_between_cores_ * scale_; }
   float GetSpaceBetweenGpuDepths() const { return space_between_gpu_depths_ * scale_; }
@@ -84,7 +83,6 @@ class TimeGraphLayout {
   float rounding_num_sides_;
   float text_offset_;
   float right_margin_;
-  float scheduler_track_offset_;
 
   uint32_t font_size_;
 

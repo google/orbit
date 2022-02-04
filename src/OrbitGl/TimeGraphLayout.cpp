@@ -36,7 +36,6 @@ TimeGraphLayout::TimeGraphLayout() {
   rounding_num_sides_ = 16;
   text_offset_ = 5.f;
   right_margin_ = 10.f;
-  scheduler_track_offset_ = 10.f;
   toolbar_icon_height_ = 24.f;
   generic_fixed_spacer_width_ = 10.f;
   scale_ = 1.f;
@@ -80,7 +79,6 @@ bool TimeGraphLayout::DrawProperties() {
   FLOAT_SLIDER(rounding_num_sides_);
   FLOAT_SLIDER(text_offset_);
   FLOAT_SLIDER(right_margin_);
-  FLOAT_SLIDER(scheduler_track_offset_);
   FLOAT_SLIDER_MIN_MAX(track_tab_width_, 0, 1000.f);
   FLOAT_SLIDER_MIN_MAX(track_content_bottom_margin_, 0, 20.f);
   FLOAT_SLIDER_MIN_MAX(track_content_top_margin_, 0, 20.f);
