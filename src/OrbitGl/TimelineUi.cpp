@@ -50,37 +50,27 @@ void TimelineUi::RenderLabels(Batcher& batcher, TextRenderer& text_renderer,
     number_of_decimal_places_needed = std::max(
         number_of_decimal_places_needed, timeline_ticks_.GetTimestampNumDigitsPrecision(tick));
   }
-  float previous_label_end_x = std::numeric_limits<float>::lowest();
-  for (uint64_t tick_ns : all_major_ticks) {
-    std::string label;
-    // TODO(http://b/170712621): Remove this flag when we decide which timestamp format we will use.
-    if (absl::GetFlag(FLAGS_iso_timestamps)) {
-      label = orbit_display_formats::GetDisplayISOTimestamp(
-          absl::Nanoseconds(tick_ns), number_of_decimal_places_needed,
-          absl::Nanoseconds(timeline_info_interface_->GetCaptureTimeSpanNs()));
-    } else {
-      label = orbit_display_formats::GetDisplayTime(absl::Nanoseconds(tick_ns));
-    }
-    float world_x = timeline_info_interface_->GetWorldFromUs(
-        tick_ns / static_cast<double>(kNanosecondsPerMicrosecond));
-    if (world_x > previous_label_end_x + kLabelMarginRight + kPixelMargin) {
-      Vec2 pos, size;
-      float label_middle_y = GetPos()[1] + GetHeightWithoutMargin() / 2;
-      text_renderer.AddText(label.c_str(), world_x + kLabelMarginLeft, label_middle_y,
-                            GlCanvas::kZValueTimeBar,
-                            {layout_->GetFontSize(), Color(255, 255, 255, 255), -1.f,
-                             TextRenderer::HAlign::Left, TextRenderer::VAlign::Middle},
-                            &pos, &size);
-      previous_label_end_x = pos[0] + size[0];
 
-      // Box behind the label to hide the ticks behind it.
-      const float kBackgroundBoxVerticalMargin = 4;
-      size[0] += kLabelMarginRight;
-      pos[1] = pos[1] - kBackgroundBoxVerticalMargin;
-      size[1] = size[1] + 2 * kBackgroundBoxVerticalMargin;
-      Box background_box(pos, size, GlCanvas::kZValueTimeBar);
-      batcher.AddBox(background_box, GlCanvas::kTimeBarBackgroundColor);
-    }
+  for (uint64_t tick_ns : GetTicksForNonOverlappingLabels(
+           text_renderer, all_major_ticks, kLabelMarginLeft + kLabelMarginRight + kPixelMargin,
+           number_of_decimal_places_needed)) {
+    std::string label = GetLabel(tick_ns, number_of_decimal_places_needed);
+    float world_x = GetTickWorldXPos(tick_ns);
+    Vec2 pos, size;
+    float label_middle_y = GetPos()[1] + GetHeightWithoutMargin() / 2;
+    text_renderer.AddText(label.c_str(), world_x + kLabelMarginLeft, label_middle_y,
+                          GlCanvas::kZValueTimeBar,
+                          {layout_->GetFontSize(), Color(255, 255, 255, 255), -1.f,
+                           TextRenderer::HAlign::Left, TextRenderer::VAlign::Middle},
+                          &pos, &size);
+
+    // Box behind the label to hide the ticks behind it.
+    const float kBackgroundBoxVerticalMargin = 4;
+    size[0] += kLabelMarginRight;
+    pos[1] = pos[1] - kBackgroundBoxVerticalMargin;
+    size[1] = size[1] + 2 * kBackgroundBoxVerticalMargin;
+    Box background_box(pos, size, GlCanvas::kZValueTimeBar);
+    batcher.AddBox(background_box, GlCanvas::kTimeBarBackgroundColor);
   }
 }
 
@@ -95,6 +85,62 @@ void TimelineUi::RenderBackground(Batcher& batcher) const {
   Box background_box(GetPos(), Vec2(GetWidth(), GetHeightWithoutMargin()),
                      GlCanvas::kZValueTimeBarBg);
   batcher.AddBox(background_box, GlCanvas::kTimeBarBackgroundColor);
+}
+
+std::string TimelineUi::GetLabel(uint64_t tick_ns, int number_of_decimal_places) const {
+  // TODO(http://b/170712621): Remove this flag when we decide which timestamp format we will use.
+  if (absl::GetFlag(FLAGS_iso_timestamps)) {
+    return orbit_display_formats::GetDisplayISOTimestamp(
+        absl::Nanoseconds(tick_ns), number_of_decimal_places,
+        absl::Nanoseconds(timeline_info_interface_->GetCaptureTimeSpanNs()));
+  }
+  return orbit_display_formats::GetDisplayTime(absl::Nanoseconds(tick_ns));
+}
+
+float TimelineUi::GetTickWorldXPos(uint64_t tick_ns) const {
+  return timeline_info_interface_->GetWorldFromUs(tick_ns /
+                                                  static_cast<double>(kNanosecondsPerMicrosecond));
+}
+
+std::vector<uint64_t> TimelineUi::GetTicksForNonOverlappingLabels(
+    TextRenderer& text_renderer, std::vector<uint64_t> all_major_ticks, float horizontal_margin,
+    int number_of_decimal_places) const {
+  if (all_major_ticks.size() <= 1) return all_major_ticks;
+  uint64_t ns_between_major_ticks = all_major_ticks[1] - all_major_ticks[0];
+
+  // In general, all major tick labels will fit in screen. In extreme cases with long labels
+  // and small screens, we will skip the same number of labels in between visible ones for
+  // consistency.
+  int num_consecutive_skipped_labels = 0;
+  std::vector<uint64_t> visible_labels = all_major_ticks;
+  while (WillLabelsOverlap(text_renderer, visible_labels, horizontal_margin,
+                           number_of_decimal_places)) {
+    visible_labels.clear();
+    num_consecutive_skipped_labels++;
+    for (uint64_t tick : all_major_ticks) {
+      // There is an invariant that all timestamps will be divisible by the space between them.
+      // We will choose the visible labels without breaking this invariant. In this way, visible
+      // labels won't change after horizontal scrolling.
+      if (tick % ((num_consecutive_skipped_labels + 1) * ns_between_major_ticks) == 0) {
+        visible_labels.push_back(tick);
+      }
+    }
+  }
+  return visible_labels;
+}
+
+bool TimelineUi::WillLabelsOverlap(TextRenderer& text_renderer, std::vector<uint64_t> tick_list,
+                                   float horizontal_margin, int number_of_decimal_places) const {
+  if (tick_list.size() <= 1) return false;
+  float distance_between_labels = GetTickWorldXPos(tick_list[1]) - GetTickWorldXPos(tick_list[0]);
+  for (auto tick_ns : tick_list) {
+    float label_width = text_renderer.GetStringWidth(
+        GetLabel(tick_ns, number_of_decimal_places).c_str(), layout_->GetFontSize());
+    if (distance_between_labels < horizontal_margin + label_width) {
+      return true;
+    }
+  }
+  return false;
 }
 
 void TimelineUi::DoUpdatePrimitives(Batcher& batcher, TextRenderer& text_renderer,
