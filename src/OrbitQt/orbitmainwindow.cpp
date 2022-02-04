@@ -667,8 +667,8 @@ void OrbitMainWindow::UpdateCaptureStateDependentWidgets() {
 
   hint_frame_->setVisible(!has_data);
 
-  filter_panel_action_->SetTimerLabelText(
-      QString::fromStdString(orbit_display_formats::GetDisplayTime(app_->GetCaptureTime())));
+  filter_panel_action_->SetTimerLabelText(QString::fromStdString(
+      orbit_display_formats::GetDisplayISOTimestamp(app_->GetCaptureTime(), 3)));
 
   UpdateCaptureToolbarIconOpacity();
 
@@ -1006,8 +1006,8 @@ void OrbitMainWindow::OnTimer() {
   }
 
   if (app_->IsCapturing()) {
-    filter_panel_action_->SetTimerLabelText(
-        QString::fromStdString(orbit_display_formats::GetDisplayTime(app_->GetCaptureTime())));
+    filter_panel_action_->SetTimerLabelText(QString::fromStdString(
+        orbit_display_formats::GetDisplayISOTimestamp(app_->GetCaptureTime(), 3)));
   }
 }
 
