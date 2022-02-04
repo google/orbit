@@ -12,7 +12,7 @@
 #include <string>
 #include <utility>
 
-#include "CaptureService/CaptureStartStopListener.h"
+#include "CaptureServiceBase/CaptureStartStopListener.h"
 
 #ifdef __linux
 
@@ -45,9 +45,9 @@ class OrbitGrpcServerImpl final : public OrbitGrpcServer {
   void Wait() override;
 
   void AddCaptureStartStopListener(
-      orbit_capture_service::CaptureStartStopListener* listener) override;
+      orbit_capture_service_base::CaptureStartStopListener* listener) override;
   void RemoveCaptureStartStopListener(
-      orbit_capture_service::CaptureStartStopListener* listener) override;
+      orbit_capture_service_base::CaptureStartStopListener* listener) override;
 
  private:
 #ifdef __linux
@@ -93,12 +93,12 @@ void OrbitGrpcServerImpl::Shutdown() { server_->Shutdown(); }
 void OrbitGrpcServerImpl::Wait() { server_->Wait(); }
 
 void OrbitGrpcServerImpl::AddCaptureStartStopListener(
-    orbit_capture_service::CaptureStartStopListener* listener) {
+    orbit_capture_service_base::CaptureStartStopListener* listener) {
   capture_service_.AddCaptureStartStopListener(listener);
 }
 
 void OrbitGrpcServerImpl::RemoveCaptureStartStopListener(
-    orbit_capture_service::CaptureStartStopListener* listener) {
+    orbit_capture_service_base::CaptureStartStopListener* listener) {
   capture_service_.RemoveCaptureStartStopListener(listener);
 }
 

@@ -12,10 +12,12 @@ target_include_directories(LinuxCaptureService PRIVATE
         ${CMAKE_CURRENT_LIST_DIR})
 
 target_sources(LinuxCaptureService PUBLIC
-        include/LinuxCaptureService/LinuxCaptureService.h)
+        include/LinuxCaptureService/LinuxCaptureService.h
+        include/LinuxCaptureService/LinuxCaptureServiceBase.h)
 
 target_sources(LinuxCaptureService PRIVATE
         LinuxCaptureService.cpp
+        LinuxCaptureServiceBase.cpp
         MemoryInfoHandler.cpp
         MemoryInfoHandler.h
         MemoryWatchdog.cpp
@@ -27,7 +29,7 @@ target_sources(LinuxCaptureService PRIVATE
 target_link_libraries(LinuxCaptureService PUBLIC
         ApiLoader
         ApiUtils
-        CaptureService
+        CaptureServiceBase
         ProducerEventProcessor
         GrpcProtos
         Introspection

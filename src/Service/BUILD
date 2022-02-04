@@ -16,7 +16,7 @@ orbit_cc_library(
     deps = [
         "//src/ApiLoader",
         "//src/ApiUtils",
-        "//src/CaptureService",
+        "//src/CaptureServiceBase",
         "//src/CrashService",
         "//src/FramePointerValidator",
         "//src/FramePointerValidatorService",

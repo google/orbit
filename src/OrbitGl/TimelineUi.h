@@ -18,7 +18,9 @@ class TimelineUi : public CaptureViewElement {
                       Viewport* viewport, TimeGraphLayout* layout)
       : CaptureViewElement(parent, viewport, layout), timeline_info_interface_(timeline_info) {}
 
-  [[nodiscard]] float GetHeight() const override { return layout_->GetTimeBarHeight(); }
+  [[nodiscard]] float GetHeight() const override {
+    return GetHeightWithoutMargin() + GetMarginHeight();
+  }
 
   std::unique_ptr<orbit_accessibility::AccessibleInterface> CreateAccessibleInterface() override;
 
@@ -28,7 +30,10 @@ class TimelineUi : public CaptureViewElement {
   void RenderLines(Batcher& batcher, uint64_t min_timestamp_ns, uint64_t max_timestamp_ns) const;
   void RenderLabels(Batcher& batcher, TextRenderer& text_renderer, uint64_t min_timestamp_ns,
                     uint64_t max_timestamp_ns) const;
+  void RenderMargin(Batcher& batcher) const;
   void RenderBackground(Batcher& batcher) const;
+  [[nodiscard]] float GetHeightWithoutMargin() const { return layout_->GetTimeBarHeight(); }
+  [[nodiscard]] float GetMarginHeight() const { return layout_->GetTimeBarMargin(); }
 
   const TimelineInfoInterface* timeline_info_interface_;
   TimelineTicks timeline_ticks_;

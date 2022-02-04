@@ -5,16 +5,14 @@
 #include "AllocateInTracee.h"
 
 #include <absl/base/casts.h>
-#include <absl/strings/numbers.h>
 #include <absl/strings/str_format.h>
-#include <absl/strings/str_split.h>
-#include <errno.h>
 #include <sys/mman.h>
 #include <sys/ptrace.h>
 #include <sys/wait.h>
 
 #include <cstdint>
 #include <string>
+#include <thread>
 #include <vector>
 
 #include "AccessTraceesMemory.h"
@@ -62,6 +60,7 @@ namespace {
     return ErrorMessage(absl::StrFormat("Failed to read from tracee's memory: %s",
                                         backup_or_error.error().message()));
   }
+  const std::vector<uint8_t> backup = std::move(backup_or_error.value());
 
   // Write `syscall` into memory. Machine code is `0x0f05`.
   auto write_code_result = WriteTraceesMemory(pid, start_address, std::vector<uint8_t>{0x0f, 0x05});
@@ -69,6 +68,15 @@ namespace {
     return ErrorMessage(absl::StrFormat("Failed to write to tracee's memory: %s",
                                         write_code_result.error().message()));
   }
+
+  std::shared_ptr<void> restore_memory_on_return{
+      nullptr, [pid, start_address, backup](void* /*ptr*/) {
+        auto restore_memory_result = WriteTraceesMemory(pid, start_address, backup);
+        if (restore_memory_result.has_error()) {
+          ORBIT_FATAL("Unable to restore memory state of tracee: %s",
+                      restore_memory_result.error().message());
+        }
+      }};
 
   // Move instruction pointer to the `syscall` and fill registers with parameters.
   RegisterState registers_for_syscall = original_registers;
@@ -87,6 +95,15 @@ namespace {
     return ErrorMessage(absl::StrFormat("Failed to set registers with syscall parameters: %s",
                                         restore_registers_result.error().message()));
   }
+
+  std::shared_ptr<void> restore_registers_on_return{
+      nullptr, [&original_registers](void* /*ptr*/) {
+        auto restore_registers_result = original_registers.RestoreRegisters();
+        if (restore_registers_result.has_error()) {
+          ORBIT_FATAL("Unable to restore register state of tracee: %s",
+                      restore_registers_result.error().message());
+        }
+      }};
 
   // Single step to execute the syscall.
   if (ptrace(PTRACE_SINGLESTEP, pid, 0, 0) != 0) {
@@ -113,18 +130,6 @@ namespace {
                                         SafeStrerror(-result_as_int), result_as_int));
   }
 
-  // Clean up memory and registers.
-  auto restore_memory_result = WriteTraceesMemory(pid, start_address, backup_or_error.value());
-  if (restore_memory_result.has_error()) {
-    ORBIT_FATAL("Unable to restore memory state of tracee: %s",
-                restore_memory_result.error().message());
-  }
-  restore_registers_result = original_registers.RestoreRegisters();
-  if (restore_registers_result.has_error()) {
-    ORBIT_FATAL("Unable to restore register state of tracee: %s",
-                restore_registers_result.error().message());
-  }
-
   return result;
 }
 
@@ -143,9 +148,9 @@ ErrorMessageOr<std::unique_ptr<MemoryInTracee>> MemoryInTracee::Create(pid_t pid
                                          MAP_PRIVATE | MAP_ANONYMOUS, static_cast<uint64_t>(-1), 0,
                                          /*exclude_address=*/0);
   if (result_or_error.has_error()) {
-    return ErrorMessage(
-        absl::StrFormat("Failed to execute mmap syscall with parameters address=%#x size=%u: %s",
-                        address, size, result_or_error.error().message()));
+    return ErrorMessage(absl::StrFormat(
+        "Failed to execute mmap syscall with parameters address=%#x size=%u prot=PROT_WRITE: %s",
+        address, size, result_or_error.error().message()));
   }
 
   std::unique_ptr<MemoryInTracee> result(
@@ -191,8 +196,8 @@ ErrorMessageOr<void> MemoryInTracee::EnsureMemoryExecutable() {
       SyscallInTracee(pid_, kSyscallNumberMprotect, address_, size_, PROT_EXEC, 0, 0, 0, 0);
   if (result_or_error.has_error()) {
     return ErrorMessage(absl::StrFormat(
-        "Failed to execute mprotect syscall with parameters address=%#x size=%u: %s", address_,
-        size_, result_or_error.error().message()));
+        "Failed to execute mprotect syscall with parameters address=%#x size=%u prot=PROT_EXEC: %s",
+        address_, size_, result_or_error.error().message()));
   }
 
   state_ = State::kExecutable;
@@ -208,9 +213,10 @@ ErrorMessageOr<void> MemoryInTracee::EnsureMemoryWritable() {
   auto result_or_error =
       SyscallInTracee(pid_, kSyscallNumberMprotect, address_, size_, PROT_WRITE, 0, 0, 0, 0);
   if (result_or_error.has_error()) {
-    return ErrorMessage(absl::StrFormat(
-        "Failed to execute mprotect syscall with parameters address=%#x size=%u: %s", address_,
-        size_, result_or_error.error().message()));
+    return ErrorMessage(
+        absl::StrFormat("Failed to execute mprotect syscall with parameters address=%#x size=%u "
+                        "prot=PROT_WRITE: %s",
+                        address_, size_, result_or_error.error().message()));
   }
 
   state_ = State::kWritable;

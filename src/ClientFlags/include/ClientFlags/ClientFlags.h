@@ -60,4 +60,7 @@ ABSL_DECLARE_FLAG(std::vector<std::string>, additional_symbol_paths);
 // Clears QSettings. This is intended for e2e tests.
 ABSL_DECLARE_FLAG(bool, clear_settings);
 
+// TODO(http://b/170712621): Remove this flag when we decide which timestamp format we will use.
+ABSL_DECLARE_FLAG(bool, iso_timestamps);
+
 #endif  // CLIENT_FLAGS_CLIENT_FLAGS_H_

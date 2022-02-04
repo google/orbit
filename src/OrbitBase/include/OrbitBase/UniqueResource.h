@@ -83,4 +83,3 @@ unique_resource(Resource, Deleter)
 }  // namespace orbit_base
 
 #endif  // ORBIT_BASE_UNIQUE_RESOURCE_H_
-#

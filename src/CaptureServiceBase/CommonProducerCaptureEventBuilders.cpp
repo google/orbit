@@ -2,7 +2,7 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#include "CaptureService/CommonProducerCaptureEventBuilders.h"
+#include "CaptureServiceBase/CommonProducerCaptureEventBuilders.h"
 
 #include <string>
 
@@ -21,7 +21,7 @@ using orbit_grpc_protos::CaptureOptions;
 using orbit_grpc_protos::CaptureStarted;
 using orbit_grpc_protos::ProducerCaptureEvent;
 
-namespace orbit_capture_service {
+namespace orbit_capture_service_base {
 
 namespace {
 
@@ -149,4 +149,4 @@ ProducerCaptureEvent CreateWarningEvent(uint64_t timestamp_ns, std::string messa
   return event;
 }
 
-}  // namespace orbit_capture_service
+}  // namespace orbit_capture_service_base

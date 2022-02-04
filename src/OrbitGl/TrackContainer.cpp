@@ -50,8 +50,7 @@ TrackContainer::TrackContainer(CaptureViewElement* parent, TimelineInfoInterface
 
 float TrackContainer::GetVisibleTracksTotalHeight() const {
   // Top and Bottom Margin. TODO: Margins should be treated in a different way (http://b/192070555).
-  float visible_tracks_total_height =
-      layout_->GetSchedulerTrackOffset() + layout_->GetBottomMargin();
+  float visible_tracks_total_height = layout_->GetTracksTopMargin() + layout_->GetBottomMargin();
 
   // Track height including space between them
   for (auto& track : GetNonHiddenChildren()) {
@@ -105,7 +104,7 @@ void TrackContainer::DoUpdateLayout() {
 void TrackContainer::UpdateTracksPosition() {
   const float track_pos_x = GetPos()[0];
 
-  float current_y = GetPos()[1] + layout_->GetSchedulerTrackOffset() - vertical_scrolling_offset_;
+  float current_y = GetPos()[1] - vertical_scrolling_offset_;
 
   // Track height including space between them
   for (auto& track : track_manager_->GetVisibleTracks()) {
