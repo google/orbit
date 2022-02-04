@@ -58,12 +58,10 @@ class OrbitMainWindow final : public QMainWindow, public orbit_gl::MainWindowInt
   static constexpr int kQuitOrbitReturnCode = 0;
   static constexpr int kEndSessionReturnCode = 1;
 
-  explicit OrbitMainWindow(
-      orbit_session_setup::TargetConfiguration target_configuration,
-      const orbit_base::CrashHandler* crash_handler,
-      const orbit_statistics::BinomialConfidenceIntervalEstimator* confidence_interval_estimator,
-      orbit_metrics_uploader::MetricsUploader* metrics_uploader = nullptr,
-      const QStringList& command_line_flags = QStringList());
+  explicit OrbitMainWindow(orbit_session_setup::TargetConfiguration target_configuration,
+                           const orbit_base::CrashHandler* crash_handler,
+                           orbit_metrics_uploader::MetricsUploader* metrics_uploader = nullptr,
+                           const QStringList& command_line_flags = QStringList());
   ~OrbitMainWindow() override;
 
   void RegisterGlWidget(OrbitGLWidget* widget) { gl_widgets_.push_back(widget); }

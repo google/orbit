@@ -97,11 +97,11 @@ static std::optional<orbit_session_setup::TargetConfiguration> ConnectToSpecifie
   return dialog.Exec();
 }
 
-int RunUiInstance(
-    const DeploymentConfiguration& deployment_configuration, const Context* ssh_context,
-    const QStringList& command_line_flags, const orbit_base::CrashHandler* crash_handler,
-    const orbit_statistics::BinomialConfidenceIntervalEstimator* confidence_interval_estimator,
-    const std::filesystem::path& capture_file_path, const QString& connection_target) {
+int RunUiInstance(const DeploymentConfiguration& deployment_configuration,
+                  const Context* ssh_context, const QStringList& command_line_flags,
+                  const orbit_base::CrashHandler* crash_handler,
+                  const std::filesystem::path& capture_file_path,
+                  const QString& connection_target) {
   qRegisterMetaType<std::error_code>();
 
   const GrpcPort grpc_port{/*.grpc_port =*/absl::GetFlag(FLAGS_grpc_port)};
@@ -155,8 +155,8 @@ int RunUiInstance(
 
     {  // Scoping of QT UI Resources
 
-      OrbitMainWindow w(std::move(target_config.value()), crash_handler,
-                        confidence_interval_estimator, metrics_uploader.get(), command_line_flags);
+      OrbitMainWindow w(std::move(target_config.value()), crash_handler, metrics_uploader.get(),
+                        command_line_flags);
       w.show();
 
       application_return_code = QApplication::exec();
@@ -376,11 +376,7 @@ int main(int argc, char* argv[]) {
   command_line_flags =
       orbit_command_line_utils::RemoveFlagsNotPassedToMainWindow(command_line_flags);
 
-  auto confidence_interval_estimator =
-      std::make_unique<const orbit_statistics::WilsonBinomialConfidenceIntervalEstimator>();
-
   return RunUiInstance(deployment_configuration, &context.value(), command_line_flags,
-                       crash_handler.get(), confidence_interval_estimator.get(),
-                       capture_file_paths.empty() ? "" : capture_file_paths[0],
+                       crash_handler.get(), capture_file_paths.empty() ? "" : capture_file_paths[0],
                        QString::fromStdString(connection_target));
 }

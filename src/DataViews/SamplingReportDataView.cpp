@@ -62,7 +62,7 @@ const std::vector<DataView::Column>& SamplingReportDataView::GetColumns() {
   return columns;
 }
 
-[[nodiscard]] float SamplingReportDataView::HalfWidthOfSymmetricizedConfidenceInterval(
+[[nodiscard]] float SamplingReportDataView::HalfWidthOfSymmetrizedConfidenceInterval(
     float percentage) const {
   const float rate = percentage / 100.0f;
   const auto confidence_interval =
@@ -71,10 +71,10 @@ const std::vector<DataView::Column>& SamplingReportDataView::GetColumns() {
   return std::max(confidence_interval.upper - rate, rate - confidence_interval.lower) * 100.0f;
 }
 
-[[nodiscard]] std::string SamplingReportDataView::BuildSamplingPercentageReport(
+[[nodiscard]] std::string SamplingReportDataView::BuildPercentageString(
     float percentage, uint32_t raw_count) const {
   return absl::StrFormat("%.1f ±%.1f%% (%u)", percentage,
-                         HalfWidthOfSymmetricizedConfidenceInterval(percentage), raw_count);
+                         HalfWidthOfSymmetrizedConfidenceInterval(percentage), raw_count);
 }
 
 std::string SamplingReportDataView::GetValue(int row, int column) {
@@ -87,9 +87,9 @@ std::string SamplingReportDataView::GetValue(int row, int column) {
     case kColumnFunctionName:
       return func.name;
     case kColumnInclusive:
-      return BuildSamplingPercentageReport(func.inclusive_percent, func.inclusive);
+      return BuildPercentageString(func.inclusive_percent, func.inclusive);
     case kColumnExclusive:
-      return BuildSamplingPercentageReport(func.exclusive_percent, func.exclusive);
+      return BuildPercentageString(func.exclusive_percent, func.exclusive);
     case kColumnModuleName:
       return std::filesystem::path(func.module_path).filename().string();
     case kColumnAddress:

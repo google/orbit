@@ -64,10 +64,12 @@ class SamplingReportDataView : public DataView {
   void UpdateVisibleSelectedAddressesAndTid(const std::vector<int>& visible_selected_indices);
 
   // Returns the value to the right from ± in notation like `3 ± 0.2%`.
-  [[nodiscard]] float HalfWidthOfSymmetricizedConfidenceInterval(float percentage) const;
+  // In this notation only the longer section of the confidence interval is shown,
+  // e. g. the interval `(2.9; 3.2)` constructed around the `percentage == 3.0`
+  // is shown as `3 ± 0.2%`
+  [[nodiscard]] float HalfWidthOfSymmetrizedConfidenceInterval(float percentage) const;
 
-  [[nodiscard]] std::string BuildSamplingPercentageReport(float percentage,
-                                                          uint32_t raw_count) const;
+  [[nodiscard]] std::string BuildPercentageString(float percentage, uint32_t raw_count) const;
 
   std::vector<orbit_client_data::SampledFunction> functions_;
   // We need to keep user's selected function ids such that if functions_ changes, the

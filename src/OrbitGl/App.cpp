@@ -233,16 +233,14 @@ std::vector<std::filesystem::path> GetAllSymbolPaths() {
 
 bool DoZoom = false;
 
-OrbitApp::OrbitApp(
-    orbit_gl::MainWindowInterface* main_window, MainThreadExecutor* main_thread_executor,
-    const orbit_base::CrashHandler* crash_handler,
-    const orbit_statistics::BinomialConfidenceIntervalEstimator* confidence_interval_estimator,
-    orbit_metrics_uploader::MetricsUploader* metrics_uploader)
+OrbitApp::OrbitApp(orbit_gl::MainWindowInterface* main_window,
+                   MainThreadExecutor* main_thread_executor,
+                   const orbit_base::CrashHandler* crash_handler,
+                   orbit_metrics_uploader::MetricsUploader* metrics_uploader)
     : main_window_{main_window},
       main_thread_executor_(main_thread_executor),
       crash_handler_(crash_handler),
-      metrics_uploader_(metrics_uploader),
-      confidence_interval_estimator_(confidence_interval_estimator) {
+      metrics_uploader_(metrics_uploader) {
   ORBIT_CHECK(main_window_ != nullptr);
 
   thread_pool_ = orbit_base::ThreadPool::Create(
@@ -712,10 +710,9 @@ void OrbitApp::OnValidateFramePointers(std::vector<const ModuleData*> modules_to
 std::unique_ptr<OrbitApp> OrbitApp::Create(
     orbit_gl::MainWindowInterface* main_window, MainThreadExecutor* main_thread_executor,
     const orbit_base::CrashHandler* crash_handler,
-    const orbit_statistics::BinomialConfidenceIntervalEstimator* confidence_interval_estimator,
     orbit_metrics_uploader::MetricsUploader* metrics_uploader) {
   return std::make_unique<OrbitApp>(main_window, main_thread_executor, crash_handler,
-                                    confidence_interval_estimator, metrics_uploader);
+                                    metrics_uploader);
 }
 
 void OrbitApp::PostInit(bool is_connected) {
@@ -2942,5 +2939,5 @@ void OrbitApp::TrySaveUserDefinedCaptureInfo() {
 
 [[nodiscard]] const orbit_statistics::BinomialConfidenceIntervalEstimator*
 OrbitApp::GetConfidenceIntervalEstimator() const {
-  return confidence_interval_estimator_;
+  return &confidence_interval_estimator_;
 }
