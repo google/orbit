@@ -34,10 +34,11 @@ TEST(DisplayFormats, GetDisplayISOTimestamp) {
   EXPECT_EQ(GetDisplayISOTimestamp(absl::Milliseconds(450), 2), "00.45");
   EXPECT_EQ(GetDisplayISOTimestamp(absl::Milliseconds(4005), 3), "04.005");
   EXPECT_EQ(GetDisplayISOTimestamp(absl::Milliseconds(4500), 1), "04.5");
-  EXPECT_EQ(GetDisplayISOTimestamp(absl::Seconds(0), 0), "00s");
   EXPECT_EQ(GetDisplayISOTimestamp(absl::Seconds(0), 1), "00.0");
-  EXPECT_EQ(GetDisplayISOTimestamp(absl::Seconds(10), 0), "10s");
-  EXPECT_EQ(GetDisplayISOTimestamp(absl::Seconds(13), 0), "13s");
+  EXPECT_EQ(GetDisplayISOTimestamp(absl::Seconds(0), 2), "00.00");
+  EXPECT_EQ(GetDisplayISOTimestamp(absl::Seconds(10), 1), "10");
+  EXPECT_EQ(GetDisplayISOTimestamp(absl::Seconds(10), 1), "10.0");
+  EXPECT_EQ(GetDisplayISOTimestamp(absl::Seconds(13), 1), "13.0");
   EXPECT_EQ(GetDisplayISOTimestamp(absl::Minutes(1), 0), "01:00");
   EXPECT_EQ(GetDisplayISOTimestamp(absl::Minutes(1), 1), "01:00.0");
   EXPECT_EQ(GetDisplayISOTimestamp(absl::Nanoseconds(12'345'600), 7), "00.0123456");
