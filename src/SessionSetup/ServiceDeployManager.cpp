@@ -729,37 +729,40 @@ outcome::result<void> ServiceDeployManager::ShutdownSession(orbit_ssh_qt::Sessio
 
 void ServiceDeployManager::Shutdown() {
   ORBIT_SCOPED_TIMED_LOG("ServiceDeployManager::Shutdown");
-  DeferToBackgroundThreadAndWait(this, [this]() {
-    if (sftp_channel_ != nullptr) {
-      outcome::result<void> shutdown_result = ShutdownSftpChannel(sftp_channel_.get());
-      if (shutdown_result.has_error()) {
-        ORBIT_ERROR("Unable to ShutdownSftpChannel: %s", shutdown_result.error().message());
-      }
-      sftp_channel_.reset();
-    }
-    if (grpc_tunnel_.has_value()) {
-      outcome::result<void> shutdown_result = ShutdownTunnel(&grpc_tunnel_.value());
-      if (shutdown_result.has_error()) {
-        ORBIT_ERROR("Unable to ShutdownTunnel: %s", shutdown_result.error().message());
-      }
-      grpc_tunnel_ = std::nullopt;
-    }
-    ssh_watchdog_timer_.stop();
-    if (orbit_service_task_.has_value()) {
-      outcome::result<void> shutdown_result = ShutdownTask(&orbit_service_task_.value());
-      if (shutdown_result.has_error()) {
-        ORBIT_ERROR("Unable to ShutdownTask: %s", shutdown_result.error().message());
-      }
-      orbit_service_task_ = std::nullopt;
-    }
-    if (session_.has_value()) {
-      outcome::result<void> shutdown_result = ShutdownSession(&session_.value());
-      if (shutdown_result.has_error()) {
-        ORBIT_ERROR("Unable to ShutdownSession: %s", shutdown_result.error().message());
-      }
-      session_ = std::nullopt;
-    }
-  });
+  QMetaObject::invokeMethod(
+      this,
+      [this]() {
+        if (sftp_channel_ != nullptr) {
+          outcome::result<void> shutdown_result = ShutdownSftpChannel(sftp_channel_.get());
+          if (shutdown_result.has_error()) {
+            ORBIT_ERROR("Unable to ShutdownSftpChannel: %s", shutdown_result.error().message());
+          }
+          sftp_channel_.reset();
+        }
+        if (grpc_tunnel_.has_value()) {
+          outcome::result<void> shutdown_result = ShutdownTunnel(&grpc_tunnel_.value());
+          if (shutdown_result.has_error()) {
+            ORBIT_ERROR("Unable to ShutdownTunnel: %s", shutdown_result.error().message());
+          }
+          grpc_tunnel_ = std::nullopt;
+        }
+        ssh_watchdog_timer_.stop();
+        if (orbit_service_task_.has_value()) {
+          outcome::result<void> shutdown_result = ShutdownTask(&orbit_service_task_.value());
+          if (shutdown_result.has_error()) {
+            ORBIT_ERROR("Unable to ShutdownTask: %s", shutdown_result.error().message());
+          }
+          orbit_service_task_ = std::nullopt;
+        }
+        if (session_.has_value()) {
+          outcome::result<void> shutdown_result = ShutdownSession(&session_.value());
+          if (shutdown_result.has_error()) {
+            ORBIT_ERROR("Unable to ShutdownSession: %s", shutdown_result.error().message());
+          }
+          session_ = std::nullopt;
+        }
+      },
+      Qt::BlockingQueuedConnection);
 }
 
 }  // namespace orbit_session_setup
