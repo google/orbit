@@ -6,6 +6,7 @@
 #define ORBIT_GL_TIMELINE_IMPL_H_
 
 #include <cstdint>
+#include <optional>
 #include <set>
 #include <vector>
 
@@ -27,6 +28,8 @@ class TimelineTicks {
   [[nodiscard]] std::vector<std::pair<TickType, uint64_t> > GetAllTicks(uint64_t start_ns,
                                                                         uint64_t end_ns) const;
   [[nodiscard]] std::vector<uint64_t> GetMajorTicks(uint64_t start_ns, uint64_t end_ns) const;
+  [[nodiscard]] std::optional<uint64_t> GetPreviousMajorTick(uint64_t start_ns,
+                                                             uint64_t end_ns) const;
   // Number of digits needed to show precisely parts of a second in a timestamp.
   [[nodiscard]] int GetTimestampNumDigitsPrecision(uint64_t timestamp_ns) const;
 

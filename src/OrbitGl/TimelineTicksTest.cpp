@@ -26,6 +26,20 @@ TEST(TimelineTicks, GetMajorTicks) {
                                    1 * kNanosecondsPerMinute));
 }
 
+TEST(TimelineTicks, GetPreviousMajorTick) {
+  TimelineTicks timeline_ticks;
+
+  EXPECT_EQ(timeline_ticks.GetPreviousMajorTick(0, 20), std::nullopt);
+  EXPECT_EQ(timeline_ticks.GetPreviousMajorTick(1, 299), 0);
+  EXPECT_EQ(timeline_ticks.GetPreviousMajorTick(20, 40), 10);
+  EXPECT_EQ(timeline_ticks.GetPreviousMajorTick(20, 38), 15);
+  EXPECT_EQ(
+      timeline_ticks.GetPreviousMajorTick(1 * kNanosecondsPerSecond, 6 * kNanosecondsPerSecond), 0);
+  EXPECT_EQ(
+      timeline_ticks.GetPreviousMajorTick(40 * kNanosecondsPerSecond, 1 * kNanosecondsPerMinute),
+      30 * kNanosecondsPerSecond);
+}
+
 static void CheckTicks(uint64_t start_ns, uint64_t end_ns, const std::set<uint64_t>& major_ticks,
                        const std::set<uint64_t>& minor_ticks) {
   TimelineTicks timeline_ticks;
