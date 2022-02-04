@@ -53,7 +53,8 @@ class LinuxCaptureServiceBase : public orbit_capture_service_base::CaptureServic
   // - start_stop_capture_request_waiter->WaitForStopCaptureRequest returns. For the native Orbit
   //   capture service with a GrpcStartStopCaptureRequestWaiter, this happens when the client calls
   //   WritesDone on reader_writer;
-  // - MemoryWatchdog calls OnThresholdExceeded.
+  // - The resident set size of the current process exceeds the threshold (i.e., total physical
+  //   memory / 2).
   [[nodiscard]] StopCaptureReason WaitForStopCaptureRequestOrMemoryThresholdExceeded(
       const std::shared_ptr<orbit_capture_service_base::StartStopCaptureRequestWaiter>&
           start_stop_capture_request_waiter);

@@ -160,12 +160,13 @@ LinuxCaptureServiceBase::WaitForStopCaptureRequestOrMemoryThresholdExceeded(
   auto stop_capture = std::make_shared<bool>(false);
   auto stop_capture_reason = std::make_shared<std::optional<StopCaptureReason>>();
 
-  // ServerReaderWriter::Read blocks until the client has called WritesDone, or until we finish the
-  // gRPC (before the client has called WritesDone). In the latter case, the Read unblocks *after*
-  // LinuxCaptureServiceBase::Capture has returned, so we need to keep the thread around and join it
-  // at a later time (we don't want to just detach it).
   wait_for_stop_capture_request_thread_ = std::thread{
       [start_stop_capture_request_waiter, stop_capture_mutex, stop_capture, stop_capture_reason] {
+        // For a GrpcStartStopCaptureRequestWaiter, this will wait on ServerReaderWriter::Read,
+        // which blocks until the client has called WritesDone, or until we finish the
+        // gRPC (before the client has called WritesDone). In the latter case, the Read unblocks
+        // *after* LinuxCaptureServiceBase::DoCapture has returned, so we need to keep the thread
+        // around and join it at a later time (we don't want to just detach it).
         start_stop_capture_request_waiter->WaitForStopCaptureRequest();
 
         absl::MutexLock lock{stop_capture_mutex.get()};
