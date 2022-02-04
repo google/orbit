@@ -71,8 +71,8 @@ const std::vector<DataView::Column>& SamplingReportDataView::GetColumns() {
   return std::max(confidence_interval.upper - rate, rate - confidence_interval.lower) * 100.0f;
 }
 
-[[nodiscard]] std::string SamplingReportDataView::BuildPercentageString(
-    float percentage, uint32_t raw_count) const {
+[[nodiscard]] std::string SamplingReportDataView::BuildPercentageString(float percentage,
+                                                                        uint32_t raw_count) const {
   return absl::StrFormat("%.1f ±%.1f%% (%u)", percentage,
                          HalfWidthOfSymmetrizedConfidenceInterval(percentage), raw_count);
 }
