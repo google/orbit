@@ -63,11 +63,18 @@ class SamplingReportDataView : public DataView {
   // The callstack view will be updated according to the visible selected addresses and thread id.
   void UpdateVisibleSelectedAddressesAndTid(const std::vector<int>& visible_selected_indices);
 
+  // Returns the value to the right from ± in notation like `3 ± 0.2%`.
+  [[nodiscard]] float HalfWidthOfSymmetricizedConfidenceInterval(float percentage) const;
+
+  [[nodiscard]] std::string BuildSamplingPercentageReport(float percentage,
+                                                          uint32_t raw_count) const;
+
   std::vector<orbit_client_data::SampledFunction> functions_;
   // We need to keep user's selected function ids such that if functions_ changes, the
   // selected_indices_ can be updated according to the selected function ids.
   absl::flat_hash_set<uint64_t> selected_function_ids_;
   orbit_client_data::ThreadID tid_ = -1;
+  uint32_t thread_events_count_ = 0;
   std::string name_;
   SamplingReportInterface* sampling_report_ = nullptr;
 

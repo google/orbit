@@ -30,6 +30,7 @@
 #include "OrbitBase/Logging.h"
 #include "OrbitBase/Result.h"
 #include "OrbitBase/ThreadConstants.h"
+#include "Statistics/BinomialConfidenceInterval.h"
 
 using orbit_client_data::CaptureData;
 using orbit_client_data::ModuleData;
@@ -61,6 +62,21 @@ const std::vector<DataView::Column>& SamplingReportDataView::GetColumns() {
   return columns;
 }
 
+[[nodiscard]] float SamplingReportDataView::HalfWidthOfSymmetricizedConfidenceInterval(
+    float percentage) const {
+  const float rate = percentage / 100.0f;
+  const auto confidence_interval =
+      app_->GetConfidenceIntervalEstimator()->Estimate(rate, thread_events_count_);
+
+  return std::max(confidence_interval.upper - rate, rate - confidence_interval.lower) * 100.0f;
+}
+
+[[nodiscard]] std::string SamplingReportDataView::BuildSamplingPercentageReport(
+    float percentage, uint32_t raw_count) const {
+  return absl::StrFormat("%.1f ±%.1f%% (%u)", percentage,
+                         HalfWidthOfSymmetricizedConfidenceInterval(percentage), raw_count);
+}
+
 std::string SamplingReportDataView::GetValue(int row, int column) {
   const SampledFunction& func = GetSampledFunction(row);
 
@@ -71,9 +87,9 @@ std::string SamplingReportDataView::GetValue(int row, int column) {
     case kColumnFunctionName:
       return func.name;
     case kColumnInclusive:
-      return absl::StrFormat("%.2f%% (%u)", func.inclusive_percent, func.inclusive);
+      return BuildSamplingPercentageReport(func.inclusive_percent, func.inclusive);
     case kColumnExclusive:
-      return absl::StrFormat("%.2f%% (%u)", func.exclusive_percent, func.exclusive);
+      return BuildSamplingPercentageReport(func.exclusive_percent, func.exclusive);
     case kColumnModuleName:
       return std::filesystem::path(func.module_path).filename().string();
     case kColumnAddress:
@@ -315,10 +331,14 @@ void SamplingReportDataView::SetSampledFunctions(const std::vector<SampledFuncti
 
 void SamplingReportDataView::SetThreadID(ThreadID tid) {
   tid_ = tid;
+  const orbit_client_data::CaptureData& capture_data = app_->GetCaptureData();
+
   if (tid == orbit_base::kAllProcessThreadsTid) {
-    name_ = absl::StrFormat("%s\n(all threads)", app_->GetCaptureData().process_name());
+    name_ = absl::StrFormat("%s\n(all threads)", capture_data.process_name());
+    thread_events_count_ = capture_data.GetCallstackData().GetCallstackEventsCount();
   } else {
-    name_ = absl::StrFormat("%s\n[%d]", app_->GetCaptureData().GetThreadName(tid_), tid_);
+    name_ = absl::StrFormat("%s\n[%d]", capture_data.GetThreadName(tid_), tid_);
+    thread_events_count_ = capture_data.GetCallstackData().GetCallstackEventsOfTidCount(tid_);
   }
 }
 

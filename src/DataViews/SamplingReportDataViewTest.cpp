@@ -3,10 +3,14 @@
 // found in the LICENSE file.
 #include <absl/container/flat_hash_set.h>
 #include <absl/strings/str_format.h>
+#include <gmock/gmock-actions.h>
+#include <gmock/gmock-function-mocker.h>
+#include <gmock/gmock-spec-builders.h>
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
 
 #include <algorithm>
+#include <memory>
 
 #include "ClientData/CaptureData.h"
 #include "ClientData/ModuleAndFunctionLookup.h"
@@ -22,6 +26,7 @@
 #include "DataViews/SamplingReportDataView.h"
 #include "DataViews/SamplingReportInterface.h"
 #include "MockAppInterface.h"
+#include "Statistics/BinomialConfidenceInterval.h"
 
 using orbit_client_data::CaptureData;
 using orbit_client_data::ModuleData;
@@ -47,6 +52,18 @@ using ::testing::_;
 using ::testing::Return;
 
 namespace {
+
+class MockBinomialConfidenceIntervalEstimator
+    : public orbit_statistics::BinomialConfidenceIntervalEstimator {
+ public:
+  MOCK_METHOD(orbit_statistics::BinomialConfidenceInterval, Estimate,
+              (float ratio, uint32_t trials), (const override));
+};
+
+constexpr float kConfidenceIntervalLeftSectionLength = 0.15f;
+constexpr float kConfidenceIntervalRightSectionLength = 0.2f;
+constexpr float kConfidenceIntervalLongerSectionLength =
+    std::max(kConfidenceIntervalLeftSectionLength, kConfidenceIntervalRightSectionLength);
 
 constexpr int kColumnSelected = 0;
 constexpr int kColumnFunctionName = 1;
@@ -158,19 +175,21 @@ std::string GetExpectedDisplayModuleNameByIndex(size_t index, const ModuleManage
 }
 
 std::string GetExpectedDisplayExclusiveByIndex(size_t index, bool for_copy = false) {
-  std::string value = absl::StrFormat("%.2f%%", kSampledExclusivePercents[index]);
-  if (!for_copy) {
-    absl::StrAppend(&value, absl::StrFormat(" (%u)", kSampledExclusives[index]));
+  if (for_copy) {
+    return absl::StrFormat("%.2f%%", kSampledExclusivePercents[index]);
   }
-  return value;
+  return absl::StrFormat("%.1f ±%.1f%% (%u)", kSampledExclusivePercents[index],
+                         kConfidenceIntervalLongerSectionLength * 100.0f,
+                         kSampledExclusives[index]);
 }
 
 std::string GetExpectedDisplayInclusiveByIndex(size_t index, bool for_copy = false) {
-  std::string value = absl::StrFormat("%.2f%%", kSampledInclusivePercents[index]);
-  if (!for_copy) {
-    absl::StrAppend(&value, absl::StrFormat(" (%u)", kSampledInclusives[index]));
+  if (for_copy) {
+    return absl::StrFormat("%.2f%%", kSampledInclusivePercents[index]);
   }
-  return value;
+  return absl::StrFormat("%.1f ±%.1f%% (%u)", kSampledInclusivePercents[index],
+                         kConfidenceIntervalLongerSectionLength * 100.0f,
+                         kSampledInclusives[index]);
 }
 
 std::string GetExpectedDisplayUnwindErrorsByIndex(size_t index, bool for_copy = false) {
@@ -196,6 +215,16 @@ class SamplingReportDataViewTest : public testing::Test {
       : view_{&app_}, capture_data_(GenerateTestCaptureData(&module_manager_)) {
     EXPECT_CALL(app_, GetModuleManager()).WillRepeatedly(Return(&module_manager_));
     EXPECT_CALL(app_, GetMutableModuleManager()).WillRepeatedly(Return(&module_manager_));
+    EXPECT_CALL(app_, GetConfidenceIntervalEstimator())
+        .WillRepeatedly(Return(&confidence_interval_estimator_));
+
+    EXPECT_CALL(confidence_interval_estimator_, Estimate)
+        .WillRepeatedly(testing::Invoke([](float ratio, uint32_t /*trials*/) {
+          orbit_statistics::BinomialConfidenceInterval confidence_interval{
+              ratio - kConfidenceIntervalLeftSectionLength,
+              ratio + kConfidenceIntervalRightSectionLength};
+          return confidence_interval;
+        }));
 
     view_.Init();
     for (size_t i = 0; i < kNumFunctions; i++) {
@@ -230,6 +259,7 @@ class SamplingReportDataViewTest : public testing::Test {
 
  protected:
   MockSamplingReportInterface sampling_report_;
+  MockBinomialConfidenceIntervalEstimator confidence_interval_estimator_;
   orbit_data_views::MockAppInterface app_;
   orbit_data_views::SamplingReportDataView view_;
 

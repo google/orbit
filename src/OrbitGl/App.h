@@ -76,6 +76,7 @@
 #include "OrbitPaths/Paths.h"
 #include "SamplingReport.h"
 #include "ScopedStatus.h"
+#include "Statistics/BinomialConfidenceInterval.h"
 #include "StatusListener.h"
 #include "StringManager/StringManager.h"
 #include "Symbols/SymbolHelper.h"
@@ -84,15 +85,17 @@ class OrbitApp final : public DataViewFactory,
                        public orbit_capture_client::CaptureListener,
                        public orbit_data_views::AppInterface {
  public:
-  explicit OrbitApp(orbit_gl::MainWindowInterface* main_window,
-                    MainThreadExecutor* main_thread_executor,
-                    const orbit_base::CrashHandler* crash_handler,
-                    orbit_metrics_uploader::MetricsUploader* metrics_uploader = nullptr);
+  explicit OrbitApp(
+      orbit_gl::MainWindowInterface* main_window, MainThreadExecutor* main_thread_executor,
+      const orbit_base::CrashHandler* crash_handler,
+      const orbit_statistics::BinomialConfidenceIntervalEstimator* confidence_interval_estimator,
+      orbit_metrics_uploader::MetricsUploader* metrics_uploader = nullptr);
   ~OrbitApp() override;
 
   static std::unique_ptr<OrbitApp> Create(
       orbit_gl::MainWindowInterface* main_window, MainThreadExecutor* main_thread_executor,
       const orbit_base::CrashHandler* crash_handler,
+      const orbit_statistics::BinomialConfidenceIntervalEstimator* confidence_interval_estimator,
       orbit_metrics_uploader::MetricsUploader* metrics_uploader = nullptr);
 
   void PostInit(bool is_connected);
@@ -500,6 +503,9 @@ class OrbitApp final : public DataViewFactory,
   [[nodiscard]] std::vector<const orbit_client_protos::TimerInfo*> GetAllTimersForHookedFunction(
       uint64_t function_id) const override;
 
+  [[nodiscard]] const orbit_statistics::BinomialConfidenceIntervalEstimator*
+  GetConfidenceIntervalEstimator() const override;
+
  private:
   void UpdateModulesAbortCaptureIfModuleWithoutBuildIdNeedsReload(
       absl::Span<const orbit_grpc_protos::ModuleInfo> module_infos);
@@ -633,6 +639,8 @@ class OrbitApp final : public DataViewFactory,
   orbit_metrics_uploader::CaptureCompleteData metrics_capture_complete_data_;
 
   orbit_capture_file_info::Manager capture_file_info_manager_{};
+
+  const orbit_statistics::BinomialConfidenceIntervalEstimator* confidence_interval_estimator_;
 };
 
 #endif  // ORBIT_GL_APP_H_
