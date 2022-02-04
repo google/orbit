@@ -348,7 +348,8 @@ class CaptureE2ETestCaseBase(E2ETestCase):
         logging.info('Saving "Capture Options"')
         self.find_control('Button', 'OK', parent=capture_options_dialog).click_input()
 
-    def _set_up_and_start_capture(self, collect_thread_states: bool, collect_system_memory_usage: bool,
+    def _set_up_and_start_capture(self, collect_thread_states: bool,
+                                  collect_system_memory_usage: bool,
                                   user_space_instrumentation: bool, manual_instrumentation: bool,
                                   toggle_capture_button):
         self._show_capture_window()
@@ -361,7 +362,8 @@ class CaptureE2ETestCaseBase(E2ETestCase):
         logging.info("Verifying existence of at least one track...")
         time_graph = self.find_control('Image', name='TimeGraph')
         track_container = time_graph.children()[1]
-        self.expect_true(len(track_container.children()), 'Track container exists and has at least one child')
+        self.expect_true(len(track_container.children()),
+                         'Track container exists and has at least one child')
 
     def _verify_capture(self):
         self._verify_existence_of_tracks()
