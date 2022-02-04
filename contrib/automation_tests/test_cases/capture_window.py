@@ -348,19 +348,14 @@ class CaptureE2ETestCaseBase(E2ETestCase):
         logging.info('Saving "Capture Options"')
         self.find_control('Button', 'OK', parent=capture_options_dialog).click_input()
 
-    def _toggle_capture(self):
-        capture_tab = self.find_control('Group', "CaptureTab")
-        toggle_capture_button = self.find_control('Button', 'Toggle Capture', parent=capture_tab)
-        toggle_capture_button.click_input()
-
-    def _set_up_and_start_capture(self, collect_thread_states: bool,
-                                  collect_system_memory_usage: bool,
-                                  user_space_instrumentation: bool, manual_instrumentation: bool):
+    def _set_up_and_start_capture(self, collect_thread_states: bool, collect_system_memory_usage: bool,
+                                  user_space_instrumentation: bool, manual_instrumentation: bool,
+                                  toggle_capture_button):
         self._show_capture_window()
         self._set_capture_options(collect_thread_states, collect_system_memory_usage,
                                   user_space_instrumentation, manual_instrumentation)
         logging.info('Starting to capture')
-        self._toggle_capture()
+        toggle_capture_button.click_input()
 
     def _verify_existence_of_tracks(self):
         logging.info("Verifying existence of at least one track...")
@@ -381,9 +376,9 @@ class Capture(CaptureE2ETestCaseBase):
                            max_seconds=120)
         logging.info("Capturing finished")
 
-    def _stop_capture(self):
+    def _stop_capture(self, toggle_capture_button):
         logging.info('Stopping capture')
-        self._toggle_capture()
+        toggle_capture_button.click_input()
         self._wait_for_capture_completion()
 
     def _execute(self,
@@ -392,11 +387,14 @@ class Capture(CaptureE2ETestCaseBase):
                  collect_system_memory_usage: bool = False,
                  user_space_instrumentation: bool = False,
                  manual_instrumentation: bool = False):
+        capture_tab = self.find_control('Group', "CaptureTab")
+        toggle_capture_button = self.find_control('Button', 'Toggle Capture', parent=capture_tab)
         self._set_up_and_start_capture(collect_thread_states, collect_system_memory_usage,
-                                       user_space_instrumentation, manual_instrumentation)
+                                       user_space_instrumentation, manual_instrumentation,
+                                       toggle_capture_button)
         logging.info('Capturing for {} seconds'.format(length_in_seconds))
         time.sleep(length_in_seconds)
-        self._stop_capture()
+        self._stop_capture(toggle_capture_button)
         self._verify_capture()
 
 
@@ -429,9 +427,8 @@ class CaptureRepeatedly(E2ETestCase):
     The test does not verify any behavior, but it will fail if Orbit crashes.
     """
 
-    def _stop_capture_if_necessary(self):
+    def _stop_capture_if_necessary(self, capture_tab):
         logging.info('Querying if a capture is still running')
-        capture_tab = self.find_control('Group', "CaptureTab")
         capture_options_button = self.find_control('Button', 'Capture Options', parent=capture_tab)
         if not capture_options_button.is_enabled():
             logging.info('A capture is still running: stopping it')
@@ -441,6 +438,7 @@ class CaptureRepeatedly(E2ETestCase):
             toggle_capture_button.click_input()
 
     def _execute(self, number_of_f5_presses: int):
+        capture_tab = self.find_control('Group', "CaptureTab")
         for i in range(number_of_f5_presses):
             logging.info('Pressing F5 the {}-th time'.format(i + 1))
             send_keys('{F5}')
@@ -449,7 +447,7 @@ class CaptureRepeatedly(E2ETestCase):
         logging.info('Checking that Orbit is still running')
         self.suite.top_window(force_update=True)
 
-        self._stop_capture_if_necessary()
+        self._stop_capture_if_necessary(capture_tab)
 
 
 class CheckThreadStates(CaptureWindowE2ETestCaseBase):
