@@ -69,20 +69,14 @@ std::string GetDisplayISOTimestamp(absl::Duration timestamp, int num_digits_prec
   label += ToStringAtLeastTwoDigits(seconds);
   timestamp -= absl::Seconds(seconds);
 
-  if (num_digits_precision == 0) {
-    // Special case. If we are only showing seconds, let's add an 's';
-    if (label.size() <= 2) {
-      label += 's';
+  if (num_digits_precision != 0) {
+    // Parts of a second
+    label += ".";
+    absl::Duration precision_level = absl::Seconds(1);
+    for (int i = 0; i < num_digits_precision; ++i) {
+      precision_level /= 10;
+      label += std::to_string(absl::IDivDuration(timestamp, precision_level, &timestamp));
     }
-    return label;
-  }
-
-  // Parts of a second
-  label += ".";
-  absl::Duration precision_level = absl::Seconds(1);
-  for (int i = 0; i < num_digits_precision; ++i) {
-    precision_level /= 10;
-    label += std::to_string(absl::IDivDuration(timestamp, precision_level, &timestamp));
   }
   return label;
 }

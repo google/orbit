@@ -45,7 +45,7 @@ void TimelineUi::RenderLabels(Batcher& batcher, TextRenderer& text_renderer,
     all_major_ticks.insert(all_major_ticks.begin(), previous_major_tick.value());
   }
 
-  int number_of_decimal_places_needed = 0;
+  int number_of_decimal_places_needed = 1;
   for (uint64_t tick : all_major_ticks) {
     number_of_decimal_places_needed = std::max(
         number_of_decimal_places_needed, timeline_ticks_.GetTimestampNumDigitsPrecision(tick));
