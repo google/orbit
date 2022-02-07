@@ -53,7 +53,9 @@ void Manager::SaveCaptureFileInfos() {
 void Manager::AddOrTouchCaptureFile(const std::filesystem::path& path) {
   auto it = std::find_if(capture_file_infos_.begin(), capture_file_infos_.end(),
                          [&](const CaptureFileInfo& capture_file_info) {
-                           return capture_file_info.FilePath().toStdString() == path.string();
+                           std::filesystem::path path_from_capture_file_info{
+                               capture_file_info.FilePath().toStdString()};
+                           return path_from_capture_file_info == path;
                          });
 
   if (it == capture_file_infos_.end()) {
