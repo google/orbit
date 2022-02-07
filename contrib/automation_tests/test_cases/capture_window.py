@@ -415,8 +415,11 @@ class CaptureAndWaitForInterruptedWarning(CaptureE2ETestCaseBase):
                  collect_system_memory_usage: bool = False,
                  user_space_instrumentation: bool = False,
                  manual_instrumentation: bool = False):
+        capture_tab = self.find_control('Group', "CaptureTab")
+        toggle_capture_button = self.find_control('Button', 'Toggle Capture', parent=capture_tab)
         self._set_up_and_start_capture(collect_thread_states, collect_system_memory_usage,
-                                       user_space_instrumentation, manual_instrumentation)
+                                       user_space_instrumentation, manual_instrumentation,
+                                       toggle_capture_button)
         self._wait_and_verify_capture_interrupted()
         self._verify_capture()
 
