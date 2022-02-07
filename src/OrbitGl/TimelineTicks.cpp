@@ -87,11 +87,11 @@ std::optional<uint64_t> TimelineTicks::GetPreviousMajorTick(uint64_t start_ns,
   return major_ticks[0] - major_tick_scale;
 }
 
-int TimelineTicks::GetTimestampNumDigitsPrecision(uint64_t timestamp_ns) const {
-  constexpr int kMaxDigitsPrecision = 9;  // 1ns = 0.000'000'001s
+uint32_t TimelineTicks::GetTimestampNumDigitsPrecision(uint64_t timestamp_ns) const {
+  constexpr uint32_t kMaxDigitsPrecision = 9;  // 1ns = 0.000'000'001s
 
   uint64_t current_precision_ns = kNanosecondsPerSecond;
-  for (int num_digits = 0; num_digits < kMaxDigitsPrecision;
+  for (uint32_t num_digits = 0; num_digits < kMaxDigitsPrecision;
        num_digits++, current_precision_ns /= 10) {
     if (timestamp_ns % current_precision_ns == 0) {
       return num_digits;

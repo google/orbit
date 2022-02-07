@@ -32,13 +32,15 @@ class TimelineUi : public CaptureViewElement {
                     uint64_t max_timestamp_ns) const;
   void RenderMargin(Batcher& batcher) const;
   void RenderBackground(Batcher& batcher) const;
-  [[nodiscard]] std::string GetLabel(uint64_t tick_ns, int number_of_decimal_places_needed) const;
+  [[nodiscard]] std::string GetLabel(uint64_t tick_ns,
+                                     uint32_t number_of_decimal_places_needed) const;
   [[nodiscard]] std::vector<uint64_t> GetTicksForNonOverlappingLabels(
-      TextRenderer& text_renderer, std::vector<uint64_t> all_major_ticks, float horizontal_margin,
-      int number_of_decimal_places) const;
+      TextRenderer& text_renderer, const std::vector<uint64_t>& all_major_ticks,
+      float horizontal_margin, uint32_t number_of_decimal_places) const;
   [[nodiscard]] bool WillLabelsOverlap(TextRenderer& text_renderer,
-                                       std::vector<uint64_t> timestamp_list,
-                                       float horizontal_margin, int number_of_decimal_places) const;
+                                       const std::vector<uint64_t>& tick_list,
+                                       float horizontal_margin,
+                                       uint32_t number_of_decimal_places) const;
   [[nodiscard]] float GetTickWorldXPos(uint64_t tick_ns) const;
   [[nodiscard]] float GetHeightWithoutMargin() const { return layout_->GetTimeBarHeight(); }
   [[nodiscard]] float GetMarginHeight() const { return layout_->GetTimeBarMargin(); }

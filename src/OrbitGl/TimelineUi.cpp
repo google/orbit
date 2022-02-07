@@ -45,7 +45,7 @@ void TimelineUi::RenderLabels(Batcher& batcher, TextRenderer& text_renderer,
     all_major_ticks.insert(all_major_ticks.begin(), previous_major_tick.value());
   }
 
-  int number_of_decimal_places_needed = 1;
+  uint32_t number_of_decimal_places_needed = 1;
   for (uint64_t tick : all_major_ticks) {
     number_of_decimal_places_needed = std::max(
         number_of_decimal_places_needed, timeline_ticks_.GetTimestampNumDigitsPrecision(tick));
@@ -87,11 +87,11 @@ void TimelineUi::RenderBackground(Batcher& batcher) const {
   batcher.AddBox(background_box, GlCanvas::kTimeBarBackgroundColor);
 }
 
-std::string TimelineUi::GetLabel(uint64_t tick_ns, int number_of_decimal_places) const {
+std::string TimelineUi::GetLabel(uint64_t tick_ns, uint32_t number_of_decimal_places_needed) const {
   // TODO(http://b/170712621): Remove this flag when we decide which timestamp format we will use.
   if (absl::GetFlag(FLAGS_iso_timestamps)) {
     return orbit_display_formats::GetDisplayISOTimestamp(
-        absl::Nanoseconds(tick_ns), number_of_decimal_places,
+        absl::Nanoseconds(tick_ns), number_of_decimal_places_needed,
         absl::Nanoseconds(timeline_info_interface_->GetCaptureTimeSpanNs()));
   }
   return orbit_display_formats::GetDisplayTime(absl::Nanoseconds(tick_ns));
@@ -103,8 +103,8 @@ float TimelineUi::GetTickWorldXPos(uint64_t tick_ns) const {
 }
 
 std::vector<uint64_t> TimelineUi::GetTicksForNonOverlappingLabels(
-    TextRenderer& text_renderer, std::vector<uint64_t> all_major_ticks, float horizontal_margin,
-    int number_of_decimal_places) const {
+    TextRenderer& text_renderer, const std::vector<uint64_t>& all_major_ticks,
+    float horizontal_margin, uint32_t number_of_decimal_places) const {
   if (all_major_ticks.size() <= 1) return all_major_ticks;
   uint64_t ns_between_major_ticks = all_major_ticks[1] - all_major_ticks[0];
 
@@ -129,8 +129,9 @@ std::vector<uint64_t> TimelineUi::GetTicksForNonOverlappingLabels(
   return visible_labels;
 }
 
-bool TimelineUi::WillLabelsOverlap(TextRenderer& text_renderer, std::vector<uint64_t> tick_list,
-                                   float horizontal_margin, int number_of_decimal_places) const {
+bool TimelineUi::WillLabelsOverlap(TextRenderer& text_renderer,
+                                   const std::vector<uint64_t>& tick_list, float horizontal_margin,
+                                   uint32_t number_of_decimal_places) const {
   if (tick_list.size() <= 1) return false;
   float distance_between_labels = GetTickWorldXPos(tick_list[1]) - GetTickWorldXPos(tick_list[0]);
   for (auto tick_ns : tick_list) {
