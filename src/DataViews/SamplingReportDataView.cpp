@@ -31,6 +31,7 @@
 #include "OrbitBase/Result.h"
 #include "OrbitBase/ThreadConstants.h"
 #include "Statistics/BinomialConfidenceInterval.h"
+#include "Statistics/StatisticsUtils.h"
 
 using orbit_client_data::CaptureData;
 using orbit_client_data::ModuleData;
@@ -62,19 +63,14 @@ const std::vector<DataView::Column>& SamplingReportDataView::GetColumns() {
   return columns;
 }
 
-[[nodiscard]] float SamplingReportDataView::HalfWidthOfSymmetrizedConfidenceInterval(
-    float percentage) const {
-  const float rate = percentage / 100.0f;
-  const auto confidence_interval =
-      app_->GetConfidenceIntervalEstimator()->Estimate(rate, thread_events_count_);
-
-  return std::max(confidence_interval.upper - rate, rate - confidence_interval.lower) * 100.0f;
-}
-
 [[nodiscard]] std::string SamplingReportDataView::BuildPercentageString(float percentage,
                                                                         uint32_t raw_count) const {
-  return absl::StrFormat("%.1f ±%.1f%% (%u)", percentage,
-                         HalfWidthOfSymmetrizedConfidenceInterval(percentage), raw_count);
+  const float rate = percentage / 100.0f;
+  orbit_statistics::BinomialConfidenceInterval interval =
+      app_->GetConfidenceIntervalEstimator().Estimate(rate, stack_events_count_);
+  const float plus_minus_percentage =
+      orbit_statistics::HalfWidthOfSymmetrizedConfidenceInterval(interval, rate) * 100.0f;
+  return absl::StrFormat("%.1f ±%.1f%% (%u)", percentage, plus_minus_percentage, raw_count);
 }
 
 std::string SamplingReportDataView::GetValue(int row, int column) {
@@ -335,11 +331,13 @@ void SamplingReportDataView::SetThreadID(ThreadID tid) {
 
   if (tid == orbit_base::kAllProcessThreadsTid) {
     name_ = absl::StrFormat("%s\n(all threads)", capture_data.process_name());
-    thread_events_count_ = capture_data.GetCallstackData().GetCallstackEventsCount();
   } else {
     name_ = absl::StrFormat("%s\n[%d]", capture_data.GetThreadName(tid_), tid_);
-    thread_events_count_ = capture_data.GetCallstackData().GetCallstackEventsOfTidCount(tid_);
   }
+}
+
+void SamplingReportDataView::SetStackEventsCount(uint32_t stack_events_count) {
+  stack_events_count_ = stack_events_count;
 }
 
 void SamplingReportDataView::DoFilter() {

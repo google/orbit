@@ -7,7 +7,8 @@ cmake_minimum_required(VERSION 3.15)
 add_library(Statistics STATIC)
 
 target_sources(Statistics PUBLIC
-                include/Statistics/BinomialConfidenceInterval.h)
+                include/Statistics/BinomialConfidenceInterval.h
+                include/Statistics/StatisticsUtils.h)
 
 target_include_directories(Statistics PUBLIC
                ${CMAKE_CURRENT_LIST_DIR}/include)

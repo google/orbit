@@ -501,7 +501,7 @@ class OrbitApp final : public DataViewFactory,
   [[nodiscard]] std::vector<const orbit_client_protos::TimerInfo*> GetAllTimersForHookedFunction(
       uint64_t function_id) const override;
 
-  [[nodiscard]] const orbit_statistics::BinomialConfidenceIntervalEstimator*
+  [[nodiscard]] const orbit_statistics::BinomialConfidenceIntervalEstimator&
   GetConfidenceIntervalEstimator() const override;
 
  private:

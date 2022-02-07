@@ -2937,7 +2937,7 @@ void OrbitApp::TrySaveUserDefinedCaptureInfo() {
   });
 }
 
-[[nodiscard]] const orbit_statistics::BinomialConfidenceIntervalEstimator*
+[[nodiscard]] const orbit_statistics::BinomialConfidenceIntervalEstimator&
 OrbitApp::GetConfidenceIntervalEstimator() const {
-  return &confidence_interval_estimator_;
+  return confidence_interval_estimator_;
 }

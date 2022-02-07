@@ -29,7 +29,6 @@
 #include "MetricsUploader/ScopedMetric.h"
 #include "MoveFilesToDocuments/MoveFilesToDocuments.h"
 #include "OrbitBase/File.h"
-#include "Statistics/BinomialConfidenceInterval.h"
 
 #ifdef _WIN32
 #include <process.h>

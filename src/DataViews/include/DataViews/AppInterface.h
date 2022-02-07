@@ -108,7 +108,7 @@ class AppInterface {
   virtual void Disassemble(uint32_t pid, const orbit_client_protos::FunctionInfo& function) = 0;
   virtual void ShowSourceCode(const orbit_client_protos::FunctionInfo& function) = 0;
 
-  [[nodiscard]] virtual const orbit_statistics::BinomialConfidenceIntervalEstimator*
+  [[nodiscard]] virtual const orbit_statistics::BinomialConfidenceIntervalEstimator&
   GetConfidenceIntervalEstimator() const = 0;
 };
 

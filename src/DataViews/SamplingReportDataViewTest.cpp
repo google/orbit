@@ -50,6 +50,7 @@ using orbit_grpc_protos::ModuleInfo;
 
 using ::testing::_;
 using ::testing::Return;
+using ::testing::ReturnRef;
 
 namespace {
 
@@ -216,7 +217,7 @@ class SamplingReportDataViewTest : public testing::Test {
     EXPECT_CALL(app_, GetModuleManager()).WillRepeatedly(Return(&module_manager_));
     EXPECT_CALL(app_, GetMutableModuleManager()).WillRepeatedly(Return(&module_manager_));
     EXPECT_CALL(app_, GetConfidenceIntervalEstimator())
-        .WillRepeatedly(Return(&confidence_interval_estimator_));
+        .WillRepeatedly(ReturnRef(confidence_interval_estimator_));
 
     EXPECT_CALL(confidence_interval_estimator_, Estimate)
         .WillRepeatedly(testing::Invoke([](float ratio, uint32_t /*trials*/) {
