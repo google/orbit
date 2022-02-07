@@ -31,8 +31,6 @@ using orbit_test_utils::HasValue;
 
 namespace fs = std::filesystem;
 
-static const std::filesystem::path testdata_directory = orbit_test::GetTestdataDir();
-
 TEST(ReadSymbolsFile, Empty) {
   auto temp_file_or_error = orbit_base::TemporaryFile::Create();
   ASSERT_THAT(temp_file_or_error, HasNoError());
@@ -75,6 +73,7 @@ TEST(ReadSymbolsFile, OnePath) {
 }
 
 TEST(ReadSymbolsFile, TwoPaths) {
+  const std::filesystem::path testdata_directory = orbit_test::GetTestdataDir();
   auto temp_file_or_error = orbit_base::TemporaryFile::Create();
   ASSERT_THAT(temp_file_or_error, HasNoError());
 
@@ -122,6 +121,7 @@ TEST(ReadSymbolsFile, OnePathTrailingWhitespace) {
 }
 
 TEST(SymbolHelper, FindSymbolsFileLocally) {
+  const std::filesystem::path testdata_directory = orbit_test::GetTestdataDir();
   SymbolHelper symbol_helper("", {});
   {  // Find .debug successfully
     const fs::path file_path = testdata_directory / "no_symbols_elf";
@@ -193,6 +193,7 @@ TEST(SymbolHelper, FindSymbolsFileLocally) {
 }
 
 TEST(SymbolHelper, FindSymbolsInCache) {
+  const std::filesystem::path testdata_directory = orbit_test::GetTestdataDir();
   SymbolHelper symbol_helper(testdata_directory, {});
 
   // This is more of a smoke test (looking for the same elf file)
@@ -245,6 +246,7 @@ TEST(SymbolHelper, FindSymbolsInCache) {
 }
 
 TEST(SymbolHelper, LoadSymbolsFromFile) {
+  std::filesystem::path testdata_directory = orbit_test::GetTestdataDir();
   // .debug contains symbols
   {
     const fs::path file_path = testdata_directory / "no_symbols_elf.debug";
@@ -306,6 +308,7 @@ TEST(SymbolHelper, GenerateCachedFileName) {
 }
 
 TEST(SymbolHelper, VerifySymbolsFile) {
+  const std::filesystem::path testdata_directory = orbit_test::GetTestdataDir();
   {
     // valid elf file containing symbols and matching build id
     fs::path symbols_file = testdata_directory / "no_symbols_elf.debug";
@@ -358,6 +361,7 @@ TEST(SymbolHelper, VerifySymbolsFile) {
 }
 
 TEST(SymbolHelper, FindDebugInfoFileLocally) {
+  const std::filesystem::path testdata_directory = orbit_test::GetTestdataDir();
   SymbolHelper symbol_helper("", {});
   constexpr uint32_t kExpectedChecksum = 0x2bf887bf;
 
@@ -369,6 +373,7 @@ TEST(SymbolHelper, FindDebugInfoFileLocally) {
 }
 
 TEST(SymbolHelper, IsMatchingDebugInfoFile) {
+  const std::filesystem::path testdata_directory = orbit_test::GetTestdataDir();
   constexpr uint32_t kExpectedChecksum = 0x2bf887bf;
   auto correct_file_path = testdata_directory / "hello_world_elf.debug";
   auto existing_but_wrong_file_path = testdata_directory / "hello_world_elf";
@@ -380,6 +385,7 @@ TEST(SymbolHelper, IsMatchingDebugInfoFile) {
 }
 
 TEST(SymbolHelper, FindDebugInfoFileInDebugStore) {
+  const std::filesystem::path testdata_directory = orbit_test::GetTestdataDir();
   const fs::path symbols_path = testdata_directory / "debugstore" / ".build-id" / "b5" /
                                 "413574bbacec6eacb3b89b1012d0e2cd92ec6b.debug";
   const std::string build_id = "b5413574bbacec6eacb3b89b1012d0e2cd92ec6b";
@@ -392,6 +398,7 @@ TEST(SymbolHelper, FindDebugInfoFileInDebugStore) {
 }
 
 TEST(SymbolHelper, FindSymbolsInStructedDebugStore) {
+  const std::filesystem::path testdata_directory = orbit_test::GetTestdataDir();
   SymbolHelper symbol_helper("", {testdata_directory / "debugstore"});
 
   const fs::path file_path = testdata_directory / "no_symbols_elf";
