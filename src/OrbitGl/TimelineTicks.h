@@ -31,7 +31,7 @@ class TimelineTicks {
   [[nodiscard]] std::optional<uint64_t> GetPreviousMajorTick(uint64_t start_ns,
                                                              uint64_t end_ns) const;
   // Number of digits needed to show precisely parts of a second in a timestamp.
-  [[nodiscard]] int GetTimestampNumDigitsPrecision(uint64_t timestamp_ns) const;
+  [[nodiscard]] uint32_t GetTimestampNumDigitsPrecision(uint64_t timestamp_ns) const;
 
  private:
   [[nodiscard]] uint64_t GetMajorTicksScale(uint64_t visible_ns) const;
