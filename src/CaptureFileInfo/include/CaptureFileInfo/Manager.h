@@ -20,6 +20,14 @@ class Manager {
     return capture_file_infos_;
   }
 
+  // This function adds or touches a capture file at `path` to the list of capture files saved in
+  // this class. The file is added if path is not yet contained in the list, and touches it if is.
+  // Whether a file is contained in the list is determined by whether there paths are
+  // lexicographically equal. (determined by operator== of std::filesystem::path
+  // https://en.cppreference.com/w/cpp/filesystem/path/operator_cmp). This means that on Windows
+  // paths that use slash (/) as directory separators, are equal to paths that are using backslash.
+  // TODO(http://b/218298681) use std::filesystem::equivalent instead of operator== to check whether
+  // 2 paths are actually pointing to the same file.
   void AddOrTouchCaptureFile(const std::filesystem::path& path);
   void Clear();
   void PurgeNonExistingFiles();

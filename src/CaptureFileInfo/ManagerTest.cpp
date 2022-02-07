@@ -8,6 +8,7 @@
 #include <QDateTime>
 #include <chrono>
 #include <filesystem>
+#include <set>
 #include <thread>
 
 #include "CaptureFileInfo/Manager.h"
@@ -81,6 +82,38 @@ TEST(CaptureFileInfoManager, AddOrTouchCaptureFile) {
 
   // clean up
   manager.Clear();
+}
+
+TEST(CaptureFileInfoManager, AddOrTouchCaptureFilePathFormatting) {
+  QCoreApplication::setOrganizationName(kOrgName);
+  QCoreApplication::setApplicationName(
+      "CaptureFileInfo.Manager.AddOrTouchCaptureFilePathFormatting");
+
+  Manager manager;
+  manager.Clear();
+  ASSERT_TRUE(manager.GetCaptureFileInfos().empty());
+
+  // Currently AddOrTouchCaptureFile uses path operator== to discern whether 2 paths are the same.
+  // This test uses the same mechanism (via std::set), which makes this more of a smoke test.
+  // TODO(http://b/218298681) use std::filesystem::equivalent instead of operator== and improve this
+  // test.
+
+  std::vector<std::filesystem::path> test_paths = {"/path/to/some/file",
+                                                   "/PATH/TO/SOME/FILE",
+                                                   "c:/users/user/dir/file.orbit",
+                                                   "C:/users/user/dir/file.orbit",
+                                                   "c:/users/user/dir/file.ORBIT",
+                                                   "C:/USERS/USER/DIR/FILE.ORBIT",
+                                                   R"(c:\users\user\dir\file.orbit)",
+                                                   R"(C:\USERS\USER\DIR\FILE.ORBIT)"};
+
+  std::set<std::filesystem::path> control_set;
+  for (const auto& path : test_paths) {
+    manager.AddOrTouchCaptureFile(path);
+    control_set.insert(path);
+  }
+
+  EXPECT_EQ(manager.GetCaptureFileInfos().size(), control_set.size());
 }
 
 TEST(CaptureFileInfoManager, PurgeNonExistingFiles) {
