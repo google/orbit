@@ -45,7 +45,7 @@ class TimeGraphLayout {
   float GetSpaceBetweenTracks() const { return space_between_tracks_ * scale_; }
   float GetSpaceBetweenCores() const { return space_between_cores_ * scale_; }
   float GetSpaceBetweenGpuDepths() const { return space_between_gpu_depths_ * scale_; }
-  float GetSpaceBetweenTracksAndThread() const { return space_between_tracks_and_thread_ * scale_; }
+  float GetSpaceBetweenThreadPanes() const { return space_between_thread_panes_ * scale_; }
   float GetSpaceBetweenSubtracks() const { return space_between_subtracks_ * scale_; }
   float GetToolbarIconHeight() const { return toolbar_icon_height_; }
   float GetGenericFixedSpacerWidth() const { return generic_fixed_spacer_width_; }
@@ -89,9 +89,8 @@ class TimeGraphLayout {
   float space_between_cores_;
   float space_between_gpu_depths_;
   float space_between_tracks_;
-  float space_between_tracks_and_thread_;
+  float space_between_thread_panes_;
   float space_between_subtracks_;
-  float space_between_thread_blocks_;
   float generic_fixed_spacer_width_;
 
   float toolbar_icon_height_;

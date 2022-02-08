@@ -100,7 +100,7 @@ class ThreadTrack final : public TimerTrack {
   [[nodiscard]] std::string GetBoxTooltip(const Batcher& batcher, PickingId id) const override;
 
   [[nodiscard]] float GetHeight() const override;
-  [[nodiscard]] float GetHeaderHeight() const override;
+  [[nodiscard]] float GetHeightAboveTimers() const override;
 
   void UpdatePositionOfSubtracks() override;
 
