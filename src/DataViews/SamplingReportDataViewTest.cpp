@@ -195,18 +195,22 @@ std::string GetExpectedDisplayInclusiveByIndex(size_t index, bool for_copy = fal
 std::string GetExpectedToolTipByIndex(size_t index, int column) {
   if (column == kColumnInclusive || column == kColumnExclusive) {
     const uint32_t raw_count =
-        column == kColumnInclusive ? kSampledInclusives[index] : kSampledExclusives[index];
-    const float percentage = column == kColumnInclusive ? kSampledInclusivePercents[index]
-                                                        : kSampledExclusivePercents[index];
+        (column == kColumnInclusive) ? kSampledInclusives[index] : kSampledExclusives[index];
+    const float percentage = (column == kColumnInclusive) ? kSampledInclusivePercents[index]
+                                                          : kSampledExclusivePercents[index];
+    const std::string count_type = (column == kColumnInclusive) ? "inclusive" : "exclusive";
+    const std::string at_the_top_or_encountered =
+        (column == kColumnInclusive) ? "at the top of the callstack" : "encountered";
 
     return absl::StrFormat(
-        "The function %s\n"
-        "has been encountered %u times in a total of %u stack samples.\n"
-        "This makes up for %.2f%% of samples.\n"
+        "The function \"%s\"\n"
+        "was %s %u times (%s count)\n"
+        "in a total of %u stack samples.\n"
+        "This makes up for %.2f%% of samples.\n\n"
         "The 95%% confidence interval for the true percentage is\n"
         "(%.2f%%, %.2f%%).",
-        kFunctionPrettyNames[index], raw_count, kStackEventsCount, percentage,
-        percentage - kConfidenceIntervalLeftSectionLength * 100.0f,
+        kFunctionPrettyNames[index], at_the_top_or_encountered, raw_count, count_type,
+        kStackEventsCount, percentage, percentage - kConfidenceIntervalLeftSectionLength * 100.0f,
         percentage + kConfidenceIntervalRightSectionLength * 100.0f);
   }
   return "";

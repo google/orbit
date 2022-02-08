@@ -346,25 +346,32 @@ std::string SamplingReportDataView::GetToolTip(int row, int column) {
   const SampledFunction& function = GetSampledFunction(row);
   uint32_t raw_count = {};
   float percentage = {};
+  std::string count_type;
+  std::string at_the_top_or_encountered;
   if (column == kColumnInclusive) {
     raw_count = function.inclusive;
     percentage = function.inclusive_percent;
+    count_type = "inclusive";
+    at_the_top_or_encountered = "at the top of the callstack";
   } else {
     raw_count = function.exclusive;
     percentage = function.exclusive_percent;
+    count_type = "exclusive";
+    at_the_top_or_encountered = "encountered";
   }
 
   orbit_statistics::BinomialConfidenceInterval interval =
       app_->GetConfidenceIntervalEstimator().Estimate(percentage / 100.0f, stack_events_count_);
 
   return absl::StrFormat(
-      "The function %s\n"
-      "has been encountered %u times in a total of %u stack samples.\n"
-      "This makes up for %.2f%% of samples.\n"
+      "The function \"%s\"\n"
+      "was %s %u times (%s count)\n"
+      "in a total of %u stack samples.\n"
+      "This makes up for %.2f%% of samples.\n\n"
       "The 95%% confidence interval for the true percentage is\n"
       "(%.2f%%, %.2f%%).",
-      function.name, raw_count, stack_events_count_, percentage, interval.lower * 100.0f,
-      interval.upper * 100.0f);
+      function.name, at_the_top_or_encountered, raw_count, count_type, stack_events_count_,
+      percentage, interval.lower * 100.0f, interval.upper * 100.0f);
 }
 
 void SamplingReportDataView::DoFilter() {
