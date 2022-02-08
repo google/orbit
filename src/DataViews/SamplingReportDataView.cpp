@@ -352,12 +352,12 @@ std::string SamplingReportDataView::GetToolTip(int row, int column) {
     raw_count = function.inclusive;
     percentage = function.inclusive_percent;
     count_type = "inclusive";
-    at_the_top_or_encountered = "at the top of the callstack";
+    at_the_top_or_encountered = "encountered";
   } else {
     raw_count = function.exclusive;
     percentage = function.exclusive_percent;
     count_type = "exclusive";
-    at_the_top_or_encountered = "encountered";
+    at_the_top_or_encountered = "at the top of the callstack";
   }
 
   orbit_statistics::BinomialConfidenceInterval interval =

@@ -200,7 +200,7 @@ std::string GetExpectedToolTipByIndex(size_t index, int column) {
                                                           : kSampledExclusivePercents[index];
     const std::string count_type = (column == kColumnInclusive) ? "inclusive" : "exclusive";
     const std::string at_the_top_or_encountered =
-        (column == kColumnInclusive) ? "at the top of the callstack" : "encountered";
+        (column == kColumnInclusive) ? "encountered" : "at the top of the callstack";
 
     return absl::StrFormat(
         "The function \"%s\"\n"
