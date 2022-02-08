@@ -16,6 +16,7 @@
 
 #include "PeCoffUnwindInfoUnwinderX86_64.h"
 
+#include <limits>
 #include "unwindstack/MachineX86_64.h"
 #include "unwindstack/Regs.h"
 
