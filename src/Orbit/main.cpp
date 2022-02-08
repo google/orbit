@@ -77,22 +77,10 @@ Q_DECLARE_METATYPE(std::error_code);
 
 static std::optional<orbit_session_setup::TargetConfiguration> ConnectToSpecifiedTarget(
     orbit_session_setup::SshConnectionArtifacts& connection_artifacts,
-    const QString& connection_target_string,
+    const orbit_session_setup::ConnectionTarget& target,
     orbit_metrics_uploader::MetricsUploader* metrics_uploader) {
-  auto connection_target_result =
-      orbit_session_setup::ConnectionTarget::FromString(connection_target_string);
-  if (!connection_target_result.has_value()) {
-    ORBIT_ERROR(
-        "Invalid connection target parameter was specified. Expected format: pid@instance_id, got "
-        "\"%s\"",
-        connection_target_string.toStdString());
-    return std::nullopt;
-  }
-
-  auto connection_target = connection_target_result.value();
-  orbit_session_setup::ConnectToTargetDialog dialog(
-      &connection_artifacts, connection_target.instance_id_or_name_, connection_target.process_id_,
-      metrics_uploader);
+  orbit_session_setup::ConnectToTargetDialog dialog(&connection_artifacts, target,
+                                                    metrics_uploader);
   return dialog.Exec();
 }
 
@@ -100,7 +88,7 @@ int RunUiInstance(const DeploymentConfiguration& deployment_configuration,
                   const Context* ssh_context, const QStringList& command_line_flags,
                   const orbit_base::CrashHandler* crash_handler,
                   const std::filesystem::path& capture_file_path,
-                  const QString& connection_target) {
+                  std::optional<orbit_session_setup::ConnectionTarget> maybe_connection_target) {
   qRegisterMetaType<std::error_code>();
 
   const GrpcPort grpc_port{/*.grpc_port =*/absl::GetFlag(FLAGS_grpc_port)};
@@ -123,13 +111,13 @@ int RunUiInstance(const DeploymentConfiguration& deployment_configuration,
   // has_file_parameter as false such that if a user ends the previous session, Orbit
   // will return to a SessionSetupDialog.
   bool has_file_parameter = !capture_file_path.empty();
-  bool has_connection_target = !connection_target.isEmpty();
+  bool has_connection_target = maybe_connection_target.has_value();
 
   while (true) {
     {
       if (has_connection_target) {
-        target_config = ConnectToSpecifiedTarget(ssh_connection_artifacts, connection_target,
-                                                 metrics_uploader.get());
+        target_config = ConnectToSpecifiedTarget(
+            ssh_connection_artifacts, maybe_connection_target.value(), metrics_uploader.get());
         if (!target_config.has_value()) {
           // User closed dialog, or an error occured.
           return -1;
@@ -353,15 +341,33 @@ int main(int argc, char* argv[]) {
     return -1;
   }
 
-  const std::string& connection_target = absl::GetFlag(FLAGS_connection_target);
+  const std::string& target_process = absl::GetFlag(FLAGS_target_process);
+  const std::string& target_instance = absl::GetFlag(FLAGS_target_instance);
 
-  if (capture_file_paths.size() > 0 && !connection_target.empty()) {
+  if (target_process.empty() != target_instance.empty()) {
     ORBIT_LOG(
-        "Aborting startup: User specified a connection target and one or multiple capture files at "
-        "the same time.");
+        "Aborting startup: User specified only an instance or a process to connect to, but not "
+        "both.");
+    DisplayErrorToUser(
+        QString("Invalid combination of startup flags: You need to specify either both "
+                "--target_process and --target_instance, or none of them."));
+    return -1;
+  }
+
+  std::optional<orbit_session_setup::ConnectionTarget> target;
+  if (!target_process.empty() && !target_instance.empty()) {
+    target = orbit_session_setup::ConnectionTarget(QString::fromStdString(target_process),
+                                                   QString::fromStdString(target_instance));
+  }
+
+  if (capture_file_paths.size() > 0 && target.has_value()) {
+    ORBIT_LOG(
+        "Aborting startup: User specified a process and instance to connect to, and one or "
+        "multiple capture files at the same time.");
     DisplayErrorToUser(
         QString("Invalid combination of startup flags: Specify either one or multiple capture "
-                "files to open or a connection target (--connection_target), but not both."));
+                "files to open or a target process and instance (--target_instance, "
+                "--target_process), but not both."));
     return -1;
   }
 
@@ -377,5 +383,5 @@ int main(int argc, char* argv[]) {
 
   return RunUiInstance(deployment_configuration, &context.value(), command_line_flags,
                        crash_handler.get(), capture_file_paths.empty() ? "" : capture_file_paths[0],
-                       QString::fromStdString(connection_target));
+                       target);
 }
