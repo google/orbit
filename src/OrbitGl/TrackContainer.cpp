@@ -271,10 +271,8 @@ void TrackContainer::DrawOverlay(Batcher& batcher, TextRenderer& text_renderer,
 void TrackContainer::DrawIncompleteDataIntervals(Batcher& batcher, PickingMode picking_mode) {
   if (picking_mode == PickingMode::kClick) return;  // Allow to click through.
 
-  auto min_visible_timestamp_ns = timeline_info_->GetNsSinceStart(
-      static_cast<uint64_t>(timeline_info_->GetMinTimeUs() * 1000L));
-  auto max_visible_timestamp_ns = timeline_info_->GetNsSinceStart(
-      static_cast<uint64_t>(timeline_info_->GetMaxTimeUs() * 1000L));
+  uint64_t min_visible_timestamp_ns = timeline_info_->GetTickFromUs(timeline_info_->GetMinTimeUs());
+  uint64_t max_visible_timestamp_ns = timeline_info_->GetTickFromUs(timeline_info_->GetMaxTimeUs());
 
   std::vector<std::pair<float, float>> x_ranges;
   for (auto it = capture_data_->incomplete_data_intervals().LowerBound(min_visible_timestamp_ns);
