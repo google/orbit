@@ -86,6 +86,9 @@ class MockAppInterface : public AppInterface {
   MOCK_METHOD(bool, IsTracepointSelected, (const orbit_grpc_protos::TracepointInfo&), (const));
   MOCK_METHOD(void, SelectTracepoint, (const orbit_grpc_protos::TracepointInfo&));
   MOCK_METHOD(void, DeselectTracepoint, (const orbit_grpc_protos::TracepointInfo&));
+
+  MOCK_METHOD(const orbit_statistics::BinomialConfidenceIntervalEstimator&,
+              GetConfidenceIntervalEstimator, (), (const));
 };
 
 }  // namespace orbit_data_views

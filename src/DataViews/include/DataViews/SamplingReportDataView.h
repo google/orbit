@@ -4,6 +4,7 @@
 
 #pragma once
 
+#include <cstdint>
 #include <optional>
 #include <string>
 #include <vector>
@@ -44,6 +45,7 @@ class SamplingReportDataView : public DataView {
   }
   void SetSampledFunctions(const std::vector<orbit_client_data::SampledFunction>& functions);
   void SetThreadID(orbit_client_data::ThreadID tid);
+  void SetStackEventsCount(uint32_t stack_events_count);
   orbit_client_data::ThreadID GetThreadID() const { return tid_; }
 
  protected:
@@ -63,11 +65,14 @@ class SamplingReportDataView : public DataView {
   // The callstack view will be updated according to the visible selected addresses and thread id.
   void UpdateVisibleSelectedAddressesAndTid(const std::vector<int>& visible_selected_indices);
 
+  [[nodiscard]] std::string BuildPercentageString(float percentage, uint32_t raw_count) const;
+
   std::vector<orbit_client_data::SampledFunction> functions_;
   // We need to keep user's selected function ids such that if functions_ changes, the
   // selected_indices_ can be updated according to the selected function ids.
   absl::flat_hash_set<uint64_t> selected_function_ids_;
   orbit_client_data::ThreadID tid_ = -1;
+  uint32_t stack_events_count_ = 0;
   std::string name_;
   SamplingReportInterface* sampling_report_ = nullptr;
 

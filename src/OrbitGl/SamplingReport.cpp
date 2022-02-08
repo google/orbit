@@ -52,6 +52,7 @@ void SamplingReport::FillReport() {
     thread_report.Init();
     thread_report.SetSampledFunctions(thread_sample_data->sampled_functions);
     thread_report.SetThreadID(thread_sample_data->thread_id);
+    thread_report.SetStackEventsCount(thread_sample_data->samples_count);
     thread_report.SetSamplingReport(this);
     thread_data_views_.push_back(std::move(thread_report));
   }

@@ -83,6 +83,7 @@
 #include "OrbitPaths/Paths.h"
 #include "OrbitVersion/OrbitVersion.h"
 #include "SamplingReport.h"
+#include "Statistics/BinomialConfidenceInterval.h"
 #include "SymbolPaths/QSettingsWrapper.h"
 #include "Symbols/SymbolHelper.h"
 #include "TimeGraph.h"
@@ -2934,4 +2935,9 @@ void OrbitApp::TrySaveUserDefinedCaptureInfo() {
                                                    write_result.error().message()));
     }
   });
+}
+
+[[nodiscard]] const orbit_statistics::BinomialConfidenceIntervalEstimator&
+OrbitApp::GetConfidenceIntervalEstimator() const {
+  return confidence_interval_estimator_;
 }

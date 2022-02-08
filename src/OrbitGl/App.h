@@ -76,6 +76,7 @@
 #include "OrbitPaths/Paths.h"
 #include "SamplingReport.h"
 #include "ScopedStatus.h"
+#include "Statistics/BinomialConfidenceInterval.h"
 #include "StatusListener.h"
 #include "StringManager/StringManager.h"
 #include "Symbols/SymbolHelper.h"
@@ -500,6 +501,9 @@ class OrbitApp final : public DataViewFactory,
   [[nodiscard]] std::vector<const orbit_client_protos::TimerInfo*> GetAllTimersForHookedFunction(
       uint64_t function_id) const override;
 
+  [[nodiscard]] const orbit_statistics::BinomialConfidenceIntervalEstimator&
+  GetConfidenceIntervalEstimator() const override;
+
  private:
   void UpdateModulesAbortCaptureIfModuleWithoutBuildIdNeedsReload(
       absl::Span<const orbit_grpc_protos::ModuleInfo> module_infos);
@@ -633,6 +637,8 @@ class OrbitApp final : public DataViewFactory,
   orbit_metrics_uploader::CaptureCompleteData metrics_capture_complete_data_;
 
   orbit_capture_file_info::Manager capture_file_info_manager_{};
+
+  const orbit_statistics::WilsonBinomialConfidenceIntervalEstimator confidence_interval_estimator_;
 };
 
 #endif  // ORBIT_GL_APP_H_

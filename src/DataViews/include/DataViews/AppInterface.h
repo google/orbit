@@ -19,6 +19,7 @@
 #include "GrpcProtos/tracepoint.pb.h"
 #include "OrbitBase/Future.h"
 #include "PresetFile/PresetFile.h"
+#include "Statistics/BinomialConfidenceInterval.h"
 
 namespace orbit_data_views {
 
@@ -106,6 +107,9 @@ class AppInterface {
 
   virtual void Disassemble(uint32_t pid, const orbit_client_protos::FunctionInfo& function) = 0;
   virtual void ShowSourceCode(const orbit_client_protos::FunctionInfo& function) = 0;
+
+  [[nodiscard]] virtual const orbit_statistics::BinomialConfidenceIntervalEstimator&
+  GetConfidenceIntervalEstimator() const = 0;
 };
 
 }  // namespace orbit_data_views
