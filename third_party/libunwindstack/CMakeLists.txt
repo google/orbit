@@ -66,6 +66,8 @@ target_sources(libunwindstack_common PRIVATE
   MemoryXz.h
   Object.cpp
   PeCoff.cpp
+  PeCoffEpilog.cpp
+  PeCoffEpilog.h
   PeCoffInterface.cpp
   PeCoffRuntimeFunctions.cpp
   PeCoffRuntimeFunctions.h
@@ -148,6 +150,7 @@ target_sources(libunwindstack_common PUBLIC
 target_include_directories(libunwindstack_common PUBLIC include/)
 target_compile_features(libunwindstack_common PUBLIC cxx_std_17)
 target_link_libraries(libunwindstack_common PRIVATE
+  CONAN_PKG::capstone
   CONAN_PKG::libunwindstack-android-dependencies
   CONAN_PKG::lzma_sdk)
 
@@ -259,6 +262,7 @@ target_sources(libunwindstack_tests PRIVATE
   tests/PeCoffTest.cpp
   tests/PeCoffUnwindInfosTest.cpp
   tests/PeCoffUnwindInfoUnwinderX86_64Test.cpp
+  tests/PeCoffEpilogTest.cpp
   tests/RegsInfoTest.cpp
   tests/RegsIterateTest.cpp
   tests/RegsStepIfSignalHandlerTest.cpp
@@ -286,6 +290,7 @@ target_link_libraries(libunwindstack_tests PRIVATE ${CMAKE_DL_LIBS})
 # so we link to it explicitly here.
 find_library(liblog_shared log_shared REQUIRED)
 target_link_libraries(libunwindstack_tests PRIVATE
+  CONAN_PKG::capstone
   CONAN_PKG::libunwindstack-android-dependencies
   CONAN_PKG::lzma_sdk
   CONAN_PKG::zlib
