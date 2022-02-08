@@ -36,7 +36,6 @@ orbit_cc_library(
         "//src/OrbitBase",
         "//src/OrbitVersion",
         "//src/ProcessService",
-        "//src/ProducerSideChannel",
         "//src/ProducerSideService",
         "//src/TracepointService",
         "//src/UserSpaceInstrumentation",

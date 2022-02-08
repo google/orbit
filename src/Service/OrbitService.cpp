@@ -14,7 +14,6 @@
 #include <chrono>
 #include <cinttypes>
 #include <cstdio>
-#include <filesystem>
 #include <memory>
 #include <string>
 #include <thread>
@@ -22,10 +21,9 @@
 #include "OrbitBase/ExecuteCommand.h"
 #include "OrbitBase/Logging.h"
 #include "OrbitBase/ReadFileToString.h"
-#include "OrbitBase/SafeStrerror.h"
 #include "OrbitGrpcServer.h"
 #include "OrbitVersion/OrbitVersion.h"
-#include "ProducerSideChannel/ProducerSideChannel.h"
+#include "ProducerSideService/BuildAndStartProducerSideServer.h"
 #include "ProducerSideService/ProducerSideServer.h"
 
 using orbit_producer_side_service::ProducerSideServer;
@@ -124,55 +122,6 @@ std::unique_ptr<OrbitGrpcServer> CreateGrpcServer(uint16_t grpc_port, bool dev_m
   return grpc_server;
 }
 
-std::unique_ptr<ProducerSideServer> BuildAndStartProducerSideServerWithUri(std::string uri) {
-  auto producer_side_server = std::make_unique<ProducerSideServer>();
-  ORBIT_LOG("Starting producer-side server at %s", uri);
-  if (!producer_side_server->BuildAndStart(uri)) {
-    ORBIT_ERROR("Unable to start producer-side server");
-    return nullptr;
-  }
-  ORBIT_LOG("Producer-side server is running");
-  return producer_side_server;
-}
-
-#ifdef __linux
-
-std::unique_ptr<ProducerSideServer> BuildAndStartProducerSideServer() {
-  const std::filesystem::path unix_domain_socket_dir =
-      std::filesystem::path{orbit_producer_side_channel::kProducerSideUnixDomainSocketPath}
-          .parent_path();
-  std::error_code error_code;
-  std::filesystem::create_directories(unix_domain_socket_dir, error_code);
-  if (error_code) {
-    ORBIT_ERROR("Unable to create directory for socket for producer-side server: %s",
-                error_code.message());
-    return nullptr;
-  }
-
-  std::string unix_socket_path(orbit_producer_side_channel::kProducerSideUnixDomainSocketPath);
-  std::string uri = absl::StrFormat("unix:%s", unix_socket_path);
-  auto producer_side_server = BuildAndStartProducerSideServerWithUri(uri);
-
-  // When OrbitService runs as root, also allow non-root producers
-  // (e.g., the game) to communicate over the Unix domain socket.
-  if (chmod(unix_socket_path.c_str(), 0777) != 0) {
-    ORBIT_ERROR("Changing mode bits to 777 of \"%s\": %s", unix_socket_path, SafeStrerror(errno));
-    producer_side_server->ShutdownAndWait();
-    return nullptr;
-  }
-
-  return producer_side_server;
-}
-
-#else
-
-std::unique_ptr<ProducerSideServer> BuildAndStartProducerSideServer() {
-  constexpr const char* kProducerSideServerUri = "127.0.0.1:1789";
-  return BuildAndStartProducerSideServerWithUri(kProducerSideServerUri);
-}
-
-#endif
-
 }  // namespace
 
 int OrbitService::Run(std::atomic<bool>* exit_requested) {
@@ -193,7 +142,8 @@ int OrbitService::Run(std::atomic<bool>* exit_requested) {
     return -1;
   }
 
-  std::unique_ptr<ProducerSideServer> producer_side_server = BuildAndStartProducerSideServer();
+  std::unique_ptr<ProducerSideServer> producer_side_server =
+      orbit_producer_side_service::BuildAndStartProducerSideServer();
   if (producer_side_server == nullptr) {
     ORBIT_ERROR("Unable to build and start ProducerSideServer.");
     return -1;
