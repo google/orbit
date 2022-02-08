@@ -15,7 +15,7 @@ namespace orbit_capture_service_base {
 class StartStopCaptureRequestWaiter {
  public:
   virtual ~StartStopCaptureRequestWaiter() = default;
-  virtual orbit_grpc_protos::CaptureOptions WaitForStartCaptureRequest() = 0;
+  [[nodiscard]] virtual orbit_grpc_protos::CaptureOptions WaitForStartCaptureRequest() = 0;
   virtual void WaitForStopCaptureRequest() = 0;
 };
 

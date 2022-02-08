@@ -15,7 +15,8 @@ namespace orbit_capture_service_base {
 
 // Create a `ClientCaptureEventCollectorBuilder` which builds a `GrpcCaptureEventCollector` for
 // native orbit capture services.
-std::unique_ptr<ClientCaptureEventCollectorBuilder> CreateGrpcClientCaptureEventCollectorBuilder(
+[[nodiscard]] std::unique_ptr<ClientCaptureEventCollectorBuilder>
+CreateGrpcClientCaptureEventCollectorBuilder(
     grpc::ServerReaderWriter<orbit_grpc_protos::CaptureResponse, orbit_grpc_protos::CaptureRequest>*
         reader_writer);
 

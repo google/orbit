@@ -15,7 +15,7 @@ namespace orbit_capture_service_base {
 class ClientCaptureEventCollectorBuilder {
  public:
   virtual ~ClientCaptureEventCollectorBuilder() = default;
-  virtual std::unique_ptr<orbit_producer_event_processor::ClientCaptureEventCollector>
+  [[nodiscard]] virtual std::unique_ptr<orbit_producer_event_processor::ClientCaptureEventCollector>
   BuildClientCaptureEventCollector() = 0;
 };
 

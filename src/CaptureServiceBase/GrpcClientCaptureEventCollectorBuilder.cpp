@@ -19,7 +19,7 @@ class GrpcClientCaptureEventCollectorBuilder : public ClientCaptureEventCollecto
       grpc::ServerReaderWriter<CaptureResponse, CaptureRequest>* reader_writer)
       : reader_writer_{reader_writer} {}
 
-  std::unique_ptr<orbit_producer_event_processor::ClientCaptureEventCollector>
+  [[nodiscard]] std::unique_ptr<orbit_producer_event_processor::ClientCaptureEventCollector>
   BuildClientCaptureEventCollector() override {
     return std::make_unique<orbit_producer_event_processor::GrpcClientCaptureEventCollector>(
         reader_writer_);
