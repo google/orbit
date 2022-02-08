@@ -53,8 +53,8 @@ const std::vector<DataView::Column>& SamplingReportDataView::GetColumns() {
     columns.resize(kNumColumns);
     columns[kColumnSelected] = {"Hooked", .0f, SortingOrder::kDescending};
     columns[kColumnFunctionName] = {"Name", .4f, SortingOrder::kAscending};
-    columns[kColumnInclusive] = {"Inclusive", .0f, SortingOrder::kDescending};
-    columns[kColumnExclusive] = {"Exclusive", .0f, SortingOrder::kDescending};
+    columns[kColumnInclusive] = {"Inclusive, %", .0f, SortingOrder::kDescending};
+    columns[kColumnExclusive] = {"Exclusive, %", .0f, SortingOrder::kDescending};
     columns[kColumnModuleName] = {"Module", .0f, SortingOrder::kAscending};
     columns[kColumnAddress] = {"Address", .0f, SortingOrder::kAscending};
     columns[kColumnUnwindErrors] = {"Unwind errors", .0f, SortingOrder::kDescending};
@@ -63,14 +63,13 @@ const std::vector<DataView::Column>& SamplingReportDataView::GetColumns() {
   return columns;
 }
 
-[[nodiscard]] std::string SamplingReportDataView::BuildPercentageString(float percentage,
-                                                                        uint32_t raw_count) const {
+[[nodiscard]] std::string SamplingReportDataView::BuildPercentageString(float percentage) const {
   const float rate = percentage / 100.0f;
   orbit_statistics::BinomialConfidenceInterval interval =
       app_->GetConfidenceIntervalEstimator().Estimate(rate, stack_events_count_);
   const float plus_minus_percentage =
       orbit_statistics::HalfWidthOfSymmetrizedConfidenceInterval(interval, rate) * 100.0f;
-  return absl::StrFormat("%.1f ±%.1f%% (%u)", percentage, plus_minus_percentage, raw_count);
+  return absl::StrFormat("%.1f ±%.1f", percentage, plus_minus_percentage);
 }
 
 std::string SamplingReportDataView::GetValue(int row, int column) {
@@ -83,9 +82,9 @@ std::string SamplingReportDataView::GetValue(int row, int column) {
     case kColumnFunctionName:
       return func.name;
     case kColumnInclusive:
-      return BuildPercentageString(func.inclusive_percent, func.inclusive);
+      return BuildPercentageString(func.inclusive_percent);
     case kColumnExclusive:
-      return BuildPercentageString(func.exclusive_percent, func.exclusive);
+      return BuildPercentageString(func.exclusive_percent);
     case kColumnModuleName:
       return std::filesystem::path(func.module_path).filename().string();
     case kColumnAddress:
@@ -338,6 +337,34 @@ void SamplingReportDataView::SetThreadID(ThreadID tid) {
 
 void SamplingReportDataView::SetStackEventsCount(uint32_t stack_events_count) {
   stack_events_count_ = stack_events_count;
+}
+
+std::string SamplingReportDataView::GetToolTip(int row, int column) {
+  if (column != kColumnInclusive && column != kColumnExclusive) {
+    return "";
+  }
+  const SampledFunction& function = GetSampledFunction(row);
+  uint32_t raw_count = {};
+  float percentage = {};
+  if (column == kColumnInclusive) {
+    raw_count = function.inclusive;
+    percentage = function.inclusive_percent;
+  } else {
+    raw_count = function.exclusive;
+    percentage = function.exclusive_percent;
+  }
+
+  orbit_statistics::BinomialConfidenceInterval interval =
+      app_->GetConfidenceIntervalEstimator().Estimate(percentage / 100.0f, stack_events_count_);
+
+  return absl::StrFormat(
+      "The function %s\n"
+      "has been encountered %u times in a total of %u stack samples.\n"
+      "This makes up for %.2f%% of samples.\n"
+      "The 95%% confidence interval for the true percentage is\n"
+      "(%.2f%%, %.2f%%).",
+      function.name, raw_count, stack_events_count_, percentage, interval.lower * 100.0f,
+      interval.upper * 100.0f);
 }
 
 void SamplingReportDataView::DoFilter() {

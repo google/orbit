@@ -107,6 +107,7 @@ constexpr std::array<uint32_t, kNumFunctions> kSampledInclusives{3, 6, 1, 593};
 constexpr std::array<float, kNumFunctions> kSampledInclusivePercents{0.08f, 0.16f, 0.03f, 16.0f};
 constexpr std::array<uint32_t, kNumFunctions> kSampledUnwindErrors{3, 2, 1, 0};
 constexpr std::array<float, kNumFunctions> kSampledUnwindErrorPercents{0.08f, 0.05f, 0.03f, 0.0f};
+constexpr uint32_t kStackEventsCount = 3700;
 
 std::unique_ptr<CaptureData> GenerateTestCaptureData(
     orbit_client_data::ModuleManager* module_manager) {
@@ -179,18 +180,36 @@ std::string GetExpectedDisplayExclusiveByIndex(size_t index, bool for_copy = fal
   if (for_copy) {
     return absl::StrFormat("%.2f%%", kSampledExclusivePercents[index]);
   }
-  return absl::StrFormat("%.1f ±%.1f%% (%u)", kSampledExclusivePercents[index],
-                         kConfidenceIntervalLongerSectionLength * 100.0f,
-                         kSampledExclusives[index]);
+  return absl::StrFormat("%.1f ±%.1f", kSampledExclusivePercents[index],
+                         kConfidenceIntervalLongerSectionLength * 100.0f);
 }
 
 std::string GetExpectedDisplayInclusiveByIndex(size_t index, bool for_copy = false) {
   if (for_copy) {
     return absl::StrFormat("%.2f%%", kSampledInclusivePercents[index]);
   }
-  return absl::StrFormat("%.1f ±%.1f%% (%u)", kSampledInclusivePercents[index],
-                         kConfidenceIntervalLongerSectionLength * 100.0f,
-                         kSampledInclusives[index]);
+  return absl::StrFormat("%.1f ±%.1f", kSampledInclusivePercents[index],
+                         kConfidenceIntervalLongerSectionLength * 100.0f);
+}
+
+std::string GetExpectedToolTipByIndex(size_t index, int column) {
+  if (column == kColumnInclusive || column == kColumnExclusive) {
+    const uint32_t raw_count =
+        column == kColumnInclusive ? kSampledInclusives[index] : kSampledExclusives[index];
+    const float percentage = column == kColumnInclusive ? kSampledInclusivePercents[index]
+                                                        : kSampledExclusivePercents[index];
+
+    return absl::StrFormat(
+        "The function %s\n"
+        "has been encountered %u times in a total of %u stack samples.\n"
+        "This makes up for %.2f%% of samples.\n"
+        "The 95%% confidence interval for the true percentage is\n"
+        "(%.2f%%, %.2f%%).",
+        kFunctionPrettyNames[index], raw_count, kStackEventsCount, percentage,
+        percentage - kConfidenceIntervalLeftSectionLength * 100.0f,
+        percentage + kConfidenceIntervalRightSectionLength * 100.0f);
+  }
+  return "";
 }
 
 std::string GetExpectedDisplayUnwindErrorsByIndex(size_t index, bool for_copy = false) {
@@ -281,6 +300,14 @@ TEST_F(SamplingReportDataViewTest, ColumnHeadersNotEmpty) {
 TEST_F(SamplingReportDataViewTest, HasValidDefaultSortingColumn) {
   EXPECT_GE(view_.GetDefaultSortingColumn(), kColumnInclusive);
   EXPECT_LT(view_.GetDefaultSortingColumn(), view_.GetColumns().size());
+}
+
+TEST_F(SamplingReportDataViewTest, ToolTipMessageIsCorrect) {
+  AddFunctionsByIndices({0});
+  view_.SetStackEventsCount(kStackEventsCount);
+  for (size_t column = 0; column < kNumColumns; ++column) {
+    EXPECT_EQ(view_.GetToolTip(0, column), GetExpectedToolTipByIndex(0, column));
+  }
 }
 
 TEST_F(SamplingReportDataViewTest, ColumnValuesAreCorrect) {
@@ -451,7 +478,7 @@ TEST_F(SamplingReportDataViewTest, ContextMenuActionsAreInvoked) {
   // Copy Selection
   {
     std::string expected_clipboard = absl::StrFormat(
-        "Hooked\tName\tInclusive\tExclusive\tModule\tAddress\tUnwind errors\n"
+        "Hooked\tName\tInclusive, %%\tExclusive, %%\tModule\tAddress\tUnwind errors\n"
         "\t%s\t%s\t%s\t%s\t%s\t%s\n",
         GetExpectedDisplayFunctionNameByIndex(0, module_manager_, *capture_data_),
         GetExpectedDisplayInclusiveByIndex(0, true), GetExpectedDisplayExclusiveByIndex(0, true),
@@ -463,7 +490,7 @@ TEST_F(SamplingReportDataViewTest, ContextMenuActionsAreInvoked) {
   // Export to CSV
   {
     std::string expected_contents = absl::StrFormat(
-        R"("Hooked","Name","Inclusive","Exclusive","Module","Address","Unwind errors")"
+        R"("Hooked","Name","Inclusive, %%","Exclusive, %%","Module","Address","Unwind errors")"
         "\r\n"
         R"("","%s","%s","%s","%s","%s","%s")"
         "\r\n",
