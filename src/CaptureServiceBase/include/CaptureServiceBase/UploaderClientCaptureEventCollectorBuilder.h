@@ -11,7 +11,7 @@ namespace orbit_capture_service_base {
 
 // Create a `ClientCaptureEventCollectorBuilder` which builds a `UploaderCaptureEventCollector` for
 // the cloud collector.
-std::unique_ptr<ClientCaptureEventCollectorBuilder>
+[[nodiscard]] std::unique_ptr<ClientCaptureEventCollectorBuilder>
 CreateUploaderClientCaptureEventCollectorBuilder();
 
 }  // namespace orbit_capture_service_base

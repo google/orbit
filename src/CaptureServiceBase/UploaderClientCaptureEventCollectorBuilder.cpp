@@ -12,7 +12,7 @@ namespace orbit_capture_service_base {
 // `UploaderClientCaptureEventCollector` for the cloud collector.
 class UploaderClientCaptureEventCollectorBuilder : public ClientCaptureEventCollectorBuilder {
  public:
-  std::unique_ptr<orbit_producer_event_processor::ClientCaptureEventCollector>
+  [[nodiscard]] std::unique_ptr<orbit_producer_event_processor::ClientCaptureEventCollector>
   BuildClientCaptureEventCollector() override {
     return std::make_unique<orbit_producer_event_processor::UploaderClientCaptureEventCollector>();
   }

@@ -15,7 +15,8 @@ namespace orbit_capture_service_base {
 
 // Create a `StartStopCaptureRequestWaiter` with `ServerReaderWriter` for the native orbit capture
 // services.
-std::shared_ptr<StartStopCaptureRequestWaiter> CreateGrpcStartStopCaptureRequestWaiter(
+[[nodiscard]] std::shared_ptr<StartStopCaptureRequestWaiter>
+CreateGrpcStartStopCaptureRequestWaiter(
     grpc::ServerReaderWriter<orbit_grpc_protos::CaptureResponse, orbit_grpc_protos::CaptureRequest>*
         reader_writer);
 

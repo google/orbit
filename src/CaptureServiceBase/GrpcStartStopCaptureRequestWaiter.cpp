@@ -20,7 +20,7 @@ class GrpcStartStopCaptureRequestWaiter : public StartStopCaptureRequestWaiter {
       grpc::ServerReaderWriter<CaptureResponse, CaptureRequest>* reader_writer)
       : reader_writer_{reader_writer} {}
 
-  CaptureOptions WaitForStartCaptureRequest() override {
+  [[nodiscard]] CaptureOptions WaitForStartCaptureRequest() override {
     CaptureRequest request;
     // This call is blocking.
     reader_writer_->Read(&request);
