@@ -230,7 +230,18 @@ bool PeCoffUnwindInfoUnwinderX86_64::Eval(Memory* process_memory, Regs* regs,
     }
   }
 
-  // TODO: Chained info.
+  if (unwind_info.HasChainedInfo()) {
+    UnwindInfo chained_unwind_info;
+    if (!unwind_infos_->GetUnwindInfo(unwind_info.chained_info.unwind_info_offset,
+                                      &chained_unwind_info)) {
+      return false;
+    }
+
+    // We have to chain all unwind operations that are in the chained info, so we pass the max
+    // uint64_t value as code offset.
+    return Eval(process_memory, regs, chained_unwind_info, std::numeric_limits<uint64_t>::max(),
+                frame_pointer, frame_pointer_used);
+  }
 
   return true;
 }

@@ -33,7 +33,7 @@ class PeCoffUnwindInfosTest : public ::testing::Test {
     if (chained) {
       // To get the flags, this value will be shifted right by 3. To get chained info,
       // after shifting, this value must be 0x04.
-      flags = 0x20;
+      flags |= 0x04 << 3;
     }
     // Only version "1" is supported.
     uint8_t version_and_flags = flags | 0x01;

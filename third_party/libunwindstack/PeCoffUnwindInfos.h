@@ -61,6 +61,7 @@ struct UnwindInfo {
 
   uint8_t GetVersion() const { return version_and_flags & 0x07; }
   uint8_t GetFlags() const { return (version_and_flags >> 3) & 0x1f; }
+  bool HasChainedInfo() const { return GetFlags() & 0x04; }
   uint8_t GetFrameRegister() const { return frame_register_and_offset & 0x0f; }
   uint8_t GetFrameOffset() const { return (frame_register_and_offset >> 4) & 0x0f; }
 };
