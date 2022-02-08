@@ -18,13 +18,15 @@ target_sources(CaptureServiceBase PUBLIC
         include/CaptureServiceBase/CommonProducerCaptureEventBuilders.h
         include/CaptureServiceBase/GrpcClientCaptureEventCollectorBuilder.h
         include/CaptureServiceBase/GrpcStartStopCaptureRequestWaiter.h
-        include/CaptureServiceBase/StartStopCaptureRequestWaiter.h)
+        include/CaptureServiceBase/StartStopCaptureRequestWaiter.h
+        include/CaptureServiceBase/UploaderClientCaptureEventCollectorBuilder.h)
 
 target_sources(CaptureServiceBase PRIVATE
         CaptureServiceBase.cpp
         CommonProducerCaptureEventBuilders.cpp
         GrpcClientCaptureEventCollectorBuilder.cpp
-        GrpcStartStopCaptureRequestWaiter.cpp)
+        GrpcStartStopCaptureRequestWaiter.cpp
+        UploaderClientCaptureEventCollectorBuilder.cpp)
 
 target_link_libraries(CaptureServiceBase PUBLIC
         ProducerEventProcessor
