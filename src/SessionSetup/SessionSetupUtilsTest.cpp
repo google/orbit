@@ -7,6 +7,7 @@
 #include <QString>
 #include <filesystem>
 
+#include "GrpcProtos/process.pb.h"
 #include "OrbitGgp/SshInfo.h"
 #include "OrbitSsh/Credentials.h"
 #include "SessionSetup/SessionSetupUtils.h"
@@ -29,6 +30,50 @@ TEST(SessionSetupUtils, CredentialsFromSshInfoWorksCorrectly) {
   EXPECT_EQ(std::filesystem::path{info.known_hosts_path.toStdString()},
             credentials.known_hosts_path);
   EXPECT_EQ(info.user.toStdString(), credentials.user);
+}
+
+const uint32_t kPid = 100;
+const char* kProcessName = "process_name";
+const char* kProcessPath = "/path/to/process_name";
+
+std::vector<orbit_grpc_protos::ProcessInfo> SetupTestProcessList() {
+  using orbit_grpc_protos::ProcessInfo;
+
+  auto expected_target_process = ProcessInfo();
+  expected_target_process.set_pid(kPid);
+  expected_target_process.set_name(kProcessName);
+  expected_target_process.set_full_path(kProcessPath);
+
+  auto lower_pid_process = ProcessInfo();
+  lower_pid_process.set_pid(kPid - 1);
+  lower_pid_process.set_name(kProcessName);
+  lower_pid_process.set_full_path(kProcessPath);
+
+  auto different_process = ProcessInfo();
+  different_process.set_pid(kPid + 1);
+  different_process.set_name("some_other_process");
+  different_process.set_full_path("/path/to/some_other_process");
+
+  return {different_process, lower_pid_process, expected_target_process, different_process,
+          lower_pid_process};
+}
+
+TEST(SessionSetupUtils, TryToFindProcessDataFindsProcessByName) {
+  std::vector<orbit_grpc_protos::ProcessInfo> processes = SetupTestProcessList();
+
+  EXPECT_EQ(kPid, TryToFindProcessData(processes, kProcessName)->pid());
+}
+
+TEST(SessionSetupUtils, TryToFindProcessDataFindsProcessByPath) {
+  std::vector<orbit_grpc_protos::ProcessInfo> processes = SetupTestProcessList();
+
+  EXPECT_EQ(kPid, TryToFindProcessData(processes, kProcessPath)->pid());
+}
+
+TEST(SessionSetupUtils, TryToFindProcessDataReturnsNullOnFailure) {
+  std::vector<orbit_grpc_protos::ProcessInfo> processes = SetupTestProcessList();
+
+  EXPECT_EQ(nullptr, TryToFindProcessData(processes, "nonexisting_process"));
 }
 
 }  // namespace orbit_session_setup

@@ -6,6 +6,7 @@
 
 #include <QApplication>
 #include <QMessageBox>
+#include <algorithm>
 #include <memory>
 
 #include "ClientServices/ProcessClient.h"
@@ -140,22 +141,22 @@ ConnectToTargetDialog::FindSpecifiedProcess(std::shared_ptr<grpc::Channel> grpc_
   ORBIT_CHECK(grpc_channel != nullptr);
 
   orbit_client_services::ProcessClient client(grpc_channel);
-  auto process_list = client.GetProcessList();
-  if (!process_list.has_value()) {
+  auto maybe_process_list = client.GetProcessList();
+  if (!maybe_process_list.has_value()) {
     return ErrorMessage("Unknown error: Could not retrieve list of running processes.");
   }
 
-  std::string process_name_or_path_stdstring = process_name_or_path.toStdString();
-  for (auto& process : process_list.value()) {
-    if (process.full_path() == process_name_or_path_stdstring ||
-        process.name() == process_name_or_path_stdstring) {
-      return std::make_unique<orbit_client_data::ProcessData>(process);
-    }
+  auto process_list = maybe_process_list.value();
+  std::unique_ptr<orbit_client_data::ProcessData> result =
+      TryToFindProcessData(process_list, process_name_or_path.toStdString());
+
+  if (result != nullptr) {
+    return result;
   }
 
   return ErrorMessage(
       absl::StrFormat("Process \"%s\" was not found in the list of running processes.",
-                      process_name_or_path_stdstring));
+                      process_name_or_path.toStdString()));
 }
 
 void ConnectToTargetDialog::SetStatusMessage(const QString& message) {
