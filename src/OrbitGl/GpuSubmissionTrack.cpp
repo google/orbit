@@ -153,7 +153,8 @@ float GpuSubmissionTrack::GetYFromTimer(const TimerInfo& timer_info) const {
   if (timer_info.type() == TimerInfo::kGpuCommandBuffer) {
     adjusted_depth += 1.f;
   }
-  return GetPos()[1] + GetHeaderHeight() + layout_->GetTextBoxHeight() * adjusted_depth + gap_space;
+  return GetPos()[1] + GetHeightAboveTimers() + layout_->GetTextBoxHeight() * adjusted_depth +
+         gap_space;
 }
 
 // When track or its parent is collapsed, only draw "hardware execution" timers.

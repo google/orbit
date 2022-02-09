@@ -88,7 +88,7 @@ class TimerTrack : public Track {
   [[nodiscard]] virtual float GetYFromTimer(const orbit_client_protos::TimerInfo& timer_info) const;
   [[nodiscard]] virtual float GetYFromDepth(uint32_t depth) const;
 
-  [[nodiscard]] virtual float GetHeaderHeight() const;
+  [[nodiscard]] virtual float GetHeightAboveTimers() const;
 
   [[nodiscard]] int GetVisiblePrimitiveCount() const override { return visible_timer_count_; }
 

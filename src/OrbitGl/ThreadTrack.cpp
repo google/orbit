@@ -255,7 +255,7 @@ bool ThreadTrack::IsEmpty() const {
 void ThreadTrack::UpdatePositionOfSubtracks() {
   const float thread_state_track_height = layout_->GetThreadStateTrackHeight();
   const float event_track_height = layout_->GetEventTrackHeightFromTid(GetThreadId());
-  const float space_between_subtracks = layout_->GetSpaceBetweenTracksAndThread();
+  const float space_between_subtracks = layout_->GetSpaceBetweenThreadPanes();
 
   const Vec2 pos = GetPos();
   float current_y = pos[1] + layout_->GetTrackTabHeight() + layout_->GetTrackContentTopMargin();
@@ -319,16 +319,16 @@ float ThreadTrack::GetHeight() const {
   bool gap_between_tracks_and_timers =
       (!thread_state_bar_->IsEmpty() || !event_bar_->IsEmpty() || !tracepoint_bar_->IsEmpty()) &&
       (depth > 0);
-  return GetHeaderHeight() +
-         (gap_between_tracks_and_timers ? layout_->GetSpaceBetweenTracksAndThread() : 0) +
+  return GetHeightAboveTimers() +
+         (gap_between_tracks_and_timers ? layout_->GetSpaceBetweenThreadPanes() : 0) +
          layout_->GetTextBoxHeight() * depth + layout_->GetTrackContentBottomMargin();
 }
 
-float ThreadTrack::GetHeaderHeight() const {
+float ThreadTrack::GetHeightAboveTimers() const {
   const float thread_state_track_height = layout_->GetThreadStateTrackHeight();
   const float event_track_height = layout_->GetEventTrackHeightFromTid(GetThreadId());
   const float tracepoint_track_height = layout_->GetEventTrackHeightFromTid(GetThreadId());
-  const float space_between_subtracks = layout_->GetSpaceBetweenTracksAndThread();
+  const float space_between_subtracks = layout_->GetSpaceBetweenThreadPanes();
 
   float header_height = layout_->GetTrackTabHeight() + layout_->GetTrackContentTopMargin();
   int track_count = 0;
@@ -354,8 +354,8 @@ float ThreadTrack::GetHeaderHeight() const {
 float ThreadTrack::GetYFromDepth(uint32_t depth) const {
   bool gap_between_tracks_and_timers =
       !thread_state_bar_->IsEmpty() || !event_bar_->IsEmpty() || !tracepoint_bar_->IsEmpty();
-  return GetPos()[1] + GetHeaderHeight() +
-         (gap_between_tracks_and_timers ? layout_->GetSpaceBetweenTracksAndThread() : 0) +
+  return GetPos()[1] + GetHeightAboveTimers() +
+         (gap_between_tracks_and_timers ? layout_->GetSpaceBetweenThreadPanes() : 0) +
          GetDefaultBoxHeight() * static_cast<float>(depth);
 }
 

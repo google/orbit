@@ -71,11 +71,11 @@ FrameTrack::FrameTrack(CaptureViewElement* parent,
 }
 
 float FrameTrack::GetHeight() const {
-  return GetHeaderHeight() + GetMaximumBoxHeight() + layout_->GetTrackContentBottomMargin();
+  return GetHeightAboveTimers() + GetMaximumBoxHeight() + layout_->GetTrackContentBottomMargin();
 }
 
 float FrameTrack::GetYFromTimer(const TimerInfo& timer_info) const {
-  return GetPos()[1] + GetHeaderHeight() +
+  return GetPos()[1] + GetHeightAboveTimers() +
          (GetMaximumBoxHeight() - GetDynamicBoxHeight(timer_info));
 }
 
@@ -223,7 +223,7 @@ void FrameTrack::DoDraw(Batcher& batcher, TextRenderer& text_renderer,
   const Vec2 pos = GetPos();
 
   const float x = pos[0];
-  const float y = pos[1] + GetHeaderHeight() + GetMaximumBoxHeight() - GetAverageBoxHeight();
+  const float y = pos[1] + GetHeightAboveTimers() + GetMaximumBoxHeight() - GetAverageBoxHeight();
   Vec2 from(x, y);
   Vec2 to(x + GetWidth(), y);
   float text_z = GlCanvas::kZValueTrackText;

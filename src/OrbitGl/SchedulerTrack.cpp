@@ -44,7 +44,7 @@ void SchedulerTrack::OnTimer(const orbit_client_protos::TimerInfo& timer_info) {
 
 float SchedulerTrack::GetHeight() const {
   uint32_t num_gaps = std::max(GetDepth() - 1, 0u);
-  return GetHeaderHeight() + (GetDepth() * layout_->GetTextCoresHeight()) +
+  return GetHeightAboveTimers() + (GetDepth() * layout_->GetTextCoresHeight()) +
          (num_gaps * layout_->GetSpaceBetweenCores()) + layout_->GetTrackContentBottomMargin();
 }
 
@@ -86,7 +86,7 @@ Color SchedulerTrack::GetTimerColor(const TimerInfo& timer_info, bool is_selecte
 
 float SchedulerTrack::GetYFromTimer(const TimerInfo& timer_info) const {
   uint32_t num_gaps = timer_info.depth();
-  return GetPos()[1] + GetHeaderHeight() +
+  return GetPos()[1] + GetHeightAboveTimers() +
          (layout_->GetTextCoresHeight() * static_cast<float>(timer_info.depth())) +
          num_gaps * layout_->GetSpaceBetweenCores();
 }
