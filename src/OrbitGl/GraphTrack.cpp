@@ -38,23 +38,26 @@ GraphTrack<Dimension>::GraphTrack(CaptureViewElement* parent,
       series_{series_names, series_value_decimal_digits, std::move(series_value_units)} {}
 
 template <size_t Dimension>
+bool GraphTrack<Dimension>::HasLegend() const {
+  return !IsCollapsed() && Dimension > 1;
+}
+
+template <size_t Dimension>
 float GraphTrack<Dimension>::GetHeight() const {
-  // Top content margin is counted twice because it it inserted before and after the legend
-  float height = layout_->GetTrackTabHeight() + layout_->GetTrackContentTopMargin() * 2 +
-                 GetLegendHeight() + GetGraphContentHeight() +
-                 layout_->GetTrackContentBottomMargin();
-  return height;
+  // Top content margin is counted twice when there are legends because it is inserted above and
+  // below the legend.
+  float track_content_top_margin = (HasLegend() ? 2.f : 1.f) * layout_->GetTrackContentTopMargin();
+
+  return layout_->GetTrackTabHeight() + track_content_top_margin + GetLegendHeight() +
+         GetGraphContentHeight() + layout_->GetTrackContentBottomMargin();
 }
 
 template <size_t Dimension>
 float GraphTrack<Dimension>::GetLegendHeight() const {
-  if (IsCollapsed() || Dimension <= 1) {
-    return 0;
-  }
   // This is a bit of an arbitrary choice - I don't want to introduce an additional layout
   // parameter just for the legend size, but it should be smaller than all regular textboxes
   // across Orbit.
-  return layout_->GetTextBoxHeight() / 2.f;
+  return HasLegend() ? layout_->GetTextBoxHeight() / 2.f : 0;
 }
 
 template <size_t Dimension>
@@ -75,7 +78,7 @@ void GraphTrack<Dimension>::DoDraw(Batcher& batcher, TextRenderer& text_renderer
   const Color kTransparentWhite(255, 255, 255, 180);
   DrawLabel(batcher, text_renderer, Vec2(point_x, point_y), text, kBlack, kTransparentWhite);
 
-  if (Dimension == 1) return;
+  if (!HasLegend()) return;
 
   // Draw legends
   const Color kWhite(255, 255, 255, 255);
