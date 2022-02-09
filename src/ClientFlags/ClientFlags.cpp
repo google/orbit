@@ -54,11 +54,14 @@ ABSL_FLAG(bool, enforce_full_redraw, false,
           "Enforce full redraw every frame (used for performance measurements)");
 
 // VSI
-ABSL_FLAG(std::string, connection_target, "",
-          "Instance and process in the form <pid>@<instance>, where <instance> is either an "
-          "instance ID or an instance display name. Specify this to skip the connection setup and "
-          "open the main window instead. If either the instance or the process ID can't be found "
-          "or deployment is aborted by the user Orbit will exit with return code -1 immediately.");
+ABSL_FLAG(std::string, target_process, "",
+          "Process name or path. Specify this together with --target_instance to skip the "
+          "connection setup and open the main window instead. If the process can't be found or "
+          "deployment is aborted by the user Orbit will exit with return code -1 immediately.");
+ABSL_FLAG(std::string, target_instance, "",
+          "Instance name or id. Specify this together with --target_process to skip the "
+          "connection setup and open the main window instead. If the instance can't be found or "
+          "deployment is aborted by the user Orbit will exit with return code -1 immediately.");
 ABSL_FLAG(std::vector<std::string>, additional_symbol_paths, {},
           "Additional local symbol locations (comma-separated)");
 

@@ -20,27 +20,26 @@
 namespace orbit_session_setup {
 
 ConnectToTargetDialog::ConnectToTargetDialog(
-    SshConnectionArtifacts* ssh_connection_artifacts, const QString& instance_id_or_name,
-    uint32_t process_id, orbit_metrics_uploader::MetricsUploader* metrics_uploader, QWidget* parent)
+    SshConnectionArtifacts* ssh_connection_artifacts, const ConnectionTarget& target,
+    orbit_metrics_uploader::MetricsUploader* metrics_uploader, QWidget* parent)
     : QDialog{parent, Qt::Window},
       ui_(std::make_unique<Ui::ConnectToTargetDialog>()),
       ssh_connection_artifacts_(ssh_connection_artifacts),
-      instance_id_or_name_(instance_id_or_name),
-      process_id_(process_id),
+      target_(target),
       metrics_uploader_(metrics_uploader),
       main_thread_executor_(orbit_qt_utils::MainThreadExecutorImpl::Create()) {
   ORBIT_CHECK(ssh_connection_artifacts != nullptr);
 
   ui_->setupUi(this);
-  ui_->instanceIdLabel->setText(instance_id_or_name);
-  ui_->processIdLabel->setText(QString::number(process_id));
+  ui_->instanceIdLabel->setText(target_.instance_name_or_id);
+  ui_->processIdLabel->setText(target_.process_name_or_path);
 }
 
 ConnectToTargetDialog::~ConnectToTargetDialog() {}
 
 std::optional<TargetConfiguration> ConnectToTargetDialog::Exec() {
-  ORBIT_LOG("Trying to establish a connection to specified target %s:%d",
-            instance_id_or_name_.toStdString(), process_id_);
+  ORBIT_LOG("Trying to establish a connection to process \"%s\" on instance \"%s\"",
+            target_.process_name_or_path.toStdString(), target_.instance_name_or_id.toStdString());
 
   auto ggp_client_result = orbit_ggp::CreateClient();
   if (ggp_client_result.has_error()) {
@@ -51,8 +50,8 @@ std::optional<TargetConfiguration> ConnectToTargetDialog::Exec() {
 
   SetStatusMessage("Loading encryption credentials for instance...");
 
-  auto process_future = ggp_client_->GetSshInfoAsync(instance_id_or_name_, std::nullopt);
-  auto instance_future = ggp_client_->DescribeInstanceAsync(instance_id_or_name_);
+  auto process_future = ggp_client_->GetSshInfoAsync(target_.instance_name_or_id, std::nullopt);
+  auto instance_future = ggp_client_->DescribeInstanceAsync(target_.instance_name_or_id);
   auto joined_future = orbit_base::JoinFutures(process_future, instance_future);
 
   std::optional<TargetConfiguration> target;
@@ -95,14 +94,15 @@ ErrorMessageOr<StadiaTarget> ConnectToTargetDialog::OnAsyncDataAvailable(
   connection_data.grpc_channel_ = CreateGrpcChannel(grpc_port.grpc_port);
 
   OUTCOME_TRY(connection_data.process_data_,
-              FindSpecifiedProcess(connection_data.grpc_channel_, process_id_));
+              FindSpecifiedProcess(connection_data.grpc_channel_, target_.process_name_or_path));
 
   return CreateTarget(std::move(connection_data), std::move(instance));
 }
 
 StadiaTarget ConnectToTargetDialog::CreateTarget(ConnectionData result,
                                                  orbit_ggp::Instance instance) const {
-  ORBIT_CHECK(instance.id == instance_id_or_name_ || instance.display_name == instance_id_or_name_);
+  ORBIT_CHECK(instance.id == target_.instance_name_or_id ||
+              instance.display_name == target_.instance_name_or_id);
   ORBIT_CHECK(result.grpc_channel_ != nullptr);
   ORBIT_CHECK(result.service_deploy_manager_ != nullptr);
   ORBIT_CHECK(result.process_data_ != nullptr);
@@ -136,7 +136,7 @@ ConnectToTargetDialog::DeployOrbitService(
 
 ErrorMessageOr<std::unique_ptr<orbit_client_data::ProcessData>>
 ConnectToTargetDialog::FindSpecifiedProcess(std::shared_ptr<grpc::Channel> grpc_channel,
-                                            uint32_t process_id) {
+                                            const QString& process_name_or_path) {
   ORBIT_CHECK(grpc_channel != nullptr);
 
   orbit_client_services::ProcessClient client(grpc_channel);
@@ -145,14 +145,17 @@ ConnectToTargetDialog::FindSpecifiedProcess(std::shared_ptr<grpc::Channel> grpc_
     return ErrorMessage("Unknown error: Could not retrieve list of running processes.");
   }
 
+  std::string process_name_or_path_stdstring = process_name_or_path.toStdString();
   for (auto& process : process_list.value()) {
-    if (process.pid() == process_id) {
+    if (process.full_path() == process_name_or_path_stdstring ||
+        process.name() == process_name_or_path_stdstring) {
       return std::make_unique<orbit_client_data::ProcessData>(process);
     }
   }
 
   return ErrorMessage(
-      absl::StrFormat("PID %d was not found in the list of running processes.", process_id));
+      absl::StrFormat("Process \"%s\" was not found in the list of running processes.",
+                      process_name_or_path_stdstring));
 }
 
 void ConnectToTargetDialog::SetStatusMessage(const QString& message) {

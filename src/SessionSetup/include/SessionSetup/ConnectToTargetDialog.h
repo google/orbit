@@ -23,6 +23,14 @@ class ConnectToTargetDialog;  // IWYU pragma: keep
 }
 namespace orbit_session_setup {
 
+struct ConnectionTarget {
+  QString process_name_or_path;
+  QString instance_name_or_id;
+
+  ConnectionTarget(const QString& process_name_or_path, const QString& instance_name_or_id)
+      : process_name_or_path(process_name_or_path), instance_name_or_id(instance_name_or_id) {}
+};
+
 // Simple dialog to show progress while connecting to a specified instance id and process id.
 // This takes care of establishing the connection and deploying Orbit service, and will either
 // return a TargetConfiguration or nullopt on Exec. If a nullopt is returned, an error was
@@ -32,7 +40,7 @@ class ConnectToTargetDialog : public QDialog {
 
  public:
   explicit ConnectToTargetDialog(SshConnectionArtifacts* ssh_connection_artifacts,
-                                 const QString& instance_id, uint32_t process_id,
+                                 const ConnectionTarget& target,
                                  orbit_metrics_uploader::MetricsUploader* metrics_uploader,
                                  QWidget* parent = nullptr);
   ~ConnectToTargetDialog() override;
@@ -44,8 +52,7 @@ class ConnectToTargetDialog : public QDialog {
 
   SshConnectionArtifacts* ssh_connection_artifacts_;
 
-  QString instance_id_or_name_;
-  uint32_t process_id_;
+  ConnectionTarget target_;
   orbit_metrics_uploader::MetricsUploader* metrics_uploader_;
 
   struct ConnectionData {
@@ -67,7 +74,8 @@ class ConnectToTargetDialog : public QDialog {
   [[nodiscard]] ErrorMessageOr<orbit_session_setup::ServiceDeployManager::GrpcPort>
   DeployOrbitService(orbit_session_setup::ServiceDeployManager* service_deploy_manager);
   [[nodiscard]] ErrorMessageOr<std::unique_ptr<orbit_client_data::ProcessData>>
-  FindSpecifiedProcess(std::shared_ptr<grpc::Channel> grpc_channel, uint32_t process_id);
+  FindSpecifiedProcess(std::shared_ptr<grpc::Channel> grpc_channel,
+                       const QString& process_name_or_path);
 
   void SetStatusMessage(const QString& message);
   void LogAndDisplayError(const ErrorMessage& message);
