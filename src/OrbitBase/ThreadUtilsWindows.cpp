@@ -7,6 +7,7 @@
 
 #include <string>
 
+#include "OrbitBase/GetProcAddress.h"
 #include "OrbitBase/Logging.h"
 #include "OrbitBase/ThreadUtils.h"
 
@@ -63,16 +64,6 @@ uint32_t ToNativeProcessId(uint32_t pid) {
 
 std::string GetThreadName(uint32_t tid) { return GetThreadNameNative(ToNativeThreadId(tid)); }
 
-template <typename FunctionPrototypeT>
-static FunctionPrototypeT GetProcAddress(const std::string& library, const std::string& procedure) {
-  HMODULE module_handle = LoadLibraryA(library.c_str());
-  if (module_handle == nullptr) {
-    ORBIT_ERROR("Could not find procedure %s in %s", procedure, library);
-    return nullptr;
-  }
-  return reinterpret_cast<FunctionPrototypeT>(::GetProcAddress(module_handle, procedure.c_str()));
-}
-
 std::string GetThreadNameNative(uint32_t tid) {
   static const std::string kEmptyString;
 
@@ -80,8 +71,8 @@ std::string GetThreadNameNative(uint32_t tid) {
   if (tid == 0) return "System";
 
   // Find "GetThreadDescription" procedure.
-  static auto get_thread_description =
-      GetProcAddress<HRESULT(WINAPI*)(HANDLE, PWSTR*)>("kernel32.dll", "GetThreadDescription");
+  static auto get_thread_description = orbit_base::GetProcAddress<HRESULT(WINAPI*)(HANDLE, PWSTR*)>(
+      "kernel32.dll", "GetThreadDescription");
   if (get_thread_description == nullptr) {
     ORBIT_ERROR("Getting thread name from id %u with proc[%llx]", tid, get_thread_description);
     return kEmptyString;
