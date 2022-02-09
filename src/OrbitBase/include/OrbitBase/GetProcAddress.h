@@ -5,43 +5,30 @@
 #ifndef ORBIT_BASE_GET_PROC_ADDRESS_H_
 #define ORBIT_BASE_GET_PROC_ADDRESS_H_
 
-#include <Windows.h>
+#ifdef WIN32
 
 #include <string>
 
-#include "GetLastError.h"
 #include "Logging.h"
-#include "UniqueResource.h"
-
-// clang-format off
-#include <libloaderapi.h>
-// clang-format on
+#include "Result.h"
 
 namespace orbit_base {
 
-inline void* GetProcAddress(const std::string& module, const std::string& function) {
-  HMODULE module_handle = LoadLibraryA(module.c_str());
-  if (module_handle == nullptr) {
-    ORBIT_ERROR("Could not load module \"%s\" while looking for function \"%s\": %s", module,
-                function, GetLastErrorAsString());
-    return nullptr;
-  }
-  orbit_base::unique_resource handle_closer(module_handle, ::FreeLibrary);
+// Returns the address of a function in the specified loaded module.
+ErrorMessageOr<void*> GetProcAddress(const std::string& module, const std::string& function);
 
-  void* address = ::GetProcAddress(module_handle, function.c_str());
-  if (address == nullptr) {
-    ORBIT_ERROR("Looking for function \"%s\" in module \"%s\": %s", function, module,
-                GetLastErrorAsString());
-  }
-
-  return address;
-}
-
+// Utility function to cast the return of GetProcAddress into the specified function pointer type.
 template <typename FunctionPrototypeT>
 inline FunctionPrototypeT GetProcAddress(const std::string& module, const std::string& function) {
-  return reinterpret_cast<FunctionPrototypeT>(GetProcAddress(module, function));
+  auto result = GetProcAddress(module, function);
+  if (result.has_error()) {
+    ORBIT_ERROR("Calling GetProcAddress: %s", result.error().message());
+  }
+  return reinterpret_cast<FunctionPrototypeT>(result.value());
 }
 
 }  // namespace orbit_base
+
+#endif  // WIN32
 
 #endif  // ORBIT_BASE_GET_PROC_ADDRESS_H_

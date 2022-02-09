@@ -2,12 +2,17 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#include <gmock/gmock.h>
+#ifdef WIN32
+
 #include <gtest/gtest.h>
 
 #include "OrbitBase/GetProcAddress.h"
+#include "TestUtils/TestUtils.h"
+#include "Windows.h"
 
 namespace orbit_base {
+
+using orbit_test_utils::HasError;
 
 TEST(GetProcAddress, FindExistingFunctions) {
   static auto set_thread_description =
@@ -16,21 +21,18 @@ TEST(GetProcAddress, FindExistingFunctions) {
 
   static auto fatal_exit = GetProcAddress<void(WINAPI*)(int)>("kernel32.dll", "FatalExit");
   EXPECT_NE(fatal_exit, nullptr);
-
-  static auto is_zoomed = GetProcAddress<BOOL(WINAPI*)(HWND)>("user32.dll", "IsZoomed");
-  EXPECT_NE(is_zoomed, nullptr);
 }
 
 TEST(GetProcAddress, NonExistingModule) {
-  static auto invalid_function =
-      GetProcAddress<void (*)()>("non_existing.dll", "non_existing_function_name");
-  EXPECT_EQ(invalid_function, nullptr);
+  EXPECT_THAT(GetProcAddress("non_existing.dll", "non_existing_function_name"),
+              HasError("Could not find module"));
 }
 
 TEST(GetProcAddress, NonExistingFunction) {
-  static auto invalid_function =
-      GetProcAddress<void (*)()>("kernel32.dll", "non_existing_function_name");
-  EXPECT_EQ(invalid_function, nullptr);
+  EXPECT_THAT(GetProcAddress("kernel32.dll", "non_existing_function_name"),
+              HasError("Could not find function"));
 }
 
 }  // namespace orbit_base
+
+#endif  // WIN32
