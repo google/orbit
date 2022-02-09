@@ -39,23 +39,35 @@ const char* kProcessPath = "/path/to/process_name";
 std::vector<orbit_grpc_protos::ProcessInfo> SetupTestProcessList() {
   using orbit_grpc_protos::ProcessInfo;
 
-  auto expected_target_process = ProcessInfo();
+  ProcessInfo expected_target_process;
   expected_target_process.set_pid(kPid);
   expected_target_process.set_name(kProcessName);
   expected_target_process.set_full_path(kProcessPath);
 
-  auto lower_pid_process = ProcessInfo();
-  lower_pid_process.set_pid(kPid - 1);
-  lower_pid_process.set_name(kProcessName);
-  lower_pid_process.set_full_path(kProcessPath);
+  ProcessInfo lower_pid_process1;
+  lower_pid_process1.set_pid(kPid - 1);
+  lower_pid_process1.set_name(kProcessName);
+  lower_pid_process1.set_full_path(kProcessPath);
 
-  auto different_process = ProcessInfo();
-  different_process.set_pid(kPid + 1);
-  different_process.set_name("some_other_process");
-  different_process.set_full_path("/path/to/some_other_process");
+  ProcessInfo lower_pid_process2;
+  lower_pid_process2.set_pid(kPid - 2);
+  lower_pid_process2.set_name(kProcessName);
+  lower_pid_process2.set_full_path(kProcessPath);
 
-  return {different_process, lower_pid_process, expected_target_process, different_process,
-          lower_pid_process};
+  ProcessInfo different_process1;
+  different_process1.set_pid(kPid + 1);
+  different_process1.set_name("some_other_process");
+  different_process1.set_full_path("/path/to/some_other_process");
+
+  ProcessInfo different_process2;
+  different_process1.set_pid(kPid + 2);
+  different_process1.set_name("some_other_process");
+  different_process1.set_full_path("/path/to/some_other_process");
+
+  // Try to add different combinations of PID sorting order and different process names before and
+  // after the expected target process
+  return {different_process1, lower_pid_process1, expected_target_process, different_process2,
+          lower_pid_process2};
 }
 
 TEST(SessionSetupUtils, TryToFindProcessDataFindsProcessByName) {

@@ -20,8 +20,8 @@ namespace orbit_session_setup {
 [[nodiscard]] orbit_ssh::Credentials CredentialsFromSshInfo(const orbit_ggp::SshInfo& ssh_info);
 [[nodiscard]] std::shared_ptr<grpc::Channel> CreateGrpcChannel(uint16_t port);
 [[nodiscard]] std::unique_ptr<orbit_client_data::ProcessData> TryToFindProcessData(
-    const std::vector<orbit_grpc_protos::ProcessInfo>& process_list,
-    const std::string process_name_or_path);
+    std::vector<orbit_grpc_protos::ProcessInfo> process_list,
+    const std::string& process_name_or_path);
 
 }  // namespace orbit_session_setup
 
