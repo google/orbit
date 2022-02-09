@@ -57,7 +57,9 @@ ABSL_FLAG(bool, enforce_full_redraw, false,
 ABSL_FLAG(std::string, target_process, "",
           "Process name or path. Specify this together with --target_instance to skip the "
           "connection setup and open the main window instead. If the process can't be found or "
-          "deployment is aborted by the user Orbit will exit with return code -1 immediately.");
+          "deployment is aborted by the user Orbit will exit with return code -1 immediately. "
+          "If multiple instances of the same process exist, the one with the highest PID will be "
+          "chosen.");
 ABSL_FLAG(std::string, target_instance, "",
           "Instance name or id. Specify this together with --target_process to skip the "
           "connection setup and open the main window instead. If the instance can't be found or "
