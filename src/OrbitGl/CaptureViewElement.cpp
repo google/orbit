@@ -53,10 +53,10 @@ void CaptureViewElement::UpdatePrimitives(Batcher& batcher, TextRenderer& text_r
 }
 
 void CaptureViewElement::UpdateLayout() {
+  DoUpdateLayout();
   for (CaptureViewElement* child : GetAllChildren()) {
     child->UpdateLayout();
   }
-  DoUpdateLayout();
 }
 
 void CaptureViewElement::SetPos(float x, float y) {
