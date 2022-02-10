@@ -35,7 +35,7 @@ class SymbolHelper {
   [[nodiscard]] ErrorMessageOr<fs::path> FindSymbolsFileLocally(
       const fs::path& module_path, const std::string& build_id,
       const orbit_grpc_protos::ModuleInfo::ObjectFileType& object_file_type,
-      absl::Span<const fs::path> directories) const;
+      absl::Span<const fs::path> paths) const;
   [[nodiscard]] ErrorMessageOr<fs::path> FindSymbolsInCache(const fs::path& module_path,
                                                             const std::string& build_id) const;
   [[nodiscard]] static ErrorMessageOr<orbit_grpc_protos::ModuleSymbols> LoadSymbolsFromFile(
