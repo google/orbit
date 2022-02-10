@@ -122,70 +122,102 @@ TEST(ReadSymbolsFile, OnePathTrailingWhitespace) {
 
 TEST(SymbolHelper, FindSymbolsFileLocally) {
   const std::filesystem::path testdata_directory = orbit_test::GetTestdataDir();
+  const fs::path no_symbols_elf = testdata_directory / "no_symbols_elf";
+  const fs::path no_symbols_elf_debug = testdata_directory / "no_symbols_elf.debug";
+  const std::string no_symbols_elf_build_id = "b5413574bbacec6eacb3b89b1012d0e2cd92ec6b";
+  const fs::path dllmain_dll = testdata_directory / "dllmain.dll";
+  const fs::path dllmain_pdb = testdata_directory / "dllmain.pdb";
+  const std::string dllmain_build_id = "efaecd92f773bb4ebcf213b84f43b322-3";
+
   SymbolHelper symbol_helper("", {});
-  {  // Find .debug successfully
-    const fs::path file_path = testdata_directory / "no_symbols_elf";
-    const fs::path symbols_path = testdata_directory / "no_symbols_elf.debug";
 
-    const auto symbols_path_result =
-        symbol_helper.FindSymbolsFileLocally(file_path, "b5413574bbacec6eacb3b89b1012d0e2cd92ec6b",
-                                             ModuleInfo::kElfFile, {testdata_directory});
-    ASSERT_THAT(symbols_path_result, HasValue());
-    EXPECT_EQ(symbols_path_result.value(), symbols_path);
+  {  // Find .debug successfully - in directory
+    const auto symbols_path_result = symbol_helper.FindSymbolsFileLocally(
+        no_symbols_elf, no_symbols_elf_build_id, ModuleInfo::kElfFile, {testdata_directory});
+    EXPECT_THAT(symbols_path_result, HasValue(no_symbols_elf_debug));
   }
 
-  {  // Find .pdb successfully
-    const fs::path file_path = testdata_directory / "dllmain.dll";
-    const fs::path symbols_path = testdata_directory / "dllmain.pdb";
-
-    const auto symbols_path_result =
-        symbol_helper.FindSymbolsFileLocally(file_path, "efaecd92f773bb4ebcf213b84f43b322-3",
-                                             ModuleInfo::kCoffFile, {testdata_directory});
-    ASSERT_THAT(symbols_path_result, HasValue());
-    EXPECT_EQ(symbols_path_result.value(), symbols_path);
+  {  // Find .debug successfully - directly
+    const auto symbols_path_result = symbol_helper.FindSymbolsFileLocally(
+        no_symbols_elf, no_symbols_elf_build_id, ModuleInfo::kElfFile, {no_symbols_elf_debug});
+    EXPECT_THAT(symbols_path_result, HasValue(no_symbols_elf_debug));
   }
 
-  {  // Non existing file
+  {  // Find .pdb successfully - in directory
+    const auto symbols_path_result = symbol_helper.FindSymbolsFileLocally(
+        dllmain_dll, dllmain_build_id, ModuleInfo::kCoffFile, {testdata_directory});
+    EXPECT_THAT(symbols_path_result, HasValue(dllmain_pdb));
+  }
+
+  {  // Find .pdb successfully - directly
+    const auto symbols_path_result = symbol_helper.FindSymbolsFileLocally(
+        dllmain_dll, dllmain_build_id, ModuleInfo::kCoffFile, {dllmain_pdb});
+    EXPECT_THAT(symbols_path_result, HasValue(dllmain_pdb));
+  }
+
+  {  // Non existing file (no matching file can be found for module filename)
     const fs::path non_existing_path = "file.not.exist";
     const auto symbols_path_result = symbol_helper.FindSymbolsFileLocally(
         non_existing_path, "irrelevant build id", ModuleInfo::kElfFile, {testdata_directory});
     EXPECT_THAT(symbols_path_result, HasError("Could not find"));
   }
 
-  {  // Find .debug fails because of wrong build id
-    const fs::path file_path = testdata_directory / "no_symbols_elf";
+  {  // Directly provided symbols file does not exist
+    const fs::path symbols_path = testdata_directory / "file.not.exist";
     const auto symbols_path_result = symbol_helper.FindSymbolsFileLocally(
-        file_path, "wrong build id", ModuleInfo::kElfFile, {testdata_directory});
+        "irrelevant module path", "irrelevant build id", ModuleInfo::kElfFile, {symbols_path});
     EXPECT_THAT(symbols_path_result, HasError("Could not find"));
   }
 
-  {  // Find .pdb fails because of wrong build id
-    const fs::path file_path = testdata_directory / "dllmain.dll";
+  {  // Find .debug fails because of wrong build id - in directory
     const auto symbols_path_result = symbol_helper.FindSymbolsFileLocally(
-        file_path, "wrong build id", ModuleInfo::kCoffFile, {testdata_directory});
+        no_symbols_elf, "wrong build id", ModuleInfo::kElfFile, {testdata_directory});
     EXPECT_THAT(symbols_path_result, HasError("Could not find"));
   }
 
-  {  // Find .debug fails because of empty build id
-    const fs::path file_path = testdata_directory / "no_symbols_elf";
+  {  // Find .debug fails because of wrong build id - directly
+
     const auto symbols_path_result = symbol_helper.FindSymbolsFileLocally(
-        file_path, "", ModuleInfo::kElfFile, {testdata_directory});
+        no_symbols_elf, "wrong build id", ModuleInfo::kElfFile, {no_symbols_elf_debug});
+    EXPECT_THAT(symbols_path_result, HasError("Could not find"));
+  }
+
+  {  // Find .pdb fails because of wrong build id - in directory
+    const auto symbols_path_result = symbol_helper.FindSymbolsFileLocally(
+        dllmain_dll, "wrong build id", ModuleInfo::kCoffFile, {testdata_directory});
+    EXPECT_THAT(symbols_path_result, HasError("Could not find"));
+  }
+
+  {  // Find .pdb fails because of wrong build id - directly
+    const auto symbols_path_result = symbol_helper.FindSymbolsFileLocally(
+        dllmain_dll, "wrong build id", ModuleInfo::kCoffFile, {dllmain_pdb});
+    EXPECT_THAT(symbols_path_result, HasError("Could not find"));
+  }
+
+  {  // Find .debug fails because of module does not have build id
+    const auto symbols_path_result = symbol_helper.FindSymbolsFileLocally(
+        no_symbols_elf, "", ModuleInfo::kElfFile, {testdata_directory});
     EXPECT_THAT(symbols_path_result, HasError("Could not find"));
     EXPECT_THAT(symbols_path_result, HasError("does not contain a build id"));
   }
 
-  {  // Find .pdb fails because of empty build id
-    const fs::path file_path = testdata_directory / "dllmain.dll";
+  {  // Find .pdb fails because of module does not have build id
     const auto symbols_path_result = symbol_helper.FindSymbolsFileLocally(
-        file_path, "", ModuleInfo::kCoffFile, {testdata_directory});
+        dllmain_dll, "", ModuleInfo::kCoffFile, {testdata_directory});
     EXPECT_THAT(symbols_path_result, HasError("does not contain a build id"));
   }
 
   {  // Find .debug fails because of object_file_type is wrong
-    const fs::path file_path = testdata_directory / "no_symbols_elf";
-    const auto symbols_path_result =
-        symbol_helper.FindSymbolsFileLocally(file_path, "b5413574bbacec6eacb3b89b1012d0e2cd92ec6b",
-                                             ModuleInfo::kCoffFile, {testdata_directory});
+    const auto symbols_path_result = symbol_helper.FindSymbolsFileLocally(
+        no_symbols_elf, no_symbols_elf_build_id, ModuleInfo::kCoffFile, {testdata_directory});
+    EXPECT_THAT(
+        symbols_path_result,
+        HasError("Could not find a file with debug symbols on the local machine for module"));
+  }
+
+  {  // Find .pdb fails because of object_file_type is wrong
+    const auto symbols_path_result = symbol_helper.FindSymbolsFileLocally(
+        dllmain_dll, dllmain_build_id, ModuleInfo::kElfFile, {testdata_directory});
     EXPECT_THAT(
         symbols_path_result,
         HasError("Could not find a file with debug symbols on the local machine for module"));
