@@ -1,0 +1,207 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>SymbolErrorDialog</class>
+ <widget class="QDialog" name="SymbolErrorDialog">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>391</width>
+    <height>296</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>Dialog</string>
+  </property>
+  <layout class="QGridLayout" name="gridLayout">
+   <item row="0" column="0">
+    <layout class="QVBoxLayout" name="verticalLayout" stretch="1,0,0,0,3,0">
+     <item>
+      <widget class="QLabel" name="label">
+       <property name="text">
+        <string>Orbit did not find local or remote symbols for module:</string>
+       </property>
+       <property name="wordWrap">
+        <bool>true</bool>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <layout class="QHBoxLayout" name="horizontalLayout" stretch="1">
+       <item>
+        <widget class="QLabel" name="moduleNameLabel">
+         <property name="styleSheet">
+          <string notr="true">font-weight: bold</string>
+         </property>
+        </widget>
+       </item>
+      </layout>
+     </item>
+     <item>
+      <layout class="QHBoxLayout" name="horizontalLayout_3">
+       <item>
+        <widget class="QPushButton" name="showErrorButton">
+         <property name="styleSheet">
+          <string notr="true">border: none; color: #4F9CFF; font-weight: bold; text-decoration: underline</string>
+         </property>
+         <property name="text">
+          <string>Show detailed error</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <spacer name="horizontalSpacer_2">
+         <property name="orientation">
+          <enum>Qt::Horizontal</enum>
+         </property>
+         <property name="sizeHint" stdset="0">
+          <size>
+           <width>40</width>
+           <height>20</height>
+          </size>
+         </property>
+        </spacer>
+       </item>
+      </layout>
+     </item>
+     <item>
+      <widget class="QPlainTextEdit" name="errorPlainTextEdit">
+       <property name="visible">
+        <bool>false</bool>
+       </property>
+       <property name="readOnly">
+        <bool>true</bool>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QLabel" name="label_2">
+       <property name="text">
+        <string>Orbit attemps to load symbols to accurately label functions with their names, resolve callstack and more. When symbols can't be loaded, function names will be displayed as ???.</string>
+       </property>
+       <property name="wordWrap">
+        <bool>true</bool>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <layout class="QHBoxLayout" name="horizontalLayout_2">
+       <item>
+        <spacer name="horizontalSpacer">
+         <property name="orientation">
+          <enum>Qt::Horizontal</enum>
+         </property>
+         <property name="sizeHint" stdset="0">
+          <size>
+           <width>40</width>
+           <height>20</height>
+          </size>
+         </property>
+        </spacer>
+       </item>
+       <item>
+        <widget class="QPushButton" name="cancelButton">
+         <property name="text">
+          <string>Cancel</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QPushButton" name="tryAgainButton">
+         <property name="text">
+          <string>Try Again</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QPushButton" name="AddSymbolLocationButton">
+         <property name="text">
+          <string>Add Symbol Location</string>
+         </property>
+        </widget>
+       </item>
+      </layout>
+     </item>
+    </layout>
+   </item>
+  </layout>
+ </widget>
+ <tabstops>
+  <tabstop>AddSymbolLocationButton</tabstop>
+  <tabstop>showErrorButton</tabstop>
+  <tabstop>tryAgainButton</tabstop>
+  <tabstop>cancelButton</tabstop>
+ </tabstops>
+ <resources/>
+ <connections>
+  <connection>
+   <sender>cancelButton</sender>
+   <signal>clicked()</signal>
+   <receiver>SymbolErrorDialog</receiver>
+   <slot>reject()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>163</x>
+     <y>275</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>75</x>
+     <y>279</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>AddSymbolLocationButton</sender>
+   <signal>clicked()</signal>
+   <receiver>SymbolErrorDialog</receiver>
+   <slot>OnAddSymbolLocationButtonClicked()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>323</x>
+     <y>274</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>344</x>
+     <y>111</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>tryAgainButton</sender>
+   <signal>clicked()</signal>
+   <receiver>SymbolErrorDialog</receiver>
+   <slot>OnTryAgainButtonClicked()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>239</x>
+     <y>272</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>292</x>
+     <y>104</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>showErrorButton</sender>
+   <signal>clicked()</signal>
+   <receiver>SymbolErrorDialog</receiver>
+   <slot>OnShowErrorButtonClicked()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>69</x>
+     <y>95</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>187</x>
+     <y>97</y>
+    </hint>
+   </hints>
+  </connection>
+ </connections>
+ <slots>
+  <slot>OnAddSymbolLocationButtonClicked()</slot>
+  <slot>OnTryAgainButtonClicked()</slot>
+  <slot>OnShowErrorButtonClicked()</slot>
+ </slots>
+</ui>
