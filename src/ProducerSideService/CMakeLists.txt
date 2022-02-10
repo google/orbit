@@ -12,12 +12,25 @@ target_include_directories(ProducerSideService PRIVATE
         ${CMAKE_CURRENT_LIST_DIR}) 
 
 target_sources(ProducerSideService PUBLIC
+        include/ProducerSideService/BuildAndStartProducerSideServer.h
         include/ProducerSideService/ProducerSideServer.h
         include/ProducerSideService/ProducerSideServiceImpl.h)    
         
 target_sources(ProducerSideService PRIVATE
+        BuildAndStartProducerSideServerWithUri.h
         ProducerSideServer.cpp
         ProducerSideServiceImpl.cpp)
+
+if (WIN32)        
+target_sources(ProducerSideService PRIVATE
+        BuildAndStartProducerSideServerWindows.cpp)
+else()
+target_sources(ProducerSideService PRIVATE
+        BuildAndStartProducerSideServerLinux.cpp)
+
+target_link_libraries(ProducerSideService PUBLIC
+        ProducerSideChannel)
+endif()
 
 target_link_libraries(ProducerSideService PUBLIC
         CaptureServiceBase

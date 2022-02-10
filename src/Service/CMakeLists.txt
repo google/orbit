@@ -20,7 +20,6 @@ target_include_directories(OrbitServiceLib PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 target_link_libraries(OrbitServiceLib PUBLIC
         GrpcProtos
         OrbitVersion
-        ProducerSideChannel
         ProducerSideService
 )
 
