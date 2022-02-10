@@ -40,7 +40,7 @@ class HistogramBuilder {
 
   void SetNumberOfBins(size_t bins_num);
 
-  [[nodiscard]] std::unique_ptr<Histogram> Build() const;
+  [[nodiscard]] std::unique_ptr<const Histogram> Build() const;
 
  private:
   friend HistogramBuilderTest;

@@ -22,12 +22,12 @@ TEST(HistogramTest, RiskScoreTest) {
   const uint64_t min = 14015002;
   const uint64_t max = 43843646;
   const size_t data_set_size = 280;
-  Histogram histogram{min, max, bandwidth, data_set_size, counts};
+  const Histogram histogram{min, max, bandwidth, data_set_size, counts};
   EXPECT_NEAR(HistogramRiskScore(histogram), -1.72, 0.01);
 }
 
 TEST(HistogramTest, RiskScoreTestZeroWidth) {
-  Histogram histogram{0, 0, 1, 1, {}};
+  const Histogram histogram{0, 0, 1, 1, {}};
   EXPECT_DOUBLE_EQ(HistogramRiskScore(histogram), 0.0);
 }
 

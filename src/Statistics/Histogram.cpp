@@ -42,7 +42,7 @@ void HistogramBuilder::SetNumberOfBins(size_t bins_num) {
   return (value - min_.value()) / bandwidth_.value();
 }
 
-[[nodiscard]] std::unique_ptr<Histogram> HistogramBuilder::Build() const {
+[[nodiscard]] std::unique_ptr<const Histogram> HistogramBuilder::Build() const {
   const size_t bin_num = ValueToIndex(max_.value()) + 1;
   std::vector<size_t> counts(bin_num, 0UL);
   for (uint64_t value : *data_) {
@@ -55,16 +55,13 @@ void HistogramBuilder::SetNumberOfBins(size_t bins_num) {
 double HistogramRiskScore(const Histogram& histogram) {
   if (histogram.max == histogram.min) return 0.0;
 
-  const double sum_of_squared_frequencies = std::transform_reduce(
-      histogram.counts.begin(), histogram.counts.end(), 0.0,
-      [](const double squared_frequency_1, const double squared_frequency_2) -> double {
-        return squared_frequency_1 + squared_frequency_2;
-      },
-      [&histogram](const uint64_t count) -> double {
-        double frequency =
-            static_cast<double>(count) / static_cast<double>(histogram.data_set_size);
-        return frequency * frequency;
-      });
+  const double sum_of_squared_frequencies =
+      std::transform_reduce(histogram.counts.begin(), histogram.counts.end(), 0.0, std::plus<>(),
+                            [&histogram](const uint64_t count) -> double {
+                              double frequency = static_cast<double>(count) /
+                                                 static_cast<double>(histogram.data_set_size);
+                              return frequency * frequency;
+                            });
 
   const auto bandwidth = static_cast<double>(histogram.bandwidth) /
                          (static_cast<double>(histogram.max) - static_cast<double>(histogram.min));
@@ -74,14 +71,14 @@ double HistogramRiskScore(const Histogram& histogram) {
 
 constexpr int kNumberOfBinsGridSize = 12;
 
-std::unique_ptr<Histogram> BuildHistogram(const std::vector<uint64_t>& data) {
+[[nodiscard]] std::unique_ptr<const Histogram> BuildHistogram(const std::vector<uint64_t>& data) {
   ORBIT_CHECK(!data.empty());
   HistogramBuilder histogram_builder;
   histogram_builder.SetDataSet(&data);
 
   size_t number_of_bins = 1;
   double best_risk_score = std::numeric_limits<double>::max();
-  std::unique_ptr<Histogram> best_histogram;
+  std::unique_ptr<const Histogram> best_histogram;
 
   for (int i = 0; i < kNumberOfBinsGridSize; ++i) {
     histogram_builder.SetNumberOfBins(number_of_bins);

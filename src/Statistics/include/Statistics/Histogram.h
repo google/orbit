@@ -21,14 +21,19 @@ namespace orbit_statistics {
  * `counts[i]` stores the number of elements in i-th bin.
  */
 struct Histogram {
-  const uint64_t min;
-  const uint64_t max;
-  const uint64_t bandwidth;
-  const size_t data_set_size;
-  const std::vector<size_t> counts;
+  uint64_t min;
+  uint64_t max;
+  uint64_t bandwidth;
+  size_t data_set_size;
+  std::vector<size_t> counts;
 };
 
-std::unique_ptr<Histogram> BuildHistogram(const std::vector<uint64_t>& data);
+/**
+ * The function builds multiple histograms with different number of bins,
+ * estiamtes the risk score using `HistogramRiskScore` and returns the histogram
+ * which minimizes it.
+ */
+[[nodiscard]] std::unique_ptr<const Histogram> BuildHistogram(const std::vector<uint64_t>& data);
 }  // namespace orbit_statistics
 
 #endif  // STATISTICS_HISTOGRAM_H_
