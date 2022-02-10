@@ -41,7 +41,8 @@ void orbit_api_start_v1(const char* name, orbit_api_color color, uint64_t group_
 
 [[deprecated]] void orbit_api_start(const char* name, orbit_api_color color) {
   uint64_t return_address = ORBIT_GET_CALLER_PC();
-  EnqueueApiEvent<orbit_api::ApiScopeStart>(name, color, kOrbitDefaultGroupId, return_address);
+  EnqueueApiEvent<orbit_api::ApiScopeStart>(
+      name, color, static_cast<uint64_t>(kOrbitDefaultGroupId), return_address);
 }
 
 void orbit_api_stop() { EnqueueApiEvent<orbit_api::ApiScopeStop>(); }
@@ -158,6 +159,8 @@ void orbit_api_initialize_v2(orbit_api_v2* api_v2) {
   api_v2->track_double = &orbit_api_track_double;
 }
 
+#ifdef __linux
+
 // The functions that follow, with `__attribute__((ms_abi))`, are used to fill the function table
 // `g_orbit_api` when the target was built for Windows and is running on Wine. They simply forward
 // to the Linux versions, and the compiler takes care of converting between calling conventions.
@@ -232,6 +235,8 @@ void orbit_api_initialize_wine_v2(orbit_api_win_v2* api_win_v2) {
   api_win_v2->track_double = &orbit_api_track_double_wine;
 }
 
+#endif  // __linux
+
 }  // namespace
 
 extern "C" {
@@ -239,9 +244,10 @@ extern "C" {
 // The "orbit_api_set_enabled" function is called remotely by OrbitService on every capture start
 // for all api function tables. It is also called on every capture stop to disable the api so that
 // the api calls early out at the call site.
-void orbit_api_set_enabled(uint64_t address, uint64_t api_version, bool enabled) {
+ORBIT_EXPORT void orbit_api_set_enabled(uint64_t address, uint64_t api_version, bool enabled) {
   ORBIT_LOG("%s Orbit API at address %#x, version %u", enabled ? "Enabling" : "Disabling", address,
             api_version);
+
   if (api_version > kOrbitApiVersion) {
     ORBIT_ERROR(
         "Orbit API version in tracee (%u) is newer than the max supported version (%u). "
@@ -276,6 +282,8 @@ void orbit_api_set_enabled(uint64_t address, uint64_t api_version, bool enabled)
   //  avoid any memory allocation). Re-add the call once we have a solution to allow re-entrancy.
 }
 
+#ifdef __linux
+
 void orbit_api_set_enabled_wine(uint64_t address, uint64_t api_version, bool enabled) {
   ORBIT_LOG("%s Orbit API at address %#x, for Windows", enabled ? "Enabling" : "Disabling",
             address);
@@ -308,5 +316,7 @@ void orbit_api_set_enabled_wine(uint64_t address, uint64_t api_version, bool ena
 
   // TODO(b/206359125): Re-add GetCaptureEventProducer() once possible. See above.
 }
+
+#endif  // __linux
 
 }  // extern "C"
