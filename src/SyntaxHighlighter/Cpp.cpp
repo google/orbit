@@ -26,14 +26,14 @@ namespace CppRegex {
 using PatternOption = QRegularExpression::PatternOption;
 
 const QRegularExpression kNumberRegex{
-    "(?:\\b0b[01']+|\\b0x(?:[\\da-f']+(?:\\.[\\da-f']*)?|\\.[\\da-f']+)(?:p[+-]?[\\d']+)?|(?:\\b["
-    "\\d']+(?:\\.[\\d']*)?|\\B\\.[\\d']+)(?:e[+-]?[\\d']+)?)[ful]{0,4}",
+    "((?:\\b0b[01']+|\\b0x(?:[\\da-f']+(?:\\.[\\da-f']*)?|\\.[\\da-f']+)(?:p[+-]?[\\d']+)?|(?:\\b["
+    "\\d']+(?:\\.[\\d']*)?|\\B\\.[\\d']+)(?:e[+-]?[\\d']+)?)[ful]{0,4})",
     PatternOption::CaseInsensitiveOption};
 const QRegularExpression kConstantRegex{
-    "__FILE__|__LINE__|__DATE__|__TIME__|__TIMESTAMP__|__func__|EOF|NULL|SEEK_CUR|SEEK_END|SEEK_"
-    "SET|stdin|stdout|stderr"};
+    "(__FILE__|__LINE__|__DATE__|__TIME__|__TIMESTAMP__|__func__|EOF|NULL|SEEK_CUR|SEEK_END|SEEK_"
+    "SET|stdin|stdout|stderr)"};
 const QRegularExpression kKeywordRegex{
-    "\\b(?:alignas|alignof|asm|auto|bool|break|case|catch|char|char8_t|char16_t|char32_t|class|"
+    "\\b(alignas|alignof|asm|auto|bool|break|case|catch|char|char8_t|char16_t|char32_t|class|"
     "compl|concept|const|consteval|constexpr|constinit|const_cast|continue|co_await|co_return|co_"
     "yield|decltype|default|delete|do|double|dynamic_cast|else|enum|explicit|export|extern|false|"
     "final|float|for|friend|goto|if|import|inline|int|int8_t|int16_t|int32_t|int64_t|uint8_t|"
@@ -41,36 +41,36 @@ const QRegularExpression kKeywordRegex{
     "private|protected|public|register|reinterpret_cast|requires|return|short|signed|sizeof|static|"
     "static_|assert|static_cast|struct|switch|template|this|thread_local|throw|true|try|typedef|"
     "typeid|typename|union|unsigned|using|virtual|void|volatile|wchar_t|while)\\b"};
-const QRegularExpression kCapitalizedRegex{"(?<=[\\s\\(<])[A-Z][\\w]*"};
+const QRegularExpression kCapitalizedRegex{"(?<=[\\s\\(<])([A-Z][\\w]*)"};
 // int Function( or Namespace::FunctionName( patterns
 const QRegularExpression kFunctionDefinitionRegex{
-    "(?<=\\w)\\s+([A-Za-z_]\\w*::)*[A-Za-z_]\\w*(?=\\()", PatternOption::CaseInsensitiveOption};
-const QRegularExpression kOnlyUppercaseRegex{"(?<=[\\s\\(])[A-Z][0-9A-Z\\_]*(?=\\b)"};
-const QRegularExpression kCommaRegex{"[\\;\\,]"};
+    "(?<=\\w)\\s+(([A-Za-z_]\\w*::)*[A-Za-z_]\\w*)(?=\\()", PatternOption::CaseInsensitiveOption};
+const QRegularExpression kOnlyUppercaseRegex{"(?<=[\\s\\(])([A-Z][0-9A-Z\\_]*)(?=\\b)"};
+const QRegularExpression kCommaRegex{"([\\;\\,])"};
 // Methods and variables from a namespace, after "::" (e.g. std::cout, absl::Milliseconds)
-const QRegularExpression kNamespaceVariablesRegex{"(?<=::)[A-Za-z_]\\w*(?=\\b)"};
+const QRegularExpression kNamespaceVariablesRegex{"(?<=::)([A-Za-z_]\\w*)(?=\\b)"};
 // Namespaces itself, before "::"
-const QRegularExpression kNamespaceRegex{"[A-Za-z_]\\w*::"};
+const QRegularExpression kNamespaceRegex{"([A-Za-z_]\\w*::)"};
 const QRegularExpression kClassNameRegex{
-    "\\b(?:class|concept|enum|namespace|struct|typename)\\s+(\\w+)"};
+    "\\b((?:class|concept|enum|namespace|struct|typename)\\s+(\\w+))"};
 // Variables starting with lowercase and finishing with _ (e.g. tracks_) or starting with "m_"
-const QRegularExpression kClassMemberRegex{"\\b[a-z]\\w*\\_(?<=\\b)|(?<=\\b)m_\\w*"};
-const QRegularExpression kPreprocessorRegex{"(^\\s*)#\\s*[A-Za-z_]\\w*"};
+const QRegularExpression kClassMemberRegex{"\\b([a-z]\\w*\\_(?<=\\b)|(?<=\\b)m_\\w*)"};
+const QRegularExpression kPreprocessorRegex{"((^\\s*)#\\s*[A-Za-z_]\\w*)"};
 // Match with <word> after #include
-const QRegularExpression kIncludeFileRegex{"(?<=#include)\\s*<[^>]*>"};
+const QRegularExpression kIncludeFileRegex{"((?<=#include)\\s*<[^>]*>)"};
 const QRegularExpression kCommentRegex{
-    "\\/\\/(?:[^\\r\\n\\\\]|\\\\(?:\\r\\n?|\\n|(?![\\r\\n])))*|\\/\\*[\\s\\S]*?\\*\\/"};
+    "(\\/\\/(?:[^\\r\\n\\\\]|\\\\(?:\\r\\n?|\\n|(?![\\r\\n])))*|\\/\\*[\\s\\S]*?\\*\\/)"};
 // Match with "/*" comments which starts but not finishes in this line
-const QRegularExpression kOpenCommentRegex{"\\/\\*([^\\*]|[\\*]+[^\\/])*?$"};
+const QRegularExpression kOpenCommentRegex{"(\\/\\*([^\\*]|[\\*]+[^\\/])*?)$"};
 // Match with the closing part of the comment
-const QRegularExpression kEndCommentRegex{"[\\s\\S]*\\*\\/"};
+const QRegularExpression kEndCommentRegex{"([\\s\\S]*\\*\\/)"};
 // Match with a line without a closing comment
-const QRegularExpression kNoEndCommentRegex{"([^\\*]|\\*+[^\\/\\*])*$"};
+const QRegularExpression kNoEndCommentRegex{"(([^\\*]|\\*+[^\\/\\*])*)$"};
 // Similar process to comments to match a multiline string
-const QRegularExpression kStringRegex{"\"([^\\\\\"]|\\\\.)*\"|\'[^\']*\'"};
-const QRegularExpression kOpenStringRegex{"\"([^\\\\\"]|\\\\.)*\\\\$"};
-const QRegularExpression kEndStringRegex{"([^\\\\\"]|\\\\.)*\""};
-const QRegularExpression kNoEndStringRegex{"([^\\\\\"]|\\\\.)*\\\\$"};
+const QRegularExpression kStringRegex{"(\"([^\\\\\"]|\\\\.)*\"|\'[^\']*\')"};
+const QRegularExpression kOpenStringRegex{"(\"([^\\\\\"]|\\\\.)*\\\\)$"};
+const QRegularExpression kEndStringRegex{"(([^\\\\\"]|\\\\.)*\")"};
+const QRegularExpression kNoEndStringRegex{"(([^\\\\\"]|\\\\.)*\\\\)$"};
 }  // namespace CppRegex
 }  // namespace
 
@@ -88,7 +88,7 @@ CppHighlighterState HighlightBlockCpp(
 
     for (auto it = expression.globalMatch(code); it.hasNext();) {
       const auto match = it.next();
-      set_format(match.capturedStart(), match.capturedLength(), format);
+      set_format(match.capturedStart(1), match.capturedLength(1), format);
       next_block_state = new_state;
     }
   };
