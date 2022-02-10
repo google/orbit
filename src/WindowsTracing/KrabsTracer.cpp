@@ -88,7 +88,7 @@ void KrabsTracer::Start() {
   ORBIT_CHECK(trace_thread_ == nullptr);
   context_switch_manager_ = std::make_unique<ContextSwitchManager>(listener_);
   SetIsSystemProfilePrivilegeEnabled(true);
-  trace_.open();
+  log_file_ = trace_.open();
   SetupStackTracing();
   trace_thread_ = std::make_unique<std::thread>(&KrabsTracer::Run, this);
 }
