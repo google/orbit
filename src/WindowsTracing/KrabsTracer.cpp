@@ -181,6 +181,7 @@ void KrabsTracer::OnStackWalkEvent(const EVENT_RECORD& record,
 }
 
 void KrabsTracer::OutputStats() {
+  OutputLogFileInfo(log_file_);
   krabs::trace_stats trace_stats = trace_.query_stats();
   ORBIT_LOG("--- ETW stats ---");
   ORBIT_LOG("Number of buffers: %u", trace_stats.buffersCount);
@@ -194,6 +195,40 @@ void KrabsTracer::OutputStats() {
   ORBIT_LOG("Number of stack events: %u", stats_.num_stack_events);
   ORBIT_LOG("Number of stack events for target pid: %u", stats_.num_stack_events_for_target_pid);
   context_switch_manager_->OutputStats();
+}
+
+void KrabsTracer::OutputLogFileInfo(const EVENT_TRACE_LOGFILE& log_file) {
+  ORBIT_LOG("--- ETW Logfile info ---");
+  ORBIT_LOG_VAR(log_file.LoggerName);
+  ORBIT_LOG_VAR(log_file.CurrentTime);
+  ORBIT_LOG_VAR(log_file.BuffersRead);
+  ORBIT_LOG_VAR(log_file.BufferSize);
+  ORBIT_LOG_VAR(log_file.Filled);
+  ORBIT_LOG_VAR(log_file.EventsLost);
+  ORBIT_LOG_VAR(log_file.IsKernelTrace);
+
+  const TRACE_LOGFILE_HEADER& header = log_file.LogfileHeader;
+  ORBIT_LOG_VAR(header.VersionDetail.MajorVersion);
+  ORBIT_LOG_VAR(header.VersionDetail.MinorVersion);
+  ORBIT_LOG_VAR(header.VersionDetail.SubVersion);
+  ORBIT_LOG_VAR(header.VersionDetail.SubMinorVersion);
+  ORBIT_LOG_VAR(header.ProviderVersion);
+  ORBIT_LOG_VAR(header.EndTime.QuadPart);
+  ORBIT_LOG_VAR(header.TimerResolution);
+  ORBIT_LOG_VAR(header.MaximumFileSize);
+  ORBIT_LOG_VAR(header.LogFileMode);
+  ORBIT_LOG_VAR(header.BuffersWritten);
+  ORBIT_LOG_VAR(header.StartBuffers);
+  ORBIT_LOG_VAR(header.PointerSize);
+  ORBIT_LOG_VAR(header.EventsLost);
+  ORBIT_LOG_VAR(header.CpuSpeedInMHz);
+  ORBIT_LOG_VAR(header.LoggerName);
+  ORBIT_LOG_VAR(header.LogFileName);
+  ORBIT_LOG_VAR(header.BootTime.QuadPart);
+  ORBIT_LOG_VAR(header.PerfFreq.QuadPart);
+  ORBIT_LOG_VAR(header.StartTime.QuadPart);
+  ORBIT_LOG_VARN(header.ReservedFlags, "header.ReservedFlags (ClockType)");
+  ORBIT_LOG_VAR(header.BuffersLost);
 }
 
 }  // namespace orbit_windows_tracing

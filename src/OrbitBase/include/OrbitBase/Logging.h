@@ -20,6 +20,7 @@
 #endif
 
 #include "OrbitBase/Result.h"
+#include "OrbitBase/ToString.h"
 
 #ifdef __clang__
 #pragma clang diagnostic push
@@ -120,6 +121,9 @@ constexpr const char* kLogTimeFormat = "%Y-%m-%dT%H:%M:%E6S";
   } ORBIT_INTERNAL_SCOPED_TIMED_LOG_CONCAT(scoped_timed_log_, __LINE__) {                      \
     absl::StrFormat(format, ##__VA_ARGS__)                                                     \
   }
+
+#define ORBIT_LOG_VAR(x) ORBIT_LOG("%s = %s", #x, orbit_base::ToString(x))
+#define ORBIT_LOG_VARN(x, name) ORBIT_LOG("%s = %s", name, orbit_base::ToString(x))
 
 // Internal.
 #if defined(FUZZING_BUILD_MODE_UNSAFE_FOR_PRODUCTION)

@@ -42,6 +42,7 @@ target_sources(OrbitBase PRIVATE
         include/OrbitBase/ThreadConstants.h
         include/OrbitBase/ThreadPool.h
         include/OrbitBase/ThreadUtils.h
+        include/OrbitBase/ToString.h
         include/OrbitBase/UniqueResource.h
         include/OrbitBase/WriteStringToFile.h)
 
@@ -105,6 +106,7 @@ target_sources(OrbitBaseTests PRIVATE
         SimpleExecutorTest.cpp
         TemporaryFileTest.cpp
         ThreadUtilsTest.cpp
+        ToStringTest.cpp
         UniqueResourceTest.cpp
         WriteStringToFileTest.cpp
 )
