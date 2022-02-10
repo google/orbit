@@ -33,6 +33,7 @@ class SamplingReportDataView : public DataView {
       int clicked_index, const std::vector<int>& selected_indices) override;
   std::string GetValue(int row, int column) override;
   std::string GetValueForCopy(int row, int column) override;
+  std::string GetToolTip(int /*row*/, int /*column*/) override;
   const std::string& GetName() { return name_; }
 
   void OnSelect(const std::vector<int>& indices) override;
@@ -65,7 +66,7 @@ class SamplingReportDataView : public DataView {
   // The callstack view will be updated according to the visible selected addresses and thread id.
   void UpdateVisibleSelectedAddressesAndTid(const std::vector<int>& visible_selected_indices);
 
-  [[nodiscard]] std::string BuildPercentageString(float percentage, uint32_t raw_count) const;
+  [[nodiscard]] std::string BuildPercentageString(float percentage) const;
 
   std::vector<orbit_client_data::SampledFunction> functions_;
   // We need to keep user's selected function ids such that if functions_ changes, the
