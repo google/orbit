@@ -185,7 +185,7 @@ class ThreadUnwinder : public UnwinderFromPid {
 
   void Unwind(const std::vector<std::string>*, const std::vector<std::string>*) override {}
 
-  void UnwindWithSignal(int signal, pid_t tid,
+  void UnwindWithSignal(int signal, pid_t tid, std::unique_ptr<Regs>* initial_regs = nullptr,
                         const std::vector<std::string>* initial_map_names_to_skip = nullptr,
                         const std::vector<std::string>* map_suffixes_to_ignore = nullptr);
 

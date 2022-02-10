@@ -467,8 +467,8 @@ TEST_F(UnwindTest, multiple_threads_unwind_same_map) {
   size_t frames[kNumConcurrentThreads];
   for (size_t i = 0; i < kNumConcurrentThreads; i++) {
     std::thread* thread = new std::thread([i, &frames, &maps, &process_memory, &wait]() {
-      while (wait)
-        ;
+      while (wait) {
+      }
       std::unique_ptr<Regs> regs(Regs::CreateFromLocal());
       RegsGetLocal(regs.get());
 
@@ -495,12 +495,40 @@ TEST_F(UnwindTest, thread_unwind) {
     OuterFunction(TEST_TYPE_LOCAL_WAIT_FOR_FINISH);
   });
 
-  while (tid.load() == 0)
-    ;
+  while (tid.load() == 0) {
+  }
 
   ThreadUnwinder unwinder(512);
   ASSERT_TRUE(unwinder.Init());
   unwinder.UnwindWithSignal(SIGRTMIN, tid);
+  VerifyUnwindFrames(&unwinder, kFunctionOrder);
+
+  g_finish = true;
+  thread.join();
+}
+
+TEST_F(UnwindTest, thread_unwind_copy_regs) {
+  ResetGlobals();
+
+  std::atomic_int tid(0);
+  std::thread thread([&tid]() {
+    tid = android::base::GetThreadId();
+    OuterFunction(TEST_TYPE_LOCAL_WAIT_FOR_FINISH);
+  });
+
+  while (tid.load() == 0) {
+  }
+
+  ThreadUnwinder unwinder(512);
+  ASSERT_TRUE(unwinder.Init());
+  std::unique_ptr<Regs> initial_regs;
+  unwinder.UnwindWithSignal(SIGRTMIN, tid, &initial_regs);
+  ASSERT_TRUE(initial_regs != nullptr);
+  // Verify the initial registers match the first frame pc/sp.
+  ASSERT_TRUE(unwinder.NumFrames() != 0);
+  auto initial_frame = unwinder.frames()[0];
+  ASSERT_EQ(initial_regs->pc(), initial_frame.pc);
+  ASSERT_EQ(initial_regs->sp(), initial_frame.sp);
   VerifyUnwindFrames(&unwinder, kFunctionOrder);
 
   g_finish = true;
@@ -516,8 +544,8 @@ TEST_F(UnwindTest, thread_unwind_with_external_maps) {
     OuterFunction(TEST_TYPE_LOCAL_WAIT_FOR_FINISH);
   });
 
-  while (tid.load() == 0)
-    ;
+  while (tid.load() == 0) {
+  }
 
   LocalMaps maps;
   ASSERT_TRUE(maps.Parse());
@@ -546,8 +574,8 @@ static std::thread* CreateUnwindThread(std::atomic_int& tid, ThreadUnwinder& unw
                                        std::atomic_bool& start_unwinding,
                                        std::atomic_int& unwinders) {
   return new std::thread([&tid, &unwinder, &start_unwinding, &unwinders]() {
-    while (!start_unwinding.load())
-      ;
+    while (!start_unwinding.load()) {
+    }
 
     ThreadUnwinder thread_unwinder(512, &unwinder);
     // Allow the unwind to timeout since this will be doing multiple
@@ -573,8 +601,8 @@ TEST_F(UnwindTest, thread_unwind_same_thread_from_threads) {
     OuterFunction(TEST_TYPE_LOCAL_WAIT_FOR_FINISH);
   });
 
-  while (g_waiters.load() != 1)
-    ;
+  while (g_waiters.load() != 1) {
+  }
 
   ThreadUnwinder unwinder(512);
   ASSERT_TRUE(unwinder.Init());
@@ -587,8 +615,8 @@ TEST_F(UnwindTest, thread_unwind_same_thread_from_threads) {
   }
 
   start_unwinding = true;
-  while (unwinders.load() != kNumThreads)
-    ;
+  while (unwinders.load() != kNumThreads) {
+  }
 
   for (auto* thread : threads) {
     thread->join();
@@ -613,8 +641,8 @@ TEST_F(UnwindTest, thread_unwind_multiple_thread_from_threads) {
     threads.push_back(thread);
   }
 
-  while (g_waiters.load() != kNumThreads)
-    ;
+  while (g_waiters.load() != kNumThreads) {
+  }
 
   ThreadUnwinder unwinder(512);
   ASSERT_TRUE(unwinder.Init());
@@ -627,8 +655,8 @@ TEST_F(UnwindTest, thread_unwind_multiple_thread_from_threads) {
   }
 
   start_unwinding = true;
-  while (unwinders.load() != kNumThreads)
-    ;
+  while (unwinders.load() != kNumThreads) {
+  }
 
   for (auto* thread : unwinder_threads) {
     thread->join();
@@ -663,8 +691,8 @@ TEST_F(UnwindTest, thread_unwind_multiple_thread_from_threads_updatable_maps) {
     threads.push_back(thread);
   }
 
-  while (g_waiters.load() != kNumThreads)
-    ;
+  while (g_waiters.load() != kNumThreads) {
+  }
 
   ThreadUnwinder unwinder(512, &maps);
   ASSERT_TRUE(unwinder.Init());
@@ -677,8 +705,8 @@ TEST_F(UnwindTest, thread_unwind_multiple_thread_from_threads_updatable_maps) {
   }
 
   start_unwinding = true;
-  while (unwinders.load() != kNumThreads)
-    ;
+  while (unwinders.load() != kNumThreads) {
+  }
 
   for (auto* thread : unwinder_threads) {
     thread->join();
