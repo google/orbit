@@ -46,18 +46,20 @@ template <size_t Dimension>
 float GraphTrack<Dimension>::GetHeight() const {
   // Top content margin is counted twice when there are legends because it is inserted above and
   // below the legend.
-  float track_content_top_margin = (HasLegend() ? 2.f : 1.f) * layout_->GetTrackContentTopMargin();
+  float legend_height_with_margins =
+      GetLegendHeight() + (HasLegend() ? 2.f : 1.f) * layout_->GetTrackContentTopMargin();
 
-  return layout_->GetTrackTabHeight() + track_content_top_margin + GetLegendHeight() +
-         GetGraphContentHeight() + layout_->GetTrackContentBottomMargin();
+  return layout_->GetTrackTabHeight() + legend_height_with_margins + GetGraphContentHeight() +
+         layout_->GetTrackContentBottomMargin();
 }
 
 template <size_t Dimension>
 float GraphTrack<Dimension>::GetLegendHeight() const {
-  // This is a bit of an arbitrary choice - I don't want to introduce an additional layout
-  // parameter just for the legend size, but it should be smaller than all regular textboxes
-  // across Orbit.
-  return HasLegend() ? layout_->GetTextBoxHeight() / 2.f : 0;
+  if (!HasLegend()) return 0;
+
+  // Legend size should be smaller than all regular textboxes across Orbit.
+  const float kLegendHeight = layout_->GetTextBoxHeight() / 2.f;
+  return kLegendHeight;
 }
 
 template <size_t Dimension>
