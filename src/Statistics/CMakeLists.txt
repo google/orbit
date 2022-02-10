@@ -8,17 +8,25 @@ add_library(Statistics STATIC)
 
 target_sources(Statistics PUBLIC
                 include/Statistics/BinomialConfidenceInterval.h
-                include/Statistics/StatisticsUtils.h)
+                include/Statistics/StatisticsUtils.h
+                include/Statistics/Histogram.h)
 
 target_include_directories(Statistics PUBLIC
                ${CMAKE_CURRENT_LIST_DIR}/include)
 
 target_sources(Statistics PRIVATE
+                Histogram.cpp
+                Histogram.h
+                Histogram.cpp
                 BinomialConfidenceInterval.cpp)
+
+target_link_libraries(Statistics PRIVATE OrbitBase)
 
 add_executable(StatisticsTests)
 
 target_sources(StatisticsTests PRIVATE
+          HistogramBuilderTest.cpp
+          HistogramTest.cpp
           WilsonBinomialConfidenceIntervalEstimatorTest.cpp)
 
 target_link_libraries(
