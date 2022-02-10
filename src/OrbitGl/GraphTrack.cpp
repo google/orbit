@@ -46,10 +46,10 @@ template <size_t Dimension>
 float GraphTrack<Dimension>::GetHeight() const {
   // Top content margin is counted twice when there are legends because it is inserted above and
   // below the legend.
-  float legend_height_with_margins =
+  float height_above_content =
       GetLegendHeight() + (HasLegend() ? 2.f : 1.f) * layout_->GetTrackContentTopMargin();
 
-  return layout_->GetTrackTabHeight() + legend_height_with_margins + GetGraphContentHeight() +
+  return layout_->GetTrackTabHeight() + height_above_content + GetGraphContentHeight() +
          layout_->GetTrackContentBottomMargin();
 }
 
