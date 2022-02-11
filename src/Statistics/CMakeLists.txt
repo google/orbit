@@ -9,8 +9,8 @@ add_library(Statistics STATIC)
 target_sources(Statistics PUBLIC
                 include/Statistics/BinomialConfidenceInterval.h
                 include/Statistics/DataSet.h
-                include/Statistics/StatisticsUtils.h
-                include/Statistics/Histogram.h)
+                include/Statistics/Histogram.h
+                include/Statistics/StatisticsUtils.h)
 
 target_include_directories(Statistics PUBLIC
                ${CMAKE_CURRENT_LIST_DIR}/include)

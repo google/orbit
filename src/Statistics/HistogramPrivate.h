@@ -12,12 +12,10 @@
 
 namespace orbit_statistics {
 
-/**
- * The function estimates risk score (integral of squared difference of the histogram and true
- * distribution). Implements the analytical expression for the leave-one-out estimate. The lower --
- * the better.
- * If the data set happens to be singular (histogram.min == histogram.max), 0.0 is returned.
- */
+// The function estimates risk score (integral of squared difference of the histogram and true
+// distribution). Implements the analytical expression for the leave-one-out estimate. The lower --
+// the better.
+// If the data set happens to be singular (histogram.min == histogram.max), 0.0 is returned.
 [[nodiscard]] double HistogramRiskScore(const Histogram& histogram);
 
 [[nodiscard]] size_t ValueToIndex(uint64_t value, const DataSet& data_set, uint64_t bandwidth);
