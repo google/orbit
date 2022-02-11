@@ -21,10 +21,10 @@ namespace orbit_statistics {
  * `counts[i]` stores the number of elements in i-th bin.
  */
 struct Histogram {
-  uint64_t min;
-  uint64_t max;
-  uint64_t bandwidth;
-  size_t data_set_size;
+  uint64_t min{};
+  uint64_t max{};
+  uint64_t bandwidth{};
+  size_t data_set_size{};
   std::vector<size_t> counts;
 };
 
