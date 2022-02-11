@@ -9,8 +9,6 @@
 #include <optional>
 #include <vector>
 
-#include "Statistics/Histogram.h"
-
 namespace orbit_statistics {
 
 class DataSet {

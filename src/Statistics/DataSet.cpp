@@ -4,12 +4,9 @@
 
 #include "Statistics/DataSet.h"
 
-#include <algorithm>
-#include <cstddef>
 #include <cstdint>
-#include <memory>
-#include <numeric>
 #include <optional>
+#include <vector>
 
 #include "OrbitBase/Logging.h"
 #include "Statistics/Histogram.h"

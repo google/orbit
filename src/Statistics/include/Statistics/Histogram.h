@@ -6,7 +6,6 @@
 #define STATISTICS_HISTOGRAM_H_
 
 #include <cstdint>
-#include <memory>
 #include <optional>
 #include <vector>
 

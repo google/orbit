@@ -4,12 +4,9 @@
 
 #include "Statistics/Histogram.h"
 
-#include <algorithm>
-#include <cstddef>
 #include <cstdint>
-#include <memory>
-#include <numeric>
 #include <optional>
+#include <vector>
 
 #include "HistogramPrivate.h"
 #include "OrbitBase/Logging.h"
