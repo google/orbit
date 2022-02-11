@@ -9,12 +9,108 @@
 #include <cstddef>
 #include <cstdint>
 #include <iterator>
+#include <numeric>
 #include <vector>
 
-#include "Histogram.h"
+#include "HistogramPrivate.h"
+#include "Statistics/DataSet.h"
 #include "Statistics/Histogram.h"
 
 namespace orbit_statistics {
+
+constexpr uint64_t kBandwidth = 5;
+constexpr size_t kDataSetSize = 8;
+constexpr std::array<uint64_t, kDataSetSize> kRawDataSet{11ULL, 12ULL, 14ULL,  18ULL,
+                                                         19ULL, 30ULL, 100ULL, 58ULL};
+constexpr uint64_t kMin = *std::min_element(kRawDataSet.begin(), kRawDataSet.end());
+constexpr uint64_t kMax = *std::max_element(kRawDataSet.begin(), kRawDataSet.end());
+
+const std::vector<uint64_t> raw_data_set(kRawDataSet.begin(), kRawDataSet.end());
+
+TEST(CrteateDataSetTest, TestWithEmptyVector) {
+  const std::vector<uint64_t> empty;
+  const std::optional<DataSet> data_set = CreateDataSet(&empty);
+  EXPECT_TRUE(!data_set.has_value());
+}
+
+TEST(CrteateDataSetTest, TestWithNonEmptyVector) {
+  const std::optional<DataSet> data_set = CreateDataSet(&raw_data_set);
+  EXPECT_TRUE(data_set.has_value());
+  EXPECT_EQ(data_set->GetMin(), kMin);
+  EXPECT_EQ(data_set->GetMax(), kMax);
+}
+
+TEST(HistogramTest, ValueToIndexTest) {
+  const std::optional<DataSet> data_set = CreateDataSet(&raw_data_set);
+
+  EXPECT_EQ(ValueToIndex(15ULL, data_set.value(), kBandwidth), 0);
+  EXPECT_EQ(ValueToIndex(14ULL, data_set.value(), kBandwidth), 0);
+  EXPECT_EQ(ValueToIndex(16ULL, data_set.value(), kBandwidth), 1);
+  EXPECT_EQ(ValueToIndex(25ULL, data_set.value(), kBandwidth), 2);
+  EXPECT_EQ(ValueToIndex(24ULL, data_set.value(), kBandwidth), 2);
+  EXPECT_EQ(ValueToIndex(26ULL, data_set.value(), kBandwidth), 3);
+  EXPECT_EQ(ValueToIndex(100ULL, data_set.value(), kBandwidth), 17);
+}
+
+TEST(HistogramBuildTest, TestCounting) {
+  const std::optional<DataSet> data_set = CreateDataSet(&raw_data_set);
+
+  const auto histogram = BuildHistogram(data_set.value(), kBandwidth);
+  EXPECT_EQ(histogram.data_set_size, kDataSetSize);
+  EXPECT_EQ(histogram.min, kMin);
+  EXPECT_EQ(histogram.max, kMax);
+  EXPECT_EQ(histogram.bandwidth, kBandwidth);
+
+  const std::vector<size_t>& counts = histogram.counts;
+  EXPECT_EQ(counts.size(), 18);
+  EXPECT_EQ(counts[0], 3);
+  EXPECT_EQ(counts[1], 2);
+  EXPECT_EQ(counts[3], 1);
+  EXPECT_EQ(counts[9], 1);
+  EXPECT_EQ(counts[17], 1);
+
+  EXPECT_EQ(std::reduce(counts.begin(), counts.end()), kDataSetSize);
+}
+
+TEST(HistogramBuildTest, TestCountingAllEqual) {
+  const size_t singular_dataset_size = 100;
+  const std::vector<uint64_t> singular_raw_data_set(singular_dataset_size, 5ULL);
+  const auto data_set = CreateDataSet(&singular_raw_data_set);
+
+  auto histogram = BuildHistogram(data_set.value(), kBandwidth);
+  EXPECT_EQ(histogram.data_set_size, singular_dataset_size);
+  EXPECT_EQ(histogram.min, 5);
+  EXPECT_EQ(histogram.max, 5);
+
+  EXPECT_EQ(histogram.counts.size(), 1);
+  EXPECT_EQ(histogram.counts[0], singular_dataset_size);
+}
+
+uint64_t NumberOfBinsToBandwidth(size_t bins_num, uint64_t max, uint64_t min) {
+  const std::vector<uint64_t> raw_data = {max, min};
+  const auto data_set = CreateDataSet(&raw_data);
+  return NumberOfBinsToBandwidth(data_set.value(), bins_num);
+}
+
+TEST(NumberOfBinsToBandwidthTest, NumberOfBinsCorrectlySetsBandidthWithOverflow) {
+  EXPECT_EQ(NumberOfBinsToBandwidth(2, 1ULL, 7ULL), 4);
+}
+
+TEST(NumberOfBinsToBandwidthTest, NumberOfBinsCorrectlySetsBandidthWithoutOverflow) {
+  EXPECT_EQ(NumberOfBinsToBandwidth(2, 1ULL, 6ULL), 3);
+}
+
+TEST(NumberOfBinsToBandwidthTest, NumberOfBinsCorrectlySetsBandidthForExcessiveNumberOfBins) {
+  EXPECT_EQ(NumberOfBinsToBandwidth(200, 1ULL, 6ULL), 6);
+}
+
+TEST(NumberOfBinsToBandwidthTest, NumberOfBinsCorrectlySetsBandidthWhenWidthEqualsNumberOfBins) {
+  EXPECT_EQ(NumberOfBinsToBandwidth(6, 1ULL, 6ULL), 1);
+}
+
+TEST(NumberOfBinsToBandwidthTest, NumberOfBinsCorrectlySetsBandidthWhenNumberOfBinsBinsEqualsOne) {
+  EXPECT_EQ(NumberOfBinsToBandwidth(1, 1ULL, 6ULL), 6);
+}
 
 TEST(HistogramTest, RiskScoreTest) {
   const uint64_t bandwidth = 7421300;
@@ -66,7 +162,7 @@ TEST(BuildHistogramTest, BuildHistogramCorrectlyChoosesTheBandwidth) {
       39884349, 39889010, 39925959, 39933440, 39987806, 40223294, 43078564, 43081818, 43700203,
       43843646};
 
-  auto hist = BuildHistogram(data);
+  std::optional<Histogram> hist = BuildHistogram(data);
   EXPECT_EQ(hist->counts.size(), 128);
 }
 

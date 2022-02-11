@@ -33,7 +33,7 @@ struct Histogram {
  * estiamtes the risk score using `HistogramRiskScore` and returns the histogram
  * which minimizes it.
  */
-[[nodiscard]] std::unique_ptr<const Histogram> BuildHistogram(const std::vector<uint64_t>& data);
+[[nodiscard]] std::optional<Histogram> BuildHistogram(const std::vector<uint64_t>& data);
 }  // namespace orbit_statistics
 
 #endif  // STATISTICS_HISTOGRAM_H_
