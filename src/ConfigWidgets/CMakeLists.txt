@@ -17,9 +17,12 @@ target_link_libraries(ConfigWidgets PUBLIC OrbitBase
 
 target_sources(
   ConfigWidgets PUBLIC include/ConfigWidgets/SourcePathsMappingDialog.h
+                       include/ConfigWidgets/SymbolErrorDialog.h
                        include/ConfigWidgets/SymbolsDialog.h)
 target_sources(ConfigWidgets PRIVATE SourcePathsMappingDialog.cpp
                                      SourcePathsMappingDialog.ui
+                                     SymbolErrorDialog.cpp
+                                     SymbolErrorDialog.ui
                                      SymbolsDialog.cpp
                                      SymbolsDialog.ui)
 
@@ -28,7 +31,8 @@ set_target_properties(ConfigWidgets PROPERTIES AUTOUIC ON)
 
 add_executable(ConfigWidgetsTest)
 
-target_sources(ConfigWidgetsTest PRIVATE SymbolsDialogTest.cpp)
+target_sources(ConfigWidgetsTest PRIVATE SymbolErrorDialogTest.cpp
+                                         SymbolsDialogTest.cpp)
 
 target_link_libraries(ConfigWidgetsTest PRIVATE ConfigWidgets
                                                 GTest::QtGuiMain)
