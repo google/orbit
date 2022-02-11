@@ -10,7 +10,7 @@
 // This file contains versions of `struct orbit_api_..._v#` different from the one defined in
 // Orbit.h.
 
-// In particular, these are the versions for Linux older than the current one.
+// In particular, these are the versions older than the current one.
 
 struct orbit_api_v0 {
   uint32_t enabled;
@@ -45,6 +45,8 @@ struct orbit_api_v1 {
   void (*track_double)(const char* name, double value, orbit_api_color color);
 };
 
+#ifdef __linux
+
 // And these are the versions that resulted from building Orbit.h on Windows, but defined on Linux
 // in a way that yields the same result. They include previous versions, but also the current
 // version, because we want the Windows layout to be available to us in liborbit.so when dealing
@@ -71,5 +73,7 @@ struct orbit_api_win_v2 {
   __attribute__((ms_abi)) void (*track_double)(const char* name, double value,
                                                orbit_api_color color);
 };
+
+#endif  // __linux
 
 #endif  // ORBIT_API_ORBIT_API_VERSIONS_H_

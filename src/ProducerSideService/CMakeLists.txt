@@ -27,14 +27,12 @@ target_sources(ProducerSideService PRIVATE
 else()
 target_sources(ProducerSideService PRIVATE
         BuildAndStartProducerSideServerLinux.cpp)
-
-target_link_libraries(ProducerSideService PUBLIC
-        ProducerSideChannel)
 endif()
 
 target_link_libraries(ProducerSideService PUBLIC
         CaptureServiceBase
-        GrpcProtos)
+        GrpcProtos
+        ProducerSideChannel)
 
 add_executable(ProducerSideServiceTests)
 
