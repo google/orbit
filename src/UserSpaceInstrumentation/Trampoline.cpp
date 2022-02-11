@@ -50,7 +50,7 @@ size_t kMaxRelocatedPrologueSize = kSizeOfJmp * 16;
 // before each run. This happens in `InstrumentFunction`. Whenever the code of the trampoline is
 // changed this constant needs to be adjusted as well. There is a CHECK in the code below to make
 // sure this number is correct.
-constexpr uint64_t kOffsetOfFunctionIdInCallToEntryPayload = 104;
+constexpr uint64_t kOffsetOfFunctionIdInCallToEntryPayload = 184;
 
 [[nodiscard]] std::string InstructionBytesAsString(cs_insn* instruction) {
   std::string result;
@@ -81,34 +81,54 @@ void AppendBackupCode(MachineCode& trampoline) {
   // This code is executed immediately after the control is passed to the instrumented function. The
   // top of the stack contains the return address. Above that are the parameters passed via the
   // stack.
-  // Some of the general purpose and vector registers contain the parameters for the
-  // instrumented function not passed via the stack. These need to be backed up - see explanation
-  // at the bottom of this comment.
-
+  // Some of the general purpose and vector registers contain the parameters for the instrumented
+  // function not passed via the stack. These need to be backed up - see explanation at the bottom
+  // of this comment.
+  //
   // There are other guarantees from the calling convention, but these do not require any work from
   // our side:
-
+  //
   // x87 state: The calling convention requires the cpu to be in x87 state when entering a function.
   // Since we don't alter the state in the machine code and the calling function and the payload
   // function obey the calling convention we don't need to take care of anything here. We are in x87
   // mode when we enter the trampoline and it will stay like this. If the payload switches to mmx it
   // is guaranteed to switch back to x87 before returning.
-
+  //
   // The direction flag DF in the %rFLAGS register: must be clear (set to “forward” direction) on
   // function entry and return. As above with the x87 state we don't need to care about that.
-
+  //
   // Similar to this we do not need to do anything to obey the other requirements of the calling
   // convention: The control bits of the MXCSR register are callee-saved, while the status bits are
   // caller-saved. The x87 status word register is caller-saved, whereas the x87 control word is
   // callee-saved.
-
+  //
   // For all of the above compare section "3.2 Function Calling Sequence" in "System V Application
   // Binary Interface" https://refspecs.linuxfoundation.org/elf/x86_64-abi-0.99.pdf
+  //
+  // While we focus primarily on the System V calling convention, we also want to consider
+  // instrumented functions that follow the Microsoft x64 calling convention or the __vectorcall
+  // convention. This is for two cases: a Windows binary running under Wine; a Linux binary with
+  // functions following the Microsoft x64 calling convention, e.g., with GCC's and Clang's
+  // `__attribute__((ms_abi))`.
+  // Again, we need to back up registers that are used for parameter passing. In the Microsoft x64
+  // calling convention, these are only RCX, RDX, R8, R9, XMM0, XMM1, XMM2, XMM3. The __vectorcall
+  // convention adds XMM4 and XMM5, or the full YMM0 to YMM5 if AVX is supported. All of these are
+  // already used for parameter passing by the System V calling convention.
+  // Furthermore, as the payload functions follow the System V calling convention, we also need to
+  // back up registers that are preserved across function calls ("callee-saved", "non-volatile") in
+  // the Microsoft x64 calling convention or in the __vectorcall convention, but aren't
+  // ("caller-saved", "volatile") in the System V calling convention - the caller could expect the
+  // content of these registers to not change, but our payload functions could modify it. Such
+  // registers are RDI, RSI, and XMM6 to XMM15.
+  // Refer to https://docs.microsoft.com/en-us/cpp/build/x64-software-conventions,
+  // https://docs.microsoft.com/en-us/cpp/build/x64-calling-convention, and
+  // https://docs.microsoft.com/en-us/cpp/cpp/vectorcall.
 
-  // General purpose registers used for passing parameters are rdi, rsi, rdx, rcx,
-  // r8, r9 in that order. rax is used to indicate the number of vector arguments
-  // passed to a function requiring a variable number of arguments. r10 is used for
+  // In the System V calling convention, general purpose registers used for passing parameters are
+  // rdi, rsi, rdx, rcx, r8, r9 in that order. rax is used to indicate the number of vector
+  // arguments passed to a function requiring a variable number of arguments. r10 is used for
   // passing a function’s static chain pointer. All of these need to be backed up:
+  //
   // push rdi      57
   // push rsi      56
   // push rdx      52
@@ -129,6 +149,7 @@ void AppendBackupCode(MachineCode& trampoline) {
   // We align the stack to 32 bytes first: round down to a multiple of 32, subtract another 24 and
   // then push 8 byte original rsp. So we are 32 byte aligned after these commands and we can 'pop
   // rsp' later to undo this.
+  //
   // mov rax, rsp
   // and rsp, $0xffffffffffffffe0
   // sub rsp, 0x18
@@ -139,7 +160,7 @@ void AppendBackupCode(MachineCode& trampoline) {
       .AppendBytes({0x50});
 
   // Backup vector registers on the stack. They are used to pass float parameters so they need to be
-  // preserved. If Avx is supported backup ymm{0,..,8} (which include the xmm{0,..,8} registers as
+  // preserved. If Avx is supported backup ymm{0,..,7} (which include the xmm{0,..,7} registers as
   // their lower half).
   if (HasAvx()) {
     // sub       rsp, 32
@@ -186,6 +207,36 @@ void AppendBackupCode(MachineCode& trampoline) {
         .AppendBytes({0x48, 0x83, 0xec, 0x10})
         .AppendBytes({0x66, 0x0f, 0x7f, 0x3c, 0x24});
   }
+
+  // Also back up xmm{8,..,15} as xmm{6,..,15} (but we already backed up xmm6 and xmm7 above) are
+  // callee-saved in the Microsoft x64 calling convention (e.g., under Wine), but not in the System
+  // V calling convention. Note that, even if AVX is supported, only the lower half of ymm{6,..,15}
+  // (xmm{6,..,15}) is callee-saved.
+  //
+  // RSI and RDI should also be backed up for the same reason, but that already happens as they are
+  // used for parameter passing in the System V calling convention.
+  //
+  // sub     rsp, 16
+  // movdqa  (rsp), xmm8
+  // ...
+  // sub     rsp, 16
+  // movdqa  (rsp), xmm15
+  trampoline.AppendBytes({0x48, 0x83, 0xec, 0x10})
+      .AppendBytes({0x66, 0x44, 0x0f, 0x7f, 0x04, 0x24})
+      .AppendBytes({0x48, 0x83, 0xec, 0x10})
+      .AppendBytes({0x66, 0x44, 0x0f, 0x7f, 0x0c, 0x24})
+      .AppendBytes({0x48, 0x83, 0xec, 0x10})
+      .AppendBytes({0x66, 0x44, 0x0f, 0x7f, 0x14, 0x24})
+      .AppendBytes({0x48, 0x83, 0xec, 0x10})
+      .AppendBytes({0x66, 0x44, 0x0f, 0x7f, 0x1c, 0x24})
+      .AppendBytes({0x48, 0x83, 0xec, 0x10})
+      .AppendBytes({0x66, 0x44, 0x0f, 0x7f, 0x24, 0x24})
+      .AppendBytes({0x48, 0x83, 0xec, 0x10})
+      .AppendBytes({0x66, 0x44, 0x0f, 0x7f, 0x2c, 0x24})
+      .AppendBytes({0x48, 0x83, 0xec, 0x10})
+      .AppendBytes({0x66, 0x44, 0x0f, 0x7f, 0x34, 0x24})
+      .AppendBytes({0x48, 0x83, 0xec, 0x10})
+      .AppendBytes({0x66, 0x44, 0x0f, 0x7f, 0x3c, 0x24});
 }
 
 // Call the entry payload function with the return address, the id of the instrumented function,
@@ -223,6 +274,31 @@ void AppendCallToEntryPayload(uint64_t entry_payload_function_address,
 }
 
 void AppendRestoreCode(MachineCode& trampoline) {
+  // Restore vector registers that are callee-saved in the Microsoft x64 calling convention, but not
+  // in the System V calling convention.
+  //
+  // movdqa   xmm15, (rsp)
+  // add rsp, $0x10
+  //...
+  // movdqa   xmm8, (rsp)
+  // add rsp, $0x10
+  trampoline.AppendBytes({0x66, 0x44, 0x0f, 0x6f, 0x3c, 0x24})
+      .AppendBytes({0x48, 0x83, 0xc4, 0x10})
+      .AppendBytes({0x66, 0x44, 0x0f, 0x6f, 0x34, 0x24})
+      .AppendBytes({0x48, 0x83, 0xc4, 0x10})
+      .AppendBytes({0x66, 0x44, 0x0f, 0x6f, 0x2c, 0x24})
+      .AppendBytes({0x48, 0x83, 0xc4, 0x10})
+      .AppendBytes({0x66, 0x44, 0x0f, 0x6f, 0x24, 0x24})
+      .AppendBytes({0x48, 0x83, 0xc4, 0x10})
+      .AppendBytes({0x66, 0x44, 0x0f, 0x6f, 0x1c, 0x24})
+      .AppendBytes({0x48, 0x83, 0xc4, 0x10})
+      .AppendBytes({0x66, 0x44, 0x0f, 0x6f, 0x14, 0x24})
+      .AppendBytes({0x48, 0x83, 0xc4, 0x10})
+      .AppendBytes({0x66, 0x44, 0x0f, 0x6f, 0x0c, 0x24})
+      .AppendBytes({0x48, 0x83, 0xc4, 0x10})
+      .AppendBytes({0x66, 0x44, 0x0f, 0x6f, 0x04, 0x24})
+      .AppendBytes({0x48, 0x83, 0xc4, 0x10});
+
   // Restore vector registers (see comment on AppendBackupCode above).
   if (HasAvx()) {
     // vmovdqa   ymm7, (rsp)
@@ -373,21 +449,33 @@ void AppendRestoreCode(MachineCode& trampoline) {
   return outcome::success();
 }
 
-// First backup all the (potential) return values - compare section "3.2.3 Parameter Passing" in
-// "System V Application Binary Interface"
-// https://refspecs.linuxfoundation.org/elf/x86_64-abi-0.99.pdf. Then call the exit payload, restore
-// the return values and finally jump the actual return address.
+// First backup all the (potential) return values, in the System V calling convention (compare
+// section "3.2.3 Parameter Passing" in "System V Application Binary Interface"
+// https://refspecs.linuxfoundation.org/elf/x86_64-abi-0.99.pdf), in the Microsoft x64 calling
+// convention (see https://docs.microsoft.com/en-us/cpp/build/x64-calling-convention), and in the
+// __vectorcall convention (see https://docs.microsoft.com/en-us/cpp/cpp/vectorcall).
+// Also back up registers that are callee-saved in the Microsoft x64 calling convention, but not in
+// the System V calling convention.
+// Then call the exit payload, restore the return values and backed up registers, and finally jump
+// to the actual return address.
 void AppendCallToExitPayloadAndJumpToReturnAddress(uint64_t exit_payload_function_address,
                                                    MachineCode& return_trampoline) {
   // Backup rax, rdx, st(0), st(1).
+  // Also back up rdi and rsi as they are callee-saved in the Microsoft x64 calling convention, but
+  // not in the System V calling convention.
+  //
   // push rax                                        50
   // push rdx                                        52
+  // push rdi                                        57
+  // push rsi                                        56
   // sub rsp, 0x0a                                   48 83 ec 0a
   // fstpt (rsp)                                     db 3c 24
   // sub rsp, 0x0a                                   48 83 ec 0a
   // fstpt (rsp)                                     db 3c 24
   return_trampoline.AppendBytes({0x50})
       .AppendBytes({0x52})
+      .AppendBytes({0x57})
+      .AppendBytes({0x56})
       .AppendBytes({0x48, 0x83, 0xec, 0x0a})
       .AppendBytes({0xdb, 0x3c, 0x24})
       .AppendBytes({0x48, 0x83, 0xec, 0x0a})
@@ -396,6 +484,7 @@ void AppendCallToExitPayloadAndJumpToReturnAddress(uint64_t exit_payload_functio
   // We align the stack to 32 bytes first: round down to a multiple of 32, subtract another 24 and
   // then push 8 byte original rsp. So we are 32 byte aligned after these commands and we can 'pop
   // rsp' later to undo this.
+  //
   // mov rax, rsp                                    48 89 e0
   // and rsp, 0xffffffffffffffe0                     48 83 e4 e0
   // sub rsp, 0x18                                   48 83 ec 18
@@ -405,35 +494,139 @@ void AppendCallToExitPayloadAndJumpToReturnAddress(uint64_t exit_payload_functio
       .AppendBytes({0x48, 0x83, 0xec, 0x18})
       .AppendBytes({0x50});
 
-  // Store xmm0 and xmm1 on the stack.
-  // sub     rsp, 16                                 48 83 ec 10
-  // movdqa  (rsp), xmm0                             66 0f 7f 04 24
-  // sub     rsp, 16                                 48 83 ec 10
-  // movdqa  (rsp), xmm1                             66 0f 7f 0c 24
+  // Store xmm{0,..,3} or ymm{0,..,3} on the stack, depending on whether AVX is available. xmm0 and
+  // xmm1 are used to return floating point values in the System V calling convention; xmm0 is used
+  // to return non-scalar types in the Microsoft x64 calling convention; xmm{0,..,3} or ymm{0,..,3}
+  // are used to return various types of values in the __vectorcall convention.
+  if (HasAvx()) {
+    // sub       rsp, 32
+    // vmovdqa   (rsp), ymm0
+    // ...
+    // sub       rsp, 32
+    // vmovdqa   (rsp), ymm3
+    return_trampoline.AppendBytes({0x48, 0x83, 0xec, 0x20})
+        .AppendBytes({0xc5, 0xfd, 0x7f, 0x04, 0x24})
+        .AppendBytes({0x48, 0x83, 0xec, 0x20})
+        .AppendBytes({0xc5, 0xfd, 0x7f, 0x0c, 0x24})
+        .AppendBytes({0x48, 0x83, 0xec, 0x20})
+        .AppendBytes({0xc5, 0xfd, 0x7f, 0x14, 0x24})
+        .AppendBytes({0x48, 0x83, 0xec, 0x20})
+        .AppendBytes({0xc5, 0xfd, 0x7f, 0x1c, 0x24});
+  } else {
+    // sub     rsp, 16
+    // movdqa  (rsp), xmm0
+    // ...
+    // sub     rsp, 16
+    // movdqa  (rsp), xmm3
+    return_trampoline.AppendBytes({0x48, 0x83, 0xec, 0x10})
+        .AppendBytes({0x66, 0x0f, 0x7f, 0x04, 0x24})
+        .AppendBytes({0x48, 0x83, 0xec, 0x10})
+        .AppendBytes({0x66, 0x0f, 0x7f, 0x0c, 0x24})
+        .AppendBytes({0x48, 0x83, 0xec, 0x10})
+        .AppendBytes({0x66, 0x0f, 0x7f, 0x14, 0x24})
+        .AppendBytes({0x48, 0x83, 0xec, 0x10})
+        .AppendBytes({0x66, 0x0f, 0x7f, 0x1c, 0x24});
+  }
+
+  // Also back up xmm{6,..,15} as they are callee-saved in the Microsoft x64 calling convention, but
+  // not in the System V calling convention.
+  //
+  // sub     rsp, 16
+  // movdqa  (rsp), xmm6
+  // ...
+  // sub     rsp, 16
+  // movdqa  (rsp), xmm15
   return_trampoline.AppendBytes({0x48, 0x83, 0xec, 0x10})
-      .AppendBytes({0x66, 0x0f, 0x7f, 0x04, 0x24})
+      .AppendBytes({0x66, 0x0f, 0x7f, 0x34, 0x24})
       .AppendBytes({0x48, 0x83, 0xec, 0x10})
-      .AppendBytes({0x66, 0x0f, 0x7f, 0x0c, 0x24});
+      .AppendBytes({0x66, 0x0f, 0x7f, 0x3c, 0x24})
+      .AppendBytes({0x48, 0x83, 0xec, 0x10})
+      .AppendBytes({0x66, 0x44, 0x0f, 0x7f, 0x04, 0x24})
+      .AppendBytes({0x48, 0x83, 0xec, 0x10})
+      .AppendBytes({0x66, 0x44, 0x0f, 0x7f, 0x0c, 0x24})
+      .AppendBytes({0x48, 0x83, 0xec, 0x10})
+      .AppendBytes({0x66, 0x44, 0x0f, 0x7f, 0x14, 0x24})
+      .AppendBytes({0x48, 0x83, 0xec, 0x10})
+      .AppendBytes({0x66, 0x44, 0x0f, 0x7f, 0x1c, 0x24})
+      .AppendBytes({0x48, 0x83, 0xec, 0x10})
+      .AppendBytes({0x66, 0x44, 0x0f, 0x7f, 0x24, 0x24})
+      .AppendBytes({0x48, 0x83, 0xec, 0x10})
+      .AppendBytes({0x66, 0x44, 0x0f, 0x7f, 0x2c, 0x24})
+      .AppendBytes({0x48, 0x83, 0xec, 0x10})
+      .AppendBytes({0x66, 0x44, 0x0f, 0x7f, 0x34, 0x24})
+      .AppendBytes({0x48, 0x83, 0xec, 0x10})
+      .AppendBytes({0x66, 0x44, 0x0f, 0x7f, 0x3c, 0x24});
 
   // Note that rsp is 32 byte aligned now - we can just do the call. Call the exit payload and move
-  // the return address (which is returned by the exit payload) to rdi.
+  // the return address (which is returned by the exit payload) to a register that is not backed up
+  // and restored -- we choose rcx.
+  //
   // mov rax, exit_payload_function_address          48 b8 addr
   // call rax                                        ff d0
-  // mov rdi, rax                                    48 89 c7
+  // mov rcx, rax                                    48 89 c1
   return_trampoline.AppendBytes({0x48, 0xb8})
       .AppendImmediate64(exit_payload_function_address)
       .AppendBytes({0xff, 0xd0})
-      .AppendBytes({0x48, 0x89, 0xc7});
+      .AppendBytes({0x48, 0x89, 0xc1});
 
-  // Restore in reverse order: xmm1, xmm0, pop rsp, st(1), st(0), rdx, rax
-  // movdqa   xmm1, (rsp)                            66 0f 6f 0c 24
-  // add rsp, 0x10                                   48 83 c4 10
-  // movdqa   xmm0, (rsp)                            66 0f 6f 04 24
-  // add rsp, 0x10                                   48 83 c4 10
-  return_trampoline.AppendBytes({0x66, 0x0f, 0x6f, 0x0c, 0x24})
+  // Restore in reverse order: xmm{15..6}; xmm{3..0} or ymm{3..0}; pop rsp; st(1), st(0), rsi, rdi,
+  // rdx, rax.
+
+  // movdqa   xmm15, (rsp)
+  // add rsp, $0x10
+  //...
+  // movdqa   xmm6, (rsp)
+  // add rsp, $0x10
+  return_trampoline.AppendBytes({0x66, 0x44, 0x0f, 0x6f, 0x3c, 0x24})
       .AppendBytes({0x48, 0x83, 0xc4, 0x10})
-      .AppendBytes({0x66, 0x0f, 0x6f, 0x04, 0x24})
+      .AppendBytes({0x66, 0x44, 0x0f, 0x6f, 0x34, 0x24})
+      .AppendBytes({0x48, 0x83, 0xc4, 0x10})
+      .AppendBytes({0x66, 0x44, 0x0f, 0x6f, 0x2c, 0x24})
+      .AppendBytes({0x48, 0x83, 0xc4, 0x10})
+      .AppendBytes({0x66, 0x44, 0x0f, 0x6f, 0x24, 0x24})
+      .AppendBytes({0x48, 0x83, 0xc4, 0x10})
+      .AppendBytes({0x66, 0x44, 0x0f, 0x6f, 0x1c, 0x24})
+      .AppendBytes({0x48, 0x83, 0xc4, 0x10})
+      .AppendBytes({0x66, 0x44, 0x0f, 0x6f, 0x14, 0x24})
+      .AppendBytes({0x48, 0x83, 0xc4, 0x10})
+      .AppendBytes({0x66, 0x44, 0x0f, 0x6f, 0x0c, 0x24})
+      .AppendBytes({0x48, 0x83, 0xc4, 0x10})
+      .AppendBytes({0x66, 0x44, 0x0f, 0x6f, 0x04, 0x24})
+      .AppendBytes({0x48, 0x83, 0xc4, 0x10})
+      .AppendBytes({0x66, 0x0f, 0x6f, 0x3c, 0x24})
+      .AppendBytes({0x48, 0x83, 0xc4, 0x10})
+      .AppendBytes({0x66, 0x0f, 0x6f, 0x34, 0x24})
       .AppendBytes({0x48, 0x83, 0xc4, 0x10});
+
+  if (HasAvx()) {
+    // vmovdqa   ymm3, (rsp)
+    // add       rsp, 32
+    // ...
+    // vmovdqa   ymm0, (rsp)
+    // add       rsp, 32
+    return_trampoline.AppendBytes({0xc5, 0xfd, 0x6f, 0x1c, 0x24})
+        .AppendBytes({0x48, 0x83, 0xc4, 0x20})
+        .AppendBytes({0xc5, 0xfd, 0x6f, 0x14, 0x24})
+        .AppendBytes({0x48, 0x83, 0xc4, 0x20})
+        .AppendBytes({0xc5, 0xfd, 0x6f, 0x0c, 0x24})
+        .AppendBytes({0x48, 0x83, 0xc4, 0x20})
+        .AppendBytes({0xc5, 0xfd, 0x6f, 0x04, 0x24})
+        .AppendBytes({0x48, 0x83, 0xc4, 0x20});
+  } else {
+    // movdqa   xmm3, (rsp)
+    // add rsp, $0x10
+    //...
+    // movdqa   xmm0, (rsp)
+    // add rsp, $0x10
+    return_trampoline.AppendBytes({0x66, 0x0f, 0x6f, 0x1c, 0x24})
+        .AppendBytes({0x48, 0x83, 0xc4, 0x10})
+        .AppendBytes({0x66, 0x0f, 0x6f, 0x14, 0x24})
+        .AppendBytes({0x48, 0x83, 0xc4, 0x10})
+        .AppendBytes({0x66, 0x0f, 0x6f, 0x0c, 0x24})
+        .AppendBytes({0x48, 0x83, 0xc4, 0x10})
+        .AppendBytes({0x66, 0x0f, 0x6f, 0x04, 0x24})
+        .AppendBytes({0x48, 0x83, 0xc4, 0x10});
+  }
 
   // pop rsp                                         5c
   return_trampoline.AppendBytes({0x5c});
@@ -442,18 +635,22 @@ void AppendCallToExitPayloadAndJumpToReturnAddress(uint64_t exit_payload_functio
   // add rsp, 0x0a                                   48 83 c4 0a
   // fldt (rsp)                                      db 2c 24
   // add rsp, 0x0a                                   48 83 c4 0a
+  // pop rsi                                         5e
+  // pop rdi                                         5f
   // pop rdx                                         5a
   // pop rax                                         58
   return_trampoline.AppendBytes({0xdb, 0x2c, 0x24})
       .AppendBytes({0x48, 0x83, 0xc4, 0x0a})
       .AppendBytes({0xdb, 0x2c, 0x24})
       .AppendBytes({0x48, 0x83, 0xc4, 0x0a})
+      .AppendBytes({0x5e})
+      .AppendBytes({0x5f})
       .AppendBytes({0x5a})
       .AppendBytes({0x58});
 
   // Jump to the actual return address.
-  // jmp rdi                                         ff e7
-  return_trampoline.AppendBytes({0xff, 0xe7});
+  // jmp rcx                                         ff e1
+  return_trampoline.AppendBytes({0xff, 0xe1});
 }
 
 }  // namespace
@@ -495,7 +692,7 @@ ErrorMessageOr<std::vector<AddressRange>> GetUnavailableAddressRanges(pid_t pid)
   std::vector<std::string> lines = absl::StrSplit(maps, '\n', absl::SkipEmpty());
   for (const auto& line : lines) {
     std::vector<std::string> tokens = absl::StrSplit(line, ' ', absl::SkipEmpty());
-    if (tokens.size() < 1) {
+    if (tokens.empty()) {
       continue;
     }
     std::vector<std::string> addresses = absl::StrSplit(tokens[0], '-');
@@ -727,7 +924,7 @@ ErrorMessageOr<RelocatedInstruction> RelocateInstruction(cs_insn* instruction, u
         instruction->bytes + instruction->detail->x86.encoding.imm_offset);
     const uint64_t absolute_address = old_address + instruction->size + immediate;
     MachineCode code;
-    // Inverting the last bit negates the condidion for the jump. We need a jump to an eight bit
+    // Inverting the last bit negates the condition for the jump. We need a jump to an eight bit
     // immediate (opcode 0x7?).
     const uint8_t opcode = 0x70 | (0x01 ^ (instruction->detail->x86.opcode[1] & 0x0f));
     code.AppendBytes({opcode, 0x0e})
