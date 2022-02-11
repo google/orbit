@@ -120,9 +120,15 @@ void ProcessManagerImpl::WorkerFunction() {
       continue;
     }
 
-    absl::MutexLock callback_lock(&process_list_update_listener_mutex_);
-    if (process_list_update_listener_) {
-      process_list_update_listener_(std::move(result.value()));
+    // Call a copy of the update listener to allow detaching the listener inside the callback
+    std::function<void(std::vector<orbit_grpc_protos::ProcessInfo>)>
+        process_list_update_listener_copy;
+    {
+      absl::MutexLock callback_lock(&process_list_update_listener_mutex_);
+      process_list_update_listener_copy = process_list_update_listener_;
+    }
+    if (process_list_update_listener_copy) {
+      process_list_update_listener_copy(std::move(result.value()));
     }
   }
 }

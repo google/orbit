@@ -9,6 +9,7 @@
 #include <QString>
 #include <optional>
 
+#include "ClientServices/ProcessManager.h"
 #include "Connections.h"
 #include "MetricsUploader/MetricsUploader.h"
 #include "OrbitBase/Result.h"
@@ -49,17 +50,9 @@ class ConnectToTargetDialog : public QDialog {
 
  private:
   std::unique_ptr<Ui::ConnectToTargetDialog> ui_;
-
   SshConnectionArtifacts* ssh_connection_artifacts_;
-
   ConnectionTarget target_;
   orbit_metrics_uploader::MetricsUploader* metrics_uploader_;
-
-  struct ConnectionData {
-    std::unique_ptr<orbit_client_data::ProcessData> process_data_;
-    std::unique_ptr<orbit_session_setup::ServiceDeployManager> service_deploy_manager_;
-    std::shared_ptr<grpc::Channel> grpc_channel_;
-  };
 
   using MaybeSshAndInstanceData =
       std::tuple<ErrorMessageOr<orbit_ggp::SshInfo>, ErrorMessageOr<orbit_ggp::Instance>>;
@@ -67,10 +60,13 @@ class ConnectToTargetDialog : public QDialog {
   std::unique_ptr<orbit_ggp::Client> ggp_client_;
   std::shared_ptr<orbit_qt_utils::MainThreadExecutorImpl> main_thread_executor_;
 
-  ErrorMessageOr<StadiaTarget> OnAsyncDataAvailable(MaybeSshAndInstanceData ssh_instance_data);
+  std::optional<orbit_session_setup::StadiaConnection> stadia_connection_;
+  std::unique_ptr<orbit_client_services::ProcessManager> process_manager_;
+  std::optional<TargetConfiguration> target_configuration_;
 
-  [[nodiscard]] StadiaTarget CreateTarget(ConnectionData result,
-                                          orbit_ggp::Instance instance) const;
+  void OnAsyncDataAvailable(MaybeSshAndInstanceData ssh_instance_data);
+  void OnProcessListUpdate(std::vector<orbit_grpc_protos::ProcessInfo> process_list);
+
   [[nodiscard]] ErrorMessageOr<orbit_session_setup::ServiceDeployManager::GrpcPort>
   DeployOrbitService(orbit_session_setup::ServiceDeployManager* service_deploy_manager);
   [[nodiscard]] ErrorMessageOr<std::unique_ptr<orbit_client_data::ProcessData>>
