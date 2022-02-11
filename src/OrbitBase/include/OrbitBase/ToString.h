@@ -6,6 +6,7 @@
 #define ORBIT_BASE_TO_STRING_H_
 
 #include <algorithm>
+#include <cwchar>
 #include <string>
 
 // Wrapper around std::to_string which adds support for strings.
@@ -24,9 +25,11 @@ template <typename T>
   return result;
 }
 
-[[nodiscard]] inline std::string ToString(wchar_t* value) { return ToString(value, wcslen(value)); }
+[[nodiscard]] inline std::string ToString(wchar_t* value) {
+  return ToString(value, std::wcslen(value));
+}
 [[nodiscard]] inline std::string ToString(const wchar_t* value) {
-  return ToString(value, wcslen(value));
+  return ToString(value, std::wcslen(value));
 }
 [[nodiscard]] inline std::string ToString(const std::wstring& value) {
   return ToString(value.c_str(), value.size());
