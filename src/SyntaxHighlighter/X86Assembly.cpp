@@ -26,11 +26,11 @@ const QColor kKeywordColor{0xcc, 0x99, 0xcd};
 const QColor kCallTargetColor{0x80, 0x80, 0x00};
 
 namespace AssemblyRegex {
-const QRegularExpression kCharacterRegex{"\\S"};
-const QRegularExpression kNumberRegex{"\\s(0x)?[\\da-f]+\\b"};
-const QRegularExpression kProgramCounterRegex{"^0x[0-9a-f]+:"};
+const QRegularExpression kCharacterRegex{"(\\S)"};
+const QRegularExpression kNumberRegex{"\\s((0x)?[\\da-f]+)\\b"};
+const QRegularExpression kProgramCounterRegex{"^(0x[0-9a-f]+:)"};
 const QRegularExpression kOpCodeRegex{
-    "\\b(?:aaa|aad|aam|aas|adc|add|and|arpl|bb0_reset|bb1_reset|bound|bsf|bsr|bswap|bt|btc|btr|"
+    "\\b(aaa|aad|aam|aas|adc|add|and|arpl|bb0_reset|bb1_reset|bound|bsf|bsr|bswap|bt|btc|btr|"
     "bts|call|cbw|cdq|cdqe|clc|cld|cli|clts|cmc|cmp|cmpsb|cmpsd|cmpsq|cmpsw|cmpxchg|cmpxchg486|"
     "cmpxchg8b|cmpxchg16b|cpuid|cpu_read|cpu_write|cqo|cwd|cwde|daa|das|dec|div|dmint|emms|enter|"
     "equ|f2xm1|fabs|fadd|faddp|fbld|fbstp|fchs|fclex|fcmovb|fcmovbe|fcmove|fcmovnb|fcmovnbe|"
@@ -207,14 +207,14 @@ const QRegularExpression kOpCodeRegex{
     "hint_nop54|hint_nop55|hint_nop56|hint_nop57|hint_nop58|hint_nop59|hint_nop60|hint_nop61|"
     "hint_nop62|hint_nop63)\\b"};
 const QRegularExpression kRegisterRegex{
-    "\\b(?:ip|eip|rip|[abcd][lh]|sil|dil|bpl|spl|r\\d+b|[abcd]x|si|di|bp|sp|r\\d+w|e[abcd]x|esi|"
+    "\\b(ip|eip|rip|[abcd][lh]|sil|dil|bpl|spl|r\\d+b|[abcd]x|si|di|bp|sp|r\\d+w|e[abcd]x|esi|"
     "edi|ebp|esp|eip|r\\d+d|r[abcd]x|rsi|rdi|rbp|rsp|r\\d+|[cdefgs]s|st\\d*|[xyz]?mm\\d+|k\\d|"
     "bnd\\d|[cd]?r\\d+[bwhl]?|d[bwdqtoyz]|ddq|res[bwdqtoyz]|resdq|incbin|equ|times|nosplit|rel|"
     "abs|seg|wrt|strict|near|far|a32)\\b"};
-const QRegularExpression kKeywordRegex{"\\b(?:ptr|[xy]mmword|[sdq]?word|byte)\\b"};
-const QRegularExpression kCommentRegex{";.*$"};
-const QRegularExpression kPlatformRegex{"^Platform:.*$"};
-const QRegularExpression kCallTargetRegex{"(?<=\\()(.*?\\(.*?\\)+.*|\\?\\?\\?)(?=\\))"};
+const QRegularExpression kKeywordRegex{"\\b(ptr|[xy]mmword|[sdq]?word|byte)\\b"};
+const QRegularExpression kCommentRegex{"(;.*)$"};
+const QRegularExpression kPlatformRegex{"^(Platform:.*)$"};
+const QRegularExpression kCallTargetRegex{"\\bcall[^\\(]*\\()(.*)\\)$"};
 }  // namespace AssemblyRegex
 }  // namespace
 
@@ -245,7 +245,10 @@ void HighlightAnnotatingBlock(
 
     for (auto it = expression.globalMatch(code); it.hasNext();) {
       const auto match = it.next();
-      set_format(match.capturedStart(), match.capturedLength(), format);
+      // We use the first / outermost capture group, as this gives more flexibility for the match
+      // without being highlighted. In particular this allows variable length matches before the
+      // part of interest (in contrast to fixed length lookaheads).
+      set_format(match.capturedStart(1), match.capturedLength(1), format);
     }
   };
 
@@ -261,7 +264,10 @@ void HighlightBlockAssembly(
 
     for (auto it = expression.globalMatch(code); it.hasNext();) {
       const auto match = it.next();
-      set_format(match.capturedStart(), match.capturedLength(), format);
+      // We use the first / outermost capture group, as this gives more flexibility for the match
+      // without being highlighted. In particular this allows variable length matches before the
+      // part of interest (in contrast to fixed length lookaheads).
+      set_format(match.capturedStart(1), match.capturedLength(1), format);
     }
   };
 
