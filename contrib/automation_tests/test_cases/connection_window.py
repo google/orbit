@@ -14,8 +14,8 @@ from pywinauto.keyboard import send_keys
 from core.orbit_e2e import E2ETestCase, OrbitE2EError, wait_for_condition
 
 
-def _wait_for_main_window(application: Application):
-    wait_for_condition(lambda: application.top_window().class_name() == "OrbitMainWindow", max_seconds=30)
+def _wait_for_main_window(application: Application, timeout=30):
+    wait_for_condition(lambda: application.top_window().class_name() == "OrbitMainWindow", max_seconds=timeout)
 
 
 def _wait_for_connection_window(application: Application):
@@ -319,3 +319,22 @@ class FilterAndSelectFirstProcess(E2ETestCase):
         window = self.suite.top_window(True)
         self.expect_eq(window.class_name(), "OrbitMainWindow", 'Main window is visible')
         window.maximize()
+
+
+class WaitForConnectionToTargetInstanceAndProcess(E2ETestCase):
+    """
+    Assumes Orbit has been started with --target_process and --target_instance parameters.
+    Verifies the contents of the connection window and waits for the main window to appear.
+    """
+
+    def _execute(self, expected_instance: str, expected_process: str):
+        window = self.suite.top_window()
+        self.expect_eq(window.class_name(), 'orbit_session_setup::ConnectToTargetDialog', 'Target connection dialog is visible')
+        instance_label = self.find_control('Text', expected_instance, raise_on_failure=False)
+        self.expect_true(instance_label is not None, 'Found a label with the correct instance name')
+        process_label = self.find_control('Text', expected_process, raise_on_failure=False)
+        self.expect_true(process_label is not None, 'Found a label with the correct process name')
+        logging.info('Verified labels in ConnectToTargetDialog, waiting for main window')
+        _wait_for_main_window(self.suite.application, timeout=60)
+        # As there is a new top window (Orbit main window), we need to update the top window.
+        self.suite.top_window(True)
