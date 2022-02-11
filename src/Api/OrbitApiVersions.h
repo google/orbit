@@ -10,7 +10,7 @@
 // This file contains versions of `struct orbit_api_..._v#` different from the one defined in
 // Orbit.h.
 
-// In particular, these are the versions for Linux older than the current one.
+// In particular, these are the versions older than the current one.
 
 struct orbit_api_v0 {
   uint32_t enabled;

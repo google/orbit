@@ -3,13 +3,15 @@
 // found in the LICENSE file.
 
 #include "BuildAndStartProducerSideServerWithUri.h"
+#include "ProducerSideChannel/ProducerSideChannel.h"
 #include "ProducerSideService/BuildAndStartProducerSideServer.h"
+
 
 namespace orbit_producer_side_service {
 
 std::unique_ptr<ProducerSideServer> BuildAndStartProducerSideServer() {
-  constexpr const char* kProducerSideServerUri = "127.0.0.1:1789";
-  return BuildAndStartProducerSideServerWithUri(kProducerSideServerUri);
+  return BuildAndStartProducerSideServerWithUri(
+      orbit_producer_side_channel::kProducerSideWindowsServerAddress);
 }
 
 }  // namespace orbit_producer_side_service

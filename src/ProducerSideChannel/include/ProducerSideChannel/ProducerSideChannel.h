@@ -13,11 +13,13 @@
 
 namespace orbit_producer_side_channel {
 
+// This is the default server address used for the communication between producers of CaptureEvents
+// and OrbitService on Windows.
 constexpr const char* kProducerSideWindowsServerAddress = "localhost:1789";
 
 // This is the default path of the Unix domain socket used for the communication
 // between producers of CaptureEvents and OrbitService.
-constexpr std::string_view kProducerSideUnixDomainSocketPath = "/tmp/orbit-producer-side-socket";
+constexpr const char* kProducerSideUnixDomainSocketPath = "/tmp/orbit-producer-side-socket";
 
 // This function returns a gRPC channel that uses a Unix domain socket,
 // by default the one specified by kProducerSideUnixDomainSocketPath.
