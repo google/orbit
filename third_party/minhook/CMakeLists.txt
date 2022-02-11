@@ -89,53 +89,55 @@ else()
   set_target_properties(minhook PROPERTIES DEBUG_POSTFIX "d")
 endif()
 
+# Orbit: the code below was commented out to not interfere with our own packaging.
+
 ################
 # CMAKE CONFIG # 
 ################
 
-configure_package_config_file(
-    "cmake/minhook-config.cmake.in"
-    "minhook-config.cmake"
-  INSTALL_DESTINATION 
-    "lib/minhook"
-)
+# configure_package_config_file(
+#     "cmake/minhook-config.cmake.in"
+#     "minhook-config.cmake"
+#   INSTALL_DESTINATION 
+#     "lib/minhook"
+# )
 
-write_basic_package_version_file(
-  "minhook-config-version.cmake"
-VERSION 
-  ${MINHOOK_VERSION}
-COMPATIBILITY
-  AnyNewerVersion
-)
+# write_basic_package_version_file(
+#   "minhook-config-version.cmake"
+# VERSION 
+#   ${MINHOOK_VERSION}
+# COMPATIBILITY
+#   AnyNewerVersion
+# )
 
-install(
-  FILES 
-    "${CMAKE_CURRENT_BINARY_DIR}/minhook-config.cmake"
-    "${CMAKE_CURRENT_BINARY_DIR}/minhook-config-version.cmake"
-  DESTINATION 
-    "lib/minhook"
-)
+# install(
+#   FILES 
+#     "${CMAKE_CURRENT_BINARY_DIR}/minhook-config.cmake"
+#     "${CMAKE_CURRENT_BINARY_DIR}/minhook-config-version.cmake"
+#   DESTINATION 
+#     "lib/minhook"
+# )
 
 ###################
 #     INSTALL     #
 ###################
 
-install(TARGETS minhook
-        EXPORT minhook-targets
-        RUNTIME DESTINATION "bin"
-        ARCHIVE DESTINATION "lib"
-        LIBRARY DESTINATION "lib"
-)
+# install(TARGETS minhook
+#         EXPORT minhook-targets
+#         RUNTIME DESTINATION "bin"
+#         ARCHIVE DESTINATION "lib"
+#         LIBRARY DESTINATION "lib"
+# )
 
-install(
-  EXPORT
-    minhook-targets
-  NAMESPACE 
-    minhook::
-  DESTINATION 
-    "lib/minhook"
-)
+# install(
+#   EXPORT
+#     minhook-targets
+#   NAMESPACE 
+#     minhook::
+#   DESTINATION 
+#     "lib/minhook"
+# )
 
-install(
-  DIRECTORY include DESTINATION .
-)
+# install(
+#   DIRECTORY include DESTINATION .
+# )
