@@ -22,7 +22,7 @@ SymbolErrorDialog::SymbolErrorDialog(const orbit_client_data::ModuleData* module
   ui_->setupUi(this);
   ui_->moduleNameLabel->setText(QString::fromStdString(module_->file_path()));
   ui_->errorPlainTextEdit->setPlainText(QString::fromStdString(detailed_error));
-  ui_->AddSymbolLocationButton->setFocus();
+  ui_->addSymbolLocationButton->setFocus();
 }
 
 SymbolErrorDialog::~SymbolErrorDialog() = default;

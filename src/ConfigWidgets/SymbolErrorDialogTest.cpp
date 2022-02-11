@@ -28,9 +28,9 @@ class SymbolErrorDialogTest : public testing::Test {
  protected:
   void SetUp() override {
     error_plain_text_edit_ = dialog_.findChild<QPlainTextEdit*>("errorPlainTextEdit");
-    ASSERT_TRUE(error_plain_text_edit_ != nullptr);
+    ASSERT_NE(error_plain_text_edit_, nullptr);
     show_error_button_ = dialog_.findChild<QPushButton*>("showErrorButton");
-    ASSERT_TRUE(show_error_button_ != nullptr);
+    ASSERT_NE(show_error_button_, nullptr);
   }
 
   const std::string module_path_ = "example/file/path/module.so";
@@ -43,6 +43,7 @@ class SymbolErrorDialogTest : public testing::Test {
 
 TEST_F(SymbolErrorDialogTest, UiElements) {
   auto* module_name_label = dialog_.findChild<QLabel*>("moduleNameLabel");
+  ASSERT_NE(module_name_label, nullptr);
   EXPECT_EQ(module_name_label->text().toStdString(), module_path_);
 
   EXPECT_EQ(error_plain_text_edit_->toPlainText().toStdString(), error_);
@@ -68,19 +69,36 @@ TEST_F(SymbolErrorDialogTest, OnShowErrorButtonClicked) {
 }
 
 TEST_F(SymbolErrorDialogTest, OnAddSymbolLocationButtonClicked) {
-  QMetaObject::invokeMethod(&dialog_, &SymbolErrorDialog::OnAddSymbolLocationButtonClicked,
-                            Qt::QueuedConnection);
+  auto* on_add_symbol_location_button = dialog_.findChild<QPushButton*>("addSymbolLocationButton");
+  ASSERT_NE(on_add_symbol_location_button, nullptr);
+  QMetaObject::invokeMethod(
+      &dialog_, [&]() { QTest::mouseClick(on_add_symbol_location_button, Qt::LeftButton); },
+      Qt::QueuedConnection);
 
   SymbolErrorDialog::Result result = dialog_.Exec();
   EXPECT_EQ(result, SymbolErrorDialog::Result::kAddSymbolLocation);
 }
 
 TEST_F(SymbolErrorDialogTest, OnTryAgainButtonClicked) {
-  QMetaObject::invokeMethod(&dialog_, &SymbolErrorDialog::OnTryAgainButtonClicked,
-                            Qt::QueuedConnection);
+  auto* on_try_again_button = dialog_.findChild<QPushButton*>("tryAgainButton");
+  ASSERT_NE(on_try_again_button, nullptr);
+  QMetaObject::invokeMethod(
+      &dialog_, [&]() { QTest::mouseClick(on_try_again_button, Qt::LeftButton); },
+      Qt::QueuedConnection);
 
   SymbolErrorDialog::Result result = dialog_.Exec();
   EXPECT_EQ(result, SymbolErrorDialog::Result::kTryAgain);
+}
+
+TEST_F(SymbolErrorDialogTest, OnCancelButtonClicked) {
+  auto* on_cancel_button = dialog_.findChild<QPushButton*>("cancelButton");
+  ASSERT_NE(on_cancel_button, nullptr);
+  QMetaObject::invokeMethod(
+      &dialog_, [&]() { QTest::mouseClick(on_cancel_button, Qt::LeftButton); },
+      Qt::QueuedConnection);
+
+  SymbolErrorDialog::Result result = dialog_.Exec();
+  EXPECT_EQ(result, SymbolErrorDialog::Result::kCancel);
 }
 
 TEST_F(SymbolErrorDialogTest, OnRejected) {

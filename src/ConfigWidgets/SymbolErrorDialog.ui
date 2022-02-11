@@ -114,7 +114,7 @@
         </widget>
        </item>
        <item>
-        <widget class="QPushButton" name="AddSymbolLocationButton">
+        <widget class="QPushButton" name="addSymbolLocationButton">
          <property name="text">
           <string>Add Symbol Location</string>
          </property>
@@ -127,7 +127,7 @@
   </layout>
  </widget>
  <tabstops>
-  <tabstop>AddSymbolLocationButton</tabstop>
+  <tabstop>addSymbolLocationButton</tabstop>
   <tabstop>showErrorButton</tabstop>
   <tabstop>tryAgainButton</tabstop>
   <tabstop>cancelButton</tabstop>
@@ -151,7 +151,7 @@
    </hints>
   </connection>
   <connection>
-   <sender>AddSymbolLocationButton</sender>
+   <sender>addSymbolLocationButton</sender>
    <signal>clicked()</signal>
    <receiver>SymbolErrorDialog</receiver>
    <slot>OnAddSymbolLocationButtonClicked()</slot>
