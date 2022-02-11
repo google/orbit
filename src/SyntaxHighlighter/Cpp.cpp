@@ -88,6 +88,9 @@ CppHighlighterState HighlightBlockCpp(
 
     for (auto it = expression.globalMatch(code); it.hasNext();) {
       const auto match = it.next();
+      // We use the first / outermost capture group, as this gives more flexibility for the match
+      // without being highlighted. In particular this allows variable length matches before the
+      // part of interest (in contrast to fixed length lookaheads).
       set_format(match.capturedStart(1), match.capturedLength(1), format);
       next_block_state = new_state;
     }
