@@ -40,8 +40,7 @@ class LinuxCaptureServiceBase : public orbit_capture_service_base::CaptureServic
   // this method. See wait_for_stop_capture_request_thread_ in
   // WaitForStopCaptureRequestOrMemoryThresholdExceeded.
   orbit_capture_service_base::CaptureServiceBase::CaptureInitializationResult DoCapture(
-      orbit_capture_service_base::ClientCaptureEventCollectorBuilder*
-          client_capture_event_collector_builder,
+      orbit_producer_event_processor::ClientCaptureEventCollector* client_capture_event_collector,
       const std::shared_ptr<orbit_capture_service_base::StartStopCaptureRequestWaiter>&
           start_stop_capture_request_waiter);
 

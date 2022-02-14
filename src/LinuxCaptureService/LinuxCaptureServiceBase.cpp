@@ -18,7 +18,6 @@
 
 #include "ApiLoader/EnableInTracee.h"
 #include "ApiUtils/Event.h"
-#include "CaptureServiceBase/ClientCaptureEventCollectorBuilder.h"
 #include "CaptureServiceBase/CommonProducerCaptureEventBuilders.h"
 #include "CaptureServiceBase/StartStopCaptureRequestWaiter.h"
 #include "GrpcProtos/Constants.h"
@@ -40,11 +39,11 @@ using orbit_grpc_protos::CaptureRequest;
 using orbit_grpc_protos::CaptureResponse;
 using orbit_grpc_protos::ProducerCaptureEvent;
 
+using orbit_producer_event_processor::ClientCaptureEventCollector;
 using orbit_producer_event_processor::ProducerEventProcessor;
 
 using orbit_capture_service_base::CaptureServiceBase;
 using orbit_capture_service_base::CaptureStartStopListener;
-using orbit_capture_service_base::ClientCaptureEventCollectorBuilder;
 using orbit_capture_service_base::StartStopCaptureRequestWaiter;
 
 namespace orbit_linux_capture_service {
@@ -221,10 +220,9 @@ LinuxCaptureServiceBase::WaitForStopCaptureRequestOrMemoryThresholdExceeded(
 }
 
 CaptureServiceBase::CaptureInitializationResult LinuxCaptureServiceBase::DoCapture(
-    ClientCaptureEventCollectorBuilder* client_capture_event_collector_builder,
+    ClientCaptureEventCollector* client_capture_event_collector,
     const std::shared_ptr<StartStopCaptureRequestWaiter>& start_stop_capture_request_waiter) {
-  if (CaptureInitializationResult result =
-          InitializeCapture(client_capture_event_collector_builder);
+  if (CaptureInitializationResult result = InitializeCapture(client_capture_event_collector);
       result != CaptureInitializationResult::kSuccess) {
     return result;
   }
