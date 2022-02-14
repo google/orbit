@@ -6,18 +6,18 @@
 #include <absl/strings/str_format.h>
 #include <absl/strings/str_split.h>
 #include <gtest/gtest.h>
+#include <linux/seccomp.h>
 #include <sys/prctl.h>
-#include <sys/ptrace.h>
 #include <sys/types.h>
 #include <sys/wait.h>
+#include <syscall.h>
 
-#include <csignal>
 #include <filesystem>
 #include <string>
+#include <thread>
 #include <vector>
 
 #include "AllocateInTracee.h"
-#include "OrbitBase/ExecutablePath.h"
 #include "OrbitBase/Logging.h"
 #include "OrbitBase/ReadFileToString.h"
 #include "TestUtils/TestUtils.h"
@@ -168,6 +168,66 @@ TEST(AllocateInTraceeTest, AutomaticAllocateAndFree) {
   ORBIT_CHECK(!DetachAndContinueProcess(pid).has_error());
   kill(pid, SIGKILL);
   waitpid(pid, nullptr, 0);
+}
+
+TEST(AllocateInTraceeTest, ReadSeccompModeOfThread) {
+  std::optional<int> seccomp_mode = ReadSeccompModeOfThread(getpid());
+  ASSERT_TRUE(seccomp_mode.has_value());
+  EXPECT_THAT(seccomp_mode.value(),
+              testing::AnyOf(SECCOMP_MODE_DISABLED, SECCOMP_MODE_STRICT, SECCOMP_MODE_FILTER));
+}
+
+TEST(AllocateInTraceeTest, SyscallInTraceeFailsBecauseOfSeccomp) {
+  pid_t pid = fork();
+  ORBIT_CHECK(pid != -1);
+  if (pid == 0) {
+    prctl(PR_SET_PDEATHSIG, SIGTERM);
+
+    // Transition to strict seccomp mode.
+    int64_t seccomp_result = syscall(SYS_seccomp, SECCOMP_SET_MODE_STRICT, 0, nullptr);
+    ORBIT_CHECK(seccomp_result == 0);
+
+    // Child just runs an endless loop.
+    volatile uint64_t counter = 0;
+    while (true) {
+      // Endless loops without side effects are UB and recent versions of clang optimize it away.
+      ++counter;
+    }
+  }
+
+  // Give the child enough time to execute the seccomp syscall.
+  std::this_thread::sleep_for(std::chrono::milliseconds{10});
+
+  int wstatus = 0;
+  pid_t waited_pid = waitpid(pid, &wstatus, WNOHANG);
+  ORBIT_CHECK(waited_pid != -1);
+  if (waited_pid != 0) {
+    // ORBIT_CHECK(seccomp_result == 0) failed in the child.
+    ORBIT_CHECK(waited_pid == pid);
+    ORBIT_CHECK(WIFSIGNALED(wstatus));
+    ORBIT_CHECK(WTERMSIG(wstatus) == SIGABRT);
+    ORBIT_ERROR("Child failed to call seccomp");
+    GTEST_SKIP();
+  }
+  ORBIT_CHECK(kill(pid, 0) == 0);
+
+  // Stop the process using our tooling.
+  auto attach_and_stop_result = AttachAndStopProcess(pid);
+  if (attach_and_stop_result.has_error()) {
+    ORBIT_FATAL("attach_and_stop_result.has_error(): %s", attach_and_stop_result.error().message());
+  }
+
+  constexpr uint64_t kMemorySize = 1024 * 1024;
+
+  // Allocation will fail because of seccomp.
+  auto my_memory_or_error = MemoryInTracee::Create(pid, 0, kMemorySize);
+  EXPECT_THAT(
+      my_memory_or_error,
+      HasError(absl::StrFormat(
+          "This might be due to thread %d being in seccomp mode 1 (SECCOMP_MODE_STRICT).", pid)));
+
+  // The forked process was killed because of seccomp and it cannot be waited for.
+  ORBIT_CHECK(kill(pid, 0) != 0);
 }
 
 }  // namespace orbit_user_space_instrumentation
