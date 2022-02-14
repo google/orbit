@@ -24,7 +24,7 @@ class CloudCollectorStartStopCaptureRequestWaiter : public StartStopCaptureReque
 
  private:
   mutable absl::Mutex capture_options_mutex_;
-  CaptureOptions capture_options_ ABSL_GUARDED_BY(capture_options_mutex_);
+  orbit_grpc_protos::CaptureOptions capture_options_ ABSL_GUARDED_BY(capture_options_mutex_);
 
   std::atomic<bool> start_requested_ = false;
   std::atomic<bool> stop_requested_ = false;
