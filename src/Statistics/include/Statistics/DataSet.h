@@ -11,17 +11,20 @@
 
 namespace orbit_statistics {
 
+// A data set of in `uint64_t` values.
+// Also stores and exposes minimum and maximum value
 class DataSet {
+ public:
+  [[nodiscard]] const std::vector<uint64_t>* GetData() const { return data_; }
+  [[nodiscard]] uint64_t GetMin() const { return min_; }
+  [[nodiscard]] uint64_t GetMax() const { return max_; }
+
+ private:
   DataSet(const std::vector<uint64_t>* data, uint64_t min, uint64_t max)
       : data_(data), min_(min), max_(max) {}
   const std::vector<uint64_t>* data_;
   uint64_t min_;
   uint64_t max_;
-
- public:
-  [[nodiscard]] const std::vector<uint64_t>* GetData() const { return data_; }
-  [[nodiscard]] uint64_t GetMin() const { return min_; }
-  [[nodiscard]] uint64_t GetMax() const { return max_; }
 
   friend std::optional<DataSet> CreateDataSet(const std::vector<uint64_t>* data);
 };

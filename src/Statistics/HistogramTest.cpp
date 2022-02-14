@@ -9,54 +9,54 @@
 #include <numeric>
 #include <vector>
 
-#include "HistogramPrivate.h"
+#include "HistogramUtils.h"
 #include "Statistics/DataSet.h"
 #include "Statistics/Histogram.h"
 
 namespace orbit_statistics {
 
-constexpr uint64_t kBandwidth = 5;
+constexpr uint64_t kBinWidth = 5;
 constexpr size_t kDataSetSize = 8;
 constexpr std::array<uint64_t, kDataSetSize> kRawDataSet{11ULL, 12ULL, 14ULL,  18ULL,
                                                          19ULL, 30ULL, 100ULL, 58ULL};
 constexpr uint64_t kMin = *std::min_element(kRawDataSet.begin(), kRawDataSet.end());
 constexpr uint64_t kMax = *std::max_element(kRawDataSet.begin(), kRawDataSet.end());
 
-const std::vector<uint64_t> raw_data_set(kRawDataSet.begin(), kRawDataSet.end());
+const static std::vector<uint64_t> raw_data_set(kRawDataSet.begin(), kRawDataSet.end());
 
-TEST(CrteateDataSetTest, TestWithEmptyVector) {
+TEST(DataSet, TestCreateDataSetWithEmptyVector) {
   const std::vector<uint64_t> empty;
   const std::optional<DataSet> data_set = CreateDataSet(&empty);
   EXPECT_TRUE(!data_set.has_value());
 }
 
-TEST(CrteateDataSetTest, TestWithNonEmptyVector) {
+TEST(DataSet, TestCreateDataSetWithNonEmptyVector) {
   const std::optional<DataSet> data_set = CreateDataSet(&raw_data_set);
-  EXPECT_TRUE(data_set.has_value());
+  ASSERT_TRUE(data_set.has_value());
   EXPECT_EQ(data_set->GetMin(), kMin);
   EXPECT_EQ(data_set->GetMax(), kMax);
 }
 
-TEST(HistogramTest, ValueToIndexTest) {
+TEST(HistogramUtils, ValueToHistogramBinIndexTest) {
   const std::optional<DataSet> data_set = CreateDataSet(&raw_data_set);
 
-  EXPECT_EQ(ValueToIndex(15ULL, data_set.value(), kBandwidth), 0);
-  EXPECT_EQ(ValueToIndex(14ULL, data_set.value(), kBandwidth), 0);
-  EXPECT_EQ(ValueToIndex(16ULL, data_set.value(), kBandwidth), 1);
-  EXPECT_EQ(ValueToIndex(25ULL, data_set.value(), kBandwidth), 2);
-  EXPECT_EQ(ValueToIndex(24ULL, data_set.value(), kBandwidth), 2);
-  EXPECT_EQ(ValueToIndex(26ULL, data_set.value(), kBandwidth), 3);
-  EXPECT_EQ(ValueToIndex(100ULL, data_set.value(), kBandwidth), 17);
+  EXPECT_EQ(ValueToHistogramBinIndex(15ULL, data_set.value(), kBinWidth), 0);
+  EXPECT_EQ(ValueToHistogramBinIndex(14ULL, data_set.value(), kBinWidth), 0);
+  EXPECT_EQ(ValueToHistogramBinIndex(16ULL, data_set.value(), kBinWidth), 1);
+  EXPECT_EQ(ValueToHistogramBinIndex(25ULL, data_set.value(), kBinWidth), 2);
+  EXPECT_EQ(ValueToHistogramBinIndex(24ULL, data_set.value(), kBinWidth), 2);
+  EXPECT_EQ(ValueToHistogramBinIndex(26ULL, data_set.value(), kBinWidth), 3);
+  EXPECT_EQ(ValueToHistogramBinIndex(100ULL, data_set.value(), kBinWidth), 17);
 }
 
-TEST(HistogramBuildTest, TestCounting) {
+TEST(HistogramUtils, TestBuildHistogramCounts) {
   const std::optional<DataSet> data_set = CreateDataSet(&raw_data_set);
 
-  const auto histogram = BuildHistogram(data_set.value(), kBandwidth);
+  const auto histogram = BuildHistogram(data_set.value(), kBinWidth);
   EXPECT_EQ(histogram.data_set_size, kDataSetSize);
   EXPECT_EQ(histogram.min, kMin);
   EXPECT_EQ(histogram.max, kMax);
-  EXPECT_EQ(histogram.bandwidth, kBandwidth);
+  EXPECT_EQ(histogram.bin_width, kBinWidth);
 
   const std::vector<size_t>& counts = histogram.counts;
   EXPECT_EQ(counts.size(), 18);
@@ -69,12 +69,12 @@ TEST(HistogramBuildTest, TestCounting) {
   EXPECT_EQ(std::reduce(counts.begin(), counts.end()), kDataSetSize);
 }
 
-TEST(HistogramBuildTest, TestCountingAllEqual) {
+TEST(HistogramUtils, TestBuildHistogramCountsAllEqualDataElements) {
   const size_t singular_dataset_size = 100;
   const std::vector<uint64_t> singular_raw_data_set(singular_dataset_size, 5ULL);
   const auto data_set = CreateDataSet(&singular_raw_data_set);
 
-  auto histogram = BuildHistogram(data_set.value(), kBandwidth);
+  auto histogram = BuildHistogram(data_set.value(), kBinWidth);
   EXPECT_EQ(histogram.data_set_size, singular_dataset_size);
   EXPECT_EQ(histogram.min, 5);
   EXPECT_EQ(histogram.max, 5);
@@ -83,48 +83,48 @@ TEST(HistogramBuildTest, TestCountingAllEqual) {
   EXPECT_EQ(histogram.counts[0], singular_dataset_size);
 }
 
-uint64_t NumberOfBinsToBandwidth(size_t bins_num, uint64_t max, uint64_t min) {
+static uint64_t NumberOfBinsToBinWidthHelper(size_t bins_num, uint64_t max, uint64_t min) {
   const std::vector<uint64_t> raw_data = {max, min};
   const auto data_set = CreateDataSet(&raw_data);
-  return NumberOfBinsToBandwidth(data_set.value(), bins_num);
+  return NumberOfBinsToBinWidth(data_set.value(), bins_num);
 }
 
-TEST(NumberOfBinsToBandwidthTest, NumberOfBinsCorrectlySetsBandidthWithOverflow) {
-  EXPECT_EQ(NumberOfBinsToBandwidth(2, 1ULL, 7ULL), 4);
+TEST(HistogramUtils, TestNumberOfBinsToBinWidthWithOverflow) {
+  EXPECT_EQ(NumberOfBinsToBinWidthHelper(2, 1ULL, 7ULL), 4);
 }
 
-TEST(NumberOfBinsToBandwidthTest, NumberOfBinsCorrectlySetsBandidthWithoutOverflow) {
-  EXPECT_EQ(NumberOfBinsToBandwidth(2, 1ULL, 6ULL), 3);
+TEST(HistogramUtils, TestNumberOfBinsToBinWidthWithoutOverflow) {
+  EXPECT_EQ(NumberOfBinsToBinWidthHelper(2, 1ULL, 6ULL), 3);
 }
 
-TEST(NumberOfBinsToBandwidthTest, NumberOfBinsCorrectlySetsBandidthForExcessiveNumberOfBins) {
-  EXPECT_EQ(NumberOfBinsToBandwidth(200, 1ULL, 6ULL), 6);
+TEST(HistogramUtils, TestNumberOfBinsToBinWidthWithExcessiveNumberOfBins) {
+  EXPECT_EQ(NumberOfBinsToBinWidthHelper(200, 1ULL, 6ULL), 6);
 }
 
-TEST(NumberOfBinsToBandwidthTest, NumberOfBinsCorrectlySetsBandidthWhenWidthEqualsNumberOfBins) {
-  EXPECT_EQ(NumberOfBinsToBandwidth(6, 1ULL, 6ULL), 1);
+TEST(HistogramUtils, TestNumberOfBinsToBinWidthWidthEqualsNumberOfBins) {
+  EXPECT_EQ(NumberOfBinsToBinWidthHelper(6, 1ULL, 6ULL), 1);
 }
 
-TEST(NumberOfBinsToBandwidthTest, NumberOfBinsCorrectlySetsBandidthWhenNumberOfBinsBinsEqualsOne) {
-  EXPECT_EQ(NumberOfBinsToBandwidth(1, 1ULL, 6ULL), 6);
+TEST(HistogramUtils, TestNumberOfBinsToBinWidthWithNumberOfBinsBinsEqualsOne) {
+  EXPECT_EQ(NumberOfBinsToBinWidthHelper(1, 1ULL, 6ULL), 6);
 }
 
-TEST(HistogramTest, RiskScoreTest) {
-  const uint64_t bandwidth = 7421300;
+TEST(HistogramUtils, HistogramRiskScoreTest) {
+  const uint64_t bin_width = 7421300;
   const std::vector<uint64_t> counts = {32ULL, 30ULL, 174ULL, 42ULL, 2ULL};
   const uint64_t min = 14015002;
   const uint64_t max = 43843646;
   const size_t data_set_size = 280;
-  const Histogram histogram{min, max, bandwidth, data_set_size, counts};
+  const Histogram histogram{min, max, bin_width, data_set_size, counts};
   EXPECT_NEAR(HistogramRiskScore(histogram), -1.72, 0.01);
 }
 
-TEST(HistogramTest, RiskScoreTestZeroWidth) {
+TEST(HistogramUtils, HistogramRiskScoreTestZeroWidth) {
   const Histogram histogram{0, 0, 1, 1, {}};
   EXPECT_DOUBLE_EQ(HistogramRiskScore(histogram), 0.0);
 }
 
-TEST(BuildHistogramTest, BuildHistogramCorrectlyChoosesTheBandwidth) {
+TEST(HistogramTest, BuildHistogramCorrectlyChoosesTheBinWidth) {
   const std::vector<uint64_t> data = {
       14015002, 14085204, 14137416, 14148620, 14208677, 14210556, 14230187, 14236563, 14249140,
       14297935, 14370241, 14483703, 14650528, 14694684, 14716937, 14731743, 14749105, 14752345,
@@ -160,6 +160,7 @@ TEST(BuildHistogramTest, BuildHistogramCorrectlyChoosesTheBandwidth) {
       43843646};
 
   std::optional<Histogram> hist = BuildHistogram(data);
+  ASSERT_TRUE(hist.has_value());
   EXPECT_EQ(hist->counts.size(), 128);
 }
 

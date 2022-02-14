@@ -14,13 +14,11 @@
 namespace orbit_statistics {
 
 [[nodiscard]] std::optional<DataSet> CreateDataSet(const std::vector<uint64_t>* data) {
+  ORBIT_CHECK(data != nullptr);
   if (data->empty()) return std::nullopt;
-  const auto min_max_iterators = std::minmax_element(data->begin(), data->end());
-  uint64_t min = *min_max_iterators.first;
-  uint64_t max = *min_max_iterators.second;
+  const auto [min, max] = std::minmax_element(data->begin(), data->end());
 
-  DataSet result(data, min, max);
-  return result;
+  return DataSet(data, *min, *max);
 }
 
 }  // namespace orbit_statistics

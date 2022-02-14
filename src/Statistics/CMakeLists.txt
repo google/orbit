@@ -19,8 +19,8 @@ target_sources(Statistics PRIVATE
                 BinomialConfidenceInterval.cpp                
                 DataSet.cpp
                 Histogram.cpp
-                HistogramPrivate.h
-                HistogramPrivate.cpp)
+                HistogramUtils.h
+                HistogramUtils.cpp)
 
 target_link_libraries(Statistics PRIVATE OrbitBase)
 

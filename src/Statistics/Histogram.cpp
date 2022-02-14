@@ -8,13 +8,13 @@
 #include <optional>
 #include <vector>
 
-#include "HistogramPrivate.h"
+#include "HistogramUtils.h"
 #include "OrbitBase/Logging.h"
 #include "Statistics/DataSet.h"
 
 namespace orbit_statistics {
 
-constexpr int kNumberOfBinsGridSize = 12;
+constexpr uint32_t kNumberOfBinsGridSize = 12;
 
 [[nodiscard]] std::optional<Histogram> BuildHistogram(const std::vector<uint64_t>& data) {
   std::optional<DataSet> data_set = CreateDataSet(&data);
@@ -24,9 +24,9 @@ constexpr int kNumberOfBinsGridSize = 12;
   double best_risk_score = std::numeric_limits<double>::max();
   Histogram best_histogram;
 
-  for (int i = 0; i < kNumberOfBinsGridSize; ++i) {
-    uint64_t bandwidth = NumberOfBinsToBandwidth(data_set.value(), number_of_bins);
-    auto histogram = BuildHistogram(data_set.value(), bandwidth);
+  for (uint32_t i = 0; i < kNumberOfBinsGridSize; ++i) {
+    uint64_t bin_width = NumberOfBinsToBinWidth(data_set.value(), number_of_bins);
+    auto histogram = BuildHistogram(data_set.value(), bin_width);
     double risk_score = HistogramRiskScore(histogram);
 
     if (risk_score < best_risk_score) {

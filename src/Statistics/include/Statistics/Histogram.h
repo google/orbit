@@ -13,13 +13,13 @@ namespace orbit_statistics {
 
 // A histogram of a dataset of `uint64_t` values with bins of equal width (with a possible
 // exception for the last one). The bins are:
-// [min, min + bandwidth), [min + bandwidth, min + 2*bandwidth), ...
-// ... [min + (counts*size() - 1) * bandwidth, max]
+// [min, min + bin_width), [min + bin_width, min + 2*bin_width), ...
+// ... [min + (counts*size() - 1) * bin_width, max]
 // `counts[i]` stores the number of elements in i-th bin.
 struct Histogram {
   uint64_t min{};
   uint64_t max{};
-  uint64_t bandwidth{};
+  uint64_t bin_width{};
   size_t data_set_size{};
   std::vector<size_t> counts;
 };
