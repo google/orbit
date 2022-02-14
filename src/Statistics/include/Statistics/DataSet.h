@@ -15,11 +15,11 @@ namespace orbit_statistics {
 // Also stores and exposes minimum and maximum value.
 class DataSet {
  public:
+  [[nodiscard]] static std::optional<DataSet> Create(const std::vector<uint64_t>* data);
+
   [[nodiscard]] const std::vector<uint64_t>* GetData() const { return data_; }
   [[nodiscard]] uint64_t GetMin() const { return min_; }
   [[nodiscard]] uint64_t GetMax() const { return max_; }
-
-  [[nodiscard]] static std::optional<DataSet> Create(const std::vector<uint64_t>* data);
 
  private:
   DataSet(const std::vector<uint64_t>* data, uint64_t min, uint64_t max)
