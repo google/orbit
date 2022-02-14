@@ -943,10 +943,10 @@ extern "C" int CheckIntParameters(u_int64_t p0, u_int64_t p1, u_int64_t p2, u_in
   return 0;
 }
 
-// This test and the two tests below check for proper handling of parameters handed to the
-// instrumented function. The payload that is called before the instrumented function is executed
-// clobbers the respective set of registers. So the Check*Parameter methods can check if the backup
-// worked correctly.
+// This test and the tests below check for proper handling of parameters handed to the instrumented
+// function. The payload that is called before the instrumented function is executed clobbers the
+// respective set of registers. So the Check*Parameter methods can check if the backup worked
+// correctly.
 TEST_F(InstrumentFunctionTest, CheckIntParameters) {
   function_name_ = "CheckIntParameters";
   pid_ = fork();
@@ -954,11 +954,11 @@ TEST_F(InstrumentFunctionTest, CheckIntParameters) {
   if (pid_ == 0) {
     prctl(PR_SET_PDEATHSIG, SIGTERM);
 
+    // Endless loops without side effects are UB and recent versions of clang optimize it away.
+    // Making `sum` volatile avoids that problem.
     [[maybe_unused]] volatile uint64_t sum = 0;
     while (true) {
       sum += CheckIntParameters(0, 0, 0, 0, 0, 0, 0, 0);
-      // Endless loops without side effects are UB and recent versions of clang optimize
-      // it away.
     }
   }
   PrepareInstrumentation("EntryPayloadClobberParameterRegisters", kExitPayloadFunctionName);
@@ -988,8 +988,8 @@ TEST_F(InstrumentFunctionTest, CheckFloatParameters) {
   if (pid_ == 0) {
     prctl(PR_SET_PDEATHSIG, SIGTERM);
 
-    // Endless loops without side effects are UB and recent versions of clang optimize
-    // it away. Making `sum` volatile avoids that problem.
+    // Endless loops without side effects are UB and recent versions of clang optimize it away.
+    // Making `sum` volatile avoids that problem.
     [[maybe_unused]] volatile uint64_t sum = 0;
     while (true) {
       sum += CheckFloatParameters(0.f, 0.f, 0.f, 0.f, 0.f, 0.f, 0.f, 0.f);
@@ -1024,8 +1024,8 @@ TEST_F(InstrumentFunctionTest, CheckM256iParameters) {
   if (pid_ == 0) {
     prctl(PR_SET_PDEATHSIG, SIGTERM);
 
-    // Endless loops without side effects are UB and recent versions of clang optimize
-    // it away. Making `sum` volatile avoids that problem.
+    // Endless loops without side effects are UB and recent versions of clang optimize it away.
+    // Making `sum` volatile avoids that problem.
     [[maybe_unused]] volatile uint64_t sum = 0;
     while (true) {
       sum +=
@@ -1035,6 +1035,72 @@ TEST_F(InstrumentFunctionTest, CheckM256iParameters) {
     }
   }
   PrepareInstrumentation("EntryPayloadClobberYmmRegisters", kExitPayloadFunctionName);
+  ErrorMessageOr<uint64_t> address_after_prologue_or_error = CreateTrampoline(
+      pid_, function_address_, function_code_, trampoline_address_, entry_payload_function_address_,
+      return_trampoline_address_, capstone_handle_, relocation_map_);
+  EXPECT_THAT(address_after_prologue_or_error, HasNoError());
+  ErrorMessageOr<void> result =
+      InstrumentFunction(pid_, function_address_, /*function_id=*/42,
+                         address_after_prologue_or_error.value(), trampoline_address_);
+  EXPECT_THAT(result, HasNoError());
+  RestartAndRemoveInstrumentation();
+}
+
+// Check-fails if any parameter is not zero.
+extern "C" __attribute__((ms_abi)) int CheckIntParametersMsAbi(uint64_t p0, uint64_t p1,
+                                                               uint64_t p2, uint64_t p3) {
+  ORBIT_CHECK(p0 == 0 && p1 == 0 && p2 == 0 && p3 == 0);
+  return 0;
+}
+
+TEST_F(InstrumentFunctionTest, CheckIntParametersMsAbi) {
+  function_name_ = "CheckIntParametersMsAbi";
+  pid_ = fork();
+  ORBIT_CHECK(pid_ != -1);
+  if (pid_ == 0) {
+    prctl(PR_SET_PDEATHSIG, SIGTERM);
+
+    // Endless loops without side effects are UB and recent versions of clang optimize it away.
+    // Making `sum` volatile avoids that problem.
+    [[maybe_unused]] volatile uint64_t sum = 0;
+    while (true) {
+      sum += CheckIntParametersMsAbi(0, 0, 0, 0);
+    }
+  }
+  PrepareInstrumentation("EntryPayloadClobberParameterRegisters", kExitPayloadFunctionName);
+  ErrorMessageOr<uint64_t> address_after_prologue_or_error = CreateTrampoline(
+      pid_, function_address_, function_code_, trampoline_address_, entry_payload_function_address_,
+      return_trampoline_address_, capstone_handle_, relocation_map_);
+  EXPECT_THAT(address_after_prologue_or_error, HasNoError());
+  ErrorMessageOr<void> result =
+      InstrumentFunction(pid_, function_address_, /*function_id=*/42,
+                         address_after_prologue_or_error.value(), trampoline_address_);
+  EXPECT_THAT(result, HasNoError());
+  RestartAndRemoveInstrumentation();
+}
+
+// Check-fails if any parameter is not zero.
+extern "C" __attribute__((ms_abi)) int CheckFloatParametersMsAbi(float p0, float p1, float p2,
+                                                                 float p3) {
+  ORBIT_CHECK(p0 == 0.f && p1 == 0.f && p2 == 0.f && p3 == 0.f);
+  return 0;
+}
+
+TEST_F(InstrumentFunctionTest, CheckFloatParametersMsAbi) {
+  function_name_ = "CheckFloatParametersMsAbi";
+  pid_ = fork();
+  ORBIT_CHECK(pid_ != -1);
+  if (pid_ == 0) {
+    prctl(PR_SET_PDEATHSIG, SIGTERM);
+
+    // Endless loops without side effects are UB and recent versions of clang optimize it away.
+    // Making `sum` volatile avoids that problem.
+    [[maybe_unused]] volatile uint64_t sum = 0;
+    while (true) {
+      sum += CheckFloatParametersMsAbi(0.f, 0.f, 0.f, 0.f);
+    }
+  }
+  PrepareInstrumentation("EntryPayloadClobberXmmRegisters", kExitPayloadFunctionName);
   ErrorMessageOr<uint64_t> address_after_prologue_or_error = CreateTrampoline(
       pid_, function_address_, function_code_, trampoline_address_, entry_payload_function_address_,
       return_trampoline_address_, capstone_handle_, relocation_map_);
