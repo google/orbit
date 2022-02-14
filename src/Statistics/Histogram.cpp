@@ -17,7 +17,7 @@ namespace orbit_statistics {
 constexpr uint32_t kNumberOfBinsGridSize = 12;
 
 [[nodiscard]] std::optional<Histogram> BuildHistogram(const std::vector<uint64_t>& data) {
-  std::optional<DataSet> data_set = CreateDataSet(&data);
+  std::optional<DataSet> data_set = DataSet::Create(&data);
   if (!data_set.has_value()) return std::nullopt;
 
   size_t number_of_bins = 1;
