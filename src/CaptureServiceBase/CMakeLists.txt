@@ -31,6 +31,7 @@ target_sources(CaptureServiceBase PRIVATE
         UploaderClientCaptureEventCollectorBuilder.cpp)
 
 target_link_libraries(CaptureServiceBase PUBLIC
+        CaptureUploader
         ProducerEventProcessor
         GrpcProtos
         Introspection

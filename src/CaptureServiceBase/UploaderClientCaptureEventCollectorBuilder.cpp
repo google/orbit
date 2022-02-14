@@ -6,21 +6,28 @@
 
 #include "ProducerEventProcessor/UploaderClientCaptureEventCollector.h"
 
+using orbit_capture_uploader::UploadDataInterface;
+using orbit_producer_event_processor::ClientCaptureEventCollector;
+using orbit_producer_event_processor::UploaderClientCaptureEventCollector;
+
 namespace orbit_capture_service_base {
 
-// A `ClientCaptureEventCollectorBuilder` implementation to build
-// `UploaderClientCaptureEventCollector` for the cloud collector.
-class UploaderClientCaptureEventCollectorBuilder : public ClientCaptureEventCollectorBuilder {
- public:
-  [[nodiscard]] std::unique_ptr<orbit_producer_event_processor::ClientCaptureEventCollector>
-  BuildClientCaptureEventCollector() override {
-    return std::make_unique<orbit_producer_event_processor::UploaderClientCaptureEventCollector>();
-  }
-};
+std::unique_ptr<ClientCaptureEventCollector>
+UploaderClientCaptureEventCollectorBuilder::BuildClientCaptureEventCollector() {
+  std::unique_ptr<UploaderClientCaptureEventCollector> uploader_client_capture_event_collector =
+      std::make_unique<UploaderClientCaptureEventCollector>();
 
-std::unique_ptr<ClientCaptureEventCollectorBuilder>
-CreateUploaderClientCaptureEventCollectorBuilder() {
-  return std::make_unique<UploaderClientCaptureEventCollectorBuilder>();
+  absl::MutexLock lock{&mutex_};
+  upload_data_interface_ = uploader_client_capture_event_collector.get();
+  return std::move(uploader_client_capture_event_collector);
+}
+
+UploadDataInterface* UploaderClientCaptureEventCollectorBuilder::GetUploadDataInterface() {
+  absl::MutexLock lock{&mutex_};
+  mutex_.Await(absl::Condition(
+      +[](UploadDataInterface* upload_data_interface) { return upload_data_interface != nullptr; },
+      upload_data_interface_));
+  return upload_data_interface_;
 }
 
 }  // namespace orbit_capture_service_base
