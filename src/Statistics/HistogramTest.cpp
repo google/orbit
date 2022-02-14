@@ -27,7 +27,7 @@ const static std::vector<uint64_t> raw_data_set(kRawDataSet.begin(), kRawDataSet
 TEST(DataSet, TestCreateDataSetWithEmptyVector) {
   const std::vector<uint64_t> empty;
   const std::optional<DataSet> data_set = DataSet::Create(&empty);
-  EXPECT_TRUE(!data_set.has_value());
+  EXPECT_FALSE(data_set.has_value());
 }
 
 TEST(DataSet, TestCreateDataSetWithNonEmptyVector) {
@@ -124,7 +124,7 @@ TEST(HistogramUtils, HistogramRiskScoreTestZeroWidth) {
   EXPECT_DOUBLE_EQ(HistogramRiskScore(histogram), 0.0);
 }
 
-TEST(HistogramTest, BuildHistogramCorrectlyChoosesTheBinWidth) {
+TEST(Histogram, BuildHistogramCorrectlyChoosesTheBinWidth) {
   const std::vector<uint64_t> data = {
       14015002, 14085204, 14137416, 14148620, 14208677, 14210556, 14230187, 14236563, 14249140,
       14297935, 14370241, 14483703, 14650528, 14694684, 14716937, 14731743, 14749105, 14752345,

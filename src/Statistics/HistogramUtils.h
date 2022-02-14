@@ -2,8 +2,8 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#ifndef STATISTICS_HISTOGRAM_PRIVATE_H_
-#define STATISTICS_HISTOGRAM_PRIVATE_H_
+#ifndef STATISTICS_HISTOGRAM_UTILS_H_
+#define STATISTICS_HISTOGRAM_UTILS_H_
 
 #include <cstdint>
 
@@ -27,4 +27,4 @@ namespace orbit_statistics {
 
 }  // namespace orbit_statistics
 
-#endif /* STATISTICS_HISTOGRAM_PRIVATE_H_ */
+#endif /* STATISTICS_HISTOGRAM_UTILS_H_ */
