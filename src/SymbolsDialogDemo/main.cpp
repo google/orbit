@@ -6,7 +6,9 @@
 #include <filesystem>
 #include <vector>
 
+#include "ClientData/ModuleData.h"
 #include "ConfigWidgets/SymbolsDialog.h"
+#include "GrpcProtos/module.pb.h"
 #include "SymbolPaths/QSettingsBasedStorageManager.h"
 
 int main(int argc, char* argv[]) {
@@ -14,14 +16,16 @@ int main(int argc, char* argv[]) {
   QApplication::setApplicationName("SymbolsDialogDemo");
   QApplication::setOrganizationName("The Orbit Authors");
 
-  orbit_symbol_paths::QSettingsBasedStorageManager symbol_paths_storage_manager;
-  orbit_config_widgets::SymbolsDialog dialog{};
-  dialog.SetSymbolPaths(symbol_paths_storage_manager.LoadPaths());
-  const int result_code = dialog.exec();
+  orbit_grpc_protos::ModuleInfo module_info;
+  module_info.set_name("test.so");
+  module_info.set_file_path("/usr/modules/test.so");
+  module_info.set_object_file_type(orbit_grpc_protos::ModuleInfo::kElfFile);
 
-  if (result_code == QDialog::Accepted) {
-    symbol_paths_storage_manager.SavePaths(dialog.GetSymbolPaths());
-  }
+  orbit_client_data::ModuleData module{module_info};
+
+  orbit_symbol_paths::QSettingsBasedStorageManager symbol_paths_storage_manager;
+  orbit_config_widgets::SymbolsDialog dialog{&symbol_paths_storage_manager, &module};
+  const int result_code = dialog.exec();
 
   return result_code;
 }

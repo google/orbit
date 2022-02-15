@@ -6,89 +6,202 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>701</width>
-    <height>308</height>
+    <width>614</width>
+    <height>398</height>
    </rect>
   </property>
   <property name="windowTitle">
    <string>Symbol Locations</string>
   </property>
   <layout class="QGridLayout" name="gridLayout">
-   <item row="0" column="0" rowspan="3">
+   <item row="1" column="1">
+    <layout class="QVBoxLayout" name="verticalLayout">
+     <item>
+      <widget class="QPushButton" name="addFolderButton">
+       <property name="text">
+        <string>Add Folder</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QPushButton" name="addFileButton">
+       <property name="text">
+        <string>Add File</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QPushButton" name="removeButton">
+       <property name="text">
+        <string>Remove</string>
+       </property>
+       <property name="enabled">
+        <bool>false</bool>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <spacer name="verticalSpacer">
+       <property name="orientation">
+        <enum>Qt::Vertical</enum>
+       </property>
+       <property name="sizeHint" stdset="0">
+        <size>
+         <width>20</width>
+         <height>40</height>
+        </size>
+       </property>
+      </spacer>
+     </item>
+    </layout>
+   </item>
+   <item row="3" column="0">
+    <widget class="QLabel" name="label_2">
+     <property name="text">
+      <string>Orbit tries to find symbols automatically based on filenames and build id.</string>
+     </property>
+    </widget>
+   </item>
+   <item row="1" column="0">
     <widget class="QListWidget" name="listWidget"/>
    </item>
-   <item row="0" column="1">
-    <widget class="QPushButton" name="addButton">
+   <item row="4" column="0">
+    <layout class="QHBoxLayout" name="horizontalLayout_3">
+     <item>
+      <spacer name="horizontalSpacer_2">
+       <property name="orientation">
+        <enum>Qt::Horizontal</enum>
+       </property>
+       <property name="sizeHint" stdset="0">
+        <size>
+         <width>40</width>
+         <height>20</height>
+        </size>
+       </property>
+      </spacer>
+     </item>
+    </layout>
+   </item>
+   <item row="2" column="0">
+    <widget class="QLabel" name="label">
      <property name="text">
-      <string>Add Folder</string>
+      <string>Orbit attemps to load symbols to accurately label functions with their names, resolve callstack and more. When symbols can't be loaded, function names will be displayed as ???.</string>
+     </property>
+     <property name="wordWrap">
+      <bool>true</bool>
      </property>
     </widget>
    </item>
-   <item row="1" column="1">
-    <widget class="QPushButton" name="removeButton">
+   <item row="5" column="1">
+    <widget class="QPushButton" name="doneButton">
      <property name="text">
-      <string>Remove</string>
+      <string>Done</string>
      </property>
     </widget>
    </item>
-   <item row="2" column="1">
-    <spacer name="verticalSpacer">
-     <property name="orientation">
-      <enum>Qt::Vertical</enum>
-     </property>
-     <property name="sizeHint" stdset="0">
-      <size>
-       <width>20</width>
-       <height>192</height>
-      </size>
-     </property>
-    </spacer>
-   </item>
-   <item row="3" column="0" colspan="2">
-    <widget class="QDialogButtonBox" name="buttonBox">
-     <property name="orientation">
-      <enum>Qt::Horizontal</enum>
-     </property>
-     <property name="standardButtons">
-      <set>QDialogButtonBox::Cancel|QDialogButtonBox::Ok</set>
+   <item row="0" column="0">
+    <widget class="QLabel" name="moduleHeadlineLabel">
+     <property name="visible">
+      <bool>false</bool>
      </property>
     </widget>
    </item>
   </layout>
  </widget>
+ <tabstops>
+  <tabstop>addFolderButton</tabstop>
+  <tabstop>addFileButton</tabstop>
+  <tabstop>removeButton</tabstop>
+  <tabstop>listWidget</tabstop>
+  <tabstop>doneButton</tabstop>
+ </tabstops>
  <resources/>
  <connections>
   <connection>
-   <sender>buttonBox</sender>
-   <signal>accepted()</signal>
-   <receiver>SymbolsDialog</receiver>
-   <slot>accept()</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>248</x>
-     <y>254</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>157</x>
-     <y>274</y>
-    </hint>
-   </hints>
-  </connection>
-  <connection>
-   <sender>buttonBox</sender>
-   <signal>rejected()</signal>
+   <sender>doneButton</sender>
+   <signal>clicked()</signal>
    <receiver>SymbolsDialog</receiver>
    <slot>reject()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>316</x>
-     <y>260</y>
+     <x>521</x>
+     <y>513</y>
     </hint>
     <hint type="destinationlabel">
-     <x>286</x>
-     <y>274</y>
+     <x>531</x>
+     <y>477</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>addFolderButton</sender>
+   <signal>clicked()</signal>
+   <receiver>SymbolsDialog</receiver>
+   <slot>OnAddFolderButtonClicked()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>481</x>
+     <y>25</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>500</x>
+     <y>120</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>addFileButton</sender>
+   <signal>clicked()</signal>
+   <receiver>SymbolsDialog</receiver>
+   <slot>OnAddFileButtonClicked()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>466</x>
+     <y>47</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>462</x>
+     <y>117</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>removeButton</sender>
+   <signal>clicked()</signal>
+   <receiver>SymbolsDialog</receiver>
+   <slot>OnRemoveButtonClicked()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>506</x>
+     <y>84</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>473</x>
+     <y>180</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>listWidget</sender>
+   <signal>itemSelectionChanged()</signal>
+   <receiver>SymbolsDialog</receiver>
+   <slot>OnListItemSelectionChanged()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>211</x>
+     <y>207</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>469</x>
+     <y>304</y>
     </hint>
    </hints>
   </connection>
  </connections>
+ <slots>
+  <slot>OnAddFolderButtonClicked()</slot>
+  <slot>OnAddFileButtonClicked()</slot>
+  <slot>OnRemoveButtonClicked()</slot>
+  <slot>OnListItemSelectionChanged()</slot>
+ </slots>
 </ui>
