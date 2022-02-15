@@ -125,5 +125,6 @@ cc_library(
         "@android_platform_system_libbase//:libbase",
         "@android_platform_system_libprocinfo//:libprocinfo",
         "@com_7-zip_org_sdk//lzma",
+        "@com_github_capstone-engine_capstone//capstone",
     ],
 )
