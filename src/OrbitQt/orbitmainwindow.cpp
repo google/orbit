@@ -236,14 +236,16 @@ OrbitMainWindow::OrbitMainWindow(TargetConfiguration target_configuration,
     }
   }
 
-  for (const auto& dir : orbit_symbol_paths::LoadPaths()) {
+  std::unique_ptr<orbit_symbol_paths::PersistentStorageManager> symbol_paths_storage_manager =
+      orbit_symbol_paths::CreatePersistenStorageManager();
+  for (const auto& dir : symbol_paths_storage_manager->LoadPaths()) {
     if (!already_seen_paths.contains(dir.string())) {
       already_seen_paths.insert(dir.string());
       dirs_to_save.push_back(dir);
     }
   }
 
-  orbit_symbol_paths::SavePaths(dirs_to_save);
+  symbol_paths_storage_manager->SavePaths(dirs_to_save);
 
   ErrorMessageOr<void> add_depr_note_result =
       orbit_symbols::AddDeprecationNoteToFile(orbit_paths::GetSymbolsFilePath());
@@ -1420,12 +1422,14 @@ void OrbitMainWindow::on_actionSourcePathMappings_triggered() {
 }
 
 void OrbitMainWindow::on_actionSymbolsDialog_triggered() {
+  std::unique_ptr<orbit_symbol_paths::PersistentStorageManager> symbol_paths_storage_manager =
+      orbit_symbol_paths::CreatePersistenStorageManager();
   orbit_config_widgets::SymbolsDialog dialog{this};
-  dialog.SetSymbolPaths(orbit_symbol_paths::LoadPaths());
+  dialog.SetSymbolPaths(symbol_paths_storage_manager->LoadPaths());
   const int result_code = dialog.exec();
 
   if (result_code == QDialog::Accepted) {
-    orbit_symbol_paths::SavePaths(dialog.GetSymbolPaths());
+    symbol_paths_storage_manager->SavePaths(dialog.GetSymbolPaths());
   }
 }
 

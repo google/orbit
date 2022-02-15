@@ -7,6 +7,7 @@
 #include <QCoreApplication>
 #include <QSettings>
 #include <filesystem>
+#include <memory>
 
 #include "SymbolPaths/PersistentStorageManager.h"
 
@@ -27,7 +28,9 @@ TEST(SymbolPathsManager, LoadAndSave) {
     settings.clear();
   }
 
-  EXPECT_EQ(LoadPaths(), std::vector<std::filesystem::path>{});
+  std::unique_ptr<PersistentStorageManager> manager = CreatePersistenStorageManager();
+
+  EXPECT_EQ(manager->LoadPaths(), std::vector<std::filesystem::path>{});
 
   std::vector<std::filesystem::path> paths{
       path0,
@@ -35,8 +38,8 @@ TEST(SymbolPathsManager, LoadAndSave) {
       path2,
   };
 
-  SavePaths(paths);
-  EXPECT_EQ(LoadPaths(), paths);
+  manager->SavePaths(paths);
+  EXPECT_EQ(manager->LoadPaths(), paths);
 }
 
 }  // namespace orbit_symbol_paths
