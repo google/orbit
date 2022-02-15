@@ -109,7 +109,7 @@
 #include "SourcePathsMapping/MappingManager.h"
 #include "SourcePathsMappingUI/AskUserForFile.h"
 #include "StatusListenerImpl.h"
-#include "SymbolPaths/PersistentStorageManager.h"
+#include "SymbolPaths/QSettingsBasedStorageManager.h"
 #include "Symbols/SymbolHelper.h"
 #include "SyntaxHighlighter/Cpp.h"
 #include "SyntaxHighlighter/X86Assembly.h"
@@ -236,16 +236,15 @@ OrbitMainWindow::OrbitMainWindow(TargetConfiguration target_configuration,
     }
   }
 
-  std::unique_ptr<orbit_symbol_paths::PersistentStorageManager> symbol_paths_storage_manager =
-      orbit_symbol_paths::CreatePersistenStorageManager();
-  for (const auto& dir : symbol_paths_storage_manager->LoadPaths()) {
+  orbit_symbol_paths::QSettingsBasedStorageManager symbol_paths_storage_manager;
+  for (const auto& dir : symbol_paths_storage_manager.LoadPaths()) {
     if (!already_seen_paths.contains(dir.string())) {
       already_seen_paths.insert(dir.string());
       dirs_to_save.push_back(dir);
     }
   }
 
-  symbol_paths_storage_manager->SavePaths(dirs_to_save);
+  symbol_paths_storage_manager.SavePaths(dirs_to_save);
 
   ErrorMessageOr<void> add_depr_note_result =
       orbit_symbols::AddDeprecationNoteToFile(orbit_paths::GetSymbolsFilePath());
@@ -1422,14 +1421,13 @@ void OrbitMainWindow::on_actionSourcePathMappings_triggered() {
 }
 
 void OrbitMainWindow::on_actionSymbolsDialog_triggered() {
-  std::unique_ptr<orbit_symbol_paths::PersistentStorageManager> symbol_paths_storage_manager =
-      orbit_symbol_paths::CreatePersistenStorageManager();
+  orbit_symbol_paths::QSettingsBasedStorageManager symbol_paths_storage_manager;
   orbit_config_widgets::SymbolsDialog dialog{this};
-  dialog.SetSymbolPaths(symbol_paths_storage_manager->LoadPaths());
+  dialog.SetSymbolPaths(symbol_paths_storage_manager.LoadPaths());
   const int result_code = dialog.exec();
 
   if (result_code == QDialog::Accepted) {
-    symbol_paths_storage_manager->SavePaths(dialog.GetSymbolPaths());
+    symbol_paths_storage_manager.SavePaths(dialog.GetSymbolPaths());
   }
 }
 
