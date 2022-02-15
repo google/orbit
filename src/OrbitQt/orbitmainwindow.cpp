@@ -1422,13 +1422,8 @@ void OrbitMainWindow::on_actionSourcePathMappings_triggered() {
 
 void OrbitMainWindow::on_actionSymbolsDialog_triggered() {
   orbit_symbol_paths::QSettingsBasedStorageManager symbol_paths_storage_manager;
-  orbit_config_widgets::SymbolsDialog dialog{this};
-  dialog.SetSymbolPaths(symbol_paths_storage_manager.LoadPaths());
-  const int result_code = dialog.exec();
-
-  if (result_code == QDialog::Accepted) {
-    symbol_paths_storage_manager.SavePaths(dialog.GetSymbolPaths());
-  }
+  orbit_config_widgets::SymbolsDialog dialog{&symbol_paths_storage_manager, std::nullopt, this};
+  dialog.exec();
 }
 
 void OrbitMainWindow::OnCaptureCleared() {
