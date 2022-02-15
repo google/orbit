@@ -84,7 +84,7 @@
 #include "OrbitVersion/OrbitVersion.h"
 #include "SamplingReport.h"
 #include "Statistics/BinomialConfidenceInterval.h"
-#include "SymbolPaths/QSettingsWrapper.h"
+#include "SymbolPaths/PersistentStorageManager.h"
 #include "Symbols/SymbolHelper.h"
 #include "TimeGraph.h"
 
@@ -223,7 +223,9 @@ orbit_metrics_uploader::CaptureStartData CreateCaptureStartData(
 }
 
 std::vector<std::filesystem::path> GetAllSymbolPaths() {
-  std::vector<std::filesystem::path> all_paths = orbit_symbol_paths::LoadPaths();
+  std::unique_ptr<orbit_symbol_paths::PersistentStorageManager> symbol_paths_storage_manager =
+      orbit_symbol_paths::CreatePersistenStorageManager();
+  std::vector<std::filesystem::path> all_paths = symbol_paths_storage_manager->LoadPaths();
   std::vector<std::string> temp_paths = absl::GetFlag(FLAGS_additional_symbol_paths);
   all_paths.insert(all_paths.end(), temp_paths.begin(), temp_paths.end());
   return all_paths;

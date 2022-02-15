@@ -10,7 +10,7 @@
 
 #include "ConfigWidgets/SymbolsDialog.h"
 #include "OrbitBase/Logging.h"
-#include "SymbolPaths/QSettingsWrapper.h"
+#include "SymbolPaths/PersistentStorageManager.h"
 #include "ui_SymbolErrorDialog.h"
 
 namespace orbit_config_widgets {
