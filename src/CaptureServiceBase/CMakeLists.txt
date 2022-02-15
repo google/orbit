@@ -14,23 +14,19 @@ target_include_directories(CaptureServiceBase PRIVATE
 target_sources(CaptureServiceBase PUBLIC
         include/CaptureServiceBase/CaptureServiceBase.h
         include/CaptureServiceBase/CaptureStartStopListener.h
-        include/CaptureServiceBase/ClientCaptureEventCollectorBuilder.h
         include/CaptureServiceBase/CloudCollectorStartStopCaptureRequestWaiter.h
         include/CaptureServiceBase/CommonProducerCaptureEventBuilders.h
-        include/CaptureServiceBase/GrpcClientCaptureEventCollectorBuilder.h
         include/CaptureServiceBase/GrpcStartStopCaptureRequestWaiter.h
-        include/CaptureServiceBase/StartStopCaptureRequestWaiter.h
-        include/CaptureServiceBase/UploaderClientCaptureEventCollectorBuilder.h)
+        include/CaptureServiceBase/StartStopCaptureRequestWaiter.h)
 
 target_sources(CaptureServiceBase PRIVATE
         CaptureServiceBase.cpp
         CloudCollectorStartStopCaptureRequestWaiter.cpp
         CommonProducerCaptureEventBuilders.cpp
-        GrpcClientCaptureEventCollectorBuilder.cpp
-        GrpcStartStopCaptureRequestWaiter.cpp
-        UploaderClientCaptureEventCollectorBuilder.cpp)
+        GrpcStartStopCaptureRequestWaiter.cpp)
 
 target_link_libraries(CaptureServiceBase PUBLIC
+        CaptureUploader
         ProducerEventProcessor
         GrpcProtos
         Introspection
