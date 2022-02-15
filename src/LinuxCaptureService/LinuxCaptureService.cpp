@@ -4,10 +4,10 @@
 
 #include "LinuxCaptureService/LinuxCaptureService.h"
 
-#include "CaptureServiceBase/GrpcClientCaptureEventCollectorManager.h"
 #include "CaptureServiceBase/GrpcStartStopCaptureRequestWaiter.h"
 #include "OrbitBase/Logging.h"
 #include "OrbitBase/ThreadUtils.h"
+#include "ProducerEventProcessor/GrpcClientCaptureEventCollector.h"
 
 namespace orbit_linux_capture_service {
 
@@ -17,18 +17,15 @@ grpc::Status LinuxCaptureService::Capture(
         reader_writer) {
   orbit_base::SetCurrentThreadName("CSImpl::Capture");
 
-  std::unique_ptr<orbit_capture_service_base::ClientCaptureEventCollectorManager>
-      client_capture_event_collector_manager =
-          orbit_capture_service_base::CreateGrpcClientCaptureEventCollectorManager(reader_writer);
-  orbit_producer_event_processor::ClientCaptureEventCollector* client_capture_event_collector =
-      client_capture_event_collector_manager->GetClientCaptureEventCollector();
+  orbit_producer_event_processor::GrpcClientCaptureEventCollector
+      grpc_client_capture_event_collector{reader_writer};
 
   std::shared_ptr<orbit_capture_service_base::StartStopCaptureRequestWaiter>
       start_stop_capture_request_waiter =
           orbit_capture_service_base::CreateGrpcStartStopCaptureRequestWaiter(reader_writer);
 
   CaptureServiceBase::CaptureInitializationResult initialization_result =
-      DoCapture(client_capture_event_collector, start_stop_capture_request_waiter);
+      DoCapture(&grpc_client_capture_event_collector, start_stop_capture_request_waiter);
   switch (initialization_result) {
     case CaptureInitializationResult::kSuccess:
       return grpc::Status::OK;

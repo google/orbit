@@ -7,10 +7,10 @@
 #include <grpcpp/grpcpp.h>
 #include <stdint.h>
 
-#include "CaptureServiceBase/GrpcClientCaptureEventCollectorManager.h"
 #include "CaptureServiceBase/GrpcStartStopCaptureRequestWaiter.h"
 #include "GrpcProtos/capture.pb.h"
 #include "OrbitBase/ThreadUtils.h"
+#include "ProducerEventProcessor/GrpcClientCaptureEventCollector.h"
 #include "TracingHandler.h"
 
 namespace orbit_windows_capture_service {
@@ -24,18 +24,15 @@ grpc::Status WindowsCaptureService::Capture(
     grpc::ServerReaderWriter<CaptureResponse, CaptureRequest>* reader_writer) {
   orbit_base::SetCurrentThreadName("WinCS::Capture");
 
-  std::unique_ptr<orbit_capture_service_base::ClientCaptureEventCollectorManager>
-      client_capture_event_collector_manager =
-          orbit_capture_service_base::CreateGrpcClientCaptureEventCollectorManager(reader_writer);
-  orbit_producer_event_processor::ClientCaptureEventCollector* client_capture_event_collector =
-      client_capture_event_collector_manager->GetClientCaptureEventCollector();
+  orbit_producer_event_processor::GrpcClientCaptureEventCollector
+      grpc_client_capture_event_collector{reader_writer};
 
   std::shared_ptr<orbit_capture_service_base::StartStopCaptureRequestWaiter>
       start_stop_capture_request_waiter =
           orbit_capture_service_base::CreateGrpcStartStopCaptureRequestWaiter(reader_writer);
 
   CaptureServiceBase::CaptureInitializationResult initialization_result =
-      InitializeCapture(client_capture_event_collector);
+      InitializeCapture(&grpc_client_capture_event_collector);
   switch (initialization_result) {
     case CaptureInitializationResult::kSuccess:
       break;
