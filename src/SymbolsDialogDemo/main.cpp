@@ -7,7 +7,7 @@
 #include <vector>
 
 #include "ConfigWidgets/SymbolsDialog.h"
-#include "SymbolPaths/QSettingsWrapper.h"
+#include "SymbolPaths/PersistentStorageManager.h"
 
 int main(int argc, char* argv[]) {
   QApplication app{argc, argv};

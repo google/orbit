@@ -84,7 +84,7 @@
 #include "OrbitVersion/OrbitVersion.h"
 #include "SamplingReport.h"
 #include "Statistics/BinomialConfidenceInterval.h"
-#include "SymbolPaths/QSettingsWrapper.h"
+#include "SymbolPaths/PersistentStorageManager.h"
 #include "Symbols/SymbolHelper.h"
 #include "TimeGraph.h"
 

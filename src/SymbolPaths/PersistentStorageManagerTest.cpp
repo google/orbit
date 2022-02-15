@@ -8,7 +8,7 @@
 #include <QSettings>
 #include <filesystem>
 
-#include "SymbolPaths/QSettingsWrapper.h"
+#include "SymbolPaths/PersistentStorageManager.h"
 
 const std::filesystem::path path0{"/path/to/symbols/path"};
 const std::filesystem::path path1{"/home/src/project/build/"};

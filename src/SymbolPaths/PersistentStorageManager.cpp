@@ -2,10 +2,10 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#include "SymbolPaths/QSettingsWrapper.h"
-
 #include <QSettings>
 #include <filesystem>
+
+#include "SymbolPaths/PersistentStorageManager.h"
 
 constexpr const char* kSymbolPathsSettingsKey = "symbol_directories";
 constexpr const char* kDirectoryPathKey = "directory_path";

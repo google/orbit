@@ -2,8 +2,8 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#ifndef SYMBOL_PATHS_QSETTINGS_WRAPPER_H_
-#define SYMBOL_PATHS_QSETTINGS_WRAPPER_H_
+#ifndef SYMBOL_PATHS_PERSISTENT_STORAGE_MANAGER_H
+#define SYMBOL_PATHS_PERSISTENT_STORAGE_MANAGER_H
 
 #include <filesystem>
 #include <vector>
@@ -20,4 +20,4 @@ void SavePaths(const std::vector<std::filesystem::path>& paths);
 
 }  // namespace orbit_symbol_paths
 
-#endif  // SYMBOL_PATHS_QSETTINGS_WRAPPER_H_
+#endif  // SYMBOL_PATHS_PERSISTENT_STORAGE_MANAGER_H

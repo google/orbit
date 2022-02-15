@@ -109,7 +109,7 @@
 #include "SourcePathsMapping/MappingManager.h"
 #include "SourcePathsMappingUI/AskUserForFile.h"
 #include "StatusListenerImpl.h"
-#include "SymbolPaths/QSettingsWrapper.h"
+#include "SymbolPaths/PersistentStorageManager.h"
 #include "Symbols/SymbolHelper.h"
 #include "SyntaxHighlighter/Cpp.h"
 #include "SyntaxHighlighter/X86Assembly.h"

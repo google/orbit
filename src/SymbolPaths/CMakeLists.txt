@@ -11,12 +11,12 @@ target_include_directories(SymbolPaths PUBLIC include/)
 target_link_libraries(SymbolPaths PUBLIC Qt5::Core)
 
 target_sources(
-  SymbolPaths PUBLIC include/SymbolPaths/QSettingsWrapper.h)
+  SymbolPaths PUBLIC include/SymbolPaths/PersistentStorageManager.h)
 
-target_sources(SymbolPaths PRIVATE QSettingsWrapper.cpp)
+target_sources(SymbolPaths PRIVATE PersistentStorageManager.cpp)
 
 add_executable(SymbolPathsTests)
-target_sources(SymbolPathsTests PRIVATE QSettingsWrapperTest.cpp)
+target_sources(SymbolPathsTests PRIVATE PersistentStorageManagerTest.cpp)
 
 target_link_libraries(SymbolPathsTests PRIVATE SymbolPaths
                                                GTest::QtCoreMain)
