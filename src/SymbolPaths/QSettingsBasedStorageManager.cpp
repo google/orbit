@@ -2,7 +2,7 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#include "SymbolPaths/PersistentStorageManager.h"
+#include "SymbolPaths/QSettingsBasedStorageManager.h"
 
 #include <QSettings>
 #include <filesystem>
@@ -13,13 +13,7 @@ constexpr const char* kDirectoryPathKey = "directory_path";
 
 namespace orbit_symbol_paths {
 
-class PersistentStorageManagerImpl : public PersistentStorageManager {
- public:
-  void SavePaths(const std::vector<std::filesystem::path>& paths) override;
-  [[nodiscard]] std::vector<std::filesystem::path> LoadPaths() override;
-};
-
-std::vector<std::filesystem::path> PersistentStorageManagerImpl::LoadPaths() {
+std::vector<std::filesystem::path> QSettingsBasedStorageManager::LoadPaths() {
   QSettings settings{};
   const int size = settings.beginReadArray(kSymbolPathsSettingsKey);
   std::vector<std::filesystem::path> paths{};
@@ -32,7 +26,7 @@ std::vector<std::filesystem::path> PersistentStorageManagerImpl::LoadPaths() {
   return paths;
 }
 
-void PersistentStorageManagerImpl::SavePaths(const std::vector<std::filesystem::path>& paths) {
+void QSettingsBasedStorageManager::SavePaths(absl::Span<const std::filesystem::path> paths) {
   QSettings settings{};
   settings.beginWriteArray(kSymbolPathsSettingsKey, static_cast<int>(paths.size()));
   for (size_t i = 0; i < paths.size(); ++i) {
@@ -40,10 +34,6 @@ void PersistentStorageManagerImpl::SavePaths(const std::vector<std::filesystem::
     settings.setValue(kDirectoryPathKey, QString::fromStdString(paths[i].string()));
   }
   settings.endArray();
-}
-
-std::unique_ptr<PersistentStorageManager> CreatePersistenStorageManager() {
-  return std::make_unique<PersistentStorageManagerImpl>();
 }
 
 }  // namespace orbit_symbol_paths

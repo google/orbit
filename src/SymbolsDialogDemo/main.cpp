@@ -7,21 +7,20 @@
 #include <vector>
 
 #include "ConfigWidgets/SymbolsDialog.h"
-#include "SymbolPaths/PersistentStorageManager.h"
+#include "SymbolPaths/QSettingsBasedStorageManager.h"
 
 int main(int argc, char* argv[]) {
   QApplication app{argc, argv};
   QApplication::setApplicationName("SymbolsDialogDemo");
   QApplication::setOrganizationName("The Orbit Authors");
 
-  std::unique_ptr<orbit_symbol_paths::PersistentStorageManager> symbol_paths_storage_manager =
-      orbit_symbol_paths::CreatePersistenStorageManager();
+  orbit_symbol_paths::QSettingsBasedStorageManager symbol_paths_storage_manager;
   orbit_config_widgets::SymbolsDialog dialog{};
-  dialog.SetSymbolPaths(symbol_paths_storage_manager->LoadPaths());
+  dialog.SetSymbolPaths(symbol_paths_storage_manager.LoadPaths());
   const int result_code = dialog.exec();
 
   if (result_code == QDialog::Accepted) {
-    symbol_paths_storage_manager->SavePaths(dialog.GetSymbolPaths());
+    symbol_paths_storage_manager.SavePaths(dialog.GetSymbolPaths());
   }
 
   return result_code;

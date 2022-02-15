@@ -5,6 +5,8 @@
 #ifndef SYMBOL_PATHS_PERSISTENT_STORAGE_MANAGER_H
 #define SYMBOL_PATHS_PERSISTENT_STORAGE_MANAGER_H
 
+#include <absl/types/span.h>
+
 #include <filesystem>
 #include <memory>
 #include <vector>
@@ -13,19 +15,11 @@ namespace orbit_symbol_paths {
 
 class PersistentStorageManager {
  public:
-  PersistentStorageManager() = default;
   virtual ~PersistentStorageManager() = default;
 
-  // This is a simple wrapper around QSettings, which makes this thread safe, see
-  // https://doc.qt.io/qt-5/qsettings.html
-  void virtual SavePaths(const std::vector<std::filesystem::path>& paths) = 0;
-
-  // This is a simple wrapper around QSettings, which makes this thread safe, see
-  // https://doc.qt.io/qt-5/qsettings.html
-  [[nodiscard]] std::vector<std::filesystem::path> virtual LoadPaths() = 0;
+  virtual void SavePaths(absl::Span<const std::filesystem::path> paths) = 0;
+  [[nodiscard]] virtual std::vector<std::filesystem::path> LoadPaths() = 0;
 };
-
-std::unique_ptr<PersistentStorageManager> CreatePersistenStorageManager();
 
 }  // namespace orbit_symbol_paths
 
