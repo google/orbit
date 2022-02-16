@@ -178,14 +178,23 @@ TEST(AllocateInTraceeTest, ReadSeccompModeOfThread) {
 }
 
 TEST(AllocateInTraceeTest, SyscallInTraceeFailsBecauseOfSeccomp) {
+  std::array<int, 2> child_to_parent_pipe{};
+  ORBIT_CHECK(pipe(child_to_parent_pipe.data()) == 0);
+
   pid_t pid = fork();
   ORBIT_CHECK(pid != -1);
   if (pid == 0) {
     prctl(PR_SET_PDEATHSIG, SIGTERM);
 
+    // Close the read end of the pipe.
+    ORBIT_CHECK(close(child_to_parent_pipe[0]) == 0);
+
     // Transition to strict seccomp mode.
-    int64_t seccomp_result = syscall(SYS_seccomp, SECCOMP_SET_MODE_STRICT, 0, nullptr);
-    ORBIT_CHECK(seccomp_result == 0);
+    ORBIT_CHECK(syscall(SYS_seccomp, SECCOMP_SET_MODE_STRICT, 0, nullptr) == 0);
+
+    // Send one byte to the parent to notify that the child has called seccomp. Note that the strict
+    // seccomp mode still allows write.
+    ORBIT_CHECK(write(child_to_parent_pipe[1], "a", 1) == 1);
 
     // Child just runs an endless loop.
     volatile uint64_t counter = 0;
@@ -195,21 +204,12 @@ TEST(AllocateInTraceeTest, SyscallInTraceeFailsBecauseOfSeccomp) {
     }
   }
 
-  // Give the child enough time to execute the seccomp syscall.
-  std::this_thread::sleep_for(std::chrono::milliseconds{1000});
+  // Close the write end of the pipe.
+  ORBIT_CHECK(close(child_to_parent_pipe[1]) == 0);
 
-  int wstatus = 0;
-  pid_t waited_pid = waitpid(pid, &wstatus, WNOHANG);
-  ORBIT_CHECK(waited_pid != -1);
-  if (waited_pid != 0) {
-    // ORBIT_CHECK(seccomp_result == 0) failed in the child.
-    ORBIT_CHECK(waited_pid == pid);
-    ORBIT_CHECK(WIFSIGNALED(wstatus));
-    ORBIT_CHECK(WTERMSIG(wstatus) == SIGABRT);
-    ORBIT_ERROR("Child failed to call seccomp");
-    GTEST_SKIP();
-  }
-  ORBIT_CHECK(kill(pid, 0) == 0);
+  // Wait for the child to execute the seccomp syscall.
+  char buf[1];
+  ORBIT_CHECK(read(child_to_parent_pipe[0], buf, 1) == 1);
 
   // Stop the process using our tooling.
   auto attach_and_stop_result = AttachAndStopProcess(pid);
@@ -218,7 +218,6 @@ TEST(AllocateInTraceeTest, SyscallInTraceeFailsBecauseOfSeccomp) {
   }
 
   constexpr uint64_t kMemorySize = 1024 * 1024;
-
   // Allocation will fail because of seccomp.
   auto my_memory_or_error = MemoryInTracee::Create(pid, 0, kMemorySize);
   EXPECT_THAT(
