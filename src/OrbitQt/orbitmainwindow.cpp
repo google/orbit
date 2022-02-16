@@ -1629,6 +1629,11 @@ void OrbitMainWindow::ShowWarningWithDontShowAgainCheckboxIfNeeded(
   message_box.exec();
 }
 
+void OrbitMainWindow::ShowHistogram(const std::optional<orbit_statistics::Histogram>& histogram,
+                                    const std::string& function_name) {
+  GetUi()->liveFunctions->ShowHistogram(histogram, function_name);
+}
+
 static std::optional<QString> TryApplyMappingAndReadSourceFile(
     const std::filesystem::path& file_path) {
   orbit_source_paths_mapping::MappingManager mapping_manager{};

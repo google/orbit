@@ -14,6 +14,7 @@
 #include "ClientProtos/capture_data.pb.h"
 #include "CodeReport/CodeReport.h"
 #include "CodeReport/DisassemblyReport.h"
+#include "Statistics/Histogram.h"
 
 namespace orbit_gl {
 
@@ -39,6 +40,9 @@ class MainWindowInterface {
   enum class CaptureLogSeverity { kInfo, kWarning, kSevereWarning, kError };
   virtual void AppendToCaptureLog(CaptureLogSeverity severity, absl::Duration capture_time,
                                   std::string_view message) = 0;
+
+  virtual void ShowHistogram(const std::optional<orbit_statistics::Histogram>& histogram,
+                             const std::string& function_name) = 0;
 
   virtual ~MainWindowInterface() = default;
 };

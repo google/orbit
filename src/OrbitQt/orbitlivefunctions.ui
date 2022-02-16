@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>690</width>
-    <height>284</height>
+    <width>1197</width>
+    <height>919</height>
    </rect>
   </property>
   <property name="sizePolicy">
@@ -45,88 +45,109 @@
        </sizepolicy>
       </property>
      </widget>
-     <widget class="QWidget" name="verticalLayoutWidget">
-      <layout class="QVBoxLayout" name="verticalLayout_3">
-       <item>
-        <widget class="QLabel" name="instructionsLabel">
-         <property name="styleSheet">
-          <string notr="true">margin-top: 5px;</string>
-         </property>
-         <property name="text">
-          <string>Select functions above, right-click, and select 'Add iterator(s)' to add iterators for instrumented functions.</string>
-         </property>
-         <property name="margin">
-          <number>0</number>
-         </property>
-        </widget>
-       </item>
-       <item>
-        <widget class="QScrollArea" name="iteratorScrollArea">
-         <property name="autoFillBackground">
-          <bool>true</bool>
-         </property>
-         <property name="styleSheet">
-          <string notr="true">QScrollArea {
-	border: 0;
-}</string>
-         </property>
-         <property name="sizeAdjustPolicy">
-          <enum>QAbstractScrollArea::AdjustToContents</enum>
-         </property>
-         <property name="widgetResizable">
-          <bool>true</bool>
-         </property>
-         <widget class="QWidget" name="iteratorFrame">
-          <property name="geometry">
-           <rect>
-            <x>0</x>
-            <y>0</y>
-            <width>688</width>
-            <height>187</height>
-           </rect>
+     <widget class="QTabWidget" name="tabWidget">
+      <property name="currentIndex">
+       <number>1</number>
+      </property>
+      <widget class="QWidget" name="iterators_tab">
+       <attribute name="title">
+        <string>Iterators</string>
+       </attribute>
+       <layout class="QVBoxLayout" name="verticalLayout_3">
+        <item>
+         <widget class="QLabel" name="instructionsLabel">
+          <property name="styleSheet">
+           <string notr="true">margin-top: 5px;</string>
           </property>
+          <property name="text">
+           <string>Select functions above, right-click, and select 'Add iterator(s)' to add iterators for instrumented functions.</string>
+          </property>
+          <property name="margin">
+           <number>0</number>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QScrollArea" name="iteratorScrollArea">
           <property name="autoFillBackground">
-           <bool>false</bool>
+           <bool>true</bool>
           </property>
           <property name="styleSheet">
-           <string notr="true">#iteratorFrame {
-	background-color: rgb(67, 67, 67);
+           <string notr="true">QScrollArea {
+	border: 0;
 }</string>
           </property>
-          <layout class="QVBoxLayout" name="verticalLayout">
-           <property name="spacing">
-            <number>6</number>
+          <property name="sizeAdjustPolicy">
+           <enum>QAbstractScrollArea::AdjustToContents</enum>
+          </property>
+          <property name="widgetResizable">
+           <bool>true</bool>
+          </property>
+          <widget class="QWidget" name="iteratorFrame">
+           <property name="geometry">
+            <rect>
+             <x>0</x>
+             <y>0</y>
+             <width>685</width>
+             <height>28</height>
+            </rect>
            </property>
-           <property name="leftMargin">
-            <number>0</number>
+           <property name="autoFillBackground">
+            <bool>false</bool>
            </property>
-           <property name="topMargin">
-            <number>0</number>
+           <property name="styleSheet">
+            <string notr="true">#iteratorFrame {
+	background-color: rgb(67, 67, 67);
+}</string>
            </property>
-           <property name="rightMargin">
-            <number>0</number>
-           </property>
-           <property name="bottomMargin">
-            <number>0</number>
-           </property>
-           <item>
-            <spacer name="verticalSpacer">
-             <property name="orientation">
-              <enum>Qt::Vertical</enum>
-             </property>
-             <property name="sizeHint" stdset="0">
-              <size>
-               <width>20</width>
-               <height>40</height>
-              </size>
-             </property>
-            </spacer>
-           </item>
-          </layout>
+           <layout class="QVBoxLayout" name="verticalLayout">
+            <property name="spacing">
+             <number>6</number>
+            </property>
+            <property name="leftMargin">
+             <number>0</number>
+            </property>
+            <property name="topMargin">
+             <number>0</number>
+            </property>
+            <property name="rightMargin">
+             <number>0</number>
+            </property>
+            <property name="bottomMargin">
+             <number>0</number>
+            </property>
+            <item>
+             <spacer name="verticalSpacer">
+              <property name="orientation">
+               <enum>Qt::Vertical</enum>
+              </property>
+              <property name="sizeType">
+               <enum>QSizePolicy::Expanding</enum>
+              </property>
+              <property name="sizeHint" stdset="0">
+               <size>
+                <width>685</width>
+                <height>124</height>
+               </size>
+              </property>
+             </spacer>
+            </item>
+           </layout>
+          </widget>
          </widget>
-        </widget>
-       </item>
-      </layout>
+        </item>
+       </layout>
+      </widget>
+      <widget class="QWidget" name="histogram_tab">
+       <attribute name="title">
+        <string>Histogram</string>
+       </attribute>
+       <layout class="QVBoxLayout" name="verticalLayout_5">
+        <item>
+         <widget class="OrbitHistogram" name="histogram_widget" native="true"/>
+        </item>
+       </layout>
+      </widget>
      </widget>
     </widget>
    </item>
@@ -137,6 +158,12 @@
    <class>OrbitDataViewPanel</class>
    <extends>QWidget</extends>
    <header>orbitdataviewpanel.h</header>
+  </customwidget>
+  <customwidget>
+   <class>OrbitHistogram</class>
+   <extends>QWidget</extends>
+   <header>orbithistogram.h</header>
+   <container>1</container>
   </customwidget>
  </customwidgets>
  <resources/>

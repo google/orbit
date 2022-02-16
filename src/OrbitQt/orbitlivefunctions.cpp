@@ -155,3 +155,9 @@ void OrbitLiveFunctions::OnRowSelected(std::optional<int> row) {
   selection->select(index, QItemSelectionModel::ClearAndSelect | QItemSelectionModel::Rows);
   ui->data_view_panel_->GetTreeView()->SetIsInternalRefresh(false);
 }
+
+void OrbitLiveFunctions::ShowHistogram(const std::optional<orbit_statistics::Histogram>& histogram,
+                                       const std::string& function_name) {
+  ui->histogram_widget->SetHistogram(histogram, function_name);
+  ui->histogram_widget->update();
+}

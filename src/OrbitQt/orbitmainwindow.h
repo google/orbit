@@ -112,6 +112,9 @@ class OrbitMainWindow final : public QMainWindow, public orbit_gl::MainWindowInt
       std::string_view title, std::string_view text,
       std::string_view dont_show_again_setting_key) override;
 
+  void ShowHistogram(const std::optional<orbit_statistics::Histogram>& histogram,
+                     const std::string& function_name) override;
+
  protected:
   void closeEvent(QCloseEvent* event) override;
 

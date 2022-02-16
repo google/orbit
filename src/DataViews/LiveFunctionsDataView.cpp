@@ -14,8 +14,11 @@
 #include <llvm/Demangle/Demangle.h>
 #include <stddef.h>
 
+#include <algorithm>
 #include <functional>
+#include <iterator>
 #include <memory>
+#include <vector>
 
 #include "ClientData/CaptureData.h"
 #include "ClientData/FunctionUtils.h"
@@ -31,6 +34,7 @@
 #include "OrbitBase/Logging.h"
 #include "OrbitBase/Result.h"
 #include "OrbitBase/ThreadUtils.h"
+#include "Statistics/Histogram.h"
 
 using orbit_client_data::CaptureData;
 using orbit_client_data::ModuleData;
@@ -133,6 +137,26 @@ void LiveFunctionsDataView::UpdateSelectedFunctionId() {
 void LiveFunctionsDataView::OnSelect(const std::vector<int>& rows) {
   UpdateHighlightedFunctionId(rows);
   UpdateSelectedFunctionId();
+
+  if (!rows.empty()) {
+    const FunctionInfo& function = *GetFunctionInfoFromRow(rows[0]);
+    std::string function_name = orbit_client_data::function_utils::GetDisplayName(function);
+
+    uint64_t function_id = GetInstrumentedFunctionId(rows[0]);
+    std::vector<const orbit_client_protos::TimerInfo*> timers =
+        app_->GetAllTimersForHookedFunction(function_id);
+    std::vector<uint64_t> histogram_data;
+
+    std::transform(std::begin(timers), std::end(timers), std::back_inserter(histogram_data),
+                   [](const orbit_client_protos::TimerInfo* const timer) {
+                     return timer->end() - timer->start();
+                   });
+
+    std::optional<orbit_statistics::Histogram> histogram =
+        orbit_statistics::BuildHistogram(histogram_data);
+
+    app_->ShowHistogram(histogram, function_name);
+  }
 }
 
 #define ORBIT_FUNC_SORT(Member)                                                         \

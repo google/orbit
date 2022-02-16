@@ -25,6 +25,7 @@ target_sources(
           orbitlivefunctions.h
           orbitmainwindow.h
           orbitsamplingreport.h
+          orbithistogram.h
           orbittablemodel.h
           orbittreeview.h
           opengldetect.h
@@ -54,6 +55,7 @@ target_sources(
           orbiteventiterator.cpp
           orbiteventiterator.ui
           orbitglwidget.cpp
+          orbithistogram.cpp
           orbitlivefunctions.cpp
           orbitlivefunctions.ui
           orbitmainwindow.cpp
