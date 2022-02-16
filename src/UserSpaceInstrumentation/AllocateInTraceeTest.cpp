@@ -213,10 +213,7 @@ TEST(AllocateInTraceeTest, SyscallInTraceeFailsBecauseOfStrictSeccompMode) {
   ORBIT_CHECK(read(child_to_parent_pipe[0], buf, 1) == 1);
 
   // Stop the process using our tooling.
-  auto attach_and_stop_result = AttachAndStopProcess(pid);
-  if (attach_and_stop_result.has_error()) {
-    ORBIT_FATAL("attach_and_stop_result.has_error(): %s", attach_and_stop_result.error().message());
-  }
+  ORBIT_CHECK(!AttachAndStopProcess(pid).has_error());
 
   constexpr uint64_t kMemorySize = 1024 * 1024;
   // Allocation will fail because of seccomp.
@@ -281,10 +278,7 @@ TEST(AllocateInTraceeTest, SyscallInTraceeFailsBecauseOfSeccompFilter) {
   ORBIT_CHECK(read(child_to_parent_pipe[0], buf, 1) == 1);
 
   // Stop the process using our tooling.
-  auto attach_and_stop_result = AttachAndStopProcess(pid);
-  if (attach_and_stop_result.has_error()) {
-    ORBIT_FATAL("attach_and_stop_result.has_error(): %s", attach_and_stop_result.error().message());
-  }
+  ORBIT_CHECK(!AttachAndStopProcess(pid).has_error());
 
   constexpr uint64_t kMemorySize = 1024 * 1024;
   // Allocation will fail because of seccomp.
