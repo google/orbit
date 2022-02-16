@@ -6,6 +6,7 @@
 #include <absl/strings/str_format.h>
 #include <absl/strings/str_split.h>
 #include <gtest/gtest.h>
+#include <linux/filter.h>
 #include <linux/seccomp.h>
 #include <sys/prctl.h>
 #include <sys/types.h>
@@ -177,7 +178,7 @@ TEST(AllocateInTraceeTest, ReadSeccompModeOfThread) {
               testing::AnyOf(SECCOMP_MODE_DISABLED, SECCOMP_MODE_STRICT, SECCOMP_MODE_FILTER));
 }
 
-TEST(AllocateInTraceeTest, SyscallInTraceeFailsBecauseOfSeccomp) {
+TEST(AllocateInTraceeTest, SyscallInTraceeFailsBecauseOfStrictSeccompMode) {
   std::array<int, 2> child_to_parent_pipe{};
   ORBIT_CHECK(pipe(child_to_parent_pipe.data()) == 0);
 
@@ -227,6 +228,76 @@ TEST(AllocateInTraceeTest, SyscallInTraceeFailsBecauseOfSeccomp) {
 
   // The forked process was killed because of seccomp and it cannot be waited for.
   ORBIT_CHECK(kill(pid, 0) != 0);
+}
+
+TEST(AllocateInTraceeTest, SyscallInTraceeFailsBecauseOfSeccompFilter) {
+  std::array<int, 2> child_to_parent_pipe{};
+  ORBIT_CHECK(pipe(child_to_parent_pipe.data()) == 0);
+
+  pid_t pid = fork();
+  ORBIT_CHECK(pid != -1);
+  if (pid == 0) {
+    prctl(PR_SET_PDEATHSIG, SIGTERM);
+
+    // Close the read end of the pipe.
+    ORBIT_CHECK(close(child_to_parent_pipe[0]) == 0);
+
+    // "In order to use the SECCOMP_SET_MODE_FILTER operation, [...] the thread must already have
+    // the no_new_privs bit set."
+    ORBIT_CHECK(prctl(PR_SET_NO_NEW_PRIVS, 1, 0, 0, 0) == 0);
+
+    // Set the following filter, which makes any system call other than write result in EPERM.
+    //  line  OP   JT   JF   K
+    // =================================
+    //  0000: 0x20 0x00 0x00 0x00000000   ld  $data[0]
+    //  0001: 0x15 0x00 0x01 0x00000001   jeq 1    true:0002 false:0003
+    //  0002: 0x06 0x00 0x00 0x7fff0000   ret ALLOW
+    //  0003: 0x06 0x00 0x00 0x00050001   ret ERRNO(1)
+    std::array<sock_filter, 4> filter{
+        sock_filter{.code = 0x20, .jt = 0x00, .jf = 0x00, .k = 0x00000000},
+        sock_filter{.code = 0x15, .jt = 0x00, .jf = 0x01, .k = 0x00000001},
+        sock_filter{.code = 0x06, .jt = 0x00, .jf = 0x00, .k = 0x7fff0000},
+        sock_filter{.code = 0x06, .jt = 0x00, .jf = 0x00, .k = 0x00050001},
+    };
+    sock_fprog program{.len = filter.size(), .filter = filter.data()};
+    ORBIT_CHECK(syscall(SYS_seccomp, SECCOMP_SET_MODE_FILTER, 0, &program) == 0);
+
+    // Send one byte to the parent to notify that the child has called seccomp.
+    ORBIT_CHECK(write(child_to_parent_pipe[1], "a", 1) == 1);
+
+    // Child just runs an endless loop.
+    volatile uint64_t counter = 0;
+    while (true) {
+      // Endless loops without side effects are UB and recent versions of clang optimize it away.
+      ++counter;
+    }
+  }
+
+  // Close the write end of the pipe.
+  ORBIT_CHECK(close(child_to_parent_pipe[1]) == 0);
+
+  // Wait for the child to execute the seccomp syscall.
+  char buf[1];
+  ORBIT_CHECK(read(child_to_parent_pipe[0], buf, 1) == 1);
+
+  // Stop the process using our tooling.
+  auto attach_and_stop_result = AttachAndStopProcess(pid);
+  if (attach_and_stop_result.has_error()) {
+    ORBIT_FATAL("attach_and_stop_result.has_error(): %s", attach_and_stop_result.error().message());
+  }
+
+  constexpr uint64_t kMemorySize = 1024 * 1024;
+  // Allocation will fail because of seccomp.
+  auto my_memory_or_error = MemoryInTracee::Create(pid, 0, kMemorySize);
+  EXPECT_THAT(
+      my_memory_or_error,
+      HasError(absl::StrFormat(
+          "This might be due to thread %d being in seccomp mode 2 (SECCOMP_MODE_FILTER).", pid)));
+
+  // Detach and end child.
+  ORBIT_CHECK(!DetachAndContinueProcess(pid).has_error());
+  kill(pid, SIGKILL);
+  waitpid(pid, nullptr, 0);
 }
 
 }  // namespace orbit_user_space_instrumentation
