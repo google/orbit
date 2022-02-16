@@ -63,7 +63,7 @@ TEST(SymbolsDialog, ConstructNonEmpty) {
   EXPECT_EQ(list_widget->count(), test_paths.size());
 
   EXPECT_CALL(mock_storage_manager, SavePaths)
-      .WillOnce([&test_paths](absl::Span<const std::filesystem::path> paths) {
+      .WillOnce([test_paths](absl::Span<const std::filesystem::path> paths) {
         EXPECT_EQ(paths, test_paths);
       });
 }
@@ -125,7 +125,7 @@ TEST(SymbolsDialog, TryAddSymbolPath) {
 
   std::vector<std::filesystem::path> test_paths = {path, path_2, file};
   EXPECT_CALL(mock_storage_manager, SavePaths)
-      .WillOnce([&test_paths](absl::Span<const std::filesystem::path> paths) {
+      .WillOnce([test_paths](absl::Span<const std::filesystem::path> paths) {
         EXPECT_EQ(paths, test_paths);
       });
 }
@@ -166,7 +166,7 @@ TEST(SymbolsDialog, TryAddSymbolFileWithoutModule) {
 
   std::vector<std::filesystem::path> test_paths{hello_world_elf};
   EXPECT_CALL(mock_storage_manager, SavePaths)
-      .WillOnce([&test_paths](absl::Span<const std::filesystem::path> paths) {
+      .WillOnce([test_paths](absl::Span<const std::filesystem::path> paths) {
         EXPECT_EQ(paths, test_paths);
       });
 }
@@ -202,7 +202,7 @@ TEST(SymbolsDialog, TryAddSymbolFileWithModule) {
 
   std::vector<std::filesystem::path> test_paths{no_symbols_elf_debug};
   EXPECT_CALL(mock_storage_manager, SavePaths)
-      .WillOnce([&test_paths](absl::Span<const std::filesystem::path> paths) {
+      .WillOnce([test_paths](absl::Span<const std::filesystem::path> paths) {
         EXPECT_EQ(paths, test_paths);
       });
 }
