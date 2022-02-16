@@ -174,8 +174,7 @@ TEST(AllocateInTraceeTest, AutomaticAllocateAndFree) {
 TEST(AllocateInTraceeTest, ReadSeccompModeOfThread) {
   std::optional<int> seccomp_mode = ReadSeccompModeOfThread(getpid());
   ASSERT_TRUE(seccomp_mode.has_value());
-  EXPECT_THAT(seccomp_mode.value(),
-              testing::AnyOf(SECCOMP_MODE_DISABLED, SECCOMP_MODE_STRICT, SECCOMP_MODE_FILTER));
+  EXPECT_EQ(seccomp_mode.value(), SECCOMP_MODE_DISABLED);
 }
 
 TEST(AllocateInTraceeTest, SyscallInTraceeFailsBecauseOfStrictSeccompMode) {
