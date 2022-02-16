@@ -196,7 +196,7 @@ TEST(AllocateInTraceeTest, SyscallInTraceeFailsBecauseOfSeccomp) {
   }
 
   // Give the child enough time to execute the seccomp syscall.
-  std::this_thread::sleep_for(std::chrono::milliseconds{10});
+  std::this_thread::sleep_for(std::chrono::milliseconds{1000});
 
   int wstatus = 0;
   pid_t waited_pid = waitpid(pid, &wstatus, WNOHANG);
