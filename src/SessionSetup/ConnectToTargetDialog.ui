@@ -19,6 +19,9 @@
   <property name="windowTitle">
    <string>Connecting to Stadia Target...</string>
   </property>
+  <property name="accessibleName">
+   <string>Orbit Profiler</string>
+  </property>
   <property name="modal">
    <bool>true</bool>
   </property>
