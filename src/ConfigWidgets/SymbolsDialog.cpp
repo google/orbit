@@ -158,6 +158,7 @@ void SymbolsDialog::OnAddFileButtonClicked() {
 }
 
 ErrorMessageOr<void> SymbolsDialog::TryAddSymbolFile(const std::filesystem::path& file_path) {
+  ORBIT_LOG("Before CreateSymbolsFile");
   ErrorMessageOr<std::unique_ptr<orbit_object_utils::SymbolsFile>> symbols_file_or_error =
       orbit_object_utils::CreateSymbolsFile(file_path, orbit_object_utils::ObjectFileInfo());
 
@@ -168,6 +169,7 @@ ErrorMessageOr<void> SymbolsDialog::TryAddSymbolFile(const std::filesystem::path
 
   const orbit_object_utils::SymbolsFile& symbols_file{*symbols_file_or_error.value()};
 
+  ORBIT_LOG("Before Get BuildId");
   const std::string build_id = symbols_file.GetBuildId();
   if (build_id.empty()) {
     return ErrorMessage("The selected file does not contain a build id");

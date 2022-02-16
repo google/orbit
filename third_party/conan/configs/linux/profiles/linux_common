@@ -1,8 +1,8 @@
 include(cmake_common)
 
-C_FLAGS=-march=sandybridge -fno-omit-frame-pointer -mno-omit-leaf-frame-pointer -D_FORTIFY_SOURCE=2 -fstack-protector-all
-CXX_FLAGS=-march=sandybridge -fno-omit-frame-pointer -mno-omit-leaf-frame-pointer -fsized-deallocation -D_FORTIFY_SOURCE=2 -fstack-protector-all -fno-exceptions
-LD_FLAGS=-Wl,-z,relro,-z,now,-z,noexecstack
+C_FLAGS=-march=sandybridge -fno-omit-frame-pointer -mno-omit-leaf-frame-pointer -D_FORTIFY_SOURCE=2 -fstack-protector-all -fsanitize=address
+CXX_FLAGS=-march=sandybridge -fno-omit-frame-pointer -mno-omit-leaf-frame-pointer -fsized-deallocation -D_FORTIFY_SOURCE=2 -fstack-protector-all -fno-exceptions -fsanitize=address
+LD_FLAGS=-Wl,-z,relro,-z,now,-z,noexecstack -fsanitize=address
 
 [settings]
 os=Linux

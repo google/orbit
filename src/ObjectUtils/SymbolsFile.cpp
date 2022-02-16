@@ -22,6 +22,7 @@ ErrorMessageOr<std::unique_ptr<SymbolsFile>> CreateSymbolsFile(
   std::string error_message{
       absl::StrFormat("Unable to create symbols file from \"%s\".", file_path.string())};
 
+  ORBIT_LOG("Before FileExists");
   OUTCOME_TRY(auto file_exists, orbit_base::FileExists(file_path));
 
   if (!file_exists) {
@@ -29,8 +30,10 @@ ErrorMessageOr<std::unique_ptr<SymbolsFile>> CreateSymbolsFile(
     return ErrorMessage{error_message};
   }
 
+  ORBIT_LOG("Before CreateObjectFile");
   ErrorMessageOr<std::unique_ptr<ObjectFile>> object_file_or_error = CreateObjectFile(file_path);
   if (object_file_or_error.has_value()) {
+    ORBIT_LOG("Before HasDebugSymbols");
     if (object_file_or_error.value()->HasDebugSymbols()) {
       return std::move(object_file_or_error.value());
     }
@@ -41,6 +44,7 @@ ErrorMessageOr<std::unique_ptr<SymbolsFile>> CreateSymbolsFile(
   error_message.append(absl::StrFormat("\n* File cannot be read as an object file, error: %s",
                                        object_file_or_error.error().message()));
 
+  ORBIT_LOG("Before CreatePdbFile");
   ErrorMessageOr<std::unique_ptr<PdbFile>> pdb_file_or_error =
       CreatePdbFile(file_path, object_file_info);
 

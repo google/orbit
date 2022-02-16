@@ -69,6 +69,12 @@ TEST(SymbolsFile, FailToCreateSymbolsFile) {
   auto invalid_file = CreateSymbolsFile(invalid_path, ObjectFileInfo{0x10000, 0x1000});
   EXPECT_THAT(invalid_file, HasError("Unable to create symbols file"));
   EXPECT_THAT(invalid_file, HasError("File does not exist"));
+
+  const std::filesystem::path no_build_id =
+      orbit_test::GetTestdataDir() / "hello_world_elf_no_build_id";
+  auto result = CreateSymbolsFile(no_build_id, ObjectFileInfo{});
+  ASSERT_THAT(result, orbit_test_utils::HasValue());
+  EXPECT_TRUE(result.value()->GetBuildId().empty());
 }
 
 }  // namespace orbit_object_utils

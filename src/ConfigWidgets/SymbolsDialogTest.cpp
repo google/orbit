@@ -20,6 +20,7 @@
 #include "ClientData/ModuleData.h"
 #include "ConfigWidgets/SymbolsDialog.h"
 #include "GrpcProtos/module.pb.h"
+#include "OrbitBase/Logging.h"
 #include "SymbolPaths/PersistentStorageManager.h"
 #include "Test/Path.h"
 #include "TestUtils/TestUtils.h"
@@ -136,6 +137,7 @@ TEST(SymbolsDialog, TryAddSymbolFileWithoutModule) {
 
   SymbolsDialog dialog{&mock_storage_manager};
 
+  ORBIT_LOG("Before adding hello_world_elf");
   // success case
   std::filesystem::path hello_world_elf = orbit_test::GetTestdataDir() / "hello_world_elf";
   {
@@ -143,6 +145,7 @@ TEST(SymbolsDialog, TryAddSymbolFileWithoutModule) {
     EXPECT_TRUE(result.has_value());
   }
 
+  ORBIT_LOG("Before adding textfile");
   // fails because not an object_file
   std::filesystem::path text_file = orbit_test::GetTestdataDir() / "textfile.txt";
   {
@@ -151,12 +154,12 @@ TEST(SymbolsDialog, TryAddSymbolFileWithoutModule) {
                 orbit_test_utils::HasError("The selected file is not a viable symbol file"));
   }
 
+  ORBIT_LOG("Before adding hello_world_elf_no_build_id");
   // fails because no build-id
   std::filesystem::path hello_world_elf_no_build_id =
       orbit_test::GetTestdataDir() / "hello_world_elf_no_build_id";
   {
     auto result = dialog.TryAddSymbolFile(hello_world_elf_no_build_id);
-
     EXPECT_THAT(result,
                 orbit_test_utils::HasError("The selected file does not contain a build id"));
   }
