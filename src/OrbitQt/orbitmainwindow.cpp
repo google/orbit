@@ -82,6 +82,7 @@
 #include "CodeViewer/FontSizeInEm.h"
 #include "CodeViewer/OwningDialog.h"
 #include "ConfigWidgets/SourcePathsMappingDialog.h"
+#include "ConfigWidgets/SymbolErrorDialog.h"
 #include "ConfigWidgets/SymbolsDialog.h"
 #include "DataViewFactory.h"
 #include "DataViews/DataViewType.h"
@@ -353,6 +354,28 @@ void OrbitMainWindow::SetupMainWindow() {
   app_->SetSelectLiveTabCallback([this] { ui->RightTabWidget->setCurrentWidget(ui->liveTab); });
   app_->SetErrorMessageCallback([this](const std::string& title, const std::string& text) {
     QMessageBox::critical(this, QString::fromStdString(title), QString::fromStdString(text));
+  });
+  app_->SetSymbolLoadingErrorCallback([this](const ErrorMessage& error,
+                                             const orbit_client_data::ModuleData* module) {
+    orbit_config_widgets::SymbolErrorDialog error_dialog{module, error.message(), this};
+
+    orbit_config_widgets::SymbolErrorDialog::Result result = error_dialog.Exec();
+
+    switch (result) {
+      case orbit_config_widgets::SymbolErrorDialog::Result::kCancel:
+        return false;
+      case orbit_config_widgets::SymbolErrorDialog::Result::kTryAgain:
+        return true;
+      case orbit_config_widgets::SymbolErrorDialog::Result::kAddSymbolLocation:
+        break;
+    }
+
+    orbit_symbol_paths::QSettingsBasedStorageManager symbol_paths_storage_manager;
+    orbit_config_widgets::SymbolsDialog symbols_dialog{&symbol_paths_storage_manager, module, this};
+    symbols_dialog.exec();
+
+    // When the SymbolsDialog was executed an reload is always attempted.
+    return true;
   });
   app_->SetWarningMessageCallback([this](const std::string& title, const std::string& text) {
     QMessageBox::warning(this, QString::fromStdString(title), QString::fromStdString(text));

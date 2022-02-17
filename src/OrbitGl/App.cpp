@@ -1681,19 +1681,31 @@ orbit_base::Future<void> OrbitApp::RetrieveModulesAndLoadSymbols(
   std::vector<orbit_base::Future<void>> futures;
   futures.reserve(modules.size());
 
-  const auto handle_error = [this](const ErrorMessageOr<void>& result) {
-    if (result.has_error()) {
-      error_message_callback_("Error loading symbols", result.error().message());
-      return;
-    }
-  };
-
   for (const auto& module : modules) {
-    futures.emplace_back(
-        RetrieveModuleAndLoadSymbols(module).Then(main_thread_executor_, handle_error));
+    futures.emplace_back(RetrieveModuleAndLoadSymbolsAndHandleError(module));
   }
 
   return orbit_base::JoinFutures(futures);
+}
+
+orbit_base::Future<void> OrbitApp::RetrieveModuleAndLoadSymbolsAndHandleError(
+    const ModuleData* module) {
+  Future<ErrorMessageOr<void>> first_load_result_future = RetrieveModuleAndLoadSymbols(module);
+
+  Future<Future<void>> chained_load_future = first_load_result_future.Then(
+      main_thread_executor_, [module, this](ErrorMessageOr<void> load_result) -> Future<void> {
+        if (!load_result.has_error()) return Future<void>();
+
+        bool error_handling_result = symbol_error_loading_callback_(load_result.error(), module);
+
+        // if error_handling_result is false, that means the user clicked cancel, which means no
+        // other loading attempt will be made.
+        if (!error_handling_result) return Future<void>();
+
+        return RetrieveModuleAndLoadSymbolsAndHandleError(module);
+      });
+
+  return orbit_base::UnwrapFuture(chained_load_future);
 }
 
 orbit_base::Future<ErrorMessageOr<void>> OrbitApp::RetrieveModuleAndLoadSymbols(
