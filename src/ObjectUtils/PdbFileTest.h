@@ -67,7 +67,7 @@ TYPED_TEST_P(PdbFileTest, LoadDebugSymbols) {
     EXPECT_EQ(symbol.name(), "PrintHelloWorld");
     // TODO(b/219413222): We actually also expect the parameter list (empty in this case), but the
     //  DIA SDK implementation does not support this yet.
-    EXPECT_TRUE(absl::StrContains(symbol.demangled_name(), "PrintHelloWorld()"));
+    EXPECT_TRUE(absl::StrContains(symbol.demangled_name(), "PrintHelloWorld"));
     EXPECT_EQ(symbol.address(), 0x18000efd0);
     EXPECT_EQ(symbol.size(), 0xe);
   }
