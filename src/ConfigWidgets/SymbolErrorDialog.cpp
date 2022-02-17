@@ -24,13 +24,13 @@ SymbolErrorDialog::SymbolErrorDialog(const orbit_client_data::ModuleData* module
   ui_->errorPlainTextEdit->setPlainText(QString::fromStdString(detailed_error));
   if (!module_->build_id().empty()) {
     ui_->addSymbolLocationButton->setFocus();
-  } else {
-    ui_->addSymbolLocationButton->setEnabled(false);
-    ui_->addSymbolLocationButton->setToolTip(
-        QString("Orbit matches modules and symbol files based on build-id. Module %1, does not "
-                "contain a build id.")
-            .arg(module_file_path));
+    return;
   }
+  ui_->addSymbolLocationButton->setEnabled(false);
+  ui_->addSymbolLocationButton->setToolTip(
+      QString("Orbit matches modules and symbol files based on build-id. Module %1 does not "
+              "contain a build id.")
+          .arg(module_file_path));
 }
 
 SymbolErrorDialog::~SymbolErrorDialog() = default;
