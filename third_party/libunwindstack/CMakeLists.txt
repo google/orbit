@@ -382,5 +382,13 @@ set_target_properties(libunwindstack_local PROPERTIES
 
 # Fuzz testing for parsers
 add_fuzzer(PeCoffInterfaceFuzzer tests/fuzz/PeCoffInterfaceFuzzer.cpp)
-target_include_directories(PeCoffInterfaceFuzzer PRIVATE include/)
+target_include_directories(PeCoffInterfaceFuzzer PRIVATE ${CMAKE_CURRENT_SOURCE_DIR} include/)
 target_link_libraries(PeCoffInterfaceFuzzer PRIVATE libunwindstack)
+
+add_fuzzer(PeCoffUnwindInfosFuzzer tests/fuzz/PeCoffUnwindInfosFuzzer.cpp)
+target_include_directories(PeCoffUnwindInfosFuzzer PRIVATE ${CMAKE_CURRENT_SOURCE_DIR} include/)
+target_link_libraries(PeCoffUnwindInfosFuzzer PRIVATE libunwindstack)
+
+add_fuzzer(PeCoffRuntimeFunctionsFuzzer tests/fuzz/PeCoffRuntimeFunctionsFuzzer.cpp)
+target_include_directories(PeCoffRuntimeFunctionsFuzzer PRIVATE ${CMAKE_CURRENT_SOURCE_DIR} include/)
+target_link_libraries(PeCoffRuntimeFunctionsFuzzer PRIVATE libunwindstack)

@@ -16,6 +16,7 @@
 
 #include "PeCoffEpilog.h"
 
+#include <array>
 #include <cstring>
 #include <memory>
 #include <vector>
