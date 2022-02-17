@@ -27,17 +27,17 @@ constexpr double kRelativeMargin = 0.1;
 constexpr uint32_t kTicksNum = 3;
 constexpr int kTickLength = 5;
 
-static int RoundToClosestInt(double x) { return static_cast<int>(std::round(x)); }
+[[nodiscard]] static int RoundToClosestInt(double x) { return static_cast<int>(std::round(x)); }
 
-static int Width(const QPainter& painter) { return painter.device()->width(); }
+[[nodiscard]] static int Width(const QPainter& painter) { return painter.device()->width(); }
 
-static int WidthMargin(const QPainter& painter) {
+[[nodiscard]] static int WidthMargin(const QPainter& painter) {
   return RoundToClosestInt(Width(painter) * kRelativeMargin);
 }
 
-static int Height(const QPainter& painter) { return painter.device()->height(); }
+[[nodiscard]] static int Height(const QPainter& painter) { return painter.device()->height(); }
 
-static int HeightMargin(const QPainter& painter) {
+[[nodiscard]] static int HeightMargin(const QPainter& painter) {
   return RoundToClosestInt(Height(painter) * kRelativeMargin);
 }
 
