@@ -1678,10 +1678,13 @@ orbit_base::Future<ErrorMessageOr<std::filesystem::path>> OrbitApp::RetrieveModu
 
 orbit_base::Future<void> OrbitApp::RetrieveModulesAndLoadSymbols(
     absl::Span<const ModuleData* const> modules) {
-  std::vector<orbit_base::Future<void>> futures;
-  futures.reserve(modules.size());
+  // Use a set, to filter out duplicates
+  absl::flat_hash_set<const ModuleData*> modules_set(modules.begin(), modules.end());
 
-  for (const auto& module : modules) {
+  std::vector<orbit_base::Future<void>> futures;
+  futures.reserve(modules_set.size());
+
+  for (const auto& module : modules_set) {
     futures.emplace_back(RetrieveModuleAndLoadSymbolsAndHandleError(module));
   }
 
