@@ -113,6 +113,11 @@ int RunUiInstance(const DeploymentConfiguration& deployment_configuration,
   bool has_file_parameter = !capture_file_path.empty();
   bool has_connection_target = maybe_connection_target.has_value();
 
+  if (absl::GetFlag(FLAGS_launched_from_vsi) && metrics_uploader != nullptr) {
+    metrics_uploader->SendLogEvent(
+        orbit_metrics_uploader::OrbitLogEvent_LogEventType_ORBIT_LAUNCHED_FROM_VSI);
+  }
+
   while (true) {
     {
       if (has_connection_target) {
