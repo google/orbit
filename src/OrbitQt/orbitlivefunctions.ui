@@ -47,8 +47,18 @@
      </widget>
      <widget class="QTabWidget" name="tabWidget">
       <property name="currentIndex">
-       <number>1</number>
+       <number>0</number>
       </property>
+      <widget class="QWidget" name="histogram_tab">
+       <attribute name="title">
+        <string>Histogram</string>
+       </attribute>
+       <layout class="QVBoxLayout" name="verticalLayout_5">
+        <item>
+         <widget class="OrbitHistogram" name="histogram_widget" native="true"/>
+        </item>
+       </layout>
+      </widget>
       <widget class="QWidget" name="iterators_tab">
        <attribute name="title">
         <string>Iterators</string>
@@ -88,8 +98,8 @@
             <rect>
              <x>0</x>
              <y>0</y>
-             <width>685</width>
-             <height>28</height>
+             <width>1175</width>
+             <height>722</height>
             </rect>
            </property>
            <property name="autoFillBackground">
@@ -135,16 +145,6 @@
            </layout>
           </widget>
          </widget>
-        </item>
-       </layout>
-      </widget>
-      <widget class="QWidget" name="histogram_tab">
-       <attribute name="title">
-        <string>Histogram</string>
-       </attribute>
-       <layout class="QVBoxLayout" name="verticalLayout_5">
-        <item>
-         <widget class="OrbitHistogram" name="histogram_widget" native="true"/>
         </item>
        </layout>
       </widget>
