@@ -1693,19 +1693,22 @@ orbit_base::Future<void> OrbitApp::RetrieveModulesAndLoadSymbols(
 
 orbit_base::Future<void> OrbitApp::RetrieveModuleAndLoadSymbolsAndHandleError(
     const ModuleData* module) {
-  Future<ErrorMessageOr<void>> first_load_result_future = RetrieveModuleAndLoadSymbols(module);
+  Future<ErrorMessageOr<void>> load_future = RetrieveModuleAndLoadSymbols(module);
 
-  Future<Future<void>> chained_load_future = first_load_result_future.Then(
+  Future<Future<void>> chained_load_future = load_future.Then(
       main_thread_executor_, [module, this](ErrorMessageOr<void> load_result) -> Future<void> {
         if (!load_result.has_error()) return Future<void>();
 
-        bool error_handling_result = symbol_error_loading_callback_(load_result.error(), module);
+        MainWindowInterface::SymbolErrorHandlingResult error_handling_result =
+            main_window_->HandleSymbolError(load_result.error(), module);
 
-        // if error_handling_result is false, that means the user clicked cancel, which means no
-        // other loading attempt will be made.
-        if (!error_handling_result) return Future<void>();
-
-        return RetrieveModuleAndLoadSymbolsAndHandleError(module);
+        switch (error_handling_result) {
+          case MainWindowInterface::SymbolErrorHandlingResult::kSymbolLoadingCancelled:
+            return Future<void>();
+          case MainWindowInterface::SymbolErrorHandlingResult::kReloadRequired:
+            return RetrieveModuleAndLoadSymbolsAndHandleError(module);
+        }
+        ORBIT_UNREACHABLE();
       });
 
   return orbit_base::UnwrapFuture(chained_load_future);

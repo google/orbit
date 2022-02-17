@@ -32,6 +32,7 @@
 
 #include "App.h"
 #include "CallTreeView.h"
+#include "ClientData/ModuleData.h"
 #include "ClientProtos/capture_data.pb.h"
 #include "ClientServices/ProcessManager.h"
 #include "DataViews/DataView.h"
@@ -39,6 +40,7 @@
 #include "FilterPanelWidgetAction.h"
 #include "GrpcProtos/process.pb.h"
 #include "MainThreadExecutor.h"
+#include "MainWindowInterface.h"
 #include "MetricsUploader/MetricsUploader.h"
 #include "OrbitBase/CrashHandler.h"
 #include "SessionSetup/ServiceDeployManager.h"
@@ -108,6 +110,8 @@ class OrbitMainWindow final : public QMainWindow, public orbit_gl::MainWindowInt
 
   void AppendToCaptureLog(CaptureLogSeverity severity, absl::Duration capture_time,
                           std::string_view message) override;
+  orbit_gl::MainWindowInterface::SymbolErrorHandlingResult HandleSymbolError(
+      const ErrorMessage& error, const orbit_client_data::ModuleData* module) override;
   void ShowWarningWithDontShowAgainCheckboxIfNeeded(
       std::string_view title, std::string_view text,
       std::string_view dont_show_again_setting_key) override;
@@ -185,6 +189,8 @@ class OrbitMainWindow final : public QMainWindow, public orbit_gl::MainWindowInt
   void SetTarget(const orbit_session_setup::FileTarget& target);
 
   void OnProcessListUpdated(const std::vector<orbit_grpc_protos::ProcessInfo>& processes);
+
+  void ExecuteSymbolsDialog(std::optional<const orbit_client_data::ModuleData*> module);
 
   static const QString kEnableCallstackSamplingSettingKey;
   static const QString kCallstackSamplingPeriodMsSettingKey;

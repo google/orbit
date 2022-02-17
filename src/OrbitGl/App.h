@@ -265,13 +265,6 @@ class OrbitApp final : public DataViewFactory,
   void SetErrorMessageCallback(ErrorMessageCallback callback) {
     error_message_callback_ = std::move(callback);
   }
-  // returns true when the error was handled/resolved. This means Orbit needs to retry loading
-  // symbols for this module
-  using SymbolLoadingErrorCallback =
-      std::function<bool(const ErrorMessage&, const orbit_client_data::ModuleData*)>;
-  void SetSymbolLoadingErrorCallback(SymbolLoadingErrorCallback callback) {
-    symbol_error_loading_callback_ = std::move(callback);
-  }
   using WarningMessageCallback = std::function<void(const std::string&, const std::string&)>;
   void SetWarningMessageCallback(WarningMessageCallback callback) {
     warning_message_callback_ = std::move(callback);
@@ -576,7 +569,6 @@ class OrbitApp final : public DataViewFactory,
   CaptureClearedCallback capture_cleared_callback_;
   SelectLiveTabCallback select_live_tab_callback_;
   ErrorMessageCallback error_message_callback_;
-  SymbolLoadingErrorCallback symbol_error_loading_callback_;
   WarningMessageCallback warning_message_callback_;
   InfoMessageCallback info_message_callback_;
   RefreshCallback refresh_callback_;
