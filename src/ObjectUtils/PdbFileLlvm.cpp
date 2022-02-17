@@ -64,6 +64,7 @@ class SymbolInfoVisitor : public llvm::codeview::SymbolVisitorCallbacks {
                             object_file_info_.executable_segment_offset);
     symbol_info.set_size(proc.CodeSize);
 
+    ORBIT_CHECK(module_symbols_ != nullptr);
     *(module_symbols_->add_symbol_infos()) = std::move(symbol_info);
 
     return llvm::Error::success();
@@ -71,10 +72,11 @@ class SymbolInfoVisitor : public llvm::codeview::SymbolVisitorCallbacks {
 
  private:
   [[nodiscard]] llvm::StringRef RetrieveArgumentList(const llvm::codeview::ProcSym& proc) const {
+    ORBIT_CHECK(type_info_stream_ != nullptr);
     llvm::codeview::LazyRandomTypeCollection& type_collection = type_info_stream_->typeCollection();
 
     // We expect function types being either LF_PROCEDURE or LF_MFUNCTION, which are non-simple
-    // types. However, there are cases where the function type is "<no type>. In those cases, we
+    // types. However, there are cases where the function type is "<no type>". In those cases, we
     // can't retrieve the argument list.
     if (proc.FunctionType.isSimple()) {
       llvm::StringRef function_type = type_collection.getTypeName(proc.FunctionType);
