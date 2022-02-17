@@ -48,6 +48,7 @@ class SymbolsDialog : public QDialog {
   void OnAddFolderButtonClicked();
   void OnAddFileButtonClicked();
   void OnListItemSelectionChanged();
+  void OnMoreInfoButtonClicked();
 
  private:
   std::unique_ptr<Ui::SymbolsDialog> ui_;

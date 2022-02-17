@@ -46,6 +46,10 @@ TEST(SymbolsDialog, ConstructEmpty) {
   auto* list_widget = dialog.findChild<QListWidget*>("listWidget");
   ASSERT_NE(list_widget, nullptr);
   EXPECT_EQ(list_widget->count(), 0);
+
+  auto* more_info_button = dialog.findChild<QPushButton*>("moreInfoButton");
+  ASSERT_NE(more_info_button, nullptr);
+  EXPECT_EQ(more_info_button->text().toStdString(), "More information on symbol loading");
 }
 
 TEST(SymbolsDialog, ConstructNonEmpty) {
