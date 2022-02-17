@@ -55,7 +55,7 @@ TYPED_TEST_P(PdbFileTest, LoadDebugSymbols) {
   {
     const SymbolInfo& symbol = *symbol_infos_by_address[0x18000ef90];
     EXPECT_EQ(symbol.name(), "PrintHelloWorldInternal");
-    EXPECT_EQ(symbol.demangled_name(), "PrintHelloWorldInternal");
+    EXPECT_EQ(symbol.demangled_name(), "PrintHelloWorldInternal()");
     EXPECT_EQ(symbol.address(), 0x18000ef90);
     EXPECT_EQ(symbol.size(), 0x2b);
   }
@@ -63,7 +63,7 @@ TYPED_TEST_P(PdbFileTest, LoadDebugSymbols) {
   {
     const SymbolInfo& symbol = *symbol_infos_by_address[0x18000efd0];
     EXPECT_EQ(symbol.name(), "PrintHelloWorld");
-    EXPECT_EQ(symbol.demangled_name(), "PrintHelloWorld");
+    EXPECT_EQ(symbol.demangled_name(), "PrintHelloWorld()");
     EXPECT_EQ(symbol.address(), 0x18000efd0);
     EXPECT_EQ(symbol.size(), 0xe);
   }
