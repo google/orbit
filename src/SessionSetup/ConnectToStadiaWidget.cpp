@@ -167,6 +167,7 @@ void ConnectToStadiaWidget::Start() {
 
   retrieve_instances_ = RetrieveInstances::Create(ggp_client_.get(), main_thread_executor_.get());
   ui_->retrieveInstancesWidget->SetRetrieveInstances(retrieve_instances_.get());
+  ui_->retrieveInstancesWidget->SetMetricsUploader(metrics_uploader_);
   ui_->retrieveInstancesWidget->Start();
 }
 
