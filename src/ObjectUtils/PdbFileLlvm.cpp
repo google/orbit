@@ -76,13 +76,15 @@ class SymbolInfoVisitor : public llvm::codeview::SymbolVisitorCallbacks {
     llvm::codeview::LazyRandomTypeCollection& type_collection = type_info_stream_->typeCollection();
 
     // We expect function types being either LF_PROCEDURE or LF_MFUNCTION, which are non-simple
-    // types. However, there are cases where the function type is "<no type>". In those cases, we
-    // can't retrieve the argument list.
+    // types. However, there are cases where the function type is "<no type>", which is a simple
+    // type. In those cases, we can't retrieve the argument list. Other simple types are not
+    // expected here (as they are mostly base types). However, the call to `getType` below will fail
+    // on any simple type. So we check for all simple types here, instead of only for "<no type>".
     if (proc.FunctionType.isSimple()) {
       llvm::StringRef function_type = type_collection.getTypeName(proc.FunctionType);
       ORBIT_ERROR(
           "Unable to retrieve parameter list for function \"%s\"; The function type is \"%s\"",
-          proc.Name, function_type);
+          proc.Name.data(), function_type.data());
       return "";
     }
 
@@ -93,7 +95,13 @@ class SymbolInfoVisitor : public llvm::codeview::SymbolVisitorCallbacks {
         llvm::Error error =
             llvm::codeview::TypeDeserializer::deserializeAs<llvm::codeview::ProcedureRecord>(
                 function_type, procedure_record);
-        ORBIT_CHECK(!error);
+        if (error) {
+          ORBIT_ERROR(
+              "Unable to retrieve parameter list for function \"%s\"; The function is of type "
+              "\"LF_PROCEDURE\", but we can not deserialize it to a \"ProcedureRecord\".",
+              proc.Name.data());
+          return "";
+        }
 
         llvm::StringRef parameter_list = type_collection.getTypeName(procedure_record.ArgumentList);
         return parameter_list;
@@ -103,7 +111,13 @@ class SymbolInfoVisitor : public llvm::codeview::SymbolVisitorCallbacks {
         llvm::Error error =
             llvm::codeview::TypeDeserializer::deserializeAs<llvm::codeview::MemberFunctionRecord>(
                 function_type, member_function_record);
-        ORBIT_CHECK(!error);
+        if (error) {
+          ORBIT_ERROR(
+              "Unable to retrieve parameter list for function \"%s\"; The function is of type "
+              "\"LF_MFUNCTION\", but we can not deserialize it to a \"MemberFunctionRecord\".",
+              proc.Name.data());
+          return "";
+        }
 
         return type_collection.getTypeName(member_function_record.ArgumentList);
       }
