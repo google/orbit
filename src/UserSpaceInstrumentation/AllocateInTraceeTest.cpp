@@ -77,7 +77,7 @@ TEST(AllocateInTraceeTest, AllocateAndFree) {
     prctl(PR_SET_PDEATHSIG, SIGTERM);
 
     // Child just runs an endless loop.
-    volatile uint64_t counter = 0;
+    [[maybe_unused]] volatile uint64_t counter = 0;
     while (true) {
       // Endless loops without side effects are UB and recent versions of clang optimize it away.
       ++counter;
@@ -144,7 +144,7 @@ TEST(AllocateInTraceeTest, AutomaticAllocateAndFree) {
     prctl(PR_SET_PDEATHSIG, SIGTERM);
 
     // Child just runs an endless loop.
-    volatile uint64_t counter = 0;
+    [[maybe_unused]] volatile uint64_t counter = 0;
     while (true) {
       // Endless loops without side effects are UB and recent versions of clang optimize it away.
       ++counter;
@@ -197,7 +197,7 @@ TEST(AllocateInTraceeTest, SyscallInTraceeFailsBecauseOfStrictSeccompMode) {
     ORBIT_CHECK(write(child_to_parent_pipe[1], "a", 1) == 1);
 
     // Child just runs an endless loop.
-    volatile uint64_t counter = 0;
+    [[maybe_unused]] volatile uint64_t counter = 0;
     while (true) {
       // Endless loops without side effects are UB and recent versions of clang optimize it away.
       ++counter;
@@ -262,7 +262,7 @@ TEST(AllocateInTraceeTest, SyscallInTraceeFailsBecauseOfSeccompFilter) {
     ORBIT_CHECK(write(child_to_parent_pipe[1], "a", 1) == 1);
 
     // Child just runs an endless loop.
-    volatile uint64_t counter = 0;
+    [[maybe_unused]] volatile uint64_t counter = 0;
     while (true) {
       // Endless loops without side effects are UB and recent versions of clang optimize it away.
       ++counter;
