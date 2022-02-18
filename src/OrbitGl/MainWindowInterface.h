@@ -11,6 +11,7 @@
 #include <optional>
 #include <string_view>
 
+#include "ClientData/ModuleData.h"
 #include "ClientProtos/capture_data.pb.h"
 #include "CodeReport/CodeReport.h"
 #include "CodeReport/DisassemblyReport.h"
@@ -39,6 +40,10 @@ class MainWindowInterface {
   enum class CaptureLogSeverity { kInfo, kWarning, kSevereWarning, kError };
   virtual void AppendToCaptureLog(CaptureLogSeverity severity, absl::Duration capture_time,
                                   std::string_view message) = 0;
+
+  enum class SymbolErrorHandlingResult { kReloadRequired, kSymbolLoadingCancelled };
+  virtual SymbolErrorHandlingResult HandleSymbolError(
+      const ErrorMessage& error, const orbit_client_data::ModuleData* module) = 0;
 
   virtual ~MainWindowInterface() = default;
 };

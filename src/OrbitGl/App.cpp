@@ -1678,22 +1678,40 @@ orbit_base::Future<ErrorMessageOr<std::filesystem::path>> OrbitApp::RetrieveModu
 
 orbit_base::Future<void> OrbitApp::RetrieveModulesAndLoadSymbols(
     absl::Span<const ModuleData* const> modules) {
+  // Use a set, to filter out duplicates
+  absl::flat_hash_set<const ModuleData*> modules_set(modules.begin(), modules.end());
+
   std::vector<orbit_base::Future<void>> futures;
-  futures.reserve(modules.size());
+  futures.reserve(modules_set.size());
 
-  const auto handle_error = [this](const ErrorMessageOr<void>& result) {
-    if (result.has_error()) {
-      error_message_callback_("Error loading symbols", result.error().message());
-      return;
-    }
-  };
-
-  for (const auto& module : modules) {
-    futures.emplace_back(
-        RetrieveModuleAndLoadSymbols(module).Then(main_thread_executor_, handle_error));
+  for (const auto& module : modules_set) {
+    futures.emplace_back(RetrieveModuleAndLoadSymbolsAndHandleError(module));
   }
 
   return orbit_base::JoinFutures(futures);
+}
+
+orbit_base::Future<void> OrbitApp::RetrieveModuleAndLoadSymbolsAndHandleError(
+    const ModuleData* module) {
+  Future<ErrorMessageOr<void>> load_future = RetrieveModuleAndLoadSymbols(module);
+
+  Future<Future<void>> chained_load_future = load_future.Then(
+      main_thread_executor_, [module, this](ErrorMessageOr<void> load_result) -> Future<void> {
+        if (!load_result.has_error()) return Future<void>();
+
+        MainWindowInterface::SymbolErrorHandlingResult error_handling_result =
+            main_window_->HandleSymbolError(load_result.error(), module);
+
+        switch (error_handling_result) {
+          case MainWindowInterface::SymbolErrorHandlingResult::kSymbolLoadingCancelled:
+            return Future<void>();
+          case MainWindowInterface::SymbolErrorHandlingResult::kReloadRequired:
+            return RetrieveModuleAndLoadSymbolsAndHandleError(module);
+        }
+        ORBIT_UNREACHABLE();
+      });
+
+  return orbit_base::UnwrapFuture(chained_load_future);
 }
 
 orbit_base::Future<ErrorMessageOr<void>> OrbitApp::RetrieveModuleAndLoadSymbols(

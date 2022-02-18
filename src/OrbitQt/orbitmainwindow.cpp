@@ -82,6 +82,7 @@
 #include "CodeViewer/FontSizeInEm.h"
 #include "CodeViewer/OwningDialog.h"
 #include "ConfigWidgets/SourcePathsMappingDialog.h"
+#include "ConfigWidgets/SymbolErrorDialog.h"
 #include "ConfigWidgets/SymbolsDialog.h"
 #include "DataViewFactory.h"
 #include "DataViews/DataViewType.h"
@@ -1420,11 +1421,14 @@ void OrbitMainWindow::on_actionSourcePathMappings_triggered() {
   }
 }
 
-void OrbitMainWindow::on_actionSymbolsDialog_triggered() {
+void OrbitMainWindow::ExecuteSymbolsDialog(
+    std::optional<const orbit_client_data::ModuleData*> module) {
   orbit_symbol_paths::QSettingsBasedStorageManager symbol_paths_storage_manager;
-  orbit_config_widgets::SymbolsDialog dialog{&symbol_paths_storage_manager, std::nullopt, this};
+  orbit_config_widgets::SymbolsDialog dialog{&symbol_paths_storage_manager, module, this};
   dialog.exec();
 }
+
+void OrbitMainWindow::on_actionSymbolsDialog_triggered() { ExecuteSymbolsDialog(std::nullopt); }
 
 void OrbitMainWindow::OnCaptureCleared() {
   ui->liveFunctions->Reset();
@@ -1767,4 +1771,22 @@ void OrbitMainWindow::AppendToCaptureLog(CaptureLogSeverity severity, absl::Dura
       QString::fromStdString(absl::StrFormat("%s\t%s", pretty_time, message)));
   ORBIT_LOG("\"%s  %s\" with severity %s added to the capture log", pretty_time, message,
             severity_name);
+}
+
+orbit_gl::MainWindowInterface::SymbolErrorHandlingResult OrbitMainWindow::HandleSymbolError(
+    const ErrorMessage& error, const orbit_client_data::ModuleData* module) {
+  orbit_config_widgets::SymbolErrorDialog error_dialog{module, error.message(), this};
+
+  orbit_config_widgets::SymbolErrorDialog::Result result = error_dialog.Exec();
+
+  switch (result) {
+    case orbit_config_widgets::SymbolErrorDialog::Result::kCancel:
+      return SymbolErrorHandlingResult::kSymbolLoadingCancelled;
+    case orbit_config_widgets::SymbolErrorDialog::Result::kTryAgain:
+      return SymbolErrorHandlingResult::kReloadRequired;
+    case orbit_config_widgets::SymbolErrorDialog::Result::kAddSymbolLocation:
+      ExecuteSymbolsDialog(module);
+      return SymbolErrorHandlingResult::kReloadRequired;
+  }
+  ORBIT_UNREACHABLE();
 }
