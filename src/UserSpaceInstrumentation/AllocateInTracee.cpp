@@ -5,18 +5,24 @@
 #include "AllocateInTracee.h"
 
 #include <absl/base/casts.h>
+#include <absl/strings/match.h>
+#include <absl/strings/numbers.h>
 #include <absl/strings/str_format.h>
+#include <absl/strings/str_split.h>
+#include <linux/seccomp.h>
 #include <sys/mman.h>
 #include <sys/ptrace.h>
 #include <sys/wait.h>
 
 #include <cstdint>
+#include <sstream>
 #include <string>
 #include <thread>
 #include <vector>
 
 #include "AccessTraceesMemory.h"
 #include "OrbitBase/Logging.h"
+#include "OrbitBase/ReadFileToString.h"
 #include "OrbitBase/SafeStrerror.h"
 #include "RegisterState.h"
 
@@ -73,7 +79,7 @@ namespace {
       nullptr, [pid, start_address, backup](void* /*ptr*/) {
         auto restore_memory_result = WriteTraceesMemory(pid, start_address, backup);
         if (restore_memory_result.has_error()) {
-          ORBIT_FATAL("Unable to restore memory state of tracee: %s",
+          ORBIT_ERROR("Unable to restore memory state of tracee: %s",
                       restore_memory_result.error().message());
         }
       }};
@@ -100,10 +106,24 @@ namespace {
       nullptr, [&original_registers](void* /*ptr*/) {
         auto restore_registers_result = original_registers.RestoreRegisters();
         if (restore_registers_result.has_error()) {
-          ORBIT_FATAL("Unable to restore register state of tracee: %s",
+          ORBIT_ERROR("Unable to restore register state of tracee: %s",
                       restore_registers_result.error().message());
         }
       }};
+
+  // The system call could cause the thread to be killed, so we need to read the seccomp mode
+  // before actually executing the system call.
+  const std::optional<int> seccomp_mode = ReadSeccompModeOfThread(pid);
+  std::string seccomp_message_suffix;
+  if (seccomp_mode.has_value() && seccomp_mode.value() == SECCOMP_MODE_STRICT) {
+    seccomp_message_suffix = absl::StrFormat(
+        " This might be due to thread %d being in seccomp mode %d (SECCOMP_MODE_STRICT).", pid,
+        SECCOMP_MODE_STRICT);
+  } else if (seccomp_mode.has_value() && seccomp_mode.value() == SECCOMP_MODE_FILTER) {
+    seccomp_message_suffix = absl::StrFormat(
+        " This might be due to thread %d being in seccomp mode %d (SECCOMP_MODE_FILTER).", pid,
+        SECCOMP_MODE_FILTER);
+  }
 
   // Single step to execute the syscall.
   if (ptrace(PTRACE_SINGLESTEP, pid, 0, 0) != 0) {
@@ -112,22 +132,24 @@ namespace {
   int status = 0;
   pid_t waited = waitpid(pid, &status, 0);
   if (waited != pid || !WIFSTOPPED(status) || WSTOPSIG(status) != SIGTRAP) {
-    return ErrorMessage("Failed to wait for PTRACE_SINGLESTEP to execute.");
+    return ErrorMessage(absl::StrFormat("Failed to wait for PTRACE_SINGLESTEP to execute.%s",
+                                        seccomp_message_suffix));
   }
 
   // Return value of syscalls is in rax.
   RegisterState return_value;
   auto return_value_result = return_value.BackupRegisters(pid);
   if (return_value_result.has_error()) {
-    return ErrorMessage(absl::StrFormat("Failed to get registers with mmap result: %s",
+    return ErrorMessage(absl::StrFormat("Failed to get registers with result of syscall: %s",
                                         return_value_result.error().message()));
   }
   const uint64_t result = return_value.GetGeneralPurposeRegisters()->x86_64.rax;
   // Syscalls return -4095, ..., -1 on failure. And these are actually (-1 * errno)
   const int64_t result_as_int = absl::bit_cast<int64_t>(result);
   if (result_as_int > -4096 && result_as_int < 0) {
-    return ErrorMessage(absl::StrFormat("Syscall failed. Return value: %s (%d)",
-                                        SafeStrerror(-result_as_int), result_as_int));
+    return ErrorMessage(absl::StrFormat("Syscall failed. Return value: %s (%d).%s",
+                                        SafeStrerror(-result_as_int), result_as_int,
+                                        seccomp_message_suffix));
   }
 
   return result;
@@ -263,6 +285,39 @@ AutomaticMemoryInTracee::~AutomaticMemoryInTracee() {
   if (result.has_error()) {
     ORBIT_ERROR("Unable to free memory in tracee: %s", result.error().message());
   }
+}
+
+std::optional<int> ReadSeccompModeOfThread(pid_t tid) {
+  std::string status_file_path = absl::StrFormat("/proc/%d/status", tid);
+  ErrorMessageOr<std::string> status_content_or_error =
+      orbit_base::ReadFileToString(status_file_path);
+  if (status_content_or_error.has_error()) {
+    ORBIT_ERROR("%s", status_content_or_error.error().message());
+    return std::nullopt;
+  }
+
+  constexpr const char* kSeccompPrefix = "Seccomp:";
+  std::istringstream status_content_stream{status_content_or_error.value()};
+  std::string status_line;
+  while (std::getline(status_content_stream, status_line)) {
+    if (!absl::StartsWith(status_line, kSeccompPrefix)) continue;
+
+    std::vector<std::string_view> seccomp_tokens =
+        absl::StrSplit(status_line, absl::ByAnyChar(": \t"), absl::SkipWhitespace{});
+    if (seccomp_tokens.size() < 2) break;
+
+    int seccomp_mode = -1;
+    if (!absl::SimpleAtoi(seccomp_tokens[1], &seccomp_mode)) break;
+
+    if (seccomp_mode != SECCOMP_MODE_DISABLED && seccomp_mode != SECCOMP_MODE_STRICT &&
+        seccomp_mode != SECCOMP_MODE_FILTER) {
+      break;
+    }
+    return seccomp_mode;
+  }
+
+  ORBIT_ERROR("Could not read seccomp mode of thread %d", tid);
+  return std::nullopt;
 }
 
 }  // namespace orbit_user_space_instrumentation
