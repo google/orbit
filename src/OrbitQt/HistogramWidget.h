@@ -5,21 +5,22 @@
 #ifndef ORBIT_HISTOGRAM_H_
 #define ORBIT_HISTOGRAM_H_
 
-#include <qevent.h>
-#include <qpainter.h>
-#include <qwidget.h>
-
+#include <QEvent>
+#include <QPainter>
+#include <QWidget>
 #include <optional>
 #include <string>
 
 #include "Statistics/Histogram.h"
 
-class OrbitHistogram : public QWidget {
+// Implements a widget that draws a histogram.
+// If the histogram is empty, draws a textual suggestion to select a function.
+class HistogramWidget : public QWidget {
  public:
-  explicit OrbitHistogram(QWidget* /* histogram_tab */) {}
+  using QWidget::QWidget;
 
-  void SetHistogram(std::optional<orbit_statistics::Histogram> histogram,
-                    std::string function_name);
+  void UpdateHistogram(std::optional<orbit_statistics::Histogram> histogram,
+                       std::string function_name);
 
  protected:
   void paintEvent(QPaintEvent* /*event*/) override;

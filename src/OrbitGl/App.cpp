@@ -2942,7 +2942,7 @@ OrbitApp::GetConfidenceIntervalEstimator() const {
   return confidence_interval_estimator_;
 }
 
-void OrbitApp::ShowHistogram(const std::optional<orbit_statistics::Histogram>& histogram,
+void OrbitApp::ShowHistogram(std::optional<orbit_statistics::Histogram> histogram,
                              const std::string& function_name) {
-  main_window_->ShowHistogram(histogram, function_name);
+  main_window_->ShowHistogram(std::move(histogram), function_name);
 }

@@ -83,6 +83,8 @@ class LiveFunctionsDataView : public DataView {
  private:
   [[nodiscard]] const orbit_client_protos::FunctionInfo* GetFunctionInfoFromRow(int row) override;
 
+  std::tuple<std::optional<orbit_statistics::Histogram>, std::string> ShowHistogram(int row);
+
   orbit_metrics_uploader::MetricsUploader* metrics_uploader_;
 };
 

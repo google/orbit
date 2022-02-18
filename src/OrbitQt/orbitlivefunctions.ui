@@ -55,7 +55,7 @@
        </attribute>
        <layout class="QVBoxLayout" name="verticalLayout_5">
         <item>
-         <widget class="OrbitHistogram" name="histogram_widget" native="true"/>
+         <widget class="HistogramWidget" name="histogram_widget" native="true"/>
         </item>
        </layout>
       </widget>
@@ -160,9 +160,9 @@
    <header>orbitdataviewpanel.h</header>
   </customwidget>
   <customwidget>
-   <class>OrbitHistogram</class>
+   <class>HistogramWidget</class>
    <extends>QWidget</extends>
-   <header>orbithistogram.h</header>
+   <header>HistogramWidget.h</header>
    <container>1</container>
   </customwidget>
  </customwidgets>

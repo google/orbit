@@ -91,7 +91,7 @@ class MockAppInterface : public AppInterface {
               GetConfidenceIntervalEstimator, (), (const));
 
   MOCK_METHOD(void, ShowHistogram,
-              (const std::optional<orbit_statistics::Histogram>& histogram,
+              (std::optional<orbit_statistics::Histogram> histogram,
                const std::string& function_name),
               ());
 };

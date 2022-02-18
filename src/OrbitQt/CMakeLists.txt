@@ -18,6 +18,7 @@ target_sources(
           ElidedLabel.h
           FilterPanelWidget.h
           FilterPanelWidgetAction.h
+          HistogramWidget.h
           orbitaboutdialog.h
           orbitdataviewpanel.h
           orbiteventiterator.h
@@ -25,7 +26,6 @@ target_sources(
           orbitlivefunctions.h
           orbitmainwindow.h
           orbitsamplingreport.h
-          orbithistogram.h
           orbittablemodel.h
           orbittreeview.h
           opengldetect.h
@@ -47,6 +47,7 @@ target_sources(
           ElidedLabel.cpp
           FilterPanelWidget.cpp
           FilterPanelWidgetAction.cpp
+          HistogramWidget.cpp
           StatusListenerImpl.cpp
           orbitaboutdialog.cpp
           orbitaboutdialog.ui
@@ -55,7 +56,6 @@ target_sources(
           orbiteventiterator.cpp
           orbiteventiterator.ui
           orbitglwidget.cpp
-          orbithistogram.cpp
           orbitlivefunctions.cpp
           orbitlivefunctions.ui
           orbitmainwindow.cpp

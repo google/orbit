@@ -18,6 +18,9 @@
 #include <functional>
 #include <iterator>
 #include <memory>
+#include <optional>
+#include <tuple>
+#include <type_traits>
 #include <vector>
 
 #include "ClientData/CaptureData.h"
@@ -134,29 +137,36 @@ void LiveFunctionsDataView::UpdateSelectedFunctionId() {
   selected_function_id_ = app_->GetHighlightedFunctionId();
 }
 
+std::tuple<std::optional<orbit_statistics::Histogram>, std::string>
+LiveFunctionsDataView::ShowHistogram(int row) {
+  const FunctionInfo& function = *GetFunctionInfoFromRow(row);
+  const std::string function_name = orbit_client_data::function_utils::GetDisplayName(function);
+
+  const uint64_t function_id = GetInstrumentedFunctionId(row);
+  const std::vector<const orbit_client_protos::TimerInfo*> timers =
+      app_->GetAllTimersForHookedFunction(function_id);
+  std::vector<uint64_t> timer_durations;
+  std::transform(std::begin(timers), std::end(timers), std::back_inserter(timer_durations),
+                 [](const orbit_client_protos::TimerInfo* const timer) {
+                   return timer->end() - timer->start();
+                 });
+
+  std::optional<orbit_statistics::Histogram> histogram =
+      orbit_statistics::BuildHistogram(timer_durations);
+
+  return {histogram, function_name};
+}
+
 void LiveFunctionsDataView::OnSelect(const std::vector<int>& rows) {
   UpdateHighlightedFunctionId(rows);
   UpdateSelectedFunctionId();
 
+  std::optional<orbit_statistics::Histogram> histogram;
+  std::string function_name;
   if (!rows.empty()) {
-    const FunctionInfo& function = *GetFunctionInfoFromRow(rows[0]);
-    std::string function_name = orbit_client_data::function_utils::GetDisplayName(function);
-
-    uint64_t function_id = GetInstrumentedFunctionId(rows[0]);
-    std::vector<const orbit_client_protos::TimerInfo*> timers =
-        app_->GetAllTimersForHookedFunction(function_id);
-    std::vector<uint64_t> histogram_data;
-
-    std::transform(std::begin(timers), std::end(timers), std::back_inserter(histogram_data),
-                   [](const orbit_client_protos::TimerInfo* const timer) {
-                     return timer->end() - timer->start();
-                   });
-
-    std::optional<orbit_statistics::Histogram> histogram =
-        orbit_statistics::BuildHistogram(histogram_data);
-
-    app_->ShowHistogram(histogram, function_name);
+    std::tie(histogram, function_name) = ShowHistogram(rows[0]);
   }
+  app_->ShowHistogram(histogram, function_name);
 }
 
 #define ORBIT_FUNC_SORT(Member)                                                         \
@@ -436,6 +446,7 @@ void LiveFunctionsDataView::AddFunction(uint64_t function_id,
 void LiveFunctionsDataView::OnDataChanged() {
   functions_.clear();
   indices_.clear();
+  app_->ShowHistogram(std::nullopt, "");
 
   if (!app_->HasCaptureData()) {
     DataView::OnDataChanged();

@@ -2,16 +2,16 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#include "orbithistogram.h"
+#include "HistogramWidget.h"
 
 #include <absl/strings/str_cat.h>
 #include <absl/strings/str_format.h>
-#include <qevent.h>
 #include <qnamespace.h>
-#include <qpainter.h>
 #include <qpoint.h>
-#include <qwidget.h>
 
+#include <QEvent>
+#include <QPainter>
+#include <QWidget>
 #include <algorithm>
 #include <cmath>
 #include <cstdint>
@@ -24,7 +24,8 @@
 
 constexpr double kRelativeMargin = 0.1;
 
-constexpr uint32_t kTicksNum = 3;
+constexpr uint32_t kVerticalTickCount = 3;
+constexpr uint32_t kHorizontalTickCount = 3;
 constexpr int kTickLength = 5;
 
 [[nodiscard]] static int RoundToClosestInt(double x) { return static_cast<int>(std::round(x)); }
@@ -55,20 +56,22 @@ static void DrawHorizontalAxis(QPainter& painter, const QPoint& zero,
                                const orbit_statistics::Histogram& histogram, int length) {
   DrawHorizontalLine(painter, zero, length);
 
-  int tick_spacing_as_value = RoundToClosestInt(static_cast<double>(histogram.max) / kTicksNum);
-  int tick_spacing_pixels = RoundToClosestInt(static_cast<double>(length) / kTicksNum);
+  const int tick_spacing_as_value =
+      RoundToClosestInt(static_cast<double>(histogram.max) / kHorizontalTickCount);
+  const int tick_spacing_pixels =
+      RoundToClosestInt(static_cast<double>(length) / kHorizontalTickCount);
 
   int current_tick_location = tick_spacing_pixels + zero.x();
   int current_tick_value = tick_spacing_as_value;
 
-  QFontMetrics font_metrics(painter.font());
+  const QFontMetrics font_metrics(painter.font());
 
-  for (uint32_t i = 1; i <= kTicksNum; ++i) {
+  for (uint32_t i = 1; i <= kHorizontalTickCount; ++i) {
     DrawVerticalLine(painter, {current_tick_location, zero.y()}, kTickLength);
 
-    QString tick_label = QString::fromStdString(
+    const QString tick_label = QString::fromStdString(
         orbit_display_formats::GetDisplayTime(absl::Nanoseconds(current_tick_value)));
-    QRect tick_label_bounding_rect = font_metrics.boundingRect(tick_label);
+    const QRect tick_label_bounding_rect = font_metrics.boundingRect(tick_label);
     painter.drawText(current_tick_location - tick_label_bounding_rect.width() / 2,
                      zero.y() + kTickLength + tick_label_bounding_rect.height(), tick_label);
 
@@ -80,15 +83,16 @@ static void DrawHorizontalAxis(QPainter& painter, const QPoint& zero,
 static void DrawVerticalAxis(QPainter& painter, const QPoint& zero, int length, double max_freq) {
   DrawVerticalLine(painter, zero, -length);
 
-  double tick_spacing_as_value = max_freq / kTicksNum;
-  double current_tick_value = tick_spacing_as_value;
+  const double tick_spacing_as_value = max_freq / kVerticalTickCount;
+  const int tick_spacing_pixels =
+      RoundToClosestInt(static_cast<double>(length) / kVerticalTickCount);
 
-  int tick_spacing_pixels = RoundToClosestInt(static_cast<double>(length) / kTicksNum);
+  double current_tick_value = tick_spacing_as_value;
   int current_tick_location = zero.y() - tick_spacing_pixels;
 
-  QFontMetrics font_metrics(painter.font());
+  const QFontMetrics font_metrics(painter.font());
 
-  for (uint32_t i = 1; i <= kTicksNum; ++i) {
+  for (uint32_t i = 1; i <= kVerticalTickCount; ++i) {
     DrawHorizontalLine(painter, {zero.x(), current_tick_location}, -kTickLength);
 
     QString tick_label = QString::fromStdString(absl::StrFormat("%.2f", current_tick_value));
@@ -112,36 +116,51 @@ static void DrawVerticalAxis(QPainter& painter, const QPoint& zero, int length, 
 
 static void DrawHistogram(QPainter& painter, const QPoint& zero,
                           const orbit_statistics::Histogram& histogram, int horizontal_axis_length,
-                          int vertical_axis_length, double max_freq) {
+                          int vertical_axis_length, double max_freq, int vertical_shift) {
   for (size_t i = 0; i < histogram.counts.size(); ++i) {
-    uint64_t bin_from = histogram.min + i * histogram.bin_width;
-    uint64_t bin_to = bin_from + histogram.bin_width;
+    const uint64_t bin_from = histogram.min + i * histogram.bin_width;
+    const uint64_t bin_to = bin_from + histogram.bin_width;
 
     double freq = GetFreq(histogram, i);
     if (freq > 0) {
-      QPoint top_left(
+      const QPoint top_left(
           zero.x() + ValueToAxisLocation(bin_from, horizontal_axis_length, histogram.max),
-          zero.y() - ValueToAxisLocation(freq, vertical_axis_length, max_freq));
-      QPoint lower_right(
-          zero.x() + ValueToAxisLocation(bin_to, horizontal_axis_length, histogram.max), zero.y());
-      QRect bar(top_left, lower_right);
-      painter.fillRect(bar, Qt::red);
+          zero.y() - vertical_shift - ValueToAxisLocation(freq, vertical_axis_length, max_freq));
+      const QPoint lower_right(
+          zero.x() + ValueToAxisLocation(bin_to, horizontal_axis_length, histogram.max),
+          zero.y() - vertical_shift);
+      const QRect bar(top_left, lower_right);
+      painter.fillRect(bar, Qt::cyan);
     }
   }
 }
 
-void OrbitHistogram::SetHistogram(std::optional<orbit_statistics::Histogram> histogram,
-                                  std::string function_name) {
+void HistogramWidget::UpdateHistogram(std::optional<orbit_statistics::Histogram> histogram,
+                                      std::string function_name) {
   histogram_ = std::move(histogram);
   function_name_ = std::move(function_name);
+  update();
 }
 
-void OrbitHistogram::paintEvent(QPaintEvent* /*event*/) {
-  if (!histogram_) return;
+static void DrawTitle(const std::string& text, QPainter& painter) {
+  const QFontMetrics font_metrics(painter.font());
+  const QString qtext = QString::fromStdString(text);
+  const QRect title_bounding_rect = font_metrics.boundingRect(qtext);
+  painter.drawText((painter.device()->width() - title_bounding_rect.width()) / 2,
+                   title_bounding_rect.height(), qtext);
+}
 
+void HistogramWidget::paintEvent(QPaintEvent* /*event*/) {
   QPainter painter(this);
-  int width = painter.device()->width();
-  int height = painter.device()->height();
+  if (!histogram_) {
+    DrawTitle("Select a function with Count>0 to plot a histogram of its runtime", painter);
+    return;
+  }
+
+  const int axis_width = painter.pen().width();
+
+  const int width = painter.device()->width();
+  const int height = painter.device()->height();
 
   QPoint zero(RoundToClosestInt(width * kRelativeMargin),
               RoundToClosestInt(height * (1 - kRelativeMargin)));
@@ -149,19 +168,15 @@ void OrbitHistogram::paintEvent(QPaintEvent* /*event*/) {
   const int vertical_axis_length = Height(painter) - 2 * HeightMargin(painter);
   const int horizontal_axis_length = Width(painter) - 2 * WidthMargin(painter);
 
-  uint64_t max_count =
+  const uint64_t max_count =
       *std::max_element(std::begin(histogram_->counts), std::end(histogram_->counts));
-  double max_freq = static_cast<double>(max_count) / histogram_->data_set_size;
+  const double max_freq = static_cast<double>(max_count) / histogram_->data_set_size;
 
   DrawHistogram(painter, zero, histogram_.value(), horizontal_axis_length, vertical_axis_length,
-                max_freq);
+                max_freq, axis_width);
 
   DrawHorizontalAxis(painter, zero, histogram_.value(), horizontal_axis_length);
   DrawVerticalAxis(painter, zero, vertical_axis_length, max_freq);
 
-  QString title = QString::fromStdString(function_name_.value());
-
-  QFontMetrics font_metrics(painter.font());
-  QRect title_bounding_rect = font_metrics.boundingRect(title);
-  painter.drawText((width - title_bounding_rect.width()) / 2, title_bounding_rect.height(), title);
+  DrawTitle(function_name_.value(), painter);
 }
