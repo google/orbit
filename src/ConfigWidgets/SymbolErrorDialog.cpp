@@ -19,9 +19,18 @@ SymbolErrorDialog::SymbolErrorDialog(const orbit_client_data::ModuleData* module
     : QDialog(parent), ui_(std::make_unique<Ui::SymbolErrorDialog>()), module_(module) {
   ORBIT_CHECK(module_ != nullptr);
   ui_->setupUi(this);
-  ui_->moduleNameLabel->setText(QString::fromStdString(module_->file_path()));
+  QString module_file_path = QString::fromStdString(module_->file_path());
+  ui_->moduleNameLabel->setText(module_file_path);
   ui_->errorPlainTextEdit->setPlainText(QString::fromStdString(detailed_error));
-  ui_->addSymbolLocationButton->setFocus();
+  if (!module_->build_id().empty()) {
+    ui_->addSymbolLocationButton->setFocus();
+    return;
+  }
+  ui_->addSymbolLocationButton->setEnabled(false);
+  ui_->addSymbolLocationButton->setToolTip(
+      QString("Orbit matches modules and symbol files based on build-id. Module %1 does not "
+              "contain a build id.")
+          .arg(module_file_path));
 }
 
 SymbolErrorDialog::~SymbolErrorDialog() = default;
