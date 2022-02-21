@@ -62,8 +62,7 @@ CoffFileImpl::CoffFileImpl(std::filesystem::path file_path,
   }
 }
 
-void FillDebugSymbolsFromDWARF(llvm::DWARFContext* dwarf_context,
-                                      ModuleSymbols* module_symbols) {
+void FillDebugSymbolsFromDWARF(llvm::DWARFContext* dwarf_context, ModuleSymbols* module_symbols) {
   for (const auto& info_section : dwarf_context->compile_units()) {
     for (uint32_t index = 0; index < info_section->getNumDIEs(); ++index) {
       llvm::DWARFDie full_die = info_section->getDIEAtIndex(index);
