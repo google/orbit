@@ -1,0 +1,309 @@
+/*
+ * Copyright (C) 2022 The Android Open Source Project
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+#include "PeCoffEpilog.h"
+
+#include <map>
+
+#include <capstone/capstone.h>
+#include <capstone/x86.h>
+
+#include <unwindstack/MachineX86_64.h>
+#include "Check.h"
+
+namespace unwindstack {
+
+PeCoffEpilog::~PeCoffEpilog() {
+  if (capstone_initialized_) {
+    cs_free(capstone_instruction_, 1);
+    cs_close(&capstone_handle_);
+  }
+}
+
+bool PeCoffEpilog::Init() {
+  cs_err err = cs_open(CS_ARCH_X86, CS_MODE_64, &capstone_handle_);
+  if (err) {
+    return false;
+  }
+  err = cs_option(capstone_handle_, CS_OPT_DETAIL, CS_OPT_ON);
+  if (err) {
+    cs_close(&capstone_handle_);
+    return false;
+  }
+  capstone_instruction_ = cs_malloc(capstone_handle_);
+  capstone_initialized_ = true;
+  return true;
+}
+
+static uint16_t MapCapstoneToUnwindstackRegister(x86_reg capstone_reg) {
+  static const std::map<x86_reg, uint16_t> kMapToUnwindstackRegister = {
+      {X86_REG_RAX, X86_64_REG_RAX}, {X86_REG_RCX, X86_64_REG_RCX}, {X86_REG_RDX, X86_64_REG_RDX},
+      {X86_REG_RBX, X86_64_REG_RBX}, {X86_REG_RSP, X86_64_REG_RSP}, {X86_REG_RBP, X86_64_REG_RBP},
+      {X86_REG_RSI, X86_64_REG_RSI}, {X86_REG_RDI, X86_64_REG_RDI}, {X86_REG_R8, X86_64_REG_R8},
+      {X86_REG_R9, X86_64_REG_R9},   {X86_REG_R10, X86_64_REG_R10}, {X86_REG_R11, X86_64_REG_R11},
+      {X86_REG_R12, X86_64_REG_R12}, {X86_REG_R13, X86_64_REG_R13}, {X86_REG_R14, X86_64_REG_R14},
+      {X86_REG_R15, X86_64_REG_R15}};
+  auto it = kMapToUnwindstackRegister.find(capstone_reg);
+  if (it != kMapToUnwindstackRegister.end()) {
+    return it->second;
+  }
+  return X86_64_REG_LAST;
+}
+
+bool PeCoffEpilog::ValidateLeaInstruction() {
+  // Note that this instruction is only legal as the first instruction if frame pointers are
+  // being used.
+  // TODO: Do we need to check that this frame is using a frame pointer? Can be seen in the
+  // unwind info. I believe this has no impact on unwinding itself and would thus only be a
+  // check that the compiler actually emitted instructions correctly. Probably not worth it to
+  // check here.
+  CHECK(capstone_instruction_->detail->x86.op_count == 2);
+  cs_x86_op operand0 = capstone_instruction_->detail->x86.operands[0];
+
+  // First operand is always a register for 'lea' instruction.
+  CHECK(operand0.type == X86_OP_REG);
+
+  x86_reg reg = operand0.reg;
+  if (reg != X86_REG_RSP) {
+    // The register that we set must be rsp, o/w we are not in the epilog.
+    return false;
+  }
+  cs_x86_op operand1 = capstone_instruction_->detail->x86.operands[1];
+
+  // Second operand is always a mem operand for 'lea' instructions.
+  CHECK(operand1.type == X86_OP_MEM);
+
+  // TODO: Not sure if this is really illegal.
+  CHECK(operand1.mem.segment == X86_REG_INVALID);
+
+  if (operand1.mem.index != X86_REG_INVALID) {
+    // Only instructions of the form lea rsp, constant[frame_pointer_register] are legal. This
+    // excludes using an index register.
+    return false;
+  }
+
+  return true;
+}
+
+void PeCoffEpilog::HandleLeaInstruction(RegsImpl<uint64_t>* registers) {
+  cs_x86_op operand1 = capstone_instruction_->detail->x86.operands[1];
+  x86_reg base_reg = operand1.mem.base;
+  uint16_t unwindstack_base_reg = MapCapstoneToUnwindstackRegister(base_reg);
+
+  uint64_t effective_address = (*registers)[unwindstack_base_reg] + operand1.mem.disp;
+  registers->set_sp(effective_address);
+}
+
+bool PeCoffEpilog::ValidateAddInstruction() {
+  CHECK(capstone_instruction_->detail->x86.op_count == 2);
+  cs_x86_op operand0 = capstone_instruction_->detail->x86.operands[0];
+  cs_x86_op operand1 = capstone_instruction_->detail->x86.operands[1];
+  if (operand0.type != X86_OP_REG || operand1.type != X86_OP_IMM) {
+    // The 'add' instruction must be adding an immediate value to a register, o/w
+    // we are not in the epilog.
+    return false;
+  }
+  x86_reg reg = operand0.reg;
+  if (reg != X86_REG_RSP) {
+    // The register that we add to must be rsp, o/w we are not in the epilog.
+    return false;
+  }
+  int64_t immediate_value = operand1.imm;
+  if (immediate_value < 0) {
+    // The immediate value represents the stack allocation size, so it must be non-negative.
+    return false;
+  }
+  return true;
+}
+
+void PeCoffEpilog::HandleAddInstruction(RegsImpl<uint64_t>* registers) {
+  // An 'add' instruction in the epilog adds the immediate value to the stack pointer to deallocate
+  // the stack frame.
+  int64_t immediate_value = capstone_instruction_->detail->x86.operands[1].imm;
+  registers->set_sp(registers->sp() + static_cast<uint64_t>(immediate_value));
+}
+
+bool PeCoffEpilog::HandlePopInstruction(Memory* process_memory, RegsImpl<uint64_t>* registers) {
+  // Handling a pop instructions means to read the value on top of the stack, then setting the
+  // register operand of the instruction with the read value, and increasing the stack pointer.
+  CHECK(capstone_instruction_->detail->x86.op_count == 1);
+  cs_x86_op operand = capstone_instruction_->detail->x86.operands[0];
+  CHECK(operand.type == X86_OP_REG);
+  x86_reg reg = operand.reg;
+  uint16_t unwindstack_reg = MapCapstoneToUnwindstackRegister(reg);
+
+  uint64_t value;
+  if (!process_memory->Read64(registers->sp(), &value)) {
+    last_error_.code = ERROR_MEMORY_INVALID;
+    last_error_.address = registers->sp();
+    return false;
+  }
+
+  registers->set_sp(registers->sp() + sizeof(uint64_t));
+  (*registers)[unwindstack_reg] = value;
+
+  return true;
+}
+
+bool PeCoffEpilog::HandleReturnInstruction(Memory* process_memory, RegsImpl<uint64_t>* registers) {
+  // Handling the return means we have to read the return address from the top of the stack, and
+  // then set stack pointer and pc accordingly.
+  uint64_t return_address;
+  if (!process_memory->Read64(registers->sp(), &return_address)) {
+    last_error_.code = ERROR_MEMORY_INVALID;
+    last_error_.address = registers->sp();
+    return false;
+  }
+  registers->set_sp(registers->sp() + sizeof(uint64_t));
+  registers->set_pc(return_address);
+
+  return true;
+}
+
+bool PeCoffEpilog::ValidateJumpInstruction() {
+  // It's not entirely clear how to distinguish between regular 'jmp' instructions and 'jmp'
+  // instructions that are at the end of an epilog (e.g. due to tail call optimization).
+  // There are some restrictions which 'jmp' instructions are allowed in epilogs, but this
+  // doesn't solve the problem of distinguishing entirely. This means that we may identify all
+  // 'jmp' instructions that satisfy this restriction as an epilog consisting of a single
+  // instruction.
+  // TODO: We may need to look at the unwind codes of this function to see if the epilog should
+  // be non-trivial (and not just consist of a single 'jmp' instruction).
+
+  // Only 'jmp' instructions with memory references are allowed in the epilog:
+  // https://docs.microsoft.com/en-us/cpp/build/prolog-and-epilog?view=msvc-170#epilog-code
+  CHECK(capstone_instruction_->detail->x86.op_count >= 1);
+  cs_x86_op operand0 = capstone_instruction_->detail->x86.operands[0];
+  if (operand0.type != X86_OP_MEM) {
+    return false;
+  }
+
+  // Only instructions with mod = 0b00 are allowed according to
+  // https://docs.microsoft.com/en-us/cpp/build/prolog-and-epilog?view=msvc-170#epilog-code
+  // (The modrm byte consist of fields mod, reg, and rm, where mod is 2 bits, reg is 3 bits, and
+  // rm is 3 bits.)
+  if (capstone_instruction_->detail->x86.modrm & 0b11'000'000) {
+    return false;
+  }
+
+  return true;
+}
+
+bool PeCoffEpilog::HandleJumpInstruction(Memory* process_memory, RegsImpl<uint64_t>* registers) {
+  // Seeing a 'jmp' at the end of the epilog means we are jumping into some other function  that
+  // will carry out prolog and at the end epilog instructions, setting up and unwinding a
+  // callframe. We do not have to simulate all these steps by the function we are jumping to,
+  // the return address leading back to the function that called the current function is already
+  // on the top of the stack and we can just directly virtually return here. Hence, the rest of
+  // the code to handle this case is exactly the same as in the 'ret' case.
+  uint64_t return_address;
+  if (!process_memory->Read64(registers->sp(), &return_address)) {
+    last_error_.code = ERROR_MEMORY_INVALID;
+    last_error_.address = registers->sp();
+    return false;
+  }
+  registers->set_sp(registers->sp() + sizeof(uint64_t));
+  registers->set_pc(return_address);
+
+  return true;
+}
+
+// Disassembles the machine code passed in, and scans through the instructions one-by-one to detect
+// if the machine code is an epilog according to the specification. For x86_64 on on Windows,
+// epilogs must follow a specific pattern as described on:
+// https://docs.microsoft.com/en-us/cpp/build/prolog-and-epilog?view=msvc-170
+// Instructions are virtually executed and their effect reflected on the registers if we are indeed
+// in an epilog. Since we are detecting and handling the epilog at the same time, we must make sure
+// that registers are not changed if we detect later that we are indeed not in an epilog.
+bool PeCoffEpilog::DetectAndHandleEpilog(const std::vector<uint8_t>& machine_code,
+                                         Memory* process_memory, Regs* regs) {
+  // These values are all updated by capstone as we go through the machine code for disassembling.
+  uint64_t current_offset = 0;
+  size_t current_code_size = machine_code.size();
+  const uint8_t* current_code_pointer = machine_code.data();
+
+  bool is_first_iteration = true;
+
+  // We need to copy registers to make sure we don't overwrite values incorrectly when after some
+  // instructions we find out we are actually not in the epilog.
+  std::unique_ptr<Regs> cloned_regs(regs->Clone());
+  auto* updated_regs = static_cast<RegsImpl<uint64_t>*>(cloned_regs.get());
+
+  bool have_seen_ret_or_jmp = false;
+
+  while (current_code_size > 0) {
+    if (!cs_disasm_iter(capstone_handle_, &current_code_pointer, &current_code_size,
+                        &current_offset, capstone_instruction_)) {
+      last_error_.code = ERROR_UNSUPPORTED;
+      return false;
+    }
+
+    // The instructions 'lea' and 'add' are only legal as the first instruction of the epilog, so we
+    // can only see them in the first iteration of this loop if we are indeed in the epilog. In this
+    // case we are actually at the start of the epilog.
+    if (is_first_iteration && capstone_instruction_->id == X86_INS_LEA) {
+      if (!ValidateLeaInstruction()) {
+        return false;
+      }
+      HandleLeaInstruction(updated_regs);
+    } else if (is_first_iteration && capstone_instruction_->id == X86_INS_ADD) {
+      if (!ValidateAddInstruction()) {
+        return false;
+      }
+      HandleAddInstruction(updated_regs);
+    } else if (capstone_instruction_->id == X86_INS_POP) {
+      if (!HandlePopInstruction(process_memory, updated_regs)) {
+        return false;
+      }
+    } else if (capstone_instruction_->id == X86_INS_RET ||
+               capstone_instruction_->id == X86_INS_RETF) {
+      if (!HandleReturnInstruction(process_memory, updated_regs)) {
+        return false;
+      }
+
+      // This is the last instruction of the epilog.
+      have_seen_ret_or_jmp = true;
+      break;
+    } else if (capstone_instruction_->id == X86_INS_JMP) {
+      if (!ValidateJumpInstruction()) {
+        return false;
+      }
+      if (!HandleJumpInstruction(process_memory, updated_regs)) {
+        return false;
+      }
+      // This is the last instruction of the epilog.
+      have_seen_ret_or_jmp = true;
+      break;
+    } else {
+      return false;
+    }
+
+    is_first_iteration = false;
+  }
+  if (!have_seen_ret_or_jmp) {
+    return false;
+  }
+
+  // If we get here, then we indeed were in the epilog and must update all proper registers to the
+  // updated registers that followed the epilog instructions.
+  auto* current_regs = static_cast<RegsImpl<uint64_t>*>(regs);
+  for (uint16_t reg = 0; reg < X86_64_REG_LAST; ++reg) {
+    (*current_regs)[reg] = (*updated_regs)[reg];
+  }
+  return true;
+}
+
+}  // namespace unwindstack

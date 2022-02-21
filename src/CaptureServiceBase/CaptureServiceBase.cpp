@@ -29,7 +29,9 @@ void CaptureServiceBase::RemoveCaptureStartStopListener(CaptureStartStopListener
 }
 
 CaptureServiceBase::CaptureInitializationResult CaptureServiceBase::InitializeCapture(
-    ClientCaptureEventCollectorBuilder* client_capture_event_collector_builder) {
+    ClientCaptureEventCollector* client_capture_event_collector) {
+  ORBIT_CHECK(client_capture_event_collector != nullptr);
+
   {
     absl::MutexLock lock(&capture_mutex_);
     if (is_capturing_) {
@@ -38,15 +40,14 @@ CaptureServiceBase::CaptureInitializationResult CaptureServiceBase::InitializeCa
     is_capturing_ = true;
   }
 
-  client_capture_event_collector_ =
-      client_capture_event_collector_builder->BuildClientCaptureEventCollector();
-  producer_event_processor_ = ProducerEventProcessor::Create(client_capture_event_collector_.get());
+  client_capture_event_collector_ = client_capture_event_collector;
+  producer_event_processor_ = ProducerEventProcessor::Create(client_capture_event_collector_);
   return CaptureInitializationResult::kSuccess;
 }
 
 void CaptureServiceBase::TerminateCapture() {
   producer_event_processor_.reset();
-  client_capture_event_collector_.reset();
+  client_capture_event_collector_ = nullptr;
   capture_start_timestamp_ns_ = 0;
 
   absl::MutexLock lock(&capture_mutex_);

@@ -19,6 +19,7 @@ namespace orbit_config_widgets {
 orbit_grpc_protos::ModuleInfo CreateModuleInfo(std::string module_path) {
   orbit_grpc_protos::ModuleInfo module_info;
   module_info.set_file_path(std::move(module_path));
+  module_info.set_build_id("some build id");
   return module_info;
 }
 class SymbolErrorDialogTest : public testing::Test {
@@ -71,6 +72,7 @@ TEST_F(SymbolErrorDialogTest, OnShowErrorButtonClicked) {
 TEST_F(SymbolErrorDialogTest, OnAddSymbolLocationButtonClicked) {
   auto* on_add_symbol_location_button = dialog_.findChild<QPushButton*>("addSymbolLocationButton");
   ASSERT_NE(on_add_symbol_location_button, nullptr);
+  ASSERT_TRUE(on_add_symbol_location_button->isEnabled());
   QMetaObject::invokeMethod(
       &dialog_, [&]() { QTest::mouseClick(on_add_symbol_location_button, Qt::LeftButton); },
       Qt::QueuedConnection);
@@ -106,6 +108,14 @@ TEST_F(SymbolErrorDialogTest, OnRejected) {
 
   SymbolErrorDialog::Result result = dialog_.Exec();
   EXPECT_EQ(result, SymbolErrorDialog::Result::kCancel);
+}
+
+TEST(SymbolErrorDialog, EmptyBuildId) {
+  orbit_client_data::ModuleData module{{}};
+  SymbolErrorDialog dialog{&module, "error"};
+  auto* on_add_symbol_location_button = dialog.findChild<QPushButton*>("addSymbolLocationButton");
+  ASSERT_NE(on_add_symbol_location_button, nullptr);
+  EXPECT_FALSE(on_add_symbol_location_button->isEnabled());
 }
 
 }  // namespace orbit_config_widgets

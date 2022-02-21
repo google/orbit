@@ -12,7 +12,9 @@
 #include <llvm/ADT/Twine.h>
 #include <llvm/ADT/iterator_range.h>
 #include <llvm/BinaryFormat/ELF.h>
+#include <llvm/DebugInfo/DWARF/DWARFCompileUnit.h>
 #include <llvm/DebugInfo/DWARF/DWARFContext.h>
+#include <llvm/DebugInfo/DWARF/DWARFDebugAranges.h>
 #include <llvm/DebugInfo/DWARF/DWARFDebugLine.h>
 #include <llvm/DebugInfo/DWARF/DWARFFormValue.h>
 #include <llvm/DebugInfo/Symbolize/Symbolize.h>

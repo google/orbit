@@ -35,6 +35,7 @@ target_sources(ConfigWidgetsTest PRIVATE SymbolErrorDialogTest.cpp
                                          SymbolsDialogTest.cpp)
 
 target_link_libraries(ConfigWidgetsTest PRIVATE ConfigWidgets
+                                                TestUtils
                                                 GTest::QtGuiMain)
 
 if (WIN32 AND "$ENV{QT_QPA_PLATFORM}" STREQUAL "offscreen")
