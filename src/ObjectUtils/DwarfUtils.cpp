@@ -31,13 +31,13 @@ std::string DwarfTypeDieToString(const llvm::DWARFDie& type_die) {
   // see section 5.3 in the DWARF spec: https://dwarfstd.org/doc/DWARF5.pdf).
   switch (tag) {
     case llvm::dwarf::DW_TAG_atomic_type:
-      absl::StrAppend(&result, "atomic");
+      absl::StrAppend(&result, "atomic ");
       break;
     case llvm::dwarf::DW_TAG_const_type:
-      absl::StrAppend(&result, "const");
+      absl::StrAppend(&result, "const ");
       break;
     case llvm::dwarf::DW_TAG_volatile_type:
-      absl::StrAppend(&result, "volatile");
+      absl::StrAppend(&result, "volatile ");
       break;
     default:
       break;
@@ -55,6 +55,7 @@ std::string DwarfTypeDieToString(const llvm::DWARFDie& type_die) {
   // may occur as formal parameter.
   switch (tag) {
     case llvm::dwarf::DW_TAG_array_type:
+      type_die.dump();
       // We could do better for array types, as e.g. the exact size might be known here.
       absl::StrAppend(&result, "[]");
       break;
