@@ -13,10 +13,9 @@
 
 namespace orbit_statistics {
 
-[[nodiscard]] std::optional<DataSet> DataSet::Create(const std::vector<uint64_t>* data) {
-  ORBIT_CHECK(data != nullptr);
-  if (data->empty()) return std::nullopt;
-  const auto [min, max] = std::minmax_element(data->begin(), data->end());
+[[nodiscard]] std::optional<DataSet> DataSet::Create(absl::Span<const uint64_t> data) {
+  if (data.empty()) return std::nullopt;
+  const auto [min, max] = std::minmax_element(data.begin(), data.end());
 
   return DataSet(data, *min, *max);
 }

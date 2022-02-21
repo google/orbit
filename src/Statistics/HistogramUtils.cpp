@@ -45,10 +45,10 @@ namespace orbit_statistics {
 [[nodiscard]] Histogram BuildHistogram(const DataSet& data_set, uint64_t bin_width) {
   const size_t bin_num = ValueToHistogramBinIndex(data_set.GetMax(), data_set, bin_width) + 1;
   std::vector<size_t> counts(bin_num, 0UL);
-  for (uint64_t value : *data_set.GetData()) {
+  for (uint64_t value : data_set.GetData()) {
     counts[ValueToHistogramBinIndex(value, data_set, bin_width)]++;
   }
-  return {data_set.GetMin(), data_set.GetMax(), bin_width, data_set.GetData()->size(),
+  return {data_set.GetMin(), data_set.GetMax(), bin_width, data_set.GetData().size(),
           std::move(counts)};
 }
 

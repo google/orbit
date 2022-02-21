@@ -21,6 +21,7 @@
 #include <optional>
 #include <tuple>
 #include <type_traits>
+#include <utility>
 #include <vector>
 
 #include "ClientData/CaptureData.h"
@@ -137,11 +138,7 @@ void LiveFunctionsDataView::UpdateSelectedFunctionId() {
   selected_function_id_ = app_->GetHighlightedFunctionId();
 }
 
-std::tuple<std::optional<orbit_statistics::Histogram>, std::string>
-LiveFunctionsDataView::ShowHistogram(int row) {
-  const FunctionInfo& function = *GetFunctionInfoFromRow(row);
-  const std::string function_name = orbit_client_data::function_utils::GetDisplayName(function);
-
+std::vector<uint64_t> LiveFunctionsDataView::GetFunctionTimerDurations(int row) {
   const uint64_t function_id = GetInstrumentedFunctionId(row);
   const std::vector<const orbit_client_protos::TimerInfo*> timers =
       app_->GetAllTimersForHookedFunction(function_id);
@@ -151,22 +148,22 @@ LiveFunctionsDataView::ShowHistogram(int row) {
                    return timer->end() - timer->start();
                  });
 
-  std::optional<orbit_statistics::Histogram> histogram =
-      orbit_statistics::BuildHistogram(timer_durations);
-
-  return {histogram, function_name};
+  return timer_durations;
 }
 
 void LiveFunctionsDataView::OnSelect(const std::vector<int>& rows) {
   UpdateHighlightedFunctionId(rows);
   UpdateSelectedFunctionId();
 
-  std::optional<orbit_statistics::Histogram> histogram;
+  std::vector<uint64_t> timer_durations;
   std::string function_name;
   if (!rows.empty()) {
-    std::tie(histogram, function_name) = ShowHistogram(rows[0]);
+    const FunctionInfo& function = *GetFunctionInfoFromRow(rows[0]);
+    function_name = orbit_client_data::function_utils::GetDisplayName(function);
+
+    timer_durations = GetFunctionTimerDurations(rows[0]);
   }
-  app_->ShowHistogram(histogram, function_name);
+  app_->ShowHistogram(std::move(timer_durations), function_name);
 }
 
 #define ORBIT_FUNC_SORT(Member)                                                         \
@@ -446,7 +443,7 @@ void LiveFunctionsDataView::AddFunction(uint64_t function_id,
 void LiveFunctionsDataView::OnDataChanged() {
   functions_.clear();
   indices_.clear();
-  app_->ShowHistogram(std::nullopt, "");
+  app_->ShowHistogram({}, "");
 
   if (!app_->HasCaptureData()) {
     DataView::OnDataChanged();

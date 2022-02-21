@@ -5,6 +5,8 @@
 #ifndef STATISTICS_DATA_SET_H_
 #define STATISTICS_DATA_SET_H_
 
+#include <absl/types/span.h>
+
 #include <cstdint>
 #include <optional>
 #include <vector>
@@ -15,16 +17,16 @@ namespace orbit_statistics {
 // Also stores and exposes minimum and maximum value.
 class DataSet {
  public:
-  [[nodiscard]] static std::optional<DataSet> Create(const std::vector<uint64_t>* data);
+  [[nodiscard]] static std::optional<DataSet> Create(absl::Span<const uint64_t> data);
 
-  [[nodiscard]] const std::vector<uint64_t>* GetData() const { return data_; }
+  [[nodiscard]] absl::Span<const uint64_t> GetData() const { return data_; }
   [[nodiscard]] uint64_t GetMin() const { return min_; }
   [[nodiscard]] uint64_t GetMax() const { return max_; }
 
  private:
-  DataSet(const std::vector<uint64_t>* data, uint64_t min, uint64_t max)
+  DataSet(absl::Span<const uint64_t> data, uint64_t min, uint64_t max)
       : data_(data), min_(min), max_(max) {}
-  const std::vector<uint64_t>* data_;
+  absl::Span<const uint64_t> data_;
   uint64_t min_;
   uint64_t max_;
 };

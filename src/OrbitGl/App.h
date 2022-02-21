@@ -558,8 +558,7 @@ class OrbitApp final : public DataViewFactory,
   // Only call from the capture thread
   void CaptureMetricProcessTimer(const orbit_client_protos::TimerInfo& timer);
 
-  void ShowHistogram(std::optional<orbit_statistics::Histogram> histogram,
-                     const std::string& function_name) override;
+  void ShowHistogram(std::vector<uint64_t> data, const std::string& function_name) override;
 
   std::atomic<bool> capture_loading_cancellation_requested_ = false;
   std::atomic<orbit_client_data::CaptureData::DataSource> data_source_{
