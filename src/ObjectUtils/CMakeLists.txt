@@ -11,6 +11,7 @@ target_sources(
   ObjectUtils
   PUBLIC include/ObjectUtils/Address.h
          include/ObjectUtils/CoffFile.h
+         include/ObjectUtils/DwarfUtils.h
          include/ObjectUtils/ElfFile.h
          include/ObjectUtils/PdbFile.h
          include/ObjectUtils/LinuxMap.h
@@ -22,6 +23,7 @@ target_sources(
   PRIVATE
         Address.cpp
         CoffFile.cpp
+        DwarfUtils.cpp
         ElfFile.cpp
         PdbFile.cpp
         PdbFileLlvm.h

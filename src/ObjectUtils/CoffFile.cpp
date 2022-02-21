@@ -14,9 +14,8 @@
 #include <llvm/Object/ObjectFile.h>
 #include <llvm/Support/Error.h>
 
-#include <system_error>
-
 #include "GrpcProtos/symbol.pb.h"
+#include "ObjectUtils/DwarfUtils.h"
 #include "ObjectUtils/WindowsBuildIdUtils.h"
 #include "OrbitBase/Logging.h"
 #include "OrbitBase/Result.h"
@@ -44,8 +43,6 @@ class CoffFileImpl : public CoffFile {
   [[nodiscard]] ErrorMessageOr<PdbDebugInfo> GetDebugPdbInfo() const override;
 
  private:
-  ErrorMessageOr<uint64_t> GetSectionOffsetForSymbol(const llvm::object::SymbolRef& symbol_ref);
-  ErrorMessageOr<SymbolInfo> CreateSymbolInfo(const llvm::object::SymbolRef& symbol_ref);
   [[nodiscard]] bool AreDebugSymbolsEmpty() const;
   const std::filesystem::path file_path_;
   llvm::object::OwningBinary<llvm::object::ObjectFile> owning_binary_;
@@ -65,7 +62,7 @@ CoffFileImpl::CoffFileImpl(std::filesystem::path file_path,
   }
 }
 
-static void FillDebugSymbolsFromDWARF(llvm::DWARFContext* dwarf_context,
+void FillDebugSymbolsFromDWARF(llvm::DWARFContext* dwarf_context,
                                       ModuleSymbols* module_symbols) {
   for (const auto& info_section : dwarf_context->compile_units()) {
     for (uint32_t index = 0; index < info_section->getNumDIEs(); ++index) {
@@ -85,7 +82,8 @@ static void FillDebugSymbolsFromDWARF(llvm::DWARFContext* dwarf_context,
         std::string name(full_die.getName(llvm::DINameKind::LinkageName));
         ORBIT_CHECK(!name.empty());
         symbol_info.set_name(name);
-        symbol_info.set_demangled_name(llvm::demangle(name));
+        symbol_info.set_demangled_name(
+            absl::StrCat(llvm::demangle(name), DwarfParameterListToString(full_die)));
         symbol_info.set_address(low_pc);
         symbol_info.set_size(high_pc - low_pc);
         *(module_symbols->add_symbol_infos()) = std::move(symbol_info);
