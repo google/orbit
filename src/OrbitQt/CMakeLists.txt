@@ -18,6 +18,7 @@ target_sources(
           ElidedLabel.h
           FilterPanelWidget.h
           FilterPanelWidgetAction.h
+          HistogramWidget.h
           orbitaboutdialog.h
           orbitdataviewpanel.h
           orbiteventiterator.h
@@ -46,6 +47,7 @@ target_sources(
           ElidedLabel.cpp
           FilterPanelWidget.cpp
           FilterPanelWidgetAction.cpp
+          HistogramWidget.cpp
           StatusListenerImpl.cpp
           orbitaboutdialog.cpp
           orbitaboutdialog.ui

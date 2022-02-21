@@ -16,6 +16,7 @@
 
 #include "ClientProtos/capture_data.pb.h"
 #include "LiveFunctionsController.h"
+#include "Statistics/Histogram.h"
 #include "absl/container/flat_hash_map.h"
 #include "orbiteventiterator.h"
 #include "types.h"
@@ -46,6 +47,8 @@ class OrbitLiveFunctions : public QWidget {
   std::optional<LiveFunctionsController*> GetLiveFunctionsController() {
     return live_functions_ ? &live_functions_.value() : nullptr;
   }
+  void ShowHistogram(std::optional<orbit_statistics::Histogram> histogram,
+                     const std::string& function_name);
 
  private:
   Ui::OrbitLiveFunctions* ui;
