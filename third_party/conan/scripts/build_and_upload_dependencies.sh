@@ -19,7 +19,7 @@ readonly SCRIPT="/mnt/third_party/conan/scripts/build_and_upload_dependencies.sh
 export CONAN_USE_ALWAYS_SHORT_PATHS=1
 
 if [[ -v IN_DOCKER ]]; then
-  pip3 install conan==1.40.3
+  pip3 install conan==1.45.0
   export QT_QPA_PLATFORM=offscreen
 
   if [[ -v ORBIT_PUBLIC_BUILD ]]; then
