@@ -4,11 +4,14 @@
 
 #include "SessionSetup/ConnectToTargetDialog.h"
 
+#include <absl/flags/flag.h>
+
 #include <QApplication>
 #include <QMessageBox>
 #include <algorithm>
 #include <memory>
 
+#include "ClientFlags/ClientFlags.h"
 #include "ClientServices/ProcessClient.h"
 #include "OrbitBase/JoinFutures.h"
 #include "OrbitBase/Logging.h"
@@ -39,6 +42,14 @@ ConnectToTargetDialog::ConnectToTargetDialog(
 ConnectToTargetDialog::~ConnectToTargetDialog() {}
 
 std::optional<TargetConfiguration> ConnectToTargetDialog::Exec() {
+  if (absl::GetFlag(FLAGS_launched_from_vsi)) {
+    connection_metric_ = std::make_unique<orbit_metrics_uploader::ScopedMetric>(
+        metrics_uploader_, orbit_metrics_uploader::OrbitLogEvent::ORBIT_CONNECT_TO_VSI_TARGET);
+  } else {
+    connection_metric_ = std::make_unique<orbit_metrics_uploader::ScopedMetric>(
+        metrics_uploader_, orbit_metrics_uploader::OrbitLogEvent::ORBIT_CONNECT_TO_CLI_TARGET);
+  }
+
   ORBIT_LOG("Trying to establish a connection to process \"%s\" on instance \"%s\"",
             target_.process_name_or_path.toStdString(), target_.instance_name_or_id.toStdString());
 
@@ -68,7 +79,15 @@ std::optional<TargetConfiguration> ConnectToTargetDialog::Exec() {
   int rc = QDialog::exec();
 
   if (rc != QDialog::Accepted) {
+    if (connection_metric_ != nullptr) {
+      connection_metric_->SetStatusCode(orbit_metrics_uploader::OrbitLogEvent::CANCELLED);
+      connection_metric_.release();
+    }
     return std::nullopt;
+  }
+
+  if (connection_metric_ != nullptr) {
+    connection_metric_.release();
   }
 
   return std::move(target_configuration_);
@@ -152,6 +171,11 @@ void ConnectToTargetDialog::SetStatusMessage(const QString& message) {
 
 void ConnectToTargetDialog::LogAndDisplayError(const ErrorMessage& message) {
   ORBIT_ERROR("%s", message.message());
+  if (connection_metric_ != nullptr) {
+    connection_metric_->SetStatusCode(orbit_metrics_uploader::OrbitLogEvent::INTERNAL_ERROR);
+    connection_metric_.release();
+  }
+
   QMessageBox::critical(nullptr, QApplication::applicationName(),
                         QString::fromStdString(message.message()));
 }
