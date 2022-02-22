@@ -2,7 +2,6 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#include <absl/types/span.h>
 #include <gtest/gtest.h>
 
 #include <algorithm>
@@ -40,7 +39,7 @@ TEST(DataSet, TestCreateDataSetWithNonEmptyVector) {
 }
 
 TEST(HistogramUtils, ValueToHistogramBinIndexTest) {
-  const std::optional<DataSet> data_set = DataSet::Create(absl::MakeSpan(raw_data_set));
+  const std::optional<DataSet> data_set = DataSet::Create((raw_data_set));
 
   EXPECT_EQ(ValueToHistogramBinIndex(15ULL, data_set.value(), kBinWidth), 0);
   EXPECT_EQ(ValueToHistogramBinIndex(14ULL, data_set.value(), kBinWidth), 0);

@@ -13,6 +13,7 @@
 #include <QWidget>
 #include <cstdint>
 #include <optional>
+#include <stack>
 #include <string>
 
 #include "Statistics/Histogram.h"
@@ -36,8 +37,7 @@ class HistogramWidget : public QWidget {
   std::optional<std::vector<uint64_t>> data_;
   std::optional<std::string> function_name_;
 
-  std::optional<orbit_statistics::Histogram> histogram_;
-  std::optional<orbit_statistics::Histogram> selection_histogram_;
+  std::stack<orbit_statistics::Histogram> histogram_stack_;
 
   std::optional<int> selection_start_pixel;
   std::optional<int> selection_current_pixel;
