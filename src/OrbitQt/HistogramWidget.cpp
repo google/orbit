@@ -151,8 +151,8 @@ static void DrawTitle(const std::string& text, QPainter& painter) {
   const QFontMetrics font_metrics(painter.font());
   const QString qtext = QString::fromStdString(text);
   const QRect title_bounding_rect = font_metrics.boundingRect(qtext);
-  painter.drawText((painter.device()->width() - title_bounding_rect.width()) / 2,
-                   title_bounding_rect.height(), qtext);
+  const int text_start_to_center = (painter.device()->width() - title_bounding_rect.width()) / 2;
+  painter.drawText(std::max(text_start_to_center, 0), title_bounding_rect.height(), qtext);
 }
 
 void HistogramWidget::paintEvent(QPaintEvent* /*event*/) {
