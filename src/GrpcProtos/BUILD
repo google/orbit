@@ -6,7 +6,10 @@ load("@rules_cc/cc:defs.bzl", "cc_proto_library")
 load("@com_github_grpc_grpc//bazel:cc_grpc_library.bzl", "cc_grpc_library")
 load("//:orbit.bzl", "orbit_cc_library", "orbit_cc_test")
 
-package(default_visibility = ["//:__subpackages__"])
+package(default_visibility = [
+    "//chrome/cloudcast/gamelet/orbitprofiler:__subpackages__",
+    "//:__subpackages__",
+])
 
 licenses(["notice"])
 
