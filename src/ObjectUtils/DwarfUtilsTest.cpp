@@ -49,7 +49,8 @@ const FakeDWARFDie kUserSpecifiedType{
 namespace orbit_object_utils {
 
 TEST(DwarfTypeAsString, DiesIfInvalid) {
-  FakeDWARFDie invalid_die{.is_valid_ = false};
+  FakeDWARFDie invalid_die;
+  invalid_die.is_valid_ = false;
 
   EXPECT_DEATH((void)DwarfTypeAsString(invalid_die), "");
 }
