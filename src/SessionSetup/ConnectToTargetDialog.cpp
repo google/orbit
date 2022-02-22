@@ -53,11 +53,6 @@ std::optional<TargetConfiguration> ConnectToTargetDialog::Exec() {
   ORBIT_LOG("Trying to establish a connection to process \"%s\" on instance \"%s\"",
             target_.process_name_or_path.toStdString(), target_.instance_name_or_id.toStdString());
 
-  if (metrics_uploader_ != nullptr) {
-    metrics_uploader_->SendLogEvent(
-        orbit_metrics_uploader::OrbitLogEvent_LogEventType_ORBIT_CONNECTION_TARGET_SPECIFIED);
-  }
-
   auto ggp_client_result = orbit_ggp::CreateClient();
   if (ggp_client_result.has_error()) {
     LogAndDisplayError(ggp_client_result.error());
