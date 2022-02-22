@@ -82,7 +82,7 @@ void FillDebugSymbolsFromDWARF(llvm::DWARFContext* dwarf_context, ModuleSymbols*
         ORBIT_CHECK(!name.empty());
         symbol_info.set_name(name);
         symbol_info.set_demangled_name(
-            absl::StrCat(llvm::demangle(name), DwarfParameterListToString(full_die)));
+            absl::StrCat(llvm::demangle(name), DwarfParameterListAsString(full_die)));
         symbol_info.set_address(low_pc);
         symbol_info.set_size(high_pc - low_pc);
         *(module_symbols->add_symbol_infos()) = std::move(symbol_info);

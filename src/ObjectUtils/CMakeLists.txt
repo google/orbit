@@ -23,7 +23,6 @@ target_sources(
   PRIVATE
         Address.cpp
         CoffFile.cpp
-        DwarfUtils.cpp
         ElfFile.cpp
         PdbFile.cpp
         PdbFileLlvm.h
@@ -62,6 +61,7 @@ add_executable(ObjectUtilsTests)
 target_sources(ObjectUtilsTests PRIVATE
         AddressTest.cpp
         CoffFileTest.cpp
+        DwarfUtilsTest.cpp
         ElfFileTest.cpp
         ObjectFileTest.cpp
         PdbFileTest.h
