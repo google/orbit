@@ -29,7 +29,7 @@ constexpr uint32_t kVerticalTickCount = 3;
 constexpr uint32_t kHorizontalTickCount = 3;
 constexpr int kTickLength = 5;
 
-constexpr QColor kSelectionColor = QColor(128, 128, 255, 128);
+const QColor kSelectionColor = QColor(128, 128, 255, 128);
 
 [[nodiscard]] static int RoundToClosestInt(double x) { return static_cast<int>(std::round(x)); }
 
