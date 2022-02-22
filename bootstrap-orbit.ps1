@@ -2,7 +2,7 @@
 # Use of this source code is governed by a BSD-style license that can be
 # found in the LICENSE file.
 
-$conan_version_required = "1.40.3"
+$conan_version_required = "1.45.0"
 
 function Check-Conan-Version-Sufficient {
   $version = $args[0]
