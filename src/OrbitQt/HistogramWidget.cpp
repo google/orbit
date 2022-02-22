@@ -56,13 +56,13 @@ static void DrawHorizontalAxis(QPainter& painter, const QPoint& axes_intersectio
                                const orbit_statistics::Histogram& histogram, int length) {
   DrawHorizontalLine(painter, axes_intersection, length);
 
-  const int tick_spacing_as_value =
-      RoundToClosestInt(static_cast<double>(histogram.max) / kHorizontalTickCount);
+  const auto tick_spacing_as_value =
+      static_cast<uint64_t>(static_cast<double>(histogram.max) / kHorizontalTickCount);
   const int tick_spacing_pixels =
       RoundToClosestInt(static_cast<double>(length) / kHorizontalTickCount);
 
   int current_tick_location = tick_spacing_pixels + axes_intersection.x();
-  int current_tick_value = tick_spacing_as_value;
+  uint64_t current_tick_value = tick_spacing_as_value;
 
   const QFontMetrics font_metrics(painter.font());
 
