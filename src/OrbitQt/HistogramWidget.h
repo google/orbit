@@ -34,8 +34,18 @@ class HistogramWidget : public QWidget {
   void mouseMoveEvent(QMouseEvent* event) override;
 
  private:
-  std::optional<std::vector<uint64_t>> data_;
-  std::optional<std::string> function_name_;
+  [[nodiscard]] bool IsSelectionActive() const;
+
+  [[nodiscard]] uint64_t MinValue() const;
+  [[nodiscard]] uint64_t MaxValue() const;
+
+  [[nodiscard]] int Width() const;
+  [[nodiscard]] int Height() const;
+  [[nodiscard]] int WidthMargin() const;
+  [[nodiscard]] int HeightMargin() const;
+
+  std::optional<const std::vector<uint64_t>> data_;
+  std::optional<const std::string> function_name_;
 
   std::stack<orbit_statistics::Histogram> histogram_stack_;
 

@@ -7,19 +7,17 @@
 #include <absl/strings/str_cat.h>
 #include <absl/strings/str_format.h>
 #include <qnamespace.h>
-#include <qpoint.h>
 
 #include <QEvent>
 #include <QMouseEvent>
 #include <QPainter>
+#include <QPoint>
 #include <QWidget>
 #include <algorithm>
 #include <cmath>
 #include <cstdint>
-#include <iostream>
 #include <iterator>
 #include <string>
-#include <type_traits>
 #include <utility>
 
 #include "DisplayFormats/DisplayFormats.h"
@@ -34,18 +32,6 @@ constexpr int kTickLength = 5;
 constexpr QColor kSelectionColor = QColor(128, 128, 255, 128);
 
 [[nodiscard]] static int RoundToClosestInt(double x) { return static_cast<int>(std::round(x)); }
-
-[[nodiscard]] static int Width(const QPainter& painter) { return painter.device()->width(); }
-
-[[nodiscard]] static int WidthMargin(const QPainter& painter) {
-  return RoundToClosestInt(Width(painter) * kRelativeMargin);
-}
-
-[[nodiscard]] static int Height(const QPainter& painter) { return painter.device()->height(); }
-
-[[nodiscard]] static int HeightMargin(const QPainter& painter) {
-  return RoundToClosestInt(Height(painter) * kRelativeMargin);
-}
 
 // if `length > 0`, the line will be plot to the right from `start` and to the left otherwise
 static void DrawHorizontalLine(QPainter& painter, const QPoint& start, int length) {
@@ -152,10 +138,10 @@ static void DrawHistogram(QPainter& painter, const QPoint& axes_intersection,
 void HistogramWidget::UpdateData(std::vector<uint64_t> data, std::string function_name) {
   histogram_stack_ = {};
 
-  data_ = std::move(data);
-  std::sort(data_->begin(), data_->end());
+  std::sort(data.begin(), data.end());
+  data_.emplace(std::move(data));
 
-  function_name_ = std::move(function_name);
+  function_name_.emplace(std::move(function_name));
 
   std::optional<orbit_statistics::Histogram> histogram =
       orbit_statistics::BuildHistogram(data_.value());
@@ -182,9 +168,9 @@ static void DrawSelection(QPainter& painter, int start_x, int end_x,
   if (start_x == end_x) return;
   if (start_x > end_x) std::swap(start_x, end_x);
 
-  QPoint top_left = {start_x, axes_intersection.y() - vertical_axis_length};
-  QPoint bottom_right = {end_x, axes_intersection.y()};
-  QRect selection(top_left, bottom_right);
+  const QPoint top_left = {start_x, axes_intersection.y() - vertical_axis_length};
+  const QPoint bottom_right = {end_x, axes_intersection.y()};
+  const QRect selection(top_left, bottom_right);
   painter.fillRect(selection, kSelectionColor);
 }
 
@@ -195,32 +181,26 @@ void HistogramWidget::paintEvent(QPaintEvent* /*event*/) {
     return;
   }
 
-  const bool is_selection_active = histogram_stack_.size() > 1;
   const orbit_statistics::Histogram& histogram = histogram_stack_.top();
-  const uint64_t min_value = is_selection_active ? histogram.min : 0;
 
   const int axis_width = painter.pen().width();
 
-  const int width = size().width();
-  const int height = size().height();
+  QPoint axes_intersection(WidthMargin(), Height() - HeightMargin());
 
-  QPoint axes_intersection(RoundToClosestInt(width * kRelativeMargin),
-                           RoundToClosestInt(height * (1 - kRelativeMargin)));
-
-  const int vertical_axis_length = Height(painter) - 2 * HeightMargin(painter);
-  const int horizontal_axis_length = Width(painter) - 2 * WidthMargin(painter);
+  const int vertical_axis_length = Height() - 2 * HeightMargin();
+  const int horizontal_axis_length = Width() - 2 * WidthMargin();
 
   const uint64_t max_count =
       *std::max_element(std::begin(histogram.counts), std::end(histogram.counts));
   const double max_freq = static_cast<double>(max_count) / histogram.data_set_size;
 
   DrawHistogram(painter, axes_intersection, histogram, horizontal_axis_length, vertical_axis_length,
-                max_freq, axis_width, min_value);
+                max_freq, axis_width, MinValue());
 
-  DrawHorizontalAxis(painter, axes_intersection, histogram, horizontal_axis_length, min_value);
+  DrawHorizontalAxis(painter, axes_intersection, histogram, horizontal_axis_length, MinValue());
   DrawVerticalAxis(painter, axes_intersection, vertical_axis_length, max_freq);
 
-  if (is_selection_active) {
+  if (IsSelectionActive()) {
     DrawTitle(painter, absl::StrFormat("Selection over %u points", histogram.data_set_size));
   } else {
     DrawTitle(painter, function_name_.value());
@@ -235,16 +215,15 @@ void HistogramWidget::paintEvent(QPaintEvent* /*event*/) {
 void HistogramWidget::mousePressEvent(QMouseEvent* event) {
   if (histogram_stack_.empty()) return;
 
-  int pixel_x = event->x();
+  const int pixel_x = event->x();
   selection_start_pixel = pixel_x;
   selection_current_pixel = pixel_x;
 
   update();
 }
 
-[[nodiscard]] static uint64_t LocationToValue(int pos_x, int width, uint64_t min_value,
+[[nodiscard]] static uint64_t LocationToValue(int pos_x, int width, int margin, uint64_t min_value,
                                               uint64_t max_value) {
-  int margin = RoundToClosestInt(width * kRelativeMargin);
   if (pos_x <= margin) return 0;
   if (pos_x > width - margin) return max_value + 1;
 
@@ -258,33 +237,27 @@ void HistogramWidget::mousePressEvent(QMouseEvent* event) {
 void HistogramWidget::mouseReleaseEvent(QMouseEvent* /* event*/) {
   if (histogram_stack_.empty()) return;
 
-  const int width = size().width();
-  const bool is_selection_active = histogram_stack_.size() > 1;
   if (selection_start_pixel && selection_current_pixel) {
-    // if it wasn't a drag, but just a click, resent selection_ to return to the full histogram view
+    // if it wasn't a drag, but just a click, go one level of selections up
     if (*selection_start_pixel == *selection_current_pixel) {
-      if (is_selection_active) histogram_stack_.pop();
+      if (IsSelectionActive()) histogram_stack_.pop();
       selection_start_pixel.reset();
       selection_current_pixel.reset();
       update();
       return;
     }
 
-    uint64_t min_value = is_selection_active ? histogram_stack_.top().min : 0;
     uint64_t min =
-        LocationToValue(*selection_start_pixel, width, min_value, histogram_stack_.top().max);
+        LocationToValue(*selection_start_pixel, Width(), WidthMargin(), MinValue(), MaxValue());
     uint64_t max =
-        LocationToValue(*selection_current_pixel, width, min_value, histogram_stack_.top().max);
-    std::cout << std::endl
-              << min << " " << max << " " << min_value << " " << histogram_stack_.top().max
-              << std::endl;
+        LocationToValue(*selection_current_pixel, Width(), WidthMargin(), MinValue(), MaxValue());
     if (min > max) {
       std::swap(min, max);
     }
 
-    auto min_it = std::lower_bound(data_->begin(), data_->end(), min);
-    auto max_it = std::upper_bound(data_->begin(), data_->end(), max);
-    auto selection = absl::Span<const uint64_t>(&*min_it, std::distance(min_it, max_it));
+    const auto min_it = std::lower_bound(data_->begin(), data_->end(), min);
+    const auto max_it = std::upper_bound(data_->begin(), data_->end(), max);
+    const auto selection = absl::Span<const uint64_t>(&*min_it, std::distance(min_it, max_it));
 
     auto histogram = orbit_statistics::BuildHistogram(selection);
     if (histogram) {
@@ -305,3 +278,19 @@ void HistogramWidget::mouseMoveEvent(QMouseEvent* event) {
 
   update();
 }
+
+bool HistogramWidget::IsSelectionActive() const { return histogram_stack_.size() > 1; }
+
+uint64_t HistogramWidget::MinValue() const {
+  return IsSelectionActive() ? histogram_stack_.top().min : 0;
+}
+
+uint64_t HistogramWidget::MaxValue() const { return histogram_stack_.top().max; }
+
+int HistogramWidget::Width() const { return size().width(); }
+
+int HistogramWidget::Height() const { return size().height(); }
+
+int HistogramWidget::HeightMargin() const { return RoundToClosestInt(Height() * kRelativeMargin); }
+
+int HistogramWidget::WidthMargin() const { return RoundToClosestInt(Width() * kRelativeMargin); }
