@@ -36,6 +36,9 @@ class AddIterator(LiveTabTestCase):
     """
 
     def _execute(self, function_name):
+        # Bring iterator tab to foreground.
+        self.find_control("TabItem", "Iterators", parent=self._live_tab).click_input()
+
         # Adding an iterator adds three new buttons and we use this knowledge to
         # verify that an iterator was added correctly. It seems other widgets like
         # the label are not well represented by pywinauto.
