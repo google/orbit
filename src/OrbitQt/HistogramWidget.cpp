@@ -138,18 +138,15 @@ void HistogramWidget::UpdateData(std::vector<uint64_t> data, std::string functio
   histogram_stack_ = {};
 
   std::sort(data.begin(), data.end());
-  data_.emplace(std::move(data));
-
-  function_name_.emplace(std::move(function_name));
+  function_data_.emplace(std::move(data), std::move(function_name));
 
   std::optional<orbit_statistics::Histogram> histogram =
-      orbit_statistics::BuildHistogram(data_.value());
+      orbit_statistics::BuildHistogram(function_data_->data);
   if (histogram) {
     histogram_stack_.push(std::move(*histogram));
   }
 
-  selection_start_pixel.reset();
-  selection_current_pixel.reset();
+  selected_area_.reset();
 
   update();
 }
@@ -202,12 +199,12 @@ void HistogramWidget::paintEvent(QPaintEvent* /*event*/) {
   if (IsSelectionActive()) {
     DrawTitle(painter, absl::StrFormat("Selection over %u points", histogram.data_set_size));
   } else {
-    DrawTitle(painter, function_name_.value());
+    DrawTitle(painter, function_data_->name);
   }
 
-  if (selection_start_pixel && selection_current_pixel) {
-    DrawSelection(painter, *selection_start_pixel, *selection_current_pixel, axes_intersection,
-                  vertical_axis_length);
+  if (selected_area_) {
+    DrawSelection(painter, selected_area_->selection_start_pixel,
+                  selected_area_->selection_current_pixel, axes_intersection, vertical_axis_length);
   }
 }
 
@@ -215,8 +212,7 @@ void HistogramWidget::mousePressEvent(QMouseEvent* event) {
   if (histogram_stack_.empty()) return;
 
   const int pixel_x = event->x();
-  selection_start_pixel = pixel_x;
-  selection_current_pixel = pixel_x;
+  selected_area_ = {pixel_x, pixel_x};
 
   update();
 }
@@ -236,44 +232,45 @@ void HistogramWidget::mousePressEvent(QMouseEvent* event) {
 void HistogramWidget::mouseReleaseEvent(QMouseEvent* /* event*/) {
   if (histogram_stack_.empty()) return;
 
-  if (selection_start_pixel && selection_current_pixel) {
+  if (selected_area_) {
     // if it wasn't a drag, but just a click, go one level of selections up
-    if (*selection_start_pixel == *selection_current_pixel) {
+    if (selected_area_->selection_start_pixel == selected_area_->selection_current_pixel) {
       if (IsSelectionActive()) histogram_stack_.pop();
-      selection_start_pixel.reset();
-      selection_current_pixel.reset();
+      selected_area_.reset();
       update();
       return;
     }
 
-    uint64_t min =
-        LocationToValue(*selection_start_pixel, Width(), WidthMargin(), MinValue(), MaxValue());
-    uint64_t max =
-        LocationToValue(*selection_current_pixel, Width(), WidthMargin(), MinValue(), MaxValue());
+    uint64_t min = LocationToValue(selected_area_->selection_start_pixel, Width(), WidthMargin(),
+                                   MinValue(), MaxValue());
+    uint64_t max = LocationToValue(selected_area_->selection_current_pixel, Width(), WidthMargin(),
+                                   MinValue(), MaxValue());
     if (min > max) {
       std::swap(min, max);
     }
 
-    const auto min_it = std::lower_bound(data_->begin(), data_->end(), min);
-    const auto max_it = std::upper_bound(data_->begin(), data_->end(), max);
-    const auto selection = absl::Span<const uint64_t>(&*min_it, std::distance(min_it, max_it));
+    const auto min_it =
+        std::lower_bound(function_data_->data.begin(), function_data_->data.end(), min);
+    if (min_it != function_data_->data.end()) {
+      const auto max_it =
+          std::upper_bound(function_data_->data.begin(), function_data_->data.end(), max);
+      const auto selection = absl::Span<const uint64_t>(&*min_it, std::distance(min_it, max_it));
 
-    auto histogram = orbit_statistics::BuildHistogram(selection);
-    if (histogram) {
-      histogram_stack_.push(std::move(*histogram));
+      auto histogram = orbit_statistics::BuildHistogram(selection);
+      if (histogram) {
+        histogram_stack_.push(std::move(*histogram));
+      }
     }
-
-    selection_start_pixel.reset();
-    selection_current_pixel.reset();
+    selected_area_.reset();
   }
 
   update();
 }
 
 void HistogramWidget::mouseMoveEvent(QMouseEvent* event) {
-  if (!selection_start_pixel) return;
+  if (!selected_area_) return;
 
-  selection_current_pixel = event->x();
+  selected_area_->selection_current_pixel = event->x();
 
   update();
 }

@@ -15,6 +15,7 @@
 #include <optional>
 #include <stack>
 #include <string>
+#include <vector>
 
 #include "Statistics/Histogram.h"
 
@@ -44,13 +45,24 @@ class HistogramWidget : public QWidget {
   [[nodiscard]] int WidthMargin() const;
   [[nodiscard]] int HeightMargin() const;
 
-  std::optional<const std::vector<uint64_t>> data_;
-  std::optional<const std::string> function_name_;
+  struct FunctionData {
+    FunctionData(std::vector<uint64_t> data, std::string name)
+        : data(std::move(data)), name(std::move(name)) {}
+
+    std::vector<uint64_t> data;
+    std::string name;
+  };
+
+  std::optional<FunctionData> function_data_;
 
   std::stack<orbit_statistics::Histogram> histogram_stack_;
 
-  std::optional<int> selection_start_pixel;
-  std::optional<int> selection_current_pixel;
+  struct SelectedArea {
+    int selection_start_pixel;
+    int selection_current_pixel;
+  };
+
+  std::optional<SelectedArea> selected_area_;
 };
 
 #endif  // ORBIT_HISTOGRAM_H_

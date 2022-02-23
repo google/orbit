@@ -28,7 +28,7 @@ struct Histogram {
 
 // The function builds multiple histograms with different number of bins,
 // estimates the risk score using `HistogramRiskScore` and returns the histogram
-// which minimizes it.
+// which minimizes it. The histogram will not own the data.
 [[nodiscard]] std::optional<Histogram> BuildHistogram(absl::Span<const uint64_t> data);
 }  // namespace orbit_statistics
 
