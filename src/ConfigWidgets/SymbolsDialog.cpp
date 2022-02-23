@@ -21,7 +21,6 @@
 #include "ObjectUtils/SymbolsFile.h"
 #include "OrbitBase/Logging.h"
 #include "OrbitBase/Result.h"
-#include "Symbols/SymbolUtils.h"
 #include "ui_SymbolsDialog.h"
 
 constexpr const char* kFileDialogSavedDirectoryKey = "symbols_file_dialog_saved_directory";
