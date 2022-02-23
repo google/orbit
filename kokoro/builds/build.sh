@@ -119,7 +119,7 @@ if [ -n "$1" ]; then
   # That's a temporary solution. The docker containers should have the
   # correct version of conan already preinstalled. This step will be removed
   # when the docker containers are restructured and versioned.
-  pip3 install conan==1.40.3
+  pip3 install conan==1.45.0
 
   echo "Installing conan configuration (profiles, settings, etc.)..."
   ${REPO_ROOT}/third_party/conan/configs/install.sh ${PUBLIC_BUILD:+--force-public-remotes}

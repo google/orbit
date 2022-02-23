@@ -4,7 +4,10 @@
 
 load("//:orbit.bzl", "orbit_cc_library", "orbit_cc_test")
 
-package(default_visibility = ["//:__subpackages__"])
+package(default_visibility = [
+    "//:__subpackages__",
+    "//:users",  
+])
 
 licenses(["notice"])
 

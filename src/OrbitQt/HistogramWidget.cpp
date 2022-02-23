@@ -48,13 +48,13 @@ static void DrawHorizontalAxis(QPainter& painter, const QPoint& axes_intersectio
                                uint64_t min_value) {
   DrawHorizontalLine(painter, axes_intersection, length);
 
-  const int tick_spacing_as_value =
-      RoundToClosestInt(static_cast<double>(histogram.max - min_value) / kHorizontalTickCount);
+
+  const auto tick_spacing_as_value = histogram.max / kHorizontalTickCount;
   const int tick_spacing_pixels =
       RoundToClosestInt(static_cast<double>(length) / kHorizontalTickCount);
 
-  int current_tick_location = axes_intersection.x();
-  uint64_t current_tick_value = min_value;
+  int current_tick_location = tick_spacing_pixels + axes_intersection.x();
+  uint64_t current_tick_value = tick_spacing_as_value;
 
   const QFontMetrics font_metrics(painter.font());
 
@@ -159,8 +159,8 @@ static void DrawTitle(QPainter& painter, const std::string& text) {
   const QFontMetrics font_metrics(painter.font());
   const QString qtext = QString::fromStdString(text);
   const QRect title_bounding_rect = font_metrics.boundingRect(qtext);
-  painter.drawText((painter.device()->width() - title_bounding_rect.width()) / 2,
-                   title_bounding_rect.height(), qtext);
+  const int text_start_to_center = (painter.device()->width() - title_bounding_rect.width()) / 2;
+  painter.drawText(std::max(text_start_to_center, 0), title_bounding_rect.height(), qtext);
 }
 
 static void DrawSelection(QPainter& painter, int start_x, int end_x,
