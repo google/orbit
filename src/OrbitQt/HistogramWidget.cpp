@@ -48,13 +48,12 @@ static void DrawHorizontalAxis(QPainter& painter, const QPoint& axes_intersectio
                                uint64_t min_value) {
   DrawHorizontalLine(painter, axes_intersection, length);
 
-
-  const auto tick_spacing_as_value = histogram.max / kHorizontalTickCount;
+  const auto tick_spacing_as_value = (histogram.max - min_value) / kHorizontalTickCount;
   const int tick_spacing_pixels =
       RoundToClosestInt(static_cast<double>(length) / kHorizontalTickCount);
 
-  int current_tick_location = tick_spacing_pixels + axes_intersection.x();
-  uint64_t current_tick_value = tick_spacing_as_value;
+  int current_tick_location = axes_intersection.x();
+  uint64_t current_tick_value = min_value;
 
   const QFontMetrics font_metrics(painter.font());
 
