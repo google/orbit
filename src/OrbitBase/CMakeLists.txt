@@ -102,6 +102,7 @@ target_sources(OrbitBaseTests PRIVATE
         PromiseTest.cpp
         PromiseHelpersTest.cpp
         ReadFileToStringTest.cpp
+        ResultTest.cpp
         SimpleExecutorTest.cpp
         TemporaryFileTest.cpp
         ThreadUtilsTest.cpp
