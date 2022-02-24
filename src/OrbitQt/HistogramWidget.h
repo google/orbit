@@ -5,11 +5,17 @@
 #ifndef ORBIT_HISTOGRAM_H_
 #define ORBIT_HISTOGRAM_H_
 
+#include <absl/types/span.h>
+
 #include <QEvent>
+#include <QMouseEvent>
 #include <QPainter>
 #include <QWidget>
+#include <cstdint>
 #include <optional>
+#include <stack>
 #include <string>
+#include <vector>
 
 #include "Statistics/Histogram.h"
 
@@ -19,15 +25,44 @@ class HistogramWidget : public QWidget {
  public:
   using QWidget::QWidget;
 
-  void UpdateHistogram(std::optional<orbit_statistics::Histogram> histogram,
-                       std::string function_name);
+  void UpdateData(std::vector<uint64_t> data, std::string function_name);
 
  protected:
   void paintEvent(QPaintEvent* /*event*/) override;
 
+  void mousePressEvent(QMouseEvent* event) override;
+  void mouseReleaseEvent(QMouseEvent* event) override;
+  void mouseMoveEvent(QMouseEvent* event) override;
+
  private:
-  std::optional<orbit_statistics::Histogram> histogram_;
-  std::optional<std::string> function_name_;
+  [[nodiscard]] bool IsSelectionActive() const;
+
+  [[nodiscard]] uint64_t MinValue() const;
+  [[nodiscard]] uint64_t MaxValue() const;
+
+  [[nodiscard]] int Width() const;
+  [[nodiscard]] int Height() const;
+  [[nodiscard]] int WidthMargin() const;
+  [[nodiscard]] int HeightMargin() const;
+
+  struct FunctionData {
+    FunctionData(std::vector<uint64_t> data, std::string name)
+        : data(std::move(data)), name(std::move(name)) {}
+
+    std::vector<uint64_t> data;
+    std::string name;
+  };
+
+  std::optional<FunctionData> function_data_;
+
+  std::stack<orbit_statistics::Histogram> histogram_stack_;
+
+  struct SelectedArea {
+    int selection_start_pixel;
+    int selection_current_pixel;
+  };
+
+  std::optional<SelectedArea> selected_area_;
 };
 
 #endif  // ORBIT_HISTOGRAM_H_

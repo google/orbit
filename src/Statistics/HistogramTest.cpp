@@ -27,19 +27,19 @@ const static std::vector<uint64_t> raw_data_set(kRawDataSet.begin(), kRawDataSet
 
 TEST(DataSet, TestCreateDataSetWithEmptyVector) {
   const std::vector<uint64_t> empty;
-  const std::optional<DataSet> data_set = DataSet::Create(&empty);
+  const std::optional<DataSet> data_set = DataSet::Create(absl::MakeSpan(empty));
   EXPECT_FALSE(data_set.has_value());
 }
 
 TEST(DataSet, TestCreateDataSetWithNonEmptyVector) {
-  const std::optional<DataSet> data_set = DataSet::Create(&raw_data_set);
+  const std::optional<DataSet> data_set = DataSet::Create(absl::MakeSpan(raw_data_set));
   ASSERT_TRUE(data_set.has_value());
   EXPECT_EQ(data_set->GetMin(), kMin);
   EXPECT_EQ(data_set->GetMax(), kMax);
 }
 
 TEST(HistogramUtils, ValueToHistogramBinIndexTest) {
-  const std::optional<DataSet> data_set = DataSet::Create(&raw_data_set);
+  const std::optional<DataSet> data_set = DataSet::Create((raw_data_set));
 
   EXPECT_EQ(ValueToHistogramBinIndex(15ULL, data_set.value(), kBinWidth), 0);
   EXPECT_EQ(ValueToHistogramBinIndex(14ULL, data_set.value(), kBinWidth), 0);
@@ -51,7 +51,7 @@ TEST(HistogramUtils, ValueToHistogramBinIndexTest) {
 }
 
 TEST(HistogramUtils, TestBuildHistogramCounts) {
-  const std::optional<DataSet> data_set = DataSet::Create(&raw_data_set);
+  const std::optional<DataSet> data_set = DataSet::Create(absl::MakeSpan(raw_data_set));
 
   const auto histogram = BuildHistogram(data_set.value(), kBinWidth);
   EXPECT_EQ(histogram.data_set_size, kDataSetSize);
@@ -73,7 +73,7 @@ TEST(HistogramUtils, TestBuildHistogramCounts) {
 TEST(HistogramUtils, TestBuildHistogramCountsAllEqualDataElements) {
   const size_t singular_dataset_size = 100;
   const std::vector<uint64_t> singular_raw_data_set(singular_dataset_size, 5ULL);
-  const auto data_set = DataSet::Create(&singular_raw_data_set);
+  const auto data_set = DataSet::Create(absl::MakeSpan(singular_raw_data_set));
 
   auto histogram = BuildHistogram(data_set.value(), kBinWidth);
   EXPECT_EQ(histogram.data_set_size, singular_dataset_size);
@@ -86,7 +86,7 @@ TEST(HistogramUtils, TestBuildHistogramCountsAllEqualDataElements) {
 
 static uint64_t NumberOfBinsToBinWidthHelper(size_t bins_num, uint64_t max, uint64_t min) {
   const std::vector<uint64_t> raw_data = {max, min};
-  const auto data_set = DataSet::Create(&raw_data);
+  const auto data_set = DataSet::Create(absl::MakeSpan(raw_data));
   return NumberOfBinsToBinWidth(data_set.value(), bins_num);
 }
 
@@ -160,7 +160,8 @@ TEST(Histogram, BuildHistogramCorrectlyChoosesTheBinWidth) {
       39884349, 39889010, 39925959, 39933440, 39987806, 40223294, 43078564, 43081818, 43700203,
       43843646};
 
-  std::optional<Histogram> hist = BuildHistogram(data);
+  const absl::Span<const uint64_t> span = absl::MakeSpan(data);
+  std::optional<Histogram> hist = BuildHistogram(span);
   ASSERT_TRUE(hist.has_value());
   EXPECT_EQ(hist->counts.size(), 128);
 }

@@ -5,6 +5,8 @@
 #ifndef STATISTICS_HISTOGRAM_H_
 #define STATISTICS_HISTOGRAM_H_
 
+#include <absl/types/span.h>
+
 #include <cstdint>
 #include <optional>
 #include <vector>
@@ -26,8 +28,8 @@ struct Histogram {
 
 // The function builds multiple histograms with different number of bins,
 // estimates the risk score using `HistogramRiskScore` and returns the histogram
-// which minimizes it.
-[[nodiscard]] std::optional<Histogram> BuildHistogram(const std::vector<uint64_t>& data);
+// which minimizes it. The histogram will not own the data.
+[[nodiscard]] std::optional<Histogram> BuildHistogram(absl::Span<const uint64_t> data);
 }  // namespace orbit_statistics
 
 #endif  // STATISTICS_HISTOGRAM_H_
