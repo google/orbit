@@ -15,6 +15,7 @@
 #include <stddef.h>
 
 #include <algorithm>
+#include <cstdint>
 #include <functional>
 #include <iterator>
 #include <memory>
@@ -157,13 +158,14 @@ void LiveFunctionsDataView::UpdateHistogram() { UpdateHistogram(GetVisibleSelect
 void LiveFunctionsDataView::UpdateHistogram(const std::vector<int>& visible_selected_indices) {
   std::vector<uint64_t> timer_durations;
   std::string function_name;
+  uint64_t function_id = orbit_grpc_protos::kInvalidFunctionId;
   if (!visible_selected_indices.empty()) {
     const FunctionInfo& function = *GetFunctionInfoFromRow(visible_selected_indices[0]);
     function_name = orbit_client_data::function_utils::GetDisplayName(function);
-
     timer_durations = GetFunctionTimerDurations(visible_selected_indices[0]);
+    function_id = indices_[visible_selected_indices[0]];
   }
-  app_->ShowHistogram(std::move(timer_durations), function_name);
+  app_->ShowHistogram(std::move(timer_durations), function_name, function_id);
 }
 
 void LiveFunctionsDataView::OnSelect(const std::vector<int>& rows) {
@@ -449,7 +451,7 @@ void LiveFunctionsDataView::AddFunction(uint64_t function_id,
 void LiveFunctionsDataView::OnDataChanged() {
   functions_.clear();
   indices_.clear();
-  app_->ShowHistogram({}, "");
+  app_->ShowHistogram({}, "", orbit_grpc_protos::kInvalidFunctionId);
 
   if (!app_->HasCaptureData()) {
     DataView::OnDataChanged();
