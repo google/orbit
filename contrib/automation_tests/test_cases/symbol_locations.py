@@ -62,5 +62,6 @@ class ClearAllSymbolLocations(E2ETestCase):
         while len(symbol_path_list.descendants(control_type='ListItem')) > 0:
             symbol_path_list.descendants(control_type='ListItem')[0].click_input()
             self.find_control('Button', 'Remove').click_input()
-        self.expect_eq(0, len(symbol_path_list.descendants(control_type='ListItem')), 'List is empty')
+        self.expect_eq(0, len(symbol_path_list.descendants(control_type='ListItem')),
+                       'List is empty')
         self.find_control('Button', 'OK', parent=ui).click_input()
