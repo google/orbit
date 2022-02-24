@@ -47,8 +47,9 @@ class MetricsUploaderImpl : public MetricsUploader {
  private:
   [[nodiscard]] bool FillAndSendLogEvent(OrbitLogEvent partial_filled_event) const;
 
+  mutable absl::Mutex mutex_;
   HMODULE metrics_uploader_client_dll_;
-  Result (*send_log_event_addr_)(const uint8_t*, int) = nullptr;
+  Result (*send_log_event_addr_)(const uint8_t*, int) ABSL_PT_GUARDED_BY(mutex_) = nullptr;
   Result (*shutdown_connection_addr_)() = nullptr;
   std::string client_name_;
   std::string session_uuid_;
@@ -200,6 +201,7 @@ ErrorMessageOr<std::string> GenerateUUID() {
 }
 
 bool MetricsUploaderImpl::FillAndSendLogEvent(OrbitLogEvent partial_filled_event) const {
+  absl::MutexLock lock(&mutex_);
   if (send_log_event_addr_ == nullptr) {
     ORBIT_ERROR("Unable to send metric, send_log_event_addr_ is nullptr");
     return false;
