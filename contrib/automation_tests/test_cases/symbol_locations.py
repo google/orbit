@@ -35,7 +35,7 @@ class AddSymbolLocation(E2ETestCase):
         self.find_control('Edit', 'Folder:', parent=ui).set_text(location)
         self.find_control('Button', 'Select Folder', parent=ui).click_input()
         self._verify_symbols_list_contains(ui, location)
-        self.find_control('Button', 'OK', parent=ui).click_input()
+        self.find_control('Button', 'Done', parent=ui).click_input()
 
     def _verify_symbols_list_contains(self, ui, location):
         logging.info("Verifying symbol path location is in the list")
@@ -62,5 +62,6 @@ class ClearAllSymbolLocations(E2ETestCase):
         while len(symbol_path_list.descendants(control_type='ListItem')) > 0:
             symbol_path_list.descendants(control_type='ListItem')[0].click_input()
             self.find_control('Button', 'Remove').click_input()
-        self.expect_eq(0, len(symbol_path_list.descendants(control_type='ListItem')), 'List is empty')
-        self.find_control('Button', 'OK', parent=ui).click_input()
+        self.expect_eq(0, len(symbol_path_list.descendants(control_type='ListItem')),
+                       'List is empty')
+        self.find_control('Button', 'Done', parent=ui).click_input()
