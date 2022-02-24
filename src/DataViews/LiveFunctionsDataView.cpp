@@ -152,6 +152,8 @@ std::vector<uint64_t> LiveFunctionsDataView::GetFunctionTimerDurations(int row) 
   return timer_durations;
 }
 
+void LiveFunctionsDataView::UpdateHistogram() { UpdateHistogram(GetVisibleSelectedIndices()); }
+
 void LiveFunctionsDataView::UpdateHistogram(const std::vector<int>& visible_selected_indices) {
   std::vector<uint64_t> timer_durations;
   std::string function_name;
@@ -167,7 +169,7 @@ void LiveFunctionsDataView::UpdateHistogram(const std::vector<int>& visible_sele
 void LiveFunctionsDataView::OnSelect(const std::vector<int>& rows) {
   UpdateHighlightedFunctionId(rows);
   UpdateSelectedFunctionId();
-  UpdateHistogram(GetVisibleSelectedIndices());
+  UpdateHistogram();
 }
 
 #define ORBIT_FUNC_SORT(Member)                                                         \
