@@ -34,21 +34,29 @@ def _show_symbols_and_functions_tabs(top_window):
 def _find_and_close_error_dialog(top_window) -> str or None:
     window = find_control(top_window,
                           'Window',
-                          'Error loading symbols',
+                          'Symbol Loading Error',
                           recurse=False,
                           raise_on_failure=False)
+    logging.info("Trying to find Symbol Loading Error dialog")
     if window is None:
         return None
 
-    error_message = find_control(window, 'Text').texts()[0]
-    module_path_search_result = re.search('for module "(.+?)"', error_message)
-    if not module_path_search_result:
+    logging.info("Trying to find module name label in the error dialog")
+    # Finding the label via a find_control and an accessibleName is not possible here.
+    # When adding the accessibleName to the QLabel, the content of the label is not available in
+    # pywinauto anymore.
+    module_name_label = window.children()[2]
+    if not module_name_label:
         return None
 
-    logging.info(
-        "Found error dialog with message {message}, closing.".format(message=error_message))
-    find_control(window, 'Button').click_input()
-    return module_path_search_result[1]
+    logging.info("Found module name label in the error dialog")
+    module_path = module_name_label.texts()[0]
+    if not module_path:
+        return None
+
+    logging.info("Found error dialog for module {path}, closing.".format(path=module_path))
+    find_control(window, 'Button', 'Cancel').click_input()
+    return module_path
 
 
 ModulesLoadingResult = namedtuple("LoadingResult", ["time", "errors"])
