@@ -225,7 +225,7 @@ TEST(DwarfTypeAsString, MemberFunctionPointer) {
   EXPECT_STREQ(DwarfTypeAsString(function_pointer_die).data(), "void(Foo::*)(int)");
 }
 
-TEST(DwarfTypeAsString, ConstVolatileFunctionPointer) {
+TEST(DwarfTypeAsString, PointerToConstVolatileFunction) {
   FakeDWARFDie formal_parameter_die;
   formal_parameter_die.tag_ = llvm::dwarf::DW_TAG_formal_parameter;
   formal_parameter_die.type_ = &kUserSpecifiedType;
@@ -247,7 +247,7 @@ TEST(DwarfTypeAsString, ConstVolatileFunctionPointer) {
   function_pointer_die.tag_ = llvm::dwarf::DW_TAG_pointer_type;
   function_pointer_die.type_ = &const_volatile_function_die;
 
-  EXPECT_STREQ(DwarfTypeAsString(function_pointer_die).data(), "int(* const volatile)(Foo)");
+  EXPECT_STREQ(DwarfTypeAsString(function_pointer_die).data(), "int(* volatile const)(Foo)");
 }
 
 TEST(DwarfTypeAsString, OrderMatters) {
