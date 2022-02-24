@@ -17,8 +17,26 @@ struct FakeDWARFDie {
   [[nodiscard]] llvm::dwarf::Tag getTag() const { return tag_; }
   [[nodiscard]] FakeDWARFDie getAttributeValueAsReferencedDie(
       llvm::dwarf::Attribute attribute) const {
-    ORBIT_CHECK(attribute == llvm::dwarf::DW_AT_type);
-    return *type_;
+    switch (attribute) {
+      case llvm::dwarf::DW_AT_type: {
+        if (type_ != nullptr) {
+          return *type_;
+        };
+        FakeDWARFDie result{};
+        result.is_valid_ = false;
+        return result;
+      }
+      case llvm::dwarf::DW_AT_containing_type: {
+        if (containing_type_ != nullptr) {
+          return *containing_type_;
+        }
+        FakeDWARFDie result{};
+        result.is_valid_ = false;
+        return result;
+      }
+      default:
+        ORBIT_UNREACHABLE();
+    }
   }
 
   bool is_valid_ = true;
@@ -26,6 +44,7 @@ struct FakeDWARFDie {
   const char* name_{};
   llvm::dwarf::Tag tag_ = static_cast<llvm::dwarf::Tag>(llvm::dwarf::DW_TAG_invalid);
   const FakeDWARFDie* type_{};
+  const FakeDWARFDie* containing_type_{};
 };
 
 const FakeDWARFDie kBaseTypeDie{
@@ -34,6 +53,7 @@ const FakeDWARFDie kBaseTypeDie{
     /*name=*/"int",
     /*tag=*/llvm::dwarf::DW_TAG_base_type,
     /*type=*/{},
+    /*containing_type_=*/{},
 };
 
 const FakeDWARFDie kUserSpecifiedType{
@@ -42,6 +62,7 @@ const FakeDWARFDie kUserSpecifiedType{
     /*name=*/"Foo",
     /*tag=*/llvm::dwarf::DW_TAG_class_type,
     /*type=*/{},
+    /*containing_type_=*/{},
 };
 
 }  // namespace
@@ -65,7 +86,7 @@ TEST(DwarfTypeAsString, PrependsAtomicModifier) {
   atomic_die.tag_ = llvm::dwarf::DW_TAG_atomic_type;
   atomic_die.type_ = &kBaseTypeDie;
 
-  EXPECT_STREQ(DwarfTypeAsString(atomic_die).data(), "int _Atomic");
+  EXPECT_STREQ(DwarfTypeAsString(atomic_die).data(), "_Atomic int");
 }
 
 TEST(DwarfTypeAsString, PrependsConstModifier) {
@@ -73,7 +94,7 @@ TEST(DwarfTypeAsString, PrependsConstModifier) {
   const_die.tag_ = llvm::dwarf::DW_TAG_const_type;
   const_die.type_ = &kBaseTypeDie;
 
-  EXPECT_STREQ(DwarfTypeAsString(const_die).data(), "int const");
+  EXPECT_STREQ(DwarfTypeAsString(const_die).data(), "const int");
 }
 
 TEST(DwarfTypeAsString, PrependsVolatileModifier) {
@@ -81,7 +102,7 @@ TEST(DwarfTypeAsString, PrependsVolatileModifier) {
   volatile_die.tag_ = llvm::dwarf::DW_TAG_volatile_type;
   volatile_die.type_ = &kBaseTypeDie;
 
-  EXPECT_STREQ(DwarfTypeAsString(volatile_die).data(), "int volatile");
+  EXPECT_STREQ(DwarfTypeAsString(volatile_die).data(), "volatile int");
 }
 
 TEST(DwarfTypeAsString, PrependsRestrictModifier) {
@@ -89,7 +110,7 @@ TEST(DwarfTypeAsString, PrependsRestrictModifier) {
   restrict_die.tag_ = llvm::dwarf::DW_TAG_restrict_type;
   restrict_die.type_ = &kBaseTypeDie;
 
-  EXPECT_STREQ(DwarfTypeAsString(restrict_die).data(), "int restrict");
+  EXPECT_STREQ(DwarfTypeAsString(restrict_die).data(), "restrict int");
 }
 
 TEST(DwarfTypeAsString, AppendsArrayType) {
@@ -124,7 +145,7 @@ TEST(DwarfTypeAsString, AppendsRValueReferenceType) {
   EXPECT_STREQ(DwarfTypeAsString(rvalue_reference_die).data(), "int&&");
 }
 
-TEST(DwarfTypeAsString, PointerToConstIntVsConstPointerToInt) {
+TEST(DwarfTypeAsString, ConstPointerToIntVsPointerToConstInt) {
   FakeDWARFDie pointer_die;
   pointer_die.tag_ = llvm::dwarf::DW_TAG_pointer_type;
   pointer_die.type_ = &kBaseTypeDie;
@@ -139,7 +160,94 @@ TEST(DwarfTypeAsString, PointerToConstIntVsConstPointerToInt) {
   pointer_die.type_ = &const_die;
   const_die.type_ = &kBaseTypeDie;
 
-  EXPECT_STREQ(DwarfTypeAsString(pointer_die).data(), "int const*");
+  EXPECT_STREQ(DwarfTypeAsString(pointer_die).data(), "const int*");
+}
+
+TEST(DwarfTypeAsString, ReferenceToFooPointer) {
+  FakeDWARFDie pointer_die;
+  pointer_die.tag_ = llvm::dwarf::DW_TAG_pointer_type;
+  pointer_die.type_ = &kUserSpecifiedType;
+
+  FakeDWARFDie reference_die;
+  reference_die.tag_ = llvm::dwarf::DW_TAG_reference_type;
+  reference_die.type_ = &pointer_die;
+
+  EXPECT_STREQ(DwarfTypeAsString(reference_die).data(), "Foo*&");
+}
+
+TEST(DwarfTypeAsString, FunctionPointer) {
+  FakeDWARFDie formal_parameter_die;
+  formal_parameter_die.tag_ = llvm::dwarf::DW_TAG_formal_parameter;
+  formal_parameter_die.type_ = &kUserSpecifiedType;
+
+  FakeDWARFDie function_die;
+  function_die.tag_ = llvm::dwarf::DW_TAG_subroutine_type;
+  function_die.type_ = &kBaseTypeDie;
+  function_die.children_ = {formal_parameter_die};
+
+  FakeDWARFDie function_pointer_die;
+  function_pointer_die.tag_ = llvm::dwarf::DW_TAG_pointer_type;
+  function_pointer_die.type_ = &function_die;
+
+  EXPECT_STREQ(DwarfTypeAsString(function_pointer_die).data(), "int(*)(Foo)");
+}
+
+TEST(DwarfTypeAsString, VoidFunctionPointer) {
+  FakeDWARFDie formal_parameter_die;
+  formal_parameter_die.tag_ = llvm::dwarf::DW_TAG_formal_parameter;
+  formal_parameter_die.type_ = &kUserSpecifiedType;
+
+  FakeDWARFDie function_die;
+  function_die.tag_ = llvm::dwarf::DW_TAG_subroutine_type;
+  function_die.children_ = {formal_parameter_die};
+
+  FakeDWARFDie function_pointer_die;
+  function_pointer_die.tag_ = llvm::dwarf::DW_TAG_pointer_type;
+  function_pointer_die.type_ = &function_die;
+
+  EXPECT_STREQ(DwarfTypeAsString(function_pointer_die).data(), "void(*)(Foo)");
+}
+
+TEST(DwarfTypeAsString, MemberFunctionPointer) {
+  FakeDWARFDie formal_parameter_die;
+  formal_parameter_die.tag_ = llvm::dwarf::DW_TAG_formal_parameter;
+  formal_parameter_die.type_ = &kBaseTypeDie;
+
+  FakeDWARFDie function_die;
+  function_die.tag_ = llvm::dwarf::DW_TAG_subroutine_type;
+  function_die.children_ = {formal_parameter_die};
+
+  FakeDWARFDie function_pointer_die;
+  function_pointer_die.tag_ = llvm::dwarf::DW_TAG_ptr_to_member_type;
+  function_pointer_die.type_ = &function_die;
+  function_pointer_die.containing_type_ = &kUserSpecifiedType;
+
+  EXPECT_STREQ(DwarfTypeAsString(function_pointer_die).data(), "void(Foo::*)(int)");
+}
+
+TEST(DwarfTypeAsString, ConstVolatileFunctionPointer) {
+  FakeDWARFDie formal_parameter_die;
+  formal_parameter_die.tag_ = llvm::dwarf::DW_TAG_formal_parameter;
+  formal_parameter_die.type_ = &kUserSpecifiedType;
+
+  FakeDWARFDie function_die;
+  function_die.tag_ = llvm::dwarf::DW_TAG_subroutine_type;
+  function_die.type_ = &kBaseTypeDie;
+  function_die.children_ = {formal_parameter_die};
+
+  FakeDWARFDie volatile_function_die;
+  volatile_function_die.tag_ = llvm::dwarf::DW_TAG_volatile_type;
+  volatile_function_die.type_ = &function_die;
+
+  FakeDWARFDie const_volatile_function_die;
+  const_volatile_function_die.tag_ = llvm::dwarf::DW_TAG_volatile_type;
+  const_volatile_function_die.type_ = &volatile_function_die;
+
+  FakeDWARFDie function_pointer_die;
+  function_pointer_die.tag_ = llvm::dwarf::DW_TAG_pointer_type;
+  function_pointer_die.type_ = &const_volatile_function_die;
+
+  EXPECT_STREQ(DwarfTypeAsString(function_pointer_die).data(), "int(* const volatile)(Foo)");
 }
 
 TEST(DwarfTypeAsString, OrderMatters) {
@@ -165,7 +273,7 @@ TEST(DwarfTypeAsString, OrderMatters) {
   volatile_die.tag_ = llvm::dwarf::DW_TAG_volatile_type;
   volatile_die.type_ = &pointer_die;
 
-  EXPECT_STREQ(DwarfTypeAsString(volatile_die).data(), "unsigned char const* volatile");
+  EXPECT_STREQ(DwarfTypeAsString(volatile_die).data(), "const unsigned char* volatile");
 }
 
 TEST(DwarfTypeAsString, OrderMattersCont) {
@@ -196,7 +304,7 @@ TEST(DwarfTypeAsString, OrderMattersCont) {
   restrict_die.tag_ = llvm::dwarf::DW_TAG_restrict_type;
   restrict_die.type_ = &const_die;
 
-  EXPECT_STREQ(DwarfTypeAsString(restrict_die).data(), "unsigned char volatile* const restrict");
+  EXPECT_STREQ(DwarfTypeAsString(restrict_die).data(), "volatile unsigned char* const restrict");
 }
 
 TEST(DwarfParameterListAsString, EmptyParameterList) {
