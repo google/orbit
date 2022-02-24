@@ -76,10 +76,10 @@ void TrackContainer::VerticallyMoveIntoView(const TimerInfo& timer_info) {
 
 // Move vertically the view to make a Track fully visible.
 void TrackContainer::VerticallyMoveIntoView(const Track& track) {
-  float pos = track.GetPos()[1] + vertical_scrolling_offset_;
+  float relative_track_y_pos = track.GetPos()[1] - GetPos()[1] + vertical_scrolling_offset_;
 
-  float max_vertical_scrolling_offset = pos;
-  float min_vertical_scrolling_offset = pos + track.GetHeight() - GetHeight();
+  float max_vertical_scrolling_offset = relative_track_y_pos;
+  float min_vertical_scrolling_offset = relative_track_y_pos + track.GetHeight() - GetHeight();
   SetVerticalScrollingOffset(std::clamp(vertical_scrolling_offset_, min_vertical_scrolling_offset,
                                         max_vertical_scrolling_offset));
 }
