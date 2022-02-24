@@ -58,8 +58,8 @@ template <typename Func>
 [[nodiscard]] orbit_ssh_qt::ScopedConnection ConnectErrorHandler(
     orbit_qt_utils::EventLoop* loop,
     const typename QtPrivate::FunctionPointer<Func>::Object* sender, Func signal) {
-  return orbit_ssh_qt::ScopedConnection{
-      QObject::connect(sender, signal, loop, &orbit_qt_utils::EventLoop::error)};
+  return orbit_ssh_qt::ScopedConnection{QObject::connect(
+      sender, signal, loop, qOverload<std::error_code>(&orbit_qt_utils::EventLoop::error))};
 }
 
 [[nodiscard]] orbit_ssh_qt::ScopedConnection ConnectCancelHandler(orbit_qt_utils::EventLoop* loop,

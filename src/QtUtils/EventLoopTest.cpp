@@ -68,7 +68,7 @@ TEST(EventLoop, exec) {
     {
       const auto result = loop.exec();
       ASSERT_TRUE(result.has_error());
-      ASSERT_EQ(result.error(), std::errc::bad_message);
+      ASSERT_EQ(result.error(), ErrorMessage{std::make_error_code(std::errc::bad_message)});
     }
   }
 
@@ -130,53 +130,91 @@ TEST(EventLoop, reuseLoop) {
   ASSERT_FALSE(loop.isRunning());
 
   // 1. normal quit
-  QMetaObject::invokeMethod(
-      &loop,
-      [&]() {
-        ASSERT_TRUE(loop.isRunning());
-        loop.quit();
-      },
-      Qt::QueuedConnection);
   {
-    const auto result = loop.exec();
-    ASSERT_FALSE(result.has_error());
-    EXPECT_EQ(result.value(), 0);
+    QMetaObject::invokeMethod(
+        &loop,
+        [&]() {
+          ASSERT_TRUE(loop.isRunning());
+          loop.quit();
+        },
+        Qt::QueuedConnection);
+    {
+      const auto result = loop.exec();
+      ASSERT_FALSE(result.has_error());
+      EXPECT_EQ(result.value(), 0);
+    }
   }
 
-  // 2. normal error
-  QMetaObject::invokeMethod(
-      &loop,
-      [&]() {
-        ASSERT_TRUE(loop.isRunning());
-        loop.error(std::make_error_code(std::errc::bad_message));
-      },
-      Qt::QueuedConnection);
+  // 2. normal error from error code
   {
-    const auto result = loop.exec();
-    ASSERT_TRUE(result.has_error());
-    EXPECT_EQ(result.error(), std::errc::bad_message);
+    const auto error_code = std::make_error_code(std::errc::bad_message);
+    QMetaObject::invokeMethod(
+        &loop,
+        [&]() {
+          ASSERT_TRUE(loop.isRunning());
+          loop.error(error_code);
+        },
+        Qt::QueuedConnection);
+    {
+      const auto result = loop.exec();
+      ASSERT_TRUE(result.has_error());
+      EXPECT_EQ(result.error(), ErrorMessage{error_code});
+    }
   }
 
-  // 3. premature quit
-  loop.quit();
-  QMetaObject::invokeMethod(
-      &loop,
-      []() {
-        FAIL();  // This task will be queued but never executes since the event loop is supposed
-                 // to return early.
-      },
-      Qt::QueuedConnection);
+  // 3. normal error from ErrorMessage
   {
-    const auto result = loop.exec();
-    ASSERT_FALSE(result.has_error());
-    EXPECT_EQ(result.value(), 0);
+    const ErrorMessage error_message{"Important error message"};
+    QMetaObject::invokeMethod(
+        &loop,
+        [&]() {
+          ASSERT_TRUE(loop.isRunning());
+          loop.error(error_message);
+        },
+        Qt::QueuedConnection);
+    {
+      const auto result = loop.exec();
+      ASSERT_TRUE(result.has_error());
+      EXPECT_EQ(result.error(), error_message);
+    }
   }
 
-  // 4. premature error
-  loop.error(std::make_error_code(std::errc::bad_message));
+  // 4. premature quit
   {
-    const auto result = loop.exec();
-    ASSERT_TRUE(result.has_error());
-    EXPECT_EQ(result.error(), std::errc::bad_message);
+    loop.quit();
+    QMetaObject::invokeMethod(
+        &loop,
+        []() {
+          FAIL();  // This task will be queued but never executes since the event loop is supposed
+                   // to return early.
+        },
+        Qt::QueuedConnection);
+    {
+      const auto result = loop.exec();
+      ASSERT_FALSE(result.has_error());
+      EXPECT_EQ(result.value(), 0);
+    }
+  }
+
+  // 5. premature error from error code
+  {
+    const auto error_code = std::make_error_code(std::errc::bad_message);
+    loop.error(error_code);
+    {
+      const auto result = loop.exec();
+      ASSERT_TRUE(result.has_error());
+      EXPECT_EQ(result.error(), ErrorMessage{error_code});
+    }
+  }
+
+  // 6. premature error from ErrorMessage
+  {
+    const ErrorMessage error_message{"Important error message"};
+    loop.error(error_message);
+    {
+      const auto result = loop.exec();
+      ASSERT_TRUE(result.has_error());
+      EXPECT_EQ(result.error(), error_message);
+    }
   }
 }
