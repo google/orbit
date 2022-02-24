@@ -138,12 +138,7 @@ ConnectToTargetDialog::DeployOrbitService(
       QObject::connect(ui_->abortButton, &QPushButton::clicked, service_deploy_manager,
                        &ServiceDeployManager::Cancel)};
 
-  auto deployment_result = service_deploy_manager->Exec();
-  if (deployment_result.has_error()) {
-    return ErrorMessage{deployment_result.error().message()};
-  } else {
-    return deployment_result.value();
-  }
+  return service_deploy_manager->Exec();
 }
 
 void ConnectToTargetDialog::SetStatusMessage(const QString& message) {
