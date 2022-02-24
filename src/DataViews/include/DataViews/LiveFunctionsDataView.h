@@ -83,6 +83,8 @@ class LiveFunctionsDataView : public DataView {
  private:
   [[nodiscard]] const orbit_client_protos::FunctionInfo* GetFunctionInfoFromRow(int row) override;
 
+  void UpdateHistogram(const std::vector<int>& visible_selected_indices);
+
   std::vector<uint64_t> GetFunctionTimerDurations(int row);
 
   orbit_metrics_uploader::MetricsUploader* metrics_uploader_;
