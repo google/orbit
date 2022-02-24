@@ -99,7 +99,7 @@ TEST(HistogramUtils, TestNumberOfBinsToBinWidthWithoutOverflow) {
 }
 
 TEST(HistogramUtils, TestNumberOfBinsToBinWidthWithExcessiveNumberOfBins) {
-  EXPECT_EQ(NumberOfBinsToBinWidthHelper(200, 1ULL, 6ULL), 6);
+  EXPECT_EQ(NumberOfBinsToBinWidthHelper(200, 1ULL, 6ULL), 1);
 }
 
 TEST(HistogramUtils, TestNumberOfBinsToBinWidthWidthEqualsNumberOfBins) {
