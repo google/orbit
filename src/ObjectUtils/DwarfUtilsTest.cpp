@@ -240,7 +240,7 @@ TEST(DwarfTypeAsString, ConstVolatileFunctionPointer) {
   volatile_function_die.type_ = &function_die;
 
   FakeDWARFDie const_volatile_function_die;
-  const_volatile_function_die.tag_ = llvm::dwarf::DW_TAG_volatile_type;
+  const_volatile_function_die.tag_ = llvm::dwarf::DW_TAG_const_type;
   const_volatile_function_die.type_ = &volatile_function_die;
 
   FakeDWARFDie function_pointer_die;
