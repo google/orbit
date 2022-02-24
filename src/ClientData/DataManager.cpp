@@ -49,7 +49,7 @@ void DataManager::set_highlighted_function_id(uint64_t highlighted_function_id) 
 
 void DataManager::set_highlighted_group_id(uint64_t highlighted_group_id) {
   ORBIT_CHECK(std::this_thread::get_id() == main_thread_id_);
-  highlighted_function_id_ = highlighted_group_id;
+  highlighted_group_id_ = highlighted_group_id;
 }
 
 void DataManager::set_selected_thread_id(uint32_t thread_id) {
