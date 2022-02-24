@@ -90,8 +90,8 @@ class MockAppInterface : public AppInterface {
   MOCK_METHOD(const orbit_statistics::BinomialConfidenceIntervalEstimator&,
               GetConfidenceIntervalEstimator, (), (const));
 
-  MOCK_METHOD(void, ShowHistogram, (std::vector<uint64_t> data, const std::string& function_name),
-              ());
+  MOCK_METHOD(void, ShowHistogram,
+              (const std::vector<uint64_t>* data, const std::string& function_name), ());
 };
 
 }  // namespace orbit_data_views

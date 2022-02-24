@@ -138,8 +138,7 @@ void LiveFunctionsDataView::UpdateSelectedFunctionId() {
   selected_function_id_ = app_->GetHighlightedFunctionId();
 }
 
-std::vector<uint64_t> LiveFunctionsDataView::GetFunctionTimerDurations(int row) {
-  const uint64_t function_id = GetInstrumentedFunctionId(row);
+std::vector<uint64_t> LiveFunctionsDataView::GetFunctionTimerDurations(uint64_t function_id) {
   const std::vector<const orbit_client_protos::TimerInfo*> timers =
       app_->GetAllTimersForHookedFunction(function_id);
   std::vector<uint64_t> timer_durations;
@@ -148,6 +147,7 @@ std::vector<uint64_t> LiveFunctionsDataView::GetFunctionTimerDurations(int row) 
                    return timer->end() - timer->start();
                  });
 
+  std::sort(timer_durations.begin(), timer_durations.end());
   return timer_durations;
 }
 
@@ -155,15 +155,14 @@ void LiveFunctionsDataView::OnSelect(const std::vector<int>& rows) {
   UpdateHighlightedFunctionId(rows);
   UpdateSelectedFunctionId();
 
-  std::vector<uint64_t> timer_durations;
+  std::vector<uint64_t>* timer_durations = nullptr;
   std::string function_name;
   if (!rows.empty()) {
     const FunctionInfo& function = *GetFunctionInfoFromRow(rows[0]);
     function_name = orbit_client_data::function_utils::GetDisplayName(function);
-
-    timer_durations = GetFunctionTimerDurations(rows[0]);
+    timer_durations = &timer_durations_.at(indices_[rows[0]]);
   }
-  app_->ShowHistogram(std::move(timer_durations), function_name);
+  app_->ShowHistogram(timer_durations, function_name);
 }
 
 #define ORBIT_FUNC_SORT(Member)                                                         \
@@ -438,11 +437,13 @@ void LiveFunctionsDataView::AddFunction(uint64_t function_id,
                                         orbit_client_protos::FunctionInfo function_info) {
   functions_.insert_or_assign(function_id, std::move(function_info));
   indices_.push_back(function_id);
+  timer_durations_.insert_or_assign(function_id, GetFunctionTimerDurations(function_id));
 }
 
 void LiveFunctionsDataView::OnDataChanged() {
   functions_.clear();
   indices_.clear();
+  timer_durations_.clear();
   app_->ShowHistogram({}, "");
 
   if (!app_->HasCaptureData()) {

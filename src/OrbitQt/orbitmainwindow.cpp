@@ -1630,8 +1630,9 @@ void OrbitMainWindow::ShowWarningWithDontShowAgainCheckboxIfNeeded(
   message_box.exec();
 }
 
-void OrbitMainWindow::ShowHistogram(std::vector<uint64_t> data, const std::string& function_name) {
-  ui->liveFunctions->ShowHistogram(std::move(data), function_name);
+void OrbitMainWindow::ShowHistogram(const std::vector<uint64_t>* data,
+                                    const std::string& function_name) {
+  ui->liveFunctions->ShowHistogram(data, function_name);
 }
 
 static std::optional<QString> TryApplyMappingAndReadSourceFile(

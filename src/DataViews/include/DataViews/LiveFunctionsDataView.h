@@ -8,6 +8,7 @@
 #include <absl/container/flat_hash_map.h>
 #include <stdint.h>
 
+#include <cstdint>
 #include <optional>
 #include <string>
 #include <utility>
@@ -62,6 +63,7 @@ class LiveFunctionsDataView : public DataView {
       const orbit_grpc_protos::InstrumentedFunction& instrumented_function);
 
   absl::flat_hash_map<uint64_t, orbit_client_protos::FunctionInfo> functions_{};
+  absl::flat_hash_map<uint64_t, std::vector<uint64_t>> timer_durations_;
 
   LiveFunctionsInterface* live_functions_;
   uint64_t selected_function_id_;
@@ -83,7 +85,7 @@ class LiveFunctionsDataView : public DataView {
  private:
   [[nodiscard]] const orbit_client_protos::FunctionInfo* GetFunctionInfoFromRow(int row) override;
 
-  std::vector<uint64_t> GetFunctionTimerDurations(int row);
+  std::vector<uint64_t> GetFunctionTimerDurations(uint64_t function_id);
 
   orbit_metrics_uploader::MetricsUploader* metrics_uploader_;
 };

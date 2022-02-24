@@ -109,7 +109,8 @@ class AppInterface {
   virtual void Disassemble(uint32_t pid, const orbit_client_protos::FunctionInfo& function) = 0;
   virtual void ShowSourceCode(const orbit_client_protos::FunctionInfo& function) = 0;
 
-  virtual void ShowHistogram(std::vector<uint64_t> data, const std::string& function_name) = 0;
+  virtual void ShowHistogram(const std::vector<uint64_t>* data,
+                             const std::string& function_name) = 0;
 
   [[nodiscard]] virtual const orbit_statistics::BinomialConfidenceIntervalEstimator&
   GetConfidenceIntervalEstimator() const = 0;
