@@ -18,7 +18,7 @@ namespace orbit_statistics {
 
 // These values are chosen to be arbitrarily large/small enough
 constexpr uint32_t kNumberOfBinsGridSize = 12;
-constexpr size_t kLargeNumberOfBins = 2048;  // 2^11, not necesserily 2^(kNumberOfBinsGridSize-1)
+constexpr size_t kLargeNumberOfBins = 2048;  // 2^11, not necessarily 2^(kNumberOfBinsGridSize-1)
 constexpr uint32_t kVeryLargeDatasetThreshold = 10'000'000;
 
 static Histogram BuildHistogramWithNumberOfBins(const std::optional<DataSet>& data_set,
