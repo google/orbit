@@ -2961,7 +2961,7 @@ OrbitApp::GetConfidenceIntervalEstimator() const {
   return confidence_interval_estimator_;
 }
 
-void OrbitApp::ShowHistogram(std::vector<uint64_t> data, const std::string& function_name,
+void OrbitApp::ShowHistogram(const std::vector<uint64_t>* data, const std::string& function_name,
                              uint64_t function_id) {
-  main_window_->ShowHistogram(std::move(data), function_name, function_id);
+  main_window_->ShowHistogram(data, function_name, function_id);
 }

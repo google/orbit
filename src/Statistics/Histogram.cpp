@@ -16,21 +16,34 @@
 
 namespace orbit_statistics {
 
+// These values are chosen to be arbitrarily large/small enough
 constexpr uint32_t kNumberOfBinsGridSize = 12;
+constexpr size_t kLargeNumberOfBins = 2048;  // 2^11, not necessarily 2^(kNumberOfBinsGridSize-1)
+constexpr uint32_t kVeryLargeDatasetThreshold = 10'000'000;
+
+static Histogram BuildHistogramWithNumberOfBins(const std::optional<DataSet>& data_set,
+                                                size_t number_of_bins) {
+  uint64_t bin_width = NumberOfBinsToBinWidth(data_set.value(), number_of_bins);
+  return BuildHistogram(data_set.value(), bin_width);
+}
 
 [[nodiscard]] std::optional<Histogram> BuildHistogram(absl::Span<const uint64_t> data) {
   std::optional<DataSet> data_set = DataSet::Create(data);
   if (!data_set.has_value()) return std::nullopt;
+
+  // if the data set is extremely large, we surely have enough data
+  // to populate the maximal number of bins.
+  if (data_set->GetData().size() > kVeryLargeDatasetThreshold) {
+    return BuildHistogramWithNumberOfBins(data_set, kLargeNumberOfBins);
+  }
 
   size_t number_of_bins = 1;
   double best_risk_score = std::numeric_limits<double>::max();
   Histogram best_histogram;
 
   for (uint32_t i = 0; i < kNumberOfBinsGridSize; ++i) {
-    uint64_t bin_width = NumberOfBinsToBinWidth(data_set.value(), number_of_bins);
-    auto histogram = BuildHistogram(data_set.value(), bin_width);
+    Histogram histogram = BuildHistogramWithNumberOfBins(data_set, number_of_bins);
     double risk_score = HistogramRiskScore(histogram);
-
     if (risk_score < best_risk_score) {
       best_risk_score = risk_score;
       best_histogram = std::move(histogram);

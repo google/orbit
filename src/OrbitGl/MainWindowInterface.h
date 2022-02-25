@@ -42,7 +42,7 @@ class MainWindowInterface {
   virtual void AppendToCaptureLog(CaptureLogSeverity severity, absl::Duration capture_time,
                                   std::string_view message) = 0;
 
-  virtual void ShowHistogram(std::vector<uint64_t> data, const std::string& function_name,
+  virtual void ShowHistogram(const std::vector<uint64_t>* data, const std::string& function_name,
                              uint64_t function_id) = 0;
 
   enum class SymbolErrorHandlingResult { kReloadRequired, kSymbolLoadingCancelled };

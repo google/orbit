@@ -92,7 +92,8 @@ class MockAppInterface : public AppInterface {
               GetConfidenceIntervalEstimator, (), (const));
 
   MOCK_METHOD(void, ShowHistogram,
-              (std::vector<uint64_t> data, const std::string& function_name, uint64_t function_id),
+              (const std::vector<uint64_t>* data, const std::string& function_name,
+               uint64_t function_id),
               ());
 };
 

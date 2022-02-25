@@ -20,7 +20,9 @@
 #include <string>
 #include <utility>
 
+#include "ApiInterface/Orbit.h"
 #include "DisplayFormats/DisplayFormats.h"
+#include "Introspection/Introspection.h"
 #include "Statistics/Histogram.h"
 
 constexpr double kRelativeMargin = 0.1;
@@ -134,19 +136,21 @@ static void DrawHistogram(QPainter& painter, const QPoint& axes_intersection,
   }
 }
 
-void HistogramWidget::UpdateData(std::vector<uint64_t> data, std::string function_name,
+void HistogramWidget::UpdateData(const std::vector<uint64_t>* data, std::string function_name,
                                  uint64_t function_id) {
+  ORBIT_SCOPE_FUNCTION;
   if (function_data_.has_value() && function_data_->id == function_id) return;
 
   histogram_stack_ = {};
 
-  std::sort(data.begin(), data.end());
-  function_data_.emplace(std::move(data), std::move(function_name), function_id);
+  function_data_.emplace(data, std::move(function_name), function_id);
 
-  std::optional<orbit_statistics::Histogram> histogram =
-      orbit_statistics::BuildHistogram(function_data_->data);
-  if (histogram) {
-    histogram_stack_.push(std::move(*histogram));
+  if (data != nullptr) {
+    std::optional<orbit_statistics::Histogram> histogram =
+        orbit_statistics::BuildHistogram(*function_data_->data);
+    if (histogram) {
+      histogram_stack_.push(std::move(*histogram));
+    }
   }
 
   selected_area_.reset();
@@ -235,6 +239,7 @@ void HistogramWidget::mousePressEvent(QMouseEvent* event) {
 void HistogramWidget::mouseReleaseEvent(QMouseEvent* /* event*/) {
   if (histogram_stack_.empty()) return;
 
+  ORBIT_SCOPE("Histogram zooming in");
   if (selected_area_) {
     // if it wasn't a drag, but just a click, go one level of selections up
     if (selected_area_->selection_start_pixel == selected_area_->selection_current_pixel) {
@@ -252,11 +257,12 @@ void HistogramWidget::mouseReleaseEvent(QMouseEvent* /* event*/) {
       std::swap(min, max);
     }
 
-    const auto min_it =
-        std::lower_bound(function_data_->data.begin(), function_data_->data.end(), min);
-    if (min_it != function_data_->data.end()) {
-      const auto max_it =
-          std::upper_bound(function_data_->data.begin(), function_data_->data.end(), max);
+    const auto data_begin = function_data_->data->begin();
+    const auto data_end = function_data_->data->end();
+
+    const auto min_it = std::lower_bound(data_begin, data_end, min);
+    if (min_it != function_data_->data->end()) {
+      const auto max_it = std::upper_bound(data_begin, data_end, max);
       const auto selection = absl::Span<const uint64_t>(&*min_it, std::distance(min_it, max_it));
 
       auto histogram = orbit_statistics::BuildHistogram(selection);

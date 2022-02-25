@@ -25,6 +25,7 @@
 #include <utility>
 #include <vector>
 
+#include "ApiInterface/Orbit.h"
 #include "ClientData/CaptureData.h"
 #include "ClientData/FunctionUtils.h"
 #include "ClientData/ModuleAndFunctionLookup.h"
@@ -35,6 +36,7 @@
 #include "DataViews/FunctionsDataView.h"
 #include "DisplayFormats/DisplayFormats.h"
 #include "GrpcProtos/Constants.h"
+#include "Introspection/Introspection.h"
 #include "OrbitBase/Append.h"
 #include "OrbitBase/File.h"
 #include "OrbitBase/Logging.h"
@@ -140,8 +142,8 @@ void LiveFunctionsDataView::UpdateSelectedFunctionId() {
   selected_function_id_ = app_->GetHighlightedFunctionId();
 }
 
-std::vector<uint64_t> LiveFunctionsDataView::GetFunctionTimerDurations(int row) {
-  const uint64_t function_id = GetInstrumentedFunctionId(row);
+std::vector<uint64_t> LiveFunctionsDataView::GetFunctionTimerDurations(uint64_t function_id) {
+  ORBIT_SCOPE_FUNCTION;
   const std::vector<const orbit_client_protos::TimerInfo*> timers =
       app_->GetAllTimersForHookedFunction(function_id);
   std::vector<uint64_t> timer_durations;
@@ -150,22 +152,23 @@ std::vector<uint64_t> LiveFunctionsDataView::GetFunctionTimerDurations(int row) 
                    return timer->end() - timer->start();
                  });
 
+  std::sort(timer_durations.begin(), timer_durations.end());
   return timer_durations;
 }
 
 void LiveFunctionsDataView::UpdateHistogram() { UpdateHistogram(GetVisibleSelectedIndices()); }
 
 void LiveFunctionsDataView::UpdateHistogram(const std::vector<int>& visible_selected_indices) {
-  std::vector<uint64_t> timer_durations;
-  std::string function_name;
-  uint64_t function_id = orbit_grpc_protos::kInvalidFunctionId;
-  if (!visible_selected_indices.empty()) {
-    const FunctionInfo& function = *GetFunctionInfoFromRow(visible_selected_indices[0]);
-    function_name = orbit_client_data::function_utils::GetDisplayName(function);
-    timer_durations = GetFunctionTimerDurations(visible_selected_indices[0]);
-    function_id = indices_[visible_selected_indices[0]];
+  if (visible_selected_indices.empty()) {
+    app_->ShowHistogram(nullptr, "", orbit_grpc_protos::kInvalidFunctionId);
+    return;
   }
-  app_->ShowHistogram(std::move(timer_durations), function_name, function_id);
+  const FunctionInfo& function = *GetFunctionInfoFromRow(visible_selected_indices[0]);
+  const std::string function_name = orbit_client_data::function_utils::GetDisplayName(function);
+  const uint64_t function_id = indices_[visible_selected_indices[0]];
+  const std::vector<uint64_t>* timer_durations = &timer_durations_.at(function_id);
+
+  app_->ShowHistogram(timer_durations, function_name, function_id);
 }
 
 void LiveFunctionsDataView::OnSelect(const std::vector<int>& rows) {
@@ -446,12 +449,14 @@ void LiveFunctionsDataView::AddFunction(uint64_t function_id,
                                         orbit_client_protos::FunctionInfo function_info) {
   functions_.insert_or_assign(function_id, std::move(function_info));
   indices_.push_back(function_id);
+  timer_durations_.insert_or_assign(function_id, GetFunctionTimerDurations(function_id));
 }
 
 void LiveFunctionsDataView::OnDataChanged() {
+  app_->ShowHistogram({}, "", orbit_grpc_protos::kInvalidFunctionId);
   functions_.clear();
   indices_.clear();
-  app_->ShowHistogram({}, "", orbit_grpc_protos::kInvalidFunctionId);
+  timer_durations_.clear();
 
   if (!app_->HasCaptureData()) {
     DataView::OnDataChanged();

@@ -36,9 +36,6 @@ namespace orbit_statistics {
 
 [[nodiscard]] uint64_t NumberOfBinsToBinWidth(const DataSet& data_set, size_t bins_num) {
   const uint64_t width = data_set.GetMax() - data_set.GetMin() + 1;
-  if (width < bins_num) {
-    return width;
-  }
   return width / bins_num + ((width % bins_num != 0) ? 1 : 0);
 }
 
