@@ -495,8 +495,12 @@ void LiveFunctionsDataView::OnTimer() {
 
 void LiveFunctionsDataView::OnRefresh(const std::vector<int>& visible_selected_indices,
                                       const RefreshMode& mode) {
-  if (mode != RefreshMode::kOther) UpdateHighlightedFunctionId(visible_selected_indices);
-  if (mode != RefreshMode::kOnSort) UpdateHistogram(visible_selected_indices);
+  if (mode == RefreshMode::kOnFilter || mode == RefreshMode::kOnSort) {
+    UpdateHighlightedFunctionId(visible_selected_indices);
+  }
+  if (mode != RefreshMode::kOnSort) {
+    UpdateHistogram(visible_selected_indices);
+  }
 }
 
 uint64_t LiveFunctionsDataView::GetInstrumentedFunctionId(uint32_t row) const {

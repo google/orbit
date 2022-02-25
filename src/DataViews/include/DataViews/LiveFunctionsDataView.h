@@ -53,6 +53,7 @@ class LiveFunctionsDataView : public DataView {
   // timestamp, and duration) associated with the selected rows in to a CSV file.
   void OnExportEventsToCsvRequested(const std::vector<int>& selection) override;
 
+  // TODO make it take function_id as a parameter
   void UpdateHistogram();
 
  protected:
