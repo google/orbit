@@ -20,7 +20,9 @@
 #include <string>
 #include <utility>
 
+#include "ApiInterface/Orbit.h"
 #include "DisplayFormats/DisplayFormats.h"
+#include "Introspection/Introspection.h"
 #include "Statistics/Histogram.h"
 
 constexpr double kRelativeMargin = 0.1;
@@ -136,6 +138,7 @@ static void DrawHistogram(QPainter& painter, const QPoint& axes_intersection,
 
 void HistogramWidget::UpdateData(const std::vector<uint64_t>* data, std::string function_name,
                                  uint64_t function_id) {
+  ORBIT_SCOPE_FUNCTION;
   if (function_data_.has_value() && function_data_->id == function_id) return;
 
   histogram_stack_ = {};
@@ -236,6 +239,7 @@ void HistogramWidget::mousePressEvent(QMouseEvent* event) {
 void HistogramWidget::mouseReleaseEvent(QMouseEvent* /* event*/) {
   if (histogram_stack_.empty()) return;
 
+  ORBIT_SCOPE("Histogram zooming in");
   if (selected_area_) {
     // if it wasn't a drag, but just a click, go one level of selections up
     if (selected_area_->selection_start_pixel == selected_area_->selection_current_pixel) {

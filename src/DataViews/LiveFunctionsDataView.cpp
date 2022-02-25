@@ -25,6 +25,7 @@
 #include <utility>
 #include <vector>
 
+#include "ApiInterface/Orbit.h"
 #include "ClientData/CaptureData.h"
 #include "ClientData/FunctionUtils.h"
 #include "ClientData/ModuleAndFunctionLookup.h"
@@ -35,6 +36,7 @@
 #include "DataViews/FunctionsDataView.h"
 #include "DisplayFormats/DisplayFormats.h"
 #include "GrpcProtos/Constants.h"
+#include "Introspection/Introspection.h"
 #include "OrbitBase/Append.h"
 #include "OrbitBase/File.h"
 #include "OrbitBase/Logging.h"
@@ -141,6 +143,7 @@ void LiveFunctionsDataView::UpdateSelectedFunctionId() {
 }
 
 std::vector<uint64_t> LiveFunctionsDataView::GetFunctionTimerDurations(uint64_t function_id) {
+  ORBIT_SCOPE_FUNCTION;
   const std::vector<const orbit_client_protos::TimerInfo*> timers =
       app_->GetAllTimersForHookedFunction(function_id);
   std::vector<uint64_t> timer_durations;
@@ -164,6 +167,7 @@ void LiveFunctionsDataView::UpdateHistogram(const std::vector<int>& visible_sele
   const std::string function_name = orbit_client_data::function_utils::GetDisplayName(function);
   const uint64_t function_id = indices_[visible_selected_indices[0]];
   const std::vector<uint64_t>* timer_durations = &timer_durations_.at(function_id);
+
   app_->ShowHistogram(timer_durations, function_name, function_id);
 }
 
