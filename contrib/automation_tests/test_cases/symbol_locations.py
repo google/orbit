@@ -7,6 +7,7 @@ found in the LICENSE file.
 import logging
 
 from core.orbit_e2e import E2ETestCase, find_control, OrbitE2EError
+from pywinauto.keyboard import send_keys
 
 
 def _show_and_get_symbol_location_ui(top_window):
@@ -19,6 +20,16 @@ def _show_and_get_symbol_location_ui(top_window):
     find_control(top_window, "MenuItem", "Settings").click_input()
     find_control(top_window, "MenuItem", "Symbol Locations...").click_input()
     return find_control(top_window, "Window", "Symbol Locations")
+
+
+def _verify_symbols_list_contains(symbol_path_list, location):
+    logging.info("Verifying symbol path location is in the list")
+    location = location.replace("\\", "/")
+    for item in symbol_path_list.descendants(control_type='ListItem'):
+        if item.texts()[0] == location:
+            return
+
+    raise OrbitE2EError("Found symbol file location {} in the list".format(location))
 
 
 class AddSymbolLocation(E2ETestCase):
@@ -34,18 +45,30 @@ class AddSymbolLocation(E2ETestCase):
         self.find_control('Button', 'Add Folder', ui).click_input()
         self.find_control('Edit', 'Folder:', parent=ui).set_text(location)
         self.find_control('Button', 'Select Folder', parent=ui).click_input()
-        self._verify_symbols_list_contains(ui, location)
-        self.find_control('Button', 'OK', parent=ui).click_input()
-
-    def _verify_symbols_list_contains(self, ui, location):
-        logging.info("Verifying symbol path location is in the list")
-        location = location.replace("\\", "/")
         symbol_path_list = self.find_control('List', parent=ui)
-        for item in symbol_path_list.descendants(control_type='ListItem'):
-            if item.texts()[0] == location:
-                return
+        _verify_symbols_list_contains(symbol_path_list, location)
+        self.find_control('Button', 'Done', parent=ui).click_input()
 
-        raise OrbitE2EError("Found symbol file location {} in the list".format(location))
+
+class AddSymbolFile(E2ETestCase):
+    """
+    Add a single file to the symbol locations UI, and verify it shows up in the list of symbol locations.
+
+    If the symbol locations window is not open, it will be opened automatically. Regardless of the previous
+    state, that window will be closed after the test is done.
+    """
+
+    def _execute(self, location):
+        ui = _show_and_get_symbol_location_ui(self.suite.top_window())
+        self.find_control('Button', 'Add File', ui).click_input()
+        self.find_control('Edit', 'File name:', parent=ui).set_text(location)
+        # Windows decides to show a drop down menu here with suggestions which file to pick. This is not needed
+        # here, but the result is that a click on the open button is not registered. To circumvent that, a return
+        # key press is done instead.
+        send_keys('{VK_RETURN}')
+        symbol_path_list = self.find_control('List', parent=ui)
+        _verify_symbols_list_contains(symbol_path_list, location)
+        self.find_control('Button', 'Done', parent=ui).click_input()
 
 
 class ClearAllSymbolLocations(E2ETestCase):
@@ -62,5 +85,6 @@ class ClearAllSymbolLocations(E2ETestCase):
         while len(symbol_path_list.descendants(control_type='ListItem')) > 0:
             symbol_path_list.descendants(control_type='ListItem')[0].click_input()
             self.find_control('Button', 'Remove').click_input()
-        self.expect_eq(0, len(symbol_path_list.descendants(control_type='ListItem')), 'List is empty')
-        self.find_control('Button', 'OK', parent=ui).click_input()
+        self.expect_eq(0, len(symbol_path_list.descendants(control_type='ListItem')),
+                       'List is empty')
+        self.find_control('Button', 'Done', parent=ui).click_input()

@@ -9,6 +9,7 @@
 #include <gmock/gmock.h>
 #include <stdint.h>
 
+#include <cstdint>
 #include <string>
 
 #include "ClientData/CaptureData.h"
@@ -91,7 +92,9 @@ class MockAppInterface : public AppInterface {
               GetConfidenceIntervalEstimator, (), (const));
 
   MOCK_METHOD(void, ShowHistogram,
-              (const std::vector<uint64_t>* data, const std::string& function_name), ());
+              (const std::vector<uint64_t>* data, const std::string& function_name,
+               uint64_t function_id),
+              ());
 };
 
 }  // namespace orbit_data_views

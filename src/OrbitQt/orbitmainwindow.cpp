@@ -1292,6 +1292,7 @@ void OrbitMainWindow::OnTimerSelectionChanged(const orbit_client_protos::TimerIn
         live_functions_controller.value()->GetDataView();
     selected_row = live_functions_data_view.GetRowFromFunctionId(function_id);
     live_functions_data_view.UpdateSelectedFunctionId();
+    live_functions_data_view.UpdateHistogram();
   }
   ui->liveFunctions->OnRowSelected(selected_row);
 }
@@ -1631,8 +1632,8 @@ void OrbitMainWindow::ShowWarningWithDontShowAgainCheckboxIfNeeded(
 }
 
 void OrbitMainWindow::ShowHistogram(const std::vector<uint64_t>* data,
-                                    const std::string& function_name) {
-  ui->liveFunctions->ShowHistogram(data, function_name);
+                                    const std::string& function_name, uint64_t function_id) {
+  ui->liveFunctions->ShowHistogram(data, function_name, function_id);
 }
 
 static std::optional<QString> TryApplyMappingAndReadSourceFile(

@@ -47,7 +47,8 @@ class OrbitLiveFunctions : public QWidget {
   std::optional<LiveFunctionsController*> GetLiveFunctionsController() {
     return live_functions_ ? &live_functions_.value() : nullptr;
   }
-  void ShowHistogram(const std::vector<uint64_t>* data, const std::string& function_name);
+  void ShowHistogram(const std::vector<uint64_t>* data, const std::string& function_name,
+                     uint64_t function_id);
 
  private:
   Ui::OrbitLiveFunctions* ui;

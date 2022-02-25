@@ -32,18 +32,31 @@ def _show_symbols_and_functions_tabs(top_window):
 
 
 def _find_and_close_error_dialog(top_window) -> str or None:
-    window = find_control(top_window, 'Window', 'Error loading symbols', recurse=False, raise_on_failure=False)
+    window = find_control(top_window,
+                          'Window',
+                          'Symbol Loading Error',
+                          recurse=False,
+                          raise_on_failure=False)
+    logging.info("Trying to find Symbol Loading Error dialog")
     if window is None:
         return None
 
-    error_message = find_control(window, 'Text').texts()[0]
-    module_path_search_result = re.search('for module "(.+?)"', error_message)
-    if not module_path_search_result:
+    logging.info("Trying to find module name label in the error dialog")
+    # Finding the label via a find_control and an accessibleName is not possible here.
+    # When adding the accessibleName to the QLabel, the content of the label is not available in
+    # pywinauto anymore.
+    module_name_label = window.children()[2]
+    if not module_name_label:
         return None
 
-    logging.info("Found error dialog with message {message}, closing.".format(message=error_message))
-    find_control(window, 'Button').click_input()
-    return module_path_search_result[1]
+    logging.info("Found module name label in the error dialog")
+    module_path = module_name_label.texts()[0]
+    if not module_path:
+        return None
+
+    logging.info("Found error dialog for module {path}, closing.".format(path=module_path))
+    find_control(window, 'Button', 'Cancel').click_input()
+    return module_path
 
 
 ModulesLoadingResult = namedtuple("LoadingResult", ["time", "errors"])
@@ -110,8 +123,9 @@ class LoadAllSymbolsAndVerifyCache(E2ETestCase):
     def _verify_all_modules_are_cached(self, modules: List[Module]):
         loaded_modules = [module for module in modules if module.is_loaded]
         module_set = set(loaded_modules)
-        logging.info('Verifying cache. Found {total} modules in total, {loaded} of which are loaded'.
-                     format(total=len(modules), loaded=len(loaded_modules)))
+        logging.info(
+            'Verifying cache. Found {total} modules in total, {loaded} of which are loaded'.format(
+                total=len(modules), loaded=len(loaded_modules)))
 
         cached_files = [file for file in os.listdir(CACHE_LOCATION)]
         cached_file_set = set(cached_files)
@@ -123,14 +137,17 @@ class LoadAllSymbolsAndVerifyCache(E2ETestCase):
             module_set.remove(module)
             cached_file_set.remove(expected_filename)
 
-        self.expect_eq(0, len(module_set), 'All successfully loaded modules are cached. Modules not found in cache: {}'
-                       .format([module.name for module in module_set]))
+        self.expect_eq(
+            0, len(module_set),
+            'All successfully loaded modules are cached. Modules not found in cache: {}'.format(
+                [module.name for module in module_set]))
 
     def _verify_all_errors_were_raised(self, all_modules: List[Module], errors: List[str]):
         modules_not_loaded = set([module.path for module in all_modules if not module.is_loaded])
         error_set = set(errors)
         for module in modules_not_loaded:
-            self.expect_true(module in error_set, 'Error has been raised for module {}'.format(module))
+            self.expect_true(module in error_set,
+                             'Error has been raised for module {}'.format(module))
             error_set.remove(module)
         self.expect_eq(0, len(error_set), 'All errors raised resulted in non-loadable modules')
 
@@ -162,7 +179,8 @@ class LoadAllSymbolsAndVerifyCache(E2ETestCase):
             else:
                 total_time += time.time() - start_time
                 assume_loading_complete = 0
-        logging.info("Assuming symbol loading has completed. Total time: {time:.2f} seconds".format(time=total_time))
+        logging.info("Assuming symbol loading has completed. Total time: {time:.2f} seconds".format(
+            time=total_time))
         return ModulesLoadingResult(total_time, error_modules)
 
     def _gather_module_states(self) -> List[Module]:
@@ -175,7 +193,8 @@ class LoadAllSymbolsAndVerifyCache(E2ETestCase):
 
         return result
 
-    def _check_and_update_duration(self, storage_key: str, current_duration: float, expected_difference_ratio: float):
+    def _check_and_update_duration(self, storage_key: str, current_duration: float,
+                                   expected_difference_ratio: float):
         """
         Compare the current duration with the previous run, and fail if it exceeds the defined bounds.
         :param storage_key: Unique key to store the duration within the test suite, used to persist the data across
@@ -189,19 +208,17 @@ class LoadAllSymbolsAndVerifyCache(E2ETestCase):
         if expected_difference_ratio is not None and last_duration is not None:
             expected_duration = last_duration * expected_difference_ratio
             if expected_difference_ratio < 1.0:
-                self.expect_true(current_duration <= expected_duration,
-                                 "Expected symbol loading time to be at most {expected:.2f}s."
-                                 "Last run duration: {last:.2f}s, current run duration: {cur:.2f}s".format(
-                                     expected=expected_duration,
-                                     last=last_duration,
-                                     cur=current_duration))
+                self.expect_true(
+                    current_duration <= expected_duration,
+                    "Expected symbol loading time to be at most {expected:.2f}s."
+                    "Last run duration: {last:.2f}s, current run duration: {cur:.2f}s".format(
+                        expected=expected_duration, last=last_duration, cur=current_duration))
             else:
-                self.expect_true(current_duration >= expected_duration,
-                                 "Expected symbol loading time to be at least {expected:.2f}s."
-                                 "Last run duration: {last:.2f}s, current run duration: {cur:.2f}s".format(
-                                     expected=expected_duration,
-                                     last=last_duration,
-                                     cur=current_duration))
+                self.expect_true(
+                    current_duration >= expected_duration,
+                    "Expected symbol loading time to be at least {expected:.2f}s."
+                    "Last run duration: {last:.2f}s, current run duration: {cur:.2f}s".format(
+                        expected=expected_duration, last=last_duration, cur=current_duration))
 
 
 class ForceAndVerifySymbolUpdate(E2ETestCase):
@@ -224,11 +241,12 @@ class ForceAndVerifySymbolUpdate(E2ETestCase):
 
         os.unlink(os.path.join(CACHE_LOCATION, dst_module))
         os.rename(os.path.join(CACHE_LOCATION, src_module), dst_module)
-        assert(os.stat(dst_module).st_size != old_size)
+        assert (os.stat(dst_module).st_size != old_size)
 
         LoadSymbols(module_search_string=full_module_path).execute(self.suite)
-        self.expect_true(os.stat(dst_module).st_size != old_size,
-                         "Module %s has changed in cache after loading symbols" % full_module_path)
+        self.expect_true(
+            os.stat(dst_module).st_size != old_size,
+            "Module %s has changed in cache after loading symbols" % full_module_path)
 
 
 class LoadSymbols(E2ETestCase):
@@ -266,12 +284,13 @@ class LoadSymbols(E2ETestCase):
 
         # The Loading column which should get filled with the "*" is the first column (0)
         if expect_fail:
-            wait_for_condition(lambda: _find_and_close_error_dialog(self.suite.top_window()) is not None)
+            wait_for_condition(
+                lambda: _find_and_close_error_dialog(self.suite.top_window()) is not None)
         else:
             wait_for_condition(lambda: modules_dataview.get_item_at(0, 0).texts()[0] == "*", 100)
 
-        VerifySymbolsLoaded(symbol_search_string=module_search_string, expect_loaded=not expect_fail).execute(
-            self.suite)
+        VerifySymbolsLoaded(symbol_search_string=module_search_string,
+                            expect_loaded=not expect_fail).execute(self.suite)
 
 
 class VerifyModuleLoaded(E2ETestCase):
@@ -296,8 +315,9 @@ class VerifyModuleLoaded(E2ETestCase):
 class VerifySymbolsLoaded(E2ETestCase):
 
     def _execute(self, symbol_search_string: str, expect_loaded: bool = True):
-        logging.info('Start verifying symbols with substring %s are {}loaded'.format("" if expect_loaded else "not "),
-                     symbol_search_string)
+        logging.info(
+            'Start verifying symbols with substring %s are {}loaded'.format(
+                "" if expect_loaded else "not "), symbol_search_string)
         functions_dataview = DataViewPanel(self.find_control("Group", "FunctionsDataView"))
 
         logging.info('Filtering symbols')

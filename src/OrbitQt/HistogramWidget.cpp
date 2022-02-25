@@ -134,10 +134,13 @@ static void DrawHistogram(QPainter& painter, const QPoint& axes_intersection,
   }
 }
 
-void HistogramWidget::UpdateData(const std::vector<uint64_t>* data, std::string function_name) {
+void HistogramWidget::UpdateData(const std::vector<uint64_t>* data, std::string function_name,
+                                 uint64_t function_id) {
+  if (function_data_.has_value() && function_data_->id == function_id) return;
+
   histogram_stack_ = {};
 
-  function_data_.emplace(data, std::move(function_name));
+  function_data_.emplace(data, std::move(function_name), function_id);
 
   if (data != nullptr) {
     std::optional<orbit_statistics::Histogram> histogram =

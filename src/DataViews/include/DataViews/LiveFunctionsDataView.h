@@ -54,6 +54,9 @@ class LiveFunctionsDataView : public DataView {
   // timestamp, and duration) associated with the selected rows in to a CSV file.
   void OnExportEventsToCsvRequested(const std::vector<int>& selection) override;
 
+  // TODO make it take function_id as a parameter
+  void UpdateHistogram();
+
  protected:
   void DoFilter() override;
   void DoSort() override;
@@ -86,6 +89,8 @@ class LiveFunctionsDataView : public DataView {
   [[nodiscard]] const orbit_client_protos::FunctionInfo* GetFunctionInfoFromRow(int row) override;
 
   std::vector<uint64_t> GetFunctionTimerDurations(uint64_t function_id);
+
+  void UpdateHistogram(const std::vector<int>& visible_selected_indices);
 
   orbit_metrics_uploader::MetricsUploader* metrics_uploader_;
 };

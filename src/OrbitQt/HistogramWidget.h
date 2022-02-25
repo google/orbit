@@ -25,7 +25,8 @@ class HistogramWidget : public QWidget {
  public:
   using QWidget::QWidget;
 
-  void UpdateData(const std::vector<uint64_t>* data, std::string function_name);
+  void UpdateData(const std::vector<uint64_t>* data, std::string function_name,
+                  uint64_t function_id);
 
  protected:
   void paintEvent(QPaintEvent* /*event*/) override;
@@ -46,11 +47,12 @@ class HistogramWidget : public QWidget {
   [[nodiscard]] int HeightMargin() const;
 
   struct FunctionData {
-    FunctionData(const std::vector<uint64_t>* data, std::string name)
-        : data(data), name(std::move(name)) {}
+    FunctionData(const std::vector<uint64_t>* data, std::string name, uint64_t id)
+        : data(data), name(std::move(name)), id(id) {}
 
     const std::vector<uint64_t>* data;
     std::string name;
+    uint64_t id;
   };
 
   std::optional<FunctionData> function_data_;
