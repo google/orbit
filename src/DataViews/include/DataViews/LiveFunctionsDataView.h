@@ -66,6 +66,9 @@ class LiveFunctionsDataView : public DataView {
       const orbit_grpc_protos::InstrumentedFunction& instrumented_function);
 
   absl::flat_hash_map<uint64_t, orbit_client_protos::FunctionInfo> functions_{};
+  // TODO This is populated in OnDataChanged(), which causes an overhead upon capture
+  // load/finalization this may be optimized via populating it function-wise on user's demand
+  // Possibly related bug: b/191333567
   absl::flat_hash_map<uint64_t, std::vector<uint64_t>> timer_durations_;
 
   LiveFunctionsInterface* live_functions_;
