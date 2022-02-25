@@ -15,6 +15,7 @@ struct FakeDWARFDie {
   [[nodiscard]] std::vector<FakeDWARFDie> children() const { return children_; }
   [[nodiscard]] const char* getName(llvm::DINameKind /*unused*/) const { return name_; }
   [[nodiscard]] llvm::dwarf::Tag getTag() const { return tag_; }
+  void dump() const {}
   [[nodiscard]] FakeDWARFDie getAttributeValueAsReferencedDie(
       llvm::dwarf::Attribute attribute) const {
     switch (attribute) {
@@ -247,7 +248,7 @@ TEST(DwarfTypeAsString, PointerToConstVolatileFunction) {
   function_pointer_die.tag_ = llvm::dwarf::DW_TAG_pointer_type;
   function_pointer_die.type_ = &const_volatile_function_die;
 
-  EXPECT_STREQ(DwarfTypeAsString(function_pointer_die).data(), "int(* volatile const)(Foo)");
+  EXPECT_STREQ(DwarfTypeAsString(function_pointer_die).data(), "int(* const volatile)(Foo)");
 }
 
 TEST(DwarfTypeAsString, OrderMatters) {
@@ -304,7 +305,7 @@ TEST(DwarfTypeAsString, OrderMattersCont) {
   restrict_die.tag_ = llvm::dwarf::DW_TAG_restrict_type;
   restrict_die.type_ = &const_die;
 
-  EXPECT_STREQ(DwarfTypeAsString(restrict_die).data(), "volatile unsigned char* const restrict");
+  EXPECT_STREQ(DwarfTypeAsString(restrict_die).data(), "volatile unsigned char* restrict const");
 }
 
 TEST(DwarfParameterListAsString, EmptyParameterList) {

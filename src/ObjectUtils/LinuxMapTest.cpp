@@ -70,10 +70,10 @@ TEST(LinuxMap, CreateCoffModule) {
 
   EXPECT_EQ(result.value().name(), "libtest.dll");
   EXPECT_EQ(result.value().file_path(), dll_path);
-  EXPECT_EQ(result.value().file_size(), 96441);
+  EXPECT_EQ(result.value().file_size(), 263397);
   EXPECT_EQ(result.value().address_start(), kStartAddress);
   EXPECT_EQ(result.value().address_end(), kEndAddress);
-  EXPECT_EQ(result.value().load_bias(), 0x62640000);
+  EXPECT_EQ(result.value().load_bias(), 0x361370000);
   EXPECT_EQ(result.value().executable_segment_offset(), 0x1000);
   EXPECT_EQ(result.value().build_id(), "");
   EXPECT_EQ(result.value().object_file_type(), ModuleInfo::kCoffFile);
@@ -104,10 +104,10 @@ TEST(LinuxMan, CreateModuleWithSoname) {
 
   EXPECT_EQ(result.value().name(), "libtest.so");
   EXPECT_EQ(result.value().file_path(), hello_world_path);
-  EXPECT_EQ(result.value().file_size(), 16128);
+  EXPECT_EQ(result.value().file_size(), 16104);
   EXPECT_EQ(result.value().address_start(), kStartAddress);
   EXPECT_EQ(result.value().address_end(), kEndAddress);
-  EXPECT_EQ(result.value().build_id(), "2e70049c5cf42e6c5105825b57104af5882a40a2");
+  EXPECT_EQ(result.value().build_id(), "658520c6071c3156156ae9dc44e85cd7206885a6");
   EXPECT_EQ(result.value().load_bias(), 0x0);
   EXPECT_EQ(result.value().object_file_type(), ModuleInfo::kElfFile);
 }

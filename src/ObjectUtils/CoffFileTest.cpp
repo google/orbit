@@ -11,6 +11,7 @@
 
 #include "GrpcProtos/symbol.pb.h"
 #include "ObjectUtils/CoffFile.h"
+#include "OrbitBase/Logging.h"
 #include "Test/Path.h"
 #include "TestUtils/TestUtils.h"
 #include "absl/strings/ascii.h"
@@ -36,7 +37,8 @@ TEST(CoffFile, LoadDebugSymbols) {
 
   std::vector<SymbolInfo> symbol_infos(symbols_result.value().symbol_infos().begin(),
                                        symbols_result.value().symbol_infos().end());
-  EXPECT_EQ(symbol_infos.size(), 35);
+
+  EXPECT_EQ(symbol_infos.size(), 96);
 
   SymbolInfo& symbol_info = symbol_infos[4];
   EXPECT_EQ(symbol_info.name(), "pre_c_init");
@@ -46,12 +48,48 @@ TEST(CoffFile, LoadDebugSymbols) {
   EXPECT_EQ(symbol_info.address(), expected_address);
   EXPECT_EQ(symbol_info.size(), 0xc);
 
-  symbol_info = symbol_infos[5];
+  symbol_info = symbol_infos[17];
   EXPECT_EQ(symbol_info.name(), "PrintHelloWorld");
   EXPECT_EQ(symbol_info.demangled_name(), "PrintHelloWorld()");
   expected_address = 0x03a0 + coff_file->GetExecutableSegmentOffset() + coff_file->GetLoadBias();
   EXPECT_EQ(symbol_info.address(), expected_address);
   EXPECT_EQ(symbol_info.size(), 0x1b);
+
+  symbol_info = symbol_infos[6];
+  EXPECT_EQ(symbol_info.demangled_name(),
+            "TakesVolatileConstPtrToVolatileConstChar(volatile const char* volatile const)");
+
+  symbol_info = symbol_infos[7];
+  EXPECT_EQ(symbol_info.demangled_name(),
+            "TakesVolatilePointerToConstUnsignedChar(const unsigned char* volatile)");
+
+  symbol_info = symbol_infos[8];
+  EXPECT_EQ(symbol_info.demangled_name(),
+            "TakesMemberFunctionPointer(const char*(Foo::*)(Foo*, int), Foo)");
+
+  symbol_info = symbol_infos[9];
+  EXPECT_EQ(symbol_info.demangled_name(), "TakesCharFunctionPointer(char(*)(int))");
+
+  symbol_info = symbol_infos[10];
+  EXPECT_EQ(symbol_info.demangled_name(), "TakesVoidFunctionPointer(void(*)(int))");
+
+  symbol_info = symbol_infos[11];
+  EXPECT_EQ(symbol_info.demangled_name(), "TakesReferenceToIntPtr(int*&)");
+
+  symbol_info = symbol_infos[12];
+  EXPECT_EQ(symbol_info.demangled_name(), "TakesConstPtrToInt(int* const)");
+
+  symbol_info = symbol_infos[13];
+  EXPECT_EQ(symbol_info.demangled_name(), "TakesFooRValueReference(Foo&&)");
+
+  symbol_info = symbol_infos[14];
+  EXPECT_EQ(symbol_info.demangled_name(), "TakesFooReference(Foo&)");
+
+  symbol_info = symbol_infos[15];
+  EXPECT_EQ(symbol_info.demangled_name(), "TakesVolatileInt(volatile int)");
+
+  symbol_info = symbol_infos[16];
+  EXPECT_EQ(symbol_info.demangled_name(), "PrintString(const char*)");
 }
 
 TEST(CoffFile, HasDebugSymbols) {
