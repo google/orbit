@@ -28,7 +28,7 @@ void CheckExportToCsvIsInvoked(const std::vector<std::string>& context_menu,
                                std::string_view action_name = kMenuActionExportToCsv);
 
 std::vector<std::string> FlattenContextMenuWithGrouping(
-    const std::vector<std::vector<std::string>>& menu_with_grouping);
+    const std::vector<ActionGroup>& menu_with_grouping);
 
 }  // namespace orbit_data_views
 

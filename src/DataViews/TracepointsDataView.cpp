@@ -120,27 +120,6 @@ absl::flat_hash_map<std::string_view, bool> TracepointsDataView::GetActionVisibi
   return visible_action_name_to_availability;
 }
 
-std::vector<std::vector<std::string>> TracepointsDataView::GetContextMenuWithGrouping(
-    int clicked_index, const std::vector<int>& selected_indices) {
-  bool enable_select = false;
-  bool enable_unselect = false;
-  for (int index : selected_indices) {
-    const TracepointInfo& tracepoint = GetTracepoint(index);
-    enable_select |= !app_->IsTracepointSelected(tracepoint);
-    enable_unselect |= app_->IsTracepointSelected(tracepoint);
-  }
-
-  std::vector<std::string> action_group;
-  if (enable_select) action_group.emplace_back(std::string{kMenuActionSelect});
-  if (enable_unselect) action_group.emplace_back(std::string{kMenuActionUnselect});
-
-  std::vector<std::vector<std::string>> menu =
-      DataView::GetContextMenuWithGrouping(clicked_index, selected_indices);
-  menu.insert(menu.begin(), action_group);
-
-  return menu;
-}
-
 void TracepointsDataView::OnSelectRequested(const std::vector<int>& selection) {
   for (int i : selection) {
     app_->SelectTracepoint(GetTracepoint(i));

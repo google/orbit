@@ -118,40 +118,12 @@ absl::flat_hash_map<std::string_view, bool> ModulesDataView::GetActionVisibiliti
 
   for (int index : selected_indices) {
     const ModuleData* module = GetModuleDataFromRow(index);
-    visible_action_name_to_availability[kMenuActionLoadSymbols] = !module->is_loaded();
-    visible_action_name_to_availability[kMenuActionVerifyFramePointers] =
+    visible_action_name_to_availability[kMenuActionLoadSymbols] |= !module->is_loaded();
+    visible_action_name_to_availability[kMenuActionVerifyFramePointers] |=
         absl::GetFlag(FLAGS_enable_frame_pointer_validator) && module->is_loaded();
   }
 
   return visible_action_name_to_availability;
-}
-
-std::vector<std::vector<std::string>> ModulesDataView::GetContextMenuWithGrouping(
-    int clicked_index, const std::vector<int>& selected_indices) {
-  bool enable_load = false;
-  bool enable_verify = false;
-  for (int index : selected_indices) {
-    const ModuleData* module = GetModuleDataFromRow(index);
-    if (!module->is_loaded()) {
-      enable_load = true;
-    }
-
-    if (module->is_loaded()) {
-      enable_verify = true;
-    }
-  }
-
-  std::vector<std::string> action_group;
-  if (enable_load) action_group.emplace_back(std::string{kMenuActionLoadSymbols});
-  if (enable_verify && absl::GetFlag(FLAGS_enable_frame_pointer_validator)) {
-    action_group.emplace_back(std::string{kMenuActionVerifyFramePointers});
-  }
-
-  std::vector<std::vector<std::string>> menu =
-      DataView::GetContextMenuWithGrouping(clicked_index, selected_indices);
-  menu.insert(menu.begin(), action_group);
-
-  return menu;
 }
 
 void ModulesDataView::OnDoubleClicked(int index) {

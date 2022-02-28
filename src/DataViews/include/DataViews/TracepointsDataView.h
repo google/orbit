@@ -23,8 +23,6 @@ class TracepointsDataView : public DataView {
 
   const std::vector<Column>& GetColumns() override;
   int GetDefaultSortingColumn() override { return kColumnCategory; }
-  std::vector<std::vector<std::string>> GetContextMenuWithGrouping(
-      int clicked_index, const std::vector<int>& selected_indices) override;
   std::string GetValue(int row, int column) override;
 
   void OnSelectRequested(const std::vector<int>& selection) override;

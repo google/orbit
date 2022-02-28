@@ -220,8 +220,9 @@ TEST_F(PresetsDataViewTest, CheckPresenceOfContextMenuEntries) {
 
   // Not loadable preset
   EXPECT_THAT(FlattenContextMenuWithGrouping(view_.GetContextMenuWithGrouping(1, {1})),
-              testing::ElementsAre(kMenuActionDeletePreset, kMenuActionShowInExplorer,
-                                   kMenuActionCopySelection, kMenuActionExportToCsv))
+              testing::ElementsAre(kMenuActionLoadPreset, kMenuActionDeletePreset,
+                                   kMenuActionShowInExplorer, kMenuActionCopySelection,
+                                   kMenuActionExportToCsv))
       << view_.GetValue(1, 1);
 
   // Partially loadable preset
