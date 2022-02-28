@@ -27,7 +27,10 @@
 
 using orbit_data_views::CheckCopySelectionIsInvoked;
 using orbit_data_views::CheckExportToCsvIsInvoked;
+using orbit_data_views::FlattenContextMenu;
 using orbit_data_views::FlattenContextMenuWithGrouping;
+using orbit_data_views::GetActionIndexOnMenu;
+using orbit_data_views::kInvalidActionIndex;
 using orbit_data_views::kMenuActionCopySelection;
 using orbit_data_views::kMenuActionDeletePreset;
 using orbit_data_views::kMenuActionExportToCsv;
@@ -211,26 +214,30 @@ TEST_F(PresetsDataViewTest, CheckPresenceOfContextMenuEntries) {
   view_.SetPresets({preset_file0, preset_file1, preset_file2});
   view_.OnSort(1, DataView::SortingOrder::kAscending);
 
+  auto verify_context_menu_action_availability = [&](int selected_index,
+                                                     bool expect_load_preset_enabled) {
+    FlattenContextMenu context_menu = FlattenContextMenuWithGrouping(
+        view_.GetContextMenuWithGrouping(selected_index, {selected_index}));
+
+    // Check always available actions
+    CheckSingleAction(context_menu, kMenuActionCopySelection, ContextMenuEntry::kEnabled);
+    CheckSingleAction(context_menu, kMenuActionExportToCsv, ContextMenuEntry::kEnabled);
+    CheckSingleAction(context_menu, kMenuActionDeletePreset, ContextMenuEntry::kEnabled);
+    CheckSingleAction(context_menu, kMenuActionShowInExplorer, ContextMenuEntry::kEnabled);
+
+    CheckSingleAction(
+        context_menu, kMenuActionLoadPreset,
+        expect_load_preset_enabled ? ContextMenuEntry::kEnabled : ContextMenuEntry::kDisabled);
+  };
+
   // Loadable preset
-  EXPECT_THAT(FlattenContextMenuWithGrouping(view_.GetContextMenuWithGrouping(0, {0})),
-              testing::ElementsAre(kMenuActionLoadPreset, kMenuActionDeletePreset,
-                                   kMenuActionShowInExplorer, kMenuActionCopySelection,
-                                   kMenuActionExportToCsv))
-      << view_.GetValue(0, 1);
+  verify_context_menu_action_availability(0, true);
 
   // Not loadable preset
-  EXPECT_THAT(FlattenContextMenuWithGrouping(view_.GetContextMenuWithGrouping(1, {1})),
-              testing::ElementsAre(kMenuActionLoadPreset, kMenuActionDeletePreset,
-                                   kMenuActionShowInExplorer, kMenuActionCopySelection,
-                                   kMenuActionExportToCsv))
-      << view_.GetValue(1, 1);
+  verify_context_menu_action_availability(1, false);
 
   // Partially loadable preset
-  EXPECT_THAT(FlattenContextMenuWithGrouping(view_.GetContextMenuWithGrouping(2, {2})),
-              testing::ElementsAre(kMenuActionLoadPreset, kMenuActionDeletePreset,
-                                   kMenuActionShowInExplorer, kMenuActionCopySelection,
-                                   kMenuActionExportToCsv))
-      << view_.GetValue(2, 1);
+  verify_context_menu_action_availability(2, true);
 }
 
 TEST_F(PresetsDataViewTest, CheckInvokedContextMenuActions) {
@@ -249,7 +256,7 @@ TEST_F(PresetsDataViewTest, CheckInvokedContextMenuActions) {
   ASSERT_THAT(date_modified, orbit_test_utils::HasNoError());
 
   view_.SetPresets({preset_file0});
-  std::vector<std::string> context_menu =
+  FlattenContextMenu context_menu =
       FlattenContextMenuWithGrouping(view_.GetContextMenuWithGrouping(0, {0}));
   ASSERT_FALSE(context_menu.empty());
 
@@ -275,44 +282,37 @@ TEST_F(PresetsDataViewTest, CheckInvokedContextMenuActions) {
 
   // Load Preset
   {
-    const auto load_preset_idx =
-        std::find(context_menu.begin(), context_menu.end(), kMenuActionLoadPreset) -
-        context_menu.begin();
-    ASSERT_LT(load_preset_idx, context_menu.size());
+    const int load_preset_index = GetActionIndexOnMenu(context_menu, kMenuActionLoadPreset);
+    EXPECT_TRUE(load_preset_index != kInvalidActionIndex);
 
     EXPECT_CALL(app_, LoadPreset)
         .Times(1)
         .WillOnce([&](const orbit_preset_file::PresetFile& preset_file) {
           EXPECT_EQ(preset_file.file_path(), preset_filename0);
         });
-    view_.OnContextMenu(std::string{kMenuActionLoadPreset}, static_cast<int>(load_preset_idx), {0});
+    view_.OnContextMenu(std::string{kMenuActionLoadPreset}, load_preset_index, {0});
   }
 
   // Show In Explorer
   {
-    const auto show_in_explorer_idx =
-        std::find(context_menu.begin(), context_menu.end(), kMenuActionShowInExplorer) -
-        context_menu.begin();
-    ASSERT_LT(show_in_explorer_idx, context_menu.size());
+    const int show_in_explorer_index =
+        GetActionIndexOnMenu(context_menu, kMenuActionShowInExplorer);
+    EXPECT_TRUE(show_in_explorer_index != kInvalidActionIndex);
 
     EXPECT_CALL(app_, ShowPresetInExplorer)
         .Times(1)
         .WillOnce([&](const orbit_preset_file::PresetFile& preset_file) {
           EXPECT_EQ(preset_file.file_path(), preset_filename0);
         });
-    view_.OnContextMenu(std::string{kMenuActionShowInExplorer},
-                        static_cast<int>(show_in_explorer_idx), {0});
+    view_.OnContextMenu(std::string{kMenuActionShowInExplorer}, show_in_explorer_index, {0});
   }
 
   // Delete Preset
   {
-    const auto delete_preset_idx =
-        std::find(context_menu.begin(), context_menu.end(), kMenuActionDeletePreset) -
-        context_menu.begin();
-    ASSERT_LT(delete_preset_idx, context_menu.size());
+    const auto delete_preset_index = GetActionIndexOnMenu(context_menu, kMenuActionDeletePreset);
+    EXPECT_TRUE(delete_preset_index != kInvalidActionIndex);
 
-    view_.OnContextMenu(std::string{kMenuActionDeletePreset}, static_cast<int>(delete_preset_idx),
-                        {0});
+    view_.OnContextMenu(std::string{kMenuActionDeletePreset}, delete_preset_index, {0});
 
     const auto file_exists = orbit_base::FileExists(preset_filename0);
     ASSERT_THAT(file_exists, orbit_test_utils::HasNoError());
@@ -327,8 +327,7 @@ TEST_F(PresetsDataViewTest, CheckInvokedContextMenuActions) {
     view_.SetPresets({preset_file1});
 
     EXPECT_CALL(app_, SendErrorToUi).Times(1);
-    view_.OnContextMenu(std::string{kMenuActionDeletePreset}, static_cast<int>(delete_preset_idx),
-                        {0});
+    view_.OnContextMenu(std::string{kMenuActionDeletePreset}, delete_preset_index, {0});
 
     EXPECT_EQ(view_.GetNumElements(), 1);
   }
@@ -343,7 +342,7 @@ TEST_F(PresetsDataViewTest, CheckLoadPresetOnDoubleClick) {
   orbit_preset_file::PresetFile preset_file0{preset_filename0, orbit_client_protos::PresetInfo{}};
 
   view_.SetPresets({preset_file0});
-  std::vector<std::string> context_menu =
+  FlattenContextMenu context_menu =
       FlattenContextMenuWithGrouping(view_.GetContextMenuWithGrouping(0, {0}));
   ASSERT_FALSE(context_menu.empty());
 

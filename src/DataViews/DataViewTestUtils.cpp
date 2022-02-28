@@ -15,33 +15,50 @@
 
 namespace orbit_data_views {
 
-// TODO(vickyliu) Update the unit tests.
-void CheckSingleAction(const std::vector<std::string>& context_menu, std::string_view action,
-                       ContextMenuEntry /*menu_entry*/) {
-  EXPECT_THAT(context_menu, testing::Contains(action));
+int GetActionIndexOnMenu(const FlattenContextMenu& context_menu, std::string_view action) {
+  auto matcher = [&action](std::pair<std::string, bool> action_name_and_availability) {
+    return action_name_and_availability.first == std::string{action};
+  };
+
+  const auto menu_index = static_cast<int>(
+      std::find_if(context_menu.begin(), context_menu.end(), matcher) - context_menu.begin());
+
+  if (menu_index == static_cast<int>(context_menu.size())) return kInvalidActionIndex;
+
+  return menu_index;
 }
 
-void CheckCopySelectionIsInvoked(const std::vector<std::string>& context_menu,
+void CheckSingleAction(const FlattenContextMenu& context_menu, std::string_view action,
+                       ContextMenuEntry menu_entry) {
+  const int action_index = GetActionIndexOnMenu(context_menu, action);
+  EXPECT_TRUE(action_index != kInvalidActionIndex);
+
+  switch (menu_entry) {
+    case ContextMenuEntry::kEnabled:
+      EXPECT_TRUE(context_menu[action_index].second);
+      break;
+    case ContextMenuEntry::kDisabled:
+      EXPECT_FALSE(context_menu[action_index].second);
+  }
+}
+
+void CheckCopySelectionIsInvoked(const FlattenContextMenu& context_menu,
                                  const MockAppInterface& app, DataView& view,
                                  const std::string& expected_clipboard) {
-  const auto copy_selection_index =
-      std::find(context_menu.begin(), context_menu.end(), kMenuActionCopySelection) -
-      context_menu.begin();
-  ASSERT_LT(copy_selection_index, context_menu.size());
+  const int action_index = GetActionIndexOnMenu(context_menu, kMenuActionCopySelection);
+  EXPECT_TRUE(action_index != kInvalidActionIndex);
 
   std::string clipboard;
   EXPECT_CALL(app, SetClipboard).Times(1).WillOnce(testing::SaveArg<0>(&clipboard));
-  view.OnContextMenu(std::string{kMenuActionCopySelection}, static_cast<int>(copy_selection_index),
-                     {0});
+  view.OnContextMenu(std::string{kMenuActionCopySelection}, action_index, {0});
   EXPECT_EQ(clipboard, expected_clipboard);
 }
 
-void CheckExportToCsvIsInvoked(const std::vector<std::string>& context_menu,
-                               const MockAppInterface& app, DataView& view,
-                               const std::string& expected_contents, std::string_view action_name) {
-  const auto action_index =
-      std::find(context_menu.begin(), context_menu.end(), action_name) - context_menu.begin();
-  ASSERT_LT(action_index, context_menu.size());
+void CheckExportToCsvIsInvoked(const FlattenContextMenu& context_menu, const MockAppInterface& app,
+                               DataView& view, const std::string& expected_contents,
+                               std::string_view action_name) {
+  const int action_index = GetActionIndexOnMenu(context_menu, action_name);
+  EXPECT_TRUE(action_index != kInvalidActionIndex);
 
   ErrorMessageOr<orbit_base::TemporaryFile> temporary_file_or_error =
       orbit_base::TemporaryFile::Create();
@@ -54,7 +71,7 @@ void CheckExportToCsvIsInvoked(const std::vector<std::string>& context_menu,
   temporary_file_or_error.value().CloseAndRemove();
 
   EXPECT_CALL(app, GetSaveFile).Times(1).WillOnce(testing::Return(temporary_file_path.string()));
-  view.OnContextMenu(std::string{action_name}, static_cast<int>(action_index), {0});
+  view.OnContextMenu(std::string{action_name}, action_index, {0});
 
   ErrorMessageOr<std::string> contents_or_error = orbit_base::ReadFileToString(temporary_file_path);
   ASSERT_THAT(contents_or_error, orbit_test_utils::HasNoError());
@@ -62,12 +79,12 @@ void CheckExportToCsvIsInvoked(const std::vector<std::string>& context_menu,
   EXPECT_EQ(contents_or_error.value(), expected_contents);
 }
 
-std::vector<std::string> FlattenContextMenuWithGrouping(
+FlattenContextMenu FlattenContextMenuWithGrouping(
     const std::vector<ActionGroup>& menu_with_grouping) {
-  std::vector<std::string> menu;
+  FlattenContextMenu menu;
   for (const ActionGroup& action_group : menu_with_grouping) {
     for (const auto& action_name_and_availability : action_group) {
-      menu.push_back(action_name_and_availability.first);
+      menu.push_back(action_name_and_availability);
     }
   }
   return menu;
