@@ -54,6 +54,8 @@ class LiveFunctionsDataView : public DataView {
   void OnExportEventsToCsvRequested(const std::vector<int>& selection) override;
 
  protected:
+  [[nodiscard]] absl::flat_hash_map<std::string_view, bool> GetActionVisibilities(
+      int clicked_index, const std::vector<int>& selected_indices) override;
   void DoFilter() override;
   void DoSort() override;
   [[nodiscard]] uint64_t GetInstrumentedFunctionId(uint32_t row) const;

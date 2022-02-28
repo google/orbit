@@ -232,6 +232,67 @@ void LiveFunctionsDataView::DoSort() {
   }
 }
 
+absl::flat_hash_map<std::string_view, bool> LiveFunctionsDataView::GetActionVisibilities(
+    int clicked_index, const std::vector<int>& selected_indices) {
+  absl::flat_hash_map<std::string_view, bool> visible_action_name_to_availability =
+      DataView::GetActionVisibilities(clicked_index, selected_indices);
+
+  visible_action_name_to_availability.insert({{kMenuActionSelect, false},
+                                              {kMenuActionUnselect, false},
+                                              {kMenuActionEnableFrameTrack, false},
+                                              {kMenuActionDisableFrameTrack, false},
+                                              {kMenuActionAddIterator, false},
+                                              {kMenuActionDisassembly, false},
+                                              {kMenuActionSourceCode, false},
+                                              {kMenuActionJumpToFirst, false},
+                                              {kMenuActionJumpToLast, false},
+                                              {kMenuActionJumpToMax, false},
+                                              {kMenuActionJumpToMin, false},
+                                              {kMenuActionExportEventsToCsv, true}});
+
+  const CaptureData& capture_data = app_->GetCaptureData();
+  for (int index : selected_indices) {
+    uint64_t instrumented_function_id = GetInstrumentedFunctionId(index);
+    const FunctionInfo& instrumented_function = *GetFunctionInfoFromRow(index);
+    if (app_->IsCaptureConnected(capture_data)) {
+      visible_action_name_to_availability[kMenuActionSelect] |=
+          !app_->IsFunctionSelected(instrumented_function) &&
+          orbit_client_data::function_utils::IsFunctionSelectable(instrumented_function);
+      visible_action_name_to_availability[kMenuActionUnselect] |=
+          app_->IsFunctionSelected(instrumented_function);
+      visible_action_name_to_availability[kMenuActionDisassembly] = true;
+      visible_action_name_to_availability[kMenuActionSourceCode] = true;
+
+      visible_action_name_to_availability[kMenuActionEnableFrameTrack] |=
+          !app_->IsFrameTrackEnabled(instrumented_function);
+      visible_action_name_to_availability[kMenuActionDisableFrameTrack] |=
+          app_->IsFrameTrackEnabled(instrumented_function);
+    } else {
+      visible_action_name_to_availability[kMenuActionEnableFrameTrack] |=
+          !capture_data.IsFrameTrackEnabled(instrumented_function_id);
+      visible_action_name_to_availability[kMenuActionDisableFrameTrack] |=
+          capture_data.IsFrameTrackEnabled(instrumented_function_id);
+    }
+
+    const FunctionStats& stats = capture_data.GetFunctionStatsOrDefault(instrumented_function_id);
+    // We need at least one function call to a function so that adding iterators makes sense.
+    visible_action_name_to_availability[kMenuActionAddIterator] |= stats.count() > 0;
+  }
+
+  if (selected_indices.size() == 1) {
+    uint64_t instrumented_function_id = GetInstrumentedFunctionId(selected_indices[0]);
+    const FunctionStats& stats = capture_data.GetFunctionStatsOrDefault(instrumented_function_id);
+    if (stats.count() > 0) {
+      visible_action_name_to_availability[kMenuActionJumpToFirst] = true;
+      visible_action_name_to_availability[kMenuActionJumpToLast] = true;
+      visible_action_name_to_availability[kMenuActionJumpToMin] = true;
+      visible_action_name_to_availability[kMenuActionJumpToMax] = true;
+    }
+  }
+
+  return visible_action_name_to_availability;
+}
+
 std::vector<std::vector<std::string>> LiveFunctionsDataView::GetContextMenuWithGrouping(
     int clicked_index, const std::vector<int>& selected_indices) {
   bool enable_select = false;

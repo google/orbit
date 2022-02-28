@@ -35,6 +35,8 @@ class FunctionsDataView : public DataView {
   void ClearFunctions();
 
  protected:
+  [[nodiscard]] absl::flat_hash_map<std::string_view, bool> GetActionVisibilities(
+      int clicked_index, const std::vector<int>& selected_indices) override;
   void DoSort() override;
   void DoFilter() override;
 

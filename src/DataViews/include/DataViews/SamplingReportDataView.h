@@ -50,6 +50,8 @@ class SamplingReportDataView : public DataView {
   orbit_client_data::ThreadID GetThreadID() const { return tid_; }
 
  protected:
+  [[nodiscard]] absl::flat_hash_map<std::string_view, bool> GetActionVisibilities(
+      int clicked_index, const std::vector<int>& selected_indices) override;
   void DoSort() override;
   void DoFilter() override;
   const orbit_client_data::SampledFunction& GetSampledFunction(unsigned int row) const;

@@ -53,6 +53,8 @@ class PresetsDataView : public DataView {
     uint32_t function_count;
   };
 
+  [[nodiscard]] absl::flat_hash_map<std::string_view, bool> GetActionVisibilities(
+      int clicked_index, const std::vector<int>& selected_indices) override;
   void DoSort() override;
   void DoFilter() override;
   [[nodiscard]] static std::string GetModulesList(const std::vector<ModuleView>& modules);

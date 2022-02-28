@@ -108,6 +108,24 @@ void ModulesDataView::DoSort() {
   }
 }
 
+absl::flat_hash_map<std::string_view, bool> ModulesDataView::GetActionVisibilities(
+    int clicked_index, const std::vector<int>& selected_indices) {
+  absl::flat_hash_map<std::string_view, bool> visible_action_name_to_availability =
+      DataView::GetActionVisibilities(clicked_index, selected_indices);
+
+  visible_action_name_to_availability.insert(
+      {{kMenuActionLoadSymbols, false}, {kMenuActionVerifyFramePointers, false}});
+
+  for (int index : selected_indices) {
+    const ModuleData* module = GetModuleDataFromRow(index);
+    visible_action_name_to_availability[kMenuActionLoadSymbols] = !module->is_loaded();
+    visible_action_name_to_availability[kMenuActionVerifyFramePointers] =
+        absl::GetFlag(FLAGS_enable_frame_pointer_validator) && module->is_loaded();
+  }
+
+  return visible_action_name_to_availability;
+}
+
 std::vector<std::vector<std::string>> ModulesDataView::GetContextMenuWithGrouping(
     int clicked_index, const std::vector<int>& selected_indices) {
   bool enable_load = false;
