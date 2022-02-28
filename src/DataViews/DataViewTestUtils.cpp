@@ -79,7 +79,32 @@ void CheckExportToCsvIsInvoked(const FlattenContextMenu& context_menu, const Moc
   EXPECT_EQ(contents_or_error.value(), expected_contents);
 }
 
-FlattenContextMenu FlattenContextMenuWithGrouping(
+void CheckContextMenuOrder(const FlattenContextMenu& context_menu) {
+  const std::vector<std::string_view> ordered_action_names = {
+      /* Hooking related actions */
+      kMenuActionLoadSymbols, kMenuActionSelect, kMenuActionUnselect, kMenuActionEnableFrameTrack,
+      kMenuActionDisableFrameTrack, kMenuActionVerifyFramePointers,
+      /* Disassembly & source code related actions */
+      kMenuActionDisassembly, kMenuActionSourceCode,
+      /* Navigating related actions */
+      kMenuActionAddIterator, kMenuActionJumpToFirst, kMenuActionJumpToLast, kMenuActionJumpToMin,
+      kMenuActionJumpToMax,
+      /* Preset related actions */
+      kMenuActionLoadPreset, kMenuActionDeletePreset, kMenuActionShowInExplorer,
+      /* Exporting related actions */
+      kMenuActionCopySelection, kMenuActionExportToCsv, kMenuActionExportEventsToCsv};
+
+  std::vector<int> visible_action_indices;
+  for (auto action_name : ordered_action_names) {
+    const int action_index = GetActionIndexOnMenu(context_menu, action_name);
+    if (action_index == kInvalidActionIndex) continue;
+    visible_action_indices.push_back(action_index);
+  }
+
+  EXPECT_TRUE(is_sorted(visible_action_indices.begin(), visible_action_indices.end()));
+}
+
+FlattenContextMenu FlattenContextMenuWithGroupingAndCheckOrder(
     const std::vector<ActionGroup>& menu_with_grouping) {
   FlattenContextMenu menu;
   for (const ActionGroup& action_group : menu_with_grouping) {
@@ -87,6 +112,8 @@ FlattenContextMenu FlattenContextMenuWithGrouping(
       menu.push_back(action_name_and_availability);
     }
   }
+
+  CheckContextMenuOrder(menu);
   return menu;
 }
 

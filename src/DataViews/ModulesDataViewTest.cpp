@@ -23,7 +23,7 @@ using orbit_data_views::CheckCopySelectionIsInvoked;
 using orbit_data_views::CheckExportToCsvIsInvoked;
 using orbit_data_views::ContextMenuEntry;
 using orbit_data_views::FlattenContextMenu;
-using orbit_data_views::FlattenContextMenuWithGrouping;
+using orbit_data_views::FlattenContextMenuWithGroupingAndCheckOrder;
 using orbit_data_views::GetActionIndexOnMenu;
 using orbit_data_views::kInvalidActionIndex;
 using orbit_data_views::kMenuActionCopySelection;
@@ -122,7 +122,7 @@ TEST_F(ModulesDataViewTest, ColumnValuesAreCorrect) {
 TEST_F(ModulesDataViewTest, ContextMenuEntriesArePresent) {
   AddModulesByIndices({0});
   FlattenContextMenu context_menu =
-      FlattenContextMenuWithGrouping(view_.GetContextMenuWithGrouping(0, {0}));
+      FlattenContextMenuWithGroupingAndCheckOrder(view_.GetContextMenuWithGrouping(0, {0}));
 
   CheckSingleAction(context_menu, kMenuActionCopySelection, ContextMenuEntry::kEnabled);
   CheckSingleAction(context_menu, kMenuActionExportToCsv, ContextMenuEntry::kEnabled);
@@ -132,7 +132,7 @@ TEST_F(ModulesDataViewTest, ContextMenuEntriesArePresent) {
 TEST_F(ModulesDataViewTest, ContextMenuActionsAreInvoked) {
   AddModulesByIndices({0});
   FlattenContextMenu context_menu =
-      FlattenContextMenuWithGrouping(view_.GetContextMenuWithGrouping(0, {0}));
+      FlattenContextMenuWithGroupingAndCheckOrder(view_.GetContextMenuWithGrouping(0, {0}));
   ASSERT_FALSE(context_menu.empty());
 
   // Load Symbols
