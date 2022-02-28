@@ -14,59 +14,28 @@
    <string>Symbol Locations</string>
   </property>
   <layout class="QGridLayout" name="gridLayout">
-   <item row="1" column="1">
-    <layout class="QVBoxLayout" name="verticalLayout">
-     <item>
-      <widget class="QPushButton" name="addFolderButton">
-       <property name="text">
-        <string>Add Folder</string>
-       </property>
-      </widget>
-     </item>
-     <item>
-      <widget class="QPushButton" name="addFileButton">
-       <property name="text">
-        <string>Add File</string>
-       </property>
-      </widget>
-     </item>
-     <item>
-      <widget class="QPushButton" name="removeButton">
-       <property name="text">
-        <string>Remove</string>
-       </property>
-       <property name="enabled">
-        <bool>false</bool>
-       </property>
-      </widget>
-     </item>
-     <item>
-      <spacer name="verticalSpacer">
-       <property name="orientation">
-        <enum>Qt::Vertical</enum>
-       </property>
-       <property name="sizeHint" stdset="0">
-        <size>
-         <width>20</width>
-         <height>40</height>
-        </size>
-       </property>
-      </spacer>
-     </item>
-    </layout>
-   </item>
-   <item row="3" column="0">
-    <widget class="QLabel" name="label_2">
-     <property name="text">
-      <string>Orbit tries to find symbols automatically based on filenames and build id.</string>
-     </property>
-    </widget>
-   </item>
    <item row="1" column="0">
     <widget class="QListWidget" name="listWidget"/>
    </item>
-   <item row="4" column="0">
+   <item row="4" column="1">
+    <widget class="QPushButton" name="doneButton">
+     <property name="text">
+      <string>Done</string>
+     </property>
+    </widget>
+   </item>
+   <item row="3" column="0">
     <layout class="QHBoxLayout" name="horizontalLayout_3">
+     <item>
+      <widget class="QPushButton" name="moreInfoButton">
+       <property name="styleSheet">
+        <string notr="true">border: none; color: #4F9CFF; font-weight: bold; text-decoration: underline</string>
+       </property>
+       <property name="text">
+        <string>More information on symbol loading</string>
+       </property>
+      </widget>
+     </item>
      <item>
       <spacer name="horizontalSpacer_2">
        <property name="orientation">
@@ -85,19 +54,53 @@
    <item row="2" column="0">
     <widget class="QLabel" name="label">
      <property name="text">
-      <string>Orbit attemps to load symbols to accurately label functions with their names, resolve callstack and more. When symbols can't be loaded, function names will be displayed as ???.</string>
+      <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Add folders and files to load symbols:&lt;/p&gt;&lt;p&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;Add Folder&lt;/span&gt; to load symbol files contained in that folder. Symbols will be loaded if the file name and build ID match the module and the file extension is “.so”, “.debug”, “.so.debug”, “.dll” or “.pdb”.&lt;/p&gt;&lt;p&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;Add File&lt;/span&gt; to load symbols from an individual file, even if file name, build ID or file extension don’t match the module. &lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
      </property>
      <property name="wordWrap">
       <bool>true</bool>
      </property>
     </widget>
    </item>
-   <item row="5" column="1">
-    <widget class="QPushButton" name="doneButton">
-     <property name="text">
-      <string>Done</string>
-     </property>
-    </widget>
+   <item row="1" column="1">
+    <layout class="QVBoxLayout" name="verticalLayout">
+     <item>
+      <widget class="QPushButton" name="addFolderButton">
+       <property name="text">
+        <string>Add Folder</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QPushButton" name="addFileButton">
+       <property name="text">
+        <string>Add File</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QPushButton" name="removeButton">
+       <property name="enabled">
+        <bool>false</bool>
+       </property>
+       <property name="text">
+        <string>Remove</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <spacer name="verticalSpacer">
+       <property name="orientation">
+        <enum>Qt::Vertical</enum>
+       </property>
+       <property name="sizeHint" stdset="0">
+        <size>
+         <width>20</width>
+         <height>40</height>
+        </size>
+       </property>
+      </spacer>
+     </item>
+    </layout>
    </item>
    <item row="0" column="0">
     <widget class="QLabel" name="moduleHeadlineLabel">
@@ -113,6 +116,7 @@
   <tabstop>addFileButton</tabstop>
   <tabstop>removeButton</tabstop>
   <tabstop>listWidget</tabstop>
+  <tabstop>moreInfoButton</tabstop>
   <tabstop>doneButton</tabstop>
  </tabstops>
  <resources/>
@@ -182,6 +186,22 @@
    </hints>
   </connection>
   <connection>
+   <sender>moreInfoButton</sender>
+   <signal>clicked()</signal>
+   <receiver>SymbolsDialog</receiver>
+   <slot>OnMoreInfoButtonClicked()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>119</x>
+     <y>472</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>217</x>
+     <y>477</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
    <sender>listWidget</sender>
    <signal>itemSelectionChanged()</signal>
    <receiver>SymbolsDialog</receiver>
@@ -202,6 +222,7 @@
   <slot>OnAddFolderButtonClicked()</slot>
   <slot>OnAddFileButtonClicked()</slot>
   <slot>OnRemoveButtonClicked()</slot>
+  <slot>OnMoreInfoButtonClicked()</slot>
   <slot>OnListItemSelectionChanged()</slot>
  </slots>
 </ui>

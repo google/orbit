@@ -6,6 +6,7 @@
 
 #include <absl/strings/str_format.h>
 
+#include <QDesktopServices>
 #include <QFileDialog>
 #include <QMessageBox>
 #include <QPushButton>
@@ -190,6 +191,16 @@ ErrorMessageOr<void> SymbolsDialog::TryAddSymbolFile(const std::filesystem::path
 
 void SymbolsDialog::OnListItemSelectionChanged() {
   ui_->removeButton->setEnabled(!ui_->listWidget->selectedItems().isEmpty());
+}
+
+void SymbolsDialog::OnMoreInfoButtonClicked() {
+  QString url_as_string{
+      "https://developers.google.com/stadia/docs/develop/optimize/"
+      "profile-cpu-with-orbit#load_symbols"};
+  if (!QDesktopServices::openUrl(QUrl(url_as_string, QUrl::StrictMode))) {
+    QMessageBox::critical(this, "Error opening URL",
+                          QString("Could not open %1").arg(url_as_string));
+  }
 }
 
 }  // namespace orbit_config_widgets
