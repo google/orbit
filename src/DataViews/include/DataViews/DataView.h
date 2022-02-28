@@ -5,7 +5,7 @@
 #ifndef DATA_VIEWS_DATA_VIEW_H_
 #define DATA_VIEWS_DATA_VIEW_H_
 
-#include <absl/container/flat_hash_set.h>
+#include <absl/container/flat_hash_map.h>
 #include <stddef.h>
 #include <stdint.h>
 
@@ -170,6 +170,9 @@ class DataView {
       int /*row*/) {
     return nullptr;
   }
+
+  [[nodiscard]] virtual absl::flat_hash_map<std::string_view, bool> GetActionVisibilities(
+      int clicked_index, const std::vector<int>& selected_indices);
 
   void InitSortingOrders();
   virtual void DoSort() {}
