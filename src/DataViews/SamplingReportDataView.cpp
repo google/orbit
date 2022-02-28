@@ -218,6 +218,43 @@ SamplingReportDataView::GetModulePathAndBuildIdFromRow(int row) const {
   return std::make_pair(result.value().file_path(), result.value().build_id());
 }
 
+absl::flat_hash_map<std::string_view, bool> SamplingReportDataView::GetActionVisibilities(
+    int clicked_index, const std::vector<int>& selected_indices) {
+  absl::flat_hash_map<std::string_view, bool> visible_action_name_to_availability =
+      DataView::GetActionVisibilities(clicked_index, selected_indices);
+
+  visible_action_name_to_availability.insert({{kMenuActionLoadSymbols, false},
+                                              {kMenuActionSelect, false},
+                                              {kMenuActionUnselect, false},
+                                              {kMenuActionDisassembly, false},
+                                              {kMenuActionSourceCode, false}});
+
+  for (int index : selected_indices) {
+    const ModuleData* module = GetModuleDataFromRow(index);
+    visible_action_name_to_availability[kMenuActionLoadSymbols] |=
+        module != nullptr && !module->is_loaded();
+  }
+
+  if (app_->IsCaptureConnected(app_->GetCaptureData())) {
+    for (int index : selected_indices) {
+      const FunctionInfo* function = GetFunctionInfoFromRow(index);
+      if (function != nullptr) {
+        visible_action_name_to_availability[kMenuActionSelect] |=
+            !app_->IsFunctionSelected(*function) &&
+            orbit_client_data::function_utils::IsFunctionSelectable(*function);
+        visible_action_name_to_availability[kMenuActionUnselect] |=
+            app_->IsFunctionSelected(*function);
+        visible_action_name_to_availability[kMenuActionDisassembly] = true;
+        visible_action_name_to_availability[kMenuActionSourceCode] = true;
+      }
+    }
+  }
+
+  return visible_action_name_to_availability;
+}
+
+// TODO(b/205676296): Remove this when we change to use GetActionVisibilities in
+// DataView::GetContextMenuWithGrouping.
 std::vector<std::vector<std::string>> SamplingReportDataView::GetContextMenuWithGrouping(
     int clicked_index, const std::vector<int>& selected_indices) {
   bool enable_load = false;

@@ -148,6 +148,27 @@ void PresetsDataView::DoSort() {
   }
 }
 
+absl::flat_hash_map<std::string_view, bool> PresetsDataView::GetActionVisibilities(
+    int clicked_index, const std::vector<int>& selected_indices) {
+  // Note that the UI already enforces a single selection.
+  ORBIT_CHECK(selected_indices.size() == 1);
+
+  absl::flat_hash_map<std::string_view, bool> visible_action_name_to_availability =
+      DataView::GetActionVisibilities(clicked_index, selected_indices);
+
+  visible_action_name_to_availability.insert({{kMenuActionLoadPreset, false},
+                                              {kMenuActionDeletePreset, true},
+                                              {kMenuActionShowInExplorer, true}});
+
+  const PresetFile& preset = GetPreset(selected_indices[0]);
+  visible_action_name_to_availability[kMenuActionLoadPreset] =
+      app_->GetPresetLoadState(preset).state != PresetLoadState::kNotLoadable;
+
+  return visible_action_name_to_availability;
+}
+
+// TODO(b/205676296): Remove this when we change to use GetActionVisibilities in
+// DataView::GetContextMenuWithGrouping.
 std::vector<std::vector<std::string>> PresetsDataView::GetContextMenuWithGrouping(
     int clicked_index, const std::vector<int>& selected_indices) {
   // Note that the UI already enforces a single selection.

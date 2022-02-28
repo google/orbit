@@ -105,6 +105,39 @@ const std::string CallstackDataView::kHighlightedFunctionString = "➜ ";
 const std::string CallstackDataView::kHighlightedFunctionBlankString =
     std::string(kHighlightedFunctionString.size(), ' ');
 
+absl::flat_hash_map<std::string_view, bool> CallstackDataView::GetActionVisibilities(
+    int clicked_index, const std::vector<int>& selected_indices) {
+  absl::flat_hash_map<std::string_view, bool> visible_action_name_to_availability =
+      DataView::GetActionVisibilities(clicked_index, selected_indices);
+
+  visible_action_name_to_availability.insert({{kMenuActionLoadSymbols, false},
+                                              {kMenuActionSelect, false},
+                                              {kMenuActionUnselect, false},
+                                              {kMenuActionDisassembly, false},
+                                              {kMenuActionSourceCode, false}});
+
+  for (int index : selected_indices) {
+    CallstackDataViewFrame frame = GetFrameFromRow(index);
+    const FunctionInfo* function = frame.function;
+    const ModuleData* module = frame.module;
+
+    if (frame.function != nullptr && app_->IsCaptureConnected(app_->GetCaptureData())) {
+      visible_action_name_to_availability[kMenuActionSelect] |=
+          !app_->IsFunctionSelected(*function) &&
+          orbit_client_data::function_utils::IsFunctionSelectable(*function);
+      visible_action_name_to_availability[kMenuActionUnselect] |=
+          app_->IsFunctionSelected(*function);
+      visible_action_name_to_availability[kMenuActionDisassembly] = true;
+      visible_action_name_to_availability[kMenuActionSourceCode] = true;
+    } else if (module != nullptr && !module->is_loaded()) {
+      visible_action_name_to_availability[kMenuActionLoadSymbols] = true;
+    }
+  }
+  return visible_action_name_to_availability;
+}
+
+// TODO(b/205676296): Remove this when we change to use GetActionVisibilities in
+// DataView::GetContextMenuWithGrouping.
 std::vector<std::vector<std::string>> CallstackDataView::GetContextMenuWithGrouping(
     int clicked_index, const std::vector<int>& selected_indices) {
   bool enable_load = false;

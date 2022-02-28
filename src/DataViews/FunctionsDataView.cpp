@@ -162,6 +162,35 @@ void FunctionsDataView::DoSort() {
   }
 }
 
+absl::flat_hash_map<std::string_view, bool> FunctionsDataView::GetActionVisibilities(
+    int clicked_index, const std::vector<int>& selected_indices) {
+  absl::flat_hash_map<std::string_view, bool> visible_action_name_to_availability =
+      DataView::GetActionVisibilities(clicked_index, selected_indices);
+
+  visible_action_name_to_availability.insert({{kMenuActionSelect, false},
+                                              {kMenuActionUnselect, false},
+                                              {kMenuActionEnableFrameTrack, false},
+                                              {kMenuActionDisableFrameTrack, false},
+                                              {kMenuActionDisassembly, true},
+                                              {kMenuActionSourceCode, true}});
+
+  for (int index : selected_indices) {
+    const FunctionInfo& function = *GetFunctionInfoFromRow(index);
+    visible_action_name_to_availability[kMenuActionSelect] |=
+        !app_->IsFunctionSelected(function) &&
+        orbit_client_data::function_utils::IsFunctionSelectable(function);
+    visible_action_name_to_availability[kMenuActionUnselect] |= app_->IsFunctionSelected(function);
+    visible_action_name_to_availability[kMenuActionEnableFrameTrack] |=
+        !app_->IsFrameTrackEnabled(function);
+    visible_action_name_to_availability[kMenuActionDisableFrameTrack] |=
+        app_->IsFrameTrackEnabled(function);
+  }
+
+  return visible_action_name_to_availability;
+}
+
+// TODO(b/205676296): Remove this when we change to use GetActionVisibilities in
+// DataView::GetContextMenuWithGrouping.
 std::vector<std::vector<std::string>> FunctionsDataView::GetContextMenuWithGrouping(
     int clicked_index, const std::vector<int>& selected_indices) {
   bool enable_select = false;
