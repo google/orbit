@@ -149,45 +149,6 @@ DataView::ActionStatus CallstackDataView::GetActionStatus(
   return ActionStatus::kVisibleButDisabled;
 }
 
-// TODO(b/205676296): Remove this when we change to use GetActionStatus in
-// DataView::GetContextMenuWithGrouping.
-std::vector<std::vector<std::string>> CallstackDataView::GetContextMenuWithGrouping(
-    int clicked_index, const std::vector<int>& selected_indices) {
-  bool enable_load = false;
-  bool enable_select = false;
-  bool enable_unselect = false;
-  bool enable_disassembly = false;
-  bool enable_source_code = false;
-  for (int index : selected_indices) {
-    CallstackDataViewFrame frame = GetFrameFromRow(index);
-    const FunctionInfo* function = frame.function;
-    const ModuleData* module = frame.module;
-
-    if (frame.function != nullptr && app_->IsCaptureConnected(app_->GetCaptureData())) {
-      enable_select |= !app_->IsFunctionSelected(*function) &&
-                       orbit_client_data::function_utils::IsFunctionSelectable(*function);
-      enable_unselect |= app_->IsFunctionSelected(*function);
-      enable_disassembly = true;
-      enable_source_code = true;
-    } else if (module != nullptr && !module->is_loaded()) {
-      enable_load = true;
-    }
-  }
-
-  std::vector<std::string> action_group;
-  if (enable_load) action_group.emplace_back(std::string{kMenuActionLoadSymbols});
-  if (enable_select) action_group.emplace_back(std::string{kMenuActionSelect});
-  if (enable_unselect) action_group.emplace_back(std::string{kMenuActionUnselect});
-  if (enable_disassembly) action_group.emplace_back(std::string{kMenuActionDisassembly});
-  if (enable_source_code) action_group.emplace_back(std::string{kMenuActionSourceCode});
-
-  std::vector<std::vector<std::string>> menu =
-      DataView::GetContextMenuWithGrouping(clicked_index, selected_indices);
-  menu.insert(menu.begin(), action_group);
-
-  return menu;
-}
-
 void CallstackDataView::DoFilter() {
   if (callstack_.frames_size() == 0) {
     return;

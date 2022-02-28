@@ -62,6 +62,8 @@ constexpr std::string_view kMenuActionExportEventsToCsv = "Export events to CSV"
 // specification in https://tools.ietf.org/html/rfc4180.
 std::string FormatValueForCsv(std::string_view value);
 
+using ActionGroup = std::vector<std::pair<std::string, bool>>;
+
 class DataView {
  public:
   enum class SortingOrder {
@@ -98,8 +100,8 @@ class DataView {
   virtual const std::vector<Column>& GetColumns() = 0;
   virtual bool IsSortingAllowed() { return true; }
   virtual int GetDefaultSortingColumn() { return 0; }
-  virtual std::vector<std::vector<std::string>> GetContextMenuWithGrouping(
-      int clicked_index, const std::vector<int>& selected_indices);
+  std::vector<ActionGroup> GetContextMenuWithGrouping(int clicked_index,
+                                                      const std::vector<int>& selected_indices);
   virtual size_t GetNumElements() { return indices_.size(); }
   virtual std::string GetValue(int /*row*/, int /*column*/) { return ""; }
   virtual std::string GetValueForCopy(int row, int column) { return GetValue(row, column); }

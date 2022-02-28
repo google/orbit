@@ -238,13 +238,13 @@ DataView::ActionStatus SamplingReportDataView::GetActionStatus(
   std::function<bool(const FunctionInfo*)> is_visible_action_enabled;
   if (action == kMenuActionSelect) {
     is_visible_action_enabled = [this](const FunctionInfo* function) {
-      return !app_->IsFunctionSelected(*function) &&
+      return function != nullptr && !app_->IsFunctionSelected(*function) &&
              orbit_client_data::function_utils::IsFunctionSelectable(*function);
     };
 
   } else if (action == kMenuActionUnselect) {
     is_visible_action_enabled = [this](const FunctionInfo* function) {
-      return app_->IsFunctionSelected(*function);
+      return function != nullptr && app_->IsFunctionSelected(*function);
     };
 
   } else if (action == kMenuActionDisassembly || action == kMenuActionSourceCode) {
@@ -259,47 +259,6 @@ DataView::ActionStatus SamplingReportDataView::GetActionStatus(
     if (is_visible_action_enabled(function)) return ActionStatus::kVisibleAndEnabled;
   }
   return ActionStatus::kVisibleButDisabled;
-}
-
-// TODO(b/205676296): Remove this when we change to use GetActionStatus in
-// DataView::GetContextMenuWithGrouping.
-std::vector<std::vector<std::string>> SamplingReportDataView::GetContextMenuWithGrouping(
-    int clicked_index, const std::vector<int>& selected_indices) {
-  bool enable_load = false;
-  for (int index : selected_indices) {
-    const ModuleData* module = GetModuleDataFromRow(index);
-    if (module != nullptr && !module->is_loaded()) enable_load = true;
-  }
-
-  bool enable_select = false;
-  bool enable_unselect = false;
-  bool enable_disassembly = false;
-  bool enable_source_code = false;
-  if (app_->IsCaptureConnected(app_->GetCaptureData())) {
-    for (int index : selected_indices) {
-      const FunctionInfo* function = GetFunctionInfoFromRow(index);
-      if (function != nullptr) {
-        enable_select |= !app_->IsFunctionSelected(*function) &&
-                         orbit_client_data::function_utils::IsFunctionSelectable(*function);
-        enable_unselect |= app_->IsFunctionSelected(*function);
-        enable_disassembly = true;
-        enable_source_code = true;
-      }
-    }
-  }
-
-  std::vector<std::string> action_group;
-  if (enable_load) action_group.emplace_back(std::string{kMenuActionLoadSymbols});
-  if (enable_select) action_group.emplace_back(std::string{kMenuActionSelect});
-  if (enable_unselect) action_group.emplace_back(std::string{kMenuActionUnselect});
-  if (enable_disassembly) action_group.emplace_back(std::string{kMenuActionDisassembly});
-  if (enable_source_code) action_group.emplace_back(std::string{kMenuActionSourceCode});
-
-  std::vector<std::vector<std::string>> menu =
-      DataView::GetContextMenuWithGrouping(clicked_index, selected_indices);
-  menu.insert(menu.begin(), action_group);
-
-  return menu;
 }
 
 ModuleData* SamplingReportDataView::GetModuleDataFromRow(int row) const {

@@ -15,18 +15,10 @@
 
 namespace orbit_data_views {
 
+// TODO(vickyliu) Update the unit tests.
 void CheckSingleAction(const std::vector<std::string>& context_menu, std::string_view action,
-                       ContextMenuEntry menu_entry) {
-  switch (menu_entry) {
-    case ContextMenuEntry::kEnabled:
-      EXPECT_THAT(context_menu, testing::Contains(action));
-      return;
-    case ContextMenuEntry::kDisabled:
-      EXPECT_THAT(context_menu, testing::Not(testing::Contains(action)));
-      return;
-    default:
-      ORBIT_UNREACHABLE();
-  }
+                       ContextMenuEntry /*menu_entry*/) {
+  EXPECT_THAT(context_menu, testing::Contains(action));
 }
 
 void CheckCopySelectionIsInvoked(const std::vector<std::string>& context_menu,
@@ -71,10 +63,12 @@ void CheckExportToCsvIsInvoked(const std::vector<std::string>& context_menu,
 }
 
 std::vector<std::string> FlattenContextMenuWithGrouping(
-    const std::vector<std::vector<std::string>>& menu_with_grouping) {
+    const std::vector<ActionGroup>& menu_with_grouping) {
   std::vector<std::string> menu;
-  for (const std::vector<std::string>& action_group : menu_with_grouping) {
-    orbit_base::Append(menu, action_group);
+  for (const ActionGroup& action_group : menu_with_grouping) {
+    for (const auto& action_name_and_availability : action_group) {
+      menu.push_back(action_name_and_availability.first);
+    }
   }
   return menu;
 }
