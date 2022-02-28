@@ -17,6 +17,7 @@
 #include <llvm/DebugInfo/DWARF/DWARFDebugAranges.h>
 #include <llvm/DebugInfo/DWARF/DWARFDebugLine.h>
 #include <llvm/DebugInfo/DWARF/DWARFFormValue.h>
+#include <llvm/DebugInfo/Symbolize/SymbolizableModule.h>
 #include <llvm/DebugInfo/Symbolize/Symbolize.h>
 #include <llvm/Demangle/Demangle.h>
 #include <llvm/Object/Binary.h>
