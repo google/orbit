@@ -37,7 +37,7 @@ using orbit_data_views::CheckCopySelectionIsInvoked;
 using orbit_data_views::CheckExportToCsvIsInvoked;
 using orbit_data_views::ContextMenuEntry;
 using orbit_data_views::FlattenContextMenu;
-using orbit_data_views::FlattenContextMenuWithGrouping;
+using orbit_data_views::FlattenContextMenuWithGroupingAndCheckOrder;
 using orbit_data_views::GetActionIndexOnMenu;
 using orbit_data_views::kInvalidActionIndex;
 using orbit_data_views::kMenuActionCopySelection;
@@ -330,8 +330,8 @@ TEST_F(CallstackDataViewTest, ContextMenuEntriesArePresentCorrectly) {
       });
 
   auto verify_context_menu_action_availability = [&](std::vector<int> selected_indices) {
-    FlattenContextMenu context_menu =
-        FlattenContextMenuWithGrouping(view_.GetContextMenuWithGrouping(0, selected_indices));
+    FlattenContextMenu context_menu = FlattenContextMenuWithGroupingAndCheckOrder(
+        view_.GetContextMenuWithGrouping(0, selected_indices));
 
     // Common actions should always be available.
     CheckSingleAction(context_menu, kMenuActionCopySelection, ContextMenuEntry::kEnabled);
@@ -400,7 +400,7 @@ TEST_F(CallstackDataViewTest, ContextMenuActionsAreInvoked) {
   constexpr uint64_t kFrameAddress = 0x3140;
   SetCallstackFromFrames({kFrameAddress});
   FlattenContextMenu context_menu =
-      FlattenContextMenuWithGrouping(view_.GetContextMenuWithGrouping(0, {0}));
+      FlattenContextMenuWithGroupingAndCheckOrder(view_.GetContextMenuWithGrouping(0, {0}));
   ASSERT_FALSE(context_menu.empty());
 
   // Copy Selection
@@ -463,7 +463,8 @@ TEST_F(CallstackDataViewTest, ContextMenuActionsAreInvoked) {
   }
 
   function_selected = true;
-  context_menu = FlattenContextMenuWithGrouping(view_.GetContextMenuWithGrouping(0, {0}));
+  context_menu =
+      FlattenContextMenuWithGroupingAndCheckOrder(view_.GetContextMenuWithGrouping(0, {0}));
   ASSERT_FALSE(context_menu.empty());
 
   // Unhook

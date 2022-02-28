@@ -28,7 +28,7 @@
 using orbit_data_views::CheckCopySelectionIsInvoked;
 using orbit_data_views::CheckExportToCsvIsInvoked;
 using orbit_data_views::FlattenContextMenu;
-using orbit_data_views::FlattenContextMenuWithGrouping;
+using orbit_data_views::FlattenContextMenuWithGroupingAndCheckOrder;
 using orbit_data_views::GetActionIndexOnMenu;
 using orbit_data_views::kInvalidActionIndex;
 using orbit_data_views::kMenuActionCopySelection;
@@ -216,7 +216,7 @@ TEST_F(PresetsDataViewTest, CheckPresenceOfContextMenuEntries) {
 
   auto verify_context_menu_action_availability = [&](int selected_index,
                                                      bool expect_load_preset_enabled) {
-    FlattenContextMenu context_menu = FlattenContextMenuWithGrouping(
+    FlattenContextMenu context_menu = FlattenContextMenuWithGroupingAndCheckOrder(
         view_.GetContextMenuWithGrouping(selected_index, {selected_index}));
 
     // Check always available actions
@@ -257,7 +257,7 @@ TEST_F(PresetsDataViewTest, CheckInvokedContextMenuActions) {
 
   view_.SetPresets({preset_file0});
   FlattenContextMenu context_menu =
-      FlattenContextMenuWithGrouping(view_.GetContextMenuWithGrouping(0, {0}));
+      FlattenContextMenuWithGroupingAndCheckOrder(view_.GetContextMenuWithGrouping(0, {0}));
   ASSERT_FALSE(context_menu.empty());
 
   // Copy Selection
@@ -343,7 +343,7 @@ TEST_F(PresetsDataViewTest, CheckLoadPresetOnDoubleClick) {
 
   view_.SetPresets({preset_file0});
   FlattenContextMenu context_menu =
-      FlattenContextMenuWithGrouping(view_.GetContextMenuWithGrouping(0, {0}));
+      FlattenContextMenuWithGroupingAndCheckOrder(view_.GetContextMenuWithGrouping(0, {0}));
   ASSERT_FALSE(context_menu.empty());
 
   EXPECT_CALL(app_, LoadPreset)

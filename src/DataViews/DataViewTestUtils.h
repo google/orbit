@@ -33,7 +33,9 @@ void CheckExportToCsvIsInvoked(const FlattenContextMenu& context_menu, const Moc
                                DataView& view, const std::string& expected_contents,
                                std::string_view action_name = kMenuActionExportToCsv);
 
-[[nodiscard]] FlattenContextMenu FlattenContextMenuWithGrouping(
+void CheckContextMenuOrder(const FlattenContextMenu& context_menu);
+
+[[nodiscard]] FlattenContextMenu FlattenContextMenuWithGroupingAndCheckOrder(
     const std::vector<ActionGroup>& menu_with_grouping);
 
 }  // namespace orbit_data_views
