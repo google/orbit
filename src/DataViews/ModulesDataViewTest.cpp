@@ -22,7 +22,10 @@ using orbit_client_data::ModuleInMemory;
 using orbit_data_views::CheckCopySelectionIsInvoked;
 using orbit_data_views::CheckExportToCsvIsInvoked;
 using orbit_data_views::ContextMenuEntry;
+using orbit_data_views::FlattenContextMenu;
 using orbit_data_views::FlattenContextMenuWithGrouping;
+using orbit_data_views::GetActionIndexOnMenu;
+using orbit_data_views::kInvalidActionIndex;
 using orbit_data_views::kMenuActionCopySelection;
 using orbit_data_views::kMenuActionExportToCsv;
 using orbit_data_views::kMenuActionLoadSymbols;
@@ -118,7 +121,7 @@ TEST_F(ModulesDataViewTest, ColumnValuesAreCorrect) {
 
 TEST_F(ModulesDataViewTest, ContextMenuEntriesArePresent) {
   AddModulesByIndices({0});
-  std::vector<std::string> context_menu =
+  FlattenContextMenu context_menu =
       FlattenContextMenuWithGrouping(view_.GetContextMenuWithGrouping(0, {0}));
 
   CheckSingleAction(context_menu, kMenuActionCopySelection, ContextMenuEntry::kEnabled);
@@ -128,22 +131,19 @@ TEST_F(ModulesDataViewTest, ContextMenuEntriesArePresent) {
 
 TEST_F(ModulesDataViewTest, ContextMenuActionsAreInvoked) {
   AddModulesByIndices({0});
-  std::vector<std::string> context_menu =
+  FlattenContextMenu context_menu =
       FlattenContextMenuWithGrouping(view_.GetContextMenuWithGrouping(0, {0}));
   ASSERT_FALSE(context_menu.empty());
 
   // Load Symbols
   {
-    const auto load_symbols_index =
-        std::find(context_menu.begin(), context_menu.end(), kMenuActionLoadSymbols) -
-        context_menu.begin();
-    ASSERT_LT(load_symbols_index, context_menu.size());
+    const int load_symbols_index = GetActionIndexOnMenu(context_menu, kMenuActionLoadSymbols);
+    EXPECT_TRUE(load_symbols_index != kInvalidActionIndex);
 
     EXPECT_CALL(app_, RetrieveModulesAndLoadSymbols)
         .Times(1)
         .WillOnce(testing::Return(orbit_base::Future<void>{}));
-    view_.OnContextMenu(std::string{kMenuActionLoadSymbols}, static_cast<int>(load_symbols_index),
-                        {0});
+    view_.OnContextMenu(std::string{kMenuActionLoadSymbols}, load_symbols_index, {0});
   }
 
   // Copy Selection

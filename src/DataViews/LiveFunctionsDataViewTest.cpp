@@ -34,7 +34,10 @@ using orbit_data_views::CheckCopySelectionIsInvoked;
 using orbit_data_views::CheckExportToCsvIsInvoked;
 using orbit_data_views::CheckSingleAction;
 using orbit_data_views::ContextMenuEntry;
+using orbit_data_views::FlattenContextMenu;
 using orbit_data_views::FlattenContextMenuWithGrouping;
+using orbit_data_views::GetActionIndexOnMenu;
+using orbit_data_views::kInvalidActionIndex;
 using orbit_data_views::kMenuActionAddIterator;
 using orbit_data_views::kMenuActionCopySelection;
 using orbit_data_views::kMenuActionDisableFrameTrack;
@@ -284,7 +287,7 @@ TEST_F(LiveFunctionsDataViewTest, ContextMenuEntriesArePresentCorrectly) {
   });
 
   auto verify_context_menu_action_availability = [&](std::vector<int> selected_indices) {
-    std::vector<std::string> context_menu =
+    FlattenContextMenu context_menu =
         FlattenContextMenuWithGrouping(view_.GetContextMenuWithGrouping(0, selected_indices));
 
     // Common actions should always be available.
@@ -374,7 +377,7 @@ TEST_F(LiveFunctionsDataViewTest, ContextMenuActionsAreInvoked) {
       .WillRepeatedly(testing::ReturnPointee(&frame_track_enabled));
 
   AddFunctionsByIndices({0});
-  std::vector<std::string> context_menu =
+  FlattenContextMenu context_menu =
       FlattenContextMenuWithGrouping(view_.GetContextMenuWithGrouping(0, {0}));
   ASSERT_FALSE(context_menu.empty());
 
@@ -446,104 +449,84 @@ TEST_F(LiveFunctionsDataViewTest, ContextMenuActionsAreInvoked) {
 
   // Go to Disassembly
   {
-    const auto disassembly_index =
-        std::find(context_menu.begin(), context_menu.end(), kMenuActionDisassembly) -
-        context_menu.begin();
-    ASSERT_LT(disassembly_index, context_menu.size());
+    const int disassembly_index = GetActionIndexOnMenu(context_menu, kMenuActionDisassembly);
+    EXPECT_TRUE(disassembly_index != kInvalidActionIndex);
 
     EXPECT_CALL(app_, Disassemble)
         .Times(1)
         .WillOnce([&](int32_t /*pid*/, const FunctionInfo& function) {
           EXPECT_EQ(function.name(), kNames[0]);
         });
-    view_.OnContextMenu(std::string{kMenuActionDisassembly}, static_cast<int>(disassembly_index),
-                        {0});
+    view_.OnContextMenu(std::string{kMenuActionDisassembly}, disassembly_index, {0});
   }
 
   // Go to Source code
   {
-    const auto source_code_index =
-        std::find(context_menu.begin(), context_menu.end(), kMenuActionSourceCode) -
-        context_menu.begin();
-    ASSERT_LT(source_code_index, context_menu.size());
+    const int source_code_index = GetActionIndexOnMenu(context_menu, kMenuActionDisassembly);
+    EXPECT_TRUE(source_code_index != kInvalidActionIndex);
 
     EXPECT_CALL(app_, ShowSourceCode).Times(1).WillOnce([&](const FunctionInfo& function) {
       EXPECT_EQ(function.name(), kNames[0]);
     });
-    view_.OnContextMenu(std::string{kMenuActionSourceCode}, static_cast<int>(source_code_index),
-                        {0});
+    view_.OnContextMenu(std::string{kMenuActionSourceCode}, source_code_index, {0});
   }
 
   // Jump to first
   {
-    const auto jump_to_first_index =
-        std::find(context_menu.begin(), context_menu.end(), kMenuActionJumpToFirst) -
-        context_menu.begin();
-    ASSERT_LT(jump_to_first_index, context_menu.size());
+    const int jump_to_first_index = GetActionIndexOnMenu(context_menu, kMenuActionJumpToFirst);
+    EXPECT_TRUE(jump_to_first_index != kInvalidActionIndex);
 
     EXPECT_CALL(app_, JumpToTimerAndZoom)
         .Times(1)
         .WillOnce([](uint64_t /*function_id*/, JumpToTimerMode selection_mode) {
           EXPECT_EQ(selection_mode, JumpToTimerMode::kFirst);
         });
-    view_.OnContextMenu(std::string{kMenuActionJumpToFirst}, static_cast<int>(jump_to_first_index),
-                        {0});
+    view_.OnContextMenu(std::string{kMenuActionJumpToFirst}, jump_to_first_index, {0});
   }
 
   // Jump to last
   {
-    const auto jump_to_last_index =
-        std::find(context_menu.begin(), context_menu.end(), kMenuActionJumpToLast) -
-        context_menu.begin();
-    ASSERT_LT(jump_to_last_index, context_menu.size());
+    const int jump_to_last_index = GetActionIndexOnMenu(context_menu, kMenuActionJumpToLast);
+    EXPECT_TRUE(jump_to_last_index != kInvalidActionIndex);
 
     EXPECT_CALL(app_, JumpToTimerAndZoom)
         .Times(1)
         .WillOnce([](uint64_t /*function_id*/, JumpToTimerMode selection_mode) {
           EXPECT_EQ(selection_mode, JumpToTimerMode::kLast);
         });
-    view_.OnContextMenu(std::string{kMenuActionJumpToLast}, static_cast<int>(jump_to_last_index),
-                        {0});
+    view_.OnContextMenu(std::string{kMenuActionJumpToLast}, jump_to_last_index, {0});
   }
 
   // Jump to min
   {
-    const auto jump_to_min_index =
-        std::find(context_menu.begin(), context_menu.end(), kMenuActionJumpToMin) -
-        context_menu.begin();
-    ASSERT_LT(jump_to_min_index, context_menu.size());
+    const int jump_to_min_index = GetActionIndexOnMenu(context_menu, kMenuActionJumpToMin);
+    EXPECT_TRUE(jump_to_min_index != kInvalidActionIndex);
 
     EXPECT_CALL(app_, JumpToTimerAndZoom)
         .Times(1)
         .WillOnce([](uint64_t /*function_id*/, JumpToTimerMode selection_mode) {
           EXPECT_EQ(selection_mode, JumpToTimerMode::kMin);
         });
-    view_.OnContextMenu(std::string{kMenuActionJumpToMin}, static_cast<int>(jump_to_min_index),
-                        {0});
+    view_.OnContextMenu(std::string{kMenuActionJumpToMin}, jump_to_min_index, {0});
   }
 
   // Jump to max
   {
-    const auto jump_to_max_index =
-        std::find(context_menu.begin(), context_menu.end(), kMenuActionJumpToMax) -
-        context_menu.begin();
-    ASSERT_LT(jump_to_max_index, context_menu.size());
+    const int jump_to_max_index = GetActionIndexOnMenu(context_menu, kMenuActionJumpToMax);
+    EXPECT_TRUE(jump_to_max_index != kInvalidActionIndex);
 
     EXPECT_CALL(app_, JumpToTimerAndZoom)
         .Times(1)
         .WillOnce([](uint64_t /*function_id*/, JumpToTimerMode selection_mode) {
           EXPECT_EQ(selection_mode, JumpToTimerMode::kMax);
         });
-    view_.OnContextMenu(std::string{kMenuActionJumpToMax}, static_cast<int>(jump_to_max_index),
-                        {0});
+    view_.OnContextMenu(std::string{kMenuActionJumpToMax}, jump_to_max_index, {0});
   }
 
   // Add iterator(s)
   {
-    const auto add_iterators_index =
-        std::find(context_menu.begin(), context_menu.end(), kMenuActionAddIterator) -
-        context_menu.begin();
-    ASSERT_LT(add_iterators_index, context_menu.size());
+    const int add_iterators_index = GetActionIndexOnMenu(context_menu, kMenuActionAddIterator);
+    EXPECT_TRUE(add_iterators_index != kInvalidActionIndex);
 
     EXPECT_CALL(live_functions_, AddIterator)
         .Times(1)
@@ -551,28 +534,25 @@ TEST_F(LiveFunctionsDataViewTest, ContextMenuActionsAreInvoked) {
           EXPECT_EQ(instrumented_function_id, kFunctionIds[0]);
           EXPECT_EQ(function->name(), kNames[0]);
         });
-    view_.OnContextMenu(std::string{kMenuActionAddIterator}, static_cast<int>(add_iterators_index),
-                        {0});
+    view_.OnContextMenu(std::string{kMenuActionAddIterator}, add_iterators_index, {0});
   }
 
   // Hook
   {
-    const auto hook_index = std::find(context_menu.begin(), context_menu.end(), kMenuActionSelect) -
-                            context_menu.begin();
-    ASSERT_LT(hook_index, context_menu.size());
+    const auto hook_index = GetActionIndexOnMenu(context_menu, kMenuActionSelect);
+    EXPECT_TRUE(hook_index != kInvalidActionIndex);
 
     EXPECT_CALL(app_, SelectFunction).Times(1).WillOnce([&](const FunctionInfo& function) {
       EXPECT_EQ(function.name(), kNames[0]);
     });
-    view_.OnContextMenu(std::string{kMenuActionSelect}, static_cast<int>(hook_index), {0});
+    view_.OnContextMenu(std::string{kMenuActionSelect}, hook_index, {0});
   }
 
   // Enable frame track(s)
   {
     const auto enable_frame_track_index =
-        std::find(context_menu.begin(), context_menu.end(), kMenuActionEnableFrameTrack) -
-        context_menu.begin();
-    ASSERT_LT(enable_frame_track_index, context_menu.size());
+        GetActionIndexOnMenu(context_menu, kMenuActionEnableFrameTrack);
+    EXPECT_TRUE(enable_frame_track_index != kInvalidActionIndex);
 
     EXPECT_CALL(app_, SelectFunction).Times(1).WillOnce([&](const FunctionInfo& function) {
       EXPECT_EQ(function.name(), kNames[0]);
@@ -581,8 +561,7 @@ TEST_F(LiveFunctionsDataViewTest, ContextMenuActionsAreInvoked) {
     EXPECT_CALL(app_, AddFrameTrack(testing::A<const orbit_client_protos::FunctionInfo&>()))
         .Times(1)
         .WillOnce([&](const FunctionInfo& function) { EXPECT_EQ(function.name(), kNames[0]); });
-    view_.OnContextMenu(std::string{kMenuActionEnableFrameTrack},
-                        static_cast<int>(enable_frame_track_index), {0});
+    view_.OnContextMenu(std::string{kMenuActionEnableFrameTrack}, enable_frame_track_index, {0});
   }
 
   function_selected = true;
@@ -593,10 +572,8 @@ TEST_F(LiveFunctionsDataViewTest, ContextMenuActionsAreInvoked) {
 
   // Unhook
   {
-    const auto unhook_index =
-        std::find(context_menu.begin(), context_menu.end(), kMenuActionUnselect) -
-        context_menu.begin();
-    ASSERT_LT(unhook_index, context_menu.size());
+    const auto unhook_index = GetActionIndexOnMenu(context_menu, kMenuActionUnselect);
+    EXPECT_TRUE(unhook_index != kInvalidActionIndex);
 
     EXPECT_CALL(app_, DeselectFunction).Times(1).WillOnce([&](const FunctionInfo& function) {
       EXPECT_EQ(function.name(), kNames[0]);
@@ -605,15 +582,14 @@ TEST_F(LiveFunctionsDataViewTest, ContextMenuActionsAreInvoked) {
     EXPECT_CALL(app_, RemoveFrameTrack(testing::An<const FunctionInfo&>()))
         .Times(1)
         .WillOnce([&](const FunctionInfo& function) { EXPECT_EQ(function.name(), kNames[0]); });
-    view_.OnContextMenu(std::string{kMenuActionUnselect}, static_cast<int>(unhook_index), {0});
+    view_.OnContextMenu(std::string{kMenuActionUnselect}, unhook_index, {0});
   }
 
   // Disable frame track(s)
   {
     const auto disable_frame_track_index =
-        std::find(context_menu.begin(), context_menu.end(), kMenuActionDisableFrameTrack) -
-        context_menu.begin();
-    ASSERT_LT(disable_frame_track_index, context_menu.size());
+        GetActionIndexOnMenu(context_menu, kMenuActionDisableFrameTrack);
+    EXPECT_TRUE(disable_frame_track_index != kInvalidActionIndex);
 
     EXPECT_CALL(app_, DisableFrameTrack).Times(1).WillOnce([&](const FunctionInfo& function) {
       EXPECT_EQ(function.name(), kNames[0]);
@@ -621,8 +597,7 @@ TEST_F(LiveFunctionsDataViewTest, ContextMenuActionsAreInvoked) {
     EXPECT_CALL(app_, RemoveFrameTrack(testing::An<const FunctionInfo&>()))
         .Times(1)
         .WillOnce([&](const FunctionInfo& function) { EXPECT_EQ(function.name(), kNames[0]); });
-    view_.OnContextMenu(std::string{kMenuActionDisableFrameTrack},
-                        static_cast<int>(disable_frame_track_index), {0});
+    view_.OnContextMenu(std::string{kMenuActionDisableFrameTrack}, disable_frame_track_index, {0});
   }
 }
 
