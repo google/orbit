@@ -54,7 +54,7 @@
    <item row="2" column="0">
     <widget class="QLabel" name="label">
      <property name="text">
-      <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Add folders and files to load symbols:&lt;/p&gt;&lt;p&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;Add Folder&lt;/span&gt; to load symbol files contained in that folder. Symbols will be loaded if the file name and build ID match the module and the file extension is “.so”, “.debug”, “.so.debug”, “.dll” or “.pdb”.&lt;/p&gt;&lt;p&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;Add File&lt;/span&gt; to load symbols from an individual file, even if file name, build ID or file extension don’t match the module. &lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+      <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Add folders and files to load symbols:&lt;/p&gt;&lt;p&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;Add Folder&lt;/span&gt; to load symbol files contained in that folder. Symbols will be loaded if the file name and build ID match the module and the file extension is “.so”, “.debug”, “.so.debug”, “.dll” or “.pdb”.&lt;/p&gt;&lt;p&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;Add File&lt;/span&gt; to load symbols from an individual file, even if file name or file extension don’t match the module. &lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
      </property>
      <property name="wordWrap">
       <bool>true</bool>

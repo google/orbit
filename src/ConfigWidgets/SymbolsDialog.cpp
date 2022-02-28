@@ -24,7 +24,7 @@
 #include "ui_SymbolsDialog.h"
 
 constexpr const char* kFileDialogSavedDirectoryKey = "symbols_file_dialog_saved_directory";
-constexpr const char* kModuleHeadlineLabel = "Add Symbols for <font color=\"red\">%1</font>";
+constexpr const char* kModuleHeadlineLabel = "Add Symbols for <font color=\"#E64646\">%1</font>";
 
 using orbit_client_data::ModuleData;
 using orbit_grpc_protos::ModuleInfo;
