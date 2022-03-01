@@ -4,7 +4,7 @@
 
 #include <absl/container/flat_hash_map.h>
 #include <absl/strings/str_format.h>
-#include <gmock/gmock-spec-builders.h>
+#include <gmock/gmock-matchers.h>
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
 
@@ -57,6 +57,7 @@ using orbit_grpc_protos::InstrumentedFunction;
 using orbit_grpc_protos::ModuleInfo;
 
 using ::testing::_;
+using ::testing::Pointee;
 using ::testing::Return;
 
 namespace {
@@ -101,26 +102,31 @@ constexpr std::array<uint64_t, kNumTimers> kStarts = {1000, 2345, 6789};
 constexpr std::array<uint64_t, kNumTimers> kEnds = {1500, 5432, 9876};
 constexpr std::array<uint64_t, kNumTimers> kThreadIndices = {
     0, 1, 1};  // kThreadIndices[i] is the index of the thread that timer i corresponds to.
-std::array<TimerInfo, kNumTimers> timers;
 
-std::vector<const TimerInfo*> GetTimersForInstrumentedFunctions() {
-  std::vector<const TimerInfo*> timers_for_instrumented_function;
+const std::array<TimerInfo, kNumTimers> kTimers = []() {
+  std::array<TimerInfo, kNumTimers> timers;
   for (size_t i = 0; i < kNumTimers; i++) {
     timers[i].set_start(kStarts[i]);
     timers[i].set_end(kEnds[i]);
     timers[i].set_thread_id(kThreadIds[kThreadIndices[i]]);
-    timers_for_instrumented_function.push_back(&timers[i]);
   }
-  return timers_for_instrumented_function;
-}
+  return timers;
+}();
 
-std::vector<uint64_t> GetDurationsForInstrumentedFunctions() {
+const std::vector<const TimerInfo*> kTimerPointers = []() {
+  std::vector<const TimerInfo*> pointers;
+  std::transform(std::begin(kTimers), std::end(kTimers), std::back_inserter(pointers),
+                 [](const TimerInfo& timer) { return &timer; });
+  return pointers;
+}();
+
+const std::vector<uint64_t> kDurations = []() {
   std::vector<uint64_t> durations;
-  auto timers = GetTimersForInstrumentedFunctions();
-  std::transform(std::begin(timers), std::end(timers), std::back_inserter(durations),
+  std::transform(std::begin(kTimerPointers), std::end(kTimerPointers),
+                 std::back_inserter(durations),
                  [](const TimerInfo* timer) { return timer->end() - timer->start(); });
   return durations;
-}
+}();
 
 std::string GetExpectedDisplayTime(uint64_t time_ns) {
   return orbit_display_formats::GetDisplayTime(absl::Nanoseconds(time_ns));
@@ -448,9 +454,8 @@ TEST_F(LiveFunctionsDataViewTest, ContextMenuActionsAreInvoked) {
     }
     EXPECT_CALL(app_, GetCaptureData).WillRepeatedly(testing::ReturnRef(*capture_data_));
 
-    auto timers_for_instrumented_function = GetTimersForInstrumentedFunctions();
     EXPECT_CALL(app_, GetAllTimersForHookedFunction)
-        .WillRepeatedly(testing::Return(timers_for_instrumented_function));
+        .WillRepeatedly(testing::Return(kTimerPointers));
 
     std::string expected_contents("\"Name\",\"Thread\",\"Start\",\"End\",\"Duration (ns)\"\r\n");
     for (size_t i = 0; i < kNumTimers; ++i) {
@@ -835,18 +840,13 @@ TEST_F(LiveFunctionsDataViewTest, OnRefreshWithNoIndicesResetsHistogram) {
   view_.OnRefresh({}, RefreshMode::kOther);
 }
 
-MATCHER(ExpectedDurations, "") {
-  auto durations = *arg;
-  return durations == GetDurationsForInstrumentedFunctions();
-}
-
 TEST_F(LiveFunctionsDataViewTest, HistogramIsProperlyUpdated) {
-  EXPECT_CALL(app_, GetAllTimersForHookedFunction(_))
-      .WillOnce(Return(GetTimersForInstrumentedFunctions()));
+  EXPECT_CALL(app_, GetAllTimersForHookedFunction(_)).WillOnce(Return(kTimerPointers));
   view_.OnDataChanged();
   AddFunctionsByIndices({0});
 
-  EXPECT_CALL(app_, ShowHistogram(ExpectedDurations(), kPrettyNames[0], kFunctionIds[0])).Times(3);
+  EXPECT_CALL(app_, ShowHistogram(testing::Pointee(kDurations), kPrettyNames[0], kFunctionIds[0]))
+      .Times(3);
 
   view_.OnRefresh({0}, RefreshMode::kOnFilter);
   view_.OnRefresh({0}, RefreshMode::kOther);
