@@ -462,7 +462,7 @@ void LiveFunctionsDataView::AddFunction(uint64_t function_id,
 }
 
 void LiveFunctionsDataView::OnDataChanged() {
-  app_->ShowHistogram(nullptr, "", orbit_grpc_protos::kInvalidFunctionId);
+  UpdateHistogramWithFunctionIds({});
   functions_.clear();
   indices_.clear();
   timer_durations_.clear();
