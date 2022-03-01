@@ -34,7 +34,20 @@ class [[nodiscard]] ErrorMessage final {
   ErrorMessage() = default;
   explicit ErrorMessage(std::string message) : message_(std::move(message)) {}
 
+  // This implicit conversion constructor helps migrating code from outcome::result<T> to
+  // ErrorMessageOr<T> because it allows OUTCOME_TRY to call functions that return outcome::result
+  // in functions that return ErrorMessageOr. NOLINTNEXTLINE
+  /* explicit(false) */ ErrorMessage(std::error_code ec) : message_(ec.message()) {}
+
   [[nodiscard]] const std::string& message() const { return message_; }
+
+  [[nodiscard]] friend bool operator==(const ErrorMessage& lhs, const ErrorMessage& rhs) {
+    return lhs.message_ == rhs.message_;
+  }
+
+  [[nodiscard]] friend bool operator!=(const ErrorMessage& lhs, const ErrorMessage& rhs) {
+    return !(lhs == rhs);
+  }
 
  private:
   std::string message_;
