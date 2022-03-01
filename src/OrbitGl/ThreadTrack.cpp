@@ -11,6 +11,7 @@
 #include <algorithm>
 #include <atomic>
 #include <cstdint>
+#include <memory>
 #include <optional>
 
 #include "ApiInterface/Orbit.h"
@@ -390,6 +391,10 @@ void ThreadTrack::OnTimer(const TimerInfo& timer_info) {
   return range->start <= duration && duration <= range->end;
 }
 
+class NotPickable : public Pickable {
+  virtual void OnPick(int /*x*/, int /*y*/) {}
+};
+
 // We minimize overdraw when drawing lines for small events by discarding events that would just
 // draw over an already drawn pixel line. When zoomed in enough that all events are drawn as boxes,
 // this has no effect. When zoomed  out, many events will be discarded quickly.
@@ -431,8 +436,8 @@ void ThreadTrack::DoUpdatePrimitives(Batcher& batcher, TextRenderer& text_render
         batcher.AddShadedBox(pos, size, draw_data.z, color, std::move(user_data));
         if (IsInRange(timer_info, app_->GetHighlightedFunctionId(),
                       draw_data.histogram_selection_range)) {
-          batcher.AddBoxBorder({pos, size, GlCanvas::kZValueBoxBorder},
-                               TimerTrack::kBoxBorderColor);
+          batcher.AddBoxBorder({pos, size, GlCanvas::kZValueBoxBorder}, TimerTrack::kBoxBorderColor,
+                               std::make_shared<NotPickable>());
         }
       } else {
         batcher.AddVerticalLine(pos, box_height, draw_data.z, color, std::move(user_data));
