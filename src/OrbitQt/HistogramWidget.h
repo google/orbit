@@ -17,6 +17,7 @@
 #include <string>
 #include <vector>
 
+#include "App.h"
 #include "Statistics/Histogram.h"
 
 // Implements a widget that draws a histogram.
@@ -24,6 +25,8 @@
 class HistogramWidget : public QWidget {
  public:
   using QWidget::QWidget;
+
+  void Initialize(OrbitApp* app) { app_ = app; }
 
   void UpdateData(const std::vector<uint64_t>* data, std::string function_name,
                   uint64_t function_id);
@@ -46,6 +49,8 @@ class HistogramWidget : public QWidget {
   [[nodiscard]] int WidthMargin() const;
   [[nodiscard]] int HeightMargin() const;
 
+  void PropagateSelectionRangeToApp() const;
+
   struct FunctionData {
     FunctionData(const std::vector<uint64_t>* data, std::string name, uint64_t id)
         : data(data), name(std::move(name)), id(id) {}
@@ -58,6 +63,7 @@ class HistogramWidget : public QWidget {
   std::optional<FunctionData> function_data_;
 
   std::stack<orbit_statistics::Histogram> histogram_stack_;
+  std::stack<orbit_statistics::HistogramSelectionRange> ranges_stack_;
 
   struct SelectedArea {
     int selection_start_pixel;
@@ -65,6 +71,8 @@ class HistogramWidget : public QWidget {
   };
 
   std::optional<SelectedArea> selected_area_;
+
+  OrbitApp* app_ = nullptr;
 };
 
 #endif  // ORBIT_HISTOGRAM_H_

@@ -17,6 +17,7 @@
 #include <cmath>
 #include <cstdint>
 #include <iterator>
+#include <optional>
 #include <string>
 #include <utility>
 
@@ -142,6 +143,8 @@ void HistogramWidget::UpdateData(const std::vector<uint64_t>* data, std::string 
   if (function_data_.has_value() && function_data_->id == function_id) return;
 
   histogram_stack_ = {};
+  ranges_stack_ = {};
+  PropagateSelectionRangeToApp();
 
   function_data_.emplace(data, std::move(function_name), function_id);
 
@@ -243,8 +246,12 @@ void HistogramWidget::mouseReleaseEvent(QMouseEvent* /* event*/) {
   if (selected_area_) {
     // if it wasn't a drag, but just a click, go one level of selections up
     if (selected_area_->selection_start_pixel == selected_area_->selection_current_pixel) {
-      if (IsSelectionActive()) histogram_stack_.pop();
+      if (IsSelectionActive()) {
+        histogram_stack_.pop();
+        ranges_stack_.pop();
+      }
       selected_area_.reset();
+      PropagateSelectionRangeToApp();
       update();
       return;
     }
@@ -268,11 +275,13 @@ void HistogramWidget::mouseReleaseEvent(QMouseEvent* /* event*/) {
       auto histogram = orbit_statistics::BuildHistogram(selection);
       if (histogram) {
         histogram_stack_.push(std::move(*histogram));
+        ranges_stack_.push({min, max});
       }
     }
     selected_area_.reset();
   }
 
+  PropagateSelectionRangeToApp();
   update();
 }
 
@@ -299,3 +308,11 @@ int HistogramWidget::Height() const { return size().height(); }
 int HistogramWidget::HeightMargin() const { return RoundToClosestInt(Height() * kRelativeMargin); }
 
 int HistogramWidget::WidthMargin() const { return RoundToClosestInt(Width() * kRelativeMargin); }
+
+void HistogramWidget::PropagateSelectionRangeToApp() const {
+  if (ranges_stack_.empty()) {
+    app_->SetHistogramSelectionRange(std::nullopt);
+    return;
+  }
+  app_->SetHistogramSelectionRange(ranges_stack_.top());
+}

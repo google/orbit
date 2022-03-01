@@ -31,6 +31,7 @@ using orbit_client_data::TimerData;
 using orbit_client_protos::TimerInfo;
 
 const Color TimerTrack::kHighlightColor = Color(100, 181, 246, 255);
+const Color TimerTrack::kBoxBorderColor = Color(255, 255, 255, 255);
 
 TimerTrack::TimerTrack(CaptureViewElement* parent,
                        const orbit_gl::TimelineInfoInterface* timeline_info,
@@ -363,13 +364,12 @@ float TimerTrack::GetHeightAboveTimers() const {
   return layout_->GetTrackTabHeight() + layout_->GetTrackContentTopMargin();
 }
 
-internal::DrawData TimerTrack::GetDrawData(uint64_t min_tick, uint64_t max_tick, float track_pos_x,
-                                           float track_width, Batcher* batcher,
-                                           const orbit_gl::TimelineInfoInterface* timeline_info,
-                                           orbit_gl::Viewport* viewport, bool is_collapsed,
-                                           const orbit_client_protos::TimerInfo* selected_timer,
-                                           uint64_t highlighted_function_id,
-                                           uint64_t highlighted_group_id) {
+internal::DrawData TimerTrack::GetDrawData(
+    uint64_t min_tick, uint64_t max_tick, float track_pos_x, float track_width, Batcher* batcher,
+    const orbit_gl::TimelineInfoInterface* timeline_info, orbit_gl::Viewport* viewport,
+    bool is_collapsed, const orbit_client_protos::TimerInfo* selected_timer,
+    uint64_t highlighted_function_id, uint64_t highlighted_group_id,
+    std::optional<orbit_statistics::HistogramSelectionRange> histogram_selection_range) {
   internal::DrawData draw_data{};
   draw_data.min_tick = min_tick;
   draw_data.max_tick = max_tick;
@@ -383,6 +383,7 @@ internal::DrawData TimerTrack::GetDrawData(uint64_t min_tick, uint64_t max_tick,
   draw_data.selected_timer = selected_timer;
   draw_data.highlighted_function_id = highlighted_function_id;
   draw_data.highlighted_group_id = highlighted_group_id;
+  draw_data.histogram_selection_range = histogram_selection_range;
 
   uint64_t time_window_ns = static_cast<uint64_t>(1000 * timeline_info->GetTimeWindowUs());
   draw_data.ns_per_pixel =

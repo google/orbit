@@ -135,6 +135,8 @@ class Batcher {
               std::unique_ptr<PickingUserData> user_data = nullptr);
   void AddBox(const Box& box, const Color& color, std::shared_ptr<Pickable> pickable);
 
+  void AddBoxBorder(const Box& box, const Color& color);
+
   void AddShadedBox(Vec2 pos, Vec2 size, float z, const Color& color);
   void AddShadedBox(Vec2 pos, Vec2 size, float z, const Color& color,
                     ShadingDirection shading_direction);

@@ -89,6 +89,16 @@ void Batcher::AddBox(const Box& box, const Color& color, std::shared_ptr<Pickabl
   AddBox(box, colors, picking_color, nullptr);
 }
 
+[[nodiscard]] static Vec2 Vec3ToVec2(const Vec3 v) { return {v[0], v[1]}; }
+
+void Batcher::AddBoxBorder(const Box& box, const Color& color) {
+  float z = box.vertices[0][2];
+  AddLine(Vec3ToVec2(box.vertices[0]), Vec3ToVec2(box.vertices[1]), z, color);
+  AddLine(Vec3ToVec2(box.vertices[1]), Vec3ToVec2(box.vertices[2]), z, color);
+  AddLine(Vec3ToVec2(box.vertices[2]), Vec3ToVec2(box.vertices[3]), z, color);
+  AddLine(Vec3ToVec2(box.vertices[3]), Vec3ToVec2(box.vertices[0]), z, color);
+}
+
 void Batcher::AddShadedBox(Vec2 pos, Vec2 size, float z, const Color& color) {
   AddShadedBox(pos, size, z, color, std::unique_ptr<PickingUserData>(),
                ShadingDirection::kLeftToRight);

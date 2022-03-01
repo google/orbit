@@ -13,6 +13,13 @@
 
 namespace orbit_statistics {
 
+// Represents the inclusive range the user has selected on the HistogramWidget.
+// Advise on better placement is welcome
+struct HistogramSelectionRange {
+  uint64_t start;
+  uint64_t end;
+};
+
 // A histogram of a dataset of `uint64_t` values with bins of equal width (with a possible
 // exception for the last one). The bins are:
 // [min, min + bin_width), [min + bin_width, min + 2*bin_width), ...

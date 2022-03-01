@@ -38,6 +38,7 @@ void OrbitLiveFunctions::Initialize(OrbitApp* app,
                                     orbit_metrics_uploader::MetricsUploader* metrics_uploader,
                                     SelectionType selection_type, FontType font_type,
                                     bool is_main_instance) {
+  ui->histogram_widget->Initialize(app);
   live_functions_.emplace(app, metrics_uploader);
   orbit_data_views::DataView* data_view = &live_functions_->GetDataView();
   ui->data_view_panel_->Initialize(data_view, selection_type, font_type, is_main_instance);

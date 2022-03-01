@@ -10,6 +10,7 @@
 
 #include <algorithm>
 #include <atomic>
+#include <cstdint>
 #include <optional>
 
 #include "ApiInterface/Orbit.h"
@@ -28,6 +29,7 @@
 #include "OrbitBase/ThreadUtils.h"
 #include "TextRenderer.h"
 #include "TimeGraphLayout.h"
+#include "TimerTrack.h"
 #include "TriangleToggle.h"
 #include "Viewport.h"
 
@@ -378,6 +380,16 @@ void ThreadTrack::OnTimer(const TimerInfo& timer_info) {
   return {world_timer_x, world_timer_width};
 }
 
+[[nodiscard]] static bool IsInRange(
+    const TimerInfo* timer, uint64_t selected_function_id,
+    const std::optional<orbit_statistics::HistogramSelectionRange>& range) {
+  if (!range.has_value() || timer->function_id() != selected_function_id) {
+    return false;
+  }
+  const uint64_t duration = timer->end() - timer->start();
+  return range->start <= duration && duration <= range->end;
+}
+
 // We minimize overdraw when drawing lines for small events by discarding events that would just
 // draw over an already drawn pixel line. When zoomed in enough that all events are drawn as boxes,
 // this has no effect. When zoomed  out, many events will be discarded quickly.
@@ -390,10 +402,10 @@ void ThreadTrack::DoUpdatePrimitives(Batcher& batcher, TextRenderer& text_render
   ORBIT_SCOPE_WITH_COLOR("ThreadTrack::DoUpdatePrimitives", kOrbitColorYellow);
   visible_timer_count_ = 0;
 
-  const internal::DrawData draw_data =
-      GetDrawData(min_tick, max_tick, GetPos()[0], GetWidth(), &batcher, timeline_info_, viewport_,
-                  collapse_toggle_->IsCollapsed(), app_->selected_timer(),
-                  app_->GetFunctionIdToHighlight(), app_->GetGroupIdToHighlight());
+  const internal::DrawData draw_data = GetDrawData(
+      min_tick, max_tick, GetPos()[0], GetWidth(), &batcher, timeline_info_, viewport_,
+      collapse_toggle_->IsCollapsed(), app_->selected_timer(), app_->GetFunctionIdToHighlight(),
+      app_->GetGroupIdToHighlight(), app_->GetHistogramSelectionRange());
 
   uint64_t resolution_in_pixels = draw_data.viewport->WorldToScreen({draw_data.track_width, 0})[0];
   for (uint32_t depth = 0; depth < GetDepth(); depth++) {
@@ -417,6 +429,11 @@ void ThreadTrack::DoUpdatePrimitives(Batcher& batcher, TextRenderer& text_render
           DrawTimesliceText(text_renderer, *timer_info, draw_data.track_start_x, pos, size);
         }
         batcher.AddShadedBox(pos, size, draw_data.z, color, std::move(user_data));
+        if (IsInRange(timer_info, app_->GetHighlightedFunctionId(),
+                      draw_data.histogram_selection_range)) {
+          batcher.AddBoxBorder({pos, size, GlCanvas::kZValueBoxBorder},
+                               TimerTrack::kBoxBorderColor);
+        }
       } else {
         batcher.AddVerticalLine(pos, box_height, draw_data.z, color, std::move(user_data));
       }
