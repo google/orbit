@@ -58,6 +58,7 @@ namespace {
 
 constexpr size_t kNumFunctions = 3;
 const std::array<uint64_t, kNumFunctions> kFunctionIds{11, 22, 33};
+constexpr uint64_t kNonDynamicallyInstrumentedFunctionId = 123456;
 const std::array<std::string, kNumFunctions> kNames{"foo", "main", "ffind"};
 const std::array<std::string, kNumFunctions> kPrettyNames{"void foo()", "main(int, char**)",
                                                           "ffind(int)"};
@@ -800,4 +801,11 @@ TEST_F(LiveFunctionsDataViewTest, ColumnSortingShowsRightResults) {
     // Sort by descending
     { sort_and_verify(column, orbit_data_views::DataView::SortingOrder::kDescending); }
   }
+}
+
+TEST_F(LiveFunctionsDataViewTest,
+       RemoveHistogramWhenUpdatedWithIdOfNonDynamicallyInstrumentedFunction) {
+  EXPECT_CALL(app_, ShowHistogram(nullptr, "", orbit_grpc_protos::kInvalidFunctionId)).Times(1);
+
+  view_.UpdateHistogramWithFunctionIds({kNonDynamicallyInstrumentedFunctionId});
 }
