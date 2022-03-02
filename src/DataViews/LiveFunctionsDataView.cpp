@@ -168,7 +168,7 @@ void LiveFunctionsDataView::UpdateHistogramWithIndices(
 
 void LiveFunctionsDataView::UpdateHistogramWithFunctionIds(
     const std::vector<uint64_t>& function_ids) {
-  if (function_ids.empty()) {
+  if (function_ids.empty() || !timer_durations_.contains(function_ids[0])) {
     app_->ShowHistogram(nullptr, "", orbit_grpc_protos::kInvalidFunctionId);
     return;
   }
