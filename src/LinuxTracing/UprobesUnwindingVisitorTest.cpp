@@ -29,7 +29,6 @@
 #include "LibunwindstackUnwinder.h"
 #include "MockTracerListener.h"
 #include "OrbitBase/Logging.h"
-#include "OrbitBase/MakeUniqueForOverwrite.h"
 #include "PerfEvent.h"
 #include "PerfEventRecords.h"
 #include "UprobesFunctionCallManager.h"
@@ -245,9 +244,9 @@ StackSamplePerfEvent BuildFakeStackSamplePerfEvent() {
           {
               .pid = 10,
               .tid = 11,
-              .regs = make_unique_for_overwrite<perf_event_sample_regs_user_all>(),
+              .regs = std::make_unique<perf_event_sample_regs_user_all>(),
               .dyn_size = kStackSize,
-              .data = make_unique_for_overwrite<char[]>(kStackSize),
+              .data = std::make_unique<char[]>(kStackSize),
           },
   };
 }
@@ -260,8 +259,8 @@ CallchainSamplePerfEvent BuildFakeCallchainSamplePerfEvent(const std::vector<uin
           {
               .pid = 10,
               .tid = 11,
-              .regs = make_unique_for_overwrite<perf_event_sample_regs_user_all>(),
-              .data = make_unique_for_overwrite<char[]>(kStackSize),
+              .regs = std::make_unique<perf_event_sample_regs_user_all>(),
+              .data = std::make_unique<char[]>(kStackSize),
           },
   };
   event.data.SetIps(callchain);
