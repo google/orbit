@@ -1284,15 +1284,22 @@ void OrbitMainWindow::RestoreDefaultTabLayout() {
 
 void OrbitMainWindow::OnTimerSelectionChanged(const orbit_client_protos::TimerInfo* timer_info) {
   std::optional<int> selected_row(std::nullopt);
+  const auto live_functions_controller = ui->liveFunctions->GetLiveFunctionsController();
+  orbit_data_views::LiveFunctionsDataView* live_functions_data_view = nullptr;
+  if (live_functions_controller.has_value()) {
+    live_functions_data_view = &live_functions_controller.value()->GetDataView();
+  }
+  bool is_live_function_data_view_initialized = live_functions_data_view != nullptr;
   if (timer_info) {
-    uint64_t function_id = timer_info->function_id();
-    const auto live_functions_controller = ui->liveFunctions->GetLiveFunctionsController();
-    ORBIT_CHECK(live_functions_controller.has_value());
-    orbit_data_views::LiveFunctionsDataView& live_functions_data_view =
-        live_functions_controller.value()->GetDataView();
-    selected_row = live_functions_data_view.GetRowFromFunctionId(function_id);
-    live_functions_data_view.UpdateSelectedFunctionId();
-    live_functions_data_view.UpdateHistogramWithFunctionIds({function_id});
+    ORBIT_CHECK(is_live_function_data_view_initialized);
+    const uint64_t function_id = timer_info->function_id();
+    selected_row = live_functions_data_view->GetRowFromFunctionId(function_id);
+    live_functions_data_view->UpdateSelectedFunctionId();
+    live_functions_data_view->UpdateHistogramWithFunctionIds({function_id});
+  } else {
+    if (is_live_function_data_view_initialized) {
+      live_functions_data_view->UpdateHistogramWithFunctionIds({});
+    }
   }
   ui->liveFunctions->OnRowSelected(selected_row);
 }
