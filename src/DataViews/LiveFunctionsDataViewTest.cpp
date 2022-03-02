@@ -63,6 +63,7 @@ namespace {
 
 constexpr size_t kNumFunctions = 3;
 const std::array<uint64_t, kNumFunctions> kFunctionIds{11, 22, 33};
+constexpr uint64_t kNonDynamicallyInstrumentedFunctionId = 123456;
 const std::array<std::string, kNumFunctions> kNames{"foo", "main", "ffind"};
 const std::array<std::string, kNumFunctions> kPrettyNames{"void foo()", "main(int, char**)",
                                                           "ffind(int)"};
@@ -850,4 +851,11 @@ TEST_F(LiveFunctionsDataViewTest, HistogramIsProperlyUpdated) {
   view_.OnRefresh({0}, RefreshMode::kOnFilter);
   view_.OnRefresh({0}, RefreshMode::kOther);
   view_.UpdateHistogramWithFunctionIds({kFunctionIds[0]});
+}
+
+TEST_F(LiveFunctionsDataViewTest,
+       RemoveHistogramWhenUpdatedWithIdOfNonDynamicallyInstrumentedFunction) {
+  EXPECT_CALL(app_, ShowHistogram(nullptr, "", orbit_grpc_protos::kInvalidFunctionId)).Times(1);
+
+  view_.UpdateHistogramWithFunctionIds({kNonDynamicallyInstrumentedFunctionId});
 }
