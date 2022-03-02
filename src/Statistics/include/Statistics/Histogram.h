@@ -16,8 +16,8 @@ namespace orbit_statistics {
 // Represents the inclusive range the user has selected on the HistogramWidget.
 // Advise on better placement is welcome
 struct HistogramSelectionRange {
-  uint64_t start;
-  uint64_t end;
+  uint64_t min;
+  uint64_t max;
 };
 
 // A histogram of a dataset of `uint64_t` values with bins of equal width (with a possible

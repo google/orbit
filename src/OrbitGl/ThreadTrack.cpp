@@ -388,7 +388,7 @@ void ThreadTrack::OnTimer(const TimerInfo& timer_info) {
     return false;
   }
   const uint64_t duration = timer->end() - timer->start();
-  return range->start <= duration && duration <= range->end;
+  return range->min <= duration && duration <= range->max;
 }
 
 class NotPickable : public Pickable {

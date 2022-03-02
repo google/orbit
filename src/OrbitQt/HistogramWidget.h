@@ -26,7 +26,7 @@ class HistogramWidget : public QWidget {
  public:
   using QWidget::QWidget;
 
-  void Initialize(OrbitApp* app) { app_ = app; }
+  void Initialize(OrbitApp* app);
 
   void UpdateData(const std::vector<uint64_t>* data, std::string function_name,
                   uint64_t function_id);

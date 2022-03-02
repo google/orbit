@@ -24,6 +24,7 @@
 #include "ApiInterface/Orbit.h"
 #include "DisplayFormats/DisplayFormats.h"
 #include "Introspection/Introspection.h"
+#include "OrbitBase/Logging.h"
 #include "Statistics/Histogram.h"
 
 constexpr double kRelativeMargin = 0.1;
@@ -135,6 +136,11 @@ static void DrawHistogram(QPainter& painter, const QPoint& axes_intersection,
       painter.fillRect(bar, Qt::cyan);
     }
   }
+}
+
+void HistogramWidget::Initialize(OrbitApp* app) {
+  ORBIT_CHECK(app != nullptr);
+  app_ = app;
 }
 
 void HistogramWidget::UpdateData(const std::vector<uint64_t>* data, std::string function_name,
@@ -310,6 +316,7 @@ int HistogramWidget::HeightMargin() const { return RoundToClosestInt(Height() * 
 int HistogramWidget::WidthMargin() const { return RoundToClosestInt(Width() * kRelativeMargin); }
 
 void HistogramWidget::PropagateSelectionRangeToApp() const {
+  ORBIT_CHECK(app_ != nullptr);
   if (ranges_stack_.empty()) {
     app_->SetHistogramSelectionRange(std::nullopt);
     return;
