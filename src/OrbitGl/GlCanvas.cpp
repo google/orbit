@@ -27,7 +27,6 @@ float GlCanvas::kZValueTrack = 0.01f;
 float GlCanvas::kZValueIncompleteDataOverlayPicking = 0.02f;
 float GlCanvas::kZValueEventBar = 0.03f;
 float GlCanvas::kZValueBox = 0.05f;
-float GlCanvas::kZValueBoxBorder = 0.07f;
 float GlCanvas::kZValueEvent = 0.07f;
 float GlCanvas::kZValueTrackText = 0.08f;
 float GlCanvas::kZValueTrackLabel = 0.09f;

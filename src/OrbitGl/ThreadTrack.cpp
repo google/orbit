@@ -381,7 +381,7 @@ void ThreadTrack::OnTimer(const TimerInfo& timer_info) {
   return {world_timer_x, world_timer_width};
 }
 
-[[nodiscard]] static bool IsInRange(
+[[nodiscard]] static bool ShouldHaveBorder(
     const TimerInfo* timer, uint64_t selected_function_id,
     const std::optional<orbit_statistics::HistogramSelectionRange>& range) {
   if (!range.has_value() || timer->function_id() != selected_function_id) {
@@ -394,6 +394,17 @@ void ThreadTrack::OnTimer(const TimerInfo& timer_info) {
 class NotPickable : public Pickable {
   virtual void OnPick(int /*x*/, int /*y*/) {}
 };
+
+[[nodiscard]] static Vec2 Vec3ToVec2(const Vec3 v) { return {v[0], v[1]}; }
+
+static void AddBoxBorder(Batcher& batcher, const Box& box, const Color& color,
+                         std::shared_ptr<Pickable> pickable) {
+  float z = box.vertices[0][2];
+  batcher.AddLine(Vec3ToVec2(box.vertices[0]), Vec3ToVec2(box.vertices[1]), z, color, pickable);
+  batcher.AddLine(Vec3ToVec2(box.vertices[1]), Vec3ToVec2(box.vertices[2]), z, color, pickable);
+  batcher.AddLine(Vec3ToVec2(box.vertices[2]), Vec3ToVec2(box.vertices[3]), z, color, pickable);
+  batcher.AddLine(Vec3ToVec2(box.vertices[3]), Vec3ToVec2(box.vertices[0]), z, color, pickable);
+}
 
 // We minimize overdraw when drawing lines for small events by discarding events that would just
 // draw over an already drawn pixel line. When zoomed in enough that all events are drawn as boxes,
@@ -434,10 +445,10 @@ void ThreadTrack::DoUpdatePrimitives(Batcher& batcher, TextRenderer& text_render
           DrawTimesliceText(text_renderer, *timer_info, draw_data.track_start_x, pos, size);
         }
         batcher.AddShadedBox(pos, size, draw_data.z, color, std::move(user_data));
-        if (IsInRange(timer_info, app_->GetHighlightedFunctionId(),
-                      draw_data.histogram_selection_range)) {
-          batcher.AddBoxBorder({pos, size, GlCanvas::kZValueBoxBorder}, TimerTrack::kBoxBorderColor,
-                               std::make_shared<NotPickable>());
+        if (ShouldHaveBorder(timer_info, app_->GetHighlightedFunctionId(),
+                             draw_data.histogram_selection_range)) {
+          AddBoxBorder(batcher, {pos, size, GlCanvas::kZValueBox}, TimerTrack::kBoxBorderColor,
+                       std::make_shared<NotPickable>());
         }
       } else {
         batcher.AddVerticalLine(pos, box_height, draw_data.z, color, std::move(user_data));
