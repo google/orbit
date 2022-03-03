@@ -381,10 +381,11 @@ void ThreadTrack::OnTimer(const TimerInfo& timer_info) {
   return {world_timer_x, world_timer_width};
 }
 
-[[nodiscard]] static bool ShouldHaveBorder(
-    const TimerInfo* timer, uint64_t selected_function_id,
-    const std::optional<orbit_statistics::HistogramSelectionRange>& range) {
-  if (!range.has_value() || timer->function_id() != selected_function_id) {
+bool ThreadTrack::ShouldHaveBorder(
+    const TimerInfo* timer, const std::optional<orbit_statistics::HistogramSelectionRange>& range,
+    float width) {
+  if (!range.has_value() || width < 4.0 ||
+      timer->function_id() != app_->GetHighlightedFunctionId()) {
     return false;
   }
   const uint64_t duration = timer->end() - timer->start();
@@ -445,8 +446,7 @@ void ThreadTrack::DoUpdatePrimitives(Batcher& batcher, TextRenderer& text_render
           DrawTimesliceText(text_renderer, *timer_info, draw_data.track_start_x, pos, size);
         }
         batcher.AddShadedBox(pos, size, draw_data.z, color, std::move(user_data));
-        if (ShouldHaveBorder(timer_info, app_->GetHighlightedFunctionId(),
-                             draw_data.histogram_selection_range)) {
+        if (ShouldHaveBorder(timer_info, draw_data.histogram_selection_range, size[0])) {
           AddBoxBorder(batcher, {pos, size, GlCanvas::kZValueBox}, TimerTrack::kBoxBorderColor,
                        std::make_shared<NotPickable>());
         }
