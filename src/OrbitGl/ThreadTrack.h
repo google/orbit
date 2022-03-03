@@ -113,9 +113,14 @@ class ThreadTrack final : public TimerTrack {
   orbit_client_data::ThreadTrackDataProvider* thread_track_data_provider_;
 
  private:
-  bool ShouldHaveBorder(const orbit_client_protos::TimerInfo* timer,
-                        const std::optional<orbit_statistics::HistogramSelectionRange>& range,
-                        float width);
+  [[nodiscard]] bool ShouldHaveBorder(
+      const orbit_client_protos::TimerInfo* timer,
+      const std::optional<orbit_statistics::HistogramSelectionRange>& range, float width) const;
+
+  void AddBorderLine(const Vec2& from, const Vec2& to, float z, const Color& color,
+                     Batcher& batcher, const orbit_client_protos::TimerInfo& timer_info);
+  void AddBoxBorder(Batcher& batcher, const Box& box, const Color& color,
+                    const orbit_client_protos::TimerInfo& timer_info);
 };
 
 #endif  // ORBIT_GL_THREAD_TRACK_H_

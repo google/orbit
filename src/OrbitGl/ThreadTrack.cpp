@@ -381,10 +381,12 @@ void ThreadTrack::OnTimer(const TimerInfo& timer_info) {
   return {world_timer_x, world_timer_width};
 }
 
-bool ThreadTrack::ShouldHaveBorder(
+constexpr float kMinimalWidthToHaveBorder = 4.0;
+
+[[nodiscard]] bool ThreadTrack::ShouldHaveBorder(
     const TimerInfo* timer, const std::optional<orbit_statistics::HistogramSelectionRange>& range,
-    float width) {
-  if (!range.has_value() || width < 4.0 ||
+    float width) const {
+  if (!range.has_value() || width < kMinimalWidthToHaveBorder ||
       timer->function_id() != app_->GetHighlightedFunctionId()) {
     return false;
   }
@@ -392,19 +394,26 @@ bool ThreadTrack::ShouldHaveBorder(
   return range->min <= duration && duration <= range->max;
 }
 
-class NotPickable : public Pickable {
-  virtual void OnPick(int /*x*/, int /*y*/) {}
-};
-
 [[nodiscard]] static Vec2 Vec3ToVec2(const Vec3 v) { return {v[0], v[1]}; }
 
-static void AddBoxBorder(Batcher& batcher, const Box& box, const Color& color,
-                         std::shared_ptr<Pickable> pickable) {
+void ThreadTrack::AddBorderLine(const Vec2& from, const Vec2& to, float z, const Color& color,
+                                Batcher& batcher,
+                                const orbit_client_protos::TimerInfo& timer_info) {
+  auto user_data = CreatePickingUserData(batcher, timer_info);
+  batcher.AddLine(from, to, z, color, std::move(user_data));
+}
+
+void ThreadTrack::AddBoxBorder(Batcher& batcher, const Box& box, const Color& color,
+                               const orbit_client_protos::TimerInfo& timer_info) {
   float z = box.vertices[0][2];
-  batcher.AddLine(Vec3ToVec2(box.vertices[0]), Vec3ToVec2(box.vertices[1]), z, color, pickable);
-  batcher.AddLine(Vec3ToVec2(box.vertices[1]), Vec3ToVec2(box.vertices[2]), z, color, pickable);
-  batcher.AddLine(Vec3ToVec2(box.vertices[2]), Vec3ToVec2(box.vertices[3]), z, color, pickable);
-  batcher.AddLine(Vec3ToVec2(box.vertices[3]), Vec3ToVec2(box.vertices[0]), z, color, pickable);
+  AddBorderLine(Vec3ToVec2(box.vertices[0]), Vec3ToVec2(box.vertices[1]), z, color, batcher,
+                timer_info);
+  AddBorderLine(Vec3ToVec2(box.vertices[1]), Vec3ToVec2(box.vertices[2]), z, color, batcher,
+                timer_info);
+  AddBorderLine(Vec3ToVec2(box.vertices[2]), Vec3ToVec2(box.vertices[3]), z, color, batcher,
+                timer_info);
+  AddBorderLine(Vec3ToVec2(box.vertices[3]), Vec3ToVec2(box.vertices[0]), z, color, batcher,
+                timer_info);
 }
 
 // We minimize overdraw when drawing lines for small events by discarding events that would just
@@ -448,7 +457,7 @@ void ThreadTrack::DoUpdatePrimitives(Batcher& batcher, TextRenderer& text_render
         batcher.AddShadedBox(pos, size, draw_data.z, color, std::move(user_data));
         if (ShouldHaveBorder(timer_info, draw_data.histogram_selection_range, size[0])) {
           AddBoxBorder(batcher, {pos, size, GlCanvas::kZValueBox}, TimerTrack::kBoxBorderColor,
-                       std::make_shared<NotPickable>());
+                       *timer_info);
         }
       } else {
         batcher.AddVerticalLine(pos, box_height, draw_data.z, color, std::move(user_data));

@@ -512,7 +512,7 @@ class OrbitApp final : public DataViewFactory,
   GetConfidenceIntervalEstimator() const override;
 
   void SetHistogramSelectionRange(std::optional<orbit_statistics::HistogramSelectionRange> range) {
-    histogram_selection_range_ = range;
+    histogram_selection_range_ = std::move(range);
     RequestUpdatePrimitives();
   }
 
