@@ -151,7 +151,7 @@ void ThreadUnwinder::UnwindWithSignal(int signal, pid_t tid, std::unique_ptr<Reg
                                       const std::vector<std::string>* initial_map_names_to_skip,
                                       const std::vector<std::string>* map_suffixes_to_ignore) {
   ClearErrors();
-  if (tid == pid_) {
+  if (tid == static_cast<pid_t>(android::base::GetThreadId())) {
     last_error_.code = ERROR_UNSUPPORTED;
     return;
   }

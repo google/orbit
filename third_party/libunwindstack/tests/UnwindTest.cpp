@@ -570,6 +570,28 @@ TEST_F(UnwindTest, thread_unwind_cur_pid) {
   EXPECT_EQ(ERROR_UNSUPPORTED, unwinder.LastErrorCode());
 }
 
+TEST_F(UnwindTest, thread_unwind_cur_thread) {
+  std::thread thread([]() {
+    ThreadUnwinder unwinder(512);
+    ASSERT_TRUE(unwinder.Init());
+    unwinder.UnwindWithSignal(SIGRTMIN, android::base::GetThreadId());
+    EXPECT_EQ(0U, unwinder.NumFrames());
+    EXPECT_EQ(ERROR_UNSUPPORTED, unwinder.LastErrorCode());
+  });
+  thread.join();
+}
+
+TEST_F(UnwindTest, thread_unwind_cur_pid_from_thread) {
+  std::thread thread([]() {
+    ThreadUnwinder unwinder(512);
+    ASSERT_TRUE(unwinder.Init());
+    unwinder.UnwindWithSignal(SIGRTMIN, getpid());
+    EXPECT_NE(0U, unwinder.NumFrames());
+    EXPECT_NE(ERROR_UNSUPPORTED, unwinder.LastErrorCode());
+  });
+  thread.join();
+}
+
 static std::thread* CreateUnwindThread(std::atomic_int& tid, ThreadUnwinder& unwinder,
                                        std::atomic_bool& start_unwinding,
                                        std::atomic_int& unwinders) {
