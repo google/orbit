@@ -45,6 +45,9 @@ class MainWindowInterface {
   virtual void ShowHistogram(const std::vector<uint64_t>* data, const std::string& function_name,
                              uint64_t function_id) = 0;
 
+  [[nodiscard]] virtual std::optional<orbit_statistics::HistogramSelectionRange>
+  GetHistogramSelectionRange() const = 0;
+
   enum class SymbolErrorHandlingResult { kReloadRequired, kSymbolLoadingCancelled };
   virtual SymbolErrorHandlingResult HandleSymbolError(
       const ErrorMessage& error, const orbit_client_data::ModuleData* module) = 0;

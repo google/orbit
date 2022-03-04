@@ -138,11 +138,6 @@ static void DrawHistogram(QPainter& painter, const QPoint& axes_intersection,
   }
 }
 
-void HistogramWidget::Initialize(OrbitApp* app) {
-  ORBIT_CHECK(app != nullptr);
-  app_ = app;
-}
-
 void HistogramWidget::UpdateData(const std::vector<uint64_t>* data, std::string function_name,
                                  uint64_t function_id) {
   ORBIT_SCOPE_FUNCTION;
@@ -150,7 +145,7 @@ void HistogramWidget::UpdateData(const std::vector<uint64_t>* data, std::string 
 
   histogram_stack_ = {};
   ranges_stack_ = {};
-  PropagateSelectionRangeToApp();
+  EmitSignalSelectionRangeChange();
 
   function_data_.emplace(data, std::move(function_name), function_id);
 
@@ -257,7 +252,7 @@ void HistogramWidget::mouseReleaseEvent(QMouseEvent* /* event*/) {
         ranges_stack_.pop();
       }
       selected_area_.reset();
-      PropagateSelectionRangeToApp();
+      EmitSignalSelectionRangeChange();
       update();
       return;
     }
@@ -287,7 +282,7 @@ void HistogramWidget::mouseReleaseEvent(QMouseEvent* /* event*/) {
     selected_area_.reset();
   }
 
-  PropagateSelectionRangeToApp();
+  EmitSignalSelectionRangeChange();
   update();
 }
 
@@ -315,11 +310,12 @@ int HistogramWidget::HeightMargin() const { return RoundToClosestInt(Height() * 
 
 int HistogramWidget::WidthMargin() const { return RoundToClosestInt(Width() * kRelativeMargin); }
 
-void HistogramWidget::PropagateSelectionRangeToApp() const {
-  ORBIT_CHECK(app_ != nullptr);
+[[nodiscard]] std::optional<orbit_statistics::HistogramSelectionRange>
+HistogramWidget::GetSelectionRange() const {
   if (ranges_stack_.empty()) {
-    app_->SetHistogramSelectionRange(std::nullopt);
-    return;
+    return std::nullopt;
   }
-  app_->SetHistogramSelectionRange(ranges_stack_.top());
+  return ranges_stack_.top();
 }
+
+void HistogramWidget::EmitSignalSelectionRangeChange() const { emit SignalSelectionRangeChange(); }

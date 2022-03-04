@@ -511,14 +511,11 @@ class OrbitApp final : public DataViewFactory,
   [[nodiscard]] const orbit_statistics::BinomialConfidenceIntervalEstimator&
   GetConfidenceIntervalEstimator() const override;
 
-  void SetHistogramSelectionRange(std::optional<orbit_statistics::HistogramSelectionRange> range) {
-    histogram_selection_range_ = std::move(range);
-    RequestUpdatePrimitives();
-  }
+  void OnHistogramSelectionRangeChange() { RequestUpdatePrimitives(); }
 
   [[nodiscard]] std::optional<orbit_statistics::HistogramSelectionRange>
   GetHistogramSelectionRange() const {
-    return histogram_selection_range_;
+    return main_window_->GetHistogramSelectionRange();
   }
 
  private:
@@ -659,8 +656,6 @@ class OrbitApp final : public DataViewFactory,
   orbit_capture_file_info::Manager capture_file_info_manager_{};
 
   const orbit_statistics::WilsonBinomialConfidenceIntervalEstimator confidence_interval_estimator_;
-
-  std::optional<orbit_statistics::HistogramSelectionRange> histogram_selection_range_;
 };
 
 #endif  // ORBIT_GL_APP_H_

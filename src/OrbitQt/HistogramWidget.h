@@ -23,13 +23,18 @@
 // Implements a widget that draws a histogram.
 // If the histogram is empty, draws a textual suggestion to select a function.
 class HistogramWidget : public QWidget {
+  Q_OBJECT
+
  public:
   using QWidget::QWidget;
 
-  void Initialize(OrbitApp* app);
-
   void UpdateData(const std::vector<uint64_t>* data, std::string function_name,
                   uint64_t function_id);
+
+  [[nodiscard]] std::optional<orbit_statistics::HistogramSelectionRange> GetSelectionRange() const;
+
+ signals:
+  void SignalSelectionRangeChange() const;
 
  protected:
   void paintEvent(QPaintEvent* /*event*/) override;
@@ -49,7 +54,7 @@ class HistogramWidget : public QWidget {
   [[nodiscard]] int WidthMargin() const;
   [[nodiscard]] int HeightMargin() const;
 
-  void PropagateSelectionRangeToApp() const;
+  void EmitSignalSelectionRangeChange() const;
 
   struct FunctionData {
     FunctionData(const std::vector<uint64_t>* data, std::string name, uint64_t id)
@@ -71,8 +76,6 @@ class HistogramWidget : public QWidget {
   };
 
   std::optional<SelectedArea> selected_area_;
-
-  OrbitApp* app_ = nullptr;
 };
 
 #endif  // ORBIT_HISTOGRAM_H_

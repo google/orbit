@@ -119,6 +119,9 @@ class OrbitMainWindow final : public QMainWindow, public orbit_gl::MainWindowInt
   void ShowHistogram(const std::vector<uint64_t>* data, const std::string& function_name,
                      uint64_t function_id) override;
 
+  [[nodiscard]] std::optional<orbit_statistics::HistogramSelectionRange>
+  GetHistogramSelectionRange() const override;
+
  protected:
   void closeEvent(QCloseEvent* event) override;
 

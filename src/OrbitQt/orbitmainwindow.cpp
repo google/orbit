@@ -408,6 +408,9 @@ void OrbitMainWindow::SetupMainWindow() {
   connect(ui->liveFunctions->GetFilterLineEdit(), &QLineEdit::textChanged, this,
           [this](const QString& text) { OnLiveTabFunctionsFilterTextChanged(text); });
 
+  connect(ui->liveFunctions, &OrbitLiveFunctions::SignalSelectionRangeChange, this,
+          [this]() { app_->OnHistogramSelectionRangeChange(); });
+
   ui->topDownWidget->Initialize(app_.get());
   ui->selectionTopDownWidget->Initialize(app_.get());
   ui->bottomUpWidget->Initialize(app_.get());
@@ -1634,6 +1637,11 @@ void OrbitMainWindow::ShowWarningWithDontShowAgainCheckboxIfNeeded(
 void OrbitMainWindow::ShowHistogram(const std::vector<uint64_t>* data,
                                     const std::string& function_name, uint64_t function_id) {
   ui->liveFunctions->ShowHistogram(data, function_name, function_id);
+}
+
+[[nodiscard]] std::optional<orbit_statistics::HistogramSelectionRange>
+OrbitMainWindow::GetHistogramSelectionRange() const {
+  return ui->liveFunctions->GetHistogramSelectionRange();
 }
 
 static std::optional<QString> TryApplyMappingAndReadSourceFile(
