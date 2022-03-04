@@ -60,10 +60,7 @@ ErrorMessageOr<std::unique_ptr<SymbolsFile>> CreateSymbolsFile(
 void DemangleSymbols(std::vector<FunctionSymbol>& function_symbols) {
   ORBIT_SCOPE(absl::StrFormat("DemangleSymbols (%u)", function_symbols.size()).c_str());
   for (FunctionSymbol& function_symbol : function_symbols) {
-    if (function_symbol.demangled_name.empty()) {
-      function_symbol.demangled_name =
-          absl::StrCat(llvm::demangle(function_symbol.name), function_symbol.argument_list);
-    }
+    function_symbol.demangled_name = llvm::demangle(function_symbol.mangled_name);
   }
 }
 
@@ -73,8 +70,6 @@ void DemangleSymbols(std::vector<FunctionSymbol>& function_symbols) {
 ErrorMessageOr<orbit_grpc_protos::ModuleSymbols> SymbolsFile::LoadDebugSymbols() {
   ORBIT_SCOPE(absl::StrFormat("LoadDebugSymbols (%s)", GetFilePath().string()).c_str());
   OUTCOME_TRY(DebugSymbols debug_symbols, LoadRawDebugSymbols());
-
-  DemangleSymbols(debug_symbols.function_symbols);
 
   ORBIT_SCOPE("ModuleSymbols protobuf creation");
   orbit_grpc_protos::ModuleSymbols module_symbols;
@@ -87,7 +82,7 @@ ErrorMessageOr<orbit_grpc_protos::ModuleSymbols> SymbolsFile::LoadDebugSymbols()
 
   for (FunctionSymbol& function_symbol : function_symbols) {
     orbit_grpc_protos::SymbolInfo* symbol_info = module_symbols.add_symbol_infos();
-    symbol_info->set_name(std::move(function_symbol.name));
+    symbol_info->set_name(std::move(function_symbol.mangled_name));
     symbol_info->set_demangled_name(std::move(function_symbol.demangled_name));
     symbol_info->set_address(function_symbol.address);
     symbol_info->set_size(function_symbol.size);

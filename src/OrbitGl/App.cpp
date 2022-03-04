@@ -88,6 +88,10 @@
 #include "Symbols/SymbolHelper.h"
 #include "TimeGraph.h"
 
+#if WIN32
+#include "WindowsUtils/FindDebugSymbols.h"
+#endif
+
 using orbit_base::Future;
 
 using orbit_capture_client::CaptureClient;
@@ -1849,6 +1853,16 @@ static ErrorMessageOr<std::filesystem::path> FindModuleLocallyImpl(
                         module_data.file_path()));
   }
 
+#if WIN32
+  ErrorMessageOr<std::filesystem::path> symbols_path = orbit_windows_utils::FindDebugSymbols(
+      module_data.file_path(), /*additional_search_directories=*/{});
+
+  if (symbols_path.has_value()) {
+    ORBIT_LOG("Found symbols for module \"%s\" locally. Symbols filename: \"%s\"",
+              module_data.file_path(), symbols_path.value().string());
+    return symbols_path.value();
+  }
+#else
   std::string error_message;
   {
     std::vector<fs::path> search_paths = GetAllSymbolPaths();
@@ -1887,6 +1901,7 @@ static ErrorMessageOr<std::filesystem::path> FindModuleLocallyImpl(
     error_message += "\n* Symbols are not included in module file: " +
                      symbols_included_in_module.error().message();
   }
+#endif
 
   error_message = absl::StrFormat("Did not find local symbols for module \"%s\": %s",
                                   module_data.file_path(), error_message);

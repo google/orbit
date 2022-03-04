@@ -129,7 +129,7 @@ ErrorMessageOr<void> PdbFileDia::LoadProcSymbols(const enum SymTagEnum symbol_ta
     SysFreeString(function_name);
 
     FunctionSymbol& function_symbol = debug_symbols.function_symbols.emplace_back();
-    function_symbol.name = std::string(name.begin(), name.end());
+    function_symbol.demangled_name = std::string(name.begin(), name.end());
 
     DWORD relative_virtual_address = 0;
     if (dia_symbol->get_relativeVirtualAddress(&relative_virtual_address) != S_OK) continue;

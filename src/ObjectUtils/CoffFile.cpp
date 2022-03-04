@@ -85,7 +85,7 @@ static void FillDebugSymbolsFromDWARF(llvm::DWARFContext* dwarf_context,
         ORBIT_CHECK(!name.empty());
         FunctionSymbol& function_symbol = debug_symbols->function_symbols.emplace_back();
         function_symbol.mangled_name = name;
-        function_symbol.rva = low_pc;
+        function_symbol.address = low_pc;
         function_symbol.size = high_pc - low_pc;
       }
     }
@@ -109,6 +109,8 @@ ErrorMessageOr<DebugSymbols> CoffFileImpl::LoadRawDebugSymbols() {
         "Unable to load symbols from object file, not even a single symbol of "
         "type function found.");
   }
+
+  DemangleSymbols(debug_symbols.function_symbols);
   return debug_symbols;
 }
 

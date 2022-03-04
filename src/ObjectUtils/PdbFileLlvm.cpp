@@ -42,14 +42,14 @@ class SymbolInfoVisitor : public llvm::codeview::SymbolVisitorCallbacks {
   llvm::Error visitKnownRecord(llvm::codeview::CVSymbol& /*unused*/,
                                llvm::codeview::ProcSym& proc) override {
     FunctionSymbol& function_symbol = debug_symbols_->function_symbols.emplace_back();
-    function_symbol.name = proc.Name.str();
+    function_symbol.demangled_name = proc.Name.str();
 
     // The ProcSym's name does not contain an argument list. However, this information is required
     // when dealing with overloads and it is available in the type info stream. See:
     // https://llvm.org/docs/PDB/TpiStream.html
     llvm::StringRef argument_list = RetrieveArgumentList(proc);
     if (!argument_list.empty()) {
-      function_symbol.argument_list = argument_list.data();
+      function_symbol.demangled_name.append(argument_list.data());
     }
 
     // The address in PDB files is a relative virtual address (RVA), to make the address compatible

@@ -88,7 +88,7 @@ TEST(ElfFile, LoadSymbolsFromDynsym) {
   EXPECT_EQ(function_symbols.size(), 8);
 
   const FunctionSymbol& function_symbol = function_symbols[7];
-  EXPECT_EQ(function_symbol.name, "UseTestLib");
+  EXPECT_EQ(function_symbol.mangled_name, "UseTestLib");
   EXPECT_EQ(function_symbol.demangled_name, "UseTestLib");
   EXPECT_EQ(function_symbol.address, 0x2670);
   EXPECT_EQ(function_symbol.size, 591);

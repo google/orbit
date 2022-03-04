@@ -353,7 +353,7 @@ ErrorMessageOr<FunctionSymbol> ElfFileImpl<ElfT>::CreateFunctionSymbol(
   }
 
   FunctionSymbol function_symbol;
-  function_symbol.name = name;
+  function_symbol.mangled_name = name;
   function_symbol.address = maybe_value.get();
   function_symbol.size = symbol_ref.getSize();
   return function_symbol;
@@ -382,6 +382,8 @@ ErrorMessageOr<DebugSymbols> ElfFileImpl<ElfT>::LoadRawDebugSymbols() {
         "Unable to load symbols from ELF file, not even a single symbol of "
         "type function found.");
   }
+  
+  DemangleSymbols(debug_symbols.function_symbols);
   return debug_symbols;
 }
 

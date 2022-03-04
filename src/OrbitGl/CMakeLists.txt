@@ -182,6 +182,10 @@ endif()
 
 if(WIN32)
   target_compile_options(OrbitGl PRIVATE "$<$<CONFIG:Debug>:/bigobj>")
+
+  target_link_libraries(
+    OrbitGl
+    PUBLIC WindowsUtils)
 endif()
 
 

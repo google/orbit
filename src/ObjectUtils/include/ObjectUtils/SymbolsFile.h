@@ -25,10 +25,13 @@ struct ObjectFileInfo {
 
 // Raw structure representing a function symbol.
 struct FunctionSymbol {
-  std::string name;
-  std::string argument_list;
+  // Mangled symbol name. Can be empty if demangled name is available directly from the parser.
+  std::string mangled_name;
+  // Demangled symbol name.
   std::string demangled_name;
+  // Function relative virtual address, containing load bias and executable segment offset.
   uint64_t address = 0;
+  // Function size in bytes.
   uint32_t size = 0;
 };
 
