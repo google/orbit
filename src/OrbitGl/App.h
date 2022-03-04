@@ -511,8 +511,7 @@ class OrbitApp final : public DataViewFactory,
   [[nodiscard]] const orbit_statistics::BinomialConfidenceIntervalEstimator&
   GetConfidenceIntervalEstimator() const override;
 
-  void SetHistogramSelectionRangeChange(
-      std::optional<orbit_statistics::HistogramSelectionRange> range) {
+  void SetHistogramSelectionRange(std::optional<orbit_statistics::HistogramSelectionRange> range) {
     histogram_selection_range_ = range;
     RequestUpdatePrimitives();
   }

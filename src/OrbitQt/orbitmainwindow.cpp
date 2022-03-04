@@ -410,7 +410,7 @@ void OrbitMainWindow::SetupMainWindow() {
 
   connect(ui->liveFunctions, &OrbitLiveFunctions::SignalSelectionRangeChange, this,
           [this](std::optional<orbit_statistics::HistogramSelectionRange> range) {
-            app_->SetHistogramSelectionRangeChange(range);
+            app_->SetHistogramSelectionRange(range);
           });
 
   ui->topDownWidget->Initialize(app_.get());
