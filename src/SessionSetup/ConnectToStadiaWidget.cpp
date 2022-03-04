@@ -311,7 +311,7 @@ void ConnectToStadiaWidget::DeployOrbitService() {
                        service_deploy_manager_.get(), &ServiceDeployManager::Cancel)};
 
   const auto deployment_result = service_deploy_manager_->Exec(metrics_uploader_);
-  if (!deployment_result) {
+  if (deployment_result.has_error()) {
     Disconnect();
     if (deployment_result.error() == make_error_code(Error::kUserCanceledServiceDeployment)) {
       return;

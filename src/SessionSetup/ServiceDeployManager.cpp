@@ -104,14 +104,23 @@ void DeferToBackgroundThreadAndWait(QObject* context, Func&& func) {
 }  // namespace
 
 template <typename T>
-static outcome::result<T> MapError(outcome::result<T> result, Error new_error) {
-  if (result) {
+static ErrorMessageOr<T> MapError(ErrorMessageOr<T> result, Error new_error) {
+  if (result.has_value()) {
     return result;
-  } else {
-    const auto new_error_code = make_error_code(new_error);
-    ORBIT_ERROR("%s: %s", new_error_code.message().c_str(), result.error().message().c_str());
-    return outcome::failure(new_error_code);
   }
+  const auto new_error_code = make_error_code(new_error);
+  ORBIT_ERROR("%s: %s", new_error_code.message(), result.error().message());
+  return outcome::failure(new_error_code);
+}
+
+template <typename T>
+static ErrorMessageOr<T> MapError(outcome::result<T> result, Error new_error) {
+  if (result.has_value()) {
+    return result.value();
+  }
+  const auto new_error_code = make_error_code(new_error);
+  return ErrorMessage{
+      absl::StrFormat("%s: %s", new_error_code.message(), result.error().message())};
 }
 
 ServiceDeployManager::ServiceDeployManager(const DeploymentConfiguration* deployment_configuration,
@@ -149,7 +158,7 @@ void ServiceDeployManager::Cancel() {
   emit cancelRequested();
 }
 
-outcome::result<bool> ServiceDeployManager::CheckIfInstalled() {
+ErrorMessageOr<bool> ServiceDeployManager::CheckIfInstalled() {
   ORBIT_CHECK(QThread::currentThread() == thread());
   emit statusMessage(QString("Checking if OrbitService is already installed in version %1 on the "
                              "remote instance.")
@@ -199,7 +208,7 @@ outcome::result<bool> ServiceDeployManager::CheckIfInstalled() {
   }
 }
 
-outcome::result<uint16_t> ServiceDeployManager::StartTunnel(
+ErrorMessageOr<uint16_t> ServiceDeployManager::StartTunnel(
     std::optional<orbit_ssh_qt::Tunnel>* tunnel, uint16_t port) {
   ORBIT_CHECK(QThread::currentThread() == thread());
   emit statusMessage("Setting up port forwarding...");
@@ -222,7 +231,7 @@ outcome::result<uint16_t> ServiceDeployManager::StartTunnel(
   return outcome::success(tunnel->value().GetListenPort());
 }
 
-outcome::result<std::unique_ptr<orbit_ssh_qt::SftpChannel>>
+ErrorMessageOr<std::unique_ptr<orbit_ssh_qt::SftpChannel>>
 ServiceDeployManager::StartSftpChannel() {
   ORBIT_CHECK(QThread::currentThread() == thread());
   auto sftp_channel = std::make_unique<orbit_ssh_qt::SftpChannel>(&session_.value());
@@ -241,7 +250,7 @@ ServiceDeployManager::StartSftpChannel() {
   return sftp_channel;
 }
 
-outcome::result<void> ServiceDeployManager::CopyFileToRemote(
+ErrorMessageOr<void> ServiceDeployManager::CopyFileToRemote(
     const std::string& source, const std::string& dest,
     orbit_ssh_qt::SftpCopyToRemoteOperation::FileMode dest_mode) {
   ORBIT_CHECK(QThread::currentThread() == thread());
@@ -264,7 +273,7 @@ outcome::result<void> ServiceDeployManager::CopyFileToRemote(
   return outcome::success();
 }
 
-outcome::result<void> ServiceDeployManager::ShutdownSftpChannel(
+ErrorMessageOr<void> ServiceDeployManager::ShutdownSftpChannel(
     orbit_ssh_qt::SftpChannel* sftp_channel) {
   ORBIT_SCOPED_TIMED_LOG("ServiceDeployManager::ShutdownSftpChannel");
   ORBIT_CHECK(QThread::currentThread() == thread());
@@ -282,7 +291,7 @@ outcome::result<void> ServiceDeployManager::ShutdownSftpChannel(
   return outcome::success();
 }
 
-outcome::result<void> ServiceDeployManager::CopyOrbitServicePackage() {
+ErrorMessageOr<void> ServiceDeployManager::CopyOrbitServicePackage() {
   ORBIT_CHECK(QThread::currentThread() == thread());
   emit statusMessage("Copying OrbitService package to the remote instance...");
 
@@ -394,7 +403,7 @@ void ServiceDeployManager::CopyFileToLocalImpl(orbit_base::Promise<ErrorMessageO
   operation->CopyFileToLocal(source, destination);
 }
 
-outcome::result<void> ServiceDeployManager::CopyOrbitServiceExecutable(
+ErrorMessageOr<void> ServiceDeployManager::CopyOrbitServiceExecutable(
     const BareExecutableAndRootPasswordDeployment& config) {
   ORBIT_CHECK(QThread::currentThread() == thread());
   emit statusMessage("Copying OrbitService executable to the remote instance...");
@@ -408,7 +417,7 @@ outcome::result<void> ServiceDeployManager::CopyOrbitServiceExecutable(
   return outcome::success();
 }
 
-outcome::result<void> ServiceDeployManager::CopyOrbitApiLibrary(
+ErrorMessageOr<void> ServiceDeployManager::CopyOrbitApiLibrary(
     const BareExecutableAndRootPasswordDeployment& config) {
   ORBIT_CHECK(QThread::currentThread() == thread());
   emit statusMessage("Copying liborbit.so to the remote instance...");
@@ -423,7 +432,7 @@ outcome::result<void> ServiceDeployManager::CopyOrbitApiLibrary(
   return outcome::success();
 }
 
-outcome::result<void> ServiceDeployManager::CopyOrbitUserSpaceInstrumentationLibrary(
+ErrorMessageOr<void> ServiceDeployManager::CopyOrbitUserSpaceInstrumentationLibrary(
     const BareExecutableAndRootPasswordDeployment& config) {
   ORBIT_CHECK(QThread::currentThread() == thread());
   emit statusMessage("Copying liborbituserspaceinstrumentation.so to the remote instance...");
@@ -440,7 +449,7 @@ outcome::result<void> ServiceDeployManager::CopyOrbitUserSpaceInstrumentationLib
   return outcome::success();
 }
 
-outcome::result<void> ServiceDeployManager::StartOrbitService() {
+ErrorMessageOr<void> ServiceDeployManager::StartOrbitService() {
   ORBIT_CHECK(QThread::currentThread() == thread());
   emit statusMessage("Starting OrbitService on the remote instance...");
 
@@ -478,7 +487,7 @@ outcome::result<void> ServiceDeployManager::StartOrbitService() {
   return outcome::success();
 }
 
-outcome::result<void> ServiceDeployManager::StartOrbitServicePrivileged(
+ErrorMessageOr<void> ServiceDeployManager::StartOrbitServicePrivileged(
     const BareExecutableAndRootPasswordDeployment& config) {
   ORBIT_CHECK(QThread::currentThread() == thread());
   // TODO(antonrohr) Check whether the password was incorrect.
@@ -521,7 +530,7 @@ outcome::result<void> ServiceDeployManager::StartOrbitServicePrivileged(
   return outcome::success();
 }
 
-outcome::result<void> ServiceDeployManager::InstallOrbitServicePackage() {
+ErrorMessageOr<void> ServiceDeployManager::InstallOrbitServicePackage() {
   ORBIT_CHECK(QThread::currentThread() == thread());
   emit statusMessage("Installing the OrbitService package on the remote instance...");
 
@@ -552,7 +561,7 @@ outcome::result<void> ServiceDeployManager::InstallOrbitServicePackage() {
   return outcome::success();
 }
 
-outcome::result<void> ServiceDeployManager::ConnectToServer() {
+ErrorMessageOr<void> ServiceDeployManager::ConnectToServer() {
   ORBIT_CHECK(QThread::currentThread() == thread());
   emit statusMessage(QString("Connecting to %1:%2...")
                          .arg(QString::fromStdString(credentials_.addr_and_port.addr))
@@ -592,12 +601,12 @@ void ServiceDeployManager::StartWatchdog() {
   ssh_watchdog_timer_.start(kSshWatchdogInterval);
 }
 
-outcome::result<ServiceDeployManager::GrpcPort> ServiceDeployManager::Exec(
+ErrorMessageOr<ServiceDeployManager::GrpcPort> ServiceDeployManager::Exec(
     orbit_metrics_uploader::MetricsUploader* metrics_uploader) {
   orbit_metrics_uploader::ScopedMetric connect_metric{
       metrics_uploader, orbit_metrics_uploader::OrbitLogEvent::ORBIT_INSTANCE_CONNECT};
 
-  outcome::result<GrpcPort> result = outcome::success(GrpcPort{0});
+  ErrorMessageOr<GrpcPort> result = outcome::success(GrpcPort{0});
   DeferToBackgroundThreadAndWait(this, [&]() { result = ExecImpl(); });
 
   if (!result.has_value()) {
@@ -615,7 +624,7 @@ outcome::result<ServiceDeployManager::GrpcPort> ServiceDeployManager::Exec(
   return result;
 }
 
-outcome::result<ServiceDeployManager::GrpcPort> ServiceDeployManager::ExecImpl() {
+ErrorMessageOr<ServiceDeployManager::GrpcPort> ServiceDeployManager::ExecImpl() {
   ORBIT_CHECK(QThread::currentThread() == thread());
   OUTCOME_TRY(ConnectToServer());
 
@@ -659,7 +668,7 @@ outcome::result<ServiceDeployManager::GrpcPort> ServiceDeployManager::ExecImpl()
         "running...");
   }
 
-  outcome::result<uint16_t> local_grpc_port_result =
+  ErrorMessageOr<uint16_t> local_grpc_port_result =
       StartTunnel(&grpc_tunnel_, grpc_port_.grpc_port);
   int retry = 3;
   while (retry > 0 && local_grpc_port_result.has_error()) {
@@ -682,7 +691,7 @@ void ServiceDeployManager::handleSocketError(std::error_code e) {
   emit socketErrorOccurred(e);
 }
 
-outcome::result<void> ServiceDeployManager::ShutdownTunnel(orbit_ssh_qt::Tunnel* tunnel) {
+ErrorMessageOr<void> ServiceDeployManager::ShutdownTunnel(orbit_ssh_qt::Tunnel* tunnel) {
   ORBIT_SCOPED_TIMED_LOG("ServiceDeployManager::StopTunnel");
   ORBIT_CHECK(tunnel != nullptr);
 
@@ -697,7 +706,7 @@ outcome::result<void> ServiceDeployManager::ShutdownTunnel(orbit_ssh_qt::Tunnel*
   return outcome::success();
 }
 
-outcome::result<void> ServiceDeployManager::ShutdownTask(orbit_ssh_qt::Task* task) {
+ErrorMessageOr<void> ServiceDeployManager::ShutdownTask(orbit_ssh_qt::Task* task) {
   ORBIT_SCOPED_TIMED_LOG("ServiceDeployManager::ShutdownOrbitService");
   ORBIT_CHECK(task != nullptr);
 
@@ -712,7 +721,7 @@ outcome::result<void> ServiceDeployManager::ShutdownTask(orbit_ssh_qt::Task* tas
   return outcome::success();
 }
 
-outcome::result<void> ServiceDeployManager::ShutdownSession(orbit_ssh_qt::Session* session) {
+ErrorMessageOr<void> ServiceDeployManager::ShutdownSession(orbit_ssh_qt::Session* session) {
   ORBIT_SCOPED_TIMED_LOG("ServiceDeployManager::ShutdownSession");
   ORBIT_CHECK(session != nullptr);
 
@@ -733,14 +742,14 @@ void ServiceDeployManager::Shutdown() {
       this,
       [this]() {
         if (sftp_channel_ != nullptr) {
-          outcome::result<void> shutdown_result = ShutdownSftpChannel(sftp_channel_.get());
+          ErrorMessageOr<void> shutdown_result = ShutdownSftpChannel(sftp_channel_.get());
           if (shutdown_result.has_error()) {
             ORBIT_ERROR("Unable to ShutdownSftpChannel: %s", shutdown_result.error().message());
           }
           sftp_channel_.reset();
         }
         if (grpc_tunnel_.has_value()) {
-          outcome::result<void> shutdown_result = ShutdownTunnel(&grpc_tunnel_.value());
+          ErrorMessageOr<void> shutdown_result = ShutdownTunnel(&grpc_tunnel_.value());
           if (shutdown_result.has_error()) {
             ORBIT_ERROR("Unable to ShutdownTunnel: %s", shutdown_result.error().message());
           }
@@ -748,14 +757,14 @@ void ServiceDeployManager::Shutdown() {
         }
         ssh_watchdog_timer_.stop();
         if (orbit_service_task_.has_value()) {
-          outcome::result<void> shutdown_result = ShutdownTask(&orbit_service_task_.value());
+          ErrorMessageOr<void> shutdown_result = ShutdownTask(&orbit_service_task_.value());
           if (shutdown_result.has_error()) {
             ORBIT_ERROR("Unable to ShutdownTask: %s", shutdown_result.error().message());
           }
           orbit_service_task_ = std::nullopt;
         }
         if (session_.has_value()) {
-          outcome::result<void> shutdown_result = ShutdownSession(&session_.value());
+          ErrorMessageOr<void> shutdown_result = ShutdownSession(&session_.value());
           if (shutdown_result.has_error()) {
             ORBIT_ERROR("Unable to ShutdownSession: %s", shutdown_result.error().message());
           }
