@@ -2,6 +2,7 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
+#include <gmock/gmock.h>
 #include <gtest/gtest.h>
 
 #include <QMetaObject>
@@ -11,6 +12,7 @@
 
 #include "OrbitBase/Result.h"
 #include "QtUtils/EventLoop.h"
+#include "TestUtils/TestUtils.h"
 
 TEST(EventLoop, exec) {
   // Case 1: The event loop finishes successfully
@@ -25,11 +27,7 @@ TEST(EventLoop, exec) {
           loop.quit();
         },
         Qt::QueuedConnection);
-    {
-      const auto result = loop.exec();
-      ASSERT_FALSE(result.has_error());
-      EXPECT_EQ(result.value(), 0);
-    }
+    EXPECT_THAT(loop.exec(), orbit_test_utils::HasValue(0));
   }
 
   // Case 2: The event loop returns an error that occured
@@ -45,10 +43,9 @@ TEST(EventLoop, exec) {
           loop.error(std::make_error_code(std::errc::bad_message));
         },
         Qt::QueuedConnection);
-    {
-      const auto result = loop.exec();
-      ASSERT_TRUE(result.has_error());
-    }
+    EXPECT_THAT(loop.exec(),
+                orbit_test_utils::HasError(
+                    ErrorMessage{std::make_error_code(std::errc::bad_message)}.message()));
   }
 
   // Case 3: The event loop immediately returns due to a queued error.
@@ -64,12 +61,9 @@ TEST(EventLoop, exec) {
                    // to return early.
         },
         Qt::QueuedConnection);
-
-    {
-      const auto result = loop.exec();
-      ASSERT_TRUE(result.has_error());
-      ASSERT_EQ(result.error(), ErrorMessage{std::make_error_code(std::errc::bad_message)});
-    }
+    EXPECT_THAT(loop.exec(),
+                orbit_test_utils::HasError(
+                    ErrorMessage{std::make_error_code(std::errc::bad_message)}.message()));
   }
 
   // Case 4: The event loop immediately returns due to a queued result (quit).
@@ -85,11 +79,8 @@ TEST(EventLoop, exec) {
                    // to return early.
         },
         Qt::QueuedConnection);
-    {
-      const auto result = loop.exec();
-      ASSERT_FALSE(result.has_error());
-      EXPECT_EQ(result.value(), 0);
-    }
+
+    EXPECT_THAT(loop.exec(), orbit_test_utils::HasValue(0));
   }
 }
 
@@ -104,11 +95,7 @@ TEST(EventLoop, exit) {
         loop.exit(42);
       },
       Qt::QueuedConnection);
-  {
-    const auto result = loop.exec();
-    ASSERT_FALSE(result.has_error());
-    EXPECT_EQ(result.value(), 42);
-  }
+  EXPECT_THAT(loop.exec(), orbit_test_utils::HasValue(42));
 }
 
 TEST(EventLoop, processEvents) {
@@ -138,11 +125,7 @@ TEST(EventLoop, reuseLoop) {
           loop.quit();
         },
         Qt::QueuedConnection);
-    {
-      const auto result = loop.exec();
-      ASSERT_FALSE(result.has_error());
-      EXPECT_EQ(result.value(), 0);
-    }
+    EXPECT_THAT(loop.exec(), orbit_test_utils::HasValue(0));
   }
 
   // 2. normal error from error code
@@ -155,11 +138,7 @@ TEST(EventLoop, reuseLoop) {
           loop.error(error_code);
         },
         Qt::QueuedConnection);
-    {
-      const auto result = loop.exec();
-      ASSERT_TRUE(result.has_error());
-      EXPECT_EQ(result.error(), ErrorMessage{error_code});
-    }
+    EXPECT_THAT(loop.exec(), orbit_test_utils::HasError(ErrorMessage{error_code}.message()));
   }
 
   // 3. normal error from ErrorMessage
@@ -172,11 +151,8 @@ TEST(EventLoop, reuseLoop) {
           loop.error(error_message);
         },
         Qt::QueuedConnection);
-    {
-      const auto result = loop.exec();
-      ASSERT_TRUE(result.has_error());
-      EXPECT_EQ(result.error(), error_message);
-    }
+
+    EXPECT_THAT(loop.exec(), orbit_test_utils::HasError(error_message.message()));
   }
 
   // 4. premature quit
@@ -189,32 +165,21 @@ TEST(EventLoop, reuseLoop) {
                    // to return early.
         },
         Qt::QueuedConnection);
-    {
-      const auto result = loop.exec();
-      ASSERT_FALSE(result.has_error());
-      EXPECT_EQ(result.value(), 0);
-    }
+
+    EXPECT_THAT(loop.exec(), orbit_test_utils::HasValue(0));
   }
 
   // 5. premature error from error code
   {
     const auto error_code = std::make_error_code(std::errc::bad_message);
     loop.error(error_code);
-    {
-      const auto result = loop.exec();
-      ASSERT_TRUE(result.has_error());
-      EXPECT_EQ(result.error(), ErrorMessage{error_code});
-    }
+    EXPECT_THAT(loop.exec(), orbit_test_utils::HasError(ErrorMessage{error_code}.message()));
   }
 
   // 6. premature error from ErrorMessage
   {
     const ErrorMessage error_message{"Important error message"};
     loop.error(error_message);
-    {
-      const auto result = loop.exec();
-      ASSERT_TRUE(result.has_error());
-      EXPECT_EQ(result.error(), error_message);
-    }
+    EXPECT_THAT(loop.exec(), orbit_test_utils::HasError(error_message.message()));
   }
 }
