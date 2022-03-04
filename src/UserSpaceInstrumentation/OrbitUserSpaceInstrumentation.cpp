@@ -37,13 +37,42 @@ std::stack<OpenFunctionCall>& GetOpenFunctionCallStack() {
 
 uint64_t current_capture_start_timestamp_ns = 0;
 
-// We can use the protos directly: since their fields are all integer fields, they are basically
-// plain structs.
-using FunctionEntryExitVariant =
-    std::variant<orbit_grpc_protos::FunctionEntry, orbit_grpc_protos::FunctionExit>;
+// Don't use the orbit_grpc_protos::FunctionEntry and orbit_grpc_protos::FunctionExit protos
+// directly. While in memory those protos are basically plain structs as their fields are all
+// integer fields, their constructors and assignment operators are more complicated, and spend a lot
+// of time in InternalSwap.
+struct FunctionEntry {
+  FunctionEntry() = default;
+  FunctionEntry(uint32_t pid, uint32_t tid, uint64_t function_id, uint64_t stack_pointer,
+                uint64_t return_address, uint64_t timestamp_ns)
+      : pid{pid},
+        tid{tid},
+        function_id{function_id},
+        stack_pointer{stack_pointer},
+        return_address{return_address},
+        timestamp_ns{timestamp_ns} {}
+  uint32_t pid;
+  uint32_t tid;
+  uint64_t function_id;
+  uint64_t stack_pointer;
+  uint64_t return_address;
+  uint64_t timestamp_ns;
+};
 
-// This class is used to enqueue FunctionEntry and FunctionExit events from multiple threads and
-// relay them to OrbitService.
+struct FunctionExit {
+  FunctionExit() = default;
+  FunctionExit(uint32_t pid, uint32_t tid, uint64_t timestamp_ns)
+      : pid{pid}, tid{tid}, timestamp_ns{timestamp_ns} {}
+  uint32_t pid;
+  uint32_t tid;
+  uint64_t timestamp_ns;
+};
+
+using FunctionEntryExitVariant = std::variant<FunctionEntry, FunctionExit>;
+
+// This class is used to enqueue FunctionEntry and FunctionExit events from multiple threads,
+// transform them into orbit_grpc_protos::FunctionEntry and orbit_grpc_protos::FunctionExit protos,
+// and relay them to OrbitService.
 class LockFreeUserSpaceInstrumentationEventProducer
     : public orbit_capture_event_producer::LockFreeBufferCaptureEventProducer<
           FunctionEntryExitVariant> {
@@ -63,18 +92,25 @@ class LockFreeUserSpaceInstrumentationEventProducer
     std::visit(
         [capture_event](auto&& raw_event) {
           using DecayedEventType = std::decay_t<decltype(raw_event)>;
-          if constexpr (std::is_same_v<DecayedEventType, orbit_grpc_protos::FunctionEntry>) {
+          if constexpr (std::is_same_v<DecayedEventType, FunctionEntry>) {
             orbit_grpc_protos::FunctionEntry* function_entry =
                 capture_event->mutable_function_entry();
-            *function_entry = std::forward<decltype(raw_event)>(raw_event);
-          } else if constexpr (std::is_same_v<DecayedEventType, orbit_grpc_protos::FunctionExit>) {
+            function_entry->set_pid(raw_event.pid);
+            function_entry->set_tid(raw_event.tid);
+            function_entry->set_function_id(raw_event.function_id);
+            function_entry->set_stack_pointer(raw_event.stack_pointer);
+            function_entry->set_return_address(raw_event.return_address);
+            function_entry->set_timestamp_ns(raw_event.timestamp_ns);
+          } else if constexpr (std::is_same_v<DecayedEventType, FunctionExit>) {
             orbit_grpc_protos::FunctionExit* function_exit = capture_event->mutable_function_exit();
-            *function_exit = std::forward<decltype(raw_event)>(raw_event);
+            function_exit->set_pid(raw_event.pid);
+            function_exit->set_tid(raw_event.tid);
+            function_exit->set_timestamp_ns(raw_event.timestamp_ns);
           } else {
             static_assert(always_false_v<DecayedEventType>, "Non-exhaustive visitor");
           }
         },
-        std::move(raw_event));
+        raw_event);
 
     return capture_event;
   }
@@ -130,14 +166,8 @@ void EntryPayload(uint64_t return_address, uint64_t function_id, uint64_t stack_
   if (GetCaptureEventProducer().IsCapturing()) {
     static uint32_t pid = orbit_base::GetCurrentProcessId();
     thread_local uint32_t tid = orbit_base::GetCurrentThreadId();
-    orbit_grpc_protos::FunctionEntry function_entry;
-    function_entry.set_pid(pid);
-    function_entry.set_tid(tid);
-    function_entry.set_function_id(function_id);
-    function_entry.set_stack_pointer(stack_pointer);
-    function_entry.set_return_address(return_address);
-    function_entry.set_timestamp_ns(timestamp_on_entry_ns);
-    GetCaptureEventProducer().EnqueueIntermediateEvent(std::move(function_entry));
+    GetCaptureEventProducer().EnqueueIntermediateEvent(
+        FunctionEntry{pid, tid, function_id, stack_pointer, return_address, timestamp_on_entry_ns});
   }
 
   // Overwrite return address so that we end up returning to the exit trampoline.
@@ -161,11 +191,8 @@ uint64_t ExitPayload() {
       current_capture_start_timestamp_ns < current_function_call.timestamp_on_entry_ns) {
     static uint32_t pid = orbit_base::GetCurrentProcessId();
     thread_local uint32_t tid = orbit_base::GetCurrentThreadId();
-    orbit_grpc_protos::FunctionExit function_exit;
-    function_exit.set_pid(pid);
-    function_exit.set_tid(tid);
-    function_exit.set_timestamp_ns(timestamp_on_exit_ns);
-    GetCaptureEventProducer().EnqueueIntermediateEvent(std::move(function_exit));
+    GetCaptureEventProducer().EnqueueIntermediateEvent(
+        FunctionExit{pid, tid, timestamp_on_exit_ns});
   }
 
   is_in_payload = false;
