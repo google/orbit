@@ -22,4 +22,19 @@ ErrorMessageOr<std::unique_ptr<PdbFile>> CreatePdbFile(const std::filesystem::pa
 #endif
 }
 
+#if _WIN32
+ErrorMessageOr<std::unique_ptr<PdbFile>> CreatePdbFile(const std::filesystem::path& file_path,
+                                                       const ObjectFileInfo& object_file_info,
+                                                       PdbParserType parser_type) {
+  switch (parser_type) {
+    case PdbParserType::Llvm:
+      return PdbFileLlvm::CreatePdbFile(file_path, object_file_info);
+    case PdbParserType::Dia:
+      return PdbFileDia::CreatePdbFile(file_path, object_file_info);
+  }
+
+  return ErrorMessage("Unhandled parser type");
+}
+#endif
+
 }  // namespace orbit_object_utils

@@ -23,7 +23,7 @@ namespace orbit_object_utils {
 
 class PdbFileDia : public PdbFile {
  public:
-  ErrorMessageOr<orbit_grpc_protos::ModuleSymbols> LoadDebugSymbols() override;
+  ErrorMessageOr<DebugSymbols> LoadDebugSymbols() override;
 
   [[nodiscard]] const std::filesystem::path& GetFilePath() const override { return file_path_; }
 
@@ -37,6 +37,8 @@ class PdbFileDia : public PdbFile {
       const std::filesystem::path& file_path, const ObjectFileInfo& object_file_info);
 
  private:
+  ErrorMessageOr<void> LoadProcSymbols(const enum SymTagEnum symbol_tag,
+                                       DebugSymbols& debug_symbols);
   PdbFileDia(std::filesystem::path file_path, const ObjectFileInfo& object_file_info);
   ErrorMessageOr<void> LoadDataForPDB();
   ErrorMessageOr<CComPtr<IDiaDataSource>> CreateDiaDataSource();

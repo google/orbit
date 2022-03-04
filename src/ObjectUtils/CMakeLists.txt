@@ -47,7 +47,8 @@ target_include_directories(ObjectUtils PUBLIC ${CMAKE_CURRENT_LIST_DIR}/include)
 
 target_link_libraries(
   ObjectUtils
-  PUBLIC GrpcProtos
+  PUBLIC Introspection
+         GrpcProtos
          OrbitBase
          CONAN_PKG::abseil
          CONAN_PKG::llvm-core)

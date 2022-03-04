@@ -29,7 +29,7 @@ TEST(CoffFile, LoadDebugSymbols) {
   ASSERT_THAT(coff_file_result, HasNoError());
   std::unique_ptr<CoffFile> coff_file = std::move(coff_file_result.value());
 
-  const auto symbols_result = coff_file->LoadDebugSymbols();
+  const auto symbols_result = coff_file->LoadDebugSymbolsAsProto();
   ASSERT_THAT(symbols_result, HasNoError());
 
   EXPECT_EQ(symbols_result.value().symbols_file_path(), file_path);

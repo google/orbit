@@ -32,7 +32,7 @@ class CoffFileImpl : public CoffFile {
  public:
   CoffFileImpl(std::filesystem::path file_path,
                llvm::object::OwningBinary<llvm::object::ObjectFile>&& owning_binary);
-  [[nodiscard]] ErrorMessageOr<orbit_grpc_protos::ModuleSymbols> LoadDebugSymbols() override;
+  [[nodiscard]] ErrorMessageOr<DebugSymbols> LoadDebugSymbols() override;
   [[nodiscard]] bool HasDebugSymbols() const override;
   [[nodiscard]] std::string GetName() const override;
   [[nodiscard]] const std::filesystem::path& GetFilePath() const override;
@@ -66,14 +66,13 @@ CoffFileImpl::CoffFileImpl(std::filesystem::path file_path,
 }
 
 static void FillDebugSymbolsFromDWARF(llvm::DWARFContext* dwarf_context,
-                                      ModuleSymbols* module_symbols) {
+                                      DebugSymbols* debug_symbols) {
   for (const auto& info_section : dwarf_context->compile_units()) {
     for (uint32_t index = 0; index < info_section->getNumDIEs(); ++index) {
       llvm::DWARFDie full_die = info_section->getDIEAtIndex(index);
       // We only want symbols of functions, which are DIEs with isSubprogramDIR()
       // and not of inlined functions, which are DIEs with isSubroutineDIE().
       if (full_die.isSubprogramDIE()) {
-        SymbolInfo symbol_info;
         uint64_t low_pc;
         uint64_t high_pc;
         uint64_t unused_section_index;
@@ -84,32 +83,33 @@ static void FillDebugSymbolsFromDWARF(llvm::DWARFContext* dwarf_context,
         // not present, so this should never return an empty name.
         std::string name(full_die.getName(llvm::DINameKind::LinkageName));
         ORBIT_CHECK(!name.empty());
-        symbol_info.set_demangled_name(llvm::demangle(name));
-        symbol_info.set_address(low_pc);
-        symbol_info.set_size(high_pc - low_pc);
-        *(module_symbols->add_symbol_infos()) = std::move(symbol_info);
+        FunctionSymbol& function_symbol = debug_symbols->function_symbols.emplace_back();
+        function_symbol.mangled_name = name;
+        function_symbol.rva = low_pc;
+        function_symbol.size = high_pc - low_pc;
       }
     }
   }
 }
 
-ErrorMessageOr<ModuleSymbols> CoffFileImpl::LoadDebugSymbols() {
+ErrorMessageOr<DebugSymbols> CoffFileImpl::LoadDebugSymbols() {
   const auto dwarf_context = llvm::DWARFContext::create(*owning_binary_.getBinary());
   if (dwarf_context == nullptr) {
     return ErrorMessage("Could not create DWARF context.");
   }
 
-  ModuleSymbols module_symbols;
-  module_symbols.set_symbols_file_path(file_path_.string());
+  DebugSymbols debug_symbols;
+  debug_symbols.load_bias = GetLoadBias();
+  debug_symbols.symbols_file_path = file_path_.string();
 
-  FillDebugSymbolsFromDWARF(dwarf_context.get(), &module_symbols);
+  FillDebugSymbolsFromDWARF(dwarf_context.get(), &debug_symbols);
 
-  if (module_symbols.symbol_infos_size() == 0) {
+  if (debug_symbols.function_symbols.empty()) {
     return ErrorMessage(
         "Unable to load symbols from object file, not even a single symbol of "
         "type function found.");
   }
-  return module_symbols;
+  return debug_symbols;
 }
 
 bool CoffFileImpl::HasDebugSymbols() const { return has_debug_info_ && !AreDebugSymbolsEmpty(); }

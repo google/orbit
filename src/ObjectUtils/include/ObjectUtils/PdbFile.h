@@ -27,6 +27,13 @@ class PdbFile : public SymbolsFile {
 ErrorMessageOr<std::unique_ptr<PdbFile>> CreatePdbFile(const std::filesystem::path& file_path,
                                                        const ObjectFileInfo& object_file_info);
 
+#if WIN32
+enum class PdbParserType { Llvm, Dia };
+ErrorMessageOr<std::unique_ptr<PdbFile>> CreatePdbFile(const std::filesystem::path& file_path,
+                                                       const ObjectFileInfo& object_file_info,
+                                                       PdbParserType parser_type);
+#endif
+
 }  // namespace orbit_object_utils
 
 #endif  // OBJECT_UTILS_PDB_FILE_H_

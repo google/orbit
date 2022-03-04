@@ -41,7 +41,7 @@ TYPED_TEST_P(PdbFileTest, LoadDebugSymbols) {
       TypeParam::CreatePdbFile(file_path_pdb, ObjectFileInfo{0x180000000, 0x1000});
   ASSERT_THAT(pdb_file_result, HasNoError());
   std::unique_ptr<orbit_object_utils::PdbFile> pdb_file = std::move(pdb_file_result.value());
-  auto symbols_result = pdb_file->LoadDebugSymbols();
+  auto symbols_result = pdb_file->LoadDebugSymbolsAsProto();
   ASSERT_THAT(symbols_result, HasNoError());
 
   auto symbols = std::move(symbols_result.value());
@@ -56,7 +56,7 @@ TYPED_TEST_P(PdbFileTest, LoadDebugSymbols) {
   {
     const SymbolInfo* symbol = symbol_infos_by_address[0x18000eea0];
     ASSERT_NE(symbol, nullptr);
-    EXPECT_EQ(symbol->demangled_name(), "PrintHelloWorldInternal()");
+    EXPECT_TRUE(absl::StrContains(symbol->demangled_name(), "PrintHelloWorldInternal"));
     EXPECT_EQ(symbol->address(), 0x18000eea0);
     EXPECT_EQ(symbol->size(), 0x2b);
   }
@@ -64,7 +64,7 @@ TYPED_TEST_P(PdbFileTest, LoadDebugSymbols) {
   {
     const SymbolInfo* symbol = symbol_infos_by_address[0x18000eee0];
     ASSERT_NE(symbol, nullptr);
-    EXPECT_EQ(symbol->demangled_name(), "PrintHelloWorld()");
+    EXPECT_TRUE(absl::StrContains(symbol->demangled_name(), "PrintHelloWorld"));
     EXPECT_EQ(symbol->address(), 0x18000eee0);
     EXPECT_EQ(symbol->size(), 0xe);
   }

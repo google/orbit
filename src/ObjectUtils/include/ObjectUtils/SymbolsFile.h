@@ -23,6 +23,27 @@ struct ObjectFileInfo {
   uint64_t executable_segment_offset = 0;
 };
 
+// Raw structure representing a function symbol.
+struct FunctionSymbol {
+  std::string name;
+  std::string argument_list;
+  std::string demangled_name;
+  uint64_t rva = 0;
+  uint32_t size = 0;
+};
+
+// Raw structure that a SymbolsFile fills when loading symbols.
+struct DebugSymbols {
+  DebugSymbols() = default;
+  DebugSymbols(DebugSymbols& debug_symbols) = default;
+  DebugSymbols(DebugSymbols&& debug_symbols) = default;
+  DebugSymbols& operator=(DebugSymbols&& debug_symbols) = default;
+
+  std::string symbols_file_path;
+  uint64_t load_bias = 0;
+  std::vector<FunctionSymbol> function_symbols;
+};
+
 class SymbolsFile {
  public:
   SymbolsFile() = default;
@@ -34,8 +55,12 @@ class SymbolsFile {
   // The build id is formed from these to provide a string that uniquely identifies this object file
   // and the corresponding PDB debug info. The build id for PDB files is formed in the same way.
   [[nodiscard]] virtual std::string GetBuildId() const = 0;
-  [[nodiscard]] virtual ErrorMessageOr<orbit_grpc_protos::ModuleSymbols> LoadDebugSymbols() = 0;
   [[nodiscard]] virtual const std::filesystem::path& GetFilePath() const = 0;
+
+  // Loads debug symbols as a DebugSymbols object.
+  [[nodiscard]] virtual ErrorMessageOr<DebugSymbols> LoadDebugSymbols() = 0;
+  // Utility to load debug symbols as a ModuleSymbols protobuf. This calls LoadDebugSymbols.
+  [[nodiscard]] ErrorMessageOr<orbit_grpc_protos::ModuleSymbols> LoadDebugSymbolsAsProto();
 };
 
 // Create a symbols file from the file at symbol_file_path. Additional info about the corresponding
@@ -44,6 +69,9 @@ class SymbolsFile {
 // right addresses for symbols.
 ErrorMessageOr<std::unique_ptr<SymbolsFile>> CreateSymbolsFile(
     const std::filesystem::path& symbol_file_path, const ObjectFileInfo& object_file_info);
+
+// Utility to demangle symbols in bulk.
+void DemangleSymbols(std::vector<FunctionSymbol>& function_symbols);
 
 }  // namespace orbit_object_utils
 

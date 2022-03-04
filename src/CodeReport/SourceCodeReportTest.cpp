@@ -11,11 +11,12 @@
 #include "GrpcProtos/symbol.pb.h"
 #include "ObjectUtils/ObjectFile.h"
 
+using orbit_object_utils::DebugSymbols;
+
 namespace {
 class MockElfFile : public orbit_object_utils::ElfFile {
  public:
-  MOCK_METHOD(ErrorMessageOr<orbit_grpc_protos::ModuleSymbols>, LoadSymbolsFromDynsym, (),
-              (override));
+  MOCK_METHOD(ErrorMessageOr<DebugSymbols>, LoadSymbolsFromDynsym, (), (override));
   MOCK_METHOD(uint64_t, GetLoadBias, (), (const, override));
   MOCK_METHOD(uint64_t, GetExecutableSegmentOffset, (), (const, override));
 
@@ -33,7 +34,7 @@ class MockElfFile : public orbit_object_utils::ElfFile {
   MOCK_METHOD(ErrorMessageOr<orbit_grpc_protos::LineInfo>, GetLocationOfFunction, (uint64_t),
               (override));
 
-  MOCK_METHOD(ErrorMessageOr<orbit_grpc_protos::ModuleSymbols>, LoadDebugSymbols, (), (override));
+  MOCK_METHOD(ErrorMessageOr<DebugSymbols>, LoadDebugSymbols, (), (override));
   MOCK_METHOD(bool, HasDebugSymbols, (), (const, override));
   MOCK_METHOD(std::string, GetName, (), (const, override));
   MOCK_METHOD(const std::filesystem::path&, GetFilePath, (), (const, override));

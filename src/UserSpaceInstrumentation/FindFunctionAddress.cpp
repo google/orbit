@@ -12,6 +12,9 @@
 #include "ObjectUtils/ElfFile.h"
 #include "ObjectUtils/LinuxMap.h"
 
+using orbit_object_utils::DebugSymbols;
+using orbit_object_utils::FunctionSymbol;
+
 namespace orbit_user_space_instrumentation {
 
 ErrorMessageOr<uint64_t> FindFunctionAddress(pid_t pid, std::string_view module_soname,
@@ -35,16 +38,16 @@ ErrorMessageOr<uint64_t> FindFunctionAddress(pid_t pid, std::string_view module_
   }
 
   OUTCOME_TRY(auto&& elf_file, orbit_object_utils::CreateElfFile(module_file_path));
-  auto symbols = elf_file->LoadSymbolsFromDynsym();
+  ErrorMessageOr<DebugSymbols> symbols = elf_file->LoadSymbolsFromDynsym();
   if (symbols.has_error()) {
     return ErrorMessage(absl::StrFormat("Failed to load symbols for module \"%s\": %s",
                                         module_soname, symbols.error().message()));
   }
 
-  for (const orbit_grpc_protos::SymbolInfo& symbol : symbols.value().symbol_infos()) {
-    if (symbol.demangled_name() == function_name) {
+  for (const FunctionSymbol& symbol : symbols.value().function_symbols) {
+    if (symbol.demangled_name == function_name) {
       return orbit_object_utils::SymbolVirtualAddressToAbsoluteAddress(
-          symbol.address(), module_base_address, elf_file->GetLoadBias(),
+          symbol.rva, module_base_address, elf_file->GetLoadBias(),
           elf_file->GetExecutableSegmentOffset());
     }
   }

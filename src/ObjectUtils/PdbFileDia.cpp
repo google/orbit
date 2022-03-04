@@ -9,7 +9,11 @@
 #include <llvm/Demangle/Demangle.h>
 #include <winerror.h>
 
+<<<<<<< HEAD
 #include "ObjectUtils/PdbUtilsDia.h"
+=======
+#include "Introspection/Introspection.h"
+>>>>>>> 5f7357592 (Load debug symbols as raw struct instead of proto)
 #include "OrbitBase/ExecutablePath.h"
 #include "OrbitBase/Logging.h"
 #include "OrbitBase/StringConversion.h"
@@ -83,24 +87,33 @@ ErrorMessageOr<void> PdbFileDia::LoadDataForPDB() {
   return outcome::success();
 }
 
-ErrorMessageOr<orbit_grpc_protos::ModuleSymbols> PdbFileDia::LoadDebugSymbols() {
+ErrorMessageOr<DebugSymbols> PdbFileDia::LoadDebugSymbols() {
+  ORBIT_SCOPE_FUNCTION;
+  DebugSymbols debug_symbols;
+  debug_symbols.load_bias = object_file_info_.load_bias;
+  debug_symbols.symbols_file_path = file_path_.string();
+
+  OUTCOME_TRY(LoadProcSymbols(SymTagFunction, debug_symbols));
+
+  return debug_symbols;
+}
+
+ErrorMessageOr<void> PdbFileDia::LoadProcSymbols(const enum SymTagEnum symbol_tag,
+                                                 DebugSymbols& debug_symbols) {
   HRESULT result = 0;
   CComPtr<IDiaEnumSymbols> dia_enum_symbols;
-  result = dia_global_scope_symbol_->findChildren(SymTagFunction, NULL, nsNone, &dia_enum_symbols);
+  result = dia_global_scope_symbol_->findChildren(symbol_tag, /*name=*/nullptr,
+                                                  NameSearchOptions::nsNone, &dia_enum_symbols);
   if (result != S_OK) {
     return ErrorMessage{
         absl::StrFormat("findChildren failed for %s (%u)", file_path_.string(), result)};
   }
 
-  ModuleSymbols module_symbols;
-  module_symbols.set_load_bias(object_file_info_.load_bias);
-  module_symbols.set_symbols_file_path(file_path_.string());
   IDiaSymbol* dia_symbol = nullptr;
   ULONG celt = 0;
 
   while (SUCCEEDED(dia_enum_symbols->Next(1, &dia_symbol, &celt)) && (celt == 1)) {
     CComPtr<IDiaSymbol> dia_symbol_com_ptr = dia_symbol;
-    SymbolInfo symbol_info;
 
     BSTR function_name = {};
     if (dia_symbol->get_name(&function_name) != S_OK) continue;
@@ -115,18 +128,19 @@ ErrorMessageOr<orbit_grpc_protos::ModuleSymbols> PdbFileDia::LoadDebugSymbols() 
     }
     SysFreeString(function_name);
 
+    FunctionSymbol& function_symbol = debug_symbols.function_symbols.emplace_back();
+    function_symbol.name = std::string(name.begin(), name.end());
+
     DWORD relative_virtual_address = 0;
     if (dia_symbol->get_relativeVirtualAddress(&relative_virtual_address) != S_OK) continue;
-    symbol_info.set_address(relative_virtual_address + object_file_info_.load_bias);
+    function_symbol.rva = relative_virtual_address + object_file_info_.load_bias;
 
     ULONGLONG length = 0;
     if (dia_symbol->get_length(&length) != S_OK) continue;
-    symbol_info.set_size(length);
-
-    *module_symbols.add_symbol_infos() = std::move(symbol_info);
+    function_symbol.size = length;
   }
 
-  return module_symbols;
+  return outcome::success();
 }
 
 ErrorMessageOr<std::unique_ptr<PdbFile>> PdbFileDia::CreatePdbFile(

@@ -4,12 +4,15 @@
 
 #include "ObjectUtils/SymbolsFile.h"
 
+#include <absl/strings/str_cat.h>
 #include <absl/strings/str_format.h>
+#include <llvm/Demangle/Demangle.h>
 
 #include <filesystem>
 #include <memory>
 #include <string>
 
+#include "Introspection/Introspection.h"
 #include "ObjectUtils/ObjectFile.h"
 #include "ObjectUtils/PdbFile.h"
 #include "OrbitBase/File.h"
@@ -50,6 +53,47 @@ ErrorMessageOr<std::unique_ptr<SymbolsFile>> CreateSymbolsFile(
                                        pdb_file_or_error.error().message()));
 
   return ErrorMessage{error_message};
+}
+
+// Demangling is quite expensive. We demangle in bulk here to easily measure the run time. It's also
+// a first step towards parallelization which could now be easily implemented.
+void DemangleSymbols(std::vector<FunctionSymbol>& function_symbols) {
+  ORBIT_SCOPE(absl::StrFormat("DemangleSymbols (%u)", function_symbols.size()).c_str());
+  for (FunctionSymbol& function_symbol : function_symbols) {
+    if (function_symbol.demangled_name.empty()) {
+      function_symbol.demangled_name =
+          absl::StrCat(llvm::demangle(function_symbol.name), function_symbol.argument_list);
+    }
+  }
+}
+
+// We centralize the creation of the ModuleSymbols proto, which is an expensive operation, so that
+// further optimizations can be done at this single point rather than having to modify all
+// SymbolsFile implementations.
+ErrorMessageOr<orbit_grpc_protos::ModuleSymbols> SymbolsFile::LoadDebugSymbolsAsProto() {
+  ORBIT_SCOPE(absl::StrFormat("LoadDebugSymbols (%s)", GetFilePath().string()).c_str());
+  OUTCOME_TRY(DebugSymbols debug_symbols, LoadDebugSymbols());
+
+  DemangleSymbols(debug_symbols.function_symbols);
+
+  ORBIT_SCOPE("ModuleSymbols protobuf creation");
+  orbit_grpc_protos::ModuleSymbols module_symbols;
+  module_symbols.set_load_bias(debug_symbols.load_bias);
+  module_symbols.set_symbols_file_path(debug_symbols.symbols_file_path);
+
+  std::vector<FunctionSymbol>& function_symbols = debug_symbols.function_symbols;
+  auto* symbol_infos = module_symbols.mutable_symbol_infos();
+  symbol_infos->Reserve(function_symbols.size());
+
+  for (FunctionSymbol& function_symbol : function_symbols) {
+    orbit_grpc_protos::SymbolInfo* symbol_info = module_symbols.add_symbol_infos();
+    symbol_info->set_name(std::move(function_symbol.name));
+    symbol_info->set_demangled_name(std::move(function_symbol.demangled_name));
+    symbol_info->set_address(function_symbol.rva);
+    symbol_info->set_size(function_symbol.size);
+  }
+
+  return module_symbols;
 }
 
 }  // namespace orbit_object_utils

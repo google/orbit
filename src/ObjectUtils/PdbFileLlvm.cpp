@@ -13,13 +13,10 @@
 
 #include <memory>
 
-#include "GrpcProtos/symbol.pb.h"
+#include "Introspection/Introspection.h"
 #include "ObjectUtils/CoffFile.h"
 #include "OrbitBase/Logging.h"
 #include "OrbitBase/Result.h"
-
-using orbit_grpc_protos::ModuleSymbols;
-using orbit_grpc_protos::SymbolInfo;
 
 namespace orbit_object_utils {
 
@@ -31,12 +28,12 @@ namespace {
 // all symbol info required for functions.
 class SymbolInfoVisitor : public llvm::codeview::SymbolVisitorCallbacks {
  public:
-  SymbolInfoVisitor(ModuleSymbols* module_symbols, const ObjectFileInfo& object_file_info,
+  SymbolInfoVisitor(DebugSymbols* debug_symbols, const ObjectFileInfo& object_file_info,
                     llvm::pdb::TpiStream* type_info_stream)
-      : module_symbols_(module_symbols),
+      : debug_symbols_(debug_symbols),
         object_file_info_(object_file_info),
         type_info_stream_(type_info_stream) {
-    ORBIT_CHECK(module_symbols != nullptr);
+    ORBIT_CHECK(debug_symbols != nullptr);
     ORBIT_CHECK(type_info_stream != nullptr);
   }
 
@@ -44,27 +41,25 @@ class SymbolInfoVisitor : public llvm::codeview::SymbolVisitorCallbacks {
   // method. Other records will simply return llvm::Error::success without any work done.
   llvm::Error visitKnownRecord(llvm::codeview::CVSymbol& /*unused*/,
                                llvm::codeview::ProcSym& proc) override {
-    SymbolInfo symbol_info;
-    symbol_info.set_demangled_name(llvm::demangle(proc.Name.str()));
+    FunctionSymbol& function_symbol = debug_symbols_->function_symbols.emplace_back();
+    function_symbol.name = proc.Name.str();
 
     // The ProcSym's name does not contain an argument list. However, this information is required
     // when dealing with overloads and it is available in the type info stream. See:
     // https://llvm.org/docs/PDB/TpiStream.html
     llvm::StringRef argument_list = RetrieveArgumentList(proc);
     if (!argument_list.empty()) {
-      symbol_info.set_demangled_name(
-          absl::StrCat(symbol_info.demangled_name(), argument_list.data()));
+      function_symbol.argument_list = argument_list.data();
     }
 
     // The address in PDB files is a relative virtual address (RVA), to make the address compatible
     // with how we do the computation, we need to add both the load bias (ImageBase for COFF) and
     // the offset of the executable section.
-    symbol_info.set_address(proc.CodeOffset + object_file_info_.load_bias +
-                            object_file_info_.executable_segment_offset);
-    symbol_info.set_size(proc.CodeSize);
+    function_symbol.rva =
+        proc.CodeOffset + object_file_info_.load_bias + object_file_info_.executable_segment_offset;
+    function_symbol.size = proc.CodeSize;
 
-    ORBIT_CHECK(module_symbols_ != nullptr);
-    *(module_symbols_->add_symbol_infos()) = std::move(symbol_info);
+    ORBIT_CHECK(debug_symbols_ != nullptr);
 
     return llvm::Error::success();
   }
@@ -125,7 +120,7 @@ class SymbolInfoVisitor : public llvm::codeview::SymbolVisitorCallbacks {
     }
   }
 
-  ModuleSymbols* module_symbols_;
+  DebugSymbols* debug_symbols_;
   ObjectFileInfo object_file_info_;
   llvm::pdb::TpiStream* type_info_stream_;
 };
@@ -138,10 +133,11 @@ PdbFileLlvm::PdbFileLlvm(std::filesystem::path file_path, const ObjectFileInfo& 
       object_file_info_(object_file_info),
       session_(std::move(session)) {}
 
-[[nodiscard]] ErrorMessageOr<orbit_grpc_protos::ModuleSymbols> PdbFileLlvm::LoadDebugSymbols() {
-  ModuleSymbols module_symbols;
-  module_symbols.set_load_bias(object_file_info_.load_bias);
-  module_symbols.set_symbols_file_path(file_path_.string());
+ErrorMessageOr<DebugSymbols> PdbFileLlvm::LoadDebugSymbols() {
+  ORBIT_SCOPE_FUNCTION;
+  DebugSymbols debug_symbols;
+  debug_symbols.symbols_file_path = file_path_.string();
+  debug_symbols.load_bias = object_file_info_.load_bias;
 
   auto* native_session = dynamic_cast<llvm::pdb::NativeSession*>(session_.get());
   ORBIT_CHECK(native_session != nullptr);
@@ -188,7 +184,7 @@ PdbFileLlvm::PdbFileLlvm(std::filesystem::path file_path, const ObjectFileInfo& 
     llvm::codeview::SymbolDeserializer deserializer(nullptr,
                                                     llvm::codeview::CodeViewContainer::Pdb);
     pipeline.addCallbackToPipeline(deserializer);
-    SymbolInfoVisitor symbol_visitor(&module_symbols, object_file_info_, &type_info_stream.get());
+    SymbolInfoVisitor symbol_visitor(&debug_symbols, object_file_info_, &type_info_stream.get());
     pipeline.addCallbackToPipeline(symbol_visitor);
     llvm::codeview::CVSymbolVisitor visitor(pipeline);
 
@@ -204,7 +200,7 @@ PdbFileLlvm::PdbFileLlvm(std::filesystem::path file_path, const ObjectFileInfo& 
                           llvm::toString(std::move(error)))};
     }
   }
-  return module_symbols;
+  return debug_symbols;
 }
 
 ErrorMessageOr<std::unique_ptr<PdbFile>> PdbFileLlvm::CreatePdbFile(

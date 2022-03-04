@@ -43,7 +43,7 @@ TEST(ObjectFile, LoadsCoffFileWithSymbols) {
   ASSERT_THAT(object_file, HasNoError());
 
   EXPECT_TRUE(object_file.value()->HasDebugSymbols());
-  const auto symbols_result = object_file.value()->LoadDebugSymbols();
+  const auto symbols_result = object_file.value()->LoadDebugSymbolsAsProto();
   ASSERT_TRUE(symbols_result.has_value()) << symbols_result.error().message();
 }
 
@@ -55,7 +55,7 @@ TEST(ObjectFile, LoadsElfFileWithSymbols) {
   ASSERT_THAT(object_file, HasNoError());
 
   EXPECT_TRUE(object_file.value()->HasDebugSymbols());
-  const auto symbols_result = object_file.value()->LoadDebugSymbols();
+  const auto symbols_result = object_file.value()->LoadDebugSymbolsAsProto();
   ASSERT_TRUE(symbols_result.has_value()) << symbols_result.error().message();
 }
 

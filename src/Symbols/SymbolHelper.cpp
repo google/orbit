@@ -256,7 +256,7 @@ ErrorMessageOr<ModuleSymbols> SymbolHelper::LoadSymbolsFromFile(
   ORBIT_SCOPED_TIMED_LOG("LoadSymbolsFromFile: %s", file_path.string());
 
   OUTCOME_TRY(auto symbols_file, CreateSymbolsFile(file_path, object_file_info));
-  return symbols_file->LoadDebugSymbols();
+  return symbols_file->LoadDebugSymbolsAsProto();
 }
 
 fs::path SymbolHelper::GenerateCachedFileName(const fs::path& file_path) const {

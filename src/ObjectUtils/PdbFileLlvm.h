@@ -33,7 +33,7 @@ namespace orbit_object_utils {
 
 class PdbFileLlvm : public PdbFile {
  public:
-  [[nodiscard]] ErrorMessageOr<orbit_grpc_protos::ModuleSymbols> LoadDebugSymbols() override;
+  [[nodiscard]] ErrorMessageOr<DebugSymbols> LoadDebugSymbols() override;
   [[nodiscard]] const std::filesystem::path& GetFilePath() const override { return file_path_; }
 
   [[nodiscard]] std::array<uint8_t, 16> GetGuid() const override {

@@ -36,8 +36,7 @@ class ElfFile : public ObjectFile {
   ElfFile() = default;
   virtual ~ElfFile() = default;
 
-  [[nodiscard]] virtual ErrorMessageOr<orbit_grpc_protos::ModuleSymbols>
-  LoadSymbolsFromDynsym() = 0;
+  [[nodiscard]] virtual ErrorMessageOr<DebugSymbols> LoadSymbolsFromDynsym() = 0;
 
   [[nodiscard]] virtual bool HasDynsym() const = 0;
   [[nodiscard]] virtual bool HasDebugInfo() const = 0;

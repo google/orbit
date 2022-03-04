@@ -25,6 +25,7 @@ using orbit_grpc_protos::SymbolInfo;
 using orbit_object_utils::CreateElfFile;
 using orbit_object_utils::CreateElfFileFromBuffer;
 using orbit_object_utils::ElfFile;
+using orbit_object_utils::FunctionSymbol;
 using orbit_test_utils::HasError;
 using orbit_test_utils::HasNoError;
 
@@ -36,7 +37,7 @@ TEST(ElfFile, LoadDebugSymbols) {
   ASSERT_THAT(elf_file_result, HasNoError());
   std::unique_ptr<ElfFile> elf_file = std::move(elf_file_result.value());
 
-  const auto symbols_result = elf_file->LoadDebugSymbols();
+  const auto symbols_result = elf_file->LoadDebugSymbolsAsProto();
   ASSERT_THAT(symbols_result, HasNoError());
 
   EXPECT_EQ(symbols_result.value().symbols_file_path(), file_path);
@@ -83,14 +84,14 @@ TEST(ElfFile, LoadSymbolsFromDynsym) {
   const auto symbols_result = elf_file->LoadSymbolsFromDynsym();
   ASSERT_THAT(symbols_result, HasNoError());
 
-  std::vector<SymbolInfo> symbol_infos(symbols_result.value().symbol_infos().begin(),
-                                       symbols_result.value().symbol_infos().end());
-  EXPECT_EQ(symbol_infos.size(), 8);
+  const std::vector<FunctionSymbol>& function_symbols = symbols_result.value().function_symbols;
+  EXPECT_EQ(function_symbols.size(), 8);
 
-  SymbolInfo& symbol_info = symbol_infos[7];
-  EXPECT_EQ(symbol_info.demangled_name(), "UseTestLib");
-  EXPECT_EQ(symbol_info.address(), 0x2670);
-  EXPECT_EQ(symbol_info.size(), 591);
+  const FunctionSymbol& function_symbol = function_symbols[7];
+  EXPECT_EQ(function_symbol.name, "UseTestLib");
+  EXPECT_EQ(function_symbol.demangled_name, "UseTestLib");
+  EXPECT_EQ(function_symbol.rva, 0x2670);
+  EXPECT_EQ(function_symbol.size, 591);
 }
 
 TEST(ElfFile, LoadBiasAndExecutableSegmentOffset) {

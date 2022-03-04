@@ -22,7 +22,7 @@ static ErrorMessageOr<AddressRange> FindFunctionAbsoluteAddressInModule(
     std::string_view function_name, std::string_view module_file_path,
     AddressRange module_address_range) {
   OUTCOME_TRY(auto&& elf_file, orbit_object_utils::CreateElfFile(module_file_path));
-  OUTCOME_TRY(auto&& syms, elf_file->LoadDebugSymbols());
+  OUTCOME_TRY(auto&& syms, elf_file->LoadDebugSymbolsAsProto());
   for (const auto& sym : syms.symbol_infos()) {
     if (sym.demangled_name() == function_name) {
       const uint64_t address = orbit_object_utils::SymbolVirtualAddressToAbsoluteAddress(
@@ -67,7 +67,7 @@ AddressRange GetFunctionAbsoluteAddressRangeOrDie(std::string_view function_name
 static ErrorMessageOr<AddressRange> FindFunctionRelativeAddressInModule(
     std::string_view function_name, std::string_view module_file_path) {
   OUTCOME_TRY(auto&& elf_file, orbit_object_utils::CreateElfFile(module_file_path));
-  OUTCOME_TRY(auto&& syms, elf_file->LoadDebugSymbols());
+  OUTCOME_TRY(auto&& syms, elf_file->LoadDebugSymbolsAsProto());
   for (const auto& sym : syms.symbol_infos()) {
     if (sym.demangled_name() == function_name) {
       return AddressRange(sym.address(), sym.address() + sym.size());
