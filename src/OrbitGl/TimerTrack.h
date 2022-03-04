@@ -21,6 +21,7 @@
 #include "Containers/BlockChain.h"
 #include "CoreMath.h"
 #include "PickingManager.h"
+#include "Statistics/Histogram.h"
 #include "TextRenderer.h"
 #include "TracepointThreadBar.h"
 #include "Track.h"
@@ -45,6 +46,7 @@ struct DrawData {
   float track_width;
   float z;
   bool is_collapsed;
+  std::optional<orbit_statistics::HistogramSelectionRange> histogram_selection_range;
 };
 }  // namespace internal
 
@@ -135,7 +137,8 @@ class TimerTrack : public Track {
       uint64_t min_tick, uint64_t max_tick, float track_pos_x, float track_width, Batcher* batcher,
       const orbit_gl::TimelineInfoInterface* timeline_info, orbit_gl::Viewport* viewport,
       bool is_collapsed, const orbit_client_protos::TimerInfo* selected_timer,
-      uint64_t highlighted_function_id, uint64_t highlighted_group_id);
+      uint64_t highlighted_function_id, uint64_t highlighted_group_id,
+      std::optional<orbit_statistics::HistogramSelectionRange> histogram_selection_range);
 
   [[nodiscard]] virtual std::string GetBoxTooltip(const Batcher& batcher, PickingId id) const;
   [[nodiscard]] std::unique_ptr<PickingUserData> CreatePickingUserData(
@@ -149,6 +152,8 @@ class TimerTrack : public Track {
   }
 
   static const Color kHighlightColor;
+  static const Color kBoxBorderColor;
+
   int visible_timer_count_ = 0;
   OrbitApp* app_ = nullptr;
 

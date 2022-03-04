@@ -12,6 +12,7 @@
 #include <QItemSelectionModel>
 #include <QLayout>
 #include <QModelIndex>
+#include <QObject>
 #include <cstdint>
 #include <memory>
 #include <utility>
@@ -19,6 +20,7 @@
 #include "App.h"
 #include "DataViews/DataView.h"
 #include "DataViews/LiveFunctionsDataView.h"
+#include "HistogramWidget.h"
 #include "MetricsUploader/MetricsUploader.h"
 #include "orbitdataviewpanel.h"
 #include "orbittablemodel.h"
@@ -69,6 +71,11 @@ void OrbitLiveFunctions::Initialize(OrbitApp* app,
   all_events_iterator_->DisableButtons();
   dynamic_cast<QBoxLayout*>(ui->iteratorFrame->layout())
       ->insertWidget(ui->iteratorFrame->layout()->count() - 1, all_events_iterator_);
+
+  QObject::connect(ui->histogram_widget, &HistogramWidget::SignalSelectionRangeChange, this,
+                   [this](std::optional<orbit_statistics::HistogramSelectionRange> range) {
+                     emit SignalSelectionRangeChange(range);
+                   });
 }
 
 void OrbitLiveFunctions::Deinitialize() {

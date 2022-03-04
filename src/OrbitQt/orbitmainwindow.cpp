@@ -408,6 +408,11 @@ void OrbitMainWindow::SetupMainWindow() {
   connect(ui->liveFunctions->GetFilterLineEdit(), &QLineEdit::textChanged, this,
           [this](const QString& text) { OnLiveTabFunctionsFilterTextChanged(text); });
 
+  connect(ui->liveFunctions, &OrbitLiveFunctions::SignalSelectionRangeChange, this,
+          [this](std::optional<orbit_statistics::HistogramSelectionRange> range) {
+            app_->SetHistogramSelectionRange(range);
+          });
+
   ui->topDownWidget->Initialize(app_.get());
   ui->selectionTopDownWidget->Initialize(app_.get());
   ui->bottomUpWidget->Initialize(app_.get());

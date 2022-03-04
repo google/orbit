@@ -17,12 +17,14 @@
 #include <cmath>
 #include <cstdint>
 #include <iterator>
+#include <optional>
 #include <string>
 #include <utility>
 
 #include "ApiInterface/Orbit.h"
 #include "DisplayFormats/DisplayFormats.h"
 #include "Introspection/Introspection.h"
+#include "OrbitBase/Logging.h"
 #include "Statistics/Histogram.h"
 
 constexpr double kRelativeMargin = 0.1;
@@ -142,6 +144,8 @@ void HistogramWidget::UpdateData(const std::vector<uint64_t>* data, std::string 
   if (function_data_.has_value() && function_data_->id == function_id) return;
 
   histogram_stack_ = {};
+  ranges_stack_ = {};
+  EmitSignalSelectionRangeChange();
 
   function_data_.emplace(data, std::move(function_name), function_id);
 
@@ -243,8 +247,12 @@ void HistogramWidget::mouseReleaseEvent(QMouseEvent* /* event*/) {
   if (selected_area_) {
     // if it wasn't a drag, but just a click, go one level of selections up
     if (selected_area_->selection_start_pixel == selected_area_->selection_current_pixel) {
-      if (IsSelectionActive()) histogram_stack_.pop();
+      if (IsSelectionActive()) {
+        histogram_stack_.pop();
+        ranges_stack_.pop();
+      }
       selected_area_.reset();
+      EmitSignalSelectionRangeChange();
       update();
       return;
     }
@@ -268,11 +276,13 @@ void HistogramWidget::mouseReleaseEvent(QMouseEvent* /* event*/) {
       auto histogram = orbit_statistics::BuildHistogram(selection);
       if (histogram) {
         histogram_stack_.push(std::move(*histogram));
+        ranges_stack_.push({min, max});
       }
     }
     selected_area_.reset();
   }
 
+  EmitSignalSelectionRangeChange();
   update();
 }
 
@@ -299,3 +309,15 @@ int HistogramWidget::Height() const { return size().height(); }
 int HistogramWidget::HeightMargin() const { return RoundToClosestInt(Height() * kRelativeMargin); }
 
 int HistogramWidget::WidthMargin() const { return RoundToClosestInt(Width() * kRelativeMargin); }
+
+[[nodiscard]] std::optional<orbit_statistics::HistogramSelectionRange>
+HistogramWidget::GetSelectionRange() const {
+  if (ranges_stack_.empty()) {
+    return std::nullopt;
+  }
+  return ranges_stack_.top();
+}
+
+void HistogramWidget::EmitSignalSelectionRangeChange() const {
+  emit SignalSelectionRangeChange(GetSelectionRange());
+}

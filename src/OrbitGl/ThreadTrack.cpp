@@ -10,6 +10,8 @@
 
 #include <algorithm>
 #include <atomic>
+#include <cstdint>
+#include <memory>
 #include <optional>
 
 #include "ApiInterface/Orbit.h"
@@ -28,6 +30,7 @@
 #include "OrbitBase/ThreadUtils.h"
 #include "TextRenderer.h"
 #include "TimeGraphLayout.h"
+#include "TimerTrack.h"
 #include "TriangleToggle.h"
 #include "Viewport.h"
 
@@ -378,6 +381,41 @@ void ThreadTrack::OnTimer(const TimerInfo& timer_info) {
   return {world_timer_x, world_timer_width};
 }
 
+constexpr float kMinimalWidthToHaveBorder = 4.0;
+
+[[nodiscard]] bool ThreadTrack::ShouldHaveBorder(
+    const TimerInfo* timer, const std::optional<orbit_statistics::HistogramSelectionRange>& range,
+    float width) const {
+  if (!range.has_value() || width < kMinimalWidthToHaveBorder ||
+      timer->function_id() != app_->GetHighlightedFunctionId()) {
+    return false;
+  }
+  const uint64_t duration = timer->end() - timer->start();
+  return range->min_duration <= duration && duration <= range->max_duration;
+}
+
+[[nodiscard]] static Vec2 Vec3ToVec2(const Vec3 v) { return {v[0], v[1]}; }
+
+void ThreadTrack::AddBorderLine(const Vec2& from, const Vec2& to, float z, const Color& color,
+                                Batcher& batcher,
+                                const orbit_client_protos::TimerInfo& timer_info) {
+  auto user_data = CreatePickingUserData(batcher, timer_info);
+  batcher.AddLine(from, to, z, color, std::move(user_data));
+}
+
+void ThreadTrack::AddBoxBorder(Batcher& batcher, const Box& box, const Color& color,
+                               const orbit_client_protos::TimerInfo& timer_info) {
+  float z = box.vertices[0][2];
+  AddBorderLine(Vec3ToVec2(box.vertices[0]), Vec3ToVec2(box.vertices[1]), z, color, batcher,
+                timer_info);
+  AddBorderLine(Vec3ToVec2(box.vertices[1]), Vec3ToVec2(box.vertices[2]), z, color, batcher,
+                timer_info);
+  AddBorderLine(Vec3ToVec2(box.vertices[2]), Vec3ToVec2(box.vertices[3]), z, color, batcher,
+                timer_info);
+  AddBorderLine(Vec3ToVec2(box.vertices[3]), Vec3ToVec2(box.vertices[0]), z, color, batcher,
+                timer_info);
+}
+
 // We minimize overdraw when drawing lines for small events by discarding events that would just
 // draw over an already drawn pixel line. When zoomed in enough that all events are drawn as boxes,
 // this has no effect. When zoomed  out, many events will be discarded quickly.
@@ -390,10 +428,10 @@ void ThreadTrack::DoUpdatePrimitives(Batcher& batcher, TextRenderer& text_render
   ORBIT_SCOPE_WITH_COLOR("ThreadTrack::DoUpdatePrimitives", kOrbitColorYellow);
   visible_timer_count_ = 0;
 
-  const internal::DrawData draw_data =
-      GetDrawData(min_tick, max_tick, GetPos()[0], GetWidth(), &batcher, timeline_info_, viewport_,
-                  collapse_toggle_->IsCollapsed(), app_->selected_timer(),
-                  app_->GetFunctionIdToHighlight(), app_->GetGroupIdToHighlight());
+  const internal::DrawData draw_data = GetDrawData(
+      min_tick, max_tick, GetPos()[0], GetWidth(), &batcher, timeline_info_, viewport_,
+      collapse_toggle_->IsCollapsed(), app_->selected_timer(), app_->GetFunctionIdToHighlight(),
+      app_->GetGroupIdToHighlight(), app_->GetHistogramSelectionRange());
 
   uint64_t resolution_in_pixels = draw_data.viewport->WorldToScreen({draw_data.track_width, 0})[0];
   for (uint32_t depth = 0; depth < GetDepth(); depth++) {
@@ -417,6 +455,10 @@ void ThreadTrack::DoUpdatePrimitives(Batcher& batcher, TextRenderer& text_render
           DrawTimesliceText(text_renderer, *timer_info, draw_data.track_start_x, pos, size);
         }
         batcher.AddShadedBox(pos, size, draw_data.z, color, std::move(user_data));
+        if (ShouldHaveBorder(timer_info, draw_data.histogram_selection_range, size[0])) {
+          AddBoxBorder(batcher, {pos, size, GlCanvas::kZValueBox}, TimerTrack::kBoxBorderColor,
+                       *timer_info);
+        }
       } else {
         batcher.AddVerticalLine(pos, box_height, draw_data.z, color, std::move(user_data));
       }

@@ -17,16 +17,22 @@
 #include <string>
 #include <vector>
 
+#include "App.h"
 #include "Statistics/Histogram.h"
 
 // Implements a widget that draws a histogram.
 // If the histogram is empty, draws a textual suggestion to select a function.
 class HistogramWidget : public QWidget {
+  Q_OBJECT
+
  public:
   using QWidget::QWidget;
 
   void UpdateData(const std::vector<uint64_t>* data, std::string function_name,
                   uint64_t function_id);
+
+ signals:
+  void SignalSelectionRangeChange(std::optional<orbit_statistics::HistogramSelectionRange>) const;
 
  protected:
   void paintEvent(QPaintEvent* /*event*/) override;
@@ -46,6 +52,9 @@ class HistogramWidget : public QWidget {
   [[nodiscard]] int WidthMargin() const;
   [[nodiscard]] int HeightMargin() const;
 
+  [[nodiscard]] std::optional<orbit_statistics::HistogramSelectionRange> GetSelectionRange() const;
+  void EmitSignalSelectionRangeChange() const;
+
   struct FunctionData {
     FunctionData(const std::vector<uint64_t>* data, std::string name, uint64_t id)
         : data(data), name(std::move(name)), id(id) {}
@@ -58,6 +67,7 @@ class HistogramWidget : public QWidget {
   std::optional<FunctionData> function_data_;
 
   std::stack<orbit_statistics::Histogram> histogram_stack_;
+  std::stack<orbit_statistics::HistogramSelectionRange> ranges_stack_;
 
   struct SelectedArea {
     int selection_start_pixel;
