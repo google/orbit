@@ -391,7 +391,7 @@ constexpr float kMinimalWidthToHaveBorder = 4.0;
     return false;
   }
   const uint64_t duration = timer->end() - timer->start();
-  return range->min <= duration && duration <= range->max;
+  return range->min_duration <= duration && duration <= range->max_duration;
 }
 
 [[nodiscard]] static Vec2 Vec3ToVec2(const Vec3 v) { return {v[0], v[1]}; }
