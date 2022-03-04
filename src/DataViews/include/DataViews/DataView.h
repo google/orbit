@@ -171,8 +171,9 @@ class DataView {
     return nullptr;
   }
 
-  [[nodiscard]] virtual absl::flat_hash_map<std::string_view, bool> GetActionVisibilities(
-      int clicked_index, const std::vector<int>& selected_indices);
+  enum class ActionStatus { kInvisible, kVisibleButDisabled, kVisibleAndEnabled };
+  [[nodiscard]] virtual ActionStatus GetActionStatus(std::string_view action, int clicked_index,
+                                                     const std::vector<int>& selected_indices);
 
   void InitSortingOrders();
   virtual void DoSort() {}
@@ -187,7 +188,7 @@ class DataView {
   absl::flat_hash_set<int> selected_indices_;
   DataViewType type_;
 
-  orbit_data_views::AppInterface* app_ = nullptr;
+  AppInterface* app_ = nullptr;
 };
 
 }  // namespace orbit_data_views

@@ -36,11 +36,6 @@ void DataView::InitSortingOrders() {
   sorting_column_ = GetDefaultSortingColumn();
 }
 
-absl::flat_hash_map<std::string_view, bool> DataView::GetActionVisibilities(
-    int /* clicked_index */, const std::vector<int>& /* selected_indices */) {
-  return {{kMenuActionCopySelection, true}, {kMenuActionExportToCsv, true}};
-}
-
 void DataView::OnSort(int column, std::optional<SortingOrder> new_order) {
   ORBIT_SCOPE_FUNCTION;
 
@@ -78,6 +73,17 @@ void DataView::OnDataChanged() {
   ORBIT_SCOPE_FUNCTION;
   DoFilter();
   OnSort(sorting_column_, std::optional<SortingOrder>{});
+}
+
+DataView::ActionStatus DataView::GetActionStatus(std::string_view action, int /* clicked_index */,
+                                                 const std::vector<int>& /* selected_indices */) {
+  if (action == kMenuActionCopySelection) {
+    return ActionStatus::kVisibleAndEnabled;
+  } else if (action == kMenuActionExportToCsv) {
+    return ActionStatus::kVisibleAndEnabled;
+  }
+
+  return ActionStatus::kInvisible;
 }
 
 std::vector<std::vector<std::string>> DataView::GetContextMenuWithGrouping(

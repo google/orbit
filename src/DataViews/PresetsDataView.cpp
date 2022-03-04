@@ -148,23 +148,23 @@ void PresetsDataView::DoSort() {
   }
 }
 
-absl::flat_hash_map<std::string_view, bool> PresetsDataView::GetActionVisibilities(
-    int clicked_index, const std::vector<int>& selected_indices) {
+DataView::ActionStatus PresetsDataView::GetActionStatus(std::string_view action, int clicked_index,
+                                                        const std::vector<int>& selected_indices) {
   // Note that the UI already enforces a single selection.
   ORBIT_CHECK(selected_indices.size() == 1);
 
-  absl::flat_hash_map<std::string_view, bool> visible_action_name_to_availability =
-      DataView::GetActionVisibilities(clicked_index, selected_indices);
+  if (action == kMenuActionDeletePreset || action == kMenuActionShowInExplorer) {
+    return ActionStatus::kVisibleAndEnabled;
 
-  visible_action_name_to_availability.insert({{kMenuActionLoadPreset, false},
-                                              {kMenuActionDeletePreset, true},
-                                              {kMenuActionShowInExplorer, true}});
+  } else if (action == kMenuActionLoadPreset) {
+    const PresetFile& preset = GetPreset(selected_indices[0]);
+    return app_->GetPresetLoadState(preset).state == PresetLoadState::kNotLoadable
+               ? ActionStatus::kVisibleButDisabled
+               : ActionStatus::kVisibleAndEnabled;
 
-  const PresetFile& preset = GetPreset(selected_indices[0]);
-  visible_action_name_to_availability[kMenuActionLoadPreset] =
-      app_->GetPresetLoadState(preset).state != PresetLoadState::kNotLoadable;
-
-  return visible_action_name_to_availability;
+  } else {
+    return DataView::GetActionStatus(action, clicked_index, selected_indices);
+  }
 }
 
 // TODO(b/205676296): Remove this when we change to use GetActionVisibilities in

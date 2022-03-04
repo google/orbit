@@ -57,8 +57,8 @@ class LiveFunctionsDataView : public DataView {
   void UpdateHistogramWithFunctionIds(const std::vector<uint64_t>& function_ids);
 
  protected:
-  [[nodiscard]] absl::flat_hash_map<std::string_view, bool> GetActionVisibilities(
-      int clicked_index, const std::vector<int>& selected_indices) override;
+  [[nodiscard]] ActionStatus GetActionStatus(std::string_view action, int clicked_index,
+                                             const std::vector<int>& selected_indices) override;
   void DoFilter() override;
   void DoSort() override;
   [[nodiscard]] uint64_t GetInstrumentedFunctionId(uint32_t row) const;

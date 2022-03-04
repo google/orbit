@@ -162,31 +162,43 @@ void FunctionsDataView::DoSort() {
   }
 }
 
-absl::flat_hash_map<std::string_view, bool> FunctionsDataView::GetActionVisibilities(
-    int clicked_index, const std::vector<int>& selected_indices) {
-  absl::flat_hash_map<std::string_view, bool> visible_action_name_to_availability =
-      DataView::GetActionVisibilities(clicked_index, selected_indices);
+DataView::ActionStatus FunctionsDataView::GetActionStatus(
+    std::string_view action, int clicked_index, const std::vector<int>& selected_indices) {
+  if (action == kMenuActionDisassembly || action == kMenuActionSourceCode) {
+    return ActionStatus::kVisibleAndEnabled;
+  }
 
-  visible_action_name_to_availability.insert({{kMenuActionSelect, false},
-                                              {kMenuActionUnselect, false},
-                                              {kMenuActionEnableFrameTrack, false},
-                                              {kMenuActionDisableFrameTrack, false},
-                                              {kMenuActionDisassembly, true},
-                                              {kMenuActionSourceCode, true}});
+  std::function<bool(const FunctionInfo&)> is_visible_action_enabled;
+  if (action == kMenuActionSelect) {
+    is_visible_action_enabled = [this](const FunctionInfo& function) {
+      return !app_->IsFunctionSelected(function) &&
+             orbit_client_data::function_utils::IsFunctionSelectable(function);
+    };
+
+  } else if (action == kMenuActionUnselect) {
+    is_visible_action_enabled = [this](const FunctionInfo& function) {
+      return app_->IsFunctionSelected(function);
+    };
+
+  } else if (action == kMenuActionEnableFrameTrack) {
+    is_visible_action_enabled = [this](const FunctionInfo& function) {
+      return !app_->IsFrameTrackEnabled(function);
+    };
+
+  } else if (action == kMenuActionDisableFrameTrack) {
+    is_visible_action_enabled = [this](const FunctionInfo& function) {
+      return app_->IsFrameTrackEnabled(function);
+    };
+
+  } else {
+    return DataView::GetActionStatus(action, clicked_index, selected_indices);
+  }
 
   for (int index : selected_indices) {
     const FunctionInfo& function = *GetFunctionInfoFromRow(index);
-    visible_action_name_to_availability[kMenuActionSelect] |=
-        !app_->IsFunctionSelected(function) &&
-        orbit_client_data::function_utils::IsFunctionSelectable(function);
-    visible_action_name_to_availability[kMenuActionUnselect] |= app_->IsFunctionSelected(function);
-    visible_action_name_to_availability[kMenuActionEnableFrameTrack] |=
-        !app_->IsFrameTrackEnabled(function);
-    visible_action_name_to_availability[kMenuActionDisableFrameTrack] |=
-        app_->IsFrameTrackEnabled(function);
+    if (is_visible_action_enabled(function)) return ActionStatus::kVisibleAndEnabled;
   }
-
-  return visible_action_name_to_availability;
+  return ActionStatus::kVisibleButDisabled;
 }
 
 // TODO(b/205676296): Remove this when we change to use GetActionVisibilities in

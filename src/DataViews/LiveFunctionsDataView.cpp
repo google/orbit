@@ -252,66 +252,80 @@ void LiveFunctionsDataView::DoSort() {
   }
 }
 
-absl::flat_hash_map<std::string_view, bool> LiveFunctionsDataView::GetActionVisibilities(
-    int clicked_index, const std::vector<int>& selected_indices) {
-  absl::flat_hash_map<std::string_view, bool> visible_action_name_to_availability =
-      DataView::GetActionVisibilities(clicked_index, selected_indices);
-
-  visible_action_name_to_availability.insert({{kMenuActionSelect, false},
-                                              {kMenuActionUnselect, false},
-                                              {kMenuActionEnableFrameTrack, false},
-                                              {kMenuActionDisableFrameTrack, false},
-                                              {kMenuActionAddIterator, false},
-                                              {kMenuActionDisassembly, false},
-                                              {kMenuActionSourceCode, false},
-                                              {kMenuActionJumpToFirst, false},
-                                              {kMenuActionJumpToLast, false},
-                                              {kMenuActionJumpToMax, false},
-                                              {kMenuActionJumpToMin, false},
-                                              {kMenuActionExportEventsToCsv, true}});
-
+DataView::ActionStatus LiveFunctionsDataView::GetActionStatus(
+    std::string_view action, int clicked_index, const std::vector<int>& selected_indices) {
   const CaptureData& capture_data = app_->GetCaptureData();
+  if (action == kMenuActionJumpToFirst || action == kMenuActionJumpToLast ||
+      action == kMenuActionJumpToMin || action == kMenuActionJumpToMax) {
+    if (selected_indices.size() != 1) return ActionStatus::kVisibleButDisabled;
+
+    uint64_t instrumented_function_id = GetInstrumentedFunctionId(selected_indices[0]);
+    const FunctionStats& stats = capture_data.GetFunctionStatsOrDefault(instrumented_function_id);
+    if (stats.count() == 0) return ActionStatus::kVisibleButDisabled;
+
+    return ActionStatus::kVisibleAndEnabled;
+  }
+
+  bool is_capture_connected = app_->IsCaptureConnected(capture_data);
+  if (action == kMenuActionDisassembly || action == kMenuActionSourceCode) {
+    return is_capture_connected ? ActionStatus::kVisibleAndEnabled
+                                : ActionStatus::kVisibleButDisabled;
+  }
+
+  if ((action == kMenuActionSelect || action == kMenuActionUnselect) && !is_capture_connected) {
+    return ActionStatus::kVisibleButDisabled;
+  }
+
+  std::function<bool(uint64_t, const FunctionInfo&)> is_visible_action_enabled;
+  if (action == kMenuActionSelect) {
+    is_visible_action_enabled = [this](uint64_t /*instrumented_function_id*/,
+                                       const FunctionInfo& instrumented_function) {
+      return !app_->IsFunctionSelected(instrumented_function) &&
+             orbit_client_data::function_utils::IsFunctionSelectable(instrumented_function);
+    };
+
+  } else if (action == kMenuActionUnselect) {
+    is_visible_action_enabled = [this](uint64_t /*instrumented_function_id*/,
+                                       const FunctionInfo& instrumented_function) {
+      return app_->IsFunctionSelected(instrumented_function);
+    };
+
+  } else if (action == kMenuActionEnableFrameTrack) {
+    is_visible_action_enabled = [this, &is_capture_connected, &capture_data](
+                                    uint64_t instrumented_function_id,
+                                    const FunctionInfo& instrumented_function) {
+      return is_capture_connected ? !app_->IsFrameTrackEnabled(instrumented_function)
+                                  : !capture_data.IsFrameTrackEnabled(instrumented_function_id);
+    };
+
+  } else if (action == kMenuActionDisableFrameTrack) {
+    is_visible_action_enabled = [this, &is_capture_connected, &capture_data](
+                                    uint64_t instrumented_function_id,
+                                    const FunctionInfo& instrumented_function) {
+      return is_capture_connected ? app_->IsFrameTrackEnabled(instrumented_function)
+                                  : capture_data.IsFrameTrackEnabled(instrumented_function_id);
+    };
+
+  } else if (action == kMenuActionAddIterator) {
+    is_visible_action_enabled = [&capture_data](uint64_t instrumented_function_id,
+                                                const FunctionInfo& /*instrumented_function*/) {
+      const FunctionStats& stats = capture_data.GetFunctionStatsOrDefault(instrumented_function_id);
+      // We need at least one function call to a function so that adding iterators makes sense.
+      return stats.count() > 0;
+    };
+
+  } else {
+    return DataView::GetActionStatus(action, clicked_index, selected_indices);
+  }
+
   for (int index : selected_indices) {
     uint64_t instrumented_function_id = GetInstrumentedFunctionId(index);
     const FunctionInfo& instrumented_function = *GetFunctionInfoFromRow(index);
-
-    if (app_->IsCaptureConnected(capture_data)) {
-      visible_action_name_to_availability[kMenuActionSelect] |=
-          !app_->IsFunctionSelected(instrumented_function) &&
-          orbit_client_data::function_utils::IsFunctionSelectable(instrumented_function);
-      visible_action_name_to_availability[kMenuActionUnselect] |=
-          app_->IsFunctionSelected(instrumented_function);
-      visible_action_name_to_availability[kMenuActionDisassembly] = true;
-      visible_action_name_to_availability[kMenuActionSourceCode] = true;
-
-      visible_action_name_to_availability[kMenuActionEnableFrameTrack] |=
-          !app_->IsFrameTrackEnabled(instrumented_function);
-      visible_action_name_to_availability[kMenuActionDisableFrameTrack] |=
-          app_->IsFrameTrackEnabled(instrumented_function);
-    } else {
-      visible_action_name_to_availability[kMenuActionEnableFrameTrack] |=
-          !capture_data.IsFrameTrackEnabled(instrumented_function_id);
-      visible_action_name_to_availability[kMenuActionDisableFrameTrack] |=
-          capture_data.IsFrameTrackEnabled(instrumented_function_id);
-    }
-
-    const FunctionStats& stats = capture_data.GetFunctionStatsOrDefault(instrumented_function_id);
-    // We need at least one function call to a function so that adding iterators makes sense.
-    visible_action_name_to_availability[kMenuActionAddIterator] |= stats.count() > 0;
-  }
-
-  if (selected_indices.size() == 1) {
-    uint64_t instrumented_function_id = GetInstrumentedFunctionId(selected_indices[0]);
-    const FunctionStats& stats = capture_data.GetFunctionStatsOrDefault(instrumented_function_id);
-    if (stats.count() > 0) {
-      visible_action_name_to_availability[kMenuActionJumpToFirst] = true;
-      visible_action_name_to_availability[kMenuActionJumpToLast] = true;
-      visible_action_name_to_availability[kMenuActionJumpToMin] = true;
-      visible_action_name_to_availability[kMenuActionJumpToMax] = true;
+    if (is_visible_action_enabled(instrumented_function_id, instrumented_function)) {
+      return ActionStatus::kVisibleAndEnabled;
     }
   }
-
-  return visible_action_name_to_availability;
+  return ActionStatus::kVisibleButDisabled;
 }
 
 // TODO(b/205676296): Remove this when we change to use GetActionVisibilities in
