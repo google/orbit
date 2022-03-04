@@ -70,9 +70,9 @@ void DemangleSymbols(std::vector<FunctionSymbol>& function_symbols) {
 // We centralize the creation of the ModuleSymbols proto, which is an expensive operation, so that
 // further optimizations can be done at this single point rather than having to modify all
 // SymbolsFile implementations.
-ErrorMessageOr<orbit_grpc_protos::ModuleSymbols> SymbolsFile::LoadDebugSymbolsAsProto() {
+ErrorMessageOr<orbit_grpc_protos::ModuleSymbols> SymbolsFile::LoadDebugSymbols() {
   ORBIT_SCOPE(absl::StrFormat("LoadDebugSymbols (%s)", GetFilePath().string()).c_str());
-  OUTCOME_TRY(DebugSymbols debug_symbols, LoadDebugSymbols());
+  OUTCOME_TRY(DebugSymbols debug_symbols, LoadRawDebugSymbols());
 
   DemangleSymbols(debug_symbols.function_symbols);
 
@@ -89,7 +89,7 @@ ErrorMessageOr<orbit_grpc_protos::ModuleSymbols> SymbolsFile::LoadDebugSymbolsAs
     orbit_grpc_protos::SymbolInfo* symbol_info = module_symbols.add_symbol_infos();
     symbol_info->set_name(std::move(function_symbol.name));
     symbol_info->set_demangled_name(std::move(function_symbol.demangled_name));
-    symbol_info->set_address(function_symbol.rva);
+    symbol_info->set_address(function_symbol.address);
     symbol_info->set_size(function_symbol.size);
   }
 

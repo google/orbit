@@ -23,7 +23,7 @@ namespace orbit_object_utils {
 
 class PdbFileDia : public PdbFile {
  public:
-  ErrorMessageOr<DebugSymbols> LoadDebugSymbols() override;
+  ErrorMessageOr<DebugSymbols> LoadRawDebugSymbols() override;
 
   [[nodiscard]] const std::filesystem::path& GetFilePath() const override { return file_path_; }
 

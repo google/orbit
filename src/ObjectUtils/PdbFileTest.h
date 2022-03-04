@@ -41,7 +41,7 @@ TYPED_TEST_P(PdbFileTest, LoadDebugSymbols) {
       TypeParam::CreatePdbFile(file_path_pdb, ObjectFileInfo{0x180000000, 0x1000});
   ASSERT_THAT(pdb_file_result, HasNoError());
   std::unique_ptr<orbit_object_utils::PdbFile> pdb_file = std::move(pdb_file_result.value());
-  auto symbols_result = pdb_file->LoadDebugSymbolsAsProto();
+  auto symbols_result = pdb_file->LoadDebugSymbols();
   ASSERT_THAT(symbols_result, HasNoError());
 
   auto symbols = std::move(symbols_result.value());

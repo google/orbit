@@ -37,7 +37,7 @@ TEST(ElfFile, LoadDebugSymbols) {
   ASSERT_THAT(elf_file_result, HasNoError());
   std::unique_ptr<ElfFile> elf_file = std::move(elf_file_result.value());
 
-  const auto symbols_result = elf_file->LoadDebugSymbolsAsProto();
+  const auto symbols_result = elf_file->LoadDebugSymbols();
   ASSERT_THAT(symbols_result, HasNoError());
 
   EXPECT_EQ(symbols_result.value().symbols_file_path(), file_path);
@@ -90,7 +90,7 @@ TEST(ElfFile, LoadSymbolsFromDynsym) {
   const FunctionSymbol& function_symbol = function_symbols[7];
   EXPECT_EQ(function_symbol.name, "UseTestLib");
   EXPECT_EQ(function_symbol.demangled_name, "UseTestLib");
-  EXPECT_EQ(function_symbol.rva, 0x2670);
+  EXPECT_EQ(function_symbol.address, 0x2670);
   EXPECT_EQ(function_symbol.size, 591);
 }
 

@@ -28,7 +28,7 @@ struct FunctionSymbol {
   std::string name;
   std::string argument_list;
   std::string demangled_name;
-  uint64_t rva = 0;
+  uint64_t address = 0;
   uint32_t size = 0;
 };
 
@@ -57,10 +57,10 @@ class SymbolsFile {
   [[nodiscard]] virtual std::string GetBuildId() const = 0;
   [[nodiscard]] virtual const std::filesystem::path& GetFilePath() const = 0;
 
-  // Loads debug symbols as a DebugSymbols object.
-  [[nodiscard]] virtual ErrorMessageOr<DebugSymbols> LoadDebugSymbols() = 0;
-  // Utility to load debug symbols as a ModuleSymbols protobuf. This calls LoadDebugSymbols.
-  [[nodiscard]] ErrorMessageOr<orbit_grpc_protos::ModuleSymbols> LoadDebugSymbolsAsProto();
+  // Loads debug symbols as a raw DebugSymbols object.
+  [[nodiscard]] virtual ErrorMessageOr<DebugSymbols> LoadRawDebugSymbols() = 0;
+  // Loads debug symbols as a ModuleSymbols protobuf. This calls LoadRawDebugSymbols.
+  [[nodiscard]] ErrorMessageOr<orbit_grpc_protos::ModuleSymbols> LoadDebugSymbols();
 };
 
 // Create a symbols file from the file at symbol_file_path. Additional info about the corresponding

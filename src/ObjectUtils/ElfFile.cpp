@@ -49,8 +49,6 @@ namespace orbit_object_utils {
 namespace {
 
 using orbit_grpc_protos::LineInfo;
-using orbit_grpc_protos::ModuleSymbols;
-using orbit_grpc_protos::SymbolInfo;
 
 template <typename ElfT>
 class ElfFileImpl : public ElfFile {
@@ -61,7 +59,7 @@ class ElfFileImpl : public ElfFile {
   ErrorMessageOr<void> Initialize();
 
   // Loads symbols from the .symtab section.
-  [[nodiscard]] ErrorMessageOr<DebugSymbols> LoadDebugSymbols() override;
+  [[nodiscard]] ErrorMessageOr<DebugSymbols> LoadRawDebugSymbols() override;
   [[nodiscard]] ErrorMessageOr<DebugSymbols> LoadSymbolsFromDynsym() override;
   [[nodiscard]] uint64_t GetLoadBias() const override;
   [[nodiscard]] uint64_t GetExecutableSegmentOffset() const override;
@@ -86,7 +84,7 @@ class ElfFileImpl : public ElfFile {
   ErrorMessageOr<void> InitSections();
   ErrorMessageOr<void> InitProgramHeaders();
   ErrorMessageOr<void> InitDynamicEntries();
-  ErrorMessageOr<FunctionSymbol> CreateSymbolInfo(const llvm::object::ELFSymbolRef& symbol_ref);
+  ErrorMessageOr<FunctionSymbol> CreateFunctionSymbol(const llvm::object::ELFSymbolRef& symbol_ref);
 
   const std::filesystem::path file_path_;
   llvm::object::OwningBinary<llvm::object::ObjectFile> owning_binary_;
@@ -316,7 +314,7 @@ ErrorMessageOr<void> ElfFileImpl<ElfT>::InitSections() {
 }
 
 template <typename ElfT>
-ErrorMessageOr<FunctionSymbol> ElfFileImpl<ElfT>::CreateSymbolInfo(
+ErrorMessageOr<FunctionSymbol> ElfFileImpl<ElfT>::CreateFunctionSymbol(
     const llvm::object::ELFSymbolRef& symbol_ref) {
   std::string name;
   if (auto maybe_name = symbol_ref.getName(); maybe_name) name = maybe_name.get().str();
@@ -356,13 +354,13 @@ ErrorMessageOr<FunctionSymbol> ElfFileImpl<ElfT>::CreateSymbolInfo(
 
   FunctionSymbol function_symbol;
   function_symbol.name = name;
-  function_symbol.rva = maybe_value.get();
+  function_symbol.address = maybe_value.get();
   function_symbol.size = symbol_ref.getSize();
   return function_symbol;
 }
 
 template <typename ElfT>
-ErrorMessageOr<DebugSymbols> ElfFileImpl<ElfT>::LoadDebugSymbols() {
+ErrorMessageOr<DebugSymbols> ElfFileImpl<ElfT>::LoadRawDebugSymbols() {
   ORBIT_SCOPE_FUNCTION;
   if (!has_symtab_section_) {
     return ErrorMessage("ELF file does not have a .symtab section.");
@@ -373,7 +371,7 @@ ErrorMessageOr<DebugSymbols> ElfFileImpl<ElfT>::LoadDebugSymbols() {
   debug_symbols.symbols_file_path = file_path_.string();
 
   for (const llvm::object::ELFSymbolRef& symbol_ref : object_file_->symbols()) {
-    auto symbol_or_error = CreateSymbolInfo(symbol_ref);
+    auto symbol_or_error = CreateFunctionSymbol(symbol_ref);
     if (symbol_or_error.has_value()) {
       debug_symbols.function_symbols.emplace_back(std::move(symbol_or_error.value()));
     }
@@ -398,7 +396,7 @@ ErrorMessageOr<DebugSymbols> ElfFileImpl<ElfT>::LoadSymbolsFromDynsym() {
   debug_symbols.symbols_file_path = file_path_.string();
 
   for (const llvm::object::ELFSymbolRef& symbol_ref : object_file_->getDynamicSymbolIterators()) {
-    auto symbol_or_error = CreateSymbolInfo(symbol_ref);
+    auto symbol_or_error = CreateFunctionSymbol(symbol_ref);
     if (symbol_or_error.has_value()) {
       debug_symbols.function_symbols.emplace_back(std::move(symbol_or_error.value()));
     }

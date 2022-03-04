@@ -116,7 +116,7 @@ void ManipulateModuleManagerAndSelectedFunctionsToAddInstrumentedFunctionFromFun
   ORBIT_CHECK(module_manager->AddOrUpdateModules({module_info}).empty());
 
   ErrorMessageOr<orbit_grpc_protos::ModuleSymbols> symbols_or_error =
-      elf_file->LoadDebugSymbolsAsProto();
+      elf_file->LoadDebugSymbols();
   ORBIT_FAIL_IF(symbols_or_error.has_error(), "%s", symbols_or_error.error().message());
   orbit_grpc_protos::ModuleSymbols& symbols = symbols_or_error.value();
 
@@ -174,7 +174,7 @@ std::optional<orbit_grpc_protos::ModuleSymbols> FindAndLoadDebugSymbols(
     std::unique_ptr<orbit_object_utils::ElfFile>& elf_file = error_or_elf_file.value();
 
     ErrorMessageOr<orbit_grpc_protos::ModuleSymbols> symbols_or_error =
-        elf_file->LoadDebugSymbolsAsProto();
+        elf_file->LoadDebugSymbols();
     // Load debug symbols from the first of the candidate files that contains any.
     if (symbols_or_error.has_error()) {
       continue;
