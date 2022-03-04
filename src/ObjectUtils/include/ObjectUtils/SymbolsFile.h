@@ -34,11 +34,6 @@ struct FunctionSymbol {
 
 // Raw structure that a SymbolsFile fills when loading symbols.
 struct DebugSymbols {
-  DebugSymbols() = default;
-  DebugSymbols(DebugSymbols& debug_symbols) = default;
-  DebugSymbols(DebugSymbols&& debug_symbols) = default;
-  DebugSymbols& operator=(DebugSymbols&& debug_symbols) = default;
-
   std::string symbols_file_path;
   uint64_t load_bias = 0;
   std::vector<FunctionSymbol> function_symbols;
