@@ -33,20 +33,25 @@ class EventLoop : public QObject {
   using ProcessEventsFlag = QEventLoop::ProcessEventsFlag;
   using ProcessEventsFlags = QEventLoop::ProcessEventsFlags;
 
-  outcome::result<int> exec(ProcessEventsFlags flags = ProcessEventsFlag::AllEvents) {
+  ErrorMessageOr<int> exec(ProcessEventsFlags flags = ProcessEventsFlag::AllEvents) {
     if (result_ == std::nullopt) {
       (void)loop_.exec(flags);
     }
 
     ORBIT_CHECK(result_ != std::nullopt);
 
-    auto result = result_.value();
+    auto result = std::move(result_.value());
     result_ = std::nullopt;
     return result;
   }
 
   void error(std::error_code e) {
     result_ = outcome::failure(e);
+    loop_.quit();
+  }
+
+  void error(ErrorMessage e) {
+    result_ = outcome::failure(std::move(e));
     loop_.quit();
   }
 
@@ -68,7 +73,7 @@ class EventLoop : public QObject {
   void processEvents(ProcessEventsFlags flags, int maxTime) { loop_.processEvents(flags, maxTime); }
 
  private:
-  std::optional<outcome::result<int>> result_;
+  std::optional<ErrorMessageOr<int>> result_;
   QEventLoop loop_;
 };
 
