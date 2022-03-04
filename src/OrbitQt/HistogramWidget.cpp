@@ -318,4 +318,6 @@ HistogramWidget::GetSelectionRange() const {
   return ranges_stack_.top();
 }
 
-void HistogramWidget::EmitSignalSelectionRangeChange() const { emit SignalSelectionRangeChange(); }
+void HistogramWidget::EmitSignalSelectionRangeChange() const {
+  emit SignalSelectionRangeChange(GetSelectionRange());
+}

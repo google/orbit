@@ -73,12 +73,9 @@ void OrbitLiveFunctions::Initialize(OrbitApp* app,
       ->insertWidget(ui->iteratorFrame->layout()->count() - 1, all_events_iterator_);
 
   QObject::connect(ui->histogram_widget, &HistogramWidget::SignalSelectionRangeChange, this,
-                   &OrbitLiveFunctions::RelaySignalSelectionRangeChange);
-}
-
-[[nodiscard]] std::optional<orbit_statistics::HistogramSelectionRange>
-OrbitLiveFunctions::GetHistogramSelectionRange() const {
-  return ui->histogram_widget->GetSelectionRange();
+                   [this](std::optional<orbit_statistics::HistogramSelectionRange> range) {
+                     emit SignalSelectionRangeChange(range);
+                   });
 }
 
 void OrbitLiveFunctions::Deinitialize() {
