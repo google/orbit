@@ -9,8 +9,10 @@
 #include <llvm/Demangle/Demangle.h>
 #include <winerror.h>
 
+#include "ObjectUtils/PdbDiaUtils.h"
 #include "OrbitBase/ExecutablePath.h"
 #include "OrbitBase/Logging.h"
+#include "absl/strings/str_cat.h"
 
 using orbit_grpc_protos::ModuleSymbols;
 using orbit_grpc_protos::SymbolInfo;
@@ -104,7 +106,8 @@ ErrorMessageOr<orbit_grpc_protos::ModuleSymbols> PdbFileDia::LoadDebugSymbols() 
     if (dia_symbol->get_name(&function_name) != S_OK) continue;
     std::wstring name(function_name);
     symbol_info.set_name(std::string(name.begin(), name.end()));
-    symbol_info.set_demangled_name(llvm::demangle(symbol_info.name()));
+    std::string parameter_list = PdbDiaParameterListAsString(dia_symbol);
+    symbol_info.set_demangled_name(llvm::demangle(symbol_info.name()) + parameter_list);
     SysFreeString(function_name);
 
     DWORD relative_virtual_address = 0;

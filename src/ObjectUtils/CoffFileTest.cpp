@@ -90,7 +90,7 @@ TEST(CoffFile, LoadsPdbPathSuccessfully) {
 
   auto pdb_debug_info_or_error = coff_file_or_error.value()->GetDebugPdbInfo();
   ASSERT_THAT(pdb_debug_info_or_error, HasNoError());
-  EXPECT_EQ("c:\\tmp\\dllmain.pdb", pdb_debug_info_or_error.value().pdb_file_path.string());
+  EXPECT_EQ("C:\\tmp\\dllmain.pdb", pdb_debug_info_or_error.value().pdb_file_path.string());
 
   // The correct loading of age and guid is tested in PdbFileTest, where we compare the
   // DLL and PDB data directly.
@@ -112,7 +112,7 @@ TEST(CoffFile, GetsCorrectBuildIdIfPdbInfoIsPresent) {
   auto coff_file_or_error = CreateCoffFile(file_path);
   ASSERT_THAT(coff_file_or_error, HasNoError());
 
-  EXPECT_EQ("efaecd92f773bb4ebcf213b84f43b322-3", coff_file_or_error.value()->GetBuildId());
+  EXPECT_EQ("4f9ad6af397f504e88fc34477bd0bae3-1", coff_file_or_error.value()->GetBuildId());
 }
 
 TEST(CoffFile, GetsEmptyBuildIdIfPdbInfoIsNotPresent) {
