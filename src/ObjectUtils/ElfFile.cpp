@@ -382,7 +382,7 @@ ErrorMessageOr<DebugSymbols> ElfFileImpl<ElfT>::LoadRawDebugSymbols() {
         "Unable to load symbols from ELF file, not even a single symbol of "
         "type function found.");
   }
-  
+
   DemangleSymbols(debug_symbols.function_symbols);
   return debug_symbols;
 }

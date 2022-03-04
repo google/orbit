@@ -115,8 +115,7 @@ void ManipulateModuleManagerAndSelectedFunctionsToAddInstrumentedFunctionFromFun
   module_info.set_executable_segment_offset(executable_segment_offset);
   ORBIT_CHECK(module_manager->AddOrUpdateModules({module_info}).empty());
 
-  ErrorMessageOr<orbit_grpc_protos::ModuleSymbols> symbols_or_error =
-      elf_file->LoadDebugSymbols();
+  ErrorMessageOr<orbit_grpc_protos::ModuleSymbols> symbols_or_error = elf_file->LoadDebugSymbols();
   ORBIT_FAIL_IF(symbols_or_error.has_error(), "%s", symbols_or_error.error().message());
   orbit_grpc_protos::ModuleSymbols& symbols = symbols_or_error.value();
 
