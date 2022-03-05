@@ -133,7 +133,8 @@ ErrorMessageOr<void> PdbFileDia::LoadProcSymbols(const enum SymTagEnum symbol_ta
 
     DWORD relative_virtual_address = 0;
     if (dia_symbol->get_relativeVirtualAddress(&relative_virtual_address) != S_OK) continue;
-    function_symbol.address = relative_virtual_address + object_file_info_.load_bias;
+    relative_virtual_address += object_file_info_.load_bias;
+    function_symbol.relative_virtual_address = relative_virtual_address;
 
     ULONGLONG length = 0;
     if (dia_symbol->get_length(&length) != S_OK) continue;
