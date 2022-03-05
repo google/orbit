@@ -85,7 +85,7 @@ static void FillDebugSymbolsFromDWARF(llvm::DWARFContext* dwarf_context,
         ORBIT_CHECK(!name.empty());
         FunctionSymbol& function_symbol = debug_symbols->function_symbols.emplace_back();
         function_symbol.mangled_name = name;
-        function_symbol.address = low_pc;
+        function_symbol.relative_virtual_address = low_pc;
         function_symbol.size = high_pc - low_pc;
       }
     }
@@ -99,7 +99,6 @@ ErrorMessageOr<DebugSymbols> CoffFileImpl::LoadRawDebugSymbols() {
   }
 
   DebugSymbols debug_symbols;
-  debug_symbols.load_bias = GetLoadBias();
   debug_symbols.symbols_file_path = file_path_.string();
 
   FillDebugSymbolsFromDWARF(dwarf_context.get(), &debug_symbols);

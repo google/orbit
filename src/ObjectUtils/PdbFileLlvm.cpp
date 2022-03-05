@@ -55,7 +55,7 @@ class SymbolInfoVisitor : public llvm::codeview::SymbolVisitorCallbacks {
     // The address in PDB files is a relative virtual address (RVA), to make the address compatible
     // with how we do the computation, we need to add both the load bias (ImageBase for COFF) and
     // the offset of the executable section.
-    function_symbol.address =
+    function_symbol.relative_virtual_address =
         proc.CodeOffset + object_file_info_.load_bias + object_file_info_.executable_segment_offset;
     function_symbol.size = proc.CodeSize;
 

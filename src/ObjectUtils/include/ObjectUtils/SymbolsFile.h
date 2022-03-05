@@ -30,7 +30,7 @@ struct FunctionSymbol {
   // Demangled symbol name.
   std::string demangled_name;
   // Function relative virtual address, containing load bias and executable segment offset.
-  uint64_t address = 0;
+  uint64_t relative_virtual_address = 0;
   // Function size in bytes.
   uint32_t size = 0;
 };

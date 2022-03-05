@@ -47,7 +47,7 @@ ErrorMessageOr<uint64_t> FindFunctionAddress(pid_t pid, std::string_view module_
   for (const FunctionSymbol& symbol : symbols.value().function_symbols) {
     if (symbol.demangled_name == function_name) {
       return orbit_object_utils::SymbolVirtualAddressToAbsoluteAddress(
-          symbol.address, module_base_address, elf_file->GetLoadBias(),
+          symbol.relative_virtual_address, module_base_address, elf_file->GetLoadBias(),
           elf_file->GetExecutableSegmentOffset());
     }
   }

@@ -354,7 +354,7 @@ ErrorMessageOr<FunctionSymbol> ElfFileImpl<ElfT>::CreateFunctionSymbol(
 
   FunctionSymbol function_symbol;
   function_symbol.mangled_name = name;
-  function_symbol.address = maybe_value.get();
+  function_symbol.relative_virtual_address = maybe_value.get();
   function_symbol.size = symbol_ref.getSize();
   return function_symbol;
 }
@@ -362,25 +362,28 @@ ErrorMessageOr<FunctionSymbol> ElfFileImpl<ElfT>::CreateFunctionSymbol(
 template <typename ElfT>
 ErrorMessageOr<DebugSymbols> ElfFileImpl<ElfT>::LoadRawDebugSymbols() {
   ORBIT_SCOPE_FUNCTION;
-  if (!has_symtab_section_) {
-    return ErrorMessage("ELF file does not have a .symtab section.");
-  }
-
   DebugSymbols debug_symbols;
-  debug_symbols.load_bias = load_bias_;
-  debug_symbols.symbols_file_path = file_path_.string();
-
-  for (const llvm::object::ELFSymbolRef& symbol_ref : object_file_->symbols()) {
-    auto symbol_or_error = CreateFunctionSymbol(symbol_ref);
-    if (symbol_or_error.has_value()) {
-      debug_symbols.function_symbols.emplace_back(std::move(symbol_or_error.value()));
+  {
+    ORBIT_SCOPE("ParseSymbols");
+    if (!has_symtab_section_) {
+      return ErrorMessage("ELF file does not have a .symtab section.");
     }
-  }
 
-  if (debug_symbols.function_symbols.empty()) {
-    return ErrorMessage(
-        "Unable to load symbols from ELF file, not even a single symbol of "
-        "type function found.");
+    debug_symbols.load_bias = load_bias_;
+    debug_symbols.symbols_file_path = file_path_.string();
+
+    for (const llvm::object::ELFSymbolRef& symbol_ref : object_file_->symbols()) {
+      auto symbol_or_error = CreateFunctionSymbol(symbol_ref);
+      if (symbol_or_error.has_value()) {
+        debug_symbols.function_symbols.emplace_back(std::move(symbol_or_error.value()));
+      }
+    }
+
+    if (debug_symbols.function_symbols.empty()) {
+      return ErrorMessage(
+          "Unable to load symbols from ELF file, not even a single symbol of "
+          "type function found.");
+    }
   }
 
   DemangleSymbols(debug_symbols.function_symbols);
