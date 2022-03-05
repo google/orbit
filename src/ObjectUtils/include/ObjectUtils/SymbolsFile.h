@@ -29,9 +29,9 @@ struct FunctionSymbol {
   std::string mangled_name;
   // Demangled symbol name.
   std::string demangled_name;
-  // Function relative virtual address, containing load bias and executable segment offset.
+  // Relative virtual address, containing load bias and executable segment offset.
   uint64_t relative_virtual_address = 0;
-  // Function size in bytes.
+  // Function code size in bytes.
   uint32_t size = 0;
 };
 
@@ -55,9 +55,9 @@ class SymbolsFile {
   [[nodiscard]] virtual std::string GetBuildId() const = 0;
   [[nodiscard]] virtual const std::filesystem::path& GetFilePath() const = 0;
 
-  // Loads debug symbols as a raw DebugSymbols object.
+  // Load debug symbols as a raw DebugSymbols object.
   [[nodiscard]] virtual ErrorMessageOr<DebugSymbols> LoadRawDebugSymbols() = 0;
-  // Loads debug symbols as a ModuleSymbols protobuf. This calls LoadRawDebugSymbols.
+  // Load debug symbols as a ModuleSymbols protobuf. This calls LoadRawDebugSymbols.
   [[nodiscard]] ErrorMessageOr<orbit_grpc_protos::ModuleSymbols> LoadDebugSymbols();
 };
 
