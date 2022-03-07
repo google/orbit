@@ -101,6 +101,32 @@ void TracepointsDataView::DoFilter() {
   indices_ = std::move(indices);
 }
 
+DataView::ActionStatus TracepointsDataView::GetActionStatus(
+    std::string_view action, int clicked_index, const std::vector<int>& selected_indices) {
+  std::function<bool(const TracepointInfo&)> is_visible_action_enabled;
+  if (action == kMenuActionSelect) {
+    is_visible_action_enabled = [this](const TracepointInfo& tracepoint) {
+      return !app_->IsTracepointSelected(tracepoint);
+    };
+
+  } else if (action == kMenuActionUnselect) {
+    is_visible_action_enabled = [this](const TracepointInfo& tracepoint) {
+      return app_->IsTracepointSelected(tracepoint);
+    };
+
+  } else {
+    return DataView::GetActionStatus(action, clicked_index, selected_indices);
+  }
+
+  for (int index : selected_indices) {
+    const TracepointInfo& tracepoint = GetTracepoint(index);
+    if (is_visible_action_enabled(tracepoint)) return ActionStatus::kVisibleAndEnabled;
+  }
+  return ActionStatus::kVisibleButDisabled;
+}
+
+// TODO(b/205676296): Remove this when we change to use GetActionStatus in
+// DataView::GetContextMenuWithGrouping.
 std::vector<std::vector<std::string>> TracepointsDataView::GetContextMenuWithGrouping(
     int clicked_index, const std::vector<int>& selected_indices) {
   bool enable_select = false;

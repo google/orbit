@@ -53,6 +53,8 @@ class PresetsDataView : public DataView {
     uint32_t function_count;
   };
 
+  [[nodiscard]] ActionStatus GetActionStatus(std::string_view action, int clicked_index,
+                                             const std::vector<int>& selected_indices) override;
   void DoSort() override;
   void DoFilter() override;
   [[nodiscard]] static std::string GetModulesList(const std::vector<ModuleView>& modules);

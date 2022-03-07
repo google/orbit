@@ -105,6 +105,52 @@ const std::string CallstackDataView::kHighlightedFunctionString = "➜ ";
 const std::string CallstackDataView::kHighlightedFunctionBlankString =
     std::string(kHighlightedFunctionString.size(), ' ');
 
+DataView::ActionStatus CallstackDataView::GetActionStatus(
+    std::string_view action, int clicked_index, const std::vector<int>& selected_indices) {
+  bool is_capture_connected = app_->IsCaptureConnected(app_->GetCaptureData());
+  if (!is_capture_connected &&
+      (action == kMenuActionSelect || action == kMenuActionUnselect ||
+       action == kMenuActionDisassembly || action == kMenuActionSourceCode)) {
+    return ActionStatus::kVisibleButDisabled;
+  }
+
+  std::function<bool(const FunctionInfo*, const ModuleData*)> is_visible_action_enabled;
+  if (action == kMenuActionLoadSymbols) {
+    is_visible_action_enabled = [](const FunctionInfo* /*function*/, const ModuleData* module) {
+      return module != nullptr && !module->is_loaded();
+    };
+
+  } else if (action == kMenuActionSelect) {
+    is_visible_action_enabled = [this](const FunctionInfo* function, const ModuleData* /*module*/) {
+      return function != nullptr && !app_->IsFunctionSelected(*function) &&
+             orbit_client_data::function_utils::IsFunctionSelectable(*function);
+    };
+
+  } else if (action == kMenuActionUnselect) {
+    is_visible_action_enabled = [this](const FunctionInfo* function, const ModuleData* /*module*/) {
+      return function != nullptr && app_->IsFunctionSelected(*function);
+    };
+
+  } else if (action == kMenuActionDisassembly || action == kMenuActionSourceCode) {
+    is_visible_action_enabled = [](const FunctionInfo* function, const ModuleData* /*module*/) {
+      return function != nullptr;
+    };
+
+  } else {
+    return DataView::GetActionStatus(action, clicked_index, selected_indices);
+  }
+
+  for (int index : selected_indices) {
+    CallstackDataViewFrame frame = GetFrameFromRow(index);
+    const FunctionInfo* function = frame.function;
+    const ModuleData* module = frame.module;
+    if (is_visible_action_enabled(function, module)) return ActionStatus::kVisibleAndEnabled;
+  }
+  return ActionStatus::kVisibleButDisabled;
+}
+
+// TODO(b/205676296): Remove this when we change to use GetActionStatus in
+// DataView::GetContextMenuWithGrouping.
 std::vector<std::vector<std::string>> CallstackDataView::GetContextMenuWithGrouping(
     int clicked_index, const std::vector<int>& selected_indices) {
   bool enable_load = false;

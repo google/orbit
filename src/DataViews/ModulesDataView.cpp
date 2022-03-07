@@ -108,6 +108,33 @@ void ModulesDataView::DoSort() {
   }
 }
 
+DataView::ActionStatus ModulesDataView::GetActionStatus(std::string_view action, int clicked_index,
+                                                        const std::vector<int>& selected_indices) {
+  if (action == kMenuActionVerifyFramePointers &&
+      !absl::GetFlag(FLAGS_enable_frame_pointer_validator)) {
+    return ActionStatus::kInvisible;
+  }
+
+  std::function<bool(const ModuleData*)> is_visible_action_enabled;
+  if (action == kMenuActionLoadSymbols) {
+    is_visible_action_enabled = [](const ModuleData* module) { return !module->is_loaded(); };
+
+  } else if (action == kMenuActionVerifyFramePointers) {
+    is_visible_action_enabled = [](const ModuleData* module) { return module->is_loaded(); };
+
+  } else {
+    return DataView::GetActionStatus(action, clicked_index, selected_indices);
+  }
+
+  for (int index : selected_indices) {
+    const ModuleData* module = GetModuleDataFromRow(index);
+    if (is_visible_action_enabled(module)) return ActionStatus::kVisibleAndEnabled;
+  }
+  return ActionStatus::kVisibleButDisabled;
+}
+
+// TODO(b/205676296): Remove this when we change to use GetActionStatus in
+// DataView::GetContextMenuWithGrouping.
 std::vector<std::vector<std::string>> ModulesDataView::GetContextMenuWithGrouping(
     int clicked_index, const std::vector<int>& selected_indices) {
   bool enable_load = false;

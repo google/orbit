@@ -80,6 +80,9 @@ class CallstackDataView : public DataView {
     kNumColumns
   };
 
+  [[nodiscard]] ActionStatus GetActionStatus(std::string_view action, int clicked_index,
+                                             const std::vector<int>& selected_indices) override;
+
  private:
   [[nodiscard]] const orbit_client_data::ModuleData* GetModuleDataFromRow(int row) const override {
     return GetFrameFromRow(row).module;

@@ -218,6 +218,51 @@ SamplingReportDataView::GetModulePathAndBuildIdFromRow(int row) const {
   return std::make_pair(result.value().file_path(), result.value().build_id());
 }
 
+DataView::ActionStatus SamplingReportDataView::GetActionStatus(
+    std::string_view action, int clicked_index, const std::vector<int>& selected_indices) {
+  if (action == kMenuActionLoadSymbols) {
+    for (int index : selected_indices) {
+      const ModuleData* module = GetModuleDataFromRow(index);
+      if (module != nullptr && !module->is_loaded()) return ActionStatus::kVisibleAndEnabled;
+    }
+    return ActionStatus::kVisibleButDisabled;
+  }
+
+  bool is_capture_connected = app_->IsCaptureConnected(app_->GetCaptureData());
+  if (!is_capture_connected &&
+      (action == kMenuActionSelect || action == kMenuActionUnselect ||
+       action == kMenuActionDisassembly || action == kMenuActionSourceCode)) {
+    return ActionStatus::kVisibleButDisabled;
+  }
+
+  std::function<bool(const FunctionInfo*)> is_visible_action_enabled;
+  if (action == kMenuActionSelect) {
+    is_visible_action_enabled = [this](const FunctionInfo* function) {
+      return !app_->IsFunctionSelected(*function) &&
+             orbit_client_data::function_utils::IsFunctionSelectable(*function);
+    };
+
+  } else if (action == kMenuActionUnselect) {
+    is_visible_action_enabled = [this](const FunctionInfo* function) {
+      return app_->IsFunctionSelected(*function);
+    };
+
+  } else if (action == kMenuActionDisassembly || action == kMenuActionSourceCode) {
+    is_visible_action_enabled = [](const FunctionInfo* function) { return function != nullptr; };
+
+  } else {
+    return DataView::GetActionStatus(action, clicked_index, selected_indices);
+  }
+
+  for (int index : selected_indices) {
+    const FunctionInfo* function = GetFunctionInfoFromRow(index);
+    if (is_visible_action_enabled(function)) return ActionStatus::kVisibleAndEnabled;
+  }
+  return ActionStatus::kVisibleButDisabled;
+}
+
+// TODO(b/205676296): Remove this when we change to use GetActionStatus in
+// DataView::GetContextMenuWithGrouping.
 std::vector<std::vector<std::string>> SamplingReportDataView::GetContextMenuWithGrouping(
     int clicked_index, const std::vector<int>& selected_indices) {
   bool enable_load = false;

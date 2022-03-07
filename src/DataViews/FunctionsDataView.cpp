@@ -162,6 +162,47 @@ void FunctionsDataView::DoSort() {
   }
 }
 
+DataView::ActionStatus FunctionsDataView::GetActionStatus(
+    std::string_view action, int clicked_index, const std::vector<int>& selected_indices) {
+  if (action == kMenuActionDisassembly || action == kMenuActionSourceCode) {
+    return ActionStatus::kVisibleAndEnabled;
+  }
+
+  std::function<bool(const FunctionInfo&)> is_visible_action_enabled;
+  if (action == kMenuActionSelect) {
+    is_visible_action_enabled = [this](const FunctionInfo& function) {
+      return !app_->IsFunctionSelected(function) &&
+             orbit_client_data::function_utils::IsFunctionSelectable(function);
+    };
+
+  } else if (action == kMenuActionUnselect) {
+    is_visible_action_enabled = [this](const FunctionInfo& function) {
+      return app_->IsFunctionSelected(function);
+    };
+
+  } else if (action == kMenuActionEnableFrameTrack) {
+    is_visible_action_enabled = [this](const FunctionInfo& function) {
+      return !app_->IsFrameTrackEnabled(function);
+    };
+
+  } else if (action == kMenuActionDisableFrameTrack) {
+    is_visible_action_enabled = [this](const FunctionInfo& function) {
+      return app_->IsFrameTrackEnabled(function);
+    };
+
+  } else {
+    return DataView::GetActionStatus(action, clicked_index, selected_indices);
+  }
+
+  for (int index : selected_indices) {
+    const FunctionInfo& function = *GetFunctionInfoFromRow(index);
+    if (is_visible_action_enabled(function)) return ActionStatus::kVisibleAndEnabled;
+  }
+  return ActionStatus::kVisibleButDisabled;
+}
+
+// TODO(b/205676296): Remove this when we change to use GetActionStatus in
+// DataView::GetContextMenuWithGrouping.
 std::vector<std::vector<std::string>> FunctionsDataView::GetContextMenuWithGrouping(
     int clicked_index, const std::vector<int>& selected_indices) {
   bool enable_select = false;

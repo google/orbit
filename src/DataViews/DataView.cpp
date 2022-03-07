@@ -75,6 +75,15 @@ void DataView::OnDataChanged() {
   OnSort(sorting_column_, std::optional<SortingOrder>{});
 }
 
+DataView::ActionStatus DataView::GetActionStatus(std::string_view action, int /* clicked_index */,
+                                                 const std::vector<int>& /* selected_indices */) {
+  if (action == kMenuActionCopySelection || action == kMenuActionExportToCsv) {
+    return ActionStatus::kVisibleAndEnabled;
+  }
+
+  return ActionStatus::kInvisible;
+}
+
 std::vector<std::vector<std::string>> DataView::GetContextMenuWithGrouping(
     int /*clicked_index*/, const std::vector<int>& selected_indices) {
   // GetContextmenuWithGrouping is called when OrbitTreeView::indexAt returns a valid index and

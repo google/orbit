@@ -148,6 +148,27 @@ void PresetsDataView::DoSort() {
   }
 }
 
+DataView::ActionStatus PresetsDataView::GetActionStatus(std::string_view action, int clicked_index,
+                                                        const std::vector<int>& selected_indices) {
+  // Note that the UI already enforces a single selection.
+  ORBIT_CHECK(selected_indices.size() == 1);
+
+  if (action == kMenuActionDeletePreset || action == kMenuActionShowInExplorer) {
+    return ActionStatus::kVisibleAndEnabled;
+
+  } else if (action == kMenuActionLoadPreset) {
+    const PresetFile& preset = GetPreset(selected_indices[0]);
+    return app_->GetPresetLoadState(preset).state == PresetLoadState::kNotLoadable
+               ? ActionStatus::kVisibleButDisabled
+               : ActionStatus::kVisibleAndEnabled;
+
+  } else {
+    return DataView::GetActionStatus(action, clicked_index, selected_indices);
+  }
+}
+
+// TODO(b/205676296): Remove this when we change to use GetActionStatus in
+// DataView::GetContextMenuWithGrouping.
 std::vector<std::vector<std::string>> PresetsDataView::GetContextMenuWithGrouping(
     int clicked_index, const std::vector<int>& selected_indices) {
   // Note that the UI already enforces a single selection.
