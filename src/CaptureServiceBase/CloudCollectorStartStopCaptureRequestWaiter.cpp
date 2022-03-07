@@ -30,9 +30,11 @@ void CloudCollectorStartStopCaptureRequestWaiter::WaitForStopCaptureRequest() {
   ORBIT_LOG("Stopping capture");
 }
 
-void CloudCollectorStartStopCaptureRequestWaiter::StopCapture() {
+void CloudCollectorStartStopCaptureRequestWaiter::StopCapture(
+    CaptureServiceBase::StopCaptureReason stop_capture_reason) {
   absl::MutexLock lock(&stop_mutex_);
   ORBIT_LOG("Stop capture requested");
+  SetStopCaptureReason(stop_capture_reason);
   stop_requested_ = true;
 }
 

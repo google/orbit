@@ -36,6 +36,10 @@ class GrpcStartStopCaptureRequestWaiter : public StartStopCaptureRequestWaiter {
     // Read also unblocks and returns false if the gRPC finishes.
     while (reader_writer_->Read(&request)) {
     }
+
+    if (!GetStopCaptureReason().has_value()) {
+      SetStopCaptureReason(CaptureServiceBase::StopCaptureReason::kClientStop);
+    }
     ORBIT_LOG("Client finished writing on Capture's gRPC stream: stopping capture");
   }
 
