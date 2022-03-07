@@ -30,7 +30,7 @@ class HistogramWidget : public QWidget {
 
   void UpdateData(const std::vector<uint64_t>* data, std::string function_name,
                   uint64_t function_id);
-  [[nodiscard]] QString GetDefaultTitleMessage() const;
+  [[nodiscard]] QString GetDefaultTitle() const;
 
  signals:
   void SignalSelectionRangeChange(std::optional<orbit_statistics::HistogramSelectionRange>) const;
