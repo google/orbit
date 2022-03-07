@@ -33,6 +33,7 @@ class HistogramWidget : public QWidget {
 
  signals:
   void SignalSelectionRangeChange(std::optional<orbit_statistics::HistogramSelectionRange>) const;
+  void SignalTitleChange(QString) const;
 
  protected:
   void paintEvent(QPaintEvent* /*event*/) override;
@@ -51,6 +52,8 @@ class HistogramWidget : public QWidget {
   [[nodiscard]] int Height() const;
   [[nodiscard]] int WidthMargin() const;
   [[nodiscard]] int HeightMargin() const;
+
+  [[nodiscard]] QString Title() const;
 
   [[nodiscard]] std::optional<orbit_statistics::HistogramSelectionRange> GetSelectionRange() const;
   void EmitSignalSelectionRangeChange() const;

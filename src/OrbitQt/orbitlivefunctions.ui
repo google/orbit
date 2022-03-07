@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>1197</width>
-    <height>919</height>
+    <width>1266</width>
+    <height>934</height>
    </rect>
   </property>
   <property name="sizePolicy">
@@ -55,6 +55,31 @@
        </attribute>
        <layout class="QVBoxLayout" name="verticalLayout_5">
         <item>
+         <widget class="QLabel" name="histogram_title_">
+          <property name="maximumSize">
+           <size>
+            <width>16777215</width>
+            <height>19</height>
+           </size>
+          </property>
+          <property name="frameShape">
+           <enum>QFrame::StyledPanel</enum>
+          </property>
+          <property name="frameShadow">
+           <enum>QFrame::Raised</enum>
+          </property>
+          <property name="text">
+           <string>TextLabel</string>
+          </property>
+          <property name="textFormat">
+           <enum>Qt::RichText</enum>
+          </property>
+          <property name="wordWrap">
+           <bool>false</bool>
+          </property>
+         </widget>
+        </item>
+        <item>
          <widget class="HistogramWidget" name="histogram_widget" native="true"/>
         </item>
        </layout>
@@ -98,8 +123,8 @@
             <rect>
              <x>0</x>
              <y>0</y>
-             <width>1175</width>
-             <height>722</height>
+             <width>1244</width>
+             <height>735</height>
             </rect>
            </property>
            <property name="autoFillBackground">
