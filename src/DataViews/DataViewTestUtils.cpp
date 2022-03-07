@@ -15,9 +15,9 @@
 
 namespace orbit_data_views {
 
-int GetActionIndexOnMenu(const FlattenContextMenu& context_menu, std::string_view action) {
-  auto matcher = [&action](std::pair<std::string, bool> action_name_and_availability) {
-    return action_name_and_availability.first == std::string{action};
+int GetActionIndexOnMenu(const FlattenContextMenu& context_menu, std::string_view action_name) {
+  auto matcher = [&action_name](DataView::Action action) {
+    return action.name == std::string{action_name};
   };
 
   const auto menu_index = static_cast<int>(
@@ -28,17 +28,18 @@ int GetActionIndexOnMenu(const FlattenContextMenu& context_menu, std::string_vie
   return menu_index;
 }
 
-void CheckSingleAction(const FlattenContextMenu& context_menu, std::string_view action,
+void CheckSingleAction(const FlattenContextMenu& context_menu, std::string_view action_name,
                        ContextMenuEntry menu_entry) {
-  const int action_index = GetActionIndexOnMenu(context_menu, action);
+  const int action_index = GetActionIndexOnMenu(context_menu, action_name);
   EXPECT_TRUE(action_index != kInvalidActionIndex);
+  const DataView::Action& action = context_menu[action_index];
 
   switch (menu_entry) {
     case ContextMenuEntry::kEnabled:
-      EXPECT_TRUE(context_menu[action_index].second);
+      EXPECT_TRUE(action.enabled);
       break;
     case ContextMenuEntry::kDisabled:
-      EXPECT_FALSE(context_menu[action_index].second);
+      EXPECT_FALSE(action.enabled);
   }
 }
 
@@ -105,12 +106,10 @@ void CheckContextMenuOrder(const FlattenContextMenu& context_menu) {
 }
 
 FlattenContextMenu FlattenContextMenuWithGroupingAndCheckOrder(
-    const std::vector<ActionGroup>& menu_with_grouping) {
+    const std::vector<DataView::ActionGroup>& menu_with_grouping) {
   FlattenContextMenu menu;
-  for (const ActionGroup& action_group : menu_with_grouping) {
-    for (const auto& action_name_and_availability : action_group) {
-      menu.push_back(action_name_and_availability);
-    }
+  for (const DataView::ActionGroup& action_group : menu_with_grouping) {
+    for (const auto& action : action_group) menu.push_back(action);
   }
 
   CheckContextMenuOrder(menu);

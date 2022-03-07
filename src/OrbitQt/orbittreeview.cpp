@@ -210,7 +210,7 @@ void OrbitTreeView::ShowContextMenu(const QPoint& pos) {
     }
     std::vector<int> selected_indices(selection_set.begin(), selection_set.end());
 
-    const std::vector<orbit_data_views::ActionGroup> menu_with_grouping =
+    const std::vector<orbit_data_views::DataView::ActionGroup> menu_with_grouping =
         model_->GetDataView()->GetContextMenuWithGrouping(clicked_index, selected_indices);
     if (menu_with_grouping.empty()) return;
 
@@ -219,16 +219,12 @@ void OrbitTreeView::ShowContextMenu(const QPoint& pos) {
     for (size_t i = 0; i < menu_with_grouping.size(); ++i) {
       if (i > 0) context_menu.addSeparator();
 
-      for (const std::pair<std::string, bool>& action_name_and_availability :
-           menu_with_grouping[i]) {
-        actions.push_back(
-            std::make_unique<QAction>(QString::fromStdString(action_name_and_availability.first)));
-        actions.back()->setEnabled(action_name_and_availability.second);
+      for (const orbit_data_views::DataView::Action& action : menu_with_grouping[i]) {
+        actions.push_back(std::make_unique<QAction>(QString::fromStdString(action.name)));
+        actions.back()->setEnabled(action.enabled);
         size_t action_index = actions.size();
         connect(actions.back().get(), &QAction::triggered,
-                [this, action_name_and_availability, action_index] {
-                  OnMenuClicked(action_name_and_availability.first, action_index);
-                });
+                [this, action, action_index] { OnMenuClicked(action.name, action_index); });
         context_menu.addAction(actions.back().get());
       }
     }

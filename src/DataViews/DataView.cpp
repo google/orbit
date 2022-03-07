@@ -84,7 +84,7 @@ DataView::ActionStatus DataView::GetActionStatus(std::string_view action, int /*
   return ActionStatus::kInvisible;
 }
 
-std::vector<ActionGroup> DataView::GetContextMenuWithGrouping(
+std::vector<DataView::ActionGroup> DataView::GetContextMenuWithGrouping(
     int clicked_index, const std::vector<int>& selected_indices) {
   // GetContextmenuWithGrouping is called when OrbitTreeView::indexAt returns a valid index and
   // hence the selected_indices retrieved from OrbitTreeView::selectionModel()->selectedIndexes()
@@ -92,15 +92,15 @@ std::vector<ActionGroup> DataView::GetContextMenuWithGrouping(
   ORBIT_CHECK(!selected_indices.empty());
 
   std::vector<ActionGroup> menu;
-  auto try_add_action_group = [&](std::vector<std::string_view> actions) {
+  auto try_add_action_group = [&](std::vector<std::string_view> action_names) {
     ActionGroup action_group;
-    for (std::string_view action : actions) {
-      switch (GetActionStatus(action, clicked_index, selected_indices)) {
+    for (std::string_view action_name : action_names) {
+      switch (GetActionStatus(action_name, clicked_index, selected_indices)) {
         case ActionStatus::kVisibleAndEnabled:
-          action_group.emplace_back(action, true);
+          action_group.emplace_back(action_name, /*enabled=*/true);
           break;
         case ActionStatus::kVisibleButDisabled:
-          action_group.emplace_back(action, false);
+          action_group.emplace_back(action_name, /*enabled=*/false);
           break;
         case ActionStatus::kInvisible:
           break;

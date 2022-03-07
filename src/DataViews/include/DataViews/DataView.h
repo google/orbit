@@ -62,8 +62,6 @@ constexpr std::string_view kMenuActionExportEventsToCsv = "Export events to CSV"
 // specification in https://tools.ietf.org/html/rfc4180.
 std::string FormatValueForCsv(std::string_view value);
 
-using ActionGroup = std::vector<std::pair<std::string, bool>>;
-
 class DataView {
  public:
   enum class SortingOrder {
@@ -79,6 +77,13 @@ class DataView {
     float ratio;
     SortingOrder initial_order;
   };
+
+  struct Action {
+    Action(std::string_view name, bool enabled) : name{std::move(name)}, enabled{enabled} {}
+    std::string name;
+    bool enabled;
+  };
+  using ActionGroup = std::vector<Action>;
 
   explicit DataView(DataViewType type, AppInterface* app)
       : update_period_ms_(-1), type_(type), app_{app} {}
