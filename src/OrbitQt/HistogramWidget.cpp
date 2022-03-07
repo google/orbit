@@ -33,6 +33,8 @@ constexpr double kRelativeMargin = 0.1;
 constexpr uint32_t kVerticalTickCount = 3;
 constexpr uint32_t kHorizontalTickCount = 3;
 constexpr int kTickLength = 5;
+const QString kDefaultTitle =
+    QStringLiteral("Select a function with Count>0 to plot a histogram of its runtime");
 
 const QColor kSelectionColor = QColor(128, 128, 255, 128);
 
@@ -147,7 +149,7 @@ void HistogramWidget::UpdateData(const std::vector<uint64_t>* data, std::string 
   histogram_stack_ = {};
   ranges_stack_ = {};
   EmitSignalSelectionRangeChange();
-  emit SignalTitleChange(GetDefaultTitle());
+  emit SignalTitleChange(GetTitle());
 
   function_data_.emplace(data, std::move(function_name), function_id);
 
@@ -315,6 +317,9 @@ void HistogramWidget::EmitSignalSelectionRangeChange() const {
 constexpr size_t kMaxFunctionNameLengthForTitle = 80;
 
 [[nodiscard]] QString HistogramWidget::GetTitle() const {
+  if (!function_data_.has_value() || histogram_stack_.empty()) {
+    return kDefaultTitle;
+  }
   std::string function_name = function_data_->name;
   if (function_name.size() > kMaxFunctionNameLengthForTitle) {
     function_name = absl::StrCat(function_name.substr(0, kMaxFunctionNameLengthForTitle), "...");
@@ -328,8 +333,4 @@ constexpr size_t kMaxFunctionNameLengthForTitle = 80;
                       histogram_stack_.top().data_set_size, function_data_->data->size());
 
   return QString::fromStdString(title);
-}
-
-[[nodiscard]] QString HistogramWidget::GetDefaultTitle() const {
-  return QStringLiteral("Select a function with Count>0 to plot a histogram of its runtime");
 }
