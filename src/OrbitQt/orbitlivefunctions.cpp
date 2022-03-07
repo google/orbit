@@ -77,6 +77,7 @@ void OrbitLiveFunctions::Initialize(OrbitApp* app,
                      emit SignalSelectionRangeChange(range);
                    });
 
+  ui->histogram_title_->setText(ui->histogram_widget->GetDefaultTitileMessage());
   QObject::connect(ui->histogram_widget, &HistogramWidget::SignalTitleChange, ui->histogram_title_,
                    &QLabel::setText);
 }

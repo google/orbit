@@ -147,6 +147,7 @@ void HistogramWidget::UpdateData(const std::vector<uint64_t>* data, std::string 
   histogram_stack_ = {};
   ranges_stack_ = {};
   EmitSignalSelectionRangeChange();
+  emit SignalTitleChange(GetDefaultTitileMessage());
 
   function_data_.emplace(data, std::move(function_name), function_id);
 
@@ -177,8 +178,6 @@ static void DrawSelection(QPainter& painter, int start_x, int end_x,
 void HistogramWidget::paintEvent(QPaintEvent* /*event*/) {
   QPainter painter(this);
   if (histogram_stack_.empty()) {
-    emit SignalTitleChange(
-        QStringLiteral("Select a function with Count>0 to plot a histogram of its runtime"));
     return;
   }
 
@@ -201,7 +200,7 @@ void HistogramWidget::paintEvent(QPaintEvent* /*event*/) {
   DrawHorizontalAxis(painter, axes_intersection, histogram, horizontal_axis_length, MinValue());
   DrawVerticalAxis(painter, axes_intersection, vertical_axis_length, max_freq);
 
-  emit SignalTitleChange(Title());
+  emit SignalTitleChange(GetTitle());
 
   if (selected_area_) {
     DrawSelection(painter, selected_area_->selection_start_pixel,
@@ -314,7 +313,7 @@ void HistogramWidget::EmitSignalSelectionRangeChange() const {
 
 constexpr size_t kMaxFunctionNameLengthForTitle = 80;
 
-[[nodiscard]] QString HistogramWidget::Title() const {
+[[nodiscard]] QString HistogramWidget::GetTitle() const {
   std::string function_name = function_data_->name;
   if (function_name.size() > kMaxFunctionNameLengthForTitle) {
     function_name = absl::StrCat(function_name.substr(0, kMaxFunctionNameLengthForTitle), "...");
@@ -328,4 +327,8 @@ constexpr size_t kMaxFunctionNameLengthForTitle = 80;
                       histogram_stack_.top().data_set_size, function_data_->data->size());
 
   return QString::fromStdString(title);
+}
+
+[[nodiscard]] QString HistogramWidget::GetDefaultTitileMessage() const {
+  return QStringLiteral("Select a function with Count>0 to plot a histogram of its runtime");
 }
