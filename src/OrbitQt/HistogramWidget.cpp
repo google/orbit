@@ -147,7 +147,7 @@ void HistogramWidget::UpdateData(const std::vector<uint64_t>* data, std::string 
   histogram_stack_ = {};
   ranges_stack_ = {};
   EmitSignalSelectionRangeChange();
-  emit SignalTitleChange(GetDefaultTitileMessage());
+  emit SignalTitleChange(GetDefaultTitleMessage());
 
   function_data_.emplace(data, std::move(function_name), function_id);
 
@@ -330,6 +330,6 @@ constexpr size_t kMaxFunctionNameLengthForTitle = 80;
   return QString::fromStdString(title);
 }
 
-[[nodiscard]] QString HistogramWidget::GetDefaultTitileMessage() const {
+[[nodiscard]] QString HistogramWidget::GetDefaultTitleMessage() const {
   return QStringLiteral("Select a function with Count>0 to plot a histogram of its runtime");
 }
