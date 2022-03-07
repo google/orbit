@@ -30,8 +30,6 @@ class LiveFunctionsDataView : public DataView {
 
   const std::vector<Column>& GetColumns() override;
   int GetDefaultSortingColumn() override { return kColumnCount; }
-  std::vector<std::vector<std::string>> GetContextMenuWithGrouping(
-      int clicked_index, const std::vector<int>& selected_indices) override;
   std::string GetValue(int row, int column) override;
   // As we allow single selection on Live tab, this method returns either an empty vector or a
   // single-value vector.

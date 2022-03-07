@@ -36,7 +36,10 @@ using orbit_data_views::CallstackDataView;
 using orbit_data_views::CheckCopySelectionIsInvoked;
 using orbit_data_views::CheckExportToCsvIsInvoked;
 using orbit_data_views::ContextMenuEntry;
-using orbit_data_views::FlattenContextMenuWithGrouping;
+using orbit_data_views::FlattenContextMenu;
+using orbit_data_views::FlattenContextMenuWithGroupingAndCheckOrder;
+using orbit_data_views::GetActionIndexOnMenu;
+using orbit_data_views::kInvalidActionIndex;
 using orbit_data_views::kMenuActionCopySelection;
 using orbit_data_views::kMenuActionDisassembly;
 using orbit_data_views::kMenuActionExportToCsv;
@@ -327,8 +330,8 @@ TEST_F(CallstackDataViewTest, ContextMenuEntriesArePresentCorrectly) {
       });
 
   auto verify_context_menu_action_availability = [&](std::vector<int> selected_indices) {
-    std::vector<std::string> context_menu =
-        FlattenContextMenuWithGrouping(view_.GetContextMenuWithGrouping(0, selected_indices));
+    FlattenContextMenu context_menu = FlattenContextMenuWithGroupingAndCheckOrder(
+        view_.GetContextMenuWithGrouping(0, selected_indices));
 
     // Common actions should always be available.
     CheckSingleAction(context_menu, kMenuActionCopySelection, ContextMenuEntry::kEnabled);
@@ -396,8 +399,8 @@ TEST_F(CallstackDataViewTest, ContextMenuActionsAreInvoked) {
 
   constexpr uint64_t kFrameAddress = 0x3140;
   SetCallstackFromFrames({kFrameAddress});
-  std::vector<std::string> context_menu =
-      FlattenContextMenuWithGrouping(view_.GetContextMenuWithGrouping(0, {0}));
+  FlattenContextMenu context_menu =
+      FlattenContextMenuWithGroupingAndCheckOrder(view_.GetContextMenuWithGrouping(0, {0}));
   ASSERT_FALSE(context_menu.empty());
 
   // Copy Selection
@@ -426,61 +429,53 @@ TEST_F(CallstackDataViewTest, ContextMenuActionsAreInvoked) {
 
   // Go to Disassembly
   {
-    const auto disassembly_index =
-        std::find(context_menu.begin(), context_menu.end(), kMenuActionDisassembly) -
-        context_menu.begin();
-    ASSERT_LT(disassembly_index, context_menu.size());
+    const int disassembly_index = GetActionIndexOnMenu(context_menu, kMenuActionDisassembly);
+    EXPECT_TRUE(disassembly_index != kInvalidActionIndex);
 
     EXPECT_CALL(app_, Disassemble)
         .Times(1)
         .WillOnce([&](int32_t /*pid*/, const FunctionInfo& function) {
           EXPECT_EQ(function.name(), kFunctionNames[0]);
         });
-    view_.OnContextMenu(std::string{kMenuActionDisassembly}, static_cast<int>(disassembly_index),
-                        {0});
+    view_.OnContextMenu(std::string{kMenuActionDisassembly}, disassembly_index, {0});
   }
 
   // Go to Source code
   {
-    const auto source_code_index =
-        std::find(context_menu.begin(), context_menu.end(), kMenuActionSourceCode) -
-        context_menu.begin();
-    ASSERT_LT(source_code_index, context_menu.size());
+    const int source_code_index = GetActionIndexOnMenu(context_menu, kMenuActionSourceCode);
+    EXPECT_TRUE(source_code_index != kInvalidActionIndex);
 
     EXPECT_CALL(app_, ShowSourceCode).Times(1).WillOnce([&](const FunctionInfo& function) {
       EXPECT_EQ(function.name(), kFunctionNames[0]);
     });
-    view_.OnContextMenu(std::string{kMenuActionSourceCode}, static_cast<int>(source_code_index),
-                        {0});
+    view_.OnContextMenu(std::string{kMenuActionSourceCode}, source_code_index, {0});
   }
 
   // Hook
   {
-    const auto hook_index = std::find(context_menu.begin(), context_menu.end(), kMenuActionSelect) -
-                            context_menu.begin();
-    ASSERT_LT(hook_index, context_menu.size());
+    const auto hook_index = GetActionIndexOnMenu(context_menu, kMenuActionSelect);
+    EXPECT_TRUE(hook_index != kInvalidActionIndex);
 
     EXPECT_CALL(app_, SelectFunction).Times(1).WillOnce([&](const FunctionInfo& function) {
       EXPECT_EQ(function.name(), kFunctionNames[0]);
     });
-    view_.OnContextMenu(std::string{kMenuActionSelect}, static_cast<int>(hook_index), {0});
+    view_.OnContextMenu(std::string{kMenuActionSelect}, hook_index, {0});
   }
 
   function_selected = true;
-  context_menu = FlattenContextMenuWithGrouping(view_.GetContextMenuWithGrouping(0, {0}));
+  context_menu =
+      FlattenContextMenuWithGroupingAndCheckOrder(view_.GetContextMenuWithGrouping(0, {0}));
   ASSERT_FALSE(context_menu.empty());
 
   // Unhook
   {
-    const auto unhook_index =
-        std::find(context_menu.begin(), context_menu.end(), kMenuActionUnselect) -
-        context_menu.begin();
-    ASSERT_LT(unhook_index, context_menu.size());
+    const auto unhook_index = GetActionIndexOnMenu(context_menu, kMenuActionUnselect);
+    EXPECT_TRUE(unhook_index != kInvalidActionIndex);
 
     EXPECT_CALL(app_, DeselectFunction).Times(1).WillOnce([&](const FunctionInfo& function) {
       EXPECT_EQ(function.name(), kFunctionNames[0]);
     });
-    view_.OnContextMenu(std::string{kMenuActionUnselect}, static_cast<int>(unhook_index), {0});
+    view_.OnContextMenu(std::string{kMenuActionUnselect}, unhook_index, {0});
   }
 }
 

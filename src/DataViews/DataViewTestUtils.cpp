@@ -15,41 +15,51 @@
 
 namespace orbit_data_views {
 
-void CheckSingleAction(const std::vector<std::string>& context_menu, std::string_view action,
+int GetActionIndexOnMenu(const FlattenContextMenu& context_menu, std::string_view action_name) {
+  auto matcher = [&action_name](DataView::Action action) {
+    return action.name == std::string{action_name};
+  };
+
+  const auto menu_index = static_cast<int>(
+      std::find_if(context_menu.begin(), context_menu.end(), matcher) - context_menu.begin());
+
+  if (menu_index == static_cast<int>(context_menu.size())) return kInvalidActionIndex;
+
+  return menu_index;
+}
+
+void CheckSingleAction(const FlattenContextMenu& context_menu, std::string_view action_name,
                        ContextMenuEntry menu_entry) {
+  const int action_index = GetActionIndexOnMenu(context_menu, action_name);
+  EXPECT_TRUE(action_index != kInvalidActionIndex);
+  const DataView::Action& action = context_menu[action_index];
+
   switch (menu_entry) {
     case ContextMenuEntry::kEnabled:
-      EXPECT_THAT(context_menu, testing::Contains(action));
-      return;
+      EXPECT_TRUE(action.enabled);
+      break;
     case ContextMenuEntry::kDisabled:
-      EXPECT_THAT(context_menu, testing::Not(testing::Contains(action)));
-      return;
-    default:
-      ORBIT_UNREACHABLE();
+      EXPECT_FALSE(action.enabled);
   }
 }
 
-void CheckCopySelectionIsInvoked(const std::vector<std::string>& context_menu,
+void CheckCopySelectionIsInvoked(const FlattenContextMenu& context_menu,
                                  const MockAppInterface& app, DataView& view,
                                  const std::string& expected_clipboard) {
-  const auto copy_selection_index =
-      std::find(context_menu.begin(), context_menu.end(), kMenuActionCopySelection) -
-      context_menu.begin();
-  ASSERT_LT(copy_selection_index, context_menu.size());
+  const int action_index = GetActionIndexOnMenu(context_menu, kMenuActionCopySelection);
+  EXPECT_TRUE(action_index != kInvalidActionIndex);
 
   std::string clipboard;
   EXPECT_CALL(app, SetClipboard).Times(1).WillOnce(testing::SaveArg<0>(&clipboard));
-  view.OnContextMenu(std::string{kMenuActionCopySelection}, static_cast<int>(copy_selection_index),
-                     {0});
+  view.OnContextMenu(std::string{kMenuActionCopySelection}, action_index, {0});
   EXPECT_EQ(clipboard, expected_clipboard);
 }
 
-void CheckExportToCsvIsInvoked(const std::vector<std::string>& context_menu,
-                               const MockAppInterface& app, DataView& view,
-                               const std::string& expected_contents, std::string_view action_name) {
-  const auto action_index =
-      std::find(context_menu.begin(), context_menu.end(), action_name) - context_menu.begin();
-  ASSERT_LT(action_index, context_menu.size());
+void CheckExportToCsvIsInvoked(const FlattenContextMenu& context_menu, const MockAppInterface& app,
+                               DataView& view, const std::string& expected_contents,
+                               std::string_view action_name) {
+  const int action_index = GetActionIndexOnMenu(context_menu, action_name);
+  EXPECT_TRUE(action_index != kInvalidActionIndex);
 
   ErrorMessageOr<orbit_base::TemporaryFile> temporary_file_or_error =
       orbit_base::TemporaryFile::Create();
@@ -62,7 +72,7 @@ void CheckExportToCsvIsInvoked(const std::vector<std::string>& context_menu,
   temporary_file_or_error.value().CloseAndRemove();
 
   EXPECT_CALL(app, GetSaveFile).Times(1).WillOnce(testing::Return(temporary_file_path.string()));
-  view.OnContextMenu(std::string{action_name}, static_cast<int>(action_index), {0});
+  view.OnContextMenu(std::string{action_name}, action_index, {0});
 
   ErrorMessageOr<std::string> contents_or_error = orbit_base::ReadFileToString(temporary_file_path);
   ASSERT_THAT(contents_or_error, orbit_test_utils::HasNoError());
@@ -70,12 +80,39 @@ void CheckExportToCsvIsInvoked(const std::vector<std::string>& context_menu,
   EXPECT_EQ(contents_or_error.value(), expected_contents);
 }
 
-std::vector<std::string> FlattenContextMenuWithGrouping(
-    const std::vector<std::vector<std::string>>& menu_with_grouping) {
-  std::vector<std::string> menu;
-  for (const std::vector<std::string>& action_group : menu_with_grouping) {
-    orbit_base::Append(menu, action_group);
+void CheckContextMenuOrder(const FlattenContextMenu& context_menu) {
+  const std::vector<std::string_view> ordered_action_names = {
+      /* Hooking related actions */
+      kMenuActionLoadSymbols, kMenuActionSelect, kMenuActionUnselect, kMenuActionEnableFrameTrack,
+      kMenuActionDisableFrameTrack, kMenuActionVerifyFramePointers,
+      /* Disassembly & source code related actions */
+      kMenuActionDisassembly, kMenuActionSourceCode,
+      /* Navigating related actions */
+      kMenuActionAddIterator, kMenuActionJumpToFirst, kMenuActionJumpToLast, kMenuActionJumpToMin,
+      kMenuActionJumpToMax,
+      /* Preset related actions */
+      kMenuActionLoadPreset, kMenuActionDeletePreset, kMenuActionShowInExplorer,
+      /* Exporting related actions */
+      kMenuActionCopySelection, kMenuActionExportToCsv, kMenuActionExportEventsToCsv};
+
+  std::vector<int> visible_action_indices;
+  for (auto action_name : ordered_action_names) {
+    const int action_index = GetActionIndexOnMenu(context_menu, action_name);
+    if (action_index == kInvalidActionIndex) continue;
+    visible_action_indices.push_back(action_index);
   }
+
+  EXPECT_TRUE(is_sorted(visible_action_indices.begin(), visible_action_indices.end()));
+}
+
+FlattenContextMenu FlattenContextMenuWithGroupingAndCheckOrder(
+    const std::vector<DataView::ActionGroup>& menu_with_grouping) {
+  FlattenContextMenu menu;
+  for (const DataView::ActionGroup& action_group : menu_with_grouping) {
+    for (const auto& action : action_group) menu.push_back(action);
+  }
+
+  CheckContextMenuOrder(menu);
   return menu;
 }
 

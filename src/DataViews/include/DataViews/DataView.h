@@ -78,6 +78,13 @@ class DataView {
     SortingOrder initial_order;
   };
 
+  struct Action {
+    Action(std::string_view name, bool enabled) : name{std::move(name)}, enabled{enabled} {}
+    std::string name;
+    bool enabled;
+  };
+  using ActionGroup = std::vector<Action>;
+
   explicit DataView(DataViewType type, AppInterface* app)
       : update_period_ms_(-1), type_(type), app_{app} {}
 
@@ -98,8 +105,8 @@ class DataView {
   virtual const std::vector<Column>& GetColumns() = 0;
   virtual bool IsSortingAllowed() { return true; }
   virtual int GetDefaultSortingColumn() { return 0; }
-  virtual std::vector<std::vector<std::string>> GetContextMenuWithGrouping(
-      int clicked_index, const std::vector<int>& selected_indices);
+  std::vector<ActionGroup> GetContextMenuWithGrouping(int clicked_index,
+                                                      const std::vector<int>& selected_indices);
   virtual size_t GetNumElements() { return indices_.size(); }
   virtual std::string GetValue(int /*row*/, int /*column*/) { return ""; }
   virtual std::string GetValueForCopy(int row, int column) { return GetValue(row, column); }

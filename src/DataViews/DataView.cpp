@@ -84,16 +84,49 @@ DataView::ActionStatus DataView::GetActionStatus(std::string_view action, int /*
   return ActionStatus::kInvisible;
 }
 
-std::vector<std::vector<std::string>> DataView::GetContextMenuWithGrouping(
-    int /*clicked_index*/, const std::vector<int>& selected_indices) {
+std::vector<DataView::ActionGroup> DataView::GetContextMenuWithGrouping(
+    int clicked_index, const std::vector<int>& selected_indices) {
   // GetContextmenuWithGrouping is called when OrbitTreeView::indexAt returns a valid index and
   // hence the selected_indices retrieved from OrbitTreeView::selectionModel()->selectedIndexes()
   // should not be empty.
   ORBIT_CHECK(!selected_indices.empty());
 
-  static std::vector<std::string> default_group = {std::string{kMenuActionCopySelection},
-                                                   std::string{kMenuActionExportToCsv}};
-  return {default_group};
+  std::vector<ActionGroup> menu;
+  auto try_add_action_group = [&](std::vector<std::string_view> action_names) {
+    ActionGroup action_group;
+    for (std::string_view action_name : action_names) {
+      switch (GetActionStatus(action_name, clicked_index, selected_indices)) {
+        case ActionStatus::kVisibleAndEnabled:
+          action_group.emplace_back(action_name, /*enabled=*/true);
+          break;
+        case ActionStatus::kVisibleButDisabled:
+          action_group.emplace_back(action_name, /*enabled=*/false);
+          break;
+        case ActionStatus::kInvisible:
+          break;
+      }
+    }
+    if (!action_group.empty()) menu.push_back(std::move(action_group));
+  };
+
+  // Hooking related actions
+  try_add_action_group({kMenuActionLoadSymbols, kMenuActionSelect, kMenuActionUnselect,
+                        kMenuActionEnableFrameTrack, kMenuActionDisableFrameTrack,
+                        kMenuActionVerifyFramePointers});
+
+  try_add_action_group({kMenuActionDisassembly, kMenuActionSourceCode});
+
+  // Navigating related actions
+  try_add_action_group({kMenuActionAddIterator, kMenuActionJumpToFirst, kMenuActionJumpToLast,
+                        kMenuActionJumpToMin, kMenuActionJumpToMax});
+
+  // Preset related actions
+  try_add_action_group({kMenuActionLoadPreset, kMenuActionDeletePreset, kMenuActionShowInExplorer});
+
+  // Exporting relate actions
+  try_add_action_group(
+      {kMenuActionCopySelection, kMenuActionExportToCsv, kMenuActionExportEventsToCsv});
+  return menu;
 }
 
 void DataView::OnContextMenu(const std::string& action, int /*menu_index*/,
