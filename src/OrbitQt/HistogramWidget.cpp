@@ -176,10 +176,11 @@ static void DrawSelection(QPainter& painter, int start_x, int end_x,
 }
 
 void HistogramWidget::paintEvent(QPaintEvent* /*event*/) {
-  QPainter painter(this);
   if (histogram_stack_.empty()) {
     return;
   }
+
+  QPainter painter(this);
 
   const orbit_statistics::Histogram& histogram = histogram_stack_.top();
 
