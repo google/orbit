@@ -149,7 +149,6 @@ void HistogramWidget::UpdateData(const std::vector<uint64_t>* data, std::string 
   histogram_stack_ = {};
   ranges_stack_ = {};
   EmitSignalSelectionRangeChange();
-  emit SignalTitleChange(GetTitle());
 
   function_data_.emplace(data, std::move(function_name), function_id);
 
@@ -163,6 +162,7 @@ void HistogramWidget::UpdateData(const std::vector<uint64_t>* data, std::string 
 
   selected_area_.reset();
 
+  EmitSignalTitleChange();
   update();
 }
 
@@ -203,8 +203,6 @@ void HistogramWidget::paintEvent(QPaintEvent* /*event*/) {
   DrawHorizontalAxis(painter, axes_intersection, histogram, horizontal_axis_length, MinValue());
   DrawVerticalAxis(painter, axes_intersection, vertical_axis_length, max_freq);
 
-  emit SignalTitleChange(GetTitle());
-
   if (selected_area_) {
     DrawSelection(painter, selected_area_->selection_start_pixel,
                   selected_area_->selection_current_pixel, axes_intersection, vertical_axis_length);
@@ -244,8 +242,7 @@ void HistogramWidget::mouseReleaseEvent(QMouseEvent* /* event*/) {
         ranges_stack_.pop();
       }
       selected_area_.reset();
-      EmitSignalSelectionRangeChange();
-      update();
+      UpdateAndNotify();
       return;
     }
 
@@ -274,8 +271,7 @@ void HistogramWidget::mouseReleaseEvent(QMouseEvent* /* event*/) {
     selected_area_.reset();
   }
 
-  EmitSignalSelectionRangeChange();
-  update();
+  UpdateAndNotify();
 }
 
 void HistogramWidget::mouseMoveEvent(QMouseEvent* event) {
@@ -312,6 +308,14 @@ HistogramWidget::GetSelectionRange() const {
 
 void HistogramWidget::EmitSignalSelectionRangeChange() const {
   emit SignalSelectionRangeChange(GetSelectionRange());
+}
+
+void HistogramWidget::EmitSignalTitleChange() const { emit SignalTitleChange(GetTitle()); }
+
+void HistogramWidget::UpdateAndNotify() {
+  EmitSignalSelectionRangeChange();
+  EmitSignalTitleChange();
+  update();
 }
 
 constexpr size_t kMaxFunctionNameLengthForTitle = 80;

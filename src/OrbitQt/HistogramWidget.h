@@ -56,7 +56,10 @@ class HistogramWidget : public QWidget {
   [[nodiscard]] int HeightMargin() const;
 
   [[nodiscard]] std::optional<orbit_statistics::HistogramSelectionRange> GetSelectionRange() const;
+
   void EmitSignalSelectionRangeChange() const;
+  void EmitSignalTitleChange() const;
+  void UpdateAndNotify();
 
   struct FunctionData {
     FunctionData(const std::vector<uint64_t>* data, std::string name, uint64_t id)
