@@ -77,9 +77,7 @@ void DataView::OnDataChanged() {
 
 DataView::ActionStatus DataView::GetActionStatus(std::string_view action, int /* clicked_index */,
                                                  const std::vector<int>& /* selected_indices */) {
-  if (action == kMenuActionCopySelection) {
-    return ActionStatus::kVisibleAndEnabled;
-  } else if (action == kMenuActionExportToCsv) {
+  if (action == kMenuActionCopySelection || action == kMenuActionExportToCsv) {
     return ActionStatus::kVisibleAndEnabled;
   }
 

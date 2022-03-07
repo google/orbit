@@ -328,7 +328,7 @@ DataView::ActionStatus LiveFunctionsDataView::GetActionStatus(
   return ActionStatus::kVisibleButDisabled;
 }
 
-// TODO(b/205676296): Remove this when we change to use GetActionVisibilities in
+// TODO(b/205676296): Remove this when we change to use GetActionStatus in
 // DataView::GetContextMenuWithGrouping.
 std::vector<std::vector<std::string>> LiveFunctionsDataView::GetContextMenuWithGrouping(
     int clicked_index, const std::vector<int>& selected_indices) {
