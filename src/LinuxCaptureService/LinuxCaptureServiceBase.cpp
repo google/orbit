@@ -165,12 +165,9 @@ LinuxCaptureServiceBase::WaitForStopCaptureRequestOrMemoryThresholdExceeded(
         //   which blocks until the client has called WritesDone, or until we finish the
         //   gRPC (before the client has called WritesDone). In the latter case, the Read unblocks
         //   *after* LinuxCaptureServiceBase::DoCapture has returned, so we need to keep the thread
-        //   around and join it at a later time (we don't want to just detach it). If the
-        //   capture_stop_reason is not set yet, this will set the capture_stop_reason as
-        //   StopCaptureReason::kClientStop before returns.
+        //   around and join it at a later time (we don't want to just detach it).
         // - For a CloudCollectorStartStopCaptureRequestWaiter, this will wait until
-        //   CloudCollectorStartStopCaptureRequestWaiter::StopCapture is called externally, in which
-        //   we will set the CaptureStopReason.
+        //   CloudCollectorStartStopCaptureRequestWaiter::StopCapture is called externally.
         StopCaptureReason external_stop_reason =
             start_stop_capture_request_waiter->WaitForStopCaptureRequest();
 
