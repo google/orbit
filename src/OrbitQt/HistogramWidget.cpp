@@ -6,6 +6,7 @@
 
 #include <absl/strings/str_cat.h>
 #include <absl/strings/str_format.h>
+#include <absl/strings/str_replace.h>
 #include <qnamespace.h>
 
 #include <QEvent>
@@ -32,6 +33,8 @@ constexpr double kRelativeMargin = 0.1;
 constexpr uint32_t kVerticalTickCount = 3;
 constexpr uint32_t kHorizontalTickCount = 3;
 constexpr int kTickLength = 5;
+const QString kDefaultTitle =
+    QStringLiteral("Select a function with Count>0 to plot a histogram of its runtime");
 
 const QColor kSelectionColor = QColor(128, 128, 255, 128);
 
@@ -159,15 +162,8 @@ void HistogramWidget::UpdateData(const std::vector<uint64_t>* data, std::string 
 
   selected_area_.reset();
 
+  EmitSignalTitleChange();
   update();
-}
-
-static void DrawTitle(QPainter& painter, const std::string& text) {
-  const QFontMetrics font_metrics(painter.font());
-  const QString qtext = QString::fromStdString(text);
-  const QRect title_bounding_rect = font_metrics.boundingRect(qtext);
-  const int text_start_to_center = (painter.device()->width() - title_bounding_rect.width()) / 2;
-  painter.drawText(std::max(text_start_to_center, 0), title_bounding_rect.height(), qtext);
 }
 
 static void DrawSelection(QPainter& painter, int start_x, int end_x,
@@ -182,11 +178,11 @@ static void DrawSelection(QPainter& painter, int start_x, int end_x,
 }
 
 void HistogramWidget::paintEvent(QPaintEvent* /*event*/) {
-  QPainter painter(this);
   if (histogram_stack_.empty()) {
-    DrawTitle(painter, "Select a function with Count>0 to plot a histogram of its runtime");
     return;
   }
+
+  QPainter painter(this);
 
   const orbit_statistics::Histogram& histogram = histogram_stack_.top();
 
@@ -206,12 +202,6 @@ void HistogramWidget::paintEvent(QPaintEvent* /*event*/) {
 
   DrawHorizontalAxis(painter, axes_intersection, histogram, horizontal_axis_length, MinValue());
   DrawVerticalAxis(painter, axes_intersection, vertical_axis_length, max_freq);
-
-  if (IsSelectionActive()) {
-    DrawTitle(painter, absl::StrFormat("Selection over %u points", histogram.data_set_size));
-  } else {
-    DrawTitle(painter, function_data_->name);
-  }
 
   if (selected_area_) {
     DrawSelection(painter, selected_area_->selection_start_pixel,
@@ -252,8 +242,7 @@ void HistogramWidget::mouseReleaseEvent(QMouseEvent* /* event*/) {
         ranges_stack_.pop();
       }
       selected_area_.reset();
-      EmitSignalSelectionRangeChange();
-      update();
+      UpdateAndNotify();
       return;
     }
 
@@ -282,8 +271,7 @@ void HistogramWidget::mouseReleaseEvent(QMouseEvent* /* event*/) {
     selected_area_.reset();
   }
 
-  EmitSignalSelectionRangeChange();
-  update();
+  UpdateAndNotify();
 }
 
 void HistogramWidget::mouseMoveEvent(QMouseEvent* event) {
@@ -320,4 +308,33 @@ HistogramWidget::GetSelectionRange() const {
 
 void HistogramWidget::EmitSignalSelectionRangeChange() const {
   emit SignalSelectionRangeChange(GetSelectionRange());
+}
+
+void HistogramWidget::EmitSignalTitleChange() const { emit SignalTitleChange(GetTitle()); }
+
+void HistogramWidget::UpdateAndNotify() {
+  EmitSignalSelectionRangeChange();
+  EmitSignalTitleChange();
+  update();
+}
+
+constexpr size_t kMaxFunctionNameLengthForTitle = 80;
+
+[[nodiscard]] QString HistogramWidget::GetTitle() const {
+  if (!function_data_.has_value() || histogram_stack_.empty()) {
+    return kDefaultTitle;
+  }
+  std::string function_name = function_data_->name;
+  if (function_name.size() > kMaxFunctionNameLengthForTitle) {
+    function_name = absl::StrCat(function_name.substr(0, kMaxFunctionNameLengthForTitle), "...");
+  }
+
+  function_name =
+      absl::StrReplaceAll(function_name, {{"&", "&amp;"}, {"<", "&lt;"}, {">", "&gt;"}});
+
+  std::string title =
+      absl::StrFormat("<b>%s</b> (%d of %d samples)", function_name,
+                      histogram_stack_.top().data_set_size, function_data_->data->size());
+
+  return QString::fromStdString(title);
 }

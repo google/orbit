@@ -31,8 +31,11 @@ class HistogramWidget : public QWidget {
   void UpdateData(const std::vector<uint64_t>* data, std::string function_name,
                   uint64_t function_id);
 
+  [[nodiscard]] QString GetTitle() const;
+
  signals:
   void SignalSelectionRangeChange(std::optional<orbit_statistics::HistogramSelectionRange>) const;
+  void SignalTitleChange(QString) const;
 
  protected:
   void paintEvent(QPaintEvent* /*event*/) override;
@@ -53,7 +56,10 @@ class HistogramWidget : public QWidget {
   [[nodiscard]] int HeightMargin() const;
 
   [[nodiscard]] std::optional<orbit_statistics::HistogramSelectionRange> GetSelectionRange() const;
+
   void EmitSignalSelectionRangeChange() const;
+  void EmitSignalTitleChange() const;
+  void UpdateAndNotify();
 
   struct FunctionData {
     FunctionData(const std::vector<uint64_t>* data, std::string name, uint64_t id)
