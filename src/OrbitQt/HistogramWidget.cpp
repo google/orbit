@@ -158,7 +158,7 @@ static void DrawHistogram(QPainter& painter, const QPoint& axes_intersection,
               ValueToAxisLocation(bin_to, horizontal_axis_length, min_value, histogram.max),
           axes_intersection.y() - kLineWidth);
       const QRect bar(top_left, lower_right);
-      painter.fillRect(bar, kBarColors[i % kBarColorsCount]);
+      painter.fillRect(bar, kBarColors[i % kBarColors.size()]);
     }
   }
 }
