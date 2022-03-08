@@ -52,8 +52,6 @@ class HistogramWidget : public QWidget {
 
   [[nodiscard]] int Width() const;
   [[nodiscard]] int Height() const;
-  [[nodiscard]] int WidthMargin() const;
-  [[nodiscard]] int HeightMargin() const;
 
   [[nodiscard]] std::optional<orbit_statistics::HistogramSelectionRange> GetSelectionRange() const;
 
