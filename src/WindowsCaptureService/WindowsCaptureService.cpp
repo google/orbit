@@ -47,13 +47,10 @@ grpc::Status WindowsCaptureService::Capture(
   StartEventProcessing(capture_options);
   TracingHandler tracing_handler{producer_event_processor_.get()};
   tracing_handler.Start(capture_options);
-  start_stop_capture_request_waiter->WaitForStopCaptureRequest();
+  StopCaptureReason stop_capture_reason =
+      start_stop_capture_request_waiter->WaitForStopCaptureRequest();
   tracing_handler.Stop();
-
-  std::optional<StopCaptureReason> stop_capture_reason =
-      start_stop_capture_request_waiter->GetStopCaptureReason();
-  ORBIT_CHECK(stop_capture_reason.has_value());
-  FinalizeEventProcessing(stop_capture_reason.value());
+  FinalizeEventProcessing(stop_capture_reason);
 
   TerminateCapture();
 

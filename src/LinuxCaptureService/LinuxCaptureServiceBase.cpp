@@ -151,14 +151,16 @@ class ProducerEventProcessorHijackingFunctionEntryExitForLinuxTracing
 
 }  // namespace
 
-void LinuxCaptureServiceBase::WaitForStopCaptureRequestOrMemoryThresholdExceeded(
+CaptureServiceBase::StopCaptureReason
+LinuxCaptureServiceBase::WaitForStopCaptureRequestOrMemoryThresholdExceeded(
     const std::shared_ptr<StartStopCaptureRequestWaiter>& start_stop_capture_request_waiter) {
   // wait_for_stop_capture_request_thread_ below outlives this method, hence the shared pointers.
   auto stop_capture_mutex = std::make_shared<absl::Mutex>();
   auto stop_capture = std::make_shared<bool>(false);
+  auto stop_capture_reason = std::make_shared<std::optional<StopCaptureReason>>();
 
-  wait_for_stop_capture_request_thread_ =
-      std::thread{[start_stop_capture_request_waiter, stop_capture_mutex, stop_capture] {
+  wait_for_stop_capture_request_thread_ = std::thread{
+      [start_stop_capture_request_waiter, stop_capture_mutex, stop_capture, stop_capture_reason] {
         // - For a GrpcStartStopCaptureRequestWaiter, this will wait on ServerReaderWriter::Read,
         //   which blocks until the client has called WritesDone, or until we finish the
         //   gRPC (before the client has called WritesDone). In the latter case, the Read unblocks
@@ -169,12 +171,14 @@ void LinuxCaptureServiceBase::WaitForStopCaptureRequestOrMemoryThresholdExceeded
         // - For a CloudCollectorStartStopCaptureRequestWaiter, this will wait until
         //   CloudCollectorStartStopCaptureRequestWaiter::StopCapture is called externally, in which
         //   we will set the CaptureStopReason.
-        start_stop_capture_request_waiter->WaitForStopCaptureRequest();
+        StopCaptureReason external_stop_reason =
+            start_stop_capture_request_waiter->WaitForStopCaptureRequest();
 
         absl::MutexLock lock{stop_capture_mutex.get()};
         if (!*stop_capture) {
           ORBIT_LOG("Client finished writing on Capture's gRPC stream: stopping capture");
           *stop_capture = true;
+          *stop_capture_reason = external_stop_reason;
         } else {
           ORBIT_LOG(
               "Client finished writing on Capture's gRPC stream or the RPC has already finished; "
@@ -207,16 +211,18 @@ void LinuxCaptureServiceBase::WaitForStopCaptureRequestOrMemoryThresholdExceeded
       ORBIT_LOG("Memory threshold exceeded: stopping capture (and stopping memory watchdog)");
       absl::MutexLock lock{stop_capture_mutex.get()};
       *stop_capture = true;
-      if (!start_stop_capture_request_waiter->GetStopCaptureReason().has_value()) {
-        start_stop_capture_request_waiter->SetStopCaptureReason(StopCaptureReason::kMemoryWatchdog);
-      }
+      *stop_capture_reason = StopCaptureReason::kMemoryWatchdog;
       break;
     }
   }
 
   // The memory watchdog loop exits when either the stop capture is requested, or the
   // memory threshold was exceeded. So at that point we can proceed with stopping the capture.
-  ORBIT_CHECK(start_stop_capture_request_waiter->GetStopCaptureReason().has_value());
+  {
+    absl::MutexLock lock{stop_capture_mutex.get()};
+    ORBIT_CHECK(stop_capture_reason->has_value());
+    return stop_capture_reason->value();
+  }
 }
 
 CaptureServiceBase::CaptureInitializationResult LinuxCaptureServiceBase::DoCapture(
@@ -325,7 +331,8 @@ CaptureServiceBase::CaptureInitializationResult LinuxCaptureServiceBase::DoCaptu
     listener->OnCaptureStartRequested(capture_options, &function_entry_exit_hijacker);
   }
 
-  WaitForStopCaptureRequestOrMemoryThresholdExceeded(start_stop_capture_request_waiter);
+  StopCaptureReason stop_capture_reason =
+      WaitForStopCaptureRequestOrMemoryThresholdExceeded(start_stop_capture_request_waiter);
 
   // Disable Orbit API in tracee.
   if (capture_options.enable_api()) {
@@ -363,8 +370,6 @@ CaptureServiceBase::CaptureInitializationResult LinuxCaptureServiceBase::DoCaptu
   // The destructor of IntrospectionListener takes care of actually disabling introspection.
   introspection_listener.reset();
 
-  StopCaptureReason stop_capture_reason =
-      start_stop_capture_request_waiter->GetStopCaptureReason().value();
   FinalizeEventProcessing(stop_capture_reason);
 
   TerminateCapture();

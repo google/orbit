@@ -17,17 +17,7 @@ class StartStopCaptureRequestWaiter {
  public:
   virtual ~StartStopCaptureRequestWaiter() = default;
   [[nodiscard]] virtual orbit_grpc_protos::CaptureOptions WaitForStartCaptureRequest() = 0;
-  virtual void WaitForStopCaptureRequest() = 0;
-
-  void SetStopCaptureReason(CaptureServiceBase::StopCaptureReason stop_capture_reason) {
-    stop_capture_reason_ = std::move(stop_capture_reason);
-  }
-  [[nodiscard]] std::optional<CaptureServiceBase::StopCaptureReason> GetStopCaptureReason() const {
-    return stop_capture_reason_;
-  }
-
- private:
-  std::optional<CaptureServiceBase::StopCaptureReason> stop_capture_reason_;
+  [[nodiscard]] virtual CaptureServiceBase::StopCaptureReason WaitForStopCaptureRequest() = 0;
 };
 
 }  // namespace orbit_capture_service_base

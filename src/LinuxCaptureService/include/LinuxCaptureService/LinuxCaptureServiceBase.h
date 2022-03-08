@@ -57,7 +57,7 @@ class LinuxCaptureServiceBase : public orbit_capture_service_base::CaptureServic
   //   CloudCollectorStartStopCaptureRequestWaiter::StopCapture is called.
   // - The resident set size of the current process exceeds the threshold (i.e., total physical
   //   memory / 2).
-  void WaitForStopCaptureRequestOrMemoryThresholdExceeded(
+  [[nodiscard]] StopCaptureReason WaitForStopCaptureRequestOrMemoryThresholdExceeded(
       const std::shared_ptr<orbit_capture_service_base::StartStopCaptureRequestWaiter>&
           start_stop_capture_request_waiter);
   std::thread wait_for_stop_capture_request_thread_;
