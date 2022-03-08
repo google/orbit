@@ -7,6 +7,7 @@
 #include <absl/strings/str_cat.h>
 #include <absl/strings/str_format.h>
 #include <absl/strings/str_replace.h>
+#include <qcolor.h>
 #include <qnamespace.h>
 
 #include <QEvent>
@@ -15,6 +16,7 @@
 #include <QPoint>
 #include <QWidget>
 #include <algorithm>
+#include <array>
 #include <cmath>
 #include <cstdint>
 #include <iterator>
@@ -27,6 +29,11 @@
 #include "Introspection/Introspection.h"
 #include "OrbitBase/Logging.h"
 #include "Statistics/Histogram.h"
+
+const QColor kBackgroundColor(QString::fromStdString("#323232"));
+constexpr size_t kBarColorsCount = 2;
+const std::array<QColor, kBarColorsCount> kBarColors = {QColor(QString::fromStdString("#2A82DA")),
+                                                        QColor(QString::fromStdString("#3198FF"))};
 
 constexpr double kRelativeMargin = 0.1;
 
@@ -136,7 +143,7 @@ static void DrawHistogram(QPainter& painter, const QPoint& axes_intersection,
               ValueToAxisLocation(bin_to, horizontal_axis_length, min_value, histogram.max),
           axes_intersection.y() - vertical_shift);
       const QRect bar(top_left, lower_right);
-      painter.fillRect(bar, Qt::cyan);
+      painter.fillRect(bar, kBarColors[i % kBarColorsCount]);
     }
   }
 }
@@ -183,6 +190,8 @@ void HistogramWidget::paintEvent(QPaintEvent* /*event*/) {
   }
 
   QPainter painter(this);
+
+  painter.fillRect(0, 0, Width(), Height(), kBackgroundColor);
 
   const orbit_statistics::Histogram& histogram = histogram_stack_.top();
 
