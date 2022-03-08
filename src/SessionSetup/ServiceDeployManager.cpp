@@ -13,6 +13,7 @@
 #include <QMetaObject>
 #include <Qt>
 #include <chrono>
+#include <cstddef>
 #include <filesystem>
 #include <system_error>
 #include <thread>
@@ -494,39 +495,43 @@ ErrorMessageOr<void> ServiceDeployManager::StartOrbitService(
   auto cancel_handler = ConnectCancelHandler(&loop, this);
   QObject::connect(
       &orbit_service_task_.value(), &orbit_ssh_qt::Task::finished, &loop, [&loop](int exit_code) {
-        // TODO(http://b/221369463): So far this is only reporting a rather generic exit code. This
-        // will be extended in a subsequent PR.
+        // TODO(http://b/221369463): Also report a potential error message that has been logged to
+        // stdout.
         loop.error(ErrorMessage{
             absl::StrFormat("The service exited prematurely with exit code %d.", exit_code)});
       });
 
   std::string stdout_buffer;
 
-  QObject::connect(
-      &orbit_service_task_.value(), &orbit_ssh_qt::Task::readyReadStdOut, &loop, [&]() {
-        stdout_buffer.append(orbit_service_task_->ReadStdOut());
+  QObject::connect(&orbit_service_task_.value(), &orbit_ssh_qt::Task::readyReadStdOut, &loop,
+                   [&]() {
+                     // We are looking for the kReadyKeyword. Since it might be split up into
+                     // consecutive chunks in the stdout stream we reassemble to whole string into a
+                     // buffer and check that for the keyword.
+                     stdout_buffer.append(orbit_service_task_->ReadStdOut());
 
-        // That's what we expect the service to send through stdout when it's ready to
-        // accept a connection from the client.
-        constexpr std::string_view kReadyKeyword = "READY";
+                     // That's what we expect the service to send through stdout when it's ready to
+                     // accept a connection from the client.
+                     constexpr std::string_view kReadyKeyword = "READY";
 
-        if (absl::StrContains(stdout_buffer, kReadyKeyword)) {
-          ORBIT_LOG("The service reported to be ready to accept connections.");
-          loop.quit();
-          return;
-        }
+                     if (absl::StrContains(stdout_buffer, kReadyKeyword)) {
+                       ORBIT_LOG("The service reported to be ready to accept connections.");
+                       loop.quit();
+                       return;
+                     }
 
-        // This is protecting us against consuming unreasonable amount of memory when
-        // for whatever reason there is a lot of data coming through the stdout
-        // channel.
-        constexpr size_t kMaxBufferSize = 100 * 1024;  // 100 KiB
+                     // This is protecting us against consuming unreasonable amount of memory when
+                     // for whatever reason there is a lot of data coming through the stdout
+                     // channel.
+                     constexpr size_t kMaxBufferSize = 100ul * 1024;  // 100 KiB
 
-        if (stdout_buffer.size() > kMaxBufferSize) {
-          constexpr size_t kNumberOfBytesToRemove = kMaxBufferSize - kReadyKeyword.size();
-          stdout_buffer.erase(stdout_buffer.begin(),
-                              stdout_buffer.begin() + kNumberOfBytesToRemove);
-        }
-      });
+                     if (stdout_buffer.size() > kMaxBufferSize) {
+                       const auto number_of_bytes_to_remove =
+                           static_cast<ptrdiff_t>(stdout_buffer.size() - kMaxBufferSize);
+                       stdout_buffer.erase(stdout_buffer.begin(),
+                                           stdout_buffer.begin() + number_of_bytes_to_remove);
+                     }
+                   });
 
   QObject::connect(&orbit_service_task_.value(), &orbit_ssh_qt::Task::readyReadStdErr, this,
                    [this]() { PrintAsOrbitService(orbit_service_task_->ReadStdErr()); });

@@ -152,8 +152,8 @@ int OrbitService::Run(std::atomic<bool>* exit_requested) {
 
   // The client is looking for the "READY" keyword to learn whether the service finish its start up
   // and is ready to accept a connection. Check out the ServiceDeployManager on how the detection
-  // works.
-  std::puts("\n--- READY to accept connections! ---\n");
+  // works. We also print some line breaks here to avoid interfering with our logging output.
+  std::puts("\nREADY\n");
   std::fflush(stdout);
 
 #ifdef __linux
