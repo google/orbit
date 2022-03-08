@@ -18,11 +18,19 @@ proto_library(
     srcs = ["user_defined_capture_info.proto"],
 )
 
+proto_library(
+    name = "capture_data_proto",
+    srcs = ["capture_data.proto"],
+)
+
 # CC Proto and GRPC Library targets
 
 cc_proto_library(
     name = "user_defined_capture_info_cc_proto",
-    deps = [
-        ":user_defined_capture_info_proto",
-    ],
+    deps = [":user_defined_capture_info_proto"],
+)
+
+cc_proto_library(
+    name = "capture_data_cc_proto",
+    deps = [":capture_data_proto"],
 )
