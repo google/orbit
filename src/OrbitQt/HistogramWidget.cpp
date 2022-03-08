@@ -10,9 +10,11 @@
 #include <qcolor.h>
 #include <qnamespace.h>
 
+#include <QColor>
 #include <QEvent>
 #include <QMouseEvent>
 #include <QPainter>
+#include <QPen>
 #include <QPoint>
 #include <QWidget>
 #include <algorithm>
@@ -30,16 +32,25 @@
 #include "OrbitBase/Logging.h"
 #include "Statistics/Histogram.h"
 
-const QColor kBackgroundColor(QString::fromStdString("#323232"));
+const QColor kBackgroundColor(QStringLiteral("#323232"));
 constexpr size_t kBarColorsCount = 2;
-const std::array<QColor, kBarColorsCount> kBarColors = {QColor(QString::fromStdString("#2A82DA")),
-                                                        QColor(QString::fromStdString("#3198FF"))};
-
-constexpr double kRelativeMargin = 0.1;
+const std::array<QColor, kBarColorsCount> kBarColors = {QColor(QStringLiteral("#2A82DA")),
+                                                        QColor(QStringLiteral("#3198FF"))};
 
 constexpr uint32_t kVerticalTickCount = 3;
 constexpr uint32_t kHorizontalTickCount = 3;
-constexpr int kTickLength = 5;
+constexpr int kVerticalAxisTickLength = 4;
+constexpr int kHorizontalAxisTickLength = 8;
+constexpr int kTickLabelGap = 3;
+
+const QColor kAxisColor = Qt::white;
+constexpr int kLineWidth = 2;
+
+constexpr int kTopMargin = 50;
+constexpr int kBottomMargin = 40;
+constexpr int kLeftMargin = 50;
+constexpr int kRightMargin = 50;
+
 const QString kDefaultTitle =
     QStringLiteral("Select a function with Count>0 to plot a histogram of its runtime");
 
@@ -72,13 +83,16 @@ static void DrawHorizontalAxis(QPainter& painter, const QPoint& axes_intersectio
   const QFontMetrics font_metrics(painter.font());
 
   for (uint32_t i = 0; i <= kHorizontalTickCount; ++i) {
-    DrawVerticalLine(painter, {current_tick_location, axes_intersection.y()}, kTickLength);
+    DrawVerticalLine(painter, {current_tick_location, axes_intersection.y()},
+                     kHorizontalAxisTickLength);
 
     const QString tick_label = QString::fromStdString(
         orbit_display_formats::GetDisplayTime(absl::Nanoseconds(current_tick_value)));
-    const QRect tick_label_bounding_rect = font_metrics.boundingRect(tick_label);
+    const QRect tick_label_bounding_rect = font_metrics.tightBoundingRect(tick_label);
+
     painter.drawText(current_tick_location - tick_label_bounding_rect.width() / 2,
-                     axes_intersection.y() + kTickLength + tick_label_bounding_rect.height(),
+                     axes_intersection.y() + kHorizontalAxisTickLength +
+                         tick_label_bounding_rect.height() + kTickLabelGap + kLineWidth / 2,
                      tick_label);
 
     current_tick_location += tick_spacing_pixels;
@@ -100,13 +114,15 @@ static void DrawVerticalAxis(QPainter& painter, const QPoint& axes_intersection,
   const QFontMetrics font_metrics(painter.font());
 
   for (uint32_t i = 1; i <= kVerticalTickCount; ++i) {
-    DrawHorizontalLine(painter, {axes_intersection.x(), current_tick_location}, -kTickLength);
+    DrawHorizontalLine(painter, {axes_intersection.x(), current_tick_location},
+                       -kVerticalAxisTickLength);
 
-    QString tick_label = QString::fromStdString(absl::StrFormat("%.2f", current_tick_value));
+    QString tick_label = QString::fromStdString(absl::StrFormat("%.0f", current_tick_value * 100));
 
-    QRect tick_label_bounding_rect = font_metrics.boundingRect(tick_label);
-    painter.drawText(axes_intersection.x() - tick_label_bounding_rect.width() - kTickLength,
-                     current_tick_location + tick_label_bounding_rect.height() / 2, tick_label);
+    QRect tick_label_bounding_rect = font_metrics.tightBoundingRect(tick_label);
+    painter.drawText(axes_intersection.x() - tick_label_bounding_rect.width() -
+                         kVerticalAxisTickLength - kTickLabelGap,
+                     current_tick_location + (tick_label_bounding_rect.height()) / 2, tick_label);
 
     current_tick_location -= tick_spacing_pixels;
     current_tick_value += tick_spacing_as_value;
@@ -125,8 +141,7 @@ static void DrawVerticalAxis(QPainter& painter, const QPoint& axes_intersection,
 
 static void DrawHistogram(QPainter& painter, const QPoint& axes_intersection,
                           const orbit_statistics::Histogram& histogram, int horizontal_axis_length,
-                          int vertical_axis_length, double max_freq, int vertical_shift,
-                          uint64_t min_value) {
+                          int vertical_axis_length, double max_freq, uint64_t min_value) {
   for (size_t i = 0; i < histogram.counts.size(); ++i) {
     const uint64_t bin_from = histogram.min + i * histogram.bin_width;
     const uint64_t bin_to = bin_from + histogram.bin_width;
@@ -136,12 +151,12 @@ static void DrawHistogram(QPainter& painter, const QPoint& axes_intersection,
       const QPoint top_left(
           axes_intersection.x() +
               ValueToAxisLocation(bin_from, horizontal_axis_length, min_value, histogram.max),
-          axes_intersection.y() - vertical_shift -
+          axes_intersection.y() - kLineWidth -
               ValueToAxisLocation(freq, vertical_axis_length, 0, max_freq));
       const QPoint lower_right(
           axes_intersection.x() +
               ValueToAxisLocation(bin_to, horizontal_axis_length, min_value, histogram.max),
-          axes_intersection.y() - vertical_shift);
+          axes_intersection.y() - kLineWidth);
       const QRect bar(top_left, lower_right);
       painter.fillRect(bar, kBarColors[i % kBarColorsCount]);
     }
@@ -195,22 +210,22 @@ void HistogramWidget::paintEvent(QPaintEvent* /*event*/) {
 
   const orbit_statistics::Histogram& histogram = histogram_stack_.top();
 
-  const int axis_width = painter.pen().width();
+  QPoint axes_intersection(kLeftMargin, Height() - kBottomMargin);
 
-  QPoint axes_intersection(WidthMargin(), Height() - HeightMargin());
-
-  const int vertical_axis_length = Height() - 2 * HeightMargin();
-  const int horizontal_axis_length = Width() - 2 * WidthMargin();
+  const int vertical_axis_length = Height() - kTopMargin - kBottomMargin;
+  const int horizontal_axis_length = Width() - kLeftMargin - kRightMargin;
 
   const uint64_t max_count =
       *std::max_element(std::begin(histogram.counts), std::end(histogram.counts));
   const double max_freq = static_cast<double>(max_count) / histogram.data_set_size;
 
   DrawHistogram(painter, axes_intersection, histogram, horizontal_axis_length, vertical_axis_length,
-                max_freq, axis_width, MinValue());
+                max_freq, MinValue());
 
+  painter.setPen(QPen(kAxisColor, kLineWidth));
   DrawHorizontalAxis(painter, axes_intersection, histogram, horizontal_axis_length, MinValue());
   DrawVerticalAxis(painter, axes_intersection, vertical_axis_length, max_freq);
+  painter.setPen(QPen(Qt::white, 1));
 
   if (selected_area_) {
     DrawSelection(painter, selected_area_->selection_start_pixel,
@@ -227,13 +242,13 @@ void HistogramWidget::mousePressEvent(QMouseEvent* event) {
   update();
 }
 
-[[nodiscard]] static uint64_t LocationToValue(int pos_x, int width, int margin, uint64_t min_value,
+[[nodiscard]] static uint64_t LocationToValue(int pos_x, int width, uint64_t min_value,
                                               uint64_t max_value) {
-  if (pos_x <= margin) return 0;
-  if (pos_x > width - margin) return max_value + 1;
+  if (pos_x <= kLeftMargin) return 0;
+  if (pos_x > width - kRightMargin) return max_value + 1;
 
-  const int location = pos_x - margin;
-  const int histogram_width = width - 2 * margin;
+  const int location = pos_x - kLeftMargin;
+  const int histogram_width = width - kLeftMargin - kRightMargin;
   const uint64_t value_range = max_value - min_value;
   return min_value +
          static_cast<uint64_t>(static_cast<double>(location) / histogram_width * value_range);
@@ -255,10 +270,10 @@ void HistogramWidget::mouseReleaseEvent(QMouseEvent* /* event*/) {
       return;
     }
 
-    uint64_t min = LocationToValue(selected_area_->selection_start_pixel, Width(), WidthMargin(),
-                                   MinValue(), MaxValue());
-    uint64_t max = LocationToValue(selected_area_->selection_current_pixel, Width(), WidthMargin(),
-                                   MinValue(), MaxValue());
+    uint64_t min =
+        LocationToValue(selected_area_->selection_start_pixel, Width(), MinValue(), MaxValue());
+    uint64_t max =
+        LocationToValue(selected_area_->selection_current_pixel, Width(), MinValue(), MaxValue());
     if (min > max) {
       std::swap(min, max);
     }
@@ -302,10 +317,6 @@ uint64_t HistogramWidget::MaxValue() const { return histogram_stack_.top().max; 
 int HistogramWidget::Width() const { return size().width(); }
 
 int HistogramWidget::Height() const { return size().height(); }
-
-int HistogramWidget::HeightMargin() const { return RoundToClosestInt(Height() * kRelativeMargin); }
-
-int HistogramWidget::WidthMargin() const { return RoundToClosestInt(Width() * kRelativeMargin); }
 
 [[nodiscard]] std::optional<orbit_statistics::HistogramSelectionRange>
 HistogramWidget::GetSelectionRange() const {

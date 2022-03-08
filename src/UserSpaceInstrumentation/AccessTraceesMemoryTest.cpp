@@ -215,9 +215,9 @@ TEST(AccessTraceesMemoryTest, ReadWriteRestore) {
 
   std::vector<uint8_t> new_data(kMemorySize);
   std::mt19937 engine{std::random_device()()};
-  std::uniform_int_distribution<uint8_t> distribution{0x00, 0xff};
+  std::uniform_int_distribution<uint32_t> distribution{0x00, 0xff};
   std::generate(std::begin(new_data), std::end(new_data),
-                [&distribution, &engine]() { return distribution(engine); });
+                [&distribution, &engine]() { return static_cast<uint8_t>(distribution(engine)); });
 
   ASSERT_FALSE(WriteTraceesMemory(pid, address, new_data).has_error());
 
