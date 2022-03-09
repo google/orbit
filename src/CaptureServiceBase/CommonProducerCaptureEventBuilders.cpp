@@ -89,19 +89,19 @@ ProducerCaptureEvent CreateSuccessfulCaptureFinishedEvent() {
   return event;
 }
 
-ProducerCaptureEvent CreateMemoryThresholdExceededCaptureFinishedEvent() {
+ProducerCaptureEvent CreateInterruptedByServiceCaptureFinishedEvent(std::string message) {
   ProducerCaptureEvent event;
   CaptureFinished* capture_finished = event.mutable_capture_finished();
   capture_finished->set_status(CaptureFinished::kInterruptedByService);
-  capture_finished->set_error_message("OrbitService was using too much memory.");
+  capture_finished->set_error_message(std::move(message));
   return event;
 }
 
-ProducerCaptureEvent CreateMaxCaptureDurationExceededCaptureFinishedEvent() {
+ProducerCaptureEvent CreateFailedCaptureFinishedEvent(std::string message) {
   ProducerCaptureEvent event;
   CaptureFinished* capture_finished = event.mutable_capture_finished();
-  capture_finished->set_status(CaptureFinished::kInterruptedByService);
-  capture_finished->set_error_message("Capture duration exceeded the maximum duration limit.");
+  capture_finished->set_status(CaptureFinished::kFailed);
+  capture_finished->set_error_message(std::move(message));
   return event;
 }
 

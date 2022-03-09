@@ -72,13 +72,21 @@ void CaptureServiceBase::FinalizeEventProcessing(StopCaptureReason stop_capture_
   ProducerCaptureEvent capture_finished;
   switch (stop_capture_reason) {
     case StopCaptureReason::kClientStop:
+    case StopCaptureReason::kGuestOrcStop:
       capture_finished = CreateSuccessfulCaptureFinishedEvent();
       break;
     case StopCaptureReason::kMemoryWatchdog:
-      capture_finished = CreateMemoryThresholdExceededCaptureFinishedEvent();
+      capture_finished =
+          CreateInterruptedByServiceCaptureFinishedEvent("OrbitService was using too much memory.");
       break;
     case StopCaptureReason::kExceededMaxDurationLimit:
-      capture_finished = CreateMaxCaptureDurationExceededCaptureFinishedEvent();
+      capture_finished = CreateInterruptedByServiceCaptureFinishedEvent(
+          "Capture duration exceeded the maximum duration limit.");
+      break;
+    case StopCaptureReason::kGuestOrcConnectionFailure:
+      capture_finished =
+          CreateFailedCaptureFinishedEvent("Encountered GuestOrc connection failure.");
+      break;
   }
   producer_event_processor_->ProcessEvent(orbit_grpc_protos::kRootProducerId,
                                           std::move(capture_finished));

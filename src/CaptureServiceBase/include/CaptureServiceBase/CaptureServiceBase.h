@@ -25,7 +25,13 @@ class CaptureServiceBase {
   void RemoveCaptureStartStopListener(CaptureStartStopListener* listener);
 
   enum class CaptureInitializationResult { kSuccess, kAlreadyInProgress };
-  enum class StopCaptureReason { kClientStop, kMemoryWatchdog, kExceededMaxDurationLimit };
+  enum class StopCaptureReason {
+    kClientStop,
+    kMemoryWatchdog,
+    kExceededMaxDurationLimit,
+    kGuestOrcStop,
+    kGuestOrcConnectionFailure,
+  };
 
  protected:
   [[nodiscard]] CaptureInitializationResult InitializeCapture(
