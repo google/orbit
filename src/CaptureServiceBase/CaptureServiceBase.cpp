@@ -77,6 +77,8 @@ void CaptureServiceBase::FinalizeEventProcessing(StopCaptureReason stop_capture_
     case StopCaptureReason::kMemoryWatchdog:
       capture_finished = CreateMemoryThresholdExceededCaptureFinishedEvent();
       break;
+    case StopCaptureReason::kExceededMaxDurationLimit:
+      capture_finished = CreateMaxCaptureDurationExceededCaptureFinishedEvent();
   }
   producer_event_processor_->ProcessEvent(orbit_grpc_protos::kRootProducerId,
                                           std::move(capture_finished));

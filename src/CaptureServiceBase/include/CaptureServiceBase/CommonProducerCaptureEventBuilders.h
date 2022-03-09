@@ -24,6 +24,9 @@ namespace orbit_capture_service_base {
 [[nodiscard]] orbit_grpc_protos::ProducerCaptureEvent
 CreateMemoryThresholdExceededCaptureFinishedEvent();
 
+[[nodiscard]] orbit_grpc_protos::ProducerCaptureEvent
+CreateMaxCaptureDurationExceededCaptureFinishedEvent();
+
 [[nodiscard]] orbit_grpc_protos::ProducerCaptureEvent CreateClockResolutionEvent(
     uint64_t timestamp_ns, uint64_t resolution_ns);
 

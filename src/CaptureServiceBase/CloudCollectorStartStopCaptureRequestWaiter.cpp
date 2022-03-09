@@ -27,7 +27,14 @@ void CloudCollectorStartStopCaptureRequestWaiter::StartCapture(CaptureOptions ca
 CaptureServiceBase::StopCaptureReason
 CloudCollectorStartStopCaptureRequestWaiter::WaitForStopCaptureRequest() {
   absl::MutexLock lock(&stop_mutex_);
-  stop_mutex_.Await(absl::Condition(&stop_requested_));
+
+  if (!max_capture_duration_.has_value()) {
+    stop_mutex_.Await(absl::Condition(&stop_requested_));
+  } else if (!stop_mutex_.AwaitWithTimeout(absl::Condition(&stop_requested_),
+                                           max_capture_duration_.value())) {
+    stop_capture_reason_ = CaptureServiceBase::StopCaptureReason::kExceededMaxDurationLimit;
+  }
+
   ORBIT_LOG("Stopping capture");
   return stop_capture_reason_;
 }
