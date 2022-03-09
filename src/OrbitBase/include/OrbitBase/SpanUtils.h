@@ -6,6 +6,7 @@
 #define ORBIT_BASE_SPAN_UTILS_H_
 
 #include <absl/types/span.h>
+#include <stddef.h>
 
 namespace orbit_base {
 
@@ -26,8 +27,8 @@ namespace orbit_base {
 // }
 //
 template <typename T>
-[[nodiscard]] inline std::vector<absl::Span<T>> CreateSpansOfSize(std::vector<T>& input_vector,
-                                                                  const size_t span_size) {
+[[nodiscard]] std::vector<absl::Span<T>> CreateSpansOfSize(std::vector<T>& input_vector,
+                                                           const size_t span_size) {
   if (input_vector.empty() || span_size == 0) return {};
   const size_t num_spans = (input_vector.size() + (span_size - 1)) / span_size;
   std::vector<absl::Span<T>> spans;

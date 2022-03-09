@@ -7,6 +7,7 @@
 
 #include "OrbitBase/SpanUtils.h"
 #include "OrbitBase/TaskGroup.h"
+#include "OrbitBase/ThreadPool.h"
 
 using orbit_base::CreateSpansOfSize;
 using orbit_base::TaskGroup;

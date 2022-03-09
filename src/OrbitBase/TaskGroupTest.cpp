@@ -7,6 +7,7 @@
 
 #include "OrbitBase/Logging.h"
 #include "OrbitBase/TaskGroup.h"
+#include "OrbitBase/ThreadPool.h"
 #include "OrbitBase/UniqueResource.h"
 
 using orbit_base::TaskGroup;

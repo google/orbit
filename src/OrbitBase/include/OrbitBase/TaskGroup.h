@@ -5,7 +5,7 @@
 #ifndef ORBIT_BASE_TASK_GROUP_H_
 #define ORBIT_BASE_TASK_GROUP_H_
 
-#include "OrbitBase/ThreadPool.h"
+#include "OrbitBase/Executor.h"
 
 namespace orbit_base {
 
@@ -17,7 +17,7 @@ namespace orbit_base {
 // Usage:
 //
 // void ProcessObjectsInParallel(std::vector<Object>& objects) {
-//   TaskGroup task_group(thread_pool_);
+//   TaskGroup task_group(executor_);
 //   for (Object& object : objects) {
 //     task_group.AddTask([&object]() { ProcessObject(object); });
 //   }
@@ -25,9 +25,9 @@ namespace orbit_base {
 //
 class TaskGroup {
  public:
-  explicit TaskGroup(orbit_base::ThreadPool* thread_pool) : thread_pool_(thread_pool) {}
+  explicit TaskGroup(orbit_base::Executor* executor) : executor_(executor) {}
   ~TaskGroup() {
-    if (!done_) Wait();
+    if (!futures_.empty()) Wait();
   }
 
   TaskGroup() = delete;
@@ -35,21 +35,20 @@ class TaskGroup {
   TaskGroup& operator=(TaskGroup const&) = delete;
 
   template <typename T>
-  Future<void>* AddTask(T&& task) {
-    return &futures_.emplace_back(thread_pool_->Schedule(std::forward<T>(task)));
+  Future<void> AddTask(T&& task) {
+    return futures_.emplace_back(executor_->Schedule(std::forward<T>(task)));
   }
 
   void Wait() {
     for (Future<void>& future : futures_) {
       future.Wait();
     }
-    done_ = true;
+    futures_.clear();
   }
 
  private:
-  orbit_base::ThreadPool* thread_pool_ = nullptr;
+  orbit_base::Executor* executor_ = nullptr;
   std::vector<Future<void>> futures_;
-  bool done_ = false;
 };
 
 }  // namespace orbit_base
