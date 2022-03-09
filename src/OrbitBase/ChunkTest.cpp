@@ -19,7 +19,7 @@ namespace {
 // overflow.
 template <typename T>
 void TestChunksCoverage(const std::vector<T>& test_vector,
-                       const std::vector<absl::Span<T>>& chunks) {
+                        const std::vector<absl::Span<T>>& chunks) {
   const T* element = test_vector.data();
   for (const absl::Span<T>& chunk : chunks) {
     EXPECT_EQ(element, chunk.data());
