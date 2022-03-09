@@ -20,6 +20,7 @@ target_sources(OrbitBase PRIVATE
         include/OrbitBase/AnyInvocable.h
         include/OrbitBase/AnyMovable.h
         include/OrbitBase/Append.h
+        include/OrbitBase/Chunk.h
         include/OrbitBase/CrashHandler.h
         include/OrbitBase/ExecutablePath.h
         include/OrbitBase/ExecuteCommand.h
@@ -38,7 +39,6 @@ target_sources(OrbitBase PRIVATE
         include/OrbitBase/SafeStrerror.h
         include/OrbitBase/SharedState.h
         include/OrbitBase/SimpleExecutor.h
-        include/OrbitBase/SpanUtils.h
         include/OrbitBase/TaskGroup.h
         include/OrbitBase/TemporaryFile.h
         include/OrbitBase/ThreadConstants.h
@@ -92,6 +92,7 @@ target_sources(OrbitBaseTests PRIVATE
         AnyInvocableTest.cpp
         AnyMovableTest.cpp
         AppendTest.cpp
+        ChunkTest.cpp
         ExecutablePathTest.cpp
         ExecutorTest.cpp
         FileTest.cpp
@@ -106,7 +107,6 @@ target_sources(OrbitBaseTests PRIVATE
         ReadFileToStringTest.cpp
         ResultTest.cpp
         SimpleExecutorTest.cpp
-        SpanUtilsTest.cpp
         TaskGroupTest.cpp
         TemporaryFileTest.cpp
         ThreadUtilsTest.cpp
