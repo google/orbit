@@ -13,7 +13,6 @@ namespace orbit_capture_service_base {
 CaptureOptions CloudCollectorStartStopCaptureRequestWaiter::WaitForStartCaptureRequest() {
   absl::MutexLock lock(&start_mutex_);
   start_mutex_.Await(absl::Condition(&start_requested_));
-  capture_start_time_ = absl::Now();
   ORBIT_LOG("Starting capture");
   return capture_options_;
 }
@@ -31,8 +30,8 @@ CloudCollectorStartStopCaptureRequestWaiter::WaitForStopCaptureRequest() {
 
   if (!max_capture_duration_.has_value()) {
     stop_mutex_.Await(absl::Condition(&stop_requested_));
-  } else if (!stop_mutex_.AwaitWithDeadline(absl::Condition(&stop_requested_),
-                                            capture_start_time_ + max_capture_duration_.value())) {
+  } else if (!stop_mutex_.AwaitWithTimeout(absl::Condition(&stop_requested_),
+                                           max_capture_duration_.value())) {
     stop_capture_reason_ = CaptureServiceBase::StopCaptureReason::kExceededMaxDurationLimit;
   }
 

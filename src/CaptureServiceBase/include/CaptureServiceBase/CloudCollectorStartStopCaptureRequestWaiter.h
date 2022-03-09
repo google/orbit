@@ -39,7 +39,6 @@ class CloudCollectorStartStopCaptureRequestWaiter : public StartStopCaptureReque
   bool stop_requested_ ABSL_GUARDED_BY(stop_mutex_) = false;
 
   std::optional<absl::Duration> max_capture_duration_;
-  absl::Time capture_start_time_;
 };
 
 }  // namespace orbit_capture_service_base
