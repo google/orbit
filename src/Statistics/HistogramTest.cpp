@@ -166,4 +166,23 @@ TEST(Histogram, BuildHistogramCorrectlyChoosesTheBinWidth) {
   EXPECT_EQ(hist->counts.size(), 128);
 }
 
+static void TestGetBinWidths(int number_of_bins, int histogram_width) {
+  const std::vector<int> widths = GetBinWidth(number_of_bins, histogram_width);
+  ASSERT_EQ(widths.size(), number_of_bins);
+  int sum = std::reduce(std::begin(widths), std::end(widths), 0);
+  ASSERT_EQ(sum, histogram_width);
+  int max = *std::max_element(std::begin(widths), std::end(widths));
+  int min = *std::min_element(std::begin(widths), std::end(widths));
+  ASSERT_TRUE(max - min <= 1);
+  ASSERT_TRUE(std::all_of(std::begin(widths), std::end(widths),
+                          [](const int width) { return width >= 0; }));
+}
+
+TEST(HistogramUtil, GetBinWidthIsCorrect) {
+  TestGetBinWidths(10, 100);
+  TestGetBinWidths(10, 115);
+  TestGetBinWidths(1, 115);
+  TestGetBinWidths(10, 2);
+  TestGetBinWidths(1, 1);
+}
 }  // namespace orbit_statistics

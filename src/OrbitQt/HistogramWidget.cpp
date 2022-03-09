@@ -25,6 +25,7 @@
 #include <optional>
 #include <string>
 #include <utility>
+#include <vector>
 
 #include "ApiInterface/Orbit.h"
 #include "DisplayFormats/DisplayFormats.h"
@@ -142,24 +143,26 @@ static void DrawVerticalAxis(QPainter& painter, const QPoint& axes_intersection,
 static void DrawHistogram(QPainter& painter, const QPoint& axes_intersection,
                           const orbit_statistics::Histogram& histogram, int horizontal_axis_length,
                           int vertical_axis_length, double max_freq, uint64_t min_value) {
-  for (size_t i = 0; i < histogram.counts.size(); ++i) {
-    const uint64_t bin_from = histogram.min + i * histogram.bin_width;
-    const uint64_t bin_to = bin_from + histogram.bin_width;
+  std::vector<int> widths =
+      orbit_statistics::GetBinWidth(histogram.counts.size(), horizontal_axis_length);
 
+  int left_x = axes_intersection.x() + kLineWidth / 2 +
+               ValueToAxisLocation(histogram.min, horizontal_axis_length, min_value, histogram.max);
+
+  // If the number of bins exceeds the width of histogram in pixels, `widths[i]` might be zero.
+  // In such case we plot the bar on top of the previous one
+  for (size_t i = 0; i < histogram.counts.size(); ++i) {
     double freq = GetFreq(histogram, i);
     if (freq > 0) {
-      const QPoint top_left(
-          axes_intersection.x() +
-              ValueToAxisLocation(bin_from, horizontal_axis_length, min_value, histogram.max),
-          axes_intersection.y() - kLineWidth -
-              ValueToAxisLocation(freq, vertical_axis_length, 0, max_freq));
-      const QPoint lower_right(
-          axes_intersection.x() +
-              ValueToAxisLocation(bin_to, horizontal_axis_length, min_value, histogram.max),
-          axes_intersection.y() - kLineWidth);
+      const QPoint top_left(left_x,
+                            axes_intersection.y() - kLineWidth -
+                                ValueToAxisLocation(freq, vertical_axis_length, 0, max_freq));
+      const QPoint lower_right(left_x + std::max(widths[i] - 1, 0),
+                               axes_intersection.y() - kLineWidth);
       const QRect bar(top_left, lower_right);
       painter.fillRect(bar, kBarColors[i % kBarColors.size()]);
     }
+    left_x += widths[i];
   }
 }
 
