@@ -10,7 +10,7 @@
 #include <utility>
 #include <vector>
 
-#include "Batcher.h"
+#include "BatcherImpl.h"
 #include "CoreMath.h"
 #include "Geometry.h"
 #include "PickingManager.h"
@@ -18,10 +18,10 @@
 
 namespace {
 
-class FakeBatcher : public Batcher {
+class FakeBatcher : public BatcherImpl {
  public:
   explicit FakeBatcher(BatcherId id, PickingManager* picking_manager = nullptr)
-      : Batcher(id, picking_manager) {}
+      : BatcherImpl(id, picking_manager) {}
 
   void ResetMockDrawCounts() {
     drawn_line_colors_.clear();

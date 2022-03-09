@@ -17,7 +17,7 @@
 
 #include "AccessibleInterfaceProvider.h"
 #include "AccessibleTimeGraph.h"
-#include "Batcher.h"
+#include "BatcherImpl.h"
 #include "CoreMath.h"
 #include "GlUtils.h"
 #include "ImGuiOrbit.h"
@@ -161,7 +161,7 @@ class GlCanvas : public orbit_gl::AccessibleInterfaceProvider {
   orbit_gl::Viewport viewport_;
 
   // Batcher to draw elements in the UI.
-  Batcher ui_batcher_;
+  BatcherImpl ui_batcher_;
   std::vector<RenderCallback> render_callbacks_;
 
  private:

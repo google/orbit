@@ -13,12 +13,10 @@
 #include <functional>
 #include <memory>
 #include <string>
-#include <unordered_map>
 #include <utility>
 #include <vector>
 
 #include "ClientProtos/capture_data.pb.h"
-#include "Containers/BlockChain.h"
 #include "CoreMath.h"
 #include "Geometry.h"
 #include "PickingManager.h"
@@ -36,57 +34,6 @@ struct PickingUserData {
       : timer_info_(timer_info), generate_tooltip_(std::move(generate_tooltip)) {}
 };
 
-struct LineBuffer {
-  void Reset() {
-    lines_.Reset();
-    colors_.Reset();
-    picking_colors_.Reset();
-  }
-
-  static const int NUM_LINES_PER_BLOCK = 64 * 1024;
-  orbit_containers::BlockChain<Line, NUM_LINES_PER_BLOCK> lines_;
-  orbit_containers::BlockChain<Color, 2 * NUM_LINES_PER_BLOCK> colors_;
-  orbit_containers::BlockChain<Color, 2 * NUM_LINES_PER_BLOCK> picking_colors_;
-};
-
-struct BoxBuffer {
-  void Reset() {
-    boxes_.Reset();
-    colors_.Reset();
-    picking_colors_.Reset();
-  }
-
-  static const int NUM_BOXES_PER_BLOCK = 64 * 1024;
-  orbit_containers::BlockChain<Box, NUM_BOXES_PER_BLOCK> boxes_;
-  orbit_containers::BlockChain<Color, 4 * NUM_BOXES_PER_BLOCK> colors_;
-  orbit_containers::BlockChain<Color, 4 * NUM_BOXES_PER_BLOCK> picking_colors_;
-};
-
-struct TriangleBuffer {
-  void Reset() {
-    triangles_.Reset();
-    colors_.Reset();
-    picking_colors_.Reset();
-  }
-
-  static const int NUM_TRIANGLES_PER_BLOCK = 64 * 1024;
-  orbit_containers::BlockChain<Triangle, NUM_TRIANGLES_PER_BLOCK> triangles_;
-  orbit_containers::BlockChain<Color, 3 * NUM_TRIANGLES_PER_BLOCK> colors_;
-  orbit_containers::BlockChain<Color, 3 * NUM_TRIANGLES_PER_BLOCK> picking_colors_;
-};
-
-struct PrimitiveBuffers {
-  void Reset() {
-    line_buffer.Reset();
-    box_buffer.Reset();
-    triangle_buffer.Reset();
-  }
-
-  LineBuffer line_buffer;
-  BoxBuffer box_buffer;
-  TriangleBuffer triangle_buffer;
-};
-
 enum class ShadingDirection { kLeftToRight, kRightToLeft, kTopToBottom, kBottomToTop };
 
 /**
@@ -97,9 +44,8 @@ into layers formed by equal z-coordinates. Each layer can then be drawn seperate
 Batcher::DrawLayer(), or all layers can be drawn at once in their correct order using
 Batcher::Draw():
 
-NOTE: The Batcher assumes x/y coordinates are in pixels and will automatically round those
-down to the next integer in all Batcher::AddXXX methods. This fixes the issue of primitives
-"jumping" around when their coordinates are changed slightly.
+NOTE: Batcher has a few pure virtual functions that has to be implemented: A few AddInternalMethods,
+ResetElements(), GetLayers() and DrawLayers().
 **/
 class Batcher {
  public:
@@ -162,8 +108,10 @@ class Batcher {
                    std::shared_ptr<Pickable> pickable);
 
   void AddCircle(const Vec2& position, float radius, float z, Color color);
-  [[nodiscard]] std::vector<float> GetLayers() const;
-  virtual void DrawLayer(float layer, bool picking = false) const;
+
+  [[nodiscard]] virtual std::vector<float> GetLayers() const = 0;
+  virtual void DrawLayer(float layer, bool picking) const = 0;
+
   void Draw(bool picking = false) const;
 
   void StartNewFrame();
@@ -179,36 +127,29 @@ class Batcher {
   static constexpr uint32_t kNumArcSides = 16;
 
  protected:
-  void DrawLineBuffer(float layer, bool picking) const;
-  void DrawBoxBuffer(float layer, bool picking) const;
-  void DrawTriangleBuffer(float layer, bool picking) const;
-
-  void GetBoxGradientColors(const Color& color, std::array<Color, 4>* colors,
-                            ShadingDirection shading_direction = ShadingDirection::kLeftToRight);
-
   void AddTriangle(const Triangle& triangle, const Color& color, const Color& picking_color,
                    std::unique_ptr<PickingUserData> user_data = nullptr);
+  orbit_gl::TranslationStack translations_;
+  std::vector<std::unique_ptr<PickingUserData>> user_data_;
+
+ private:
+  void GetBoxGradientColors(const Color& color, std::array<Color, 4>* colors,
+                            ShadingDirection shading_direction = ShadingDirection::kLeftToRight);
+  virtual void ResetElements() = 0;
+  virtual void AddLineInternal(Vec2 from, Vec2 to, float z, const Color& color,
+                               const Color& picking_color,
+                               std::unique_ptr<PickingUserData> user_data) = 0;
+  virtual void AddBoxInternal(const Box& box, const std::array<Color, 4>& colors,
+                              const Color& picking_color,
+                              std::unique_ptr<PickingUserData> user_data) = 0;
+  virtual void AddTriangleInternal(const Triangle& triangle, const std::array<Color, 3>& colors,
+                                   const Color& picking_color,
+                                   std::unique_ptr<PickingUserData> user_data) = 0;
 
   BatcherId batcher_id_;
   PickingManager* picking_manager_;
-  std::unordered_map<float, PrimitiveBuffers> primitive_buffers_by_layer_;
-
-  std::vector<std::unique_ptr<PickingUserData>> user_data_;
 
   std::vector<Vec2> circle_points;
-
-  orbit_gl::TranslationStack translations_;
-
- private:
-  void AddLineInternal(Vec2 from, Vec2 to, float z, const Color& color, const Color& picking_color,
-                       std::unique_ptr<PickingUserData> user_data = nullptr);
-  void AddBoxInternal(const Box& box, const std::array<Color, 4>& colors,
-                      const Color& picking_color,
-                      std::unique_ptr<PickingUserData> user_data = nullptr);
-  void AddTriangleInternal(const Triangle& triangle, const std::array<Color, 3>& colors,
-                           const Color& picking_color,
-                           std::unique_ptr<PickingUserData> user_data = nullptr);
-  void ResetElements();
 };
 
 #endif
