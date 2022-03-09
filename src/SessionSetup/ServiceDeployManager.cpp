@@ -42,8 +42,8 @@
 static const std::string kLocalhost = "127.0.0.1";
 static const std::string kDebDestinationPath = "/tmp/orbitprofiler.deb";
 static const std::string kSigDestinationPath = "/tmp/orbitprofiler.deb.asc";
-static const std::string_view kSshWatchdogPassphrase = "start_watchdog";
-static const std::chrono::milliseconds kSshWatchdogInterval(1000);
+constexpr std::string_view kSshWatchdogPassphrase = "start_watchdog";
+constexpr std::chrono::milliseconds kSshWatchdogInterval{1000};
 constexpr std::chrono::seconds kServiceStartupTimeout{10};
 
 namespace orbit_session_setup {
@@ -452,7 +452,7 @@ ErrorMessageOr<void> ServiceDeployManager::CopyOrbitUserSpaceInstrumentationLibr
   return outcome::success();
 }
 
-[[nodiscard]] static std::string GenStartOrbitServiceCommand(
+[[nodiscard]] static std::string GenerateStartOrbitServiceCommand(
     const std::variant<SignedDebianPackageDeployment, BareExecutableAndRootPasswordDeployment>&
         deployment_config) {
   std::string command;
@@ -475,7 +475,7 @@ ErrorMessageOr<void> ServiceDeployManager::StartOrbitService(
   ORBIT_CHECK(QThread::currentThread() == thread());
   emit statusMessage("Starting OrbitService on the remote instance...");
 
-  std::string task_string = GenStartOrbitServiceCommand(deployment_config);
+  std::string task_string = GenerateStartOrbitServiceCommand(deployment_config);
   orbit_service_task_.emplace(&session_.value(), task_string);
 
   if (std::holds_alternative<BareExecutableAndRootPasswordDeployment>(deployment_config)) {
