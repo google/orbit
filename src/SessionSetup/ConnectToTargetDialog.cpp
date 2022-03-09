@@ -68,7 +68,11 @@ std::optional<TargetConfiguration> ConnectToTargetDialog::Exec() {
 
   joined_future.Then(main_thread_executor_.get(),
                      [this](MaybeSshAndInstanceData ssh_instance_data) {
-                       OnAsyncDataAvailable(std::move(ssh_instance_data));
+                       auto result = OnAsyncDataAvailable(std::move(ssh_instance_data));
+                       if (result.has_error()) {
+                         LogAndDisplayError(result.error());
+                         reject();
+                       }
                      });
 
   int rc = QDialog::exec();
@@ -88,39 +92,19 @@ std::optional<TargetConfiguration> ConnectToTargetDialog::Exec() {
   return std::move(target_configuration_);
 }
 
-void ConnectToTargetDialog::OnAsyncDataAvailable(MaybeSshAndInstanceData ssh_instance_data) {
-  auto maybe_ssh_info = std::get<0>(ssh_instance_data);
-
-  if (maybe_ssh_info.has_error()) {
-    LogAndDisplayError(maybe_ssh_info.error());
-    reject();
-    return;
-  }
-  orbit_ggp::SshInfo ssh_info = std::move(maybe_ssh_info.value());
-
-  auto maybe_instance_data = std::get<1>(ssh_instance_data);
-
-  if (maybe_instance_data.has_error()) {
-    LogAndDisplayError(maybe_instance_data.error());
-    reject();
-    return;
-  }
-  orbit_ggp::Instance instance = std::move(maybe_instance_data.value());
+ErrorMessageOr<void> ConnectToTargetDialog::OnAsyncDataAvailable(
+    MaybeSshAndInstanceData ssh_instance_data) {
+  OUTCOME_TRY(auto&& ssh_info, std::get<0>(ssh_instance_data));
+  OUTCOME_TRY(auto&& instance, std::get<1>(ssh_instance_data));
 
   auto service_deploy_manager = std::make_unique<orbit_session_setup::ServiceDeployManager>(
       ssh_connection_artifacts_->GetDeploymentConfiguration(),
       ssh_connection_artifacts_->GetSshContext(), CredentialsFromSshInfo(ssh_info),
       ssh_connection_artifacts_->GetGrpcPort());
 
-  auto maybe_grpc_port = DeployOrbitService(service_deploy_manager.get());
+  OUTCOME_TRY(auto&& grpc_port, DeployOrbitService(service_deploy_manager.get()));
 
-  if (maybe_grpc_port.has_error()) {
-    LogAndDisplayError(maybe_grpc_port.error());
-    reject();
-    return;
-  }
-
-  auto grpc_channel = CreateGrpcChannel(maybe_grpc_port.value().grpc_port);
+  auto grpc_channel = CreateGrpcChannel(grpc_port.grpc_port);
   stadia_connection_ = orbit_session_setup::StadiaConnection(
       std::move(instance), std::move(service_deploy_manager), std::move(grpc_channel));
 
@@ -166,10 +150,6 @@ void ConnectToTargetDialog::SetStatusMessage(const QString& message) {
 
 void ConnectToTargetDialog::LogAndDisplayError(const ErrorMessage& message) {
   ORBIT_ERROR("%s", message.message());
-  if (connection_metric_ != nullptr) {
-    connection_metric_->SetStatusCode(orbit_metrics_uploader::OrbitLogEvent::INTERNAL_ERROR);
-    connection_metric_.release();
-  }
 
   QMessageBox::critical(nullptr, QApplication::applicationName(),
                         QString::fromStdString(message.message()));
