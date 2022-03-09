@@ -148,6 +148,7 @@ static void DrawHistogram(QPainter& painter, const QPoint& axes_intersection,
 
   int left_x = axes_intersection.x() + kLineWidth / 2 +
                ValueToAxisLocation(histogram.min, horizontal_axis_length, min_value, histogram.max);
+  int color_index = 0;
 
   // If the number of bins exceeds the width of histogram in pixels, `widths[i]` might be zero.
   // In such case we plot the bar on top of the previous one
@@ -160,8 +161,10 @@ static void DrawHistogram(QPainter& painter, const QPoint& axes_intersection,
       const QPoint lower_right(left_x + std::max(widths[i] - 1, 0),
                                axes_intersection.y() - kLineWidth);
       const QRect bar(top_left, lower_right);
-      painter.fillRect(bar, kBarColors[i % kBarColors.size()]);
+      painter.fillRect(bar, kBarColors[color_index % kBarColors.size()]);
     }
+
+    if (widths[i] > 0) color_index++;
     left_x += widths[i];
   }
 }
