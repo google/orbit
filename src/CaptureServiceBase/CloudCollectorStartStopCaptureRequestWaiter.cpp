@@ -29,7 +29,7 @@ CaptureServiceBase::StopCaptureReason
 CloudCollectorStartStopCaptureRequestWaiter::WaitForStopCaptureRequest() {
   absl::MutexLock lock(&stop_mutex_);
 
-  if (max_capture_duration_.has_value()) {
+  if (!max_capture_duration_.has_value()) {
     stop_mutex_.Await(absl::Condition(&stop_requested_));
   } else if (!stop_mutex_.AwaitWithDeadline(absl::Condition(&stop_requested_),
                                             capture_start_time_ + max_capture_duration_.value())) {
