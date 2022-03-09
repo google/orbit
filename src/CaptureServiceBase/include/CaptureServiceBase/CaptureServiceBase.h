@@ -25,10 +25,9 @@ class CaptureServiceBase {
   void RemoveCaptureStartStopListener(CaptureStartStopListener* listener);
 
   enum class CaptureInitializationResult { kSuccess, kAlreadyInProgress };
-
- protected:
   enum class StopCaptureReason { kClientStop, kMemoryWatchdog };
 
+ protected:
   [[nodiscard]] CaptureInitializationResult InitializeCapture(
       orbit_producer_event_processor::ClientCaptureEventCollector* client_capture_event_collector);
   void TerminateCapture();

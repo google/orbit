@@ -29,14 +29,16 @@ class GrpcStartStopCaptureRequestWaiter : public StartStopCaptureRequestWaiter {
     return request.capture_options();
   }
 
-  void WaitForStopCaptureRequest() override {
+  [[nodiscard]] CaptureServiceBase::StopCaptureReason WaitForStopCaptureRequest() override {
     CaptureRequest request;
     // The client asks for the capture to be stopped by calling WritesDone. At that point, this
     // call to Read will return false. In the meantime, it blocks if no message is received.
     // Read also unblocks and returns false if the gRPC finishes.
     while (reader_writer_->Read(&request)) {
     }
+
     ORBIT_LOG("Client finished writing on Capture's gRPC stream: stopping capture");
+    return CaptureServiceBase::StopCaptureReason::kClientStop;
   }
 
  private:

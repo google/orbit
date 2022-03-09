@@ -5,6 +5,7 @@
 #ifndef CAPTURE_SERVICE_BASE_START_STOP_CAPTURE_REQUEST_WAITER_H_
 #define CAPTURE_SERVICE_BASE_START_STOP_CAPTURE_REQUEST_WAITER_H_
 
+#include "CaptureServiceBase/CaptureServiceBase.h"
 #include "GrpcProtos/capture.pb.h"
 
 namespace orbit_capture_service_base {
@@ -16,7 +17,7 @@ class StartStopCaptureRequestWaiter {
  public:
   virtual ~StartStopCaptureRequestWaiter() = default;
   [[nodiscard]] virtual orbit_grpc_protos::CaptureOptions WaitForStartCaptureRequest() = 0;
-  virtual void WaitForStopCaptureRequest() = 0;
+  [[nodiscard]] virtual CaptureServiceBase::StopCaptureReason WaitForStopCaptureRequest() = 0;
 };
 
 }  // namespace orbit_capture_service_base
