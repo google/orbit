@@ -51,132 +51,152 @@ TYPED_TEST_P(PdbFileTest, LoadDebugSymbols) {
     symbol_infos_by_address.emplace(symbol_info.address(), &symbol_info);
   }
 
-  /*for (auto[address, symbol] : symbol_infos_by_address) {
-      ORBIT_LOG("0x%x: %s", address, symbol->name());
-  }*/
-
   ASSERT_EQ(symbol_infos_by_address.size(), 5459);
 
   {
-    const SymbolInfo& symbol = *symbol_infos_by_address[0x18000eea0];
-    EXPECT_EQ(symbol.name(), "PrintHelloWorldInternal");
-    EXPECT_EQ(symbol.demangled_name(), "PrintHelloWorldInternal()");
-    EXPECT_EQ(symbol.address(), 0x18000eea0);
-    EXPECT_EQ(symbol.size(), 0x2b);
+    const SymbolInfo* symbol = symbol_infos_by_address[0x18000eea0];
+    ASSERT_NE(symbol, nullptr);
+    EXPECT_EQ(symbol->name(), "PrintHelloWorldInternal");
+    EXPECT_EQ(symbol->demangled_name(), "PrintHelloWorldInternal()");
+    EXPECT_EQ(symbol->address(), 0x18000eea0);
+    EXPECT_EQ(symbol->size(), 0x2b);
   }
 
   {
-    const SymbolInfo& symbol = *symbol_infos_by_address[0x18000eee0];
-    EXPECT_EQ(symbol.name(), "PrintHelloWorld");
-    EXPECT_EQ(symbol.demangled_name(), "PrintHelloWorld()");
-    EXPECT_EQ(symbol.address(), 0x18000eee0);
-    EXPECT_EQ(symbol.size(), 0xe);
+    const SymbolInfo* symbol = symbol_infos_by_address[0x18000eee0];
+    ASSERT_NE(symbol, nullptr);
+    EXPECT_EQ(symbol->name(), "PrintHelloWorld");
+    EXPECT_EQ(symbol->demangled_name(), "PrintHelloWorld()");
+    EXPECT_EQ(symbol->address(), 0x18000eee0);
+    EXPECT_EQ(symbol->size(), 0xe);
   }
 
   {
-    const SymbolInfo& symbol = *symbol_infos_by_address[0x18000ef00];
-    EXPECT_EQ(symbol.name(), "PrintString");
-    EXPECT_EQ(symbol.demangled_name(), "PrintString(const char*)");
-    EXPECT_EQ(symbol.address(), 0x18000ef00);
+    const SymbolInfo* symbol = symbol_infos_by_address[0x18000ef00];
+    ASSERT_NE(symbol, nullptr);
+    EXPECT_EQ(symbol->name(), "PrintString");
+    EXPECT_EQ(symbol->demangled_name(), "PrintString(const char*)");
+    EXPECT_EQ(symbol->address(), 0x18000ef00);
   }
 
   {
-    const SymbolInfo& symbol = *symbol_infos_by_address[0x18000ef20];
-    EXPECT_EQ(symbol.name(), "TakesVolatileInt");
-    EXPECT_EQ(symbol.demangled_name(), "TakesVolatileInt(volatile int)");
-    EXPECT_EQ(symbol.address(), 0x18000ef20);
+    const SymbolInfo* symbol = symbol_infos_by_address[0x18000ef20];
+    ASSERT_NE(symbol, nullptr);
+    EXPECT_EQ(symbol->name(), "TakesVolatileInt");
+    EXPECT_EQ(symbol->demangled_name(), "TakesVolatileInt(volatile int)");
+    EXPECT_EQ(symbol->address(), 0x18000ef20);
   }
 
   {
-    const SymbolInfo& symbol = *symbol_infos_by_address[0x18000ef50];
-    EXPECT_EQ(symbol.name(), "TakesFooReference");
-    EXPECT_EQ(symbol.demangled_name(), "TakesFooReference(Foo&)");
-    EXPECT_EQ(symbol.address(), 0x18000ef50);
+    const SymbolInfo* symbol = symbol_infos_by_address[0x18000ef50];
+    ASSERT_NE(symbol, nullptr);
+    EXPECT_EQ(symbol->name(), "TakesFooReference");
+    EXPECT_EQ(symbol->demangled_name(), "TakesFooReference(Foo&)");
+    EXPECT_EQ(symbol->address(), 0x18000ef50);
   }
 
   {
-    const SymbolInfo& symbol = *symbol_infos_by_address[0x18000ef80];
-    EXPECT_EQ(symbol.name(), "TakesFooRValueReference");
-    EXPECT_EQ(symbol.demangled_name(), "TakesFooRValueReference(Foo&&)");
-    EXPECT_EQ(symbol.address(), 0x18000ef80);
+    const SymbolInfo* symbol = symbol_infos_by_address[0x18000ef80];
+    ASSERT_NE(symbol, nullptr);
+    EXPECT_EQ(symbol->name(), "TakesFooRValueReference");
+    EXPECT_EQ(symbol->demangled_name(), "TakesFooRValueReference(Foo&&)");
+    EXPECT_EQ(symbol->address(), 0x18000ef80);
   }
 
   {
-    const SymbolInfo& symbol = *symbol_infos_by_address[0x18000efb0];
-    EXPECT_EQ(symbol.name(), "TakesConstPtrToInt");
-    EXPECT_EQ(symbol.demangled_name(), "TakesConstPtrToInt(int* const)");
-    EXPECT_EQ(symbol.address(), 0x18000efb0);
+    const SymbolInfo* symbol = symbol_infos_by_address[0x18000efb0];
+    ASSERT_NE(symbol, nullptr);
+    EXPECT_EQ(symbol->name(), "TakesConstPtrToInt");
+    EXPECT_EQ(symbol->demangled_name(), "TakesConstPtrToInt(int* const)");
+    EXPECT_EQ(symbol->address(), 0x18000efb0);
   }
 
   {
-    const SymbolInfo& symbol = *symbol_infos_by_address[0x18000efe0];
-    EXPECT_EQ(symbol.name(), "TakesReferenceToIntPtr");
-    EXPECT_EQ(symbol.demangled_name(), "TakesReferenceToIntPtr(int*&)");
-    EXPECT_EQ(symbol.address(), 0x18000efe0);
+    const SymbolInfo* symbol = symbol_infos_by_address[0x18000efe0];
+    ASSERT_NE(symbol, nullptr);
+    EXPECT_EQ(symbol->name(), "TakesReferenceToIntPtr");
+    EXPECT_EQ(symbol->demangled_name(), "TakesReferenceToIntPtr(int*&)");
+    EXPECT_EQ(symbol->address(), 0x18000efe0);
   }
 
   {
-    const SymbolInfo& symbol = *symbol_infos_by_address[0x18000f010];
-    EXPECT_EQ(symbol.name(), "TakesVoidFunctionPointer");
-    EXPECT_THAT(symbol.demangled_name(), AnyOf("TakesVoidFunctionPointer(void (*)(int))",
+    const SymbolInfo* symbol = symbol_infos_by_address[0x18000f010];
+    ASSERT_NE(symbol, nullptr);
+    EXPECT_EQ(symbol->name(), "TakesVoidFunctionPointer");
+    // LLVM does not handle function pointers correctly, thus we also accept the wrong
+    // strings here.
+    EXPECT_THAT(symbol->demangled_name(), AnyOf("TakesVoidFunctionPointer(void (*)(int))",
                                                "TakesVoidFunctionPointer(void (int)*)"));
-    EXPECT_EQ(symbol.address(), 0x18000f010);
+    EXPECT_EQ(symbol->address(), 0x18000f010);
   }
 
   {
-    const SymbolInfo& symbol = *symbol_infos_by_address[0x18000f030];
-    EXPECT_EQ(symbol.name(), "TakesCharFunctionPointer");
-    EXPECT_THAT(symbol.demangled_name(), AnyOf("TakesCharFunctionPointer(char (*)(int))",
+    const SymbolInfo* symbol = symbol_infos_by_address[0x18000f030];
+    ASSERT_NE(symbol, nullptr);
+    EXPECT_EQ(symbol->name(), "TakesCharFunctionPointer");
+    // LLVM does not handle function pointers correctly, thus we also accept the wrong
+    // strings here.
+    EXPECT_THAT(symbol->demangled_name(), AnyOf("TakesCharFunctionPointer(char (*)(int))",
                                                "TakesCharFunctionPointer(char (int)*)"));
-    EXPECT_EQ(symbol.address(), 0x18000f030);
+    EXPECT_EQ(symbol->address(), 0x18000f030);
   }
 
   {
-    const SymbolInfo& symbol = *symbol_infos_by_address[0x18000f060];
-    EXPECT_EQ(symbol.name(), "TakesMemberFunctionPointer");
-    EXPECT_THAT(symbol.demangled_name(),
+    const SymbolInfo* symbol = symbol_infos_by_address[0x18000f060];
+    ASSERT_NE(symbol, nullptr);
+    EXPECT_EQ(symbol->name(), "TakesMemberFunctionPointer");
+    // LLVM does not handle function pointers correctly, thus we also accept the wrong
+    // strings here.
+    EXPECT_THAT(symbol->demangled_name(),
                 AnyOf("TakesMemberFunctionPointer(const char* (Foo::*)(int), Foo)",
                       "TakesMemberFunctionPointer(const char* Foo::(int) Foo::*, Foo)"));
-    EXPECT_EQ(symbol.address(), 0x18000f060);
+    EXPECT_EQ(symbol->address(), 0x18000f060);
   }
 
   {
-    const SymbolInfo& symbol = *symbol_infos_by_address[0x18000f090];
-    EXPECT_EQ(symbol.name(), "TakesVolatilePointerToConstUnsignedChar");
-    EXPECT_EQ(symbol.demangled_name(),
+    const SymbolInfo* symbol = symbol_infos_by_address[0x18000f090];
+    ASSERT_NE(symbol, nullptr);
+    EXPECT_EQ(symbol->name(), "TakesVolatilePointerToConstUnsignedChar");
+    EXPECT_EQ(symbol->demangled_name(),
               "TakesVolatilePointerToConstUnsignedChar(const unsigned char* volatile)");
-    EXPECT_EQ(symbol.address(), 0x18000f090);
+    EXPECT_EQ(symbol->address(), 0x18000f090);
   }
 
   {
-    const SymbolInfo& symbol = *symbol_infos_by_address[0x18000f0b0];
-    EXPECT_EQ(symbol.name(), "TakesVolatileConstPtrToVolatileConstChar");
-    EXPECT_EQ(symbol.demangled_name(),
+    const SymbolInfo* symbol = symbol_infos_by_address[0x18000f0b0];
+    ASSERT_NE(symbol, nullptr);
+    EXPECT_EQ(symbol->name(), "TakesVolatileConstPtrToVolatileConstChar");
+    EXPECT_EQ(symbol->demangled_name(),
               "TakesVolatileConstPtrToVolatileConstChar(const volatile char* const volatile)");
-    EXPECT_EQ(symbol.address(), 0x18000f0b0);
+    EXPECT_EQ(symbol->address(), 0x18000f0b0);
   }
 
   {
-    const SymbolInfo& symbol = *symbol_infos_by_address[0x18000f0d0];
-    EXPECT_EQ(symbol.name(), "TakesConstPointerToConstFunctionPointer");
-    EXPECT_THAT(symbol.demangled_name(),
+    const SymbolInfo* symbol = symbol_infos_by_address[0x18000f0d0];
+    ASSERT_NE(symbol, nullptr);
+    EXPECT_EQ(symbol->name(), "TakesConstPointerToConstFunctionPointer");
+    // LLVM does not handle function pointers correctly, thus we also accept the wrong
+    // strings here.
+    EXPECT_THAT(symbol->demangled_name(),
                 AnyOf("TakesConstPointerToConstFunctionPointer(char (* const* const)(int))",
                       "TakesConstPointerToConstFunctionPointer(char (int)* const* const)"));
-    EXPECT_EQ(symbol.address(), 0x18000f0d0);
+    EXPECT_EQ(symbol->address(), 0x18000f0d0);
   }
 
   {
-    const SymbolInfo& symbol = *symbol_infos_by_address[0x18000f100];
-    EXPECT_EQ(symbol.name(), "TakesVariableArguments");
-    EXPECT_EQ(symbol.demangled_name(), "TakesVariableArguments(int, <no type>)");
-    EXPECT_EQ(symbol.address(), 0x18000f100);
+    const SymbolInfo* symbol = symbol_infos_by_address[0x18000f100];
+    ASSERT_NE(symbol, nullptr);
+    EXPECT_EQ(symbol->name(), "TakesVariableArguments");
+    EXPECT_EQ(symbol->demangled_name(), "TakesVariableArguments(int, <no type>)");
+    EXPECT_EQ(symbol->address(), 0x18000f100);
   }
 
   {
-    const SymbolInfo& symbol = *symbol_infos_by_address[0x18000f1b0];
-    EXPECT_EQ(symbol.name(), "TakesUserTypeInNamespace");
-    EXPECT_EQ(symbol.demangled_name(), "TakesUserTypeInNamespace(A::FooA, A::B::FooAB)");
-    EXPECT_EQ(symbol.address(), 0x18000f1b0);
+    const SymbolInfo* symbol = symbol_infos_by_address[0x18000f1b0];
+    ASSERT_NE(symbol, nullptr);
+    EXPECT_EQ(symbol->name(), "TakesUserTypeInNamespace");
+    EXPECT_EQ(symbol->demangled_name(), "TakesUserTypeInNamespace(A::FooA, A::B::FooAB)");
+    EXPECT_EQ(symbol->address(), 0x18000f1b0);
   }
 }
 

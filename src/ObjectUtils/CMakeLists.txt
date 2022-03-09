@@ -35,7 +35,8 @@ target_sources(ObjectUtils PRIVATE LinuxMap.cpp)
 else()
 target_sources(
   ObjectUtils
-  PRIVATE PdbFileDia.h
+  PRIVATE PdbDiaUtils.cpp
+          PdbFileDia.h
           PdbFileDia.cpp)
 target_sources(
   ObjectUtils
