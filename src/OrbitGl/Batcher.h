@@ -187,14 +187,7 @@ class Batcher {
   void GetBoxGradientColors(const Color& color, std::array<Color, 4>* colors,
                             ShadingDirection shading_direction = ShadingDirection::kLeftToRight);
 
-  void AddLine(Vec2 from, Vec2 to, float z, const Color& color, const Color& picking_color,
-               std::unique_ptr<PickingUserData> user_data = nullptr);
-  void AddBox(const Box& box, const std::array<Color, 4>& colors, const Color& picking_color,
-              std::unique_ptr<PickingUserData> user_data = nullptr);
   void AddTriangle(const Triangle& triangle, const Color& color, const Color& picking_color,
-                   std::unique_ptr<PickingUserData> user_data = nullptr);
-  void AddTriangle(const Triangle& triangle, const std::array<Color, 3>& colors,
-                   const Color& picking_color,
                    std::unique_ptr<PickingUserData> user_data = nullptr);
 
   BatcherId batcher_id_;
@@ -206,6 +199,16 @@ class Batcher {
   std::vector<Vec2> circle_points;
 
   orbit_gl::TranslationStack translations_;
+
+ private:
+  void AddLineInternal(Vec2 from, Vec2 to, float z, const Color& color, const Color& picking_color,
+                       std::unique_ptr<PickingUserData> user_data = nullptr);
+  void AddBoxInternal(const Box& box, const std::array<Color, 4>& colors,
+                      const Color& picking_color,
+                      std::unique_ptr<PickingUserData> user_data = nullptr);
+  void AddTriangleInternal(const Triangle& triangle, const std::array<Color, 3>& colors,
+                           const Color& picking_color,
+                           std::unique_ptr<PickingUserData> user_data = nullptr);
 };
 
 #endif

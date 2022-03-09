@@ -18,9 +18,9 @@
 
 namespace {
 
-class MockBatcher : public Batcher {
+class FakeBatcher : public Batcher {
  public:
-  explicit MockBatcher(BatcherId id, PickingManager* picking_manager = nullptr)
+  explicit FakeBatcher(BatcherId id, PickingManager* picking_manager = nullptr)
       : Batcher(id, picking_manager) {}
 
   void ResetMockDrawCounts() {
@@ -95,7 +95,7 @@ class MockBatcher : public Batcher {
   mutable std::vector<Color> drawn_box_colors_;
 };
 
-void ExpectDraw(MockBatcher& batcher, uint32_t line_count, uint32_t triangle_count,
+void ExpectDraw(FakeBatcher& batcher, uint32_t line_count, uint32_t triangle_count,
                 uint32_t box_count) {
   batcher.ResetMockDrawCounts();
   batcher.Draw();
@@ -105,7 +105,7 @@ void ExpectDraw(MockBatcher& batcher, uint32_t line_count, uint32_t triangle_cou
 }
 
 TEST(Batcher, SimpleElementsDrawing) {
-  MockBatcher batcher(BatcherId::kUi);
+  FakeBatcher batcher(BatcherId::kUi);
 
   ExpectDraw(batcher, 0, 0, 0);
   batcher.AddLine(Vec2(0, 0), Vec2(1, 0), 0, Color(255, 255, 255, 255));
@@ -122,7 +122,7 @@ TEST(Batcher, SimpleElementsDrawing) {
 }
 
 TEST(Batcher, PickingElementsDrawing) {
-  MockBatcher batcher(BatcherId::kUi);
+  FakeBatcher batcher(BatcherId::kUi);
   std::shared_ptr<PickableMock> pickable = std::make_shared<PickableMock>();
   PickingManager pm;
 
@@ -137,7 +137,7 @@ TEST(Batcher, PickingElementsDrawing) {
 }
 
 template <typename T>
-void ExpectCustomDataEq(const MockBatcher& batcher, const Color& rendered_color, const T& value) {
+void ExpectCustomDataEq(const FakeBatcher& batcher, const Color& rendered_color, const T& value) {
   PickingId id = MockRenderPickingColor(rendered_color);
   const PickingUserData* rendered_data = batcher.GetUserData(id);
   EXPECT_NE(rendered_data, nullptr);
@@ -146,7 +146,7 @@ void ExpectCustomDataEq(const MockBatcher& batcher, const Color& rendered_color,
 }
 
 TEST(Batcher, PickingSimpleElements) {
-  MockBatcher batcher(BatcherId::kUi);
+  FakeBatcher batcher(BatcherId::kUi);
 
   std::string line_custom_data = "line custom data";
   auto line_user_data = std::make_unique<PickingUserData>();
@@ -171,7 +171,7 @@ TEST(Batcher, PickingSimpleElements) {
   ExpectCustomDataEq(batcher, batcher.GetDrawnBoxColors()[0], box_custom_data);
 }
 
-void ExpectPickableEq(const MockBatcher& batcher, const Color& rendered_color, PickingManager& pm,
+void ExpectPickableEq(const FakeBatcher& batcher, const Color& rendered_color, PickingManager& pm,
                       const std::shared_ptr<const Pickable>& pickable) {
   PickingId id = MockRenderPickingColor(rendered_color);
   const PickingUserData* rendered_data = batcher.GetUserData(id);
@@ -182,7 +182,7 @@ void ExpectPickableEq(const MockBatcher& batcher, const Color& rendered_color, P
 
 TEST(Batcher, PickingPickables) {
   PickingManager pm;
-  MockBatcher batcher(BatcherId::kUi, &pm);
+  FakeBatcher batcher(BatcherId::kUi, &pm);
   std::shared_ptr<PickableMock> line_pickable = std::make_shared<PickableMock>();
   std::shared_ptr<PickableMock> triangle_pickable = std::make_shared<PickableMock>();
   std::shared_ptr<PickableMock> box_pickable = std::make_shared<PickableMock>();
@@ -199,7 +199,7 @@ TEST(Batcher, PickingPickables) {
 }
 
 TEST(Batcher, MultipleDrawCalls) {
-  MockBatcher batcher(BatcherId::kUi);
+  FakeBatcher batcher(BatcherId::kUi);
 
   std::string line_custom_data = "line custom data";
   auto line_user_data = std::make_unique<PickingUserData>();
@@ -246,7 +246,7 @@ bool LineEq(const Line& lhs, const Line& rhs) {
 }
 
 TEST(Batcher, TranslationsAreAutomaticallyAdded) {
-  MockBatcher batcher(BatcherId::kUi);
+  FakeBatcher batcher(BatcherId::kUi);
   batcher.AddLine(Vec2(0.f, 0.f), Vec2(1.f, 1.f), 0.f, Color());
 
   const PrimitiveBuffers& buffers = batcher.GetInternalBuffers(0.f);
