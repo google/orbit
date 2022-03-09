@@ -364,12 +364,12 @@ void Batcher::ResetElements() {
   for (auto& [unused_layer, buffer] : primitive_buffers_by_layer_) {
     buffer.Reset();
   }
+  user_data_.clear();
 }
 
 void Batcher::StartNewFrame() {
   ORBIT_CHECK(translations_.IsEmpty());
   ResetElements();
-  user_data_.clear();
 }
 
 std::vector<float> Batcher::GetLayers() const {
@@ -405,7 +405,7 @@ void Batcher::DrawLayer(float layer, bool picking) const {
 }
 
 void Batcher::Draw(bool picking) const {
-  for (auto& [layer, unused_buffer] : primitive_buffers_by_layer_) {
+  for (float layer : GetLayers()) {
     DrawLayer(layer, picking);
   }
 }
