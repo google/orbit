@@ -66,8 +66,7 @@ ABSL_FLAG(std::string, target_instance, "",
           "deployment is aborted by the user Orbit will exit with return code -1 immediately.");
 ABSL_FLAG(std::vector<std::string>, additional_symbol_paths, {},
           "Additional local symbol locations (comma-separated)");
-ABSL_FLAG(bool, launched_from_vsi, false,
-          "Indicates Orbit was launched from VSI (used for metrics).");
+ABSL_FLAG(bool, launched_from_vsi, false, "Indicates Orbit was launched from VSI.");
 
 // Clears QSettings. This is intended for e2e tests.
 ABSL_FLAG(bool, clear_settings, false,
