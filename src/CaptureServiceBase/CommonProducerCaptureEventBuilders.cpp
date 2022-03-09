@@ -97,6 +97,14 @@ ProducerCaptureEvent CreateMemoryThresholdExceededCaptureFinishedEvent() {
   return event;
 }
 
+ProducerCaptureEvent CreateMaxCaptureDurationExceededCaptureFinishedEvent() {
+  ProducerCaptureEvent event;
+  CaptureFinished* capture_finished = event.mutable_capture_finished();
+  capture_finished->set_status(CaptureFinished::kInterruptedByService);
+  capture_finished->set_error_message("Capture duration exceeded the maximum duration limit.");
+  return event;
+}
+
 ProducerCaptureEvent CreateClockResolutionEvent(uint64_t timestamp_ns, uint64_t resolution_ns) {
   ProducerCaptureEvent event;
   orbit_grpc_protos::ClockResolutionEvent* clock_resolution_event =
