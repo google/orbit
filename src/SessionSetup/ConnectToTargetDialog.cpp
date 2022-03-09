@@ -115,6 +115,8 @@ ErrorMessageOr<void> ConnectToTargetDialog::OnAsyncDataAvailable(
         OnProcessListUpdate(std::move(process_list));
       });
   SetStatusMessage("Waiting for process to launch.");
+
+  return outcome::success();
 }
 
 void ConnectToTargetDialog::OnProcessListUpdate(
