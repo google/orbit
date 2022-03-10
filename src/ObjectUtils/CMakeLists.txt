@@ -35,12 +35,12 @@ target_sources(ObjectUtils PRIVATE LinuxMap.cpp)
 else()
 target_sources(
   ObjectUtils
-  PRIVATE PdbDiaUtils.cpp
-          PdbFileDia.h
-          PdbFileDia.cpp)
+  PRIVATE PdbFileDia.h
+          PdbFileDia.cpp
+          PdbUtilsDia.cpp)
 target_sources(
   ObjectUtils
-  PUBLIC include/ObjectUtils/PdbDiaUtils.h)
+  PUBLIC include/ObjectUtils/PdbUtilsDia.h)
 endif()
 
 target_include_directories(ObjectUtils PUBLIC ${CMAKE_CURRENT_LIST_DIR}/include)

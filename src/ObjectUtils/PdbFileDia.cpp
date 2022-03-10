@@ -9,7 +9,7 @@
 #include <llvm/Demangle/Demangle.h>
 #include <winerror.h>
 
-#include "ObjectUtils/PdbDiaUtils.h"
+#include "ObjectUtils/PdbUtilsDia.h"
 #include "OrbitBase/ExecutablePath.h"
 #include "OrbitBase/Logging.h"
 
