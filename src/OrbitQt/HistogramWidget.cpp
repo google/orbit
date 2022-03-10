@@ -7,7 +7,6 @@
 #include <absl/strings/str_cat.h>
 #include <absl/strings/str_format.h>
 #include <absl/strings/str_replace.h>
-#include <qcolor.h>
 #include <qnamespace.h>
 
 #include <QColor>
@@ -45,6 +44,12 @@ constexpr int kTickLabelGap = 3;
 
 const QColor kAxisColor = Qt::white;
 constexpr int kLineWidth = 2;
+
+constexpr int kHintTopMargin = 10;
+constexpr int kHintRightMargin = 50;
+constexpr int kHintBottom = 40;
+const QColor kHintFirstLineColor = Qt::white;
+const QColor kHintSecondLineColor = QColor(QStringLiteral("#999999"));
 
 constexpr int kTopMargin = 50;
 constexpr int kBottomMargin = 40;
@@ -163,6 +168,28 @@ static void DrawHistogram(QPainter& painter, const QPoint& axes_intersection,
   }
 }
 
+static void DrawOneLineOfHint(QPainter& painter, const QString message, const QPoint& bottom_right,
+                              const QColor color) {
+  painter.setPen(color);
+  const QRect rect(QPoint(0, 0), bottom_right);
+  painter.drawText(rect, Qt::AlignRight | Qt::AlignBottom, message);
+}
+
+static void DrawHint(QPainter& painter, int width) {
+  const QString first_line = QStringLiteral("Distribution (%) / Execution time");
+  const QString second_line =
+      QStringLiteral("Drag over a selection to zoom in or click to zoom out");
+
+  const QFontMetrics font_metrics(painter.font());
+
+  const QRect first_bounding_rect = font_metrics.tightBoundingRect(first_line);
+  DrawOneLineOfHint(painter, first_line,
+                    QPoint(width - kHintRightMargin, kHintTopMargin + first_bounding_rect.height()),
+                    kHintFirstLineColor);
+  DrawOneLineOfHint(painter, second_line, QPoint(width - kHintRightMargin, kHintBottom),
+                    kHintSecondLineColor);
+}
+
 void HistogramWidget::UpdateData(const std::vector<uint64_t>* data, std::string function_name,
                                  uint64_t function_id) {
   ORBIT_SCOPE_FUNCTION;
@@ -218,6 +245,8 @@ void HistogramWidget::paintEvent(QPaintEvent* /*event*/) {
   const uint64_t max_count =
       *std::max_element(std::begin(histogram.counts), std::end(histogram.counts));
   const double max_freq = static_cast<double>(max_count) / histogram.data_set_size;
+
+  DrawHint(painter, Width());
 
   DrawHistogram(painter, axes_intersection, histogram, horizontal_axis_length, vertical_axis_length,
                 max_freq, MinValue());
