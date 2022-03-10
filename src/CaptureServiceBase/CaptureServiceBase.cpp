@@ -84,8 +84,7 @@ void CaptureServiceBase::FinalizeEventProcessing(StopCaptureReason stop_capture_
           "Capture duration exceeded the maximum duration limit.");
       break;
     case StopCaptureReason::kGuestOrcConnectionFailure:
-      capture_finished =
-          CreateFailedCaptureFinishedEvent("Encountered GuestOrc connection failure.");
+      capture_finished = CreateFailedCaptureFinishedEvent("Connection with GuestOrc failed.");
       break;
   }
   producer_event_processor_->ProcessEvent(orbit_grpc_protos::kRootProducerId,
