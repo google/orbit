@@ -8,7 +8,6 @@
 
 #include <cstdint>
 #include <optional>
-#include <vector>
 
 #include "HistogramUtils.h"
 #include "OrbitBase/Logging.h"

@@ -72,14 +72,14 @@ void OrbitLiveFunctions::Initialize(OrbitApp* app,
   dynamic_cast<QBoxLayout*>(ui->iteratorFrame->layout())
       ->insertWidget(ui->iteratorFrame->layout()->count() - 1, all_events_iterator_);
 
-  QObject::connect(ui->histogram_widget, &HistogramWidget::SignalSelectionRangeChange, this,
-                   [this](std::optional<orbit_statistics::HistogramSelectionRange> range) {
+  QObject::connect(ui->histogram_widget_, &orbit_qt::HistogramWidget::SignalSelectionRangeChange,
+                   this, [this](std::optional<orbit_statistics::HistogramSelectionRange> range) {
                      emit SignalSelectionRangeChange(range);
                    });
 
-  ui->histogram_title_->setText(ui->histogram_widget->GetTitle());
-  QObject::connect(ui->histogram_widget, &HistogramWidget::SignalTitleChange, ui->histogram_title_,
-                   &QLabel::setText);
+  ui->histogram_title_->setText(ui->histogram_widget_->GetTitle());
+  QObject::connect(ui->histogram_widget_, &orbit_qt::HistogramWidget::SignalTitleChange,
+                   ui->histogram_title_, &QLabel::setText);
 }
 
 void OrbitLiveFunctions::Deinitialize() {
@@ -169,5 +169,5 @@ void OrbitLiveFunctions::OnRowSelected(std::optional<int> row) {
 
 void OrbitLiveFunctions::ShowHistogram(const std::vector<uint64_t>* data,
                                        const std::string& function_name, uint64_t function_id) {
-  ui->histogram_widget->UpdateData(data, function_name, function_id);
+  ui->histogram_widget_->UpdateData(data, function_name, function_id);
 }

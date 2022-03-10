@@ -20,6 +20,15 @@
 #include "App.h"
 #include "Statistics/Histogram.h"
 
+namespace orbit_qt {
+
+// This method returns a vector specifying the width to be drawn for each bin of a histogram
+// Takes two positive intergers, returns a vector `result` of non-negative integers s.t.
+// their sum equals to `histogram_width` and for all `i` and `j` `max(result[i] - result[j]) <= 1`
+// `histogram_width` represents the width of the histogarm in pixels.
+[[nodiscard]] std::vector<int> GenerateHistogramBinWidths(size_t number_of_bins,
+                                                          int histogram_width);
+
 // Implements a widget that draws a histogram.
 // If the histogram is empty, draws a textual suggestion to select a function.
 class HistogramWidget : public QWidget {
@@ -80,5 +89,5 @@ class HistogramWidget : public QWidget {
 
   std::optional<SelectedArea> selected_area_;
 };
-
+}  // namespace orbit_qt
 #endif  // ORBIT_HISTOGRAM_H_

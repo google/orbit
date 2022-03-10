@@ -80,7 +80,7 @@
          </widget>
         </item>
         <item>
-         <widget class="HistogramWidget" name="histogram_widget" native="true"/>
+         <widget class="orbit_qt::HistogramWidget" name="histogram_widget_" native="true"/>
         </item>
        </layout>
       </widget>

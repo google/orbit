@@ -22,8 +22,10 @@
 #include <cstdint>
 #include <iterator>
 #include <optional>
+#include <random>
 #include <string>
 #include <utility>
+#include <vector>
 
 #include "ApiInterface/Orbit.h"
 #include "DisplayFormats/DisplayFormats.h"
@@ -147,25 +149,53 @@ static void DrawVerticalAxis(QPainter& painter, const QPoint& axes_intersection,
 static void DrawHistogram(QPainter& painter, const QPoint& axes_intersection,
                           const orbit_statistics::Histogram& histogram, int horizontal_axis_length,
                           int vertical_axis_length, double max_freq, uint64_t min_value) {
-  for (size_t i = 0; i < histogram.counts.size(); ++i) {
-    const uint64_t bin_from = histogram.min + i * histogram.bin_width;
-    const uint64_t bin_to = bin_from + histogram.bin_width;
+  std::vector<int> widths =
+      orbit_qt::GenerateHistogramBinWidths(histogram.counts.size(), horizontal_axis_length);
 
+  int left_x = axes_intersection.x() + kLineWidth / 2 +
+               ValueToAxisLocation(histogram.min, horizontal_axis_length, min_value, histogram.max);
+  int color_index = 0;
+
+  // If the number of bins exceeds the width of histogram in pixels, `widths[i]` might be zero.
+  // In such case we plot the bar on top of the previous one
+  for (size_t i = 0; i < histogram.counts.size(); ++i) {
     double freq = GetFreq(histogram, i);
     if (freq > 0) {
-      const QPoint top_left(
-          axes_intersection.x() +
-              ValueToAxisLocation(bin_from, horizontal_axis_length, min_value, histogram.max),
-          axes_intersection.y() - kLineWidth -
-              ValueToAxisLocation(freq, vertical_axis_length, 0, max_freq));
-      const QPoint lower_right(
-          axes_intersection.x() +
-              ValueToAxisLocation(bin_to, horizontal_axis_length, min_value, histogram.max),
-          axes_intersection.y() - kLineWidth);
+      const QPoint top_left(left_x,
+                            axes_intersection.y() - kLineWidth -
+                                ValueToAxisLocation(freq, vertical_axis_length, 0, max_freq));
+      const QPoint lower_right(left_x + std::max(widths[i] - 1, 0),
+                               axes_intersection.y() - kLineWidth);
       const QRect bar(top_left, lower_right);
-      painter.fillRect(bar, kBarColors[i % kBarColors.size()]);
+      painter.fillRect(bar, kBarColors[color_index % kBarColors.size()]);
     }
+
+    if (widths[i] > 0) color_index++;
+    left_x += widths[i];
   }
+}
+
+static void DrawSelection(QPainter& painter, int start_x, int end_x,
+                          const QPoint& axes_intersection, int vertical_axis_length) {
+  if (start_x == end_x) return;
+  if (start_x > end_x) std::swap(start_x, end_x);
+
+  const QPoint top_left = {start_x, axes_intersection.y() - vertical_axis_length};
+  const QPoint bottom_right = {end_x, axes_intersection.y()};
+  const QRect selection(top_left, bottom_right);
+  painter.fillRect(selection, kSelectionColor);
+}
+
+[[nodiscard]] static uint64_t LocationToValue(int pos_x, int width, uint64_t min_value,
+                                              uint64_t max_value) {
+  if (pos_x <= kLeftMargin) return 0;
+  if (pos_x > width - kRightMargin) return max_value + 1;
+
+  const int location = pos_x - kLeftMargin;
+  const int histogram_width = width - kLeftMargin - kRightMargin;
+  const uint64_t value_range = max_value - min_value;
+  return min_value +
+         static_cast<uint64_t>(static_cast<double>(location) / histogram_width * value_range);
 }
 
 static void DrawOneLineOfHint(QPainter& painter, const QString message, const QPoint& bottom_right,
@@ -188,6 +218,29 @@ static void DrawHint(QPainter& painter, int width) {
                     kHintFirstLineColor);
   DrawOneLineOfHint(painter, second_line, QPoint(width - kHintRightMargin, kHintBottom),
                     kHintSecondLineColor);
+}
+
+namespace orbit_qt {
+
+constexpr uint32_t kSeed = 31;
+
+[[nodiscard]] std::vector<int> GenerateHistogramBinWidths(size_t number_of_bins,
+                                                          int histogram_width) {
+  std::mt19937 gen32(kSeed);
+
+  const int narrower_width = histogram_width / number_of_bins;
+  const int wider_width = narrower_width + 1;
+
+  const int number_of_wider_bins = histogram_width % number_of_bins;
+  const int number_of_narrower_bins = number_of_bins - number_of_wider_bins;
+
+  std::vector<int> result(number_of_narrower_bins, narrower_width);
+  const std::vector<int> wider_widths(number_of_wider_bins, wider_width);
+  result.insert(std::end(result), std::begin(wider_widths), std::end(wider_widths));
+
+  // shuffle the result for the histogram to look more natural
+  std::shuffle(std::begin(result), std::end(result), std::default_random_engine{});
+  return result;
 }
 
 void HistogramWidget::UpdateData(const std::vector<uint64_t>* data, std::string function_name,
@@ -213,17 +266,6 @@ void HistogramWidget::UpdateData(const std::vector<uint64_t>* data, std::string 
 
   EmitSignalTitleChange();
   update();
-}
-
-static void DrawSelection(QPainter& painter, int start_x, int end_x,
-                          const QPoint& axes_intersection, int vertical_axis_length) {
-  if (start_x == end_x) return;
-  if (start_x > end_x) std::swap(start_x, end_x);
-
-  const QPoint top_left = {start_x, axes_intersection.y() - vertical_axis_length};
-  const QPoint bottom_right = {end_x, axes_intersection.y()};
-  const QRect selection(top_left, bottom_right);
-  painter.fillRect(selection, kSelectionColor);
 }
 
 void HistogramWidget::paintEvent(QPaintEvent* /*event*/) {
@@ -260,27 +302,6 @@ void HistogramWidget::paintEvent(QPaintEvent* /*event*/) {
     DrawSelection(painter, selected_area_->selection_start_pixel,
                   selected_area_->selection_current_pixel, axes_intersection, vertical_axis_length);
   }
-}
-
-void HistogramWidget::mousePressEvent(QMouseEvent* event) {
-  if (histogram_stack_.empty()) return;
-
-  const int pixel_x = event->x();
-  selected_area_ = {pixel_x, pixel_x};
-
-  update();
-}
-
-[[nodiscard]] static uint64_t LocationToValue(int pos_x, int width, uint64_t min_value,
-                                              uint64_t max_value) {
-  if (pos_x <= kLeftMargin) return 0;
-  if (pos_x > width - kRightMargin) return max_value + 1;
-
-  const int location = pos_x - kLeftMargin;
-  const int histogram_width = width - kLeftMargin - kRightMargin;
-  const uint64_t value_range = max_value - min_value;
-  return min_value +
-         static_cast<uint64_t>(static_cast<double>(location) / histogram_width * value_range);
 }
 
 void HistogramWidget::mouseReleaseEvent(QMouseEvent* /* event*/) {
@@ -325,6 +346,15 @@ void HistogramWidget::mouseReleaseEvent(QMouseEvent* /* event*/) {
   }
 
   UpdateAndNotify();
+}
+
+void HistogramWidget::mousePressEvent(QMouseEvent* event) {
+  if (histogram_stack_.empty()) return;
+
+  const int pixel_x = event->x();
+  selected_area_ = {pixel_x, pixel_x};
+
+  update();
 }
 
 void HistogramWidget::mouseMoveEvent(QMouseEvent* event) {
@@ -387,3 +417,4 @@ constexpr size_t kMaxFunctionNameLengthForTitle = 80;
 
   return QString::fromStdString(title);
 }
+}  // namespace orbit_qt

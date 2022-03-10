@@ -36,6 +36,7 @@ struct Histogram {
 // estimates the risk score using `HistogramRiskScore` and returns the histogram
 // which minimizes it. The histogram will not own the data.
 [[nodiscard]] std::optional<Histogram> BuildHistogram(absl::Span<const uint64_t> data);
+
 }  // namespace orbit_statistics
 
 #endif  // STATISTICS_HISTOGRAM_H_
