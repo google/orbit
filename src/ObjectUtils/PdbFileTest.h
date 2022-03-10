@@ -126,7 +126,7 @@ TYPED_TEST_P(PdbFileTest, LoadDebugSymbols) {
     // LLVM does not handle function pointers correctly, thus we also accept the wrong
     // strings here.
     EXPECT_THAT(symbol->demangled_name(), AnyOf("TakesVoidFunctionPointer(void (*)(int))",
-                                               "TakesVoidFunctionPointer(void (int)*)"));
+                                                "TakesVoidFunctionPointer(void (int)*)"));
     EXPECT_EQ(symbol->address(), 0x18000f010);
   }
 
@@ -137,7 +137,7 @@ TYPED_TEST_P(PdbFileTest, LoadDebugSymbols) {
     // LLVM does not handle function pointers correctly, thus we also accept the wrong
     // strings here.
     EXPECT_THAT(symbol->demangled_name(), AnyOf("TakesCharFunctionPointer(char (*)(int))",
-                                               "TakesCharFunctionPointer(char (int)*)"));
+                                                "TakesCharFunctionPointer(char (int)*)"));
     EXPECT_EQ(symbol->address(), 0x18000f030);
   }
 
