@@ -9,6 +9,7 @@
 #include <llvm/Demangle/Demangle.h>
 #include <winerror.h>
 
+#include "ObjectUtils/PdbUtilsDia.h"
 #include "OrbitBase/ExecutablePath.h"
 #include "OrbitBase/Logging.h"
 
@@ -104,7 +105,13 @@ ErrorMessageOr<orbit_grpc_protos::ModuleSymbols> PdbFileDia::LoadDebugSymbols() 
     if (dia_symbol->get_name(&function_name) != S_OK) continue;
     std::wstring name(function_name);
     symbol_info.set_name(std::string(name.begin(), name.end()));
-    symbol_info.set_demangled_name(llvm::demangle(symbol_info.name()));
+    ErrorMessageOr<std::string> parameter_list_or_error = PdbDiaParameterListAsString(dia_symbol);
+    if (parameter_list_or_error.has_value()) {
+      symbol_info.set_demangled_name(symbol_info.name() + parameter_list_or_error.value());
+    } else {
+      ORBIT_ERROR("Unable to retrieve parameter types of function %s. Error: %s",
+                  symbol_info.name(), parameter_list_or_error.error().message());
+    }
     SysFreeString(function_name);
 
     DWORD relative_virtual_address = 0;

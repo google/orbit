@@ -36,7 +36,11 @@ else()
 target_sources(
   ObjectUtils
   PRIVATE PdbFileDia.h
-          PdbFileDia.cpp)
+          PdbFileDia.cpp
+          PdbUtilsDia.cpp)
+target_sources(
+  ObjectUtils
+  PUBLIC include/ObjectUtils/PdbUtilsDia.h)
 endif()
 
 target_include_directories(ObjectUtils PUBLIC ${CMAKE_CURRENT_LIST_DIR}/include)
