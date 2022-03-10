@@ -16,11 +16,13 @@ from core.orbit_e2e import E2ETestCase, OrbitE2EError, wait_for_condition
 
 def _wait_for_main_window(application: Application, timeout=30):
     wait_for_condition(lambda: application.top_window().class_name() == "OrbitMainWindow", max_seconds=timeout)
+    application.top_window().set_focus()
 
 
 def _wait_for_connection_window(application: Application):
     wait_for_condition(lambda: application.top_window().class_name() == "orbit_session_setup::SessionSetupDialog",
                        max_seconds=30)
+    application.top_window().set_focus()
 
 
 def _get_number_of_instances_in_list(test_case: E2ETestCase) -> int:
