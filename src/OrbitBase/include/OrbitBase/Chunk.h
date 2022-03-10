@@ -10,14 +10,14 @@
 
 namespace orbit_base {
 
-// Chunk an input vector into spans of specified size. Note that the last span can be smaller
-// than the specified "chunk_size" if the input vector size is not a multiple of "chunk_size".
+// Chunk an input vector into spans of specified "chunk_size". Note that the last span can be
+// smaller than "chunk_size" if the input vector size is not a multiple of "chunk_size".
 //
 // Example: Splitting data in chunks to be processed in parallel tasks:
 //
 // void ProcessObjectsInParallel(std::vector<Object>& objects) {
-//   TaskGroup task_group;
-//   for (absl::Span<Object> chunk : Chunk(objects, 1024)) {
+//   TaskGroup task_group(executor_);
+//   for (absl::Span<Object> chunk : CreateChunksOfSize(objects, 1024)) {
 //     task_group.AddTask([chunk]() {
 //       for (Object& object : chunk) {
 //         Process(object);
