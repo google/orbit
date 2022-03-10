@@ -169,6 +169,31 @@ static void DrawHistogram(QPainter& painter, const QPoint& axes_intersection,
   }
 }
 
+static void DrawSelection(QPainter& painter, int start_x, int end_x,
+                          const QPoint& axes_intersection, int vertical_axis_length) {
+  if (start_x == end_x) return;
+  if (start_x > end_x) std::swap(start_x, end_x);
+
+  const QPoint top_left = {start_x, axes_intersection.y() - vertical_axis_length};
+  const QPoint bottom_right = {end_x, axes_intersection.y()};
+  const QRect selection(top_left, bottom_right);
+  painter.fillRect(selection, kSelectionColor);
+}
+
+[[nodiscard]] static uint64_t LocationToValue(int pos_x, int width, uint64_t min_value,
+                                              uint64_t max_value) {
+  if (pos_x <= kLeftMargin) return 0;
+  if (pos_x > width - kRightMargin) return max_value + 1;
+
+  const int location = pos_x - kLeftMargin;
+  const int histogram_width = width - kLeftMargin - kRightMargin;
+  const uint64_t value_range = max_value - min_value;
+  return min_value +
+         static_cast<uint64_t>(static_cast<double>(location) / histogram_width * value_range);
+}
+
+namespace orbit_histogram_widget {
+
 void HistogramWidget::UpdateData(const std::vector<uint64_t>* data, std::string function_name,
                                  uint64_t function_id) {
   ORBIT_SCOPE_FUNCTION;
@@ -192,17 +217,6 @@ void HistogramWidget::UpdateData(const std::vector<uint64_t>* data, std::string 
 
   EmitSignalTitleChange();
   update();
-}
-
-static void DrawSelection(QPainter& painter, int start_x, int end_x,
-                          const QPoint& axes_intersection, int vertical_axis_length) {
-  if (start_x == end_x) return;
-  if (start_x > end_x) std::swap(start_x, end_x);
-
-  const QPoint top_left = {start_x, axes_intersection.y() - vertical_axis_length};
-  const QPoint bottom_right = {end_x, axes_intersection.y()};
-  const QRect selection(top_left, bottom_right);
-  painter.fillRect(selection, kSelectionColor);
 }
 
 void HistogramWidget::paintEvent(QPaintEvent* /*event*/) {
@@ -237,27 +251,6 @@ void HistogramWidget::paintEvent(QPaintEvent* /*event*/) {
     DrawSelection(painter, selected_area_->selection_start_pixel,
                   selected_area_->selection_current_pixel, axes_intersection, vertical_axis_length);
   }
-}
-
-void HistogramWidget::mousePressEvent(QMouseEvent* event) {
-  if (histogram_stack_.empty()) return;
-
-  const int pixel_x = event->x();
-  selected_area_ = {pixel_x, pixel_x};
-
-  update();
-}
-
-[[nodiscard]] static uint64_t LocationToValue(int pos_x, int width, uint64_t min_value,
-                                              uint64_t max_value) {
-  if (pos_x <= kLeftMargin) return 0;
-  if (pos_x > width - kRightMargin) return max_value + 1;
-
-  const int location = pos_x - kLeftMargin;
-  const int histogram_width = width - kLeftMargin - kRightMargin;
-  const uint64_t value_range = max_value - min_value;
-  return min_value +
-         static_cast<uint64_t>(static_cast<double>(location) / histogram_width * value_range);
 }
 
 void HistogramWidget::mouseReleaseEvent(QMouseEvent* /* event*/) {
@@ -302,6 +295,15 @@ void HistogramWidget::mouseReleaseEvent(QMouseEvent* /* event*/) {
   }
 
   UpdateAndNotify();
+}
+
+void HistogramWidget::mousePressEvent(QMouseEvent* event) {
+  if (histogram_stack_.empty()) return;
+
+  const int pixel_x = event->x();
+  selected_area_ = {pixel_x, pixel_x};
+
+  update();
 }
 
 void HistogramWidget::mouseMoveEvent(QMouseEvent* event) {
@@ -364,3 +366,4 @@ constexpr size_t kMaxFunctionNameLengthForTitle = 80;
 
   return QString::fromStdString(title);
 }
+}  // namespace orbit_histogram_widget

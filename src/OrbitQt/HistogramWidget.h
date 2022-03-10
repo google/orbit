@@ -20,6 +20,7 @@
 #include "App.h"
 #include "Statistics/Histogram.h"
 
+namespace orbit_histogram_widget {
 // Implements a widget that draws a histogram.
 // If the histogram is empty, draws a textual suggestion to select a function.
 class HistogramWidget : public QWidget {
@@ -80,5 +81,5 @@ class HistogramWidget : public QWidget {
 
   std::optional<SelectedArea> selected_area_;
 };
-
+}  // namespace orbit_histogram_widget
 #endif  // ORBIT_HISTOGRAM_H_
