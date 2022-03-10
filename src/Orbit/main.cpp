@@ -145,6 +145,8 @@ int RunUiInstance(const DeploymentConfiguration& deployment_configuration,
       OrbitMainWindow w(std::move(target_config.value()), crash_handler, metrics_uploader.get(),
                         command_line_flags);
       w.show();
+      w.raise();
+      w.activateWindow();
 
       application_return_code = QApplication::exec();
 
