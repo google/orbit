@@ -72,15 +72,13 @@ void OrbitLiveFunctions::Initialize(OrbitApp* app,
   dynamic_cast<QBoxLayout*>(ui->iteratorFrame->layout())
       ->insertWidget(ui->iteratorFrame->layout()->count() - 1, all_events_iterator_);
 
-  QObject::connect(ui->histogram_widget_,
-                   &orbit_histogram_widget::HistogramWidget::SignalSelectionRangeChange, this,
-                   [this](std::optional<orbit_statistics::HistogramSelectionRange> range) {
+  QObject::connect(ui->histogram_widget_, &orbit_qt::HistogramWidget::SignalSelectionRangeChange,
+                   this, [this](std::optional<orbit_statistics::HistogramSelectionRange> range) {
                      emit SignalSelectionRangeChange(range);
                    });
 
   ui->histogram_title_->setText(ui->histogram_widget_->GetTitle());
-  QObject::connect(ui->histogram_widget_,
-                   &orbit_histogram_widget::HistogramWidget::SignalTitleChange,
+  QObject::connect(ui->histogram_widget_, &orbit_qt::HistogramWidget::SignalTitleChange,
                    ui->histogram_title_, &QLabel::setText);
 }
 

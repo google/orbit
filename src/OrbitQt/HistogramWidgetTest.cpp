@@ -9,9 +9,9 @@
 
 #include "HistogramWidget.h"
 
-namespace orbit_histogram_widget {
+namespace orbit_qt {
 static void TestGetBinWidths(int number_of_bins, int histogram_width) {
-  const std::vector<int> widths = GenerageBinWidth(number_of_bins, histogram_width);
+  const std::vector<int> widths = GenerateBinWidth(number_of_bins, histogram_width);
   ASSERT_EQ(widths.size(), number_of_bins);
   int sum = std::reduce(std::begin(widths), std::end(widths), 0);
   ASSERT_EQ(sum, histogram_width);
@@ -28,4 +28,4 @@ TEST(HistogramUtil, GetBinWidthIsCorrect) {
   TestGetBinWidths(10, 2);
   TestGetBinWidths(1, 1);
 }
-}  // namespace orbit_histogram_widget
+}  // namespace orbit_qt

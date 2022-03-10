@@ -150,7 +150,7 @@ static void DrawHistogram(QPainter& painter, const QPoint& axes_intersection,
                           const orbit_statistics::Histogram& histogram, int horizontal_axis_length,
                           int vertical_axis_length, double max_freq, uint64_t min_value) {
   std::vector<int> widths =
-      orbit_histogram_widget::GenerageBinWidth(histogram.counts.size(), horizontal_axis_length);
+      orbit_qt::GenerateBinWidth(histogram.counts.size(), horizontal_axis_length);
 
   int left_x = axes_intersection.x() + kLineWidth / 2 +
                ValueToAxisLocation(histogram.min, horizontal_axis_length, min_value, histogram.max);
@@ -220,11 +220,11 @@ static void DrawHint(QPainter& painter, int width) {
                     kHintSecondLineColor);
 }
 
-namespace orbit_histogram_widget {
+namespace orbit_qt {
 
 constexpr uint32_t kSeed = 31;
 
-[[nodiscard]] std::vector<int> GenerageBinWidth(size_t number_of_bins, int histogram_width) {
+[[nodiscard]] std::vector<int> GenerateBinWidth(size_t number_of_bins, int histogram_width) {
   std::mt19937 gen32(kSeed);
 
   const int narrower_width = histogram_width / number_of_bins;
@@ -416,4 +416,4 @@ constexpr size_t kMaxFunctionNameLengthForTitle = 80;
 
   return QString::fromStdString(title);
 }
-}  // namespace orbit_histogram_widget
+}  // namespace orbit_qt
