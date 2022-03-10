@@ -4,140 +4,90 @@
 
 #include "ObjectUtils/PdbDiaUtils.h"
 
+#include <Windows.h>
+#include <atlbase.h>
+#include <cguid.h>
+// Don't allow "shlwapi.h" to rename StrCat. See:
+// https://github.com/abseil/abseil-cpp/issues/377
+#undef StrCat
+
 #include <absl/strings/str_join.h>
 #include <absl/strings/str_format.h>
+#include <absl/strings/str_cat.h>
 
 #include "OrbitBase/GetLastError.h"
 
+
 namespace {
-    [[nodiscard]] ErrorMessageOr<std::string> GetSignedIntegerTypeFromSizeInBytes(const ULONGLONG& length) {
+    [[nodiscard]] ErrorMessageOr<std::string> GetSignedIntegerTypeFromSizeInBytes(IDiaSymbol* type) {
+        ULONGLONG length;
+        if (FAILED(type->get_length(&length))) {
+            return ErrorMessage(orbit_base::GetLastErrorAsString());
+        }
+
         switch (length) {
-        case 1:
-            return "char";
-        case 2:
-            return "short";
-        case 4:
-            return "int";
-        case 8:
-            return "__int64";
+        case 1: return "char";
+        case 2: return "short";
+        case 4: return "int";
+        case 8: return "__int64";
         default:
             return ErrorMessage(absl::StrFormat("Unexpected size of integer: %lu", length));
         }
     }
 
-    [[nodiscard]] ErrorMessageOr<std::string> GetBaseTypeAsString(IDiaSymbol* type, const std::string& parent_pointer_type_str)
+    [[nodiscard]] ErrorMessageOr<std::string> GetBaseTypeAsString(IDiaSymbol* type)
     {
         DWORD base_type;
         if (FAILED(type->get_baseType(&base_type))) {
-            return ErrorMessage(orbit_base::GetLastErrorAsString());
+            return ErrorMessage(absl::StrFormat("Error calling \"get_baseType\": %s", orbit_base::GetLastErrorAsString()));
         }
 
-        std::string result_string;
         switch (base_type) {
-        case btNoType:  // 0
-            result_string += "<no type>";
-            break;
-        case btVoid:  // 1
-            result_string += "void";
-            break;
-        case btChar:  // 2
-            result_string += "char";
-            break;
-        case btWChar:  // 3
-            result_string += "wchar_t";
-            break;
+        case btNoType: return "<no type>"; // 0
+        case btVoid: return "void"; // 1
+        case btChar: return "char"; // 2
+        case btWChar: return "wchar_t"; // 3
         case btInt:  // 6
         {
-            ULONGLONG length;
-            if (FAILED(type->get_length(&length))) {
-                return ErrorMessage(orbit_base::GetLastErrorAsString());
-            }
-            OUTCOME_TRY(auto&& integer_type, GetSignedIntegerTypeFromSizeInBytes(length));
-   
-            result_string += integer_type;
-            break;
+            OUTCOME_TRY(auto&& integer_type, GetSignedIntegerTypeFromSizeInBytes(type));
+            return integer_type;
         }
         case btUInt:  // 7
         {
-            ULONGLONG length;
-            if (FAILED(type->get_length(&length))) {
-                return ErrorMessage(orbit_base::GetLastErrorAsString());
-            }
-
-            result_string += "unsigned ";
-
-            OUTCOME_TRY(auto&& integer_type, GetSignedIntegerTypeFromSizeInBytes(length));
-
-            result_string += integer_type;
-            break;
+            OUTCOME_TRY(auto&& integer_type, GetSignedIntegerTypeFromSizeInBytes(type));
+            return absl::StrCat("unsigned ", integer_type);
         }
         case btFloat:  // 8
         {
             ULONGLONG length;
             if (FAILED(type->get_length(&length))) {
-                return ErrorMessage(orbit_base::GetLastErrorAsString());
+                return ErrorMessage(absl::StrFormat("Error calling \"get_length\": %s", orbit_base::GetLastErrorAsString()));
             }
 
             switch (length) {
-            case 4:
-                result_string += "float";
-                break;
-            case 8:
-                result_string += "double";
-                break;
-            default:
-                ORBIT_UNREACHABLE();
+            case 4: return "float";
+            case 8: return "double";
+            default: ORBIT_UNREACHABLE();
             }
-            break;
         }
-        case btBCD:  // 9
-            result_string += "<BCD>";
-            break;
-        case btBool:  // 10
-            result_string += "bool";
-            break;
-        case btLong:  // 13
-            result_string += "long";
-            break;
-        case btULong:  // 14
-            result_string += "unsigned long";
-            break;
-        case btCurrency:  // 25
-            result_string += "<currency>";
-            break;
-        case btDate:  // 26
-            result_string += "<date>";
-            break;
-        case btVariant:  // 27
-            result_string += "VARIANT";
-            break;
-        case btComplex:  // 28
-            result_string += "<complex>";
-            break;
-        case btBit:  // 29
-            result_string += "<bit>";
-            break;
-        case btBSTR:  // 30
-            result_string += "BSTR";
-            break;
-        case btHresult:  // 31
-            result_string += "HRESULT";
-            break;
-        case btChar16:  // 32
-            result_string += "char16_t";
-            break;
-        case btChar32:  // 33
-            result_string += "char32_t";
-            break;
-        case btChar8:  // 34
-            result_string += "char8_t";
-            break;
+        case btBCD: return "<BCD>"; // 9
+        case btBool: return "bool"; // 10
+        case btLong: return "long"; // 13
+        case btULong: return "unsigned long"; // 14
+        case btCurrency: return "<currency>"; // 25
+        case btDate: return "<date>"; // 26
+        case btVariant: return "VARIANT"; // 27
+        case btComplex: return "<complex>"; // 28
+        case btBit: return "<bit>"; // 29
+        case btBSTR: return "BSTR"; // 30
+        case btHresult: return "HRESULT"; // 31
+        case btChar16: return "char16_t"; // 32
+        case btChar32: return "char32_t"; // 33
+        case btChar8: return "char8_t"; // 34
         default:
-            return ErrorMessage(absl::StrFormat("Unexpected base type with id \"%d\". Returning \"???\" as a type name.",
+            return ErrorMessage(absl::StrFormat("Unexpected base type with id \"%d\".",
                 base_type));
         }
-        result_string += parent_pointer_type_str;
-        return result_string;
     }
 
 
@@ -159,10 +109,10 @@ namespace {
         return absl::StrJoin(type_modifiers, " ");
     }
 
-    [[nodiscard]] ErrorMessageOr<std::string> GetPointerTypeAsString(IDiaSymbol* type, const std::string& parent_pointer_type_str) {
+    [[nodiscard]] ErrorMessageOr<std::string> GetPointerTypeAsString(IDiaSymbol* type, std::string_view parent_pointer_type_str) {
         CComPtr<IDiaSymbol> base_type = nullptr;
         if (FAILED(type->get_type(&base_type))) {
-            return ErrorMessage(orbit_base::GetLastErrorAsString());
+            return ErrorMessage(absl::StrFormat("Error calling \"get_type\": %s", orbit_base::GetLastErrorAsString()));
         }
         if (base_type == nullptr) {
             return ErrorMessage("Unable to retrieve type symbol.");
@@ -182,7 +132,7 @@ namespace {
             is_ptr_to_member_function) {
             CComPtr<IDiaSymbol> class_parent = nullptr;
             if (FAILED(type->get_classParent(&class_parent))) {
-                return ErrorMessage(orbit_base::GetLastErrorAsString());
+                return ErrorMessage(absl::StrFormat("Error calling \"get_classParent\": %s", orbit_base::GetLastErrorAsString()));
             }
             if (class_parent == nullptr) {
                 return ErrorMessage("Unable to retrieve class parent symbol.");
@@ -195,7 +145,7 @@ namespace {
             is_ptr_to_member_function) {
             CComPtr<IDiaSymbol> class_parent = nullptr;
             if (FAILED(type->get_classParent(&class_parent))) {
-                return ErrorMessage(orbit_base::GetLastErrorAsString());
+                return ErrorMessage(absl::StrFormat("Error calling \"get_classParent\": %s", orbit_base::GetLastErrorAsString()));
             }
             if (class_parent == nullptr) {
                 return ErrorMessage("Unable to retrieve class parent symbol.");
@@ -209,11 +159,10 @@ namespace {
 
         std::string type_modifiers = GetTypeModifiersAsString(type);
         if (!type_modifiers.empty()) {
-            new_pointer_type_str += " ";
-            new_pointer_type_str += type_modifiers;
+            absl::StrAppend(&new_pointer_type_str, " ", type_modifiers);
         }
 
-        new_pointer_type_str += parent_pointer_type_str;
+        absl::StrAppend(&new_pointer_type_str, parent_pointer_type_str);
         return orbit_object_utils::PdbDiaTypeAsString(*&base_type, new_pointer_type_str);
     }
 
@@ -226,12 +175,12 @@ ErrorMessageOr<std::string> PdbDiaParameterListAsString(IDiaSymbol* function_or_
 
   DWORD tag;
   if (FAILED(function_or_function_type->get_symTag(&tag))) {
-      return ErrorMessage(orbit_base::GetLastErrorAsString());
+      return ErrorMessage(absl::StrFormat("Error calling \"get_symTag\": %s", orbit_base::GetLastErrorAsString()));
   }
   if (tag == SymTagFunction) {
     CComPtr<IDiaSymbol> function_type = nullptr;
     if (FAILED(function_or_function_type->get_type(&function_type))) {
-        return ErrorMessage(orbit_base::GetLastErrorAsString());
+        return ErrorMessage(absl::StrFormat("Error calling \"get_type\": %s", orbit_base::GetLastErrorAsString()));
     }
     if (function_type == nullptr) {
         return ErrorMessage("Unable to retrieve type symbol.");
@@ -249,7 +198,7 @@ ErrorMessageOr<std::string> PdbDiaParameterListAsString(IDiaSymbol* function_or_
 
   CComPtr<IDiaEnumSymbols> parameter_enumeration = nullptr;
   if (FAILED(function_type->findChildren(SymTagNull, nullptr, nsNone, &parameter_enumeration))) {
-      return ErrorMessage(orbit_base::GetLastErrorAsString());
+      return ErrorMessage(absl::StrFormat("Error calling \"findChildren\": %s", orbit_base::GetLastErrorAsString()));
   }
   if (parameter_enumeration == nullptr) {
       return ErrorMessage("Unable to find child symbols.");
@@ -264,29 +213,27 @@ ErrorMessageOr<std::string> PdbDiaParameterListAsString(IDiaSymbol* function_or_
   while (SUCCEEDED(parameter_enumeration->Next(1, &parameter, &celt)) && (celt == 1) &&
          parameter != nullptr) {
     if (!is_first_parameter) {
-      result_string += ", ";
+      absl::StrAppend(&result_string, ", ");
     }
 
     CComPtr<IDiaSymbol> parameter_type = nullptr;
     if (FAILED(parameter->get_type(&parameter_type))) {
-        return ErrorMessage(orbit_base::GetLastErrorAsString());
+        return ErrorMessage(absl::StrFormat("Error calling \"get_type\": %s", orbit_base::GetLastErrorAsString()));
     }
     if (parameter_type == nullptr) {
         return ErrorMessage("Unable to retrieve type symbol.");
     }
 
     OUTCOME_TRY(auto && parameter_type_str, orbit_object_utils::PdbDiaTypeAsString(parameter_type));
-    result_string += parameter_type_str;
+    absl::StrAppend(&result_string, parameter_type_str);
 
     is_first_parameter = false;
   }
 
-  result_string += ")";
-
-  return result_string;
+  return absl::StrCat(result_string, ")");
 }
 
-ErrorMessageOr<std::string> PdbDiaTypeAsString(IDiaSymbol* type, const std::string& parent_pointer_type_str) {
+ErrorMessageOr<std::string> PdbDiaTypeAsString(IDiaSymbol* type, std::string_view parent_pointer_type_str) {
   HRESULT result;
   DWORD tag;
   if (FAILED(type->get_symTag(&tag))) {
@@ -297,8 +244,7 @@ ErrorMessageOr<std::string> PdbDiaTypeAsString(IDiaSymbol* type, const std::stri
   if (tag != SymTagPointerType) {
       std::string type_modifiers = GetTypeModifiersAsString(type);
       if (!type_modifiers.empty()) {
-          result_string += type_modifiers;
-          result_string += " ";
+          absl::StrAppend(&result_string, type_modifiers, " ");
       }
   }
 
@@ -311,9 +257,7 @@ ErrorMessageOr<std::string> PdbDiaTypeAsString(IDiaSymbol* type, const std::stri
   }
 
   if (!type_name.empty()) {
-    result_string += type_name;
-    result_string += parent_pointer_type_str;
-    return result_string;
+    return absl::StrCat(result_string, type_name, parent_pointer_type_str);
   }
 
   switch (tag) {
@@ -322,43 +266,35 @@ ErrorMessageOr<std::string> PdbDiaTypeAsString(IDiaSymbol* type, const std::stri
       // We could e.g. also print the size of the array if known.
       CComPtr<IDiaSymbol> base_type = nullptr;
       if (FAILED(type->get_type(&base_type))) {
-         return ErrorMessage(orbit_base::GetLastErrorAsString());
+          return ErrorMessage(absl::StrFormat("Error calling \"get_type\": %s", orbit_base::GetLastErrorAsString()));
       }
       if (base_type == nullptr) {
           return ErrorMessage("Unable to retrieve type symbol.");
       }
-      std::string new_pointer_type_str = "[]" + parent_pointer_type_str;
+      std::string new_pointer_type_str = absl::StrCat("[]", parent_pointer_type_str);
       OUTCOME_TRY(auto&& type_str, PdbDiaTypeAsString(*&base_type, new_pointer_type_str));
-      result_string += type_str;
-
-      return result_string;
+      return absl::StrCat(result_string,  type_str);
     }
     case SymTagBaseType: {
-        OUTCOME_TRY(auto && type_str, GetBaseTypeAsString(type, parent_pointer_type_str));
-        result_string += type_str;
-        return result_string;
+        OUTCOME_TRY(auto && type_str, GetBaseTypeAsString(type));
+        return absl::StrCat(result_string, type_str, parent_pointer_type_str);
     }
     case SymTagPointerType: {
         OUTCOME_TRY(auto && type_str, GetPointerTypeAsString(type, parent_pointer_type_str));
-      result_string += type_str;
-      return result_string;
+      return absl::StrCat(result_string, type_str);
     }
     case SymTagFunctionType: {
       CComPtr<IDiaSymbol> return_type = nullptr;
       if (FAILED(type->get_type(&return_type))) {
-          return ErrorMessage(orbit_base::GetLastErrorAsString());
+          return ErrorMessage(absl::StrFormat("Error calling \"get_type\": %s", orbit_base::GetLastErrorAsString()));
       }
       if (return_type == nullptr) {
           return ErrorMessage("Unable to retrieve type symbol.");
       }
       OUTCOME_TRY(auto && return_type_str, PdbDiaTypeAsString(*&return_type));
-      result_string += return_type_str;
-      result_string += " (";
-      result_string += parent_pointer_type_str;
-      result_string += ")";
+      absl::StrAppend(&result_string, return_type_str, " (", parent_pointer_type_str, ")");
       OUTCOME_TRY(auto && parameter_list, PdbDiaParameterListAsString(*&type));
-      result_string += parameter_list;
-      return result_string;
+      return absl::StrCat(result_string, parameter_list);
     }
     default:
       return ErrorMessage(absl::StrFormat("Unexpected tag \"%d\".", tag));

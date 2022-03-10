@@ -5,9 +5,6 @@
 #ifndef OBJECT_UTILS_PDB_DIA_UTILS_H_
 #define OBJECT_UTILS_PDB_DIA_UTILS_H_
 
-#include <Windows.h>
-#include <atlbase.h>
-#include <cguid.h>
 #include <dia2.h>
 
 #include <string>
@@ -26,7 +23,7 @@ namespace orbit_object_utils {
 // given `pointer_type_string` to the result string, or in case of a function pointer,
 // add it inside the parentheses (e.g. void(*)(int, int)).
 // If the type can't be computed properly, "???" will be returned.
-[[nodiscard]] ErrorMessageOr<std::string> PdbDiaTypeAsString(IDiaSymbol* type, const std::string& pointer_type_str = "");
+[[nodiscard]] ErrorMessageOr<std::string> PdbDiaTypeAsString(IDiaSymbol* type, std::string_view pointer_type_str = "");
 
 }  // namespace orbit_object_utils
 
