@@ -61,7 +61,7 @@ constexpr int kRightMargin = 50;
 const QString kDefaultTitle =
     QStringLiteral("Select a function with Count>0 to plot a histogram of its runtime");
 
-const QColor kSelectionColor = QColor(128, 128, 255, 128);
+const QColor kSelectionColor(QStringLiteral("#1B548C"));
 
 [[nodiscard]] static int RoundToClosestInt(double x) { return static_cast<int>(std::round(x)); }
 
@@ -288,6 +288,11 @@ void HistogramWidget::paintEvent(QPaintEvent* /*event*/) {
       *std::max_element(std::begin(histogram.counts), std::end(histogram.counts));
   const double max_freq = static_cast<double>(max_count) / histogram.data_set_size;
 
+  if (selected_area_) {
+    DrawSelection(painter, selected_area_->selection_start_pixel,
+                  selected_area_->selection_current_pixel, axes_intersection, vertical_axis_length);
+  }
+
   DrawHint(painter, Width());
 
   DrawHistogram(painter, axes_intersection, histogram, horizontal_axis_length, vertical_axis_length,
@@ -297,11 +302,6 @@ void HistogramWidget::paintEvent(QPaintEvent* /*event*/) {
   DrawHorizontalAxis(painter, axes_intersection, histogram, horizontal_axis_length, MinValue());
   DrawVerticalAxis(painter, axes_intersection, vertical_axis_length, max_freq);
   painter.setPen(QPen(Qt::white, 1));
-
-  if (selected_area_) {
-    DrawSelection(painter, selected_area_->selection_start_pixel,
-                  selected_area_->selection_current_pixel, axes_intersection, vertical_axis_length);
-  }
 }
 
 void HistogramWidget::mouseReleaseEvent(QMouseEvent* /* event*/) {
