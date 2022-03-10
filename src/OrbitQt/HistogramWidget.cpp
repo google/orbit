@@ -23,6 +23,7 @@
 #include <cstdint>
 #include <iterator>
 #include <optional>
+#include <random>
 #include <string>
 #include <utility>
 #include <vector>
@@ -144,7 +145,7 @@ static void DrawHistogram(QPainter& painter, const QPoint& axes_intersection,
                           const orbit_statistics::Histogram& histogram, int horizontal_axis_length,
                           int vertical_axis_length, double max_freq, uint64_t min_value) {
   std::vector<int> widths =
-      orbit_statistics::GetBinWidth(histogram.counts.size(), horizontal_axis_length);
+      orbit_histogram_widget::GenerageBinWidth(histogram.counts.size(), horizontal_axis_length);
 
   int left_x = axes_intersection.x() + kLineWidth / 2 +
                ValueToAxisLocation(histogram.min, horizontal_axis_length, min_value, histogram.max);
@@ -193,6 +194,26 @@ static void DrawSelection(QPainter& painter, int start_x, int end_x,
 }
 
 namespace orbit_histogram_widget {
+
+constexpr uint32_t kSeed = 31;
+
+[[nodiscard]] std::vector<int> GenerageBinWidth(size_t number_of_bins, int histogram_width) {
+  std::mt19937 gen32(kSeed);
+
+  const int narrower_width = histogram_width / number_of_bins;
+  const int wider_width = narrower_width + 1;
+
+  const int number_of_wider_bins = histogram_width % number_of_bins;
+  const int number_of_narrower_bins = number_of_bins - number_of_wider_bins;
+
+  std::vector<int> result(number_of_narrower_bins, narrower_width);
+  const std::vector<int> wider_widths(number_of_wider_bins, wider_width);
+  result.insert(std::end(result), std::begin(wider_widths), std::end(wider_widths));
+
+  // shuffle the result for the histogram to look more natural
+  std::shuffle(std::begin(result), std::end(result), std::default_random_engine{});
+  return result;
+}
 
 void HistogramWidget::UpdateData(const std::vector<uint64_t>* data, std::string function_name,
                                  uint64_t function_id) {

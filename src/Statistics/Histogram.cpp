@@ -6,11 +6,8 @@
 
 #include <absl/types/span.h>
 
-#include <algorithm>
 #include <cstdint>
 #include <optional>
-#include <random>
-#include <vector>
 
 #include "HistogramUtils.h"
 #include "OrbitBase/Logging.h"
@@ -54,21 +51,6 @@ static Histogram BuildHistogramWithNumberOfBins(const std::optional<DataSet>& da
   }
 
   return best_histogram;
-}
-
-[[nodiscard]] std::vector<int> GetBinWidth(size_t number_of_bins, int histogram_width) {
-  const int narrower_width = histogram_width / number_of_bins;
-  const int wider_width = narrower_width + 1;
-
-  const int number_of_wider_bins = histogram_width % number_of_bins;
-  const int number_of_narrower_bins = number_of_bins - number_of_wider_bins;
-
-  std::vector<int> result(number_of_narrower_bins, narrower_width);
-  const std::vector<int> wider_widths(number_of_wider_bins, wider_width);
-  result.insert(std::end(result), std::begin(wider_widths), std::end(wider_widths));
-
-  std::shuffle(std::begin(result), std::end(result), std::default_random_engine{});
-  return result;
 }
 
 }  // namespace orbit_statistics

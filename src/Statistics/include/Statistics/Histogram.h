@@ -37,11 +37,6 @@ struct Histogram {
 // which minimizes it. The histogram will not own the data.
 [[nodiscard]] std::optional<Histogram> BuildHistogram(absl::Span<const uint64_t> data);
 
-// The functions aids histogram rendering.
-// Takes two positive intergers, returns a vector `result` of non-negative integers s.t.
-// their sum equals to `histogram_width` and for all `i` and `j` `max(result[i] - result[j]) <= 1`
-// `histogram_width` represents the width of the histogarm in pixels.
-[[nodiscard]] std::vector<int> GetBinWidth(size_t number_of_bins, int histogram_width);
 }  // namespace orbit_statistics
 
 #endif  // STATISTICS_HISTOGRAM_H_
