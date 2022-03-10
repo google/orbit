@@ -11,6 +11,7 @@
 
 #include <string>
 
+#include "CaptureServiceBase/CaptureServiceBase.h"
 #include "GrpcProtos/capture.pb.h"
 
 namespace orbit_capture_service_base {
@@ -22,7 +23,10 @@ namespace orbit_capture_service_base {
 [[nodiscard]] orbit_grpc_protos::ProducerCaptureEvent CreateSuccessfulCaptureFinishedEvent();
 
 [[nodiscard]] orbit_grpc_protos::ProducerCaptureEvent
-CreateMemoryThresholdExceededCaptureFinishedEvent();
+CreateInterruptedByServiceCaptureFinishedEvent(std::string message);
+
+[[nodiscard]] orbit_grpc_protos::ProducerCaptureEvent CreateFailedCaptureFinishedEvent(
+    std::string message);
 
 [[nodiscard]] orbit_grpc_protos::ProducerCaptureEvent CreateClockResolutionEvent(
     uint64_t timestamp_ns, uint64_t resolution_ns);

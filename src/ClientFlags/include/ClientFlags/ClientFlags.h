@@ -57,6 +57,7 @@ ABSL_DECLARE_FLAG(bool, enforce_full_redraw);
 ABSL_DECLARE_FLAG(std::string, target_process);
 ABSL_DECLARE_FLAG(std::string, target_instance);
 ABSL_DECLARE_FLAG(std::vector<std::string>, additional_symbol_paths);
+ABSL_DECLARE_FLAG(bool, launched_from_vsi);
 
 // Clears QSettings. This is intended for e2e tests.
 ABSL_DECLARE_FLAG(bool, clear_settings);

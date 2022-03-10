@@ -20,7 +20,7 @@ void Batcher::AddLine(Vec2 from, Vec2 to, float z, const Color& color,
                       std::unique_ptr<PickingUserData> user_data) {
   Color picking_color = PickingId::ToColor(PickingType::kLine, user_data_.size(), batcher_id_);
 
-  AddLine(from, to, z, color, picking_color, std::move(user_data));
+  AddLineInternal(from, to, z, color, picking_color, std::move(user_data));
 }
 
 void Batcher::AddLine(Vec2 from, Vec2 to, float z, const Color& color,
@@ -29,7 +29,7 @@ void Batcher::AddLine(Vec2 from, Vec2 to, float z, const Color& color,
 
   Color picking_color = picking_manager_->GetPickableColor(pickable, batcher_id_);
 
-  AddLine(from, to, z, color, picking_color, nullptr);
+  AddLineInternal(from, to, z, color, picking_color, nullptr);
 }
 
 void Batcher::AddVerticalLine(Vec2 pos, float size, float z, const Color& color,
@@ -43,7 +43,7 @@ void Batcher::AddVerticalLine(Vec2 pos, float size, float z, const Color& color,
 
   Color picking_color = picking_manager_->GetPickableColor(pickable, batcher_id_);
 
-  AddLine(pos, pos + Vec2(0, size), z, color, picking_color, nullptr);
+  AddLineInternal(pos, pos + Vec2(0, size), z, color, picking_color, nullptr);
 }
 
 static void MoveLineToPixelCenterIfHorizontal(Line& line) {
@@ -52,8 +52,9 @@ static void MoveLineToPixelCenterIfHorizontal(Line& line) {
   line.end_point[1] += 0.5f;
 }
 
-void Batcher::AddLine(Vec2 from, Vec2 to, float z, const Color& color, const Color& picking_color,
-                      std::unique_ptr<PickingUserData> user_data) {
+void Batcher::AddLineInternal(Vec2 from, Vec2 to, float z, const Color& color,
+                              const Color& picking_color,
+                              std::unique_ptr<PickingUserData> user_data) {
   Line line;
   line.start_point = translations_.TranslateAndFloorVertex(Vec3(from[0], from[1], z));
   line.end_point = translations_.TranslateAndFloorVertex(Vec3(to[0], to[1], z));
@@ -71,7 +72,7 @@ void Batcher::AddLine(Vec2 from, Vec2 to, float z, const Color& color, const Col
 void Batcher::AddBox(const Box& box, const std::array<Color, 4>& colors,
                      std::unique_ptr<PickingUserData> user_data) {
   Color picking_color = PickingId::ToColor(PickingType::kBox, user_data_.size(), batcher_id_);
-  AddBox(box, colors, picking_color, std::move(user_data));
+  AddBoxInternal(box, colors, picking_color, std::move(user_data));
 }
 
 void Batcher::AddBox(const Box& box, const Color& color,
@@ -88,7 +89,7 @@ void Batcher::AddBox(const Box& box, const Color& color, std::shared_ptr<Pickabl
   std::array<Color, 4> colors;
   colors.fill(color);
 
-  AddBox(box, colors, picking_color, nullptr);
+  AddBoxInternal(box, colors, picking_color, nullptr);
 }
 
 void Batcher::AddShadedBox(Vec2 pos, Vec2 size, float z, const Color& color) {
@@ -195,11 +196,12 @@ void Batcher::AddShadedBox(Vec2 pos, Vec2 size, float z, const Color& color,
   GetBoxGradientColors(color, &colors, shading_direction);
   Color picking_color = picking_manager_->GetPickableColor(pickable, batcher_id_);
   Box box(pos, size, z);
-  AddBox(box, colors, picking_color, nullptr);
+  AddBoxInternal(box, colors, picking_color, nullptr);
 }
 
-void Batcher::AddBox(const Box& box, const std::array<Color, 4>& colors, const Color& picking_color,
-                     std::unique_ptr<PickingUserData> user_data) {
+void Batcher::AddBoxInternal(const Box& box, const std::array<Color, 4>& colors,
+                             const Color& picking_color,
+                             std::unique_ptr<PickingUserData> user_data) {
   Box rounded_box = box;
   for (size_t v = 0; v < 4; ++v) {
     rounded_box.vertices[v] = translations_.TranslateAndFloorVertex(rounded_box.vertices[v]);
@@ -232,7 +234,7 @@ void Batcher::AddTriangle(const Triangle& triangle, const Color& color, const Co
                           std::unique_ptr<PickingUserData> user_data) {
   std::array<Color, 3> colors;
   colors.fill(color);
-  AddTriangle(triangle, colors, picking_color, std::move(user_data));
+  AddTriangleInternal(triangle, colors, picking_color, std::move(user_data));
 }
 
 // Draw a shaded trapezium with two sides parallel to the x-axis or y-axis.
@@ -245,14 +247,16 @@ void Batcher::AddShadedTrapezium(const Vec3& top_left, const Vec3& bottom_left,
   Color picking_color = PickingId::ToColor(PickingType::kTriangle, user_data_.size(), batcher_id_);
   Triangle triangle_1{top_left, bottom_left, top_right};
   std::array<Color, 3> colors_1{colors[0], colors[1], colors[2]};
-  AddTriangle(triangle_1, colors_1, picking_color, std::make_unique<PickingUserData>(*user_data));
+  AddTriangleInternal(triangle_1, colors_1, picking_color,
+                      std::make_unique<PickingUserData>(*user_data));
   Triangle triangle_2{bottom_left, bottom_right, top_right};
   std::array<Color, 3> colors_2{colors[1], colors[2], colors[3]};
-  AddTriangle(triangle_2, colors_2, picking_color, std::move(user_data));
+  AddTriangleInternal(triangle_2, colors_2, picking_color, std::move(user_data));
 }
 
-void Batcher::AddTriangle(const Triangle& triangle, const std::array<Color, 3>& colors,
-                          const Color& picking_color, std::unique_ptr<PickingUserData> user_data) {
+void Batcher::AddTriangleInternal(const Triangle& triangle, const std::array<Color, 3>& colors,
+                                  const Color& picking_color,
+                                  std::unique_ptr<PickingUserData> user_data) {
   Triangle rounded_tri = triangle;
   for (auto& vertex : rounded_tri.vertices) {
     vertex = translations_.TranslateAndFloorVertex(vertex);
@@ -360,12 +364,12 @@ void Batcher::ResetElements() {
   for (auto& [unused_layer, buffer] : primitive_buffers_by_layer_) {
     buffer.Reset();
   }
+  user_data_.clear();
 }
 
 void Batcher::StartNewFrame() {
   ORBIT_CHECK(translations_.IsEmpty());
   ResetElements();
-  user_data_.clear();
 }
 
 std::vector<float> Batcher::GetLayers() const {
@@ -401,7 +405,7 @@ void Batcher::DrawLayer(float layer, bool picking) const {
 }
 
 void Batcher::Draw(bool picking) const {
-  for (auto& [layer, unused_buffer] : primitive_buffers_by_layer_) {
+  for (float layer : GetLayers()) {
     DrawLayer(layer, picking);
   }
 }

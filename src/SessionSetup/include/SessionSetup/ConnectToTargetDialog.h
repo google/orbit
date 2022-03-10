@@ -12,6 +12,7 @@
 #include "ClientServices/ProcessManager.h"
 #include "Connections.h"
 #include "MetricsUploader/MetricsUploader.h"
+#include "MetricsUploader/ScopedMetric.h"
 #include "OrbitBase/Result.h"
 #include "OrbitGgp/Client.h"
 #include "OrbitGgp/SshInfo.h"
@@ -64,14 +65,13 @@ class ConnectToTargetDialog : public QDialog {
   std::unique_ptr<orbit_client_services::ProcessManager> process_manager_;
   std::optional<TargetConfiguration> target_configuration_;
 
-  void OnAsyncDataAvailable(MaybeSshAndInstanceData ssh_instance_data);
+  std::unique_ptr<orbit_metrics_uploader::ScopedMetric> connection_metric_;
+
+  ErrorMessageOr<void> OnAsyncDataAvailable(MaybeSshAndInstanceData ssh_instance_data);
   void OnProcessListUpdate(std::vector<orbit_grpc_protos::ProcessInfo> process_list);
 
   [[nodiscard]] ErrorMessageOr<orbit_session_setup::ServiceDeployManager::GrpcPort>
   DeployOrbitService(orbit_session_setup::ServiceDeployManager* service_deploy_manager);
-  [[nodiscard]] ErrorMessageOr<std::unique_ptr<orbit_client_data::ProcessData>>
-  FindSpecifiedProcess(std::shared_ptr<grpc::Channel> grpc_channel,
-                       const QString& process_name_or_path);
 
   void SetStatusMessage(const QString& message);
   void LogAndDisplayError(const ErrorMessage& message);
