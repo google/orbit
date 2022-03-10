@@ -163,10 +163,9 @@ class Batcher {
 
   void AddCircle(const Vec2& position, float radius, float z, Color color);
   [[nodiscard]] std::vector<float> GetLayers() const;
-  void DrawLayer(float layer, bool picking = false) const;
-  virtual void Draw(bool picking = false) const;
+  virtual void DrawLayer(float layer, bool picking = false) const;
+  void Draw(bool picking = false) const;
 
-  void ResetElements();
   void StartNewFrame();
 
   [[nodiscard]] PickingManager* GetPickingManager() const { return picking_manager_; }
@@ -209,6 +208,7 @@ class Batcher {
   void AddTriangleInternal(const Triangle& triangle, const std::array<Color, 3>& colors,
                            const Color& picking_color,
                            std::unique_ptr<PickingUserData> user_data = nullptr);
+  void ResetElements();
 };
 
 #endif

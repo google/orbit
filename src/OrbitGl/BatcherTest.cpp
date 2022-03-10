@@ -36,51 +36,49 @@ class FakeBatcher : public Batcher {
   // Simulate drawing by simple appending all colors to internal
   // buffers. Only a single color per element will be appended
   // (start point for line, first vertex for triangle and box)
-  void Draw(bool picking = false) const override {
-    for (auto& [unused_layer, buffer] : primitive_buffers_by_layer_) {
-      if (picking) {
-        for (auto it = buffer.line_buffer.picking_colors_.begin();
-             it != buffer.line_buffer.picking_colors_.end();) {
-          drawn_line_colors_.push_back(*it);
-          ++it;
-          ++it;
-        }
-        for (auto it = buffer.triangle_buffer.picking_colors_.begin();
-             it != buffer.triangle_buffer.picking_colors_.end();) {
-          drawn_triangle_colors_.push_back(*it);
-          ++it;
-          ++it;
-          ++it;
-        }
-        for (auto it = buffer.box_buffer.picking_colors_.begin();
-             it != buffer.box_buffer.picking_colors_.end();) {
-          drawn_box_colors_.push_back(*it);
-          ++it;
-          ++it;
-          ++it;
-          ++it;
-        }
-      } else {
-        for (auto it = buffer.line_buffer.colors_.begin();
-             it != buffer.line_buffer.colors_.end();) {
-          drawn_line_colors_.push_back(*it);
-          ++it;
-          ++it;
-        }
-        for (auto it = buffer.triangle_buffer.colors_.begin();
-             it != buffer.triangle_buffer.colors_.end();) {
-          drawn_triangle_colors_.push_back(*it);
-          ++it;
-          ++it;
-          ++it;
-        }
-        for (auto it = buffer.box_buffer.colors_.begin(); it != buffer.box_buffer.colors_.end();) {
-          drawn_box_colors_.push_back(*it);
-          ++it;
-          ++it;
-          ++it;
-          ++it;
-        }
+  void DrawLayer(float layer, bool picking = false) const override {
+    auto& buffer = primitive_buffers_by_layer_.at(layer);
+    if (picking) {
+      for (auto it = buffer.line_buffer.picking_colors_.begin();
+           it != buffer.line_buffer.picking_colors_.end();) {
+        drawn_line_colors_.push_back(*it);
+        ++it;
+        ++it;
+      }
+      for (auto it = buffer.triangle_buffer.picking_colors_.begin();
+           it != buffer.triangle_buffer.picking_colors_.end();) {
+        drawn_triangle_colors_.push_back(*it);
+        ++it;
+        ++it;
+        ++it;
+      }
+      for (auto it = buffer.box_buffer.picking_colors_.begin();
+           it != buffer.box_buffer.picking_colors_.end();) {
+        drawn_box_colors_.push_back(*it);
+        ++it;
+        ++it;
+        ++it;
+        ++it;
+      }
+    } else {
+      for (auto it = buffer.line_buffer.colors_.begin(); it != buffer.line_buffer.colors_.end();) {
+        drawn_line_colors_.push_back(*it);
+        ++it;
+        ++it;
+      }
+      for (auto it = buffer.triangle_buffer.colors_.begin();
+           it != buffer.triangle_buffer.colors_.end();) {
+        drawn_triangle_colors_.push_back(*it);
+        ++it;
+        ++it;
+        ++it;
+      }
+      for (auto it = buffer.box_buffer.colors_.begin(); it != buffer.box_buffer.colors_.end();) {
+        drawn_box_colors_.push_back(*it);
+        ++it;
+        ++it;
+        ++it;
+        ++it;
       }
     }
   }
@@ -223,11 +221,6 @@ TEST(Batcher, MultipleDrawCalls) {
   auto line_color = batcher.GetDrawnLineColors()[0];
   auto triangle_color = batcher.GetDrawnTriangleColors()[0];
   auto box_color = batcher.GetDrawnBoxColors()[0];
-  ExpectCustomDataEq(batcher, line_color, line_custom_data);
-  ExpectCustomDataEq(batcher, triangle_color, triangle_custom_data);
-  ExpectCustomDataEq(batcher, box_color, box_custom_data);
-
-  batcher.ResetElements();
   ExpectCustomDataEq(batcher, line_color, line_custom_data);
   ExpectCustomDataEq(batcher, triangle_color, triangle_custom_data);
   ExpectCustomDataEq(batcher, box_color, box_custom_data);
