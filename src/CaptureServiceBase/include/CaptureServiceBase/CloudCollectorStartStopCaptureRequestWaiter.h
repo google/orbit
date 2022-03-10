@@ -27,8 +27,7 @@ class CloudCollectorStartStopCaptureRequestWaiter : public StartStopCaptureReque
 
   // WaitForStopCaptureRequest is blocked until StopCapture is called.
   [[nodiscard]] CaptureServiceBase::StopCaptureReason WaitForStopCaptureRequest() override;
-  void StopCapture(CaptureServiceBase::StopCaptureReason stop_capture_reason =
-                       CaptureServiceBase::StopCaptureReason::kClientStop);
+  void StopCapture(CaptureServiceBase::StopCaptureReason stop_capture_reason);
 
  private:
   mutable absl::Mutex start_mutex_;
