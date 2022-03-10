@@ -39,7 +39,6 @@ TEST(CoffFile, LoadDebugSymbols) {
   EXPECT_EQ(symbol_infos.size(), 35);
 
   SymbolInfo& symbol_info = symbol_infos[4];
-  EXPECT_EQ(symbol_info.name(), "pre_c_init");
   EXPECT_EQ(symbol_info.demangled_name(), "pre_c_init");
   uint64_t expected_address =
       0x0 + coff_file->GetExecutableSegmentOffset() + coff_file->GetLoadBias();
@@ -47,7 +46,6 @@ TEST(CoffFile, LoadDebugSymbols) {
   EXPECT_EQ(symbol_info.size(), 0xc);
 
   symbol_info = symbol_infos[5];
-  EXPECT_EQ(symbol_info.name(), "PrintHelloWorld");
   EXPECT_EQ(symbol_info.demangled_name(), "PrintHelloWorld");
   expected_address = 0x03a0 + coff_file->GetExecutableSegmentOffset() + coff_file->GetLoadBias();
   EXPECT_EQ(symbol_info.address(), expected_address);

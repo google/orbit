@@ -354,7 +354,6 @@ ErrorMessageOr<SymbolInfo> ElfFileImpl<ElfT>::CreateSymbolInfo(
   }
 
   SymbolInfo symbol_info;
-  symbol_info.set_name(name);
   symbol_info.set_demangled_name(llvm::demangle(name));
   symbol_info.set_address(maybe_value.get());
   symbol_info.set_size(symbol_ref.getSize());

@@ -46,13 +46,11 @@ TEST(ElfFile, LoadDebugSymbols) {
   EXPECT_EQ(symbol_infos.size(), 10);
 
   SymbolInfo& symbol_info = symbol_infos[0];
-  EXPECT_EQ(symbol_info.name(), "deregister_tm_clones");
   EXPECT_EQ(symbol_info.demangled_name(), "deregister_tm_clones");
   EXPECT_EQ(symbol_info.address(), 0x1080);
   EXPECT_EQ(symbol_info.size(), 0);
 
   symbol_info = symbol_infos[5];
-  EXPECT_EQ(symbol_info.name(), "main");
   EXPECT_EQ(symbol_info.demangled_name(), "main");
   EXPECT_EQ(symbol_info.address(), 0x1140);
   EXPECT_EQ(symbol_info.size(), 45);
@@ -90,7 +88,6 @@ TEST(ElfFile, LoadSymbolsFromDynsym) {
   EXPECT_EQ(symbol_infos.size(), 8);
 
   SymbolInfo& symbol_info = symbol_infos[7];
-  EXPECT_EQ(symbol_info.name(), "UseTestLib");
   EXPECT_EQ(symbol_info.demangled_name(), "UseTestLib");
   EXPECT_EQ(symbol_info.address(), 0x2670);
   EXPECT_EQ(symbol_info.size(), 591);

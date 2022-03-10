@@ -24,7 +24,7 @@ static ErrorMessageOr<AddressRange> FindFunctionAbsoluteAddressInModule(
   OUTCOME_TRY(auto&& elf_file, orbit_object_utils::CreateElfFile(module_file_path));
   OUTCOME_TRY(auto&& syms, elf_file->LoadDebugSymbols());
   for (const auto& sym : syms.symbol_infos()) {
-    if (sym.name() == function_name) {
+    if (sym.demangled_name() == function_name) {
       const uint64_t address = orbit_object_utils::SymbolVirtualAddressToAbsoluteAddress(
           sym.address(), module_address_range.start, syms.load_bias(),
           elf_file->GetExecutableSegmentOffset());
@@ -69,7 +69,7 @@ static ErrorMessageOr<AddressRange> FindFunctionRelativeAddressInModule(
   OUTCOME_TRY(auto&& elf_file, orbit_object_utils::CreateElfFile(module_file_path));
   OUTCOME_TRY(auto&& syms, elf_file->LoadDebugSymbols());
   for (const auto& sym : syms.symbol_infos()) {
-    if (sym.name() == function_name) {
+    if (sym.demangled_name() == function_name) {
       return AddressRange(sym.address(), sym.address() + sym.size());
     }
   }

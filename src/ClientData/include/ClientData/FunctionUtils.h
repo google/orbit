@@ -20,7 +20,7 @@ namespace orbit_client_data::function_utils {
 
 [[nodiscard]] inline const std::string& GetDisplayName(
     const orbit_client_protos::FunctionInfo& func) {
-  return func.pretty_name().empty() ? func.name() : func.pretty_name();
+  return func.pretty_name();
 }
 
 [[nodiscard]] std::string GetLoadedModuleNameByPath(std::string_view module_path);

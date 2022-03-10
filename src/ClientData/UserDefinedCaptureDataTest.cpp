@@ -17,7 +17,6 @@ namespace orbit_client_data {
 
 FunctionInfo CreateFunctionInfo(const std::string& function_name, uint64_t function_address) {
   FunctionInfo info;
-  info.set_name(function_name);
   info.set_pretty_name(function_name);
   info.set_module_path("/path/to/module");
   info.set_module_build_id("build id");

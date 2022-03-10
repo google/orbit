@@ -50,7 +50,6 @@ struct FunctionsDataViewTest : public testing::Test {
         view_{&app_, thread_pool_.get()} {
     view_.Init();
     orbit_client_protos::FunctionInfo function0;
-    function0.set_name("foo");
     function0.set_pretty_name("void foo()");
     function0.set_module_path("/path/to/module");
     function0.set_module_build_id("buildid");
@@ -59,7 +58,6 @@ struct FunctionsDataViewTest : public testing::Test {
     functions_.emplace_back(std::move(function0));
 
     orbit_client_protos::FunctionInfo function1;
-    function1.set_name("main");
     function1.set_pretty_name("main(int, char**)");
     function1.set_module_path("/path/to/other");
     function1.set_module_build_id("buildid2");
@@ -68,7 +66,6 @@ struct FunctionsDataViewTest : public testing::Test {
     functions_.emplace_back(std::move(function1));
 
     orbit_client_protos::FunctionInfo function2;
-    function2.set_name("_ZeqRK1AS1_");
     function2.set_pretty_name("operator==(A const&, A const&)");
     function2.set_module_path("/somewhere/else/module");
     function2.set_module_build_id("buildid3");
@@ -77,7 +74,6 @@ struct FunctionsDataViewTest : public testing::Test {
     functions_.emplace_back(std::move(function2));
 
     orbit_client_protos::FunctionInfo function3;
-    function3.set_name("ffind");
     function3.set_pretty_name("ffind(int)");
     function3.set_module_path("/somewhere/else/foomodule");
     function3.set_module_build_id("buildid4");
@@ -86,7 +82,6 @@ struct FunctionsDataViewTest : public testing::Test {
     functions_.emplace_back(std::move(function3));
 
     orbit_client_protos::FunctionInfo function4;
-    function4.set_name("bar");
     function4.set_pretty_name("bar(const char*)");
     function4.set_module_path("/somewhere/else/barmodule");
     function4.set_module_build_id("buildid4");
@@ -95,7 +90,6 @@ struct FunctionsDataViewTest : public testing::Test {
     functions_.emplace_back(std::move(function4));
 
     orbit_grpc_protos::ModuleInfo module_info0{};
-    module_info0.set_name("module0");
     module_info0.set_file_path(functions_[0].module_path());
     module_info0.set_file_size(0x42);
     module_info0.set_build_id(functions_[0].module_build_id());
@@ -104,7 +98,6 @@ struct FunctionsDataViewTest : public testing::Test {
     module_infos_.emplace_back(std::move(module_info0));
 
     orbit_grpc_protos::ModuleInfo module_info1{};
-    module_info1.set_name("module1");
     module_info1.set_file_path(functions_[1].module_path());
     module_info1.set_file_size(0x24);
     module_info1.set_build_id(functions_[1].module_build_id());
@@ -113,7 +106,6 @@ struct FunctionsDataViewTest : public testing::Test {
     module_infos_.emplace_back(std::move(module_info1));
 
     orbit_grpc_protos::ModuleInfo module_info2{};
-    module_info2.set_name("module2");
     module_info2.set_file_path(functions_[2].module_path());
     module_info2.set_file_size(0x55);
     module_info2.set_build_id(functions_[2].module_build_id());
@@ -138,7 +130,7 @@ struct FunctionsDataViewTest : public testing::Test {
                                    // This is not a canonical comparison, but since we control
                                    // our testing data, we can assure that all our functions have
                                    // distinctive names.
-                                   return function.name() == candidate.name();
+                                   return function.pretty_name() == candidate.pretty_name();
                                  });
     if (it == functions_.end()) return std::nullopt;
     return std::distance(functions_.begin(), it);
@@ -287,7 +279,6 @@ TEST_F(FunctionsDataViewTest, FrameTrackSelectionAppearsInFirstColumnWhenACaptur
   ASSERT_EQ(module_manager.GetAllModuleData().size(), 1);
 
   orbit_grpc_protos::SymbolInfo symbol_info;
-  symbol_info.set_name(functions_[0].name());
   symbol_info.set_demangled_name(functions_[0].pretty_name());
   symbol_info.set_address(functions_[0].address());
   symbol_info.set_size(functions_[0].size());
@@ -663,13 +654,13 @@ TEST_F(FunctionsDataViewTest, FilteringByFunctionName) {
 
   // We know that the function name of function 3 is unique, so we expect only the very same
   // function as the filter result.
-  view_.OnFilter(functions_[3].name());
+  view_.OnFilter(functions_[3].pretty_name());
   EXPECT_EQ(view_.GetNumElements(), 1);
   EXPECT_EQ(view_.GetValue(0, 1), functions_[3].pretty_name());
 
   // We know that the function name of function 4 is unique, so we expect only the very same
   // function as the filter result.
-  view_.OnFilter(functions_[4].name());
+  view_.OnFilter(functions_[4].pretty_name());
   EXPECT_EQ(view_.GetNumElements(), 1);
   EXPECT_EQ(view_.GetValue(0, 1), functions_[4].pretty_name());
 

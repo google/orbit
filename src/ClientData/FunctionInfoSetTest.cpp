@@ -16,7 +16,6 @@ namespace orbit_client_data {
 
 TEST(FunctionInfoSet, EqualFunctions) {
   FunctionInfo left;
-  left.set_name("foo");
   left.set_pretty_name("void foo()");
   left.set_module_path("/path/to/module");
   left.set_module_build_id("buildid");
@@ -24,7 +23,6 @@ TEST(FunctionInfoSet, EqualFunctions) {
   left.set_size(16);
 
   FunctionInfo right;
-  right.set_name("foo");
   right.set_pretty_name("void foo()");
   right.set_module_path("/path/to/module");
   right.set_module_build_id("buildid");
@@ -39,7 +37,6 @@ TEST(FunctionInfoSet, EqualFunctions) {
 
 TEST(FunctionInfoSet, DifferentName) {
   FunctionInfo left;
-  left.set_name("foo");
   left.set_pretty_name("void foo()");
   left.set_module_path("/path/to/module");
   left.set_module_build_id("buildid");
@@ -48,7 +45,7 @@ TEST(FunctionInfoSet, DifferentName) {
 
   FunctionInfo right;
   right.CopyFrom(left);
-  right.set_name("bar");
+  right.set_pretty_name("bar");
 
   internal::EqualFunctionInfo eq;
   EXPECT_TRUE(eq(left, right));
@@ -56,7 +53,6 @@ TEST(FunctionInfoSet, DifferentName) {
 
 TEST(FunctionInfoSet, DifferentPrettyName) {
   FunctionInfo left;
-  left.set_name("foo");
   left.set_pretty_name("void foo()");
   left.set_module_path("/path/to/module");
   left.set_module_build_id("buildid");
@@ -73,7 +69,6 @@ TEST(FunctionInfoSet, DifferentPrettyName) {
 
 TEST(FunctionInfoSet, DifferentModulePath) {
   FunctionInfo left;
-  left.set_name("foo");
   left.set_pretty_name("void foo()");
   left.set_module_path("/path/to/module");
   left.set_module_build_id("buildid");
@@ -90,7 +85,6 @@ TEST(FunctionInfoSet, DifferentModulePath) {
 
 TEST(FunctionInfoSet, DifferentBuildId) {
   FunctionInfo left;
-  left.set_name("foo");
   left.set_pretty_name("void foo()");
   left.set_module_path("/path/to/module");
   left.set_module_build_id("buildid");
@@ -107,7 +101,6 @@ TEST(FunctionInfoSet, DifferentBuildId) {
 
 TEST(FunctionInfoSet, DifferentAddress) {
   FunctionInfo left;
-  left.set_name("foo");
   left.set_pretty_name("void foo()");
   left.set_module_path("/path/to/module");
   left.set_module_build_id("buildid");
@@ -124,7 +117,6 @@ TEST(FunctionInfoSet, DifferentAddress) {
 
 TEST(FunctionInfoSet, DifferentSize) {
   FunctionInfo left;
-  left.set_name("foo");
   left.set_pretty_name("void foo()");
   left.set_module_path("/path/to/module");
   left.set_module_build_id("buildid");
@@ -141,7 +133,6 @@ TEST(FunctionInfoSet, DifferentSize) {
 
 TEST(FunctionInfoSet, Insertion) {
   FunctionInfo function;
-  function.set_name("foo");
   function.set_pretty_name("void foo()");
   function.set_module_path("/path/to/module");
   function.set_module_build_id("buildid");
@@ -160,7 +151,6 @@ TEST(FunctionInfoSet, Insertion) {
 
 TEST(FunctionInfoSet, Deletion) {
   FunctionInfo function;
-  function.set_name("foo");
   function.set_pretty_name("void foo()");
   function.set_module_path("/path/to/module");
   function.set_module_build_id("buildid");

@@ -36,8 +36,7 @@ message ModuleInfo {
 }
 
 message FunctionInfo {
-  reserved 4, 6, 8, 9, 10, 11;
-  string name = 1;
+  reserved 1, 4, 6, 8, 9, 10, 11;
   string pretty_name = 2;
   string module_path = 3;
   string module_build_id = 12;

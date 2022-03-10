@@ -51,7 +51,6 @@ static void TestSimple(bool windows_line_endings) {
   }
 
   orbit_client_protos::FunctionInfo function_info{};
-  function_info.set_name("main");
   function_info.set_pretty_name("main");
   function_info.set_module_path("line_info_test_binary");
   function_info.set_address(0x401140);

@@ -67,7 +67,6 @@ namespace {
 constexpr size_t kNumFunctions = 3;
 const std::array<uint64_t, kNumFunctions> kFunctionIds{11, 22, 33};
 constexpr uint64_t kNonDynamicallyInstrumentedFunctionId = 123456;
-const std::array<std::string, kNumFunctions> kNames{"foo", "main", "ffind"};
 const std::array<std::string, kNumFunctions> kPrettyNames{"void foo()", "main(int, char**)",
                                                           "ffind(int)"};
 const std::array<std::string, kNumFunctions> kModulePaths{
@@ -151,7 +150,6 @@ std::unique_ptr<CaptureData> GenerateTestCaptureData(
     (void)module_manager->AddOrUpdateModules({module_info});
 
     orbit_grpc_protos::SymbolInfo symbol_info;
-    symbol_info.set_name(kNames[i]);
     symbol_info.set_demangled_name(kPrettyNames[i]);
     symbol_info.set_address(kAddresses[i]);
     symbol_info.set_size(kSizes[i]);
@@ -208,7 +206,6 @@ class LiveFunctionsDataViewTest : public testing::Test {
     view_.Init();
     for (size_t i = 0; i < kNumFunctions; i++) {
       FunctionInfo function;
-      function.set_name(kNames[i]);
       function.set_pretty_name(kPrettyNames[i]);
       function.set_module_path(kModulePaths[i]);
       function.set_module_build_id(kBuildIds[i]);
@@ -309,7 +306,7 @@ TEST_F(LiveFunctionsDataViewTest, ContextMenuEntriesArePresentCorrectly) {
 
   auto get_index_from_function_info = [&](const FunctionInfo& function) -> std::optional<size_t> {
     for (size_t i = 0; i < kNumFunctions; i++) {
-      if (kNames[i] == function.name()) return i;
+      if (kPrettyNames[i] == function.pretty_name()) return i;
     }
     return std::nullopt;
   };
@@ -480,7 +477,7 @@ TEST_F(LiveFunctionsDataViewTest, ContextMenuActionsAreInvoked) {
     EXPECT_CALL(app_, Disassemble)
         .Times(1)
         .WillOnce([&](int32_t /*pid*/, const FunctionInfo& function) {
-          EXPECT_EQ(function.name(), kNames[0]);
+          EXPECT_EQ(function.pretty_name(), kPrettyNames[0]);
         });
     view_.OnContextMenu(std::string{kMenuActionDisassembly}, disassembly_index, {0});
   }
@@ -491,7 +488,7 @@ TEST_F(LiveFunctionsDataViewTest, ContextMenuActionsAreInvoked) {
     EXPECT_TRUE(source_code_index != kInvalidActionIndex);
 
     EXPECT_CALL(app_, ShowSourceCode).Times(1).WillOnce([&](const FunctionInfo& function) {
-      EXPECT_EQ(function.name(), kNames[0]);
+      EXPECT_EQ(function.pretty_name(), kPrettyNames[0]);
     });
     view_.OnContextMenu(std::string{kMenuActionSourceCode}, source_code_index, {0});
   }
@@ -557,7 +554,7 @@ TEST_F(LiveFunctionsDataViewTest, ContextMenuActionsAreInvoked) {
         .Times(1)
         .WillOnce([&](uint64_t instrumented_function_id, const FunctionInfo* function) {
           EXPECT_EQ(instrumented_function_id, kFunctionIds[0]);
-          EXPECT_EQ(function->name(), kNames[0]);
+          EXPECT_EQ(function->pretty_name(), kPrettyNames[0]);
         });
     view_.OnContextMenu(std::string{kMenuActionAddIterator}, add_iterators_index, {0});
   }
@@ -568,7 +565,7 @@ TEST_F(LiveFunctionsDataViewTest, ContextMenuActionsAreInvoked) {
     EXPECT_TRUE(hook_index != kInvalidActionIndex);
 
     EXPECT_CALL(app_, SelectFunction).Times(1).WillOnce([&](const FunctionInfo& function) {
-      EXPECT_EQ(function.name(), kNames[0]);
+      EXPECT_EQ(function.pretty_name(), kPrettyNames[0]);
     });
     view_.OnContextMenu(std::string{kMenuActionSelect}, hook_index, {0});
   }
@@ -580,12 +577,14 @@ TEST_F(LiveFunctionsDataViewTest, ContextMenuActionsAreInvoked) {
     EXPECT_TRUE(enable_frame_track_index != kInvalidActionIndex);
 
     EXPECT_CALL(app_, SelectFunction).Times(1).WillOnce([&](const FunctionInfo& function) {
-      EXPECT_EQ(function.name(), kNames[0]);
+      EXPECT_EQ(function.pretty_name(), kPrettyNames[0]);
     });
     EXPECT_CALL(app_, EnableFrameTrack).Times(1);
     EXPECT_CALL(app_, AddFrameTrack(testing::A<const orbit_client_protos::FunctionInfo&>()))
         .Times(1)
-        .WillOnce([&](const FunctionInfo& function) { EXPECT_EQ(function.name(), kNames[0]); });
+        .WillOnce([&](const FunctionInfo& function) {
+          EXPECT_EQ(function.pretty_name(), kPrettyNames[0]);
+        });
     view_.OnContextMenu(std::string{kMenuActionEnableFrameTrack}, enable_frame_track_index, {0});
   }
 
@@ -602,12 +601,14 @@ TEST_F(LiveFunctionsDataViewTest, ContextMenuActionsAreInvoked) {
     EXPECT_TRUE(unhook_index != kInvalidActionIndex);
 
     EXPECT_CALL(app_, DeselectFunction).Times(1).WillOnce([&](const FunctionInfo& function) {
-      EXPECT_EQ(function.name(), kNames[0]);
+      EXPECT_EQ(function.pretty_name(), kPrettyNames[0]);
     });
     EXPECT_CALL(app_, DisableFrameTrack).Times(1);
     EXPECT_CALL(app_, RemoveFrameTrack(testing::An<const FunctionInfo&>()))
         .Times(1)
-        .WillOnce([&](const FunctionInfo& function) { EXPECT_EQ(function.name(), kNames[0]); });
+        .WillOnce([&](const FunctionInfo& function) {
+          EXPECT_EQ(function.pretty_name(), kPrettyNames[0]);
+        });
     view_.OnContextMenu(std::string{kMenuActionUnselect}, unhook_index, {0});
   }
 
@@ -618,11 +619,13 @@ TEST_F(LiveFunctionsDataViewTest, ContextMenuActionsAreInvoked) {
     EXPECT_TRUE(disable_frame_track_index != kInvalidActionIndex);
 
     EXPECT_CALL(app_, DisableFrameTrack).Times(1).WillOnce([&](const FunctionInfo& function) {
-      EXPECT_EQ(function.name(), kNames[0]);
+      EXPECT_EQ(function.pretty_name(), kPrettyNames[0]);
     });
     EXPECT_CALL(app_, RemoveFrameTrack(testing::An<const FunctionInfo&>()))
         .Times(1)
-        .WillOnce([&](const FunctionInfo& function) { EXPECT_EQ(function.name(), kNames[0]); });
+        .WillOnce([&](const FunctionInfo& function) {
+          EXPECT_EQ(function.pretty_name(), kPrettyNames[0]);
+        });
     view_.OnContextMenu(std::string{kMenuActionDisableFrameTrack}, disable_frame_track_index, {0});
   }
 }

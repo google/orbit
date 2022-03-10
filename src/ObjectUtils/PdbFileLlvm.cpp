@@ -45,7 +45,6 @@ class SymbolInfoVisitor : public llvm::codeview::SymbolVisitorCallbacks {
   llvm::Error visitKnownRecord(llvm::codeview::CVSymbol& /*unused*/,
                                llvm::codeview::ProcSym& proc) override {
     SymbolInfo symbol_info;
-    symbol_info.set_name(proc.Name.str());
     symbol_info.set_demangled_name(llvm::demangle(proc.Name.str()));
 
     // The ProcSym's name does not contain an argument list. However, this information is required

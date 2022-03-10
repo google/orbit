@@ -28,7 +28,7 @@ void AddPuppetOuterAndInnerFunctionToCaptureOptions(
   bool outer_function_symbol_found = false;
   bool inner_function_symbol_found = false;
   for (const orbit_grpc_protos::SymbolInfo& symbol : module_symbols.symbol_infos()) {
-    if (symbol.name() == PuppetConstants::kOuterFunctionName) {
+    if (absl::StrContains(symbol.demangled_name(), PuppetConstants::kOuterFunctionName)) {
       ORBIT_CHECK(!outer_function_symbol_found);
       outer_function_symbol_found = true;
       orbit_grpc_protos::InstrumentedFunction instrumented_function;
@@ -36,12 +36,12 @@ void AddPuppetOuterAndInnerFunctionToCaptureOptions(
       instrumented_function.set_file_offset(symbol.address() - module_symbols.load_bias());
       instrumented_function.set_function_id(outer_function_id);
       instrumented_function.set_function_size(symbol.size());
-      instrumented_function.set_function_name(symbol.name());
+      instrumented_function.set_function_name(symbol.demangled_name());
       instrumented_function.set_record_return_value(true);
       capture_options->mutable_instrumented_functions()->Add(std::move(instrumented_function));
     }
 
-    if (symbol.name() == PuppetConstants::kInnerFunctionName) {
+    if (absl::StrContains(symbol.demangled_name(), PuppetConstants::kInnerFunctionName)) {
       ORBIT_CHECK(!inner_function_symbol_found);
       inner_function_symbol_found = true;
       orbit_grpc_protos::InstrumentedFunction instrumented_function;
@@ -49,7 +49,7 @@ void AddPuppetOuterAndInnerFunctionToCaptureOptions(
       instrumented_function.set_file_offset(symbol.address() - module_symbols.load_bias());
       instrumented_function.set_function_id(inner_function_id);
       instrumented_function.set_function_size(symbol.size());
-      instrumented_function.set_function_name(symbol.name());
+      instrumented_function.set_function_name(symbol.demangled_name());
       instrumented_function.set_record_arguments(true);
       capture_options->mutable_instrumented_functions()->Add(std::move(instrumented_function));
     }

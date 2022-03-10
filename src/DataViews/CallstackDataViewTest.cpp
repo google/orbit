@@ -61,7 +61,6 @@ constexpr int kColumnModule = 3;
 constexpr int kColumnAddress = 4;
 
 constexpr size_t kNumFunctions = 4;
-const std::array<std::string, kNumFunctions> kFunctionNames{"foo", "main", "ffind", "bar"};
 const std::array<std::string, kNumFunctions> kFunctionPrettyNames{"void foo()", "main(int, char**)",
                                                                   "ffind(int)", "bar(const char*)"};
 constexpr std::array<uint64_t, kNumFunctions> kFunctionAddresses{0x5100, 0x7250, 0x6700, 0x4450};
@@ -110,7 +109,6 @@ std::unique_ptr<CaptureData> GenerateTestCaptureData(
 
     if (kModuleIsLoaded[i]) {
       orbit_grpc_protos::SymbolInfo symbol_info;
-      symbol_info.set_name(kFunctionNames[i]);
       symbol_info.set_demangled_name(kFunctionPrettyNames[i]);
       symbol_info.set_address(kFunctionAddresses[i]);
       symbol_info.set_size(kFunctionSizes[i]);
@@ -314,7 +312,7 @@ TEST_F(CallstackDataViewTest, ContextMenuEntriesArePresentCorrectly) {
 
   auto get_index_from_function_info = [&](const FunctionInfo& function) -> std::optional<size_t> {
     for (size_t i = 0; i < kNumFunctions; i++) {
-      if (kFunctionNames[i] == function.name()) return i;
+      if (kFunctionPrettyNames[i] == function.pretty_name()) return i;
     }
     return std::nullopt;
   };
@@ -435,7 +433,7 @@ TEST_F(CallstackDataViewTest, ContextMenuActionsAreInvoked) {
     EXPECT_CALL(app_, Disassemble)
         .Times(1)
         .WillOnce([&](int32_t /*pid*/, const FunctionInfo& function) {
-          EXPECT_EQ(function.name(), kFunctionNames[0]);
+          EXPECT_EQ(function.pretty_name(), kFunctionPrettyNames[0]);
         });
     view_.OnContextMenu(std::string{kMenuActionDisassembly}, disassembly_index, {0});
   }
@@ -446,7 +444,7 @@ TEST_F(CallstackDataViewTest, ContextMenuActionsAreInvoked) {
     EXPECT_TRUE(source_code_index != kInvalidActionIndex);
 
     EXPECT_CALL(app_, ShowSourceCode).Times(1).WillOnce([&](const FunctionInfo& function) {
-      EXPECT_EQ(function.name(), kFunctionNames[0]);
+      EXPECT_EQ(function.pretty_name(), kFunctionPrettyNames[0]);
     });
     view_.OnContextMenu(std::string{kMenuActionSourceCode}, source_code_index, {0});
   }
@@ -457,7 +455,7 @@ TEST_F(CallstackDataViewTest, ContextMenuActionsAreInvoked) {
     EXPECT_TRUE(hook_index != kInvalidActionIndex);
 
     EXPECT_CALL(app_, SelectFunction).Times(1).WillOnce([&](const FunctionInfo& function) {
-      EXPECT_EQ(function.name(), kFunctionNames[0]);
+      EXPECT_EQ(function.pretty_name(), kFunctionPrettyNames[0]);
     });
     view_.OnContextMenu(std::string{kMenuActionSelect}, hook_index, {0});
   }
@@ -473,7 +471,7 @@ TEST_F(CallstackDataViewTest, ContextMenuActionsAreInvoked) {
     EXPECT_TRUE(unhook_index != kInvalidActionIndex);
 
     EXPECT_CALL(app_, DeselectFunction).Times(1).WillOnce([&](const FunctionInfo& function) {
-      EXPECT_EQ(function.name(), kFunctionNames[0]);
+      EXPECT_EQ(function.pretty_name(), kFunctionPrettyNames[0]);
     });
     view_.OnContextMenu(std::string{kMenuActionUnselect}, unhook_index, {0});
   }

@@ -104,13 +104,14 @@ ErrorMessageOr<orbit_grpc_protos::ModuleSymbols> PdbFileDia::LoadDebugSymbols() 
 
     BSTR function_name = {};
     if (dia_symbol->get_name(&function_name) != S_OK) continue;
-    symbol_info.set_name(orbit_base::ToStdString(function_name));
+    symbol_info.set_demangled_name(orbit_base::ToStdString(function_name));
     ErrorMessageOr<std::string> parameter_list_or_error = PdbDiaParameterListAsString(dia_symbol);
     if (parameter_list_or_error.has_value()) {
-      symbol_info.set_demangled_name(symbol_info.name() + parameter_list_or_error.value());
+      symbol_info.set_demangled_name(symbol_info.demangled_name() +
+                                     parameter_list_or_error.value());
     } else {
       ORBIT_ERROR("Unable to retrieve parameter types of function %s. Error: %s",
-                  symbol_info.name(), parameter_list_or_error.error().message());
+                  symbol_info.demangled_name(), parameter_list_or_error.error().message());
     }
     SysFreeString(function_name);
 
