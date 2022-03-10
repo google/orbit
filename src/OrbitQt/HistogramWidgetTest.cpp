@@ -10,8 +10,8 @@
 #include "HistogramWidget.h"
 
 namespace orbit_qt {
-static void TestGetBinWidths(int number_of_bins, int histogram_width) {
-  const std::vector<int> widths = GenerateBinWidth(number_of_bins, histogram_width);
+static void TestGenerateHistogramBinWidths(int number_of_bins, int histogram_width) {
+  const std::vector<int> widths = GenerateHistogramBinWidths(number_of_bins, histogram_width);
   ASSERT_EQ(widths.size(), number_of_bins);
   int sum = std::reduce(std::begin(widths), std::end(widths), 0);
   ASSERT_EQ(sum, histogram_width);
@@ -21,11 +21,11 @@ static void TestGetBinWidths(int number_of_bins, int histogram_width) {
   ASSERT_THAT(widths, testing::Each(testing::Ge(0)));
 }
 
-TEST(HistogramUtil, GetBinWidthIsCorrect) {
-  TestGetBinWidths(10, 100);
-  TestGetBinWidths(10, 115);
-  TestGetBinWidths(1, 115);
-  TestGetBinWidths(10, 2);
-  TestGetBinWidths(1, 1);
+TEST(HistrogramWidget, GenerateHistogramBinWidthsIsCorrect) {
+  TestGenerateHistogramBinWidths(10, 100);
+  TestGenerateHistogramBinWidths(10, 115);
+  TestGenerateHistogramBinWidths(1, 115);
+  TestGenerateHistogramBinWidths(10, 2);
+  TestGenerateHistogramBinWidths(1, 1);
 }
 }  // namespace orbit_qt
