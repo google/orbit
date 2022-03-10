@@ -18,7 +18,11 @@
 #include <malloc.h>
 #include <stdint.h>
 
+#include <string>
+
 #include <gtest/gtest.h>
+
+#include "TestUtils.h"
 
 namespace unwindstack {
 

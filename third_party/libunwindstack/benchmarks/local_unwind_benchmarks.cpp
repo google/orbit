@@ -22,6 +22,7 @@
 
 #include <android-base/strings.h>
 
+#include <unwindstack/AndroidUnwinder.h>
 #include <unwindstack/Maps.h>
 #include <unwindstack/Memory.h>
 #include <unwindstack/Regs.h>
@@ -98,6 +99,54 @@ static void BM_local_unwind_cached_process_memory(benchmark::State& state) {
   Run(state, Unwind, &data);
 }
 BENCHMARK(BM_local_unwind_cached_process_memory);
+
+static void BM_local_android_unwind_uncached_process_memory(benchmark::State& state) {
+  auto process_memory = unwindstack::Memory::CreateProcessMemory(getpid());
+  unwindstack::AndroidLocalUnwinder unwinder(process_memory);
+  unwindstack::ErrorData error;
+  if (!unwinder.Initialize(error)) {
+    state.SkipWithError("Failed to initialize.");
+  }
+
+  for (auto _ : state) {
+    if (LocalCall1(
+            [](void* u) -> size_t {
+              unwindstack::AndroidLocalUnwinder* unwinder =
+                  reinterpret_cast<unwindstack::AndroidLocalUnwinder*>(u);
+              unwindstack::AndroidUnwinderData data;
+              unwinder->Unwind(data);
+              return data.frames.size();
+            },
+            &unwinder) < 5) {
+      state.SkipWithError("Failed to unwind.");
+    }
+  }
+}
+BENCHMARK(BM_local_android_unwind_uncached_process_memory);
+
+static void BM_local_android_unwind_cached_process_memory(benchmark::State& state) {
+  auto process_memory = unwindstack::Memory::CreateProcessMemoryCached(getpid());
+  unwindstack::AndroidLocalUnwinder unwinder(process_memory);
+  unwindstack::ErrorData error;
+  if (!unwinder.Initialize(error)) {
+    state.SkipWithError("Failed to initialize.");
+  }
+
+  for (auto _ : state) {
+    if (LocalCall1(
+            [](void* u) -> size_t {
+              unwindstack::AndroidLocalUnwinder* unwinder =
+                  reinterpret_cast<unwindstack::AndroidLocalUnwinder*>(u);
+              unwindstack::AndroidUnwinderData data;
+              unwinder->Unwind(data);
+              return data.frames.size();
+            },
+            &unwinder) < 5) {
+      state.SkipWithError("Failed to unwind.");
+    }
+  }
+}
+BENCHMARK(BM_local_android_unwind_cached_process_memory);
 
 static void BM_local_unwind_local_updatable_maps_uncached(benchmark::State& state) {
   auto process_memory = unwindstack::Memory::CreateProcessMemory(getpid());

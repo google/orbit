@@ -17,12 +17,10 @@
 #ifndef _LIBUNWINDSTACK_TESTS_TEST_UTILS_H
 #define _LIBUNWINDSTACK_TESTS_TEST_UTILS_H
 
-#include <errno.h>
 #include <signal.h>
-#include <sys/ptrace.h>
+#include <stdint.h>
 #include <sys/types.h>
 #include <sys/wait.h>
-#include <unistd.h>
 
 namespace unwindstack {
 
@@ -37,62 +35,6 @@ class TestScopedPidReaper {
  private:
   pid_t pid_;
 };
-
-inline bool TestQuiescePid(pid_t pid) {
-  siginfo_t si;
-  // Wait for up to 10 seconds.
-  for (size_t i = 0; i < 10000; i++) {
-    if (ptrace(PTRACE_GETSIGINFO, pid, 0, &si) == 0) {
-      return true;
-    }
-    if (errno != ESRCH) {
-      if (errno == EINVAL) {
-        // The process is in group-stop state, so try and kick the
-        // process out of that state.
-        if (ptrace(PTRACE_LISTEN, pid, 0, 0) == -1) {
-          perror("ptrace listen failed.");
-          return false;
-        }
-      } else {
-        return false;
-      }
-    }
-    usleep(1000);
-  }
-  return false;
-}
-
-inline bool TestAttach(pid_t pid) {
-  // Wait up to 10 seconds to attach.
-  for (size_t j = 0; j < 10000; j++) {
-    if (ptrace(PTRACE_ATTACH, pid, 0, 0) == 0) {
-      break;
-    }
-    if (errno == ESRCH) {
-      usleep(1000);
-      continue;
-    }
-    perror("Failed to attach.");
-    return false;
-  }
-
-  if (TestQuiescePid(pid)) {
-    return true;
-  }
-
-  if (ptrace(PTRACE_DETACH, pid, 0, 0) == -1) {
-    perror("Failed to detach.");
-  }
-  return false;
-}
-
-inline bool TestDetach(pid_t pid) {
-  if (ptrace(PTRACE_DETACH, pid, 0, 0) == -1) {
-    perror("ptrace detach failed");
-    return false;
-  }
-  return true;
-}
 
 void TestCheckForLeaks(void (*unwind_func)(void*), void* data);
 

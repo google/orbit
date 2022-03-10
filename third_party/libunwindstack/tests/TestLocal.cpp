@@ -17,6 +17,8 @@
 #include <stdint.h>
 #include <stdlib.h>
 
+#include "TestUtils.h"
+
 // The loop in this function is only guaranteed to not be optimized away by the compiler
 // if optimizations are turned off. This is partially because the compiler doesn't have
 // any idea about the function since it is retrieved using dlsym.
@@ -25,7 +27,17 @@
 //  1. The loop iteration variable is volatile.
 //  2. A call to this function should be wrapped in TestUtils::DoNotOptimize().
 extern "C" int BusyWait() {
-  for (volatile size_t i = 0; i < 1000000; ++i)
-    ;
+  for (size_t i = 0; i < 1000000;) {
+    unwindstack::DoNotOptimize(i++);
+  }
   return 0;
+}
+
+// Do a loop that guarantees the terminating leaf frame will be in
+// the this library and not a function from a different library.
+extern "C" void WaitForever() {
+  bool run = true;
+  while (run) {
+    unwindstack::DoNotOptimize(run = true);
+  }
 }

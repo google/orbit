@@ -146,6 +146,7 @@ void Unwinder::Unwind(const std::vector<std::string>* initial_map_names_to_skip,
     uint64_t step_pc;
     uint64_t rel_pc;
     Object* object;
+    bool ignore_frame = false;
     if (map_info == nullptr) {
       step_pc = regs_->pc();
       rel_pc = step_pc;
@@ -156,7 +157,11 @@ void Unwinder::Unwind(const std::vector<std::string>* initial_map_names_to_skip,
       }
       object = nullptr;
     } else {
-      if (ShouldStop(map_suffixes_to_ignore, map_info->name())) {
+      ignore_frame =
+          initial_map_names_to_skip != nullptr &&
+          std::find(initial_map_names_to_skip->begin(), initial_map_names_to_skip->end(),
+                    android::base::Basename(map_info->name())) != initial_map_names_to_skip->end();
+      if (!ignore_frame && ShouldStop(map_suffixes_to_ignore, map_info->name())) {
         break;
       }
       object = map_info->GetObject(process_memory_, arch_);
@@ -187,9 +192,7 @@ void Unwinder::Unwind(const std::vector<std::string>* initial_map_names_to_skip,
     }
 
     FrameData* frame = nullptr;
-    if (map_info == nullptr || initial_map_names_to_skip == nullptr ||
-        std::find(initial_map_names_to_skip->begin(), initial_map_names_to_skip->end(),
-                  android::base::Basename(map_info->name())) == initial_map_names_to_skip->end()) {
+    if (!ignore_frame) {
       if (regs_->dex_pc() != 0) {
         // Add a frame to represent the dex file.
         FillInDexFrame();
@@ -297,8 +300,12 @@ void Unwinder::Unwind(const std::vector<std::string>* initial_map_names_to_skip,
 }
 
 std::string Unwinder::FormatFrame(const FrameData& frame) const {
+  return FormatFrame(arch_, frame, display_build_id_);
+}
+
+std::string Unwinder::FormatFrame(ArchEnum arch, const FrameData& frame, bool display_build_id) {
   std::string data;
-  if (ArchIs32Bit(arch_)) {
+  if (ArchIs32Bit(arch)) {
     data += android::base::StringPrintf("  #%02zu pc %08" PRIx64, frame.num, frame.rel_pc);
   } else {
     data += android::base::StringPrintf("  #%02zu pc %016" PRIx64, frame.num, frame.rel_pc);
@@ -335,7 +342,7 @@ std::string Unwinder::FormatFrame(const FrameData& frame) const {
     data += ')';
   }
 
-  if (map_info != nullptr && display_build_id_) {
+  if (map_info != nullptr && display_build_id) {
     std::string build_id = map_info->GetPrintableBuildID();
     if (!build_id.empty()) {
       data += " (BuildId: " + build_id + ')';
@@ -348,7 +355,7 @@ std::string Unwinder::FormatFrame(size_t frame_num) const {
   if (frame_num >= frames_.size()) {
     return "";
   }
-  return FormatFrame(frames_[frame_num]);
+  return FormatFrame(arch_, frames_[frame_num], display_build_id_);
 }
 
 void Unwinder::SetJitDebug(JitDebug* jit_debug) {

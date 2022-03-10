@@ -26,7 +26,7 @@
 
 #include <unwindstack/Regs.h>
 
-#include "TestUtils.h"
+#include "PidUtils.h"
 
 namespace unwindstack {
 
@@ -40,15 +40,14 @@ class RegsRemoteTest : public ::testing::Test {
       exit(1);
     }
     ASSERT_TRUE(pid_ != -1);
-    ASSERT_TRUE(TestAttach(pid_));
-    ASSERT_TRUE(TestQuiescePid(pid_));
+    ASSERT_TRUE(Attach(pid_));
   }
 
   void TearDown() override {
     if (pid_ == -1) {
       return;
     }
-    EXPECT_TRUE(TestDetach(pid_));
+    EXPECT_TRUE(Detach(pid_));
     kill(pid_, SIGKILL);
     waitpid(pid_, nullptr, 0);
   }

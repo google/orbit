@@ -14,6 +14,7 @@ cmake_minimum_required(VERSION 3.15)
 
 add_library(libunwindstack_common OBJECT)
 target_sources(libunwindstack_common PRIVATE
+  AndroidUnwinder.cpp
   ArmExidx.cpp
   ArmExidx.h
   Check.h
@@ -99,6 +100,7 @@ endif()
 
 target_sources(libunwindstack_common PUBLIC
   include/GlobalDebugInterface.h
+  include/unwindstack/AndroidUnwinder.h
   include/unwindstack/Arch.h
   include/unwindstack/DexFiles.h
   include/unwindstack/DwarfError.h
@@ -196,6 +198,11 @@ add_executable(libunwindstack_tests)
 target_sources(libunwindstack_tests PRIVATE
   $<TARGET_OBJECTS:libunwindstack_common>
   LogAndroid.cpp
+
+  # AndroidUnwinderTest are broken and need to be investigated,
+  # but we currently don't use this part of the library.
+  # tests/AndroidUnwinderTest.cpp
+
   tests/ArmExidxDecodeTest.cpp
   tests/ArmExidxExtractTest.cpp
 
@@ -277,6 +284,7 @@ target_sources(libunwindstack_tests PRIVATE
   tests/VerifyBionicTerminationTest.cpp
   utils/MemoryFake.cpp
   utils/OfflineUnwindUtils.cpp
+  utils/PidUtils.cpp
   utils/ProcessTracer.cpp)
 
 # Some tests call dlopen/dlsym/dlclose which requires the

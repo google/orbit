@@ -52,6 +52,7 @@ cc_defaults {
 }
 
 libunwindstack_common_src_files = [
+    "AndroidUnwinder.cpp",
     "ArmExidx.cpp",
     "DexFiles.cpp",
     "DwarfCfa.cpp",
@@ -239,6 +240,7 @@ cc_library {
     srcs: [
         "utils/MemoryFake.cpp",
         "utils/OfflineUnwindUtils.cpp",
+        "utils/PidUtils.cpp",
         "utils/ProcessTracer.cpp",
     ],
 }
@@ -266,6 +268,7 @@ cc_defaults {
     defaults: ["libunwindstack_flags"],
 
     srcs: [
+        "tests/AndroidUnwinderTest.cpp",
         "tests/ArmExidxDecodeTest.cpp",
         "tests/ArmExidxExtractTest.cpp",
         "tests/DexFileTest.cpp",
@@ -573,13 +576,13 @@ cc_benchmark {
 
     static_libs: [
         "libunwindstack_utils",
+        "libprocinfo",
     ],
 
     target: {
         android: {
             static_libs: [
                 "libmeminfo",
-                "libprocinfo",
             ],
         },
     },

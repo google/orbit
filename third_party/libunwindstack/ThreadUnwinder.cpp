@@ -72,6 +72,10 @@ static void SignalHandler(int, siginfo_t*, void* sigcontext) {
 ThreadUnwinder::ThreadUnwinder(size_t max_frames, Maps* maps)
     : UnwinderFromPid(max_frames, getpid(), Regs::CurrentArch(), maps) {}
 
+ThreadUnwinder::ThreadUnwinder(size_t max_frames, Maps* maps,
+                               std::shared_ptr<Memory>& process_memory)
+    : UnwinderFromPid(max_frames, getpid(), Regs::CurrentArch(), maps, process_memory) {}
+
 ThreadUnwinder::ThreadUnwinder(size_t max_frames, const ThreadUnwinder* unwinder)
     : UnwinderFromPid(max_frames, getpid(), Regs::CurrentArch()) {
   process_memory_ = unwinder->process_memory_;

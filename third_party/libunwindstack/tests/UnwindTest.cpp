@@ -40,6 +40,7 @@
 #include <unwindstack/Unwinder.h>
 
 #include "MemoryRemote.h"
+#include "PidUtils.h"
 #include "TestUtils.h"
 
 namespace unwindstack {
@@ -236,28 +237,15 @@ TEST_F(UnwindTest, local_use_from_pid_check_for_leak) {
   TestCheckForLeaks(LocalUnwind, &test_type);
 }
 
-void WaitForRemote(pid_t pid, uint64_t addr, bool leave_attached, bool* completed) {
-  *completed = false;
-  // Need to sleep before attempting first ptrace. Without this, on the
-  // host it becomes impossible to attach and ptrace sets errno to EPERM.
-  usleep(1000);
-  for (size_t i = 0; i < 4000; i++) {
-    ASSERT_TRUE(TestAttach(pid));
-
-    MemoryRemote memory(pid);
-    // Read the remote value to see if we are ready.
+static bool WaitForRemote(pid_t pid, bool leave_attached, uint64_t addr) {
+  MemoryRemote memory(pid);
+  return RunWhenQuiesced(pid, leave_attached, [addr, &memory]() {
     bool value;
     if (memory.ReadFully(addr, &value, sizeof(value)) && value) {
-      *completed = true;
+      return PID_RUN_PASS;
     }
-    if (!*completed || !leave_attached) {
-      ASSERT_TRUE(TestDetach(pid));
-    }
-    if (*completed) {
-      break;
-    }
-    usleep(5000);
-  }
+    return PID_RUN_KEEP_GOING;
+  });
 }
 
 TEST_F(UnwindTest, remote) {
@@ -269,9 +257,7 @@ TEST_F(UnwindTest, remote) {
   ASSERT_NE(-1, pid);
   TestScopedPidReaper reap(pid);
 
-  bool completed;
-  WaitForRemote(pid, reinterpret_cast<uint64_t>(&g_ready_for_remote), true, &completed);
-  ASSERT_TRUE(completed) << "Timed out waiting for remote process to be ready.";
+  ASSERT_TRUE(WaitForRemote(pid, true, reinterpret_cast<uint64_t>(&g_ready_for_remote)));
 
   RemoteMaps maps(pid);
   ASSERT_TRUE(maps.Parse());
@@ -280,7 +266,7 @@ TEST_F(UnwindTest, remote) {
 
   VerifyUnwind(pid, &maps, regs.get(), kFunctionOrder);
 
-  ASSERT_TRUE(TestDetach(pid));
+  ASSERT_TRUE(Detach(pid));
 }
 
 TEST_F(UnwindTest, unwind_from_pid_remote) {
@@ -292,9 +278,7 @@ TEST_F(UnwindTest, unwind_from_pid_remote) {
   ASSERT_NE(-1, pid);
   TestScopedPidReaper reap(pid);
 
-  bool completed;
-  WaitForRemote(pid, reinterpret_cast<uint64_t>(&g_ready_for_remote), true, &completed);
-  ASSERT_TRUE(completed) << "Timed out waiting for remote process to be ready.";
+  ASSERT_TRUE(WaitForRemote(pid, true, reinterpret_cast<uint64_t>(&g_ready_for_remote)));
 
   std::unique_ptr<Regs> regs(Regs::RemoteGet(pid));
   ASSERT_TRUE(regs.get() != nullptr);
@@ -304,7 +288,7 @@ TEST_F(UnwindTest, unwind_from_pid_remote) {
 
   VerifyUnwind(&unwinder, kFunctionOrder);
 
-  ASSERT_TRUE(TestDetach(pid));
+  ASSERT_TRUE(Detach(pid));
 }
 
 static void RemoteCheckForLeaks(void (*unwind_func)(void*)) {
@@ -316,13 +300,11 @@ static void RemoteCheckForLeaks(void (*unwind_func)(void*)) {
   ASSERT_NE(-1, pid);
   TestScopedPidReaper reap(pid);
 
-  bool completed;
-  WaitForRemote(pid, reinterpret_cast<uint64_t>(&g_ready_for_remote), true, &completed);
-  ASSERT_TRUE(completed) << "Timed out waiting for remote process to be ready.";
+  ASSERT_TRUE(WaitForRemote(pid, true, reinterpret_cast<uint64_t>(&g_ready_for_remote)));
 
   TestCheckForLeaks(unwind_func, &pid);
 
-  ASSERT_TRUE(TestDetach(pid));
+  ASSERT_TRUE(Detach(pid));
 }
 
 static void RemoteUnwind(void* data) {
@@ -368,8 +350,8 @@ TEST_F(UnwindTest, from_context) {
   act.sa_sigaction = SignalHandler;
   act.sa_flags = SA_RESTART | SA_SIGINFO | SA_ONSTACK;
   ASSERT_EQ(0, sigaction(SIGUSR1, &act, &oldact));
-  // Wait for the tid to get set.
-  for (size_t i = 0; i < 100; i++) {
+  // Wait 20 seconds for the tid to get set.
+  for (time_t start_time = time(nullptr); time(nullptr) - start_time < 20;) {
     if (tid.load() != 0) {
       break;
     }
@@ -378,9 +360,9 @@ TEST_F(UnwindTest, from_context) {
   ASSERT_NE(0, tid.load());
   ASSERT_EQ(0, tgkill(getpid(), tid.load(), SIGUSR1)) << "Error: " << strerror(errno);
 
-  // Wait for context data.
+  // Wait 20 seconds for context data.
   void* ucontext;
-  for (size_t i = 0; i < 2000; i++) {
+  for (time_t start_time = time(nullptr); time(nullptr) - start_time < 20;) {
     ucontext = reinterpret_cast<void*>(g_ucontext.load());
     if (ucontext != nullptr) {
       break;
@@ -416,14 +398,11 @@ static void RemoteThroughSignal(int signal, unsigned int sa_flags) {
   ASSERT_NE(-1, pid);
   TestScopedPidReaper reap(pid);
 
-  bool completed;
   if (signal != SIGSEGV) {
-    WaitForRemote(pid, reinterpret_cast<uint64_t>(&g_ready_for_remote), false, &completed);
-    ASSERT_TRUE(completed) << "Timed out waiting for remote process to be ready.";
+    ASSERT_TRUE(WaitForRemote(pid, false, reinterpret_cast<uint64_t>(&g_ready_for_remote)));
     ASSERT_EQ(0, kill(pid, SIGUSR1));
   }
-  WaitForRemote(pid, reinterpret_cast<uint64_t>(&g_signal_ready_for_remote), true, &completed);
-  ASSERT_TRUE(completed) << "Timed out waiting for remote process to be in signal handler.";
+  ASSERT_TRUE(WaitForRemote(pid, true, reinterpret_cast<uint64_t>(&g_signal_ready_for_remote)));
 
   RemoteMaps maps(pid);
   ASSERT_TRUE(maps.Parse());
@@ -432,7 +411,7 @@ static void RemoteThroughSignal(int signal, unsigned int sa_flags) {
 
   VerifyUnwind(pid, &maps, regs.get(), kFunctionSignalOrder);
 
-  ASSERT_TRUE(TestDetach(pid));
+  ASSERT_TRUE(Detach(pid));
 }
 
 TEST_F(UnwindTest, remote_through_signal) {
