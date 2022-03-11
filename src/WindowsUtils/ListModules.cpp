@@ -11,6 +11,7 @@
 
 #include "ObjectUtils/CoffFile.h"
 #include "OrbitBase/Logging.h"
+#include "OrbitBase/StringConversion.h"
 #include "OrbitBase/UniqueResource.h"
 
 // clang-format off
@@ -45,11 +46,8 @@ std::vector<Module> ListModules(uint32_t pid) {
   // Walk the module list of the process.
   std::vector<Module> modules;
   do {
-    std::wstring module_name_w = module_entry.szModule;
-    std::wstring module_path_w = module_entry.szExePath;
-
     std::string build_id;
-    std::string module_path = std::string(module_path_w.begin(), module_path_w.end());
+    std::string module_path = orbit_base::Narrow(module_entry.szExePath);
     auto coff_file_or_error = orbit_object_utils::CreateCoffFile(module_path);
     if (coff_file_or_error.has_value()) {
       build_id = coff_file_or_error.value()->GetBuildId();
@@ -59,7 +57,7 @@ std::vector<Module> ListModules(uint32_t pid) {
     }
 
     Module& module = modules.emplace_back();
-    module.name = std::string(module_name_w.begin(), module_name_w.end());
+    module.name = orbit_base::Narrow(module_entry.szModule);
     module.full_path = module_path;
     module.file_size = module_entry.modBaseSize;
     module.address_start = absl::bit_cast<uint64_t>(module_entry.modBaseAddr);

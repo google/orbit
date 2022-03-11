@@ -9,6 +9,7 @@
 
 #include "OrbitBase/GetProcAddress.h"
 #include "OrbitBase/Logging.h"
+#include "OrbitBase/StringConversion.h"
 #include "OrbitBase/ThreadUtils.h"
 
 namespace orbit_base {
@@ -88,9 +89,8 @@ std::string GetThreadNameNative(uint32_t tid) {
   // Get thread name from handle.
   PWSTR thread_name_pwstr;
   if (SUCCEEDED((*get_thread_description)(thread_handle, &thread_name_pwstr))) {
-    std::wstring thread_name_w(thread_name_pwstr);
+    std::string thread_name = orbit_base::Narrow(thread_name_pwstr);
     LocalFree(thread_name_pwstr);
-    std::string thread_name(thread_name_w.begin(), thread_name_w.end());
     return thread_name;
   }
 

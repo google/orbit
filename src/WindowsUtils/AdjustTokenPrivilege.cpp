@@ -4,11 +4,12 @@
 
 #include "WindowsUtils/AdjustTokenPrivilege.h"
 
+#include "OrbitBase/StringConversion.h"
+
 namespace orbit_windows_utils {
 
 ErrorMessageOr<void> AdjustTokenPrivilege(LPCTSTR token_name, bool enabled) {
-  std::wstring token_name_wstr(token_name);
-  std::string token_name_str(token_name_wstr.begin(), token_name_wstr.end());
+  std::string token_name_str = orbit_base::Narrow(token_name);
   HANDLE token_handle;
   if (!OpenProcessToken(GetCurrentProcess(), TOKEN_ADJUST_PRIVILEGES, &token_handle)) {
     return ErrorMessage{absl::StrFormat("Unable to open process token \"%s\"", token_name_str)};

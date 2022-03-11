@@ -16,6 +16,7 @@
 #include <absl/strings/str_join.h>
 
 #include "OrbitBase/GetLastError.h"
+#include "OrbitBase/StringConversion.h"
 
 namespace {
 [[nodiscard]] ErrorMessageOr<std::string> GetSignedIntegerTypeFromSizeInBytes(IDiaSymbol* type) {
@@ -275,8 +276,7 @@ ErrorMessageOr<std::string> PdbDiaTypeAsString(IDiaSymbol* type,
   BSTR type_name_bstr = {};
   std::string type_name;
   if (SUCCEEDED(type->get_name(&type_name_bstr)) && type_name_bstr != NULL) {
-    std::wstring type_name_wstring{type_name_bstr};
-    type_name = std::string(type_name_wstring.begin(), type_name_wstring.end());
+    type_name = orbit_base::Narrow(type_name_bstr);
     SysFreeString(type_name_bstr);
   }
 

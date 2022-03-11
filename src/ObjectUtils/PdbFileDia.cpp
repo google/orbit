@@ -12,6 +12,7 @@
 #include "ObjectUtils/PdbUtilsDia.h"
 #include "OrbitBase/ExecutablePath.h"
 #include "OrbitBase/Logging.h"
+#include "OrbitBase/StringConversion.h"
 
 using orbit_grpc_protos::ModuleSymbols;
 using orbit_grpc_protos::SymbolInfo;
@@ -103,8 +104,7 @@ ErrorMessageOr<orbit_grpc_protos::ModuleSymbols> PdbFileDia::LoadDebugSymbols() 
 
     BSTR function_name = {};
     if (dia_symbol->get_name(&function_name) != S_OK) continue;
-    std::wstring name(function_name);
-    symbol_info.set_name(std::string(name.begin(), name.end()));
+    symbol_info.set_name(orbit_base::Narrow(function_name));
     ErrorMessageOr<std::string> parameter_list_or_error = PdbDiaParameterListAsString(dia_symbol);
     if (parameter_list_or_error.has_value()) {
       symbol_info.set_demangled_name(symbol_info.name() + parameter_list_or_error.value());

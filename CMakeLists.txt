@@ -131,7 +131,10 @@ add_definitions(-DNOMINMAX)
 add_definitions(-DUNICODE -D_UNICODE)
 
 if (MSVC)
-  string(APPEND CMAKE_CXX_FLAGS " /MP")
+  # Build with Multiple Processes.
+  add_compile_options("/MP")
+  # Set source and execution character sets to UTF-8.
+  add_compile_options("/utf-8")
 endif()
 
 if(WIN32)
