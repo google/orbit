@@ -102,6 +102,10 @@ class MapInfo {
     std::mutex object_mutex_;
   };
 
+  // True if the file named by this map is not actually readable and the
+  // object is using the data in memory.
+  bool ObjectFileNotReadable();
+
   // This is the previous map with the same name that is not empty and with
   // a 0 offset. For example, this set of maps:
   //  1000-2000  r--p 000000 00:00 0 libc.so

@@ -102,8 +102,6 @@ class Unwinder {
 
   void SetDexFiles(DexFiles* dex_files);
 
-  bool object_from_memory_not_file() { return object_from_memory_not_file_; }
-
   ErrorCode LastErrorCode() { return last_error_.code; }
   const char* LastErrorCodeString() { return GetErrorCodeString(last_error_.code); }
   uint64_t LastErrorAddress() { return last_error_.address; }
@@ -142,9 +140,6 @@ class Unwinder {
   DexFiles* dex_files_ = nullptr;
   bool resolve_names_ = true;
   bool display_build_id_ = false;
-  // True if at least one object file is coming from memory and not the related
-  // file. This is only true if there is an actual file backing up the object.
-  bool object_from_memory_not_file_ = false;
   ErrorData last_error_;
   uint64_t warnings_;
   ArchEnum arch_ = ARCH_UNKNOWN;

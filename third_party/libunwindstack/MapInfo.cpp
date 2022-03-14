@@ -23,6 +23,8 @@
 #include <mutex>
 #include <string>
 
+#include <android-base/strings.h>
+
 #include <unwindstack/Elf.h>
 #include <unwindstack/MapInfo.h>
 #include <unwindstack/Maps.h>
@@ -32,6 +34,12 @@
 #include "MemoryRange.h"
 
 namespace unwindstack {
+
+bool MapInfo::ObjectFileNotReadable() {
+  const std::string& map_name = name();
+  return memory_backed_object() && !map_name.empty() && map_name[0] != '[' &&
+         !android::base::StartsWith(map_name, "/memfd:");
+}
 
 std::shared_ptr<MapInfo> MapInfo::GetPrevRealMap() {
   if (name().empty()) {

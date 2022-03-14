@@ -206,7 +206,6 @@ TEST_F(UnwinderTest, multiple_frames) {
   unwinder.Unwind();
   EXPECT_EQ(ERROR_NONE, unwinder.LastErrorCode());
   EXPECT_EQ(WARNING_NONE, unwinder.warnings());
-  EXPECT_FALSE(unwinder.object_from_memory_not_file());
 
   ASSERT_EQ(3U, unwinder.NumFrames());
 
@@ -278,7 +277,6 @@ TEST_F(UnwinderTest, multiple_frames_dont_resolve_names) {
   unwinder.Unwind();
   EXPECT_EQ(ERROR_NONE, unwinder.LastErrorCode());
   EXPECT_EQ(WARNING_NONE, unwinder.warnings());
-  EXPECT_FALSE(unwinder.object_from_memory_not_file());
 
   ASSERT_EQ(3U, unwinder.NumFrames());
 
@@ -345,7 +343,6 @@ TEST_F(UnwinderTest, non_zero_load_bias) {
   unwinder.Unwind();
   EXPECT_EQ(ERROR_NONE, unwinder.LastErrorCode());
   EXPECT_EQ(WARNING_NONE, unwinder.warnings());
-  EXPECT_FALSE(unwinder.object_from_memory_not_file());
 
   ASSERT_EQ(1U, unwinder.NumFrames());
 
@@ -378,7 +375,6 @@ TEST_F(UnwinderTest, non_zero_object_offset) {
   unwinder.Unwind();
   EXPECT_EQ(ERROR_NONE, unwinder.LastErrorCode());
   EXPECT_EQ(WARNING_NONE, unwinder.warnings());
-  EXPECT_FALSE(unwinder.object_from_memory_not_file());
 
   ASSERT_EQ(1U, unwinder.NumFrames());
 
@@ -411,7 +407,6 @@ TEST_F(UnwinderTest, non_zero_map_offset) {
   unwinder.Unwind();
   EXPECT_EQ(ERROR_NONE, unwinder.LastErrorCode());
   EXPECT_EQ(WARNING_NONE, unwinder.warnings());
-  EXPECT_FALSE(unwinder.object_from_memory_not_file());
 
   ASSERT_EQ(1U, unwinder.NumFrames());
 
@@ -451,7 +446,6 @@ TEST_F(UnwinderTest, no_frames_after_finished) {
   unwinder.Unwind();
   EXPECT_EQ(ERROR_NONE, unwinder.LastErrorCode());
   EXPECT_EQ(WARNING_NONE, unwinder.warnings());
-  EXPECT_FALSE(unwinder.object_from_memory_not_file());
 
   ASSERT_EQ(1U, unwinder.NumFrames());
 
@@ -487,7 +481,6 @@ TEST_F(UnwinderTest, max_frames) {
   unwinder.Unwind();
   EXPECT_EQ(ERROR_MAX_FRAMES_EXCEEDED, unwinder.LastErrorCode());
   EXPECT_EQ(WARNING_NONE, unwinder.warnings());
-  EXPECT_FALSE(unwinder.object_from_memory_not_file());
 
   ASSERT_EQ(20U, unwinder.NumFrames());
 
@@ -534,7 +527,6 @@ TEST_F(UnwinderTest, verify_frames_skipped) {
   unwinder.Unwind(&skip_libs);
   EXPECT_EQ(ERROR_NONE, unwinder.LastErrorCode());
   EXPECT_EQ(WARNING_NONE, unwinder.warnings());
-  EXPECT_FALSE(unwinder.object_from_memory_not_file());
 
   ASSERT_EQ(3U, unwinder.NumFrames());
 
@@ -603,7 +595,6 @@ TEST_F(UnwinderTest, sp_not_in_map) {
   unwinder.Unwind();
   EXPECT_EQ(ERROR_NONE, unwinder.LastErrorCode());
   EXPECT_EQ(WARNING_NONE, unwinder.warnings());
-  EXPECT_FALSE(unwinder.object_from_memory_not_file());
 
   ASSERT_EQ(2U, unwinder.NumFrames());
 
@@ -656,7 +647,6 @@ TEST_F(UnwinderTest, pc_in_device_stops_unwind) {
   unwinder.Unwind();
   EXPECT_EQ(ERROR_NONE, unwinder.LastErrorCode());
   EXPECT_EQ(WARNING_NONE, unwinder.warnings());
-  EXPECT_FALSE(unwinder.object_from_memory_not_file());
 
   ASSERT_EQ(1U, unwinder.NumFrames());
 }
@@ -677,7 +667,6 @@ TEST_F(UnwinderTest, sp_in_device_stops_unwind) {
   unwinder.Unwind();
   EXPECT_EQ(ERROR_NONE, unwinder.LastErrorCode());
   EXPECT_EQ(WARNING_NONE, unwinder.warnings());
-  EXPECT_FALSE(unwinder.object_from_memory_not_file());
 
   ASSERT_EQ(1U, unwinder.NumFrames());
 }
@@ -693,7 +682,6 @@ TEST_F(UnwinderTest, pc_without_map) {
   unwinder.Unwind();
   EXPECT_EQ(ERROR_INVALID_MAP, unwinder.LastErrorCode());
   EXPECT_EQ(WARNING_NONE, unwinder.warnings());
-  EXPECT_FALSE(unwinder.object_from_memory_not_file());
 
   ASSERT_EQ(1U, unwinder.NumFrames());
 
@@ -725,7 +713,6 @@ TEST_F(UnwinderTest, speculative_frame) {
   unwinder.Unwind();
   EXPECT_EQ(ERROR_NONE, unwinder.LastErrorCode());
   EXPECT_EQ(WARNING_NONE, unwinder.warnings());
-  EXPECT_FALSE(unwinder.object_from_memory_not_file());
 
   ASSERT_EQ(3U, unwinder.NumFrames());
 
@@ -790,7 +777,6 @@ TEST_F(UnwinderTest, speculative_frame_removed) {
   unwinder.Unwind();
   EXPECT_EQ(ERROR_INVALID_MAP, unwinder.LastErrorCode());
   EXPECT_EQ(WARNING_NONE, unwinder.warnings());
-  EXPECT_FALSE(unwinder.object_from_memory_not_file());
 
   ASSERT_EQ(2U, unwinder.NumFrames());
 
@@ -837,7 +823,6 @@ TEST_F(UnwinderTest, speculative_frame_not_removed_pc_bad) {
   unwinder.Unwind();
   EXPECT_EQ(ERROR_NONE, unwinder.LastErrorCode());
   EXPECT_EQ(WARNING_NONE, unwinder.warnings());
-  EXPECT_FALSE(unwinder.object_from_memory_not_file());
 
   ASSERT_EQ(2U, unwinder.NumFrames());
 
@@ -882,7 +867,6 @@ TEST_F(UnwinderTest, speculative_frame_check_with_no_frames) {
   unwinder.Unwind(&skip_names);
   EXPECT_EQ(ERROR_NONE, unwinder.LastErrorCode());
   EXPECT_EQ(WARNING_NONE, unwinder.warnings());
-  EXPECT_FALSE(unwinder.object_from_memory_not_file());
 
   ASSERT_EQ(0U, unwinder.NumFrames());
 }
@@ -899,7 +883,6 @@ TEST_F(UnwinderTest, speculative_frame_to_invalid_map_not_hide_prev_error) {
   unwinder.Unwind();
   EXPECT_EQ(ERROR_INVALID_ELF, unwinder.LastErrorCode());
   EXPECT_EQ(WARNING_NONE, unwinder.warnings());
-  EXPECT_FALSE(unwinder.object_from_memory_not_file());
 
   ASSERT_EQ(1U, unwinder.NumFrames());
 
@@ -932,7 +915,6 @@ TEST_F(UnwinderTest, map_ignore_suffixes) {
   unwinder.Unwind(nullptr, &suffixes);
   EXPECT_EQ(ERROR_NONE, unwinder.LastErrorCode());
   EXPECT_EQ(WARNING_NONE, unwinder.warnings());
-  EXPECT_FALSE(unwinder.object_from_memory_not_file());
 
   ASSERT_EQ(2U, unwinder.NumFrames());
   // Make sure the object was not initialized.
@@ -996,7 +978,6 @@ TEST_F(UnwinderTest, sp_pc_do_not_change) {
   unwinder.Unwind();
   EXPECT_EQ(ERROR_REPEATED_FRAME, unwinder.LastErrorCode());
   EXPECT_EQ(WARNING_NONE, unwinder.warnings());
-  EXPECT_FALSE(unwinder.object_from_memory_not_file());
 
   ASSERT_EQ(3U, unwinder.NumFrames());
 
@@ -1062,7 +1043,6 @@ TEST_F(UnwinderTest, dex_pc_in_map) {
   unwinder.Unwind();
   EXPECT_EQ(ERROR_NONE, unwinder.LastErrorCode());
   EXPECT_EQ(WARNING_NONE, unwinder.warnings());
-  EXPECT_FALSE(unwinder.object_from_memory_not_file());
 
   ASSERT_EQ(2U, unwinder.NumFrames());
 
@@ -1111,7 +1091,6 @@ TEST_F(UnwinderTest, dex_pc_in_map_non_zero_offset) {
   unwinder.Unwind();
   EXPECT_EQ(ERROR_NONE, unwinder.LastErrorCode());
   EXPECT_EQ(WARNING_NONE, unwinder.warnings());
-  EXPECT_FALSE(unwinder.object_from_memory_not_file());
 
   ASSERT_EQ(2U, unwinder.NumFrames());
 
@@ -1160,7 +1139,6 @@ TEST_F(UnwinderTest, dex_pc_not_in_map) {
   unwinder.Unwind();
   EXPECT_EQ(ERROR_NONE, unwinder.LastErrorCode());
   EXPECT_EQ(WARNING_DEX_PC_NOT_IN_MAP, unwinder.warnings());
-  EXPECT_FALSE(unwinder.object_from_memory_not_file());
 
   ASSERT_EQ(2U, unwinder.NumFrames());
 
@@ -1203,7 +1181,6 @@ TEST_F(UnwinderTest, dex_pc_not_in_map_valid_dex_files) {
   unwinder.Unwind();
   EXPECT_EQ(ERROR_NONE, unwinder.LastErrorCode());
   EXPECT_EQ(WARNING_DEX_PC_NOT_IN_MAP, unwinder.warnings());
-  EXPECT_FALSE(unwinder.object_from_memory_not_file());
 
   ASSERT_EQ(2U, unwinder.NumFrames());
 
@@ -1247,7 +1224,6 @@ TEST_F(UnwinderTest, dex_pc_multiple_frames) {
   unwinder.Unwind();
   EXPECT_EQ(ERROR_NONE, unwinder.LastErrorCode());
   EXPECT_EQ(WARNING_NONE, unwinder.warnings());
-  EXPECT_FALSE(unwinder.object_from_memory_not_file());
 
   ASSERT_EQ(3U, unwinder.NumFrames());
 
@@ -1312,7 +1288,6 @@ TEST_F(UnwinderTest, dex_pc_max_frames) {
   unwinder.Unwind();
   EXPECT_EQ(ERROR_MAX_FRAMES_EXCEEDED, unwinder.LastErrorCode());
   EXPECT_EQ(WARNING_NONE, unwinder.warnings());
-  EXPECT_FALSE(unwinder.object_from_memory_not_file());
 
   ASSERT_EQ(1U, unwinder.NumFrames());
 
@@ -1334,7 +1309,7 @@ TEST_F(UnwinderTest, dex_pc_max_frames) {
   EXPECT_EQ(PROT_READ | PROT_WRITE | PROT_EXEC, frame->map_info->flags());
 }
 
-TEST_F(UnwinderTest, object_from_memory_not_file) {
+TEST_F(UnwinderTest, object_file_not_readable) {
   ElfInterfaceFake::FakePushFunctionData(FunctionData("Frame0", 0));
 
   regs_.set_pc(0xc0050);
@@ -1345,7 +1320,6 @@ TEST_F(UnwinderTest, object_from_memory_not_file) {
   unwinder.Unwind();
   EXPECT_EQ(ERROR_NONE, unwinder.LastErrorCode());
   EXPECT_EQ(WARNING_NONE, unwinder.warnings());
-  EXPECT_TRUE(unwinder.object_from_memory_not_file());
 
   ASSERT_EQ(1U, unwinder.NumFrames());
 
@@ -1357,6 +1331,7 @@ TEST_F(UnwinderTest, object_from_memory_not_file) {
   EXPECT_EQ("Frame0", frame->function_name);
   EXPECT_EQ(0U, frame->function_offset);
   ASSERT_TRUE(frame->map_info != nullptr);
+  EXPECT_TRUE(frame->map_info->ObjectFileNotReadable());
   EXPECT_EQ("/fake/unreadable.so", frame->map_info->name());
   EXPECT_EQ("/fake/unreadable.so", frame->map_info->GetFullName());
   EXPECT_EQ(0U, frame->map_info->object_start_offset());
@@ -1378,7 +1353,6 @@ TEST_F(UnwinderTest, elf_from_memory_but_no_valid_file_with_bracket) {
   unwinder.Unwind();
   EXPECT_EQ(ERROR_NONE, unwinder.LastErrorCode());
   EXPECT_EQ(WARNING_NONE, unwinder.warnings());
-  EXPECT_FALSE(unwinder.object_from_memory_not_file());
 
   ASSERT_EQ(1U, unwinder.NumFrames());
 
@@ -1411,7 +1385,6 @@ TEST_F(UnwinderTest, elf_from_memory_but_empty_filename) {
   unwinder.Unwind();
   EXPECT_EQ(ERROR_NONE, unwinder.LastErrorCode());
   EXPECT_EQ(WARNING_NONE, unwinder.warnings());
-  EXPECT_FALSE(unwinder.object_from_memory_not_file());
 
   ASSERT_EQ(1U, unwinder.NumFrames());
 
@@ -1444,7 +1417,6 @@ TEST_F(UnwinderTest, elf_from_memory_but_from_memfd) {
   unwinder.Unwind();
   EXPECT_EQ(ERROR_NONE, unwinder.LastErrorCode());
   EXPECT_EQ(WARNING_NONE, unwinder.warnings());
-  EXPECT_FALSE(unwinder.object_from_memory_not_file());
 
   ASSERT_EQ(1U, unwinder.NumFrames());
 
