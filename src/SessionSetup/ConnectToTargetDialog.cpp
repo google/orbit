@@ -8,6 +8,7 @@
 
 #include <QApplication>
 #include <QMessageBox>
+#include <QSizePolicy>
 #include <algorithm>
 #include <memory>
 
@@ -37,6 +38,9 @@ ConnectToTargetDialog::ConnectToTargetDialog(
   ui_->setupUi(this);
   ui_->instanceIdLabel->setText(target_.instance_name_or_id);
   ui_->processIdLabel->setText(target_.process_name_or_path);
+  setWindowFlags(Qt::Dialog | Qt::WindowTitleHint);
+  setSizeGripEnabled(false);
+  setFixedSize(window()->sizeHint());
 }
 
 ConnectToTargetDialog::~ConnectToTargetDialog() {}
