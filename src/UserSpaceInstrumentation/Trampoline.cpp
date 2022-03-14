@@ -456,30 +456,24 @@ void AppendRestoreCode(MachineCode& trampoline) {
 // __vectorcall convention (see https://docs.microsoft.com/en-us/cpp/cpp/vectorcall).
 // Also back up registers that are callee-saved in the Microsoft x64 calling convention, but not in
 // the System V calling convention.
+// We make an exception: the top two elements of the x87 FPU register stack, st(0) and st(1), are
+// used to return (complex) long double values in the System V calling convention. We should back up
+// and restore them too, but only when they are actually used, as the calling convention also
+// requires to leave the x87 FPU register stack empty when leaving a function. This is not easy with
+// minimal overhead, so we simply decide not to back those registers up as the ExitPayload will not
+// use them anyway. More details in b/224446632.
 // Then call the exit payload, restore the return values and backed up registers, and finally jump
 // to the actual return address.
 void AppendCallToExitPayloadAndJumpToReturnAddress(uint64_t exit_payload_function_address,
                                                    MachineCode& return_trampoline) {
-  // Backup rax, rdx, st(0), st(1).
-  // Also back up rdi and rsi as they are callee-saved in the Microsoft x64 calling convention, but
-  // not in the System V calling convention.
+  // Backup rax, rdx. Also back up rdi and rsi as they are callee-saved in the Microsoft x64 calling
+  // convention, but not in the System V calling convention.
   //
   // push rax                                        50
   // push rdx                                        52
   // push rdi                                        57
   // push rsi                                        56
-  // sub rsp, 0x0a                                   48 83 ec 0a
-  // fstpt (rsp)                                     db 3c 24
-  // sub rsp, 0x0a                                   48 83 ec 0a
-  // fstpt (rsp)                                     db 3c 24
-  return_trampoline.AppendBytes({0x50})
-      .AppendBytes({0x52})
-      .AppendBytes({0x57})
-      .AppendBytes({0x56})
-      .AppendBytes({0x48, 0x83, 0xec, 0x0a})
-      .AppendBytes({0xdb, 0x3c, 0x24})
-      .AppendBytes({0x48, 0x83, 0xec, 0x0a})
-      .AppendBytes({0xdb, 0x3c, 0x24});
+  return_trampoline.AppendBytes({0x50}).AppendBytes({0x52}).AppendBytes({0x57}).AppendBytes({0x56});
 
   // We align the stack to 32 bytes first: round down to a multiple of 32, subtract another 24 and
   // then push 8 byte original rsp. So we are 32 byte aligned after these commands and we can 'pop
@@ -631,22 +625,11 @@ void AppendCallToExitPayloadAndJumpToReturnAddress(uint64_t exit_payload_functio
   // pop rsp                                         5c
   return_trampoline.AppendBytes({0x5c});
 
-  // fldt (rsp)                                      db 2c 24
-  // add rsp, 0x0a                                   48 83 c4 0a
-  // fldt (rsp)                                      db 2c 24
-  // add rsp, 0x0a                                   48 83 c4 0a
   // pop rsi                                         5e
   // pop rdi                                         5f
   // pop rdx                                         5a
   // pop rax                                         58
-  return_trampoline.AppendBytes({0xdb, 0x2c, 0x24})
-      .AppendBytes({0x48, 0x83, 0xc4, 0x0a})
-      .AppendBytes({0xdb, 0x2c, 0x24})
-      .AppendBytes({0x48, 0x83, 0xc4, 0x0a})
-      .AppendBytes({0x5e})
-      .AppendBytes({0x5f})
-      .AppendBytes({0x5a})
-      .AppendBytes({0x58});
+  return_trampoline.AppendBytes({0x5e}).AppendBytes({0x5f}).AppendBytes({0x5a}).AppendBytes({0x58});
 
   // Jump to the actual return address.
   // jmp rcx                                         ff e1

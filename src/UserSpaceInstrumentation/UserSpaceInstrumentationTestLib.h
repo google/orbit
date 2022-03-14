@@ -23,8 +23,10 @@ extern "C" __attribute__((ms_abi)) uint64_t TrivialSumWithMsAbi(uint64_t p0, uin
 
 // Payload called on entry of an instrumented function. Needs to record the return address of the
 // function (in order to have it available in `ExitPayload`) and the stack pointer (i.e., the
-// address of the return address). `function_id` is the id of the instrumented function.
-extern "C" void EntryPayload(uint64_t return_address, uint64_t function_id, uint64_t stack_pointer);
+// address of the return address). `function_id` is the id of the instrumented function. Also needs
+// to overwrite the return address stored at `stack_pointer` with the `return_trampoline_address`.
+extern "C" void EntryPayload(uint64_t return_address, uint64_t function_id, uint64_t stack_pointer,
+                             uint64_t return_trampoline_address);
 
 // Payload called on exit of an instrumented function. Needs to return the actual return address of
 // the function such that the execution can be continued there.
@@ -36,17 +38,20 @@ extern "C" uint64_t ExitPayload();
 // We are assuming that this function updates the frame pointer, i.e., that it starts with
 // `push rbp; mov rbp, rsp`.
 extern "C" void EntryPayloadAlignedCopy(uint64_t return_address, uint64_t function_id,
-                                        uint64_t stack_pointer);
+                                        uint64_t stack_pointer, uint64_t return_trampoline_address);
 
 // Overwrites rdi, rsi, rdx, rcx, r8, r9, rax, r10. These registers are used to hand over parameters
 // to a called function. This function is used to assert our backup of these registers works
 // properly. The two functions below do the same thing for SSE/AVX registers that can be used to
 // hand over floating point parameters.
 extern "C" void EntryPayloadClobberParameterRegisters(uint64_t return_address, uint64_t function_id,
-                                                      uint64_t stack_pointer);
+                                                      uint64_t stack_pointer,
+                                                      uint64_t return_trampoline_address);
 extern "C" void EntryPayloadClobberXmmRegisters(uint64_t return_address, uint64_t function_id,
-                                                uint64_t stack_pointer);
+                                                uint64_t stack_pointer,
+                                                uint64_t return_trampoline_address);
 extern "C" void EntryPayloadClobberYmmRegisters(uint64_t return_address, uint64_t function_id,
-                                                uint64_t stack_pointer);
+                                                uint64_t stack_pointer,
+                                                uint64_t return_trampoline_address);
 
 #endif  // USER_SPACE_INSTRUMENTATION_TEST_LIB_H_

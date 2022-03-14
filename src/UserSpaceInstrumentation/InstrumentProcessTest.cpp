@@ -12,6 +12,7 @@
 #include <random>
 #include <string>
 #include <string_view>
+#include <thread>
 
 #include "FindFunctionAddress.h"
 #include "GrpcProtos/capture.pb.h"
@@ -260,6 +261,50 @@ TEST(InstrumentProcessTest, GetErrorMessage) {
   VerifyTrampolineAddressRangesAndLibraryPath(result_or_error.value());
   auto result = instrumentation_manager->UninstrumentProcess(pid);
   ASSERT_THAT(result, HasNoError());
+  kill(pid, SIGKILL);
+  waitpid(pid, nullptr, 0);
+}
+
+// Don't #include <complex.h>, it defines the macro I which can break compilation of other headers.
+extern "C" long double creall(_Complex long double z);
+extern "C" long double cimagl(_Complex long double z);
+
+// Sets st(0) and st(1). Use optnone instead of noinline to prevent constant folding.
+extern "C" __attribute__((optnone)) _Complex long double ReturnComplexLongDouble() {
+  return {42.0L, 43.0L};
+}
+
+// The top two elements of the x87 FPU register stack are used in the System V calling convention to
+// return (complex) long double values. We do not back them up in the return trampoline, because we
+// can't do it in a way that is correct and also has minimal overhead. But we assume that the
+// ExitPayload doesn't change the content. This test verifies it.
+TEST(InstrumentProcessTest, ExitPayloadDoesNotUseX87Fpu) {
+  InstrumentationManager* instrumentation_manager = GetInstrumentationManager();
+
+  const pid_t pid = fork();
+  ORBIT_CHECK(pid != -1);
+  if (pid == 0) {
+    prctl(PR_SET_PDEATHSIG, SIGTERM);
+
+    while (true) {
+      volatile _Complex long double value = ReturnComplexLongDouble();
+      ORBIT_CHECK(creall(value) == 42.0L && cimagl(value) == 43.0L);
+    }
+  }
+
+  orbit_grpc_protos::CaptureOptions capture_options;
+  capture_options.set_pid(pid);
+  AddFunctionToCaptureOptions(&capture_options, "ReturnComplexLongDouble", kFunctionId1);
+  auto result_or_error = instrumentation_manager->InstrumentProcess(capture_options);
+  ASSERT_THAT(result_or_error, HasNoError());
+  EXPECT_TRUE(result_or_error.value().instrumented_function_ids.contains(kFunctionId1));
+  VerifyTrampolineAddressRangesAndLibraryPath(result_or_error.value());
+
+  std::this_thread::sleep_for(std::chrono::milliseconds(10));
+  // This will fail or hang if the child crashed.
+  auto result = instrumentation_manager->UninstrumentProcess(pid);
+  ASSERT_THAT(result, HasNoError());
+
   kill(pid, SIGKILL);
   waitpid(pid, nullptr, 0);
 }
