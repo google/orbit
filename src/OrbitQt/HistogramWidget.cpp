@@ -8,8 +8,6 @@
 #include <absl/strings/str_format.h>
 #include <absl/strings/str_replace.h>
 #include <absl/time/time.h>
-#include <qfont.h>
-#include <qfontmetrics.h>
 #include <qnamespace.h>
 #include <qwindowdefs.h>
 
