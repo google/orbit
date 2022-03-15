@@ -9,6 +9,7 @@
 #include <absl/strings/str_replace.h>
 #include <absl/time/time.h>
 #include <qfont.h>
+#include <qfontmetrics.h>
 #include <qnamespace.h>
 #include <qwindowdefs.h>
 
@@ -37,11 +38,15 @@
 #include "OrbitBase/Logging.h"
 #include "Statistics/Histogram.h"
 
+constexpr int kTimeDecimalsCount = 3;
+
 const QColor kBackgroundColor(QStringLiteral("#323232"));
 constexpr size_t kBarColorsCount = 2;
 const std::array<QColor, kBarColorsCount> kBarColors = {QColor(QStringLiteral("#2A82DA")),
                                                         QColor(QStringLiteral("#3198FF"))};
 const QColor kHoveredBarColor(QStringLiteral("#99CCFF"));
+
+constexpr int kHoverLabelPadding = 6;
 
 constexpr uint32_t kVerticalTickCount = 3;
 constexpr uint32_t kHorizontalTickCount = 3;
@@ -104,7 +109,7 @@ static void DrawHorizontalAxis(QPainter& painter, const QPoint& axes_intersectio
     const QString tick_label =
         QString::number(orbit_display_formats::ToDoubleInGivenTimeUnits(
                             absl::Nanoseconds(current_tick_value), time_unit),
-                        'f', 3);
+                        'f', kTimeDecimalsCount);
     const QRect tick_label_bounding_rect = font_metrics.tightBoundingRect(tick_label);
 
     painter.drawText(current_tick_location - tick_label_bounding_rect.width() / 2,
@@ -252,6 +257,29 @@ static void DrawSelection(QPainter& painter, int start_x, int end_x,
          static_cast<uint64_t>(static_cast<double>(location) / histogram_width * value_range);
 }
 
+static void DrawHorizontalHoverLabel(QPainter& painter, const QPoint& axes_intersection,
+                                     std::optional<int> histogram_hover_x, int width,
+                                     uint64_t min_value, uint64_t max_value,
+                                     orbit_display_formats::TimeUnit time_unit) {
+  if (!histogram_hover_x) return;
+
+  const uint64_t value_pos = LocationToValue(*histogram_hover_x, width, min_value, max_value);
+  const QString label_text = QString::number(
+      orbit_display_formats::ToDoubleInGivenTimeUnits(absl::Nanoseconds(value_pos), time_unit), 'f',
+      kTimeDecimalsCount);
+  SetBoldFont(painter);
+
+  const QFontMetrics font_metrics(painter.font());
+  const QRect bounding_rect = font_metrics.tightBoundingRect(label_text);
+
+  QRect label_rect(bounding_rect.topLeft(),
+                   bounding_rect.bottomRight() + QPoint(kHoverLabelPadding, kHoverLabelPadding));
+  label_rect.moveTo(*histogram_hover_x - bounding_rect.width() / 2,
+                    axes_intersection.y() + kHorizontalAxisTickLength + kTickLabelGap);
+  painter.fillRect(label_rect, kHoverLabelColor);
+  painter.drawText(label_rect, Qt::AlignCenter, label_text);
+}
+
 static void DrawOneLineOfHint(QPainter& painter, const QString message, const QPoint& bottom_right,
                               const QColor color) {
   painter.setPen(color);
@@ -363,6 +391,9 @@ void HistogramWidget::paintEvent(QPaintEvent* /*event*/) {
 
   DrawHistogram(painter, axes_intersection, histogram, horizontal_axis_length, vertical_axis_length,
                 max_freq, MinValue(), histogram_hover_x_);
+
+  DrawHorizontalHoverLabel(painter, axes_intersection, histogram_hover_x_, Width(), MinValue(),
+                           MaxValue(), time_unit);
 }
 
 void HistogramWidget::mouseReleaseEvent(QMouseEvent* /* event*/) {
