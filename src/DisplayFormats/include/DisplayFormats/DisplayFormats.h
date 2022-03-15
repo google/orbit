@@ -12,9 +12,9 @@ namespace orbit_display_formats {
 [[nodiscard]] std::string GetDisplaySize(uint64_t size_bytes);
 
 enum class TimeUnit { kNanosecond, kMicrosecod, kMillisecond, kSecond, kMinute, kHour, kDay };
-std::string DisplayTimeUnit(TimeUnit unit);
-TimeUnit ChooseUnitForDisplayTime(absl::Duration duration);
-double ToDoubleTimeUnits(absl::Duration duration, TimeUnit unit);
+[[nodiscard]] std::string GetDisplayTimeUnit(TimeUnit unit);
+[[nodiscard]] TimeUnit ChooseUnitForDisplayTime(absl::Duration duration);
+[[nodiscard]] double ToDoubleTimeUnits(absl::Duration duration, TimeUnit unit);
 [[nodiscard]] std::string GetDisplayTime(absl::Duration duration);
 [[nodiscard]] std::string GetDisplayISOTimestamp(absl::Duration timestamp, int num_digits_precision,
                                                  absl::Duration total_capture_duration);

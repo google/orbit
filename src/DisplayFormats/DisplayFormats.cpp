@@ -26,7 +26,7 @@ std::string GetDisplaySize(uint64_t size_bytes) {
 
 constexpr double kHoursInOneDay = 24;
 
-TimeUnit ChooseUnitForDisplayTime(absl::Duration duration) {
+[[nodiscard]] TimeUnit ChooseUnitForDisplayTime(absl::Duration duration) {
   if (duration < absl::Microseconds(1)) {
     return TimeUnit::kNanosecond;
   }
@@ -48,7 +48,7 @@ TimeUnit ChooseUnitForDisplayTime(absl::Duration duration) {
   return TimeUnit::kDay;
 }
 
-std::string DisplayTimeUnit(TimeUnit unit) {
+[[nodiscard]] std::string GetDisplayTimeUnit(TimeUnit unit) {
   switch (unit) {
     case TimeUnit::kNanosecond:
       return "ns";
@@ -64,12 +64,11 @@ std::string DisplayTimeUnit(TimeUnit unit) {
       return "h";
     case TimeUnit::kDay:
       return "days";
-    default:
-      ORBIT_UNREACHABLE();
   }
+  ORBIT_UNREACHABLE();
 }
 
-double ToDoubleTimeUnits(absl::Duration duration, TimeUnit unit) {
+[[nodiscard]] double ToDoubleTimeUnits(absl::Duration duration, TimeUnit unit) {
   switch (unit) {
     case TimeUnit::kNanosecond:
       return absl::ToDoubleNanoseconds(duration);
@@ -85,16 +84,13 @@ double ToDoubleTimeUnits(absl::Duration duration, TimeUnit unit) {
       return absl::ToDoubleHours(duration);
     case TimeUnit::kDay:
       return absl::ToDoubleHours(duration) / kHoursInOneDay;
-    default:
-      ORBIT_UNREACHABLE();
   }
+  ORBIT_UNREACHABLE();
 }
 
 std::string GetDisplayTime(absl::Duration duration) {
   const TimeUnit unit = ChooseUnitForDisplayTime(duration);
-  const std::string unit_str = DisplayTimeUnit(unit);
-  const double duration_double = ToDoubleTimeUnits(duration, unit);
-  return absl::StrFormat("%.3f %s", duration_double, unit_str);
+  return absl::StrFormat("%.3f %s", ToDoubleTimeUnits(duration, unit), GetDisplayTimeUnit(unit));
 }
 
 [[nodiscard]] std::string ToStringAtLeastTwoDigits(int number) {
