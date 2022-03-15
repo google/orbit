@@ -60,7 +60,7 @@ std::string DisplayTimeUnit(TimeUnit unit) {
       return "min";
     case TimeUnit::kHour:
       return "h";
-    case TimeUnit::kDay:
+    default:
       return "days";
   }
 }
@@ -79,7 +79,7 @@ double ToDoubleTimeUnits(absl::Duration duration, TimeUnit unit) {
       return absl::ToDoubleMinutes(duration);
     case TimeUnit::kHour:
       return absl::ToDoubleHours(duration);
-    case TimeUnit::kDay:
+    default:
       return absl::ToDoubleHours(duration) / kHoursInOneDay;
   }
 }
