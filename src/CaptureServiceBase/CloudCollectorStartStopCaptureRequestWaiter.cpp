@@ -47,4 +47,10 @@ void CloudCollectorStartStopCaptureRequestWaiter::StopCapture(
   stop_requested_ = true;
 }
 
+CaptureServiceBase::StopCaptureReason
+CloudCollectorStartStopCaptureRequestWaiter::GetStopCaptureReason() const {
+  absl::MutexLock lock(&stop_mutex_);
+  return stop_capture_reason_;
+}
+
 }  // namespace orbit_capture_service_base
