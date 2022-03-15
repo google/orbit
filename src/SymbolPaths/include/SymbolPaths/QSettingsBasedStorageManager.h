@@ -12,7 +12,11 @@ namespace orbit_symbol_paths {
 class QSettingsBasedStorageManager : public PersistentStorageManager {
  public:
   void SavePaths(absl::Span<const std::filesystem::path> paths) override;
-  [[nodiscard]] virtual std::vector<std::filesystem::path> LoadPaths() override;
+  [[nodiscard]] std::vector<std::filesystem::path> LoadPaths() override;
+  void SaveModuleSymbolFileMappings(
+      const absl::flat_hash_map<std::string, std::filesystem::path>& mappings) override;
+  [[nodiscard]] absl::flat_hash_map<std::string, std::filesystem::path>
+  LoadModuleSymbolFileMappings() override;
 };
 
 }  // namespace orbit_symbol_paths
