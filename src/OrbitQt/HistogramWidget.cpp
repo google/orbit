@@ -183,13 +183,14 @@ static void DrawHistogram(QPainter& painter, const QPoint& axes_intersection,
                           const orbit_statistics::Histogram& histogram, int horizontal_axis_length,
                           int vertical_axis_length, double max_freq, uint64_t min_value,
                           const std::optional<int>& histogram_hover_x) {
-  std::vector<int> widths =
-      orbit_qt::GenerateHistogramBinWidths(histogram.counts.size(), horizontal_axis_length);
-
   int color_index = 0;
   std::optional<orbit_qt::BarData> hovered_bar_data;
-  int left_x = axes_intersection.x() + kLineWidth / 2 +
-               ValueToAxisLocation(histogram.min, horizontal_axis_length, min_value, histogram.max);
+  const int first_bar_offset_from_axes_intersection =
+      ValueToAxisLocation(histogram.min, horizontal_axis_length, min_value, histogram.max);
+  int left_x = axes_intersection.x() + kLineWidth / 2 + first_bar_offset_from_axes_intersection;
+  std::vector<int> widths = orbit_qt::GenerateHistogramBinWidths(
+      histogram.counts.size(),
+      horizontal_axis_length - first_bar_offset_from_axes_intersection + 1);
 
   // If the number of bins exceeds the width of histogram in pixels, `widths[i]` might be zero.
   // In such case we plot the bar on top of the previous one
