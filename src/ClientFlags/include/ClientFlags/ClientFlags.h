@@ -65,4 +65,7 @@ ABSL_DECLARE_FLAG(bool, clear_settings);
 // TODO(http://b/170712621): Remove this flag when we decide which timestamp format we will use.
 ABSL_DECLARE_FLAG(bool, iso_timestamps);
 
+// Enables to use symbol files without a build id, or with a mismatching build ID
+ABSL_DECLARE_FLAG(bool, enable_unsafe_symbols);
+
 #endif  // CLIENT_FLAGS_CLIENT_FLAGS_H_

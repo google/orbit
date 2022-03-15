@@ -74,3 +74,6 @@ ABSL_FLAG(bool, clear_settings, false,
 
 // TODO(http://b/170712621): Remove this flag when we decide which timestamp format we will use.
 ABSL_FLAG(bool, iso_timestamps, true, "Show timestamps using ISO-8601 format.");
+
+ABSL_FLAG(bool, enable_unsafe_symbols, false,
+          "Enable the possibility to use symbol files that do not have a matching build ID");
