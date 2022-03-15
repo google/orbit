@@ -39,7 +39,7 @@ struct DrawData {
   double ns_per_pixel;
   uint64_t min_timegraph_tick;
   Batcher* batcher;
-  orbit_gl::Viewport* viewport;
+  const orbit_gl::Viewport* viewport;
   const orbit_client_protos::TimerInfo* selected_timer;
   double inv_time_window;
   float track_start_x;
@@ -135,7 +135,7 @@ class TimerTrack : public Track {
 
   [[nodiscard]] static internal::DrawData GetDrawData(
       uint64_t min_tick, uint64_t max_tick, float track_pos_x, float track_width, Batcher* batcher,
-      const orbit_gl::TimelineInfoInterface* timeline_info, orbit_gl::Viewport* viewport,
+      const orbit_gl::TimelineInfoInterface* timeline_info, const orbit_gl::Viewport* viewport,
       bool is_collapsed, const orbit_client_protos::TimerInfo* selected_timer,
       uint64_t highlighted_function_id, uint64_t highlighted_group_id,
       std::optional<orbit_statistics::HistogramSelectionRange> histogram_selection_range);
