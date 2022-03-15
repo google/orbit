@@ -14,6 +14,8 @@ namespace orbit_gl {
 // TimelineUi is the class which takes care of drawing the timeline in the CaptureWindows.
 class TimelineUi : public CaptureViewElement {
  public:
+  const float kLabelMarginRight = 2;
+  const float kLabelMarginLeft = 4;
   explicit TimelineUi(CaptureViewElement* parent, const TimelineInfoInterface* timeline_info,
                       Viewport* viewport, TimeGraphLayout* layout)
       : CaptureViewElement(parent, viewport, layout), timeline_info_interface_(timeline_info) {}
@@ -32,6 +34,9 @@ class TimelineUi : public CaptureViewElement {
                     uint64_t max_timestamp_ns) const;
   void RenderMargin(Batcher& batcher) const;
   void RenderBackground(Batcher& batcher) const;
+  void RenderLabel(Batcher& batcher, TextRenderer& text_renderer, uint64_t tick_ns,
+                   uint32_t number_of_decimal_places_needed, float label_z_value,
+                   const Color background_color) const;
   [[nodiscard]] std::string GetLabel(uint64_t tick_ns,
                                      uint32_t number_of_decimal_places_needed) const;
   [[nodiscard]] std::vector<uint64_t> GetTicksForNonOverlappingLabels(
