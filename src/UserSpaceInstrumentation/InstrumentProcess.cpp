@@ -471,16 +471,20 @@ std::vector<AddressRange> InstrumentedProcess::GetEntryTrampolineAddressRanges()
   return address_ranges;
 }
 
+static std::mutex already_exists_mutex;
+static bool already_exists = false;
+
 std::unique_ptr<InstrumentationManager> InstrumentationManager::Create() {
-  static std::mutex mutex;
-  std::unique_lock<std::mutex> lock(mutex);
-  static bool first_call = true;
-  ORBIT_FAIL_IF(!first_call, "InstrumentationManager should be globally unique.");
-  first_call = false;
+  std::unique_lock<std::mutex> lock(already_exists_mutex);
+  ORBIT_FAIL_IF(already_exists, "InstrumentationManager should be globally unique.");
+  already_exists = true;
   return std::unique_ptr<InstrumentationManager>(new InstrumentationManager());
 }
 
-InstrumentationManager::~InstrumentationManager() = default;
+InstrumentationManager::~InstrumentationManager() {
+  std::unique_lock<std::mutex> lock(already_exists_mutex);
+  already_exists = false;
+}
 
 ErrorMessageOr<InstrumentationManager::InstrumentationResult>
 InstrumentationManager::InstrumentProcess(const CaptureOptions& capture_options) {
