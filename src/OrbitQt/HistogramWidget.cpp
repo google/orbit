@@ -167,6 +167,12 @@ static void SetBoldFont(QPainter& painter) {
   painter.setFont(font);
 }
 
+static void DrawHoverLabel(QPainter& painter, const QRect& rect, const QString text) {
+  SetBoldFont(painter);
+  painter.fillRect(rect, kHoverLabelColor);
+  painter.drawText(rect, Qt::AlignCenter, text);
+}
+
 static void DrawVerticalHoverLabel(QPainter& painter, const QPoint& axes_intersection,
                                    const orbit_qt::BarData& bar_data) {
   // We treat 100% frequency as a special case to render the value as "100", not as "100.0".
@@ -179,11 +185,7 @@ static void DrawVerticalHoverLabel(QPainter& painter, const QPoint& axes_interse
   label_rect.moveTo(axes_intersection.x() - label_rect.width() - kLineWidth / 2 -
                         kVerticalAxisTickLength - kTickLabelGap,
                     bar_data.top_y_pos - label_rect.height() / 2);
-
-  painter.fillRect(label_rect, kHoverLabelColor);
-
-  SetBoldFont(painter);
-  painter.drawText(label_rect, Qt::AlignCenter, label_text);
+  DrawHoverLabel(painter, label_rect, label_text);
 }
 
 static void DrawHistogram(QPainter& painter, const QPoint& axes_intersection,
@@ -267,7 +269,6 @@ static void DrawHorizontalHoverLabel(QPainter& painter, const QPoint& axes_inter
   const QString label_text = QString::number(
       orbit_display_formats::ToDoubleInGivenTimeUnits(absl::Nanoseconds(value_pos), time_unit), 'f',
       kTimeDecimalsCount);
-  SetBoldFont(painter);
 
   const QFontMetrics font_metrics(painter.font());
   const QRect bounding_rect = font_metrics.tightBoundingRect(label_text);
@@ -276,8 +277,8 @@ static void DrawHorizontalHoverLabel(QPainter& painter, const QPoint& axes_inter
                    bounding_rect.bottomRight() + QPoint(kHoverLabelPadding, kHoverLabelPadding));
   label_rect.moveTo(*histogram_hover_x - bounding_rect.width() / 2,
                     axes_intersection.y() + kHorizontalAxisTickLength + kTickLabelGap);
-  painter.fillRect(label_rect, kHoverLabelColor);
-  painter.drawText(label_rect, Qt::AlignCenter, label_text);
+
+  DrawHoverLabel(painter, label_rect, label_text);
 }
 
 static void DrawOneLineOfHint(QPainter& painter, const QString message, const QPoint& bottom_right,
