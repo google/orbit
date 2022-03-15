@@ -24,7 +24,7 @@ namespace orbit_qt {
 
 struct BarData {
   double frequency;
-  int top;  // the y-coordinate for the top of the bar to be rendered
+  int top_y_pos;
 };
 
 // This method returns a vector specifying the width to be drawn for each bin of a histogram
