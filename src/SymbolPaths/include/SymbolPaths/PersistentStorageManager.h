@@ -20,6 +20,7 @@ class PersistentStorageManager {
 
   virtual void SavePaths(absl::Span<const std::filesystem::path> paths) = 0;
   [[nodiscard]] virtual std::vector<std::filesystem::path> LoadPaths() = 0;
+
   // The hash map uses the key std::string for the module path instead of std::filesystem::path,
   // because the module path is always linux path (from the instance). When this is compiled on
   // windows, std::filesystem::path will use backslash instead of slash as directory separator which
