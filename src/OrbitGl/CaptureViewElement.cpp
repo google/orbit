@@ -52,8 +52,19 @@ void CaptureViewElement::UpdatePrimitives(Batcher& batcher, TextRenderer& text_r
   batcher.PopTranslation();
 }
 
+bool CaptureViewElement::OnMouseWheel(const Vec2& mouse_pos, int delta,
+                                      const ModifierKeys& modifiers) {
+  return false;
+}
+
 void CaptureViewElement::UpdateLayout() {
+  // Call all methods that may invoke layout changed for children
+  SetWidth(width_);
+
+  // Perform any layout changes of this element
   DoUpdateLayout();
+
+  // Recurse into children
   for (CaptureViewElement* child : GetAllChildren()) {
     child->UpdateLayout();
   }
@@ -68,14 +79,14 @@ void CaptureViewElement::SetPos(float x, float y) {
 }
 
 void CaptureViewElement::SetWidth(float width) {
+  for (auto& child : GetAllChildren()) {
+    if (child->GetLayoutFlags() & LayoutFlags::kScaleHorizontallyWithParent) {
+      child->SetWidth(width);
+    }
+  }
+
   if (width != width_) {
     width_ = width;
-
-    for (auto& child : GetAllChildren()) {
-      if (child->GetLayoutFlags() & LayoutFlags::kScaleHorizontallyWithParent) {
-        child->SetWidth(width);
-      }
-    }
     RequestUpdate();
   }
 }
@@ -102,6 +113,30 @@ void CaptureViewElement::OnRelease() {
 void CaptureViewElement::OnDrag(int x, int y) {
   mouse_pos_cur_ = viewport_->ScreenToWorld(Vec2i(x, y));
   RequestUpdate();
+}
+
+bool CaptureViewElement::IsMouseOver(const Vec2& mouse_pos) {
+  if (parent_ != nullptr && !parent_->IsMouseOver(mouse_pos)) {
+    return false;
+  }
+
+  return mouse_pos[0] >= GetPos()[0] && mouse_pos[0] <= GetPos()[0] + GetSize()[0] &&
+         mouse_pos[1] >= GetPos()[1] && mouse_pos[1] <= GetPos()[1] + GetSize()[1];
+}
+
+bool CaptureViewElement::HandleMouseWheelEvent(const Vec2& mouse_pos, int delta,
+                                               const ModifierKeys& modifiers) {
+  if (!IsMouseOver(mouse_pos)) {
+    return false;
+  }
+
+  for (CaptureViewElement* child : GetAllChildren()) {
+    if (child->HandleMouseWheelEvent(mouse_pos, delta, modifiers)) {
+      return true;
+    }
+  }
+
+  return OnMouseWheel(mouse_pos, delta, modifiers);
 }
 
 std::vector<CaptureViewElement*> CaptureViewElement::GetNonHiddenChildren() const {

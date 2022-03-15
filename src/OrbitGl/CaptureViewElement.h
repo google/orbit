@@ -48,6 +48,17 @@ class CaptureViewElement : public Pickable, public AccessibleInterfaceProvider {
   void OnDrag(int x, int y) override;
   [[nodiscard]] bool Draggable() override { return true; }
 
+  // Mouse interaction (bounding-box based)
+  struct ModifierKeys {
+    bool ctrl = false;
+    bool shift = false;
+    bool alt = false;
+  };
+
+  [[nodiscard]] bool IsMouseOver(const Vec2& mouse_pos);
+  [[nodiscard]] bool HandleMouseWheelEvent(const Vec2& mouse_pos, int delta,
+                                           const ModifierKeys& modifiers = ModifierKeys());
+
   [[nodiscard]] virtual CaptureViewElement* GetParent() const { return parent_; }
   [[nodiscard]] virtual std::vector<CaptureViewElement*> GetAllChildren() const { return {}; }
   [[nodiscard]] virtual std::vector<CaptureViewElement*> GetNonHiddenChildren() const;
@@ -87,6 +98,9 @@ class CaptureViewElement : public Pickable, public AccessibleInterfaceProvider {
                                   PickingMode /*picking_mode*/) {}
 
   virtual void DoUpdateLayout() {}
+
+  [[nodiscard]] virtual bool OnMouseWheel(const Vec2& mouse_pos, int delta,
+                                          const ModifierKeys& modifiers);
 
  private:
   float width_ = 0.;
