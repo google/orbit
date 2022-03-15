@@ -68,7 +68,7 @@ constexpr double kHoursInOneDay = 24;
   ORBIT_UNREACHABLE();
 }
 
-[[nodiscard]] double ToDoubleTimeUnits(absl::Duration duration, TimeUnit unit) {
+[[nodiscard]] double ToDoubleInGivenTimeUnits(absl::Duration duration, TimeUnit unit) {
   switch (unit) {
     case TimeUnit::kNanosecond:
       return absl::ToDoubleNanoseconds(duration);
@@ -90,7 +90,8 @@ constexpr double kHoursInOneDay = 24;
 
 std::string GetDisplayTime(absl::Duration duration) {
   const TimeUnit unit = ChooseUnitForDisplayTime(duration);
-  return absl::StrFormat("%.3f %s", ToDoubleTimeUnits(duration, unit), GetDisplayTimeUnit(unit));
+  return absl::StrFormat("%.3f %s", ToDoubleInGivenTimeUnits(duration, unit),
+                         GetDisplayTimeUnit(unit));
 }
 
 [[nodiscard]] std::string ToStringAtLeastTwoDigits(int number) {

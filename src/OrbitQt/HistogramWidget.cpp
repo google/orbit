@@ -101,9 +101,10 @@ static void DrawHorizontalAxis(QPainter& painter, const QPoint& axes_intersectio
     DrawVerticalLine(painter, {current_tick_location, axes_intersection.y()},
                      kHorizontalAxisTickLength);
 
-    const QString tick_label = QString::number(
-        orbit_display_formats::ToDoubleTimeUnits(absl::Nanoseconds(current_tick_value), time_unit),
-        'f', 3);
+    const QString tick_label =
+        QString::number(orbit_display_formats::ToDoubleInGivenTimeUnits(
+                            absl::Nanoseconds(current_tick_value), time_unit),
+                        'f', 3);
     const QRect tick_label_bounding_rect = font_metrics.tightBoundingRect(tick_label);
 
     painter.drawText(current_tick_location - tick_label_bounding_rect.width() / 2,
