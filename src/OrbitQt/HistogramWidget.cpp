@@ -7,6 +7,7 @@
 #include <absl/strings/str_cat.h>
 #include <absl/strings/str_format.h>
 #include <absl/strings/str_replace.h>
+#include <absl/time/time.h>
 #include <qfont.h>
 #include <qnamespace.h>
 #include <qwindowdefs.h>
@@ -83,12 +84,11 @@ static void DrawVerticalLine(QPainter& painter, const QPoint& start, int length)
   painter.drawLine(start, {start.x(), start.y() + length});
 }
 
-static void DrawHorizontalAxis(QPainter& painter, const QPoint& axes_intersection,
-                               const orbit_statistics::Histogram& histogram, int length,
-                               uint64_t min_value) {
+static void DrawHorizontalAxis(QPainter& painter, const QPoint& axes_intersection, int length,
+                               uint64_t min_value, uint64_t tick_spacing_as_value,
+                               orbit_display_formats::TimeUnit time_unit) {
   DrawHorizontalLine(painter, axes_intersection, length);
 
-  const auto tick_spacing_as_value = (histogram.max - min_value) / kHorizontalTickCount;
   const int tick_spacing_pixels =
       RoundToClosestInt(static_cast<double>(length) / kHorizontalTickCount);
 
@@ -101,8 +101,10 @@ static void DrawHorizontalAxis(QPainter& painter, const QPoint& axes_intersectio
     DrawVerticalLine(painter, {current_tick_location, axes_intersection.y()},
                      kHorizontalAxisTickLength);
 
-    const QString tick_label = QString::fromStdString(
-        orbit_display_formats::GetDisplayTime(absl::Nanoseconds(current_tick_value)));
+    const QString tick_label =
+        QString::number(orbit_display_formats::ToDoubleInGivenTimeUnits(
+                            absl::Nanoseconds(current_tick_value), time_unit),
+                        'f', 3);
     const QRect tick_label_bounding_rect = font_metrics.tightBoundingRect(tick_label);
 
     painter.drawText(current_tick_location - tick_label_bounding_rect.width() / 2,
@@ -257,8 +259,10 @@ static void DrawOneLineOfHint(QPainter& painter, const QString message, const QP
   painter.drawText(rect, Qt::AlignRight | Qt::AlignBottom, message);
 }
 
-static void DrawHint(QPainter& painter, int width) {
-  const QString first_line = QStringLiteral("Distribution (%) / Execution time");
+static void DrawHint(QPainter& painter, int width, orbit_display_formats::TimeUnit time_unit) {
+  const QString first_line =
+      QString::fromStdString(absl::StrFormat("Distribution %% / Execution time (%s)",
+                                             orbit_display_formats::GetDisplayTimeUnit(time_unit)));
   const QString second_line =
       QStringLiteral("Drag over a selection to zoom in or click to zoom out");
 
@@ -344,11 +348,16 @@ void HistogramWidget::paintEvent(QPaintEvent* /*event*/) {
     DrawSelection(painter, selected_area_->selection_start_pixel,
                   selected_area_->selection_current_pixel, axes_intersection, vertical_axis_length);
   }
+  const auto tick_spacing_as_value = (histogram.max - MinValue()) / kHorizontalTickCount;
+  orbit_display_formats::TimeUnit time_unit = orbit_display_formats::ChooseUnitForDisplayTime(
+      absl::Nanoseconds(MinValue() + tick_spacing_as_value));
 
-  DrawHint(painter, Width());
+  DrawHint(painter, Width(), time_unit);
 
   painter.setPen(QPen(kAxisColor, kLineWidth));
-  DrawHorizontalAxis(painter, axes_intersection, histogram, horizontal_axis_length, MinValue());
+
+  DrawHorizontalAxis(painter, axes_intersection, horizontal_axis_length, MinValue(),
+                     tick_spacing_as_value, time_unit);
   DrawVerticalAxis(painter, axes_intersection, vertical_axis_length, max_freq);
   painter.setPen(QPen(Qt::white, 1));
 

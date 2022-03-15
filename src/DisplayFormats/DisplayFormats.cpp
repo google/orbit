@@ -7,6 +7,8 @@
 #include <absl/strings/str_format.h>
 #include <absl/time/time.h>
 
+#include "OrbitBase/Logging.h"
+
 namespace orbit_display_formats {
 
 std::string GetDisplaySize(uint64_t size_bytes) {
@@ -22,27 +24,74 @@ std::string GetDisplaySize(uint64_t size_bytes) {
   return absl::StrFormat("%.2f TB", size_bytes / kBytesInTb);
 }
 
-std::string GetDisplayTime(absl::Duration duration) {
+constexpr double kHoursInOneDay = 24;
+
+[[nodiscard]] TimeUnit ChooseUnitForDisplayTime(absl::Duration duration) {
   if (duration < absl::Microseconds(1)) {
-    return absl::StrFormat("%.3f ns", absl::ToDoubleNanoseconds(duration));
+    return TimeUnit::kNanosecond;
   }
   if (duration < absl::Milliseconds(1)) {
-    return absl::StrFormat("%.3f us", absl::ToDoubleMicroseconds(duration));
+    return TimeUnit::kMicrosecod;
   }
   if (duration < absl::Seconds(1)) {
-    return absl::StrFormat("%.3f ms", absl::ToDoubleMilliseconds(duration));
+    return TimeUnit::kMillisecond;
   }
   if (duration < absl::Minutes(1)) {
-    return absl::StrFormat("%.3f s", absl::ToDoubleSeconds(duration));
+    return TimeUnit::kSecond;
   }
   if (duration < absl::Hours(1)) {
-    return absl::StrFormat("%.3f min", absl::ToDoubleMinutes(duration));
+    return TimeUnit::kMinute;
   }
-  constexpr double kHoursInOneDay = 24;
   if (duration < absl::Hours(kHoursInOneDay)) {
-    return absl::StrFormat("%.3f h", absl::ToDoubleHours(duration));
+    return TimeUnit::kHour;
   }
-  return absl::StrFormat("%.3f days", absl::ToDoubleHours(duration) / kHoursInOneDay);
+  return TimeUnit::kDay;
+}
+
+[[nodiscard]] std::string GetDisplayTimeUnit(TimeUnit unit) {
+  switch (unit) {
+    case TimeUnit::kNanosecond:
+      return "ns";
+    case TimeUnit::kMicrosecod:
+      return "us";
+    case TimeUnit::kMillisecond:
+      return "ms";
+    case TimeUnit::kSecond:
+      return "s";
+    case TimeUnit::kMinute:
+      return "min";
+    case TimeUnit::kHour:
+      return "h";
+    case TimeUnit::kDay:
+      return "days";
+  }
+  ORBIT_UNREACHABLE();
+}
+
+[[nodiscard]] double ToDoubleInGivenTimeUnits(absl::Duration duration, TimeUnit unit) {
+  switch (unit) {
+    case TimeUnit::kNanosecond:
+      return absl::ToDoubleNanoseconds(duration);
+    case TimeUnit::kMicrosecod:
+      return absl::ToDoubleMicroseconds(duration);
+    case TimeUnit::kMillisecond:
+      return absl::ToDoubleMilliseconds(duration);
+    case TimeUnit::kSecond:
+      return absl::ToDoubleSeconds(duration);
+    case TimeUnit::kMinute:
+      return absl::ToDoubleMinutes(duration);
+    case TimeUnit::kHour:
+      return absl::ToDoubleHours(duration);
+    case TimeUnit::kDay:
+      return absl::ToDoubleHours(duration) / kHoursInOneDay;
+  }
+  ORBIT_UNREACHABLE();
+}
+
+std::string GetDisplayTime(absl::Duration duration) {
+  const TimeUnit unit = ChooseUnitForDisplayTime(duration);
+  return absl::StrFormat("%.3f %s", ToDoubleInGivenTimeUnits(duration, unit),
+                         GetDisplayTimeUnit(unit));
 }
 
 [[nodiscard]] std::string ToStringAtLeastTwoDigits(int number) {
