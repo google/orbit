@@ -14,6 +14,9 @@
 
 namespace orbit_gl {
 
+constexpr float kLabelMarginRight = 2;
+constexpr float kLabelMarginLeft = 4;
+
 void TimelineUi::RenderLines(Batcher& batcher, uint64_t min_timestamp_ns,
                              uint64_t max_timestamp_ns) const {
   const Color kMajorTickColor(255, 254, 253, 255);

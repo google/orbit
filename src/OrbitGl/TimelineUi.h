@@ -14,8 +14,6 @@ namespace orbit_gl {
 // TimelineUi is the class which takes care of drawing the timeline in the CaptureWindows.
 class TimelineUi : public CaptureViewElement {
  public:
-  const float kLabelMarginRight = 2;
-  const float kLabelMarginLeft = 4;
   explicit TimelineUi(CaptureViewElement* parent, const TimelineInfoInterface* timeline_info,
                       Viewport* viewport, TimeGraphLayout* layout)
       : CaptureViewElement(parent, viewport, layout), timeline_info_interface_(timeline_info) {}
