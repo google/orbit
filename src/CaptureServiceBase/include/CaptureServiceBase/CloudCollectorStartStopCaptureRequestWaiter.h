@@ -29,6 +29,8 @@ class CloudCollectorStartStopCaptureRequestWaiter : public StartStopCaptureReque
   [[nodiscard]] CaptureServiceBase::StopCaptureReason WaitForStopCaptureRequest() override;
   void StopCapture(CaptureServiceBase::StopCaptureReason stop_capture_reason);
 
+  [[nodiscard]] CaptureServiceBase::StopCaptureReason GetStopCaptureReason() const;
+
  private:
   mutable absl::Mutex start_mutex_;
   orbit_grpc_protos::CaptureOptions capture_options_ ABSL_GUARDED_BY(start_mutex_);
