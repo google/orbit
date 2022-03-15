@@ -7,6 +7,8 @@
 #include <absl/strings/str_format.h>
 #include <absl/time/time.h>
 
+#include "OrbitBase/Logging.h"
+
 namespace orbit_display_formats {
 
 std::string GetDisplaySize(uint64_t size_bytes) {
@@ -60,8 +62,10 @@ std::string DisplayTimeUnit(TimeUnit unit) {
       return "min";
     case TimeUnit::kHour:
       return "h";
-    default:
+    case TimeUnit::kDay:
       return "days";
+    default:
+      ORBIT_UNREACHABLE();
   }
 }
 
@@ -79,8 +83,10 @@ double ToDoubleTimeUnits(absl::Duration duration, TimeUnit unit) {
       return absl::ToDoubleMinutes(duration);
     case TimeUnit::kHour:
       return absl::ToDoubleHours(duration);
-    default:
+    case TimeUnit::kDay:
       return absl::ToDoubleHours(duration) / kHoursInOneDay;
+    default:
+      ORBIT_UNREACHABLE();
   }
 }
 
