@@ -261,7 +261,7 @@ static void DrawOneLineOfHint(QPainter& painter, const QString message, const QP
 
 static void DrawHint(QPainter& painter, int width, orbit_display_formats::TimeUnit time_unit) {
   const QString first_line =
-      QString::fromStdString(absl::StrFormat("Distribution %% / Execution time (%s)",
+      QString::fromStdString(absl::StrFormat("Distribution (%%) / Execution time (%s)",
                                              orbit_display_formats::GetDisplayTimeUnit(time_unit)));
   const QString second_line =
       QStringLiteral("Drag over a selection to zoom in or click to zoom out");
