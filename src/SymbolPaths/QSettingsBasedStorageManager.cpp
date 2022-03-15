@@ -10,7 +10,7 @@
 
 constexpr const char* kSymbolPathsSettingsKey = "symbol_directories";
 constexpr const char* kDirectoryPathKey = "directory_path";
-constexpr const char* kModuleSymbolFileMappingKey = "module_symbol_file_mappings";
+constexpr const char* kModuleSymbolFileMappingKey = "module_symbol_file_mapping_key";
 constexpr const char* kModuleSymbolFileMappingModuleKey = "module_symbol_file_mapping_module_key";
 constexpr const char* kModuleSymbolFileMappingSymbolFileKey =
     "module_symbol_file_mapping_symbol_file_key";
