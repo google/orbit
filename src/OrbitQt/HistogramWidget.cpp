@@ -7,7 +7,9 @@
 #include <absl/strings/str_cat.h>
 #include <absl/strings/str_format.h>
 #include <absl/strings/str_replace.h>
+#include <qfont.h>
 #include <qnamespace.h>
+#include <qwindowdefs.h>
 
 #include <QColor>
 #include <QEvent>
@@ -15,6 +17,7 @@
 #include <QPainter>
 #include <QPen>
 #include <QPoint>
+#include <QStringLiteral>
 #include <QWidget>
 #include <algorithm>
 #include <array>
@@ -37,6 +40,7 @@ const QColor kBackgroundColor(QStringLiteral("#323232"));
 constexpr size_t kBarColorsCount = 2;
 const std::array<QColor, kBarColorsCount> kBarColors = {QColor(QStringLiteral("#2A82DA")),
                                                         QColor(QStringLiteral("#3198FF"))};
+const QColor kHoveredBarColor(QStringLiteral("#99CCFF"));
 
 constexpr uint32_t kVerticalTickCount = 3;
 constexpr uint32_t kHorizontalTickCount = 3;
@@ -51,7 +55,11 @@ constexpr int kHintTopMargin = 10;
 constexpr int kHintRightMargin = 50;
 constexpr int kHintBottom = 40;
 const QColor kHintFirstLineColor = Qt::white;
-const QColor kHintSecondLineColor = QColor(QStringLiteral("#999999"));
+const QColor kHintSecondLineColor(QStringLiteral("#999999"));
+
+constexpr int kVerticalLabelHeight = 15;
+constexpr int kVerticalLabelWidth = 30;
+const QColor kHoverLabelColor(QStringLiteral("#3f3f3f"));
 
 constexpr int kTopMargin = 50;
 constexpr int kBottomMargin = 40;
@@ -128,7 +136,7 @@ static void DrawVerticalAxis(QPainter& painter, const QPoint& axes_intersection,
 
     QRect tick_label_bounding_rect = font_metrics.tightBoundingRect(tick_label);
     painter.drawText(axes_intersection.x() - tick_label_bounding_rect.width() -
-                         kVerticalAxisTickLength - kTickLabelGap,
+                         kVerticalAxisTickLength - kTickLabelGap - kLineWidth,
                      current_tick_location + (tick_label_bounding_rect.height()) / 2, tick_label);
 
     current_tick_location -= tick_spacing_pixels;
@@ -146,33 +154,76 @@ static void DrawVerticalAxis(QPainter& painter, const QPoint& axes_intersection,
   return static_cast<double>(histogram.counts[i]) / static_cast<double>(histogram.data_set_size);
 }
 
+static void SetBoldFont(QPainter& painter) {
+  QFont font = painter.font();
+  font.setBold(true);
+  painter.setFont(font);
+}
+
+static void DrawVerticalHoverLabel(QPainter& painter, const QPoint& axes_intersection,
+                                   const orbit_qt::BarData& bar_data) {
+  // We treat 100% frequency as a special case to render the value as "100", not as "100.0".
+  // It doesn't fit into the widget otherwise.
+  QString label_text = QString::fromStdString(
+      bar_data.frequency == 1.0 ? "100" : absl::StrFormat("%.1f", bar_data.frequency * 100));
+
+  QRect label_rect(QPoint(0, 0), QPoint(kVerticalLabelWidth, kVerticalLabelHeight));
+
+  label_rect.moveTo(axes_intersection.x() - label_rect.width() - kLineWidth / 2 -
+                        kVerticalAxisTickLength - kTickLabelGap,
+                    bar_data.top_y_pos - label_rect.height() / 2);
+
+  painter.fillRect(label_rect, kHoverLabelColor);
+
+  SetBoldFont(painter);
+  painter.drawText(label_rect, Qt::AlignCenter, label_text);
+}
+
 static void DrawHistogram(QPainter& painter, const QPoint& axes_intersection,
                           const orbit_statistics::Histogram& histogram, int horizontal_axis_length,
-                          int vertical_axis_length, double max_freq, uint64_t min_value) {
+                          int vertical_axis_length, double max_freq, uint64_t min_value,
+                          const std::optional<int>& histogram_hover_x) {
   std::vector<int> widths =
       orbit_qt::GenerateHistogramBinWidths(histogram.counts.size(), horizontal_axis_length);
 
+  int color_index = 0;
+  std::optional<orbit_qt::BarData> hovered_bar_data;
   int left_x = axes_intersection.x() + kLineWidth / 2 +
                ValueToAxisLocation(histogram.min, horizontal_axis_length, min_value, histogram.max);
-  int color_index = 0;
 
   // If the number of bins exceeds the width of histogram in pixels, `widths[i]` might be zero.
   // In such case we plot the bar on top of the previous one
+  // Because of that we keep track of hovered_bar_data (multiple bars may be hovered at once).
+  // As we render the tallest bar, the hover label shows the highest frequency
   for (size_t i = 0; i < histogram.counts.size(); ++i) {
     double freq = GetFreq(histogram, i);
     if (freq > 0) {
-      const QPoint top_left(left_x,
-                            axes_intersection.y() - kLineWidth -
-                                ValueToAxisLocation(freq, vertical_axis_length, 0, max_freq));
-      const QPoint lower_right(left_x + std::max(widths[i] - 1, 0),
-                               axes_intersection.y() - kLineWidth);
-      const QRect bar(top_left, lower_right);
-      painter.fillRect(bar, kBarColors[color_index % kBarColors.size()]);
+      const int top_y = axes_intersection.y() - kLineWidth -
+                        ValueToAxisLocation(freq, vertical_axis_length, 0, max_freq);
+      const int right_x = left_x + std::max(widths[i] - 1, 0);
+      const QPoint top_left(left_x, top_y);
+      const QPoint bottom_right(right_x, axes_intersection.y() - kLineWidth);
+      const QRect bar(top_left, bottom_right);
+
+      const bool is_bar_hovered = histogram_hover_x.has_value() && left_x <= *histogram_hover_x &&
+                                  *histogram_hover_x <= right_x;
+
+      const QColor& bar_color =
+          is_bar_hovered ? kHoveredBarColor : kBarColors[color_index % kBarColors.size()];
+      painter.fillRect(bar, bar_color);
+
+      const bool current_bar_is_taller = !hovered_bar_data || hovered_bar_data->frequency < freq;
+
+      if (is_bar_hovered && current_bar_is_taller) {
+        hovered_bar_data = {freq, top_y};
+      }
     }
 
     if (widths[i] > 0) color_index++;
     left_x += widths[i];
   }
+
+  if (hovered_bar_data) DrawVerticalHoverLabel(painter, axes_intersection, *hovered_bar_data);
 }
 
 static void DrawSelection(QPainter& painter, int start_x, int end_x,
@@ -279,7 +330,7 @@ void HistogramWidget::paintEvent(QPaintEvent* /*event*/) {
 
   const orbit_statistics::Histogram& histogram = histogram_stack_.top();
 
-  QPoint axes_intersection(kLeftMargin, Height() - kBottomMargin);
+  const QPoint axes_intersection(kLeftMargin, Height() - kBottomMargin);
 
   const int vertical_axis_length = Height() - kTopMargin - kBottomMargin;
   const int horizontal_axis_length = Width() - kLeftMargin - kRightMargin;
@@ -295,13 +346,13 @@ void HistogramWidget::paintEvent(QPaintEvent* /*event*/) {
 
   DrawHint(painter, Width());
 
-  DrawHistogram(painter, axes_intersection, histogram, horizontal_axis_length, vertical_axis_length,
-                max_freq, MinValue());
-
   painter.setPen(QPen(kAxisColor, kLineWidth));
   DrawHorizontalAxis(painter, axes_intersection, histogram, horizontal_axis_length, MinValue());
   DrawVerticalAxis(painter, axes_intersection, vertical_axis_length, max_freq);
   painter.setPen(QPen(Qt::white, 1));
+
+  DrawHistogram(painter, axes_intersection, histogram, horizontal_axis_length, vertical_axis_length,
+                max_freq, MinValue(), histogram_hover_x_);
 }
 
 void HistogramWidget::mouseReleaseEvent(QMouseEvent* /* event*/) {
@@ -358,9 +409,13 @@ void HistogramWidget::mousePressEvent(QMouseEvent* event) {
 }
 
 void HistogramWidget::mouseMoveEvent(QMouseEvent* event) {
-  if (!selected_area_) return;
+  if (IsOverHistogram(event->pos())) {
+    histogram_hover_x_ = event->x();
+  } else {
+    histogram_hover_x_ = std::nullopt;
+  }
 
-  selected_area_->selection_current_pixel = event->x();
+  if (selected_area_) selected_area_->selection_current_pixel = event->x();
 
   update();
 }
@@ -417,4 +472,10 @@ constexpr size_t kMaxFunctionNameLengthForTitle = 80;
 
   return QString::fromStdString(title);
 }
+
+[[nodiscard]] bool HistogramWidget::IsOverHistogram(const QPoint& pos) const {
+  return kLeftMargin <= pos.x() && pos.x() <= Width() - kRightMargin && kTopMargin <= pos.y() &&
+         pos.y() <= Height() - kBottomMargin;
+}
+
 }  // namespace orbit_qt

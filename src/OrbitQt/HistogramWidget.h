@@ -22,6 +22,11 @@
 
 namespace orbit_qt {
 
+struct BarData {
+  double frequency;
+  int top_y_pos;
+};
+
 // This method returns a vector specifying the width to be drawn for each bin of a histogram
 // Takes two positive intergers, returns a vector `result` of non-negative integers s.t.
 // their sum equals to `histogram_width` and for all `i` and `j` `max(result[i] - result[j]) <= 1`
@@ -68,6 +73,8 @@ class HistogramWidget : public QWidget {
   void EmitSignalTitleChange() const;
   void UpdateAndNotify();
 
+  [[nodiscard]] bool IsOverHistogram(const QPoint& pos) const;
+
   struct FunctionData {
     FunctionData(const std::vector<uint64_t>* data, std::string name, uint64_t id)
         : data(data), name(std::move(name)), id(id) {}
@@ -88,6 +95,8 @@ class HistogramWidget : public QWidget {
   };
 
   std::optional<SelectedArea> selected_area_;
+
+  std::optional<int> histogram_hover_x_;
 };
 }  // namespace orbit_qt
 #endif  // ORBIT_HISTOGRAM_H_

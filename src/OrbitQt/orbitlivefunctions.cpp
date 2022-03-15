@@ -80,6 +80,7 @@ void OrbitLiveFunctions::Initialize(OrbitApp* app,
   ui->histogram_title_->setText(ui->histogram_widget_->GetTitle());
   QObject::connect(ui->histogram_widget_, &orbit_qt::HistogramWidget::SignalTitleChange,
                    ui->histogram_title_, &QLabel::setText);
+  ui->histogram_widget_->setMouseTracking(true);
 }
 
 void OrbitLiveFunctions::Deinitialize() {
