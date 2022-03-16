@@ -25,6 +25,10 @@
 
 constexpr const char* kFileDialogSavedDirectoryKey = "symbols_file_dialog_saved_directory";
 constexpr const char* kModuleHeadlineLabel = "Add Symbols for <font color=\"#E64646\">%1</font>";
+constexpr const char* kOverrideWarningText =
+    "The build ID in the file you selected does not match. This may lead to unexpected behavior in "
+    "Orbit.<br />If you are sure this is the right file, then you can override to use the file "
+    "with the mismatched build ID.";
 
 using orbit_client_data::ModuleData;
 using orbit_grpc_protos::ModuleInfo;
@@ -201,6 +205,17 @@ void SymbolsDialog::OnMoreInfoButtonClicked() {
     QMessageBox::critical(this, "Error opening URL",
                           QString("Could not open %1").arg(url_as_string));
   }
+}
+
+[[nodiscard]] SymbolsDialog::OverrideWarningResult SymbolsDialog::DisplayOverrideWarning() {
+  QMessageBox message_box{QMessageBox::Warning, "Override Symbol location?", kOverrideWarningText,
+                          QMessageBox::StandardButton::Cancel, this};
+  message_box.addButton("Override", QMessageBox::AcceptRole);
+  int result_code = message_box.exec();
+  if (result_code == QMessageBox::Accepted) {
+    return OverrideWarningResult::kOverride;
+  }
+  return OverrideWarningResult::kCancel;
 }
 
 }  // namespace orbit_config_widgets

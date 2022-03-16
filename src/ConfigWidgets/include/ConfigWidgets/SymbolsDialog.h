@@ -37,7 +37,7 @@ class SymbolsDialog : public QDialog {
   // message is returned. A path here is either a path to directory, or a path to a file.
   ErrorMessageOr<void> TryAddSymbolPath(const std::filesystem::path& path);
   // TryAddSymbolFile will check whether the following conditions are met and if they are, call
-  // TryAddSymbolFile
+  // TryAddSymbolPath
   // 1. file at file_path is a viable object file.
   // 2. check that the file contains a build-id.
   // 3. if the module_ is set, that the build-id are the same.
@@ -51,6 +51,8 @@ class SymbolsDialog : public QDialog {
   void OnMoreInfoButtonClicked();
 
  private:
+  enum class OverrideWarningResult { kOverride, kCancel };
+
   std::unique_ptr<Ui::SymbolsDialog> ui_;
   std::optional<const orbit_client_data::ModuleData*> module_;
   orbit_symbol_paths::PersistentStorageManager* persistent_storage_manager_ = nullptr;
@@ -60,6 +62,7 @@ class SymbolsDialog : public QDialog {
   // Returns the caption and file filter for the FileDialog that is opened when the user clicks the
   // "Add File" button.
   [[nodiscard]] std::tuple<QString, QString> GetFilePickerConfig() const;
+  [[nodiscard]] OverrideWarningResult DisplayOverrideWarning();
 };
 
 }  // namespace orbit_config_widgets
