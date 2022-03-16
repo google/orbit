@@ -219,13 +219,13 @@ std::string GetExpectedToolTipByIndex(size_t index, int column) {
   if (column == kColumnUnwindErrors) {
     const float percentage = kSampledUnwindErrorPercents[index];
     return absl::StrFormat(
-        "Stack containing the function \"%s\"\n"
-        "could not be unwound %u times\n"
+        "%u samples with the function \"%s\" \n"
+        "at the top of the stack could not be unwound\n"
         "in a total of %u stack samples.\n"
         "This makes up for %.2f%% of samples.\n\n"
         "The 95%% confidence interval for the true percentage is\n"
         "(%.2f%%, %.2f%%).",
-        kFunctionPrettyNames[index], kSampledUnwindErrors[index], kStackEventsCount, percentage,
+        kSampledUnwindErrors[index], kFunctionPrettyNames[index], kStackEventsCount, percentage,
         percentage - kConfidenceIntervalLeftSectionLength * 100.0f,
         percentage + kConfidenceIntervalRightSectionLength * 100.0f);
   }
