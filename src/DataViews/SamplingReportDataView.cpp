@@ -389,9 +389,9 @@ void SamplingReportDataView::SetStackEventsCount(uint32_t stack_events_count) {
       app_->GetConfidenceIntervalEstimator().Estimate(function.unwind_errors_percent / 100.0f,
                                                       stack_events_count_);
   const std::string head = absl::StrFormat(
-      "Stack containing the function \"%s\"\n"
-      "could not be unwound %u times\n",
-      function.name, function.unwind_errors);
+      "%u samples with the function \"%s\" \n"
+      "at the top of the stack could not be unwound\n",
+      function.unwind_errors, function.name);
 
   return absl::StrCat(
       head, BuildTooltipTail(stack_events_count_, function.unwind_errors_percent, interval));
