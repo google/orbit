@@ -39,6 +39,7 @@ target_sources(ClientData PUBLIC
 
 target_sources(ClientData PRIVATE
         CallstackData.cpp
+        CallstackTypes.cpp
         CaptureData.cpp
         DataManager.cpp
         FunctionUtils.cpp

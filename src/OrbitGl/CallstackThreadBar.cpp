@@ -292,11 +292,9 @@ std::string CallstackThreadBar::GetSampleTooltip(const Batcher& batcher, Picking
   if (callstack->type() == CallstackInfo::kComplete) {
     result += "<b>Callstack:</b>" + FormatCallstackForTooltip(*callstack);
   } else {
-    // TODO(b/188756080): Show a specific explanation for each CallstackType.
-    result += "Callstack not available: the stack could not be unwound successfully";
-    if (app_->IsDevMode()) {
-      result += absl::StrFormat(" (%s)", CallstackInfo::CallstackType_Name(callstack->type()));
-    }
+    result += absl::StrFormat(
+        "<b>Callstack not available: the stack could not be unwound successfully.</b><b>%s</b>",
+        orbit_client_data::CallstackTypeToDescription(callstack->type()));
   }
   return result +
          "<br/><br/><i>To select samples, click the bar & drag across multiple samples</i>";

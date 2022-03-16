@@ -20,6 +20,7 @@
 class CallTreeThread;
 class CallTreeFunction;
 class CallTreeUnwindErrors;
+class CallTreeUnwindErrorNode;
 
 class CallTreeNode {
  public:
@@ -30,7 +31,7 @@ class CallTreeNode {
   [[nodiscard]] const CallTreeNode* parent() const { return parent_; }
 
   [[nodiscard]] uint64_t child_count() const {
-    return thread_children_.size() + function_children_.size() +
+    return thread_children_.size() + function_children_.size() + unwind_error_children_.size() +
            (unwind_errors_child_ != nullptr ? 1 : 0);
   }
 
@@ -46,6 +47,12 @@ class CallTreeNode {
                                                     std::string function_name,
                                                     std::string module_path,
                                                     std::string module_build_id);
+
+  [[nodiscard]] CallTreeUnwindErrorNode* GetUnwindErrorOrNull(
+      orbit_client_protos::CallstackInfo::CallstackType type);
+
+  [[nodiscard]] CallTreeUnwindErrorNode* AddAndGetUnwindError(
+      orbit_client_protos::CallstackInfo::CallstackType type);
 
   [[nodiscard]] CallTreeUnwindErrors* GetUnwindErrorsOrNull();
 
@@ -95,6 +102,9 @@ class CallTreeNode {
   // std::shared_ptr instead of std::unique_ptr because absl::node_hash_map
   // needs the copy constructor (even for try_emplace).
   std::shared_ptr<CallTreeUnwindErrors> unwind_errors_child_;
+
+  absl::node_hash_map<orbit_client_protos::CallstackInfo::CallstackType, CallTreeUnwindErrorNode>
+      unwind_error_children_;
 
   CallTreeNode* parent_;
   uint64_t sample_count_ = 0;
@@ -152,6 +162,22 @@ class CallTreeThread : public CallTreeNode {
 class CallTreeUnwindErrors : public CallTreeNode {
  public:
   explicit CallTreeUnwindErrors(CallTreeNode* parent) : CallTreeNode{parent} {}
+};
+
+class CallTreeUnwindErrorNode : public CallTreeNode {
+ public:
+  explicit CallTreeUnwindErrorNode(CallTreeNode* parent,
+                                   orbit_client_protos::CallstackInfo::CallstackType error_type)
+      : CallTreeNode{parent}, error_type_{error_type} {
+    ORBIT_CHECK(error_type != orbit_client_protos::CallstackInfo::kComplete);
+  }
+
+  [[nodiscard]] orbit_client_protos::CallstackInfo::CallstackType error_type() const {
+    return error_type_;
+  }
+
+ private:
+  orbit_client_protos::CallstackInfo::CallstackType error_type_;
 };
 
 class CallTreeView : public CallTreeNode {
