@@ -3,9 +3,11 @@
 // found in the LICENSE file.
 
 #include <gtest/gtest.h>
+#include <linux/seccomp.h>
 #include <sys/prctl.h>
 #include <sys/ptrace.h>
 #include <sys/wait.h>
+#include <syscall.h>
 #include <unistd.h>
 
 #include <cstdint>
@@ -304,6 +306,59 @@ TEST(InstrumentProcessTest, ExitPayloadDoesNotUseX87Fpu) {
   // This will fail or hang if the child crashed.
   auto result = instrumentation_manager->UninstrumentProcess(pid);
   ASSERT_THAT(result, HasNoError());
+
+  kill(pid, SIGKILL);
+  waitpid(pid, nullptr, 0);
+}
+
+TEST(InstrumentProcessTest, AnyTargetThreadInStrictSeccompMode) {
+  InstrumentationManager* instrumentation_manager = GetInstrumentationManager();
+
+  std::array<int, 2> child_to_parent_pipe{};
+  ORBIT_CHECK(pipe(child_to_parent_pipe.data()) == 0);
+
+  const pid_t pid = fork();
+  ORBIT_CHECK(pid != -1);
+  if (pid == 0) {
+    prctl(PR_SET_PDEATHSIG, SIGTERM);
+
+    // Close the read end of the pipe.
+    ORBIT_CHECK(close(child_to_parent_pipe[0]) == 0);
+
+    std::thread t{[&child_to_parent_pipe] {
+      // Transition to strict seccomp mode.
+      ORBIT_CHECK(syscall(SYS_seccomp, SECCOMP_SET_MODE_STRICT, 0, nullptr) == 0);
+
+      // Send one byte to the parent to notify that the child has called seccomp. Note that the
+      // strict seccomp mode still allows write.
+      ORBIT_CHECK(write(child_to_parent_pipe[1], "a", 1) == 1);
+
+      [[maybe_unused]] volatile int sum = 0;
+      while (true) {
+        sum += SomethingToInstrument();
+      }
+    }};
+
+    // Endless loops without side effects are UB and recent versions of clang optimize
+    // it away. Making `sum` volatile avoids that problem.
+    [[maybe_unused]] volatile int sum = 0;
+    while (true) {
+      sum += SomethingToInstrument();
+    }
+  }
+
+  // Close the write end of the pipe.
+  ORBIT_CHECK(close(child_to_parent_pipe[1]) == 0);
+
+  // Wait for the child to execute the seccomp syscall.
+  char buf[1];
+  ORBIT_CHECK(read(child_to_parent_pipe[0], buf, 1) == 1);
+
+  orbit_grpc_protos::CaptureOptions capture_options = BuildCaptureOptions();
+  capture_options.set_pid(pid);
+  auto result_or_error = instrumentation_manager->InstrumentProcess(capture_options);
+  ASSERT_THAT(result_or_error,
+              HasError("At least one thread of the target process is in strict seccomp mode."));
 
   kill(pid, SIGKILL);
   waitpid(pid, nullptr, 0);
