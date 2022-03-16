@@ -21,8 +21,10 @@ class CloudCollectorStartStopCaptureRequestWaiter : public StartStopCaptureReque
       std::optional<absl::Duration> max_capture_duration = std::nullopt)
       : max_capture_duration_(max_capture_duration) {}
 
-  // WaitForStartCaptureRequest is blocked until StartCapture is called.
-  [[nodiscard]] orbit_grpc_protos::CaptureOptions WaitForStartCaptureRequest() override;
+  // WaitForStartCaptureRequest is blocked until StartCapture or StopCapture is called. For the
+  // latter case, it will return an error message.
+  [[nodiscard]] ErrorMessageOr<orbit_grpc_protos::CaptureOptions> WaitForStartCaptureRequest()
+      override;
   void StartCapture(orbit_grpc_protos::CaptureOptions capture_options);
 
   // WaitForStopCaptureRequest is blocked until StopCapture is called.
@@ -32,13 +34,12 @@ class CloudCollectorStartStopCaptureRequestWaiter : public StartStopCaptureReque
   [[nodiscard]] CaptureServiceBase::StopCaptureReason GetStopCaptureReason() const;
 
  private:
-  mutable absl::Mutex start_mutex_;
-  orbit_grpc_protos::CaptureOptions capture_options_ ABSL_GUARDED_BY(start_mutex_);
-  bool start_requested_ ABSL_GUARDED_BY(start_mutex_) = false;
+  mutable absl::Mutex mutex_;
+  orbit_grpc_protos::CaptureOptions capture_options_ ABSL_GUARDED_BY(mutex_);
+  bool start_requested_ ABSL_GUARDED_BY(mutex_) = false;
 
-  mutable absl::Mutex stop_mutex_;
-  CaptureServiceBase::StopCaptureReason stop_capture_reason_ ABSL_GUARDED_BY(stop_mutex_);
-  bool stop_requested_ ABSL_GUARDED_BY(stop_mutex_) = false;
+  CaptureServiceBase::StopCaptureReason stop_capture_reason_ ABSL_GUARDED_BY(mutex_);
+  bool stop_requested_ ABSL_GUARDED_BY(mutex_) = false;
 
   std::optional<absl::Duration> max_capture_duration_;
 };

@@ -7,6 +7,7 @@
 
 #include "CaptureServiceBase/CaptureServiceBase.h"
 #include "GrpcProtos/capture.pb.h"
+#include "OrbitBase/Result.h"
 
 namespace orbit_capture_service_base {
 
@@ -16,7 +17,8 @@ namespace orbit_capture_service_base {
 class StartStopCaptureRequestWaiter {
  public:
   virtual ~StartStopCaptureRequestWaiter() = default;
-  [[nodiscard]] virtual orbit_grpc_protos::CaptureOptions WaitForStartCaptureRequest() = 0;
+  [[nodiscard]] virtual ErrorMessageOr<orbit_grpc_protos::CaptureOptions>
+  WaitForStartCaptureRequest() = 0;
   [[nodiscard]] virtual CaptureServiceBase::StopCaptureReason WaitForStopCaptureRequest() = 0;
 };
 

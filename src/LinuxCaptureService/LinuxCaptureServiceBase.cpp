@@ -239,8 +239,15 @@ CaptureServiceBase::CaptureInitializationResult LinuxCaptureServiceBase::DoCaptu
       producer_event_processor_.get(), &tracing_handler};
   MemoryInfoHandler memory_info_handler{producer_event_processor_.get()};
 
-  const CaptureOptions& capture_options =
-      start_stop_capture_request_waiter->WaitForStartCaptureRequest();
+  auto capture_options_or_error = start_stop_capture_request_waiter->WaitForStartCaptureRequest();
+  if (capture_options_or_error.has_error()) {
+    ORBIT_ERROR("An error occurred while waiting for start: %s",
+                capture_options_or_error.error().message());
+    client_capture_event_collector->StopAndWait();
+    TerminateCapture();
+    return CaptureInitializationResult::kSuccess;
+  }
+  const CaptureOptions& capture_options = capture_options_or_error.value();
 
   // Enable Orbit API in tracee.
   std::optional<std::string> error_enabling_orbit_api;

@@ -41,8 +41,9 @@ grpc::Status WindowsCaptureService::Capture(
               "Cannot start capture because another capture is already in progress"};
   }
 
-  const CaptureOptions& capture_options =
-      start_stop_capture_request_waiter->WaitForStartCaptureRequest();
+  auto capture_options_or_error = start_stop_capture_request_waiter->WaitForStartCaptureRequest();
+  ORBIT_CHECK(capture_options_or_error.has_value());
+  const CaptureOptions& capture_options = capture_options_or_error.value();
 
   StartEventProcessing(capture_options);
   TracingHandler tracing_handler{producer_event_processor_.get()};
