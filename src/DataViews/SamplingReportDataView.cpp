@@ -384,7 +384,7 @@ void SamplingReportDataView::SetStackEventsCount(uint32_t stack_events_count) {
 [[nodiscard]] std::string SamplingReportDataView::BuildToolTipUnwindErrors(
     const SampledFunction& function) const {
   if (function.unwind_errors == 0) return "";
-  
+
   const orbit_statistics::BinomialConfidenceInterval interval =
       app_->GetConfidenceIntervalEstimator().Estimate(function.unwind_errors_percent / 100.0f,
                                                       stack_events_count_);
