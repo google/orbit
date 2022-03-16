@@ -150,7 +150,7 @@ ErrorMessageOr<void> ProcessListImpl::Refresh() {
     auto it = process_infos_.find(pid);
     if (it == process_infos_.end()) {
       ProcessInfo& process_info = process_infos_[pid];
-      std::string process_name = orbit_base::Narrow(process_entry.szExeFile);
+      std::string process_name = orbit_base::ToStdString(process_entry.szExeFile);
       char full_path[MAX_PATH] = {0};
       // Assume 64 bit as the default.
       bool is_64_bit = true;

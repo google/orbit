@@ -47,7 +47,7 @@ std::vector<Module> ListModules(uint32_t pid) {
   std::vector<Module> modules;
   do {
     std::string build_id;
-    std::string module_path = orbit_base::Narrow(module_entry.szExePath);
+    std::string module_path = orbit_base::ToStdString(module_entry.szExePath);
     auto coff_file_or_error = orbit_object_utils::CreateCoffFile(module_path);
     if (coff_file_or_error.has_value()) {
       build_id = coff_file_or_error.value()->GetBuildId();
@@ -57,7 +57,7 @@ std::vector<Module> ListModules(uint32_t pid) {
     }
 
     Module& module = modules.emplace_back();
-    module.name = orbit_base::Narrow(module_entry.szModule);
+    module.name = orbit_base::ToStdString(module_entry.szModule);
     module.full_path = module_path;
     module.file_size = module_entry.modBaseSize;
     module.address_start = absl::bit_cast<uint64_t>(module_entry.modBaseAddr);

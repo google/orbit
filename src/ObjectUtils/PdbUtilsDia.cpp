@@ -276,7 +276,7 @@ ErrorMessageOr<std::string> PdbDiaTypeAsString(IDiaSymbol* type,
   BSTR type_name_bstr = {};
   std::string type_name;
   if (SUCCEEDED(type->get_name(&type_name_bstr)) && type_name_bstr != NULL) {
-    type_name = orbit_base::Narrow(type_name_bstr);
+    type_name = orbit_base::ToStdString(type_name_bstr);
     SysFreeString(type_name_bstr);
   }
 

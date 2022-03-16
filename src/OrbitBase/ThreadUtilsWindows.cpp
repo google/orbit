@@ -89,7 +89,7 @@ std::string GetThreadNameNative(uint32_t tid) {
   // Get thread name from handle.
   PWSTR thread_name_pwstr;
   if (SUCCEEDED((*get_thread_description)(thread_handle, &thread_name_pwstr))) {
-    std::string thread_name = orbit_base::Narrow(thread_name_pwstr);
+    std::string thread_name = orbit_base::ToStdString(thread_name_pwstr);
     LocalFree(thread_name_pwstr);
     return thread_name;
   }

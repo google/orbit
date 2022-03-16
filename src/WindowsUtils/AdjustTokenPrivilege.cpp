@@ -9,7 +9,7 @@
 namespace orbit_windows_utils {
 
 ErrorMessageOr<void> AdjustTokenPrivilege(LPCTSTR token_name, bool enabled) {
-  std::string token_name_str = orbit_base::Narrow(token_name);
+  std::string token_name_str(orbit_base::ToStdString(token_name));
   HANDLE token_handle;
   if (!OpenProcessToken(GetCurrentProcess(), TOKEN_ADJUST_PRIVILEGES, &token_handle)) {
     return ErrorMessage{absl::StrFormat("Unable to open process token \"%s\"", token_name_str)};

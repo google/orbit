@@ -58,6 +58,7 @@ target_sources(OrbitBase PRIVATE
         ReadFileToString.cpp
         SafeStrerror.cpp
         SimpleExecutor.cpp
+        StringConversion.cpp
         TemporaryFile.cpp
         ThreadPool.cpp
         WriteStringToFile.cpp)

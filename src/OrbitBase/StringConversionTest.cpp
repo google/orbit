@@ -4,43 +4,64 @@
 
 #include <gtest/gtest.h>
 
+#include "OrbitBase/Logging.h"
 #include "OrbitBase/StringConversion.h"
 
 namespace {
 
-const std::wstring kAsciiWideString = L"Ascii string";
-const std::string kAsciiString = "Ascii string";
-const std::wstring kUnicodeWideString = L"CaféSchloß🏰🚀😎🐨😁";
-const std::string kUnicodeString = "CaféSchloß🏰🚀😎🐨😁";
+constexpr const wchar_t* kAsciiWideString = L"Ascii string";
+constexpr const char* kAsciiString = "Ascii string";
+constexpr const wchar_t* kUnicodeWideString = L"CaféSchloß☕🏰🚀😎🐨😁";
+constexpr const char* kUnicodeString = "CaféSchloß☕🏰🚀😎🐨😁";
+const std::string kEmptyString;
+const std::wstring kEmptyWideString;
 
 }  // namespace
 
 TEST(StringConversion, NarrowAscii) {
-  // Ascii string.
-  EXPECT_EQ(orbit_base::Narrow(kAsciiWideString), kAsciiString);
+  // const wchar_t* to std::string.
+  EXPECT_EQ(orbit_base::ToStdString(kAsciiWideString), kAsciiString);
+
+  // std::wstring to std::string.
+  EXPECT_EQ(orbit_base::ToStdString(std::wstring(kAsciiWideString)), kAsciiString);
 }
 
 TEST(StringConversion, WidenAscii) {
-  // Ascii string.
-  EXPECT_EQ(orbit_base::Widen(kAsciiString), kAsciiWideString);
+  // const char* to std::wstring.
+  EXPECT_EQ(orbit_base::ToStdWString(kAsciiString), kAsciiWideString);
+
+  // std::string to std::wstring.
+  EXPECT_EQ(orbit_base::ToStdWString(std::string(kAsciiString)), kAsciiWideString);
 }
 
 TEST(StringConversion, NarrowUnicode) {
-  // Unicode string.
-  EXPECT_EQ(orbit_base::Narrow(kUnicodeWideString), kUnicodeString);
+  // const wchar_t* to std::string.
+  EXPECT_EQ(orbit_base::ToStdString(kUnicodeWideString), kUnicodeString);
+
+  // std::wstring to std::string.
+  EXPECT_EQ(orbit_base::ToStdString(std::wstring(kUnicodeWideString)), kUnicodeString);
 }
 
 TEST(StringConversion, WidenUnicode) {
-  // Unicode string.
-  EXPECT_EQ(orbit_base::Widen(kUnicodeString), kUnicodeWideString);
+  // const char* to std::wstring.
+  EXPECT_EQ(orbit_base::ToStdWString(kUnicodeString), kUnicodeWideString);
+
+  // std::string to std::wstring.
+  EXPECT_EQ(orbit_base::ToStdWString(std::string(kUnicodeString)), kUnicodeWideString);
 }
 
 TEST(StringConversion, NarrowEmpty) {
-  // Empty string.
-  EXPECT_EQ(orbit_base::Narrow(L""), "");
+  // const wchar_t* to std::string.
+  EXPECT_EQ(orbit_base::ToStdString(L""), "");
+
+  // std::wstring to std::string.
+  EXPECT_EQ(orbit_base::ToStdString(kEmptyWideString), "");
 }
 
 TEST(StringConversion, WidenEmpty) {
-  // Empty string.
-  EXPECT_EQ(orbit_base::Widen(""), L"");
+  // const char* to std::wstring.
+  EXPECT_EQ(orbit_base::ToStdWString(""), L"");
+
+  // std::string to std::wstring.
+  EXPECT_EQ(orbit_base::ToStdWString(kEmptyString), L"");
 }
