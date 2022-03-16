@@ -214,7 +214,7 @@ const QRegularExpression kRegisterRegex{
 const QRegularExpression kKeywordRegex{"\\b(ptr|[xy]mmword|[sdq]?word|byte)\\b"};
 const QRegularExpression kCommentRegex{"(;.*)$"};
 const QRegularExpression kPlatformRegex{"^(Platform:.*)$"};
-const QRegularExpression kCallTargetRegex{"\\bcall[^\\(]*\\()(.*)\\)$"};
+const QRegularExpression kCallTargetRegex{R"(\bcall[^\(]*\((.*)\)$)"};
 }  // namespace AssemblyRegex
 }  // namespace
 
