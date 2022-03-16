@@ -108,8 +108,8 @@ constexpr std::array<uint32_t, kNumFunctions> kSampledExclusives{3, 6, 1, 0};
 constexpr std::array<float, kNumFunctions> kSampledExclusivePercents{0.08f, 0.16f, 0.03f, 0.0f};
 constexpr std::array<uint32_t, kNumFunctions> kSampledInclusives{3, 6, 1, 593};
 constexpr std::array<float, kNumFunctions> kSampledInclusivePercents{0.08f, 0.16f, 0.03f, 16.0f};
-constexpr std::array<uint32_t, kNumFunctions> kSampledUnwindErrors{3, 2, 1, 0};
-constexpr std::array<float, kNumFunctions> kSampledUnwindErrorPercents{0.08f, 0.05f, 0.03f, 0.0f};
+constexpr std::array<uint32_t, kNumFunctions> kSampledUnwindErrors{30, 8, 2, 0};
+constexpr std::array<float, kNumFunctions> kSampledUnwindErrorPercents{0.8f, 0.2f, 0.06f, 0.0f};
 constexpr uint32_t kStackEventsCount = 3700;
 
 std::unique_ptr<CaptureData> GenerateTestCaptureData(
@@ -216,17 +216,30 @@ std::string GetExpectedToolTipByIndex(size_t index, int column) {
         kStackEventsCount, percentage, percentage - kConfidenceIntervalLeftSectionLength * 100.0f,
         percentage + kConfidenceIntervalRightSectionLength * 100.0f);
   }
+  if (column == kColumnUnwindErrors) {
+    const float percentage = kSampledUnwindErrorPercents[index];
+    return absl::StrFormat(
+        "%u samples with the function \"%s\"\n"
+        "at the top of the stack could not be unwound\n"
+        "in a total of %u stack samples.\n"
+        "This makes up for %.2f%% of samples.\n\n"
+        "The 95%% confidence interval for the true percentage is\n"
+        "(%.2f%%, %.2f%%).",
+        kSampledUnwindErrors[index], kFunctionPrettyNames[index], kStackEventsCount, percentage,
+        percentage - kConfidenceIntervalLeftSectionLength * 100.0f,
+        percentage + kConfidenceIntervalRightSectionLength * 100.0f);
+  }
   return "";
 }
 
 std::string GetExpectedDisplayUnwindErrorsByIndex(size_t index, bool for_copy = false) {
   if (kSampledUnwindErrors[index] <= 0) return "";
 
-  std::string value = absl::StrFormat("%.2f%%", kSampledUnwindErrorPercents[index]);
-  if (!for_copy) {
-    absl::StrAppend(&value, absl::StrFormat(" (%d)", kSampledUnwindErrors[index]));
+  if (for_copy) {
+    return absl::StrFormat("%.2f%%", kSampledUnwindErrorPercents[index]);
   }
-  return value;
+  return absl::StrFormat("%.1f ±%.1f", kSampledUnwindErrorPercents[index],
+                         kConfidenceIntervalLongerSectionLength * 100.0f);
 }
 
 class MockSamplingReportInterface : public orbit_data_views::SamplingReportInterface {
@@ -485,7 +498,7 @@ TEST_F(SamplingReportDataViewTest, ContextMenuActionsAreInvoked) {
   // Copy Selection
   {
     std::string expected_clipboard = absl::StrFormat(
-        "Hooked\tName\tInclusive, %%\tExclusive, %%\tModule\tAddress\tUnwind errors\n"
+        "Hooked\tName\tInclusive, %%\tExclusive, %%\tModule\tAddress\tUnwind errors, %%\n"
         "\t%s\t%s\t%s\t%s\t%s\t%s\n",
         GetExpectedDisplayFunctionNameByIndex(0, module_manager_, *capture_data_),
         GetExpectedDisplayInclusiveByIndex(0, true), GetExpectedDisplayExclusiveByIndex(0, true),
@@ -497,7 +510,7 @@ TEST_F(SamplingReportDataViewTest, ContextMenuActionsAreInvoked) {
   // Export to CSV
   {
     std::string expected_contents = absl::StrFormat(
-        R"("Hooked","Name","Inclusive, %%","Exclusive, %%","Module","Address","Unwind errors")"
+        R"("Hooked","Name","Inclusive, %%","Exclusive, %%","Module","Address","Unwind errors, %%")"
         "\r\n"
         R"("","%s","%s","%s","%s","%s","%s")"
         "\r\n",
