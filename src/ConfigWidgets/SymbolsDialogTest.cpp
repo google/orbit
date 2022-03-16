@@ -27,8 +27,6 @@
 
 namespace orbit_config_widgets {
 
-using ::testing::HasSubstr;
-
 class MockPersistentStorageManager : public orbit_symbol_paths::PersistentStorageManager {
  public:
   MOCK_METHOD(void, SavePaths, (absl::Span<const std::filesystem::path>), (override));
@@ -39,66 +37,72 @@ class MockPersistentStorageManager : public orbit_symbol_paths::PersistentStorag
               LoadModuleSymbolFileMappings, (), (override));
 };
 
-TEST(SymbolsDialog, ConstructEmpty) {
-  MockPersistentStorageManager mock_storage_manager;
-  EXPECT_CALL(mock_storage_manager, LoadPaths())
-      .WillOnce(testing::Return(std::vector<std::filesystem::path>{}));
-  EXPECT_CALL(mock_storage_manager, SavePaths)
-      .WillOnce([](absl::Span<const std::filesystem::path> paths) { EXPECT_TRUE(paths.empty()); });
+class SymbolsDialogTest : public ::testing::Test {
+ protected:
+  void SetLoadPaths(std::vector<std::filesystem::path> load_paths) {
+    EXPECT_CALL(mock_storage_manager_, LoadPaths).WillOnce(testing::Return(std::move(load_paths)));
+  }
+  void SetExpectSavePaths(std::vector<std::filesystem::path> save_paths) {
+    EXPECT_CALL(mock_storage_manager_, SavePaths)
+        .WillOnce(
+            [save_paths = std::move(save_paths)](absl::Span<const std::filesystem::path> paths) {
+              EXPECT_EQ(paths, save_paths);
+            });
+  }
 
-  SymbolsDialog dialog{&mock_storage_manager};
+  MockPersistentStorageManager mock_storage_manager_;
+};
+
+TEST_F(SymbolsDialogTest, ConstructEmpty) {
+  SetLoadPaths({});
+  SetExpectSavePaths({});
+
+  SymbolsDialog dialog{&mock_storage_manager_};
 
   auto* list_widget = dialog.findChild<QListWidget*>("listWidget");
   ASSERT_NE(list_widget, nullptr);
   EXPECT_EQ(list_widget->count(), 0);
 }
 
-TEST(SymbolsDialog, ConstructNonEmpty) {
+TEST_F(SymbolsDialogTest, ConstructNonEmpty) {
   const std::vector<std::filesystem::path> test_paths{"/path/to/somewhere",
                                                       "path/to/somewhere/else"};
 
-  MockPersistentStorageManager mock_storage_manager;
-  EXPECT_CALL(mock_storage_manager, LoadPaths).WillOnce(testing::Return(test_paths));
+  SetLoadPaths(test_paths);
+  SetExpectSavePaths(test_paths);
 
-  SymbolsDialog dialog{&mock_storage_manager};
+  SymbolsDialog dialog{&mock_storage_manager_};
 
   auto* list_widget = dialog.findChild<QListWidget*>("listWidget");
   ASSERT_NE(list_widget, nullptr);
   EXPECT_EQ(list_widget->count(), test_paths.size());
-
-  EXPECT_CALL(mock_storage_manager, SavePaths)
-      .WillOnce([test_paths](absl::Span<const std::filesystem::path> paths) {
-        EXPECT_EQ(paths, test_paths);
-      });
 }
 
-TEST(SymbolsDialog, ConstructWithElfModule) {
+TEST_F(SymbolsDialogTest, ConstructWithElfModule) {
   orbit_grpc_protos::ModuleInfo module_info;
   module_info.set_object_file_type(orbit_grpc_protos::ModuleInfo::kElfFile);
   module_info.set_file_path("/path/to/lib.so");
   orbit_client_data::ModuleData module{module_info};
 
-  MockPersistentStorageManager mock_storage_manager;
-  EXPECT_CALL(mock_storage_manager, LoadPaths())
-      .WillOnce(testing::Return(std::vector<std::filesystem::path>{}));
+  SetLoadPaths({});
+  SetExpectSavePaths({});
 
-  SymbolsDialog dialog{&mock_storage_manager, &module};
-
-  EXPECT_CALL(mock_storage_manager, SavePaths)
-      .WillOnce([](absl::Span<const std::filesystem::path> paths) { EXPECT_TRUE(paths.empty()); });
+  SymbolsDialog dialog{&mock_storage_manager_, &module};
 }
 
-TEST(SymbolsDialog, TryAddSymbolPath) {
-  MockPersistentStorageManager mock_storage_manager;
-  EXPECT_CALL(mock_storage_manager, LoadPaths())
-      .WillOnce(testing::Return(std::vector<std::filesystem::path>{}));
+TEST_F(SymbolsDialogTest, TryAddSymbolPath) {
+  std::filesystem::path path{"/absolute/test/path1"};
+  std::filesystem::path path_2{R"(C:\windows\test\path1)"};
+  std::filesystem::path file{"/path/to/file.ext"};
+  std::vector<std::filesystem::path> save_paths = {path, path_2, file};
 
-  SymbolsDialog dialog{&mock_storage_manager};
+  SetLoadPaths({});
+  SetExpectSavePaths(save_paths);
+
+  SymbolsDialog dialog{&mock_storage_manager_};
   auto* list_widget = dialog.findChild<QListWidget*>("listWidget");
   ASSERT_NE(list_widget, nullptr);
   EXPECT_EQ(list_widget->count(), 0);
-
-  std::filesystem::path path{"/absolute/test/path1"};
 
   {  // simple add succeeds
     auto result = dialog.TryAddSymbolPath(path);
@@ -114,35 +118,28 @@ TEST(SymbolsDialog, TryAddSymbolPath) {
     EXPECT_EQ(list_widget->count(), 1);
   }
 
-  std::filesystem::path path_2{R"(C:\windows\test\path1)"};
   {  // add different path succeeds
     auto result = dialog.TryAddSymbolPath(path_2);
     EXPECT_TRUE(result.has_value());
     EXPECT_EQ(list_widget->count(), 2);
   }
 
-  std::filesystem::path file{"/path/to/file.ext"};
   {  // add path to file should succeed
     auto result = dialog.TryAddSymbolPath(file);
     EXPECT_EQ(list_widget->count(), 3);
   }
-
-  std::vector<std::filesystem::path> test_paths = {path, path_2, file};
-  EXPECT_CALL(mock_storage_manager, SavePaths)
-      .WillOnce([test_paths](absl::Span<const std::filesystem::path> paths) {
-        EXPECT_EQ(paths, test_paths);
-      });
 }
 
-TEST(SymbolsDialog, TryAddSymbolFileWithoutModule) {
-  MockPersistentStorageManager mock_storage_manager;
-  EXPECT_CALL(mock_storage_manager, LoadPaths())
-      .WillOnce(testing::Return(std::vector<std::filesystem::path>{}));
+TEST_F(SymbolsDialogTest, TryAddSymbolFileWithoutModule) {
+  std::filesystem::path hello_world_elf = orbit_test::GetTestdataDir() / "hello_world_elf";
+  std::vector<std::filesystem::path> save_paths{hello_world_elf};
 
-  SymbolsDialog dialog{&mock_storage_manager};
+  SetLoadPaths({});
+  SetExpectSavePaths(save_paths);
+
+  SymbolsDialog dialog{&mock_storage_manager_};
 
   // success case
-  std::filesystem::path hello_world_elf = orbit_test::GetTestdataDir() / "hello_world_elf";
   {
     auto result = dialog.TryAddSymbolFile(hello_world_elf);
     EXPECT_TRUE(result.has_value());
@@ -165,30 +162,25 @@ TEST(SymbolsDialog, TryAddSymbolFileWithoutModule) {
     EXPECT_THAT(result,
                 orbit_test_utils::HasError("The selected file does not contain a build id"));
   }
-
-  std::vector<std::filesystem::path> test_paths{hello_world_elf};
-  EXPECT_CALL(mock_storage_manager, SavePaths)
-      .WillOnce([test_paths](absl::Span<const std::filesystem::path> paths) {
-        EXPECT_EQ(paths, test_paths);
-      });
 }
 
-TEST(SymbolsDialog, TryAddSymbolFileWithModule) {
+TEST_F(SymbolsDialogTest, TryAddSymbolFileWithModule) {
   orbit_grpc_protos::ModuleInfo module_info;
   module_info.set_object_file_type(orbit_grpc_protos::ModuleInfo::kElfFile);
   module_info.set_file_path((orbit_test::GetTestdataDir() / "no_symbols_elf").string());
   module_info.set_build_id("b5413574bbacec6eacb3b89b1012d0e2cd92ec6b");
   orbit_client_data::ModuleData module{module_info};
 
-  MockPersistentStorageManager mock_storage_manager;
-  EXPECT_CALL(mock_storage_manager, LoadPaths())
-      .WillOnce(testing::Return(std::vector<std::filesystem::path>{}));
-
-  SymbolsDialog dialog{&mock_storage_manager, &module};
-
-  // Success (build id matches)
   std::filesystem::path no_symbols_elf_debug =
       orbit_test::GetTestdataDir() / "no_symbols_elf.debug";
+  std::vector<std::filesystem::path> save_paths{no_symbols_elf_debug};
+
+  SetLoadPaths({});
+  SetExpectSavePaths(save_paths);
+
+  SymbolsDialog dialog{&mock_storage_manager_, &module};
+
+  // Success (build id matches)
   {
     auto result = dialog.TryAddSymbolFile(no_symbols_elf_debug);
     EXPECT_TRUE(result.has_value());
@@ -201,20 +193,13 @@ TEST(SymbolsDialog, TryAddSymbolFileWithModule) {
     EXPECT_THAT(result, orbit_test_utils::HasError(
                             "The build ids of module and symbols file do not match."));
   }
-
-  std::vector<std::filesystem::path> test_paths{no_symbols_elf_debug};
-  EXPECT_CALL(mock_storage_manager, SavePaths)
-      .WillOnce([test_paths](absl::Span<const std::filesystem::path> paths) {
-        EXPECT_EQ(paths, test_paths);
-      });
 }
 
-TEST(SymbolsDialog, RemoveButton) {
-  MockPersistentStorageManager mock_storage_manager;
-  EXPECT_CALL(mock_storage_manager, LoadPaths())
-      .WillOnce(testing::Return(std::vector<std::filesystem::path>{"random/path/entry"}));
+TEST_F(SymbolsDialogTest, RemoveButton) {
+  SetLoadPaths({"random/path/entry"});
+  SetExpectSavePaths({});
 
-  SymbolsDialog dialog{&mock_storage_manager};
+  SymbolsDialog dialog{&mock_storage_manager_};
 
   auto* remove_button = dialog.findChild<QPushButton*>("removeButton");
   ASSERT_NE(remove_button, nullptr);
@@ -231,9 +216,6 @@ TEST(SymbolsDialog, RemoveButton) {
 
   EXPECT_EQ(list_widget->count(), 0);
   EXPECT_FALSE(remove_button->isEnabled());
-
-  EXPECT_CALL(mock_storage_manager, SavePaths)
-      .WillOnce([](absl::Span<const std::filesystem::path> paths) { EXPECT_TRUE(paths.empty()); });
 }
 
 }  // namespace orbit_config_widgets
