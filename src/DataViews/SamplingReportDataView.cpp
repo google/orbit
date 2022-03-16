@@ -7,6 +7,7 @@
 #include <absl/container/flat_hash_set.h>
 #include <absl/flags/declare.h>
 #include <absl/flags/flag.h>
+#include <absl/strings/str_cat.h>
 #include <absl/strings/str_format.h>
 #include <absl/strings/str_split.h>
 #include <stddef.h>
@@ -57,7 +58,7 @@ const std::vector<DataView::Column>& SamplingReportDataView::GetColumns() {
     columns[kColumnExclusive] = {"Exclusive, %", .0f, SortingOrder::kDescending};
     columns[kColumnModuleName] = {"Module", .0f, SortingOrder::kAscending};
     columns[kColumnAddress] = {"Address", .0f, SortingOrder::kAscending};
-    columns[kColumnUnwindErrors] = {"Unwind errors", .0f, SortingOrder::kDescending};
+    columns[kColumnUnwindErrors] = {"Unwind errors, %", .0f, SortingOrder::kDescending};
     return columns;
   }();
   return columns;
@@ -90,9 +91,7 @@ std::string SamplingReportDataView::GetValue(int row, int column) {
     case kColumnAddress:
       return absl::StrFormat("%#llx", func.absolute_address);
     case kColumnUnwindErrors:
-      return (func.unwind_errors > 0)
-                 ? absl::StrFormat("%.2f%% (%d)", func.unwind_errors_percent, func.unwind_errors)
-                 : "";
+      return (func.unwind_errors > 0) ? BuildPercentageString(func.unwind_errors_percent) : "";
     default:
       return "";
   }
@@ -343,39 +342,73 @@ void SamplingReportDataView::SetStackEventsCount(uint32_t stack_events_count) {
   stack_events_count_ = stack_events_count;
 }
 
-std::string SamplingReportDataView::GetToolTip(int row, int column) {
-  if (column != kColumnInclusive && column != kColumnExclusive) {
-    return "";
-  }
-  const SampledFunction& function = GetSampledFunction(row);
-  uint32_t raw_count = {};
-  float percentage = {};
-  std::string count_type;
-  std::string at_the_top_or_encountered;
-  if (column == kColumnInclusive) {
-    raw_count = function.inclusive;
-    percentage = function.inclusive_percent;
-    count_type = "inclusive";
-    at_the_top_or_encountered = "encountered";
-  } else {
-    raw_count = function.exclusive;
-    percentage = function.exclusive_percent;
-    count_type = "exclusive";
-    at_the_top_or_encountered = "at the top of the callstack";
-  }
-
-  orbit_statistics::BinomialConfidenceInterval interval =
-      app_->GetConfidenceIntervalEstimator().Estimate(percentage / 100.0f, stack_events_count_);
-
+[[nodiscard]] static std::string BuildTooltipTail(
+    uint32_t stack_events_count, float percentage,
+    const orbit_statistics::BinomialConfidenceInterval& interval) {
   return absl::StrFormat(
-      "The function \"%s\"\n"
-      "was %s %u times (%s count)\n"
       "in a total of %u stack samples.\n"
       "This makes up for %.2f%% of samples.\n\n"
       "The 95%% confidence interval for the true percentage is\n"
       "(%.2f%%, %.2f%%).",
-      function.name, at_the_top_or_encountered, raw_count, count_type, stack_events_count_,
-      percentage, interval.lower * 100.0f, interval.upper * 100.0f);
+      stack_events_count, percentage, interval.lower * 100.0f, interval.upper * 100.0f);
+}
+
+[[nodiscard]] std::string SamplingReportDataView::BuildToolTipInclusive(
+    const SampledFunction& function) const {
+  const orbit_statistics::BinomialConfidenceInterval interval =
+      app_->GetConfidenceIntervalEstimator().Estimate(function.inclusive_percent / 100.0f,
+                                                      stack_events_count_);
+  const std::string head = absl::StrFormat(
+      "The function \"%s\"\n"
+      "was encountered %u times (inclusive count)\n",
+      function.name, function.inclusive);
+  return absl::StrCat(head,
+                      BuildTooltipTail(stack_events_count_, function.inclusive_percent, interval));
+}
+
+[[nodiscard]] std::string SamplingReportDataView::BuildToolTipExclusive(
+    const SampledFunction& function) const {
+  const orbit_statistics::BinomialConfidenceInterval interval =
+      app_->GetConfidenceIntervalEstimator().Estimate(function.exclusive_percent / 100.0f,
+                                                      stack_events_count_);
+
+  const std::string head = absl::StrFormat(
+      "The function \"%s\"\n"
+      "was at the top of the callstack %u times (exclusive count)\n",
+      function.name, function.exclusive);
+
+  return absl::StrCat(head,
+                      BuildTooltipTail(stack_events_count_, function.exclusive_percent, interval));
+}
+
+[[nodiscard]] std::string SamplingReportDataView::BuildToolTipUnwindErrors(
+    const SampledFunction& function) const {
+  if (function.unwind_errors == 0) return "";
+  
+  const orbit_statistics::BinomialConfidenceInterval interval =
+      app_->GetConfidenceIntervalEstimator().Estimate(function.unwind_errors_percent / 100.0f,
+                                                      stack_events_count_);
+  const std::string head = absl::StrFormat(
+      "Stack containing the function \"%s\"\n"
+      "could not be unwound %u times\n",
+      function.name, function.unwind_errors);
+
+  return absl::StrCat(
+      head, BuildTooltipTail(stack_events_count_, function.unwind_errors_percent, interval));
+}
+
+std::string SamplingReportDataView::GetToolTip(int row, int column) {
+  const SampledFunction& function = GetSampledFunction(row);
+  switch (column) {
+    case kColumnInclusive:
+      return BuildToolTipInclusive(function);
+    case kColumnExclusive:
+      return BuildToolTipExclusive(function);
+    case kColumnUnwindErrors:
+      return BuildToolTipUnwindErrors(function);
+    default:
+      return "";
+  }
 }
 
 void SamplingReportDataView::DoFilter() {

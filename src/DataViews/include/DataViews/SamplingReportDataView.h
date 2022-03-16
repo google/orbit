@@ -68,6 +68,13 @@ class SamplingReportDataView : public DataView {
 
   [[nodiscard]] std::string BuildPercentageString(float percentage) const;
 
+  [[nodiscard]] std::string BuildToolTipInclusive(
+      const orbit_client_data::SampledFunction& function) const;
+  [[nodiscard]] std::string BuildToolTipExclusive(
+      const orbit_client_data::SampledFunction& function) const;
+  [[nodiscard]] std::string BuildToolTipUnwindErrors(
+      const orbit_client_data::SampledFunction& function) const;
+
   std::vector<orbit_client_data::SampledFunction> functions_;
   // We need to keep user's selected function ids such that if functions_ changes, the
   // selected_indices_ can be updated according to the selected function ids.
