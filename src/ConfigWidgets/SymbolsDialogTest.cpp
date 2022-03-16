@@ -39,24 +39,27 @@ class MockPersistentStorageManager : public orbit_symbol_paths::PersistentStorag
 
 class SymbolsDialogTest : public ::testing::Test {
  protected:
-  void SetLoadPaths(std::vector<std::filesystem::path> load_paths) {
-    EXPECT_CALL(mock_storage_manager_, LoadPaths).WillOnce(testing::Return(std::move(load_paths)));
-  }
-  void SetExpectSavePaths(std::vector<std::filesystem::path> save_paths) {
+  explicit SymbolsDialogTest() {
+    EXPECT_CALL(mock_storage_manager_, LoadPaths).WillOnce(testing::Return(load_paths_));
     EXPECT_CALL(mock_storage_manager_, SavePaths)
-        .WillOnce(
-            [save_paths = std::move(save_paths)](absl::Span<const std::filesystem::path> paths) {
-              EXPECT_EQ(paths, save_paths);
-            });
+        .WillOnce([this](absl::Span<const std::filesystem::path> paths) {
+          EXPECT_EQ(paths, expected_save_paths_);
+        });
+  }
+
+  void SetLoadPaths(std::vector<std::filesystem::path> load_paths) {
+    load_paths_ = std::move(load_paths);
+  }
+  void SetExpectSavePaths(std::vector<std::filesystem::path> expected_save_paths) {
+    expected_save_paths_ = std::move(expected_save_paths);
   }
 
   MockPersistentStorageManager mock_storage_manager_;
+  std::vector<std::filesystem::path> load_paths_;
+  std::vector<std::filesystem::path> expected_save_paths_;
 };
 
 TEST_F(SymbolsDialogTest, ConstructEmpty) {
-  SetLoadPaths({});
-  SetExpectSavePaths({});
-
   SymbolsDialog dialog{&mock_storage_manager_};
 
   auto* list_widget = dialog.findChild<QListWidget*>("listWidget");
@@ -84,9 +87,6 @@ TEST_F(SymbolsDialogTest, ConstructWithElfModule) {
   module_info.set_file_path("/path/to/lib.so");
   orbit_client_data::ModuleData module{module_info};
 
-  SetLoadPaths({});
-  SetExpectSavePaths({});
-
   SymbolsDialog dialog{&mock_storage_manager_, &module};
 }
 
@@ -96,7 +96,6 @@ TEST_F(SymbolsDialogTest, TryAddSymbolPath) {
   std::filesystem::path file{"/path/to/file.ext"};
   std::vector<std::filesystem::path> save_paths = {path, path_2, file};
 
-  SetLoadPaths({});
   SetExpectSavePaths(save_paths);
 
   SymbolsDialog dialog{&mock_storage_manager_};
@@ -134,7 +133,6 @@ TEST_F(SymbolsDialogTest, TryAddSymbolFileWithoutModule) {
   std::filesystem::path hello_world_elf = orbit_test::GetTestdataDir() / "hello_world_elf";
   std::vector<std::filesystem::path> save_paths{hello_world_elf};
 
-  SetLoadPaths({});
   SetExpectSavePaths(save_paths);
 
   SymbolsDialog dialog{&mock_storage_manager_};
@@ -175,7 +173,6 @@ TEST_F(SymbolsDialogTest, TryAddSymbolFileWithModule) {
       orbit_test::GetTestdataDir() / "no_symbols_elf.debug";
   std::vector<std::filesystem::path> save_paths{no_symbols_elf_debug};
 
-  SetLoadPaths({});
   SetExpectSavePaths(save_paths);
 
   SymbolsDialog dialog{&mock_storage_manager_, &module};
