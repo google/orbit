@@ -347,6 +347,8 @@ void OrbitApp::OnCaptureStarted(const orbit_grpc_protos::CaptureStarted& capture
         // this task is completely executed.
         capture_data_ = std::make_unique<CaptureData>(
             capture_started, file_path, std::move(frame_track_function_ids), data_source_);
+        capture_data_->set_memory_warning_threshold_kb(
+            data_manager_->memory_warning_threshold_kb());
         capture_window_->CreateTimeGraph(capture_data_.get());
         orbit_gl::TrackManager* track_manager = GetMutableTimeGraph()->GetTrackManager();
         track_manager->SetIsDataFromSavedCapture(data_source_ ==

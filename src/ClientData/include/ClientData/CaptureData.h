@@ -66,6 +66,12 @@ class CaptureData {
   }
 
   [[nodiscard]] uint64_t memory_sampling_period_ns() const { return memory_sampling_period_ns_; }
+  [[nodiscard]] uint64_t memory_warning_threshold_kb() const {
+    return memory_warning_threshold_kb_;
+  }
+  void set_memory_warning_threshold_kb(uint64_t memory_warning_threshold_kb) {
+    memory_warning_threshold_kb_ = memory_warning_threshold_kb;
+  }
 
   [[nodiscard]] const orbit_grpc_protos::InstrumentedFunction* GetInstrumentedFunctionById(
       uint64_t function_id) const;
@@ -234,6 +240,7 @@ class CaptureData {
   orbit_client_data::ProcessData process_;
   absl::flat_hash_map<uint64_t, orbit_grpc_protos::InstrumentedFunction> instrumented_functions_;
   uint64_t memory_sampling_period_ns_;
+  uint64_t memory_warning_threshold_kb_;
 
   orbit_client_data::CallstackData callstack_data_;
   std::optional<PostProcessedSamplingData> post_processed_sampling_data_;

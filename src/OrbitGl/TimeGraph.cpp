@@ -327,7 +327,6 @@ void TimeGraph::ProcessSystemMemoryTrackingTimer(const TimerInfo& timer_info) {
 
   if (absl::GetFlag(FLAGS_enable_warning_threshold) && !track->GetWarningThreshold().has_value()) {
     constexpr double kMegabytesToKilobytes = 1024.0;
-    // TODO(b/216245594): This uses the DataManager not from the main thread, failing a check.
     double warning_threshold_mb =
         static_cast<double>(app_->GetMemoryWarningThresholdKb()) / kMegabytesToKilobytes;
     track->SetWarningThreshold(warning_threshold_mb);
