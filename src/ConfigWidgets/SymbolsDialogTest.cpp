@@ -40,7 +40,9 @@ class MockPersistentStorageManager : public orbit_symbol_paths::PersistentStorag
 class SymbolsDialogTest : public ::testing::Test {
  protected:
   explicit SymbolsDialogTest() {
-    EXPECT_CALL(mock_storage_manager_, LoadPaths).WillOnce(testing::Return(load_paths_));
+    EXPECT_CALL(mock_storage_manager_, LoadPaths).WillOnce(testing::Return([this]() {
+      return load_paths_;
+    }));
     EXPECT_CALL(mock_storage_manager_, SavePaths)
         .WillOnce([this](absl::Span<const std::filesystem::path> paths) {
           EXPECT_EQ(paths, expected_save_paths_);
