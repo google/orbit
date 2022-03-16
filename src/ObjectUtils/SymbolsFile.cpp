@@ -82,7 +82,6 @@ ErrorMessageOr<orbit_grpc_protos::ModuleSymbols> SymbolsFile::LoadDebugSymbols()
 
   for (FunctionSymbol& function_symbol : function_symbols) {
     orbit_grpc_protos::SymbolInfo* symbol_info = module_symbols.add_symbol_infos();
-    symbol_info->set_name(std::move(function_symbol.mangled_name));
     symbol_info->set_demangled_name(std::move(function_symbol.demangled_name));
     symbol_info->set_address(function_symbol.relative_virtual_address);
     symbol_info->set_size(function_symbol.size);

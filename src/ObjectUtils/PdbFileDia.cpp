@@ -9,11 +9,8 @@
 #include <llvm/Demangle/Demangle.h>
 #include <winerror.h>
 
-<<<<<<< HEAD
-#include "ObjectUtils/PdbUtilsDia.h"
-=======
 #include "Introspection/Introspection.h"
->>>>>>> 5f7357592 (Load debug symbols as raw struct instead of proto)
+#include "ObjectUtils/PdbUtilsDia.h"
 #include "OrbitBase/ExecutablePath.h"
 #include "OrbitBase/Logging.h"
 #include "OrbitBase/StringConversion.h"
@@ -117,19 +114,16 @@ ErrorMessageOr<void> PdbFileDia::LoadProcSymbols(const enum SymTagEnum symbol_ta
 
     BSTR function_name = {};
     if (dia_symbol->get_name(&function_name) != S_OK) continue;
-    symbol_info.set_demangled_name(orbit_base::ToStdString(function_name));
+    FunctionSymbol& function_symbol = debug_symbols.function_symbols.emplace_back();
+    function_symbol.demangled_name = orbit_base::ToStdString(function_name);
     ErrorMessageOr<std::string> parameter_list_or_error = PdbDiaParameterListAsString(dia_symbol);
     if (parameter_list_or_error.has_value()) {
-      symbol_info.set_demangled_name(symbol_info.demangled_name() +
-                                     parameter_list_or_error.value());
+      function_symbol.demangled_name += parameter_list_or_error.value();
     } else {
       ORBIT_ERROR("Unable to retrieve parameter types of function %s. Error: %s",
-                  symbol_info.demangled_name(), parameter_list_or_error.error().message());
+                  function_symbol.demangled_name, parameter_list_or_error.error().message());
     }
     SysFreeString(function_name);
-
-    FunctionSymbol& function_symbol = debug_symbols.function_symbols.emplace_back();
-    function_symbol.demangled_name = std::string(name.begin(), name.end());
 
     DWORD relative_virtual_address = 0;
     if (dia_symbol->get_relativeVirtualAddress(&relative_virtual_address) != S_OK) continue;
