@@ -32,6 +32,9 @@ grpc::Status LinuxCaptureService::Capture(
     case CaptureInitializationResult::kAlreadyInProgress:
       return {grpc::StatusCode::ALREADY_EXISTS,
               "Cannot start capture because another capture is already in progress"};
+    case CaptureInitializationResult::kFailureWhileWaitingForStart:
+      return {grpc::StatusCode::INTERNAL,
+              "An error occurred while waiting for start capture request"};
   }
 
   ORBIT_UNREACHABLE();

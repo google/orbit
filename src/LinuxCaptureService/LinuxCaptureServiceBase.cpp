@@ -245,7 +245,7 @@ CaptureServiceBase::CaptureInitializationResult LinuxCaptureServiceBase::DoCaptu
                 capture_options_or_error.error().message());
     client_capture_event_collector->StopAndWait();
     TerminateCapture();
-    return CaptureInitializationResult::kSuccess;
+    return CaptureInitializationResult::kFailureWhileWaitingForStart;
   }
   const CaptureOptions& capture_options = capture_options_or_error.value();
 

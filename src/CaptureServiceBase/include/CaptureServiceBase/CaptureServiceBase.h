@@ -24,7 +24,11 @@ class CaptureServiceBase {
   void AddCaptureStartStopListener(CaptureStartStopListener* listener);
   void RemoveCaptureStartStopListener(CaptureStartStopListener* listener);
 
-  enum class CaptureInitializationResult { kSuccess, kAlreadyInProgress };
+  enum class CaptureInitializationResult {
+    kSuccess,
+    kAlreadyInProgress,
+    kFailureWhileWaitingForStart,
+  };
   enum class StopCaptureReason {
     kClientStop,
     kMemoryWatchdog,
