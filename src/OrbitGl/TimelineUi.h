@@ -33,8 +33,8 @@ class TimelineUi : public CaptureViewElement {
   void RenderMargin(Batcher& batcher) const;
   void RenderBackground(Batcher& batcher) const;
   void RenderLabel(Batcher& batcher, TextRenderer& text_renderer, uint64_t tick_ns,
-                   uint32_t number_of_decimal_places_needed, float label_z_value,
-                   const Color background_color) const;
+                   uint32_t number_of_decimal_places_needed, float label_z,
+                   Color background_color) const;
   [[nodiscard]] std::string GetLabel(uint64_t tick_ns,
                                      uint32_t number_of_decimal_places_needed) const;
   [[nodiscard]] std::vector<uint64_t> GetTicksForNonOverlappingLabels(

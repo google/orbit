@@ -14,8 +14,8 @@
 
 namespace orbit_gl {
 
-constexpr float kLabelMarginRight = 2;
-constexpr float kLabelMarginLeft = 4;
+constexpr float kLabelMarginRight = 2.f;
+constexpr float kLabelMarginLeft = 4.f;
 
 void TimelineUi::RenderLines(Batcher& batcher, uint64_t min_timestamp_ns,
                              uint64_t max_timestamp_ns) const {
@@ -74,23 +74,24 @@ void TimelineUi::RenderBackground(Batcher& batcher) const {
 }
 
 void TimelineUi::RenderLabel(Batcher& batcher, TextRenderer& text_renderer, uint64_t tick_ns,
-                             uint32_t number_of_decimal_places_needed, float label_z_value,
+                             uint32_t number_of_decimal_places_needed, float label_z,
                              const Color background_color) const {
   std::string label = GetLabel(tick_ns, number_of_decimal_places_needed);
   float world_x = GetTickWorldXPos(tick_ns);
   Vec2 pos, size;
-  float label_middle_y = GetPos()[1] + GetHeightWithoutMargin() / 2;
-  text_renderer.AddText(label.c_str(), world_x + kLabelMarginLeft, label_middle_y, label_z_value,
+  float label_middle_y = GetPos()[1] + GetHeightWithoutMargin() / 2.f;
+  text_renderer.AddText(label.c_str(), world_x + kLabelMarginLeft, label_middle_y, label_z,
+                        /*text_formatting=*/
                         {layout_->GetFontSize(), Color(255, 255, 255, 255), -1.f,
                          TextRenderer::HAlign::Left, TextRenderer::VAlign::Middle},
-                        &pos, &size);
+                        /*out_text_pos=*/&pos, /*out_text_size=*/&size);
 
   // Box behind the label to hide the ticks behind it.
-  const float kBackgroundBoxVerticalMargin = 4;
+  const float kBackgroundBoxVerticalMargin = 4.f;
   size[0] += kLabelMarginRight;
   pos[1] = pos[1] - kBackgroundBoxVerticalMargin;
   size[1] = size[1] + 2 * kBackgroundBoxVerticalMargin;
-  Box background_box(pos, size, label_z_value);
+  Box background_box(pos, size, label_z);
   batcher.AddBox(background_box, background_color);
 }
 
