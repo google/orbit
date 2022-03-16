@@ -50,11 +50,16 @@ Callstack::CallstackType LeafFunctionCallManager::PatchCallerOfLeafFunction(
   uint64_t rsp = event_data->GetRegisters()[PERF_REG_X86_SP];
 
   if (rbp < rsp) {
+    ORBIT_ERROR("Discarding sample as $rbp got modified ($rbp: %llx, $rsp: %#llx)", rsp, rbp);
     return Callstack::kFramePointerUnwindingError;
   }
 
   uint64_t stack_size = rbp - rsp;
   if (stack_size > stack_dump_size_) {
+    ORBIT_ERROR(
+        "Discarding sample as the collected stack dump is too small (collected %lu byes, but "
+        "require %lu)",
+        stack_dump_size_, stack_size);
     return Callstack::kStackTopForDwarfUnwindingTooSmall;
   }
 
@@ -81,6 +86,7 @@ Callstack::CallstackType LeafFunctionCallManager::PatchCallerOfLeafFunction(
   // If unwinding results in more than two frames, $rbp was also not set correctly by the caller,
   // thus frame pointers are not all in non-leaf functions, and our assumptions do not hold.
   if (libunwindstack_callstack.size() > 2) {
+    ORBIT_ERROR("Discarding sample as the functions caller does not have frame pointers");
     return Callstack::kFramePointerUnwindingError;
   }
 
@@ -99,6 +105,7 @@ Callstack::CallstackType LeafFunctionCallManager::PatchCallerOfLeafFunction(
   // If the caller is not executable, we have an unwinding error.
   unwindstack::MapInfo* map_info = current_maps->Find(libunwindstack_leaf_caller_pc);
   if (map_info == nullptr || (map_info->flags() & PROT_EXEC) == 0) {
+    ORBIT_ERROR("Discarding sample as DWARF unwinding falls into non-executable code");
     return Callstack::kStackTopDwarfUnwindingError;
   }
 
