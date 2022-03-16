@@ -83,7 +83,7 @@ TEST(SymbolsDialog, ConstructWithElfModule) {
   MockPersistentStorageManager mock_storage_manager;
   SetUpExpectMockCalls(&mock_storage_manager);
 
-  SymbolsDialog dialog{&mock_storage_manager, false, &module};
+  SymbolsDialog dialog{&mock_storage_manager, &module};
 }
 
 TEST(SymbolsDialog, TryAddSymbolPath) {
@@ -174,7 +174,7 @@ TEST(SymbolsDialog, TryAddSymbolFileWithModuleNoOverride) {
   MockPersistentStorageManager mock_storage_manager;
   SetUpExpectMockCalls(&mock_storage_manager, {}, save_paths);
 
-  SymbolsDialog dialog{&mock_storage_manager, false, &module};
+  SymbolsDialog dialog{&mock_storage_manager, &module};
 
   // Success (build id matches)
   {
