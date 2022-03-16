@@ -63,6 +63,8 @@ class SymbolsDialog : public QDialog {
   // "Add File" button.
   [[nodiscard]] std::tuple<QString, QString> GetFilePickerConfig() const;
   [[nodiscard]] OverrideWarningResult DisplayOverrideWarning();
+  void SetUpModuleHeadlineLabel();
+  void DisableAddFolder();
 };
 
 }  // namespace orbit_config_widgets
