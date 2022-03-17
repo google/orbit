@@ -10,6 +10,7 @@
 #include <gtest/gtest.h>
 
 #include <QDialogButtonBox>
+#include <QLabel>
 #include <QListWidget>
 #include <QMessageBox>
 #include <QPushButton>
@@ -27,6 +28,7 @@
 namespace orbit_config_widgets {
 
 using orbit_symbol_paths::ModuleSymbolFileMappings;
+using orbit_test_utils::HasError;
 
 class MockPersistentStorageManager : public orbit_symbol_paths::PersistentStorageManager {
  public:
@@ -61,6 +63,10 @@ TEST_F(SymbolsDialogTest, ConstructEmpty) {
   auto* list_widget = dialog.findChild<QListWidget*>("listWidget");
   ASSERT_NE(list_widget, nullptr);
   EXPECT_EQ(list_widget->count(), 0);
+
+  auto* module_headline_label = dialog.findChild<QLabel*>("moduleHeadlineLabel");
+  ASSERT_NE(module_headline_label, nullptr);
+  EXPECT_FALSE(module_headline_label->isVisible());
 }
 
 TEST_F(SymbolsDialogTest, ConstructNonEmpty) {
@@ -81,12 +87,20 @@ TEST_F(SymbolsDialogTest, ConstructWithElfModule) {
   orbit_grpc_protos::ModuleInfo module_info;
   module_info.set_object_file_type(orbit_grpc_protos::ModuleInfo::kElfFile);
   module_info.set_file_path("/path/to/lib.so");
+  module_info.set_name("lib.so");
   orbit_client_data::ModuleData module{module_info};
 
   SetLoadPaths({});
   SetExpectSavePaths({});
 
   SymbolsDialog dialog{&mock_storage_manager_, &module};
+
+  auto* add_folder_button = dialog.findChild<QPushButton*>("addFolderButton");
+  ASSERT_NE(add_folder_button, nullptr);
+  EXPECT_FALSE(add_folder_button->isEnabled());
+  EXPECT_THAT(add_folder_button->toolTip().toStdString(),
+              testing::HasSubstr("does not have a build ID"));
+  EXPECT_THAT(add_folder_button->toolTip().toStdString(), testing::HasSubstr(module.name()));
 }
 
 TEST_F(SymbolsDialogTest, TryAddSymbolPath) {
@@ -112,8 +126,7 @@ TEST_F(SymbolsDialogTest, TryAddSymbolPath) {
   {  // add the same path again -> warning that needs to be dismissed and nothing changes
     auto result = dialog.TryAddSymbolPath(path);
     ASSERT_TRUE(result.has_error());
-    EXPECT_THAT(result, orbit_test_utils::HasError(
-                            "Unable to add selected path, it is already part of the list."));
+    EXPECT_THAT(result, HasError("Unable to add selected path, it is already part of the list."));
     EXPECT_EQ(list_widget->count(), 1);
   }
 
@@ -148,8 +161,7 @@ TEST_F(SymbolsDialogTest, TryAddSymbolFileWithoutModule) {
   std::filesystem::path text_file = orbit_test::GetTestdataDir() / "textfile.txt";
   {
     auto result = dialog.TryAddSymbolFile(text_file);
-    EXPECT_THAT(result,
-                orbit_test_utils::HasError("The selected file is not a viable symbol file"));
+    EXPECT_THAT(result, HasError("The selected file is not a viable symbol file"));
   }
 
   // fails because no build-id
@@ -158,8 +170,7 @@ TEST_F(SymbolsDialogTest, TryAddSymbolFileWithoutModule) {
   {
     auto result = dialog.TryAddSymbolFile(hello_world_elf_no_build_id);
 
-    EXPECT_THAT(result,
-                orbit_test_utils::HasError("The selected file does not contain a build id"));
+    EXPECT_THAT(result, HasError("The selected file does not contain a build id"));
   }
 }
 
@@ -189,8 +200,7 @@ TEST_F(SymbolsDialogTest, TryAddSymbolFileWithModule) {
   std::filesystem::path libc_debug = orbit_test::GetTestdataDir() / "libc.debug";
   {
     auto result = dialog.TryAddSymbolFile(libc_debug);
-    EXPECT_THAT(result, orbit_test_utils::HasError(
-                            "The build ids of module and symbols file do not match."));
+    EXPECT_THAT(result, HasError("The build ids of module and symbols file do not match."));
   }
 }
 

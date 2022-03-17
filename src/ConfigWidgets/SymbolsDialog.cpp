@@ -50,9 +50,15 @@ SymbolsDialog::SymbolsDialog(
 
   if (!module_.has_value()) return;
 
-  ui_->moduleHeadlineLabel->setVisible(true);
-  ui_->moduleHeadlineLabel->setText(
-      QString(kModuleHeadlineLabel).arg(QString::fromStdString(module_.value()->name())));
+  SetUpModuleHeadlineLabel();
+
+  if (!module_.value()->build_id().empty()) return;
+
+  // To find a symbols in a symbol folder, the build id of module and potential symbols file are
+  // matched. Therefore, if the build id of the module is empty, Orbit will never be able to match
+  // a symbols file. So adding a symbol folder is disabled here when the module does not have a
+  // build ID.
+  DisableAddFolder();
 }
 
 void SymbolsDialog::SetSymbolPaths(absl::Span<const std::filesystem::path> paths) {
@@ -215,6 +221,23 @@ void SymbolsDialog::OnMoreInfoButtonClicked() {
     return OverrideWarningResult::kOverride;
   }
   return OverrideWarningResult::kCancel;
+}
+
+void SymbolsDialog::SetUpModuleHeadlineLabel() {
+  ORBIT_CHECK(module_.has_value());
+  ui_->moduleHeadlineLabel->setVisible(true);
+  ui_->moduleHeadlineLabel->setText(
+      QString(kModuleHeadlineLabel).arg(QString::fromStdString(module_.value()->name())));
+}
+
+void SymbolsDialog::DisableAddFolder() {
+  ORBIT_CHECK(module_.has_value());
+
+  ui_->addFolderButton->setDisabled(true);
+  ui_->addFolderButton->setToolTip(
+      QString("Module %1 does not have a build ID. For modules without build ID, Orbit cannot find "
+              "symbols in folders.")
+          .arg(QString::fromStdString(module_.value()->name())));
 }
 
 }  // namespace orbit_config_widgets
