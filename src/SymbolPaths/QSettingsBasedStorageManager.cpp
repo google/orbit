@@ -41,7 +41,7 @@ void QSettingsBasedStorageManager::SavePaths(absl::Span<const std::filesystem::p
 }
 
 void QSettingsBasedStorageManager::SaveModuleSymbolFileMappings(
-    const absl::flat_hash_map<std::string, std::filesystem::path>& mappings) {
+    const ModuleSymbolFileMappings& mappings) {
   QSettings settings{};
   settings.beginWriteArray(kModuleSymbolFileMappingKey, static_cast<int>(mappings.size()));
   int index = 0;
@@ -55,11 +55,11 @@ void QSettingsBasedStorageManager::SaveModuleSymbolFileMappings(
   settings.endArray();
 }
 
-[[nodiscard]] absl::flat_hash_map<std::string, std::filesystem::path>
+[[nodiscard]] ModuleSymbolFileMappings
 QSettingsBasedStorageManager::LoadModuleSymbolFileMappings() {
   QSettings settings{};
   const int size = settings.beginReadArray(kModuleSymbolFileMappingKey);
-  absl::flat_hash_map<std::string, std::filesystem::path> mappings{};
+  ModuleSymbolFileMappings mappings{};
   mappings.reserve(size);
   for (int i = 0; i < size; ++i) {
     settings.setArrayIndex(i);
