@@ -8,6 +8,7 @@
 #include <absl/container/flat_hash_set.h>
 #include <absl/flags/declare.h>
 #include <absl/flags/flag.h>
+#include <absl/flags/internal/flag.h>
 #include <absl/strings/match.h>
 #include <absl/strings/str_format.h>
 #include <absl/strings/str_join.h>
@@ -228,6 +229,26 @@ std::vector<std::filesystem::path> GetAllSymbolPaths() {
   std::vector<std::string> temp_paths = absl::GetFlag(FLAGS_additional_symbol_paths);
   all_paths.insert(all_paths.end(), temp_paths.begin(), temp_paths.end());
   return all_paths;
+}
+
+ErrorMessageOr<std::optional<std::filesystem::path>> GetOverrideSymbolFileForModule(
+    const ModuleData& module_data) {
+  orbit_symbol_paths::QSettingsBasedStorageManager storage_manager;
+  absl::flat_hash_map<std::string, std::filesystem::path> mappings =
+      storage_manager.LoadModuleSymbolFileMappings();
+  if (!mappings.contains(module_data.file_path())) return std::nullopt;
+
+  std::filesystem::path symbol_file_path = mappings[module_data.file_path()];
+
+  OUTCOME_TRY(bool file_exists, orbit_base::FileExists(symbol_file_path));
+
+  if (!file_exists) {
+    return ErrorMessage{absl::StrFormat(
+        R"(A symbol file override is in place for module "%s", but the symbols file "%s" does not exist.)",
+        module_data.file_path(), symbol_file_path.string())};
+  }
+
+  return symbol_file_path;
 }
 
 }  // namespace
@@ -1843,6 +1864,13 @@ orbit_base::Future<ErrorMessageOr<std::filesystem::path>> OrbitApp::RetrieveModu
 
 static ErrorMessageOr<std::filesystem::path> FindModuleLocallyImpl(
     const orbit_symbols::SymbolHelper& symbol_helper, const ModuleData& module_data) {
+  if (absl::GetFlag(FLAGS_enable_unsafe_symbols)) {
+    // First checkout if a symbol file override exists and if it does, use it
+    OUTCOME_TRY(std::optional<std::filesystem::path> overriden_symbols_file,
+                GetOverrideSymbolFileForModule(module_data));
+    if (overriden_symbols_file.has_value()) return overriden_symbols_file.value();
+  }
+
   if (module_data.build_id().empty()) {
     return ErrorMessage(
         absl::StrFormat("Unable to find local symbols for module \"%s\", build id is empty",

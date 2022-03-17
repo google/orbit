@@ -1437,7 +1437,8 @@ void OrbitMainWindow::on_actionSourcePathMappings_triggered() {
 void OrbitMainWindow::ExecuteSymbolsDialog(
     std::optional<const orbit_client_data::ModuleData*> module) {
   orbit_symbol_paths::QSettingsBasedStorageManager symbol_paths_storage_manager;
-  orbit_config_widgets::SymbolsDialog dialog{&symbol_paths_storage_manager, module, this};
+  orbit_config_widgets::SymbolsDialog dialog{
+      &symbol_paths_storage_manager, absl::GetFlag(FLAGS_enable_unsafe_symbols), module, this};
   dialog.exec();
 }
 

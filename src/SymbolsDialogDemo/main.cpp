@@ -2,16 +2,21 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
+#include <absl/flags/flag.h>
+#include <absl/flags/parse.h>
+
 #include <QApplication>
 #include <filesystem>
 #include <vector>
 
 #include "ClientData/ModuleData.h"
+#include "ClientFlags/ClientFlags.h"
 #include "ConfigWidgets/SymbolsDialog.h"
 #include "GrpcProtos/module.pb.h"
 #include "SymbolPaths/QSettingsBasedStorageManager.h"
 
 int main(int argc, char* argv[]) {
+  absl::ParseCommandLine(argc, argv);
   QApplication app{argc, argv};
   QApplication::setApplicationName("SymbolsDialogDemo");
   QApplication::setOrganizationName("The Orbit Authors");
@@ -24,7 +29,8 @@ int main(int argc, char* argv[]) {
   orbit_client_data::ModuleData module{module_info};
 
   orbit_symbol_paths::QSettingsBasedStorageManager symbol_paths_storage_manager;
-  orbit_config_widgets::SymbolsDialog dialog{&symbol_paths_storage_manager, &module};
+  orbit_config_widgets::SymbolsDialog dialog{&symbol_paths_storage_manager,
+                                             absl::GetFlag(FLAGS_enable_unsafe_symbols), &module};
   const int result_code = dialog.exec();
 
   return result_code;

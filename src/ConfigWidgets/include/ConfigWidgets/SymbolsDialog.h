@@ -29,6 +29,7 @@ class SymbolsDialog : public QDialog {
 
  public:
   explicit SymbolsDialog(orbit_symbol_paths::PersistentStorageManager* persistent_storage_manager,
+                         bool allow_unsafe_symbols = false,
                          std::optional<const orbit_client_data::ModuleData*> module = std::nullopt,
                          QWidget* parent = nullptr);
   ~SymbolsDialog() override;
@@ -36,11 +37,16 @@ class SymbolsDialog : public QDialog {
   // TryAddSymbolPath will add the path if its not in the list of paths. In case it is, an error
   // message is returned. A path here is either a path to directory, or a path to a file.
   ErrorMessageOr<void> TryAddSymbolPath(const std::filesystem::path& path);
-  // TryAddSymbolFile will check whether the following conditions are met and if they are, call
-  // TryAddSymbolPath
-  // 1. file at file_path is a viable object file.
-  // 2. check that the file contains a build-id.
-  // 3. if the module_ is set, that the build-id are the same.
+  // TryAddSymbolFile will add the file_path as a symbol file to the list when possible. The
+  // requirements are dependent on the state of this dialog, as follows.
+  // 1. If the dialog was opened without a module (not error case), the file will be added (via
+  // TryAddSymbolPath), if its a valid symbol file and contains a build id. Otherwise error.
+  // 2. If the dialog was opened with a module (the error case) and the Build ID of module and
+  // symbols file match, then the file is added (via TryAddSymbolPath). Otherwise:
+  // 3. If the Build IDs dont match, and only safe symbols are allowed (allow_unsafe_symbols_ ==
+  // false), then this will return an error. If unsafe symbols are allowed, this function will
+  // display a message box where the user can choose an "symbol file override". In this case the
+  // "module symbol file mapping" is saved and added to the list.
   ErrorMessageOr<void> TryAddSymbolFile(const std::filesystem::path& file_path);
 
  public slots:
@@ -54,11 +60,17 @@ class SymbolsDialog : public QDialog {
   enum class OverrideWarningResult { kOverride, kCancel };
 
   std::unique_ptr<Ui::SymbolsDialog> ui_;
+  bool allow_unsafe_symbols_;
   std::optional<const orbit_client_data::ModuleData*> module_;
   orbit_symbol_paths::PersistentStorageManager* persistent_storage_manager_ = nullptr;
+  orbit_symbol_paths::ModuleSymbolFileMappings module_symbol_file_mappings_;
 
-  void SetSymbolPaths(absl::Span<const std::filesystem::path> paths);
-  [[nodiscard]] std::vector<std::filesystem::path> GetSymbolPaths();
+  void AddSymbolPathsToListWidget(absl::Span<const std::filesystem::path> paths);
+  [[nodiscard]] std::vector<std::filesystem::path> GetSymbolPathsFromListWidget();
+  void AddModuleSymbolFileMappingsToList();
+  ErrorMessageOr<void> AddMapping(const orbit_client_data::ModuleData& module,
+                                  const std::filesystem::path& symbol_file_path);
+
   // Returns the caption and file filter for the FileDialog that is opened when the user clicks the
   // "Add File" button.
   [[nodiscard]] std::tuple<QString, QString> GetFilePickerConfig() const;
