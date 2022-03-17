@@ -37,6 +37,7 @@ std::string CallstackTypeToString(CallstackInfo::CallstackType callstack_type) {
         CallstackInfo_CallstackType_CallstackInfo_CallstackType_INT_MAX_SENTINEL_DO_NOT_USE_:
       ORBIT_UNREACHABLE();
   }
+  ORBIT_UNREACHABLE();
 }
 
 std::string CallstackTypeToDescription(CallstackInfo::CallstackType callstack_type) {
@@ -69,6 +70,7 @@ std::string CallstackTypeToDescription(CallstackInfo::CallstackType callstack_ty
         CallstackInfo_CallstackType_CallstackInfo_CallstackType_INT_MAX_SENTINEL_DO_NOT_USE_:
       ORBIT_UNREACHABLE();
   }
+  ORBIT_UNREACHABLE();
 }
 
 }  // namespace orbit_client_data
