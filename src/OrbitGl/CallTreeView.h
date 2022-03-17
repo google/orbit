@@ -20,7 +20,7 @@
 class CallTreeThread;
 class CallTreeFunction;
 class CallTreeUnwindErrors;
-class CallTreeUnwindErrorNode;
+class CallTreeUnwindErrorType;
 
 class CallTreeNode {
  public:
@@ -31,8 +31,8 @@ class CallTreeNode {
   [[nodiscard]] const CallTreeNode* parent() const { return parent_; }
 
   [[nodiscard]] uint64_t child_count() const {
-    return thread_children_.size() + function_children_.size() + unwind_error_children_.size() +
-           (unwind_errors_child_ != nullptr ? 1 : 0);
+    return thread_children_.size() + function_children_.size() +
+           unwind_error_types_children_.size() + (unwind_errors_child_ != nullptr ? 1 : 0);
   }
 
   [[nodiscard]] const std::vector<const CallTreeNode*>& children() const;
@@ -48,10 +48,10 @@ class CallTreeNode {
                                                     std::string module_path,
                                                     std::string module_build_id);
 
-  [[nodiscard]] CallTreeUnwindErrorNode* GetUnwindErrorOrNull(
+  [[nodiscard]] CallTreeUnwindErrorType* GetUnwindErrorTypeOrNull(
       orbit_client_protos::CallstackInfo::CallstackType type);
 
-  [[nodiscard]] CallTreeUnwindErrorNode* AddAndGetUnwindError(
+  [[nodiscard]] CallTreeUnwindErrorType* AddAndGetUnwindErrorType(
       orbit_client_protos::CallstackInfo::CallstackType type);
 
   [[nodiscard]] CallTreeUnwindErrors* GetUnwindErrorsOrNull();
@@ -99,12 +99,11 @@ class CallTreeNode {
   // needed for the CallTreeNode::parent_ field.
   absl::node_hash_map<uint32_t, CallTreeThread> thread_children_;
   absl::node_hash_map<uint64_t, CallTreeFunction> function_children_;
+  absl::node_hash_map<orbit_client_protos::CallstackInfo::CallstackType, CallTreeUnwindErrorType>
+      unwind_error_types_children_;
   // std::shared_ptr instead of std::unique_ptr because absl::node_hash_map
   // needs the copy constructor (even for try_emplace).
   std::shared_ptr<CallTreeUnwindErrors> unwind_errors_child_;
-
-  absl::node_hash_map<orbit_client_protos::CallstackInfo::CallstackType, CallTreeUnwindErrorNode>
-      unwind_error_children_;
 
   CallTreeNode* parent_;
   uint64_t sample_count_ = 0;
@@ -164,9 +163,9 @@ class CallTreeUnwindErrors : public CallTreeNode {
   explicit CallTreeUnwindErrors(CallTreeNode* parent) : CallTreeNode{parent} {}
 };
 
-class CallTreeUnwindErrorNode : public CallTreeNode {
+class CallTreeUnwindErrorType : public CallTreeNode {
  public:
-  explicit CallTreeUnwindErrorNode(CallTreeNode* parent,
+  explicit CallTreeUnwindErrorType(CallTreeNode* parent,
                                    orbit_client_protos::CallstackInfo::CallstackType error_type)
       : CallTreeNode{parent}, error_type_{error_type} {
     ORBIT_CHECK(error_type != orbit_client_protos::CallstackInfo::kComplete);

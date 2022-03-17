@@ -300,12 +300,6 @@ TEST(CallTreeViewItemModel, GetDisplayRoleData) {
     EXPECT_EQ(model.data(index, Qt::DisplayRole).toString(), "33.33% (1)");
   }
 
-  {  // exclusive
-    QModelIndex index =
-        model.index(0, CallTreeViewItemModel::Columns::kExclusive, unwind_error_function_index);
-    EXPECT_EQ(model.data(index, Qt::DisplayRole).toString(), "33.33% (1)");
-  }
-
   {  // of parent
     QModelIndex index =
         model.index(0, CallTreeViewItemModel::Columns::kOfParent, unwind_error_function_index);
@@ -475,13 +469,6 @@ TEST(CallTreeViewItemModel, GetEditRoleData) {
   {  // inclusive
     QModelIndex index =
         model.index(0, CallTreeViewItemModel::Columns::kInclusive, unwind_error_function_index);
-    EXPECT_LE(model.data(index, Qt::EditRole).toFloat(), 33.34);
-    EXPECT_GE(model.data(index, Qt::EditRole).toFloat(), 33.32);
-  }
-
-  {  // exclusive
-    QModelIndex index =
-        model.index(0, CallTreeViewItemModel::Columns::kExclusive, unwind_error_function_index);
     EXPECT_LE(model.data(index, Qt::EditRole).toFloat(), 33.34);
     EXPECT_GE(model.data(index, Qt::EditRole).toFloat(), 33.32);
   }

@@ -39,7 +39,7 @@ const std::vector<const CallTreeNode*>& CallTreeNode::children() const {
     children_cache_->push_back(unwind_errors_child_.get());
   }
 
-  for (const auto& error_type_and_unwind_error : unwind_error_children_) {
+  for (const auto& error_type_and_unwind_error : unwind_error_types_children_) {
     children_cache_->push_back(&error_type_and_unwind_error.second);
   }
 
@@ -83,17 +83,17 @@ CallTreeFunction* CallTreeNode::AddAndGetFunction(uint64_t function_absolute_add
   return &it->second;
 }
 
-CallTreeUnwindErrorNode* CallTreeNode::GetUnwindErrorOrNull(CallstackInfo::CallstackType type) {
-  auto unwind_error_it = unwind_error_children_.find(type);
-  if (unwind_error_it == unwind_error_children_.end()) {
+CallTreeUnwindErrorType* CallTreeNode::GetUnwindErrorTypeOrNull(CallstackInfo::CallstackType type) {
+  auto unwind_error_it = unwind_error_types_children_.find(type);
+  if (unwind_error_it == unwind_error_types_children_.end()) {
     return nullptr;
   }
   return &unwind_error_it->second;
 }
 
-CallTreeUnwindErrorNode* CallTreeNode::AddAndGetUnwindError(CallstackInfo::CallstackType type) {
+CallTreeUnwindErrorType* CallTreeNode::AddAndGetUnwindErrorType(CallstackInfo::CallstackType type) {
   const auto& [it, inserted] =
-      unwind_error_children_.try_emplace(type, CallTreeUnwindErrorNode{this, type});
+      unwind_error_types_children_.try_emplace(type, CallTreeUnwindErrorType{this, type});
   ORBIT_CHECK(inserted);
   children_cache_.reset();
   return &it->second;
@@ -127,11 +127,11 @@ CallTreeUnwindErrors* CallTreeNode::AddAndGetUnwindErrors() {
   return function_node;
 }
 
-[[nodiscard]] static CallTreeUnwindErrorNode* GetOrCreateUnwindingErrorNode(
+[[nodiscard]] static CallTreeUnwindErrorType* GetOrCreateUnwindingErrorTypeNode(
     CallTreeNode* current_node, CallstackInfo::CallstackType error_type) {
-  CallTreeUnwindErrorNode* unwind_error = current_node->GetUnwindErrorOrNull(error_type);
+  CallTreeUnwindErrorType* unwind_error = current_node->GetUnwindErrorTypeOrNull(error_type);
   if (unwind_error == nullptr) {
-    unwind_error = current_node->AddAndGetUnwindError(error_type);
+    unwind_error = current_node->AddAndGetUnwindErrorType(error_type);
   }
   return unwind_error;
 }
@@ -183,10 +183,9 @@ static void AddUnwindErrorToTopDownThread(
   function_node->IncreaseSampleCount(callstack_sample_count);
   function_node->AddExclusiveCallstackEvents(callstack_events);
 
-  CallTreeUnwindErrorNode* unwind_error_node =
-      GetOrCreateUnwindingErrorNode(function_node, resolved_callstack.type());
-  unwind_error_node->IncreaseSampleCount(callstack_sample_count);
-  unwind_error_node->AddExclusiveCallstackEvents(callstack_events);
+  CallTreeUnwindErrorType* unwind_error_type_node =
+      GetOrCreateUnwindingErrorTypeNode(function_node, resolved_callstack.type());
+  unwind_error_type_node->IncreaseSampleCount(callstack_sample_count);
 }
 
 [[nodiscard]] static CallTreeThread* GetOrCreateThreadNode(
@@ -265,7 +264,7 @@ std::unique_ptr<CallTreeView> CallTreeView::CreateTopDownViewFromPostProcessedSa
   return current_node;
 }
 
-[[nodiscard]] static CallTreeUnwindErrorNode*
+[[nodiscard]] static CallTreeUnwindErrorType*
 AddUnwindErrorToBottomUpViewAndReturnUnwindingErrorsNode(CallTreeView* bottom_up_view,
                                                          const CallstackInfo& resolved_callstack,
                                                          uint64_t callstack_sample_count,
@@ -288,8 +287,8 @@ AddUnwindErrorToBottomUpViewAndReturnUnwindingErrorsNode(CallTreeView* bottom_up
   }
   unwind_errors_node->IncreaseSampleCount(callstack_sample_count);
 
-  CallTreeUnwindErrorNode* unwind_error_node =
-      GetOrCreateUnwindingErrorNode(unwind_errors_node, resolved_callstack.type());
+  CallTreeUnwindErrorType* unwind_error_node =
+      GetOrCreateUnwindingErrorTypeNode(unwind_errors_node, resolved_callstack.type());
   unwind_error_node->IncreaseSampleCount(callstack_sample_count);
 
   return unwind_error_node;

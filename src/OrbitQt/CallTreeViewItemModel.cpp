@@ -15,7 +15,7 @@
 #include <utility>
 #include <vector>
 
-#include "ClientData/CallstackTypes.h"
+#include "ClientData/CallstackType.h"
 #include "OrbitBase/Logging.h"
 #include "OrbitBase/ThreadConstants.h"
 
@@ -29,7 +29,7 @@ QVariant CallTreeViewItemModel::GetDisplayRoleData(const QModelIndex& index) con
   auto* thread_item = dynamic_cast<CallTreeThread*>(item);
   auto* function_item = dynamic_cast<CallTreeFunction*>(item);
   auto* unwind_errors_item = dynamic_cast<CallTreeUnwindErrors*>(item);
-  auto* unwind_error_item = dynamic_cast<CallTreeUnwindErrorNode*>(item);
+  auto* unwind_error_type_item = dynamic_cast<CallTreeUnwindErrorType*>(item);
 
   if (thread_item != nullptr) {
     switch (index.column()) {
@@ -93,25 +93,20 @@ QVariant CallTreeViewItemModel::GetDisplayRoleData(const QModelIndex& index) con
         return QString::fromStdString(
             absl::StrFormat("%.2f%%", unwind_errors_item->GetPercentOfParent()));
     }
-  } else if (unwind_error_item != nullptr) {
+  } else if (unwind_error_type_item != nullptr) {
     switch (index.column()) {
       case kThreadOrFunction:
         return QString::fromStdString(
-            orbit_client_data::CallstackTypeToString(unwind_error_item->error_type()));
+            orbit_client_data::CallstackTypeToString(unwind_error_type_item->error_type()));
       case kInclusive:
-        return QString::fromStdString(
-            absl::StrFormat("%.2f%% (%llu)",
-                            unwind_error_item->GetInclusivePercent(call_tree_view_->sample_count()),
-                            unwind_error_item->sample_count()));
-        // Exclusive makes no sense for this node, and would always be zero.
-      case kExclusive:
-        return QString::fromStdString(
-            absl::StrFormat("%.2f%% (%llu)",
-                            unwind_error_item->GetExclusivePercent(call_tree_view_->sample_count()),
-                            unwind_error_item->GetExclusiveSampleCount()));
+        return QString::fromStdString(absl::StrFormat(
+            "%.2f%% (%llu)",
+            unwind_error_type_item->GetInclusivePercent(call_tree_view_->sample_count()),
+            unwind_error_type_item->sample_count()));
+      // Exclusive makes no sense for this node, and would always be zero.
       case kOfParent:
         return QString::fromStdString(
-            absl::StrFormat("%.2f%%", unwind_error_item->GetPercentOfParent()));
+            absl::StrFormat("%.2f%%", unwind_error_type_item->GetPercentOfParent()));
     }
   }
   return QVariant();
@@ -123,7 +118,7 @@ QVariant CallTreeViewItemModel::GetEditRoleData(const QModelIndex& index) const 
   auto* thread_item = dynamic_cast<CallTreeThread*>(item);
   auto* function_item = dynamic_cast<CallTreeFunction*>(item);
   auto* unwind_errors_item = dynamic_cast<CallTreeUnwindErrors*>(item);
-  auto* unwind_error_item = dynamic_cast<CallTreeUnwindErrorNode*>(item);
+  auto* unwind_error_type_item = dynamic_cast<CallTreeUnwindErrorType*>(item);
 
   if (thread_item != nullptr) {
     switch (index.column()) {
@@ -161,17 +156,15 @@ QVariant CallTreeViewItemModel::GetEditRoleData(const QModelIndex& index) const 
       case kOfParent:
         return unwind_errors_item->GetPercentOfParent();
     }
-  } else if (unwind_error_item != nullptr) {
+  } else if (unwind_error_type_item != nullptr) {
     switch (index.column()) {
       case kThreadOrFunction:
         return QString::fromStdString(
-            orbit_client_data::CallstackTypeToString(unwind_error_item->error_type()));
+            orbit_client_data::CallstackTypeToString(unwind_error_type_item->error_type()));
       case kInclusive:
-        return unwind_error_item->GetInclusivePercent(call_tree_view_->sample_count());
-      case kExclusive:
-        return unwind_error_item->GetExclusivePercent(call_tree_view_->sample_count());
+        return unwind_error_type_item->GetInclusivePercent(call_tree_view_->sample_count());
       case kOfParent:
-        return unwind_error_item->GetPercentOfParent();
+        return unwind_error_type_item->GetPercentOfParent();
     }
   }
   return QVariant();
@@ -181,7 +174,7 @@ QVariant CallTreeViewItemModel::GetToolTipRoleData(const QModelIndex& index) con
   ORBIT_CHECK(index.isValid());
   auto* item = static_cast<CallTreeNode*>(index.internalPointer());
   auto* function_item = dynamic_cast<CallTreeFunction*>(item);
-  auto* unwind_error_item = dynamic_cast<CallTreeUnwindErrorNode*>(item);
+  auto* unwind_error_type_item = dynamic_cast<CallTreeUnwindErrorType*>(item);
   if (function_item != nullptr) {
     switch (index.column()) {
       case kThreadOrFunction:
@@ -189,11 +182,11 @@ QVariant CallTreeViewItemModel::GetToolTipRoleData(const QModelIndex& index) con
       case kModule:
         return QString::fromStdString(function_item->module_path());
     }
-  } else if (unwind_error_item != nullptr) {
+  } else if (unwind_error_type_item != nullptr) {
     switch (index.column()) {
       case kThreadOrFunction:
         return QString::fromStdString(
-            orbit_client_data::CallstackTypeToDescription(unwind_error_item->error_type()));
+            orbit_client_data::CallstackTypeToDescription(unwind_error_type_item->error_type()));
     }
   }
   return QVariant();
@@ -203,7 +196,7 @@ QVariant CallTreeViewItemModel::GetForegroundRoleData(const QModelIndex& index) 
   ORBIT_CHECK(index.isValid());
   auto* item = static_cast<CallTreeNode*>(index.internalPointer());
   auto* unwind_errors_item = dynamic_cast<CallTreeUnwindErrors*>(item);
-  auto* unwind_error_item = dynamic_cast<CallTreeUnwindErrorNode*>(item);
+  auto* unwind_error_item = dynamic_cast<CallTreeUnwindErrorType*>(item);
 
   if ((unwind_errors_item != nullptr || unwind_error_item != nullptr) &&
       index.column() == kThreadOrFunction) {
@@ -214,10 +207,10 @@ QVariant CallTreeViewItemModel::GetForegroundRoleData(const QModelIndex& index) 
   const auto* parent_is_unwind_errors_item =
       dynamic_cast<const CallTreeUnwindErrors*>(item->parent());
   const auto* parent_is_unwind_error_item =
-      dynamic_cast<const CallTreeUnwindErrorNode*>(item->parent());
+      dynamic_cast<const CallTreeUnwindErrorType*>(item->parent());
   if ((parent_is_unwind_error_item != nullptr || parent_is_unwind_errors_item != nullptr) &&
       index.column() == kThreadOrFunction) {
-    static const QColor kUnwindErrorFunctionColor{QColor::fromRgb(150, 150, 150)};
+    static const QColor kUnwindErrorFunctionColor{Qt::lightGray};
     return kUnwindErrorFunctionColor;
   }
   return QVariant();

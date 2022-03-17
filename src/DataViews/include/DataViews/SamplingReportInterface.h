@@ -8,7 +8,7 @@
 #include <absl/container/flat_hash_set.h>
 #include <stdint.h>
 
-#include "ClientData/CallstackTypes.h"
+#include "ClientData/CallstackType.h"
 #include "DataViews/CallstackDataView.h"
 
 namespace orbit_data_views {

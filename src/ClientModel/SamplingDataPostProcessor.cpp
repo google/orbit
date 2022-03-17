@@ -15,7 +15,7 @@
 #include <vector>
 
 #include "ClientData/CallstackEvent.h"
-#include "ClientData/CallstackTypes.h"
+#include "ClientData/CallstackType.h"
 #include "ClientData/ModuleAndFunctionLookup.h"
 #include "ClientProtos/capture_data.pb.h"
 #include "OrbitBase/Logging.h"
