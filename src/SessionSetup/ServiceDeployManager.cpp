@@ -493,15 +493,29 @@ ErrorMessageOr<void> ServiceDeployManager::StartOrbitService(
   auto error_handler =
       ConnectErrorHandler(&loop, &orbit_service_task_.value(), &orbit_ssh_qt::Task::errorOccurred);
   auto cancel_handler = ConnectCancelHandler(&loop, this);
-  QObject::connect(
-      &orbit_service_task_.value(), &orbit_ssh_qt::Task::finished, &loop, [&loop](int exit_code) {
-        // TODO(http://b/221369463): Also report a potential error message that has been logged to
-        // stdout.
-        loop.error(ErrorMessage{
-            absl::StrFormat("The service exited prematurely with exit code %d.", exit_code)});
-      });
 
   std::string stdout_buffer;
+
+  QObject::connect(&orbit_service_task_.value(), &orbit_ssh_qt::Task::finished, &loop,
+                   [&loop, &stdout_buffer](int exit_code) {
+                     constexpr int kExitCodeIndicatingErrorMessage = 42;
+                     if (exit_code == kExitCodeIndicatingErrorMessage) {
+                       // We convert to QString here because there could be UTF-8 multibyte
+                       // codepoints in the stdout_buffer which makes limiting to a certain number
+                       // of characters non-trivial.
+                       auto error_message = QString::fromStdString(stdout_buffer).trimmed();
+                       constexpr int kMaximumErrorMessageLength = 1000;
+                       if (error_message.size() > kMaximumErrorMessageLength) {
+                         error_message =
+                             error_message.left(kMaximumErrorMessageLength - 3).append("...");
+                       }
+                       loop.error(ErrorMessage{error_message.toStdString()});
+                       return;
+                     }
+
+                     loop.error(ErrorMessage{absl::StrFormat(
+                         "The service exited prematurely with exit code %d.", exit_code)});
+                   });
 
   QObject::connect(&orbit_service_task_.value(), &orbit_ssh_qt::Task::readyReadStdOut, &loop,
                    [&]() {

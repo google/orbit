@@ -95,5 +95,13 @@ int main(int argc, char** argv) {
 
   exit_requested = false;
   orbit_service::OrbitService service{grpc_port, dev_mode};
-  return service.Run(&exit_requested);
+  auto result = service.Run(&exit_requested);
+
+  if (!result.has_error()) return 0;
+
+  std::puts(result.error().message().c_str());
+  std::ignore = std::fflush(stdout);
+
+  constexpr int kExitCodeIndicatingErrorMessage = 42;
+  return kExitCodeIndicatingErrorMessage;
 }

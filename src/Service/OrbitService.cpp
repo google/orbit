@@ -124,7 +124,7 @@ std::unique_ptr<OrbitGrpcServer> CreateGrpcServer(uint16_t grpc_port, bool dev_m
 
 }  // namespace
 
-int OrbitService::Run(std::atomic<bool>* exit_requested) {
+ErrorMessageOr<void> OrbitService::Run(std::atomic<bool>* exit_requested) {
 #ifdef __linux
   PrintInstanceVersions();
 #endif
@@ -138,15 +138,17 @@ int OrbitService::Run(std::atomic<bool>* exit_requested) {
 
   std::unique_ptr<OrbitGrpcServer> grpc_server = CreateGrpcServer(grpc_port_, dev_mode_);
   if (grpc_server == nullptr) {
-    ORBIT_ERROR("Unable to create gRPC server.");
-    return -1;
+    constexpr std::string_view kErrorMessage = "Unable to create gRPC server.";
+    ORBIT_ERROR("%s", kErrorMessage);
+    return ErrorMessage{std::string{kErrorMessage}};
   }
 
   std::unique_ptr<ProducerSideServer> producer_side_server =
       orbit_producer_side_service::BuildAndStartProducerSideServer();
   if (producer_side_server == nullptr) {
-    ORBIT_ERROR("Unable to build and start ProducerSideServer.");
-    return -1;
+    constexpr std::string_view kErrorMessage = "Unable to build and start ProducerSideServer.";
+    ORBIT_ERROR("%s", kErrorMessage);
+    return ErrorMessage{std::string{kErrorMessage}};
   }
   grpc_server->AddCaptureStartStopListener(producer_side_server.get());
 
@@ -161,7 +163,7 @@ int OrbitService::Run(std::atomic<bool>* exit_requested) {
   fcntl(STDIN_FILENO, F_SETFL, O_NONBLOCK);
 #endif
 
-  int return_code = 0;
+  std::optional<ErrorMessage> error_message;
 
   // Wait for exit_request or for the watchdog to expire.
   while (!(*exit_requested)) {
@@ -180,8 +182,10 @@ int OrbitService::Run(std::atomic<bool>* exit_requested) {
       }
 
       if (!IsSshConnectionAlive(last_stdin_message_.value(), kWatchdogTimeoutInSeconds)) {
-        ORBIT_ERROR("Connection is not alive (watchdog timed out). Exiting main loop.");
-        return_code = -1;
+        constexpr std::string_view kErrorMessage =
+            "Connection is not alive (watchdog timed out). Exiting main loop.";
+        ORBIT_ERROR("%s", kErrorMessage);
+        error_message.emplace(std::string{kErrorMessage});
         break;
       }
     }
@@ -196,7 +200,8 @@ int OrbitService::Run(std::atomic<bool>* exit_requested) {
   grpc_server->Shutdown();
   grpc_server->Wait();
 
-  return return_code;
+  if (error_message.has_value()) return error_message.value();
+  return outcome::success();
 }
 
 }  // namespace orbit_service
