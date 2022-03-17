@@ -13,6 +13,7 @@
 #include <QMetaObject>
 #include <Qt>
 #include <chrono>
+#include <cstddef>
 #include <filesystem>
 #include <system_error>
 #include <thread>
@@ -35,13 +36,15 @@
 #include "OrbitSshQt/SftpCopyToRemoteOperation.h"
 #include "OrbitSshQt/Task.h"
 #include "QtUtils/EventLoop.h"
+#include "SessionSetup/DeploymentConfigurations.h"
 #include "SessionSetup/Error.h"
 
 static const std::string kLocalhost = "127.0.0.1";
 static const std::string kDebDestinationPath = "/tmp/orbitprofiler.deb";
 static const std::string kSigDestinationPath = "/tmp/orbitprofiler.deb.asc";
-static const std::string_view kSshWatchdogPassphrase = "start_watchdog";
-static const std::chrono::milliseconds kSshWatchdogInterval(1000);
+constexpr std::string_view kSshWatchdogPassphrase = "start_watchdog";
+constexpr std::chrono::milliseconds kSshWatchdogInterval{1000};
+constexpr std::chrono::seconds kServiceStartupTimeout{10};
 
 namespace orbit_session_setup {
 
@@ -449,78 +452,106 @@ ErrorMessageOr<void> ServiceDeployManager::CopyOrbitUserSpaceInstrumentationLibr
   return outcome::success();
 }
 
-ErrorMessageOr<void> ServiceDeployManager::StartOrbitService() {
-  ORBIT_CHECK(QThread::currentThread() == thread());
-  emit statusMessage("Starting OrbitService on the remote instance...");
-
-  std::string task_string = "/opt/developer/tools/OrbitService";
-  if (absl::GetFlag(FLAGS_devmode)) {
-    task_string += " --devmode";
+[[nodiscard]] static std::string GenerateStartOrbitServiceCommand(
+    const std::variant<SignedDebianPackageDeployment, BareExecutableAndRootPasswordDeployment>&
+        deployment_config) {
+  std::string command;
+  if (std::holds_alternative<SignedDebianPackageDeployment>(deployment_config)) {
+    command = "/opt/developer/tools/OrbitService";
+  } else {
+    command = "sudo --stdin /tmp/OrbitService";
   }
-  orbit_service_task_.emplace(&session_.value(), task_string);
 
-  orbit_qt_utils::EventLoop loop{};
+  if (absl::GetFlag(FLAGS_devmode)) {
+    command += " --devmode";
+  }
 
-  auto quit_handler =
-      ConnectQuitHandler(&loop, &orbit_service_task_.value(), &orbit_ssh_qt::Task::started);
-
-  auto error_handler =
-      ConnectErrorHandler(&loop, &orbit_service_task_.value(), &orbit_ssh_qt::Task::errorOccurred);
-
-  auto cancel_handler = ConnectCancelHandler(&loop, this);
-
-  QObject::connect(&orbit_service_task_.value(), &orbit_ssh_qt::Task::readyReadStdOut, this,
-                   [this]() { PrintAsOrbitService(orbit_service_task_->ReadStdOut()); });
-
-  QObject::connect(&orbit_service_task_.value(), &orbit_ssh_qt::Task::readyReadStdErr, this,
-                   [this]() { PrintAsOrbitService(orbit_service_task_->ReadStdErr()); });
-
-  orbit_service_task_->Start();
-
-  OUTCOME_TRY(loop.exec());
-  QObject::connect(&orbit_service_task_.value(), &orbit_ssh_qt::Task::errorOccurred, this,
-                   &ServiceDeployManager::handleSocketError);
-  QObject::connect(&orbit_service_task_.value(), &orbit_ssh_qt::Task::finished, this,
-                   [](int exit_code) {
-                     ORBIT_LOG("The OrbitService Task finished with exit code: %d", exit_code);
-                   });
-  return outcome::success();
+  return command;
 }
 
-ErrorMessageOr<void> ServiceDeployManager::StartOrbitServicePrivileged(
-    const BareExecutableAndRootPasswordDeployment& config) {
+ErrorMessageOr<void> ServiceDeployManager::StartOrbitService(
+    const std::variant<SignedDebianPackageDeployment, BareExecutableAndRootPasswordDeployment>&
+        deployment_config) {
   ORBIT_CHECK(QThread::currentThread() == thread());
-  // TODO(antonrohr) Check whether the password was incorrect.
-  // There are multiple ways of doing this. the best way is probably to have a
-  // second task running before OrbitService that sets the SUID bit. It might be
-  // necessary to close stdin by sending EOF, since sudo would ask for trying to
-  // enter the password again. Another option is to use std err as soon as its
-  // implemented in OrbitSshQt::Task.
   emit statusMessage("Starting OrbitService on the remote instance...");
 
-  std::string task_string = "sudo --stdin /tmp/OrbitService";
-  if (absl::GetFlag(FLAGS_devmode)) {
-    task_string += " --devmode";
-  }
+  std::string task_string = GenerateStartOrbitServiceCommand(deployment_config);
   orbit_service_task_.emplace(&session_.value(), task_string);
 
-  orbit_service_task_->Write(absl::StrFormat("%s\n", config.root_password));
+  if (std::holds_alternative<BareExecutableAndRootPasswordDeployment>(deployment_config)) {
+    const auto& config = std::get<BareExecutableAndRootPasswordDeployment>(deployment_config);
+    orbit_service_task_->Write(absl::StrFormat("%s\n", config.root_password));
+    // TODO(antonrohr) Check whether the password was incorrect.
+    // There are multiple ways of doing this. the best way is probably to have a
+    // second task running before OrbitService that sets the SUID bit. It might be
+    // necessary to close stdin by sending EOF, since sudo would ask for trying to
+    // enter the password again. Another option is to use std err as soon as its
+    // implemented in OrbitSshQt::Task.
+  }
 
   orbit_qt_utils::EventLoop loop{};
   auto error_handler =
       ConnectErrorHandler(&loop, &orbit_service_task_.value(), &orbit_ssh_qt::Task::errorOccurred);
-  auto quit_handler =
-      ConnectQuitHandler(&loop, &orbit_service_task_.value(), &orbit_ssh_qt::Task::started);
   auto cancel_handler = ConnectCancelHandler(&loop, this);
+  QObject::connect(
+      &orbit_service_task_.value(), &orbit_ssh_qt::Task::finished, &loop, [&loop](int exit_code) {
+        // TODO(http://b/221369463): Also report a potential error message that has been logged to
+        // stdout.
+        loop.error(ErrorMessage{
+            absl::StrFormat("The service exited prematurely with exit code %d.", exit_code)});
+      });
 
-  QObject::connect(&orbit_service_task_.value(), &orbit_ssh_qt::Task::readyReadStdOut, this,
-                   [this]() { PrintAsOrbitService(orbit_service_task_->ReadStdOut()); });
+  std::string stdout_buffer;
+
+  QObject::connect(&orbit_service_task_.value(), &orbit_ssh_qt::Task::readyReadStdOut, &loop,
+                   [&]() {
+                     // We are looking for the kReadyKeyword. Since it might be split up into
+                     // consecutive chunks in the stdout stream we reassemble to whole string into a
+                     // buffer and check that for the keyword.
+                     stdout_buffer.append(orbit_service_task_->ReadStdOut());
+
+                     // That's what we expect the service to send through stdout when it's ready to
+                     // accept a connection from the client.
+                     constexpr std::string_view kReadyKeyword = "READY";
+
+                     if (absl::StrContains(stdout_buffer, kReadyKeyword)) {
+                       ORBIT_LOG("The service reported to be ready to accept connections.");
+                       loop.quit();
+                       return;
+                     }
+
+                     // This is protecting us against consuming unreasonable amount of memory when
+                     // for whatever reason there is a lot of data coming through the stdout
+                     // channel.
+                     constexpr size_t kMaxBufferSize = 100ul * 1024;  // 100 KiB
+
+                     if (stdout_buffer.size() > kMaxBufferSize) {
+                       const auto number_of_bytes_to_remove =
+                           static_cast<ptrdiff_t>(stdout_buffer.size() - kMaxBufferSize);
+                       stdout_buffer.erase(stdout_buffer.begin(),
+                                           stdout_buffer.begin() + number_of_bytes_to_remove);
+                     }
+                   });
+
   QObject::connect(&orbit_service_task_.value(), &orbit_ssh_qt::Task::readyReadStdErr, this,
                    [this]() { PrintAsOrbitService(orbit_service_task_->ReadStdErr()); });
+
+  QTimer::singleShot(kServiceStartupTimeout, &loop, [&]() {
+    // OrbitService took too long to start. That's an indication that something is wrong.
+    std::string error_message = absl::StrFormat(
+        "The service took more than %d seconds to start up.", kServiceStartupTimeout.count());
+
+    if (std::holds_alternative<BareExecutableAndRootPasswordDeployment>(deployment_config)) {
+      error_message.append(" (An outdated version of OrbitService could have caused this.)");
+    }
+    loop.error(ErrorMessage{std::move(error_message)});
+  });
 
   orbit_service_task_->Start();
 
   OUTCOME_TRY(loop.exec());
+  QObject::connect(&orbit_service_task_.value(), &orbit_ssh_qt::Task::readyReadStdOut, this,
+                   [this]() { PrintAsOrbitService(orbit_service_task_->ReadStdOut()); });
   QObject::connect(&orbit_service_task_.value(), &orbit_ssh_qt::Task::errorOccurred, this,
                    &ServiceDeployManager::handleSocketError);
   QObject::connect(&orbit_service_task_.value(), &orbit_ssh_qt::Task::finished, this,
@@ -632,17 +663,15 @@ ErrorMessageOr<ServiceDeployManager::GrpcPort> ServiceDeployManager::ExecImpl() 
   sftp_channel_ = std::move(sftp_channel);
   // Release mode: Deploying a signed debian package. No password required.
   if (std::holds_alternative<SignedDebianPackageDeployment>(*deployment_configuration_)) {
+    const auto& config = std::get<SignedDebianPackageDeployment>(*deployment_configuration_);
+
     OUTCOME_TRY(auto&& service_already_installed, CheckIfInstalled());
 
     if (!service_already_installed) {
       OUTCOME_TRY(CopyOrbitServicePackage());
       OUTCOME_TRY(InstallOrbitServicePackage());
     }
-    OUTCOME_TRY(StartOrbitService());
-    // TODO(hebecker): Replace this timeout by waiting for a
-    //  stdout-greeting-message.
-    std::this_thread::sleep_for(std::chrono::milliseconds{100});
-
+    OUTCOME_TRY(StartOrbitService(config));
     StartWatchdog();
 
     // Developer mode: Deploying a bare executable and start it via sudo.
@@ -653,11 +682,7 @@ ErrorMessageOr<ServiceDeployManager::GrpcPort> ServiceDeployManager::ExecImpl() 
     OUTCOME_TRY(CopyOrbitServiceExecutable(config));
     OUTCOME_TRY(CopyOrbitApiLibrary(config));
     OUTCOME_TRY(CopyOrbitUserSpaceInstrumentationLibrary(config));
-    OUTCOME_TRY(StartOrbitServicePrivileged(config));
-    // TODO(hebecker): Replace this timeout by waiting for a
-    // stdout-greeting-message.
-    std::this_thread::sleep_for(std::chrono::milliseconds{200});
-
+    OUTCOME_TRY(StartOrbitService(config));
     StartWatchdog();
 
     // Manual Developer mode: No deployment, no starting. Just the tunnels.

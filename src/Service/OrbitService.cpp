@@ -150,6 +150,12 @@ int OrbitService::Run(std::atomic<bool>* exit_requested) {
   }
   grpc_server->AddCaptureStartStopListener(producer_side_server.get());
 
+  // The client is looking for the "READY" keyword to learn whether the service finish its start up
+  // and is ready to accept a connection. Check out the ServiceDeployManager on how the detection
+  // works. We also print some line breaks here to avoid interfering with our logging output.
+  std::puts("\nREADY\n");
+  std::fflush(stdout);
+
 #ifdef __linux
   // Make stdin non-blocking.
   fcntl(STDIN_FILENO, F_SETFL, O_NONBLOCK);
