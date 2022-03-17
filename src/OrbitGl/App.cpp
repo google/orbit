@@ -390,8 +390,8 @@ void OrbitApp::OnCaptureStarted(const orbit_grpc_protos::CaptureStarted& capture
           SendWarningToUi("Capture", warning_message);
         }
 
-        api_event_id_setter_ =
-            orbit_capture_client::ApiEventIdSetter::Create(capture_started.capture_options());
+        api_event_id_setter_ = orbit_capture_client::NameEqualityApiEventIdSetter::Create(
+            capture_started.capture_options());
 
         absl::MutexLock lock(&mutex);
         initialization_complete = true;
@@ -1560,7 +1560,7 @@ void OrbitApp::ClearCapture() {
 
   FireRefreshCallbacks();
 
-  api_event_id_setter_ = orbit_capture_client::ApiEventIdSetter();
+  api_event_id_setter_ = orbit_capture_client::NameEqualityApiEventIdSetter();
 }
 
 void OrbitApp::ToggleCapture() {

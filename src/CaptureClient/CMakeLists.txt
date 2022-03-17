@@ -45,6 +45,7 @@ add_executable(CaptureClientTests)
 
 target_sources(CaptureClientTests PRIVATE
         ApiEventProcessorTest.cpp
+        ApiEventSetterTest.cpp
         CaptureEventProcessorTest.cpp
         CompositeEventProcessorTest.cpp
         GpuQueueSubmissionProcessorTest.cpp

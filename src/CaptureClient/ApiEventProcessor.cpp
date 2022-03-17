@@ -113,11 +113,11 @@ void ApiEventProcessor::ProcessStopEventLegacy(const orbit_api::ApiEvent& api_ev
   }
 
   timer_info.set_api_scope_name(start_event.encoded_event.event.name);
-  capture_listener_->GetApiEventIdSetter().SetId(timer_info);
 
   timer_info.set_group_id(0);
   timer_info.set_address_in_function(0);
 
+  capture_listener_->GetApiEventIdSetter().SetId(timer_info);
   capture_listener_->OnTimer(timer_info);
   event_stack.pop_back();
 }
@@ -149,10 +149,10 @@ void ApiEventProcessor::ProcessAsyncStopEventLegacy(const orbit_api::ApiEvent& a
   }
   timer_info.set_api_async_scope_id(api_event.encoded_event.event.data);
   timer_info.set_api_scope_name(start_event.encoded_event.event.name);
-  capture_listener_->GetApiEventIdSetter().SetId(timer_info);
 
   timer_info.set_address_in_function(0);
 
+  capture_listener_->GetApiEventIdSetter().SetId(timer_info);
   capture_listener_->OnTimer(timer_info);
 
   asynchronous_legacy_events_by_id_.erase(event_id);
@@ -243,8 +243,8 @@ void ApiEventProcessor::ProcessApiScopeStop(
   timer_info.set_address_in_function(start_event.address_in_function());
 
   timer_info.set_api_scope_name(DecodeString(start_event));
-  capture_listener_->GetApiEventIdSetter().SetId(timer_info);
 
+  capture_listener_->GetApiEventIdSetter().SetId(timer_info);
   capture_listener_->OnTimer(timer_info);
   event_stack.pop_back();
 }
@@ -281,8 +281,8 @@ void ApiEventProcessor::ProcessApiScopeStopAsync(
   timer_info.set_address_in_function(start_event.address_in_function());
 
   timer_info.set_api_scope_name(DecodeString(start_event));
-  capture_listener_->GetApiEventIdSetter().SetId(timer_info);
 
+  capture_listener_->GetApiEventIdSetter().SetId(timer_info);
   capture_listener_->OnTimer(timer_info);
   asynchronous_scopes_by_id_.erase(event_id);
 }

@@ -74,7 +74,7 @@ class MyCaptureListener : public CaptureListener {
                                         /*out_of_order_events_discarded_event*/) override {}
   ApiEventIdSetter& GetApiEventIdSetter() override { return api_event_setter_; }
 
-  ApiEventIdSetter api_event_setter_;
+  NameEqualityApiEventIdSetter api_event_setter_;
 };
 }  // namespace
 

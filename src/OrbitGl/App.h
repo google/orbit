@@ -665,7 +665,7 @@ class OrbitApp final : public DataViewFactory,
 
   std::optional<orbit_statistics::HistogramSelectionRange> histogram_selection_range_;
 
-  orbit_capture_client::ApiEventIdSetter api_event_id_setter_;
+  orbit_capture_client::NameEqualityApiEventIdSetter api_event_id_setter_;
 };
 
 #endif  // ORBIT_GL_APP_H_
