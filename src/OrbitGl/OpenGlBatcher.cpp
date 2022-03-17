@@ -2,14 +2,16 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#include "BatcherImpl.h"
+#include "OpenGlBatcher.h"
 
 #include <CoreMath.h>
 #include <glad/glad.h>
 
 #include "Introspection/Introspection.h"
 
-void BatcherImpl::ResetElements() {
+namespace orbit_gl {
+
+void OpenGlBatcher::ResetElements() {
   for (auto& [unused_layer, buffer] : primitive_buffers_by_layer_) {
     buffer.Reset();
   }
@@ -22,9 +24,9 @@ static void MoveLineToPixelCenterIfHorizontal(Line& line) {
   line.end_point[1] += 0.5f;
 }
 
-void BatcherImpl::AddLineInternal(Vec2 from, Vec2 to, float z, const Color& color,
-                                  const Color& picking_color,
-                                  std::unique_ptr<PickingUserData> user_data) {
+void OpenGlBatcher::AddLineInternal(Vec2 from, Vec2 to, float z, const Color& color,
+                                    const Color& picking_color,
+                                    std::unique_ptr<PickingUserData> user_data) {
   Line line;
   line.start_point = translations_.TranslateAndFloorVertex(Vec3(from[0], from[1], z));
   line.end_point = translations_.TranslateAndFloorVertex(Vec3(to[0], to[1], z));
@@ -39,9 +41,9 @@ void BatcherImpl::AddLineInternal(Vec2 from, Vec2 to, float z, const Color& colo
   user_data_.push_back(std::move(user_data));
 }
 
-void BatcherImpl::AddBoxInternal(const Box& box, const std::array<Color, 4>& colors,
-                                 const Color& picking_color,
-                                 std::unique_ptr<PickingUserData> user_data) {
+void OpenGlBatcher::AddBoxInternal(const Box& box, const std::array<Color, 4>& colors,
+                                   const Color& picking_color,
+                                   std::unique_ptr<PickingUserData> user_data) {
   Box rounded_box = box;
   for (size_t v = 0; v < 4; ++v) {
     rounded_box.vertices[v] = translations_.TranslateAndFloorVertex(rounded_box.vertices[v]);
@@ -54,9 +56,10 @@ void BatcherImpl::AddBoxInternal(const Box& box, const std::array<Color, 4>& col
   user_data_.push_back(std::move(user_data));
 }
 
-void BatcherImpl::AddTriangleInternal(const Triangle& triangle, const std::array<Color, 3>& colors,
-                                      const Color& picking_color,
-                                      std::unique_ptr<PickingUserData> user_data) {
+void OpenGlBatcher::AddTriangleInternal(const Triangle& triangle,
+                                        const std::array<Color, 3>& colors,
+                                        const Color& picking_color,
+                                        std::unique_ptr<PickingUserData> user_data) {
   Triangle rounded_tri = triangle;
   for (auto& vertex : rounded_tri.vertices) {
     vertex = translations_.TranslateAndFloorVertex(vertex);
@@ -69,7 +72,7 @@ void BatcherImpl::AddTriangleInternal(const Triangle& triangle, const std::array
   user_data_.push_back(std::move(user_data));
 }
 
-[[nodiscard]] std::vector<float> BatcherImpl::GetLayers() const {
+[[nodiscard]] std::vector<float> OpenGlBatcher::GetLayers() const {
   std::vector<float> layers;
   for (auto& [layer, _] : primitive_buffers_by_layer_) {
     layers.push_back(layer);
@@ -77,7 +80,7 @@ void BatcherImpl::AddTriangleInternal(const Triangle& triangle, const std::array
   return layers;
 };
 
-void BatcherImpl::DrawLayer(float layer, bool picking) const {
+void OpenGlBatcher::DrawLayer(float layer, bool picking) const {
   ORBIT_SCOPE_FUNCTION;
   if (!primitive_buffers_by_layer_.count(layer)) return;
   glPushAttrib(GL_ENABLE_BIT | GL_COLOR_BUFFER_BIT);
@@ -101,7 +104,7 @@ void BatcherImpl::DrawLayer(float layer, bool picking) const {
   glPopAttrib();
 }
 
-void BatcherImpl::DrawBoxBuffer(float layer, bool picking) const {
+void OpenGlBatcher::DrawBoxBuffer(float layer, bool picking) const {
   auto& box_buffer = primitive_buffers_by_layer_.at(layer).box_buffer;
   const orbit_containers::Block<Box, BoxBuffer::NUM_BOXES_PER_BLOCK>* box_block =
       box_buffer.boxes_.root();
@@ -121,7 +124,7 @@ void BatcherImpl::DrawBoxBuffer(float layer, bool picking) const {
   }
 }
 
-void BatcherImpl::DrawLineBuffer(float layer, bool picking) const {
+void OpenGlBatcher::DrawLineBuffer(float layer, bool picking) const {
   auto& line_buffer = primitive_buffers_by_layer_.at(layer).line_buffer;
   const orbit_containers::Block<Line, LineBuffer::NUM_LINES_PER_BLOCK>* line_block =
       line_buffer.lines_.root();
@@ -140,7 +143,7 @@ void BatcherImpl::DrawLineBuffer(float layer, bool picking) const {
   }
 }
 
-void BatcherImpl::DrawTriangleBuffer(float layer, bool picking) const {
+void OpenGlBatcher::DrawTriangleBuffer(float layer, bool picking) const {
   auto& triangle_buffer = primitive_buffers_by_layer_.at(layer).triangle_buffer;
   const orbit_containers::Block<Triangle, TriangleBuffer::NUM_TRIANGLES_PER_BLOCK>* triangle_block =
       triangle_buffer.triangles_.root();
@@ -159,3 +162,5 @@ void BatcherImpl::DrawTriangleBuffer(float layer, bool picking) const {
     color_block = color_block->next();
   }
 }
+
+}  // namespace orbit_gl

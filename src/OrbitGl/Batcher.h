@@ -44,8 +44,8 @@ into layers formed by equal z-coordinates. Each layer can then be drawn seperate
 Batcher::DrawLayer(), or all layers can be drawn at once in their correct order using
 Batcher::Draw():
 
-NOTE: Batcher has a few pure virtual functions that has to be implemented: A few AddInternalMethods,
-ResetElements(), GetLayers() and DrawLayers().
+NOTE: Batcher has a few pure virtual functions that have to be implemented: A few
+AddInternalMethods, ResetElements(), GetLayers() and DrawLayers().
 **/
 class Batcher {
  public:

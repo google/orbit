@@ -2,8 +2,8 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#ifndef ORBIT_GL_BATCHER_IMPL_H_
-#define ORBIT_GL_BATCHER_IMPL_H_
+#ifndef ORBIT_GL_OPEN_GL_BATCHER_H_
+#define ORBIT_GL_OPEN_GL_BATCHER_H_
 
 #include <Batcher.h>
 
@@ -14,6 +14,10 @@
 
 #include "Containers/BlockChain.h"
 #include "PickingManager.h"
+
+namespace orbit_gl {
+
+namespace {
 
 struct LineBuffer {
   void Reset() {
@@ -66,16 +70,17 @@ struct PrimitiveBuffers {
   TriangleBuffer triangle_buffer;
 };
 
+}  // namespace
 /**
 Implements internal methods to collects primitives to be rendered at a later point in time.
 
-NOTE: The BatcherImpl assumes x/y coordinates are in pixels and will automatically round those
+NOTE: The OpenGlBatcher assumes x/y coordinates are in pixels and will automatically round those
 down to the next integer in all Batcher::AddXXX methods. This fixes the issue of primitives
 "jumping" around when their coordinates are changed slightly.
 **/
-class BatcherImpl : public Batcher {
+class OpenGlBatcher : public Batcher {
  public:
-  BatcherImpl(BatcherId batcher_id, PickingManager* picking_manager = nullptr)
+  OpenGlBatcher(BatcherId batcher_id, PickingManager* picking_manager = nullptr)
       : Batcher(batcher_id, picking_manager) {}
   [[nodiscard]] std::vector<float> GetLayers() const override;
   void DrawLayer(float layer, bool picking) const override;
@@ -99,4 +104,6 @@ class BatcherImpl : public Batcher {
   void DrawTriangleBuffer(float layer, bool picking) const;
 };
 
-#endif  // ORBIT_GL_BATCHER_IMPL_H_
+}  // namespace orbit_gl
+
+#endif  // ORBIT_GL_OPEN_GL_BATCHER_H_

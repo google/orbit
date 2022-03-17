@@ -10,18 +10,18 @@
 #include <utility>
 #include <vector>
 
-#include "BatcherImpl.h"
 #include "CoreMath.h"
 #include "Geometry.h"
+#include "OpenGlBatcher.h"
 #include "PickingManager.h"
 #include "PickingManagerTest.h"
 
-namespace {
+namespace orbit_gl {
 
-class FakeBatcher : public BatcherImpl {
+class FakeBatcher : public OpenGlBatcher {
  public:
   explicit FakeBatcher(BatcherId id, PickingManager* picking_manager = nullptr)
-      : BatcherImpl(id, picking_manager) {}
+      : OpenGlBatcher(id, picking_manager) {}
 
   void ResetMockDrawCounts() {
     drawn_line_colors_.clear();
@@ -271,4 +271,4 @@ TEST(Batcher, TranslationsAreAutomaticallyAdded) {
   ASSERT_DEATH(batcher.PopTranslation(), "Check failed");
 }
 
-}  // namespace
+}  // namespace orbit_gl
