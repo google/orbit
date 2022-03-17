@@ -215,9 +215,13 @@ void SymbolsDialog::OnMoreInfoButtonClicked() {
 [[nodiscard]] SymbolsDialog::OverrideWarningResult SymbolsDialog::DisplayOverrideWarning() {
   QMessageBox message_box{QMessageBox::Warning, "Override Symbol location?", kOverrideWarningText,
                           QMessageBox::StandardButton::Cancel, this};
-  message_box.addButton("Override", QMessageBox::AcceptRole);
-  int result_code = message_box.exec();
-  if (result_code == QMessageBox::Accepted) {
+  QAbstractButton* override_button = message_box.addButton("Override", QMessageBox::AcceptRole);
+
+  // From https://doc.qt.io/qt-5/qmessagebox.html#exec
+  // > When using QMessageBox with custom buttons, this function [exec] returns an opaque value; use
+  // clickedButton() to determine which button was clicked.
+  (void)message_box.exec();
+  if (message_box.clickedButton() == override_button) {
     return OverrideWarningResult::kOverride;
   }
   return OverrideWarningResult::kCancel;
