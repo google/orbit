@@ -14,8 +14,8 @@
 
 namespace orbit_gl {
 
-constexpr float kLabelMarginRight = 2.f;
-constexpr float kLabelMarginLeft = 4.f;
+constexpr float kLabelsPadding = 4.f;
+const Color kBackgroundColorSpecialLabels(68, 67, 69, 255);
 
 void TimelineUi::RenderLines(Batcher& batcher, uint64_t min_timestamp_ns,
                              uint64_t max_timestamp_ns) const {
@@ -35,8 +35,6 @@ void TimelineUi::RenderLines(Batcher& batcher, uint64_t min_timestamp_ns,
 
 void TimelineUi::RenderLabels(Batcher& batcher, TextRenderer& text_renderer,
                               uint64_t min_timestamp_ns, uint64_t max_timestamp_ns) const {
-  const float kPixelMargin = 1;
-
   std::vector<uint64_t> all_major_ticks =
       timeline_ticks_.GetMajorTicks(min_timestamp_ns, max_timestamp_ns);
   // The label of the previous major tick could be also partially visible.
@@ -51,11 +49,10 @@ void TimelineUi::RenderLabels(Batcher& batcher, TextRenderer& text_renderer,
     number_of_decimal_places_needed = std::max(
         number_of_decimal_places_needed, timeline_ticks_.GetTimestampNumDigitsPrecision(tick));
   }
+  SetNumberOfDecimalPlacesNeeded(number_of_decimal_places_needed);
 
-  for (uint64_t tick_ns : GetTicksForNonOverlappingLabels(
-           text_renderer, all_major_ticks, kLabelMarginLeft + kLabelMarginRight + kPixelMargin,
-           number_of_decimal_places_needed)) {
-    RenderLabel(batcher, text_renderer, tick_ns, number_of_decimal_places_needed,
+  for (uint64_t tick_ns : GetTicksForNonOverlappingLabels(text_renderer, all_major_ticks)) {
+    RenderLabel(batcher, text_renderer, tick_ns, GetNumberOfDecimalPlacesNeeded(),
                 GlCanvas::kZValueTimeBar, GlCanvas::kTimeBarBackgroundColor);
   }
 }
@@ -74,32 +71,43 @@ void TimelineUi::RenderBackground(Batcher& batcher) const {
 }
 
 void TimelineUi::RenderLabel(Batcher& batcher, TextRenderer& text_renderer, uint64_t tick_ns,
-                             uint32_t number_of_decimal_places_needed, float label_z,
+                             uint32_t number_of_decimal_places, float label_z,
                              const Color background_color) const {
-  std::string label = GetLabel(tick_ns, number_of_decimal_places_needed);
+  std::string label = GetLabel(tick_ns, number_of_decimal_places);
   float world_x = GetTickWorldXPos(tick_ns);
   Vec2 pos, size;
   float label_middle_y = GetPos()[1] + GetHeightWithoutMargin() / 2.f;
-  text_renderer.AddText(label.c_str(), world_x + kLabelMarginLeft, label_middle_y, label_z,
+  text_renderer.AddText(label.c_str(), world_x + kLabelsPadding, label_middle_y, label_z,
                         /*text_formatting=*/
                         {layout_->GetFontSize(), Color(255, 255, 255, 255), -1.f,
                          TextRenderer::HAlign::Left, TextRenderer::VAlign::Middle},
                         /*out_text_pos=*/&pos, /*out_text_size=*/&size);
 
   // Box behind the label to hide the ticks behind it.
-  const float kBackgroundBoxVerticalMargin = 4.f;
-  size[0] += kLabelMarginRight;
-  pos[1] = pos[1] - kBackgroundBoxVerticalMargin;
-  size[1] = size[1] + 2 * kBackgroundBoxVerticalMargin;
+  size[0] += 2 * kLabelsPadding;
+  size[1] += 2 * kLabelsPadding;
+  pos[0] -= kLabelsPadding;
+  pos[1] -= kLabelsPadding;
   Box background_box(pos, size, label_z);
   batcher.AddBox(background_box, background_color);
 }
 
-std::string TimelineUi::GetLabel(uint64_t tick_ns, uint32_t number_of_decimal_places_needed) const {
+void TimelineUi::RenderMouseLabel(Batcher& batcher, TextRenderer& text_renderer,
+                                  uint64_t mouse_tick_ns) const {
+  // The label in mouse position has 2 more digits of precision than other labels.
+  constexpr uint32_t kMaxNumberOfDecimalPlaces = 9;
+  uint32_t num_decimal_places_mouse_label =
+      std::min(kMaxNumberOfDecimalPlaces, GetNumberOfDecimalPlacesNeeded() + 2);
+
+  RenderLabel(batcher, text_renderer, mouse_tick_ns, num_decimal_places_mouse_label,
+              GlCanvas::kZValueTimeBarMouseLabel, kBackgroundColorSpecialLabels);
+}
+
+std::string TimelineUi::GetLabel(uint64_t tick_ns, uint32_t number_of_decimal_places) const {
   // TODO(http://b/170712621): Remove this flag when we decide which timestamp format we will use.
   if (absl::GetFlag(FLAGS_iso_timestamps)) {
     return orbit_display_formats::GetDisplayISOTimestamp(
-        absl::Nanoseconds(tick_ns), number_of_decimal_places_needed,
+        absl::Nanoseconds(tick_ns), number_of_decimal_places,
         absl::Nanoseconds(timeline_info_interface_->GetCaptureTimeSpanNs()));
   }
   return orbit_display_formats::GetDisplayTime(absl::Nanoseconds(tick_ns));
@@ -111,8 +119,7 @@ float TimelineUi::GetTickWorldXPos(uint64_t tick_ns) const {
 }
 
 std::vector<uint64_t> TimelineUi::GetTicksForNonOverlappingLabels(
-    TextRenderer& text_renderer, const std::vector<uint64_t>& all_major_ticks,
-    float horizontal_margin, uint32_t number_of_decimal_places) const {
+    TextRenderer& text_renderer, const std::vector<uint64_t>& all_major_ticks) const {
   if (all_major_ticks.size() <= 1) return all_major_ticks;
   uint64_t ns_between_major_ticks = all_major_ticks[1] - all_major_ticks[0];
 
@@ -121,8 +128,7 @@ std::vector<uint64_t> TimelineUi::GetTicksForNonOverlappingLabels(
   // consistency.
   int num_consecutive_skipped_labels = 0;
   std::vector<uint64_t> visible_labels = all_major_ticks;
-  while (WillLabelsOverlap(text_renderer, visible_labels, horizontal_margin,
-                           number_of_decimal_places)) {
+  while (WillLabelsOverlap(text_renderer, visible_labels)) {
     visible_labels.clear();
     num_consecutive_skipped_labels++;
     for (uint64_t tick : all_major_ticks) {
@@ -138,18 +144,25 @@ std::vector<uint64_t> TimelineUi::GetTicksForNonOverlappingLabels(
 }
 
 bool TimelineUi::WillLabelsOverlap(TextRenderer& text_renderer,
-                                   const std::vector<uint64_t>& tick_list, float horizontal_margin,
-                                   uint32_t number_of_decimal_places) const {
+                                   const std::vector<uint64_t>& tick_list) const {
   if (tick_list.size() <= 1) return false;
   float distance_between_labels = GetTickWorldXPos(tick_list[1]) - GetTickWorldXPos(tick_list[0]);
   for (auto tick_ns : tick_list) {
     float label_width = text_renderer.GetStringWidth(
-        GetLabel(tick_ns, number_of_decimal_places).c_str(), layout_->GetFontSize());
-    if (distance_between_labels < horizontal_margin + label_width) {
+        GetLabel(tick_ns, GetNumberOfDecimalPlacesNeeded()).c_str(), layout_->GetFontSize());
+    if (distance_between_labels < 2 * kLabelsPadding + label_width) {
       return true;
     }
   }
   return false;
+}
+
+void TimelineUi::DoDraw(Batcher& batcher, TextRenderer& text_renderer,
+                        const DrawContext& draw_context) {
+  const uint64_t mouse_timestamp_ns =
+      timeline_info_interface_->GetNsSinceStart(draw_context.current_mouse_time_ns);
+
+  RenderMouseLabel(batcher, text_renderer, mouse_timestamp_ns);
 }
 
 void TimelineUi::DoUpdatePrimitives(Batcher& batcher, TextRenderer& text_renderer,
