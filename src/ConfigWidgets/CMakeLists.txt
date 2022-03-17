@@ -29,19 +29,19 @@ target_sources(ConfigWidgets PRIVATE SourcePathsMappingDialog.cpp
 set_target_properties(ConfigWidgets PROPERTIES AUTOMOC ON)
 set_target_properties(ConfigWidgets PROPERTIES AUTOUIC ON)
 
-add_executable(ConfigWidgetsTest)
+add_executable(ConfigWidgetsTests)
 
-target_sources(ConfigWidgetsTest PRIVATE SymbolErrorDialogTest.cpp
-                                         SymbolsDialogTest.cpp)
+target_sources(ConfigWidgetsTests PRIVATE SymbolErrorDialogTest.cpp
+                                          SymbolsDialogTest.cpp)
 
-target_link_libraries(ConfigWidgetsTest PRIVATE ConfigWidgets
-                                                TestUtils
-                                                GTest::QtGuiMain)
+target_link_libraries(ConfigWidgetsTests PRIVATE ConfigWidgets
+                                                 TestUtils
+                                                 GTest::QtGuiMain)
 
 if (WIN32 AND "$ENV{QT_QPA_PLATFORM}" STREQUAL "offscreen")
-  register_test(ConfigWidgetsTest PROPERTIES DISABLED TRUE)
+  register_test(ConfigWidgetsTests PROPERTIES DISABLED TRUE)
 endif()
 
 if (NOT WIN32)
-  register_test(ConfigWidgetsTest PROPERTIES ENVIRONMENT QT_QPA_PLATFORM=offscreen)
+  register_test(ConfigWidgetsTests PROPERTIES ENVIRONMENT QT_QPA_PLATFORM=offscreen)
 endif()
