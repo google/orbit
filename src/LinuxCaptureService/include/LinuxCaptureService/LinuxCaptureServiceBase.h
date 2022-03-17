@@ -39,11 +39,9 @@ class LinuxCaptureServiceBase : public orbit_capture_service_base::CaptureServic
   // Note that start_stop_capture_request_waiter needs to be a shared_ptr here as it might outlive
   // this method. See wait_for_stop_capture_request_thread_ in
   // WaitForStopCaptureRequestOrMemoryThresholdExceeded.
-  [[nodiscard]] orbit_capture_service_base::CaptureServiceBase::CaptureInitializationResult
-  DoCapture(
-      orbit_producer_event_processor::ClientCaptureEventCollector* client_capture_event_collector,
-      const std::shared_ptr<orbit_capture_service_base::StartStopCaptureRequestWaiter>&
-          start_stop_capture_request_waiter);
+  void DoCapture(const orbit_grpc_protos::CaptureOptions& capture_options,
+                 const std::shared_ptr<orbit_capture_service_base::StartStopCaptureRequestWaiter>&
+                     start_stop_capture_request_waiter);
 
  private:
   std::unique_ptr<orbit_user_space_instrumentation::InstrumentationManager>

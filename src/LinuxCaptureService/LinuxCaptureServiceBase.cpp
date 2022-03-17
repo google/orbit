@@ -222,14 +222,9 @@ LinuxCaptureServiceBase::WaitForStopCaptureRequestOrMemoryThresholdExceeded(
   }
 }
 
-CaptureServiceBase::CaptureInitializationResult LinuxCaptureServiceBase::DoCapture(
-    ClientCaptureEventCollector* client_capture_event_collector,
+void LinuxCaptureServiceBase::DoCapture(
+    const CaptureOptions& capture_options,
     const std::shared_ptr<StartStopCaptureRequestWaiter>& start_stop_capture_request_waiter) {
-  if (CaptureInitializationResult result = InitializeCapture(client_capture_event_collector);
-      result != CaptureInitializationResult::kSuccess) {
-    return result;
-  }
-
   if (wait_for_stop_capture_request_thread_.joinable()) {
     wait_for_stop_capture_request_thread_.join();
   }
@@ -238,16 +233,6 @@ CaptureServiceBase::CaptureInitializationResult LinuxCaptureServiceBase::DoCaptu
   ProducerEventProcessorHijackingFunctionEntryExitForLinuxTracing function_entry_exit_hijacker{
       producer_event_processor_.get(), &tracing_handler};
   MemoryInfoHandler memory_info_handler{producer_event_processor_.get()};
-
-  auto capture_options_or_error = start_stop_capture_request_waiter->WaitForStartCaptureRequest();
-  if (capture_options_or_error.has_error()) {
-    ORBIT_ERROR("An error occurred while waiting for start: %s",
-                capture_options_or_error.error().message());
-    client_capture_event_collector->StopAndWait();
-    TerminateCapture();
-    return CaptureInitializationResult::kFailureWhileWaitingForStart;
-  }
-  const CaptureOptions& capture_options = capture_options_or_error.value();
 
   // Enable Orbit API in tracee.
   std::optional<std::string> error_enabling_orbit_api;
@@ -377,8 +362,6 @@ CaptureServiceBase::CaptureInitializationResult LinuxCaptureServiceBase::DoCaptu
   FinalizeEventProcessing(stop_capture_reason);
 
   TerminateCapture();
-
-  return CaptureInitializationResult::kSuccess;
 }
 
 }  // namespace orbit_linux_capture_service
