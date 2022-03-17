@@ -7,6 +7,7 @@
 
 #include <string>
 
+#include "CaptureClient/ApiEventIdSetter.h"
 #include "CaptureClient/CaptureEventProcessor.h"
 #include "CaptureClient/CaptureListener.h"
 #include "ClientData/ProcessData.h"
@@ -71,6 +72,9 @@ class MyCaptureListener : public CaptureListener {
       orbit_grpc_protos::LostPerfRecordsEvent /*lost_perf_records_event*/) override {}
   void OnOutOfOrderEventsDiscardedEvent(orbit_grpc_protos::OutOfOrderEventsDiscardedEvent
                                         /*out_of_order_events_discarded_event*/) override {}
+  ApiEventIdSetter& GetApiEventIdSetter() override { return api_event_setter_; }
+
+  ApiEventIdSetter api_event_setter_;
 };
 }  // namespace
 

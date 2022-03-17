@@ -21,6 +21,7 @@
 #include <chrono>
 #include <cinttypes>
 #include <cstddef>
+#include <cstdint>
 #include <limits>
 #include <memory>
 #include <optional>
@@ -29,6 +30,7 @@
 #include <thread>
 #include <utility>
 
+#include "CaptureClient/ApiEventIdSetter.h"
 #include "CaptureClient/CaptureListener.h"
 #include "CaptureFile/CaptureFile.h"
 #include "CaptureFile/CaptureFileHelpers.h"
@@ -387,6 +389,10 @@ void OrbitApp::OnCaptureStarted(const orbit_grpc_protos::CaptureStarted& capture
                                            absl::ZeroDuration(), warning_message);
           SendWarningToUi("Capture", warning_message);
         }
+
+        api_event_id_setter_ =
+            orbit_capture_client::ApiEventIdSetter::Create(capture_started.capture_options());
+
         absl::MutexLock lock(&mutex);
         initialization_complete = true;
       });
@@ -1553,6 +1559,8 @@ void OrbitApp::ClearCapture() {
   capture_cleared_callback_();
 
   FireRefreshCallbacks();
+
+  api_event_id_setter_ = orbit_capture_client::ApiEventIdSetter();
 }
 
 void OrbitApp::ToggleCapture() {
@@ -2964,4 +2972,8 @@ OrbitApp::GetConfidenceIntervalEstimator() const {
 void OrbitApp::ShowHistogram(const std::vector<uint64_t>* data, const std::string& function_name,
                              uint64_t function_id) {
   main_window_->ShowHistogram(data, function_name, function_id);
+}
+
+[[nodiscard]] orbit_capture_client::ApiEventIdSetter& OrbitApp::GetApiEventIdSetter() {
+  return api_event_id_setter_;
 }

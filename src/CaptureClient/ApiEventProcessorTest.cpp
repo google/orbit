@@ -2,6 +2,7 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
+#include <gmock/gmock-actions.h>
 #include <gmock/gmock.h>
 #include <google/protobuf/util/message_differencer.h>
 #include <gtest/gtest.h>
@@ -10,6 +11,7 @@
 #include <vector>
 
 #include "ApiUtils/EncodedString.h"
+#include "CaptureClient/ApiEventIdSetter.h"
 #include "CaptureClient/ApiEventProcessor.h"
 #include "CaptureClient/CaptureEventProcessor.h"
 #include "CaptureClient/CaptureListener.h"
@@ -83,6 +85,11 @@ class MockCaptureListener : public CaptureListener {
       void, OnOutOfOrderEventsDiscardedEvent,
       (orbit_grpc_protos::OutOfOrderEventsDiscardedEvent /*out_of_order_events_discarded_event*/),
       (override));
+
+  //   ApiEventIdSetter api_event_id_setter_;
+  //   ApiEventIdSetter& GetApiEventIdSetter() override { return api_event_id_setter_; }
+
+  MOCK_METHOD(ApiEventIdSetter&, GetApiEventIdSetter, (), (override));
 };
 
 class ApiEventProcessorTest : public ::testing::Test {
@@ -90,7 +97,12 @@ class ApiEventProcessorTest : public ::testing::Test {
   ApiEventProcessorTest() : api_event_processor_{&capture_listener_} {}
 
  protected:
-  void SetUp() override {}
+  void SetUp() override {
+    std::cout << "Setup begin" << std::endl;
+    EXPECT_CALL(capture_listener_, GetApiEventIdSetter())
+        .WillRepeatedly(testing::ReturnRef(api_event_id_setter_));
+    std::cout << "Setup end" << std::endl;
+  }
 
   void TearDown() override {}
 
@@ -239,6 +251,7 @@ class ApiEventProcessorTest : public ::testing::Test {
 
   MockCaptureListener capture_listener_;
   ApiEventProcessor api_event_processor_;
+  ApiEventIdSetter api_event_id_setter_;
 
   static constexpr int32_t kProcessId = 42;
   static constexpr int32_t kThreadId1 = 12;
