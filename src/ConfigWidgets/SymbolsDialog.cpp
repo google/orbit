@@ -236,7 +236,7 @@ void SymbolsDialog::DisableAddFolder() {
   ui_->addFolderButton->setDisabled(true);
   ui_->addFolderButton->setToolTip(
       QString("Module %1 does not have a build ID. For modules without build ID, Orbit cannot find "
-              "symbols in folders")
+              "symbols in folders.")
           .arg(QString::fromStdString(module_.value()->name())));
 }
 
