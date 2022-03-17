@@ -135,9 +135,14 @@ bool PeCoffUnwindInfoUnwinderX86_64::Eval(Memory* process_memory, Regs* regs,
         }
         const uint8_t frame_register = unwind_info.GetFrameRegister();
         const uint16_t reg = MapToUnwindstackRegister(frame_register);
-        const uint32_t frame_offset = 16 * static_cast<uint32_t>(unwind_info.GetFrameOffset());
+        const uint64_t frame_offset = 16 * static_cast<uint64_t>(unwind_info.GetFrameOffset());
 
-        (*cur_regs)[reg] = cur_regs->sp() + frame_offset;
+        if (frame_offset > (*cur_regs)[reg]) {
+          last_error_.code = ERROR_INVALID_COFF;
+          return false;
+        }
+        uint64_t new_sp_value = (*cur_regs)[reg] - frame_offset;
+        cur_regs->set_sp(new_sp_value);
         *frame_pointer = (*cur_regs)[reg];
         *frame_pointer_used = true;
 
