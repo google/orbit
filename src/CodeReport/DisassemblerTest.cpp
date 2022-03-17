@@ -62,8 +62,6 @@ TEST(Disassembler, DisassembleWithSymbols) {
   orbit_grpc_protos::ModuleSymbols symbols;
   orbit_grpc_protos::SymbolInfo* symbol = symbols.add_symbol_infos();
   symbol->set_address(kOffset);
-  constexpr const char* kFunctionName = "_Z3fibi";
-  symbol->set_name(kFunctionName);
   constexpr const char* kDemangledFunctionName = "int fib(int)";
   symbol->set_demangled_name(kDemangledFunctionName);
   symbol->set_size(kFibonacciAssembly.size());

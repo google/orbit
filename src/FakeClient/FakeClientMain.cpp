@@ -130,7 +130,6 @@ void ManipulateModuleManagerAndSelectedFunctionsToAddInstrumentedFunctionFromFun
                 demangled_function_name, file_path);
 
   orbit_client_protos::FunctionInfo function_info;
-  function_info.set_name(symbol->name());
   function_info.set_pretty_name(symbol->demangled_name());
   function_info.set_module_path(file_path);
   function_info.set_module_build_id(build_id);
@@ -225,10 +224,10 @@ void ManipulateModuleManagerToAddFunctionFromFunctionPrefixInSymtabIfExists(
                 demangled_function_prefix, elf_file->GetName());
     return;
   }
-  ORBIT_LOG("Found function \"%s\" in module \"%s\"", symbol->name(), elf_file->GetName());
+  ORBIT_LOG("Found function \"%s\" in module \"%s\"", symbol->demangled_name(),
+            elf_file->GetName());
 
   orbit_grpc_protos::SymbolInfo symbol_info;
-  symbol_info.set_name(symbol->name());
   symbol_info.set_demangled_name(symbol->demangled_name());
   symbol_info.set_address(symbol->address());
   symbol_info.set_size(symbol->size());

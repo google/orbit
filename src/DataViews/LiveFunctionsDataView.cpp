@@ -552,7 +552,6 @@ std::optional<FunctionInfo> LiveFunctionsDataView::CreateFunctionInfoFromInstrum
   }
 
   FunctionInfo result;
-  result.set_name(instrumented_function.function_name());
   result.set_pretty_name(llvm::demangle(instrumented_function.function_name()));
   result.set_module_path(instrumented_function.file_path());
   result.set_module_build_id(instrumented_function.file_build_id());

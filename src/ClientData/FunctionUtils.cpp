@@ -69,7 +69,6 @@ std::unique_ptr<FunctionInfo> CreateFunctionInfo(const SymbolInfo& symbol_info,
                                                  const std::string& module_build_id) {
   auto function_info = std::make_unique<FunctionInfo>();
 
-  function_info->set_name(symbol_info.name());
   function_info->set_pretty_name(symbol_info.demangled_name());
   function_info->set_address(symbol_info.address());
   function_info->set_size(symbol_info.size());

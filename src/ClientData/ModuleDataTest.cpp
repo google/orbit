@@ -59,14 +59,12 @@ TEST(ModuleData, LoadSymbols) {
   ModuleData module{module_info};
 
   // Setup ModuleSymbols
-  std::string symbol_name = "function name";
   auto symbol_pretty_name = "pretty name";
   uint64_t symbol_address = 15;
   uint64_t symbol_size = 12;
 
   ModuleSymbols module_symbols;
   SymbolInfo* symbol_info = module_symbols.add_symbol_infos();
-  symbol_info->set_name(symbol_name);
   symbol_info->set_demangled_name(symbol_pretty_name);
   symbol_info->set_address(symbol_address);
   symbol_info->set_size(symbol_size);
@@ -78,7 +76,6 @@ TEST(ModuleData, LoadSymbols) {
   ASSERT_EQ(module.GetFunctions().size(), 1);
 
   const FunctionInfo* function = module.GetFunctions()[0];
-  EXPECT_EQ(function->name(), symbol_name);
   EXPECT_EQ(function->pretty_name(), symbol_pretty_name);
   EXPECT_EQ(function->module_path(), module_file_path);
   EXPECT_EQ(function->module_build_id(), kBuildId);
@@ -88,21 +85,17 @@ TEST(ModuleData, LoadSymbols) {
 
 TEST(ModuleData, FindFunctionByOffset) {
   uint64_t address1 = 100;
-  std::string name1 = "Name 1";
   std::string demangled_name_1 = "Pretty Name 1";
   uint64_t address2 = 200;
-  std::string name2 = "Name 2";
   std::string demangled_name_2 = "Pretty Name 2";
   uint64_t size = 10;
 
   ModuleSymbols symbols;
   SymbolInfo* symbol1 = symbols.add_symbol_infos();
-  symbol1->set_name(name1);
   symbol1->set_demangled_name(demangled_name_1);
   symbol1->set_address(address1);
   symbol1->set_size(size);
   SymbolInfo* symbol2 = symbols.add_symbol_infos();
-  symbol2->set_name(name2);
   symbol2->set_demangled_name(demangled_name_2);
   symbol2->set_address(address2);
   symbol2->set_size(size);
@@ -117,13 +110,13 @@ TEST(ModuleData, FindFunctionByOffset) {
     // address 1
     const FunctionInfo* result = module.FindFunctionByOffset(address1, true);
     ASSERT_NE(result, nullptr);
-    EXPECT_EQ(result->name(), name1);
+    EXPECT_EQ(result->pretty_name(), demangled_name_1);
   }
   {
     // address 2
     const FunctionInfo* result = module.FindFunctionByOffset(address2, true);
     ASSERT_NE(result, nullptr);
-    EXPECT_EQ(result->name(), name2);
+    EXPECT_EQ(result->pretty_name(), demangled_name_2);
   }
   {
     // wrong address (larger)
@@ -141,14 +134,14 @@ TEST(ModuleData, FindFunctionByOffset) {
     // at address 1
     const FunctionInfo* result = module.FindFunctionByOffset(address1, false);
     ASSERT_NE(result, nullptr);
-    EXPECT_EQ(result->name(), name1);
+    EXPECT_EQ(result->pretty_name(), demangled_name_1);
   }
   {
     // at address 1 + offset (offset < size)
     uint64_t offset = 5;
     const FunctionInfo* result = module.FindFunctionByOffset(address1 + offset, false);
     ASSERT_NE(result, nullptr);
-    EXPECT_EQ(result->name(), name1);
+    EXPECT_EQ(result->pretty_name(), demangled_name_1);
   }
   {
     // at address 1 + offset (offset > size)
@@ -168,7 +161,6 @@ TEST(ModuleData, FindFunctionFromHash) {
   ModuleSymbols symbols;
 
   SymbolInfo* symbol = symbols.add_symbol_infos();
-  symbol->set_name("Symbol Name");
   symbol->set_demangled_name("demangled name");
 
   ModuleData module{ModuleInfo{}};

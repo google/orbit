@@ -331,7 +331,7 @@ static std::pair<uint64_t, uint64_t> GetUseOrbitApiFunctionVirtualAddressRange(p
   const orbit_grpc_protos::ModuleInfo& module_info = GetExecutableBinaryModuleInfo(pid);
   const orbit_grpc_protos::ModuleSymbols& module_symbols = GetExecutableBinaryModuleSymbols(pid);
   for (const orbit_grpc_protos::SymbolInfo& symbol : module_symbols.symbol_infos()) {
-    if (symbol.name() == PuppetConstants::kUseOrbitApiFunctionName) {
+    if (absl::StrContains(symbol.demangled_name(), PuppetConstants::kUseOrbitApiFunctionName)) {
       const uint64_t virtual_address_start =
           orbit_object_utils::SymbolVirtualAddressToAbsoluteAddress(
               symbol.address(), module_info.address_start(), module_info.load_bias(),

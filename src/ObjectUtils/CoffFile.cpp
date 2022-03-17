@@ -84,7 +84,6 @@ static void FillDebugSymbolsFromDWARF(llvm::DWARFContext* dwarf_context,
         // not present, so this should never return an empty name.
         std::string name(full_die.getName(llvm::DINameKind::LinkageName));
         ORBIT_CHECK(!name.empty());
-        symbol_info.set_name(name);
         symbol_info.set_demangled_name(llvm::demangle(name));
         symbol_info.set_address(low_pc);
         symbol_info.set_size(high_pc - low_pc);
