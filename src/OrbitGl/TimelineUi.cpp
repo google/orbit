@@ -14,6 +14,9 @@
 
 namespace orbit_gl {
 
+constexpr float kLabelMarginRight = 2.f;
+constexpr float kLabelMarginLeft = 4.f;
+
 void TimelineUi::RenderLines(Batcher& batcher, uint64_t min_timestamp_ns,
                              uint64_t max_timestamp_ns) const {
   const Color kMajorTickColor(255, 254, 253, 255);
@@ -32,8 +35,6 @@ void TimelineUi::RenderLines(Batcher& batcher, uint64_t min_timestamp_ns,
 
 void TimelineUi::RenderLabels(Batcher& batcher, TextRenderer& text_renderer,
                               uint64_t min_timestamp_ns, uint64_t max_timestamp_ns) const {
-  const float kLabelMarginLeft = 4;
-  const float kLabelMarginRight = 2;
   const float kPixelMargin = 1;
 
   std::vector<uint64_t> all_major_ticks =
@@ -54,23 +55,8 @@ void TimelineUi::RenderLabels(Batcher& batcher, TextRenderer& text_renderer,
   for (uint64_t tick_ns : GetTicksForNonOverlappingLabels(
            text_renderer, all_major_ticks, kLabelMarginLeft + kLabelMarginRight + kPixelMargin,
            number_of_decimal_places_needed)) {
-    std::string label = GetLabel(tick_ns, number_of_decimal_places_needed);
-    float world_x = GetTickWorldXPos(tick_ns);
-    Vec2 pos, size;
-    float label_middle_y = GetPos()[1] + GetHeightWithoutMargin() / 2;
-    text_renderer.AddText(label.c_str(), world_x + kLabelMarginLeft, label_middle_y,
-                          GlCanvas::kZValueTimeBar,
-                          {layout_->GetFontSize(), Color(255, 255, 255, 255), -1.f,
-                           TextRenderer::HAlign::Left, TextRenderer::VAlign::Middle},
-                          &pos, &size);
-
-    // Box behind the label to hide the ticks behind it.
-    const float kBackgroundBoxVerticalMargin = 4;
-    size[0] += kLabelMarginRight;
-    pos[1] = pos[1] - kBackgroundBoxVerticalMargin;
-    size[1] = size[1] + 2 * kBackgroundBoxVerticalMargin;
-    Box background_box(pos, size, GlCanvas::kZValueTimeBar);
-    batcher.AddBox(background_box, GlCanvas::kTimeBarBackgroundColor);
+    RenderLabel(batcher, text_renderer, tick_ns, number_of_decimal_places_needed,
+                GlCanvas::kZValueTimeBar, GlCanvas::kTimeBarBackgroundColor);
   }
 }
 
@@ -85,6 +71,28 @@ void TimelineUi::RenderBackground(Batcher& batcher) const {
   Box background_box(GetPos(), Vec2(GetWidth(), GetHeightWithoutMargin()),
                      GlCanvas::kZValueTimeBarBg);
   batcher.AddBox(background_box, GlCanvas::kTimeBarBackgroundColor);
+}
+
+void TimelineUi::RenderLabel(Batcher& batcher, TextRenderer& text_renderer, uint64_t tick_ns,
+                             uint32_t number_of_decimal_places_needed, float label_z,
+                             const Color background_color) const {
+  std::string label = GetLabel(tick_ns, number_of_decimal_places_needed);
+  float world_x = GetTickWorldXPos(tick_ns);
+  Vec2 pos, size;
+  float label_middle_y = GetPos()[1] + GetHeightWithoutMargin() / 2.f;
+  text_renderer.AddText(label.c_str(), world_x + kLabelMarginLeft, label_middle_y, label_z,
+                        /*text_formatting=*/
+                        {layout_->GetFontSize(), Color(255, 255, 255, 255), -1.f,
+                         TextRenderer::HAlign::Left, TextRenderer::VAlign::Middle},
+                        /*out_text_pos=*/&pos, /*out_text_size=*/&size);
+
+  // Box behind the label to hide the ticks behind it.
+  const float kBackgroundBoxVerticalMargin = 4.f;
+  size[0] += kLabelMarginRight;
+  pos[1] = pos[1] - kBackgroundBoxVerticalMargin;
+  size[1] = size[1] + 2 * kBackgroundBoxVerticalMargin;
+  Box background_box(pos, size, label_z);
+  batcher.AddBox(background_box, background_color);
 }
 
 std::string TimelineUi::GetLabel(uint64_t tick_ns, uint32_t number_of_decimal_places_needed) const {
