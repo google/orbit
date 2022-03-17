@@ -46,16 +46,12 @@ class TimelineUi : public CaptureViewElement {
   [[nodiscard]] float GetTickWorldXPos(uint64_t tick_ns) const;
   [[nodiscard]] float GetHeightWithoutMargin() const { return layout_->GetTimeBarHeight(); }
   [[nodiscard]] float GetMarginHeight() const { return layout_->GetTimeBarMargin(); }
-  [[nodiscard]] uint32_t GetNumberOfDecimalPlacesNeeded() const {
-    return number_of_decimal_places_needed_;
-  }
-  void SetNumberOfDecimalPlacesNeeded(uint32_t number_of_decimal_places_needed) const {
-    number_of_decimal_places_needed_ = number_of_decimal_places_needed;
-  }
+  [[nodiscard]] uint32_t GetNumDecimalsInLabels() const { return num_decimals_in_labels_; }
+  void UpdateNumDecimalsInLabels(uint64_t min_timestamp_ns, uint64_t max_timestamp_ns);
 
   const TimelineInfoInterface* timeline_info_interface_;
   TimelineTicks timeline_ticks_;
-  mutable uint32_t number_of_decimal_places_needed_ = 0;
+  uint32_t num_decimals_in_labels_ = 0;
 };
 
 }  // namespace orbit_gl

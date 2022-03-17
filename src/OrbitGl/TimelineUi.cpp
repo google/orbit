@@ -44,16 +44,9 @@ void TimelineUi::RenderLabels(Batcher& batcher, TextRenderer& text_renderer,
     all_major_ticks.insert(all_major_ticks.begin(), previous_major_tick.value());
   }
 
-  uint32_t number_of_decimal_places_needed = 1;
-  for (uint64_t tick : all_major_ticks) {
-    number_of_decimal_places_needed = std::max(
-        number_of_decimal_places_needed, timeline_ticks_.GetTimestampNumDigitsPrecision(tick));
-  }
-  SetNumberOfDecimalPlacesNeeded(number_of_decimal_places_needed);
-
   for (uint64_t tick_ns : GetTicksForNonOverlappingLabels(text_renderer, all_major_ticks)) {
-    RenderLabel(batcher, text_renderer, tick_ns, GetNumberOfDecimalPlacesNeeded(),
-                GlCanvas::kZValueTimeBar, GlCanvas::kTimeBarBackgroundColor);
+    RenderLabel(batcher, text_renderer, tick_ns, GetNumDecimalsInLabels(), GlCanvas::kZValueTimeBar,
+                GlCanvas::kTimeBarBackgroundColor);
   }
 }
 
@@ -84,8 +77,8 @@ void TimelineUi::RenderLabel(Batcher& batcher, TextRenderer& text_renderer, uint
                         /*out_text_pos=*/&pos, /*out_text_size=*/&size);
 
   // Box behind the label to hide the ticks behind it.
-  size[0] += 2 * kLabelsPadding;
-  size[1] += 2 * kLabelsPadding;
+  size[0] += 2.f * kLabelsPadding;
+  size[1] += 2.f * kLabelsPadding;
   pos[0] -= kLabelsPadding;
   pos[1] -= kLabelsPadding;
   Box background_box(pos, size, label_z);
@@ -95,9 +88,10 @@ void TimelineUi::RenderLabel(Batcher& batcher, TextRenderer& text_renderer, uint
 void TimelineUi::RenderMouseLabel(Batcher& batcher, TextRenderer& text_renderer,
                                   uint64_t mouse_tick_ns) const {
   // The label in mouse position has 2 more digits of precision than other labels.
-  constexpr uint32_t kMaxNumberOfDecimalPlaces = 9;
+  constexpr uint32_t kNumAdditionalDecimalDigits = 2;
+  constexpr uint32_t kMaxNumberOfDecimalDigits = 9;
   uint32_t num_decimal_places_mouse_label =
-      std::min(kMaxNumberOfDecimalPlaces, GetNumberOfDecimalPlacesNeeded() + 2);
+      std::min(kMaxNumberOfDecimalDigits, GetNumDecimalsInLabels() + kNumAdditionalDecimalDigits);
 
   RenderLabel(batcher, text_renderer, mouse_tick_ns, num_decimal_places_mouse_label,
               GlCanvas::kZValueTimeBarMouseLabel, kBackgroundColorSpecialLabels);
@@ -149,12 +143,22 @@ bool TimelineUi::WillLabelsOverlap(TextRenderer& text_renderer,
   float distance_between_labels = GetTickWorldXPos(tick_list[1]) - GetTickWorldXPos(tick_list[0]);
   for (auto tick_ns : tick_list) {
     float label_width = text_renderer.GetStringWidth(
-        GetLabel(tick_ns, GetNumberOfDecimalPlacesNeeded()).c_str(), layout_->GetFontSize());
-    if (distance_between_labels < 2 * kLabelsPadding + label_width) {
+        GetLabel(tick_ns, GetNumDecimalsInLabels()).c_str(), layout_->GetFontSize());
+    if (distance_between_labels < 2.f * kLabelsPadding + label_width) {
       return true;
     }
   }
   return false;
+}
+
+void TimelineUi::UpdateNumDecimalsInLabels(uint64_t min_timestamp_ns, uint64_t max_timestamp_ns) {
+  constexpr uint32_t kMinDecimalsInLabels = 1;
+  num_decimals_in_labels_ = kMinDecimalsInLabels;
+
+  for (uint64_t tick : timeline_ticks_.GetMajorTicks(min_timestamp_ns, max_timestamp_ns)) {
+    num_decimals_in_labels_ =
+        std::max(num_decimals_in_labels_, timeline_ticks_.GetTimestampNumDigitsPrecision(tick));
+  }
 }
 
 void TimelineUi::DoDraw(Batcher& batcher, TextRenderer& text_renderer,
@@ -174,6 +178,10 @@ void TimelineUi::DoUpdatePrimitives(Batcher& batcher, TextRenderer& text_rendere
 
   uint64_t min_timestamp_ns = timeline_info_interface_->GetNsSinceStart(min_tick);
   uint64_t max_timestamp_ns = timeline_info_interface_->GetNsSinceStart(max_tick);
+
+  // All labels will have the same number of decimals for consistency. We will store that number
+  // because it is needed for the mouse label which is drawn independently.
+  UpdateNumDecimalsInLabels(min_timestamp_ns, max_timestamp_ns);
   RenderLines(batcher, min_timestamp_ns, max_timestamp_ns);
   RenderLabels(batcher, text_renderer, min_timestamp_ns, max_timestamp_ns);
   // TODO(http://b/217719000): Hack needed to not draw tracks on timeline's margin.
