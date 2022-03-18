@@ -47,8 +47,8 @@ class ThreadPool : public orbit_base::Executor {
     Wait();
   }
 
-  virtual size_t GetPoolSize() = 0;
-  virtual size_t GetNumberOfBusyThreads() = 0;
+  [[nodiscard]] virtual size_t GetPoolSize() = 0;
+  [[nodiscard]] virtual size_t GetNumberOfBusyThreads() = 0;
 
   // Create ThreadPool with specified minimum and maximum number of worker
   // threads.
@@ -68,9 +68,13 @@ class ThreadPool : public orbit_base::Executor {
   // Action in a different way than simply calling Action::Execute. This can for
   // example be used to run some operation before and/or after the original
   // Action.
-  static std::shared_ptr<ThreadPool> Create(
+  [[nodiscard]] static std::shared_ptr<ThreadPool> Create(
       size_t thread_pool_min_size, size_t thread_pool_max_size, absl::Duration thread_ttl,
       std::function<void(const std::unique_ptr<Action>&)> run_action = nullptr);
+
+  // Globally accessible ThreadPool with a fixed number of threads that equal to or slightly smaller
+  // than the number of available cores on the system.
+  [[nodiscard]] static std::shared_ptr<ThreadPool> GetGlobalWorkerThreadPool();
 };
 
 }  // namespace orbit_base

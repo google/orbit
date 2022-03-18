@@ -6,6 +6,7 @@
 #define ORBIT_BASE_TASK_GROUP_H_
 
 #include "OrbitBase/Executor.h"
+#include "OrbitBase/ThreadPool.h"
 
 namespace orbit_base {
 
@@ -25,12 +26,12 @@ namespace orbit_base {
 //
 class TaskGroup {
  public:
-  explicit TaskGroup(orbit_base::Executor* executor) : executor_(executor) {}
+  TaskGroup() : executor_(ThreadPool::GetGlobalWorkerThreadPool()) {}
+  explicit TaskGroup(std::shared_ptr<orbit_base::Executor> executor) : executor_(executor) {}
   ~TaskGroup() {
     if (!futures_.empty()) Wait();
   }
 
-  TaskGroup() = delete;
   TaskGroup(TaskGroup const&) = delete;
   TaskGroup& operator=(TaskGroup const&) = delete;
 
@@ -47,7 +48,7 @@ class TaskGroup {
   }
 
  private:
-  orbit_base::Executor* executor_ = nullptr;
+  std::shared_ptr<orbit_base::Executor> executor_ = nullptr;
   std::vector<Future<void>> futures_;
 };
 

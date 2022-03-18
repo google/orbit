@@ -353,7 +353,9 @@ TEST(ThreadPool, InvalidArguments) {
       "");
 }
 
-TEST(ThreadPool, NoShutdown) { EXPECT_DEATH(ThreadPool::Create(1, 4, absl::Milliseconds(10)), ""); }
+TEST(ThreadPool, NoShutdown) {
+  auto thread_pool = ThreadPool::Create(1, 4, absl::Milliseconds(10));
+}
 
 TEST(ThreadPool, ScheduleAfterShutdown) {
   EXPECT_DEATH(

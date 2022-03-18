@@ -24,11 +24,15 @@ class ThreadPoolImpl : public ThreadPool {
   explicit ThreadPoolImpl(size_t thread_pool_min_size, size_t thread_pool_max_size,
                           absl::Duration thread_ttl,
                           std::function<void(const std::unique_ptr<Action>&)> run_action);
+  ~ThreadPoolImpl() {
+    ShutdownInternal();
+    WaitInternal();
+  }
 
   size_t GetPoolSize() override;
   size_t GetNumberOfBusyThreads() override;
-  void Shutdown() override;
-  void Wait() override;
+  void Shutdown() override { ShutdownInternal(); };
+  void Wait() override { WaitInternal(); };
 
  private:
   void ScheduleImpl(std::unique_ptr<Action> action) override;
@@ -38,6 +42,10 @@ class ThreadPoolImpl : public ThreadPool {
   void CleanupFinishedThreads();
   void CreateWorker();
   void WorkerFunction();
+
+  // Non-virtual implementations of Shutdown and Wait that can be called from the destructor.
+  void ShutdownInternal();
+  void WaitInternal();
 
   absl::Mutex mutex_;
   std::list<std::unique_ptr<Action>> scheduled_actions_;
@@ -115,12 +123,12 @@ size_t ThreadPoolImpl::GetNumberOfBusyThreads() {
   return worker_threads_.size() - idle_threads_;
 }
 
-void ThreadPoolImpl::Shutdown() {
+void ThreadPoolImpl::ShutdownInternal() {
   absl::MutexLock lock(&mutex_);
   shutdown_initiated_ = true;
 }
 
-void ThreadPoolImpl::Wait() {
+void ThreadPoolImpl::WaitInternal() {
   absl::MutexLock lock(&mutex_);
   ORBIT_CHECK(shutdown_initiated_);
   // First wait until all worker threads finished their work
@@ -195,6 +203,20 @@ std::shared_ptr<ThreadPool> ThreadPool::Create(
   // created as a `shared_ptr`.
   return std::make_shared<ThreadPoolImpl>(thread_pool_min_size, thread_pool_max_size, thread_ttl,
                                           std::move(run_action));
+}
+
+std::shared_ptr<ThreadPool> ThreadPool::GetGlobalWorkerThreadPool() {
+  static const unsigned number_of_logical_cores = std::thread::hardware_concurrency();
+  // std::thread::hardware_concurrency may return 0 on unsupported platforms but that shouldn't
+  // occur on standard Linux or Windows.
+  ORBIT_CHECK(number_of_logical_cores > 0);
+
+  static std::shared_ptr<ThreadPool> core_count_sized_thread_pool = orbit_base::ThreadPool::Create(
+      /*thread_pool_min_size=*/number_of_logical_cores,
+      /*thread_pool_max_size=*/number_of_logical_cores, /*thread_ttl=*/absl::Seconds(1),
+      /*run_action=*/[](const std::unique_ptr<Action>& action) { action->Execute(); });
+
+  return core_count_sized_thread_pool;
 }
 
 }  // namespace orbit_base
