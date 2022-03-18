@@ -5,7 +5,7 @@
 #ifndef CAPTURE_CLIENT_CAPTURE_LISTENER_H_
 #define CAPTURE_CLIENT_CAPTURE_LISTENER_H_
 
-#include "ApiEventIdSetter.h"
+#include "ApiEventIdProvider.h"
 #include "ClientData/CallstackEvent.h"
 #include "ClientData/ProcessData.h"
 #include "ClientData/TracepointCustom.h"
@@ -61,7 +61,7 @@ class CaptureListener {
   virtual void OnOutOfOrderEventsDiscardedEvent(
       orbit_grpc_protos::OutOfOrderEventsDiscardedEvent out_of_order_events_discarded_event) = 0;
 
-  [[nodiscard]] virtual ApiEventIdSetter& GetApiEventIdSetter() = 0;
+  [[nodiscard]] virtual ApiEventIdProvider& GetApiEventIdSetter() = 0;
 };
 
 }  // namespace orbit_capture_client

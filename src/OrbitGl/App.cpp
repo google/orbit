@@ -30,7 +30,7 @@
 #include <thread>
 #include <utility>
 
-#include "CaptureClient/ApiEventIdSetter.h"
+#include "CaptureClient/ApiEventIdProvider.h"
 #include "CaptureClient/CaptureListener.h"
 #include "CaptureFile/CaptureFile.h"
 #include "CaptureFile/CaptureFileHelpers.h"
@@ -390,7 +390,7 @@ void OrbitApp::OnCaptureStarted(const orbit_grpc_protos::CaptureStarted& capture
           SendWarningToUi("Capture", warning_message);
         }
 
-        api_event_id_setter_ = orbit_capture_client::NameEqualityApiEventIdSetter::Create(
+        api_event_id_setter_ = orbit_capture_client::NameEqualityApiEventIdProvider::Create(
             capture_started.capture_options());
 
         absl::MutexLock lock(&mutex);
@@ -1560,7 +1560,7 @@ void OrbitApp::ClearCapture() {
 
   FireRefreshCallbacks();
 
-  api_event_id_setter_ = orbit_capture_client::NameEqualityApiEventIdSetter();
+  api_event_id_setter_ = orbit_capture_client::NameEqualityApiEventIdProvider();
 }
 
 void OrbitApp::ToggleCapture() {
@@ -2974,6 +2974,6 @@ void OrbitApp::ShowHistogram(const std::vector<uint64_t>* data, const std::strin
   main_window_->ShowHistogram(data, function_name, function_id);
 }
 
-[[nodiscard]] orbit_capture_client::ApiEventIdSetter& OrbitApp::GetApiEventIdSetter() {
+[[nodiscard]] orbit_capture_client::ApiEventIdProvider& OrbitApp::GetApiEventIdSetter() {
   return api_event_id_setter_;
 }

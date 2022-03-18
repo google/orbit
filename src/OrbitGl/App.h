@@ -25,7 +25,7 @@
 #include <vector>
 
 #include "CallTreeView.h"
-#include "CaptureClient/ApiEventIdSetter.h"
+#include "CaptureClient/ApiEventIdProvider.h"
 #include "CaptureClient/CaptureClient.h"
 #include "CaptureClient/CaptureListener.h"
 #include "CaptureFile/CaptureFile.h"
@@ -522,7 +522,7 @@ class OrbitApp final : public DataViewFactory,
     return histogram_selection_range_;
   }
 
-  [[nodiscard]] orbit_capture_client::ApiEventIdSetter& GetApiEventIdSetter() override;
+  [[nodiscard]] orbit_capture_client::ApiEventIdProvider& GetApiEventIdSetter() override;
 
  private:
   void UpdateModulesAbortCaptureIfModuleWithoutBuildIdNeedsReload(
@@ -665,7 +665,7 @@ class OrbitApp final : public DataViewFactory,
 
   std::optional<orbit_statistics::HistogramSelectionRange> histogram_selection_range_;
 
-  orbit_capture_client::NameEqualityApiEventIdSetter api_event_id_setter_;
+  orbit_capture_client::NameEqualityApiEventIdProvider api_event_id_setter_;
 };
 
 #endif  // ORBIT_GL_APP_H_

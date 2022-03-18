@@ -14,7 +14,7 @@
 #include <vector>
 
 #include "ApiUtils/EncodedString.h"
-#include "CaptureClient/ApiEventIdSetter.h"
+#include "CaptureClient/ApiEventIdProvider.h"
 #include "CaptureClient/ApiEventProcessor.h"
 #include "CaptureClient/CaptureEventProcessor.h"
 #include "CaptureClient/CaptureListener.h"
@@ -90,12 +90,12 @@ class MockCaptureListener : public CaptureListener {
       (orbit_grpc_protos::OutOfOrderEventsDiscardedEvent /*out_of_order_events_discarded_event*/),
       (override));
 
-  MOCK_METHOD(ApiEventIdSetter&, GetApiEventIdSetter, (), (override));
+  MOCK_METHOD(ApiEventIdProvider&, GetApiEventIdSetter, (), (override));
 };
 
-class MockApiEventIdSetter : public ApiEventIdSetter {
+class MockApiEventIdSetter : public ApiEventIdProvider {
  public:
-  MOCK_METHOD(uint64_t, GetId, (const TimerInfo& timer_info), (override));
+  MOCK_METHOD(uint64_t, ProvideId, (const TimerInfo& timer_info), (override));
 };
 
 class ApiEventProcessorTest : public ::testing::Test {
@@ -294,7 +294,7 @@ TEST_F(ApiEventProcessorTest, ScopesFromSameThread) {
   EXPECT_CALL(capture_listener_, GetApiEventIdSetter())
       .WillRepeatedly(testing::ReturnRef(api_event_id_setter_));
 
-  EXPECT_CALL(api_event_id_setter_, GetId)
+  EXPECT_CALL(api_event_id_setter_, ProvideId)
       .Times(3)
       .WillRepeatedly(Invoke([](const TimerInfo& timer_info) {
         return kApiScopeNameToGroupId.at(timer_info.api_scope_name());
@@ -342,7 +342,7 @@ TEST_F(ApiEventProcessorTest, ScopesFromDifferentThreads) {
   EXPECT_CALL(capture_listener_, GetApiEventIdSetter())
       .WillRepeatedly(testing::ReturnRef(api_event_id_setter_));
 
-  EXPECT_CALL(api_event_id_setter_, GetId)
+  EXPECT_CALL(api_event_id_setter_, ProvideId)
       .Times(2)
       .WillRepeatedly(Invoke([](const TimerInfo& timer_info) {
         return kApiScopeNameToGroupId.at(timer_info.api_scope_name());
@@ -390,7 +390,7 @@ TEST_F(ApiEventProcessorTest, AsyncScopes) {
   EXPECT_CALL(capture_listener_, GetApiEventIdSetter())
       .WillRepeatedly(testing::ReturnRef(api_event_id_setter_));
 
-  EXPECT_CALL(api_event_id_setter_, GetId)
+  EXPECT_CALL(api_event_id_setter_, ProvideId)
       .Times(3)
       .WillRepeatedly(Invoke([](const TimerInfo& timer_info) {
         return kApiScopeNameToGroupId.at(timer_info.api_scope_name());
@@ -432,7 +432,7 @@ TEST_F(ApiEventProcessorTest, AsyncScopesOverwrittenStartAndRepeatedStop) {
   EXPECT_CALL(capture_listener_, GetApiEventIdSetter())
       .WillRepeatedly(testing::ReturnRef(api_event_id_setter_));
 
-  EXPECT_CALL(api_event_id_setter_, GetId)
+  EXPECT_CALL(api_event_id_setter_, ProvideId)
       .Times(1)
       .WillRepeatedly(Invoke([](const TimerInfo& timer_info) {
         return kApiScopeNameToGroupId.at(timer_info.api_scope_name());
@@ -467,7 +467,7 @@ TEST_F(ApiEventProcessorTest, AsyncScopesWithIdsDifferingOnlyInUpperHalf) {
   EXPECT_CALL(capture_listener_, GetApiEventIdSetter())
       .WillRepeatedly(testing::ReturnRef(api_event_id_setter_));
 
-  EXPECT_CALL(api_event_id_setter_, GetId)
+  EXPECT_CALL(api_event_id_setter_, ProvideId)
       .Times(2)
       .WillRepeatedly(Invoke([](const TimerInfo& timer_info) {
         return kApiScopeNameToGroupId.at(timer_info.api_scope_name());
@@ -643,7 +643,7 @@ TEST_F(ApiEventProcessorTest, ScopesFromSameThreadLegacy) {
   EXPECT_CALL(capture_listener_, GetApiEventIdSetter())
       .WillRepeatedly(testing::ReturnRef(api_event_id_setter_));
 
-  EXPECT_CALL(api_event_id_setter_, GetId)
+  EXPECT_CALL(api_event_id_setter_, ProvideId)
       .Times(3)
       .WillRepeatedly(Invoke([](const TimerInfo& timer_info) {
         return kApiScopeNameToGroupId.at(timer_info.api_scope_name());
@@ -691,7 +691,7 @@ TEST_F(ApiEventProcessorTest, ScopesFromDifferentThreadsLegacy) {
   EXPECT_CALL(capture_listener_, GetApiEventIdSetter())
       .WillRepeatedly(testing::ReturnRef(api_event_id_setter_));
 
-  EXPECT_CALL(api_event_id_setter_, GetId)
+  EXPECT_CALL(api_event_id_setter_, ProvideId)
       .Times(2)
       .WillRepeatedly(Invoke([](const TimerInfo& timer_info) {
         return kApiScopeNameToGroupId.at(timer_info.api_scope_name());
@@ -743,7 +743,7 @@ TEST_F(ApiEventProcessorTest, AsyncScopesLegacy) {
   EXPECT_CALL(capture_listener_, GetApiEventIdSetter())
       .WillRepeatedly(testing::ReturnRef(api_event_id_setter_));
 
-  EXPECT_CALL(api_event_id_setter_, GetId)
+  EXPECT_CALL(api_event_id_setter_, ProvideId)
       .Times(3)
       .WillRepeatedly(Invoke([](const TimerInfo& timer_info) {
         return kApiScopeNameToGroupId.at(timer_info.api_scope_name());

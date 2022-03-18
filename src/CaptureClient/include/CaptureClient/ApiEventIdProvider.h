@@ -2,8 +2,8 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#ifndef CAPTURE_CLIENT_API_EVENT_ID_SETTER_H_
-#define CAPTURE_CLIENT_API_EVENT_ID_SETTER_H_
+#ifndef CAPTURE_CLIENT_API_EVENT_ID_PROVIDER_H_
+#define CAPTURE_CLIENT_API_EVENT_ID_PROVIDER_H_
 
 #include <cstdint>
 
@@ -12,14 +12,11 @@
 
 namespace orbit_capture_client {
 
-class ApiEventIdSetter {
+class ApiEventIdProvider {
  public:
-  virtual ~ApiEventIdSetter() = default;
+  virtual ~ApiEventIdProvider() = default;
 
-  virtual void SetId(TimerInfo& timer_info);
-
- protected:
-  virtual uint64_t GetId(const TimerInfo& timer_info) = 0;
+  [[nodiscard]] virtual uint64_t ProvideId(const TimerInfo& timer_info) = 0;
 };
 
 // Sets equal `api_scope_group_id` to the instances of TimeInfo
@@ -29,17 +26,17 @@ class ApiEventIdSetter {
 // To instantiate, use `NameEqualityApiEventIdSetter::Create`
 // as this ensures no overlap between `api_scope_group_id`
 // and `function_id`.
-class NameEqualityApiEventIdSetter : public ApiEventIdSetter {
+class NameEqualityApiEventIdProvider : public ApiEventIdProvider {
  public:
-  [[nodiscard]] static NameEqualityApiEventIdSetter Create(
+  [[nodiscard]] static NameEqualityApiEventIdProvider Create(
       const ::orbit_grpc_protos::CaptureOptions& capture_options);
 
-  NameEqualityApiEventIdSetter() = default;
+  NameEqualityApiEventIdProvider() = default;
 
-  uint64_t GetId(const TimerInfo& timer_info) override;
+  [[nodiscard]] uint64_t ProvideId(const TimerInfo& timer_info) override;
 
  private:
-  explicit NameEqualityApiEventIdSetter(uint64_t start_id);
+  explicit NameEqualityApiEventIdProvider(uint64_t start_id);
 
   absl::flat_hash_map<std::string, uint64_t> name_to_id_;
   uint64_t next_id_{};
@@ -47,4 +44,4 @@ class NameEqualityApiEventIdSetter : public ApiEventIdSetter {
 
 }  // namespace orbit_capture_client
 
-#endif /* CAPTURE_CLIENT_API_EVENT_ID_SETTER_H_ */
+#endif /* CAPTURE_CLIENT_API_EVENT_ID_PROVIDER_H_ */

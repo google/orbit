@@ -10,7 +10,7 @@
 #include <iterator>
 #include <string>
 
-#include "CaptureClient/ApiEventIdSetter.h"
+#include "CaptureClient/ApiEventIdProvider.h"
 #include "ClientProtos/capture_data.pb.h"
 
 using ::testing::Each;
@@ -55,9 +55,9 @@ const std::vector<std::string> kNames{"A", "B", "C", "D", "A", "B", "B"};
 namespace orbit_capture_client {
 
 void SetIds(std::vector<TimerInfo>& timer_infos) {
-  NameEqualityApiEventIdSetter setter;
+  NameEqualityApiEventIdProvider id_provider;
   for (auto& timer_info : timer_infos) {
-    setter.SetId(timer_info);
+    timer_info.set_api_scope_group_id(id_provider.ProvideId(timer_info));
   }
 }
 
@@ -77,26 +77,16 @@ TEST(NameEqualityApiEventIdSetterTest, SetIdIsCorrectForApiScopeAsync) {
   TestSetId(async_timer_infos);
 }
 
-TEST(NameEqualityApiEventIdSetter, SetIdDoesNotSetForNonApiScope) {
-  std::vector<TimerInfo> function_timer_infos =
-      MakeTimerInfos(kNames, orbit_client_protos::TimerInfo_Type_kNone);
-  SetIds(function_timer_infos);
-  ASSERT_THAT(function_timer_infos,
-              Each(Property("api_scope_group_id", &TimerInfo::api_scope_group_id, Eq(0))));
-}
-
 TEST(NameEqualityApiEventIdSetterTest, CreateIsCorrect) {
   orbit_grpc_protos::CaptureOptions capture_options;
   capture_options.add_instrumented_functions()->set_function_id(10);
   capture_options.add_instrumented_functions()->set_function_id(13);
   capture_options.add_instrumented_functions()->set_function_id(15);
 
-  NameEqualityApiEventIdSetter setter = NameEqualityApiEventIdSetter::Create(capture_options);
+  NameEqualityApiEventIdProvider setter = NameEqualityApiEventIdProvider::Create(capture_options);
   TimerInfo timer_info = MakeTimerInfo("A", orbit_client_protos::TimerInfo_Type_kApiScope);
 
-  setter.SetId(timer_info);
-
-  ASSERT_EQ(timer_info.api_scope_group_id(), 16);
+  ASSERT_EQ(setter.ProvideId(timer_info), 16);
 }
 
 }  // namespace orbit_capture_client
