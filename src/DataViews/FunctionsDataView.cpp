@@ -208,16 +208,16 @@ void FunctionsDataView::DoFilter() {
   ORBIT_SCOPE(absl::StrFormat("FunctionsDataView::DoFilter [%u]", functions_.size()).c_str());
   filter_tokens_ = absl::StrSplit(absl::AsciiStrToLower(filter_), ' ');
 
-  const size_t kNumFunctionPerTask = 1024;
-  std::vector<absl::Span<const FunctionInfo*>> spans =
-      orbit_base::CreateChunksOfSize(functions_, kNumFunctionPerTask);
-  std::vector<std::vector<uint64_t>> task_results(spans.size());
+  const size_t kNumFunctionsPerTask = 1024;
+  std::vector<absl::Span<const FunctionInfo*>> chunks =
+      orbit_base::CreateChunksOfSize(functions_, kNumFunctionsPerTask);
+  std::vector<std::vector<uint64_t>> task_results(chunks.size());
   orbit_base::TaskGroup task_group(thread_pool_);
 
-  for (size_t i = 0; i < spans.size(); ++i) {
-    task_group.AddTask([& span = spans[i], &result = task_results[i], this]() {
+  for (size_t i = 0; i < chunks.size(); ++i) {
+    task_group.AddTask([& chunk = chunks[i], &result = task_results[i], this]() {
       ORBIT_SCOPE("FunctionsDataView::DoFilter Task");
-      for (const FunctionInfo*& function : span) {
+      for (const FunctionInfo*& function : chunk) {
         std::string name =
             absl::AsciiStrToLower(orbit_client_data::function_utils::GetDisplayName(*function));
         std::string module = orbit_client_data::function_utils::GetLoadedModuleName(*function);
