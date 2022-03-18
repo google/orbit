@@ -29,6 +29,7 @@ constexpr const char* kModuleHeadlineLabel = "Add Symbols for <font color=\"#E64
 constexpr const char* kOverrideWarningText =
     "The Build ID in the file you selected does not match. This may lead to unexpected behavior in "
     "Orbit.<br />Override to use this file.";
+constexpr QListWidgetItem::ItemType kOverrideMappingItemType = QListWidgetItem::ItemType::UserType;
 
 using orbit_client_data::ModuleData;
 using orbit_grpc_protos::ModuleInfo;
@@ -52,7 +53,7 @@ class OverrideMappingItem : public QListWidgetItem {
                         QString("%1 -> %2")
                             .arg(QString::fromStdString(module_file_path))
                             .arg(QString::fromStdString(symbol_file_path.string())),
-                        parent, QListWidgetItem::ItemType::UserType),
+                        parent, kOverrideMappingItemType),
         module_file_path_(module_file_path) {
     setToolTip(
         QString(
@@ -107,7 +108,7 @@ SymbolsDialog::SymbolsDialog(
       module_symbol_file_mappings_(persistent_storage_manager_->LoadModuleSymbolFileMappings()) {
   ORBIT_CHECK(persistent_storage_manager_ != nullptr);
 
-  // When the symbols dialog is started with an module (from the error) *and* only save symbols are
+  // When the symbols dialog is started with a module (from the error) *and* only save symbols are
   // allowed, then the module is required to have a build ID. Without a build ID Orbit will not be
   // able to match any symbol file. This is enforced, because in SymbolErrorDialog the "Add Symbol
   // Location" button is disabled when the module does not have a build id (and only safe symbols
@@ -163,7 +164,7 @@ ErrorMessageOr<void> SymbolsDialog::TryAddSymbolPath(const std::filesystem::path
   for (int i = 0; i < ui_->listWidget->count(); ++i) {
     QListWidgetItem* item = ui_->listWidget->item(i);
     ORBIT_CHECK(item != nullptr);
-    if (item->type() == QListWidgetItem::ItemType::UserType) continue;
+    if (item->type() == kOverrideMappingItemType) continue;
 
     result.emplace_back(item->text().toStdString());
   }
@@ -187,7 +188,7 @@ void SymbolsDialog::OnAddFolderButtonClicked() {
 
 void SymbolsDialog::OnRemoveButtonClicked() {
   for (QListWidgetItem* selected_item : ui_->listWidget->selectedItems()) {
-    if (selected_item->type() == QListWidgetItem::ItemType::UserType) {
+    if (selected_item->type() == kOverrideMappingItemType) {
       auto* mapping_item = dynamic_cast<OverrideMappingItem*>(selected_item);
       ORBIT_CHECK(mapping_item != nullptr);
       ORBIT_CHECK(module_symbol_file_mappings_.contains(mapping_item->module_file_path_));
@@ -272,10 +273,8 @@ ErrorMessageOr<void> SymbolsDialog::TryAddSymbolFile(const std::filesystem::path
 
   switch (DisplayOverrideWarning()) {
     case OverrideWarningResult::kOverride:
-      ORBIT_LOG("override");
       return AddMapping(module, file_path);
     case OverrideWarningResult::kCancel:
-      ORBIT_LOG("cancel");
       // success here means "no error", aka the symbol file adding ended without an error (was
       // cancelled)
       return outcome::success();
