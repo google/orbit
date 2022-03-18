@@ -35,10 +35,19 @@ using orbit_grpc_protos::ModuleInfo;
 using orbit_object_utils::SymbolsFile;
 
 namespace {
-class MappingItem : public QListWidgetItem {
+
+// OverrideMappingItem is a class to represent an override (module to symbol file mapping) entry in
+// the Symbol Locations list. It subclasses QListWidgetItem so it can be added to the QListWidget
+// and distinguished from the regular path entries, that are "simple" QListWidgetItems. An
+// OverrideMappingItem carries an alert icon which is displayed at the beginning of the line. It
+// also has an explanatory tooltip and saves the module file path, so the
+// SymbolsDialog::OnRemoveButtonClicked can delete the corresponding entry from the
+// module_symbol_file_mappings_ map.
+class OverrideMappingItem : public QListWidgetItem {
  public:
-  explicit MappingItem(const std::string& module_file_path,
-                       const std::filesystem::path& symbol_file_path, QListWidget* parent = nullptr)
+  explicit OverrideMappingItem(const std::string& module_file_path,
+                               const std::filesystem::path& symbol_file_path,
+                               QListWidget* parent = nullptr)
       : QListWidgetItem(QIcon(":/actions/alert"),
                         QString("%1 -> %2")
                             .arg(QString::fromStdString(module_file_path))
@@ -99,11 +108,10 @@ SymbolsDialog::SymbolsDialog(
   ORBIT_CHECK(persistent_storage_manager_ != nullptr);
 
   // When the symbols dialog is started with an module (from the error) *and* only save symbols are
-  // allowed, then the module is required to have a build ID. As long as only save symbols are
-  // allowed, Orbit requires a build id for the module, without build id Orbit will not be able to
-  // match any symbol file. This is enforces, because in SymbolErrorDialog the "Add Symbol Location"
-  // button is disabled when the module does not have a build id (and only safe symbols are
-  // allowed).
+  // allowed, then the module is required to have a build ID. Without a build ID Orbit will not be
+  // able to match any symbol file. This is enforced, because in SymbolErrorDialog the "Add Symbol
+  // Location" button is disabled when the module does not have a build id (and only safe symbols
+  // are allowed).
   if (module_.has_value() && !allow_unsafe_symbols) {
     ORBIT_CHECK(!module_.value()->build_id().empty());
   }
@@ -155,7 +163,7 @@ ErrorMessageOr<void> SymbolsDialog::TryAddSymbolPath(const std::filesystem::path
   for (int i = 0; i < ui_->listWidget->count(); ++i) {
     QListWidgetItem* item = ui_->listWidget->item(i);
     ORBIT_CHECK(item != nullptr);
-    if (dynamic_cast<MappingItem*>(item) != nullptr) continue;
+    if (item->type() == QListWidgetItem::ItemType::UserType) continue;
 
     result.emplace_back(item->text().toStdString());
   }
@@ -180,7 +188,7 @@ void SymbolsDialog::OnAddFolderButtonClicked() {
 void SymbolsDialog::OnRemoveButtonClicked() {
   for (QListWidgetItem* selected_item : ui_->listWidget->selectedItems()) {
     if (selected_item->type() == QListWidgetItem::ItemType::UserType) {
-      auto* mapping_item = dynamic_cast<MappingItem*>(selected_item);
+      auto* mapping_item = dynamic_cast<OverrideMappingItem*>(selected_item);
       ORBIT_CHECK(mapping_item != nullptr);
       ORBIT_CHECK(module_symbol_file_mappings_.contains(mapping_item->module_file_path_));
       module_symbol_file_mappings_.erase(mapping_item->module_file_path_);
@@ -307,7 +315,7 @@ void SymbolsDialog::AddModuleSymbolFileMappingsToList() {
   for (const auto& [module_path, symbol_file_path] : module_symbol_file_mappings_) {
     // The "new" here is okay, because listWidget will own the MappingItem and the Qt lifecycle
     // management will take care of its deletion
-    ui_->listWidget->addItem(new MappingItem(module_path, symbol_file_path));
+    ui_->listWidget->addItem(new OverrideMappingItem(module_path, symbol_file_path));
   }
 }
 
@@ -321,7 +329,7 @@ ErrorMessageOr<void> SymbolsDialog::AddMapping(const ModuleData& module,
   }
 
   module_symbol_file_mappings_[module.file_path()] = symbol_file_path;
-  ui_->listWidget->addItem(new MappingItem(module.file_path(), symbol_file_path));
+  ui_->listWidget->addItem(new OverrideMappingItem(module.file_path(), symbol_file_path));
   return outcome::success();
 }
 
