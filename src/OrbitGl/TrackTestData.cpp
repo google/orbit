@@ -31,13 +31,30 @@ std::unique_ptr<CaptureData> TrackTestData::GenerateTestCaptureData() {
   capture_data->AddUniqueCallstack(kCallstackId, std::move(callstack_info));
 
   // CallstackEvent
-  orbit_client_data::CallstackEvent callstack_event{1234, kCallstackId, kThreadId};
-  capture_data->AddCallstackEvent(callstack_event);
+  orbit_client_data::CallstackEvent callstack_event0{1234, kCallstackId, kThreadId};
+  capture_data->AddCallstackEvent(callstack_event0);
+
+  orbit_client_data::CallstackEvent callstack_event1{5000, kCallstackId, kThreadId};
+  capture_data->AddCallstackEvent(callstack_event1);
 
   capture_data->AddOrAssignThreadName(kThreadId, kThreadName);
   capture_data->AddOrAssignThreadName(kTimerOnlyThreadId, kTimerOnlyThreadName);
 
   return capture_data;
+}
+
+std::vector<orbit_client_protos::TimerInfo> TrackTestData::GenerateTimers() {
+  using orbit_client_protos::TimerInfo;
+
+  TimerInfo timer;
+  timer.set_start(0);
+  timer.set_end(100);
+  timer.set_thread_id(TrackTestData::kThreadId);
+  timer.set_processor(0);
+  timer.set_depth(0);
+  timer.set_type(TimerInfo::kCoreActivity);
+
+  return {timer};
 }
 
 }  // namespace orbit_gl
