@@ -9,13 +9,13 @@
 #include <absl/synchronization/mutex.h>
 #include <absl/time/time.h>
 
-#include "CaptureServiceBase/StartStopCaptureRequestWaiter.h"
+#include "CaptureServiceBase/StopCaptureRequestWaiter.h"
 #include "GrpcProtos/capture.pb.h"
 
 namespace orbit_capture_service_base {
 
 // A `StartStopCaptureRequestWaiter` implementation for the cloud collector.
-class CloudCollectorStartStopCaptureRequestWaiter : public StartStopCaptureRequestWaiter {
+class CloudCollectorStartStopCaptureRequestWaiter : public StopCaptureRequestWaiter {
  public:
   explicit CloudCollectorStartStopCaptureRequestWaiter(
       std::optional<absl::Duration> max_capture_duration = std::nullopt)
@@ -23,8 +23,7 @@ class CloudCollectorStartStopCaptureRequestWaiter : public StartStopCaptureReque
 
   // WaitForStartCaptureRequest is blocked until StartCapture or StopCapture is called. For the
   // latter case, it will return an error message.
-  [[nodiscard]] ErrorMessageOr<orbit_grpc_protos::CaptureOptions> WaitForStartCaptureRequest()
-      override;
+  [[nodiscard]] ErrorMessageOr<orbit_grpc_protos::CaptureOptions> WaitForStartCaptureRequest();
   void StartCapture(orbit_grpc_protos::CaptureOptions capture_options);
 
   // WaitForStopCaptureRequest is blocked until StopCapture is called.

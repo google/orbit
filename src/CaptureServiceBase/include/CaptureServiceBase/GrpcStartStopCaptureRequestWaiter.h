@@ -7,18 +7,28 @@
 
 #include <grpcpp/grpcpp.h>
 
-#include "CaptureServiceBase/StartStopCaptureRequestWaiter.h"
+#include "CaptureServiceBase/StopCaptureRequestWaiter.h"
 #include "GrpcProtos/services.grpc.pb.h"
 #include "GrpcProtos/services.pb.h"
 
 namespace orbit_capture_service_base {
 
-// Create a `StartStopCaptureRequestWaiter` with `ServerReaderWriter` for the native orbit capture
+// A `StartStopCaptureRequestWaiter` with `ServerReaderWriter` for the native orbit capture
 // services.
-[[nodiscard]] std::shared_ptr<StartStopCaptureRequestWaiter>
-CreateGrpcStartStopCaptureRequestWaiter(
-    grpc::ServerReaderWriter<orbit_grpc_protos::CaptureResponse, orbit_grpc_protos::CaptureRequest>*
-        reader_writer);
+class GrpcStartStopCaptureRequestWaiter : public StopCaptureRequestWaiter {
+ public:
+  explicit GrpcStartStopCaptureRequestWaiter(
+      grpc::ServerReaderWriter<orbit_grpc_protos::CaptureResponse,
+                               orbit_grpc_protos::CaptureRequest>* reader_writer)
+      : reader_writer_{reader_writer} {}
+
+  [[nodiscard]] orbit_grpc_protos::CaptureOptions WaitForStartCaptureRequest();
+  [[nodiscard]] CaptureServiceBase::StopCaptureReason WaitForStopCaptureRequest() override;
+
+ private:
+  grpc::ServerReaderWriter<orbit_grpc_protos::CaptureResponse, orbit_grpc_protos::CaptureRequest>*
+      reader_writer_;
+};
 
 }  // namespace orbit_capture_service_base
 

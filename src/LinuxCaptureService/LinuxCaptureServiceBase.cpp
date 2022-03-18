@@ -19,7 +19,7 @@
 #include "ApiLoader/EnableInTracee.h"
 #include "ApiUtils/Event.h"
 #include "CaptureServiceBase/CommonProducerCaptureEventBuilders.h"
-#include "CaptureServiceBase/StartStopCaptureRequestWaiter.h"
+#include "CaptureServiceBase/StopCaptureRequestWaiter.h"
 #include "GrpcProtos/Constants.h"
 #include "GrpcProtos/capture.pb.h"
 #include "Introspection/Introspection.h"
@@ -44,7 +44,7 @@ using orbit_producer_event_processor::ProducerEventProcessor;
 
 using orbit_capture_service_base::CaptureServiceBase;
 using orbit_capture_service_base::CaptureStartStopListener;
-using orbit_capture_service_base::StartStopCaptureRequestWaiter;
+using orbit_capture_service_base::StopCaptureRequestWaiter;
 
 namespace orbit_linux_capture_service {
 
@@ -153,14 +153,14 @@ class ProducerEventProcessorHijackingFunctionEntryExitForLinuxTracing
 
 CaptureServiceBase::StopCaptureReason
 LinuxCaptureServiceBase::WaitForStopCaptureRequestOrMemoryThresholdExceeded(
-    const std::shared_ptr<StartStopCaptureRequestWaiter>& start_stop_capture_request_waiter) {
+    const std::shared_ptr<StopCaptureRequestWaiter>& stop_capture_request_waiter) {
   // wait_for_stop_capture_request_thread_ below outlives this method, hence the shared pointers.
   auto stop_capture_mutex = std::make_shared<absl::Mutex>();
   auto stop_capture = std::make_shared<bool>(false);
   auto stop_capture_reason = std::make_shared<std::optional<StopCaptureReason>>();
 
   wait_for_stop_capture_request_thread_ = std::thread{
-      [start_stop_capture_request_waiter, stop_capture_mutex, stop_capture, stop_capture_reason] {
+      [stop_capture_request_waiter, stop_capture_mutex, stop_capture, stop_capture_reason] {
         // - For a GrpcStartStopCaptureRequestWaiter, this will wait on ServerReaderWriter::Read,
         //   which blocks until the client has called WritesDone, or until we finish the
         //   gRPC (before the client has called WritesDone). In the latter case, the Read unblocks
@@ -169,7 +169,7 @@ LinuxCaptureServiceBase::WaitForStopCaptureRequestOrMemoryThresholdExceeded(
         // - For a CloudCollectorStartStopCaptureRequestWaiter, this will wait until
         //   CloudCollectorStartStopCaptureRequestWaiter::StopCapture is called externally.
         StopCaptureReason external_stop_reason =
-            start_stop_capture_request_waiter->WaitForStopCaptureRequest();
+            stop_capture_request_waiter->WaitForStopCaptureRequest();
 
         absl::MutexLock lock{stop_capture_mutex.get()};
         if (!*stop_capture) {
@@ -224,7 +224,7 @@ LinuxCaptureServiceBase::WaitForStopCaptureRequestOrMemoryThresholdExceeded(
 
 void LinuxCaptureServiceBase::DoCapture(
     const CaptureOptions& capture_options,
-    const std::shared_ptr<StartStopCaptureRequestWaiter>& start_stop_capture_request_waiter) {
+    const std::shared_ptr<StopCaptureRequestWaiter>& stop_capture_request_waiter) {
   if (wait_for_stop_capture_request_thread_.joinable()) {
     wait_for_stop_capture_request_thread_.join();
   }
@@ -321,7 +321,7 @@ void LinuxCaptureServiceBase::DoCapture(
   }
 
   StopCaptureReason stop_capture_reason =
-      WaitForStopCaptureRequestOrMemoryThresholdExceeded(start_stop_capture_request_waiter);
+      WaitForStopCaptureRequestOrMemoryThresholdExceeded(stop_capture_request_waiter);
 
   // Disable Orbit API in tracee.
   if (capture_options.enable_api()) {

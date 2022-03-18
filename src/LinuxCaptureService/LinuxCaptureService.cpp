@@ -29,21 +29,13 @@ grpc::Status LinuxCaptureService::Capture(
               "Cannot start capture because another capture is already in progress"};
   }
 
-  std::shared_ptr<orbit_capture_service_base::StartStopCaptureRequestWaiter>
-      start_stop_capture_request_waiter =
-          orbit_capture_service_base::CreateGrpcStartStopCaptureRequestWaiter(reader_writer);
-  auto capture_options_or_error = start_stop_capture_request_waiter->WaitForStartCaptureRequest();
-  if (capture_options_or_error.has_error()) {
-    std::string error_msg = absl::StrFormat("An error occurred while waiting for start: %s",
-                                            capture_options_or_error.error().message());
-    ORBIT_ERROR("%s", error_msg);
-    grpc_client_capture_event_collector.StopAndWait();
-    TerminateCapture();
-    return {grpc::StatusCode::INTERNAL, error_msg};
-  }
+  auto grpc_start_stop_capture_request_waiter =
+      std::make_shared<orbit_capture_service_base::GrpcStartStopCaptureRequestWaiter>(
+          reader_writer);
+  const orbit_grpc_protos::CaptureOptions& capture_options =
+      grpc_start_stop_capture_request_waiter->WaitForStartCaptureRequest();
+  DoCapture(capture_options, grpc_start_stop_capture_request_waiter);
 
-  const orbit_grpc_protos::CaptureOptions& capture_options = capture_options_or_error.value();
-  DoCapture(capture_options, start_stop_capture_request_waiter);
   return grpc::Status::OK;
 }
 
