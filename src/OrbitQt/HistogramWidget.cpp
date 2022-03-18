@@ -122,9 +122,9 @@ struct Ticks {
 }
 
 template <typename T>
-size_t CountUnique(const std::vector<T>& vector) {
-  absl::flat_hash_set<T> set(std::begin(vector), std::end(vector));
-  return set.size();
+size_t CountUnique(std::vector<T> vector) {
+  std::sort(vector.begin(), vector.end());
+  return std::unique(vector.begin(), vector.end()) - vector.begin();
 }
 
 [[nodiscard]] static Ticks GetTicklabels(const std::vector<double>& values, int max_precision) {
