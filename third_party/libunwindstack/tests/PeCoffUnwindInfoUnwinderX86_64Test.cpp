@@ -109,7 +109,7 @@ class PeCoffUnwindInfoUnwinderX86_64Test : public ::testing::Test {
 
     bool use_frame_pointer = false;
     UnwindInfoRegister frame_pointer_register = RBP;
-    uint8_t frame_pointer_offset = 0;
+    uint32_t scaled_frame_pointer_offset = 0;
 
     bool has_chained_info = false;
     uint32_t chained_info_offset = 0;
@@ -318,9 +318,9 @@ class PeCoffUnwindInfoUnwinderX86_64Test : public ::testing::Test {
     std::vector<UnwindCode> unwind_codes;
     AddPushedRegisters(pushed_registers, &unwind_codes);
     AddStackAllocation(options.stack_allocation, &unwind_codes);
+    AddFramePointerRegisterOp(options, &unwind_codes);
     AddSavedRegisters(saved_registers, &unwind_codes);
     AddSavedXmm128Registers(saved_xmm128_registers, &unwind_codes);
-    AddFramePointerRegisterOp(options, &unwind_codes);
 
     uint8_t flags = 0x00;
     if (options.has_chained_info) {
@@ -342,8 +342,8 @@ class PeCoffUnwindInfoUnwinderX86_64Test : public ::testing::Test {
 
     new_unwind_info.frame_register_and_offset = 0x00;
     if (options.use_frame_pointer) {
-      new_unwind_info.frame_register_and_offset =
-          PackFrameRegisterAndOffset(options.frame_pointer_register, options.frame_pointer_offset);
+      new_unwind_info.frame_register_and_offset = PackFrameRegisterAndOffset(
+          options.frame_pointer_register, options.scaled_frame_pointer_offset);
     }
 
     new_unwind_info.unwind_codes = unwind_codes;
@@ -957,8 +957,15 @@ TEST_F(PeCoffUnwindInfoUnwinderX86_64Test,
 
 TEST_F(PeCoffUnwindInfoUnwinderX86_64Test, eval_succeeds_set_frame_pointer_register) {
   constexpr uint64_t kReturnAddress = 0x2000;
-  constexpr uint32_t kAllocation = 32;
+  constexpr uint32_t kAllocation = 0x30;
   UnwindInfo unwind_info;
+
+  // Frame begin is where the stack pointer points at the return address.
+  const uint64_t frame_begin = stack_pointer_ - sizeof(uint64_t);
+
+  std::vector<PushOp> push_ops;
+  push_ops.emplace_back(PushOp{RDI, 0x100});
+  push_ops.emplace_back(PushOp{R12, 0x200});
 
   StackFrameOptions options;
   options.return_address = kReturnAddress;
@@ -966,27 +973,27 @@ TEST_F(PeCoffUnwindInfoUnwinderX86_64Test, eval_succeeds_set_frame_pointer_regis
   options.use_frame_pointer = true;
   // Any register can act as the frame pointer register.
   options.frame_pointer_register = RSI;
-  options.frame_pointer_offset = 0x10;
-  PushStackFrame(options, {}, {}, {}, &unwind_info);
+  options.scaled_frame_pointer_offset = 0x20;
+  PushStackFrame(options, push_ops, {}, {}, &unwind_info);
 
   RegsX86_64 regs;
+  const uint64_t frame_pointer_value =
+      frame_begin - kAllocation - 2 * sizeof(uint64_t) + options.scaled_frame_pointer_offset;
+  regs[X86_64Reg::X86_64_REG_RSI] = frame_pointer_value;
+  regs.set_sp(stack_pointer_);
+
   uint64_t code_offset = unwind_info.prolog_size;
   uint64_t frame_pointer = 0;
   bool frame_pointer_used = false;
-
-  regs.set_sp(stack_pointer_);
-  const uint64_t expected_frame_pointer_value = stack_pointer_ + options.frame_pointer_offset;
-  // Make sure the frame pointer register is different from the expected value after the
-  // operation is carried out.
-  regs[X86_64Reg::X86_64_REG_RSI] = expected_frame_pointer_value + 1;
 
   // We use unwind_info.prolog_size to unwind using all unwind codes.
   EXPECT_TRUE(unwinder_.Eval(process_mem_fake_.get(), &regs, unwind_info, code_offset,
                              &frame_pointer, &frame_pointer_used));
   EXPECT_TRUE(frame_pointer_used);
-  EXPECT_EQ(frame_pointer, expected_frame_pointer_value);
-  EXPECT_EQ(regs[X86_64Reg::X86_64_REG_RSI], expected_frame_pointer_value);
-  EXPECT_EQ(regs.sp(), stack_pointer_ + kAllocation);
+  EXPECT_EQ(frame_pointer, frame_pointer_value);
+  EXPECT_EQ(regs.sp(), frame_begin);
+  EXPECT_EQ(regs[X86_64Reg::X86_64_REG_RDI], 0x100);
+  EXPECT_EQ(regs[X86_64Reg::X86_64_REG_R12], 0x200);
 
   // Validate that stack pointer points to the return address.
   uint64_t return_address;
@@ -998,6 +1005,38 @@ TEST_F(PeCoffUnwindInfoUnwinderX86_64Test, eval_succeeds_set_frame_pointer_regis
   EXPECT_TRUE(unwinder_.Eval(process_mem_fake_.get(), &regs, unwind_info, 0, &frame_pointer,
                              &frame_pointer_used));
   EXPECT_FALSE(frame_pointer_used);
+}
+
+TEST_F(PeCoffUnwindInfoUnwinderX86_64Test, eval_fails_set_frame_pointer_register_offset_too_large) {
+  constexpr uint64_t kReturnAddress = 0x2000;
+  constexpr uint32_t kAllocation = 0x10;
+  UnwindInfo unwind_info;
+
+  StackFrameOptions options;
+  options.return_address = kReturnAddress;
+  options.stack_allocation = kAllocation;
+  options.use_frame_pointer = true;
+  // Any register can act as the frame pointer register.
+  options.frame_pointer_register = RSI;
+  // A value of 240 is the largest value allowed here. The actual value doesn't matter too much, we
+  // just need to make sure that the value is larger than the frame pointer register value for the
+  // failure case to trigger.
+  options.scaled_frame_pointer_offset = 240;
+  PushStackFrame(options, {}, {}, {}, &unwind_info);
+
+  RegsX86_64 regs;
+  const uint64_t frame_pointer_value = options.scaled_frame_pointer_offset - 1;
+  regs[X86_64Reg::X86_64_REG_RSI] = frame_pointer_value;
+  regs.set_sp(stack_pointer_);
+
+  uint64_t code_offset = unwind_info.prolog_size;
+  uint64_t frame_pointer = 0;
+  bool frame_pointer_used = false;
+
+  // We use unwind_info.prolog_size to unwind using all unwind codes.
+  EXPECT_FALSE(unwinder_.Eval(process_mem_fake_.get(), &regs, unwind_info, code_offset,
+                              &frame_pointer, &frame_pointer_used));
+  EXPECT_EQ(unwinder_.GetLastError().code, ERROR_INVALID_COFF);
 }
 
 TEST_F(PeCoffUnwindInfoUnwinderX86_64Test,
