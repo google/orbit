@@ -18,6 +18,7 @@ orbit_cc_library(
         "UserSpaceInstrumentationTestLib.*",
     ],
     deps = [
+        "//net/grpc:grpc++",
         "//src/CaptureEventProducer",
         "//src/ObjectUtils",
         "//src/OrbitBase",
