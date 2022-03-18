@@ -16,7 +16,7 @@
 #include <mutex>
 #include <vector>
 
-#include "CallstackTypes.h"
+#include "CallstackType.h"
 #include "ClientData/CallstackEvent.h"
 #include "ClientProtos/capture_data.pb.h"
 

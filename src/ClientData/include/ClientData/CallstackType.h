@@ -7,9 +7,17 @@
 
 #include <cstdint>
 
+#include "ClientProtos/capture_data.pb.h"
+
 namespace orbit_client_data {
 
 using ThreadID = uint32_t;
+
+[[nodiscard]] std::string CallstackTypeToString(
+    orbit_client_protos::CallstackInfo::CallstackType callstack_type);
+
+[[nodiscard]] std::string CallstackTypeToDescription(
+    orbit_client_protos::CallstackInfo::CallstackType callstack_type);
 
 }  // namespace orbit_client_data
 

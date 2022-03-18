@@ -14,7 +14,7 @@
 #include <vector>
 
 #include "ClientData/CallstackEvent.h"
-#include "ClientData/CallstackTypes.h"
+#include "ClientData/CallstackType.h"
 #include "ClientProtos/capture_data.pb.h"
 #include "OrbitBase/ThreadConstants.h"
 #include "absl/container/flat_hash_map.h"

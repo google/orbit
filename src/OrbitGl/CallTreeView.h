@@ -20,6 +20,7 @@
 class CallTreeThread;
 class CallTreeFunction;
 class CallTreeUnwindErrors;
+class CallTreeUnwindErrorType;
 
 class CallTreeNode {
  public:
@@ -31,7 +32,7 @@ class CallTreeNode {
 
   [[nodiscard]] uint64_t child_count() const {
     return thread_children_.size() + function_children_.size() +
-           (unwind_errors_child_ != nullptr ? 1 : 0);
+           unwind_error_type_children_.size() + (unwind_errors_child_ != nullptr ? 1 : 0);
   }
 
   [[nodiscard]] const std::vector<const CallTreeNode*>& children() const;
@@ -46,6 +47,12 @@ class CallTreeNode {
                                                     std::string function_name,
                                                     std::string module_path,
                                                     std::string module_build_id);
+
+  [[nodiscard]] CallTreeUnwindErrorType* GetUnwindErrorTypeOrNull(
+      orbit_client_protos::CallstackInfo::CallstackType type);
+
+  [[nodiscard]] CallTreeUnwindErrorType* AddAndGetUnwindErrorType(
+      orbit_client_protos::CallstackInfo::CallstackType type);
 
   [[nodiscard]] CallTreeUnwindErrors* GetUnwindErrorsOrNull();
 
@@ -92,6 +99,8 @@ class CallTreeNode {
   // needed for the CallTreeNode::parent_ field.
   absl::node_hash_map<uint32_t, CallTreeThread> thread_children_;
   absl::node_hash_map<uint64_t, CallTreeFunction> function_children_;
+  absl::node_hash_map<orbit_client_protos::CallstackInfo::CallstackType, CallTreeUnwindErrorType>
+      unwind_error_type_children_;
   // std::shared_ptr instead of std::unique_ptr because absl::node_hash_map
   // needs the copy constructor (even for try_emplace).
   std::shared_ptr<CallTreeUnwindErrors> unwind_errors_child_;
@@ -152,6 +161,22 @@ class CallTreeThread : public CallTreeNode {
 class CallTreeUnwindErrors : public CallTreeNode {
  public:
   explicit CallTreeUnwindErrors(CallTreeNode* parent) : CallTreeNode{parent} {}
+};
+
+class CallTreeUnwindErrorType : public CallTreeNode {
+ public:
+  explicit CallTreeUnwindErrorType(CallTreeNode* parent,
+                                   orbit_client_protos::CallstackInfo::CallstackType error_type)
+      : CallTreeNode{parent}, error_type_{error_type} {
+    ORBIT_CHECK(error_type != orbit_client_protos::CallstackInfo::kComplete);
+  }
+
+  [[nodiscard]] orbit_client_protos::CallstackInfo::CallstackType error_type() const {
+    return error_type_;
+  }
+
+ private:
+  orbit_client_protos::CallstackInfo::CallstackType error_type_;
 };
 
 class CallTreeView : public CallTreeNode {

@@ -9,7 +9,7 @@
 #include <string>
 #include <vector>
 
-#include "ClientData/CallstackTypes.h"
+#include "ClientData/CallstackType.h"
 #include "ClientData/PostProcessedSamplingData.h"
 #include "ClientModel/SamplingDataPostProcessor.h"
 #include "ClientProtos/capture_data.pb.h"

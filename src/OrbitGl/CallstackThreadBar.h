@@ -11,7 +11,7 @@
 #include <memory>
 #include <string>
 
-#include "ClientData/CallstackTypes.h"
+#include "ClientData/CallstackType.h"
 #include "ClientData/CaptureData.h"
 #include "ClientProtos/capture_data.pb.h"
 #include "CoreMath.h"

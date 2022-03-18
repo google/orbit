@@ -19,6 +19,7 @@
 #include "QtUtils/AssertNoQtLogWarnings.h"
 
 constexpr uint64_t kCallstackId = 1;
+constexpr uint64_t kUnwindErrorCallstackId = 2;
 constexpr uint64_t kFunctionAbsoluteAddress = 0x30;
 constexpr uint64_t kInstructionAbsoluteAddress = 0x31;
 constexpr int32_t kThreadId = 42;
@@ -47,12 +48,28 @@ std::unique_ptr<CaptureData> GenerateTestCaptureData() {
   const std::vector<uint64_t> callstack_frames{kInstructionAbsoluteAddress};
   orbit_client_protos::CallstackInfo callstack_info;
   *callstack_info.mutable_frames() = {callstack_frames.begin(), callstack_frames.end()};
-  callstack_info.set_type(orbit_client_protos::CallstackInfo_CallstackType_kComplete);
+  callstack_info.set_type(orbit_client_protos::CallstackInfo::kComplete);
   capture_data->AddUniqueCallstack(kCallstackId, std::move(callstack_info));
 
+  // CallstackEvent 1
+  orbit_client_data::CallstackEvent callstack_event_1{1234, kCallstackId, kThreadId};
+  capture_data->AddCallstackEvent(callstack_event_1);
+
+  // CallstackEvent 2
+  orbit_client_data::CallstackEvent callstack_event_2{2345, kCallstackId, kThreadId};
+  capture_data->AddCallstackEvent(callstack_event_2);
+
+  // CallstackInfo
+  const std::vector<uint64_t> callstack_error_frames{kInstructionAbsoluteAddress};
+  orbit_client_protos::CallstackInfo callstack_error_info;
+  *callstack_error_info.mutable_frames() = {callstack_error_frames.begin(),
+                                            callstack_error_frames.end()};
+  callstack_error_info.set_type(orbit_client_protos::CallstackInfo::kFramePointerUnwindingError);
+  capture_data->AddUniqueCallstack(kUnwindErrorCallstackId, std::move(callstack_error_info));
+
   // CallstackEvent
-  orbit_client_data::CallstackEvent callstack_event{1234, kCallstackId, kThreadId};
-  capture_data->AddCallstackEvent(callstack_event);
+  orbit_client_data::CallstackEvent callstack_error_event{4098, kUnwindErrorCallstackId, kThreadId};
+  capture_data->AddCallstackEvent(callstack_error_event);
 
   capture_data->AddOrAssignThreadName(kThreadId, kThreadName);
 
@@ -145,7 +162,7 @@ TEST(CallTreeViewItemModel, GetDisplayRoleData) {
 
   {  // inclusive
     QModelIndex index = model.index(0, CallTreeViewItemModel::Columns::kInclusive, {});
-    EXPECT_EQ(model.data(index, Qt::DisplayRole).toString(), "100.00% (1)");
+    EXPECT_EQ(model.data(index, Qt::DisplayRole).toString(), "100.00% (3)");
   }
 
   {  // exclusive
@@ -171,6 +188,7 @@ TEST(CallTreeViewItemModel, GetDisplayRoleData) {
   // Function entry
   QModelIndex thread_index = model.index(0, CallTreeViewItemModel::Columns::kThreadOrFunction, {});
   EXPECT_TRUE(thread_index.isValid());
+  ASSERT_EQ(model.rowCount(thread_index), 2);
 
   {  // function name
     QModelIndex index =
@@ -180,17 +198,17 @@ TEST(CallTreeViewItemModel, GetDisplayRoleData) {
 
   {  // inclusive
     QModelIndex index = model.index(0, CallTreeViewItemModel::Columns::kInclusive, thread_index);
-    EXPECT_EQ(model.data(index, Qt::DisplayRole).toString(), "100.00% (1)");
+    EXPECT_EQ(model.data(index, Qt::DisplayRole).toString(), "66.67% (2)");
   }
 
   {  // exclusive
     QModelIndex index = model.index(0, CallTreeViewItemModel::Columns::kExclusive, thread_index);
-    EXPECT_EQ(model.data(index, Qt::DisplayRole).toString(), "100.00% (1)");
+    EXPECT_EQ(model.data(index, Qt::DisplayRole).toString(), "66.67% (2)");
   }
 
   {  // of parent
     QModelIndex index = model.index(0, CallTreeViewItemModel::Columns::kOfParent, thread_index);
-    EXPECT_EQ(model.data(index, Qt::DisplayRole).toString(), "100.00%");
+    EXPECT_EQ(model.data(index, Qt::DisplayRole).toString(), "66.67%");
   }
 
   {  // kModule
@@ -201,6 +219,90 @@ TEST(CallTreeViewItemModel, GetDisplayRoleData) {
   {  // kFunctionAddress
     QModelIndex index =
         model.index(0, CallTreeViewItemModel::Columns::kFunctionAddress, thread_index);
+    EXPECT_EQ(model.data(index, Qt::DisplayRole).toString(), QString{"0x30"});
+  }
+
+  {  // error string
+    QModelIndex index =
+        model.index(1, CallTreeViewItemModel::Columns::kThreadOrFunction, thread_index);
+    EXPECT_EQ(model.data(index, Qt::DisplayRole).toString(), QStringLiteral("[Unwind errors]"));
+  }
+
+  {  // inclusive
+    QModelIndex index = model.index(1, CallTreeViewItemModel::Columns::kInclusive, thread_index);
+    EXPECT_EQ(model.data(index, Qt::DisplayRole).toString(), "33.33% (1)");
+  }
+
+  {  // of parent
+    QModelIndex index = model.index(1, CallTreeViewItemModel::Columns::kOfParent, thread_index);
+    EXPECT_EQ(model.data(index, Qt::DisplayRole).toString(), "33.33%");
+  }
+
+  // Unwind errors entry
+  QModelIndex unwind_errors_index =
+      model.index(1, CallTreeViewItemModel::Columns::kThreadOrFunction, thread_index);
+  EXPECT_TRUE(unwind_errors_index.isValid());
+  ASSERT_EQ(model.rowCount(unwind_errors_index), 1);
+
+  {  // error type
+    QModelIndex index =
+        model.index(0, CallTreeViewItemModel::Columns::kThreadOrFunction, unwind_errors_index);
+    EXPECT_EQ(model.data(index, Qt::DisplayRole).toString(),
+              QString::fromStdString(orbit_client_data::CallstackTypeToString(
+                  orbit_client_protos::CallstackInfo::kFramePointerUnwindingError)));
+  }
+
+  {  // inclusive
+    QModelIndex index =
+        model.index(0, CallTreeViewItemModel::Columns::kInclusive, unwind_errors_index);
+    EXPECT_EQ(model.data(index, Qt::DisplayRole).toString(), "33.33% (1)");
+  }
+
+  {  // of parent
+    QModelIndex index =
+        model.index(0, CallTreeViewItemModel::Columns::kOfParent, unwind_errors_index);
+    EXPECT_EQ(model.data(index, Qt::DisplayRole).toString(), "100.00%");
+  }
+
+  // Unwind error function entry
+  QModelIndex unwinding_error_type_index =
+      model.index(0, CallTreeViewItemModel::Columns::kThreadOrFunction, unwind_errors_index);
+  EXPECT_TRUE(unwinding_error_type_index.isValid());
+  ASSERT_EQ(model.rowCount(unwinding_error_type_index), 1);
+
+  {  // function name
+    QModelIndex index = model.index(0, CallTreeViewItemModel::Columns::kThreadOrFunction,
+                                    unwinding_error_type_index);
+    EXPECT_EQ(model.data(index, Qt::DisplayRole).toString(), QString(kFunctionName));
+  }
+
+  {  // inclusive
+    QModelIndex index =
+        model.index(0, CallTreeViewItemModel::Columns::kInclusive, unwinding_error_type_index);
+    EXPECT_EQ(model.data(index, Qt::DisplayRole).toString(), "33.33% (1)");
+  }
+
+  {  // exclusive
+    QModelIndex index =
+        model.index(0, CallTreeViewItemModel::Columns::kExclusive, unwinding_error_type_index);
+    EXPECT_EQ(model.data(index, Qt::DisplayRole).toString(), "33.33% (1)");
+  }
+
+  {  // of parent
+    QModelIndex index =
+        model.index(0, CallTreeViewItemModel::Columns::kOfParent, unwinding_error_type_index);
+    EXPECT_EQ(model.data(index, Qt::DisplayRole).toString(), "100.00%");
+  }
+
+  {  // kModule
+    QModelIndex index =
+        model.index(0, CallTreeViewItemModel::Columns::kModule, unwinding_error_type_index);
+    EXPECT_EQ(model.data(index, Qt::DisplayRole).toString(), QString{kModuleName});
+  }
+
+  {  // kFunctionAddress
+    QModelIndex index = model.index(0, CallTreeViewItemModel::Columns::kFunctionAddress,
+                                    unwinding_error_type_index);
     EXPECT_EQ(model.data(index, Qt::DisplayRole).toString(), QString{"0x30"});
   }
 }
@@ -267,17 +369,17 @@ TEST(CallTreeViewItemModel, GetEditRoleData) {
 
   {  // inclusive
     QModelIndex index = model.index(0, CallTreeViewItemModel::Columns::kInclusive, thread_index);
-    EXPECT_EQ(model.data(index, Qt::EditRole).toFloat(), 100);
+    EXPECT_NEAR(model.data(index, Qt::EditRole).toFloat(), 66.67, 0.01);
   }
 
   {  // exclusive
     QModelIndex index = model.index(0, CallTreeViewItemModel::Columns::kExclusive, thread_index);
-    EXPECT_EQ(model.data(index, Qt::EditRole).toFloat(), 100);
+    EXPECT_NEAR(model.data(index, Qt::EditRole).toFloat(), 66.67, 0.01);
   }
 
   {  // of parent
     QModelIndex index = model.index(0, CallTreeViewItemModel::Columns::kOfParent, thread_index);
-    EXPECT_EQ(model.data(index, Qt::EditRole).toFloat(), 100);
+    EXPECT_NEAR(model.data(index, Qt::EditRole).toFloat(), 66.67, 0.01);
   }
 
   {  // kModule
@@ -288,6 +390,84 @@ TEST(CallTreeViewItemModel, GetEditRoleData) {
   {  // kFunctionAddress
     QModelIndex index =
         model.index(0, CallTreeViewItemModel::Columns::kFunctionAddress, thread_index);
+    EXPECT_EQ(model.data(index, Qt::EditRole).toLongLong(), kFunctionAbsoluteAddress);
+  }
+
+  {  // inclusive
+    QModelIndex index = model.index(1, CallTreeViewItemModel::Columns::kInclusive, thread_index);
+    EXPECT_NEAR(model.data(index, Qt::EditRole).toFloat(), 33.33, 0.01);
+  }
+
+  {  // of parent
+    QModelIndex index = model.index(1, CallTreeViewItemModel::Columns::kOfParent, thread_index);
+    EXPECT_NEAR(model.data(index, Qt::EditRole).toFloat(), 33.33, 0.01);
+  }
+
+  // Unwind errors entry
+  QModelIndex unwind_errors_index =
+      model.index(1, CallTreeViewItemModel::Columns::kThreadOrFunction, thread_index);
+  EXPECT_TRUE(unwind_errors_index.isValid());
+  ASSERT_EQ(model.rowCount(unwind_errors_index), 1);
+
+  {  // error type
+    QModelIndex index =
+        model.index(0, CallTreeViewItemModel::Columns::kThreadOrFunction, unwind_errors_index);
+    EXPECT_EQ(model.data(index, Qt::EditRole).toString(),
+              QString::fromStdString(orbit_client_data::CallstackTypeToString(
+                  orbit_client_protos::CallstackInfo::kFramePointerUnwindingError)));
+  }
+
+  {  // inclusive
+    QModelIndex index =
+        model.index(0, CallTreeViewItemModel::Columns::kInclusive, unwind_errors_index);
+    EXPECT_NEAR(model.data(index, Qt::EditRole).toFloat(), 33.33, 0.01);
+  }
+
+  {  // of parent
+    QModelIndex index =
+        model.index(0, CallTreeViewItemModel::Columns::kOfParent, unwind_errors_index);
+    EXPECT_EQ(model.data(index, Qt::EditRole).toFloat(), 100);
+  }
+
+  // Unwind error type entry
+  QModelIndex unwind_error_type_index =
+      model.index(0, CallTreeViewItemModel::Columns::kThreadOrFunction, unwind_errors_index);
+  EXPECT_TRUE(unwind_error_type_index.isValid());
+  ASSERT_EQ(model.rowCount(unwind_error_type_index), 1);
+
+  {  // function name
+    QModelIndex index =
+        model.index(0, CallTreeViewItemModel::Columns::kThreadOrFunction, unwind_error_type_index);
+    EXPECT_EQ(model.data(index, Qt::EditRole).toString(), QString(kFunctionName));
+  }
+
+  {  // inclusive
+    QModelIndex index =
+        model.index(0, CallTreeViewItemModel::Columns::kInclusive, unwind_error_type_index);
+    EXPECT_NEAR(model.data(index, Qt::EditRole).toFloat(), 33.33, 0.01);
+  }
+
+  {  // exclusive
+    QModelIndex index =
+        model.index(0, CallTreeViewItemModel::Columns::kExclusive, unwind_error_type_index);
+    EXPECT_NEAR(model.data(index, Qt::EditRole).toFloat(), 33.33, 0.01);
+  }
+
+  {  // of parent
+    QModelIndex index =
+        model.index(0, CallTreeViewItemModel::Columns::kOfParent, unwind_error_type_index);
+    EXPECT_EQ(model.data(index, Qt::EditRole).toFloat(), 100);
+  }
+
+  {  // kModule
+    QModelIndex index =
+        model.index(0, CallTreeViewItemModel::Columns::kModule, unwind_error_type_index);
+    EXPECT_EQ(model.data(index, Qt::EditRole).toString(), QString{kModuleName});
+  }
+
+  {  // kFunctionAddress
+    QModelIndex index =
+        model.index(0, CallTreeViewItemModel::Columns::kFunctionAddress, unwind_error_type_index);
     EXPECT_EQ(model.data(index, Qt::EditRole).toLongLong(), kFunctionAbsoluteAddress);
   }
 }
