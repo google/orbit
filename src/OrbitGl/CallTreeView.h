@@ -32,7 +32,7 @@ class CallTreeNode {
 
   [[nodiscard]] uint64_t child_count() const {
     return thread_children_.size() + function_children_.size() +
-           unwind_error_types_children_.size() + (unwind_errors_child_ != nullptr ? 1 : 0);
+           unwind_error_type_children_.size() + (unwind_errors_child_ != nullptr ? 1 : 0);
   }
 
   [[nodiscard]] const std::vector<const CallTreeNode*>& children() const;
@@ -100,7 +100,7 @@ class CallTreeNode {
   absl::node_hash_map<uint32_t, CallTreeThread> thread_children_;
   absl::node_hash_map<uint64_t, CallTreeFunction> function_children_;
   absl::node_hash_map<orbit_client_protos::CallstackInfo::CallstackType, CallTreeUnwindErrorType>
-      unwind_error_types_children_;
+      unwind_error_type_children_;
   // std::shared_ptr instead of std::unique_ptr because absl::node_hash_map
   // needs the copy constructor (even for try_emplace).
   std::shared_ptr<CallTreeUnwindErrors> unwind_errors_child_;

@@ -5,8 +5,6 @@
 #ifndef CLIENT_DATA_CALLSTACK_TYPES_H_
 #define CLIENT_DATA_CALLSTACK_TYPES_H_
 
-#include <absl/container/flat_hash_map.h>
-
 #include <cstdint>
 
 #include "ClientProtos/capture_data.pb.h"

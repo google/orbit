@@ -27,7 +27,7 @@ std::string CallstackTypeToString(CallstackInfo::CallstackType callstack_type) {
     case CallstackInfo::kStackTopForDwarfUnwindingTooSmall:
       return "Collected raw stack is too small";
     case CallstackInfo::kStackTopDwarfUnwindingError:
-      return "Dwarf unwinding error in inner frame";
+      return "DWARF unwinding error in inner frame";
     case CallstackInfo::kFilteredByMajorityOutermostFrame:
       return "Unknown unwinding error";
     case orbit_client_protos::
@@ -43,12 +43,12 @@ std::string CallstackTypeToString(CallstackInfo::CallstackType callstack_type) {
 std::string CallstackTypeToDescription(CallstackInfo::CallstackType callstack_type) {
   switch (callstack_type) {
     case CallstackInfo::kComplete:
-      return "Complete";
+      return "Unwinding succeeded.";
     case CallstackInfo::kDwarfUnwindingError:
       return "DWARF unwinding failed on the collected sample.";
     case CallstackInfo::kFramePointerUnwindingError:
       return "Frame pointer unwinding failed on the collected sample. Likely, the callstack "
-             "contains a function not compiled with frame pointers (-fno-omit-frame-pointer)";
+             "contains a function not compiled with frame pointers (-fno-omit-frame-pointer).";
     case CallstackInfo::kInUprobes:
       return "The collected callstack falls inside uprobes (kernel) code.";
     case CallstackInfo::kInUserSpaceInstrumentation:
@@ -59,7 +59,7 @@ std::string CallstackTypeToDescription(CallstackInfo::CallstackType callstack_ty
       return "The collected raw stack is too small to unwind. You can increase the size to collect "
              "in the capture options.";
     case CallstackInfo::kStackTopDwarfUnwindingError:
-      return "Dwarf unwinding the inner frame to patch a leaf function (-momit-leaf-frame-pointer) "
+      return "DWARF unwinding the inner frame to patch a leaf function (-momit-leaf-frame-pointer) "
              "failed.";
     case CallstackInfo::kFilteredByMajorityOutermostFrame:
       return "The outermost frame does not match the majority for this thread, so the callstack "

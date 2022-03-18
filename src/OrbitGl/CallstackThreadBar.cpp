@@ -293,7 +293,7 @@ std::string CallstackThreadBar::GetSampleTooltip(const Batcher& batcher, Picking
     result += "<b>Callstack:</b>" + FormatCallstackForTooltip(*callstack);
   } else {
     result += absl::StrFormat(
-        "<b>Callstack not available:</b> the stack could not be unwound successfully. <p>%s</p>",
+        "<b>Callstack not available:</b> the stack could not be unwound successfully.<br/>%s",
         orbit_client_data::CallstackTypeToDescription(callstack->type()));
   }
   return result +
