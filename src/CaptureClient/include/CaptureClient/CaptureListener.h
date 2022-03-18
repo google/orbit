@@ -60,8 +60,6 @@ class CaptureListener {
       orbit_grpc_protos::LostPerfRecordsEvent lost_perf_records_event) = 0;
   virtual void OnOutOfOrderEventsDiscardedEvent(
       orbit_grpc_protos::OutOfOrderEventsDiscardedEvent out_of_order_events_discarded_event) = 0;
-
-  [[nodiscard]] virtual ApiEventIdProvider& GetApiEventIdSetter() = 0;
 };
 
 }  // namespace orbit_capture_client

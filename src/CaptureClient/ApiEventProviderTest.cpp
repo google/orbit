@@ -83,10 +83,10 @@ TEST(NameEqualityApiEventIdSetterTest, CreateIsCorrect) {
   capture_options.add_instrumented_functions()->set_function_id(13);
   capture_options.add_instrumented_functions()->set_function_id(15);
 
-  NameEqualityApiEventIdProvider setter = NameEqualityApiEventIdProvider::Create(capture_options);
+  auto setter = NameEqualityApiEventIdProvider::Create(capture_options);
   TimerInfo timer_info = MakeTimerInfo("A", orbit_client_protos::TimerInfo_Type_kApiScope);
 
-  ASSERT_EQ(setter.ProvideId(timer_info), 16);
+  ASSERT_EQ(setter->ProvideId(timer_info), 16);
 }
 
 }  // namespace orbit_capture_client

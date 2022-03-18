@@ -6,18 +6,21 @@
 
 #include <algorithm>
 #include <cstdint>
+#include <memory>
 
 namespace orbit_capture_client {
 
-[[nodiscard]] NameEqualityApiEventIdProvider NameEqualityApiEventIdProvider::Create(
-    const orbit_grpc_protos::CaptureOptions& capture_options) {
-  const auto instrumented_functions = capture_options.instrumented_functions();
+[[nodiscard]] std::unique_ptr<NameEqualityApiEventIdProvider>
+NameEqualityApiEventIdProvider::Create(const orbit_grpc_protos::CaptureOptions& capture_options) {
+  const auto& instrumented_functions = capture_options.instrumented_functions();
   const uint64_t max_id =
-      std::max_element(
-          std::begin(instrumented_functions), std::end(instrumented_functions),
-          [](const auto& a, const auto& b) { return a.function_id() < b.function_id(); })
-          ->function_id();
-  return NameEqualityApiEventIdProvider(max_id + 1);
+      instrumented_functions.empty()
+          ? 0
+          : std::max_element(
+                std::begin(instrumented_functions), std::end(instrumented_functions),
+                [](const auto& a, const auto& b) { return a.function_id() < b.function_id(); })
+                ->function_id();
+  return std::make_unique<NameEqualityApiEventIdProvider>(max_id + 1);
 }
 
 NameEqualityApiEventIdProvider::NameEqualityApiEventIdProvider(uint64_t start_id)

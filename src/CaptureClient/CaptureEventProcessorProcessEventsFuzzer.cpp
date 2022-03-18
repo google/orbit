@@ -72,7 +72,6 @@ class MyCaptureListener : public CaptureListener {
       orbit_grpc_protos::LostPerfRecordsEvent /*lost_perf_records_event*/) override {}
   void OnOutOfOrderEventsDiscardedEvent(orbit_grpc_protos::OutOfOrderEventsDiscardedEvent
                                         /*out_of_order_events_discarded_event*/) override {}
-  ApiEventIdProvider& GetApiEventIdSetter() override { return api_event_setter_; }
 
   NameEqualityApiEventIdProvider api_event_setter_;
 };

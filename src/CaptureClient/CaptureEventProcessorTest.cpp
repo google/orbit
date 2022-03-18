@@ -124,8 +124,6 @@ class MockCaptureListener : public CaptureListener {
       void, OnOutOfOrderEventsDiscardedEvent,
       (orbit_grpc_protos::OutOfOrderEventsDiscardedEvent /*out_of_order_events_discarded_event*/),
       (override));
-
-  MOCK_METHOD(ApiEventIdProvider&, GetApiEventIdSetter, (), (override));
 };
 
 }  // namespace

@@ -194,8 +194,6 @@ class IntrospectionCaptureListener : public orbit_capture_client::CaptureListene
     ORBIT_UNREACHABLE();
   }
 
-  orbit_capture_client::ApiEventIdProvider& GetApiEventIdSetter() override { ORBIT_UNREACHABLE(); }
-
   IntrospectionWindow* introspection_window_;
 };
 

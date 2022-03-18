@@ -522,8 +522,6 @@ class OrbitApp final : public DataViewFactory,
     return histogram_selection_range_;
   }
 
-  [[nodiscard]] orbit_capture_client::ApiEventIdProvider& GetApiEventIdSetter() override;
-
  private:
   void UpdateModulesAbortCaptureIfModuleWithoutBuildIdNeedsReload(
       absl::Span<const orbit_grpc_protos::ModuleInfo> module_infos);
@@ -664,8 +662,6 @@ class OrbitApp final : public DataViewFactory,
   const orbit_statistics::WilsonBinomialConfidenceIntervalEstimator confidence_interval_estimator_;
 
   std::optional<orbit_statistics::HistogramSelectionRange> histogram_selection_range_;
-
-  orbit_capture_client::NameEqualityApiEventIdProvider api_event_id_setter_;
 };
 
 #endif  // ORBIT_GL_APP_H_
