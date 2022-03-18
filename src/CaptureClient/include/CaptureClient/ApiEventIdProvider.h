@@ -12,6 +12,9 @@
 
 namespace orbit_capture_client {
 
+// The inferface defines a map from timer_info to ids.
+// When called twice of identical `timer_info` instances,
+// it should return the same ids.
 class ApiEventIdProvider {
  public:
   virtual ~ApiEventIdProvider() = default;
@@ -28,6 +31,8 @@ class ApiEventIdProvider {
 // and `function_id`.
 class NameEqualityApiEventIdProvider : public ApiEventIdProvider {
  public:
+  // Ids for instrumented functions are precomputed on capture start and we are using id
+  // range above those.
   [[nodiscard]] static std::unique_ptr<NameEqualityApiEventIdProvider> Create(
       const ::orbit_grpc_protos::CaptureOptions& capture_options);
 
