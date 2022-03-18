@@ -24,9 +24,12 @@
 #include "CompareAscendingOrDescending.h"
 #include "DataViews/AppInterface.h"
 #include "DataViews/DataViewType.h"
+#include "Introspection/Introspection.h"
 #include "OrbitBase/Append.h"
+#include "OrbitBase/Chunk.h"
 #include "OrbitBase/JoinFutures.h"
 #include "OrbitBase/Logging.h"
+#include "OrbitBase/TaskGroup.h"
 #include "OrbitBase/ThreadPool.h"
 
 using orbit_client_data::CaptureData;
@@ -202,31 +205,19 @@ DataView::ActionStatus FunctionsDataView::GetActionStatus(
 }
 
 void FunctionsDataView::DoFilter() {
+  ORBIT_SCOPE(absl::StrFormat("FunctionsDataView::DoFilter [%u]", functions_.size()).c_str());
   filter_tokens_ = absl::StrSplit(absl::AsciiStrToLower(filter_), ' ');
 
-  const size_t number_of_threads_available = thread_pool_->GetPoolSize();
-  constexpr size_t kNumberOfTasksPerThread = 7;
-  const size_t target_number_of_tasks = kNumberOfTasksPerThread * number_of_threads_available;
+  const size_t kNumFunctionsPerTask = 1024;
+  std::vector<absl::Span<const FunctionInfo*>> chunks =
+      orbit_base::CreateChunksOfSize(functions_, kNumFunctionsPerTask);
+  std::vector<std::vector<uint64_t>> task_results(chunks.size());
+  orbit_base::TaskGroup task_group(thread_pool_);
 
-  constexpr size_t kMinimumNumberOfFunctionsPerTask = 512;
-  const size_t number_of_functions_per_task =
-      std::max(kMinimumNumberOfFunctionsPerTask, functions_.size() / target_number_of_tasks);
-  const size_t number_of_tasks_needed =
-      functions_.size() / number_of_functions_per_task +
-      ((functions_.size() % number_of_functions_per_task) > 0 ? 1 : 0);
-
-  std::vector<orbit_base::Future<std::vector<uint64_t>>> filtered_indices_per_thread;
-  filtered_indices_per_thread.reserve(number_of_tasks_needed);
-
-  for (size_t task_idx = 0; task_idx < number_of_tasks_needed; ++task_idx) {
-    const size_t begin = task_idx * number_of_functions_per_task;
-    const size_t end = std::min((task_idx + 1) * number_of_functions_per_task, functions_.size());
-
-    filtered_indices_per_thread.emplace_back(thread_pool_->Schedule([begin, end, this]() {
-      std::vector<uint64_t> indices_of_matches;
-
-      for (size_t index = begin; index < end; ++index) {
-        const FunctionInfo* function = functions_[index];
+  for (size_t i = 0; i < chunks.size(); ++i) {
+    task_group.AddTask([& chunk = chunks[i], &result = task_results[i], this]() {
+      ORBIT_SCOPE("FunctionsDataView::DoFilter Task");
+      for (const FunctionInfo*& function : chunk) {
         std::string name =
             absl::AsciiStrToLower(orbit_client_data::function_utils::GetDisplayName(*function));
         std::string module = orbit_client_data::function_utils::GetLoadedModuleName(*function);
@@ -236,22 +227,19 @@ void FunctionsDataView::DoFilter() {
         };
 
         if (std::all_of(filter_tokens_.begin(), filter_tokens_.end(), is_token_found)) {
-          indices_of_matches.push_back(index);
+          size_t function_index = &function - functions_.data();
+          ORBIT_CHECK(function_index < functions_.size());
+          result.push_back(function_index);
         }
       }
-
-      return indices_of_matches;
-    }));
+    });
   }
 
-  std::vector<std::vector<uint64_t>> filtered_indices =
-      orbit_base::JoinFutures(absl::MakeConstSpan(filtered_indices_per_thread)).Get();
-
-  std::vector<uint64_t> indices;
-  for (const auto& indices_from_one_thread : filtered_indices) {
-    indices.insert(indices.end(), indices_from_one_thread.begin(), indices_from_one_thread.end());
+  task_group.Wait();
+  indices_.clear();
+  for (std::vector<uint64_t>& result : task_results) {
+    indices_.insert(indices_.end(), result.begin(), result.end());
   }
-  indices_ = std::move(indices);
 }
 
 void FunctionsDataView::AddFunctions(
