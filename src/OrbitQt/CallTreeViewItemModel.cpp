@@ -82,7 +82,7 @@ QVariant CallTreeViewItemModel::GetDisplayRoleData(const QModelIndex& index) con
   } else if (unwind_errors_item != nullptr) {
     switch (index.column()) {
       case kThreadOrFunction:
-        return QStringLiteral("[unwind errors]");
+        return QStringLiteral("[Unwind errors]");
       case kInclusive:
         return QString::fromStdString(absl::StrFormat(
             "%.2f%% (%llu)",
@@ -196,20 +196,17 @@ QVariant CallTreeViewItemModel::GetForegroundRoleData(const QModelIndex& index) 
   ORBIT_CHECK(index.isValid());
   auto* item = static_cast<CallTreeNode*>(index.internalPointer());
   auto* unwind_errors_item = dynamic_cast<CallTreeUnwindErrors*>(item);
-  auto* unwind_error_item = dynamic_cast<CallTreeUnwindErrorType*>(item);
+  auto* unwind_error_type_item = dynamic_cast<CallTreeUnwindErrorType*>(item);
 
-  if ((unwind_errors_item != nullptr || unwind_error_item != nullptr) &&
+  if ((unwind_errors_item != nullptr || unwind_error_type_item != nullptr) &&
       index.column() == kThreadOrFunction) {
     static const QColor kUnwindErrorsColor{QColor::fromRgb(255, 128, 0)};
     return kUnwindErrorsColor;
   }
 
-  const auto* parent_is_unwind_errors_item =
-      dynamic_cast<const CallTreeUnwindErrors*>(item->parent());
-  const auto* parent_is_unwind_error_item =
+  const auto* parent_is_unwind_error_type_item =
       dynamic_cast<const CallTreeUnwindErrorType*>(item->parent());
-  if ((parent_is_unwind_error_item != nullptr || parent_is_unwind_errors_item != nullptr) &&
-      index.column() == kThreadOrFunction) {
+  if (parent_is_unwind_error_type_item != nullptr && index.column() == kThreadOrFunction) {
     static const QColor kUnwindErrorFunctionColor{Qt::lightGray};
     return kUnwindErrorFunctionColor;
   }

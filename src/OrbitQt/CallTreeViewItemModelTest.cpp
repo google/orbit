@@ -19,7 +19,7 @@
 #include "QtUtils/AssertNoQtLogWarnings.h"
 
 constexpr uint64_t kCallstackId = 1;
-constexpr uint64_t kCallstackErrorId = 2;
+constexpr uint64_t kUnwindErrorCallstackId = 2;
 constexpr uint64_t kFunctionAbsoluteAddress = 0x30;
 constexpr uint64_t kInstructionAbsoluteAddress = 0x31;
 constexpr int32_t kThreadId = 42;
@@ -65,10 +65,10 @@ std::unique_ptr<CaptureData> GenerateTestCaptureData() {
   *callstack_error_info.mutable_frames() = {callstack_error_frames.begin(),
                                             callstack_error_frames.end()};
   callstack_error_info.set_type(orbit_client_protos::CallstackInfo::kFramePointerUnwindingError);
-  capture_data->AddUniqueCallstack(kCallstackErrorId, std::move(callstack_error_info));
+  capture_data->AddUniqueCallstack(kUnwindErrorCallstackId, std::move(callstack_error_info));
 
   // CallstackEvent
-  orbit_client_data::CallstackEvent callstack_error_event{4098, kCallstackErrorId, kThreadId};
+  orbit_client_data::CallstackEvent callstack_error_event{4098, kUnwindErrorCallstackId, kThreadId};
   capture_data->AddCallstackEvent(callstack_error_event);
 
   capture_data->AddOrAssignThreadName(kThreadId, kThreadName);
@@ -225,7 +225,7 @@ TEST(CallTreeViewItemModel, GetDisplayRoleData) {
   {  // error string
     QModelIndex index =
         model.index(1, CallTreeViewItemModel::Columns::kThreadOrFunction, thread_index);
-    EXPECT_EQ(model.data(index, Qt::DisplayRole).toString(), QStringLiteral("[unwind errors]"));
+    EXPECT_EQ(model.data(index, Qt::DisplayRole).toString(), QStringLiteral("[Unwind errors]"));
   }
 
   {  // inclusive
@@ -369,20 +369,17 @@ TEST(CallTreeViewItemModel, GetEditRoleData) {
 
   {  // inclusive
     QModelIndex index = model.index(0, CallTreeViewItemModel::Columns::kInclusive, thread_index);
-    EXPECT_LE(model.data(index, Qt::EditRole).toFloat(), 66.67);
-    EXPECT_GE(model.data(index, Qt::EditRole).toFloat(), 66.66);
+    EXPECT_NEAR(model.data(index, Qt::EditRole).toFloat(), 66.67, 0.01);
   }
 
   {  // exclusive
     QModelIndex index = model.index(0, CallTreeViewItemModel::Columns::kExclusive, thread_index);
-    EXPECT_LE(model.data(index, Qt::EditRole).toFloat(), 66.67);
-    EXPECT_GE(model.data(index, Qt::EditRole).toFloat(), 66.66);
+    EXPECT_NEAR(model.data(index, Qt::EditRole).toFloat(), 66.67, 0.01);
   }
 
   {  // of parent
     QModelIndex index = model.index(0, CallTreeViewItemModel::Columns::kOfParent, thread_index);
-    EXPECT_LE(model.data(index, Qt::EditRole).toFloat(), 66.67);
-    EXPECT_GE(model.data(index, Qt::EditRole).toFloat(), 66.66);
+    EXPECT_NEAR(model.data(index, Qt::EditRole).toFloat(), 66.67, 0.01);
   }
 
   {  // kModule
@@ -398,14 +395,12 @@ TEST(CallTreeViewItemModel, GetEditRoleData) {
 
   {  // inclusive
     QModelIndex index = model.index(1, CallTreeViewItemModel::Columns::kInclusive, thread_index);
-    EXPECT_LE(model.data(index, Qt::EditRole).toFloat(), 33.34);
-    EXPECT_GE(model.data(index, Qt::EditRole).toFloat(), 33.32);
+    EXPECT_NEAR(model.data(index, Qt::EditRole).toFloat(), 33.33, 0.01);
   }
 
   {  // of parent
     QModelIndex index = model.index(1, CallTreeViewItemModel::Columns::kOfParent, thread_index);
-    EXPECT_LE(model.data(index, Qt::EditRole).toFloat(), 33.34);
-    EXPECT_GE(model.data(index, Qt::EditRole).toFloat(), 33.32);
+    EXPECT_NEAR(model.data(index, Qt::EditRole).toFloat(), 33.33, 0.01);
   }
 
   // Unwind errors entry
@@ -425,8 +420,7 @@ TEST(CallTreeViewItemModel, GetEditRoleData) {
   {  // inclusive
     QModelIndex index =
         model.index(0, CallTreeViewItemModel::Columns::kInclusive, unwind_errors_index);
-    EXPECT_LE(model.data(index, Qt::EditRole).toFloat(), 33.34);
-    EXPECT_GE(model.data(index, Qt::EditRole).toFloat(), 33.32);
+    EXPECT_NEAR(model.data(index, Qt::EditRole).toFloat(), 33.33, 0.01);
   }
 
   {  // of parent
@@ -450,15 +444,13 @@ TEST(CallTreeViewItemModel, GetEditRoleData) {
   {  // inclusive
     QModelIndex index =
         model.index(0, CallTreeViewItemModel::Columns::kInclusive, unwind_error_type_index);
-    EXPECT_LE(model.data(index, Qt::EditRole).toFloat(), 33.34);
-    EXPECT_GE(model.data(index, Qt::EditRole).toFloat(), 33.32);
+    EXPECT_NEAR(model.data(index, Qt::EditRole).toFloat(), 33.33, 0.01);
   }
 
   {  // exclusive
     QModelIndex index =
         model.index(0, CallTreeViewItemModel::Columns::kExclusive, unwind_error_type_index);
-    EXPECT_LE(model.data(index, Qt::EditRole).toFloat(), 33.34);
-    EXPECT_GE(model.data(index, Qt::EditRole).toFloat(), 33.32);
+    EXPECT_NEAR(model.data(index, Qt::EditRole).toFloat(), 33.33, 0.01);
   }
 
   {  // of parent

@@ -127,7 +127,7 @@ CallTreeUnwindErrors* CallTreeNode::AddAndGetUnwindErrors() {
   return function_node;
 }
 
-[[nodiscard]] static CallTreeUnwindErrorType* GetOrCreateUnwindingErrorTypeNode(
+[[nodiscard]] static CallTreeUnwindErrorType* GetOrCreateUnwindErrorTypeNode(
     CallTreeNode* current_node, CallstackInfo::CallstackType error_type) {
   CallTreeUnwindErrorType* unwind_error = current_node->GetUnwindErrorTypeOrNull(error_type);
   if (unwind_error == nullptr) {
@@ -172,7 +172,7 @@ static void AddUnwindErrorToTopDownThread(
   unwind_errors_node->IncreaseSampleCount(callstack_sample_count);
 
   CallTreeUnwindErrorType* unwind_error_type_node =
-      GetOrCreateUnwindingErrorTypeNode(unwind_errors_node, resolved_callstack.type());
+      GetOrCreateUnwindErrorTypeNode(unwind_errors_node, resolved_callstack.type());
   unwind_error_type_node->IncreaseSampleCount(callstack_sample_count);
 
   ORBIT_CHECK(!resolved_callstack.frames().empty());
@@ -266,11 +266,11 @@ std::unique_ptr<CallTreeView> CallTreeView::CreateTopDownViewFromPostProcessedSa
 }
 
 [[nodiscard]] static CallTreeUnwindErrorType*
-AddUnwindErrorToBottomUpViewAndReturnUnwindingErrorTypeNode(CallTreeView* bottom_up_view,
-                                                            const CallstackInfo& resolved_callstack,
-                                                            uint64_t callstack_sample_count,
-                                                            const ModuleManager& module_manager,
-                                                            const CaptureData& capture_data) {
+AddUnwindErrorToBottomUpViewAndReturnUnwindErrorTypeNode(CallTreeView* bottom_up_view,
+                                                         const CallstackInfo& resolved_callstack,
+                                                         uint64_t callstack_sample_count,
+                                                         const ModuleManager& module_manager,
+                                                         const CaptureData& capture_data) {
   ORBIT_CHECK(!resolved_callstack.frames().empty());
   // Only use the innermost frame for unwind errors.
   uint64_t frame = resolved_callstack.frames(0);
@@ -289,7 +289,7 @@ AddUnwindErrorToBottomUpViewAndReturnUnwindingErrorTypeNode(CallTreeView* bottom
   unwind_errors_node->IncreaseSampleCount(callstack_sample_count);
 
   CallTreeUnwindErrorType* unwind_error_type_node =
-      GetOrCreateUnwindingErrorTypeNode(unwind_errors_node, resolved_callstack.type());
+      GetOrCreateUnwindErrorTypeNode(unwind_errors_node, resolved_callstack.type());
   unwind_error_type_node->IncreaseSampleCount(callstack_sample_count);
 
   return unwind_error_type_node;
@@ -324,7 +324,7 @@ std::unique_ptr<CallTreeView> CallTreeView::CreateBottomUpViewFromPostProcessedS
         last_node = AddReversedCallstackToBottomUpViewAndReturnLastFunction(
             bottom_up_view.get(), resolved_callstack, sample_count, module_manager, capture_data);
       } else {
-        last_node = AddUnwindErrorToBottomUpViewAndReturnUnwindingErrorTypeNode(
+        last_node = AddUnwindErrorToBottomUpViewAndReturnUnwindErrorTypeNode(
             bottom_up_view.get(), resolved_callstack, sample_count, module_manager, capture_data);
       }
       CallTreeThread* thread_node =
