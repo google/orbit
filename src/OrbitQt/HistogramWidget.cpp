@@ -109,8 +109,8 @@ struct Ticks {
 }
 
 [[nodiscard]] static double Round(double x, int precision) {
-  const double powerOfTen = pow(10.0, precision);
-  return static_cast<double>(RoundToClosestInt(x * powerOfTen)) / powerOfTen;
+  const double power_of_ten = pow(10.0, precision);
+  return std::round(x * power_of_ten) / power_of_ten;
 }
 
 [[nodiscard]] static std::vector<double> RoundDoubles(const std::vector<double>& values,
@@ -130,9 +130,9 @@ bool AreAllUnique(std::vector<T> vector) {
 [[nodiscard]] static Ticks GetTicklabels(const std::vector<double>& values, int max_precision) {
   Ticks result;
   for (int precision = 0; precision <= max_precision; precision++) {
-    auto labels = DoublesToLabels(values, precision);
+    std::vector<QString> labels = DoublesToLabels(values, precision);
     if (precision == max_precision || AreAllUnique(labels)) {
-      auto rounded_values = RoundDoubles(values, precision);
+      std::vector<double> rounded_values = RoundDoubles(values, precision);
       result = {labels, rounded_values, precision};
       break;
     }
@@ -156,7 +156,7 @@ bool AreAllUnique(std::vector<T> vector) {
 
 [[nodiscard]] static int ValueToAxisLocation(double value, int axis_length, double min_value,
                                              double max_value) {
-  if (min_value == max_value) max_value++;
+  if (min_value == max_value) return 0;
   return RoundToClosestInt(((value - min_value) / (max_value - min_value)) * axis_length);
 }
 
@@ -294,9 +294,10 @@ static void DrawHistogram(QPainter& painter, const QPoint& axes_intersection,
     left_x += widths[i];
   }
 
-  if (hovered_bar_data)
+  if (hovered_bar_data) {
     DrawVerticalHoverLabel(painter, axes_intersection, *hovered_bar_data,
                            vertical_label_decimal_count);
+  }
 }
 
 static void DrawSelection(QPainter& painter, int start_x, int end_x,
