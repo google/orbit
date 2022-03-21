@@ -108,29 +108,17 @@ class VerifyTopDownContentForLoadedCapture(E2ETestCase):
         self._verify_first_rows(tree_view_table, expectations)
         logging.info("Verified content of top-down view when all threads are collapsed")
 
-    def _verify_rows_when_thread_expanded(self, tree_view_table):
+    def _verify_rows_when_thread_and_errors_expanded(self, tree_view_table):
         logging.info("Expanding a thread of the top-down view")
         tree_view_table.get_item_at(1, 0).double_click_input()
         expected_first_thread_child_count = 2
-        self._verify_row_count(tree_view_table,
-                               self.EXPECTED_THREAD_COUNT + expected_first_thread_child_count)
+        expected_total_child_count = self.EXPECTED_THREAD_COUNT + expected_first_thread_child_count
+        self._verify_row_count(tree_view_table, expected_total_child_count)
 
-        expectations = [
-            ["OrbitTest (all threads)", "100.00% (1583)", "", "", "", ""],
-            ["OrbitThread_203 [20301]", "79.34% (1256)", "", "", "", ""],
-            ["clone", "79.22% (1254)", "0.00% (0)", "99.84%", "libc-2.24.so", "0x7fe86eff5900"],
-            ["[Unwind errors]", "0.13% (2)", "", "0.16%", "", ""],
-        ]
-        self._verify_first_rows(tree_view_table, expectations)
-        logging.info("Verified content of top-down view when one thread is expanded")
-
-    def _verify_unwinding_errors_when_thread_expanded(self, tree_view_table):
         logging.info("Expanding a thread of the top-down view")
         tree_view_table.get_item_at(3, 0).double_click_input()
-        expected_first_thread_child_count = 2
         expected_second_thread_child_count = 1
-        expected_total_child_count = \
-            self.EXPECTED_THREAD_COUNT + expected_first_thread_child_count + expected_second_thread_child_count
+        expected_total_child_count += expected_second_thread_child_count
         self._verify_row_count(tree_view_table, expected_total_child_count)
 
         tree_view_table.get_item_at(4, 0).double_click_input()
@@ -237,8 +225,7 @@ class VerifyTopDownContentForLoadedCapture(E2ETestCase):
 
         self._verify_columns(tree_view_table)
         self._verify_rows_when_tree_collapsed(tree_view_table)
-        self._verify_rows_when_thread_expanded(tree_view_table)
-        self._verify_unwinding_errors_when_thread_expanded(tree_view_table)
+        self._verify_rows_when_thread_and_errors_expanded(tree_view_table)
         self._verify_rows_when_thread_recursively_expanded(tree_view_table)
         self._verify_rows_when_tree_expanded(tree_view_table)
         self._verify_rows_on_search(tab, tree_view_table)
