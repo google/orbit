@@ -172,6 +172,8 @@ static void DrawHorizontalAxis(QPainter& painter, const QPoint& axes_intersectio
     const int tick_location =
         ValueToAxisLocation(tick_value, axis_length, min_value, max_value) + axes_intersection.x();
 
+    // We skip the ticks that do not fall into the horizontal axis range. Such ticks might appear
+    // due to rounding errors.
     if (!(axes_intersection.x() <= tick_location &&
           tick_location <= axes_intersection.x() + axis_length)) {
       continue;
