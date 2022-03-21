@@ -2132,7 +2132,7 @@ void OrbitApp::EnableFrameTracksByName(const ModuleData* module,
   }
 }
 
-void OrbitApp::LoadPreset(const PresetFile& preset_file) {
+void OrbitApp::LoadPreset(PresetFile& preset_file) {
   ScopedMetric metric{metrics_uploader_, orbit_metrics_uploader::OrbitLogEvent::ORBIT_PRESET_LOAD};
   std::vector<orbit_base::Future<std::string>> load_module_results{};
   auto module_paths = preset_file.GetModulePaths();
@@ -2158,7 +2158,7 @@ void OrbitApp::LoadPreset(const PresetFile& preset_file) {
   // Then - when all modules are loaded or failed to load - we update the UI and potentially show an
   // error message.
   auto results = orbit_base::JoinFutures(absl::MakeConstSpan(load_module_results));
-  results.Then(main_thread_executor_, [this, metric = std::move(metric), preset_file](
+  results.Then(main_thread_executor_, [this, metric = std::move(metric), &preset_file](
                                           std::vector<std::string> module_paths_not_found) mutable {
     size_t tried_to_load_amount = module_paths_not_found.size();
     module_paths_not_found.erase(
@@ -2186,6 +2186,8 @@ void OrbitApp::LoadPreset(const PresetFile& preset_file) {
                     preset_file.file_path().string(), convertion_result.error().message());
       }
     }
+
+    preset_file.SetIsLoaded(true);
 
     FireRefreshCallbacks();
   });

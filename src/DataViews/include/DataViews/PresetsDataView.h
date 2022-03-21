@@ -58,6 +58,7 @@ class PresetsDataView : public DataView {
   [[nodiscard]] static std::string GetModulesList(const std::vector<ModuleView>& modules);
   [[nodiscard]] static std::string GetFunctionCountList(const std::vector<ModuleView>& modules);
   [[nodiscard]] const orbit_preset_file::PresetFile& GetPreset(unsigned int row) const;
+  [[nodiscard]] orbit_preset_file::PresetFile& GetMutablePreset(unsigned int row);
   [[nodiscard]] const std::vector<ModuleView>& GetModules(uint32_t row) const;
 
   std::vector<orbit_preset_file::PresetFile> presets_;

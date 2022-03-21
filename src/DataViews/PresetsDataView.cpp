@@ -168,7 +168,7 @@ DataView::ActionStatus PresetsDataView::GetActionStatus(std::string_view action,
 }
 
 void PresetsDataView::OnLoadPresetRequested(const std::vector<int>& selection) {
-  const PresetFile& preset = GetPreset(selection[0]);
+  PresetFile& preset = GetMutablePreset(selection[0]);
   app_->LoadPreset(preset);
 }
 
@@ -196,7 +196,7 @@ void PresetsDataView::OnShowInExplorerRequested(const std::vector<int>& selectio
 }
 
 void PresetsDataView::OnDoubleClicked(int index) {
-  const PresetFile& preset = GetPreset(index);
+  PresetFile& preset = GetMutablePreset(index);
   if (app_->GetPresetLoadState(preset).state != PresetLoadState::kNotLoadable) {
     app_->LoadPreset(preset);
   }
@@ -260,6 +260,9 @@ void PresetsDataView::SetPresets(std::vector<PresetFile> presets) {
 const PresetFile& PresetsDataView::GetPreset(unsigned int row) const {
   return presets_[indices_[row]];
 }
+
+PresetFile& PresetsDataView::GetMutablePreset(unsigned int row) { return presets_[indices_[row]]; }
+
 const std::vector<PresetsDataView::ModuleView>& PresetsDataView::GetModules(uint32_t row) const {
   return modules_[indices_[row]];
 }

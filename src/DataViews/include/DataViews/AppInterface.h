@@ -35,7 +35,7 @@ class AppInterface {
   virtual void SendErrorToUi(const std::string& title, const std::string& text) = 0;
 
   // Functions needed by PresetsDataView
-  virtual void LoadPreset(const orbit_preset_file::PresetFile& preset) = 0;
+  virtual void LoadPreset(orbit_preset_file::PresetFile& preset) = 0;
   [[nodiscard]] virtual PresetLoadState GetPresetLoadState(
       const orbit_preset_file::PresetFile& preset) const = 0;
   virtual void ShowPresetInExplorer(const orbit_preset_file::PresetFile& preset) = 0;
