@@ -106,6 +106,12 @@ Future<ErrorMessageOr<CaptureListener::CaptureOutcome>> CaptureClient::Capture(
         std::string function_name =
             absl::StrFormat("%s%u", orbit_api_get_function_table_address_prefix, i);
         const FunctionInfo* function_info = module_data->FindFunctionFromPrettyName(function_name);
+        if (function_info == nullptr) {
+          // Try both variants, with and without trailing parentheses, as the function name might or
+          // might not have them depending on the symbol loading library.
+          function_name.append("()");
+          function_info = module_data->FindFunctionFromPrettyName(function_name);
+        }
         if (function_info == nullptr) continue;
         ApiFunction api_function;
         api_function.set_module_path(function_info->module_path());
