@@ -84,13 +84,13 @@ std::optional<TargetConfiguration> ConnectToTargetDialog::Exec() {
   if (rc != QDialog::Accepted) {
     if (connection_metric_ != nullptr) {
       connection_metric_->SetStatusCode(orbit_metrics_uploader::OrbitLogEvent::CANCELLED);
-      connection_metric_.release();
+      connection_metric_.reset();
     }
     return std::nullopt;
   }
 
   if (connection_metric_ != nullptr) {
-    connection_metric_.release();
+    connection_metric_.reset();
   }
 
   return std::move(target_configuration_);
