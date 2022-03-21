@@ -681,7 +681,7 @@ class InstrumentFunctionTest : public testing::Test {
 // world functions will look like this (starting with pushing the stack frame...). Most functions
 // below are declared "naked", i.e. without the prologue and implemented entirely in assembly. This
 // is done to also cover edge cases.
-extern "C" int DoSomething() {
+extern "C" __attribute__((noinline)) int DoSomething() {
   std::random_device rd;
   std::mt19937 gen(rd());
   std::uniform_int_distribution<int> dis(1, 6);
@@ -721,7 +721,7 @@ TEST_F(InstrumentFunctionTest, CheckStackAlignedTo16Bytes) {
 
 // We will not be able to instrument this - the function is just four bytes long and we need five
 // bytes to write a jump.
-extern "C" __attribute__((naked)) int TooShort() {
+extern "C" __attribute__((noinline, naked)) int TooShort() {
   __asm__ __volatile__(
       "nop \n\t"
       "nop \n\t"
@@ -747,7 +747,7 @@ TEST_F(InstrumentFunctionTest, TooShort) {
 
 // This function is just long enough to be instrumented (five bytes). It is also interesting in that
 // the return statement is copied into the trampoline and executed from there.
-extern "C" __attribute__((naked)) int LongEnough() {
+extern "C" __attribute__((noinline, naked)) int LongEnough() {
   __asm__ __volatile__(
       "nop \n\t"
       "nop \n\t"
@@ -774,7 +774,7 @@ TEST_F(InstrumentFunctionTest, LongEnough) {
 }
 
 // The rip relative address is translated to the new code position.
-extern "C" __attribute__((naked)) int RipRelativeAddressing() {
+extern "C" __attribute__((noinline, naked)) int RipRelativeAddressing() {
   __asm__ __volatile__(
       "movq 0x03(%%rip), %%rax\n\t"
       "nop \n\t"
@@ -800,8 +800,8 @@ TEST_F(InstrumentFunctionTest, RipRelativeAddressing) {
   RestartAndRemoveInstrumentation();
 }
 
-// Unconditional jump to a 8 bit offset.
-extern "C" __attribute__((naked)) int UnconditionalJump8BitOffset() {
+// Unconditional jump to an 8-bit offset.
+extern "C" __attribute__((noinline, naked)) int UnconditionalJump8BitOffset() {
   __asm__ __volatile__(
       "jmp label_unconditional_jmp_8_bit \n\t"
       "nop \n\t"
@@ -829,7 +829,7 @@ TEST_F(InstrumentFunctionTest, UnconditionalJump8BitOffset) {
 }
 
 // Unconditional jump to a 32 bit offset.
-extern "C" __attribute__((naked)) int UnconditionalJump32BitOffset() {
+extern "C" __attribute__((noinline, naked)) int UnconditionalJump32BitOffset() {
   __asm__ __volatile__(
       "jmp label_unconditional_jmp_32_bit \n\t"
       ".octa 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 \n\t"  // 256 bytes of zeros
@@ -855,7 +855,7 @@ TEST_F(InstrumentFunctionTest, UnconditionalJump32BitOffset) {
 }
 
 // The rip relative address is translated to the new code position.
-extern "C" __attribute__((naked)) int ConditionalJump8BitOffset() {
+extern "C" __attribute__((noinline, naked)) int ConditionalJump8BitOffset() {
   __asm__ __volatile__(
       "loop_label_jcc: \n\t"
       "xor %%eax, %%eax \n\t"
@@ -883,7 +883,7 @@ TEST_F(InstrumentFunctionTest, ConditionalJump8BitOffset) {
 }
 
 // The rip relative address is translated to the new code position.
-extern "C" __attribute__((naked)) int ConditionalJump32BitOffset() {
+extern "C" __attribute__((noinline, naked)) int ConditionalJump32BitOffset() {
   __asm__ __volatile__(
       "xor %%eax, %%eax \n\t"
       "jnz label_jcc_32_bit \n\t"
@@ -912,7 +912,7 @@ TEST_F(InstrumentFunctionTest, ConditionalJump32BitOffset) {
 }
 
 // Function can not be instrumented since it uses the unsupported loop instruction.
-extern "C" __attribute__((naked)) int Loop() {
+extern "C" __attribute__((noinline, naked)) int Loop() {
   __asm__ __volatile__(
       "mov $42, %%cx\n\t"
       "loop_label:\n\t"
@@ -937,8 +937,9 @@ TEST_F(InstrumentFunctionTest, Loop) {
 }
 
 // Check-fails if any parameter is not zero.
-extern "C" int CheckIntParameters(u_int64_t p0, u_int64_t p1, u_int64_t p2, u_int64_t p3,
-                                  u_int64_t p4, u_int64_t p5, u_int64_t p6, u_int64_t p7) {
+extern "C" __attribute__((noinline)) int CheckIntParameters(uint64_t p0, uint64_t p1, uint64_t p2,
+                                                            uint64_t p3, uint64_t p4, uint64_t p5,
+                                                            uint64_t p6, uint64_t p7) {
   ORBIT_CHECK(p0 == 0 && p1 == 0 && p2 == 0 && p3 == 0 && p4 == 0 && p5 == 0 && p6 == 0 && p7 == 0);
   return 0;
 }
@@ -974,8 +975,9 @@ TEST_F(InstrumentFunctionTest, CheckIntParameters) {
 }
 
 // Check-fails if any parameter is not zero.
-extern "C" int CheckFloatParameters(float p0, float p1, float p2, float p3, float p4, float p5,
-                                    float p6, float p7) {
+extern "C" __attribute__((noinline)) int CheckFloatParameters(float p0, float p1, float p2,
+                                                              float p3, float p4, float p5,
+                                                              float p6, float p7) {
   ORBIT_CHECK(p0 == 0.f && p1 == 0.f && p2 == 0.f && p3 == 0.f && p4 == 0.f && p5 == 0.f &&
               p6 == 0.f && p7 == 0.f);
   return 0;
@@ -1008,8 +1010,9 @@ TEST_F(InstrumentFunctionTest, CheckFloatParameters) {
 }
 
 // Check-fails if any parameter is not zero.
-extern "C" int CheckM256iParameters(__m256i p0, __m256i p1, __m256i p2, __m256i p3, __m256i p4,
-                                    __m256i p5, __m256i p6, __m256i p7) {
+extern "C" __attribute__((noinline)) int CheckM256iParameters(__m256i p0, __m256i p1, __m256i p2,
+                                                              __m256i p3, __m256i p4, __m256i p5,
+                                                              __m256i p6, __m256i p7) {
   ORBIT_CHECK(_mm256_extract_epi64(p0, 0) == 0 && _mm256_extract_epi64(p1, 0) == 0 &&
               _mm256_extract_epi64(p2, 0) == 0 && _mm256_extract_epi64(p3, 0) == 0 &&
               _mm256_extract_epi64(p4, 0) == 0 && _mm256_extract_epi64(p5, 0) == 0 &&
@@ -1047,8 +1050,8 @@ TEST_F(InstrumentFunctionTest, CheckM256iParameters) {
 }
 
 // Check-fails if any parameter is not zero.
-extern "C" __attribute__((ms_abi)) int CheckIntParametersMsAbi(uint64_t p0, uint64_t p1,
-                                                               uint64_t p2, uint64_t p3) {
+extern "C" __attribute__((noinline, ms_abi)) int CheckIntParametersMsAbi(uint64_t p0, uint64_t p1,
+                                                                         uint64_t p2, uint64_t p3) {
   ORBIT_CHECK(p0 == 0 && p1 == 0 && p2 == 0 && p3 == 0);
   return 0;
 }
@@ -1080,8 +1083,8 @@ TEST_F(InstrumentFunctionTest, CheckIntParametersMsAbi) {
 }
 
 // Check-fails if any parameter is not zero.
-extern "C" __attribute__((ms_abi)) int CheckFloatParametersMsAbi(float p0, float p1, float p2,
-                                                                 float p3) {
+extern "C" __attribute__((noinline, ms_abi)) int CheckFloatParametersMsAbi(float p0, float p1,
+                                                                           float p2, float p3) {
   ORBIT_CHECK(p0 == 0.f && p1 == 0.f && p2 == 0.f && p3 == 0.f);
   return 0;
 }
@@ -1101,6 +1104,99 @@ TEST_F(InstrumentFunctionTest, CheckFloatParametersMsAbi) {
     }
   }
   PrepareInstrumentation("EntryPayloadClobberXmmRegisters", kExitPayloadFunctionName);
+  ErrorMessageOr<uint64_t> address_after_prologue_or_error = CreateTrampoline(
+      pid_, function_address_, function_code_, trampoline_address_, entry_payload_function_address_,
+      return_trampoline_address_, capstone_handle_, relocation_map_);
+  EXPECT_THAT(address_after_prologue_or_error, HasNoError());
+  ErrorMessageOr<void> result =
+      InstrumentFunction(pid_, function_address_, /*function_id=*/42,
+                         address_after_prologue_or_error.value(), trampoline_address_);
+  EXPECT_THAT(result, HasNoError());
+  RestartAndRemoveInstrumentation();
+}
+
+// This test guards against naively backing up x87 registers in the return trampoline when the
+// instrumented function doesn't use them to return values.
+TEST_F(InstrumentFunctionTest, CheckNoX87UnderflowInReturnTrampoline) {
+  function_name_ = "DoSomething";
+  pid_ = fork();
+  ORBIT_CHECK(pid_ != -1);
+  if (pid_ == 0) {
+    prctl(PR_SET_PDEATHSIG, SIGTERM);
+
+    // Reset bit 0 of the 16-bit x87 FPU Control Word, in order to unmask invalid-operation
+    // exception. If the return trampoline causes the underflow of the x87 register stack before
+    // masking the exception, the process will crash.
+    uint16_t control = 0;
+    __asm__ __volatile__("fnstcw %0\n\t" : "=m"(control) : :);
+    control &= 0xFE;
+    __asm__ __volatile__("fldcw %0\n\t" : : "m"(control) :);
+
+    // Endless loops without side effects are UB and recent versions of clang optimize it away.
+    // Making `sum` volatile avoids that problem.
+    [[maybe_unused]] volatile uint64_t sum = 0;
+    while (true) {
+      sum += DoSomething();
+    }
+  }
+  PrepareInstrumentation(kEntryPayloadFunctionName, kExitPayloadFunctionName);
+  ErrorMessageOr<uint64_t> address_after_prologue_or_error = CreateTrampoline(
+      pid_, function_address_, function_code_, trampoline_address_, entry_payload_function_address_,
+      return_trampoline_address_, capstone_handle_, relocation_map_);
+  EXPECT_THAT(address_after_prologue_or_error, HasNoError());
+  ErrorMessageOr<void> result =
+      InstrumentFunction(pid_, function_address_, /*function_id=*/42,
+                         address_after_prologue_or_error.value(), trampoline_address_);
+  EXPECT_THAT(result, HasNoError());
+  RestartAndRemoveInstrumentation();
+}
+
+// This test guards against naively restoring x87 registers in the return trampoline when the
+// instrumented function doesn't use them to return values.
+TEST_F(InstrumentFunctionTest, CheckX87StackEmptyAfterCall) {
+  function_name_ = "DoSomething";
+  pid_ = fork();
+  ORBIT_CHECK(pid_ != -1);
+  if (pid_ == 0) {
+    prctl(PR_SET_PDEATHSIG, SIGTERM);
+
+    // Endless loops without side effects are UB and recent versions of clang optimize it away.
+    // Making `sum` volatile avoids that problem.
+    [[maybe_unused]] volatile uint64_t sum = 0;
+    while (true) {
+      sum += DoSomething();
+
+      // According to "Programming With the x87 Floating-Point Unit", section 8.5.1.1 "Stack
+      // overflow or underflow exception", when the x87 8-register stack overflows, the destination
+      // is set to NaN. We can therefore check if the x87 register stack was empty by pushing (the
+      // value 1.0) eight times, popping once, and then checking if the popped value matches what we
+      // pushed. We pop seven more times to leave the x87 stack empty ourselves.
+      long double dest = 0.0L;
+      long double sink = 0.0L;
+      __asm__ __volatile__(
+          "fld1\n\t"
+          "fld1\n\t"
+          "fld1\n\t"
+          "fld1\n\t"
+          "fld1\n\t"
+          "fld1\n\t"
+          "fld1\n\t"
+          "fld1\n\t"
+          "fstpt %0\n\t"
+          "fstpt %1\n\t"
+          "fstpt %1\n\t"
+          "fstpt %1\n\t"
+          "fstpt %1\n\t"
+          "fstpt %1\n\t"
+          "fstpt %1\n\t"
+          "fstpt %1\n\t"
+          : "=m"(dest), "=m"(sink)
+          :
+          :);
+      ORBIT_CHECK(dest == 1.0L);
+    }
+  }
+  PrepareInstrumentation(kEntryPayloadFunctionName, kExitPayloadFunctionName);
   ErrorMessageOr<uint64_t> address_after_prologue_or_error = CreateTrampoline(
       pid_, function_address_, function_code_, trampoline_address_, entry_payload_function_address_,
       return_trampoline_address_, capstone_handle_, relocation_map_);

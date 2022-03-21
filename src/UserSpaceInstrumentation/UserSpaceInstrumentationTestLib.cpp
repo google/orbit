@@ -35,7 +35,8 @@ uint64_t TrivialSumWithMsAbi(uint64_t p0, uint64_t p1, uint64_t p2, uint64_t p3)
   return p0 + p1 + p2 + p3;
 }
 
-void EntryPayload(uint64_t return_address, uint64_t function_id, uint64_t stack_pointer) {
+void EntryPayload(uint64_t return_address, uint64_t function_id, uint64_t stack_pointer,
+                  uint64_t return_trampoline_address) {
   // Verify that the return address and the stack pointer (location of the return address) are
   // coherent. If not, the tests that use trampolines that call this EntryPayload will not succeed.
   if (*reinterpret_cast<uint64_t*>(stack_pointer) != return_address) {
@@ -43,6 +44,8 @@ void EntryPayload(uint64_t return_address, uint64_t function_id, uint64_t stack_
   }
 
   return_addresses.emplace(return_address, function_id, stack_pointer);
+
+  *reinterpret_cast<uint64_t*>(stack_pointer) = return_trampoline_address;
 }
 
 uint64_t ExitPayload() {
@@ -69,16 +72,23 @@ uint64_t ExitPayload() {
   return current_return_address.return_address;
 }
 
-void EntryPayloadAlignedCopy(uint64_t return_address, uint64_t function_id,
-                             uint64_t stack_pointer) {
+void EntryPayloadAlignedCopy(uint64_t return_address, uint64_t function_id, uint64_t stack_pointer,
+                             uint64_t return_trampoline_address) {
+  if (*reinterpret_cast<uint64_t*>(stack_pointer) != return_address) abort();
   return_addresses.emplace(return_address, function_id, stack_pointer);
+  *reinterpret_cast<uint64_t*>(stack_pointer) = return_trampoline_address;
+
   __asm__ __volatile__("movaps -0x10(%%rbp), %%xmm0\n\t" : : :);
 }
 
 // rdi, rsi, rdx, rcx, r8, r9, rax, r10
 void EntryPayloadClobberParameterRegisters(uint64_t return_address, uint64_t function_id,
-                                           uint64_t stack_pointer) {
+                                           uint64_t stack_pointer,
+                                           uint64_t return_trampoline_address) {
+  if (*reinterpret_cast<uint64_t*>(stack_pointer) != return_address) abort();
   return_addresses.emplace(return_address, function_id, stack_pointer);
+  *reinterpret_cast<uint64_t*>(stack_pointer) = return_trampoline_address;
+
   __asm__ __volatile__(
       "mov $0xffffffffffffffff, %%rdi\n\t"
       "mov $0xffffffffffffffff, %%rsi\n\t"
@@ -94,8 +104,11 @@ void EntryPayloadClobberParameterRegisters(uint64_t return_address, uint64_t fun
 }
 
 void EntryPayloadClobberXmmRegisters(uint64_t return_address, uint64_t function_id,
-                                     uint64_t stack_pointer) {
+                                     uint64_t stack_pointer, uint64_t return_trampoline_address) {
+  if (*reinterpret_cast<uint64_t*>(stack_pointer) != return_address) abort();
   return_addresses.emplace(return_address, function_id, stack_pointer);
+  *reinterpret_cast<uint64_t*>(stack_pointer) = return_trampoline_address;
+
   __asm__ __volatile__(
       "movdqu 0x3a(%%rip), %%xmm0\n\t"
       "movdqu 0x32(%%rip), %%xmm1\n\t"
@@ -114,8 +127,11 @@ void EntryPayloadClobberXmmRegisters(uint64_t return_address, uint64_t function_
 }
 
 void EntryPayloadClobberYmmRegisters(uint64_t return_address, uint64_t function_id,
-                                     uint64_t stack_pointer) {
+                                     uint64_t stack_pointer, uint64_t return_trampoline_address) {
+  if (*reinterpret_cast<uint64_t*>(stack_pointer) != return_address) abort();
   return_addresses.emplace(return_address, function_id, stack_pointer);
+  *reinterpret_cast<uint64_t*>(stack_pointer) = return_trampoline_address;
+
   __asm__ __volatile__(
       "vmovdqu 0x3a(%%rip), %%ymm0\n\t"
       "vmovdqu 0x32(%%rip), %%ymm1\n\t"
