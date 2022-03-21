@@ -176,9 +176,8 @@ std::string SamplingReport::GetSelectedCallstackTooltipString() const {
     return "";
   }
 
-  return absl::StrFormat(
-        "The callstack could not be unwound successfully.<br/>%s",
-        orbit_client_data::CallstackTypeToDescription(callstack_type));
+  return absl::StrFormat("The callstack could not be unwound successfully.<br/>%s",
+                         orbit_client_data::CallstackTypeToDescription(callstack_type));
 }
 
 void SamplingReport::OnCallstackIndexChanged(size_t index) {
