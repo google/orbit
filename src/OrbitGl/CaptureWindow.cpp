@@ -267,26 +267,15 @@ bool CaptureWindow::RightUp() {
   return GlCanvas::RightUp();
 }
 
-void CaptureWindow::Zoom(ZoomDirection dir, int delta) {
+void CaptureWindow::ZoomHorizontally(int delta, int mouse_x) {
   if (delta == 0) return;
 
   auto delta_float = static_cast<float>(-delta);
 
   if (time_graph_ != nullptr) {
-    switch (dir) {
-      case ZoomDirection::kHorizontal: {
-        double mouse_ratio =
-            static_cast<double>(mouse_move_pos_screen_[0]) / time_graph_->GetWidth();
-        time_graph_->ZoomTime(delta_float, mouse_ratio);
-        break;
-      }
-      case ZoomDirection::kVertical: {
-        time_graph_->VerticalZoom(delta_float, viewport_.ScreenToWorld(mouse_move_pos_screen_)[1]);
-      }
-    }
+    double mouse_ratio = static_cast<double>(mouse_x) / time_graph_->GetWidth();
+    time_graph_->ZoomTime(delta_float, mouse_ratio);
   }
-
-  RequestUpdatePrimitives();
 }
 
 void CaptureWindow::Pan(float ratio) {
@@ -303,8 +292,11 @@ void CaptureWindow::Pan(float ratio) {
 void CaptureWindow::MouseWheelMoved(int x, int y, int delta, bool ctrl) {
   GlCanvas::MouseWheelMoved(x, y, delta, ctrl);
 
-  const int delta_normalized = delta < 0 ? -1 : 1;
-  Zoom(ctrl ? ZoomDirection::kVertical : ZoomDirection::kHorizontal, delta_normalized);
+  if (time_graph_ != nullptr) {
+    orbit_gl::ModifierKeys modifiers;
+    modifiers.ctrl = ctrl;
+    time_graph_->HandleMouseWheelEvent(viewport_.ScreenToWorld(Vec2i(x, y)), delta, modifiers);
+  }
 }
 
 void CaptureWindow::MouseWheelMovedHorizontally(int x, int y, int delta, bool ctrl) {
@@ -335,10 +327,10 @@ void CaptureWindow::KeyPressed(unsigned int key_code, bool ctrl, bool shift, boo
       Pan(-0.1f);
       break;
     case 'W':
-      Zoom(ZoomDirection::kHorizontal, 1);
+      ZoomHorizontally(1, mouse_move_pos_screen_[0]);
       break;
     case 'S':
-      Zoom(ZoomDirection::kHorizontal, -1);
+      ZoomHorizontally(-1, mouse_move_pos_screen_[0]);
       break;
     case 'X':
       ToggleRecording();

@@ -365,6 +365,22 @@ void TimeGraph::ProcessPageFaultsTrackingTimer(const TimerInfo& timer_info) {
   track->OnTimer(timer_info);
 }
 
+orbit_gl::CaptureViewElement::EventResult TimeGraph::OnMouseWheel(
+    const Vec2& mouse_pos, int delta, const orbit_gl::ModifierKeys& modifiers) {
+  if (delta == 0) return EventResult::kIgnored;
+
+  const float delta_normalized = delta < 0 ? -1.f : 1.f;
+
+  if (modifiers.ctrl) {
+    VerticalZoom(-delta_normalized, mouse_pos[1]);
+  } else {
+    double mouse_ratio = mouse_pos[0] / GetWidth();
+    ZoomTime(-delta_normalized, mouse_ratio);
+  }
+
+  return EventResult::kHandled;
+}
+
 void TimeGraph::ProcessAsyncTimer(const TimerInfo& timer_info) {
   const std::string& track_name = timer_info.api_scope_name();
   AsyncTrack* track = GetTrackManager()->GetOrCreateAsyncTrack(track_name);
