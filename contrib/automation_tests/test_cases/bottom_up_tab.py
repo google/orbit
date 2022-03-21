@@ -145,7 +145,7 @@ class VerifyBottomUpContentForLoadedCapture(E2ETestCase):
         tree_view_table.get_item_at(0, 0).click_input(button='right')
         self.find_context_menu_item('Expand all').click_input()
 
-        self._verify_row_count(tree_view_table, 1908)
+        self._verify_row_count(tree_view_table, 1914)
 
         expectations = [
             ["clock_gettime", "61.66% (976)", "", "", "[vdso]", "0x7fff627d1a00"],
