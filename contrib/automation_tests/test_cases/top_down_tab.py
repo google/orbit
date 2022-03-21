@@ -115,15 +115,16 @@ class VerifyTopDownContentForLoadedCapture(E2ETestCase):
         expected_total_child_count = self.EXPECTED_THREAD_COUNT + expected_first_thread_child_count
         self._verify_row_count(tree_view_table, expected_total_child_count)
 
-        logging.info("Expanding a thread of the top-down view")
+        logging.info("Expanding an [Unwind errors] node of the top-down view")
         tree_view_table.get_item_at(3, 0).double_click_input()
-        expected_second_thread_child_count = 1
-        expected_total_child_count += expected_second_thread_child_count
+        expected_unwind_errors_child_count = 1
+        expected_total_child_count += expected_unwind_errors_child_count
         self._verify_row_count(tree_view_table, expected_total_child_count)
 
+        logging.info("Expanding an error type node of the top-down view")
         tree_view_table.get_item_at(4, 0).double_click_input()
-        expected_third_thread_child_count = 1
-        expected_total_child_count += expected_third_thread_child_count
+        expected_unwind_error_type_child_count = 1
+        expected_total_child_count += expected_unwind_error_type_child_count
         self._verify_row_count(tree_view_table, expected_total_child_count)
 
         expectations = [
