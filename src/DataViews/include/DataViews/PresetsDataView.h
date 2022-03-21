@@ -43,6 +43,9 @@ class PresetsDataView : public DataView {
   void OnDeletePresetRequested(const std::vector<int>& selection) override;
   void OnShowInExplorerRequested(const std::vector<int>& selection) override;
 
+  static const std::string kLoadedPresetString;
+  static const std::string kLoadedPresetBlankString;
+
  protected:
   struct ModuleView {
     ModuleView(std::string name, uint32_t count)

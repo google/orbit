@@ -44,9 +44,13 @@ constexpr const float kHookedFunctionsColumnWidth = 0.16f;
 constexpr const float kDateModifiedColumnWidth = 0.16f;
 
 namespace {
-std::string GetLoadStateString(orbit_data_views::AppInterface* app, const PresetFile& preset) {
+std::string GetLoadStatusAndStateString(orbit_data_views::AppInterface* app,
+                                        const PresetFile& preset) {
+  std::string load_status = preset.IsLoaded()
+                                ? orbit_data_views::PresetsDataView::kLoadedPresetString
+                                : orbit_data_views::PresetsDataView::kLoadedPresetBlankString;
   orbit_data_views::PresetLoadState load_state = app->GetPresetLoadState(preset);
-  return load_state.GetName();
+  return absl::StrCat(load_status, load_state.GetName());
 }
 
 std::string GetDateModifiedString(const PresetFile& preset) {
@@ -61,6 +65,10 @@ std::string GetDateModifiedString(const PresetFile& preset) {
 }  // namespace
 
 namespace orbit_data_views {
+
+const std::string PresetsDataView::kLoadedPresetString = "* ";
+const std::string PresetsDataView::kLoadedPresetBlankString =
+    std::string(kLoadedPresetString.size(), ' ');
 
 PresetsDataView::PresetsDataView(AppInterface* app,
                                  orbit_metrics_uploader::MetricsUploader* metrics_uploader)
@@ -100,7 +108,7 @@ std::string PresetsDataView::GetValue(int row, int column) {
 
   switch (column) {
     case kColumnLoadState:
-      return GetLoadStateString(app_, preset);
+      return GetLoadStatusAndStateString(app_, preset);
     case kColumnPresetName:
       return preset.file_path().filename().string();
     case kColumnModules:
