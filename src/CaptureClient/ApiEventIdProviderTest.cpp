@@ -50,10 +50,12 @@ static void AssertNameToIdIsBijective(const std::vector<TimerInfo>& timers,
 }
 
 static std::vector<uint64_t> GetIds(const std::vector<TimerInfo>& timers) {
-  NameEqualityApiEventIdProvider id_provider;
+  orbit_grpc_protos::CaptureOptions capture_options;
+  auto id_provider = NameEqualityApiEventIdProvider::Create(capture_options);
+
   std::vector<uint64_t> ids;
   std::transform(std::begin(timers), std::end(timers), std::back_inserter(ids),
-                 [&id_provider](const TimerInfo& timer) { return id_provider.ProvideId(timer); });
+                 [&id_provider](const TimerInfo& timer) { return id_provider->ProvideId(timer); });
   return ids;
 }
 
@@ -76,8 +78,10 @@ TEST(NameEqualityApiEventIdProviderTest, SyncAndAsyncScopesOfTheSameNameGetDiffe
   TimerInfo sync = MakeTimerInfo("A", orbit_client_protos::TimerInfo_Type_kApiScope);
   TimerInfo async = MakeTimerInfo("A", orbit_client_protos::TimerInfo_Type_kApiScopeAsync);
 
-  NameEqualityApiEventIdProvider id_provider;
-  ASSERT_NE(id_provider.ProvideId(sync), id_provider.ProvideId(async));
+  orbit_grpc_protos::CaptureOptions capture_options;
+  auto id_provider = NameEqualityApiEventIdProvider::Create(capture_options);
+
+  ASSERT_NE(id_provider->ProvideId(sync), id_provider->ProvideId(async));
 }
 
 TEST(NameEqualityApiEventIdProviderTest, CreateIsCorrect) {

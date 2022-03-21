@@ -32,12 +32,11 @@ class NameEqualityApiEventIdProvider : public ApiEventIdProvider {
   [[nodiscard]] static std::unique_ptr<NameEqualityApiEventIdProvider> Create(
       const ::orbit_grpc_protos::CaptureOptions& capture_options);
 
-  NameEqualityApiEventIdProvider() = default;
-  explicit NameEqualityApiEventIdProvider(uint64_t start_id);
-
   [[nodiscard]] uint64_t ProvideId(const TimerInfo& timer_info) override;
 
  private:
+  explicit NameEqualityApiEventIdProvider(uint64_t start_id);
+
   absl::flat_hash_map<std::pair<orbit_client_protos::TimerInfo_Type, std::string>, uint64_t>
       name_to_id_;
   uint64_t next_id_{};
