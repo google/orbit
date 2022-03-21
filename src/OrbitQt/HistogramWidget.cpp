@@ -507,7 +507,7 @@ constexpr size_t kMaxFunctionNameLengthForTitle = 80;
       absl::StrReplaceAll(function_name, {{"&", "&amp;"}, {"<", "&lt;"}, {">", "&gt;"}});
 
   std::string title =
-      absl::StrFormat("<b>%s</b> (%d of %d samples)", function_name,
+      absl::StrFormat("<b>%s</b> (%d of %d invocations)", function_name,
                       histogram_stack_.top().data_set_size, function_data_->data->size());
 
   return QString::fromStdString(title);
