@@ -5,7 +5,6 @@
 #ifndef CAPTURE_CLIENT_CAPTURE_LISTENER_H_
 #define CAPTURE_CLIENT_CAPTURE_LISTENER_H_
 
-#include "ApiEventIdProvider.h"
 #include "ClientData/CallstackEvent.h"
 #include "ClientData/ProcessData.h"
 #include "ClientData/TracepointCustom.h"

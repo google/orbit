@@ -142,7 +142,6 @@ message TimerInfo {
   uint64 api_async_scope_id = 15;
   uint64 address_in_function = 16;
   string api_scope_name = 17;
-  uint64 api_scope_group_id = 18;
 }
 
 message ApiStringEvent {

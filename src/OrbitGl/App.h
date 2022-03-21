@@ -25,7 +25,6 @@
 #include <vector>
 
 #include "CallTreeView.h"
-#include "CaptureClient/ApiEventIdProvider.h"
 #include "CaptureClient/CaptureClient.h"
 #include "CaptureClient/CaptureListener.h"
 #include "CaptureFile/CaptureFile.h"

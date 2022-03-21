@@ -3,19 +3,20 @@
 // found in the LICENSE file.
 
 #include <absl/container/flat_hash_set.h>
-#include <gmock/gmock.h>
 #include <gtest/gtest.h>
 
 #include <algorithm>
+#include <cstdint>
 #include <iterator>
 #include <string>
+#include <vector>
 
 #include "CaptureClient/ApiEventIdProvider.h"
 #include "ClientProtos/capture_data.pb.h"
 
-using ::testing::Each;
-using ::testing::Eq;
-using ::testing::Property;
+namespace orbit_capture_client {
+
+const std::vector<std::string> kNames{"A", "B", "C", "D", "A", "B", "B"};
 
 [[nodiscard]] static orbit_client_protos::TimerInfo MakeTimerInfo(
     const std::string& name, orbit_client_protos::TimerInfo_Type type) {
@@ -33,51 +34,53 @@ using ::testing::Property;
   return timer_infos;
 }
 
-void AssertApiScopeGroupIdUniqueness(const std::vector<TimerInfo>& timers) {
+static void AssertNameToIdIsBijective(const std::vector<TimerInfo>& timers,
+                                      const std::vector<uint64_t>& ids) {
   absl::flat_hash_map<std::string, uint64_t> name_to_id;
-  for (const auto& timer : timers) {
-    name_to_id[timer.api_scope_name()] = timer.api_scope_group_id();
+  for (size_t i = 0; i < timers.size(); ++i) {
+    name_to_id[timers[i].api_scope_name()] = ids[i];
   }
 
-  absl::flat_hash_set<uint64_t> ids;
-  std::transform(std::begin(name_to_id), std::end(name_to_id), std::inserter(ids, ids.begin()),
-                 [](const auto& key_value) { return key_value.second; });
+  absl::flat_hash_set<uint64_t> ids_set(std::begin(ids), std::end(ids));
+  ASSERT_EQ(ids_set.size(), name_to_id.size());
 
-  ASSERT_EQ(ids.size(), name_to_id.size());
-
-  for (const auto& timer : timers) {
-    ASSERT_EQ(timer.api_scope_group_id(), name_to_id[timer.api_scope_name()]);
+  for (size_t i = 0; i < timers.size(); ++i) {
+    ASSERT_EQ(ids[i], name_to_id[timers[i].api_scope_name()]);
   }
 }
 
-const std::vector<std::string> kNames{"A", "B", "C", "D", "A", "B", "B"};
-
-namespace orbit_capture_client {
-
-void SetIds(std::vector<TimerInfo>& timer_infos) {
+static std::vector<uint64_t> GetIds(const std::vector<TimerInfo>& timers) {
   NameEqualityApiEventIdProvider id_provider;
-  for (auto& timer_info : timer_infos) {
-    timer_info.set_api_scope_group_id(id_provider.ProvideId(timer_info));
-  }
+  std::vector<uint64_t> ids;
+  std::transform(std::begin(timers), std::end(timers), std::back_inserter(ids),
+                 [&id_provider](const TimerInfo& timer) { return id_provider.ProvideId(timer); });
+  return ids;
 }
 
-void TestSetId(std::vector<TimerInfo>& timer_infos) {
-  SetIds(timer_infos);
-  AssertApiScopeGroupIdUniqueness(timer_infos);
+static void TestProvideId(std::vector<TimerInfo>& timer_infos) {
+  AssertNameToIdIsBijective(timer_infos, GetIds(timer_infos));
 }
 
-TEST(NameEqualityApiEventIdSetterTest, SetIdIsCorrectForApiScope) {
+TEST(NameEqualityApiEventIdProviderTest, ProvideIdIsCorrectForApiScope) {
   auto timer_infos = MakeTimerInfos(kNames, orbit_client_protos::TimerInfo_Type_kApiScope);
-  TestSetId(timer_infos);
+  TestProvideId(timer_infos);
 }
 
-TEST(NameEqualityApiEventIdSetterTest, SetIdIsCorrectForApiScopeAsync) {
+TEST(NameEqualityApiEventIdProviderTest, ProvideIdIsCorrectForApiScopeAsync) {
   auto async_timer_infos =
       MakeTimerInfos(kNames, orbit_client_protos::TimerInfo_Type_kApiScopeAsync);
-  TestSetId(async_timer_infos);
+  TestProvideId(async_timer_infos);
 }
 
-TEST(NameEqualityApiEventIdSetterTest, CreateIsCorrect) {
+TEST(NameEqualityApiEventIdProviderTest, SyncAndAsyncScopesOfTheSameNameGetDifferentIds) {
+  TimerInfo sync = MakeTimerInfo("A", orbit_client_protos::TimerInfo_Type_kApiScope);
+  TimerInfo async = MakeTimerInfo("A", orbit_client_protos::TimerInfo_Type_kApiScopeAsync);
+
+  NameEqualityApiEventIdProvider id_provider;
+  ASSERT_NE(id_provider.ProvideId(sync), id_provider.ProvideId(async));
+}
+
+TEST(NameEqualityApiEventIdProviderTest, CreateIsCorrect) {
   orbit_grpc_protos::CaptureOptions capture_options;
   capture_options.add_instrumented_functions()->set_function_id(10);
   capture_options.add_instrumented_functions()->set_function_id(13);

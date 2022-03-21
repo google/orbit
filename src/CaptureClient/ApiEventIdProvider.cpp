@@ -10,8 +10,8 @@
 
 namespace orbit_capture_client {
 
-[[nodiscard]] std::unique_ptr<NameEqualityApiEventIdProvider>
-NameEqualityApiEventIdProvider::Create(const orbit_grpc_protos::CaptureOptions& capture_options) {
+[[nodiscard]] std::unique_ptr<NameEqualityApiEventIdProvider> Create(
+    const orbit_grpc_protos::CaptureOptions& capture_options) {
   const auto& instrumented_functions = capture_options.instrumented_functions();
   const uint64_t max_id =
       instrumented_functions.empty()
@@ -27,14 +27,14 @@ NameEqualityApiEventIdProvider::NameEqualityApiEventIdProvider(uint64_t start_id
     : next_id_(start_id) {}
 
 [[nodiscard]] uint64_t NameEqualityApiEventIdProvider::ProvideId(const TimerInfo& timer_info) {
-  const std::string& name = timer_info.api_scope_name();
+  const auto key = make_pair(timer_info.type(), timer_info.api_scope_name());
 
-  const auto it = name_to_id_.find(name);
+  const auto it = name_to_id_.find(key);
   if (it != name_to_id_.end()) {
     return it->second;
   }
 
-  name_to_id_[name] = next_id_;
+  name_to_id_[key] = next_id_;
   uint64_t id = next_id_;
   next_id_++;
   return id;

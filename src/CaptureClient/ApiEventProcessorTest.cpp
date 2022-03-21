@@ -2,24 +2,17 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#include <absl/container/flat_hash_map.h>
-#include <absl/container/flat_hash_set.h>
-#include <gmock/gmock-actions.h>
 #include <gmock/gmock.h>
 #include <google/protobuf/util/message_differencer.h>
 #include <gtest/gtest.h>
 
 #include <algorithm>
-#include <iterator>
-#include <memory>
 #include <vector>
 
 #include "ApiUtils/EncodedString.h"
-#include "CaptureClient/ApiEventIdProvider.h"
 #include "CaptureClient/ApiEventProcessor.h"
 #include "CaptureClient/CaptureEventProcessor.h"
 #include "CaptureClient/CaptureListener.h"
-#include "ClientProtos/capture_data.pb.h"
 #include "GrpcProtos/capture.pb.h"
 #include "OrbitBase/Profiling.h"
 #include "OrbitBase/ThreadUtils.h"
@@ -92,21 +85,12 @@ class MockCaptureListener : public CaptureListener {
       (override));
 };
 
-class MockApiEventIdProvider : public ApiEventIdProvider {
- public:
-  MOCK_METHOD(uint64_t, ProvideId, (const TimerInfo& timer_info), (override));
-};
-
 class ApiEventProcessorTest : public ::testing::Test {
  public:
   ApiEventProcessorTest() : api_event_processor_{&capture_listener_} {}
 
  protected:
-  void SetUp() override {
-    auto api_event_id_provider = std::make_unique<MockApiEventIdProvider>();
-    api_event_id_provider_ = api_event_id_provider.get();
-    api_event_processor_.SetApiEventIdProvider(std::move(api_event_id_provider));
-  }
+  void SetUp() override {}
 
   void TearDown() override {}
 
@@ -249,14 +233,12 @@ class ApiEventProcessorTest : public ::testing::Test {
     timer.set_api_async_scope_id(async_scope_id);
     timer.set_address_in_function(address_in_function);
     timer.set_depth(depth);
-    timer.set_api_scope_group_id(kApiScopeNameToGroupId.at(name));
 
     return timer;
   }
 
   MockCaptureListener capture_listener_;
   ApiEventProcessor api_event_processor_;
-  MockApiEventIdProvider* api_event_id_provider_;
 
   static constexpr int32_t kProcessId = 42;
   static constexpr int32_t kThreadId1 = 12;
@@ -266,10 +248,6 @@ class ApiEventProcessorTest : public ::testing::Test {
   static constexpr uint64_t kId2 = 99;
   static constexpr uint64_t kId3 = 109;
   static constexpr uint64_t kAddressInFunction = 111;
-
-  static inline const absl::flat_hash_map<std::string, uint64_t> kApiScopeNameToGroupId = {
-      {"Scope0", 0},       {"Scope1", 1},       {"Scope2", 2},     {"AsyncScope0", 10},
-      {"AsyncScope1", 11}, {"AsyncScope2", 12}, {"AsyncTrack", 20}};
 };
 
 }  // namespace
@@ -293,12 +271,6 @@ TEST_F(ApiEventProcessorTest, ScopesFromSameThread) {
   ::testing::Mock::VerifyAndClearExpectations(&capture_listener_);
 
   std::vector<orbit_client_protos::TimerInfo> actual_timers;
-
-  EXPECT_CALL(*api_event_id_provider_, ProvideId)
-      .Times(3)
-      .WillRepeatedly(Invoke([](const TimerInfo& timer_info) {
-        return kApiScopeNameToGroupId.at(timer_info.api_scope_name());
-      }));
 
   EXPECT_CALL(capture_listener_, OnTimer)
       .Times(3)
@@ -339,12 +311,6 @@ TEST_F(ApiEventProcessorTest, ScopesFromDifferentThreads) {
 
   std::vector<orbit_client_protos::TimerInfo> actual_timers;
 
-  EXPECT_CALL(*api_event_id_provider_, ProvideId)
-      .Times(2)
-      .WillRepeatedly(Invoke([](const TimerInfo& timer_info) {
-        return kApiScopeNameToGroupId.at(timer_info.api_scope_name());
-      }));
-
   EXPECT_CALL(capture_listener_, OnTimer)
       .Times(2)
       .WillRepeatedly(
@@ -384,12 +350,6 @@ TEST_F(ApiEventProcessorTest, AsyncScopes) {
 
   std::vector<orbit_client_protos::TimerInfo> actual_timers;
 
-  EXPECT_CALL(*api_event_id_provider_, ProvideId)
-      .Times(3)
-      .WillRepeatedly(Invoke([](const TimerInfo& timer_info) {
-        return kApiScopeNameToGroupId.at(timer_info.api_scope_name());
-      }));
-
   EXPECT_CALL(capture_listener_, OnTimer)
       .Times(3)
       .WillRepeatedly(
@@ -422,13 +382,6 @@ TEST_F(ApiEventProcessorTest, AsyncScopesOverwrittenStartAndRepeatedStop) {
   auto stop1 = CreateStopScopeAsync(4, kProcessId, kThreadId1, kId1);
 
   orbit_client_protos::TimerInfo actual_timer;
-
-  EXPECT_CALL(*api_event_id_provider_, ProvideId)
-      .Times(1)
-      .WillRepeatedly(Invoke([](const TimerInfo& timer_info) {
-        return kApiScopeNameToGroupId.at(timer_info.api_scope_name());
-      }));
-
   EXPECT_CALL(capture_listener_, OnTimer)
       .Times(1)
       .WillRepeatedly(Invoke([&actual_timer](const TimerInfo& timer) { actual_timer = timer; }));
@@ -454,13 +407,6 @@ TEST_F(ApiEventProcessorTest, AsyncScopesWithIdsDifferingOnlyInUpperHalf) {
   auto stop0 = CreateStopScopeAsync(4, kProcessId, kThreadId1, kShortId);
 
   std::vector<orbit_client_protos::TimerInfo> actual_timers;
-
-  EXPECT_CALL(*api_event_id_provider_, ProvideId)
-      .Times(2)
-      .WillRepeatedly(Invoke([](const TimerInfo& timer_info) {
-        return kApiScopeNameToGroupId.at(timer_info.api_scope_name());
-      }));
-
   EXPECT_CALL(capture_listener_, OnTimer)
       .Times(2)
       .WillRepeatedly(
@@ -628,12 +574,6 @@ TEST_F(ApiEventProcessorTest, ScopesFromSameThreadLegacy) {
 
   std::vector<orbit_client_protos::TimerInfo> actual_timers;
 
-  EXPECT_CALL(*api_event_id_provider_, ProvideId)
-      .Times(3)
-      .WillRepeatedly(Invoke([](const TimerInfo& timer_info) {
-        return kApiScopeNameToGroupId.at(timer_info.api_scope_name());
-      }));
-
   EXPECT_CALL(capture_listener_, OnTimer)
       .Times(3)
       .WillRepeatedly(
@@ -672,12 +612,6 @@ TEST_F(ApiEventProcessorTest, ScopesFromDifferentThreadsLegacy) {
   ::testing::Mock::VerifyAndClearExpectations(&capture_listener_);
 
   std::vector<orbit_client_protos::TimerInfo> actual_timers;
-
-  EXPECT_CALL(*api_event_id_provider_, ProvideId)
-      .Times(2)
-      .WillRepeatedly(Invoke([](const TimerInfo& timer_info) {
-        return kApiScopeNameToGroupId.at(timer_info.api_scope_name());
-      }));
 
   EXPECT_CALL(capture_listener_, OnTimer)
       .Times(2)
@@ -722,12 +656,6 @@ TEST_F(ApiEventProcessorTest, AsyncScopesLegacy) {
 
   std::vector<orbit_client_protos::TimerInfo> actual_timers;
 
-  EXPECT_CALL(*api_event_id_provider_, ProvideId)
-      .Times(3)
-      .WillRepeatedly(Invoke([](const TimerInfo& timer_info) {
-        return kApiScopeNameToGroupId.at(timer_info.api_scope_name());
-      }));
-
   EXPECT_CALL(capture_listener_, OnTimer)
       .Times(3)
       .WillRepeatedly(
@@ -759,7 +687,6 @@ TEST_F(ApiEventProcessorTest, StringEventLegacy) {
       CreateClientStringEvent(kId1, "Some string for this id", /*should_concatenate=*/true);
 
   orbit_client_protos::ApiStringEvent actual_string_event;
-
   EXPECT_CALL(capture_listener_, OnApiStringEvent)
       .Times(1)
       .WillOnce(SaveArg<0>(&actual_string_event));

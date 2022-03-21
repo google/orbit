@@ -7,8 +7,6 @@
 
 #include <absl/container/flat_hash_map.h>
 
-#include <memory>
-
 #include "ApiUtils/EncodedEvent.h"
 #include "CaptureClient/CaptureListener.h"
 #include "GrpcProtos/capture.pb.h"
@@ -42,10 +40,6 @@ class ApiEventProcessor {
   void ProcessApiTrackUint(const orbit_grpc_protos::ApiTrackUint& grpc_api_track_uint);
   void ProcessApiTrackUint64(const orbit_grpc_protos::ApiTrackUint64& grpc_api_track_uint64);
 
-  void SetApiEventIdProvider(std::unique_ptr<ApiEventIdProvider> provider) {
-    api_event_id_provider_ = std::move(provider);
-  }
-
  private:
   [[deprecated]] void ProcessApiEventLegacy(const orbit_api::ApiEvent& api_event);
   [[deprecated]] void ProcessStartEventLegacy(const orbit_api::ApiEvent& api_event);
@@ -62,8 +56,6 @@ class ApiEventProcessor {
       synchronous_scopes_stack_by_tid_;
   absl::flat_hash_map<uint64_t, orbit_api::ApiEvent> asynchronous_legacy_events_by_id_;
   absl::flat_hash_map<uint64_t, orbit_grpc_protos::ApiScopeStartAsync> asynchronous_scopes_by_id_;
-
-  std::unique_ptr<ApiEventIdProvider> api_event_id_provider_;
 };
 
 }  // namespace orbit_capture_client

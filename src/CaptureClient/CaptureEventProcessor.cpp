@@ -11,7 +11,6 @@
 #include <string>
 #include <utility>
 
-#include "CaptureClient/ApiEventIdProvider.h"
 #include "CaptureClient/ApiEventProcessor.h"
 #include "CaptureClient/GpuQueueSubmissionProcessor.h"
 #include "ClientData/CallstackEvent.h"
@@ -251,8 +250,6 @@ void CaptureEventProcessorForListener::ProcessEvent(const ClientCaptureEvent& ev
 void CaptureEventProcessorForListener::ProcessCaptureStarted(
     const orbit_grpc_protos::CaptureStarted& capture_started) {
   capture_listener_->OnCaptureStarted(capture_started, file_path_, frame_track_function_ids_);
-  api_event_processor_.SetApiEventIdProvider(
-      NameEqualityApiEventIdProvider::Create(capture_started.capture_options()));
 }
 
 void CaptureEventProcessorForListener::ProcessCaptureFinished(

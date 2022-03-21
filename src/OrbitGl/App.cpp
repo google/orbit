@@ -21,7 +21,6 @@
 #include <chrono>
 #include <cinttypes>
 #include <cstddef>
-#include <cstdint>
 #include <limits>
 #include <memory>
 #include <optional>
@@ -30,7 +29,6 @@
 #include <thread>
 #include <utility>
 
-#include "CaptureClient/ApiEventIdProvider.h"
 #include "CaptureClient/CaptureListener.h"
 #include "CaptureFile/CaptureFile.h"
 #include "CaptureFile/CaptureFileHelpers.h"
@@ -389,7 +387,6 @@ void OrbitApp::OnCaptureStarted(const orbit_grpc_protos::CaptureStarted& capture
                                            absl::ZeroDuration(), warning_message);
           SendWarningToUi("Capture", warning_message);
         }
-
         absl::MutexLock lock(&mutex);
         initialization_complete = true;
       });
