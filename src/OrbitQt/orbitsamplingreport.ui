@@ -103,7 +103,7 @@
                <string/>
               </property>
               <property name="icon">
-               <iconset resource="../icons/orbiticons.qrc">
+               <iconset>
                 <normaloff>:/actions/keyboard_arrow_left</normaloff>:/actions/keyboard_arrow_left</iconset>
               </property>
              </widget>
@@ -120,13 +120,16 @@
                <string/>
               </property>
               <property name="icon">
-               <iconset resource="../icons/orbiticons.qrc">
+               <iconset>
                 <normaloff>:/actions/keyboard_arrow_right</normaloff>:/actions/keyboard_arrow_right</iconset>
               </property>
              </widget>
             </item>
             <item>
              <widget class="QLabel" name="CallstackLabel">
+              <property name="toolTip">
+               <string/>
+              </property>
               <property name="text">
                <string>Callstack</string>
               </property>

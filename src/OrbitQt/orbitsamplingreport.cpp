@@ -141,6 +141,9 @@ void OrbitSamplingReport::RefreshCallstackView() {
 
   std::string label = sampling_report_->GetSelectedCallstackString();
   ui_->CallstackLabel->setText(QString::fromStdString(label));
+
+  std::string tooltip = sampling_report_->GetSelectedCallstackTooltipString();
+  ui_->CallstackLabel->setToolTip(QString::fromStdString(tooltip));
   ui_->CallstackTreeView->Refresh();
 }
 
