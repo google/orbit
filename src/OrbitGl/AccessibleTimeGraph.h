@@ -7,28 +7,22 @@
 
 #include <string>
 
-#include "OrbitAccessibility/AccessibleInterface.h"
+#include "AccessibleCaptureViewElement.h"
 #include "OrbitBase/Logging.h"
 #include "TimeGraph.h"
 
 namespace orbit_gl {
 
-class TimeGraphAccessibility : public orbit_accessibility::AccessibleInterface {
+class AccessibleTimeGraph : public AccessibleCaptureViewElement {
  public:
-  explicit TimeGraphAccessibility(TimeGraph* time_graph) : time_graph_(time_graph) {
-    ORBIT_CHECK(time_graph != nullptr);
+  explicit AccessibleTimeGraph(TimeGraph* time_graph)
+      : AccessibleCaptureViewElement(time_graph, "TimeGraph",
+                                     orbit_accessibility::AccessibilityRole::Graphic,
+                                     orbit_accessibility::AccessibilityState::Focusable),
+        time_graph_(time_graph) {}
+  [[nodiscard]] const orbit_accessibility::AccessibleInterface* AccessibleParent() const override {
+    return time_graph_->GetAccessibleParent()->GetOrCreateAccessibleInterface();
   }
-  [[nodiscard]] int AccessibleChildCount() const override;
-  [[nodiscard]] const orbit_accessibility::AccessibleInterface* AccessibleChild(
-      int index) const override;
-  [[nodiscard]] const orbit_accessibility::AccessibleInterface* AccessibleParent() const override;
-
-  [[nodiscard]] std::string AccessibleName() const override { return "TimeGraph"; }
-  [[nodiscard]] orbit_accessibility::AccessibilityRole AccessibleRole() const override {
-    return orbit_accessibility::AccessibilityRole::Graphic;
-  }
-  [[nodiscard]] orbit_accessibility::AccessibilityRect AccessibleRect() const override;
-  [[nodiscard]] orbit_accessibility::AccessibilityState AccessibleState() const override;
 
  private:
   TimeGraph* time_graph_;

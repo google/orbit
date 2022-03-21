@@ -7,6 +7,19 @@
 #include "Viewport.h"
 
 namespace orbit_gl {
+
+int AccessibleCaptureViewElement::AccessibleChildCount() const {
+  return capture_view_element_->GetNonHiddenChildren().size();
+}
+
+const orbit_accessibility::AccessibleInterface* AccessibleCaptureViewElement::AccessibleChild(
+    int index) const {
+  if (index < 0 || index >= AccessibleChildCount()) return nullptr;
+
+  CaptureViewElement* child = capture_view_element_->GetNonHiddenChildren().at(index);
+  return child->GetOrCreateAccessibleInterface();
+}
+
 const orbit_accessibility::AccessibleInterface* AccessibleCaptureViewElement::AccessibleParent()
     const {
   CaptureViewElement* parent = capture_view_element_->GetParent();

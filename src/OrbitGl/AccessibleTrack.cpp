@@ -8,7 +8,6 @@
 
 #include <algorithm>
 
-#include "AccessibleThreadBar.h"
 #include "AccessibleTimeGraph.h"
 #include "CoreMath.h"
 #include "OrbitBase/Logging.h"
@@ -32,7 +31,8 @@ class FakeTrackTab : public CaptureViewElement {
   }
 
   [[nodiscard]] std::unique_ptr<AccessibleInterface> CreateAccessibleInterface() override {
-    return std::make_unique<AccessibleTrackTab>(this, track_);
+    return std::make_unique<AccessibleCaptureViewElement>(
+        this, track_->GetName() + "_tab", orbit_accessibility::AccessibilityRole::PageTab);
   }
 
   [[nodiscard]] float GetHeight() const override { return layout_->GetTrackTabHeight(); }
@@ -57,7 +57,7 @@ class FakeTimerPane : public CaptureViewElement {
   }
 
   std::unique_ptr<AccessibleInterface> CreateAccessibleInterface() override {
-    return std::make_unique<AccessibleTimerPane>(this);
+    return std::make_unique<AccessibleCaptureViewElement>(this, "Timers");
   }
 
   [[nodiscard]] Vec2 GetPos() const override {
@@ -88,23 +88,9 @@ class FakeTimerPane : public CaptureViewElement {
 
 }  //  namespace
 
-AccessibleTrackTab::AccessibleTrackTab(CaptureViewElement* fake_track_tab, Track* track)
-    : AccessibleCaptureViewElement(fake_track_tab), track_(track) {}
-
-const AccessibleInterface* AccessibleTrackTab::AccessibleChild(int /*unused*/) const {
-  return nullptr;
-}
-
-std::string AccessibleTrackTab::AccessibleName() const {
-  ORBIT_CHECK(track_ != nullptr);
-  return track_->GetName() + "_tab";
-}
-
-AccessibleTimerPane::AccessibleTimerPane(CaptureViewElement* fake_timer_pane)
-    : AccessibleCaptureViewElement(fake_timer_pane) {}
-
 AccessibleTrack::AccessibleTrack(Track* track, const TimeGraphLayout* layout)
-    : AccessibleCaptureViewElement(track),
+    : AccessibleCaptureViewElement(track, track->GetName(),
+                                   orbit_accessibility::AccessibilityRole::Grouping),
       track_(track),
       fake_tab_(std::make_unique<FakeTrackTab>(track, layout)),
       fake_timers_pane_(std::make_unique<FakeTimerPane>(track, layout, fake_tab_.get())) {}
@@ -143,11 +129,6 @@ const AccessibleInterface* AccessibleTrack::AccessibleChild(int index) const {
 
   // Indexes between 1 and child_count + 1 are reserved for the actual children.
   return children[index - 1]->GetOrCreateAccessibleInterface();
-}
-
-std::string AccessibleTrack::AccessibleName() const {
-  ORBIT_CHECK(track_ != nullptr);
-  return track_->GetName();
 }
 
 AccessibilityState AccessibleTrack::AccessibleState() const {
