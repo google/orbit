@@ -2661,6 +2661,8 @@ bool OrbitApp::IsLoadingCapture() const {
   return data_source_ == orbit_client_data::CaptureData::DataSource::kLoadedCapture;
 }
 
+bool OrbitApp::IsDataStreamingActive() const { return IsCapturing(); }
+
 ScopedStatus OrbitApp::CreateScopedStatus(const std::string& initial_message) {
   ORBIT_CHECK(std::this_thread::get_id() == main_thread_id_);
   ORBIT_CHECK(status_listener_ != nullptr);

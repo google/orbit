@@ -25,6 +25,7 @@
 #include <vector>
 
 #include "CallTreeView.h"
+#include "CaptureClient/AppInterface.h"
 #include "CaptureClient/CaptureClient.h"
 #include "CaptureClient/CaptureListener.h"
 #include "CaptureFile/CaptureFile.h"
@@ -83,7 +84,8 @@
 
 class OrbitApp final : public DataViewFactory,
                        public orbit_capture_client::CaptureListener,
-                       public orbit_data_views::AppInterface {
+                       public orbit_data_views::AppInterface,
+                       public orbit_capture_client::AppInterface {
  public:
   explicit OrbitApp(orbit_gl::MainWindowInterface* main_window,
                     MainThreadExecutor* main_thread_executor,
@@ -114,14 +116,21 @@ class OrbitApp final : public DataViewFactory,
                                                            const std::filesystem::path& dest);
   void OnLoadCaptureCancelRequested();
 
-  [[nodiscard]] orbit_capture_client::CaptureClient::State GetCaptureState() const;
+  // vvv AppCaptureClientInterface
+  [[nodiscard]] orbit_capture_client::CaptureClient::State GetCaptureState() const override;
   [[nodiscard]] bool IsCapturing() const override;
-  [[nodiscard]] bool IsLoadingCapture() const;
 
-  void StartCapture();
-  void StopCapture();
-  void AbortCapture();
+  void StartCapture() override;
+  void StopCapture() override;
+  void AbortCapture() override;
+  void ToggleCapture() override;
+  // ^^^
+
   void ClearCapture();
+
+  [[nodiscard]] bool IsLoadingCapture() const;
+  [[nodiscard]] bool IsDataStreamingActive() const;
+
   [[nodiscard]] bool HasCaptureData() const override { return capture_data_ != nullptr; }
   [[nodiscard]] orbit_client_data::CaptureData& GetMutableCaptureData() override {
     ORBIT_CHECK(capture_data_ != nullptr);
@@ -146,7 +155,6 @@ class OrbitApp final : public DataViewFactory,
     return selection_report_ != nullptr && selection_report_->HasSamples();
   }
 
-  void ToggleCapture();
   void ListPresets();
   void RefreshCaptureView();
   void Disassemble(uint32_t pid, const orbit_client_protos::FunctionInfo& function) override;

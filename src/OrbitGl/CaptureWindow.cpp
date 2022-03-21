@@ -72,6 +72,8 @@ class AccessibleCaptureWindow : public AccessibleWidgetBridge {
 using orbit_client_protos::TimerInfo;
 
 CaptureWindow::CaptureWindow(OrbitApp* app) : GlCanvas(), app_{app} {
+  capture_client_app_ = app;
+
   draw_help_ = true;
 
   scoped_frame_times_[kTimingDraw] = std::make_unique<orbit_gl::SimpleTimings>(30);
@@ -117,7 +119,7 @@ void CaptureWindow::MouseMoved(int x, int y, bool left, bool right, bool middle)
   if (time_graph_ == nullptr) return;
 
   // Pan
-  if (left && !picking_manager_.IsDragging() && !app_->IsCapturing()) {
+  if (left && !picking_manager_.IsDragging() && !capture_client_app_->IsCapturing()) {
     Vec2i mouse_click_screen = viewport_.WorldToScreen(mouse_click_pos_world_);
     Vec2 mouse_pos_world = viewport_.ScreenToWorld({x, y});
     time_graph_->GetTrackContainer()->SetVerticalScrollingOffset(
@@ -383,7 +385,7 @@ void CaptureWindow::SetIsMouseOver(bool value) {
   }
 }
 
-bool CaptureWindow::ShouldAutoZoom() const { return app_->IsCapturing(); }
+bool CaptureWindow::ShouldAutoZoom() const { return capture_client_app_->IsCapturing(); }
 
 std::unique_ptr<AccessibleInterface> CaptureWindow::CreateAccessibleInterface() {
   return std::make_unique<AccessibleCaptureWindow>(this);
@@ -564,7 +566,7 @@ void CaptureWindow::UpdateHorizontalSliderFromWorld() {
   double stop = time_graph_->GetMaxTimeUs();
   double width = stop - start;
   double max_start = time_span - width;
-  double ratio = app_->IsCapturing() ? 1 : (max_start != 0 ? start / max_start : 0);
+  double ratio = capture_client_app_->IsCapturing() ? 1 : (max_start != 0 ? start / max_start : 0);
   int slider_width = static_cast<int>(time_graph_->GetLayout().GetSliderWidth());
   slider_->SetPixelHeight(slider_width);
   slider_->SetNormalizedPosition(static_cast<float>(ratio));
@@ -605,7 +607,7 @@ void CaptureWindow::UpdateVerticalSliderFromWorld() {
 }
 
 void CaptureWindow::ToggleRecording() {
-  app_->ToggleCapture();
+  capture_client_app_->ToggleCapture();
   draw_help_ = false;
 #ifdef __linux__
   ZoomAll();
