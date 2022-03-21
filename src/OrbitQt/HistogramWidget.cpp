@@ -122,16 +122,16 @@ struct Ticks {
 }
 
 template <typename T>
-size_t CountUnique(std::vector<T> vector) {
+bool AreAllUnique(std::vector<T> vector) {
   std::sort(vector.begin(), vector.end());
-  return std::unique(vector.begin(), vector.end()) - vector.begin();
+  return std::unique(vector.begin(), vector.end()) == vector.end();
 }
 
 [[nodiscard]] static Ticks GetTicklabels(const std::vector<double>& values, int max_precision) {
   Ticks result;
   for (int precision = 0; precision <= max_precision; precision++) {
     auto labels = DoublesToLabels(values, precision);
-    if (precision == max_precision || CountUnique(labels) == values.size()) {
+    if (precision == max_precision || AreAllUnique(labels)) {
       auto rounded_values = RoundDoubles(values, precision);
       result = {labels, rounded_values, precision};
       break;
