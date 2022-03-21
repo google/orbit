@@ -247,7 +247,7 @@ static void DrawSelection(QPainter& painter, int start_x, int end_x,
 
 [[nodiscard]] static uint64_t LocationToValue(int pos_x, int width, uint64_t min_value,
                                               uint64_t max_value) {
-  if (pos_x <= kLeftMargin) return 0;
+  if (pos_x <= kLeftMargin) return min_value;
   if (pos_x > width - kRightMargin) return max_value + 1;
 
   const int location = pos_x - kLeftMargin;
