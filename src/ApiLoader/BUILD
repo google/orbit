@@ -14,6 +14,7 @@ licenses(["notice"])
 orbit_cc_library(
     name = "ApiLoader",
     deps = [
+        "//net/grpc:grpc++",
         "//src/ApiUtils",
         "//src/GrpcProtos:capture_cc_proto",
         "//src/ObjectUtils",
