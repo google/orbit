@@ -4,10 +4,13 @@
 
 #include "ConfigWidgets/SymbolErrorDialog.h"
 
+#include <absl/flags/flag.h>
+
 #include <QDialog>
 #include <QPushButton>
 #include <memory>
 
+#include "ClientFlags/ClientFlags.h"
 #include "ConfigWidgets/SymbolsDialog.h"
 #include "OrbitBase/Logging.h"
 #include "ui_SymbolErrorDialog.h"
@@ -22,10 +25,16 @@ SymbolErrorDialog::SymbolErrorDialog(const orbit_client_data::ModuleData* module
   QString module_file_path = QString::fromStdString(module_->file_path());
   ui_->moduleNameLabel->setText(module_file_path);
   ui_->errorPlainTextEdit->setPlainText(QString::fromStdString(detailed_error));
-  if (!module_->build_id().empty()) {
+
+  // If the module has a build id, or unsafe symbols are allowed, then the user can continue to
+  // resolve this error.
+  if (!module_->build_id().empty() || absl::GetFlag(FLAGS_enable_unsafe_symbols)) {
     ui_->addSymbolLocationButton->setFocus();
     return;
   }
+
+  // The module does not have a build id, and only safe symbols are allowed, therefore the user
+  // cannot resolve this error.
   ui_->addSymbolLocationButton->setEnabled(false);
   ui_->addSymbolLocationButton->setToolTip(
       QString("Orbit matches modules and symbol files based on build-id. Module %1 does not "

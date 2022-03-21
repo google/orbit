@@ -8,6 +8,7 @@
 
 #include <QDesktopServices>
 #include <QFileDialog>
+#include <QListWidget>
 #include <QMessageBox>
 #include <QPushButton>
 #include <QSettings>
@@ -28,25 +29,98 @@ constexpr const char* kModuleHeadlineLabel = "Add Symbols for <font color=\"#E64
 constexpr const char* kOverrideWarningText =
     "The Build ID in the file you selected does not match. This may lead to unexpected behavior in "
     "Orbit.<br />Override to use this file.";
+constexpr QListWidgetItem::ItemType kOverrideMappingItemType = QListWidgetItem::ItemType::UserType;
 
 using orbit_client_data::ModuleData;
 using orbit_grpc_protos::ModuleInfo;
+using orbit_object_utils::SymbolsFile;
+
+namespace {
+
+// OverrideMappingItem is a class to represent an override (module to symbol file mapping) entry in
+// the Symbol Locations list. It subclasses QListWidgetItem so it can be added to the QListWidget
+// and distinguished from the regular path entries, that are "simple" QListWidgetItems. An
+// OverrideMappingItem carries an alert icon which is displayed at the beginning of the line. It
+// also has an explanatory tooltip and saves the module file path, so the
+// SymbolsDialog::OnRemoveButtonClicked can delete the corresponding entry from the
+// module_symbol_file_mappings_ map.
+class OverrideMappingItem : public QListWidgetItem {
+ public:
+  explicit OverrideMappingItem(const std::string& module_file_path,
+                               const std::filesystem::path& symbol_file_path,
+                               QListWidget* parent = nullptr)
+      : QListWidgetItem(QIcon(":/actions/alert"),
+                        QString("%1 -> %2")
+                            .arg(QString::fromStdString(module_file_path))
+                            .arg(QString::fromStdString(symbol_file_path.string())),
+                        parent, kOverrideMappingItemType),
+        module_file_path_(module_file_path) {
+    setToolTip(
+        QString(
+            R"(This is a symbol file override. Orbit will always use the symbol file "%1" for the module "%2".)")
+            .arg(QString::fromStdString(module_file_path))
+            .arg(QString::fromStdString(symbol_file_path.string())));
+  }
+  std::string module_file_path_;
+};
+
+ErrorMessageOr<std::unique_ptr<SymbolsFile>> CreateValidSymbolsFile(
+    const std::filesystem::path& file_path) {
+  // ObjectFileInfo is only required when loading symbols from the file. Since here it is only
+  // created to check whether the file is valid (and not to actually load symbols), a default
+  // constructed ObjectFileInfo can be used.
+  ErrorMessageOr<std::unique_ptr<SymbolsFile>> symbols_file_or_error =
+      orbit_object_utils::CreateSymbolsFile(file_path, orbit_object_utils::ObjectFileInfo());
+
+  if (symbols_file_or_error.has_error()) {
+    return ErrorMessage(absl::StrFormat("The selected file is not a viable symbol file, error: %s",
+                                        symbols_file_or_error.error().message()));
+  }
+  return symbols_file_or_error;
+}
+
+ErrorMessageOr<void> CheckValidSymbolsFileWithBuildId(const std::filesystem::path& file_path) {
+  OUTCOME_TRY(std::unique_ptr<SymbolsFile> symbols_file, CreateValidSymbolsFile(file_path));
+
+  if (symbols_file->GetBuildId().empty()) {
+    return ErrorMessage("The selected file does not contain a build id");
+  }
+  return outcome::success();
+}
+
+}  // namespace
 
 namespace orbit_config_widgets {
 
-SymbolsDialog::~SymbolsDialog() { persistent_storage_manager_->SavePaths(GetSymbolPaths()); }
+SymbolsDialog::~SymbolsDialog() {
+  persistent_storage_manager_->SavePaths(GetSymbolPathsFromListWidget());
+  persistent_storage_manager_->SaveModuleSymbolFileMappings(module_symbol_file_mappings_);
+}
 
 SymbolsDialog::SymbolsDialog(
     orbit_symbol_paths::PersistentStorageManager* persistent_storage_manager,
-    std::optional<const ModuleData*> module, QWidget* parent)
+    bool allow_unsafe_symbols, std::optional<const ModuleData*> module, QWidget* parent)
     : QDialog(parent),
       ui_(std::make_unique<Ui::SymbolsDialog>()),
+      allow_unsafe_symbols_(allow_unsafe_symbols),
       module_(module),
-      persistent_storage_manager_(persistent_storage_manager) {
+      persistent_storage_manager_(persistent_storage_manager),
+      module_symbol_file_mappings_(persistent_storage_manager_->LoadModuleSymbolFileMappings()) {
   ORBIT_CHECK(persistent_storage_manager_ != nullptr);
+
+  // When the symbols dialog is started with a module (from the error) *and* only save symbols are
+  // allowed, then the module is required to have a build ID. Without a build ID Orbit will not be
+  // able to match any symbol file. This is enforced, because in SymbolErrorDialog the "Add Symbol
+  // Location" button is disabled when the module does not have a build id (and only safe symbols
+  // are allowed).
+  if (module_.has_value() && !allow_unsafe_symbols) {
+    ORBIT_CHECK(!module_.value()->build_id().empty());
+  }
+
   ui_->setupUi(this);
 
-  SetSymbolPaths(persistent_storage_manager_->LoadPaths());
+  if (allow_unsafe_symbols_) AddModuleSymbolFileMappingsToList();
+  AddSymbolPathsToListWidget(persistent_storage_manager_->LoadPaths());
 
   if (!module_.has_value()) return;
 
@@ -61,8 +135,7 @@ SymbolsDialog::SymbolsDialog(
   DisableAddFolder();
 }
 
-void SymbolsDialog::SetSymbolPaths(absl::Span<const std::filesystem::path> paths) {
-  ui_->listWidget->clear();
+void SymbolsDialog::AddSymbolPathsToListWidget(absl::Span<const std::filesystem::path> paths) {
   QStringList paths_list;
   paths_list.reserve(static_cast<int>(paths.size()));
 
@@ -85,12 +158,15 @@ ErrorMessageOr<void> SymbolsDialog::TryAddSymbolPath(const std::filesystem::path
   return outcome::success();
 }
 
-[[nodiscard]] std::vector<std::filesystem::path> SymbolsDialog::GetSymbolPaths() {
+[[nodiscard]] std::vector<std::filesystem::path> SymbolsDialog::GetSymbolPathsFromListWidget() {
   std::vector<std::filesystem::path> result;
-  result.reserve(ui_->listWidget->count());
 
   for (int i = 0; i < ui_->listWidget->count(); ++i) {
-    result.emplace_back(ui_->listWidget->item(i)->text().toStdString());
+    QListWidgetItem* item = ui_->listWidget->item(i);
+    ORBIT_CHECK(item != nullptr);
+    if (item->type() == kOverrideMappingItemType) continue;
+
+    result.emplace_back(item->text().toStdString());
   }
 
   return result;
@@ -112,6 +188,12 @@ void SymbolsDialog::OnAddFolderButtonClicked() {
 
 void SymbolsDialog::OnRemoveButtonClicked() {
   for (QListWidgetItem* selected_item : ui_->listWidget->selectedItems()) {
+    if (selected_item->type() == kOverrideMappingItemType) {
+      auto* mapping_item = dynamic_cast<OverrideMappingItem*>(selected_item);
+      ORBIT_CHECK(mapping_item != nullptr);
+      ORBIT_CHECK(module_symbol_file_mappings_.contains(mapping_item->module_file_path_));
+      module_symbol_file_mappings_.erase(mapping_item->module_file_path_);
+    }
     ui_->listWidget->takeItem(ui_->listWidget->row(selected_item));
   }
 }
@@ -165,37 +247,38 @@ void SymbolsDialog::OnAddFileButtonClicked() {
 }
 
 ErrorMessageOr<void> SymbolsDialog::TryAddSymbolFile(const std::filesystem::path& file_path) {
-  // ObjectFileInfo is only required when loading symbols from the file. Since here it is only
-  // created to check whether the file is valid (and not to actually load symbols), a default
-  // constructed ObjectFileInfo can be used.
-  ErrorMessageOr<std::unique_ptr<orbit_object_utils::SymbolsFile>> symbols_file_or_error =
-      orbit_object_utils::CreateSymbolsFile(file_path, orbit_object_utils::ObjectFileInfo());
-
-  if (symbols_file_or_error.has_error()) {
-    return ErrorMessage(absl::StrFormat("The selected file is not a viable symbol file, error: %s",
-                                        symbols_file_or_error.error().message()));
+  // If the dialog was opened without a module, every valid symbols file with build id can be added
+  if (!module_.has_value()) {
+    OUTCOME_TRY(CheckValidSymbolsFileWithBuildId(file_path));
+    return TryAddSymbolPath(file_path);
   }
-
-  const orbit_object_utils::SymbolsFile& symbols_file{*symbols_file_or_error.value()};
-
-  const std::string build_id = symbols_file.GetBuildId();
-  if (build_id.empty()) {
-    return ErrorMessage("The selected file does not contain a build id");
-  }
-
-  // In case this dialog was not opened with a module, there is no reason to compare build-ids.
-  // Hence the path of the symbols file is added to this dialog.
-  if (!module_.has_value()) return TryAddSymbolPath(file_path);
 
   const ModuleData& module{*module_.value()};
 
-  if (module.build_id() == build_id) return TryAddSymbolPath(file_path);
+  OUTCOME_TRY(std::unique_ptr<SymbolsFile> symbols_file, CreateValidSymbolsFile(file_path));
 
-  std::string error = absl::StrFormat(
-      "The build ids of module and symbols file do not match. Module (%s) build id: \"%s\". Symbol "
-      "file (%s) build id: \"%s\".",
-      module.file_path(), module.build_id(), file_path.string(), build_id);
-  return ErrorMessage(error);
+  // If the build ids match, the file can be used
+  if (!module.build_id().empty() && module.build_id() == symbols_file->GetBuildId()) {
+    return TryAddSymbolPath(file_path);
+  }
+
+  // If only safe symbols are allowed, then a mismatching error is returned here
+  if (!allow_unsafe_symbols_) {
+    std::string error = absl::StrFormat(
+        "The build ids of module and symbols file do not match. Module (%s) build id: \"%s\". "
+        "Symbol file (%s) build id: \"%s\".",
+        module.file_path(), module.build_id(), file_path.string(), symbols_file->GetBuildId());
+    return ErrorMessage(error);
+  }
+
+  switch (DisplayOverrideWarning()) {
+    case OverrideWarningResult::kOverride:
+      return AddMapping(module, file_path);
+    case OverrideWarningResult::kCancel:
+      // success here means "no error", aka the symbol file adding ended without an error (was
+      // cancelled)
+      return outcome::success();
+  }
 }
 
 void SymbolsDialog::OnListItemSelectionChanged() {
@@ -225,6 +308,28 @@ void SymbolsDialog::OnMoreInfoButtonClicked() {
     return OverrideWarningResult::kOverride;
   }
   return OverrideWarningResult::kCancel;
+}
+
+void SymbolsDialog::AddModuleSymbolFileMappingsToList() {
+  for (const auto& [module_path, symbol_file_path] : module_symbol_file_mappings_) {
+    // The "new" here is okay, because listWidget will own the MappingItem and the Qt lifecycle
+    // management will take care of its deletion
+    ui_->listWidget->addItem(new OverrideMappingItem(module_path, symbol_file_path));
+  }
+}
+
+ErrorMessageOr<void> SymbolsDialog::AddMapping(const ModuleData& module,
+                                               const std::filesystem::path& symbol_file_path) {
+  if (module_symbol_file_mappings_.contains(module.file_path())) {
+    return ErrorMessage(
+        absl::StrFormat("Module \"%s\" is already mapped to a symbol file (\"%s\"). Please remove "
+                        "the existing mapping before adding a new one.",
+                        module.file_path(), symbol_file_path.string()));
+  }
+
+  module_symbol_file_mappings_[module.file_path()] = symbol_file_path;
+  ui_->listWidget->addItem(new OverrideMappingItem(module.file_path(), symbol_file_path));
+  return outcome::success();
 }
 
 void SymbolsDialog::SetUpModuleHeadlineLabel() {
