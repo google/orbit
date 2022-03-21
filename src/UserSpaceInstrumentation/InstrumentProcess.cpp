@@ -493,7 +493,7 @@ InstrumentationManager::InstrumentProcess(const CaptureOptions& capture_options)
   // If the user tries to instrument this instance of OrbitService we can't use user space
   // instrumentation: We would need to attach to / stop our own process.
   if (pid == getpid()) {
-    return InstrumentationResult();
+    return ErrorMessage("The target process is OrbitService itself.");
   }
 
   if (!process_map_.contains(pid)) {

@@ -146,9 +146,7 @@ TEST(InstrumentProcessTest, FailToInstrumentThisProcess) {
   orbit_grpc_protos::CaptureOptions capture_options;
   capture_options.set_pid(getpid());
   auto result_or_error = instrumentation_manager->InstrumentProcess(capture_options);
-  // We do not fail but just instrument nothing.
-  ASSERT_THAT(result_or_error, HasNoError());
-  EXPECT_TRUE(result_or_error.value().instrumented_function_ids.empty());
+  ASSERT_THAT(result_or_error, HasError("The target process is OrbitService itself."));
 }
 
 static void VerifyTrampolineAddressRangesAndLibraryPath(
