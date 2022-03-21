@@ -200,6 +200,8 @@ static void DrawVerticalAxis(QPainter& painter, const QPoint& axes_intersection,
     const int tick_location =
         axes_intersection.y() - ValueToAxisLocation(tick_value, axis_length, 0.0, max_value);
 
+    // We skip the ticks that do not fall into the horizontal axis range. Such ticks might appear
+    // due to rounding errors.
     if (!(axes_intersection.y() - axis_length <= tick_location &&
           tick_location <= axes_intersection.y())) {
       continue;
