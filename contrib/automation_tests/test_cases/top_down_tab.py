@@ -119,7 +119,40 @@ class VerifyTopDownContentForLoadedCapture(E2ETestCase):
             ["OrbitTest (all threads)", "100.00% (1583)", "", "", "", ""],
             ["OrbitThread_203 [20301]", "79.34% (1256)", "", "", "", ""],
             ["clone", "79.22% (1254)", "0.00% (0)", "99.84%", "libc-2.24.so", "0x7fe86eff5900"],
-            ["[unwind errors]", "0.13% (2)", "", "0.16%", "", ""],
+            ["[Unwind errors]", "0.13% (2)", "", "0.16%", "", ""],
+        ]
+        self._verify_first_rows(tree_view_table, expectations)
+        logging.info("Verified content of top-down view when one thread is expanded")
+
+    def _verify_unwinding_errors_when_thread_expanded(self, tree_view_table):
+        logging.info("Expanding a thread of the top-down view")
+        tree_view_table.get_item_at(3, 0).double_click_input()
+        expected_first_thread_child_count = 2
+        expected_second_thread_child_count = 1
+        expected_total_child_count = \
+            self.EXPECTED_THREAD_COUNT + expected_first_thread_child_count + expected_second_thread_child_count
+        self._verify_row_count(tree_view_table, expected_total_child_count)
+
+        tree_view_table.get_item_at(4, 0).double_click_input()
+        expected_third_thread_child_count = 1
+        expected_total_child_count += expected_third_thread_child_count
+        self._verify_row_count(tree_view_table, expected_total_child_count)
+
+        expectations = [
+            ["OrbitTest (all threads)", "100.00% (1583)", "", "", "", ""],
+            ["OrbitThread_203 [20301]", "79.34% (1256)", "", "", "", ""],
+            ["clone", "79.22% (1254)", "0.00% (0)", "99.84%", "libc-2.24.so", "0x7fe86eff5900"],
+            ["[Unwind errors]", "0.13% (2)", "", "0.16%", "", ""],
+            ["Callstack inside user-space instrumentation", "0.13% (2)", "", "100.00%", "", ""],
+            [
+                "decltype(auto) std::__1::__variant_detail::__visitation::__base::__dispatcher<1ul>::__dispatch<std"
+                "::__1::__variant_detail::__destructor<std::__1::__variant_detail::__traits<orbit_grpc_protos"
+                "::FunctionEntry, orbit_grpc_protos::FunctionExit>, "
+                "(std::__1::__variant_detail::_Trait)1>::__destroy()::'lambda'(auto&)&&, "
+                "std::__1::__variant_detail::__base<(std::__1::__variant_detail::_Trait)1, "
+                "orbit_grpc_protos::FunctionEntry, orbit_grpc_protos::FunctionExit>&>(auto, "
+                "(std::__1::__variant_detail::_Trait)1...)",
+                "0.13% (2)", "0.13% (2)", "100.00%", "liborbituserspaceinstrumentation.so", "0x7fe84851ab10"]
         ]
         self._verify_first_rows(tree_view_table, expectations)
         logging.info("Verified content of top-down view when one thread is expanded")
@@ -128,7 +161,7 @@ class VerifyTopDownContentForLoadedCapture(E2ETestCase):
         logging.info("Recursively expanding a thread of the top-down view")
         tree_view_table.get_item_at(1, 0).click_input(button='right')
         self.find_context_menu_item('Expand recursively').click_input()
-        expected_first_thread_descendant_count = 19
+        expected_first_thread_descendant_count = 20
         self._verify_row_count(tree_view_table,
                                self.EXPECTED_THREAD_COUNT + expected_first_thread_descendant_count)
 
@@ -152,7 +185,7 @@ class VerifyTopDownContentForLoadedCapture(E2ETestCase):
         logging.info("Expanding the entire top-down view")
         tree_view_table.get_item_at(0, 0).click_input(button='right')
         self.find_context_menu_item('Expand all').click_input()
-        self._verify_row_count(tree_view_table, 827)
+        self._verify_row_count(tree_view_table, 832)
 
         expectations = [
             ["OrbitTest (all threads)", "100.00% (1583)", "", "", "", ""],
@@ -205,6 +238,7 @@ class VerifyTopDownContentForLoadedCapture(E2ETestCase):
         self._verify_columns(tree_view_table)
         self._verify_rows_when_tree_collapsed(tree_view_table)
         self._verify_rows_when_thread_expanded(tree_view_table)
+        self._verify_unwinding_errors_when_thread_expanded(tree_view_table)
         self._verify_rows_when_thread_recursively_expanded(tree_view_table)
         self._verify_rows_when_tree_expanded(tree_view_table)
         self._verify_rows_on_search(tab, tree_view_table)
