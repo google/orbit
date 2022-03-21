@@ -45,8 +45,8 @@ void AnnotationTrack::DrawAnnotation(Batcher& batcher, TextRenderer& text_render
     float string_width = text_renderer.GetStringWidth(text.c_str(), font_size);
     Vec2 text_box_position(content_right_x - string_width, content_bottom_y);
 
-    TextRenderer::TextFormatting formatting{font_size, kWhite, string_width};
-    formatting.valign = TextRenderer::VAlign::Bottom;
+    TextRenderer::TextFormatting formatting{
+        font_size, kWhite, string_width, TextRenderer::HAlign::Left, TextRenderer::VAlign::Bottom};
     text_renderer.AddText(text.c_str(), text_box_position[0], text_box_position[1], z, formatting);
   }
 
@@ -65,8 +65,9 @@ void AnnotationTrack::DrawAnnotation(Batcher& batcher, TextRenderer& text_render
     float string_width = text_renderer.GetStringWidth(text.c_str(), font_size);
     Vec2 text_box_position(track_pos[0] + layout->GetRightMargin(), y);
 
-    TextRenderer::TextFormatting formatting{font_size, kThresholdColor, string_width};
-    formatting.valign = TextRenderer::VAlign::Middle;
+    TextRenderer::TextFormatting formatting{font_size, kThresholdColor, string_width,
+                                            TextRenderer::HAlign::Left,
+                                            TextRenderer::VAlign::Middle};
     text_renderer.AddText(text.c_str(), text_box_position[0], text_box_position[1], z, formatting);
 
     Vec2 from(track_pos[0], y);
