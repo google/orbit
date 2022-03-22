@@ -153,7 +153,7 @@ std::string SamplingReport::GetSelectedCallstackString() const {
   std::string type_string =
       (callstack_type == CallstackInfo::kComplete)
           ? ""
-          : absl::StrFormat("  - Unwind error (%s)",
+          : absl::StrFormat("  -  Unwind error (%s)",
                             orbit_client_data::CallstackTypeToString(callstack_type));
   return absl::StrFormat(
       "%i of %i unique callstacks  [%i/%i total samples] (%.2f%%)%s", selected_callstack_index_ + 1,
