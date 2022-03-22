@@ -26,8 +26,8 @@ namespace orbit_base {
 //
 class TaskGroup {
  public:
-  TaskGroup() : executor_(ThreadPool::GetGlobalWorkerThreadPool()) {}
-  explicit TaskGroup(std::shared_ptr<orbit_base::Executor> executor) : executor_(executor) {}
+  TaskGroup() : executor_(ThreadPool::GetDefaultThreadPool()) {}
+  explicit TaskGroup(orbit_base::Executor* executor) : executor_(executor) {}
   ~TaskGroup() {
     if (!futures_.empty()) Wait();
   }
@@ -48,7 +48,7 @@ class TaskGroup {
   }
 
  private:
-  std::shared_ptr<orbit_base::Executor> executor_ = nullptr;
+  orbit_base::Executor* executor_ = nullptr;
   std::vector<Future<void>> futures_;
 };
 

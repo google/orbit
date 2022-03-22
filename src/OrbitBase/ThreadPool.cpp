@@ -4,6 +4,7 @@
 
 #include "OrbitBase/ThreadPool.h"
 
+#include <absl/base/attributes.h>
 #include <absl/container/flat_hash_map.h>
 #include <absl/synchronization/mutex.h>
 #include <absl/time/time.h>
@@ -18,6 +19,13 @@
 
 namespace orbit_base {
 namespace {
+
+ABSL_CONST_INIT absl::Mutex g_default_thread_pool_mutex(absl::kConstInit);
+ABSL_CONST_INIT std::shared_ptr<ThreadPool> g_default_thread_pool
+    ABSL_GUARDED_BY(g_default_thread_pool_mutex);
+ABSL_CONST_INIT std::shared_ptr<ThreadPool> g_initial_default_thread_pool
+    ABSL_GUARDED_BY(g_default_thread_pool_mutex);
+;
 
 class ThreadPoolImpl : public ThreadPool {
  public:
@@ -205,18 +213,36 @@ std::shared_ptr<ThreadPool> ThreadPool::Create(
                                           std::move(run_action));
 }
 
-std::shared_ptr<ThreadPool> ThreadPool::GetGlobalWorkerThreadPool() {
-  static const unsigned number_of_logical_cores = std::thread::hardware_concurrency();
+void ThreadPool::InitializeDefaultThreadPool() { (void)GetDefaultThreadPool(); }
+
+ThreadPool* ThreadPool::GetDefaultThreadPool() {
+  absl::MutexLock lock(&g_default_thread_pool_mutex);
+  if (g_default_thread_pool != nullptr) {
+    return g_default_thread_pool.get();
+  }
+
+  if (g_initial_default_thread_pool != nullptr) {
+    g_default_thread_pool = g_initial_default_thread_pool;
+    return g_default_thread_pool.get();
+  }
+
+  const unsigned number_of_logical_cores = std::thread::hardware_concurrency();
   // std::thread::hardware_concurrency may return 0 on unsupported platforms but that shouldn't
   // occur on standard Linux or Windows.
   ORBIT_CHECK(number_of_logical_cores > 0);
 
-  static std::shared_ptr<ThreadPool> core_count_sized_thread_pool = orbit_base::ThreadPool::Create(
+  g_initial_default_thread_pool = orbit_base::ThreadPool::Create(
       /*thread_pool_min_size=*/number_of_logical_cores,
       /*thread_pool_max_size=*/number_of_logical_cores, /*thread_ttl=*/absl::Seconds(1),
       /*run_action=*/[](const std::unique_ptr<Action>& action) { action->Execute(); });
+  g_default_thread_pool = g_initial_default_thread_pool;
 
-  return core_count_sized_thread_pool;
+  return g_default_thread_pool.get();
+}
+
+void ThreadPool::SetDefaultThreadPool(std::shared_ptr<ThreadPool> thread_pool) {
+  absl::MutexLock lock(&g_default_thread_pool_mutex);
+  g_default_thread_pool = thread_pool;
 }
 
 }  // namespace orbit_base
