@@ -10,8 +10,6 @@
 #include <absl/strings/str_format.h>
 #include <absl/strings/str_replace.h>
 #include <absl/time/time.h>
-#include <qnamespace.h>
-#include <qstringliteral.h>
 #include <qwindowdefs.h>
 
 #include <QColor>
@@ -22,6 +20,7 @@
 #include <QPoint>
 #include <QStringLiteral>
 #include <QWidget>
+#include <Qt>
 #include <algorithm>
 #include <array>
 #include <cmath>
@@ -134,7 +133,7 @@ template <typename Rounder>
 }
 
 template <typename T>
-bool AreAllUnique(std::vector<T> vector) {
+static bool AreAllUnique(std::vector<T> vector) {
   std::sort(vector.begin(), vector.end());
   return std::unique(vector.begin(), vector.end()) == vector.end();
 }
