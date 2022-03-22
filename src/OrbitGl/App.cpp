@@ -3008,6 +3008,10 @@ void OrbitApp::ShowHistogram(const std::vector<uint64_t>* data, const std::strin
   if (timer_info.function_id() != orbit_grpc_protos::kInvalidFunctionId) {
     return timer_info.function_id();
   }
-  ORBIT_CHECK(api_event_id_provider_);
-  return api_event_id_provider_->ProvideId(timer_info);
+  if (timer_info.type() == orbit_client_protos::TimerInfo_Type_kApiScope ||
+      timer_info.type() == orbit_client_protos::TimerInfo_Type_kApiScopeAsync) {
+    ORBIT_CHECK(api_event_id_provider_);
+    return api_event_id_provider_->ProvideId(timer_info);
+  }
+  return orbit_grpc_protos::kInvalidFunctionId;
 }
