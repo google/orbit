@@ -1850,10 +1850,9 @@ orbit_base::Future<ErrorMessageOr<std::filesystem::path>> OrbitApp::RetrieveModu
                                                     debuglink.crc32_checksum, GetAllSymbolPaths());
         if (local_debuginfo_path.has_error()) {
           return ErrorMessage{absl::StrFormat(
-              "Module \"%s\" doesn't include debug info, and a separate "
-              "debuginfo file wasn't found on this machine, when searching "
-              "the paths from your SymbolsPath.txt. Please make sure the "
-              "debuginfo file can be found in one of the listed directories. According to "
+              "Module \"%s\" doesn't include debug info, and a separate debuginfo file wasn't "
+              "found on this machine, when searching the folders from the Symbol Locations. Please "
+              "make sure the debuginfo file can be found in one of the added folders. According to "
               "the .gnu_debuglink section, the debuginfo file must be called \"%s\".",
               module_path, debuglink.path.string())};
         }
