@@ -12,8 +12,8 @@
 
 namespace orbit_capture_client {
 
-// The inferface defines a map from timer_info to ids. When called twice of identical `timer_info`
-// instances, it returns the same ids.
+// The inferface defines a map from `TimerInfo` to ids. When called twice on identical `TimerInfo`
+// instances instances, it returns the same ids.
 class ApiEventIdProvider {
  public:
   virtual ~ApiEventIdProvider() = default;
@@ -22,8 +22,8 @@ class ApiEventIdProvider {
 };
 
 // Provides equal ids to the instances of `TimerInfo` if and only if their
-// `api_scope_name` and their `type` are equal.  The ids are chosen consequtively starting with
-// `start_id`.  To instantiate, use `NameEqualityApiEventIdSetter::Create` as this ensures no
+// `api_scope_name` and their `type` are equal.  The ids are chosen consecutively starting with
+// `start_id`. To instantiate, use `NameEqualityApiEventIdSetter::Create` as this ensures no
 // overlap between `api_scope_group_id` and `function_id`.
 class NameEqualityApiEventIdProvider : public ApiEventIdProvider {
  public:
@@ -44,4 +44,4 @@ class NameEqualityApiEventIdProvider : public ApiEventIdProvider {
 
 }  // namespace orbit_capture_client
 
-#endif /* CAPTURE_CLIENT_API_EVENT_ID_PROVIDER_H_ */
+#endif  // CAPTURE_CLIENT_API_EVENT_ID_PROVIDER_H_
