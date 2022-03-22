@@ -2999,15 +2999,15 @@ OrbitApp::GetConfidenceIntervalEstimator() const {
   return confidence_interval_estimator_;
 }
 
-void OrbitApp::ShowHistogram(const std::vector<uint64_t>* data, const std::string& function_name,
-                             uint64_t function_id) {
-  main_window_->ShowHistogram(data, function_name, function_id);
+void OrbitApp::ShowHistogram(const std::vector<uint64_t>* data, const std::string& scope_name,
+                             uint64_t scope_id) {
+  main_window_->ShowHistogram(data, scope_name, scope_id);
 }
 
 [[nodiscard]] uint64_t OrbitApp::ProvideId(const orbit_client_protos::TimerInfo& timer_info) const {
   if (timer_info.function_id() != orbit_grpc_protos::kInvalidFunctionId) {
     return timer_info.function_id();
   }
-
+  ORBIT_CHECK(api_event_id_provider_);
   return api_event_id_provider_->ProvideId(timer_info);
 }

@@ -52,7 +52,7 @@ class LiveFunctionsDataView : public DataView {
   // timestamp, and duration) associated with the selected rows in to a CSV file.
   void OnExportEventsToCsvRequested(const std::vector<int>& selection) override;
 
-  void UpdateHistogramWithFunctionIds(const std::vector<uint64_t>& function_ids);
+  void UpdateHistogramWithScopeIds(const std::vector<uint64_t>& scope_ids);
 
  protected:
   [[nodiscard]] ActionStatus GetActionStatus(std::string_view action, int clicked_index,
@@ -89,7 +89,7 @@ class LiveFunctionsDataView : public DataView {
  private:
   [[nodiscard]] const orbit_client_protos::FunctionInfo* GetFunctionInfoFromRow(int row) override;
 
-  std::vector<uint64_t> GetFunctionTimerDurations(uint64_t function_id);
+  void UpdateTimerDurations();
 
   void UpdateHistogramWithIndices(const std::vector<int>& visible_selected_indices);
 

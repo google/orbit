@@ -47,8 +47,8 @@ class OrbitLiveFunctions : public QWidget {
   std::optional<LiveFunctionsController*> GetLiveFunctionsController() {
     return live_functions_ ? &live_functions_.value() : nullptr;
   }
-  void ShowHistogram(const std::vector<uint64_t>* data, const std::string& function_name,
-                     uint64_t function_id);
+  void ShowHistogram(const std::vector<uint64_t>* data, const std::string& scope_name,
+                     uint64_t scope_id);
 
  signals:
   void SignalSelectionRangeChange(std::optional<orbit_statistics::HistogramSelectionRange>) const;

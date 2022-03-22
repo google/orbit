@@ -112,13 +112,14 @@ class AppInterface {
   virtual void Disassemble(uint32_t pid, const orbit_client_protos::FunctionInfo& function) = 0;
   virtual void ShowSourceCode(const orbit_client_protos::FunctionInfo& function) = 0;
 
-  virtual void ShowHistogram(const std::vector<uint64_t>* data, const std::string& function_name,
-                             uint64_t function_id) = 0;
+  virtual void ShowHistogram(const std::vector<uint64_t>* data, const std::string& scope_name,
+                             uint64_t scope_id) = 0;
 
   [[nodiscard]] virtual const orbit_statistics::BinomialConfidenceIntervalEstimator&
   GetConfidenceIntervalEstimator() const = 0;
 
-  [[nodiscard]] virtual uint64_t ProvideId(const orbit_client_protos::TimerInfo& timer_info) const = 0;
+  [[nodiscard]] virtual uint64_t ProvideId(
+      const orbit_client_protos::TimerInfo& timer_info) const = 0;
 };
 
 }  // namespace orbit_data_views

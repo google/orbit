@@ -326,20 +326,20 @@ constexpr uint32_t kSeed = 31;
   return result;
 }
 
-void HistogramWidget::UpdateData(const std::vector<uint64_t>* data, std::string function_name,
-                                 uint64_t function_id) {
+void HistogramWidget::UpdateData(const std::vector<uint64_t>* data, std::string scope_name,
+                                 uint64_t scope_id) {
   ORBIT_SCOPE_FUNCTION;
-  if (function_data_.has_value() && function_data_->id == function_id) return;
+  if (scope_data_.has_value() && scope_data_->id == scope_id) return;
 
   histogram_stack_ = {};
   ranges_stack_ = {};
   EmitSignalSelectionRangeChange();
 
-  function_data_.emplace(data, std::move(function_name), function_id);
+  scope_data_.emplace(data, std::move(scope_name), scope_id);
 
   if (data != nullptr) {
     std::optional<orbit_statistics::Histogram> histogram =
-        orbit_statistics::BuildHistogram(*function_data_->data);
+        orbit_statistics::BuildHistogram(*scope_data_->data);
     if (histogram) {
       histogram_stack_.push(std::move(*histogram));
     }
@@ -419,11 +419,11 @@ void HistogramWidget::mouseReleaseEvent(QMouseEvent* /* event*/) {
       std::swap(min, max);
     }
 
-    const auto data_begin = function_data_->data->begin();
-    const auto data_end = function_data_->data->end();
+    const auto data_begin = scope_data_->data->begin();
+    const auto data_end = scope_data_->data->end();
 
     const auto min_it = std::lower_bound(data_begin, data_end, min);
-    if (min_it != function_data_->data->end()) {
+    if (min_it != scope_data_->data->end()) {
       const auto max_it = std::upper_bound(data_begin, data_end, max);
       const auto selection = absl::Span<const uint64_t>(&*min_it, std::distance(min_it, max_it));
 
@@ -492,23 +492,22 @@ void HistogramWidget::UpdateAndNotify() {
   update();
 }
 
-constexpr size_t kMaxFunctionNameLengthForTitle = 80;
+constexpr size_t kMaxScopeNameLengthForTitle = 80;
 
 [[nodiscard]] QString HistogramWidget::GetTitle() const {
-  if (!function_data_.has_value() || histogram_stack_.empty()) {
+  if (!scope_data_.has_value() || histogram_stack_.empty()) {
     return kDefaultTitle;
   }
-  std::string function_name = function_data_->name;
-  if (function_name.size() > kMaxFunctionNameLengthForTitle) {
-    function_name = absl::StrCat(function_name.substr(0, kMaxFunctionNameLengthForTitle), "...");
+  std::string scope_name = scope_data_->name;
+  if (scope_name.size() > kMaxScopeNameLengthForTitle) {
+    scope_name = absl::StrCat(scope_name.substr(0, kMaxScopeNameLengthForTitle), "...");
   }
 
-  function_name =
-      absl::StrReplaceAll(function_name, {{"&", "&amp;"}, {"<", "&lt;"}, {">", "&gt;"}});
+  scope_name = absl::StrReplaceAll(scope_name, {{"&", "&amp;"}, {"<", "&lt;"}, {">", "&gt;"}});
 
   std::string title =
-      absl::StrFormat("<b>%s</b> (%d of %d invocations)", function_name,
-                      histogram_stack_.top().data_set_size, function_data_->data->size());
+      absl::StrFormat("<b>%s</b> (%d of %d invocations)", scope_name,
+                      histogram_stack_.top().data_set_size, scope_data_->data->size());
 
   return QString::fromStdString(title);
 }
