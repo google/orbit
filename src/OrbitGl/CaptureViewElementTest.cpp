@@ -43,13 +43,12 @@ class UnitTestCaptureViewContainerElement : public CaptureViewElementMock {
                                                const TimeGraphLayout* layout,
                                                int children_to_create = 0)
       : CaptureViewElementMock(parent, viewport, layout) {
-    SetWidth(viewport->GetWorldWidth());
-
     for (int i = 0; i < children_to_create; ++i) {
       children_.emplace_back(
           std::make_unique<UnitTestCaptureViewLeafElement>(this, viewport, layout));
     }
 
+    SetWidth(viewport->GetWorldWidth());
     UpdateLayout();
   }
 
@@ -109,7 +108,7 @@ TEST(CaptureViewElement, IsMouseOverWorksForVisibleElements) {
   elem.SetWidth(kViewport.GetWorldWidth());
 
   EXPECT_FALSE(elem.IsMouseOver(Vec2(-1, -1)));
-  EXPECT_TRUE(elem.IsMouseOver(Vec2(5, 5)));
+  EXPECT_TRUE(elem.IsMouseOver(Vec2(kLeafElementHeight / 2, kLeafElementHeight / 2)));
   EXPECT_TRUE(elem.IsMouseOver(elem.GetSize()));
   EXPECT_TRUE(elem.IsMouseOver(Vec2(0, 0)));
 }
@@ -137,7 +136,7 @@ TEST(CaptureViewElement, MouseWheelEventRecursesToCorrectChildren) {
   static_assert(kMarginAfterChild > 0);
 
   const Vec2 kPosOutside(-1, -1);
-  const Vec2 kPosOnParent(10, kLeafElementHeight + 1);
+  const Vec2 kPosBetweenChildren(10, kLeafElementHeight + 1);
   const Vec2 kPosOnChild0(10, kLeafElementHeight);
   const Vec2 kPosOnChild1(10, kLeafElementHeight + kMarginAfterChild);
   const Vec2 kPosOnChild2(10, (kLeafElementHeight + kMarginAfterChild) * 2);
@@ -176,7 +175,7 @@ TEST(CaptureViewElement, MouseWheelEventRecursesToCorrectChildren) {
   EXPECT_CALL(*child1, OnMouseWheel(_, kDelta, _)).Times(Exactly(1)).WillRepeatedly(Return(false));
 
   EXPECT_FALSE(container_elem.HandleMouseWheelEvent(kPosOutside, kDelta));
-  EXPECT_FALSE(container_elem.HandleMouseWheelEvent(kPosOnParent, kDelta));
+  EXPECT_FALSE(container_elem.HandleMouseWheelEvent(kPosBetweenChildren, kDelta));
   EXPECT_FALSE(container_elem.HandleMouseWheelEvent(kPosOnChild0, kDelta));
   EXPECT_FALSE(container_elem.HandleMouseWheelEvent(kPosOnChild1, kDelta));
   EXPECT_TRUE(container_elem.HandleMouseWheelEvent(kPosOnChild2, kDelta));

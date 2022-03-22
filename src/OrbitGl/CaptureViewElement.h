@@ -16,6 +16,12 @@
 
 namespace orbit_gl {
 
+struct ModifierKeys {
+  bool ctrl = false;
+  bool shift = false;
+  bool alt = false;
+};
+
 /* Base class for UI elements drawn underneath the capture window. */
 class CaptureViewElement : public Pickable, public AccessibleInterfaceProvider {
  public:
@@ -47,13 +53,6 @@ class CaptureViewElement : public Pickable, public AccessibleInterfaceProvider {
   void OnRelease() override;
   void OnDrag(int x, int y) override;
   [[nodiscard]] bool Draggable() override { return true; }
-
-  // Mouse interaction (bounding-box based)
-  struct ModifierKeys {
-    bool ctrl = false;
-    bool shift = false;
-    bool alt = false;
-  };
 
   [[nodiscard]] bool IsMouseOver(const Vec2& mouse_pos);
   [[nodiscard]] bool HandleMouseWheelEvent(const Vec2& mouse_pos, int delta,
