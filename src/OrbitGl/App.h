@@ -24,6 +24,7 @@
 #include <utility>
 #include <vector>
 
+#include "ApiEventIdProvider.h"
 #include "CallTreeView.h"
 #include "CaptureClient/AppInterface.h"
 #include "CaptureClient/CaptureClient.h"
@@ -513,6 +514,8 @@ class OrbitApp final : public DataViewFactory,
   void JumpToTimerAndZoom(uint64_t function_id, JumpToTimerMode selection_mode) override;
   [[nodiscard]] std::vector<const orbit_client_protos::TimerInfo*> GetAllTimersForHookedFunction(
       uint64_t function_id) const override;
+  [[nodiscard]] std::vector<const orbit_client_data::TimerChain*> GetAllTimerChains()
+      const override;
 
   [[nodiscard]] const orbit_statistics::BinomialConfidenceIntervalEstimator&
   GetConfidenceIntervalEstimator() const override;
@@ -526,6 +529,8 @@ class OrbitApp final : public DataViewFactory,
   GetHistogramSelectionRange() const {
     return histogram_selection_range_;
   }
+
+  [[nodiscard]] uint64_t ProvideId(const orbit_client_protos::TimerInfo& timer_info) const override;
 
  private:
   void UpdateModulesAbortCaptureIfModuleWithoutBuildIdNeedsReload(
@@ -667,6 +672,8 @@ class OrbitApp final : public DataViewFactory,
   const orbit_statistics::WilsonBinomialConfidenceIntervalEstimator confidence_interval_estimator_;
 
   std::optional<orbit_statistics::HistogramSelectionRange> histogram_selection_range_;
+
+  std::unique_ptr<orbit_gl::ApiEventIdProvider> api_event_id_provider_;
 };
 
 #endif  // ORBIT_GL_APP_H_

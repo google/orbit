@@ -8,6 +8,7 @@
 #include <absl/types/span.h>
 #include <stdint.h>
 
+#include <cstdint>
 #include <string>
 
 #include "ClientData/CaptureData.h"
@@ -54,6 +55,8 @@ class AppInterface {
   [[nodiscard]] virtual bool IsCapturing() const = 0;
   [[nodiscard]] virtual std::vector<const orbit_client_protos::TimerInfo*>
   GetAllTimersForHookedFunction(uint64_t function_id) const = 0;
+  [[nodiscard]] virtual std::vector<const orbit_client_data::TimerChain*> GetAllTimerChains()
+      const = 0;
 
   // Function needed by CallstackDataView
   [[nodiscard]] virtual orbit_client_data::CaptureData& GetMutableCaptureData() = 0;
@@ -114,6 +117,8 @@ class AppInterface {
 
   [[nodiscard]] virtual const orbit_statistics::BinomialConfidenceIntervalEstimator&
   GetConfidenceIntervalEstimator() const = 0;
+
+  [[nodiscard]] virtual uint64_t ProvideId(const orbit_client_protos::TimerInfo& timer_info) const = 0;
 };
 
 }  // namespace orbit_data_views
