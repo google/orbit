@@ -101,26 +101,36 @@ struct Ticks {
 };
 }  // namespace
 
-[[nodiscard]] static std::vector<QString> DoublesToLabels(const std::vector<double>& values,
-                                                          int precision) {
-  std::vector<QString> labels;
-  std::transform(
-      std::begin(values), std::end(values), std::back_inserter(labels),
-      [precision](const double value) { return QString::number(value, 'f', precision); });
-  return labels;
-}
-
-[[nodiscard]] static double Round(double x, int precision) {
+template <typename Rounder>
+[[nodiscard]] static double Round(double x, int precision, Rounder&& rounder) {
   const double power_of_ten = pow(10.0, precision);
-  return std::round(x * power_of_ten) / power_of_ten;
+  return rounder(x * power_of_ten) / power_of_ten;
 }
 
 [[nodiscard]] static std::vector<double> RoundDoubles(const std::vector<double>& values,
                                                       int precision) {
   std::vector<double> rounded;
-  std::transform(std::begin(values), std::end(values), std::back_inserter(rounded),
-                 [precision](const double value) { return Round(value, precision); });
+  for (size_t i = 0; i < values.size(); ++i) {
+    double result = 0;
+    if (i == 0) {
+      result = Round(values[i], precision, static_cast<double (*)(double)>(std::ceil));
+    } else if (i + 1 == values.size()) {
+      result = Round(values[i], precision, static_cast<double (*)(double)>(std::floor));
+    } else {
+      result = Round(values[i], precision, static_cast<double (*)(double)>(std::round));
+    }
+    rounded.push_back(result);
+  }
   return rounded;
+}
+
+[[nodiscard]] static Ticks DoublesToLabels(const std::vector<double>& values, int precision) {
+  std::vector<QString> labels;
+  const std::vector<double> rounded_values = RoundDoubles(values, precision);
+  std::transform(
+      std::begin(rounded_values), std::end(rounded_values), std::back_inserter(labels),
+      [precision](const double value) { return QString::number(value, 'f', precision); });
+  return {labels, rounded_values, precision};
 }
 
 template <typename T>
@@ -130,16 +140,13 @@ bool AreAllUnique(std::vector<T> vector) {
 }
 
 [[nodiscard]] static Ticks GetTicklabels(const std::vector<double>& values, int max_precision) {
-  Ticks result;
   for (int precision = 0; precision <= max_precision; precision++) {
-    std::vector<QString> labels = DoublesToLabels(values, precision);
-    if (precision == max_precision || AreAllUnique(labels)) {
-      std::vector<double> rounded_values = RoundDoubles(values, precision);
-      result = {labels, rounded_values, precision};
-      break;
+    Ticks ticks = DoublesToLabels(values, precision);
+    if (precision == max_precision || AreAllUnique(ticks.labels)) {
+      return ticks;
     }
   }
-  return result;
+  ORBIT_UNREACHABLE();
 }
 
 [[nodiscard]] static std::vector<double> GenerateEquidistantTickValues(double min, double spacing) {
