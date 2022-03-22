@@ -84,7 +84,7 @@ class AnnotatingSourceCodeDialog : public orbit_code_viewer::Dialog {
   RetrieveModuleWithDebugInfoCallback retrieve_module_with_debug_info_;
 
   std::chrono::steady_clock::time_point starting_time_ = std::chrono::steady_clock::now();
-  std::shared_ptr<MainThreadExecutor> main_thread_executor_ =
+  std::shared_ptr<orbit_base::MainThreadExecutor> main_thread_executor_ =
       orbit_qt_utils::MainThreadExecutorImpl::Create();
 
   enum class ButtonAction { kNone, kChooseFile, kAddAnnotations, kHide };

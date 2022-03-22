@@ -15,6 +15,8 @@
 #include "OrbitBase/Logging.h"
 #include "QtUtils/FutureWatcher.h"
 
+using orbit_base::MainThreadExecutor;
+
 namespace orbit_qt_utils {
 
 void MainThreadExecutorImpl::ScheduleImpl(std::unique_ptr<Action> action) {

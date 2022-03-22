@@ -2,8 +2,8 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#ifndef ORBIT_GL_MAIN_THREAD_EXECUTOR_H_
-#define ORBIT_GL_MAIN_THREAD_EXECUTOR_H_
+#ifndef ORBIT_BASE_MAIN_THREAD_EXECUTOR_H_
+#define ORBIT_BASE_MAIN_THREAD_EXECUTOR_H_
 
 #include <absl/types/span.h>
 
@@ -11,6 +11,8 @@
 
 #include "OrbitBase/Executor.h"
 #include "OrbitBase/Future.h"
+
+namespace orbit_base {
 
 // This class implements a mechanism for landing
 // actions to the main thread. As a general rule
@@ -28,20 +30,22 @@
 // manager->Schedule(CreateAction([data]{
 //   UpdateSomethingWith(data);
 // }));
-class MainThreadExecutor : public orbit_base::Executor {
+class MainThreadExecutor : public Executor {
  public:
   enum class WaitResult { kCompleted, kTimedOut, kAborted };
-  [[nodiscard]] virtual WaitResult WaitFor(const orbit_base::Future<void>& future,
+  [[nodiscard]] virtual WaitResult WaitFor(const Future<void>& future,
                                            std::chrono::milliseconds timeout) = 0;
 
-  [[nodiscard]] virtual WaitResult WaitFor(const orbit_base::Future<void>& future) = 0;
+  [[nodiscard]] virtual WaitResult WaitFor(const Future<void>& future) = 0;
 
-  [[nodiscard]] virtual WaitResult WaitForAll(absl::Span<orbit_base::Future<void>> futures,
+  [[nodiscard]] virtual WaitResult WaitForAll(absl::Span<Future<void>> futures,
                                               std::chrono::milliseconds timeout) = 0;
 
-  [[nodiscard]] virtual WaitResult WaitForAll(absl::Span<orbit_base::Future<void>> futures) = 0;
+  [[nodiscard]] virtual WaitResult WaitForAll(absl::Span<Future<void>> futures) = 0;
 
   virtual void AbortWaitingJobs() = 0;
 };
 
-#endif  // ORBIT_GL_MAIN_THREAD_EXECUTOR_H_
+}  // namespace orbit_base
+
+#endif  // ORBIT_BASE_MAIN_THREAD_EXECUTOR_H_

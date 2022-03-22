@@ -63,7 +63,6 @@
 #include "GrpcProtos/symbol.pb.h"
 #include "GrpcProtos/tracepoint.pb.h"
 #include "IntrospectionWindow.h"
-#include "MainThreadExecutor.h"
 #include "MainWindowInterface.h"
 #include "ManualInstrumentationManager.h"
 #include "MetricsUploader/CaptureMetric.h"
@@ -71,6 +70,7 @@
 #include "OrbitBase/CrashHandler.h"
 #include "OrbitBase/Future.h"
 #include "OrbitBase/Logging.h"
+#include "OrbitBase/MainThreadExecutor.h"
 #include "OrbitBase/Result.h"
 #include "OrbitBase/ThreadPool.h"
 #include "OrbitPaths/Paths.h"
@@ -86,13 +86,14 @@ class OrbitApp final : public DataViewFactory,
                        public orbit_data_views::AppInterface {
  public:
   explicit OrbitApp(orbit_gl::MainWindowInterface* main_window,
-                    MainThreadExecutor* main_thread_executor,
+                    orbit_base::MainThreadExecutor* main_thread_executor,
                     const orbit_base::CrashHandler* crash_handler,
                     orbit_metrics_uploader::MetricsUploader* metrics_uploader = nullptr);
   ~OrbitApp() override;
 
   static std::unique_ptr<OrbitApp> Create(
-      orbit_gl::MainWindowInterface* main_window, MainThreadExecutor* main_thread_executor,
+      orbit_gl::MainWindowInterface* main_window,
+      orbit_base::MainThreadExecutor* main_thread_executor,
       const orbit_base::CrashHandler* crash_handler,
       orbit_metrics_uploader::MetricsUploader* metrics_uploader = nullptr);
 
@@ -395,7 +396,9 @@ class OrbitApp final : public DataViewFactory,
   [[nodiscard]] orbit_client_services::ProcessManager* GetProcessManager() {
     return process_manager_;
   }
-  [[nodiscard]] MainThreadExecutor* GetMainThreadExecutor() { return main_thread_executor_; }
+  [[nodiscard]] orbit_base::MainThreadExecutor* GetMainThreadExecutor() {
+    return main_thread_executor_;
+  }
   [[nodiscard]] orbit_client_data::ProcessData* GetMutableTargetProcess() const { return process_; }
   [[nodiscard]] const orbit_client_data::ProcessData* GetTargetProcess() const override {
     return process_;
@@ -621,7 +624,7 @@ class OrbitApp final : public DataViewFactory,
   std::shared_ptr<grpc::Channel> grpc_channel_;
 
   orbit_gl::MainWindowInterface* main_window_ = nullptr;
-  MainThreadExecutor* main_thread_executor_;
+  orbit_base::MainThreadExecutor* main_thread_executor_;
   std::thread::id main_thread_id_;
   std::shared_ptr<orbit_base::ThreadPool> thread_pool_;
   std::shared_ptr<orbit_base::ThreadPool> core_count_sized_thread_pool_;

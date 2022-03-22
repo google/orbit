@@ -32,9 +32,9 @@
 #include <system_error>
 #include <utility>
 
-#include "MainThreadExecutor.h"
 #include "OrbitBase/Future.h"
 #include "OrbitBase/Logging.h"
+#include "OrbitBase/MainThreadExecutor.h"
 #include "OrbitBase/Result.h"
 #include "OrbitGgp/Client.h"
 #include "OrbitGgp/InstanceItemModel.h"

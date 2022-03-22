@@ -64,7 +64,6 @@
 #include "GrpcProtos/symbol.pb.h"
 #include "ImGuiOrbit.h"
 #include "Introspection/Introspection.h"
-#include "MainThreadExecutor.h"
 #include "MainWindowInterface.h"
 #include "MetricsUploader/CaptureMetric.h"
 #include "MetricsUploader/MetricsUploader.h"
@@ -78,6 +77,7 @@
 #include "OrbitBase/ImmediateExecutor.h"
 #include "OrbitBase/JoinFutures.h"
 #include "OrbitBase/Logging.h"
+#include "OrbitBase/MainThreadExecutor.h"
 #include "OrbitBase/Result.h"
 #include "OrbitBase/ThreadConstants.h"
 #include "OrbitBase/UniqueResource.h"
@@ -256,7 +256,7 @@ ErrorMessageOr<std::optional<std::filesystem::path>> GetOverrideSymbolFileForMod
 bool DoZoom = false;
 
 OrbitApp::OrbitApp(orbit_gl::MainWindowInterface* main_window,
-                   MainThreadExecutor* main_thread_executor,
+                   orbit_base::MainThreadExecutor* main_thread_executor,
                    const orbit_base::CrashHandler* crash_handler,
                    orbit_metrics_uploader::MetricsUploader* metrics_uploader)
     : main_window_{main_window},
@@ -348,71 +348,71 @@ void OrbitApp::OnCaptureStarted(const orbit_grpc_protos::CaptureStarted& capture
     metrics_capture_complete_data_.file_path = file_path.value();
   }
 
-  main_thread_executor_->Schedule(
-      [this, &initialization_complete, &mutex, &capture_started, file_path = std::move(file_path),
-       frame_track_function_ids = std::move(frame_track_function_ids)]() mutable {
-        absl::flat_hash_map<Track::Type, bool> track_type_visibility;
-        bool had_capture = capture_window_->GetTimeGraph();
-        if (had_capture) {
-          track_type_visibility =
-              capture_window_->GetTimeGraph()->GetTrackManager()->GetAllTrackTypesVisibility();
-        }
+  main_thread_executor_->Schedule([this, &initialization_complete, &mutex, &capture_started,
+                                   file_path = std::move(file_path),
+                                   frame_track_function_ids =
+                                       std::move(frame_track_function_ids)]() mutable {
+    absl::flat_hash_map<Track::Type, bool> track_type_visibility;
+    bool had_capture = capture_window_->GetTimeGraph();
+    if (had_capture) {
+      track_type_visibility =
+          capture_window_->GetTimeGraph()->GetTrackManager()->GetAllTrackTypesVisibility();
+    }
 
-        ClearCapture();
+    ClearCapture();
 
-        if (file_path.has_value()) {
-          capture_file_info_manager_.AddOrTouchCaptureFile(file_path.value());
-        }
+    if (file_path.has_value()) {
+      capture_file_info_manager_.AddOrTouchCaptureFile(file_path.value());
+    }
 
-        // It is safe to do this write on the main thread, as the capture thread is suspended until
-        // this task is completely executed.
-        capture_data_ = std::make_unique<CaptureData>(
-            capture_started, file_path, std::move(frame_track_function_ids), data_source_);
-        capture_data_->set_memory_warning_threshold_kb(
-            data_manager_->memory_warning_threshold_kb());
-        capture_window_->CreateTimeGraph(capture_data_.get());
-        orbit_gl::TrackManager* track_manager = GetMutableTimeGraph()->GetTrackManager();
-        track_manager->SetIsDataFromSavedCapture(data_source_ ==
-                                                 CaptureData::DataSource::kLoadedCapture);
-        if (had_capture) {
-          track_manager->RestoreAllTrackTypesVisibility(track_type_visibility);
-        }
+    // It is safe to do this write on the main thread, as the capture thread is suspended until
+    // this task is completely executed.
+    capture_data_ = std::make_unique<CaptureData>(
+        capture_started, file_path, std::move(frame_track_function_ids), data_source_);
+    capture_data_->set_memory_warning_threshold_kb(data_manager_->memory_warning_threshold_kb());
+    capture_window_->CreateTimeGraph(capture_data_.get());
+    orbit_gl::TrackManager* track_manager = GetMutableTimeGraph()->GetTrackManager();
+    track_manager->SetIsDataFromSavedCapture(data_source_ ==
+                                             CaptureData::DataSource::kLoadedCapture);
+    if (had_capture) {
+      track_manager->RestoreAllTrackTypesVisibility(track_type_visibility);
+    }
 
-        frame_track_online_processor_ =
-            orbit_gl::FrameTrackOnlineProcessor(GetCaptureData(), GetMutableTimeGraph());
+    frame_track_online_processor_ =
+        orbit_gl::FrameTrackOnlineProcessor(GetCaptureData(), GetMutableTimeGraph());
 
-        ORBIT_CHECK(capture_started_callback_ != nullptr);
-        capture_started_callback_(file_path);
+    ORBIT_CHECK(capture_started_callback_ != nullptr);
+    capture_started_callback_(file_path);
 
-        if (!capture_data_->instrumented_functions().empty()) {
-          ORBIT_CHECK(select_live_tab_callback_);
-          select_live_tab_callback_();
-        }
+    if (!capture_data_->instrumented_functions().empty()) {
+      ORBIT_CHECK(select_live_tab_callback_);
+      select_live_tab_callback_();
+    }
 
-        FireRefreshCallbacks();
+    FireRefreshCallbacks();
 
-        main_window_->AppendToCaptureLog(
-            MainWindowInterface::CaptureLogSeverity::kInfo, absl::ZeroDuration(),
-            absl::StrFormat(
-                "Capture started on %s.",
-                absl::FormatTime(absl::FromUnixNanos(capture_started.capture_start_unix_time_ns()),
-                                 absl::LocalTimeZone())));
+    main_window_->AppendToCaptureLog(
+        MainWindowInterface::CaptureLogSeverity::kInfo, absl::ZeroDuration(),
+        absl::StrFormat(
+            "Capture started on %s.",
+            absl::FormatTime(absl::FromUnixNanos(capture_started.capture_start_unix_time_ns()),
+                             absl::LocalTimeZone())));
 
-        orbit_version::Version capture_version{capture_started.orbit_version_major(),
-                                               capture_started.orbit_version_minor()};
-        orbit_version::Version current_version = orbit_version::GetVersion();
-        if (capture_version > current_version) {
-          std::string warning_message = absl::Substitute(
-              "The capture was taken with Orbit version $0.$1, which is higher than the "
-              "current version. Please open the capture using Orbit v$0.$1 or above.",
-              capture_version.major_version, capture_version.minor_version);
-          main_window_->AppendToCaptureLog(MainWindowInterface::CaptureLogSeverity::kSevereWarning,
-                                           absl::ZeroDuration(), warning_message);
-          SendWarningToUi("Capture", warning_message);
-        }
-        absl::MutexLock lock(&mutex);
-        initialization_complete = true;
-      });
+    orbit_version::Version capture_version{capture_started.orbit_version_major(),
+                                           capture_started.orbit_version_minor()};
+    orbit_version::Version current_version = orbit_version::GetVersion();
+    if (capture_version > current_version) {
+      std::string warning_message = absl::Substitute(
+          "The capture was taken with Orbit version $0.$1, which is higher than the "
+          "current version. Please open the capture using Orbit v$0.$1 or above.",
+          capture_version.major_version, capture_version.minor_version);
+      main_window_->AppendToCaptureLog(MainWindowInterface::CaptureLogSeverity::kSevereWarning,
+                                       absl::ZeroDuration(), warning_message);
+      SendWarningToUi("Capture", warning_message);
+    }
+    absl::MutexLock lock(&mutex);
+    initialization_complete = true;
+  });
 
   mutex.Await(absl::Condition(&initialization_complete));
 }
@@ -732,7 +732,8 @@ void OrbitApp::OnValidateFramePointers(std::vector<const ModuleData*> modules_to
 }
 
 std::unique_ptr<OrbitApp> OrbitApp::Create(
-    orbit_gl::MainWindowInterface* main_window, MainThreadExecutor* main_thread_executor,
+    orbit_gl::MainWindowInterface* main_window,
+    orbit_base::MainThreadExecutor* main_thread_executor,
     const orbit_base::CrashHandler* crash_handler,
     orbit_metrics_uploader::MetricsUploader* metrics_uploader) {
   return std::make_unique<OrbitApp>(main_window, main_thread_executor, crash_handler,
