@@ -44,7 +44,7 @@ static const std::string kDebDestinationPath = "/tmp/orbitprofiler.deb";
 static const std::string kSigDestinationPath = "/tmp/orbitprofiler.deb.asc";
 constexpr std::string_view kSshWatchdogPassphrase = "start_watchdog";
 constexpr std::chrono::milliseconds kSshWatchdogInterval{1000};
-constexpr std::chrono::seconds kServiceStartupTimeout{10};
+constexpr std::chrono::seconds kServiceStartupTimeout{20};
 
 namespace orbit_session_setup {
 
