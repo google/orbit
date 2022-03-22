@@ -49,6 +49,25 @@ const QColor kHoveredBarColor(QStringLiteral("#99CCFF"));
 
 constexpr int kHoverLabelPadding = 6;
 
+namespace {
+struct Ticks {
+  std::vector<QString> labels;
+  std::vector<double> values;
+  int precision{};
+};
+
+struct TickStep {
+  double value{};
+  int precision{};
+};
+}  // namespace
+
+const std::vector<TickStep> kHorizontalTickSteps = {{0.001, 3}, {0.005, 3}, {0.01, 2}, {0.05, 2},
+                                                    {0.1, 1},   {0.25, 2},  {0.5, 1},  {1, 0},
+                                                    {5, 0},     {10, 0},    {20, 0},   {50, 0}};
+
+const std::vector<TickStep> kVerticalTickSteps = {{0.1, 1}, {0.5, 1}, {1, 0},
+                                                  {5, 0},   {10, 0},  {25, 0}};
 constexpr uint32_t kVerticalTickCount = 4;
 constexpr uint32_t kHorizontalTickCount = 4;
 constexpr int kVerticalAxisTickLength = 4;
@@ -73,9 +92,6 @@ constexpr int kBottomMargin = 40;
 constexpr int kLeftMargin = 50;
 constexpr int kRightMargin = 50;
 
-constexpr int kHorizontalAxisTickMaxPrecision = 3;
-constexpr int kVerticalAxisTickMaxPrecision = 1;
-
 const QString kDefaultTitle =
     QStringLiteral("Select a function with Count>0 to plot a histogram of its runtime");
 
@@ -93,91 +109,56 @@ static void DrawVerticalLine(QPainter& painter, const QPoint& start, int length)
   painter.drawLine(start, {start.x(), start.y() + length});
 }
 
-namespace {
-struct Ticks {
-  std::vector<QString> labels;
-  std::vector<double> values;
-  int precision{};
-};
-}  // namespace
-
-template <typename Rounder>
-[[nodiscard]] static double Round(double x, int precision, Rounder&& rounder) {
-  const double power_of_ten = pow(10.0, precision);
-  return rounder(x * power_of_ten) / power_of_ten;
+[[nodiscard]] static uint32_t TickCount(double min, double max, double step) {
+  double first = std::ceil(min / step) * step;
+  if (first > max) return 0;
+  return static_cast<uint32_t>(std::floor((max - first) / step)) + 1;
 }
 
-[[nodiscard]] static std::vector<double> RoundDoubles(const std::vector<double>& values,
-                                                      int precision) {
-  std::vector<double> rounded;
-  for (size_t i = 0; i < values.size(); ++i) {
-    double result = 0;
-    if (i == 0) {
-      result = Round(values[i], precision, static_cast<double (*)(double)>(std::ceil));
-    } else if (i + 1 == values.size()) {
-      result = Round(values[i], precision, static_cast<double (*)(double)>(std::floor));
-    } else {
-      result = Round(values[i], precision, static_cast<double (*)(double)>(std::round));
-    }
-    rounded.push_back(result);
+[[nodiscard]] static std::vector<double> MakeLabelValues(double min, double max, double step) {
+  double current = std::ceil(min / step) * step;
+  std::vector<double> result = {current};
+
+  while (current <= max) {
+    result.push_back(current);
+    current += step;
   }
-  return rounded;
+
+  return result;
 }
 
-[[nodiscard]] static Ticks MakeTicks(const std::vector<double>& values, int precision) {
+[[nodiscard]] static TickStep ChooseBestStep(double min, double max,
+                                             const std::vector<TickStep>& steps,
+                                             uint32_t optimal_tick_count) {
+  std::optional<TickStep> best_step;
+  int best_deviation = std::numeric_limits<int>::max();
+  for (const TickStep& step : steps) {
+    int tick_count = static_cast<int>(TickCount(min, max, step.value));
+    if (best_step && tick_count < 2) continue;
+
+    int deviation = std::abs(tick_count - static_cast<int>(optimal_tick_count));
+
+    if (deviation < best_deviation) {
+      best_step = step;
+      best_deviation = deviation;
+    }
+  }
+  return *best_step;
+}
+
+[[nodiscard]] static Ticks MakeTicksFromValues(const std::vector<double>& values, int precision) {
   std::vector<QString> labels;
-  const std::vector<double> rounded_values = RoundDoubles(values, precision);
   std::transform(
-      std::begin(rounded_values), std::end(rounded_values), std::back_inserter(labels),
+      std::begin(values), std::end(values), std::back_inserter(labels),
       [precision](const double value) { return QString::number(value, 'f', precision); });
-  return {labels, rounded_values, precision};
+  return {labels, values, precision};
 }
 
-template <typename T>
-static bool AreAllUnique(std::vector<T> vector) {
-  std::sort(vector.begin(), vector.end());
-  return std::unique(vector.begin(), vector.end()) == vector.end();
-}
-
-static double MaxDiff(std::vector<double> values) {
-  if (values.size() < 2) return std::numeric_limits<double>::max();
-  double max_diff = 0;
-  for (size_t i = 1; i < values.size(); ++i) {
-    max_diff = std::max(max_diff, values[i] - values[i - 1]);
-  }
-  return max_diff;
-}
-
-[[nodiscard]] static std::vector<double> GenerateEquidistantTickValues(double min, double spacing) {
-  std::vector<double> values;
-  double current = min;
-  for (uint32_t i = 0; i < kHorizontalTickCount; ++i) {
-    values.push_back(current);
-    current += spacing;
-  }
-  return values;
-}
-
-[[nodiscard]] static Ticks MakeTicksChoosePrecision(const std::vector<double>& values,
-                                                    int max_precision) {
-  Ticks ticks;
-  for (int precision = 0; precision <= max_precision; precision++) {
-    ticks = MakeTicks(values, precision);
-    if (precision == max_precision || AreAllUnique(ticks.labels)) {
-      break;
-    }
-  }
-
-  auto first_in_range =
-      std::lower_bound(std::begin(ticks.values), std::end(ticks.values), values[0]);
-  ORBIT_CHECK(first_in_range != std::end(ticks.values));
-  double diff = MaxDiff(ticks.values);
-  std::vector<double> result_values = GenerateEquidistantTickValues(*first_in_range, diff);
-  return MakeTicks(result_values, ticks.precision);
-}
-
-[[nodiscard]] static Ticks GenerateLabels(double min, double spacing, int max_precision) {
-  return MakeTicksChoosePrecision(GenerateEquidistantTickValues(min, spacing), max_precision);
+[[nodiscard]] static Ticks MakeTicks(double min, double max, const std::vector<TickStep>& steps,
+                                     uint32_t optimal_tick_count) {
+  TickStep step = ChooseBestStep(min, max, steps, optimal_tick_count);
+  std::vector<double> values = MakeLabelValues(min, max, step.value);
+  return MakeTicksFromValues(values, step.precision);
 }
 
 [[nodiscard]] static int ValueToAxisLocation(double value, int axis_length, double min_value,
@@ -197,13 +178,6 @@ static void DrawHorizontalAxis(QPainter& painter, const QPoint& axes_intersectio
     const double tick_value = ticks.values[i];
     const int tick_location =
         ValueToAxisLocation(tick_value, axis_length, min_value, max_value) + axes_intersection.x();
-
-    // We skip the ticks that do not fall into the horizontal axis range. Such ticks might appear
-    // due to rounding errors.
-    if (!(axes_intersection.x() <= tick_location &&
-          tick_location <= axes_intersection.x() + axis_length)) {
-      continue;
-    }
 
     DrawVerticalLine(painter, {tick_location, axes_intersection.y()}, kHorizontalAxisTickLength);
 
@@ -481,12 +455,11 @@ void HistogramWidget::paintEvent(QPaintEvent* /*event*/) {
 
   const double min_value_in_units = NanosecondsToDoubleInGivenUnits(MinValue(), time_unit);
   const double max_value_in_units = NanosecondsToDoubleInGivenUnits(MaxValue(), time_unit);
-  const Ticks horizontal_ticks = GenerateLabels(
-      min_value_in_units, NanosecondsToDoubleInGivenUnits(tick_spacing_as_value, time_unit),
-      kHorizontalAxisTickMaxPrecision);
+  const Ticks horizontal_ticks =
+      MakeTicks(min_value_in_units, max_value_in_units, kHorizontalTickSteps, kHorizontalTickCount);
 
-  const Ticks vertical_ticks = GenerateLabels(0.0, max_freq / (kVerticalTickCount - 1) * 100.0,
-                                              kVerticalAxisTickMaxPrecision);
+  const Ticks vertical_ticks =
+      MakeTicks(0.0, max_freq * 100.0, kVerticalTickSteps, kVerticalTickCount);
 
   DrawHint(painter, Width(), time_unit);
 
