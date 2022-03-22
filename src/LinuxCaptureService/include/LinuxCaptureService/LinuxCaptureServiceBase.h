@@ -13,7 +13,7 @@
 #include <thread>
 
 #include "CaptureServiceBase/CaptureServiceBase.h"
-#include "CaptureServiceBase/StartStopCaptureRequestWaiter.h"
+#include "CaptureServiceBase/StopCaptureRequestWaiter.h"
 #include "GrpcProtos/services.grpc.pb.h"
 #include "GrpcProtos/services.pb.h"
 #include "OrbitBase/Logging.h"
@@ -36,21 +36,19 @@ class LinuxCaptureServiceBase : public orbit_capture_service_base::CaptureServic
     }
   }
 
-  // Note that start_stop_capture_request_waiter needs to be a shared_ptr here as it might outlive
+  // Note that stop_capture_request_waiter needs to be a shared_ptr here as it might outlive
   // this method. See wait_for_stop_capture_request_thread_ in
   // WaitForStopCaptureRequestOrMemoryThresholdExceeded.
-  [[nodiscard]] orbit_capture_service_base::CaptureServiceBase::CaptureInitializationResult
-  DoCapture(
-      orbit_producer_event_processor::ClientCaptureEventCollector* client_capture_event_collector,
-      const std::shared_ptr<orbit_capture_service_base::StartStopCaptureRequestWaiter>&
-          start_stop_capture_request_waiter);
+  void DoCapture(const orbit_grpc_protos::CaptureOptions& capture_options,
+                 const std::shared_ptr<orbit_capture_service_base::StopCaptureRequestWaiter>&
+                     stop_capture_request_waiter);
 
  private:
   std::unique_ptr<orbit_user_space_instrumentation::InstrumentationManager>
       instrumentation_manager_;
 
   // This method returns when the first of the following happens:
-  // - start_stop_capture_request_waiter->WaitForStopCaptureRequest returns. For the native Orbit
+  // - stop_capture_request_waiter->WaitForStopCaptureRequest returns. For the native Orbit
   //   capture service with a GrpcStartStopCaptureRequestWaiter, this happens when the client calls
   //   WritesDone on reader_writer; For the cloud collector capture service with a
   //   CloudCollectorStartStopCaptureRequestWaiter, this happends when
@@ -58,8 +56,8 @@ class LinuxCaptureServiceBase : public orbit_capture_service_base::CaptureServic
   // - The resident set size of the current process exceeds the threshold (i.e., total physical
   //   memory / 2).
   [[nodiscard]] StopCaptureReason WaitForStopCaptureRequestOrMemoryThresholdExceeded(
-      const std::shared_ptr<orbit_capture_service_base::StartStopCaptureRequestWaiter>&
-          start_stop_capture_request_waiter);
+      const std::shared_ptr<orbit_capture_service_base::StopCaptureRequestWaiter>&
+          stop_capture_request_waiter);
   std::thread wait_for_stop_capture_request_thread_;
 };
 

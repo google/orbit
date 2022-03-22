@@ -26,11 +26,6 @@ grpc::Status WindowsCaptureService::Capture(
 
   orbit_producer_event_processor::GrpcClientCaptureEventCollector
       grpc_client_capture_event_collector{reader_writer};
-
-  std::shared_ptr<orbit_capture_service_base::StartStopCaptureRequestWaiter>
-      start_stop_capture_request_waiter =
-          orbit_capture_service_base::CreateGrpcStartStopCaptureRequestWaiter(reader_writer);
-
   CaptureServiceBase::CaptureInitializationResult initialization_result =
       InitializeCapture(&grpc_client_capture_event_collector);
   switch (initialization_result) {
@@ -41,14 +36,16 @@ grpc::Status WindowsCaptureService::Capture(
               "Cannot start capture because another capture is already in progress"};
   }
 
+  orbit_capture_service_base::GrpcStartStopCaptureRequestWaiter
+      grpc_start_stop_capture_request_waiter{reader_writer};
   const CaptureOptions& capture_options =
-      start_stop_capture_request_waiter->WaitForStartCaptureRequest();
+      grpc_start_stop_capture_request_waiter.WaitForStartCaptureRequest();
 
   StartEventProcessing(capture_options);
   TracingHandler tracing_handler{producer_event_processor_.get()};
   tracing_handler.Start(capture_options);
   StopCaptureReason stop_capture_reason =
-      start_stop_capture_request_waiter->WaitForStopCaptureRequest();
+      grpc_start_stop_capture_request_waiter.WaitForStopCaptureRequest();
   tracing_handler.Stop();
   FinalizeEventProcessing(stop_capture_reason);
 

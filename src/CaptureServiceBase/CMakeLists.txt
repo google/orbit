@@ -17,7 +17,7 @@ target_sources(CaptureServiceBase PUBLIC
         include/CaptureServiceBase/CloudCollectorStartStopCaptureRequestWaiter.h
         include/CaptureServiceBase/CommonProducerCaptureEventBuilders.h
         include/CaptureServiceBase/GrpcStartStopCaptureRequestWaiter.h
-        include/CaptureServiceBase/StartStopCaptureRequestWaiter.h)
+        include/CaptureServiceBase/StopCaptureRequestWaiter.h)
 
 target_sources(CaptureServiceBase PRIVATE
         CaptureServiceBase.cpp

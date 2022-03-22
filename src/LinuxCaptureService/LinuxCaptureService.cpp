@@ -19,22 +19,24 @@ grpc::Status LinuxCaptureService::Capture(
 
   orbit_producer_event_processor::GrpcClientCaptureEventCollector
       grpc_client_capture_event_collector{reader_writer};
-
-  std::shared_ptr<orbit_capture_service_base::StartStopCaptureRequestWaiter>
-      start_stop_capture_request_waiter =
-          orbit_capture_service_base::CreateGrpcStartStopCaptureRequestWaiter(reader_writer);
-
   CaptureServiceBase::CaptureInitializationResult initialization_result =
-      DoCapture(&grpc_client_capture_event_collector, start_stop_capture_request_waiter);
+      InitializeCapture(&grpc_client_capture_event_collector);
   switch (initialization_result) {
     case CaptureInitializationResult::kSuccess:
-      return grpc::Status::OK;
+      break;
     case CaptureInitializationResult::kAlreadyInProgress:
       return {grpc::StatusCode::ALREADY_EXISTS,
               "Cannot start capture because another capture is already in progress"};
   }
 
-  ORBIT_UNREACHABLE();
+  auto grpc_start_stop_capture_request_waiter =
+      std::make_shared<orbit_capture_service_base::GrpcStartStopCaptureRequestWaiter>(
+          reader_writer);
+  const orbit_grpc_protos::CaptureOptions& capture_options =
+      grpc_start_stop_capture_request_waiter->WaitForStartCaptureRequest();
+  DoCapture(capture_options, grpc_start_stop_capture_request_waiter);
+
+  return grpc::Status::OK;
 }
 
 }  // namespace orbit_linux_capture_service
