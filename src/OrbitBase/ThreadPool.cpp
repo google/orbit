@@ -23,7 +23,7 @@ namespace {
 ABSL_CONST_INIT absl::Mutex g_default_thread_pool_mutex(absl::kConstInit);
 ABSL_CONST_INIT std::shared_ptr<ThreadPool> g_default_thread_pool
     ABSL_GUARDED_BY(g_default_thread_pool_mutex);
-ABSL_CONST_INIT std::shared_ptr<ThreadPool> g_initial_default_thread_pool
+ABSL_CONST_INIT std::shared_ptr<ThreadPool> g_user_default_thread_pool
     ABSL_GUARDED_BY(g_default_thread_pool_mutex);
 ;
 
@@ -217,12 +217,11 @@ void ThreadPool::InitializeDefaultThreadPool() { (void)GetDefaultThreadPool(); }
 
 ThreadPool* ThreadPool::GetDefaultThreadPool() {
   absl::MutexLock lock(&g_default_thread_pool_mutex);
-  if (g_default_thread_pool != nullptr) {
-    return g_default_thread_pool.get();
+  if (g_user_default_thread_pool != nullptr) {
+    return g_user_default_thread_pool.get();
   }
 
-  if (g_initial_default_thread_pool != nullptr) {
-    g_default_thread_pool = g_initial_default_thread_pool;
+  if (g_default_thread_pool != nullptr) {
     return g_default_thread_pool.get();
   }
 
@@ -231,18 +230,17 @@ ThreadPool* ThreadPool::GetDefaultThreadPool() {
   // occur on standard Linux or Windows.
   ORBIT_CHECK(number_of_logical_cores > 0);
 
-  g_initial_default_thread_pool = orbit_base::ThreadPool::Create(
+  g_default_thread_pool = orbit_base::ThreadPool::Create(
       /*thread_pool_min_size=*/number_of_logical_cores,
       /*thread_pool_max_size=*/number_of_logical_cores, /*thread_ttl=*/absl::Seconds(1),
       /*run_action=*/[](const std::unique_ptr<Action>& action) { action->Execute(); });
-  g_default_thread_pool = g_initial_default_thread_pool;
 
   return g_default_thread_pool.get();
 }
 
 void ThreadPool::SetDefaultThreadPool(std::shared_ptr<ThreadPool> thread_pool) {
   absl::MutexLock lock(&g_default_thread_pool_mutex);
-  g_default_thread_pool = thread_pool;
+  g_user_default_thread_pool = thread_pool;
 }
 
 }  // namespace orbit_base
