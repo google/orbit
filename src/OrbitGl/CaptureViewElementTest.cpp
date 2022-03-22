@@ -10,8 +10,8 @@ namespace orbit_gl {
 
 class UnitTestCaptureViewLeafElement : public CaptureViewElement {
  public:
-  explicit UnitTestCaptureViewLeafElement(CaptureViewElement* parent, Viewport* viewport,
-                                          TimeGraphLayout* layout)
+  explicit UnitTestCaptureViewLeafElement(CaptureViewElement* parent, const Viewport* viewport,
+                                          const TimeGraphLayout* layout)
       : CaptureViewElement(parent, viewport, layout) {}
 
   [[nodiscard]] float GetHeight() const override { return 10; }
@@ -25,8 +25,9 @@ class UnitTestCaptureViewLeafElement : public CaptureViewElement {
 
 class UnitTestCaptureViewContainerElement : public CaptureViewElement {
  public:
-  explicit UnitTestCaptureViewContainerElement(CaptureViewElement* parent, Viewport* viewport,
-                                               TimeGraphLayout* layout, int children_to_create = 0)
+  explicit UnitTestCaptureViewContainerElement(CaptureViewElement* parent, const Viewport* viewport,
+                                               const TimeGraphLayout* layout,
+                                               int children_to_create = 0)
       : CaptureViewElement(parent, viewport, layout) {
     for (int i = 0; i < children_to_create; ++i) {
       children_.emplace_back(

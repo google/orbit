@@ -19,12 +19,12 @@ namespace orbit_gl {
 /* Base class for UI elements drawn underneath the capture window. */
 class CaptureViewElement : public Pickable, public AccessibleInterfaceProvider {
  public:
-  explicit CaptureViewElement(CaptureViewElement* parent, Viewport* viewport,
-                              TimeGraphLayout* layout);
+  explicit CaptureViewElement(CaptureViewElement* parent, const Viewport* viewport,
+                              const TimeGraphLayout* layout);
 
   void UpdateLayout();
 
-  [[nodiscard]] orbit_gl::Viewport* GetViewport() const { return viewport_; }
+  [[nodiscard]] const orbit_gl::Viewport* GetViewport() const { return viewport_; }
 
   void SetPos(float x, float y);
 
@@ -66,8 +66,8 @@ class CaptureViewElement : public Pickable, public AccessibleInterfaceProvider {
     PickingMode picking_mode = PickingMode::kNone;
   };
 
-  orbit_gl::Viewport* viewport_;
-  TimeGraphLayout* layout_;
+  const orbit_gl::Viewport* viewport_;
+  const TimeGraphLayout* layout_;
 
   Vec2 mouse_pos_last_click_;
   Vec2 mouse_pos_cur_;

@@ -60,7 +60,7 @@ class AccessibleTimerPane : public AccessibleCaptureViewElement {
  */
 class AccessibleTrack : public AccessibleCaptureViewElement {
  public:
-  AccessibleTrack(Track* track, TimeGraphLayout* layout);
+  AccessibleTrack(Track* track, const TimeGraphLayout* layout);
 
   [[nodiscard]] int AccessibleChildCount() const override;
   [[nodiscard]] const AccessibleInterface* AccessibleChild(int index) const override;

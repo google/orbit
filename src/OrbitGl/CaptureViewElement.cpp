@@ -9,8 +9,8 @@
 
 namespace orbit_gl {
 
-CaptureViewElement::CaptureViewElement(CaptureViewElement* parent, Viewport* viewport,
-                                       TimeGraphLayout* layout)
+CaptureViewElement::CaptureViewElement(CaptureViewElement* parent, const Viewport* viewport,
+                                       const TimeGraphLayout* layout)
     : viewport_(viewport), layout_(layout), parent_(parent) {
   ORBIT_CHECK(layout != nullptr);
 }
