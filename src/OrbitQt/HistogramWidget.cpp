@@ -124,7 +124,7 @@ template <typename Rounder>
   return rounded;
 }
 
-[[nodiscard]] static Ticks DoublesToLabels(const std::vector<double>& values, int precision) {
+[[nodiscard]] static Ticks MakeTicks(const std::vector<double>& values, int precision) {
   std::vector<QString> labels;
   const std::vector<double> rounded_values = RoundDoubles(values, precision);
   std::transform(
@@ -139,9 +139,10 @@ bool AreAllUnique(std::vector<T> vector) {
   return std::unique(vector.begin(), vector.end()) == vector.end();
 }
 
-[[nodiscard]] static Ticks GetTicklabels(const std::vector<double>& values, int max_precision) {
+[[nodiscard]] static Ticks MakeTicksChoosePrecision(const std::vector<double>& values,
+                                                    int max_precision) {
   for (int precision = 0; precision <= max_precision; precision++) {
-    Ticks ticks = DoublesToLabels(values, precision);
+    Ticks ticks = MakeTicks(values, precision);
     if (precision == max_precision || AreAllUnique(ticks.labels)) {
       return ticks;
     }
@@ -160,7 +161,7 @@ bool AreAllUnique(std::vector<T> vector) {
 }
 
 [[nodiscard]] static Ticks GenerateLabels(double min, double spacing, int max_precision) {
-  return GetTicklabels(GenerateEquidistantTickValues(min, spacing), max_precision);
+  return MakeTicksChoosePrecision(GenerateEquidistantTickValues(min, spacing), max_precision);
 }
 
 [[nodiscard]] static int ValueToAxisLocation(double value, int axis_length, double min_value,
