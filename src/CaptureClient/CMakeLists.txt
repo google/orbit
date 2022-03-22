@@ -13,6 +13,7 @@ target_include_directories(CaptureClient PRIVATE
 
 target_sources(CaptureClient PUBLIC
         include/CaptureClient/ApiEventProcessor.h
+        include/CaptureClient/AppInterface.h
         include/CaptureClient/CaptureClient.h
         include/CaptureClient/CaptureListener.h
         include/CaptureClient/CaptureEventProcessor.h
