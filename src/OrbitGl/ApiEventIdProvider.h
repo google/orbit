@@ -2,15 +2,15 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#ifndef CAPTURE_CLIENT_API_EVENT_ID_PROVIDER_H_
-#define CAPTURE_CLIENT_API_EVENT_ID_PROVIDER_H_
+#ifndef ORBIT_GL_API_EVENT_ID_PROVIDER_H_
+#define ORBIT_GL_API_EVENT_ID_PROVIDER_H_
 
 #include <cstdint>
 
 #include "ClientData/TimerTrackDataIdManager.h"
 #include "GrpcProtos/capture.pb.h"
 
-namespace orbit_capture_client {
+namespace orbit_gl {
 
 // The inferface defines a map from `TimerInfo` to ids. When called twice on identical `TimerInfo`
 // instances instances, it returns the same ids.
@@ -42,6 +42,6 @@ class NameEqualityApiEventIdProvider : public ApiEventIdProvider {
   uint64_t next_id_{};
 };
 
-}  // namespace orbit_capture_client
+}  // namespace orbit_gl
 
-#endif  // CAPTURE_CLIENT_API_EVENT_ID_PROVIDER_H_
+#endif  // ORBIT_GL_API_EVENT_ID_PROVIDER_H_

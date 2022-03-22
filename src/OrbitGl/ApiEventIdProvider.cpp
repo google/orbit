@@ -2,13 +2,13 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#include "CaptureClient/ApiEventIdProvider.h"
+#include "ApiEventIdProvider.h"
 
 #include <algorithm>
 #include <cstdint>
 #include <memory>
 
-namespace orbit_capture_client {
+namespace orbit_gl {
 
 [[nodiscard]] std::unique_ptr<NameEqualityApiEventIdProvider>
 NameEqualityApiEventIdProvider::Create(const orbit_grpc_protos::CaptureOptions& capture_options) {
@@ -41,4 +41,4 @@ NameEqualityApiEventIdProvider::NameEqualityApiEventIdProvider(uint64_t start_id
   return id;
 }
 
-}  // namespace orbit_capture_client
+}  // namespace orbit_gl

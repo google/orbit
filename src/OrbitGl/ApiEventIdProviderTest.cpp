@@ -11,10 +11,10 @@
 #include <string>
 #include <vector>
 
-#include "CaptureClient/ApiEventIdProvider.h"
+#include "ApiEventIdProvider.h"
 #include "ClientProtos/capture_data.pb.h"
 
-namespace orbit_capture_client {
+namespace orbit_gl {
 
 const std::vector<std::string> kNames{"A", "B", "C", "D", "A", "B", "B"};
 
@@ -96,4 +96,4 @@ TEST(NameEqualityApiEventIdProviderTest, CreateIsCorrect) {
   ASSERT_EQ(setter->ProvideId(timer_info), 16);
 }
 
-}  // namespace orbit_capture_client
+}  // namespace orbit_gl
