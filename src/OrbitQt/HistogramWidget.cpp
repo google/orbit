@@ -93,11 +93,13 @@ static void DrawVerticalLine(QPainter& painter, const QPoint& start, int length)
   painter.drawLine(start, {start.x(), start.y() + length});
 }
 
+namespace {
 struct Ticks {
   std::vector<QString> labels;
   std::vector<double> values;
   int precision{};
 };
+}  // namespace
 
 [[nodiscard]] static std::vector<QString> DoublesToLabels(const std::vector<double>& values,
                                                           int precision) {
