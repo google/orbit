@@ -4,8 +4,6 @@
 
 #include "HistogramWidget.h"
 
-#include <absl/container/flat_hash_map.h>
-#include <absl/container/flat_hash_set.h>
 #include <absl/strings/str_cat.h>
 #include <absl/strings/str_format.h>
 #include <absl/strings/str_replace.h>
@@ -50,12 +48,6 @@ const QColor kHoveredBarColor(QStringLiteral("#99CCFF"));
 constexpr int kHoverLabelPadding = 6;
 
 namespace {
-struct Ticks {
-  std::vector<QString> labels;
-  std::vector<double> values;
-  int precision{};
-};
-
 struct TickStep {
   double value{};
   int precision{};
@@ -145,6 +137,14 @@ static void DrawVerticalLine(QPainter& painter, const QPoint& start, int length)
   }
   return *best_step;
 }
+
+namespace {
+struct Ticks {
+  std::vector<QString> labels;
+  std::vector<double> values;
+  int precision{};
+};
+}  // namespace
 
 [[nodiscard]] static Ticks MakeTicksFromValues(const std::vector<double>& values, int precision) {
   std::vector<QString> labels;
