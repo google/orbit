@@ -100,6 +100,19 @@ CaptureWindow::CaptureWindow(OrbitApp* app) : GlCanvas(), app_{app}, capture_cli
   slider_->SetOrthogonalSliderPixelHeight(vertical_slider_->GetPixelHeight());
 }
 
+void CaptureWindow::PreRender() {
+  GlCanvas::PreRender();
+
+  if (ShouldAutoZoom()) {
+    ZoomAll();
+  }
+
+  if (time_graph_ != nullptr) {
+    time_graph_->UpdateLayout();
+    UpdateChildrenPosAndSize();
+  }
+}
+
 void CaptureWindow::ZoomAll() {
   ResetHoverTimer();
   RequestUpdatePrimitives();
@@ -392,7 +405,7 @@ std::unique_ptr<AccessibleInterface> CaptureWindow::CreateAccessibleInterface() 
 void CaptureWindow::Draw() {
   ORBIT_SCOPE("CaptureWindow::Draw");
   uint64_t start_time_ns = orbit_base::CaptureTimestampNs();
-  bool time_graph_was_redrawn = false;
+  bool time_graph_was_redrawn = time_graph_ != nullptr ? time_graph_->IsRedrawNeeded() : false;
 
   text_renderer_.Init();
 
@@ -405,13 +418,6 @@ void CaptureWindow::Draw() {
   }
 
   if (time_graph_ != nullptr) {
-    time_graph_->UpdateLayout();
-    UpdateChildrenPosAndSize();
-
-    if (time_graph_->IsRedrawNeeded()) {
-      time_graph_was_redrawn = true;
-    }
-
     uint64_t timegraph_current_mouse_time_ns =
         time_graph_->GetTickFromWorld(viewport_.ScreenToWorld(GetMouseScreenPos())[0]);
     time_graph_->DrawAllElements(GetBatcher(), GetTextRenderer(), picking_mode_,
@@ -473,15 +479,6 @@ void CaptureWindow::UpdateChildrenPosAndSize() {
   UpdateRightMargin(right_margin);
 
   time_graph_->SetWidth(viewport_.GetWorldWidth() - right_margin);
-  // HACK: This needs to be done as long as TimeGraph does not properly report its children.
-  // The line above may change the width of TimeGraph (due to the vertical scrollbar
-  // disappearing) and calls TimeGraph::SetWidth().
-  // Usually, TimeGraph::SetWidth() should update the size of all tracks, but due to an
-  // incomplete implementation, this does not happen. Instead, UpdateLayout() resizes the
-  // tracks.
-  // This will be removed once the TimeGraph is implementing the API
-  // correctly.
-  time_graph_->UpdateLayout();
 }
 
 void CaptureWindow::DrawScreenSpace() {

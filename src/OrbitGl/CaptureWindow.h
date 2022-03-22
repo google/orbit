@@ -30,6 +30,8 @@ class CaptureWindow : public GlCanvas {
 
   enum class ZoomDirection { kHorizontal, kVertical };
 
+  void PreRender() override;
+
   void ZoomAll();
   void Zoom(ZoomDirection dir, int delta);
   void Pan(float ratio);
