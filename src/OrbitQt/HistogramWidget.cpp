@@ -24,6 +24,7 @@
 #include <algorithm>
 #include <array>
 #include <cmath>
+#include <cstddef>
 #include <cstdint>
 #include <iterator>
 #include <optional>
@@ -138,25 +139,41 @@ static bool AreAllUnique(std::vector<T> vector) {
   return std::unique(vector.begin(), vector.end()) == vector.end();
 }
 
-[[nodiscard]] static Ticks MakeTicksChoosePrecision(const std::vector<double>& values,
-                                                    int max_precision) {
-  for (int precision = 0; precision <= max_precision; precision++) {
-    Ticks ticks = MakeTicks(values, precision);
-    if (precision == max_precision || AreAllUnique(ticks.labels)) {
-      return ticks;
-    }
+static double MaxDiff(std::vector<double> values) {
+  if (values.size() < 2) return std::numeric_limits<double>::max();
+  double max_diff = 0;
+  for (size_t i = 1; i < values.size(); ++i) {
+    max_diff = std::max(max_diff, values[i] - values[i - 1]);
   }
-  ORBIT_UNREACHABLE();
+  return max_diff;
 }
 
 [[nodiscard]] static std::vector<double> GenerateEquidistantTickValues(double min, double spacing) {
   std::vector<double> values;
   double current = min;
-  for (uint32_t i = 0; i <= kHorizontalTickCount; ++i) {
+  for (uint32_t i = 0; i < kHorizontalTickCount; ++i) {
     values.push_back(current);
     current += spacing;
   }
   return values;
+}
+
+[[nodiscard]] static Ticks MakeTicksChoosePrecision(const std::vector<double>& values,
+                                                    int max_precision) {
+  Ticks ticks;
+  for (int precision = 0; precision <= max_precision; precision++) {
+    ticks = MakeTicks(values, precision);
+    if (precision == max_precision || AreAllUnique(ticks.labels)) {
+      break;
+    }
+  }
+
+  auto first_in_range =
+      std::lower_bound(std::begin(ticks.values), std::end(ticks.values), values[0]);
+  ORBIT_CHECK(first_in_range != std::end(ticks.values));
+  double diff = MaxDiff(ticks.values);
+  std::vector<double> result_values = GenerateEquidistantTickValues(*first_in_range, diff);
+  return MakeTicks(result_values, ticks.precision);
 }
 
 [[nodiscard]] static Ticks GenerateLabels(double min, double spacing, int max_precision) {
@@ -458,7 +475,7 @@ void HistogramWidget::paintEvent(QPaintEvent* /*event*/) {
     DrawSelection(painter, selected_area_->selection_start_pixel,
                   selected_area_->selection_current_pixel, axes_intersection, vertical_axis_length);
   }
-  const auto tick_spacing_as_value = (histogram.max - MinValue()) / kHorizontalTickCount;
+  const auto tick_spacing_as_value = (histogram.max - MinValue()) / (kHorizontalTickCount - 1);
   orbit_display_formats::TimeUnit time_unit = orbit_display_formats::ChooseUnitForDisplayTime(
       absl::Nanoseconds(MinValue() + tick_spacing_as_value));
 
@@ -468,8 +485,8 @@ void HistogramWidget::paintEvent(QPaintEvent* /*event*/) {
       min_value_in_units, NanosecondsToDoubleInGivenUnits(tick_spacing_as_value, time_unit),
       kHorizontalAxisTickMaxPrecision);
 
-  const Ticks vertical_ticks =
-      GenerateLabels(0.0, max_freq / kVerticalTickCount * 100.0, kVerticalAxisTickMaxPrecision);
+  const Ticks vertical_ticks = GenerateLabels(0.0, max_freq / (kVerticalTickCount - 1) * 100.0,
+                                              kVerticalAxisTickMaxPrecision);
 
   DrawHint(painter, Width(), time_unit);
 
