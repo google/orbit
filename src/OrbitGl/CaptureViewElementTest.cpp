@@ -130,7 +130,7 @@ TEST(CaptureViewElement, MouseWheelEventRecursesToCorrectChildren) {
   using ::testing::Exactly;
   using ::testing::Return;
 
-  const int kChildCount = 2;
+  const int kChildCount = 3;
   UnitTestCaptureViewContainerElement container_elem(nullptr, &kViewport, &kLayout, kChildCount);
 
   static_assert(kMarginAfterChild > 0);
@@ -141,29 +141,14 @@ TEST(CaptureViewElement, MouseWheelEventRecursesToCorrectChildren) {
   const Vec2 kPosOnChild1(10, kLeafElementHeight + kMarginAfterChild);
   const Vec2 kPosOnChild2(10, (kLeafElementHeight + kMarginAfterChild) * 2);
 
-  class ElementThatHandlesMouseWheelEvents : public UnitTestCaptureViewLeafElement {
-   public:
-    explicit ElementThatHandlesMouseWheelEvents(CaptureViewElement* parent,
-                                                const Viewport* viewport,
-                                                const TimeGraphLayout* layout)
-        : UnitTestCaptureViewLeafElement(parent, viewport, layout) {}
-
-   protected:
-    [[nodiscard]] bool OnMouseWheel(const Vec2& mouse_pos, int delta,
-                                    const ModifierKeys& modifiers) override {
-      return true;
-    }
-  };
-
-  container_elem.AddChild(
-      std::make_unique<ElementThatHandlesMouseWheelEvents>(&container_elem, &kViewport, &kLayout));
-
   const int kDelta = 1;
 
   CaptureViewElementMock* child0 =
       dynamic_cast<CaptureViewElementMock*>(container_elem.GetAllChildren()[0]);
   CaptureViewElementMock* child1 =
       dynamic_cast<CaptureViewElementMock*>(container_elem.GetAllChildren()[1]);
+  CaptureViewElementMock* child2 =
+      dynamic_cast<CaptureViewElementMock*>(container_elem.GetAllChildren()[2]);
 
   // Expect the parent to catch all mouse wheel events of children 0 and 1, but not those of child 2
   // since child 2 actually handles the event
@@ -173,6 +158,7 @@ TEST(CaptureViewElement, MouseWheelEventRecursesToCorrectChildren) {
 
   EXPECT_CALL(*child0, OnMouseWheel(_, kDelta, _)).Times(Exactly(1)).WillRepeatedly(Return(false));
   EXPECT_CALL(*child1, OnMouseWheel(_, kDelta, _)).Times(Exactly(1)).WillRepeatedly(Return(false));
+  EXPECT_CALL(*child2, OnMouseWheel(_, kDelta, _)).Times(Exactly(1)).WillRepeatedly(Return(true));
 
   EXPECT_FALSE(container_elem.HandleMouseWheelEvent(kPosOutside, kDelta));
   EXPECT_FALSE(container_elem.HandleMouseWheelEvent(kPosBetweenChildren, kDelta));
