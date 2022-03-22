@@ -5,13 +5,14 @@
 #include "SamplingReport.h"
 
 #include <absl/meta/type_traits.h>
+#include <absl/strings/str_format.h>
 
 #include <algorithm>
 
 #include "App.h"
+#include "ClientData/CallstackType.h"
 #include "ClientProtos/capture_data.pb.h"
 #include "OrbitBase/Logging.h"
-#include "absl/strings/str_format.h"
 
 using orbit_client_data::CallstackCount;
 using orbit_client_data::PostProcessedSamplingData;
@@ -149,11 +150,34 @@ std::string SamplingReport::GetSelectedCallstackString() const {
   ORBIT_CHECK(callstack != nullptr);
   CallstackInfo::CallstackType callstack_type = callstack->type();
 
-  std::string type_string = (callstack_type == CallstackInfo::kComplete) ? "" : "  -  Unwind error";
+  std::string type_string =
+      (callstack_type == CallstackInfo::kComplete)
+          ? ""
+          : absl::StrFormat("  -  Unwind error (%s)",
+                            orbit_client_data::CallstackTypeToString(callstack_type));
   return absl::StrFormat(
       "%i of %i unique callstacks  [%i/%i total samples] (%.2f%%)%s", selected_callstack_index_ + 1,
       selected_sorted_callstack_report_->callstack_counts.size(), num_occurrences, total_callstacks,
       100.f * num_occurrences / total_callstacks, type_string);
+}
+
+std::string SamplingReport::GetSelectedCallstackTooltipString() const {
+  if (selected_sorted_callstack_report_ == nullptr) {
+    return "";
+  }
+
+  uint64_t callstack_id =
+      selected_sorted_callstack_report_->callstack_counts[selected_callstack_index_].callstack_id;
+  const orbit_client_protos::CallstackInfo* callstack = callstack_data_->GetCallstack(callstack_id);
+  ORBIT_CHECK(callstack != nullptr);
+  CallstackInfo::CallstackType callstack_type = callstack->type();
+
+  if (callstack_type == CallstackInfo::kComplete) {
+    return "";
+  }
+
+  return absl::StrFormat("The callstack could not be unwound successfully.<br/>%s",
+                         orbit_client_data::CallstackTypeToDescription(callstack_type));
 }
 
 void SamplingReport::OnCallstackIndexChanged(size_t index) {

@@ -47,6 +47,7 @@ class SamplingReport : public orbit_data_views::SamplingReportInterface {
   void IncrementCallstackIndex();
   void DecrementCallstackIndex();
   [[nodiscard]] std::string GetSelectedCallstackString() const;
+  [[nodiscard]] std::string GetSelectedCallstackTooltipString() const;
   void SetUiRefreshFunc(std::function<void()> func) { ui_refresh_func_ = std::move(func); };
   [[nodiscard]] bool HasCallstacks() const { return selected_sorted_callstack_report_ != nullptr; };
   [[nodiscard]] bool HasSamples() const { return !thread_data_views_.empty(); }
