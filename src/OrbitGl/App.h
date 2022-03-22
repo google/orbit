@@ -85,7 +85,7 @@
 class OrbitApp final : public DataViewFactory,
                        public orbit_capture_client::CaptureListener,
                        public orbit_data_views::AppInterface,
-                       public orbit_capture_client::AppInterface {
+                       public orbit_capture_client::CaptureControlInterface {
  public:
   explicit OrbitApp(orbit_gl::MainWindowInterface* main_window,
                     MainThreadExecutor* main_thread_executor,
@@ -116,7 +116,7 @@ class OrbitApp final : public DataViewFactory,
                                                            const std::filesystem::path& dest);
   void OnLoadCaptureCancelRequested();
 
-  // vvv AppCaptureClientInterface
+  // --------- orbit_capture_client::CaptureControlInterface  ----------
   [[nodiscard]] orbit_capture_client::CaptureClient::State GetCaptureState() const override;
   [[nodiscard]] bool IsCapturing() const override;
 
@@ -124,12 +124,11 @@ class OrbitApp final : public DataViewFactory,
   void StopCapture() override;
   void AbortCapture() override;
   void ToggleCapture() override;
-  // ^^^
+  // ---------------------------------------------------------
 
   void ClearCapture();
 
   [[nodiscard]] bool IsLoadingCapture() const;
-  [[nodiscard]] bool IsDataStreamingActive() const;
 
   [[nodiscard]] bool HasCaptureData() const override { return capture_data_ != nullptr; }
   [[nodiscard]] orbit_client_data::CaptureData& GetMutableCaptureData() override {

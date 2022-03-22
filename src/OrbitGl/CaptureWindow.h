@@ -108,7 +108,7 @@ class CaptureWindow : public GlCanvas {
   bool background_clicked_ = false;
 
   OrbitApp* app_ = nullptr;
-  orbit_capture_client::AppInterface* capture_client_app_ = nullptr;
+  orbit_capture_client::CaptureControlInterface* capture_client_app_ = nullptr;
 
   [[nodiscard]] std::unique_ptr<orbit_accessibility::AccessibleInterface>
   CreateAccessibleInterface() override;

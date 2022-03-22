@@ -42,7 +42,7 @@ class MockAppInterface : public AppInterface {
   MOCK_METHOD(void, SetHighlightedFunctionId, (uint64_t highlighted_function_id));
   MOCK_METHOD(void, SetVisibleFunctionIds, (absl::flat_hash_set<uint64_t> visible_functions));
   MOCK_METHOD(void, DeselectTimer, ());
-  MOCK_METHOD(bool, IsDataStreamingActive, (), (const));
+  MOCK_METHOD(bool, IsCapturing, (), (const));
   MOCK_METHOD(void, JumpToTimerAndZoom, (uint64_t function_id, JumpToTimerMode selection_mode));
   MOCK_METHOD(std::vector<const orbit_client_protos::TimerInfo*>, GetAllTimersForHookedFunction,
               (uint64_t), (const));

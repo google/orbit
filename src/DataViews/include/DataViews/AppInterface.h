@@ -51,7 +51,7 @@ class AppInterface {
   virtual void SetHighlightedFunctionId(uint64_t highlighted_function_id) = 0;
   virtual void SetVisibleFunctionIds(absl::flat_hash_set<uint64_t> visible_functions) = 0;
   virtual void DeselectTimer() = 0;
-  [[nodiscard]] virtual bool IsDataStreamingActive() const = 0;
+  [[nodiscard]] virtual bool IsCapturing() const = 0;
   [[nodiscard]] virtual std::vector<const orbit_client_protos::TimerInfo*>
   GetAllTimersForHookedFunction(uint64_t function_id) const = 0;
 

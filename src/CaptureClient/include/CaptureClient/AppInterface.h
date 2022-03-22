@@ -9,9 +9,9 @@
 
 namespace orbit_capture_client {
 
-class AppInterface {
+class CaptureControlInterface {
  public:
-  virtual ~AppInterface() = default;
+  virtual ~CaptureControlInterface() = default;
 
   [[nodiscard]] virtual CaptureClient::State GetCaptureState() const = 0;
   [[nodiscard]] virtual bool IsCapturing() const = 0;
