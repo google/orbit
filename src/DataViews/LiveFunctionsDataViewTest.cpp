@@ -15,6 +15,7 @@
 
 #include "ClientData/CaptureData.h"
 #include "ClientData/FunctionUtils.h"
+#include "ClientData/TimerChain.h"
 #include "ClientProtos/capture_data.pb.h"
 #include "DataViewTestUtils.h"
 #include "DataViews/AppInterface.h"
@@ -59,6 +60,7 @@ using orbit_grpc_protos::InstrumentedFunction;
 using orbit_grpc_protos::ModuleInfo;
 
 using ::testing::_;
+using ::testing::Invoke;
 using ::testing::Pointee;
 using ::testing::Return;
 
@@ -111,6 +113,7 @@ const std::array<TimerInfo, kNumTimers> kTimers = []() {
     timers[i].set_start(kStarts[i]);
     timers[i].set_end(kEnds[i]);
     timers[i].set_thread_id(kThreadIds[kThreadIndices[i]]);
+    timers[i].set_function_id(kFunctionIds[0]);
   }
   return timers;
 }();
@@ -121,6 +124,16 @@ const std::vector<const TimerInfo*> kTimerPointers = []() {
                  [](const TimerInfo& timer) { return &timer; });
   return pointers;
 }();
+
+const orbit_client_data::TimerChain kTimerChain = []() {
+  orbit_client_data::TimerChain result;
+  for (const auto& timer : kTimers) {
+    result.emplace_back(timer);
+  }
+  return result;
+}();
+
+const std::vector<const orbit_client_data::TimerChain*> kTimerChains = {&kTimerChain};
 
 const std::vector<uint64_t> kDurations = []() {
   std::vector<uint64_t> durations;
@@ -170,6 +183,7 @@ std::unique_ptr<CaptureData> GenerateTestCaptureData(
     instrumented_function->set_file_build_id(function.module_build_id());
     instrumented_function->set_file_offset(
         orbit_client_data::function_utils::Offset(function, *module_data));
+    instrumented_function->set_function_id(kFunctionIds[i]);
   }
 
   auto capture_data =
@@ -820,7 +834,13 @@ TEST_F(LiveFunctionsDataViewTest, OnRefreshWithNoIndicesResetsHistogram) {
 }
 
 TEST_F(LiveFunctionsDataViewTest, HistogramIsProperlyUpdated) {
-  EXPECT_CALL(app_, GetAllTimersForHookedFunction(_)).WillOnce(Return(kTimerPointers));
+  EXPECT_CALL(app_, GetAllTimerChains()).WillOnce(Return(kTimerChains));
+  EXPECT_CALL(app_, ProvideId).WillRepeatedly(Invoke([&](const TimerInfo& timer) {
+    return timer.function_id();
+  }));
+  EXPECT_CALL(app_, HasCaptureData).WillRepeatedly(testing::Return(true));
+  EXPECT_CALL(app_, GetCaptureData).WillRepeatedly(testing::ReturnRef(*capture_data_));
+
   view_.OnDataChanged();
   AddFunctionsByIndices({0});
 
