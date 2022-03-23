@@ -23,9 +23,6 @@ namespace {
 ABSL_CONST_INIT absl::Mutex g_default_thread_pool_mutex(absl::kConstInit);
 ABSL_CONST_INIT std::shared_ptr<ThreadPool> g_default_thread_pool
     ABSL_GUARDED_BY(g_default_thread_pool_mutex);
-ABSL_CONST_INIT std::shared_ptr<ThreadPool> g_user_default_thread_pool
-    ABSL_GUARDED_BY(g_default_thread_pool_mutex);
-;
 
 class ThreadPoolImpl : public ThreadPool {
  public:
@@ -213,14 +210,23 @@ std::shared_ptr<ThreadPool> ThreadPool::Create(
                                           std::move(run_action));
 }
 
-void ThreadPool::InitializeDefaultThreadPool() { (void)GetDefaultThreadPool(); }
+void ThreadPool::InitializeDefaultThreadPool() {
+  {
+    absl::MutexLock lock(&g_default_thread_pool_mutex);
+    ORBIT_CHECK(g_default_thread_pool == nullptr);
+  }
+  (void)GetDefaultThreadPool();
+}
+
+void ThreadPool::SetDefaultThreadPool(std::shared_ptr<ThreadPool> thread_pool) {
+  ORBIT_CHECK(thread_pool != nullptr);
+  absl::MutexLock lock(&g_default_thread_pool_mutex);
+  ORBIT_CHECK(g_default_thread_pool == nullptr);
+  g_default_thread_pool = thread_pool;
+}
 
 ThreadPool* ThreadPool::GetDefaultThreadPool() {
   absl::MutexLock lock(&g_default_thread_pool_mutex);
-  if (g_user_default_thread_pool != nullptr) {
-    return g_user_default_thread_pool.get();
-  }
-
   if (g_default_thread_pool != nullptr) {
     return g_default_thread_pool.get();
   }
@@ -236,11 +242,6 @@ ThreadPool* ThreadPool::GetDefaultThreadPool() {
       /*run_action=*/[](const std::unique_ptr<Action>& action) { action->Execute(); });
 
   return g_default_thread_pool.get();
-}
-
-void ThreadPool::SetDefaultThreadPool(std::shared_ptr<ThreadPool> thread_pool) {
-  absl::MutexLock lock(&g_default_thread_pool_mutex);
-  g_user_default_thread_pool = thread_pool;
 }
 
 }  // namespace orbit_base

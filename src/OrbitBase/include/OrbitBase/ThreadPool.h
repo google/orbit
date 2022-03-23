@@ -72,12 +72,14 @@ class ThreadPool : public orbit_base::Executor {
       size_t thread_pool_min_size, size_t thread_pool_max_size, absl::Duration thread_ttl,
       std::function<void(const std::unique_ptr<Action>&)> run_action = nullptr);
 
-  // Initialize and set the default ThreadPool with a fixed number of threads that is equal to or
-  // smaller than the number of available cores on the system.
+  // Initialize a thread pool with a fixed number of threads that is equal to or smaller than the
+  // number of available cores on the system and set it as the default thread pool. This can only be
+  // called once, before any call to "GetDefaultThreadPool()".
   static void InitializeDefaultThreadPool();
-  // Set or override the current default thread pool.
+  // Set the default thread pool. This can only be called once and with a non-null thread pool,
+  // before any call to "GetDefaultThreadPool()".
   static void SetDefaultThreadPool(std::shared_ptr<ThreadPool> thread_pool);
-  // Get default thread pool. Create one if none was set, as if we had called
+  // Get the default thread pool. Create one if none was set, as if we had called
   // "InitializeDefaultThreadPool()" explicitly.
   [[nodiscard]] static ThreadPool* GetDefaultThreadPool();
 };

@@ -549,26 +549,22 @@ TEST(ThreadPool, DefaultThreadPoolNotNull) {
   EXPECT_NE(ThreadPool::GetDefaultThreadPool(), nullptr);
 }
 
-TEST(ThreadPool, InitializeDefaultThreadPool) {
-  ThreadPool::InitializeDefaultThreadPool();
-  EXPECT_NE(ThreadPool::GetDefaultThreadPool(), nullptr);
+TEST(ThreadPool, InitializeDefaultThreadPoolAfterFirstUse) {
+  (void)ThreadPool::GetDefaultThreadPool();
+  EXPECT_DEATH(ThreadPool::InitializeDefaultThreadPool(), "");
 }
 
-TEST(ThreadPool, OverrideDefaultThreadPool) {
+TEST(ThreadPool, SetDefaultThreadPoolAfterFirstUse) {
   constexpr size_t kThreadPoolMinSize = 1;
   constexpr size_t kThreadPoolMaxSize = 2;
   constexpr absl::Duration kThreadTtl = absl::Milliseconds(5);
   static std::shared_ptr<ThreadPool> thread_pool =
       ThreadPool::Create(kThreadPoolMinSize, kThreadPoolMaxSize, kThreadTtl);
 
-  EXPECT_EQ(thread_pool.use_count(), 1);
-  ThreadPool::SetDefaultThreadPool(thread_pool);
-  EXPECT_EQ(thread_pool.use_count(), 2);
-  EXPECT_EQ(ThreadPool::GetDefaultThreadPool(), thread_pool.get());
+  (void)ThreadPool::GetDefaultThreadPool();
+  EXPECT_DEATH(ThreadPool::SetDefaultThreadPool(thread_pool), "");
+}
 
-  ThreadPool::SetDefaultThreadPool(nullptr);
-  EXPECT_EQ(thread_pool.use_count(), 1);
-
-  EXPECT_NE(ThreadPool::GetDefaultThreadPool(), thread_pool.get());
-  EXPECT_NE(ThreadPool::GetDefaultThreadPool(), nullptr);
+TEST(ThreadPool, SetNullDefaultThreadPool) {
+  EXPECT_DEATH(ThreadPool::SetDefaultThreadPool(nullptr), "");
 }
