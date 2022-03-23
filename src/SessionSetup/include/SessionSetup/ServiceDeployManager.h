@@ -86,9 +86,9 @@ class ServiceDeployManager : public QObject {
   ErrorMessageOr<void> CopyOrbitUserSpaceInstrumentationLibrary(
       const BareExecutableAndRootPasswordDeployment& config);
   ErrorMessageOr<void> InstallOrbitServicePackage();
-  ErrorMessageOr<void> StartOrbitService(
-      const std::variant<SignedDebianPackageDeployment, BareExecutableAndRootPasswordDeployment>&
-          deployment_config);
+  ErrorMessageOr<void> StartOrbitService();
+  ErrorMessageOr<void> StartOrbitServicePrivileged(
+      const BareExecutableAndRootPasswordDeployment& config);
   ErrorMessageOr<uint16_t> StartTunnel(std::optional<orbit_ssh_qt::Tunnel>* tunnel, uint16_t port);
   ErrorMessageOr<std::unique_ptr<orbit_ssh_qt::SftpChannel>> StartSftpChannel();
   ErrorMessageOr<void> ShutdownSftpChannel(orbit_ssh_qt::SftpChannel* sftp_channel);
