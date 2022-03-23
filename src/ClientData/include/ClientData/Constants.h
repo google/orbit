@@ -8,8 +8,11 @@
 #include <cstdint>
 namespace orbit_client_data {
 
+// The value returned by `AppInterface::ProvideScopeId` if the supplied
+// `orbit_client_protos::TimerInfo` is neither of type kApiScope, kApiScopeAsync nor refers to a
+// dynamic instrumentation event.
 constexpr uint64_t kInvalidScopeId = 0;
 
-}
+}  // namespace orbit_client_data
 
 #endif  // CLIENT_DATA_CONSTANTS_H_
