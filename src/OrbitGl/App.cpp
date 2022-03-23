@@ -1236,7 +1236,12 @@ ErrorMessageOr<PresetFile> OrbitApp::ReadPresetFromFile(const std::filesystem::p
 
 ErrorMessageOr<void> OrbitApp::OnLoadPreset(const std::string& filename) {
   OUTCOME_TRY(auto&& preset_file, ReadPresetFromFile(filename));
-  LoadPreset(preset_file);
+  LoadPreset(preset_file).Then(
+      main_thread_executor_,
+      [this, preset_file_path = preset_file.file_path().string()](ErrorMessageOr<void> result) {
+        if (result.has_error() || presets_data_view_ == nullptr) return;
+        presets_data_view_->OnLoadPresetCompleted(preset_file_path);
+      });
   return outcome::success();
 }
 
@@ -2133,7 +2138,7 @@ void OrbitApp::EnableFrameTracksByName(const ModuleData* module,
   }
 }
 
-void OrbitApp::LoadPreset(PresetFile& preset_file) {
+orbit_base::Future<ErrorMessageOr<void>> OrbitApp::LoadPreset(const PresetFile& preset_file) {
   ScopedMetric metric{metrics_uploader_, orbit_metrics_uploader::OrbitLogEvent::ORBIT_PRESET_LOAD};
   std::vector<orbit_base::Future<std::string>> load_module_results{};
   auto module_paths = preset_file.GetModulePaths();
@@ -2159,39 +2164,41 @@ void OrbitApp::LoadPreset(PresetFile& preset_file) {
   // Then - when all modules are loaded or failed to load - we update the UI and potentially show an
   // error message.
   auto results = orbit_base::JoinFutures(absl::MakeConstSpan(load_module_results));
-  results.Then(main_thread_executor_, [this, metric = std::move(metric), &preset_file](
-                                          std::vector<std::string> module_paths_not_found) mutable {
-    size_t tried_to_load_amount = module_paths_not_found.size();
-    module_paths_not_found.erase(
-        std::remove_if(module_paths_not_found.begin(), module_paths_not_found.end(),
-                       [](const std::string& path) { return path.empty(); }),
-        module_paths_not_found.end());
+  return results.Then(
+      main_thread_executor_,
+      [this, metric = std::move(metric), &preset_file](
+          std::vector<std::string> module_paths_not_found) mutable -> ErrorMessageOr<void> {
+        size_t tried_to_load_amount = module_paths_not_found.size();
+        module_paths_not_found.erase(
+            std::remove_if(module_paths_not_found.begin(), module_paths_not_found.end(),
+                           [](const std::string& path) { return path.empty(); }),
+            module_paths_not_found.end());
 
-    if (tried_to_load_amount == module_paths_not_found.size()) {
-      metric.SetStatusCode(orbit_metrics_uploader::OrbitLogEvent::INTERNAL_ERROR);
-      SendErrorToUi("Preset loading failed",
-                    absl::StrFormat("None of the modules of the preset were loaded:\n* %s",
-                                    absl::StrJoin(module_paths_not_found, "\n* ")));
-      return;
-    }
+        if (tried_to_load_amount == module_paths_not_found.size()) {
+          metric.SetStatusCode(orbit_metrics_uploader::OrbitLogEvent::INTERNAL_ERROR);
+          std::string error_message =
+              absl::StrFormat("None of the modules of the preset were loaded:\n* %s",
+                              absl::StrJoin(module_paths_not_found, "\n* "));
+          SendErrorToUi("Preset loading failed", error_message);
+          return ErrorMessage{error_message};
+        }
 
-    if (!module_paths_not_found.empty()) {
-      SendWarningToUi("Preset only partially loaded",
-                      absl::StrFormat("The following modules were not loaded:\n* %s",
-                                      absl::StrJoin(module_paths_not_found, "\n* ")));
-    } else {
-      // Then if load was successful and the preset is in old format - convert it to new one.
-      auto convertion_result = ConvertPresetToNewFormatIfNecessary(preset_file);
-      if (convertion_result.has_error()) {
-        ORBIT_ERROR("Unable to convert preset file \"%s\" to new file format: %s",
-                    preset_file.file_path().string(), convertion_result.error().message());
-      }
-    }
+        if (!module_paths_not_found.empty()) {
+          SendWarningToUi("Preset only partially loaded",
+                          absl::StrFormat("The following modules were not loaded:\n* %s",
+                                          absl::StrJoin(module_paths_not_found, "\n* ")));
+        } else {
+          // Then if load was successful and the preset is in old format - convert it to new one.
+          auto convertion_result = ConvertPresetToNewFormatIfNecessary(preset_file);
+          if (convertion_result.has_error()) {
+            ORBIT_ERROR("Unable to convert preset file \"%s\" to new file format: %s",
+                        preset_file.file_path().string(), convertion_result.error().message());
+          }
+        }
 
-    preset_file.SetIsLoaded(true);
-
-    FireRefreshCallbacks();
-  });
+        FireRefreshCallbacks();
+        return outcome::success();
+      });
 }
 
 void OrbitApp::ShowPresetInExplorer(const PresetFile& preset) {

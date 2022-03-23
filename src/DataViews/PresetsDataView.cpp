@@ -28,6 +28,7 @@
 #include "OrbitBase/Logging.h"
 #include "OrbitBase/SafeStrerror.h"
 #include "PresetFile/PresetFile.h"
+#include "QtUtils/MainThreadExecutorImpl.h"
 
 using orbit_preset_file::PresetFile;
 
@@ -46,9 +47,9 @@ constexpr const float kDateModifiedColumnWidth = 0.16f;
 namespace {
 std::string GetLoadStatusAndStateString(orbit_data_views::AppInterface* app,
                                         const PresetFile& preset) {
-  std::string load_status = preset.IsLoaded()
-                                ? orbit_data_views::PresetsDataView::kLoadedPresetString
-                                : orbit_data_views::PresetsDataView::kLoadedPresetBlankString;
+  std::string_view load_status = preset.IsLoaded()
+                                     ? orbit_data_views::PresetsDataView::kLoadedPresetString
+                                     : orbit_data_views::PresetsDataView::kLoadedPresetBlankString;
   orbit_data_views::PresetLoadState load_state = app->GetPresetLoadState(preset);
   return absl::StrCat(load_status, load_state.GetName());
 }
@@ -66,13 +67,11 @@ std::string GetDateModifiedString(const PresetFile& preset) {
 
 namespace orbit_data_views {
 
-const std::string PresetsDataView::kLoadedPresetString = "* ";
-const std::string PresetsDataView::kLoadedPresetBlankString =
-    std::string(kLoadedPresetString.size(), ' ');
-
 PresetsDataView::PresetsDataView(AppInterface* app,
                                  orbit_metrics_uploader::MetricsUploader* metrics_uploader)
-    : DataView(DataViewType::kPresets, app), metrics_uploader_(metrics_uploader) {}
+    : DataView(DataViewType::kPresets, app),
+      main_thread_executor_(orbit_qt_utils::MainThreadExecutorImpl::Create()),
+      metrics_uploader_(metrics_uploader) {}
 
 std::string PresetsDataView::GetModulesList(const std::vector<ModuleView>& modules) {
   return absl::StrJoin(modules, "\n", [](std::string* out, const ModuleView& module) {
@@ -177,7 +176,10 @@ DataView::ActionStatus PresetsDataView::GetActionStatus(std::string_view action,
 
 void PresetsDataView::OnLoadPresetRequested(const std::vector<int>& selection) {
   PresetFile& preset = GetMutablePreset(selection[0]);
-  app_->LoadPreset(preset);
+  app_->LoadPreset(preset).Then(main_thread_executor_.get(),
+                                [&preset](ErrorMessageOr<void> result) {
+                                  if (!result.has_error()) preset.SetIsLoaded(true);
+                                });
 }
 
 void PresetsDataView::OnDeletePresetRequested(const std::vector<int>& selection) {
@@ -206,7 +208,20 @@ void PresetsDataView::OnShowInExplorerRequested(const std::vector<int>& selectio
 void PresetsDataView::OnDoubleClicked(int index) {
   PresetFile& preset = GetMutablePreset(index);
   if (app_->GetPresetLoadState(preset).state != PresetLoadState::kNotLoadable) {
-    app_->LoadPreset(preset);
+    app_->LoadPreset(preset).Then(main_thread_executor_.get(),
+                                  [&preset](ErrorMessageOr<void> result) {
+                                    if (!result.has_error()) preset.SetIsLoaded(true);
+                                  });
+  }
+}
+
+void PresetsDataView::OnLoadPresetCompleted(const std::string& preset_file_path) {
+  for (size_t i = 0; i < presets_.size(); ++i) {
+    PresetFile& preset = presets_[i];
+    if (preset.file_path().string() == preset_file_path) {
+      preset.SetIsLoaded(true);
+      return;
+    }
   }
 }
 

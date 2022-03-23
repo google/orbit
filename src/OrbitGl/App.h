@@ -369,7 +369,8 @@ class OrbitApp final : public DataViewFactory,
 
   orbit_base::Future<ErrorMessageOr<void>> LoadPresetModule(
       const std::filesystem::path& module_path, const orbit_preset_file::PresetFile& preset_file);
-  void LoadPreset(orbit_preset_file::PresetFile& preset) override;
+  orbit_base::Future<ErrorMessageOr<void>> LoadPreset(
+      const orbit_preset_file::PresetFile& preset) override;
   [[nodiscard]] orbit_data_views::PresetLoadState GetPresetLoadState(
       const orbit_preset_file::PresetFile& preset) const override;
   void ShowPresetInExplorer(const orbit_preset_file::PresetFile& preset) override;

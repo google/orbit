@@ -296,8 +296,10 @@ TEST_F(PresetsDataViewTest, CheckInvokedContextMenuActions) {
 
     EXPECT_CALL(app_, LoadPreset)
         .Times(1)
-        .WillOnce([&](const orbit_preset_file::PresetFile& preset_file) {
+        .WillOnce([&](const orbit_preset_file::PresetFile& preset_file)
+                      -> orbit_base::Future<ErrorMessageOr<void>> {
           EXPECT_EQ(preset_file.file_path(), preset_filename0);
+          return orbit_base::Future<ErrorMessageOr<void>>{outcome::success()};
         });
     view_.OnContextMenu(std::string{kMenuActionLoadPreset}, load_preset_index, {0});
   }
@@ -357,8 +359,10 @@ TEST_F(PresetsDataViewTest, CheckLoadPresetOnDoubleClick) {
 
   EXPECT_CALL(app_, LoadPreset)
       .Times(1)
-      .WillOnce([&](const orbit_preset_file::PresetFile& preset_file) {
+      .WillOnce([&](const orbit_preset_file::PresetFile& preset_file)
+                    -> orbit_base::Future<ErrorMessageOr<void>> {
         EXPECT_EQ(preset_file.file_path(), preset_filename0);
+        return orbit_base::Future<ErrorMessageOr<void>>{outcome::success()};
       });
   view_.OnDoubleClicked(0);
 }
