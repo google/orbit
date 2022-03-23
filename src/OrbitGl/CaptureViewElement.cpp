@@ -52,8 +52,8 @@ void CaptureViewElement::UpdatePrimitives(Batcher& batcher, TextRenderer& text_r
   batcher.PopTranslation();
 }
 
-CaptureViewElement::EventResult CaptureViewElement::OnMouseWheel(const Vec2& mouse_pos, int delta,
-                                                                 const ModifierKeys& modifiers) {
+CaptureViewElement::EventResult CaptureViewElement::OnMouseWheel(
+    const Vec2& /*mouse_pos*/, int /*delta*/, const ModifierKeys& /*modifiers*/) {
   return EventResult::kIgnored;
 }
 
