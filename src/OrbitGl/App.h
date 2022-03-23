@@ -24,7 +24,6 @@
 #include <utility>
 #include <vector>
 
-#include "ApiEventIdProvider.h"
 #include "CallTreeView.h"
 #include "CaptureClient/AppInterface.h"
 #include "CaptureClient/CaptureClient.h"
@@ -57,6 +56,7 @@
 #include "DataViews/PresetLoadState.h"
 #include "DataViews/PresetsDataView.h"
 #include "DataViews/TracepointsDataView.h"
+#include "EventIdProvider.h"
 #include "FramePointerValidatorClient.h"
 #include "FrameTrackOnlineProcessor.h"
 #include "GlCanvas.h"
@@ -674,7 +674,7 @@ class OrbitApp final : public DataViewFactory,
 
   std::optional<orbit_statistics::HistogramSelectionRange> histogram_selection_range_;
 
-  std::unique_ptr<orbit_gl::ApiEventIdProvider> api_event_id_provider_;
+  std::unique_ptr<orbit_gl::EventIdProvider> api_event_id_provider_;
 };
 
 #endif  // ORBIT_GL_APP_H_

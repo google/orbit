@@ -30,7 +30,6 @@
 #include <thread>
 #include <utility>
 
-#include "ApiEventIdProvider.h"
 #include "CaptureClient/CaptureListener.h"
 #include "CaptureFile/CaptureFile.h"
 #include "CaptureFile/CaptureFileHelpers.h"
@@ -58,6 +57,7 @@
 #include "DataViews/FunctionsDataView.h"
 #include "DataViews/ModulesDataView.h"
 #include "DataViews/PresetsDataView.h"
+#include "EventIdProvider.h"
 #include "FrameTrackOnlineProcessor.h"
 #include "GlCanvas.h"
 #include "GrpcProtos/Constants.h"
@@ -355,7 +355,7 @@ void OrbitApp::OnCaptureStarted(const orbit_grpc_protos::CaptureStarted& capture
                                    frame_track_function_ids =
                                        std::move(frame_track_function_ids)]() mutable {
     api_event_id_provider_ =
-        orbit_gl::NameEqualityApiEventIdProvider::Create(capture_started.capture_options());
+        orbit_gl::NameEqualityEventIdProvider::Create(capture_started.capture_options());
     absl::flat_hash_map<Track::Type, bool> track_type_visibility;
     bool had_capture = capture_window_->GetTimeGraph();
     if (had_capture) {

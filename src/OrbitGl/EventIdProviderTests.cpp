@@ -3,6 +3,7 @@
 // found in the LICENSE file.
 
 #include <absl/container/flat_hash_set.h>
+#include <absl/flags/flag.h>
 #include <gtest/gtest.h>
 
 #include <algorithm>
@@ -11,8 +12,10 @@
 #include <string>
 #include <vector>
 
-#include "ApiEventIdProvider.h"
+#include "ClientFlags/ClientFlags.h"
 #include "ClientProtos/capture_data.pb.h"
+#include "EventIdProvider.h"
+#include "GrpcProtos/Constants.h"
 
 namespace orbit_gl {
 
@@ -23,6 +26,7 @@ const std::vector<std::string> kNames{"A", "B", "C", "D", "A", "B", "B"};
   orbit_client_protos::TimerInfo timer_info;
   timer_info.set_api_scope_name(name);
   timer_info.set_type(type);
+  timer_info.set_function_id(orbit_grpc_protos::kInvalidFunctionId);
   return timer_info;
 }
 
@@ -51,7 +55,7 @@ static void AssertNameToIdIsBijective(const std::vector<TimerInfo>& timers,
 
 static std::vector<uint64_t> GetIds(const std::vector<TimerInfo>& timers) {
   orbit_grpc_protos::CaptureOptions capture_options;
-  auto id_provider = NameEqualityApiEventIdProvider::Create(capture_options);
+  auto id_provider = NameEqualityEventIdProvider::Create(capture_options);
 
   std::vector<uint64_t> ids;
   std::transform(std::begin(timers), std::end(timers), std::back_inserter(ids),
@@ -63,34 +67,39 @@ static void TestProvideId(std::vector<TimerInfo>& timer_infos) {
   AssertNameToIdIsBijective(timer_infos, GetIds(timer_infos));
 }
 
-TEST(NameEqualityApiEventIdProviderTest, ProvideIdIsCorrectForApiScope) {
+TEST(NameEqualityEventIdProviderTest, ProvideIdIsCorrectForApiScope) {
+  absl::SetFlag(&FLAGS_devmode, true);
   auto timer_infos = MakeTimerInfos(kNames, orbit_client_protos::TimerInfo_Type_kApiScope);
   TestProvideId(timer_infos);
 }
 
-TEST(NameEqualityApiEventIdProviderTest, ProvideIdIsCorrectForApiScopeAsync) {
+TEST(NameEqualityEventIdProviderTest, ProvideIdIsCorrectForApiScopeAsync) {
+  absl::SetFlag(&FLAGS_devmode, true);
+
   auto async_timer_infos =
       MakeTimerInfos(kNames, orbit_client_protos::TimerInfo_Type_kApiScopeAsync);
   TestProvideId(async_timer_infos);
 }
 
-TEST(NameEqualityApiEventIdProviderTest, SyncAndAsyncScopesOfTheSameNameGetDifferentIds) {
+TEST(NameEqualityEventIdProviderTest, SyncAndAsyncScopesOfTheSameNameGetDifferentIds) {
+  absl::SetFlag(&FLAGS_devmode, true);
   TimerInfo sync = MakeTimerInfo("A", orbit_client_protos::TimerInfo_Type_kApiScope);
   TimerInfo async = MakeTimerInfo("A", orbit_client_protos::TimerInfo_Type_kApiScopeAsync);
 
   orbit_grpc_protos::CaptureOptions capture_options;
-  auto id_provider = NameEqualityApiEventIdProvider::Create(capture_options);
+  auto id_provider = NameEqualityEventIdProvider::Create(capture_options);
 
   ASSERT_NE(id_provider->ProvideId(sync), id_provider->ProvideId(async));
 }
 
-TEST(NameEqualityApiEventIdProviderTest, CreateIsCorrect) {
+TEST(NameEqualityEventIdProviderTest, CreateIsCorrect) {
+  absl::SetFlag(&FLAGS_devmode, true);
   orbit_grpc_protos::CaptureOptions capture_options;
   capture_options.add_instrumented_functions()->set_function_id(10);
   capture_options.add_instrumented_functions()->set_function_id(13);
   capture_options.add_instrumented_functions()->set_function_id(15);
 
-  auto setter = NameEqualityApiEventIdProvider::Create(capture_options);
+  auto setter = NameEqualityEventIdProvider::Create(capture_options);
   TimerInfo timer_info = MakeTimerInfo("A", orbit_client_protos::TimerInfo_Type_kApiScope);
 
   ASSERT_EQ(setter->ProvideId(timer_info), 16);
