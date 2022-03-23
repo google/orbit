@@ -30,6 +30,11 @@ class Channel {
 
   outcome::result<std::string> ReadStdOut(int buffer_size = 0x400);
   outcome::result<std::string> ReadStdErr(int buffer_size = 0x400);
+
+  // Returns the accumulated number of bytes available to read from all data streams. That's usually
+  // stdout and stderr but there could be more streams.
+  size_t GetNumBytesToRead();
+
   outcome::result<void> WriteBlocking(std::string_view text);
   outcome::result<int> Write(std::string_view text);
   outcome::result<void> Exec(const std::string& command);
