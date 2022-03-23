@@ -4,6 +4,7 @@
 
 #include "OrbitBase/ThreadPool.h"
 
+#include <absl/base/attributes.h>
 #include <absl/container/flat_hash_map.h>
 #include <absl/synchronization/mutex.h>
 #include <absl/time/time.h>
@@ -19,16 +20,24 @@
 namespace orbit_base {
 namespace {
 
+ABSL_CONST_INIT absl::Mutex g_default_thread_pool_mutex(absl::kConstInit);
+ABSL_CONST_INIT std::shared_ptr<ThreadPool> g_default_thread_pool
+    ABSL_GUARDED_BY(g_default_thread_pool_mutex);
+
 class ThreadPoolImpl : public ThreadPool {
  public:
   explicit ThreadPoolImpl(size_t thread_pool_min_size, size_t thread_pool_max_size,
                           absl::Duration thread_ttl,
                           std::function<void(const std::unique_ptr<Action>&)> run_action);
+  ~ThreadPoolImpl() {
+    ShutdownInternal();
+    WaitInternal();
+  }
 
   size_t GetPoolSize() override;
   size_t GetNumberOfBusyThreads() override;
-  void Shutdown() override;
-  void Wait() override;
+  void Shutdown() override { ShutdownInternal(); };
+  void Wait() override { WaitInternal(); };
 
  private:
   void ScheduleImpl(std::unique_ptr<Action> action) override;
@@ -38,6 +47,10 @@ class ThreadPoolImpl : public ThreadPool {
   void CleanupFinishedThreads();
   void CreateWorker();
   void WorkerFunction();
+
+  // Non-virtual implementations of Shutdown and Wait that can be called from the destructor.
+  void ShutdownInternal();
+  void WaitInternal();
 
   absl::Mutex mutex_;
   std::list<std::unique_ptr<Action>> scheduled_actions_;
@@ -115,12 +128,12 @@ size_t ThreadPoolImpl::GetNumberOfBusyThreads() {
   return worker_threads_.size() - idle_threads_;
 }
 
-void ThreadPoolImpl::Shutdown() {
+void ThreadPoolImpl::ShutdownInternal() {
   absl::MutexLock lock(&mutex_);
   shutdown_initiated_ = true;
 }
 
-void ThreadPoolImpl::Wait() {
+void ThreadPoolImpl::WaitInternal() {
   absl::MutexLock lock(&mutex_);
   ORBIT_CHECK(shutdown_initiated_);
   // First wait until all worker threads finished their work
@@ -195,6 +208,40 @@ std::shared_ptr<ThreadPool> ThreadPool::Create(
   // created as a `shared_ptr`.
   return std::make_shared<ThreadPoolImpl>(thread_pool_min_size, thread_pool_max_size, thread_ttl,
                                           std::move(run_action));
+}
+
+void ThreadPool::InitializeDefaultThreadPool() {
+  {
+    absl::MutexLock lock(&g_default_thread_pool_mutex);
+    ORBIT_CHECK(g_default_thread_pool == nullptr);
+  }
+  (void)GetDefaultThreadPool();
+}
+
+void ThreadPool::SetDefaultThreadPool(std::shared_ptr<ThreadPool> thread_pool) {
+  ORBIT_CHECK(thread_pool != nullptr);
+  absl::MutexLock lock(&g_default_thread_pool_mutex);
+  ORBIT_CHECK(g_default_thread_pool == nullptr);
+  g_default_thread_pool = thread_pool;
+}
+
+ThreadPool* ThreadPool::GetDefaultThreadPool() {
+  absl::MutexLock lock(&g_default_thread_pool_mutex);
+  if (g_default_thread_pool != nullptr) {
+    return g_default_thread_pool.get();
+  }
+
+  const unsigned number_of_logical_cores = std::thread::hardware_concurrency();
+  // std::thread::hardware_concurrency may return 0 on unsupported platforms but that shouldn't
+  // occur on standard Linux or Windows.
+  ORBIT_CHECK(number_of_logical_cores > 0);
+
+  g_default_thread_pool = orbit_base::ThreadPool::Create(
+      /*thread_pool_min_size=*/number_of_logical_cores,
+      /*thread_pool_max_size=*/number_of_logical_cores, /*thread_ttl=*/absl::Seconds(1),
+      /*run_action=*/[](const std::unique_ptr<Action>& action) { action->Execute(); });
+
+  return g_default_thread_pool.get();
 }
 
 }  // namespace orbit_base

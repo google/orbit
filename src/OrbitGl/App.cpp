@@ -265,22 +265,10 @@ OrbitApp::OrbitApp(orbit_gl::MainWindowInterface* main_window,
       metrics_uploader_(metrics_uploader) {
   ORBIT_CHECK(main_window_ != nullptr);
 
+  orbit_base::ThreadPool::InitializeDefaultThreadPool();
+
   thread_pool_ = orbit_base::ThreadPool::Create(
       /*thread_pool_min_size=*/4, /*thread_pool_max_size=*/256, /*thread_ttl=*/absl::Seconds(1),
-      /*run_action=*/[](const std::unique_ptr<Action>& action) {
-        ORBIT_START("Execute Action");
-        action->Execute();
-        ORBIT_STOP();
-      });
-
-  const unsigned number_of_logical_cores = std::thread::hardware_concurrency();
-  // std::thread::hardware_concurrency may return 0 on unsupported platforms but that shouldn't
-  // occur on standard Linux or Windows.
-  ORBIT_CHECK(number_of_logical_cores > 0);
-
-  core_count_sized_thread_pool_ = orbit_base::ThreadPool::Create(
-      /*thread_pool_min_size=*/number_of_logical_cores,
-      /*thread_pool_max_size=*/number_of_logical_cores, /*thread_ttl=*/absl::Seconds(1),
       /*run_action=*/[](const std::unique_ptr<Action>& action) {
         ORBIT_START("Execute Action");
         action->Execute();
@@ -293,12 +281,7 @@ OrbitApp::OrbitApp(orbit_gl::MainWindowInterface* main_window,
   manual_instrumentation_manager_ = std::make_unique<ManualInstrumentationManager>();
 }
 
-OrbitApp::~OrbitApp() {
-  AbortCapture();
-
-  thread_pool_->ShutdownAndWait();
-  core_count_sized_thread_pool_->ShutdownAndWait();
-}
+OrbitApp::~OrbitApp() { AbortCapture(); }
 
 void OrbitApp::OnCaptureFinished(const CaptureFinished& capture_finished) {
   ORBIT_LOG("CaptureFinished received: status=%s, error_message=\"%s\"",
@@ -2580,8 +2563,7 @@ orbit_data_views::DataView* OrbitApp::GetOrCreateDataView(DataViewType type) {
   switch (type) {
     case DataViewType::kFunctions:
       if (!functions_data_view_) {
-        functions_data_view_ =
-            DataView::CreateAndInit<FunctionsDataView>(this, core_count_sized_thread_pool_.get());
+        functions_data_view_ = DataView::CreateAndInit<FunctionsDataView>(this);
         panels_.push_back(functions_data_view_.get());
       }
       return functions_data_view_.get();

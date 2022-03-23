@@ -631,7 +631,6 @@ class OrbitApp final : public DataViewFactory,
   MainThreadExecutor* main_thread_executor_;
   std::thread::id main_thread_id_;
   std::shared_ptr<orbit_base::ThreadPool> thread_pool_;
-  std::shared_ptr<orbit_base::ThreadPool> core_count_sized_thread_pool_;
   std::unique_ptr<orbit_capture_client::CaptureClient> capture_client_;
   orbit_client_services::ProcessManager* process_manager_ = nullptr;
   std::unique_ptr<orbit_client_data::ModuleManager> module_manager_;
