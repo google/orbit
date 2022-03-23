@@ -58,9 +58,6 @@ CaptureViewElement::EventResult CaptureViewElement::OnMouseWheel(
 }
 
 void CaptureViewElement::UpdateLayout() {
-  // Call all methods that may invoke layout changed for children
-  SetWidth(width_);
-
   // Perform any layout changes of this element
   DoUpdateLayout();
 
@@ -79,16 +76,16 @@ void CaptureViewElement::SetPos(float x, float y) {
 }
 
 void CaptureViewElement::SetWidth(float width) {
+  if (width == width_) return;
+
   for (auto& child : GetAllChildren()) {
     if (child->GetLayoutFlags() & LayoutFlags::kScaleHorizontallyWithParent) {
       child->SetWidth(width);
     }
   }
 
-  if (width != width_) {
-    width_ = width;
-    RequestUpdate();
-  }
+  width_ = width;
+  RequestUpdate();
 }
 
 void CaptureViewElement::SetVisible(bool value) {
