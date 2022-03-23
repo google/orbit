@@ -9,8 +9,8 @@
 
 namespace orbit_gl {
 
-constexpr float kMarginAfterChild = 10;
-constexpr float kLeafElementHeight = 20;
+constexpr float kMarginAfterChild = 10.f;
+constexpr float kLeafElementHeight = 20.f;
 
 class CaptureViewElementMock : public CaptureViewElement {
  public:
@@ -18,8 +18,8 @@ class CaptureViewElementMock : public CaptureViewElement {
                                   const TimeGraphLayout* layout)
       : CaptureViewElement(parent, viewport, layout) {}
 
-  MOCK_METHOD(bool, OnMouseWheel, (const Vec2& mouse_pos, int delta, const ModifierKeys& modifiers),
-              (override));
+  MOCK_METHOD(EventResult, OnMouseWheel,
+              (const Vec2& mouse_pos, int delta, const ModifierKeys& modifiers), (override));
 };
 
 class UnitTestCaptureViewLeafElement : public CaptureViewElementMock {
@@ -54,7 +54,7 @@ class UnitTestCaptureViewContainerElement : public CaptureViewElementMock {
 
   [[nodiscard]] float GetHeight() const override {
     float result = 0;
-    for (auto& child : GetAllChildren()) {
+    for (CaptureViewElement* child : GetAllChildren()) {
       result += child->GetHeight() + kMarginAfterChild;
     }
     return result;
@@ -154,16 +154,27 @@ TEST(CaptureViewElement, MouseWheelEventRecursesToCorrectChildren) {
   // since child 2 actually handles the event
   EXPECT_CALL(container_elem, OnMouseWheel(_, kDelta, _))
       .Times(Exactly(3))
-      .WillRepeatedly(Return(false));
+      .WillRepeatedly(Return(CaptureViewElement::EventResult::kIgnored));
 
-  EXPECT_CALL(*child0, OnMouseWheel(_, kDelta, _)).Times(Exactly(1)).WillRepeatedly(Return(false));
-  EXPECT_CALL(*child1, OnMouseWheel(_, kDelta, _)).Times(Exactly(1)).WillRepeatedly(Return(false));
-  EXPECT_CALL(*child2, OnMouseWheel(_, kDelta, _)).Times(Exactly(1)).WillRepeatedly(Return(true));
+  EXPECT_CALL(*child0, OnMouseWheel(_, kDelta, _))
+      .Times(Exactly(1))
+      .WillRepeatedly(Return(CaptureViewElement::EventResult::kIgnored));
+  EXPECT_CALL(*child1, OnMouseWheel(_, kDelta, _))
+      .Times(Exactly(1))
+      .WillRepeatedly(Return(CaptureViewElement::EventResult::kIgnored));
+  EXPECT_CALL(*child2, OnMouseWheel(_, kDelta, _))
+      .Times(Exactly(1))
+      .WillRepeatedly(Return(CaptureViewElement::EventResult::kHandled));
 
-  EXPECT_FALSE(container_elem.HandleMouseWheelEvent(kPosOutside, kDelta));
-  EXPECT_FALSE(container_elem.HandleMouseWheelEvent(kPosBetweenChildren, kDelta));
-  EXPECT_FALSE(container_elem.HandleMouseWheelEvent(kPosOnChild0, kDelta));
-  EXPECT_FALSE(container_elem.HandleMouseWheelEvent(kPosOnChild1, kDelta));
-  EXPECT_TRUE(container_elem.HandleMouseWheelEvent(kPosOnChild2, kDelta));
+  EXPECT_EQ(CaptureViewElement::EventResult::kIgnored,
+            container_elem.HandleMouseWheelEvent(kPosOutside, kDelta));
+  EXPECT_EQ(CaptureViewElement::EventResult::kIgnored,
+            container_elem.HandleMouseWheelEvent(kPosBetweenChildren, kDelta));
+  EXPECT_EQ(CaptureViewElement::EventResult::kIgnored,
+            container_elem.HandleMouseWheelEvent(kPosOnChild0, kDelta));
+  EXPECT_EQ(CaptureViewElement::EventResult::kIgnored,
+            container_elem.HandleMouseWheelEvent(kPosOnChild1, kDelta));
+  EXPECT_EQ(CaptureViewElement::EventResult::kHandled,
+            container_elem.HandleMouseWheelEvent(kPosOnChild2, kDelta));
 }
 }  // namespace orbit_gl

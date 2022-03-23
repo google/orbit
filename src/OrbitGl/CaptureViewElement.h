@@ -54,9 +54,15 @@ class CaptureViewElement : public Pickable, public AccessibleInterfaceProvider {
   void OnDrag(int x, int y) override;
   [[nodiscard]] bool Draggable() override { return true; }
 
+  [[nodiscard]] bool ContainsPoint(const Vec2& pos);
+
+  // This also checks IsMouseOver() for the parent, and only returns true if the mouse
+  // position is included in all parents up to the root
   [[nodiscard]] bool IsMouseOver(const Vec2& mouse_pos);
-  [[nodiscard]] bool HandleMouseWheelEvent(const Vec2& mouse_pos, int delta,
-                                           const ModifierKeys& modifiers = ModifierKeys());
+
+  enum class EventResult { kHandled, kIgnored };
+  [[nodiscard]] EventResult HandleMouseWheelEvent(const Vec2& mouse_pos, int delta,
+                                                  const ModifierKeys& modifiers = ModifierKeys());
 
   [[nodiscard]] virtual CaptureViewElement* GetParent() const { return parent_; }
   [[nodiscard]] virtual std::vector<CaptureViewElement*> GetAllChildren() const { return {}; }
@@ -98,8 +104,8 @@ class CaptureViewElement : public Pickable, public AccessibleInterfaceProvider {
 
   virtual void DoUpdateLayout() {}
 
-  [[nodiscard]] virtual bool OnMouseWheel(const Vec2& mouse_pos, int delta,
-                                          const ModifierKeys& modifiers);
+  [[nodiscard]] virtual EventResult OnMouseWheel(const Vec2& mouse_pos, int delta,
+                                                 const ModifierKeys& modifiers);
 
  private:
   float width_ = 0.;

@@ -52,9 +52,9 @@ void CaptureViewElement::UpdatePrimitives(Batcher& batcher, TextRenderer& text_r
   batcher.PopTranslation();
 }
 
-bool CaptureViewElement::OnMouseWheel(const Vec2& mouse_pos, int delta,
-                                      const ModifierKeys& modifiers) {
-  return false;
+CaptureViewElement::EventResult CaptureViewElement::OnMouseWheel(const Vec2& mouse_pos, int delta,
+                                                                 const ModifierKeys& modifiers) {
+  return EventResult::kIgnored;
 }
 
 void CaptureViewElement::UpdateLayout() {
@@ -115,24 +115,28 @@ void CaptureViewElement::OnDrag(int x, int y) {
   RequestUpdate();
 }
 
+bool CaptureViewElement::ContainsPoint(const Vec2& pos) {
+  return pos[0] >= GetPos()[0] && pos[0] <= GetPos()[0] + GetSize()[0] && pos[1] >= GetPos()[1] &&
+         pos[1] <= GetPos()[1] + GetSize()[1];
+}
+
 bool CaptureViewElement::IsMouseOver(const Vec2& mouse_pos) {
   if (parent_ != nullptr && !parent_->IsMouseOver(mouse_pos)) {
     return false;
   }
 
-  return mouse_pos[0] >= GetPos()[0] && mouse_pos[0] <= GetPos()[0] + GetSize()[0] &&
-         mouse_pos[1] >= GetPos()[1] && mouse_pos[1] <= GetPos()[1] + GetSize()[1];
+  return ContainsPoint(mouse_pos);
 }
 
-bool CaptureViewElement::HandleMouseWheelEvent(const Vec2& mouse_pos, int delta,
-                                               const ModifierKeys& modifiers) {
+CaptureViewElement::EventResult CaptureViewElement::HandleMouseWheelEvent(
+    const Vec2& mouse_pos, int delta, const ModifierKeys& modifiers) {
   if (!IsMouseOver(mouse_pos)) {
-    return false;
+    return EventResult::kIgnored;
   }
 
   for (CaptureViewElement* child : GetAllChildren()) {
-    if (child->HandleMouseWheelEvent(mouse_pos, delta, modifiers)) {
-      return true;
+    if (child->HandleMouseWheelEvent(mouse_pos, delta, modifiers) == EventResult::kHandled) {
+      return EventResult::kHandled;
     }
   }
 
