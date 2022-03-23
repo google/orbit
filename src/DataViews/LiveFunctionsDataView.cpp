@@ -27,6 +27,7 @@
 
 #include "ApiInterface/Orbit.h"
 #include "ClientData/CaptureData.h"
+#include "ClientData/Constants.h"
 #include "ClientData/FunctionUtils.h"
 #include "ClientData/ModuleAndFunctionLookup.h"
 #include "ClientProtos/capture_data.pb.h"
@@ -146,16 +147,16 @@ void LiveFunctionsDataView::UpdateTimerDurations() {
   ORBIT_SCOPE_FUNCTION;
   timer_durations_.clear();
 
-  const std::vector<const orbit_client_data::TimerChain*> chains = app_->GetAllTimerChains();
+  const std::vector<const orbit_client_data::TimerChain*> chains = app_->GetAllThreadTimerChains();
 
   for (const orbit_client_data::TimerChain* chain : chains) {
     ORBIT_CHECK(chain != nullptr);
     for (const auto& block : *chain) {
       for (uint64_t i = 0; i < block.size(); i++) {
         const TimerInfo& timer = block[i];
-        const uint64_t scope_id = app_->ProvideId(timer);
+        const uint64_t scope_id = app_->ProvideScopeId(timer);
 
-        if (scope_id == orbit_grpc_protos::kInvalidFunctionId) continue;
+        if (scope_id == orbit_client_data::kInvalidScopeId) continue;
 
         timer_durations_[scope_id].push_back(timer.end() - timer.start());
       }
@@ -179,7 +180,7 @@ void LiveFunctionsDataView::UpdateHistogramWithIndices(
 
 void LiveFunctionsDataView::UpdateHistogramWithScopeIds(const std::vector<uint64_t>& scope_ids) {
   if (scope_ids.empty() || !timer_durations_.contains(scope_ids[0])) {
-    app_->ShowHistogram(nullptr, "", orbit_grpc_protos::kInvalidFunctionId);
+    app_->ShowHistogram(nullptr, "", orbit_client_data::kInvalidScopeId);
     return;
   }
   const uint64_t scope_id = scope_ids[0];

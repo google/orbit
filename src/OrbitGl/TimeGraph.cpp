@@ -483,7 +483,7 @@ std::vector<const TimerInfo*> TimeGraph::GetAllTimersForHookedFunction(
 }
 
 std::vector<const TimerChain*> TimeGraph::GetAllThreadTrackTimerChains() const {
-  ORBIT_CHECK(thread_track_data_provider_);
+  ORBIT_CHECK(thread_track_data_provider_ != nullptr);
   return thread_track_data_provider_->GetAllThreadTimerChains();
 }
 

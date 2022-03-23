@@ -506,8 +506,8 @@ constexpr size_t kMaxScopeNameLengthForTitle = 80;
   scope_name = absl::StrReplaceAll(scope_name, {{"&", "&amp;"}, {"<", "&lt;"}, {">", "&gt;"}});
 
   std::string title =
-      absl::StrFormat("<b>%s</b> (%d of %d invocations)", scope_name,
-                      histogram_stack_.top().data_set_size, scope_data_->data->size());
+      absl::StrFormat("<b>%s</b> (%d of %d hits)", scope_name, histogram_stack_.top().data_set_size,
+                      scope_data_->data->size());
 
   return QString::fromStdString(title);
 }

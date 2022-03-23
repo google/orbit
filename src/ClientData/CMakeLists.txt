@@ -16,6 +16,7 @@ target_sources(ClientData PUBLIC
         include/ClientData/CallstackEvent.h
         include/ClientData/CallstackType.h
         include/ClientData/CaptureData.h
+        include/ClientData/Constants.h
         include/ClientData/DataManager.h
         include/ClientData/FunctionInfoSet.h
         include/ClientData/FunctionUtils.h

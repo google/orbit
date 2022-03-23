@@ -36,6 +36,7 @@
 #include "CaptureFile/CaptureFileHelpers.h"
 #include "CaptureWindow.h"
 #include "ClientData/CallstackData.h"
+#include "ClientData/Constants.h"
 #include "ClientData/FunctionUtils.h"
 #include "ClientData/ModuleAndFunctionLookup.h"
 #include "ClientData/ModuleData.h"
@@ -2810,7 +2811,7 @@ std::vector<const TimerInfo*> OrbitApp::GetAllTimersForHookedFunction(uint64_t f
   return GetTimeGraph()->GetAllTimersForHookedFunction(function_id);
 }
 
-[[nodiscard]] std::vector<const orbit_client_data::TimerChain*> OrbitApp::GetAllTimerChains()
+[[nodiscard]] std::vector<const orbit_client_data::TimerChain*> OrbitApp::GetAllThreadTimerChains()
     const {
   return GetTimeGraph()->GetAllThreadTrackTimerChains();
 }
@@ -3004,7 +3005,8 @@ void OrbitApp::ShowHistogram(const std::vector<uint64_t>* data, const std::strin
   main_window_->ShowHistogram(data, scope_name, scope_id);
 }
 
-[[nodiscard]] uint64_t OrbitApp::ProvideId(const orbit_client_protos::TimerInfo& timer_info) const {
+[[nodiscard]] uint64_t OrbitApp::ProvideScopeId(
+    const orbit_client_protos::TimerInfo& timer_info) const {
   if (timer_info.function_id() != orbit_grpc_protos::kInvalidFunctionId) {
     return timer_info.function_id();
   }
@@ -3013,5 +3015,5 @@ void OrbitApp::ShowHistogram(const std::vector<uint64_t>* data, const std::strin
     ORBIT_CHECK(api_event_id_provider_);
     return api_event_id_provider_->ProvideId(timer_info);
   }
-  return orbit_grpc_protos::kInvalidFunctionId;
+  return orbit_client_data::kInvalidScopeId;
 }

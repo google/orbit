@@ -14,6 +14,7 @@
 #include <vector>
 
 #include "ClientData/CaptureData.h"
+#include "ClientData/Constants.h"
 #include "ClientData/FunctionUtils.h"
 #include "ClientData/TimerChain.h"
 #include "ClientProtos/capture_data.pb.h"
@@ -821,21 +822,21 @@ TEST_F(LiveFunctionsDataViewTest, ColumnSortingShowsRightResults) {
 }
 
 TEST_F(LiveFunctionsDataViewTest, OnDataChangeResetsHistogram) {
-  EXPECT_CALL(app_, ShowHistogram(nullptr, "", orbit_grpc_protos::kInvalidFunctionId)).Times(1);
+  EXPECT_CALL(app_, ShowHistogram(nullptr, "", orbit_client_data::kInvalidScopeId)).Times(1);
 
   view_.OnDataChanged();
 }
 
 TEST_F(LiveFunctionsDataViewTest, OnRefreshWithNoIndicesResetsHistogram) {
-  EXPECT_CALL(app_, ShowHistogram(nullptr, "", orbit_grpc_protos::kInvalidFunctionId)).Times(2);
+  EXPECT_CALL(app_, ShowHistogram(nullptr, "", orbit_client_data::kInvalidScopeId)).Times(2);
 
   view_.OnRefresh({}, RefreshMode::kOnFilter);
   view_.OnRefresh({}, RefreshMode::kOther);
 }
 
 TEST_F(LiveFunctionsDataViewTest, HistogramIsProperlyUpdated) {
-  EXPECT_CALL(app_, GetAllTimerChains()).WillOnce(Return(kTimerChains));
-  EXPECT_CALL(app_, ProvideId).WillRepeatedly(Invoke([&](const TimerInfo& timer) {
+  EXPECT_CALL(app_, GetAllThreadTimerChains()).WillOnce(Return(kTimerChains));
+  EXPECT_CALL(app_, ProvideScopeId).WillRepeatedly(Invoke([&](const TimerInfo& timer) {
     return timer.function_id();
   }));
   EXPECT_CALL(app_, HasCaptureData).WillRepeatedly(testing::Return(true));
@@ -854,7 +855,7 @@ TEST_F(LiveFunctionsDataViewTest, HistogramIsProperlyUpdated) {
 
 TEST_F(LiveFunctionsDataViewTest,
        RemoveHistogramWhenUpdatedWithIdOfNonDynamicallyInstrumentedFunction) {
-  EXPECT_CALL(app_, ShowHistogram(nullptr, "", orbit_grpc_protos::kInvalidFunctionId)).Times(1);
+  EXPECT_CALL(app_, ShowHistogram(nullptr, "", orbit_client_data::kInvalidScopeId)).Times(1);
 
   view_.UpdateHistogramWithScopeIds({kNonDynamicallyInstrumentedFunctionId});
 }

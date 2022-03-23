@@ -46,7 +46,8 @@ class MockAppInterface : public AppInterface {
   MOCK_METHOD(void, JumpToTimerAndZoom, (uint64_t function_id, JumpToTimerMode selection_mode));
   MOCK_METHOD(std::vector<const orbit_client_protos::TimerInfo*>, GetAllTimersForHookedFunction,
               (uint64_t), (const));
-  MOCK_METHOD(std::vector<const orbit_client_data::TimerChain*>, GetAllTimerChains, (), (const));
+  MOCK_METHOD(std::vector<const orbit_client_data::TimerChain*>, GetAllThreadTimerChains, (),
+              (const));
 
   MOCK_METHOD(bool, IsFrameTrackEnabled, (const orbit_client_protos::FunctionInfo&), (const));
   MOCK_METHOD(bool, HasFrameTrackInCaptureData, (uint64_t), (const));
@@ -97,7 +98,8 @@ class MockAppInterface : public AppInterface {
                uint64_t function_id),
               ());
 
-  MOCK_METHOD(uint64_t, ProvideId, (const orbit_client_protos::TimerInfo& timer_info), (const));
+  MOCK_METHOD(uint64_t, ProvideScopeId, (const orbit_client_protos::TimerInfo& timer_info),
+              (const));
 };
 
 }  // namespace orbit_data_views

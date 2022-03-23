@@ -55,7 +55,7 @@ class AppInterface {
   [[nodiscard]] virtual bool IsCapturing() const = 0;
   [[nodiscard]] virtual std::vector<const orbit_client_protos::TimerInfo*>
   GetAllTimersForHookedFunction(uint64_t function_id) const = 0;
-  [[nodiscard]] virtual std::vector<const orbit_client_data::TimerChain*> GetAllTimerChains()
+  [[nodiscard]] virtual std::vector<const orbit_client_data::TimerChain*> GetAllThreadTimerChains()
       const = 0;
 
   // Function needed by CallstackDataView
@@ -118,7 +118,7 @@ class AppInterface {
   [[nodiscard]] virtual const orbit_statistics::BinomialConfidenceIntervalEstimator&
   GetConfidenceIntervalEstimator() const = 0;
 
-  [[nodiscard]] virtual uint64_t ProvideId(
+  [[nodiscard]] virtual uint64_t ProvideScopeId(
       const orbit_client_protos::TimerInfo& timer_info) const = 0;
 };
 

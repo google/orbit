@@ -514,7 +514,7 @@ class OrbitApp final : public DataViewFactory,
   void JumpToTimerAndZoom(uint64_t function_id, JumpToTimerMode selection_mode) override;
   [[nodiscard]] std::vector<const orbit_client_protos::TimerInfo*> GetAllTimersForHookedFunction(
       uint64_t function_id) const override;
-  [[nodiscard]] std::vector<const orbit_client_data::TimerChain*> GetAllTimerChains()
+  [[nodiscard]] std::vector<const orbit_client_data::TimerChain*> GetAllThreadTimerChains()
       const override;
 
   [[nodiscard]] const orbit_statistics::BinomialConfidenceIntervalEstimator&
@@ -530,7 +530,8 @@ class OrbitApp final : public DataViewFactory,
     return histogram_selection_range_;
   }
 
-  [[nodiscard]] uint64_t ProvideId(const orbit_client_protos::TimerInfo& timer_info) const override;
+  [[nodiscard]] uint64_t ProvideScopeId(
+      const orbit_client_protos::TimerInfo& timer_info) const override;
 
  private:
   void UpdateModulesAbortCaptureIfModuleWithoutBuildIdNeedsReload(
