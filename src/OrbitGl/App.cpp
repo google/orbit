@@ -3007,13 +3007,6 @@ void OrbitApp::ShowHistogram(const std::vector<uint64_t>* data, const std::strin
 
 [[nodiscard]] uint64_t OrbitApp::ProvideScopeId(
     const orbit_client_protos::TimerInfo& timer_info) const {
-  if (timer_info.function_id() != orbit_grpc_protos::kInvalidFunctionId) {
-    return timer_info.function_id();
-  }
-  if (timer_info.type() == orbit_client_protos::TimerInfo_Type_kApiScope ||
-      timer_info.type() == orbit_client_protos::TimerInfo_Type_kApiScopeAsync) {
-    ORBIT_CHECK(api_event_id_provider_);
-    return api_event_id_provider_->ProvideId(timer_info);
-  }
-  return orbit_client_data::kInvalidScopeId;
+  ORBIT_CHECK(api_event_id_provider_);
+  return api_event_id_provider_->ProvideId(timer_info);
 }
