@@ -12,12 +12,12 @@
 #include <string>
 #include <vector>
 
+#include "ClientData/EventIdProvider.h"
 #include "ClientFlags/ClientFlags.h"
 #include "ClientProtos/capture_data.pb.h"
-#include "EventIdProvider.h"
 #include "GrpcProtos/Constants.h"
 
-namespace orbit_gl {
+namespace orbit_client_data {
 
 const std::vector<std::string> kNames{"A", "B", "C", "D", "A", "B", "B"};
 
@@ -38,7 +38,7 @@ const std::vector<std::string> kNames{"A", "B", "C", "D", "A", "B", "B"};
   return timer_infos;
 }
 
-static void AssertNameToIdIsBijective(const std::vector<TimerInfo>& timers,
+static void AssertNameToIdIsBijective(const std::vector<orbit_client_protos::TimerInfo>& timers,
                                       const std::vector<uint64_t>& ids) {
   absl::flat_hash_map<std::string, uint64_t> name_to_id;
   for (size_t i = 0; i < timers.size(); ++i) {
@@ -53,7 +53,7 @@ static void AssertNameToIdIsBijective(const std::vector<TimerInfo>& timers,
   }
 }
 
-static std::vector<uint64_t> GetIds(const std::vector<TimerInfo>& timers) {
+static std::vector<uint64_t> GetIds(const std::vector<orbit_client_protos::TimerInfo>& timers) {
   orbit_grpc_protos::CaptureOptions capture_options;
   auto id_provider = NameEqualityEventIdProvider::Create(capture_options);
 
@@ -63,7 +63,7 @@ static std::vector<uint64_t> GetIds(const std::vector<TimerInfo>& timers) {
   return ids;
 }
 
-static void TestProvideId(std::vector<TimerInfo>& timer_infos) {
+static void TestProvideId(std::vector<orbit_client_protos::TimerInfo>& timer_infos) {
   AssertNameToIdIsBijective(timer_infos, GetIds(timer_infos));
 }
 
@@ -105,4 +105,4 @@ TEST(NameEqualityEventIdProviderTest, CreateIsCorrect) {
   ASSERT_EQ(setter->ProvideId(timer_info), 16);
 }
 
-}  // namespace orbit_gl
+}  // namespace orbit_client_data

@@ -205,6 +205,15 @@ std::unique_ptr<CaptureData> GenerateTestCaptureData(
   return capture_data;
 }
 
+static void AddTimersToThreadTrackDataProvider(
+    orbit_client_data::ThreadTrackDataProvider* thread_track_data_provider) {
+  for (const TimerInfo* timer_info : kTimerPointers) {
+    thread_track_data_provider->AddTimer(*timer_info);
+  }
+
+  thread_track_data_provider->OnCaptureComplete();
+}
+
 class MockLiveFunctionsInterface : public orbit_data_views::LiveFunctionsInterface {
  public:
   MOCK_METHOD(void, AddIterator, (uint64_t instrumented_function_id, const FunctionInfo* function));
@@ -835,7 +844,9 @@ TEST_F(LiveFunctionsDataViewTest, OnRefreshWithNoIndicesResetsHistogram) {
 }
 
 TEST_F(LiveFunctionsDataViewTest, HistogramIsProperlyUpdated) {
-  EXPECT_CALL(app_, GetAllThreadTimerChains()).WillOnce(Return(kTimerChains));
+  AddTimersToThreadTrackDataProvider(capture_data_->GetThreadTrackDataProvider());
+
+  EXPECT_CALL(app_, GetCaptureData).WillRepeatedly(testing::ReturnRef(*capture_data_));
   EXPECT_CALL(app_, ProvideScopeId).WillRepeatedly(Invoke([&](const TimerInfo& timer) {
     return timer.function_id();
   }));

@@ -2,7 +2,7 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#include "EventIdProvider.h"
+#include "ClientData/EventIdProvider.h"
 
 #include <absl/flags/flag.h>
 
@@ -14,7 +14,7 @@
 #include "ClientFlags/ClientFlags.h"
 #include "GrpcProtos/Constants.h"
 
-namespace orbit_gl {
+namespace orbit_client_data {
 
 [[nodiscard]] std::unique_ptr<NameEqualityEventIdProvider> NameEqualityEventIdProvider::Create(
     const orbit_grpc_protos::CaptureOptions& capture_options) {
@@ -39,7 +39,7 @@ NameEqualityEventIdProvider::NameEqualityEventIdProvider(uint64_t start_id) : ne
   if (absl::GetFlag(FLAGS_devmode) &&
       (timer_info.type() == orbit_client_protos::TimerInfo_Type_kApiScope ||
        timer_info.type() == orbit_client_protos::TimerInfo_Type_kApiScopeAsync)) {
-    const auto key = make_pair(timer_info.type(), timer_info.api_scope_name());
+    const auto key = std::make_pair(timer_info.type(), timer_info.api_scope_name());
 
     const auto it = name_to_id_.find(key);
     if (it != name_to_id_.end()) {
@@ -54,4 +54,4 @@ NameEqualityEventIdProvider::NameEqualityEventIdProvider(uint64_t start_id) : ne
   return orbit_client_data::kInvalidScopeId;
 }
 
-}  // namespace orbit_gl
+}  // namespace orbit_client_data

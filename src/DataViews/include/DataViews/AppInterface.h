@@ -117,9 +117,6 @@ class AppInterface {
 
   [[nodiscard]] virtual const orbit_statistics::BinomialConfidenceIntervalEstimator&
   GetConfidenceIntervalEstimator() const = 0;
-
-  [[nodiscard]] virtual uint64_t ProvideScopeId(
-      const orbit_client_protos::TimerInfo& timer_info) const = 0;
 };
 
 }  // namespace orbit_data_views

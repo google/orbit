@@ -22,6 +22,7 @@
 
 #include "ClientData/CallstackData.h"
 #include "ClientData/CallstackEvent.h"
+#include "ClientData/EventIdProvider.h"
 #include "ClientData/FunctionInfoSet.h"
 #include "ClientData/ModuleData.h"
 #include "ClientData/ModuleManager.h"
@@ -236,6 +237,8 @@ class CaptureData {
     return thread_track_data_provider_.get();
   }
 
+  [[nodiscard]] uint64_t ProvideScopeId(const orbit_client_protos::TimerInfo& timer_info) const;
+
  private:
   orbit_client_data::ProcessData process_;
   absl::flat_hash_map<uint64_t, orbit_grpc_protos::InstrumentedFunction> instrumented_functions_;
@@ -271,6 +274,8 @@ class CaptureData {
   absl::flat_hash_set<uint64_t> frame_track_function_ids_;
 
   std::optional<std::filesystem::path> file_path_;
+
+  std::unique_ptr<EventIdProvider> api_event_id_provider_;
 
   TimerDataManager timer_data_manager_;
   std::unique_ptr<ThreadTrackDataProvider> thread_track_data_provider_;

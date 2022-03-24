@@ -2,15 +2,15 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#ifndef ORBIT_GL_API_EVENT_ID_PROVIDER_H_
-#define ORBIT_GL_API_EVENT_ID_PROVIDER_H_
+#ifndef ORBIT_CLIENT_DATA_API_EVENT_ID_PROVIDER_H_
+#define ORBIT_CLIENT_DATA_API_EVENT_ID_PROVIDER_H_
 
 #include <cstdint>
 
 #include "ClientData/TimerTrackDataIdManager.h"
 #include "GrpcProtos/capture.pb.h"
 
-namespace orbit_gl {
+namespace orbit_client_data {
 
 // The inferface defines a map from `TimerInfo` to ids. When called twice on identical `TimerInfo`
 // instances, it returns the same ids.
@@ -21,7 +21,7 @@ class EventIdProvider {
   [[nodiscard]] virtual uint64_t ProvideId(const TimerInfo& timer_info) = 0;
 };
 
-// If `timer_info.function_id` is not invalid, it is returned;
+// If `timer_info.function_id` is not invalid, it is returned.
 // If `timer_info.function_id` is invalid and `timer_info` is neither of type kApiScope, nor
 // kApiScopeAsync, `kInvalidScopeId` is returned.
 // Otherwise, provides equal ids to the instances of `TimerInfo`
@@ -46,6 +46,6 @@ class NameEqualityEventIdProvider : public EventIdProvider {
   uint64_t next_id_{};
 };
 
-}  // namespace orbit_gl
+}  // namespace orbit_client_data
 
-#endif  // ORBIT_GL_API_EVENT_ID_PROVIDER_H_
+#endif  // ORBIT_CLIENT_DATA_API_EVENT_ID_PROVIDER_H_

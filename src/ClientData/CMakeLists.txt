@@ -18,6 +18,7 @@ target_sources(ClientData PUBLIC
         include/ClientData/CaptureData.h
         include/ClientData/Constants.h
         include/ClientData/DataManager.h
+        include/ClientData/EventIdProvider.h
         include/ClientData/FunctionInfoSet.h
         include/ClientData/FunctionUtils.h
         include/ClientData/ModuleAndFunctionLookup.h
@@ -43,6 +44,7 @@ target_sources(ClientData PRIVATE
         CallstackType.cpp
         CaptureData.cpp
         DataManager.cpp
+        EventIdProvider.cpp
         FunctionUtils.cpp
         ModuleAndFunctionLookup.cpp
         ModuleData.cpp
@@ -61,6 +63,7 @@ target_sources(ClientData PRIVATE
 target_link_libraries(ClientData PUBLIC
         ApiInterface
         Containers
+        ClientFlags
         ClientProtos
         GrpcProtos
         # TODO(b/191248550): Remove ObjectUtils once GetAbsoluteAddress is removed
@@ -73,6 +76,7 @@ add_executable(ClientDataTests)
 target_sources(ClientDataTests PRIVATE
         CallstackDataTest.cpp
         DataManagerTest.cpp
+        EventIdProviderTest.cpp
         FunctionInfoSetTest.cpp
         ModuleDataTest.cpp
         ModuleManagerTest.cpp
@@ -88,6 +92,7 @@ target_sources(ClientDataTests PRIVATE
 
 target_link_libraries(ClientDataTests PRIVATE
         ClientData
+        ClientFlags
         TestUtils
         GTest::Main)
 

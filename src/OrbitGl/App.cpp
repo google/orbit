@@ -57,7 +57,6 @@
 #include "DataViews/FunctionsDataView.h"
 #include "DataViews/ModulesDataView.h"
 #include "DataViews/PresetsDataView.h"
-#include "EventIdProvider.h"
 #include "FrameTrackOnlineProcessor.h"
 #include "GlCanvas.h"
 #include "GrpcProtos/Constants.h"
@@ -354,8 +353,6 @@ void OrbitApp::OnCaptureStarted(const orbit_grpc_protos::CaptureStarted& capture
                                    file_path = std::move(file_path),
                                    frame_track_function_ids =
                                        std::move(frame_track_function_ids)]() mutable {
-    api_event_id_provider_ =
-        orbit_gl::NameEqualityEventIdProvider::Create(capture_started.capture_options());
     absl::flat_hash_map<Track::Type, bool> track_type_visibility;
     bool had_capture = capture_window_->GetTimeGraph();
     if (had_capture) {
@@ -3003,10 +3000,4 @@ OrbitApp::GetConfidenceIntervalEstimator() const {
 void OrbitApp::ShowHistogram(const std::vector<uint64_t>* data, const std::string& scope_name,
                              uint64_t scope_id) {
   main_window_->ShowHistogram(data, scope_name, scope_id);
-}
-
-[[nodiscard]] uint64_t OrbitApp::ProvideScopeId(
-    const orbit_client_protos::TimerInfo& timer_info) const {
-  ORBIT_CHECK(api_event_id_provider_);
-  return api_event_id_provider_->ProvideId(timer_info);
 }

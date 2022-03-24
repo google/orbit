@@ -56,7 +56,6 @@
 #include "DataViews/PresetLoadState.h"
 #include "DataViews/PresetsDataView.h"
 #include "DataViews/TracepointsDataView.h"
-#include "EventIdProvider.h"
 #include "FramePointerValidatorClient.h"
 #include "FrameTrackOnlineProcessor.h"
 #include "GlCanvas.h"
@@ -530,9 +529,6 @@ class OrbitApp final : public DataViewFactory,
     return histogram_selection_range_;
   }
 
-  [[nodiscard]] uint64_t ProvideScopeId(
-      const orbit_client_protos::TimerInfo& timer_info) const override;
-
  private:
   void UpdateModulesAbortCaptureIfModuleWithoutBuildIdNeedsReload(
       absl::Span<const orbit_grpc_protos::ModuleInfo> module_infos);
@@ -673,8 +669,6 @@ class OrbitApp final : public DataViewFactory,
   const orbit_statistics::WilsonBinomialConfidenceIntervalEstimator confidence_interval_estimator_;
 
   std::optional<orbit_statistics::HistogramSelectionRange> histogram_selection_range_;
-
-  std::unique_ptr<orbit_gl::EventIdProvider> api_event_id_provider_;
 };
 
 #endif  // ORBIT_GL_APP_H_
