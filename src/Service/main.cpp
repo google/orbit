@@ -103,6 +103,7 @@ int main(int argc, char** argv) {
 
   if (!result.has_error()) return 0;
 
+  ORBIT_ERROR("%s", result.error().message());
   std::puts(result.error().message().c_str());
   std::ignore = std::fflush(stdout);
 

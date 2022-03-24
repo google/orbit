@@ -22,7 +22,7 @@ namespace orbit_producer_side_service {
 // and listens on a socket.
 class ProducerSideServer final : public orbit_capture_service_base::CaptureStartStopListener {
  public:
-  bool BuildAndStart(std::string uri);
+  bool BuildAndStart(const std::string& uri);
   void ShutdownAndWait();
 
   void OnCaptureStartRequested(

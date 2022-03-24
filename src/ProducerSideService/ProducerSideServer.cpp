@@ -16,7 +16,7 @@
 
 namespace orbit_producer_side_service {
 
-bool ProducerSideServer::BuildAndStart(std::string uri) {
+bool ProducerSideServer::BuildAndStart(const std::string& uri) {
   ORBIT_CHECK(server_ == nullptr);
 
   grpc::ServerBuilder builder;

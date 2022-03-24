@@ -8,7 +8,7 @@
 
 namespace orbit_producer_side_service {
 
-std::unique_ptr<ProducerSideServer> BuildAndStartProducerSideServer() {
+BuildAndStartReturnValue BuildAndStartProducerSideServer() {
   return BuildAndStartProducerSideServerWithUri(
       orbit_producer_side_channel::kProducerSideWindowsServerAddress);
 }
