@@ -326,13 +326,6 @@ void TimerTrack::OnTimer(const TimerInfo& timer_info) {
   timer_data_->AddTimer(timer_info, timer_info.depth());
 }
 
-float TimerTrack::GetHeight() const {
-  uint32_t collapsed_depth = std::min<uint32_t>(1, GetDepth());
-  uint32_t depth = collapse_toggle_->IsCollapsed() ? collapsed_depth : GetDepth();
-  return GetHeightAboveTimers() + layout_->GetTextBoxHeight() * depth +
-         layout_->GetTrackContentBottomMargin();
-}
-
 std::string TimerTrack::GetTooltip() const {
   return "Shows collected samples and timings from dynamically instrumented "
          "functions";
