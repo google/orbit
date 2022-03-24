@@ -16,6 +16,7 @@
 #include <iterator>
 #include <ostream>
 #include <string_view>
+#include <tuple>
 
 #include "AccessibleTimeGraph.h"
 #include "App.h"
@@ -295,7 +296,8 @@ void CaptureWindow::MouseWheelMoved(int x, int y, int delta, bool ctrl) {
   if (time_graph_ != nullptr) {
     orbit_gl::ModifierKeys modifiers;
     modifiers.ctrl = ctrl;
-    time_graph_->HandleMouseWheelEvent(viewport_.ScreenToWorld(Vec2i(x, y)), delta, modifiers);
+    std::ignore =
+        time_graph_->HandleMouseWheelEvent(viewport_.ScreenToWorld(Vec2i(x, y)), delta, modifiers);
   }
 }
 
