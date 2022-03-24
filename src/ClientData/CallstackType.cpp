@@ -31,6 +31,7 @@ std::string CallstackTypeToString(CallstackType callstack_type) {
     case CallstackType::kFilteredByMajorityOutermostFrame:
       return "Unknown unwinding error";
   }
+  ORBIT_UNREACHABLE();
 }
 
 std::string CallstackTypeToDescription(CallstackType callstack_type) {
@@ -58,6 +59,7 @@ std::string CallstackTypeToDescription(CallstackType callstack_type) {
       return "The outermost frame does not match the majority for this thread, so the callstack "
              "has been marked as unwound incorrectly.";
   }
+  ORBIT_UNREACHABLE();
 }
 
 CallstackType GrpcCallstackTypeToCallstackType(
@@ -86,6 +88,7 @@ CallstackType GrpcCallstackTypeToCallstackType(
         Callstack_CallstackType_Callstack_CallstackType_INT_MAX_SENTINEL_DO_NOT_USE_:
       ORBIT_UNREACHABLE();
   }
+  ORBIT_UNREACHABLE();
 }
 
 }  // namespace orbit_client_data
