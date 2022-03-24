@@ -35,7 +35,6 @@
 #include "CaptureFile/CaptureFileHelpers.h"
 #include "CaptureWindow.h"
 #include "ClientData/CallstackData.h"
-#include "ClientData/Constants.h"
 #include "ClientData/FunctionUtils.h"
 #include "ClientData/ModuleAndFunctionLookup.h"
 #include "ClientData/ModuleData.h"

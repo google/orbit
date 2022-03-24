@@ -10,7 +10,7 @@
 #include <cstdint>
 #include <memory>
 
-#include "ClientData/Constants.h"
+#include "ClientData/ScopeIdConstants.h"
 #include "ClientFlags/ClientFlags.h"
 #include "GrpcProtos/Constants.h"
 

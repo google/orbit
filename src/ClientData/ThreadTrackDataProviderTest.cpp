@@ -10,7 +10,7 @@
 #include <cstdint>
 #include <iterator>
 
-#include "ClientData/Constants.h"
+#include "ClientData/ScopeIdConstants.h"
 #include "ClientData/ScopeIdProvider.h"
 #include "ClientData/ThreadTrackDataProvider.h"
 

@@ -14,8 +14,8 @@
 #include <vector>
 
 #include "ClientData/CaptureData.h"
-#include "ClientData/Constants.h"
 #include "ClientData/FunctionUtils.h"
+#include "ClientData/ScopeIdConstants.h"
 #include "ClientData/TimerChain.h"
 #include "ClientProtos/capture_data.pb.h"
 #include "DataViewTestUtils.h"
@@ -29,7 +29,8 @@
 #include "MetricsUploader/MetricsUploaderStub.h"
 #include "MockAppInterface.h"
 
-using orbit_client_protos::FunctionInfo;
+using orbit_client_protos::
+FunctionInfo;
 using orbit_client_protos::FunctionStats;
 using JumpToTimerMode = orbit_data_views::AppInterface::JumpToTimerMode;
 using orbit_client_data::CaptureData;

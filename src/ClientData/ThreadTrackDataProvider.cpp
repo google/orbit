@@ -6,7 +6,7 @@
 
 #include <cstdint>
 
-#include "ClientData/Constants.h"
+#include "ClientData/ScopeIdConstants.h"
 #include "OrbitBase/Logging.h"
 
 namespace orbit_client_data {

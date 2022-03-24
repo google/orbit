@@ -27,9 +27,9 @@
 
 #include "ApiInterface/Orbit.h"
 #include "ClientData/CaptureData.h"
-#include "ClientData/Constants.h"
 #include "ClientData/FunctionUtils.h"
 #include "ClientData/ModuleAndFunctionLookup.h"
+#include "ClientData/ScopeIdConstants.h"
 #include "ClientProtos/capture_data.pb.h"
 #include "CompareAscendingOrDescending.h"
 #include "DataViews/DataView.h"
@@ -155,7 +155,7 @@ void LiveFunctionsDataView::UpdateHistogramWithIndices(
 
 void LiveFunctionsDataView::UpdateHistogramWithScopeIds(const std::vector<uint64_t>& scope_ids) {
   const std::vector<uint64_t>* timer_durations =
-      app_->HasCaptureData() && !scope_ids.empty()
+      (app_->HasCaptureData() && !scope_ids.empty())
           ? app_->GetCaptureData().GetThreadTrackDataProvider()->GetSortedTimerDurationsForScopeId(
                 scope_ids[0])
           : nullptr;
