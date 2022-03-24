@@ -29,8 +29,6 @@ namespace orbit_client_data {
   return std::unique_ptr<NameEqualityScopeIdProvider>(new NameEqualityScopeIdProvider(max_id + 1));
 }
 
-NameEqualityScopeIdProvider::NameEqualityScopeIdProvider(uint64_t start_id) : next_id_(start_id) {}
-
 [[nodiscard]] uint64_t NameEqualityScopeIdProvider::ProvideId(const TimerInfo& timer_info) {
   if (timer_info.function_id() != orbit_grpc_protos::kInvalidFunctionId) {
     return timer_info.function_id();
@@ -46,8 +44,8 @@ NameEqualityScopeIdProvider::NameEqualityScopeIdProvider(uint64_t start_id) : ne
       return it->second;
     }
 
-    name_to_id_[key] = next_id_;
     uint64_t id = next_id_;
+    name_to_id_[key] = id;
     next_id_++;
     return id;
   }
