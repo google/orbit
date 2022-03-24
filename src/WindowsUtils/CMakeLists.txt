@@ -28,7 +28,8 @@ target_sources(WindowsUtils PUBLIC
         include/WindowsUtils/OpenProcess.h
         include/WindowsUtils/ProcessList.h
         include/WindowsUtils/ReadProcessMemory.h
-        include/WindowsUtils/SafeHandle.h)
+        include/WindowsUtils/SafeHandle.h
+        include/WindowsUtils/WriteProcessMemory.h)
 
 target_sources(WindowsUtils PRIVATE
         AdjustTokenPrivilege.cpp
@@ -39,7 +40,8 @@ target_sources(WindowsUtils PRIVATE
         OpenProcess.cpp
         ProcessList.cpp
         ReadProcessMemory.cpp
-        SafeHandle.cpp)
+        SafeHandle.cpp
+        WriteProcessMemory.cpp)
 
 target_link_libraries(WindowsUtils PUBLIC
         ObjectUtils
@@ -56,7 +58,8 @@ target_sources(WindowsUtilsTests PRIVATE
         OpenProcessTest.cpp
         ProcessListTest.cpp
         ReadProcessMemoryTest.cpp
-        SafeHandleTest.cpp)
+        SafeHandleTest.cpp
+        WriteProcessMemoryTest.cpp)
 
 target_link_libraries(WindowsUtilsTests PRIVATE
         TestUtils
