@@ -55,8 +55,8 @@ void ThreadTrackDataProvider::OnCaptureComplete() {
   UpdateTimerDurations();
 }
 
-[[nodiscard]] const std::vector<uint64_t>*
-ThreadTrackDataProvider::GetSortedTimerDurationsForScopeId(uint64_t scope_id) const {
+const std::vector<uint64_t>* ThreadTrackDataProvider::GetSortedTimerDurationsForScopeId(
+    uint64_t scope_id) const {
   const auto it = timer_durations_.find(scope_id);
   if (it == timer_durations_.end()) return nullptr;
   return &it->second;
