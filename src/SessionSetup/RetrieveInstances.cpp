@@ -18,11 +18,11 @@
 #include <tuple>
 #include <utility>
 
-#include "MainThreadExecutor.h"
 #include "MetricsUploader/ScopedMetric.h"
 #include "OrbitBase/Future.h"
 #include "OrbitBase/FutureHelpers.h"
 #include "OrbitBase/JoinFutures.h"
+#include "OrbitBase/MainThreadExecutor.h"
 #include "OrbitBase/Result.h"
 
 namespace orbit_session_setup {
@@ -36,7 +36,8 @@ using orbit_metrics_uploader::ScopedMetric;
 
 class RetrieveInstancesImpl : public RetrieveInstances {
  public:
-  RetrieveInstancesImpl(orbit_ggp::Client* ggp_client, MainThreadExecutor* main_thread_executor);
+  RetrieveInstancesImpl(orbit_ggp::Client* ggp_client,
+                        orbit_base::MainThreadExecutor* main_thread_executor);
 
   orbit_base::Future<ErrorMessageOr<QVector<orbit_ggp::Instance>>> LoadInstances(
       const std::optional<orbit_ggp::Project>& project,
@@ -54,7 +55,7 @@ class RetrieveInstancesImpl : public RetrieveInstances {
  private:
   orbit_ggp::Client* ggp_client_ = nullptr;
   // To avoid race conditions to the instance_cache_, the main thread is used.
-  MainThreadExecutor* main_thread_executor_ = nullptr;
+  orbit_base::MainThreadExecutor* main_thread_executor_ = nullptr;
   absl::flat_hash_map<
       std::pair<std::optional<orbit_ggp::Project>, orbit_ggp::Client::InstanceListScope>,
       QVector<orbit_ggp::Instance>>
@@ -63,12 +64,12 @@ class RetrieveInstancesImpl : public RetrieveInstances {
 };
 
 std::unique_ptr<RetrieveInstances> RetrieveInstances::Create(
-    orbit_ggp::Client* ggp_client, MainThreadExecutor* main_thread_executor) {
+    orbit_ggp::Client* ggp_client, orbit_base::MainThreadExecutor* main_thread_executor) {
   return std::make_unique<RetrieveInstancesImpl>(ggp_client, main_thread_executor);
 }
 
 RetrieveInstancesImpl::RetrieveInstancesImpl(Client* ggp_client,
-                                             MainThreadExecutor* main_thread_executor)
+                                             orbit_base::MainThreadExecutor* main_thread_executor)
     : ggp_client_(ggp_client), main_thread_executor_(main_thread_executor) {
   ORBIT_CHECK(ggp_client != nullptr);
   ORBIT_CHECK(main_thread_executor != nullptr);

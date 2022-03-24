@@ -39,10 +39,10 @@
 #include "DataViews/DataViewType.h"
 #include "FilterPanelWidgetAction.h"
 #include "GrpcProtos/process.pb.h"
-#include "MainThreadExecutor.h"
 #include "MainWindowInterface.h"
 #include "MetricsUploader/MetricsUploader.h"
 #include "OrbitBase/CrashHandler.h"
+#include "OrbitBase/MainThreadExecutor.h"
 #include "SessionSetup/ServiceDeployManager.h"
 #include "SessionSetup/TargetConfiguration.h"
 #include "SessionSetup/TargetLabel.h"
@@ -224,7 +224,7 @@ class OrbitMainWindow final : public QMainWindow, public orbit_gl::MainWindowInt
   std::optional<QString> LoadSourceCode(const std::filesystem::path& file_path);
 
  private:
-  std::shared_ptr<MainThreadExecutor> main_thread_executor_;
+  std::shared_ptr<orbit_base::MainThreadExecutor> main_thread_executor_;
   std::unique_ptr<OrbitApp> app_;
   Ui::OrbitMainWindow* ui;
   FilterPanelWidgetAction* filter_panel_action_ = nullptr;

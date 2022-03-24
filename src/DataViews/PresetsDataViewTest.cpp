@@ -74,10 +74,10 @@ TEST_F(PresetsDataViewTest, Empty) {
 }
 
 TEST_F(PresetsDataViewTest, CheckLabelAndColorForLoadStates) {
-  // GetPresetLoadState is called once per `GetValue` and `GetToolTip` call.
+  // GetPresetLoadState is called once per `GetValue`, `GetToolTip` and `GetDisplayColor` call.
   auto load_state = PresetLoadState::kLoadable;
   EXPECT_CALL(app_, GetPresetLoadState)
-      .Times(9)
+      .Times(11)
       .WillRepeatedly(testing::ReturnPointee(&load_state));
 
   orbit_client_protos::PresetInfo preset_info0{};
@@ -87,21 +87,21 @@ TEST_F(PresetsDataViewTest, CheckLabelAndColorForLoadStates) {
   EXPECT_EQ(view_.GetNumElements(), 1);
 
   load_state = PresetLoadState::kLoadable;
-  EXPECT_EQ(view_.GetValue(0, 0), "Yes");
+  EXPECT_EQ(view_.GetValue(0, 0), absl::StrCat(view_.kLoadedPresetBlankString, "Yes"));
   EXPECT_TRUE(view_.GetToolTip(0, 0).empty());
   Color color_loadable_state{};
   view_.GetDisplayColor(0, 0, color_loadable_state.r, color_loadable_state.g,
                         color_loadable_state.b);
 
   load_state = PresetLoadState::kNotLoadable;
-  EXPECT_EQ(view_.GetValue(0, 0), "No");
+  EXPECT_EQ(view_.GetValue(0, 0), absl::StrCat(view_.kLoadedPresetBlankString, "No"));
   EXPECT_FALSE(view_.GetToolTip(0, 0).empty());
   Color color_not_loadable_state{};
   view_.GetDisplayColor(0, 0, color_not_loadable_state.r, color_not_loadable_state.g,
                         color_not_loadable_state.b);
 
   load_state = PresetLoadState::kPartiallyLoadable;
-  EXPECT_EQ(view_.GetValue(0, 0), "Partially");
+  EXPECT_EQ(view_.GetValue(0, 0), absl::StrCat(view_.kLoadedPresetBlankString, "Partially"));
   EXPECT_TRUE(view_.GetToolTip(0, 0).empty());
   Color color_partially_loadable_state{};
   view_.GetDisplayColor(0, 0, color_partially_loadable_state.r, color_partially_loadable_state.g,
@@ -113,6 +113,15 @@ TEST_F(PresetsDataViewTest, CheckLabelAndColorForLoadStates) {
   EXPECT_NE(color_loadable_state, color_partially_loadable_state);
   EXPECT_NE(color_loadable_state, color_not_loadable_state);
   EXPECT_NE(color_partially_loadable_state, color_not_loadable_state);
+
+  preset_file0.SetIsLoaded(true);
+  view_.SetPresets({preset_file0});
+
+  load_state = PresetLoadState::kLoadable;
+  EXPECT_EQ(view_.GetValue(0, 0), absl::StrCat(view_.kLoadedPresetString, "Yes"));
+
+  load_state = PresetLoadState::kPartiallyLoadable;
+  EXPECT_EQ(view_.GetValue(0, 0), absl::StrCat(view_.kLoadedPresetString, "Partially"));
 }
 
 TEST_F(PresetsDataViewTest, PresetNameIsFileName) {
@@ -264,7 +273,7 @@ TEST_F(PresetsDataViewTest, CheckInvokedContextMenuActions) {
   {
     std::string expected_clipboard = absl::StrFormat(
         "Loadable\tPreset\tModules\tHooked Functions\tDate Modified\n"
-        "Yes\t%s\t\t\t%s\n",
+        "  Yes\t%s\t\t\t%s\n",
         preset_filename0.filename().string(), FormatShortDatetime(date_modified.value()));
     CheckCopySelectionIsInvoked(context_menu, app_, view_, expected_clipboard);
   }
@@ -274,7 +283,7 @@ TEST_F(PresetsDataViewTest, CheckInvokedContextMenuActions) {
     std::string expected_contents = absl::StrFormat(
         R"("Loadable","Preset","Modules","Hooked Functions","Date Modified")"
         "\r\n"
-        R"("Yes","%s","","","%s")"
+        R"("  Yes","%s","","","%s")"
         "\r\n",
         preset_filename0.filename().string(), FormatShortDatetime(date_modified.value()));
     CheckExportToCsvIsInvoked(context_menu, app_, view_, expected_contents);
@@ -287,8 +296,10 @@ TEST_F(PresetsDataViewTest, CheckInvokedContextMenuActions) {
 
     EXPECT_CALL(app_, LoadPreset)
         .Times(1)
-        .WillOnce([&](const orbit_preset_file::PresetFile& preset_file) {
+        .WillOnce([&](const orbit_preset_file::PresetFile& preset_file)
+                      -> orbit_base::Future<ErrorMessageOr<void>> {
           EXPECT_EQ(preset_file.file_path(), preset_filename0);
+          return orbit_base::Future<ErrorMessageOr<void>>{outcome::success()};
         });
     view_.OnContextMenu(std::string{kMenuActionLoadPreset}, load_preset_index, {0});
   }
@@ -348,8 +359,10 @@ TEST_F(PresetsDataViewTest, CheckLoadPresetOnDoubleClick) {
 
   EXPECT_CALL(app_, LoadPreset)
       .Times(1)
-      .WillOnce([&](const orbit_preset_file::PresetFile& preset_file) {
+      .WillOnce([&](const orbit_preset_file::PresetFile& preset_file)
+                    -> orbit_base::Future<ErrorMessageOr<void>> {
         EXPECT_EQ(preset_file.file_path(), preset_filename0);
+        return orbit_base::Future<ErrorMessageOr<void>>{outcome::success()};
       });
   view_.OnDoubleClicked(0);
 }

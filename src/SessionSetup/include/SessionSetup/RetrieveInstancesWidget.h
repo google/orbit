@@ -11,8 +11,8 @@
 #include <QWidget>
 #include <memory>
 
-#include "MainThreadExecutor.h"
 #include "MetricsUploader/MetricsUploader.h"
+#include "OrbitBase/MainThreadExecutor.h"
 #include "OrbitGgp/Client.h"
 #include "OrbitGgp/Project.h"
 #include "SessionSetup/RetrieveInstances.h"
@@ -61,7 +61,7 @@ class RetrieveInstancesWidget : public QWidget {
   void OnAllCheckboxClicked();
 
   std::unique_ptr<Ui::RetrieveInstancesWidget> ui_;
-  std::shared_ptr<MainThreadExecutor> main_thread_executor_;
+  std::shared_ptr<orbit_base::MainThreadExecutor> main_thread_executor_;
   RetrieveInstances* retrieve_instances_;
   orbit_metrics_uploader::MetricsUploader* metrics_uploader_ = nullptr;
   QStateMachine state_machine_;

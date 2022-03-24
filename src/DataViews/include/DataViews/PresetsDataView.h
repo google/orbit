@@ -9,6 +9,7 @@
 
 #include <memory>
 #include <string>
+#include <string_view>
 #include <utility>
 #include <vector>
 
@@ -16,6 +17,7 @@
 #include "DataViews/AppInterface.h"
 #include "DataViews/DataView.h"
 #include "MetricsUploader/MetricsUploader.h"
+#include "OrbitBase/MainThreadExecutor.h"
 #include "PresetFile/PresetFile.h"
 
 namespace orbit_data_views {
@@ -42,6 +44,10 @@ class PresetsDataView : public DataView {
   void OnLoadPresetRequested(const std::vector<int>& selection) override;
   void OnDeletePresetRequested(const std::vector<int>& selection) override;
   void OnShowInExplorerRequested(const std::vector<int>& selection) override;
+  void OnLoadPresetSuccessful(const std::filesystem::path& preset_file_path);
+
+  static constexpr std::string_view kLoadedPresetString{"* "};
+  static constexpr std::string_view kLoadedPresetBlankString{"  "};
 
  protected:
   struct ModuleView {
@@ -73,7 +79,10 @@ class PresetsDataView : public DataView {
   };
 
  private:
+  [[nodiscard]] orbit_preset_file::PresetFile& GetMutablePreset(unsigned int row);
+
   orbit_metrics_uploader::MetricsUploader* metrics_uploader_;
+  std::shared_ptr<orbit_base::MainThreadExecutor> main_thread_executor_;
 };
 
 }  // namespace orbit_data_views

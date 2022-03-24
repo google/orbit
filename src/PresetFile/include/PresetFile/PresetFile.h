@@ -33,6 +33,9 @@ class PresetFile final {
       const std::filesystem::path& module_path) const;
   [[nodiscard]] bool IsLegacyFileFormat() const;
 
+  void SetIsLoaded(bool is_loaded) { is_loaded_ = is_loaded; }
+  [[nodiscard]] bool IsLoaded() const { return is_loaded_; }
+
   [[nodiscard]] std::vector<uint64_t> GetSelectedFunctionHashesForModuleLegacy(
       const std::filesystem::path& module_path) const;
   [[nodiscard]] std::vector<uint64_t> GetFrameTrackFunctionHashesForModuleLegacy(
@@ -48,6 +51,7 @@ class PresetFile final {
  private:
   std::filesystem::path file_path_;
   bool is_legacy_format_;
+  bool is_loaded_ = false;
   orbit_client_protos::PresetInfo preset_info_;
   orbit_client_protos::PresetInfoLegacy preset_info_legacy_;
 };
