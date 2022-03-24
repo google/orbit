@@ -176,10 +176,8 @@ DataView::ActionStatus PresetsDataView::GetActionStatus(std::string_view action,
 
 void PresetsDataView::OnLoadPresetRequested(const std::vector<int>& selection) {
   PresetFile& preset = GetMutablePreset(selection[0]);
-  app_->LoadPreset(preset).Then(main_thread_executor_.get(),
-                                [&preset](ErrorMessageOr<void> result) {
-                                  if (!result.has_error()) preset.SetIsLoaded(true);
-                                });
+  app_->LoadPreset(preset).ThenIfSuccess(main_thread_executor_.get(),
+                                         [&preset]() { preset.SetIsLoaded(true); });
 }
 
 void PresetsDataView::OnDeletePresetRequested(const std::vector<int>& selection) {
@@ -208,10 +206,8 @@ void PresetsDataView::OnShowInExplorerRequested(const std::vector<int>& selectio
 void PresetsDataView::OnDoubleClicked(int index) {
   PresetFile& preset = GetMutablePreset(index);
   if (app_->GetPresetLoadState(preset).state != PresetLoadState::kNotLoadable) {
-    app_->LoadPreset(preset).Then(main_thread_executor_.get(),
-                                  [&preset](ErrorMessageOr<void> result) {
-                                    if (!result.has_error()) preset.SetIsLoaded(true);
-                                  });
+    app_->LoadPreset(preset).ThenIfSuccess(main_thread_executor_.get(),
+                                           [&preset]() { preset.SetIsLoaded(true); });
   }
 }
 
