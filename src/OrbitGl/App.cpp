@@ -1236,7 +1236,7 @@ ErrorMessageOr<PresetFile> OrbitApp::ReadPresetFromFile(const std::filesystem::p
 
 ErrorMessageOr<void> OrbitApp::OnLoadPreset(const std::string& filename) {
   OUTCOME_TRY(auto&& preset_file, ReadPresetFromFile(filename));
-  LoadPreset(preset_file)
+  (void)LoadPreset(preset_file)
       .ThenIfSuccess(main_thread_executor_,
                      [this, preset_file_path = std::move(preset_file.file_path())]() {
                        ORBIT_CHECK(presets_data_view_ != nullptr);
