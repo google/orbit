@@ -44,7 +44,7 @@ class PresetsDataView : public DataView {
   void OnLoadPresetRequested(const std::vector<int>& selection) override;
   void OnDeletePresetRequested(const std::vector<int>& selection) override;
   void OnShowInExplorerRequested(const std::vector<int>& selection) override;
-  void OnLoadPresetCompleted(const std::string& preset_file_path);
+  void OnLoadPresetSuccessful(const std::filesystem::path& preset_file_path);
 
   static constexpr std::string_view kLoadedPresetString{"* "};
   static constexpr std::string_view kLoadedPresetBlankString{"  "};
@@ -64,7 +64,6 @@ class PresetsDataView : public DataView {
   [[nodiscard]] static std::string GetModulesList(const std::vector<ModuleView>& modules);
   [[nodiscard]] static std::string GetFunctionCountList(const std::vector<ModuleView>& modules);
   [[nodiscard]] const orbit_preset_file::PresetFile& GetPreset(unsigned int row) const;
-  [[nodiscard]] orbit_preset_file::PresetFile& GetMutablePreset(unsigned int row);
   [[nodiscard]] const std::vector<ModuleView>& GetModules(uint32_t row) const;
 
   std::vector<orbit_preset_file::PresetFile> presets_;
@@ -80,6 +79,8 @@ class PresetsDataView : public DataView {
   };
 
  private:
+  [[nodiscard]] orbit_preset_file::PresetFile& GetMutablePreset(unsigned int row);
+
   orbit_metrics_uploader::MetricsUploader* metrics_uploader_;
   std::shared_ptr<orbit_base::MainThreadExecutor> main_thread_executor_;
 };

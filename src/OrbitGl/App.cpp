@@ -1236,11 +1236,11 @@ ErrorMessageOr<PresetFile> OrbitApp::ReadPresetFromFile(const std::filesystem::p
 
 ErrorMessageOr<void> OrbitApp::OnLoadPreset(const std::string& filename) {
   OUTCOME_TRY(auto&& preset_file, ReadPresetFromFile(filename));
-  LoadPreset(preset_file).Then(
-      main_thread_executor_,
-      [this, preset_file_path = preset_file.file_path().string()](ErrorMessageOr<void> result) {
-        if (result.has_error() || presets_data_view_ == nullptr) return;
-        presets_data_view_->OnLoadPresetCompleted(preset_file_path);
+  LoadPreset(preset_file)
+      .Then(main_thread_executor_, [this, preset_file_path = std::move(preset_file.file_path())](
+                                       ErrorMessageOr<void> result) {
+        ORBIT_CHECK(presets_data_view_ != nullptr);
+        if (!result.has_error()) presets_data_view_->OnLoadPresetSuccessful(preset_file_path);
       });
   return outcome::success();
 }
@@ -2166,7 +2166,7 @@ orbit_base::Future<ErrorMessageOr<void>> OrbitApp::LoadPreset(const PresetFile& 
   auto results = orbit_base::JoinFutures(absl::MakeConstSpan(load_module_results));
   return results.Then(
       main_thread_executor_,
-      [this, metric = std::move(metric), &preset_file](
+      [this, metric = std::move(metric), preset_file](
           std::vector<std::string> module_paths_not_found) mutable -> ErrorMessageOr<void> {
         size_t tried_to_load_amount = module_paths_not_found.size();
         module_paths_not_found.erase(

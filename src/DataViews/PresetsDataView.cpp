@@ -70,8 +70,8 @@ namespace orbit_data_views {
 PresetsDataView::PresetsDataView(AppInterface* app,
                                  orbit_metrics_uploader::MetricsUploader* metrics_uploader)
     : DataView(DataViewType::kPresets, app),
-      main_thread_executor_(orbit_qt_utils::MainThreadExecutorImpl::Create()),
-      metrics_uploader_(metrics_uploader) {}
+      metrics_uploader_(metrics_uploader),
+      main_thread_executor_(orbit_qt_utils::MainThreadExecutorImpl::Create()) {}
 
 std::string PresetsDataView::GetModulesList(const std::vector<ModuleView>& modules) {
   return absl::StrJoin(modules, "\n", [](std::string* out, const ModuleView& module) {
@@ -215,14 +215,11 @@ void PresetsDataView::OnDoubleClicked(int index) {
   }
 }
 
-void PresetsDataView::OnLoadPresetCompleted(const std::string& preset_file_path) {
-  for (size_t i = 0; i < presets_.size(); ++i) {
-    PresetFile& preset = presets_[i];
-    if (preset.file_path().string() == preset_file_path) {
-      preset.SetIsLoaded(true);
-      return;
-    }
-  }
+void PresetsDataView::OnLoadPresetSuccessful(const std::filesystem::path& preset_file_path) {
+  const auto it = std::find_if(presets_.begin(), presets_.end(), [&](const PresetFile& preset) {
+    return preset.file_path() == preset_file_path;
+  });
+  if (it != presets_.end()) it->SetIsLoaded(true);
 }
 
 void PresetsDataView::DoFilter() {
