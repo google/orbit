@@ -17,7 +17,7 @@
 
 namespace orbit_gl {
 
-namespace {
+namespace orbit_gl_internal {
 
 struct LineBuffer {
   void Reset() {
@@ -70,23 +70,22 @@ struct PrimitiveBuffers {
   TriangleBuffer triangle_buffer;
 };
 
-}  // namespace
-/**
-Implements internal methods to collects primitives to be rendered at a later point in time.
+}  // namespace orbit_gl_internal
 
-NOTE: The OpenGlBatcher assumes x/y coordinates are in pixels and will automatically round those
-down to the next integer in all Batcher::AddXXX methods. This fixes the issue of primitives
-"jumping" around when their coordinates are changed slightly.
-**/
+// Implements internal methods to collects primitives to be rendered at a later point in time.
+//
+// NOTE: The OpenGlBatcher assumes x/y coordinates are in pixels and will automatically round those
+// down to the next integer in all Batcher::AddXXX methods. This fixes the issue of primitives
+// "jumping" around when their coordinates are changed slightly.
 class OpenGlBatcher : public Batcher {
  public:
-  OpenGlBatcher(BatcherId batcher_id, PickingManager* picking_manager = nullptr)
+  explicit OpenGlBatcher(BatcherId batcher_id, PickingManager* picking_manager = nullptr)
       : Batcher(batcher_id, picking_manager) {}
   [[nodiscard]] std::vector<float> GetLayers() const override;
   void DrawLayer(float layer, bool picking) const override;
 
  protected:
-  std::unordered_map<float, PrimitiveBuffers> primitive_buffers_by_layer_;
+  std::unordered_map<float, orbit_gl_internal::PrimitiveBuffers> primitive_buffers_by_layer_;
 
  private:
   void ResetElements() override;
