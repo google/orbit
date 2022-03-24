@@ -25,8 +25,10 @@ target_sources(WindowsUtils PUBLIC
         include/WindowsUtils/FindDebugSymbols.h
         include/WindowsUtils/ListModules.h
         include/WindowsUtils/ListThreads.h
+        include/WindowsUtils/OpenProcess.h
         include/WindowsUtils/ProcessList.h
-        include/WindowsUtils/ReadProcessMemory.h)
+        include/WindowsUtils/ReadProcessMemory.h
+        include/WindowsUtils/SafeHandle.h)
 
 target_sources(WindowsUtils PRIVATE
         AdjustTokenPrivilege.cpp
@@ -34,8 +36,10 @@ target_sources(WindowsUtils PRIVATE
         FindDebugSymbols.cpp
         ListModules.cpp
         ListThreads.cpp
+        OpenProcess.cpp
         ProcessList.cpp
-        ReadProcessMemory.cpp)
+        ReadProcessMemory.cpp
+        SafeHandle.cpp)
 
 target_link_libraries(WindowsUtils PUBLIC
         ObjectUtils
@@ -49,8 +53,10 @@ target_sources(WindowsUtilsTests PRIVATE
         FindDebugSymbolsTest.cpp
         ListModulesTest.cpp
         ListThreadsTest.cpp
+        OpenProcessTest.cpp
         ProcessListTest.cpp
-        ReadProcessMemoryTest.cpp)
+        ReadProcessMemoryTest.cpp
+        SafeHandleTest.cpp)
 
 target_link_libraries(WindowsUtilsTests PRIVATE
         TestUtils
