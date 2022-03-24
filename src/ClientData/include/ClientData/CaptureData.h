@@ -22,12 +22,12 @@
 
 #include "ClientData/CallstackData.h"
 #include "ClientData/CallstackEvent.h"
-#include "ClientData/EventIdProvider.h"
 #include "ClientData/FunctionInfoSet.h"
 #include "ClientData/ModuleData.h"
 #include "ClientData/ModuleManager.h"
 #include "ClientData/PostProcessedSamplingData.h"
 #include "ClientData/ProcessData.h"
+#include "ClientData/ScopeIdProvider.h"
 #include "ClientData/ThreadTrackDataProvider.h"
 #include "ClientData/TimerChain.h"
 #include "ClientData/TimerData.h"
@@ -275,7 +275,7 @@ class CaptureData {
 
   std::optional<std::filesystem::path> file_path_;
 
-  std::unique_ptr<EventIdProvider> api_event_id_provider_;
+  std::unique_ptr<ScopeIdProvider> scope_id_provider_;
 
   TimerDataManager timer_data_manager_;
   std::unique_ptr<ThreadTrackDataProvider> thread_track_data_provider_;

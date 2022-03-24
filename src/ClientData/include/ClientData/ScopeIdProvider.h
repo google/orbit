@@ -2,8 +2,8 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#ifndef ORBIT_CLIENT_DATA_API_EVENT_ID_PROVIDER_H_
-#define ORBIT_CLIENT_DATA_API_EVENT_ID_PROVIDER_H_
+#ifndef ORBIT_CLIENT_DATA_API_SCOPE_ID_PROVIDER_H_
+#define ORBIT_CLIENT_DATA_API_SCOPE_ID_PROVIDER_H_
 
 #include <cstdint>
 
@@ -14,9 +14,9 @@ namespace orbit_client_data {
 
 // The inferface defines a map from `TimerInfo` to ids. When called twice on identical `TimerInfo`
 // instances, it returns the same ids.
-class EventIdProvider {
+class ScopeIdProvider {
  public:
-  virtual ~EventIdProvider() = default;
+  virtual ~ScopeIdProvider() = default;
 
   [[nodiscard]] virtual uint64_t ProvideId(const TimerInfo& timer_info) = 0;
 };
@@ -29,17 +29,17 @@ class EventIdProvider {
 // consecutively starting with `start_id`. To instantiate, use
 // `NameEqualityApiEventIdSetter::Create` as this ensures no overlap between `api_scope_group_id`
 // and `function_id`.
-class NameEqualityEventIdProvider : public EventIdProvider {
+class NameEqualityScopeIdProvider : public ScopeIdProvider {
  public:
   // Ids for instrumented functions are precomputed on capture start and we are using id range above
   // those.
-  [[nodiscard]] static std::unique_ptr<NameEqualityEventIdProvider> Create(
+  [[nodiscard]] static std::unique_ptr<NameEqualityScopeIdProvider> Create(
       const ::orbit_grpc_protos::CaptureOptions& capture_options);
 
   [[nodiscard]] uint64_t ProvideId(const TimerInfo& timer_info) override;
 
  private:
-  explicit NameEqualityEventIdProvider(uint64_t start_id);
+  explicit NameEqualityScopeIdProvider(uint64_t start_id);
 
   absl::flat_hash_map<std::pair<orbit_client_protos::TimerInfo_Type, std::string>, uint64_t>
       name_to_id_;
@@ -48,4 +48,4 @@ class NameEqualityEventIdProvider : public EventIdProvider {
 
 }  // namespace orbit_client_data
 
-#endif  // ORBIT_CLIENT_DATA_API_EVENT_ID_PROVIDER_H_
+#endif  // ORBIT_CLIENT_DATA_API_SCOPE_ID_PROVIDER_H_

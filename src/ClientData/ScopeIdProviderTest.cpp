@@ -12,7 +12,7 @@
 #include <string>
 #include <vector>
 
-#include "ClientData/EventIdProvider.h"
+#include "ClientData/ScopeIdProvider.h"
 #include "ClientFlags/ClientFlags.h"
 #include "ClientProtos/capture_data.pb.h"
 #include "GrpcProtos/Constants.h"
@@ -55,7 +55,7 @@ static void AssertNameToIdIsBijective(const std::vector<orbit_client_protos::Tim
 
 static std::vector<uint64_t> GetIds(const std::vector<orbit_client_protos::TimerInfo>& timers) {
   orbit_grpc_protos::CaptureOptions capture_options;
-  auto id_provider = NameEqualityEventIdProvider::Create(capture_options);
+  auto id_provider = NameEqualityScopeIdProvider::Create(capture_options);
 
   std::vector<uint64_t> ids;
   std::transform(std::begin(timers), std::end(timers), std::back_inserter(ids),
@@ -67,13 +67,13 @@ static void TestProvideId(std::vector<orbit_client_protos::TimerInfo>& timer_inf
   AssertNameToIdIsBijective(timer_infos, GetIds(timer_infos));
 }
 
-TEST(NameEqualityEventIdProviderTest, ProvideIdIsCorrectForApiScope) {
+TEST(NameEqualityScopeIdProviderTest, ProvideIdIsCorrectForApiScope) {
   absl::SetFlag(&FLAGS_devmode, true);
   auto timer_infos = MakeTimerInfos(kNames, orbit_client_protos::TimerInfo_Type_kApiScope);
   TestProvideId(timer_infos);
 }
 
-TEST(NameEqualityEventIdProviderTest, ProvideIdIsCorrectForApiScopeAsync) {
+TEST(NameEqualityScopeIdProviderTest, ProvideIdIsCorrectForApiScopeAsync) {
   absl::SetFlag(&FLAGS_devmode, true);
 
   auto async_timer_infos =
@@ -81,25 +81,25 @@ TEST(NameEqualityEventIdProviderTest, ProvideIdIsCorrectForApiScopeAsync) {
   TestProvideId(async_timer_infos);
 }
 
-TEST(NameEqualityEventIdProviderTest, SyncAndAsyncScopesOfTheSameNameGetDifferentIds) {
+TEST(NameEqualityScopeIdProviderTest, SyncAndAsyncScopesOfTheSameNameGetDifferentIds) {
   absl::SetFlag(&FLAGS_devmode, true);
   TimerInfo sync = MakeTimerInfo("A", orbit_client_protos::TimerInfo_Type_kApiScope);
   TimerInfo async = MakeTimerInfo("A", orbit_client_protos::TimerInfo_Type_kApiScopeAsync);
 
   orbit_grpc_protos::CaptureOptions capture_options;
-  auto id_provider = NameEqualityEventIdProvider::Create(capture_options);
+  auto id_provider = NameEqualityScopeIdProvider::Create(capture_options);
 
   ASSERT_NE(id_provider->ProvideId(sync), id_provider->ProvideId(async));
 }
 
-TEST(NameEqualityEventIdProviderTest, CreateIsCorrect) {
+TEST(NameEqualityScopeIdProviderTest, CreateIsCorrect) {
   absl::SetFlag(&FLAGS_devmode, true);
   orbit_grpc_protos::CaptureOptions capture_options;
   capture_options.add_instrumented_functions()->set_function_id(10);
   capture_options.add_instrumented_functions()->set_function_id(13);
   capture_options.add_instrumented_functions()->set_function_id(15);
 
-  auto setter = NameEqualityEventIdProvider::Create(capture_options);
+  auto setter = NameEqualityScopeIdProvider::Create(capture_options);
   TimerInfo timer_info = MakeTimerInfo("A", orbit_client_protos::TimerInfo_Type_kApiScope);
 
   ASSERT_EQ(setter->ProvideId(timer_info), 16);

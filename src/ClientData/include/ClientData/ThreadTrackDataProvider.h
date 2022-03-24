@@ -5,7 +5,7 @@
 #ifndef THREAD_TRACK_DATA_PROVIDER_H_
 #define THREAD_TRACK_DATA_PROVIDER_H_
 
-#include "ClientData/EventIdProvider.h"
+#include "ClientData/ScopeIdProvider.h"
 #include "ClientData/ThreadTrackDataManager.h"
 #include "ClientData/TimerData.h"
 
@@ -15,7 +15,7 @@ namespace orbit_client_data {
 // well as metadata about them.
 class ThreadTrackDataProvider final {
  public:
-  explicit ThreadTrackDataProvider(EventIdProvider* scope_id_provider,
+  explicit ThreadTrackDataProvider(ScopeIdProvider* scope_id_provider,
                                    bool is_data_from_saved_capture = false)
       : thread_track_data_manager_{std::make_unique<ThreadTrackDataManager>(
             is_data_from_saved_capture)},
@@ -99,7 +99,7 @@ class ThreadTrackDataProvider final {
 
   std::unique_ptr<ThreadTrackDataManager> thread_track_data_manager_;
 
-  EventIdProvider* scope_id_provider_;
+  ScopeIdProvider* scope_id_provider_;
 
   absl::flat_hash_map<uint64_t, std::vector<uint64_t>> timer_durations_;
 };

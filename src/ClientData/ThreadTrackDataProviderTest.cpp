@@ -8,7 +8,7 @@
 #include <cstddef>
 #include <cstdint>
 
-#include "ClientData/EventIdProvider.h"
+#include "ClientData/ScopeIdProvider.h"
 #include "ClientData/ThreadTrackDataProvider.h"
 
 namespace orbit_client_data {
@@ -52,7 +52,7 @@ struct TimersInTest {
   const TimerInfo* other_thread_id;
 };
 
-class MockScopeIdProvider : public EventIdProvider {
+class MockScopeIdProvider : public ScopeIdProvider {
  public:
   MOCK_METHOD(uint64_t, ProvideId, (const TimerInfo& timer_info));
 };

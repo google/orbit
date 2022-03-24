@@ -2,7 +2,7 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#include "ClientData/EventIdProvider.h"
+#include "ClientData/ScopeIdProvider.h"
 
 #include <absl/flags/flag.h>
 
@@ -16,7 +16,7 @@
 
 namespace orbit_client_data {
 
-[[nodiscard]] std::unique_ptr<NameEqualityEventIdProvider> NameEqualityEventIdProvider::Create(
+[[nodiscard]] std::unique_ptr<NameEqualityScopeIdProvider> NameEqualityScopeIdProvider::Create(
     const orbit_grpc_protos::CaptureOptions& capture_options) {
   const auto& instrumented_functions = capture_options.instrumented_functions();
   const uint64_t max_id =
@@ -26,12 +26,12 @@ namespace orbit_client_data {
                 std::begin(instrumented_functions), std::end(instrumented_functions),
                 [](const auto& a, const auto& b) { return a.function_id() < b.function_id(); })
                 ->function_id();
-  return std::unique_ptr<NameEqualityEventIdProvider>(new NameEqualityEventIdProvider(max_id + 1));
+  return std::unique_ptr<NameEqualityScopeIdProvider>(new NameEqualityScopeIdProvider(max_id + 1));
 }
 
-NameEqualityEventIdProvider::NameEqualityEventIdProvider(uint64_t start_id) : next_id_(start_id) {}
+NameEqualityScopeIdProvider::NameEqualityScopeIdProvider(uint64_t start_id) : next_id_(start_id) {}
 
-[[nodiscard]] uint64_t NameEqualityEventIdProvider::ProvideId(const TimerInfo& timer_info) {
+[[nodiscard]] uint64_t NameEqualityScopeIdProvider::ProvideId(const TimerInfo& timer_info) {
   if (timer_info.function_id() != orbit_grpc_protos::kInvalidFunctionId) {
     return timer_info.function_id();
   }
