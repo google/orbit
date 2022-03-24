@@ -83,8 +83,9 @@ class PeCoffFake {
   uint64_t SetOptionalHeaderMagicPE32PlusAtOffset(uint64_t offset);
   uint64_t SetOptionalHeaderAtOffset(uint64_t offset);
   uint64_t SetSectionStringsAtOffset(uint64_t offset);
-  uint64_t SetSectionHeadersAtOffset(uint64_t offset);
-  uint64_t SetDebugFrameSectionAtOffset(uint64_t offset);
+  uint64_t SetSectionHeadersAtOffset(uint64_t offset, uint32_t debug_frame_vmsize,
+                                     uint32_t debug_frame_filesize);
+  uint64_t SetDebugFrameEntryAtOffset(uint64_t offset, uint32_t pc_start);
 
   std::unique_ptr<MemoryFake> memory_fake_;
   std::vector<std::pair<uint64_t, std::string>> section_names_in_string_table_;
