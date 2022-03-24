@@ -32,7 +32,6 @@ class CaptureWindow : public GlCanvas {
 
   void ZoomAll();
   void ZoomHorizontally(int delta, int mouse_x);
-  void ZoomVertically(int delta, int mouse_y);
   void Pan(float ratio);
 
   void MouseMoved(int x, int y, bool left, bool right, bool middle) override;

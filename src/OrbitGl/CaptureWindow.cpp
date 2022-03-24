@@ -270,7 +270,7 @@ bool CaptureWindow::RightUp() {
 void CaptureWindow::ZoomHorizontally(int delta, int mouse_x) {
   if (delta == 0) return;
 
-  auto delta_float = static_cast<float>(-delta);
+  auto delta_float = static_cast<float>(delta);
 
   if (time_graph_ != nullptr) {
     double mouse_ratio = static_cast<double>(mouse_x) / time_graph_->GetWidth();

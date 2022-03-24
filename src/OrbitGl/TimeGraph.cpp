@@ -128,8 +128,8 @@ void TimeGraph::ZoomTime(float zoom_value, double mouse_ratio) {
   double time_left = std::max(ref_time_us_ - min_time_us_, 0.0);
   double time_right = std::max(max_time_us_ - ref_time_us_, 0.0);
 
-  double min_time_us = ref_time_us_ - scale * time_left;
-  double max_time_us = ref_time_us_ + scale * time_right;
+  double min_time_us = ref_time_us_ - time_left / scale;
+  double max_time_us = ref_time_us_ + time_right / scale;
 
   SetMinMax(min_time_us, max_time_us);
 }
@@ -137,7 +137,7 @@ void TimeGraph::ZoomTime(float zoom_value, double mouse_ratio) {
 void TimeGraph::VerticalZoom(float zoom_value, float mouse_world_y_pos) {
   constexpr float kIncrementRatio = 0.1f;
   const float proposed_ratio =
-      (zoom_value < 0) ? (1 + kIncrementRatio) : (1 / (1 + kIncrementRatio));
+      (zoom_value > 0) ? (1 + kIncrementRatio) : (1 / (1 + kIncrementRatio));
 
   // We have to scale every item in the layout.
   const float old_scale = layout_.GetScale();
@@ -372,10 +372,10 @@ orbit_gl::CaptureViewElement::EventResult TimeGraph::OnMouseWheel(
   const float delta_normalized = delta < 0 ? -1.f : 1.f;
 
   if (modifiers.ctrl) {
-    VerticalZoom(-delta_normalized, mouse_pos[1]);
+    VerticalZoom(delta_normalized, mouse_pos[1]);
   } else {
     double mouse_ratio = mouse_pos[0] / GetWidth();
-    ZoomTime(-delta_normalized, mouse_ratio);
+    ZoomTime(delta_normalized, mouse_ratio);
   }
 
   return EventResult::kHandled;
