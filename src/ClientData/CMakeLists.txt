@@ -14,6 +14,7 @@ target_include_directories(ClientData PRIVATE
 target_sources(ClientData PUBLIC
         include/ClientData/CallstackData.h
         include/ClientData/CallstackEvent.h
+        include/ClientData/CallstackInfo.h
         include/ClientData/CallstackType.h
         include/ClientData/CaptureData.h
         include/ClientData/DataManager.h

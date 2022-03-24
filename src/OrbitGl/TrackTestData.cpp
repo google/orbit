@@ -5,7 +5,10 @@
 #include "TrackTestData.h"
 
 #include "ClientData/CallstackEvent.h"
+#include "ClientData/CallstackInfo.h"
+#include "ClientData/CallstackType.h"
 
+using orbit_client_data::CallstackType;
 using orbit_client_data::CaptureData;
 
 namespace orbit_gl {
@@ -25,9 +28,8 @@ std::unique_ptr<CaptureData> TrackTestData::GenerateTestCaptureData() {
 
   // CallstackInfo
   const std::vector<uint64_t> callstack_frames{kInstructionAbsoluteAddress};
-  orbit_client_protos::CallstackInfo callstack_info;
-  *callstack_info.mutable_frames() = {callstack_frames.begin(), callstack_frames.end()};
-  callstack_info.set_type(orbit_client_protos::CallstackInfo_CallstackType_kComplete);
+  orbit_client_data::CallstackInfo callstack_info{
+      {callstack_frames.begin(), callstack_frames.end()}, CallstackType::kComplete};
   capture_data->AddUniqueCallstack(kCallstackId, std::move(callstack_info));
 
   // CallstackEvent

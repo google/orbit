@@ -15,6 +15,7 @@
 #include <vector>
 
 #include "ClientData/CallstackEvent.h"
+#include "ClientData/CallstackInfo.h"
 #include "ClientData/CallstackType.h"
 #include "ClientData/ModuleAndFunctionLookup.h"
 #include "ClientProtos/capture_data.pb.h"
@@ -25,6 +26,8 @@
 
 using orbit_client_data::CallstackData;
 using orbit_client_data::CallstackEvent;
+using orbit_client_data::CallstackInfo;
+using orbit_client_data::CallstackType;
 using orbit_client_data::CaptureData;
 using orbit_client_data::ModuleManager;
 using orbit_client_data::PostProcessedSamplingData;
@@ -32,42 +35,24 @@ using orbit_client_data::SampledFunction;
 using orbit_client_data::ThreadID;
 using orbit_client_data::ThreadSampleData;
 
-using orbit_client_protos::CallstackInfo;
-
 namespace orbit_client_model {
 
 namespace {
 
-// class equivalent of orbit_client_protos::CallstackInfo for use as key of absl::flat_hash_map.
-class CallstackInfoAsClass {
- public:
-  CallstackInfoAsClass(std::vector<uint64_t> frames, CallstackInfo::CallstackType type)
-      : frames_(std::move(frames)), type_(type) {}
-
-  [[nodiscard]] const std::vector<uint64_t>& frames() const { return frames_; }
-  [[nodiscard]] CallstackInfo::CallstackType type() const { return type_; }
-
- private:
-  std::vector<uint64_t> frames_;
-  CallstackInfo::CallstackType type_;
-};
-
 template <typename H>
-H AbslHashValue(H h, const CallstackInfoAsClass& o) {
+H AbslHashValue(H h, const CallstackInfo& o) {
   return H::combine(std::move(h), o.frames(), o.type());
 }
 
 using CallstackInfoAsPairWithLvalueRefToFrames =
-    std::pair<const std::vector<uint64_t>&, CallstackInfo::CallstackType>;
+    std::pair<const std::vector<uint64_t>&, CallstackType>;
 
 // CallstackInfoHash and CallstackInfoEq allow heterogeneous lookup in
 // SamplingDataPostProcessor::resolved_callstack_to_id_;
 struct CallstackInfoHash {
   using is_transparent = void;  // Makes this functor transparent, enabling heterogeneous lookup.
 
-  size_t operator()(const CallstackInfoAsClass& o) const {
-    return absl::Hash<CallstackInfoAsClass>{}(o);
-  }
+  size_t operator()(const CallstackInfo& o) const { return absl::Hash<CallstackInfo>{}(o); }
 
   size_t operator()(const CallstackInfoAsPairWithLvalueRefToFrames& p) const {
     return absl::Hash<CallstackInfoAsPairWithLvalueRefToFrames>{}(p);
@@ -77,13 +62,13 @@ struct CallstackInfoHash {
 struct CallstackInfoEq {
   using is_transparent = void;  // Makes this functor transparent, enabling heterogeneous lookup.
 
-  bool operator()(const CallstackInfoAsClass& lhs, const CallstackInfoAsClass& rhs) const {
+  bool operator()(const CallstackInfo& lhs, const CallstackInfo& rhs) const {
     return std::equal(lhs.frames().begin(), lhs.frames().end(), rhs.frames().begin(),
                       rhs.frames().end()) &&
            lhs.type() == rhs.type();
   }
 
-  bool operator()(const CallstackInfoAsClass& lhs,
+  bool operator()(const CallstackInfo& lhs,
                   const CallstackInfoAsPairWithLvalueRefToFrames& rhs) const {
     return std::equal(lhs.frames().begin(), lhs.frames().end(), rhs.first.begin(),
                       rhs.first.end()) &&
@@ -118,7 +103,8 @@ class SamplingDataPostProcessor {
   // Filled by ProcessSamples.
   absl::flat_hash_map<ThreadID, ThreadSampleData> thread_id_to_sample_data_;
   absl::flat_hash_map<uint64_t, CallstackInfo> id_to_resolved_callstack_;
-  absl::flat_hash_map<CallstackInfoAsClass, uint64_t, CallstackInfoHash, CallstackInfoEq>
+  absl::flat_hash_map<orbit_client_data::CallstackInfo, uint64_t, CallstackInfoHash,
+                      CallstackInfoEq>
       resolved_callstack_to_id_;
   absl::flat_hash_map<uint64_t, uint64_t> original_id_to_resolved_callstack_id_;
   absl::flat_hash_map<uint64_t, absl::flat_hash_set<uint64_t>>
@@ -144,13 +130,12 @@ PostProcessedSamplingData SamplingDataPostProcessor::ProcessSamples(
   // Unique call stacks and per thread data
   callstack_data.ForEachCallstackEvent([this, &callstack_data,
                                         generate_summary](const CallstackEvent& event) {
-    const orbit_client_protos::CallstackInfo* callstack_info =
-        callstack_data.GetCallstack(event.callstack_id());
+    const CallstackInfo* callstack_info = callstack_data.GetCallstack(event.callstack_id());
     ORBIT_CHECK(callstack_info != nullptr);
 
     std::vector<uint64_t> sorted_frames;
     ORBIT_CHECK(!callstack_info->frames().empty());
-    if (callstack_info->type() == CallstackInfo::kComplete) {
+    if (callstack_info->type() == CallstackType::kComplete) {
       for (uint64_t frame : callstack_info->frames()) {
         sorted_frames.push_back(frame);
       }
@@ -158,7 +143,7 @@ PostProcessedSamplingData SamplingDataPostProcessor::ProcessSamples(
       // For non-kComplete callstacks, only use the innermost frame for statistics, as it's the only
       // one known to be correct. Note that, in the vast majority of cases, the innermost frame is
       // also the only one available.
-      sorted_frames.push_back(callstack_info->frames(0));
+      sorted_frames.push_back(callstack_info->frames()[0]);
     }
 
     // We need to consider duplicated frames (because of recursion) only once. We should use a set
@@ -204,21 +189,21 @@ PostProcessedSamplingData SamplingDataPostProcessor::ProcessSamples(
          thread_sample_data->sampled_callstack_id_to_events) {
       uint64_t callstack_count = callstack_events.size();
       uint64_t resolved_callstack_id = original_id_to_resolved_callstack_id_[sampled_callstack_id];
-      const CallstackInfo& resolved_callstack = id_to_resolved_callstack_[resolved_callstack_id];
+      const CallstackInfo& resolved_callstack = id_to_resolved_callstack_.at(resolved_callstack_id);
 
       // "Exclusive" stat.
       ORBIT_CHECK(!resolved_callstack.frames().empty());
-      thread_sample_data->resolved_address_to_exclusive_count[resolved_callstack.frames(0)] +=
+      thread_sample_data->resolved_address_to_exclusive_count[resolved_callstack.frames()[0]] +=
           callstack_count;
 
       absl::flat_hash_set<uint64_t> unique_resolved_addresses;
-      if (resolved_callstack.type() == CallstackInfo::kComplete) {
+      if (resolved_callstack.type() == CallstackType::kComplete) {
         for (uint64_t resolved_address : resolved_callstack.frames()) {
           unique_resolved_addresses.insert(resolved_address);
         }
       } else {
         // For non-kComplete callstacks, only use the innermost frame for statistics.
-        unique_resolved_addresses.insert(resolved_callstack.frames(0));
+        unique_resolved_addresses.insert(resolved_callstack.frames()[0]);
       }
 
       // "Inclusive" stat.
@@ -227,8 +212,8 @@ PostProcessedSamplingData SamplingDataPostProcessor::ProcessSamples(
       }
 
       // "Unwind errors" stat.
-      if (resolved_callstack.type() != CallstackInfo::kComplete) {
-        thread_sample_data->resolved_address_to_error_count[resolved_callstack.frames(0)] +=
+      if (resolved_callstack.type() != CallstackType::kComplete) {
+        thread_sample_data->resolved_address_to_error_count[resolved_callstack.frames()[0]] +=
             callstack_count;
       }
     }
@@ -243,10 +228,9 @@ PostProcessedSamplingData SamplingDataPostProcessor::ProcessSamples(
 
   FillThreadSampleDataSampleReports(capture_data, module_manager);
 
-  return PostProcessedSamplingData(std::move(thread_id_to_sample_data_),
-                                   std::move(id_to_resolved_callstack_),
-                                   std::move(original_id_to_resolved_callstack_id_),
-                                   std::move(function_address_to_sampled_callstack_ids_));
+  return {std::move(thread_id_to_sample_data_), std::move(id_to_resolved_callstack_),
+          std::move(original_id_to_resolved_callstack_id_),
+          std::move(function_address_to_sampled_callstack_ids_)};
 }
 
 void SamplingDataPostProcessor::ResolveCallstacks(const CallstackData& callstack_data,
@@ -267,7 +251,7 @@ void SamplingDataPostProcessor::ResolveCallstacks(const CallstackData& callstack
       resolved_callstack_frames.push_back(function_address_it->second);
     }
 
-    if (callstack.type() == CallstackInfo::kComplete) {
+    if (callstack.type() == CallstackType::kComplete) {
       for (uint64_t function_address : resolved_callstack_frames) {
         // Create a new entry if it doesn't exist.
         auto it = function_address_to_sampled_callstack_ids_.try_emplace(function_address).first;
@@ -280,27 +264,24 @@ void SamplingDataPostProcessor::ResolveCallstacks(const CallstackData& callstack
       it->second.insert(callstack_id);
     }
 
-    CallstackInfo::CallstackType resolved_callstack_type = callstack.type();
+    CallstackType resolved_callstack_type = callstack.type();
 
     // Check if we already have this resolved callstack, and if not, create one.
     uint64_t resolved_callstack_id;
-    auto it = resolved_callstack_to_id_.find(CallstackInfoAsPairWithLvalueRefToFrames{
-        resolved_callstack_frames, resolved_callstack_type});
-    if (it == resolved_callstack_to_id_.end()) {
+
+    if (resolved_callstack_to_id_.contains(CallstackInfoAsPairWithLvalueRefToFrames{
+            resolved_callstack_frames, resolved_callstack_type})) {
+      resolved_callstack_id = resolved_callstack_to_id_.at(CallstackInfoAsPairWithLvalueRefToFrames{
+          resolved_callstack_frames, resolved_callstack_type});
+    } else {
       resolved_callstack_id = callstack_id;
       ORBIT_CHECK(!id_to_resolved_callstack_.contains(resolved_callstack_id));
 
-      CallstackInfo resolved_callstack;
-      *resolved_callstack.mutable_frames() = {resolved_callstack_frames.begin(),
-                                              resolved_callstack_frames.end()};
-      resolved_callstack.set_type(resolved_callstack_type);
-      id_to_resolved_callstack_.insert_or_assign(resolved_callstack_id, resolved_callstack);
+      id_to_resolved_callstack_.emplace(
+          resolved_callstack_id, CallstackInfo{resolved_callstack_frames, resolved_callstack_type});
 
       resolved_callstack_to_id_.emplace(
-          CallstackInfoAsClass{resolved_callstack_frames, resolved_callstack_type},
-          resolved_callstack_id);
-    } else {
-      resolved_callstack_id = it->second;
+          CallstackInfo{resolved_callstack_frames, resolved_callstack_type}, resolved_callstack_id);
     }
 
     original_id_to_resolved_callstack_id_[callstack_id] = resolved_callstack_id;

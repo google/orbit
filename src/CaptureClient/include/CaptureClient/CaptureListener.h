@@ -6,10 +6,10 @@
 #define CAPTURE_CLIENT_CAPTURE_LISTENER_H_
 
 #include "ClientData/CallstackEvent.h"
+#include "ClientData/CallstackInfo.h"
 #include "ClientData/ProcessData.h"
 #include "ClientData/TracepointCustom.h"
 #include "ClientData/UserDefinedCaptureData.h"
-#include "ClientProtos/capture_data.pb.h"
 #include "GrpcProtos/capture.pb.h"
 #include "OrbitBase/Result.h"
 #include "absl/container/flat_hash_set.h"
@@ -30,7 +30,7 @@ class CaptureListener {
   virtual void OnTimer(const orbit_client_protos::TimerInfo& timer_info) = 0;
   virtual void OnKeyAndString(uint64_t key, std::string str) = 0;
   virtual void OnUniqueCallstack(uint64_t callstack_id,
-                                 orbit_client_protos::CallstackInfo callstack) = 0;
+                                 orbit_client_data::CallstackInfo callstack) = 0;
   virtual void OnCallstackEvent(orbit_client_data::CallstackEvent callstack_event) = 0;
   virtual void OnThreadName(uint32_t thread_id, std::string thread_name) = 0;
   virtual void OnModuleUpdate(uint64_t timestamp_ns, orbit_grpc_protos::ModuleInfo module_info) = 0;
