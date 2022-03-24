@@ -11,11 +11,8 @@ target_sources(
   OrbitGl
   PUBLIC AccessibleCaptureViewElement.h
          AccessibleInterfaceProvider.h
-         AccessibleThreadBar.h
          AccessibleTimeGraph.h
-         AccessibleTimeline.h
          AccessibleTrack.h
-         AccessibleTrackContainer.h
          AccessibleTriangleToggle.h
          AnnotationTrack.h
          ApiEventIdProvider.h
@@ -87,10 +84,7 @@ target_sources(
   OrbitGl
   PRIVATE AccessibleCaptureViewElement.cpp
           AccessibleInterfaceProvider.cpp
-          AccessibleThreadBar.cpp
-          AccessibleTimeGraph.cpp
           AccessibleTrack.cpp
-          AccessibleTrackContainer.cpp
           AccessibleTriangleToggle.cpp
           AnnotationTrack.cpp
           ApiEventIdProvider.cpp

@@ -6,7 +6,7 @@
 
 #include <absl/flags/flag.h>
 
-#include "AccessibleTimeline.h"
+#include "AccessibleCaptureViewElement.h"
 #include "ClientFlags/ClientFlags.h"
 #include "DisplayFormats/DisplayFormats.h"
 #include "GlCanvas.h"
@@ -189,7 +189,7 @@ void TimelineUi::DoUpdatePrimitives(Batcher& batcher, TextRenderer& text_rendere
 }
 
 std::unique_ptr<orbit_accessibility::AccessibleInterface> TimelineUi::CreateAccessibleInterface() {
-  return std::make_unique<AccessibleTimeline>(this);
+  return std::make_unique<AccessibleCaptureViewElement>(this, "Timeline");
 }
 
 }  // namespace orbit_gl

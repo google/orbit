@@ -692,5 +692,5 @@ std::vector<orbit_gl::CaptureViewElement*> TimeGraph::GetAllChildren() const {
 }
 
 std::unique_ptr<orbit_accessibility::AccessibleInterface> TimeGraph::CreateAccessibleInterface() {
-  return std::make_unique<orbit_gl::TimeGraphAccessibility>(this);
+  return std::make_unique<orbit_gl::AccessibleTimeGraph>(this);
 }
