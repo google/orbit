@@ -705,6 +705,8 @@ TEST_F(LiveFunctionsDataViewTest, UpdateHighlightedFunctionsOnSelect) {
   EXPECT_CALL(app_, GetHighlightedFunctionId).Times(3);
   EXPECT_CALL(app_, HasCaptureData).WillRepeatedly(testing::Return(true));
 
+  EXPECT_CALL(app_, GetCaptureData).WillRepeatedly(testing::ReturnRef(*capture_data_));
+
   // Single selection will hightlight the selected function
   {
     EXPECT_CALL(app_, SetHighlightedFunctionId)

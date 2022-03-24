@@ -87,7 +87,8 @@ class ThreadTrackDataProvider final {
 
   void OnCaptureComplete();
 
-  const absl::flat_hash_map<uint64_t, std::vector<uint64_t>>* GetTimerDurations();
+  [[nodiscard]] const std::vector<uint64_t>* GetSortedTimerDurationsForScopeId(
+      uint64_t scope_id) const;
 
  private:
   [[nodiscard]] const ScopeTreeTimerData* GetScopeTreeTimerData(uint32_t thread_id) const {

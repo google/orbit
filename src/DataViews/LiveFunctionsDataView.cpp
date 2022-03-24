@@ -63,8 +63,7 @@ LiveFunctionsDataView::LiveFunctionsDataView(
     : DataView(DataViewType::kLiveFunctions, app),
       live_functions_(live_functions),
       selected_function_id_(orbit_grpc_protos::kInvalidFunctionId),
-      metrics_uploader_(metrics_uploader),
-      timer_durations_(nullptr) {
+      metrics_uploader_(metrics_uploader) {
   update_period_ms_ = 300;
 }
 
@@ -155,11 +154,17 @@ void LiveFunctionsDataView::UpdateHistogramWithIndices(
 }
 
 void LiveFunctionsDataView::UpdateHistogramWithScopeIds(const std::vector<uint64_t>& scope_ids) {
-  if (timer_durations_ == nullptr || scope_ids.empty() ||
-      !timer_durations_->contains(scope_ids[0])) {
+  const std::vector<uint64_t>* timer_durations =
+      app_->HasCaptureData() && !scope_ids.empty()
+          ? app_->GetCaptureData().GetThreadTrackDataProvider()->GetSortedTimerDurationsForScopeId(
+                scope_ids[0])
+          : nullptr;
+
+  if (timer_durations == nullptr) {
     app_->ShowHistogram(nullptr, "", orbit_client_data::kInvalidScopeId);
     return;
   }
+
   const uint64_t scope_id = scope_ids[0];
 
   std::string function_name = "MANUAL";
@@ -168,7 +173,6 @@ void LiveFunctionsDataView::UpdateHistogramWithScopeIds(const std::vector<uint64
     function_name = orbit_client_data::function_utils::GetDisplayName(function);
   }
 
-  const std::vector<uint64_t>* timer_durations = &timer_durations_->at(scope_id);
   app_->ShowHistogram(timer_durations, function_name, scope_id);
 }
 
@@ -468,8 +472,6 @@ void LiveFunctionsDataView::OnDataChanged() {
     DataView::OnDataChanged();
     return;
   }
-
-  timer_durations_ = app_->GetCaptureData().GetThreadTrackDataProvider()->GetTimerDurations();
 
   const absl::flat_hash_map<uint64_t, orbit_grpc_protos::InstrumentedFunction>&
       instrumented_functions = app_->GetCaptureData().instrumented_functions();

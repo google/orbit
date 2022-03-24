@@ -4,6 +4,8 @@
 
 #include "ClientData/ThreadTrackDataProvider.h"
 
+#include <cstdint>
+
 #include "ClientData/Constants.h"
 #include "OrbitBase/Logging.h"
 
@@ -53,9 +55,11 @@ void ThreadTrackDataProvider::OnCaptureComplete() {
   UpdateTimerDurations();
 }
 
-const absl::flat_hash_map<uint64_t, std::vector<uint64_t>>*
-ThreadTrackDataProvider::GetTimerDurations() {
-  return &timer_durations_;
+[[nodiscard]] const std::vector<uint64_t>*
+ThreadTrackDataProvider::GetSortedTimerDurationsForScopeId(uint64_t scope_id) const {
+  const auto it = timer_durations_.find(scope_id);
+  if (it == timer_durations_.end()) return nullptr;
+  return &it->second;
 }
 
 void ThreadTrackDataProvider::UpdateTimerDurations() {

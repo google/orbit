@@ -91,8 +91,6 @@ class LiveFunctionsDataView : public DataView {
   void UpdateHistogramWithIndices(const std::vector<int>& visible_selected_indices);
 
   orbit_metrics_uploader::MetricsUploader* metrics_uploader_;
-
-  const absl::flat_hash_map<uint64_t, std::vector<uint64_t>>* timer_durations_;
 };
 
 }  // namespace orbit_data_views
