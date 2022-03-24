@@ -4,17 +4,9 @@
 
 #include "Batcher.h"
 
-#include <GteVector.h>
-#include <GteVector2.h>
-#include <glad/glad.h>
+#include <OrbitBase/Logging.h>
 #include <math.h>
 #include <stddef.h>
-
-#include <memory>
-
-#include "DisplayFormats/DisplayFormats.h"
-#include "Introspection/Introspection.h"
-#include "OrbitBase/Logging.h"
 
 void Batcher::AddLine(Vec2 from, Vec2 to, float z, const Color& color,
                       std::unique_ptr<PickingUserData> user_data) {
@@ -44,29 +36,6 @@ void Batcher::AddVerticalLine(Vec2 pos, float size, float z, const Color& color,
   Color picking_color = picking_manager_->GetPickableColor(pickable, batcher_id_);
 
   AddLineInternal(pos, pos + Vec2(0, size), z, color, picking_color, nullptr);
-}
-
-static void MoveLineToPixelCenterIfHorizontal(Line& line) {
-  if (line.start_point[1] != line.end_point[1]) return;
-  line.start_point[1] += 0.5f;
-  line.end_point[1] += 0.5f;
-}
-
-void Batcher::AddLineInternal(Vec2 from, Vec2 to, float z, const Color& color,
-                              const Color& picking_color,
-                              std::unique_ptr<PickingUserData> user_data) {
-  Line line;
-  line.start_point = translations_.TranslateAndFloorVertex(Vec3(from[0], from[1], z));
-  line.end_point = translations_.TranslateAndFloorVertex(Vec3(to[0], to[1], z));
-  // TODO(b/195386885) This is a hack to address the issue that some horizontal lines in the graph
-  // tracks are missing. We need a better solution for this issue.
-  MoveLineToPixelCenterIfHorizontal(line);
-  auto& buffer = primitive_buffers_by_layer_[z];
-
-  buffer.line_buffer.lines_.emplace_back(line);
-  buffer.line_buffer.colors_.push_back_n(color, 2);
-  buffer.line_buffer.picking_colors_.push_back_n(picking_color, 2);
-  user_data_.push_back(std::move(user_data));
 }
 
 void Batcher::AddBox(const Box& box, const std::array<Color, 4>& colors,
@@ -199,21 +168,6 @@ void Batcher::AddShadedBox(Vec2 pos, Vec2 size, float z, const Color& color,
   AddBoxInternal(box, colors, picking_color, nullptr);
 }
 
-void Batcher::AddBoxInternal(const Box& box, const std::array<Color, 4>& colors,
-                             const Color& picking_color,
-                             std::unique_ptr<PickingUserData> user_data) {
-  Box rounded_box = box;
-  for (size_t v = 0; v < 4; ++v) {
-    rounded_box.vertices[v] = translations_.TranslateAndFloorVertex(rounded_box.vertices[v]);
-  }
-  float layer_z_value = rounded_box.vertices[0][2];
-  auto& buffer = primitive_buffers_by_layer_[layer_z_value];
-  buffer.box_buffer.boxes_.emplace_back(rounded_box);
-  buffer.box_buffer.colors_.push_back(colors);
-  buffer.box_buffer.picking_colors_.push_back_n(picking_color, 4);
-  user_data_.push_back(std::move(user_data));
-}
-
 void Batcher::AddTriangle(const Triangle& triangle, const Color& color,
                           std::unique_ptr<PickingUserData> user_data) {
   Color picking_color = PickingId::ToColor(PickingType::kTriangle, user_data_.size(), batcher_id_);
@@ -252,21 +206,6 @@ void Batcher::AddShadedTrapezium(const Vec3& top_left, const Vec3& bottom_left,
   Triangle triangle_2{bottom_left, bottom_right, top_right};
   std::array<Color, 3> colors_2{colors[1], colors[2], colors[3]};
   AddTriangleInternal(triangle_2, colors_2, picking_color, std::move(user_data));
-}
-
-void Batcher::AddTriangleInternal(const Triangle& triangle, const std::array<Color, 3>& colors,
-                                  const Color& picking_color,
-                                  std::unique_ptr<PickingUserData> user_data) {
-  Triangle rounded_tri = triangle;
-  for (auto& vertex : rounded_tri.vertices) {
-    vertex = translations_.TranslateAndFloorVertex(vertex);
-  }
-  float layer_z_value = rounded_tri.vertices[0][2];
-  auto& buffer = primitive_buffers_by_layer_[layer_z_value];
-  buffer.triangle_buffer.triangles_.emplace_back(rounded_tri);
-  buffer.triangle_buffer.colors_.push_back(colors);
-  buffer.triangle_buffer.picking_colors_.push_back_n(picking_color, 3);
-  user_data_.push_back(std::move(user_data));
 }
 
 void Batcher::AddCircle(const Vec2& position, float radius, float z, Color color) {
@@ -360,111 +299,13 @@ void Batcher::GetBoxGradientColors(const Color& color, std::array<Color, 4>* col
   }
 }
 
-void Batcher::ResetElements() {
-  for (auto& [unused_layer, buffer] : primitive_buffers_by_layer_) {
-    buffer.Reset();
-  }
-  user_data_.clear();
-}
-
 void Batcher::StartNewFrame() {
   ORBIT_CHECK(translations_.IsEmpty());
   ResetElements();
 }
 
-std::vector<float> Batcher::GetLayers() const {
-  std::vector<float> layers;
-  for (auto& [layer, _] : primitive_buffers_by_layer_) {
-    layers.push_back(layer);
-  }
-  return layers;
-};
-
-void Batcher::DrawLayer(float layer, bool picking) const {
-  ORBIT_SCOPE_FUNCTION;
-  if (!primitive_buffers_by_layer_.count(layer)) return;
-  glPushAttrib(GL_ENABLE_BIT | GL_COLOR_BUFFER_BIT);
-  if (picking) {
-    glDisable(GL_BLEND);
-  } else {
-    glEnable(GL_BLEND);
-    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-  }
-  glDisable(GL_CULL_FACE);
-  glEnableClientState(GL_VERTEX_ARRAY);
-  glEnableClientState(GL_COLOR_ARRAY);
-  glEnable(GL_TEXTURE_2D);
-
-  DrawBoxBuffer(layer, picking);
-  DrawLineBuffer(layer, picking);
-  DrawTriangleBuffer(layer, picking);
-
-  glDisableClientState(GL_COLOR_ARRAY);
-  glDisableClientState(GL_VERTEX_ARRAY);
-  glPopAttrib();
-}
-
 void Batcher::Draw(bool picking) const {
   for (float layer : GetLayers()) {
     DrawLayer(layer, picking);
-  }
-}
-
-void Batcher::DrawBoxBuffer(float layer, bool picking) const {
-  auto& box_buffer = primitive_buffers_by_layer_.at(layer).box_buffer;
-  const orbit_containers::Block<Box, BoxBuffer::NUM_BOXES_PER_BLOCK>* box_block =
-      box_buffer.boxes_.root();
-  const orbit_containers::Block<Color, BoxBuffer::NUM_BOXES_PER_BLOCK * 4>* color_block;
-
-  color_block = !picking ? box_buffer.colors_.root() : box_buffer.picking_colors_.root();
-
-  while (box_block != nullptr) {
-    if (auto num_elems = box_block->size()) {
-      glVertexPointer(3, GL_FLOAT, sizeof(Vec3), box_block->data());
-      glColorPointer(4, GL_UNSIGNED_BYTE, sizeof(Color), color_block->data());
-      glDrawArrays(GL_QUADS, 0, num_elems * 4);
-    }
-
-    box_block = box_block->next();
-    color_block = color_block->next();
-  }
-}
-
-void Batcher::DrawLineBuffer(float layer, bool picking) const {
-  auto& line_buffer = primitive_buffers_by_layer_.at(layer).line_buffer;
-  const orbit_containers::Block<Line, LineBuffer::NUM_LINES_PER_BLOCK>* line_block =
-      line_buffer.lines_.root();
-  const orbit_containers::Block<Color, LineBuffer::NUM_LINES_PER_BLOCK * 2>* color_block;
-
-  color_block = !picking ? line_buffer.colors_.root() : line_buffer.picking_colors_.root();
-  while (line_block != nullptr) {
-    if (auto num_elems = line_block->size()) {
-      glVertexPointer(3, GL_FLOAT, sizeof(Vec3), line_block->data());
-      glColorPointer(4, GL_UNSIGNED_BYTE, sizeof(Color), color_block->data());
-      glDrawArrays(GL_LINES, 0, num_elems * 2);
-    }
-
-    line_block = line_block->next();
-    color_block = color_block->next();
-  }
-}
-
-void Batcher::DrawTriangleBuffer(float layer, bool picking) const {
-  auto& triangle_buffer = primitive_buffers_by_layer_.at(layer).triangle_buffer;
-  const orbit_containers::Block<Triangle, TriangleBuffer::NUM_TRIANGLES_PER_BLOCK>* triangle_block =
-      triangle_buffer.triangles_.root();
-  const orbit_containers::Block<Color, TriangleBuffer::NUM_TRIANGLES_PER_BLOCK * 3>* color_block;
-
-  color_block = !picking ? triangle_buffer.colors_.root() : triangle_buffer.picking_colors_.root();
-
-  while (triangle_block != nullptr) {
-    if (int num_elems = triangle_block->size()) {
-      glVertexPointer(3, GL_FLOAT, sizeof(Vec3), triangle_block->data());
-      glColorPointer(4, GL_UNSIGNED_BYTE, sizeof(Color), color_block->data());
-      glDrawArrays(GL_TRIANGLES, 0, num_elems * 3);
-    }
-
-    triangle_block = triangle_block->next();
-    color_block = color_block->next();
   }
 }

@@ -10,12 +10,12 @@
 #include <vector>
 
 #include "AccessibleInterfaceProvider.h"
-#include "Batcher.h"
 #include "CaptureViewElement.h"
 #include "ClientData/CaptureData.h"
 #include "ClientProtos/capture_data.pb.h"
 #include "CoreMath.h"
 #include "ManualInstrumentationManager.h"
+#include "OpenGlBatcher.h"
 #include "OrbitAccessibility/AccessibleInterface.h"
 #include "PickingManager.h"
 #include "TextRenderer.h"
@@ -182,7 +182,7 @@ class TimeGraph final : public orbit_gl::CaptureViewElement,
 
   bool update_primitives_requested_ = false;
 
-  Batcher batcher_;
+  orbit_gl::OpenGlBatcher batcher_;
 
   std::unique_ptr<orbit_gl::TrackContainer> track_container_;
   std::unique_ptr<orbit_gl::TimelineUi> timeline_ui_;

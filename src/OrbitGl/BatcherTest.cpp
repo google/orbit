@@ -10,18 +10,18 @@
 #include <utility>
 #include <vector>
 
-#include "Batcher.h"
 #include "CoreMath.h"
 #include "Geometry.h"
+#include "OpenGlBatcher.h"
 #include "PickingManager.h"
 #include "PickingManagerTest.h"
 
-namespace {
+namespace orbit_gl {
 
-class FakeBatcher : public Batcher {
+class FakeBatcher : public OpenGlBatcher {
  public:
   explicit FakeBatcher(BatcherId id, PickingManager* picking_manager = nullptr)
-      : Batcher(id, picking_manager) {}
+      : OpenGlBatcher(id, picking_manager) {}
 
   void ResetMockDrawCounts() {
     drawn_line_colors_.clear();
@@ -83,7 +83,7 @@ class FakeBatcher : public Batcher {
     }
   }
 
-  const PrimitiveBuffers& GetInternalBuffers(float layer) {
+  const orbit_gl_internal::PrimitiveBuffers& GetInternalBuffers(float layer) {
     return primitive_buffers_by_layer_.at(layer);
   }
 
@@ -242,7 +242,7 @@ TEST(Batcher, TranslationsAreAutomaticallyAdded) {
   FakeBatcher batcher(BatcherId::kUi);
   batcher.AddLine(Vec2(0.f, 0.f), Vec2(1.f, 1.f), 0.f, Color());
 
-  const PrimitiveBuffers& buffers = batcher.GetInternalBuffers(0.f);
+  const orbit_gl_internal::PrimitiveBuffers& buffers = batcher.GetInternalBuffers(0.f);
   const Line original_expectation{Vec3(0.f, 0.f, 0.f), Vec3(1.f, 1.f, 0.f)};
   const Vec3 transform(10.f, 100.f, 0.1f);
   const Line transformed_expectation{original_expectation.start_point + transform,
@@ -271,4 +271,4 @@ TEST(Batcher, TranslationsAreAutomaticallyAdded) {
   ASSERT_DEATH(batcher.PopTranslation(), "Check failed");
 }
 
-}  // namespace
+}  // namespace orbit_gl
