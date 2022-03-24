@@ -119,6 +119,9 @@ static void DrawVerticalLine(QPainter& painter, const QPoint& start, int length)
   return result;
 }
 
+// Providing exactly `optimal_tick_count` of ticks is impossible as we use a finite set of `steps`.
+// Hence, we choose the step leading to the number of ticks closest to `optimal_tick_count`.
+// If the available tick count is either 0 or 1, the step yielding zero ticks may be returned.
 [[nodiscard]] static TickStep ChooseBestStep(double min, double max,
                                              const std::vector<TickStep>& steps,
                                              uint32_t optimal_tick_count) {
