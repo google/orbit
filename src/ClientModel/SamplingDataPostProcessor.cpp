@@ -39,11 +39,6 @@ namespace orbit_client_model {
 
 namespace {
 
-template <typename H>
-H AbslHashValue(H h, const CallstackInfo& o) {
-  return H::combine(std::move(h), o.frames(), o.type());
-}
-
 using CallstackInfoAsPairWithLvalueRefToFrames =
     std::pair<const std::vector<uint64_t>&, CallstackType>;
 
@@ -268,12 +263,9 @@ void SamplingDataPostProcessor::ResolveCallstacks(const CallstackData& callstack
 
     // Check if we already have this resolved callstack, and if not, create one.
     uint64_t resolved_callstack_id;
-
-    if (resolved_callstack_to_id_.contains(CallstackInfoAsPairWithLvalueRefToFrames{
-            resolved_callstack_frames, resolved_callstack_type})) {
-      resolved_callstack_id = resolved_callstack_to_id_.at(CallstackInfoAsPairWithLvalueRefToFrames{
-          resolved_callstack_frames, resolved_callstack_type});
-    } else {
+    auto it = resolved_callstack_to_id_.find(CallstackInfoAsPairWithLvalueRefToFrames{
+        resolved_callstack_frames, resolved_callstack_type});
+    if (it == resolved_callstack_to_id_.end()) {
       resolved_callstack_id = callstack_id;
       ORBIT_CHECK(!id_to_resolved_callstack_.contains(resolved_callstack_id));
 
@@ -282,6 +274,8 @@ void SamplingDataPostProcessor::ResolveCallstacks(const CallstackData& callstack
 
       resolved_callstack_to_id_.emplace(
           CallstackInfo{resolved_callstack_frames, resolved_callstack_type}, resolved_callstack_id);
+    } else {
+      resolved_callstack_id = it->second;
     }
 
     original_id_to_resolved_callstack_id_[callstack_id] = resolved_callstack_id;

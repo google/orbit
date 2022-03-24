@@ -218,7 +218,7 @@ static void CanHandleOneCallstackSampleOfType(Callstack::CallstackType type) {
   EXPECT_CALL(listener, OnCallstackEvent).Times(1).WillOnce(SaveArg<0>(&actual_callstack_event));
 
   event_processor->ProcessEvent(event);
-
+  ASSERT_TRUE(actual_callstack.has_value());
   ExpectCallstackSamplesEqual(*actual_callstack_event, actual_callstack_id, *actual_callstack,
                               callstack_sample, &interned_callstack->intern());
 }
@@ -274,6 +274,7 @@ TEST(CaptureEventProcessor, WillOnlyHandleUniqueCallstacksOnce) {
   event_processor->ProcessEvent(event_1);
   event_processor->ProcessEvent(event_2);
 
+  ASSERT_TRUE(actual_callstack.has_value());
   ExpectCallstackSamplesEqual(*actual_call_stack_event_1, actual_callstack_id, *actual_callstack,
                               callstack_sample_1, &interned_callstack->intern());
   ExpectCallstackSamplesEqual(*actual_call_stack_event_2, actual_callstack_id, *actual_callstack,
@@ -313,6 +314,7 @@ TEST(CaptureEventProcessor, CanHandleInternedCallstackSamples) {
   event_processor->ProcessEvent(interned_callstack_event);
   event_processor->ProcessEvent(callstack_event);
 
+  ASSERT_TRUE(actual_callstack.has_value());
   ExpectCallstackSamplesEqual(*actual_call_stack_event, actual_callstack_id, *actual_callstack,
                               callstack_sample, callstack_intern);
 }

@@ -10,8 +10,8 @@
 #include "ClientData/CallstackType.h"
 namespace orbit_client_data {
 
-// This class is used on the client to represent a unique callstack, containing of the frames (as
-// pcs) as well as a `CallstackType`.
+// This class is used on the client to represent a unique callstack, containing  the frames (as
+// program counters) as well as a `CallstackType`.
 class CallstackInfo {
  public:
   CallstackInfo() = delete;
