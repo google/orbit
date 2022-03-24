@@ -265,8 +265,6 @@ OrbitApp::OrbitApp(orbit_gl::MainWindowInterface* main_window,
       metrics_uploader_(metrics_uploader) {
   ORBIT_CHECK(main_window_ != nullptr);
 
-  orbit_base::ThreadPool::InitializeDefaultThreadPool();
-
   thread_pool_ = orbit_base::ThreadPool::Create(
       /*thread_pool_min_size=*/4, /*thread_pool_max_size=*/256, /*thread_ttl=*/absl::Seconds(1),
       /*run_action=*/[](const std::unique_ptr<Action>& action) {
