@@ -171,12 +171,6 @@ TEST(AllocateInTraceeTest, AutomaticAllocateAndFree) {
   waitpid(pid, nullptr, 0);
 }
 
-TEST(AllocateInTraceeTest, ReadSeccompModeOfThread) {
-  std::optional<int> seccomp_mode = ReadSeccompModeOfThread(getpid());
-  ASSERT_TRUE(seccomp_mode.has_value());
-  EXPECT_EQ(seccomp_mode.value(), SECCOMP_MODE_DISABLED);
-}
-
 TEST(AllocateInTraceeTest, SyscallInTraceeFailsBecauseOfStrictSeccompMode) {
   std::array<int, 2> child_to_parent_pipe{};
   ORBIT_CHECK(pipe(child_to_parent_pipe.data()) == 0);

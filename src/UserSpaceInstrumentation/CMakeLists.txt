@@ -16,6 +16,7 @@ target_include_directories(UserSpaceInstrumentation PRIVATE
 
 target_sources(UserSpaceInstrumentation PUBLIC
         include/UserSpaceInstrumentation/AddressRange.h
+        include/UserSpaceInstrumentation/AnyThreadIsInStrictSeccompMode.h
         include/UserSpaceInstrumentation/Attach.h
         include/UserSpaceInstrumentation/ExecuteInProcess.h
         include/UserSpaceInstrumentation/InjectLibraryInTracee.h
@@ -26,6 +27,7 @@ target_sources(UserSpaceInstrumentation PRIVATE
         AccessTraceesMemory.h
         AllocateInTracee.cpp
         AllocateInTracee.h
+        AnyThreadIsInStrictSeccompMode.cpp
         Attach.cpp
         ExecuteInProcess.cpp
         ExecuteMachineCode.h
@@ -36,6 +38,8 @@ target_sources(UserSpaceInstrumentation PRIVATE
         InstrumentProcess.cpp
         MachineCode.cpp
         MachineCode.h
+        ReadSeccompModeOfThread.cpp
+        ReadSeccompModeOfThread.h
         RegisterState.cpp
         RegisterState.h
         Trampoline.cpp
@@ -98,6 +102,7 @@ target_sources(UserSpaceInstrumentationTests PRIVATE
         InjectLibraryInTraceeTest.cpp
         InstrumentProcessTest.cpp
         MachineCodeTest.cpp
+        ReadSeccompModeOfThreadTest.cpp
         RegisterStateTest.cpp
         TestProcess.cpp
         TestProcess.h

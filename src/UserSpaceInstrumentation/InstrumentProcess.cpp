@@ -7,10 +7,12 @@
 #include <absl/base/casts.h>
 #include <absl/container/flat_hash_set.h>
 #include <dlfcn.h>
+#include <linux/seccomp.h>
 #include <unistd.h>
 
 #include <filesystem>
 #include <mutex>
+#include <optional>
 #include <vector>
 
 #include "AccessTraceesMemory.h"
@@ -19,11 +21,14 @@
 #include "ObjectUtils/LinuxMap.h"
 #include "OrbitBase/ExecutablePath.h"
 #include "OrbitBase/File.h"
+#include "OrbitBase/GetProcessIds.h"
 #include "OrbitBase/Logging.h"
 #include "OrbitBase/ThreadUtils.h"
 #include "OrbitBase/UniqueResource.h"
+#include "ReadSeccompModeOfThread.h"
 #include "Trampoline.h"
 #include "UserSpaceInstrumentation/AddressRange.h"
+#include "UserSpaceInstrumentation/AnyThreadIsInStrictSeccompMode.h"
 #include "UserSpaceInstrumentation/Attach.h"
 #include "UserSpaceInstrumentation/ExecuteInProcess.h"
 #include "UserSpaceInstrumentation/InjectLibraryInTracee.h"
@@ -99,7 +104,7 @@ bool IsBlocklisted(std::string_view function_name) {
 
 // Holds all the data necessary to keep track of a process we instrument.
 // Needs to be created via the static factory function `Create`. This will inject the shared library
-// with our instrumentaion code into the target process and create the return trampoline. Once
+// with our instrumentation code into the target process and create the return trampoline. Once
 // created we can instrument functions in the target process and deactivate the instrumentation
 // again (see `InstrumentFunctions`, `UninstrumentFunctions` below).
 class InstrumentedProcess {
@@ -211,6 +216,10 @@ ErrorMessageOr<std::unique_ptr<InstrumentedProcess>> InstrumentedProcess::Create
                                                }
                                              }};
 
+  if (AnyThreadIsInStrictSeccompMode(pid)) {
+    return ErrorMessage("At least one thread of the target process is in strict seccomp mode.");
+  }
+
   // Inject library into target process.
   auto library_path_or_error = GetLibraryPath();
   if (library_path_or_error.has_error()) {
@@ -263,6 +272,11 @@ InstrumentedProcess::InstrumentFunctions(const CaptureOptions& capture_options) 
                                                  ORBIT_ERROR("Detaching from %i", pid);
                                                }
                                              }};
+
+  if (AnyThreadIsInStrictSeccompMode(pid_)) {
+    return ErrorMessage("At least one thread of the target process is in strict seccomp mode.");
+  }
+
   // Init Capstone disassembler.
   csh capstone_handle = 0;
   cs_err error_code = cs_open(CS_ARCH_X86, CS_MODE_64, &capstone_handle);

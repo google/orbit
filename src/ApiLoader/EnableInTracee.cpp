@@ -17,6 +17,7 @@
 #include "OrbitBase/Logging.h"
 #include "OrbitBase/ThreadUtils.h"
 #include "OrbitBase/UniqueResource.h"
+#include "UserSpaceInstrumentation/AnyThreadIsInStrictSeccompMode.h"
 #include "UserSpaceInstrumentation/Attach.h"
 #include "UserSpaceInstrumentation/ExecuteInProcess.h"
 #include "UserSpaceInstrumentation/InjectLibraryInTracee.h"
@@ -26,6 +27,7 @@ using orbit_api_utils::kOrbitApiGetFunctionTableAddressWinPrefix;
 using orbit_grpc_protos::ApiFunction;
 using orbit_grpc_protos::CaptureOptions;
 using orbit_grpc_protos::ModuleInfo;
+using orbit_user_space_instrumentation::AnyThreadIsInStrictSeccompMode;
 using orbit_user_space_instrumentation::AttachAndStopNewThreadsOfProcess;
 using orbit_user_space_instrumentation::AttachAndStopProcess;
 using orbit_user_space_instrumentation::DetachAndContinueProcess;
@@ -97,6 +99,10 @@ ErrorMessageOr<void> SetApiEnabledInTracee(const CaptureOptions& capture_options
                                              ORBIT_ERROR("Detaching from %i", pid);
                                            }
                                          }};
+
+  if (AnyThreadIsInStrictSeccompMode(pid)) {
+    return ErrorMessage("At least one thread of the target process is in strict seccomp mode.");
+  }
 
   // Load liborbit.so and find api table initialization function.
   OUTCOME_TRY(auto&& liborbit_path, GetLibOrbitPath());
