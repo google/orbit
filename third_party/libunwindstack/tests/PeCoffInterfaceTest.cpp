@@ -307,6 +307,9 @@ TYPED_TEST(PeCoffInterfaceTest, debug_frame_section_parsed_correctly) {
   ASSERT_NE(dwarf_fde, nullptr);
   EXPECT_EQ(0x2100, dwarf_fde->pc_start);
   EXPECT_EQ(0x2500, dwarf_fde->pc_end);
+
+  const DwarfFde* dwarf_fde2 = coff.DebugFrameSection()->GetFdeFromPc(0x10000);
+  ASSERT_EQ(dwarf_fde2, nullptr);
 }
 
 TYPED_TEST(PeCoffInterfaceTest, get_correct_relative_pc) {

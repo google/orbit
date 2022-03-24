@@ -35,10 +35,21 @@ void PeCoffFake<PeCoffInterfaceType>::Init() {
   uint64_t offset = SetDosHeader(0x1000);
   offset = SetNewHeaderAtOffset(offset);
   offset = SetCoffHeaderAtOffset(offset);
-  offset = SetOptionalHeaderAtOffset(offset);
-  offset = SetSectionHeadersAtOffset(offset);
 
-  SetDebugFrameSectionAtOffset(kDebugFrameSectionFileOffset);
+  uint64_t section_headers_offset = SetOptionalHeaderAtOffset(offset);
+
+  offset = SetDebugFrameEntryAtOffset(kDebugFrameSectionFileOffset, 0x2100);
+  uint64_t debug_frame_vmsize = offset - kDebugFrameSectionFileOffset;
+
+  // Invalid entry after the .debug_frame section. We want to validate that this entry does *not*
+  // get parsed.
+  offset = SetDebugFrameEntryAtOffset(kDebugFrameSectionFileOffset + 0x200, 0x10000);
+  uint64_t debug_frame_filesize = offset - kDebugFrameSectionFileOffset;
+
+  CHECK(debug_frame_vmsize <= std::numeric_limits<uint32_t>::max());
+  CHECK(debug_frame_filesize <= std::numeric_limits<uint32_t>::max());
+  SetSectionHeadersAtOffset(section_headers_offset, static_cast<uint32_t>(debug_frame_vmsize),
+                            static_cast<uint32_t>(debug_frame_filesize));
 }
 
 template <typename PeCoffInterfaceType>
@@ -282,12 +293,14 @@ uint64_t PeCoffFake<PeCoffInterfaceType>::SetSectionStringsAtOffset(uint64_t off
 }
 
 template <typename PeCoffInterfaceType>
-uint64_t PeCoffFake<PeCoffInterfaceType>::SetSectionHeadersAtOffset(uint64_t offset) {
+uint64_t PeCoffFake<PeCoffInterfaceType>::SetSectionHeadersAtOffset(uint64_t offset,
+                                                                    uint32_t debug_frame_vmsize,
+                                                                    uint32_t debug_frame_filesize) {
   // Shorter than kSectionNameInHeaderSize (== 8) characters
   offset = SetSectionHeaderAtOffset(offset, ".text", 0, kTextSectionOffsetFake, 0, 0);
   // Longer than kSectionNameInHeaderSize (== 8) characters
-  offset = SetSectionHeaderAtOffset(offset, ".debug_frame", kDebugFrameSectionSize,
-                                    kDebugFrameSectionFileOffset, kDebugFrameSectionSize,
+  offset = SetSectionHeaderAtOffset(offset, ".debug_frame", debug_frame_vmsize,
+                                    kDebugFrameSectionFileOffset, debug_frame_filesize,
                                     kDebugFrameSectionFileOffset);
   SetData16(coff_header_nsects_offset_, 2);
 
@@ -301,7 +314,8 @@ uint64_t PeCoffFake<PeCoffInterfaceType>::SetSectionHeadersAtOffset(uint64_t off
 }
 
 template <typename PeCoffInterfaceType>
-uint64_t PeCoffFake<PeCoffInterfaceType>::SetDebugFrameSectionAtOffset(uint64_t offset) {
+uint64_t PeCoffFake<PeCoffInterfaceType>::SetDebugFrameEntryAtOffset(uint64_t offset,
+                                                                     uint32_t pc_start) {
   CHECK(memory_);
   uint64_t initial_offset = offset;
   // CIE 32 information.
@@ -323,7 +337,7 @@ uint64_t PeCoffFake<PeCoffInterfaceType>::SetDebugFrameSectionAtOffset(uint64_t 
   offset = initial_offset + 0x100;
   offset = SetData32(offset, 0xfc);
   offset = SetData32(offset, 0);
-  offset = SetData32(offset, 0x2100);
+  offset = SetData32(offset, pc_start);
   offset = SetData32(offset, 0x400);
 
   // Augmentation size, ULEB128 encoding, must be present as 'z' is present in the
