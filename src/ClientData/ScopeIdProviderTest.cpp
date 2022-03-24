@@ -68,12 +68,16 @@ static void TestProvideId(std::vector<orbit_client_protos::TimerInfo>& timer_inf
 }
 
 TEST(NameEqualityScopeIdProviderTest, ProvideIdIsCorrectForApiScope) {
+  // TODO (b/226565085) remove the flag when the manual instrumentation grouping feature is
+  // released.
   absl::SetFlag(&FLAGS_devmode, true);
   auto timer_infos = MakeTimerInfos(kNames, orbit_client_protos::TimerInfo_Type_kApiScope);
   TestProvideId(timer_infos);
 }
 
 TEST(NameEqualityScopeIdProviderTest, ProvideIdIsCorrectForApiScopeAsync) {
+  // TODO (b/226565085) remove the flag when the manual instrumentation grouping feature is
+  // released.
   absl::SetFlag(&FLAGS_devmode, true);
 
   auto async_timer_infos =
@@ -82,6 +86,8 @@ TEST(NameEqualityScopeIdProviderTest, ProvideIdIsCorrectForApiScopeAsync) {
 }
 
 TEST(NameEqualityScopeIdProviderTest, SyncAndAsyncScopesOfTheSameNameGetDifferentIds) {
+  // TODO (b/226565085) remove the flag when the manual instrumentation grouping feature is
+  // released.
   absl::SetFlag(&FLAGS_devmode, true);
   TimerInfo sync = MakeTimerInfo("A", orbit_client_protos::TimerInfo_Type_kApiScope);
   TimerInfo async = MakeTimerInfo("A", orbit_client_protos::TimerInfo_Type_kApiScopeAsync);
@@ -93,6 +99,8 @@ TEST(NameEqualityScopeIdProviderTest, SyncAndAsyncScopesOfTheSameNameGetDifferen
 }
 
 TEST(NameEqualityScopeIdProviderTest, CreateIsCorrect) {
+  // TODO (b/226565085) remove the flag when the manual instrumentation grouping feature is
+  // released.
   absl::SetFlag(&FLAGS_devmode, true);
   orbit_grpc_protos::CaptureOptions capture_options;
   capture_options.add_instrumented_functions()->set_function_id(10);

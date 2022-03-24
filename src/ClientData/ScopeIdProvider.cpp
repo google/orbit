@@ -34,6 +34,8 @@ namespace orbit_client_data {
     return timer_info.function_id();
   }
 
+  // TODO (b/226565085) remove the flag check when the manual instrumentation grouping feature is
+  // released.
   if (absl::GetFlag(FLAGS_devmode) &&
       (timer_info.type() == orbit_client_protos::TimerInfo_Type_kApiScope ||
        timer_info.type() == orbit_client_protos::TimerInfo_Type_kApiScopeAsync)) {

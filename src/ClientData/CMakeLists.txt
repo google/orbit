@@ -63,7 +63,7 @@ target_sources(ClientData PRIVATE
 target_link_libraries(ClientData PUBLIC
         ApiInterface
         Containers
-        ClientFlags
+        ClientFlags  # TODO (b/226565085) remove when manual instrumentation grouping feature is released.
         ClientProtos
         GrpcProtos
         # TODO(b/191248550): Remove ObjectUtils once GetAbsoluteAddress is removed
@@ -92,7 +92,7 @@ target_sources(ClientDataTests PRIVATE
 
 target_link_libraries(ClientDataTests PRIVATE
         ClientData
-        ClientFlags
+        ClientFlags # TODO (b/226565085) remove when manual instrumentation grouping feature is released.
         TestUtils
         GTest::Main)
 
