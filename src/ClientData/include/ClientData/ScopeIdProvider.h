@@ -27,7 +27,7 @@ class ScopeIdProvider {
 // Otherwise, provides equal ids to the instances of `TimerInfo`
 // if and only if their `api_scope_name` and their `type` are equal.  The ids are chosen
 // consecutively starting with `start_id`. To instantiate, use
-// `NameEqualityApiEventIdSetter::Create` as this ensures no overlap between `api_scope_group_id`
+// `NameEqualityScopeIdProvider::Create` as this ensures no overlap between `api_scope_group_id`
 // and `function_id`.
 class NameEqualityScopeIdProvider : public ScopeIdProvider {
  public:
