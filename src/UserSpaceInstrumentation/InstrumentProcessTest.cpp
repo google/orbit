@@ -333,9 +333,9 @@ TEST(InstrumentProcessTest, AnyTargetThreadInStrictSeccompMode) {
       // strict seccomp mode still allows write.
       ORBIT_CHECK(write(child_to_parent_pipe[1], "a", 1) == 1);
 
-      [[maybe_unused]] volatile int sum = 0;
+      [[maybe_unused]] volatile uint64_t counter = 0;
       while (true) {
-        sum += SomethingToInstrument();
+        ++counter;
       }
     }};
 
