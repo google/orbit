@@ -146,7 +146,9 @@ void GlCanvas::LeftDown(int x, int y) {
   RequestRedraw();
 }
 
-void GlCanvas::MouseWheelMoved(int /*x*/, int /*y*/, int delta, bool /*ctrl*/) {
+void GlCanvas::MouseWheelMoved(int x, int y, int delta, bool /*ctrl*/) {
+  mouse_move_pos_screen_ = Vec2i(x, y);
+
   // Normalize and invert sign, so that delta < 0 is zoom in.
   int delta_normalized = delta < 0 ? 1 : -1;
 

@@ -405,7 +405,7 @@ std::unique_ptr<AccessibleInterface> CaptureWindow::CreateAccessibleInterface() 
 void CaptureWindow::Draw() {
   ORBIT_SCOPE("CaptureWindow::Draw");
   uint64_t start_time_ns = orbit_base::CaptureTimestampNs();
-  bool time_graph_was_redrawn = time_graph_ != nullptr ? time_graph_->IsRedrawNeeded() : false;
+  bool time_graph_was_redrawn = time_graph_ != nullptr && time_graph_->IsRedrawNeeded();
 
   text_renderer_.Init();
 
@@ -561,11 +561,15 @@ void CaptureWindow::UpdateHorizontalSliderFromWorld() {
   double stop = time_graph_->GetMaxTimeUs();
   double width = stop - start;
   double max_start = time_span - width;
-  double ratio = capture_client_app_->IsCapturing() ? 1 : (max_start != 0 ? start / max_start : 0);
+
+  constexpr double kEpsilon = 1e-8;
+  double ratio =
+      capture_client_app_->IsCapturing() ? 1 : (max_start > kEpsilon ? start / max_start : 0);
   int slider_width = static_cast<int>(time_graph_->GetLayout().GetSliderWidth());
   slider_->SetPixelHeight(slider_width);
-  slider_->SetNormalizedPosition(static_cast<float>(ratio));
   slider_->SetNormalizedLength(static_cast<float>(width / time_span));
+  slider_->SetNormalizedPosition(static_cast<float>(ratio));
+
   slider_->SetOrthogonalSliderPixelHeight(vertical_slider_->IsVisible() ? slider_width : 0);
 }
 

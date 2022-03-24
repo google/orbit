@@ -60,15 +60,19 @@ TimeGraph::TimeGraph(AccessibleInterfaceProvider* parent, OrbitApp* app,
     : orbit_gl::CaptureViewElement(nullptr, viewport, &layout_),
       accessible_parent_{parent},
       batcher_(BatcherId::kTimeGraph),
-      manual_instrumentation_manager_{app->GetManualInstrumentationManager()},
       thread_track_data_provider_(capture_data->GetThreadTrackDataProvider()),
       capture_data_{capture_data},
       app_{app} {
-  text_renderer_static_.Init();
+  if (app_ != nullptr) {
+    manual_instrumentation_manager_ = app->GetManualInstrumentationManager();
+  }
   text_renderer_static_.SetViewport(viewport);
   batcher_.SetPickingManager(picking_manager);
-  track_container_ = std::make_unique<orbit_gl::TrackContainer>(
-      this, this, viewport, &layout_, app, app->GetModuleManager(), capture_data);
+
+  const orbit_client_data::ModuleManager* module_manager =
+      app != nullptr ? app->GetModuleManager() : nullptr;
+  track_container_ = std::make_unique<orbit_gl::TrackContainer>(this, this, viewport, &layout_,
+                                                                app_, module_manager, capture_data);
   timeline_ui_ = std::make_unique<orbit_gl::TimelineUi>(
       /*parent=*/this, /*timeline_info_interface=*/this, viewport, &layout_);
   if (absl::GetFlag(FLAGS_enforce_full_redraw)) {
@@ -521,6 +525,7 @@ void TimeGraph::PrepareBatcherAndUpdatePrimitives(PickingMode picking_mode) {
 
   batcher_.StartNewFrame();
 
+  text_renderer_static_.Init();
   text_renderer_static_.Clear();
 
   uint64_t min_tick = GetTickFromUs(min_time_us_);
