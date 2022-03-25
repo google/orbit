@@ -29,6 +29,7 @@
 #include "ClientData/PostProcessedSamplingData.h"
 #include "ClientData/ProcessData.h"
 #include "ClientData/ScopeIdProvider.h"
+#include "ClientData/ThreadStateSliceInfo.h"
 #include "ClientData/ThreadTrackDataProvider.h"
 #include "ClientData/TimerChain.h"
 #include "ClientData/TimerData.h"
@@ -117,7 +118,7 @@ class CaptureData {
     return thread_state_slices_.count(tid) > 0;
   }
 
-  void AddThreadStateSlice(orbit_client_protos::ThreadStateSliceInfo state_slice) {
+  void AddThreadStateSlice(ThreadStateSliceInfo state_slice) {
     absl::MutexLock lock{&thread_state_slices_mutex_};
     thread_state_slices_[state_slice.tid()].emplace_back(std::move(state_slice));
   }
@@ -126,7 +127,7 @@ class CaptureData {
   // in the time range while holding for the whole time the internal mutex, acquired only once.
   void ForEachThreadStateSliceIntersectingTimeRange(
       uint32_t thread_id, uint64_t min_timestamp, uint64_t max_timestamp,
-      const std::function<void(const orbit_client_protos::ThreadStateSliceInfo&)>& action) const;
+      const std::function<void(const ThreadStateSliceInfo&)>& action) const;
 
   [[nodiscard]] const orbit_client_protos::FunctionStats& GetFunctionStatsOrDefault(
       uint64_t instrumented_function_id) const;
@@ -263,8 +264,8 @@ class CaptureData {
   absl::flat_hash_map<uint32_t, std::string> thread_names_;
 
   // For each thread, assume sorted by timestamp and not overlapping.
-  absl::flat_hash_map<uint32_t, std::vector<orbit_client_protos::ThreadStateSliceInfo>>
-      thread_state_slices_ GUARDED_BY(thread_state_slices_mutex_);
+  absl::flat_hash_map<uint32_t, std::vector<ThreadStateSliceInfo>> thread_state_slices_
+      GUARDED_BY(thread_state_slices_mutex_);
   mutable absl::Mutex thread_state_slices_mutex_;
 
   // Only access this field from the main thread.

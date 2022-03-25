@@ -170,7 +170,7 @@ class OrbitApp final : public DataViewFactory,
                          orbit_client_data::CallstackInfo callstack) override;
   void OnCallstackEvent(orbit_client_data::CallstackEvent callstack_event) override;
   void OnThreadName(uint32_t thread_id, std::string thread_name) override;
-  void OnThreadStateSlice(orbit_client_protos::ThreadStateSliceInfo thread_state_slice) override;
+  void OnThreadStateSlice(orbit_client_data::ThreadStateSliceInfo thread_state_slice) override;
   void OnAddressInfo(orbit_client_protos::LinuxAddressInfo address_info) override;
   void OnUniqueTracepointInfo(uint64_t key,
                               orbit_grpc_protos::TracepointInfo tracepoint_info) override;

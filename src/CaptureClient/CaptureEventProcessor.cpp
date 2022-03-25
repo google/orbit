@@ -25,9 +25,9 @@ namespace orbit_capture_client {
 using orbit_client_data::CallstackEvent;
 using orbit_client_data::CallstackInfo;
 using orbit_client_data::CallstackType;
+using orbit_client_data::ThreadStateSliceInfo;
 
 using orbit_client_protos::LinuxAddressInfo;
-using orbit_client_protos::ThreadStateSliceInfo;
 using orbit_client_protos::TimerInfo;
 
 using orbit_grpc_protos::AddressInfo;
@@ -550,45 +550,10 @@ void CaptureEventProcessorForListener::ProcessThreadNamesSnapshot(
 
 void CaptureEventProcessorForListener::ProcessThreadStateSlice(
     const ThreadStateSlice& thread_state_slice) {
-  ThreadStateSliceInfo slice_info;
-  slice_info.set_tid(thread_state_slice.tid());
-  switch (thread_state_slice.thread_state()) {
-    case ThreadStateSlice::kRunning:
-      slice_info.set_thread_state(ThreadStateSliceInfo::kRunning);
-      break;
-    case ThreadStateSlice::kRunnable:
-      slice_info.set_thread_state(ThreadStateSliceInfo::kRunnable);
-      break;
-    case ThreadStateSlice::kInterruptibleSleep:
-      slice_info.set_thread_state(ThreadStateSliceInfo::kInterruptibleSleep);
-      break;
-    case ThreadStateSlice::kUninterruptibleSleep:
-      slice_info.set_thread_state(ThreadStateSliceInfo::kUninterruptibleSleep);
-      break;
-    case ThreadStateSlice::kStopped:
-      slice_info.set_thread_state(ThreadStateSliceInfo::kStopped);
-      break;
-    case ThreadStateSlice::kTraced:
-      slice_info.set_thread_state(ThreadStateSliceInfo::kTraced);
-      break;
-    case ThreadStateSlice::kDead:
-      slice_info.set_thread_state(ThreadStateSliceInfo::kDead);
-      break;
-    case ThreadStateSlice::kZombie:
-      slice_info.set_thread_state(ThreadStateSliceInfo::kZombie);
-      break;
-    case ThreadStateSlice::kParked:
-      slice_info.set_thread_state(ThreadStateSliceInfo::kParked);
-      break;
-    case ThreadStateSlice::kIdle:
-      slice_info.set_thread_state(ThreadStateSliceInfo::kIdle);
-      break;
-    default:
-      ORBIT_UNREACHABLE();
-  }
-  slice_info.set_begin_timestamp_ns(thread_state_slice.end_timestamp_ns() -
-                                    thread_state_slice.duration_ns());
-  slice_info.set_end_timestamp_ns(thread_state_slice.end_timestamp_ns());
+  ThreadStateSliceInfo slice_info{
+      thread_state_slice.tid(), thread_state_slice.thread_state(),
+      thread_state_slice.end_timestamp_ns() - thread_state_slice.duration_ns(),
+      thread_state_slice.end_timestamp_ns()};
 
   gpu_queue_submission_processor_.UpdateBeginCaptureTime(slice_info.begin_timestamp_ns());
 

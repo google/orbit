@@ -106,6 +106,7 @@ using orbit_client_data::PostProcessedSamplingData;
 using orbit_client_data::ProcessData;
 using orbit_client_data::SampledFunction;
 using orbit_client_data::ThreadID;
+using orbit_client_data::ThreadStateSliceInfo;
 using orbit_client_data::TimerBlock;
 using orbit_client_data::TimerChain;
 using orbit_client_data::TracepointInfoSet;
@@ -495,7 +496,7 @@ void OrbitApp::OnThreadName(uint32_t thread_id, std::string thread_name) {
   GetMutableCaptureData().AddOrAssignThreadName(thread_id, std::move(thread_name));
 }
 
-void OrbitApp::OnThreadStateSlice(orbit_client_protos::ThreadStateSliceInfo thread_state_slice) {
+void OrbitApp::OnThreadStateSlice(ThreadStateSliceInfo thread_state_slice) {
   GetMutableCaptureData().AddThreadStateSlice(std::move(thread_state_slice));
 }
 

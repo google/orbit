@@ -137,8 +137,7 @@ class IntrospectionCaptureListener : public orbit_capture_client::CaptureListene
   void OnThreadName(uint32_t /*thread_id*/, std::string /*thread_name*/) override {
     ORBIT_UNREACHABLE();
   }
-  void OnThreadStateSlice(
-      orbit_client_protos::ThreadStateSliceInfo /*thread_state_slice*/) override {
+  void OnThreadStateSlice(orbit_client_data::ThreadStateSliceInfo /*thread_state_slice*/) override {
     ORBIT_UNREACHABLE();
   }
   void OnAddressInfo(orbit_client_protos::LinuxAddressInfo /*address_info*/) override {
