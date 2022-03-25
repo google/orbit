@@ -316,6 +316,11 @@ void OrbitApp::OnCaptureFinished(const CaptureFinished& capture_finished) {
         ORBIT_UNREACHABLE();
         break;
     }
+
+    if (capture_data_ != nullptr && capture_data_->file_path().has_value()) {
+      capture_file_info_manager_.AddOrTouchCaptureFile(capture_data_->file_path().value(),
+                                                       GetCaptureTime());
+    }
   });
 }
 
@@ -344,10 +349,6 @@ void OrbitApp::OnCaptureStarted(const orbit_grpc_protos::CaptureStarted& capture
     }
 
     ClearCapture();
-
-    if (file_path.has_value()) {
-      capture_file_info_manager_.AddOrTouchCaptureFile(file_path.value());
-    }
 
     // It is safe to do this write on the main thread, as the capture thread is suspended until
     // this task is completely executed.
