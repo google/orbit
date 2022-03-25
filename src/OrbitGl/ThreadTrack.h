@@ -69,7 +69,7 @@ class ThreadTrack final : public TimerTrack {
   void OnTimer(const orbit_client_protos::TimerInfo& timer_info) override;
   [[nodiscard]] float GetYFromDepth(uint32_t depth) const override;
 
-  void OnPick(int x, int y) override;
+  void SelectTrack() override;
 
   [[nodiscard]] bool IsEmpty() const override;
 

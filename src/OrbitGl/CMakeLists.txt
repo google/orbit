@@ -76,7 +76,10 @@ target_sources(
          TracepointThreadBar.h
          Track.h
          TrackContainer.h
+         TrackControlInterface.h
+         TrackHeader.h
          TrackManager.h
+         TrackRenderHelper.h
          TrackTestData.h
          TranslationStack.h
          TriangleToggle.h
@@ -139,7 +142,9 @@ target_sources(
           TracepointThreadBar.cpp
           Track.cpp
           TrackContainer.cpp
+          TrackHeader.cpp
           TrackManager.cpp
+          TrackRenderHelper.cpp
           TrackTestData.cpp
           TranslationStack.cpp
           TriangleToggle.cpp
@@ -215,6 +220,7 @@ target_sources(OrbitGlTests PRIVATE
                TimerInfosIteratorTest.cpp
                TranslationStackTest.cpp
                ThreadTrackTest.cpp
+               TrackHeaderTest.cpp
                TrackManagerTest.cpp
                ViewportTest.cpp)
 

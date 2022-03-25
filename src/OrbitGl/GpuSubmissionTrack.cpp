@@ -40,9 +40,7 @@ GpuSubmissionTrack::GpuSubmissionTrack(Track* parent,
                  timer_data),
       timeline_hash_{timeline_hash},
       string_manager_{app->GetStringManager()},
-      parent_{parent} {
-  draw_background_ = false;
-}
+      parent_{parent} {}
 
 std::string GpuSubmissionTrack::GetName() const {
   return absl::StrFormat(

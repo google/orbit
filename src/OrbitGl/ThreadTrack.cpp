@@ -281,10 +281,7 @@ void ThreadTrack::UpdatePositionOfSubtracks() {
   tracepoint_bar_->SetPos(pos[0], current_y);
 }
 
-void ThreadTrack::OnPick(int x, int y) {
-  Track::OnPick(x, y);
-  app_->set_selected_thread_id(GetThreadId());
-}
+void ThreadTrack::SelectTrack() { app_->set_selected_thread_id(GetThreadId()); }
 
 std::vector<orbit_gl::CaptureViewElement*> ThreadTrack::GetAllChildren() const {
   auto result = Track::GetAllChildren();
