@@ -29,8 +29,7 @@
 #include "MetricsUploader/MetricsUploaderStub.h"
 #include "MockAppInterface.h"
 
-using orbit_client_protos::
-FunctionInfo;
+using orbit_client_protos::FunctionInfo;
 using orbit_client_protos::FunctionStats;
 using JumpToTimerMode = orbit_data_views::AppInterface::JumpToTimerMode;
 using orbit_client_data::CaptureData;
