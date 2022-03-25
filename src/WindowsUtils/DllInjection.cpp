@@ -12,6 +12,8 @@
 #include "OrbitBase/Logging.h"
 #include "OrbitBase/UniqueResource.h"
 #include "WindowsUtils/ListModules.h"
+#include "WindowsUtils/OpenProcess.h"
+#include "WindowsUtils/SafeHandle.h"
 
 // clang-format off
 #include <windows.h>
@@ -72,15 +74,6 @@ ErrorMessageOr<std::string> RemoteReadString(HANDLE process_handle, uint64_t bas
     result.push_back(character);
   }
   return result;
-}
-
-ErrorMessageOr<HANDLE> GetHandleFromPid(uint32_t pid) {
-  HANDLE process_handle = OpenProcess(PROCESS_ALL_ACCESS, /*bInheritHandle=*/FALSE, pid);
-  if (!process_handle) {
-    return ErrorMessage(absl::StrFormat("OpenProcess failed for pid %u: %s", pid,
-                                        orbit_base::GetLastErrorAsString()));
-  }
-  return process_handle;
 }
 
 ErrorMessageOr<void> ValidatePath(std::filesystem::path path) {
@@ -153,8 +146,9 @@ ErrorMessageOr<void> CreateRemoteThread(uint32_t pid, std::string_view module_na
                                         std::string_view function_name,
                                         std::vector<uint8_t> parameter) {
   OUTCOME_TRY(uint64_t function_address, GetRemoteProcAddress(pid, module_name, function_name));
-  OUTCOME_TRY(HANDLE handle, GetHandleFromPid(pid));
-  orbit_base::unique_resource handle_closer(handle, ::CloseHandle);
+  OUTCOME_TRY(SafeHandle safe_handle,
+              OpenProcess(PROCESS_ALL_ACCESS, /*inherit_handle=*/false, pid));
+  HANDLE handle = *safe_handle;
 
   // Write parameter to remote process memory.
   uint64_t parameter_address = 0;
@@ -182,8 +176,9 @@ ErrorMessageOr<uint64_t> GetRemoteProcAddress(uint32_t pid, std::string_view mod
   OUTCOME_TRY(Module module, FindModule(pid, module_name));
   uint64_t module_base = module.address_start;
 
-  OUTCOME_TRY(HANDLE handle, GetHandleFromPid(pid));
-  orbit_base::unique_resource handle_closer(handle, ::CloseHandle);
+  OUTCOME_TRY(SafeHandle safe_handle,
+              OpenProcess(PROCESS_ALL_ACCESS, /*inherit_handle=*/false, pid));
+  HANDLE handle = *safe_handle;
 
   OUTCOME_TRY(auto image_dos_header, RemoteRead<IMAGE_DOS_HEADER>(handle, module_base));
   if (image_dos_header.e_magic != IMAGE_DOS_SIGNATURE) {

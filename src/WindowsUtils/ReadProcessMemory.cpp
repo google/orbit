@@ -8,6 +8,9 @@
 #include <absl/strings/str_format.h>
 #include <windows.h>
 
+#include "WindowsUtils/OpenProcess.h"
+#include "WindowsUtils/SafeHandle.h"
+
 // clang-format off
 #include <memoryapi.h>
 // clang-format on
@@ -18,12 +21,8 @@ namespace orbit_windows_utils {
 
 ErrorMessageOr<void> ReadProcessMemory(uint32_t pid, uintptr_t address, void* buffer, uint64_t size,
                                        uint64_t* num_bytes_read) {
-  HANDLE process_handle = OpenProcess(PROCESS_VM_READ, /*bInheritHandle=*/FALSE, pid);
-  if (process_handle == nullptr) {
-    return ErrorMessage(absl::StrFormat("Could not get handle for process %u", pid));
-  }
-
-  BOOL result = ::ReadProcessMemory(process_handle, absl::bit_cast<void*>(address), buffer, size,
+  OUTCOME_TRY(SafeHandle process_handle, OpenProcessForReading(pid));
+  BOOL result = ::ReadProcessMemory(*process_handle, absl::bit_cast<void*>(address), buffer, size,
                                     num_bytes_read);
 
   if (result == FALSE) {

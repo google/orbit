@@ -18,6 +18,8 @@
 #include "OrbitBase/Profiling.h"
 #include "OrbitBase/StringConversion.h"
 #include "OrbitBase/UniqueResource.h"
+#include "WindowsUtils/OpenProcess.h"
+#include "WindowsUtils/SafeHandle.h"
 
 // clang-format off
 #include <processthreadsapi.h>
@@ -62,12 +64,6 @@ namespace {
   ORBIT_CHECK(t_1 >= t_0);
   constexpr uint64_t kIntervalNs = 100;
   return (t_1 - t_0) * kIntervalNs;
-}
-
-void SafeCloseHandle(HANDLE handle) {
-  if (handle != nullptr) {
-    ::CloseHandle(handle);
-  }
 }
 
 }  // namespace
@@ -131,7 +127,7 @@ ErrorMessageOr<void> ProcessListImpl::Refresh() {
 
   // Take a snapshot of all processes in the system.
   HANDLE process_snap_handle = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, /*th32ProcessID=*/0);
-  orbit_base::unique_resource handle_closer(process_snap_handle, SafeCloseHandle);
+  SafeHandle handle_closer(process_snap_handle);
   if (process_snap_handle == INVALID_HANDLE_VALUE) {
     return ErrorMessage(absl::StrFormat("Calling CreateToolhelp32Snapshot: %s",
                                         orbit_base::GetLastErrorAsString()));
@@ -156,7 +152,7 @@ ErrorMessageOr<void> ProcessListImpl::Refresh() {
       bool is_64_bit = true;
 
       HANDLE handle = ::OpenProcess(PROCESS_ALL_ACCESS, /*bInheritHandle=*/FALSE, pid);
-      orbit_base::unique_resource handle_closer(handle, SafeCloseHandle);
+      SafeHandle handle_closer(handle);
       if (handle == nullptr) {
         // "System" processes cannot be opened, track errors to skip further OpenProcess calls.
         process_info.open_process_error = ::GetLastError();
@@ -209,16 +205,17 @@ void ProcessListImpl::UpdateCpuUsage() {
       continue;
     }
 
-    HANDLE process_handle = ::OpenProcess(PROCESS_ALL_ACCESS, /*bInheritHandle=*/FALSE, pid);
-    orbit_base::unique_resource handle_closer(process_handle, SafeCloseHandle);
+    ErrorMessageOr<SafeHandle> safe_handle_or_error =
+        OpenProcess(PROCESS_ALL_ACCESS, /*bInheritHandle=*/FALSE, pid);
 
-    if (process_handle == nullptr) {
+    if (safe_handle_or_error.has_error()) {
       process_info.open_process_error = ::GetLastError();
       ORBIT_ERROR("Calling OpenProcess for %s[%u]: %s", process.name, pid,
                   orbit_base::GetLastErrorAsString());
       continue;
     }
 
+    HANDLE process_handle = *safe_handle_or_error.value();
     FILETIME creation_file_time = {};
     FILETIME exit_file_time = {};
     FILETIME kernel_file_time = {};
