@@ -4,11 +4,25 @@
 
 #include "CaptureFileInfo/ItemModel.h"
 
+#include <absl/time/time.h>
+
 #include "CaptureFileInfo/CaptureFileInfo.h"
 #include "DisplayFormats/DisplayFormats.h"
 #include "OrbitBase/Logging.h"
 
 namespace orbit_capture_file_info {
+
+namespace {
+
+const QString kMisingCaptureLengthToDisplay = QStringLiteral("--");
+
+[[nodiscard]] QString GetCaptureLengthToDisplay(absl::Duration capture_length) {
+  if (capture_length == absl::Nanoseconds(0)) return kMisingCaptureLengthToDisplay;
+
+  return QString::fromStdString(orbit_display_formats::GetDisplayTime(capture_length));
+}
+
+}  // namespace
 
 void ItemModel::SetCaptureFileInfos(std::vector<CaptureFileInfo> capture_file_infos) {
   if (!capture_files_.empty()) {
@@ -52,6 +66,8 @@ QVariant ItemModel::data(const QModelIndex& idx, int role) const {
         return capture_file_info.LastUsed();
       case Column::kCreated:
         return capture_file_info.Created();
+      case Column::kCaptureLength:
+        return GetCaptureLengthToDisplay(capture_file_info.CaptureLength());
       case Column::kEnd:
         ORBIT_UNREACHABLE();
     }
@@ -79,6 +95,8 @@ QVariant ItemModel::headerData(int section, Qt::Orientation orientation, int rol
       return "Last used";
     case Column::kCreated:
       return "Created";
+    case Column::kCaptureLength:
+      return "Capture length";
     case Column::kEnd:
       ORBIT_UNREACHABLE();
   }
