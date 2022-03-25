@@ -21,6 +21,9 @@ class Manager {
     return capture_file_infos_;
   }
 
+  [[nodiscard]] std::optional<absl::Duration> GetCaptureLengthByPath(
+      const std::filesystem::path& path) const;
+
   // This function adds or touches a capture file at `path` to the list of capture files saved in
   // this class. The file is added if path is not yet contained in the list, and touches it if is.
   // Whether a file is contained in the list is determined by whether there paths are

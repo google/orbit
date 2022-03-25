@@ -83,6 +83,18 @@ void Manager::AddOrTouchCaptureFile(const std::filesystem::path& path,
   SaveCaptureFileInfos();
 }
 
+std::optional<absl::Duration> Manager::GetCaptureLengthByPath(
+    const std::filesystem::path& path) const {
+  auto it = std::find_if(capture_file_infos_.begin(), capture_file_infos_.end(),
+                         [&](const CaptureFileInfo& capture_file_info) {
+                           std::filesystem::path path_from_capture_file_info{
+                               capture_file_info.FilePath().toStdString()};
+                           return path_from_capture_file_info == path;
+                         });
+  if (it == capture_file_infos_.end()) return std::nullopt;
+  return it->CaptureLength();
+}
+
 void Manager::Clear() {
   capture_file_infos_.clear();
   SaveCaptureFileInfos();
