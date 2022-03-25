@@ -21,7 +21,7 @@ namespace orbit_windows_utils {
 
 ErrorMessageOr<void> ReadProcessMemory(uint32_t pid, uintptr_t address, void* buffer, uint64_t size,
                                        uint64_t* num_bytes_read) {
-  OUTCOME_TRY(SafeHandle process_handle, OpenProcess(pid));
+  OUTCOME_TRY(SafeHandle process_handle, OpenProcessForReading(pid));
   BOOL result = ::ReadProcessMemory(*process_handle, absl::bit_cast<void*>(address), buffer, size,
                                     num_bytes_read);
 

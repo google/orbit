@@ -13,7 +13,7 @@ namespace orbit_windows_utils {
 ErrorMessageOr<SafeHandle> OpenProcess(uint32_t desired_access, bool inherit_handle,
                                        uint32_t process_id);
 // Calls OpenProcess(PROCESS_VM_READ, /*inherit_handle=*/false, process_id).
-ErrorMessageOr<SafeHandle> OpenProcess(uint32_t process_id);
+ErrorMessageOr<SafeHandle> OpenProcessForReading(uint32_t process_id);
 
 }  // namespace orbit_windows_utils
 

@@ -9,11 +9,22 @@
 #include "WindowsUtils/OpenProcess.h"
 
 TEST(OpenProcess, ValidHandleForCurrentPid) {
-  auto result = orbit_windows_utils::OpenProcess(orbit_base::GetCurrentProcessId());
+  auto result = orbit_windows_utils::OpenProcess(PROCESS_VM_READ, /*inherit_handle=*/false,
+                                                 orbit_base::GetCurrentProcessId());
   EXPECT_TRUE(result.has_value());
 }
 
 TEST(OpenProcess, ErrorForInvalidPid) {
-  auto result = orbit_windows_utils::OpenProcess(0);
+  auto result = orbit_windows_utils::OpenProcess(PROCESS_VM_READ, /*inherit_handle=*/false, 0);
+  EXPECT_TRUE(result.has_error());
+}
+
+TEST(OpenProcess, OpenProcessForReadingValidHandleForCurrentPid) {
+  auto result = orbit_windows_utils::OpenProcessForReading(orbit_base::GetCurrentProcessId());
+  EXPECT_TRUE(result.has_value());
+}
+
+TEST(OpenProcess, OpenProcessForReadingErrorForInvalidPid) {
+  auto result = orbit_windows_utils::OpenProcessForReading(0);
   EXPECT_TRUE(result.has_error());
 }

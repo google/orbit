@@ -12,8 +12,8 @@
 using orbit_windows_utils::SafeHandle;
 
 TEST(SafeHandle, OwnershipTransfer) {
-  auto result = orbit_windows_utils::OpenProcess(orbit_base::GetCurrentProcessId());
-  EXPECT_TRUE(result.has_value());
+  auto result = orbit_windows_utils::OpenProcessForReading(orbit_base::GetCurrentProcessId());
+  ASSERT_TRUE(result.has_value());
   SafeHandle safe_handle = std::move(result.value());
 }
 
@@ -22,9 +22,9 @@ TEST(SafeHandle, NullHandle) { SafeHandle safe_handle(nullptr); }
 TEST(SafeHandle, DoubleCloseError) {
   HANDLE handle = nullptr;
   {
-    uint32_t pid = orbit_base::GetCurrentProcessId();
-    SafeHandle safe_handle =
-        orbit_windows_utils::OpenProcess(PROCESS_VM_READ, /*inherit_handle=*/false, pid).value();
+    auto result = orbit_windows_utils::OpenProcessForReading(orbit_base::GetCurrentProcessId());
+    ASSERT_TRUE(result.has_value());
+    SafeHandle& safe_handle = result.value();
     handle = safe_handle.get();
   }
 
