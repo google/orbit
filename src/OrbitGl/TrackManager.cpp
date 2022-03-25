@@ -56,20 +56,13 @@ TrackManager::TrackManager(TrackContainer* track_container, TimelineInfoInterfac
 }
 
 std::vector<Track*> TrackManager::GetAllTracks() const {
+  std::lock_guard<std::recursive_mutex> lock(mutex_);
   std::vector<Track*> tracks;
   for (const auto& track : all_tracks_) {
     tracks.push_back(track.get());
   }
 
-  for (const auto track : GetFrameTracks()) {
-    tracks.push_back(track);
-  }
-  return tracks;
-}
-
-std::vector<ThreadTrack*> TrackManager::GetThreadTracks() const {
-  std::vector<ThreadTrack*> tracks;
-  for (const auto& [unused_key, track] : thread_tracks_) {
+  for (const auto& [unused_id, track] : frame_tracks_) {
     tracks.push_back(track.get());
   }
   return tracks;
@@ -451,7 +444,7 @@ ThreadTrack* TrackManager::GetOrCreateThreadTrack(uint32_t tid) {
   std::lock_guard<std::recursive_mutex> lock(mutex_);
   std::shared_ptr<ThreadTrack> track = thread_tracks_[tid];
   if (track == nullptr) {
-    auto thread_track_data_provider = capture_data_->GetThreadTrackDataProvider();
+    auto* thread_track_data_provider = capture_data_->GetThreadTrackDataProvider();
     thread_track_data_provider->CreateScopeTreeTimerData(tid);
     track = std::make_shared<ThreadTrack>(track_container_, timeline_info_, viewport_, layout_, tid,
                                           app_, module_manager_, capture_data_,
