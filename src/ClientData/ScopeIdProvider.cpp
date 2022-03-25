@@ -36,7 +36,7 @@ std::unique_ptr<NameEqualityScopeIdProvider> NameEqualityScopeIdProvider::Create
                  std::inserter(scope_id_to_name, std::end(scope_id_to_name)),
                  [](const auto& instrumented_function) {
                    return std::make_pair(instrumented_function.function_id(),
-                                         llvm::demangle(instrumented_function.function_name()));
+                                         instrumented_function.function_name());
                  });
 
   return std::unique_ptr<NameEqualityScopeIdProvider>(
