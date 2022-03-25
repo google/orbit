@@ -98,10 +98,6 @@ class AutomaticMemoryInTracee : public MemoryInTracee {
   using MemoryInTracee::MemoryInTracee;
 };
 
-// Retrieves the seccomp mode of a thread.
-// This is in the header file for testing.
-[[nodiscard]] std::optional<int> ReadSeccompModeOfThread(pid_t tid);
-
 }  // namespace orbit_user_space_instrumentation
 
 #endif  // USER_SPACE_INSTRUMENTATION_ALLOCATE_IN_TRACEE_H_

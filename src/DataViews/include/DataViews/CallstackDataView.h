@@ -11,6 +11,7 @@
 #include <utility>
 #include <vector>
 
+#include "ClientData/CallstackInfo.h"
 #include "ClientData/ModuleData.h"
 #include "ClientProtos/capture_data.pb.h"
 #include "DataViews/AppInterface.h"
@@ -29,13 +30,13 @@ class CallstackDataView : public DataView {
   std::string GetToolTip(int row, int /*column*/) override;
 
   void OnDataChanged() override;
-  void SetCallstack(const orbit_client_protos::CallstackInfo& callstack) {
+  void SetCallstack(const orbit_client_data::CallstackInfo& callstack) {
     callstack_ = callstack;
     OnDataChanged();
   }
 
   void ClearCallstack() {
-    callstack_ = orbit_client_protos::CallstackInfo{};
+    callstack_ = {};
     OnDataChanged();
   }
 
@@ -50,7 +51,7 @@ class CallstackDataView : public DataView {
  protected:
   void DoFilter() override;
 
-  orbit_client_protos::CallstackInfo callstack_;
+  std::optional<orbit_client_data::CallstackInfo> callstack_;
 
   struct CallstackDataViewFrame {
     CallstackDataViewFrame(uint64_t address, const orbit_client_protos::FunctionInfo* function,
@@ -67,7 +68,7 @@ class CallstackDataView : public DataView {
   };
 
   CallstackDataViewFrame GetFrameFromRow(int row) const;
-  CallstackDataViewFrame GetFrameFromIndex(int index_in_callstack) const;
+  CallstackDataViewFrame GetFrameFromIndex(size_t index_in_callstack) const;
 
   enum ColumnIndex {
     kColumnSelected,

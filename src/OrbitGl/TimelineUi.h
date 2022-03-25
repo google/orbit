@@ -25,6 +25,8 @@ class TimelineUi : public CaptureViewElement {
   std::unique_ptr<orbit_accessibility::AccessibleInterface> CreateAccessibleInterface() override;
 
  private:
+  void DoDraw(Batcher& batcher, TextRenderer& text_renderer,
+              const DrawContext& draw_context) override;
   void DoUpdatePrimitives(Batcher& batcher, TextRenderer& text_renderer, uint64_t min_tick,
                           uint64_t max_tick, PickingMode picking_mode) override;
   void RenderLines(Batcher& batcher, uint64_t min_timestamp_ns, uint64_t max_timestamp_ns) const;
@@ -33,23 +35,23 @@ class TimelineUi : public CaptureViewElement {
   void RenderMargin(Batcher& batcher) const;
   void RenderBackground(Batcher& batcher) const;
   void RenderLabel(Batcher& batcher, TextRenderer& text_renderer, uint64_t tick_ns,
-                   uint32_t number_of_decimal_places_needed, float label_z,
-                   Color background_color) const;
-  [[nodiscard]] std::string GetLabel(uint64_t tick_ns,
-                                     uint32_t number_of_decimal_places_needed) const;
+                   uint32_t number_of_decimal_places, float label_z, Color background_color) const;
+  void RenderMouseLabel(Batcher& batcher, TextRenderer& text_renderer,
+                        uint64_t mouse_tick_ns) const;
+  [[nodiscard]] std::string GetLabel(uint64_t tick_ns, uint32_t number_of_decimal_places) const;
   [[nodiscard]] std::vector<uint64_t> GetTicksForNonOverlappingLabels(
-      TextRenderer& text_renderer, const std::vector<uint64_t>& all_major_ticks,
-      float horizontal_margin, uint32_t number_of_decimal_places) const;
+      TextRenderer& text_renderer, const std::vector<uint64_t>& all_major_ticks) const;
   [[nodiscard]] bool WillLabelsOverlap(TextRenderer& text_renderer,
-                                       const std::vector<uint64_t>& tick_list,
-                                       float horizontal_margin,
-                                       uint32_t number_of_decimal_places) const;
+                                       const std::vector<uint64_t>& tick_list) const;
   [[nodiscard]] float GetTickWorldXPos(uint64_t tick_ns) const;
   [[nodiscard]] float GetHeightWithoutMargin() const { return layout_->GetTimeBarHeight(); }
   [[nodiscard]] float GetMarginHeight() const { return layout_->GetTimeBarMargin(); }
+  [[nodiscard]] uint32_t GetNumDecimalsInLabels() const { return num_decimals_in_labels_; }
+  void UpdateNumDecimalsInLabels(uint64_t min_timestamp_ns, uint64_t max_timestamp_ns);
 
   const TimelineInfoInterface* timeline_info_interface_;
   TimelineTicks timeline_ticks_;
+  uint32_t num_decimals_in_labels_ = 0;
 };
 
 }  // namespace orbit_gl

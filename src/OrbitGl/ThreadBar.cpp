@@ -4,13 +4,14 @@
 
 #include "ThreadBar.h"
 
-#include "AccessibleThreadBar.h"
-#include "Track.h"
+#include "AccessibleCaptureViewElement.h"
 
 namespace orbit_gl {
 
 std::unique_ptr<orbit_accessibility::AccessibleInterface> ThreadBar::CreateAccessibleInterface() {
-  return std::make_unique<AccessibleThreadBar>(this);
+  return std::make_unique<AccessibleCaptureViewElement>(
+      this, GetName(), orbit_accessibility::AccessibilityRole::Pane,
+      orbit_accessibility::AccessibilityState::Focusable);
 }
 
 }  // namespace orbit_gl

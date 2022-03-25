@@ -18,6 +18,7 @@
 
 #include "CallstackType.h"
 #include "ClientData/CallstackEvent.h"
+#include "ClientData/CallstackInfo.h"
 #include "ClientProtos/capture_data.pb.h"
 
 namespace orbit_client_data {
@@ -36,7 +37,7 @@ class CallstackData {
   // Assume that callstack_event.callstack_hash is filled correctly and the
   // Callstack with the corresponding id is already in unique_callstacks_.
   void AddCallstackEvent(orbit_client_data::CallstackEvent callstack_event);
-  void AddUniqueCallstack(uint64_t callstack_id, orbit_client_protos::CallstackInfo callstack);
+  void AddUniqueCallstack(uint64_t callstack_id, CallstackInfo callstack);
   void AddCallstackFromKnownCallstackData(const orbit_client_data::CallstackEvent& event,
                                           const CallstackData& known_callstack_data);
 
@@ -71,13 +72,13 @@ class CallstackData {
     return min_time_;
   }
 
-  [[nodiscard]] const orbit_client_protos::CallstackInfo* GetCallstack(uint64_t callstack_id) const;
+  [[nodiscard]] const CallstackInfo* GetCallstack(uint64_t callstack_id) const;
 
   [[nodiscard]] bool HasCallstack(uint64_t callstack_id) const;
 
   void ForEachUniqueCallstack(
-      const std::function<void(uint64_t callstack_id,
-                               const orbit_client_protos::CallstackInfo& callstack)>& action) const;
+      const std::function<void(uint64_t callstack_id, const CallstackInfo& callstack)>& action)
+      const;
 
   // Assuming that, for each thread, the outermost frame of each callstack is always the same,
   // update the type of all the kComplete callstacks that have the outermost frame not matching the
@@ -86,18 +87,15 @@ class CallstackData {
   void UpdateCallstackTypeBasedOnMajorityStart();
 
  private:
-  [[nodiscard]] std::shared_ptr<orbit_client_protos::CallstackInfo> GetCallstackPtr(
-      uint64_t callstack_id) const;
+  [[nodiscard]] std::shared_ptr<CallstackInfo> GetCallstackPtr(uint64_t callstack_id) const;
 
   void RegisterTime(uint64_t time);
 
   // Use a reentrant mutex so that calls to the ForEach... methods can be nested.
   // E.g., one might want to nest ForEachCallstackEvent and ForEachFrameInCallstack.
   mutable std::recursive_mutex mutex_;
-  absl::flat_hash_map<uint64_t, std::shared_ptr<orbit_client_protos::CallstackInfo>>
-      unique_callstacks_;
-  absl::flat_hash_map<uint32_t, absl::btree_map<uint64_t, orbit_client_data::CallstackEvent>>
-      callstack_events_by_tid_;
+  absl::flat_hash_map<uint64_t, std::shared_ptr<CallstackInfo>> unique_callstacks_;
+  absl::flat_hash_map<uint32_t, absl::btree_map<uint64_t, CallstackEvent>> callstack_events_by_tid_;
 
   uint64_t max_time_ = 0;
   uint64_t min_time_ = std::numeric_limits<uint64_t>::max();

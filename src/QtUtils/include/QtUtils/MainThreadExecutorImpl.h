@@ -8,12 +8,12 @@
 #include <QObject>
 #include <memory>
 
-#include "MainThreadExecutor.h"
+#include "OrbitBase/MainThreadExecutor.h"
 
 namespace orbit_qt_utils {
 
 // An implementation of MainThreadExecutor that integrates with Qt's event loop
-class MainThreadExecutorImpl : public QObject, public MainThreadExecutor {
+class MainThreadExecutorImpl : public QObject, public orbit_base::MainThreadExecutor {
   Q_OBJECT
   explicit MainThreadExecutorImpl(QObject* parent = nullptr) : QObject(parent) {}
 

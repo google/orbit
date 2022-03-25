@@ -22,16 +22,6 @@ class AccessibleTriangleToggle : public AccessibleCaptureViewElement {
  public:
   explicit AccessibleTriangleToggle(TriangleToggle* triangle_toggle);
 
-  [[nodiscard]] int AccessibleChildCount() const override { return 0; };
-  [[nodiscard]] const AccessibleInterface* AccessibleChild(int /*index*/) const override {
-    return nullptr;
-  }
-
-  [[nodiscard]] std::string AccessibleName() const override { return "TriangleToggle"; }
-
-  [[nodiscard]] orbit_accessibility::AccessibilityRole AccessibleRole() const override {
-    return orbit_accessibility::AccessibilityRole::Button;
-  }
   [[nodiscard]] orbit_accessibility::AccessibilityState AccessibleState() const override;
 
  private:

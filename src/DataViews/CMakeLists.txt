@@ -44,6 +44,7 @@ target_link_libraries(DataViews PUBLIC
         MetricsUploader
         OrbitBase
         PresetFile
+        QtUtils
         Statistics
         CONAN_PKG::abseil)
 

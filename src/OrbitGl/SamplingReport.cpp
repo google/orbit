@@ -10,15 +10,17 @@
 #include <algorithm>
 
 #include "App.h"
+#include "ClientData/CallstackInfo.h"
 #include "ClientData/CallstackType.h"
 #include "ClientProtos/capture_data.pb.h"
 #include "OrbitBase/Logging.h"
 
 using orbit_client_data::CallstackCount;
+using orbit_client_data::CallstackInfo;
+using orbit_client_data::CallstackType;
 using orbit_client_data::PostProcessedSamplingData;
 using orbit_client_data::ThreadID;
 using orbit_client_data::ThreadSampleData;
-using orbit_client_protos::CallstackInfo;
 
 SamplingReport::SamplingReport(
     OrbitApp* app, const orbit_client_data::CallstackData* callstack_data,
@@ -146,12 +148,12 @@ std::string SamplingReport::GetSelectedCallstackString() const {
 
   uint64_t callstack_id =
       selected_sorted_callstack_report_->callstack_counts[selected_callstack_index_].callstack_id;
-  const orbit_client_protos::CallstackInfo* callstack = callstack_data_->GetCallstack(callstack_id);
+  const CallstackInfo* callstack = callstack_data_->GetCallstack(callstack_id);
   ORBIT_CHECK(callstack != nullptr);
-  CallstackInfo::CallstackType callstack_type = callstack->type();
+  CallstackType callstack_type = callstack->type();
 
   std::string type_string =
-      (callstack_type == CallstackInfo::kComplete)
+      (callstack_type == CallstackType::kComplete)
           ? ""
           : absl::StrFormat("  -  Unwind error (%s)",
                             orbit_client_data::CallstackTypeToString(callstack_type));
@@ -168,11 +170,11 @@ std::string SamplingReport::GetSelectedCallstackTooltipString() const {
 
   uint64_t callstack_id =
       selected_sorted_callstack_report_->callstack_counts[selected_callstack_index_].callstack_id;
-  const orbit_client_protos::CallstackInfo* callstack = callstack_data_->GetCallstack(callstack_id);
+  const CallstackInfo* callstack = callstack_data_->GetCallstack(callstack_id);
   ORBIT_CHECK(callstack != nullptr);
-  CallstackInfo::CallstackType callstack_type = callstack->type();
+  CallstackType callstack_type = callstack->type();
 
-  if (callstack_type == CallstackInfo::kComplete) {
+  if (callstack_type == CallstackType::kComplete) {
     return "";
   }
 
@@ -185,8 +187,7 @@ void SamplingReport::OnCallstackIndexChanged(size_t index) {
     const CallstackCount& callstack_count =
         selected_sorted_callstack_report_->callstack_counts[index];
     selected_callstack_index_ = index;
-    const orbit_client_protos::CallstackInfo* callstack =
-        callstack_data_->GetCallstack(callstack_count.callstack_id);
+    const CallstackInfo* callstack = callstack_data_->GetCallstack(callstack_count.callstack_id);
     ORBIT_CHECK(callstack != nullptr);
     callstack_data_view_->SetCallstack(*callstack);
     callstack_data_view_->SetFunctionsToHighlight(selected_addresses_);

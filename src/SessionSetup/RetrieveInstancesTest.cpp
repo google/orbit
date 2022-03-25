@@ -11,8 +11,8 @@
 #include <memory>
 #include <optional>
 
-#include "MainThreadExecutor.h"
 #include "OrbitBase/Future.h"
+#include "OrbitBase/MainThreadExecutor.h"
 #include "OrbitBase/Result.h"
 #include "OrbitGgp/Client.h"
 #include "OrbitGgp/Project.h"

@@ -11,6 +11,8 @@
 #include "CallTreeView.h"
 #include "CallTreeViewItemModel.h"
 #include "ClientData/CallstackEvent.h"
+#include "ClientData/CallstackInfo.h"
+#include "ClientData/CallstackType.h"
 #include "ClientData/CaptureData.h"
 #include "ClientData/PostProcessedSamplingData.h"
 #include "ClientModel/SamplingDataPostProcessor.h"
@@ -29,6 +31,8 @@ constexpr const char* kThreadName = "example thread";
 
 namespace {
 
+using orbit_client_data::CallstackInfo;
+using orbit_client_data::CallstackType;
 using orbit_client_data::CaptureData;
 
 std::unique_ptr<CaptureData> GenerateTestCaptureData() {
@@ -46,9 +50,7 @@ std::unique_ptr<CaptureData> GenerateTestCaptureData() {
 
   // CallstackInfo
   const std::vector<uint64_t> callstack_frames{kInstructionAbsoluteAddress};
-  orbit_client_protos::CallstackInfo callstack_info;
-  *callstack_info.mutable_frames() = {callstack_frames.begin(), callstack_frames.end()};
-  callstack_info.set_type(orbit_client_protos::CallstackInfo::kComplete);
+  CallstackInfo callstack_info{callstack_frames, CallstackType::kComplete};
   capture_data->AddUniqueCallstack(kCallstackId, std::move(callstack_info));
 
   // CallstackEvent 1
@@ -61,10 +63,9 @@ std::unique_ptr<CaptureData> GenerateTestCaptureData() {
 
   // CallstackInfo
   const std::vector<uint64_t> callstack_error_frames{kInstructionAbsoluteAddress};
-  orbit_client_protos::CallstackInfo callstack_error_info;
-  *callstack_error_info.mutable_frames() = {callstack_error_frames.begin(),
-                                            callstack_error_frames.end()};
-  callstack_error_info.set_type(orbit_client_protos::CallstackInfo::kFramePointerUnwindingError);
+  CallstackInfo callstack_error_info{callstack_error_frames,
+                                     CallstackType::kFramePointerUnwindingError};
+
   capture_data->AddUniqueCallstack(kUnwindErrorCallstackId, std::move(callstack_error_info));
 
   // CallstackEvent
@@ -249,7 +250,7 @@ TEST(CallTreeViewItemModel, GetDisplayRoleData) {
         model.index(0, CallTreeViewItemModel::Columns::kThreadOrFunction, unwind_errors_index);
     EXPECT_EQ(model.data(index, Qt::DisplayRole).toString(),
               QString::fromStdString(orbit_client_data::CallstackTypeToString(
-                  orbit_client_protos::CallstackInfo::kFramePointerUnwindingError)));
+                  CallstackType::kFramePointerUnwindingError)));
   }
 
   {  // inclusive
@@ -414,7 +415,7 @@ TEST(CallTreeViewItemModel, GetEditRoleData) {
         model.index(0, CallTreeViewItemModel::Columns::kThreadOrFunction, unwind_errors_index);
     EXPECT_EQ(model.data(index, Qt::EditRole).toString(),
               QString::fromStdString(orbit_client_data::CallstackTypeToString(
-                  orbit_client_protos::CallstackInfo::kFramePointerUnwindingError)));
+                  CallstackType::kFramePointerUnwindingError)));
   }
 
   {  // inclusive

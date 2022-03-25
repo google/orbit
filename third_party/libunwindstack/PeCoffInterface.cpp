@@ -358,7 +358,7 @@ bool PeCoffInterfaceImpl<AddressType>::InitSections() {
     if (sections_[i].name == ".debug_frame") {
       DebugFrameSectionData section_data;
       section_data.file_offset = sections_[i].offset;
-      section_data.size = sections_[i].size;
+      section_data.size = sections_[i].vmsize;
       uint64_t debug_frame_section_bias =
           static_cast<int64_t>(sections_[i].vmaddr) - sections_[i].offset;
       section_data.section_bias = debug_frame_section_bias;

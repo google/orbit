@@ -7,8 +7,10 @@
 
 #include <cstdint>
 #include <memory>
+#include <vector>
 
 #include "ClientData/CaptureData.h"
+#include "ClientProtos/capture_data.pb.h"
 
 namespace orbit_gl {
 
@@ -25,6 +27,7 @@ struct TrackTestData {
   static constexpr const char* kTimerOnlyThreadName = "timer only thread";
 
   static std::unique_ptr<orbit_client_data::CaptureData> GenerateTestCaptureData();
+  static std::vector<orbit_client_protos::TimerInfo> GenerateTimers();
 };
 
 }  // namespace orbit_gl

@@ -5,30 +5,10 @@
 #include <gtest/gtest.h>
 #include <stddef.h>
 
-#include "OrbitBase/Logging.h"
 #include "OrbitBase/TaskGroup.h"
-#include "OrbitBase/ThreadPool.h"
-#include "OrbitBase/UniqueResource.h"
-
-using orbit_base::TaskGroup;
-using orbit_base::ThreadPool;
-
-namespace {
-
-void ShutdownThreadPool(std::shared_ptr<ThreadPool> thread_pool) { thread_pool->ShutdownAndWait(); }
-
-[[nodiscard]] ThreadPool* GetTestThreadPool() {
-  constexpr size_t kNumThreads = 4;
-  constexpr absl::Duration kThreadTtl = absl::Milliseconds(5);
-  static orbit_base::unique_resource handle{
-      ThreadPool::Create(kNumThreads, kNumThreads, kThreadTtl), ShutdownThreadPool};
-  return handle.get().get();
-}
-
-}  // namespace
 
 TEST(TaskGroup, EmptyTaskGroup) {
-  TaskGroup task_group(GetTestThreadPool());
+  orbit_base::TaskGroup task_group;
   task_group.Wait();
 }
 
@@ -36,7 +16,7 @@ TEST(TaskGroup, AllTasksAreCalledOnce) {
   constexpr size_t kNumElements = 1024;
   std::vector<uint32_t> counters(kNumElements);
 
-  TaskGroup task_group(GetTestThreadPool());
+  orbit_base::TaskGroup task_group;
   for (uint32_t& counter : counters) {
     task_group.AddTask([&counter] { ++counter; });
   }
@@ -53,7 +33,7 @@ TEST(TaskGroup, AllTasksAreCalledOnceNoExplicitWait) {
   std::vector<uint32_t> counters(kNumElements);
 
   {
-    TaskGroup task_group(GetTestThreadPool());
+    orbit_base::TaskGroup task_group;
     for (uint32_t& counter : counters) {
       task_group.AddTask([&counter] { ++counter; });
     }

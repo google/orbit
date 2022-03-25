@@ -12,9 +12,9 @@
 #include <QTimer>
 #include <memory>
 
-#include "MainThreadExecutor.h"
 #include "OrbitBase/ExecutablePath.h"
 #include "OrbitBase/Future.h"
+#include "OrbitBase/MainThreadExecutor.h"
 #include "OrbitBase/Result.h"
 #include "QtUtils/AssertNoQtLogWarnings.h"
 #include "QtUtils/ExecuteProcess.h"
@@ -24,6 +24,7 @@
 namespace orbit_qt_utils {
 
 using orbit_base::Future;
+using orbit_base::MainThreadExecutor;
 using orbit_test_utils::HasError;
 using orbit_test_utils::HasValue;
 

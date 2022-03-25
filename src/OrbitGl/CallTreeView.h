@@ -14,6 +14,7 @@
 #include <utility>
 #include <vector>
 
+#include "ClientData/CallstackType.h"
 #include "ClientData/CaptureData.h"
 #include "ClientData/PostProcessedSamplingData.h"
 
@@ -49,10 +50,10 @@ class CallTreeNode {
                                                     std::string module_build_id);
 
   [[nodiscard]] CallTreeUnwindErrorType* GetUnwindErrorTypeOrNull(
-      orbit_client_protos::CallstackInfo::CallstackType type);
+      orbit_client_data::CallstackType type);
 
   [[nodiscard]] CallTreeUnwindErrorType* AddAndGetUnwindErrorType(
-      orbit_client_protos::CallstackInfo::CallstackType type);
+      orbit_client_data::CallstackType type);
 
   [[nodiscard]] CallTreeUnwindErrors* GetUnwindErrorsOrNull();
 
@@ -99,7 +100,7 @@ class CallTreeNode {
   // needed for the CallTreeNode::parent_ field.
   absl::node_hash_map<uint32_t, CallTreeThread> thread_children_;
   absl::node_hash_map<uint64_t, CallTreeFunction> function_children_;
-  absl::node_hash_map<orbit_client_protos::CallstackInfo::CallstackType, CallTreeUnwindErrorType>
+  absl::node_hash_map<orbit_client_data::CallstackType, CallTreeUnwindErrorType>
       unwind_error_type_children_;
   // std::shared_ptr instead of std::unique_ptr because absl::node_hash_map
   // needs the copy constructor (even for try_emplace).
@@ -166,17 +167,15 @@ class CallTreeUnwindErrors : public CallTreeNode {
 class CallTreeUnwindErrorType : public CallTreeNode {
  public:
   explicit CallTreeUnwindErrorType(CallTreeNode* parent,
-                                   orbit_client_protos::CallstackInfo::CallstackType error_type)
+                                   orbit_client_data::CallstackType error_type)
       : CallTreeNode{parent}, error_type_{error_type} {
-    ORBIT_CHECK(error_type != orbit_client_protos::CallstackInfo::kComplete);
+    ORBIT_CHECK(error_type != orbit_client_data::CallstackType::kComplete);
   }
 
-  [[nodiscard]] orbit_client_protos::CallstackInfo::CallstackType error_type() const {
-    return error_type_;
-  }
+  [[nodiscard]] orbit_client_data::CallstackType error_type() const { return error_type_; }
 
  private:
-  orbit_client_protos::CallstackInfo::CallstackType error_type_;
+  orbit_client_data::CallstackType error_type_;
 };
 
 class CallTreeView : public CallTreeNode {

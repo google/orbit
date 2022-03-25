@@ -14,7 +14,7 @@
 #include <algorithm>
 #include <utility>
 
-#include "AccessibleTrackContainer.h"
+#include "AccessibleCaptureViewElement.h"
 #include "App.h"
 #include "ClientData/FunctionUtils.h"
 #include "ClientFlags/ClientFlags.h"
@@ -408,7 +408,9 @@ std::vector<CaptureViewElement*> TrackContainer::GetNonHiddenChildren() const {
 
 std::unique_ptr<orbit_accessibility::AccessibleInterface>
 TrackContainer::CreateAccessibleInterface() {
-  return std::make_unique<AccessibleTrackContainer>(this);
+  return std::make_unique<AccessibleCaptureViewElement>(
+      this, "TrackContainer", orbit_accessibility::AccessibilityRole::Pane,
+      orbit_accessibility::AccessibilityState::Focusable);
 }
 
 }  // namespace orbit_gl

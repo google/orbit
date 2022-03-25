@@ -28,6 +28,7 @@
 #include "OrbitBase/Logging.h"
 #include "OrbitBase/SafeStrerror.h"
 #include "PresetFile/PresetFile.h"
+#include "QtUtils/MainThreadExecutorImpl.h"
 
 using orbit_preset_file::PresetFile;
 
@@ -44,9 +45,13 @@ constexpr const float kHookedFunctionsColumnWidth = 0.16f;
 constexpr const float kDateModifiedColumnWidth = 0.16f;
 
 namespace {
-std::string GetLoadStateString(orbit_data_views::AppInterface* app, const PresetFile& preset) {
+std::string GetLoadStatusAndStateString(orbit_data_views::AppInterface* app,
+                                        const PresetFile& preset) {
+  std::string_view load_status = preset.IsLoaded()
+                                     ? orbit_data_views::PresetsDataView::kLoadedPresetString
+                                     : orbit_data_views::PresetsDataView::kLoadedPresetBlankString;
   orbit_data_views::PresetLoadState load_state = app->GetPresetLoadState(preset);
-  return load_state.GetName();
+  return absl::StrCat(load_status, load_state.GetName());
 }
 
 std::string GetDateModifiedString(const PresetFile& preset) {
@@ -64,7 +69,9 @@ namespace orbit_data_views {
 
 PresetsDataView::PresetsDataView(AppInterface* app,
                                  orbit_metrics_uploader::MetricsUploader* metrics_uploader)
-    : DataView(DataViewType::kPresets, app), metrics_uploader_(metrics_uploader) {}
+    : DataView(DataViewType::kPresets, app),
+      metrics_uploader_(metrics_uploader),
+      main_thread_executor_(orbit_qt_utils::MainThreadExecutorImpl::Create()) {}
 
 std::string PresetsDataView::GetModulesList(const std::vector<ModuleView>& modules) {
   return absl::StrJoin(modules, "\n", [](std::string* out, const ModuleView& module) {
@@ -100,7 +107,7 @@ std::string PresetsDataView::GetValue(int row, int column) {
 
   switch (column) {
     case kColumnLoadState:
-      return GetLoadStateString(app_, preset);
+      return GetLoadStatusAndStateString(app_, preset);
     case kColumnPresetName:
       return preset.file_path().filename().string();
     case kColumnModules:
@@ -168,8 +175,11 @@ DataView::ActionStatus PresetsDataView::GetActionStatus(std::string_view action,
 }
 
 void PresetsDataView::OnLoadPresetRequested(const std::vector<int>& selection) {
-  const PresetFile& preset = GetPreset(selection[0]);
-  app_->LoadPreset(preset);
+  PresetFile& preset = GetMutablePreset(selection[0]);
+  (void)app_->LoadPreset(preset).ThenIfSuccess(main_thread_executor_.get(),
+                                               [this, preset_file_path = preset.file_path()]() {
+                                                 OnLoadPresetSuccessful(preset_file_path);
+                                               });
 }
 
 void PresetsDataView::OnDeletePresetRequested(const std::vector<int>& selection) {
@@ -196,10 +206,20 @@ void PresetsDataView::OnShowInExplorerRequested(const std::vector<int>& selectio
 }
 
 void PresetsDataView::OnDoubleClicked(int index) {
-  const PresetFile& preset = GetPreset(index);
+  PresetFile& preset = GetMutablePreset(index);
   if (app_->GetPresetLoadState(preset).state != PresetLoadState::kNotLoadable) {
-    app_->LoadPreset(preset);
+    (void)app_->LoadPreset(preset).ThenIfSuccess(main_thread_executor_.get(),
+                                                 [this, preset_file_path = preset.file_path()]() {
+                                                   OnLoadPresetSuccessful(preset_file_path);
+                                                 });
   }
+}
+
+void PresetsDataView::OnLoadPresetSuccessful(const std::filesystem::path& preset_file_path) {
+  const auto it = std::find_if(presets_.begin(), presets_.end(), [&](const PresetFile& preset) {
+    return preset.file_path() == preset_file_path;
+  });
+  if (it != presets_.end()) it->SetIsLoaded(true);
 }
 
 void PresetsDataView::DoFilter() {
@@ -260,6 +280,9 @@ void PresetsDataView::SetPresets(std::vector<PresetFile> presets) {
 const PresetFile& PresetsDataView::GetPreset(unsigned int row) const {
   return presets_[indices_[row]];
 }
+
+PresetFile& PresetsDataView::GetMutablePreset(unsigned int row) { return presets_[indices_[row]]; }
+
 const std::vector<PresetsDataView::ModuleView>& PresetsDataView::GetModules(uint32_t row) const {
   return modules_[indices_[row]];
 }

@@ -16,6 +16,7 @@
 #include <iterator>
 #include <ostream>
 #include <string_view>
+#include <tuple>
 
 #include "AccessibleTimeGraph.h"
 #include "App.h"
@@ -98,6 +99,19 @@ CaptureWindow::CaptureWindow(OrbitApp* app) : GlCanvas(), app_{app}, capture_cli
 
   vertical_slider_->SetOrthogonalSliderPixelHeight(slider_->GetPixelHeight());
   slider_->SetOrthogonalSliderPixelHeight(vertical_slider_->GetPixelHeight());
+}
+
+void CaptureWindow::PreRender() {
+  GlCanvas::PreRender();
+
+  if (ShouldAutoZoom()) {
+    ZoomAll();
+  }
+
+  if (time_graph_ != nullptr) {
+    time_graph_->UpdateLayout();
+    UpdateChildrenPosAndSize();
+  }
 }
 
 void CaptureWindow::ZoomAll() {
@@ -254,26 +268,15 @@ bool CaptureWindow::RightUp() {
   return GlCanvas::RightUp();
 }
 
-void CaptureWindow::Zoom(ZoomDirection dir, int delta) {
+void CaptureWindow::ZoomHorizontally(int delta, int mouse_x) {
   if (delta == 0) return;
 
-  auto delta_float = static_cast<float>(-delta);
+  auto delta_float = static_cast<float>(delta);
 
   if (time_graph_ != nullptr) {
-    switch (dir) {
-      case ZoomDirection::kHorizontal: {
-        double mouse_ratio =
-            static_cast<double>(mouse_move_pos_screen_[0]) / time_graph_->GetWidth();
-        time_graph_->ZoomTime(delta_float, mouse_ratio);
-        break;
-      }
-      case ZoomDirection::kVertical: {
-        time_graph_->VerticalZoom(delta_float, viewport_.ScreenToWorld(mouse_move_pos_screen_)[1]);
-      }
-    }
+    double mouse_ratio = static_cast<double>(mouse_x) / time_graph_->GetWidth();
+    time_graph_->ZoomTime(delta_float, mouse_ratio);
   }
-
-  RequestUpdatePrimitives();
 }
 
 void CaptureWindow::Pan(float ratio) {
@@ -290,8 +293,12 @@ void CaptureWindow::Pan(float ratio) {
 void CaptureWindow::MouseWheelMoved(int x, int y, int delta, bool ctrl) {
   GlCanvas::MouseWheelMoved(x, y, delta, ctrl);
 
-  const int delta_normalized = delta < 0 ? -1 : 1;
-  Zoom(ctrl ? ZoomDirection::kVertical : ZoomDirection::kHorizontal, delta_normalized);
+  if (time_graph_ != nullptr) {
+    orbit_gl::ModifierKeys modifiers;
+    modifiers.ctrl = ctrl;
+    std::ignore =
+        time_graph_->HandleMouseWheelEvent(viewport_.ScreenToWorld(Vec2i(x, y)), delta, modifiers);
+  }
 }
 
 void CaptureWindow::MouseWheelMovedHorizontally(int x, int y, int delta, bool ctrl) {
@@ -322,10 +329,10 @@ void CaptureWindow::KeyPressed(unsigned int key_code, bool ctrl, bool shift, boo
       Pan(-0.1f);
       break;
     case 'W':
-      Zoom(ZoomDirection::kHorizontal, 1);
+      ZoomHorizontally(1, mouse_move_pos_screen_[0]);
       break;
     case 'S':
-      Zoom(ZoomDirection::kHorizontal, -1);
+      ZoomHorizontally(-1, mouse_move_pos_screen_[0]);
       break;
     case 'X':
       ToggleRecording();
@@ -392,7 +399,7 @@ std::unique_ptr<AccessibleInterface> CaptureWindow::CreateAccessibleInterface() 
 void CaptureWindow::Draw() {
   ORBIT_SCOPE("CaptureWindow::Draw");
   uint64_t start_time_ns = orbit_base::CaptureTimestampNs();
-  bool time_graph_was_redrawn = false;
+  bool time_graph_was_redrawn = time_graph_ != nullptr && time_graph_->IsRedrawNeeded();
 
   text_renderer_.Init();
 
@@ -405,13 +412,6 @@ void CaptureWindow::Draw() {
   }
 
   if (time_graph_ != nullptr) {
-    time_graph_->UpdateLayout();
-    UpdateChildrenPosAndSize();
-
-    if (time_graph_->IsRedrawNeeded()) {
-      time_graph_was_redrawn = true;
-    }
-
     uint64_t timegraph_current_mouse_time_ns =
         time_graph_->GetTickFromWorld(viewport_.ScreenToWorld(GetMouseScreenPos())[0]);
     time_graph_->DrawAllElements(GetBatcher(), GetTextRenderer(), picking_mode_,
@@ -473,15 +473,6 @@ void CaptureWindow::UpdateChildrenPosAndSize() {
   UpdateRightMargin(right_margin);
 
   time_graph_->SetWidth(viewport_.GetWorldWidth() - right_margin);
-  // HACK: This needs to be done as long as TimeGraph does not properly report its children.
-  // The line above may change the width of TimeGraph (due to the vertical scrollbar
-  // disappearing) and calls TimeGraph::SetWidth().
-  // Usually, TimeGraph::SetWidth() should update the size of all tracks, but due to an
-  // incomplete implementation, this does not happen. Instead, UpdateLayout() resizes the
-  // tracks.
-  // This will be removed once the TimeGraph is implementing the API
-  // correctly.
-  time_graph_->UpdateLayout();
 }
 
 void CaptureWindow::DrawScreenSpace() {
@@ -564,11 +555,15 @@ void CaptureWindow::UpdateHorizontalSliderFromWorld() {
   double stop = time_graph_->GetMaxTimeUs();
   double width = stop - start;
   double max_start = time_span - width;
-  double ratio = capture_client_app_->IsCapturing() ? 1 : (max_start != 0 ? start / max_start : 0);
+
+  constexpr double kEpsilon = 1e-8;
+  double ratio =
+      capture_client_app_->IsCapturing() ? 1 : (max_start > kEpsilon ? start / max_start : 0);
   int slider_width = static_cast<int>(time_graph_->GetLayout().GetSliderWidth());
   slider_->SetPixelHeight(slider_width);
-  slider_->SetNormalizedPosition(static_cast<float>(ratio));
   slider_->SetNormalizedLength(static_cast<float>(width / time_span));
+  slider_->SetNormalizedPosition(static_cast<float>(ratio));
+
   slider_->SetOrthogonalSliderPixelHeight(vertical_slider_->IsVisible() ? slider_width : 0);
 }
 

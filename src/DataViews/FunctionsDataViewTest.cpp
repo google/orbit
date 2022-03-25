@@ -45,9 +45,7 @@ using ::testing::Return;
 namespace {
 struct FunctionsDataViewTest : public testing::Test {
  public:
-  explicit FunctionsDataViewTest()
-      : thread_pool_{orbit_base::ThreadPool::Create(4, 4, absl::Milliseconds(50))},
-        view_{&app_, thread_pool_.get()} {
+  explicit FunctionsDataViewTest() : view_{&app_} {
     view_.Init();
     orbit_client_protos::FunctionInfo function0;
     function0.set_pretty_name("void foo()");
@@ -114,10 +112,9 @@ struct FunctionsDataViewTest : public testing::Test {
     module_infos_.emplace_back(std::move(module_info2));
   }
 
-  ~FunctionsDataViewTest() override { thread_pool_->ShutdownAndWait(); }
+  ~FunctionsDataViewTest() override {}
 
  protected:
-  std::shared_ptr<orbit_base::ThreadPool> thread_pool_;
   orbit_data_views::MockAppInterface app_;
   orbit_data_views::FunctionsDataView view_;
   std::vector<orbit_client_protos::FunctionInfo> functions_;

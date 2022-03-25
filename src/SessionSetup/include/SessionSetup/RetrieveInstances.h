@@ -9,9 +9,9 @@
 #include <memory>
 #include <optional>
 
-#include "MainThreadExecutor.h"
 #include "MetricsUploader/MetricsUploader.h"
 #include "OrbitBase/Future.h"
+#include "OrbitBase/MainThreadExecutor.h"
 #include "OrbitBase/Result.h"
 #include "OrbitGgp/Client.h"
 #include "OrbitGgp/Instance.h"
@@ -56,7 +56,7 @@ class RetrieveInstances {
   virtual void SetMetricsUploader(orbit_metrics_uploader::MetricsUploader* metrics_uploader) = 0;
 
   [[nodiscard]] static std::unique_ptr<RetrieveInstances> Create(
-      orbit_ggp::Client* ggp_client, MainThreadExecutor* main_thread_executor);
+      orbit_ggp::Client* ggp_client, orbit_base::MainThreadExecutor* main_thread_executor);
 };
 
 }  // namespace orbit_session_setup

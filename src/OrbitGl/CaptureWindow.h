@@ -28,10 +28,10 @@ class CaptureWindow : public GlCanvas {
  public:
   explicit CaptureWindow(OrbitApp* app);
 
-  enum class ZoomDirection { kHorizontal, kVertical };
+  void PreRender() override;
 
   void ZoomAll();
-  void Zoom(ZoomDirection dir, int delta);
+  void ZoomHorizontally(int delta, int mouse_x);
   void Pan(float ratio);
 
   void MouseMoved(int x, int y, bool left, bool right, bool middle) override;

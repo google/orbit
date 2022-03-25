@@ -12,10 +12,12 @@
 
 #include "ClientData/CallstackData.h"
 #include "ClientData/CallstackEvent.h"
-#include "ClientProtos/capture_data.pb.h"
+#include "ClientData/CallstackInfo.h"
+#include "ClientData/CallstackType.h"
 
 using orbit_client_data::CallstackEvent;
-using orbit_client_protos::CallstackInfo;
+using orbit_client_data::CallstackInfo;
+using orbit_client_data::CallstackType;
 
 namespace orbit_client_data {
 
@@ -36,38 +38,27 @@ TEST(CallstackData, FilterCallstackEventsBasedOnMajorityStart) {
   const uint64_t cs1_id = 12;
   const uint64_t cs1_outer = 0x10;
   const uint64_t cs1_inner = 0x11;
-  CallstackInfo cs1;
-  cs1.add_frames(cs1_inner);
-  cs1.add_frames(cs1_outer);
-  cs1.set_type(CallstackInfo::kComplete);
-  callstack_data.AddUniqueCallstack(cs1_id, cs1);
+  CallstackInfo cs1{{cs1_inner, cs1_outer}, CallstackType::kComplete};
+  callstack_data.AddUniqueCallstack(cs1_id, std::move(cs1));
 
   const uint64_t cs2_id = 13;
   const uint64_t cs2_outer = 0x10;
   const uint64_t cs2_inner = 0x21;
-  CallstackInfo cs2;
-  cs2.add_frames(cs2_inner);
-  cs2.add_frames(cs2_outer);
-  cs2.set_type(CallstackInfo::kComplete);
-  callstack_data.AddUniqueCallstack(cs2_id, cs2);
+  CallstackInfo cs2{{cs2_inner, cs2_outer}, CallstackType::kComplete};
+  callstack_data.AddUniqueCallstack(cs2_id, std::move(cs2));
 
   const uint64_t broken_cs_id = 81;
   const uint64_t broken_cs_outer = 0x30;
   const uint64_t broken_cs_inner = 0x31;
-  CallstackInfo broken_cs;
-  broken_cs.add_frames(broken_cs_inner);
-  broken_cs.add_frames(broken_cs_outer);
-  broken_cs.set_type(CallstackInfo::kComplete);
-  callstack_data.AddUniqueCallstack(broken_cs_id, broken_cs);
+  CallstackInfo broken_cs{{broken_cs_inner, broken_cs_outer}, CallstackType::kComplete};
+  callstack_data.AddUniqueCallstack(broken_cs_id, std::move(broken_cs));
 
   const uint64_t non_complete_cs_id = 91;
   const uint64_t non_complete_cs_outer = 0x40;
   const uint64_t non_complete_cs_inner = 0x41;
-  CallstackInfo non_complete_cs;
-  non_complete_cs.add_frames(non_complete_cs_inner);
-  non_complete_cs.add_frames(non_complete_cs_outer);
-  non_complete_cs.set_type(CallstackInfo::kDwarfUnwindingError);
-  callstack_data.AddUniqueCallstack(non_complete_cs_id, non_complete_cs);
+  CallstackInfo non_complete_cs{{non_complete_cs_inner, non_complete_cs_outer},
+                                CallstackType::kDwarfUnwindingError};
+  callstack_data.AddUniqueCallstack(non_complete_cs_id, std::move(non_complete_cs));
 
   const uint64_t time1 = 142;
   CallstackEvent event1{time1, cs1_id, tid};
@@ -111,12 +102,12 @@ TEST(CallstackData, FilterCallstackEventsBasedOnMajorityStart) {
 
   callstack_data.UpdateCallstackTypeBasedOnMajorityStart();
 
-  EXPECT_EQ(callstack_data.GetCallstack(cs1_id)->type(), CallstackInfo::kComplete);
-  EXPECT_EQ(callstack_data.GetCallstack(cs2_id)->type(), CallstackInfo::kComplete);
+  EXPECT_EQ(callstack_data.GetCallstack(cs1_id)->type(), CallstackType::kComplete);
+  EXPECT_EQ(callstack_data.GetCallstack(cs2_id)->type(), CallstackType::kComplete);
   EXPECT_EQ(callstack_data.GetCallstack(broken_cs_id)->type(),
-            CallstackInfo::kFilteredByMajorityOutermostFrame);
+            CallstackType::kFilteredByMajorityOutermostFrame);
   EXPECT_EQ(callstack_data.GetCallstack(non_complete_cs_id)->type(),
-            CallstackInfo::kDwarfUnwindingError);
+            CallstackType::kDwarfUnwindingError);
 
   EXPECT_THAT(callstack_data.GetCallstackEventsOfTidInTimeRange(
                   tid, 0, std::numeric_limits<uint64_t>::max()),

@@ -8,7 +8,6 @@
 #include <absl/strings/str_format.h>
 #include <absl/strings/str_replace.h>
 #include <absl/time/time.h>
-#include <qnamespace.h>
 #include <qwindowdefs.h>
 
 #include <QColor>
@@ -19,9 +18,11 @@
 #include <QPoint>
 #include <QStringLiteral>
 #include <QWidget>
+#include <Qt>
 #include <algorithm>
 #include <array>
 #include <cmath>
+#include <cstddef>
 #include <cstdint>
 #include <iterator>
 #include <optional>
@@ -36,7 +37,7 @@
 #include "OrbitBase/Logging.h"
 #include "Statistics/Histogram.h"
 
-constexpr int kTimeDecimalsCount = 3;
+namespace orbit_qt {
 
 const QColor kBackgroundColor(QStringLiteral("#323232"));
 constexpr size_t kBarColorsCount = 2;
@@ -46,8 +47,21 @@ const QColor kHoveredBarColor(QStringLiteral("#99CCFF"));
 
 constexpr int kHoverLabelPadding = 6;
 
-constexpr uint32_t kVerticalTickCount = 3;
-constexpr uint32_t kHorizontalTickCount = 3;
+namespace {
+struct TickStep {
+  double value{};
+  int precision{};
+};
+}  // namespace
+
+const std::vector<TickStep> kHorizontalTickSteps = {{0.001, 3}, {0.005, 3}, {0.01, 2}, {0.05, 2},
+                                                    {0.1, 1},   {0.25, 2},  {0.5, 1},  {1, 0},
+                                                    {5, 0},     {10, 0},    {20, 0},   {50, 0}};
+
+const std::vector<TickStep> kVerticalTickSteps = {{0.1, 1}, {0.5, 1}, {1, 0},
+                                                  {5, 0},   {10, 0},  {25, 0}};
+constexpr uint32_t kVerticalTickCount = 4;
+constexpr uint32_t kHorizontalTickCount = 4;
 constexpr int kVerticalAxisTickLength = 4;
 constexpr int kHorizontalAxisTickLength = 8;
 constexpr int kTickLabelGap = 3;
@@ -87,72 +101,126 @@ static void DrawVerticalLine(QPainter& painter, const QPoint& start, int length)
   painter.drawLine(start, {start.x(), start.y() + length});
 }
 
-static void DrawHorizontalAxis(QPainter& painter, const QPoint& axes_intersection, int length,
-                               uint64_t min_value, uint64_t tick_spacing_as_value,
-                               orbit_display_formats::TimeUnit time_unit) {
-  DrawHorizontalLine(painter, axes_intersection, length);
-
-  const int tick_spacing_pixels =
-      RoundToClosestInt(static_cast<double>(length) / kHorizontalTickCount);
-
-  int current_tick_location = axes_intersection.x();
-  uint64_t current_tick_value = min_value;
-
-  const QFontMetrics font_metrics(painter.font());
-
-  for (uint32_t i = 0; i <= kHorizontalTickCount; ++i) {
-    DrawVerticalLine(painter, {current_tick_location, axes_intersection.y()},
-                     kHorizontalAxisTickLength);
-
-    const QString tick_label =
-        QString::number(orbit_display_formats::ToDoubleInGivenTimeUnits(
-                            absl::Nanoseconds(current_tick_value), time_unit),
-                        'f', kTimeDecimalsCount);
-    const QRect tick_label_bounding_rect = font_metrics.tightBoundingRect(tick_label);
-
-    painter.drawText(current_tick_location - tick_label_bounding_rect.width() / 2,
-                     axes_intersection.y() + kHorizontalAxisTickLength +
-                         tick_label_bounding_rect.height() + kTickLabelGap + kLineWidth / 2,
-                     tick_label);
-
-    current_tick_location += tick_spacing_pixels;
-    current_tick_value += tick_spacing_as_value;
-  }
+[[nodiscard]] static uint32_t TickCount(double min, double max, double step) {
+  double first = std::ceil(min / step) * step;
+  if (first > max) return 0;
+  return static_cast<uint32_t>(std::floor((max - first) / step)) + 1;
 }
 
-static void DrawVerticalAxis(QPainter& painter, const QPoint& axes_intersection, int length,
-                             double max_freq) {
-  DrawVerticalLine(painter, axes_intersection, -length);
+[[nodiscard]] static std::vector<double> MakeLabelValues(double min, double max, double step) {
+  double current = std::ceil(min / step) * step;
+  std::vector<double> result = {current};
 
-  const double tick_spacing_as_value = max_freq / kVerticalTickCount;
-  const int tick_spacing_pixels =
-      RoundToClosestInt(static_cast<double>(length) / kVerticalTickCount);
-
-  double current_tick_value = tick_spacing_as_value;
-  int current_tick_location = axes_intersection.y() - tick_spacing_pixels;
-
-  const QFontMetrics font_metrics(painter.font());
-
-  for (uint32_t i = 1; i <= kVerticalTickCount; ++i) {
-    DrawHorizontalLine(painter, {axes_intersection.x(), current_tick_location},
-                       -kVerticalAxisTickLength);
-
-    QString tick_label = QString::fromStdString(absl::StrFormat("%.0f", current_tick_value * 100));
-
-    QRect tick_label_bounding_rect = font_metrics.tightBoundingRect(tick_label);
-    painter.drawText(axes_intersection.x() - tick_label_bounding_rect.width() -
-                         kVerticalAxisTickLength - kTickLabelGap - kLineWidth,
-                     current_tick_location + (tick_label_bounding_rect.height()) / 2, tick_label);
-
-    current_tick_location -= tick_spacing_pixels;
-    current_tick_value += tick_spacing_as_value;
+  while (current <= max) {
+    result.push_back(current);
+    current += step;
   }
+
+  return result;
+}
+
+// Providing exactly `optimal_tick_count` of ticks is impossible as we use a finite set of `steps`.
+// Hence, we choose the step leading to the number of ticks closest to `optimal_tick_count`.
+// If the available tick count is either 0 or 1, the step yielding zero ticks may be returned.
+[[nodiscard]] static TickStep ChooseBestStep(double min, double max,
+                                             const std::vector<TickStep>& steps,
+                                             uint32_t optimal_tick_count) {
+  std::optional<TickStep> best_step;
+  int best_deviation = std::numeric_limits<int>::max();
+  for (const TickStep& step : steps) {
+    int tick_count = static_cast<int>(TickCount(min, max, step.value));
+    if (best_step && tick_count < 2) continue;
+
+    int deviation = std::abs(tick_count - static_cast<int>(optimal_tick_count));
+
+    if (deviation < best_deviation) {
+      best_step = step;
+      best_deviation = deviation;
+    }
+  }
+  return *best_step;
+}
+
+namespace {
+struct Ticks {
+  std::vector<QString> labels;
+  std::vector<double> values;
+  int precision{};
+};
+}  // namespace
+
+[[nodiscard]] static Ticks MakeTicksFromValues(const std::vector<double>& values, int precision) {
+  std::vector<QString> labels;
+  std::transform(
+      std::begin(values), std::end(values), std::back_inserter(labels),
+      [precision](const double value) { return QString::number(value, 'f', precision); });
+  return {labels, values, precision};
+}
+
+[[nodiscard]] static Ticks MakeTicks(double min, double max, const std::vector<TickStep>& steps,
+                                     uint32_t optimal_tick_count) {
+  TickStep step = ChooseBestStep(min, max, steps, optimal_tick_count);
+  std::vector<double> values = MakeLabelValues(min, max, step.value);
+  return MakeTicksFromValues(values, step.precision);
 }
 
 [[nodiscard]] static int ValueToAxisLocation(double value, int axis_length, double min_value,
                                              double max_value) {
-  if (min_value == max_value) max_value++;
+  if (min_value == max_value) return 0;
   return RoundToClosestInt(((value - min_value) / (max_value - min_value)) * axis_length);
+}
+
+static void DrawHorizontalAxis(QPainter& painter, const QPoint& axes_intersection, int length,
+                               const Ticks& ticks, int axis_length, double min_value,
+                               double max_value) {
+  DrawHorizontalLine(painter, axes_intersection, length);
+
+  const QFontMetrics font_metrics(painter.font());
+
+  for (size_t i = 0; i < ticks.values.size(); ++i) {
+    const double tick_value = ticks.values[i];
+    const int tick_location =
+        ValueToAxisLocation(tick_value, axis_length, min_value, max_value) + axes_intersection.x();
+
+    DrawVerticalLine(painter, {tick_location, axes_intersection.y()}, kHorizontalAxisTickLength);
+
+    const QString& tick_label = ticks.labels[i];
+    const QRect tick_label_bounding_rect = font_metrics.tightBoundingRect(tick_label);
+
+    painter.drawText(tick_location - tick_label_bounding_rect.width() / 2,
+                     axes_intersection.y() + kHorizontalAxisTickLength +
+                         tick_label_bounding_rect.height() + kTickLabelGap + kLineWidth / 2,
+                     tick_label);
+  }
+}
+
+static void DrawVerticalAxis(QPainter& painter, const QPoint& axes_intersection, int length,
+                             const Ticks& ticks, int axis_length, double max_value) {
+  DrawVerticalLine(painter, axes_intersection, -length);
+
+  const QFontMetrics font_metrics(painter.font());
+
+  for (size_t i = 1; i < ticks.values.size(); ++i) {
+    const double tick_value = ticks.values[i];
+    const int tick_location =
+        axes_intersection.y() - ValueToAxisLocation(tick_value, axis_length, 0.0, max_value);
+
+    // We skip the ticks that do not fall into the horizontal axis range. Such ticks might appear
+    // due to rounding errors.
+    if (!(axes_intersection.y() - axis_length <= tick_location &&
+          tick_location <= axes_intersection.y())) {
+      continue;
+    }
+
+    DrawHorizontalLine(painter, {axes_intersection.x(), tick_location}, -kVerticalAxisTickLength);
+
+    QString tick_label = ticks.labels[i];
+
+    QRect tick_label_bounding_rect = font_metrics.tightBoundingRect(tick_label);
+    painter.drawText(axes_intersection.x() - tick_label_bounding_rect.width() -
+                         kVerticalAxisTickLength - kTickLabelGap - kLineWidth,
+                     tick_location + (tick_label_bounding_rect.height()) / 2, tick_label);
+  }
 }
 
 [[nodiscard]] static double GetFreq(const orbit_statistics::Histogram& histogram, size_t i) {
@@ -172,11 +240,12 @@ static void DrawHoverLabel(QPainter& painter, const QRect& rect, const QString t
 }
 
 static void DrawVerticalHoverLabel(QPainter& painter, const QPoint& axes_intersection,
-                                   const orbit_qt::BarData& bar_data) {
+                                   const orbit_qt::BarData& bar_data, int decimals_count) {
   // We treat 100% frequency as a special case to render the value as "100", not as "100.0".
   // It doesn't fit into the widget otherwise.
-  QString label_text = QString::fromStdString(
-      bar_data.frequency == 1.0 ? "100" : absl::StrFormat("%.1f", bar_data.frequency * 100));
+  QString label_text = bar_data.frequency == 1.0
+                           ? QStringLiteral("100")
+                           : QString::number(bar_data.frequency * 100, 'f', decimals_count);
 
   QRect label_rect(QPoint(0, 0), QPoint(kVerticalLabelWidth, kVerticalLabelHeight));
 
@@ -189,7 +258,8 @@ static void DrawVerticalHoverLabel(QPainter& painter, const QPoint& axes_interse
 static void DrawHistogram(QPainter& painter, const QPoint& axes_intersection,
                           const orbit_statistics::Histogram& histogram, int horizontal_axis_length,
                           int vertical_axis_length, double max_freq, uint64_t min_value,
-                          const std::optional<int>& histogram_hover_x) {
+                          const std::optional<int>& histogram_hover_x,
+                          int vertical_label_decimal_count) {
   int color_index = 0;
   std::optional<orbit_qt::BarData> hovered_bar_data;
   const int first_bar_offset_from_axes_intersection =
@@ -231,7 +301,10 @@ static void DrawHistogram(QPainter& painter, const QPoint& axes_intersection,
     left_x += widths[i];
   }
 
-  if (hovered_bar_data) DrawVerticalHoverLabel(painter, axes_intersection, *hovered_bar_data);
+  if (hovered_bar_data) {
+    DrawVerticalHoverLabel(painter, axes_intersection, *hovered_bar_data,
+                           vertical_label_decimal_count);
+  }
 }
 
 static void DrawSelection(QPainter& painter, int start_x, int end_x,
@@ -260,13 +333,14 @@ static void DrawSelection(QPainter& painter, int start_x, int end_x,
 static void DrawHorizontalHoverLabel(QPainter& painter, const QPoint& axes_intersection,
                                      std::optional<int> histogram_hover_x, int width,
                                      uint64_t min_value, uint64_t max_value,
-                                     orbit_display_formats::TimeUnit time_unit) {
+                                     orbit_display_formats::TimeUnit time_unit,
+                                     int decimals_count) {
   if (!histogram_hover_x) return;
 
   const uint64_t value_pos = LocationToValue(*histogram_hover_x, width, min_value, max_value);
   const QString label_text = QString::number(
       orbit_display_formats::ToDoubleInGivenTimeUnits(absl::Nanoseconds(value_pos), time_unit), 'f',
-      kTimeDecimalsCount);
+      decimals_count);
 
   const QFontMetrics font_metrics(painter.font());
   const QRect bounding_rect = font_metrics.tightBoundingRect(label_text);
@@ -302,8 +376,6 @@ static void DrawHint(QPainter& painter, int width, orbit_display_formats::TimeUn
   DrawOneLineOfHint(painter, second_line, QPoint(width - kHintRightMargin, kHintBottom),
                     kHintSecondLineColor);
 }
-
-namespace orbit_qt {
 
 constexpr uint32_t kSeed = 31;
 
@@ -351,6 +423,11 @@ void HistogramWidget::UpdateData(const std::vector<uint64_t>* data, std::string 
   update();
 }
 
+[[nodiscard]] static double NanosecondsToDoubleInGivenUnits(
+    uint64_t nanos, orbit_display_formats::TimeUnit time_unit) {
+  return orbit_display_formats::ToDoubleInGivenTimeUnits(absl::Nanoseconds(nanos), time_unit);
+}
+
 void HistogramWidget::paintEvent(QPaintEvent* /*event*/) {
   if (histogram_stack_.empty()) {
     return;
@@ -375,24 +452,33 @@ void HistogramWidget::paintEvent(QPaintEvent* /*event*/) {
     DrawSelection(painter, selected_area_->selection_start_pixel,
                   selected_area_->selection_current_pixel, axes_intersection, vertical_axis_length);
   }
-  const auto tick_spacing_as_value = (histogram.max - MinValue()) / kHorizontalTickCount;
+  const auto tick_spacing_as_value = (histogram.max - MinValue()) / (kHorizontalTickCount - 1);
   orbit_display_formats::TimeUnit time_unit = orbit_display_formats::ChooseUnitForDisplayTime(
       absl::Nanoseconds(MinValue() + tick_spacing_as_value));
+
+  const double min_value_in_units = NanosecondsToDoubleInGivenUnits(MinValue(), time_unit);
+  const double max_value_in_units = NanosecondsToDoubleInGivenUnits(MaxValue(), time_unit);
+  const Ticks horizontal_ticks =
+      MakeTicks(min_value_in_units, max_value_in_units, kHorizontalTickSteps, kHorizontalTickCount);
+
+  const Ticks vertical_ticks =
+      MakeTicks(0.0, max_freq * 100.0, kVerticalTickSteps, kVerticalTickCount);
 
   DrawHint(painter, Width(), time_unit);
 
   painter.setPen(QPen(kAxisColor, kLineWidth));
 
-  DrawHorizontalAxis(painter, axes_intersection, horizontal_axis_length, MinValue(),
-                     tick_spacing_as_value, time_unit);
-  DrawVerticalAxis(painter, axes_intersection, vertical_axis_length, max_freq);
+  DrawHorizontalAxis(painter, axes_intersection, horizontal_axis_length, horizontal_ticks,
+                     horizontal_axis_length, min_value_in_units, max_value_in_units);
+  DrawVerticalAxis(painter, axes_intersection, vertical_axis_length, vertical_ticks,
+                   vertical_axis_length, max_freq * 100.0);
   painter.setPen(QPen(Qt::white, 1));
 
   DrawHistogram(painter, axes_intersection, histogram, horizontal_axis_length, vertical_axis_length,
-                max_freq, MinValue(), histogram_hover_x_);
+                max_freq, MinValue(), histogram_hover_x_, 1);
 
   DrawHorizontalHoverLabel(painter, axes_intersection, histogram_hover_x_, Width(), MinValue(),
-                           MaxValue(), time_unit);
+                           MaxValue(), time_unit, horizontal_ticks.precision + 1);
 }
 
 void HistogramWidget::mouseReleaseEvent(QMouseEvent* /* event*/) {

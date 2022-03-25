@@ -64,7 +64,6 @@
 #include "GrpcProtos/symbol.pb.h"
 #include "ImGuiOrbit.h"
 #include "Introspection/Introspection.h"
-#include "MainThreadExecutor.h"
 #include "MainWindowInterface.h"
 #include "MetricsUploader/CaptureMetric.h"
 #include "MetricsUploader/MetricsUploader.h"
@@ -78,6 +77,7 @@
 #include "OrbitBase/ImmediateExecutor.h"
 #include "OrbitBase/JoinFutures.h"
 #include "OrbitBase/Logging.h"
+#include "OrbitBase/MainThreadExecutor.h"
 #include "OrbitBase/Result.h"
 #include "OrbitBase/ThreadConstants.h"
 #include "OrbitBase/UniqueResource.h"
@@ -99,6 +99,7 @@ using orbit_capture_file::CaptureFile;
 
 using orbit_client_data::CallstackData;
 using orbit_client_data::CallstackEvent;
+using orbit_client_data::CallstackInfo;
 using orbit_client_data::CaptureData;
 using orbit_client_data::ModuleData;
 using orbit_client_data::PostProcessedSamplingData;
@@ -110,7 +111,6 @@ using orbit_client_data::TimerChain;
 using orbit_client_data::TracepointInfoSet;
 using orbit_client_data::UserDefinedCaptureData;
 
-using orbit_client_protos::CallstackInfo;
 using orbit_client_protos::FunctionInfo;
 using orbit_client_protos::FunctionStats;
 using orbit_client_protos::LinuxAddressInfo;
@@ -256,7 +256,7 @@ ErrorMessageOr<std::optional<std::filesystem::path>> GetOverrideSymbolFileForMod
 bool DoZoom = false;
 
 OrbitApp::OrbitApp(orbit_gl::MainWindowInterface* main_window,
-                   MainThreadExecutor* main_thread_executor,
+                   orbit_base::MainThreadExecutor* main_thread_executor,
                    const orbit_base::CrashHandler* crash_handler,
                    orbit_metrics_uploader::MetricsUploader* metrics_uploader)
     : main_window_{main_window},
@@ -273,32 +273,13 @@ OrbitApp::OrbitApp(orbit_gl::MainWindowInterface* main_window,
         ORBIT_STOP();
       });
 
-  const unsigned number_of_logical_cores = std::thread::hardware_concurrency();
-  // std::thread::hardware_concurrency may return 0 on unsupported platforms but that shouldn't
-  // occur on standard Linux or Windows.
-  ORBIT_CHECK(number_of_logical_cores > 0);
-
-  core_count_sized_thread_pool_ = orbit_base::ThreadPool::Create(
-      /*thread_pool_min_size=*/number_of_logical_cores,
-      /*thread_pool_max_size=*/number_of_logical_cores, /*thread_ttl=*/absl::Seconds(1),
-      /*run_action=*/[](const std::unique_ptr<Action>& action) {
-        ORBIT_START("Execute Action");
-        action->Execute();
-        ORBIT_STOP();
-      });
-
   main_thread_id_ = std::this_thread::get_id();
   data_manager_ = std::make_unique<orbit_client_data::DataManager>(main_thread_id_);
   module_manager_ = std::make_unique<orbit_client_data::ModuleManager>();
   manual_instrumentation_manager_ = std::make_unique<ManualInstrumentationManager>();
 }
 
-OrbitApp::~OrbitApp() {
-  AbortCapture();
-
-  thread_pool_->ShutdownAndWait();
-  core_count_sized_thread_pool_->ShutdownAndWait();
-}
+OrbitApp::~OrbitApp() { AbortCapture(); }
 
 void OrbitApp::OnCaptureFinished(const CaptureFinished& capture_finished) {
   ORBIT_LOG("CaptureFinished received: status=%s, error_message=\"%s\"",
@@ -732,7 +713,8 @@ void OrbitApp::OnValidateFramePointers(std::vector<const ModuleData*> modules_to
 }
 
 std::unique_ptr<OrbitApp> OrbitApp::Create(
-    orbit_gl::MainWindowInterface* main_window, MainThreadExecutor* main_thread_executor,
+    orbit_gl::MainWindowInterface* main_window,
+    orbit_base::MainThreadExecutor* main_thread_executor,
     const orbit_base::CrashHandler* crash_handler,
     orbit_metrics_uploader::MetricsUploader* metrics_uploader) {
   return std::make_unique<OrbitApp>(main_window, main_thread_executor, crash_handler,
@@ -1235,7 +1217,12 @@ ErrorMessageOr<PresetFile> OrbitApp::ReadPresetFromFile(const std::filesystem::p
 
 ErrorMessageOr<void> OrbitApp::OnLoadPreset(const std::string& filename) {
   OUTCOME_TRY(auto&& preset_file, ReadPresetFromFile(filename));
-  LoadPreset(preset_file);
+  (void)LoadPreset(preset_file)
+      .ThenIfSuccess(main_thread_executor_,
+                     [this, preset_file_path = std::move(preset_file.file_path())]() {
+                       ORBIT_CHECK(presets_data_view_ != nullptr);
+                       presets_data_view_->OnLoadPresetSuccessful(preset_file_path);
+                     });
   return outcome::success();
 }
 
@@ -1850,11 +1837,10 @@ orbit_base::Future<ErrorMessageOr<std::filesystem::path>> OrbitApp::RetrieveModu
                                                     debuglink.crc32_checksum, GetAllSymbolPaths());
         if (local_debuginfo_path.has_error()) {
           return ErrorMessage{absl::StrFormat(
-              "Module \"%s\" doesn't include debug info, and a separate "
-              "debuginfo file wasn't found on this machine, when searching "
-              "the paths from your SymbolsPath.txt. Please make sure the "
-              "debuginfo file can be found in one of the listed directories. According to "
-              "the .gnu_debuglink section, the debuginfo file must be called \"%s\".",
+              "Module \"%s\" doesn't include debug info, and a separate debuginfo file wasn't "
+              "found on this machine, when searching the folders from the Symbol Locations. Please "
+              "make sure that the debuginfo file can be found in one of the added folders. "
+              "According to the .gnu_debuglink section, the debuginfo file must be called \"%s\".",
               module_path, debuglink.path.string())};
         }
 
@@ -2132,7 +2118,7 @@ void OrbitApp::EnableFrameTracksByName(const ModuleData* module,
   }
 }
 
-void OrbitApp::LoadPreset(const PresetFile& preset_file) {
+orbit_base::Future<ErrorMessageOr<void>> OrbitApp::LoadPreset(const PresetFile& preset_file) {
   ScopedMetric metric{metrics_uploader_, orbit_metrics_uploader::OrbitLogEvent::ORBIT_PRESET_LOAD};
   std::vector<orbit_base::Future<std::string>> load_module_results{};
   auto module_paths = preset_file.GetModulePaths();
@@ -2158,37 +2144,41 @@ void OrbitApp::LoadPreset(const PresetFile& preset_file) {
   // Then - when all modules are loaded or failed to load - we update the UI and potentially show an
   // error message.
   auto results = orbit_base::JoinFutures(absl::MakeConstSpan(load_module_results));
-  results.Then(main_thread_executor_, [this, metric = std::move(metric), preset_file](
-                                          std::vector<std::string> module_paths_not_found) mutable {
-    size_t tried_to_load_amount = module_paths_not_found.size();
-    module_paths_not_found.erase(
-        std::remove_if(module_paths_not_found.begin(), module_paths_not_found.end(),
-                       [](const std::string& path) { return path.empty(); }),
-        module_paths_not_found.end());
+  return results.Then(
+      main_thread_executor_,
+      [this, metric = std::move(metric), preset_file](
+          std::vector<std::string> module_paths_not_found) mutable -> ErrorMessageOr<void> {
+        size_t tried_to_load_amount = module_paths_not_found.size();
+        module_paths_not_found.erase(
+            std::remove_if(module_paths_not_found.begin(), module_paths_not_found.end(),
+                           [](const std::string& path) { return path.empty(); }),
+            module_paths_not_found.end());
 
-    if (tried_to_load_amount == module_paths_not_found.size()) {
-      metric.SetStatusCode(orbit_metrics_uploader::OrbitLogEvent::INTERNAL_ERROR);
-      SendErrorToUi("Preset loading failed",
-                    absl::StrFormat("None of the modules of the preset were loaded:\n* %s",
-                                    absl::StrJoin(module_paths_not_found, "\n* ")));
-      return;
-    }
+        if (tried_to_load_amount == module_paths_not_found.size()) {
+          metric.SetStatusCode(orbit_metrics_uploader::OrbitLogEvent::INTERNAL_ERROR);
+          std::string error_message =
+              absl::StrFormat("None of the modules of the preset were loaded:\n* %s",
+                              absl::StrJoin(module_paths_not_found, "\n* "));
+          SendErrorToUi("Preset loading failed", error_message);
+          return ErrorMessage{error_message};
+        }
 
-    if (!module_paths_not_found.empty()) {
-      SendWarningToUi("Preset only partially loaded",
-                      absl::StrFormat("The following modules were not loaded:\n* %s",
-                                      absl::StrJoin(module_paths_not_found, "\n* ")));
-    } else {
-      // Then if load was successful and the preset is in old format - convert it to new one.
-      auto convertion_result = ConvertPresetToNewFormatIfNecessary(preset_file);
-      if (convertion_result.has_error()) {
-        ORBIT_ERROR("Unable to convert preset file \"%s\" to new file format: %s",
-                    preset_file.file_path().string(), convertion_result.error().message());
-      }
-    }
+        if (!module_paths_not_found.empty()) {
+          SendWarningToUi("Preset only partially loaded",
+                          absl::StrFormat("The following modules were not loaded:\n* %s",
+                                          absl::StrJoin(module_paths_not_found, "\n* ")));
+        } else {
+          // Then if load was successful and the preset is in old format - convert it to new one.
+          auto convertion_result = ConvertPresetToNewFormatIfNecessary(preset_file);
+          if (convertion_result.has_error()) {
+            ORBIT_ERROR("Unable to convert preset file \"%s\" to new file format: %s",
+                        preset_file.file_path().string(), convertion_result.error().message());
+          }
+        }
 
-    FireRefreshCallbacks();
-  });
+        FireRefreshCallbacks();
+        return outcome::success();
+      });
 }
 
 void OrbitApp::ShowPresetInExplorer(const PresetFile& preset) {
@@ -2581,8 +2571,7 @@ orbit_data_views::DataView* OrbitApp::GetOrCreateDataView(DataViewType type) {
   switch (type) {
     case DataViewType::kFunctions:
       if (!functions_data_view_) {
-        functions_data_view_ =
-            DataView::CreateAndInit<FunctionsDataView>(this, core_count_sized_thread_pool_.get());
+        functions_data_view_ = DataView::CreateAndInit<FunctionsDataView>(this);
         panels_.push_back(functions_data_view_.get());
       }
       return functions_data_view_.get();

@@ -12,6 +12,8 @@
 #include "OrbitBase/Promise.h"
 #include "QtUtils/MainThreadExecutorImpl.h"
 
+using orbit_base::MainThreadExecutor;
+
 namespace orbit_qt_utils {
 
 TEST(MainThreadExecutorImpl, Schedule) {

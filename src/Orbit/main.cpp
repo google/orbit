@@ -287,6 +287,8 @@ int main(int argc, char* argv[]) {
       dump_path, handler_path, crash_server_url, attachments);
 #endif  // ORBIT_CRASH_HANDLING
 
+  orbit_base::ThreadPool::InitializeDefaultThreadPool();
+
   if (absl::GetFlag(FLAGS_clear_source_paths_mappings)) {
     ClearSourcePathsMappings();
     return 0;

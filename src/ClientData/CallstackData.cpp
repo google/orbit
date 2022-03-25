@@ -7,16 +7,13 @@
 #include <absl/container/flat_hash_map.h>
 #include <absl/container/flat_hash_set.h>
 
-#include <cstdint>
 #include <mutex>
 #include <utility>
 
 #include "ClientData/CallstackEvent.h"
-#include "ClientProtos/capture_data.pb.h"
+#include "ClientData/CallstackInfo.h"
+#include "ClientData/CallstackType.h"
 #include "OrbitBase/Logging.h"
-
-using orbit_client_data::CallstackEvent;
-using orbit_client_protos::CallstackInfo;
 
 namespace orbit_client_data {
 
@@ -33,11 +30,9 @@ void CallstackData::RegisterTime(uint64_t time) {
   if (time > 0 && time < min_time_) min_time_ = time;
 }
 
-void CallstackData::AddUniqueCallstack(uint64_t callstack_id,
-                                       orbit_client_protos::CallstackInfo callstack) {
+void CallstackData::AddUniqueCallstack(uint64_t callstack_id, CallstackInfo callstack) {
   std::lock_guard<std::recursive_mutex> lock(mutex_);
-  unique_callstacks_[callstack_id] =
-      std::make_shared<orbit_client_protos::CallstackInfo>(std::move(callstack));
+  unique_callstacks_[callstack_id] = std::make_shared<CallstackInfo>(std::move(callstack));
 }
 
 uint32_t CallstackData::GetCallstackEventsCount() const {
@@ -141,7 +136,7 @@ void CallstackData::AddCallstackFromKnownCallstackData(const CallstackEvent& eve
                                                        const CallstackData& known_callstack_data) {
   std::lock_guard<std::recursive_mutex> lock(mutex_);
   uint64_t callstack_id = event.callstack_id();
-  std::shared_ptr<orbit_client_protos::CallstackInfo> unique_callstack =
+  std::shared_ptr<CallstackInfo> unique_callstack =
       known_callstack_data.GetCallstackPtr(callstack_id);
   if (unique_callstack == nullptr) {
     return;
@@ -152,7 +147,7 @@ void CallstackData::AddCallstackFromKnownCallstackData(const CallstackEvent& eve
   callstack_events_by_tid_[event.thread_id()].emplace(event.timestamp_ns(), event);
 }
 
-const orbit_client_protos::CallstackInfo* CallstackData::GetCallstack(uint64_t callstack_id) const {
+const CallstackInfo* CallstackData::GetCallstack(uint64_t callstack_id) const {
   std::lock_guard<std::recursive_mutex> lock(mutex_);
   auto it = unique_callstacks_.find(callstack_id);
   if (it != unique_callstacks_.end()) {
@@ -167,16 +162,15 @@ bool CallstackData::HasCallstack(uint64_t callstack_id) const {
 }
 
 void CallstackData::ForEachUniqueCallstack(
-    const std::function<void(uint64_t callstack_id,
-                             const orbit_client_protos::CallstackInfo& callstack)>& action) const {
+    const std::function<void(uint64_t callstack_id, const CallstackInfo& callstack)>& action)
+    const {
   std::lock_guard<std::recursive_mutex> lock(mutex_);
   for (const auto& [callstack_id, callstack_ptr] : unique_callstacks_) {
     action(callstack_id, *callstack_ptr);
   }
 }
 
-std::shared_ptr<orbit_client_protos::CallstackInfo> CallstackData::GetCallstackPtr(
-    uint64_t callstack_id) const {
+std::shared_ptr<CallstackInfo> CallstackData::GetCallstackPtr(uint64_t callstack_id) const {
   auto it = unique_callstacks_.find(callstack_id);
   if (it != unique_callstacks_.end()) {
     return unique_callstacks_.at(callstack_id);
@@ -196,8 +190,8 @@ void CallstackData::UpdateCallstackTypeBasedOnMajorityStart() {
     absl::flat_hash_map<uint64_t, uint64_t> count_by_outer_frame;
     for (const auto& [unused_timestamp_ns, event] : timestamps_and_callstack_events) {
       const CallstackInfo& callstack = *unique_callstacks_.at(event.callstack_id());
-      ORBIT_CHECK(callstack.type() != CallstackInfo::kFilteredByMajorityOutermostFrame);
-      if (callstack.type() != CallstackInfo::kComplete) {
+      ORBIT_CHECK(callstack.type() != CallstackType::kFilteredByMajorityOutermostFrame);
+      if (callstack.type() != CallstackType::kComplete) {
         continue;
       }
       ++count_for_this_thread;
@@ -239,8 +233,8 @@ void CallstackData::UpdateCallstackTypeBasedOnMajorityStart() {
     // CallstackEvent will also be affected.
     for (const auto& [unused_timestamp_ns, event] : timestamps_and_callstack_events) {
       const CallstackInfo& callstack = *unique_callstacks_.at(event.callstack_id());
-      ORBIT_CHECK(callstack.type() != CallstackInfo::kFilteredByMajorityOutermostFrame);
-      if (callstack.type() != CallstackInfo::kComplete) {
+      ORBIT_CHECK(callstack.type() != CallstackType::kFilteredByMajorityOutermostFrame);
+      if (callstack.type() != CallstackType::kComplete) {
         continue;
       }
 
@@ -255,8 +249,8 @@ void CallstackData::UpdateCallstackTypeBasedOnMajorityStart() {
   // Change the type of the recorded CallstackInfos.
   for (uint64_t callstack_id_to_filter : callstack_ids_to_filter) {
     CallstackInfo* callstack = unique_callstacks_.at(callstack_id_to_filter).get();
-    ORBIT_CHECK(callstack->type() == CallstackInfo::kComplete);
-    callstack->set_type(CallstackInfo::kFilteredByMajorityOutermostFrame);
+    ORBIT_CHECK(callstack->type() == CallstackType::kComplete);
+    callstack->set_type(CallstackType::kFilteredByMajorityOutermostFrame);
   }
 
   // Count how many CallstackEvents had their CallstackInfo affected by the type change.
@@ -264,7 +258,7 @@ void CallstackData::UpdateCallstackTypeBasedOnMajorityStart() {
   for (auto& [tid, timestamps_and_callstack_events] : callstack_events_by_tid_) {
     for (const auto& [unused_timestamp_ns, event] : timestamps_and_callstack_events) {
       if (unique_callstacks_.at(event.callstack_id())->type() ==
-          CallstackInfo::kFilteredByMajorityOutermostFrame) {
+          CallstackType::kFilteredByMajorityOutermostFrame) {
         ++affected_event_count;
       }
     }

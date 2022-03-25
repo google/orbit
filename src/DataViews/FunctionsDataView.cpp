@@ -30,7 +30,6 @@
 #include "OrbitBase/JoinFutures.h"
 #include "OrbitBase/Logging.h"
 #include "OrbitBase/TaskGroup.h"
-#include "OrbitBase/ThreadPool.h"
 
 using orbit_client_data::CaptureData;
 using orbit_client_data::ModuleManager;
@@ -38,8 +37,7 @@ using orbit_client_protos::FunctionInfo;
 
 namespace orbit_data_views {
 
-FunctionsDataView::FunctionsDataView(AppInterface* app, orbit_base::ThreadPool* thread_pool)
-    : DataView(DataViewType::kFunctions, app), thread_pool_{thread_pool} {}
+FunctionsDataView::FunctionsDataView(AppInterface* app) : DataView(DataViewType::kFunctions, app) {}
 
 const std::string FunctionsDataView::kUnselectedFunctionString = "";
 const std::string FunctionsDataView::kSelectedFunctionString = "✓";
@@ -212,7 +210,7 @@ void FunctionsDataView::DoFilter() {
   std::vector<absl::Span<const FunctionInfo*>> chunks =
       orbit_base::CreateChunksOfSize(functions_, kNumFunctionsPerTask);
   std::vector<std::vector<uint64_t>> task_results(chunks.size());
-  orbit_base::TaskGroup task_group(thread_pool_);
+  orbit_base::TaskGroup task_group;
 
   for (size_t i = 0; i < chunks.size(); ++i) {
     task_group.AddTask([& chunk = chunks[i], &result = task_results[i], this]() {

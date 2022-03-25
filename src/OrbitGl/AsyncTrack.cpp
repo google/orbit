@@ -86,6 +86,13 @@ void AsyncTrack::OnTimer(const orbit_client_protos::TimerInfo& timer_info) {
   TimerTrack::OnTimer(new_timer_info);
 }
 
+float AsyncTrack::GetHeight() const {
+  uint32_t collapsed_depth = std::min<uint32_t>(1, GetDepth());
+  uint32_t depth = collapse_toggle_->IsCollapsed() ? collapsed_depth : GetDepth();
+  return GetHeightAboveTimers() + layout_->GetTextBoxHeight() * depth +
+         layout_->GetTrackContentBottomMargin();
+}
+
 void AsyncTrack::DoUpdatePrimitives(Batcher& batcher, TextRenderer& text_renderer,
                                     uint64_t min_tick, uint64_t max_tick,
                                     PickingMode picking_mode) {

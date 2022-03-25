@@ -16,6 +16,8 @@
 #include "App.h"
 #include "Batcher.h"
 #include "ClientData/CallstackData.h"
+#include "ClientData/CallstackInfo.h"
+#include "ClientData/CallstackType.h"
 #include "ClientData/CaptureData.h"
 #include "ClientData/ModuleAndFunctionLookup.h"
 #include "ClientProtos/capture_data.pb.h"
@@ -30,9 +32,10 @@
 
 using orbit_client_data::CallstackData;
 using orbit_client_data::CallstackEvent;
+using orbit_client_data::CallstackInfo;
+using orbit_client_data::CallstackType;
 using orbit_client_data::CaptureData;
 using orbit_client_data::ThreadID;
-using orbit_client_protos::CallstackInfo;
 
 namespace orbit_gl {
 
@@ -119,7 +122,7 @@ void CallstackThreadBar::DoUpdatePrimitives(Batcher& batcher, TextRenderer& text
       Vec2 pos(timeline_info_->GetWorldFromTick(time), GetPos()[1]);
       Color color = kWhite;
       if (capture_data_->GetCallstackData().GetCallstack(event.callstack_id())->type() !=
-          CallstackInfo::kComplete) {
+          CallstackType::kComplete) {
         color = kGreyError;
       }
       batcher.AddVerticalLine(pos, track_height, z, color);
@@ -222,14 +225,13 @@ bool CallstackThreadBar::IsEmpty() const {
 }
 
 [[nodiscard]] std::string CallstackThreadBar::SafeGetFormattedFunctionName(
-    const orbit_client_protos::CallstackInfo& callstack, int frame_index,
-    int max_line_length) const {
+    const CallstackInfo& callstack, size_t frame_index, int max_line_length) const {
   ORBIT_CHECK(capture_data_ != nullptr);
-  if (frame_index >= callstack.frames_size()) {
+  if (frame_index >= callstack.frames().size()) {
     return std::string("<i>") + orbit_client_data::kUnknownFunctionOrModuleName + "</i>";
   }
 
-  const uint64_t addr = callstack.frames(frame_index);
+  const uint64_t addr = callstack.frames()[frame_index];
   const std::string& function_name =
       orbit_client_data::GetFunctionNameByAddress(*module_manager_, *capture_data_, addr);
   if (function_name == orbit_client_data::kUnknownFunctionOrModuleName) {
@@ -248,7 +250,7 @@ std::string CallstackThreadBar::FormatCallstackForTooltip(const CallstackInfo& c
                                                           int max_line_length, int max_lines,
                                                           int bottom_n_lines) const {
   std::string result;
-  int size = static_cast<int>(callstack.frames_size());
+  int size = static_cast<int>(callstack.frames().size());
   if (max_lines <= 0) {
     max_lines = size;
   }
@@ -289,7 +291,7 @@ std::string CallstackThreadBar::GetSampleTooltip(const Batcher& batcher, Picking
   std::string function_name = SafeGetFormattedFunctionName(*callstack, 0, -1);
   std::string result =
       absl::StrFormat("<b>%s</b><br/><i>Stack sample</i><br/><br/>", function_name.c_str());
-  if (callstack->type() == CallstackInfo::kComplete) {
+  if (callstack->type() == CallstackType::kComplete) {
     result += "<b>Callstack:</b>" + FormatCallstackForTooltip(*callstack);
   } else {
     result += absl::StrFormat(

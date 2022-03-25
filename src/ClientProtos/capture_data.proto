@@ -16,25 +16,6 @@ message FunctionStats {
   uint64 std_dev_ns = 7;
 }
 
-message ProcessInfo {
-  uint32 pid = 1;
-  string name = 2;
-  double cpu_usage = 3;
-  string full_path = 4;
-  string command_line = 5;
-  bool is_64_bit = 6;
-}
-
-message ModuleInfo {
-  string name = 1;
-  string file_path = 2;
-  uint64 file_size = 3;
-  uint64 address_start = 4;
-  uint64 address_end = 5;
-  string build_id = 6;
-  uint64 load_bias = 7;
-}
-
 message FunctionInfo {
   reserved 1, 4, 6, 8, 9, 10, 11;
   string pretty_name = 2;
@@ -42,26 +23,6 @@ message FunctionInfo {
   string module_build_id = 12;
   uint64 address = 5;
   uint64 size = 7;
-}
-
-message CallstackInfo {
-  repeated uint64 frames = 1;
-
-  enum CallstackType {
-    // Keep these in sync with orbit_grpc_protos::Callstack::CallstackType.
-    kComplete = 0;
-    kDwarfUnwindingError = 1;
-    kFramePointerUnwindingError = 2;
-    kInUprobes = 3;
-    kInUserSpaceInstrumentation = 7;
-    kCallstackPatchingFailed = 4;
-    kStackTopForDwarfUnwindingTooSmall = 5;
-    kStackTopDwarfUnwindingError = 6;
-    // These are set by the client and are in addition to the ones in
-    // Callstack::CallstackType.
-    kFilteredByMajorityOutermostFrame = 100;
-  }
-  CallstackType type = 2;
 }
 
 message ThreadStateSliceInfo {

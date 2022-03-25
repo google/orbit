@@ -353,7 +353,9 @@ TEST(ThreadPool, InvalidArguments) {
       "");
 }
 
-TEST(ThreadPool, NoShutdown) { EXPECT_DEATH(ThreadPool::Create(1, 4, absl::Milliseconds(10)), ""); }
+TEST(ThreadPool, NoShutdown) {
+  auto thread_pool = ThreadPool::Create(1, 4, absl::Milliseconds(10));
+}
 
 TEST(ThreadPool, ScheduleAfterShutdown) {
   EXPECT_DEATH(
@@ -541,4 +543,28 @@ TEST(ThreadPool, WithRunActionParameter) {
   EXPECT_FALSE(called);
   EXPECT_EQ(run_before_action_count, 1);
   EXPECT_EQ(run_after_action_count, 1);
+}
+
+TEST(ThreadPool, DefaultThreadPoolNotNull) {
+  EXPECT_NE(ThreadPool::GetDefaultThreadPool(), nullptr);
+}
+
+TEST(ThreadPool, InitializeDefaultThreadPoolAfterFirstUse) {
+  (void)ThreadPool::GetDefaultThreadPool();
+  EXPECT_DEATH(ThreadPool::InitializeDefaultThreadPool(), "");
+}
+
+TEST(ThreadPool, SetDefaultThreadPoolAfterFirstUse) {
+  constexpr size_t kThreadPoolMinSize = 1;
+  constexpr size_t kThreadPoolMaxSize = 2;
+  constexpr absl::Duration kThreadTtl = absl::Milliseconds(5);
+  static std::shared_ptr<ThreadPool> thread_pool =
+      ThreadPool::Create(kThreadPoolMinSize, kThreadPoolMaxSize, kThreadTtl);
+
+  (void)ThreadPool::GetDefaultThreadPool();
+  EXPECT_DEATH(ThreadPool::SetDefaultThreadPool(thread_pool), "");
+}
+
+TEST(ThreadPool, SetNullDefaultThreadPool) {
+  EXPECT_DEATH(ThreadPool::SetDefaultThreadPool(nullptr), "");
 }

@@ -7,11 +7,8 @@
 
 #include "OrbitBase/Chunk.h"
 #include "OrbitBase/TaskGroup.h"
-#include "OrbitBase/ThreadPool.h"
 
 using orbit_base::CreateChunksOfSize;
-using orbit_base::TaskGroup;
-using orbit_base::ThreadPool;
 
 namespace {
 
@@ -84,16 +81,10 @@ TEST(SpanUtils, SpanSizeBiggerThanVectorSize) {
 }
 
 TEST(SpanUtils, TaskGroupTestCase) {
-  constexpr size_t kThreadPoolMinSize = 2;
-  constexpr size_t kThreadPoolMaxSize = 2;
-  constexpr absl::Duration kThreadTtl = absl::Milliseconds(5);
-  std::shared_ptr<ThreadPool> thread_pool =
-      ThreadPool::Create(kThreadPoolMinSize, kThreadPoolMaxSize, kThreadTtl);
-
   constexpr size_t kNumElements = 1024;
   std::vector<uint32_t> counters(kNumElements);
 
-  TaskGroup task_group(thread_pool.get());
+  orbit_base::TaskGroup task_group;
   for (absl::Span<uint32_t> chunk : CreateChunksOfSize(counters, 10)) {
     task_group.AddTask([chunk]() {
       for (uint32_t& counter : chunk) ++counter;
@@ -104,6 +95,4 @@ TEST(SpanUtils, TaskGroupTestCase) {
   for (uint32_t counter : counters) {
     EXPECT_EQ(counter, 1);
   }
-
-  thread_pool->ShutdownAndWait();
 }

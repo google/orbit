@@ -80,6 +80,12 @@ outcome::result<std::string> Channel::ReadStdErr(int buffer_size) {
   return outcome::success(std::move(buffer));
 }
 
+size_t Channel::GetNumBytesToRead() {
+  unsigned long read_avail{};  // NOLINT
+  libssh2_channel_window_read_ex(raw_channel_ptr_.get(), &read_avail, nullptr);
+  return static_cast<size_t>(read_avail);
+}
+
 outcome::result<int> Channel::Write(std::string_view text) {
   const int rc = libssh2_channel_write(raw_channel_ptr_.get(), text.data(), text.size());
 

@@ -11,17 +11,15 @@ target_sources(
   OrbitGl
   PUBLIC AccessibleCaptureViewElement.h
          AccessibleInterfaceProvider.h
-         AccessibleThreadBar.h
          AccessibleTimeGraph.h
-         AccessibleTimeline.h
          AccessibleTrack.h
-         AccessibleTrackContainer.h
          AccessibleTriangleToggle.h
          AnnotationTrack.h
          App.h
          AsyncTrack.h
          BasicPageFaultsTrack.h
          Batcher.h
+         OpenGlBatcher.h
          CallstackThreadBar.h
          CallTreeView.h
          CaptureStats.h
@@ -85,16 +83,14 @@ target_sources(
   OrbitGl
   PRIVATE AccessibleCaptureViewElement.cpp
           AccessibleInterfaceProvider.cpp
-          AccessibleThreadBar.cpp
-          AccessibleTimeGraph.cpp
           AccessibleTrack.cpp
-          AccessibleTrackContainer.cpp
           AccessibleTriangleToggle.cpp
           AnnotationTrack.cpp
           App.cpp
           AsyncTrack.cpp
           BasicPageFaultsTrack.cpp
           Batcher.cpp
+          OpenGlBatcher.cpp
           CallstackThreadBar.cpp
           CallTreeView.cpp
           CaptureStats.cpp

@@ -64,7 +64,6 @@
 #include "GrpcProtos/symbol.pb.h"
 #include "GrpcProtos/tracepoint.pb.h"
 #include "IntrospectionWindow.h"
-#include "MainThreadExecutor.h"
 #include "MainWindowInterface.h"
 #include "ManualInstrumentationManager.h"
 #include "MetricsUploader/CaptureMetric.h"
@@ -72,6 +71,7 @@
 #include "OrbitBase/CrashHandler.h"
 #include "OrbitBase/Future.h"
 #include "OrbitBase/Logging.h"
+#include "OrbitBase/MainThreadExecutor.h"
 #include "OrbitBase/Result.h"
 #include "OrbitBase/ThreadPool.h"
 #include "OrbitPaths/Paths.h"
@@ -88,13 +88,14 @@ class OrbitApp final : public DataViewFactory,
                        public orbit_capture_client::CaptureControlInterface {
  public:
   explicit OrbitApp(orbit_gl::MainWindowInterface* main_window,
-                    MainThreadExecutor* main_thread_executor,
+                    orbit_base::MainThreadExecutor* main_thread_executor,
                     const orbit_base::CrashHandler* crash_handler,
                     orbit_metrics_uploader::MetricsUploader* metrics_uploader = nullptr);
   ~OrbitApp() override;
 
   static std::unique_ptr<OrbitApp> Create(
-      orbit_gl::MainWindowInterface* main_window, MainThreadExecutor* main_thread_executor,
+      orbit_gl::MainWindowInterface* main_window,
+      orbit_base::MainThreadExecutor* main_thread_executor,
       const orbit_base::CrashHandler* crash_handler,
       orbit_metrics_uploader::MetricsUploader* metrics_uploader = nullptr);
 
@@ -166,7 +167,7 @@ class OrbitApp final : public DataViewFactory,
   void OnTimer(const orbit_client_protos::TimerInfo& timer_info) override;
   void OnKeyAndString(uint64_t key, std::string str) override;
   void OnUniqueCallstack(uint64_t callstack_id,
-                         orbit_client_protos::CallstackInfo callstack) override;
+                         orbit_client_data::CallstackInfo callstack) override;
   void OnCallstackEvent(orbit_client_data::CallstackEvent callstack_event) override;
   void OnThreadName(uint32_t thread_id, std::string thread_name) override;
   void OnThreadStateSlice(orbit_client_protos::ThreadStateSliceInfo thread_state_slice) override;
@@ -375,7 +376,8 @@ class OrbitApp final : public DataViewFactory,
 
   orbit_base::Future<ErrorMessageOr<void>> LoadPresetModule(
       const std::filesystem::path& module_path, const orbit_preset_file::PresetFile& preset_file);
-  void LoadPreset(const orbit_preset_file::PresetFile& preset) override;
+  orbit_base::Future<ErrorMessageOr<void>> LoadPreset(
+      const orbit_preset_file::PresetFile& preset) override;
   [[nodiscard]] orbit_data_views::PresetLoadState GetPresetLoadState(
       const orbit_preset_file::PresetFile& preset) const override;
   void ShowPresetInExplorer(const orbit_preset_file::PresetFile& preset) override;
@@ -402,7 +404,9 @@ class OrbitApp final : public DataViewFactory,
   [[nodiscard]] orbit_client_services::ProcessManager* GetProcessManager() {
     return process_manager_;
   }
-  [[nodiscard]] MainThreadExecutor* GetMainThreadExecutor() { return main_thread_executor_; }
+  [[nodiscard]] orbit_base::MainThreadExecutor* GetMainThreadExecutor() {
+    return main_thread_executor_;
+  }
   [[nodiscard]] orbit_client_data::ProcessData* GetMutableTargetProcess() const { return process_; }
   [[nodiscard]] const orbit_client_data::ProcessData* GetTargetProcess() const override {
     return process_;
@@ -630,10 +634,9 @@ class OrbitApp final : public DataViewFactory,
   std::shared_ptr<grpc::Channel> grpc_channel_;
 
   orbit_gl::MainWindowInterface* main_window_ = nullptr;
-  MainThreadExecutor* main_thread_executor_;
+  orbit_base::MainThreadExecutor* main_thread_executor_;
   std::thread::id main_thread_id_;
   std::shared_ptr<orbit_base::ThreadPool> thread_pool_;
-  std::shared_ptr<orbit_base::ThreadPool> core_count_sized_thread_pool_;
   std::unique_ptr<orbit_capture_client::CaptureClient> capture_client_;
   orbit_client_services::ProcessManager* process_manager_ = nullptr;
   std::unique_ptr<orbit_client_data::ModuleManager> module_manager_;

@@ -22,6 +22,7 @@
 
 #include "ClientData/CallstackData.h"
 #include "ClientData/CallstackEvent.h"
+#include "ClientData/CallstackInfo.h"
 #include "ClientData/FunctionInfoSet.h"
 #include "ClientData/ModuleData.h"
 #include "ClientData/ModuleManager.h"
@@ -155,7 +156,7 @@ class CaptureData {
 
   void reset_file_path() { file_path_.reset(); }
 
-  void AddUniqueCallstack(uint64_t callstack_id, orbit_client_protos::CallstackInfo callstack) {
+  void AddUniqueCallstack(uint64_t callstack_id, CallstackInfo callstack) {
     callstack_data_.AddUniqueCallstack(callstack_id, std::move(callstack));
   }
 
@@ -245,7 +246,7 @@ class CaptureData {
   uint64_t memory_sampling_period_ns_;
   uint64_t memory_warning_threshold_kb_;
 
-  orbit_client_data::CallstackData callstack_data_;
+  CallstackData callstack_data_;
   std::optional<PostProcessedSamplingData> post_processed_sampling_data_;
 
   // selection_callstack_data_ is subset of callstack_data_.

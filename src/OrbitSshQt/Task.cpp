@@ -64,76 +64,83 @@ void Task::Write(std::string_view data) {
 }
 
 outcome::result<void> Task::run() {
-  // read stdout
-  bool added_new_data_to_read_buffer = false;
-  while (true) {
-    const size_t kChunkSize = 8192;
-    auto result = channel_->ReadStdOut(kChunkSize);
+  do {
+    // read stdout
+    bool added_new_data_to_read_buffer = false;
+    while (true) {
+      const size_t kChunkSize = 8192;
+      auto result = channel_->ReadStdOut(kChunkSize);
 
-    if (!result && !orbit_ssh::ShouldITryAgain(result)) {
-      if (added_new_data_to_read_buffer) {
-        emit readyReadStdOut();
+      if (!result && !orbit_ssh::ShouldITryAgain(result)) {
+        if (added_new_data_to_read_buffer) {
+          emit readyReadStdOut();
+        }
+        return result.error();
+      } else if (!result) {
+        if (added_new_data_to_read_buffer) {
+          emit readyReadStdOut();
+        }
+        break;
+      } else if (result && result.value().empty()) {
+        // Channel closed
+        if (added_new_data_to_read_buffer) {
+          emit readyReadStdOut();
+        }
+        SetState(State::kWaitChannelClosed);
+        break;
+      } else if (result) {
+        read_std_out_buffer_.append(std::move(result).value());
+        added_new_data_to_read_buffer = true;
       }
-      return result.error();
-    } else if (!result) {
-      if (added_new_data_to_read_buffer) {
-        emit readyReadStdOut();
-      }
-      break;
-    } else if (result && result.value().empty()) {
-      // Channel closed
-      if (added_new_data_to_read_buffer) {
-        emit readyReadStdOut();
-      }
-      SetState(State::kWaitChannelClosed);
-      break;
-    } else if (result) {
-      read_std_out_buffer_.append(std::move(result).value());
-      added_new_data_to_read_buffer = true;
     }
-  }
 
-  // read stderr
-  added_new_data_to_read_buffer = false;
-  while (true) {
-    const size_t kChunkSize = 8192;
-    auto result = channel_->ReadStdErr(kChunkSize);
+    // read stderr
+    added_new_data_to_read_buffer = false;
+    while (true) {
+      const size_t kChunkSize = 8192;
+      auto result = channel_->ReadStdErr(kChunkSize);
 
-    if (!result && !orbit_ssh::ShouldITryAgain(result)) {
-      if (added_new_data_to_read_buffer) {
-        emit readyReadStdErr();
+      if (!result && !orbit_ssh::ShouldITryAgain(result)) {
+        if (added_new_data_to_read_buffer) {
+          emit readyReadStdErr();
+        }
+        return result.error();
+      } else if (!result) {
+        if (added_new_data_to_read_buffer) {
+          emit readyReadStdErr();
+        }
+        break;
+      } else if (result && result.value().empty()) {
+        // Channel closed
+        if (added_new_data_to_read_buffer) {
+          emit readyReadStdErr();
+        }
+        SetState(State::kWaitChannelClosed);
+        break;
+      } else if (result) {
+        read_std_err_buffer_.append(std::move(result).value());
+        added_new_data_to_read_buffer = true;
       }
-      return result.error();
-    } else if (!result) {
-      if (added_new_data_to_read_buffer) {
-        emit readyReadStdErr();
-      }
-      break;
-    } else if (result && result.value().empty()) {
-      // Channel closed
-      if (added_new_data_to_read_buffer) {
-        emit readyReadStdErr();
-      }
-      SetState(State::kWaitChannelClosed);
-      break;
-    } else if (result) {
-      read_std_err_buffer_.append(std::move(result).value());
-      added_new_data_to_read_buffer = true;
     }
-  }
 
-  // If the state here is kWaitChannelClosed, that means a close from the remote side was detected.
-  // This means writing is not possible/necessary anymore, therefore: return early.
-  if (CurrentState() == State::kWaitChannelClosed) {
-    return outcome::success();
-  }
+    // If the state here is kWaitChannelClosed, that means a close from the remote side was
+    // detected. This means writing is not possible/necessary anymore, therefore: return early.
+    if (CurrentState() == State::kWaitChannelClosed) {
+      return outcome::success();
+    }
 
-  // write
-  if (!write_buffer_.empty()) {
-    OUTCOME_TRY(auto&& result, channel_->Write(write_buffer_));
-    write_buffer_ = write_buffer_.substr(result);
-    emit bytesWritten(result);
-  }
+    // write
+    if (!write_buffer_.empty()) {
+      OUTCOME_TRY(auto&& result, channel_->Write(write_buffer_));
+      write_buffer_ = write_buffer_.substr(result);
+      emit bytesWritten(result);
+    }
+
+    // Channel::ReadStdout, Channel::ReadStderr, and Channel::Write all potentially process packets
+    // coming from the TCP socket. That means after handling stderr there could already be new data
+    // in the queue for stdout. So we have to keep reading until no more data is available in any of
+    // the streams.
+  } while (channel_->GetNumBytesToRead() > 0);
 
   return outcome::success();
 }
