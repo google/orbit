@@ -517,6 +517,8 @@ class OrbitApp final : public DataViewFactory,
   void JumpToTimerAndZoom(uint64_t function_id, JumpToTimerMode selection_mode) override;
   [[nodiscard]] std::vector<const orbit_client_protos::TimerInfo*> GetAllTimersForHookedFunction(
       uint64_t function_id) const override;
+  [[nodiscard]] std::vector<const orbit_client_data::TimerChain*> GetAllThreadTimerChains()
+      const override;
 
   [[nodiscard]] const orbit_statistics::BinomialConfidenceIntervalEstimator&
   GetConfidenceIntervalEstimator() const override;
@@ -578,8 +580,8 @@ class OrbitApp final : public DataViewFactory,
   // Only call from the capture thread
   void CaptureMetricProcessTimer(const orbit_client_protos::TimerInfo& timer);
 
-  void ShowHistogram(const std::vector<uint64_t>* data, const std::string& function_name,
-                     uint64_t function_id) override;
+  void ShowHistogram(const std::vector<uint64_t>* data, const std::string& scope_name,
+                     uint64_t scope_id) override;
 
   std::atomic<bool> capture_loading_cancellation_requested_ = false;
   std::atomic<orbit_client_data::CaptureData::DataSource> data_source_{

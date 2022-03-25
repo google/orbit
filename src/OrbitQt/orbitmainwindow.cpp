@@ -1297,13 +1297,13 @@ void OrbitMainWindow::OnTimerSelectionChanged(const orbit_client_protos::TimerIn
   bool is_live_function_data_view_initialized = live_functions_data_view != nullptr;
   if (timer_info) {
     ORBIT_CHECK(is_live_function_data_view_initialized);
-    const uint64_t function_id = timer_info->function_id();
-    selected_row = live_functions_data_view->GetRowFromFunctionId(function_id);
+    const uint64_t scope_id = app_->GetCaptureData().ProvideScopeId(*timer_info);
+    selected_row = live_functions_data_view->GetRowFromFunctionId(scope_id);
     live_functions_data_view->UpdateSelectedFunctionId();
-    live_functions_data_view->UpdateHistogramWithFunctionIds({function_id});
+    live_functions_data_view->UpdateHistogramWithScopeIds({scope_id});
   } else {
     if (is_live_function_data_view_initialized) {
-      live_functions_data_view->UpdateHistogramWithFunctionIds({});
+      live_functions_data_view->UpdateHistogramWithScopeIds({});
     }
   }
   ui->liveFunctions->OnRowSelected(selected_row);
@@ -1645,8 +1645,8 @@ void OrbitMainWindow::ShowWarningWithDontShowAgainCheckboxIfNeeded(
 }
 
 void OrbitMainWindow::ShowHistogram(const std::vector<uint64_t>* data,
-                                    const std::string& function_name, uint64_t function_id) {
-  ui->liveFunctions->ShowHistogram(data, function_name, function_id);
+                                    const std::string& scope_name, uint64_t scope_id) {
+  ui->liveFunctions->ShowHistogram(data, scope_name, scope_id);
 }
 
 static std::optional<QString> TryApplyMappingAndReadSourceFile(

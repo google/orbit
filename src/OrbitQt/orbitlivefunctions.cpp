@@ -169,6 +169,6 @@ void OrbitLiveFunctions::OnRowSelected(std::optional<int> row) {
 }
 
 void OrbitLiveFunctions::ShowHistogram(const std::vector<uint64_t>* data,
-                                       const std::string& function_name, uint64_t function_id) {
-  ui->histogram_widget_->UpdateData(data, function_name, function_id);
+                                       const std::string& scope_name, uint64_t scope_id) {
+  ui->histogram_widget_->UpdateData(data, scope_name, scope_id);
 }

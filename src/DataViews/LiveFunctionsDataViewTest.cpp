@@ -15,6 +15,8 @@
 
 #include "ClientData/CaptureData.h"
 #include "ClientData/FunctionUtils.h"
+#include "ClientData/ScopeIdConstants.h"
+#include "ClientData/TimerChain.h"
 #include "ClientProtos/capture_data.pb.h"
 #include "DataViewTestUtils.h"
 #include "DataViews/AppInterface.h"
@@ -59,6 +61,7 @@ using orbit_grpc_protos::InstrumentedFunction;
 using orbit_grpc_protos::ModuleInfo;
 
 using ::testing::_;
+using ::testing::Invoke;
 using ::testing::Pointee;
 using ::testing::Return;
 
@@ -111,6 +114,7 @@ const std::array<TimerInfo, kNumTimers> kTimers = []() {
     timers[i].set_start(kStarts[i]);
     timers[i].set_end(kEnds[i]);
     timers[i].set_thread_id(kThreadIds[kThreadIndices[i]]);
+    timers[i].set_function_id(kFunctionIds[0]);
   }
   return timers;
 }();
@@ -121,6 +125,16 @@ const std::vector<const TimerInfo*> kTimerPointers = []() {
                  [](const TimerInfo& timer) { return &timer; });
   return pointers;
 }();
+
+const orbit_client_data::TimerChain kTimerChain = []() {
+  orbit_client_data::TimerChain result;
+  for (const auto& timer : kTimers) {
+    result.emplace_back(timer);
+  }
+  return result;
+}();
+
+const std::vector<const orbit_client_data::TimerChain*> kTimerChains = {&kTimerChain};
 
 const std::vector<uint64_t> kDurations = []() {
   std::vector<uint64_t> durations;
@@ -170,6 +184,7 @@ std::unique_ptr<CaptureData> GenerateTestCaptureData(
     instrumented_function->set_file_build_id(function.module_build_id());
     instrumented_function->set_file_offset(
         orbit_client_data::function_utils::Offset(function, *module_data));
+    instrumented_function->set_function_id(kFunctionIds[i]);
   }
 
   auto capture_data =
@@ -188,6 +203,15 @@ std::unique_ptr<CaptureData> GenerateTestCaptureData(
   }
 
   return capture_data;
+}
+
+static void AddTimersToThreadTrackDataProvider(
+    orbit_client_data::ThreadTrackDataProvider* thread_track_data_provider) {
+  for (const TimerInfo* timer_info : kTimerPointers) {
+    thread_track_data_provider->AddTimer(*timer_info);
+  }
+
+  thread_track_data_provider->OnCaptureComplete();
 }
 
 class MockLiveFunctionsInterface : public orbit_data_views::LiveFunctionsInterface {
@@ -681,6 +705,8 @@ TEST_F(LiveFunctionsDataViewTest, UpdateHighlightedFunctionsOnSelect) {
   EXPECT_CALL(app_, GetHighlightedFunctionId).Times(3);
   EXPECT_CALL(app_, HasCaptureData).WillRepeatedly(testing::Return(true));
 
+  EXPECT_CALL(app_, GetCaptureData).WillRepeatedly(testing::ReturnRef(*capture_data_));
+
   // Single selection will hightlight the selected function
   {
     EXPECT_CALL(app_, SetHighlightedFunctionId)
@@ -807,20 +833,28 @@ TEST_F(LiveFunctionsDataViewTest, ColumnSortingShowsRightResults) {
 }
 
 TEST_F(LiveFunctionsDataViewTest, OnDataChangeResetsHistogram) {
-  EXPECT_CALL(app_, ShowHistogram(nullptr, "", orbit_grpc_protos::kInvalidFunctionId)).Times(1);
+  EXPECT_CALL(app_, ShowHistogram(nullptr, "", orbit_client_data::kInvalidScopeId)).Times(1);
 
   view_.OnDataChanged();
 }
 
 TEST_F(LiveFunctionsDataViewTest, OnRefreshWithNoIndicesResetsHistogram) {
-  EXPECT_CALL(app_, ShowHistogram(nullptr, "", orbit_grpc_protos::kInvalidFunctionId)).Times(2);
+  EXPECT_CALL(app_, ShowHistogram(nullptr, "", orbit_client_data::kInvalidScopeId)).Times(2);
 
   view_.OnRefresh({}, RefreshMode::kOnFilter);
   view_.OnRefresh({}, RefreshMode::kOther);
 }
 
 TEST_F(LiveFunctionsDataViewTest, HistogramIsProperlyUpdated) {
-  EXPECT_CALL(app_, GetAllTimersForHookedFunction(_)).WillOnce(Return(kTimerPointers));
+  AddTimersToThreadTrackDataProvider(capture_data_->GetThreadTrackDataProvider());
+
+  EXPECT_CALL(app_, GetCaptureData).WillRepeatedly(testing::ReturnRef(*capture_data_));
+  EXPECT_CALL(app_, ProvideScopeId).WillRepeatedly(Invoke([&](const TimerInfo& timer) {
+    return timer.function_id();
+  }));
+  EXPECT_CALL(app_, HasCaptureData).WillRepeatedly(testing::Return(true));
+  EXPECT_CALL(app_, GetCaptureData).WillRepeatedly(testing::ReturnRef(*capture_data_));
+
   view_.OnDataChanged();
   AddFunctionsByIndices({0});
 
@@ -829,12 +863,12 @@ TEST_F(LiveFunctionsDataViewTest, HistogramIsProperlyUpdated) {
 
   view_.OnRefresh({0}, RefreshMode::kOnFilter);
   view_.OnRefresh({0}, RefreshMode::kOther);
-  view_.UpdateHistogramWithFunctionIds({kFunctionIds[0]});
+  view_.UpdateHistogramWithScopeIds({kFunctionIds[0]});
 }
 
 TEST_F(LiveFunctionsDataViewTest,
        RemoveHistogramWhenUpdatedWithIdOfNonDynamicallyInstrumentedFunction) {
-  EXPECT_CALL(app_, ShowHistogram(nullptr, "", orbit_grpc_protos::kInvalidFunctionId)).Times(1);
+  EXPECT_CALL(app_, ShowHistogram(nullptr, "", orbit_client_data::kInvalidScopeId)).Times(1);
 
-  view_.UpdateHistogramWithFunctionIds({kNonDynamicallyInstrumentedFunctionId});
+  view_.UpdateHistogramWithScopeIds({kNonDynamicallyInstrumentedFunctionId});
 }

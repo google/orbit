@@ -34,8 +34,9 @@ CaptureData::CaptureData(const CaptureStarted& capture_started,
       selection_callstack_data_(std::make_unique<CallstackData>()),
       frame_track_function_ids_{std::move(frame_track_function_ids)},
       file_path_{std::move(file_path)},
-      thread_track_data_provider_(
-          std::make_unique<ThreadTrackDataProvider>(data_source == DataSource::kLoadedCapture)) {
+      scope_id_provider_(NameEqualityScopeIdProvider::Create(capture_started.capture_options())),
+      thread_track_data_provider_(std::make_unique<ThreadTrackDataProvider>(
+          scope_id_provider_.get(), data_source == DataSource::kLoadedCapture)) {
   ProcessInfo process_info;
   process_info.set_pid(capture_started.process_id());
   std::filesystem::path executable_path{capture_started.executable_path()};
@@ -199,6 +200,12 @@ void CaptureData::DisableFrameTrack(uint64_t instrumented_function_id) {
 
 [[nodiscard]] bool CaptureData::IsFrameTrackEnabled(uint64_t instrumented_function_id) const {
   return frame_track_function_ids_.contains(instrumented_function_id);
+}
+
+[[nodiscard]] uint64_t CaptureData::ProvideScopeId(
+    const orbit_client_protos::TimerInfo& timer_info) const {
+  ORBIT_CHECK(scope_id_provider_);
+  return scope_id_provider_->ProvideId(timer_info);
 }
 
 }  // namespace orbit_client_data

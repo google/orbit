@@ -17,7 +17,9 @@ target_sources(ClientData PUBLIC
         include/ClientData/CallstackInfo.h
         include/ClientData/CallstackType.h
         include/ClientData/CaptureData.h
+        include/ClientData/ScopeIdConstants.h
         include/ClientData/DataManager.h
+        include/ClientData/ScopeIdProvider.h
         include/ClientData/FunctionInfoSet.h
         include/ClientData/FunctionUtils.h
         include/ClientData/ModuleAndFunctionLookup.h
@@ -43,6 +45,7 @@ target_sources(ClientData PRIVATE
         CallstackType.cpp
         CaptureData.cpp
         DataManager.cpp
+        ScopeIdProvider.cpp
         FunctionUtils.cpp
         ModuleAndFunctionLookup.cpp
         ModuleData.cpp
@@ -61,6 +64,7 @@ target_sources(ClientData PRIVATE
 target_link_libraries(ClientData PUBLIC
         ApiInterface
         Containers
+        ClientFlags  # TODO (b/226565085) remove when manual instrumentation grouping feature is released.
         ClientProtos
         GrpcProtos
         # TODO(b/191248550): Remove ObjectUtils once GetAbsoluteAddress is removed
@@ -73,6 +77,7 @@ add_executable(ClientDataTests)
 target_sources(ClientDataTests PRIVATE
         CallstackDataTest.cpp
         DataManagerTest.cpp
+        ScopeIdProviderTest.cpp
         FunctionInfoSetTest.cpp
         ModuleDataTest.cpp
         ModuleManagerTest.cpp
@@ -88,6 +93,7 @@ target_sources(ClientDataTests PRIVATE
 
 target_link_libraries(ClientDataTests PRIVATE
         ClientData
+        ClientFlags # TODO (b/226565085) remove when manual instrumentation grouping feature is released.
         TestUtils
         GTest::Main)
 

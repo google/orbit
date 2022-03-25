@@ -52,7 +52,7 @@ class LiveFunctionsDataView : public DataView {
   // timestamp, and duration) associated with the selected rows in to a CSV file.
   void OnExportEventsToCsvRequested(const std::vector<int>& selection) override;
 
-  void UpdateHistogramWithFunctionIds(const std::vector<uint64_t>& function_ids);
+  void UpdateHistogramWithScopeIds(const std::vector<uint64_t>& scope_ids);
 
  protected:
   [[nodiscard]] ActionStatus GetActionStatus(std::string_view action, int clicked_index,
@@ -67,7 +67,6 @@ class LiveFunctionsDataView : public DataView {
   absl::flat_hash_map<uint64_t, orbit_client_protos::FunctionInfo> functions_{};
   // TODO(b/191333567) This is populated in OnDataChanged(), which causes an overhead upon capture
   // load/finalization this may be optimized via populating it function-wise on user's demand
-  absl::flat_hash_map<uint64_t, std::vector<uint64_t>> timer_durations_;
 
   LiveFunctionsInterface* live_functions_;
   uint64_t selected_function_id_;
@@ -88,8 +87,6 @@ class LiveFunctionsDataView : public DataView {
 
  private:
   [[nodiscard]] const orbit_client_protos::FunctionInfo* GetFunctionInfoFromRow(int row) override;
-
-  std::vector<uint64_t> GetFunctionTimerDurations(uint64_t function_id);
 
   void UpdateHistogramWithIndices(const std::vector<int>& visible_selected_indices);
 

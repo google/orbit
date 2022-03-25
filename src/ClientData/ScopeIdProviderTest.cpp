@@ -3,6 +3,7 @@
 // found in the LICENSE file.
 
 #include <absl/container/flat_hash_set.h>
+#include <absl/flags/flag.h>
 #include <gtest/gtest.h>
 
 #include <algorithm>
@@ -11,10 +12,12 @@
 #include <string>
 #include <vector>
 
-#include "ApiEventIdProvider.h"
+#include "ClientData/ScopeIdProvider.h"
+#include "ClientFlags/ClientFlags.h"
 #include "ClientProtos/capture_data.pb.h"
+#include "GrpcProtos/Constants.h"
 
-namespace orbit_gl {
+namespace orbit_client_data {
 
 const std::vector<std::string> kNames{"A", "B", "C", "D", "A", "B", "B"};
 
@@ -23,6 +26,7 @@ const std::vector<std::string> kNames{"A", "B", "C", "D", "A", "B", "B"};
   orbit_client_protos::TimerInfo timer_info;
   timer_info.set_api_scope_name(name);
   timer_info.set_type(type);
+  timer_info.set_function_id(orbit_grpc_protos::kInvalidFunctionId);
   return timer_info;
 }
 
@@ -34,7 +38,7 @@ const std::vector<std::string> kNames{"A", "B", "C", "D", "A", "B", "B"};
   return timer_infos;
 }
 
-static void AssertNameToIdIsBijective(const std::vector<TimerInfo>& timers,
+static void AssertNameToIdIsBijective(const std::vector<orbit_client_protos::TimerInfo>& timers,
                                       const std::vector<uint64_t>& ids) {
   absl::flat_hash_map<std::string, uint64_t> name_to_id;
   for (size_t i = 0; i < timers.size(); ++i) {
@@ -49,9 +53,9 @@ static void AssertNameToIdIsBijective(const std::vector<TimerInfo>& timers,
   }
 }
 
-static std::vector<uint64_t> GetIds(const std::vector<TimerInfo>& timers) {
+static std::vector<uint64_t> GetIds(const std::vector<orbit_client_protos::TimerInfo>& timers) {
   orbit_grpc_protos::CaptureOptions capture_options;
-  auto id_provider = NameEqualityApiEventIdProvider::Create(capture_options);
+  auto id_provider = NameEqualityScopeIdProvider::Create(capture_options);
 
   std::vector<uint64_t> ids;
   std::transform(std::begin(timers), std::end(timers), std::back_inserter(ids),
@@ -59,41 +63,54 @@ static std::vector<uint64_t> GetIds(const std::vector<TimerInfo>& timers) {
   return ids;
 }
 
-static void TestProvideId(std::vector<TimerInfo>& timer_infos) {
+static void TestProvideId(std::vector<orbit_client_protos::TimerInfo>& timer_infos) {
   AssertNameToIdIsBijective(timer_infos, GetIds(timer_infos));
 }
 
-TEST(NameEqualityApiEventIdProviderTest, ProvideIdIsCorrectForApiScope) {
+TEST(NameEqualityScopeIdProviderTest, ProvideIdIsCorrectForApiScope) {
+  // TODO (b/226565085) remove the flag when the manual instrumentation grouping feature is
+  // released.
+  absl::SetFlag(&FLAGS_devmode, true);
   auto timer_infos = MakeTimerInfos(kNames, orbit_client_protos::TimerInfo_Type_kApiScope);
   TestProvideId(timer_infos);
 }
 
-TEST(NameEqualityApiEventIdProviderTest, ProvideIdIsCorrectForApiScopeAsync) {
+TEST(NameEqualityScopeIdProviderTest, ProvideIdIsCorrectForApiScopeAsync) {
+  // TODO (b/226565085) remove the flag when the manual instrumentation grouping feature is
+  // released.
+  absl::SetFlag(&FLAGS_devmode, true);
+
   auto async_timer_infos =
       MakeTimerInfos(kNames, orbit_client_protos::TimerInfo_Type_kApiScopeAsync);
   TestProvideId(async_timer_infos);
 }
 
-TEST(NameEqualityApiEventIdProviderTest, SyncAndAsyncScopesOfTheSameNameGetDifferentIds) {
+TEST(NameEqualityScopeIdProviderTest, SyncAndAsyncScopesOfTheSameNameGetDifferentIds) {
+  // TODO (b/226565085) remove the flag when the manual instrumentation grouping feature is
+  // released.
+  absl::SetFlag(&FLAGS_devmode, true);
   TimerInfo sync = MakeTimerInfo("A", orbit_client_protos::TimerInfo_Type_kApiScope);
   TimerInfo async = MakeTimerInfo("A", orbit_client_protos::TimerInfo_Type_kApiScopeAsync);
 
   orbit_grpc_protos::CaptureOptions capture_options;
-  auto id_provider = NameEqualityApiEventIdProvider::Create(capture_options);
+  auto id_provider = NameEqualityScopeIdProvider::Create(capture_options);
 
   ASSERT_NE(id_provider->ProvideId(sync), id_provider->ProvideId(async));
 }
 
-TEST(NameEqualityApiEventIdProviderTest, CreateIsCorrect) {
+TEST(NameEqualityScopeIdProviderTest, CreateIsCorrect) {
+  // TODO (b/226565085) remove the flag when the manual instrumentation grouping feature is
+  // released.
+  absl::SetFlag(&FLAGS_devmode, true);
   orbit_grpc_protos::CaptureOptions capture_options;
   capture_options.add_instrumented_functions()->set_function_id(10);
   capture_options.add_instrumented_functions()->set_function_id(13);
   capture_options.add_instrumented_functions()->set_function_id(15);
 
-  auto setter = NameEqualityApiEventIdProvider::Create(capture_options);
+  auto setter = NameEqualityScopeIdProvider::Create(capture_options);
   TimerInfo timer_info = MakeTimerInfo("A", orbit_client_protos::TimerInfo_Type_kApiScope);
 
   ASSERT_EQ(setter->ProvideId(timer_info), 16);
 }
 
-}  // namespace orbit_gl
+}  // namespace orbit_client_data

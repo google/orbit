@@ -75,8 +75,8 @@ class HistogramWidget : public QWidget {
 
   [[nodiscard]] bool IsOverHistogram(const QPoint& pos) const;
 
-  struct FunctionData {
-    FunctionData(const std::vector<uint64_t>* data, std::string name, uint64_t id)
+  struct ScopeData {
+    ScopeData(const std::vector<uint64_t>* data, std::string name, uint64_t id)
         : data(data), name(std::move(name)), id(id) {}
 
     const std::vector<uint64_t>* data;
@@ -84,7 +84,7 @@ class HistogramWidget : public QWidget {
     uint64_t id;
   };
 
-  std::optional<FunctionData> function_data_;
+  std::optional<ScopeData> scope_data_;
 
   std::stack<orbit_statistics::Histogram> histogram_stack_;
   std::stack<orbit_statistics::HistogramSelectionRange> ranges_stack_;

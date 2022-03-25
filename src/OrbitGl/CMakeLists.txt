@@ -15,7 +15,6 @@ target_sources(
          AccessibleTrack.h
          AccessibleTriangleToggle.h
          AnnotationTrack.h
-         ApiEventIdProvider.h
          App.h
          AsyncTrack.h
          BasicPageFaultsTrack.h
@@ -87,7 +86,6 @@ target_sources(
           AccessibleTrack.cpp
           AccessibleTriangleToggle.cpp
           AnnotationTrack.cpp
-          ApiEventIdProvider.cpp
           App.cpp
           AsyncTrack.cpp
           BasicPageFaultsTrack.cpp
@@ -191,7 +189,6 @@ target_sources(OrbitGlTests PRIVATE
                UnitTestSlider.h)
 
 target_sources(OrbitGlTests PRIVATE
-               ApiEventIdProviderTest.cpp
                BatcherTest.cpp
                CaptureStatsTest.cpp
                CaptureViewElementTest.cpp

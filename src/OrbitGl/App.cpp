@@ -2796,6 +2796,11 @@ std::vector<const TimerInfo*> OrbitApp::GetAllTimersForHookedFunction(uint64_t f
   return GetTimeGraph()->GetAllTimersForHookedFunction(function_id);
 }
 
+[[nodiscard]] std::vector<const orbit_client_data::TimerChain*> OrbitApp::GetAllThreadTimerChains()
+    const {
+  return GetTimeGraph()->GetAllThreadTrackTimerChains();
+}
+
 void OrbitApp::RefreshFrameTracks() {
   ORBIT_CHECK(HasCaptureData());
   ORBIT_CHECK(std::this_thread::get_id() == main_thread_id_);
@@ -2980,7 +2985,7 @@ OrbitApp::GetConfidenceIntervalEstimator() const {
   return confidence_interval_estimator_;
 }
 
-void OrbitApp::ShowHistogram(const std::vector<uint64_t>* data, const std::string& function_name,
-                             uint64_t function_id) {
-  main_window_->ShowHistogram(data, function_name, function_id);
+void OrbitApp::ShowHistogram(const std::vector<uint64_t>* data, const std::string& scope_name,
+                             uint64_t scope_id) {
+  main_window_->ShowHistogram(data, scope_name, scope_id);
 }
