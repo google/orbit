@@ -6,16 +6,6 @@ syntax = "proto3";
 
 package orbit_client_protos;
 
-message FunctionStats {
-  uint64 count = 1;
-  uint64 total_time_ns = 2;
-  uint64 average_time_ns = 3;
-  uint64 min_ns = 4;
-  uint64 max_ns = 5;
-  double variance_ns = 6;
-  uint64 std_dev_ns = 7;
-}
-
 message FunctionInfo {
   reserved 1, 4, 6, 8, 9, 10, 11;
   string pretty_name = 2;

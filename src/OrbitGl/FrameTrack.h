@@ -12,6 +12,7 @@
 #include <vector>
 
 #include "CallstackThreadBar.h"
+#include "ClientData/ScopeStats.h"
 #include "ClientData/TimerChain.h"
 #include "ClientProtos/capture_data.pb.h"
 #include "CoreMath.h"
@@ -72,7 +73,7 @@ class FrameTrack : public TimerTrack {
   [[nodiscard]] float GetAverageBoxHeight() const;
 
   orbit_grpc_protos::InstrumentedFunction function_;
-  orbit_client_protos::FunctionStats stats_;
+  orbit_client_data::ScopeStats stats_;
 };
 
 #endif  // ORBIT_GL_FRAME_TRACK_H_
