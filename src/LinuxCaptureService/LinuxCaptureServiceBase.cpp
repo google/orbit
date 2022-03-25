@@ -104,7 +104,7 @@ static void StopInternalProducersAndCaptureStartStopListenersInParallel(
   });
 
   for (CaptureStartStopListener* listener : *capture_start_stop_listeners) {
-    stop_threads.emplace_back([&listener] {
+    stop_threads.emplace_back([listener] {
       listener->OnCaptureStopRequested();
       ORBIT_LOG("CaptureStartStopListener stopped: one or more producers finished capturing");
     });
