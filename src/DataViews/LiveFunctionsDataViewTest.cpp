@@ -185,6 +185,7 @@ std::unique_ptr<CaptureData> GenerateTestCaptureData(
     instrumented_function->set_file_offset(
         orbit_client_data::function_utils::Offset(function, *module_data));
     instrumented_function->set_function_id(kFunctionIds[i]);
+    instrumented_function->set_function_name(kPrettyNames[i]);
   }
 
   auto capture_data =
