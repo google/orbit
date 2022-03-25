@@ -48,7 +48,6 @@ class TrackManager {
 
   [[nodiscard]] std::vector<Track*> GetAllTracks() const;
   [[nodiscard]] std::vector<Track*> GetVisibleTracks() const { return visible_tracks_; }
-  [[nodiscard]] std::vector<ThreadTrack*> GetThreadTracks() const;
   [[nodiscard]] std::vector<FrameTrack*> GetFrameTracks() const;
 
   void RequestTrackSorting() { sorting_invalidated_ = true; };
@@ -114,7 +113,7 @@ class TrackManager {
   // we want the marker tracks next to their queue track. E.g. "gfx" and "gfx_markers" should appear
   // next to each other.
   std::map<std::string, std::shared_ptr<GpuTrack>> gpu_tracks_;
-  // Mapping from function address to frame tracks.
+  // Mapping from function id to frame tracks.
   std::map<uint64_t, std::shared_ptr<FrameTrack>> frame_tracks_;
   std::shared_ptr<SchedulerTrack> scheduler_track_;
   std::shared_ptr<SystemMemoryTrack> system_memory_track_;
