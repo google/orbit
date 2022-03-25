@@ -530,7 +530,7 @@ class CheckCallstacks(CaptureWindowE2ETestCaseBase):
                                  'Track "{}" has no callstacks pane'.format(track.name))
 
 
-class SelectAllCallstacks(CaptureWindowE2ETestCaseBase):
+class SelectAllCallstacksFromTrack(CaptureWindowE2ETestCaseBase):
     """
     Select all currently visible callstacks (based on the current visible section of the capture) from the track with
     the specified name.

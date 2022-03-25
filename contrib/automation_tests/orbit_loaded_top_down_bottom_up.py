@@ -8,9 +8,9 @@ from absl import app
 
 from core.orbit_e2e import E2ETestSuite
 from test_cases.bottom_up_tab import VerifyBottomUpContentForLoadedCapture
-from test_cases.capture_window import FilterTracks, SelectAllCallstacks, ZoomOut
+from test_cases.capture_window import FilterTracks, SelectAllCallstacksFromTrack, ZoomOut
 from test_cases.connection_window import LoadCapture
-from test_cases.top_down_tab import VerifyTopDownContentForLoadedCapture
+from test_cases.top_down_tab import SelectAllCallstackFromTopDownTab, VerifyTopDownContentForLoadedCapture
 """Verify top-down and bottom-up view of a known capture.
 
 Before this script is run Orbit needs to be started.
@@ -30,6 +30,8 @@ This automation script covers a basic workflow:
  - verify searching the top-down view of the selection
  - verify the content of the bottom-up view for the selection
  - verify searching the bottom-up view of the selection
+ - select all callstacks again using the "Select these callstacks" context menu action in the "Top-Down" tab
+ - verify the selection in the top-down and bottom-up view like before
 """
 
 
@@ -41,11 +43,16 @@ def main(argv):
 
         ZoomOut(),
         FilterTracks(filter_string='threads{)}'),
-        SelectAllCallstacks(track_name_filter='All Threads'),
+        SelectAllCallstacksFromTrack(track_name_filter='All Threads'),
+        VerifyTopDownContentForLoadedCapture(selection_tab=True),
+        VerifyBottomUpContentForLoadedCapture(selection_tab=True),
+
+        SelectAllCallstackFromTopDownTab(),
         VerifyTopDownContentForLoadedCapture(selection_tab=True),
         VerifyBottomUpContentForLoadedCapture(selection_tab=True),
     ]
-    suite = E2ETestSuite(test_name="Top-Down and Bottom-Up view of loaded capture", test_cases=test_cases)
+    suite = E2ETestSuite(test_name="Top-Down and Bottom-Up view of loaded capture",
+                         test_cases=test_cases)
     suite.execute()
 
 
