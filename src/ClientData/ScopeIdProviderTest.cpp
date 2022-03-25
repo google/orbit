@@ -7,6 +7,7 @@
 #include <gtest/gtest.h>
 
 #include <algorithm>
+#include <array>
 #include <cstdint>
 #include <iterator>
 #include <string>
@@ -16,6 +17,7 @@
 #include "ClientFlags/ClientFlags.h"
 #include "ClientProtos/capture_data.pb.h"
 #include "GrpcProtos/Constants.h"
+#include "GrpcProtos/capture.pb.h"
 
 namespace orbit_client_data {
 
@@ -53,18 +55,23 @@ static void AssertNameToIdIsBijective(const std::vector<orbit_client_protos::Tim
   }
 }
 
-static std::vector<uint64_t> GetIds(const std::vector<orbit_client_protos::TimerInfo>& timers) {
-  orbit_grpc_protos::CaptureOptions capture_options;
-  auto id_provider = NameEqualityScopeIdProvider::Create(capture_options);
-
+static std::vector<uint64_t> GetIds(ScopeIdProvider* id_provider,
+                                    const std::vector<orbit_client_protos::TimerInfo>& timers) {
   std::vector<uint64_t> ids;
   std::transform(std::begin(timers), std::end(timers), std::back_inserter(ids),
-                 [&id_provider](const TimerInfo& timer) { return id_provider->ProvideId(timer); });
+                 [id_provider](const TimerInfo& timer) { return id_provider->ProvideId(timer); });
   return ids;
 }
 
 static void TestProvideId(std::vector<orbit_client_protos::TimerInfo>& timer_infos) {
-  AssertNameToIdIsBijective(timer_infos, GetIds(timer_infos));
+  orbit_grpc_protos::CaptureOptions capture_options;
+  auto id_provider = NameEqualityScopeIdProvider::Create(capture_options);
+
+  const std::vector<uint64_t> ids = GetIds(id_provider.get(), timer_infos);
+  AssertNameToIdIsBijective(timer_infos, ids);
+  for (size_t i = 0; i < timer_infos.size(); ++i) {
+    EXPECT_EQ(id_provider->GetScopeName(ids[i]), timer_infos[i].api_scope_name());
+  }
 }
 
 TEST(NameEqualityScopeIdProviderTest, ProvideIdIsCorrectForApiScope) {
@@ -98,19 +105,35 @@ TEST(NameEqualityScopeIdProviderTest, SyncAndAsyncScopesOfTheSameNameGetDifferen
   ASSERT_NE(id_provider->ProvideId(sync), id_provider->ProvideId(async));
 }
 
+constexpr size_t kFunctionCount = 3;
+constexpr std::array<uint64_t, kFunctionCount> kFunctionIds = {10, 13, 15};
+const std::array<std::string, kFunctionCount> kFunctionNames = {"foo()", "bar()", "baz()"};
+
+static void AddInstrumentedFunction(orbit_grpc_protos::CaptureOptions& capture_options,
+                                    uint64_t function_id, const std::string& name) {
+  orbit_grpc_protos::InstrumentedFunction* function = capture_options.add_instrumented_functions();
+  function->set_function_id(function_id);
+  function->set_function_name(name);
+}
+
 TEST(NameEqualityScopeIdProviderTest, CreateIsCorrect) {
   // TODO (b/226565085) remove the flag when the manual instrumentation grouping feature is
   // released.
   absl::SetFlag(&FLAGS_devmode, true);
   orbit_grpc_protos::CaptureOptions capture_options;
-  capture_options.add_instrumented_functions()->set_function_id(10);
-  capture_options.add_instrumented_functions()->set_function_id(13);
-  capture_options.add_instrumented_functions()->set_function_id(15);
+  for (size_t i = 0; i < kFunctionCount; ++i) {
+    AddInstrumentedFunction(capture_options, kFunctionIds[i], kFunctionNames[i]);
+  }
 
   auto setter = NameEqualityScopeIdProvider::Create(capture_options);
   TimerInfo timer_info = MakeTimerInfo("A", orbit_client_protos::TimerInfo_Type_kApiScope);
 
-  ASSERT_EQ(setter->ProvideId(timer_info), 16);
+  ASSERT_EQ(setter->ProvideId(timer_info),
+            *std::max_element(std::begin(kFunctionIds), std::end(kFunctionIds)) + 1);
+
+  for (size_t i = 0; i < kFunctionCount; ++i) {
+    EXPECT_EQ(setter->GetScopeName(kFunctionIds[i]), kFunctionNames[i]);
+  }
 }
 
 }  // namespace orbit_client_data
