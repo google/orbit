@@ -128,7 +128,7 @@ class IntrospectionCaptureListener : public orbit_capture_client::CaptureListene
   }
   void OnKeyAndString(uint64_t /*key*/, std::string /*str*/) override { ORBIT_UNREACHABLE(); }
   void OnUniqueCallstack(uint64_t /*callstack_id*/,
-                         orbit_client_protos::CallstackInfo /*callstack*/) override {
+                         orbit_client_data::CallstackInfo /*callstack*/) override {
     ORBIT_UNREACHABLE();
   }
   void OnCallstackEvent(orbit_client_data::CallstackEvent /*callstack_event*/) override {

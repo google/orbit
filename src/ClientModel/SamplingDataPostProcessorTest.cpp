@@ -9,6 +9,8 @@
 #include <vector>
 
 #include "ClientData/CallstackEvent.h"
+#include "ClientData/CallstackInfo.h"
+#include "ClientData/CallstackType.h"
 #include "ClientData/CaptureData.h"
 #include "ClientData/ModuleAndFunctionLookup.h"
 #include "ClientData/ModuleManager.h"
@@ -18,6 +20,8 @@
 
 using orbit_client_data::CallstackCount;
 using orbit_client_data::CallstackEvent;
+using orbit_client_data::CallstackInfo;
+using orbit_client_data::CallstackType;
 using orbit_client_data::CaptureData;
 using orbit_client_data::ModuleManager;
 using orbit_client_data::PostProcessedSamplingData;
@@ -25,7 +29,6 @@ using orbit_client_data::SampledFunction;
 using orbit_client_data::SortedCallstackReport;
 using orbit_client_data::ThreadSampleData;
 
-using orbit_client_protos::CallstackInfo;
 using orbit_client_protos::LinuxAddressInfo;
 
 using orbit_grpc_protos::CaptureStarted;
@@ -153,10 +156,10 @@ class SamplingDataPostProcessorTest : public ::testing::Test {
                             absl::flat_hash_set<uint64_t>{}, CaptureData::DataSource::kLiveCapture};
 
   void AddCallstackInfo(uint64_t callstack_id, const std::vector<uint64_t>& callstack_frames,
-                        CallstackInfo::CallstackType callstack_type) {
-    CallstackInfo callstack_info;
-    *callstack_info.mutable_frames() = {callstack_frames.begin(), callstack_frames.end()};
-    callstack_info.set_type(callstack_type);
+                        CallstackType callstack_type) {
+    CallstackInfo callstack_info{{callstack_frames.begin(), callstack_frames.end()},
+                                 callstack_type};
+
     capture_data_.AddUniqueCallstack(callstack_id, std::move(callstack_info));
   }
 
@@ -272,7 +275,7 @@ class SamplingDataPostProcessorTest : public ::testing::Test {
       kFunction1StartAbsoluteAddress,
   };
 
-  void AddAllCallstackInfos(CallstackInfo::CallstackType callstack_type) {
+  void AddAllCallstackInfos(CallstackType callstack_type) {
     AddCallstackInfo(kCallstack1Id, kCallstack1Frames, callstack_type);
     AddCallstackInfo(kCallstack2Id, kCallstack2Frames, callstack_type);
     AddCallstackInfo(kCallstack3Id, kCallstack3Frames, callstack_type);
@@ -280,11 +283,11 @@ class SamplingDataPostProcessorTest : public ::testing::Test {
   }
 
   void AddAllCallstackInfosWithMixedCallstackTypes() {
-    AddCallstackInfo(kCallstack1Id, kCallstack1Frames, CallstackInfo::kDwarfUnwindingError);
-    AddCallstackInfo(kCallstack2Id, kCallstack2Frames, CallstackInfo::kComplete);
-    AddCallstackInfo(kCallstack3Id, kCallstack3Frames, CallstackInfo::kComplete);
+    AddCallstackInfo(kCallstack1Id, kCallstack1Frames, CallstackType::kDwarfUnwindingError);
+    AddCallstackInfo(kCallstack2Id, kCallstack2Frames, CallstackType::kComplete);
+    AddCallstackInfo(kCallstack3Id, kCallstack3Frames, CallstackType::kComplete);
     AddCallstackInfo(kCallstack4Id, kCallstack4Frames,
-                     CallstackInfo::kFilteredByMajorityOutermostFrame);
+                     CallstackType::kFilteredByMajorityOutermostFrame);
   }
 
   static constexpr int32_t kThreadId1 = 42;
@@ -377,31 +380,27 @@ class SamplingDataPostProcessorTest : public ::testing::Test {
     EXPECT_DEATH((void)ppsd_.GetResolvedCallstack(kCallstack4Id), "");
   }
 
-  void VerifyAllCallstackInfos(CallstackInfo::CallstackType expected_callstack_type) {
+  void VerifyAllCallstackInfos(CallstackType expected_callstack_type) {
     {
-      const orbit_client_protos::CallstackInfo& resolved_callstack_1 =
-          ppsd_.GetResolvedCallstack(kCallstack1Id);
+      const CallstackInfo& resolved_callstack_1 = ppsd_.GetResolvedCallstack(kCallstack1Id);
       EXPECT_THAT(resolved_callstack_1.frames(), Pointwise(Eq(), kCallstack1ResolvedFrames));
       EXPECT_EQ(resolved_callstack_1.type(), expected_callstack_type);
     }
 
     {
-      const orbit_client_protos::CallstackInfo& resolved_callstack_2 =
-          ppsd_.GetResolvedCallstack(kCallstack2Id);
+      const CallstackInfo& resolved_callstack_2 = ppsd_.GetResolvedCallstack(kCallstack2Id);
       EXPECT_THAT(resolved_callstack_2.frames(), Pointwise(Eq(), kCallstack2ResolvedFrames));
       EXPECT_EQ(resolved_callstack_2.type(), expected_callstack_type);
     }
 
     {
-      const orbit_client_protos::CallstackInfo& resolved_callstack_3 =
-          ppsd_.GetResolvedCallstack(kCallstack3Id);
+      const CallstackInfo& resolved_callstack_3 = ppsd_.GetResolvedCallstack(kCallstack3Id);
       EXPECT_THAT(resolved_callstack_3.frames(), Pointwise(Eq(), kCallstack3ResolvedFrames));
       EXPECT_EQ(resolved_callstack_3.type(), expected_callstack_type);
     }
 
     {
-      const orbit_client_protos::CallstackInfo& resolved_callstack_4 =
-          ppsd_.GetResolvedCallstack(kCallstack4Id);
+      const CallstackInfo& resolved_callstack_4 = ppsd_.GetResolvedCallstack(kCallstack4Id);
       EXPECT_THAT(resolved_callstack_4.frames(), Pointwise(Eq(), kCallstack4ResolvedFrames));
       EXPECT_EQ(resolved_callstack_4.type(), expected_callstack_type);
     }
@@ -409,60 +408,51 @@ class SamplingDataPostProcessorTest : public ::testing::Test {
 
   void VerifyAllCallstackInfosWithMixedCallstackTypes() {
     {
-      const orbit_client_protos::CallstackInfo& resolved_callstack_1 =
-          ppsd_.GetResolvedCallstack(kCallstack1Id);
+      const CallstackInfo& resolved_callstack_1 = ppsd_.GetResolvedCallstack(kCallstack1Id);
       EXPECT_THAT(resolved_callstack_1.frames(), Pointwise(Eq(), kCallstack1ResolvedFrames));
-      EXPECT_EQ(resolved_callstack_1.type(), CallstackInfo::kDwarfUnwindingError);
+      EXPECT_EQ(resolved_callstack_1.type(), CallstackType::kDwarfUnwindingError);
     }
 
     {
-      const orbit_client_protos::CallstackInfo& resolved_callstack_2 =
-          ppsd_.GetResolvedCallstack(kCallstack2Id);
+      const CallstackInfo& resolved_callstack_2 = ppsd_.GetResolvedCallstack(kCallstack2Id);
       EXPECT_THAT(resolved_callstack_2.frames(), Pointwise(Eq(), kCallstack2ResolvedFrames));
-      EXPECT_EQ(resolved_callstack_2.type(), CallstackInfo::kComplete);
+      EXPECT_EQ(resolved_callstack_2.type(), CallstackType::kComplete);
     }
 
     {
-      const orbit_client_protos::CallstackInfo& resolved_callstack_3 =
-          ppsd_.GetResolvedCallstack(kCallstack3Id);
+      const CallstackInfo& resolved_callstack_3 = ppsd_.GetResolvedCallstack(kCallstack3Id);
       EXPECT_THAT(resolved_callstack_3.frames(), Pointwise(Eq(), kCallstack3ResolvedFrames));
-      EXPECT_EQ(resolved_callstack_3.type(), CallstackInfo::kComplete);
+      EXPECT_EQ(resolved_callstack_3.type(), CallstackType::kComplete);
     }
 
     {
-      const orbit_client_protos::CallstackInfo& resolved_callstack_4 =
-          ppsd_.GetResolvedCallstack(kCallstack4Id);
+      const CallstackInfo& resolved_callstack_4 = ppsd_.GetResolvedCallstack(kCallstack4Id);
       EXPECT_THAT(resolved_callstack_4.frames(), Pointwise(Eq(), kCallstack4ResolvedFrames));
-      EXPECT_EQ(resolved_callstack_4.type(), CallstackInfo::kFilteredByMajorityOutermostFrame);
+      EXPECT_EQ(resolved_callstack_4.type(), CallstackType::kFilteredByMajorityOutermostFrame);
     }
   }
 
-  void VerifyAllCallstackInfosWithoutAddressInfos(
-      CallstackInfo::CallstackType expected_callstack_type) {
+  void VerifyAllCallstackInfosWithoutAddressInfos(CallstackType expected_callstack_type) {
     {
-      const orbit_client_protos::CallstackInfo& resolved_callstack_1 =
-          ppsd_.GetResolvedCallstack(kCallstack1Id);
+      const CallstackInfo& resolved_callstack_1 = ppsd_.GetResolvedCallstack(kCallstack1Id);
       EXPECT_THAT(resolved_callstack_1.frames(), Pointwise(Eq(), kCallstack1Frames));
       EXPECT_EQ(resolved_callstack_1.type(), expected_callstack_type);
     }
 
     {
-      const orbit_client_protos::CallstackInfo& resolved_callstack_2 =
-          ppsd_.GetResolvedCallstack(kCallstack2Id);
+      const CallstackInfo& resolved_callstack_2 = ppsd_.GetResolvedCallstack(kCallstack2Id);
       EXPECT_THAT(resolved_callstack_2.frames(), Pointwise(Eq(), kCallstack2Frames));
       EXPECT_EQ(resolved_callstack_2.type(), expected_callstack_type);
     }
 
     {
-      const orbit_client_protos::CallstackInfo& resolved_callstack_3 =
-          ppsd_.GetResolvedCallstack(kCallstack3Id);
+      const CallstackInfo& resolved_callstack_3 = ppsd_.GetResolvedCallstack(kCallstack3Id);
       EXPECT_THAT(resolved_callstack_3.frames(), Pointwise(Eq(), kCallstack3Frames));
       EXPECT_EQ(resolved_callstack_3.type(), expected_callstack_type);
     }
 
     {
-      const orbit_client_protos::CallstackInfo& resolved_callstack_4 =
-          ppsd_.GetResolvedCallstack(kCallstack4Id);
+      const CallstackInfo& resolved_callstack_4 = ppsd_.GetResolvedCallstack(kCallstack4Id);
       EXPECT_THAT(resolved_callstack_4.frames(), Pointwise(Eq(), kCallstack4Frames));
       EXPECT_EQ(resolved_callstack_4.type(), expected_callstack_type);
     }
@@ -1508,7 +1498,7 @@ TEST_F(SamplingDataPostProcessorTest, CallstackEventOfEmptyCallstack) {
   AddAllAddressInfos();
 
   static constexpr uint64_t kEmptyCallstackId = 99;
-  AddCallstackInfo(kEmptyCallstackId, {}, CallstackInfo::kComplete);
+  AddCallstackInfo(kEmptyCallstackId, {}, CallstackType::kComplete);
   AddCallstackEvent(kEmptyCallstackId, kThreadId1);
 
   EXPECT_DEATH(CreatePostProcessedSamplingDataWithSummary(), "Check failed");
@@ -1516,11 +1506,11 @@ TEST_F(SamplingDataPostProcessorTest, CallstackEventOfEmptyCallstack) {
 
 TEST_F(SamplingDataPostProcessorTest, CallstackInfosButNoCallstackEvents) {
   AddAllAddressInfos();
-  AddAllCallstackInfos(CallstackInfo::kComplete);
+  AddAllCallstackInfos(CallstackType::kComplete);
 
   CreatePostProcessedSamplingDataWithSummary();
 
-  VerifyAllCallstackInfos(CallstackInfo::kComplete);
+  VerifyAllCallstackInfos(CallstackType::kComplete);
 
   EXPECT_EQ(ppsd_.GetSortedThreadSampleData().size(), 0);
   EXPECT_EQ(ppsd_.GetSummary(), nullptr);
@@ -1530,14 +1520,14 @@ TEST_F(SamplingDataPostProcessorTest, CallstackInfosButNoCallstackEvents) {
 }
 
 TEST_F(SamplingDataPostProcessorTest, OneThreadWithoutSummary) {
-  AddAllCallstackInfos(CallstackInfo::kComplete);
+  AddAllCallstackInfos(CallstackType::kComplete);
   AddAllAddressInfos();
 
   AddCallstackEventsAllInThreadId1();
 
   CreatePostProcessedSamplingDataWithoutSummary();
 
-  VerifyAllCallstackInfos(CallstackInfo::kComplete);
+  VerifyAllCallstackInfos(CallstackType::kComplete);
 
   EXPECT_EQ(ppsd_.GetSortedThreadSampleData().size(), 1);
   EXPECT_EQ(ppsd_.GetSummary(), nullptr);
@@ -1557,14 +1547,14 @@ TEST_F(SamplingDataPostProcessorTest, OneThreadWithoutSummary) {
 }
 
 TEST_F(SamplingDataPostProcessorTest, OneThreadWithSummary) {
-  AddAllCallstackInfos(CallstackInfo::kComplete);
+  AddAllCallstackInfos(CallstackType::kComplete);
   AddAllAddressInfos();
 
   AddCallstackEventsAllInThreadId1();
 
   CreatePostProcessedSamplingDataWithSummary();
 
-  VerifyAllCallstackInfos(CallstackInfo::kComplete);
+  VerifyAllCallstackInfos(CallstackType::kComplete);
 
   EXPECT_EQ(ppsd_.GetSortedThreadSampleData().size(), 2);
   ASSERT_NE(ppsd_.GetSummary(), nullptr);
@@ -1591,13 +1581,13 @@ TEST_F(SamplingDataPostProcessorTest, OneThreadWithSummary) {
 
 TEST_F(SamplingDataPostProcessorTest, OneThreadWithSummaryWithOnlyNonCompleteCallstackInfos) {
   AddAllAddressInfos();
-  AddAllCallstackInfos(CallstackInfo::kDwarfUnwindingError);
+  AddAllCallstackInfos(CallstackType::kDwarfUnwindingError);
 
   AddCallstackEventsAllInThreadId1();
 
   CreatePostProcessedSamplingDataWithSummary();
 
-  VerifyAllCallstackInfos(CallstackInfo::kDwarfUnwindingError);
+  VerifyAllCallstackInfos(CallstackType::kDwarfUnwindingError);
 
   EXPECT_EQ(ppsd_.GetSortedThreadSampleData().size(), 2);
   ASSERT_NE(ppsd_.GetSummary(), nullptr);
@@ -1687,13 +1677,13 @@ TEST_F(SamplingDataPostProcessorTest, OneThreadWithSummaryWithMixedCallstackType
 
 // This test shows what happens when each different address is considered a different function.
 TEST_F(SamplingDataPostProcessorTest, OneThreadWithSummaryWithoutAddressInfos) {
-  AddAllCallstackInfos(CallstackInfo::kComplete);
+  AddAllCallstackInfos(CallstackType::kComplete);
 
   AddCallstackEventsAllInThreadId1();
 
   CreatePostProcessedSamplingDataWithSummary();
 
-  VerifyAllCallstackInfosWithoutAddressInfos(CallstackInfo::kComplete);
+  VerifyAllCallstackInfosWithoutAddressInfos(CallstackType::kComplete);
 
   EXPECT_EQ(ppsd_.GetSortedThreadSampleData().size(), 2);
   ASSERT_NE(ppsd_.GetSummary(), nullptr);
@@ -1719,14 +1709,14 @@ TEST_F(SamplingDataPostProcessorTest, OneThreadWithSummaryWithoutAddressInfos) {
 }
 
 TEST_F(SamplingDataPostProcessorTest, TwoThreadsWithoutSummary) {
-  AddAllCallstackInfos(CallstackInfo::kComplete);
+  AddAllCallstackInfos(CallstackType::kComplete);
   AddAllAddressInfos();
 
   AddCallstackEventsInThreadId1And2();
 
   CreatePostProcessedSamplingDataWithoutSummary();
 
-  VerifyAllCallstackInfos(CallstackInfo::kComplete);
+  VerifyAllCallstackInfos(CallstackType::kComplete);
 
   EXPECT_EQ(ppsd_.GetSortedThreadSampleData().size(), 2);
   EXPECT_EQ(ppsd_.GetSummary(), nullptr);
@@ -1751,14 +1741,14 @@ TEST_F(SamplingDataPostProcessorTest, TwoThreadsWithoutSummary) {
 }
 
 TEST_F(SamplingDataPostProcessorTest, TwoThreadsWithSummary) {
-  AddAllCallstackInfos(CallstackInfo::kComplete);
+  AddAllCallstackInfos(CallstackType::kComplete);
   AddAllAddressInfos();
 
   AddCallstackEventsInThreadId1And2();
 
   CreatePostProcessedSamplingDataWithSummary();
 
-  VerifyAllCallstackInfos(CallstackInfo::kComplete);
+  VerifyAllCallstackInfos(CallstackType::kComplete);
 
   EXPECT_EQ(ppsd_.GetSortedThreadSampleData().size(), 3);
   ASSERT_NE(ppsd_.GetSummary(), nullptr);

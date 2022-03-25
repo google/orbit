@@ -22,10 +22,10 @@
 namespace orbit_capture_client {
 
 using orbit_client_data::CallstackEvent;
+using orbit_client_data::CallstackInfo;
 
 using orbit_client_protos::ApiStringEvent;
 using orbit_client_protos::ApiTrackValue;
-using orbit_client_protos::CallstackInfo;
 using orbit_client_protos::LinuxAddressInfo;
 using orbit_client_protos::ThreadStateSliceInfo;
 using orbit_client_protos::TimerInfo;
@@ -181,43 +181,13 @@ static void ExpectCallstackSamplesEqual(const CallstackEvent& actual_callstack_e
   EXPECT_EQ(actual_callstack_event.timestamp_ns(), expected_callstack_sample->timestamp_ns());
   EXPECT_EQ(actual_callstack_event.thread_id(), expected_callstack_sample->tid());
   EXPECT_EQ(actual_callstack_event.callstack_id(), actual_callstack_id);
-  ASSERT_EQ(actual_callstack.frames_size(), expected_callstack->pcs_size());
-  for (int i = 0; i < actual_callstack.frames_size(); ++i) {
-    EXPECT_EQ(actual_callstack.frames(i), expected_callstack->pcs(i));
+  ASSERT_EQ(actual_callstack.frames().size(), expected_callstack->pcs_size());
+  for (size_t i = 0; i < actual_callstack.frames().size(); ++i) {
+    EXPECT_EQ(actual_callstack.frames()[i], expected_callstack->pcs(i));
   }
 
-  switch (expected_callstack->type()) {
-    case Callstack::kComplete:
-      EXPECT_EQ(actual_callstack.type(), CallstackInfo::kComplete);
-      break;
-    case Callstack::kDwarfUnwindingError:
-      EXPECT_EQ(actual_callstack.type(), CallstackInfo::kDwarfUnwindingError);
-      break;
-    case Callstack::kFramePointerUnwindingError:
-      EXPECT_EQ(actual_callstack.type(), CallstackInfo::kFramePointerUnwindingError);
-      break;
-    case Callstack::kInUprobes:
-      EXPECT_EQ(actual_callstack.type(), CallstackInfo::kInUprobes);
-      break;
-    case Callstack::kInUserSpaceInstrumentation:
-      EXPECT_EQ(actual_callstack.type(), CallstackInfo::kInUserSpaceInstrumentation);
-      break;
-    case Callstack::kCallstackPatchingFailed:
-      EXPECT_EQ(actual_callstack.type(), CallstackInfo::kCallstackPatchingFailed);
-      break;
-    case Callstack::kStackTopDwarfUnwindingError:
-      EXPECT_EQ(actual_callstack.type(), CallstackInfo::kStackTopDwarfUnwindingError);
-      break;
-    case Callstack::kStackTopForDwarfUnwindingTooSmall:
-      EXPECT_EQ(actual_callstack.type(), CallstackInfo::kStackTopForDwarfUnwindingTooSmall);
-      break;
-    case orbit_grpc_protos::
-        Callstack_CallstackType_Callstack_CallstackType_INT_MIN_SENTINEL_DO_NOT_USE_:
-      [[fallthrough]];
-    case orbit_grpc_protos::
-        Callstack_CallstackType_Callstack_CallstackType_INT_MAX_SENTINEL_DO_NOT_USE_:
-      ORBIT_UNREACHABLE();
-  }
+  EXPECT_EQ(orbit_client_data::GrpcCallstackTypeToCallstackType(expected_callstack->type()),
+            actual_callstack.type());
 }
 
 static void CanHandleOneCallstackSampleOfType(Callstack::CallstackType type) {
@@ -237,16 +207,19 @@ static void CanHandleOneCallstackSampleOfType(Callstack::CallstackType type) {
   callstack_sample->set_timestamp_ns(100);
 
   uint64_t actual_callstack_id = 0;
-  CallstackInfo actual_callstack;
+  std::optional<CallstackInfo> actual_callstack;
   EXPECT_CALL(listener, OnUniqueCallstack)
       .Times(1)
-      .WillOnce(DoAll(SaveArg<0>(&actual_callstack_id), SaveArg<1>(&actual_callstack)));
+      .WillOnce([&](uint64_t id, CallstackInfo callstack) {
+        actual_callstack_id = id;
+        actual_callstack = std::move(callstack);
+      });
   std::optional<CallstackEvent> actual_callstack_event;
   EXPECT_CALL(listener, OnCallstackEvent).Times(1).WillOnce(SaveArg<0>(&actual_callstack_event));
 
   event_processor->ProcessEvent(event);
-
-  ExpectCallstackSamplesEqual(*actual_callstack_event, actual_callstack_id, actual_callstack,
+  ASSERT_TRUE(actual_callstack.has_value());
+  ExpectCallstackSamplesEqual(*actual_callstack_event, actual_callstack_id, *actual_callstack,
                               callstack_sample, &interned_callstack->intern());
 }
 
@@ -283,10 +256,13 @@ TEST(CaptureEventProcessor, WillOnlyHandleUniqueCallstacksOnce) {
   callstack_sample_2->set_timestamp_ns(200);
 
   uint64_t actual_callstack_id = 0;
-  CallstackInfo actual_callstack;
+  std::optional<CallstackInfo> actual_callstack;
   EXPECT_CALL(listener, OnUniqueCallstack)
       .Times(1)
-      .WillOnce(DoAll(SaveArg<0>(&actual_callstack_id), SaveArg<1>(&actual_callstack)));
+      .WillOnce([&](uint64_t id, CallstackInfo callstack) {
+        actual_callstack_id = id;
+        actual_callstack = std::move(callstack);
+      });
   std::optional<CallstackEvent> actual_call_stack_event_1;
   std::optional<CallstackEvent> actual_call_stack_event_2;
   EXPECT_CALL(listener, OnCallstackEvent)
@@ -298,9 +274,10 @@ TEST(CaptureEventProcessor, WillOnlyHandleUniqueCallstacksOnce) {
   event_processor->ProcessEvent(event_1);
   event_processor->ProcessEvent(event_2);
 
-  ExpectCallstackSamplesEqual(*actual_call_stack_event_1, actual_callstack_id, actual_callstack,
+  ASSERT_TRUE(actual_callstack.has_value());
+  ExpectCallstackSamplesEqual(*actual_call_stack_event_1, actual_callstack_id, *actual_callstack,
                               callstack_sample_1, &interned_callstack->intern());
-  ExpectCallstackSamplesEqual(*actual_call_stack_event_2, actual_callstack_id, actual_callstack,
+  ExpectCallstackSamplesEqual(*actual_call_stack_event_2, actual_callstack_id, *actual_callstack,
                               callstack_sample_2, &interned_callstack->intern());
 }
 
@@ -324,17 +301,21 @@ TEST(CaptureEventProcessor, CanHandleInternedCallstackSamples) {
   callstack_sample->set_timestamp_ns(100);
 
   uint64_t actual_callstack_id = 0;
-  CallstackInfo actual_callstack;
+  std::optional<CallstackInfo> actual_callstack;
   EXPECT_CALL(listener, OnUniqueCallstack)
       .Times(1)
-      .WillOnce(DoAll(SaveArg<0>(&actual_callstack_id), SaveArg<1>(&actual_callstack)));
+      .WillOnce([&](uint64_t id, CallstackInfo callstack) {
+        actual_callstack_id = id;
+        actual_callstack = std::move(callstack);
+      });
   std::optional<CallstackEvent> actual_call_stack_event;
   EXPECT_CALL(listener, OnCallstackEvent).Times(1).WillOnce(SaveArg<0>(&actual_call_stack_event));
 
   event_processor->ProcessEvent(interned_callstack_event);
   event_processor->ProcessEvent(callstack_event);
 
-  ExpectCallstackSamplesEqual(*actual_call_stack_event, actual_callstack_id, actual_callstack,
+  ASSERT_TRUE(actual_callstack.has_value());
+  ExpectCallstackSamplesEqual(*actual_call_stack_event, actual_callstack_id, *actual_callstack,
                               callstack_sample, callstack_intern);
 }
 

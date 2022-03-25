@@ -10,6 +10,8 @@
 #include <filesystem>
 #include <string>
 
+#include "ClientData/CallstackInfo.h"
+#include "ClientData/CallstackType.h"
 #include "ClientData/CaptureData.h"
 #include "ClientData/FunctionUtils.h"
 #include "ClientData/ModuleAndFunctionLookup.h"
@@ -26,11 +28,12 @@
 #include "OrbitBase/TemporaryFile.h"
 #include "TestUtils/TestUtils.h"
 
+using orbit_client_data::CallstackInfo;
+using orbit_client_data::CallstackType;
 using orbit_client_data::CaptureData;
 using orbit_client_data::ModuleData;
 using orbit_client_data::ProcessData;
 using orbit_client_data::function_utils::GetLoadedModuleNameByPath;
-using orbit_client_protos::CallstackInfo;
 using orbit_client_protos::FunctionInfo;
 using orbit_data_views::CallstackDataView;
 using orbit_data_views::CheckCopySelectionIsInvoked;
@@ -148,10 +151,9 @@ class CallstackDataViewTest : public testing::Test {
   }
 
   void SetCallstackFromFrames(std::vector<uint64_t> callstack_frames) {
-    orbit_client_protos::CallstackInfo callstack_info;
-    *callstack_info.mutable_frames() = {callstack_frames.begin(), callstack_frames.end()};
-    callstack_info.set_type(orbit_client_protos::CallstackInfo_CallstackType_kComplete);
-    view_.SetCallstack(callstack_info);
+    orbit_client_data::CallstackInfo callstack_info{std::move(callstack_frames),
+                                                    CallstackType::kComplete};
+    view_.SetCallstack(std::move(callstack_info));
   }
 
   std::string GetModulePathByAddressFromCaptureData(uint64_t frame_address) {

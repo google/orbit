@@ -14,6 +14,8 @@
 #include "CaptureClient/ApiEventProcessor.h"
 #include "CaptureClient/GpuQueueSubmissionProcessor.h"
 #include "ClientData/CallstackEvent.h"
+#include "ClientData/CallstackInfo.h"
+#include "ClientData/CallstackType.h"
 #include "ClientProtos/capture_data.pb.h"
 #include "GrpcProtos/Constants.h"
 #include "OrbitBase/Logging.h"
@@ -21,8 +23,9 @@
 namespace orbit_capture_client {
 
 using orbit_client_data::CallstackEvent;
+using orbit_client_data::CallstackInfo;
+using orbit_client_data::CallstackType;
 
-using orbit_client_protos::CallstackInfo;
 using orbit_client_protos::LinuxAddressInfo;
 using orbit_client_protos::ThreadStateSliceInfo;
 using orbit_client_protos::TimerInfo;
@@ -613,42 +616,10 @@ void CaptureEventProcessorForListener::SendCallstackToListenerIfNecessary(
   }
   callstack_hashes_seen_.emplace(callstack_id);
 
-  CallstackInfo callstack_info;
-  *callstack_info.mutable_frames() = {callstack.pcs().begin(), callstack.pcs().end()};
-  switch (callstack.type()) {
-    case orbit_grpc_protos::Callstack::kComplete:
-      callstack_info.set_type(CallstackInfo::kComplete);
-      break;
-    case orbit_grpc_protos::Callstack::kDwarfUnwindingError:
-      callstack_info.set_type(CallstackInfo::kDwarfUnwindingError);
-      break;
-    case orbit_grpc_protos::Callstack::kFramePointerUnwindingError:
-      callstack_info.set_type(CallstackInfo::kFramePointerUnwindingError);
-      break;
-    case orbit_grpc_protos::Callstack::kInUprobes:
-      callstack_info.set_type(CallstackInfo::kInUprobes);
-      break;
-    case orbit_grpc_protos::Callstack::kInUserSpaceInstrumentation:
-      callstack_info.set_type(CallstackInfo::kInUserSpaceInstrumentation);
-      break;
-    case orbit_grpc_protos::Callstack::kCallstackPatchingFailed:
-      callstack_info.set_type(CallstackInfo::kCallstackPatchingFailed);
-      break;
-    case orbit_grpc_protos::Callstack::kStackTopForDwarfUnwindingTooSmall:
-      callstack_info.set_type(CallstackInfo::kStackTopForDwarfUnwindingTooSmall);
-      break;
-    case orbit_grpc_protos::Callstack::kStackTopDwarfUnwindingError:
-      callstack_info.set_type(CallstackInfo::kStackTopDwarfUnwindingError);
-      break;
-    case orbit_grpc_protos::
-        Callstack_CallstackType_Callstack_CallstackType_INT_MIN_SENTINEL_DO_NOT_USE_:
-      [[fallthrough]];
-    case orbit_grpc_protos::
-        Callstack_CallstackType_Callstack_CallstackType_INT_MAX_SENTINEL_DO_NOT_USE_:
-      ORBIT_UNREACHABLE();
-  }
-
-  capture_listener_->OnUniqueCallstack(callstack_id, callstack_info);
+  CallstackInfo callstack_info{
+      {callstack.pcs().begin(), callstack.pcs().end()},
+      orbit_client_data::GrpcCallstackTypeToCallstackType(callstack.type())};
+  capture_listener_->OnUniqueCallstack(callstack_id, std::move(callstack_info));
 }
 
 void CaptureEventProcessorForListener::ProcessInternedTracepointInfo(

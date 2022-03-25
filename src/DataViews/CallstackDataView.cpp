@@ -22,11 +22,11 @@
 #include "OrbitBase/Append.h"
 #include "OrbitBase/Logging.h"
 
+using orbit_client_data::CallstackInfo;
 using orbit_client_data::CaptureData;
 using orbit_client_data::ModuleData;
 using orbit_client_data::ModuleManager;
 
-using orbit_client_protos::CallstackInfo;
 using orbit_client_protos::FunctionInfo;
 
 namespace orbit_data_views {
@@ -150,14 +150,14 @@ DataView::ActionStatus CallstackDataView::GetActionStatus(
 }
 
 void CallstackDataView::DoFilter() {
-  if (callstack_.frames_size() == 0) {
+  if (!callstack_.has_value()) {
     return;
   }
 
   std::vector<uint64_t> indices;
   std::vector<std::string> tokens = absl::StrSplit(absl::AsciiStrToLower(filter_), ' ');
 
-  for (int i = 0; i < callstack_.frames_size(); ++i) {
+  for (size_t i = 0; i < callstack_->frames().size(); ++i) {
     CallstackDataViewFrame frame = GetFrameFromIndex(i);
     const FunctionInfo* function = frame.function;
     std::string name = absl::AsciiStrToLower(
@@ -181,9 +181,9 @@ void CallstackDataView::DoFilter() {
 }
 
 void CallstackDataView::OnDataChanged() {
-  int num_functions = callstack_.frames_size();
+  size_t num_functions = callstack_.has_value() ? callstack_->frames().size() : 0;
   indices_.resize(num_functions);
-  for (int i = 0; i < num_functions; ++i) {
+  for (size_t i = 0; i < num_functions; ++i) {
     indices_[i] = i;
   }
 
@@ -225,9 +225,10 @@ CallstackDataView::CallstackDataViewFrame CallstackDataView::GetFrameFromRow(int
 }
 
 CallstackDataView::CallstackDataViewFrame CallstackDataView::GetFrameFromIndex(
-    int index_in_callstack) const {
-  ORBIT_CHECK(index_in_callstack < callstack_.frames_size());
-  uint64_t address = callstack_.frames(index_in_callstack);
+    size_t index_in_callstack) const {
+  ORBIT_CHECK(callstack_.has_value());
+  ORBIT_CHECK(index_in_callstack < callstack_->frames().size());
+  uint64_t address = callstack_->frames()[index_in_callstack];
 
   const CaptureData& capture_data = app_->GetCaptureData();
   ModuleManager* module_manager = app_->GetMutableModuleManager();

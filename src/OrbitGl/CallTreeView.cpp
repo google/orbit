@@ -16,12 +16,13 @@
 #include "Introspection/Introspection.h"
 #include "OrbitBase/ThreadConstants.h"
 
+using orbit_client_data::CallstackInfo;
+using orbit_client_data::CallstackType;
 using orbit_client_data::CaptureData;
 using orbit_client_data::ModuleManager;
 using orbit_client_data::PostProcessedSamplingData;
 using orbit_client_data::ThreadSampleData;
 
-using orbit_client_protos::CallstackInfo;
 
 const std::vector<const CallTreeNode*>& CallTreeNode::children() const {
   if (children_cache_.has_value()) {
@@ -83,7 +84,7 @@ CallTreeFunction* CallTreeNode::AddAndGetFunction(uint64_t function_absolute_add
   return &it->second;
 }
 
-CallTreeUnwindErrorType* CallTreeNode::GetUnwindErrorTypeOrNull(CallstackInfo::CallstackType type) {
+CallTreeUnwindErrorType* CallTreeNode::GetUnwindErrorTypeOrNull(CallstackType type) {
   auto unwind_error_it = unwind_error_type_children_.find(type);
   if (unwind_error_it == unwind_error_type_children_.end()) {
     return nullptr;
@@ -91,7 +92,7 @@ CallTreeUnwindErrorType* CallTreeNode::GetUnwindErrorTypeOrNull(CallstackInfo::C
   return &unwind_error_it->second;
 }
 
-CallTreeUnwindErrorType* CallTreeNode::AddAndGetUnwindErrorType(CallstackInfo::CallstackType type) {
+CallTreeUnwindErrorType* CallTreeNode::AddAndGetUnwindErrorType(CallstackType type) {
   const auto& [it, inserted] =
       unwind_error_type_children_.try_emplace(type, CallTreeUnwindErrorType{this, type});
   ORBIT_CHECK(inserted);
@@ -128,7 +129,7 @@ CallTreeUnwindErrors* CallTreeNode::AddAndGetUnwindErrors() {
 }
 
 [[nodiscard]] static CallTreeUnwindErrorType* GetOrCreateUnwindErrorTypeNode(
-    CallTreeNode* current_node, CallstackInfo::CallstackType error_type) {
+    CallTreeNode* current_node, CallstackType error_type) {
   CallTreeUnwindErrorType* unwind_error = current_node->GetUnwindErrorTypeOrNull(error_type);
   if (unwind_error == nullptr) {
     unwind_error = current_node->AddAndGetUnwindErrorType(error_type);
@@ -177,7 +178,7 @@ static void AddUnwindErrorToTopDownThread(
 
   ORBIT_CHECK(!resolved_callstack.frames().empty());
   // Only use the innermost frame for unwind errors.
-  uint64_t frame = resolved_callstack.frames(0);
+  uint64_t frame = resolved_callstack.frames()[0];
   const std::string& function_name =
       orbit_client_data::GetFunctionNameByAddress(module_manager, capture_data, frame);
   const auto& [module_path, module_build_id] =
@@ -234,7 +235,7 @@ std::unique_ptr<CallTreeView> CallTreeView::CreateTopDownViewFromPostProcessedSa
 
       const CallstackInfo& resolved_callstack =
           post_processed_sampling_data.GetResolvedCallstack(callstack_id);
-      if (resolved_callstack.type() == CallstackInfo::kComplete) {
+      if (resolved_callstack.type() == CallstackType::kComplete) {
         AddCallstackToTopDownThread(thread_node, resolved_callstack, callstack_events,
                                     module_manager, capture_data);
       } else {
@@ -273,7 +274,7 @@ AddUnwindErrorToBottomUpViewAndReturnUnwindErrorTypeNode(CallTreeView* bottom_up
                                                          const CaptureData& capture_data) {
   ORBIT_CHECK(!resolved_callstack.frames().empty());
   // Only use the innermost frame for unwind errors.
-  uint64_t frame = resolved_callstack.frames(0);
+  uint64_t frame = resolved_callstack.frames()[0];
   const std::string& function_name =
       orbit_client_data::GetFunctionNameByAddress(module_manager, capture_data, frame);
   const auto& [module_path, module_build_id] =
@@ -320,7 +321,7 @@ std::unique_ptr<CallTreeView> CallTreeView::CreateBottomUpViewFromPostProcessedS
       const CallstackInfo& resolved_callstack =
           post_processed_sampling_data.GetResolvedCallstack(callstack_id);
       CallTreeNode* last_node;
-      if (resolved_callstack.type() == CallstackInfo::kComplete) {
+      if (resolved_callstack.type() == CallstackType::kComplete) {
         last_node = AddReversedCallstackToBottomUpViewAndReturnLastFunction(
             bottom_up_view.get(), resolved_callstack, sample_count, module_manager, capture_data);
       } else {

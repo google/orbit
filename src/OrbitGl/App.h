@@ -167,7 +167,7 @@ class OrbitApp final : public DataViewFactory,
   void OnTimer(const orbit_client_protos::TimerInfo& timer_info) override;
   void OnKeyAndString(uint64_t key, std::string str) override;
   void OnUniqueCallstack(uint64_t callstack_id,
-                         orbit_client_protos::CallstackInfo callstack) override;
+                         orbit_client_data::CallstackInfo callstack) override;
   void OnCallstackEvent(orbit_client_data::CallstackEvent callstack_event) override;
   void OnThreadName(uint32_t thread_id, std::string thread_name) override;
   void OnThreadStateSlice(orbit_client_protos::ThreadStateSliceInfo thread_state_slice) override;

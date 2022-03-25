@@ -50,19 +50,12 @@ using orbit_capture_client::CaptureClient;
 using orbit_capture_client::CaptureEventProcessor;
 using orbit_capture_client::CaptureListener;
 
-using orbit_client_data::CallstackEvent;
-using orbit_client_data::CaptureData;
 using orbit_client_data::ProcessData;
 using orbit_client_data::TracepointInfoSet;
 
-using orbit_client_protos::CallstackInfo;
 using orbit_client_protos::FunctionInfo;
-using orbit_client_protos::LinuxAddressInfo;
-using orbit_client_protos::TimerInfo;
 
-using orbit_grpc_protos::CaptureFinished;
 using orbit_grpc_protos::CaptureOptions;
-using orbit_grpc_protos::CaptureStarted;
 using orbit_grpc_protos::ModuleInfo;
 using orbit_grpc_protos::ProcessInfo;
 

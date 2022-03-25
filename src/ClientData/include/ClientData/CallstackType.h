@@ -7,17 +7,37 @@
 
 #include <cstdint>
 
-#include "ClientProtos/capture_data.pb.h"
+#include "GrpcProtos/capture.pb.h"
 
 namespace orbit_client_data {
 
 using ThreadID = uint32_t;
 
-[[nodiscard]] std::string CallstackTypeToString(
-    orbit_client_protos::CallstackInfo::CallstackType callstack_type);
+// This enum represents the different (error) types of a callstack. `kComplete` represents an
+// intact callstack, while the other enum values describe different errors. In addition to the
+// values in `orbit_grpc_protos::Callstack`, error types detected by the client are added.
+// The enum must be kept in sync with the one in `orbit_grpc_protos::Callstack`.
+enum class CallstackType {
+  kComplete,
+  kDwarfUnwindingError,
+  kFramePointerUnwindingError,
+  kInUprobes,
+  kInUserSpaceInstrumentation,
+  kCallstackPatchingFailed,
+  kStackTopForDwarfUnwindingTooSmall,
+  kStackTopDwarfUnwindingError,
 
-[[nodiscard]] std::string CallstackTypeToDescription(
-    orbit_client_protos::CallstackInfo::CallstackType callstack_type);
+  // These are set by the client and are in addition to the ones in
+  // orbit_grpc_protos::Callstack::CallstackType.
+  kFilteredByMajorityOutermostFrame
+};
+
+[[nodiscard]] std::string CallstackTypeToString(CallstackType callstack_type);
+
+[[nodiscard]] std::string CallstackTypeToDescription(CallstackType callstack_type);
+
+[[nodiscard]] CallstackType GrpcCallstackTypeToCallstackType(
+    orbit_grpc_protos::Callstack::CallstackType callstack_type);
 
 }  // namespace orbit_client_data
 
