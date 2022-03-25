@@ -6,6 +6,7 @@
 #define CAPTURE_FILE_INFO_MANAGER_H_
 
 #include <filesystem>
+#include <optional>
 #include <vector>
 
 #include "CaptureFileInfo/CaptureFileInfo.h"
@@ -28,7 +29,8 @@ class Manager {
   // paths that use slash (/) as directory separators, are equal to paths that are using backslash.
   // TODO(http://b/218298681) use std::filesystem::equivalent instead of operator== to check whether
   // 2 paths are actually pointing to the same file.
-  void AddOrTouchCaptureFile(const std::filesystem::path& path);
+  void AddOrTouchCaptureFile(const std::filesystem::path& path,
+                             std::optional<absl::Duration> capture_length = std::nullopt);
   void Clear();
   void PurgeNonExistingFiles();
   ErrorMessageOr<void> FillFromDirectory(const std::filesystem::path& directory);

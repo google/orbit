@@ -4,9 +4,12 @@
 
 #include "CaptureFileInfo/Manager.h"
 
+#include <absl/time/time.h>
+
 #include <QDateTime>
 #include <QFileInfo>
 #include <QSettings>
+#include <QVariant>
 #include <algorithm>
 
 #include "CaptureFileInfo/CaptureFileInfo.h"
@@ -15,6 +18,7 @@
 constexpr const char* kCaptureFileInfoArrayKey = "capture_file_infos";
 constexpr const char* kCaptureFileInfoPathKey = "capture_file_info_path";
 constexpr const char* kCaptureFileInfoLastUsedKey = "capture_file_info_last_used";
+constexpr const char* kCaptureFileInfoCaptureLengthKey = "capture_file_info_capture_length";
 
 namespace orbit_capture_file_info {
 
@@ -34,6 +38,10 @@ void Manager::LoadCaptureFileInfos() {
     QString path = settings.value(kCaptureFileInfoPathKey).toString();
     QDateTime last_used(settings.value(kCaptureFileInfoLastUsedKey).toDateTime());
     capture_file_infos_.emplace_back(path, std::move(last_used));
+
+    int64_t capture_length_ns =
+        static_cast<int64_t>(settings.value(kCaptureFileInfoCaptureLengthKey).toLongLong());
+    capture_file_infos_.back().SetCaptureLength(absl::Nanoseconds(capture_length_ns));
   }
   settings.endArray();
 }
@@ -46,11 +54,15 @@ void Manager::SaveCaptureFileInfos() {
     const CaptureFileInfo& capture_file_info = capture_file_infos_[i];
     settings.setValue(kCaptureFileInfoPathKey, capture_file_info.FilePath());
     settings.setValue(kCaptureFileInfoLastUsedKey, capture_file_info.LastUsed());
+
+    int64_t capture_length_ns = absl::ToInt64Nanoseconds(capture_file_info.CaptureLength());
+    settings.setValue(kCaptureFileInfoCaptureLengthKey, QVariant::fromValue(capture_length_ns));
   }
   settings.endArray();
 }
 
-void Manager::AddOrTouchCaptureFile(const std::filesystem::path& path) {
+void Manager::AddOrTouchCaptureFile(const std::filesystem::path& path,
+                                    std::optional<absl::Duration> capture_length) {
   auto it = std::find_if(capture_file_infos_.begin(), capture_file_infos_.end(),
                          [&](const CaptureFileInfo& capture_file_info) {
                            std::filesystem::path path_from_capture_file_info{
@@ -60,8 +72,12 @@ void Manager::AddOrTouchCaptureFile(const std::filesystem::path& path) {
 
   if (it == capture_file_infos_.end()) {
     capture_file_infos_.emplace_back(QString::fromStdString(path.string()));
+    if (capture_length.has_value()) {
+      capture_file_infos_.back().SetCaptureLength(capture_length.value());
+    }
   } else {
     it->Touch();
+    if (capture_length.has_value()) it->SetCaptureLength(capture_length.value());
   }
 
   SaveCaptureFileInfos();

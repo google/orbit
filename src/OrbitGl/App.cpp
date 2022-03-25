@@ -1316,12 +1316,11 @@ Future<ErrorMessageOr<CaptureListener::CaptureOutcome>> OrbitApp::LoadCaptureFro
 
   DoZoom = true;  // TODO: remove global, review logic
 
-  (void)load_future.ThenIfSuccess(main_thread_executor_,
-                                  [this, file_path](CaptureListener::CaptureOutcome outcome) {
-                                    if (outcome == CaptureOutcome::kComplete) {
-                                      capture_file_info_manager_.AddOrTouchCaptureFile(file_path);
-                                    }
-                                  });
+  (void)load_future.ThenIfSuccess(
+      main_thread_executor_, [this, file_path](CaptureListener::CaptureOutcome outcome) {
+        if (outcome != CaptureOutcome::kComplete) return;
+        capture_file_info_manager_.AddOrTouchCaptureFile(file_path, GetCaptureTime());
+      });
 
   return load_future;
 }
