@@ -16,6 +16,7 @@
 #include "ClientData/CaptureData.h"
 #include "ClientData/FunctionUtils.h"
 #include "ClientData/ScopeIdConstants.h"
+#include "ClientData/ScopeStats.h"
 #include "ClientData/TimerChain.h"
 #include "ClientProtos/capture_data.pb.h"
 #include "DataViewTestUtils.h"
@@ -29,12 +30,15 @@
 #include "MetricsUploader/MetricsUploaderStub.h"
 #include "MockAppInterface.h"
 
-using orbit_client_protos::FunctionInfo;
-using orbit_client_protos::FunctionStats;
 using JumpToTimerMode = orbit_data_views::AppInterface::JumpToTimerMode;
+
 using orbit_client_data::CaptureData;
 using orbit_client_data::ModuleData;
+using orbit_client_data::ScopeStats;
+
+using orbit_client_protos::FunctionInfo;
 using orbit_client_protos::TimerInfo;
+
 using orbit_data_views::CheckCopySelectionIsInvoked;
 using orbit_data_views::CheckExportToCsvIsInvoked;
 using orbit_data_views::CheckSingleAction;
@@ -57,6 +61,7 @@ using orbit_data_views::kMenuActionJumpToMin;
 using orbit_data_views::kMenuActionSelect;
 using orbit_data_views::kMenuActionSourceCode;
 using orbit_data_views::kMenuActionUnselect;
+
 using orbit_grpc_protos::InstrumentedFunction;
 using orbit_grpc_protos::ModuleInfo;
 
@@ -192,14 +197,13 @@ std::unique_ptr<CaptureData> GenerateTestCaptureData(
                                     CaptureData::DataSource::kLiveCapture);
 
   for (size_t i = 0; i < kNumFunctions; i++) {
-    FunctionStats stats;
+    ScopeStats stats;
     stats.set_count(kCounts[i]);
     stats.set_total_time_ns(kTotalTimeNs[i]);
-    stats.set_average_time_ns(kAvgTimeNs[i]);
     stats.set_min_ns(kMinNs[i]);
     stats.set_max_ns(kMaxNs[i]);
     stats.set_std_dev_ns(kStdDevNs[i]);
-    capture_data->AddFunctionStats(kFunctionIds[i], std::move(stats));
+    capture_data->AddScopeStats(kFunctionIds[i], std::move(stats));
   }
 
   return capture_data;
@@ -750,7 +754,7 @@ TEST_F(LiveFunctionsDataViewTest, ColumnSortingShowsRightResults) {
   std::vector<ViewRowEntry> view_entries;
   absl::flat_hash_map<std::string, uint64_t> string_to_raw_value;
   for (const auto& [function_id, function] : functions_) {
-    const FunctionStats& stats = capture_data_->GetFunctionStatsOrDefault(function_id);
+    const ScopeStats& stats = capture_data_->GetScopeStatsOrDefault(function_id);
 
     ViewRowEntry entry;
     entry[kColumnName] = function.pretty_name();

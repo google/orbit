@@ -137,16 +137,7 @@ Color FrameTrack::GetTimerColor(const orbit_client_protos::TimerInfo& timer_info
 
 void FrameTrack::OnTimer(const TimerInfo& timer_info) {
   uint64_t duration_ns = timer_info.end() - timer_info.start();
-  stats_.set_count(stats_.count() + 1);
-  stats_.set_total_time_ns(stats_.total_time_ns() + duration_ns);
-  stats_.set_average_time_ns(stats_.total_time_ns() / stats_.count());
-
-  if (duration_ns > stats_.max_ns()) {
-    stats_.set_max_ns(duration_ns);
-  }
-  if (stats_.min_ns() == 0 || duration_ns < stats_.min_ns()) {
-    stats_.set_min_ns(duration_ns);
-  }
+  stats_.UpdateStats(duration_ns);
 
   TimerTrack::OnTimer(timer_info);
 }

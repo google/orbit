@@ -30,6 +30,7 @@
 #include "ClientData/FunctionUtils.h"
 #include "ClientData/ModuleAndFunctionLookup.h"
 #include "ClientData/ScopeIdConstants.h"
+#include "ClientData/ScopeStats.h"
 #include "ClientProtos/capture_data.pb.h"
 #include "CompareAscendingOrDescending.h"
 #include "DataViews/DataView.h"
@@ -47,10 +48,10 @@
 
 using orbit_client_data::CaptureData;
 using orbit_client_data::ModuleData;
-using orbit_client_data::ModuleManager;
+using orbit_client_data::ScopeStats;
 
+using orbit_client_data::ModuleManager;
 using orbit_client_protos::FunctionInfo;
-using orbit_client_protos::FunctionStats;
 using orbit_client_protos::TimerInfo;
 
 using orbit_grpc_protos::InstrumentedFunction;
@@ -95,7 +96,7 @@ std::string LiveFunctionsDataView::GetValue(int row, int column) {
   }
 
   const uint64_t function_id = GetInstrumentedFunctionId(row);
-  const FunctionStats& stats = app_->GetCaptureData().GetFunctionStatsOrDefault(function_id);
+  const ScopeStats& stats = app_->GetCaptureData().GetScopeStatsOrDefault(function_id);
 
   const FunctionInfo& function = *GetFunctionInfoFromRow(row);
   switch (column) {
@@ -188,11 +189,11 @@ void LiveFunctionsDataView::OnSelect(const std::vector<int>& rows) {
     return CompareAscendingOrDescending(functions.at(a).Member, functions.at(b).Member, \
                                         ascending);                                     \
   }
-#define ORBIT_STAT_SORT(Member)                                                         \
-  [&](uint64_t a, uint64_t b) {                                                         \
-    const FunctionStats& stats_a = app_->GetCaptureData().GetFunctionStatsOrDefault(a); \
-    const FunctionStats& stats_b = app_->GetCaptureData().GetFunctionStatsOrDefault(b); \
-    return CompareAscendingOrDescending(stats_a.Member, stats_b.Member, ascending);     \
+#define ORBIT_STAT_SORT(Member)                                                     \
+  [&](uint64_t a, uint64_t b) {                                                     \
+    const ScopeStats& stats_a = app_->GetCaptureData().GetScopeStatsOrDefault(a);   \
+    const ScopeStats& stats_b = app_->GetCaptureData().GetScopeStatsOrDefault(b);   \
+    return CompareAscendingOrDescending(stats_a.Member, stats_b.Member, ascending); \
   }
 #define ORBIT_CUSTOM_FUNC_SORT(Func)                                                              \
   [&](uint64_t a, uint64_t b) {                                                                   \
@@ -259,7 +260,7 @@ DataView::ActionStatus LiveFunctionsDataView::GetActionStatus(
     if (selected_indices.size() != 1) return ActionStatus::kVisibleButDisabled;
 
     uint64_t instrumented_function_id = GetInstrumentedFunctionId(selected_indices[0]);
-    const FunctionStats& stats = capture_data.GetFunctionStatsOrDefault(instrumented_function_id);
+    const ScopeStats& stats = capture_data.GetScopeStatsOrDefault(instrumented_function_id);
     if (stats.count() == 0) return ActionStatus::kVisibleButDisabled;
 
     return ActionStatus::kVisibleAndEnabled;
@@ -308,7 +309,7 @@ DataView::ActionStatus LiveFunctionsDataView::GetActionStatus(
   } else if (action == kMenuActionAddIterator) {
     is_visible_action_enabled = [&capture_data](uint64_t instrumented_function_id,
                                                 const FunctionInfo& /*instrumented_function*/) {
-      const FunctionStats& stats = capture_data.GetFunctionStatsOrDefault(instrumented_function_id);
+      const ScopeStats& stats = capture_data.GetScopeStatsOrDefault(instrumented_function_id);
       // We need at least one function call to a function so that adding iterators makes sense.
       return stats.count() > 0;
     };
@@ -331,8 +332,8 @@ void LiveFunctionsDataView::OnIteratorRequested(const std::vector<int>& selectio
   for (int i : selection) {
     uint64_t instrumented_function_id = GetInstrumentedFunctionId(i);
     const FunctionInfo* instrumented_function = GetFunctionInfoFromRow(i);
-    const FunctionStats& stats =
-        app_->GetCaptureData().GetFunctionStatsOrDefault(instrumented_function_id);
+    const ScopeStats& stats =
+        app_->GetCaptureData().GetScopeStatsOrDefault(instrumented_function_id);
     if (stats.count() > 0) {
       live_functions_->AddIterator(instrumented_function_id, instrumented_function);
       metrics_uploader_->SendLogEvent(orbit_metrics_uploader::OrbitLogEvent::ORBIT_ITERATOR_ADD);
