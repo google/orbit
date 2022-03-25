@@ -49,6 +49,7 @@
 #include "ClientModel/SamplingDataPostProcessor.h"
 #include "ClientProtos/capture_data.pb.h"
 #include "ClientProtos/preset.pb.h"
+#include "ClientSymbols/QSettingsBasedStorageManager.h"
 #include "CodeReport/Disassembler.h"
 #include "CodeReport/DisassemblyReport.h"
 #include "CodeReport/SourceCodeReport.h"
@@ -86,7 +87,6 @@
 #include "OrbitVersion/OrbitVersion.h"
 #include "SamplingReport.h"
 #include "Statistics/BinomialConfidenceInterval.h"
-#include "SymbolPaths/QSettingsBasedStorageManager.h"
 #include "Symbols/SymbolHelper.h"
 #include "TimeGraph.h"
 
@@ -226,7 +226,7 @@ orbit_metrics_uploader::CaptureStartData CreateCaptureStartData(
 }
 
 std::vector<std::filesystem::path> GetAllSymbolPaths() {
-  orbit_symbol_paths::QSettingsBasedStorageManager storage_manager;
+  orbit_client_symbols::QSettingsBasedStorageManager storage_manager;
   std::vector<std::filesystem::path> all_paths = storage_manager.LoadPaths();
   std::vector<std::string> temp_paths = absl::GetFlag(FLAGS_additional_symbol_paths);
   all_paths.insert(all_paths.end(), temp_paths.begin(), temp_paths.end());
@@ -235,7 +235,7 @@ std::vector<std::filesystem::path> GetAllSymbolPaths() {
 
 ErrorMessageOr<std::optional<std::filesystem::path>> GetOverrideSymbolFileForModule(
     const ModuleData& module_data) {
-  orbit_symbol_paths::QSettingsBasedStorageManager storage_manager;
+  orbit_client_symbols::QSettingsBasedStorageManager storage_manager;
   absl::flat_hash_map<std::string, std::filesystem::path> mappings =
       storage_manager.LoadModuleSymbolFileMappings();
   if (!mappings.contains(module_data.file_path())) return std::nullopt;

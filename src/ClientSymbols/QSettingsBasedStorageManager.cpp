@@ -2,7 +2,7 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#include "SymbolPaths/QSettingsBasedStorageManager.h"
+#include "ClientSymbols/QSettingsBasedStorageManager.h"
 
 #include <QSettings>
 #include <filesystem>
@@ -15,7 +15,7 @@ constexpr const char* kModuleSymbolFileMappingModuleKey = "module_symbol_file_ma
 constexpr const char* kModuleSymbolFileMappingSymbolFileKey =
     "module_symbol_file_mapping_symbol_file_key";
 
-namespace orbit_symbol_paths {
+namespace orbit_client_symbols {
 
 std::vector<std::filesystem::path> QSettingsBasedStorageManager::LoadPaths() {
   QSettings settings{};
@@ -74,4 +74,4 @@ QSettingsBasedStorageManager::LoadModuleSymbolFileMappings() {
   return mappings;
 }
 
-}  // namespace orbit_symbol_paths
+}  // namespace orbit_client_symbols

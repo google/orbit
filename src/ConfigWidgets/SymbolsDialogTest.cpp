@@ -19,19 +19,19 @@
 #include <vector>
 
 #include "ClientData/ModuleData.h"
+#include "ClientSymbols/PersistentStorageManager.h"
 #include "ConfigWidgets/SymbolsDialog.h"
 #include "GrpcProtos/module.pb.h"
-#include "SymbolPaths/PersistentStorageManager.h"
 #include "Test/Path.h"
 #include "TestUtils/TestUtils.h"
 
 namespace orbit_config_widgets {
 
-using orbit_symbol_paths::ModuleSymbolFileMappings;
+using orbit_client_symbols::ModuleSymbolFileMappings;
 using orbit_test_utils::HasError;
 using orbit_test_utils::HasValue;
 
-class MockPersistentStorageManager : public orbit_symbol_paths::PersistentStorageManager {
+class MockPersistentStorageManager : public orbit_client_symbols::PersistentStorageManager {
  public:
   MOCK_METHOD(void, SavePaths, (absl::Span<const std::filesystem::path>), (override));
   MOCK_METHOD(std::vector<std::filesystem::path>, LoadPaths, (), (override));
