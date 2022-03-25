@@ -24,7 +24,7 @@ class ScopeIdProvider {
 
   [[nodiscard]] virtual uint64_t ProvideId(const TimerInfo& timer_info) = 0;
 
-  [[nodiscard]] virtual std::string& GetScopeName(uint64_t scope_id) = 0;
+  [[nodiscard]] virtual const std::string& GetScopeName(uint64_t scope_id) const = 0;
 };
 
 // This class, unless the timer does already have an id (`function_id`), it assigning an id for
@@ -40,7 +40,7 @@ class NameEqualityScopeIdProvider : public ScopeIdProvider {
 
   [[nodiscard]] uint64_t ProvideId(const TimerInfo& timer_info) override;
 
-  [[nodiscard]] std::string& GetScopeName(uint64_t scope_id) override;
+  [[nodiscard]] const std::string& GetScopeName(uint64_t scope_id) const override;
 
  private:
   explicit NameEqualityScopeIdProvider(uint64_t start_id,
