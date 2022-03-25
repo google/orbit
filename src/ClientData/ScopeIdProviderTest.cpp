@@ -125,14 +125,14 @@ TEST(NameEqualityScopeIdProviderTest, CreateIsCorrect) {
     AddInstrumentedFunction(capture_options, kFunctionIds[i], kFunctionNames[i]);
   }
 
-  auto setter = NameEqualityScopeIdProvider::Create(capture_options);
+  auto id_provider = NameEqualityScopeIdProvider::Create(capture_options);
   TimerInfo timer_info = MakeTimerInfo("A", orbit_client_protos::TimerInfo_Type_kApiScope);
 
-  ASSERT_EQ(setter->ProvideId(timer_info),
+  ASSERT_EQ(id_provider->ProvideId(timer_info),
             *std::max_element(std::begin(kFunctionIds), std::end(kFunctionIds)) + 1);
 
   for (size_t i = 0; i < kFunctionCount; ++i) {
-    EXPECT_EQ(setter->GetScopeName(kFunctionIds[i]), kFunctionNames[i]);
+    EXPECT_EQ(id_provider->GetScopeName(kFunctionIds[i]), kFunctionNames[i]);
   }
 }
 

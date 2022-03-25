@@ -31,12 +31,9 @@ std::unique_ptr<NameEqualityScopeIdProvider> NameEqualityScopeIdProvider::Create
                 ->function_id();
 
   absl::flat_hash_map<uint64_t, std::string> scope_id_to_name;
-  std::transform(std::begin(instrumented_functions), std::end(instrumented_functions),
-                 std::inserter(scope_id_to_name, std::end(scope_id_to_name)),
-                 [](const auto& instrumented_function) {
-                   return std::make_pair(instrumented_function.function_id(),
-                                         instrumented_function.function_name());
-                 });
+  for (const auto& instrumented_function : instrumented_functions) {
+    scope_id_to_name[instrumented_function.function_id()] = instrumented_function.function_name();
+  }
 
   return std::unique_ptr<NameEqualityScopeIdProvider>(
       new NameEqualityScopeIdProvider(max_id + 1, std::move(scope_id_to_name)));
