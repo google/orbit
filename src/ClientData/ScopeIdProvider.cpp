@@ -4,11 +4,14 @@
 
 #include "ClientData/ScopeIdProvider.h"
 
+#include <absl/container/flat_hash_map.h>
 #include <absl/flags/flag.h>
+#include <llvm/Demangle/Demangle.h>
 
 #include <algorithm>
 #include <cstdint>
 #include <memory>
+#include <string>
 
 #include "ClientData/ScopeIdConstants.h"
 #include "ClientFlags/ClientFlags.h"
@@ -26,7 +29,17 @@ namespace orbit_client_data {
                 std::begin(instrumented_functions), std::end(instrumented_functions),
                 [](const auto& a, const auto& b) { return a.function_id() < b.function_id(); })
                 ->function_id();
-  return std::unique_ptr<NameEqualityScopeIdProvider>(new NameEqualityScopeIdProvider(max_id + 1));
+
+  absl::flat_hash_map<uint64_t, std::string> scope_id_to_name;
+  std::transform(std::begin(instrumented_functions), std::end(instrumented_functions),
+                 std::inserter(scope_id_to_name, std::end(scope_id_to_name)),
+                 [](const auto& instrumented_function) {
+                   return std::make_pair(instrumented_function.function_id(),
+                                         llvm::demangle(instrumented_function.function_name()));
+                 });
+
+  return std::unique_ptr<NameEqualityScopeIdProvider>(
+      new NameEqualityScopeIdProvider(max_id + 1, std::move(scope_id_to_name)));
 }
 
 [[nodiscard]] uint64_t NameEqualityScopeIdProvider::ProvideId(const TimerInfo& timer_info) {
