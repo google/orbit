@@ -200,7 +200,6 @@ std::unique_ptr<CaptureData> GenerateTestCaptureData(
     ScopeStats stats;
     stats.set_count(kCounts[i]);
     stats.set_total_time_ns(kTotalTimeNs[i]);
-    stats.set_average_time_ns(kAvgTimeNs[i]);
     stats.set_min_ns(kMinNs[i]);
     stats.set_max_ns(kMaxNs[i]);
     stats.set_std_dev_ns(kStdDevNs[i]);

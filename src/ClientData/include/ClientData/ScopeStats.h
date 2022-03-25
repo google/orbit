@@ -26,8 +26,7 @@ class ScopeStats {
   [[nodiscard]] uint64_t total_time_ns() const { return total_time_ns_; }
   void set_total_time_ns(uint64_t set_total_time_ns) { total_time_ns_ = set_total_time_ns; }
 
-  [[nodiscard]] uint64_t average_time_ns() const { return average_time_ns_; }
-  void set_average_time_ns(uint64_t average_time_ns) { average_time_ns_ = average_time_ns; }
+  [[nodiscard]] uint64_t average_time_ns() const { return total_time_ns_ / count_; }
 
   [[nodiscard]] uint64_t min_ns() const { return min_ns_; }
   void set_min_ns(uint64_t min_ns) { min_ns_ = min_ns; }
@@ -44,7 +43,6 @@ class ScopeStats {
  private:
   uint64_t count_;
   uint64_t total_time_ns_;
-  uint64_t average_time_ns_;
   uint64_t min_ns_;
   uint64_t max_ns_;
   double variance_ns_;
