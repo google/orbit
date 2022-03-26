@@ -14,6 +14,7 @@
 #include "WindowsUtils/ListModules.h"
 #include "WindowsUtils/OpenProcess.h"
 #include "WindowsUtils/SafeHandle.h"
+#include "WindowsUtils/WriteProcessMemory.h"
 
 // clang-format off
 #include <windows.h>
@@ -24,7 +25,7 @@ namespace orbit_windows_utils {
 
 namespace {
 
-ErrorMessageOr<uint64_t> RemoteWrite(HANDLE process_handle, const std::vector<uint8_t>& buffer) {
+ErrorMessageOr<uint64_t> RemoteWrite(HANDLE process_handle, absl::Span<const char> buffer) {
   // Allocate memory in target process.
   LPVOID base_address = VirtualAllocEx(process_handle, /*lpAddress=*/0, buffer.size(),
                                        MEM_RESERVE | MEM_COMMIT, PAGE_READWRITE);
@@ -34,16 +35,7 @@ ErrorMessageOr<uint64_t> RemoteWrite(HANDLE process_handle, const std::vector<ui
   }
 
   // Write in allocated remote memory.
-  size_t num_bytes_written = 0;
-  if (!WriteProcessMemory(process_handle, base_address, static_cast<LPCVOID>(buffer.data()),
-                          buffer.size(), &num_bytes_written)) {
-    return ErrorMessage(absl::StrFormat("Error calling WriteProcessMemory: %s",
-                                        orbit_base::GetLastErrorAsString()));
-  }
-
-  if (num_bytes_written != buffer.size()) {
-    return ErrorMessage("WriteProcessMemory could not write the requested number bytes.");
-  }
+  OUTCOME_TRY(WriteProcessMemory(process_handle, base_address, buffer));
 
   return absl::bit_cast<uint64_t>(base_address);
 }
@@ -80,12 +72,6 @@ ErrorMessageOr<void> ValidatePath(std::filesystem::path path) {
   if (!std::filesystem::exists(path))
     return ErrorMessage(absl::StrFormat("Path does not exist: %s", path.string()));
   return outcome::success();
-}
-
-[[nodiscard]] std::vector<uint8_t> ToByteBuffer(std::string_view str) {
-  std::vector<uint8_t> result(str.size() + 1, 0);
-  std::memcpy(result.data(), str.data(), str.size());
-  return result;
 }
 
 ErrorMessageOr<Module> FindModule(uint32_t pid, std::string_view module_name) {
@@ -132,7 +118,7 @@ ErrorMessageOr<void> InjectDll(uint32_t pid, std::filesystem::path dll_path) {
   OUTCOME_TRY(EnsureModuleIsNotAlreadyLoaded(pid, dll_path.filename().string()));
 
   // Inject dll by calling "LoadLibraryA" in remote process with the name of our dll as parameter.
-  OUTCOME_TRY(CreateRemoteThread(pid, "kernel32.dll", "LoadLibraryA", ToByteBuffer(dll_name)));
+  OUTCOME_TRY(CreateRemoteThread(pid, "kernel32.dll", "LoadLibraryA", dll_name));
 
   // Find injected dll in target process. Allow for retries as the loading might take some time.
   constexpr uint32_t kNumRetries = 10;
@@ -144,7 +130,7 @@ ErrorMessageOr<void> InjectDll(uint32_t pid, std::filesystem::path dll_path) {
 
 ErrorMessageOr<void> CreateRemoteThread(uint32_t pid, std::string_view module_name,
                                         std::string_view function_name,
-                                        std::vector<uint8_t> parameter) {
+                                        absl::Span<const char> parameter) {
   OUTCOME_TRY(uint64_t function_address, GetRemoteProcAddress(pid, module_name, function_name));
   OUTCOME_TRY(SafeHandle safe_handle,
               OpenProcess(PROCESS_ALL_ACCESS, /*inherit_handle=*/false, pid));
