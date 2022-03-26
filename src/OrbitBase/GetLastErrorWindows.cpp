@@ -11,6 +11,12 @@
 
 namespace orbit_base {
 
+ErrorMessage GetLastError() { return ErrorMessage(GetLastErrorAsString()); }
+
+ErrorMessage GetLastError(std::string_view prefix) {
+  return ErrorMessage(absl::StrFormat("%s: %s", prefix, GetLastErrorAsString()));
+}
+
 std::string GetLastErrorAsString() {
   DWORD error = ::GetLastError();
   if (error == 0) {
@@ -37,7 +43,7 @@ std::string GetLastErrorAsString() {
 
   std::string error_as_string(buffer, size);
   LocalFree(buffer);
-  return std::string(absl::StripAsciiWhitespace(error_as_string));
+  return absl::StrFormat("%s [%u]", absl::StripAsciiWhitespace(error_as_string), error);
 }
 
 }  // namespace orbit_base

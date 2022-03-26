@@ -19,6 +19,7 @@ using SafeHandleBase = orbit_base::unique_resource<HANDLE, void (*)(HANDLE)>;
 
 // Wrapper around a Windows "HANDLE" which calls "CloseHandle" on destruction if non-null.
 struct SafeHandle : public SafeHandleBase {
+  SafeHandle() = default;
   explicit SafeHandle(HANDLE handle);
   [[nodiscard]] HANDLE operator*() const { return get(); }
 };
