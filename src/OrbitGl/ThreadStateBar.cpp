@@ -13,14 +13,17 @@
 #include "Batcher.h"
 #include "CaptureViewElement.h"
 #include "ClientData/CaptureData.h"
+#include "ClientData/ThreadStateSliceInfo.h"
 #include "ClientProtos/capture_data.pb.h"
 #include "Geometry.h"
 #include "GlCanvas.h"
+#include "GrpcProtos/capture.pb.h"
 #include "OrbitBase/Logging.h"
 #include "Viewport.h"
 
 using orbit_client_data::ThreadID;
-using orbit_client_protos::ThreadStateSliceInfo;
+using orbit_client_data::ThreadStateSliceInfo;
+using orbit_grpc_protos::ThreadStateSlice;
 
 namespace orbit_gl {
 
@@ -54,7 +57,7 @@ void ThreadStateBar::DoDraw(Batcher& batcher, TextRenderer& text_renderer,
   batcher.AddBox(box, kTransparent, shared_from_this());
 }
 
-static Color GetThreadStateColor(ThreadStateSliceInfo::ThreadState state) {
+static Color GetThreadStateColor(ThreadStateSlice::ThreadState state) {
   static const Color kGreen500{76, 175, 80, 255};
   static const Color kBlue500{33, 150, 243, 255};
   static const Color kGray600{117, 117, 117, 255};
@@ -65,80 +68,80 @@ static Color GetThreadStateColor(ThreadStateSliceInfo::ThreadState state) {
   static const Color kBrown500{121, 85, 72, 255};
 
   switch (state) {
-    case ThreadStateSliceInfo::kRunning:
+    case ThreadStateSlice::kRunning:
       return kGreen500;
-    case ThreadStateSliceInfo::kRunnable:
+    case ThreadStateSlice::kRunnable:
       return kBlue500;
-    case ThreadStateSliceInfo::kInterruptibleSleep:
+    case ThreadStateSlice::kInterruptibleSleep:
       return kGray600;
-    case ThreadStateSliceInfo::kUninterruptibleSleep:
+    case ThreadStateSlice::kUninterruptibleSleep:
       return kOrange500;
-    case ThreadStateSliceInfo::kStopped:
+    case ThreadStateSlice::kStopped:
       return kRed500;
-    case ThreadStateSliceInfo::kTraced:
+    case ThreadStateSlice::kTraced:
       return kPurple500;
-    case ThreadStateSliceInfo::kDead:
+    case ThreadStateSlice::kDead:
       [[fallthrough]];
-    case ThreadStateSliceInfo::kZombie:
+    case ThreadStateSlice::kZombie:
       return kBlack;
-    case ThreadStateSliceInfo::kParked:
+    case ThreadStateSlice::kParked:
       [[fallthrough]];
-    case ThreadStateSliceInfo::kIdle:
+    case ThreadStateSlice::kIdle:
       return kBrown500;
     default:
       ORBIT_UNREACHABLE();
   }
 }
 
-static std::string GetThreadStateName(ThreadStateSliceInfo::ThreadState state) {
+static std::string GetThreadStateName(ThreadStateSlice::ThreadState state) {
   switch (state) {
-    case ThreadStateSliceInfo::kRunning:
+    case ThreadStateSlice::kRunning:
       return "Running";
-    case ThreadStateSliceInfo::kRunnable:
+    case ThreadStateSlice::kRunnable:
       return "Runnable";
-    case ThreadStateSliceInfo::kInterruptibleSleep:
+    case ThreadStateSlice::kInterruptibleSleep:
       return "Interruptible sleep";
-    case ThreadStateSliceInfo::kUninterruptibleSleep:
+    case ThreadStateSlice::kUninterruptibleSleep:
       return "Uninterruptible sleep";
-    case ThreadStateSliceInfo::kStopped:
+    case ThreadStateSlice::kStopped:
       return "Stopped";
-    case ThreadStateSliceInfo::kTraced:
+    case ThreadStateSlice::kTraced:
       return "Traced";
-    case ThreadStateSliceInfo::kDead:
+    case ThreadStateSlice::kDead:
       return "Dead";
-    case ThreadStateSliceInfo::kZombie:
+    case ThreadStateSlice::kZombie:
       return "Zombie";
-    case ThreadStateSliceInfo::kParked:
+    case ThreadStateSlice::kParked:
       return "Parked";
-    case ThreadStateSliceInfo::kIdle:
+    case ThreadStateSlice::kIdle:
       return "Idle";
     default:
       ORBIT_UNREACHABLE();
   }
 }
 
-static std::string GetThreadStateDescription(ThreadStateSliceInfo::ThreadState state) {
+static std::string GetThreadStateDescription(ThreadStateSlice::ThreadState state) {
   switch (state) {
-    case ThreadStateSliceInfo::kRunning:
+    case ThreadStateSlice::kRunning:
       return "The thread is currently scheduled on the CPU.";
-    case ThreadStateSliceInfo::kRunnable:
+    case ThreadStateSlice::kRunnable:
       return "The thread is ready to use the CPU, but is currently not scheduled.";
-    case ThreadStateSliceInfo::kInterruptibleSleep:
+    case ThreadStateSlice::kInterruptibleSleep:
       return "The thread is waiting for a resource to become available or for an event to happen.";
-    case ThreadStateSliceInfo::kUninterruptibleSleep:
+    case ThreadStateSlice::kUninterruptibleSleep:
       return "The thread performed a specific system call that cannot be interrupted by any signal "
              "and is waiting for the call to complete.";
-    case ThreadStateSliceInfo::kStopped:
+    case ThreadStateSlice::kStopped:
       return "The execution of the thread was suspended with the SIGSTOP signal.";
-    case ThreadStateSliceInfo::kTraced:
+    case ThreadStateSlice::kTraced:
       return "The thread is stopped because a tracer (for example, a debugger) is attached to it.";
-    case ThreadStateSliceInfo::kDead:
+    case ThreadStateSlice::kDead:
       [[fallthrough]];
-    case ThreadStateSliceInfo::kZombie:
+    case ThreadStateSlice::kZombie:
       return "The thread has exited.";
-    case ThreadStateSliceInfo::kParked:
+    case ThreadStateSlice::kParked:
       return "Parked kernel thread.";
-    case ThreadStateSliceInfo::kIdle:
+    case ThreadStateSlice::kIdle:
       return "Idle kernel thread.";
     default:
       ORBIT_UNREACHABLE();

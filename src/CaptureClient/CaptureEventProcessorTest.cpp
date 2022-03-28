@@ -23,11 +23,11 @@ namespace orbit_capture_client {
 
 using orbit_client_data::CallstackEvent;
 using orbit_client_data::CallstackInfo;
+using orbit_client_data::ThreadStateSliceInfo;
 
 using orbit_client_protos::ApiStringEvent;
 using orbit_client_protos::ApiTrackValue;
 using orbit_client_protos::LinuxAddressInfo;
-using orbit_client_protos::ThreadStateSliceInfo;
 using orbit_client_protos::TimerInfo;
 using orbit_client_protos::TracepointEventInfo;
 
@@ -1156,9 +1156,9 @@ TEST(CaptureEventProcessor, CanHandleThreadStateSlices) {
   dead_thread_state_slice->set_tid(24);
   dead_thread_state_slice->set_thread_state(ThreadStateSlice::kDead);
 
-  ThreadStateSliceInfo actual_running_thread_state_slice_info;
-  ThreadStateSliceInfo actual_runnable_thread_state_slice_info;
-  ThreadStateSliceInfo actual_dead_thread_state_slice_info;
+  std::optional<ThreadStateSliceInfo> actual_running_thread_state_slice_info{};
+  std::optional<ThreadStateSliceInfo> actual_runnable_thread_state_slice_info{};
+  std::optional<ThreadStateSliceInfo> actual_dead_thread_state_slice_info{};
   EXPECT_CALL(listener, OnThreadStateSlice)
       .Times(3)
       .WillOnce(SaveArg<0>(&actual_running_thread_state_slice_info))
@@ -1169,29 +1169,31 @@ TEST(CaptureEventProcessor, CanHandleThreadStateSlices) {
   event_processor->ProcessEvent(runnable_event);
   event_processor->ProcessEvent(dead_event);
 
+  ASSERT_TRUE(actual_running_thread_state_slice_info.has_value());
   EXPECT_EQ(
-      actual_running_thread_state_slice_info.begin_timestamp_ns(),
+      actual_running_thread_state_slice_info->begin_timestamp_ns(),
       running_thread_state_slice->end_timestamp_ns() - running_thread_state_slice->duration_ns());
-  EXPECT_EQ(actual_running_thread_state_slice_info.end_timestamp_ns(),
+  EXPECT_EQ(actual_running_thread_state_slice_info->end_timestamp_ns(),
             running_thread_state_slice->end_timestamp_ns());
-  EXPECT_EQ(actual_running_thread_state_slice_info.tid(), running_thread_state_slice->tid());
-  EXPECT_EQ(actual_running_thread_state_slice_info.thread_state(), ThreadStateSliceInfo::kRunning);
+  EXPECT_EQ(actual_running_thread_state_slice_info->tid(), running_thread_state_slice->tid());
+  EXPECT_EQ(actual_running_thread_state_slice_info->thread_state(), ThreadStateSlice::kRunning);
 
+  ASSERT_TRUE(actual_runnable_thread_state_slice_info.has_value());
   EXPECT_EQ(
-      actual_runnable_thread_state_slice_info.begin_timestamp_ns(),
+      actual_runnable_thread_state_slice_info->begin_timestamp_ns(),
       runnable_thread_state_slice->end_timestamp_ns() - runnable_thread_state_slice->duration_ns());
-  EXPECT_EQ(actual_runnable_thread_state_slice_info.end_timestamp_ns(),
+  EXPECT_EQ(actual_runnable_thread_state_slice_info->end_timestamp_ns(),
             runnable_thread_state_slice->end_timestamp_ns());
-  EXPECT_EQ(actual_runnable_thread_state_slice_info.tid(), runnable_thread_state_slice->tid());
-  EXPECT_EQ(actual_runnable_thread_state_slice_info.thread_state(),
-            ThreadStateSliceInfo::kRunnable);
+  EXPECT_EQ(actual_runnable_thread_state_slice_info->tid(), runnable_thread_state_slice->tid());
+  EXPECT_EQ(actual_runnable_thread_state_slice_info->thread_state(), ThreadStateSlice::kRunnable);
 
-  EXPECT_EQ(actual_dead_thread_state_slice_info.begin_timestamp_ns(),
+  ASSERT_TRUE(actual_dead_thread_state_slice_info.has_value());
+  EXPECT_EQ(actual_dead_thread_state_slice_info->begin_timestamp_ns(),
             dead_thread_state_slice->end_timestamp_ns() - dead_thread_state_slice->duration_ns());
-  EXPECT_EQ(actual_dead_thread_state_slice_info.end_timestamp_ns(),
+  EXPECT_EQ(actual_dead_thread_state_slice_info->end_timestamp_ns(),
             dead_thread_state_slice->end_timestamp_ns());
-  EXPECT_EQ(actual_dead_thread_state_slice_info.tid(), dead_thread_state_slice->tid());
-  EXPECT_EQ(actual_dead_thread_state_slice_info.thread_state(), ThreadStateSliceInfo::kDead);
+  EXPECT_EQ(actual_dead_thread_state_slice_info->tid(), dead_thread_state_slice->tid());
+  EXPECT_EQ(actual_dead_thread_state_slice_info->thread_state(), ThreadStateSlice::kDead);
 }
 
 TEST(CaptureEventProcessor, CanHandleWarningEvents) {

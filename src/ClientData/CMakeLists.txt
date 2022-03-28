@@ -29,6 +29,7 @@ target_sources(ClientData PUBLIC
         include/ClientData/ProcessData.h
         include/ClientData/ScopeStats.h
         include/ClientData/ScopeTreeTimerData.h
+        include/ClientData/ThreadStateSliceInfo.h
         include/ClientData/ThreadTrackDataManager.h
         include/ClientData/ThreadTrackDataProvider.h
         include/ClientData/TimerChain.h

@@ -15,26 +15,6 @@ message FunctionInfo {
   uint64 size = 7;
 }
 
-message ThreadStateSliceInfo {
-  // pid is absent as we don't yet get that information from the service.
-  uint32 tid = 1;
-  enum ThreadState {
-    kRunning = 0;
-    kRunnable = 1;
-    kInterruptibleSleep = 2;
-    kUninterruptibleSleep = 3;
-    kStopped = 4;
-    kTraced = 5;
-    kDead = 6;
-    kZombie = 7;
-    kParked = 8;
-    kIdle = 9;
-  }
-  ThreadState thread_state = 2;
-  uint64 begin_timestamp_ns = 3;
-  uint64 end_timestamp_ns = 4;
-}
-
 message TracepointInfo {
   string name = 1;
   string category = 2;
