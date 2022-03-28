@@ -87,7 +87,6 @@ target_sources(ClientDataTests PRIVATE
         ModuleManagerTest.cpp
         ProcessDataTest.cpp
         ScopeTreeTimerDataTest.cpp
-        SharedTestConstants.h
         ThreadTrackDataManagerTest.cpp
         ThreadTrackDataProviderTest.cpp
         TimerTrackDataIdManagerTest.cpp
