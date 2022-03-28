@@ -1170,9 +1170,6 @@ TEST(CaptureEventProcessor, CanHandleThreadStateSlices) {
   event_processor->ProcessEvent(dead_event);
 
   ASSERT_TRUE(actual_running_thread_state_slice_info.has_value());
-  ASSERT_TRUE(actual_runnable_thread_state_slice_info.has_value());
-  ASSERT_TRUE(actual_dead_thread_state_slice_info.has_value());
-
   EXPECT_EQ(
       actual_running_thread_state_slice_info->begin_timestamp_ns(),
       running_thread_state_slice->end_timestamp_ns() - running_thread_state_slice->duration_ns());
@@ -1181,6 +1178,7 @@ TEST(CaptureEventProcessor, CanHandleThreadStateSlices) {
   EXPECT_EQ(actual_running_thread_state_slice_info->tid(), running_thread_state_slice->tid());
   EXPECT_EQ(actual_running_thread_state_slice_info->thread_state(), ThreadStateSlice::kRunning);
 
+  ASSERT_TRUE(actual_runnable_thread_state_slice_info.has_value());
   EXPECT_EQ(
       actual_runnable_thread_state_slice_info->begin_timestamp_ns(),
       runnable_thread_state_slice->end_timestamp_ns() - runnable_thread_state_slice->duration_ns());
@@ -1189,6 +1187,7 @@ TEST(CaptureEventProcessor, CanHandleThreadStateSlices) {
   EXPECT_EQ(actual_runnable_thread_state_slice_info->tid(), runnable_thread_state_slice->tid());
   EXPECT_EQ(actual_runnable_thread_state_slice_info->thread_state(), ThreadStateSlice::kRunnable);
 
+  ASSERT_TRUE(actual_dead_thread_state_slice_info.has_value());
   EXPECT_EQ(actual_dead_thread_state_slice_info->begin_timestamp_ns(),
             dead_thread_state_slice->end_timestamp_ns() - dead_thread_state_slice->duration_ns());
   EXPECT_EQ(actual_dead_thread_state_slice_info->end_timestamp_ns(),

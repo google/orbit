@@ -28,6 +28,7 @@ target_sources(ClientData PUBLIC
         include/ClientData/PostProcessedSamplingData.h
         include/ClientData/ProcessData.h
         include/ClientData/ScopeTreeTimerData.h
+        include/ClientData/ThreadStateSliceInfo.h
         include/ClientData/ThreadTrackDataManager.h
         include/ClientData/ThreadTrackDataProvider.h
         include/ClientData/TimerChain.h
@@ -36,7 +37,6 @@ target_sources(ClientData PUBLIC
         include/ClientData/TimerDataInterface.h
         include/ClientData/TimerDataManager.h
         include/ClientData/TimestampIntervalSet.h
-        include/ClientData/ThreadStateSliceInfo.h
         include/ClientData/TracepointCustom.h
         include/ClientData/TracepointData.h
         include/ClientData/UserDefinedCaptureData.h)
