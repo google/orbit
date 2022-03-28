@@ -34,6 +34,7 @@
 #include "ClientData/CallstackType.h"
 #include "ClientData/CaptureData.h"
 #include "ClientData/DataManager.h"
+#include "ClientData/LinuxAddressInfo.h"
 #include "ClientData/ModuleData.h"
 #include "ClientData/ModuleManager.h"
 #include "ClientData/PostProcessedSamplingData.h"
@@ -171,7 +172,7 @@ class OrbitApp final : public DataViewFactory,
   void OnCallstackEvent(orbit_client_data::CallstackEvent callstack_event) override;
   void OnThreadName(uint32_t thread_id, std::string thread_name) override;
   void OnThreadStateSlice(orbit_client_data::ThreadStateSliceInfo thread_state_slice) override;
-  void OnAddressInfo(orbit_client_protos::LinuxAddressInfo address_info) override;
+  void OnAddressInfo(orbit_client_data::LinuxAddressInfo address_info) override;
   void OnUniqueTracepointInfo(uint64_t key,
                               orbit_grpc_protos::TracepointInfo tracepoint_info) override;
   void OnTracepointEvent(orbit_client_protos::TracepointEventInfo tracepoint_event_info) override;

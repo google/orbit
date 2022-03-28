@@ -23,11 +23,11 @@ namespace orbit_capture_client {
 
 using orbit_client_data::CallstackEvent;
 using orbit_client_data::CallstackInfo;
+using orbit_client_data::LinuxAddressInfo;
 using orbit_client_data::ThreadStateSliceInfo;
 
 using orbit_client_protos::ApiStringEvent;
 using orbit_client_protos::ApiTrackValue;
-using orbit_client_protos::LinuxAddressInfo;
 using orbit_client_protos::TimerInfo;
 using orbit_client_protos::TracepointEventInfo;
 
@@ -416,8 +416,8 @@ TEST(CaptureEventProcessor, CanHandleAddressInfosWithInternedStrings) {
   EXPECT_CALL(listener, OnKeyAndString(kDemangledFunctionNameKey, "already_demangled")).Times(1);
   EXPECT_CALL(listener, OnKeyAndString(kMangledFunctionNameKey, "_Z1hic")).Times(1);
 
-  LinuxAddressInfo actual_address_info1;
-  LinuxAddressInfo actual_address_info2;
+  std::optional<LinuxAddressInfo> actual_address_info1;
+  std::optional<LinuxAddressInfo> actual_address_info2;
   EXPECT_CALL(listener, OnAddressInfo)
       .Times(2)
       .WillOnce(SaveArg<0>(&actual_address_info1))
@@ -429,19 +429,21 @@ TEST(CaptureEventProcessor, CanHandleAddressInfosWithInternedStrings) {
   event_processor->ProcessEvent(address_info_with_demangled_name_event);
   event_processor->ProcessEvent(address_info_with_mangled_name_event);
 
-  EXPECT_EQ(actual_address_info1.absolute_address(),
+  ASSERT_TRUE(actual_address_info1.has_value());
+  EXPECT_EQ(actual_address_info1->absolute_address(),
             address_info_with_demangled_name->absolute_address());
-  EXPECT_EQ(actual_address_info1.function_name(), "already_demangled");
-  EXPECT_EQ(actual_address_info1.offset_in_function(),
+  EXPECT_EQ(actual_address_info1->function_name(), "already_demangled");
+  EXPECT_EQ(actual_address_info1->offset_in_function(),
             address_info_with_demangled_name->offset_in_function());
-  EXPECT_EQ(actual_address_info1.module_path(), "module");
+  EXPECT_EQ(actual_address_info1->module_path(), "module");
 
-  EXPECT_EQ(actual_address_info2.absolute_address(),
+  ASSERT_TRUE(actual_address_info2.has_value());
+  EXPECT_EQ(actual_address_info2->absolute_address(),
             address_info_with_mangled_name->absolute_address());
-  EXPECT_EQ(actual_address_info2.function_name(), "h(int, char)");
-  EXPECT_EQ(actual_address_info2.offset_in_function(),
+  EXPECT_EQ(actual_address_info2->function_name(), "h(int, char)");
+  EXPECT_EQ(actual_address_info2->offset_in_function(),
             address_info_with_mangled_name->offset_in_function());
-  EXPECT_EQ(actual_address_info2.module_path(), "module");
+  EXPECT_EQ(actual_address_info2->module_path(), "module");
 }
 
 TEST(CaptureEventProcessor, CanHandleInternedTracepointEvents) {
@@ -1426,17 +1428,18 @@ TEST(CaptureEventProcessor, CanHandleMultipleEvents) {
   address_info->set_module_name_key(kModuleKey);
   events.push_back(event_2);
 
-  LinuxAddressInfo actual_address_info;
+  std::optional<LinuxAddressInfo> actual_address_info;
   EXPECT_CALL(listener, OnAddressInfo).Times(1).WillOnce(SaveArg<0>(&actual_address_info));
 
   for (const auto& event : events) {
     event_processor->ProcessEvent(event);
   }
 
-  EXPECT_EQ(actual_address_info.absolute_address(), address_info->absolute_address());
-  EXPECT_EQ(actual_address_info.function_name(), kFunctionName);
-  EXPECT_EQ(actual_address_info.offset_in_function(), address_info->offset_in_function());
-  EXPECT_EQ(actual_address_info.module_path(), kModuleName);
+  ASSERT_TRUE(actual_address_info.has_value());
+  EXPECT_EQ(actual_address_info->absolute_address(), address_info->absolute_address());
+  EXPECT_EQ(actual_address_info->function_name(), kFunctionName);
+  EXPECT_EQ(actual_address_info->offset_in_function(), address_info->offset_in_function());
+  EXPECT_EQ(actual_address_info->module_path(), kModuleName);
 }
 
 }  // namespace orbit_capture_client

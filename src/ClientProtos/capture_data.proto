@@ -29,13 +29,6 @@ message TracepointEventInfo {
   uint64 tracepoint_info_key = 5;
 }
 
-message LinuxAddressInfo {
-  uint64 absolute_address = 1;
-  string module_path = 2;
-  string function_name = 3;
-  uint64 offset_in_function = 4;
-}
-
 message TimerInfo {
   // NextID: 18
   uint64 start = 1;

@@ -9,22 +9,19 @@
 
 #include "CaptureClient/CaptureEventProcessor.h"
 #include "CaptureClient/CaptureListener.h"
-#include "ClientData/ProcessData.h"
-#include "ClientData/TracepointCustom.h"
-#include "ClientData/UserDefinedCaptureData.h"
+#include "ClientData/LinuxAddressInfo.h"
 #include "ClientProtos/capture_data.pb.h"
 #include "FuzzingUtils/ProtoFuzzer.h"
 #include "GrpcProtos/capture.pb.h"
 #include "GrpcProtos/services.pb.h"
 #include "GrpcProtos/tracepoint.pb.h"
-#include "OrbitBase/Result.h"
 #include "absl/flags/flag.h"
 
 namespace orbit_capture_client {
 
 using orbit_client_data::CallstackEvent;
 using orbit_client_data::CallstackInfo;
-using orbit_client_protos::LinuxAddressInfo;
+using orbit_client_data::LinuxAddressInfo;
 using orbit_client_protos::TimerInfo;
 
 using orbit_grpc_protos::CaptureResponse;

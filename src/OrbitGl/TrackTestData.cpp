@@ -7,9 +7,11 @@
 #include "ClientData/CallstackEvent.h"
 #include "ClientData/CallstackInfo.h"
 #include "ClientData/CallstackType.h"
+#include "ClientData/LinuxAddressInfo.h"
 
 using orbit_client_data::CallstackType;
 using orbit_client_data::CaptureData;
+using orbit_client_data::LinuxAddressInfo;
 
 namespace orbit_gl {
 
@@ -19,12 +21,11 @@ std::unique_ptr<CaptureData> TrackTestData::GenerateTestCaptureData() {
                                                     CaptureData::DataSource::kLiveCapture);
 
   // AddressInfo
-  orbit_client_protos::LinuxAddressInfo address_info;
-  address_info.set_absolute_address(kInstructionAbsoluteAddress);
-  address_info.set_offset_in_function(kInstructionAbsoluteAddress - kFunctionAbsoluteAddress);
-  address_info.set_function_name(kFunctionName);
-  address_info.set_module_path(kModuleName);
-  capture_data->InsertAddressInfo(address_info);
+  LinuxAddressInfo address_info{kInstructionAbsoluteAddress,
+                                kInstructionAbsoluteAddress - kFunctionAbsoluteAddress, kModuleName,
+                                kModuleName};
+
+  capture_data->InsertAddressInfo(std::move(address_info));
 
   // CallstackInfo
   const std::vector<uint64_t> callstack_frames{kInstructionAbsoluteAddress};

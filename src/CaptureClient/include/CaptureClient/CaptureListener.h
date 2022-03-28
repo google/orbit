@@ -7,6 +7,7 @@
 
 #include "ClientData/CallstackEvent.h"
 #include "ClientData/CallstackInfo.h"
+#include "ClientData/LinuxAddressInfo.h"
 #include "ClientData/ProcessData.h"
 #include "ClientData/ThreadStateSliceInfo.h"
 #include "ClientData/TracepointCustom.h"
@@ -38,7 +39,7 @@ class CaptureListener {
   virtual void OnModulesSnapshot(uint64_t timestamp_ns,
                                  std::vector<orbit_grpc_protos::ModuleInfo> module_infos) = 0;
   virtual void OnThreadStateSlice(orbit_client_data::ThreadStateSliceInfo thread_state_slice) = 0;
-  virtual void OnAddressInfo(orbit_client_protos::LinuxAddressInfo address_info) = 0;
+  virtual void OnAddressInfo(orbit_client_data::LinuxAddressInfo address_info) = 0;
   virtual void OnUniqueTracepointInfo(uint64_t key,
                                       orbit_grpc_protos::TracepointInfo tracepoint_info) = 0;
   virtual void OnTracepointEvent(

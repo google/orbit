@@ -22,6 +22,7 @@ target_sources(ClientData PUBLIC
         include/ClientData/ScopeIdProvider.h
         include/ClientData/FunctionInfoSet.h
         include/ClientData/FunctionUtils.h
+        include/ClientData/LinuxAddressInfo.h
         include/ClientData/ModuleAndFunctionLookup.h
         include/ClientData/ModuleData.h
         include/ClientData/ModuleManager.h

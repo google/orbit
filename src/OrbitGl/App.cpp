@@ -102,6 +102,7 @@ using orbit_client_data::CallstackData;
 using orbit_client_data::CallstackEvent;
 using orbit_client_data::CallstackInfo;
 using orbit_client_data::CaptureData;
+using orbit_client_data::LinuxAddressInfo;
 using orbit_client_data::ModuleData;
 using orbit_client_data::PostProcessedSamplingData;
 using orbit_client_data::ProcessData;
@@ -115,7 +116,6 @@ using orbit_client_data::TracepointInfoSet;
 using orbit_client_data::UserDefinedCaptureData;
 
 using orbit_client_protos::FunctionInfo;
-using orbit_client_protos::LinuxAddressInfo;
 using orbit_client_protos::PresetInfo;
 using orbit_client_protos::PresetModule;
 using orbit_client_protos::TimerInfo;

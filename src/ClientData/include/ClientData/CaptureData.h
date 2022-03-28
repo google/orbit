@@ -24,6 +24,7 @@
 #include "ClientData/CallstackEvent.h"
 #include "ClientData/CallstackInfo.h"
 #include "ClientData/FunctionInfoSet.h"
+#include "ClientData/LinuxAddressInfo.h"
 #include "ClientData/ModuleData.h"
 #include "ClientData/ModuleManager.h"
 #include "ClientData/PostProcessedSamplingData.h"
@@ -88,15 +89,13 @@ class CaptureData {
 
   [[nodiscard]] absl::Time capture_start_time() const { return capture_start_time_; }
 
-  [[nodiscard]] const absl::flat_hash_map<uint64_t, orbit_client_protos::LinuxAddressInfo>&
-  address_infos() const {
+  [[nodiscard]] const absl::flat_hash_map<uint64_t, LinuxAddressInfo>& address_infos() const {
     return address_infos_;
   }
 
-  [[nodiscard]] const orbit_client_protos::LinuxAddressInfo* GetAddressInfo(
-      uint64_t absolute_address) const;
+  [[nodiscard]] const LinuxAddressInfo* GetAddressInfo(uint64_t absolute_address) const;
 
-  void InsertAddressInfo(orbit_client_protos::LinuxAddressInfo address_info);
+  void InsertAddressInfo(LinuxAddressInfo address_info);
 
   static const std::string kUnknownFunctionOrModuleName;
 
@@ -257,7 +256,7 @@ class CaptureData {
 
   TracepointData tracepoint_data_;
 
-  absl::flat_hash_map<uint64_t, orbit_client_protos::LinuxAddressInfo> address_infos_;
+  absl::flat_hash_map<uint64_t, LinuxAddressInfo> address_infos_;
 
   absl::flat_hash_map<uint64_t, ScopeStats> scope_stats_;
 
