@@ -26,12 +26,6 @@ class ApiStringEvent {
   [[nodiscard]] const std::string& name() const { return name_; }
   [[nodiscard]] bool should_concatenate() const { return should_concatenate_; }
 
-  bool operator==(const ApiStringEvent& rhs) const {
-    return async_scope_id_ == rhs.async_scope_id_ && name_ == rhs.name_ &&
-           should_concatenate_ == rhs.should_concatenate_;
-  }
-  bool operator!=(const ApiStringEvent& rhs) const { return !(rhs == *this); }
-
  private:
   uint64_t async_scope_id_;
   std::string name_;

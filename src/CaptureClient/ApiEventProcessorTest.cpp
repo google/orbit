@@ -11,11 +11,9 @@
 
 #include "ApiUtils/EncodedString.h"
 #include "CaptureClient/ApiEventProcessor.h"
-#include "CaptureClient/CaptureEventProcessor.h"
 #include "CaptureClient/CaptureListener.h"
 #include "GrpcProtos/capture.pb.h"
 #include "OrbitBase/Profiling.h"
-#include "OrbitBase/ThreadUtils.h"
 
 namespace orbit_capture_client {
 
@@ -25,7 +23,9 @@ using orbit_client_data::CallstackInfo;
 using orbit_client_protos::TimerInfo;
 
 using google::protobuf::util::MessageDifferencer;
+using ::testing::AllOf;
 using ::testing::Invoke;
+using ::testing::Property;
 using ::testing::SaveArg;
 
 using orbit_grpc_protos::ApiEvent;
@@ -243,6 +243,12 @@ class ApiEventProcessorTest : public ::testing::Test {
   static constexpr uint64_t kAddressInFunction = 111;
 };
 
+auto ApiStringEventEq(const ApiStringEvent& expected) {
+  return AllOf(Property(&ApiStringEvent::async_scope_id, expected.async_scope_id()),
+               Property(&ApiStringEvent::name, expected.name()),
+               Property(&ApiStringEvent::should_concatenate, expected.should_concatenate()));
+}
+
 }  // namespace
 
 TEST_F(ApiEventProcessorTest, ScopesFromSameThread) {
@@ -434,7 +440,7 @@ TEST_F(ApiEventProcessorTest, StringEvent) {
   api_event_processor_.ProcessApiStringEvent(string_event);
 
   ASSERT_TRUE(actual_string_event.has_value());
-  EXPECT_EQ(expected_string_event, actual_string_event.value());
+  EXPECT_THAT(actual_string_event.value(), ApiStringEventEq(expected_string_event));
 }
 
 TEST_F(ApiEventProcessorTest, TrackDouble) {
@@ -688,7 +694,7 @@ TEST_F(ApiEventProcessorTest, StringEventLegacy) {
   api_event_processor_.ProcessApiEventLegacy(string_event);
 
   ASSERT_TRUE(actual_string_event.has_value());
-  EXPECT_EQ(expected_string_event, actual_string_event.value());
+  EXPECT_THAT(actual_string_event.value(), ApiStringEventEq(expected_string_event));
 }
 
 TEST_F(ApiEventProcessorTest, TrackDoubleLegacy) {
