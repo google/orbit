@@ -76,10 +76,12 @@ void TimelineUi::RenderLabel(Batcher& batcher, TextRenderer& text_renderer, uint
                          TextRenderer::HAlign::Left, TextRenderer::VAlign::Middle},
                         /*out_text_pos=*/&pos, /*out_text_size=*/&size);
 
-  // Box behind the label to hide the ticks behind it.
-  size[0] += 2.f * kLabelsPadding;
+  // Box behind the label to hide the ticks behind it. We make the left padding a pixel smaller, so
+  // they don't incercept with the proper tick.
+  constexpr float kLeftPadding = kLabelsPadding - 1.f;
+  size[0] += kLeftPadding + kLabelsPadding;
   size[1] += 2.f * kLabelsPadding;
-  pos[0] -= kLabelsPadding;
+  pos[0] -= kLeftPadding;
   pos[1] -= kLabelsPadding;
   Box background_box(pos, size, label_z);
   batcher.AddBox(background_box, background_color);
