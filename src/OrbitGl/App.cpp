@@ -2672,28 +2672,22 @@ void OrbitApp::DisableFrameTrack(const FunctionInfo& function) {
   data_manager_->DisableFrameTrack(function);
 }
 
-void OrbitApp::AddFrameTrack(const FunctionInfo& function) {
-  if (!HasCaptureData()) {
-    return;
-  }
+OrbitApp::AddFrameTrackResult OrbitApp::AddFrameTrack(const FunctionInfo& function) {
+  if (!HasCaptureData()) return AddFrameTrackResult::kAborted;
 
   std::optional<uint64_t> instrumented_function_id =
       orbit_client_data::FindInstrumentedFunctionIdSlow(*module_manager_, *capture_data_, function);
   // If the function is not instrumented - ignore it. This happens when user
   // enables frame tracks for a not instrumented function from the function list.
-  if (!instrumented_function_id) {
-    return;
-  }
+  if (!instrumented_function_id) return AddFrameTrackResult::kAborted;
 
-  AddFrameTrack(instrumented_function_id.value());
+  return AddFrameTrack(instrumented_function_id.value());
 }
 
-void OrbitApp::AddFrameTrack(uint64_t instrumented_function_id) {
+OrbitApp::AddFrameTrackResult OrbitApp::AddFrameTrack(uint64_t instrumented_function_id) {
   ORBIT_CHECK(instrumented_function_id != 0);
   ORBIT_CHECK(std::this_thread::get_id() == main_thread_id_);
-  if (!HasCaptureData()) {
-    return;
-  }
+  if (!HasCaptureData()) return AddFrameTrackResult::kAborted;
 
   // We only add a frame track to the actual capture data if the function for the frame
   // track actually has hits in the capture data. Otherwise we can end up in inconsistent
@@ -2707,48 +2701,48 @@ void OrbitApp::AddFrameTrack(uint64_t instrumented_function_id) {
       AddFrameTrackTimers(instrumented_function_id);
     }
     TrySaveUserDefinedCaptureInfo();
-  } else {
-    const InstrumentedFunction* function =
-        GetCaptureData().GetInstrumentedFunctionById(instrumented_function_id);
-    constexpr const char* kDontShowAgainEmptyFrameTrackWarningKey = "EmptyFrameTrackWarning";
-    const std::string title = "Frame track not added";
-    const std::string message = absl::StrFormat(
-        "Frame track enabled for function \"%s\", but since the function does not have any hits in "
-        "the current capture, a frame track was not added to the capture.",
-        function->function_name());
-    main_window_->ShowWarningWithDontShowAgainCheckboxIfNeeded(
-        title, message, kDontShowAgainEmptyFrameTrackWarningKey);
+    return AddFrameTrackResult::kVisible;
   }
+
+  const InstrumentedFunction* function =
+      GetCaptureData().GetInstrumentedFunctionById(instrumented_function_id);
+  constexpr const char* kDontShowAgainEmptyFrameTrackWarningKey = "EmptyFrameTrackWarning";
+  const std::string title = "Frame track not added";
+  const std::string message = absl::StrFormat(
+      "Frame track enabled for function \"%s\", but since the function does not have any hits in "
+      "the current capture, a frame track was not added to the capture.",
+      function->function_name());
+  main_window_->ShowWarningWithDontShowAgainCheckboxIfNeeded(
+      title, message, kDontShowAgainEmptyFrameTrackWarningKey);
+  return AddFrameTrackResult::kInvisible;
 }
 
-void OrbitApp::RemoveFrameTrack(const FunctionInfo& function) {
+OrbitApp::RemoveFrameTrackResult OrbitApp::RemoveFrameTrack(const FunctionInfo& function) {
   // Ignore this call if there is no capture data
-  if (!HasCaptureData()) {
-    return;
-  }
+  if (!HasCaptureData()) return RemoveFrameTrackResult::kAborted;
 
   std::optional<uint64_t> instrumented_function_id =
       orbit_client_data::FindInstrumentedFunctionIdSlow(*module_manager_, *capture_data_, function);
   // If the function is not instrumented - ignore it. This happens when user
   // enables frame tracks for a not instrumented function from the function list.
-  if (!instrumented_function_id) {
-    return;
-  }
+  if (!instrumented_function_id) return RemoveFrameTrackResult::kAborted;
 
-  RemoveFrameTrack(instrumented_function_id.value());
+  return RemoveFrameTrack(instrumented_function_id.value());
 }
 
-void OrbitApp::RemoveFrameTrack(uint64_t instrumented_function_id) {
+OrbitApp::RemoveFrameTrackResult OrbitApp::RemoveFrameTrack(uint64_t instrumented_function_id) {
   ORBIT_CHECK(std::this_thread::get_id() == main_thread_id_);
+  if (!HasCaptureData()) return RemoveFrameTrackResult::kAborted;
 
   // We can only remove the frame track from the capture data if we have capture data and
   // the frame track is actually enabled in the capture data.
-  if (HasCaptureData() && GetCaptureData().IsFrameTrackEnabled(instrumented_function_id)) {
+  if (GetCaptureData().IsFrameTrackEnabled(instrumented_function_id)) {
     frame_track_online_processor_.RemoveFrameTrack(instrumented_function_id);
     GetMutableCaptureData().DisableFrameTrack(instrumented_function_id);
     GetMutableTimeGraph()->GetTrackContainer()->RemoveFrameTrack(instrumented_function_id);
     TrySaveUserDefinedCaptureInfo();
   }
+  return RemoveFrameTrackResult::kSuccess;
 }
 
 bool OrbitApp::IsFrameTrackEnabled(const FunctionInfo& function) const {
