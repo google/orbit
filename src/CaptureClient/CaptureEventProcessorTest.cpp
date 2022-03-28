@@ -13,6 +13,7 @@
 
 #include "CaptureClient/CaptureEventProcessor.h"
 #include "CaptureClient/CaptureListener.h"
+#include "ClientData/ApiStringEvent.h"
 #include "ClientData/CallstackEvent.h"
 #include "ClientData/TracepointCustom.h"
 #include "ClientProtos/capture_data.pb.h"
@@ -21,12 +22,12 @@
 
 namespace orbit_capture_client {
 
+using orbit_client_data::ApiStringEvent;
 using orbit_client_data::CallstackEvent;
 using orbit_client_data::CallstackInfo;
 using orbit_client_data::LinuxAddressInfo;
 using orbit_client_data::ThreadStateSliceInfo;
 
-using orbit_client_protos::ApiStringEvent;
 using orbit_client_protos::ApiTrackValue;
 using orbit_client_protos::TimerInfo;
 using orbit_client_protos::TracepointEventInfo;

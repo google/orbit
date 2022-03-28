@@ -289,7 +289,7 @@ void TimeGraph::ProcessTimer(const TimerInfo& timer_info, const InstrumentedFunc
   RequestUpdate();
 }
 
-void TimeGraph::ProcessApiStringEvent(const orbit_client_protos::ApiStringEvent& string_event) {
+void TimeGraph::ProcessApiStringEvent(const orbit_client_data::ApiStringEvent& string_event) {
   manual_instrumentation_manager_->ProcessStringEvent(string_event);
 }
 

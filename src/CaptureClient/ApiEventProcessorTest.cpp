@@ -11,20 +11,21 @@
 
 #include "ApiUtils/EncodedString.h"
 #include "CaptureClient/ApiEventProcessor.h"
-#include "CaptureClient/CaptureEventProcessor.h"
 #include "CaptureClient/CaptureListener.h"
 #include "GrpcProtos/capture.pb.h"
 #include "OrbitBase/Profiling.h"
-#include "OrbitBase/ThreadUtils.h"
 
 namespace orbit_capture_client {
 
+using orbit_client_data::ApiStringEvent;
 using orbit_client_data::CallstackInfo;
 
 using orbit_client_protos::TimerInfo;
 
 using google::protobuf::util::MessageDifferencer;
+using ::testing::AllOf;
 using ::testing::Invoke;
+using ::testing::Property;
 using ::testing::SaveArg;
 
 using orbit_grpc_protos::ApiEvent;
@@ -58,7 +59,7 @@ class MockCaptureListener : public CaptureListener {
               (uint64_t /*timestamp_ns*/,
                std::vector<orbit_grpc_protos::ModuleInfo> /*module_infos*/),
               (override));
-  MOCK_METHOD(void, OnApiStringEvent, (const orbit_client_protos::ApiStringEvent&), (override));
+  MOCK_METHOD(void, OnApiStringEvent, (const orbit_client_data::ApiStringEvent&), (override));
   MOCK_METHOD(void, OnApiTrackValue, (const orbit_client_protos::ApiTrackValue&), (override));
   MOCK_METHOD(void, OnWarningEvent, (orbit_grpc_protos::WarningEvent /*warning_event*/),
               (override));
@@ -162,15 +163,6 @@ class ApiEventProcessorTest : public ::testing::Test {
     return result;
   }
 
-  static orbit_client_protos::ApiStringEvent CreateClientStringEvent(uint64_t id, const char* name,
-                                                                     bool should_concatenate) {
-    orbit_client_protos::ApiStringEvent result;
-    result.set_async_scope_id(id);
-    result.set_name(name);
-    result.set_should_concatenate(should_concatenate);
-    return result;
-  }
-
   template <typename DataType, typename ProtoType>
   static ProtoType CreateTrackValue(uint64_t timestamp_ns, int32_t process_id, int32_t thread_id,
                                     const char* name, DataType data) {
@@ -250,6 +242,12 @@ class ApiEventProcessorTest : public ::testing::Test {
   static constexpr uint64_t kId3 = 109;
   static constexpr uint64_t kAddressInFunction = 111;
 };
+
+auto ApiStringEventEq(const ApiStringEvent& expected) {
+  return AllOf(Property(&ApiStringEvent::async_scope_id, expected.async_scope_id()),
+               Property(&ApiStringEvent::name, expected.name()),
+               Property(&ApiStringEvent::should_concatenate, expected.should_concatenate()));
+}
 
 }  // namespace
 
@@ -431,17 +429,18 @@ TEST_F(ApiEventProcessorTest, AsyncScopesWithIdsDifferingOnlyInUpperHalf) {
 TEST_F(ApiEventProcessorTest, StringEvent) {
   auto string_event = CreateStringEvent(1, kProcessId, kThreadId1, kId1, "Some string for this id");
 
-  auto expected_string_event =
-      CreateClientStringEvent(kId1, "Some string for this id", /*should_concatenate=*/false);
+  ApiStringEvent expected_string_event{kId1, "Some string for this id",
+                                       /*should_concatenate=*/false};
 
-  orbit_client_protos::ApiStringEvent actual_string_event;
+  std::optional<ApiStringEvent> actual_string_event;
   EXPECT_CALL(capture_listener_, OnApiStringEvent)
       .Times(1)
       .WillOnce(SaveArg<0>(&actual_string_event));
 
   api_event_processor_.ProcessApiStringEvent(string_event);
 
-  EXPECT_TRUE(MessageDifferencer::Equivalent(expected_string_event, actual_string_event));
+  ASSERT_TRUE(actual_string_event.has_value());
+  EXPECT_THAT(actual_string_event.value(), ApiStringEventEq(expected_string_event));
 }
 
 TEST_F(ApiEventProcessorTest, TrackDouble) {
@@ -684,17 +683,18 @@ TEST_F(ApiEventProcessorTest, StringEventLegacy) {
   auto string_event = CreateApiEventLegacy(kProcessId, kThreadId1, 1, orbit_api::EventType::kString,
                                            "Some string for this id", kId1);
 
-  auto expected_string_event =
-      CreateClientStringEvent(kId1, "Some string for this id", /*should_concatenate=*/true);
+  ApiStringEvent expected_string_event{kId1, "Some string for this id",
+                                       /*should_concatenate=*/true};
 
-  orbit_client_protos::ApiStringEvent actual_string_event;
+  std::optional<ApiStringEvent> actual_string_event;
   EXPECT_CALL(capture_listener_, OnApiStringEvent)
       .Times(1)
       .WillOnce(SaveArg<0>(&actual_string_event));
 
   api_event_processor_.ProcessApiEventLegacy(string_event);
 
-  EXPECT_TRUE(MessageDifferencer::Equivalent(expected_string_event, actual_string_event));
+  ASSERT_TRUE(actual_string_event.has_value());
+  EXPECT_THAT(actual_string_event.value(), ApiStringEventEq(expected_string_event));
 }
 
 TEST_F(ApiEventProcessorTest, TrackDoubleLegacy) {

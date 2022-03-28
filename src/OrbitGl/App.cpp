@@ -472,7 +472,7 @@ void OrbitApp::OnTimer(const TimerInfo& timer_info) {
   frame_track_online_processor_.ProcessTimer(timer_info, func);
 }
 
-void OrbitApp::OnApiStringEvent(const orbit_client_protos::ApiStringEvent& api_string_event) {
+void OrbitApp::OnApiStringEvent(const orbit_client_data::ApiStringEvent& api_string_event) {
   GetMutableTimeGraph()->ProcessApiStringEvent(api_string_event);
 }
 
