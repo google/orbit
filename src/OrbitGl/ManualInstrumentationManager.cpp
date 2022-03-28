@@ -10,7 +10,7 @@
 #include "ClientProtos/capture_data.pb.h"
 
 void ManualInstrumentationManager::ProcessStringEvent(
-    const orbit_client_protos::ApiStringEvent& string_event) {
+    const orbit_client_data::ApiStringEvent& string_event) {
   const uint64_t event_id = string_event.async_scope_id();
   if (!string_event.should_concatenate()) {
     string_manager_.AddOrReplace(event_id, string_event.name());

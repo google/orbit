@@ -5,11 +5,12 @@
 #include "CaptureClient/ApiEventProcessor.h"
 
 #include "ApiUtils/EncodedString.h"
+#include "ClientData/ApiStringEvent.h"
 #include "OrbitBase/Logging.h"
 
 namespace orbit_capture_client {
 
-using orbit_client_protos::ApiStringEvent;
+using orbit_client_data::ApiStringEvent;
 using orbit_client_protos::ApiTrackValue;
 using orbit_client_protos::TimerInfo;
 using orbit_grpc_protos::ApiEvent;
@@ -157,10 +158,8 @@ void ApiEventProcessor::ProcessAsyncStopEventLegacy(const orbit_api::ApiEvent& a
 }
 
 void ApiEventProcessor::ProcessStringEventLegacy(const orbit_api::ApiEvent& api_event) {
-  ApiStringEvent api_string_event;
-  api_string_event.set_async_scope_id(api_event.encoded_event.event.data);
-  api_string_event.set_name(api_event.encoded_event.event.name);
-  api_string_event.set_should_concatenate(true);
+  ApiStringEvent api_string_event{api_event.encoded_event.event.data,
+                                  api_event.encoded_event.event.name, /*should_concatenate=*/true};
   capture_listener_->OnApiStringEvent(api_string_event);
 }
 
@@ -285,10 +284,8 @@ void ApiEventProcessor::ProcessApiScopeStopAsync(
 
 void ApiEventProcessor::ProcessApiStringEvent(
     const orbit_grpc_protos::ApiStringEvent& grpc_api_string_event) {
-  ApiStringEvent api_string_event;
-  api_string_event.set_async_scope_id(grpc_api_string_event.id());
-  api_string_event.set_name(DecodeString(grpc_api_string_event));
-  api_string_event.set_should_concatenate(false);
+  ApiStringEvent api_string_event{grpc_api_string_event.id(), DecodeString(grpc_api_string_event),
+                                  /*should_concatenate=*/false};
   capture_listener_->OnApiStringEvent(api_string_event);
 }
 

@@ -45,7 +45,7 @@ class TimeGraph final : public orbit_gl::CaptureViewElement,
   // TODO(b/214282122): Move Process Timers function outside the UI.
   void ProcessTimer(const orbit_client_protos::TimerInfo& timer_info,
                     const orbit_grpc_protos::InstrumentedFunction* function);
-  void ProcessApiStringEvent(const orbit_client_protos::ApiStringEvent& string_event);
+  void ProcessApiStringEvent(const orbit_client_data::ApiStringEvent& string_event);
   void ProcessApiTrackValueEvent(const orbit_client_protos::ApiTrackValue& track_event);
 
   [[nodiscard]] const orbit_client_data::CaptureData* GetCaptureData() const {

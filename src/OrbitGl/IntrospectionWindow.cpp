@@ -110,7 +110,7 @@ class IntrospectionCaptureListener : public orbit_capture_client::CaptureListene
     introspection_window_->GetTimeGraph()->ProcessTimer(timer_info, nullptr);
   }
 
-  void OnApiStringEvent(const orbit_client_protos::ApiStringEvent& api_string_event) override {
+  void OnApiStringEvent(const orbit_client_data::ApiStringEvent& api_string_event) override {
     introspection_window_->GetTimeGraph()->ProcessApiStringEvent(api_string_event);
   }
 
