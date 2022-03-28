@@ -151,6 +151,7 @@ target_link_libraries(
          ClientFlags
          ClientModel
          ClientServices
+         ClientSymbols
          CodeReport
          Containers
          DataViews
@@ -161,7 +162,6 @@ target_link_libraries(
          OrbitPaths
          PresetFile
          StringManager
-         SymbolPaths
          Qt5::Gui
          Symbols
          CONAN_PKG::freetype-gl

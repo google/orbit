@@ -77,6 +77,7 @@
 #include "ClientModel/CaptureSerializer.h"
 #include "ClientProtos/capture_data.pb.h"
 #include "ClientServices/ProcessManager.h"
+#include "ClientSymbols/QSettingsBasedStorageManager.h"
 #include "CodeReport/DisassemblyReport.h"
 #include "CodeViewer/Dialog.h"
 #include "CodeViewer/FontSizeInEm.h"
@@ -110,7 +111,6 @@
 #include "SourcePathsMapping/MappingManager.h"
 #include "SourcePathsMappingUI/AskUserForFile.h"
 #include "StatusListenerImpl.h"
-#include "SymbolPaths/QSettingsBasedStorageManager.h"
 #include "Symbols/SymbolHelper.h"
 #include "SyntaxHighlighter/Cpp.h"
 #include "SyntaxHighlighter/X86Assembly.h"
@@ -237,15 +237,15 @@ OrbitMainWindow::OrbitMainWindow(TargetConfiguration target_configuration,
     }
   }
 
-  orbit_symbol_paths::QSettingsBasedStorageManager symbol_paths_storage_manager;
-  for (const auto& dir : symbol_paths_storage_manager.LoadPaths()) {
+  orbit_client_symbols::QSettingsBasedStorageManager client_symbols_storage_manager;
+  for (const auto& dir : client_symbols_storage_manager.LoadPaths()) {
     if (!already_seen_paths.contains(dir.string())) {
       already_seen_paths.insert(dir.string());
       dirs_to_save.push_back(dir);
     }
   }
 
-  symbol_paths_storage_manager.SavePaths(dirs_to_save);
+  client_symbols_storage_manager.SavePaths(dirs_to_save);
 
   ErrorMessageOr<void> add_depr_note_result =
       orbit_symbols::AddDeprecationNoteToFile(orbit_paths::GetSymbolsFilePath());
@@ -1436,9 +1436,9 @@ void OrbitMainWindow::on_actionSourcePathMappings_triggered() {
 
 void OrbitMainWindow::ExecuteSymbolsDialog(
     std::optional<const orbit_client_data::ModuleData*> module) {
-  orbit_symbol_paths::QSettingsBasedStorageManager symbol_paths_storage_manager;
+  orbit_client_symbols::QSettingsBasedStorageManager client_symbols_storage_manager;
   orbit_config_widgets::SymbolsDialog dialog{
-      &symbol_paths_storage_manager, absl::GetFlag(FLAGS_enable_unsafe_symbols), module, this};
+      &client_symbols_storage_manager, absl::GetFlag(FLAGS_enable_unsafe_symbols), module, this};
   dialog.exec();
 }
 

@@ -2,8 +2,8 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#ifndef SYMBOL_PATHS_PERSISTENT_STORAGE_MANAGER_H
-#define SYMBOL_PATHS_PERSISTENT_STORAGE_MANAGER_H
+#ifndef CLIENT_SYMBOLS_PERSISTENT_STORAGE_MANAGER_H
+#define CLIENT_SYMBOLS_PERSISTENT_STORAGE_MANAGER_H
 
 #include <absl/container/flat_hash_map.h>
 #include <absl/types/span.h>
@@ -12,7 +12,7 @@
 #include <memory>
 #include <vector>
 
-namespace orbit_symbol_paths {
+namespace orbit_client_symbols {
 
 // The hash map uses the key std::string for the module path instead of std::filesystem::path,
 // because the module path is always linux path (from the instance). When this is compiled on
@@ -31,6 +31,6 @@ class PersistentStorageManager {
   [[nodiscard]] virtual ModuleSymbolFileMappings LoadModuleSymbolFileMappings() = 0;
 };
 
-}  // namespace orbit_symbol_paths
+}  // namespace orbit_client_symbols
 
-#endif  // SYMBOL_PATHS_PERSISTENT_STORAGE_MANAGER_H
+#endif  // CLIENT_SYMBOLS_PERSISTENT_STORAGE_MANAGER_H

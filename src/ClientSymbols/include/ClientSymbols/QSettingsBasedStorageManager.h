@@ -2,12 +2,12 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#ifndef SYMBOL_PATHS_Q_SETTINGS_BASED_STORAGE_MANAGER_H_
-#define SYMBOL_PATHS_Q_SETTINGS_BASED_STORAGE_MANAGER_H_
+#ifndef CLIENT_SYMBOLS_Q_SETTINGS_BASED_STORAGE_MANAGER_H_
+#define CLIENT_SYMBOLS_Q_SETTINGS_BASED_STORAGE_MANAGER_H_
 
-#include "SymbolPaths/PersistentStorageManager.h"
+#include "ClientSymbols/PersistentStorageManager.h"
 
-namespace orbit_symbol_paths {
+namespace orbit_client_symbols {
 
 class QSettingsBasedStorageManager : public PersistentStorageManager {
  public:
@@ -17,6 +17,6 @@ class QSettingsBasedStorageManager : public PersistentStorageManager {
   [[nodiscard]] ModuleSymbolFileMappings LoadModuleSymbolFileMappings() override;
 };
 
-}  // namespace orbit_symbol_paths
+}  // namespace orbit_client_symbols
 
-#endif  // SYMBOL_PATHS_Q_SETTINGS_BASED_STORAGE_MANAGER_H_
+#endif  // CLIENT_SYMBOLS_Q_SETTINGS_BASED_STORAGE_MANAGER_H_

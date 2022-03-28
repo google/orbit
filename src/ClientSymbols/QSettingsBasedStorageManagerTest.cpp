@@ -11,7 +11,7 @@
 #include <filesystem>
 #include <memory>
 
-#include "SymbolPaths/QSettingsBasedStorageManager.h"
+#include "ClientSymbols/QSettingsBasedStorageManager.h"
 
 const std::filesystem::path path0{"/path/to/symbols/path"};
 const std::filesystem::path path1{"/home/src/project/build/"};
@@ -19,7 +19,7 @@ const std::filesystem::path path2{R"(c:\project\build\)"};
 
 constexpr const char* kOrgName = "The Orbit Authors";
 
-namespace orbit_symbol_paths {
+namespace orbit_client_symbols {
 
 TEST(QSettingsBasedStorageManager, LoadAndSavePaths) {
   QCoreApplication::setOrganizationDomain(kOrgName);
@@ -77,4 +77,4 @@ TEST(QSettingsBasedStorageManager, LoadAndSaveModuleSymbolFileMappings) {
   }
 }
 
-}  // namespace orbit_symbol_paths
+}  // namespace orbit_client_symbols

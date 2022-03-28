@@ -11,9 +11,9 @@
 
 #include "ClientData/ModuleData.h"
 #include "ClientFlags/ClientFlags.h"
+#include "ClientSymbols/QSettingsBasedStorageManager.h"
 #include "ConfigWidgets/SymbolsDialog.h"
 #include "GrpcProtos/module.pb.h"
-#include "SymbolPaths/QSettingsBasedStorageManager.h"
 
 int main(int argc, char* argv[]) {
   absl::ParseCommandLine(argc, argv);
@@ -28,8 +28,8 @@ int main(int argc, char* argv[]) {
 
   orbit_client_data::ModuleData module{module_info};
 
-  orbit_symbol_paths::QSettingsBasedStorageManager symbol_paths_storage_manager;
-  orbit_config_widgets::SymbolsDialog dialog{&symbol_paths_storage_manager,
+  orbit_client_symbols::QSettingsBasedStorageManager client_symbols_storage_manager;
+  orbit_config_widgets::SymbolsDialog dialog{&client_symbols_storage_manager,
                                              absl::GetFlag(FLAGS_enable_unsafe_symbols), &module};
   const int result_code = dialog.exec();
 

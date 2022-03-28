@@ -98,7 +98,7 @@ SymbolsDialog::~SymbolsDialog() {
 }
 
 SymbolsDialog::SymbolsDialog(
-    orbit_symbol_paths::PersistentStorageManager* persistent_storage_manager,
+    orbit_client_symbols::PersistentStorageManager* persistent_storage_manager,
     bool allow_unsafe_symbols, std::optional<const ModuleData*> module, QWidget* parent)
     : QDialog(parent),
       ui_(std::make_unique<Ui::SymbolsDialog>()),

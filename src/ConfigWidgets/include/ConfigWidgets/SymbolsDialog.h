@@ -15,8 +15,8 @@
 #include <tuple>
 #include <vector>
 
+#include "ClientSymbols/PersistentStorageManager.h"
 #include "OrbitBase/Result.h"
-#include "SymbolPaths/PersistentStorageManager.h"
 
 namespace Ui {
 class SymbolsDialog;  // IWYU pragma: keep
@@ -28,7 +28,7 @@ class SymbolsDialog : public QDialog {
   Q_OBJECT
 
  public:
-  explicit SymbolsDialog(orbit_symbol_paths::PersistentStorageManager* persistent_storage_manager,
+  explicit SymbolsDialog(orbit_client_symbols::PersistentStorageManager* persistent_storage_manager,
                          bool allow_unsafe_symbols = false,
                          std::optional<const orbit_client_data::ModuleData*> module = std::nullopt,
                          QWidget* parent = nullptr);
@@ -62,8 +62,8 @@ class SymbolsDialog : public QDialog {
   std::unique_ptr<Ui::SymbolsDialog> ui_;
   bool allow_unsafe_symbols_;
   std::optional<const orbit_client_data::ModuleData*> module_;
-  orbit_symbol_paths::PersistentStorageManager* persistent_storage_manager_ = nullptr;
-  orbit_symbol_paths::ModuleSymbolFileMappings module_symbol_file_mappings_;
+  orbit_client_symbols::PersistentStorageManager* persistent_storage_manager_ = nullptr;
+  orbit_client_symbols::ModuleSymbolFileMappings module_symbol_file_mappings_;
 
   void AddSymbolPathsToListWidget(absl::Span<const std::filesystem::path> paths);
   [[nodiscard]] std::vector<std::filesystem::path> GetSymbolPathsFromListWidget();
