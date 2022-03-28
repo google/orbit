@@ -179,14 +179,18 @@ void CaptureData::DisableFrameTrack(uint64_t instrumented_function_id) {
   frame_track_function_ids_.erase(instrumented_function_id);
 }
 
-[[nodiscard]] bool CaptureData::IsFrameTrackEnabled(uint64_t instrumented_function_id) const {
+bool CaptureData::IsFrameTrackEnabled(uint64_t instrumented_function_id) const {
   return frame_track_function_ids_.contains(instrumented_function_id);
 }
 
-[[nodiscard]] uint64_t CaptureData::ProvideScopeId(
-    const orbit_client_protos::TimerInfo& timer_info) const {
+uint64_t CaptureData::ProvideScopeId(const orbit_client_protos::TimerInfo& timer_info) const {
   ORBIT_CHECK(scope_id_provider_);
   return scope_id_provider_->ProvideId(timer_info);
+}
+
+const std::string& CaptureData::GetScopeName(uint64_t scope_id) const {
+  ORBIT_CHECK(scope_id_provider_);
+  return scope_id_provider_->GetScopeName(scope_id);
 }
 
 }  // namespace orbit_client_data

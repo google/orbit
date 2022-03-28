@@ -239,6 +239,7 @@ class CaptureData {
   }
 
   [[nodiscard]] uint64_t ProvideScopeId(const orbit_client_protos::TimerInfo& timer_info) const;
+  [[nodiscard]] const std::string& GetScopeName(uint64_t scope_id) const;
 
  private:
   orbit_client_data::ProcessData process_;

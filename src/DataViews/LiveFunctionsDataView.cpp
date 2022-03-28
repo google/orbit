@@ -167,14 +167,8 @@ void LiveFunctionsDataView::UpdateHistogramWithScopeIds(const std::vector<uint64
   }
 
   const uint64_t scope_id = scope_ids[0];
-
-  std::string function_name = "MANUAL";
-  if (functions_.contains(scope_id)) {
-    const FunctionInfo& function = functions_.at(scope_id);
-    function_name = orbit_client_data::function_utils::GetDisplayName(function);
-  }
-
-  app_->ShowHistogram(timer_durations, function_name, scope_id);
+  const std::string& scope_name = app_->GetCaptureData().GetScopeName(scope_id);
+  app_->ShowHistogram(timer_durations, scope_name, scope_id);
 }
 
 void LiveFunctionsDataView::OnSelect(const std::vector<int>& rows) {
@@ -547,8 +541,11 @@ std::optional<FunctionInfo> LiveFunctionsDataView::CreateFunctionInfoFromInstrum
     return std::nullopt;
   }
 
+  const std::string& function_name =
+      app_->GetCaptureData().GetScopeName(instrumented_function.function_id());
+
   FunctionInfo result;
-  result.set_pretty_name(llvm::demangle(instrumented_function.function_name()));
+  result.set_pretty_name(function_name);
   result.set_module_path(instrumented_function.file_path());
   result.set_module_build_id(instrumented_function.file_build_id());
   result.set_address(module_data->load_bias() + instrumented_function.file_offset());
