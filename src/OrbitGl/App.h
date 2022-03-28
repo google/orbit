@@ -506,12 +506,10 @@ class OrbitApp final : public DataViewFactory,
   // capture data, *if* the captures contains function calls to the function and the function
   // was instrumented.
   void AddFrameTrack(const orbit_client_data::FunctionInfo& function) override;
-  void AddFrameTrack(uint64_t instrumented_function_id) override;
 
   // Removes the frame track from the capture settings and also removes the frame track
   // (if it exists) from the capture data.
   void RemoveFrameTrack(const orbit_client_data::FunctionInfo& function) override;
-  void RemoveFrameTrack(uint64_t instrumented_function_id) override;
 
   [[nodiscard]] bool HasFrameTrackInCaptureData(uint64_t instrumented_function_id) const override;
 
@@ -564,6 +562,8 @@ class OrbitApp final : public DataViewFactory,
   ErrorMessageOr<void> SavePreset(const std::string& filename);
   [[nodiscard]] ScopedStatus CreateScopedStatus(const std::string& initial_message);
 
+  void AddFrameTrack(uint64_t instrumented_function_id);
+  void RemoveFrameTrack(uint64_t instrumented_function_id);
   void EnableFrameTracksFromHashes(const orbit_client_data::ModuleData* module,
                                    absl::Span<const uint64_t> function_hashes);
   void EnableFrameTracksByName(const orbit_client_data::ModuleData* module,
