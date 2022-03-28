@@ -20,7 +20,7 @@ const Color kBackgroundColorSpecialLabels(68, 67, 69, 255);
 void TimelineUi::RenderLines(Batcher& batcher, uint64_t min_timestamp_ns,
                              uint64_t max_timestamp_ns) const {
   const Color kMajorTickColor(255, 254, 253, 255);
-  const Color kMinorTickColor(63, 62, 63, 255);
+  const Color kMinorTickColor(255, 254, 253, 63);
 
   for (auto& [tick_type, tick_ns] :
        timeline_ticks_.GetAllTicks(min_timestamp_ns, max_timestamp_ns)) {
@@ -28,7 +28,7 @@ void TimelineUi::RenderLines(Batcher& batcher, uint64_t min_timestamp_ns,
         tick_ns / static_cast<double>(kNanosecondsPerMicrosecond));
     int screen_x = viewport_->WorldToScreen(Vec2(world_x, 0))[0];
     batcher.AddVerticalLine(
-        Vec2(screen_x, GetPos()[1]), GetHeightWithoutMargin(), GlCanvas::kZValueTimeBarBg,
+        Vec2(screen_x, GetPos()[1]), GetHeightWithoutMargin(), GlCanvas::kZValueTimeBar,
         tick_type == TimelineTicks::TickType::kMajorTick ? kMajorTickColor : kMinorTickColor);
   }
 }
@@ -45,8 +45,8 @@ void TimelineUi::RenderLabels(Batcher& batcher, TextRenderer& text_renderer,
   }
 
   for (uint64_t tick_ns : GetTicksForNonOverlappingLabels(text_renderer, all_major_ticks)) {
-    RenderLabel(batcher, text_renderer, tick_ns, GetNumDecimalsInLabels(), GlCanvas::kZValueTimeBar,
-                GlCanvas::kTimeBarBackgroundColor);
+    RenderLabel(batcher, text_renderer, tick_ns, GetNumDecimalsInLabels(),
+                GlCanvas::kZValueTimeBarLabel, GlCanvas::kTimeBarBackgroundColor);
   }
 }
 
@@ -59,7 +59,7 @@ void TimelineUi::RenderMargin(Batcher& batcher) const {
 
 void TimelineUi::RenderBackground(Batcher& batcher) const {
   Box background_box(GetPos(), Vec2(GetWidth(), GetHeightWithoutMargin()),
-                     GlCanvas::kZValueTimeBarBg);
+                     GlCanvas::kZValueTimeBar);
   batcher.AddBox(background_box, GlCanvas::kTimeBarBackgroundColor);
 }
 

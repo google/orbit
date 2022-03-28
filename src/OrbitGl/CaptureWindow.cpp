@@ -801,8 +801,11 @@ void CaptureWindow::RenderSelectionOverlay() {
   float stop_pos_world = time_graph_->GetWorldFromTick(select_stop_time_);
 
   float size_x = to_world - from_world;
-  Vec2 pos(from_world, 0);
-  Vec2 size(size_x, viewport_.GetWorldHeight());
+  // TODO(http://b/226401787): Allow green selection overlay to be on top of the Timeline after
+  // modifying its design and how it the overlay is drawn.
+  float initial_y_position = time_graph_->GetLayout().GetTimeBarHeight();
+  Vec2 pos(from_world, initial_y_position);
+  Vec2 size(size_x, viewport_.GetWorldHeight() - initial_y_position);
 
   std::string text = orbit_display_formats::GetDisplayTime(TicksToDuration(min_time, max_time));
   const Color color(0, 128, 0, 128);

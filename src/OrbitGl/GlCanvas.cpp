@@ -20,6 +20,9 @@
 #include "OrbitBase/Logging.h"
 
 // Tracks: 0.0 - 0.1
+// Tracks - Moving: 0.1 - 0.2
+// Tracks - Pinned: 0.2 - 0.3
+// TimeBar: 0.3 - 0.4
 // World Overlay: 0.4 - 0.5
 // UI: 0.6 - 0.7
 // ScreenSpace: 0.8 - 0.9
@@ -30,15 +33,15 @@ float GlCanvas::kZValueBox = 0.05f;
 float GlCanvas::kZValueEvent = 0.07f;
 float GlCanvas::kZValueTrackText = 0.08f;
 float GlCanvas::kZValueTrackLabel = 0.09f;
+float GlCanvas::kZValueTimeBar = 0.31f;
+float GlCanvas::kZValueTimeBarLabel = 0.33f;
+float GlCanvas::kZValueTimeBarMouseLabel = 0.35f;
 float GlCanvas::kZValueIncompleteDataOverlay = 0.42f;
 float GlCanvas::kZValueOverlay = 0.43f;
 float GlCanvas::kZValueOverlayTextBackground = 0.45f;
 float GlCanvas::kZValueEventBarPicking = 0.49f;
 float GlCanvas::kZValueUi = 0.61f;
 float GlCanvas::kZValueTextUi = 0.61f;
-float GlCanvas::kZValueTimeBarBg = 0.81f;
-float GlCanvas::kZValueTimeBar = 0.83f;
-float GlCanvas::kZValueTimeBarMouseLabel = 0.84f;
 float GlCanvas::kZValueMargin = 0.85f;
 float GlCanvas::kZValueSliderBg = 0.87f;
 float GlCanvas::kZValueSlider = 0.89f;
