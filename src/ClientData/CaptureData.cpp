@@ -8,11 +8,13 @@
 
 #include <algorithm>
 #include <cmath>
+#include <cstdint>
 #include <memory>
 #include <vector>
 
 #include "ClientData/FunctionUtils.h"
 #include "ClientData/ModuleData.h"
+#include "ClientData/ScopeIdConstants.h"
 #include "ObjectUtils/Address.h"
 #include "OrbitBase/Result.h"
 
@@ -85,8 +87,12 @@ const ScopeStats& CaptureData::GetScopeStatsOrDefault(uint64_t scope_id) const {
   return scope_stats_it->second;
 }
 
-void CaptureData::UpdateScopeStats(uint64_t scope_id, uint64_t elapsed_nanos) {
+void CaptureData::UpdateScopeStats(const TimerInfo& timer_info) {
+  const uint64_t scope_id = ProvideScopeId(timer_info);
+  if (scope_id == kInvalidScopeId) return;
+
   ScopeStats& stats = scope_stats_[scope_id];
+  const uint64_t elapsed_nanos = timer_info.end() - timer_info.start();
   stats.UpdateStats(elapsed_nanos);
 }
 

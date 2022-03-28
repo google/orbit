@@ -132,7 +132,7 @@ class CaptureData {
 
   [[nodiscard]] const ScopeStats& GetScopeStatsOrDefault(uint64_t scope_id) const;
 
-  void UpdateScopeStats(uint64_t scope_id, uint64_t elapsed_nanos);
+  void UpdateScopeStats(const TimerInfo& timer_info);
   void AddScopeStats(uint64_t scope_id, ScopeStats stats);
 
   void OnCaptureComplete();

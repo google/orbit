@@ -79,6 +79,7 @@ target_link_libraries(ClientData PUBLIC
 add_executable(ClientDataTests)
 target_sources(ClientDataTests PRIVATE
         CallstackDataTest.cpp
+        CaptureDataTest.cpp
         DataManagerTest.cpp
         ScopeIdProviderTest.cpp
         FunctionInfoSetTest.cpp
@@ -86,6 +87,7 @@ target_sources(ClientDataTests PRIVATE
         ModuleManagerTest.cpp
         ProcessDataTest.cpp
         ScopeTreeTimerDataTest.cpp
+        SharedTestConstants.h
         ThreadTrackDataManagerTest.cpp
         ThreadTrackDataProviderTest.cpp
         TimerTrackDataIdManagerTest.cpp

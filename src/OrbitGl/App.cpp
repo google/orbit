@@ -457,14 +457,13 @@ Future<void> OrbitApp::OnCaptureFailed(ErrorMessage error_message) {
 void OrbitApp::OnTimer(const TimerInfo& timer_info) {
   CaptureMetricProcessTimer(timer_info);
 
+  CaptureData& capture_data = GetMutableCaptureData();
+  capture_data.UpdateScopeStats(timer_info);
+
   if (timer_info.function_id() == 0) {
     GetMutableTimeGraph()->ProcessTimer(timer_info, nullptr);
     return;
   }
-
-  CaptureData& capture_data = GetMutableCaptureData();
-  uint64_t elapsed_nanos = timer_info.end() - timer_info.start();
-  capture_data.UpdateScopeStats(timer_info.function_id(), elapsed_nanos);
 
   const InstrumentedFunction& func =
       capture_data.instrumented_functions().at(timer_info.function_id());
