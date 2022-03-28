@@ -17,6 +17,7 @@
 #include "DataViews/FunctionsDataView.h"
 #include "GrpcProtos/capture.pb.h"
 #include "GrpcProtos/process.pb.h"
+#include "MetricsUploader/MetricsUploaderStub.h"
 #include "MockAppInterface.h"
 
 using orbit_client_data::CaptureData;
@@ -42,7 +43,7 @@ using ::testing::Return;
 namespace {
 struct FunctionsDataViewTest : public testing::Test {
  public:
-  explicit FunctionsDataViewTest() : view_{&app_} {
+  explicit FunctionsDataViewTest() : view_{&app_, &metrics_uploader_} {
     view_.Init();
     orbit_client_data::FunctionInfo function0{"/path/to/module", "buildid", 12, 16, "foo()"};
     functions_.emplace_back(std::move(function0));
@@ -92,6 +93,7 @@ struct FunctionsDataViewTest : public testing::Test {
 
  protected:
   orbit_data_views::MockAppInterface app_;
+  orbit_metrics_uploader::MetricsUploaderStub metrics_uploader_;
   orbit_data_views::FunctionsDataView view_;
   std::vector<orbit_client_data::FunctionInfo> functions_;
   std::vector<orbit_grpc_protos::ModuleInfo> module_infos_;

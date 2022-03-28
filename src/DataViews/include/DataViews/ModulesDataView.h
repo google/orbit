@@ -20,7 +20,8 @@ namespace orbit_data_views {
 
 class ModulesDataView : public DataView {
  public:
-  explicit ModulesDataView(AppInterface* app);
+  explicit ModulesDataView(AppInterface* app,
+                           orbit_metrics_uploader::MetricsUploader* metrics_uploader);
 
   const std::vector<Column>& GetColumns() override;
   int GetDefaultSortingColumn() override { return kColumnFileSize; }

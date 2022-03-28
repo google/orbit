@@ -1041,8 +1041,8 @@ void OrbitApp::SetSamplingReport(
     sampling_report_->ClearReport();
   }
 
-  auto report =
-      std::make_shared<SamplingReport>(this, callstack_data, post_processed_sampling_data);
+  auto report = std::make_shared<SamplingReport>(this, callstack_data, post_processed_sampling_data,
+                                                 metrics_uploader_);
   orbit_data_views::DataView* callstack_data_view = GetOrCreateDataView(DataViewType::kCallstack);
   ORBIT_CHECK(sampling_reports_callback_);
   sampling_reports_callback_(callstack_data_view, report);
@@ -1067,8 +1067,9 @@ void OrbitApp::SetSelectionReport(
     selection_report_->ClearReport();
   }
 
-  auto report = std::make_shared<SamplingReport>(
-      this, selection_callstack_data, selection_post_processed_sampling_data, has_summary);
+  auto report = std::make_shared<SamplingReport>(this, selection_callstack_data,
+                                                 selection_post_processed_sampling_data,
+                                                 metrics_uploader_, has_summary);
   orbit_data_views::DataView* callstack_data_view = GetOrCreateSelectionCallstackDataView();
 
   selection_report_ = report;
@@ -2564,21 +2565,21 @@ orbit_data_views::DataView* OrbitApp::GetOrCreateDataView(DataViewType type) {
   switch (type) {
     case DataViewType::kFunctions:
       if (!functions_data_view_) {
-        functions_data_view_ = DataView::CreateAndInit<FunctionsDataView>(this);
+        functions_data_view_ = DataView::CreateAndInit<FunctionsDataView>(this, metrics_uploader_);
         panels_.push_back(functions_data_view_.get());
       }
       return functions_data_view_.get();
 
     case DataViewType::kCallstack:
       if (!callstack_data_view_) {
-        callstack_data_view_ = DataView::CreateAndInit<CallstackDataView>(this);
+        callstack_data_view_ = DataView::CreateAndInit<CallstackDataView>(this, metrics_uploader_);
         panels_.push_back(callstack_data_view_.get());
       }
       return callstack_data_view_.get();
 
     case DataViewType::kModules:
       if (!modules_data_view_) {
-        modules_data_view_ = DataView::CreateAndInit<ModulesDataView>(this);
+        modules_data_view_ = DataView::CreateAndInit<ModulesDataView>(this, metrics_uploader_);
         panels_.push_back(modules_data_view_.get());
       }
       return modules_data_view_.get();
@@ -2602,7 +2603,8 @@ orbit_data_views::DataView* OrbitApp::GetOrCreateDataView(DataViewType type) {
 
     case DataViewType::kTracepoints:
       if (!tracepoints_data_view_) {
-        tracepoints_data_view_ = DataView::CreateAndInit<TracepointsDataView>(this);
+        tracepoints_data_view_ =
+            DataView::CreateAndInit<TracepointsDataView>(this, metrics_uploader_);
         panels_.push_back(tracepoints_data_view_.get());
       }
       return tracepoints_data_view_.get();
@@ -2615,7 +2617,8 @@ orbit_data_views::DataView* OrbitApp::GetOrCreateDataView(DataViewType type) {
 
 orbit_data_views::DataView* OrbitApp::GetOrCreateSelectionCallstackDataView() {
   if (selection_callstack_data_view_ == nullptr) {
-    selection_callstack_data_view_ = DataView::CreateAndInit<CallstackDataView>(this);
+    selection_callstack_data_view_ =
+        DataView::CreateAndInit<CallstackDataView>(this, metrics_uploader_);
     panels_.push_back(selection_callstack_data_view_.get());
   }
   return selection_callstack_data_view_.get();

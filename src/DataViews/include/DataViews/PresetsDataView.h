@@ -81,7 +81,6 @@ class PresetsDataView : public DataView {
  private:
   [[nodiscard]] orbit_preset_file::PresetFile& GetMutablePreset(unsigned int row);
 
-  orbit_metrics_uploader::MetricsUploader* metrics_uploader_;
   std::shared_ptr<orbit_base::MainThreadExecutor> main_thread_executor_;
 };
 

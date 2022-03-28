@@ -31,7 +31,9 @@ using orbit_client_data::ModuleManager;
 
 namespace orbit_data_views {
 
-FunctionsDataView::FunctionsDataView(AppInterface* app) : DataView(DataViewType::kFunctions, app) {}
+FunctionsDataView::FunctionsDataView(AppInterface* app,
+                                     orbit_metrics_uploader::MetricsUploader* metrics_uploader)
+    : DataView(DataViewType::kFunctions, app, metrics_uploader) {}
 
 const std::string FunctionsDataView::kUnselectedFunctionString = "";
 const std::string FunctionsDataView::kSelectedFunctionString = "✓";

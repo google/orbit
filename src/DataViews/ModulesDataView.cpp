@@ -29,7 +29,9 @@ using orbit_client_data::ProcessData;
 
 namespace orbit_data_views {
 
-ModulesDataView::ModulesDataView(AppInterface* app) : DataView(DataViewType::kModules, app) {}
+ModulesDataView::ModulesDataView(AppInterface* app,
+                                 orbit_metrics_uploader::MetricsUploader* metrics_uploader)
+    : DataView(DataViewType::kModules, app, metrics_uploader) {}
 
 const std::vector<DataView::Column>& ModulesDataView::GetColumns() {
   static const std::vector<Column> columns = [] {

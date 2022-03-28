@@ -26,7 +26,8 @@ namespace orbit_data_views {
 
 class SamplingReportDataView : public DataView {
  public:
-  explicit SamplingReportDataView(AppInterface* app);
+  explicit SamplingReportDataView(AppInterface* app,
+                                  orbit_metrics_uploader::MetricsUploader* metrics_uploader);
 
   const std::vector<Column>& GetColumns() override;
   int GetDefaultSortingColumn() override { return kColumnInclusive; }

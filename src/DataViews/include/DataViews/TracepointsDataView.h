@@ -19,7 +19,8 @@ namespace orbit_data_views {
 
 class TracepointsDataView : public DataView {
  public:
-  explicit TracepointsDataView(AppInterface* app);
+  explicit TracepointsDataView(AppInterface* app,
+                               orbit_metrics_uploader::MetricsUploader* metrics_uploader);
 
   const std::vector<Column>& GetColumns() override;
   int GetDefaultSortingColumn() override { return kColumnCategory; }
