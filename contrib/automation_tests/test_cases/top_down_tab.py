@@ -12,6 +12,23 @@ from pywinauto.keyboard import send_keys
 from typing import Sequence
 
 
+class SelectAllCallstackFromTopDownTab(E2ETestCase):
+    """
+    Select all CallstackEvents from the Top-Down tab by using the "Select these callstacks" context menu action.
+    """
+
+    def _execute(self):
+        self.find_control("TabItem", "Top-Down").click_input()
+        logging.info("Switched to Top-Down tab")
+        tree_view_table = Table(find_control(self.find_control('Group', 'topDownTab'), 'Tree'))
+        tree_view_table.get_item_at(0, 0).click_input()
+        # Select all threads. Selecting the "(all threads)" node would be enough, but this way at a later state we can
+        # also verify that the selection doesn't create duplicates.
+        send_keys("^a")
+        tree_view_table.get_item_at(0, 0).click_input('right')
+        self.find_context_menu_item("Select these callstacks").click_input()
+
+
 class VerifyHelloGgpTopDownContents(E2ETestCase):
     """
     Verify that the first rows of the top-down view are in line with hello_ggp.
@@ -140,8 +157,9 @@ class VerifyTopDownContentForLoadedCapture(E2ETestCase):
                 "(std::__1::__variant_detail::_Trait)1>::__destroy()::'lambda'(auto&)&&, "
                 "std::__1::__variant_detail::__base<(std::__1::__variant_detail::_Trait)1, "
                 "orbit_grpc_protos::FunctionEntry, orbit_grpc_protos::FunctionExit>&>(auto, "
-                "(std::__1::__variant_detail::_Trait)1...)",
-                "0.13% (2)", "0.13% (2)", "100.00%", "liborbituserspaceinstrumentation.so", "0x7fe84851ab10"]
+                "(std::__1::__variant_detail::_Trait)1...)", "0.13% (2)", "0.13% (2)", "100.00%",
+                "liborbituserspaceinstrumentation.so", "0x7fe84851ab10"
+            ]
         ]
         self._verify_first_rows(tree_view_table, expectations)
         logging.info("Verified content of top-down view when one thread is expanded")
@@ -219,6 +237,10 @@ class VerifyTopDownContentForLoadedCapture(E2ETestCase):
         self.expect_eq(search_item_count, 2,
                        "Searching top-down view for '{}' produces two results".format(search_term))
         logging.info("Verified result of searching top-down view for '{}'".format(search_term))
+
+        # Clear the search terms.
+        search_bar.set_focus()
+        send_keys('^a{BACKSPACE}')
 
     def _execute(self, selection_tab: bool = False):
         tab = self._switch_to_tab(selection_tab)

@@ -41,6 +41,7 @@
 #include "ClientData/ModuleManager.h"
 #include "ClientData/PostProcessedSamplingData.h"
 #include "ClientData/ProcessData.h"
+#include "ClientData/ScopeStats.h"
 #include "ClientData/TimerChain.h"
 #include "ClientData/UserDefinedCaptureData.h"
 #include "ClientFlags/ClientFlags.h"
@@ -105,6 +106,7 @@ using orbit_client_data::ModuleData;
 using orbit_client_data::PostProcessedSamplingData;
 using orbit_client_data::ProcessData;
 using orbit_client_data::SampledFunction;
+using orbit_client_data::ScopeStats;
 using orbit_client_data::ThreadID;
 using orbit_client_data::ThreadStateSliceInfo;
 using orbit_client_data::TimerBlock;
@@ -113,7 +115,6 @@ using orbit_client_data::TracepointInfoSet;
 using orbit_client_data::UserDefinedCaptureData;
 
 using orbit_client_protos::FunctionInfo;
-using orbit_client_protos::FunctionStats;
 using orbit_client_protos::LinuxAddressInfo;
 using orbit_client_protos::PresetInfo;
 using orbit_client_protos::PresetModule;
@@ -463,7 +464,7 @@ void OrbitApp::OnTimer(const TimerInfo& timer_info) {
 
   CaptureData& capture_data = GetMutableCaptureData();
   uint64_t elapsed_nanos = timer_info.end() - timer_info.start();
-  capture_data.UpdateFunctionStats(timer_info.function_id(), elapsed_nanos);
+  capture_data.UpdateScopeStats(timer_info.function_id(), elapsed_nanos);
 
   const InstrumentedFunction& func =
       capture_data.instrumented_functions().at(timer_info.function_id());
@@ -2704,7 +2705,7 @@ void OrbitApp::AddFrameTrack(uint64_t instrumented_function_id) {
   // track actually has hits in the capture data. Otherwise we can end up in inconsistent
   // states where "empty" frame tracks exist in the capture data (which would also be
   // serialized).
-  const FunctionStats& stats = GetCaptureData().GetFunctionStatsOrDefault(instrumented_function_id);
+  const ScopeStats& stats = GetCaptureData().GetScopeStatsOrDefault(instrumented_function_id);
   if (stats.count() > 1) {
     frame_track_online_processor_.AddFrameTrack(instrumented_function_id);
     GetMutableCaptureData().EnableFrameTrack(instrumented_function_id);
@@ -2814,7 +2815,7 @@ void OrbitApp::RefreshFrameTracks() {
 
 void OrbitApp::AddFrameTrackTimers(uint64_t instrumented_function_id) {
   ORBIT_CHECK(HasCaptureData());
-  const FunctionStats& stats = GetCaptureData().GetFunctionStatsOrDefault(instrumented_function_id);
+  const ScopeStats& stats = GetCaptureData().GetScopeStatsOrDefault(instrumented_function_id);
   if (stats.count() == 0) {
     return;
   }

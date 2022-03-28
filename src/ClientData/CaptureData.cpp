@@ -7,6 +7,7 @@
 #include <absl/container/flat_hash_map.h>
 
 #include <algorithm>
+#include <cmath>
 #include <memory>
 #include <vector>
 
@@ -16,7 +17,6 @@
 #include "OrbitBase/Result.h"
 
 using orbit_client_protos::FunctionInfo;
-using orbit_client_protos::FunctionStats;
 using orbit_client_protos::LinuxAddressInfo;
 
 using orbit_grpc_protos::CaptureStarted;
@@ -76,48 +76,30 @@ void CaptureData::ForEachThreadStateSliceIntersectingTimeRange(
   }
 }
 
-const FunctionStats& CaptureData::GetFunctionStatsOrDefault(
-    uint64_t instrumented_function_id) const {
-  static const FunctionStats kDefaultFunctionStats;
-  auto function_stats_it = functions_stats_.find(instrumented_function_id);
-  if (function_stats_it == functions_stats_.end()) {
-    return kDefaultFunctionStats;
+const ScopeStats& CaptureData::GetScopeStatsOrDefault(uint64_t scope_id) const {
+  static const ScopeStats kDefaultScopeStats{};
+  auto scope_stats_it = scope_stats_.find(scope_id);
+  if (scope_stats_it == scope_stats_.end()) {
+    return kDefaultScopeStats;
   }
-  return function_stats_it->second;
+  return scope_stats_it->second;
 }
 
-void CaptureData::UpdateFunctionStats(uint64_t instrumented_function_id, uint64_t elapsed_nanos) {
-  FunctionStats& stats = functions_stats_[instrumented_function_id];
-  stats.set_count(stats.count() + 1);
-  stats.set_total_time_ns(stats.total_time_ns() + elapsed_nanos);
-  uint64_t old_avg = stats.average_time_ns();
-  stats.set_average_time_ns(stats.total_time_ns() / stats.count());
-  // variance(N) = ( (N-1)*variance(N-1) + (x-avg(N))*(x-avg(N-1)) ) / N
-  stats.set_variance_ns(((stats.count() - 1) * stats.variance_ns() +
-                         (elapsed_nanos - stats.average_time_ns()) * (elapsed_nanos - old_avg)) /
-                        static_cast<double>(stats.count()));
-  // std_dev = sqrt(variance)
-  stats.set_std_dev_ns(static_cast<uint64_t>(sqrt(stats.variance_ns())));
-
-  if (elapsed_nanos > stats.max_ns()) {
-    stats.set_max_ns(elapsed_nanos);
-  }
-
-  if (stats.min_ns() == 0 || elapsed_nanos < stats.min_ns()) {
-    stats.set_min_ns(elapsed_nanos);
-  }
+void CaptureData::UpdateScopeStats(uint64_t scope_id, uint64_t elapsed_nanos) {
+  ScopeStats& stats = scope_stats_[scope_id];
+  stats.UpdateStats(elapsed_nanos);
 }
 
-void CaptureData::AddFunctionStats(uint64_t instrumented_function_id,
-                                   orbit_client_protos::FunctionStats stats) {
-  functions_stats_.insert_or_assign(instrumented_function_id, std::move(stats));
+void CaptureData::AddScopeStats(uint64_t scope_id, ScopeStats stats) {
+  scope_stats_.insert_or_assign(scope_id, stats);
 }
 
 void CaptureData::OnCaptureComplete() {
   thread_track_data_provider_->OnCaptureComplete();
 
   // Recalculate standard deviation as the running calculation may have introduced error.
-  absl::flat_hash_map<int, unsigned long> id_to_sum_of_deviations_squared;
+  // TODO(b/226880177): This should not be necessary and should be removed.
+  absl::flat_hash_map<int, uint64_t> id_to_sum_of_deviations_squared;
 
   for (const orbit_client_data::TimerChain* chain :
        thread_track_data_provider_->GetAllThreadTimerChains()) {
@@ -125,9 +107,9 @@ void CaptureData::OnCaptureComplete() {
     for (const orbit_client_data::TimerBlock& block : *chain) {
       for (uint64_t i = 0; i < block.size(); i++) {
         const orbit_client_protos::TimerInfo& timer_info = block[i];
-        const auto& stats_it = functions_stats_.find(timer_info.function_id());
-        if (stats_it == functions_stats_.end()) continue;
-        FunctionStats& stats = stats_it->second;
+        const auto& stats_it = scope_stats_.find(timer_info.function_id());
+        if (stats_it == scope_stats_.end()) continue;
+        ScopeStats& stats = stats_it->second;
         if (stats.count() > 0) {
           uint64_t elapsed_nanos = timer_info.end() - timer_info.start();
           int64_t deviation = elapsed_nanos - stats.average_time_ns();
@@ -138,12 +120,12 @@ void CaptureData::OnCaptureComplete() {
   }
 
   for (auto& [id, sum_of_deviations_squared] : id_to_sum_of_deviations_squared) {
-    const auto& stats_it = functions_stats_.find(id);
-    if (stats_it == functions_stats_.end()) continue;
-    FunctionStats& stats = stats_it->second;
+    const auto& stats_it = scope_stats_.find(id);
+    if (stats_it == scope_stats_.end()) continue;
+    ScopeStats& stats = stats_it->second;
     if (stats.count() > 0) {
       stats.set_variance_ns(sum_of_deviations_squared / static_cast<double>(stats.count()));
-      stats.set_std_dev_ns(static_cast<uint64_t>(sqrt(stats.variance_ns())));
+      stats.set_std_dev_ns(static_cast<uint64_t>(std::sqrt(stats.variance_ns())));
     }
   }
 }

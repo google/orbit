@@ -11,6 +11,7 @@
 #include "OrbitBase/Profiling.h"
 #include "OrbitBase/ThreadUtils.h"
 #include "OrbitBase/UniqueResource.h"
+#include "WindowsUtils/SafeHandle.h"
 
 // clang-format off
 #include <psapi.h>
@@ -31,7 +32,7 @@ std::vector<Thread> ListThreads(uint32_t pid) {
     ORBIT_ERROR("Calling CreateToolhelp32Snapshot for threads");
     return {};
   }
-  orbit_base::unique_resource handle{thread_snap_handle, ::CloseHandle};
+  SafeHandle handle_closer(thread_snap_handle);
 
   // Retrieve information about the first thread.
   thread_entry.dwSize = sizeof(THREADENTRY32);

@@ -5,6 +5,8 @@
 #ifndef WINDOWS_UTILS_DLL_INJECTION_H_
 #define WINDOWS_UTILS_DLL_INJECTION_H_
 
+#include <absl/types/span.h>
+
 #include <filesystem>
 #include <string>
 #include <vector>
@@ -20,7 +22,7 @@ namespace orbit_windows_utils {
 // is copied to the target's memory and its address is passed to the thread function as argument.
 [[nodiscard]] ErrorMessageOr<void> CreateRemoteThread(uint32_t pid, std::string_view module_name,
                                                       std::string_view function_name,
-                                                      std::vector<uint8_t> parameter);
+                                                      absl::Span<const char> parameter);
 
 // Get address of function in a remote process.
 [[nodiscard]] ErrorMessageOr<uint64_t> GetRemoteProcAddress(uint32_t pid,

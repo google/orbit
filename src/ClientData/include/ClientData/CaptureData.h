@@ -29,6 +29,7 @@
 #include "ClientData/PostProcessedSamplingData.h"
 #include "ClientData/ProcessData.h"
 #include "ClientData/ScopeIdProvider.h"
+#include "ClientData/ScopeStats.h"
 #include "ClientData/ThreadStateSliceInfo.h"
 #include "ClientData/ThreadTrackDataProvider.h"
 #include "ClientData/TimerChain.h"
@@ -129,12 +130,10 @@ class CaptureData {
       uint32_t thread_id, uint64_t min_timestamp, uint64_t max_timestamp,
       const std::function<void(const ThreadStateSliceInfo&)>& action) const;
 
-  [[nodiscard]] const orbit_client_protos::FunctionStats& GetFunctionStatsOrDefault(
-      uint64_t instrumented_function_id) const;
+  [[nodiscard]] const ScopeStats& GetScopeStatsOrDefault(uint64_t scope_id) const;
 
-  void UpdateFunctionStats(uint64_t instrumented_function_id, uint64_t elapsed_nanos);
-  void AddFunctionStats(uint64_t instrumented_function_id,
-                        orbit_client_protos::FunctionStats stats);
+  void UpdateScopeStats(uint64_t scope_id, uint64_t elapsed_nanos);
+  void AddScopeStats(uint64_t scope_id, ScopeStats stats);
 
   void OnCaptureComplete();
 
@@ -259,7 +258,7 @@ class CaptureData {
 
   absl::flat_hash_map<uint64_t, orbit_client_protos::LinuxAddressInfo> address_infos_;
 
-  absl::flat_hash_map<uint64_t, orbit_client_protos::FunctionStats> functions_stats_;
+  absl::flat_hash_map<uint64_t, ScopeStats> scope_stats_;
 
   absl::flat_hash_map<uint32_t, std::string> thread_names_;
 

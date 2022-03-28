@@ -13,6 +13,7 @@
 #include "OrbitBase/Logging.h"
 #include "OrbitBase/StringConversion.h"
 #include "OrbitBase/UniqueResource.h"
+#include "WindowsUtils/SafeHandle.h"
 
 // clang-format off
 #include <psapi.h>
@@ -34,7 +35,7 @@ std::vector<Module> ListModules(uint32_t pid) {
     ORBIT_ERROR("Calling CreateToolhelp32Snapshot for modules");
     return {};
   }
-  orbit_base::unique_resource handle{module_snap_handle, ::CloseHandle};
+  SafeHandle handle_closer(module_snap_handle);
 
   // Retrieve information about the first module.
   module_entry.dwSize = sizeof(MODULEENTRY32);

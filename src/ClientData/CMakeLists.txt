@@ -27,6 +27,7 @@ target_sources(ClientData PUBLIC
         include/ClientData/ModuleManager.h
         include/ClientData/PostProcessedSamplingData.h
         include/ClientData/ProcessData.h
+        include/ClientData/ScopeStats.h
         include/ClientData/ScopeTreeTimerData.h
         include/ClientData/ThreadStateSliceInfo.h
         include/ClientData/ThreadTrackDataManager.h
@@ -53,6 +54,7 @@ target_sources(ClientData PRIVATE
         ModuleManager.cpp
         PostProcessedSamplingData.cpp
         ProcessData.cpp
+        ScopeStats.cpp
         ScopeTreeTimerData.cpp
         ThreadTrackDataProvider.cpp
         TimerChain.cpp

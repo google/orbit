@@ -189,6 +189,10 @@ class VerifyBottomUpContentForLoadedCapture(E2ETestCase):
                        "Searching bottom-up view for '{}' produces one result".format(search_term))
         logging.info("Verified result of searching bottom-up view for '{}'".format(search_term))
 
+        # Clear the search terms.
+        search_bar.set_focus()
+        send_keys('^a{BACKSPACE}')
+
     def _execute(self, selection_tab: bool = False):
         tab = self._switch_to_tab(selection_tab)
         tree_view_table = Table(find_control(tab, 'Tree'))
