@@ -185,8 +185,7 @@ void CallTreeWidget::ResizeColumnsIfNecessary() {
   column_resizing_state_ = ColumnResizingState::kDone;
 }
 
-static int FindDepthDifferenceFromIndexToDeepestVisibleNode(QTreeView* tree_view,
-                                                            const QModelIndex& index) {
+static int ComputeHeightOfSubtreeOfVisibleNodes(QTreeView* tree_view, const QModelIndex& index) {
   if (!tree_view->isExpanded(index)) {
     return 0;
   }
@@ -194,8 +193,8 @@ static int FindDepthDifferenceFromIndexToDeepestVisibleNode(QTreeView* tree_view
   int depth_difference = 0;
   for (int i = 0; i < index.model()->rowCount(index); ++i) {
     const QModelIndex& child = index.child(i, 0);
-    depth_difference = std::max(
-        depth_difference, 1 + FindDepthDifferenceFromIndexToDeepestVisibleNode(tree_view, child));
+    depth_difference =
+        std::max(depth_difference, 1 + ComputeHeightOfSubtreeOfVisibleNodes(tree_view, child));
   }
   return depth_difference;
 }
@@ -208,8 +207,7 @@ void CallTreeWidget::ResizeThreadOrFunctionColumnToShowVisibleDescendants(
   }
 
   int one_based_depth_of_deepest_visible_descendant =
-      one_based_depth_of_index +
-      FindDepthDifferenceFromIndexToDeepestVisibleNode(ui_->callTreeTreeView, index);
+      one_based_depth_of_index + ComputeHeightOfSubtreeOfVisibleNodes(ui_->callTreeTreeView, index);
 
   static constexpr int kMinThreadOrFunctionColumnSizeWithoutIndentation = 100;
   int min_thread_or_function_column_size =
