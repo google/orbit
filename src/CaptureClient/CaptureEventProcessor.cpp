@@ -16,6 +16,7 @@
 #include "ClientData/CallstackEvent.h"
 #include "ClientData/CallstackInfo.h"
 #include "ClientData/CallstackType.h"
+#include "ClientData/LinuxAddressInfo.h"
 #include "ClientProtos/capture_data.pb.h"
 #include "GrpcProtos/Constants.h"
 #include "OrbitBase/Logging.h"
@@ -25,9 +26,9 @@ namespace orbit_capture_client {
 using orbit_client_data::CallstackEvent;
 using orbit_client_data::CallstackInfo;
 using orbit_client_data::CallstackType;
+using orbit_client_data::LinuxAddressInfo;
 using orbit_client_data::ThreadStateSliceInfo;
 
-using orbit_client_protos::LinuxAddressInfo;
 using orbit_client_protos::TimerInfo;
 
 using orbit_grpc_protos::AddressInfo;
@@ -566,11 +567,9 @@ void CaptureEventProcessorForListener::ProcessAddressInfo(const AddressInfo& add
   std::string function_name = string_intern_pool_.at(address_info.function_name_key());
   std::string module_name = string_intern_pool_.at(address_info.module_name_key());
 
-  LinuxAddressInfo linux_address_info;
-  linux_address_info.set_absolute_address(address_info.absolute_address());
-  linux_address_info.set_module_path(module_name);
-  linux_address_info.set_function_name(llvm::demangle(function_name));
-  linux_address_info.set_offset_in_function(address_info.offset_in_function());
+  LinuxAddressInfo linux_address_info{address_info.absolute_address(),
+                                      address_info.offset_in_function(), module_name,
+                                      llvm::demangle(function_name)};
   capture_listener_->OnAddressInfo(linux_address_info);
 }
 

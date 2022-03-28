@@ -41,12 +41,10 @@ std::unique_ptr<CaptureData> GenerateTestCaptureData() {
                                                     CaptureData::DataSource::kLiveCapture);
 
   // AddressInfo
-  orbit_client_protos::LinuxAddressInfo address_info;
-  address_info.set_absolute_address(kInstructionAbsoluteAddress);
-  address_info.set_offset_in_function(kInstructionAbsoluteAddress - kFunctionAbsoluteAddress);
-  address_info.set_function_name(kFunctionName);
-  address_info.set_module_path(kModuleName);
-  capture_data->InsertAddressInfo(address_info);
+  orbit_client_data::LinuxAddressInfo address_info{
+      kInstructionAbsoluteAddress, kInstructionAbsoluteAddress - kFunctionAbsoluteAddress,
+      kModuleName, kFunctionName};
+  capture_data->InsertAddressInfo(std::move(address_info));
 
   // CallstackInfo
   const std::vector<uint64_t> callstack_frames{kInstructionAbsoluteAddress};

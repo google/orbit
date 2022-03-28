@@ -23,13 +23,12 @@ using orbit_client_data::CallstackEvent;
 using orbit_client_data::CallstackInfo;
 using orbit_client_data::CallstackType;
 using orbit_client_data::CaptureData;
+using orbit_client_data::LinuxAddressInfo;
 using orbit_client_data::ModuleManager;
 using orbit_client_data::PostProcessedSamplingData;
 using orbit_client_data::SampledFunction;
 using orbit_client_data::SortedCallstackReport;
 using orbit_client_data::ThreadSampleData;
-
-using orbit_client_protos::LinuxAddressInfo;
 
 using orbit_grpc_protos::CaptureStarted;
 
@@ -171,11 +170,8 @@ class SamplingDataPostProcessorTest : public ::testing::Test {
 
   void AddAddressInfo(std::string module_path, std::string function_name, uint64_t absolute_address,
                       uint64_t offset_in_function) {
-    LinuxAddressInfo linux_address_info;
-    linux_address_info.set_module_path(std::move(module_path));
-    linux_address_info.set_function_name(std::move(function_name));
-    linux_address_info.set_absolute_address(absolute_address);
-    linux_address_info.set_offset_in_function(offset_in_function);
+    LinuxAddressInfo linux_address_info{absolute_address, offset_in_function,
+                                        std::move(module_path), std::move(function_name)};
     capture_data_.InsertAddressInfo(std::move(linux_address_info));
   }
 

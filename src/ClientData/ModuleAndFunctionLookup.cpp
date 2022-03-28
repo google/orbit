@@ -6,10 +6,10 @@
 
 #include <ClientData/CaptureData.h>
 #include <ClientData/FunctionUtils.h>
+#include <ClientData/LinuxAddressInfo.h>
 #include <ObjectUtils/Address.h>
 
 using orbit_client_protos::FunctionInfo;
-using orbit_client_protos::LinuxAddressInfo;
 
 namespace orbit_client_data {
 namespace {

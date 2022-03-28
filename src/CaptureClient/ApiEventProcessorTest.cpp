@@ -46,7 +46,7 @@ class MockCaptureListener : public CaptureListener {
   MOCK_METHOD(void, OnThreadName, (uint32_t /*thread_id*/, std::string /*thread_name*/),
               (override));
   MOCK_METHOD(void, OnThreadStateSlice, (orbit_client_data::ThreadStateSliceInfo), (override));
-  MOCK_METHOD(void, OnAddressInfo, (orbit_client_protos::LinuxAddressInfo), (override));
+  MOCK_METHOD(void, OnAddressInfo, (orbit_client_data::LinuxAddressInfo), (override));
   MOCK_METHOD(void, OnUniqueTracepointInfo,
               (uint64_t /*key*/, orbit_grpc_protos::TracepointInfo /*tracepoint_info*/),
               (override));

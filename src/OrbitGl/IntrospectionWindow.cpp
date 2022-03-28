@@ -140,7 +140,7 @@ class IntrospectionCaptureListener : public orbit_capture_client::CaptureListene
   void OnThreadStateSlice(orbit_client_data::ThreadStateSliceInfo /*thread_state_slice*/) override {
     ORBIT_UNREACHABLE();
   }
-  void OnAddressInfo(orbit_client_protos::LinuxAddressInfo /*address_info*/) override {
+  void OnAddressInfo(orbit_client_data::LinuxAddressInfo /*address_info*/) override {
     ORBIT_UNREACHABLE();
   }
   void OnUniqueTracepointInfo(uint64_t /*key*/,

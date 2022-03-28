@@ -17,7 +17,6 @@
 #include "OrbitBase/Result.h"
 
 using orbit_client_protos::FunctionInfo;
-using orbit_client_protos::LinuxAddressInfo;
 
 using orbit_grpc_protos::CaptureStarted;
 using orbit_grpc_protos::InstrumentedFunction;
@@ -151,11 +150,9 @@ void CaptureData::InsertAddressInfo(LinuxAddressInfo address_info) {
   const uint64_t absolute_function_address = absolute_address - address_info.offset_in_function();
   // Ensure we know the symbols also for the resolved function address;
   if (!address_infos_.contains(absolute_function_address)) {
-    LinuxAddressInfo function_info;
-    function_info.CopyFrom(address_info);
-    function_info.set_absolute_address(absolute_function_address);
-    function_info.set_offset_in_function(0);
-    address_infos_.emplace(absolute_function_address, function_info);
+    LinuxAddressInfo function_info{absolute_function_address, /*offset_in_function=*/0,
+                                   address_info.module_path(), address_info.function_name()};
+    address_infos_.emplace(absolute_function_address, std::move(function_info));
   }
   address_infos_.emplace(absolute_address, std::move(address_info));
 }
