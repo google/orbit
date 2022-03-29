@@ -9,11 +9,14 @@
 
 #include <chrono>
 #include <cstdint>
+#include <future>
 #include <iostream>
 #include <string_view>
 #include <thread>
 
 ABSL_FLAG(int, sleep_for_ms, 0, "The program will sleep for X milliseconds");
+
+ABSL_FLAG(bool, infinite_sleep, false, "The program will sleep indefinitely");
 
 ABSL_FLAG(int, exit_code, 0, "The program returns this exit_code");
 
@@ -21,6 +24,12 @@ int main(int argc, char* argv[]) {
   absl::ParseCommandLine(argc, argv);
 
   std::cout << "Some example output" << std::endl;
+
+  bool infinite_sleep = absl::GetFlag(FLAGS_infinite_sleep);
+  if (infinite_sleep) {
+    // Wait on a promise which value is never set.
+    std::promise<void>().get_future().wait();
+  }
 
   int sleep_time = absl::GetFlag(FLAGS_sleep_for_ms);
   if (sleep_time != 0) {

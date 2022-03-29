@@ -3,10 +3,14 @@
 // found in the LICENSE file.
 
 #include "OrbitBase/ExecutablePath.h"
+#include "OrbitBase/GetLastError.h"
+#include "OrbitBase/Logging.h"
 #include "Test/Path.h"
 #include "TestUtils/TestUtils.h"
 #include "WindowsUtils/CreateProcess.h"
 #include "WindowsUtils/ProcessList.h"
+
+#pragma optimize("", off)
 
 namespace {
 std::filesystem::path GetTestExecutablePath() {
@@ -14,22 +18,24 @@ std::filesystem::path GetTestExecutablePath() {
   return path;
 }
 
-}  // namespace
-
 using orbit_windows_utils::ProcessInfo;
 using orbit_windows_utils::ProcessList;
 
+}  // namespace
+
 TEST(CreateProcess, SuccessfulProcessCreation) {
-  constexpr const char* kArguments = "sleep_for_ms=5000";
+  constexpr const char* kArguments = "--infinite_sleep=true";
   auto result = orbit_windows_utils::CreateProcess(GetTestExecutablePath(), "", kArguments);
   ASSERT_FALSE(result.has_error());
   ProcessInfo& process_info = result.value();
   std::unique_ptr<ProcessList> process_list = ProcessList::Create();
   EXPECT_TRUE(process_list->GetProcessByPid(process_info.process_id).has_value());
+  EXPECT_NE(TerminateProcess(*process_info.process_handle, /*exit_code*/ 0), 0)
+      << orbit_base::GetLastErrorAsString();
 }
 
 TEST(CreateProcess, CommandLine) {
-  constexpr const char* kArguments = "sleep_for_ms=20";
+  constexpr const char* kArguments = "--sleep_for_ms=20";
   auto result = orbit_windows_utils::CreateProcess(GetTestExecutablePath(), "", kArguments);
   ASSERT_FALSE(result.has_error());
   ProcessInfo& process_info = result.value();

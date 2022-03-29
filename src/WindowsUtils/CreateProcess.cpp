@@ -19,62 +19,55 @@ namespace orbit_windows_utils {
 
 namespace {
 
-ErrorMessageOr<ProcessInfo> CreateProcess(std::filesystem::path executable,
-                                          std::filesystem::path working_directory,
-                                          std::string arguments, uint32_t creation_flags) {
-  if (!std::filesystem::exists(executable)) {
-    return ErrorMessage(absl::StrFormat("Executable does not exist: \"%s\"", executable.string()));
-  }
-
-  if (!working_directory.empty() && !std::filesystem::exists(working_directory)) {
+ErrorMessageOr<ProcessInfo> CreateProcess(const std::filesystem::path& executable_path,
+                                          const std::filesystem::path& working_directory_path,
+                                          const std::string_view arguments,
+                                          uint32_t creation_flags) {
+  if (!std::filesystem::exists(executable_path)) {
     return ErrorMessage(
-        absl::StrFormat("Working directory does not exist: \"%s\"", working_directory.string()));
+        absl::StrFormat("Executable does not exist: \"%s\"", executable_path.string()));
   }
 
-  ProcessInfo process_info;
-  process_info.working_directory = working_directory.string();
-  process_info.command_line = executable.string();
+  if (!working_directory_path.empty() && !std::filesystem::exists(working_directory_path)) {
+    return ErrorMessage(absl::StrFormat("Working directory does not exist: \"%s\"",
+                                        working_directory_path.string()));
+  }
+
+  std::string working_directory = working_directory_path.string();
+  std::string command_line = executable_path.string();
   if (!arguments.empty()) {
-    process_info.command_line += absl::StrFormat(" %s", arguments);
+    command_line += absl::StrFormat(" %s", arguments);
   }
 
-  const char* current_directory =
-      process_info.working_directory.empty() ? nullptr : process_info.working_directory.c_str();
+  STARTUPINFOA startup_info = {0};
+  PROCESS_INFORMATION process_info = {0};
+  startup_info.cb = sizeof(startup_info);
 
-  STARTUPINFOA si = {0};
-  PROCESS_INFORMATION pi = {0};
-  si.cb = sizeof(si);
-
-  if (CreateProcessA(/*lpApplicationName=*/nullptr, process_info.command_line.data(),
+  if (CreateProcessA(/*lpApplicationName=*/nullptr, command_line.data(),
                      /*lpProcessAttributes*/ nullptr, /*lpThreadAttributes*/ nullptr,
-                     /*bInheritHandles*/ FALSE,
-                     /*dwCreationFlags=*/creation_flags, /*lpEnvironment*/ nullptr,
-                     /*lpCurrentDirectory=*/current_directory,
-                     /*lpStartupInfo=*/&si,
-                     /*lpProcessInformation=*/&pi) == 0) {
+                     /*bInheritHandles*/ FALSE, creation_flags, /*lpEnvironment*/ nullptr,
+                     working_directory.empty() ? nullptr : working_directory.c_str(), &startup_info,
+                     &process_info) == 0) {
     return ErrorMessage(
         absl::StrFormat("Calling \"CreateProcess\": %s", orbit_base::GetLastErrorAsString()));
   }
 
-  // A SafeHandle makes sure "CloseHandle" is called when process_info goes out of scope.
-  process_info.process_handle = SafeHandle(pi.hProcess);
-  process_info.thread_handle = SafeHandle(pi.hThread);
-
-  process_info.process_id = pi.dwProcessId;
-  return process_info;
+  // A SafeHandle makes sure "CloseHandle" is called when the ProcessInfo goes out of scope.
+  return ProcessInfo{working_directory, command_line, process_info.dwProcessId,
+                     SafeHandle(process_info.hProcess), SafeHandle(process_info.hThread)};
 }
 
 }  // namespace
 
-ErrorMessageOr<ProcessInfo> CreateProcessToDebug(std::filesystem::path executable,
-                                                 std::filesystem::path working_directory,
-                                                 std::string arguments) {
+ErrorMessageOr<ProcessInfo> CreateProcessToDebug(const std::filesystem::path& executable,
+                                                 const std::filesystem::path& working_directory,
+                                                 const std::string_view arguments) {
   return CreateProcess(executable, working_directory, arguments, DEBUG_ONLY_THIS_PROCESS);
 }
 
-ErrorMessageOr<ProcessInfo> CreateProcess(std::filesystem::path executable,
-                                          std::filesystem::path working_directory,
-                                          std::string arguments) {
+ErrorMessageOr<ProcessInfo> CreateProcess(const std::filesystem::path& executable,
+                                          const std::filesystem::path& working_directory,
+                                          const std::string_view arguments) {
   return CreateProcess(executable, working_directory, arguments, /*creation_flags=*/0);
 }
 

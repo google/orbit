@@ -25,14 +25,14 @@ struct ProcessInfo {
 };
 
 // Create a process.
-ErrorMessageOr<ProcessInfo> CreateProcess(std::filesystem::path executable,
-                                          std::filesystem::path working_directory,
-                                          std::string arguments);
+ErrorMessageOr<ProcessInfo> CreateProcess(const std::filesystem::path& executable,
+                                          const std::filesystem::path& working_directory,
+                                          const std::string_view arguments);
 
 // Create a process for a debugger.
-ErrorMessageOr<ProcessInfo> CreateProcessToDebug(std::filesystem::path executable,
-                                                 std::filesystem::path working_directory,
-                                                 std::string arguments);
+ErrorMessageOr<ProcessInfo> CreateProcessToDebug(const std::filesystem::path& executable,
+                                                 const std::filesystem::path& working_directory,
+                                                 const std::string_view arguments);
 
 }  // namespace orbit_windows_utils
 
