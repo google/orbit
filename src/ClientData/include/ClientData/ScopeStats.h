@@ -20,18 +20,13 @@ class ScopeStats {
 
   void UpdateStats(uint64_t elapsed_nanos);
 
+  [[nodiscard]] uint64_t ComputeAverageTimeNs() const;
+
   [[nodiscard]] uint64_t count() const { return count_; }
   void set_count(uint64_t count) { count_ = count; }
 
   [[nodiscard]] uint64_t total_time_ns() const { return total_time_ns_; }
   void set_total_time_ns(uint64_t set_total_time_ns) { total_time_ns_ = set_total_time_ns; }
-
-  [[nodiscard]] uint64_t average_time_ns() const {
-    if (count_ == 0) {
-      return 0;
-    }
-    return total_time_ns_ / count_;
-  }
 
   [[nodiscard]] uint64_t min_ns() const { return min_ns_; }
   void set_min_ns(uint64_t min_ns) { min_ns_ = min_ns; }

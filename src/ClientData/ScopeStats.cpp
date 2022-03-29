@@ -8,11 +8,12 @@
 
 namespace orbit_client_data {
 void ScopeStats::UpdateStats(uint64_t elapsed_nanos) {
-  double old_avg = static_cast<double>(average_time_ns());
+  auto old_avg = static_cast<double>(ComputeAverageTimeNs());
   count_++;
   total_time_ns_ += elapsed_nanos;
-  double new_avg = static_cast<double>(average_time_ns());  // it should be double for arithmetics
-  double elapsed_nanos_double = static_cast<double>(elapsed_nanos);
+  auto new_avg =
+      static_cast<double>(ComputeAverageTimeNs());  // it should be double for arithmetics
+  auto elapsed_nanos_double = static_cast<double>(elapsed_nanos);
 
   // variance(N) = ( (N-1)*variance(N-1) + (x-avg(N))*(x-avg(N-1)) ) / N
   variance_ns_ = ((static_cast<double>(count_ - 1) * variance_ns_ +
@@ -28,5 +29,12 @@ void ScopeStats::UpdateStats(uint64_t elapsed_nanos) {
   if (min_ns_ == 0 || elapsed_nanos < min_ns_) {
     min_ns_ = elapsed_nanos;
   }
+}
+
+uint64_t ScopeStats::ComputeAverageTimeNs() const {
+  if (count_ == 0) {
+    return 0;
+  }
+  return total_time_ns_ / count_;
 }
 }  // namespace orbit_client_data

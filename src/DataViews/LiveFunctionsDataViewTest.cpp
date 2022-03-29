@@ -765,8 +765,8 @@ TEST_F(LiveFunctionsDataViewTest, ColumnSortingShowsRightResults) {
     string_to_raw_value.insert_or_assign(entry[kColumnCount], stats.count());
     entry[kColumnTimeTotal] = GetExpectedDisplayTime(stats.total_time_ns());
     string_to_raw_value.insert_or_assign(entry[kColumnTimeTotal], stats.total_time_ns());
-    entry[kColumnTimeAvg] = GetExpectedDisplayTime(stats.average_time_ns());
-    string_to_raw_value.insert_or_assign(entry[kColumnTimeAvg], stats.average_time_ns());
+    entry[kColumnTimeAvg] = GetExpectedDisplayTime(stats.ComputeAverageTimeNs());
+    string_to_raw_value.insert_or_assign(entry[kColumnTimeAvg], stats.ComputeAverageTimeNs());
     entry[kColumnTimeMin] = GetExpectedDisplayTime(stats.min_ns());
     string_to_raw_value.insert_or_assign(entry[kColumnTimeMin], stats.min_ns());
     entry[kColumnTimeMax] = GetExpectedDisplayTime(stats.max_ns());
