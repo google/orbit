@@ -263,6 +263,7 @@ target_sources(libunwindstack_tests PRIVATE
   tests/RegsInfoTest.cpp
   tests/RegsIterateTest.cpp
   tests/RegsStepIfSignalHandlerTest.cpp
+  tests/RegsRemoteTest.cpp
   tests/RegsTest.cpp
   tests/SymbolsTest.cpp
 

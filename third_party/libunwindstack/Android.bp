@@ -313,6 +313,7 @@ cc_defaults {
         "tests/MemoryXzTest.cpp",
         "tests/RegsInfoTest.cpp",
         "tests/RegsIterateTest.cpp",
+        "tests/RegsRemoteTest.cpp",
         "tests/RegsStepIfSignalHandlerTest.cpp",
         "tests/RegsTest.cpp",
         "tests/SymbolsTest.cpp",
