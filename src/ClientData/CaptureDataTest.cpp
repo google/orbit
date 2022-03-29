@@ -1,4 +1,3 @@
-
 // Copyright (c) 2022 The Orbit Authors. All rights reserved.
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
@@ -18,6 +17,8 @@
 #include "GrpcProtos/capture.pb.h"
 
 namespace orbit_client_data {
+
+namespace {
 
 class MockScopeIdProvider : public ScopeIdProvider {
  public:
@@ -42,6 +43,8 @@ class CaptureDataTest : public testing::Test {
   CaptureData capture_data_;
 };
 
+}  // namespace
+
 constexpr size_t kTimersForFirstId = 3;
 constexpr size_t kTimersForSecondId = 2;
 constexpr size_t kTimerCount = kTimersForFirstId + kTimersForSecondId;
@@ -53,14 +56,14 @@ constexpr std::array<uint64_t, kTimerCount> kStarts = {10, 20, 30, 40, 50};
 constexpr std::array<uint64_t, kTimersForFirstId> kDurationsForFirstId = {300, 100, 200};
 constexpr std::array<uint64_t, kTimersForSecondId> kDurationsForSecondId = {500, 400};
 
-const std::array<uint64_t, kTimerCount> kDurations = [] {
+static const std::array<uint64_t, kTimerCount> kDurations = [] {
   std::array<uint64_t, kTimerCount> result;
   std::copy(std::begin(kDurationsForFirstId), std::end(kDurationsForFirstId), std::begin(result));
   std::copy(std::begin(kDurationsForSecondId), std::end(kDurationsForSecondId),
             std::begin(result) + kTimersForFirstId);
   return result;
 }();
-const std::array<TimerInfo, kTimerCount> kTimerInfos = [] {
+static const std::array<TimerInfo, kTimerCount> kTimerInfos = [] {
   std::array<TimerInfo, kTimerCount> result;
   for (size_t i = 0; i < kTimerCount; ++i) {
     result[i].set_function_id(kTimerIds[i]);
