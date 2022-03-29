@@ -77,6 +77,7 @@ class SymbolsDialog : public QDialog {
   [[nodiscard]] OverrideWarningResult DisplayOverrideWarning();
   void SetUpModuleHeadlineLabel();
   void DisableAddFolder();
+  void SetUpInfoLabel();
 };
 
 }  // namespace orbit_config_widgets

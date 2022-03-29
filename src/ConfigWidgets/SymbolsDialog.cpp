@@ -29,6 +29,13 @@ constexpr const char* kModuleHeadlineLabel = "Add Symbols for <font color=\"#E64
 constexpr const char* kOverrideWarningText =
     "The Build ID in the file you selected does not match. This may lead to unexpected behavior in "
     "Orbit.<br />Override to use this file.";
+constexpr const char* kInfoLabelTemplate =
+    "<p>Add folders and files to the symbol locations Orbit loads from:</p><p><b>Add Folder</b> to "
+    "add a symbol location. The symbol files' filenames and build IDs must match the module's name "
+    "and build ID. Supported file extensions are “.so”, “.debug”, “.so.debug”, “.dll” and "
+    "“.pdb”.</p><p><b>Add File</b> to load from a symbol file with a different filename%1</p>";
+constexpr const char* kInfoLabelArgumentNoBuildIdOverride = " or extension.";
+constexpr const char* kInfoLabelArgumentWithBuildIdOverride = ", extension or build ID.";
 constexpr QListWidgetItem::ItemType kOverrideMappingItemType = QListWidgetItem::ItemType::UserType;
 
 using orbit_client_data::ModuleData;
@@ -118,6 +125,7 @@ SymbolsDialog::SymbolsDialog(
   }
 
   ui_->setupUi(this);
+  SetUpInfoLabel();
 
   if (allow_unsafe_symbols_) AddModuleSymbolFileMappingsToList();
   AddSymbolPathsToListWidget(persistent_storage_manager_->LoadPaths());
@@ -347,6 +355,16 @@ void SymbolsDialog::DisableAddFolder() {
       QString("Module %1 does not have a build ID. For modules without build ID, Orbit cannot find "
               "symbols in folders.")
           .arg(QString::fromStdString(module_.value()->name())));
+}
+
+void SymbolsDialog::SetUpInfoLabel() {
+  QString label_text{kInfoLabelTemplate};
+  if (allow_unsafe_symbols_) {
+    label_text = label_text.arg(kInfoLabelArgumentWithBuildIdOverride);
+  } else {
+    label_text = label_text.arg(kInfoLabelArgumentNoBuildIdOverride);
+  }
+  ui_->infoLabel->setText(label_text);
 }
 
 }  // namespace orbit_config_widgets
