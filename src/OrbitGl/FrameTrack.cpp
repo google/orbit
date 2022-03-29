@@ -32,7 +32,7 @@ constexpr const float kBoxHeightMultiplier = 3.f;
 }  // namespace
 
 float FrameTrack::GetCappedMaximumToAverageRatio() const {
-  if (stats_.average_time_ns() == 0) {
+  if (stats_.ComputeAverageTimeNs() == 0) {
     return 0.f;
   }
   // Compute the scale factor in double first as we convert time values in nanoseconds to
@@ -40,7 +40,7 @@ float FrameTrack::GetCappedMaximumToAverageRatio() const {
   // represent all integer values up to 2^24 - 1, which given the ns time unit is fairly
   // small (only ~16ms).
   double max_average_ratio =
-      static_cast<double>(stats_.max_ns()) / static_cast<double>(stats_.average_time_ns());
+      static_cast<double>(stats_.max_ns()) / static_cast<double>(stats_.ComputeAverageTimeNs());
   max_average_ratio = std::min(max_average_ratio, kHeightCapAverageMultipleDouble);
   return static_cast<float>(max_average_ratio);
 }
@@ -85,11 +85,11 @@ float FrameTrack::GetDefaultBoxHeight() const {
 
 float FrameTrack::GetDynamicBoxHeight(const TimerInfo& timer_info) const {
   uint64_t timer_duration_ns = timer_info.end() - timer_info.start();
-  if (stats_.average_time_ns() == 0) {
+  if (stats_.ComputeAverageTimeNs() == 0) {
     return 0.f;
   }
   double ratio =
-      static_cast<double>(timer_duration_ns) / static_cast<double>(stats_.average_time_ns());
+      static_cast<double>(timer_duration_ns) / static_cast<double>(stats_.ComputeAverageTimeNs());
   ratio = std::min(ratio, kHeightCapAverageMultipleDouble);
   return static_cast<float>(ratio) * GetAverageBoxHeight();
 }
@@ -107,16 +107,16 @@ Color FrameTrack::GetTimerColor(const orbit_client_protos::TimerInfo& timer_info
   // A note on overflows here and below: The times in uint64_t represent durations of events
   // in nanoseconds. This means the maximum duration is ~600 years. That is, multiplying by values
   // in the single digits (and even much higher) as done here does not cause any issues.
-  if (timer_duration_ns >= kHeightCapAverageMultipleUint64 * stats_.average_time_ns()) {
+  if (timer_duration_ns >= kHeightCapAverageMultipleUint64 * stats_.ComputeAverageTimeNs()) {
     color = warn_color;
-  } else if (stats_.average_time_ns() > 0) {
+  } else if (stats_.ComputeAverageTimeNs() > 0) {
     // We are interpolating colors between min_color and max_color based on how much
     // the duration (timer_duration_ns) differs from the average. This is asymmetric on
     // purpose, as frames that are shorter than the average time are fine and do not need
     // to stand out differently from the average. Durations below lower_bound and
     // durations above upper_bound are drawn with min_color and max_color, respectively.
-    uint64_t lower_bound = 4 * stats_.average_time_ns() / 5;
-    uint64_t upper_bound = 8 * stats_.average_time_ns() / 5;
+    uint64_t lower_bound = 4 * stats_.ComputeAverageTimeNs() / 5;
+    uint64_t upper_bound = 8 * stats_.ComputeAverageTimeNs() / 5;
 
     timer_duration_ns = std::min(std::max(timer_duration_ns, lower_bound), upper_bound);
     float fraction = static_cast<float>(timer_duration_ns - lower_bound) /
@@ -170,7 +170,7 @@ std::string FrameTrack::GetTooltip() const {
       orbit_client_data::function_utils::GetLoadedModuleNameByPath(function_.file_path()),
       stats_.count(), orbit_display_formats::GetDisplayTime(absl::Nanoseconds(stats_.max_ns())),
       orbit_display_formats::GetDisplayTime(absl::Nanoseconds(stats_.min_ns())),
-      orbit_display_formats::GetDisplayTime(absl::Nanoseconds(stats_.average_time_ns())));
+      orbit_display_formats::GetDisplayTime(absl::Nanoseconds(stats_.ComputeAverageTimeNs())));
 }
 
 std::string FrameTrack::GetBoxTooltip(const Batcher& batcher, PickingId id) const {
@@ -220,7 +220,7 @@ void FrameTrack::DoDraw(Batcher& batcher, TextRenderer& text_renderer,
   float text_z = GlCanvas::kZValueTrackText;
 
   std::string avg_time =
-      orbit_display_formats::GetDisplayTime(absl::Nanoseconds(stats_.average_time_ns()));
+      orbit_display_formats::GetDisplayTime(absl::Nanoseconds(stats_.ComputeAverageTimeNs()));
   std::string label = absl::StrFormat("Avg: %s", avg_time);
   uint32_t font_size = layout_->CalculateZoomedFontSize();
   float string_width = text_renderer.GetStringWidth(label.c_str(), font_size);

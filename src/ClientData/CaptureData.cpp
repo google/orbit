@@ -117,7 +117,7 @@ void CaptureData::OnCaptureComplete() {
         ScopeStats& stats = stats_it->second;
         if (stats.count() > 0) {
           uint64_t elapsed_nanos = timer_info.end() - timer_info.start();
-          int64_t deviation = elapsed_nanos - stats.average_time_ns();
+          int64_t deviation = elapsed_nanos - stats.ComputeAverageTimeNs();
           id_to_sum_of_deviations_squared[timer_info.function_id()] += deviation * deviation;
         }
       }

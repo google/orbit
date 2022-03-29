@@ -109,7 +109,7 @@ std::string LiveFunctionsDataView::GetValue(int row, int column) {
     case kColumnTimeTotal:
       return orbit_display_formats::GetDisplayTime(absl::Nanoseconds(stats.total_time_ns()));
     case kColumnTimeAvg:
-      return orbit_display_formats::GetDisplayTime(absl::Nanoseconds(stats.average_time_ns()));
+      return orbit_display_formats::GetDisplayTime(absl::Nanoseconds(stats.ComputeAverageTimeNs()));
     case kColumnTimeMin:
       return orbit_display_formats::GetDisplayTime(absl::Nanoseconds(stats.min_ns()));
     case kColumnTimeMax:
@@ -218,7 +218,7 @@ void LiveFunctionsDataView::DoSort() {
       sorter = ORBIT_STAT_SORT(total_time_ns());
       break;
     case kColumnTimeAvg:
-      sorter = ORBIT_STAT_SORT(average_time_ns());
+      sorter = ORBIT_STAT_SORT(ComputeAverageTimeNs());
       break;
     case kColumnTimeMin:
       sorter = ORBIT_STAT_SORT(min_ns());
