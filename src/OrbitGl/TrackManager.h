@@ -109,10 +109,9 @@ class TrackManager {
 
   void UpdateTimerDurations();
 
-  template <typename IteratorType>
-  void CollectDurationsFromMap(IteratorType begin, IteratorType end);
-
   void CollectDurations(const std::vector<const orbit_client_data::TimerChain*>& chains);
+  void CollectDurations(const std::vector<const TimerInfo*>& timer);
+  void CollectDuration(const TimerInfo& timer);
 
   // TODO(b/174655559): Use absl's mutex here.
   mutable std::recursive_mutex mutex_;

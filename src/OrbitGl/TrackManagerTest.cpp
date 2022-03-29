@@ -4,6 +4,7 @@
 #include <gtest/gtest.h>
 
 #include <cstdint>
+#include <vector>
 
 #include "ClientData/CaptureData.h"
 #include "ClientData/ModuleManager.h"
@@ -205,9 +206,9 @@ constexpr std::array<uint64_t, kTimerCount> kTimerIds = {kFirstId, kFirstId, kFi
                                                          kSecondId};
 constexpr std::array<uint64_t, kTimerCount> kStarts = {10, 20, 30, 40, 50};
 constexpr std::array<uint64_t, kTimersForFirstId> kDurationsForFirstId = {300, 100, 200};
-// constexpr std::array<uint64_t, kTimersForFirstId> kSortedDurationsForFirstId = {100, 200, 300};
+constexpr std::array<uint64_t, kTimersForFirstId> kSortedDurationsForFirstId = {100, 200, 300};
 constexpr std::array<uint64_t, kTimersForSecondId> kDurationsForSecondId = {500, 400};
-// constexpr std::array<uint64_t, kTimersForSecondId> kSortedDurationsForSecondId = {400, 500};
+constexpr std::array<uint64_t, kTimersForSecondId> kSortedDurationsForSecondId = {400, 500};
 
 static const std::array<uint64_t, kTimerCount> kDurations = [] {
   std::array<uint64_t, kTimerCount> result;
@@ -227,21 +228,31 @@ static const std::array<TimerInfo, kTimerCount> kTimerInfos = [] {
 }();
 
 TEST_F(TrackManagerTest, UpdateTimerDurationsIsCorrect) {
-  ThreadTrack* thread_track = track_manager_.GetOrCreateThreadTrack(15655);
   for (const TimerInfo& timer : kTimerInfos) {
-    ORBIT_LOG("adding timer id=%u", timer.function_id());
-    thread_track->OnTimer(timer);
+    if (timer.function_id() == kFirstId) {
+      capture_data_->GetThreadTrackDataProvider()->AddTimer(timer);
+    }
   }
 
-  ORBIT_LOG("chains %u", thread_track->GetChains().size());
+  auto* async_track = track_manager_.GetOrCreateAsyncTrack(TrackTestData::kAsyncTrackName);
+
+  for (const TimerInfo& timer : kTimerInfos) {
+    if (timer.function_id() == kSecondId) {
+      async_track->OnTimer(timer);
+    }
+  }
 
   track_manager_.OnCaptureComplete();
 
-  const auto* durations = track_manager_.GetSortedTimerDurationsForScopeId(kFirstId);
+  const std::vector<uint64_t>* durations_first =
+      track_manager_.GetSortedTimerDurationsForScopeId(kFirstId);
+  EXPECT_EQ(*durations_first,
+            std::vector(std::begin(kSortedDurationsForFirstId), std::end(kSortedDurationsForFirstId)));
 
-  for (const uint64_t duration : *durations) {
-    ORBIT_LOG("%u", duration);
-  }
+  const std::vector<uint64_t>* durations_second =
+      track_manager_.GetSortedTimerDurationsForScopeId(kSecondId);
+  EXPECT_EQ(*durations_second,
+            std::vector(std::begin(kSortedDurationsForSecondId), std::end(kSortedDurationsForSecondId)));
 }
 
 }  // namespace orbit_gl

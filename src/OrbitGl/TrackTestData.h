@@ -22,6 +22,7 @@ struct TrackTestData {
   static constexpr const char* kFunctionName = "example function";
   static constexpr const char* kModuleName = "example module";
   static constexpr const char* kThreadName = "example thread";
+  static constexpr const char* kAsyncTrackName = "example AsyncTrack";
 
   static constexpr size_t kTimerOnlyThreadId = 128;
   static constexpr const char* kTimerOnlyThreadName = "timer only thread";

@@ -274,28 +274,4 @@ TEST(ThreadTrackDataProvider, GetLeftRightUpDown) {
   check_neighbors(other_thread_id, nullptr, nullptr, nullptr, nullptr);
 }
 
-// TEST(ThreadTrackDataProvider, GetSortedTimerDurationsForScopeIdIsCorrect) {
-//   MockScopeIdProvider scope_id_provider;
-//   EXPECT_CALL(scope_id_provider, ProvideId)
-//       .WillRepeatedly(
-//           testing::Invoke([](const TimerInfo& timer_info) { return timer_info.function_id(); }));
-//   ThreadTrackDataProvider thread_track_data_provider(&scope_id_provider);
-
-//   for (size_t i = 0; i < kTimerCount; ++i) {
-//     thread_track_data_provider.AddTimer(kTimerInfos[i]);
-//   }
-//   thread_track_data_provider.OnCaptureComplete();
-
-//   EXPECT_EQ(
-//       *thread_track_data_provider.GetSortedTimerDurationsForScopeId(kFirstId),
-//       std::vector<uint64_t>(kSortedDurationsForFirstId.begin(),
-//       kSortedDurationsForFirstId.end()));
-
-//   EXPECT_EQ(*thread_track_data_provider.GetSortedTimerDurationsForScopeId(kSecondId),
-//             std::vector<uint64_t>(kSortedDurationsForSecondId.begin(),
-//                                   kSortedDurationsForSecondId.end()));
-//   EXPECT_THAT(thread_track_data_provider.GetSortedTimerDurationsForScopeId(kInvalidScopeId),
-//               testing::IsNull());
-// }
-
 }  // namespace orbit_client_data

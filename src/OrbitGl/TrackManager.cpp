@@ -586,19 +586,33 @@ void TrackManager::UpdateTimerDurations() {
   ORBIT_SCOPE_FUNCTION;
   timer_durations_.clear();
 
-  CollectDurationsFromMap(std::begin(thread_tracks_), std::end(thread_tracks_));
-  CollectDurationsFromMap(std::begin(async_tracks_), std::end(async_tracks_));
+  for (const uint32_t thread_id : capture_data_->GetThreadTrackDataProvider()->GetAllThreadIds()) {
+    const std::vector<const TimerInfo*> timers =
+        capture_data_->GetThreadTrackDataProvider()->GetTimers(thread_id);
+    CollectDurations(timers);
+  }
+
+  for (const auto& [id, async_track] : async_tracks_) {
+    CollectDurations(async_track->GetChains());
+  }
 
   for (auto& [id, timer_durations] : timer_durations_) {
     std::sort(timer_durations.begin(), timer_durations.end());
   }
 }
 
-template <typename IteratorType>
-void TrackManager::CollectDurationsFromMap(IteratorType begin, IteratorType end) {
-  for (IteratorType it = begin; it != end; ++it) {
-    CollectDurations(it->second->GetChains());
+void TrackManager::CollectDurations(const std::vector<const TimerInfo*>& timers) {
+  for (const TimerInfo* timer : timers) {
+    CollectDuration(*timer);
   }
+}
+
+void TrackManager::CollectDuration(const TimerInfo& timer) {
+  const uint64_t scope_id = capture_data_->ProvideScopeId(timer);
+
+  if (scope_id == orbit_client_data::kInvalidScopeId) return;
+
+  timer_durations_[scope_id].push_back(timer.end() - timer.start());
 }
 
 void TrackManager::CollectDurations(
@@ -608,11 +622,7 @@ void TrackManager::CollectDurations(
     for (const auto& block : *chain) {
       for (uint64_t i = 0; i < block.size(); i++) {
         const TimerInfo& timer = block[i];
-        const uint64_t scope_id = capture_data_->ProvideScopeId(timer);
-
-        if (scope_id == orbit_client_data::kInvalidScopeId) continue;
-
-        timer_durations_[scope_id].push_back(timer.end() - timer.start());
+        CollectDuration(timer);
       }
     }
   }
