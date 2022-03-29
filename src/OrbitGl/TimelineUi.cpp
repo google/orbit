@@ -15,7 +15,7 @@
 namespace orbit_gl {
 
 constexpr float kLabelsPadding = 4.f;
-constexpr float kPixelBetweenMajorTicksAndLabels = 1.f;
+constexpr float kPixelsBetweenMajorTicksAndLabels = 1.f;
 const Color kBackgroundColorSpecialLabels(68, 67, 69, 255);
 
 void TimelineUi::RenderLines(Batcher& batcher, uint64_t min_timestamp_ns,
@@ -70,7 +70,7 @@ void TimelineUi::RenderLabel(Batcher& batcher, TextRenderer& text_renderer, uint
   float label_z = is_mouse_label ? GlCanvas::kZValueTimeBarMouseLabel : GlCanvas::kZValueTimeBar;
 
   // We add a pixel separation between the label and the major ticks so they don't intersect.
-  float extra_left_margin = is_mouse_label ? 0.f : kPixelBetweenMajorTicksAndLabels;
+  float extra_left_margin = is_mouse_label ? 0.f : kPixelsBetweenMajorTicksAndLabels;
 
   std::string label = GetLabel(tick_ns, number_of_decimal_places);
   float world_x = GetTickWorldXPos(tick_ns);
@@ -151,7 +151,7 @@ bool TimelineUi::WillLabelsOverlap(TextRenderer& text_renderer,
     float label_width = text_renderer.GetStringWidth(
         GetLabel(tick_ns, GetNumDecimalsInLabels()).c_str(), layout_->GetFontSize());
     if (distance_between_labels <
-        2.f * kLabelsPadding + kPixelBetweenMajorTicksAndLabels + label_width) {
+        2.f * kLabelsPadding + kPixelsBetweenMajorTicksAndLabels + label_width) {
       return true;
     }
   }
