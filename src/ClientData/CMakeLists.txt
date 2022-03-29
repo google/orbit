@@ -13,6 +13,7 @@ target_include_directories(ClientData PRIVATE
 
 target_sources(ClientData PUBLIC
         include/ClientData/ApiStringEvent.h
+        include/ClientData/ApiTrackValue.h
         include/ClientData/CallstackData.h
         include/ClientData/CallstackEvent.h
         include/ClientData/CallstackInfo.h

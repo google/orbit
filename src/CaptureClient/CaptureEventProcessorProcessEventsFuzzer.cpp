@@ -50,7 +50,7 @@ class MyCaptureListener : public CaptureListener {
   void OnModulesSnapshot(uint64_t /*timestamp_ns*/,
                          std::vector<orbit_grpc_protos::ModuleInfo> /*module_infos*/) override {}
   void OnApiStringEvent(const orbit_client_data::ApiStringEvent& /*api_string_event*/) override {}
-  void OnApiTrackValue(const orbit_client_protos::ApiTrackValue& /*api_track_value*/) override {}
+  void OnApiTrackValue(const orbit_client_data::ApiTrackValue& /*api_track_value*/) override {}
   void OnWarningEvent(orbit_grpc_protos::WarningEvent /*warning_event*/) override {}
   void OnClockResolutionEvent(
       orbit_grpc_protos::ClockResolutionEvent /*clock_resolution_event*/) override {}

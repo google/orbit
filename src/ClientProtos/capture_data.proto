@@ -67,23 +67,6 @@ message TimerInfo {
   string api_scope_name = 17;
 }
 
-message ApiTrackValue {
-  // NextID: 11
-  uint32 process_id = 1;
-  uint32 thread_id = 2;
-  uint64 timestamp_ns = 3;
-  string name = 4;
-
-  oneof data {
-    int32 data_int = 5;
-    int64 data_int64 = 6;
-    uint32 data_uint = 7;
-    uint64 data_uint64 = 8;
-    float data_float = 9;
-    double data_double = 10;
-  }
-}
-
 message Color {
   // Each color must be between 0 and 255 (including).
   uint32 red = 1;

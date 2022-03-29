@@ -18,12 +18,14 @@
 namespace orbit_capture_client {
 
 using orbit_client_data::ApiStringEvent;
+using orbit_client_data::ApiTrackValue;
 using orbit_client_data::CallstackInfo;
 
 using orbit_client_protos::TimerInfo;
 
 using google::protobuf::util::MessageDifferencer;
 using ::testing::AllOf;
+using ::testing::DoubleEq;
 using ::testing::Invoke;
 using ::testing::Property;
 using ::testing::SaveArg;
@@ -60,7 +62,7 @@ class MockCaptureListener : public CaptureListener {
                std::vector<orbit_grpc_protos::ModuleInfo> /*module_infos*/),
               (override));
   MOCK_METHOD(void, OnApiStringEvent, (const orbit_client_data::ApiStringEvent&), (override));
-  MOCK_METHOD(void, OnApiTrackValue, (const orbit_client_protos::ApiTrackValue&), (override));
+  MOCK_METHOD(void, OnApiTrackValue, (const orbit_client_data::ApiTrackValue&), (override));
   MOCK_METHOD(void, OnWarningEvent, (orbit_grpc_protos::WarningEvent /*warning_event*/),
               (override));
   MOCK_METHOD(void, OnClockResolutionEvent,
@@ -176,20 +178,6 @@ class ApiEventProcessorTest : public ::testing::Test {
 
     return result;
   }
-  template <typename DataType>
-  static orbit_client_protos::ApiTrackValue CreateClientTrackValue(
-      uint64_t timestamp_ns, int32_t process_id, int32_t thread_id, const char* name,
-      void (orbit_client_protos::ApiTrackValue::*set_data)(DataType), DataType data) {
-    orbit_client_protos::ApiTrackValue result;
-    result.set_timestamp_ns(timestamp_ns);
-    result.set_process_id(process_id);
-    result.set_thread_id(thread_id);
-    result.set_name(name);
-
-    (result.*set_data)(data);
-
-    return result;
-  }
 
   [[deprecated]] static orbit_grpc_protos::ApiEvent CreateApiEventLegacy(
       int32_t pid, int32_t tid, uint64_t timestamp_ns, orbit_api::EventType type,
@@ -247,6 +235,14 @@ auto ApiStringEventEq(const ApiStringEvent& expected) {
   return AllOf(Property(&ApiStringEvent::async_scope_id, expected.async_scope_id()),
                Property(&ApiStringEvent::name, expected.name()),
                Property(&ApiStringEvent::should_concatenate, expected.should_concatenate()));
+}
+
+auto ApiTrackValueEq(const ApiTrackValue& expected) {
+  return AllOf(Property("process_id()", &ApiTrackValue::process_id, expected.process_id()),
+               Property("thread_id()", &ApiTrackValue::thread_id, expected.thread_id()),
+               Property("timestamp_ns()", &ApiTrackValue::timestamp_ns, expected.timestamp_ns()),
+               Property("track_name()", &ApiTrackValue::track_name, expected.track_name()),
+               Property("value()", &ApiTrackValue::value, DoubleEq(expected.value())));
 }
 
 }  // namespace
@@ -447,107 +443,112 @@ TEST_F(ApiEventProcessorTest, TrackDouble) {
   auto track_double = CreateTrackValue<double, orbit_grpc_protos::ApiTrackDouble>(
       1, kProcessId, kThreadId1, "Some name", 3.14);
 
-  auto expected_track_value =
-      CreateClientTrackValue<double>(1, kProcessId, kThreadId1, "Some name",
-                                     &orbit_client_protos::ApiTrackValue::set_data_double, 3.14);
+  ApiTrackValue expected_track_value{kProcessId, kThreadId1, 1, "Some name", 3.14};
 
-  orbit_client_protos::ApiTrackValue actual_track_value;
+  std::optional<ApiTrackValue> actual_track_value;
   EXPECT_CALL(capture_listener_, OnApiTrackValue)
       .Times(1)
       .WillOnce(SaveArg<0>(&actual_track_value));
 
   api_event_processor_.ProcessApiTrackDouble(track_double);
 
-  EXPECT_TRUE(MessageDifferencer::Equivalent(expected_track_value, actual_track_value));
+  ASSERT_TRUE(actual_track_value.has_value());
+  EXPECT_THAT(actual_track_value.value(), ApiTrackValueEq(expected_track_value));
 }
 
 TEST_F(ApiEventProcessorTest, TrackFloat) {
+  constexpr float kValue = 3.14f;
   auto track_float = CreateTrackValue<float, orbit_grpc_protos::ApiTrackFloat>(
-      1, kProcessId, kThreadId1, "Some name", 3.14f);
+      1, kProcessId, kThreadId1, "Some name", kValue);
 
-  auto expected_track_value =
-      CreateClientTrackValue<float>(1, kProcessId, kThreadId1, "Some name",
-                                    &orbit_client_protos::ApiTrackValue::set_data_float, 3.14f);
+  ApiTrackValue expected_track_value{kProcessId, kThreadId1, 1, "Some name",
+                                     static_cast<double>(kValue)};
 
-  orbit_client_protos::ApiTrackValue actual_track_value;
+  std::optional<ApiTrackValue> actual_track_value;
   EXPECT_CALL(capture_listener_, OnApiTrackValue)
       .Times(1)
       .WillOnce(SaveArg<0>(&actual_track_value));
 
   api_event_processor_.ProcessApiTrackFloat(track_float);
 
-  EXPECT_TRUE(MessageDifferencer::Equivalent(expected_track_value, actual_track_value));
+  ASSERT_TRUE(actual_track_value.has_value());
+  EXPECT_THAT(actual_track_value.value(), ApiTrackValueEq(expected_track_value));
 }
 
 TEST_F(ApiEventProcessorTest, TrackInt) {
+  constexpr int32_t kValue = 3;
   auto track_int = CreateTrackValue<int32_t, orbit_grpc_protos::ApiTrackInt>(
-      1, kProcessId, kThreadId1, "Some name", 3);
+      1, kProcessId, kThreadId1, "Some name", kValue);
 
-  auto expected_track_value = CreateClientTrackValue<int32_t>(
-      1, kProcessId, kThreadId1, "Some name", &orbit_client_protos::ApiTrackValue::set_data_int, 3);
+  ApiTrackValue expected_track_value{kProcessId, kThreadId1, 1, "Some name",
+                                     static_cast<double>(kValue)};
 
-  orbit_client_protos::ApiTrackValue actual_track_value;
+  std::optional<ApiTrackValue> actual_track_value;
   EXPECT_CALL(capture_listener_, OnApiTrackValue)
       .Times(1)
       .WillOnce(SaveArg<0>(&actual_track_value));
 
   api_event_processor_.ProcessApiTrackInt(track_int);
 
-  EXPECT_TRUE(MessageDifferencer::Equivalent(expected_track_value, actual_track_value));
+  ASSERT_TRUE(actual_track_value.has_value());
+  EXPECT_THAT(actual_track_value.value(), ApiTrackValueEq(expected_track_value));
 }
 
 TEST_F(ApiEventProcessorTest, TrackInt64) {
+  constexpr int64_t kValue = std::numeric_limits<int64_t>::max();
   auto track_int64 = CreateTrackValue<int64_t, orbit_grpc_protos::ApiTrackInt64>(
-      1, kProcessId, kThreadId1, "Some name", 3);
+      1, kProcessId, kThreadId1, "Some name", kValue);
 
-  auto expected_track_value =
-      CreateClientTrackValue<int64_t>(1, kProcessId, kThreadId1, "Some name",
-                                      &orbit_client_protos::ApiTrackValue::set_data_int64, 3);
+  ApiTrackValue expected_track_value{kProcessId, kThreadId1, 1, "Some name",
+                                     static_cast<double>(kValue)};
 
-  orbit_client_protos::ApiTrackValue actual_track_value;
+  std::optional<ApiTrackValue> actual_track_value;
   EXPECT_CALL(capture_listener_, OnApiTrackValue)
       .Times(1)
       .WillOnce(SaveArg<0>(&actual_track_value));
 
   api_event_processor_.ProcessApiTrackInt64(track_int64);
 
-  EXPECT_TRUE(MessageDifferencer::Equivalent(expected_track_value, actual_track_value));
+  ASSERT_TRUE(actual_track_value.has_value());
+  EXPECT_THAT(actual_track_value.value(), ApiTrackValueEq(expected_track_value));
 }
 
 TEST_F(ApiEventProcessorTest, TrackUint) {
+  constexpr uint32_t kValue = std::numeric_limits<uint32_t>::max();
   auto track_uint = CreateTrackValue<uint32_t, orbit_grpc_protos::ApiTrackUint>(
-      1, kProcessId, kThreadId1, "Some name", 3);
+      1, kProcessId, kThreadId1, "Some name", kValue);
 
-  auto expected_track_value =
-      CreateClientTrackValue<uint32_t>(1, kProcessId, kThreadId1, "Some name",
-                                       &orbit_client_protos::ApiTrackValue::set_data_uint, 3);
+  ApiTrackValue expected_track_value{kProcessId, kThreadId1, 1, "Some name",
+                                     static_cast<double>(kValue)};
 
-  orbit_client_protos::ApiTrackValue actual_track_value;
+  std::optional<ApiTrackValue> actual_track_value;
   EXPECT_CALL(capture_listener_, OnApiTrackValue)
       .Times(1)
       .WillOnce(SaveArg<0>(&actual_track_value));
 
   api_event_processor_.ProcessApiTrackUint(track_uint);
 
-  EXPECT_TRUE(MessageDifferencer::Equivalent(expected_track_value, actual_track_value));
+  ASSERT_TRUE(actual_track_value.has_value());
+  EXPECT_THAT(actual_track_value.value(), ApiTrackValueEq(expected_track_value));
 }
 
 TEST_F(ApiEventProcessorTest, TrackUint64) {
+  constexpr uint64_t kValue = std::numeric_limits<uint64_t>::max();
   auto track_uint64 = CreateTrackValue<uint64_t, orbit_grpc_protos::ApiTrackUint64>(
-      1, kProcessId, kThreadId1, "Some name", 3);
+      1, kProcessId, kThreadId1, "Some name", kValue);
 
-  auto expected_track_value =
-      CreateClientTrackValue<uint64_t>(1, kProcessId, kThreadId1, "Some name",
-                                       &orbit_client_protos::ApiTrackValue::set_data_uint64, 3);
+  ApiTrackValue expected_track_value{kProcessId, kThreadId1, 1, "Some name",
+                                     static_cast<double>(kValue)};
 
-  orbit_client_protos::ApiTrackValue actual_track_value;
+  std::optional<ApiTrackValue> actual_track_value;
   EXPECT_CALL(capture_listener_, OnApiTrackValue)
       .Times(1)
       .WillOnce(SaveArg<0>(&actual_track_value));
 
   api_event_processor_.ProcessApiTrackUint64(track_uint64);
 
-  EXPECT_TRUE(MessageDifferencer::Equivalent(expected_track_value, actual_track_value));
+  ASSERT_TRUE(actual_track_value.has_value());
+  EXPECT_THAT(actual_track_value.value(), ApiTrackValueEq(expected_track_value));
 }
 
 TEST_F(ApiEventProcessorTest, ScopesFromSameThreadLegacy) {
@@ -698,115 +699,121 @@ TEST_F(ApiEventProcessorTest, StringEventLegacy) {
 }
 
 TEST_F(ApiEventProcessorTest, TrackDoubleLegacy) {
+  constexpr double kValue = 3.14;
   auto track_double =
       CreateApiEventLegacy(kProcessId, kThreadId1, 1, orbit_api::EventType::kTrackDouble,
-                           "Some name", orbit_api::Encode<uint64_t>(3.14));
+                           "Some name", orbit_api::Encode<uint64_t>(kValue));
 
-  auto expected_track_value =
-      CreateClientTrackValue<double>(1, kProcessId, kThreadId1, "Some name",
-                                     &orbit_client_protos::ApiTrackValue::set_data_double, 3.14);
+  ApiTrackValue expected_track_value{kProcessId, kThreadId1, 1, "Some name", kValue};
 
-  orbit_client_protos::ApiTrackValue actual_track_value;
+  std::optional<ApiTrackValue> actual_track_value;
   EXPECT_CALL(capture_listener_, OnApiTrackValue)
       .Times(1)
       .WillOnce(SaveArg<0>(&actual_track_value));
 
   api_event_processor_.ProcessApiEventLegacy(track_double);
 
-  EXPECT_TRUE(MessageDifferencer::Equivalent(expected_track_value, actual_track_value));
+  ASSERT_TRUE(actual_track_value.has_value());
+  EXPECT_THAT(actual_track_value.value(), ApiTrackValueEq(expected_track_value));
 }
 
 TEST_F(ApiEventProcessorTest, TrackFloatLegacy) {
+  constexpr float kValue = 3.14f;
   auto track_float =
       CreateApiEventLegacy(kProcessId, kThreadId1, 1, orbit_api::EventType::kTrackFloat,
-                           "Some name", orbit_api::Encode<uint64_t>(3.14f));
+                           "Some name", orbit_api::Encode<uint64_t>(kValue));
 
-  auto expected_track_value =
-      CreateClientTrackValue<float>(1, kProcessId, kThreadId1, "Some name",
-                                    &orbit_client_protos::ApiTrackValue::set_data_float, 3.14f);
+  ApiTrackValue expected_track_value{kProcessId, kThreadId1, 1, "Some name",
+                                     static_cast<double>(kValue)};
 
-  orbit_client_protos::ApiTrackValue actual_track_value;
+  std::optional<ApiTrackValue> actual_track_value;
   EXPECT_CALL(capture_listener_, OnApiTrackValue)
       .Times(1)
       .WillOnce(SaveArg<0>(&actual_track_value));
 
   api_event_processor_.ProcessApiEventLegacy(track_float);
 
-  EXPECT_TRUE(MessageDifferencer::Equivalent(expected_track_value, actual_track_value));
+  ASSERT_TRUE(actual_track_value.has_value());
+  EXPECT_THAT(actual_track_value.value(), ApiTrackValueEq(expected_track_value));
 }
 
 TEST_F(ApiEventProcessorTest, TrackIntLegacy) {
+  constexpr int32_t kValue = 3;
   auto track_int = CreateApiEventLegacy(kProcessId, kThreadId1, 1, orbit_api::EventType::kTrackInt,
-                                        "Some name", orbit_api::Encode<uint64_t>(3));
+                                        "Some name", orbit_api::Encode<uint64_t>(kValue));
 
-  auto expected_track_value = CreateClientTrackValue<int32_t>(
-      1, kProcessId, kThreadId1, "Some name", &orbit_client_protos::ApiTrackValue::set_data_int, 3);
+  ApiTrackValue expected_track_value{kProcessId, kThreadId1, 1, "Some name",
+                                     static_cast<double>(kValue)};
 
-  orbit_client_protos::ApiTrackValue actual_track_value;
+  std::optional<ApiTrackValue> actual_track_value;
   EXPECT_CALL(capture_listener_, OnApiTrackValue)
       .Times(1)
       .WillOnce(SaveArg<0>(&actual_track_value));
 
   api_event_processor_.ProcessApiEventLegacy(track_int);
 
-  EXPECT_TRUE(MessageDifferencer::Equivalent(expected_track_value, actual_track_value));
+  ASSERT_TRUE(actual_track_value.has_value());
+  EXPECT_THAT(actual_track_value.value(), ApiTrackValueEq(expected_track_value));
 }
 
 TEST_F(ApiEventProcessorTest, TrackInt64Legacy) {
+  constexpr int64_t kValue = std::numeric_limits<int64_t>::max();
   auto track_int64 =
       CreateApiEventLegacy(kProcessId, kThreadId1, 1, orbit_api::EventType::kTrackInt64,
-                           "Some name", orbit_api::Encode<uint64_t>(3));
+                           "Some name", orbit_api::Encode<uint64_t>(kValue));
 
-  auto expected_track_value =
-      CreateClientTrackValue<int64_t>(1, kProcessId, kThreadId1, "Some name",
-                                      &orbit_client_protos::ApiTrackValue::set_data_int64, 3);
+  ApiTrackValue expected_track_value{kProcessId, kThreadId1, 1, "Some name",
+                                     static_cast<double>(kValue)};
 
-  orbit_client_protos::ApiTrackValue actual_track_value;
+  std::optional<ApiTrackValue> actual_track_value;
   EXPECT_CALL(capture_listener_, OnApiTrackValue)
       .Times(1)
       .WillOnce(SaveArg<0>(&actual_track_value));
 
   api_event_processor_.ProcessApiEventLegacy(track_int64);
 
-  EXPECT_TRUE(MessageDifferencer::Equivalent(expected_track_value, actual_track_value));
+  ASSERT_TRUE(actual_track_value.has_value());
+  EXPECT_THAT(actual_track_value.value(), ApiTrackValueEq(expected_track_value));
 }
 
 TEST_F(ApiEventProcessorTest, TrackUintLegacy) {
+  constexpr uint32_t kValue = std::numeric_limits<uint32_t>::max();
   auto track_uint =
       CreateApiEventLegacy(kProcessId, kThreadId1, 1, orbit_api::EventType::kTrackUint, "Some name",
-                           orbit_api::Encode<uint64_t>(3));
+                           orbit_api::Encode<uint64_t>(kValue));
 
-  auto expected_track_value =
-      CreateClientTrackValue<uint32_t>(1, kProcessId, kThreadId1, "Some name",
-                                       &orbit_client_protos::ApiTrackValue::set_data_uint, 3);
+  ApiTrackValue expected_track_value{kProcessId, kThreadId1, 1, "Some name",
+                                     static_cast<double>(kValue)};
 
-  orbit_client_protos::ApiTrackValue actual_track_value;
+  std::optional<ApiTrackValue> actual_track_value;
   EXPECT_CALL(capture_listener_, OnApiTrackValue)
       .Times(1)
       .WillOnce(SaveArg<0>(&actual_track_value));
 
   api_event_processor_.ProcessApiEventLegacy(track_uint);
 
-  EXPECT_TRUE(MessageDifferencer::Equivalent(expected_track_value, actual_track_value));
+  ASSERT_TRUE(actual_track_value.has_value());
+  EXPECT_THAT(actual_track_value.value(), ApiTrackValueEq(expected_track_value));
 }
 
 TEST_F(ApiEventProcessorTest, TrackUint64Legacy) {
+  constexpr uint64_t kValue = std::numeric_limits<uint64_t>::max();
   auto track_uint64 =
       CreateApiEventLegacy(kProcessId, kThreadId1, 1, orbit_api::EventType::kTrackUint64,
-                           "Some name", orbit_api::Encode<uint64_t>(3));
+                           "Some name", orbit_api::Encode<uint64_t>(kValue));
 
-  auto expected_track_value =
-      CreateClientTrackValue<uint64_t>(1, kProcessId, kThreadId1, "Some name",
-                                       &orbit_client_protos::ApiTrackValue::set_data_uint64, 3);
+  ApiTrackValue expected_track_value{kProcessId, kThreadId1, 1, "Some name",
+                                     static_cast<double>(kValue)};
 
-  orbit_client_protos::ApiTrackValue actual_track_value;
+  std::optional<ApiTrackValue> actual_track_value;
   EXPECT_CALL(capture_listener_, OnApiTrackValue)
       .Times(1)
       .WillOnce(SaveArg<0>(&actual_track_value));
 
   api_event_processor_.ProcessApiEventLegacy(track_uint64);
 
-  EXPECT_TRUE(MessageDifferencer::Equivalent(expected_track_value, actual_track_value));
+  ASSERT_TRUE(actual_track_value.has_value());
+  EXPECT_THAT(actual_track_value.value(), ApiTrackValueEq(expected_track_value));
 }
 
 }  // namespace orbit_capture_client
