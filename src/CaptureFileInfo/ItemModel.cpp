@@ -17,7 +17,9 @@ namespace {
 const QString kMisingCaptureLengthToDisplay = QStringLiteral("--");
 
 [[nodiscard]] QString GetCaptureLengthToDisplay(absl::Duration capture_length) {
-  if (capture_length == absl::Nanoseconds(0)) return kMisingCaptureLengthToDisplay;
+  if (capture_length == CaptureFileInfo::kMissingCaptureLengthValue) {
+    return kMisingCaptureLengthToDisplay;
+  }
 
   return QString::fromStdString(orbit_display_formats::GetDisplayTime(capture_length));
 }

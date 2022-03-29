@@ -33,10 +33,12 @@ class CaptureFileInfo {
   void Touch() { last_used_ = QDateTime::currentDateTime(); }
   void SetCaptureLength(absl::Duration capture_length) { capture_length_ = capture_length; }
 
+  static constexpr absl::Duration kMissingCaptureLengthValue{absl::Nanoseconds(0)};
+
  private:
   QFileInfo file_info_;
   QDateTime last_used_;
-  absl::Duration capture_length_ = absl::Nanoseconds(0);
+  absl::Duration capture_length_ = kMissingCaptureLengthValue;
 };
 
 }  // namespace orbit_capture_file_info

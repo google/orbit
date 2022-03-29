@@ -67,18 +67,22 @@ TEST(CaptureFileInfoManager, AddOrTouchCaptureFile) {
   std::this_thread::sleep_for(std::chrono::milliseconds(5));
 
   // Touch 1st file
-  manager.AddOrTouchCaptureFile(path1);
+  const absl::Duration capture_length1 = absl::Seconds(10);
+  manager.AddOrTouchCaptureFile(path1, capture_length1);
   ASSERT_EQ(manager.GetCaptureFileInfos().size(), 1);
+  ASSERT_EQ(manager.GetCaptureFileInfos()[0].CaptureLength(), capture_length1);
 
   // last used was after now_time_stamp
   EXPECT_GT(capture_file_info_1.LastUsed(), now_time_stamp);
 
   // Add 2nd file
   const std::filesystem::path path2 = "path/to/file2";
-  manager.AddOrTouchCaptureFile(path2);
+  const absl::Duration capture_length2 = absl::Milliseconds(10);
+  manager.AddOrTouchCaptureFile(path2, capture_length2);
   ASSERT_EQ(manager.GetCaptureFileInfos().size(), 2);
   const CaptureFileInfo& capture_file_info_2 = manager.GetCaptureFileInfos()[1];
   EXPECT_EQ(capture_file_info_2.FilePath(), QString::fromStdString(path2.string()));
+  EXPECT_EQ(capture_file_info_2.CaptureLength(), capture_length2);
 
   // clean up
   manager.Clear();
@@ -201,6 +205,29 @@ TEST(CaptureFileInfoManager, FillFromDirectory) {
 
     EXPECT_EQ(capture_file_info.FileName(), "test_capture.orbit");
   }
+
+  // clean up
+  manager.Clear();
+}
+
+TEST(CaptureFileInfoManager, GetCaptureLengthByPath) {
+  QCoreApplication::setOrganizationName(kOrgName);
+  QCoreApplication::setApplicationName("CaptureFileInfo.Manager.GetCaptureLengthByPath");
+
+  Manager manager;
+  manager.Clear();
+
+  const std::filesystem::path path1 = "path/to/file1";
+  manager.AddOrTouchCaptureFile(path1);
+  ASSERT_EQ(manager.GetCaptureLengthByPath(path1).value(),
+            CaptureFileInfo::kMissingCaptureLengthValue);
+
+  const std::filesystem::path path2 = "path/to/file2";
+  ASSERT_FALSE(manager.GetCaptureLengthByPath(path2).has_value());
+
+  const absl::Duration capture_length = absl::Milliseconds(10);
+  manager.AddOrTouchCaptureFile(path2, capture_length);
+  ASSERT_EQ(manager.GetCaptureLengthByPath(path2).value(), capture_length);
 
   // clean up
   manager.Clear();
