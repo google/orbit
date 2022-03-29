@@ -11,8 +11,17 @@
 #include "TestUtils/TestUtils.h"
 #include "WindowsUtils/Debugger.h"
 
+namespace {
+
+std::filesystem::path GetTestExecutablePath() {
+  static auto path = orbit_base::GetExecutableDir() / "FakeCliProgram.exe";
+  return path;
+}
+
 using orbit_windows_utils::Debugger;
 using orbit_windows_utils::ProcessInfo;
+
+}  // namespace
 
 class MockDebugger : public Debugger {
  public:
@@ -28,13 +37,6 @@ class MockDebugger : public Debugger {
   MOCK_METHOD(void, OnRipEvent, (const DEBUG_EVENT& event), (override));
 };
 
-namespace {
-std::filesystem::path GetTestExecutablePath() {
-  static auto path = orbit_base::GetExecutableDir() / "FakeCliProgram.exe";
-  return path;
-}
-}  // namespace
-
 TEST(Debugger, LaunchProcess) {
   MockDebugger debugger;
 
@@ -49,10 +51,17 @@ TEST(Debugger, LaunchProcess) {
   EXPECT_CALL(debugger, OnExceptionDebugEvent).Times(testing::AnyNumber());
   EXPECT_CALL(debugger, OnRipEvent).Times(testing::AnyNumber());
 
-  auto result = debugger.Start(GetTestExecutablePath(), /*working_directory=*/"", /*arguments=*/"");
+  const std::string kArguments = "--sleep_for_ms=20";
+  auto result = debugger.Start(GetTestExecutablePath(), /*working_directory=*/"", kArguments);
   ASSERT_TRUE(result.has_value());
   ProcessInfo& process_info = result.value();
-  EXPECT_STREQ(process_info.command_line.c_str(), GetTestExecutablePath().string().c_str());
+
+  std::string expected_command_line = GetTestExecutablePath().string();
+  if (!kArguments.empty()) expected_command_line += absl::StrFormat(" %s", kArguments);
+  EXPECT_STREQ(process_info.command_line.c_str(), expected_command_line.c_str());
+
+  // Wait for debugger to automatically detach upon process termination.
+  debugger.Wait();
 }
 
 TEST(Debugger, NonExistingExecutable) {
