@@ -53,11 +53,6 @@ TEST(Debugger, LaunchProcess) {
   ASSERT_TRUE(result.has_value());
   ProcessInfo& process_info = result.value();
   EXPECT_STREQ(process_info.command_line.c_str(), GetTestExecutablePath().string().c_str());
-
-  // Wait for process to finish.
-  WaitForSingleObject(*process_info.process_handle, INFINITE);
-
-  debugger.Detach();
 }
 
 TEST(Debugger, NonExistingExecutable) {
