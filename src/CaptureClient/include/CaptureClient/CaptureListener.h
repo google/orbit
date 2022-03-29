@@ -6,6 +6,7 @@
 #define CAPTURE_CLIENT_CAPTURE_LISTENER_H_
 
 #include "ClientData/ApiStringEvent.h"
+#include "ClientData/ApiTrackValue.h"
 #include "ClientData/CallstackEvent.h"
 #include "ClientData/CallstackInfo.h"
 #include "ClientData/LinuxAddressInfo.h"
@@ -46,7 +47,7 @@ class CaptureListener {
   virtual void OnTracepointEvent(
       orbit_client_protos::TracepointEventInfo tracepoint_event_info) = 0;
   virtual void OnApiStringEvent(const orbit_client_data::ApiStringEvent&) = 0;
-  virtual void OnApiTrackValue(const orbit_client_protos::ApiTrackValue&) = 0;
+  virtual void OnApiTrackValue(const orbit_client_data::ApiTrackValue&) = 0;
   virtual void OnWarningEvent(orbit_grpc_protos::WarningEvent warning_event) = 0;
   virtual void OnClockResolutionEvent(
       orbit_grpc_protos::ClockResolutionEvent clock_resolution_event) = 0;

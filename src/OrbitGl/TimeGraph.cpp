@@ -37,10 +37,10 @@
 
 using orbit_capture_client::CaptureEventProcessor;
 
+using orbit_client_data::ApiTrackValue;
 using orbit_client_data::CallstackEvent;
 using orbit_client_data::CaptureData;
 using orbit_client_data::TimerChain;
-using orbit_client_protos::ApiTrackValue;
 using orbit_client_protos::TimerInfo;
 
 using orbit_gl::CGroupAndProcessMemoryTrack;
@@ -293,33 +293,11 @@ void TimeGraph::ProcessApiStringEvent(const orbit_client_data::ApiStringEvent& s
   manual_instrumentation_manager_->ProcessStringEvent(string_event);
 }
 
-void TimeGraph::ProcessApiTrackValueEvent(const orbit_client_protos::ApiTrackValue& track_event) {
+void TimeGraph::ProcessApiTrackValueEvent(const orbit_client_data::ApiTrackValue& track_event) {
   VariableTrack* track = GetTrackManager()->GetOrCreateVariableTrack(track_event.name());
 
   uint64_t time = track_event.timestamp_ns();
-
-  switch (track_event.data_case()) {
-    case ApiTrackValue::kDataDouble:
-      track->AddValue(time, track_event.data_double());
-      break;
-    case ApiTrackValue::kDataFloat:
-      track->AddValue(time, track_event.data_float());
-      break;
-    case ApiTrackValue::kDataInt:
-      track->AddValue(time, track_event.data_int());
-      break;
-    case ApiTrackValue::kDataInt64:
-      track->AddValue(time, track_event.data_int64());
-      break;
-    case ApiTrackValue::kDataUint:
-      track->AddValue(time, track_event.data_uint());
-      break;
-    case ApiTrackValue::kDataUint64:
-      track->AddValue(time, track_event.data_uint64());
-      break;
-    default:
-      ORBIT_UNREACHABLE();
-  }
+  track->AddValue(time, track_event.data());
 }
 
 void TimeGraph::ProcessSystemMemoryTrackingTimer(const TimerInfo& timer_info) {

@@ -476,7 +476,7 @@ void OrbitApp::OnApiStringEvent(const orbit_client_data::ApiStringEvent& api_str
   GetMutableTimeGraph()->ProcessApiStringEvent(api_string_event);
 }
 
-void OrbitApp::OnApiTrackValue(const orbit_client_protos::ApiTrackValue& api_track_value) {
+void OrbitApp::OnApiTrackValue(const orbit_client_data::ApiTrackValue& api_track_value) {
   metrics_capture_complete_data_.number_of_manual_tracked_value_timers++;
   GetMutableTimeGraph()->ProcessApiTrackValueEvent(api_track_value);
 }

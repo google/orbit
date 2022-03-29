@@ -6,12 +6,13 @@
 
 #include "ApiUtils/EncodedString.h"
 #include "ClientData/ApiStringEvent.h"
+#include "ClientData/ApiTrackValue.h"
 #include "OrbitBase/Logging.h"
 
 namespace orbit_capture_client {
 
 using orbit_client_data::ApiStringEvent;
-using orbit_client_protos::ApiTrackValue;
+using orbit_client_data::ApiTrackValue;
 using orbit_client_protos::TimerInfo;
 using orbit_grpc_protos::ApiEvent;
 using orbit_grpc_protos::ApiScopeStart;
@@ -164,35 +165,25 @@ void ApiEventProcessor::ProcessStringEventLegacy(const orbit_api::ApiEvent& api_
 }
 
 void ApiEventProcessor::ProcessTrackingEventLegacy(const orbit_api::ApiEvent& api_event) {
-  ApiTrackValue api_track_value;
-  api_track_value.set_process_id(api_event.pid);
-  api_track_value.set_thread_id(api_event.tid);
-  api_track_value.set_timestamp_ns(api_event.timestamp_ns);
-
-  api_track_value.set_name(api_event.encoded_event.event.name);
-
+  double data = 0.0;
   switch (api_event.Type()) {
     case orbit_api::kTrackInt:
-      api_track_value.set_data_int(orbit_api::Decode<int32_t>(api_event.encoded_event.event.data));
+      data = static_cast<double>(orbit_api::Decode<int32_t>(api_event.encoded_event.event.data));
       break;
     case orbit_api::kTrackInt64:
-      api_track_value.set_data_int64(
-          orbit_api::Decode<int64_t>(api_event.encoded_event.event.data));
+      data = static_cast<double>(orbit_api::Decode<int64_t>(api_event.encoded_event.event.data));
       break;
     case orbit_api::kTrackUint:
-      api_track_value.set_data_uint(
-          orbit_api::Decode<uint32_t>(api_event.encoded_event.event.data));
+      data = static_cast<double>(orbit_api::Decode<uint32_t>(api_event.encoded_event.event.data));
       break;
     case orbit_api::kTrackUint64:
-      api_track_value.set_data_uint64(
-          orbit_api::Decode<uint64_t>(api_event.encoded_event.event.data));
+      data = static_cast<double>(orbit_api::Decode<uint64_t>(api_event.encoded_event.event.data));
       break;
     case orbit_api::kTrackFloat:
-      api_track_value.set_data_float(orbit_api::Decode<float>(api_event.encoded_event.event.data));
+      data = static_cast<double>(orbit_api::Decode<float>(api_event.encoded_event.event.data));
       break;
     case orbit_api::kTrackDouble:
-      api_track_value.set_data_double(
-          orbit_api::Decode<double>(api_event.encoded_event.event.data));
+      data = static_cast<double>(orbit_api::Decode<double>(api_event.encoded_event.event.data));
       break;
 
     case orbit_api::kNone:
@@ -203,7 +194,8 @@ void ApiEventProcessor::ProcessTrackingEventLegacy(const orbit_api::ApiEvent& ap
     case orbit_api::kString:
       ORBIT_UNREACHABLE();
   }
-
+  ApiTrackValue api_track_value{api_event.pid, api_event.tid, api_event.timestamp_ns,
+                                api_event.encoded_event.event.name, data};
   capture_listener_->OnApiTrackValue(api_track_value);
 }
 
@@ -291,78 +283,55 @@ void ApiEventProcessor::ProcessApiStringEvent(
 
 void ApiEventProcessor::ProcessApiTrackDouble(
     const orbit_grpc_protos::ApiTrackDouble& grpc_api_track_double) {
-  ApiTrackValue api_track_value;
-  api_track_value.set_process_id(grpc_api_track_double.pid());
-  api_track_value.set_thread_id(grpc_api_track_double.tid());
-  api_track_value.set_timestamp_ns(grpc_api_track_double.timestamp_ns());
-  api_track_value.set_data_double(grpc_api_track_double.data());
-
-  api_track_value.set_name(DecodeString(grpc_api_track_double));
+  ApiTrackValue api_track_value{grpc_api_track_double.pid(), grpc_api_track_double.tid(),
+                                grpc_api_track_double.timestamp_ns(),
+                                DecodeString(grpc_api_track_double), grpc_api_track_double.data()};
 
   capture_listener_->OnApiTrackValue(api_track_value);
 }
 
 void ApiEventProcessor::ProcessApiTrackFloat(
     const orbit_grpc_protos::ApiTrackFloat& grpc_api_track_float) {
-  ApiTrackValue api_track_value;
-  api_track_value.set_process_id(grpc_api_track_float.pid());
-  api_track_value.set_thread_id(grpc_api_track_float.tid());
-  api_track_value.set_timestamp_ns(grpc_api_track_float.timestamp_ns());
-  api_track_value.set_data_float(grpc_api_track_float.data());
-
-  api_track_value.set_name(DecodeString(grpc_api_track_float));
+  ApiTrackValue api_track_value{
+      grpc_api_track_float.pid(), grpc_api_track_float.tid(), grpc_api_track_float.timestamp_ns(),
+      DecodeString(grpc_api_track_float), static_cast<double>(grpc_api_track_float.data())};
 
   capture_listener_->OnApiTrackValue(api_track_value);
 }
 
 void ApiEventProcessor::ProcessApiTrackInt(
     const orbit_grpc_protos::ApiTrackInt& grpc_api_track_int) {
-  ApiTrackValue api_track_value;
-  api_track_value.set_process_id(grpc_api_track_int.pid());
-  api_track_value.set_thread_id(grpc_api_track_int.tid());
-  api_track_value.set_timestamp_ns(grpc_api_track_int.timestamp_ns());
-  api_track_value.set_data_int(grpc_api_track_int.data());
-
-  api_track_value.set_name(DecodeString(grpc_api_track_int));
+  ApiTrackValue api_track_value{grpc_api_track_int.pid(), grpc_api_track_int.tid(),
+                                grpc_api_track_int.timestamp_ns(), DecodeString(grpc_api_track_int),
+                                static_cast<double>(grpc_api_track_int.data())};
 
   capture_listener_->OnApiTrackValue(api_track_value);
 }
 
 void ApiEventProcessor::ProcessApiTrackInt64(
     const orbit_grpc_protos::ApiTrackInt64& grpc_api_track_int64) {
-  ApiTrackValue api_track_value;
-  api_track_value.set_process_id(grpc_api_track_int64.pid());
-  api_track_value.set_thread_id(grpc_api_track_int64.tid());
-  api_track_value.set_timestamp_ns(grpc_api_track_int64.timestamp_ns());
-  api_track_value.set_data_int64(grpc_api_track_int64.data());
-
-  api_track_value.set_name(DecodeString(grpc_api_track_int64));
+  ApiTrackValue api_track_value{
+      grpc_api_track_int64.pid(), grpc_api_track_int64.tid(), grpc_api_track_int64.timestamp_ns(),
+      DecodeString(grpc_api_track_int64), static_cast<double>(grpc_api_track_int64.data())};
 
   capture_listener_->OnApiTrackValue(api_track_value);
 }
 
 void ApiEventProcessor::ProcessApiTrackUint(
     const orbit_grpc_protos::ApiTrackUint& grpc_api_track_uint) {
-  ApiTrackValue api_track_value;
-  api_track_value.set_process_id(grpc_api_track_uint.pid());
-  api_track_value.set_thread_id(grpc_api_track_uint.tid());
-  api_track_value.set_timestamp_ns(grpc_api_track_uint.timestamp_ns());
-  api_track_value.set_data_uint(grpc_api_track_uint.data());
-
-  api_track_value.set_name(DecodeString(grpc_api_track_uint));
+  ApiTrackValue api_track_value{
+      grpc_api_track_uint.pid(), grpc_api_track_uint.tid(), grpc_api_track_uint.timestamp_ns(),
+      DecodeString(grpc_api_track_uint), static_cast<double>(grpc_api_track_uint.data())};
 
   capture_listener_->OnApiTrackValue(api_track_value);
 }
 
 void ApiEventProcessor::ProcessApiTrackUint64(
     const orbit_grpc_protos::ApiTrackUint64& grpc_api_track_uint64) {
-  ApiTrackValue api_track_value;
-  api_track_value.set_process_id(grpc_api_track_uint64.pid());
-  api_track_value.set_thread_id(grpc_api_track_uint64.tid());
-  api_track_value.set_timestamp_ns(grpc_api_track_uint64.timestamp_ns());
-  api_track_value.set_data_uint64(grpc_api_track_uint64.data());
-
-  api_track_value.set_name(DecodeString(grpc_api_track_uint64));
+  ApiTrackValue api_track_value{grpc_api_track_uint64.pid(), grpc_api_track_uint64.tid(),
+                                grpc_api_track_uint64.timestamp_ns(),
+                                DecodeString(grpc_api_track_uint64),
+                                static_cast<double>(grpc_api_track_uint64.data())};
 
   capture_listener_->OnApiTrackValue(api_track_value);
 }
