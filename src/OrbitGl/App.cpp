@@ -317,7 +317,8 @@ void OrbitApp::OnCaptureFinished(const CaptureFinished& capture_finished) {
         break;
     }
 
-    if (capture_data_ != nullptr && capture_data_->file_path().has_value()) {
+    ORBIT_CHECK(capture_data_ != nullptr);
+    if (capture_data_->file_path().has_value()) {
       capture_file_info_manager_.AddOrTouchCaptureFile(capture_data_->file_path().value(),
                                                        GetCaptureTime());
     }

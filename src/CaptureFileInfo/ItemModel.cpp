@@ -14,11 +14,11 @@ namespace orbit_capture_file_info {
 
 namespace {
 
-const QString kMisingCaptureLengthToDisplay = QStringLiteral("--");
+const QString kMissingCaptureLengthDisplayText = QStringLiteral("--");
 
 [[nodiscard]] QString GetCaptureLengthToDisplay(absl::Duration capture_length) {
   if (capture_length == CaptureFileInfo::kMissingCaptureLengthValue) {
-    return kMisingCaptureLengthToDisplay;
+    return kMissingCaptureLengthDisplayText;
   }
 
   return QString::fromStdString(orbit_display_formats::GetDisplayTime(capture_length));

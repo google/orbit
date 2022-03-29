@@ -33,7 +33,7 @@ class Manager {
   // TODO(http://b/218298681) use std::filesystem::equivalent instead of operator== to check whether
   // 2 paths are actually pointing to the same file.
   void AddOrTouchCaptureFile(const std::filesystem::path& path,
-                             std::optional<absl::Duration> capture_length = std::nullopt);
+                             std::optional<absl::Duration> capture_length);
   void Clear();
   void PurgeNonExistingFiles();
   ErrorMessageOr<void> FillFromDirectory(const std::filesystem::path& directory);

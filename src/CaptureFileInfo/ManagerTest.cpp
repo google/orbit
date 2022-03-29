@@ -30,15 +30,15 @@ TEST(CaptureFileInfoManager, Clear) {
   manager.Clear();
   EXPECT_TRUE(manager.GetCaptureFileInfos().empty());
 
-  manager.AddOrTouchCaptureFile("test/path1");
+  manager.AddOrTouchCaptureFile("test/path1", std::nullopt);
   EXPECT_FALSE(manager.GetCaptureFileInfos().empty());
 
   manager.Clear();
   EXPECT_TRUE(manager.GetCaptureFileInfos().empty());
 
-  manager.AddOrTouchCaptureFile("test/path1");
+  manager.AddOrTouchCaptureFile("test/path1", std::nullopt);
   EXPECT_FALSE(manager.GetCaptureFileInfos().empty());
-  manager.AddOrTouchCaptureFile("test/path2");
+  manager.AddOrTouchCaptureFile("test/path2", std::nullopt);
   EXPECT_FALSE(manager.GetCaptureFileInfos().empty());
 
   manager.Clear();
@@ -55,7 +55,7 @@ TEST(CaptureFileInfoManager, AddOrTouchCaptureFile) {
 
   // Add 1st file
   const std::filesystem::path path1 = "path/to/file1";
-  manager.AddOrTouchCaptureFile(path1);
+  manager.AddOrTouchCaptureFile(path1, std::nullopt);
   ASSERT_EQ(manager.GetCaptureFileInfos().size(), 1);
 
   const CaptureFileInfo& capture_file_info_1 = manager.GetCaptureFileInfos()[0];
@@ -113,7 +113,7 @@ TEST(CaptureFileInfoManager, AddOrTouchCaptureFilePathFormatting) {
 
   std::set<std::filesystem::path> control_set;
   for (const auto& path : test_paths) {
-    manager.AddOrTouchCaptureFile(path);
+    manager.AddOrTouchCaptureFile(path, std::nullopt);
     control_set.insert(path);
   }
 
@@ -128,14 +128,14 @@ TEST(CaptureFileInfoManager, PurgeNonExistingFiles) {
   manager.Clear();
   EXPECT_TRUE(manager.GetCaptureFileInfos().empty());
 
-  manager.AddOrTouchCaptureFile("non/existing/path");
+  manager.AddOrTouchCaptureFile("non/existing/path", std::nullopt);
   EXPECT_FALSE(manager.GetCaptureFileInfos().empty());
 
   manager.PurgeNonExistingFiles();
   EXPECT_TRUE(manager.GetCaptureFileInfos().empty());
 
   const std::filesystem::path existing_file = orbit_test::GetTestdataDir() / "test_file.txt";
-  manager.AddOrTouchCaptureFile(existing_file);
+  manager.AddOrTouchCaptureFile(existing_file, std::nullopt);
   EXPECT_FALSE(manager.GetCaptureFileInfos().empty());
 
   manager.PurgeNonExistingFiles();
@@ -162,7 +162,7 @@ TEST(CaptureFileInfoManager, Persistency) {
   const std::filesystem::path existing_file = orbit_test::GetTestdataDir() / "test_file.txt";
   {
     Manager manager;
-    manager.AddOrTouchCaptureFile(existing_file);
+    manager.AddOrTouchCaptureFile(existing_file, std::nullopt);
     EXPECT_EQ(manager.GetCaptureFileInfos().size(), 1);
   }
 
@@ -218,7 +218,7 @@ TEST(CaptureFileInfoManager, GetCaptureLengthByPath) {
   manager.Clear();
 
   const std::filesystem::path path1 = "path/to/file1";
-  manager.AddOrTouchCaptureFile(path1);
+  manager.AddOrTouchCaptureFile(path1, std::nullopt);
   ASSERT_EQ(manager.GetCaptureLengthByPath(path1).value(),
             CaptureFileInfo::kMissingCaptureLengthValue);
 
