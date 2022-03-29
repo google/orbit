@@ -97,26 +97,25 @@ class GlCanvas : public orbit_gl::AccessibleInterfaceProvider {
   [[nodiscard]] const orbit_gl::Viewport& GetViewport() const { return viewport_; }
   [[nodiscard]] orbit_gl::Viewport& GetViewport() { return viewport_; }
 
-  static float kZValueSlider;
-  static float kZValueSliderBg;
-  static float kZValueMargin;
-  static float kZValueTimeBarMouseLabel;
-  static float kZValueTimeBar;
-  static float kZValueTimeBarBg;
-  static float kZValueTextUi;
-  static float kZValueUi;
-  static float kZValueEventBarPicking;
-  static float kZValueOverlayTextBackground;
-  static float kZValueOverlay;
-  static float kZValueIncompleteDataOverlay;
+  static float kZValueTrack;
+  static float kZValueIncompleteDataOverlayPicking;
+  static float kZValueEventBar;
+  static float kZValueBox;
+  static float kZValueEvent;
   static float kZValueTrackText;
   static float kZValueTrackLabel;
-  static float kZValueEvent;
-  static float kZValueBox;
-  static float kZValueBoxBorder;
-  static float kZValueEventBar;
-  static float kZValueIncompleteDataOverlayPicking;
-  static float kZValueTrack;
+  static float kZValueTimeBar;
+  static float kZValueTimeBarLabel;
+  static float kZValueTimeBarMouseLabel;
+  static float kZValueIncompleteDataOverlay;
+  static float kZValueOverlay;
+  static float kZValueOverlayTextBackground;
+  static float kZValueEventBarPicking;
+  static float kZValueUi;
+  static float kZValueTextUi;
+  static float kZValueMargin;
+  static float kZValueSliderBg;
+  static float kZValueSlider;
 
   static float kZOffsetMovingTrack;
   static float kZOffsetPinnedTrack;
