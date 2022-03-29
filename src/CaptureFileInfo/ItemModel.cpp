@@ -76,10 +76,14 @@ QVariant ItemModel::data(const QModelIndex& idx, int role) const {
   }
 
   if (role == Qt::ToolTipRole) {
-    return QString::fromStdString("%1 - %2")
-        .arg(QString::fromStdString(
-            orbit_display_formats::GetDisplaySize(capture_file_info.FileSize())))
-        .arg(capture_file_info.FilePath());
+    QString tooltips = QString::fromStdString("%1 - %2")
+                           .arg(QString::fromStdString(
+                               orbit_display_formats::GetDisplaySize(capture_file_info.FileSize())))
+                           .arg(capture_file_info.FilePath());
+    if (capture_file_info.CaptureLength() == CaptureFileInfo::kMissingCaptureLengthValue) {
+      tooltips.append("\n(The capture length will be available after the capture file is loaded.)");
+    }
+    return tooltips;
   }
 
   return {};
