@@ -81,6 +81,7 @@ target_link_libraries(ClientData PUBLIC
 add_executable(ClientDataTests)
 target_sources(ClientDataTests PRIVATE
         CallstackDataTest.cpp
+        CaptureDataTest.cpp
         DataManagerTest.cpp
         ScopeIdProviderTest.cpp
         FunctionInfoSetTest.cpp

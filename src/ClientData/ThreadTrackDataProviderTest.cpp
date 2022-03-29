@@ -288,14 +288,14 @@ constexpr std::array<uint64_t, kTimersForFirstId> kSortedDurationsForFirstId = {
 constexpr std::array<uint64_t, kTimersForSecondId> kDurationsForSecondId = {500, 400};
 constexpr std::array<uint64_t, kTimersForSecondId> kSortedDurationsForSecondId = {400, 500};
 
-const std::array<uint64_t, kTimerCount> kDurations = []() {
+static const std::array<uint64_t, kTimerCount> kDurations = [] {
   std::array<uint64_t, kTimerCount> result;
   std::copy(std::begin(kDurationsForFirstId), std::end(kDurationsForFirstId), std::begin(result));
   std::copy(std::begin(kDurationsForSecondId), std::end(kDurationsForSecondId),
             std::begin(result) + kTimersForFirstId);
   return result;
 }();
-const std::array<TimerInfo, kTimerCount> kTimerInfos = []() {
+static const std::array<TimerInfo, kTimerCount> kTimerInfos = [] {
   std::array<TimerInfo, kTimerCount> result;
   for (size_t i = 0; i < kTimerCount; ++i) {
     result[i].set_function_id(kTimerIds[i]);
@@ -313,7 +313,6 @@ TEST(ThreadTrackDataProvider, GetSortedTimerDurationsForScopeIdIsCorrect) {
   ThreadTrackDataProvider thread_track_data_provider(&scope_id_provider);
 
   for (size_t i = 0; i < kTimerCount; ++i) {
-    std::cout << std::endl << kTimerInfos[i].function_id() << std::endl;
     thread_track_data_provider.AddTimer(kTimerInfos[i]);
   }
   thread_track_data_provider.OnCaptureComplete();
