@@ -63,6 +63,7 @@ class CallTreeWidget : public QWidget {
  private slots:
   void OnRowExpanded(const QModelIndex& index);
   void OnCopyKeySequencePressed();
+  void OnAltKeyAndMousePressed(const QPoint& point);
   void OnCustomContextMenuRequested(const QPoint& point);
   void OnSearchLineEditTextEdited(const QString& text);
   void OnSearchTypingFinishedTimerTimout();

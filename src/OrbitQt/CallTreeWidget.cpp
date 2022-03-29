@@ -42,7 +42,7 @@
 #include "ClientData/CaptureData.h"
 #include "ClientData/ModuleAndFunctionLookup.h"
 #include "ClientData/ModuleData.h"
-#include "CopyKeySequenceEnabledTreeView.h"
+#include "CustomSignalsTreeView.h"
 #include "DataViews/FunctionsDataView.h"
 #include "MetricsUploader/orbit_log_event.pb.h"
 #include "OrbitBase/Logging.h"
@@ -61,8 +61,10 @@ CallTreeWidget::CallTreeWidget(QWidget* parent)
   search_typing_finished_timer_->setSingleShot(true);
 
   connect(ui_->callTreeTreeView, &QTreeView::expanded, this, &CallTreeWidget::OnRowExpanded);
-  connect(ui_->callTreeTreeView, &CopyKeySequenceEnabledTreeView::copyKeySequencePressed, this,
+  connect(ui_->callTreeTreeView, &CustomSignalsTreeView::copyKeySequencePressed, this,
           &CallTreeWidget::OnCopyKeySequencePressed);
+  connect(ui_->callTreeTreeView, &CustomSignalsTreeView::altKeyAndMousePressed, this,
+          &CallTreeWidget::OnAltKeyAndMousePressed);
   connect(ui_->callTreeTreeView, &QTreeView::customContextMenuRequested, this,
           &CallTreeWidget::OnCustomContextMenuRequested);
   connect(ui_->searchLineEdit, &QLineEdit::textEdited, this,
@@ -414,6 +416,20 @@ static void CollapseRecursively(QTreeView* tree_view, const QModelIndex& index) 
   }
   if (tree_view->isExpanded(index)) {
     tree_view->collapse(index);
+  }
+}
+
+void CallTreeWidget::OnAltKeyAndMousePressed(const QPoint& point) {
+  QModelIndex index = ui_->callTreeTreeView->indexAt(point);
+  if (!index.isValid()) return;
+
+  if (ui_->callTreeTreeView->isExpanded(index)) {
+    CollapseRecursively(ui_->callTreeTreeView, index);
+  } else {
+    DisableThreadOrFunctionColumnResizeOnRowExpanded();
+    ExpandRecursively(ui_->callTreeTreeView, index);
+    ReEnableThreadOrFunctionColumnResizeOnRowExpanded();
+    ResizeThreadOrFunctionColumnToShowVisibleDescendants(index);
   }
 }
 

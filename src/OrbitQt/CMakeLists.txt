@@ -13,7 +13,7 @@ target_sources(
           CallTreeViewItemModel.h
           CallTreeWidget.h
           CaptureOptionsDialog.h
-          CopyKeySequenceEnabledTreeView.h
+          CustomSignalsTreeView.h
           CutoutWidget.h
           ElidedLabel.h
           FilterPanelWidget.h
