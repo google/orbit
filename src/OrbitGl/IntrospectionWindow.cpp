@@ -144,11 +144,11 @@ class IntrospectionCaptureListener : public orbit_capture_client::CaptureListene
     ORBIT_UNREACHABLE();
   }
   void OnUniqueTracepointInfo(uint64_t /*key*/,
-                              orbit_grpc_protos::TracepointInfo /*tracepoint_info*/) override {
+                              orbit_client_data::TracepointInfo /*tracepoint_info*/) override {
     ORBIT_UNREACHABLE();
   }
   void OnTracepointEvent(
-      orbit_client_protos::TracepointEventInfo /*tracepoint_event_info*/) override {
+      orbit_client_data::TracepointEventInfo /*tracepoint_event_info*/) override {
     ORBIT_UNREACHABLE();
   }
   void OnModuleUpdate(uint64_t /*timestamp_ns*/,

@@ -15,20 +15,6 @@ message FunctionInfo {
   uint64 size = 7;
 }
 
-message TracepointInfo {
-  string name = 1;
-  string category = 2;
-  uint64 tracepoint_info_key = 3;
-}
-
-message TracepointEventInfo {
-  uint32 pid = 1;
-  uint32 tid = 2;
-  int64 time = 3;
-  int32 cpu = 4;
-  uint64 tracepoint_info_key = 5;
-}
-
 message TimerInfo {
   // NextID: 18
   uint64 start = 1;

@@ -42,9 +42,9 @@ class MyCaptureListener : public CaptureListener {
   }
   void OnAddressInfo(LinuxAddressInfo /*address_info*/) override {}
   void OnUniqueTracepointInfo(uint64_t /*key*/,
-                              orbit_grpc_protos::TracepointInfo /*tracepoint_info*/) override {}
+                              orbit_client_data::TracepointInfo /*tracepoint_info*/) override {}
   void OnTracepointEvent(
-      orbit_client_protos::TracepointEventInfo /*tracepoint_event_info*/) override {}
+      orbit_client_data::TracepointEventInfo /*tracepoint_event_info*/) override {}
   void OnModuleUpdate(uint64_t /*timestamp_ns*/,
                       orbit_grpc_protos::ModuleInfo /*module_info*/) override {}
   void OnModulesSnapshot(uint64_t /*timestamp_ns*/,

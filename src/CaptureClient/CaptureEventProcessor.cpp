@@ -28,6 +28,7 @@ using orbit_client_data::CallstackInfo;
 using orbit_client_data::CallstackType;
 using orbit_client_data::LinuxAddressInfo;
 using orbit_client_data::ThreadStateSliceInfo;
+using orbit_client_data::TracepointInfo;
 
 using orbit_client_protos::TimerInfo;
 
@@ -588,23 +589,22 @@ void CaptureEventProcessorForListener::SendCallstackToListenerIfNecessary(
 
 void CaptureEventProcessorForListener::ProcessInternedTracepointInfo(
     orbit_grpc_protos::InternedTracepointInfo interned_tracepoint_info) {
+  TracepointInfo tracepoint_info{interned_tracepoint_info.intern().name(),
+                                 interned_tracepoint_info.intern().category()};
   capture_listener_->OnUniqueTracepointInfo(interned_tracepoint_info.key(),
-                                            std::move(*interned_tracepoint_info.mutable_intern()));
+                                            std::move(tracepoint_info));
 }
 void CaptureEventProcessorForListener::ProcessTracepointEvent(
     const orbit_grpc_protos::TracepointEvent& tracepoint_event) {
   uint64_t key = tracepoint_event.tracepoint_info_key();
 
-  orbit_client_protos::TracepointEventInfo tracepoint_event_info;
-  tracepoint_event_info.set_pid(tracepoint_event.pid());
-  tracepoint_event_info.set_tid(tracepoint_event.tid());
-  tracepoint_event_info.set_time(tracepoint_event.timestamp_ns());
-  tracepoint_event_info.set_cpu(tracepoint_event.cpu());
-  tracepoint_event_info.set_tracepoint_info_key(key);
+  orbit_client_data::TracepointEventInfo tracepoint_event_info{
+      tracepoint_event.pid(), tracepoint_event.tid(), tracepoint_event.cpu(),
+      tracepoint_event.timestamp_ns(), key};
 
   gpu_queue_submission_processor_.UpdateBeginCaptureTime(tracepoint_event.timestamp_ns());
 
-  capture_listener_->OnTracepointEvent(std::move(tracepoint_event_info));
+  capture_listener_->OnTracepointEvent(tracepoint_event_info);
 }
 
 void CaptureEventProcessorForListener::ProcessWarningEvent(

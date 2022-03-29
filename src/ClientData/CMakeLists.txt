@@ -43,6 +43,8 @@ target_sources(ClientData PUBLIC
         include/ClientData/TimestampIntervalSet.h
         include/ClientData/TracepointCustom.h
         include/ClientData/TracepointData.h
+        include/ClientData/TracepointEventInfo.h
+        include/ClientData/TracepointInfo.h
         include/ClientData/UserDefinedCaptureData.h)
 
 target_sources(ClientData PRIVATE
