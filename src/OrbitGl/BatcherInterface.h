@@ -10,11 +10,10 @@
 #include "PickingManager.h"
 #include "TranslationStack.h"
 
-using TooltipCallback = std::function<std::string(PickingId)>;
-
 namespace orbit_gl {
 
 struct PickingUserData {
+  using TooltipCallback = std::function<std::string(PickingId)>;
   const orbit_client_protos::TimerInfo* timer_info_;
   TooltipCallback generate_tooltip_;
   const void* custom_data_ = nullptr;
@@ -50,6 +49,7 @@ class BatcherInterface {
 
   [[nodiscard]] virtual const PickingUserData* GetUserData(PickingId id) const = 0;
 
+  // TODO(b/227302285): Move them outside BatcherInterface
   [[nodiscard]] BatcherId GetBatcherId() const { return batcher_id_; }
   void PushTranslation(float x, float y, float z = 0.f) { translations_.PushTranslation(x, y, z); }
   void PopTranslation() { translations_.PopTranslation(); }
