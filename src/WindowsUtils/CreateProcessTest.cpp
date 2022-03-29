@@ -10,8 +10,6 @@
 #include "WindowsUtils/CreateProcess.h"
 #include "WindowsUtils/ProcessList.h"
 
-#pragma optimize("", off)
-
 namespace {
 std::filesystem::path GetTestExecutablePath() {
   static auto path = orbit_base::GetExecutableDir() / "FakeCliProgram.exe";
