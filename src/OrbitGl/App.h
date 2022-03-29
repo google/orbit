@@ -534,6 +534,9 @@ class OrbitApp final : public DataViewFactory,
     return histogram_selection_range_;
   }
 
+  [[nodiscard]] const std::vector<uint64_t>* GetSortedTimerDurationsForScopeId(
+      uint64_t scope_id) const override;
+
  private:
   void UpdateModulesAbortCaptureIfModuleWithoutBuildIdNeedsReload(
       absl::Span<const orbit_grpc_protos::ModuleInfo> module_infos);

@@ -157,8 +157,7 @@ void LiveFunctionsDataView::UpdateHistogramWithIndices(
 void LiveFunctionsDataView::UpdateHistogramWithScopeIds(const std::vector<uint64_t>& scope_ids) {
   const std::vector<uint64_t>* timer_durations =
       (app_->HasCaptureData() && !scope_ids.empty())
-          ? app_->GetCaptureData().GetThreadTrackDataProvider()->GetSortedTimerDurationsForScopeId(
-                scope_ids[0])
+          ? app_->GetSortedTimerDurationsForScopeId(scope_ids[0])
           : nullptr;
 
   if (timer_durations == nullptr) {

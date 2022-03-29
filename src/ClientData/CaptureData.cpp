@@ -35,8 +35,8 @@ CaptureData::CaptureData(const CaptureStarted& capture_started,
       frame_track_function_ids_{std::move(frame_track_function_ids)},
       file_path_{std::move(file_path)},
       scope_id_provider_(NameEqualityScopeIdProvider::Create(capture_started.capture_options())),
-      thread_track_data_provider_(std::make_unique<ThreadTrackDataProvider>(
-          scope_id_provider_.get(), data_source == DataSource::kLoadedCapture)) {
+      thread_track_data_provider_(
+          std::make_unique<ThreadTrackDataProvider>(data_source == DataSource::kLoadedCapture)) {
   ProcessInfo process_info;
   process_info.set_pid(capture_started.process_id());
   std::filesystem::path executable_path{capture_started.executable_path()};

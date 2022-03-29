@@ -91,6 +91,11 @@ class TrackManager {
   const absl::flat_hash_map<Track::Type, bool> GetAllTrackTypesVisibility() const;
   void RestoreAllTrackTypesVisibility(const absl::flat_hash_map<Track::Type, bool>& values);
 
+  void OnCaptureComplete();
+
+  [[nodiscard]] const std::vector<uint64_t>* GetSortedTimerDurationsForScopeId(
+      uint64_t scope_id) const;
+
  private:
   [[nodiscard]] int FindMovingTrackIndex();
   void UpdateMovingTrackPositionInVisibleTracks();
@@ -102,6 +107,13 @@ class TrackManager {
   void AddTrack(const std::shared_ptr<Track>& track);
   void AddFrameTrack(const std::shared_ptr<FrameTrack>& frame_track);
 
+  void UpdateTimerDurations();
+
+  template <typename IteratorType>
+  void CollectDurationsFromMap(IteratorType begin, IteratorType end);
+
+  void CollectDurations(const std::vector<const orbit_client_data::TimerChain*>& chains);
+
   // TODO(b/174655559): Use absl's mutex here.
   mutable std::recursive_mutex mutex_;
 
@@ -110,8 +122,8 @@ class TrackManager {
   std::map<std::string, std::shared_ptr<AsyncTrack>> async_tracks_;
   std::map<std::string, std::shared_ptr<VariableTrack>> variable_tracks_;
   // Mapping from timeline to GPU tracks. Timeline name is used for stable ordering. In particular
-  // we want the marker tracks next to their queue track. E.g. "gfx" and "gfx_markers" should appear
-  // next to each other.
+  // we want the marker tracks next to their queue track. E.g. "gfx" and "gfx_markers" should
+  // appear next to each other.
   std::map<std::string, std::shared_ptr<GpuTrack>> gpu_tracks_;
   // Mapping from function id to frame tracks.
   std::map<uint64_t, std::shared_ptr<FrameTrack>> frame_tracks_;
@@ -140,6 +152,8 @@ class TrackManager {
 
   bool data_from_saved_capture_ = false;
   absl::flat_hash_map<Track::Type, bool> track_type_visibility_;
+
+  absl::flat_hash_map<uint64_t, std::vector<uint64_t>> timer_durations_;
 };
 
 }  // namespace orbit_gl

@@ -15,11 +15,9 @@ namespace orbit_client_data {
 // well as metadata about them.
 class ThreadTrackDataProvider final {
  public:
-  explicit ThreadTrackDataProvider(ScopeIdProvider* scope_id_provider,
-                                   bool is_data_from_saved_capture = false)
-      : thread_track_data_manager_{std::make_unique<ThreadTrackDataManager>(
-            is_data_from_saved_capture)},
-        scope_id_provider_(scope_id_provider){};
+  explicit ThreadTrackDataProvider(bool is_data_from_saved_capture = false)
+      : thread_track_data_manager_{
+            std::make_unique<ThreadTrackDataManager>(is_data_from_saved_capture)} {};
 
   const orbit_client_protos::TimerInfo& AddTimer(orbit_client_protos::TimerInfo timer_info) {
     return thread_track_data_manager_->AddTimer(std::move(timer_info));
@@ -87,21 +85,12 @@ class ThreadTrackDataProvider final {
 
   void OnCaptureComplete();
 
-  [[nodiscard]] const std::vector<uint64_t>* GetSortedTimerDurationsForScopeId(
-      uint64_t scope_id) const;
-
  private:
   [[nodiscard]] const ScopeTreeTimerData* GetScopeTreeTimerData(uint32_t thread_id) const {
     return thread_track_data_manager_->GetScopeTreeTimerData(thread_id);
   }
 
-  void UpdateTimerDurations();
-
   std::unique_ptr<ThreadTrackDataManager> thread_track_data_manager_;
-
-  ScopeIdProvider* scope_id_provider_;
-
-  absl::flat_hash_map<uint64_t, std::vector<uint64_t>> timer_durations_;
 };
 
 }  // namespace orbit_client_data

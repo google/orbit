@@ -101,6 +101,9 @@ class MockAppInterface : public AppInterface {
 
   MOCK_METHOD(uint64_t, ProvideScopeId, (const orbit_client_protos::TimerInfo& timer_info),
               (const));
+
+  MOCK_METHOD(const std::vector<uint64_t>*, GetSortedTimerDurationsForScopeId, (uint64_t scope_id),
+              (const));
 };
 
 }  // namespace orbit_data_views

@@ -3,10 +3,13 @@
 // found in the LICENSE file.
 #include <gtest/gtest.h>
 
+#include <cstdint>
+
 #include "ClientData/CaptureData.h"
 #include "ClientData/ModuleManager.h"
 #include "ClientProtos/capture_data.pb.h"
 #include "GrpcProtos/capture.pb.h"
+#include "OrbitBase/Logging.h"
 #include "TimeGraph.h"
 #include "Track.h"
 #include "TrackManager.h"
@@ -191,6 +194,54 @@ TEST_F(TrackManagerTest, TrackTypeVisibilityIsRestored) {
 
   track_manager_.RestoreAllTrackTypesVisibility(visibility_after);
   EXPECT_TRUE(match_visible_track_types(visible_tracks));
+}
+
+constexpr size_t kTimersForFirstId = 3;
+constexpr size_t kTimersForSecondId = 2;
+constexpr size_t kTimerCount = kTimersForFirstId + kTimersForSecondId;
+constexpr uint64_t kFirstId = 1;
+constexpr uint64_t kSecondId = 2;
+constexpr std::array<uint64_t, kTimerCount> kTimerIds = {kFirstId, kFirstId, kFirstId, kSecondId,
+                                                         kSecondId};
+constexpr std::array<uint64_t, kTimerCount> kStarts = {10, 20, 30, 40, 50};
+constexpr std::array<uint64_t, kTimersForFirstId> kDurationsForFirstId = {300, 100, 200};
+// constexpr std::array<uint64_t, kTimersForFirstId> kSortedDurationsForFirstId = {100, 200, 300};
+constexpr std::array<uint64_t, kTimersForSecondId> kDurationsForSecondId = {500, 400};
+// constexpr std::array<uint64_t, kTimersForSecondId> kSortedDurationsForSecondId = {400, 500};
+
+static const std::array<uint64_t, kTimerCount> kDurations = [] {
+  std::array<uint64_t, kTimerCount> result;
+  std::copy(std::begin(kDurationsForFirstId), std::end(kDurationsForFirstId), std::begin(result));
+  std::copy(std::begin(kDurationsForSecondId), std::end(kDurationsForSecondId),
+            std::begin(result) + kTimersForFirstId);
+  return result;
+}();
+static const std::array<TimerInfo, kTimerCount> kTimerInfos = [] {
+  std::array<TimerInfo, kTimerCount> result;
+  for (size_t i = 0; i < kTimerCount; ++i) {
+    result[i].set_function_id(kTimerIds[i]);
+    result[i].set_start(kStarts[i]);
+    result[i].set_end(kStarts[i] + kDurations[i]);
+  }
+  return result;
+}();
+
+TEST_F(TrackManagerTest, UpdateTimerDurationsIsCorrect) {
+  ThreadTrack* thread_track = track_manager_.GetOrCreateThreadTrack(15655);
+  for (const TimerInfo& timer : kTimerInfos) {
+    ORBIT_LOG("adding timer id=%u", timer.function_id());
+    thread_track->OnTimer(timer);
+  }
+
+  ORBIT_LOG("chains %u", thread_track->GetChains().size());
+
+  track_manager_.OnCaptureComplete();
+
+  const auto* durations = track_manager_.GetSortedTimerDurationsForScopeId(kFirstId);
+
+  for (const uint64_t duration : *durations) {
+    ORBIT_LOG("%u", duration);
+  }
 }
 
 }  // namespace orbit_gl

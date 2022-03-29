@@ -23,6 +23,8 @@
 #include "App.h"
 #include "ClientData/CallstackData.h"
 #include "ClientData/CaptureData.h"
+#include "ClientData/ScopeIdConstants.h"
+#include "ClientData/ScopeIdProvider.h"
 #include "ClientFlags/ClientFlags.h"
 #include "GlCanvas.h"
 #include "OrbitBase/Append.h"
@@ -375,6 +377,8 @@ void TrackManager::RestoreAllTrackTypesVisibility(
   visible_track_list_needs_update_ = true;
 }
 
+void TrackManager::OnCaptureComplete() { UpdateTimerDurations(); }
+
 bool TrackManager::IteratableType(orbit_client_protos::TimerInfo_Type type) {
   switch (type) {
     case TimerInfo::kNone:
@@ -569,6 +573,49 @@ std::pair<uint64_t, uint64_t> TrackManager::GetTracksMinMaxTimestamps() const {
     }
   }
   return std::make_pair(min_time, max_time);
+}
+
+const std::vector<uint64_t>* TrackManager::GetSortedTimerDurationsForScopeId(
+    uint64_t scope_id) const {
+  const auto it = timer_durations_.find(scope_id);
+  if (it == timer_durations_.end()) return nullptr;
+  return &it->second;
+}
+
+void TrackManager::UpdateTimerDurations() {
+  ORBIT_SCOPE_FUNCTION;
+  timer_durations_.clear();
+
+  CollectDurationsFromMap(std::begin(thread_tracks_), std::end(thread_tracks_));
+  CollectDurationsFromMap(std::begin(async_tracks_), std::end(async_tracks_));
+
+  for (auto& [id, timer_durations] : timer_durations_) {
+    std::sort(timer_durations.begin(), timer_durations.end());
+  }
+}
+
+template <typename IteratorType>
+void TrackManager::CollectDurationsFromMap(IteratorType begin, IteratorType end) {
+  for (IteratorType it = begin; it != end; ++it) {
+    CollectDurations(it->second->GetChains());
+  }
+}
+
+void TrackManager::CollectDurations(
+    const std::vector<const orbit_client_data::TimerChain*>& chains) {
+  for (const orbit_client_data::TimerChain* chain : chains) {
+    ORBIT_CHECK(chain != nullptr);
+    for (const auto& block : *chain) {
+      for (uint64_t i = 0; i < block.size(); i++) {
+        const TimerInfo& timer = block[i];
+        const uint64_t scope_id = capture_data_->ProvideScopeId(timer);
+
+        if (scope_id == orbit_client_data::kInvalidScopeId) continue;
+
+        timer_durations_[scope_id].push_back(timer.end() - timer.start());
+      }
+    }
+  }
 }
 
 }  // namespace orbit_gl
