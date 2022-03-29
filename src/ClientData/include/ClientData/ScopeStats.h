@@ -22,7 +22,6 @@ class ScopeStats {
 
   [[nodiscard]] uint64_t ComputeAverageTimeNs() const;
 
-
   [[nodiscard]] uint64_t count() const { return count_; }
   void set_count(uint64_t count) { count_ = count; }
 
