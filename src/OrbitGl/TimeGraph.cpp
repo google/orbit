@@ -294,10 +294,10 @@ void TimeGraph::ProcessApiStringEvent(const orbit_client_data::ApiStringEvent& s
 }
 
 void TimeGraph::ProcessApiTrackValueEvent(const orbit_client_data::ApiTrackValue& track_event) {
-  VariableTrack* track = GetTrackManager()->GetOrCreateVariableTrack(track_event.name());
+  VariableTrack* track = GetTrackManager()->GetOrCreateVariableTrack(track_event.track_name());
 
   uint64_t time = track_event.timestamp_ns();
-  track->AddValue(time, track_event.data());
+  track->AddValue(time, track_event.value());
 }
 
 void TimeGraph::ProcessSystemMemoryTrackingTimer(const TimerInfo& timer_info) {

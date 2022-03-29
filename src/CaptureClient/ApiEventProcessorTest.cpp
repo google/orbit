@@ -241,8 +241,8 @@ auto ApiTrackValueEq(const ApiTrackValue& expected) {
   return AllOf(Property("process_id()", &ApiTrackValue::process_id, expected.process_id()),
                Property("thread_id()", &ApiTrackValue::thread_id, expected.thread_id()),
                Property("timestamp_ns()", &ApiTrackValue::timestamp_ns, expected.timestamp_ns()),
-               Property("name()", &ApiTrackValue::name, expected.name()),
-               Property("data()", &ApiTrackValue::data, DoubleEq(expected.data())));
+               Property("track_name()", &ApiTrackValue::track_name, expected.track_name()),
+               Property("value()", &ApiTrackValue::value, DoubleEq(expected.value())));
 }
 
 }  // namespace
