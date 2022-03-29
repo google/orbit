@@ -15,6 +15,7 @@
 namespace orbit_gl {
 
 constexpr float kLabelsPadding = 4.f;
+constexpr float kPixelBetweenMajorTicksAndLabels = 1.f;
 const Color kBackgroundColorSpecialLabels(68, 67, 69, 255);
 
 void TimelineUi::RenderLines(Batcher& batcher, uint64_t min_timestamp_ns,
@@ -46,7 +47,7 @@ void TimelineUi::RenderLabels(Batcher& batcher, TextRenderer& text_renderer,
 
   for (uint64_t tick_ns : GetTicksForNonOverlappingLabels(text_renderer, all_major_ticks)) {
     RenderLabel(batcher, text_renderer, tick_ns, GetNumDecimalsInLabels(),
-                GlCanvas::kZValueTimeBarLabel, GlCanvas::kTimeBarBackgroundColor);
+                GlCanvas::kTimeBarBackgroundColor);
   }
 }
 
@@ -64,24 +65,27 @@ void TimelineUi::RenderBackground(Batcher& batcher) const {
 }
 
 void TimelineUi::RenderLabel(Batcher& batcher, TextRenderer& text_renderer, uint64_t tick_ns,
-                             uint32_t number_of_decimal_places, float label_z,
-                             const Color background_color) const {
+                             uint32_t number_of_decimal_places, const Color background_color,
+                             bool is_mouse_label) const {
+  float label_z = is_mouse_label ? GlCanvas::kZValueTimeBarMouseLabel : GlCanvas::kZValueTimeBar;
+
+  // We add a pixel separation between the label and the major ticks so they don't intersect.
+  float extra_left_margin = is_mouse_label ? 0.f : kPixelBetweenMajorTicksAndLabels;
+
   std::string label = GetLabel(tick_ns, number_of_decimal_places);
   float world_x = GetTickWorldXPos(tick_ns);
   Vec2 pos, size;
   float label_middle_y = GetPos()[1] + GetHeightWithoutMargin() / 2.f;
-  text_renderer.AddText(label.c_str(), world_x + kLabelsPadding, label_middle_y, label_z,
-                        /*text_formatting=*/
+  text_renderer.AddText(label.c_str(), world_x + kLabelsPadding + extra_left_margin, label_middle_y,
+                        label_z, /*text_formatting=*/
                         {layout_->GetFontSize(), Color(255, 255, 255, 255), -1.f,
                          TextRenderer::HAlign::Left, TextRenderer::VAlign::Middle},
                         /*out_text_pos=*/&pos, /*out_text_size=*/&size);
 
-  // Box behind the label to hide the ticks behind it. We make the left padding a pixel smaller, so
-  // they don't incercept with the proper tick.
-  constexpr float kLeftPadding = kLabelsPadding - 1.f;
-  size[0] += kLeftPadding + kLabelsPadding;
+  // Box behind the label to hide the ticks behind it.
+  size[0] += 2.f * kLabelsPadding;
   size[1] += 2.f * kLabelsPadding;
-  pos[0] -= kLeftPadding;
+  pos[0] -= kLabelsPadding;
   pos[1] -= kLabelsPadding;
   Box background_box(pos, size, label_z);
   batcher.AddBox(background_box, background_color);
@@ -96,7 +100,7 @@ void TimelineUi::RenderMouseLabel(Batcher& batcher, TextRenderer& text_renderer,
       std::min(kMaxNumberOfDecimalDigits, GetNumDecimalsInLabels() + kNumAdditionalDecimalDigits);
 
   RenderLabel(batcher, text_renderer, mouse_tick_ns, num_decimal_places_mouse_label,
-              GlCanvas::kZValueTimeBarMouseLabel, kBackgroundColorSpecialLabels);
+              kBackgroundColorSpecialLabels, /*is_mouse_label=*/true);
 }
 
 std::string TimelineUi::GetLabel(uint64_t tick_ns, uint32_t number_of_decimal_places) const {
@@ -146,7 +150,8 @@ bool TimelineUi::WillLabelsOverlap(TextRenderer& text_renderer,
   for (auto tick_ns : tick_list) {
     float label_width = text_renderer.GetStringWidth(
         GetLabel(tick_ns, GetNumDecimalsInLabels()).c_str(), layout_->GetFontSize());
-    if (distance_between_labels < 2.f * kLabelsPadding + label_width) {
+    if (distance_between_labels <
+        2.f * kLabelsPadding + kPixelBetweenMajorTicksAndLabels + label_width) {
       return true;
     }
   }
