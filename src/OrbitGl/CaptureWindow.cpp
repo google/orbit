@@ -802,7 +802,7 @@ void CaptureWindow::RenderSelectionOverlay() {
 
   float size_x = to_world - from_world;
   // TODO(http://b/226401787): Allow green selection overlay to be on top of the Timeline after
-  // modifying its design and how it the overlay is drawn.
+  // modifying its design and how the overlay is drawn
   float initial_y_position = time_graph_->GetLayout().GetTimeBarHeight();
   Vec2 pos(from_world, initial_y_position);
   Vec2 size(size_x, viewport_.GetWorldHeight() - initial_y_position);
