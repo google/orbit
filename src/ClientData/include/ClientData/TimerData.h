@@ -23,6 +23,9 @@ class TimerData final : public TimerDataInterface {
   // Timers queries
   [[nodiscard]] std::vector<const TimerChain*> GetChains() const override;
   [[nodiscard]] const TimerChain* GetChain(uint64_t depth) const;
+
+  // The method is not optimized. The complexity is linear in the total number of timer_infos,
+  // sortedness is not made use of.
   [[nodiscard]] virtual std::vector<const orbit_client_protos::TimerInfo*> GetTimers(
       uint64_t min_tick = std::numeric_limits<uint64_t>::min(),
       uint64_t max_tick = std::numeric_limits<uint64_t>::max()) const override {

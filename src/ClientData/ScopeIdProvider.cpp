@@ -40,6 +40,9 @@ std::unique_ptr<NameEqualityScopeIdProvider> NameEqualityScopeIdProvider::Create
 }
 
 uint64_t NameEqualityScopeIdProvider::ProvideId(const TimerInfo& timer_info) {
+  // Check if the `timer_info` corresponds to a  hooked finction events. Checking for `function_id`
+  // not being invalid is not sufficient, as e.g. frametrack events may also have non-invalid
+  // function_id
   if (timer_info.function_id() != orbit_grpc_protos::kInvalidFunctionId &&
       timer_info.type() == orbit_client_protos::TimerInfo::kNone) {
     return timer_info.function_id();
