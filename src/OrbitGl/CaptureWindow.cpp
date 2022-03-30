@@ -423,7 +423,8 @@ void CaptureWindow::Draw() {
   if (picking_mode_ == PickingMode::kNone) {
     Vec2 pos = viewport_.ScreenToWorld(Vec2i(mouse_move_pos_screen_[0], 0));
     // Vertical green line at mouse x position
-    ui_batcher_.AddVerticalLine(pos, viewport_.GetWorldHeight(), kZValueUi, Color(0, 255, 0, 127));
+    ui_batcher_.AddVerticalLine(pos, viewport_.GetWorldHeight(), kZValueOverlay,
+                                Color(0, 255, 0, 127));
 
     if (draw_help_) {
       RenderHelpUi();
@@ -727,7 +728,7 @@ void CaptureWindow::RenderHelpUi() {
   Vec2 text_bounding_box_pos;
   Vec2 text_bounding_box_size;
   // TODO(b/180312795): Use TimeGraphLayout's font size again.
-  text_renderer_.AddText(GetHelpText(), world_pos[0], world_pos[1], GlCanvas::kZValueTextUi,
+  text_renderer_.AddText(GetHelpText(), world_pos[0], world_pos[1], GlCanvas::kZValueUi,
                          {14, Color(255, 255, 255, 255), -1.f /*max_size*/}, &text_bounding_box_pos,
                          &text_bounding_box_size);
 
@@ -816,7 +817,7 @@ void CaptureWindow::RenderSelectionOverlay() {
   formatting.halign = alignment;
 
   text_renderer_.AddText(text.c_str(), stop_pos_world, select_stop_pos_world_[1],
-                         GlCanvas::kZValueTextUi, formatting);
+                         GlCanvas::kZValueOverlay, formatting);
 
   const unsigned char g = 100;
   Color grey(g, g, g, 255);
