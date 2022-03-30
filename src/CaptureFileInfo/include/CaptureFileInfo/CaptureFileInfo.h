@@ -16,8 +16,8 @@ namespace orbit_capture_file_info {
 
 class CaptureFileInfo {
  public:
-  explicit CaptureFileInfo(const QString& path);
-  explicit CaptureFileInfo(const QString& path, QDateTime last_used);
+  explicit CaptureFileInfo(const QString& path, absl::Duration capture_length);
+  explicit CaptureFileInfo(const QString& path, QDateTime last_used, absl::Duration capture_length);
 
   [[nodiscard]] QString FilePath() const { return file_info_.filePath(); }
   [[nodiscard]] QString FileName() const { return file_info_.fileName(); }

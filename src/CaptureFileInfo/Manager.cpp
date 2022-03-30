@@ -37,11 +37,10 @@ void Manager::LoadCaptureFileInfos() {
     settings.setArrayIndex(i);
     QString path = settings.value(kCaptureFileInfoPathKey).toString();
     QDateTime last_used(settings.value(kCaptureFileInfoLastUsedKey).toDateTime());
-    capture_file_infos_.emplace_back(path, std::move(last_used));
-
     int64_t capture_length_ns =
         static_cast<int64_t>(settings.value(kCaptureFileInfoCaptureLengthKey).toLongLong());
-    capture_file_infos_.back().SetCaptureLength(absl::Nanoseconds(capture_length_ns));
+    capture_file_infos_.emplace_back(path, std::move(last_used),
+                                     absl::Nanoseconds(capture_length_ns));
   }
   settings.endArray();
 }
@@ -71,10 +70,11 @@ void Manager::AddOrTouchCaptureFile(const std::filesystem::path& path,
                          });
 
   if (it == capture_file_infos_.end()) {
-    capture_file_infos_.emplace_back(QString::fromStdString(path.string()));
-    if (capture_length.has_value()) {
-      capture_file_infos_.back().SetCaptureLength(capture_length.value());
-    }
+    capture_file_infos_.emplace_back(QString::fromStdString(path.string()),
+                                     capture_length.has_value()
+                                         ? capture_length.value()
+                                         : CaptureFileInfo::kMissingCaptureLengthValue);
+
   } else {
     it->Touch();
     if (capture_length.has_value()) it->SetCaptureLength(capture_length.value());
@@ -118,7 +118,8 @@ ErrorMessageOr<void> Manager::FillFromDirectory(const std::filesystem::path& dir
     if (file.extension() != ".orbit") continue;
 
     QFileInfo tmp_file_info{QString::fromStdString(file.string())};
-    capture_file_infos_.emplace_back(tmp_file_info.filePath(), tmp_file_info.birthTime());
+    capture_file_infos_.emplace_back(tmp_file_info.filePath(), tmp_file_info.birthTime(),
+                                     CaptureFileInfo::kMissingCaptureLengthValue);
   }
 
   SaveCaptureFileInfos();

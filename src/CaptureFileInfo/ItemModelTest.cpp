@@ -14,19 +14,11 @@ namespace orbit_capture_file_info {
 
 namespace {
 
-template <typename... Args>
-CaptureFileInfo CreateCaptureFileInfoAndSetCaptureDuration(absl::Duration capture_length,
-                                                           Args... args) {
-  CaptureFileInfo capture_file_info{args...};
-  capture_file_info.SetCaptureLength(capture_length);
-  return capture_file_info;
-}
-
-const CaptureFileInfo capture_file_info1{"/path/to/file1"};
-const CaptureFileInfo capture_file_info2 =
-    CreateCaptureFileInfoAndSetCaptureDuration(absl::Seconds(10), "/path/to/file2");
-const CaptureFileInfo capture_file_info3 = CreateCaptureFileInfoAndSetCaptureDuration(
-    absl::Minutes(2), "/path/to/file3", QDateTime::fromMSecsSinceEpoch(100000000));
+const CaptureFileInfo capture_file_info1{"/path/to/file1",
+                                         CaptureFileInfo::kMissingCaptureLengthValue};
+const CaptureFileInfo capture_file_info2{"/path/to/file2", absl::Seconds(10)};
+const CaptureFileInfo capture_file_info3{
+    "/path/to/file3", QDateTime::fromMSecsSinceEpoch(100000000), absl::Minutes(2)};
 const std::vector<CaptureFileInfo> capture_file_infos{capture_file_info1, capture_file_info2,
                                                       capture_file_info3};
 
