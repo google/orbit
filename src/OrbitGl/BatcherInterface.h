@@ -33,7 +33,7 @@ struct PickingUserData {
 // BatcherInterface is a pure interface class except for Translations and BatcherId.
 class BatcherInterface {
  public:
-  BatcherInterface(BatcherId batcher_id) : batcher_id_(batcher_id) {}
+  explicit BatcherInterface(BatcherId batcher_id) : batcher_id_(batcher_id) {}
   virtual ~BatcherInterface() = default;
 
   virtual void ResetElements() = 0;
