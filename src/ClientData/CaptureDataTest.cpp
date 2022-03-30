@@ -152,15 +152,15 @@ TEST_F(CaptureDataTest, VarianceIsCorrectOnScimitarDataset) {
   const ErrorMessageOr<std::string> file_content_or_error = orbit_base::ReadFileToString(path);
   EXPECT_TRUE(file_content_or_error.has_value());
   const std::string& file_content = file_content_or_error.value();
-  const std::vector<absl::string_view> tokens = absl::StrSplit(file_content, '\n');
+  const std::vector<std::string_view> tokens = absl::StrSplit(file_content, '\n');
 
   double expected_variance;
   EXPECT_TRUE(absl::SimpleAtod(*tokens.begin(), &expected_variance));
 
   std::vector<TimerInfo> timers;
   std::transform(std::begin(tokens) + 1, std::end(tokens) - 1, std::back_inserter(timers),
-                 [](const absl::string_view& line) {
-                   uint64_t duration = std::stoull(std::string(std::begin(line), std::end(line)));
+                 [](const std::string_view line) {
+                   const uint64_t duration = std::stoull(std::string(line));
                    TimerInfo timer;
                    timer.set_function_id(kFirstId);
                    timer.set_start(0);
