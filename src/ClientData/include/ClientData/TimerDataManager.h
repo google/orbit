@@ -27,14 +27,13 @@ class TimerDataManager final {
     return std::make_pair(id, timer_data_.at(id).get());
   }
 
-  template <typename Predicate>
   [[nodiscard]] std::vector<const orbit_client_protos::TimerInfo*> GetTimers(
-      Predicate predicate) const {
+      orbit_client_protos::TimerInfo_Type type) const {
     std::vector<const orbit_client_protos::TimerInfo*> timers;
     absl::MutexLock lock(&mutex_);
     for (const std::unique_ptr<TimerData>& timer_datum : timer_data_) {
       for (const orbit_client_protos::TimerInfo* timer : timer_datum->GetTimers()) {
-        if (predicate(timer)) timers.push_back(timer);
+        if (timer->type() == type) timers.push_back(timer);
       }
     }
     return timers;

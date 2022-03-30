@@ -213,9 +213,7 @@ void CaptureData::UpdateTimerDurations() {
     CollectDurations(timers);
   }
 
-  CollectDurations(timer_data_manager_.GetTimers([](const TimerInfo* timer) {
-    return timer->type() == orbit_client_protos::TimerInfo_Type::TimerInfo_Type_kApiScopeAsync;
-  }));
+  CollectDurations(timer_data_manager_.GetTimers(orbit_client_protos::TimerInfo::kApiScopeAsync));
 
   for (auto& [id, timer_durations] : timer_durations_) {
     std::sort(timer_durations.begin(), timer_durations.end());
