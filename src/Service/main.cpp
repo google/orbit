@@ -102,6 +102,8 @@ int main(int argc, char** argv) {
   std::puts(result.error().message().c_str());
   std::ignore = std::fflush(stdout);
 
+  // Note that changing the exit code value will affect the UI client which is checking for the
+  // exact value.
   constexpr int kExitCodeIndicatingErrorMessage = 42;
   return kExitCodeIndicatingErrorMessage;
 }
