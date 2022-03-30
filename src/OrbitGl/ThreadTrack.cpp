@@ -386,8 +386,8 @@ constexpr float kMinimalWidthToHaveBorder = 4.0;
 [[nodiscard]] bool ThreadTrack::ShouldHaveBorder(
     const TimerInfo* timer, const std::optional<orbit_statistics::HistogramSelectionRange>& range,
     float width) const {
-  if (!range.has_value() || width < kMinimalWidthToHaveBorder ||
-      timer->function_id() != app_->GetHighlightedFunctionId()) {
+  if ((!range.has_value() || width < kMinimalWidthToHaveBorder || !app_->HasCaptureData()) ||
+      (app_->GetCaptureData().ProvideScopeId(*timer) != app_->GetHighlightedFunctionId())) {
     return false;
   }
   const uint64_t duration = timer->end() - timer->start();

@@ -40,7 +40,8 @@ std::unique_ptr<NameEqualityScopeIdProvider> NameEqualityScopeIdProvider::Create
 }
 
 uint64_t NameEqualityScopeIdProvider::ProvideId(const TimerInfo& timer_info) {
-  if (timer_info.function_id() != orbit_grpc_protos::kInvalidFunctionId) {
+  if (timer_info.function_id() != orbit_grpc_protos::kInvalidFunctionId &&
+      timer_info.type() == orbit_client_protos::TimerInfo_Type::TimerInfo_Type_kNone) {
     return timer_info.function_id();
   }
 

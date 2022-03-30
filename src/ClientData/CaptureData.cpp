@@ -101,6 +101,7 @@ void CaptureData::AddScopeStats(uint64_t scope_id, ScopeStats stats) {
 
 void CaptureData::OnCaptureComplete() {
   thread_track_data_provider_->OnCaptureComplete();
+  UpdateTimerDurations();
 
   // Recalculate standard deviation as the running calculation may have introduced error.
   // TODO(b/226880177): This should not be necessary and should be removed.
@@ -194,6 +195,58 @@ uint64_t CaptureData::ProvideScopeId(const orbit_client_protos::TimerInfo& timer
 const std::string& CaptureData::GetScopeName(uint64_t scope_id) const {
   ORBIT_CHECK(scope_id_provider_);
   return scope_id_provider_->GetScopeName(scope_id);
+}
+
+const std::vector<uint64_t>* CaptureData::GetSortedTimerDurationsForScopeId(
+    uint64_t scope_id) const {
+  const auto it = timer_durations_.find(scope_id);
+  if (it == timer_durations_.end()) return nullptr;
+  return &it->second;
+}
+
+void CaptureData::UpdateTimerDurations() {
+  ORBIT_SCOPE_FUNCTION;
+  timer_durations_.clear();
+
+  for (const uint32_t thread_id : GetThreadTrackDataProvider()->GetAllThreadIds()) {
+    const std::vector<const TimerInfo*> timers = GetThreadTrackDataProvider()->GetTimers(thread_id);
+    CollectDurations(timers);
+  }
+
+  CollectDurations(timer_data_manager_.GetTimers([](const TimerInfo* timer) {
+    return timer->type() == orbit_client_protos::TimerInfo_Type::TimerInfo_Type_kApiScopeAsync;
+  }));
+
+  for (auto& [id, timer_durations] : timer_durations_) {
+    std::sort(timer_durations.begin(), timer_durations.end());
+  }
+}
+
+void CaptureData::CollectDurations(const std::vector<const TimerInfo*>& timers) {
+  for (const TimerInfo* timer : timers) {
+    CollectDuration(*timer);
+  }
+}
+
+void CaptureData::CollectDuration(const TimerInfo& timer) {
+  const uint64_t scope_id = ProvideScopeId(timer);
+
+  if (scope_id == orbit_client_data::kInvalidScopeId) return;
+
+  timer_durations_[scope_id].push_back(timer.end() - timer.start());
+}
+
+void CaptureData::CollectDurations(
+    const std::vector<const orbit_client_data::TimerChain*>& chains) {
+  for (const orbit_client_data::TimerChain* chain : chains) {
+    ORBIT_CHECK(chain != nullptr);
+    for (const auto& block : *chain) {
+      for (uint64_t i = 0; i < block.size(); i++) {
+        const TimerInfo& timer = block[i];
+        CollectDuration(timer);
+      }
+    }
+  }
 }
 
 }  // namespace orbit_client_data

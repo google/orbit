@@ -118,9 +118,6 @@ class AppInterface {
 
   [[nodiscard]] virtual const orbit_statistics::BinomialConfidenceIntervalEstimator&
   GetConfidenceIntervalEstimator() const = 0;
-
-  [[nodiscard]] virtual const std::vector<uint64_t>* GetSortedTimerDurationsForScopeId(
-      uint64_t scope_id) const = 0;
 };
 
 }  // namespace orbit_data_views

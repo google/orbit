@@ -24,10 +24,23 @@ class TimerData final : public TimerDataInterface {
   [[nodiscard]] std::vector<const TimerChain*> GetChains() const override;
   [[nodiscard]] const TimerChain* GetChain(uint64_t depth) const;
   [[nodiscard]] virtual std::vector<const orbit_client_protos::TimerInfo*> GetTimers(
-      uint64_t /*min_tick*/ = std::numeric_limits<uint64_t>::min(),
-      uint64_t /*max_tick*/ = std::numeric_limits<uint64_t>::max()) const override {
-    // TODO(b/204173236): Implement GetTimers and use it in TimerTracks.
-    return {};
+      uint64_t min_tick = std::numeric_limits<uint64_t>::min(),
+      uint64_t max_tick = std::numeric_limits<uint64_t>::max()) const override {
+    // TODO(b/204173236): use it in TimerTracks.
+    std::vector<const orbit_client_protos::TimerInfo*> timers;
+    absl::MutexLock lock(&mutex_);
+    for (const auto& [depth, chain] : timers_) {
+      ORBIT_CHECK(chain != nullptr);
+      for (const auto& block : *chain) {
+        if (!block.Intersects(min_tick, max_tick)) continue;
+        for (uint64_t i = 0; i < block.size(); i++) {
+          const orbit_client_protos::TimerInfo* timer = &block[i];
+          if (min_tick <= timer->start() && timer->end() <= max_tick) timers.push_back(timer);
+        }
+      }
+    }
+
+    return timers;
   }
 
   // Metadata queries

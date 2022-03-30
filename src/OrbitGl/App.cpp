@@ -292,7 +292,6 @@ void OrbitApp::OnCaptureFinished(const CaptureFinished& capture_finished) {
       case orbit_grpc_protos::CaptureFinished::kSuccessful: {
         main_window_->AppendToCaptureLog(MainWindowInterface::CaptureLogSeverity::kInfo,
                                          GetCaptureTime(), "Capture finished.");
-        GetTimeGraph()->GetTrackContainer()->GetTrackManager()->OnCaptureComplete();
       } break;
       case orbit_grpc_protos::CaptureFinished::kInterruptedByService: {
         std::string full_message =
@@ -2990,8 +2989,4 @@ OrbitApp::GetConfidenceIntervalEstimator() const {
 void OrbitApp::ShowHistogram(const std::vector<uint64_t>* data, const std::string& scope_name,
                              uint64_t scope_id) {
   main_window_->ShowHistogram(data, scope_name, scope_id);
-}
-
-const std::vector<uint64_t>* OrbitApp::GetSortedTimerDurationsForScopeId(uint64_t scope_id) const {
-  return GetTimeGraph()->GetTrackManager()->GetSortedTimerDurationsForScopeId(scope_id);
 }

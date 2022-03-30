@@ -240,7 +240,15 @@ class CaptureData {
   [[nodiscard]] uint64_t ProvideScopeId(const orbit_client_protos::TimerInfo& timer_info) const;
   [[nodiscard]] const std::string& GetScopeName(uint64_t scope_id) const;
 
+  [[nodiscard]] const std::vector<uint64_t>* GetSortedTimerDurationsForScopeId(
+      uint64_t scope_id) const;
+
  private:
+  void UpdateTimerDurations();
+  void CollectDurations(const std::vector<const orbit_client_data::TimerChain*>& chains);
+  void CollectDurations(const std::vector<const TimerInfo*>& timer);
+  void CollectDuration(const TimerInfo& timer);
+
   orbit_client_data::ProcessData process_;
   absl::flat_hash_map<uint64_t, orbit_grpc_protos::InstrumentedFunction> instrumented_functions_;
   uint64_t memory_sampling_period_ns_;
@@ -280,6 +288,8 @@ class CaptureData {
 
   TimerDataManager timer_data_manager_;
   std::unique_ptr<ThreadTrackDataProvider> thread_track_data_provider_;
+
+  absl::flat_hash_map<uint64_t, std::vector<uint64_t>> timer_durations_;
 };
 
 }  // namespace orbit_client_data
