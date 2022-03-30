@@ -24,9 +24,9 @@ static void MoveLineToPixelCenterIfHorizontal(Line& line) {
   line.end_point[1] += 0.5f;
 }
 
-void OpenGlBatcher::AddLineInternal(Vec2 from, Vec2 to, float z, const Color& color,
-                                    const Color& picking_color,
-                                    std::unique_ptr<PickingUserData> user_data) {
+void OpenGlBatcher::AddLine(Vec2 from, Vec2 to, float z, const Color& color,
+                            const Color& picking_color,
+                            std::unique_ptr<PickingUserData> user_data) {
   Line line;
   line.start_point = translations_.TranslateAndFloorVertex(Vec3(from[0], from[1], z));
   line.end_point = translations_.TranslateAndFloorVertex(Vec3(to[0], to[1], z));
@@ -41,9 +41,8 @@ void OpenGlBatcher::AddLineInternal(Vec2 from, Vec2 to, float z, const Color& co
   user_data_.push_back(std::move(user_data));
 }
 
-void OpenGlBatcher::AddBoxInternal(const Box& box, const std::array<Color, 4>& colors,
-                                   const Color& picking_color,
-                                   std::unique_ptr<PickingUserData> user_data) {
+void OpenGlBatcher::AddBox(const Box& box, const std::array<Color, 4>& colors,
+                           const Color& picking_color, std::unique_ptr<PickingUserData> user_data) {
   Box rounded_box = box;
   for (size_t v = 0; v < 4; ++v) {
     rounded_box.vertices[v] = translations_.TranslateAndFloorVertex(rounded_box.vertices[v]);
@@ -56,10 +55,9 @@ void OpenGlBatcher::AddBoxInternal(const Box& box, const std::array<Color, 4>& c
   user_data_.push_back(std::move(user_data));
 }
 
-void OpenGlBatcher::AddTriangleInternal(const Triangle& triangle,
-                                        const std::array<Color, 3>& colors,
-                                        const Color& picking_color,
-                                        std::unique_ptr<PickingUserData> user_data) {
+void OpenGlBatcher::AddTriangle(const Triangle& triangle, const std::array<Color, 3>& colors,
+                                const Color& picking_color,
+                                std::unique_ptr<PickingUserData> user_data) {
   Triangle rounded_tri = triangle;
   for (auto& vertex : rounded_tri.vertices) {
     vertex = translations_.TranslateAndFloorVertex(vertex);

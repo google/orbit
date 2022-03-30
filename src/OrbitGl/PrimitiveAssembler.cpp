@@ -14,7 +14,7 @@ void PrimitiveAssembler::AddLine(Vec2 from, Vec2 to, float z, const Color& color
                                  std::unique_ptr<PickingUserData> user_data) {
   Color picking_color = PickingId::ToColor(PickingType::kLine, user_data_.size(), batcher_id_);
 
-  AddLineInternal(from, to, z, color, picking_color, std::move(user_data));
+  AddLine(from, to, z, color, picking_color, std::move(user_data));
 }
 
 void PrimitiveAssembler::AddLine(Vec2 from, Vec2 to, float z, const Color& color,
@@ -23,7 +23,7 @@ void PrimitiveAssembler::AddLine(Vec2 from, Vec2 to, float z, const Color& color
 
   Color picking_color = picking_manager_->GetPickableColor(pickable, batcher_id_);
 
-  AddLineInternal(from, to, z, color, picking_color, nullptr);
+  AddLine(from, to, z, color, picking_color, nullptr);
 }
 
 void PrimitiveAssembler::AddVerticalLine(Vec2 pos, float size, float z, const Color& color,
@@ -37,13 +37,13 @@ void PrimitiveAssembler::AddVerticalLine(Vec2 pos, float size, float z, const Co
 
   Color picking_color = picking_manager_->GetPickableColor(pickable, batcher_id_);
 
-  AddLineInternal(pos, pos + Vec2(0, size), z, color, picking_color, nullptr);
+  AddLine(pos, pos + Vec2(0, size), z, color, picking_color, nullptr);
 }
 
 void PrimitiveAssembler::AddBox(const Box& box, const std::array<Color, 4>& colors,
                                 std::unique_ptr<PickingUserData> user_data) {
   Color picking_color = PickingId::ToColor(PickingType::kBox, user_data_.size(), batcher_id_);
-  AddBoxInternal(box, colors, picking_color, std::move(user_data));
+  AddBox(box, colors, picking_color, std::move(user_data));
 }
 
 void PrimitiveAssembler::AddBox(const Box& box, const Color& color,
@@ -61,7 +61,7 @@ void PrimitiveAssembler::AddBox(const Box& box, const Color& color,
   std::array<Color, 4> colors;
   colors.fill(color);
 
-  AddBoxInternal(box, colors, picking_color, nullptr);
+  AddBox(box, colors, picking_color, nullptr);
 }
 
 void PrimitiveAssembler::AddShadedBox(Vec2 pos, Vec2 size, float z, const Color& color) {
@@ -174,7 +174,7 @@ void PrimitiveAssembler::AddShadedBox(Vec2 pos, Vec2 size, float z, const Color&
   GetBoxGradientColors(color, &colors, shading_direction);
   Color picking_color = picking_manager_->GetPickableColor(pickable, batcher_id_);
   Box box(pos, size, z);
-  AddBoxInternal(box, colors, picking_color, nullptr);
+  AddBox(box, colors, picking_color, nullptr);
 }
 
 void PrimitiveAssembler::AddTriangle(const Triangle& triangle, const Color& color,
@@ -198,7 +198,7 @@ void PrimitiveAssembler::AddTriangle(const Triangle& triangle, const Color& colo
                                      std::unique_ptr<PickingUserData> user_data) {
   std::array<Color, 3> colors;
   colors.fill(color);
-  AddTriangleInternal(triangle, colors, picking_color, std::move(user_data));
+  AddTriangle(triangle, colors, picking_color, std::move(user_data));
 }
 
 // Draw a shaded trapezium with two sides parallel to the x-axis or y-axis.
@@ -212,11 +212,10 @@ void PrimitiveAssembler::AddShadedTrapezium(const Vec3& top_left, const Vec3& bo
   Color picking_color = PickingId::ToColor(PickingType::kTriangle, user_data_.size(), batcher_id_);
   Triangle triangle_1{top_left, bottom_left, top_right};
   std::array<Color, 3> colors_1{colors[0], colors[1], colors[2]};
-  AddTriangleInternal(triangle_1, colors_1, picking_color,
-                      std::make_unique<PickingUserData>(*user_data));
+  AddTriangle(triangle_1, colors_1, picking_color, std::make_unique<PickingUserData>(*user_data));
   Triangle triangle_2{bottom_left, bottom_right, top_right};
   std::array<Color, 3> colors_2{colors[1], colors[2], colors[3]};
-  AddTriangleInternal(triangle_2, colors_2, picking_color, std::move(user_data));
+  AddTriangle(triangle_2, colors_2, picking_color, std::move(user_data));
 }
 
 void PrimitiveAssembler::AddCircle(const Vec2& position, float radius, float z, Color color) {

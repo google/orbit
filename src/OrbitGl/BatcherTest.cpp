@@ -23,6 +23,24 @@ class FakeBatcher : public OpenGlBatcher {
   explicit FakeBatcher(BatcherId id, PickingManager* picking_manager = nullptr)
       : OpenGlBatcher(id, picking_manager) {}
 
+  // Auxiliary methods to simplify the addition of lines, boxes and triangles.
+  void AddLineHelper(Vec2 from, Vec2 to, float z, const Color& color,
+                     std::unique_ptr<PickingUserData> user_data = nullptr) {
+    Color picking_color = PickingId::ToColor(PickingType::kLine, GetNumElements(), GetBatcherId());
+    return AddLine(from, to, z, color, picking_color, std::move(user_data));
+  }
+  void AddBoxHelper(const Box& box, const Color& color,
+                    std::unique_ptr<PickingUserData> user_data = nullptr) {
+    Color picking_color = PickingId::ToColor(PickingType::kBox, GetNumElements(), GetBatcherId());
+    return AddBox(box, {color, color, color, color}, picking_color, std::move(user_data));
+  }
+  void AddTriangleHelper(const Triangle& triangle, const Color& color,
+                         std::unique_ptr<PickingUserData> user_data = nullptr) {
+    Color picking_color =
+        PickingId::ToColor(PickingType::kTriangle, GetNumElements(), GetBatcherId());
+    return AddTriangle(triangle, {color, color, color}, picking_color, std::move(user_data));
+  }
+
   void ResetMockDrawCounts() {
     drawn_line_colors_.clear();
     drawn_triangle_colors_.clear();
@@ -106,29 +124,33 @@ TEST(Batcher, SimpleElementsDrawing) {
   FakeBatcher batcher(BatcherId::kUi);
 
   ExpectDraw(batcher, 0, 0, 0);
-  batcher.AddLine(Vec2(0, 0), Vec2(1, 0), 0, Color(255, 255, 255, 255));
+  batcher.AddLineHelper(Vec2(0, 0), Vec2(1, 0), 0, Color(255, 255, 255, 255));
   ExpectDraw(batcher, 1, 0, 0);
   EXPECT_EQ(batcher.GetDrawnLineColors()[0], Color(255, 255, 255, 255));
-  batcher.AddTriangle(Triangle(Vec3(0, 0, 0), Vec3(0, 1, 0), Vec3(1, 0, 0)), Color(0, 255, 0, 255));
+  batcher.AddTriangleHelper(Triangle(Vec3(0, 0, 0), Vec3(0, 1, 0), Vec3(1, 0, 0)),
+                            Color(0, 255, 0, 255));
   ExpectDraw(batcher, 1, 1, 0);
   EXPECT_EQ(batcher.GetDrawnTriangleColors()[0], Color(0, 255, 0, 255));
-  batcher.AddBox(Box(Vec2(0, 0), Vec2(1, 1), 0), Color(255, 0, 0, 255));
+  batcher.AddBoxHelper(Box(Vec2(0, 0), Vec2(1, 1), 0), Color(255, 0, 0, 255));
   ExpectDraw(batcher, 1, 1, 1);
   EXPECT_EQ(batcher.GetDrawnBoxColors()[0], Color(255, 0, 0, 255));
   batcher.StartNewFrame();
   ExpectDraw(batcher, 0, 0, 0);
 }
 
+// TODO(http://b/225173189): Move this test to PrimitiveAssemblerTest
 TEST(Batcher, PickingElementsDrawing) {
   FakeBatcher batcher(BatcherId::kUi);
   std::shared_ptr<PickableMock> pickable = std::make_shared<PickableMock>();
   PickingManager pm;
 
   ExpectDraw(batcher, 0, 0, 0);
-  EXPECT_DEATH(batcher.AddLine(Vec2(0, 0), Vec2(1, 0), 0, Color(255, 255, 255, 255), pickable),
+  EXPECT_DEATH(batcher.PrimitiveAssembler::AddLine(Vec2(0, 0), Vec2(1, 0), 0,
+                                                   Color(255, 255, 255, 255), pickable),
                "nullptr");
   batcher.SetPickingManager(&pm);
-  batcher.AddLine(Vec2(0, 0), Vec2(1, 0), 0, Color(255, 255, 255, 255), pickable);
+  batcher.PrimitiveAssembler::AddLine(Vec2(0, 0), Vec2(1, 0), 0, Color(255, 255, 255, 255),
+                                      pickable);
   ExpectDraw(batcher, 1, 0, 0);
   batcher.StartNewFrame();
   ExpectDraw(batcher, 0, 0, 0);
@@ -158,10 +180,12 @@ TEST(Batcher, PickingSimpleElements) {
   auto box_user_data = std::make_unique<PickingUserData>();
   box_user_data->custom_data_ = &box_custom_data;
 
-  batcher.AddLine(Vec2(0, 0), Vec2(1, 0), 0, Color(255, 255, 255, 255), std::move(line_user_data));
-  batcher.AddTriangle(Triangle(Vec3(0, 0, 0), Vec3(0, 1, 0), Vec3(1, 0, 0)), Color(0, 255, 0, 255),
-                      std::move(triangle_user_data));
-  batcher.AddBox(Box(Vec2(0, 0), Vec2(1, 1), 0), Color(255, 0, 0, 255), std::move(box_user_data));
+  batcher.AddLineHelper(Vec2(0, 0), Vec2(1, 0), 0, Color(255, 255, 255, 255),
+                        std::move(line_user_data));
+  batcher.AddTriangleHelper(Triangle(Vec3(0, 0, 0), Vec3(0, 1, 0), Vec3(1, 0, 0)),
+                            Color(0, 255, 0, 255), std::move(triangle_user_data));
+  batcher.AddBoxHelper(Box(Vec2(0, 0), Vec2(1, 1), 0), Color(255, 0, 0, 255),
+                       std::move(box_user_data));
 
   batcher.Draw(true);
   ExpectCustomDataEq(batcher, batcher.GetDrawnLineColors()[0], line_custom_data);
@@ -178,6 +202,7 @@ void ExpectPickableEq(const FakeBatcher& batcher, const Color& rendered_color, P
   EXPECT_EQ(pm.GetPickableFromId(id).get(), pickable.get());
 }
 
+// TODO(http://b/225173189): Move this test to PrimitiveAssemblerTest
 TEST(Batcher, PickingPickables) {
   PickingManager pm;
   FakeBatcher batcher(BatcherId::kUi, &pm);
@@ -185,10 +210,12 @@ TEST(Batcher, PickingPickables) {
   std::shared_ptr<PickableMock> triangle_pickable = std::make_shared<PickableMock>();
   std::shared_ptr<PickableMock> box_pickable = std::make_shared<PickableMock>();
 
-  batcher.AddLine(Vec2(0, 0), Vec2(1, 0), 0, Color(255, 255, 255, 255), line_pickable);
-  batcher.AddTriangle(Triangle(Vec3(0, 0, 0), Vec3(0, 1, 0), Vec3(1, 0, 0)), Color(0, 255, 0, 255),
-                      triangle_pickable);
-  batcher.AddBox(Box(Vec2(0, 0), Vec2(1, 1), 0), Color(255, 0, 0, 255), box_pickable);
+  batcher.PrimitiveAssembler::AddLine(Vec2(0, 0), Vec2(1, 0), 0, Color(255, 255, 255, 255),
+                                      line_pickable);
+  batcher.PrimitiveAssembler::AddTriangle(Triangle(Vec3(0, 0, 0), Vec3(0, 1, 0), Vec3(1, 0, 0)),
+                                          Color(0, 255, 0, 255), triangle_pickable);
+  batcher.PrimitiveAssembler::AddBox(Box(Vec2(0, 0), Vec2(1, 1), 0), Color(255, 0, 0, 255),
+                                     box_pickable);
 
   batcher.Draw(true);
   ExpectPickableEq(batcher, batcher.GetDrawnLineColors()[0], pm, line_pickable);
@@ -211,10 +238,12 @@ TEST(Batcher, MultipleDrawCalls) {
   auto box_user_data = std::make_unique<PickingUserData>();
   box_user_data->custom_data_ = &box_custom_data;
 
-  batcher.AddLine(Vec2(0, 0), Vec2(1, 0), 0, Color(255, 255, 255, 255), std::move(line_user_data));
-  batcher.AddTriangle(Triangle(Vec3(0, 0, 0), Vec3(0, 1, 0), Vec3(1, 0, 0)), Color(0, 255, 0, 255),
-                      std::move(triangle_user_data));
-  batcher.AddBox(Box(Vec2(0, 0), Vec2(1, 1), 0), Color(255, 0, 0, 255), std::move(box_user_data));
+  batcher.AddLineHelper(Vec2(0, 0), Vec2(1, 0), 0, Color(255, 255, 255, 255),
+                        std::move(line_user_data));
+  batcher.AddTriangleHelper(Triangle(Vec3(0, 0, 0), Vec3(0, 1, 0), Vec3(1, 0, 0)),
+                            Color(0, 255, 0, 255), std::move(triangle_user_data));
+  batcher.AddBoxHelper(Box(Vec2(0, 0), Vec2(1, 1), 0), Color(255, 0, 0, 255),
+                       std::move(box_user_data));
 
   batcher.Draw(true);
 
@@ -240,7 +269,7 @@ bool LineEq(const Line& lhs, const Line& rhs) {
 
 TEST(Batcher, TranslationsAreAutomaticallyAdded) {
   FakeBatcher batcher(BatcherId::kUi);
-  batcher.AddLine(Vec2(0.f, 0.f), Vec2(1.f, 1.f), 0.f, Color());
+  batcher.AddLineHelper(Vec2(0.f, 0.f), Vec2(1.f, 1.f), 0.f, Color());
 
   const orbit_gl_internal::PrimitiveBuffers& buffers = batcher.GetInternalBuffers(0.f);
   const Line original_expectation{Vec3(0.f, 0.f, 0.f), Vec3(1.f, 1.f, 0.f)};
@@ -250,7 +279,7 @@ TEST(Batcher, TranslationsAreAutomaticallyAdded) {
   auto it = buffers.line_buffer.lines_.begin();
 
   const auto add_line_assert_eq = [&batcher, &it](const Line& expectation) {
-    batcher.AddLine(Vec2(0.f, 0.f), Vec2(1.f, 1.f), 0.f, Color());
+    batcher.AddLineHelper(Vec2(0.f, 0.f), Vec2(1.f, 1.f), 0.f, Color());
     ++it;
     ASSERT_TRUE(LineEq(expectation, *it));
   };

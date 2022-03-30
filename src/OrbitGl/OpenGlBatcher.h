@@ -81,6 +81,15 @@ class OpenGlBatcher : public PrimitiveAssembler {
  public:
   explicit OpenGlBatcher(BatcherId batcher_id, PickingManager* picking_manager = nullptr)
       : PrimitiveAssembler(batcher_id, picking_manager) {}
+
+  void ResetElements() override;
+  void AddLine(Vec2 from, Vec2 to, float z, const Color& color, const Color& picking_color,
+               std::unique_ptr<PickingUserData> user_data) override;
+  void AddBox(const Box& box, const std::array<Color, 4>& colors, const Color& picking_color,
+              std::unique_ptr<PickingUserData> user_data) override;
+  void AddTriangle(const Triangle& triangle, const std::array<Color, 3>& colors,
+                   const Color& picking_color, std::unique_ptr<PickingUserData> user_data) override;
+
   [[nodiscard]] std::vector<float> GetLayers() const override;
   void DrawLayer(float layer, bool picking) const override;
 
@@ -88,16 +97,6 @@ class OpenGlBatcher : public PrimitiveAssembler {
   std::unordered_map<float, orbit_gl_internal::PrimitiveBuffers> primitive_buffers_by_layer_;
 
  private:
-  void ResetElements() override;
-  void AddLineInternal(Vec2 from, Vec2 to, float z, const Color& color, const Color& picking_color,
-                       std::unique_ptr<PickingUserData> user_data) override;
-  void AddBoxInternal(const Box& box, const std::array<Color, 4>& colors,
-                      const Color& picking_color,
-                      std::unique_ptr<PickingUserData> user_data) override;
-  void AddTriangleInternal(const Triangle& triangle, const std::array<Color, 3>& colors,
-                           const Color& picking_color,
-                           std::unique_ptr<PickingUserData> user_data) override;
-
   void DrawLineBuffer(float layer, bool picking) const;
   void DrawBoxBuffer(float layer, bool picking) const;
   void DrawTriangleBuffer(float layer, bool picking) const;

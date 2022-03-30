@@ -128,6 +128,17 @@ class PrimitiveAssembler {
 
   static constexpr uint32_t kNumArcSides = 16;
 
+  virtual void ResetElements() = 0;
+  virtual void AddLine(Vec2 from, Vec2 to, float z, const Color& color, const Color& picking_color,
+                       std::unique_ptr<PickingUserData> user_data) = 0;
+  virtual void AddBox(const Box& box, const std::array<Color, 4>& colors,
+                      const Color& picking_color, std::unique_ptr<PickingUserData> user_data) = 0;
+  virtual void AddTriangle(const Triangle& triangle, const std::array<Color, 3>& colors,
+                           const Color& picking_color,
+                           std::unique_ptr<PickingUserData> user_data) = 0;
+  [[nodiscard]] virtual uint32_t GetNumElements() const { return user_data_.size(); }
+  [[nodiscard]] BatcherId GetBatcherId() const { return batcher_id_; }
+
  protected:
   void AddTriangle(const Triangle& triangle, const Color& color, const Color& picking_color,
                    std::unique_ptr<PickingUserData> user_data = nullptr);
@@ -137,16 +148,6 @@ class PrimitiveAssembler {
  private:
   void GetBoxGradientColors(const Color& color, std::array<Color, 4>* colors,
                             ShadingDirection shading_direction = ShadingDirection::kLeftToRight);
-  virtual void ResetElements() = 0;
-  virtual void AddLineInternal(Vec2 from, Vec2 to, float z, const Color& color,
-                               const Color& picking_color,
-                               std::unique_ptr<PickingUserData> user_data) = 0;
-  virtual void AddBoxInternal(const Box& box, const std::array<Color, 4>& colors,
-                              const Color& picking_color,
-                              std::unique_ptr<PickingUserData> user_data) = 0;
-  virtual void AddTriangleInternal(const Triangle& triangle, const std::array<Color, 3>& colors,
-                                   const Color& picking_color,
-                                   std::unique_ptr<PickingUserData> user_data) = 0;
 
   BatcherId batcher_id_;
   PickingManager* picking_manager_;

@@ -499,7 +499,8 @@ void CaptureWindow::DrawScreenSpace() {
   float margin_x0 = margin_x1 - GetRightMargin();
 
   Box box(Vec2(margin_x0, 0), Vec2(margin_x1 - margin_x0, canvas_height), GlCanvas::kZValueMargin);
-  ui_batcher_.AddBox(box, kBackgroundColor);
+  // TODO(b/225173189): Use primitive assembler here after splitting it with BatcherInterface.
+  ui_batcher_.PrimitiveAssembler::AddBox(box, kBackgroundColor);
 }
 
 void CaptureWindow::RenderAllLayers() {
@@ -808,7 +809,8 @@ void CaptureWindow::RenderSelectionOverlay() {
   const Color color(0, 128, 0, 128);
 
   Box box(pos, size, GlCanvas::kZValueOverlay);
-  ui_batcher_.AddBox(box, color);
+  // TODO(b/225173189): Use primitive assembler here after splitting it with BatcherInterface.
+  ui_batcher_.PrimitiveAssembler::AddBox(box, color);
 
   TextRenderer::HAlign alignment = select_stop_pos_world_[0] < select_start_pos_world_[0]
                                        ? TextRenderer::HAlign::Left
