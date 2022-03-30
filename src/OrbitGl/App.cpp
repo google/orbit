@@ -504,9 +504,9 @@ void OrbitApp::OnAddressInfo(LinuxAddressInfo address_info) {
   GetMutableCaptureData().InsertAddressInfo(std::move(address_info));
 }
 
-void OrbitApp::OnUniqueTracepointInfo(uint64_t key,
+void OrbitApp::OnUniqueTracepointInfo(uint64_t tracepoint_id,
                                       orbit_client_data::TracepointInfo tracepoint_info) {
-  GetMutableCaptureData().AddUniqueTracepointEventInfo(key, std::move(tracepoint_info));
+  GetMutableCaptureData().AddUniqueTracepointInfo(tracepoint_id, std::move(tracepoint_info));
 }
 
 void OrbitApp::OnTracepointEvent(orbit_client_data::TracepointEventInfo tracepoint_event_info) {

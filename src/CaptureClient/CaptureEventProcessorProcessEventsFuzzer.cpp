@@ -41,7 +41,7 @@ class MyCaptureListener : public CaptureListener {
   void OnThreadStateSlice(orbit_client_data::ThreadStateSliceInfo /*thread_state_slice*/) override {
   }
   void OnAddressInfo(LinuxAddressInfo /*address_info*/) override {}
-  void OnUniqueTracepointInfo(uint64_t /*key*/,
+  void OnUniqueTracepointInfo(uint64_t /*tracepoint_id*/,
                               orbit_client_data::TracepointInfo /*tracepoint_info*/) override {}
   void OnTracepointEvent(
       orbit_client_data::TracepointEventInfo /*tracepoint_event_info*/) override {}

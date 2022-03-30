@@ -138,8 +138,8 @@ class CaptureData {
 
   [[nodiscard]] const CallstackData& GetCallstackData() const { return callstack_data_; };
 
-  [[nodiscard]] const TracepointInfo* GetTracepointInfo(uint64_t key) const {
-    return tracepoint_data_.GetTracepointInfo(key);
+  [[nodiscard]] const TracepointInfo* GetTracepointInfo(uint64_t tracepoint_id) const {
+    return tracepoint_data_.GetTracepointInfo(tracepoint_id);
   }
 
   void ForEachTracepointEventOfThreadInTimeRange(
@@ -165,8 +165,8 @@ class CaptureData {
 
   void FilterBrokenCallstacks() { callstack_data_.UpdateCallstackTypeBasedOnMajorityStart(); }
 
-  void AddUniqueTracepointEventInfo(uint64_t key, TracepointInfo tracepoint_info) {
-    tracepoint_data_.AddUniqueTracepointInfo(key, std::move(tracepoint_info));
+  void AddUniqueTracepointInfo(uint64_t tracepoint_id, TracepointInfo tracepoint_info) {
+    tracepoint_data_.AddUniqueTracepointInfo(tracepoint_id, std::move(tracepoint_info));
   }
 
   void AddTracepointEventAndMapToThreads(uint64_t time, uint64_t tracepoint_hash,

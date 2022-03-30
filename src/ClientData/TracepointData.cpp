@@ -111,18 +111,18 @@ bool TracepointData::AddUniqueTracepointInfo(uint64_t key, TracepointInfo tracep
   return inserted;
 }
 
-const TracepointInfo* TracepointData::GetTracepointInfo(uint64_t hash) const {
+const TracepointInfo* TracepointData::GetTracepointInfo(uint64_t tracepoint_id) const {
   absl::MutexLock lock{&unique_tracepoints_mutex_};
-  auto it = unique_tracepoints_.find(hash);
+  auto it = unique_tracepoints_.find(tracepoint_id);
   if (it != unique_tracepoints_.end()) {
     return it->second.get();
   }
   return nullptr;
 }
 
-bool TracepointData::HasTracepointKey(uint64_t key) const {
+bool TracepointData::HasTracepointId(uint64_t tracepoint_id) const {
   absl::MutexLock lock{&unique_tracepoints_mutex_};
-  return unique_tracepoints_.contains(key);
+  return unique_tracepoints_.contains(tracepoint_id);
 }
 
 void TracepointData::ForEachUniqueTracepointInfo(

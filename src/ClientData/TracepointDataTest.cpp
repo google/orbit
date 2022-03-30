@@ -70,25 +70,25 @@ TEST(TracepointData, Contains) {
   TracepointData tracepoint_data;
 
   tracepoint_data.AddUniqueTracepointInfo(1, {"", ""});
-  EXPECT_TRUE(tracepoint_data.HasTracepointKey(1));
-  EXPECT_FALSE(tracepoint_data.HasTracepointKey(0));
+  EXPECT_TRUE(tracepoint_data.HasTracepointId(1));
+  EXPECT_FALSE(tracepoint_data.HasTracepointId(0));
 }
 
 TEST(TracepointData, AddUniqueTracepointEventInfo) {
   TracepointData tracepoint_info_manager;
 
   EXPECT_TRUE(tracepoint_info_manager.AddUniqueTracepointInfo(1, {"", ""}));
-  EXPECT_TRUE(tracepoint_info_manager.HasTracepointKey(1));
+  EXPECT_TRUE(tracepoint_info_manager.HasTracepointId(1));
 
   EXPECT_FALSE(tracepoint_info_manager.AddUniqueTracepointInfo(1, {"", ""}));
   EXPECT_TRUE(tracepoint_info_manager.AddUniqueTracepointInfo(2, {"", ""}));
-  EXPECT_TRUE(tracepoint_info_manager.HasTracepointKey(2));
+  EXPECT_TRUE(tracepoint_info_manager.HasTracepointId(2));
 }
 
 TEST(TracepointData, Get) {
   TracepointData tracepoint_data;
 
-  TracepointInfo tracepoint_info{"sched_switch", "sched"};
+  TracepointInfo tracepoint_info{"sched", "sched_switch"};
 
   EXPECT_TRUE(tracepoint_data.AddUniqueTracepointInfo(1, {"", ""}));
   EXPECT_TRUE(tracepoint_data.AddUniqueTracepointInfo(2, {"", ""}));

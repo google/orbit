@@ -76,7 +76,7 @@ class CaptureEventProcessorForListener : public CaptureEventProcessor {
   void ProcessThreadStateSlice(const orbit_grpc_protos::ThreadStateSlice& thread_state_slice);
   void ProcessAddressInfo(const orbit_grpc_protos::AddressInfo& address_info);
   void ProcessInternedTracepointInfo(
-      orbit_grpc_protos::InternedTracepointInfo interned_tracepoint_info);
+      const orbit_grpc_protos::InternedTracepointInfo& interned_tracepoint_info);
   void ProcessTracepointEvent(const orbit_grpc_protos::TracepointEvent& tracepoint_event);
   void ProcessGpuQueueSubmission(const orbit_grpc_protos::GpuQueueSubmission& gpu_queue_submission);
   void ProcessWarningEvent(const orbit_grpc_protos::WarningEvent& warning_event);
@@ -588,9 +588,9 @@ void CaptureEventProcessorForListener::SendCallstackToListenerIfNecessary(
 }
 
 void CaptureEventProcessorForListener::ProcessInternedTracepointInfo(
-    orbit_grpc_protos::InternedTracepointInfo interned_tracepoint_info) {
-  TracepointInfo tracepoint_info{interned_tracepoint_info.intern().name(),
-                                 interned_tracepoint_info.intern().category()};
+    const orbit_grpc_protos::InternedTracepointInfo& interned_tracepoint_info) {
+  TracepointInfo tracepoint_info{interned_tracepoint_info.intern().category(),
+                                 interned_tracepoint_info.intern().name()};
   capture_listener_->OnUniqueTracepointInfo(interned_tracepoint_info.key(),
                                             std::move(tracepoint_info));
 }

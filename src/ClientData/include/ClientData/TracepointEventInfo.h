@@ -10,10 +10,11 @@
 namespace orbit_client_data {
 
 // This class is used on the client to represent a tracepoint event sample on a certain thread at a
-// certain timestamp. The actual callstack is referenced by the tracepoint id.
+// certain timestamp. The actual tracepoint is referenced by the tracepoint id.
 // See `orbit_grpc_protos::TracePointEvent`.
 class TracepointEventInfo {
  public:
+  TracepointEventInfo() = delete;
   TracepointEventInfo(uint32_t pid, uint32_t tid, int32_t cpu, uint64_t timestamp_ns,
                       uint64_t tracepoint_id)
       : pid_(pid),

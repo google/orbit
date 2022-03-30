@@ -51,7 +51,7 @@ class MockCaptureListener : public CaptureListener {
   MOCK_METHOD(void, OnThreadStateSlice, (orbit_client_data::ThreadStateSliceInfo), (override));
   MOCK_METHOD(void, OnAddressInfo, (orbit_client_data::LinuxAddressInfo), (override));
   MOCK_METHOD(void, OnUniqueTracepointInfo,
-              (uint64_t /*key*/, orbit_client_data::TracepointInfo /*tracepoint_info*/),
+              (uint64_t /*tracepoint_id*/, orbit_client_data::TracepointInfo /*tracepoint_info*/),
               (override));
   MOCK_METHOD(void, OnTracepointEvent, (orbit_client_data::TracepointEventInfo), (override));
   MOCK_METHOD(void, OnModuleUpdate,

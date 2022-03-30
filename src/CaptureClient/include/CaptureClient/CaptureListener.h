@@ -44,7 +44,7 @@ class CaptureListener {
                                  std::vector<orbit_grpc_protos::ModuleInfo> module_infos) = 0;
   virtual void OnThreadStateSlice(orbit_client_data::ThreadStateSliceInfo thread_state_slice) = 0;
   virtual void OnAddressInfo(orbit_client_data::LinuxAddressInfo address_info) = 0;
-  virtual void OnUniqueTracepointInfo(uint64_t key,
+  virtual void OnUniqueTracepointInfo(uint64_t tracepoint_id,
                                       orbit_client_data::TracepointInfo tracepoint_info) = 0;
   virtual void OnTracepointEvent(orbit_client_data::TracepointEventInfo tracepoint_event_info) = 0;
   virtual void OnApiStringEvent(const orbit_client_data::ApiStringEvent&) = 0;

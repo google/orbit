@@ -143,7 +143,7 @@ class IntrospectionCaptureListener : public orbit_capture_client::CaptureListene
   void OnAddressInfo(orbit_client_data::LinuxAddressInfo /*address_info*/) override {
     ORBIT_UNREACHABLE();
   }
-  void OnUniqueTracepointInfo(uint64_t /*key*/,
+  void OnUniqueTracepointInfo(uint64_t /*tracepoint_id*/,
                               orbit_client_data::TracepointInfo /*tracepoint_info*/) override {
     ORBIT_UNREACHABLE();
   }

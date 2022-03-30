@@ -92,7 +92,7 @@ class MockCaptureListener : public CaptureListener {
   MOCK_METHOD(void, OnThreadStateSlice, (ThreadStateSliceInfo), (override));
   MOCK_METHOD(void, OnAddressInfo, (LinuxAddressInfo), (override));
   MOCK_METHOD(void, OnUniqueTracepointInfo,
-              (uint64_t /*key*/, orbit_client_data::TracepointInfo /*tracepoint_info*/),
+              (uint64_t /*tracepoint_id*/, orbit_client_data::TracepointInfo /*tracepoint_info*/),
               (override));
   MOCK_METHOD(void, OnTracepointEvent, (TracepointEventInfo), (override));
   MOCK_METHOD(void, OnModuleUpdate, (uint64_t /*timestamp_ns*/, ModuleInfo /*module_info*/),
@@ -479,12 +479,13 @@ TEST(CaptureEventProcessor, CanHandleInternedTracepointEvents) {
   event_processor->ProcessEvent(interned_tracepoint_event);
   event_processor->ProcessEvent(tracepoint_event);
 
-  ASSERT_TRUE(actual_tracepoint_event.has_value());
-  EXPECT_EQ(actual_key, actual_tracepoint_event->tracepoint_id());
-  EXPECT_EQ(actual_tracepoint_event->tracepoint_id(), tracepoint->tracepoint_info_key());
   ASSERT_TRUE(actual_tracepoint_info.has_value());
   EXPECT_EQ(actual_tracepoint_info->category(), tracepoint_intern->category());
   EXPECT_EQ(actual_tracepoint_info->name(), tracepoint_intern->name());
+
+  ASSERT_TRUE(actual_tracepoint_event.has_value());
+  EXPECT_EQ(actual_key, actual_tracepoint_event->tracepoint_id());
+  EXPECT_EQ(actual_tracepoint_event->tracepoint_id(), tracepoint->tracepoint_info_key());
   EXPECT_EQ(actual_tracepoint_event->pid(), tracepoint->pid());
   EXPECT_EQ(actual_tracepoint_event->tid(), tracepoint->tid());
   EXPECT_EQ(actual_tracepoint_event->timestamp_ns(), tracepoint->timestamp_ns());

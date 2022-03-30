@@ -15,15 +15,15 @@ namespace orbit_client_data {
 class TracepointInfo {
  public:
   TracepointInfo() = delete;
-  TracepointInfo(std::string name, std::string category)
-      : name_{std::move(name)}, category_{std::move(category)} {}
+  TracepointInfo(std::string category, std::string name)
+      : category_{std::move(category)}, name_{std::move(name)} {}
 
-  [[nodiscard]] const std::string& name() const { return name_; }
   [[nodiscard]] const std::string& category() const { return category_; }
+  [[nodiscard]] const std::string& name() const { return name_; }
 
  private:
-  std::string name_;
   std::string category_;
+  std::string name_;
 };
 
 }  // namespace orbit_client_data

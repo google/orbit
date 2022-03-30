@@ -52,8 +52,8 @@ class TracepointData {
 
   bool AddUniqueTracepointInfo(uint64_t key, TracepointInfo tracepoint);
 
-  [[nodiscard]] const TracepointInfo* GetTracepointInfo(uint64_t hash) const;
-  [[nodiscard]] bool HasTracepointKey(uint64_t key) const;
+  [[nodiscard]] const TracepointInfo* GetTracepointInfo(uint64_t tracepoint_id) const;
+  [[nodiscard]] bool HasTracepointId(uint64_t tracepoint_id) const;
 
   void ForEachUniqueTracepointInfo(const std::function<void(const TracepointInfo&)>& action) const;
 
@@ -65,6 +65,9 @@ class TracepointData {
 
   absl::flat_hash_map<uint32_t, std::map<uint64_t, TracepointEventInfo>>
       thread_id_to_time_to_tracepoint_ GUARDED_BY(mutex_);
+
+  // Store unique pointers, such that we can hand out pointers to tracepoint infos, without
+  // requiring the caller to lock the mutex.
   absl::flat_hash_map<uint64_t, std::unique_ptr<TracepointInfo>> unique_tracepoints_
       GUARDED_BY(unique_tracepoints_mutex_);
 };
