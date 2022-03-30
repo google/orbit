@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <ui version="4.0">
- <class>SymbolsDialog</class>
- <widget class="QDialog" name="SymbolsDialog">
+ <class>SymbolLocationsDialog</class>
+ <widget class="QDialog" name="SymbolLocationsDialog">
   <property name="geometry">
    <rect>
     <x>0</x>
@@ -124,7 +124,7 @@
   <connection>
    <sender>doneButton</sender>
    <signal>clicked()</signal>
-   <receiver>SymbolsDialog</receiver>
+   <receiver>SymbolLocationsDialog</receiver>
    <slot>reject()</slot>
    <hints>
     <hint type="sourcelabel">
@@ -140,7 +140,7 @@
   <connection>
    <sender>addFolderButton</sender>
    <signal>clicked()</signal>
-   <receiver>SymbolsDialog</receiver>
+   <receiver>SymbolLocationsDialog</receiver>
    <slot>OnAddFolderButtonClicked()</slot>
    <hints>
     <hint type="sourcelabel">
@@ -156,7 +156,7 @@
   <connection>
    <sender>addFileButton</sender>
    <signal>clicked()</signal>
-   <receiver>SymbolsDialog</receiver>
+   <receiver>SymbolLocationsDialog</receiver>
    <slot>OnAddFileButtonClicked()</slot>
    <hints>
     <hint type="sourcelabel">
@@ -172,7 +172,7 @@
   <connection>
    <sender>removeButton</sender>
    <signal>clicked()</signal>
-   <receiver>SymbolsDialog</receiver>
+   <receiver>SymbolLocationsDialog</receiver>
    <slot>OnRemoveButtonClicked()</slot>
    <hints>
     <hint type="sourcelabel">
@@ -188,7 +188,7 @@
   <connection>
    <sender>moreInfoButton</sender>
    <signal>clicked()</signal>
-   <receiver>SymbolsDialog</receiver>
+   <receiver>SymbolLocationsDialog</receiver>
    <slot>OnMoreInfoButtonClicked()</slot>
    <hints>
     <hint type="sourcelabel">
@@ -204,7 +204,7 @@
   <connection>
    <sender>listWidget</sender>
    <signal>itemSelectionChanged()</signal>
-   <receiver>SymbolsDialog</receiver>
+   <receiver>SymbolLocationsDialog</receiver>
    <slot>OnListItemSelectionChanged()</slot>
    <hints>
     <hint type="sourcelabel">

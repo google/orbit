@@ -2,7 +2,7 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#include "ConfigWidgets/SymbolsDialog.h"
+#include "ConfigWidgets/SymbolLocationsDialog.h"
 
 #include <absl/strings/str_format.h>
 
@@ -22,7 +22,7 @@
 #include "ObjectUtils/SymbolsFile.h"
 #include "OrbitBase/Logging.h"
 #include "OrbitBase/Result.h"
-#include "ui_SymbolsDialog.h"
+#include "ui_SymbolLocationsDialog.h"
 
 constexpr const char* kFileDialogSavedDirectoryKey = "symbols_file_dialog_saved_directory";
 constexpr const char* kModuleHeadlineLabel = "Add Symbols for <font color=\"#E64646\">%1</font>";
@@ -49,7 +49,7 @@ namespace {
 // and distinguished from the regular path entries, that are "simple" QListWidgetItems. An
 // OverrideMappingItem carries an alert icon which is displayed at the beginning of the line. It
 // also has an explanatory tooltip and saves the module file path, so the
-// SymbolsDialog::OnRemoveButtonClicked can delete the corresponding entry from the
+// SymbolLocationsDialog::OnRemoveButtonClicked can delete the corresponding entry from the
 // module_symbol_file_mappings_ map.
 class OverrideMappingItem : public QListWidgetItem {
  public:
@@ -99,16 +99,16 @@ ErrorMessageOr<void> CheckValidSymbolsFileWithBuildId(const std::filesystem::pat
 
 namespace orbit_config_widgets {
 
-SymbolsDialog::~SymbolsDialog() {
+SymbolLocationsDialog::~SymbolLocationsDialog() {
   persistent_storage_manager_->SavePaths(GetSymbolPathsFromListWidget());
   persistent_storage_manager_->SaveModuleSymbolFileMappings(module_symbol_file_mappings_);
 }
 
-SymbolsDialog::SymbolsDialog(
+SymbolLocationsDialog::SymbolLocationsDialog(
     orbit_client_symbols::PersistentStorageManager* persistent_storage_manager,
     bool allow_unsafe_symbols, std::optional<const ModuleData*> module, QWidget* parent)
     : QDialog(parent),
-      ui_(std::make_unique<Ui::SymbolsDialog>()),
+      ui_(std::make_unique<Ui::SymbolLocationsDialog>()),
       allow_unsafe_symbols_(allow_unsafe_symbols),
       module_(module),
       persistent_storage_manager_(persistent_storage_manager),
@@ -143,7 +143,8 @@ SymbolsDialog::SymbolsDialog(
   DisableAddFolder();
 }
 
-void SymbolsDialog::AddSymbolPathsToListWidget(absl::Span<const std::filesystem::path> paths) {
+void SymbolLocationsDialog::AddSymbolPathsToListWidget(
+    absl::Span<const std::filesystem::path> paths) {
   QStringList paths_list;
   paths_list.reserve(static_cast<int>(paths.size()));
 
@@ -154,7 +155,7 @@ void SymbolsDialog::AddSymbolPathsToListWidget(absl::Span<const std::filesystem:
   ui_->listWidget->addItems(paths_list);
 }
 
-ErrorMessageOr<void> SymbolsDialog::TryAddSymbolPath(const std::filesystem::path& path) {
+ErrorMessageOr<void> SymbolLocationsDialog::TryAddSymbolPath(const std::filesystem::path& path) {
   QString path_as_qstring = QString::fromStdString(path.string());
   QList<QListWidgetItem*> find_result =
       ui_->listWidget->findItems(path_as_qstring, Qt::MatchFixedString);
@@ -166,7 +167,8 @@ ErrorMessageOr<void> SymbolsDialog::TryAddSymbolPath(const std::filesystem::path
   return outcome::success();
 }
 
-[[nodiscard]] std::vector<std::filesystem::path> SymbolsDialog::GetSymbolPathsFromListWidget() {
+[[nodiscard]] std::vector<std::filesystem::path>
+SymbolLocationsDialog::GetSymbolPathsFromListWidget() {
   std::vector<std::filesystem::path> result;
 
   for (int i = 0; i < ui_->listWidget->count(); ++i) {
@@ -180,7 +182,7 @@ ErrorMessageOr<void> SymbolsDialog::TryAddSymbolPath(const std::filesystem::path
   return result;
 }
 
-void SymbolsDialog::OnAddFolderButtonClicked() {
+void SymbolLocationsDialog::OnAddFolderButtonClicked() {
   QSettings settings;
   QString directory = QFileDialog::getExistingDirectory(
       this, "Select Symbol Folder", settings.value(kFileDialogSavedDirectoryKey).toString());
@@ -194,7 +196,7 @@ void SymbolsDialog::OnAddFolderButtonClicked() {
                        QString::fromStdString(result.error().message()));
 }
 
-void SymbolsDialog::OnRemoveButtonClicked() {
+void SymbolLocationsDialog::OnRemoveButtonClicked() {
   for (QListWidgetItem* selected_item : ui_->listWidget->selectedItems()) {
     if (selected_item->type() == kOverrideMappingItemType) {
       auto* mapping_item = dynamic_cast<OverrideMappingItem*>(selected_item);
@@ -206,7 +208,7 @@ void SymbolsDialog::OnRemoveButtonClicked() {
   }
 }
 
-std::tuple<QString, QString> SymbolsDialog::GetFilePickerConfig() const {
+std::tuple<QString, QString> SymbolLocationsDialog::GetFilePickerConfig() const {
   QString file_filter{"Symbol Files (*.debug *.so *.pdb *.dll);;All files (*)"};
 
   if (!module_.has_value()) {
@@ -233,7 +235,7 @@ std::tuple<QString, QString> SymbolsDialog::GetFilePickerConfig() const {
   return std::make_tuple(caption, file_filter);
 }
 
-void SymbolsDialog::OnAddFileButtonClicked() {
+void SymbolLocationsDialog::OnAddFileButtonClicked() {
   QSettings settings;
 
   auto [caption, file_filter] = GetFilePickerConfig();
@@ -254,7 +256,8 @@ void SymbolsDialog::OnAddFileButtonClicked() {
                        QString::fromStdString(add_result.error().message()));
 }
 
-ErrorMessageOr<void> SymbolsDialog::TryAddSymbolFile(const std::filesystem::path& file_path) {
+ErrorMessageOr<void> SymbolLocationsDialog::TryAddSymbolFile(
+    const std::filesystem::path& file_path) {
   // If the dialog was opened without a module, every valid symbols file with build id can be added
   if (!module_.has_value()) {
     OUTCOME_TRY(CheckValidSymbolsFileWithBuildId(file_path));
@@ -289,11 +292,11 @@ ErrorMessageOr<void> SymbolsDialog::TryAddSymbolFile(const std::filesystem::path
   }
 }
 
-void SymbolsDialog::OnListItemSelectionChanged() {
+void SymbolLocationsDialog::OnListItemSelectionChanged() {
   ui_->removeButton->setEnabled(!ui_->listWidget->selectedItems().isEmpty());
 }
 
-void SymbolsDialog::OnMoreInfoButtonClicked() {
+void SymbolLocationsDialog::OnMoreInfoButtonClicked() {
   QString url_as_string{
       "https://developers.google.com/stadia/docs/develop/optimize/"
       "profile-cpu-with-orbit#load_symbols"};
@@ -303,7 +306,8 @@ void SymbolsDialog::OnMoreInfoButtonClicked() {
   }
 }
 
-[[nodiscard]] SymbolsDialog::OverrideWarningResult SymbolsDialog::DisplayOverrideWarning() {
+[[nodiscard]] SymbolLocationsDialog::OverrideWarningResult
+SymbolLocationsDialog::DisplayOverrideWarning() {
   QMessageBox message_box{QMessageBox::Warning, "Override Symbol location?", kOverrideWarningText,
                           QMessageBox::StandardButton::Cancel, this};
   QAbstractButton* override_button = message_box.addButton("Override", QMessageBox::AcceptRole);
@@ -318,7 +322,7 @@ void SymbolsDialog::OnMoreInfoButtonClicked() {
   return OverrideWarningResult::kCancel;
 }
 
-void SymbolsDialog::AddModuleSymbolFileMappingsToList() {
+void SymbolLocationsDialog::AddModuleSymbolFileMappingsToList() {
   for (const auto& [module_path, symbol_file_path] : module_symbol_file_mappings_) {
     // The "new" here is okay, because listWidget will own the MappingItem and the Qt lifecycle
     // management will take care of its deletion
@@ -326,8 +330,8 @@ void SymbolsDialog::AddModuleSymbolFileMappingsToList() {
   }
 }
 
-ErrorMessageOr<void> SymbolsDialog::AddMapping(const ModuleData& module,
-                                               const std::filesystem::path& symbol_file_path) {
+ErrorMessageOr<void> SymbolLocationsDialog::AddMapping(
+    const ModuleData& module, const std::filesystem::path& symbol_file_path) {
   if (module_symbol_file_mappings_.contains(module.file_path())) {
     return ErrorMessage(
         absl::StrFormat("Module \"%s\" is already mapped to a symbol file (\"%s\"). Please remove "
@@ -340,14 +344,14 @@ ErrorMessageOr<void> SymbolsDialog::AddMapping(const ModuleData& module,
   return outcome::success();
 }
 
-void SymbolsDialog::SetUpModuleHeadlineLabel() {
+void SymbolLocationsDialog::SetUpModuleHeadlineLabel() {
   ORBIT_CHECK(module_.has_value());
   ui_->moduleHeadlineLabel->setVisible(true);
   ui_->moduleHeadlineLabel->setText(
       QString(kModuleHeadlineLabel).arg(QString::fromStdString(module_.value()->name())));
 }
 
-void SymbolsDialog::DisableAddFolder() {
+void SymbolLocationsDialog::DisableAddFolder() {
   ORBIT_CHECK(module_.has_value());
 
   ui_->addFolderButton->setDisabled(true);
@@ -357,7 +361,7 @@ void SymbolsDialog::DisableAddFolder() {
           .arg(QString::fromStdString(module_.value()->name())));
 }
 
-void SymbolsDialog::SetUpInfoLabel() {
+void SymbolLocationsDialog::SetUpInfoLabel() {
   QString label_text{kInfoLabelTemplate};
   if (allow_unsafe_symbols_) {
     label_text = label_text.arg(kInfoLabelArgumentWithBuildIdOverride);
