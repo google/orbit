@@ -142,6 +142,8 @@ TEST_F(CaptureDataTest, UpdateTimerDurationsIsCorrect) {
       capture_data_.GetSortedTimerDurationsForScopeId(kSecondId);
   EXPECT_EQ(*durations_second, std::vector(std::begin(kSortedDurationsForSecondId),
                                            std::end(kSortedDurationsForSecondId)));
+
+  EXPECT_THAT(capture_data_.GetSortedTimerDurationsForScopeId(kInvalidScopeId), testing::IsNull());
 }
 
 }  // namespace orbit_client_data

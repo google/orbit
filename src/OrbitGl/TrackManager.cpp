@@ -23,8 +23,6 @@
 #include "App.h"
 #include "ClientData/CallstackData.h"
 #include "ClientData/CaptureData.h"
-#include "ClientData/ScopeIdConstants.h"
-#include "ClientData/ScopeIdProvider.h"
 #include "ClientFlags/ClientFlags.h"
 #include "GlCanvas.h"
 #include "OrbitBase/Append.h"

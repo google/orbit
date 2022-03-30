@@ -224,29 +224,16 @@ void CaptureData::UpdateTimerDurations() {
 
 void CaptureData::CollectDurations(const std::vector<const TimerInfo*>& timers) {
   for (const TimerInfo* timer : timers) {
-    CollectDuration(*timer);
+    CollectDuration(timer);
   }
 }
 
-void CaptureData::CollectDuration(const TimerInfo& timer) {
-  const uint64_t scope_id = ProvideScopeId(timer);
+void CaptureData::CollectDuration(const TimerInfo* timer) {
+  const uint64_t scope_id = ProvideScopeId(*timer);
 
   if (scope_id == orbit_client_data::kInvalidScopeId) return;
 
-  timer_durations_[scope_id].push_back(timer.end() - timer.start());
-}
-
-void CaptureData::CollectDurations(
-    const std::vector<const orbit_client_data::TimerChain*>& chains) {
-  for (const orbit_client_data::TimerChain* chain : chains) {
-    ORBIT_CHECK(chain != nullptr);
-    for (const auto& block : *chain) {
-      for (uint64_t i = 0; i < block.size(); i++) {
-        const TimerInfo& timer = block[i];
-        CollectDuration(timer);
-      }
-    }
-  }
+  timer_durations_[scope_id].push_back(timer->end() - timer->start());
 }
 
 }  // namespace orbit_client_data

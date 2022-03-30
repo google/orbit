@@ -858,7 +858,6 @@ TEST_F(LiveFunctionsDataViewTest, HistogramIsProperlyUpdated) {
   EXPECT_CALL(app_, ProvideScopeId).WillRepeatedly(Invoke([&](const TimerInfo& timer) {
     return timer.function_id();
   }));
-
   EXPECT_CALL(app_, HasCaptureData).WillRepeatedly(testing::Return(true));
   EXPECT_CALL(app_, GetCaptureData).WillRepeatedly(testing::ReturnRef(*capture_data_));
 

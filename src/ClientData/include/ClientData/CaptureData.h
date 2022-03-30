@@ -245,9 +245,8 @@ class CaptureData {
 
  private:
   void UpdateTimerDurations();
-  void CollectDurations(const std::vector<const orbit_client_data::TimerChain*>& chains);
   void CollectDurations(const std::vector<const TimerInfo*>& timer);
-  void CollectDuration(const TimerInfo& timer);
+  void CollectDuration(const TimerInfo* timer);
 
   orbit_client_data::ProcessData process_;
   absl::flat_hash_map<uint64_t, orbit_grpc_protos::InstrumentedFunction> instrumented_functions_;

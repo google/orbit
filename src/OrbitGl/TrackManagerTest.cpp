@@ -3,14 +3,10 @@
 // found in the LICENSE file.
 #include <gtest/gtest.h>
 
-#include <cstdint>
-#include <vector>
-
 #include "ClientData/CaptureData.h"
 #include "ClientData/ModuleManager.h"
 #include "ClientProtos/capture_data.pb.h"
 #include "GrpcProtos/capture.pb.h"
-#include "OrbitBase/Logging.h"
 #include "TimeGraph.h"
 #include "Track.h"
 #include "TrackManager.h"
