@@ -146,6 +146,8 @@ TEST_F(CaptureDataTest, VarianceIsCorrectForLongDurations) {
 }
 
 TEST_F(CaptureDataTest, VarianceIsCorrectOnScimitarDataset) {
+  // The file first line of the file contains the expected variance. The rest of the lines store
+  // durations one per line. The last line is empty.
   std::filesystem::path path = orbit_test::GetTestdataDir() / "scimitar_variance_and_durations.csv";
   const ErrorMessageOr<std::string> file_content_or_error = orbit_base::ReadFileToString(path);
   EXPECT_TRUE(file_content_or_error.has_value());
