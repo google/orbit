@@ -28,12 +28,19 @@ ErrorMessageOr<Debugger::StartInfo> CreateStartInfoOrError(
 
 }  // namespace
 
-Debugger::Debugger() {}
+Debugger::Debugger(std::vector<DebugEventListener*> debug_event_listeners)
+    : debug_event_listeners_(std::move(debug_event_listeners)) {}
+
 Debugger::~Debugger() { Wait(); }
 
 ErrorMessageOr<Debugger::StartInfo> Debugger::Start(const std::filesystem::path& executable,
                                                     const std::filesystem::path& working_directory,
                                                     const std::string_view arguments) {
+  // Make sure we have at least on debug event listener.
+  if (debug_event_listeners_.size() == 0) {
+    return ErrorMessage("Debugger has no debug event listener");
+  }
+
   // Launch process and start debugging loop on the same separate thread.
   thread_ = std::thread(&Debugger::DebuggerThread, this, executable, working_directory,
                         std::string(arguments));
@@ -81,43 +88,64 @@ void Debugger::DebuggingLoop(uint32_t process_id) {
       break;
     }
 
-    uint32_t continue_status = HandleDebugEvent(debug_event);
+    uint32_t continue_status = DispatchDebugEvent(debug_event);
     ContinueDebugEvent(debug_event.dwProcessId, debug_event.dwThreadId, continue_status);
   }
 }
 
-uint32_t Debugger::HandleDebugEvent(const DEBUG_EVENT& debug_event) {
+uint32_t Debugger::DispatchDebugEvent(const DEBUG_EVENT& debug_event) {
   switch (debug_event.dwDebugEventCode) {
     case CREATE_PROCESS_DEBUG_EVENT:
-      OnCreateProcessDebugEvent(debug_event);
+      for (auto* listener : debug_event_listeners_) {
+        listener->OnCreateProcessDebugEvent(debug_event);
+      }
       break;
     case EXIT_PROCESS_DEBUG_EVENT:
-      OnExitProcessDebugEvent(debug_event);
+      for (auto* listener : debug_event_listeners_) {
+        listener->OnExitProcessDebugEvent(debug_event);
+      }
+      // The debugged process has exited, call detach to exit debugging loop.
       Detach();
       break;
     case CREATE_THREAD_DEBUG_EVENT:
-      OnCreateThreadDebugEvent(debug_event);
+      for (auto* listener : debug_event_listeners_) {
+        listener->OnCreateThreadDebugEvent(debug_event);
+      }
       break;
     case EXIT_THREAD_DEBUG_EVENT:
-      OnExitThreadDebugEvent(debug_event);
+      for (auto* listener : debug_event_listeners_) {
+        listener->OnExitThreadDebugEvent(debug_event);
+      }
       break;
     case LOAD_DLL_DEBUG_EVENT:
-      OnLoadDllDebugEvent(debug_event);
+      for (auto* listener : debug_event_listeners_) {
+        listener->OnLoadDllDebugEvent(debug_event);
+      }
       break;
     case UNLOAD_DLL_DEBUG_EVENT:
-      OnUnLoadDllDebugEvent(debug_event);
+      for (auto* listener : debug_event_listeners_) {
+        listener->OnUnLoadDllDebugEvent(debug_event);
+      }
       break;
     case OUTPUT_DEBUG_STRING_EVENT:
-      OnOutputStringDebugEvent(debug_event);
+      for (auto* listener : debug_event_listeners_) {
+        listener->OnOutputStringDebugEvent(debug_event);
+      }
       break;
     case RIP_EVENT:
-      OnRipEvent(debug_event);
+      for (auto* listener : debug_event_listeners_) {
+        listener->OnRipEvent(debug_event);
+      }
       break;
     case EXCEPTION_DEBUG_EVENT: {
       if (debug_event.u.Exception.ExceptionRecord.ExceptionCode == STATUS_BREAKPOINT) {
-        OnBreakpointDebugEvent(debug_event);
+        for (auto* listener : debug_event_listeners_) {
+          listener->OnBreakpointDebugEvent(debug_event);
+        }
       } else {
-        OnExceptionDebugEvent(debug_event);
+        for (auto* listener : debug_event_listeners_) {
+          listener->OnExceptionDebugEvent(debug_event);
+        }
         return DBG_EXCEPTION_NOT_HANDLED;
       }
       break;

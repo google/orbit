@@ -18,13 +18,13 @@ std::filesystem::path GetTestExecutablePath() {
   return path;
 }
 
+using orbit_windows_utils::DebugEventListener;
 using orbit_windows_utils::Debugger;
 using orbit_windows_utils::ProcessInfo;
 
 }  // namespace
 
-class MockDebugger : public Debugger {
- public:
+struct MockListener : public DebugEventListener {
   MOCK_METHOD(void, OnCreateProcessDebugEvent, (const DEBUG_EVENT& event), (override));
   MOCK_METHOD(void, OnExitProcessDebugEvent, (const DEBUG_EVENT& event), (override));
   MOCK_METHOD(void, OnCreateThreadDebugEvent, (const DEBUG_EVENT& event), (override));
@@ -38,18 +38,27 @@ class MockDebugger : public Debugger {
 };
 
 TEST(Debugger, LaunchProcess) {
-  MockDebugger debugger;
+  constexpr size_t kNumListeners = 10;
+  std::vector<MockListener> mock_listeners(kNumListeners);
+  std::vector<DebugEventListener*> listeners;
+  for (MockListener& mock_listener : mock_listeners) {
+    listeners.push_back(&mock_listener);
+  }
 
-  EXPECT_CALL(debugger, OnCreateProcessDebugEvent).Times(1);
-  EXPECT_CALL(debugger, OnExitProcessDebugEvent).Times(1);
-  EXPECT_CALL(debugger, OnBreakpointDebugEvent).Times(1);
-  EXPECT_CALL(debugger, OnCreateThreadDebugEvent).Times(testing::AtLeast(1));
-  EXPECT_CALL(debugger, OnExitThreadDebugEvent).Times(testing::AtLeast(1));
-  EXPECT_CALL(debugger, OnLoadDllDebugEvent).Times(testing::AnyNumber());
-  EXPECT_CALL(debugger, OnUnLoadDllDebugEvent).Times(testing::AnyNumber());
-  EXPECT_CALL(debugger, OnOutputStringDebugEvent).Times(testing::AnyNumber());
-  EXPECT_CALL(debugger, OnExceptionDebugEvent).Times(testing::AnyNumber());
-  EXPECT_CALL(debugger, OnRipEvent).Times(testing::AnyNumber());
+  Debugger debugger(listeners);
+
+  for (MockListener& mock_listener : mock_listeners) {
+    EXPECT_CALL(mock_listener, OnCreateProcessDebugEvent).Times(1);
+    EXPECT_CALL(mock_listener, OnExitProcessDebugEvent).Times(1);
+    EXPECT_CALL(mock_listener, OnBreakpointDebugEvent).Times(1);
+    EXPECT_CALL(mock_listener, OnCreateThreadDebugEvent).Times(testing::AtLeast(1));
+    EXPECT_CALL(mock_listener, OnExitThreadDebugEvent).Times(testing::AtLeast(1));
+    EXPECT_CALL(mock_listener, OnLoadDllDebugEvent).Times(testing::AnyNumber());
+    EXPECT_CALL(mock_listener, OnUnLoadDllDebugEvent).Times(testing::AnyNumber());
+    EXPECT_CALL(mock_listener, OnOutputStringDebugEvent).Times(testing::AnyNumber());
+    EXPECT_CALL(mock_listener, OnExceptionDebugEvent).Times(testing::AnyNumber());
+    EXPECT_CALL(mock_listener, OnRipEvent).Times(testing::AnyNumber());
+  }
 
   const std::string kArguments = "--sleep_for_ms=20";
   auto result = debugger.Start(GetTestExecutablePath(), /*working_directory=*/"", kArguments);
@@ -64,15 +73,24 @@ TEST(Debugger, LaunchProcess) {
   debugger.Wait();
 }
 
+TEST(Debugger, NoListener) {
+  Debugger debugger({});
+  const std::string kArguments = "--sleep_for_ms=20";
+  auto result = debugger.Start(GetTestExecutablePath(), /*working_directory=*/"", kArguments);
+  EXPECT_THAT(result, orbit_test_utils::HasError("Debugger has no debug event listener"));
+}
+
 TEST(Debugger, NonExistingExecutable) {
-  MockDebugger debugger;
+  MockListener listener;
+  Debugger debugger({&listener});
   const std::string executable = R"(C:\non_existing_executable.exe)";
   auto result = debugger.Start(executable, "", "");
   EXPECT_THAT(result, orbit_test_utils::HasError("Executable does not exist"));
 }
 
 TEST(Debugger, NonExistingWorkingDirectory) {
-  MockDebugger debugger;
+  MockListener listener;
+  Debugger debugger({&listener});
   const std::string non_existing_working_directory = R"(C:\non_existing_directory)";
   auto result = debugger.Start(GetTestExecutablePath(), non_existing_working_directory, "");
   EXPECT_THAT(result, orbit_test_utils::HasError("Working directory does not exist"));

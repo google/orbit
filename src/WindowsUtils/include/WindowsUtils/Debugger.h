@@ -17,12 +17,26 @@
 #include <filesystem>
 #include <string>
 #include <thread>
+#include <vector>
 
 namespace orbit_windows_utils {
 
+struct DebugEventListener {
+  virtual void OnCreateProcessDebugEvent(const DEBUG_EVENT& event) = 0;
+  virtual void OnExitProcessDebugEvent(const DEBUG_EVENT& event) = 0;
+  virtual void OnCreateThreadDebugEvent(const DEBUG_EVENT& event) = 0;
+  virtual void OnExitThreadDebugEvent(const DEBUG_EVENT& event) = 0;
+  virtual void OnLoadDllDebugEvent(const DEBUG_EVENT& event) = 0;
+  virtual void OnUnLoadDllDebugEvent(const DEBUG_EVENT& event) = 0;
+  virtual void OnBreakpointDebugEvent(const DEBUG_EVENT& event) = 0;
+  virtual void OnOutputStringDebugEvent(const DEBUG_EVENT& event) = 0;
+  virtual void OnExceptionDebugEvent(const DEBUG_EVENT& event) = 0;
+  virtual void OnRipEvent(const DEBUG_EVENT& event) = 0;
+};
+
 class Debugger {
  public:
-  Debugger();
+  explicit Debugger(std::vector<DebugEventListener*> debug_event_listeners);
   virtual ~Debugger();
 
   struct StartInfo {
@@ -40,28 +54,16 @@ class Debugger {
   // Wait for debuggee to exit.
   void Wait();
 
- protected:
-  // The functions below will not be called from the thread "Start" was called from.
-  virtual void OnCreateProcessDebugEvent(const DEBUG_EVENT& event) = 0;
-  virtual void OnExitProcessDebugEvent(const DEBUG_EVENT& event) = 0;
-  virtual void OnCreateThreadDebugEvent(const DEBUG_EVENT& event) = 0;
-  virtual void OnExitThreadDebugEvent(const DEBUG_EVENT& event) = 0;
-  virtual void OnLoadDllDebugEvent(const DEBUG_EVENT& event) = 0;
-  virtual void OnUnLoadDllDebugEvent(const DEBUG_EVENT& event) = 0;
-  virtual void OnBreakpointDebugEvent(const DEBUG_EVENT& event) = 0;
-  virtual void OnOutputStringDebugEvent(const DEBUG_EVENT& event) = 0;
-  virtual void OnExceptionDebugEvent(const DEBUG_EVENT& event) = 0;
-  virtual void OnRipEvent(const DEBUG_EVENT& event) = 0;
-
  private:
   void DebuggerThread(std::filesystem::path executable, std::filesystem::path working_directory,
                       std::string arguments);
   void DebuggingLoop(uint32_t process_id);
-  uint32_t HandleDebugEvent(const DEBUG_EVENT& event);
+  uint32_t DispatchDebugEvent(const DEBUG_EVENT& event);
 
   std::thread thread_;
   std::atomic<bool> detach_requested_ = false;
   orbit_base::Promise<ErrorMessageOr<StartInfo>> start_info_or_error_promise_;
+  std::vector<DebugEventListener*> debug_event_listeners_;
 };
 
 }  // namespace orbit_windows_utils
