@@ -34,6 +34,8 @@ struct PickingUserData {
 class BatcherInterface {
  public:
   BatcherInterface(BatcherId batcher_id) : batcher_id_(batcher_id) {}
+  virtual ~BatcherInterface() = default;
+
   virtual void ResetElements() = 0;
   virtual void AddLine(Vec2 from, Vec2 to, float z, const Color& color, const Color& picking_color,
                        std::unique_ptr<PickingUserData> user_data) = 0;
