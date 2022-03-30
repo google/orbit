@@ -17,6 +17,7 @@
 #include <utility>
 #include <vector>
 
+#include "ClientData/FunctionInfo.h"
 #include "ClientData/ModuleData.h"
 #include "DataViews/AppInterface.h"
 #include "DataViews/DataViewType.h"
@@ -173,8 +174,7 @@ class DataView {
       int /*row*/) const {
     return nullptr;
   }
-  [[nodiscard]] virtual const orbit_client_protos::FunctionInfo* GetFunctionInfoFromRow(
-      int /*row*/) {
+  [[nodiscard]] virtual const orbit_client_data::FunctionInfo* GetFunctionInfoFromRow(int /*row*/) {
     return nullptr;
   }
 

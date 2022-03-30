@@ -6,15 +6,6 @@ syntax = "proto3";
 
 package orbit_client_protos;
 
-message FunctionInfo {
-  reserved 1, 4, 6, 8, 9, 10, 11;
-  string pretty_name = 2;
-  string module_path = 3;
-  string module_build_id = 12;
-  uint64 address = 5;
-  uint64 size = 7;
-}
-
 message TimerInfo {
   // NextID: 18
   uint64 start = 1;

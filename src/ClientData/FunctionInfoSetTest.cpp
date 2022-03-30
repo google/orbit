@@ -3,166 +3,83 @@
 // found in the LICENSE file.
 
 #include <absl/container/flat_hash_map.h>
+#include <absl/container/flat_hash_set.h>
 #include <gtest/gtest.h>
 
 #include <memory>
 
-#include "ClientData/FunctionInfoSet.h"
-#include "ClientProtos/capture_data.pb.h"
-
-using orbit_client_protos::FunctionInfo;
+#include "ClientData/FunctionInfo.h"
 
 namespace orbit_client_data {
 
 TEST(FunctionInfoSet, EqualFunctions) {
-  FunctionInfo left;
-  left.set_pretty_name("void foo()");
-  left.set_module_path("/path/to/module");
-  left.set_module_build_id("buildid");
-  left.set_address(12);
-  left.set_size(16);
+  FunctionInfo left{"foo()", "/path/to/module", "buildid", 12, 16};
+  FunctionInfo right{"foo()", "/path/to/module", "buildid", 12, 16};
 
-  FunctionInfo right;
-  right.set_pretty_name("void foo()");
-  right.set_module_path("/path/to/module");
-  right.set_module_build_id("buildid");
-  right.set_address(12);
-  right.set_size(16);
-
-  internal::EqualFunctionInfo eq;
-  EXPECT_TRUE(eq(left, right));
-  internal::HashFunctionInfo hash;
-  EXPECT_EQ(hash(left), hash(right));
+  EXPECT_TRUE(left == right);
+  EXPECT_TRUE(right == left);
+  EXPECT_EQ(left, right);
 }
 
 TEST(FunctionInfoSet, DifferentName) {
-  FunctionInfo left;
-  left.set_pretty_name("void foo()");
-  left.set_module_path("/path/to/module");
-  left.set_module_build_id("buildid");
-  left.set_address(12);
-  left.set_size(16);
+  FunctionInfo left{"foo()", "/path/to/module", "buildid", 12, 16};
+  FunctionInfo right{"bar()", "/path/to/module", "buildid", 12, 16};
 
-  FunctionInfo right;
-  right.CopyFrom(left);
-  right.set_pretty_name("bar");
-
-  internal::EqualFunctionInfo eq;
-  EXPECT_TRUE(eq(left, right));
-}
-
-TEST(FunctionInfoSet, DifferentPrettyName) {
-  FunctionInfo left;
-  left.set_pretty_name("void foo()");
-  left.set_module_path("/path/to/module");
-  left.set_module_build_id("buildid");
-  left.set_address(12);
-  left.set_size(16);
-
-  FunctionInfo right;
-  right.CopyFrom(left);
-  right.set_pretty_name("void bar()");
-
-  internal::EqualFunctionInfo eq;
-  EXPECT_TRUE(eq(left, right));
+  EXPECT_EQ(left, right);
 }
 
 TEST(FunctionInfoSet, DifferentModulePath) {
-  FunctionInfo left;
-  left.set_pretty_name("void foo()");
-  left.set_module_path("/path/to/module");
-  left.set_module_build_id("buildid");
-  left.set_address(12);
-  left.set_size(16);
+  FunctionInfo left{"foo()", "/path/to/module", "buildid", 12, 16};
+  FunctionInfo right{"foo()", "/path/to/other", "buildid", 12, 16};
 
-  FunctionInfo right;
-  right.CopyFrom(left);
-  right.set_module_path("/path/to/other");
-
-  internal::EqualFunctionInfo eq;
-  EXPECT_FALSE(eq(left, right));
+  EXPECT_NE(left, right);
 }
 
 TEST(FunctionInfoSet, DifferentBuildId) {
-  FunctionInfo left;
-  left.set_pretty_name("void foo()");
-  left.set_module_path("/path/to/module");
-  left.set_module_build_id("buildid");
-  left.set_address(12);
-  left.set_size(16);
+  FunctionInfo left{"foo()", "/path/to/module", "buildid", 12, 16};
+  FunctionInfo right{"foo()", "/path/to/module", "anotherbuildid", 12, 16};
 
-  FunctionInfo right;
-  right.CopyFrom(left);
-  right.set_module_build_id("anotherbuildid");
-
-  internal::EqualFunctionInfo eq;
-  EXPECT_FALSE(eq(left, right));
+  EXPECT_NE(left, right);
 }
 
 TEST(FunctionInfoSet, DifferentAddress) {
-  FunctionInfo left;
-  left.set_pretty_name("void foo()");
-  left.set_module_path("/path/to/module");
-  left.set_module_build_id("buildid");
-  left.set_address(12);
-  left.set_size(16);
+  FunctionInfo left{"foo()", "/path/to/module", "buildid", 12, 16};
+  FunctionInfo right{"foo()", "/path/to/module", "buildid", 14, 16};
 
-  FunctionInfo right;
-  right.CopyFrom(left);
-  right.set_address(14);
-
-  internal::EqualFunctionInfo eq;
-  EXPECT_FALSE(eq(left, right));
+  EXPECT_NE(left, right);
 }
 
 TEST(FunctionInfoSet, DifferentSize) {
-  FunctionInfo left;
-  left.set_pretty_name("void foo()");
-  left.set_module_path("/path/to/module");
-  left.set_module_build_id("buildid");
-  left.set_address(12);
-  left.set_size(16);
+  FunctionInfo left{"foo()", "/path/to/module", "buildid", 12, 16};
+  FunctionInfo right{"foo()", "/path/to/module", "buildid", 12, 15};
 
-  FunctionInfo right;
-  right.CopyFrom(left);
-  right.set_size(15);
-
-  internal::EqualFunctionInfo eq;
-  EXPECT_TRUE(eq(left, right));
+  EXPECT_EQ(left, right);
 }
 
 TEST(FunctionInfoSet, Insertion) {
-  FunctionInfo function;
-  function.set_pretty_name("void foo()");
-  function.set_module_path("/path/to/module");
-  function.set_module_build_id("buildid");
-  function.set_address(12);
-  function.set_size(16);
+  FunctionInfo function{"foo()", "/path/to/module", "buildid", 12, 16};
 
-  FunctionInfoSet functions;
+  absl::flat_hash_set<FunctionInfo> functions;
   EXPECT_FALSE(functions.contains(function));
   functions.insert(function);
   EXPECT_TRUE(functions.contains(function));
   EXPECT_EQ(functions.size(), 1);
 
-  FunctionInfo other;
+  FunctionInfo other{"bar()", "/path/to/module", "buildid", 512, 14};
   EXPECT_FALSE(functions.contains(other));
 }
 
 TEST(FunctionInfoSet, Deletion) {
-  FunctionInfo function;
-  function.set_pretty_name("void foo()");
-  function.set_module_path("/path/to/module");
-  function.set_module_build_id("buildid");
-  function.set_address(12);
-  function.set_size(16);
+  FunctionInfo function{"foo()", "/path/to/module", "buildid", 12, 16};
+  ;
 
-  FunctionInfoSet functions;
+  absl::flat_hash_set<FunctionInfo> functions;
   functions.insert(function);
   EXPECT_TRUE(functions.contains(function));
   EXPECT_EQ(functions.size(), 1);
 
-  FunctionInfo other;
+  FunctionInfo other{"bar()", "/path/to/module", "buildid", 512, 14};
+  ;
   EXPECT_FALSE(functions.contains(other));
   functions.erase(other);
   EXPECT_FALSE(functions.contains(other));

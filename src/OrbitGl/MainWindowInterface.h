@@ -11,6 +11,7 @@
 #include <optional>
 #include <string_view>
 
+#include "ClientData/FunctionInfo.h"
 #include "ClientData/ModuleData.h"
 #include "ClientProtos/capture_data.pb.h"
 #include "CodeReport/CodeReport.h"
@@ -34,7 +35,7 @@ class MainWindowInterface {
   virtual void ShowSourceCode(
       const std::filesystem::path& file_path, size_t line_number,
       std::optional<std::unique_ptr<orbit_code_report::CodeReport>> code_report) = 0;
-  virtual void ShowDisassembly(const orbit_client_protos::FunctionInfo& function_info,
+  virtual void ShowDisassembly(const orbit_client_data::FunctionInfo& function_info,
                                const std::string& assembly,
                                orbit_code_report::DisassemblyReport report) = 0;
 

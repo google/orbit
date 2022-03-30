@@ -14,7 +14,6 @@
 #include <vector>
 
 #include "ClientData/CaptureData.h"
-#include "ClientData/FunctionUtils.h"
 #include "ClientData/ScopeIdConstants.h"
 #include "ClientData/ScopeStats.h"
 #include "ClientData/TimerChain.h"
@@ -33,10 +32,10 @@
 using JumpToTimerMode = orbit_data_views::AppInterface::JumpToTimerMode;
 
 using orbit_client_data::CaptureData;
+using orbit_client_data::FunctionInfo;
 using orbit_client_data::ModuleData;
 using orbit_client_data::ScopeStats;
 
-using orbit_client_protos::FunctionInfo;
 using orbit_client_protos::TimerInfo;
 
 using orbit_data_views::CheckCopySelectionIsInvoked;
@@ -187,8 +186,7 @@ std::unique_ptr<CaptureData> GenerateTestCaptureData(
         capture_started.mutable_capture_options()->add_instrumented_functions();
     instrumented_function->set_file_path(function.module_path());
     instrumented_function->set_file_build_id(function.module_build_id());
-    instrumented_function->set_file_offset(
-        orbit_client_data::function_utils::Offset(function, *module_data));
+    instrumented_function->set_file_offset(function.Offset(*module_data));
     instrumented_function->set_function_id(kFunctionIds[i]);
     instrumented_function->set_function_name(kPrettyNames[i]);
   }
@@ -234,11 +232,7 @@ class LiveFunctionsDataViewTest : public testing::Test {
 
     view_.Init();
     for (size_t i = 0; i < kNumFunctions; i++) {
-      FunctionInfo function;
-      function.set_pretty_name(kPrettyNames[i]);
-      function.set_module_path(kModulePaths[i]);
-      function.set_module_build_id(kBuildIds[i]);
-      function.set_address(kAddresses[i]);
+      FunctionInfo function{kPrettyNames[i], kModulePaths[i], kBuildIds[i], kAddresses[i], 0};
       functions_.insert_or_assign(kFunctionIds[i], std::move(function));
     }
   }
@@ -299,7 +293,7 @@ TEST_F(LiveFunctionsDataViewTest, ColumnSelectedShowsRightResults) {
   bool frame_track_enabled = false;
   EXPECT_CALL(app_, HasCaptureData).WillRepeatedly(testing::Return(true));
   EXPECT_CALL(app_, GetCaptureData).WillRepeatedly(testing::ReturnRef(*capture_data_));
-  EXPECT_CALL(app_, IsFunctionSelected(testing::A<const orbit_client_protos::FunctionInfo&>()))
+  EXPECT_CALL(app_, IsFunctionSelected(testing::A<const orbit_client_data::FunctionInfo&>()))
       .WillRepeatedly(testing::ReturnPointee(&function_selected));
   // The following code guarantees the appearance of frame track icon is determined by
   // frame_track_enable.
@@ -341,7 +335,7 @@ TEST_F(LiveFunctionsDataViewTest, ContextMenuEntriesArePresentCorrectly) {
   };
   EXPECT_CALL(app_, GetCaptureData).WillRepeatedly(testing::ReturnRef(*capture_data_));
   EXPECT_CALL(app_, IsCaptureConnected).WillRepeatedly(testing::ReturnPointee(&capture_connected));
-  EXPECT_CALL(app_, IsFunctionSelected(testing::A<const orbit_client_protos::FunctionInfo&>()))
+  EXPECT_CALL(app_, IsFunctionSelected(testing::A<const orbit_client_data::FunctionInfo&>()))
       .WillRepeatedly([&](const FunctionInfo& function) -> bool {
         std::optional<size_t> index = get_index_from_function_info(function);
         EXPECT_TRUE(index.has_value());
@@ -438,7 +432,7 @@ TEST_F(LiveFunctionsDataViewTest, ContextMenuActionsAreInvoked) {
   EXPECT_CALL(app_, HasCaptureData).WillRepeatedly(testing::Return(true));
   EXPECT_CALL(app_, GetCaptureData).WillRepeatedly(testing::ReturnRef(*capture_data_));
   EXPECT_CALL(app_, IsCaptureConnected).WillRepeatedly(testing::Return(true));
-  EXPECT_CALL(app_, IsFunctionSelected(testing::A<const orbit_client_protos::FunctionInfo&>()))
+  EXPECT_CALL(app_, IsFunctionSelected(testing::A<const orbit_client_data::FunctionInfo&>()))
       .WillRepeatedly(testing::ReturnPointee(&function_selected));
   EXPECT_CALL(app_, IsFrameTrackEnabled)
       .WillRepeatedly(testing::ReturnPointee(&frame_track_enabled));
@@ -609,7 +603,7 @@ TEST_F(LiveFunctionsDataViewTest, ContextMenuActionsAreInvoked) {
       EXPECT_EQ(function.pretty_name(), kPrettyNames[0]);
     });
     EXPECT_CALL(app_, EnableFrameTrack).Times(1);
-    EXPECT_CALL(app_, AddFrameTrack(testing::A<const orbit_client_protos::FunctionInfo&>()))
+    EXPECT_CALL(app_, AddFrameTrack(testing::A<const orbit_client_data::FunctionInfo&>()))
         .Times(1)
         .WillOnce([&](const FunctionInfo& function) {
           EXPECT_EQ(function.pretty_name(), kPrettyNames[0]);

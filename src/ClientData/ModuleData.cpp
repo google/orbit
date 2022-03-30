@@ -7,14 +7,12 @@
 #include <absl/container/flat_hash_map.h>
 
 #include <algorithm>
+#include <filesystem>
 
-#include "ClientData/FunctionUtils.h"
-#include "ClientProtos/capture_data.pb.h"
 #include "GrpcProtos/module.pb.h"
 #include "OrbitBase/Logging.h"
 #include "absl/synchronization/mutex.h"
 
-using orbit_client_protos::FunctionInfo;
 using orbit_grpc_protos::ModuleInfo;
 
 namespace orbit_client_data {
@@ -75,8 +73,7 @@ bool ModuleData::UpdateIfChangedAndNotLoaded(orbit_grpc_protos::ModuleInfo info)
   return true;
 }
 
-const orbit_client_protos::FunctionInfo* ModuleData::FindFunctionByOffset(uint64_t offset,
-                                                                          bool is_exact) const {
+const FunctionInfo* ModuleData::FindFunctionByOffset(uint64_t offset, bool is_exact) const {
   uint64_t elf_address = offset + load_bias();
   return FindFunctionByElfAddress(elf_address, is_exact);
 }
@@ -112,7 +109,7 @@ void ModuleData::AddSymbols(const orbit_grpc_protos::ModuleSymbols& module_symbo
   for (const orbit_grpc_protos::SymbolInfo& symbol_info : module_symbols.symbol_infos()) {
     auto [inserted_it, success_functions] = functions_.try_emplace(
         symbol_info.address(),
-        function_utils::CreateFunctionInfo(symbol_info, file_path(), build_id()));
+        std::make_unique<FunctionInfo>(symbol_info, file_path(), build_id()));
     FunctionInfo* function = inserted_it->second.get();
     // It happens that the same address has multiple symbol names associated
     // with it. For example: (all the same address)
@@ -131,7 +128,7 @@ void ModuleData::AddSymbols(const orbit_grpc_protos::ModuleSymbols& module_symbo
         name_reuse_counter++;
       }
 
-      hash_to_function_map_.try_emplace(function_utils::GetHash(*function), function);
+      hash_to_function_map_.try_emplace(function->GetHash(), function);
     } else {
       address_reuse_counter++;
     }
@@ -151,13 +148,12 @@ void ModuleData::AddSymbols(const orbit_grpc_protos::ModuleSymbols& module_symbo
   is_loaded_ = true;
 }
 
-const orbit_client_protos::FunctionInfo* ModuleData::FindFunctionFromHash(uint64_t hash) const {
+const FunctionInfo* ModuleData::FindFunctionFromHash(uint64_t hash) const {
   absl::MutexLock lock(&mutex_);
   return hash_to_function_map_.contains(hash) ? hash_to_function_map_.at(hash) : nullptr;
 }
 
-const orbit_client_protos::FunctionInfo* ModuleData::FindFunctionFromPrettyName(
-    std::string_view pretty_name) const {
+const FunctionInfo* ModuleData::FindFunctionFromPrettyName(std::string_view pretty_name) const {
   absl::MutexLock lock(&mutex_);
   auto it = name_to_function_info_map_.find(pretty_name);
   return it != name_to_function_info_map_.end() ? it->second : nullptr;
@@ -171,6 +167,10 @@ std::vector<const FunctionInfo*> ModuleData::GetFunctions() const {
     result.push_back(pair.second.get());
   }
   return result;
+}
+
+std::string ModuleData::GetLoadedModuleNameByPath(std::string_view module_path) {
+  return std::filesystem::path(module_path).filename().string();
 }
 
 }  // namespace orbit_client_data

@@ -14,16 +14,15 @@
 #include <string>
 
 #include "App.h"
-#include "ClientData/FunctionUtils.h"
+#include "ClientData/FunctionInfo.h"
 #include "ClientData/ModuleData.h"
-#include "ClientProtos/capture_data.pb.h"
 #include "GrpcProtos/code_block.pb.h"
 #include "GrpcProtos/services.grpc.pb.h"
 #include "GrpcProtos/services.pb.h"
 #include "OrbitBase/Logging.h"
 
+using orbit_client_data::FunctionInfo;
 using orbit_client_data::ModuleData;
-using orbit_client_protos::FunctionInfo;
 using orbit_grpc_protos::CodeBlock;
 using orbit_grpc_protos::FramePointerValidatorService;
 using orbit_grpc_protos::ValidateFramePointersRequest;
@@ -50,9 +49,9 @@ void FramePointerValidatorClient::AnalyzeModules(const std::vector<const ModuleD
     std::vector<const FunctionInfo*> functions = module->GetFunctions();
     request.set_module_path(module->file_path());
     for (const FunctionInfo* function : functions) {
-      CodeBlock* function_info = request.add_functions();
-      function_info->set_offset(orbit_client_data::function_utils::Offset(*function, *module));
-      function_info->set_size(function->size());
+      CodeBlock* code_block = request.add_functions();
+      code_block->set_offset(function->Offset(*module));
+      code_block->set_size(function->size());
     }
     grpc::ClientContext context;
     std::chrono::system_clock::time_point deadline =

@@ -5,8 +5,9 @@
 #ifndef CLIENT_DATA_USER_DEFINED_CAPTURE_DATA_H_
 #define CLIENT_DATA_USER_DEFINED_CAPTURE_DATA_H_
 
-#include "ClientData/FunctionInfoSet.h"
-#include "ClientProtos/capture_data.pb.h"
+#include <absl/container/flat_hash_set.h>
+
+#include "ClientData/FunctionInfo.h"
 
 namespace orbit_client_data {
 
@@ -15,16 +16,16 @@ namespace orbit_client_data {
 // Note that this class is not thread-safe.
 class UserDefinedCaptureData {
  public:
-  [[nodiscard]] const FunctionInfoSet& frame_track_functions() const {
+  [[nodiscard]] const absl::flat_hash_set<FunctionInfo>& frame_track_functions() const {
     return frame_track_functions_;
   }
-  void InsertFrameTrack(const orbit_client_protos::FunctionInfo& function);
-  void EraseFrameTrack(const orbit_client_protos::FunctionInfo& function);
-  [[nodiscard]] bool ContainsFrameTrack(const orbit_client_protos::FunctionInfo& function) const;
+  void InsertFrameTrack(const FunctionInfo& function);
+  void EraseFrameTrack(const FunctionInfo& function);
+  [[nodiscard]] bool ContainsFrameTrack(const FunctionInfo& function) const;
   void Clear() { frame_track_functions_.clear(); }
 
  private:
-  FunctionInfoSet frame_track_functions_;
+  absl::flat_hash_set<FunctionInfo> frame_track_functions_;
 };
 
 }  // namespace orbit_client_data

@@ -19,6 +19,7 @@
 #include "CaptureClient/CaptureClient.h"
 #include "CaptureClient/CaptureListener.h"
 #include "ClientData/CaptureData.h"
+#include "ClientData/FunctionInfo.h"
 #include "ClientData/ModuleData.h"
 #include "ClientData/ModuleManager.h"
 #include "ClientData/ProcessData.h"
@@ -53,7 +54,7 @@ class ClientGgp {
   std::shared_ptr<grpc::Channel> grpc_channel_;
   std::unique_ptr<orbit_client_data::ProcessData> target_process_;
   orbit_client_data::ModuleManager module_manager_;
-  absl::flat_hash_map<uint64_t, orbit_client_protos::FunctionInfo> selected_functions_;
+  absl::flat_hash_map<uint64_t, orbit_client_data::FunctionInfo> selected_functions_;
   orbit_client_data::ModuleData* main_module_ = nullptr;
   std::unique_ptr<orbit_capture_client::CaptureClient> capture_client_;
   std::unique_ptr<orbit_client_services::ProcessClient> process_client_;
@@ -63,8 +64,8 @@ class ClientGgp {
   bool InitCapture();
   ErrorMessageOr<void> LoadModuleAndSymbols();
   void LoadSelectedFunctions();
-  std::string SelectedFunctionMatch(const orbit_client_protos::FunctionInfo& func);
-  absl::flat_hash_map<uint64_t, orbit_client_protos::FunctionInfo> GetSelectedFunctions();
+  std::string SelectedFunctionMatch(const orbit_client_data::FunctionInfo& func);
+  absl::flat_hash_map<uint64_t, orbit_client_data::FunctionInfo> GetSelectedFunctions();
   void InformUsedSelectedCaptureFunctions(
       const absl::flat_hash_set<std::string>& capture_functions_used);
 };

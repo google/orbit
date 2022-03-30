@@ -4,15 +4,11 @@
 
 #include "FrameTrackOnlineProcessor.h"
 
-#include <absl/container/flat_hash_map.h>
-#include <absl/container/flat_hash_set.h>
-
 #include <limits>
 #include <utility>
 
 #include "ClientData/CaptureData.h"
-#include "ClientData/FunctionInfoSet.h"
-#include "ClientData/UserDefinedCaptureData.h"
+#include "ClientData/FunctionInfo.h"
 #include "TimeGraph.h"
 
 namespace orbit_gl {

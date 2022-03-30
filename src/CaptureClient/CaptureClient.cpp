@@ -18,7 +18,7 @@
 #include "ApiUtils/GetFunctionTableAddressPrefix.h"
 #include "CaptureClient/CaptureEventProcessor.h"
 #include "CaptureClient/CaptureListener.h"
-#include "ClientData/FunctionUtils.h"
+#include "ClientData/FunctionInfo.h"
 #include "ClientData/ModuleData.h"
 #include "GrpcProtos/tracepoint.pb.h"
 #include "Introspection/Introspection.h"
@@ -28,10 +28,9 @@
 
 namespace orbit_capture_client {
 
+using orbit_client_data::FunctionInfo;
 using orbit_client_data::ModuleData;
 using orbit_client_data::TracepointInfoSet;
-
-using orbit_client_protos::FunctionInfo;
 
 using orbit_grpc_protos::ApiFunction;
 using orbit_grpc_protos::CaptureOptions;
@@ -170,8 +169,7 @@ ErrorMessageOr<CaptureListener::CaptureOutcome> CaptureClient::CaptureSync(
     const ModuleData* module = module_manager.GetModuleByPathAndBuildId(function.module_path(),
                                                                         function.module_build_id());
     ORBIT_CHECK(module != nullptr);
-    instrumented_function->set_file_offset(
-        orbit_client_data::function_utils::Offset(function, *module));
+    instrumented_function->set_file_offset(function.Offset(*module));
     instrumented_function->set_file_build_id(function.module_build_id());
     instrumented_function->set_function_id(function_id);
     instrumented_function->set_function_size(function.size());

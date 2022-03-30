@@ -14,9 +14,8 @@
 #include <filesystem>
 
 #include "ClientData/CaptureData.h"
-#include "ClientData/FunctionUtils.h"
+#include "ClientData/FunctionInfo.h"
 #include "ClientData/ModuleAndFunctionLookup.h"
-#include "ClientProtos/capture_data.pb.h"
 #include "DataViews/DataViewType.h"
 #include "DataViews/FunctionsDataView.h"
 #include "OrbitBase/Append.h"
@@ -24,10 +23,9 @@
 
 using orbit_client_data::CallstackInfo;
 using orbit_client_data::CaptureData;
+using orbit_client_data::FunctionInfo;
 using orbit_client_data::ModuleData;
 using orbit_client_data::ModuleManager;
-
-using orbit_client_protos::FunctionInfo;
 
 namespace orbit_data_views {
 
@@ -62,17 +60,15 @@ std::string CallstackDataView::GetValue(int row, int column) {
                  ? FunctionsDataView::kSelectedFunctionString
                  : FunctionsDataView::kUnselectedFunctionString;
     case kColumnName:
-      return absl::StrCat(
-          functions_to_highlight_.contains(frame.address) ? kHighlightedFunctionString
-                                                          : kHighlightedFunctionBlankString,
-          function != nullptr ? orbit_client_data::function_utils::GetDisplayName(*function)
-                              : frame.fallback_name);
+      return absl::StrCat(functions_to_highlight_.contains(frame.address)
+                              ? kHighlightedFunctionString
+                              : kHighlightedFunctionBlankString,
+                          function != nullptr ? function->pretty_name() : frame.fallback_name);
     case kColumnSize:
       return function != nullptr ? absl::StrFormat("%lu", function->size()) : "";
     case kColumnModule: {
-      if (function != nullptr &&
-          !orbit_client_data::function_utils::GetLoadedModuleName(*function).empty()) {
-        return orbit_client_data::function_utils::GetLoadedModuleName(*function);
+      if (function != nullptr && !function->GetLoadedModuleName().empty()) {
+        return function->GetLoadedModuleName();
       }
       if (module != nullptr) {
         return module->name();
@@ -123,7 +119,7 @@ DataView::ActionStatus CallstackDataView::GetActionStatus(
   } else if (action == kMenuActionSelect) {
     is_visible_action_enabled = [this](const FunctionInfo* function, const ModuleData* /*module*/) {
       return function != nullptr && !app_->IsFunctionSelected(*function) &&
-             orbit_client_data::function_utils::IsFunctionSelectable(*function);
+             function->IsFunctionSelectable();
     };
 
   } else if (action == kMenuActionUnselect) {
@@ -160,9 +156,8 @@ void CallstackDataView::DoFilter() {
   for (size_t i = 0; i < callstack_->frames().size(); ++i) {
     CallstackDataViewFrame frame = GetFrameFromIndex(i);
     const FunctionInfo* function = frame.function;
-    std::string name = absl::AsciiStrToLower(
-        function != nullptr ? orbit_client_data::function_utils::GetDisplayName(*function)
-                            : frame.fallback_name);
+    std::string name =
+        absl::AsciiStrToLower(function != nullptr ? function->pretty_name() : frame.fallback_name);
     bool match = true;
 
     for (std::string& filter_token : tokens) {

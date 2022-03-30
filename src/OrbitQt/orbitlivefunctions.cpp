@@ -27,7 +27,7 @@
 #include "orbittreeview.h"
 #include "ui_orbitlivefunctions.h"
 
-using orbit_client_protos::FunctionInfo;
+using orbit_client_data::FunctionInfo;
 
 OrbitLiveFunctions::OrbitLiveFunctions(QWidget* parent)
     : QWidget(parent), ui(new Ui::OrbitLiveFunctions) {

@@ -62,11 +62,8 @@ TEST(AnnotatingSourceCodeDialog, SmokeTest) {
       << source_file_contents_or_error.error().message();
   std::string source_file_contents = std::move(source_file_contents_or_error.value());
 
-  orbit_client_protos::FunctionInfo function_info{};
-  function_info.set_pretty_name("main");
-  function_info.set_module_path("line_info_test_binary");
-  function_info.set_address(0x401140);
-  function_info.set_size(kMainFunctionInstructions.size());
+  orbit_client_data::FunctionInfo function_info{"main", "line_info_test_binary", "buildid",
+                                                0x401140, kMainFunctionInstructions.size()};
 
   orbit_code_report::Disassembler disassembler{};
   orbit_client_data::ProcessData process_data{};

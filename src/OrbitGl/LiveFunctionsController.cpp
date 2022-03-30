@@ -17,7 +17,7 @@
 #include "ClientProtos/capture_data.pb.h"
 #include "TimeGraph.h"
 
-using orbit_client_protos::FunctionInfo;
+using orbit_client_data::FunctionInfo;
 using orbit_client_protos::TimerInfo;
 
 namespace {

@@ -22,8 +22,7 @@ target_sources(ClientData PUBLIC
         include/ClientData/ScopeIdConstants.h
         include/ClientData/DataManager.h
         include/ClientData/ScopeIdProvider.h
-        include/ClientData/FunctionInfoSet.h
-        include/ClientData/FunctionUtils.h
+        include/ClientData/FunctionInfo.h
         include/ClientData/LinuxAddressInfo.h
         include/ClientData/ModuleAndFunctionLookup.h
         include/ClientData/ModuleData.h
@@ -53,7 +52,7 @@ target_sources(ClientData PRIVATE
         CaptureData.cpp
         DataManager.cpp
         ScopeIdProvider.cpp
-        FunctionUtils.cpp
+        FunctionInfo.cpp
         ModuleAndFunctionLookup.cpp
         ModuleData.cpp
         ModuleManager.cpp

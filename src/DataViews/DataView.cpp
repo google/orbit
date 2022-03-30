@@ -8,12 +8,13 @@
 
 #include <memory>
 
+#include "ClientData/FunctionInfo.h"
 #include "OrbitBase/File.h"
 #include "OrbitBase/Logging.h"
 
+using orbit_client_data::FunctionInfo;
 using orbit_client_data::ModuleData;
 using orbit_client_data::ProcessData;
-using orbit_client_protos::FunctionInfo;
 
 namespace orbit_data_views {
 

@@ -5,6 +5,8 @@
 #ifndef CAPTURE_CLIENT_CAPTURE_LISTENER_H_
 #define CAPTURE_CLIENT_CAPTURE_LISTENER_H_
 
+#include <absl/container/flat_hash_set.h>
+
 #include "ClientData/ApiStringEvent.h"
 #include "ClientData/ApiTrackValue.h"
 #include "ClientData/CallstackEvent.h"
@@ -16,9 +18,9 @@
 #include "ClientData/TracepointEventInfo.h"
 #include "ClientData/TracepointInfo.h"
 #include "ClientData/UserDefinedCaptureData.h"
+#include "ClientProtos/capture_data.pb.h"
 #include "GrpcProtos/capture.pb.h"
 #include "OrbitBase/Result.h"
-#include "absl/container/flat_hash_set.h"
 
 namespace orbit_capture_client {
 

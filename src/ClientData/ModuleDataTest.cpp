@@ -8,13 +8,10 @@
 #include <string>
 #include <vector>
 
-#include "ClientData/FunctionUtils.h"
 #include "ClientData/ModuleData.h"
-#include "ClientProtos/capture_data.pb.h"
 #include "GrpcProtos/module.pb.h"
 #include "GrpcProtos/symbol.pb.h"
 
-using orbit_client_protos::FunctionInfo;
 using orbit_grpc_protos::ModuleInfo;
 using orbit_grpc_protos::ModuleSymbols;
 using orbit_grpc_protos::SymbolInfo;
@@ -170,7 +167,7 @@ TEST(ModuleData, FindFunctionFromHash) {
   ASSERT_FALSE(module.GetFunctions().empty());
 
   const FunctionInfo* function = module.GetFunctions()[0];
-  uint64_t hash = function_utils::GetHash(*function);
+  uint64_t hash = function->GetHash();
 
   {
     const FunctionInfo* result = module.FindFunctionFromHash(hash);
