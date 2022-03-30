@@ -95,5 +95,15 @@ int main(int argc, char** argv) {
 
   exit_requested = false;
   orbit_service::OrbitService service{grpc_port, dev_mode};
-  return service.Run(&exit_requested);
+  auto result = service.Run(&exit_requested);
+
+  if (!result.has_error()) return 0;
+
+  std::puts(result.error().message().c_str());
+  std::ignore = std::fflush(stdout);
+
+  // Note that changing the exit code value will affect the UI client which is checking for the
+  // exact value.
+  constexpr int kExitCodeIndicatingErrorMessage = 42;
+  return kExitCodeIndicatingErrorMessage;
 }

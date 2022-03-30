@@ -15,6 +15,7 @@
 #include <utility>
 
 #include "GrpcProtos/capture.pb.h"
+#include "OrbitBase/Result.h"
 
 namespace orbit_service {
 
@@ -23,7 +24,7 @@ class OrbitService {
   explicit OrbitService(uint16_t grpc_port, bool dev_mode)
       : grpc_port_{grpc_port}, dev_mode_{dev_mode} {}
 
-  [[nodiscard]] int Run(std::atomic<bool>* exit_requested);
+  ErrorMessageOr<void> Run(std::atomic<bool>* exit_requested);
 
  private:
   [[nodiscard]] bool IsSshWatchdogActive() { return last_stdin_message_ != std::nullopt; }
