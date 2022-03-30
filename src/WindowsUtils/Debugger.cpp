@@ -36,7 +36,7 @@ Debugger::~Debugger() { Wait(); }
 ErrorMessageOr<Debugger::StartInfo> Debugger::Start(const std::filesystem::path& executable,
                                                     const std::filesystem::path& working_directory,
                                                     const std::string_view arguments) {
-  // Make sure we have at least on debug event listener.
+  // Make sure we have at least one debug event listener.
   if (debug_event_listeners_.size() == 0) {
     return ErrorMessage("Debugger has no debug event listener");
   }
