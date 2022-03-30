@@ -43,6 +43,8 @@ using orbit_accessibility::AccessibleInterface;
 using orbit_accessibility::AccessibleWidgetBridge;
 
 using orbit_client_data::CaptureData;
+using orbit_gl::Batcher;
+using orbit_gl::PickingUserData;
 
 constexpr const char* kTimingDraw = "Draw";
 constexpr const char* kTimingDrawAndUpdatePrimitives = "Draw & Update Primitives";

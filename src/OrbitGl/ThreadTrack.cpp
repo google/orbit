@@ -37,6 +37,9 @@
 using orbit_client_data::CaptureData;
 using orbit_client_data::TimerChain;
 
+using orbit_gl::Batcher;
+using orbit_gl::PickingUserData;
+
 using orbit_client_protos::TimerInfo;
 
 using orbit_grpc_protos::InstrumentedFunction;

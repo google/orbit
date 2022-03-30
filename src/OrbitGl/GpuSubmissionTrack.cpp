@@ -22,6 +22,7 @@
 
 using orbit_client_data::TimerChain;
 using orbit_client_protos::TimerInfo;
+using orbit_gl::Batcher;
 
 constexpr const char* kSwQueueString = "sw queue";
 constexpr const char* kHwQueueString = "hw queue";

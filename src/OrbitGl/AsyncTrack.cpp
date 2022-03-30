@@ -28,6 +28,7 @@
 #include "Viewport.h"
 
 using orbit_client_protos::TimerInfo;
+using orbit_gl::Batcher;
 using orbit_grpc_protos::InstrumentedFunction;
 
 AsyncTrack::AsyncTrack(CaptureViewElement* parent,

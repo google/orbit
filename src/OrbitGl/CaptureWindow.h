@@ -58,7 +58,7 @@ class CaptureWindow : public GlCanvas {
   void CreateTimeGraph(orbit_client_data::CaptureData* capture_data);
   void ClearTimeGraph() { time_graph_.reset(nullptr); }
 
-  Batcher& GetBatcherById(BatcherId batcher_id);
+  orbit_gl::Batcher& GetBatcherById(BatcherId batcher_id);
 
  protected:
   void Draw() override;

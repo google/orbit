@@ -56,7 +56,8 @@ class GpuDebugMarkerTrack final : public TimerTrack {
   [[nodiscard]] std::string GetTimesliceText(
       const orbit_client_protos::TimerInfo& timer) const override;
 
-  [[nodiscard]] std::string GetBoxTooltip(const Batcher& batcher, PickingId id) const override;
+  [[nodiscard]] std::string GetBoxTooltip(const orbit_gl::Batcher& batcher,
+                                          PickingId id) const override;
 
  private:
   orbit_string_manager::StringManager* string_manager_;

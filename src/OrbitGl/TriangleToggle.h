@@ -42,7 +42,7 @@ class TriangleToggle : public orbit_gl::CaptureViewElement,
   [[nodiscard]] uint32_t GetLayoutFlags() const override { return LayoutFlags::kNone; }
 
  protected:
-  void DoDraw(Batcher& batcher, TextRenderer& text_renderer,
+  void DoDraw(orbit_gl::Batcher& batcher, TextRenderer& text_renderer,
               const DrawContext& draw_context) override;
 
   std::unique_ptr<orbit_accessibility::AccessibleInterface> CreateAccessibleInterface() override;
