@@ -219,8 +219,7 @@ TEST(CaptureFileInfoManager, GetCaptureLengthByPath) {
 
   const std::filesystem::path path1 = "path/to/file1";
   manager.AddOrTouchCaptureFile(path1, std::nullopt);
-  ASSERT_EQ(manager.GetCaptureLengthByPath(path1).value(),
-            CaptureFileInfo::kMissingCaptureLengthValue);
+  ASSERT_FALSE(manager.GetCaptureLengthByPath(path1).has_value());
 
   const std::filesystem::path path2 = "path/to/file2";
   ASSERT_FALSE(manager.GetCaptureLengthByPath(path2).has_value());

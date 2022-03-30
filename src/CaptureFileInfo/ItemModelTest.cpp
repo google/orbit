@@ -14,8 +14,7 @@ namespace orbit_capture_file_info {
 
 namespace {
 
-const CaptureFileInfo capture_file_info1{"/path/to/file1",
-                                         CaptureFileInfo::kMissingCaptureLengthValue};
+const CaptureFileInfo capture_file_info1{"/path/to/file1", std::nullopt};
 const CaptureFileInfo capture_file_info2{"/path/to/file2", absl::Seconds(10)};
 const CaptureFileInfo capture_file_info3{
     "/path/to/file3", QDateTime::fromMSecsSinceEpoch(100000000), absl::Minutes(2)};

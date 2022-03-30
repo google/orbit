@@ -10,35 +10,37 @@
 #include <QDateTime>
 #include <QFileInfo>
 #include <filesystem>
+#include <optional>
 #include <utility>
 
 namespace orbit_capture_file_info {
 
 class CaptureFileInfo {
  public:
-  explicit CaptureFileInfo(const QString& path, absl::Duration capture_length);
-  explicit CaptureFileInfo(const QString& path, QDateTime last_used, absl::Duration capture_length);
+  explicit CaptureFileInfo(const QString& path, std::optional<absl::Duration> capture_length);
+  explicit CaptureFileInfo(const QString& path, QDateTime last_used,
+                           std::optional<absl::Duration> capture_length);
 
   [[nodiscard]] QString FilePath() const { return file_info_.filePath(); }
   [[nodiscard]] QString FileName() const { return file_info_.fileName(); }
 
   [[nodiscard]] QDateTime LastUsed() const { return last_used_; }
   [[nodiscard]] QDateTime Created() const { return file_info_.birthTime(); }
-  [[nodiscard]] absl::Duration CaptureLength() const { return capture_length_; }
+  [[nodiscard]] std::optional<absl::Duration> CaptureLength() const { return capture_length_; }
 
   [[nodiscard]] bool FileExists() const;
 
   [[nodiscard]] uint64_t FileSize() const;
 
   void Touch() { last_used_ = QDateTime::currentDateTime(); }
-  void SetCaptureLength(absl::Duration capture_length) { capture_length_ = capture_length; }
-
-  static constexpr absl::Duration kMissingCaptureLengthValue{absl::ZeroDuration()};
+  void SetCaptureLength(std::optional<absl::Duration> capture_length) {
+    capture_length_ = capture_length;
+  }
 
  private:
   QFileInfo file_info_;
   QDateTime last_used_;
-  absl::Duration capture_length_ = kMissingCaptureLengthValue;
+  std::optional<absl::Duration> capture_length_ = std::nullopt;
 };
 
 }  // namespace orbit_capture_file_info

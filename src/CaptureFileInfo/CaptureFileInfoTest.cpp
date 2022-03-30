@@ -22,7 +22,7 @@ TEST(CaptureFileInfo, PathConstructor) {
 
   EXPECT_EQ(capture_file_info.FilePath(), kFullPath);
   EXPECT_EQ(capture_file_info.FileName(), kFileName);
-  EXPECT_EQ(capture_file_info.CaptureLength(), kCaptureLength);
+  EXPECT_EQ(capture_file_info.CaptureLength().value(), kCaptureLength);
 
   // LastUsed() before or equal to now.
   EXPECT_LE(capture_file_info.LastUsed(), QDateTime::currentDateTime());
@@ -39,7 +39,7 @@ TEST(CaptureFileInfo, PathLastUsedConstructor) {
 
   EXPECT_EQ(capture_file_info.FilePath(), kFullPath);
   EXPECT_EQ(capture_file_info.FileName(), kFileName);
-  EXPECT_EQ(capture_file_info.CaptureLength(), kCaptureLength);
+  EXPECT_EQ(capture_file_info.CaptureLength().value(), kCaptureLength);
 
   EXPECT_EQ(capture_file_info.LastUsed(), last_used);
 }
@@ -48,8 +48,7 @@ TEST(CaptureFileInfo, FileExistsAndCreated) {
   {
     const std::filesystem::path path = orbit_test::GetTestdataDir() / "test_file.txt";
 
-    CaptureFileInfo capture_file_info{QString::fromStdString(path.string()),
-                                      CaptureFileInfo::kMissingCaptureLengthValue};
+    CaptureFileInfo capture_file_info{QString::fromStdString(path.string()), std::nullopt};
 
     ASSERT_TRUE(capture_file_info.FileExists());
 
@@ -60,8 +59,7 @@ TEST(CaptureFileInfo, FileExistsAndCreated) {
   {
     const std::filesystem::path path = orbit_test::GetTestdataDir() / "not_existing_test_file.txt";
 
-    CaptureFileInfo capture_file_info{QString::fromStdString(path.string()),
-                                      CaptureFileInfo::kMissingCaptureLengthValue};
+    CaptureFileInfo capture_file_info{QString::fromStdString(path.string()), std::nullopt};
 
     ASSERT_FALSE(capture_file_info.FileExists());
 
@@ -74,7 +72,7 @@ TEST(CaptureFileInfo, Touch) {
   const QString path{"test/path/file.ext"};
   const QDateTime last_used = QDateTime::fromMSecsSinceEpoch(1600000000000);
 
-  CaptureFileInfo capture_file_info{path, last_used, CaptureFileInfo::kMissingCaptureLengthValue};
+  CaptureFileInfo capture_file_info{path, last_used, std::nullopt};
 
   EXPECT_EQ(capture_file_info.LastUsed(), last_used);
 
@@ -93,16 +91,15 @@ TEST(CaptureFileInfo, FileSize) {
   {
     const QString non_existing_path{"test/path/file.ext"};
 
-    CaptureFileInfo capture_file_info{non_existing_path,
-                                      CaptureFileInfo::kMissingCaptureLengthValue};
+    CaptureFileInfo capture_file_info{non_existing_path, std::nullopt};
 
     EXPECT_EQ(capture_file_info.FileSize(), 0);
   }
+
   {
     const std::filesystem::path path = orbit_test::GetTestdataDir() / "test_file.txt";
 
-    CaptureFileInfo capture_file_info{QString::fromStdString(path.string()),
-                                      CaptureFileInfo::kMissingCaptureLengthValue};
+    CaptureFileInfo capture_file_info{QString::fromStdString(path.string()), std::nullopt};
 
     // Not testing exact file size here, because it might be slightly different on windows and linux
     EXPECT_GT(capture_file_info.FileSize(), 0);

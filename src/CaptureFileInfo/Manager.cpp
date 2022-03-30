@@ -37,10 +37,13 @@ void Manager::LoadCaptureFileInfos() {
     settings.setArrayIndex(i);
     QString path = settings.value(kCaptureFileInfoPathKey).toString();
     QDateTime last_used(settings.value(kCaptureFileInfoLastUsedKey).toDateTime());
-    int64_t capture_length_ns =
-        static_cast<int64_t>(settings.value(kCaptureFileInfoCaptureLengthKey).toLongLong());
-    capture_file_infos_.emplace_back(path, std::move(last_used),
-                                     absl::Nanoseconds(capture_length_ns));
+
+    std::optional<absl::Duration> capture_length = std::nullopt;
+    if (settings.contains(kCaptureFileInfoCaptureLengthKey)) {
+      capture_length = absl::Nanoseconds(
+          static_cast<int64_t>(settings.value(kCaptureFileInfoCaptureLengthKey).toLongLong()));
+    }
+    capture_file_infos_.emplace_back(path, std::move(last_used), capture_length);
   }
   settings.endArray();
 }
@@ -54,7 +57,9 @@ void Manager::SaveCaptureFileInfos() {
     settings.setValue(kCaptureFileInfoPathKey, capture_file_info.FilePath());
     settings.setValue(kCaptureFileInfoLastUsedKey, capture_file_info.LastUsed());
 
-    int64_t capture_length_ns = absl::ToInt64Nanoseconds(capture_file_info.CaptureLength());
+    if (!capture_file_info.CaptureLength().has_value()) continue;
+
+    int64_t capture_length_ns = absl::ToInt64Nanoseconds(capture_file_info.CaptureLength().value());
     settings.setValue(kCaptureFileInfoCaptureLengthKey, QVariant::fromValue(capture_length_ns));
   }
   settings.endArray();
@@ -70,14 +75,11 @@ void Manager::AddOrTouchCaptureFile(const std::filesystem::path& path,
                          });
 
   if (it == capture_file_infos_.end()) {
-    capture_file_infos_.emplace_back(QString::fromStdString(path.string()),
-                                     capture_length.has_value()
-                                         ? capture_length.value()
-                                         : CaptureFileInfo::kMissingCaptureLengthValue);
+    capture_file_infos_.emplace_back(QString::fromStdString(path.string()), capture_length);
 
   } else {
     it->Touch();
-    if (capture_length.has_value()) it->SetCaptureLength(capture_length.value());
+    it->SetCaptureLength(capture_length);
   }
 
   SaveCaptureFileInfos();
@@ -119,7 +121,7 @@ ErrorMessageOr<void> Manager::FillFromDirectory(const std::filesystem::path& dir
 
     QFileInfo tmp_file_info{QString::fromStdString(file.string())};
     capture_file_infos_.emplace_back(tmp_file_info.filePath(), tmp_file_info.birthTime(),
-                                     CaptureFileInfo::kMissingCaptureLengthValue);
+                                     std::nullopt);
   }
 
   SaveCaptureFileInfos();

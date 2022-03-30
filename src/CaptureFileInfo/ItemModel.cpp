@@ -16,12 +16,10 @@ namespace {
 
 const QString kMissingCaptureLengthDisplayText = QStringLiteral("--");
 
-[[nodiscard]] QString GetCaptureLengthToDisplay(absl::Duration capture_length) {
-  if (capture_length == CaptureFileInfo::kMissingCaptureLengthValue) {
-    return kMissingCaptureLengthDisplayText;
-  }
+[[nodiscard]] QString GetCaptureLengthToDisplay(std::optional<absl::Duration> capture_length) {
+  if (!capture_length.has_value()) return kMissingCaptureLengthDisplayText;
 
-  return QString::fromStdString(orbit_display_formats::GetDisplayTime(capture_length));
+  return QString::fromStdString(orbit_display_formats::GetDisplayTime(capture_length.value()));
 }
 
 }  // namespace
@@ -80,7 +78,7 @@ QVariant ItemModel::data(const QModelIndex& idx, int role) const {
                            .arg(QString::fromStdString(
                                orbit_display_formats::GetDisplaySize(capture_file_info.FileSize())))
                            .arg(capture_file_info.FilePath());
-    if (capture_file_info.CaptureLength() == CaptureFileInfo::kMissingCaptureLengthValue) {
+    if (!capture_file_info.CaptureLength().has_value()) {
       tooltips.append("\n(The capture length will be available after the capture file is loaded.)");
     }
     return tooltips;

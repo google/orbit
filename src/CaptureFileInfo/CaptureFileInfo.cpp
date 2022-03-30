@@ -6,11 +6,11 @@
 
 namespace orbit_capture_file_info {
 
-CaptureFileInfo::CaptureFileInfo(const QString& path, absl::Duration capture_length)
+CaptureFileInfo::CaptureFileInfo(const QString& path, std::optional<absl::Duration> capture_length)
     : file_info_(path), last_used_(QDateTime::currentDateTime()), capture_length_(capture_length) {}
 
 CaptureFileInfo::CaptureFileInfo(const QString& path, QDateTime last_used,
-                                 absl::Duration capture_length)
+                                 std::optional<absl::Duration> capture_length)
     : file_info_(path), last_used_(std::move(last_used)), capture_length_(capture_length) {}
 
 bool CaptureFileInfo::FileExists() const { return file_info_.exists() && file_info_.isFile(); }
