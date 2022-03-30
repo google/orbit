@@ -22,6 +22,7 @@
 #include "absl/strings/str_format.h"
 
 using orbit_client_protos::TimerInfo;
+using orbit_gl::Batcher;
 
 GpuDebugMarkerTrack::GpuDebugMarkerTrack(CaptureViewElement* parent,
                                          const orbit_gl::TimelineInfoInterface* timeline_info,

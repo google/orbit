@@ -49,7 +49,7 @@ class TextRenderer {
   void SetViewport(orbit_gl::Viewport* viewport) { viewport_ = viewport; }
 
   void RenderLayer(float layer);
-  void RenderDebug(Batcher* batcher);
+  void RenderDebug(orbit_gl::Batcher* batcher);
   [[nodiscard]] std::vector<float> GetLayers() const;
 
   void AddText(const char* text, float x, float y, float z, TextFormatting formatting,
@@ -76,7 +76,7 @@ class TextRenderer {
   [[nodiscard]] ftgl::texture_glyph_t* MaybeLoadAndGetGlyph(ftgl::texture_font_t* self,
                                                             const char* character);
 
-  void DrawOutline(Batcher* batcher, ftgl::vertex_buffer_t* buffer);
+  void DrawOutline(orbit_gl::Batcher* batcher, ftgl::vertex_buffer_t* buffer);
 
  private:
   ftgl::texture_atlas_t* texture_atlas_;

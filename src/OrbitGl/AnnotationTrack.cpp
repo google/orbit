@@ -12,6 +12,9 @@ const Color kThresholdColor(179, 0, 80, 255);
 
 }  // namespace
 
+using orbit_gl::Batcher;
+using orbit_gl::PickingUserData;
+
 void AnnotationTrack::DrawAnnotation(Batcher& batcher, TextRenderer& text_renderer,
                                      const TimeGraphLayout* layout, int indentation_level,
                                      float z) {

@@ -25,6 +25,9 @@ namespace {
 constexpr const float kBoxHeightMultiplier = 1.5f;
 }  // namespace
 
+using orbit_gl::Batcher;
+using orbit_gl::PickingUserData;
+
 template <size_t Dimension>
 GraphTrack<Dimension>::GraphTrack(CaptureViewElement* parent,
                                   const orbit_gl::TimelineInfoInterface* timeline_info,

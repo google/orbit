@@ -25,6 +25,8 @@
 #include "OrbitBase/ExecutablePath.h"
 #include "OrbitBase/Logging.h"
 
+using orbit_gl::Batcher;
+
 namespace {
 
 struct vertex_t {

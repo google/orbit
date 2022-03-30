@@ -74,7 +74,8 @@ class GpuSubmissionTrack : public TimerTrack {
 
   [[nodiscard]] std::string GetTimesliceText(
       const orbit_client_protos::TimerInfo& timer) const override;
-  [[nodiscard]] std::string GetBoxTooltip(const Batcher& batcher, PickingId id) const override;
+  [[nodiscard]] std::string GetBoxTooltip(const orbit_gl::Batcher& batcher,
+                                          PickingId id) const override;
 
  private:
   uint64_t timeline_hash_;
