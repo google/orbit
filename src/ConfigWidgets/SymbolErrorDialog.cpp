@@ -11,7 +11,7 @@
 #include <memory>
 
 #include "ClientFlags/ClientFlags.h"
-#include "ConfigWidgets/SymbolsDialog.h"
+#include "ConfigWidgets/SymbolLocationsDialog.h"
 #include "OrbitBase/Logging.h"
 #include "ui_SymbolErrorDialog.h"
 

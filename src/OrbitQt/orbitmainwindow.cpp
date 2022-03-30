@@ -84,7 +84,7 @@
 #include "CodeViewer/OwningDialog.h"
 #include "ConfigWidgets/SourcePathsMappingDialog.h"
 #include "ConfigWidgets/SymbolErrorDialog.h"
-#include "ConfigWidgets/SymbolsDialog.h"
+#include "ConfigWidgets/SymbolLocationsDialog.h"
 #include "DataViewFactory.h"
 #include "DataViews/DataViewType.h"
 #include "DataViews/LiveFunctionsDataView.h"
@@ -1434,15 +1434,17 @@ void OrbitMainWindow::on_actionSourcePathMappings_triggered() {
   }
 }
 
-void OrbitMainWindow::ExecuteSymbolsDialog(
+void OrbitMainWindow::ExecuteSymbolLocationsDialog(
     std::optional<const orbit_client_data::ModuleData*> module) {
   orbit_client_symbols::QSettingsBasedStorageManager client_symbols_storage_manager;
-  orbit_config_widgets::SymbolsDialog dialog{
+  orbit_config_widgets::SymbolLocationsDialog dialog{
       &client_symbols_storage_manager, absl::GetFlag(FLAGS_enable_unsafe_symbols), module, this};
   dialog.exec();
 }
 
-void OrbitMainWindow::on_actionSymbolsDialog_triggered() { ExecuteSymbolsDialog(std::nullopt); }
+void OrbitMainWindow::on_actionSymbolLocationsDialog_triggered() {
+  ExecuteSymbolLocationsDialog(std::nullopt);
+}
 
 void OrbitMainWindow::OnCaptureCleared() {
   ui->liveFunctions->Reset();
@@ -1804,7 +1806,7 @@ orbit_gl::MainWindowInterface::SymbolErrorHandlingResult OrbitMainWindow::Handle
     case orbit_config_widgets::SymbolErrorDialog::Result::kTryAgain:
       return SymbolErrorHandlingResult::kReloadRequired;
     case orbit_config_widgets::SymbolErrorDialog::Result::kAddSymbolLocation:
-      ExecuteSymbolsDialog(module);
+      ExecuteSymbolLocationsDialog(module);
       return SymbolErrorHandlingResult::kReloadRequired;
   }
   ORBIT_UNREACHABLE();

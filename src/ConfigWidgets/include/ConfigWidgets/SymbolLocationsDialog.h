@@ -2,8 +2,8 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#ifndef CONFIG_WIDGETS_SYMBOLS_DIALOG_H_
-#define CONFIG_WIDGETS_SYMBOLS_DIALOG_H_
+#ifndef CONFIG_WIDGETS_SYMBOL_LOCATIONS_DIALOG_H_
+#define CONFIG_WIDGETS_SYMBOL_LOCATIONS_DIALOG_H_
 
 #include <ClientData/ModuleData.h>
 #include <absl/types/span.h>
@@ -19,20 +19,21 @@
 #include "OrbitBase/Result.h"
 
 namespace Ui {
-class SymbolsDialog;  // IWYU pragma: keep
+class SymbolLocationsDialog;  // IWYU pragma: keep
 }
 
 namespace orbit_config_widgets {
 
-class SymbolsDialog : public QDialog {
+class SymbolLocationsDialog : public QDialog {
   Q_OBJECT
 
  public:
-  explicit SymbolsDialog(orbit_client_symbols::PersistentStorageManager* persistent_storage_manager,
-                         bool allow_unsafe_symbols = false,
-                         std::optional<const orbit_client_data::ModuleData*> module = std::nullopt,
-                         QWidget* parent = nullptr);
-  ~SymbolsDialog() override;
+  explicit SymbolLocationsDialog(
+      orbit_client_symbols::PersistentStorageManager* persistent_storage_manager,
+      bool allow_unsafe_symbols = false,
+      std::optional<const orbit_client_data::ModuleData*> module = std::nullopt,
+      QWidget* parent = nullptr);
+  ~SymbolLocationsDialog() override;
 
   // TryAddSymbolPath will add the path if its not in the list of paths. In case it is, an error
   // message is returned. A path here is either a path to directory, or a path to a file.
@@ -59,7 +60,7 @@ class SymbolsDialog : public QDialog {
  private:
   enum class OverrideWarningResult { kOverride, kCancel };
 
-  std::unique_ptr<Ui::SymbolsDialog> ui_;
+  std::unique_ptr<Ui::SymbolLocationsDialog> ui_;
   bool allow_unsafe_symbols_;
   std::optional<const orbit_client_data::ModuleData*> module_;
   orbit_client_symbols::PersistentStorageManager* persistent_storage_manager_ = nullptr;
@@ -82,4 +83,4 @@ class SymbolsDialog : public QDialog {
 
 }  // namespace orbit_config_widgets
 
-#endif  // CONFIG_WIDGETS_SYMBOLS_DIALOG_H_
+#endif  // CONFIG_WIDGETS_SYMBOL_LOCATIONS_DIALOG_H_

@@ -20,7 +20,7 @@
 
 #include "ClientData/ModuleData.h"
 #include "ClientSymbols/PersistentStorageManager.h"
-#include "ConfigWidgets/SymbolsDialog.h"
+#include "ConfigWidgets/SymbolLocationsDialog.h"
 #include "GrpcProtos/module.pb.h"
 #include "Test/Path.h"
 #include "TestUtils/TestUtils.h"
@@ -39,7 +39,7 @@ class MockPersistentStorageManager : public orbit_client_symbols::PersistentStor
   MOCK_METHOD((ModuleSymbolFileMappings), LoadModuleSymbolFileMappings, (), (override));
 };
 
-class SymbolsDialogTest : public ::testing::Test {
+class SymbolLocationsDialogTest : public ::testing::Test {
  protected:
   void SetLoadPaths(std::vector<std::filesystem::path> load_paths) {
     EXPECT_CALL(mock_storage_manager_, LoadPaths).WillOnce(testing::Return(std::move(load_paths)));
@@ -72,7 +72,7 @@ class SymbolsDialogTest : public ::testing::Test {
     SetLoadMappings({});
     SetExpectedSaveMappings({});
   }
-  static void ScheduleMessageBoxCancellation(SymbolsDialog* dialog, bool& called) {
+  static void ScheduleMessageBoxCancellation(SymbolLocationsDialog* dialog, bool& called) {
     QMetaObject::invokeMethod(
         dialog,
         [&]() {
@@ -83,7 +83,7 @@ class SymbolsDialogTest : public ::testing::Test {
         },
         Qt::QueuedConnection);
   }
-  static void ScheduleMessageBoxAcceptOverride(SymbolsDialog* dialog, bool* called) {
+  static void ScheduleMessageBoxAcceptOverride(SymbolLocationsDialog* dialog, bool* called) {
     QMetaObject::invokeMethod(
         dialog,
         [&]() {
@@ -101,10 +101,10 @@ class SymbolsDialogTest : public ::testing::Test {
   MockPersistentStorageManager mock_storage_manager_;
 };
 
-TEST_F(SymbolsDialogTest, ConstructEmpty) {
+TEST_F(SymbolLocationsDialogTest, ConstructEmpty) {
   SetLoadAndExpectedSaveEmpty();
 
-  SymbolsDialog dialog{&mock_storage_manager_};
+  SymbolLocationsDialog dialog{&mock_storage_manager_};
 
   auto* list_widget = dialog.findChild<QListWidget*>("listWidget");
   ASSERT_NE(list_widget, nullptr);
@@ -115,7 +115,7 @@ TEST_F(SymbolsDialogTest, ConstructEmpty) {
   EXPECT_FALSE(module_headline_label->isVisible());
 }
 
-TEST_F(SymbolsDialogTest, ConstructNonEmptyNoUnsafeSymbols) {
+TEST_F(SymbolLocationsDialogTest, ConstructNonEmptyNoUnsafeSymbols) {
   const std::vector<std::filesystem::path> test_paths{"/path/to/somewhere",
                                                       "path/to/somewhere/else"};
   ModuleSymbolFileMappings mappings;
@@ -127,7 +127,7 @@ TEST_F(SymbolsDialogTest, ConstructNonEmptyNoUnsafeSymbols) {
   SetLoadMappings(mappings);
   SetExpectedSaveMappings(mappings);
 
-  SymbolsDialog dialog{&mock_storage_manager_};
+  SymbolLocationsDialog dialog{&mock_storage_manager_};
 
   auto* list_widget = dialog.findChild<QListWidget*>("listWidget");
   ASSERT_NE(list_widget, nullptr);
@@ -135,7 +135,7 @@ TEST_F(SymbolsDialogTest, ConstructNonEmptyNoUnsafeSymbols) {
   EXPECT_EQ(list_widget->count(), test_paths.size());
 }
 
-TEST_F(SymbolsDialogTest, ConstructNonEmptyWithUnsafeSymbols) {
+TEST_F(SymbolLocationsDialogTest, ConstructNonEmptyWithUnsafeSymbols) {
   const std::vector<std::filesystem::path> test_paths{"/path/to/somewhere",
                                                       "path/to/somewhere/else"};
   ModuleSymbolFileMappings mappings;
@@ -147,14 +147,14 @@ TEST_F(SymbolsDialogTest, ConstructNonEmptyWithUnsafeSymbols) {
   SetLoadMappings(mappings);
   SetExpectedSaveMappings(mappings);
 
-  SymbolsDialog dialog{&mock_storage_manager_, true};
+  SymbolLocationsDialog dialog{&mock_storage_manager_, true};
 
   auto* list_widget = dialog.findChild<QListWidget*>("listWidget");
   ASSERT_NE(list_widget, nullptr);
   EXPECT_EQ(list_widget->count(), test_paths.size() + mappings.size());
 }
 
-TEST_F(SymbolsDialogTest, ConstructWithElfModuleNoBuildId) {
+TEST_F(SymbolLocationsDialogTest, ConstructWithElfModuleNoBuildId) {
   orbit_grpc_protos::ModuleInfo module_info;
   module_info.set_object_file_type(orbit_grpc_protos::ModuleInfo::kElfFile);
   module_info.set_file_path("/path/to/lib.so");
@@ -163,7 +163,7 @@ TEST_F(SymbolsDialogTest, ConstructWithElfModuleNoBuildId) {
 
   SetLoadAndExpectedSaveEmpty();
 
-  SymbolsDialog dialog{&mock_storage_manager_, true, &module};
+  SymbolLocationsDialog dialog{&mock_storage_manager_, true, &module};
 
   auto* add_folder_button = dialog.findChild<QPushButton*>("addFolderButton");
   ASSERT_NE(add_folder_button, nullptr);
@@ -173,7 +173,7 @@ TEST_F(SymbolsDialogTest, ConstructWithElfModuleNoBuildId) {
   EXPECT_THAT(add_folder_button->toolTip().toStdString(), testing::HasSubstr(module.name()));
 }
 
-TEST_F(SymbolsDialogTest, ConstructWithElfModuleWithBuildId) {
+TEST_F(SymbolLocationsDialogTest, ConstructWithElfModuleWithBuildId) {
   orbit_grpc_protos::ModuleInfo module_info;
   module_info.set_object_file_type(orbit_grpc_protos::ModuleInfo::kElfFile);
   module_info.set_file_path("/path/to/lib.so");
@@ -183,7 +183,7 @@ TEST_F(SymbolsDialogTest, ConstructWithElfModuleWithBuildId) {
 
   SetLoadAndExpectedSaveEmpty();
 
-  SymbolsDialog dialog{&mock_storage_manager_, false, &module};
+  SymbolLocationsDialog dialog{&mock_storage_manager_, false, &module};
 
   auto* add_folder_button = dialog.findChild<QPushButton*>("addFolderButton");
   ASSERT_NE(add_folder_button, nullptr);
@@ -194,7 +194,7 @@ TEST_F(SymbolsDialogTest, ConstructWithElfModuleWithBuildId) {
   EXPECT_THAT(module_headline_label->text().toStdString(), testing::HasSubstr(module.name()));
 }
 
-TEST_F(SymbolsDialogTest, TryAddSymbolPath) {
+TEST_F(SymbolLocationsDialogTest, TryAddSymbolPath) {
   std::filesystem::path path{"/absolute/test/path1"};
   std::filesystem::path path_2{R"(C:\windows\test\path1)"};
   std::filesystem::path file{"/path/to/file.ext"};
@@ -205,7 +205,7 @@ TEST_F(SymbolsDialogTest, TryAddSymbolPath) {
   SetLoadMappings({});
   SetExpectedSaveMappings({});
 
-  SymbolsDialog dialog{&mock_storage_manager_};
+  SymbolLocationsDialog dialog{&mock_storage_manager_};
   auto* list_widget = dialog.findChild<QListWidget*>("listWidget");
   ASSERT_NE(list_widget, nullptr);
   EXPECT_EQ(list_widget->count(), 0);
@@ -235,7 +235,7 @@ TEST_F(SymbolsDialogTest, TryAddSymbolPath) {
   }
 }
 
-TEST_F(SymbolsDialogTest, TryAddSymbolFileWithoutModule) {
+TEST_F(SymbolLocationsDialogTest, TryAddSymbolFileWithoutModule) {
   std::filesystem::path hello_world_elf = orbit_test::GetTestdataDir() / "hello_world_elf";
   std::vector<std::filesystem::path> save_paths{hello_world_elf};
 
@@ -244,7 +244,7 @@ TEST_F(SymbolsDialogTest, TryAddSymbolFileWithoutModule) {
   SetLoadMappings({});
   SetExpectedSaveMappings({});
 
-  SymbolsDialog dialog{&mock_storage_manager_};
+  SymbolLocationsDialog dialog{&mock_storage_manager_};
 
   // success case
   {
@@ -269,7 +269,7 @@ TEST_F(SymbolsDialogTest, TryAddSymbolFileWithoutModule) {
   }
 }
 
-TEST_F(SymbolsDialogTest, TryAddSymbolFileWithModuleNoOverride) {
+TEST_F(SymbolLocationsDialogTest, TryAddSymbolFileWithModuleNoOverride) {
   orbit_grpc_protos::ModuleInfo module_info;
   module_info.set_object_file_type(orbit_grpc_protos::ModuleInfo::kElfFile);
   module_info.set_file_path((orbit_test::GetTestdataDir() / "no_symbols_elf").string());
@@ -285,7 +285,7 @@ TEST_F(SymbolsDialogTest, TryAddSymbolFileWithModuleNoOverride) {
   SetLoadMappings({});
   SetExpectedSaveMappings({});
 
-  SymbolsDialog dialog{&mock_storage_manager_, false, &module};
+  SymbolLocationsDialog dialog{&mock_storage_manager_, false, &module};
 
   // Success (build id matches)
   {
@@ -301,7 +301,7 @@ TEST_F(SymbolsDialogTest, TryAddSymbolFileWithModuleNoOverride) {
   }
 }
 
-TEST_F(SymbolsDialogTest, TryAddSymbolFileOverrideStaleSymbols) {
+TEST_F(SymbolLocationsDialogTest, TryAddSymbolFileOverrideStaleSymbols) {
   orbit_grpc_protos::ModuleInfo module_info;
   module_info.set_object_file_type(orbit_grpc_protos::ModuleInfo::kElfFile);
   module_info.set_file_path((orbit_test::GetTestdataDir() / "no_symbols_elf").string());
@@ -320,7 +320,7 @@ TEST_F(SymbolsDialogTest, TryAddSymbolFileOverrideStaleSymbols) {
   mappings[module.file_path()] = no_symbols_elf_stale_debug;
   SetExpectedSaveMappings(mappings);
 
-  SymbolsDialog dialog(&mock_storage_manager_, true, &module);
+  SymbolLocationsDialog dialog(&mock_storage_manager_, true, &module);
 
   auto* list_widget = dialog.findChild<QListWidget*>("listWidget");
   ASSERT_NE(list_widget, nullptr);
@@ -347,7 +347,7 @@ TEST_F(SymbolsDialogTest, TryAddSymbolFileOverrideStaleSymbols) {
   }
 }
 
-TEST_F(SymbolsDialogTest, TryAddSymbolFileOverrideSymbolsNoBuildId) {
+TEST_F(SymbolLocationsDialogTest, TryAddSymbolFileOverrideSymbolsNoBuildId) {
   orbit_grpc_protos::ModuleInfo module_info;
   module_info.set_object_file_type(orbit_grpc_protos::ModuleInfo::kElfFile);
   module_info.set_file_path((orbit_test::GetTestdataDir() / "no_symbols_elf").string());
@@ -364,7 +364,7 @@ TEST_F(SymbolsDialogTest, TryAddSymbolFileOverrideSymbolsNoBuildId) {
   mappings[module.file_path()] = symbols_file_no_build_id_debug;
   SetExpectedSaveMappings(mappings);
 
-  SymbolsDialog dialog(&mock_storage_manager_, true, &module);
+  SymbolLocationsDialog dialog(&mock_storage_manager_, true, &module);
 
   {  // build id mismatch. Warning is displayed and accepted
     bool message_box_accepted = false;
@@ -374,7 +374,7 @@ TEST_F(SymbolsDialogTest, TryAddSymbolFileOverrideSymbolsNoBuildId) {
   }
 }
 
-TEST_F(SymbolsDialogTest, TryAddSymbolFileOverrideModuleNoBuildIdSymbolsNoBuildId) {
+TEST_F(SymbolLocationsDialogTest, TryAddSymbolFileOverrideModuleNoBuildIdSymbolsNoBuildId) {
   orbit_grpc_protos::ModuleInfo module_info;
   module_info.set_object_file_type(orbit_grpc_protos::ModuleInfo::kElfFile);
   module_info.set_file_path((orbit_test::GetTestdataDir() / "no_symbols_elf").string());
@@ -390,7 +390,7 @@ TEST_F(SymbolsDialogTest, TryAddSymbolFileOverrideModuleNoBuildIdSymbolsNoBuildI
   mappings[module.file_path()] = symbols_file_no_build_id_debug;
   SetExpectedSaveMappings(mappings);
 
-  SymbolsDialog dialog(&mock_storage_manager_, true, &module);
+  SymbolLocationsDialog dialog(&mock_storage_manager_, true, &module);
 
   {  // build id mismatch. Warning is displayed and accepted
     bool message_box_accepted = false;
@@ -400,7 +400,7 @@ TEST_F(SymbolsDialogTest, TryAddSymbolFileOverrideModuleNoBuildIdSymbolsNoBuildI
   }
 }
 
-TEST_F(SymbolsDialogTest, RemoveButton) {
+TEST_F(SymbolLocationsDialogTest, RemoveButton) {
   SetLoadPaths({"random/path/entry"});
   SetExpectSavePaths({});
   ModuleSymbolFileMappings mappings;
@@ -408,7 +408,7 @@ TEST_F(SymbolsDialogTest, RemoveButton) {
   SetLoadMappings(std::move(mappings));
   SetExpectedSaveMappings({});
 
-  SymbolsDialog dialog{&mock_storage_manager_, true};
+  SymbolLocationsDialog dialog{&mock_storage_manager_, true};
 
   auto* remove_button = dialog.findChild<QPushButton*>("removeButton");
   ASSERT_NE(remove_button, nullptr);

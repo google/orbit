@@ -157,7 +157,7 @@ class OrbitMainWindow final : public QMainWindow, public orbit_gl::MainWindowInt
 
   void on_actionSourcePathMappings_triggered();
 
-  void on_actionSymbolsDialog_triggered();
+  void on_actionSymbolLocationsDialog_triggered();
 
   void OnTimerSelectionChanged(const orbit_client_protos::TimerInfo* timer_info);
 
@@ -193,7 +193,7 @@ class OrbitMainWindow final : public QMainWindow, public orbit_gl::MainWindowInt
 
   void OnProcessListUpdated(const std::vector<orbit_grpc_protos::ProcessInfo>& processes);
 
-  void ExecuteSymbolsDialog(std::optional<const orbit_client_data::ModuleData*> module);
+  void ExecuteSymbolLocationsDialog(std::optional<const orbit_client_data::ModuleData*> module);
 
   static const QString kEnableCallstackSamplingSettingKey;
   static const QString kCallstackSamplingPeriodMsSettingKey;
