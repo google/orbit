@@ -61,6 +61,7 @@ CallTreeWidget::CallTreeWidget(QWidget* parent)
       CallTreeViewItemModel::kInclusive, new ProgressBarItemDelegate{ui_->callTreeTreeView});
   search_typing_finished_timer_->setSingleShot(true);
 
+  connect(ui_->callTreeTreeView, &QTreeView::expanded, this, &CallTreeWidget::OnRowExpanded);
   connect(ui_->callTreeTreeView, &CopyKeySequenceEnabledTreeView::copyKeySequencePressed, this,
           &CallTreeWidget::OnCopyKeySequencePressed);
   connect(ui_->callTreeTreeView, &QTreeView::customContextMenuRequested, this,
@@ -182,6 +183,72 @@ void CallTreeWidget::ResizeColumnsIfNecessary() {
   ui_->callTreeTreeView->header()->setStretchLastSection(true);
 
   column_resizing_state_ = ColumnResizingState::kDone;
+}
+
+static int ComputeHeightOfSubtreeOfVisibleNodes(QTreeView* tree_view, const QModelIndex& index) {
+  if (!tree_view->isExpanded(index)) {
+    return 0;
+  }
+
+  int depth_difference = 0;
+  for (int i = 0; i < index.model()->rowCount(index); ++i) {
+    const QModelIndex& child = index.child(i, 0);
+    depth_difference =
+        std::max(depth_difference, 1 + ComputeHeightOfSubtreeOfVisibleNodes(tree_view, child));
+  }
+  return depth_difference;
+}
+
+void CallTreeWidget::ResizeThreadOrFunctionColumnToShowVisibleDescendants(
+    const QModelIndex& index) {
+  int one_based_depth_of_index = 0;
+  for (QModelIndex temp_index = index; temp_index.isValid(); temp_index = temp_index.parent()) {
+    ++one_based_depth_of_index;
+  }
+
+  int one_based_depth_of_deepest_visible_descendant =
+      one_based_depth_of_index + ComputeHeightOfSubtreeOfVisibleNodes(ui_->callTreeTreeView, index);
+
+  static constexpr int kMinThreadOrFunctionColumnSizeWithoutIndentation = 100;
+  int min_thread_or_function_column_size =
+      one_based_depth_of_deepest_visible_descendant * ui_->callTreeTreeView->indentation() +
+      kMinThreadOrFunctionColumnSizeWithoutIndentation;
+  int actual_thread_or_function_column_size =
+      ui_->callTreeTreeView->header()->sectionSize(CallTreeViewItemModel::kThreadOrFunction);
+
+  if (min_thread_or_function_column_size > actual_thread_or_function_column_size) {
+    ui_->callTreeTreeView->header()->resizeSection(CallTreeViewItemModel::kThreadOrFunction,
+                                                   min_thread_or_function_column_size);
+  }
+}
+
+void CallTreeWidget::ResizeThreadOrFunctionColumnToShowAllVisibleNodes() {
+  for (int i = 0; i < ui_->callTreeTreeView->model()->rowCount(); ++i) {
+    ResizeThreadOrFunctionColumnToShowVisibleDescendants(
+        ui_->callTreeTreeView->model()->index(i, 0));
+  }
+}
+
+void CallTreeWidget::OnRowExpanded(const QModelIndex& index) {
+  if (resize_thread_or_function_column_on_row_expanded_) {
+    // Some descendants deeper than the immediate children also become visible if some descendant
+    // had already been expanded. But it's possible that the first column was shrunk again after
+    // that previous expansion. Instead of (possibly) resizing the first column only based on the
+    // depth of the direct children of the expanded row, this function considers the deepest
+    // descendant of this row.
+    ResizeThreadOrFunctionColumnToShowVisibleDescendants(index);
+  }
+}
+
+// When expanding a large number of nodes programmatically, we don't want
+// ResizeThreadOrFunctionColumnToShowVisibleDescendants to be called for each node, as it's
+// computationally expensive.
+void CallTreeWidget::DisableThreadOrFunctionColumnResizeOnRowExpanded() {
+  resize_thread_or_function_column_on_row_expanded_ = false;
+}
+
+void CallTreeWidget::ReEnableThreadOrFunctionColumnResizeOnRowExpanded() {
+  resize_thread_or_function_column_on_row_expanded_ = true;
 }
 
 static std::string BuildStringFromIndices(QTreeView* tree_view, const QModelIndexList& indices) {
@@ -536,7 +603,10 @@ void CallTreeWidget::OnCustomContextMenuRequested(const QPoint& point) {
 
   if (action->text() == kActionExpandRecursively) {
     for (const QModelIndex& selected_index : selected_tree_indices) {
+      DisableThreadOrFunctionColumnResizeOnRowExpanded();
       ExpandRecursively(ui_->callTreeTreeView, selected_index);
+      ReEnableThreadOrFunctionColumnResizeOnRowExpanded();
+      ResizeThreadOrFunctionColumnToShowVisibleDescendants(selected_index);
     }
   } else if (action->text() == kActionCollapseRecursively) {
     for (const QModelIndex& selected_index : selected_tree_indices) {
@@ -547,7 +617,10 @@ void CallTreeWidget::OnCustomContextMenuRequested(const QPoint& point) {
       CollapseChildrenRecursively(ui_->callTreeTreeView, selected_index);
     }
   } else if (action->text() == kActionExpandAll) {
+    DisableThreadOrFunctionColumnResizeOnRowExpanded();
     ui_->callTreeTreeView->expandAll();
+    ReEnableThreadOrFunctionColumnResizeOnRowExpanded();
+    ResizeThreadOrFunctionColumnToShowAllVisibleNodes();
   } else if (action->text() == kActionCollapseAll) {
     ui_->callTreeTreeView->collapseAll();
   } else if (action->text() == kActionLoadSymbols) {
@@ -628,8 +701,11 @@ void CallTreeWidget::OnSearchTypingFinishedTimerTimout() {
   search_proxy_model_->SetFilter(search_text);
   ui_->callTreeTreeView->viewport()->update();
   if (!search_text.empty()) {
+    DisableThreadOrFunctionColumnResizeOnRowExpanded();
     ExpandCollapseBasedOnRole(ui_->callTreeTreeView,
                               CallTreeViewItemModel::kMatchesCustomFilterRole);
+    ReEnableThreadOrFunctionColumnResizeOnRowExpanded();
+    ResizeThreadOrFunctionColumnToShowAllVisibleNodes();
   }
 }
 

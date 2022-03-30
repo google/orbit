@@ -54,6 +54,7 @@ class CallTreeWidget : public QWidget {
   void resizeEvent(QResizeEvent* event) override;
 
  private slots:
+  void OnRowExpanded(const QModelIndex& index);
   void OnCopyKeySequencePressed();
   void OnCustomContextMenuRequested(const QPoint& point);
   void OnSearchLineEditTextEdited(const QString& text);
@@ -118,6 +119,10 @@ class CallTreeWidget : public QWidget {
                        std::unique_ptr<QIdentityProxyModel> hide_values_proxy_model);
 
   void ResizeColumnsIfNecessary();
+  void ResizeThreadOrFunctionColumnToShowVisibleDescendants(const QModelIndex& index);
+  void ResizeThreadOrFunctionColumnToShowAllVisibleNodes();
+  void ReEnableThreadOrFunctionColumnResizeOnRowExpanded();
+  void DisableThreadOrFunctionColumnResizeOnRowExpanded();
 
   std::unique_ptr<Ui::CallTreeWidget> ui_;
   QTimer* search_typing_finished_timer_ = new QTimer{this};
@@ -133,6 +138,7 @@ class CallTreeWidget : public QWidget {
     kDone = 2            // The columns have been resized (once)
   };
   ColumnResizingState column_resizing_state_ = ColumnResizingState::kInitial;
+  bool resize_thread_or_function_column_on_row_expanded_ = true;
 };
 
 #endif  // ORBIT_QT_CALL_TREE_WIDGET_H_
