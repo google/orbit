@@ -138,13 +138,13 @@ class CaptureData {
 
   [[nodiscard]] const CallstackData& GetCallstackData() const { return callstack_data_; };
 
-  [[nodiscard]] orbit_grpc_protos::TracepointInfo GetTracepointInfo(uint64_t key) const {
-    return tracepoint_data_.GetTracepointInfo(key);
+  [[nodiscard]] const TracepointInfo* GetTracepointInfo(uint64_t tracepoint_id) const {
+    return tracepoint_data_.GetTracepointInfo(tracepoint_id);
   }
 
   void ForEachTracepointEventOfThreadInTimeRange(
       uint32_t thread_id, uint64_t min_tick, uint64_t max_tick,
-      const std::function<void(const orbit_client_protos::TracepointEventInfo&)>& action) const {
+      const std::function<void(const TracepointEventInfo&)>& action) const {
     return tracepoint_data_.ForEachTracepointEventOfThreadInTimeRange(thread_id, min_tick, max_tick,
                                                                       action);
   }
@@ -165,9 +165,8 @@ class CaptureData {
 
   void FilterBrokenCallstacks() { callstack_data_.UpdateCallstackTypeBasedOnMajorityStart(); }
 
-  void AddUniqueTracepointEventInfo(uint64_t key,
-                                    orbit_grpc_protos::TracepointInfo tracepoint_info) {
-    tracepoint_data_.AddUniqueTracepointInfo(key, std::move(tracepoint_info));
+  void AddUniqueTracepointInfo(uint64_t tracepoint_id, TracepointInfo tracepoint_info) {
+    tracepoint_data_.AddUniqueTracepointInfo(tracepoint_id, std::move(tracepoint_info));
   }
 
   void AddTracepointEventAndMapToThreads(uint64_t time, uint64_t tracepoint_hash,

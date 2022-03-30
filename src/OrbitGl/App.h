@@ -173,9 +173,9 @@ class OrbitApp final : public DataViewFactory,
   void OnThreadName(uint32_t thread_id, std::string thread_name) override;
   void OnThreadStateSlice(orbit_client_data::ThreadStateSliceInfo thread_state_slice) override;
   void OnAddressInfo(orbit_client_data::LinuxAddressInfo address_info) override;
-  void OnUniqueTracepointInfo(uint64_t key,
-                              orbit_grpc_protos::TracepointInfo tracepoint_info) override;
-  void OnTracepointEvent(orbit_client_protos::TracepointEventInfo tracepoint_event_info) override;
+  void OnUniqueTracepointInfo(uint64_t tracepoint_id,
+                              orbit_client_data::TracepointInfo tracepoint_info) override;
+  void OnTracepointEvent(orbit_client_data::TracepointEventInfo tracepoint_event_info) override;
   void OnModuleUpdate(uint64_t timestamp_ns, orbit_grpc_protos::ModuleInfo module_info) override;
   void OnModulesSnapshot(uint64_t timestamp_ns,
                          std::vector<orbit_grpc_protos::ModuleInfo> module_infos) override;

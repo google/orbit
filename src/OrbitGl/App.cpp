@@ -504,17 +504,17 @@ void OrbitApp::OnAddressInfo(LinuxAddressInfo address_info) {
   GetMutableCaptureData().InsertAddressInfo(std::move(address_info));
 }
 
-void OrbitApp::OnUniqueTracepointInfo(uint64_t key,
-                                      orbit_grpc_protos::TracepointInfo tracepoint_info) {
-  GetMutableCaptureData().AddUniqueTracepointEventInfo(key, std::move(tracepoint_info));
+void OrbitApp::OnUniqueTracepointInfo(uint64_t tracepoint_id,
+                                      orbit_client_data::TracepointInfo tracepoint_info) {
+  GetMutableCaptureData().AddUniqueTracepointInfo(tracepoint_id, std::move(tracepoint_info));
 }
 
-void OrbitApp::OnTracepointEvent(orbit_client_protos::TracepointEventInfo tracepoint_event_info) {
+void OrbitApp::OnTracepointEvent(orbit_client_data::TracepointEventInfo tracepoint_event_info) {
   uint32_t capture_process_id = GetCaptureData().process_id();
   bool is_same_pid_as_target = capture_process_id == tracepoint_event_info.pid();
 
   GetMutableCaptureData().AddTracepointEventAndMapToThreads(
-      tracepoint_event_info.time(), tracepoint_event_info.tracepoint_info_key(),
+      tracepoint_event_info.timestamp_ns(), tracepoint_event_info.tracepoint_id(),
       tracepoint_event_info.pid(), tracepoint_event_info.tid(), tracepoint_event_info.cpu(),
       is_same_pid_as_target);
 }
