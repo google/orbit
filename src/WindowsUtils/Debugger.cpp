@@ -13,20 +13,33 @@
 
 namespace orbit_windows_utils {
 
-Debugger::Debugger() : process_info_or_error_(ErrorMessage()) {}
+namespace {
+
+ErrorMessageOr<Debugger::StartInfo> CreateStartInfoOrError(
+    const ErrorMessageOr<ProcessInfo>& process_info_or_error) {
+  if (process_info_or_error.has_error()) return process_info_or_error.error();
+  const ProcessInfo& process_info = process_info_or_error.value();
+  Debugger::StartInfo start_info;
+  start_info.working_directory = process_info.working_directory;
+  start_info.command_line = process_info.command_line;
+  start_info.process_id = process_info.process_id;
+  return start_info;
+}
+
+}  // namespace
+
+Debugger::Debugger() {}
 Debugger::~Debugger() { Wait(); }
 
-ErrorMessageOr<ProcessInfo> Debugger::Start(const std::filesystem::path& executable,
-                                            const std::filesystem::path& working_directory,
-                                            std::string_view arguments) {
+ErrorMessageOr<Debugger::StartInfo> Debugger::Start(const std::filesystem::path& executable,
+                                                    const std::filesystem::path& working_directory,
+                                                    const std::string_view arguments) {
   // Launch process and start debugging loop on the same separate thread.
   thread_ = std::thread(&Debugger::DebuggerThread, this, executable, working_directory,
                         std::string(arguments));
 
-  // We use "create_process_promise_" to wait until the result of "CreateProcessToDebug", which is
-  // stored in "process_info_or_error_", is available from the  debugger thread.
-  create_process_promise_.GetFuture().Wait();
-  return std::move(process_info_or_error_);
+  // Return "StartInfo" or error based on the result of process creation from "DebuggerThread".
+  return start_info_or_error_promise_.GetFuture().Get();
 }
 
 void Debugger::Detach() { detach_requested_ = true; }
@@ -39,78 +52,81 @@ void Debugger::DebuggerThread(std::filesystem::path executable,
                               std::filesystem::path working_directory, std::string arguments) {
   orbit_base::SetCurrentThreadName("OrbitDebugger");
 
-  // Only the thread that created the process being debugged can call WaitForDebugEvent.
-  process_info_or_error_ = CreateProcessToDebug(executable, working_directory, arguments);
-  create_process_promise_.SetResult(true);
-  if (process_info_or_error_.has_error()) {
-    return;
-  }
+  // Create process to debug. This needs to happen on the same thread as calls to WaitForDebugEvent.
+  auto process_info_or_error = CreateProcessToDebug(executable, working_directory, arguments);
 
+  // Notify parent thread that the process creation result is ready.
+  start_info_or_error_promise_.SetResult(CreateStartInfoOrError(process_info_or_error));
+
+  // Start debugging loop if process was created successfully.
+  if (!process_info_or_error.has_error()) {
+    DebuggingLoop(process_info_or_error.value().process_id);
+  }
+}
+
+void Debugger::DebuggingLoop(uint32_t process_id) {
   DEBUG_EVENT debug_event = {0};
-  bool continue_debugging = true;
-  DWORD continue_status = DBG_CONTINUE;
   constexpr uint32_t kWaitForDebugEventMs = 500;
   constexpr uint32_t kSemaphoreExpiredErrorCode = 121;
 
-  while (continue_debugging) {
+  while (true) {
     if (!WaitForDebugEvent(&debug_event, kWaitForDebugEventMs)) {
       if (::GetLastError() != kSemaphoreExpiredErrorCode) {
         ORBIT_ERROR("Calling \"WaitForDebugEvent\": %s", orbit_base::GetLastErrorAsString());
         detach_requested_ = true;
       }
+
       if (!detach_requested_) continue;
-      DebugActiveProcessStop(process_info_or_error_.value().process_id);
+      DebugActiveProcessStop(process_id);
       break;
     }
 
-    switch (debug_event.dwDebugEventCode) {
-      case CREATE_PROCESS_DEBUG_EVENT:
-        OnCreateProcessDebugEvent(debug_event);
-        break;
-      case EXIT_PROCESS_DEBUG_EVENT:
-        OnExitProcessDebugEvent(debug_event);
-        Detach();
-        break;
-      case CREATE_THREAD_DEBUG_EVENT:
-        OnCreateThreadDebugEvent(debug_event);
-        break;
-      case EXIT_THREAD_DEBUG_EVENT:
-        OnExitThreadDebugEvent(debug_event);
-        break;
-      case LOAD_DLL_DEBUG_EVENT:
-        OnLoadDllDebugEvent(debug_event);
-        break;
-      case UNLOAD_DLL_DEBUG_EVENT:
-        OnUnLoadDllDebugEvent(debug_event);
-        break;
-      case OUTPUT_DEBUG_STRING_EVENT:
-        OnOutputStringDebugEvent(debug_event);
-        break;
-      case RIP_EVENT:
-        OnRipEvent(debug_event);
-        break;
-      case EXCEPTION_DEBUG_EVENT: {
-        EXCEPTION_DEBUG_INFO& exception = debug_event.u.Exception;
-        if (exception.ExceptionRecord.ExceptionCode == STATUS_BREAKPOINT) {
-          OnBreakpointDebugEvent(debug_event);
-        } else {
-          OnExceptionDebugEvent(debug_event);
-          if (exception.dwFirstChance == 1) {
-            ORBIT_LOG("First chance exception at %x, exception-code: 0x%08x",
-                      exception.ExceptionRecord.ExceptionAddress,
-                      exception.ExceptionRecord.ExceptionCode);
-          }
-          continue_status = DBG_EXCEPTION_NOT_HANDLED;
-        }
-        break;
-      }
-      default:
-        ORBIT_ERROR("Unhandled debugger event code: %u", debug_event.dwDebugEventCode);
-    }
-
+    uint32_t continue_status = HandleDebugEvent(debug_event);
     ContinueDebugEvent(debug_event.dwProcessId, debug_event.dwThreadId, continue_status);
-    continue_status = DBG_CONTINUE;
   }
+}
+
+uint32_t Debugger::HandleDebugEvent(const DEBUG_EVENT& debug_event) {
+  switch (debug_event.dwDebugEventCode) {
+    case CREATE_PROCESS_DEBUG_EVENT:
+      OnCreateProcessDebugEvent(debug_event);
+      break;
+    case EXIT_PROCESS_DEBUG_EVENT:
+      OnExitProcessDebugEvent(debug_event);
+      Detach();
+      break;
+    case CREATE_THREAD_DEBUG_EVENT:
+      OnCreateThreadDebugEvent(debug_event);
+      break;
+    case EXIT_THREAD_DEBUG_EVENT:
+      OnExitThreadDebugEvent(debug_event);
+      break;
+    case LOAD_DLL_DEBUG_EVENT:
+      OnLoadDllDebugEvent(debug_event);
+      break;
+    case UNLOAD_DLL_DEBUG_EVENT:
+      OnUnLoadDllDebugEvent(debug_event);
+      break;
+    case OUTPUT_DEBUG_STRING_EVENT:
+      OnOutputStringDebugEvent(debug_event);
+      break;
+    case RIP_EVENT:
+      OnRipEvent(debug_event);
+      break;
+    case EXCEPTION_DEBUG_EVENT: {
+      if (debug_event.u.Exception.ExceptionRecord.ExceptionCode == STATUS_BREAKPOINT) {
+        OnBreakpointDebugEvent(debug_event);
+      } else {
+        OnExceptionDebugEvent(debug_event);
+        return DBG_EXCEPTION_NOT_HANDLED;
+      }
+      break;
+    }
+    default:
+      ORBIT_ERROR("Unhandled debugger event code: %u", debug_event.dwDebugEventCode);
+  }
+
+  return DBG_CONTINUE;
 }
 
 }  // namespace orbit_windows_utils

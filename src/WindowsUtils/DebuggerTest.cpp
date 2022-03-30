@@ -54,11 +54,11 @@ TEST(Debugger, LaunchProcess) {
   const std::string kArguments = "--sleep_for_ms=20";
   auto result = debugger.Start(GetTestExecutablePath(), /*working_directory=*/"", kArguments);
   ASSERT_TRUE(result.has_value());
-  ProcessInfo& process_info = result.value();
 
+  Debugger::StartInfo& start_info = result.value();
   std::string expected_command_line = GetTestExecutablePath().string();
   if (!kArguments.empty()) expected_command_line += absl::StrFormat(" %s", kArguments);
-  EXPECT_STREQ(process_info.command_line.c_str(), expected_command_line.c_str());
+  EXPECT_STREQ(start_info.command_line.c_str(), expected_command_line.c_str());
 
   // Wait for debugger to automatically detach upon process termination.
   debugger.Wait();

@@ -25,10 +25,16 @@ class Debugger {
   Debugger();
   virtual ~Debugger();
 
+  struct StartInfo {
+    std::string working_directory;
+    std::string command_line;
+    uint32_t process_id = 0;
+  };
+
   // Start debugging, this call is non-blocking.
-  ErrorMessageOr<ProcessInfo> Start(const std::filesystem::path& executable,
-                                    const std::filesystem::path& working_directory,
-                                    const std::string_view arguments);
+  ErrorMessageOr<StartInfo> Start(const std::filesystem::path& executable,
+                                  const std::filesystem::path& working_directory,
+                                  const std::string_view arguments);
   // Detach debugger from process.
   void Detach();
   // Wait for debuggee to exit.
@@ -50,10 +56,12 @@ class Debugger {
  private:
   void DebuggerThread(std::filesystem::path executable, std::filesystem::path working_directory,
                       std::string arguments);
+  void DebuggingLoop(uint32_t process_id);
+  uint32_t HandleDebugEvent(const DEBUG_EVENT& event);
+
   std::thread thread_;
   std::atomic<bool> detach_requested_ = false;
-  ErrorMessageOr<ProcessInfo> process_info_or_error_;
-  orbit_base::Promise<bool> create_process_promise_;
+  orbit_base::Promise<ErrorMessageOr<StartInfo>> start_info_or_error_promise_;
 };
 
 }  // namespace orbit_windows_utils
