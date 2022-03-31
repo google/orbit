@@ -68,6 +68,31 @@ class MockBatcher : public BatcherInterface {
   [[nodiscard]] int GetNumBoxesByColor(Color color) const { return num_boxes_by_color_.at(color); }
   [[nodiscard]] int GetNumHorizontalLines() const { return num_horizontal_lines_; }
   [[nodiscard]] int GetNumVerticalLines() const { return num_vertical_lines_; }
+  [[nodiscard]] bool ExpectDraw(int num_lines, int num_triangles, int num_boxes) {
+    return GetNumLines() == num_lines && GetNumTriangles() == num_triangles &&
+           GetNumBoxes() == num_boxes;
+  }
+
+  [[nodiscard]] bool IsEverythingInsideRectangle(Vec2 start, Vec2 end) {
+    return start[0] <= min_point_[0] && start[0] >= max_point_[0] && start[1] <= min_point_[1] &&
+           start[1] >= max_point_[1] && end[0] <= min_point_[0] && end[0] >= max_point_[0] &&
+           end[1] <= min_point_[1] && end[1] >= max_point_[1];
+  }
+
+  [[nodiscard]] bool IsBetweenZLayers(float z_layer_1, float z_layer_2) {
+    return z_layer_1 <= min_point_[2] && z_layer_1 >= max_point_[2] && z_layer_2 <= min_point_[2] &&
+           z_layer_2 >= max_point_[2];
+  }
+
+ private:
+  void ProcessPoint(Vec3 point) {
+    min_point_[0] = std::min(point[0], min_point_[0]);
+    min_point_[1] = std::min(point[1], min_point_[1]);
+    min_point_[2] = std::min(point[2], min_point_[2]);
+    min_point_[0] = std::max(point[0], max_point_[0]);
+    min_point_[0] = std::max(point[1], max_point_[1]);
+    min_point_[0] = std::max(point[2], max_point_[2]);
+  }
   [[nodiscard]] int GetNumLines() const {
     int total_lines = 0;
     for (auto& [unused_color, num_lines] : num_lines_by_color_) {
@@ -89,26 +114,7 @@ class MockBatcher : public BatcherInterface {
     }
     return total_boxes;
   }
-  [[nodiscard]] bool IsEverythingInsideRectangle(Vec2 start, Vec2 end) {
-    return start[0] <= min_point_[0] && start[0] >= max_point_[0] && start[1] <= min_point_[1] &&
-           start[1] >= max_point_[1] && end[0] <= min_point_[0] && end[0] >= max_point_[0] &&
-           end[1] <= min_point_[1] && end[1] >= max_point_[1];
-  }
 
-  [[nodiscard]] bool IsBetweenZLayers(float z_layer_1, float z_layer_2) {
-    return z_layer_1 <= min_point_[2] && z_layer_1 >= max_point_[2] && z_layer_2 <= min_point_[2] &&
-           z_layer_2 >= max_point_[2];
-  }
-
- private:
-  void ProcessPoint(Vec3 point) {
-    min_point_[0] = std::min(point[0], min_point_[0]);
-    min_point_[1] = std::min(point[1], min_point_[1]);
-    min_point_[2] = std::min(point[2], min_point_[2]);
-    min_point_[0] = std::max(point[0], max_point_[0]);
-    min_point_[0] = std::max(point[1], max_point_[1]);
-    min_point_[0] = std::max(point[2], max_point_[2]);
-  }
   Vec3 min_point_;
   Vec3 max_point_;
   int num_vertical_lines_;
