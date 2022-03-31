@@ -12,6 +12,7 @@
 #include <cstdint>
 #include <iterator>
 #include <optional>
+#include <tuple>
 #include <vector>
 
 #include "ClientData/CaptureData.h"
@@ -140,14 +141,14 @@ TEST_F(CaptureDataTest, VarianceIsCorrectForLongDurations) {
 
   capture_data_.UpdateScopeStats(kTimerInfoWithInvalidScopeId);
 
-  ORBIT_LOG("VARIANCE %f", capture_data_.GetScopeStatsOrDefault(kFirstId).variance_ns());
   EXPECT_NEAR(capture_data_.GetScopeStatsOrDefault(kFirstId).variance_ns(), kFirstVariance, 1.0);
   EXPECT_NEAR(capture_data_.GetScopeStatsOrDefault(kSecondId).variance_ns(), kSecondVariance, 1.0);
 }
 
-TEST_F(CaptureDataTest, VarianceIsCorrectOnScimitarDataset) {
-  // The file first line of the file contains the expected variance. The rest of the lines store
-  // durations one per line. The last line is empty.
+// The dataset contains 208'916 durations acquired in the course of 22 seconds.
+// The file first line of the file contains the expected variance. The rest of the lines store
+// durations one per line. The last line is empty.
+const auto [kScimitarVariance, kScimitarTimers] = [] {
   std::filesystem::path path = orbit_test::GetTestdataDir() / "scimitar_variance_and_durations.csv";
   const ErrorMessageOr<std::string> file_content_or_error = orbit_base::ReadFileToString(path);
   EXPECT_TRUE(file_content_or_error.has_value());
@@ -167,14 +168,30 @@ TEST_F(CaptureDataTest, VarianceIsCorrectOnScimitarDataset) {
                    timer.set_end(duration);
                    return timer;
                  });
+  return std::make_tuple(expected_variance, timers);
+}();
 
-  for (const TimerInfo& timer : timers) {
+TEST_F(CaptureDataTest, VarianceIsCorrectOnScimitarDataset) {
+  for (const TimerInfo& timer : kScimitarTimers) {
     capture_data_.UpdateScopeStats(timer);
   }
 
   const double actual_variance = capture_data_.GetScopeStatsOrDefault(kFirstId).variance_ns();
+  EXPECT_LE(abs(actual_variance / kScimitarVariance - 1.0), 1e-5);
+}
 
-  EXPECT_LE(abs(actual_variance / expected_variance - 1.0), 1e-5);
+constexpr size_t kNumberOfTimesWeRepeatScimitarDataset = 100;
+
+// Here we simulate a dataset of 20'891'600 acquired in the course of 36 minutes
+TEST_F(CaptureDataTest, VarianceIsCorrectOnRepeatedScimitarDataset) {
+  for (size_t i = 0; i < kNumberOfTimesWeRepeatScimitarDataset; ++i) {
+    for (const TimerInfo& timer : kScimitarTimers) {
+      capture_data_.UpdateScopeStats(timer);
+    }
+  }
+
+  const double actual_variance = capture_data_.GetScopeStatsOrDefault(kFirstId).variance_ns();
+  EXPECT_LE(abs(actual_variance / kScimitarVariance - 1.0), 1e-5);
 }
 
 }  // namespace orbit_client_data
