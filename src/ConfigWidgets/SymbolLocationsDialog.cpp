@@ -166,13 +166,11 @@ void SymbolLocationsDialog::AddSymbolPathsToListWidget(
   ui_->listWidget->addItems(paths_list);
 }
 
-ErrorMessageOr<void> SymbolLocationsDialog::TryAddSymbolPath(const std::filesystem::path& path,
-                                                             ScopedMetric metric) {
+ErrorMessageOr<void> SymbolLocationsDialog::TryAddSymbolPath(const std::filesystem::path& path) {
   QString path_as_qstring = QString::fromStdString(path.string());
   QList<QListWidgetItem*> find_result =
       ui_->listWidget->findItems(path_as_qstring, Qt::MatchFixedString);
   if (!find_result.isEmpty()) {
-    metric.SetStatusCode(OrbitLogEvent::INTERNAL_ERROR);
     return ErrorMessage("Unable to add selected path, it is already part of the list.");
   }
 
@@ -203,13 +201,17 @@ void SymbolLocationsDialog::OnAddFolderButtonClicked() {
 
   settings.setValue(kFileDialogSavedDirectoryKey, directory);
 
-  ScopedMetric metric{metrics_uploader_, OrbitLogEvent::ORBIT_SYMBOL_LOCATIONS_ADD_FOLDER};
-  ErrorMessageOr<void> result =
-      TryAddSymbolPath(std::filesystem::path{directory.toStdString()}, std::move(metric));
-  if (!result.has_error()) return;
+  ErrorMessageOr<void> add_result = ErrorMessage{""};
+  {
+    ScopedMetric metric{metrics_uploader_, OrbitLogEvent::ORBIT_SYMBOL_LOCATIONS_ADD_FOLDER};
+    add_result = TryAddSymbolPath(std::filesystem::path{directory.toStdString()});
+    if (!add_result.has_error()) return;
+
+    metric.SetStatusCode(OrbitLogEvent::INTERNAL_ERROR);
+  }
 
   QMessageBox::warning(this, "Unable to add folder",
-                       QString::fromStdString(result.error().message()));
+                       QString::fromStdString(add_result.error().message()));
 }
 
 void SymbolLocationsDialog::OnRemoveButtonClicked() {
@@ -265,12 +267,12 @@ void SymbolLocationsDialog::OnAddFileButtonClicked() {
 
   settings.setValue(kFileDialogSavedDirectoryKey,
                     QString::fromStdString(path.parent_path().string()));
-  ErrorMessageOr<void> add_result = TryAddSymbolFile(path);
+  ErrorMessageOr<void> add_path_result = TryAddSymbolFile(path);
 
-  if (!add_result.has_error()) return;
+  if (!add_path_result.has_error()) return;
 
   QMessageBox::warning(this, "Unable to add file",
-                       QString::fromStdString(add_result.error().message()));
+                       QString::fromStdString(add_path_result.error().message()));
 }
 
 ErrorMessageOr<void> SymbolLocationsDialog::TryAddSymbolFile(
@@ -285,7 +287,11 @@ ErrorMessageOr<void> SymbolLocationsDialog::TryAddSymbolFile(
         add_file_metric.SetStatusCode(OrbitLogEvent::INTERNAL_ERROR);
         return check_result;
       }
-      return TryAddSymbolPath(file_path, std::move(add_file_metric));
+      ErrorMessageOr<void> add_path_result = TryAddSymbolPath(file_path);
+      if (add_path_result.has_error()) {
+        add_file_metric.SetStatusCode(OrbitLogEvent::INTERNAL_ERROR);
+      }
+      return add_path_result;
     }
 
     const ModuleData& module{*module_.value()};
@@ -300,7 +306,11 @@ ErrorMessageOr<void> SymbolLocationsDialog::TryAddSymbolFile(
 
     // If the build ids match, the file can be used
     if (!module.build_id().empty() && module.build_id() == symbols_file->GetBuildId()) {
-      return TryAddSymbolPath(file_path, std::move(add_file_metric));
+      ErrorMessageOr<void> add_path_result = TryAddSymbolPath(file_path);
+      if (add_path_result.has_error()) {
+        add_file_metric.SetStatusCode(OrbitLogEvent::INTERNAL_ERROR);
+      }
+      return add_path_result;
     }
 
     // If only safe symbols are allowed, then a mismatching error is returned here
@@ -357,8 +367,8 @@ SymbolLocationsDialog::DisplayOverrideWarning() {
   QAbstractButton* override_button = message_box.addButton("Override", QMessageBox::AcceptRole);
 
   // From https://doc.qt.io/qt-5/qmessagebox.html#exec
-  // > When using QMessageBox with custom buttons, this function [exec] returns an opaque value; use
-  // clickedButton() to determine which button was clicked.
+  // > When using QMessageBox with custom buttons, this function [exec] returns an opaque value;
+  // use clickedButton() to determine which button was clicked.
   (void)message_box.exec();
   if (message_box.clickedButton() == override_button) {
     return OverrideWarningResult::kOverride;

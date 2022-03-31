@@ -39,8 +39,7 @@ class SymbolLocationsDialog : public QDialog {
 
   // TryAddSymbolPath will add the path if its not in the list of paths. In case it is, an error
   // message is returned. A path here is either a path to directory, or a path to a file.
-  ErrorMessageOr<void> TryAddSymbolPath(const std::filesystem::path& path,
-                                        orbit_metrics_uploader::ScopedMetric metric);
+  ErrorMessageOr<void> TryAddSymbolPath(const std::filesystem::path& path);
   // TryAddSymbolFile will add the file_path as a symbol file to the list when possible. The
   // requirements are dependent on the state of this dialog, as follows.
   // 1. If the dialog was opened without a module (not error case), the file will be added (via
