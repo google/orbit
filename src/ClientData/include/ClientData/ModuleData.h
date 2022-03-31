@@ -13,7 +13,7 @@
 #include <utility>
 #include <vector>
 
-#include "ClientProtos/capture_data.pb.h"
+#include "ClientData/FunctionInfo.h"
 #include "GrpcProtos/module.pb.h"
 #include "GrpcProtos/symbol.pb.h"
 #include "absl/container/flat_hash_map.h"
@@ -48,15 +48,13 @@ class ModuleData final {
   [[nodiscard]] bool UpdateIfChangedAndNotLoaded(orbit_grpc_protos::ModuleInfo info);
   // offset here is the absolute address minus the address this module was loaded at by
   // the process (module base address)
-  [[nodiscard]] const orbit_client_protos::FunctionInfo* FindFunctionByOffset(uint64_t offset,
-                                                                              bool is_exact) const;
-  [[nodiscard]] const orbit_client_protos::FunctionInfo* FindFunctionByElfAddress(
-      uint64_t elf_address, bool is_exact) const;
+  [[nodiscard]] const FunctionInfo* FindFunctionByOffset(uint64_t offset, bool is_exact) const;
+  [[nodiscard]] const FunctionInfo* FindFunctionByElfAddress(uint64_t elf_address,
+                                                             bool is_exact) const;
   void AddSymbols(const orbit_grpc_protos::ModuleSymbols& module_symbols);
-  [[nodiscard]] const orbit_client_protos::FunctionInfo* FindFunctionFromHash(uint64_t hash) const;
-  [[nodiscard]] const orbit_client_protos::FunctionInfo* FindFunctionFromPrettyName(
-      std::string_view pretty_name) const;
-  [[nodiscard]] std::vector<const orbit_client_protos::FunctionInfo*> GetFunctions() const;
+  [[nodiscard]] const FunctionInfo* FindFunctionFromHash(uint64_t hash) const;
+  [[nodiscard]] const FunctionInfo* FindFunctionFromPrettyName(std::string_view pretty_name) const;
+  [[nodiscard]] std::vector<const FunctionInfo*> GetFunctions() const;
 
  private:
   [[nodiscard]] bool NeedsUpdate(const orbit_grpc_protos::ModuleInfo& info) const;
@@ -64,14 +62,13 @@ class ModuleData final {
   mutable absl::Mutex mutex_;
   orbit_grpc_protos::ModuleInfo module_info_;
   bool is_loaded_;
-  std::map<uint64_t, std::unique_ptr<orbit_client_protos::FunctionInfo>> functions_;
-  absl::flat_hash_map<std::string_view, orbit_client_protos::FunctionInfo*>
-      name_to_function_info_map_;
+  std::map<uint64_t, std::unique_ptr<FunctionInfo>> functions_;
+  absl::flat_hash_map<std::string_view, FunctionInfo*> name_to_function_info_map_;
 
   // TODO(b/168799822) This is a map of hash to function used for preset loading. Currently presets
   // are based on a hash of the functions pretty name. This should be changed to not use hashes
   // anymore.
-  absl::flat_hash_map<uint64_t, orbit_client_protos::FunctionInfo*> hash_to_function_map_;
+  absl::flat_hash_map<uint64_t, FunctionInfo*> hash_to_function_map_;
 };
 
 }  // namespace orbit_client_data

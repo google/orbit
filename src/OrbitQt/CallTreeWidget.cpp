@@ -40,19 +40,16 @@
 #include "CallTreeViewItemModel.h"
 #include "ClientData/CallstackEvent.h"
 #include "ClientData/CaptureData.h"
-#include "ClientData/FunctionUtils.h"
 #include "ClientData/ModuleAndFunctionLookup.h"
 #include "ClientData/ModuleData.h"
-#include "ClientProtos/capture_data.pb.h"
 #include "CopyKeySequenceEnabledTreeView.h"
 #include "DataViews/FunctionsDataView.h"
 #include "OrbitBase/Logging.h"
 
 using orbit_client_data::CaptureData;
+using orbit_client_data::FunctionInfo;
 using orbit_client_data::ModuleData;
 using orbit_client_data::ModuleManager;
-
-using orbit_client_protos::FunctionInfo;
 
 CallTreeWidget::CallTreeWidget(QWidget* parent)
     : QWidget{parent}, ui_{std::make_unique<Ui::CallTreeWidget>()} {
@@ -568,8 +565,7 @@ void CallTreeWidget::OnCustomContextMenuRequested(const QPoint& point) {
   bool enable_source_code = false;
   if (app_->IsCaptureConnected(app_->GetCaptureData())) {
     for (const FunctionInfo* function : functions) {
-      enable_select |= !app_->IsFunctionSelected(*function) &&
-                       orbit_client_data::function_utils::IsFunctionSelectable(*function);
+      enable_select |= !app_->IsFunctionSelected(*function) && function->IsFunctionSelectable();
       enable_deselect |= app_->IsFunctionSelected(*function);
       enable_disassembly = true;
       enable_source_code = true;

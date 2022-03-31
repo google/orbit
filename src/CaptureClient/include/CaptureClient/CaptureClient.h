@@ -17,11 +17,11 @@
 
 #include "CaptureClient/CaptureEventProcessor.h"
 #include "CaptureClient/CaptureListener.h"
+#include "ClientData/FunctionInfo.h"
 #include "ClientData/ModuleManager.h"
 #include "ClientData/ProcessData.h"
 #include "ClientData/TracepointCustom.h"
 #include "ClientData/UserDefinedCaptureData.h"
-#include "ClientProtos/capture_data.pb.h"
 #include "GrpcProtos/Constants.h"
 #include "GrpcProtos/capture.pb.h"
 #include "GrpcProtos/services.grpc.pb.h"
@@ -42,7 +42,7 @@ class CaptureClient {
   orbit_base::Future<ErrorMessageOr<CaptureListener::CaptureOutcome>> Capture(
       orbit_base::ThreadPool* thread_pool, uint32_t process_id,
       const orbit_client_data::ModuleManager& module_manager,
-      absl::flat_hash_map<uint64_t, orbit_client_protos::FunctionInfo> selected_functions,
+      absl::flat_hash_map<uint64_t, orbit_client_data::FunctionInfo> selected_functions,
       bool record_arguments, bool record_return_values,
       orbit_client_data::TracepointInfoSet selected_tracepoints, double samples_per_second,
       uint16_t stack_dump_size, orbit_grpc_protos::CaptureOptions::UnwindingMethod unwinding_method,
@@ -77,7 +77,7 @@ class CaptureClient {
  private:
   ErrorMessageOr<CaptureListener::CaptureOutcome> CaptureSync(
       uint32_t process_id, const orbit_client_data::ModuleManager& module_manager,
-      const absl::flat_hash_map<uint64_t, orbit_client_protos::FunctionInfo>& selected_functions,
+      const absl::flat_hash_map<uint64_t, orbit_client_data::FunctionInfo>& selected_functions,
       bool record_arguments, bool record_return_values,
       const orbit_client_data::TracepointInfoSet& selected_tracepoints, double samples_per_second,
       uint16_t stack_dump_size, orbit_grpc_protos::CaptureOptions::UnwindingMethod unwinding_method,

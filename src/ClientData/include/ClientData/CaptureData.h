@@ -23,7 +23,7 @@
 #include "ClientData/CallstackData.h"
 #include "ClientData/CallstackEvent.h"
 #include "ClientData/CallstackInfo.h"
-#include "ClientData/FunctionInfoSet.h"
+#include "ClientData/FunctionInfo.h"
 #include "ClientData/LinuxAddressInfo.h"
 #include "ClientData/ModuleData.h"
 #include "ClientData/ModuleManager.h"

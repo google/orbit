@@ -1438,7 +1438,8 @@ void OrbitMainWindow::ExecuteSymbolLocationsDialog(
     std::optional<const orbit_client_data::ModuleData*> module) {
   orbit_client_symbols::QSettingsBasedStorageManager client_symbols_storage_manager;
   orbit_config_widgets::SymbolLocationsDialog dialog{
-      &client_symbols_storage_manager, absl::GetFlag(FLAGS_enable_unsafe_symbols), module, this};
+      &client_symbols_storage_manager, metrics_uploader_,
+      absl::GetFlag(FLAGS_enable_unsafe_symbols), module, this};
   dialog.exec();
 }
 
@@ -1733,7 +1734,7 @@ void OrbitMainWindow::ShowSourceCode(
   orbit_code_viewer::OpenAndDeleteOnClose(std::move(code_viewer_dialog));
 }
 
-void OrbitMainWindow::ShowDisassembly(const orbit_client_protos::FunctionInfo& function_info,
+void OrbitMainWindow::ShowDisassembly(const orbit_client_data::FunctionInfo& function_info,
                                       const std::string& assembly,
                                       orbit_code_report::DisassemblyReport report) {
   auto dialog = std::make_unique<orbit_qt::AnnotatingSourceCodeDialog>();

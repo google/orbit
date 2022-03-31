@@ -32,6 +32,7 @@
 
 #include "App.h"
 #include "CallTreeView.h"
+#include "ClientData/FunctionInfo.h"
 #include "ClientData/ModuleData.h"
 #include "ClientProtos/capture_data.pb.h"
 #include "ClientServices/ProcessManager.h"
@@ -104,7 +105,7 @@ class OrbitMainWindow final : public QMainWindow, public orbit_gl::MainWindowInt
   void ShowSourceCode(
       const std::filesystem::path& file_path, size_t line_number,
       std::optional<std::unique_ptr<orbit_code_report::CodeReport>> maybe_code_report) override;
-  void ShowDisassembly(const orbit_client_protos::FunctionInfo& function_info,
+  void ShowDisassembly(const orbit_client_data::FunctionInfo& function_info,
                        const std::string& assembly,
                        orbit_code_report::DisassemblyReport report) override;
 

@@ -19,7 +19,7 @@ static std::vector<std::string_view> SplitIntoLines(std::string_view source_file
 }
 
 [[nodiscard]] std::vector<AnnotatingLine> AnnotateDisassemblyWithSourceCode(
-    const orbit_client_protos::FunctionInfo& function_info,
+    const orbit_client_data::FunctionInfo& function_info,
     const orbit_grpc_protos::LineInfo& location_info, std::string_view source_file_contents,
     orbit_object_utils::ElfFile* elf, const DisassemblyReport& report) {
   const std::vector<std::string_view> source_file_lines = SplitIntoLines(source_file_contents);

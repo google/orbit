@@ -16,7 +16,6 @@
 
 #include "AccessibleCaptureViewElement.h"
 #include "App.h"
-#include "ClientData/FunctionUtils.h"
 #include "ClientFlags/ClientFlags.h"
 #include "DisplayFormats/DisplayFormats.h"
 #include "Geometry.h"

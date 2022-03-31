@@ -8,21 +8,18 @@
 
 #include <utility>
 
-#include "ClientData/FunctionUtils.h"
 #include "ClientProtos/capture_data.pb.h"
 #include "OrbitBase/Logging.h"
 #include "OrbitBase/ThreadUtils.h"
 
 using orbit_client_data::TracepointInfoSet;
-using orbit_client_protos::FunctionInfo;
 using orbit_grpc_protos::TracepointInfo;
 
 namespace orbit_client_data {
 
 void DataManager::SelectFunction(const FunctionInfo& function) {
   ORBIT_CHECK(std::this_thread::get_id() == main_thread_id_);
-  if (!selected_functions_.contains(function) &&
-      orbit_client_data::function_utils::IsFunctionSelectable(function)) {
+  if (!selected_functions_.contains(function) && function.IsFunctionSelectable()) {
     selected_functions_.insert(function);
   }
 }

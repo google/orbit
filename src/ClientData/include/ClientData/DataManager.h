@@ -13,7 +13,7 @@
 #include <vector>
 
 #include "ApiInterface/Orbit.h"
-#include "ClientData/FunctionInfoSet.h"
+#include "ClientData/FunctionInfo.h"
 #include "ClientData/ScopeIdConstants.h"
 #include "ClientData/TracepointCustom.h"
 #include "ClientData/UserDefinedCaptureData.h"
@@ -32,8 +32,8 @@ class DataManager final {
   explicit DataManager(std::thread::id thread_id = std::this_thread::get_id())
       : main_thread_id_(thread_id) {}
 
-  void SelectFunction(const orbit_client_protos::FunctionInfo& function);
-  void DeselectFunction(const orbit_client_protos::FunctionInfo& function);
+  void SelectFunction(const FunctionInfo& function);
+  void DeselectFunction(const FunctionInfo& function);
   void ClearSelectedFunctions();
   void set_visible_function_ids(absl::flat_hash_set<uint64_t> visible_function_ids);
   void set_highlighted_scope_id(uint64_t highlighted_function_id);
@@ -41,8 +41,8 @@ class DataManager final {
   void set_selected_thread_id(uint32_t thread_id);
   void set_selected_timer(const orbit_client_protos::TimerInfo* timer_info);
 
-  [[nodiscard]] bool IsFunctionSelected(const orbit_client_protos::FunctionInfo& function) const;
-  [[nodiscard]] std::vector<orbit_client_protos::FunctionInfo> GetSelectedFunctions() const;
+  [[nodiscard]] bool IsFunctionSelected(const FunctionInfo& function) const;
+  [[nodiscard]] std::vector<FunctionInfo> GetSelectedFunctions() const;
   [[nodiscard]] bool IsFunctionVisible(uint64_t function_address) const;
   [[nodiscard]] uint64_t highlighted_scope_id() const;
   [[nodiscard]] uint64_t highlighted_group_id() const;
@@ -55,9 +55,9 @@ class DataManager final {
   [[nodiscard]] bool IsTracepointSelected(const orbit_grpc_protos::TracepointInfo& info) const;
   [[nodiscard]] const TracepointInfoSet& selected_tracepoints() const;
 
-  void EnableFrameTrack(const orbit_client_protos::FunctionInfo& function);
-  void DisableFrameTrack(const orbit_client_protos::FunctionInfo& function);
-  [[nodiscard]] bool IsFrameTrackEnabled(const orbit_client_protos::FunctionInfo& function) const;
+  void EnableFrameTrack(const FunctionInfo& function);
+  void DisableFrameTrack(const FunctionInfo& function);
+  [[nodiscard]] bool IsFrameTrackEnabled(const FunctionInfo& function) const;
   void ClearUserDefinedCaptureData();
 
   [[nodiscard]] const UserDefinedCaptureData& user_defined_capture_data() const;
@@ -106,7 +106,7 @@ class DataManager final {
 
  private:
   const std::thread::id main_thread_id_;
-  FunctionInfoSet selected_functions_;
+  absl::flat_hash_set<FunctionInfo> selected_functions_;
   absl::flat_hash_set<uint64_t> visible_function_ids_;
   uint64_t highlighted_scope_id_ = kInvalidScopeId;
   uint64_t highlighted_group_id_ = kOrbitDefaultGroupId;

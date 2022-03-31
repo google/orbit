@@ -8,6 +8,7 @@
 #include <cstdint>
 #include <functional>
 
+#include "ClientData/FunctionInfo.h"
 #include "ClientProtos/capture_data.pb.h"
 #include "DataViews/LiveFunctionsDataView.h"
 #include "DataViews/LiveFunctionsInterface.h"
@@ -35,7 +36,7 @@ class LiveFunctionsController : public orbit_data_views::LiveFunctionsInterface 
   void OnDataChanged() { live_functions_data_view_.OnDataChanged(); }
 
   void SetAddIteratorCallback(
-      std::function<void(uint64_t, const orbit_client_protos::FunctionInfo*)> callback) {
+      std::function<void(uint64_t, const orbit_client_data::FunctionInfo*)> callback) {
     add_iterator_callback_ = std::move(callback);
   }
 
@@ -44,7 +45,7 @@ class LiveFunctionsController : public orbit_data_views::LiveFunctionsInterface 
   [[nodiscard]] uint64_t GetStartTime(uint64_t index) const;
 
   void AddIterator(uint64_t instrumented_function_id,
-                   const orbit_client_protos::FunctionInfo* function) override;
+                   const orbit_client_data::FunctionInfo* function) override;
 
  private:
   void Move();
@@ -54,7 +55,7 @@ class LiveFunctionsController : public orbit_data_views::LiveFunctionsInterface 
   absl::flat_hash_map<uint64_t, uint64_t> iterator_id_to_function_id_;
   absl::flat_hash_map<uint64_t, const orbit_client_protos::TimerInfo*> current_timer_infos_;
 
-  std::function<void(uint64_t, const orbit_client_protos::FunctionInfo*)> add_iterator_callback_;
+  std::function<void(uint64_t, const orbit_client_data::FunctionInfo*)> add_iterator_callback_;
 
   uint64_t next_iterator_id_ = 1;
   uint64_t id_to_select_ = 0;
