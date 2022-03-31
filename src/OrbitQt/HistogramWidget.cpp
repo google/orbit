@@ -54,9 +54,9 @@ struct TickStep {
 };
 }  // namespace
 
-const std::vector<TickStep> kHorizontalTickSteps = {{0.001, 3}, {0.005, 3}, {0.01, 2}, {0.05, 2},
-                                                    {0.1, 1},   {0.25, 2},  {0.5, 1},  {1, 0},
-                                                    {5, 0},     {10, 0},    {20, 0},   {50, 0}};
+const std::vector<TickStep> kHorizontalTickSteps = {
+    {0.001, 3}, {0.005, 3}, {0.01, 2}, {0.05, 2}, {0.1, 1}, {0.25, 2}, {0.5, 1},  {1, 0},    {5, 0},
+    {10, 0},    {20, 0},    {50, 0},   {100, 0},  {500, 0}, {1000, 0}, {5000, 0}, {10000, 0}};
 
 const std::vector<TickStep> kVerticalTickSteps = {{0.1, 1}, {0.5, 1}, {1, 0},
                                                   {5, 0},   {10, 0},  {25, 0}};
