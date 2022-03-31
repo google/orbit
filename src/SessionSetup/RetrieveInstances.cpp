@@ -21,9 +21,9 @@
 #include "MetricsUploader/ScopedMetric.h"
 #include "OrbitBase/Future.h"
 #include "OrbitBase/FutureHelpers.h"
-#include "OrbitBase/JoinFutures.h"
 #include "OrbitBase/MainThreadExecutor.h"
 #include "OrbitBase/Result.h"
+#include "OrbitBase/WhenAll.h"
 
 namespace orbit_session_setup {
 
@@ -128,9 +128,9 @@ RetrieveInstancesImpl::LoadProjectsAndInstances(const std::optional<orbit_ggp::P
 
   Future<std::tuple<ErrorMessageOr<QVector<Project>>, ErrorMessageOr<Project>,
                     ErrorMessageOr<QVector<Instance>>, ErrorMessageOr<QVector<Instance>>>>
-      combined_future = orbit_base::JoinFutures(projects_future, default_project_future,
-                                                instances_from_project_future,
-                                                instances_from_default_project_future);
+      combined_future =
+          orbit_base::WhenAll(projects_future, default_project_future,
+                              instances_from_project_future, instances_from_default_project_future);
 
   return combined_future.Then(
       main_thread_executor_,

@@ -1,8 +1,8 @@
-// Copyright (c) 2021 The Orbit Authors. All rights reserved.
+// Copyright (c) 2022 The Orbit Authors. All rights reserved.
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#include "OrbitBase/JoinFutures.h"
+#include "OrbitBase/WhenAll.h"
 
 #include <memory>
 
@@ -12,15 +12,18 @@
 #include "absl/synchronization/mutex.h"
 
 namespace orbit_base {
-Future<void> JoinFutures(absl::Span<const Future<void>> futures) {
+Future<void> WhenAll(absl::Span<const Future<void>> futures) {
   if (futures.empty()) {
     Promise<void> promise;
     promise.MarkFinished();
     return promise.GetFuture();
   }
 
-  auto shared_state = std::make_shared<orbit_base_internal::SharedStateJoin<void>>();
-  shared_state->incomplete_futures = futures.size();
+  auto shared_state = std::make_shared<orbit_base_internal::SharedStateWhenAll<void>>();
+  {
+    absl::MutexLock lock{&shared_state->mutex};
+    shared_state->incomplete_futures = futures.size();
+  }
 
   for (const auto& future : futures) {
     ORBIT_CHECK(future.IsValid());

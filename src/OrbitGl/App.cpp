@@ -76,12 +76,12 @@
 #include "OrbitBase/Future.h"
 #include "OrbitBase/FutureHelpers.h"
 #include "OrbitBase/ImmediateExecutor.h"
-#include "OrbitBase/JoinFutures.h"
 #include "OrbitBase/Logging.h"
 #include "OrbitBase/MainThreadExecutor.h"
 #include "OrbitBase/Result.h"
 #include "OrbitBase/ThreadConstants.h"
 #include "OrbitBase/UniqueResource.h"
+#include "OrbitBase/WhenAll.h"
 #include "OrbitPaths/Paths.h"
 #include "OrbitVersion/OrbitVersion.h"
 #include "SamplingReport.h"
@@ -1695,7 +1695,7 @@ orbit_base::Future<void> OrbitApp::RetrieveModulesAndLoadSymbols(
     futures.emplace_back(RetrieveModuleAndLoadSymbolsAndHandleError(module));
   }
 
-  return orbit_base::JoinFutures(futures);
+  return orbit_base::WhenAll(futures);
 }
 
 orbit_base::Future<void> OrbitApp::RetrieveModuleAndLoadSymbolsAndHandleError(
@@ -2139,7 +2139,7 @@ orbit_base::Future<ErrorMessageOr<void>> OrbitApp::LoadPreset(const PresetFile& 
 
   // Then - when all modules are loaded or failed to load - we update the UI and potentially show an
   // error message.
-  auto results = orbit_base::JoinFutures(absl::MakeConstSpan(load_module_results));
+  auto results = orbit_base::WhenAll(absl::MakeConstSpan(load_module_results));
   return results.Then(
       main_thread_executor_,
       [this, metric = std::move(metric), preset_file](
@@ -2329,7 +2329,7 @@ orbit_base::Future<std::vector<ErrorMessageOr<void>>> OrbitApp::ReloadModules(
     reloaded_modules.emplace_back(std::move(reloaded_module));
   }
 
-  return orbit_base::JoinFutures(absl::MakeConstSpan(reloaded_modules));
+  return orbit_base::WhenAll(absl::MakeConstSpan(reloaded_modules));
 }
 
 void OrbitApp::SetCollectSchedulerInfo(bool collect_scheduler_info) {
