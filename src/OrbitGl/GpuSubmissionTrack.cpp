@@ -9,20 +9,20 @@
 #include <memory>
 
 #include "App.h"
-#include "Batcher.h"
 #include "ClientData/TimerChain.h"
 #include "ClientProtos/capture_data.pb.h"
 #include "DisplayFormats/DisplayFormats.h"
 #include "GlUtils.h"
 #include "OrbitBase/Logging.h"
 #include "OrbitBase/ThreadConstants.h"
+#include "PrimitiveAssembler.h"
 #include "TimeGraphLayout.h"
 #include "TriangleToggle.h"
 #include "absl/strings/str_format.h"
 
 using orbit_client_data::TimerChain;
 using orbit_client_protos::TimerInfo;
-using orbit_gl::Batcher;
+using orbit_gl::PrimitiveAssembler;
 
 constexpr const char* kSwQueueString = "sw queue";
 constexpr const char* kHwQueueString = "hw queue";
@@ -204,7 +204,8 @@ const TimerInfo* GpuSubmissionTrack::GetRight(const TimerInfo& timer_info) const
   return nullptr;
 }
 
-std::string GpuSubmissionTrack::GetBoxTooltip(const Batcher& batcher, PickingId id) const {
+std::string GpuSubmissionTrack::GetBoxTooltip(const PrimitiveAssembler& batcher,
+                                              PickingId id) const {
   const TimerInfo* timer_info = batcher.GetTimerInfo(id);
   if ((timer_info == nullptr) || timer_info->type() == TimerInfo::kCoreActivity) {
     return "";

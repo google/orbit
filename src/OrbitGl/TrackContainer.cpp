@@ -140,9 +140,10 @@ std::string GetTimeString(const TimerInfo& timer_a, const TimerInfo& timer_b) {
 
 }  // namespace
 
-void TrackContainer::DrawIteratorBox(Batcher& batcher, TextRenderer& text_renderer, Vec2 pos,
-                                     Vec2 size, const Color& color, const std::string& label,
-                                     const std::string& time, float text_box_y) {
+void TrackContainer::DrawIteratorBox(PrimitiveAssembler& batcher, TextRenderer& text_renderer,
+                                     Vec2 pos, Vec2 size, const Color& color,
+                                     const std::string& label, const std::string& time,
+                                     float text_box_y) {
   Box box(pos, size, GlCanvas::kZValueOverlay);
   batcher.AddBox(box, color);
 
@@ -169,7 +170,7 @@ void TrackContainer::DrawIteratorBox(Batcher& batcher, TextRenderer& text_render
   batcher.AddLine(line_from, line_to, GlCanvas::kZValueOverlay, Color(255, 255, 255, 255));
 }
 
-void TrackContainer::DrawOverlay(Batcher& batcher, TextRenderer& text_renderer,
+void TrackContainer::DrawOverlay(PrimitiveAssembler& batcher, TextRenderer& text_renderer,
                                  PickingMode picking_mode) {
   if (picking_mode != PickingMode::kNone || iterator_timer_info_.empty()) {
     return;
@@ -267,7 +268,8 @@ void TrackContainer::DrawOverlay(Batcher& batcher, TextRenderer& text_renderer,
   }
 }
 
-void TrackContainer::DrawIncompleteDataIntervals(Batcher& batcher, PickingMode picking_mode) {
+void TrackContainer::DrawIncompleteDataIntervals(PrimitiveAssembler& batcher,
+                                                 PickingMode picking_mode) {
   if (picking_mode == PickingMode::kClick) return;  // Allow to click through.
 
   uint64_t min_visible_timestamp_ns = timeline_info_->GetTickFromUs(timeline_info_->GetMinTimeUs());
@@ -366,7 +368,7 @@ void TrackContainer::SetIteratorOverlayData(
   RequestUpdate();
 }
 
-void TrackContainer::DoDraw(Batcher& batcher, TextRenderer& text_renderer,
+void TrackContainer::DoDraw(PrimitiveAssembler& batcher, TextRenderer& text_renderer,
                             const DrawContext& draw_context) {
   CaptureViewElement::DoDraw(batcher, text_renderer, draw_context);
 

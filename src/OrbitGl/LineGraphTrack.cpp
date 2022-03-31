@@ -44,8 +44,8 @@ float LineGraphTrack<Dimension>::GetLabelYFromValues(
 }
 
 template <size_t Dimension>
-void LineGraphTrack<Dimension>::DrawSeries(Batcher& batcher, uint64_t min_tick, uint64_t max_tick,
-                                           float z) {
+void LineGraphTrack<Dimension>::DrawSeries(PrimitiveAssembler& batcher, uint64_t min_tick,
+                                           uint64_t max_tick, float z) {
   auto entries = this->series_.GetEntriesAffectedByTimeRange(min_tick, max_tick);
   if (entries.empty()) return;
 
@@ -79,7 +79,7 @@ void LineGraphTrack<Dimension>::DrawSeries(Batcher& batcher, uint64_t min_tick, 
   }
 }
 
-static void DrawSquareDot(Batcher& batcher, Vec2 center, float radius, float z,
+static void DrawSquareDot(PrimitiveAssembler& batcher, Vec2 center, float radius, float z,
                           const Color& color) {
   Vec2 position(center[0] - radius, center[1] - radius);
   Vec2 size(2 * radius, 2 * radius);
@@ -88,7 +88,7 @@ static void DrawSquareDot(Batcher& batcher, Vec2 center, float radius, float z,
 
 template <size_t Dimension>
 void LineGraphTrack<Dimension>::DrawSingleSeriesEntry(
-    Batcher& batcher, uint64_t start_tick, uint64_t end_tick,
+    PrimitiveAssembler& batcher, uint64_t start_tick, uint64_t end_tick,
     const std::array<float, Dimension>& current_normalized_values,
     const std::array<float, Dimension>& next_normalized_values, float z, bool is_last) {
   constexpr float kDotRadius = 2.f;

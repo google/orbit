@@ -154,7 +154,8 @@ void GlSlider::OnPick(int x, int y) {
   }
 }
 
-void GlSlider::DrawBackground(Batcher& batcher, float x, float y, float width, float height) {
+void GlSlider::DrawBackground(PrimitiveAssembler& batcher, float x, float y, float width,
+                              float height) {
   const Color dark_border_color = GetDarkerColor(bar_color_);
   const float kEpsilon = 0.0001f;
 
@@ -165,7 +166,7 @@ void GlSlider::DrawBackground(Batcher& batcher, float x, float y, float width, f
   batcher.AddBox(bar_box, bar_color_, shared_from_this());
 }
 
-void GlSlider::DrawSlider(Batcher& batcher, float x, float y, float width, float height,
+void GlSlider::DrawSlider(PrimitiveAssembler& batcher, float x, float y, float width, float height,
                           ShadingDirection shading_direction, bool is_picked) {
   bool mouse_over_slider = false;
   if (is_mouse_over_) {
@@ -242,7 +243,7 @@ bool GlSlider::HandlePageScroll(float click_value) {
   return true;
 }
 
-void GlVerticalSlider::Draw(Batcher& batcher, bool is_picked) {
+void GlVerticalSlider::Draw(PrimitiveAssembler& batcher, bool is_picked) {
   batcher.PushTranslation(static_cast<int>(GetPos()[0]), static_cast<int>(GetPos()[1]));
 
   float bar_pixel_len = GetBarPixelLength();
@@ -264,7 +265,7 @@ void GlVerticalSlider::Draw(Batcher& batcher, bool is_picked) {
 
 float GlVerticalSlider::GetBarPixelLength() const { return GetSize()[1]; }
 
-void GlHorizontalSlider::Draw(Batcher& batcher, bool is_picked) {
+void GlHorizontalSlider::Draw(PrimitiveAssembler& batcher, bool is_picked) {
   batcher.PushTranslation(static_cast<int>(GetPos()[0]), static_cast<int>(GetPos()[1]));
 
   float bar_pixel_len = GetBarPixelLength();

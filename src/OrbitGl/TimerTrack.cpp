@@ -15,11 +15,11 @@
 
 #include "ApiInterface/Orbit.h"
 #include "App.h"
-#include "Batcher.h"
 #include "ClientFlags/ClientFlags.h"
 #include "ClientProtos/capture_data.pb.h"
 #include "DisplayFormats/DisplayFormats.h"
 #include "GlCanvas.h"
+#include "PrimitiveAssembler.h"
 #include "TimeGraphLayout.h"
 #include "TriangleToggle.h"
 #include "Viewport.h"
@@ -30,8 +30,8 @@ using orbit_client_data::TimerChain;
 using orbit_client_data::TimerData;
 using orbit_client_protos::TimerInfo;
 
-using orbit_gl::Batcher;
 using orbit_gl::PickingUserData;
+using orbit_gl::PrimitiveAssembler;
 
 const Color TimerTrack::kHighlightColor = Color(100, 181, 246, 255);
 const Color TimerTrack::kBoxBorderColor = Color(255, 255, 255, 255);
@@ -217,11 +217,11 @@ bool TimerTrack::DrawTimer(TextRenderer& text_renderer, const TimerInfo* prev_ti
     Vec3 bottom_right(
         world_x_info_right_overlap.world_x_start + world_x_info_right_overlap.world_x_width,
         world_timer_y + box_height, draw_data.z);
-    Batcher* batcher = draw_data.batcher;
+    PrimitiveAssembler* batcher = draw_data.batcher;
     draw_data.batcher->AddShadedTrapezium(top_left, bottom_left, bottom_right, top_right, color,
                                           CreatePickingUserData(*batcher, *current_timer_info));
   } else {
-    Batcher* batcher = draw_data.batcher;
+    PrimitiveAssembler* batcher = draw_data.batcher;
     auto user_data = std::make_unique<PickingUserData>(
         current_timer_info,
         [&, batcher](PickingId id) { return this->GetBoxTooltip(*batcher, id); });
@@ -246,7 +246,7 @@ bool TimerTrack::DrawTimer(TextRenderer& text_renderer, const TimerInfo* prev_ti
   return true;
 }
 
-void TimerTrack::DoUpdatePrimitives(Batcher& batcher, TextRenderer& text_renderer,
+void TimerTrack::DoUpdatePrimitives(PrimitiveAssembler& batcher, TextRenderer& text_renderer,
                                     uint64_t min_tick, uint64_t max_tick,
                                     PickingMode picking_mode) {
   ORBIT_SCOPE_WITH_COLOR("TimerTrack::DoUpdatePrimitives", kOrbitColorOrange);
@@ -352,7 +352,8 @@ const TimerInfo* TimerTrack::GetDown(const TimerInfo& timer_info) const {
 
 bool TimerTrack::IsEmpty() const { return timer_data_->IsEmpty(); }
 
-std::string TimerTrack::GetBoxTooltip(const Batcher& /*batcher*/, PickingId /*id*/) const {
+std::string TimerTrack::GetBoxTooltip(const PrimitiveAssembler& /*batcher*/,
+                                      PickingId /*id*/) const {
   return "";
 }
 
@@ -361,10 +362,11 @@ float TimerTrack::GetHeightAboveTimers() const {
 }
 
 internal::DrawData TimerTrack::GetDrawData(
-    uint64_t min_tick, uint64_t max_tick, float track_pos_x, float track_width, Batcher* batcher,
-    const orbit_gl::TimelineInfoInterface* timeline_info, const orbit_gl::Viewport* viewport,
-    bool is_collapsed, const orbit_client_protos::TimerInfo* selected_timer,
-    uint64_t highlighted_function_id, uint64_t highlighted_group_id,
+    uint64_t min_tick, uint64_t max_tick, float track_pos_x, float track_width,
+    PrimitiveAssembler* batcher, const orbit_gl::TimelineInfoInterface* timeline_info,
+    const orbit_gl::Viewport* viewport, bool is_collapsed,
+    const orbit_client_protos::TimerInfo* selected_timer, uint64_t highlighted_function_id,
+    uint64_t highlighted_group_id,
     std::optional<orbit_statistics::HistogramSelectionRange> histogram_selection_range) {
   internal::DrawData draw_data{};
   draw_data.min_tick = min_tick;

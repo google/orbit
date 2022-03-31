@@ -12,16 +12,16 @@
 namespace orbit_gl {
 
 template <size_t Dimension>
-void MemoryTrack<Dimension>::DoUpdatePrimitives(Batcher& batcher, TextRenderer& text_renderer,
-                                                uint64_t min_tick, uint64_t max_tick,
-                                                PickingMode picking_mode) {
+void MemoryTrack<Dimension>::DoUpdatePrimitives(PrimitiveAssembler& batcher,
+                                                TextRenderer& text_renderer, uint64_t min_tick,
+                                                uint64_t max_tick, PickingMode picking_mode) {
   ORBIT_SCOPE_WITH_COLOR("MemoryTrack<Dimension>::DoUpdatePrimitives", kOrbitColorGrey);
   GraphTrack<Dimension>::DoUpdatePrimitives(batcher, text_renderer, min_tick, max_tick,
                                             picking_mode);
 }
 
 template <size_t Dimension>
-void MemoryTrack<Dimension>::DoDraw(Batcher& batcher, TextRenderer& text_renderer,
+void MemoryTrack<Dimension>::DoDraw(PrimitiveAssembler& batcher, TextRenderer& text_renderer,
                                     const CaptureViewElement::DrawContext& draw_context) {
   GraphTrack<Dimension>::DoDraw(batcher, text_renderer, draw_context);
 

@@ -16,7 +16,6 @@
 
 #include "ApiInterface/Orbit.h"
 #include "App.h"
-#include "Batcher.h"
 #include "ClientData/CaptureData.h"
 #include "ClientData/ModuleAndFunctionLookup.h"
 #include "ClientData/TimerChain.h"
@@ -27,6 +26,7 @@
 #include "OrbitBase/Logging.h"
 #include "OrbitBase/ThreadConstants.h"
 #include "OrbitBase/ThreadUtils.h"
+#include "PrimitiveAssembler.h"
 #include "TextRenderer.h"
 #include "TimeGraphLayout.h"
 #include "TimerTrack.h"
@@ -36,8 +36,8 @@
 using orbit_client_data::CaptureData;
 using orbit_client_data::TimerChain;
 
-using orbit_gl::Batcher;
 using orbit_gl::PickingUserData;
+using orbit_gl::PrimitiveAssembler;
 
 using orbit_client_protos::TimerInfo;
 
@@ -116,7 +116,7 @@ const TimerInfo* ThreadTrack::GetDown(const TimerInfo& timer_info) const {
   return thread_track_data_provider_->GetDown(timer_info);
 }
 
-std::string ThreadTrack::GetBoxTooltip(const Batcher& batcher, PickingId id) const {
+std::string ThreadTrack::GetBoxTooltip(const PrimitiveAssembler& batcher, PickingId id) const {
   const TimerInfo* timer_info = batcher.GetTimerInfo(id);
   if (timer_info == nullptr || timer_info->type() == TimerInfo::kCoreActivity) {
     return "";
@@ -399,13 +399,13 @@ constexpr float kMinimalWidthToHaveBorder = 4.0;
 [[nodiscard]] static Vec2 Vec3ToVec2(const Vec3 v) { return {v[0], v[1]}; }
 
 void ThreadTrack::AddBorderLine(const Vec2& from, const Vec2& to, float z, const Color& color,
-                                Batcher& batcher,
+                                PrimitiveAssembler& batcher,
                                 const orbit_client_protos::TimerInfo& timer_info) {
   auto user_data = CreatePickingUserData(batcher, timer_info);
   batcher.AddLine(from, to, z, color, std::move(user_data));
 }
 
-void ThreadTrack::AddBoxBorder(Batcher& batcher, const Box& box, const Color& color,
+void ThreadTrack::AddBoxBorder(PrimitiveAssembler& batcher, const Box& box, const Color& color,
                                const orbit_client_protos::TimerInfo& timer_info) {
   float z = box.vertices[0][2];
   AddBorderLine(Vec3ToVec2(box.vertices[0]), Vec3ToVec2(box.vertices[1]), z, color, batcher,
@@ -421,7 +421,7 @@ void ThreadTrack::AddBoxBorder(Batcher& batcher, const Box& box, const Color& co
 // We minimize overdraw when drawing lines for small events by discarding events that would just
 // draw over an already drawn pixel line. When zoomed in enough that all events are drawn as boxes,
 // this has no effect. When zoomed  out, many events will be discarded quickly.
-void ThreadTrack::DoUpdatePrimitives(Batcher& batcher, TextRenderer& text_renderer,
+void ThreadTrack::DoUpdatePrimitives(PrimitiveAssembler& batcher, TextRenderer& text_renderer,
                                      uint64_t min_tick, uint64_t max_tick,
                                      PickingMode /*picking_mode*/) {
   // TODO(b/203181055): The parent class already provides an implementation, but this is completely

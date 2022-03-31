@@ -25,7 +25,7 @@
 #include "OrbitBase/ExecutablePath.h"
 #include "OrbitBase/Logging.h"
 
-using orbit_gl::Batcher;
+using orbit_gl::PrimitiveAssembler;
 
 namespace {
 
@@ -197,14 +197,14 @@ void TextRenderer::RenderLayer(float layer) {
   glPopAttrib();
 }
 
-void TextRenderer::RenderDebug(Batcher* batcher) {
+void TextRenderer::RenderDebug(PrimitiveAssembler* batcher) {
   if (!draw_outline_) return;
   for (auto& [unused_layer, buffer] : vertex_buffers_by_layer_) {
     DrawOutline(batcher, buffer);
   }
 }
 
-void TextRenderer::DrawOutline(Batcher* batcher, ftgl::vertex_buffer_t* vertex_buffer) {
+void TextRenderer::DrawOutline(PrimitiveAssembler* batcher, ftgl::vertex_buffer_t* vertex_buffer) {
   if (vertex_buffer == nullptr) return;
   const Color color(255, 255, 255, 255);
 

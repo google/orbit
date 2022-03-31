@@ -18,7 +18,7 @@
 #include "Viewport.h"
 
 using orbit_client_data::TimerData;
-using orbit_gl::Batcher;
+using orbit_gl::PrimitiveAssembler;
 
 Track::Track(CaptureViewElement* parent, const orbit_gl::TimelineInfoInterface* timeline_info,
              orbit_gl::Viewport* viewport, TimeGraphLayout* layout,
@@ -60,8 +60,8 @@ std::vector<Vec2> RotatePoints(const std::vector<Vec2>& points, float rotation) 
   return result;
 }
 
-void Track::DrawTriangleFan(Batcher& batcher, const std::vector<Vec2>& points, const Vec2& pos,
-                            const Color& color, float rotation, float z) {
+void Track::DrawTriangleFan(PrimitiveAssembler& batcher, const std::vector<Vec2>& points,
+                            const Vec2& pos, const Color& color, float rotation, float z) {
   if (points.size() < 3) {
     return;
   }
@@ -99,7 +99,8 @@ std::unique_ptr<orbit_accessibility::AccessibleInterface> Track::CreateAccessibl
   return std::make_unique<orbit_gl::AccessibleTrack>(this, layout_);
 }
 
-void Track::DoDraw(Batcher& batcher, TextRenderer& text_renderer, const DrawContext& draw_context) {
+void Track::DoDraw(PrimitiveAssembler& batcher, TextRenderer& text_renderer,
+                   const DrawContext& draw_context) {
   CaptureViewElement::DoDraw(batcher, text_renderer, draw_context);
 
   if (headless_) return;

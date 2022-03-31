@@ -12,17 +12,17 @@
 #include <limits>
 #include <utility>
 
-#include "Batcher.h"
 #include "DisplayFormats/DisplayFormats.h"
 #include "GlCanvas.h"
 #include "GlUtils.h"
+#include "PrimitiveAssembler.h"
 #include "TextRenderer.h"
 #include "TimeGraphLayout.h"
 #include "TriangleToggle.h"
 
 using orbit_client_data::CaptureData;
 using orbit_client_protos::TimerInfo;
-using orbit_gl::Batcher;
+using orbit_gl::PrimitiveAssembler;
 using orbit_grpc_protos::InstrumentedFunction;
 
 namespace {
@@ -173,7 +173,7 @@ std::string FrameTrack::GetTooltip() const {
       orbit_display_formats::GetDisplayTime(absl::Nanoseconds(stats_.ComputeAverageTimeNs())));
 }
 
-std::string FrameTrack::GetBoxTooltip(const Batcher& batcher, PickingId id) const {
+std::string FrameTrack::GetBoxTooltip(const PrimitiveAssembler& batcher, PickingId id) const {
   const orbit_client_protos::TimerInfo* timer_info = batcher.GetTimerInfo(id);
   if (timer_info == nullptr) {
     return "";
@@ -197,14 +197,14 @@ std::string FrameTrack::GetBoxTooltip(const Batcher& batcher, PickingId id) cons
           TicksToDuration(timer_info->start(), timer_info->end())));
 }
 
-void FrameTrack::DoUpdatePrimitives(Batcher& batcher, TextRenderer& text_renderer,
+void FrameTrack::DoUpdatePrimitives(PrimitiveAssembler& batcher, TextRenderer& text_renderer,
                                     uint64_t min_tick, uint64_t max_tick,
                                     PickingMode picking_mode) {
   ORBIT_SCOPE_WITH_COLOR("FrameTrack::DoUpdatePrimitives", kOrbitColorAmber);
   TimerTrack::DoUpdatePrimitives(batcher, text_renderer, min_tick, max_tick, picking_mode);
 }
 
-void FrameTrack::DoDraw(Batcher& batcher, TextRenderer& text_renderer,
+void FrameTrack::DoDraw(PrimitiveAssembler& batcher, TextRenderer& text_renderer,
                         const DrawContext& draw_context) {
   TimerTrack::DoDraw(batcher, text_renderer, draw_context);
 

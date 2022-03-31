@@ -11,7 +11,6 @@
 #include <utility>
 
 #include "App.h"
-#include "Batcher.h"
 #include "CaptureViewElement.h"
 #include "ClientData/CaptureData.h"
 #include "ClientProtos/capture_data.pb.h"
@@ -22,6 +21,7 @@
 #include "GrpcProtos/tracepoint.pb.h"
 #include "OrbitBase/Logging.h"
 #include "OrbitBase/ThreadConstants.h"
+#include "PrimitiveAssembler.h"
 #include "TimeGraphLayout.h"
 #include "Viewport.h"
 
@@ -36,7 +36,7 @@ TracepointThreadBar::TracepointThreadBar(CaptureViewElement* parent, OrbitApp* a
     : ThreadBar(parent, app, timeline_info, viewport, layout, module_manager, capture_data,
                 thread_id, "Tracepoints", color) {}
 
-void TracepointThreadBar::DoDraw(Batcher& batcher, TextRenderer& text_renderer,
+void TracepointThreadBar::DoDraw(PrimitiveAssembler& batcher, TextRenderer& text_renderer,
                                  const DrawContext& draw_context) {
   ThreadBar::DoDraw(batcher, text_renderer, draw_context);
 
@@ -52,9 +52,9 @@ void TracepointThreadBar::DoDraw(Batcher& batcher, TextRenderer& text_renderer,
   batcher.AddBox(box, color, shared_from_this());
 }
 
-void TracepointThreadBar::DoUpdatePrimitives(Batcher& batcher, TextRenderer& text_renderer,
-                                             uint64_t min_tick, uint64_t max_tick,
-                                             PickingMode picking_mode) {
+void TracepointThreadBar::DoUpdatePrimitives(PrimitiveAssembler& batcher,
+                                             TextRenderer& text_renderer, uint64_t min_tick,
+                                             uint64_t max_tick, PickingMode picking_mode) {
   ORBIT_SCOPE_WITH_COLOR("TracepointThreadBar::DoUpdatePrimitives", kOrbitColorIndigo);
   ThreadBar::DoUpdatePrimitives(batcher, text_renderer, min_tick, max_tick, picking_mode);
 
@@ -107,7 +107,8 @@ void TracepointThreadBar::DoUpdatePrimitives(Batcher& batcher, TextRenderer& tex
   }
 }
 
-std::string TracepointThreadBar::GetTracepointTooltip(Batcher& batcher, PickingId id) const {
+std::string TracepointThreadBar::GetTracepointTooltip(PrimitiveAssembler& batcher,
+                                                      PickingId id) const {
   auto* user_data = batcher.GetUserData(id);
   ORBIT_CHECK(user_data && user_data->custom_data_);
 

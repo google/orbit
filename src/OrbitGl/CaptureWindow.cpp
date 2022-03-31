@@ -43,8 +43,8 @@ using orbit_accessibility::AccessibleInterface;
 using orbit_accessibility::AccessibleWidgetBridge;
 
 using orbit_client_data::CaptureData;
-using orbit_gl::Batcher;
 using orbit_gl::PickingUserData;
+using orbit_gl::PrimitiveAssembler;
 
 constexpr const char* kTimingDraw = "Draw";
 constexpr const char* kTimingDrawAndUpdatePrimitives = "Draw & Update Primitives";
@@ -178,7 +178,7 @@ void CaptureWindow::HandlePickedElement(PickingMode picking_mode, PickingId pick
   if (time_graph_ == nullptr) return;
   PickingType type = picking_id.type;
 
-  Batcher& batcher = GetBatcherById(picking_id.batcher_id);
+  PrimitiveAssembler& batcher = GetBatcherById(picking_id.batcher_id);
 
   if (picking_mode == PickingMode::kClick) {
     background_clicked_ = false;
@@ -635,7 +635,7 @@ void CaptureWindow::CreateTimeGraph(CaptureData* capture_data) {
       std::make_unique<TimeGraph>(this, app_, &viewport_, capture_data, &GetPickingManager());
 }
 
-Batcher& CaptureWindow::GetBatcherById(BatcherId batcher_id) {
+PrimitiveAssembler& CaptureWindow::GetBatcherById(BatcherId batcher_id) {
   switch (batcher_id) {
     case BatcherId::kTimeGraph:
       ORBIT_CHECK(time_graph_ != nullptr);

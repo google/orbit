@@ -41,11 +41,11 @@ class BasicPageFaultsTrack : public LineGraphTrack<kBasicPageFaultsTrackDimensio
   enum class SeriesIndex { kProcess = 0, kCGroup = 1, kSystem = 2 };
 
  protected:
-  void DoDraw(Batcher& batcher, TextRenderer& text_renderer,
+  void DoDraw(PrimitiveAssembler& batcher, TextRenderer& text_renderer,
               const DrawContext& draw_context) override;
 
   void DrawSingleSeriesEntry(
-      Batcher& batcher, uint64_t start_tick, uint64_t end_tick,
+      PrimitiveAssembler& batcher, uint64_t start_tick, uint64_t end_tick,
       const std::array<float, kBasicPageFaultsTrackDimension>& current_normalized_values,
       const std::array<float, kBasicPageFaultsTrackDimension>& next_normalized_values, float z,
       bool is_last) override;

@@ -15,7 +15,7 @@ CaptureViewElement::CaptureViewElement(CaptureViewElement* parent, const Viewpor
   ORBIT_CHECK(layout != nullptr);
 }
 
-void CaptureViewElement::Draw(Batcher& batcher, TextRenderer& text_renderer,
+void CaptureViewElement::Draw(PrimitiveAssembler& batcher, TextRenderer& text_renderer,
                               const DrawContext& draw_context) {
   ORBIT_SCOPE_FUNCTION;
 
@@ -32,7 +32,7 @@ void CaptureViewElement::Draw(Batcher& batcher, TextRenderer& text_renderer,
   batcher.PopTranslation();
 }
 
-void CaptureViewElement::UpdatePrimitives(Batcher& batcher, TextRenderer& text_renderer,
+void CaptureViewElement::UpdatePrimitives(PrimitiveAssembler& batcher, TextRenderer& text_renderer,
                                           uint64_t min_tick, uint64_t max_tick,
                                           PickingMode picking_mode) {
   ORBIT_SCOPE_FUNCTION;

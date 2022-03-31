@@ -12,10 +12,10 @@ const Color kThresholdColor(179, 0, 80, 255);
 
 }  // namespace
 
-using orbit_gl::Batcher;
 using orbit_gl::PickingUserData;
+using orbit_gl::PrimitiveAssembler;
 
-void AnnotationTrack::DrawAnnotation(Batcher& batcher, TextRenderer& text_renderer,
+void AnnotationTrack::DrawAnnotation(PrimitiveAssembler& batcher, TextRenderer& text_renderer,
                                      const TimeGraphLayout* layout, int indentation_level,
                                      float z) {
   uint32_t font_size = GetAnnotationFontSize(indentation_level);

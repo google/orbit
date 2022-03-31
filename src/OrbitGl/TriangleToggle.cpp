@@ -10,18 +10,18 @@
 #include <utility>
 
 #include "AccessibleTriangleToggle.h"
-#include "Batcher.h"
 #include "Geometry.h"
 #include "GlCanvas.h"
+#include "PrimitiveAssembler.h"
 #include "Track.h"
 
-using orbit_gl::Batcher;
+using orbit_gl::PrimitiveAssembler;
 
 TriangleToggle::TriangleToggle(StateChangeHandler handler, orbit_gl::Viewport* viewport,
                                TimeGraphLayout* layout, Track* track)
     : CaptureViewElement(track, viewport, layout), handler_(std::move(handler)) {}
 
-void TriangleToggle::DoDraw(Batcher& batcher, TextRenderer& text_renderer,
+void TriangleToggle::DoDraw(PrimitiveAssembler& batcher, TextRenderer& text_renderer,
                             const DrawContext& draw_context) {
   CaptureViewElement::DoDraw(batcher, text_renderer, draw_context);
 

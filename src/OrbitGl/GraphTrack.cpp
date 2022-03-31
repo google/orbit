@@ -25,8 +25,8 @@ namespace {
 constexpr const float kBoxHeightMultiplier = 1.5f;
 }  // namespace
 
-using orbit_gl::Batcher;
 using orbit_gl::PickingUserData;
+using orbit_gl::PrimitiveAssembler;
 
 template <size_t Dimension>
 GraphTrack<Dimension>::GraphTrack(CaptureViewElement* parent,
@@ -66,7 +66,7 @@ float GraphTrack<Dimension>::GetLegendHeight() const {
 }
 
 template <size_t Dimension>
-void GraphTrack<Dimension>::DoDraw(Batcher& batcher, TextRenderer& text_renderer,
+void GraphTrack<Dimension>::DoDraw(PrimitiveAssembler& batcher, TextRenderer& text_renderer,
                                    const DrawContext& draw_context) {
   Track::DoDraw(batcher, text_renderer, draw_context);
   if (IsEmpty() || IsCollapsed()) return;
@@ -91,9 +91,9 @@ void GraphTrack<Dimension>::DoDraw(Batcher& batcher, TextRenderer& text_renderer
 }
 
 template <size_t Dimension>
-void GraphTrack<Dimension>::DoUpdatePrimitives(Batcher& batcher, TextRenderer& text_renderer,
-                                               uint64_t min_tick, uint64_t max_tick,
-                                               PickingMode picking_mode) {
+void GraphTrack<Dimension>::DoUpdatePrimitives(PrimitiveAssembler& batcher,
+                                               TextRenderer& text_renderer, uint64_t min_tick,
+                                               uint64_t max_tick, PickingMode picking_mode) {
   ORBIT_SCOPE_WITH_COLOR("GraphTrack<Dimension>::DoUpdatePrimitives", kOrbitColorBlueGrey);
   Track::DoUpdatePrimitives(batcher, text_renderer, min_tick, max_tick, picking_mode);
 
@@ -163,7 +163,7 @@ uint32_t GraphTrack<Dimension>::GetLegendFontSize(uint32_t indentation_level) co
 }
 
 template <size_t Dimension>
-void GraphTrack<Dimension>::DrawLabel(Batcher& batcher, TextRenderer& text_renderer,
+void GraphTrack<Dimension>::DrawLabel(PrimitiveAssembler& batcher, TextRenderer& text_renderer,
                                       Vec2 target_pos, const std::string& text,
                                       const Color& text_color, const Color& font_color) {
   uint32_t font_size = GetLegendFontSize(indentation_level_);
@@ -213,7 +213,7 @@ void GraphTrack<Dimension>::DrawLabel(Batcher& batcher, TextRenderer& text_rende
 }
 
 template <size_t Dimension>
-void GraphTrack<Dimension>::DrawLegend(Batcher& batcher, TextRenderer& text_renderer,
+void GraphTrack<Dimension>::DrawLegend(PrimitiveAssembler& batcher, TextRenderer& text_renderer,
                                        const std::array<std::string, Dimension>& series_names,
                                        const Color& legend_text_color) {
   const float kSpaceBetweenLegendSymbolAndText = layout_->GetGenericFixedSpacerWidth();
@@ -250,8 +250,8 @@ void GraphTrack<Dimension>::DrawLegend(Batcher& batcher, TextRenderer& text_rend
 }
 
 template <size_t Dimension>
-void GraphTrack<Dimension>::DrawSeries(Batcher& batcher, uint64_t min_tick, uint64_t max_tick,
-                                       float z) {
+void GraphTrack<Dimension>::DrawSeries(PrimitiveAssembler& batcher, uint64_t min_tick,
+                                       uint64_t max_tick, float z) {
   auto entries = series_.GetEntriesAffectedByTimeRange(min_tick, max_tick);
   if (entries.empty()) return;
 
@@ -284,7 +284,7 @@ void GraphTrack<Dimension>::DrawSeries(Batcher& batcher, uint64_t min_tick, uint
 
 template <size_t Dimension>
 void GraphTrack<Dimension>::DrawSingleSeriesEntry(
-    Batcher& batcher, uint64_t start_tick, uint64_t end_tick,
+    PrimitiveAssembler& batcher, uint64_t start_tick, uint64_t end_tick,
     const std::array<float, Dimension>& normalized_cumulative_values, float z) {
   const float x0 = timeline_info_->GetWorldFromTick(start_tick);
   const float width = timeline_info_->GetWorldFromTick(end_tick) - x0;

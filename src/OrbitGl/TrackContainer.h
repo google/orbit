@@ -68,7 +68,7 @@ class TrackContainer final : public CaptureViewElement {
 
  protected:
   void DoUpdateLayout() override;
-  void DoDraw(Batcher& batcher, TextRenderer& text_renderer,
+  void DoDraw(PrimitiveAssembler& batcher, TextRenderer& text_renderer,
               const DrawContext& draw_context) override;
 
   void UpdateTracksPosition();
@@ -77,11 +77,12 @@ class TrackContainer final : public CaptureViewElement {
   CreateAccessibleInterface() override;
 
  private:
-  void DrawOverlay(Batcher& batcher, TextRenderer& text_renderer, PickingMode picking_mode);
-  void DrawIteratorBox(Batcher& batcher, TextRenderer& text_renderer, Vec2 pos, Vec2 size,
-                       const Color& color, const std::string& label, const std::string& time,
-                       float text_box_y);
-  void DrawIncompleteDataIntervals(Batcher& batcher, PickingMode picking_mode);
+  void DrawOverlay(PrimitiveAssembler& batcher, TextRenderer& text_renderer,
+                   PickingMode picking_mode);
+  void DrawIteratorBox(PrimitiveAssembler& batcher, TextRenderer& text_renderer, Vec2 pos,
+                       Vec2 size, const Color& color, const std::string& label,
+                       const std::string& time, float text_box_y);
+  void DrawIncompleteDataIntervals(PrimitiveAssembler& batcher, PickingMode picking_mode);
 
   // First member is id.
   absl::flat_hash_map<uint64_t, const orbit_client_protos::TimerInfo*> iterator_timer_info_;

@@ -14,7 +14,6 @@
 #include <vector>
 
 #include "App.h"
-#include "Batcher.h"
 #include "ClientData/CallstackData.h"
 #include "ClientData/CallstackInfo.h"
 #include "ClientData/CallstackType.h"
@@ -26,6 +25,7 @@
 #include "OrbitBase/Logging.h"
 #include "OrbitBase/ThreadConstants.h"
 #include "PickingManager.h"
+#include "PrimitiveAssembler.h"
 #include "ShortenStringWithEllipsis.h"
 #include "TimeGraphLayout.h"
 #include "Viewport.h"
@@ -52,7 +52,7 @@ std::string CallstackThreadBar::GetTooltip() const {
   return "Left-click and drag to select samples";
 }
 
-void CallstackThreadBar::DoDraw(Batcher& batcher, TextRenderer& text_renderer,
+void CallstackThreadBar::DoDraw(PrimitiveAssembler& batcher, TextRenderer& text_renderer,
                                 const DrawContext& draw_context) {
   ThreadBar::DoDraw(batcher, text_renderer, draw_context);
 
@@ -99,9 +99,9 @@ void CallstackThreadBar::DoDraw(Batcher& batcher, TextRenderer& text_renderer,
   }
 }
 
-void CallstackThreadBar::DoUpdatePrimitives(Batcher& batcher, TextRenderer& text_renderer,
-                                            uint64_t min_tick, uint64_t max_tick,
-                                            PickingMode picking_mode) {
+void CallstackThreadBar::DoUpdatePrimitives(PrimitiveAssembler& batcher,
+                                            TextRenderer& text_renderer, uint64_t min_tick,
+                                            uint64_t max_tick, PickingMode picking_mode) {
   ORBIT_SCOPE_WITH_COLOR("CallstackThreadBar::DoUpdatePrimitives", kOrbitColorLightBlue);
   ThreadBar::DoUpdatePrimitives(batcher, text_renderer, min_tick, max_tick, picking_mode);
 
@@ -270,7 +270,8 @@ std::string CallstackThreadBar::FormatCallstackForTooltip(const CallstackInfo& c
   return result;
 }
 
-std::string CallstackThreadBar::GetSampleTooltip(const Batcher& batcher, PickingId id) const {
+std::string CallstackThreadBar::GetSampleTooltip(const PrimitiveAssembler& batcher,
+                                                 PickingId id) const {
   static const std::string unknown_return_text = "Function call information missing";
 
   const PickingUserData* user_data = batcher.GetUserData(id);

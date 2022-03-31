@@ -42,9 +42,9 @@ using orbit_client_data::CaptureData;
 using orbit_client_data::TimerChain;
 using orbit_client_protos::TimerInfo;
 
-using orbit_gl::Batcher;
 using orbit_gl::CGroupAndProcessMemoryTrack;
 using orbit_gl::PageFaultsTrack;
+using orbit_gl::PrimitiveAssembler;
 using orbit_gl::SystemMemoryTrack;
 using orbit_gl::TrackManager;
 using orbit_gl::VariableTrack;
@@ -627,7 +627,7 @@ void TimeGraph::JumpToNeighborTimer(const TimerInfo* from, JumpDirection jump_di
   }
 }
 
-void TimeGraph::DrawAllElements(Batcher& batcher, TextRenderer& text_renderer,
+void TimeGraph::DrawAllElements(PrimitiveAssembler& batcher, TextRenderer& text_renderer,
                                 PickingMode& picking_mode, uint64_t current_mouse_time_ns) {
   const bool picking = picking_mode != PickingMode::kNone;
 

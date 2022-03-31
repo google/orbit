@@ -72,7 +72,7 @@ void BasicPageFaultsTrack::AddValuesAndUpdateAnnotations(
   }
 }
 
-void BasicPageFaultsTrack::DoDraw(Batcher& batcher, TextRenderer& text_renderer,
+void BasicPageFaultsTrack::DoDraw(PrimitiveAssembler& batcher, TextRenderer& text_renderer,
                                   const DrawContext& draw_context) {
   LineGraphTrack<kBasicPageFaultsTrackDimension>::DoDraw(batcher, text_renderer, draw_context);
 
@@ -82,7 +82,7 @@ void BasicPageFaultsTrack::DoDraw(Batcher& batcher, TextRenderer& text_renderer,
 }
 
 void BasicPageFaultsTrack::DrawSingleSeriesEntry(
-    Batcher& batcher, uint64_t start_tick, uint64_t end_tick,
+    PrimitiveAssembler& batcher, uint64_t start_tick, uint64_t end_tick,
     const std::array<float, kBasicPageFaultsTrackDimension>& current_normalized_values,
     const std::array<float, kBasicPageFaultsTrackDimension>& next_normalized_values, float z,
     bool is_last) {

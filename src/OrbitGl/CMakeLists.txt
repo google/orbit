@@ -18,7 +18,7 @@ target_sources(
          App.h
          AsyncTrack.h
          BasicPageFaultsTrack.h
-         Batcher.h
+        PrimitiveAssembler.h
          BatcherInterface.h
          OpenGlBatcher.h
          CallstackThreadBar.h
@@ -90,7 +90,7 @@ target_sources(
           App.cpp
           AsyncTrack.cpp
           BasicPageFaultsTrack.cpp
-          Batcher.cpp
+        PrimitiveAssembler.cpp
           OpenGlBatcher.cpp
           CallstackThreadBar.cpp
           CallTreeView.cpp

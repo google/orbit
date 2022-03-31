@@ -5,8 +5,8 @@
 #ifndef ORBIT_GL_UNIT_TEST_SLIDER_H_
 #define ORBIT_GL_UNIT_TEST_SLIDER_H_
 
-#include "Batcher.h"
 #include "GlSlider.h"
+#include "PrimitiveAssembler.h"
 #include "Viewport.h"
 
 namespace orbit_gl {
@@ -14,7 +14,7 @@ namespace orbit_gl {
 class UnitTestHorizontalSlider : public GlHorizontalSlider {
  public:
   explicit UnitTestHorizontalSlider(Viewport& viewport) : GlHorizontalSlider(viewport){};
-  void Draw(Batcher& /*batcher*/, bool /*is_picked*/) override{};
+  void Draw(PrimitiveAssembler& /*batcher*/, bool /*is_picked*/) override{};
 
   bool IsMouseOver() { return is_mouse_over_; }
 };
@@ -22,7 +22,7 @@ class UnitTestHorizontalSlider : public GlHorizontalSlider {
 class UnitTestVerticalSlider : public GlVerticalSlider {
  public:
   explicit UnitTestVerticalSlider(Viewport& viewport) : GlVerticalSlider(viewport){};
-  void Draw(Batcher& /*batcher*/, bool /*is_picked*/) override{};
+  void Draw(PrimitiveAssembler& /*batcher*/, bool /*is_picked*/) override{};
 
   bool IsMouseOver() { return is_mouse_over_; }
 };

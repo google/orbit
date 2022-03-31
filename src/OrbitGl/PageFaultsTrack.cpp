@@ -67,7 +67,7 @@ std::vector<CaptureViewElement*> PageFaultsTrack::GetAllChildren() const {
   return result;
 }
 
-void PageFaultsTrack::DoUpdatePrimitives(Batcher& batcher, TextRenderer& text_renderer,
+void PageFaultsTrack::DoUpdatePrimitives(PrimitiveAssembler& batcher, TextRenderer& text_renderer,
                                          uint64_t min_tick, uint64_t max_tick,
                                          PickingMode picking_mode) {
   ORBIT_SCOPE("PageFaultsTrack::DoUpdatePrimitives");

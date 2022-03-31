@@ -10,7 +10,6 @@
 #include <utility>
 
 #include "App.h"
-#include "Batcher.h"
 #include "CaptureViewElement.h"
 #include "ClientData/CaptureData.h"
 #include "ClientData/ThreadStateSliceInfo.h"
@@ -19,6 +18,7 @@
 #include "GlCanvas.h"
 #include "GrpcProtos/capture.pb.h"
 #include "OrbitBase/Logging.h"
+#include "PrimitiveAssembler.h"
 #include "Viewport.h"
 
 using orbit_client_data::ThreadID;
@@ -40,7 +40,7 @@ bool ThreadStateBar::IsEmpty() const {
   return capture_data_ == nullptr || !capture_data_->HasThreadStatesForThread(GetThreadId());
 }
 
-void ThreadStateBar::DoDraw(Batcher& batcher, TextRenderer& text_renderer,
+void ThreadStateBar::DoDraw(PrimitiveAssembler& batcher, TextRenderer& text_renderer,
                             const DrawContext& draw_context) {
   ThreadBar::DoDraw(batcher, text_renderer, draw_context);
 
@@ -148,7 +148,8 @@ static std::string GetThreadStateDescription(ThreadStateSlice::ThreadState state
   }
 }
 
-std::string ThreadStateBar::GetThreadStateSliceTooltip(Batcher& batcher, PickingId id) const {
+std::string ThreadStateBar::GetThreadStateSliceTooltip(PrimitiveAssembler& batcher,
+                                                       PickingId id) const {
   PickingUserData* user_data = batcher.GetUserData(id);
   if (user_data == nullptr || user_data->custom_data_ == nullptr) {
     return "";
@@ -165,7 +166,7 @@ std::string ThreadStateBar::GetThreadStateSliceTooltip(Batcher& batcher, Picking
       GetThreadStateDescription(thread_state_slice->thread_state()));
 }
 
-void ThreadStateBar::DoUpdatePrimitives(Batcher& batcher, TextRenderer& text_renderer,
+void ThreadStateBar::DoUpdatePrimitives(PrimitiveAssembler& batcher, TextRenderer& text_renderer,
                                         uint64_t min_tick, uint64_t max_tick,
                                         PickingMode picking_mode) {
   ORBIT_SCOPE_WITH_COLOR("ThreadStateBar::DoUpdatePrimitives", kOrbitColorTeal);

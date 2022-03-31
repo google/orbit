@@ -18,9 +18,9 @@
 #include <unordered_map>
 #include <vector>
 
-#include "Batcher.h"
 #include "CoreMath.h"
 #include "PickingManager.h"
+#include "PrimitiveAssembler.h"
 #include "Viewport.h"
 
 namespace ftgl {
@@ -49,7 +49,7 @@ class TextRenderer {
   void SetViewport(orbit_gl::Viewport* viewport) { viewport_ = viewport; }
 
   void RenderLayer(float layer);
-  void RenderDebug(orbit_gl::Batcher* batcher);
+  void RenderDebug(orbit_gl::PrimitiveAssembler* batcher);
   [[nodiscard]] std::vector<float> GetLayers() const;
 
   void AddText(const char* text, float x, float y, float z, TextFormatting formatting,
@@ -76,7 +76,7 @@ class TextRenderer {
   [[nodiscard]] ftgl::texture_glyph_t* MaybeLoadAndGetGlyph(ftgl::texture_font_t* self,
                                                             const char* character);
 
-  void DrawOutline(orbit_gl::Batcher* batcher, ftgl::vertex_buffer_t* buffer);
+  void DrawOutline(orbit_gl::PrimitiveAssembler* batcher, ftgl::vertex_buffer_t* buffer);
 
  private:
   ftgl::texture_atlas_t* texture_atlas_;
