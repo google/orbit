@@ -36,6 +36,12 @@ class Regs;
 class Memory;
 struct ErrorData;
 
+// Inspects the first bytes of the file / memory to check if this is potentially a PE/COFF file.
+// Since we don't read the full file and don't validate if this is really a proper PE/COFF file,
+// this should only be considered a hint.
+bool IsPotentiallyPeCoffFile(Memory* memory);
+bool IsPotentiallyPeCoffFile(const std::string& filename);
+
 class PeCoff : public Object {
  public:
   explicit PeCoff(Memory* memory) : memory_(memory) {}

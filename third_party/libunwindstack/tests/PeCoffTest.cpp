@@ -237,4 +237,28 @@ TEST_F(PeCoff64Test, returns_correct_arch_for_64bit_pe_coff) {
   EXPECT_EQ(ARCH_X86_64, coff.arch());
 }
 
+TEST(PeCoffTest, detects_pe_coff_magic_value_for_given_memory) {
+  MemoryFake memory;
+  constexpr uint16_t kMsDosTwoPointZeroMagicValue = 0x5a4d;
+  memory.SetData16(0, kMsDosTwoPointZeroMagicValue);
+  EXPECT_TRUE(IsPotentiallyPeCoffFile(&memory));
+}
+
+TEST(PeCoffTest, rejects_incorrect_pe_coff_magic_value_for_given_memory) {
+  MemoryFake memory;
+  constexpr uint16_t kIncorrectMagicValue = 0x5a4e;
+  memory.SetData16(0, kIncorrectMagicValue);
+  EXPECT_FALSE(IsPotentiallyPeCoffFile(&memory));
+}
+
+TEST(PeCoffTest, detects_pe_coff_file_correctly) {
+  std::string file = android::base::GetExecutableDirectory() + "/tests/files/libtest.dll";
+  EXPECT_TRUE(IsPotentiallyPeCoffFile(file));
+}
+
+TEST(PeCoffTest, rejects_non_pe_coff_correctly) {
+  std::string file = android::base::GetExecutableDirectory() + "/tests/files/elf32.xz";
+  EXPECT_FALSE(IsPotentiallyPeCoffFile(file));
+}
+
 }  // namespace unwindstack

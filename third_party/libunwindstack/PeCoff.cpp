@@ -24,10 +24,33 @@
 #include <unwindstack/Object.h>
 #include <unwindstack/PeCoffInterface.h>
 #include <unwindstack/Regs.h>
+#include "MemoryFileAtOffset.h"
 
 #include "Check.h"
 
 namespace unwindstack {
+
+bool IsPotentiallyPeCoffFile(Memory* memory) {
+  uint16_t magic_value;
+  if (!memory->Read16(0, &magic_value)) {
+    return false;
+  }
+
+  // This magic value is present in the first two bytes of every PE/COFF file. Note that there are
+  // additional magic bytes later in the header that could be checked as well, but since we only
+  // need a hint whether the file is PE/COFF or ELF, just checking this magic value suffices.
+  constexpr uint16_t kMsDosTwoPointZeroMagicValue = 0x5a4d;
+  return magic_value == kMsDosTwoPointZeroMagicValue;
+}
+
+bool IsPotentiallyPeCoffFile(const std::string& filename) {
+  MemoryFileAtOffset memory;
+  if (!memory.Init(filename, 0)) {
+    return false;
+  }
+
+  return IsPotentiallyPeCoffFile(&memory);
+}
 
 PeCoffInterface* PeCoff::CreateInterfaceFromMemory(Memory* memory) {
   int64_t unused_load_bias;
