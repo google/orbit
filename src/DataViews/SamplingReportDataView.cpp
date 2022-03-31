@@ -20,7 +20,7 @@
 #include <utility>
 
 #include "ClientData/CaptureData.h"
-#include "ClientData/FunctionUtils.h"
+#include "ClientData/FunctionInfo.h"
 #include "ClientData/ModuleAndFunctionLookup.h"
 #include "ClientData/ModuleData.h"
 #include "ClientData/ProcessData.h"
@@ -35,13 +35,12 @@
 #include "Statistics/StatisticsUtils.h"
 
 using orbit_client_data::CaptureData;
+using orbit_client_data::FunctionInfo;
 using orbit_client_data::ModuleData;
 using orbit_client_data::ModuleManager;
 using orbit_client_data::ProcessData;
 using orbit_client_data::SampledFunction;
 using orbit_client_data::ThreadID;
-
-using orbit_client_protos::FunctionInfo;
 
 namespace orbit_data_views {
 
@@ -238,7 +237,7 @@ DataView::ActionStatus SamplingReportDataView::GetActionStatus(
   if (action == kMenuActionSelect) {
     is_visible_action_enabled = [this](const FunctionInfo* function) {
       return function != nullptr && !app_->IsFunctionSelected(*function) &&
-             orbit_client_data::function_utils::IsFunctionSelectable(*function);
+             function->IsFunctionSelectable();
     };
 
   } else if (action == kMenuActionUnselect) {

@@ -18,7 +18,6 @@
 #include "CGroupAndProcessMemoryTrack.h"
 #include "CaptureClient/CaptureEventProcessor.h"
 #include "ClientData/CallstackEvent.h"
-#include "ClientData/FunctionUtils.h"
 #include "ClientFlags/ClientFlags.h"
 #include "FrameTrack.h"
 #include "GlCanvas.h"
@@ -43,6 +42,7 @@ using orbit_client_data::CaptureData;
 using orbit_client_data::TimerChain;
 using orbit_client_protos::TimerInfo;
 
+using orbit_gl::Batcher;
 using orbit_gl::CGroupAndProcessMemoryTrack;
 using orbit_gl::PageFaultsTrack;
 using orbit_gl::SystemMemoryTrack;

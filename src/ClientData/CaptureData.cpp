@@ -12,13 +12,10 @@
 #include <memory>
 #include <vector>
 
-#include "ClientData/FunctionUtils.h"
 #include "ClientData/ModuleData.h"
 #include "ClientData/ScopeIdConstants.h"
 #include "ObjectUtils/Address.h"
 #include "OrbitBase/Result.h"
-
-using orbit_client_protos::FunctionInfo;
 
 using orbit_grpc_protos::CaptureStarted;
 using orbit_grpc_protos::InstrumentedFunction;
@@ -35,8 +32,8 @@ CaptureData::CaptureData(const CaptureStarted& capture_started,
       frame_track_function_ids_{std::move(frame_track_function_ids)},
       file_path_{std::move(file_path)},
       scope_id_provider_(NameEqualityScopeIdProvider::Create(capture_started.capture_options())),
-      thread_track_data_provider_(std::make_unique<ThreadTrackDataProvider>(
-          scope_id_provider_.get(), data_source == DataSource::kLoadedCapture)) {
+      thread_track_data_provider_(
+          std::make_unique<ThreadTrackDataProvider>(data_source == DataSource::kLoadedCapture)) {
   ProcessInfo process_info;
   process_info.set_pid(capture_started.process_id());
   std::filesystem::path executable_path{capture_started.executable_path()};
@@ -99,7 +96,10 @@ void CaptureData::AddScopeStats(uint64_t scope_id, ScopeStats stats) {
   scope_stats_.insert_or_assign(scope_id, stats);
 }
 
-void CaptureData::OnCaptureComplete() { thread_track_data_provider_->OnCaptureComplete(); }
+void CaptureData::OnCaptureComplete() {
+  thread_track_data_provider_->OnCaptureComplete();
+  UpdateTimerDurations();
+}
 
 const InstrumentedFunction* CaptureData::GetInstrumentedFunctionById(uint64_t function_id) const {
   auto instrumented_functions_it = instrumented_functions_.find(function_id);
@@ -160,6 +160,43 @@ uint64_t CaptureData::ProvideScopeId(const orbit_client_protos::TimerInfo& timer
 const std::string& CaptureData::GetScopeName(uint64_t scope_id) const {
   ORBIT_CHECK(scope_id_provider_);
   return scope_id_provider_->GetScopeName(scope_id);
+}
+
+const std::vector<uint64_t>* CaptureData::GetSortedTimerDurationsForScopeId(
+    uint64_t scope_id) const {
+  const auto it = scope_id_to_timer_durations_.find(scope_id);
+  if (it == scope_id_to_timer_durations_.end()) return nullptr;
+  return &it->second;
+}
+
+void CaptureData::UpdateTimerDurations() {
+  ORBIT_SCOPE_FUNCTION;
+  scope_id_to_timer_durations_.clear();
+
+  for (const uint32_t thread_id : GetThreadTrackDataProvider()->GetAllThreadIds()) {
+    const std::vector<const TimerInfo*> timers = GetThreadTrackDataProvider()->GetTimers(thread_id);
+    CollectDurations(timers);
+  }
+
+  CollectDurations(timer_data_manager_.GetTimers(orbit_client_protos::TimerInfo::kApiScopeAsync));
+
+  for (auto& [id, timer_durations] : scope_id_to_timer_durations_) {
+    std::sort(timer_durations.begin(), timer_durations.end());
+  }
+}
+
+void CaptureData::CollectDurations(const std::vector<const TimerInfo*>& timers) {
+  for (const TimerInfo* timer : timers) {
+    CollectDuration(timer);
+  }
+}
+
+void CaptureData::CollectDuration(const TimerInfo* timer) {
+  const uint64_t scope_id = ProvideScopeId(*timer);
+
+  if (scope_id == orbit_client_data::kInvalidScopeId) return;
+
+  scope_id_to_timer_durations_[scope_id].push_back(timer->end() - timer->start());
 }
 
 }  // namespace orbit_client_data

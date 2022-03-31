@@ -444,7 +444,7 @@ QPushButton:disabled {
     </property>
     <addaction name="actionCaptureOptions"/>
     <addaction name="actionSourcePathMappings"/>
-    <addaction name="actionSymbolsDialog"/>
+    <addaction name="actionSymbolLocationsDialog"/>
    </widget>
    <addaction name="menuFile"/>
    <addaction name="menuView"/>
@@ -688,7 +688,7 @@ It used to also contain captures and presets, but these were moved to the User D
     <string>Configure path mappings for source code</string>
    </property>
   </action>
-  <action name="actionSymbolsDialog">
+  <action name="actionSymbolLocationsDialog">
    <property name="icon">
     <iconset resource="../../icons/orbiticons.qrc">
      <normaloff>:/actions/source_path_mappings</normaloff>:/actions/source_path_mappings</iconset>

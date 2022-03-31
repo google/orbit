@@ -18,7 +18,6 @@
 #include "App.h"
 #include "Batcher.h"
 #include "ClientData/CaptureData.h"
-#include "ClientData/FunctionUtils.h"
 #include "ClientData/ModuleAndFunctionLookup.h"
 #include "ClientData/TimerChain.h"
 #include "ClientProtos/capture_data.pb.h"
@@ -36,6 +35,9 @@
 
 using orbit_client_data::CaptureData;
 using orbit_client_data::TimerChain;
+
+using orbit_gl::Batcher;
+using orbit_gl::PickingUserData;
 
 using orbit_client_protos::TimerInfo;
 
@@ -139,7 +141,7 @@ std::string ThreadTrack::GetBoxTooltip(const Batcher& batcher, PickingId id) con
   std::string module_name = orbit_client_data::kUnknownFunctionOrModuleName;
   std::string function_name = orbit_client_data::kUnknownFunctionOrModuleName;
   if (func != nullptr) {
-    module_name = orbit_client_data::function_utils::GetLoadedModuleNameByPath(func->file_path());
+    module_name = std::filesystem::path(func->file_path()).filename().string();
     function_name = label;
   } else if (timer_info->address_in_function() != 0) {
     const auto* module = orbit_client_data::FindModuleByAddress(
@@ -386,8 +388,8 @@ constexpr float kMinimalWidthToHaveBorder = 4.0;
 [[nodiscard]] bool ThreadTrack::ShouldHaveBorder(
     const TimerInfo* timer, const std::optional<orbit_statistics::HistogramSelectionRange>& range,
     float width) const {
-  if (!range.has_value() || width < kMinimalWidthToHaveBorder ||
-      timer->function_id() != app_->GetHighlightedFunctionId()) {
+  if ((!range.has_value() || width < kMinimalWidthToHaveBorder || !app_->HasCaptureData()) ||
+      (app_->GetCaptureData().ProvideScopeId(*timer) != app_->GetHighlightedFunctionId())) {
     return false;
   }
   const uint64_t duration = timer->end() - timer->start();

@@ -13,7 +13,6 @@
 #include <utility>
 
 #include "Batcher.h"
-#include "ClientData/FunctionUtils.h"
 #include "DisplayFormats/DisplayFormats.h"
 #include "GlCanvas.h"
 #include "GlUtils.h"
@@ -23,6 +22,7 @@
 
 using orbit_client_data::CaptureData;
 using orbit_client_protos::TimerInfo;
+using orbit_gl::Batcher;
 using orbit_grpc_protos::InstrumentedFunction;
 
 namespace {
@@ -167,8 +167,8 @@ std::string FrameTrack::GetTooltip() const {
       "<b>Minimum frame time:</b> %s<br/>"
       "<b>Average frame time:</b> %s<br/>",
       function_name, kHeightCapAverageMultipleUint64, function_name,
-      orbit_client_data::function_utils::GetLoadedModuleNameByPath(function_.file_path()),
-      stats_.count(), orbit_display_formats::GetDisplayTime(absl::Nanoseconds(stats_.max_ns())),
+      std::filesystem::path(function_.file_path()).filename().string(), stats_.count(),
+      orbit_display_formats::GetDisplayTime(absl::Nanoseconds(stats_.max_ns())),
       orbit_display_formats::GetDisplayTime(absl::Nanoseconds(stats_.min_ns())),
       orbit_display_formats::GetDisplayTime(absl::Nanoseconds(stats_.ComputeAverageTimeNs())));
 }
@@ -192,8 +192,7 @@ std::string FrameTrack::GetBoxTooltip(const Batcher& batcher, PickingId id) cons
       "<b>Frame:</b> #%u<br/>"
       "<b>Frame time:</b> %s",
       function_name, kHeightCapAverageMultipleUint64, function_name,
-      orbit_client_data::function_utils::GetLoadedModuleNameByPath(function_.file_path()),
-      timer_info->user_data_key(),
+      std::filesystem::path(function_.file_path()).filename().string(), timer_info->user_data_key(),
       orbit_display_formats::GetDisplayTime(
           TicksToDuration(timer_info->start(), timer_info->end())));
 }

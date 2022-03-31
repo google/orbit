@@ -34,6 +34,7 @@
 #include "ClientData/CallstackType.h"
 #include "ClientData/CaptureData.h"
 #include "ClientData/DataManager.h"
+#include "ClientData/FunctionInfo.h"
 #include "ClientData/LinuxAddressInfo.h"
 #include "ClientData/ModuleData.h"
 #include "ClientData/ModuleManager.h"
@@ -158,8 +159,8 @@ class OrbitApp final : public DataViewFactory,
 
   void ListPresets();
   void RefreshCaptureView();
-  void Disassemble(uint32_t pid, const orbit_client_protos::FunctionInfo& function) override;
-  void ShowSourceCode(const orbit_client_protos::FunctionInfo& function) override;
+  void Disassemble(uint32_t pid, const orbit_client_data::FunctionInfo& function) override;
+  void ShowSourceCode(const orbit_client_data::FunctionInfo& function) override;
 
   void OnCaptureStarted(const orbit_grpc_protos::CaptureStarted& capture_started,
                         std::optional<std::filesystem::path> file_path,
@@ -173,9 +174,9 @@ class OrbitApp final : public DataViewFactory,
   void OnThreadName(uint32_t thread_id, std::string thread_name) override;
   void OnThreadStateSlice(orbit_client_data::ThreadStateSliceInfo thread_state_slice) override;
   void OnAddressInfo(orbit_client_data::LinuxAddressInfo address_info) override;
-  void OnUniqueTracepointInfo(uint64_t key,
-                              orbit_grpc_protos::TracepointInfo tracepoint_info) override;
-  void OnTracepointEvent(orbit_client_protos::TracepointEventInfo tracepoint_event_info) override;
+  void OnUniqueTracepointInfo(uint64_t tracepoint_id,
+                              orbit_client_data::TracepointInfo tracepoint_info) override;
+  void OnTracepointEvent(orbit_client_data::TracepointEventInfo tracepoint_event_info) override;
   void OnModuleUpdate(uint64_t timestamp_ns, orbit_grpc_protos::ModuleInfo module_info) override;
   void OnModulesSnapshot(uint64_t timestamp_ns,
                          std::vector<orbit_grpc_protos::ModuleInfo> module_infos) override;
@@ -331,7 +332,7 @@ class OrbitApp final : public DataViewFactory,
 
   void SetStatusListener(StatusListener* listener) { status_listener_ = listener; }
 
-  void SendDisassemblyToUi(const orbit_client_protos::FunctionInfo& function_info,
+  void SendDisassemblyToUi(const orbit_client_data::FunctionInfo& function_info,
                            std::string disassembly, orbit_code_report::DisassemblyReport report);
   void SendTooltipToUi(const std::string& tooltip);
   void SendInfoToUi(const std::string& title, const std::string& text);
@@ -453,10 +454,9 @@ class OrbitApp final : public DataViewFactory,
   }
 
   // TODO(kuebler): Move them to a separate controller at some point
-  void SelectFunction(const orbit_client_protos::FunctionInfo& func) override;
-  void DeselectFunction(const orbit_client_protos::FunctionInfo& func) override;
-  [[nodiscard]] bool IsFunctionSelected(
-      const orbit_client_protos::FunctionInfo& func) const override;
+  void SelectFunction(const orbit_client_data::FunctionInfo& func) override;
+  void DeselectFunction(const orbit_client_data::FunctionInfo& func) override;
+  [[nodiscard]] bool IsFunctionSelected(const orbit_client_data::FunctionInfo& func) const override;
   [[nodiscard]] bool IsFunctionSelected(
       const orbit_client_data::SampledFunction& func) const override;
   [[nodiscard]] bool IsFunctionSelected(uint64_t absolute_address) const;
@@ -493,24 +493,24 @@ class OrbitApp final : public DataViewFactory,
 
   // Only enables the frame track in the capture settings (in DataManager) and does not
   // add a frame track to the current capture data.
-  void EnableFrameTrack(const orbit_client_protos::FunctionInfo& function) override;
+  void EnableFrameTrack(const orbit_client_data::FunctionInfo& function) override;
 
   // Only disables the frame track in the capture settings (in DataManager) and does
   // not remove the frame track from the capture data.
-  void DisableFrameTrack(const orbit_client_protos::FunctionInfo& function) override;
+  void DisableFrameTrack(const orbit_client_data::FunctionInfo& function) override;
 
   [[nodiscard]] bool IsFrameTrackEnabled(
-      const orbit_client_protos::FunctionInfo& function) const override;
+      const orbit_client_data::FunctionInfo& function) const override;
 
   // Adds the frame track to the capture settings and also adds a frame track to the current
   // capture data, *if* the captures contains function calls to the function and the function
   // was instrumented.
-  void AddFrameTrack(const orbit_client_protos::FunctionInfo& function) override;
+  void AddFrameTrack(const orbit_client_data::FunctionInfo& function) override;
   void AddFrameTrack(uint64_t instrumented_function_id) override;
 
   // Removes the frame track from the capture settings and also removes the frame track
   // (if it exists) from the capture data.
-  void RemoveFrameTrack(const orbit_client_protos::FunctionInfo& function) override;
+  void RemoveFrameTrack(const orbit_client_data::FunctionInfo& function) override;
   void RemoveFrameTrack(uint64_t instrumented_function_id) override;
 
   [[nodiscard]] bool HasFrameTrackInCaptureData(uint64_t instrumented_function_id) const override;

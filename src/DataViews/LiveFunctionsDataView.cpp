@@ -27,7 +27,7 @@
 
 #include "ApiInterface/Orbit.h"
 #include "ClientData/CaptureData.h"
-#include "ClientData/FunctionUtils.h"
+#include "ClientData/FunctionInfo.h"
 #include "ClientData/ModuleAndFunctionLookup.h"
 #include "ClientData/ScopeIdConstants.h"
 #include "ClientData/ScopeStats.h"
@@ -47,11 +47,11 @@
 #include "Statistics/Histogram.h"
 
 using orbit_client_data::CaptureData;
+using orbit_client_data::FunctionInfo;
 using orbit_client_data::ModuleData;
+using orbit_client_data::ModuleManager;
 using orbit_client_data::ScopeStats;
 
-using orbit_client_data::ModuleManager;
-using orbit_client_protos::FunctionInfo;
 using orbit_client_protos::TimerInfo;
 
 using orbit_grpc_protos::InstrumentedFunction;
@@ -103,7 +103,7 @@ std::string LiveFunctionsDataView::GetValue(int row, int column) {
     case kColumnSelected:
       return FunctionsDataView::BuildSelectedColumnsString(app_, function);
     case kColumnName:
-      return orbit_client_data::function_utils::GetDisplayName(function);
+      return function.pretty_name();
     case kColumnCount:
       return absl::StrFormat("%lu", stats.count());
     case kColumnTimeTotal:
@@ -157,8 +157,7 @@ void LiveFunctionsDataView::UpdateHistogramWithIndices(
 void LiveFunctionsDataView::UpdateHistogramWithScopeIds(const std::vector<uint64_t>& scope_ids) {
   const std::vector<uint64_t>* timer_durations =
       (app_->HasCaptureData() && !scope_ids.empty())
-          ? app_->GetCaptureData().GetThreadTrackDataProvider()->GetSortedTimerDurationsForScopeId(
-                scope_ids[0])
+          ? app_->GetCaptureData().GetSortedTimerDurationsForScopeId(scope_ids[0])
           : nullptr;
 
   if (timer_durations == nullptr) {
@@ -209,7 +208,7 @@ void LiveFunctionsDataView::DoSort() {
       sorter = ORBIT_CUSTOM_FUNC_SORT(app_->IsFunctionSelected);
       break;
     case kColumnName:
-      sorter = ORBIT_CUSTOM_FUNC_SORT(orbit_client_data::function_utils::GetDisplayName);
+      sorter = ORBIT_FUNC_SORT(pretty_name());
       break;
     case kColumnCount:
       sorter = ORBIT_STAT_SORT(count());
@@ -229,9 +228,13 @@ void LiveFunctionsDataView::DoSort() {
     case kColumnStdDev:
       sorter = ORBIT_STAT_SORT(std_dev_ns());
       break;
-    case kColumnModule:
-      sorter = ORBIT_CUSTOM_FUNC_SORT(orbit_client_data::function_utils::GetLoadedModuleName);
+    case kColumnModule: {
+      auto module_name = [](const orbit_client_data::FunctionInfo& function) {
+        return std::filesystem::path(function.module_path()).filename().string();
+      };
+      sorter = ORBIT_CUSTOM_FUNC_SORT(module_name);
       break;
+    }
     case kColumnAddress:
       sorter = ORBIT_FUNC_SORT(address());
       break;
@@ -275,7 +278,7 @@ DataView::ActionStatus LiveFunctionsDataView::GetActionStatus(
     is_visible_action_enabled = [this](uint64_t /*instrumented_function_id*/,
                                        const FunctionInfo& instrumented_function) {
       return !app_->IsFunctionSelected(instrumented_function) &&
-             orbit_client_data::function_utils::IsFunctionSelectable(instrumented_function);
+             instrumented_function.IsFunctionSelectable();
     };
 
   } else if (action == kMenuActionUnselect) {
@@ -385,7 +388,7 @@ void LiveFunctionsDataView::OnExportEventsToCsvRequested(const std::vector<int>&
 
   for (int row : selection) {
     const FunctionInfo& function = *GetFunctionInfoFromRow(row);
-    std::string function_name = orbit_client_data::function_utils::GetDisplayName(function);
+    std::string function_name = function.pretty_name();
 
     const uint64_t function_id = GetInstrumentedFunctionId(row);
     const CaptureData& capture_data = app_->GetCaptureData();
@@ -425,8 +428,7 @@ void LiveFunctionsDataView::DoFilter() {
   for (const auto& entry : functions_) {
     uint64_t function_id = entry.first;
     const FunctionInfo& function = entry.second;
-    std::string name =
-        absl::AsciiStrToLower(orbit_client_data::function_utils::GetDisplayName(function));
+    std::string name = absl::AsciiStrToLower(function.pretty_name());
 
     bool match = true;
 
@@ -453,7 +455,7 @@ void LiveFunctionsDataView::DoFilter() {
 }
 
 void LiveFunctionsDataView::AddFunction(uint64_t function_id,
-                                        orbit_client_protos::FunctionInfo function_info) {
+                                        orbit_client_data::FunctionInfo function_info) {
   functions_.insert_or_assign(function_id, std::move(function_info));
   indices_.push_back(function_id);
 }
@@ -544,12 +546,10 @@ std::optional<FunctionInfo> LiveFunctionsDataView::CreateFunctionInfoFromInstrum
   const std::string& function_name =
       app_->GetCaptureData().GetScopeName(instrumented_function.function_id());
 
-  FunctionInfo result;
-  result.set_pretty_name(function_name);
-  result.set_module_path(instrumented_function.file_path());
-  result.set_module_build_id(instrumented_function.file_build_id());
-  result.set_address(module_data->load_bias() + instrumented_function.file_offset());
   // size is unknown
+  FunctionInfo result{instrumented_function.file_path(), instrumented_function.file_build_id(),
+                      module_data->load_bias() + instrumented_function.file_offset(), /*size=*/0,
+                      function_name};
 
   return result;
 }

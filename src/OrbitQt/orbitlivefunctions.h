@@ -14,7 +14,7 @@
 #include <QWidget>
 #include <optional>
 
-#include "ClientProtos/capture_data.pb.h"
+#include "ClientData/FunctionInfo.h"
 #include "LiveFunctionsController.h"
 #include "Statistics/Histogram.h"
 #include "absl/container/flat_hash_map.h"
@@ -42,7 +42,7 @@ class OrbitLiveFunctions : public QWidget {
   void OnRowSelected(std::optional<int> row);
   void Reset();
   void SetFilter(const QString& a_Filter);
-  void AddIterator(uint64_t id, const orbit_client_protos::FunctionInfo* function);
+  void AddIterator(uint64_t id, const orbit_client_data::FunctionInfo* function);
   QLineEdit* GetFilterLineEdit();
   std::optional<LiveFunctionsController*> GetLiveFunctionsController() {
     return live_functions_ ? &live_functions_.value() : nullptr;

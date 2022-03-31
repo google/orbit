@@ -8,6 +8,8 @@
 #include <math.h>
 #include <stddef.h>
 
+namespace orbit_gl {
+
 void Batcher::AddLine(Vec2 from, Vec2 to, float z, const Color& color,
                       std::unique_ptr<PickingUserData> user_data) {
   Color picking_color = PickingId::ToColor(PickingType::kLine, user_data_.size(), batcher_id_);
@@ -309,3 +311,5 @@ void Batcher::Draw(bool picking) const {
     DrawLayer(layer, picking);
   }
 }
+
+}  // namespace orbit_gl

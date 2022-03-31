@@ -18,13 +18,13 @@ target_link_libraries(ConfigWidgets PUBLIC OrbitBase
 target_sources(
   ConfigWidgets PUBLIC include/ConfigWidgets/SourcePathsMappingDialog.h
                        include/ConfigWidgets/SymbolErrorDialog.h
-                       include/ConfigWidgets/SymbolsDialog.h)
+                       include/ConfigWidgets/SymbolLocationsDialog.h)
 target_sources(ConfigWidgets PRIVATE SourcePathsMappingDialog.cpp
                                      SourcePathsMappingDialog.ui
                                      SymbolErrorDialog.cpp
                                      SymbolErrorDialog.ui
-                                     SymbolsDialog.cpp
-                                     SymbolsDialog.ui)
+                                     SymbolLocationsDialog.cpp
+                                     SymbolLocationsDialog.ui)
 
 set_target_properties(ConfigWidgets PROPERTIES AUTOMOC ON)
 set_target_properties(ConfigWidgets PROPERTIES AUTOUIC ON)
@@ -32,7 +32,7 @@ set_target_properties(ConfigWidgets PROPERTIES AUTOUIC ON)
 add_executable(ConfigWidgetsTests)
 
 target_sources(ConfigWidgetsTests PRIVATE SymbolErrorDialogTest.cpp
-                                          SymbolsDialogTest.cpp)
+                                          SymbolLocationsDialogTest.cpp)
 
 target_link_libraries(ConfigWidgetsTests PRIVATE ConfigWidgets
                                                  TestUtils

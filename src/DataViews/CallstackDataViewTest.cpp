@@ -13,28 +13,21 @@
 #include "ClientData/CallstackInfo.h"
 #include "ClientData/CallstackType.h"
 #include "ClientData/CaptureData.h"
-#include "ClientData/FunctionUtils.h"
 #include "ClientData/ModuleAndFunctionLookup.h"
 #include "ClientData/ProcessData.h"
-#include "ClientProtos/capture_data.pb.h"
 #include "DataViewTestUtils.h"
 #include "DataViews/CallstackDataView.h"
 #include "DataViews/DataView.h"
 #include "DisplayFormats/DisplayFormats.h"
 #include "GrpcProtos/capture.pb.h"
 #include "MockAppInterface.h"
-#include "OrbitBase/File.h"
-#include "OrbitBase/ReadFileToString.h"
-#include "OrbitBase/TemporaryFile.h"
-#include "TestUtils/TestUtils.h"
 
 using orbit_client_data::CallstackInfo;
 using orbit_client_data::CallstackType;
 using orbit_client_data::CaptureData;
+using orbit_client_data::FunctionInfo;
 using orbit_client_data::ModuleData;
 using orbit_client_data::ProcessData;
-using orbit_client_data::function_utils::GetLoadedModuleNameByPath;
-using orbit_client_protos::FunctionInfo;
 using orbit_data_views::CallstackDataView;
 using orbit_data_views::CheckCopySelectionIsInvoked;
 using orbit_data_views::CheckExportToCsvIsInvoked;
@@ -71,8 +64,8 @@ constexpr std::array<uint64_t, kNumFunctions> kFunctionSizes{0x50, 0x70, 0x60, 0
 
 constexpr size_t kNumModules = 5;
 constexpr std::array<uint64_t, kNumModules> kModuleIsLoaded{true, true, true, true, false};
-const std::array<std::string, kNumModules> kModuleNames{"foo_module", "some_module", "ffind_module",
-                                                        "bar_module", "not_loaded_module"};
+const std::array<std::string, kNumModules> kModuleNames{"foomodule", "somemodule", "ffindmodule",
+                                                        "barmodule", "notloadedmodule"};
 const std::array<std::string, kNumModules> kModulePaths{
     "/path/to/foomodule", "/path/to/somemodule", "/path/to/ffindmodule", "/path/to/barmodule",
     "/path/to/notloadedmodule"};
@@ -254,7 +247,7 @@ TEST_F(CallstackDataViewTest, ColumnValuesAreCorrect) {
     EXPECT_EQ(view_.GetValue(0, kColumnName),
               absl::StrCat(view_.kHighlightedFunctionBlankString, kFunctionPrettyNames[0]));
     EXPECT_EQ(view_.GetValue(0, kColumnSize), GetExpectedDisplaySize(kFunctionSizes[0]));
-    EXPECT_EQ(view_.GetValue(0, kColumnModule), GetLoadedModuleNameByPath(kModulePaths[0]));
+    EXPECT_EQ(view_.GetValue(0, kColumnModule), kModuleNames[0]);
     EXPECT_EQ(view_.GetValue(0, kColumnAddress), GetExpectedDisplayAddress(kAllHaveFindings));
 
     constexpr uint64_t kSymbolAddress =
@@ -269,7 +262,7 @@ TEST_F(CallstackDataViewTest, ColumnSelectedShowsRightResults) {
   bool function_selected;
   EXPECT_CALL(app_, HasCaptureData).WillRepeatedly(testing::Return(true));
   EXPECT_CALL(app_, GetCaptureData).WillRepeatedly(testing::ReturnRef(*capture_data_));
-  EXPECT_CALL(app_, IsFunctionSelected(testing::A<const orbit_client_protos::FunctionInfo&>()))
+  EXPECT_CALL(app_, IsFunctionSelected(testing::A<const orbit_client_data::FunctionInfo&>()))
       .WillRepeatedly(testing::ReturnPointee(&function_selected));
 
   // Test the case that frame.function == nullptr.
@@ -322,7 +315,7 @@ TEST_F(CallstackDataViewTest, ContextMenuEntriesArePresentCorrectly) {
   EXPECT_CALL(app_, GetCaptureData).WillRepeatedly(testing::ReturnRef(*capture_data_));
   EXPECT_CALL(app_, GetMutableCaptureData).WillRepeatedly(testing::ReturnRef(*capture_data_));
   EXPECT_CALL(app_, IsCaptureConnected).WillRepeatedly(testing::ReturnPointee(&capture_connected));
-  EXPECT_CALL(app_, IsFunctionSelected(testing::A<const orbit_client_protos::FunctionInfo&>()))
+  EXPECT_CALL(app_, IsFunctionSelected(testing::A<const orbit_client_data::FunctionInfo&>()))
       .WillRepeatedly([&](const FunctionInfo& function) -> bool {
         std::optional<size_t> index = get_index_from_function_info(function);
         EXPECT_TRUE(index.has_value());
@@ -394,7 +387,7 @@ TEST_F(CallstackDataViewTest, ContextMenuActionsAreInvoked) {
   EXPECT_CALL(app_, GetCaptureData).WillRepeatedly(testing::ReturnRef(*capture_data_));
   EXPECT_CALL(app_, GetMutableCaptureData).WillRepeatedly(testing::ReturnRef(*capture_data_));
   EXPECT_CALL(app_, IsCaptureConnected).WillRepeatedly(testing::Return(true));
-  EXPECT_CALL(app_, IsFunctionSelected(testing::A<const orbit_client_protos::FunctionInfo&>()))
+  EXPECT_CALL(app_, IsFunctionSelected(testing::A<const orbit_client_data::FunctionInfo&>()))
       .WillRepeatedly(testing::ReturnPointee(&function_selected));
 
   constexpr uint64_t kFrameAddress = 0x3140;
@@ -409,7 +402,7 @@ TEST_F(CallstackDataViewTest, ContextMenuActionsAreInvoked) {
         "Hooked\tFunction\tSize\tModule\tSampled Address\n"
         "\t%s\t%s\t%s\t%s\n",
         absl::StrCat(view_.kHighlightedFunctionBlankString, kFunctionPrettyNames[0]),
-        GetExpectedDisplaySize(kFunctionSizes[0]), GetLoadedModuleNameByPath(kModulePaths[0]),
+        GetExpectedDisplaySize(kFunctionSizes[0]), kModuleNames[0],
         GetExpectedDisplayAddress(kFrameAddress));
     CheckCopySelectionIsInvoked(context_menu, app_, view_, expected_clipboard);
   }
@@ -422,7 +415,7 @@ TEST_F(CallstackDataViewTest, ContextMenuActionsAreInvoked) {
         R"("","%s","%s","%s","%s")"
         "\r\n",
         absl::StrCat(view_.kHighlightedFunctionBlankString, kFunctionPrettyNames[0]),
-        GetExpectedDisplaySize(kFunctionSizes[0]), GetLoadedModuleNameByPath(kModulePaths[0]),
+        GetExpectedDisplaySize(kFunctionSizes[0]), kModuleNames[0],
         GetExpectedDisplayAddress(kFrameAddress));
     CheckExportToCsvIsInvoked(context_menu, app_, view_, expected_contents);
   }

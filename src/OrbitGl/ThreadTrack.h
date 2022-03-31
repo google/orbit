@@ -82,8 +82,8 @@ class ThreadTrack final : public TimerTrack {
   [[nodiscard]] std::vector<CaptureViewElement*> GetAllChildren() const override;
 
  protected:
-  void DoUpdatePrimitives(Batcher& batcher, TextRenderer& text_renderer, uint64_t min_tick,
-                          uint64_t max_tick, PickingMode picking_mode) override;
+  void DoUpdatePrimitives(orbit_gl::Batcher& batcher, TextRenderer& text_renderer,
+                          uint64_t min_tick, uint64_t max_tick, PickingMode picking_mode) override;
 
   [[nodiscard]] int64_t GetThreadId() const { return thread_id_; }
   [[nodiscard]] bool IsTimerActive(const orbit_client_protos::TimerInfo& timer) const override;
@@ -97,7 +97,8 @@ class ThreadTrack final : public TimerTrack {
                                     const internal::DrawData& draw_data);
   [[nodiscard]] std::string GetTimesliceText(
       const orbit_client_protos::TimerInfo& timer) const override;
-  [[nodiscard]] std::string GetBoxTooltip(const Batcher& batcher, PickingId id) const override;
+  [[nodiscard]] std::string GetBoxTooltip(const orbit_gl::Batcher& batcher,
+                                          PickingId id) const override;
 
   [[nodiscard]] float GetHeight() const override;
   [[nodiscard]] float GetHeightAboveTimers() const override;
@@ -118,8 +119,8 @@ class ThreadTrack final : public TimerTrack {
       const std::optional<orbit_statistics::HistogramSelectionRange>& range, float width) const;
 
   void AddBorderLine(const Vec2& from, const Vec2& to, float z, const Color& color,
-                     Batcher& batcher, const orbit_client_protos::TimerInfo& timer_info);
-  void AddBoxBorder(Batcher& batcher, const Box& box, const Color& color,
+                     orbit_gl::Batcher& batcher, const orbit_client_protos::TimerInfo& timer_info);
+  void AddBoxBorder(orbit_gl::Batcher& batcher, const Box& box, const Color& color,
                     const orbit_client_protos::TimerInfo& timer_info);
 };
 

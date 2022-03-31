@@ -15,6 +15,8 @@
 #include "GlCanvas.h"
 #include "Track.h"
 
+using orbit_gl::Batcher;
+
 TriangleToggle::TriangleToggle(StateChangeHandler handler, orbit_gl::Viewport* viewport,
                                TimeGraphLayout* layout, Track* track)
     : CaptureViewElement(track, viewport, layout), handler_(std::move(handler)) {}

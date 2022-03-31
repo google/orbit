@@ -35,7 +35,8 @@ class TimelineUi : public CaptureViewElement {
   void RenderMargin(Batcher& batcher) const;
   void RenderBackground(Batcher& batcher) const;
   void RenderLabel(Batcher& batcher, TextRenderer& text_renderer, uint64_t tick_ns,
-                   uint32_t number_of_decimal_places, float label_z, Color background_color) const;
+                   uint32_t number_of_decimal_places, Color background_color,
+                   bool is_mouse_label = false) const;
   void RenderMouseLabel(Batcher& batcher, TextRenderer& text_renderer,
                         uint64_t mouse_tick_ns) const;
   [[nodiscard]] std::string GetLabel(uint64_t tick_ns, uint32_t number_of_decimal_places) const;

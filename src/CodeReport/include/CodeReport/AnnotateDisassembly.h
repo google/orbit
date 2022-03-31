@@ -8,7 +8,7 @@
 #include <string>
 #include <vector>
 
-#include "ClientProtos/capture_data.pb.h"
+#include "ClientData/FunctionInfo.h"
 #include "CodeReport/AnnotatingLine.h"
 #include "CodeReport/DisassemblyReport.h"
 #include "GrpcProtos/symbol.pb.h"
@@ -20,7 +20,7 @@ namespace orbit_code_report {
 // information (ElfFile). The output reference line numbers in the `DisassemblyReport` and is
 // ordered by those.
 [[nodiscard]] std::vector<AnnotatingLine> AnnotateDisassemblyWithSourceCode(
-    const orbit_client_protos::FunctionInfo& function_info,
+    const orbit_client_data::FunctionInfo& function_info,
     const orbit_grpc_protos::LineInfo& location_info, std::string_view source_file_contents,
     orbit_object_utils::ElfFile* elf, const DisassemblyReport& report);
 

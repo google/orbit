@@ -64,7 +64,7 @@ class MockScopeIdProvider : public ScopeIdProvider {
 }  // namespace
 
 TEST(ThreadTrackDataProvider, EmptyWhenCreated) {
-  ThreadTrackDataProvider thread_track_data_provider(nullptr);
+  ThreadTrackDataProvider thread_track_data_provider;
 
   // No ScopeTreeTimerData, no Timers
   EXPECT_TRUE(thread_track_data_provider.GetAllThreadIds().empty());
@@ -81,7 +81,7 @@ TEST(ThreadTrackDataProvider, EmptyWhenCreated) {
 TEST(ThreadTrackDataProvider, InsertAndGetTimer) {
   const uint64_t kTimerStart = 2;
   const uint64_t kTimerEnd = 5;
-  ThreadTrackDataProvider thread_track_data_provider(nullptr);
+  ThreadTrackDataProvider thread_track_data_provider;
 
   TimerInfo timer_info;
   timer_info.set_thread_id(kThreadId1);
@@ -104,8 +104,7 @@ TEST(ThreadTrackDataProvider, OnCaptureComplete) {
   const uint64_t kTimerStart = 2;
   const uint64_t kTimerEnd = 5;
   // ScopeTree: Need OnCaptureComplete to process the data when loading a capture.
-  MockScopeIdProvider mock_scope_id_provider;
-  ThreadTrackDataProvider thread_track_data_provider(&mock_scope_id_provider, true);
+  ThreadTrackDataProvider thread_track_data_provider(true);
 
   TimerInfo timer_info;
   timer_info.set_thread_id(kThreadId1);
@@ -162,7 +161,7 @@ TimersInTest InsertTimersForTesting(ThreadTrackDataProvider& thread_track_data_p
 }
 
 TEST(ThreadTrackDataProvider, GetTimers) {
-  ThreadTrackDataProvider thread_track_data_provider(nullptr);
+  ThreadTrackDataProvider thread_track_data_provider;
   InsertTimersForTesting(thread_track_data_provider);
 
   EXPECT_EQ(thread_track_data_provider.GetTimers(1).size(), kNumTimersInThread1);
@@ -181,7 +180,7 @@ TEST(ThreadTrackDataProvider, GetTimers) {
 }
 
 TEST(ThreadTrackDataProvider, GetTimersAtDepthDiscretized) {
-  ThreadTrackDataProvider thread_track_data_provider(nullptr);
+  ThreadTrackDataProvider thread_track_data_provider;
   InsertTimersForTesting(thread_track_data_provider);
 
   constexpr uint32_t kNormalResolution = 1000;
@@ -206,7 +205,7 @@ TEST(ThreadTrackDataProvider, GetTimersAtDepthDiscretized) {
 }
 
 TEST(ThreadTrackDataProvider, GetAllThreadIds) {
-  ThreadTrackDataProvider thread_track_data_provider(nullptr);
+  ThreadTrackDataProvider thread_track_data_provider;
   InsertTimersForTesting(thread_track_data_provider);
 
   EXPECT_THAT(thread_track_data_provider.GetAllThreadIds(),
@@ -214,7 +213,7 @@ TEST(ThreadTrackDataProvider, GetAllThreadIds) {
 }
 
 TEST(ThreadTrackDataProvider, GetChains) {
-  ThreadTrackDataProvider thread_track_data_provider(nullptr);
+  ThreadTrackDataProvider thread_track_data_provider;
   InsertTimersForTesting(thread_track_data_provider);
 
   std::vector<const TimerChain*> chains_thread_1 = thread_track_data_provider.GetChains(kThreadId1);
@@ -233,7 +232,7 @@ TEST(ThreadTrackDataProvider, GetChains) {
 }
 
 TEST(ThreadTrackDataProvider, GetStatsFromThreadId) {
-  ThreadTrackDataProvider thread_track_data_provider(nullptr);
+  ThreadTrackDataProvider thread_track_data_provider;
   InsertTimersForTesting(thread_track_data_provider);
 
   EXPECT_EQ(thread_track_data_provider.GetNumberOfTimers(kThreadId1), kNumTimersInThread1);
@@ -250,7 +249,7 @@ TEST(ThreadTrackDataProvider, GetStatsFromThreadId) {
 }
 
 TEST(ThreadTrackDataProvider, GetLeftRightUpDown) {
-  ThreadTrackDataProvider thread_track_data_provider(nullptr);
+  ThreadTrackDataProvider thread_track_data_provider;
   TimersInTest inserted_timers = InsertTimersForTesting(thread_track_data_provider);
 
   const TimerInfo* left = inserted_timers.left;
@@ -273,59 +272,6 @@ TEST(ThreadTrackDataProvider, GetLeftRightUpDown) {
   check_neighbors(right, center, nullptr, nullptr, nullptr);
   check_neighbors(down, nullptr, nullptr, nullptr, center);
   check_neighbors(other_thread_id, nullptr, nullptr, nullptr, nullptr);
-}
-
-constexpr size_t kTimersForFirstId = 3;
-constexpr size_t kTimersForSecondId = 2;
-constexpr size_t kTimerCount = kTimersForFirstId + kTimersForSecondId;
-constexpr uint64_t kFirstId = 1;
-constexpr uint64_t kSecondId = 2;
-constexpr std::array<uint64_t, kTimerCount> kTimerIds = {kFirstId, kFirstId, kFirstId, kSecondId,
-                                                         kSecondId};
-constexpr std::array<uint64_t, kTimerCount> kStarts = {10, 20, 30, 40, 50};
-constexpr std::array<uint64_t, kTimersForFirstId> kDurationsForFirstId = {300, 100, 200};
-constexpr std::array<uint64_t, kTimersForFirstId> kSortedDurationsForFirstId = {100, 200, 300};
-constexpr std::array<uint64_t, kTimersForSecondId> kDurationsForSecondId = {500, 400};
-constexpr std::array<uint64_t, kTimersForSecondId> kSortedDurationsForSecondId = {400, 500};
-
-static const std::array<uint64_t, kTimerCount> kDurations = [] {
-  std::array<uint64_t, kTimerCount> result;
-  std::copy(std::begin(kDurationsForFirstId), std::end(kDurationsForFirstId), std::begin(result));
-  std::copy(std::begin(kDurationsForSecondId), std::end(kDurationsForSecondId),
-            std::begin(result) + kTimersForFirstId);
-  return result;
-}();
-static const std::array<TimerInfo, kTimerCount> kTimerInfos = [] {
-  std::array<TimerInfo, kTimerCount> result;
-  for (size_t i = 0; i < kTimerCount; ++i) {
-    result[i].set_function_id(kTimerIds[i]);
-    result[i].set_start(kStarts[i]);
-    result[i].set_end(kStarts[i] + kDurations[i]);
-  }
-  return result;
-}();
-
-TEST(ThreadTrackDataProvider, GetSortedTimerDurationsForScopeIdIsCorrect) {
-  MockScopeIdProvider scope_id_provider;
-  EXPECT_CALL(scope_id_provider, ProvideId)
-      .WillRepeatedly(
-          testing::Invoke([](const TimerInfo& timer_info) { return timer_info.function_id(); }));
-  ThreadTrackDataProvider thread_track_data_provider(&scope_id_provider);
-
-  for (size_t i = 0; i < kTimerCount; ++i) {
-    thread_track_data_provider.AddTimer(kTimerInfos[i]);
-  }
-  thread_track_data_provider.OnCaptureComplete();
-
-  EXPECT_EQ(
-      *thread_track_data_provider.GetSortedTimerDurationsForScopeId(kFirstId),
-      std::vector<uint64_t>(kSortedDurationsForFirstId.begin(), kSortedDurationsForFirstId.end()));
-
-  EXPECT_EQ(*thread_track_data_provider.GetSortedTimerDurationsForScopeId(kSecondId),
-            std::vector<uint64_t>(kSortedDurationsForSecondId.begin(),
-                                  kSortedDurationsForSecondId.end()));
-  EXPECT_THAT(thread_track_data_provider.GetSortedTimerDurationsForScopeId(kInvalidScopeId),
-              testing::IsNull());
 }
 
 }  // namespace orbit_client_data

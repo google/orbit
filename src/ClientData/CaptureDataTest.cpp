@@ -64,6 +64,8 @@ constexpr std::array<uint64_t, kTimerCount> kTimerIds = {kFirstId, kFirstId, kFi
 constexpr std::array<uint64_t, kTimerCount> kStarts = {10, 20, 30, 40, 50};
 constexpr std::array<uint64_t, kTimersForFirstId> kDurationsForFirstId = {300, 100, 200};
 constexpr std::array<uint64_t, kTimersForSecondId> kDurationsForSecondId = {500, 400};
+constexpr std::array<uint64_t, kTimersForFirstId> kSortedDurationsForFirstId = {100, 200, 300};
+constexpr std::array<uint64_t, kTimersForSecondId> kSortedDurationsForSecondId = {400, 500};
 
 constexpr uint64_t kLargeInteger = 10'000'000'000'000'000;
 
@@ -192,6 +194,25 @@ TEST_F(CaptureDataTest, VarianceIsCorrectOnRepeatedScimitarDataset) {
 
   const double actual_variance = capture_data_.GetScopeStatsOrDefault(kFirstId).variance_ns();
   EXPECT_LE(abs(actual_variance / kScimitarVariance - 1.0), 1e-5);
+}
+TEST_F(CaptureDataTest, UpdateTimerDurationsIsCorrect) {
+  for (const TimerInfo& timer : kTimerInfos) {
+    capture_data_.GetThreadTrackDataProvider()->AddTimer(timer);
+  }
+
+  capture_data_.OnCaptureComplete();
+
+  const std::vector<uint64_t>* durations_first =
+      capture_data_.GetSortedTimerDurationsForScopeId(kFirstId);
+  EXPECT_EQ(*durations_first, std::vector(std::begin(kSortedDurationsForFirstId),
+                                          std::end(kSortedDurationsForFirstId)));
+
+  const std::vector<uint64_t>* durations_second =
+      capture_data_.GetSortedTimerDurationsForScopeId(kSecondId);
+  EXPECT_EQ(*durations_second, std::vector(std::begin(kSortedDurationsForSecondId),
+                                           std::end(kSortedDurationsForSecondId)));
+
+  EXPECT_THAT(capture_data_.GetSortedTimerDurationsForScopeId(kInvalidScopeId), testing::IsNull());
 }
 
 }  // namespace orbit_client_data

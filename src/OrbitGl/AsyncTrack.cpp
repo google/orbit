@@ -13,7 +13,6 @@
 #include "App.h"
 #include "Batcher.h"
 #include "ClientData/CaptureData.h"
-#include "ClientData/FunctionUtils.h"
 #include "ClientData/ModuleAndFunctionLookup.h"
 #include "ClientProtos/capture_data.pb.h"
 #include "DisplayFormats/DisplayFormats.h"
@@ -28,6 +27,7 @@
 #include "Viewport.h"
 
 using orbit_client_protos::TimerInfo;
+using orbit_gl::Batcher;
 using orbit_grpc_protos::InstrumentedFunction;
 
 AsyncTrack::AsyncTrack(CaptureViewElement* parent,

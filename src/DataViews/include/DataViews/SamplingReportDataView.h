@@ -10,6 +10,7 @@
 #include <vector>
 
 #include "ClientData/CallstackType.h"
+#include "ClientData/FunctionInfo.h"
 #include "ClientData/PostProcessedSamplingData.h"
 #include "ClientModel/SamplingDataPostProcessor.h"
 #include "ClientProtos/capture_data.pb.h"
@@ -59,7 +60,7 @@ class SamplingReportDataView : public DataView {
 
  private:
   [[nodiscard]] orbit_client_data::ModuleData* GetModuleDataFromRow(int row) const override;
-  [[nodiscard]] const orbit_client_protos::FunctionInfo* GetFunctionInfoFromRow(int row) override;
+  [[nodiscard]] const orbit_client_data::FunctionInfo* GetFunctionInfoFromRow(int row) override;
 
   void UpdateSelectedIndicesAndFunctionIds(const std::vector<int>& selected_indices);
   void RestoreSelectedIndicesAfterFunctionsChanged();

@@ -8,7 +8,7 @@
 #include <string>
 #include <vector>
 
-#include "ClientProtos/capture_data.pb.h"
+#include "ClientData/FunctionInfo.h"
 #include "DataViews/AppInterface.h"
 #include "DataViews/DataView.h"
 
@@ -21,14 +21,14 @@ class FunctionsDataView : public DataView {
   static const std::string kSelectedFunctionString;
   static const std::string kFrameTrackString;
   static std::string BuildSelectedColumnsString(AppInterface* app,
-                                                const orbit_client_protos::FunctionInfo& function);
+                                                const orbit_client_data::FunctionInfo& function);
 
   const std::vector<Column>& GetColumns() override;
   int GetDefaultSortingColumn() override { return kColumnAddressInModule; }
   std::string GetValue(int row, int column) override;
   std::string GetLabel() override { return "Functions"; }
 
-  void AddFunctions(std::vector<const orbit_client_protos::FunctionInfo*> functions);
+  void AddFunctions(std::vector<const orbit_client_data::FunctionInfo*> functions);
   void ClearFunctions();
 
  protected:
@@ -49,15 +49,15 @@ class FunctionsDataView : public DataView {
   };
 
  private:
-  [[nodiscard]] const orbit_client_protos::FunctionInfo* GetFunctionInfoFromRow(int row) override {
+  [[nodiscard]] const orbit_client_data::FunctionInfo* GetFunctionInfoFromRow(int row) override {
     return functions_[indices_[row]];
   }
 
   static bool ShouldShowSelectedFunctionIcon(AppInterface* app,
-                                             const orbit_client_protos::FunctionInfo& function);
+                                             const orbit_client_data::FunctionInfo& function);
   static bool ShouldShowFrameTrackIcon(AppInterface* app,
-                                       const orbit_client_protos::FunctionInfo& function);
-  std::vector<const orbit_client_protos::FunctionInfo*> functions_;
+                                       const orbit_client_data::FunctionInfo& function);
+  std::vector<const orbit_client_data::FunctionInfo*> functions_;
 };
 
 }  // namespace orbit_data_views

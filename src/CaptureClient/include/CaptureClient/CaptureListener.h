@@ -5,6 +5,8 @@
 #ifndef CAPTURE_CLIENT_CAPTURE_LISTENER_H_
 #define CAPTURE_CLIENT_CAPTURE_LISTENER_H_
 
+#include <absl/container/flat_hash_set.h>
+
 #include "ClientData/ApiStringEvent.h"
 #include "ClientData/ApiTrackValue.h"
 #include "ClientData/CallstackEvent.h"
@@ -13,10 +15,12 @@
 #include "ClientData/ProcessData.h"
 #include "ClientData/ThreadStateSliceInfo.h"
 #include "ClientData/TracepointCustom.h"
+#include "ClientData/TracepointEventInfo.h"
+#include "ClientData/TracepointInfo.h"
 #include "ClientData/UserDefinedCaptureData.h"
+#include "ClientProtos/capture_data.pb.h"
 #include "GrpcProtos/capture.pb.h"
 #include "OrbitBase/Result.h"
-#include "absl/container/flat_hash_set.h"
 
 namespace orbit_capture_client {
 
@@ -42,10 +46,9 @@ class CaptureListener {
                                  std::vector<orbit_grpc_protos::ModuleInfo> module_infos) = 0;
   virtual void OnThreadStateSlice(orbit_client_data::ThreadStateSliceInfo thread_state_slice) = 0;
   virtual void OnAddressInfo(orbit_client_data::LinuxAddressInfo address_info) = 0;
-  virtual void OnUniqueTracepointInfo(uint64_t key,
-                                      orbit_grpc_protos::TracepointInfo tracepoint_info) = 0;
-  virtual void OnTracepointEvent(
-      orbit_client_protos::TracepointEventInfo tracepoint_event_info) = 0;
+  virtual void OnUniqueTracepointInfo(uint64_t tracepoint_id,
+                                      orbit_client_data::TracepointInfo tracepoint_info) = 0;
+  virtual void OnTracepointEvent(orbit_client_data::TracepointEventInfo tracepoint_event_info) = 0;
   virtual void OnApiStringEvent(const orbit_client_data::ApiStringEvent&) = 0;
   virtual void OnApiTrackValue(const orbit_client_data::ApiTrackValue&) = 0;
   virtual void OnWarningEvent(orbit_grpc_protos::WarningEvent warning_event) = 0;

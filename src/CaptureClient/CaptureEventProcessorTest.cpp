@@ -28,9 +28,9 @@ using orbit_client_data::CallstackEvent;
 using orbit_client_data::CallstackInfo;
 using orbit_client_data::LinuxAddressInfo;
 using orbit_client_data::ThreadStateSliceInfo;
+using orbit_client_data::TracepointEventInfo;
 
 using orbit_client_protos::TimerInfo;
-using orbit_client_protos::TracepointEventInfo;
 
 using orbit_grpc_protos::AddressInfo;
 using orbit_grpc_protos::Callstack;
@@ -65,7 +65,6 @@ using orbit_grpc_protos::SystemMemoryUsage;
 using orbit_grpc_protos::ThreadName;
 using orbit_grpc_protos::ThreadStateSlice;
 using orbit_grpc_protos::TracepointEvent;
-using orbit_grpc_protos::TracepointInfo;
 using orbit_grpc_protos::WarningEvent;
 using orbit_grpc_protos::WarningInstrumentingWithUserSpaceInstrumentationEvent;
 
@@ -92,7 +91,8 @@ class MockCaptureListener : public CaptureListener {
               (override));
   MOCK_METHOD(void, OnThreadStateSlice, (ThreadStateSliceInfo), (override));
   MOCK_METHOD(void, OnAddressInfo, (LinuxAddressInfo), (override));
-  MOCK_METHOD(void, OnUniqueTracepointInfo, (uint64_t /*key*/, TracepointInfo /*tracepoint_info*/),
+  MOCK_METHOD(void, OnUniqueTracepointInfo,
+              (uint64_t /*tracepoint_id*/, orbit_client_data::TracepointInfo /*tracepoint_info*/),
               (override));
   MOCK_METHOD(void, OnTracepointEvent, (TracepointEventInfo), (override));
   MOCK_METHOD(void, OnModuleUpdate, (uint64_t /*timestamp_ns*/, ModuleInfo /*module_info*/),
@@ -456,7 +456,7 @@ TEST(CaptureEventProcessor, CanHandleInternedTracepointEvents) {
   InternedTracepointInfo* interned_tracepoint =
       interned_tracepoint_event.mutable_interned_tracepoint_info();
   interned_tracepoint->set_key(2);
-  TracepointInfo* tracepoint_intern = interned_tracepoint->mutable_intern();
+  orbit_grpc_protos::TracepointInfo* tracepoint_intern = interned_tracepoint->mutable_intern();
   tracepoint_intern->set_name("name");
   tracepoint_intern->set_category("category");
 
@@ -468,25 +468,28 @@ TEST(CaptureEventProcessor, CanHandleInternedTracepointEvents) {
   tracepoint->set_cpu(2);
   tracepoint->set_tracepoint_info_key(interned_tracepoint->key());
 
-  uint64_t actual_key;
-  TracepointInfo actual_tracepoint_info;
+  uint64_t actual_key{};
+  std::optional<orbit_client_data::TracepointInfo> actual_tracepoint_info;
   EXPECT_CALL(listener, OnUniqueTracepointInfo)
       .Times(1)
       .WillOnce(DoAll(SaveArg<0>(&actual_key), SaveArg<1>(&actual_tracepoint_info)));
-  TracepointEventInfo actual_tracepoint_event;
+  std::optional<TracepointEventInfo> actual_tracepoint_event;
   EXPECT_CALL(listener, OnTracepointEvent).Times(1).WillOnce(SaveArg<0>(&actual_tracepoint_event));
 
   event_processor->ProcessEvent(interned_tracepoint_event);
   event_processor->ProcessEvent(tracepoint_event);
 
-  EXPECT_EQ(actual_key, actual_tracepoint_event.tracepoint_info_key());
-  EXPECT_EQ(actual_tracepoint_event.tracepoint_info_key(), tracepoint->tracepoint_info_key());
-  EXPECT_EQ(actual_tracepoint_info.category(), tracepoint_intern->category());
-  EXPECT_EQ(actual_tracepoint_info.name(), tracepoint_intern->name());
-  EXPECT_EQ(actual_tracepoint_event.pid(), tracepoint->pid());
-  EXPECT_EQ(actual_tracepoint_event.tid(), tracepoint->tid());
-  EXPECT_EQ(actual_tracepoint_event.time(), tracepoint->timestamp_ns());
-  EXPECT_EQ(actual_tracepoint_event.cpu(), tracepoint->cpu());
+  ASSERT_TRUE(actual_tracepoint_info.has_value());
+  EXPECT_EQ(actual_tracepoint_info->category(), tracepoint_intern->category());
+  EXPECT_EQ(actual_tracepoint_info->name(), tracepoint_intern->name());
+
+  ASSERT_TRUE(actual_tracepoint_event.has_value());
+  EXPECT_EQ(actual_key, actual_tracepoint_event->tracepoint_id());
+  EXPECT_EQ(actual_tracepoint_event->tracepoint_id(), tracepoint->tracepoint_info_key());
+  EXPECT_EQ(actual_tracepoint_event->pid(), tracepoint->pid());
+  EXPECT_EQ(actual_tracepoint_event->tid(), tracepoint->tid());
+  EXPECT_EQ(actual_tracepoint_event->timestamp_ns(), tracepoint->timestamp_ns());
+  EXPECT_EQ(actual_tracepoint_event->cpu(), tracepoint->cpu());
 }
 
 static constexpr int32_t kGpuPid = 1;

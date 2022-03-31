@@ -15,12 +15,13 @@
 namespace orbit_gl {
 
 constexpr float kLabelsPadding = 4.f;
+constexpr float kPixelsBetweenMajorTicksAndLabels = 1.f;
 const Color kBackgroundColorSpecialLabels(68, 67, 69, 255);
 
 void TimelineUi::RenderLines(Batcher& batcher, uint64_t min_timestamp_ns,
                              uint64_t max_timestamp_ns) const {
   const Color kMajorTickColor(255, 254, 253, 255);
-  const Color kMinorTickColor(63, 62, 63, 255);
+  const Color kMinorTickColor(255, 254, 253, 63);
 
   for (auto& [tick_type, tick_ns] :
        timeline_ticks_.GetAllTicks(min_timestamp_ns, max_timestamp_ns)) {
@@ -28,7 +29,7 @@ void TimelineUi::RenderLines(Batcher& batcher, uint64_t min_timestamp_ns,
         tick_ns / static_cast<double>(kNanosecondsPerMicrosecond));
     int screen_x = viewport_->WorldToScreen(Vec2(world_x, 0))[0];
     batcher.AddVerticalLine(
-        Vec2(screen_x, GetPos()[1]), GetHeightWithoutMargin(), GlCanvas::kZValueTimeBarBg,
+        Vec2(screen_x, GetPos()[1]), GetHeightWithoutMargin(), GlCanvas::kZValueTimeBar,
         tick_type == TimelineTicks::TickType::kMajorTick ? kMajorTickColor : kMinorTickColor);
   }
 }
@@ -45,7 +46,7 @@ void TimelineUi::RenderLabels(Batcher& batcher, TextRenderer& text_renderer,
   }
 
   for (uint64_t tick_ns : GetTicksForNonOverlappingLabels(text_renderer, all_major_ticks)) {
-    RenderLabel(batcher, text_renderer, tick_ns, GetNumDecimalsInLabels(), GlCanvas::kZValueTimeBar,
+    RenderLabel(batcher, text_renderer, tick_ns, GetNumDecimalsInLabels(),
                 GlCanvas::kTimeBarBackgroundColor);
   }
 }
@@ -59,19 +60,24 @@ void TimelineUi::RenderMargin(Batcher& batcher) const {
 
 void TimelineUi::RenderBackground(Batcher& batcher) const {
   Box background_box(GetPos(), Vec2(GetWidth(), GetHeightWithoutMargin()),
-                     GlCanvas::kZValueTimeBarBg);
+                     GlCanvas::kZValueTimeBar);
   batcher.AddBox(background_box, GlCanvas::kTimeBarBackgroundColor);
 }
 
 void TimelineUi::RenderLabel(Batcher& batcher, TextRenderer& text_renderer, uint64_t tick_ns,
-                             uint32_t number_of_decimal_places, float label_z,
-                             const Color background_color) const {
+                             uint32_t number_of_decimal_places, const Color background_color,
+                             bool is_mouse_label) const {
+  float label_z = is_mouse_label ? GlCanvas::kZValueTimeBarMouseLabel : GlCanvas::kZValueTimeBar;
+
+  // We add a pixel separation between the label and the major ticks so they don't intersect.
+  float extra_left_margin = is_mouse_label ? 0.f : kPixelsBetweenMajorTicksAndLabels;
+
   std::string label = GetLabel(tick_ns, number_of_decimal_places);
   float world_x = GetTickWorldXPos(tick_ns);
   Vec2 pos, size;
   float label_middle_y = GetPos()[1] + GetHeightWithoutMargin() / 2.f;
-  text_renderer.AddText(label.c_str(), world_x + kLabelsPadding, label_middle_y, label_z,
-                        /*text_formatting=*/
+  text_renderer.AddText(label.c_str(), world_x + kLabelsPadding + extra_left_margin, label_middle_y,
+                        label_z, /*text_formatting=*/
                         {layout_->GetFontSize(), Color(255, 255, 255, 255), -1.f,
                          TextRenderer::HAlign::Left, TextRenderer::VAlign::Middle},
                         /*out_text_pos=*/&pos, /*out_text_size=*/&size);
@@ -94,7 +100,7 @@ void TimelineUi::RenderMouseLabel(Batcher& batcher, TextRenderer& text_renderer,
       std::min(kMaxNumberOfDecimalDigits, GetNumDecimalsInLabels() + kNumAdditionalDecimalDigits);
 
   RenderLabel(batcher, text_renderer, mouse_tick_ns, num_decimal_places_mouse_label,
-              GlCanvas::kZValueTimeBarMouseLabel, kBackgroundColorSpecialLabels);
+              kBackgroundColorSpecialLabels, /*is_mouse_label=*/true);
 }
 
 std::string TimelineUi::GetLabel(uint64_t tick_ns, uint32_t number_of_decimal_places) const {
@@ -144,7 +150,8 @@ bool TimelineUi::WillLabelsOverlap(TextRenderer& text_renderer,
   for (auto tick_ns : tick_list) {
     float label_width = text_renderer.GetStringWidth(
         GetLabel(tick_ns, GetNumDecimalsInLabels()).c_str(), layout_->GetFontSize());
-    if (distance_between_labels < 2.f * kLabelsPadding + label_width) {
+    if (distance_between_labels <
+        2.f * kLabelsPadding + kPixelsBetweenMajorTicksAndLabels + label_width) {
       return true;
     }
   }

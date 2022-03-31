@@ -16,7 +16,6 @@
 
 #include "AccessibleCaptureViewElement.h"
 #include "App.h"
-#include "ClientData/FunctionUtils.h"
 #include "ClientFlags/ClientFlags.h"
 #include "DisplayFormats/DisplayFormats.h"
 #include "Geometry.h"
@@ -153,14 +152,14 @@ void TrackContainer::DrawIteratorBox(Batcher& batcher, TextRenderer& text_render
 
   const Color kBlack(0, 0, 0, 255);
   float text_width = text_renderer.AddTextTrailingCharsPrioritized(
-      text.c_str(), pos[0], text_box_y + layout_->GetTextOffset(), GlCanvas::kZValueTextUi,
+      text.c_str(), pos[0], text_box_y + layout_->GetTextOffset(), GlCanvas::kZValueOverlayLabel,
       {layout_->GetFontSize(), kBlack, max_size}, time.length());
 
   float box_height = layout_->GetTextBoxHeight();
   Vec2 white_box_size(std::min(static_cast<float>(text_width), max_size), box_height);
   Vec2 white_box_position(pos[0], text_box_y);
 
-  Box white_box(white_box_position, white_box_size, GlCanvas::kZValueOverlayTextBackground);
+  Box white_box(white_box_position, white_box_size, GlCanvas::kZValueOverlayLabel);
 
   const Color kWhite(255, 255, 255, 255);
   batcher.AddBox(white_box, kWhite);

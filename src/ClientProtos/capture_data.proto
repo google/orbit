@@ -6,29 +6,6 @@ syntax = "proto3";
 
 package orbit_client_protos;
 
-message FunctionInfo {
-  reserved 1, 4, 6, 8, 9, 10, 11;
-  string pretty_name = 2;
-  string module_path = 3;
-  string module_build_id = 12;
-  uint64 address = 5;
-  uint64 size = 7;
-}
-
-message TracepointInfo {
-  string name = 1;
-  string category = 2;
-  uint64 tracepoint_info_key = 3;
-}
-
-message TracepointEventInfo {
-  uint32 pid = 1;
-  uint32 tid = 2;
-  int64 time = 3;
-  int32 cpu = 4;
-  uint64 tracepoint_info_key = 5;
-}
-
 message TimerInfo {
   // NextID: 18
   uint64 start = 1;

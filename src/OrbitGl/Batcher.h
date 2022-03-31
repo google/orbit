@@ -22,6 +22,8 @@
 #include "PickingManager.h"
 #include "TranslationStack.h"
 
+namespace orbit_gl {
+
 using TooltipCallback = std::function<std::string(PickingId)>;
 
 struct PickingUserData {
@@ -151,5 +153,7 @@ class Batcher {
 
   std::vector<Vec2> circle_points;
 };
+
+}  // namespace orbit_gl
 
 #endif
