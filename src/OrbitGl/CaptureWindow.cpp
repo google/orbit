@@ -178,11 +178,11 @@ void CaptureWindow::HandlePickedElement(PickingMode picking_mode, PickingId pick
   if (time_graph_ == nullptr) return;
   PickingType type = picking_id.type;
 
-  PrimitiveAssembler& batcher = GetBatcherById(picking_id.batcher_id);
+  PrimitiveAssembler& primitive_assembler = GetBatcherById(picking_id.batcher_id);
 
   if (picking_mode == PickingMode::kClick) {
     background_clicked_ = false;
-    const orbit_client_protos::TimerInfo* timer_info = batcher.GetTimerInfo(picking_id);
+    const orbit_client_protos::TimerInfo* timer_info = primitive_assembler.GetTimerInfo(picking_id);
     if (timer_info != nullptr) {
       SelectTimer(timer_info);
     } else if (type == PickingType::kPickable) {
@@ -202,7 +202,7 @@ void CaptureWindow::HandlePickedElement(PickingMode picking_mode, PickingId pick
         tooltip = pickable->GetTooltip();
       }
     } else {
-      PickingUserData* user_data = batcher.GetUserData(picking_id);
+      PickingUserData* user_data = primitive_assembler.GetUserData(picking_id);
 
       if (user_data && user_data->generate_tooltip_) {
         tooltip = user_data->generate_tooltip_(picking_id);
@@ -416,7 +416,7 @@ void CaptureWindow::Draw() {
   if (time_graph_ != nullptr) {
     uint64_t timegraph_current_mouse_time_ns =
         time_graph_->GetTickFromWorld(viewport_.ScreenToWorld(GetMouseScreenPos())[0]);
-    time_graph_->DrawAllElements(GetBatcher(), GetTextRenderer(), picking_mode_,
+    time_graph_->DrawAllElements(GetPrimitiveAssembler(), GetTextRenderer(), picking_mode_,
                                  timegraph_current_mouse_time_ns);
   }
 
@@ -505,7 +505,7 @@ void CaptureWindow::DrawScreenSpace() {
 void CaptureWindow::RenderAllLayers() {
   std::vector<float> all_layers{};
   if (time_graph_ != nullptr) {
-    all_layers = time_graph_->GetBatcher().GetLayers();
+    all_layers = time_graph_->GetPrimitiveAssembler().GetLayers();
     orbit_base::Append(all_layers, time_graph_->GetTextRenderer()->GetLayers());
   }
   orbit_base::Append(all_layers, ui_batcher_.GetLayers());
@@ -521,7 +521,7 @@ void CaptureWindow::RenderAllLayers() {
 
   for (float layer : all_layers) {
     if (time_graph_ != nullptr) {
-      time_graph_->GetBatcher().DrawLayer(layer, picking_mode_ != PickingMode::kNone);
+      time_graph_->GetPrimitiveAssembler().DrawLayer(layer, picking_mode_ != PickingMode::kNone);
     }
     ui_batcher_.DrawLayer(layer, picking_mode_ != PickingMode::kNone);
 
@@ -639,7 +639,7 @@ PrimitiveAssembler& CaptureWindow::GetBatcherById(BatcherId batcher_id) {
   switch (batcher_id) {
     case BatcherId::kTimeGraph:
       ORBIT_CHECK(time_graph_ != nullptr);
-      return time_graph_->GetBatcher();
+      return time_graph_->GetPrimitiveAssembler();
     case BatcherId::kUi:
       return ui_batcher_;
     default:

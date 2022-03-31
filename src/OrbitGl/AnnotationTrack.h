@@ -36,8 +36,9 @@ class AnnotationTrack {
     value_lower_bound_ = std::make_pair(pretty_label, raw_value);
   }
 
-  void DrawAnnotation(orbit_gl::PrimitiveAssembler& batcher, TextRenderer& text_renderer,
-                      const TimeGraphLayout* layout, int indentation_level, float z);
+  void DrawAnnotation(orbit_gl::PrimitiveAssembler& primitive_assembler,
+                      TextRenderer& text_renderer, const TimeGraphLayout* layout,
+                      int indentation_level, float z);
 
  private:
   [[nodiscard]] virtual float GetAnnotatedTrackContentHeight() const = 0;

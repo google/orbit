@@ -41,9 +41,9 @@ class MemoryTrack : public GraphTrack<Dimension>, public AnnotationTrack {
   void TrySetValueLowerBound(const std::string& pretty_label, double raw_value);
 
  protected:
-  void DoUpdatePrimitives(PrimitiveAssembler& batcher, TextRenderer& text_renderer,
+  void DoUpdatePrimitives(PrimitiveAssembler& primitive_assembler, TextRenderer& text_renderer,
                           uint64_t min_tick, uint64_t max_tick, PickingMode picking_mode) override;
-  void DoDraw(PrimitiveAssembler& batcher, TextRenderer& text_renderer,
+  void DoDraw(PrimitiveAssembler& primitive_assembler, TextRenderer& text_renderer,
               const CaptureViewElement::DrawContext& draw_context) override;
 
   [[nodiscard]] double GetGraphMaxValue() const override;

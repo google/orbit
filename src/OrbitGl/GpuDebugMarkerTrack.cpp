@@ -84,9 +84,9 @@ std::string GpuDebugMarkerTrack::GetTimesliceText(const TimerInfo& timer_info) c
                          time);
 }
 
-std::string GpuDebugMarkerTrack::GetBoxTooltip(const PrimitiveAssembler& batcher,
+std::string GpuDebugMarkerTrack::GetBoxTooltip(const PrimitiveAssembler& primitive_assembler,
                                                PickingId id) const {
-  const TimerInfo* timer_info = batcher.GetTimerInfo(id);
+  const TimerInfo* timer_info = primitive_assembler.GetTimerInfo(id);
   if (timer_info == nullptr) {
     return "";
   }

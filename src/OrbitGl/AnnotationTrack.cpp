@@ -15,9 +15,9 @@ const Color kThresholdColor(179, 0, 80, 255);
 using orbit_gl::PickingUserData;
 using orbit_gl::PrimitiveAssembler;
 
-void AnnotationTrack::DrawAnnotation(PrimitiveAssembler& batcher, TextRenderer& text_renderer,
-                                     const TimeGraphLayout* layout, int indentation_level,
-                                     float z) {
+void AnnotationTrack::DrawAnnotation(PrimitiveAssembler& primitive_assembler,
+                                     TextRenderer& text_renderer, const TimeGraphLayout* layout,
+                                     int indentation_level, float z) {
   uint32_t font_size = GetAnnotationFontSize(indentation_level);
   Vec2 track_size = GetAnnotatedTrackSize();
   Vec2 track_pos = GetAnnotatedTrackPosition();
@@ -38,8 +38,8 @@ void AnnotationTrack::DrawAnnotation(PrimitiveAssembler& batcher, TextRenderer& 
       Vec2 text_box_size(string_width, layout->GetTextBoxHeight());
       auto user_data = std::make_unique<PickingUserData>(
           nullptr, [&](PickingId /*id*/) { return this->GetValueUpperBoundTooltip(); });
-      batcher.AddShadedBox(text_box_position, text_box_size, z, kFullyTransparent,
-                           std::move(user_data));
+      primitive_assembler.AddShadedBox(text_box_position, text_box_size, z, kFullyTransparent,
+                                       std::move(user_data));
     }
   }
 
@@ -76,7 +76,9 @@ void AnnotationTrack::DrawAnnotation(PrimitiveAssembler& batcher, TextRenderer& 
 
     Vec2 from(track_pos[0], y);
     Vec2 to(track_pos[0] + track_size[0], y);
-    batcher.AddLine(from, from + Vec2(layout->GetRightMargin() / 2.f, 0), z, kThresholdColor);
-    batcher.AddLine(Vec2(text_box_position[0] + string_width, y), to, z, kThresholdColor);
+    primitive_assembler.AddLine(from, from + Vec2(layout->GetRightMargin() / 2.f, 0), z,
+                                kThresholdColor);
+    primitive_assembler.AddLine(Vec2(text_box_position[0] + string_width, y), to, z,
+                                kThresholdColor);
   }
 }

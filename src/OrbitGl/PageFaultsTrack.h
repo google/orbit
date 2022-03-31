@@ -70,7 +70,7 @@ class PageFaultsTrack : public Track {
   [[nodiscard]] uint64_t GetMaxTime() const override;
 
  protected:
-  void DoUpdatePrimitives(PrimitiveAssembler& batcher, TextRenderer& text_renderer,
+  void DoUpdatePrimitives(PrimitiveAssembler& primitive_assembler, TextRenderer& text_renderer,
                           uint64_t min_tick, uint64_t max_tick, PickingMode picking_mode) override;
 
  private:

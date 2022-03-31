@@ -116,8 +116,9 @@ const TimerInfo* ThreadTrack::GetDown(const TimerInfo& timer_info) const {
   return thread_track_data_provider_->GetDown(timer_info);
 }
 
-std::string ThreadTrack::GetBoxTooltip(const PrimitiveAssembler& batcher, PickingId id) const {
-  const TimerInfo* timer_info = batcher.GetTimerInfo(id);
+std::string ThreadTrack::GetBoxTooltip(const PrimitiveAssembler& primitive_assembler,
+                                       PickingId id) const {
+  const TimerInfo* timer_info = primitive_assembler.GetTimerInfo(id);
   if (timer_info == nullptr || timer_info->type() == TimerInfo::kCoreActivity) {
     return "";
   }
@@ -399,39 +400,41 @@ constexpr float kMinimalWidthToHaveBorder = 4.0;
 [[nodiscard]] static Vec2 Vec3ToVec2(const Vec3 v) { return {v[0], v[1]}; }
 
 void ThreadTrack::AddBorderLine(const Vec2& from, const Vec2& to, float z, const Color& color,
-                                PrimitiveAssembler& batcher,
+                                PrimitiveAssembler& primitive_assembler,
                                 const orbit_client_protos::TimerInfo& timer_info) {
-  auto user_data = CreatePickingUserData(batcher, timer_info);
-  batcher.AddLine(from, to, z, color, std::move(user_data));
+  auto user_data = CreatePickingUserData(primitive_assembler, timer_info);
+  primitive_assembler.AddLine(from, to, z, color, std::move(user_data));
 }
 
-void ThreadTrack::AddBoxBorder(PrimitiveAssembler& batcher, const Box& box, const Color& color,
+void ThreadTrack::AddBoxBorder(PrimitiveAssembler& primitive_assembler, const Box& box,
+                               const Color& color,
                                const orbit_client_protos::TimerInfo& timer_info) {
   float z = box.vertices[0][2];
-  AddBorderLine(Vec3ToVec2(box.vertices[0]), Vec3ToVec2(box.vertices[1]), z, color, batcher,
-                timer_info);
-  AddBorderLine(Vec3ToVec2(box.vertices[1]), Vec3ToVec2(box.vertices[2]), z, color, batcher,
-                timer_info);
-  AddBorderLine(Vec3ToVec2(box.vertices[2]), Vec3ToVec2(box.vertices[3]), z, color, batcher,
-                timer_info);
-  AddBorderLine(Vec3ToVec2(box.vertices[3]), Vec3ToVec2(box.vertices[0]), z, color, batcher,
-                timer_info);
+  AddBorderLine(Vec3ToVec2(box.vertices[0]), Vec3ToVec2(box.vertices[1]), z, color,
+                primitive_assembler, timer_info);
+  AddBorderLine(Vec3ToVec2(box.vertices[1]), Vec3ToVec2(box.vertices[2]), z, color,
+                primitive_assembler, timer_info);
+  AddBorderLine(Vec3ToVec2(box.vertices[2]), Vec3ToVec2(box.vertices[3]), z, color,
+                primitive_assembler, timer_info);
+  AddBorderLine(Vec3ToVec2(box.vertices[3]), Vec3ToVec2(box.vertices[0]), z, color,
+                primitive_assembler, timer_info);
 }
 
 // We minimize overdraw when drawing lines for small events by discarding events that would just
 // draw over an already drawn pixel line. When zoomed in enough that all events are drawn as boxes,
 // this has no effect. When zoomed  out, many events will be discarded quickly.
-void ThreadTrack::DoUpdatePrimitives(PrimitiveAssembler& batcher, TextRenderer& text_renderer,
-                                     uint64_t min_tick, uint64_t max_tick,
-                                     PickingMode /*picking_mode*/) {
+void ThreadTrack::DoUpdatePrimitives(PrimitiveAssembler& primitive_assembler,
+                                     TextRenderer& text_renderer, uint64_t min_tick,
+                                     uint64_t max_tick, PickingMode /*picking_mode*/) {
   // TODO(b/203181055): The parent class already provides an implementation, but this is completely
   // ignored because ThreadTrack uses the ScopeTree, and TimerTrack doesn't.
-  // TimerTrack::DoUpdatePrimitives(batcher, text_renderer, min_tick, max_tick, picking_mode);
+  // TimerTrack::DoUpdatePrimitives(primitive_assembler, text_renderer, min_tick, max_tick,
+  // picking_mode);
   ORBIT_SCOPE_WITH_COLOR("ThreadTrack::DoUpdatePrimitives", kOrbitColorYellow);
   visible_timer_count_ = 0;
 
   const internal::DrawData draw_data = GetDrawData(
-      min_tick, max_tick, GetPos()[0], GetWidth(), &batcher, timeline_info_, viewport_,
+      min_tick, max_tick, GetPos()[0], GetWidth(), &primitive_assembler, timeline_info_, viewport_,
       collapse_toggle_->IsCollapsed(), app_->selected_timer(), app_->GetFunctionIdToHighlight(),
       app_->GetGroupIdToHighlight(), app_->GetHistogramSelectionRange());
 
@@ -444,7 +447,8 @@ void ThreadTrack::DoUpdatePrimitives(PrimitiveAssembler& batcher, TextRenderer& 
       ++visible_timer_count_;
 
       Color color = GetTimerColor(*timer_info, draw_data);
-      std::unique_ptr<PickingUserData> user_data = CreatePickingUserData(batcher, *timer_info);
+      std::unique_ptr<PickingUserData> user_data =
+          CreatePickingUserData(primitive_assembler, *timer_info);
 
       auto box_height = GetDefaultBoxHeight();
       const auto [pos_x, size_x] = GetBoxPosXAndWidth(draw_data, timeline_info_, *timer_info);
@@ -456,13 +460,14 @@ void ThreadTrack::DoUpdatePrimitives(PrimitiveAssembler& batcher, TextRenderer& 
         if (!collapse_toggle_->IsCollapsed() && BoxHasRoomForText(text_renderer, size[0])) {
           DrawTimesliceText(text_renderer, *timer_info, draw_data.track_start_x, pos, size);
         }
-        batcher.AddShadedBox(pos, size, draw_data.z, color, std::move(user_data));
+        primitive_assembler.AddShadedBox(pos, size, draw_data.z, color, std::move(user_data));
         if (ShouldHaveBorder(timer_info, draw_data.histogram_selection_range, size[0])) {
-          AddBoxBorder(batcher, {pos, size, GlCanvas::kZValueBox}, TimerTrack::kBoxBorderColor,
-                       *timer_info);
+          AddBoxBorder(primitive_assembler, {pos, size, GlCanvas::kZValueBox},
+                       TimerTrack::kBoxBorderColor, *timer_info);
         }
       } else {
-        batcher.AddVerticalLine(pos, box_height, draw_data.z, color, std::move(user_data));
+        primitive_assembler.AddVerticalLine(pos, box_height, draw_data.z, color,
+                                            std::move(user_data));
       }
     }
   }

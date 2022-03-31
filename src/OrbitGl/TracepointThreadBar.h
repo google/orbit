@@ -31,13 +31,13 @@ class TracepointThreadBar : public ThreadBar {
   [[nodiscard]] bool IsEmpty() const override;
 
  protected:
-  void DoDraw(PrimitiveAssembler& batcher, TextRenderer& text_renderer,
+  void DoDraw(PrimitiveAssembler& primitive_assembler, TextRenderer& text_renderer,
               const DrawContext& draw_context) override;
-  void DoUpdatePrimitives(PrimitiveAssembler& batcher, TextRenderer& text_renderer,
+  void DoUpdatePrimitives(PrimitiveAssembler& primitive_assembler, TextRenderer& text_renderer,
                           uint64_t min_tick, uint64_t max_tick, PickingMode picking_mode) override;
 
  private:
-  std::string GetTracepointTooltip(PrimitiveAssembler& batcher, PickingId id) const;
+  std::string GetTracepointTooltip(PrimitiveAssembler& primitive_assembler, PickingId id) const;
 };
 
 }  // namespace orbit_gl

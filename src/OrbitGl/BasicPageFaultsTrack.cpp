@@ -72,22 +72,24 @@ void BasicPageFaultsTrack::AddValuesAndUpdateAnnotations(
   }
 }
 
-void BasicPageFaultsTrack::DoDraw(PrimitiveAssembler& batcher, TextRenderer& text_renderer,
-                                  const DrawContext& draw_context) {
-  LineGraphTrack<kBasicPageFaultsTrackDimension>::DoDraw(batcher, text_renderer, draw_context);
+void BasicPageFaultsTrack::DoDraw(PrimitiveAssembler& primitive_assembler,
+                                  TextRenderer& text_renderer, const DrawContext& draw_context) {
+  LineGraphTrack<kBasicPageFaultsTrackDimension>::DoDraw(primitive_assembler, text_renderer,
+                                                         draw_context);
 
   if (draw_context.picking_mode != PickingMode::kNone || IsCollapsed()) return;
-  AnnotationTrack::DrawAnnotation(batcher, text_renderer, layout_, indentation_level_,
+  AnnotationTrack::DrawAnnotation(primitive_assembler, text_renderer, layout_, indentation_level_,
                                   GlCanvas::kZValueTrackText);
 }
 
 void BasicPageFaultsTrack::DrawSingleSeriesEntry(
-    PrimitiveAssembler& batcher, uint64_t start_tick, uint64_t end_tick,
+    PrimitiveAssembler& primitive_assembler, uint64_t start_tick, uint64_t end_tick,
     const std::array<float, kBasicPageFaultsTrackDimension>& current_normalized_values,
     const std::array<float, kBasicPageFaultsTrackDimension>& next_normalized_values, float z,
     bool is_last) {
   LineGraphTrack<kBasicPageFaultsTrackDimension>::DrawSingleSeriesEntry(
-      batcher, start_tick, end_tick, current_normalized_values, next_normalized_values, z, is_last);
+      primitive_assembler, start_tick, end_tick, current_normalized_values, next_normalized_values,
+      z, is_last);
 
   if (!index_of_series_to_highlight_.has_value()) return;
   if (current_normalized_values[index_of_series_to_highlight_.value()] == 0) return;
@@ -97,7 +99,8 @@ void BasicPageFaultsTrack::DrawSingleSeriesEntry(
   float width = timeline_info_->GetWorldFromTick(end_tick) - x0;
   float content_height = GetGraphContentHeight();
   float y0 = GetGraphContentBottomY() - GetGraphContentHeight();
-  batcher.AddShadedBox(Vec2(x0, y0), Vec2(width, content_height), z, kHightlightingColor);
+  primitive_assembler.AddShadedBox(Vec2(x0, y0), Vec2(width, content_height), z,
+                                   kHightlightingColor);
 }
 
 bool BasicPageFaultsTrack::IsCollapsed() const {

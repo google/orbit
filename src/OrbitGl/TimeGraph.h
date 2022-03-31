@@ -121,7 +121,9 @@ class TimeGraph final : public orbit_gl::CaptureViewElement,
   [[nodiscard]] bool IsVisible(VisibilityType vis_type, uint64_t min, uint64_t max) const;
 
   [[nodiscard]] TextRenderer* GetTextRenderer() { return &text_renderer_static_; }
-  [[nodiscard]] orbit_gl::PrimitiveAssembler& GetBatcher() { return batcher_; }
+  [[nodiscard]] orbit_gl::PrimitiveAssembler& GetPrimitiveAssembler() {
+    return primitive_assembler_;
+  }
 
   void UpdateHorizontalScroll(float ratio);
   [[nodiscard]] const TimeGraphLayout& GetLayout() const { return layout_; }
@@ -188,7 +190,7 @@ class TimeGraph final : public orbit_gl::CaptureViewElement,
 
   bool update_primitives_requested_ = false;
 
-  orbit_gl::OpenGlBatcher batcher_;
+  orbit_gl::OpenGlBatcher primitive_assembler_;
 
   std::unique_ptr<orbit_gl::TrackContainer> track_container_;
   std::unique_ptr<orbit_gl::TimelineUi> timeline_ui_;

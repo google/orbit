@@ -204,9 +204,9 @@ const TimerInfo* GpuSubmissionTrack::GetRight(const TimerInfo& timer_info) const
   return nullptr;
 }
 
-std::string GpuSubmissionTrack::GetBoxTooltip(const PrimitiveAssembler& batcher,
+std::string GpuSubmissionTrack::GetBoxTooltip(const PrimitiveAssembler& primitive_assembler,
                                               PickingId id) const {
-  const TimerInfo* timer_info = batcher.GetTimerInfo(id);
+  const TimerInfo* timer_info = primitive_assembler.GetTimerInfo(id);
   if ((timer_info == nullptr) || timer_info->type() == TimerInfo::kCoreActivity) {
     return "";
   }

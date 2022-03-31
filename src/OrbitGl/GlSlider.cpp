@@ -154,20 +154,20 @@ void GlSlider::OnPick(int x, int y) {
   }
 }
 
-void GlSlider::DrawBackground(PrimitiveAssembler& batcher, float x, float y, float width,
-                              float height) {
+void GlSlider::DrawBackground(PrimitiveAssembler& primitive_assembler, float x, float y,
+                              float width, float height) {
   const Color dark_border_color = GetDarkerColor(bar_color_);
   const float kEpsilon = 0.0001f;
 
   Box border_box(Vec2(x, y), Vec2(width, height), GlCanvas::kZValueSliderBg - kEpsilon);
-  batcher.AddBox(border_box, dark_border_color, shared_from_this());
+  primitive_assembler.AddBox(border_box, dark_border_color, shared_from_this());
 
   Box bar_box(Vec2(x + 1.f, y + 1.f), Vec2(width - 2.f, height - 2.f), GlCanvas::kZValueSliderBg);
-  batcher.AddBox(bar_box, bar_color_, shared_from_this());
+  primitive_assembler.AddBox(bar_box, bar_color_, shared_from_this());
 }
 
-void GlSlider::DrawSlider(PrimitiveAssembler& batcher, float x, float y, float width, float height,
-                          ShadingDirection shading_direction, bool is_picked) {
+void GlSlider::DrawSlider(PrimitiveAssembler& primitive_assembler, float x, float y, float width,
+                          float height, ShadingDirection shading_direction, bool is_picked) {
   bool mouse_over_slider = false;
   if (is_mouse_over_) {
     mouse_over_slider = PosIsInSlider(mouse_pos_[0], mouse_pos_[1]);
@@ -180,24 +180,25 @@ void GlSlider::DrawSlider(PrimitiveAssembler& batcher, float x, float y, float w
 
   Box dark_border_box(Vec2(x, y), Vec2(width, height), GlCanvas::kZValueSlider - 2 * kEpsilon);
 
-  batcher.AddBox(dark_border_box, dark_border_color, shared_from_this());
+  primitive_assembler.AddBox(dark_border_box, dark_border_color, shared_from_this());
 
   Box light_border_box(Vec2(x + 1.f, y + 1.f), Vec2(width - 2.f, height - 2.f),
                        GlCanvas::kZValueSlider - kEpsilon);
 
-  batcher.AddBox(light_border_box, light_border_color, shared_from_this());
+  primitive_assembler.AddBox(light_border_box, light_border_color, shared_from_this());
 
   // Slider itself
   const float kSliderOffset = 2.f;
   if (!is_picked) {
-    batcher.AddShadedBox(Vec2(x + kSliderOffset, y + kSliderOffset),
-                         Vec2(width - 2.f * kSliderOffset, height - 2.f * kSliderOffset),
-                         GlCanvas::kZValueSlider, color, shared_from_this(), shading_direction);
+    primitive_assembler.AddShadedBox(
+        Vec2(x + kSliderOffset, y + kSliderOffset),
+        Vec2(width - 2.f * kSliderOffset, height - 2.f * kSliderOffset), GlCanvas::kZValueSlider,
+        color, shared_from_this(), shading_direction);
   } else {
-    batcher.AddBox(Box(Vec2(x + kSliderOffset, y + kSliderOffset),
-                       Vec2(width - 2.f * kSliderOffset, height - 2.f * kSliderOffset),
-                       GlCanvas::kZValueSlider),
-                   slider_color_, shared_from_this());
+    primitive_assembler.AddBox(Box(Vec2(x + kSliderOffset, y + kSliderOffset),
+                                   Vec2(width - 2.f * kSliderOffset, height - 2.f * kSliderOffset),
+                                   GlCanvas::kZValueSlider),
+                               slider_color_, shared_from_this());
   }
 }
 
@@ -243,8 +244,8 @@ bool GlSlider::HandlePageScroll(float click_value) {
   return true;
 }
 
-void GlVerticalSlider::Draw(PrimitiveAssembler& batcher, bool is_picked) {
-  batcher.PushTranslation(static_cast<int>(GetPos()[0]), static_cast<int>(GetPos()[1]));
+void GlVerticalSlider::Draw(PrimitiveAssembler& primitive_assembler, bool is_picked) {
+  primitive_assembler.PushTranslation(static_cast<int>(GetPos()[0]), static_cast<int>(GetPos()[1]));
 
   float bar_pixel_len = GetBarPixelLength();
   float slider_height = ceilf(length_ratio_ * bar_pixel_len);
@@ -253,31 +254,33 @@ void GlVerticalSlider::Draw(PrimitiveAssembler& batcher, bool is_picked) {
   const Color dark_border_color = GetDarkerColor(bar_color_);
 
   // Background
-  DrawBackground(batcher, 0, 0, GetPixelHeight(), bar_pixel_len);
+  DrawBackground(primitive_assembler, 0, 0, GetPixelHeight(), bar_pixel_len);
 
   float start = ceilf(pos_ratio_ * non_slider_height);
 
   ShadingDirection shading_direction = ShadingDirection::kRightToLeft;
-  DrawSlider(batcher, 0, start, GetPixelHeight(), slider_height, shading_direction, is_picked);
+  DrawSlider(primitive_assembler, 0, start, GetPixelHeight(), slider_height, shading_direction,
+             is_picked);
 
-  batcher.PopTranslation();
+  primitive_assembler.PopTranslation();
 }
 
 float GlVerticalSlider::GetBarPixelLength() const { return GetSize()[1]; }
 
-void GlHorizontalSlider::Draw(PrimitiveAssembler& batcher, bool is_picked) {
-  batcher.PushTranslation(static_cast<int>(GetPos()[0]), static_cast<int>(GetPos()[1]));
+void GlHorizontalSlider::Draw(PrimitiveAssembler& primitive_assembler, bool is_picked) {
+  primitive_assembler.PushTranslation(static_cast<int>(GetPos()[0]), static_cast<int>(GetPos()[1]));
 
   float bar_pixel_len = GetBarPixelLength();
   float slider_width = ceilf(length_ratio_ * bar_pixel_len);
   float non_slider_width = bar_pixel_len - slider_width;
 
-  DrawBackground(batcher, 0, 0, bar_pixel_len, GetPixelHeight());
+  DrawBackground(primitive_assembler, 0, 0, bar_pixel_len, GetPixelHeight());
 
   float start = floorf(pos_ratio_ * non_slider_width);
 
   ShadingDirection shading_direction = ShadingDirection::kTopToBottom;
-  DrawSlider(batcher, start, 0, slider_width, GetPixelHeight(), shading_direction, is_picked);
+  DrawSlider(primitive_assembler, start, 0, slider_width, GetPixelHeight(), shading_direction,
+             is_picked);
 
   const float kEpsilon = 0.0001f;
 
@@ -294,36 +297,37 @@ void GlHorizontalSlider::Draw(PrimitiveAssembler& batcher, bool is_picked) {
   const float x = start;
   const float width = slider_width;
 
-  batcher.AddTriangle(
+  primitive_assembler.AddTriangle(
       Triangle(Vec3(x + width - tri_size - 2.f, kHeightFactor * tri_size + tri_y_offset, z),
                Vec3(x + width - 2.f, tri_y_offset + kHeightFactor / 2.f * tri_size, z),
                Vec3(x + width - tri_size - 2.f, tri_y_offset, z)),
       kWhite, shared_from_this());
-  batcher.AddVerticalLine(Vec2(x + width - slider_resize_pixel_margin_, 2.f), pixel_height_ - 4.f,
-                          z, kWhite, shared_from_this());
+  primitive_assembler.AddVerticalLine(Vec2(x + width - slider_resize_pixel_margin_, 2.f),
+                                      pixel_height_ - 4.f, z, kWhite, shared_from_this());
 
-  batcher.AddTriangle(Triangle(Vec3(x + tri_size + 2.f, kHeightFactor * tri_size + tri_y_offset, z),
-                               Vec3(x + tri_size + 2.f, tri_y_offset, z),
-                               Vec3(x + 2.f, tri_y_offset + kHeightFactor / 2.f * tri_size, z)),
-                      kWhite, shared_from_this());
-  batcher.AddVerticalLine(Vec2(x + slider_resize_pixel_margin_ + 1, 2.f), pixel_height_ - 4.f, z,
-                          kWhite, shared_from_this());
+  primitive_assembler.AddTriangle(
+      Triangle(Vec3(x + tri_size + 2.f, kHeightFactor * tri_size + tri_y_offset, z),
+               Vec3(x + tri_size + 2.f, tri_y_offset, z),
+               Vec3(x + 2.f, tri_y_offset + kHeightFactor / 2.f * tri_size, z)),
+      kWhite, shared_from_this());
+  primitive_assembler.AddVerticalLine(Vec2(x + slider_resize_pixel_margin_ + 1, 2.f),
+                                      pixel_height_ - 4.f, z, kWhite, shared_from_this());
 
   // Highlight the scale part of the slider
   if (is_picked) {
     if (drag_type_ == DragType::kScaleMax) {
-      batcher.AddShadedBox(Vec2(x + width - slider_resize_pixel_margin_, 2),
-                           Vec2(slider_resize_pixel_margin_ - 2, pixel_height_ - 4),
-                           GlCanvas::kZValueSlider + kEpsilon, selected_color_,
-                           ShadingDirection::kTopToBottom);
+      primitive_assembler.AddShadedBox(Vec2(x + width - slider_resize_pixel_margin_, 2),
+                                       Vec2(slider_resize_pixel_margin_ - 2, pixel_height_ - 4),
+                                       GlCanvas::kZValueSlider + kEpsilon, selected_color_,
+                                       ShadingDirection::kTopToBottom);
     } else if (drag_type_ == DragType::kScaleMin) {
-      batcher.AddShadedBox(Vec2(x + 2, 2), Vec2(slider_resize_pixel_margin_ - 2, pixel_height_ - 4),
-                           GlCanvas::kZValueSlider + kEpsilon, selected_color_,
-                           ShadingDirection::kTopToBottom);
+      primitive_assembler.AddShadedBox(
+          Vec2(x + 2, 2), Vec2(slider_resize_pixel_margin_ - 2, pixel_height_ - 4),
+          GlCanvas::kZValueSlider + kEpsilon, selected_color_, ShadingDirection::kTopToBottom);
     }
   }
 
-  batcher.PopTranslation();
+  primitive_assembler.PopTranslation();
 }
 
 float GlHorizontalSlider::GetBarPixelLength() const { return GetSize()[0]; }

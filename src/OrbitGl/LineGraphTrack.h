@@ -23,9 +23,9 @@ class LineGraphTrack : public GraphTrack<Dimension> {
  protected:
   [[nodiscard]] float GetLabelYFromValues(
       const std::array<double, Dimension>& values) const override;
-  void DrawSeries(PrimitiveAssembler& batcher, uint64_t min_tick, uint64_t max_tick,
+  void DrawSeries(PrimitiveAssembler& primitive_assembler, uint64_t min_tick, uint64_t max_tick,
                   float z) override;
-  virtual void DrawSingleSeriesEntry(PrimitiveAssembler& batcher, uint64_t start_tick,
+  virtual void DrawSingleSeriesEntry(PrimitiveAssembler& primitive_assembler, uint64_t start_tick,
                                      uint64_t end_tick,
                                      const std::array<float, Dimension>& current_normalized_values,
                                      const std::array<float, Dimension>& next_normalized_values,

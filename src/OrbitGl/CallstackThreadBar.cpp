@@ -52,9 +52,9 @@ std::string CallstackThreadBar::GetTooltip() const {
   return "Left-click and drag to select samples";
 }
 
-void CallstackThreadBar::DoDraw(PrimitiveAssembler& batcher, TextRenderer& text_renderer,
-                                const DrawContext& draw_context) {
-  ThreadBar::DoDraw(batcher, text_renderer, draw_context);
+void CallstackThreadBar::DoDraw(PrimitiveAssembler& primitive_assembler,
+                                TextRenderer& text_renderer, const DrawContext& draw_context) {
+  ThreadBar::DoDraw(primitive_assembler, text_renderer, draw_context);
 
   if (GetThreadId() == orbit_base::kAllThreadsOfAllProcessesTid) {
     return;
@@ -70,9 +70,9 @@ void CallstackThreadBar::DoDraw(PrimitiveAssembler& batcher, TextRenderer& text_
   Color color = GetColor();
   const Vec2 pos = GetPos();
   Box box(pos, Vec2(GetWidth(), GetHeight()), event_bar_z);
-  batcher.AddBox(box, color, shared_from_this());
+  primitive_assembler.AddBox(box, color, shared_from_this());
 
-  if (batcher.GetPickingManager()->IsThisElementPicked(this)) {
+  if (primitive_assembler.GetPickingManager()->IsThisElementPicked(this)) {
     color = Color(255, 255, 255, 255);
   }
 
@@ -81,8 +81,8 @@ void CallstackThreadBar::DoDraw(PrimitiveAssembler& batcher, TextRenderer& text_
   float x1 = x0 + GetWidth();
   float y1 = y0 + GetHeight();
 
-  batcher.AddLine(pos, Vec2(x1, y0), event_bar_z, color, shared_from_this());
-  batcher.AddLine(Vec2(x1, y1), Vec2(x0, y1), event_bar_z, color, shared_from_this());
+  primitive_assembler.AddLine(pos, Vec2(x1, y0), event_bar_z, color, shared_from_this());
+  primitive_assembler.AddLine(Vec2(x1, y1), Vec2(x0, y1), event_bar_z, color, shared_from_this());
 
   if (picked_) {
     Vec2& from = mouse_pos_last_click_;
@@ -95,15 +95,16 @@ void CallstackThreadBar::DoDraw(PrimitiveAssembler& batcher, TextRenderer& text_
 
     Color picked_color(0, 128, 255, 128);
     Box picked_box(Vec2(x0, y0), Vec2(x1 - x0, GetHeight()), GlCanvas::kZValueUi);
-    batcher.AddBox(picked_box, picked_color, shared_from_this());
+    primitive_assembler.AddBox(picked_box, picked_color, shared_from_this());
   }
 }
 
-void CallstackThreadBar::DoUpdatePrimitives(PrimitiveAssembler& batcher,
+void CallstackThreadBar::DoUpdatePrimitives(PrimitiveAssembler& primitive_assembler,
                                             TextRenderer& text_renderer, uint64_t min_tick,
                                             uint64_t max_tick, PickingMode picking_mode) {
   ORBIT_SCOPE_WITH_COLOR("CallstackThreadBar::DoUpdatePrimitives", kOrbitColorLightBlue);
-  ThreadBar::DoUpdatePrimitives(batcher, text_renderer, min_tick, max_tick, picking_mode);
+  ThreadBar::DoUpdatePrimitives(primitive_assembler, text_renderer, min_tick, max_tick,
+                                picking_mode);
 
   float z = GlCanvas::kZValueEvent;
   float track_height = layout_->GetEventTrackHeightFromTid(GetThreadId());
@@ -125,7 +126,7 @@ void CallstackThreadBar::DoUpdatePrimitives(PrimitiveAssembler& batcher,
           CallstackType::kComplete) {
         color = kGreyError;
       }
-      batcher.AddVerticalLine(pos, track_height, z, color);
+      primitive_assembler.AddVerticalLine(pos, track_height, z, color);
     };
 
     if (GetThreadId() == orbit_base::kAllProcessThreadsTid) {
@@ -141,7 +142,7 @@ void CallstackThreadBar::DoUpdatePrimitives(PrimitiveAssembler& batcher,
       const uint64_t time = event.timestamp_ns();
       ORBIT_CHECK(time >= min_tick && time <= max_tick);
       Vec2 pos(timeline_info_->GetWorldFromTick(event.timestamp_ns()), GetPos()[1]);
-      batcher.AddVerticalLine(pos, track_height, z, kGreenSelection);
+      primitive_assembler.AddVerticalLine(pos, track_height, z, kGreenSelection);
     };
     const orbit_client_data::CallstackData& selection_callstack_data =
         capture_data_->selection_callstack_data();
@@ -164,10 +165,11 @@ void CallstackThreadBar::DoUpdatePrimitives(PrimitiveAssembler& batcher,
       Vec2 pos(timeline_info_->GetWorldFromTick(time) - kPickingBoxOffset, GetPos()[1]);
       Vec2 size(kPickingBoxWidth, track_height);
       auto user_data = std::make_unique<PickingUserData>(
-          nullptr,
-          [this, &batcher](PickingId id) -> std::string { return GetSampleTooltip(batcher, id); });
+          nullptr, [this, &primitive_assembler](PickingId id) -> std::string {
+            return GetSampleTooltip(primitive_assembler, id);
+          });
       user_data->custom_data_ = &event;
-      batcher.AddShadedBox(pos, size, z, kGreenSelection, std::move(user_data));
+      primitive_assembler.AddShadedBox(pos, size, z, kGreenSelection, std::move(user_data));
     };
     if (GetThreadId() == orbit_base::kAllProcessThreadsTid) {
       capture_data_->GetCallstackData().ForEachCallstackEventInTimeRange(
@@ -270,11 +272,11 @@ std::string CallstackThreadBar::FormatCallstackForTooltip(const CallstackInfo& c
   return result;
 }
 
-std::string CallstackThreadBar::GetSampleTooltip(const PrimitiveAssembler& batcher,
+std::string CallstackThreadBar::GetSampleTooltip(const PrimitiveAssembler& primitive_assembler,
                                                  PickingId id) const {
   static const std::string unknown_return_text = "Function call information missing";
 
-  const PickingUserData* user_data = batcher.GetUserData(id);
+  const PickingUserData* user_data = primitive_assembler.GetUserData(id);
   if (user_data == nullptr || user_data->custom_data_ == nullptr) {
     return unknown_return_text;
   }

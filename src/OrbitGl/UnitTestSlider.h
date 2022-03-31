@@ -14,7 +14,7 @@ namespace orbit_gl {
 class UnitTestHorizontalSlider : public GlHorizontalSlider {
  public:
   explicit UnitTestHorizontalSlider(Viewport& viewport) : GlHorizontalSlider(viewport){};
-  void Draw(PrimitiveAssembler& /*batcher*/, bool /*is_picked*/) override{};
+  void Draw(PrimitiveAssembler& /*primitive_assembler*/, bool /*is_picked*/) override{};
 
   bool IsMouseOver() { return is_mouse_over_; }
 };
@@ -22,7 +22,7 @@ class UnitTestHorizontalSlider : public GlHorizontalSlider {
 class UnitTestVerticalSlider : public GlVerticalSlider {
  public:
   explicit UnitTestVerticalSlider(Viewport& viewport) : GlVerticalSlider(viewport){};
-  void Draw(PrimitiveAssembler& /*batcher*/, bool /*is_picked*/) override{};
+  void Draw(PrimitiveAssembler& /*primitive_assembler*/, bool /*is_picked*/) override{};
 
   bool IsMouseOver() { return is_mouse_over_; }
 };

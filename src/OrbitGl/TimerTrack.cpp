@@ -217,21 +217,23 @@ bool TimerTrack::DrawTimer(TextRenderer& text_renderer, const TimerInfo* prev_ti
     Vec3 bottom_right(
         world_x_info_right_overlap.world_x_start + world_x_info_right_overlap.world_x_width,
         world_timer_y + box_height, draw_data.z);
-    PrimitiveAssembler* batcher = draw_data.batcher;
-    draw_data.batcher->AddShadedTrapezium(top_left, bottom_left, bottom_right, top_right, color,
-                                          CreatePickingUserData(*batcher, *current_timer_info));
+    PrimitiveAssembler* primitive_assembler = draw_data.primitive_assembler;
+    draw_data.primitive_assembler->AddShadedTrapezium(
+        top_left, bottom_left, bottom_right, top_right, color,
+        CreatePickingUserData(*primitive_assembler, *current_timer_info));
   } else {
-    PrimitiveAssembler* batcher = draw_data.batcher;
+    PrimitiveAssembler* primitive_assembler = draw_data.primitive_assembler;
     auto user_data = std::make_unique<PickingUserData>(
-        current_timer_info,
-        [&, batcher](PickingId id) { return this->GetBoxTooltip(*batcher, id); });
+        current_timer_info, [&, primitive_assembler](PickingId id) {
+          return this->GetBoxTooltip(*primitive_assembler, id);
+        });
 
     WorldXInfo world_x_info = ToWorldX(start_us, end_us, draw_data.inv_time_window,
                                        draw_data.track_start_x, draw_data.track_width);
 
     Vec2 pos(world_x_info.world_x_start, world_timer_y);
-    draw_data.batcher->AddVerticalLine(pos, GetDynamicBoxHeight(*current_timer_info), draw_data.z,
-                                       color, std::move(user_data));
+    draw_data.primitive_assembler->AddVerticalLine(pos, GetDynamicBoxHeight(*current_timer_info),
+                                                   draw_data.z, color, std::move(user_data));
     // For lines, we can ignore the entire pixel into which this event
     // falls. We align this precisely on the pixel x-coordinate of the
     // current line being drawn (in ticks).
@@ -246,11 +248,11 @@ bool TimerTrack::DrawTimer(TextRenderer& text_renderer, const TimerInfo* prev_ti
   return true;
 }
 
-void TimerTrack::DoUpdatePrimitives(PrimitiveAssembler& batcher, TextRenderer& text_renderer,
-                                    uint64_t min_tick, uint64_t max_tick,
-                                    PickingMode picking_mode) {
+void TimerTrack::DoUpdatePrimitives(PrimitiveAssembler& primitive_assembler,
+                                    TextRenderer& text_renderer, uint64_t min_tick,
+                                    uint64_t max_tick, PickingMode picking_mode) {
   ORBIT_SCOPE_WITH_COLOR("TimerTrack::DoUpdatePrimitives", kOrbitColorOrange);
-  Track::DoUpdatePrimitives(batcher, text_renderer, min_tick, max_tick, picking_mode);
+  Track::DoUpdatePrimitives(primitive_assembler, text_renderer, min_tick, max_tick, picking_mode);
 
   visible_timer_count_ = 0;
 
@@ -258,7 +260,7 @@ void TimerTrack::DoUpdatePrimitives(PrimitiveAssembler& batcher, TextRenderer& t
   draw_data.min_tick = min_tick;
   draw_data.max_tick = max_tick;
 
-  draw_data.batcher = &batcher;
+  draw_data.primitive_assembler = &primitive_assembler;
   draw_data.viewport = viewport_;
 
   draw_data.track_start_x = GetPos()[0];
@@ -352,7 +354,7 @@ const TimerInfo* TimerTrack::GetDown(const TimerInfo& timer_info) const {
 
 bool TimerTrack::IsEmpty() const { return timer_data_->IsEmpty(); }
 
-std::string TimerTrack::GetBoxTooltip(const PrimitiveAssembler& /*batcher*/,
+std::string TimerTrack::GetBoxTooltip(const PrimitiveAssembler& /*primitive_assembler*/,
                                       PickingId /*id*/) const {
   return "";
 }
@@ -363,7 +365,7 @@ float TimerTrack::GetHeightAboveTimers() const {
 
 internal::DrawData TimerTrack::GetDrawData(
     uint64_t min_tick, uint64_t max_tick, float track_pos_x, float track_width,
-    PrimitiveAssembler* batcher, const orbit_gl::TimelineInfoInterface* timeline_info,
+    PrimitiveAssembler* primitive_assembler, const orbit_gl::TimelineInfoInterface* timeline_info,
     const orbit_gl::Viewport* viewport, bool is_collapsed,
     const orbit_client_protos::TimerInfo* selected_timer, uint64_t highlighted_function_id,
     uint64_t highlighted_group_id,
@@ -371,7 +373,7 @@ internal::DrawData TimerTrack::GetDrawData(
   internal::DrawData draw_data{};
   draw_data.min_tick = min_tick;
   draw_data.max_tick = max_tick;
-  draw_data.batcher = batcher;
+  draw_data.primitive_assembler = primitive_assembler;
   draw_data.viewport = viewport;
   draw_data.track_start_x = track_pos_x;
   draw_data.track_width = track_width;

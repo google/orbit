@@ -40,9 +40,9 @@ AsyncTrack::AsyncTrack(CaptureViewElement* parent,
                  timer_data),
       name_(std::move(name)) {}
 
-[[nodiscard]] std::string AsyncTrack::GetBoxTooltip(const PrimitiveAssembler& batcher,
+[[nodiscard]] std::string AsyncTrack::GetBoxTooltip(const PrimitiveAssembler& primitive_assembler,
                                                     PickingId id) const {
-  const TimerInfo* timer_info = batcher.GetTimerInfo(id);
+  const TimerInfo* timer_info = primitive_assembler.GetTimerInfo(id);
   if (timer_info == nullptr) return "";
   auto* manual_inst_manager = app_->GetManualInstrumentationManager();
 
@@ -94,11 +94,12 @@ float AsyncTrack::GetHeight() const {
          layout_->GetTrackContentBottomMargin();
 }
 
-void AsyncTrack::DoUpdatePrimitives(PrimitiveAssembler& batcher, TextRenderer& text_renderer,
-                                    uint64_t min_tick, uint64_t max_tick,
-                                    PickingMode picking_mode) {
+void AsyncTrack::DoUpdatePrimitives(PrimitiveAssembler& primitive_assembler,
+                                    TextRenderer& text_renderer, uint64_t min_tick,
+                                    uint64_t max_tick, PickingMode picking_mode) {
   ORBIT_SCOPE_WITH_COLOR("AsyncTrack::DoUpdatePrimitives", kOrbitColorDeepPurple);
-  TimerTrack::DoUpdatePrimitives(batcher, text_renderer, min_tick, max_tick, picking_mode);
+  TimerTrack::DoUpdatePrimitives(primitive_assembler, text_renderer, min_tick, max_tick,
+                                 picking_mode);
 }
 
 float AsyncTrack::GetDefaultBoxHeight() const {
