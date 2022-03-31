@@ -54,13 +54,13 @@ void TimelineUi::RenderLabels(Batcher& batcher, TextRenderer& text_renderer,
 void TimelineUi::RenderMargin(Batcher& batcher) const {
   Vec2 margin_pos = Vec2(GetPos()[0], GetPos()[1] + GetHeightWithoutMargin());
   Vec2 margin_size = Vec2(GetSize()[0], GetMarginHeight());
-  batcher.AddBox(Box(margin_pos, margin_size, GlCanvas::kZValueOverlay),
+  batcher.AddBox(MakeBox(margin_pos, margin_size, GlCanvas::kZValueOverlay),
                  GlCanvas::kBackgroundColor);
 }
 
 void TimelineUi::RenderBackground(Batcher& batcher) const {
-  Box background_box(GetPos(), Vec2(GetWidth(), GetHeightWithoutMargin()),
-                     GlCanvas::kZValueTimeBar);
+  Tetragon background_box =
+      MakeBox(GetPos(), Vec2(GetWidth(), GetHeightWithoutMargin()), GlCanvas::kZValueTimeBar);
   batcher.AddBox(background_box, GlCanvas::kTimeBarBackgroundColor);
 }
 
@@ -87,7 +87,7 @@ void TimelineUi::RenderLabel(Batcher& batcher, TextRenderer& text_renderer, uint
   size[1] += 2.f * kLabelsPadding;
   pos[0] -= kLabelsPadding;
   pos[1] -= kLabelsPadding;
-  Box background_box(pos, size, label_z);
+  Tetragon background_box = MakeBox(pos, size, label_z);
   batcher.AddBox(background_box, background_color);
 }
 

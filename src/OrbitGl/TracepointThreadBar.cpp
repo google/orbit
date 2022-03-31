@@ -48,7 +48,7 @@ void TracepointThreadBar::DoDraw(Batcher& batcher, TextRenderer& text_renderer,
                           ? GlCanvas::kZValueEventBarPicking
                           : GlCanvas::kZValueEventBar;
   Color color = GetColor();
-  Box box(GetPos(), Vec2(GetWidth(), -GetHeight()), event_bar_z);
+  Tetragon box = MakeBox(GetPos(), Vec2(GetWidth(), -GetHeight()), event_bar_z);
   batcher.AddBox(box, color, shared_from_this());
 }
 

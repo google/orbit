@@ -83,7 +83,7 @@ static void DrawSquareDot(Batcher& batcher, Vec2 center, float radius, float z,
                           const Color& color) {
   Vec2 position(center[0] - radius, center[1] - radius);
   Vec2 size(2 * radius, 2 * radius);
-  batcher.AddBox(Box(position, size, z), color);
+  batcher.AddBox(MakeBox(position, size, z), color);
 }
 
 template <size_t Dimension>

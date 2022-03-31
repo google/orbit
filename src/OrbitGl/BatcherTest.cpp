@@ -112,7 +112,7 @@ TEST(Batcher, SimpleElementsDrawing) {
   batcher.AddTriangle(Triangle(Vec3(0, 0, 0), Vec3(0, 1, 0), Vec3(1, 0, 0)), Color(0, 255, 0, 255));
   ExpectDraw(batcher, 1, 1, 0);
   EXPECT_EQ(batcher.GetDrawnTriangleColors()[0], Color(0, 255, 0, 255));
-  batcher.AddBox(Box(Vec2(0, 0), Vec2(1, 1), 0), Color(255, 0, 0, 255));
+  batcher.AddBox(MakeBox(Vec2(0, 0), Vec2(1, 1), 0), Color(255, 0, 0, 255));
   ExpectDraw(batcher, 1, 1, 1);
   EXPECT_EQ(batcher.GetDrawnBoxColors()[0], Color(255, 0, 0, 255));
   batcher.StartNewFrame();
@@ -161,7 +161,8 @@ TEST(Batcher, PickingSimpleElements) {
   batcher.AddLine(Vec2(0, 0), Vec2(1, 0), 0, Color(255, 255, 255, 255), std::move(line_user_data));
   batcher.AddTriangle(Triangle(Vec3(0, 0, 0), Vec3(0, 1, 0), Vec3(1, 0, 0)), Color(0, 255, 0, 255),
                       std::move(triangle_user_data));
-  batcher.AddBox(Box(Vec2(0, 0), Vec2(1, 1), 0), Color(255, 0, 0, 255), std::move(box_user_data));
+  batcher.AddBox(MakeBox(Vec2(0, 0), Vec2(1, 1), 0), Color(255, 0, 0, 255),
+                 std::move(box_user_data));
 
   batcher.Draw(true);
   ExpectCustomDataEq(batcher, batcher.GetDrawnLineColors()[0], line_custom_data);
@@ -188,7 +189,7 @@ TEST(Batcher, PickingPickables) {
   batcher.AddLine(Vec2(0, 0), Vec2(1, 0), 0, Color(255, 255, 255, 255), line_pickable);
   batcher.AddTriangle(Triangle(Vec3(0, 0, 0), Vec3(0, 1, 0), Vec3(1, 0, 0)), Color(0, 255, 0, 255),
                       triangle_pickable);
-  batcher.AddBox(Box(Vec2(0, 0), Vec2(1, 1), 0), Color(255, 0, 0, 255), box_pickable);
+  batcher.AddBox(MakeBox(Vec2(0, 0), Vec2(1, 1), 0), Color(255, 0, 0, 255), box_pickable);
 
   batcher.Draw(true);
   ExpectPickableEq(batcher, batcher.GetDrawnLineColors()[0], pm, line_pickable);
@@ -214,7 +215,8 @@ TEST(Batcher, MultipleDrawCalls) {
   batcher.AddLine(Vec2(0, 0), Vec2(1, 0), 0, Color(255, 255, 255, 255), std::move(line_user_data));
   batcher.AddTriangle(Triangle(Vec3(0, 0, 0), Vec3(0, 1, 0), Vec3(1, 0, 0)), Color(0, 255, 0, 255),
                       std::move(triangle_user_data));
-  batcher.AddBox(Box(Vec2(0, 0), Vec2(1, 1), 0), Color(255, 0, 0, 255), std::move(box_user_data));
+  batcher.AddBox(MakeBox(Vec2(0, 0), Vec2(1, 1), 0), Color(255, 0, 0, 255),
+                 std::move(box_user_data));
 
   batcher.Draw(true);
 

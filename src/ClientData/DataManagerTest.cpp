@@ -31,7 +31,7 @@ TEST(DataManager, CanOnlyBeUsedFromTheMainThread) {
   CallMethodOnDifferentThreadAndExpectDeath(data_manager, &DataManager::ClearSelectedFunctions);
   CallMethodOnDifferentThreadAndExpectDeath(data_manager, &DataManager::set_visible_function_ids,
                                             absl::flat_hash_set<uint64_t>{});
-  CallMethodOnDifferentThreadAndExpectDeath(data_manager, &DataManager::set_highlighted_function_id,
+  CallMethodOnDifferentThreadAndExpectDeath(data_manager, &DataManager::set_highlighted_scope_id,
                                             0);
   CallMethodOnDifferentThreadAndExpectDeath(data_manager, &DataManager::set_highlighted_group_id,
                                             0);

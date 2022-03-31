@@ -77,11 +77,11 @@ class Batcher {
   void AddVerticalLine(Vec2 pos, float size, float z, const Color& color,
                        std::shared_ptr<Pickable> pickable);
 
-  void AddBox(const Box& box, const std::array<Color, 4>& colors,
+  void AddBox(const Tetragon& box, const std::array<Color, 4>& colors,
               std::unique_ptr<PickingUserData> user_data = nullptr);
-  void AddBox(const Box& box, const Color& color,
+  void AddBox(const Tetragon& box, const Color& color,
               std::unique_ptr<PickingUserData> user_data = nullptr);
-  void AddBox(const Box& box, const Color& color, std::shared_ptr<Pickable> pickable);
+  void AddBox(const Tetragon& box, const Color& color, std::shared_ptr<Pickable> pickable);
 
   void AddShadedBox(Vec2 pos, Vec2 size, float z, const Color& color);
   void AddShadedBox(Vec2 pos, Vec2 size, float z, const Color& color,
@@ -102,8 +102,7 @@ class Batcher {
 
   void AddTriangle(const Triangle& triangle, const Color& color,
                    std::unique_ptr<PickingUserData> user_data = nullptr);
-  void AddShadedTrapezium(const Vec3& top_left, const Vec3& bottom_left, const Vec3& bottom_right,
-                          const Vec3& top_right, const Color& color,
+  void AddShadedTrapezium(const Tetragon& trapezium, const Color& color,
                           std::unique_ptr<PickingUserData> user_data = nullptr,
                           ShadingDirection shading_direction = ShadingDirection::kLeftToRight);
   void AddTriangle(const Triangle& triangle, const Color& color,
@@ -141,7 +140,7 @@ class Batcher {
   virtual void AddLineInternal(Vec2 from, Vec2 to, float z, const Color& color,
                                const Color& picking_color,
                                std::unique_ptr<PickingUserData> user_data) = 0;
-  virtual void AddBoxInternal(const Box& box, const std::array<Color, 4>& colors,
+  virtual void AddBoxInternal(const Tetragon& box, const std::array<Color, 4>& colors,
                               const Color& picking_color,
                               std::unique_ptr<PickingUserData> user_data) = 0;
   virtual void AddTriangleInternal(const Triangle& triangle, const std::array<Color, 3>& colors,

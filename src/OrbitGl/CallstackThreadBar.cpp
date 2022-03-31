@@ -69,7 +69,7 @@ void CallstackThreadBar::DoDraw(Batcher& batcher, TextRenderer& text_renderer,
                           : GlCanvas::kZValueEventBar;
   Color color = GetColor();
   const Vec2 pos = GetPos();
-  Box box(pos, Vec2(GetWidth(), GetHeight()), event_bar_z);
+  Tetragon box = MakeBox(pos, Vec2(GetWidth(), GetHeight()), event_bar_z);
   batcher.AddBox(box, color, shared_from_this());
 
   if (batcher.GetPickingManager()->IsThisElementPicked(this)) {
@@ -94,7 +94,7 @@ void CallstackThreadBar::DoDraw(Batcher& batcher, TextRenderer& text_renderer,
     y1 = y0 + GetHeight();
 
     Color picked_color(0, 128, 255, 128);
-    Box picked_box(Vec2(x0, y0), Vec2(x1 - x0, GetHeight()), GlCanvas::kZValueUi);
+    Tetragon picked_box = MakeBox(Vec2(x0, y0), Vec2(x1 - x0, GetHeight()), GlCanvas::kZValueUi);
     batcher.AddBox(picked_box, picked_color, shared_from_this());
   }
 }

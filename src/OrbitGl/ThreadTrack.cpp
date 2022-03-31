@@ -20,6 +20,7 @@
 #include "ClientData/CaptureData.h"
 #include "ClientData/FunctionUtils.h"
 #include "ClientData/ModuleAndFunctionLookup.h"
+#include "ClientData/ScopeIdConstants.h"
 #include "ClientData/TimerChain.h"
 #include "ClientProtos/capture_data.pb.h"
 #include "DisplayFormats/DisplayFormats.h"
@@ -211,14 +212,14 @@ float ThreadTrack::GetDefaultBoxHeight() const {
 }
 
 Color ThreadTrack::GetTimerColor(const TimerInfo& timer_info, const internal::DrawData& draw_data) {
-  uint64_t function_id = timer_info.function_id();
-  uint64_t group_id = timer_info.group_id();
-  bool is_selected = &timer_info == draw_data.selected_timer;
-  bool is_function_id_highlighted = function_id != orbit_grpc_protos::kInvalidFunctionId &&
-                                    function_id == draw_data.highlighted_function_id;
-  bool is_group_id_highlighted =
+  const uint64_t scope_id = app_->GetCaptureData().ProvideScopeId(timer_info);
+  const uint64_t group_id = timer_info.group_id();
+  const bool is_selected = &timer_info == draw_data.selected_timer;
+  const bool is_scope_id_highlighted =
+      scope_id != orbit_client_data::kInvalidScopeId && scope_id == draw_data.highlighted_scope_id;
+  const bool is_group_id_highlighted =
       group_id != kOrbitDefaultGroupId && group_id == draw_data.highlighted_group_id;
-  bool is_highlighted = !is_selected && (is_function_id_highlighted || is_group_id_highlighted);
+  const bool is_highlighted = !is_selected && (is_scope_id_highlighted || is_group_id_highlighted);
   return GetTimerColor(timer_info, is_selected, is_highlighted, draw_data);
 }
 
@@ -384,41 +385,6 @@ void ThreadTrack::OnTimer(const TimerInfo& timer_info) {
   return {world_timer_x, world_timer_width};
 }
 
-constexpr float kMinimalWidthToHaveBorder = 4.0;
-
-[[nodiscard]] bool ThreadTrack::ShouldHaveBorder(
-    const TimerInfo* timer, const std::optional<orbit_statistics::HistogramSelectionRange>& range,
-    float width) const {
-  if ((!range.has_value() || width < kMinimalWidthToHaveBorder || !app_->HasCaptureData()) ||
-      (app_->GetCaptureData().ProvideScopeId(*timer) != app_->GetHighlightedFunctionId())) {
-    return false;
-  }
-  const uint64_t duration = timer->end() - timer->start();
-  return range->min_duration <= duration && duration <= range->max_duration;
-}
-
-[[nodiscard]] static Vec2 Vec3ToVec2(const Vec3 v) { return {v[0], v[1]}; }
-
-void ThreadTrack::AddBorderLine(const Vec2& from, const Vec2& to, float z, const Color& color,
-                                Batcher& batcher,
-                                const orbit_client_protos::TimerInfo& timer_info) {
-  auto user_data = CreatePickingUserData(batcher, timer_info);
-  batcher.AddLine(from, to, z, color, std::move(user_data));
-}
-
-void ThreadTrack::AddBoxBorder(Batcher& batcher, const Box& box, const Color& color,
-                               const orbit_client_protos::TimerInfo& timer_info) {
-  float z = box.vertices[0][2];
-  AddBorderLine(Vec3ToVec2(box.vertices[0]), Vec3ToVec2(box.vertices[1]), z, color, batcher,
-                timer_info);
-  AddBorderLine(Vec3ToVec2(box.vertices[1]), Vec3ToVec2(box.vertices[2]), z, color, batcher,
-                timer_info);
-  AddBorderLine(Vec3ToVec2(box.vertices[2]), Vec3ToVec2(box.vertices[3]), z, color, batcher,
-                timer_info);
-  AddBorderLine(Vec3ToVec2(box.vertices[3]), Vec3ToVec2(box.vertices[0]), z, color, batcher,
-                timer_info);
-}
-
 // We minimize overdraw when drawing lines for small events by discarding events that would just
 // draw over an already drawn pixel line. When zoomed in enough that all events are drawn as boxes,
 // this has no effect. When zoomed  out, many events will be discarded quickly.
@@ -433,7 +399,7 @@ void ThreadTrack::DoUpdatePrimitives(Batcher& batcher, TextRenderer& text_render
 
   const internal::DrawData draw_data = GetDrawData(
       min_tick, max_tick, GetPos()[0], GetWidth(), &batcher, timeline_info_, viewport_,
-      collapse_toggle_->IsCollapsed(), app_->selected_timer(), app_->GetFunctionIdToHighlight(),
+      collapse_toggle_->IsCollapsed(), app_->selected_timer(), app_->GetScopeIdToHighlight(),
       app_->GetGroupIdToHighlight(), app_->GetHistogramSelectionRange());
 
   uint64_t resolution_in_pixels = draw_data.viewport->WorldToScreen({draw_data.track_width, 0})[0];
@@ -459,8 +425,8 @@ void ThreadTrack::DoUpdatePrimitives(Batcher& batcher, TextRenderer& text_render
         }
         batcher.AddShadedBox(pos, size, draw_data.z, color, std::move(user_data));
         if (ShouldHaveBorder(timer_info, draw_data.histogram_selection_range, size[0])) {
-          AddBoxBorder(batcher, {pos, size, GlCanvas::kZValueBox}, TimerTrack::kBoxBorderColor,
-                       *timer_info);
+          AddTetragonBorder(batcher, MakeBox(pos, size, GlCanvas::kZValueBoxBorder),
+                       TimerTrack::kBoxBorderColor, *timer_info);
         }
       } else {
         batcher.AddVerticalLine(pos, box_height, draw_data.z, color, std::move(user_data));

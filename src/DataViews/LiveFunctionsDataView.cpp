@@ -134,14 +134,20 @@ std::vector<int> LiveFunctionsDataView::GetVisibleSelectedIndices() {
 void LiveFunctionsDataView::UpdateHighlightedFunctionId(const std::vector<int>& rows) {
   app_->DeselectTimer();
   if (rows.empty()) {
-    app_->SetHighlightedFunctionId(orbit_grpc_protos::kInvalidFunctionId);
+    app_->SetHighlightedScopeId(orbit_grpc_protos::kInvalidFunctionId);
   } else {
-    app_->SetHighlightedFunctionId(GetInstrumentedFunctionId(rows[0]));
+    app_->SetHighlightedScopeId(GetInstrumentedFunctionId(rows[0]));
   }
 }
 
 void LiveFunctionsDataView::UpdateSelectedFunctionId() {
-  selected_function_id_ = app_->GetHighlightedFunctionId();
+  const uint64_t scope_id = app_->GetHighlightedScopeId();
+  // Temporarily, as LiveFunctionDataView handles functions only, we check if the scope_id
+  // corresponds to functions
+  if (!functions_.contains(scope_id)) {
+    selected_function_id_ = orbit_grpc_protos::kInvalidFunctionId;
+  }
+  selected_function_id_ = scope_id;
 }
 
 void LiveFunctionsDataView::UpdateHistogramWithIndices(

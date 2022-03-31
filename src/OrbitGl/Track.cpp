@@ -124,7 +124,7 @@ void Track::DoDraw(Batcher& batcher, TextRenderer& text_renderer, const DrawCont
   float tab_x0 = x0 + layout_->GetTrackTabOffset();
 
   const float indentation_x0 = tab_x0 + (indentation_level_ * layout_->GetTrackIndentOffset());
-  Box box(Vec2(indentation_x0, y0), Vec2(label_width, label_height), track_z);
+  Tetragon box = MakeBox(Vec2(indentation_x0, y0), Vec2(label_width, label_height), track_z);
   batcher.AddBox(box, track_background_color, shared_from_this());
 
   Vec2 track_size = GetSize();
@@ -193,7 +193,8 @@ void Track::DoDraw(Batcher& batcher, TextRenderer& text_renderer, const DrawCont
   // Draw track's content background.
   if (!picking) {
     if (layout_->GetDrawTrackBackground()) {
-      Box box(Vec2(x0, y0 + label_height), Vec2(GetWidth(), GetHeight() - label_height), track_z);
+      Tetragon box = MakeBox(Vec2(x0, y0 + label_height),
+                             Vec2(GetWidth(), GetHeight() - label_height), track_z);
       batcher.AddBox(box, track_background_color, shared_from_this());
     }
   }

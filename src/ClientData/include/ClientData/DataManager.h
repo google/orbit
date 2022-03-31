@@ -14,6 +14,7 @@
 
 #include "ApiInterface/Orbit.h"
 #include "ClientData/FunctionInfoSet.h"
+#include "ClientData/ScopeIdConstants.h"
 #include "ClientData/TracepointCustom.h"
 #include "ClientData/UserDefinedCaptureData.h"
 #include "ClientProtos/capture_data.pb.h"
@@ -35,7 +36,7 @@ class DataManager final {
   void DeselectFunction(const orbit_client_protos::FunctionInfo& function);
   void ClearSelectedFunctions();
   void set_visible_function_ids(absl::flat_hash_set<uint64_t> visible_function_ids);
-  void set_highlighted_function_id(uint64_t highlighted_function_id);
+  void set_highlighted_scope_id(uint64_t highlighted_function_id);
   void set_highlighted_group_id(uint64_t highlighted_group_id);
   void set_selected_thread_id(uint32_t thread_id);
   void set_selected_timer(const orbit_client_protos::TimerInfo* timer_info);
@@ -43,7 +44,7 @@ class DataManager final {
   [[nodiscard]] bool IsFunctionSelected(const orbit_client_protos::FunctionInfo& function) const;
   [[nodiscard]] std::vector<orbit_client_protos::FunctionInfo> GetSelectedFunctions() const;
   [[nodiscard]] bool IsFunctionVisible(uint64_t function_address) const;
-  [[nodiscard]] uint64_t highlighted_function_id() const;
+  [[nodiscard]] uint64_t highlighted_scope_id() const;
   [[nodiscard]] uint64_t highlighted_group_id() const;
   [[nodiscard]] uint32_t selected_thread_id() const;
   [[nodiscard]] const orbit_client_protos::TimerInfo* selected_timer() const;
@@ -107,7 +108,7 @@ class DataManager final {
   const std::thread::id main_thread_id_;
   FunctionInfoSet selected_functions_;
   absl::flat_hash_set<uint64_t> visible_function_ids_;
-  uint64_t highlighted_function_id_ = orbit_grpc_protos::kInvalidFunctionId;
+  uint64_t highlighted_scope_id_ = kInvalidScopeId;
   uint64_t highlighted_group_id_ = kOrbitDefaultGroupId;
 
   TracepointInfoSet selected_tracepoints_;

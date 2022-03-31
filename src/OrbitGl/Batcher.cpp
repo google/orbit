@@ -8,6 +8,8 @@
 #include <math.h>
 #include <stddef.h>
 
+#include "Geometry.h"
+
 namespace orbit_gl {
 
 void Batcher::AddLine(Vec2 from, Vec2 to, float z, const Color& color,
@@ -40,20 +42,20 @@ void Batcher::AddVerticalLine(Vec2 pos, float size, float z, const Color& color,
   AddLineInternal(pos, pos + Vec2(0, size), z, color, picking_color, nullptr);
 }
 
-void Batcher::AddBox(const Box& box, const std::array<Color, 4>& colors,
+void Batcher::AddBox(const Tetragon& box, const std::array<Color, 4>& colors,
                      std::unique_ptr<PickingUserData> user_data) {
   Color picking_color = PickingId::ToColor(PickingType::kBox, user_data_.size(), batcher_id_);
   AddBoxInternal(box, colors, picking_color, std::move(user_data));
 }
 
-void Batcher::AddBox(const Box& box, const Color& color,
+void Batcher::AddBox(const Tetragon& box, const Color& color,
                      std::unique_ptr<PickingUserData> user_data) {
   std::array<Color, 4> colors;
   colors.fill(color);
   AddBox(box, colors, std::move(user_data));
 }
 
-void Batcher::AddBox(const Box& box, const Color& color, std::shared_ptr<Pickable> pickable) {
+void Batcher::AddBox(const Tetragon& box, const Color& color, std::shared_ptr<Pickable> pickable) {
   ORBIT_CHECK(picking_manager_ != nullptr);
 
   Color picking_color = picking_manager_->GetPickableColor(pickable, batcher_id_);
@@ -78,7 +80,7 @@ void Batcher::AddShadedBox(Vec2 pos, Vec2 size, float z, const Color& color,
                            ShadingDirection shading_direction) {
   std::array<Color, 4> colors;
   GetBoxGradientColors(color, &colors, shading_direction);
-  Box box(pos, size, z);
+  Tetragon box = MakeBox(pos, size, z);
   AddBox(box, colors, std::move(user_data));
 }
 
@@ -141,10 +143,11 @@ void Batcher::AddRoundedBox(Vec2 pos, Vec2 size, float z, float radius, const Co
   pos -= extra_margin;
   size += 2.f * extra_margin;
 
-  Box left_box(Vec2(pos[0], pos[1] + radius), Vec2(radius, size[1] - 2 * radius), z);
-  Box middle_box(Vec2(pos[0] + radius, pos[1]), Vec2(size[0] - 2 * radius, size[1]), z);
-  Box right_box(Vec2(pos[0] + size[0] - radius, pos[1] + radius),
-                Vec2(radius, size[1] - 2 * radius), z);
+  Tetragon left_box = MakeBox(Vec2(pos[0], pos[1] + radius), Vec2(radius, size[1] - 2 * radius), z);
+  Tetragon middle_box =
+      MakeBox(Vec2(pos[0] + radius, pos[1]), Vec2(size[0] - 2 * radius, size[1]), z);
+  Tetragon right_box = MakeBox(Vec2(pos[0] + size[0] - radius, pos[1] + radius),
+                               Vec2(radius, size[1] - 2 * radius), z);
 
   AddBox(left_box, color);
   AddBox(middle_box, color);
@@ -166,7 +169,7 @@ void Batcher::AddShadedBox(Vec2 pos, Vec2 size, float z, const Color& color,
   std::array<Color, 4> colors;
   GetBoxGradientColors(color, &colors, shading_direction);
   Color picking_color = picking_manager_->GetPickableColor(pickable, batcher_id_);
-  Box box(pos, size, z);
+  Tetragon box = MakeBox(pos, size, z);
   AddBoxInternal(box, colors, picking_color, nullptr);
 }
 
@@ -194,18 +197,17 @@ void Batcher::AddTriangle(const Triangle& triangle, const Color& color, const Co
 }
 
 // Draw a shaded trapezium with two sides parallel to the x-axis or y-axis.
-void Batcher::AddShadedTrapezium(const Vec3& top_left, const Vec3& bottom_left,
-                                 const Vec3& bottom_right, const Vec3& top_right,
-                                 const Color& color, std::unique_ptr<PickingUserData> user_data,
+void Batcher::AddShadedTrapezium(const Tetragon& trapezium, const Color& color,
+                                 std::unique_ptr<PickingUserData> user_data,
                                  ShadingDirection shading_direction) {
   std::array<Color, 4> colors;  // top_left, bottom_left, bottom_right, top_right.
   GetBoxGradientColors(color, &colors, shading_direction);
   Color picking_color = PickingId::ToColor(PickingType::kTriangle, user_data_.size(), batcher_id_);
-  Triangle triangle_1{top_left, bottom_left, top_right};
+  Triangle triangle_1{trapezium.TopLeft(), trapezium.BottomLeft(), trapezium.TopRight()};
   std::array<Color, 3> colors_1{colors[0], colors[1], colors[2]};
   AddTriangleInternal(triangle_1, colors_1, picking_color,
                       std::make_unique<PickingUserData>(*user_data));
-  Triangle triangle_2{bottom_left, bottom_right, top_right};
+  Triangle triangle_2{trapezium.BottomLeft(), trapezium.BottomRight(), trapezium.TopRight()};
   std::array<Color, 3> colors_2{colors[1], colors[2], colors[3]};
   AddTriangleInternal(triangle_2, colors_2, picking_color, std::move(user_data));
 }

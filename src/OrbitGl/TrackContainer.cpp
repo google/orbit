@@ -144,7 +144,7 @@ std::string GetTimeString(const TimerInfo& timer_a, const TimerInfo& timer_b) {
 void TrackContainer::DrawIteratorBox(Batcher& batcher, TextRenderer& text_renderer, Vec2 pos,
                                      Vec2 size, const Color& color, const std::string& label,
                                      const std::string& time, float text_box_y) {
-  Box box(pos, size, GlCanvas::kZValueOverlay);
+  Tetragon box = MakeBox(pos, size, GlCanvas::kZValueOverlay);
   batcher.AddBox(box, color);
 
   std::string text = absl::StrFormat("%s: %s", label, time);
@@ -160,7 +160,7 @@ void TrackContainer::DrawIteratorBox(Batcher& batcher, TextRenderer& text_render
   Vec2 white_box_size(std::min(static_cast<float>(text_width), max_size), box_height);
   Vec2 white_box_position(pos[0], text_box_y);
 
-  Box white_box(white_box_position, white_box_size, GlCanvas::kZValueOverlayLabel);
+  Tetragon white_box = MakeBox(white_box_position, white_box_size, GlCanvas::kZValueOverlayLabel);
 
   const Color kWhite(255, 255, 255, 255);
   batcher.AddBox(white_box, kWhite);
@@ -326,7 +326,8 @@ void TrackContainer::DrawIncompleteDataIntervals(Batcher& batcher, PickingMode p
     }
 
     static const Color kIncompleteDataIntervalOrange{255, 128, 0, 32};
-    batcher.AddBox(Box{pos, size, z_value}, kIncompleteDataIntervalOrange, std::move(user_data));
+    batcher.AddBox(MakeBox(pos, size, z_value), kIncompleteDataIntervalOrange,
+                   std::move(user_data));
   }
 }
 

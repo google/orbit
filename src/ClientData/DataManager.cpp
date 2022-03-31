@@ -42,9 +42,9 @@ void DataManager::set_visible_function_ids(absl::flat_hash_set<uint64_t> visible
   visible_function_ids_ = std::move(visible_function_ids);
 }
 
-void DataManager::set_highlighted_function_id(uint64_t highlighted_function_id) {
+void DataManager::set_highlighted_scope_id(uint64_t highlighted_scope_id) {
   ORBIT_CHECK(std::this_thread::get_id() == main_thread_id_);
-  highlighted_function_id_ = highlighted_function_id;
+  highlighted_scope_id_ = highlighted_scope_id;
 }
 
 void DataManager::set_highlighted_group_id(uint64_t highlighted_group_id) {
@@ -77,9 +77,9 @@ bool DataManager::IsFunctionVisible(uint64_t function_id) const {
   return visible_function_ids_.contains(function_id);
 }
 
-uint64_t DataManager::highlighted_function_id() const {
+uint64_t DataManager::highlighted_scope_id() const {
   ORBIT_CHECK(std::this_thread::get_id() == main_thread_id_);
-  return highlighted_function_id_;
+  return highlighted_scope_id_;
 }
 
 uint64_t DataManager::highlighted_group_id() const {

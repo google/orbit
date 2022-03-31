@@ -103,7 +103,8 @@ void GraphTrack<Dimension>::DoUpdatePrimitives(Batcher& batcher, TextRenderer& t
   float content_height = GetGraphContentHeight();
   Vec2 content_pos = GetPos();
   content_pos[1] += layout_->GetTrackTabHeight();
-  Box box(content_pos, Vec2(GetWidth(), content_height + GetLegendHeight()), track_z);
+  Tetragon box =
+      MakeBox(content_pos, Vec2(GetWidth(), content_height + GetLegendHeight()), track_z);
   batcher.AddBox(box, GetTrackBackgroundColor(), shared_from_this());
 
   const bool picking = picking_mode != PickingMode::kNone;
@@ -197,7 +198,7 @@ void GraphTrack<Dimension>::DrawLabel(Batcher& batcher, TextRenderer& text_rende
 
   Vec2 arrow_box_position(text_box_position[0] - kTextLeftMargin,
                           text_box_position[1] - kTextBottomMargin);
-  Box arrow_text_box(arrow_box_position, arrow_box_size, label_z);
+  Tetragon arrow_text_box = MakeBox(arrow_box_position, arrow_box_size, label_z);
   Vec3 arrow_extra_point(target_pos[0], target_pos[1], label_z);
 
   batcher.AddBox(arrow_text_box, font_color);
