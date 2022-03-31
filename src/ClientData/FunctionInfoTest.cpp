@@ -55,7 +55,7 @@ TEST(FunctionInfo, DifferentSize) {
   EXPECT_EQ(left, right);
 }
 
-TEST(FunctionInfo, Insertion) {
+TEST(FunctionInfo, InsertionIntoSet) {
   FunctionInfo function{"/path/to/module", "buildid", 12, 16, "foo()"};
 
   absl::flat_hash_set<FunctionInfo> functions;
@@ -68,7 +68,7 @@ TEST(FunctionInfo, Insertion) {
   EXPECT_FALSE(functions.contains(other));
 }
 
-TEST(FunctionInfo, Deletion) {
+TEST(FunctionInfo, DeletionFromSet) {
   FunctionInfo function{"/path/to/module", "buildid", 12, 16, "foo()"};
 
   absl::flat_hash_set<FunctionInfo> functions;

@@ -67,8 +67,11 @@ std::string CallstackDataView::GetValue(int row, int column) {
     case kColumnSize:
       return function != nullptr ? absl::StrFormat("%lu", function->size()) : "";
     case kColumnModule: {
-      std::string module_name = std::filesystem::path(function->module_path()).filename().string();
-      if (function != nullptr && !module_name.empty()) {
+      std::string module_name =
+          (function == nullptr)
+              ? ""
+              : std::filesystem::path(function->module_path()).filename().string();
+      if (!module_name.empty()) {
         return module_name;
       }
       if (module != nullptr) {
