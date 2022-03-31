@@ -108,7 +108,7 @@ void TimerTrack::DrawTimesliceText(TextRenderer& text_renderer,
       GlCanvas::kZValueBox, formatting, elapsed_time_length);
 }
 
-[[nodiscard]] inline Tetragon TetragonWithZ(const Tetragon& tetragon, double z) {
+[[nodiscard]] inline Tetragon TetragonWithZ(const Tetragon& tetragon, float z) {
   Tetragon result = tetragon;
   for (Vec3& vertice : result.vertices) {
     vertice[2] = z;
