@@ -30,8 +30,8 @@ class TimerData final : public TimerDataInterface {
       uint64_t min_tick = std::numeric_limits<uint64_t>::min(),
       uint64_t max_tick = std::numeric_limits<uint64_t>::max()) const override {
     // TODO(b/204173236): use it in TimerTracks.
-    std::vector<const orbit_client_protos::TimerInfo*> timers;
     absl::MutexLock lock(&mutex_);
+    std::vector<const orbit_client_protos::TimerInfo*> timers;
     for (const auto& [depth, chain] : timers_) {
       ORBIT_CHECK(chain != nullptr);
       for (const auto& block : *chain) {

@@ -288,7 +288,7 @@ class CaptureData {
   TimerDataManager timer_data_manager_;
   std::unique_ptr<ThreadTrackDataProvider> thread_track_data_provider_;
 
-  absl::flat_hash_map<uint64_t, std::vector<uint64_t>> timer_durations_;
+  absl::flat_hash_map<uint64_t, std::vector<uint64_t>> scope_id_to_timer_durations_;
 };
 
 }  // namespace orbit_client_data

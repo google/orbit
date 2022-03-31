@@ -199,14 +199,14 @@ const std::string& CaptureData::GetScopeName(uint64_t scope_id) const {
 
 const std::vector<uint64_t>* CaptureData::GetSortedTimerDurationsForScopeId(
     uint64_t scope_id) const {
-  const auto it = timer_durations_.find(scope_id);
-  if (it == timer_durations_.end()) return nullptr;
+  const auto it = scope_id_to_timer_durations_.find(scope_id);
+  if (it == scope_id_to_timer_durations_.end()) return nullptr;
   return &it->second;
 }
 
 void CaptureData::UpdateTimerDurations() {
   ORBIT_SCOPE_FUNCTION;
-  timer_durations_.clear();
+  scope_id_to_timer_durations_.clear();
 
   for (const uint32_t thread_id : GetThreadTrackDataProvider()->GetAllThreadIds()) {
     const std::vector<const TimerInfo*> timers = GetThreadTrackDataProvider()->GetTimers(thread_id);
@@ -215,7 +215,7 @@ void CaptureData::UpdateTimerDurations() {
 
   CollectDurations(timer_data_manager_.GetTimers(orbit_client_protos::TimerInfo::kApiScopeAsync));
 
-  for (auto& [id, timer_durations] : timer_durations_) {
+  for (auto& [id, timer_durations] : scope_id_to_timer_durations_) {
     std::sort(timer_durations.begin(), timer_durations.end());
   }
 }
@@ -231,7 +231,7 @@ void CaptureData::CollectDuration(const TimerInfo* timer) {
 
   if (scope_id == orbit_client_data::kInvalidScopeId) return;
 
-  timer_durations_[scope_id].push_back(timer->end() - timer->start());
+  scope_id_to_timer_durations_[scope_id].push_back(timer->end() - timer->start());
 }
 
 }  // namespace orbit_client_data
