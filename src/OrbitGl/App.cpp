@@ -2246,7 +2246,7 @@ void OrbitApp::UpdateProcessAndModuleList() {
 }
 
 void OrbitApp::RefreshUIAfterModuleReload() {
-  modules_data_view_->UpdateModules(GetMutableTargetProcess());
+  modules_data_view_->UpdateModules(GetTargetProcess());
 
   functions_data_view_->ClearFunctions();
   auto module_keys = GetTargetProcess()->GetUniqueModulesPathAndBuildId();
