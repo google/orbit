@@ -16,6 +16,8 @@
 #include <vector>
 
 #include "ClientSymbols/PersistentStorageManager.h"
+#include "MetricsUploader/MetricsUploader.h"
+#include "MetricsUploader/ScopedMetric.h"
 #include "OrbitBase/Result.h"
 
 namespace Ui {
@@ -30,14 +32,15 @@ class SymbolLocationsDialog : public QDialog {
  public:
   explicit SymbolLocationsDialog(
       orbit_client_symbols::PersistentStorageManager* persistent_storage_manager,
-      bool allow_unsafe_symbols = false,
+      orbit_metrics_uploader::MetricsUploader* metrics_uploader, bool allow_unsafe_symbols = false,
       std::optional<const orbit_client_data::ModuleData*> module = std::nullopt,
       QWidget* parent = nullptr);
   ~SymbolLocationsDialog() override;
 
   // TryAddSymbolPath will add the path if its not in the list of paths. In case it is, an error
   // message is returned. A path here is either a path to directory, or a path to a file.
-  ErrorMessageOr<void> TryAddSymbolPath(const std::filesystem::path& path);
+  ErrorMessageOr<void> TryAddSymbolPath(const std::filesystem::path& path,
+                                        orbit_metrics_uploader::ScopedMetric metric);
   // TryAddSymbolFile will add the file_path as a symbol file to the list when possible. The
   // requirements are dependent on the state of this dialog, as follows.
   // 1. If the dialog was opened without a module (not error case), the file will be added (via
@@ -65,6 +68,7 @@ class SymbolLocationsDialog : public QDialog {
   std::optional<const orbit_client_data::ModuleData*> module_;
   orbit_client_symbols::PersistentStorageManager* persistent_storage_manager_ = nullptr;
   orbit_client_symbols::ModuleSymbolFileMappings module_symbol_file_mappings_;
+  orbit_metrics_uploader::MetricsUploader* metrics_uploader_;
 
   void AddSymbolPathsToListWidget(absl::Span<const std::filesystem::path> paths);
   [[nodiscard]] std::vector<std::filesystem::path> GetSymbolPathsFromListWidget();

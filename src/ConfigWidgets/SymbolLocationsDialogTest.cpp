@@ -22,12 +22,15 @@
 #include "ClientSymbols/PersistentStorageManager.h"
 #include "ConfigWidgets/SymbolLocationsDialog.h"
 #include "GrpcProtos/module.pb.h"
+#include "MetricsUploader/ScopedMetric.h"
+#include "MetricsUploader/orbit_log_event.pb.h"
 #include "Test/Path.h"
 #include "TestUtils/TestUtils.h"
 
 namespace orbit_config_widgets {
 
 using orbit_client_symbols::ModuleSymbolFileMappings;
+using orbit_metrics_uploader::OrbitLogEvent;
 using orbit_test_utils::HasError;
 using orbit_test_utils::HasValue;
 
@@ -37,6 +40,25 @@ class MockPersistentStorageManager : public orbit_client_symbols::PersistentStor
   MOCK_METHOD(std::vector<std::filesystem::path>, LoadPaths, (), (override));
   MOCK_METHOD(void, SaveModuleSymbolFileMappings, ((const ModuleSymbolFileMappings&)), (override));
   MOCK_METHOD((ModuleSymbolFileMappings), LoadModuleSymbolFileMappings, (), (override));
+};
+
+class MockMetricsUploader : public orbit_metrics_uploader::MetricsUploader {
+ public:
+  MOCK_METHOD(bool, SendLogEvent,
+              (orbit_metrics_uploader::OrbitLogEvent_LogEventType /*log_event_type*/), (override));
+  MOCK_METHOD(bool, SendLogEvent,
+              (orbit_metrics_uploader::OrbitLogEvent_LogEventType /*log_event_type*/,
+               std::chrono::milliseconds /*event_duration*/),
+              (override));
+  MOCK_METHOD(bool, SendLogEvent,
+              (orbit_metrics_uploader::OrbitLogEvent_LogEventType /*log_event_type*/,
+               std::chrono::milliseconds /*event_duration*/,
+               OrbitLogEvent::StatusCode /*status_code*/),
+              (override));
+  MOCK_METHOD(bool, SendCaptureEvent,
+              (orbit_metrics_uploader::OrbitCaptureData /*capture data*/,
+               OrbitLogEvent::StatusCode /*status_code*/),
+              (override));
 };
 
 class SymbolLocationsDialogTest : public ::testing::Test {
@@ -97,14 +119,36 @@ class SymbolLocationsDialogTest : public ::testing::Test {
         },
         Qt::QueuedConnection);
   }
+  void SetExpectMetricOpenWithoutModule() {
+    EXPECT_CALL(mock_uploader_, SendLogEvent(OrbitLogEvent::ORBIT_SYMBOL_LOCATIONS_OPEN_FROM_MENU));
+  }
+  void SetExpectMetricOpenWithModule() {
+    EXPECT_CALL(mock_uploader_,
+                SendLogEvent(OrbitLogEvent::ORBIT_SYMBOL_LOCATIONS_OPEN_FROM_ERROR));
+  }
+  void SetExpectSendLogEventCall(orbit_metrics_uploader::OrbitLogEvent_LogEventType type,
+                                 OrbitLogEvent::StatusCode status_code) {
+    EXPECT_CALL(mock_uploader_, SendLogEvent(type, testing::_, status_code))
+        .WillOnce(testing::Return(true));
+  }
+  orbit_metrics_uploader::ScopedMetric CreateMockScopedMetric(
+      OrbitLogEvent::StatusCode status_code) {
+    SetExpectSendLogEventCall(OrbitLogEvent::UNKNOWN_EVENT_TYPE, status_code);
+    return orbit_metrics_uploader::ScopedMetric{&mock_uploader_, OrbitLogEvent::UNKNOWN_EVENT_TYPE};
+  }
+  void SetExpectAddFileLogEvent(OrbitLogEvent::StatusCode status_code) {
+    SetExpectSendLogEventCall(OrbitLogEvent::ORBIT_SYMBOL_LOCATIONS_ADD_FILE, status_code);
+  }
 
   MockPersistentStorageManager mock_storage_manager_;
+  MockMetricsUploader mock_uploader_;
 };
 
 TEST_F(SymbolLocationsDialogTest, ConstructEmpty) {
   SetLoadAndExpectedSaveEmpty();
 
-  SymbolLocationsDialog dialog{&mock_storage_manager_};
+  SetExpectMetricOpenWithoutModule();
+  SymbolLocationsDialog dialog{&mock_storage_manager_, &mock_uploader_};
 
   auto* list_widget = dialog.findChild<QListWidget*>("listWidget");
   ASSERT_NE(list_widget, nullptr);
@@ -127,7 +171,8 @@ TEST_F(SymbolLocationsDialogTest, ConstructNonEmptyNoUnsafeSymbols) {
   SetLoadMappings(mappings);
   SetExpectedSaveMappings(mappings);
 
-  SymbolLocationsDialog dialog{&mock_storage_manager_};
+  SetExpectMetricOpenWithoutModule();
+  SymbolLocationsDialog dialog{&mock_storage_manager_, &mock_uploader_};
 
   auto* list_widget = dialog.findChild<QListWidget*>("listWidget");
   ASSERT_NE(list_widget, nullptr);
@@ -147,7 +192,8 @@ TEST_F(SymbolLocationsDialogTest, ConstructNonEmptyWithUnsafeSymbols) {
   SetLoadMappings(mappings);
   SetExpectedSaveMappings(mappings);
 
-  SymbolLocationsDialog dialog{&mock_storage_manager_, true};
+  SetExpectMetricOpenWithoutModule();
+  SymbolLocationsDialog dialog{&mock_storage_manager_, &mock_uploader_, true};
 
   auto* list_widget = dialog.findChild<QListWidget*>("listWidget");
   ASSERT_NE(list_widget, nullptr);
@@ -163,7 +209,8 @@ TEST_F(SymbolLocationsDialogTest, ConstructWithElfModuleNoBuildId) {
 
   SetLoadAndExpectedSaveEmpty();
 
-  SymbolLocationsDialog dialog{&mock_storage_manager_, true, &module};
+  SetExpectMetricOpenWithModule();
+  SymbolLocationsDialog dialog{&mock_storage_manager_, &mock_uploader_, true, &module};
 
   auto* add_folder_button = dialog.findChild<QPushButton*>("addFolderButton");
   ASSERT_NE(add_folder_button, nullptr);
@@ -183,7 +230,8 @@ TEST_F(SymbolLocationsDialogTest, ConstructWithElfModuleWithBuildId) {
 
   SetLoadAndExpectedSaveEmpty();
 
-  SymbolLocationsDialog dialog{&mock_storage_manager_, false, &module};
+  SetExpectMetricOpenWithModule();
+  SymbolLocationsDialog dialog{&mock_storage_manager_, &mock_uploader_, false, &module};
 
   auto* add_folder_button = dialog.findChild<QPushButton*>("addFolderButton");
   ASSERT_NE(add_folder_button, nullptr);
@@ -205,32 +253,34 @@ TEST_F(SymbolLocationsDialogTest, TryAddSymbolPath) {
   SetLoadMappings({});
   SetExpectedSaveMappings({});
 
-  SymbolLocationsDialog dialog{&mock_storage_manager_};
+  SetExpectMetricOpenWithoutModule();
+  SymbolLocationsDialog dialog{&mock_storage_manager_, &mock_uploader_};
   auto* list_widget = dialog.findChild<QListWidget*>("listWidget");
   ASSERT_NE(list_widget, nullptr);
   EXPECT_EQ(list_widget->count(), 0);
 
   {  // simple add succeeds
-    auto result = dialog.TryAddSymbolPath(path);
+    auto result = dialog.TryAddSymbolPath(path, CreateMockScopedMetric(OrbitLogEvent::SUCCESS));
     EXPECT_TRUE(result.has_value());
     EXPECT_EQ(list_widget->count(), 1);
   }
 
   {  // add the same path again -> warning that needs to be dismissed and nothing changes
-    auto result = dialog.TryAddSymbolPath(path);
+    auto result =
+        dialog.TryAddSymbolPath(path, CreateMockScopedMetric(OrbitLogEvent::INTERNAL_ERROR));
     ASSERT_TRUE(result.has_error());
     EXPECT_THAT(result, HasError("Unable to add selected path, it is already part of the list."));
     EXPECT_EQ(list_widget->count(), 1);
   }
 
   {  // add different path succeeds
-    auto result = dialog.TryAddSymbolPath(path_2);
+    auto result = dialog.TryAddSymbolPath(path_2, CreateMockScopedMetric(OrbitLogEvent::SUCCESS));
     EXPECT_TRUE(result.has_value());
     EXPECT_EQ(list_widget->count(), 2);
   }
 
   {  // add path to file should succeed
-    auto result = dialog.TryAddSymbolPath(file);
+    auto result = dialog.TryAddSymbolPath(file, CreateMockScopedMetric(OrbitLogEvent::SUCCESS));
     EXPECT_EQ(list_widget->count(), 3);
   }
 }
@@ -244,10 +294,12 @@ TEST_F(SymbolLocationsDialogTest, TryAddSymbolFileWithoutModule) {
   SetLoadMappings({});
   SetExpectedSaveMappings({});
 
-  SymbolLocationsDialog dialog{&mock_storage_manager_};
+  SetExpectMetricOpenWithoutModule();
+  SymbolLocationsDialog dialog{&mock_storage_manager_, &mock_uploader_};
 
   // success case
   {
+    SetExpectAddFileLogEvent(OrbitLogEvent::SUCCESS);
     auto result = dialog.TryAddSymbolFile(hello_world_elf);
     EXPECT_TRUE(result.has_value());
   }
@@ -255,6 +307,7 @@ TEST_F(SymbolLocationsDialogTest, TryAddSymbolFileWithoutModule) {
   // fails because not an object_file
   std::filesystem::path text_file = orbit_test::GetTestdataDir() / "textfile.txt";
   {
+    SetExpectAddFileLogEvent(OrbitLogEvent::INTERNAL_ERROR);
     auto result = dialog.TryAddSymbolFile(text_file);
     EXPECT_THAT(result, HasError("The selected file is not a viable symbol file"));
   }
@@ -263,6 +316,7 @@ TEST_F(SymbolLocationsDialogTest, TryAddSymbolFileWithoutModule) {
   std::filesystem::path hello_world_elf_no_build_id =
       orbit_test::GetTestdataDir() / "hello_world_elf_no_build_id";
   {
+    SetExpectAddFileLogEvent(OrbitLogEvent::INTERNAL_ERROR);
     auto result = dialog.TryAddSymbolFile(hello_world_elf_no_build_id);
 
     EXPECT_THAT(result, HasError("The selected file does not contain a build id"));
@@ -285,10 +339,12 @@ TEST_F(SymbolLocationsDialogTest, TryAddSymbolFileWithModuleNoOverride) {
   SetLoadMappings({});
   SetExpectedSaveMappings({});
 
-  SymbolLocationsDialog dialog{&mock_storage_manager_, false, &module};
+  SetExpectMetricOpenWithModule();
+  SymbolLocationsDialog dialog{&mock_storage_manager_, &mock_uploader_, false, &module};
 
   // Success (build id matches)
   {
+    SetExpectAddFileLogEvent(OrbitLogEvent::SUCCESS);
     auto result = dialog.TryAddSymbolFile(no_symbols_elf_debug);
     EXPECT_TRUE(result.has_value());
   }
@@ -296,6 +352,7 @@ TEST_F(SymbolLocationsDialogTest, TryAddSymbolFileWithModuleNoOverride) {
   // fail (build id different)
   std::filesystem::path libc_debug = orbit_test::GetTestdataDir() / "libc.debug";
   {
+    SetExpectAddFileLogEvent(OrbitLogEvent::INTERNAL_ERROR);
     auto result = dialog.TryAddSymbolFile(libc_debug);
     EXPECT_THAT(result, HasError("The build ids of module and symbols file do not match."));
   }
@@ -320,17 +377,22 @@ TEST_F(SymbolLocationsDialogTest, TryAddSymbolFileOverrideStaleSymbols) {
   mappings[module.file_path()] = no_symbols_elf_stale_debug;
   SetExpectedSaveMappings(mappings);
 
-  SymbolLocationsDialog dialog(&mock_storage_manager_, true, &module);
+  SetExpectMetricOpenWithModule();
+  SymbolLocationsDialog dialog(&mock_storage_manager_, &mock_uploader_, true, &module);
 
   auto* list_widget = dialog.findChild<QListWidget*>("listWidget");
   ASSERT_NE(list_widget, nullptr);
 
   {  // build id matches, symbols file is added without warning
+    SetExpectAddFileLogEvent(OrbitLogEvent::SUCCESS);
     EXPECT_THAT(dialog.TryAddSymbolFile(no_symbols_elf_debug), HasValue());
     EXPECT_EQ(list_widget->count(), 1);
   }
 
   {  // build id mismatch. Warning is displayed and dismissed
+    SetExpectAddFileLogEvent(OrbitLogEvent::SUCCESS);
+    SetExpectSendLogEventCall(OrbitLogEvent::ORBIT_SYMBOL_LOCATIONS_BUILD_ID_OVERRIDE,
+                              OrbitLogEvent::CANCELLED);
     bool message_box_cancelled = false;
     ScheduleMessageBoxCancellation(&dialog, message_box_cancelled);
     EXPECT_THAT(dialog.TryAddSymbolFile(no_symbols_elf_stale_debug), HasValue());
@@ -339,6 +401,9 @@ TEST_F(SymbolLocationsDialogTest, TryAddSymbolFileOverrideStaleSymbols) {
   }
 
   {  // build id mismatch. Warning is displayed and accepted
+    SetExpectAddFileLogEvent(OrbitLogEvent::SUCCESS);
+    SetExpectSendLogEventCall(OrbitLogEvent::ORBIT_SYMBOL_LOCATIONS_BUILD_ID_OVERRIDE,
+                              OrbitLogEvent::SUCCESS);
     bool message_box_accepted = false;
     ScheduleMessageBoxAcceptOverride(&dialog, &message_box_accepted);
     EXPECT_THAT(dialog.TryAddSymbolFile(no_symbols_elf_stale_debug), HasValue());
@@ -364,9 +429,13 @@ TEST_F(SymbolLocationsDialogTest, TryAddSymbolFileOverrideSymbolsNoBuildId) {
   mappings[module.file_path()] = symbols_file_no_build_id_debug;
   SetExpectedSaveMappings(mappings);
 
-  SymbolLocationsDialog dialog(&mock_storage_manager_, true, &module);
+  SetExpectMetricOpenWithModule();
+  SymbolLocationsDialog dialog(&mock_storage_manager_, &mock_uploader_, true, &module);
 
   {  // build id mismatch. Warning is displayed and accepted
+    SetExpectAddFileLogEvent(OrbitLogEvent::SUCCESS);
+    SetExpectSendLogEventCall(OrbitLogEvent::ORBIT_SYMBOL_LOCATIONS_BUILD_ID_OVERRIDE,
+                              OrbitLogEvent::SUCCESS);
     bool message_box_accepted = false;
     ScheduleMessageBoxAcceptOverride(&dialog, &message_box_accepted);
     EXPECT_THAT(dialog.TryAddSymbolFile(symbols_file_no_build_id_debug), HasValue());
@@ -390,9 +459,13 @@ TEST_F(SymbolLocationsDialogTest, TryAddSymbolFileOverrideModuleNoBuildIdSymbols
   mappings[module.file_path()] = symbols_file_no_build_id_debug;
   SetExpectedSaveMappings(mappings);
 
-  SymbolLocationsDialog dialog(&mock_storage_manager_, true, &module);
+  SetExpectMetricOpenWithModule();
+  SymbolLocationsDialog dialog(&mock_storage_manager_, &mock_uploader_, true, &module);
 
   {  // build id mismatch. Warning is displayed and accepted
+    SetExpectAddFileLogEvent(OrbitLogEvent::SUCCESS);
+    SetExpectSendLogEventCall(OrbitLogEvent::ORBIT_SYMBOL_LOCATIONS_BUILD_ID_OVERRIDE,
+                              OrbitLogEvent::SUCCESS);
     bool message_box_accepted = false;
     ScheduleMessageBoxAcceptOverride(&dialog, &message_box_accepted);
     EXPECT_THAT(dialog.TryAddSymbolFile(symbols_file_no_build_id_debug), HasValue());
@@ -408,7 +481,8 @@ TEST_F(SymbolLocationsDialogTest, RemoveButton) {
   SetLoadMappings(std::move(mappings));
   SetExpectedSaveMappings({});
 
-  SymbolLocationsDialog dialog{&mock_storage_manager_, true};
+  SetExpectMetricOpenWithoutModule();
+  SymbolLocationsDialog dialog{&mock_storage_manager_, &mock_uploader_, true};
 
   auto* remove_button = dialog.findChild<QPushButton*>("removeButton");
   ASSERT_NE(remove_button, nullptr);
@@ -420,6 +494,7 @@ TEST_F(SymbolLocationsDialogTest, RemoveButton) {
   list_widget->setCurrentRow(0);
   QApplication::processEvents();
   EXPECT_TRUE(remove_button->isEnabled());
+  EXPECT_CALL(mock_uploader_, SendLogEvent(OrbitLogEvent::ORBIT_SYMBOL_LOCATIONS_REMOVE));
   QTest::mouseClick(remove_button, Qt::MouseButton::LeftButton);
 
   EXPECT_EQ(list_widget->count(), 1);
@@ -427,6 +502,7 @@ TEST_F(SymbolLocationsDialogTest, RemoveButton) {
   QApplication::processEvents();
   EXPECT_TRUE(remove_button->isEnabled());
 
+  EXPECT_CALL(mock_uploader_, SendLogEvent(OrbitLogEvent::ORBIT_SYMBOL_LOCATIONS_REMOVE));
   QTest::mouseClick(remove_button, Qt::MouseButton::LeftButton);
 
   EXPECT_EQ(list_widget->count(), 0);

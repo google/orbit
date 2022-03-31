@@ -19,6 +19,8 @@
 #include <tuple>
 
 #include "GrpcProtos/module.pb.h"
+#include "MetricsUploader/ScopedMetric.h"
+#include "MetricsUploader/orbit_log_event.pb.h"
 #include "ObjectUtils/SymbolsFile.h"
 #include "OrbitBase/Logging.h"
 #include "OrbitBase/Result.h"
@@ -40,6 +42,8 @@ constexpr QListWidgetItem::ItemType kOverrideMappingItemType = QListWidgetItem::
 
 using orbit_client_data::ModuleData;
 using orbit_grpc_protos::ModuleInfo;
+using orbit_metrics_uploader::OrbitLogEvent;
+using orbit_metrics_uploader::ScopedMetric;
 using orbit_object_utils::SymbolsFile;
 
 namespace {
@@ -106,14 +110,17 @@ SymbolLocationsDialog::~SymbolLocationsDialog() {
 
 SymbolLocationsDialog::SymbolLocationsDialog(
     orbit_client_symbols::PersistentStorageManager* persistent_storage_manager,
-    bool allow_unsafe_symbols, std::optional<const ModuleData*> module, QWidget* parent)
+    orbit_metrics_uploader::MetricsUploader* metrics_uploader, bool allow_unsafe_symbols,
+    std::optional<const ModuleData*> module, QWidget* parent)
     : QDialog(parent),
       ui_(std::make_unique<Ui::SymbolLocationsDialog>()),
       allow_unsafe_symbols_(allow_unsafe_symbols),
       module_(module),
       persistent_storage_manager_(persistent_storage_manager),
-      module_symbol_file_mappings_(persistent_storage_manager_->LoadModuleSymbolFileMappings()) {
+      module_symbol_file_mappings_(persistent_storage_manager_->LoadModuleSymbolFileMappings()),
+      metrics_uploader_(metrics_uploader) {
   ORBIT_CHECK(persistent_storage_manager_ != nullptr);
+  ORBIT_CHECK(metrics_uploader_ != nullptr);
 
   // When the symbols dialog is started with a module (from the error) *and* only save symbols are
   // allowed, then the module is required to have a build ID. Without a build ID Orbit will not be
@@ -130,7 +137,11 @@ SymbolLocationsDialog::SymbolLocationsDialog(
   if (allow_unsafe_symbols_) AddModuleSymbolFileMappingsToList();
   AddSymbolPathsToListWidget(persistent_storage_manager_->LoadPaths());
 
-  if (!module_.has_value()) return;
+  if (!module_.has_value()) {
+    metrics_uploader_->SendLogEvent(OrbitLogEvent::ORBIT_SYMBOL_LOCATIONS_OPEN_FROM_MENU);
+    return;
+  }
+  metrics_uploader_->SendLogEvent(OrbitLogEvent::ORBIT_SYMBOL_LOCATIONS_OPEN_FROM_ERROR);
 
   SetUpModuleHeadlineLabel();
 
@@ -155,11 +166,13 @@ void SymbolLocationsDialog::AddSymbolPathsToListWidget(
   ui_->listWidget->addItems(paths_list);
 }
 
-ErrorMessageOr<void> SymbolLocationsDialog::TryAddSymbolPath(const std::filesystem::path& path) {
+ErrorMessageOr<void> SymbolLocationsDialog::TryAddSymbolPath(const std::filesystem::path& path,
+                                                             ScopedMetric metric) {
   QString path_as_qstring = QString::fromStdString(path.string());
   QList<QListWidgetItem*> find_result =
       ui_->listWidget->findItems(path_as_qstring, Qt::MatchFixedString);
   if (!find_result.isEmpty()) {
+    metric.SetStatusCode(OrbitLogEvent::INTERNAL_ERROR);
     return ErrorMessage("Unable to add selected path, it is already part of the list.");
   }
 
@@ -189,7 +202,10 @@ void SymbolLocationsDialog::OnAddFolderButtonClicked() {
   if (directory.isEmpty()) return;
 
   settings.setValue(kFileDialogSavedDirectoryKey, directory);
-  ErrorMessageOr<void> result = TryAddSymbolPath(std::filesystem::path{directory.toStdString()});
+
+  ScopedMetric metric{metrics_uploader_, OrbitLogEvent::ORBIT_SYMBOL_LOCATIONS_ADD_FOLDER};
+  ErrorMessageOr<void> result =
+      TryAddSymbolPath(std::filesystem::path{directory.toStdString()}, std::move(metric));
   if (!result.has_error()) return;
 
   QMessageBox::warning(this, "Unable to add folder",
@@ -205,6 +221,7 @@ void SymbolLocationsDialog::OnRemoveButtonClicked() {
       module_symbol_file_mappings_.erase(mapping_item->module_file_path_);
     }
     ui_->listWidget->takeItem(ui_->listWidget->row(selected_item));
+    metrics_uploader_->SendLogEvent(OrbitLogEvent::ORBIT_SYMBOL_LOCATIONS_REMOVE);
   }
 }
 
@@ -258,38 +275,64 @@ void SymbolLocationsDialog::OnAddFileButtonClicked() {
 
 ErrorMessageOr<void> SymbolLocationsDialog::TryAddSymbolFile(
     const std::filesystem::path& file_path) {
-  // If the dialog was opened without a module, every valid symbols file with build id can be added
-  if (!module_.has_value()) {
-    OUTCOME_TRY(CheckValidSymbolsFileWithBuildId(file_path));
-    return TryAddSymbolPath(file_path);
+  {  // Additional scope for add_file_metric timing
+    ScopedMetric add_file_metric{metrics_uploader_, OrbitLogEvent::ORBIT_SYMBOL_LOCATIONS_ADD_FILE};
+    // If the dialog was opened without a module, every valid symbols file with build id can be
+    // added
+    if (!module_.has_value()) {
+      ErrorMessageOr<void> check_result = CheckValidSymbolsFileWithBuildId(file_path);
+      if (check_result.has_error()) {
+        add_file_metric.SetStatusCode(OrbitLogEvent::INTERNAL_ERROR);
+        return check_result;
+      }
+      return TryAddSymbolPath(file_path, std::move(add_file_metric));
+    }
+
+    const ModuleData& module{*module_.value()};
+
+    ErrorMessageOr<std::unique_ptr<SymbolsFile>> symbols_file_or_error =
+        CreateValidSymbolsFile(file_path);
+    if (symbols_file_or_error.has_error()) {
+      add_file_metric.SetStatusCode(OrbitLogEvent::INTERNAL_ERROR);
+      return symbols_file_or_error.error();
+    }
+    const std::unique_ptr<SymbolsFile>& symbols_file{symbols_file_or_error.value()};
+
+    // If the build ids match, the file can be used
+    if (!module.build_id().empty() && module.build_id() == symbols_file->GetBuildId()) {
+      return TryAddSymbolPath(file_path, std::move(add_file_metric));
+    }
+
+    // If only safe symbols are allowed, then a mismatching error is returned here
+    if (!allow_unsafe_symbols_) {
+      std::string error = absl::StrFormat(
+          "The build ids of module and symbols file do not match. Module (%s) build id: \"%s\". "
+          "Symbol file (%s) build id: \"%s\".",
+          module.file_path(), module.build_id(), file_path.string(), symbols_file->GetBuildId());
+      add_file_metric.SetStatusCode(OrbitLogEvent::INTERNAL_ERROR);
+      return ErrorMessage(error);
+    }
   }
 
+  ORBIT_CHECK(module_.has_value());
   const ModuleData& module{*module_.value()};
 
-  OUTCOME_TRY(std::unique_ptr<SymbolsFile> symbols_file, CreateValidSymbolsFile(file_path));
+  OverrideWarningResult override_result = DisplayOverrideWarning();
 
-  // If the build ids match, the file can be used
-  if (!module.build_id().empty() && module.build_id() == symbols_file->GetBuildId()) {
-    return TryAddSymbolPath(file_path);
-  }
+  ScopedMetric override_metric{metrics_uploader_,
+                               OrbitLogEvent::ORBIT_SYMBOL_LOCATIONS_BUILD_ID_OVERRIDE};
 
-  // If only safe symbols are allowed, then a mismatching error is returned here
-  if (!allow_unsafe_symbols_) {
-    std::string error = absl::StrFormat(
-        "The build ids of module and symbols file do not match. Module (%s) build id: \"%s\". "
-        "Symbol file (%s) build id: \"%s\".",
-        module.file_path(), module.build_id(), file_path.string(), symbols_file->GetBuildId());
-    return ErrorMessage(error);
-  }
-
-  switch (DisplayOverrideWarning()) {
+  switch (override_result) {
     case OverrideWarningResult::kOverride:
       return AddMapping(module, file_path);
-    case OverrideWarningResult::kCancel:
+    case OverrideWarningResult::kCancel: {
+      override_metric.SetStatusCode(OrbitLogEvent::CANCELLED);
       // success here means "no error", aka the symbol file adding ended without an error (was
       // cancelled)
       return outcome::success();
+    }
   }
+  ORBIT_UNREACHABLE();
 }
 
 void SymbolLocationsDialog::OnListItemSelectionChanged() {
@@ -304,6 +347,7 @@ void SymbolLocationsDialog::OnMoreInfoButtonClicked() {
     QMessageBox::critical(this, "Error opening URL",
                           QString("Could not open %1").arg(url_as_string));
   }
+  metrics_uploader_->SendLogEvent(OrbitLogEvent::ORBIT_SYMBOL_LOCATIONS_MORE_INFO_CLICKED);
 }
 
 [[nodiscard]] SymbolLocationsDialog::OverrideWarningResult

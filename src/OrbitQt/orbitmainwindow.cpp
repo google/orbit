@@ -1438,7 +1438,8 @@ void OrbitMainWindow::ExecuteSymbolLocationsDialog(
     std::optional<const orbit_client_data::ModuleData*> module) {
   orbit_client_symbols::QSettingsBasedStorageManager client_symbols_storage_manager;
   orbit_config_widgets::SymbolLocationsDialog dialog{
-      &client_symbols_storage_manager, absl::GetFlag(FLAGS_enable_unsafe_symbols), module, this};
+      &client_symbols_storage_manager, metrics_uploader_,
+      absl::GetFlag(FLAGS_enable_unsafe_symbols), module, this};
   dialog.exec();
 }
 
