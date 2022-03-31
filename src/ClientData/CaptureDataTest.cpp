@@ -195,6 +195,7 @@ TEST_F(CaptureDataTest, VarianceIsCorrectOnRepeatedScimitarDataset) {
   const double actual_variance = capture_data_.GetScopeStatsOrDefault(kFirstId).variance_ns();
   EXPECT_LE(abs(actual_variance / kScimitarVariance - 1.0), 1e-5);
 }
+
 TEST_F(CaptureDataTest, UpdateTimerDurationsIsCorrect) {
   for (const TimerInfo& timer : kTimerInfos) {
     capture_data_.GetThreadTrackDataProvider()->AddTimer(timer);
