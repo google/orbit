@@ -23,7 +23,6 @@ using orbit_client_data::ModuleManager;
 using orbit_client_data::PostProcessedSamplingData;
 using orbit_client_data::ThreadSampleData;
 
-
 const std::vector<const CallTreeNode*>& CallTreeNode::children() const {
   if (children_cache_.has_value()) {
     return *children_cache_;

@@ -51,7 +51,6 @@ using orbit_client_data::FunctionInfo;
 using orbit_client_data::ProcessData;
 using orbit_client_data::TracepointInfoSet;
 
-
 using orbit_grpc_protos::CaptureOptions;
 using orbit_grpc_protos::ModuleInfo;
 using orbit_grpc_protos::ProcessInfo;
