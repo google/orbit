@@ -21,62 +21,70 @@ class ProcessData;
 class FunctionInfo {
  public:
   FunctionInfo() = delete;
-  FunctionInfo(std::string pretty_name, std::string module_path, std::string module_build_id,
-               uint64_t address, uint64_t size)
-      : pretty_name_(std::move(pretty_name)),
-        module_path_(std::move(module_path)),
+  FunctionInfo(std::string module_path, std::string module_build_id, uint64_t address,
+               uint64_t size, std::string pretty_name)
+      : module_path_(std::move(module_path)),
         module_build_id_(std::move(module_build_id)),
         address_(address),
-        size_(size) {}
+        size_(size),
+        pretty_name_(std::move(pretty_name)) {}
 
   FunctionInfo(const orbit_grpc_protos::SymbolInfo& symbol_info, std::string module_path,
                std::string module_build_id)
-      : pretty_name_{symbol_info.demangled_name()},
-        module_path_{std::move(module_path)},
+      : module_path_{std::move(module_path)},
         module_build_id_{std::move(module_build_id)},
         address_{symbol_info.address()},
-        size_{symbol_info.size()} {}
+        size_{symbol_info.size()},
+        pretty_name_{symbol_info.demangled_name()} {}
 
-  [[nodiscard]] const std::string& pretty_name() const { return pretty_name_; }
   [[nodiscard]] const std::string& module_path() const { return module_path_; }
   [[nodiscard]] const std::string& module_build_id() const { return module_build_id_; }
   [[nodiscard]] uint64_t address() const { return address_; }
   [[nodiscard]] uint64_t size() const { return size_; }
+  [[nodiscard]] const std::string& pretty_name() const { return pretty_name_; }
 
-  [[nodiscard]] std::string GetLoadedModuleName() const;
-  [[nodiscard]] uint64_t GetHash() const;
+  [[nodiscard]] uint64_t GetPrettyNameHash() const;
 
-  // Calculates and returns the absolute address of the function.
-  [[nodiscard]] uint64_t Offset(const ModuleData& module) const;
+  // Calculates and returns the absolute address of the function in the module file, i.e.
+  // "address - load bias".
+  [[nodiscard]] uint64_t FileOffset(uint64_t load_bias) const;
 
   // This function should not be used, since it could return incomplete or invalid
   // result in the case when one module is mapped two or more times. Try to find another way
   // of solving the problem, for example by converting an absolute address to a module offset and
   // then operating on that.
   // TODO(b/191248550): Disassemble from file instead of doing it from process memory.
+  // Please also remove the forward declaration of ProcessData and ModuleData when removing this.
   [[nodiscard, deprecated]] std::optional<uint64_t> GetAbsoluteAddress(
       const ProcessData& process, const ModuleData& module) const;
 
   [[nodiscard]] bool IsFunctionSelectable() const;
 
-  bool operator==(const FunctionInfo& rhs) const {
-    // Compare functions by module path and address
-    return module_path() == rhs.module_path() && module_build_id() == rhs.module_build_id() &&
-           address() == rhs.address();
+  [[nodiscard]] friend bool operator==(const FunctionInfo& lhs, const FunctionInfo& rhs) {
+    // Compare functions by module path, build_id and address. Explicitly ignore function name and
+    // size.
+    // TODO(b/227562690): We should also consider name and size.
+    return lhs.module_path() == rhs.module_path() &&
+           lhs.module_build_id() == rhs.module_build_id() && lhs.address() == rhs.address();
   }
-  bool operator!=(const FunctionInfo& rhs) const { return !(*this == rhs); }
+  [[nodiscard]] friend bool operator!=(const FunctionInfo& lhs, const FunctionInfo& rhs) {
+    return !(lhs == rhs);
+  }
 
   template <typename H>
   friend H AbslHashValue(H h, const FunctionInfo& o) {
+    // Hashes by module path, build_id and address. Explicitly ignore function name and
+    // size.
+    // TODO(b/227562690): We should also consider name and size.
     return H::combine(std::move(h), o.address(), o.module_build_id(), o.module_path());
   }
 
  private:
-  std::string pretty_name_;
   std::string module_path_;
   std::string module_build_id_;
   uint64_t address_;
   uint64_t size_;
+  std::string pretty_name_;
 };
 
 }  // namespace orbit_client_data

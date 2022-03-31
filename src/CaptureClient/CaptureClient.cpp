@@ -169,7 +169,7 @@ ErrorMessageOr<CaptureListener::CaptureOutcome> CaptureClient::CaptureSync(
     const ModuleData* module = module_manager.GetModuleByPathAndBuildId(function.module_path(),
                                                                         function.module_build_id());
     ORBIT_CHECK(module != nullptr);
-    instrumented_function->set_file_offset(function.Offset(*module));
+    instrumented_function->set_file_offset(function.FileOffset(module->load_bias()));
     instrumented_function->set_file_build_id(function.module_build_id());
     instrumented_function->set_function_id(function_id);
     instrumented_function->set_function_size(function.size());

@@ -103,7 +103,7 @@ std::string FunctionsDataView::GetValue(int row, int column) {
     case kColumnSize:
       return absl::StrFormat("%lu", function.size());
     case kColumnModule:
-      return function.GetLoadedModuleName();
+      return std::filesystem::path(function.module_path()).filename().string();
     case kColumnAddressInModule:
       return absl::StrFormat("%#x", function.address());
     default:
@@ -142,9 +142,13 @@ void FunctionsDataView::DoSort() {
     case kColumnSize:
       sorter = ORBIT_FUNC_SORT(size());
       break;
-    case kColumnModule:
-      sorter = ORBIT_FUNC_SORT(GetLoadedModuleName());
+    case kColumnModule: {
+      auto module_name = [](const orbit_client_data::FunctionInfo& function) {
+        return std::filesystem::path(function.module_path()).filename().string();
+      };
+      sorter = ORBIT_CUSTOM_FUNC_SORT(module_name);
       break;
+    }
     case kColumnAddressInModule:
       sorter = ORBIT_FUNC_SORT(address());
       break;
@@ -206,12 +210,12 @@ void FunctionsDataView::DoFilter() {
   orbit_base::TaskGroup task_group;
 
   for (size_t i = 0; i < chunks.size(); ++i) {
-    task_group.AddTask([& chunk = chunks[i], &result = task_results[i], this]() {
+    task_group.AddTask([&chunk = chunks[i], &result = task_results[i], this]() {
       ORBIT_SCOPE("FunctionsDataView::DoFilter Task");
       for (const FunctionInfo*& function : chunk) {
         ORBIT_CHECK(function != nullptr);
         std::string name = absl::AsciiStrToLower(function->pretty_name());
-        std::string module = function->GetLoadedModuleName();
+        std::string module = std::filesystem::path(function->module_path()).filename().string();
 
         const auto is_token_found = [&name, &module](const std::string& token) {
           return name.find(token) != std::string::npos || module.find(token) != std::string::npos;

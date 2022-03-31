@@ -56,8 +56,6 @@ class ModuleData final {
   [[nodiscard]] const FunctionInfo* FindFunctionFromPrettyName(std::string_view pretty_name) const;
   [[nodiscard]] std::vector<const FunctionInfo*> GetFunctions() const;
 
-  static std::string GetLoadedModuleNameByPath(std::string_view module_path);
-
  private:
   [[nodiscard]] bool NeedsUpdate(const orbit_grpc_protos::ModuleInfo& info) const;
 

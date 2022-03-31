@@ -229,9 +229,13 @@ void LiveFunctionsDataView::DoSort() {
     case kColumnStdDev:
       sorter = ORBIT_STAT_SORT(std_dev_ns());
       break;
-    case kColumnModule:
-      sorter = ORBIT_FUNC_SORT(GetLoadedModuleName());
+    case kColumnModule: {
+      auto module_name = [](const orbit_client_data::FunctionInfo& function) {
+        return std::filesystem::path(function.module_path()).filename().string();
+      };
+      sorter = ORBIT_CUSTOM_FUNC_SORT(module_name);
       break;
+    }
     case kColumnAddress:
       sorter = ORBIT_FUNC_SORT(address());
       break;
@@ -544,9 +548,9 @@ std::optional<FunctionInfo> LiveFunctionsDataView::CreateFunctionInfoFromInstrum
       app_->GetCaptureData().GetScopeName(instrumented_function.function_id());
 
   // size is unknown
-  FunctionInfo result{function_name, instrumented_function.file_path(),
-                      instrumented_function.file_build_id(),
-                      module_data->load_bias() + instrumented_function.file_offset(), /*size=*/0};
+  FunctionInfo result{instrumented_function.file_path(), instrumented_function.file_build_id(),
+                      module_data->load_bias() + instrumented_function.file_offset(), /*size=*/0,
+                      function_name};
 
   return result;
 }

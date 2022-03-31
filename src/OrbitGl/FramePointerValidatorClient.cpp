@@ -50,7 +50,7 @@ void FramePointerValidatorClient::AnalyzeModules(const std::vector<const ModuleD
     request.set_module_path(module->file_path());
     for (const FunctionInfo* function : functions) {
       CodeBlock* code_block = request.add_functions();
-      code_block->set_offset(function->Offset(*module));
+      code_block->set_offset(function->FileOffset(module->load_bias()));
       code_block->set_size(function->size());
     }
     grpc::ClientContext context;

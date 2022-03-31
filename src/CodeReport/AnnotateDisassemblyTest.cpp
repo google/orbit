@@ -50,8 +50,8 @@ static void TestSimple(bool windows_line_endings) {
     absl::StrReplaceAll({{"\n", "\r\n"}}, &source_file_contents);
   }
 
-  orbit_client_data::FunctionInfo function_info{"main", "line_info_test_binary", "buildid",
-                                                0x401140, kMainFunctionInstructions.size()};
+  orbit_client_data::FunctionInfo function_info{"line_info_test_binary", "buildid", 0x401140,
+                                                kMainFunctionInstructions.size(), "main"};
 
   orbit_code_report::Disassembler disassembler{};
   orbit_client_data::ProcessData process;

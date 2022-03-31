@@ -138,7 +138,7 @@ std::string ThreadTrack::GetBoxTooltip(const Batcher& batcher, PickingId id) con
   std::string module_name = orbit_client_data::kUnknownFunctionOrModuleName;
   std::string function_name = orbit_client_data::kUnknownFunctionOrModuleName;
   if (func != nullptr) {
-    module_name = orbit_client_data::ModuleData::GetLoadedModuleNameByPath(func->file_path());
+    module_name = std::filesystem::path(func->file_path()).filename().string();
     function_name = label;
   } else if (timer_info->address_in_function() != 0) {
     const auto* module = orbit_client_data::FindModuleByAddress(

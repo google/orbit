@@ -19,9 +19,7 @@ target_sources(ClientData PUBLIC
         include/ClientData/CallstackInfo.h
         include/ClientData/CallstackType.h
         include/ClientData/CaptureData.h
-        include/ClientData/ScopeIdConstants.h
         include/ClientData/DataManager.h
-        include/ClientData/ScopeIdProvider.h
         include/ClientData/FunctionInfo.h
         include/ClientData/LinuxAddressInfo.h
         include/ClientData/ModuleAndFunctionLookup.h
@@ -29,6 +27,8 @@ target_sources(ClientData PUBLIC
         include/ClientData/ModuleManager.h
         include/ClientData/PostProcessedSamplingData.h
         include/ClientData/ProcessData.h
+        include/ClientData/ScopeIdConstants.h
+        include/ClientData/ScopeIdProvider.h
         include/ClientData/ScopeStats.h
         include/ClientData/ScopeTreeTimerData.h
         include/ClientData/ThreadStateSliceInfo.h
@@ -51,13 +51,13 @@ target_sources(ClientData PRIVATE
         CallstackType.cpp
         CaptureData.cpp
         DataManager.cpp
-        ScopeIdProvider.cpp
         FunctionInfo.cpp
         ModuleAndFunctionLookup.cpp
         ModuleData.cpp
         ModuleManager.cpp
         PostProcessedSamplingData.cpp
         ProcessData.cpp
+        ScopeIdProvider.cpp
         ScopeStats.cpp
         ScopeTreeTimerData.cpp
         ThreadTrackDataProvider.cpp
@@ -86,7 +86,7 @@ target_sources(ClientDataTests PRIVATE
         CaptureDataTest.cpp
         DataManagerTest.cpp
         ScopeIdProviderTest.cpp
-        FunctionInfoSetTest.cpp
+        FunctionInfoTest.cpp
         ModuleDataTest.cpp
         ModuleManagerTest.cpp
         ProcessDataTest.cpp

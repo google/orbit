@@ -165,7 +165,7 @@ std::optional<uint64_t> FindInstrumentedFunctionIdSlow(const ModuleManager& modu
   for (const auto& it : capture_data.instrumented_functions()) {
     const auto& target_function = it.second;
     if (target_function.file_path() == function.module_path() &&
-        target_function.file_offset() == function.Offset(*module)) {
+        target_function.file_offset() == function.FileOffset(module->load_bias())) {
       return it.first;
     }
   }

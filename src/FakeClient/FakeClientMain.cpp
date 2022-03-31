@@ -86,8 +86,8 @@ void ManipulateModuleManagerAndSelectedFunctionsToAddInstrumentedFunctionFromOff
   module_info.set_executable_segment_offset(elf_file->GetExecutableSegmentOffset());
   ORBIT_CHECK(module_manager->AddOrUpdateModules({module_info}).empty());
 
-  orbit_client_data::FunctionInfo function_info{function_name, file_path, build_id,
-                                                load_bias + file_offset, function_size};
+  orbit_client_data::FunctionInfo function_info{file_path, build_id, load_bias + file_offset,
+                                                function_size, function_name};
   selected_functions->emplace(function_id, function_info);
 }
 

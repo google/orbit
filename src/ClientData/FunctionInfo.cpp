@@ -14,21 +14,11 @@
 
 namespace orbit_client_data {
 
-namespace {
-uint64_t StringHash(const std::string& string) {
-  return XXH64(string.data(), string.size(), 0xBADDCAFEDEAD10CC);
-}
-}  // namespace
-
-std::string FunctionInfo::GetLoadedModuleName() const {
-  return ModuleData::GetLoadedModuleNameByPath(module_path());
+uint64_t FunctionInfo::GetPrettyNameHash() const {
+  return XXH64(pretty_name_.data(), pretty_name_.size(), 0xBADDCAFEDEAD10CC);
 }
 
-uint64_t FunctionInfo::GetHash() const { return StringHash(pretty_name()); }
-
-uint64_t FunctionInfo::Offset(const ModuleData& module) const {
-  return address() - module.load_bias();
-}
+uint64_t FunctionInfo::FileOffset(uint64_t load_bias) const { return address() - load_bias; }
 
 std::optional<uint64_t> FunctionInfo::GetAbsoluteAddress(const ProcessData& process,
                                                          const ModuleData& module) const {

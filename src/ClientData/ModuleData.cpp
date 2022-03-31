@@ -128,7 +128,7 @@ void ModuleData::AddSymbols(const orbit_grpc_protos::ModuleSymbols& module_symbo
         name_reuse_counter++;
       }
 
-      hash_to_function_map_.try_emplace(function->GetHash(), function);
+      hash_to_function_map_.try_emplace(function->GetPrettyNameHash(), function);
     } else {
       address_reuse_counter++;
     }
@@ -167,10 +167,6 @@ std::vector<const FunctionInfo*> ModuleData::GetFunctions() const {
     result.push_back(pair.second.get());
   }
   return result;
-}
-
-std::string ModuleData::GetLoadedModuleNameByPath(std::string_view module_path) {
-  return std::filesystem::path(module_path).filename().string();
 }
 
 }  // namespace orbit_client_data

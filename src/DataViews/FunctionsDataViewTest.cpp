@@ -44,23 +44,23 @@ struct FunctionsDataViewTest : public testing::Test {
  public:
   explicit FunctionsDataViewTest() : view_{&app_} {
     view_.Init();
-    orbit_client_data::FunctionInfo function0{"foo()", "/path/to/module", "buildid", 12, 16};
+    orbit_client_data::FunctionInfo function0{"/path/to/module", "buildid", 12, 16, "foo()"};
     functions_.emplace_back(std::move(function0));
 
-    orbit_client_data::FunctionInfo function1{"main(int, char**)", "path/to/other", "buildid2",
-                                              0x100, 42};
+    orbit_client_data::FunctionInfo function1{"path/to/other", "buildid2", 0x100, 42,
+                                              "main(int, char**)"};
     functions_.emplace_back(std::move(function1));
 
-    orbit_client_data::FunctionInfo function2{"operator==(A const&, A const&)",
-                                              "/somewhere/else/module", "buildid3", 0x330, 66};
+    orbit_client_data::FunctionInfo function2{"/somewhere/else/module", "buildid3", 0x330, 66,
+                                              "operator==(A const&, A const&)"};
     functions_.emplace_back(std::move(function2));
 
-    orbit_client_data::FunctionInfo function3{"ffind(int)", "/somewhere/else/foomodule", "buildid4",
-                                              0x33, 66};
+    orbit_client_data::FunctionInfo function3{"/somewhere/else/foomodule", "buildid4", 0x33, 66,
+                                              "ffind(int)"};
     functions_.emplace_back(std::move(function3));
 
-    orbit_client_data::FunctionInfo function4{"bar(const char*)", "/somewhere/else/barmodule",
-                                              "buildid4", 0x33, 66};
+    orbit_client_data::FunctionInfo function4{"/somewhere/else/barmodule", "buildid4", 0x33, 66,
+                                              "bar(const char*)"};
     functions_.emplace_back(std::move(function4));
 
     orbit_grpc_protos::ModuleInfo module_info0{};
@@ -268,7 +268,7 @@ TEST_F(FunctionsDataViewTest, FrameTrackSelectionAppearsInFirstColumnWhenACaptur
       capture_started.mutable_capture_options()->add_instrumented_functions();
   instrumented_function->set_file_path(functions_[0].module_path());
   instrumented_function->set_file_build_id(functions_[0].module_build_id());
-  instrumented_function->set_file_offset(functions_[0].Offset(*module_data));
+  instrumented_function->set_file_offset(functions_[0].FileOffset(module_data->load_bias()));
 
   EXPECT_CALL(app_, IsFunctionSelected(testing::A<const orbit_client_data::FunctionInfo&>()))
       .Times(testing::AnyNumber())

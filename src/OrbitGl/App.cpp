@@ -2287,7 +2287,7 @@ orbit_base::Future<std::vector<ErrorMessageOr<void>>> OrbitApp::ReloadModules(
       // (B) deselect when module does not have functions anymore (!is_loaded())
       data_manager_->DeselectFunction(func);
       // (C) Save function hashes, so they can be hooked again after reload
-      function_hashes_to_hook_map[module->file_path()].push_back(func.GetHash());
+      function_hashes_to_hook_map[module->file_path()].push_back(func.GetPrettyNameHash());
     }
   }
   absl::flat_hash_map<std::string, std::vector<uint64_t>> frame_track_function_hashes_map;
@@ -2301,7 +2301,7 @@ orbit_base::Future<std::vector<ErrorMessageOr<void>>> OrbitApp::ReloadModules(
       RemoveFrameTrack(func);
     } else if (!module->is_loaded()) {
       RemoveFrameTrack(func);
-      frame_track_function_hashes_map[module->file_path()].push_back(func.GetHash());
+      frame_track_function_hashes_map[module->file_path()].push_back(func.GetPrettyNameHash());
     }
   }
 
