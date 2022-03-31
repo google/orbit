@@ -52,40 +52,6 @@ void ThreadTrackDataProvider::OnCaptureComplete() {
        thread_track_data_manager_->GetAllScopeTreeTimerData()) {
     scope_tree_timer_data->OnCaptureComplete();
   }
-  UpdateTimerDurations();
-}
-
-const std::vector<uint64_t>* ThreadTrackDataProvider::GetSortedTimerDurationsForScopeId(
-    uint64_t scope_id) const {
-  const auto it = timer_durations_.find(scope_id);
-  if (it == timer_durations_.end()) return nullptr;
-  return &it->second;
-}
-
-void ThreadTrackDataProvider::UpdateTimerDurations() {
-  ORBIT_SCOPE_FUNCTION;
-  timer_durations_.clear();
-  ORBIT_CHECK(scope_id_provider_ != nullptr);
-
-  const std::vector<const orbit_client_data::TimerChain*> chains = GetAllThreadTimerChains();
-
-  for (const orbit_client_data::TimerChain* chain : chains) {
-    ORBIT_CHECK(chain != nullptr);
-    for (const auto& block : *chain) {
-      for (uint64_t i = 0; i < block.size(); i++) {
-        const TimerInfo& timer = block[i];
-        const uint64_t scope_id = scope_id_provider_->ProvideId(timer);
-
-        if (scope_id == orbit_client_data::kInvalidScopeId) continue;
-
-        timer_durations_[scope_id].push_back(timer.end() - timer.start());
-      }
-    }
-  }
-
-  for (auto& [id, timer_durations] : timer_durations_) {
-    std::sort(timer_durations.begin(), timer_durations.end());
-  }
 }
 
 }  // namespace orbit_client_data

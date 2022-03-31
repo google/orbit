@@ -852,6 +852,7 @@ TEST_F(LiveFunctionsDataViewTest, OnRefreshWithNoIndicesResetsHistogram) {
 
 TEST_F(LiveFunctionsDataViewTest, HistogramIsProperlyUpdated) {
   AddTimersToThreadTrackDataProvider(capture_data_->GetThreadTrackDataProvider());
+  capture_data_->OnCaptureComplete();
 
   EXPECT_CALL(app_, GetCaptureData).WillRepeatedly(testing::ReturnRef(*capture_data_));
   EXPECT_CALL(app_, ProvideScopeId).WillRepeatedly(Invoke([&](const TimerInfo& timer) {
