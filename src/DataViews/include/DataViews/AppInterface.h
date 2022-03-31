@@ -12,6 +12,7 @@
 #include <string>
 
 #include "ClientData/CaptureData.h"
+#include "ClientData/FunctionInfo.h"
 #include "ClientData/ModuleData.h"
 #include "ClientData/PostProcessedSamplingData.h"
 #include "ClientData/ProcessData.h"
@@ -44,7 +45,7 @@ class AppInterface {
 
   // Functions needed by FunctionsDataView
   [[nodiscard]] virtual bool IsFunctionSelected(
-      const orbit_client_protos::FunctionInfo& func) const = 0;
+      const orbit_client_data::FunctionInfo& func) const = 0;
 
   // Functions needed by LiveFunctionsDataView
   enum class JumpToTimerMode { kFirst, kLast, kMin, kMax };
@@ -67,7 +68,7 @@ class AppInterface {
       const orbit_client_data::SampledFunction& func) const = 0;
 
   [[nodiscard]] virtual bool IsFrameTrackEnabled(
-      const orbit_client_protos::FunctionInfo& function) const = 0;
+      const orbit_client_data::FunctionInfo& function) const = 0;
   [[nodiscard]] virtual bool HasFrameTrackInCaptureData(
       uint64_t instrumented_function_id) const = 0;
 
@@ -100,18 +101,18 @@ class AppInterface {
   virtual orbit_base::Future<void> RetrieveModulesAndLoadSymbols(
       absl::Span<const orbit_client_data::ModuleData* const> modules) = 0;
 
-  virtual void SelectFunction(const orbit_client_protos::FunctionInfo& func) = 0;
-  virtual void DeselectFunction(const orbit_client_protos::FunctionInfo& func) = 0;
+  virtual void SelectFunction(const orbit_client_data::FunctionInfo& func) = 0;
+  virtual void DeselectFunction(const orbit_client_data::FunctionInfo& func) = 0;
 
-  virtual void EnableFrameTrack(const orbit_client_protos::FunctionInfo& function) = 0;
-  virtual void DisableFrameTrack(const orbit_client_protos::FunctionInfo& function) = 0;
-  virtual void AddFrameTrack(const orbit_client_protos::FunctionInfo& function) = 0;
+  virtual void EnableFrameTrack(const orbit_client_data::FunctionInfo& function) = 0;
+  virtual void DisableFrameTrack(const orbit_client_data::FunctionInfo& function) = 0;
+  virtual void AddFrameTrack(const orbit_client_data::FunctionInfo& function) = 0;
   virtual void AddFrameTrack(uint64_t instrumented_function_id) = 0;
-  virtual void RemoveFrameTrack(const orbit_client_protos::FunctionInfo& function) = 0;
+  virtual void RemoveFrameTrack(const orbit_client_data::FunctionInfo& function) = 0;
   virtual void RemoveFrameTrack(uint64_t instrumented_function_id) = 0;
 
-  virtual void Disassemble(uint32_t pid, const orbit_client_protos::FunctionInfo& function) = 0;
-  virtual void ShowSourceCode(const orbit_client_protos::FunctionInfo& function) = 0;
+  virtual void Disassemble(uint32_t pid, const orbit_client_data::FunctionInfo& function) = 0;
+  virtual void ShowSourceCode(const orbit_client_data::FunctionInfo& function) = 0;
 
   virtual void ShowHistogram(const std::vector<uint64_t>* data, const std::string& scope_name,
                              uint64_t scope_id) = 0;

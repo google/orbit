@@ -13,6 +13,7 @@
 #include <optional>
 #include <utility>
 
+#include "ClientData/FunctionInfo.h"
 #include "ClientData/PostProcessedSamplingData.h"
 #include "ClientProtos/capture_data.pb.h"
 #include "CodeReport/CodeReport.h"
@@ -25,7 +26,7 @@ namespace orbit_code_report {
 class SourceCodeReport : public CodeReport {
  public:
   explicit SourceCodeReport(std::string_view source_file,
-                            const orbit_client_protos::FunctionInfo& function,
+                            const orbit_client_data::FunctionInfo& function,
                             uint64_t absolute_address, orbit_object_utils::ElfFile* elf_file,
                             const orbit_client_data::ThreadSampleData& thread_sample_data,
                             uint32_t total_samples_in_capture);

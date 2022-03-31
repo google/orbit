@@ -14,7 +14,7 @@
 #include <utility>
 #include <vector>
 
-#include "ClientProtos/capture_data.pb.h"
+#include "ClientData/FunctionInfo.h"
 #include "DataViews/AppInterface.h"
 #include "DataViews/DataView.h"
 #include "DataViews/LiveFunctionsInterface.h"
@@ -44,7 +44,7 @@ class LiveFunctionsDataView : public DataView {
                  const RefreshMode& mode) override;
   [[nodiscard]] bool ResetOnRefresh() const override { return false; }
   std::optional<int> GetRowFromFunctionId(uint64_t function_id);
-  void AddFunction(uint64_t function_id, orbit_client_protos::FunctionInfo function_info);
+  void AddFunction(uint64_t function_id, orbit_client_data::FunctionInfo function_info);
 
   void OnIteratorRequested(const std::vector<int>& selection) override;
   void OnJumpToRequested(const std::string& action, const std::vector<int>& selection) override;
@@ -60,11 +60,11 @@ class LiveFunctionsDataView : public DataView {
   void DoFilter() override;
   void DoSort() override;
   [[nodiscard]] uint64_t GetInstrumentedFunctionId(uint32_t row) const;
-  [[nodiscard]] std::optional<orbit_client_protos::FunctionInfo>
+  [[nodiscard]] std::optional<orbit_client_data::FunctionInfo>
   CreateFunctionInfoFromInstrumentedFunction(
       const orbit_grpc_protos::InstrumentedFunction& instrumented_function);
 
-  absl::flat_hash_map<uint64_t, orbit_client_protos::FunctionInfo> functions_{};
+  absl::flat_hash_map<uint64_t, orbit_client_data::FunctionInfo> functions_{};
   // TODO(b/191333567) This is populated in OnDataChanged(), which causes an overhead upon capture
   // load/finalization this may be optimized via populating it function-wise on user's demand
 
@@ -86,7 +86,7 @@ class LiveFunctionsDataView : public DataView {
   };
 
  private:
-  [[nodiscard]] const orbit_client_protos::FunctionInfo* GetFunctionInfoFromRow(int row) override;
+  [[nodiscard]] const orbit_client_data::FunctionInfo* GetFunctionInfoFromRow(int row) override;
 
   void UpdateHistogramWithIndices(const std::vector<int>& visible_selected_indices);
 

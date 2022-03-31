@@ -12,7 +12,6 @@
 
 #include <algorithm>
 
-#include "ClientData/FunctionUtils.h"
 #include "ClientData/ModuleAndFunctionLookup.h"
 
 namespace orbit_code_report {
@@ -55,7 +54,7 @@ void Disassembler::Disassemble(orbit_client_data::ProcessData& process,
     for (j = 0; j < count; j++) {
       cs_insn* current_instruction = &insn[j];
       if (IsCallInstruction(insn[j])) {
-        const orbit_client_protos::FunctionInfo* callee = nullptr;
+        const orbit_client_data::FunctionInfo* callee = nullptr;
 
         int immediate_operands_count = cs_op_count(handle, current_instruction, X86_OP_IMM);
         if (immediate_operands_count == 1) {
@@ -68,7 +67,7 @@ void Disassembler::Disassemble(orbit_client_data::ProcessData& process,
         if (callee != nullptr) {
           AddLine(absl::StrFormat("0x%llx:\t%-12s %s (%s)", current_instruction->address,
                                   current_instruction->mnemonic, current_instruction->op_str,
-                                  orbit_client_data::function_utils::GetDisplayName(*callee)),
+                                  callee->pretty_name()),
                   current_instruction->address);
           continue;
         }

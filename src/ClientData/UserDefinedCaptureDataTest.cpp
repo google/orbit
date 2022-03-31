@@ -2,26 +2,19 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
+#include <absl/container/flat_hash_set.h>
 #include <gtest/gtest.h>
 #include <stdint.h>
 
 #include <string>
 
-#include "ClientData/FunctionInfoSet.h"
+#include "ClientData/FunctionInfo.h"
 #include "ClientData/UserDefinedCaptureData.h"
-#include "ClientProtos/capture_data.pb.h"
-
-using orbit_client_protos::FunctionInfo;
 
 namespace orbit_client_data {
 
 FunctionInfo CreateFunctionInfo(const std::string& function_name, uint64_t function_address) {
-  FunctionInfo info;
-  info.set_pretty_name(function_name);
-  info.set_module_path("/path/to/module");
-  info.set_module_build_id("build id");
-  info.set_address(function_address);
-  info.set_size(16);
+  FunctionInfo info{"/path/to/module", "build id", function_address, 16, function_name};
   return info;
 }
 
@@ -46,7 +39,7 @@ TEST(UserDefinedCaptureData, InsertFrameTrackDifferentFunctions) {
   FunctionInfo info1 = CreateFunctionInfo("fun1_name", 1);
   data.InsertFrameTrack(info0);
   data.InsertFrameTrack(info1);
-  FunctionInfoSet set = data.frame_track_functions();
+  const absl::flat_hash_set<FunctionInfo>& set = data.frame_track_functions();
   EXPECT_EQ(set.size(), 2);
 }
 
@@ -88,7 +81,7 @@ TEST(UserDefinedCaptureData, Clear) {
   data.InsertFrameTrack(info);
   EXPECT_TRUE(data.ContainsFrameTrack(info));
   data.Clear();
-  FunctionInfoSet set = data.frame_track_functions();
+  const absl::flat_hash_set<FunctionInfo>& set = data.frame_track_functions();
   EXPECT_TRUE(set.empty());
 }
 

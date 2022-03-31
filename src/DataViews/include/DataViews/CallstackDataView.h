@@ -12,6 +12,7 @@
 #include <vector>
 
 #include "ClientData/CallstackInfo.h"
+#include "ClientData/FunctionInfo.h"
 #include "ClientData/ModuleData.h"
 #include "ClientProtos/capture_data.pb.h"
 #include "DataViews/AppInterface.h"
@@ -54,7 +55,7 @@ class CallstackDataView : public DataView {
   std::optional<orbit_client_data::CallstackInfo> callstack_;
 
   struct CallstackDataViewFrame {
-    CallstackDataViewFrame(uint64_t address, const orbit_client_protos::FunctionInfo* function,
+    CallstackDataViewFrame(uint64_t address, const orbit_client_data::FunctionInfo* function,
                            const orbit_client_data::ModuleData* module)
         : address(address), function(function), module(module) {}
     CallstackDataViewFrame(uint64_t address, std::string fallback_name,
@@ -62,7 +63,7 @@ class CallstackDataView : public DataView {
         : address(address), fallback_name(std::move(fallback_name)), module(module) {}
 
     uint64_t address = 0;
-    const orbit_client_protos::FunctionInfo* function = nullptr;
+    const orbit_client_data::FunctionInfo* function = nullptr;
     std::string fallback_name;
     const orbit_client_data::ModuleData* module;
   };
@@ -86,7 +87,7 @@ class CallstackDataView : public DataView {
   [[nodiscard]] const orbit_client_data::ModuleData* GetModuleDataFromRow(int row) const override {
     return GetFrameFromRow(row).module;
   }
-  [[nodiscard]] const orbit_client_protos::FunctionInfo* GetFunctionInfoFromRow(int row) override {
+  [[nodiscard]] const orbit_client_data::FunctionInfo* GetFunctionInfoFromRow(int row) override {
     return GetFrameFromRow(row).function;
   }
 

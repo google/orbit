@@ -19,7 +19,7 @@
 
 namespace orbit_qt {
 void AnnotatingSourceCodeDialog::AddAnnotatingSourceCode(
-    orbit_client_protos::FunctionInfo function_info, RetrieveModuleWithDebugInfoCallback callback) {
+    orbit_client_data::FunctionInfo function_info, RetrieveModuleWithDebugInfoCallback callback) {
   function_info_ = std::move(function_info);
   retrieve_module_with_debug_info_ = std::move(callback);
 
@@ -28,7 +28,8 @@ void AnnotatingSourceCodeDialog::AddAnnotatingSourceCode(
 
   SetStatusMessage("Loading source location information", std::nullopt);
 
-  retrieve_module_with_debug_info_(function_info_.module_path(), function_info_.module_build_id())
+  ORBIT_CHECK(function_info_.has_value());
+  retrieve_module_with_debug_info_(function_info_->module_path(), function_info_->module_build_id())
       .Then(main_thread_executor_.get(),
             [this](const ErrorMessageOr<std::filesystem::path>& local_file_path_or_error) {
               HandleDebugInfo(local_file_path_or_error);
@@ -69,8 +70,9 @@ bool AnnotatingSourceCodeDialog::LoadElfFile(const std::filesystem::path& local_
   return true;
 }
 bool AnnotatingSourceCodeDialog::LoadLocationInformationFromElf() {
+  ORBIT_CHECK(function_info_.has_value());
   ErrorMessageOr<orbit_grpc_protos::LineInfo> location_or_error =
-      elf_file_->GetLocationOfFunction(function_info_.address());
+      elf_file_->GetLocationOfFunction(function_info_->address());
   if (location_or_error.has_error()) {
     SetStatusMessage(QString::fromStdString(location_or_error.error().message()), "Hide");
     awaited_button_action_ = ButtonAction::kHide;
@@ -160,8 +162,9 @@ void AnnotatingSourceCodeDialog::ChooseFile() {
 }
 
 void AnnotatingSourceCodeDialog::HandleSourceCode(const QString& source_file_contents) {
+  ORBIT_CHECK(function_info_.has_value());
   annotations_ = orbit_code_report::AnnotateDisassemblyWithSourceCode(
-      function_info_, location_info_, source_file_contents.toStdString(), elf_file_.get(),
+      *function_info_, location_info_, source_file_contents.toStdString(), elf_file_.get(),
       report_.value());
 
   // When loading the source code takes less than the given time we won't ask the user if they want

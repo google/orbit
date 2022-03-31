@@ -6,6 +6,7 @@
 #define CLIENT_DATA_MODULE_AND_FUNCTION_LOOKUP_H_
 
 #include "CaptureData.h"
+#include "FunctionInfo.h"
 #include "ModuleManager.h"
 #include "ProcessData.h"
 
@@ -21,7 +22,7 @@ const std::string kUnknownFunctionOrModuleName{"???"};
     const ModuleManager& module_manager, const CaptureData& capture_data,
     uint64_t absolute_address);
 
-[[nodiscard]] const orbit_client_protos::FunctionInfo* FindFunctionByModulePathBuildIdAndOffset(
+[[nodiscard]] const FunctionInfo* FindFunctionByModulePathBuildIdAndOffset(
     const ModuleManager& module_manager, const std::string& module_path,
     const std::string& build_id, uint64_t offset);
 
@@ -33,16 +34,16 @@ const std::string kUnknownFunctionOrModuleName{"???"};
 FindModulePathAndBuildIdByAddress(const ModuleManager& module_manager,
                                   const CaptureData& capture_data, uint64_t absolute_address);
 
-[[nodiscard]] const orbit_client_protos::FunctionInfo* FindFunctionByAddress(
-    const ProcessData& process, const ModuleManager& module_manager, uint64_t absolute_address,
-    bool is_exact);
+[[nodiscard]] const FunctionInfo* FindFunctionByAddress(const ProcessData& process,
+                                                        const ModuleManager& module_manager,
+                                                        uint64_t absolute_address, bool is_exact);
 
 [[nodiscard]] const orbit_client_data::ModuleData* FindModuleByAddress(
     const ProcessData& process, const ModuleManager& module_manager, uint64_t absolute_address);
 
 [[nodiscard]] std::optional<uint64_t> FindInstrumentedFunctionIdSlow(
     const ModuleManager& module_manager, const CaptureData& capture_data,
-    const orbit_client_protos::FunctionInfo& function);
+    const FunctionInfo& function);
 }  // namespace orbit_client_data
 
 #endif  // CLIENT_DATA_MODULE_AND_FUNCTION_LOOKUP_H_

@@ -4,36 +4,30 @@
 
 #include "DataViews/FunctionsDataView.h"
 
-#include <absl/flags/declare.h>
 #include <absl/flags/flag.h>
 #include <absl/strings/str_cat.h>
 #include <absl/strings/str_format.h>
 #include <absl/strings/str_split.h>
 #include <stddef.h>
 
-#include <algorithm>
 #include <cstdint>
 #include <functional>
-#include <numeric>
 
 #include "ClientData/CaptureData.h"
-#include "ClientData/FunctionUtils.h"
+#include "ClientData/FunctionInfo.h"
 #include "ClientData/ModuleAndFunctionLookup.h"
-#include "ClientData/ModuleData.h"
-#include "ClientData/ProcessData.h"
 #include "CompareAscendingOrDescending.h"
 #include "DataViews/AppInterface.h"
 #include "DataViews/DataViewType.h"
 #include "Introspection/Introspection.h"
 #include "OrbitBase/Append.h"
 #include "OrbitBase/Chunk.h"
-#include "OrbitBase/JoinFutures.h"
 #include "OrbitBase/Logging.h"
 #include "OrbitBase/TaskGroup.h"
 
 using orbit_client_data::CaptureData;
+using orbit_client_data::FunctionInfo;
 using orbit_client_data::ModuleManager;
-using orbit_client_protos::FunctionInfo;
 
 namespace orbit_data_views {
 
@@ -105,11 +99,11 @@ std::string FunctionsDataView::GetValue(int row, int column) {
     case kColumnSelected:
       return BuildSelectedColumnsString(app_, function);
     case kColumnName:
-      return orbit_client_data::function_utils::GetDisplayName(function);
+      return function.pretty_name();
     case kColumnSize:
       return absl::StrFormat("%lu", function.size());
     case kColumnModule:
-      return orbit_client_data::function_utils::GetLoadedModuleName(function);
+      return std::filesystem::path(function.module_path()).filename().string();
     case kColumnAddressInModule:
       return absl::StrFormat("%#x", function.address());
     default:
@@ -143,14 +137,18 @@ void FunctionsDataView::DoSort() {
       sorter = ORBIT_CUSTOM_FUNC_SORT(app_->IsFunctionSelected);
       break;
     case kColumnName:
-      sorter = ORBIT_CUSTOM_FUNC_SORT(orbit_client_data::function_utils::GetDisplayName);
+      sorter = ORBIT_FUNC_SORT(pretty_name());
       break;
     case kColumnSize:
       sorter = ORBIT_FUNC_SORT(size());
       break;
-    case kColumnModule:
-      sorter = ORBIT_CUSTOM_FUNC_SORT(orbit_client_data::function_utils::GetLoadedModuleName);
+    case kColumnModule: {
+      auto module_name = [](const orbit_client_data::FunctionInfo& function) {
+        return std::filesystem::path(function.module_path()).filename().string();
+      };
+      sorter = ORBIT_CUSTOM_FUNC_SORT(module_name);
       break;
+    }
     case kColumnAddressInModule:
       sorter = ORBIT_FUNC_SORT(address());
       break;
@@ -172,8 +170,7 @@ DataView::ActionStatus FunctionsDataView::GetActionStatus(
   std::function<bool(const FunctionInfo&)> is_visible_action_enabled;
   if (action == kMenuActionSelect) {
     is_visible_action_enabled = [this](const FunctionInfo& function) {
-      return !app_->IsFunctionSelected(function) &&
-             orbit_client_data::function_utils::IsFunctionSelectable(function);
+      return !app_->IsFunctionSelected(function) && function.IsFunctionSelectable();
     };
 
   } else if (action == kMenuActionUnselect) {
@@ -216,9 +213,9 @@ void FunctionsDataView::DoFilter() {
     task_group.AddTask([& chunk = chunks[i], &result = task_results[i], this]() {
       ORBIT_SCOPE("FunctionsDataView::DoFilter Task");
       for (const FunctionInfo*& function : chunk) {
-        std::string name =
-            absl::AsciiStrToLower(orbit_client_data::function_utils::GetDisplayName(*function));
-        std::string module = orbit_client_data::function_utils::GetLoadedModuleName(*function);
+        ORBIT_CHECK(function != nullptr);
+        std::string name = absl::AsciiStrToLower(function->pretty_name());
+        std::string module = std::filesystem::path(function->module_path()).filename().string();
 
         const auto is_token_found = [&name, &module](const std::string& token) {
           return name.find(token) != std::string::npos || module.find(token) != std::string::npos;
@@ -241,7 +238,7 @@ void FunctionsDataView::DoFilter() {
 }
 
 void FunctionsDataView::AddFunctions(
-    std::vector<const orbit_client_protos::FunctionInfo*> functions) {
+    std::vector<const orbit_client_data::FunctionInfo*> functions) {
   functions_.insert(functions_.end(), functions.begin(), functions.end());
   indices_.resize(functions_.size());
   for (size_t i = 0; i < indices_.size(); ++i) {

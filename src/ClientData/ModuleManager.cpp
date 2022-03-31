@@ -18,8 +18,6 @@
 #include "OrbitBase/Logging.h"
 #include "absl/synchronization/mutex.h"
 
-using orbit_client_protos::FunctionInfo;
-
 namespace orbit_client_data {
 
 std::vector<ModuleData*> ModuleManager::AddOrUpdateModules(

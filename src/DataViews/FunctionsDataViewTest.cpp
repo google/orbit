@@ -3,18 +3,15 @@
 // found in the LICENSE file.
 
 #include <absl/flags/flag.h>
-#include <absl/strings/str_split.h>
-#include <absl/time/time.h>
 #include <absl/types/span.h>
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
 
 #include "ClientData/CaptureData.h"
-#include "ClientData/FunctionUtils.h"
+#include "ClientData/FunctionInfo.h"
 #include "ClientData/ModuleData.h"
 #include "ClientData/ModuleManager.h"
 #include "ClientData/ProcessData.h"
-#include "ClientProtos/capture_data.pb.h"
 #include "DataViewTestUtils.h"
 #include "DataViews/DataView.h"
 #include "DataViews/FunctionsDataView.h"
@@ -47,44 +44,23 @@ struct FunctionsDataViewTest : public testing::Test {
  public:
   explicit FunctionsDataViewTest() : view_{&app_} {
     view_.Init();
-    orbit_client_protos::FunctionInfo function0;
-    function0.set_pretty_name("void foo()");
-    function0.set_module_path("/path/to/module");
-    function0.set_module_build_id("buildid");
-    function0.set_address(12);
-    function0.set_size(16);
+    orbit_client_data::FunctionInfo function0{"/path/to/module", "buildid", 12, 16, "foo()"};
     functions_.emplace_back(std::move(function0));
 
-    orbit_client_protos::FunctionInfo function1;
-    function1.set_pretty_name("main(int, char**)");
-    function1.set_module_path("/path/to/other");
-    function1.set_module_build_id("buildid2");
-    function1.set_address(0x100);
-    function1.set_size(42);
+    orbit_client_data::FunctionInfo function1{"path/to/other", "buildid2", 0x100, 42,
+                                              "main(int, char**)"};
     functions_.emplace_back(std::move(function1));
 
-    orbit_client_protos::FunctionInfo function2;
-    function2.set_pretty_name("operator==(A const&, A const&)");
-    function2.set_module_path("/somewhere/else/module");
-    function2.set_module_build_id("buildid3");
-    function2.set_address(0x330);
-    function2.set_size(66);
+    orbit_client_data::FunctionInfo function2{"/somewhere/else/module", "buildid3", 0x330, 66,
+                                              "operator==(A const&, A const&)"};
     functions_.emplace_back(std::move(function2));
 
-    orbit_client_protos::FunctionInfo function3;
-    function3.set_pretty_name("ffind(int)");
-    function3.set_module_path("/somewhere/else/foomodule");
-    function3.set_module_build_id("buildid4");
-    function3.set_address(0x33);
-    function3.set_size(66);
+    orbit_client_data::FunctionInfo function3{"/somewhere/else/foomodule", "buildid4", 0x33, 66,
+                                              "ffind(int)"};
     functions_.emplace_back(std::move(function3));
 
-    orbit_client_protos::FunctionInfo function4;
-    function4.set_pretty_name("bar(const char*)");
-    function4.set_module_path("/somewhere/else/barmodule");
-    function4.set_module_build_id("buildid4");
-    function4.set_address(0x33);
-    function4.set_size(66);
+    orbit_client_data::FunctionInfo function4{"/somewhere/else/barmodule", "buildid4", 0x33, 66,
+                                              "bar(const char*)"};
     functions_.emplace_back(std::move(function4));
 
     orbit_grpc_protos::ModuleInfo module_info0{};
@@ -117,13 +93,13 @@ struct FunctionsDataViewTest : public testing::Test {
  protected:
   orbit_data_views::MockAppInterface app_;
   orbit_data_views::FunctionsDataView view_;
-  std::vector<orbit_client_protos::FunctionInfo> functions_;
+  std::vector<orbit_client_data::FunctionInfo> functions_;
   std::vector<orbit_grpc_protos::ModuleInfo> module_infos_;
 
   [[nodiscard]] std::optional<size_t> IndexOfFunction(
-      const orbit_client_protos::FunctionInfo& function) const {
+      const orbit_client_data::FunctionInfo& function) const {
     const auto it = std::find_if(functions_.begin(), functions_.end(),
-                                 [&](const orbit_client_protos::FunctionInfo& candidate) {
+                                 [&](const orbit_client_data::FunctionInfo& candidate) {
                                    // This is not a canonical comparison, but since we control
                                    // our testing data, we can assure that all our functions have
                                    // distinctive names.
@@ -153,13 +129,13 @@ TEST_F(FunctionsDataViewTest, IsEmptyOnConstruction) {
 }
 
 TEST_F(FunctionsDataViewTest, FunctionNameIsDisplayName) {
-  EXPECT_CALL(app_, IsFunctionSelected(testing::A<const orbit_client_protos::FunctionInfo&>()))
+  EXPECT_CALL(app_, IsFunctionSelected(testing::A<const orbit_client_data::FunctionInfo&>()))
       .Times(testing::AnyNumber())
       .WillRepeatedly(testing::Return(false));
 
   view_.AddFunctions({&functions_[0]});
   ASSERT_EQ(view_.GetNumElements(), 1);
-  EXPECT_EQ(view_.GetValue(0, 1), orbit_client_data::function_utils::GetDisplayName(functions_[0]));
+  EXPECT_EQ(view_.GetValue(0, 1), functions_[0].pretty_name());
 }
 
 TEST_F(FunctionsDataViewTest, InvalidColumnAndRowNumbersReturnEmptyString) {
@@ -171,7 +147,7 @@ TEST_F(FunctionsDataViewTest, InvalidColumnAndRowNumbersReturnEmptyString) {
 }
 
 TEST_F(FunctionsDataViewTest, ViewHandlesMultipleElements) {
-  EXPECT_CALL(app_, IsFunctionSelected(testing::A<const orbit_client_protos::FunctionInfo&>()))
+  EXPECT_CALL(app_, IsFunctionSelected(testing::A<const orbit_client_data::FunctionInfo&>()))
       .Times(testing::AnyNumber())
       .WillRepeatedly(testing::Return(false));
 
@@ -179,15 +155,14 @@ TEST_F(FunctionsDataViewTest, ViewHandlesMultipleElements) {
   ASSERT_EQ(view_.GetNumElements(), 3);
 
   // We don't expect the view to be in any particular order at this point.
-  EXPECT_THAT((std::array{view_.GetValue(0, 1), view_.GetValue(1, 1), view_.GetValue(2, 1)}),
-              testing::UnorderedElementsAre(
-                  orbit_client_data::function_utils::GetDisplayName(functions_[0]),
-                  orbit_client_data::function_utils::GetDisplayName(functions_[1]),
-                  orbit_client_data::function_utils::GetDisplayName(functions_[2])));
+  EXPECT_THAT(
+      (std::array{view_.GetValue(0, 1), view_.GetValue(1, 1), view_.GetValue(2, 1)}),
+      testing::UnorderedElementsAre(functions_[0].pretty_name(), functions_[1].pretty_name(),
+                                    functions_[2].pretty_name()));
 }
 
 TEST_F(FunctionsDataViewTest, ClearFunctionsRemovesAllElements) {
-  EXPECT_CALL(app_, IsFunctionSelected(testing::A<const orbit_client_protos::FunctionInfo&>()))
+  EXPECT_CALL(app_, IsFunctionSelected(testing::A<const orbit_client_data::FunctionInfo&>()))
       .Times(testing::AnyNumber())
       .WillRepeatedly(testing::Return(false));
 
@@ -202,7 +177,7 @@ TEST_F(FunctionsDataViewTest, FunctionSelectionAppearsInFirstColumn) {
   bool function_selected = false;
   bool frame_track_enabled = false;
 
-  EXPECT_CALL(app_, IsFunctionSelected(testing::A<const orbit_client_protos::FunctionInfo&>()))
+  EXPECT_CALL(app_, IsFunctionSelected(testing::A<const orbit_client_data::FunctionInfo&>()))
       .Times(testing::AnyNumber())
       .WillRepeatedly(testing::ReturnPointee(&function_selected));
 
@@ -238,7 +213,7 @@ TEST_F(FunctionsDataViewTest, FrameTrackSelectionAppearsInFirstColumn) {
   bool function_selected = false;
   bool frame_track_enabled = false;
 
-  EXPECT_CALL(app_, IsFunctionSelected(testing::A<const orbit_client_protos::FunctionInfo&>()))
+  EXPECT_CALL(app_, IsFunctionSelected(testing::A<const orbit_client_data::FunctionInfo&>()))
       .Times(testing::AnyNumber())
       .WillRepeatedly(testing::ReturnPointee(&function_selected));
 
@@ -293,10 +268,9 @@ TEST_F(FunctionsDataViewTest, FrameTrackSelectionAppearsInFirstColumnWhenACaptur
       capture_started.mutable_capture_options()->add_instrumented_functions();
   instrumented_function->set_file_path(functions_[0].module_path());
   instrumented_function->set_file_build_id(functions_[0].module_build_id());
-  instrumented_function->set_file_offset(
-      orbit_client_data::function_utils::Offset(functions_[0], *module_data));
+  instrumented_function->set_file_offset(functions_[0].FileOffset(module_data->load_bias()));
 
-  EXPECT_CALL(app_, IsFunctionSelected(testing::A<const orbit_client_protos::FunctionInfo&>()))
+  EXPECT_CALL(app_, IsFunctionSelected(testing::A<const orbit_client_data::FunctionInfo&>()))
       .Times(testing::AnyNumber())
       .WillRepeatedly(testing::Return(true));
 
@@ -331,7 +305,7 @@ TEST_F(FunctionsDataViewTest, FrameTrackSelectionAppearsInFirstColumnWhenACaptur
 }
 
 TEST_F(FunctionsDataViewTest, FunctionSizeAppearsInThirdColumn) {
-  EXPECT_CALL(app_, IsFunctionSelected(testing::A<const orbit_client_protos::FunctionInfo&>()))
+  EXPECT_CALL(app_, IsFunctionSelected(testing::A<const orbit_client_data::FunctionInfo&>()))
       .Times(testing::AnyNumber())
       .WillRepeatedly(testing::Return(false));
 
@@ -341,7 +315,7 @@ TEST_F(FunctionsDataViewTest, FunctionSizeAppearsInThirdColumn) {
 }
 
 TEST_F(FunctionsDataViewTest, ModuleColumnShowsFilenameOfModule) {
-  EXPECT_CALL(app_, IsFunctionSelected(testing::A<const orbit_client_protos::FunctionInfo&>()))
+  EXPECT_CALL(app_, IsFunctionSelected(testing::A<const orbit_client_data::FunctionInfo&>()))
       .Times(testing::AnyNumber())
       .WillRepeatedly(testing::Return(false));
 
@@ -363,9 +337,9 @@ TEST_F(FunctionsDataViewTest, AddressColumnShowsAddress) {
 
 TEST_F(FunctionsDataViewTest, ContextMenuEntriesChangeOnFunctionState) {
   std::array<bool, 3> is_function_selected = {true, true, false};
-  EXPECT_CALL(app_, IsFunctionSelected(testing::A<const orbit_client_protos::FunctionInfo&>()))
+  EXPECT_CALL(app_, IsFunctionSelected(testing::A<const orbit_client_data::FunctionInfo&>()))
       .Times(testing::AnyNumber())
-      .WillRepeatedly([&](const orbit_client_protos::FunctionInfo& function) -> bool {
+      .WillRepeatedly([&](const orbit_client_data::FunctionInfo& function) -> bool {
         std::optional<size_t> index = IndexOfFunction(function);
         EXPECT_TRUE(index.has_value());
         return is_function_selected.at(index.value());
@@ -374,7 +348,7 @@ TEST_F(FunctionsDataViewTest, ContextMenuEntriesChangeOnFunctionState) {
   std::array<bool, 3> is_frame_track_enabled = {true, false, false};
   EXPECT_CALL(app_, IsFrameTrackEnabled)
       .Times(testing::AnyNumber())
-      .WillRepeatedly([&](const orbit_client_protos::FunctionInfo& function) -> bool {
+      .WillRepeatedly([&](const orbit_client_data::FunctionInfo& function) -> bool {
         std::optional<size_t> index = IndexOfFunction(function);
         EXPECT_TRUE(index.has_value());
         return is_frame_track_enabled.at(index.value());
@@ -430,7 +404,7 @@ TEST_F(FunctionsDataViewTest, ContextMenuEntriesChangeOnFunctionState) {
 
 TEST_F(FunctionsDataViewTest, GenericDataExportFunctionShowCorrectData) {
   // This functionality is not tested in this test case.
-  EXPECT_CALL(app_, IsFunctionSelected(testing::A<const orbit_client_protos::FunctionInfo&>()))
+  EXPECT_CALL(app_, IsFunctionSelected(testing::A<const orbit_client_data::FunctionInfo&>()))
       .Times(testing::AnyNumber())
       .WillRepeatedly(testing::Return(false));
 
@@ -476,7 +450,7 @@ TEST_F(FunctionsDataViewTest, GenericDataExportFunctionShowCorrectData) {
 
 TEST_F(FunctionsDataViewTest, ColumnSorting) {
   // This functionality is not tested in this test case.
-  EXPECT_CALL(app_, IsFunctionSelected(testing::A<const orbit_client_protos::FunctionInfo&>()))
+  EXPECT_CALL(app_, IsFunctionSelected(testing::A<const orbit_client_data::FunctionInfo&>()))
       .Times(testing::AnyNumber())
       .WillRepeatedly(testing::Return(false));
 
@@ -498,7 +472,7 @@ TEST_F(FunctionsDataViewTest, ColumnSorting) {
   constexpr int kAddressColumn = 4;
   EXPECT_EQ(view_.GetDefaultSortingColumn(), kAddressColumn);
 
-  std::vector<orbit_client_protos::FunctionInfo> functions = functions_;
+  std::vector<orbit_client_data::FunctionInfo> functions = functions_;
   view_.AddFunctions(
       {&functions_[0], &functions_[1], &functions_[2], &functions_[3], &functions_[4]});
 
@@ -566,7 +540,7 @@ TEST_F(FunctionsDataViewTest, ColumnSorting) {
 }
 
 TEST_F(FunctionsDataViewTest, ContextMenuActionsCallCorrespondingFunctionsInAppInterface) {
-  EXPECT_CALL(app_, IsFunctionSelected(testing::A<const orbit_client_protos::FunctionInfo&>()))
+  EXPECT_CALL(app_, IsFunctionSelected(testing::A<const orbit_client_data::FunctionInfo&>()))
       .Times(testing::AnyNumber())
       .WillRepeatedly(testing::Return(false));
   EXPECT_CALL(app_, IsFrameTrackEnabled)
@@ -580,7 +554,7 @@ TEST_F(FunctionsDataViewTest, ContextMenuActionsCallCorrespondingFunctionsInAppI
 
   view_.AddFunctions({&functions_[0]});
 
-  const auto match_function = [&](const orbit_client_protos::FunctionInfo& function) {
+  const auto match_function = [&](const orbit_client_data::FunctionInfo& function) {
     EXPECT_EQ(function.address(), functions_[0].address());
     EXPECT_EQ(function.pretty_name(), functions_[0].pretty_name());
   };
@@ -590,20 +564,20 @@ TEST_F(FunctionsDataViewTest, ContextMenuActionsCallCorrespondingFunctionsInAppI
 
   EXPECT_CALL(app_, DeselectFunction).Times(1).WillRepeatedly(match_function);
   EXPECT_CALL(app_, DisableFrameTrack).Times(1).WillRepeatedly(match_function);
-  EXPECT_CALL(app_, RemoveFrameTrack(testing::A<const orbit_client_protos::FunctionInfo&>()))
+  EXPECT_CALL(app_, RemoveFrameTrack(testing::A<const orbit_client_data::FunctionInfo&>()))
       .Times(1)
       .WillRepeatedly(match_function);
   view_.OnContextMenu(std::string{kMenuActionUnselect}, 0, {0});
 
   EXPECT_CALL(app_, SelectFunction).Times(1).WillRepeatedly(match_function);
   EXPECT_CALL(app_, EnableFrameTrack).Times(1).WillRepeatedly(match_function);
-  EXPECT_CALL(app_, AddFrameTrack(testing::A<const orbit_client_protos::FunctionInfo&>()))
+  EXPECT_CALL(app_, AddFrameTrack(testing::A<const orbit_client_data::FunctionInfo&>()))
       .Times(1)
       .WillRepeatedly(match_function);
   view_.OnContextMenu(std::string{kMenuActionEnableFrameTrack}, 0, {0});
 
   EXPECT_CALL(app_, DisableFrameTrack).Times(1).WillRepeatedly(match_function);
-  EXPECT_CALL(app_, RemoveFrameTrack(testing::A<const orbit_client_protos::FunctionInfo&>()))
+  EXPECT_CALL(app_, RemoveFrameTrack(testing::A<const orbit_client_data::FunctionInfo&>()))
       .Times(1)
       .WillRepeatedly(match_function);
   view_.OnContextMenu(std::string{kMenuActionDisableFrameTrack}, 0, {0});
@@ -616,7 +590,7 @@ TEST_F(FunctionsDataViewTest, ContextMenuActionsCallCorrespondingFunctionsInAppI
   EXPECT_CALL(app_, GetTargetProcess).Times(1).WillRepeatedly(testing::Return(&process_data));
   EXPECT_CALL(app_, Disassemble)
       .Times(1)
-      .WillRepeatedly([&](int pid, const orbit_client_protos::FunctionInfo& function) {
+      .WillRepeatedly([&](int pid, const orbit_client_data::FunctionInfo& function) {
         EXPECT_EQ(pid, kRandomPid);
         match_function(function);
       });
@@ -628,7 +602,7 @@ TEST_F(FunctionsDataViewTest, ContextMenuActionsCallCorrespondingFunctionsInAppI
 
 TEST_F(FunctionsDataViewTest, FilteringByFunctionName) {
   // This functionality is not tested in this test case.
-  EXPECT_CALL(app_, IsFunctionSelected(testing::A<const orbit_client_protos::FunctionInfo&>()))
+  EXPECT_CALL(app_, IsFunctionSelected(testing::A<const orbit_client_data::FunctionInfo&>()))
       .Times(testing::AnyNumber())
       .WillRepeatedly(testing::Return(false));
 
@@ -683,7 +657,7 @@ TEST_F(FunctionsDataViewTest, FilteringByFunctionName) {
 
 TEST_F(FunctionsDataViewTest, FilteringByModuleName) {
   // This functionality is not tested in this test case.
-  EXPECT_CALL(app_, IsFunctionSelected(testing::A<const orbit_client_protos::FunctionInfo&>()))
+  EXPECT_CALL(app_, IsFunctionSelected(testing::A<const orbit_client_data::FunctionInfo&>()))
       .Times(testing::AnyNumber())
       .WillRepeatedly(testing::Return(false));
 
@@ -712,7 +686,7 @@ TEST_F(FunctionsDataViewTest, FilteringByModuleName) {
 
 TEST_F(FunctionsDataViewTest, FilteringByFunctionAndModuleName) {
   // This functionality is not tested in this test case.
-  EXPECT_CALL(app_, IsFunctionSelected(testing::A<const orbit_client_protos::FunctionInfo&>()))
+  EXPECT_CALL(app_, IsFunctionSelected(testing::A<const orbit_client_data::FunctionInfo&>()))
       .Times(testing::AnyNumber())
       .WillRepeatedly(testing::Return(false));
 

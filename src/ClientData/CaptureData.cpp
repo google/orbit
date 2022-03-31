@@ -12,13 +12,10 @@
 #include <memory>
 #include <vector>
 
-#include "ClientData/FunctionUtils.h"
 #include "ClientData/ModuleData.h"
 #include "ClientData/ScopeIdConstants.h"
 #include "ObjectUtils/Address.h"
 #include "OrbitBase/Result.h"
-
-using orbit_client_protos::FunctionInfo;
 
 using orbit_grpc_protos::CaptureStarted;
 using orbit_grpc_protos::InstrumentedFunction;

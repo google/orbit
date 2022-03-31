@@ -22,8 +22,8 @@
 #include "ApiUtils/GetFunctionTableAddressPrefix.h"
 #include "CaptureClient/CaptureClient.h"
 #include "CaptureClient/CaptureListener.h"
+#include "ClientData/FunctionInfo.h"
 #include "ClientData/ModuleManager.h"
-#include "ClientProtos/capture_data.pb.h"
 #include "FakeCaptureEventProcessor.h"
 #include "Flags.h"
 #include "GraphicsCaptureEventProcessor.h"
@@ -69,7 +69,7 @@ void InstallSigintHandler() {
 // not needed empty.
 void ManipulateModuleManagerAndSelectedFunctionsToAddInstrumentedFunctionFromOffset(
     orbit_client_data::ModuleManager* module_manager,
-    absl::flat_hash_map<uint64_t, orbit_client_protos::FunctionInfo>* selected_functions,
+    absl::flat_hash_map<uint64_t, orbit_client_data::FunctionInfo>* selected_functions,
     const std::string& file_path, const std::string& function_name, uint64_t file_offset,
     uint64_t function_size, uint64_t function_id) {
   ErrorMessageOr<std::unique_ptr<orbit_object_utils::ElfFile>> error_or_elf_file =
@@ -86,18 +86,14 @@ void ManipulateModuleManagerAndSelectedFunctionsToAddInstrumentedFunctionFromOff
   module_info.set_executable_segment_offset(elf_file->GetExecutableSegmentOffset());
   ORBIT_CHECK(module_manager->AddOrUpdateModules({module_info}).empty());
 
-  orbit_client_protos::FunctionInfo function_info;
-  function_info.set_pretty_name(function_name);
-  function_info.set_module_path(file_path);
-  function_info.set_module_build_id(build_id);
-  function_info.set_address(load_bias + file_offset);
-  function_info.set_size(function_size);
+  orbit_client_data::FunctionInfo function_info{file_path, build_id, load_bias + file_offset,
+                                                function_size, function_name};
   selected_functions->emplace(function_id, function_info);
 }
 
 void ManipulateModuleManagerAndSelectedFunctionsToAddInstrumentedFunctionFromFunctionNameInDebugSymbols(
     orbit_client_data::ModuleManager* module_manager,
-    absl::flat_hash_map<uint64_t, orbit_client_protos::FunctionInfo>* selected_functions,
+    absl::flat_hash_map<uint64_t, orbit_client_data::FunctionInfo>* selected_functions,
     const std::string& file_path, const std::string& demangled_function_name,
     uint64_t function_id) {
   ErrorMessageOr<std::unique_ptr<orbit_object_utils::ElfFile>> error_or_elf_file =
@@ -129,12 +125,7 @@ void ManipulateModuleManagerAndSelectedFunctionsToAddInstrumentedFunctionFromFun
   ORBIT_FAIL_IF(!symbol.has_value(), "Could not find function \"%s\" in module \"%s\"",
                 demangled_function_name, file_path);
 
-  orbit_client_protos::FunctionInfo function_info;
-  function_info.set_pretty_name(symbol->demangled_name());
-  function_info.set_module_path(file_path);
-  function_info.set_module_build_id(build_id);
-  function_info.set_address(symbol->address());
-  function_info.set_size(symbol->size());
+  orbit_client_data::FunctionInfo function_info{symbol.value(), file_path, build_id};
   selected_functions->emplace(function_id, function_info);
 }
 
@@ -375,7 +366,7 @@ int main(int argc, char* argv[]) {
       orbit_base::ThreadPool::Create(1, 1, absl::Seconds(1));
 
   orbit_client_data::ModuleManager module_manager;
-  absl::flat_hash_map<uint64_t, orbit_client_protos::FunctionInfo> selected_functions;
+  absl::flat_hash_map<uint64_t, orbit_client_data::FunctionInfo> selected_functions;
   if (instrument_function) {
     constexpr uint64_t kInstrumentedFunctionId = 1;
     ManipulateModuleManagerAndSelectedFunctionsToAddInstrumentedFunctionFromOffset(

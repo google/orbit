@@ -29,11 +29,11 @@
 #include "Statistics/BinomialConfidenceInterval.h"
 
 using orbit_client_data::CaptureData;
+using orbit_client_data::FunctionInfo;
 using orbit_client_data::ModuleData;
 using orbit_client_data::ModuleManager;
 using orbit_client_data::ProcessData;
 using orbit_client_data::SampledFunction;
-using orbit_client_protos::FunctionInfo;
 using orbit_data_views::CheckCopySelectionIsInvoked;
 using orbit_data_views::CheckExportToCsvIsInvoked;
 using orbit_data_views::CheckSingleAction;
@@ -372,7 +372,7 @@ TEST_F(SamplingReportDataViewTest, ContextMenuEntriesArePresentCorrectly) {
     }
     return std::nullopt;
   };
-  EXPECT_CALL(app_, IsFunctionSelected(testing::A<const orbit_client_protos::FunctionInfo&>()))
+  EXPECT_CALL(app_, IsFunctionSelected(testing::A<const orbit_client_data::FunctionInfo&>()))
       .WillRepeatedly([&](const FunctionInfo& function) -> bool {
         std::optional<size_t> index = get_index_from_function_info(function);
         EXPECT_TRUE(index.has_value());
@@ -480,7 +480,7 @@ TEST_F(SamplingReportDataViewTest, ContextMenuActionsAreInvoked) {
 
   EXPECT_CALL(app_, GetCaptureData).WillRepeatedly(testing::ReturnRef(*capture_data_));
   EXPECT_CALL(app_, IsCaptureConnected).WillRepeatedly(testing::Return(true));
-  EXPECT_CALL(app_, IsFunctionSelected(testing::A<const orbit_client_protos::FunctionInfo&>()))
+  EXPECT_CALL(app_, IsFunctionSelected(testing::A<const orbit_client_data::FunctionInfo&>()))
       .WillRepeatedly(testing::ReturnPointee(&function_selected));
   EXPECT_CALL(app_, GetMutableModuleByPathAndBuildId)
       .WillRepeatedly(

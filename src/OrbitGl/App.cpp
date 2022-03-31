@@ -35,7 +35,6 @@
 #include "CaptureFile/CaptureFileHelpers.h"
 #include "CaptureWindow.h"
 #include "ClientData/CallstackData.h"
-#include "ClientData/FunctionUtils.h"
 #include "ClientData/ModuleAndFunctionLookup.h"
 #include "ClientData/ModuleData.h"
 #include "ClientData/ModuleManager.h"
@@ -102,6 +101,7 @@ using orbit_client_data::CallstackData;
 using orbit_client_data::CallstackEvent;
 using orbit_client_data::CallstackInfo;
 using orbit_client_data::CaptureData;
+using orbit_client_data::FunctionInfo;
 using orbit_client_data::LinuxAddressInfo;
 using orbit_client_data::ModuleData;
 using orbit_client_data::PostProcessedSamplingData;
@@ -115,7 +115,6 @@ using orbit_client_data::TimerChain;
 using orbit_client_data::TracepointInfoSet;
 using orbit_client_data::UserDefinedCaptureData;
 
-using orbit_client_protos::FunctionInfo;
 using orbit_client_protos::PresetInfo;
 using orbit_client_protos::PresetModule;
 using orbit_client_protos::TimerInfo;
@@ -888,8 +887,7 @@ void OrbitApp::Disassemble(uint32_t pid, const FunctionInfo& function) {
                                                                         function.module_build_id());
   ORBIT_CHECK(module != nullptr);
   const bool is_64_bit = process_->is_64_bit();
-  std::optional<uint64_t> absolute_address =
-      orbit_client_data::function_utils::GetAbsoluteAddress(function, *process_, *module);
+  std::optional<uint64_t> absolute_address = function.GetAbsoluteAddress(*process_, *module);
   if (!absolute_address.has_value()) {
     SendErrorToUi(
         "Error reading memory",
@@ -909,8 +907,7 @@ void OrbitApp::Disassemble(uint32_t pid, const FunctionInfo& function) {
 
     const std::string& memory = result.value();
     orbit_code_report::Disassembler disasm;
-    disasm.AddLine(absl::StrFormat("asm: /* %s */",
-                                   orbit_client_data::function_utils::GetDisplayName(function)));
+    disasm.AddLine(absl::StrFormat("asm: /* %s */", function.pretty_name()));
     disasm.Disassemble(*process_, *module_manager_, memory.data(), memory.size(), absolute_address,
                        is_64_bit);
     if (!HasCaptureData() || !GetCaptureData().has_post_processed_sampling_data()) {
@@ -938,7 +935,7 @@ void OrbitApp::Disassemble(uint32_t pid, const FunctionInfo& function) {
   });
 }
 
-void OrbitApp::ShowSourceCode(const orbit_client_protos::FunctionInfo& function) {
+void OrbitApp::ShowSourceCode(const orbit_client_data::FunctionInfo& function) {
   const ModuleData* module = module_manager_->GetModuleByPathAndBuildId(function.module_path(),
                                                                         function.module_build_id());
 
@@ -967,8 +964,7 @@ void OrbitApp::ShowSourceCode(const orbit_client_protos::FunctionInfo& function)
 
             if (HasCaptureData() && GetCaptureData().has_post_processed_sampling_data()) {
               const auto& sampling_data = GetCaptureData().post_processed_sampling_data();
-              const auto absolute_address = orbit_client_data::function_utils::GetAbsoluteAddress(
-                  function, *process_, *module);
+              const auto absolute_address = function.GetAbsoluteAddress(*process_, *module);
 
               if (!absolute_address.has_value()) {
                 return ErrorMessage{absl::StrFormat(
@@ -1417,7 +1413,7 @@ void OrbitApp::StartCapture() {
     if (user_defined_capture_data.ContainsFrameTrack(function)) {
       frame_track_function_ids.insert(function_id);
     }
-    selected_functions_map[function_id++] = function;
+    selected_functions_map.insert_or_assign(function_id++, function);
   }
 
   TracepointInfoSet selected_tracepoints = data_manager_->selected_tracepoints();
@@ -1598,7 +1594,7 @@ bool OrbitApp::IsCaptureConnected(const CaptureData& capture) const {
 
 bool OrbitApp::IsDevMode() const { return absl::GetFlag(FLAGS_devmode); }
 
-void OrbitApp::SendDisassemblyToUi(const orbit_client_protos::FunctionInfo& function_info,
+void OrbitApp::SendDisassemblyToUi(const orbit_client_data::FunctionInfo& function_info,
                                    std::string disassembly,
                                    orbit_code_report::DisassemblyReport report) {
   main_thread_executor_->Schedule([this, function_info, disassembly = std::move(disassembly),
@@ -2066,8 +2062,7 @@ orbit_base::Future<ErrorMessageOr<void>> OrbitApp::LoadPresetModule(
 void OrbitApp::SelectFunctionsFromHashes(const ModuleData* module,
                                          absl::Span<const uint64_t> function_hashes) {
   for (const auto function_hash : function_hashes) {
-    const orbit_client_protos::FunctionInfo* const function_info =
-        module->FindFunctionFromHash(function_hash);
+    const FunctionInfo* const function_info = module->FindFunctionFromHash(function_hash);
     if (function_info == nullptr) {
       ORBIT_ERROR("Could not find function hash %#x in module \"%s\"", function_hash,
                   module->file_path());
@@ -2080,7 +2075,7 @@ void OrbitApp::SelectFunctionsFromHashes(const ModuleData* module,
 void OrbitApp::SelectFunctionsByName(const ModuleData* module,
                                      absl::Span<const std::string> function_names) {
   for (const auto& function_name : function_names) {
-    const orbit_client_protos::FunctionInfo* const function_info =
+    const orbit_client_data::FunctionInfo* const function_info =
         module->FindFunctionFromPrettyName(function_name);
     if (function_info == nullptr) {
       ORBIT_ERROR("Could not find function \"%s\" in module \"%s\"", function_name,
@@ -2094,7 +2089,7 @@ void OrbitApp::SelectFunctionsByName(const ModuleData* module,
 void OrbitApp::EnableFrameTracksFromHashes(const ModuleData* module,
                                            absl::Span<const uint64_t> function_hashes) {
   for (const auto function_hash : function_hashes) {
-    const orbit_client_protos::FunctionInfo* const function_info =
+    const orbit_client_data::FunctionInfo* const function_info =
         module->FindFunctionFromHash(function_hash);
     if (function_info == nullptr) {
       ORBIT_ERROR("Could not find function hash %#x in module \"%s\"", function_hash,
@@ -2108,7 +2103,7 @@ void OrbitApp::EnableFrameTracksFromHashes(const ModuleData* module,
 void OrbitApp::EnableFrameTracksByName(const ModuleData* module,
                                        absl::Span<const std::string> function_names) {
   for (const auto& function_name : function_names) {
-    const orbit_client_protos::FunctionInfo* const function_info =
+    const orbit_client_data::FunctionInfo* const function_info =
         module->FindFunctionFromPrettyName(function_name);
     if (function_info == nullptr) {
       ORBIT_ERROR("Could not find function \"%s\" in module \"%s\"", function_name,
@@ -2292,8 +2287,7 @@ orbit_base::Future<std::vector<ErrorMessageOr<void>>> OrbitApp::ReloadModules(
       // (B) deselect when module does not have functions anymore (!is_loaded())
       data_manager_->DeselectFunction(func);
       // (C) Save function hashes, so they can be hooked again after reload
-      function_hashes_to_hook_map[module->file_path()].push_back(
-          orbit_client_data::function_utils::GetHash(func));
+      function_hashes_to_hook_map[module->file_path()].push_back(func.GetPrettyNameHash());
     }
   }
   absl::flat_hash_map<std::string, std::vector<uint64_t>> frame_track_function_hashes_map;
@@ -2307,8 +2301,7 @@ orbit_base::Future<std::vector<ErrorMessageOr<void>>> OrbitApp::ReloadModules(
       RemoveFrameTrack(func);
     } else if (!module->is_loaded()) {
       RemoveFrameTrack(func);
-      frame_track_function_hashes_map[module->file_path()].push_back(
-          orbit_client_data::function_utils::GetHash(func));
+      frame_track_function_hashes_map[module->file_path()].push_back(func.GetPrettyNameHash());
     }
   }
 
@@ -2379,18 +2372,17 @@ void OrbitApp::SetMaxLocalMarkerDepthPerCommandBuffer(
       max_local_marker_depth_per_command_buffer);
 }
 
-void OrbitApp::SelectFunction(const orbit_client_protos::FunctionInfo& func) {
+void OrbitApp::SelectFunction(const orbit_client_data::FunctionInfo& func) {
   ORBIT_LOG("Selected %s (address_=%#x, loaded_module_path_=%s)", func.pretty_name(),
             func.address(), func.module_path());
   data_manager_->SelectFunction(func);
 }
 
-void OrbitApp::DeselectFunction(const orbit_client_protos::FunctionInfo& func) {
+void OrbitApp::DeselectFunction(const orbit_client_data::FunctionInfo& func) {
   data_manager_->DeselectFunction(func);
 }
 
-[[nodiscard]] bool OrbitApp::IsFunctionSelected(
-    const orbit_client_protos::FunctionInfo& func) const {
+[[nodiscard]] bool OrbitApp::IsFunctionSelected(const orbit_client_data::FunctionInfo& func) const {
   return data_manager_->IsFunctionSelected(func);
 }
 

@@ -7,7 +7,7 @@
 
 #include <stdint.h>
 
-#include "ClientProtos/capture_data.pb.h"
+#include "ClientData/FunctionInfo.h"
 
 namespace orbit_data_views {
 
@@ -16,7 +16,7 @@ class LiveFunctionsInterface {
   virtual ~LiveFunctionsInterface() = default;
 
   virtual void AddIterator(uint64_t instrumented_function_id,
-                           const orbit_client_protos::FunctionInfo* function) = 0;
+                           const orbit_client_data::FunctionInfo* function) = 0;
 };
 
 }  // namespace orbit_data_views

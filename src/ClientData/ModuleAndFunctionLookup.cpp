@@ -4,12 +4,9 @@
 
 #include "ClientData/ModuleAndFunctionLookup.h"
 
-#include <ClientData/CaptureData.h>
-#include <ClientData/FunctionUtils.h>
-#include <ClientData/LinuxAddressInfo.h>
-#include <ObjectUtils/Address.h>
-
-using orbit_client_protos::FunctionInfo;
+#include "ClientData/CaptureData.h"
+#include "ClientData/LinuxAddressInfo.h"
+#include "ObjectUtils/Address.h"
 
 namespace orbit_client_data {
 namespace {
@@ -51,7 +48,7 @@ const std::string& GetFunctionNameByAddress(const ModuleManager& module_manager,
   const FunctionInfo* function = FindFunctionByAddress(*capture_data.process(), module_manager,
                                                        absolute_address, /*is_exact=*/false);
   if (function != nullptr) {
-    return orbit_client_data::function_utils::GetDisplayName(*function);
+    return function->pretty_name();
   }
   const LinuxAddressInfo* address_info = capture_data.GetAddressInfo(absolute_address);
   if (address_info == nullptr) {
@@ -160,16 +157,15 @@ const FunctionInfo* FindFunctionByAddress(const ProcessData& process,
                                                                     absolute_address);
 }
 
-std::optional<uint64_t> FindInstrumentedFunctionIdSlow(
-    const ModuleManager& module_manager, const CaptureData& capture_data,
-    const orbit_client_protos::FunctionInfo& function) {
+std::optional<uint64_t> FindInstrumentedFunctionIdSlow(const ModuleManager& module_manager,
+                                                       const CaptureData& capture_data,
+                                                       const FunctionInfo& function) {
   const ModuleData* module =
       module_manager.GetModuleByPathAndBuildId(function.module_path(), function.module_build_id());
   for (const auto& it : capture_data.instrumented_functions()) {
     const auto& target_function = it.second;
     if (target_function.file_path() == function.module_path() &&
-        target_function.file_offset() ==
-            orbit_client_data::function_utils::Offset(function, *module)) {
+        target_function.file_offset() == function.FileOffset(module->load_bias())) {
       return it.first;
     }
   }

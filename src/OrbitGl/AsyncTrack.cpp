@@ -13,7 +13,6 @@
 #include "App.h"
 #include "Batcher.h"
 #include "ClientData/CaptureData.h"
-#include "ClientData/FunctionUtils.h"
 #include "ClientData/ModuleAndFunctionLookup.h"
 #include "ClientProtos/capture_data.pb.h"
 #include "DisplayFormats/DisplayFormats.h"

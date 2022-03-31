@@ -13,7 +13,7 @@
 #include <functional>
 
 #include "App.h"
-#include "ClientProtos/capture_data.pb.h"
+#include "ClientData/FunctionInfo.h"
 #include "CodeReport/AnnotatingLine.h"
 #include "CodeReport/DisassemblyReport.h"
 #include "CodeViewer/FontSizeInEm.h"
@@ -61,7 +61,7 @@ class AnnotatingSourceCodeDialog : public orbit_code_viewer::Dialog {
 
   // Call this function to trigger the annotation process. It requires a disassembly code report to
   // be set before hand by calling `SetDisassemblyCodeReport`.
-  void AddAnnotatingSourceCode(orbit_client_protos::FunctionInfo function_info,
+  void AddAnnotatingSourceCode(orbit_client_data::FunctionInfo function_info,
                                RetrieveModuleWithDebugInfoCallback callback);
 
  signals:
@@ -79,7 +79,7 @@ class AnnotatingSourceCodeDialog : public orbit_code_viewer::Dialog {
   void HandleSourceCode(const QString& source_file_contents);
   void HandleAnnotations();
 
-  orbit_client_protos::FunctionInfo function_info_;
+  std::optional<orbit_client_data::FunctionInfo> function_info_;
   std::optional<orbit_code_report::DisassemblyReport> report_;
   RetrieveModuleWithDebugInfoCallback retrieve_module_with_debug_info_;
 

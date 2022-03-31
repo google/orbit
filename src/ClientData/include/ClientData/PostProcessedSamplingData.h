@@ -16,7 +16,7 @@
 #include "ClientData/CallstackEvent.h"
 #include "ClientData/CallstackInfo.h"
 #include "ClientData/CallstackType.h"
-#include "ClientProtos/capture_data.pb.h"
+#include "ClientData/FunctionInfo.h"
 #include "OrbitBase/ThreadConstants.h"
 #include "absl/container/flat_hash_map.h"
 #include "absl/container/flat_hash_set.h"
@@ -35,7 +35,7 @@ struct SampledFunction {
   uint32_t unwind_errors = 0;
   float unwind_errors_percent = 0.f;
   uint64_t absolute_address = 0;
-  const orbit_client_protos::FunctionInfo* function = nullptr;
+  const FunctionInfo* function = nullptr;
 };
 
 struct ThreadSampleData {

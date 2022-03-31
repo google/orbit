@@ -23,13 +23,10 @@
 
 #include "CaptureClient/CaptureClient.h"
 #include "CaptureClient/CaptureListener.h"
-#include "ClientData/CallstackEvent.h"
-#include "ClientData/FunctionUtils.h"
+#include "ClientData/FunctionInfo.h"
 #include "ClientData/ProcessData.h"
-#include "ClientData/UserDefinedCaptureData.h"
 #include "ClientModel/CaptureSerializer.h"
 #include "ClientModel/SamplingDataPostProcessor.h"
-#include "ClientProtos/capture_data.pb.h"
 #include "GrpcProtos/Constants.h"
 #include "GrpcProtos/module.pb.h"
 #include "GrpcProtos/process.pb.h"
@@ -50,10 +47,9 @@ using orbit_capture_client::CaptureClient;
 using orbit_capture_client::CaptureEventProcessor;
 using orbit_capture_client::CaptureListener;
 
+using orbit_client_data::FunctionInfo;
 using orbit_client_data::ProcessData;
 using orbit_client_data::TracepointInfoSet;
-
-using orbit_client_protos::FunctionInfo;
 
 using orbit_grpc_protos::CaptureOptions;
 using orbit_grpc_protos::ModuleInfo;
@@ -297,7 +293,7 @@ absl::flat_hash_map<uint64_t, FunctionInfo> ClientGgp::GetSelectedFunctions() {
   for (const FunctionInfo* func : main_module_->GetFunctions()) {
     const std::string& selected_function_match = SelectedFunctionMatch(*func);
     if (!selected_function_match.empty()) {
-      selected_functions[function_id++] = *func;
+      selected_functions.insert_or_assign(function_id++, *func);
       if (!capture_functions_used.contains(selected_function_match)) {
         capture_functions_used.insert(selected_function_match);
       }

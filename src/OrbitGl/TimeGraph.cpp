@@ -18,7 +18,6 @@
 #include "CGroupAndProcessMemoryTrack.h"
 #include "CaptureClient/CaptureEventProcessor.h"
 #include "ClientData/CallstackEvent.h"
-#include "ClientData/FunctionUtils.h"
 #include "ClientFlags/ClientFlags.h"
 #include "FrameTrack.h"
 #include "GlCanvas.h"
