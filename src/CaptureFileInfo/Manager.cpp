@@ -18,6 +18,8 @@
 constexpr const char* kCaptureFileInfoArrayKey = "capture_file_infos";
 constexpr const char* kCaptureFileInfoPathKey = "capture_file_info_path";
 constexpr const char* kCaptureFileInfoLastUsedKey = "capture_file_info_last_used";
+constexpr const char* kCaptureFileInfoLastModifiedKey = "capture_file_info_last_modified";
+constexpr const char* kCaptureFileInfoFileSizeKey = "capture_file_info_file_size";
 constexpr const char* kCaptureFileInfoCaptureLengthKey = "capture_file_info_capture_length";
 
 namespace orbit_capture_file_info {
@@ -25,6 +27,7 @@ namespace orbit_capture_file_info {
 Manager::Manager() {
   LoadCaptureFileInfos();
   PurgeNonExistingFiles();
+  ProcessOutOfSyncFiles();
 }
 
 void Manager::LoadCaptureFileInfos() {
@@ -37,13 +40,18 @@ void Manager::LoadCaptureFileInfos() {
     settings.setArrayIndex(i);
     QString path = settings.value(kCaptureFileInfoPathKey).toString();
     QDateTime last_used(settings.value(kCaptureFileInfoLastUsedKey).toDateTime());
+    QDateTime last_modified(settings.value(kCaptureFileInfoLastModifiedKey).toDateTime());
+    uint64_t file_size =
+        static_cast<uint64_t>(settings.value(kCaptureFileInfoFileSizeKey).toULongLong());
 
     std::optional<absl::Duration> capture_length = std::nullopt;
     if (settings.contains(kCaptureFileInfoCaptureLengthKey)) {
       capture_length = absl::Nanoseconds(
           static_cast<int64_t>(settings.value(kCaptureFileInfoCaptureLengthKey).toLongLong()));
     }
-    capture_file_infos_.emplace_back(path, std::move(last_used), capture_length);
+
+    capture_file_infos_.emplace_back(path, std::move(last_used), std::move(last_modified),
+                                     file_size, capture_length);
   }
   settings.endArray();
 }
@@ -56,6 +64,9 @@ void Manager::SaveCaptureFileInfos() {
     const CaptureFileInfo& capture_file_info = capture_file_infos_[i];
     settings.setValue(kCaptureFileInfoPathKey, capture_file_info.FilePath());
     settings.setValue(kCaptureFileInfoLastUsedKey, capture_file_info.LastUsed());
+    settings.setValue(kCaptureFileInfoLastModifiedKey, capture_file_info.LastModified());
+    settings.setValue(kCaptureFileInfoFileSizeKey,
+                      QVariant::fromValue(capture_file_info.FileSize()));
 
     if (!capture_file_info.CaptureLength().has_value()) continue;
 
@@ -108,6 +119,15 @@ void Manager::PurgeNonExistingFiles() {
                                              return !capture_file_info.FileExists();
                                            }),
                             capture_file_infos_.end());
+  SaveCaptureFileInfos();
+}
+
+void Manager::ProcessOutOfSyncFiles() {
+  std::for_each(capture_file_infos_.begin(), capture_file_infos_.end(),
+                [](CaptureFileInfo& capture_file_info) {
+                  if (!capture_file_info.IsOutOfSync()) return;
+                  capture_file_info.SetCaptureLength(std::nullopt);
+                });
   SaveCaptureFileInfos();
 }
 

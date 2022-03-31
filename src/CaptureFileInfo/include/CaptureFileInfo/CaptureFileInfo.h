@@ -20,26 +20,33 @@ class CaptureFileInfo {
   explicit CaptureFileInfo(const QString& path, std::optional<absl::Duration> capture_length);
   explicit CaptureFileInfo(const QString& path, QDateTime last_used,
                            std::optional<absl::Duration> capture_length);
+  explicit CaptureFileInfo(const QString& path, QDateTime last_used, QDateTime last_modified,
+                           uint64_t file_size, std::optional<absl::Duration> capture_length);
 
   [[nodiscard]] QString FilePath() const { return file_info_.filePath(); }
   [[nodiscard]] QString FileName() const { return file_info_.fileName(); }
+  [[nodiscard]] QDateTime Created() const { return file_info_.birthTime(); }
 
   [[nodiscard]] QDateTime LastUsed() const { return last_used_; }
-  [[nodiscard]] QDateTime Created() const { return file_info_.birthTime(); }
+  [[nodiscard]] QDateTime LastModified() const { return last_modified_; }
+  [[nodiscard]] uint64_t FileSize() const { return file_size_; }
   [[nodiscard]] std::optional<absl::Duration> CaptureLength() const { return capture_length_; }
 
   [[nodiscard]] bool FileExists() const;
+  [[nodiscard]] bool IsOutOfSync() const;
 
-  [[nodiscard]] uint64_t FileSize() const;
-
-  void Touch() { last_used_ = QDateTime::currentDateTime(); }
+  void Touch();
   void SetCaptureLength(std::optional<absl::Duration> capture_length) {
     capture_length_ = capture_length;
   }
 
  private:
   QFileInfo file_info_;
+  // Last used time inside Orbit
   QDateTime last_used_;
+  // Last modified time inside Orbit
+  QDateTime last_modified_;
+  uint64_t file_size_;
   std::optional<absl::Duration> capture_length_ = std::nullopt;
 };
 

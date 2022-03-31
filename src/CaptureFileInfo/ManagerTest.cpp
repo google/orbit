@@ -232,4 +232,50 @@ TEST(CaptureFileInfoManager, GetCaptureLengthByPath) {
   manager.Clear();
 }
 
+namespace {
+
+class FakeManager : public Manager {
+ public:
+  void SetCaptureFileInfos(std::vector<CaptureFileInfo> capture_file_infos) {
+    capture_file_infos_ = std::move(capture_file_infos);
+  }
+};
+
+}  // namespace
+
+TEST(CaptureFileInfoManager, ProcessOutOfSyncFiles) {
+  QCoreApplication::setOrganizationName(kOrgName);
+  QCoreApplication::setApplicationName("CaptureFileInfo.Manager.ProcessOutOfSyncFiles");
+
+  FakeManager manager;
+  manager.Clear();
+
+  const QString path1{"path/to/file1"};
+  const QDateTime last_used1 = QDateTime::fromMSecsSinceEpoch(1600000000000);
+  const QDateTime last_modified1 = QDateTime::fromMSecsSinceEpoch(1500000000000);
+  const uint64_t file_size1 = 1234;
+  const absl::Duration capture_length1 = absl::Seconds(5);
+  CaptureFileInfo capture_file_info1{path1, last_used1, last_modified1, file_size1,
+                                     capture_length1};
+  EXPECT_TRUE(capture_file_info1.IsOutOfSync());
+
+  const QString path2{"path/to/file2"};
+  const absl::Duration capture_length2{absl::Seconds(15)};
+  CaptureFileInfo capture_file_info2{path2, capture_length2};
+  EXPECT_FALSE(capture_file_info2.IsOutOfSync());
+
+  manager.SetCaptureFileInfos({capture_file_info1, capture_file_info2});
+
+  ASSERT_EQ(manager.GetCaptureFileInfos().size(), 2);
+  ASSERT_EQ(manager.GetCaptureFileInfos()[0].CaptureLength().value(), capture_length1);
+  ASSERT_EQ(manager.GetCaptureFileInfos()[1].CaptureLength().value(), capture_length2);
+
+  manager.ProcessOutOfSyncFiles();
+  ASSERT_FALSE(manager.GetCaptureFileInfos()[0].CaptureLength().has_value());
+  ASSERT_EQ(manager.GetCaptureFileInfos()[1].CaptureLength().value(), capture_length2);
+
+  // clean up
+  manager.Clear();
+}
+
 }  // namespace orbit_capture_file_info

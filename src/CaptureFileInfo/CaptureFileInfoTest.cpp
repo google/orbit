@@ -26,6 +26,10 @@ TEST(CaptureFileInfo, PathConstructor) {
 
   // LastUsed() before or equal to now.
   EXPECT_LE(capture_file_info.LastUsed(), QDateTime::currentDateTime());
+
+  // `last_modified_` and `file_size_` are just created from `file_info_`. Hence these file
+  // information are up-to-date.
+  EXPECT_FALSE(capture_file_info.IsOutOfSync());
 }
 
 TEST(CaptureFileInfo, PathLastUsedConstructor) {
@@ -42,6 +46,35 @@ TEST(CaptureFileInfo, PathLastUsedConstructor) {
   EXPECT_EQ(capture_file_info.CaptureLength().value(), kCaptureLength);
 
   EXPECT_EQ(capture_file_info.LastUsed(), last_used);
+
+  EXPECT_FALSE(capture_file_info.IsOutOfSync());
+}
+
+TEST(CaptureFileInfo, FullInfoConstructorAndIsOutOfSync) {
+  const std::filesystem::path kTestFullPath = orbit_test::GetTestdataDir() / "test_file.orbit";
+  const QDateTime kLastUsed = QDateTime::fromMSecsSinceEpoch(1600000000000);
+  const QDateTime kLastModified = QDateTime::fromMSecsSinceEpoch(1500000000000);
+  const uint64_t kFileSize = 1234;
+  const absl::Duration kCaptureLength{absl::Seconds(5)};
+
+  CaptureFileInfo capture_file_info{QString::fromStdString(kTestFullPath.string()), kLastUsed,
+                                    kLastModified, kFileSize, kCaptureLength};
+
+  EXPECT_EQ(capture_file_info.FilePath(), QString::fromStdString(kTestFullPath.string()));
+  EXPECT_EQ(capture_file_info.FileName(),
+            QString::fromStdString(kTestFullPath.filename().string()));
+  EXPECT_EQ(capture_file_info.LastUsed(), kLastUsed);
+  EXPECT_EQ(capture_file_info.LastModified(), kLastModified);
+  EXPECT_EQ(capture_file_info.FileSize(), kFileSize);
+  EXPECT_EQ(capture_file_info.CaptureLength().value(), kCaptureLength);
+
+  // The file size and the last modified time we provided to construct the CaptureFileInfo donnot
+  // match with the information retrieved from the file system. Hence they are out of sync with the
+  // associated file.
+  EXPECT_TRUE(capture_file_info.IsOutOfSync());
+
+  capture_file_info.Touch();
+  EXPECT_FALSE(capture_file_info.IsOutOfSync());
 }
 
 TEST(CaptureFileInfo, FileExistsAndCreated) {

@@ -2999,6 +2999,7 @@ void OrbitApp::TrySaveUserDefinedCaptureInfo() {
       SendErrorToUi("Save failed", absl::StrFormat("Save to \"%s\" failed: %s", file_path.string(),
                                                    write_result.error().message()));
     }
+    capture_file_info_manager_.AddOrTouchCaptureFile(file_path, GetCaptureTime());
   });
 }
 

@@ -36,13 +36,15 @@ class Manager {
                              std::optional<absl::Duration> capture_length);
   void Clear();
   void PurgeNonExistingFiles();
+  void ProcessOutOfSyncFiles();
   ErrorMessageOr<void> FillFromDirectory(const std::filesystem::path& directory);
+
+ protected:
+  std::vector<CaptureFileInfo> capture_file_infos_;
 
  private:
   void SaveCaptureFileInfos();
   void LoadCaptureFileInfos();
-
-  std::vector<CaptureFileInfo> capture_file_infos_;
 };
 
 }  // namespace orbit_capture_file_info
