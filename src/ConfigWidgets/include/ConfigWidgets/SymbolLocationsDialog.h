@@ -16,6 +16,8 @@
 #include <vector>
 
 #include "ClientSymbols/PersistentStorageManager.h"
+#include "MetricsUploader/MetricsUploader.h"
+#include "MetricsUploader/ScopedMetric.h"
 #include "OrbitBase/Result.h"
 
 namespace Ui {
@@ -30,7 +32,7 @@ class SymbolLocationsDialog : public QDialog {
  public:
   explicit SymbolLocationsDialog(
       orbit_client_symbols::PersistentStorageManager* persistent_storage_manager,
-      bool allow_unsafe_symbols = false,
+      orbit_metrics_uploader::MetricsUploader* metrics_uploader, bool allow_unsafe_symbols = false,
       std::optional<const orbit_client_data::ModuleData*> module = std::nullopt,
       QWidget* parent = nullptr);
   ~SymbolLocationsDialog() override;
@@ -65,6 +67,7 @@ class SymbolLocationsDialog : public QDialog {
   std::optional<const orbit_client_data::ModuleData*> module_;
   orbit_client_symbols::PersistentStorageManager* persistent_storage_manager_ = nullptr;
   orbit_client_symbols::ModuleSymbolFileMappings module_symbol_file_mappings_;
+  orbit_metrics_uploader::MetricsUploader* metrics_uploader_;
 
   void AddSymbolPathsToListWidget(absl::Span<const std::filesystem::path> paths);
   [[nodiscard]] std::vector<std::filesystem::path> GetSymbolPathsFromListWidget();
