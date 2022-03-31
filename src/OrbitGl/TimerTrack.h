@@ -160,7 +160,7 @@ class TimerTrack : public Track {
   void AddBorderLine(const Vec2& from, const Vec2& to, float z, const Color& color,
                      orbit_gl::Batcher& batcher, const orbit_client_protos::TimerInfo& timer_info);
   void AddTetragonBorder(orbit_gl::Batcher& batcher, const Tetragon& tetragon, const Color& color,
-                           const orbit_client_protos::TimerInfo& timer_info);
+                         const orbit_client_protos::TimerInfo& timer_info);
 
   static const Color kHighlightColor;
   static const Color kBoxBorderColor;

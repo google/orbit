@@ -425,7 +425,7 @@ void ThreadTrack::DoUpdatePrimitives(Batcher& batcher, TextRenderer& text_render
         batcher.AddShadedBox(pos, size, draw_data.z, color, std::move(user_data));
         if (ShouldHaveBorder(timer_info, draw_data.histogram_selection_range, size[0])) {
           AddTetragonBorder(batcher, MakeBox(pos, size, GlCanvas::kZValueBoxBorder),
-                       TimerTrack::kBoxBorderColor, *timer_info);
+                            TimerTrack::kBoxBorderColor, *timer_info);
         }
       } else {
         batcher.AddVerticalLine(pos, box_height, draw_data.z, color, std::move(user_data));
