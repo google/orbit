@@ -1,9 +1,9 @@
-// Copyright (c) 2020 The Orbit Authors. All rights reserved.
+// Copyright (c) 2022 The Orbit Authors. All rights reserved.
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#ifndef ORBIT_GL_BATCHER_H_
-#define ORBIT_GL_BATCHER_H_
+#ifndef ORBIT_GL_PRIMITIVE_ASSEMBLER_H_
+#define ORBIT_GL_PRIMITIVE_ASSEMBLER_H_
 
 #include <math.h>
 #include <stdint.h>
@@ -41,17 +41,17 @@ enum class ShadingDirection { kLeftToRight, kRightToLeft, kTopToBottom, kBottomT
 /**
 Collects primitives to be rendered at a later point in time.
 
-By calling Batcher::AddXXX, primitives are added to internal CPU buffers, and sorted
+By calling PrimitiveAssembler::AddXXX, primitives are added to internal CPU buffers, and sorted
 into layers formed by equal z-coordinates. Each layer can then be drawn seperately with
-Batcher::DrawLayer(), or all layers can be drawn at once in their correct order using
-Batcher::Draw():
+PrimitiveAssembler::DrawLayer(), or all layers can be drawn at once in their correct order using
+PrimitiveAssembler::Draw():
 
-NOTE: Batcher has a few pure virtual functions that have to be implemented: A few
+NOTE: PrimitiveAssembler has a few pure virtual functions that have to be implemented: A few
 AddInternalMethods, ResetElements(), GetLayers() and DrawLayers().
 **/
-class Batcher {
+class PrimitiveAssembler {
  public:
-  explicit Batcher(BatcherId batcher_id, PickingManager* picking_manager = nullptr)
+  explicit PrimitiveAssembler(BatcherId batcher_id, PickingManager* picking_manager = nullptr)
       : batcher_id_(batcher_id), picking_manager_(picking_manager) {
     constexpr int32_t kSteps = 22;
     const float angle = (kPiFloat * 2.f) / kSteps;
@@ -62,9 +62,9 @@ class Batcher {
     }
   }
 
-  Batcher() = delete;
-  Batcher(const Batcher&) = delete;
-  Batcher(Batcher&&) = delete;
+  PrimitiveAssembler() = delete;
+  PrimitiveAssembler(const PrimitiveAssembler&) = delete;
+  PrimitiveAssembler(PrimitiveAssembler&&) = delete;
 
   void PushTranslation(float x, float y, float z = 0.f) { translations_.PushTranslation(x, y, z); }
   void PopTranslation() { translations_.PopTranslation(); }
@@ -156,4 +156,4 @@ class Batcher {
 
 }  // namespace orbit_gl
 
-#endif
+#endif  // ORBIT_GL_PRIMITIVE_ASSEMBLER_H_

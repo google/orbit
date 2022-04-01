@@ -42,9 +42,9 @@ using orbit_client_data::CaptureData;
 using orbit_client_data::TimerChain;
 using orbit_client_protos::TimerInfo;
 
-using orbit_gl::Batcher;
 using orbit_gl::CGroupAndProcessMemoryTrack;
 using orbit_gl::PageFaultsTrack;
+using orbit_gl::PrimitiveAssembler;
 using orbit_gl::SystemMemoryTrack;
 using orbit_gl::TrackManager;
 using orbit_gl::VariableTrack;
@@ -59,7 +59,7 @@ TimeGraph::TimeGraph(AccessibleInterfaceProvider* parent, OrbitApp* app,
     // parent in accessible_parent_ which doesn't need to be a CaptureViewElement.
     : orbit_gl::CaptureViewElement(nullptr, viewport, &layout_),
       accessible_parent_{parent},
-      batcher_(BatcherId::kTimeGraph),
+      primitive_assembler_(BatcherId::kTimeGraph),
       thread_track_data_provider_(capture_data->GetThreadTrackDataProvider()),
       capture_data_{capture_data},
       app_{app} {
@@ -67,7 +67,7 @@ TimeGraph::TimeGraph(AccessibleInterfaceProvider* parent, OrbitApp* app,
     manual_instrumentation_manager_ = app->GetManualInstrumentationManager();
   }
   text_renderer_static_.SetViewport(viewport);
-  batcher_.SetPickingManager(picking_manager);
+  primitive_assembler_.SetPickingManager(picking_manager);
 
   const orbit_client_data::ModuleManager* module_manager =
       app != nullptr ? app->GetModuleManager() : nullptr;
@@ -518,7 +518,7 @@ void TimeGraph::PrepareBatcherAndUpdatePrimitives(PickingMode picking_mode) {
   ORBIT_SCOPE_FUNCTION;
   ORBIT_CHECK(app_->GetStringManager() != nullptr);
 
-  batcher_.StartNewFrame();
+  primitive_assembler_.StartNewFrame();
 
   text_renderer_static_.Init();
   text_renderer_static_.Clear();
@@ -526,8 +526,8 @@ void TimeGraph::PrepareBatcherAndUpdatePrimitives(PickingMode picking_mode) {
   uint64_t min_tick = GetTickFromUs(min_time_us_);
   uint64_t max_tick = GetTickFromUs(max_time_us_);
 
-  CaptureViewElement::UpdatePrimitives(batcher_, text_renderer_static_, min_tick, max_tick,
-                                       picking_mode);
+  CaptureViewElement::UpdatePrimitives(primitive_assembler_, text_renderer_static_, min_tick,
+                                       max_tick, picking_mode);
 
   if (!absl::GetFlag(FLAGS_enforce_full_redraw)) {
     update_primitives_requested_ = false;
@@ -627,12 +627,13 @@ void TimeGraph::JumpToNeighborTimer(const TimerInfo* from, JumpDirection jump_di
   }
 }
 
-void TimeGraph::DrawAllElements(Batcher& batcher, TextRenderer& text_renderer,
-                                PickingMode& picking_mode, uint64_t current_mouse_time_ns) {
+void TimeGraph::DrawAllElements(PrimitiveAssembler& primitive_assembler,
+                                TextRenderer& text_renderer, PickingMode& picking_mode,
+                                uint64_t current_mouse_time_ns) {
   const bool picking = picking_mode != PickingMode::kNone;
 
   DrawContext context{current_mouse_time_ns, picking_mode};
-  Draw(batcher, text_renderer, context);
+  Draw(primitive_assembler, text_renderer, context);
 
   if ((!picking && update_primitives_requested_) || picking) {
     PrepareBatcherAndUpdatePrimitives(picking_mode);

@@ -10,19 +10,19 @@
 #include <memory>
 
 #include "App.h"
-#include "Batcher.h"
 #include "ClientData/TimerChain.h"
 #include "ClientProtos/capture_data.pb.h"
 #include "DisplayFormats/DisplayFormats.h"
 #include "GlUtils.h"
 #include "OrbitBase/Logging.h"
 #include "OrbitBase/ThreadConstants.h"
+#include "PrimitiveAssembler.h"
 #include "TimeGraphLayout.h"
 #include "TriangleToggle.h"
 #include "absl/strings/str_format.h"
 
 using orbit_client_protos::TimerInfo;
-using orbit_gl::Batcher;
+using orbit_gl::PrimitiveAssembler;
 
 GpuDebugMarkerTrack::GpuDebugMarkerTrack(CaptureViewElement* parent,
                                          const orbit_gl::TimelineInfoInterface* timeline_info,
@@ -84,8 +84,9 @@ std::string GpuDebugMarkerTrack::GetTimesliceText(const TimerInfo& timer_info) c
                          time);
 }
 
-std::string GpuDebugMarkerTrack::GetBoxTooltip(const Batcher& batcher, PickingId id) const {
-  const TimerInfo* timer_info = batcher.GetTimerInfo(id);
+std::string GpuDebugMarkerTrack::GetBoxTooltip(const PrimitiveAssembler& primitive_assembler,
+                                               PickingId id) const {
+  const TimerInfo* timer_info = primitive_assembler.GetTimerInfo(id);
   if (timer_info == nullptr) {
     return "";
   }

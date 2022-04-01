@@ -38,7 +38,7 @@ struct DrawData {
   uint64_t highlighted_group_id;
   double ns_per_pixel;
   uint64_t min_timegraph_tick;
-  orbit_gl::Batcher* batcher;
+  orbit_gl::PrimitiveAssembler* primitive_assembler;
   const orbit_gl::Viewport* viewport;
   const orbit_client_protos::TimerInfo* selected_timer;
   double inv_time_window;
@@ -101,8 +101,8 @@ class TimerTrack : public Track {
   [[nodiscard]] uint64_t GetMaxTime() const override;
 
  protected:
-  void DoUpdatePrimitives(orbit_gl::Batcher& batcher, TextRenderer& text_renderer,
-                          uint64_t min_tick, uint64_t max_tick,
+  void DoUpdatePrimitives(orbit_gl::PrimitiveAssembler& primitive_assembler,
+                          TextRenderer& text_renderer, uint64_t min_tick, uint64_t max_tick,
                           PickingMode /*picking_mode*/) override;
 
   [[nodiscard]] virtual bool IsTimerActive(
@@ -135,18 +135,21 @@ class TimerTrack : public Track {
 
   [[nodiscard]] static internal::DrawData GetDrawData(
       uint64_t min_tick, uint64_t max_tick, float track_pos_x, float track_width,
-      orbit_gl::Batcher* batcher, const orbit_gl::TimelineInfoInterface* timeline_info,
-      const orbit_gl::Viewport* viewport, bool is_collapsed,
-      const orbit_client_protos::TimerInfo* selected_timer, uint64_t highlighted_function_id,
-      uint64_t highlighted_group_id,
+      orbit_gl::PrimitiveAssembler* primitive_assembler,
+      const orbit_gl::TimelineInfoInterface* timeline_info, const orbit_gl::Viewport* viewport,
+      bool is_collapsed, const orbit_client_protos::TimerInfo* selected_timer,
+      uint64_t highlighted_function_id, uint64_t highlighted_group_id,
       std::optional<orbit_statistics::HistogramSelectionRange> histogram_selection_range);
 
-  [[nodiscard]] virtual std::string GetBoxTooltip(const orbit_gl::Batcher& batcher,
-                                                  PickingId id) const;
+  [[nodiscard]] virtual std::string GetBoxTooltip(
+      const orbit_gl::PrimitiveAssembler& primitive_assembler, PickingId id) const;
   [[nodiscard]] std::unique_ptr<orbit_gl::PickingUserData> CreatePickingUserData(
-      const orbit_gl::Batcher& batcher, const orbit_client_protos::TimerInfo& timer_info) {
+      const orbit_gl::PrimitiveAssembler& primitive_assembler,
+      const orbit_client_protos::TimerInfo& timer_info) {
     return std::make_unique<orbit_gl::PickingUserData>(
-        &timer_info, [this, &batcher](PickingId id) { return this->GetBoxTooltip(batcher, id); });
+        &timer_info, [this, &primitive_assembler](PickingId id) {
+          return this->GetBoxTooltip(primitive_assembler, id);
+        });
   }
 
   [[nodiscard]] inline bool BoxHasRoomForText(TextRenderer& text_renderer, const float width) {

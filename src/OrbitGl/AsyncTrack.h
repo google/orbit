@@ -33,14 +33,15 @@ class AsyncTrack final : public TimerTrack {
 
   [[nodiscard]] std::string GetName() const override { return name_; };
   [[nodiscard]] Type GetType() const override { return Type::kAsyncTrack; };
-  [[nodiscard]] std::string GetBoxTooltip(const orbit_gl::Batcher& batcher,
+  [[nodiscard]] std::string GetBoxTooltip(const orbit_gl::PrimitiveAssembler& primitive_assembler,
                                           PickingId id) const override;
   void OnTimer(const orbit_client_protos::TimerInfo& timer_info) override;
   [[nodiscard]] float GetHeight() const override;
 
  protected:
-  void DoUpdatePrimitives(orbit_gl::Batcher& batcher, TextRenderer& text_renderer,
-                          uint64_t min_tick, uint64_t max_tick, PickingMode picking_mode) override;
+  void DoUpdatePrimitives(orbit_gl::PrimitiveAssembler& primitive_assembler,
+                          TextRenderer& text_renderer, uint64_t min_tick, uint64_t max_tick,
+                          PickingMode picking_mode) override;
   [[nodiscard]] float GetDefaultBoxHeight() const override;
   [[nodiscard]] std::string GetTimesliceText(
       const orbit_client_protos::TimerInfo& timer) const override;

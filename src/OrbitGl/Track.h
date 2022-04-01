@@ -13,7 +13,6 @@
 #include <string>
 #include <vector>
 
-#include "Batcher.h"
 #include "CaptureViewElement.h"
 #include "ClientData/CaptureData.h"
 #include "ClientData/ModuleManager.h"
@@ -24,6 +23,7 @@
 #include "CoreMath.h"
 #include "GteVector.h"
 #include "OrbitBase/Profiling.h"
+#include "PrimitiveAssembler.h"
 #include "TextRenderer.h"
 #include "TimeGraphLayout.h"
 #include "TimelineInfoInterface.h"
@@ -114,12 +114,13 @@ class Track : public orbit_gl::CaptureViewElement, public std::enable_shared_fro
       const orbit_client_protos::TimerInfo& /*timer_info*/) const = 0;
 
  protected:
-  void DoDraw(orbit_gl::Batcher& batcher, TextRenderer& text_renderer,
+  void DoDraw(orbit_gl::PrimitiveAssembler& primitive_assembler, TextRenderer& text_renderer,
               const DrawContext& draw_context) override;
   void DoUpdateLayout() override;
 
-  void DrawTriangleFan(orbit_gl::Batcher& batcher, const std::vector<Vec2>& points, const Vec2& pos,
-                       const Color& color, float rotation, float z);
+  void DrawTriangleFan(orbit_gl::PrimitiveAssembler& primitive_assembler,
+                       const std::vector<Vec2>& points, const Vec2& pos, const Color& color,
+                       float rotation, float z);
   virtual void UpdatePositionOfSubtracks() {}
   void UpdatePositionOfCollapseToggle();
 

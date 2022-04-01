@@ -10,20 +10,20 @@
 #include <utility>
 
 #include "AccessibleTriangleToggle.h"
-#include "Batcher.h"
 #include "Geometry.h"
 #include "GlCanvas.h"
+#include "PrimitiveAssembler.h"
 #include "Track.h"
 
-using orbit_gl::Batcher;
+using orbit_gl::PrimitiveAssembler;
 
 TriangleToggle::TriangleToggle(StateChangeHandler handler, orbit_gl::Viewport* viewport,
                                TimeGraphLayout* layout, Track* track)
     : CaptureViewElement(track, viewport, layout), handler_(std::move(handler)) {}
 
-void TriangleToggle::DoDraw(Batcher& batcher, TextRenderer& text_renderer,
+void TriangleToggle::DoDraw(PrimitiveAssembler& primitive_assembler, TextRenderer& text_renderer,
                             const DrawContext& draw_context) {
-  CaptureViewElement::DoDraw(batcher, text_renderer, draw_context);
+  CaptureViewElement::DoDraw(primitive_assembler, text_renderer, draw_context);
 
   const float z = GlCanvas::kZValueTrack;
 
@@ -51,14 +51,14 @@ void TriangleToggle::DoDraw(Batcher& batcher, TextRenderer& text_renderer,
                           position + Vec3(-half_triangle_base_width, -half_triangle_height, z),
                           position + Vec3(0.f, half_triangle_base_width, z));
     }
-    batcher.AddTriangle(triangle, color, shared_from_this());
+    primitive_assembler.AddTriangle(triangle, color, shared_from_this());
   } else {
     // When picking, draw a big square for easier picking.
     float original_width = 2 * half_triangle_base_width;
     float large_width = 2 * original_width;
     Box box(Vec2(pos[0] - original_width, pos[1] - original_width), Vec2(large_width, large_width),
             z);
-    batcher.AddBox(box, color, shared_from_this());
+    primitive_assembler.AddBox(box, color, shared_from_this());
   }
 }
 

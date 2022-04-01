@@ -25,19 +25,20 @@ class TimelineUi : public CaptureViewElement {
   std::unique_ptr<orbit_accessibility::AccessibleInterface> CreateAccessibleInterface() override;
 
  private:
-  void DoDraw(Batcher& batcher, TextRenderer& text_renderer,
+  void DoDraw(PrimitiveAssembler& primitive_assembler, TextRenderer& text_renderer,
               const DrawContext& draw_context) override;
-  void DoUpdatePrimitives(Batcher& batcher, TextRenderer& text_renderer, uint64_t min_tick,
-                          uint64_t max_tick, PickingMode picking_mode) override;
-  void RenderLines(Batcher& batcher, uint64_t min_timestamp_ns, uint64_t max_timestamp_ns) const;
-  void RenderLabels(Batcher& batcher, TextRenderer& text_renderer, uint64_t min_timestamp_ns,
-                    uint64_t max_timestamp_ns) const;
-  void RenderMargin(Batcher& batcher) const;
-  void RenderBackground(Batcher& batcher) const;
-  void RenderLabel(Batcher& batcher, TextRenderer& text_renderer, uint64_t tick_ns,
-                   uint32_t number_of_decimal_places, Color background_color,
+  void DoUpdatePrimitives(PrimitiveAssembler& primitive_assembler, TextRenderer& text_renderer,
+                          uint64_t min_tick, uint64_t max_tick, PickingMode picking_mode) override;
+  void RenderLines(PrimitiveAssembler& primitive_assembler, uint64_t min_timestamp_ns,
+                   uint64_t max_timestamp_ns) const;
+  void RenderLabels(PrimitiveAssembler& primitive_assembler, TextRenderer& text_renderer,
+                    uint64_t min_timestamp_ns, uint64_t max_timestamp_ns) const;
+  void RenderMargin(PrimitiveAssembler& primitive_assembler) const;
+  void RenderBackground(PrimitiveAssembler& primitive_assembler) const;
+  void RenderLabel(PrimitiveAssembler& primitive_assembler, TextRenderer& text_renderer,
+                   uint64_t tick_ns, uint32_t number_of_decimal_places, Color background_color,
                    bool is_mouse_label = false) const;
-  void RenderMouseLabel(Batcher& batcher, TextRenderer& text_renderer,
+  void RenderMouseLabel(PrimitiveAssembler& primitive_assembler, TextRenderer& text_renderer,
                         uint64_t mouse_tick_ns) const;
   [[nodiscard]] std::string GetLabel(uint64_t tick_ns, uint32_t number_of_decimal_places) const;
   [[nodiscard]] std::vector<uint64_t> GetTicksForNonOverlappingLabels(

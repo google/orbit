@@ -140,11 +140,12 @@ std::string GetTimeString(const TimerInfo& timer_a, const TimerInfo& timer_b) {
 
 }  // namespace
 
-void TrackContainer::DrawIteratorBox(Batcher& batcher, TextRenderer& text_renderer, Vec2 pos,
-                                     Vec2 size, const Color& color, const std::string& label,
+void TrackContainer::DrawIteratorBox(PrimitiveAssembler& primitive_assembler,
+                                     TextRenderer& text_renderer, Vec2 pos, Vec2 size,
+                                     const Color& color, const std::string& label,
                                      const std::string& time, float text_box_y) {
   Box box(pos, size, GlCanvas::kZValueOverlay);
-  batcher.AddBox(box, color);
+  primitive_assembler.AddBox(box, color);
 
   std::string text = absl::StrFormat("%s: %s", label, time);
 
@@ -162,15 +163,16 @@ void TrackContainer::DrawIteratorBox(Batcher& batcher, TextRenderer& text_render
   Box white_box(white_box_position, white_box_size, GlCanvas::kZValueOverlayLabel);
 
   const Color kWhite(255, 255, 255, 255);
-  batcher.AddBox(white_box, kWhite);
+  primitive_assembler.AddBox(white_box, kWhite);
 
   Vec2 line_from(pos[0] + white_box_size[0], white_box_position[1] + box_height / 2.f);
   Vec2 line_to(pos[0] + size[0], white_box_position[1] + box_height / 2.f);
-  batcher.AddLine(line_from, line_to, GlCanvas::kZValueOverlay, Color(255, 255, 255, 255));
+  primitive_assembler.AddLine(line_from, line_to, GlCanvas::kZValueOverlay,
+                              Color(255, 255, 255, 255));
 }
 
-void TrackContainer::DrawOverlay(Batcher& batcher, TextRenderer& text_renderer,
-                                 PickingMode picking_mode) {
+void TrackContainer::DrawOverlay(PrimitiveAssembler& primitive_assembler,
+                                 TextRenderer& text_renderer, PickingMode picking_mode) {
   if (picking_mode != PickingMode::kNone || iterator_timer_info_.empty()) {
     return;
   }
@@ -209,8 +211,8 @@ void TrackContainer::DrawOverlay(Batcher& batcher, TextRenderer& text_renderer,
     Vec2 pos(world_timer_x, world_start_y);
     x_coords.push_back(pos[0]);
 
-    batcher.AddVerticalLine(pos, height, GlCanvas::kZValueOverlay,
-                            TimeGraph::GetThreadColor(timer_info->thread_id()));
+    primitive_assembler.AddVerticalLine(pos, height, GlCanvas::kZValueOverlay,
+                                        TimeGraph::GetThreadColor(timer_info->thread_id()));
   }
 
   // Draw timers with timings between iterators.
@@ -243,7 +245,7 @@ void TrackContainer::DrawOverlay(Batcher& batcher, TextRenderer& text_renderer,
     float text_y = pos[1] + (height / 2.f) + static_cast<float>(k) * height_per_text -
                    layout_->GetTextBoxHeight();
 
-    DrawIteratorBox(batcher, text_renderer, pos, size, color, label, time, text_y);
+    DrawIteratorBox(primitive_assembler, text_renderer, pos, size, color, label, time, text_y);
   }
 
   // When we have at least 3 boxes, we also draw the total time from the first
@@ -263,11 +265,13 @@ void TrackContainer::DrawOverlay(Batcher& batcher, TextRenderer& text_renderer,
     // We do not want the overall box to add any color, so we just set alpha to
     // 0.
     const Color kColorBlackTransparent(0, 0, 0, 0);
-    DrawIteratorBox(batcher, text_renderer, pos, size, kColorBlackTransparent, label, time, text_y);
+    DrawIteratorBox(primitive_assembler, text_renderer, pos, size, kColorBlackTransparent, label,
+                    time, text_y);
   }
 }
 
-void TrackContainer::DrawIncompleteDataIntervals(Batcher& batcher, PickingMode picking_mode) {
+void TrackContainer::DrawIncompleteDataIntervals(PrimitiveAssembler& primitive_assembler,
+                                                 PickingMode picking_mode) {
   if (picking_mode == PickingMode::kClick) return;  // Allow to click through.
 
   uint64_t min_visible_timestamp_ns = timeline_info_->GetTickFromUs(timeline_info_->GetMinTimeUs());
@@ -325,7 +329,8 @@ void TrackContainer::DrawIncompleteDataIntervals(Batcher& batcher, PickingMode p
     }
 
     static const Color kIncompleteDataIntervalOrange{255, 128, 0, 32};
-    batcher.AddBox(Box{pos, size, z_value}, kIncompleteDataIntervalOrange, std::move(user_data));
+    primitive_assembler.AddBox(Box{pos, size, z_value}, kIncompleteDataIntervalOrange,
+                               std::move(user_data));
   }
 }
 
@@ -366,12 +371,12 @@ void TrackContainer::SetIteratorOverlayData(
   RequestUpdate();
 }
 
-void TrackContainer::DoDraw(Batcher& batcher, TextRenderer& text_renderer,
+void TrackContainer::DoDraw(PrimitiveAssembler& primitive_assembler, TextRenderer& text_renderer,
                             const DrawContext& draw_context) {
-  CaptureViewElement::DoDraw(batcher, text_renderer, draw_context);
+  CaptureViewElement::DoDraw(primitive_assembler, text_renderer, draw_context);
 
-  DrawIncompleteDataIntervals(batcher, draw_context.picking_mode);
-  DrawOverlay(batcher, text_renderer, draw_context.picking_mode);
+  DrawIncompleteDataIntervals(primitive_assembler, draw_context.picking_mode);
+  DrawOverlay(primitive_assembler, text_renderer, draw_context.picking_mode);
 }
 
 void TrackContainer::SetVerticalScrollingOffset(float value) {
