@@ -186,6 +186,7 @@ add_executable(OrbitGlTests)
 
 target_sources(OrbitGlTests PRIVATE
                CaptureViewElementTester.h
+               MockBatcher.h
                PickingManagerTest.h
                UnitTestSlider.h)
 
@@ -197,6 +198,7 @@ target_sources(OrbitGlTests PRIVATE
                CaptureWindowTest.cpp
                GlUtilsTest.cpp
                GpuTrackTest.cpp
+               MockBatcher.cpp
                MultivariateTimeSeriesTest.cpp
                PageFaultsTrackTest.cpp
                PickingManagerTest.cpp
