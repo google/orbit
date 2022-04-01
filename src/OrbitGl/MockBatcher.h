@@ -11,6 +11,17 @@
 
 namespace orbit_gl {
 
+static bool IsInBetween(float point, float min, float max) { return point >= min && point <= max; }
+
+static bool IsInsideRectangle(Vec2 point, Vec2 start, Vec2 end) {
+  for (int i = 0; i < 2; i++) {
+    if (!IsInBetween(point[i], start[i], end[i])) {
+      return false;
+    }
+  }
+  return true;
+}
+
 class MockBatcher : public BatcherInterface {
  public:
   explicit MockBatcher() : BatcherInterface(BatcherId::kTimeGraph) { ResetElements(); }
@@ -75,6 +86,7 @@ class MockBatcher : public BatcherInterface {
     }
     return total_lines;
   }
+
   [[nodiscard]] int GetNumTriangles() const {
     int total_triangles = 0;
     for (auto& [unused_color, num_triangles] : num_triangles_by_color_) {
@@ -82,6 +94,7 @@ class MockBatcher : public BatcherInterface {
     }
     return total_triangles;
   }
+
   [[nodiscard]] int GetNumBoxes() const {
     int total_boxes = 0;
     for (auto& [unused_color, num_boxes] : num_boxes_by_color_) {
@@ -89,15 +102,17 @@ class MockBatcher : public BatcherInterface {
     }
     return total_boxes;
   }
+
+  // To check that everything is inside a rectangle, we just need to check the minimum and maximum
+  // used coordinates.
   [[nodiscard]] bool IsEverythingInsideRectangle(Vec2 start, Vec2 end) {
-    return start[0] <= min_point_[0] && start[0] >= max_point_[0] && start[1] <= min_point_[1] &&
-           start[1] >= max_point_[1] && end[0] <= min_point_[0] && end[0] >= max_point_[0] &&
-           end[1] <= min_point_[1] && end[1] >= max_point_[1];
+    return IsInsideRectangle({min_point_[0], min_point_[1]}, start, end) &&
+           IsInsideRectangle({max_point_[0], max_point_[1]}, start, end);
   }
 
-  [[nodiscard]] bool IsBetweenZLayers(float z_layer_1, float z_layer_2) {
-    return z_layer_1 <= min_point_[2] && z_layer_1 >= max_point_[2] && z_layer_2 <= min_point_[2] &&
-           z_layer_2 >= max_point_[2];
+  [[nodiscard]] bool IsEverythingBetweenZLayers(float z_layer_min, float z_layer_max) {
+    return IsInBetween(min_point_[2], z_layer_min, z_layer_max) &&
+           IsInBetween(max_point_[2], z_layer_min, z_layer_max);
   }
 
  private:
