@@ -8,13 +8,11 @@
 
 namespace orbit_gl {
 
-namespace {
-
-[[nodiscard]] inline bool IsInBetween(float point, float min, float max) {
+[[nodiscard]] static bool IsInBetween(float point, float min, float max) {
   return point >= min && point <= max;
 }
 
-[[nodiscard]] inline bool IsInsideRectangle(Vec2 point, Vec2 top_left, Vec2 bottom_right) {
+[[nodiscard]] static bool IsInsideRectangle(Vec2 point, Vec2 top_left, Vec2 bottom_right) {
   for (int i = 0; i < 2; i++) {
     if (!IsInBetween(point[i], top_left[i], bottom_right[i])) {
       return false;
@@ -22,8 +20,6 @@ namespace {
   }
   return true;
 }
-
-}  // namespace
 
 MockBatcher::MockBatcher() : BatcherInterface(BatcherId::kTimeGraph) { ResetElements(); }
 
