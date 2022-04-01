@@ -28,7 +28,6 @@ target_sources(OrbitBase PRIVATE
         include/OrbitBase/File.h
         include/OrbitBase/Future.h
         include/OrbitBase/FutureHelpers.h
-        include/OrbitBase/JoinFutures.h
         include/OrbitBase/Logging.h
         include/OrbitBase/MainThreadExecutor.h
         include/OrbitBase/MakeUniqueForOverwrite.h
@@ -47,12 +46,12 @@ target_sources(OrbitBase PRIVATE
         include/OrbitBase/ThreadPool.h
         include/OrbitBase/ThreadUtils.h
         include/OrbitBase/UniqueResource.h
+        include/OrbitBase/WhenAll.h
         include/OrbitBase/WriteStringToFile.h)
 
 target_sources(OrbitBase PRIVATE
         ExecutablePath.cpp
         File.cpp
-        JoinFutures.cpp
         Logging.cpp
         LoggingUtils.cpp
         Profiling.cpp
@@ -62,6 +61,7 @@ target_sources(OrbitBase PRIVATE
         StringConversion.cpp
         TemporaryFile.cpp
         ThreadPool.cpp
+        WhenAll.cpp
         WriteStringToFile.cpp)
 
 if (WIN32)
@@ -102,7 +102,6 @@ target_sources(OrbitBaseTests PRIVATE
         FutureTest.cpp
         FutureHelpersTest.cpp
         ImmediateExecutorTest.cpp
-        JoinFuturesTest.cpp
         LoggingUtilsTest.cpp
         ProfilingTest.cpp
         PromiseTest.cpp
@@ -115,6 +114,7 @@ target_sources(OrbitBaseTests PRIVATE
         TemporaryFileTest.cpp
         ThreadUtilsTest.cpp
         UniqueResourceTest.cpp
+        WhenAllTest.cpp
         WriteStringToFileTest.cpp
 )
 

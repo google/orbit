@@ -14,8 +14,8 @@
 
 #include "ClientFlags/ClientFlags.h"
 #include "ClientServices/ProcessClient.h"
-#include "OrbitBase/JoinFutures.h"
 #include "OrbitBase/Logging.h"
+#include "OrbitBase/WhenAll.h"
 #include "SessionSetup/ConnectToTargetDialog.h"
 #include "SessionSetup/ServiceDeployManager.h"
 #include "SessionSetup/SessionSetupUtils.h"
@@ -68,7 +68,7 @@ std::optional<TargetConfiguration> ConnectToTargetDialog::Exec() {
 
   auto process_future = ggp_client_->GetSshInfoAsync(target_.instance_name_or_id, std::nullopt);
   auto instance_future = ggp_client_->DescribeInstanceAsync(target_.instance_name_or_id);
-  auto joined_future = orbit_base::JoinFutures(process_future, instance_future);
+  auto joined_future = orbit_base::WhenAll(process_future, instance_future);
 
   joined_future.Then(main_thread_executor_.get(),
                      [this](MaybeSshAndInstanceData ssh_instance_data) {

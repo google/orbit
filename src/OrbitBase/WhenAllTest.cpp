@@ -1,21 +1,21 @@
-// Copyright (c) 2021 The Orbit Authors. All rights reserved.
+// Copyright (c) 2022 The Orbit Authors. All rights reserved.
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
 #include <gtest/gtest.h>
 
 #include "OrbitBase/Future.h"
-#include "OrbitBase/JoinFutures.h"
 #include "OrbitBase/Promise.h"
+#include "OrbitBase/WhenAll.h"
 #include "absl/types/span.h"
 
 namespace orbit_base {
 
 template <typename T>
-struct JoinFuturesTest : testing::Test {};
+struct WhenAllTest : testing::Test {};
 
 template <>
-struct JoinFuturesTest<int> : testing::Test {
+struct WhenAllTest<int> : testing::Test {
   using ValueType = int;
   using FutureValueType = std::vector<int>;
 
@@ -29,7 +29,7 @@ struct JoinFuturesTest<int> : testing::Test {
 };
 
 template <>
-struct JoinFuturesTest<void> : testing::Test {
+struct WhenAllTest<void> : testing::Test {
   using ValueType = void;
   using FutureValueType = void;
 
@@ -40,25 +40,25 @@ struct JoinFuturesTest<void> : testing::Test {
 };
 
 using TestTypes = testing::Types<void, int>;
-TYPED_TEST_SUITE(JoinFuturesTest, TestTypes);
+TYPED_TEST_SUITE(WhenAllTest, TestTypes);
 
-TYPED_TEST(JoinFuturesTest, JoinEmptySpan) {
+TYPED_TEST(WhenAllTest, JoinEmptySpan) {
   using T = typename TestFixture::ValueType;        // Think int
   using R = typename TestFixture::FutureValueType;  // Think std::vector<int>
 
-  Future<R> joined_future = JoinFutures(absl::Span<const Future<T>>{});
+  Future<R> joined_future = WhenAll(absl::Span<const Future<T>>{});
   EXPECT_TRUE(joined_future.IsValid());
   EXPECT_TRUE(joined_future.IsFinished());
 }
 
-TYPED_TEST(JoinFuturesTest, JoinSpanWithOneElement) {
+TYPED_TEST(WhenAllTest, JoinSpanWithOneElement) {
   using T = typename TestFixture::ValueType;        // Think int
   using R = typename TestFixture::FutureValueType;  // Think std::vector<int>
 
   Promise<T> promise{};
   Future<T> future = promise.GetFuture();
 
-  Future<R> joined_future = JoinFutures(absl::MakeConstSpan({future}));
+  Future<R> joined_future = WhenAll(absl::MakeConstSpan({future}));
   EXPECT_TRUE(joined_future.IsValid());
   EXPECT_FALSE(joined_future.IsFinished());
 
@@ -67,7 +67,7 @@ TYPED_TEST(JoinFuturesTest, JoinSpanWithOneElement) {
   TestFixture::VerifyResult(&joined_future, 1);
 }
 
-TYPED_TEST(JoinFuturesTest, JoinSpanWithManyElements) {
+TYPED_TEST(WhenAllTest, JoinSpanWithManyElements) {
   using T = typename TestFixture::ValueType;        // Think int
   using R = typename TestFixture::FutureValueType;  // Think std::vector<int>
 
@@ -80,7 +80,7 @@ TYPED_TEST(JoinFuturesTest, JoinSpanWithManyElements) {
   Promise<T> promise2{};
   Future<T> future2 = promise2.GetFuture();
 
-  Future<R> joined_future = JoinFutures(absl::MakeConstSpan({future0, future1, future2}));
+  Future<R> joined_future = WhenAll(absl::MakeConstSpan({future0, future1, future2}));
   EXPECT_TRUE(joined_future.IsValid());
   EXPECT_FALSE(joined_future.IsFinished());
 
@@ -96,14 +96,14 @@ TYPED_TEST(JoinFuturesTest, JoinSpanWithManyElements) {
   TestFixture::VerifyResult(&joined_future, 3);
 }
 
-TYPED_TEST(JoinFuturesTest, JoinSpanWithDuplicateElements) {
+TYPED_TEST(WhenAllTest, JoinSpanWithDuplicateElements) {
   using T = typename TestFixture::ValueType;        // Think int
   using R = typename TestFixture::FutureValueType;  // Think std::vector<int>
 
   Promise<T> promise{};
   Future<T> future = promise.GetFuture();
 
-  Future<R> joined_future = JoinFutures(absl::MakeConstSpan({future, future}));
+  Future<R> joined_future = WhenAll(absl::MakeConstSpan({future, future}));
   EXPECT_TRUE(joined_future.IsValid());
   EXPECT_FALSE(joined_future.IsFinished());
 
@@ -111,7 +111,7 @@ TYPED_TEST(JoinFuturesTest, JoinSpanWithDuplicateElements) {
   EXPECT_TRUE(joined_future.IsFinished());
 }
 
-TYPED_TEST(JoinFuturesTest, JoinSpanWithCompletedFutures) {
+TYPED_TEST(WhenAllTest, JoinSpanWithCompletedFutures) {
   using T = typename TestFixture::ValueType;        // Think int
   using R = typename TestFixture::FutureValueType;  // Think std::vector<int>
 
@@ -127,17 +127,17 @@ TYPED_TEST(JoinFuturesTest, JoinSpanWithCompletedFutures) {
   TestFixture::FinishPromise(&promise2, 2);
   Future<T> future2 = promise2.GetFuture();
 
-  Future<R> joined_future = JoinFutures(absl::MakeConstSpan({future0, future1, future2}));
+  Future<R> joined_future = WhenAll(absl::MakeConstSpan({future0, future1, future2}));
   EXPECT_TRUE(joined_future.IsValid());
   EXPECT_TRUE(joined_future.IsFinished());
   TestFixture::VerifyResult(&joined_future, 3);
 }
 
-TEST(JoinFuturesTest, JoinOneFuture) {
+TEST(WhenAllTest, JoinOneFuture) {
   Promise<int> promise0{};
   Future<int> future0 = promise0.GetFuture();
 
-  Future<std::tuple<int>> joined_future = JoinFutures(future0);
+  Future<std::tuple<int>> joined_future = WhenAll(future0);
   EXPECT_TRUE(joined_future.IsValid());
   EXPECT_FALSE(joined_future.IsFinished());
 
@@ -147,7 +147,7 @@ TEST(JoinFuturesTest, JoinOneFuture) {
   EXPECT_EQ(std::get<0>(joined_future.Get()), 42);
 }
 
-TEST(JoinFuturesTest, JoinThreeFutures) {
+TEST(WhenAllTest, JoinThreeFutures) {
   Promise<int> promise0{};
   Future<int> future0 = promise0.GetFuture();
 
@@ -157,7 +157,7 @@ TEST(JoinFuturesTest, JoinThreeFutures) {
   Promise<int> promise2{};
   Future<int> future2 = promise2.GetFuture();
 
-  Future<std::tuple<int, std::string, int>> joined_future = JoinFutures(future0, future1, future2);
+  Future<std::tuple<int, std::string, int>> joined_future = WhenAll(future0, future1, future2);
   EXPECT_TRUE(joined_future.IsValid());
   EXPECT_FALSE(joined_future.IsFinished());
 
