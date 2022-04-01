@@ -63,7 +63,7 @@ LiveFunctionsDataView::LiveFunctionsDataView(
     orbit_metrics_uploader::MetricsUploader* metrics_uploader)
     : DataView(DataViewType::kLiveFunctions, app),
       live_functions_(live_functions),
-      selected_function_id_(orbit_grpc_protos::kInvalidFunctionId),
+      selected_scope_id_(orbit_grpc_protos::kInvalidFunctionId),
       metrics_uploader_(metrics_uploader) {
   update_period_ms_ = 300;
 }
@@ -126,7 +126,7 @@ std::string LiveFunctionsDataView::GetValue(int row, int column) {
 }
 
 std::vector<int> LiveFunctionsDataView::GetVisibleSelectedIndices() {
-  std::optional<int> visible_selected_index = GetRowFromFunctionId(selected_function_id_);
+  std::optional<int> visible_selected_index = GetRowFromFunctionId(selected_scope_id_);
   if (!visible_selected_index.has_value()) return {};
   return {visible_selected_index.value()};
 }
@@ -141,13 +141,7 @@ void LiveFunctionsDataView::UpdateHighlightedFunctionId(const std::vector<int>& 
 }
 
 void LiveFunctionsDataView::UpdateSelectedFunctionId() {
-  const uint64_t scope_id = app_->GetHighlightedScopeId();
-  // Temporarily, as LiveFunctionDataView handles functions only, we check if the scope_id
-  // corresponds to functions
-  if (!functions_.contains(scope_id)) {
-    selected_function_id_ = orbit_grpc_protos::kInvalidFunctionId;
-  }
-  selected_function_id_ = scope_id;
+  selected_scope_id_ = app_->GetHighlightedScopeId();
 }
 
 void LiveFunctionsDataView::UpdateHistogramWithIndices(

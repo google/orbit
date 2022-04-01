@@ -69,7 +69,7 @@ class LiveFunctionsDataView : public DataView {
   // load/finalization this may be optimized via populating it function-wise on user's demand
 
   LiveFunctionsInterface* live_functions_;
-  uint64_t selected_function_id_;
+  uint64_t selected_scope_id_;
 
   enum ColumnIndex {
     kColumnSelected,

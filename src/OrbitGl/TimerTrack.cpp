@@ -424,7 +424,7 @@ bool TimerTrack::ShouldHaveBorder(
   return range->min_duration <= duration && duration <= range->max_duration;
 }
 
-[[nodiscard]] static Vec2 Vec3ToVec2(const Vec3 v) { return {v[0], v[1]}; }
+[[nodiscard]] static Vec2 Vec3ToVec2(const Vec3& v) { return {v[0], v[1]}; }
 
 void TimerTrack::AddBorderLine(const Vec2& from, const Vec2& to, float z, const Color& color,
                                Batcher& batcher, const orbit_client_protos::TimerInfo& timer_info) {
