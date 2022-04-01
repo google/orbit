@@ -19,7 +19,6 @@
 #include "DataViews/DataView.h"
 #include "DataViews/LiveFunctionsInterface.h"
 #include "GrpcProtos/capture.pb.h"
-#include "MetricsUploader/MetricsUploader.h"
 
 namespace orbit_data_views {
 
@@ -89,8 +88,6 @@ class LiveFunctionsDataView : public DataView {
   [[nodiscard]] const orbit_client_data::FunctionInfo* GetFunctionInfoFromRow(int row) override;
 
   void UpdateHistogramWithIndices(const std::vector<int>& visible_selected_indices);
-
-  orbit_metrics_uploader::MetricsUploader* metrics_uploader_;
 };
 
 }  // namespace orbit_data_views

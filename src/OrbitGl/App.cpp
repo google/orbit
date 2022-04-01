@@ -77,12 +77,12 @@
 #include "OrbitBase/Future.h"
 #include "OrbitBase/FutureHelpers.h"
 #include "OrbitBase/ImmediateExecutor.h"
-#include "OrbitBase/JoinFutures.h"
 #include "OrbitBase/Logging.h"
 #include "OrbitBase/MainThreadExecutor.h"
 #include "OrbitBase/Result.h"
 #include "OrbitBase/ThreadConstants.h"
 #include "OrbitBase/UniqueResource.h"
+#include "OrbitBase/WhenAll.h"
 #include "OrbitPaths/Paths.h"
 #include "OrbitVersion/OrbitVersion.h"
 #include "SamplingReport.h"
@@ -1042,8 +1042,8 @@ void OrbitApp::SetSamplingReport(
     sampling_report_->ClearReport();
   }
 
-  auto report =
-      std::make_shared<SamplingReport>(this, callstack_data, post_processed_sampling_data);
+  auto report = std::make_shared<SamplingReport>(this, callstack_data, post_processed_sampling_data,
+                                                 metrics_uploader_);
   orbit_data_views::DataView* callstack_data_view = GetOrCreateDataView(DataViewType::kCallstack);
   ORBIT_CHECK(sampling_reports_callback_);
   sampling_reports_callback_(callstack_data_view, report);
@@ -1068,8 +1068,9 @@ void OrbitApp::SetSelectionReport(
     selection_report_->ClearReport();
   }
 
-  auto report = std::make_shared<SamplingReport>(
-      this, selection_callstack_data, selection_post_processed_sampling_data, has_summary);
+  auto report = std::make_shared<SamplingReport>(this, selection_callstack_data,
+                                                 selection_post_processed_sampling_data,
+                                                 metrics_uploader_, has_summary);
   orbit_data_views::DataView* callstack_data_view = GetOrCreateSelectionCallstackDataView();
 
   selection_report_ = report;
@@ -1696,7 +1697,7 @@ orbit_base::Future<void> OrbitApp::RetrieveModulesAndLoadSymbols(
     futures.emplace_back(RetrieveModuleAndLoadSymbolsAndHandleError(module));
   }
 
-  return orbit_base::JoinFutures(futures);
+  return orbit_base::WhenAll(futures);
 }
 
 orbit_base::Future<void> OrbitApp::RetrieveModuleAndLoadSymbolsAndHandleError(
@@ -2140,7 +2141,7 @@ orbit_base::Future<ErrorMessageOr<void>> OrbitApp::LoadPreset(const PresetFile& 
 
   // Then - when all modules are loaded or failed to load - we update the UI and potentially show an
   // error message.
-  auto results = orbit_base::JoinFutures(absl::MakeConstSpan(load_module_results));
+  auto results = orbit_base::WhenAll(absl::MakeConstSpan(load_module_results));
   return results.Then(
       main_thread_executor_,
       [this, metric = std::move(metric), preset_file](
@@ -2330,7 +2331,7 @@ orbit_base::Future<std::vector<ErrorMessageOr<void>>> OrbitApp::ReloadModules(
     reloaded_modules.emplace_back(std::move(reloaded_module));
   }
 
-  return orbit_base::JoinFutures(absl::MakeConstSpan(reloaded_modules));
+  return orbit_base::WhenAll(absl::MakeConstSpan(reloaded_modules));
 }
 
 void OrbitApp::SetCollectSchedulerInfo(bool collect_scheduler_info) {
@@ -2567,21 +2568,21 @@ orbit_data_views::DataView* OrbitApp::GetOrCreateDataView(DataViewType type) {
   switch (type) {
     case DataViewType::kFunctions:
       if (!functions_data_view_) {
-        functions_data_view_ = DataView::CreateAndInit<FunctionsDataView>(this);
+        functions_data_view_ = DataView::CreateAndInit<FunctionsDataView>(this, metrics_uploader_);
         panels_.push_back(functions_data_view_.get());
       }
       return functions_data_view_.get();
 
     case DataViewType::kCallstack:
       if (!callstack_data_view_) {
-        callstack_data_view_ = DataView::CreateAndInit<CallstackDataView>(this);
+        callstack_data_view_ = DataView::CreateAndInit<CallstackDataView>(this, metrics_uploader_);
         panels_.push_back(callstack_data_view_.get());
       }
       return callstack_data_view_.get();
 
     case DataViewType::kModules:
       if (!modules_data_view_) {
-        modules_data_view_ = DataView::CreateAndInit<ModulesDataView>(this);
+        modules_data_view_ = DataView::CreateAndInit<ModulesDataView>(this, metrics_uploader_);
         panels_.push_back(modules_data_view_.get());
       }
       return modules_data_view_.get();
@@ -2605,7 +2606,8 @@ orbit_data_views::DataView* OrbitApp::GetOrCreateDataView(DataViewType type) {
 
     case DataViewType::kTracepoints:
       if (!tracepoints_data_view_) {
-        tracepoints_data_view_ = DataView::CreateAndInit<TracepointsDataView>(this);
+        tracepoints_data_view_ =
+            DataView::CreateAndInit<TracepointsDataView>(this, metrics_uploader_);
         panels_.push_back(tracepoints_data_view_.get());
       }
       return tracepoints_data_view_.get();
@@ -2618,7 +2620,8 @@ orbit_data_views::DataView* OrbitApp::GetOrCreateDataView(DataViewType type) {
 
 orbit_data_views::DataView* OrbitApp::GetOrCreateSelectionCallstackDataView() {
   if (selection_callstack_data_view_ == nullptr) {
-    selection_callstack_data_view_ = DataView::CreateAndInit<CallstackDataView>(this);
+    selection_callstack_data_view_ =
+        DataView::CreateAndInit<CallstackDataView>(this, metrics_uploader_);
     panels_.push_back(selection_callstack_data_view_.get());
   }
   return selection_callstack_data_view_.get();
@@ -2666,24 +2669,23 @@ void OrbitApp::DeselectTracepoint(const TracepointInfo& tracepoint) {
 
 void OrbitApp::EnableFrameTrack(const FunctionInfo& function) {
   data_manager_->EnableFrameTrack(function);
+  metrics_uploader_->SendLogEvent(orbit_metrics_uploader::OrbitLogEvent::ORBIT_FRAME_TRACK_ENABLED);
 }
 
 void OrbitApp::DisableFrameTrack(const FunctionInfo& function) {
   data_manager_->DisableFrameTrack(function);
+  metrics_uploader_->SendLogEvent(
+      orbit_metrics_uploader::OrbitLogEvent::ORBIT_FRAME_TRACK_DISABLED);
 }
 
 void OrbitApp::AddFrameTrack(const FunctionInfo& function) {
-  if (!HasCaptureData()) {
-    return;
-  }
+  if (!HasCaptureData()) return;
 
   std::optional<uint64_t> instrumented_function_id =
       orbit_client_data::FindInstrumentedFunctionIdSlow(*module_manager_, *capture_data_, function);
   // If the function is not instrumented - ignore it. This happens when user
   // enables frame tracks for a not instrumented function from the function list.
-  if (!instrumented_function_id) {
-    return;
-  }
+  if (!instrumented_function_id) return;
 
   AddFrameTrack(instrumented_function_id.value());
 }
@@ -2691,9 +2693,7 @@ void OrbitApp::AddFrameTrack(const FunctionInfo& function) {
 void OrbitApp::AddFrameTrack(uint64_t instrumented_function_id) {
   ORBIT_CHECK(instrumented_function_id != 0);
   ORBIT_CHECK(std::this_thread::get_id() == main_thread_id_);
-  if (!HasCaptureData()) {
-    return;
-  }
+  if (!HasCaptureData()) return;
 
   // We only add a frame track to the actual capture data if the function for the frame
   // track actually has hits in the capture data. Otherwise we can end up in inconsistent
@@ -2707,48 +2707,51 @@ void OrbitApp::AddFrameTrack(uint64_t instrumented_function_id) {
       AddFrameTrackTimers(instrumented_function_id);
     }
     TrySaveUserDefinedCaptureInfo();
-  } else {
-    const InstrumentedFunction* function =
-        GetCaptureData().GetInstrumentedFunctionById(instrumented_function_id);
-    constexpr const char* kDontShowAgainEmptyFrameTrackWarningKey = "EmptyFrameTrackWarning";
-    const std::string title = "Frame track not added";
-    const std::string message = absl::StrFormat(
-        "Frame track enabled for function \"%s\", but since the function does not have any hits in "
-        "the current capture, a frame track was not added to the capture.",
-        function->function_name());
-    main_window_->ShowWarningWithDontShowAgainCheckboxIfNeeded(
-        title, message, kDontShowAgainEmptyFrameTrackWarningKey);
+    metrics_uploader_->SendLogEvent(
+        orbit_metrics_uploader::OrbitLogEvent::ORBIT_FRAME_TRACK_ADDED_VISIBLE);
+    return;
   }
+
+  const InstrumentedFunction* function =
+      GetCaptureData().GetInstrumentedFunctionById(instrumented_function_id);
+  constexpr const char* kDontShowAgainEmptyFrameTrackWarningKey = "EmptyFrameTrackWarning";
+  const std::string title = "Frame track not added";
+  const std::string message = absl::StrFormat(
+      "Frame track enabled for function \"%s\", but since the function does not have any hits in "
+      "the current capture, a frame track was not added to the capture.",
+      function->function_name());
+  main_window_->ShowWarningWithDontShowAgainCheckboxIfNeeded(
+      title, message, kDontShowAgainEmptyFrameTrackWarningKey);
+  metrics_uploader_->SendLogEvent(
+      orbit_metrics_uploader::OrbitLogEvent::ORBIT_FRAME_TRACK_ADDED_INVISIBLE);
 }
 
 void OrbitApp::RemoveFrameTrack(const FunctionInfo& function) {
   // Ignore this call if there is no capture data
-  if (!HasCaptureData()) {
-    return;
-  }
+  if (!HasCaptureData()) return;
 
   std::optional<uint64_t> instrumented_function_id =
       orbit_client_data::FindInstrumentedFunctionIdSlow(*module_manager_, *capture_data_, function);
   // If the function is not instrumented - ignore it. This happens when user
   // enables frame tracks for a not instrumented function from the function list.
-  if (!instrumented_function_id) {
-    return;
-  }
+  if (!instrumented_function_id) return;
 
   RemoveFrameTrack(instrumented_function_id.value());
 }
 
 void OrbitApp::RemoveFrameTrack(uint64_t instrumented_function_id) {
   ORBIT_CHECK(std::this_thread::get_id() == main_thread_id_);
+  if (!HasCaptureData()) return;
 
   // We can only remove the frame track from the capture data if we have capture data and
   // the frame track is actually enabled in the capture data.
-  if (HasCaptureData() && GetCaptureData().IsFrameTrackEnabled(instrumented_function_id)) {
+  if (GetCaptureData().IsFrameTrackEnabled(instrumented_function_id)) {
     frame_track_online_processor_.RemoveFrameTrack(instrumented_function_id);
     GetMutableCaptureData().DisableFrameTrack(instrumented_function_id);
     GetMutableTimeGraph()->GetTrackContainer()->RemoveFrameTrack(instrumented_function_id);
     TrySaveUserDefinedCaptureInfo();
   }
+  metrics_uploader_->SendLogEvent(orbit_metrics_uploader::OrbitLogEvent::ORBIT_FRAME_TRACK_REMOVED);
 }
 
 bool OrbitApp::IsFrameTrackEnabled(const FunctionInfo& function) const {

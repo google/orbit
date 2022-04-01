@@ -61,10 +61,9 @@ namespace orbit_data_views {
 LiveFunctionsDataView::LiveFunctionsDataView(
     LiveFunctionsInterface* live_functions, AppInterface* app,
     orbit_metrics_uploader::MetricsUploader* metrics_uploader)
-    : DataView(DataViewType::kLiveFunctions, app),
+    : DataView(DataViewType::kLiveFunctions, app, metrics_uploader),
       live_functions_(live_functions),
-      selected_scope_id_(orbit_grpc_protos::kInvalidFunctionId),
-      metrics_uploader_(metrics_uploader) {
+      selected_scope_id_(orbit_grpc_protos::kInvalidFunctionId) {
   update_period_ms_ = 300;
 }
 
@@ -115,7 +114,7 @@ std::string LiveFunctionsDataView::GetValue(int row, int column) {
     case kColumnTimeMax:
       return orbit_display_formats::GetDisplayTime(absl::Nanoseconds(stats.max_ns()));
     case kColumnStdDev:
-      return orbit_display_formats::GetDisplayTime(absl::Nanoseconds(stats.std_dev_ns()));
+      return orbit_display_formats::GetDisplayTime(absl::Nanoseconds(stats.ComputeStdDevNs()));
     case kColumnModule:
       return function.module_path();
     case kColumnAddress:
@@ -226,7 +225,7 @@ void LiveFunctionsDataView::DoSort() {
       sorter = ORBIT_STAT_SORT(max_ns());
       break;
     case kColumnStdDev:
-      sorter = ORBIT_STAT_SORT(std_dev_ns());
+      sorter = ORBIT_STAT_SORT(ComputeStdDevNs());
       break;
     case kColumnModule: {
       auto module_name = [](const orbit_client_data::FunctionInfo& function) {

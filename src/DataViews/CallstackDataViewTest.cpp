@@ -20,6 +20,7 @@
 #include "DataViews/DataView.h"
 #include "DisplayFormats/DisplayFormats.h"
 #include "GrpcProtos/capture.pb.h"
+#include "MetricsUploader/MetricsUploaderStub.h"
 #include "MockAppInterface.h"
 
 using orbit_client_data::CallstackInfo;
@@ -138,7 +139,7 @@ std::unique_ptr<CaptureData> GenerateTestCaptureData(
 class CallstackDataViewTest : public testing::Test {
  public:
   explicit CallstackDataViewTest()
-      : view_{&app_}, capture_data_(GenerateTestCaptureData(&module_manager_)) {
+      : view_{&app_, &metrics_uploader_}, capture_data_(GenerateTestCaptureData(&module_manager_)) {
     EXPECT_CALL(app_, GetModuleManager()).WillRepeatedly(Return(&module_manager_));
     EXPECT_CALL(app_, GetMutableModuleManager()).WillRepeatedly(Return(&module_manager_));
   }
@@ -163,6 +164,7 @@ class CallstackDataViewTest : public testing::Test {
 
  protected:
   MockAppInterface app_;
+  orbit_metrics_uploader::MetricsUploaderStub metrics_uploader_;
   CallstackDataView view_;
   orbit_client_data::ModuleManager module_manager_;
   std::unique_ptr<CaptureData> capture_data_;

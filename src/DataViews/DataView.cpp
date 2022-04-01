@@ -221,17 +221,24 @@ void DataView::OnUnselectRequested(const std::vector<int>& selection) {
 }
 
 void DataView::OnEnableFrameTrackRequested(const std::vector<int>& selection) {
+  metrics_uploader_->SendLogEvent(
+      orbit_metrics_uploader::OrbitLogEvent::ORBIT_FRAME_TRACK_ENABLE_CLICKED);
+
   for (int i : selection) {
     const FunctionInfo& function = *GetFunctionInfoFromRow(i);
     // Functions used as frame tracks must be hooked (selected), otherwise the
     // data to produce the frame track will not be captured.
     app_->SelectFunction(function);
+
     app_->EnableFrameTrack(function);
     app_->AddFrameTrack(function);
   }
 }
 
 void DataView::OnDisableFrameTrackRequested(const std::vector<int>& selection) {
+  metrics_uploader_->SendLogEvent(
+      orbit_metrics_uploader::OrbitLogEvent::ORBIT_FRAME_TRACK_DISABLE_CLICKED);
+
   for (int i : selection) {
     const FunctionInfo& function = *GetFunctionInfoFromRow(i);
     // When we remove a frame track, we do not unhook (deselect) the function as

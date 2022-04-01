@@ -13,7 +13,7 @@
 #include <QTimer>
 #include <chrono>
 
-#include "OrbitBase/JoinFutures.h"
+#include "OrbitBase/WhenAll.h"
 
 namespace orbit_qt_utils {
 
@@ -59,6 +59,6 @@ FutureWatcher::Reason FutureWatcher::WaitFor(
 FutureWatcher::Reason FutureWatcher::WaitForAll(
     absl::Span<orbit_base::Future<void>> futures,
     std::optional<std::chrono::milliseconds> timeout) const {
-  return WaitFor(orbit_base::JoinFutures(futures), timeout);
+  return WaitFor(orbit_base::WhenAll(futures), timeout);
 }
 }  // namespace orbit_qt_utils

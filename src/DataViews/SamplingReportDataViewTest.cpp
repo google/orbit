@@ -25,6 +25,7 @@
 #include "DataViews/DataView.h"
 #include "DataViews/SamplingReportDataView.h"
 #include "DataViews/SamplingReportInterface.h"
+#include "MetricsUploader/MetricsUploaderStub.h"
 #include "MockAppInterface.h"
 #include "Statistics/BinomialConfidenceInterval.h"
 
@@ -250,7 +251,7 @@ class MockSamplingReportInterface : public orbit_data_views::SamplingReportInter
 class SamplingReportDataViewTest : public testing::Test {
  public:
   explicit SamplingReportDataViewTest()
-      : view_{&app_}, capture_data_(GenerateTestCaptureData(&module_manager_)) {
+      : view_{&app_, &metrics_uploader_}, capture_data_(GenerateTestCaptureData(&module_manager_)) {
     EXPECT_CALL(app_, GetModuleManager()).WillRepeatedly(Return(&module_manager_));
     EXPECT_CALL(app_, GetMutableModuleManager()).WillRepeatedly(Return(&module_manager_));
     EXPECT_CALL(app_, GetConfidenceIntervalEstimator())
@@ -299,6 +300,7 @@ class SamplingReportDataViewTest : public testing::Test {
   MockSamplingReportInterface sampling_report_;
   MockBinomialConfidenceIntervalEstimator confidence_interval_estimator_;
   orbit_data_views::MockAppInterface app_;
+  orbit_metrics_uploader::MetricsUploaderStub metrics_uploader_;
   orbit_data_views::SamplingReportDataView view_;
 
   orbit_client_data::ModuleManager module_manager_;

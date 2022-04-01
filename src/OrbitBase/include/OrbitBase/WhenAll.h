@@ -1,9 +1,9 @@
-// Copyright (c) 2021 The Orbit Authors. All rights reserved.
+// Copyright (c) 2022 The Orbit Authors. All rights reserved.
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#ifndef ORBIT_BASE_JOIN_FUTURES_H_
-#define ORBIT_BASE_JOIN_FUTURES_H_
+#ifndef ORBIT_BASE_WHEN_ALL_H_
+#define ORBIT_BASE_WHEN_ALL_H_
 
 #include <absl/base/thread_annotations.h>
 
@@ -17,13 +17,13 @@
 namespace orbit_base_internal {
 
 template <typename T>
-class SharedStateJoin {
+class SharedStateWhenAll {
   orbit_base::Promise<std::vector<T>> promise;
   absl::Mutex mutex;
-  size_t incomplete_futures;
-  std::vector<std::optional<T>> results;
+  size_t incomplete_futures ABSL_GUARDED_BY(mutex) = 0;
+  std::vector<std::optional<T>> results ABSL_GUARDED_BY(mutex);
 
-  void SetResultsInPromise() {
+  void SetResultsInPromise() ABSL_EXCLUSIVE_LOCKS_REQUIRED(mutex) {
     std::vector<T> output;
     output.reserve(results.size());
     std::transform(results.begin(), results.end(), std::back_inserter(output),
@@ -58,14 +58,14 @@ class SharedStateJoin {
 };
 
 template <>
-struct SharedStateJoin<void> {
+struct SharedStateWhenAll<void> {
   orbit_base::Promise<void> promise;
   absl::Mutex mutex;
-  size_t incomplete_futures;
+  size_t incomplete_futures ABSL_GUARDED_BY(mutex) = 0;
 };
 
 template <typename... Ts>
-class SharedStateJoinTuple {
+class SharedStateWhenAllTuple {
   orbit_base::Promise<std::tuple<Ts...>> promise;
   absl::Mutex mutex;
   size_t incomplete_futures ABSL_GUARDED_BY(mutex) = sizeof...(Ts);
@@ -105,11 +105,11 @@ class SharedStateJoinTuple {
 };
 
 template <typename... Args, std::size_t... Indexes>
-orbit_base::Future<std::tuple<Args...>> JoinFuturesTupleImpl(
+orbit_base::Future<std::tuple<Args...>> WhenAllTupleImpl(
     orbit_base::Future<Args>... futures, std::index_sequence<Indexes...> /* indexes */) {
   ORBIT_CHECK(futures.IsValid() && ...);
 
-  auto shared_state = std::make_shared<orbit_base_internal::SharedStateJoinTuple<Args...>>();
+  auto shared_state = std::make_shared<orbit_base_internal::SharedStateWhenAllTuple<Args...>>();
 
   (RegisterContinuationOrCallDirectly(futures,
                                       [shared_state](const auto& argument) {
@@ -125,17 +125,17 @@ namespace orbit_base {
 
 // Returns a future which completes when all futures in the argument have completed.
 // Currently only available for Future<void>.
-[[nodiscard]] Future<void> JoinFutures(absl::Span<const Future<void>> futures);
+[[nodiscard]] Future<void> WhenAll(absl::Span<const Future<void>> futures);
 
 template <typename T>
-Future<std::vector<T>> JoinFutures(absl::Span<const Future<T>> futures) {
+Future<std::vector<T>> WhenAll(absl::Span<const Future<T>> futures) {
   if (futures.empty()) {
     Promise<std::vector<T>> promise;
     promise.SetResult({});
     return promise.GetFuture();
   }
 
-  auto shared_state = std::make_shared<orbit_base_internal::SharedStateJoin<T>>();
+  auto shared_state = std::make_shared<orbit_base_internal::SharedStateWhenAll<T>>();
   shared_state->SetNumberOfFutures(futures.size());
 
   for (auto it = futures.begin(); it != futures.end(); ++it) {
@@ -155,13 +155,13 @@ Future<std::vector<T>> JoinFutures(absl::Span<const Future<T>> futures) {
 // The returning future will contain a tuple of all the given future's values.
 // Note that a future of type `Future<void>` is not supported as an argument.
 template <typename Arg0, typename... Args>
-[[nodiscard]] Future<std::tuple<Arg0, Args...>> JoinFutures(Future<Arg0> future0,
-                                                            Future<Args>... futures) {
-  return orbit_base_internal::JoinFuturesTupleImpl<Arg0, Args...>(
+[[nodiscard]] Future<std::tuple<Arg0, Args...>> WhenAll(Future<Arg0> future0,
+                                                        Future<Args>... futures) {
+  return orbit_base_internal::WhenAllTupleImpl<Arg0, Args...>(
       std::move(future0), std::move(futures)...,
       std::make_index_sequence<1 + sizeof...(futures)>());
 }
 
 }  // namespace orbit_base
 
-#endif  // ORBIT_BASE_JOIN_FUTURES_H_
+#endif  // ORBIT_BASE_WHEN_ALL_H_
