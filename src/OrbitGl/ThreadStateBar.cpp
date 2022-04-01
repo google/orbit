@@ -10,7 +10,6 @@
 #include <utility>
 
 #include "App.h"
-#include "Batcher.h"
 #include "CaptureViewElement.h"
 #include "ClientData/CaptureData.h"
 #include "ClientData/ThreadStateSliceInfo.h"
@@ -19,6 +18,7 @@
 #include "GlCanvas.h"
 #include "GrpcProtos/capture.pb.h"
 #include "OrbitBase/Logging.h"
+#include "PrimitiveAssembler.h"
 #include "Viewport.h"
 
 using orbit_client_data::ThreadID;
@@ -40,9 +40,9 @@ bool ThreadStateBar::IsEmpty() const {
   return capture_data_ == nullptr || !capture_data_->HasThreadStatesForThread(GetThreadId());
 }
 
-void ThreadStateBar::DoDraw(Batcher& batcher, TextRenderer& text_renderer,
+void ThreadStateBar::DoDraw(PrimitiveAssembler& primitive_assembler, TextRenderer& text_renderer,
                             const DrawContext& draw_context) {
-  ThreadBar::DoDraw(batcher, text_renderer, draw_context);
+  ThreadBar::DoDraw(primitive_assembler, text_renderer, draw_context);
 
   // Similarly to CallstackThreadBar::DoDraw, the thread state slices don't respond to clicks, but
   // have a tooltip. For picking, we want to draw the event bar over them if handling a click, and
@@ -54,7 +54,7 @@ void ThreadStateBar::DoDraw(Batcher& batcher, TextRenderer& text_renderer,
   // Draw a transparent track just for clicking.
   Tetragon box = MakeBox(GetPos(), Vec2(GetWidth(), GetHeight()), thread_state_bar_z);
   static const Color kTransparent{0, 0, 0, 0};
-  batcher.AddBox(box, kTransparent, shared_from_this());
+  primitive_assembler.AddBox(box, kTransparent, shared_from_this());
 }
 
 static Color GetThreadStateColor(ThreadStateSlice::ThreadState state) {
@@ -148,8 +148,9 @@ static std::string GetThreadStateDescription(ThreadStateSlice::ThreadState state
   }
 }
 
-std::string ThreadStateBar::GetThreadStateSliceTooltip(Batcher& batcher, PickingId id) const {
-  PickingUserData* user_data = batcher.GetUserData(id);
+std::string ThreadStateBar::GetThreadStateSliceTooltip(PrimitiveAssembler& primitive_assembler,
+                                                       PickingId id) const {
+  PickingUserData* user_data = primitive_assembler.GetUserData(id);
   if (user_data == nullptr || user_data->custom_data_ == nullptr) {
     return "";
   }
@@ -165,11 +166,12 @@ std::string ThreadStateBar::GetThreadStateSliceTooltip(Batcher& batcher, Picking
       GetThreadStateDescription(thread_state_slice->thread_state()));
 }
 
-void ThreadStateBar::DoUpdatePrimitives(Batcher& batcher, TextRenderer& text_renderer,
-                                        uint64_t min_tick, uint64_t max_tick,
-                                        PickingMode picking_mode) {
+void ThreadStateBar::DoUpdatePrimitives(PrimitiveAssembler& primitive_assembler,
+                                        TextRenderer& text_renderer, uint64_t min_tick,
+                                        uint64_t max_tick, PickingMode picking_mode) {
   ORBIT_SCOPE_WITH_COLOR("ThreadStateBar::DoUpdatePrimitives", kOrbitColorTeal);
-  ThreadBar::DoUpdatePrimitives(batcher, text_renderer, min_tick, max_tick, picking_mode);
+  ThreadBar::DoUpdatePrimitives(primitive_assembler, text_renderer, min_tick, max_tick,
+                                picking_mode);
 
   const auto time_window_ns = static_cast<uint64_t>(1000 * timeline_info_->GetTimeWindowUs());
   const uint64_t pixel_delta_ns = time_window_ns / viewport_->WorldToScreen(GetSize())[0];
@@ -196,13 +198,14 @@ void ThreadStateBar::DoUpdatePrimitives(Batcher& batcher, TextRenderer& text_ren
 
         const Color color = GetThreadStateColor(slice.thread_state());
 
-        auto user_data = std::make_unique<PickingUserData>(
-            nullptr, [&](PickingId id) { return GetThreadStateSliceTooltip(batcher, id); });
+        auto user_data = std::make_unique<PickingUserData>(nullptr, [&](PickingId id) {
+          return GetThreadStateSliceTooltip(primitive_assembler, id);
+        });
         user_data->custom_data_ = &slice;
 
         if (slice.end_timestamp_ns() - slice.begin_timestamp_ns() > pixel_delta_ns) {
           Tetragon box = MakeBox(pos, size, GlCanvas::kZValueEvent);
-          batcher.AddBox(box, color, std::move(user_data));
+          primitive_assembler.AddBox(box, color, std::move(user_data));
         } else {
           // Make this slice cover an entire pixel and don't draw subsequent slices that would
           // coincide with the same pixel.
@@ -210,7 +213,7 @@ void ThreadStateBar::DoUpdatePrimitives(Batcher& batcher, TextRenderer& text_ren
           // be properly aligned.
           Tetragon box =
               MakeBox(pos, {pixel_width_in_world_coords, size[1]}, GlCanvas::kZValueEvent);
-          batcher.AddBox(box, color, std::move(user_data));
+          primitive_assembler.AddBox(box, color, std::move(user_data));
 
           if (pixel_delta_ns != 0) {
             ignore_until_ns =

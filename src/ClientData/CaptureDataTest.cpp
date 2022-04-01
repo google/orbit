@@ -2,6 +2,9 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
+#include <absl/strings/numbers.h>
+#include <absl/strings/str_split.h>
+#include <absl/strings/string_view.h>
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
 
@@ -9,12 +12,18 @@
 #include <cstdint>
 #include <iterator>
 #include <optional>
+#include <tuple>
+#include <vector>
 
 #include "ClientData/CaptureData.h"
 #include "ClientData/ScopeIdConstants.h"
 #include "ClientData/ScopeIdProvider.h"
 #include "ClientData/ScopeStats.h"
+#include "ClientProtos/capture_data.pb.h"
 #include "GrpcProtos/capture.pb.h"
+#include "OrbitBase/Logging.h"
+#include "OrbitBase/ReadFileToString.h"
+#include "Test/Path.h"
 
 namespace orbit_client_data {
 
@@ -55,9 +64,10 @@ constexpr std::array<uint64_t, kTimerCount> kTimerIds = {kFirstId, kFirstId, kFi
 constexpr std::array<uint64_t, kTimerCount> kStarts = {10, 20, 30, 40, 50};
 constexpr std::array<uint64_t, kTimersForFirstId> kDurationsForFirstId = {300, 100, 200};
 constexpr std::array<uint64_t, kTimersForSecondId> kDurationsForSecondId = {500, 400};
-
 constexpr std::array<uint64_t, kTimersForFirstId> kSortedDurationsForFirstId = {100, 200, 300};
 constexpr std::array<uint64_t, kTimersForSecondId> kSortedDurationsForSecondId = {400, 500};
+
+constexpr uint64_t kLargeInteger = 10'000'000'000'000'000;
 
 static const std::array<uint64_t, kTimerCount> kDurations = [] {
   std::array<uint64_t, kTimerCount> result;
@@ -117,13 +127,73 @@ TEST_F(CaptureDataTest, UpdateScopeStatsIsCorrect) {
   for (const TimerInfo& timer : kTimerInfos) {
     capture_data_.UpdateScopeStats(timer);
   }
-
   capture_data_.UpdateScopeStats(kTimerInfoWithInvalidScopeId);
 
   ExpectStatsEqual(capture_data_.GetScopeStatsOrDefault(kFirstId),
                    GetStats(kDurationsForFirstId, kFirstVariance));
   ExpectStatsEqual(capture_data_.GetScopeStatsOrDefault(kSecondId),
                    GetStats(kDurationsForSecondId, kSecondVariance));
+}
+
+TEST_F(CaptureDataTest, VarianceIsCorrectForLongDurations) {
+  for (TimerInfo timer : kTimerInfos) {
+    timer.set_end(timer.end() + kLargeInteger);
+    capture_data_.UpdateScopeStats(timer);
+  }
+
+  capture_data_.UpdateScopeStats(kTimerInfoWithInvalidScopeId);
+
+  EXPECT_NEAR(capture_data_.GetScopeStatsOrDefault(kFirstId).variance_ns(), kFirstVariance, 1.0);
+  EXPECT_NEAR(capture_data_.GetScopeStatsOrDefault(kSecondId).variance_ns(), kSecondVariance, 1.0);
+}
+
+// The dataset contains 208'916 durations acquired in the course of 22 seconds.
+// The file first line of the file contains the expected variance. The rest of the lines store
+// durations one per line. The last line is empty.
+const auto [kScimitarVariance, kScimitarTimers] = [] {
+  std::filesystem::path path = orbit_test::GetTestdataDir() / "scimitar_variance_and_durations.csv";
+  const ErrorMessageOr<std::string> file_content_or_error = orbit_base::ReadFileToString(path);
+  EXPECT_TRUE(file_content_or_error.has_value());
+  const std::string& file_content = file_content_or_error.value();
+  const std::vector<std::string_view> tokens = absl::StrSplit(file_content, '\n');
+
+  double expected_variance;
+  EXPECT_TRUE(absl::SimpleAtod(*tokens.begin(), &expected_variance));
+
+  std::vector<TimerInfo> timers;
+  std::transform(std::begin(tokens) + 1, std::end(tokens) - 1, std::back_inserter(timers),
+                 [](const std::string_view line) {
+                   const uint64_t duration = std::stoull(std::string(line));
+                   TimerInfo timer;
+                   timer.set_function_id(kFirstId);
+                   timer.set_start(0);
+                   timer.set_end(duration);
+                   return timer;
+                 });
+  return std::make_tuple(expected_variance, timers);
+}();
+
+TEST_F(CaptureDataTest, VarianceIsCorrectOnScimitarDataset) {
+  for (const TimerInfo& timer : kScimitarTimers) {
+    capture_data_.UpdateScopeStats(timer);
+  }
+
+  const double actual_variance = capture_data_.GetScopeStatsOrDefault(kFirstId).variance_ns();
+  EXPECT_LE(abs(actual_variance / kScimitarVariance - 1.0), 1e-5);
+}
+
+constexpr size_t kNumberOfTimesWeRepeatScimitarDataset = 100;
+
+// Here we simulate a dataset of 20'891'600 acquired in the course of 36 minutes
+TEST_F(CaptureDataTest, VarianceIsCorrectOnRepeatedScimitarDataset) {
+  for (size_t i = 0; i < kNumberOfTimesWeRepeatScimitarDataset; ++i) {
+    for (const TimerInfo& timer : kScimitarTimers) {
+      capture_data_.UpdateScopeStats(timer);
+    }
+  }
+
+  const double actual_variance = capture_data_.GetScopeStatsOrDefault(kFirstId).variance_ns();
+  EXPECT_LE(abs(actual_variance / kScimitarVariance - 1.0), 1e-5);
 }
 
 TEST_F(CaptureDataTest, UpdateTimerDurationsIsCorrect) {

@@ -12,8 +12,6 @@ namespace orbit_client_data {
 // particular function).
 // Usage: Whenever we have a new occurrence of a particular scope, `UpdateStats` needs to be called
 // with the respective duration.
-// TODO(b/226880177): Currently, we need to recalculate the stats after the capture completes, to
-//  fix rounding issues.
 class ScopeStats {
  public:
   explicit ScopeStats() = default;

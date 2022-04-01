@@ -5,7 +5,7 @@
 #ifndef ORBIT_GL_OPEN_GL_BATCHER_H_
 #define ORBIT_GL_OPEN_GL_BATCHER_H_
 
-#include <Batcher.h>
+#include <PrimitiveAssembler.h>
 
 #include <array>
 #include <memory>
@@ -75,12 +75,12 @@ struct PrimitiveBuffers {
 // Implements internal methods to collects primitives to be rendered at a later point in time.
 //
 // NOTE: The OpenGlBatcher assumes x/y coordinates are in pixels and will automatically round those
-// down to the next integer in all Batcher::AddXXX methods. This fixes the issue of primitives
-// "jumping" around when their coordinates are changed slightly.
-class OpenGlBatcher : public Batcher {
+// down to the next integer in all PrimitiveAssembler::AddXXX methods. This fixes the issue of
+// primitives "jumping" around when their coordinates are changed slightly.
+class OpenGlBatcher : public PrimitiveAssembler {
  public:
   explicit OpenGlBatcher(BatcherId batcher_id, PickingManager* picking_manager = nullptr)
-      : Batcher(batcher_id, picking_manager) {}
+      : PrimitiveAssembler(batcher_id, picking_manager) {}
   [[nodiscard]] std::vector<float> GetLayers() const override;
   void DrawLayer(float layer, bool picking) const override;
 

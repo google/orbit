@@ -18,7 +18,7 @@
 #include "Viewport.h"
 
 using orbit_client_data::TimerData;
-using orbit_gl::Batcher;
+using orbit_gl::PrimitiveAssembler;
 
 Track::Track(CaptureViewElement* parent, const orbit_gl::TimelineInfoInterface* timeline_info,
              orbit_gl::Viewport* viewport, TimeGraphLayout* layout,
@@ -60,8 +60,9 @@ std::vector<Vec2> RotatePoints(const std::vector<Vec2>& points, float rotation) 
   return result;
 }
 
-void Track::DrawTriangleFan(Batcher& batcher, const std::vector<Vec2>& points, const Vec2& pos,
-                            const Color& color, float rotation, float z) {
+void Track::DrawTriangleFan(PrimitiveAssembler& primitive_assembler,
+                            const std::vector<Vec2>& points, const Vec2& pos, const Color& color,
+                            float rotation, float z) {
   if (points.size() < 3) {
     return;
   }
@@ -76,7 +77,7 @@ void Track::DrawTriangleFan(Batcher& batcher, const std::vector<Vec2>& points, c
   for (size_t i = 1; i < rotated_points.size() - 1; ++i) {
     vertices[i % 2] = position + Vec3(rotated_points[i + 1][0], rotated_points[i + 1][1], z);
     Triangle triangle(pivot, vertices[i % 2], vertices[(i + 1) % 2]);
-    batcher.AddTriangle(triangle, color, shared_from_this());
+    primitive_assembler.AddTriangle(triangle, color, shared_from_this());
   }
 }
 
@@ -99,8 +100,9 @@ std::unique_ptr<orbit_accessibility::AccessibleInterface> Track::CreateAccessibl
   return std::make_unique<orbit_gl::AccessibleTrack>(this, layout_);
 }
 
-void Track::DoDraw(Batcher& batcher, TextRenderer& text_renderer, const DrawContext& draw_context) {
-  CaptureViewElement::DoDraw(batcher, text_renderer, draw_context);
+void Track::DoDraw(PrimitiveAssembler& primitive_assembler, TextRenderer& text_renderer,
+                   const DrawContext& draw_context) {
+  CaptureViewElement::DoDraw(primitive_assembler, text_renderer, draw_context);
 
   if (headless_) return;
 
@@ -125,7 +127,7 @@ void Track::DoDraw(Batcher& batcher, TextRenderer& text_renderer, const DrawCont
 
   const float indentation_x0 = tab_x0 + (indentation_level_ * layout_->GetTrackIndentOffset());
   Tetragon box = MakeBox(Vec2(indentation_x0, y0), Vec2(label_width, label_height), track_z);
-  batcher.AddBox(box, track_background_color, shared_from_this());
+  primitive_assembler.AddBox(box, track_background_color, shared_from_this());
 
   Vec2 track_size = GetSize();
 
@@ -154,16 +156,18 @@ void Track::DoDraw(Batcher& batcher, TextRenderer& text_renderer, const DrawCont
     Vec2 content_bottom_right(top_left[0] + track_size[0], top_left[1] + track_size[1]);
     Vec2 content_top_right(top_left[0] + track_size[0], top_left[1] + label_height);
 
-    DrawTriangleFan(batcher, rounded_corner, top_left, GlCanvas::kBackgroundColor, 90.f, track_z);
-    DrawTriangleFan(batcher, rounded_corner, tab_top_right, GlCanvas::kBackgroundColor, 180.f,
+    DrawTriangleFan(primitive_assembler, rounded_corner, top_left, GlCanvas::kBackgroundColor, 90.f,
                     track_z);
-    DrawTriangleFan(batcher, rounded_corner, tab_bottom_right, track_background_color, 0, track_z);
-    DrawTriangleFan(batcher, rounded_corner, content_bottom_left, GlCanvas::kBackgroundColor, 0,
-                    track_z);
-    DrawTriangleFan(batcher, rounded_corner, content_bottom_right, GlCanvas::kBackgroundColor,
-                    -90.f, track_z);
-    DrawTriangleFan(batcher, rounded_corner, content_top_right, GlCanvas::kBackgroundColor, 180.f,
-                    track_z);
+    DrawTriangleFan(primitive_assembler, rounded_corner, tab_top_right, GlCanvas::kBackgroundColor,
+                    180.f, track_z);
+    DrawTriangleFan(primitive_assembler, rounded_corner, tab_bottom_right, track_background_color,
+                    0, track_z);
+    DrawTriangleFan(primitive_assembler, rounded_corner, content_bottom_left,
+                    GlCanvas::kBackgroundColor, 0, track_z);
+    DrawTriangleFan(primitive_assembler, rounded_corner, content_bottom_right,
+                    GlCanvas::kBackgroundColor, -90.f, track_z);
+    DrawTriangleFan(primitive_assembler, rounded_corner, content_top_right,
+                    GlCanvas::kBackgroundColor, 180.f, track_z);
   }
 
   // Collapse toggle state management.
@@ -195,7 +199,7 @@ void Track::DoDraw(Batcher& batcher, TextRenderer& text_renderer, const DrawCont
     if (layout_->GetDrawTrackBackground()) {
       Tetragon box = MakeBox(Vec2(x0, y0 + label_height),
                              Vec2(GetWidth(), GetHeight() - label_height), track_z);
-      batcher.AddBox(box, track_background_color, shared_from_this());
+      primitive_assembler.AddBox(box, track_background_color, shared_from_this());
     }
   }
 }

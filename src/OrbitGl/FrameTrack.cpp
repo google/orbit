@@ -12,17 +12,17 @@
 #include <limits>
 #include <utility>
 
-#include "Batcher.h"
 #include "DisplayFormats/DisplayFormats.h"
 #include "GlCanvas.h"
 #include "GlUtils.h"
+#include "PrimitiveAssembler.h"
 #include "TextRenderer.h"
 #include "TimeGraphLayout.h"
 #include "TriangleToggle.h"
 
 using orbit_client_data::CaptureData;
 using orbit_client_protos::TimerInfo;
-using orbit_gl::Batcher;
+using orbit_gl::PrimitiveAssembler;
 using orbit_grpc_protos::InstrumentedFunction;
 
 namespace {
@@ -173,8 +173,9 @@ std::string FrameTrack::GetTooltip() const {
       orbit_display_formats::GetDisplayTime(absl::Nanoseconds(stats_.ComputeAverageTimeNs())));
 }
 
-std::string FrameTrack::GetBoxTooltip(const Batcher& batcher, PickingId id) const {
-  const orbit_client_protos::TimerInfo* timer_info = batcher.GetTimerInfo(id);
+std::string FrameTrack::GetBoxTooltip(const PrimitiveAssembler& primitive_assembler,
+                                      PickingId id) const {
+  const orbit_client_protos::TimerInfo* timer_info = primitive_assembler.GetTimerInfo(id);
   if (timer_info == nullptr) {
     return "";
   }
@@ -197,16 +198,17 @@ std::string FrameTrack::GetBoxTooltip(const Batcher& batcher, PickingId id) cons
           TicksToDuration(timer_info->start(), timer_info->end())));
 }
 
-void FrameTrack::DoUpdatePrimitives(Batcher& batcher, TextRenderer& text_renderer,
-                                    uint64_t min_tick, uint64_t max_tick,
-                                    PickingMode picking_mode) {
+void FrameTrack::DoUpdatePrimitives(PrimitiveAssembler& primitive_assembler,
+                                    TextRenderer& text_renderer, uint64_t min_tick,
+                                    uint64_t max_tick, PickingMode picking_mode) {
   ORBIT_SCOPE_WITH_COLOR("FrameTrack::DoUpdatePrimitives", kOrbitColorAmber);
-  TimerTrack::DoUpdatePrimitives(batcher, text_renderer, min_tick, max_tick, picking_mode);
+  TimerTrack::DoUpdatePrimitives(primitive_assembler, text_renderer, min_tick, max_tick,
+                                 picking_mode);
 }
 
-void FrameTrack::DoDraw(Batcher& batcher, TextRenderer& text_renderer,
+void FrameTrack::DoDraw(PrimitiveAssembler& primitive_assembler, TextRenderer& text_renderer,
                         const DrawContext& draw_context) {
-  TimerTrack::DoDraw(batcher, text_renderer, draw_context);
+  TimerTrack::DoDraw(primitive_assembler, text_renderer, draw_context);
 
   const Color kWhiteColor(255, 255, 255, 255);
   const Color kBlackColor(0, 0, 0, 255);
@@ -225,8 +227,10 @@ void FrameTrack::DoDraw(Batcher& batcher, TextRenderer& text_renderer,
   float string_width = text_renderer.GetStringWidth(label.c_str(), font_size);
   Vec2 white_text_box_position(pos[0] + layout_->GetRightMargin(), y);
 
-  batcher.AddLine(from, from + Vec2(layout_->GetRightMargin() / 2.f, 0), text_z, kWhiteColor);
-  batcher.AddLine(Vec2(white_text_box_position[0] + string_width, y), to, text_z, kWhiteColor);
+  primitive_assembler.AddLine(from, from + Vec2(layout_->GetRightMargin() / 2.f, 0), text_z,
+                              kWhiteColor);
+  primitive_assembler.AddLine(Vec2(white_text_box_position[0] + string_width, y), to, text_z,
+                              kWhiteColor);
 
   TextRenderer::TextFormatting formatting{font_size, kWhiteColor, string_width};
   formatting.valign = TextRenderer::VAlign::Middle;

@@ -25,7 +25,7 @@
 #include "OrbitBase/ExecutablePath.h"
 #include "OrbitBase/Logging.h"
 
-using orbit_gl::Batcher;
+using orbit_gl::PrimitiveAssembler;
 
 namespace {
 
@@ -197,14 +197,15 @@ void TextRenderer::RenderLayer(float layer) {
   glPopAttrib();
 }
 
-void TextRenderer::RenderDebug(Batcher* batcher) {
+void TextRenderer::RenderDebug(PrimitiveAssembler* primitive_assembler) {
   if (!draw_outline_) return;
   for (auto& [unused_layer, buffer] : vertex_buffers_by_layer_) {
-    DrawOutline(batcher, buffer);
+    DrawOutline(primitive_assembler, buffer);
   }
 }
 
-void TextRenderer::DrawOutline(Batcher* batcher, ftgl::vertex_buffer_t* vertex_buffer) {
+void TextRenderer::DrawOutline(PrimitiveAssembler* primitive_assembler,
+                               ftgl::vertex_buffer_t* vertex_buffer) {
   if (vertex_buffer == nullptr) return;
   const Color color(255, 255, 255, 255);
 
@@ -218,9 +219,12 @@ void TextRenderer::DrawOutline(Batcher* batcher, ftgl::vertex_buffer_t* vertex_b
     vertex_t v2 = *static_cast<const vertex_t*>(vector_get(vertex_buffer->vertices, i2));
 
     // TODO: This should be pickable??
-    batcher->AddLine(Vec2(v0.x, v0.y), Vec2(v1.x, v1.y), GlCanvas::kZValueSlider, color);
-    batcher->AddLine(Vec2(v1.x, v1.y), Vec2(v2.x, v2.y), GlCanvas::kZValueSlider, color);
-    batcher->AddLine(Vec2(v2.x, v2.y), Vec2(v0.x, v0.y), GlCanvas::kZValueSlider, color);
+    primitive_assembler->AddLine(Vec2(v0.x, v0.y), Vec2(v1.x, v1.y), GlCanvas::kZValueSlider,
+                                 color);
+    primitive_assembler->AddLine(Vec2(v1.x, v1.y), Vec2(v2.x, v2.y), GlCanvas::kZValueSlider,
+                                 color);
+    primitive_assembler->AddLine(Vec2(v2.x, v2.y), Vec2(v0.x, v0.y), GlCanvas::kZValueSlider,
+                                 color);
   }
 }
 

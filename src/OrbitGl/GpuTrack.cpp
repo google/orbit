@@ -11,11 +11,11 @@
 #include <memory>
 
 #include "App.h"
-#include "Batcher.h"
 #include "ClientData/CaptureData.h"
 #include "ClientProtos/capture_data.pb.h"
 #include "OrbitBase/Logging.h"
 #include "OrbitBase/ThreadConstants.h"
+#include "PrimitiveAssembler.h"
 #include "TimeGraphLayout.h"
 #include "TriangleToggle.h"
 #include "Viewport.h"

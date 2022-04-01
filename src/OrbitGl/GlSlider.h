@@ -9,9 +9,9 @@
 #include <memory>
 #include <utility>
 
-#include "Batcher.h"
 #include "CoreMath.h"
 #include "PickingManager.h"
+#include "PrimitiveAssembler.h"
 #include "Viewport.h"
 
 namespace orbit_gl {
@@ -22,7 +22,7 @@ class GlSlider : public Pickable, public std::enable_shared_from_this<GlSlider> 
 
   [[nodiscard]] bool Draggable() override { return true; }
   [[nodiscard]] virtual bool IsVisible() const { return true; }
-  virtual void Draw(Batcher& batcher, bool is_picked) = 0;
+  virtual void Draw(PrimitiveAssembler& primitive_assembler, bool is_picked) = 0;
 
   [[nodiscard]] virtual Vec2 GetPos() const = 0;
   [[nodiscard]] virtual Vec2 GetSize() const = 0;
@@ -70,9 +70,10 @@ class GlSlider : public Pickable, public std::enable_shared_from_this<GlSlider> 
   static Color GetLighterColor(const Color& color);
   static Color GetDarkerColor(const Color& color);
 
-  void DrawBackground(Batcher& batcher, float x, float y, float width, float height);
-  void DrawSlider(Batcher& batcher, float x, float y, float width, float height,
-                  ShadingDirection shading_direction, bool is_picked);
+  void DrawBackground(PrimitiveAssembler& primitive_assembler, float x, float y, float width,
+                      float height);
+  void DrawSlider(PrimitiveAssembler& primitive_assembler, float x, float y, float width,
+                  float height, ShadingDirection shading_direction, bool is_picked);
 
   [[nodiscard]] bool PosIsInMinResizeArea(int x, int y) const;
   [[nodiscard]] bool PosIsInMaxResizeArea(int x, int y) const;
@@ -126,7 +127,7 @@ class GlVerticalSlider : public GlSlider {
  public:
   GlVerticalSlider(Viewport& viewport) : GlSlider(viewport, true) {}
 
-  void Draw(Batcher& batcher, bool is_picked) override;
+  void Draw(PrimitiveAssembler& primitive_assembler, bool is_picked) override;
   [[nodiscard]] bool IsVisible() const override { return GetLengthRatio() < 1.f; }
 
   [[nodiscard]] Vec2 GetPos() const override {
@@ -144,7 +145,7 @@ class GlHorizontalSlider : public GlSlider {
  public:
   GlHorizontalSlider(Viewport& viewport) : GlSlider(viewport, false) { can_resize_ = true; }
 
-  void Draw(Batcher& batcher, bool is_picked) override;
+  void Draw(PrimitiveAssembler& primitive_assembler, bool is_picked) override;
 
   [[nodiscard]] virtual Vec2 GetPos() const override {
     return Vec2(0, viewport_.GetScreenHeight() - pixel_height_);

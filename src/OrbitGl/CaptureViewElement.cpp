@@ -15,41 +15,41 @@ CaptureViewElement::CaptureViewElement(CaptureViewElement* parent, const Viewpor
   ORBIT_CHECK(layout != nullptr);
 }
 
-void CaptureViewElement::Draw(Batcher& batcher, TextRenderer& text_renderer,
+void CaptureViewElement::Draw(PrimitiveAssembler& primitive_assembler, TextRenderer& text_renderer,
                               const DrawContext& draw_context) {
   ORBIT_SCOPE_FUNCTION;
 
-  batcher.PushTranslation(0, 0, DetermineZOffset());
+  primitive_assembler.PushTranslation(0, 0, DetermineZOffset());
   text_renderer.PushTranslation(0, 0, DetermineZOffset());
 
-  DoDraw(batcher, text_renderer, draw_context);
+  DoDraw(primitive_assembler, text_renderer, draw_context);
 
   for (CaptureViewElement* child : GetChildrenVisibleInViewport()) {
-    child->Draw(batcher, text_renderer, draw_context);
+    child->Draw(primitive_assembler, text_renderer, draw_context);
   }
 
   text_renderer.PopTranslation();
-  batcher.PopTranslation();
+  primitive_assembler.PopTranslation();
 }
 
-void CaptureViewElement::UpdatePrimitives(Batcher& batcher, TextRenderer& text_renderer,
-                                          uint64_t min_tick, uint64_t max_tick,
-                                          PickingMode picking_mode) {
+void CaptureViewElement::UpdatePrimitives(PrimitiveAssembler& primitive_assembler,
+                                          TextRenderer& text_renderer, uint64_t min_tick,
+                                          uint64_t max_tick, PickingMode picking_mode) {
   ORBIT_SCOPE_FUNCTION;
 
-  batcher.PushTranslation(0, 0, DetermineZOffset());
+  primitive_assembler.PushTranslation(0, 0, DetermineZOffset());
   text_renderer.PushTranslation(0, 0, DetermineZOffset());
 
-  DoUpdatePrimitives(batcher, text_renderer, min_tick, max_tick, picking_mode);
+  DoUpdatePrimitives(primitive_assembler, text_renderer, min_tick, max_tick, picking_mode);
 
   for (CaptureViewElement* child : GetChildrenVisibleInViewport()) {
     if (child->ShouldBeRendered()) {
-      child->UpdatePrimitives(batcher, text_renderer, min_tick, max_tick, picking_mode);
+      child->UpdatePrimitives(primitive_assembler, text_renderer, min_tick, max_tick, picking_mode);
     }
   }
 
   text_renderer.PopTranslation();
-  batcher.PopTranslation();
+  primitive_assembler.PopTranslation();
 }
 
 CaptureViewElement::EventResult CaptureViewElement::OnMouseWheel(

@@ -11,7 +11,6 @@
 #include <ctime>
 
 #include "App.h"
-#include "Batcher.h"
 #include "ClientData/CaptureData.h"
 #include "ClientData/ModuleAndFunctionLookup.h"
 #include "ClientProtos/capture_data.pb.h"
@@ -21,13 +20,14 @@
 #include "Introspection/Introspection.h"
 #include "ManualInstrumentationManager.h"
 #include "OrbitBase/Logging.h"
+#include "PrimitiveAssembler.h"
 #include "TextRenderer.h"
 #include "TimeGraphLayout.h"
 #include "TriangleToggle.h"
 #include "Viewport.h"
 
 using orbit_client_protos::TimerInfo;
-using orbit_gl::Batcher;
+using orbit_gl::PrimitiveAssembler;
 using orbit_grpc_protos::InstrumentedFunction;
 
 AsyncTrack::AsyncTrack(CaptureViewElement* parent,
@@ -40,8 +40,9 @@ AsyncTrack::AsyncTrack(CaptureViewElement* parent,
                  timer_data),
       name_(std::move(name)) {}
 
-[[nodiscard]] std::string AsyncTrack::GetBoxTooltip(const Batcher& batcher, PickingId id) const {
-  const TimerInfo* timer_info = batcher.GetTimerInfo(id);
+[[nodiscard]] std::string AsyncTrack::GetBoxTooltip(const PrimitiveAssembler& primitive_assembler,
+                                                    PickingId id) const {
+  const TimerInfo* timer_info = primitive_assembler.GetTimerInfo(id);
   if (timer_info == nullptr) return "";
   auto* manual_inst_manager = app_->GetManualInstrumentationManager();
 
@@ -93,11 +94,12 @@ float AsyncTrack::GetHeight() const {
          layout_->GetTrackContentBottomMargin();
 }
 
-void AsyncTrack::DoUpdatePrimitives(Batcher& batcher, TextRenderer& text_renderer,
-                                    uint64_t min_tick, uint64_t max_tick,
-                                    PickingMode picking_mode) {
+void AsyncTrack::DoUpdatePrimitives(PrimitiveAssembler& primitive_assembler,
+                                    TextRenderer& text_renderer, uint64_t min_tick,
+                                    uint64_t max_tick, PickingMode picking_mode) {
   ORBIT_SCOPE_WITH_COLOR("AsyncTrack::DoUpdatePrimitives", kOrbitColorDeepPurple);
-  TimerTrack::DoUpdatePrimitives(batcher, text_renderer, min_tick, max_tick, picking_mode);
+  TimerTrack::DoUpdatePrimitives(primitive_assembler, text_renderer, min_tick, max_tick,
+                                 picking_mode);
 }
 
 float AsyncTrack::GetDefaultBoxHeight() const {

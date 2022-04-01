@@ -6,9 +6,9 @@
 #define ORBIT_GL_CAPTURE_VIEW_ELEMENT_H_
 
 #include "AccessibleInterfaceProvider.h"
-#include "Batcher.h"
 #include "OrbitAccessibility/AccessibleInterface.h"
 #include "PickingManager.h"
+#include "PrimitiveAssembler.h"
 #include "TextRenderer.h"
 #include "TimeGraphLayout.h"
 #include "TimelineInfoInterface.h"
@@ -91,16 +91,17 @@ class CaptureViewElement : public Pickable, public AccessibleInterfaceProvider {
   bool picked_ = false;
   bool visible_ = true;
 
-  void Draw(Batcher& batcher, TextRenderer& text_renderer, const DrawContext& draw_context);
-  void UpdatePrimitives(Batcher& batcher, TextRenderer& text_renderer, uint64_t min_tick,
-                        uint64_t max_tick, PickingMode picking_mode);
+  void Draw(PrimitiveAssembler& primitive_assembler, TextRenderer& text_renderer,
+            const DrawContext& draw_context);
+  void UpdatePrimitives(PrimitiveAssembler& primitive_assembler, TextRenderer& text_renderer,
+                        uint64_t min_tick, uint64_t max_tick, PickingMode picking_mode);
 
-  virtual void DoDraw(Batcher& /*batcher*/, TextRenderer& /*text_renderer*/,
+  virtual void DoDraw(PrimitiveAssembler& /*primitive_assembler*/, TextRenderer& /*text_renderer*/,
                       const DrawContext& /*draw_context*/) {}
 
-  virtual void DoUpdatePrimitives(Batcher& /*batcher*/, TextRenderer& /*text_renderer*/,
-                                  uint64_t /*min_tick*/, uint64_t /*max_tick*/,
-                                  PickingMode /*picking_mode*/) {}
+  virtual void DoUpdatePrimitives(PrimitiveAssembler& /*primitive_assembler*/,
+                                  TextRenderer& /*text_renderer*/, uint64_t /*min_tick*/,
+                                  uint64_t /*max_tick*/, PickingMode /*picking_mode*/) {}
 
   virtual void DoUpdateLayout() {}
 

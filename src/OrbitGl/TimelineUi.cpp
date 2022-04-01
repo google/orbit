@@ -18,7 +18,7 @@ constexpr float kLabelsPadding = 4.f;
 constexpr float kPixelsBetweenMajorTicksAndLabels = 1.f;
 const Color kBackgroundColorSpecialLabels(68, 67, 69, 255);
 
-void TimelineUi::RenderLines(Batcher& batcher, uint64_t min_timestamp_ns,
+void TimelineUi::RenderLines(PrimitiveAssembler& primitive_assembler, uint64_t min_timestamp_ns,
                              uint64_t max_timestamp_ns) const {
   const Color kMajorTickColor(255, 254, 253, 255);
   const Color kMinorTickColor(255, 254, 253, 63);
@@ -28,13 +28,13 @@ void TimelineUi::RenderLines(Batcher& batcher, uint64_t min_timestamp_ns,
     float world_x = timeline_info_interface_->GetWorldFromUs(
         tick_ns / static_cast<double>(kNanosecondsPerMicrosecond));
     int screen_x = viewport_->WorldToScreen(Vec2(world_x, 0))[0];
-    batcher.AddVerticalLine(
+    primitive_assembler.AddVerticalLine(
         Vec2(screen_x, GetPos()[1]), GetHeightWithoutMargin(), GlCanvas::kZValueTimeBar,
         tick_type == TimelineTicks::TickType::kMajorTick ? kMajorTickColor : kMinorTickColor);
   }
 }
 
-void TimelineUi::RenderLabels(Batcher& batcher, TextRenderer& text_renderer,
+void TimelineUi::RenderLabels(PrimitiveAssembler& primitive_assembler, TextRenderer& text_renderer,
                               uint64_t min_timestamp_ns, uint64_t max_timestamp_ns) const {
   std::vector<uint64_t> all_major_ticks =
       timeline_ticks_.GetMajorTicks(min_timestamp_ns, max_timestamp_ns);
@@ -46,27 +46,27 @@ void TimelineUi::RenderLabels(Batcher& batcher, TextRenderer& text_renderer,
   }
 
   for (uint64_t tick_ns : GetTicksForNonOverlappingLabels(text_renderer, all_major_ticks)) {
-    RenderLabel(batcher, text_renderer, tick_ns, GetNumDecimalsInLabels(),
+    RenderLabel(primitive_assembler, text_renderer, tick_ns, GetNumDecimalsInLabels(),
                 GlCanvas::kTimeBarBackgroundColor);
   }
 }
 
-void TimelineUi::RenderMargin(Batcher& batcher) const {
+void TimelineUi::RenderMargin(PrimitiveAssembler& primitive_assembler) const {
   Vec2 margin_pos = Vec2(GetPos()[0], GetPos()[1] + GetHeightWithoutMargin());
   Vec2 margin_size = Vec2(GetSize()[0], GetMarginHeight());
-  batcher.AddBox(MakeBox(margin_pos, margin_size, GlCanvas::kZValueOverlay),
-                 GlCanvas::kBackgroundColor);
+  primitive_assembler.AddBox(MakeBox(margin_pos, margin_size, GlCanvas::kZValueOverlay),
+                             GlCanvas::kBackgroundColor);
 }
 
-void TimelineUi::RenderBackground(Batcher& batcher) const {
+void TimelineUi::RenderBackground(PrimitiveAssembler& primitive_assembler) const {
   Tetragon background_box =
       MakeBox(GetPos(), Vec2(GetWidth(), GetHeightWithoutMargin()), GlCanvas::kZValueTimeBar);
-  batcher.AddBox(background_box, GlCanvas::kTimeBarBackgroundColor);
+  primitive_assembler.AddBox(background_box, GlCanvas::kTimeBarBackgroundColor);
 }
 
-void TimelineUi::RenderLabel(Batcher& batcher, TextRenderer& text_renderer, uint64_t tick_ns,
-                             uint32_t number_of_decimal_places, const Color background_color,
-                             bool is_mouse_label) const {
+void TimelineUi::RenderLabel(PrimitiveAssembler& primitive_assembler, TextRenderer& text_renderer,
+                             uint64_t tick_ns, uint32_t number_of_decimal_places,
+                             const Color background_color, bool is_mouse_label) const {
   float label_z = is_mouse_label ? GlCanvas::kZValueTimeBarMouseLabel : GlCanvas::kZValueTimeBar;
 
   // We add a pixel separation between the label and the major ticks so they don't intersect.
@@ -88,18 +88,18 @@ void TimelineUi::RenderLabel(Batcher& batcher, TextRenderer& text_renderer, uint
   pos[0] -= kLabelsPadding;
   pos[1] -= kLabelsPadding;
   Tetragon background_box = MakeBox(pos, size, label_z);
-  batcher.AddBox(background_box, background_color);
+  primitive_assembler.AddBox(background_box, background_color);
 }
 
-void TimelineUi::RenderMouseLabel(Batcher& batcher, TextRenderer& text_renderer,
-                                  uint64_t mouse_tick_ns) const {
+void TimelineUi::RenderMouseLabel(PrimitiveAssembler& primitive_assembler,
+                                  TextRenderer& text_renderer, uint64_t mouse_tick_ns) const {
   // The label in mouse position has 2 more digits of precision than other labels.
   constexpr uint32_t kNumAdditionalDecimalDigits = 2;
   constexpr uint32_t kMaxNumberOfDecimalDigits = 9;
   uint32_t num_decimal_places_mouse_label =
       std::min(kMaxNumberOfDecimalDigits, GetNumDecimalsInLabels() + kNumAdditionalDecimalDigits);
 
-  RenderLabel(batcher, text_renderer, mouse_tick_ns, num_decimal_places_mouse_label,
+  RenderLabel(primitive_assembler, text_renderer, mouse_tick_ns, num_decimal_places_mouse_label,
               kBackgroundColorSpecialLabels, /*is_mouse_label=*/true);
 }
 
@@ -168,19 +168,20 @@ void TimelineUi::UpdateNumDecimalsInLabels(uint64_t min_timestamp_ns, uint64_t m
   }
 }
 
-void TimelineUi::DoDraw(Batcher& batcher, TextRenderer& text_renderer,
+void TimelineUi::DoDraw(PrimitiveAssembler& primitive_assembler, TextRenderer& text_renderer,
                         const DrawContext& draw_context) {
   const uint64_t mouse_timestamp_ns =
       timeline_info_interface_->GetNsSinceStart(draw_context.current_mouse_time_ns);
 
-  RenderMouseLabel(batcher, text_renderer, mouse_timestamp_ns);
+  RenderMouseLabel(primitive_assembler, text_renderer, mouse_timestamp_ns);
 }
 
-void TimelineUi::DoUpdatePrimitives(Batcher& batcher, TextRenderer& text_renderer,
-                                    uint64_t min_tick, uint64_t max_tick,
-                                    PickingMode picking_mode) {
-  CaptureViewElement::DoUpdatePrimitives(batcher, text_renderer, min_tick, max_tick, picking_mode);
-  RenderBackground(batcher);
+void TimelineUi::DoUpdatePrimitives(PrimitiveAssembler& primitive_assembler,
+                                    TextRenderer& text_renderer, uint64_t min_tick,
+                                    uint64_t max_tick, PickingMode picking_mode) {
+  CaptureViewElement::DoUpdatePrimitives(primitive_assembler, text_renderer, min_tick, max_tick,
+                                         picking_mode);
+  RenderBackground(primitive_assembler);
   if (timeline_info_interface_->GetTimeWindowUs() <= 0) return;
 
   uint64_t min_timestamp_ns = timeline_info_interface_->GetNsSinceStart(min_tick);
@@ -189,10 +190,10 @@ void TimelineUi::DoUpdatePrimitives(Batcher& batcher, TextRenderer& text_rendere
   // All labels will have the same number of decimals for consistency. We will store that number
   // because it is needed for the mouse label which is drawn independently.
   UpdateNumDecimalsInLabels(min_timestamp_ns, max_timestamp_ns);
-  RenderLines(batcher, min_timestamp_ns, max_timestamp_ns);
-  RenderLabels(batcher, text_renderer, min_timestamp_ns, max_timestamp_ns);
+  RenderLines(primitive_assembler, min_timestamp_ns, max_timestamp_ns);
+  RenderLabels(primitive_assembler, text_renderer, min_timestamp_ns, max_timestamp_ns);
   // TODO(http://b/217719000): Hack needed to not draw tracks on timeline's margin.
-  RenderMargin(batcher);
+  RenderMargin(primitive_assembler);
 }
 
 std::unique_ptr<orbit_accessibility::AccessibleInterface> TimelineUi::CreateAccessibleInterface() {

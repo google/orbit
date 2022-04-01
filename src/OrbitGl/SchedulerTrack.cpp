@@ -9,16 +9,16 @@
 #include <stdint.h>
 
 #include "App.h"
-#include "Batcher.h"
 #include "ClientData/CaptureData.h"
 #include "ClientProtos/capture_data.pb.h"
 #include "OrbitBase/Logging.h"
 #include "OrbitBase/ThreadConstants.h"
+#include "PrimitiveAssembler.h"
 #include "TimeGraphLayout.h"
 #include "Viewport.h"
 
 using orbit_client_protos::TimerInfo;
-using orbit_gl::Batcher;
+using orbit_gl::PrimitiveAssembler;
 
 const Color kInactiveColor(100, 100, 100, 255);
 const Color kSamePidColor(140, 140, 140, 255);
@@ -49,11 +49,12 @@ float SchedulerTrack::GetHeight() const {
          (num_gaps * layout_->GetSpaceBetweenCores()) + layout_->GetTrackContentBottomMargin();
 }
 
-void SchedulerTrack::DoUpdatePrimitives(Batcher& batcher, TextRenderer& text_renderer,
-                                        uint64_t min_tick, uint64_t max_tick,
-                                        PickingMode picking_mode) {
+void SchedulerTrack::DoUpdatePrimitives(PrimitiveAssembler& primitive_assembler,
+                                        TextRenderer& text_renderer, uint64_t min_tick,
+                                        uint64_t max_tick, PickingMode picking_mode) {
   ORBIT_SCOPE_WITH_COLOR("SchedulerTrack::DoUpdatePrimitives", kOrbitColorPink);
-  TimerTrack::DoUpdatePrimitives(batcher, text_renderer, min_tick, max_tick, picking_mode);
+  TimerTrack::DoUpdatePrimitives(primitive_assembler, text_renderer, min_tick, max_tick,
+                                 picking_mode);
 }
 
 bool SchedulerTrack::IsTimerActive(const TimerInfo& timer_info) const {
@@ -113,8 +114,9 @@ std::string SchedulerTrack::GetTooltip() const {
   return "Shows scheduling information for CPU cores";
 }
 
-std::string SchedulerTrack::GetBoxTooltip(const Batcher& batcher, PickingId id) const {
-  const orbit_client_protos::TimerInfo* timer_info = batcher.GetTimerInfo(id);
+std::string SchedulerTrack::GetBoxTooltip(const PrimitiveAssembler& primitive_assembler,
+                                          PickingId id) const {
+  const orbit_client_protos::TimerInfo* timer_info = primitive_assembler.GetTimerInfo(id);
   if (!timer_info) {
     return "";
   }

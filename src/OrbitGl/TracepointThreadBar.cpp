@@ -11,7 +11,6 @@
 #include <utility>
 
 #include "App.h"
-#include "Batcher.h"
 #include "CaptureViewElement.h"
 #include "ClientData/CaptureData.h"
 #include "ClientProtos/capture_data.pb.h"
@@ -22,6 +21,7 @@
 #include "GrpcProtos/tracepoint.pb.h"
 #include "OrbitBase/Logging.h"
 #include "OrbitBase/ThreadConstants.h"
+#include "PrimitiveAssembler.h"
 #include "TimeGraphLayout.h"
 #include "Viewport.h"
 
@@ -36,9 +36,9 @@ TracepointThreadBar::TracepointThreadBar(CaptureViewElement* parent, OrbitApp* a
     : ThreadBar(parent, app, timeline_info, viewport, layout, module_manager, capture_data,
                 thread_id, "Tracepoints", color) {}
 
-void TracepointThreadBar::DoDraw(Batcher& batcher, TextRenderer& text_renderer,
-                                 const DrawContext& draw_context) {
-  ThreadBar::DoDraw(batcher, text_renderer, draw_context);
+void TracepointThreadBar::DoDraw(PrimitiveAssembler& primitive_assembler,
+                                 TextRenderer& text_renderer, const DrawContext& draw_context) {
+  ThreadBar::DoDraw(primitive_assembler, text_renderer, draw_context);
 
   if (IsEmpty()) {
     return;
@@ -49,14 +49,15 @@ void TracepointThreadBar::DoDraw(Batcher& batcher, TextRenderer& text_renderer,
                           : GlCanvas::kZValueEventBar;
   Color color = GetColor();
   Tetragon box = MakeBox(GetPos(), Vec2(GetWidth(), -GetHeight()), event_bar_z);
-  batcher.AddBox(box, color, shared_from_this());
+  primitive_assembler.AddBox(box, color, shared_from_this());
 }
 
-void TracepointThreadBar::DoUpdatePrimitives(Batcher& batcher, TextRenderer& text_renderer,
-                                             uint64_t min_tick, uint64_t max_tick,
-                                             PickingMode picking_mode) {
+void TracepointThreadBar::DoUpdatePrimitives(PrimitiveAssembler& primitive_assembler,
+                                             TextRenderer& text_renderer, uint64_t min_tick,
+                                             uint64_t max_tick, PickingMode picking_mode) {
   ORBIT_SCOPE_WITH_COLOR("TracepointThreadBar::DoUpdatePrimitives", kOrbitColorIndigo);
-  ThreadBar::DoUpdatePrimitives(batcher, text_renderer, min_tick, max_tick, picking_mode);
+  ThreadBar::DoUpdatePrimitives(primitive_assembler, text_renderer, min_tick, max_tick,
+                                picking_mode);
 
   float z = GlCanvas::kZValueEvent;
   float track_height = layout_->GetEventTrackHeightFromTid(GetThreadId());
@@ -77,13 +78,13 @@ void TracepointThreadBar::DoUpdatePrimitives(Batcher& batcher, TextRenderer& tex
           const Vec2 pos(timeline_info_->GetWorldFromTick(time), GetPos()[1]);
           if (GetThreadId() == orbit_base::kAllThreadsOfAllProcessesTid) {
             const Color color = tracepoint.pid() == capture_data_->process_id() ? kGrey : kWhite;
-            batcher.AddVerticalLine(pos, -track_height, z, color);
+            primitive_assembler.AddVerticalLine(pos, -track_height, z, color);
           } else {
-            batcher.AddVerticalLine(pos, -radius, z, kWhiteTransparent);
-            batcher.AddVerticalLine(Vec2(pos[0], pos[1] - track_height), radius, z,
-                                    kWhiteTransparent);
-            batcher.AddCircle(Vec2(pos[0], pos[1] - track_height / 2), radius, z,
-                              kWhiteTransparent);
+            primitive_assembler.AddVerticalLine(pos, -radius, z, kWhiteTransparent);
+            primitive_assembler.AddVerticalLine(Vec2(pos[0], pos[1] - track_height), radius, z,
+                                                kWhiteTransparent);
+            primitive_assembler.AddCircle(Vec2(pos[0], pos[1] - track_height / 2), radius, z,
+                                          kWhiteTransparent);
           }
         });
 
@@ -98,17 +99,19 @@ void TracepointThreadBar::DoUpdatePrimitives(Batcher& batcher, TextRenderer& tex
           Vec2 pos(timeline_info_->GetWorldFromTick(time) - kPickingBoxOffset,
                    GetPos()[1] - track_height + 1);
           Vec2 size(kPickingBoxWidth, track_height);
-          auto user_data = std::make_unique<PickingUserData>(
-              nullptr,
-              [&](PickingId id) -> std::string { return GetTracepointTooltip(batcher, id); });
+          auto user_data =
+              std::make_unique<PickingUserData>(nullptr, [&](PickingId id) -> std::string {
+                return GetTracepointTooltip(primitive_assembler, id);
+              });
           user_data->custom_data_ = &tracepoint;
-          batcher.AddShadedBox(pos, size, z, kWhite, std::move(user_data));
+          primitive_assembler.AddShadedBox(pos, size, z, kWhite, std::move(user_data));
         });
   }
 }
 
-std::string TracepointThreadBar::GetTracepointTooltip(Batcher& batcher, PickingId id) const {
-  auto* user_data = batcher.GetUserData(id);
+std::string TracepointThreadBar::GetTracepointTooltip(PrimitiveAssembler& primitive_assembler,
+                                                      PickingId id) const {
+  auto* user_data = primitive_assembler.GetUserData(id);
   ORBIT_CHECK(user_data && user_data->custom_data_);
 
   const auto* tracepoint_event_info =
