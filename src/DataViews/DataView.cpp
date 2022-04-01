@@ -231,21 +231,7 @@ void DataView::OnEnableFrameTrackRequested(const std::vector<int>& selection) {
     app_->SelectFunction(function);
 
     app_->EnableFrameTrack(function);
-    metrics_uploader_->SendLogEvent(
-        orbit_metrics_uploader::OrbitLogEvent::ORBIT_FRAME_TRACK_ENABLED);
-
-    switch (app_->AddFrameTrack(function)) {
-      case AppInterface::AddFrameTrackResult::kNotPossible:
-        break;
-      case AppInterface::AddFrameTrackResult::kVisible:
-        metrics_uploader_->SendLogEvent(
-            orbit_metrics_uploader::OrbitLogEvent::ORBIT_FRAME_TRACK_ADDED_VISIBLE);
-        break;
-      case AppInterface::AddFrameTrackResult::kInvisible:
-        metrics_uploader_->SendLogEvent(
-            orbit_metrics_uploader::OrbitLogEvent::ORBIT_FRAME_TRACK_ADDED_INVISIBLE);
-        break;
-    }
+    app_->AddFrameTrack(function);
   }
 }
 
@@ -259,17 +245,7 @@ void DataView::OnDisableFrameTrackRequested(const std::vector<int>& selection) {
     // it may have been selected manually (not as part of adding a frame track).
     // However, disable the frame track, so it is not recreated on the next capture.
     app_->DisableFrameTrack(function);
-    metrics_uploader_->SendLogEvent(
-        orbit_metrics_uploader::OrbitLogEvent::ORBIT_FRAME_TRACK_DISABLED);
-
-    switch (app_->RemoveFrameTrack(function)) {
-      case AppInterface::RemoveFrameTrackResult::kNotPossible:
-        break;
-      case AppInterface::RemoveFrameTrackResult::kSuccess:
-        metrics_uploader_->SendLogEvent(
-            orbit_metrics_uploader::OrbitLogEvent::ORBIT_FRAME_TRACK_REMOVED);
-        break;
-    }
+    app_->RemoveFrameTrack(function);
   }
 }
 

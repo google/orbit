@@ -107,11 +107,8 @@ class AppInterface {
   virtual void EnableFrameTrack(const orbit_client_data::FunctionInfo& function) = 0;
   virtual void DisableFrameTrack(const orbit_client_data::FunctionInfo& function) = 0;
 
-  enum class AddFrameTrackResult { kNotPossible, kVisible, kInvisible };
-  enum class RemoveFrameTrackResult { kNotPossible, kSuccess };
-  virtual AddFrameTrackResult AddFrameTrack(const orbit_client_data::FunctionInfo& function) = 0;
-  virtual RemoveFrameTrackResult RemoveFrameTrack(
-      const orbit_client_data::FunctionInfo& function) = 0;
+  virtual void AddFrameTrack(const orbit_client_data::FunctionInfo& function) = 0;
+  virtual void RemoveFrameTrack(const orbit_client_data::FunctionInfo& function) = 0;
 
   virtual void Disassemble(uint32_t pid, const orbit_client_data::FunctionInfo& function) = 0;
   virtual void ShowSourceCode(const orbit_client_data::FunctionInfo& function) = 0;

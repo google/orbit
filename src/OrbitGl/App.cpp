@@ -2666,28 +2666,31 @@ void OrbitApp::DeselectTracepoint(const TracepointInfo& tracepoint) {
 
 void OrbitApp::EnableFrameTrack(const FunctionInfo& function) {
   data_manager_->EnableFrameTrack(function);
+  metrics_uploader_->SendLogEvent(orbit_metrics_uploader::OrbitLogEvent::ORBIT_FRAME_TRACK_ENABLED);
 }
 
 void OrbitApp::DisableFrameTrack(const FunctionInfo& function) {
   data_manager_->DisableFrameTrack(function);
+  metrics_uploader_->SendLogEvent(
+      orbit_metrics_uploader::OrbitLogEvent::ORBIT_FRAME_TRACK_DISABLED);
 }
 
-OrbitApp::AddFrameTrackResult OrbitApp::AddFrameTrack(const FunctionInfo& function) {
-  if (!HasCaptureData()) return AddFrameTrackResult::kNotPossible;
+void OrbitApp::AddFrameTrack(const FunctionInfo& function) {
+  if (!HasCaptureData()) return;
 
   std::optional<uint64_t> instrumented_function_id =
       orbit_client_data::FindInstrumentedFunctionIdSlow(*module_manager_, *capture_data_, function);
   // If the function is not instrumented - ignore it. This happens when user
   // enables frame tracks for a not instrumented function from the function list.
-  if (!instrumented_function_id) return AddFrameTrackResult::kNotPossible;
+  if (!instrumented_function_id) return;
 
-  return AddFrameTrack(instrumented_function_id.value());
+  AddFrameTrack(instrumented_function_id.value());
 }
 
-OrbitApp::AddFrameTrackResult OrbitApp::AddFrameTrack(uint64_t instrumented_function_id) {
+void OrbitApp::AddFrameTrack(uint64_t instrumented_function_id) {
   ORBIT_CHECK(instrumented_function_id != 0);
   ORBIT_CHECK(std::this_thread::get_id() == main_thread_id_);
-  if (!HasCaptureData()) return AddFrameTrackResult::kNotPossible;
+  if (!HasCaptureData()) return;
 
   // We only add a frame track to the actual capture data if the function for the frame
   // track actually has hits in the capture data. Otherwise we can end up in inconsistent
@@ -2701,7 +2704,9 @@ OrbitApp::AddFrameTrackResult OrbitApp::AddFrameTrack(uint64_t instrumented_func
       AddFrameTrackTimers(instrumented_function_id);
     }
     TrySaveUserDefinedCaptureInfo();
-    return AddFrameTrackResult::kVisible;
+    metrics_uploader_->SendLogEvent(
+        orbit_metrics_uploader::OrbitLogEvent::ORBIT_FRAME_TRACK_ADDED_VISIBLE);
+    return;
   }
 
   const InstrumentedFunction* function =
@@ -2714,25 +2719,26 @@ OrbitApp::AddFrameTrackResult OrbitApp::AddFrameTrack(uint64_t instrumented_func
       function->function_name());
   main_window_->ShowWarningWithDontShowAgainCheckboxIfNeeded(
       title, message, kDontShowAgainEmptyFrameTrackWarningKey);
-  return AddFrameTrackResult::kInvisible;
+  metrics_uploader_->SendLogEvent(
+      orbit_metrics_uploader::OrbitLogEvent::ORBIT_FRAME_TRACK_ADDED_INVISIBLE);
 }
 
-OrbitApp::RemoveFrameTrackResult OrbitApp::RemoveFrameTrack(const FunctionInfo& function) {
+void OrbitApp::RemoveFrameTrack(const FunctionInfo& function) {
   // Ignore this call if there is no capture data
-  if (!HasCaptureData()) return RemoveFrameTrackResult::kNotPossible;
+  if (!HasCaptureData()) return;
 
   std::optional<uint64_t> instrumented_function_id =
       orbit_client_data::FindInstrumentedFunctionIdSlow(*module_manager_, *capture_data_, function);
   // If the function is not instrumented - ignore it. This happens when user
   // enables frame tracks for a not instrumented function from the function list.
-  if (!instrumented_function_id) return RemoveFrameTrackResult::kNotPossible;
+  if (!instrumented_function_id) return;
 
-  return RemoveFrameTrack(instrumented_function_id.value());
+  RemoveFrameTrack(instrumented_function_id.value());
 }
 
-OrbitApp::RemoveFrameTrackResult OrbitApp::RemoveFrameTrack(uint64_t instrumented_function_id) {
+void OrbitApp::RemoveFrameTrack(uint64_t instrumented_function_id) {
   ORBIT_CHECK(std::this_thread::get_id() == main_thread_id_);
-  if (!HasCaptureData()) return RemoveFrameTrackResult::kNotPossible;
+  if (!HasCaptureData()) return;
 
   // We can only remove the frame track from the capture data if we have capture data and
   // the frame track is actually enabled in the capture data.
@@ -2742,7 +2748,7 @@ OrbitApp::RemoveFrameTrackResult OrbitApp::RemoveFrameTrack(uint64_t instrumente
     GetMutableTimeGraph()->GetTrackContainer()->RemoveFrameTrack(instrumented_function_id);
     TrySaveUserDefinedCaptureInfo();
   }
-  return RemoveFrameTrackResult::kSuccess;
+  metrics_uploader_->SendLogEvent(orbit_metrics_uploader::OrbitLogEvent::ORBIT_FRAME_TRACK_REMOVED);
 }
 
 bool OrbitApp::IsFrameTrackEnabled(const FunctionInfo& function) const {

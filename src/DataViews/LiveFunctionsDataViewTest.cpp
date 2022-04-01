@@ -30,8 +30,6 @@
 #include "MockAppInterface.h"
 
 using JumpToTimerMode = orbit_data_views::AppInterface::JumpToTimerMode;
-using AddFrameTrackResult = orbit_data_views::AppInterface::AddFrameTrackResult;
-using RemoveFrameTrackResult = orbit_data_views::AppInterface::RemoveFrameTrackResult;
 
 using orbit_client_data::CaptureData;
 using orbit_client_data::FunctionInfo;
@@ -605,12 +603,9 @@ TEST_F(LiveFunctionsDataViewTest, ContextMenuActionsAreInvoked) {
       EXPECT_EQ(function.pretty_name(), kPrettyNames[0]);
     });
     EXPECT_CALL(app_, EnableFrameTrack).Times(1);
-    EXPECT_CALL(app_, AddFrameTrack)
-        .Times(1)
-        .WillOnce([&](const FunctionInfo& function) -> AddFrameTrackResult {
-          EXPECT_EQ(function.pretty_name(), kPrettyNames[0]);
-          return AddFrameTrackResult::kVisible;
-        });
+    EXPECT_CALL(app_, AddFrameTrack).Times(1).WillOnce([&](const FunctionInfo& function) {
+      EXPECT_EQ(function.pretty_name(), kPrettyNames[0]);
+    });
     view_.OnContextMenu(std::string{kMenuActionEnableFrameTrack}, enable_frame_track_index, {0});
   }
 
@@ -630,12 +625,9 @@ TEST_F(LiveFunctionsDataViewTest, ContextMenuActionsAreInvoked) {
       EXPECT_EQ(function.pretty_name(), kPrettyNames[0]);
     });
     EXPECT_CALL(app_, DisableFrameTrack).Times(1);
-    EXPECT_CALL(app_, RemoveFrameTrack)
-        .Times(1)
-        .WillOnce([&](const FunctionInfo& function) -> RemoveFrameTrackResult {
-          EXPECT_EQ(function.pretty_name(), kPrettyNames[0]);
-          return RemoveFrameTrackResult::kSuccess;
-        });
+    EXPECT_CALL(app_, RemoveFrameTrack).Times(1).WillOnce([&](const FunctionInfo& function) {
+      EXPECT_EQ(function.pretty_name(), kPrettyNames[0]);
+    });
     view_.OnContextMenu(std::string{kMenuActionUnselect}, unhook_index, {0});
   }
 
@@ -648,12 +640,9 @@ TEST_F(LiveFunctionsDataViewTest, ContextMenuActionsAreInvoked) {
     EXPECT_CALL(app_, DisableFrameTrack).Times(1).WillOnce([&](const FunctionInfo& function) {
       EXPECT_EQ(function.pretty_name(), kPrettyNames[0]);
     });
-    EXPECT_CALL(app_, RemoveFrameTrack)
-        .Times(1)
-        .WillOnce([&](const FunctionInfo& function) -> RemoveFrameTrackResult {
-          EXPECT_EQ(function.pretty_name(), kPrettyNames[0]);
-          return RemoveFrameTrackResult::kSuccess;
-        });
+    EXPECT_CALL(app_, RemoveFrameTrack).Times(1).WillOnce([&](const FunctionInfo& function) {
+      EXPECT_EQ(function.pretty_name(), kPrettyNames[0]);
+    });
     view_.OnContextMenu(std::string{kMenuActionDisableFrameTrack}, disable_frame_track_index, {0});
   }
 }

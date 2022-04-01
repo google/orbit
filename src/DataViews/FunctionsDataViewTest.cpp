@@ -20,9 +20,6 @@
 #include "MetricsUploader/MetricsUploaderStub.h"
 #include "MockAppInterface.h"
 
-using AddFrameTrackResult = orbit_data_views::AppInterface::AddFrameTrackResult;
-using RemoveFrameTrackResult = orbit_data_views::AppInterface::RemoveFrameTrackResult;
-
 using orbit_client_data::CaptureData;
 using orbit_client_data::FunctionInfo;
 using orbit_data_views::CheckCopySelectionIsInvoked;
@@ -566,31 +563,22 @@ TEST_F(FunctionsDataViewTest, ContextMenuActionsCallCorrespondingFunctionsInAppI
 
   EXPECT_CALL(app_, DeselectFunction).Times(1).WillRepeatedly(match_function);
   EXPECT_CALL(app_, DisableFrameTrack).Times(1).WillRepeatedly(match_function);
-  EXPECT_CALL(app_, RemoveFrameTrack)
-      .Times(1)
-      .WillRepeatedly([&](const FunctionInfo& function) -> RemoveFrameTrackResult {
-        match_function(function);
-        return RemoveFrameTrackResult::kSuccess;
-      });
+  EXPECT_CALL(app_, RemoveFrameTrack).Times(1).WillRepeatedly([&](const FunctionInfo& function) {
+    match_function(function);
+  });
   view_.OnContextMenu(std::string{kMenuActionUnselect}, 0, {0});
 
   EXPECT_CALL(app_, SelectFunction).Times(1).WillRepeatedly(match_function);
   EXPECT_CALL(app_, EnableFrameTrack).Times(1).WillRepeatedly(match_function);
-  EXPECT_CALL(app_, AddFrameTrack)
-      .Times(1)
-      .WillRepeatedly([&](const FunctionInfo& function) -> AddFrameTrackResult {
-        match_function(function);
-        return AddFrameTrackResult::kVisible;
-      });
+  EXPECT_CALL(app_, AddFrameTrack).Times(1).WillRepeatedly([&](const FunctionInfo& function) {
+    match_function(function);
+  });
   view_.OnContextMenu(std::string{kMenuActionEnableFrameTrack}, 0, {0});
 
   EXPECT_CALL(app_, DisableFrameTrack).Times(1).WillRepeatedly(match_function);
-  EXPECT_CALL(app_, RemoveFrameTrack)
-      .Times(1)
-      .WillRepeatedly([&](const FunctionInfo& function) -> RemoveFrameTrackResult {
-        match_function(function);
-        return RemoveFrameTrackResult::kSuccess;
-      });
+  EXPECT_CALL(app_, RemoveFrameTrack).Times(1).WillRepeatedly([&](const FunctionInfo& function) {
+    match_function(function);
+  });
   view_.OnContextMenu(std::string{kMenuActionDisableFrameTrack}, 0, {0});
 
   constexpr int kRandomPid = 4242;
