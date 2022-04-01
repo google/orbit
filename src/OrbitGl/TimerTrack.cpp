@@ -229,7 +229,7 @@ bool TimerTrack::DrawTimer(TextRenderer& text_renderer, const TimerInfo* prev_ti
         world_x_info_right_overlap.world_x_start + world_x_info_right_overlap.world_x_width,
         world_timer_y + box_height, draw_data.z);
     PrimitiveAssembler* primitive_assembler = draw_data.primitive_assembler;
-    Tetragon trapezium = {top_left, bottom_left, bottom_right, top_right};
+    Tetragon trapezium({top_left, bottom_left, bottom_right, top_right});
     draw_data.primitive_assembler->AddShadedTrapezium(
         trapezium, color, CreatePickingUserData(*primitive_assembler, *current_timer_info));
     float width =
