@@ -19,8 +19,6 @@ void ScopeStats::UpdateStats(uint64_t elapsed_nanos) {
   variance_ns_ = ((static_cast<double>(count_ - 1) * variance_ns_ +
                    (elapsed_nanos_double - new_avg) * (elapsed_nanos_double - old_avg)) /
                   static_cast<double>(count_));
-  // std_dev = sqrt(variance)
-  std_dev_ns_ = static_cast<uint64_t>(std::sqrt(variance_ns_));
 
   if (max_ns_ < elapsed_nanos) {
     max_ns_ = elapsed_nanos;

@@ -101,7 +101,6 @@ template <std::size_t Size>
   stats.set_min_ns(*std::min_element(begin, end));
   stats.set_max_ns(*std::max_element(begin, end));
   stats.set_variance_ns(variance);
-  stats.set_std_dev_ns(static_cast<uint64_t>(std::sqrt(variance)));
 
   return stats;
 }
@@ -120,7 +119,7 @@ static void ExpectStatsEqual(const ScopeStats& actual, const ScopeStats& other) 
   EXPECT_EQ(actual.max_ns(), other.max_ns());
 
   EXPECT_NEAR(actual.variance_ns(), other.variance_ns(), 1.0);
-  EXPECT_NEAR(actual.std_dev_ns(), other.std_dev_ns(), 1.0);
+  EXPECT_NEAR(actual.ComputeStdDevNs(), other.ComputeStdDevNs(), 1.0);
 }
 
 TEST_F(CaptureDataTest, UpdateScopeStatsIsCorrect) {
