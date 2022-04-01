@@ -12,22 +12,18 @@ struct Line {
   Vec3 end_point;
 };
 
+// TODO(b/227748244) Tetragon should store four Vec2
 struct Tetragon {
   Tetragon() = default;
-  Tetragon(const Vec3& top_left, const Vec3& top_right, const Vec3& bottom_right,
-           const Vec3& bottom_left) {
-    vertices[0] = top_left;
-    vertices[1] = top_right;
-    vertices[2] = bottom_right;
-    vertices[3] = bottom_left;
+  Tetragon(const Vec3& first, const Vec3& clockwise_second, const Vec3& clockwise_third,
+           const Vec3& clockwise_fourth) {
+    vertices[0] = first;
+    vertices[1] = clockwise_second;
+    vertices[2] = clockwise_third;
+    vertices[3] = clockwise_fourth;
   }
 
   Vec3 vertices[4];
-
-  [[nodiscard]] Vec3 TopLeft() const { return vertices[0]; }
-  [[nodiscard]] Vec3 TopRight() const { return vertices[1]; }
-  [[nodiscard]] Vec3 BottomRight() const { return vertices[2]; }
-  [[nodiscard]] Vec3 BottomLeft() const { return vertices[3]; }
 };
 
 [[nodiscard]] inline Tetragon MakeBox(const Vec2& pos, const Vec2& size, float z) {

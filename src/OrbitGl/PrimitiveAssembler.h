@@ -102,11 +102,15 @@ class PrimitiveAssembler {
 
   void AddTriangle(const Triangle& triangle, const Color& color,
                    std::unique_ptr<PickingUserData> user_data = nullptr);
+  // TODO(b/227744958) This should probably be removed and AddBox should be used instead
   void AddShadedTrapezium(const Tetragon& trapezium, const Color& color,
                           std::unique_ptr<PickingUserData> user_data = nullptr,
                           ShadingDirection shading_direction = ShadingDirection::kLeftToRight);
   void AddTriangle(const Triangle& triangle, const Color& color,
                    std::shared_ptr<Pickable> pickable);
+
+  void AddTetragonBorder(const Tetragon& tetragon, const Color& color,
+                         std::unique_ptr<orbit_gl::PickingUserData> user_data);
 
   void AddCircle(const Vec2& position, float radius, float z, Color color);
 

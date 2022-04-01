@@ -11,6 +11,7 @@
 
 #include <algorithm>
 #include <limits>
+#include <memory>
 #include <utility>
 
 #include "ApiInterface/Orbit.h"
@@ -107,7 +108,8 @@ void TimerTrack::DrawTimesliceText(TextRenderer& text_renderer,
       GlCanvas::kZValueBox, formatting, elapsed_time_length);
 }
 
-[[nodiscard]] inline Tetragon TetragonWithZ(const Tetragon& tetragon, float z) {
+// TODO(b/227748244) This method is only a temporary solution
+[[nodiscard]] inline Tetragon GetTetragonWithNewZ(const Tetragon& tetragon, float z) {
   Tetragon result = tetragon;
   for (Vec3& vertice : result.vertices) {
     vertice[2] = z;
@@ -234,8 +236,9 @@ bool TimerTrack::DrawTimer(TextRenderer& text_renderer, const TimerInfo* prev_ti
         world_x_info_right_overlap.world_x_start - world_x_info_left_overlap.world_x_start;
 
     if (ShouldHaveBorder(current_timer_info, draw_data.histogram_selection_range, width)) {
-      AddTetragonBorder(*primitive_assembler, TetragonWithZ(trapezium, GlCanvas::kZValueBoxBorder),
-                        TimerTrack::kBoxBorderColor, *current_timer_info);
+      primitive_assembler->AddTetragonBorder(
+          GetTetragonWithNewZ(trapezium, GlCanvas::kZValueBoxBorder), TimerTrack::kBoxBorderColor,
+          CreatePickingUserData(*primitive_assembler, *current_timer_info));
     }
   } else {
     PrimitiveAssembler* primitive_assembler = draw_data.primitive_assembler;
@@ -424,27 +427,4 @@ bool TimerTrack::ShouldHaveBorder(
   }
   const uint64_t duration = timer->end() - timer->start();
   return range->min_duration <= duration && duration <= range->max_duration;
-}
-
-[[nodiscard]] static Vec2 Vec3ToVec2(const Vec3& v) { return {v[0], v[1]}; }
-
-void TimerTrack::AddBorderLine(const Vec2& from, const Vec2& to, float z, const Color& color,
-                               PrimitiveAssembler& primitive_assembler,
-                               const orbit_client_protos::TimerInfo& timer_info) {
-  auto user_data = CreatePickingUserData(primitive_assembler, timer_info);
-  primitive_assembler.AddLine(from, to, z, color, std::move(user_data));
-}
-
-void TimerTrack::AddTetragonBorder(PrimitiveAssembler& primitive_assembler,
-                                   const Tetragon& tetragon, const Color& color,
-                                   const orbit_client_protos::TimerInfo& timer_info) {
-  float z = tetragon.vertices[0][2];
-  AddBorderLine(Vec3ToVec2(tetragon.vertices[0]), Vec3ToVec2(tetragon.vertices[1]), z, color,
-                primitive_assembler, timer_info);
-  AddBorderLine(Vec3ToVec2(tetragon.vertices[1]), Vec3ToVec2(tetragon.vertices[2]), z, color,
-                primitive_assembler, timer_info);
-  AddBorderLine(Vec3ToVec2(tetragon.vertices[2]), Vec3ToVec2(tetragon.vertices[3]), z, color,
-                primitive_assembler, timer_info);
-  AddBorderLine(Vec3ToVec2(tetragon.vertices[3]), Vec3ToVec2(tetragon.vertices[0]), z, color,
-                primitive_assembler, timer_info);
 }

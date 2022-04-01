@@ -160,13 +160,6 @@ class TimerTrack : public Track {
       const orbit_client_protos::TimerInfo* timer,
       const std::optional<orbit_statistics::HistogramSelectionRange>& range, float width) const;
 
-  void AddBorderLine(const Vec2& from, const Vec2& to, float z, const Color& color,
-                     orbit_gl::PrimitiveAssembler& primitive_assembler,
-                     const orbit_client_protos::TimerInfo& timer_info);
-  void AddTetragonBorder(orbit_gl::PrimitiveAssembler& primitive_assembler,
-                         const Tetragon& tetragon, const Color& color,
-                         const orbit_client_protos::TimerInfo& timer_info);
-
   static const Color kHighlightColor;
   static const Color kBoxBorderColor;
 

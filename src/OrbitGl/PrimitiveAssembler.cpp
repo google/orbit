@@ -211,11 +211,11 @@ void PrimitiveAssembler::AddShadedTrapezium(const Tetragon& trapezium, const Col
   std::array<Color, 4> colors;  // top_left, bottom_left, bottom_right, top_right.
   GetBoxGradientColors(color, &colors, shading_direction);
   Color picking_color = PickingId::ToColor(PickingType::kTriangle, user_data_.size(), batcher_id_);
-  Triangle triangle_1{trapezium.TopLeft(), trapezium.BottomLeft(), trapezium.TopRight()};
+  Triangle triangle_1{trapezium.vertices[0], trapezium.vertices[3], trapezium.vertices[1]};
   std::array<Color, 3> colors_1{colors[0], colors[1], colors[2]};
   AddTriangleInternal(triangle_1, colors_1, picking_color,
                       std::make_unique<PickingUserData>(*user_data));
-  Triangle triangle_2{trapezium.BottomLeft(), trapezium.BottomRight(), trapezium.TopRight()};
+  Triangle triangle_2{trapezium.vertices[3], trapezium.vertices[2], trapezium.vertices[1]};
   std::array<Color, 3> colors_2{colors[1], colors[2], colors[3]};
   AddTriangleInternal(triangle_2, colors_2, picking_color, std::move(user_data));
 }
@@ -239,6 +239,19 @@ void PrimitiveAssembler::AddCircle(const Vec2& position, float radius, float z, 
     AddTriangle(triangle, color);
     prev_point = new_point;
   }
+}
+
+void PrimitiveAssembler::AddTetragonBorder(const Tetragon& tetragon, const Color& color,
+                                           std::unique_ptr<orbit_gl::PickingUserData> user_data) {
+  float z = tetragon.vertices[0][2];
+  AddLine(Vec3ToVec2(tetragon.vertices[0]), Vec3ToVec2(tetragon.vertices[1]), z, color,
+          std::make_unique<PickingUserData>(*user_data));
+  AddLine(Vec3ToVec2(tetragon.vertices[1]), Vec3ToVec2(tetragon.vertices[2]), z, color,
+          std::make_unique<PickingUserData>(*user_data));
+  AddLine(Vec3ToVec2(tetragon.vertices[2]), Vec3ToVec2(tetragon.vertices[3]), z, color,
+          std::make_unique<PickingUserData>(*user_data));
+  AddLine(Vec3ToVec2(tetragon.vertices[3]), Vec3ToVec2(tetragon.vertices[0]), z, color,
+          std::move(user_data));
 }
 
 const PickingUserData* PrimitiveAssembler::GetUserData(PickingId id) const {
