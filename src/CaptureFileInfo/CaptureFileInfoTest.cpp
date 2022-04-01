@@ -68,7 +68,7 @@ TEST(CaptureFileInfo, FullInfoConstructorAndIsOutOfSync) {
   EXPECT_EQ(capture_file_info.FileSize(), kFileSize);
   EXPECT_EQ(capture_file_info.CaptureLength().value(), kCaptureLength);
 
-  // The file size and the last modified time we provided to construct the CaptureFileInfo donnot
+  // The file size and the last modified time we provided to construct the CaptureFileInfo do not
   // match with the information retrieved from the file system. Hence they are out of sync with the
   // associated file.
   EXPECT_TRUE(capture_file_info.IsOutOfSync());

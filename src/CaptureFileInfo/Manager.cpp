@@ -87,7 +87,6 @@ void Manager::AddOrTouchCaptureFile(const std::filesystem::path& path,
 
   if (it == capture_file_infos_.end()) {
     capture_file_infos_.emplace_back(QString::fromStdString(path.string()), capture_length);
-
   } else {
     it->Touch();
     it->SetCaptureLength(capture_length);
