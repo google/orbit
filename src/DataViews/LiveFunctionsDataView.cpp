@@ -115,7 +115,7 @@ std::string LiveFunctionsDataView::GetValue(int row, int column) {
     case kColumnTimeMax:
       return orbit_display_formats::GetDisplayTime(absl::Nanoseconds(stats.max_ns()));
     case kColumnStdDev:
-      return orbit_display_formats::GetDisplayTime(absl::Nanoseconds(stats.std_dev_ns()));
+      return orbit_display_formats::GetDisplayTime(absl::Nanoseconds(stats.ComputeStdDevNs()));
     case kColumnModule:
       return function.module_path();
     case kColumnAddress:
@@ -226,7 +226,7 @@ void LiveFunctionsDataView::DoSort() {
       sorter = ORBIT_STAT_SORT(max_ns());
       break;
     case kColumnStdDev:
-      sorter = ORBIT_STAT_SORT(std_dev_ns());
+      sorter = ORBIT_STAT_SORT(ComputeStdDevNs());
       break;
     case kColumnModule: {
       auto module_name = [](const orbit_client_data::FunctionInfo& function) {

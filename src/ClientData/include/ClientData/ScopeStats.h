@@ -6,6 +6,8 @@
 
 #include <stdint.h>
 
+#include <cmath>
+
 namespace orbit_client_data {
 
 // A simple class that keeps track of some basic statistics for a particular scope id (e.g. a
@@ -35,8 +37,10 @@ class ScopeStats {
   [[nodiscard]] double variance_ns() const { return variance_ns_; }
   void set_variance_ns(double variance_ns) { variance_ns_ = variance_ns; }
 
-  [[nodiscard]] uint64_t std_dev_ns() const { return std_dev_ns_; }
-  void set_std_dev_ns(uint64_t std_dev_ns) { std_dev_ns_ = std_dev_ns; }
+  [[nodiscard]] uint64_t ComputeStdDevNs() const {
+    // std_dev = sqrt(variance)
+    return static_cast<uint64_t>(std::sqrt(variance_ns()));
+  }
 
  private:
   uint64_t count_;
@@ -44,7 +48,6 @@ class ScopeStats {
   uint64_t min_ns_;
   uint64_t max_ns_;
   double variance_ns_;
-  uint64_t std_dev_ns_;
 };
 
 }  // namespace orbit_client_data

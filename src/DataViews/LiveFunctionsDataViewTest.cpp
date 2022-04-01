@@ -201,7 +201,7 @@ std::unique_ptr<CaptureData> GenerateTestCaptureData(
     stats.set_total_time_ns(kTotalTimeNs[i]);
     stats.set_min_ns(kMinNs[i]);
     stats.set_max_ns(kMaxNs[i]);
-    stats.set_std_dev_ns(kStdDevNs[i]);
+    stats.set_variance_ns(kStdDevNs[i] * kStdDevNs[i]);
     capture_data->AddScopeStats(kFunctionIds[i], std::move(stats));
   }
 
@@ -765,8 +765,8 @@ TEST_F(LiveFunctionsDataViewTest, ColumnSortingShowsRightResults) {
     string_to_raw_value.insert_or_assign(entry[kColumnTimeMin], stats.min_ns());
     entry[kColumnTimeMax] = GetExpectedDisplayTime(stats.max_ns());
     string_to_raw_value.insert_or_assign(entry[kColumnTimeMax], stats.max_ns());
-    entry[kColumnStdDev] = GetExpectedDisplayTime(stats.std_dev_ns());
-    string_to_raw_value.insert_or_assign(entry[kColumnStdDev], stats.std_dev_ns());
+    entry[kColumnStdDev] = GetExpectedDisplayTime(stats.ComputeStdDevNs());
+    string_to_raw_value.insert_or_assign(entry[kColumnStdDev], stats.ComputeStdDevNs());
 
     view_entries.push_back(entry);
   }
