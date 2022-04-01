@@ -11,7 +11,6 @@
 
 namespace orbit_gl {
 
-
 class MockBatcher : public BatcherInterface {
  public:
   explicit MockBatcher();
