@@ -603,11 +603,9 @@ TEST_F(LiveFunctionsDataViewTest, ContextMenuActionsAreInvoked) {
       EXPECT_EQ(function.pretty_name(), kPrettyNames[0]);
     });
     EXPECT_CALL(app_, EnableFrameTrack).Times(1);
-    EXPECT_CALL(app_, AddFrameTrack(testing::A<const orbit_client_data::FunctionInfo&>()))
-        .Times(1)
-        .WillOnce([&](const FunctionInfo& function) {
-          EXPECT_EQ(function.pretty_name(), kPrettyNames[0]);
-        });
+    EXPECT_CALL(app_, AddFrameTrack).Times(1).WillOnce([&](const FunctionInfo& function) {
+      EXPECT_EQ(function.pretty_name(), kPrettyNames[0]);
+    });
     view_.OnContextMenu(std::string{kMenuActionEnableFrameTrack}, enable_frame_track_index, {0});
   }
 
@@ -627,11 +625,9 @@ TEST_F(LiveFunctionsDataViewTest, ContextMenuActionsAreInvoked) {
       EXPECT_EQ(function.pretty_name(), kPrettyNames[0]);
     });
     EXPECT_CALL(app_, DisableFrameTrack).Times(1);
-    EXPECT_CALL(app_, RemoveFrameTrack(testing::An<const FunctionInfo&>()))
-        .Times(1)
-        .WillOnce([&](const FunctionInfo& function) {
-          EXPECT_EQ(function.pretty_name(), kPrettyNames[0]);
-        });
+    EXPECT_CALL(app_, RemoveFrameTrack).Times(1).WillOnce([&](const FunctionInfo& function) {
+      EXPECT_EQ(function.pretty_name(), kPrettyNames[0]);
+    });
     view_.OnContextMenu(std::string{kMenuActionUnselect}, unhook_index, {0});
   }
 
@@ -644,11 +640,9 @@ TEST_F(LiveFunctionsDataViewTest, ContextMenuActionsAreInvoked) {
     EXPECT_CALL(app_, DisableFrameTrack).Times(1).WillOnce([&](const FunctionInfo& function) {
       EXPECT_EQ(function.pretty_name(), kPrettyNames[0]);
     });
-    EXPECT_CALL(app_, RemoveFrameTrack(testing::An<const FunctionInfo&>()))
-        .Times(1)
-        .WillOnce([&](const FunctionInfo& function) {
-          EXPECT_EQ(function.pretty_name(), kPrettyNames[0]);
-        });
+    EXPECT_CALL(app_, RemoveFrameTrack).Times(1).WillOnce([&](const FunctionInfo& function) {
+      EXPECT_EQ(function.pretty_name(), kPrettyNames[0]);
+    });
     view_.OnContextMenu(std::string{kMenuActionDisableFrameTrack}, disable_frame_track_index, {0});
   }
 }

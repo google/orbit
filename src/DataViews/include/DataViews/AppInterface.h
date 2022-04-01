@@ -106,10 +106,9 @@ class AppInterface {
 
   virtual void EnableFrameTrack(const orbit_client_data::FunctionInfo& function) = 0;
   virtual void DisableFrameTrack(const orbit_client_data::FunctionInfo& function) = 0;
+
   virtual void AddFrameTrack(const orbit_client_data::FunctionInfo& function) = 0;
-  virtual void AddFrameTrack(uint64_t instrumented_function_id) = 0;
   virtual void RemoveFrameTrack(const orbit_client_data::FunctionInfo& function) = 0;
-  virtual void RemoveFrameTrack(uint64_t instrumented_function_id) = 0;
 
   virtual void Disassemble(uint32_t pid, const orbit_client_data::FunctionInfo& function) = 0;
   virtual void ShowSourceCode(const orbit_client_data::FunctionInfo& function) = 0;

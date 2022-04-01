@@ -61,10 +61,9 @@ namespace orbit_data_views {
 LiveFunctionsDataView::LiveFunctionsDataView(
     LiveFunctionsInterface* live_functions, AppInterface* app,
     orbit_metrics_uploader::MetricsUploader* metrics_uploader)
-    : DataView(DataViewType::kLiveFunctions, app),
+    : DataView(DataViewType::kLiveFunctions, app, metrics_uploader),
       live_functions_(live_functions),
-      selected_function_id_(orbit_grpc_protos::kInvalidFunctionId),
-      metrics_uploader_(metrics_uploader) {
+      selected_function_id_(orbit_grpc_protos::kInvalidFunctionId) {
   update_period_ms_ = 300;
 }
 

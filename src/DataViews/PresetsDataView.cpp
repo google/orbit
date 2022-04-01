@@ -69,8 +69,7 @@ namespace orbit_data_views {
 
 PresetsDataView::PresetsDataView(AppInterface* app,
                                  orbit_metrics_uploader::MetricsUploader* metrics_uploader)
-    : DataView(DataViewType::kPresets, app),
-      metrics_uploader_(metrics_uploader),
+    : DataView(DataViewType::kPresets, app, metrics_uploader),
       main_thread_executor_(orbit_qt_utils::MainThreadExecutorImpl::Create()) {}
 
 std::string PresetsDataView::GetModulesList(const std::vector<ModuleView>& modules) {

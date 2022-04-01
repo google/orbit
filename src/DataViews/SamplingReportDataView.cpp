@@ -44,8 +44,9 @@ using orbit_client_data::ThreadID;
 
 namespace orbit_data_views {
 
-SamplingReportDataView::SamplingReportDataView(AppInterface* app)
-    : DataView(DataViewType::kSampling, app) {}
+SamplingReportDataView::SamplingReportDataView(
+    AppInterface* app, orbit_metrics_uploader::MetricsUploader* metrics_uploader)
+    : DataView(DataViewType::kSampling, app, metrics_uploader) {}
 
 const std::vector<DataView::Column>& SamplingReportDataView::GetColumns() {
   static const std::vector<Column> columns = [] {
