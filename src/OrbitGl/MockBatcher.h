@@ -15,26 +15,26 @@ class MockBatcher : public BatcherInterface {
  public:
   explicit MockBatcher() : BatcherInterface(BatcherId::kTimeGraph) { ResetElements(); }
   void AddLine(Vec2 from, Vec2 to, float z, const Color& color, const Color& /*picking_color*/,
-               std::unique_ptr<PickingUserData> /*user_data*/ = nullptr) override {
+               std::unique_ptr<PickingUserData> /*user_data*/) override {
     num_lines_by_color_[color]++;
     if (from[0] == to[0]) num_vertical_lines_++;
     if (from[1] == to[1]) num_horizontal_lines_++;
-    ProcessPoint({from[0], from[1], z});
-    ProcessPoint({to[0], to[1], z});
+    AdjustDrawingBoundaries({from[0], from[1], z});
+    AdjustDrawingBoundaries({to[0], to[1], z});
   }
   void AddBox(const Box& box, const std::array<Color, 4>& colors, const Color& /*picking_color*/,
-              std::unique_ptr<PickingUserData> /*user_data*/ = nullptr) override {
+              std::unique_ptr<PickingUserData> /*user_data*/) override {
     num_boxes_by_color_[colors[0]]++;
     for (int i = 0; i < 4; i++) {
-      ProcessPoint(box.vertices[i]);
+      AdjustDrawingBoundaries(box.vertices[i]);
     }
   }
   void AddTriangle(const Triangle& triangle, const std::array<Color, 3>& colors,
                    const Color& /*picking_color*/,
-                   std::unique_ptr<PickingUserData> /*user_data*/ = nullptr) override {
+                   std::unique_ptr<PickingUserData> /*user_data*/) override {
     num_triangles_by_color_[colors[0]]++;
     for (int i = 0; i < 3; i++) {
-      ProcessPoint(triangle.vertices[i]);
+      AdjustDrawingBoundaries(triangle.vertices[i]);
     }
   }
 
@@ -101,13 +101,13 @@ class MockBatcher : public BatcherInterface {
   }
 
  private:
-  void ProcessPoint(Vec3 point) {
+  void AdjustDrawingBoundaries(Vec3 point) {
     min_point_[0] = std::min(point[0], min_point_[0]);
     min_point_[1] = std::min(point[1], min_point_[1]);
     min_point_[2] = std::min(point[2], min_point_[2]);
-    min_point_[0] = std::max(point[0], max_point_[0]);
-    min_point_[0] = std::max(point[1], max_point_[1]);
-    min_point_[0] = std::max(point[2], max_point_[2]);
+    max_point_[0] = std::max(point[0], max_point_[0]);
+    max_point_[1] = std::max(point[1], max_point_[1]);
+    max_point_[2] = std::max(point[2], max_point_[2]);
   }
   Vec3 min_point_;
   Vec3 max_point_;

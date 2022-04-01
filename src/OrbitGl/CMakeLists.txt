@@ -48,7 +48,6 @@ target_sources(
          MajorPageFaultsTrack.h
          MemoryTrack.h
          MinorPageFaultsTrack.h
-         MockBatcher.h
          MultivariateTimeSeries.h
          PageFaultsTrack.h
          PickingManager.h
@@ -187,6 +186,7 @@ add_executable(OrbitGlTests)
 
 target_sources(OrbitGlTests PRIVATE
                CaptureViewElementTester.h
+               MockBatcher.h
                PickingManagerTest.h
                UnitTestSlider.h)
 
