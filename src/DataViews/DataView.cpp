@@ -235,7 +235,7 @@ void DataView::OnEnableFrameTrackRequested(const std::vector<int>& selection) {
         orbit_metrics_uploader::OrbitLogEvent::ORBIT_FRAME_TRACK_ENABLED);
 
     switch (app_->AddFrameTrack(function)) {
-      case AppInterface::AddFrameTrackResult::kAborted:
+      case AppInterface::AddFrameTrackResult::kNotPossible:
         break;
       case AppInterface::AddFrameTrackResult::kVisible:
         metrics_uploader_->SendLogEvent(
@@ -251,7 +251,7 @@ void DataView::OnEnableFrameTrackRequested(const std::vector<int>& selection) {
 
 void DataView::OnDisableFrameTrackRequested(const std::vector<int>& selection) {
   metrics_uploader_->SendLogEvent(
-      orbit_metrics_uploader::OrbitLogEvent::ORBIT_FRAME_TRACK_ENABLE_CLICKED);
+      orbit_metrics_uploader::OrbitLogEvent::ORBIT_FRAME_TRACK_DISABLE_CLICKED);
 
   for (int i : selection) {
     const FunctionInfo& function = *GetFunctionInfoFromRow(i);
@@ -263,7 +263,7 @@ void DataView::OnDisableFrameTrackRequested(const std::vector<int>& selection) {
         orbit_metrics_uploader::OrbitLogEvent::ORBIT_FRAME_TRACK_DISABLED);
 
     switch (app_->RemoveFrameTrack(function)) {
-      case AppInterface::RemoveFrameTrackResult::kAborted:
+      case AppInterface::RemoveFrameTrackResult::kNotPossible:
         break;
       case AppInterface::RemoveFrameTrackResult::kSuccess:
         metrics_uploader_->SendLogEvent(

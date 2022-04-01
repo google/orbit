@@ -2673,13 +2673,13 @@ void OrbitApp::DisableFrameTrack(const FunctionInfo& function) {
 }
 
 OrbitApp::AddFrameTrackResult OrbitApp::AddFrameTrack(const FunctionInfo& function) {
-  if (!HasCaptureData()) return AddFrameTrackResult::kAborted;
+  if (!HasCaptureData()) return AddFrameTrackResult::kNotPossible;
 
   std::optional<uint64_t> instrumented_function_id =
       orbit_client_data::FindInstrumentedFunctionIdSlow(*module_manager_, *capture_data_, function);
   // If the function is not instrumented - ignore it. This happens when user
   // enables frame tracks for a not instrumented function from the function list.
-  if (!instrumented_function_id) return AddFrameTrackResult::kAborted;
+  if (!instrumented_function_id) return AddFrameTrackResult::kNotPossible;
 
   return AddFrameTrack(instrumented_function_id.value());
 }
@@ -2687,7 +2687,7 @@ OrbitApp::AddFrameTrackResult OrbitApp::AddFrameTrack(const FunctionInfo& functi
 OrbitApp::AddFrameTrackResult OrbitApp::AddFrameTrack(uint64_t instrumented_function_id) {
   ORBIT_CHECK(instrumented_function_id != 0);
   ORBIT_CHECK(std::this_thread::get_id() == main_thread_id_);
-  if (!HasCaptureData()) return AddFrameTrackResult::kAborted;
+  if (!HasCaptureData()) return AddFrameTrackResult::kNotPossible;
 
   // We only add a frame track to the actual capture data if the function for the frame
   // track actually has hits in the capture data. Otherwise we can end up in inconsistent
@@ -2719,20 +2719,20 @@ OrbitApp::AddFrameTrackResult OrbitApp::AddFrameTrack(uint64_t instrumented_func
 
 OrbitApp::RemoveFrameTrackResult OrbitApp::RemoveFrameTrack(const FunctionInfo& function) {
   // Ignore this call if there is no capture data
-  if (!HasCaptureData()) return RemoveFrameTrackResult::kAborted;
+  if (!HasCaptureData()) return RemoveFrameTrackResult::kNotPossible;
 
   std::optional<uint64_t> instrumented_function_id =
       orbit_client_data::FindInstrumentedFunctionIdSlow(*module_manager_, *capture_data_, function);
   // If the function is not instrumented - ignore it. This happens when user
   // enables frame tracks for a not instrumented function from the function list.
-  if (!instrumented_function_id) return RemoveFrameTrackResult::kAborted;
+  if (!instrumented_function_id) return RemoveFrameTrackResult::kNotPossible;
 
   return RemoveFrameTrack(instrumented_function_id.value());
 }
 
 OrbitApp::RemoveFrameTrackResult OrbitApp::RemoveFrameTrack(uint64_t instrumented_function_id) {
   ORBIT_CHECK(std::this_thread::get_id() == main_thread_id_);
-  if (!HasCaptureData()) return RemoveFrameTrackResult::kAborted;
+  if (!HasCaptureData()) return RemoveFrameTrackResult::kNotPossible;
 
   // We can only remove the frame track from the capture data if we have capture data and
   // the frame track is actually enabled in the capture data.

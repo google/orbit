@@ -502,13 +502,18 @@ class OrbitApp final : public DataViewFactory,
   [[nodiscard]] bool IsFrameTrackEnabled(
       const orbit_client_data::FunctionInfo& function) const override;
 
-  // Adds the frame track to the capture settings and also adds a frame track to the current
-  // capture data, *if* the captures contains function calls to the function and the function
-  // was instrumented.
+  // Tries to add a frame track to the current capture data if the capture data contains the
+  // function calls. Returns the result:
+  // - kNotPossible, if there is no capture data or the function is not instrumented; otherwise
+  // - kInvisible, if the function is instrumented but has no hits in the capture data at this
+  //   time; otherwise
+  // - kVisible, if the function is instrumented and has non-zero hits in the capture data. Note
+  //   that only in this case, we add a frame track to the actual capture data.
   AddFrameTrackResult AddFrameTrack(const orbit_client_data::FunctionInfo& function) override;
 
-  // Removes the frame track from the capture settings and also removes the frame track
-  // (if it exists) from the capture data.
+  // Tries to remove the frame track from the capture data if it exists, and returns the result:
+  // - kNotPossible, if there is no capture data or the function is not instrumented; otherwise
+  // - kSuccess.
   RemoveFrameTrackResult RemoveFrameTrack(const orbit_client_data::FunctionInfo& function) override;
 
   [[nodiscard]] bool HasFrameTrackInCaptureData(uint64_t instrumented_function_id) const override;
