@@ -34,7 +34,7 @@ namespace internal {
 struct DrawData {
   uint64_t min_tick;
   uint64_t max_tick;
-  uint64_t highlighted_function_id;
+  uint64_t highlighted_scope_id;
   uint64_t highlighted_group_id;
   double ns_per_pixel;
   uint64_t min_timegraph_tick;
@@ -155,6 +155,10 @@ class TimerTrack : public Track {
   [[nodiscard]] inline bool BoxHasRoomForText(TextRenderer& text_renderer, const float width) {
     return text_renderer.GetStringWidth("w", layout_->CalculateZoomedFontSize()) < width;
   }
+
+  [[nodiscard]] bool ShouldHaveBorder(
+      const orbit_client_protos::TimerInfo* timer,
+      const std::optional<orbit_statistics::HistogramSelectionRange>& range, float width) const;
 
   static const Color kHighlightColor;
   static const Color kBoxBorderColor;

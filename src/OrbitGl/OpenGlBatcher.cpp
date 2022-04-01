@@ -41,10 +41,10 @@ void OpenGlBatcher::AddLineInternal(Vec2 from, Vec2 to, float z, const Color& co
   user_data_.push_back(std::move(user_data));
 }
 
-void OpenGlBatcher::AddBoxInternal(const Box& box, const std::array<Color, 4>& colors,
+void OpenGlBatcher::AddBoxInternal(const Tetragon& box, const std::array<Color, 4>& colors,
                                    const Color& picking_color,
                                    std::unique_ptr<PickingUserData> user_data) {
-  Box rounded_box = box;
+  Tetragon rounded_box = box;
   for (size_t v = 0; v < 4; ++v) {
     rounded_box.vertices[v] = translations_.TranslateAndFloorVertex(rounded_box.vertices[v]);
   }
@@ -106,8 +106,8 @@ void OpenGlBatcher::DrawLayer(float layer, bool picking) const {
 
 void OpenGlBatcher::DrawBoxBuffer(float layer, bool picking) const {
   auto& box_buffer = primitive_buffers_by_layer_.at(layer).box_buffer;
-  const orbit_containers::Block<Box, orbit_gl_internal::BoxBuffer::NUM_BOXES_PER_BLOCK>* box_block =
-      box_buffer.boxes_.root();
+  const orbit_containers::Block<Tetragon, orbit_gl_internal::BoxBuffer::NUM_BOXES_PER_BLOCK>*
+      box_block = box_buffer.boxes_.root();
   const orbit_containers::Block<Color, orbit_gl_internal::BoxBuffer::NUM_BOXES_PER_BLOCK * 4>*
       color_block;
 

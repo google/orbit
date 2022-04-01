@@ -695,14 +695,14 @@ TEST_F(LiveFunctionsDataViewTest, UpdateHighlightedFunctionsOnSelect) {
   AddFunctionsByIndices({0, 1, 2});
 
   EXPECT_CALL(app_, DeselectTimer).Times(3);
-  EXPECT_CALL(app_, GetHighlightedFunctionId).Times(3);
+  EXPECT_CALL(app_, GetHighlightedScopeId).Times(3);
   EXPECT_CALL(app_, HasCaptureData).WillRepeatedly(testing::Return(true));
 
   EXPECT_CALL(app_, GetCaptureData).WillRepeatedly(testing::ReturnRef(*capture_data_));
 
   // Single selection will hightlight the selected function
   {
-    EXPECT_CALL(app_, SetHighlightedFunctionId)
+    EXPECT_CALL(app_, SetHighlightedScopeId)
         .Times(1)
         .WillOnce([&](uint64_t highlighted_function_id) {
           EXPECT_EQ(highlighted_function_id, kFunctionIds[2]);
@@ -713,7 +713,7 @@ TEST_F(LiveFunctionsDataViewTest, UpdateHighlightedFunctionsOnSelect) {
 
   // Multiple selection will hightlight the first selected function
   {
-    EXPECT_CALL(app_, SetHighlightedFunctionId)
+    EXPECT_CALL(app_, SetHighlightedScopeId)
         .Times(1)
         .WillOnce([&](uint64_t highlighted_function_id) {
           EXPECT_EQ(highlighted_function_id, kFunctionIds[1]);
@@ -724,7 +724,7 @@ TEST_F(LiveFunctionsDataViewTest, UpdateHighlightedFunctionsOnSelect) {
 
   // Empty selection will clear the function highlighting
   {
-    EXPECT_CALL(app_, SetHighlightedFunctionId)
+    EXPECT_CALL(app_, SetHighlightedScopeId)
         .Times(1)
         .WillOnce([&](uint64_t highlighted_function_id) {
           EXPECT_EQ(highlighted_function_id, orbit_grpc_protos::kInvalidFunctionId);

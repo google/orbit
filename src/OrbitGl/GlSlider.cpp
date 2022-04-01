@@ -159,10 +159,12 @@ void GlSlider::DrawBackground(PrimitiveAssembler& primitive_assembler, float x, 
   const Color dark_border_color = GetDarkerColor(bar_color_);
   const float kEpsilon = 0.0001f;
 
-  Box border_box(Vec2(x, y), Vec2(width, height), GlCanvas::kZValueSliderBg - kEpsilon);
+  Tetragon border_box =
+      MakeBox(Vec2(x, y), Vec2(width, height), GlCanvas::kZValueSliderBg - kEpsilon);
   primitive_assembler.AddBox(border_box, dark_border_color, shared_from_this());
 
-  Box bar_box(Vec2(x + 1.f, y + 1.f), Vec2(width - 2.f, height - 2.f), GlCanvas::kZValueSliderBg);
+  Tetragon bar_box =
+      MakeBox(Vec2(x + 1.f, y + 1.f), Vec2(width - 2.f, height - 2.f), GlCanvas::kZValueSliderBg);
   primitive_assembler.AddBox(bar_box, bar_color_, shared_from_this());
 }
 
@@ -178,12 +180,13 @@ void GlSlider::DrawSlider(PrimitiveAssembler& primitive_assembler, float x, floa
   const Color light_border_color = GetLighterColor(color);
   const float kEpsilon = 0.0001f;
 
-  Box dark_border_box(Vec2(x, y), Vec2(width, height), GlCanvas::kZValueSlider - 2 * kEpsilon);
+  Tetragon dark_border_box =
+      MakeBox(Vec2(x, y), Vec2(width, height), GlCanvas::kZValueSlider - 2 * kEpsilon);
 
   primitive_assembler.AddBox(dark_border_box, dark_border_color, shared_from_this());
 
-  Box light_border_box(Vec2(x + 1.f, y + 1.f), Vec2(width - 2.f, height - 2.f),
-                       GlCanvas::kZValueSlider - kEpsilon);
+  Tetragon light_border_box = MakeBox(Vec2(x + 1.f, y + 1.f), Vec2(width - 2.f, height - 2.f),
+                                      GlCanvas::kZValueSlider - kEpsilon);
 
   primitive_assembler.AddBox(light_border_box, light_border_color, shared_from_this());
 
@@ -195,10 +198,11 @@ void GlSlider::DrawSlider(PrimitiveAssembler& primitive_assembler, float x, floa
         Vec2(width - 2.f * kSliderOffset, height - 2.f * kSliderOffset), GlCanvas::kZValueSlider,
         color, shared_from_this(), shading_direction);
   } else {
-    primitive_assembler.AddBox(Box(Vec2(x + kSliderOffset, y + kSliderOffset),
-                                   Vec2(width - 2.f * kSliderOffset, height - 2.f * kSliderOffset),
-                                   GlCanvas::kZValueSlider),
-                               slider_color_, shared_from_this());
+    primitive_assembler.AddBox(
+        MakeBox(Vec2(x + kSliderOffset, y + kSliderOffset),
+                Vec2(width - 2.f * kSliderOffset, height - 2.f * kSliderOffset),
+                GlCanvas::kZValueSlider),
+        slider_color_, shared_from_this());
   }
 }
 

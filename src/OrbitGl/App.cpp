@@ -40,6 +40,7 @@
 #include "ClientData/ModuleManager.h"
 #include "ClientData/PostProcessedSamplingData.h"
 #include "ClientData/ProcessData.h"
+#include "ClientData/ScopeIdConstants.h"
 #include "ClientData/ScopeStats.h"
 #include "ClientData/TimerChain.h"
 #include "ClientData/UserDefinedCaptureData.h"
@@ -2425,12 +2426,10 @@ bool OrbitApp::IsFunctionVisible(uint64_t function_address) {
   return data_manager_->IsFunctionVisible(function_address);
 }
 
-uint64_t OrbitApp::GetHighlightedFunctionId() const {
-  return data_manager_->highlighted_function_id();
-}
+uint64_t OrbitApp::GetHighlightedScopeId() const { return data_manager_->highlighted_scope_id(); }
 
-void OrbitApp::SetHighlightedFunctionId(uint64_t highlighted_function_id) {
-  data_manager_->set_highlighted_function_id(highlighted_function_id);
+void OrbitApp::SetHighlightedScopeId(uint64_t highlighted_scope_id) {
+  data_manager_->set_highlighted_scope_id(highlighted_scope_id);
   RequestUpdatePrimitives();
 }
 
@@ -2447,11 +2446,11 @@ const orbit_client_protos::TimerInfo* OrbitApp::selected_timer() const {
 
 void OrbitApp::SelectTimer(const orbit_client_protos::TimerInfo* timer_info) {
   data_manager_->set_selected_timer(timer_info);
-  uint64_t function_id =
-      timer_info != nullptr ? timer_info->function_id() : orbit_grpc_protos::kInvalidFunctionId;
-  data_manager_->set_highlighted_function_id(function_id);
+  const uint64_t scope_id = timer_info != nullptr ? GetCaptureData().ProvideScopeId(*timer_info)
+                                                  : orbit_client_data::kInvalidScopeId;
+  data_manager_->set_highlighted_scope_id(scope_id);
 
-  uint64_t group_id = timer_info != nullptr ? timer_info->group_id() : kOrbitDefaultGroupId;
+  const uint64_t group_id = timer_info != nullptr ? timer_info->group_id() : kOrbitDefaultGroupId;
   data_manager_->set_highlighted_group_id(group_id);
 
   ORBIT_CHECK(timer_selected_callback_);
@@ -2464,13 +2463,17 @@ void OrbitApp::DeselectTimer() {
   RequestUpdatePrimitives();
 }
 
-uint64_t OrbitApp::GetFunctionIdToHighlight() const {
+uint64_t OrbitApp::GetScopeIdToHighlight() const {
   const orbit_client_protos::TimerInfo* timer_info = selected_timer();
 
-  uint64_t selected_function_id =
-      timer_info != nullptr ? timer_info->function_id() : GetHighlightedFunctionId();
+  uint64_t selected_function_id = timer_info != nullptr
+                                      ? GetCaptureData().ProvideScopeId(*timer_info)
+                                      : GetHighlightedScopeId();
 
-  // Highlighting of manually instrumented scopes is not yet supported.
+  // TODO (b/226565085) remove the flag when the manual instrumentation grouping feature is
+  // released. Highlighting of manually instrumented scopes is supported only in devmode.
+  if (IsDevMode()) return selected_function_id;
+
   const InstrumentedFunction* function = GetInstrumentedFunction(selected_function_id);
   if (function == nullptr) {
     return orbit_grpc_protos::kInvalidFunctionId;

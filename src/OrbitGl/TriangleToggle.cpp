@@ -56,8 +56,8 @@ void TriangleToggle::DoDraw(PrimitiveAssembler& primitive_assembler, TextRendere
     // When picking, draw a big square for easier picking.
     float original_width = 2 * half_triangle_base_width;
     float large_width = 2 * original_width;
-    Box box(Vec2(pos[0] - original_width, pos[1] - original_width), Vec2(large_width, large_width),
-            z);
+    Tetragon box = MakeBox(Vec2(pos[0] - original_width, pos[1] - original_width),
+                           Vec2(large_width, large_width), z);
     primitive_assembler.AddBox(box, color, shared_from_this());
   }
 }

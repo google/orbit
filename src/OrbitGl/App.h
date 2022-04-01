@@ -466,8 +466,8 @@ class OrbitApp final : public DataViewFactory,
   void SetVisibleFunctionIds(absl::flat_hash_set<uint64_t> visible_functions) override;
   [[nodiscard]] bool IsFunctionVisible(uint64_t function_id);
 
-  [[nodiscard]] uint64_t GetHighlightedFunctionId() const override;
-  void SetHighlightedFunctionId(uint64_t highlighted_function_id) override;
+  [[nodiscard]] uint64_t GetHighlightedScopeId() const override;
+  void SetHighlightedScopeId(uint64_t highlighted_scope_id) override;
 
   [[nodiscard]] orbit_client_data::ThreadID selected_thread_id() const;
   void set_selected_thread_id(orbit_client_data::ThreadID thread_id);
@@ -476,7 +476,7 @@ class OrbitApp final : public DataViewFactory,
   void SelectTimer(const orbit_client_protos::TimerInfo* timer_info);
   void DeselectTimer() override;
 
-  [[nodiscard]] uint64_t GetFunctionIdToHighlight() const;
+  [[nodiscard]] uint64_t GetScopeIdToHighlight() const;
   [[nodiscard]] uint64_t GetGroupIdToHighlight() const;
 
   // origin_is_multiple_threads defines if the selection is specific to a single thread,

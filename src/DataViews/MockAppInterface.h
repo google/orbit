@@ -40,8 +40,8 @@ class MockAppInterface : public AppInterface {
   MOCK_METHOD(bool, IsFunctionSelected, (const orbit_client_data::FunctionInfo&), (const));
   MOCK_METHOD(bool, IsFunctionSelected, (const orbit_client_data::SampledFunction&), (const));
 
-  MOCK_METHOD(uint64_t, GetHighlightedFunctionId, (), (const));
-  MOCK_METHOD(void, SetHighlightedFunctionId, (uint64_t highlighted_function_id));
+  MOCK_METHOD(uint64_t, GetHighlightedScopeId, (), (const));
+  MOCK_METHOD(void, SetHighlightedScopeId, (uint64_t highlighted_function_id));
   MOCK_METHOD(void, SetVisibleFunctionIds, (absl::flat_hash_set<uint64_t> visible_functions));
   MOCK_METHOD(void, DeselectTimer, ());
   MOCK_METHOD(bool, IsCapturing, (), (const));

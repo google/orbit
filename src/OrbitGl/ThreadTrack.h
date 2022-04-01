@@ -113,17 +113,6 @@ class ThreadTrack final : public TimerTrack {
   std::shared_ptr<orbit_gl::TracepointThreadBar> tracepoint_bar_;
 
   orbit_client_data::ThreadTrackDataProvider* thread_track_data_provider_;
-
- private:
-  [[nodiscard]] bool ShouldHaveBorder(
-      const orbit_client_protos::TimerInfo* timer,
-      const std::optional<orbit_statistics::HistogramSelectionRange>& range, float width) const;
-
-  void AddBorderLine(const Vec2& from, const Vec2& to, float z, const Color& color,
-                     orbit_gl::PrimitiveAssembler& primitive_assembler,
-                     const orbit_client_protos::TimerInfo& timer_info);
-  void AddBoxBorder(orbit_gl::PrimitiveAssembler& primitive_assembler, const Box& box,
-                    const Color& color, const orbit_client_protos::TimerInfo& timer_info);
 };
 
 #endif  // ORBIT_GL_THREAD_TRACK_H_

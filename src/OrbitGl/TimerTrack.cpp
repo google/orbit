@@ -11,10 +11,12 @@
 
 #include <algorithm>
 #include <limits>
+#include <memory>
 #include <utility>
 
 #include "ApiInterface/Orbit.h"
 #include "App.h"
+#include "ClientData/ScopeIdConstants.h"
 #include "ClientFlags/ClientFlags.h"
 #include "ClientProtos/capture_data.pb.h"
 #include "DisplayFormats/DisplayFormats.h"
@@ -106,6 +108,15 @@ void TimerTrack::DrawTimesliceText(TextRenderer& text_renderer,
       GlCanvas::kZValueBox, formatting, elapsed_time_length);
 }
 
+// TODO(b/227748244) This method is only a temporary solution
+[[nodiscard]] inline Tetragon GetTetragonWithNewZ(const Tetragon& tetragon, float z) {
+  Tetragon result = tetragon;
+  for (Vec3& vertice : result.vertices) {
+    vertice[2] = z;
+  }
+  return result;
+}
+
 bool TimerTrack::DrawTimer(TextRenderer& text_renderer, const TimerInfo* prev_timer_info,
                            const TimerInfo* next_timer_info, const internal::DrawData& draw_data,
                            const TimerInfo* current_timer_info, uint64_t* min_ignore,
@@ -184,15 +195,15 @@ bool TimerTrack::DrawTimer(TextRenderer& text_renderer, const TimerInfo* prev_ti
     }
   }
 
-  uint64_t function_id = current_timer_info->function_id();
+  uint64_t scope_id = app_->GetCaptureData().ProvideScopeId(*current_timer_info);
   uint64_t group_id = current_timer_info->group_id();
 
   bool is_selected = current_timer_info == draw_data.selected_timer;
-  bool is_function_id_highlighted = function_id != orbit_grpc_protos::kInvalidFunctionId &&
-                                    function_id == draw_data.highlighted_function_id;
+  bool is_scope_id_highlighted =
+      scope_id != orbit_client_data::kInvalidScopeId && scope_id == draw_data.highlighted_scope_id;
   bool is_group_id_highlighted =
       group_id != kOrbitDefaultGroupId && group_id == draw_data.highlighted_group_id;
-  bool is_highlighted = !is_selected && (is_function_id_highlighted || is_group_id_highlighted);
+  bool is_highlighted = !is_selected && (is_scope_id_highlighted || is_group_id_highlighted);
 
   Color color = GetTimerColor(*current_timer_info, is_selected, is_highlighted, draw_data);
 
@@ -218,9 +229,17 @@ bool TimerTrack::DrawTimer(TextRenderer& text_renderer, const TimerInfo* prev_ti
         world_x_info_right_overlap.world_x_start + world_x_info_right_overlap.world_x_width,
         world_timer_y + box_height, draw_data.z);
     PrimitiveAssembler* primitive_assembler = draw_data.primitive_assembler;
+    Tetragon trapezium({top_left, bottom_left, bottom_right, top_right});
     draw_data.primitive_assembler->AddShadedTrapezium(
-        top_left, bottom_left, bottom_right, top_right, color,
-        CreatePickingUserData(*primitive_assembler, *current_timer_info));
+        trapezium, color, CreatePickingUserData(*primitive_assembler, *current_timer_info));
+    float width =
+        world_x_info_right_overlap.world_x_start - world_x_info_left_overlap.world_x_start;
+
+    if (ShouldHaveBorder(current_timer_info, draw_data.histogram_selection_range, width)) {
+      primitive_assembler->AddTetragonBorder(
+          GetTetragonWithNewZ(trapezium, GlCanvas::kZValueBoxBorder), TimerTrack::kBoxBorderColor,
+          CreatePickingUserData(*primitive_assembler, *current_timer_info));
+    }
   } else {
     PrimitiveAssembler* primitive_assembler = draw_data.primitive_assembler;
     auto user_data = std::make_unique<PickingUserData>(
@@ -272,7 +291,7 @@ void TimerTrack::DoUpdatePrimitives(PrimitiveAssembler& primitive_assembler,
 
   std::vector<const orbit_client_data::TimerChain*> chains = timer_data_->GetChains();
   draw_data.selected_timer = app_->selected_timer();
-  draw_data.highlighted_function_id = app_->GetFunctionIdToHighlight();
+  draw_data.highlighted_scope_id = app_->GetScopeIdToHighlight();
   draw_data.highlighted_group_id = app_->GetGroupIdToHighlight();
 
   // We minimize overdraw when drawing lines for small events by discarding
@@ -283,6 +302,7 @@ void TimerTrack::DoUpdatePrimitives(PrimitiveAssembler& primitive_assembler,
   draw_data.ns_per_pixel =
       static_cast<double>(time_window_ns) / viewport_->WorldToScreen({GetWidth(), 0})[0];
   draw_data.min_timegraph_tick = timeline_info_->GetTickFromUs(timeline_info_->GetMinTimeUs());
+  draw_data.histogram_selection_range = app_->GetHistogramSelectionRange();
 
   for (const TimerChain* chain : chains) {
     ORBIT_CHECK(chain != nullptr);
@@ -367,7 +387,7 @@ internal::DrawData TimerTrack::GetDrawData(
     uint64_t min_tick, uint64_t max_tick, float track_pos_x, float track_width,
     PrimitiveAssembler* primitive_assembler, const orbit_gl::TimelineInfoInterface* timeline_info,
     const orbit_gl::Viewport* viewport, bool is_collapsed,
-    const orbit_client_protos::TimerInfo* selected_timer, uint64_t highlighted_function_id,
+    const orbit_client_protos::TimerInfo* selected_timer, uint64_t highlighted_scope_id,
     uint64_t highlighted_group_id,
     std::optional<orbit_statistics::HistogramSelectionRange> histogram_selection_range) {
   internal::DrawData draw_data{};
@@ -381,7 +401,7 @@ internal::DrawData TimerTrack::GetDrawData(
   draw_data.is_collapsed = is_collapsed;
   draw_data.z = GlCanvas::kZValueBox;
   draw_data.selected_timer = selected_timer;
-  draw_data.highlighted_function_id = highlighted_function_id;
+  draw_data.highlighted_scope_id = highlighted_scope_id;
   draw_data.highlighted_group_id = highlighted_group_id;
   draw_data.histogram_selection_range = histogram_selection_range;
 
@@ -395,3 +415,16 @@ internal::DrawData TimerTrack::GetDrawData(
 size_t TimerTrack::GetNumberOfTimers() const { return timer_data_->GetNumberOfTimers(); }
 uint64_t TimerTrack::GetMinTime() const { return timer_data_->GetMinTime(); }
 uint64_t TimerTrack::GetMaxTime() const { return timer_data_->GetMaxTime(); }
+
+constexpr float kMinimalWidthToHaveBorder = 4.0;
+
+bool TimerTrack::ShouldHaveBorder(
+    const TimerInfo* timer, const std::optional<orbit_statistics::HistogramSelectionRange>& range,
+    float width) const {
+  if ((!range.has_value() || width < kMinimalWidthToHaveBorder || !app_->HasCaptureData()) ||
+      (app_->GetCaptureData().ProvideScopeId(*timer) != app_->GetHighlightedScopeId())) {
+    return false;
+  }
+  const uint64_t duration = timer->end() - timer->start();
+  return range->min_duration <= duration && duration <= range->max_duration;
+}

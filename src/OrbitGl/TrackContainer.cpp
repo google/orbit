@@ -144,7 +144,7 @@ void TrackContainer::DrawIteratorBox(PrimitiveAssembler& primitive_assembler,
                                      TextRenderer& text_renderer, Vec2 pos, Vec2 size,
                                      const Color& color, const std::string& label,
                                      const std::string& time, float text_box_y) {
-  Box box(pos, size, GlCanvas::kZValueOverlay);
+  Tetragon box = MakeBox(pos, size, GlCanvas::kZValueOverlay);
   primitive_assembler.AddBox(box, color);
 
   std::string text = absl::StrFormat("%s: %s", label, time);
@@ -160,7 +160,7 @@ void TrackContainer::DrawIteratorBox(PrimitiveAssembler& primitive_assembler,
   Vec2 white_box_size(std::min(static_cast<float>(text_width), max_size), box_height);
   Vec2 white_box_position(pos[0], text_box_y);
 
-  Box white_box(white_box_position, white_box_size, GlCanvas::kZValueOverlayLabel);
+  Tetragon white_box = MakeBox(white_box_position, white_box_size, GlCanvas::kZValueOverlayLabel);
 
   const Color kWhite(255, 255, 255, 255);
   primitive_assembler.AddBox(white_box, kWhite);
@@ -329,7 +329,7 @@ void TrackContainer::DrawIncompleteDataIntervals(PrimitiveAssembler& primitive_a
     }
 
     static const Color kIncompleteDataIntervalOrange{255, 128, 0, 32};
-    primitive_assembler.AddBox(Box{pos, size, z_value}, kIncompleteDataIntervalOrange,
+    primitive_assembler.AddBox(MakeBox(pos, size, z_value), kIncompleteDataIntervalOrange,
                                std::move(user_data));
   }
 }

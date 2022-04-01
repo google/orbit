@@ -40,7 +40,7 @@ struct BoxBuffer {
   }
 
   static const int NUM_BOXES_PER_BLOCK = 64 * 1024;
-  orbit_containers::BlockChain<Box, NUM_BOXES_PER_BLOCK> boxes_;
+  orbit_containers::BlockChain<Tetragon, NUM_BOXES_PER_BLOCK> boxes_;
   orbit_containers::BlockChain<Color, 4 * NUM_BOXES_PER_BLOCK> colors_;
   orbit_containers::BlockChain<Color, 4 * NUM_BOXES_PER_BLOCK> picking_colors_;
 };
@@ -91,7 +91,7 @@ class OpenGlBatcher : public PrimitiveAssembler {
   void ResetElements() override;
   void AddLineInternal(Vec2 from, Vec2 to, float z, const Color& color, const Color& picking_color,
                        std::unique_ptr<PickingUserData> user_data) override;
-  void AddBoxInternal(const Box& box, const std::array<Color, 4>& colors,
+  void AddBoxInternal(const Tetragon& box, const std::array<Color, 4>& colors,
                       const Color& picking_color,
                       std::unique_ptr<PickingUserData> user_data) override;
   void AddTriangleInternal(const Triangle& triangle, const std::array<Color, 3>& colors,

@@ -101,6 +101,7 @@ class GlCanvas : public orbit_gl::AccessibleInterfaceProvider {
   static float kZValueIncompleteDataOverlayPicking;
   static float kZValueEventBar;
   static float kZValueBox;
+  static float kZValueBoxBorder;
   static float kZValueEvent;
   static float kZValueTrackText;
   static float kZValueTrackLabel;
