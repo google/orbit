@@ -18,6 +18,7 @@ target_sources(
          App.h
          AsyncTrack.h
          BasicPageFaultsTrack.h
+         Batcher.h
          BatcherInterface.h
          OpenGlBatcher.h
          CallstackThreadBar.h

@@ -7,12 +7,12 @@
 
 #include <limits>
 
-#include "BatcherInterface.h"
+#include "Batcher.h"
 #include "Geometry.h"
 
 namespace orbit_gl {
 
-class MockBatcher : public BatcherInterface {
+class MockBatcher : public Batcher {
  public:
   explicit MockBatcher();
   void AddLine(Vec2 from, Vec2 to, float z, const Color& color, const Color& /*picking_color*/,
