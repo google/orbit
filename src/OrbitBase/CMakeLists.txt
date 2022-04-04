@@ -47,6 +47,7 @@ target_sources(OrbitBase PRIVATE
         include/OrbitBase/ThreadUtils.h
         include/OrbitBase/UniqueResource.h
         include/OrbitBase/WhenAll.h
+        include/OrbitBase/WhenAny.h
         include/OrbitBase/WriteStringToFile.h)
 
 target_sources(OrbitBase PRIVATE
@@ -115,6 +116,7 @@ target_sources(OrbitBaseTests PRIVATE
         ThreadUtilsTest.cpp
         UniqueResourceTest.cpp
         WhenAllTest.cpp
+        WhenAnyTest.cpp
         WriteStringToFileTest.cpp
 )
 
