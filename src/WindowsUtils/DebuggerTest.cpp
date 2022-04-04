@@ -120,10 +120,6 @@ TEST(Debugger, Detach) {
   const SafeHandle& process_handle = safe_handle_or_error.value();
   EXPECT_NE(TerminateProcess(*process_handle, /*exit_code*/ 0), 0)
       << orbit_base::GetLastErrorAsString();
-
-  // Make sure debuggee is not still runnning.
-  EXPECT_TRUE(process_list->Refresh().has_value());
-  EXPECT_FALSE(process_list->GetProcessByPid(start_info.process_id).has_value());
 }
 
 TEST(Debugger, NoListener) { EXPECT_DEATH(Debugger({}), "Check failed"); }
