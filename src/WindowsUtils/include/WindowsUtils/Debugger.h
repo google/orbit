@@ -21,7 +21,10 @@
 
 namespace orbit_windows_utils {
 
+// Base class for debug event listeners to be used by the "Debugger" class below.
 struct DebugEventListener {
+  virtual ~DebugEventListener() = default;
+
   virtual void OnCreateProcessDebugEvent(const DEBUG_EVENT& event) = 0;
   virtual void OnExitProcessDebugEvent(const DEBUG_EVENT& event) = 0;
   virtual void OnCreateThreadDebugEvent(const DEBUG_EVENT& event) = 0;
@@ -34,10 +37,13 @@ struct DebugEventListener {
   virtual void OnRipEvent(const DEBUG_EVENT& event) = 0;
 };
 
+// "Debugger" allows to launch a process and receive debugging events such as process and thread
+// creation and exit, module loads and unloads, breakpoints, etc. Debugging events are relayed to
+// listeners of type "DebugEventListener" which need to be specified at creation.
 class Debugger {
  public:
   explicit Debugger(std::vector<DebugEventListener*> debug_event_listeners);
-  virtual ~Debugger();
+  ~Debugger();
 
   struct StartInfo {
     std::string working_directory;
