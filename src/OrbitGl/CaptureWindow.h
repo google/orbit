@@ -11,6 +11,7 @@
 #include <string>
 #include <vector>
 
+#include "Batcher.h"
 #include "CaptureClient/AppInterface.h"
 #include "CaptureStats.h"
 #include "GlCanvas.h"
@@ -58,8 +59,6 @@ class CaptureWindow : public GlCanvas {
   void CreateTimeGraph(orbit_client_data::CaptureData* capture_data);
   void ClearTimeGraph() { time_graph_.reset(nullptr); }
 
-  orbit_gl::PrimitiveAssembler& GetBatcherById(BatcherId batcher_id);
-
  protected:
   void Draw() override;
   void UpdateChildrenPosAndSize();
@@ -91,6 +90,7 @@ class CaptureWindow : public GlCanvas {
   [[nodiscard]] virtual const char* GetHelpText() const;
   [[nodiscard]] virtual bool ShouldAutoZoom() const;
   void HandlePickedElement(PickingMode picking_mode, PickingId picking_id, int x, int y) override;
+  orbit_gl::Batcher& GetBatcherById(BatcherId batcher_id);
 
   std::unique_ptr<TimeGraph> time_graph_ = nullptr;
   bool draw_help_;

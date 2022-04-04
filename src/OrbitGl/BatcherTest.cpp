@@ -20,8 +20,7 @@ namespace orbit_gl {
 
 class FakeBatcher : public OpenGlBatcher {
  public:
-  explicit FakeBatcher(BatcherId id, PickingManager* picking_manager = nullptr)
-      : OpenGlBatcher(id, picking_manager) {}
+  explicit FakeBatcher(BatcherId id) : OpenGlBatcher(id) {}
 
   void ResetMockDrawCounts() {
     drawn_line_colors_.clear();
@@ -29,6 +28,23 @@ class FakeBatcher : public OpenGlBatcher {
     drawn_box_colors_.clear();
   }
 
+  // Auxiliary methods to simplify the addition of lines, boxes and triangles.
+  void AddLineHelper(Vec2 from, Vec2 to, float z, const Color& color,
+                     std::unique_ptr<PickingUserData> user_data = nullptr) {
+    Color picking_color = PickingId::ToColor(PickingType::kLine, GetNumElements(), GetBatcherId());
+    return AddLine(from, to, z, color, picking_color, std::move(user_data));
+  }
+  void AddBoxHelper(const Tetragon& box, const Color& color,
+                    std::unique_ptr<PickingUserData> user_data = nullptr) {
+    Color picking_color = PickingId::ToColor(PickingType::kBox, GetNumElements(), GetBatcherId());
+    return AddBox(box, {color, color, color, color}, picking_color, std::move(user_data));
+  }
+  void AddTriangleHelper(const Triangle& triangle, const Color& color,
+                         std::unique_ptr<PickingUserData> user_data = nullptr) {
+    Color picking_color =
+        PickingId::ToColor(PickingType::kTriangle, GetNumElements(), GetBatcherId());
+    return AddTriangle(triangle, {color, color, color}, picking_color, std::move(user_data));
+  }
   const std::vector<Color>& GetDrawnLineColors() const { return drawn_line_colors_; }
   const std::vector<Color>& GetDrawnTriangleColors() const { return drawn_triangle_colors_; }
   const std::vector<Color>& GetDrawnBoxColors() const { return drawn_box_colors_; }
@@ -96,7 +112,10 @@ class FakeBatcher : public OpenGlBatcher {
 void ExpectDraw(FakeBatcher& batcher, uint32_t line_count, uint32_t triangle_count,
                 uint32_t box_count) {
   batcher.ResetMockDrawCounts();
-  batcher.Draw();
+
+  for (auto layer : batcher.GetLayers()) {
+    batcher.DrawLayer(layer);
+  }
   EXPECT_EQ(batcher.GetDrawnLineColors().size(), line_count);
   EXPECT_EQ(batcher.GetDrawnTriangleColors().size(), triangle_count);
   EXPECT_EQ(batcher.GetDrawnBoxColors().size(), box_count);
@@ -106,31 +125,17 @@ TEST(Batcher, SimpleElementsDrawing) {
   FakeBatcher batcher(BatcherId::kUi);
 
   ExpectDraw(batcher, 0, 0, 0);
-  batcher.AddLine(Vec2(0, 0), Vec2(1, 0), 0, Color(255, 255, 255, 255));
+  batcher.AddLineHelper(Vec2(0, 0), Vec2(1, 0), 0, Color(255, 255, 255, 255));
   ExpectDraw(batcher, 1, 0, 0);
   EXPECT_EQ(batcher.GetDrawnLineColors()[0], Color(255, 255, 255, 255));
-  batcher.AddTriangle(Triangle(Vec3(0, 0, 0), Vec3(0, 1, 0), Vec3(1, 0, 0)), Color(0, 255, 0, 255));
+  batcher.AddTriangleHelper(Triangle(Vec3(0, 0, 0), Vec3(0, 1, 0), Vec3(1, 0, 0)),
+                            Color(0, 255, 0, 255));
   ExpectDraw(batcher, 1, 1, 0);
   EXPECT_EQ(batcher.GetDrawnTriangleColors()[0], Color(0, 255, 0, 255));
-  batcher.AddBox(MakeBox(Vec2(0, 0), Vec2(1, 1), 0), Color(255, 0, 0, 255));
+  batcher.AddBoxHelper(MakeBox(Vec2(0, 0), Vec2(1, 1), 0), Color(255, 0, 0, 255));
   ExpectDraw(batcher, 1, 1, 1);
   EXPECT_EQ(batcher.GetDrawnBoxColors()[0], Color(255, 0, 0, 255));
-  batcher.StartNewFrame();
-  ExpectDraw(batcher, 0, 0, 0);
-}
-
-TEST(Batcher, PickingElementsDrawing) {
-  FakeBatcher batcher(BatcherId::kUi);
-  std::shared_ptr<PickableMock> pickable = std::make_shared<PickableMock>();
-  PickingManager pm;
-
-  ExpectDraw(batcher, 0, 0, 0);
-  EXPECT_DEATH(batcher.AddLine(Vec2(0, 0), Vec2(1, 0), 0, Color(255, 255, 255, 255), pickable),
-               "nullptr");
-  batcher.SetPickingManager(&pm);
-  batcher.AddLine(Vec2(0, 0), Vec2(1, 0), 0, Color(255, 255, 255, 255), pickable);
-  ExpectDraw(batcher, 1, 0, 0);
-  batcher.StartNewFrame();
+  batcher.ResetElements();
   ExpectDraw(batcher, 0, 0, 0);
 }
 
@@ -145,6 +150,7 @@ void ExpectCustomDataEq(const FakeBatcher& batcher, const Color& rendered_color,
 
 TEST(Batcher, PickingSimpleElements) {
   FakeBatcher batcher(BatcherId::kUi);
+  EXPECT_EQ(batcher.GetBatcherId(), BatcherId::kUi);
 
   std::string line_custom_data = "line custom data";
   auto line_user_data = std::make_unique<PickingUserData>();
@@ -158,43 +164,20 @@ TEST(Batcher, PickingSimpleElements) {
   auto box_user_data = std::make_unique<PickingUserData>();
   box_user_data->custom_data_ = &box_custom_data;
 
-  batcher.AddLine(Vec2(0, 0), Vec2(1, 0), 0, Color(255, 255, 255, 255), std::move(line_user_data));
-  batcher.AddTriangle(Triangle(Vec3(0, 0, 0), Vec3(0, 1, 0), Vec3(1, 0, 0)), Color(0, 255, 0, 255),
-                      std::move(triangle_user_data));
-  batcher.AddBox(MakeBox(Vec2(0, 0), Vec2(1, 1), 0), Color(255, 0, 0, 255),
-                 std::move(box_user_data));
+  batcher.AddLineHelper(Vec2(0, 0), Vec2(1, 0), 0, Color(255, 255, 255, 255),
+                        std::move(line_user_data));
+  batcher.AddTriangleHelper(Triangle(Vec3(0, 0, 0), Vec3(0, 1, 0), Vec3(1, 0, 0)),
+                            Color(0, 255, 0, 255), std::move(triangle_user_data));
+  batcher.AddBoxHelper(MakeBox(Vec2(0, 0), Vec2(1, 1), 0), Color(255, 0, 0, 255),
+                       std::move(box_user_data));
 
-  batcher.Draw(true);
+  for (auto layer : batcher.GetLayers()) {
+    batcher.DrawLayer(layer, true);
+  }
+
   ExpectCustomDataEq(batcher, batcher.GetDrawnLineColors()[0], line_custom_data);
   ExpectCustomDataEq(batcher, batcher.GetDrawnTriangleColors()[0], triangle_custom_data);
   ExpectCustomDataEq(batcher, batcher.GetDrawnBoxColors()[0], box_custom_data);
-}
-
-void ExpectPickableEq(const FakeBatcher& batcher, const Color& rendered_color, PickingManager& pm,
-                      const std::shared_ptr<const Pickable>& pickable) {
-  PickingId id = MockRenderPickingColor(rendered_color);
-  const PickingUserData* rendered_data = batcher.GetUserData(id);
-  EXPECT_EQ(rendered_data, nullptr);
-  EXPECT_EQ(id.type, PickingType::kPickable);
-  EXPECT_EQ(pm.GetPickableFromId(id).get(), pickable.get());
-}
-
-TEST(Batcher, PickingPickables) {
-  PickingManager pm;
-  FakeBatcher batcher(BatcherId::kUi, &pm);
-  std::shared_ptr<PickableMock> line_pickable = std::make_shared<PickableMock>();
-  std::shared_ptr<PickableMock> triangle_pickable = std::make_shared<PickableMock>();
-  std::shared_ptr<PickableMock> box_pickable = std::make_shared<PickableMock>();
-
-  batcher.AddLine(Vec2(0, 0), Vec2(1, 0), 0, Color(255, 255, 255, 255), line_pickable);
-  batcher.AddTriangle(Triangle(Vec3(0, 0, 0), Vec3(0, 1, 0), Vec3(1, 0, 0)), Color(0, 255, 0, 255),
-                      triangle_pickable);
-  batcher.AddBox(MakeBox(Vec2(0, 0), Vec2(1, 1), 0), Color(255, 0, 0, 255), box_pickable);
-
-  batcher.Draw(true);
-  ExpectPickableEq(batcher, batcher.GetDrawnLineColors()[0], pm, line_pickable);
-  ExpectPickableEq(batcher, batcher.GetDrawnTriangleColors()[0], pm, triangle_pickable);
-  ExpectPickableEq(batcher, batcher.GetDrawnBoxColors()[0], pm, box_pickable);
 }
 
 TEST(Batcher, MultipleDrawCalls) {
@@ -212,13 +195,16 @@ TEST(Batcher, MultipleDrawCalls) {
   auto box_user_data = std::make_unique<PickingUserData>();
   box_user_data->custom_data_ = &box_custom_data;
 
-  batcher.AddLine(Vec2(0, 0), Vec2(1, 0), 0, Color(255, 255, 255, 255), std::move(line_user_data));
-  batcher.AddTriangle(Triangle(Vec3(0, 0, 0), Vec3(0, 1, 0), Vec3(1, 0, 0)), Color(0, 255, 0, 255),
-                      std::move(triangle_user_data));
-  batcher.AddBox(MakeBox(Vec2(0, 0), Vec2(1, 1), 0), Color(255, 0, 0, 255),
-                 std::move(box_user_data));
+  batcher.AddLineHelper(Vec2(0, 0), Vec2(1, 0), 0, Color(255, 255, 255, 255),
+                        std::move(line_user_data));
+  batcher.AddTriangleHelper(Triangle(Vec3(0, 0, 0), Vec3(0, 1, 0), Vec3(1, 0, 0)),
+                            Color(0, 255, 0, 255), std::move(triangle_user_data));
+  batcher.AddBoxHelper(MakeBox(Vec2(0, 0), Vec2(1, 1), 0), Color(255, 0, 0, 255),
+                       std::move(box_user_data));
 
-  batcher.Draw(true);
+  for (auto layer : batcher.GetLayers()) {
+    batcher.DrawLayer(layer, true);
+  }
 
   auto line_color = batcher.GetDrawnLineColors()[0];
   auto triangle_color = batcher.GetDrawnTriangleColors()[0];
@@ -227,7 +213,7 @@ TEST(Batcher, MultipleDrawCalls) {
   ExpectCustomDataEq(batcher, triangle_color, triangle_custom_data);
   ExpectCustomDataEq(batcher, box_color, box_custom_data);
 
-  batcher.StartNewFrame();
+  batcher.ResetElements();
   PickingId id = MockRenderPickingColor(line_color);
   EXPECT_DEATH((void)batcher.GetUserData(id), "size");
   id = MockRenderPickingColor(triangle_color);
@@ -242,7 +228,7 @@ bool LineEq(const Line& lhs, const Line& rhs) {
 
 TEST(Batcher, TranslationsAreAutomaticallyAdded) {
   FakeBatcher batcher(BatcherId::kUi);
-  batcher.AddLine(Vec2(0.f, 0.f), Vec2(1.f, 1.f), 0.f, Color());
+  batcher.AddLineHelper(Vec2(0.f, 0.f), Vec2(1.f, 1.f), 0.f, Color());
 
   const orbit_gl_internal::PrimitiveBuffers& buffers = batcher.GetInternalBuffers(0.f);
   const Line original_expectation{Vec3(0.f, 0.f, 0.f), Vec3(1.f, 1.f, 0.f)};
@@ -252,7 +238,7 @@ TEST(Batcher, TranslationsAreAutomaticallyAdded) {
   auto it = buffers.line_buffer.lines_.begin();
 
   const auto add_line_assert_eq = [&batcher, &it](const Line& expectation) {
-    batcher.AddLine(Vec2(0.f, 0.f), Vec2(1.f, 1.f), 0.f, Color());
+    batcher.AddLineHelper(Vec2(0.f, 0.f), Vec2(1.f, 1.f), 0.f, Color());
     ++it;
     ASSERT_TRUE(LineEq(expectation, *it));
   };

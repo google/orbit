@@ -43,6 +43,7 @@ using orbit_accessibility::AccessibleInterface;
 using orbit_accessibility::AccessibleWidgetBridge;
 
 using orbit_client_data::CaptureData;
+using orbit_gl::Batcher;
 using orbit_gl::PickingUserData;
 using orbit_gl::PrimitiveAssembler;
 
@@ -178,11 +179,13 @@ void CaptureWindow::HandlePickedElement(PickingMode picking_mode, PickingId pick
   if (time_graph_ == nullptr) return;
   PickingType type = picking_id.type;
 
-  PrimitiveAssembler& primitive_assembler = GetBatcherById(picking_id.batcher_id);
+  orbit_gl::Batcher& batcher = GetBatcherById(picking_id.batcher_id);
 
   if (picking_mode == PickingMode::kClick) {
     background_clicked_ = false;
-    const orbit_client_protos::TimerInfo* timer_info = primitive_assembler.GetTimerInfo(picking_id);
+    const orbit_gl::PickingUserData* user_data = batcher.GetUserData(picking_id);
+    const orbit_client_protos::TimerInfo* timer_info =
+        (user_data == nullptr ? nullptr : user_data->timer_info_);
     if (timer_info != nullptr) {
       SelectTimer(timer_info);
     } else if (type == PickingType::kPickable) {
@@ -202,7 +205,7 @@ void CaptureWindow::HandlePickedElement(PickingMode picking_mode, PickingId pick
         tooltip = pickable->GetTooltip();
       }
     } else {
-      PickingUserData* user_data = primitive_assembler.GetUserData(picking_id);
+      const orbit_gl::PickingUserData* user_data = batcher.GetUserData(picking_id);
 
       if (user_data && user_data->generate_tooltip_) {
         tooltip = user_data->generate_tooltip_(picking_id);
@@ -425,8 +428,8 @@ void CaptureWindow::Draw() {
   if (picking_mode_ == PickingMode::kNone) {
     Vec2 pos = viewport_.ScreenToWorld(Vec2i(mouse_move_pos_screen_[0], 0));
     // Vertical green line at mouse x position
-    ui_batcher_.AddVerticalLine(pos, viewport_.GetWorldHeight(), kZValueOverlay,
-                                Color(0, 255, 0, 127));
+    primitive_assembler_.AddVerticalLine(pos, viewport_.GetWorldHeight(), kZValueUi,
+                                         Color(0, 255, 0, 127));
 
     if (draw_help_) {
       RenderHelpUi();
@@ -436,7 +439,7 @@ void CaptureWindow::Draw() {
   DrawScreenSpace();
 
   if (picking_mode_ == PickingMode::kNone) {
-    text_renderer_.RenderDebug(&ui_batcher_);
+    text_renderer_.RenderDebug(&GetPrimitiveAssembler());
   }
 
   if (picking_mode_ == PickingMode::kNone) {
@@ -487,9 +490,9 @@ void CaptureWindow::DrawScreenSpace() {
   auto canvas_height = static_cast<float>(viewport_.GetScreenHeight());
 
   if (time_span > 0) {
-    slider_->Draw(ui_batcher_, picking_manager_.IsThisElementPicked(slider_.get()));
+    slider_->Draw(GetPrimitiveAssembler(), picking_manager_.IsThisElementPicked(slider_.get()));
     if (vertical_slider_->IsVisible()) {
-      vertical_slider_->Draw(ui_batcher_,
+      vertical_slider_->Draw(GetPrimitiveAssembler(),
                              picking_manager_.IsThisElementPicked(vertical_slider_.get()));
     }
   }
@@ -500,13 +503,13 @@ void CaptureWindow::DrawScreenSpace() {
 
   Tetragon box = MakeBox(Vec2(margin_x0, 0), Vec2(margin_x1 - margin_x0, canvas_height),
                          GlCanvas::kZValueMargin);
-  ui_batcher_.AddBox(box, kBackgroundColor);
+  primitive_assembler_.AddBox(box, kBackgroundColor);
 }
 
 void CaptureWindow::RenderAllLayers() {
   std::vector<float> all_layers{};
   if (time_graph_ != nullptr) {
-    all_layers = time_graph_->GetPrimitiveAssembler().GetLayers();
+    all_layers = time_graph_->GetBatcher().GetLayers();
     orbit_base::Append(all_layers, time_graph_->GetTextRenderer()->GetLayers());
   }
   orbit_base::Append(all_layers, ui_batcher_.GetLayers());
@@ -522,7 +525,7 @@ void CaptureWindow::RenderAllLayers() {
 
   for (float layer : all_layers) {
     if (time_graph_ != nullptr) {
-      time_graph_->GetPrimitiveAssembler().DrawLayer(layer, picking_mode_ != PickingMode::kNone);
+      time_graph_->GetBatcher().DrawLayer(layer, picking_mode_ != PickingMode::kNone);
     }
     ui_batcher_.DrawLayer(layer, picking_mode_ != PickingMode::kNone);
 
@@ -636,11 +639,11 @@ void CaptureWindow::CreateTimeGraph(CaptureData* capture_data) {
       std::make_unique<TimeGraph>(this, app_, &viewport_, capture_data, &GetPickingManager());
 }
 
-PrimitiveAssembler& CaptureWindow::GetBatcherById(BatcherId batcher_id) {
+Batcher& CaptureWindow::GetBatcherById(BatcherId batcher_id) {
   switch (batcher_id) {
     case BatcherId::kTimeGraph:
       ORBIT_CHECK(time_graph_ != nullptr);
-      return time_graph_->GetPrimitiveAssembler();
+      return time_graph_->GetBatcher();
     case BatcherId::kUi:
       return ui_batcher_;
     default:
@@ -738,8 +741,8 @@ void CaptureWindow::RenderHelpUi() {
   const Color kBoxColor(50, 50, 50, 230);
   const float kMargin = 15.f;
   const float kRoundingRadius = 20.f;
-  ui_batcher_.AddRoundedBox(text_bounding_box_pos, text_bounding_box_size, GlCanvas::kZValueUi,
-                            kRoundingRadius, kBoxColor, kMargin);
+  primitive_assembler_.AddRoundedBox(text_bounding_box_pos, text_bounding_box_size,
+                                     GlCanvas::kZValueUi, kRoundingRadius, kBoxColor, kMargin);
 }
 
 const char* CaptureWindow::GetHelpText() const {
@@ -809,7 +812,7 @@ void CaptureWindow::RenderSelectionOverlay() {
   const Color color(0, 128, 0, 128);
 
   Tetragon box = MakeBox(pos, size, GlCanvas::kZValueOverlay);
-  ui_batcher_.AddBox(box, color);
+  primitive_assembler_.AddBox(box, color);
 
   TextRenderer::HAlign alignment = select_stop_pos_world_[0] < select_start_pos_world_[0]
                                        ? TextRenderer::HAlign::Left
@@ -824,5 +827,5 @@ void CaptureWindow::RenderSelectionOverlay() {
 
   const unsigned char g = 100;
   Color grey(g, g, g, 255);
-  ui_batcher_.AddVerticalLine(pos, size[1], GlCanvas::kZValueOverlay, grey);
+  primitive_assembler_.AddVerticalLine(pos, size[1], GlCanvas::kZValueOverlay, grey);
 }

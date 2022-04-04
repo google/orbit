@@ -150,7 +150,7 @@ static std::string GetThreadStateDescription(ThreadStateSlice::ThreadState state
 
 std::string ThreadStateBar::GetThreadStateSliceTooltip(PrimitiveAssembler& primitive_assembler,
                                                        PickingId id) const {
-  PickingUserData* user_data = primitive_assembler.GetUserData(id);
+  const PickingUserData* user_data = primitive_assembler.GetUserData(id);
   if (user_data == nullptr || user_data->custom_data_ == nullptr) {
     return "";
   }

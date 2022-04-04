@@ -64,7 +64,8 @@ const Color GlCanvas::kTabTextColorSelected = Color(100, 181, 246, 255);
 GlCanvas::GlCanvas()
     : AccessibleInterfaceProvider(),
       viewport_(0, 0),
-      ui_batcher_(BatcherId::kUi, &picking_manager_) {
+      ui_batcher_(BatcherId::kUi),
+      primitive_assembler_(&ui_batcher_, &picking_manager_) {
   // Note that `GlCanvas` is the bridge to OpenGl content, and `GlCanvas`'s parent needs special
   // handling for accessibility. Thus, we use `nullptr` here.
   text_renderer_.SetViewport(&viewport_);
@@ -254,7 +255,7 @@ void GlCanvas::Render(int width, int height) {
   }
 
   redraw_requested_ = false;
-  ui_batcher_.StartNewFrame();
+  ui_batcher_.ResetElements();
 
   PrepareGlState();
   PrepareGlViewport();

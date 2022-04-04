@@ -16,25 +16,12 @@
 #include <utility>
 #include <vector>
 
-#include "ClientProtos/capture_data.pb.h"
+#include "Batcher.h"
 #include "CoreMath.h"
 #include "Geometry.h"
-#include "PickingManager.h"
 #include "TranslationStack.h"
 
 namespace orbit_gl {
-
-using TooltipCallback = std::function<std::string(PickingId)>;
-
-struct PickingUserData {
-  const orbit_client_protos::TimerInfo* timer_info_;
-  TooltipCallback generate_tooltip_;
-  const void* custom_data_ = nullptr;
-
-  explicit PickingUserData(const orbit_client_protos::TimerInfo* timer_info = nullptr,
-                           TooltipCallback generate_tooltip = nullptr)
-      : timer_info_(timer_info), generate_tooltip_(std::move(generate_tooltip)) {}
-};
 
 enum class ShadingDirection { kLeftToRight, kRightToLeft, kTopToBottom, kBottomToTop };
 
@@ -51,8 +38,8 @@ AddInternalMethods, ResetElements(), GetLayers() and DrawLayers().
 **/
 class PrimitiveAssembler {
  public:
-  explicit PrimitiveAssembler(BatcherId batcher_id, PickingManager* picking_manager = nullptr)
-      : batcher_id_(batcher_id), picking_manager_(picking_manager) {
+  explicit PrimitiveAssembler(Batcher* batcher, PickingManager* picking_manager = nullptr)
+      : batcher_(batcher), picking_manager_(picking_manager) {
     constexpr int32_t kSteps = 22;
     const float angle = (kPiFloat * 2.f) / kSteps;
     for (int32_t i = 1; i <= kSteps; i++) {
@@ -66,8 +53,8 @@ class PrimitiveAssembler {
   PrimitiveAssembler(const PrimitiveAssembler&) = delete;
   PrimitiveAssembler(PrimitiveAssembler&&) = delete;
 
-  void PushTranslation(float x, float y, float z = 0.f) { translations_.PushTranslation(x, y, z); }
-  void PopTranslation() { translations_.PopTranslation(); }
+  void PushTranslation(float x, float y, float z = 0.f) { batcher_->PushTranslation(x, y, z); }
+  void PopTranslation() { batcher_->PopTranslation(); }
 
   void AddLine(Vec2 from, Vec2 to, float z, const Color& color,
                std::unique_ptr<PickingUserData> user_data = nullptr);
@@ -114,19 +101,12 @@ class PrimitiveAssembler {
 
   void AddCircle(const Vec2& position, float radius, float z, Color color);
 
-  [[nodiscard]] virtual std::vector<float> GetLayers() const = 0;
-  virtual void DrawLayer(float layer, bool picking) const = 0;
-
-  void Draw(bool picking = false) const;
-
   void StartNewFrame();
 
   [[nodiscard]] PickingManager* GetPickingManager() const { return picking_manager_; }
-  void SetPickingManager(PickingManager* picking_manager) { picking_manager_ = picking_manager; }
-
-  [[nodiscard]] const PickingUserData* GetUserData(PickingId id) const;
-  [[nodiscard]] PickingUserData* GetUserData(PickingId id);
-
+  [[nodiscard]] const PickingUserData* GetUserData(PickingId id) const {
+    return batcher_->GetUserData(id);
+  }
   [[nodiscard]] const orbit_client_protos::TimerInfo* GetTimerInfo(PickingId id) const;
 
   static constexpr uint32_t kNumArcSides = 16;
@@ -134,24 +114,13 @@ class PrimitiveAssembler {
  protected:
   void AddTriangle(const Triangle& triangle, const Color& color, const Color& picking_color,
                    std::unique_ptr<PickingUserData> user_data = nullptr);
-  orbit_gl::TranslationStack translations_;
-  std::vector<std::unique_ptr<PickingUserData>> user_data_;
 
  private:
+  [[nodiscard]] BatcherId GetBatcherId() const { return batcher_->GetBatcherId(); }
   void GetBoxGradientColors(const Color& color, std::array<Color, 4>* colors,
                             ShadingDirection shading_direction = ShadingDirection::kLeftToRight);
-  virtual void ResetElements() = 0;
-  virtual void AddLineInternal(Vec2 from, Vec2 to, float z, const Color& color,
-                               const Color& picking_color,
-                               std::unique_ptr<PickingUserData> user_data) = 0;
-  virtual void AddBoxInternal(const Tetragon& box, const std::array<Color, 4>& colors,
-                              const Color& picking_color,
-                              std::unique_ptr<PickingUserData> user_data) = 0;
-  virtual void AddTriangleInternal(const Triangle& triangle, const std::array<Color, 3>& colors,
-                                   const Color& picking_color,
-                                   std::unique_ptr<PickingUserData> user_data) = 0;
 
-  BatcherId batcher_id_;
+  Batcher* batcher_;
   PickingManager* picking_manager_;
 
   std::vector<Vec2> circle_points;

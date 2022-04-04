@@ -59,7 +59,8 @@ TimeGraph::TimeGraph(AccessibleInterfaceProvider* parent, OrbitApp* app,
     // parent in accessible_parent_ which doesn't need to be a CaptureViewElement.
     : orbit_gl::CaptureViewElement(nullptr, viewport, &layout_),
       accessible_parent_{parent},
-      primitive_assembler_(BatcherId::kTimeGraph),
+      batcher_(BatcherId::kTimeGraph),
+      primitive_assembler_(&batcher_, picking_manager),
       thread_track_data_provider_(capture_data->GetThreadTrackDataProvider()),
       capture_data_{capture_data},
       app_{app} {
@@ -67,7 +68,6 @@ TimeGraph::TimeGraph(AccessibleInterfaceProvider* parent, OrbitApp* app,
     manual_instrumentation_manager_ = app->GetManualInstrumentationManager();
   }
   text_renderer_static_.SetViewport(viewport);
-  primitive_assembler_.SetPickingManager(picking_manager);
 
   const orbit_client_data::ModuleManager* module_manager =
       app != nullptr ? app->GetModuleManager() : nullptr;
