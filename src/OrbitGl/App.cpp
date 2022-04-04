@@ -887,6 +887,9 @@ void OrbitApp::RenderImGuiDebugUI() {
 }
 
 void OrbitApp::Disassemble(uint32_t pid, const FunctionInfo& function) {
+  ScopedMetric metric{metrics_uploader_,
+                      orbit_metrics_uploader::OrbitLogEvent::ORBIT_DISASSEMBLY_SHOW};
+
   ORBIT_CHECK(process_ != nullptr);
   const ModuleData* module = module_manager_->GetModuleByPathAndBuildId(function.module_path(),
                                                                         function.module_build_id());
@@ -899,14 +902,17 @@ void OrbitApp::Disassemble(uint32_t pid, const FunctionInfo& function) {
         absl::StrFormat(
             R"(Unable to calculate function "%s" address, likely because the module "%s" is not loaded.)",
             function.pretty_name(), module->file_path()));
+    metric.SetStatusCode(orbit_metrics_uploader::OrbitLogEvent::INTERNAL_ERROR);
     return;
   }
-  thread_pool_->Schedule([this, absolute_address = absolute_address.value(), is_64_bit, pid,
-                          function] {
+  thread_pool_->Schedule([this, metric = std::move(metric),
+                          absolute_address = absolute_address.value(), is_64_bit, pid,
+                          function]() mutable {
     auto result = GetProcessManager()->LoadProcessMemory(pid, absolute_address, function.size());
     if (!result.has_value()) {
       SendErrorToUi("Error reading memory", absl::StrFormat("Could not read process memory: %s.",
                                                             result.error().message()));
+      metric.SetStatusCode(orbit_metrics_uploader::OrbitLogEvent::INTERNAL_ERROR);
       return;
     }
 

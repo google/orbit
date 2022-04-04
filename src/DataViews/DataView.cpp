@@ -273,6 +273,8 @@ void DataView::OnVerifyFramePointersRequested(const std::vector<int>& selection)
 }
 
 void DataView::OnDisassemblyRequested(const std::vector<int>& selection) {
+  metrics_uploader_->SendLogEvent(OrbitLogEvent::ORBIT_DISASSEMBLY_REQUESTED);
+
   const ProcessData* process_data = app_->GetTargetProcess();
   const uint32_t pid =
       process_data == nullptr ? app_->GetCaptureData().process_id() : process_data->pid();
