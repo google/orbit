@@ -347,7 +347,7 @@ class OrbitApp final : public DataViewFactory,
   orbit_base::Future<void> RetrieveModulesAndLoadSymbols(
       absl::Span<const orbit_client_data::ModuleData* const> modules) override;
 
-  enum class SymbolLoadingResult {
+  enum class SymbolErrorHandlingResult {
     kSymbolsLoadedSuccessfully,
     kCancelled,
   };
@@ -355,7 +355,7 @@ class OrbitApp final : public DataViewFactory,
   // symbols via RetrieveModuleAndLoadSymbols and when that fails handles the error with
   // symbol_loading_error_callback_. This might result in another loading attempt (another call to
   // RetrieveModuleAndLoadSymbolsAndHandleError).
-  orbit_base::Future<SymbolLoadingResult> RetrieveModuleAndLoadSymbolsAndHandleError(
+  orbit_base::Future<SymbolErrorHandlingResult> RetrieveModuleAndLoadSymbolsAndHandleError(
       const orbit_client_data::ModuleData* module);
 
   // RetrieveModuleAndSymbols is a helper function which first retrieves the module by calling

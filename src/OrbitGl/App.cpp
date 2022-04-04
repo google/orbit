@@ -1696,22 +1696,22 @@ orbit_base::Future<void> OrbitApp::RetrieveModulesAndLoadSymbols(
   for (const auto& module : modules_set) {
     // Explicitely do not handle the result of
     Future<void> future = RetrieveModuleAndLoadSymbolsAndHandleError(module).Then(
-        &immediate_executor, [](const SymbolLoadingResult& /*result*/) -> void {});
+        &immediate_executor, [](const SymbolErrorHandlingResult & /*result*/) -> void {});
     futures.emplace_back(std::move(future));
   }
 
   return orbit_base::WhenAll(futures);
 }
 
-orbit_base::Future<OrbitApp::SymbolLoadingResult>
+orbit_base::Future<OrbitApp::SymbolErrorHandlingResult>
 OrbitApp::RetrieveModuleAndLoadSymbolsAndHandleError(const ModuleData* module) {
   Future<ErrorMessageOr<void>> load_future = RetrieveModuleAndLoadSymbols(module);
 
-  Future<Future<SymbolLoadingResult>> chained_load_future = load_future.Then(
+  Future<Future<SymbolErrorHandlingResult>> chained_load_future = load_future.Then(
       main_thread_executor_,
-      [module, this](ErrorMessageOr<void> load_result) -> Future<SymbolLoadingResult> {
+      [module, this](ErrorMessageOr<void> load_result) -> Future<SymbolErrorHandlingResult> {
         if (!load_result.has_error()) {
-          return {SymbolLoadingResult::kSymbolsLoadedSuccessfully};
+          return {SymbolErrorHandlingResult::kSymbolsLoadedSuccessfully};
         }
 
         MainWindowInterface::SymbolErrorHandlingResult error_handling_result =
@@ -1720,12 +1720,13 @@ OrbitApp::RetrieveModuleAndLoadSymbolsAndHandleError(const ModuleData* module) {
         switch (error_handling_result) {
           case MainWindowInterface::SymbolErrorHandlingResult::kSymbolLoadingCancelled: {
             metrics_uploader_->SendLogEvent(OrbitLogEvent::ORBIT_SYMBOL_LOADING_ERROR_CANCELLED);
-            return {SymbolLoadingResult::kCancelled};
+            return {SymbolErrorHandlingResult::kCancelled};
           }
           case MainWindowInterface::SymbolErrorHandlingResult::kReloadRequired: {
             return RetrieveModuleAndLoadSymbolsAndHandleError(module).Then(
-                main_thread_executor_, [this](SymbolLoadingResult result) -> SymbolLoadingResult {
-                  if (result == SymbolLoadingResult::kSymbolsLoadedSuccessfully) {
+                main_thread_executor_,
+                [this](SymbolErrorHandlingResult result) -> SymbolErrorHandlingResult {
+                  if (result == SymbolErrorHandlingResult::kSymbolsLoadedSuccessfully) {
                     metrics_uploader_->SendLogEvent(
                         OrbitLogEvent::ORBIT_SYMBOL_LOADING_ERROR_RESOLVED);
                   }
