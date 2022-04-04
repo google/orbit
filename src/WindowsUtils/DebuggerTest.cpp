@@ -122,16 +122,11 @@ TEST(Debugger, Detach) {
       << orbit_base::GetLastErrorAsString();
 
   // Make sure debuggee is not still runnning.
-  process_list->Refresh();
+  EXPECT_TRUE(process_list->Refresh().has_value());
   EXPECT_FALSE(process_list->GetProcessByPid(start_info.process_id).has_value());
 }
 
-TEST(Debugger, NoListener) {
-  Debugger debugger({});
-  const std::string kArguments = "--sleep_for_ms=20";
-  auto result = debugger.Start(GetTestExecutablePath(), /*working_directory=*/"", kArguments);
-  EXPECT_THAT(result, orbit_test_utils::HasError("Debugger has no debug event listener"));
-}
+TEST(Debugger, NoListener) { EXPECT_DEATH(Debugger({}), "Check failed"); }
 
 TEST(Debugger, NonExistingExecutable) {
   MockListener listener;

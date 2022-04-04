@@ -29,23 +29,20 @@ ErrorMessageOr<Debugger::StartInfo> CreateStartInfoOrError(
 }  // namespace
 
 Debugger::Debugger(std::vector<DebugEventListener*> debug_event_listeners)
-    : debug_event_listeners_(std::move(debug_event_listeners)) {}
+    : debug_event_listeners_(std::move(debug_event_listeners)) {
+  ORBIT_CHECK(debug_event_listeners_.size() != 0);
+}
 
 Debugger::~Debugger() { Wait(); }
 
 ErrorMessageOr<Debugger::StartInfo> Debugger::Start(const std::filesystem::path& executable,
                                                     const std::filesystem::path& working_directory,
                                                     const std::string_view arguments) {
-  // Make sure we have at least one debug event listener.
-  if (debug_event_listeners_.size() == 0) {
-    return ErrorMessage("Debugger has no debug event listener");
-  }
-
   // Launch process and start debugging loop on the same separate thread.
   thread_ = std::thread(&Debugger::DebuggerThread, this, executable, working_directory,
                         std::string(arguments));
 
-  // Return "StartInfo" or error based on the result of process creation from "DebuggerThread".
+  // Wait for "DebuggerThread" to create the process and return result of process creation.
   return start_info_or_error_promise_.GetFuture().Get();
 }
 
