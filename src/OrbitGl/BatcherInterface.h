@@ -24,7 +24,7 @@ struct PickingUserData {
 
 // Collects primitives to be rendered at a later point in time.
 //
-// BatcherInterface is a pure virtual class. By calling BatcherInterface::AddXXX, primitives are
+// BatcherInterface is an interface class. By calling BatcherInterface::AddXXX, primitives are
 // added to internal CPU buffers, and sorted into layers formed by equal z-coordinates. Each layer
 // should then be drawn seperately with BatcherInterface::DrawLayer(). BatcherInterface also
 // provides a method to get the user data given a picking_id (in general used for tooltips).

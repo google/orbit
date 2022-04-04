@@ -12,8 +12,9 @@ namespace orbit_gl {
 
 // Collects primitives to be rendered at a later point in time.
 //
-// This virtual class extends BatcherInterface by taking care of holding batcher_id and translations
-// that will be called by CaptureViewElements.
+// This abstract class extends BatcherInterface by taking care of holding batcher_id and
+// translations that will be called by CaptureViewElements.
+// TODO(b/228053356): Test Batcher class.
 class Batcher : public BatcherInterface {
  public:
   explicit Batcher(BatcherId batcher_id) : batcher_id_(batcher_id) {}
