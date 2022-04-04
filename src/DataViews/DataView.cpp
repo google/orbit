@@ -9,6 +9,7 @@
 #include <memory>
 
 #include "ClientData/FunctionInfo.h"
+#include "MetricsUploader/orbit_log_event.pb.h"
 #include "OrbitBase/File.h"
 #include "OrbitBase/Logging.h"
 
@@ -190,6 +191,8 @@ void DataView::OnLoadSymbolsRequested(const std::vector<int>& selection) {
       modules_to_load.push_back(module_data);
     }
   }
+  metrics_uploader_->SendLogEvent(
+      orbit_metrics_uploader::OrbitLogEvent::ORBIT_LOAD_SYMBOLS_CLICKED);
   app_->RetrieveModulesAndLoadSymbols(modules_to_load);
 }
 
