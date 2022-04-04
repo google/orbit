@@ -941,17 +941,22 @@ void OrbitApp::Disassemble(uint32_t pid, const FunctionInfo& function) {
 }
 
 void OrbitApp::ShowSourceCode(const orbit_client_data::FunctionInfo& function) {
+  ScopedMetric metric{metrics_uploader_,
+                      orbit_metrics_uploader::OrbitLogEvent::ORBIT_SOURCE_CODE_SHOW};
+
   const ModuleData* module = module_manager_->GetModuleByPathAndBuildId(function.module_path(),
                                                                         function.module_build_id());
 
   auto loaded_module = RetrieveModuleWithDebugInfo(module);
 
   loaded_module
-      .ThenIfSuccess(
+      .Then(
           main_thread_executor_,
-          [this, module,
-           function](const std::filesystem::path& local_file_path) -> ErrorMessageOr<void> {
-            const auto elf_file = orbit_object_utils::CreateElfFile(local_file_path);
+          [this, module, function](const ErrorMessageOr<std::filesystem::path>& local_file_path)
+              -> ErrorMessageOr<void> {
+            if (local_file_path.has_error()) return local_file_path.error();
+
+            const auto elf_file = orbit_object_utils::CreateElfFile(local_file_path.value());
             const auto decl_line_info_or_error =
                 elf_file.value()->GetLocationOfFunction(function.address());
 
@@ -990,11 +995,13 @@ void OrbitApp::ShowSourceCode(const orbit_client_data::FunctionInfo& function) {
                                          std::move(code_report));
             return outcome::success();
           })
-      .Then(main_thread_executor_, [this](const ErrorMessageOr<void>& maybe_error) {
-        if (maybe_error.has_error()) {
-          SendErrorToUi("Error showing source code", maybe_error.error().message());
-        }
-      });
+      .Then(main_thread_executor_,
+            [this, metric = std::move(metric)](const ErrorMessageOr<void>& maybe_error) mutable {
+              if (maybe_error.has_error()) {
+                SendErrorToUi("Error showing source code", maybe_error.error().message());
+                metric.SetStatusCode(orbit_metrics_uploader::OrbitLogEvent::INTERNAL_ERROR);
+              }
+            });
 }
 
 void OrbitApp::MainTick() {
@@ -1843,15 +1850,17 @@ orbit_base::Future<ErrorMessageOr<std::filesystem::path>> OrbitApp::RetrieveModu
 orbit_base::Future<ErrorMessageOr<std::filesystem::path>> OrbitApp::RetrieveModuleWithDebugInfo(
     const std::string& module_path, const std::string& build_id) {
   auto loaded_module = RetrieveModule(module_path, build_id);
-  return loaded_module.ThenIfSuccess(
+  return loaded_module.Then(
       main_thread_executor_,
-      [this, module_path](
-          const std::filesystem::path& local_file_path) -> ErrorMessageOr<std::filesystem::path> {
-        auto elf_file = orbit_object_utils::CreateElfFile(local_file_path);
+      [this, module_path](const ErrorMessageOr<std::filesystem::path>& local_file_path)
+          -> ErrorMessageOr<std::filesystem::path> {
+        if (local_file_path.has_error()) return local_file_path;
+
+        auto elf_file = orbit_object_utils::CreateElfFile(local_file_path.value());
 
         if (elf_file.has_error()) return elf_file.error();
 
-        if (elf_file.value()->HasDebugInfo()) return local_file_path;
+        if (elf_file.value()->HasDebugInfo()) return local_file_path.value();
 
         if (!elf_file.value()->HasGnuDebuglink()) {
           return ErrorMessage{
