@@ -157,6 +157,10 @@ uint64_t CaptureData::ProvideScopeId(const orbit_client_protos::TimerInfo& timer
   return scope_id_provider_->ProvideId(timer_info);
 }
 
+[[nodiscard]] std::vector<uint64_t> CaptureData::GetAllProvidedScopeIds() const {
+  return scope_id_provider_->GetAllProvidedScopeIds();
+}
+
 const std::string& CaptureData::GetScopeName(uint64_t scope_id) const {
   ORBIT_CHECK(scope_id_provider_);
   return scope_id_provider_->GetScopeName(scope_id);

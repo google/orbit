@@ -33,6 +33,7 @@ class MockScopeIdProvider : public ScopeIdProvider {
  public:
   MOCK_METHOD(uint64_t, ProvideId, (const TimerInfo& timer_info));
   MOCK_METHOD(const std::string&, GetScopeName, (uint64_t scope_id), (const));
+  MOCK_METHOD(std::vector<uint64_t>, GetAllProvidedScopeIds, (), (const));
 };
 
 class CaptureDataTest : public testing::Test {

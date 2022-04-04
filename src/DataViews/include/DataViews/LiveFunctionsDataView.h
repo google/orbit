@@ -14,6 +14,7 @@
 #include <utility>
 #include <vector>
 
+#include "../CompareAscendingOrDescending.h"
 #include "ClientData/FunctionInfo.h"
 #include "DataViews/AppInterface.h"
 #include "DataViews/DataView.h"
@@ -58,7 +59,7 @@ class LiveFunctionsDataView : public DataView {
                                              const std::vector<int>& selected_indices) override;
   void DoFilter() override;
   void DoSort() override;
-  [[nodiscard]] uint64_t GetInstrumentedFunctionId(uint32_t row) const;
+  [[nodiscard]] uint64_t GetScopeId(uint32_t row) const;
   [[nodiscard]] std::optional<orbit_client_data::FunctionInfo>
   CreateFunctionInfoFromInstrumentedFunction(
       const orbit_grpc_protos::InstrumentedFunction& instrumented_function);
@@ -88,6 +89,25 @@ class LiveFunctionsDataView : public DataView {
   [[nodiscard]] const orbit_client_data::FunctionInfo* GetFunctionInfoFromRow(int row) override;
 
   void UpdateHistogramWithIndices(const std::vector<int>& visible_selected_indices);
+
+  template <typename ValueGetterType>
+  [[nodiscard]] std::function<bool(uint64_t, uint64_t)> MakeSorter(ValueGetterType getter,
+                                                                   bool ascending) {
+    return [getter, ascending](uint64_t id_a, uint64_t id_b) {
+      return CompareAscendingOrDescending(getter(id_a), getter(id_b), ascending);
+    };
+  }
+
+  template <typename ValueGetterType, typename ValueType>
+  [[nodiscard]] std::function<bool(uint64_t, uint64_t)> MakeFunctionSorter(
+      ValueGetterType getter, bool ascending, ValueType default_value) {
+    return MakeSorter(
+        [this, getter, default_value](uint64_t id) {
+          const auto it = functions_.find(id);
+          return it == functions_.end() ? default_value : getter(it->second);
+        },
+        ascending);
+  }
 };
 
 }  // namespace orbit_data_views
