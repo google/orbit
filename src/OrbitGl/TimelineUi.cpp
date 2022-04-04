@@ -67,7 +67,8 @@ void TimelineUi::RenderBackground(PrimitiveAssembler& primitive_assembler) const
 void TimelineUi::RenderLabel(PrimitiveAssembler& primitive_assembler, TextRenderer& text_renderer,
                              uint64_t tick_ns, uint32_t number_of_decimal_places,
                              const Color background_color, bool is_mouse_label) const {
-  float label_z = is_mouse_label ? GlCanvas::kZValueTimeBarMouseLabel : GlCanvas::kZValueTimeBar;
+  float label_z =
+      is_mouse_label ? GlCanvas::kZValueTimeBarMouseLabel : GlCanvas::kZValueTimeBarLabel;
 
   // We add a pixel separation between the label and the major ticks so they don't intersect.
   float extra_left_margin = is_mouse_label ? 0.f : kPixelsBetweenMajorTicksAndLabels;
