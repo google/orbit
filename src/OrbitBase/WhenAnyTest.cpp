@@ -35,7 +35,7 @@ TEST(WhenAnyTest, OneFuture) {
   promise0.SetResult(42);
   EXPECT_TRUE(joined_future.IsFinished());
 
-  EXPECT_EQ(joined_future.Get().index(), 0);
+  ASSERT_EQ(joined_future.Get().index(), 0);
   EXPECT_EQ(std::get<0>(joined_future.Get()), 42);
 }
 
@@ -116,14 +116,14 @@ TEST(WhenAnyTest, ThreeFuturesVoidCompletes) {
 
   promise2.MarkFinished();
   EXPECT_TRUE(joined_future.IsFinished());
-  ASSERT_EQ(joined_future.Get().index(), 2);
+  EXPECT_EQ(joined_future.Get().index(), 2);
 
   promise0.SetResult(42);
   EXPECT_TRUE(joined_future.IsFinished());
-  ASSERT_EQ(joined_future.Get().index(), 2);
+  EXPECT_EQ(joined_future.Get().index(), 2);
 
   promise1.SetResult("Hello World");
   EXPECT_TRUE(joined_future.IsFinished());
-  ASSERT_EQ(joined_future.Get().index(), 2);
+  EXPECT_EQ(joined_future.Get().index(), 2);
 }
 }  // namespace orbit_base
