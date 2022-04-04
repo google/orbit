@@ -1,4 +1,4 @@
-// Copyright (c) 2021 The Orbit Authors. All rights reserved.
+// Copyright (c) 2022 The Orbit Authors. All rights reserved.
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
@@ -33,9 +33,6 @@ using VoidToMonostate_t = typename VoidToMonostate<T>::type;
 
 template <typename... Ts>
 class SharedStateWhenAny {
-  orbit_base::Promise<std::variant<Ts...>> promise ABSL_GUARDED_BY(mutex);
-  mutable absl::Mutex mutex;
-
  public:
   template <size_t index>
   void SetResult(const typename std::variant_alternative_t<index, std::variant<Ts...>>& argument)
@@ -50,6 +47,10 @@ class SharedStateWhenAny {
     absl::MutexLock lock{&mutex};
     return promise.GetFuture();
   }
+
+ private:
+  orbit_base::Promise<std::variant<Ts...>> promise ABSL_GUARDED_BY(mutex);
+  mutable absl::Mutex mutex;
 };
 
 // A small helper type trait that checks whether a certain index of a parameter pack `Args` is of
@@ -60,9 +61,9 @@ using IsMonostate =
     std::is_same<std::variant_alternative_t<index, std::variant<VoidToMonostate_t<Args>...>>,
                  std::monostate>;
 
-template <typename... Args, std::size_t... Indexes>
+template <typename... Args, std::size_t... Indices>
 orbit_base::Future<std::variant<VoidToMonostate_t<Args>...>> WhenAnyImpl(
-    orbit_base::Future<Args>... futures, std::index_sequence<Indexes...> /* indexes */) {
+    orbit_base::Future<Args>... futures, std::index_sequence<Indices...> /* indexes */) {
   ORBIT_CHECK(futures.IsValid() && ...);
 
   auto shared_state =
@@ -73,13 +74,13 @@ orbit_base::Future<std::variant<VoidToMonostate_t<Args>...>> WhenAnyImpl(
        // Having the lambda expression taking a parameter pack as its arguments allows us to express
        // 0 arguments (void) and 1 argument (any other T) in a single continuation.
        [shared_state](const auto&... arguments) {
-         if constexpr (IsMonostate<Indexes, Args...>::value) {
-           shared_state->template SetResult<Indexes>(std::monostate{});
+         if constexpr (IsMonostate<Indices, Args...>::value) {
+           shared_state->template SetResult<Indices>(std::monostate{});
          } else {
            // `arguments` is a parameter pack of at most 1 argument. In this if-constexpr-branch we
            // already know it's exactly one argument, so `(arguments, ...)` just unfolds to a single
            // argument.
-           shared_state->template SetResult<Indexes>((arguments, ...));
+           shared_state->template SetResult<Indices>((arguments, ...));
          }
        }),
    ...);
