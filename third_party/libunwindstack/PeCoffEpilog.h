@@ -30,22 +30,30 @@ namespace unwindstack {
 // Helper class for epilog detection and handling used for X86_64 unwinding for PE/COFF modules.
 class PeCoffEpilog {
  public:
+  PeCoffEpilog(Memory* file_memory, uint64_t text_section_vmaddr, uint64_t text_section_offset)
+      : file_memory_(file_memory),
+        text_section_vmaddr_(text_section_vmaddr),
+        text_section_offset_(text_section_offset) {}
   ~PeCoffEpilog();
 
   // Needs to be called before one can use DetectAndHandleEpilog.
   bool Init();
 
-  // Detects if the bytes in 'machine_code' represent an epilog of a function and handles
-  // executing the instructions in the epilog if that is the case.
-  // Returns true if an epilog was detected. The registers are updated to reflect the actions from
-  // executing the epilog (which effectively unwinds the current callframe). Returns false if
-  // machine_code does not represent an epilog or if an error occured. In the latter case, the
-  // error can be retrieved using GetLastError() and registers 'regs' are not updated.
-  bool DetectAndHandleEpilog(const std::vector<uint8_t>& machine_code, Memory* process_memory,
+  // Detects if the instructions from 'current_offset_from_start_of_function' onwards represent
+  // a function epilog. Returns true if an epilog was detected. The registers are updated to reflect
+  // the actions from executing the epilog (which effectively unwinds the current callframe).
+  // Returns false if no epilog was found *or* if an error occured. In the latter case, the error
+  // can be retrieved using GetLastError() and registers 'regs' are not updated.
+  bool DetectAndHandleEpilog(uint64_t function_start_address, uint64_t function_end_address,
+                             uint64_t current_offset_from_start_of_function, Memory* process_memory,
                              Regs* regs);
+
   ErrorData GetLastError() const { return last_error_; }
 
  private:
+  bool DetectAndHandleEpilog(const std::vector<uint8_t>& machine_code, Memory* process_memory,
+                             Regs* regs);
+
   // The validation methods below check if the instructions satisfy the requirements imposed by the
   // epilog specification, as outlined on
   // https://docs.microsoft.com/en-us/cpp/build/prolog-and-epilog?view=msvc-170
@@ -58,6 +66,10 @@ class PeCoffEpilog {
   bool HandleReturnInstruction(Memory* process_memory, RegsImpl<uint64_t>* registers);
   bool ValidateJumpInstruction();
   bool HandleJumpInstruction(Memory* process_memory, RegsImpl<uint64_t>* registers);
+
+  Memory* file_memory_;
+  uint64_t text_section_vmaddr_ = 0;
+  uint64_t text_section_offset_ = 0;
 
   ErrorData last_error_{ERROR_NONE, 0};
 

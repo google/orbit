@@ -34,6 +34,9 @@ PeCoffEpilog::~PeCoffEpilog() {
 }
 
 bool PeCoffEpilog::Init() {
+  if (file_memory_ == nullptr) {
+    return false;
+  }
   cs_err err = cs_open(CS_ARCH_X86, CS_MODE_64, &capstone_handle_);
   if (err) {
     return false;
@@ -230,6 +233,7 @@ bool PeCoffEpilog::HandleJumpInstruction(Memory* process_memory, RegsImpl<uint64
 // that registers are not changed if we detect later that we are indeed not in an epilog.
 bool PeCoffEpilog::DetectAndHandleEpilog(const std::vector<uint8_t>& machine_code,
                                          Memory* process_memory, Regs* regs) {
+  CHECK(process_memory != nullptr);
   // These values are all updated by capstone as we go through the machine code for disassembling.
   uint64_t current_offset = 0;
   size_t current_code_size = machine_code.size();
@@ -239,6 +243,7 @@ bool PeCoffEpilog::DetectAndHandleEpilog(const std::vector<uint8_t>& machine_cod
 
   // We need to copy registers to make sure we don't overwrite values incorrectly when after some
   // instructions we find out we are actually not in the epilog.
+  CHECK(regs != nullptr);
   std::unique_ptr<Regs> cloned_regs(regs->Clone());
   auto* updated_regs = static_cast<RegsImpl<uint64_t>*>(cloned_regs.get());
 
@@ -304,6 +309,41 @@ bool PeCoffEpilog::DetectAndHandleEpilog(const std::vector<uint8_t>& machine_cod
     (*current_regs)[reg] = (*updated_regs)[reg];
   }
   return true;
+}
+
+bool PeCoffEpilog::DetectAndHandleEpilog(uint64_t function_start_address,
+                                         uint64_t function_end_address,
+                                         uint64_t current_offset_from_start_of_function,
+                                         Memory* process_memory, Regs* regs) {
+  if (function_start_address + current_offset_from_start_of_function >= function_end_address) {
+    last_error_.code = ERROR_INVALID_COFF;
+    return false;
+  }
+  if (function_start_address < text_section_vmaddr_) {
+    last_error_.code = ERROR_INVALID_COFF;
+    return false;
+  }
+  size_t code_size =
+      function_end_address - (function_start_address + current_offset_from_start_of_function);
+  std::vector<uint8_t> code;
+  code.resize(code_size);
+  // Map from relative virtual address (RVA) to file offset.
+  uint64_t start_offset = function_start_address + current_offset_from_start_of_function -
+                          text_section_vmaddr_ + text_section_offset_;
+  CHECK(file_memory_ != nullptr);
+
+  // Note: It may be tempting to try reading the machine code from the process memory, which also
+  // contains the machine code (as the process has the object file loaded). However, normally only
+  // the stack portion relevant for unwinding is readily available in 'process_memory'. While other
+  // memory accesses are supported, they involve stopping the target process to read out the memory.
+  // Overall this is slower (seen in experiments) and directly affects the target process.
+  if (!file_memory_->ReadFully(start_offset, static_cast<void*>(&code[0]), code_size)) {
+    last_error_.code = ERROR_MEMORY_INVALID;
+    last_error_.address = start_offset;
+    return false;
+  }
+
+  return DetectAndHandleEpilog(code, process_memory, regs);
 }
 
 }  // namespace unwindstack
