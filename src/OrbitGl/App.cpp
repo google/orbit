@@ -316,6 +316,12 @@ void OrbitApp::OnCaptureFinished(const CaptureFinished& capture_finished) {
         ORBIT_UNREACHABLE();
         break;
     }
+
+    ORBIT_CHECK(capture_data_ != nullptr);
+    if (capture_data_->file_path().has_value()) {
+      capture_file_info_manager_.AddOrTouchCaptureFile(capture_data_->file_path().value(),
+                                                       GetCaptureTime());
+    }
   });
 }
 
@@ -344,10 +350,6 @@ void OrbitApp::OnCaptureStarted(const orbit_grpc_protos::CaptureStarted& capture
     }
 
     ClearCapture();
-
-    if (file_path.has_value()) {
-      capture_file_info_manager_.AddOrTouchCaptureFile(file_path.value());
-    }
 
     // It is safe to do this write on the main thread, as the capture thread is suspended until
     // this task is completely executed.
@@ -1316,21 +1318,23 @@ Future<ErrorMessageOr<CaptureListener::CaptureOutcome>> OrbitApp::LoadCaptureFro
 
   DoZoom = true;  // TODO: remove global, review logic
 
-  (void)load_future.ThenIfSuccess(main_thread_executor_,
-                                  [this, file_path](CaptureListener::CaptureOutcome outcome) {
-                                    if (outcome == CaptureOutcome::kComplete) {
-                                      capture_file_info_manager_.AddOrTouchCaptureFile(file_path);
-                                    }
-                                  });
+  (void)load_future.ThenIfSuccess(
+      main_thread_executor_, [this, file_path](CaptureListener::CaptureOutcome outcome) {
+        if (outcome != CaptureOutcome::kComplete) return;
+        capture_file_info_manager_.AddOrTouchCaptureFile(file_path, GetCaptureTime());
+      });
 
   return load_future;
 }
 
 orbit_base::Future<ErrorMessageOr<void>> OrbitApp::MoveCaptureFile(
     const std::filesystem::path& src, const std::filesystem::path& dest) {
+  std::optional<absl::Duration> capture_length =
+      capture_file_info_manager_.GetCaptureLengthByPath(src);
   return thread_pool_->Schedule([src, dest]() { return orbit_base::MoveFile(src, dest); })
-      .ThenIfSuccess(main_thread_executor_,
-                     [this, dest] { capture_file_info_manager_.AddOrTouchCaptureFile(dest); });
+      .ThenIfSuccess(main_thread_executor_, [this, dest, capture_length] {
+        capture_file_info_manager_.AddOrTouchCaptureFile(dest, capture_length);
+      });
 }
 
 void OrbitApp::OnLoadCaptureCancelRequested() { capture_loading_cancellation_requested_ = true; }
@@ -2995,6 +2999,7 @@ void OrbitApp::TrySaveUserDefinedCaptureInfo() {
       SendErrorToUi("Save failed", absl::StrFormat("Save to \"%s\" failed: %s", file_path.string(),
                                                    write_result.error().message()));
     }
+    capture_file_info_manager_.AddOrTouchCaptureFile(file_path, GetCaptureTime());
   });
 }
 

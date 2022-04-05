@@ -17,7 +17,7 @@ class ItemModel : public QAbstractTableModel {
   Q_OBJECT
 
  public:
-  enum class Column { kFilename, kLastUsed, kCreated, kEnd };
+  enum class Column { kFilename, kLastUsed, kCreated, kCaptureLength, kEnd };
 
   explicit ItemModel(QObject* parent = nullptr) : QAbstractTableModel(parent) {}
 

@@ -87,7 +87,7 @@ TEST(LoadCaptureWidget, SelectFromTableView) {
   // To make sure there is one table entry, it is set here.
   Manager manager{};
   manager.Clear();
-  manager.AddOrTouchCaptureFile(test_file_path);
+  manager.AddOrTouchCaptureFile(test_file_path, std::nullopt);
 
   LoadCaptureWidget widget{};
   auto* table_view = widget.findChild<QTableView*>("tableView");
@@ -125,8 +125,8 @@ TEST(LoadCaptureWidget, EditCaptureFileFilter) {
 
   Manager manager{};
   manager.Clear();
-  manager.AddOrTouchCaptureFile(test_file_path0);
-  manager.AddOrTouchCaptureFile(test_file_path1);
+  manager.AddOrTouchCaptureFile(test_file_path0, std::nullopt);
+  manager.AddOrTouchCaptureFile(test_file_path1, std::nullopt);
 
   LoadCaptureWidget widget{};
   auto* table_view = widget.findChild<QTableView*>("tableView");

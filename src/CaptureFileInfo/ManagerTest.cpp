@@ -30,15 +30,15 @@ TEST(CaptureFileInfoManager, Clear) {
   manager.Clear();
   EXPECT_TRUE(manager.GetCaptureFileInfos().empty());
 
-  manager.AddOrTouchCaptureFile("test/path1");
+  manager.AddOrTouchCaptureFile("test/path1", std::nullopt);
   EXPECT_FALSE(manager.GetCaptureFileInfos().empty());
 
   manager.Clear();
   EXPECT_TRUE(manager.GetCaptureFileInfos().empty());
 
-  manager.AddOrTouchCaptureFile("test/path1");
+  manager.AddOrTouchCaptureFile("test/path1", std::nullopt);
   EXPECT_FALSE(manager.GetCaptureFileInfos().empty());
-  manager.AddOrTouchCaptureFile("test/path2");
+  manager.AddOrTouchCaptureFile("test/path2", std::nullopt);
   EXPECT_FALSE(manager.GetCaptureFileInfos().empty());
 
   manager.Clear();
@@ -55,7 +55,7 @@ TEST(CaptureFileInfoManager, AddOrTouchCaptureFile) {
 
   // Add 1st file
   const std::filesystem::path path1 = "path/to/file1";
-  manager.AddOrTouchCaptureFile(path1);
+  manager.AddOrTouchCaptureFile(path1, std::nullopt);
   ASSERT_EQ(manager.GetCaptureFileInfos().size(), 1);
 
   const CaptureFileInfo& capture_file_info_1 = manager.GetCaptureFileInfos()[0];
@@ -67,18 +67,22 @@ TEST(CaptureFileInfoManager, AddOrTouchCaptureFile) {
   std::this_thread::sleep_for(std::chrono::milliseconds(5));
 
   // Touch 1st file
-  manager.AddOrTouchCaptureFile(path1);
+  const absl::Duration capture_length1 = absl::Seconds(10);
+  manager.AddOrTouchCaptureFile(path1, capture_length1);
   ASSERT_EQ(manager.GetCaptureFileInfos().size(), 1);
+  ASSERT_EQ(manager.GetCaptureFileInfos()[0].CaptureLength(), capture_length1);
 
   // last used was after now_time_stamp
   EXPECT_GT(capture_file_info_1.LastUsed(), now_time_stamp);
 
   // Add 2nd file
   const std::filesystem::path path2 = "path/to/file2";
-  manager.AddOrTouchCaptureFile(path2);
+  const absl::Duration capture_length2 = absl::Milliseconds(10);
+  manager.AddOrTouchCaptureFile(path2, capture_length2);
   ASSERT_EQ(manager.GetCaptureFileInfos().size(), 2);
   const CaptureFileInfo& capture_file_info_2 = manager.GetCaptureFileInfos()[1];
   EXPECT_EQ(capture_file_info_2.FilePath(), QString::fromStdString(path2.string()));
+  EXPECT_EQ(capture_file_info_2.CaptureLength(), capture_length2);
 
   // clean up
   manager.Clear();
@@ -109,7 +113,7 @@ TEST(CaptureFileInfoManager, AddOrTouchCaptureFilePathFormatting) {
 
   std::set<std::filesystem::path> control_set;
   for (const auto& path : test_paths) {
-    manager.AddOrTouchCaptureFile(path);
+    manager.AddOrTouchCaptureFile(path, std::nullopt);
     control_set.insert(path);
   }
 
@@ -124,14 +128,14 @@ TEST(CaptureFileInfoManager, PurgeNonExistingFiles) {
   manager.Clear();
   EXPECT_TRUE(manager.GetCaptureFileInfos().empty());
 
-  manager.AddOrTouchCaptureFile("non/existing/path");
+  manager.AddOrTouchCaptureFile("non/existing/path", std::nullopt);
   EXPECT_FALSE(manager.GetCaptureFileInfos().empty());
 
   manager.PurgeNonExistingFiles();
   EXPECT_TRUE(manager.GetCaptureFileInfos().empty());
 
   const std::filesystem::path existing_file = orbit_test::GetTestdataDir() / "test_file.txt";
-  manager.AddOrTouchCaptureFile(existing_file);
+  manager.AddOrTouchCaptureFile(existing_file, std::nullopt);
   EXPECT_FALSE(manager.GetCaptureFileInfos().empty());
 
   manager.PurgeNonExistingFiles();
@@ -158,7 +162,7 @@ TEST(CaptureFileInfoManager, Persistency) {
   const std::filesystem::path existing_file = orbit_test::GetTestdataDir() / "test_file.txt";
   {
     Manager manager;
-    manager.AddOrTouchCaptureFile(existing_file);
+    manager.AddOrTouchCaptureFile(existing_file, std::nullopt);
     EXPECT_EQ(manager.GetCaptureFileInfos().size(), 1);
   }
 
@@ -201,6 +205,74 @@ TEST(CaptureFileInfoManager, FillFromDirectory) {
 
     EXPECT_EQ(capture_file_info.FileName(), "test_capture.orbit");
   }
+
+  // clean up
+  manager.Clear();
+}
+
+TEST(CaptureFileInfoManager, GetCaptureLengthByPath) {
+  QCoreApplication::setOrganizationName(kOrgName);
+  QCoreApplication::setApplicationName("CaptureFileInfo.Manager.GetCaptureLengthByPath");
+
+  Manager manager;
+  manager.Clear();
+
+  const std::filesystem::path path1 = "path/to/file1";
+  manager.AddOrTouchCaptureFile(path1, std::nullopt);
+  ASSERT_FALSE(manager.GetCaptureLengthByPath(path1).has_value());
+
+  const std::filesystem::path path2 = "path/to/file2";
+  ASSERT_FALSE(manager.GetCaptureLengthByPath(path2).has_value());
+
+  const absl::Duration capture_length = absl::Milliseconds(10);
+  manager.AddOrTouchCaptureFile(path2, capture_length);
+  ASSERT_EQ(manager.GetCaptureLengthByPath(path2).value(), capture_length);
+
+  // clean up
+  manager.Clear();
+}
+
+namespace {
+
+class FakeManager : public Manager {
+ public:
+  void SetCaptureFileInfos(std::vector<CaptureFileInfo> capture_file_infos) {
+    capture_file_infos_ = std::move(capture_file_infos);
+  }
+};
+
+}  // namespace
+
+TEST(CaptureFileInfoManager, ProcessOutOfSyncFiles) {
+  QCoreApplication::setOrganizationName(kOrgName);
+  QCoreApplication::setApplicationName("CaptureFileInfo.Manager.ProcessOutOfSyncFiles");
+
+  FakeManager manager;
+  manager.Clear();
+
+  const QString path1{"path/to/file1"};
+  const QDateTime last_used1 = QDateTime::fromMSecsSinceEpoch(1600000000000);
+  const QDateTime last_modified1 = QDateTime::fromMSecsSinceEpoch(1500000000000);
+  const uint64_t file_size1 = 1234;
+  const absl::Duration capture_length1 = absl::Seconds(5);
+  CaptureFileInfo capture_file_info1{path1, last_used1, last_modified1, file_size1,
+                                     capture_length1};
+  EXPECT_TRUE(capture_file_info1.IsOutOfSync());
+
+  const QString path2{"path/to/file2"};
+  const absl::Duration capture_length2{absl::Seconds(15)};
+  CaptureFileInfo capture_file_info2{path2, capture_length2};
+  EXPECT_FALSE(capture_file_info2.IsOutOfSync());
+
+  manager.SetCaptureFileInfos({capture_file_info1, capture_file_info2});
+
+  ASSERT_EQ(manager.GetCaptureFileInfos().size(), 2);
+  ASSERT_EQ(manager.GetCaptureFileInfos()[0].CaptureLength().value(), capture_length1);
+  ASSERT_EQ(manager.GetCaptureFileInfos()[1].CaptureLength().value(), capture_length2);
+
+  manager.ProcessOutOfSyncFiles();
+  ASSERT_FALSE(manager.GetCaptureFileInfos()[0].CaptureLength().has_value());
+  ASSERT_EQ(manager.GetCaptureFileInfos()[1].CaptureLength().value(), capture_length2);
 
   // clean up
   manager.Clear();

@@ -4,11 +4,25 @@
 
 #include "CaptureFileInfo/ItemModel.h"
 
+#include <absl/time/time.h>
+
 #include "CaptureFileInfo/CaptureFileInfo.h"
 #include "DisplayFormats/DisplayFormats.h"
 #include "OrbitBase/Logging.h"
 
 namespace orbit_capture_file_info {
+
+namespace {
+
+const QString kMissingCaptureLengthDisplayText = QStringLiteral("--");
+
+[[nodiscard]] QString GetCaptureLengthToDisplay(std::optional<absl::Duration> capture_length) {
+  if (!capture_length.has_value()) return kMissingCaptureLengthDisplayText;
+
+  return QString::fromStdString(orbit_display_formats::GetDisplayTime(capture_length.value()));
+}
+
+}  // namespace
 
 void ItemModel::SetCaptureFileInfos(std::vector<CaptureFileInfo> capture_file_infos) {
   if (!capture_files_.empty()) {
@@ -52,16 +66,22 @@ QVariant ItemModel::data(const QModelIndex& idx, int role) const {
         return capture_file_info.LastUsed();
       case Column::kCreated:
         return capture_file_info.Created();
+      case Column::kCaptureLength:
+        return GetCaptureLengthToDisplay(capture_file_info.CaptureLength());
       case Column::kEnd:
         ORBIT_UNREACHABLE();
     }
   }
 
   if (role == Qt::ToolTipRole) {
-    return QString::fromStdString("%1 - %2")
-        .arg(QString::fromStdString(
-            orbit_display_formats::GetDisplaySize(capture_file_info.FileSize())))
-        .arg(capture_file_info.FilePath());
+    QString tooltips = QString::fromStdString("%1 - %2")
+                           .arg(QString::fromStdString(
+                               orbit_display_formats::GetDisplaySize(capture_file_info.FileSize())))
+                           .arg(capture_file_info.FilePath());
+    if (!capture_file_info.CaptureLength().has_value()) {
+      tooltips.append("\n(The capture length will be available after the capture file is loaded.)");
+    }
+    return tooltips;
   }
 
   return {};
@@ -79,6 +99,8 @@ QVariant ItemModel::headerData(int section, Qt::Orientation orientation, int rol
       return "Last used";
     case Column::kCreated:
       return "Created";
+    case Column::kCaptureLength:
+      return "Capture length";
     case Column::kEnd:
       ORBIT_UNREACHABLE();
   }
