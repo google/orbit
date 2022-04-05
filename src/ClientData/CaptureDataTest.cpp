@@ -31,8 +31,10 @@ namespace {
 
 class MockScopeIdProvider : public ScopeIdProvider {
  public:
+  MOCK_METHOD(uint64_t, FunctionIdToScopeId, (uint64_t function_id), (const));
   MOCK_METHOD(uint64_t, ProvideId, (const TimerInfo& timer_info));
   MOCK_METHOD(const std::string&, GetScopeName, (uint64_t scope_id), (const));
+  MOCK_METHOD(std::vector<uint64_t>, GetAllProvidedScopeIds, (), (const));
 };
 
 class CaptureDataTest : public testing::Test {
@@ -44,6 +46,8 @@ class CaptureDataTest : public testing::Test {
           if (timer_info.function_id() == 0) return kInvalidScopeId;
           return timer_info.function_id();
         }));
+    EXPECT_CALL(scope_id_provider_, FunctionIdToScopeId)
+        .WillRepeatedly(testing::Invoke([](uint64_t function_id) { return function_id; }));
   }
 
  protected:

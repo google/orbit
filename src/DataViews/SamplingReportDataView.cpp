@@ -24,7 +24,7 @@
 #include "ClientData/ModuleAndFunctionLookup.h"
 #include "ClientData/ModuleData.h"
 #include "ClientData/ProcessData.h"
-#include "CompareAscendingOrDescending.h"
+#include "DataViews/CompareAscendingOrDescending.h"
 #include "DataViews/DataViewType.h"
 #include "DataViews/FunctionsDataView.h"
 #include "OrbitBase/Append.h"
@@ -113,19 +113,21 @@ std::string SamplingReportDataView::GetValueForCopy(int row, int column) {
   }
 }
 
-#define ORBIT_PROC_SORT(Member)                                                               \
-  [&](int a, int b) {                                                                         \
-    return CompareAscendingOrDescending(functions[a].Member, functions[b].Member, ascending); \
+#define ORBIT_PROC_SORT(Member)                                     \
+  [&](int a, int b) {                                               \
+    return orbit_data_views_internal::CompareAscendingOrDescending( \
+        functions[a].Member, functions[b].Member, ascending);       \
   }
 
-#define ORBIT_CUSTOM_FUNC_SORT(Func)                                                        \
-  [&](int a, int b) {                                                                       \
-    return CompareAscendingOrDescending(Func(functions[a]), Func(functions[b]), ascending); \
+#define ORBIT_CUSTOM_FUNC_SORT(Func)                                                               \
+  [&](int a, int b) {                                                                              \
+    return orbit_data_views_internal::CompareAscendingOrDescending(Func(functions[a]),             \
+                                                                   Func(functions[b]), ascending); \
   }
 
 #define ORBIT_MODULE_NAME_FUNC_SORT                                             \
   [&](int a, int b) {                                                           \
-    return CompareAscendingOrDescending(                                        \
+    return orbit_data_views_internal::CompareAscendingOrDescending(             \
         std::filesystem::path(functions[a].module_path).filename(),             \
         std::filesystem::path(functions[b].module_path).filename(), ascending); \
   }

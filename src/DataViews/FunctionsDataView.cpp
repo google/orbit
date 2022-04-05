@@ -16,8 +16,8 @@
 #include "ClientData/CaptureData.h"
 #include "ClientData/FunctionInfo.h"
 #include "ClientData/ModuleAndFunctionLookup.h"
-#include "CompareAscendingOrDescending.h"
 #include "DataViews/AppInterface.h"
+#include "DataViews/CompareAscendingOrDescending.h"
 #include "DataViews/DataViewType.h"
 #include "Introspection/Introspection.h"
 #include "OrbitBase/Append.h"
@@ -113,14 +113,16 @@ std::string FunctionsDataView::GetValue(int row, int column) {
   }
 }
 
-#define ORBIT_FUNC_SORT(Member)                                                                   \
-  [&](int a, int b) {                                                                             \
-    return CompareAscendingOrDescending(functions_[a]->Member, functions_[b]->Member, ascending); \
+#define ORBIT_FUNC_SORT(Member)                                     \
+  [&](int a, int b) {                                               \
+    return orbit_data_views_internal::CompareAscendingOrDescending( \
+        functions_[a]->Member, functions_[b]->Member, ascending);   \
   }
 
-#define ORBIT_CUSTOM_FUNC_SORT(Func)                                                            \
-  [&](int a, int b) {                                                                           \
-    return CompareAscendingOrDescending(Func(*functions_[a]), Func(*functions_[b]), ascending); \
+#define ORBIT_CUSTOM_FUNC_SORT(Func)                                \
+  [&](int a, int b) {                                               \
+    return orbit_data_views_internal::CompareAscendingOrDescending( \
+        Func(*functions_[a]), Func(*functions_[b]), ascending);     \
   }
 
 void FunctionsDataView::DoSort() {

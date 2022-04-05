@@ -52,7 +52,7 @@ class AppInterface {
   virtual void JumpToTimerAndZoom(uint64_t function_id, JumpToTimerMode selection_mode) = 0;
   [[nodiscard]] virtual uint64_t GetHighlightedScopeId() const = 0;
   virtual void SetHighlightedScopeId(uint64_t highlighted_function_id) = 0;
-  virtual void SetVisibleFunctionIds(absl::flat_hash_set<uint64_t> visible_functions) = 0;
+  virtual void SetVisibleScopeIds(absl::flat_hash_set<uint64_t> visible_scope_ids) = 0;
   virtual void DeselectTimer() = 0;
   [[nodiscard]] virtual bool IsCapturing() const = 0;
   [[nodiscard]] virtual std::vector<const orbit_client_protos::TimerInfo*>

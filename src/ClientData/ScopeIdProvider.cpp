@@ -11,6 +11,7 @@
 #include <cstdint>
 #include <memory>
 #include <string>
+#include <vector>
 
 #include "ClientData/ScopeIdConstants.h"
 #include "ClientFlags/ClientFlags.h"
@@ -39,13 +40,17 @@ std::unique_ptr<NameEqualityScopeIdProvider> NameEqualityScopeIdProvider::Create
       new NameEqualityScopeIdProvider(max_id + 1, std::move(scope_id_to_name)));
 }
 
+uint64_t NameEqualityScopeIdProvider::FunctionIdToScopeId(uint64_t function_id) const {
+  return function_id;
+}
+
 uint64_t NameEqualityScopeIdProvider::ProvideId(const TimerInfo& timer_info) {
   // Check if the `timer_info` corresponds to a hooked function event. Checking for `function_id`
   // not being invalid is not sufficient, as e.g. frametrack events may also have non-invalid
   // function_id
   if (timer_info.function_id() != orbit_grpc_protos::kInvalidFunctionId &&
       timer_info.type() == orbit_client_protos::TimerInfo::kNone) {
-    return timer_info.function_id();
+    return FunctionIdToScopeId(timer_info.function_id());
   }
 
   // TODO (b/226565085) remove the flag check when the manual instrumentation grouping feature is
@@ -67,6 +72,13 @@ uint64_t NameEqualityScopeIdProvider::ProvideId(const TimerInfo& timer_info) {
     return id;
   }
   return orbit_client_data::kInvalidScopeId;
+}
+
+[[nodiscard]] std::vector<uint64_t> NameEqualityScopeIdProvider::GetAllProvidedScopeIds() const {
+  std::vector<uint64_t> ids;
+  std::transform(std::begin(scope_id_to_name_), std::end(scope_id_to_name_),
+                 std::back_inserter(ids), [](const auto& entry) { return entry.first; });
+  return ids;
 }
 
 const std::string& NameEqualityScopeIdProvider::GetScopeName(uint64_t scope_id) const {

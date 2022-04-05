@@ -237,7 +237,9 @@ class CaptureData {
   }
 
   [[nodiscard]] uint64_t ProvideScopeId(const orbit_client_protos::TimerInfo& timer_info) const;
+  [[nodiscard]] std::vector<uint64_t> GetAllProvidedScopeIds() const;
   [[nodiscard]] const std::string& GetScopeName(uint64_t scope_id) const;
+  [[nodiscard]] uint64_t FunctionIdToScopeId(uint64_t function_id) const;
 
   [[nodiscard]] const std::vector<uint64_t>* GetSortedTimerDurationsForScopeId(
       uint64_t scope_id) const;

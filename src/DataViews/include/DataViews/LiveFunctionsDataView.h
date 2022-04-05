@@ -16,6 +16,7 @@
 
 #include "ClientData/FunctionInfo.h"
 #include "DataViews/AppInterface.h"
+#include "DataViews/CompareAscendingOrDescending.h"
 #include "DataViews/DataView.h"
 #include "DataViews/LiveFunctionsInterface.h"
 #include "GrpcProtos/capture.pb.h"
@@ -42,8 +43,8 @@ class LiveFunctionsDataView : public DataView {
   void OnRefresh(const std::vector<int>& visible_selected_indices,
                  const RefreshMode& mode) override;
   [[nodiscard]] bool ResetOnRefresh() const override { return false; }
-  std::optional<int> GetRowFromFunctionId(uint64_t function_id);
-  void AddFunction(uint64_t function_id, orbit_client_data::FunctionInfo function_info);
+  std::optional<int> GetRowFromScopeId(uint64_t scope_id);
+  void AddFunction(uint64_t scope_id, orbit_client_data::FunctionInfo function_info);
 
   void OnIteratorRequested(const std::vector<int>& selection) override;
   void OnJumpToRequested(const std::string& action, const std::vector<int>& selection) override;
@@ -58,12 +59,13 @@ class LiveFunctionsDataView : public DataView {
                                              const std::vector<int>& selected_indices) override;
   void DoFilter() override;
   void DoSort() override;
-  [[nodiscard]] uint64_t GetInstrumentedFunctionId(uint32_t row) const;
+  [[nodiscard]] uint64_t GetScopeId(uint32_t row) const;
   [[nodiscard]] std::optional<orbit_client_data::FunctionInfo>
   CreateFunctionInfoFromInstrumentedFunction(
       const orbit_grpc_protos::InstrumentedFunction& instrumented_function);
 
-  absl::flat_hash_map<uint64_t, orbit_client_data::FunctionInfo> functions_{};
+  // Maps scope_ids corresponding to dynamically instrumented functions to FunctionInfo instances
+  absl::flat_hash_map<uint64_t, orbit_client_data::FunctionInfo> scope_id_to_function_info_{};
   // TODO(b/191333567) This is populated in OnDataChanged(), which causes an overhead upon capture
   // load/finalization this may be optimized via populating it function-wise on user's demand
 
@@ -85,9 +87,31 @@ class LiveFunctionsDataView : public DataView {
   };
 
  private:
+  // The row does not necessarily refer to a dynamically instrumented function. If it does, a
+  // pointer to the corresponding FunctionInfo is returned. `nullptr` is returned otherwise.
   [[nodiscard]] const orbit_client_data::FunctionInfo* GetFunctionInfoFromRow(int row) override;
 
   void UpdateHistogramWithIndices(const std::vector<int>& visible_selected_indices);
+
+  template <typename ValueGetterType>
+  [[nodiscard]] std::function<bool(uint64_t, uint64_t)> MakeSorter(ValueGetterType getter,
+                                                                   bool ascending) {
+    return [getter, ascending](uint64_t id_a, uint64_t id_b) {
+      return orbit_data_views_internal::CompareAscendingOrDescending(getter(id_a), getter(id_b),
+                                                                     ascending);
+    };
+  }
+
+  template <typename ValueGetterType, typename ValueType>
+  [[nodiscard]] std::function<bool(uint64_t, uint64_t)> MakeFunctionSorter(
+      ValueGetterType getter, bool ascending, ValueType default_value) {
+    return MakeSorter(
+        [this, getter, default_value](uint64_t id) {
+          const auto it = scope_id_to_function_info_.find(id);
+          return it == scope_id_to_function_info_.end() ? default_value : getter(it->second);
+        },
+        ascending);
+  }
 };
 
 }  // namespace orbit_data_views

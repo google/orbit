@@ -34,9 +34,9 @@ void DataManager::ClearSelectedFunctions() {
   selected_functions_.clear();
 }
 
-void DataManager::set_visible_function_ids(absl::flat_hash_set<uint64_t> visible_function_ids) {
+void DataManager::set_visible_scope_ids(absl::flat_hash_set<uint64_t> visible_scope_ids) {
   ORBIT_CHECK(std::this_thread::get_id() == main_thread_id_);
-  visible_function_ids_ = std::move(visible_function_ids);
+  visible_scope_ids_ = std::move(visible_scope_ids);
 }
 
 void DataManager::set_highlighted_scope_id(uint64_t highlighted_scope_id) {
@@ -71,7 +71,7 @@ std::vector<FunctionInfo> DataManager::GetSelectedFunctions() const {
 
 bool DataManager::IsFunctionVisible(uint64_t function_id) const {
   ORBIT_CHECK(std::this_thread::get_id() == main_thread_id_);
-  return visible_function_ids_.contains(function_id);
+  return visible_scope_ids_.contains(function_id);
 }
 
 uint64_t DataManager::highlighted_scope_id() const {
