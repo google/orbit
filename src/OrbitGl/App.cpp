@@ -2417,7 +2417,7 @@ const InstrumentedFunction* OrbitApp::GetInstrumentedFunction(uint64_t function_
   return HasCaptureData() ? GetCaptureData().GetInstrumentedFunctionById(function_id) : nullptr;
 }
 
-void OrbitApp::SetVisibleFunctionIds(absl::flat_hash_set<uint64_t> visible_function_ids) {
+void OrbitApp::SetVisibleScopeIds(absl::flat_hash_set<uint64_t> visible_function_ids) {
   data_manager_->set_visible_function_ids(std::move(visible_function_ids));
   RequestUpdatePrimitives();
 }

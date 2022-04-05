@@ -43,8 +43,8 @@ class LiveFunctionsDataView : public DataView {
   void OnRefresh(const std::vector<int>& visible_selected_indices,
                  const RefreshMode& mode) override;
   [[nodiscard]] bool ResetOnRefresh() const override { return false; }
-  std::optional<int> GetRowFromFunctionId(uint64_t function_id);
-  void AddFunction(uint64_t function_id, orbit_client_data::FunctionInfo function_info);
+  std::optional<int> GetRowFromScopeId(uint64_t scope_id);
+  void AddFunction(uint64_t scope_id, orbit_client_data::FunctionInfo function_info);
 
   void OnIteratorRequested(const std::vector<int>& selection) override;
   void OnJumpToRequested(const std::string& action, const std::vector<int>& selection) override;

@@ -654,7 +654,7 @@ TEST_F(LiveFunctionsDataViewTest, FilteringShowsRightResults) {
 
   // Filtering by function display name with single token
   {
-    EXPECT_CALL(app_, SetVisibleFunctionIds)
+    EXPECT_CALL(app_, SetVisibleScopeIds)
         .Times(1)
         .WillOnce([&](absl::flat_hash_set<uint64_t> visible_function_ids) {
           EXPECT_THAT(visible_function_ids,
@@ -668,7 +668,7 @@ TEST_F(LiveFunctionsDataViewTest, FilteringShowsRightResults) {
 
   // Filtering by function display name with multiple tokens separated by " "
   {
-    EXPECT_CALL(app_, SetVisibleFunctionIds)
+    EXPECT_CALL(app_, SetVisibleScopeIds)
         .Times(1)
         .WillOnce([&](absl::flat_hash_set<uint64_t> visible_function_ids) {
           EXPECT_THAT(visible_function_ids, testing::UnorderedElementsAre(kFunctionIds[1]));
@@ -681,7 +681,7 @@ TEST_F(LiveFunctionsDataViewTest, FilteringShowsRightResults) {
 
   // No matching result
   {
-    EXPECT_CALL(app_, SetVisibleFunctionIds)
+    EXPECT_CALL(app_, SetVisibleScopeIds)
         .Times(1)
         .WillOnce([](absl::flat_hash_set<uint64_t> visible_function_ids) {
           EXPECT_TRUE(visible_function_ids.empty());

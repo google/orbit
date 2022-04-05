@@ -166,6 +166,11 @@ const std::string& CaptureData::GetScopeName(uint64_t scope_id) const {
   return scope_id_provider_->GetScopeName(scope_id);
 }
 
+uint64_t CaptureData::FunctionIdToScopeId(uint64_t function_id) const {
+  ORBIT_CHECK(scope_id_provider_);
+  return scope_id_provider_->FunctionIdToScopeId(function_id);
+}
+
 const std::vector<uint64_t>* CaptureData::GetSortedTimerDurationsForScopeId(
     uint64_t scope_id) const {
   const auto it = scope_id_to_timer_durations_.find(scope_id);

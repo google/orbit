@@ -126,7 +126,7 @@ std::string LiveFunctionsDataView::GetValue(int row, int column) {
 }
 
 std::vector<int> LiveFunctionsDataView::GetVisibleSelectedIndices() {
-  std::optional<int> visible_selected_index = GetRowFromFunctionId(selected_scope_id_);
+  std::optional<int> visible_selected_index = GetRowFromScopeId(selected_scope_id_);
   if (!visible_selected_index.has_value()) return {};
   return {visible_selected_index.value()};
 }
@@ -146,12 +146,12 @@ void LiveFunctionsDataView::UpdateSelectedFunctionId() {
 
 void LiveFunctionsDataView::UpdateHistogramWithIndices(
     const std::vector<int>& visible_selected_indices) {
-  std::vector<uint64_t> function_ids;
+  std::vector<uint64_t> scope_ids;
   std::transform(std::begin(visible_selected_indices), std::end(visible_selected_indices),
-                 std::back_inserter(function_ids),
+                 std::back_inserter(scope_ids),
                  [this](const int index) { return indices_[index]; });
 
-  UpdateHistogramWithScopeIds(function_ids);
+  UpdateHistogramWithScopeIds(scope_ids);
 }
 
 void LiveFunctionsDataView::UpdateHistogramWithScopeIds(const std::vector<uint64_t>& scope_ids) {
@@ -327,12 +327,12 @@ DataView::ActionStatus LiveFunctionsDataView::GetActionStatus(
 
 void LiveFunctionsDataView::OnIteratorRequested(const std::vector<int>& selection) {
   for (int i : selection) {
-    uint64_t instrumented_function_id = GetScopeId(i);
+    uint64_t scope_id = GetScopeId(i);
     const FunctionInfo* instrumented_function = GetFunctionInfoFromRow(i);
-    const ScopeStats& stats =
-        app_->GetCaptureData().GetScopeStatsOrDefault(instrumented_function_id);
+    ORBIT_CHECK(instrumented_function != nullptr);
+    const ScopeStats& stats = app_->GetCaptureData().GetScopeStatsOrDefault(scope_id);
     if (stats.count() > 0) {
-      live_functions_->AddIterator(instrumented_function_id, instrumented_function);
+      live_functions_->AddIterator(scope_id, instrumented_function);
       metrics_uploader_->SendLogEvent(orbit_metrics_uploader::OrbitLogEvent::ORBIT_ITERATOR_ADD);
     }
   }
@@ -341,15 +341,15 @@ void LiveFunctionsDataView::OnIteratorRequested(const std::vector<int>& selectio
 void LiveFunctionsDataView::OnJumpToRequested(const std::string& action,
                                               const std::vector<int>& selection) {
   ORBIT_CHECK(selection.size() == 1);
-  auto function_id = GetScopeId(selection[0]);
+  auto scope_id = GetScopeId(selection[0]);
   if (action == kMenuActionJumpToFirst) {
-    app_->JumpToTimerAndZoom(function_id, AppInterface::JumpToTimerMode::kFirst);
+    app_->JumpToTimerAndZoom(scope_id, AppInterface::JumpToTimerMode::kFirst);
   } else if (action == kMenuActionJumpToLast) {
-    app_->JumpToTimerAndZoom(function_id, AppInterface::JumpToTimerMode::kLast);
+    app_->JumpToTimerAndZoom(scope_id, AppInterface::JumpToTimerMode::kLast);
   } else if (action == kMenuActionJumpToMin) {
-    app_->JumpToTimerAndZoom(function_id, AppInterface::JumpToTimerMode::kMin);
+    app_->JumpToTimerAndZoom(scope_id, AppInterface::JumpToTimerMode::kMin);
   } else if (action == kMenuActionJumpToMax) {
-    app_->JumpToTimerAndZoom(function_id, AppInterface::JumpToTimerMode::kMax);
+    app_->JumpToTimerAndZoom(scope_id, AppInterface::JumpToTimerMode::kMax);
   }
 }
 
@@ -390,6 +390,7 @@ void LiveFunctionsDataView::OnExportEventsToCsvRequested(const std::vector<int>&
     const FunctionInfo& function = *GetFunctionInfoFromRow(row);
     std::string function_name = function.pretty_name();
 
+    // TODO(b/228151558) Allow for csv export for manual instrumentation events
     const uint64_t function_id = GetScopeId(row);
     const CaptureData& capture_data = app_->GetCaptureData();
     for (const TimerInfo* timer : app_->GetAllTimersForHookedFunction(function_id)) {
@@ -447,16 +448,17 @@ void LiveFunctionsDataView::DoFilter() {
   indices_ = std::move(indices);
 
   // Filter drawn textboxes
-  absl::flat_hash_set<uint64_t> visible_function_ids;
+  absl::flat_hash_set<uint64_t> visible_scope_ids;
   for (size_t i = 0; i < indices_.size(); ++i) {
-    visible_function_ids.insert(GetScopeId(i));
+    visible_scope_ids.insert(GetScopeId(i));
   }
-  app_->SetVisibleFunctionIds(std::move(visible_function_ids));
+  app_->SetVisibleScopeIds(std::move(visible_scope_ids));
 }
-void LiveFunctionsDataView::AddFunction(uint64_t function_id,
+
+void LiveFunctionsDataView::AddFunction(uint64_t scope_id,
                                         orbit_client_data::FunctionInfo function_info) {
-  functions_.insert_or_assign(function_id, std::move(function_info));
-  indices_.push_back(function_id);
+  functions_.insert_or_assign(scope_id, std::move(function_info));
+  indices_.push_back(scope_id);
 }
 
 void LiveFunctionsDataView::OnDataChanged() {
@@ -491,8 +493,8 @@ void LiveFunctionsDataView::OnDataChanged() {
     if (!function_info.has_value()) {
       return;
     }
-
-    AddFunction(function_id, std::move(*function_info));
+    const uint64_t scope_id = app_->GetCaptureData().FunctionIdToScopeId(function_id);
+    AddFunction(scope_id, std::move(*function_info));
   }
 
   std::vector<uint64_t> all_scope_ids = app_->GetCaptureData().GetAllProvidedScopeIds();
@@ -530,9 +532,9 @@ const FunctionInfo* LiveFunctionsDataView::GetFunctionInfoFromRow(int row) {
   return it == functions_.end() ? nullptr : &it->second;
 }
 
-std::optional<int> LiveFunctionsDataView::GetRowFromFunctionId(uint64_t function_id) {
+std::optional<int> LiveFunctionsDataView::GetRowFromScopeId(uint64_t scope_id) {
   for (size_t function_row = 0; function_row < indices_.size(); function_row++) {
-    if (indices_[function_row] == function_id) {
+    if (indices_[function_row] == scope_id) {
       return function_row;
     }
   }
@@ -547,8 +549,8 @@ std::optional<FunctionInfo> LiveFunctionsDataView::CreateFunctionInfoFromInstrum
     return std::nullopt;
   }
 
-  const std::string& function_name =
-      app_->GetCaptureData().GetScopeName(instrumented_function.function_id());
+  const std::string& function_name = app_->GetCaptureData().GetScopeName(
+      app_->GetCaptureData().FunctionIdToScopeId(instrumented_function.function_id()));
 
   // size is unknown
   FunctionInfo result{instrumented_function.file_path(), instrumented_function.file_build_id(),

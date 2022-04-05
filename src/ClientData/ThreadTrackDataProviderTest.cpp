@@ -55,12 +55,6 @@ struct TimersInTest {
   const TimerInfo* other_thread_id;
 };
 
-class MockScopeIdProvider : public ScopeIdProvider {
- public:
-  MOCK_METHOD(uint64_t, ProvideId, (const TimerInfo& timer_info));
-  MOCK_METHOD(const std::string&, GetScopeName, (uint64_t scope_id), (const));
-};
-
 }  // namespace
 
 TEST(ThreadTrackDataProvider, EmptyWhenCreated) {

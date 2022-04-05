@@ -42,7 +42,7 @@ class MockAppInterface : public AppInterface {
 
   MOCK_METHOD(uint64_t, GetHighlightedScopeId, (), (const));
   MOCK_METHOD(void, SetHighlightedScopeId, (uint64_t highlighted_function_id));
-  MOCK_METHOD(void, SetVisibleFunctionIds, (absl::flat_hash_set<uint64_t> visible_functions));
+  MOCK_METHOD(void, SetVisibleScopeIds, (absl::flat_hash_set<uint64_t> visible_functions));
   MOCK_METHOD(void, DeselectTimer, ());
   MOCK_METHOD(bool, IsCapturing, (), (const));
   MOCK_METHOD(void, JumpToTimerAndZoom, (uint64_t function_id, JumpToTimerMode selection_mode));

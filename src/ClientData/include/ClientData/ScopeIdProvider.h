@@ -22,6 +22,8 @@ class ScopeIdProvider {
  public:
   virtual ~ScopeIdProvider() = default;
 
+  [[nodiscard]] virtual uint64_t FunctionIdToScopeId(uint64_t function_id) const = 0;
+
   [[nodiscard]] virtual uint64_t ProvideId(const TimerInfo& timer_info) = 0;
 
   [[nodiscard]] virtual std::vector<uint64_t> GetAllProvidedScopeIds() const = 0;
@@ -39,6 +41,8 @@ class NameEqualityScopeIdProvider : public ScopeIdProvider {
   // those.
   [[nodiscard]] static std::unique_ptr<NameEqualityScopeIdProvider> Create(
       const ::orbit_grpc_protos::CaptureOptions& capture_options);
+
+  [[nodiscard]] uint64_t FunctionIdToScopeId(uint64_t function_id) const override;
 
   [[nodiscard]] uint64_t ProvideId(const TimerInfo& timer_info) override;
 
