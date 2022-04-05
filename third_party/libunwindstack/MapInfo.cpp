@@ -26,10 +26,13 @@
 #include <android-base/strings.h>
 
 #include <unwindstack/Elf.h>
+#include <unwindstack/Log.h>
 #include <unwindstack/MapInfo.h>
 #include <unwindstack/Maps.h>
 #include <unwindstack/Object.h>
+#include <unwindstack/PeCoff.h>
 
+#include "Check.h"
 #include "MemoryFileAtOffset.h"
 #include "MemoryRange.h"
 
@@ -115,6 +118,20 @@ Memory* MapInfo::GetFileMemory() {
     return nullptr;
   }
 
+  if (IsPotentiallyPeCoffFile(name())) {
+    // Always map the whole PE, as we always need the headers.
+    // This is similar to "No elf at offset, try to init as if the whole file is an elf" below.
+    if (memory->Init(name(), 0)) {
+      set_object_offset(offset());
+      // We only support PEs mapped from file, and by PE specification the headers are always at the
+      // beginning of the file (offset zero in the file). Therefore, keep it simple and assume that
+      // the PE is always mapped starting from offset zero, where the headers are.
+      set_object_start_offset(0);
+      return memory.release();
+    }
+    return nullptr;
+  }
+
   // These are the possibilities when the offset is non-zero.
   // - There is an elf file embedded in a file, and the offset is the
   //   the start of the elf in the file.
@@ -176,6 +193,156 @@ Memory* MapInfo::GetFileMemory() {
   return nullptr;
 }
 
+// Unlike loadable sections of ELF files, the .text section (and other sections) of a Portable
+// Executable can have an offset in the file (PointerToRawData, multiple of FileAlignment) that is
+// not congruent to the offset of that section when loaded into memory (VirtualAddress, multiple of
+// SectionAlignment) modulo the page size. This doesn't fulfill the requirements on the arguments of
+// mmap, so in these cases Wine cannot create a file-backed mapping for the .text section, and
+// resorts to creating an anonymous mapping and copying the .text section into it. This means that,
+// for PE binaries with this property, we cannot simply associate an executable mapping to the
+// corresponding file using the path in the mapping.
+//
+// However, we can make an educated guess. The path of a PE will at least appear in the read-only
+// mapping that corresponds to the beginning of the file, which contains the headers (because the
+// offset in the file is zero and the address chosen for this mapping should always be a multiple of
+// the page size). Therefore, let's consider the file of the last file mapping that precedes this
+// anonymous mapping. If this file is a PE, and an executable file mapping for the .text section of
+// this PE is not present, and finally the address and the size of this anonymous mapping are
+// compatible with the address range where the .text section would be loaded based on the header for
+// the section (in particular, VirtualAddress and VirtualSize), then we can be quite sure that this
+// anonymous mapping indeed contains the .text section of that PE. Note that we assume that a PE
+// only has one .text section and one executable mapping.
+//
+// This method is the counterpart of GetFileMemory for anonymous executable mappings and contains
+// the detection mechanism described.
+Memory* MapInfo::GetFileMemoryFromAnonExecMapIfPeCoffTextSection() {
+  // We expect this method to be called only for non-special anonymous executable mappings.
+  CHECK(name().empty());
+  CHECK((flags() & PROT_EXEC) != 0);
+
+  std::shared_ptr<MapInfo> map_info_it = prev_map();
+
+  // Find the previous file mapping.
+  // Note that when the first character of a map name is '[', the mapping is a special one like
+  // [stack], [heap], etc. Even if such mapping has a name, it's not file-backed. An alternative way
+  // of detecting that would be to check if the inode is 0 (but that's not available here).
+  while (map_info_it != nullptr &&
+         (map_info_it->name().empty() || map_info_it->name().c_str()[0] == '[')) {
+    map_info_it = map_info_it->prev_map();
+  }
+  if (map_info_it == nullptr) {
+    // There is no previous file mapping.
+    return nullptr;
+  }
+
+  if ((map_info_it->flags() & MAPS_FLAGS_DEVICE_MAP) != 0) {
+    // The previous file mapping corresponds to a character or block device.
+    return nullptr;
+  }
+
+  // This is the candidate name (file path).
+  std::string prev_name{map_info_it->name()};
+  CHECK(!prev_name.empty());
+
+  // Find the first file mapping for the same name (file path) as the file mapping we just found.
+  // This is because, even if the .text section is mapped with an anonymous mapping, it could happen
+  // that not only the header but also other sections preceding the .text (and following the header)
+  // be mapped with a file mapping, if their offset in the file allows it.
+  std::shared_ptr<MapInfo> first_map_info_with_prev_name = nullptr;
+  while (map_info_it != nullptr &&
+         (map_info_it->name().empty() || map_info_it->name().c_str()[0] == '[' ||
+          map_info_it->name() == prev_name)) {
+    if (map_info_it->name() == prev_name) {
+      if ((map_info_it->flags() & PROT_EXEC) != 0) {
+        // There is already an executable mapping for this name.
+        return nullptr;
+      }
+      first_map_info_with_prev_name = map_info_it;
+    }
+
+    map_info_it = map_info_it->prev_map();
+  }
+  // The first iteration of this loop either assigned map_info_it to this or returned.
+  CHECK(first_map_info_with_prev_name != nullptr);
+
+  if (first_map_info_with_prev_name->start() < first_map_info_with_prev_name->offset()) {
+    // base_address would be the result of an underflow. Even if this could theoretically happen, it
+    // is unexpected, so simply fail in this case.
+    return nullptr;
+  }
+
+  auto file_memory = std::make_unique<MemoryFileAtOffset>();
+  // Always use zero as offset because the headers of a PE should always be right at the beginning
+  // of the file.
+  if (!file_memory->Init(prev_name, 0)) {
+    return nullptr;
+  }
+
+  // Ideally we would use first_map_info_with_prev_name->GetObject(), but that's not right because
+  // it also requires an expected architecture. Since this function is called at most once for each
+  // map, we are fine with temporarily creating a new PeCoff.
+  PeCoff pe{file_memory.release()};
+  if (!pe.Init()) {
+    // The candidate file path doesn't correspond to a PE/COFF.
+    return nullptr;
+  }
+
+  // The address at which the first byte of the PE is mapped.
+  uint64_t base_address =
+      first_map_info_with_prev_name->start() - first_map_info_with_prev_name->offset();
+
+  uint64_t image_base_plus_text_virtual_address{};  // Image base + offset in memory.
+  uint64_t text_virtual_size{};                     // Size in memory.
+  if (!pe.GetTextRange(&image_base_plus_text_virtual_address, &text_virtual_size)) {
+    return nullptr;
+  }
+  const uint64_t text_virtual_address =
+      image_base_plus_text_virtual_address - pe.GetLoadBias();  // Offset in memory.
+
+  // The addresses at which the text section of the PE is supposed to be mapped.
+  const uint64_t expected_text_start = text_virtual_address + base_address;
+  const uint64_t expected_text_end = expected_text_start + text_virtual_size;
+
+  // This map can correspond to the text section of the PE only if it contains the address range at
+  // which the text section should be mapped.
+  // We don't require the end address of this map to be equal to the end of the address range at
+  // which the text section should be mapped, because there is no requirement on the size of the
+  // text section (VirtualSize) in relationship to the page size.
+  // We also don't require the start address of this map to be equal to the start of the address
+  // range at which the text section should be mapped. The equality holds in most cases, because the
+  // address at which sections are loaded into memory (VirtualAddress) must be a multiple of
+  // SectionAlignment, which by default is equal to the page size. However, by PE specification this
+  // is only a default, not a strict requirement.
+  if (start() > expected_text_start || end() < expected_text_end) {
+    // This map doesn't fully contain the address range at which the text section of the PE is
+    // supposed to be mapped.
+    return nullptr;
+  }
+
+  auto memory = std::make_unique<MemoryFileAtOffset>();
+  // Always map the whole PE, as we always need the headers.
+  if (!memory->Init(prev_name, 0)) {
+    return nullptr;
+  }
+
+  // Compute the offset that this mapping would have if it was a file mapping (it's not a multiple
+  // of the page size, otherwise Wine would have created a file mapping to begin with).
+  const uint64_t text_pointer_to_raw_data = pe.GetTextOffsetInFile();
+  const uint64_t offset = text_pointer_to_raw_data - (expected_text_start - start());
+
+  Log::Info("Guessing that executable map at %#lx-%#lx belongs to \"%s\" at offset %#lx", start(),
+            end(), prev_name.c_str(), offset);
+
+  // Set some ObjectFields, like GetFileMemory does.
+  set_memory_backed_object(false);
+  set_object_offset(offset);
+  // Again, assume that the headers of the PE are always at the beginning of the file (offset zero
+  // in the file) and hence are mapped with offset zero.
+  set_object_start_offset(0);
+
+  return memory.release();
+}
+
 Memory* MapInfo::CreateMemory(const std::shared_ptr<Memory>& process_memory) {
   if (end() <= start()) {
     return nullptr;
@@ -188,9 +355,24 @@ Memory* MapInfo::CreateMemory(const std::shared_ptr<Memory>& process_memory) {
     return nullptr;
   }
 
+  if (!name().empty() && IsPotentiallyPeCoffFile(name())) {
+    Memory* memory = GetFileMemory();
+    // Return even if this is a nullptr: for PEs we only support creating the memory from file.
+    return memory;
+  }
+
   // First try and use the file associated with the info.
   if (!name().empty()) {
     Memory* memory = GetFileMemory();
+    if (memory != nullptr) {
+      return memory;
+    }
+  }
+
+  // Try if this is the .text section of a PE mapped anonymously by Wine because the offset in the
+  // file and the offset in memory relative to the image base are not compatible with mmap.
+  if (name().empty() && (flags() & PROT_EXEC) != 0) {
+    Memory* memory = GetFileMemoryFromAnonExecMapIfPeCoffTextSection();
     if (memory != nullptr) {
       return memory;
     }
@@ -285,8 +467,13 @@ Object* MapInfo::GetObject(const std::shared_ptr<Memory>& process_memory, ArchEn
     }
   }
 
-  // TODO: Distinguish between the type of object file here (Coff vs. Elf).
-  object().reset(new Elf(CreateMemory(process_memory)));
+  Memory* memory = CreateMemory(process_memory);
+  if (IsPotentiallyPeCoffFile(memory)) {
+    object().reset(new PeCoff(memory));
+  } else {
+    object().reset(new Elf(memory));
+  }
+
   // If the init fails, keep the object around as an invalid object so we
   // don't try to reinit the object.
   object()->Init();

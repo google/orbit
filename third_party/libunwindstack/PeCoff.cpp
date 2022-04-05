@@ -31,6 +31,9 @@
 namespace unwindstack {
 
 bool IsPotentiallyPeCoffFile(Memory* memory) {
+  if (memory == nullptr) {
+    return false;
+  }
   uint16_t magic_value;
   if (!memory->Read16(0, &magic_value)) {
     return false;

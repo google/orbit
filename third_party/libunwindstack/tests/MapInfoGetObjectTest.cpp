@@ -36,6 +36,8 @@
 #include <unwindstack/Maps.h>
 #include <unwindstack/Memory.h>
 #include <unwindstack/Object.h>
+#include <unwindstack/PeCoff.h>
+#include <unwindstack/PeCoffInterface.h>
 
 #include "ElfTestUtils.h"
 #include "utils/MemoryFake.h"
@@ -525,6 +527,298 @@ TEST_F(MapInfoGetObjectTest, read_only_followed_by_empty_then_read_exec_share_el
   ASSERT_TRUE(object->valid());
 
   ASSERT_EQ(object, r_info->GetObject(process_memory_, ARCH_ARM));
+}
+
+template <class>
+inline constexpr bool kAlwaysFalseV = false;
+
+template <typename PeCoffInterfaceType>
+class MapInfoGetObjectPeCoffTest : public ::testing::Test {
+ public:
+  MapInfoGetObjectPeCoffTest() {
+    std::string file_name;
+    if constexpr (std::is_same_v<PeCoffInterfaceType, PeCoffInterface32>) {
+      // The .text section of libtest32.dll has:
+      //   VirtualSize: 0x13b4
+      //   VirtualAddress: 0x1000
+      //   PointerToRawData: 0x600
+      file_name = "libtest32.dll";
+      arch_ = ArchEnum::ARCH_X86;
+    } else if constexpr (std::is_same_v<PeCoffInterfaceType, PeCoffInterface64>) {
+      // The .text section of libtest.dll has:
+      //   VirtualSize: 0x1338
+      //   VirtualAddress: 0x1000
+      //   PointerToRawData: 0x600
+      file_name = "libtest.dll";
+      arch_ = ArchEnum::ARCH_X86_64;
+    } else {
+      static_assert(kAlwaysFalseV<PeCoffInterfaceType>, "non-exhaustive if");
+    }
+    file_path_ = android::base::GetExecutableDirectory() + "/tests/files/" + file_name;
+  }
+
+  const std::string& GetFilePath() const { return this->file_path_; }
+
+  const std::shared_ptr<Memory>& GetProcessMemory() { return this->process_memory_; }
+
+  ArchEnum GetArch() const { return arch_; }
+
+ private:
+  std::string file_path_;
+  ArchEnum arch_;
+  std::shared_ptr<Memory> process_memory_ = std::make_shared<MemoryFake>();
+};
+
+using PeCoffInterfaceTypes = ::testing::Types<PeCoffInterface32, PeCoffInterface64>;
+TYPED_TEST_SUITE(MapInfoGetObjectPeCoffTest, PeCoffInterfaceTypes);
+
+TYPED_TEST(MapInfoGetObjectPeCoffTest, correctly_gets_pe_from_file_mapping) {
+  Maps maps;
+  maps.Add(0x100000, 0x101000, 0, PROT_READ, this->GetFilePath(), 0);
+  maps.Add(0x101000, 0x103000, 0x1000, PROT_READ | PROT_EXEC, this->GetFilePath(), 0);
+
+  {
+    std::shared_ptr<MapInfo> map_info = maps.Get(0);
+
+    Object* object = map_info->GetObject(this->GetProcessMemory(), this->GetArch());
+    ASSERT_NE(object, nullptr);
+    EXPECT_NE(dynamic_cast<PeCoff*>(map_info->object().get()), nullptr);
+    EXPECT_TRUE(object->valid());
+
+    EXPECT_EQ(map_info->memory_backed_object(), false);
+    EXPECT_EQ(map_info->object_offset(), 0);
+    EXPECT_EQ(map_info->object_start_offset(), 0);
+  }
+  {
+    std::shared_ptr<MapInfo> map_info = maps.Get(1);
+
+    Object* object = map_info->GetObject(this->GetProcessMemory(), this->GetArch());
+    ASSERT_NE(object, nullptr);
+    EXPECT_NE(dynamic_cast<PeCoff*>(map_info->object().get()), nullptr);
+    EXPECT_TRUE(object->valid());
+
+    EXPECT_EQ(map_info->memory_backed_object(), false);
+    EXPECT_EQ(map_info->object_offset(), 0x1000);
+    EXPECT_EQ(map_info->object_start_offset(), 0);
+  }
+}
+
+TYPED_TEST(MapInfoGetObjectPeCoffTest, gets_invalid_pe_from_file_mapping_if_wrong_arch) {
+  Maps maps;
+  maps.Add(0x100000, 0x101000, 0, PROT_READ, this->GetFilePath(), 0);
+  maps.Add(0x101000, 0x103000, 0x1000, PROT_READ | PROT_EXEC, this->GetFilePath(), 0);
+
+  {
+    std::shared_ptr<MapInfo> map_info = maps.Get(0);
+
+    Object* object = map_info->GetObject(this->GetProcessMemory(), ArchEnum::ARCH_ARM64);
+    ASSERT_NE(object, nullptr);
+    EXPECT_NE(dynamic_cast<PeCoff*>(object), nullptr);
+    EXPECT_FALSE(object->valid());  // Invalidated by GetObject.
+  }
+  {
+    std::shared_ptr<MapInfo> map_info = maps.Get(1);
+
+    Object* object = map_info->GetObject(this->GetProcessMemory(), ArchEnum::ARCH_ARM64);
+    ASSERT_NE(object, nullptr);
+    EXPECT_NE(dynamic_cast<PeCoff*>(object), nullptr);
+    EXPECT_FALSE(object->valid());  // Invalidated by GetObject.
+  }
+}
+
+TYPED_TEST(MapInfoGetObjectPeCoffTest, correctly_gets_pe_from_anon_exec_map) {
+  Maps maps;
+  maps.Add(0x100000, 0x101000, 0x0, PROT_READ, this->GetFilePath(), 0);
+  maps.Add(0x101000, 0x103000, 0x0, PROT_READ | PROT_EXEC, "", 0);
+
+  std::shared_ptr<MapInfo> map_info = maps.Get(1);
+
+  Object* object = map_info->GetObject(this->GetProcessMemory(), this->GetArch());
+  ASSERT_NE(object, nullptr);
+  EXPECT_NE(dynamic_cast<PeCoff*>(object), nullptr);
+  EXPECT_TRUE(object->valid());
+
+  // Verify the ObjectFields that have been set.
+  EXPECT_FALSE(map_info->memory_backed_object());
+  EXPECT_EQ(map_info->object_offset(), 0x600);
+  EXPECT_EQ(map_info->object_start_offset(), 0);
+}
+
+TYPED_TEST(MapInfoGetObjectPeCoffTest,
+           correctly_gets_pe_from_anon_exec_map_in_more_complex_example) {
+  // The addresses in these maps are not page-aligned, but it doesn't matter for the test's purpose.
+  Maps maps;
+  maps.Add(0x10000, 0x10100, 0x0, PROT_READ | PROT_WRITE, "[stack]", 0);
+  maps.Add(0x100000, 0x100C00, 0x0, PROT_READ, this->GetFilePath(), 0);  // headers
+  maps.Add(0x100C00, 0x100D00, 0x0, PROT_READ | PROT_WRITE, "", 0);
+  maps.Add(0x100D00, 0x100E00, 0xD00, PROT_READ, this->GetFilePath(), 0);
+  maps.Add(0x100E00, 0x100F00, 0x0, PROT_READ | PROT_WRITE, "[special]", 0);
+  maps.Add(0x100F00, 0x101000, 0xF00, PROT_READ, this->GetFilePath(), 0);
+  maps.Add(0x101000, 0x103000, 0x0, PROT_READ | PROT_EXEC, "", 0);  // map_info
+  maps.Add(0x200000, 0x201000, 0x0, PROT_READ | PROT_EXEC, "/path/to/something/else", 0);
+
+  std::shared_ptr<MapInfo> map_info = maps.Find(0x101000);
+
+  Object* object = map_info->GetObject(this->GetProcessMemory(), this->GetArch());
+  ASSERT_NE(object, nullptr);
+  EXPECT_NE(dynamic_cast<PeCoff*>(object), nullptr);
+  EXPECT_TRUE(object->valid());
+
+  EXPECT_FALSE(map_info->memory_backed_object());
+  EXPECT_EQ(map_info->object_offset(), 0x600);
+  EXPECT_EQ(map_info->object_start_offset(), 0);
+}
+
+TYPED_TEST(MapInfoGetObjectPeCoffTest,
+           correctly_gets_pe_even_if_anon_exec_map_starts_lower_than_text) {
+  // The addresses in these maps are not page-aligned, but it doesn't matter for the test's purpose.
+  Maps maps;
+  maps.Add(0x100000, 0x100E00, 0x0, PROT_READ, this->GetFilePath(), 0);
+  maps.Add(0x100E00, 0x103000, 0x0, PROT_READ | PROT_EXEC, "", 0);
+
+  std::shared_ptr<MapInfo> map_info = maps.Get(1);
+
+  Object* object = map_info->GetObject(this->GetProcessMemory(), this->GetArch());
+  ASSERT_NE(object, nullptr);
+  EXPECT_NE(dynamic_cast<PeCoff*>(object), nullptr);
+  EXPECT_TRUE(object->valid());
+
+  EXPECT_FALSE(map_info->memory_backed_object());
+  EXPECT_EQ(map_info->object_offset(), 0x600 - (0x101000 - 0x100E00));
+  EXPECT_EQ(map_info->object_start_offset(), 0);
+}
+
+TYPED_TEST(MapInfoGetObjectPeCoffTest,
+           correctly_gets_pe_from_anon_exec_map_even_if_named_map_has_offset) {
+  Maps maps;
+  maps.Add(0x100100, 0x101000, 0x100, PROT_READ, this->GetFilePath(), 0);
+  maps.Add(0x101000, 0x103000, 0x0, PROT_READ | PROT_EXEC, "", 0);
+
+  std::shared_ptr<MapInfo> map_info = maps.Get(1);
+
+  Object* object = map_info->GetObject(this->GetProcessMemory(), this->GetArch());
+  ASSERT_NE(object, nullptr);
+  EXPECT_NE(dynamic_cast<PeCoff*>(object), nullptr);
+  EXPECT_TRUE(object->valid());
+
+  EXPECT_FALSE(map_info->memory_backed_object());
+  EXPECT_EQ(map_info->object_offset(), 0x600);
+  EXPECT_EQ(map_info->object_start_offset(), 0);
+}
+
+TYPED_TEST(MapInfoGetObjectPeCoffTest, does_not_get_pe_from_exec_map_if_map_has_a_name) {
+  Maps maps;
+  maps.Add(0x100000, 0x101000, 0x0, PROT_READ, this->GetFilePath(), 0);
+  maps.Add(0x101000, 0x103000, 0x0, PROT_READ | PROT_EXEC, "i_already_have_a_name", 0);
+
+  std::shared_ptr<MapInfo> map_info = maps.Get(1);
+
+  Object* object = map_info->GetObject(this->GetProcessMemory(), this->GetArch());
+  ASSERT_NE(object, nullptr);
+  EXPECT_FALSE(object->valid());
+}
+
+TYPED_TEST(MapInfoGetObjectPeCoffTest, does_not_get_pe_from_anon_map_if_map_is_not_executable) {
+  Maps maps;
+  maps.Add(0x100000, 0x101000, 0x0, PROT_READ, this->GetFilePath(), 0);
+  maps.Add(0x101000, 0x103000, 0x0, PROT_READ, "", 0);
+
+  std::shared_ptr<MapInfo> map_info = maps.Get(1);
+
+  Object* object = map_info->GetObject(this->GetProcessMemory(), this->GetArch());
+  ASSERT_NE(object, nullptr);
+  EXPECT_FALSE(object->valid());
+}
+
+TYPED_TEST(MapInfoGetObjectPeCoffTest,
+           does_not_get_pe_from_anon_exec_map_if_no_previous_named_map) {
+  Maps maps;
+  maps.Add(0x100000, 0x101000, 0x0, PROT_READ, "", 0);
+  maps.Add(0x101000, 0x103000, 0x0, PROT_READ | PROT_EXEC, "", 0);
+
+  std::shared_ptr<MapInfo> map_info = maps.Get(1);
+
+  Object* object = map_info->GetObject(this->GetProcessMemory(), this->GetArch());
+  ASSERT_NE(object, nullptr);
+  EXPECT_FALSE(object->valid());
+}
+
+TYPED_TEST(MapInfoGetObjectPeCoffTest,
+           does_not_get_pe_from_anon_exec_map_if_executable_map_exists) {
+  Maps maps;
+  maps.Add(0x100000, 0x101000, 0x0, PROT_READ | PROT_EXEC, this->GetFilePath(), 0);
+  maps.Add(0x101000, 0x103000, 0x0, PROT_READ | PROT_EXEC, "", 0);
+
+  std::shared_ptr<MapInfo> map_info = maps.Get(1);
+
+  Object* object = map_info->GetObject(this->GetProcessMemory(), this->GetArch());
+  ASSERT_NE(object, nullptr);
+  EXPECT_FALSE(object->valid());
+}
+
+TYPED_TEST(MapInfoGetObjectPeCoffTest, does_not_get_pe_from_anon_exec_map_if_wrong_arch) {
+  Maps maps;
+  maps.Add(0x100000, 0x101000, 0x0, PROT_READ, this->GetFilePath(), 0);
+  maps.Add(0x101000, 0x103000, 0x0, PROT_READ | PROT_EXEC, "", 0);
+
+  std::shared_ptr<MapInfo> map_info = maps.Get(1);
+
+  Object* object = map_info->GetObject(this->GetProcessMemory(), ArchEnum::ARCH_ARM64);
+  ASSERT_NE(object, nullptr);
+  EXPECT_NE(dynamic_cast<PeCoff*>(object), nullptr);
+  EXPECT_FALSE(object->valid());  // Invalidated by GetObject.
+}
+
+TYPED_TEST(MapInfoGetObjectPeCoffTest,
+           does_not_get_pe_from_anon_exec_map_if_named_map_is_a_device_map) {
+  Maps maps;
+  maps.Add(0x100000, 0x101000, 0x0, PROT_READ | MAPS_FLAGS_DEVICE_MAP, this->GetFilePath(), 0);
+  maps.Add(0x101000, 0x103000, 0x0, PROT_READ | PROT_EXEC, "", 0);
+
+  std::shared_ptr<MapInfo> map_info = maps.Get(1);
+
+  Object* object = map_info->GetObject(this->GetProcessMemory(), this->GetArch());
+  ASSERT_NE(object, nullptr);
+  EXPECT_FALSE(object->valid());
+}
+
+TYPED_TEST(MapInfoGetObjectPeCoffTest,
+           does_not_get_pe_from_anon_exec_map_if_named_map_is_not_a_pe) {
+  const std::string not_a_pe_file_path =
+      android::base::GetExecutableDirectory() + "/tests/files/elf64.xz";
+  Maps maps;
+  maps.Add(0x100000, 0x101000, 0x0, PROT_READ, not_a_pe_file_path, 0);
+  maps.Add(0x101000, 0x103000, 0x0, PROT_READ | PROT_EXEC, "", 0);
+
+  std::shared_ptr<MapInfo> map_info = maps.Get(1);
+
+  Object* object = map_info->GetObject(this->GetProcessMemory(), this->GetArch());
+  ASSERT_NE(object, nullptr);
+  EXPECT_FALSE(object->valid());
+}
+
+TYPED_TEST(MapInfoGetObjectPeCoffTest, does_not_get_pe_if_anon_exec_map_starts_too_high) {
+  Maps maps;
+  maps.Add(0x100000, 0x102000, 0x0, PROT_READ, this->GetFilePath(), 0);
+  maps.Add(0x102000, 0x103000, 0x0, PROT_READ | PROT_EXEC, "", 0);
+
+  std::shared_ptr<MapInfo> map_info = maps.Get(1);
+
+  Object* object = map_info->GetObject(this->GetProcessMemory(), this->GetArch());
+  ASSERT_NE(object, nullptr);
+  EXPECT_FALSE(object->valid());
+}
+
+TYPED_TEST(MapInfoGetObjectPeCoffTest, does_not_get_pe_if_anon_exec_map_ends_too_low) {
+  Maps maps;
+  maps.Add(0x100000, 0x101000, 0x0, PROT_READ, this->GetFilePath(), 0);
+  maps.Add(0x101000, 0x102000, 0x0, PROT_READ | PROT_EXEC, "", 0);
+
+  std::shared_ptr<MapInfo> map_info = maps.Get(1);
+
+  Object* object = map_info->GetObject(this->GetProcessMemory(), this->GetArch());
+  ASSERT_NE(object, nullptr);
+  EXPECT_FALSE(object->valid());
 }
 
 }  // namespace unwindstack
