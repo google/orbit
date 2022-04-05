@@ -64,6 +64,7 @@ class LiveFunctionsDataView : public DataView {
   CreateFunctionInfoFromInstrumentedFunction(
       const orbit_grpc_protos::InstrumentedFunction& instrumented_function);
 
+  // Maps scope_ids corresponding to dynamically instrumented functions to FunctionInfo instances
   absl::flat_hash_map<uint64_t, orbit_client_data::FunctionInfo> functions_{};
   // TODO(b/191333567) This is populated in OnDataChanged(), which causes an overhead upon capture
   // load/finalization this may be optimized via populating it function-wise on user's demand
@@ -86,6 +87,8 @@ class LiveFunctionsDataView : public DataView {
   };
 
  private:
+  // The row does not necessarily refer to a dynamically instrumented function. If it does, a
+  // pointer to the corresponding FunctionInfo is returned. `nullptr` is returned otherwise.
   [[nodiscard]] const orbit_client_data::FunctionInfo* GetFunctionInfoFromRow(int row) override;
 
   void UpdateHistogramWithIndices(const std::vector<int>& visible_selected_indices);

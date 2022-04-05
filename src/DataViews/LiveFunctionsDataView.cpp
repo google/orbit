@@ -255,8 +255,8 @@ DataView::ActionStatus LiveFunctionsDataView::GetActionStatus(
       action == kMenuActionJumpToMin || action == kMenuActionJumpToMax) {
     if (selected_indices.size() != 1) return ActionStatus::kVisibleButDisabled;
 
-    uint64_t instrumented_function_id = GetScopeId(selected_indices[0]);
-    const ScopeStats& stats = capture_data.GetScopeStatsOrDefault(instrumented_function_id);
+    uint64_t scope_id = GetScopeId(selected_indices[0]);
+    const ScopeStats& stats = capture_data.GetScopeStatsOrDefault(scope_id);
     if (stats.count() == 0) return ActionStatus::kVisibleButDisabled;
 
     return ActionStatus::kVisibleAndEnabled;
