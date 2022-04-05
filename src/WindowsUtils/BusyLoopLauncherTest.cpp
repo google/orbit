@@ -10,14 +10,21 @@
 
 #include "OrbitBase/ExecutablePath.h"
 #include "OrbitBase/GetLastError.h"
+#include "OrbitBase/ThreadUtils.h"
+#include "Test/Path.h"
 #include "TestUtils/TestUtils.h"
 #include "WindowsUtils/BusyLoopLauncher.h"
 #include "WindowsUtils/BusyLoopUtils.h"
+#include "WindowsUtils/DllInjection.h"
 #include "WindowsUtils/OpenProcess.h"
 #include "WindowsUtils/ProcessList.h"
 
+namespace orbit_windows_utils {
+
 namespace {
 
+using orbit_test_utils::HasError;
+using orbit_test_utils::HasNoError;
 using orbit_windows_utils::BusyLoopInfo;
 using orbit_windows_utils::BusyLoopLauncher;
 using orbit_windows_utils::OpenProcess;
@@ -27,6 +34,10 @@ using orbit_windows_utils::SafeHandle;
 [[nodiscard]] std::filesystem::path GetTestExecutablePath() {
   static auto path = orbit_base::GetExecutableDir() / "FakeCliProgram.exe";
   return path;
+}
+
+[[nodiscard]] std::filesystem::path GetTestDllPath() {
+  return orbit_test::GetTestdataDir() / "libtest.dll";
 }
 
 __declspec(noinline) void IncrementCounter(uint32_t* counter, std::atomic<bool>* exit_requested) {
@@ -43,31 +54,40 @@ __declspec(noinline) void IncrementCounter(uint32_t* counter, std::atomic<bool>*
 TEST(BusyLoop, BusyLoopLauncher) {
   // Start process that would normally exit instantly and install busy loop at entry point.
   BusyLoopLauncher busy_loop_launcher;
-  const std::string kArguments = "";
   ErrorMessageOr<BusyLoopInfo> result = busy_loop_launcher.StartWithBusyLoopAtEntryPoint(
-      GetTestExecutablePath(), /*working_directory=*/"", kArguments);
+      GetTestExecutablePath(), /*working_directory=*/"", /*arguments=*/"");
   ASSERT_TRUE(result.has_value());
 
   // Validate returned busy loop info.
   const BusyLoopInfo& busy_loop_info = result.value();
-  EXPECT_TRUE(busy_loop_info.original_bytes.size() > 0);
-  EXPECT_NE(busy_loop_info.process_id, 0);
-  EXPECT_NE(busy_loop_info.address, 0);
+  ASSERT_TRUE(busy_loop_info.original_bytes.size() > 0);
+  ASSERT_NE(busy_loop_info.process_id, 0);
+  ASSERT_NE(busy_loop_info.address, 0);
 
   // At this point, the process should be busy looping at entry point.
   std::this_thread::sleep_for(std::chrono::milliseconds(500));
 
   // Make sure the process is still alive.
   std::unique_ptr<ProcessList> process_list = ProcessList::Create();
-  EXPECT_TRUE(process_list->GetProcessByPid(busy_loop_info.process_id).has_value());
+  ASSERT_TRUE(process_list->GetProcessByPid(busy_loop_info.process_id).has_value());
 
-  // Kill process.
-  auto open_result =
-      OpenProcess(PROCESS_ALL_ACCESS, /*inherit_handle=*/false, busy_loop_info.process_id);
-  ASSERT_TRUE(open_result.has_value());
-  const SafeHandle& process_handle = open_result.value();
-  EXPECT_NE(TerminateProcess(*process_handle, /*exit_code*/ 0), 0)
-      << orbit_base::GetLastErrorAsString();
+  // Inject dll while process is spinning at entry point.
+  ErrorMessageOr<void> injection_result = InjectDll(busy_loop_info.process_id, GetTestDllPath());
+  ASSERT_THAT(injection_result, HasNoError());
+
+  // Suspend main thread and replace busy loop by original bytes.
+  ASSERT_THAT(busy_loop_launcher.SuspendMainThreadAndRemoveBusyLoop(), HasNoError());
+
+  // Call function in injected dll.
+  ErrorMessageOr<void> remote_thread_result =
+      CreateRemoteThread(busy_loop_info.process_id, "libtest.dll", "PrintHelloWorld", {});
+  EXPECT_THAT(remote_thread_result, HasNoError());
+
+  // Resume main thread.
+  ASSERT_THAT(busy_loop_launcher.ResumeMainThread(), HasNoError());
+
+  // Wait for created process to exit.
+  busy_loop_launcher.WaitForProcessToExit();
 }
 
 TEST(BusyLoop, BusyLoopAtFunction) {
@@ -116,3 +136,5 @@ TEST(BusyLoop, BusyLoopAtFunction) {
   // Make sure our counter was incremented.
   ASSERT_EQ(counter, 1);
 }
+
+}  // namespace orbit_windows_utils

@@ -8,6 +8,7 @@
 #include <absl/strings/str_format.h>
 
 #include "OrbitBase/GetLastError.h"
+#include "WindowsUtils/OpenProcess.h"
 #include "WindowsUtils/ReadProcessMemory.h"
 #include "WindowsUtils/SafeHandle.h"
 #include "WindowsUtils/WriteProcessMemory.h"
@@ -16,9 +17,10 @@ namespace orbit_windows_utils {
 
 namespace {
 
+using orbit_base::GetLastErrorAsString;
+
 ErrorMessage GetLastErrorForFunction(std::string_view function) {
-  return ErrorMessage(
-      absl::StrFormat("Calling \"%s\": %s", function, orbit_base::GetLastErrorAsString()));
+  return ErrorMessage(absl::StrFormat("Calling \"%s\": %s", function, GetLastErrorAsString()));
 }
 
 ErrorMessageOr<void> FlushInstructionCache(HANDLE process_handle, void* address, size_t size) {
@@ -28,29 +30,13 @@ ErrorMessageOr<void> FlushInstructionCache(HANDLE process_handle, void* address,
   return outcome::success();
 }
 
-ErrorMessageOr<void> WriteInstructionsAtAddress(const std::string& byte_buffer, void* address) {
-  // Mark memory page for writing.
-  DWORD old_protect = 0;
-  if (!VirtualProtect(address, byte_buffer.size(), PAGE_EXECUTE_READWRITE, &old_protect)) {
-    return GetLastErrorForFunction("VirtualProtect");
-  }
-
-  // Write original bytes.
-  memcpy(address, byte_buffer.data(), byte_buffer.size());
-
-  // Restore original page protection.
-  if (!VirtualProtect(address, byte_buffer.size(), old_protect, &old_protect)) {
-    return GetLastErrorForFunction("VirtualProtect");
-  }
-
-  OUTCOME_TRY(FlushInstructionCache(GetCurrentProcess(), address, byte_buffer.size()));
-  return outcome::success();
-}
-
 }  // namespace
 
 ErrorMessageOr<BusyLoopInfo> InstallBusyLoopAtAddress(HANDLE process_handle, void* address) {
+  // The busy loop code is a 2 bytes long reverse short jump that jumps back 2 bytes onto itself,
+  // i.e. "jmp (%rip)-2".
   constexpr const char kBusyLoopCode[] = {0xEB, 0xFE};
+
   BusyLoopInfo busy_loop;
   busy_loop.address = absl::bit_cast<uint64_t>(address);
   busy_loop.process_id = GetProcessId(process_handle);
@@ -68,24 +54,18 @@ ErrorMessageOr<BusyLoopInfo> InstallBusyLoopAtAddress(HANDLE process_handle, voi
   return busy_loop;
 }
 
-ErrorMessageOr<void> SuspendThread(HANDLE thread_handle) {
-  if (::SuspendThread(thread_handle) == (DWORD)-1) {
-    return GetLastErrorForFunction("SuspendThread");
-  }
-  return outcome::success();
-}
-
-ErrorMessageOr<void> ResumeThread(HANDLE thread_handle) {
-  if (::ResumeThread(thread_handle) == (DWORD)-1) {
-    return GetLastErrorForFunction("ResumeThread");
-  }
-  return outcome::success();
-}
-
 ErrorMessageOr<void> RemoveBusyLoop(const BusyLoopInfo& busy_loop_info) {
+  OUTCOME_TRY(SafeHandle process_handle,
+              OpenProcess(PROCESS_ALL_ACCESS, /*inherit_handle=*/false, busy_loop_info.process_id));
+
   // Remove the busy loop and restore the original bytes.
-  void* busy_loop_address = absl::bit_cast<void*>(busy_loop_info.address);
-  OUTCOME_TRY(WriteInstructionsAtAddress(busy_loop_info.original_bytes, busy_loop_address));
+  void* address = absl::bit_cast<void*>(busy_loop_info.address);
+  const std::string& original_bytes = busy_loop_info.original_bytes;
+  OUTCOME_TRY(WriteProcessMemory(*process_handle, address, original_bytes));
+
+  // Flush instruction cache.
+  OUTCOME_TRY(FlushInstructionCache(*process_handle, address, original_bytes.size()));
+
   return outcome::success();
 }
 
@@ -103,6 +83,20 @@ ErrorMessageOr<void> SetThreadInstructionPointer(HANDLE thread_handle,
     return GetLastErrorForFunction("SetThreadContext");
   }
 
+  return outcome::success();
+}
+
+ErrorMessageOr<void> SuspendThread(HANDLE thread_handle) {
+  if (::SuspendThread(thread_handle) == (DWORD)-1) {
+    return GetLastErrorForFunction("SuspendThread");
+  }
+  return outcome::success();
+}
+
+ErrorMessageOr<void> ResumeThread(HANDLE thread_handle) {
+  if (::ResumeThread(thread_handle) == (DWORD)-1) {
+    return GetLastErrorForFunction("ResumeThread");
+  }
   return outcome::success();
 }
 
