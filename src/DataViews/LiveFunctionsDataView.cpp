@@ -187,7 +187,7 @@ void LiveFunctionsDataView::OnSelect(const std::vector<int>& rows) {
 
 void LiveFunctionsDataView::DoSort() {
   if (!app_->HasCaptureData()) {
-    ORBIT_CHECK(functions_.empty());
+    ORBIT_CHECK(scope_id_to_function_info_.empty());
     return;
   }
   bool ascending = sorting_orders_[sorting_column_] == SortingOrder::kAscending;
@@ -316,9 +316,9 @@ DataView::ActionStatus LiveFunctionsDataView::GetActionStatus(
   }
 
   for (int index : selected_indices) {
-    uint64_t instrumented_function_id = GetScopeId(index);
+    uint64_t scope_id = GetScopeId(index);
     const FunctionInfo& instrumented_function = *GetFunctionInfoFromRow(index);
-    if (is_visible_action_enabled(instrumented_function_id, instrumented_function)) {
+    if (is_visible_action_enabled(scope_id, instrumented_function)) {
       return ActionStatus::kVisibleAndEnabled;
     }
   }
@@ -419,7 +419,7 @@ void LiveFunctionsDataView::OnExportEventsToCsvRequested(const std::vector<int>&
 
 void LiveFunctionsDataView::DoFilter() {
   if (!app_->HasCaptureData()) {
-    ORBIT_CHECK(functions_.empty());
+    ORBIT_CHECK(scope_id_to_function_info_.empty());
     return;
   }
   std::vector<uint64_t> indices;
@@ -457,13 +457,13 @@ void LiveFunctionsDataView::DoFilter() {
 
 void LiveFunctionsDataView::AddFunction(uint64_t scope_id,
                                         orbit_client_data::FunctionInfo function_info) {
-  functions_.insert_or_assign(scope_id, std::move(function_info));
+  scope_id_to_function_info_.insert_or_assign(scope_id, std::move(function_info));
   indices_.push_back(scope_id);
 }
 
 void LiveFunctionsDataView::OnDataChanged() {
   UpdateHistogramWithScopeIds({});
-  functions_.clear();
+  scope_id_to_function_info_.clear();
   indices_.clear();
 
   if (!app_->HasCaptureData()) {
@@ -499,7 +499,7 @@ void LiveFunctionsDataView::OnDataChanged() {
 
   std::vector<uint64_t> all_scope_ids = app_->GetCaptureData().GetAllProvidedScopeIds();
   for (uint64_t scope_id : all_scope_ids) {
-    if (!functions_.contains(scope_id)) indices_.push_back(scope_id);
+    if (!scope_id_to_function_info_.contains(scope_id)) indices_.push_back(scope_id);
   }
 
   DataView::OnDataChanged();
@@ -528,8 +528,8 @@ uint64_t LiveFunctionsDataView::GetScopeId(uint32_t row) const {
 
 const FunctionInfo* LiveFunctionsDataView::GetFunctionInfoFromRow(int row) {
   ORBIT_CHECK(static_cast<unsigned int>(row) < indices_.size());
-  const auto it = functions_.find(indices_[row]);
-  return it == functions_.end() ? nullptr : &it->second;
+  const auto it = scope_id_to_function_info_.find(indices_[row]);
+  return it == scope_id_to_function_info_.end() ? nullptr : &it->second;
 }
 
 std::optional<int> LiveFunctionsDataView::GetRowFromScopeId(uint64_t scope_id) {

@@ -463,7 +463,7 @@ class OrbitApp final : public DataViewFactory,
   [[nodiscard]] const orbit_grpc_protos::InstrumentedFunction* GetInstrumentedFunction(
       uint64_t function_id) const;
 
-  void SetVisibleScopeIds(absl::flat_hash_set<uint64_t> visible_functions) override;
+  void SetVisibleScopeIds(absl::flat_hash_set<uint64_t> visible_scope_ids) override;
   [[nodiscard]] bool IsFunctionVisible(uint64_t function_id);
 
   [[nodiscard]] uint64_t GetHighlightedScopeId() const override;

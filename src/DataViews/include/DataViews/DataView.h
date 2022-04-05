@@ -189,7 +189,7 @@ class DataView {
   virtual void DoFilter() {}
   FilterCallback filter_callback_;
 
-  // contains a list of scope_id in the displayed order
+  // Contains a list of scope_id in the displayed order
   std::vector<uint64_t> indices_;
   std::vector<SortingOrder> sorting_orders_;
   int sorting_column_ = 0;

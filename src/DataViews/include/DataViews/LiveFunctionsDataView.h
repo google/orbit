@@ -65,7 +65,7 @@ class LiveFunctionsDataView : public DataView {
       const orbit_grpc_protos::InstrumentedFunction& instrumented_function);
 
   // Maps scope_ids corresponding to dynamically instrumented functions to FunctionInfo instances
-  absl::flat_hash_map<uint64_t, orbit_client_data::FunctionInfo> functions_{};
+  absl::flat_hash_map<uint64_t, orbit_client_data::FunctionInfo> scope_id_to_function_info_{};
   // TODO(b/191333567) This is populated in OnDataChanged(), which causes an overhead upon capture
   // load/finalization this may be optimized via populating it function-wise on user's demand
 
@@ -107,8 +107,8 @@ class LiveFunctionsDataView : public DataView {
       ValueGetterType getter, bool ascending, ValueType default_value) {
     return MakeSorter(
         [this, getter, default_value](uint64_t id) {
-          const auto it = functions_.find(id);
-          return it == functions_.end() ? default_value : getter(it->second);
+          const auto it = scope_id_to_function_info_.find(id);
+          return it == scope_id_to_function_info_.end() ? default_value : getter(it->second);
         },
         ascending);
   }

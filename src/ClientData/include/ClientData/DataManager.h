@@ -35,7 +35,7 @@ class DataManager final {
   void SelectFunction(const FunctionInfo& function);
   void DeselectFunction(const FunctionInfo& function);
   void ClearSelectedFunctions();
-  void set_visible_function_ids(absl::flat_hash_set<uint64_t> visible_function_ids);
+  void set_visible_scope_ids(absl::flat_hash_set<uint64_t> visible_scope_ids);
   void set_highlighted_scope_id(uint64_t highlighted_function_id);
   void set_highlighted_group_id(uint64_t highlighted_group_id);
   void set_selected_thread_id(uint32_t thread_id);
@@ -107,7 +107,7 @@ class DataManager final {
  private:
   const std::thread::id main_thread_id_;
   absl::flat_hash_set<FunctionInfo> selected_functions_;
-  absl::flat_hash_set<uint64_t> visible_function_ids_;
+  absl::flat_hash_set<uint64_t> visible_scope_ids_;
   uint64_t highlighted_scope_id_ = kInvalidScopeId;
   uint64_t highlighted_group_id_ = kOrbitDefaultGroupId;
 
