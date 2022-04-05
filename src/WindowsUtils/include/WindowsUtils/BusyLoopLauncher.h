@@ -11,9 +11,9 @@
 
 namespace orbit_windows_utils {
 
-// "BusyLoopLauncher" is a utility to launch a process and install a busy loop at entry point.
-// This is mainly used to allow to inject a dll as early as possible during process creation.
-// The class is single-use only, it can not be reused to launch multiple processes.
+// Utility to launch a process and install a busy loop at entry point. This is mainly used to allow
+// dll injection as early as possible during process creation. The class is single-use only, it can
+// not be reused to launch multiple processes.
 //
 // Typical usage:
 //  1. Call "StartWithBusyLoopAtEntryPoint" to launch process that will spin at entry point.
@@ -51,9 +51,9 @@ class BusyLoopLauncher : public DebugEventListener {
  private:
   enum class State {
     kInitialState,
-    kProcessStarted,
-    kProcessSuspended,
-    kProcessResumed,
+    kMainThreadInBusyLoop,
+    kMainThreadSuspended,
+    kMainThreadResumed,
     kProcessExited
   };
 

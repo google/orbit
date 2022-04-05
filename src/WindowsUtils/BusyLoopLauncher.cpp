@@ -17,10 +17,10 @@ ErrorMessageOr<BusyLoopInfo> BusyLoopLauncher::StartWithBusyLoopAtEntryPoint(
     const std::string_view arguments) {
   // Calling "StartWithBusyLoopAtEntryPoint" multiple times is not supported.
   ORBIT_CHECK(state_ == State::kInitialState);
-  state_ = State::kProcessStarted;
 
   // Launch process as debuggee in order to receive debugging events.
   OUTCOME_TRY(debugger_.Start(executable, working_directory, arguments));
+  state_ = State::kMainThreadInBusyLoop;
 
   // Wait for "OnCreateProcessDebugEvent" to be called on process creation and for the result of the
   // busy loop installation to be ready.
@@ -29,8 +29,14 @@ ErrorMessageOr<BusyLoopInfo> BusyLoopLauncher::StartWithBusyLoopAtEntryPoint(
 
 void BusyLoopLauncher::OnCreateProcessDebugEvent(const DEBUG_EVENT& event) {
   // Try installing a busy loop at entry point.
-  busy_loop_info_or_error_promise_.SetResult(InstallBusyLoopAtAddress(
-      event.u.CreateProcessInfo.hProcess, event.u.CreateProcessInfo.lpStartAddress));
+  ErrorMessageOr<BusyLoopInfo> busy_loop_info_or = InstallBusyLoopAtAddress(
+      event.u.CreateProcessInfo.hProcess, event.u.CreateProcessInfo.lpStartAddress);
+
+  // Set result on promise to notify parent thread.
+  busy_loop_info_or_error_promise_.SetResult(busy_loop_info_or);
+  if (busy_loop_info_or.has_error()) {
+    return;
+  }
 
   // Keep a handle on the main thread of the created process.
   main_thread_handle_ = event.u.CreateProcessInfo.hThread;
@@ -38,15 +44,16 @@ void BusyLoopLauncher::OnCreateProcessDebugEvent(const DEBUG_EVENT& event) {
 
 ErrorMessageOr<void> BusyLoopLauncher::SuspendMainThreadAndRemoveBusyLoop() {
   ORBIT_CHECK(main_thread_handle_ != nullptr);
-  ORBIT_CHECK(state_ == State::kProcessStarted);
+  ORBIT_CHECK(state_ == State::kMainThreadInBusyLoop);
 
-  // Make sure the busy loop has been has been installed, possibly waiting.
+  // At this point, the future is already finished, there is no waiting.
+  ORBIT_CHECK(busy_loop_info_or_error_promise_.GetFuture().IsFinished());
   OUTCOME_TRY(const BusyLoopInfo& busy_loop_info,
               busy_loop_info_or_error_promise_.GetFuture().Get());
 
   // Suspend the main thread.
   OUTCOME_TRY(SuspendThread(main_thread_handle_));
-  state_ = State::kProcessSuspended;
+  state_ = State::kMainThreadSuspended;
 
   // Replace busy loop by original instructions.
   OUTCOME_TRY(RemoveBusyLoop(busy_loop_info));
@@ -58,10 +65,10 @@ ErrorMessageOr<void> BusyLoopLauncher::SuspendMainThreadAndRemoveBusyLoop() {
 }
 
 ErrorMessageOr<void> BusyLoopLauncher::ResumeMainThread() {
-  ORBIT_CHECK(state_ == State::kProcessSuspended);
+  ORBIT_CHECK(state_ == State::kMainThreadSuspended);
   ORBIT_CHECK(main_thread_handle_ != nullptr);
   OUTCOME_TRY(ResumeThread(main_thread_handle_));
-  state_ = State::kProcessResumed;
+  state_ = State::kMainThreadResumed;
   return outcome::success();
 }
 
