@@ -8,7 +8,6 @@ add_library(DataViews STATIC)
 
 target_sources(DataViews PRIVATE
         CallstackDataView.cpp
-        CompareAscendingOrDescending.h
         DataView.cpp
         DataViewUtils.h
         DataViewUtils.cpp
@@ -21,6 +20,7 @@ target_sources(DataViews PRIVATE
 
 target_sources(DataViews PUBLIC
         include/DataViews/AppInterface.h
+        include/DataViews/CompareAscendingOrDescending.h
         include/DataViews/CallstackDataView.h
         include/DataViews/DataView.h
         include/DataViews/DataViewType.h

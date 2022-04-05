@@ -14,9 +14,9 @@
 #include <utility>
 #include <vector>
 
-#include "../CompareAscendingOrDescending.h"
 #include "ClientData/FunctionInfo.h"
 #include "DataViews/AppInterface.h"
+#include "DataViews/CompareAscendingOrDescending.h"
 #include "DataViews/DataView.h"
 #include "DataViews/LiveFunctionsInterface.h"
 #include "GrpcProtos/capture.pb.h"
@@ -97,7 +97,8 @@ class LiveFunctionsDataView : public DataView {
   [[nodiscard]] std::function<bool(uint64_t, uint64_t)> MakeSorter(ValueGetterType getter,
                                                                    bool ascending) {
     return [getter, ascending](uint64_t id_a, uint64_t id_b) {
-      return CompareAscendingOrDescending(getter(id_a), getter(id_b), ascending);
+      return orbit_data_views_internal::CompareAscendingOrDescending(getter(id_a), getter(id_b),
+                                                                     ascending);
     };
   }
 

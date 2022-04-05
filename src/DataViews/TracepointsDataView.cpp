@@ -12,7 +12,7 @@
 #include <functional>
 #include <memory>
 
-#include "CompareAscendingOrDescending.h"
+#include "DataViews/CompareAscendingOrDescending.h"
 #include "DataViews/DataViewType.h"
 #include "OrbitBase/Append.h"
 
@@ -51,10 +51,10 @@ std::string TracepointsDataView::GetValue(int row, int col) {
   }
 }
 
-#define ORBIT_PROC_SORT(Member)                                                         \
-  [&](int a, int b) {                                                                   \
-    return CompareAscendingOrDescending(tracepoints_[a].Member, tracepoints_[b].Member, \
-                                        ascending);                                     \
+#define ORBIT_PROC_SORT(Member)                                     \
+  [&](int a, int b) {                                               \
+    return orbit_data_views_internal::CompareAscendingOrDescending( \
+        tracepoints_[a].Member, tracepoints_[b].Member, ascending); \
   }
 
 void TracepointsDataView::DoSort() {

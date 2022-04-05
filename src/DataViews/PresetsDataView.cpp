@@ -16,9 +16,9 @@
 #include <filesystem>
 #include <functional>
 
-#include "CompareAscendingOrDescending.h"
 #include "DataViewUtils.h"
 #include "DataViews/AppInterface.h"
+#include "DataViews/CompareAscendingOrDescending.h"
 #include "DataViews/DataViewType.h"
 #include "DataViews/PresetLoadState.h"
 #include "MetricsUploader/MetricsUploader.h"
@@ -135,14 +135,15 @@ void PresetsDataView::DoSort() {
   switch (sorting_column_) {
     case kColumnLoadState:
       sorter = [&](int a, int b) {
-        return CompareAscendingOrDescending(app_->GetPresetLoadState(presets_[a]).state,
-                                            app_->GetPresetLoadState(presets_[b]).state, ascending);
+        return orbit_data_views_internal::CompareAscendingOrDescending(
+            app_->GetPresetLoadState(presets_[a]).state,
+            app_->GetPresetLoadState(presets_[b]).state, ascending);
       };
       break;
     case kColumnPresetName:
       sorter = [&](int a, int b) {
-        return CompareAscendingOrDescending(presets_[a].file_path(), presets_[b].file_path(),
-                                            ascending);
+        return orbit_data_views_internal::CompareAscendingOrDescending(
+            presets_[a].file_path(), presets_[b].file_path(), ascending);
       };
       break;
     default:

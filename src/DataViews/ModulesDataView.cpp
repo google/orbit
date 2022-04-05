@@ -17,7 +17,7 @@
 
 #include "ClientData/ProcessData.h"
 #include "ClientFlags/ClientFlags.h"
-#include "CompareAscendingOrDescending.h"
+#include "DataViews/CompareAscendingOrDescending.h"
 #include "DataViews/DataViewType.h"
 #include "DisplayFormats/DisplayFormats.h"
 #include "OrbitBase/Append.h"
@@ -68,17 +68,18 @@ std::string ModulesDataView::GetValue(int row, int col) {
   }
 }
 
-#define ORBIT_PROC_SORT(Member)                                                             \
-  [&](uint64_t a, uint64_t b) {                                                             \
-    return CompareAscendingOrDescending(start_address_to_module_.at(a)->Member,             \
-                                        start_address_to_module_.at(b)->Member, ascending); \
+#define ORBIT_PROC_SORT(Member)                                                         \
+  [&](uint64_t a, uint64_t b) {                                                         \
+    return orbit_data_views_internal::CompareAscendingOrDescending(                     \
+        start_address_to_module_.at(a)->Member, start_address_to_module_.at(b)->Member, \
+        ascending);                                                                     \
   }
 
-#define ORBIT_MODULE_SPACE_SORT(Member)                                                  \
-  [&](uint64_t a, uint64_t b) {                                                          \
-    return CompareAscendingOrDescending(start_address_to_module_in_memory_.at(a).Member, \
-                                        start_address_to_module_in_memory_.at(b).Member, \
-                                        ascending);                                      \
+#define ORBIT_MODULE_SPACE_SORT(Member)                              \
+  [&](uint64_t a, uint64_t b) {                                      \
+    return orbit_data_views_internal::CompareAscendingOrDescending(  \
+        start_address_to_module_in_memory_.at(a).Member,             \
+        start_address_to_module_in_memory_.at(b).Member, ascending); \
   }
 
 void ModulesDataView::DoSort() {

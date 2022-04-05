@@ -32,7 +32,7 @@
 #include "ClientData/ScopeIdConstants.h"
 #include "ClientData/ScopeStats.h"
 #include "ClientProtos/capture_data.pb.h"
-#include "CompareAscendingOrDescending.h"
+#include "DataViews/CompareAscendingOrDescending.h"
 #include "DataViews/DataView.h"
 #include "DataViews/DataViewType.h"
 #include "DataViews/FunctionsDataView.h"
@@ -177,11 +177,12 @@ void LiveFunctionsDataView::OnSelect(const std::vector<int>& rows) {
   UpdateHistogramWithIndices(GetVisibleSelectedIndices());
 }
 
-#define ORBIT_STAT_SORT(Member)                                                     \
-  [&](uint64_t a, uint64_t b) {                                                     \
-    const ScopeStats& stats_a = app_->GetCaptureData().GetScopeStatsOrDefault(a);   \
-    const ScopeStats& stats_b = app_->GetCaptureData().GetScopeStatsOrDefault(b);   \
-    return CompareAscendingOrDescending(stats_a.Member, stats_b.Member, ascending); \
+#define ORBIT_STAT_SORT(Member)                                                                    \
+  [&](uint64_t a, uint64_t b) {                                                                    \
+    const ScopeStats& stats_a = app_->GetCaptureData().GetScopeStatsOrDefault(a);                  \
+    const ScopeStats& stats_b = app_->GetCaptureData().GetScopeStatsOrDefault(b);                  \
+    return orbit_data_views_internal::CompareAscendingOrDescending(stats_a.Member, stats_b.Member, \
+                                                                   ascending);                     \
   }
 
 void LiveFunctionsDataView::DoSort() {
