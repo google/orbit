@@ -84,10 +84,6 @@ class GlCanvas : public orbit_gl::AccessibleInterfaceProvider {
 
   void EnableImGui();
   [[nodiscard]] ImGuiContext* GetImGuiContext() const { return imgui_context_; }
-  [[nodiscard]] orbit_gl::BatcherInterface& GetBatcher() { return ui_batcher_; }
-  [[nodiscard]] orbit_gl::PrimitiveAssembler& GetPrimitiveAssembler() {
-    return primitive_assembler_;
-  }
 
   [[nodiscard]] virtual bool IsRedrawNeeded() const;
   void RequestRedraw() { redraw_requested_ = true; }

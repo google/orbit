@@ -419,7 +419,7 @@ void CaptureWindow::Draw() {
   if (time_graph_ != nullptr) {
     uint64_t timegraph_current_mouse_time_ns =
         time_graph_->GetTickFromWorld(viewport_.ScreenToWorld(GetMouseScreenPos())[0]);
-    time_graph_->DrawAllElements(GetPrimitiveAssembler(), GetTextRenderer(), picking_mode_,
+    time_graph_->DrawAllElements(primitive_assembler_, GetTextRenderer(), picking_mode_,
                                  timegraph_current_mouse_time_ns);
   }
 
@@ -439,7 +439,7 @@ void CaptureWindow::Draw() {
   DrawScreenSpace();
 
   if (picking_mode_ == PickingMode::kNone) {
-    text_renderer_.RenderDebug(&GetPrimitiveAssembler());
+    text_renderer_.RenderDebug(&primitive_assembler_);
   }
 
   if (picking_mode_ == PickingMode::kNone) {
@@ -490,9 +490,9 @@ void CaptureWindow::DrawScreenSpace() {
   auto canvas_height = static_cast<float>(viewport_.GetScreenHeight());
 
   if (time_span > 0) {
-    slider_->Draw(GetPrimitiveAssembler(), picking_manager_.IsThisElementPicked(slider_.get()));
+    slider_->Draw(primitive_assembler_, picking_manager_.IsThisElementPicked(slider_.get()));
     if (vertical_slider_->IsVisible()) {
-      vertical_slider_->Draw(GetPrimitiveAssembler(),
+      vertical_slider_->Draw(primitive_assembler_,
                              picking_manager_.IsThisElementPicked(vertical_slider_.get()));
     }
   }
