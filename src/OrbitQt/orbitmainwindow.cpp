@@ -94,6 +94,7 @@
 #include "GrpcProtos/services.pb.h"
 #include "Introspection/Introspection.h"
 #include "LiveFunctionsController.h"
+#include "MetricsUploader/orbit_log_event.pb.h"
 #include "OrbitBase/ExecutablePath.h"
 #include "OrbitBase/Logging.h"
 #include "OrbitBase/ReadFileToString.h"
@@ -145,6 +146,8 @@ using orbit_data_views::DataViewType;
 using DynamicInstrumentationMethod =
     orbit_grpc_protos::CaptureOptions::DynamicInstrumentationMethod;
 using UnwindingMethod = orbit_grpc_protos::CaptureOptions::UnwindingMethod;
+
+using orbit_metrics_uploader::OrbitLogEvent;
 
 namespace {
 const QString kLightGrayColor = "rgb(117, 117, 117)";
@@ -201,7 +204,7 @@ OrbitMainWindow::OrbitMainWindow(TargetConfiguration target_configuration,
 
   LoadCaptureOptionsIntoApp();
 
-  metrics_uploader_->SendLogEvent(orbit_metrics_uploader::OrbitLogEvent::ORBIT_MAIN_WINDOW_OPEN);
+  metrics_uploader_->SendLogEvent(OrbitLogEvent::ORBIT_MAIN_WINDOW_OPEN);
 
   // SymbolPaths.txt deprecation code
   // If file does not exist, do nothing. (It means the user never used an older Orbit version or
@@ -1503,7 +1506,7 @@ void OrbitMainWindow::Exit(int return_code) {
     introspection_widget_->close();
   }
 
-  metrics_uploader_->SendLogEvent(orbit_metrics_uploader::OrbitLogEvent::ORBIT_MAIN_WINDOW_CLOSE);
+  metrics_uploader_->SendLogEvent(OrbitLogEvent::ORBIT_MAIN_WINDOW_CLOSE);
 
   QApplication::exit(return_code);
 }
@@ -1799,6 +1802,7 @@ orbit_gl::MainWindowInterface::SymbolErrorHandlingResult OrbitMainWindow::Handle
     const ErrorMessage& error, const orbit_client_data::ModuleData* module) {
   orbit_config_widgets::SymbolErrorDialog error_dialog{module, error.message(), this};
 
+  metrics_uploader_->SendLogEvent(OrbitLogEvent::ORBIT_SYMBOL_LOADING_ERROR_DISPLAYED);
   orbit_config_widgets::SymbolErrorDialog::Result result = error_dialog.Exec();
 
   switch (result) {
