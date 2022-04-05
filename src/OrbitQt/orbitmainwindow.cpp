@@ -187,14 +187,6 @@ OrbitMainWindow::OrbitMainWindow(TargetConfiguration target_configuration,
 
   app_->PostInit(is_connected_);
 
-  if (FLAGS_stack_dump_size.IsSpecifiedOnCommandLine()) {
-    uint16_t stack_dump_size = absl::GetFlag(FLAGS_stack_dump_size);
-    ORBIT_CHECK(stack_dump_size != std::numeric_limits<uint16_t>::max());
-    app_->SetStackDumpSize(stack_dump_size);
-  } else {
-    app_->SetStackDumpSize(std::numeric_limits<uint16_t>::max());
-  }
-
   SaveCurrentTabLayoutAsDefaultInMemory();
 
   UpdateCaptureStateDependentWidgets();
@@ -1078,6 +1070,7 @@ void OrbitMainWindow::on_actionToggle_Capture_triggered() { app_->ToggleCapture(
 const QString OrbitMainWindow::kEnableCallstackSamplingSettingKey{"EnableCallstackSampling"};
 const QString OrbitMainWindow::kCallstackSamplingPeriodMsSettingKey{"CallstackSamplingPeriodMs"};
 const QString OrbitMainWindow::kCallstackUnwindingMethodSettingKey{"CallstackUnwindingMethod"};
+const QString OrbitMainWindow::kMaxCopyRawStackSizeKey{"MaxCopyRawStackSize"};
 const QString OrbitMainWindow::kCollectSchedulerInfoSettingKey{"CollectSchedulerInfo"};
 const QString OrbitMainWindow::kCollectThreadStatesSettingKey{"CollectThreadStates"};
 const QString OrbitMainWindow::kTraceGpuSubmissionsSettingKey{"TraceGpuSubmissions"};
@@ -1124,6 +1117,7 @@ void OrbitMainWindow::LoadCaptureOptionsIntoApp() {
 
   if (!app_->IsDevMode()) {
     app_->SetUnwindingMethod(kCallstackUnwindingMethodDefaultValue);
+    app_->SetStackDumpSize(std::numeric_limits<uint16_t>::max());
   } else {
     UnwindingMethod unwinding_method = static_cast<UnwindingMethod>(
         settings
@@ -1135,6 +1129,17 @@ void OrbitMainWindow::LoadCaptureOptionsIntoApp() {
       unwinding_method = kCallstackUnwindingMethodDefaultValue;
     }
     app_->SetUnwindingMethod(unwinding_method);
+
+    if (unwinding_method == CaptureOptions::kFramePointers) {
+      uint16_t stack_dump_size = static_cast<uint16_t>(
+          settings
+              .value(kMaxCopyRawStackSizeKey,
+                     orbit_qt::CaptureOptionsDialog::kMaxCopyRawStackSizeDefaultValue)
+              .toUInt());
+      app_->SetStackDumpSize(stack_dump_size);
+    } else {
+      app_->SetStackDumpSize(std::numeric_limits<uint16_t>::max());
+    }
   }
 
   app_->SetCollectSchedulerInfo(settings.value(kCollectSchedulerInfoSettingKey, true).toBool());
@@ -1198,6 +1203,11 @@ void OrbitMainWindow::on_actionCaptureOptions_triggered() {
     unwinding_method = kCallstackUnwindingMethodDefaultValue;
   }
   dialog.SetUnwindingMethod(unwinding_method);
+  dialog.SetMaxCopyRawStackSize(static_cast<uint16_t>(
+      settings
+          .value(kMaxCopyRawStackSizeKey,
+                 orbit_qt::CaptureOptionsDialog::kMaxCopyRawStackSizeDefaultValue)
+          .toUInt()));
   dialog.SetCollectSchedulerInfo(settings.value(kCollectSchedulerInfoSettingKey, true).toBool());
   dialog.SetCollectThreadStates(settings.value(kCollectThreadStatesSettingKey, false).toBool());
   dialog.SetTraceGpuSubmissions(settings.value(kTraceGpuSubmissionsSettingKey, true).toBool());
@@ -1238,6 +1248,7 @@ void OrbitMainWindow::on_actionCaptureOptions_triggered() {
   settings.setValue(kCallstackSamplingPeriodMsSettingKey, dialog.GetSamplingPeriodMs());
   settings.setValue(kCallstackUnwindingMethodSettingKey,
                     static_cast<int>(dialog.GetUnwindingMethod()));
+  settings.setValue(kMaxCopyRawStackSizeKey, static_cast<int>(dialog.GetMaxCopyRawStackSize()));
   settings.setValue(kCollectSchedulerInfoSettingKey, dialog.GetCollectSchedulerInfo());
   settings.setValue(kCollectThreadStatesSettingKey, dialog.GetCollectThreadStates());
   settings.setValue(kTraceGpuSubmissionsSettingKey, dialog.GetTraceGpuSubmissions());
