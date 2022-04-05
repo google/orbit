@@ -133,13 +133,14 @@ class ConnectToStadiaInstance(E2ETestCase):
         connect_radio = self.find_control('RadioButton', 'ConnectToStadia')
         connect_radio.click_input()
 
-        # Wait for the first data item in the instance list to exist
-        # We're not using find_control here because magic lookup enables us to easily wait for the existence of a row
-        window.InstanceList.click_input()
-        window.InstanceList.DataItem0.wait('exists', timeout=100)
+        # Wait for the list to be populated with more than 0 instances
+        instance_list = self.find_control('Table', 'InstanceList')
+        instance_list.click_input()
+        wait_for_condition(lambda: _get_number_of_instances_in_list(self) > 0, max_seconds=100)
         self.expect_true(_get_number_of_instances_in_list(self) >= 1, 'Found at least one instance')
 
-        window.InstanceList.DataItem0.double_click_input()
+        instance_list = self.find_control('Table', 'InstanceList')
+        instance_list.children(control_type='DataItem')[0].double_click_input()
         logging.info('Connecting to Instance, waiting for the process list...')
 
         # In the new UI, use small waits until the process list is active, and then some more for the
@@ -184,7 +185,6 @@ class RefreshStadiaInstanceList(E2ETestCase):
     """
 
     def _execute(self):
-        instance_list = self.find_control('Table', 'InstanceList')
         refresh_button = self.find_control('Button', 'RefreshInstanceList')
         logging.info('Found instance list and refresh button, clicking refresh button')
         refresh_button.click_input()
