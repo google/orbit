@@ -48,8 +48,7 @@ ErrorMessageOr<ProcessInfo> CreateProcess(const std::filesystem::path& executabl
                      /*bInheritHandles*/ FALSE, creation_flags, /*lpEnvironment*/ nullptr,
                      working_directory.empty() ? nullptr : working_directory.c_str(), &startup_info,
                      &process_info) == 0) {
-    return ErrorMessage(
-        absl::StrFormat("Calling \"CreateProcess\": %s", orbit_base::GetLastErrorAsString()));
+    return orbit_base::GetLastErrorAsErrorMessage("CreateProcess");
   }
 
   // A SafeHandle makes sure "CloseHandle" is called when the ProcessInfo goes out of scope.

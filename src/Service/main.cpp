@@ -45,7 +45,7 @@ BOOL WINAPI CtrlHandler(DWORD event_type) {
 
 void InstallSigintHandler() {
   if (!SetConsoleCtrlHandler(CtrlHandler, TRUE)) {
-    ORBIT_ERROR("Calling SetConsoleCtrlHandler: %s", orbit_base::GetLastErrorAsString());
+    ORBIT_ERROR("%s", orbit_base::GetLastErrorAsString("SetConsoleCtrlHandler"));
   }
 }
 

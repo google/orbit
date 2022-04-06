@@ -4,6 +4,7 @@
 
 #include <absl/base/casts.h>
 #include <absl/strings/ascii.h>
+#include <absl/strings/str_format.h>
 #include <windows.h>
 
 #include "OrbitBase/GetLastError.h"
@@ -38,6 +39,14 @@ std::string GetLastErrorAsString() {
   std::string error_as_string(buffer, size);
   LocalFree(buffer);
   return std::string(absl::StripAsciiWhitespace(error_as_string));
+}
+
+std::string GetLastErrorAsString(std::string_view function_name) {
+  return absl::StrFormat("Calling %s: %s", function_name, GetLastErrorAsString());
+}
+
+ErrorMessage GetLastErrorAsErrorMessage(std::string_view function_name) {
+  return ErrorMessage(GetLastErrorAsString(function_name));
 }
 
 }  // namespace orbit_base
