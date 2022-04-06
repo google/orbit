@@ -96,7 +96,9 @@ bool IsBlocklisted(std::string_view function_name) {
                                                            "__GI___libc_alloca_cutoff",
                                                            "start_thread",
                                                            "__pthread_enable_asynccancel",
-                                                           "__errno_location"};
+                                                           "__errno_location",
+                                                           "__memalign",
+                                                           "_mid_memalign"};
   return kBlocklist.contains(function_name);
 }
 
