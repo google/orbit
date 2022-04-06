@@ -121,7 +121,7 @@ void ExpectDraw(FakeOpenGlBatcher& batcher, uint32_t line_count, uint32_t triang
   EXPECT_EQ(batcher.GetDrawnBoxColors().size(), box_count);
 }
 
-TEST(Batcher, SimpleElementsDrawing) {
+TEST(OpenGlBatcher, SimpleElementsDrawing) {
   FakeOpenGlBatcher batcher(BatcherId::kUi);
 
   ExpectDraw(batcher, 0, 0, 0);
@@ -149,7 +149,7 @@ void ExpectCustomDataEq(const FakeOpenGlBatcher& batcher, const Color& rendered_
   EXPECT_EQ(*static_cast<const T*>(rendered_data->custom_data_), value);
 }
 
-TEST(Batcher, PickingSimpleElements) {
+TEST(OpenGlBatcher, PickingSimpleElements) {
   FakeOpenGlBatcher batcher(BatcherId::kUi);
   EXPECT_EQ(batcher.GetBatcherId(), BatcherId::kUi);
 
@@ -181,7 +181,7 @@ TEST(Batcher, PickingSimpleElements) {
   ExpectCustomDataEq(batcher, batcher.GetDrawnBoxColors()[0], box_custom_data);
 }
 
-TEST(Batcher, MultipleDrawCalls) {
+TEST(OpenGlBatcher, MultipleDrawCalls) {
   FakeOpenGlBatcher batcher(BatcherId::kUi);
 
   std::string line_custom_data = "line custom data";
@@ -227,7 +227,7 @@ bool LineEq(const Line& lhs, const Line& rhs) {
   return lhs.start_point == rhs.start_point && lhs.end_point == rhs.end_point;
 }
 
-TEST(Batcher, TranslationsAreAutomaticallyAdded) {
+TEST(OpenGlBatcher, TranslationsAreAutomaticallyAdded) {
   FakeOpenGlBatcher batcher(BatcherId::kUi);
   batcher.AddLineHelper(Vec2(0.f, 0.f), Vec2(1.f, 1.f), 0.f, Color());
 
