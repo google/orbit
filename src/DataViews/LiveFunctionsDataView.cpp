@@ -324,14 +324,14 @@ DataView::ActionStatus LiveFunctionsDataView::GetActionStatus(
     return ActionStatus::kInvisible;
   }
 
-  const bool enabled_for_any =
-      std::any_of(std::begin(selected_indices), std::end(selected_indices),
-                  [this, &is_visible_action_enabled](int index) {
-                    const uint64_t scope_id = GetScopeId(index);
-                    const FunctionInfo* function_info = GetFunctionInfoFromRow(index);
-                    if (function_info == nullptr) return false;
-                    return is_visible_action_enabled(scope_id, *function_info);
-                  });
+  const bool enabled_for_any = std::transform_reduce(
+      std::begin(selected_indices), std::end(selected_indices), std::begin(function_infos), false,
+      std::logical_or<>{},
+      [this, &is_visible_action_enabled](int index, const FunctionInfo* function_info) {
+        const uint64_t scope_id = GetScopeId(index);
+        if (function_info == nullptr) return false;
+        return is_visible_action_enabled(scope_id, *function_info);
+      });
 
   if (enabled_for_any) return ActionStatus::kVisibleAndEnabled;
   return ActionStatus::kVisibleButDisabled;
