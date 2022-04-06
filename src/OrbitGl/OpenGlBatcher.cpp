@@ -16,6 +16,7 @@ void OpenGlBatcher::ResetElements() {
     buffer.Reset();
   }
   user_data_.clear();
+  ORBIT_CHECK(translations_.IsEmpty());
 }
 
 static void MoveLineToPixelCenterIfHorizontal(Line& line) {
@@ -24,9 +25,9 @@ static void MoveLineToPixelCenterIfHorizontal(Line& line) {
   line.end_point[1] += 0.5f;
 }
 
-void OpenGlBatcher::AddLineInternal(Vec2 from, Vec2 to, float z, const Color& color,
-                                    const Color& picking_color,
-                                    std::unique_ptr<PickingUserData> user_data) {
+void OpenGlBatcher::AddLine(Vec2 from, Vec2 to, float z, const Color& color,
+                            const Color& picking_color,
+                            std::unique_ptr<PickingUserData> user_data) {
   Line line;
   line.start_point = translations_.TranslateAndFloorVertex(Vec3(from[0], from[1], z));
   line.end_point = translations_.TranslateAndFloorVertex(Vec3(to[0], to[1], z));
@@ -41,9 +42,8 @@ void OpenGlBatcher::AddLineInternal(Vec2 from, Vec2 to, float z, const Color& co
   user_data_.push_back(std::move(user_data));
 }
 
-void OpenGlBatcher::AddBoxInternal(const Tetragon& box, const std::array<Color, 4>& colors,
-                                   const Color& picking_color,
-                                   std::unique_ptr<PickingUserData> user_data) {
+void OpenGlBatcher::AddBox(const Tetragon& box, const std::array<Color, 4>& colors,
+                           const Color& picking_color, std::unique_ptr<PickingUserData> user_data) {
   Tetragon rounded_box = box;
   for (size_t v = 0; v < 4; ++v) {
     rounded_box.vertices[v] = translations_.TranslateAndFloorVertex(rounded_box.vertices[v]);
@@ -56,10 +56,9 @@ void OpenGlBatcher::AddBoxInternal(const Tetragon& box, const std::array<Color, 
   user_data_.push_back(std::move(user_data));
 }
 
-void OpenGlBatcher::AddTriangleInternal(const Triangle& triangle,
-                                        const std::array<Color, 3>& colors,
-                                        const Color& picking_color,
-                                        std::unique_ptr<PickingUserData> user_data) {
+void OpenGlBatcher::AddTriangle(const Triangle& triangle, const std::array<Color, 3>& colors,
+                                const Color& picking_color,
+                                std::unique_ptr<PickingUserData> user_data) {
   Triangle rounded_tri = triangle;
   for (auto& vertex : rounded_tri.vertices) {
     vertex = translations_.TranslateAndFloorVertex(vertex);
@@ -165,6 +164,27 @@ void OpenGlBatcher::DrawTriangleBuffer(float layer, bool picking) const {
     triangle_block = triangle_block->next();
     color_block = color_block->next();
   }
+}
+
+const PickingUserData* OpenGlBatcher::GetUserData(PickingId id) const {
+  ORBIT_CHECK(id.element_id >= 0);
+  ORBIT_CHECK(id.batcher_id == GetBatcherId());
+
+  switch (id.type) {
+    case PickingType::kInvalid:
+      return nullptr;
+    case PickingType::kBox:
+    case PickingType::kTriangle:
+    case PickingType::kLine:
+      ORBIT_CHECK(id.element_id < user_data_.size());
+      return user_data_[id.element_id].get();
+    case PickingType::kPickable:
+      return nullptr;
+    case PickingType::kCount:
+      ORBIT_UNREACHABLE();
+  }
+
+  ORBIT_UNREACHABLE();
 }
 
 }  // namespace orbit_gl

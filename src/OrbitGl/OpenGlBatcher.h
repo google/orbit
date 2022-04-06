@@ -5,15 +5,13 @@
 #ifndef ORBIT_GL_OPEN_GL_BATCHER_H_
 #define ORBIT_GL_OPEN_GL_BATCHER_H_
 
-#include <PrimitiveAssembler.h>
-
 #include <array>
 #include <memory>
 #include <unordered_map>
 #include <vector>
 
+#include "Batcher.h"
 #include "Containers/BlockChain.h"
-#include "PickingManager.h"
 
 namespace orbit_gl {
 
@@ -75,29 +73,32 @@ struct PrimitiveBuffers {
 // Implements internal methods to collects primitives to be rendered at a later point in time.
 //
 // NOTE: The OpenGlBatcher assumes x/y coordinates are in pixels and will automatically round those
-// down to the next integer in all PrimitiveAssembler::AddXXX methods. This fixes the issue of
-// primitives "jumping" around when their coordinates are changed slightly.
-class OpenGlBatcher : public PrimitiveAssembler {
+// down to the next integer in all Batcher::AddXXX methods. This fixes the issue of primitives
+// "jumping" around when their coordinates are changed slightly.
+class OpenGlBatcher : public Batcher {
  public:
-  explicit OpenGlBatcher(BatcherId batcher_id, PickingManager* picking_manager = nullptr)
-      : PrimitiveAssembler(batcher_id, picking_manager) {}
+  explicit OpenGlBatcher(BatcherId batcher_id) : Batcher(batcher_id) {}
+
+  void ResetElements() override;
+  void AddLine(Vec2 from, Vec2 to, float z, const Color& color, const Color& picking_color,
+               std::unique_ptr<PickingUserData> user_data = nullptr) override;
+  void AddBox(const Tetragon& box, const std::array<Color, 4>& colors, const Color& picking_color,
+              std::unique_ptr<PickingUserData> user_data = nullptr) override;
+  void AddTriangle(const Triangle& triangle, const std::array<Color, 3>& colors,
+                   const Color& picking_color,
+                   std::unique_ptr<PickingUserData> user_data = nullptr) override;
+
+  [[nodiscard]] uint32_t GetNumElements() const override { return user_data_.size(); }
   [[nodiscard]] std::vector<float> GetLayers() const override;
   void DrawLayer(float layer, bool picking) const override;
 
+  [[nodiscard]] const PickingUserData* GetUserData(PickingId id) const override;
+
  protected:
   std::unordered_map<float, orbit_gl_internal::PrimitiveBuffers> primitive_buffers_by_layer_;
+  std::vector<std::unique_ptr<PickingUserData>> user_data_;
 
  private:
-  void ResetElements() override;
-  void AddLineInternal(Vec2 from, Vec2 to, float z, const Color& color, const Color& picking_color,
-                       std::unique_ptr<PickingUserData> user_data) override;
-  void AddBoxInternal(const Tetragon& box, const std::array<Color, 4>& colors,
-                      const Color& picking_color,
-                      std::unique_ptr<PickingUserData> user_data) override;
-  void AddTriangleInternal(const Triangle& triangle, const std::array<Color, 3>& colors,
-                           const Color& picking_color,
-                           std::unique_ptr<PickingUserData> user_data) override;
-
   void DrawLineBuffer(float layer, bool picking) const;
   void DrawBoxBuffer(float layer, bool picking) const;
   void DrawTriangleBuffer(float layer, bool picking) const;

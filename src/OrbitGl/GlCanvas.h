@@ -84,7 +84,6 @@ class GlCanvas : public orbit_gl::AccessibleInterfaceProvider {
 
   void EnableImGui();
   [[nodiscard]] ImGuiContext* GetImGuiContext() const { return imgui_context_; }
-  [[nodiscard]] orbit_gl::PrimitiveAssembler& GetPrimitiveAssembler() { return ui_batcher_; }
 
   [[nodiscard]] virtual bool IsRedrawNeeded() const;
   void RequestRedraw() { redraw_requested_ = true; }
@@ -162,6 +161,7 @@ class GlCanvas : public orbit_gl::AccessibleInterfaceProvider {
 
   // PrimitiveAssembler to draw elements in the UI.
   orbit_gl::OpenGlBatcher ui_batcher_;
+  orbit_gl::PrimitiveAssembler primitive_assembler_;
   std::vector<RenderCallback> render_callbacks_;
 
  private:

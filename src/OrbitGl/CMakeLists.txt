@@ -203,6 +203,7 @@ target_sources(OrbitGlTests PRIVATE
                MultivariateTimeSeriesTest.cpp
                PageFaultsTrackTest.cpp
                PickingManagerTest.cpp
+               PrimitiveAssemblerTest.cpp
                ScopedStatusTest.cpp
                SimpleTimingsTest.cpp
                SliderTest.cpp

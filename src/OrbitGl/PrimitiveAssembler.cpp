@@ -14,18 +14,19 @@ namespace orbit_gl {
 
 void PrimitiveAssembler::AddLine(Vec2 from, Vec2 to, float z, const Color& color,
                                  std::unique_ptr<PickingUserData> user_data) {
-  Color picking_color = PickingId::ToColor(PickingType::kLine, user_data_.size(), batcher_id_);
+  Color picking_color =
+      PickingId::ToColor(PickingType::kLine, batcher_->GetNumElements(), GetBatcherId());
 
-  AddLineInternal(from, to, z, color, picking_color, std::move(user_data));
+  batcher_->AddLine(from, to, z, color, picking_color, std::move(user_data));
 }
 
 void PrimitiveAssembler::AddLine(Vec2 from, Vec2 to, float z, const Color& color,
                                  std::shared_ptr<Pickable> pickable) {
   ORBIT_CHECK(picking_manager_ != nullptr);
 
-  Color picking_color = picking_manager_->GetPickableColor(pickable, batcher_id_);
+  Color picking_color = picking_manager_->GetPickableColor(pickable, GetBatcherId());
 
-  AddLineInternal(from, to, z, color, picking_color, nullptr);
+  batcher_->AddLine(from, to, z, color, picking_color, nullptr);
 }
 
 void PrimitiveAssembler::AddVerticalLine(Vec2 pos, float size, float z, const Color& color,
@@ -37,15 +38,16 @@ void PrimitiveAssembler::AddVerticalLine(Vec2 pos, float size, float z, const Co
                                          std::shared_ptr<Pickable> pickable) {
   ORBIT_CHECK(picking_manager_ != nullptr);
 
-  Color picking_color = picking_manager_->GetPickableColor(pickable, batcher_id_);
+  Color picking_color = picking_manager_->GetPickableColor(pickable, GetBatcherId());
 
-  AddLineInternal(pos, pos + Vec2(0, size), z, color, picking_color, nullptr);
+  batcher_->AddLine(pos, pos + Vec2(0, size), z, color, picking_color, nullptr);
 }
 
 void PrimitiveAssembler::AddBox(const Tetragon& box, const std::array<Color, 4>& colors,
                                 std::unique_ptr<PickingUserData> user_data) {
-  Color picking_color = PickingId::ToColor(PickingType::kBox, user_data_.size(), batcher_id_);
-  AddBoxInternal(box, colors, picking_color, std::move(user_data));
+  Color picking_color =
+      PickingId::ToColor(PickingType::kBox, batcher_->GetNumElements(), GetBatcherId());
+  batcher_->AddBox(box, colors, picking_color, std::move(user_data));
 }
 
 void PrimitiveAssembler::AddBox(const Tetragon& box, const Color& color,
@@ -59,11 +61,11 @@ void PrimitiveAssembler::AddBox(const Tetragon& box, const Color& color,
                                 std::shared_ptr<Pickable> pickable) {
   ORBIT_CHECK(picking_manager_ != nullptr);
 
-  Color picking_color = picking_manager_->GetPickableColor(pickable, batcher_id_);
+  Color picking_color = picking_manager_->GetPickableColor(pickable, GetBatcherId());
   std::array<Color, 4> colors;
   colors.fill(color);
 
-  AddBoxInternal(box, colors, picking_color, nullptr);
+  batcher_->AddBox(box, colors, picking_color, nullptr);
 }
 
 void PrimitiveAssembler::AddShadedBox(Vec2 pos, Vec2 size, float z, const Color& color) {
@@ -175,14 +177,15 @@ void PrimitiveAssembler::AddShadedBox(Vec2 pos, Vec2 size, float z, const Color&
                                       ShadingDirection shading_direction) {
   std::array<Color, 4> colors;
   GetBoxGradientColors(color, &colors, shading_direction);
-  Color picking_color = picking_manager_->GetPickableColor(pickable, batcher_id_);
+  Color picking_color = picking_manager_->GetPickableColor(pickable, GetBatcherId());
   Tetragon box = MakeBox(pos, size, z);
-  AddBoxInternal(box, colors, picking_color, nullptr);
+  batcher_->AddBox(box, colors, picking_color, nullptr);
 }
 
 void PrimitiveAssembler::AddTriangle(const Triangle& triangle, const Color& color,
                                      std::unique_ptr<PickingUserData> user_data) {
-  Color picking_color = PickingId::ToColor(PickingType::kTriangle, user_data_.size(), batcher_id_);
+  Color picking_color =
+      PickingId::ToColor(PickingType::kTriangle, batcher_->GetNumElements(), GetBatcherId());
 
   AddTriangle(triangle, color, picking_color, std::move(user_data));
 }
@@ -191,7 +194,7 @@ void PrimitiveAssembler::AddTriangle(const Triangle& triangle, const Color& colo
                                      std::shared_ptr<Pickable> pickable) {
   ORBIT_CHECK(picking_manager_ != nullptr);
 
-  Color picking_color = picking_manager_->GetPickableColor(pickable, batcher_id_);
+  Color picking_color = picking_manager_->GetPickableColor(pickable, GetBatcherId());
 
   AddTriangle(triangle, color, picking_color, nullptr);
 }
@@ -201,7 +204,7 @@ void PrimitiveAssembler::AddTriangle(const Triangle& triangle, const Color& colo
                                      std::unique_ptr<PickingUserData> user_data) {
   std::array<Color, 3> colors;
   colors.fill(color);
-  AddTriangleInternal(triangle, colors, picking_color, std::move(user_data));
+  batcher_->AddTriangle(triangle, colors, picking_color, std::move(user_data));
 }
 
 // Draw a shaded trapezium with two sides parallel to the x-axis or y-axis.
@@ -210,14 +213,15 @@ void PrimitiveAssembler::AddShadedTrapezium(const Tetragon& trapezium, const Col
                                             ShadingDirection shading_direction) {
   std::array<Color, 4> colors;  // top_left, bottom_left, bottom_right, top_right.
   GetBoxGradientColors(color, &colors, shading_direction);
-  Color picking_color = PickingId::ToColor(PickingType::kTriangle, user_data_.size(), batcher_id_);
+  Color picking_color =
+      PickingId::ToColor(PickingType::kTriangle, batcher_->GetNumElements(), GetBatcherId());
   Triangle triangle_1{trapezium.vertices[0], trapezium.vertices[3], trapezium.vertices[1]};
   std::array<Color, 3> colors_1{colors[0], colors[1], colors[2]};
-  AddTriangleInternal(triangle_1, colors_1, picking_color,
-                      std::make_unique<PickingUserData>(*user_data));
+  batcher_->AddTriangle(triangle_1, colors_1, picking_color,
+                        std::make_unique<PickingUserData>(*user_data));
   Triangle triangle_2{trapezium.vertices[3], trapezium.vertices[2], trapezium.vertices[1]};
   std::array<Color, 3> colors_2{colors[1], colors[2], colors[3]};
-  AddTriangleInternal(triangle_2, colors_2, picking_color, std::move(user_data));
+  batcher_->AddTriangle(triangle_2, colors_2, picking_color, std::move(user_data));
 }
 
 void PrimitiveAssembler::AddCircle(const Vec2& position, float radius, float z, Color color) {
@@ -226,13 +230,11 @@ void PrimitiveAssembler::AddCircle(const Vec2& position, float radius, float z, 
     circle_points_scaled_by_radius.emplace_back(radius * point);
   }
 
-  Vec3 final_position = translations_.TranslateAndFloorVertex(Vec3(position[0], position[1], z));
-
-  Vec3 prev_point(final_position[0], final_position[1] - radius, z);
-  Vec3 point_0 = final_position;
+  Vec3 prev_point(position[0], position[1] - radius, z);
+  Vec3 point_0 = Vec3(position[0], position[1], z);
   for (size_t i = 0; i < circle_points_scaled_by_radius.size(); ++i) {
-    Vec3 new_point(final_position[0] + circle_points_scaled_by_radius[i][0],
-                   final_position[1] - circle_points_scaled_by_radius[i][1], z);
+    Vec3 new_point(position[0] + circle_points_scaled_by_radius[i][0],
+                   position[1] - circle_points_scaled_by_radius[i][1], z);
     Vec3 point_1 = Vec3(prev_point[0], prev_point[1], z);
     Vec3 point_2 = Vec3(new_point[0], new_point[1], z);
     Triangle triangle(point_0, point_1, point_2);
@@ -252,42 +254,6 @@ void PrimitiveAssembler::AddTetragonBorder(const Tetragon& tetragon, const Color
           std::make_unique<PickingUserData>(*user_data));
   AddLine(Vec3ToVec2(tetragon.vertices[3]), Vec3ToVec2(tetragon.vertices[0]), z, color,
           std::move(user_data));
-}
-
-const PickingUserData* PrimitiveAssembler::GetUserData(PickingId id) const {
-  ORBIT_CHECK(id.element_id >= 0);
-  ORBIT_CHECK(id.batcher_id == batcher_id_);
-
-  switch (id.type) {
-    case PickingType::kInvalid:
-      return nullptr;
-    case PickingType::kBox:
-    case PickingType::kTriangle:
-    case PickingType::kLine:
-      ORBIT_CHECK(id.element_id < user_data_.size());
-      return user_data_[id.element_id].get();
-    case PickingType::kPickable:
-      return nullptr;
-    case PickingType::kCount:
-      ORBIT_UNREACHABLE();
-  }
-
-  ORBIT_UNREACHABLE();
-}
-
-PickingUserData* PrimitiveAssembler::GetUserData(PickingId id) {
-  return const_cast<PickingUserData*>(
-      static_cast<const PrimitiveAssembler*>(this)->GetUserData(id));
-}
-
-const orbit_client_protos::TimerInfo* PrimitiveAssembler::GetTimerInfo(PickingId id) const {
-  const PickingUserData* data = GetUserData(id);
-
-  if (data && data->timer_info_) {
-    return data->timer_info_;
-  }
-
-  return nullptr;
 }
 
 void PrimitiveAssembler::GetBoxGradientColors(const Color& color, std::array<Color, 4>* colors,
@@ -325,15 +291,16 @@ void PrimitiveAssembler::GetBoxGradientColors(const Color& color, std::array<Col
   }
 }
 
-void PrimitiveAssembler::StartNewFrame() {
-  ORBIT_CHECK(translations_.IsEmpty());
-  ResetElements();
-}
+void PrimitiveAssembler::StartNewFrame() { batcher_->ResetElements(); }
 
-void PrimitiveAssembler::Draw(bool picking) const {
-  for (float layer : GetLayers()) {
-    DrawLayer(layer, picking);
+const orbit_client_protos::TimerInfo* PrimitiveAssembler::GetTimerInfo(PickingId id) const {
+  const PickingUserData* data = GetUserData(id);
+
+  if (data && data->timer_info_) {
+    return data->timer_info_;
   }
+
+  return nullptr;
 }
 
 }  // namespace orbit_gl
