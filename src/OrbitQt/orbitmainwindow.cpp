@@ -1070,7 +1070,7 @@ void OrbitMainWindow::on_actionToggle_Capture_triggered() { app_->ToggleCapture(
 const QString OrbitMainWindow::kEnableCallstackSamplingSettingKey{"EnableCallstackSampling"};
 const QString OrbitMainWindow::kCallstackSamplingPeriodMsSettingKey{"CallstackSamplingPeriodMs"};
 const QString OrbitMainWindow::kCallstackUnwindingMethodSettingKey{"CallstackUnwindingMethod"};
-const QString OrbitMainWindow::kMaxCopyRawStackSizeSettingsKey{"MaxCopyRawStackSize"};
+const QString OrbitMainWindow::kMaxCopyRawStackSizeSettingKey{"MaxCopyRawStackSize"};
 const QString OrbitMainWindow::kCollectSchedulerInfoSettingKey{"CollectSchedulerInfo"};
 const QString OrbitMainWindow::kCollectThreadStatesSettingKey{"CollectThreadStates"};
 const QString OrbitMainWindow::kTraceGpuSubmissionsSettingKey{"TraceGpuSubmissions"};
@@ -1129,7 +1129,7 @@ void OrbitMainWindow::LoadCaptureOptionsIntoApp() {
     if (unwinding_method == CaptureOptions::kFramePointers) {
       uint16_t stack_dump_size = static_cast<uint16_t>(
           settings
-              .value(kMaxCopyRawStackSizeSettingsKey,
+              .value(kMaxCopyRawStackSizeSettingKey,
                      orbit_qt::CaptureOptionsDialog::kMaxCopyRawStackSizeDefaultValue)
               .toUInt());
       app_->SetStackDumpSize(stack_dump_size);
@@ -1211,7 +1211,7 @@ void OrbitMainWindow::on_actionCaptureOptions_triggered() {
   dialog.SetUnwindingMethod(unwinding_method);
   dialog.SetMaxCopyRawStackSize(static_cast<uint16_t>(
       settings
-          .value(kMaxCopyRawStackSizeSettingsKey,
+          .value(kMaxCopyRawStackSizeSettingKey,
                  orbit_qt::CaptureOptionsDialog::kMaxCopyRawStackSizeDefaultValue)
           .toUInt()));
   dialog.SetCollectSchedulerInfo(settings.value(kCollectSchedulerInfoSettingKey, true).toBool());
@@ -1261,7 +1261,7 @@ void OrbitMainWindow::on_actionCaptureOptions_triggered() {
   settings.setValue(kCallstackSamplingPeriodMsSettingKey, dialog.GetSamplingPeriodMs());
   settings.setValue(kCallstackUnwindingMethodSettingKey,
                     static_cast<int>(dialog.GetUnwindingMethod()));
-  settings.setValue(kMaxCopyRawStackSizeSettingsKey,
+  settings.setValue(kMaxCopyRawStackSizeSettingKey,
                     static_cast<int>(dialog.GetMaxCopyRawStackSize()));
   settings.setValue(kCollectSchedulerInfoSettingKey, dialog.GetCollectSchedulerInfo());
   settings.setValue(kCollectThreadStatesSettingKey, dialog.GetCollectThreadStates());
