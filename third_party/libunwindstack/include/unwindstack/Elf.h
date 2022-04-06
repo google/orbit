@@ -44,13 +44,14 @@ class Regs;
 class Elf : public Object {
  public:
   Elf(Memory* memory) : memory_(memory) {}
-  virtual ~Elf() = default;
+  ~Elf() override = default;
 
   bool Init() override;
   bool valid() override { return valid_; }
   void Invalidate() override;
 
   int64_t GetLoadBias() override { return load_bias_; }
+  bool GetTextRange(uint64_t* addr, uint64_t* size) override;
   std::string GetBuildID() override;
 
   std::string GetSoname() override;
@@ -76,8 +77,6 @@ class Elf : public Object {
   ElfInterface* CreateInterfaceFromMemory(Memory* memory);
 
   bool IsValidPc(uint64_t pc);
-
-  bool GetTextRange(uint64_t* addr, uint64_t* size);
 
   uint32_t machine_type() { return machine_type_; }
 

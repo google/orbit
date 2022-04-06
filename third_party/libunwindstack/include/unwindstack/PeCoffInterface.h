@@ -144,6 +144,8 @@ class PeCoffInterface {
   virtual uint64_t LastErrorAddress() = 0;
   virtual DwarfSection* DebugFrameSection() = 0;
   virtual uint64_t GetRelPc(uint64_t pc, uint64_t map_start) const = 0;
+  virtual bool GetTextRange(uint64_t* addr, uint64_t* size) const = 0;
+  virtual uint64_t GetTextOffsetInFile() const = 0;
   virtual bool Step(uint64_t rel_pc, Regs* regs, Memory* process_memory, bool* finished,
                     bool* is_signal_frame) = 0;
 };
@@ -156,7 +158,7 @@ class PeCoffInterfaceImpl : public PeCoffInterface {
 
  public:
   explicit PeCoffInterfaceImpl(Memory* memory) : memory_(memory), coff_memory_(memory) {}
-  virtual ~PeCoffInterfaceImpl() = default;
+  ~PeCoffInterfaceImpl() override = default;
   bool Init(int64_t* load_bias) override;
 
   const ErrorData& last_error() override { return last_error_; }
@@ -165,6 +167,8 @@ class PeCoffInterfaceImpl : public PeCoffInterface {
 
   DwarfSection* DebugFrameSection() override { return debug_frame_.get(); }
   uint64_t GetRelPc(uint64_t pc, uint64_t map_start) const override;
+  bool GetTextRange(uint64_t* addr, uint64_t* size) const override;
+  uint64_t GetTextOffsetInFile() const override;
   bool Step(uint64_t rel_pc, Regs* regs, Memory* process_memory, bool* finished,
             bool* is_signal_frame) override;
 
@@ -185,7 +189,9 @@ class PeCoffInterfaceImpl : public PeCoffInterface {
 
   // Data about the .text section. Assumption: There is only a single .text section.
   struct TextSectionData {
-    uint64_t executable_offset = 0;
+    uint64_t memory_size = 0;
+    uint64_t memory_offset = 0;
+    uint64_t file_offset = 0;
     size_t section_index = 0;
   };
   std::optional<TextSectionData> text_section_data_;

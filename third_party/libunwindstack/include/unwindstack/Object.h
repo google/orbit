@@ -44,6 +44,7 @@ class Object {
   virtual void Invalidate() = 0;
 
   virtual int64_t GetLoadBias() = 0;
+  virtual bool GetTextRange(uint64_t* addr, uint64_t* size) = 0;
   virtual std::string GetBuildID() = 0;
 
   virtual std::string GetSoname() = 0;
