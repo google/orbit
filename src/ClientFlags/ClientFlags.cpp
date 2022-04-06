@@ -25,13 +25,6 @@ ABSL_FLAG(std::string, process_name, "",
 
 ABSL_FLAG(bool, enable_tutorials_feature, false, "Enable tutorials");
 
-// Max to pass to perf_event_open without getting an error is (1u << 16u) - 8,
-// because the kernel stores this in a short and because of alignment reasons.
-// But the size the kernel actually returns is smaller and we leave some extra room (see
-// `PerfEventOpen.cpp`).
-ABSL_FLAG(uint16_t, stack_dump_size, 65000,
-          "Number of bytes to copy from the stack per sample. Max: 65000");
-
 // TODO(kuebler): remove this once we have the validator complete
 ABSL_FLAG(bool, enable_frame_pointer_validator, false, "Enable validation of frame pointers");
 

@@ -21,15 +21,15 @@ namespace orbit_qt {
 class UInt64Validator : public QValidator {
  public:
   explicit UInt64Validator(QObject* parent = nullptr) : QValidator(parent) {}
-  explicit UInt64Validator(uint64_t minimum, QObject* parent = nullptr)
-      : QValidator(parent), minimum_(minimum) {}
+  explicit UInt64Validator(uint64_t minimum, uint64_t maximum, QObject* parent = nullptr)
+      : QValidator(parent), minimum_(minimum), maximum_(maximum) {}
   QValidator::State validate(QString& input, int& /*pos*/) const override {
     if (input.isEmpty()) {
       return QValidator::State::Acceptable;
     }
     bool valid = false;
     uint64_t input_value = input.toULongLong(&valid);
-    if (valid && input_value >= minimum_) {
+    if (valid && input_value >= minimum_ && input_value <= maximum_) {
       return QValidator::State::Acceptable;
     }
     return QValidator::State::Invalid;
@@ -37,6 +37,7 @@ class UInt64Validator : public QValidator {
 
  private:
   uint64_t minimum_ = 0;
+  uint64_t maximum_ = std::numeric_limits<uint64_t>::max();
 };
 
 class CaptureOptionsDialog : public QDialog {
@@ -51,6 +52,8 @@ class CaptureOptionsDialog : public QDialog {
   [[nodiscard]] double GetSamplingPeriodMs() const;
   void SetUnwindingMethod(orbit_grpc_protos::CaptureOptions::UnwindingMethod unwinding_method);
   [[nodiscard]] orbit_grpc_protos::CaptureOptions::UnwindingMethod GetUnwindingMethod() const;
+  void SetMaxCopyRawStackSize(uint16_t stack_dump_size);
+  [[nodiscard]] uint16_t GetMaxCopyRawStackSize() const;
   void SetCollectSchedulerInfo(bool collect_scheduler_info);
   [[nodiscard]] bool GetCollectSchedulerInfo() const;
   void SetCollectThreadStates(bool collect_thread_state);
@@ -77,6 +80,22 @@ class CaptureOptionsDialog : public QDialog {
   [[nodiscard]] uint64_t GetMemorySamplingPeriodMs() const;
   void SetMemoryWarningThresholdKb(uint64_t memory_warning_threshold_kb);
   [[nodiscard]] uint64_t GetMemoryWarningThresholdKb() const;
+
+  static constexpr double kCallstackSamplingPeriodMsDefaultValue = 1.0;
+  static constexpr orbit_grpc_protos::CaptureOptions::UnwindingMethod
+      kCallstackUnwindingMethodDefaultValue = orbit_grpc_protos::CaptureOptions::kDwarf;
+  static constexpr uint64_t kMemorySamplingPeriodMsDefaultValue = 10;
+  static constexpr uint64_t kMemoryWarningThresholdKbDefaultValue = 1024 * 1024 * 8;  // 8Gb
+  static constexpr orbit_grpc_protos::CaptureOptions::DynamicInstrumentationMethod
+      kDynamicInstrumentationMethodDefaultValue = orbit_grpc_protos::CaptureOptions::kKernelUprobes;
+  static constexpr uint64_t kLocalMarkerDepthDefaultValue = 0;
+
+  // Max to pass to perf_event_open without getting an error is (1u << 16u) - 8,
+  // because the kernel stores this in a short and because of alignment reasons.
+  // But the size the kernel actually returns is smaller and we leave some extra room (see
+  // `PerfEventOpen.cpp`).
+  static constexpr uint16_t kMaxCopyRawStackSizeMaxValue = 65000;
+  static constexpr uint16_t kMaxCopyRawStackSizeDefaultValue = 512;
 
  public slots:
   void ResetLocalMarkerDepthLineEdit();

@@ -190,14 +190,6 @@ OrbitMainWindow::OrbitMainWindow(TargetConfiguration target_configuration,
 
   app_->PostInit(is_connected_);
 
-  if (FLAGS_stack_dump_size.IsSpecifiedOnCommandLine()) {
-    uint16_t stack_dump_size = absl::GetFlag(FLAGS_stack_dump_size);
-    ORBIT_CHECK(stack_dump_size != std::numeric_limits<uint16_t>::max());
-    app_->SetStackDumpSize(stack_dump_size);
-  } else {
-    app_->SetStackDumpSize(std::numeric_limits<uint16_t>::max());
-  }
-
   SaveCurrentTabLayoutAsDefaultInMemory();
 
   UpdateCaptureStateDependentWidgets();
@@ -1081,6 +1073,7 @@ void OrbitMainWindow::on_actionToggle_Capture_triggered() { app_->ToggleCapture(
 const QString OrbitMainWindow::kEnableCallstackSamplingSettingKey{"EnableCallstackSampling"};
 const QString OrbitMainWindow::kCallstackSamplingPeriodMsSettingKey{"CallstackSamplingPeriodMs"};
 const QString OrbitMainWindow::kCallstackUnwindingMethodSettingKey{"CallstackUnwindingMethod"};
+const QString OrbitMainWindow::kMaxCopyRawStackSizeSettingKey{"MaxCopyRawStackSize"};
 const QString OrbitMainWindow::kCollectSchedulerInfoSettingKey{"CollectSchedulerInfo"};
 const QString OrbitMainWindow::kCollectThreadStatesSettingKey{"CollectThreadStates"};
 const QString OrbitMainWindow::kTraceGpuSubmissionsSettingKey{"TraceGpuSubmissions"};
@@ -1098,27 +1091,22 @@ const QString OrbitMainWindow::kMaxLocalMarkerDepthPerCommandBufferSettingsKey{
 const QString OrbitMainWindow::kMainWindowGeometrySettingKey{"MainWindowGeometry"};
 const QString OrbitMainWindow::kMainWindowStateSettingKey{"MainWindowState"};
 
-constexpr double kCallstackSamplingPeriodMsDefaultValue = 1.0;
-constexpr UnwindingMethod kCallstackUnwindingMethodDefaultValue = CaptureOptions::kDwarf;
-constexpr uint64_t kMemorySamplingPeriodMsDefaultValue = 10;
-constexpr uint64_t kMemoryWarningThresholdKbDefaultValue = 1024 * 1024 * 8;  // 8Gb
-constexpr DynamicInstrumentationMethod kDynamicInstrumentationMethodDefaultValue =
-    CaptureOptions::kKernelUprobes;
-
 void OrbitMainWindow::LoadCaptureOptionsIntoApp() {
   QSettings settings;
   if (!app_->IsDevMode() || settings.value(kEnableCallstackSamplingSettingKey, true).toBool()) {
     bool conversion_succeeded = false;
     double sampling_period_ms =
-        settings.value(kCallstackSamplingPeriodMsSettingKey, kCallstackSamplingPeriodMsDefaultValue)
+        settings
+            .value(kCallstackSamplingPeriodMsSettingKey,
+                   orbit_qt::CaptureOptionsDialog::kCallstackSamplingPeriodMsDefaultValue)
             .toDouble(&conversion_succeeded);
     if (!conversion_succeeded || sampling_period_ms <= 0.0) {
       ORBIT_ERROR("Invalid value for setting \"%s\", resetting to %.1f",
                   kCallstackSamplingPeriodMsSettingKey.toStdString(),
-                  kCallstackSamplingPeriodMsDefaultValue);
+                  orbit_qt::CaptureOptionsDialog::kCallstackSamplingPeriodMsDefaultValue);
       settings.setValue(kCallstackSamplingPeriodMsSettingKey,
-                        kCallstackSamplingPeriodMsDefaultValue);
-      sampling_period_ms = kCallstackSamplingPeriodMsDefaultValue;
+                        orbit_qt::CaptureOptionsDialog::kCallstackSamplingPeriodMsDefaultValue);
+      sampling_period_ms = orbit_qt::CaptureOptionsDialog::kCallstackSamplingPeriodMsDefaultValue;
     }
     app_->SetSamplesPerSecond(1000.0 / sampling_period_ms);
   } else {
@@ -1126,18 +1114,31 @@ void OrbitMainWindow::LoadCaptureOptionsIntoApp() {
   }
 
   if (!app_->IsDevMode()) {
-    app_->SetUnwindingMethod(kCallstackUnwindingMethodDefaultValue);
+    app_->SetUnwindingMethod(orbit_qt::CaptureOptionsDialog::kCallstackUnwindingMethodDefaultValue);
+    app_->SetStackDumpSize(std::numeric_limits<uint16_t>::max());
   } else {
     UnwindingMethod unwinding_method = static_cast<UnwindingMethod>(
         settings
             .value(kCallstackUnwindingMethodSettingKey,
-                   static_cast<int>(kCallstackUnwindingMethodDefaultValue))
+                   static_cast<int>(
+                       orbit_qt::CaptureOptionsDialog::kCallstackUnwindingMethodDefaultValue))
             .toInt());
     if (unwinding_method == CaptureOptions::kUndefined) {
       ORBIT_ERROR("Unknown unwinding method specified; Using default unwinding method");
-      unwinding_method = kCallstackUnwindingMethodDefaultValue;
+      unwinding_method = orbit_qt::CaptureOptionsDialog::kCallstackUnwindingMethodDefaultValue;
     }
     app_->SetUnwindingMethod(unwinding_method);
+
+    if (unwinding_method == CaptureOptions::kFramePointers) {
+      uint16_t stack_dump_size = static_cast<uint16_t>(
+          settings
+              .value(kMaxCopyRawStackSizeSettingKey,
+                     orbit_qt::CaptureOptionsDialog::kMaxCopyRawStackSizeDefaultValue)
+              .toUInt());
+      app_->SetStackDumpSize(stack_dump_size);
+    } else {
+      app_->SetStackDumpSize(std::numeric_limits<uint16_t>::max());
+    }
   }
 
   app_->SetCollectSchedulerInfo(settings.value(kCollectSchedulerInfoSettingKey, true).toBool());
@@ -1148,27 +1149,34 @@ void OrbitMainWindow::LoadCaptureOptionsIntoApp() {
   DynamicInstrumentationMethod instrumentation_method = static_cast<DynamicInstrumentationMethod>(
       settings
           .value(kDynamicInstrumentationMethodSettingKey,
-                 static_cast<int>(kDynamicInstrumentationMethodDefaultValue))
+                 static_cast<int>(
+                     orbit_qt::CaptureOptionsDialog::kDynamicInstrumentationMethodDefaultValue))
           .toInt());
   if (instrumentation_method != CaptureOptions::kKernelUprobes &&
       instrumentation_method != CaptureOptions::kUserSpaceInstrumentation) {
-    instrumentation_method = kDynamicInstrumentationMethodDefaultValue;
+    instrumentation_method =
+        orbit_qt::CaptureOptionsDialog::kDynamicInstrumentationMethodDefaultValue;
   }
   app_->SetDynamicInstrumentationMethod(instrumentation_method);
 
   bool collect_memory_info = settings.value(kCollectMemoryInfoSettingKey, false).toBool();
   app_->SetCollectMemoryInfo(collect_memory_info);
-  uint64_t memory_sampling_period_ms = kMemorySamplingPeriodMsDefaultValue;
-  uint64_t memory_warning_threshold_kb = kMemoryWarningThresholdKbDefaultValue;
+  uint64_t memory_sampling_period_ms =
+      orbit_qt::CaptureOptionsDialog::kMemorySamplingPeriodMsDefaultValue;
+  uint64_t memory_warning_threshold_kb =
+      orbit_qt::CaptureOptionsDialog::kMemoryWarningThresholdKbDefaultValue;
   if (collect_memory_info) {
-    memory_sampling_period_ms = settings
-                                    .value(kMemorySamplingPeriodMsSettingKey,
-                                           QVariant::fromValue(kMemorySamplingPeriodMsDefaultValue))
-                                    .toULongLong();
+    memory_sampling_period_ms =
+        settings
+            .value(kMemorySamplingPeriodMsSettingKey,
+                   QVariant::fromValue(
+                       orbit_qt::CaptureOptionsDialog::kMemorySamplingPeriodMsDefaultValue))
+            .toULongLong();
     memory_warning_threshold_kb =
         settings
             .value(kMemoryWarningThresholdKbSettingKey,
-                   QVariant::fromValue(kMemoryWarningThresholdKbDefaultValue))
+                   QVariant::fromValue(
+                       orbit_qt::CaptureOptionsDialog::kMemoryWarningThresholdKbDefaultValue))
             .toULongLong();
   }
   app_->SetMemorySamplingPeriodMs(memory_sampling_period_ms);
@@ -1189,18 +1197,26 @@ void OrbitMainWindow::on_actionCaptureOptions_triggered() {
   dialog.SetEnableSampling(!app_->IsDevMode() ||
                            settings.value(kEnableCallstackSamplingSettingKey, true).toBool());
   dialog.SetSamplingPeriodMs(
-      settings.value(kCallstackSamplingPeriodMsSettingKey, kCallstackSamplingPeriodMsDefaultValue)
+      settings
+          .value(kCallstackSamplingPeriodMsSettingKey,
+                 orbit_qt::CaptureOptionsDialog::kCallstackSamplingPeriodMsDefaultValue)
           .toDouble());
   UnwindingMethod unwinding_method = static_cast<UnwindingMethod>(
       settings
           .value(kCallstackUnwindingMethodSettingKey,
-                 static_cast<int>(kCallstackUnwindingMethodDefaultValue))
+                 static_cast<int>(
+                     orbit_qt::CaptureOptionsDialog::kCallstackUnwindingMethodDefaultValue))
           .toInt());
   if (unwinding_method != CaptureOptions::kDwarf &&
       unwinding_method != CaptureOptions::kFramePointers) {
-    unwinding_method = kCallstackUnwindingMethodDefaultValue;
+    unwinding_method = orbit_qt::CaptureOptionsDialog::kCallstackUnwindingMethodDefaultValue;
   }
   dialog.SetUnwindingMethod(unwinding_method);
+  dialog.SetMaxCopyRawStackSize(static_cast<uint16_t>(
+      settings
+          .value(kMaxCopyRawStackSizeSettingKey,
+                 orbit_qt::CaptureOptionsDialog::kMaxCopyRawStackSizeDefaultValue)
+          .toUInt()));
   dialog.SetCollectSchedulerInfo(settings.value(kCollectSchedulerInfoSettingKey, true).toBool());
   dialog.SetCollectThreadStates(settings.value(kCollectThreadStatesSettingKey, false).toBool());
   dialog.SetTraceGpuSubmissions(settings.value(kTraceGpuSubmissionsSettingKey, true).toBool());
@@ -1209,28 +1225,35 @@ void OrbitMainWindow::on_actionCaptureOptions_triggered() {
   DynamicInstrumentationMethod instrumentation_method = static_cast<DynamicInstrumentationMethod>(
       settings
           .value(kDynamicInstrumentationMethodSettingKey,
-                 static_cast<int>(kDynamicInstrumentationMethodDefaultValue))
+                 static_cast<int>(
+                     orbit_qt::CaptureOptionsDialog::kDynamicInstrumentationMethodDefaultValue))
           .toInt());
   if (instrumentation_method != CaptureOptions::kKernelUprobes &&
       instrumentation_method != CaptureOptions::kUserSpaceInstrumentation) {
-    instrumentation_method = kDynamicInstrumentationMethodDefaultValue;
+    instrumentation_method =
+        orbit_qt::CaptureOptionsDialog::kDynamicInstrumentationMethodDefaultValue;
   }
   dialog.SetDynamicInstrumentationMethod(instrumentation_method);
   dialog.SetCollectMemoryInfo(settings.value(kCollectMemoryInfoSettingKey, false).toBool());
   dialog.SetMemorySamplingPeriodMs(
       settings
           .value(kMemorySamplingPeriodMsSettingKey,
-                 QVariant::fromValue(kMemorySamplingPeriodMsDefaultValue))
+                 QVariant::fromValue(
+                     orbit_qt::CaptureOptionsDialog::kMemorySamplingPeriodMsDefaultValue))
           .toULongLong());
   dialog.SetMemoryWarningThresholdKb(
       settings
           .value(kMemoryWarningThresholdKbSettingKey,
-                 QVariant::fromValue(kMemoryWarningThresholdKbDefaultValue))
+                 QVariant::fromValue(
+                     orbit_qt::CaptureOptionsDialog::kMemoryWarningThresholdKbDefaultValue))
           .toULongLong());
   dialog.SetLimitLocalMarkerDepthPerCommandBuffer(
       settings.value(kLimitLocalMarkerDepthPerCommandBufferSettingsKey, false).toBool());
   dialog.SetMaxLocalMarkerDepthPerCommandBuffer(
-      settings.value(kMaxLocalMarkerDepthPerCommandBufferSettingsKey, 0).toULongLong());
+      settings
+          .value(kMaxLocalMarkerDepthPerCommandBufferSettingsKey,
+                 QVariant::fromValue(orbit_qt::CaptureOptionsDialog::kLocalMarkerDepthDefaultValue))
+          .toULongLong());
 
   int result = dialog.exec();
   if (result != QDialog::Accepted) {
@@ -1241,6 +1264,8 @@ void OrbitMainWindow::on_actionCaptureOptions_triggered() {
   settings.setValue(kCallstackSamplingPeriodMsSettingKey, dialog.GetSamplingPeriodMs());
   settings.setValue(kCallstackUnwindingMethodSettingKey,
                     static_cast<int>(dialog.GetUnwindingMethod()));
+  settings.setValue(kMaxCopyRawStackSizeSettingKey,
+                    static_cast<int>(dialog.GetMaxCopyRawStackSize()));
   settings.setValue(kCollectSchedulerInfoSettingKey, dialog.GetCollectSchedulerInfo());
   settings.setValue(kCollectThreadStatesSettingKey, dialog.GetCollectThreadStates());
   settings.setValue(kTraceGpuSubmissionsSettingKey, dialog.GetTraceGpuSubmissions());
