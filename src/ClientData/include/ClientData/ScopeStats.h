@@ -43,11 +43,11 @@ class ScopeStats {
   }
 
  private:
-  uint64_t count_;
-  uint64_t total_time_ns_;
-  uint64_t min_ns_;
-  uint64_t max_ns_;
-  double variance_ns_;
+  uint64_t count_{};
+  uint64_t total_time_ns_{};
+  uint64_t min_ns_{};
+  uint64_t max_ns_{};
+  double variance_ns_{};
 };
 
 }  // namespace orbit_client_data

@@ -75,7 +75,7 @@ void CaptureData::ForEachThreadStateSliceIntersectingTimeRange(
 }
 
 const ScopeStats& CaptureData::GetScopeStatsOrDefault(uint64_t scope_id) const {
-  static const ScopeStats kDefaultScopeStats{};
+  static const ScopeStats kDefaultScopeStats;
   auto scope_stats_it = scope_stats_.find(scope_id);
   if (scope_stats_it == scope_stats_.end()) {
     return kDefaultScopeStats;
