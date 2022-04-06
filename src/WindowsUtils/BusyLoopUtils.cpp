@@ -17,15 +17,11 @@ namespace orbit_windows_utils {
 
 namespace {
 
-using orbit_base::GetLastErrorAsString;
-
-ErrorMessage GetLastErrorForFunction(std::string_view function) {
-  return ErrorMessage(absl::StrFormat("Calling \"%s\": %s", function, GetLastErrorAsString()));
-}
+using orbit_base::GetLastErrorAsErrorMessage;
 
 ErrorMessageOr<void> FlushInstructionCache(HANDLE process_handle, void* address, size_t size) {
   if (::FlushInstructionCache(process_handle, address, size) == 0) {
-    return GetLastErrorForFunction("FlushInstructionCache");
+    return GetLastErrorAsErrorMessage("FlushInstructionCache");
   }
   return outcome::success();
 }
@@ -74,13 +70,13 @@ ErrorMessageOr<void> SetThreadInstructionPointer(HANDLE thread_handle,
   CONTEXT c = {0};
   c.ContextFlags = CONTEXT_CONTROL;
   if (!GetThreadContext(thread_handle, &c)) {
-    return GetLastErrorForFunction("GetThreadContext");
+    return GetLastErrorAsErrorMessage("GetThreadContext");
   }
 
   c.Rip = instruction_pointer;
 
   if (SetThreadContext(thread_handle, &c) == 0) {
-    return GetLastErrorForFunction("SetThreadContext");
+    return GetLastErrorAsErrorMessage("SetThreadContext");
   }
 
   return outcome::success();
@@ -88,14 +84,14 @@ ErrorMessageOr<void> SetThreadInstructionPointer(HANDLE thread_handle,
 
 ErrorMessageOr<void> SuspendThread(HANDLE thread_handle) {
   if (::SuspendThread(thread_handle) == (DWORD)-1) {
-    return GetLastErrorForFunction("SuspendThread");
+    return GetLastErrorAsErrorMessage("SuspendThread");
   }
   return outcome::success();
 }
 
 ErrorMessageOr<void> ResumeThread(HANDLE thread_handle) {
   if (::ResumeThread(thread_handle) == (DWORD)-1) {
-    return GetLastErrorForFunction("ResumeThread");
+    return GetLastErrorAsErrorMessage("ResumeThread");
   }
   return outcome::success();
 }
