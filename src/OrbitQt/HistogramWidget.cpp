@@ -321,7 +321,7 @@ static void DrawSelection(QPainter& painter, int start_x, int end_x,
 [[nodiscard]] static uint64_t LocationToValue(int pos_x, int width, uint64_t min_value,
                                               uint64_t max_value) {
   if (pos_x <= kLeftMargin) return min_value;
-  if (pos_x > width - kRightMargin) return max_value + 1;
+  if (pos_x > width - kRightMargin) return max_value;
 
   const int location = pos_x - kLeftMargin;
   const int histogram_width = width - kLeftMargin - kRightMargin;
@@ -512,6 +512,12 @@ void HistogramWidget::mouseReleaseEvent(QMouseEvent* /* event*/) {
     if (min_it != scope_data_->data->end()) {
       const auto max_it = std::upper_bound(data_begin, data_end, max);
       const auto selection = absl::Span<const uint64_t>(&*min_it, std::distance(min_it, max_it));
+
+      if (selection.front() == MinValue() && selection.back() == MaxValue()) {
+        selected_area_.reset();
+        UpdateAndNotify();
+        return;
+      }
 
       auto histogram = orbit_statistics::BuildHistogram(selection);
       if (histogram) {
