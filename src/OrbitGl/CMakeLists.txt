@@ -192,7 +192,6 @@ target_sources(OrbitGlTests PRIVATE
                UnitTestSlider.h)
 
 target_sources(OrbitGlTests PRIVATE
-               BatcherTest.cpp
                CaptureStatsTest.cpp
                CaptureViewElementTest.cpp
                CaptureViewElementTester.cpp
@@ -201,6 +200,7 @@ target_sources(OrbitGlTests PRIVATE
                GpuTrackTest.cpp
                MockBatcher.cpp
                MultivariateTimeSeriesTest.cpp
+               OpenGlBatcherTest.cpp
                PageFaultsTrackTest.cpp
                PickingManagerTest.cpp
                PrimitiveAssemblerTest.cpp

@@ -18,9 +18,9 @@
 
 namespace orbit_gl {
 
-class FakeBatcher : public OpenGlBatcher {
+class FakeOpenGlBatcher : public OpenGlBatcher {
  public:
-  explicit FakeBatcher(BatcherId id) : OpenGlBatcher(id) {}
+  explicit FakeOpenGlBatcher(BatcherId id) : OpenGlBatcher(id) {}
 
   void ResetMockDrawCounts() {
     drawn_line_colors_.clear();
@@ -109,7 +109,7 @@ class FakeBatcher : public OpenGlBatcher {
   mutable std::vector<Color> drawn_box_colors_;
 };
 
-void ExpectDraw(FakeBatcher& batcher, uint32_t line_count, uint32_t triangle_count,
+void ExpectDraw(FakeOpenGlBatcher& batcher, uint32_t line_count, uint32_t triangle_count,
                 uint32_t box_count) {
   batcher.ResetMockDrawCounts();
 
@@ -122,7 +122,7 @@ void ExpectDraw(FakeBatcher& batcher, uint32_t line_count, uint32_t triangle_cou
 }
 
 TEST(Batcher, SimpleElementsDrawing) {
-  FakeBatcher batcher(BatcherId::kUi);
+  FakeOpenGlBatcher batcher(BatcherId::kUi);
 
   ExpectDraw(batcher, 0, 0, 0);
   batcher.AddLineHelper(Vec2(0, 0), Vec2(1, 0), 0, Color(255, 255, 255, 255));
@@ -140,7 +140,8 @@ TEST(Batcher, SimpleElementsDrawing) {
 }
 
 template <typename T>
-void ExpectCustomDataEq(const FakeBatcher& batcher, const Color& rendered_color, const T& value) {
+void ExpectCustomDataEq(const FakeOpenGlBatcher& batcher, const Color& rendered_color,
+                        const T& value) {
   PickingId id = MockRenderPickingColor(rendered_color);
   const PickingUserData* rendered_data = batcher.GetUserData(id);
   EXPECT_NE(rendered_data, nullptr);
@@ -149,7 +150,7 @@ void ExpectCustomDataEq(const FakeBatcher& batcher, const Color& rendered_color,
 }
 
 TEST(Batcher, PickingSimpleElements) {
-  FakeBatcher batcher(BatcherId::kUi);
+  FakeOpenGlBatcher batcher(BatcherId::kUi);
   EXPECT_EQ(batcher.GetBatcherId(), BatcherId::kUi);
 
   std::string line_custom_data = "line custom data";
@@ -181,7 +182,7 @@ TEST(Batcher, PickingSimpleElements) {
 }
 
 TEST(Batcher, MultipleDrawCalls) {
-  FakeBatcher batcher(BatcherId::kUi);
+  FakeOpenGlBatcher batcher(BatcherId::kUi);
 
   std::string line_custom_data = "line custom data";
   auto line_user_data = std::make_unique<PickingUserData>();
@@ -227,7 +228,7 @@ bool LineEq(const Line& lhs, const Line& rhs) {
 }
 
 TEST(Batcher, TranslationsAreAutomaticallyAdded) {
-  FakeBatcher batcher(BatcherId::kUi);
+  FakeOpenGlBatcher batcher(BatcherId::kUi);
   batcher.AddLineHelper(Vec2(0.f, 0.f), Vec2(1.f, 1.f), 0.f, Color());
 
   const orbit_gl_internal::PrimitiveBuffers& buffers = batcher.GetInternalBuffers(0.f);
