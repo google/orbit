@@ -27,8 +27,9 @@ struct BusyLoopInfo {
 // Overwrite instructions at address by a 2 bytes busy loop.
 ErrorMessageOr<BusyLoopInfo> InstallBusyLoopAtAddress(HANDLE process_handle, void* address);
 // Replace the instructions overwritten by "InstallBusyLoopAtAddress" by the original instructions.
+// The busy looping thread(s) should be suspended before the call.
 ErrorMessageOr<void> RemoveBusyLoop(const BusyLoopInfo& busy_loop_info);
-// Set instruction pointer for given thread.
+// Set instruction pointer for given suspended thread.
 ErrorMessageOr<void> SetThreadInstructionPointer(HANDLE thread_handle,
                                                  uint64_t instruction_pointer);
 // Suspend given thread.
