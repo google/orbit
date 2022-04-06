@@ -76,7 +76,7 @@ void Debugger::DebuggingLoop(uint32_t process_id) {
   while (true) {
     if (!WaitForDebugEvent(&debug_event, kWaitForDebugEventMs)) {
       if (::GetLastError() != kSemaphoreExpiredErrorCode) {
-        ORBIT_ERROR("Calling \"WaitForDebugEvent\": %s", orbit_base::GetLastErrorAsString());
+        ORBIT_ERROR("%s", orbit_base::GetLastErrorAsString("WaitForDebugEvent"));
         detach_requested_ = true;
       }
 

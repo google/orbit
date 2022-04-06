@@ -22,7 +22,7 @@ namespace {
 [[nodiscard]] ErrorMessageOr<std::string> GetSignedIntegerTypeFromSizeInBytes(IDiaSymbol* type) {
   ULONGLONG length;
   if (FAILED(type->get_length(&length))) {
-    return ErrorMessage(orbit_base::GetLastErrorAsString());
+    return orbit_base::GetLastErrorAsErrorMessage("IDiaSymbol::get_length");
   }
 
   switch (length) {
@@ -42,8 +42,7 @@ namespace {
 [[nodiscard]] ErrorMessageOr<std::string> GetBaseTypeAsString(IDiaSymbol* type) {
   DWORD base_type;
   if (FAILED(type->get_baseType(&base_type))) {
-    return ErrorMessage(
-        absl::StrFormat("Error calling \"get_baseType\": %s", orbit_base::GetLastErrorAsString()));
+    return orbit_base::GetLastErrorAsErrorMessage("IDiaSymbol::get_baseType");
   }
 
   switch (base_type) {
@@ -69,8 +68,7 @@ namespace {
     {
       ULONGLONG length;
       if (FAILED(type->get_length(&length))) {
-        return ErrorMessage(absl::StrFormat("Error calling \"get_length\": %s",
-                                            orbit_base::GetLastErrorAsString()));
+        return orbit_base::GetLastErrorAsErrorMessage("IDiaSymbol::get_length");
       }
 
       switch (length) {
@@ -137,8 +135,7 @@ namespace {
     IDiaSymbol* type, std::string_view parent_pointer_type_str) {
   CComPtr<IDiaSymbol> base_type = nullptr;
   if (FAILED(type->get_type(&base_type))) {
-    return ErrorMessage(
-        absl::StrFormat("Error calling \"get_type\": %s", orbit_base::GetLastErrorAsString()));
+    return orbit_base::GetLastErrorAsErrorMessage("IDiaSymbol::get_type");
   }
   if (base_type == nullptr) {
     return ErrorMessage("Unable to retrieve type symbol.");
@@ -155,8 +152,7 @@ namespace {
              is_ptr_to_member_function) {
     CComPtr<IDiaSymbol> class_parent = nullptr;
     if (FAILED(type->get_classParent(&class_parent))) {
-      return ErrorMessage(absl::StrFormat("Error calling \"get_classParent\": %s",
-                                          orbit_base::GetLastErrorAsString()));
+      return orbit_base::GetLastErrorAsErrorMessage("IDiaSymbol::get_classParent");
     }
     if (class_parent == nullptr) {
       return ErrorMessage("Unable to retrieve class parent symbol.");
@@ -168,8 +164,7 @@ namespace {
              is_ptr_to_member_function) {
     CComPtr<IDiaSymbol> class_parent = nullptr;
     if (FAILED(type->get_classParent(&class_parent))) {
-      return ErrorMessage(absl::StrFormat("Error calling \"get_classParent\": %s",
-                                          orbit_base::GetLastErrorAsString()));
+      return orbit_base::GetLastErrorAsErrorMessage("IDiaSymbol::get_classParent");
     }
     if (class_parent == nullptr) {
       return ErrorMessage("Unable to retrieve class parent symbol.");
@@ -196,14 +191,12 @@ namespace orbit_object_utils {
 ErrorMessageOr<std::string> PdbDiaParameterListAsString(IDiaSymbol* function_or_function_type) {
   DWORD tag;
   if (FAILED(function_or_function_type->get_symTag(&tag))) {
-    return ErrorMessage(
-        absl::StrFormat("Error calling \"get_symTag\": %s", orbit_base::GetLastErrorAsString()));
+    return orbit_base::GetLastErrorAsErrorMessage("IDiaSymbol::get_symTag");
   }
   if (tag == SymTagFunction) {
     CComPtr<IDiaSymbol> function_type = nullptr;
     if (FAILED(function_or_function_type->get_type(&function_type))) {
-      return ErrorMessage(
-          absl::StrFormat("Error calling \"get_type\": %s", orbit_base::GetLastErrorAsString()));
+      return orbit_base::GetLastErrorAsErrorMessage("IDiaSymbol::get_type");
     }
     if (function_type == nullptr) {
       return ErrorMessage("Unable to retrieve type symbol.");
@@ -221,8 +214,7 @@ ErrorMessageOr<std::string> PdbDiaParameterListAsString(IDiaSymbol* function_or_
 
   CComPtr<IDiaEnumSymbols> parameter_enumeration = nullptr;
   if (FAILED(function_type->findChildren(SymTagNull, nullptr, nsNone, &parameter_enumeration))) {
-    return ErrorMessage(
-        absl::StrFormat("Error calling \"findChildren\": %s", orbit_base::GetLastErrorAsString()));
+    return orbit_base::GetLastErrorAsErrorMessage("IDiaSymbol::findChildren");
   }
   if (parameter_enumeration == nullptr) {
     return ErrorMessage("Unable to find child symbols.");
@@ -241,8 +233,7 @@ ErrorMessageOr<std::string> PdbDiaParameterListAsString(IDiaSymbol* function_or_
 
     CComPtr<IDiaSymbol> parameter_type = nullptr;
     if (FAILED(parameter->get_type(&parameter_type))) {
-      return ErrorMessage(
-          absl::StrFormat("Error calling \"get_type\": %s", orbit_base::GetLastErrorAsString()));
+      return orbit_base::GetLastErrorAsErrorMessage("IDiaSymbol::get_type");
     }
     if (parameter_type == nullptr) {
       return ErrorMessage("Unable to retrieve type symbol.");
@@ -290,8 +281,7 @@ ErrorMessageOr<std::string> PdbDiaTypeAsString(IDiaSymbol* type,
       // We could e.g. also print the size of the array if known.
       CComPtr<IDiaSymbol> base_type = nullptr;
       if (FAILED(type->get_type(&base_type))) {
-        return ErrorMessage(
-            absl::StrFormat("Error calling \"get_type\": %s", orbit_base::GetLastErrorAsString()));
+        return orbit_base::GetLastErrorAsErrorMessage("IDiaSymbol::get_type");
       }
       if (base_type == nullptr) {
         return ErrorMessage("Unable to retrieve type symbol.");
@@ -311,8 +301,7 @@ ErrorMessageOr<std::string> PdbDiaTypeAsString(IDiaSymbol* type,
     case SymTagFunctionType: {
       CComPtr<IDiaSymbol> return_type = nullptr;
       if (FAILED(type->get_type(&return_type))) {
-        return ErrorMessage(
-            absl::StrFormat("Error calling \"get_type\": %s", orbit_base::GetLastErrorAsString()));
+        return orbit_base::GetLastErrorAsErrorMessage("IDiaSymbol::get_type");
       }
       if (return_type == nullptr) {
         return ErrorMessage("Unable to retrieve type symbol.");

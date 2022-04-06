@@ -29,7 +29,7 @@ TEST(CreateProcess, SuccessfulProcessCreation) {
   std::unique_ptr<ProcessList> process_list = ProcessList::Create();
   EXPECT_TRUE(process_list->GetProcessByPid(process_info.process_id).has_value());
   EXPECT_NE(TerminateProcess(*process_info.process_handle, /*exit_code*/ 0), 0)
-      << orbit_base::GetLastErrorAsString();
+      << orbit_base::GetLastErrorAsString("TerminateProcess");
 }
 
 TEST(CreateProcess, CommandLine) {

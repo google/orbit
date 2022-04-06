@@ -119,7 +119,7 @@ TEST(Debugger, Detach) {
   ASSERT_TRUE(safe_handle_or_error.has_value());
   const SafeHandle& process_handle = safe_handle_or_error.value();
   EXPECT_NE(TerminateProcess(*process_handle, /*exit_code*/ 0), 0)
-      << orbit_base::GetLastErrorAsString();
+      << orbit_base::GetLastErrorAsString("TerminateProcess");
 }
 
 TEST(Debugger, NoListener) { EXPECT_DEATH(Debugger({}), "Check failed"); }

@@ -30,8 +30,7 @@ ErrorMessageOr<uint64_t> RemoteWrite(HANDLE process_handle, absl::Span<const cha
   LPVOID base_address = VirtualAllocEx(process_handle, /*lpAddress=*/0, buffer.size(),
                                        MEM_RESERVE | MEM_COMMIT, PAGE_READWRITE);
   if (base_address == nullptr) {
-    return ErrorMessage(
-        absl::StrFormat("Error calling VirtualAllocEx: %s", orbit_base::GetLastErrorAsString()));
+    return orbit_base::GetLastErrorAsErrorMessage("VirtualAllocEx");
   }
 
   // Write in allocated remote memory.
@@ -46,8 +45,7 @@ ErrorMessageOr<T> RemoteRead(HANDLE process_handle, uint64_t base_address) {
   T result = {0};
   if (!ReadProcessMemory(process_handle, absl::bit_cast<LPCVOID>(base_address), &result, sizeof(T),
                          &number_of_bytes_read)) {
-    return ErrorMessage(
-        absl::StrFormat("Error calling ReadProcessMemory: %s", orbit_base::GetLastErrorAsString()));
+    return orbit_base::GetLastErrorAsErrorMessage("ReadProcessMemory");
   }
 
   if (number_of_bytes_read != sizeof(T)) {
@@ -147,8 +145,7 @@ ErrorMessageOr<void> CreateRemoteThread(uint32_t pid, std::string_view module_na
                             absl::bit_cast<LPTHREAD_START_ROUTINE>(function_address),
                             absl::bit_cast<LPVOID>(parameter_address),
                             /*dwCreationFlags=*/0, /*lpThreadId=*/0)) {
-    return ErrorMessage(absl::StrFormat("Error calling CreateRemoteThread: %s",
-                                        orbit_base::GetLastErrorAsString()));
+    return orbit_base::GetLastErrorAsErrorMessage("CreateRemoteThread");
   }
 
   return outcome::success();

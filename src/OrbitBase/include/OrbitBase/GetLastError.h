@@ -7,10 +7,14 @@
 
 #include <string>
 
+#include "OrbitBase/Result.h"
+
 namespace orbit_base {
 
 #ifdef _WIN32
 [[nodiscard]] std::string GetLastErrorAsString();
+[[nodiscard]] std::string GetLastErrorAsString(std::string_view function_name);
+[[nodiscard]] ErrorMessage GetLastErrorAsErrorMessage(std::string_view function_name);
 #endif
 
 }  // namespace orbit_base

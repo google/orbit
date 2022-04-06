@@ -129,15 +129,13 @@ ErrorMessageOr<void> ProcessListImpl::Refresh() {
   HANDLE process_snap_handle = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, /*th32ProcessID=*/0);
   SafeHandle handle_closer(process_snap_handle);
   if (process_snap_handle == INVALID_HANDLE_VALUE) {
-    return ErrorMessage(absl::StrFormat("Calling CreateToolhelp32Snapshot: %s",
-                                        orbit_base::GetLastErrorAsString()));
+    return orbit_base::GetLastErrorAsErrorMessage("CreateToolhelp32Snapshot");
   }
 
   // Retrieve information about the first process, and exit if unsuccessful.
   process_entry.dwSize = sizeof(PROCESSENTRY32);
   if (!Process32First(process_snap_handle, &process_entry)) {
-    return ErrorMessage(
-        absl::StrFormat("Calling Process32First: %s", orbit_base::GetLastErrorAsString()));
+    return orbit_base::GetLastErrorAsErrorMessage("Process32First");
   }
 
   // Walk the snapshot of processes.
