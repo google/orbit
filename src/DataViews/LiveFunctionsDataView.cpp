@@ -311,30 +311,16 @@ DataView::ActionStatus LiveFunctionsDataView::GetActionStatus(
     return DataView::GetActionStatus(action, clicked_index, selected_indices);
   }
 
-  std::vector<const FunctionInfo*> function_infos;
-  std::transform(std::begin(selected_indices), std::end(selected_indices),
-                 std::back_inserter(function_infos),
-                 [this](int index) { return GetFunctionInfoFromRow(index); });
+  const bool enabled_for_any =
+      std::any_of(std::begin(selected_indices), std::end(selected_indices),
+                  [this, &is_visible_action_enabled](const int index) {
+                    const FunctionInfo* function_info = GetFunctionInfoFromRow(index);
+                    if (function_info == nullptr) return false;
+                    const uint64_t scope_id = GetScopeId(index);
+                    return is_visible_action_enabled(scope_id, *function_info);
+                  });
 
-  const bool no_functions_selected =
-      all_of(std::begin(function_infos), std::end(function_infos),
-             [](const FunctionInfo* function_info) { return function_info == nullptr; });
-
-  if (no_functions_selected) {
-    return ActionStatus::kInvisible;
-  }
-
-  const bool enabled_for_any = std::transform_reduce(
-      std::begin(selected_indices), std::end(selected_indices), std::begin(function_infos), false,
-      std::logical_or<>{},
-      [this, &is_visible_action_enabled](int index, const FunctionInfo* function_info) {
-        const uint64_t scope_id = GetScopeId(index);
-        if (function_info == nullptr) return false;
-        return is_visible_action_enabled(scope_id, *function_info);
-      });
-
-  if (enabled_for_any) return ActionStatus::kVisibleAndEnabled;
-  return ActionStatus::kVisibleButDisabled;
+  return enabled_for_any ? ActionStatus::kVisibleAndEnabled : ActionStatus::kVisibleButDisabled;
 }
 
 void LiveFunctionsDataView::OnIteratorRequested(const std::vector<int>& selection) {
