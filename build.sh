@@ -17,8 +17,8 @@ DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
 
 function create_conan_profile {
   local readonly profile="$1"
-  if ! conan profile show default >/dev/null; then
-    conan profile new --detect default || exit $?
+  if ! conan profile show $profile >/dev/null; then
+    conan profile new --detect $profile || exit $?
   fi
 
   readonly compiler="$(conan profile show default | grep compiler= | cut -d= -f2 | sed -e 's/Visual Studio/msvc/')"

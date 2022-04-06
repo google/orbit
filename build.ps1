@@ -6,8 +6,8 @@ function conan_profile_exists($profile) {
 }
 
 function conan_create_profile($profile) {
-  if (! (& $conan.Path profile show default)) {
-    if (! (& $conan.Path profile new --detect default)) {
+  if (! (& $conan.Path profile show $profile)) {
+    if (! (& $conan.Path profile new --detect $profile)) {
       exit $?
     }
   }
