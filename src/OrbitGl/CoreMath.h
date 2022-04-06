@@ -22,5 +22,6 @@ using Vec4i = gte::Vector4<int>;
 using Color = gte::Vector4<unsigned char>;
 
 [[nodiscard]] inline Vec2 Vec3ToVec2(const Vec3& v) { return {v[0], v[1]}; }
+[[nodiscard]] inline Vec3 Vec2ToVec3(Vec2 vertex, float z = 0) { return {vertex[0], vertex[1], z}; }
 
 #endif  // ORBIT_GL_CORE_MATH_H_

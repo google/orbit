@@ -194,7 +194,7 @@ void PrimitiveAssembler::AddTriangle(const Triangle& triangle, const Color& colo
                                      std::shared_ptr<Pickable> pickable) {
   ORBIT_CHECK(picking_manager_ != nullptr);
 
-  Color picking_color = GetPickingManager()->GetPickableColor(pickable, GetBatcherId());
+  Color picking_color = picking_manager_->GetPickableColor(pickable, GetBatcherId());
 
   AddTriangle(triangle, color, picking_color, nullptr);
 }

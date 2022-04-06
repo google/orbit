@@ -1,4 +1,4 @@
-// Copyright (c) 2020 The Orbit Authors. All rights reserved.
+// Copyright (c) 2022 The Orbit Authors. All rights reserved.
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
@@ -10,21 +10,24 @@
 
 namespace orbit_gl {
 
-// TODO(http://b/228063067): Test all methods in Primitive Assembler
+namespace {
+
 class PrimitiveAssemblerTester : public PrimitiveAssembler {
  public:
-  PrimitiveAssemblerTester(PickingManager* picking_manager = nullptr)
+  explicit PrimitiveAssemblerTester(PickingManager* picking_manager = nullptr)
       : PrimitiveAssembler(&mock_batcher_, picking_manager) {}
-  void ExpectAdded(uint32_t line_count, uint32_t triangle_count, uint32_t box_count) {
-    EXPECT_EQ(mock_batcher_.GetNumLines(), line_count);
-    EXPECT_EQ(mock_batcher_.GetNumTriangles(), triangle_count);
-    EXPECT_EQ(mock_batcher_.GetNumBoxes(), box_count);
-  }
+  [[nodiscard]] uint32_t GetNumLines() const { return mock_batcher_.GetNumLines(); }
+  [[nodiscard]] uint32_t GetNumTriangles() const { return mock_batcher_.GetNumTriangles(); }
+  [[nodiscard]] uint32_t GetNumBoxes() const { return mock_batcher_.GetNumBoxes(); }
+  [[nodiscard]] uint32_t GetNumElements() const { return mock_batcher_.GetNumElements(); }
 
  private:
   MockBatcher mock_batcher_;
 };
 
+}  // namespace
+
+// TODO(http://b/228063067): Test all methods in Primitive Assembler
 TEST(PrimitiveAssembler, NullPickingManager) {
   PrimitiveAssemblerTester primitive_assembler_tester;
   std::shared_ptr<PickableMock> pickable = std::make_shared<PickableMock>();
@@ -32,8 +35,6 @@ TEST(PrimitiveAssembler, NullPickingManager) {
                                                   Color(255, 255, 255, 255), pickable),
                "nullptr");
 }
-
-static Vec3 Vec2ToVec3(Vec2 vertex, float z = 0) { return {vertex[0], vertex[1], z}; }
 
 TEST(PrimitiveAssembler, BasicAdditions) {
   PickingManager pm;
@@ -46,19 +47,23 @@ TEST(PrimitiveAssembler, BasicAdditions) {
   Vec2 kBottomRight{5, 5};
   Vec2 kBottomLeft{0, 5};
 
+  constexpr uint32_t kNumLines = 4;
+  constexpr uint32_t kNumTriangles = 2;
+  constexpr uint32_t kNumBoxes = 3;
+
   // Lines
   float kLineSize = 5.;
   primitive_assembler_tester.AddLine(kTopLeft, kBottomLeft, 0, kFakeColor);
   primitive_assembler_tester.AddLine(kTopLeft, kBottomLeft, 0, kFakeColor, pickable);
   primitive_assembler_tester.AddVerticalLine(kTopLeft, kLineSize, 0, kFakeColor);
   primitive_assembler_tester.AddVerticalLine(kTopLeft, kLineSize, 0, kFakeColor, pickable);
+  EXPECT_EQ(primitive_assembler_tester.GetNumLines(), kNumLines);
 
-  primitive_assembler_tester.ExpectAdded(4, 0, 0);
   // Triangles
   Triangle kFakeTriangle{Vec2ToVec3(kTopLeft), Vec2ToVec3(kTopRight), Vec2ToVec3(kBottomRight)};
   primitive_assembler_tester.AddTriangle(kFakeTriangle, kFakeColor);
   primitive_assembler_tester.AddTriangle(kFakeTriangle, kFakeColor, pickable);
-  primitive_assembler_tester.ExpectAdded(4, 2, 0);
+  EXPECT_EQ(primitive_assembler_tester.GetNumTriangles(), kNumTriangles);
 
   // Boxes
   Tetragon kFakeBox{std::array<Vec3, 4>{Vec2ToVec3(kTopLeft), Vec2ToVec3(kTopRight),
@@ -66,7 +71,9 @@ TEST(PrimitiveAssembler, BasicAdditions) {
   primitive_assembler_tester.AddBox(kFakeBox, {kFakeColor, kFakeColor, kFakeColor, kFakeColor});
   primitive_assembler_tester.AddBox(kFakeBox, kFakeColor);
   primitive_assembler_tester.AddBox(kFakeBox, kFakeColor, pickable);
-  primitive_assembler_tester.ExpectAdded(4, 2, 3);
+  EXPECT_EQ(primitive_assembler_tester.GetNumBoxes(), kNumBoxes);
+
+  EXPECT_EQ(primitive_assembler_tester.GetNumElements(), kNumLines + kNumTriangles + kNumBoxes);
 }
 
 }  // namespace orbit_gl

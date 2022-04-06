@@ -38,8 +38,10 @@ AddInternalMethods, ResetElements(), GetLayers() and DrawLayers().
 **/
 class PrimitiveAssembler {
  public:
-  explicit PrimitiveAssembler(Batcher* batcher, PickingManager* picking_manager = nullptr)
+  explicit PrimitiveAssembler(Batcher* batcher, PickingManager* picking_manager)
       : batcher_(batcher), picking_manager_(picking_manager) {
+    ORBIT_CHECK(batcher_ != nullptr);
+    ORBIT_CHECK(picking_manager_ != nullptr);
     constexpr int32_t kSteps = 22;
     const float angle = (kPiFloat * 2.f) / kSteps;
     for (int32_t i = 1; i <= kSteps; i++) {

@@ -12,7 +12,6 @@
 
 #include "Batcher.h"
 #include "Containers/BlockChain.h"
-#include "PickingManager.h"
 
 namespace orbit_gl {
 
