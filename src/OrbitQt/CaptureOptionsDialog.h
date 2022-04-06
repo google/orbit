@@ -81,6 +81,15 @@ class CaptureOptionsDialog : public QDialog {
   void SetMemoryWarningThresholdKb(uint64_t memory_warning_threshold_kb);
   [[nodiscard]] uint64_t GetMemoryWarningThresholdKb() const;
 
+  static constexpr double kCallstackSamplingPeriodMsDefaultValue = 1.0;
+  static constexpr orbit_grpc_protos::CaptureOptions::UnwindingMethod
+      kCallstackUnwindingMethodDefaultValue = orbit_grpc_protos::CaptureOptions::kDwarf;
+  static constexpr uint64_t kMemorySamplingPeriodMsDefaultValue = 10;
+  static constexpr uint64_t kMemoryWarningThresholdKbDefaultValue = 1024 * 1024 * 8;  // 8Gb
+  static constexpr orbit_grpc_protos::CaptureOptions::DynamicInstrumentationMethod
+      kDynamicInstrumentationMethodDefaultValue = orbit_grpc_protos::CaptureOptions::kKernelUprobes;
+  static constexpr uint64_t kLocalMarkerDepthDefaultValue = 0;
+
   // Max to pass to perf_event_open without getting an error is (1u << 16u) - 8,
   // because the kernel stores this in a short and because of alignment reasons.
   // But the size the kernel actually returns is smaller and we leave some extra room (see

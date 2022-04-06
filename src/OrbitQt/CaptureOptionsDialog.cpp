@@ -39,7 +39,8 @@ CaptureOptionsDialog::CaptureOptionsDialog(QWidget* parent)
   QObject::connect(ui_->maxCopyRawStackSizeLineEdit, &QLineEdit::editingFinished,
                    ui_->maxCopyRawStackSizeLineEdit, [this]() {
                      if (ui_->maxCopyRawStackSizeLineEdit->text().isEmpty()) {
-                       ui_->maxCopyRawStackSizeLineEdit->setText(QString::number(512));
+                       ui_->maxCopyRawStackSizeLineEdit->setText(
+                           QString::number(kMaxCopyRawStackSizeDefaultValue));
                      }
                    });
 
@@ -55,7 +56,7 @@ CaptureOptionsDialog::CaptureOptionsDialog(QWidget* parent)
     // TODO(b/198748597): Don't hide samplingCheckBox once disabling sampling completely is exposed.
     ui_->samplingCheckBox->hide();
     ui_->unwindingMethodWidget->hide();
-    ui_->maxCopyRawStackSizeLineEdit->hide();
+    ui_->maxCopyRawStackSizeWidget->hide();
     ui_->schedulerCheckBox->hide();
     ui_->gpuSubmissionsCheckBox->hide();
     ui_->introspectionCheckBox->hide();
@@ -70,8 +71,8 @@ CaptureOptionsDialog::CaptureOptionsDialog(QWidget* parent)
 
   ui_->maxCopyRawStackSizeLabel->setToolTip(QString::fromStdString(
       "To improve performance, we don't require to preserve the frame pointer register on leaf\n"
-      "functions (-momit-leaf-frame-pointer). In order to fix callstacks from samples falling\n"
-      "inside a leaf function, we need to copy a portion of the raw stack and Dwarf-unwind the\n"
+      "functions (-momit-leaf-frame-pointer). In order to recover the frame corresponding to the\n"
+      "caller of a leaf function, we need to copy a portion of the raw stack and DWARF-unwind the\n"
       "first frame. Specify how much data Orbit should copy. A larger value reduces the number of\n"
       "unwind errors, but increases the performance overhead of sampling."));
 
@@ -190,7 +191,7 @@ uint64_t CaptureOptionsDialog::GetMaxLocalMarkerDepthPerCommandBuffer() const {
 
 void CaptureOptionsDialog::ResetLocalMarkerDepthLineEdit() {
   if (ui_->localMarkerDepthLineEdit->text().isEmpty()) {
-    ui_->localMarkerDepthLineEdit->setText(QString::number(0));
+    ui_->localMarkerDepthLineEdit->setText(QString::number(kLocalMarkerDepthDefaultValue));
   }
 }
 
@@ -208,8 +209,6 @@ void CaptureOptionsDialog::SetMemorySamplingPeriodMs(uint64_t memory_sampling_pe
 
 void CaptureOptionsDialog::ResetMemorySamplingPeriodMsLineEditWhenEmpty() {
   if (!ui_->memorySamplingPeriodMsLineEdit->text().isEmpty()) return;
-
-  constexpr uint64_t kMemorySamplingPeriodMsDefaultValue = 10;
   ui_->memorySamplingPeriodMsLineEdit->setText(
       QString::number(kMemorySamplingPeriodMsDefaultValue));
 }
@@ -229,8 +228,6 @@ void CaptureOptionsDialog::SetMemoryWarningThresholdKb(uint64_t memory_warning_t
 
 void CaptureOptionsDialog::ResetMemoryWarningThresholdKbLineEditWhenEmpty() {
   if (!ui_->memoryWarningThresholdKbLineEdit->text().isEmpty()) return;
-
-  constexpr uint64_t kMemoryWarningThresholdKbDefaultValue = 1024 * 1024 * 8;
   ui_->memoryWarningThresholdKbLineEdit->setText(
       QString::number(kMemoryWarningThresholdKbDefaultValue));
 }

@@ -152,14 +152,14 @@
               <string/>
              </property>
              <property name="text">
-              <string>Maximal raw stack size to copy to (Bytes):</string>
+              <string>[Frame pointers only] Max raw stack size to copy (Bytes):</string>
              </property>
             </widget>
            </item>
            <item>
             <widget class="QLineEdit" name="maxCopyRawStackSizeLineEdit">
              <property name="enabled">
-              <bool>false</bool>
+              <bool>true</bool>
              </property>
              <property name="maxLength">
               <number>5</number>

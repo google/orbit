@@ -199,7 +199,7 @@ class OrbitMainWindow final : public QMainWindow, public orbit_gl::MainWindowInt
   static const QString kEnableCallstackSamplingSettingKey;
   static const QString kCallstackSamplingPeriodMsSettingKey;
   static const QString kCallstackUnwindingMethodSettingKey;
-  static const QString kMaxCopyRawStackSizeKey;
+  static const QString kMaxCopyRawStackSizeSettingsKey;
   static const QString kCollectSchedulerInfoSettingKey;
   static const QString kCollectThreadStatesSettingKey;
   static const QString kTraceGpuSubmissionsSettingKey;
