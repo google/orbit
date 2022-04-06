@@ -513,7 +513,7 @@ void HistogramWidget::mouseReleaseEvent(QMouseEvent* /* event*/) {
       const auto max_it = std::upper_bound(data_begin, data_end, max);
       const auto selection = absl::Span<const uint64_t>(&*min_it, std::distance(min_it, max_it));
 
-      if (*min_it == MinValue() && *(max_it - 1) == MaxValue()) {
+      if (selection.front() == MinValue() && selection.back() == MaxValue()) {
         selected_area_.reset();
         UpdateAndNotify();
         return;
