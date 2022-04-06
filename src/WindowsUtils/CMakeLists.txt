@@ -21,6 +21,8 @@ target_include_directories(WindowsUtils PRIVATE
 
 target_sources(WindowsUtils PUBLIC
         include/WindowsUtils/AdjustTokenPrivilege.h
+        include/WindowsUtils/BusyLoopLauncher.h
+        include/WindowsUtils/BusyLoopUtils.h
         include/WindowsUtils/CreateProcess.h
         include/WindowsUtils/Debugger.h
         include/WindowsUtils/DllInjection.h
@@ -35,6 +37,8 @@ target_sources(WindowsUtils PUBLIC
 
 target_sources(WindowsUtils PRIVATE
         AdjustTokenPrivilege.cpp
+        BusyLoopLauncher.cpp
+        BusyLoopUtils.cpp
         CreateProcess.cpp
         Debugger.cpp
         DllInjection.cpp
@@ -55,6 +59,7 @@ target_link_libraries(WindowsUtils PUBLIC
 add_executable(WindowsUtilsTests)
 
 target_sources(WindowsUtilsTests PRIVATE
+        BusyLoopLauncherTest.cpp
         CreateProcessTest.cpp
         DebuggerTest.cpp
         DllInjectionTest.cpp
