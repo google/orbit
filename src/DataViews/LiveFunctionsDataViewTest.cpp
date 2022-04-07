@@ -523,7 +523,7 @@ TEST_F(LiveFunctionsDataViewTest, ContextMenuActionsAreInvoked) {
 
     EXPECT_CALL(app_, JumpToTimerAndZoom)
         .Times(1)
-        .WillOnce([](uint64_t /*function_id*/, JumpToTimerMode selection_mode) {
+        .WillOnce([](uint64_t /*scope_id*/, JumpToTimerMode selection_mode) {
           EXPECT_EQ(selection_mode, JumpToTimerMode::kFirst);
         });
     view_.OnContextMenu(std::string{kMenuActionJumpToFirst}, jump_to_first_index, {0});
@@ -536,7 +536,7 @@ TEST_F(LiveFunctionsDataViewTest, ContextMenuActionsAreInvoked) {
 
     EXPECT_CALL(app_, JumpToTimerAndZoom)
         .Times(1)
-        .WillOnce([](uint64_t /*function_id*/, JumpToTimerMode selection_mode) {
+        .WillOnce([](uint64_t /*scope_id*/, JumpToTimerMode selection_mode) {
           EXPECT_EQ(selection_mode, JumpToTimerMode::kLast);
         });
     view_.OnContextMenu(std::string{kMenuActionJumpToLast}, jump_to_last_index, {0});
@@ -549,7 +549,7 @@ TEST_F(LiveFunctionsDataViewTest, ContextMenuActionsAreInvoked) {
 
     EXPECT_CALL(app_, JumpToTimerAndZoom)
         .Times(1)
-        .WillOnce([](uint64_t /*function_id*/, JumpToTimerMode selection_mode) {
+        .WillOnce([](uint64_t /*scope_id*/, JumpToTimerMode selection_mode) {
           EXPECT_EQ(selection_mode, JumpToTimerMode::kMin);
         });
     view_.OnContextMenu(std::string{kMenuActionJumpToMin}, jump_to_min_index, {0});
@@ -562,7 +562,7 @@ TEST_F(LiveFunctionsDataViewTest, ContextMenuActionsAreInvoked) {
 
     EXPECT_CALL(app_, JumpToTimerAndZoom)
         .Times(1)
-        .WillOnce([](uint64_t /*function_id*/, JumpToTimerMode selection_mode) {
+        .WillOnce([](uint64_t /*scope_id*/, JumpToTimerMode selection_mode) {
           EXPECT_EQ(selection_mode, JumpToTimerMode::kMax);
         });
     view_.OnContextMenu(std::string{kMenuActionJumpToMax}, jump_to_max_index, {0});

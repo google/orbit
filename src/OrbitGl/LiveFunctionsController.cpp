@@ -63,7 +63,7 @@ const orbit_client_protos::TimerInfo* SnapToClosestStart(TimeGraph* time_graph,
   // included in the timerange that we search). Note that FindNextFunctionCall
   // uses the end marker of the timer as a timestamp.
   const orbit_client_protos::TimerInfo* timer_info =
-      time_graph->FindNextFunctionCall(function_id, center - 1);
+      time_graph->FindNextScopeCall(function_id, center - 1);
 
   // If we cannot find a next function call, then the closest one is the first
   // call we find before center.
@@ -77,7 +77,7 @@ const orbit_client_protos::TimerInfo* SnapToClosestStart(TimeGraph* time_graph,
   // using the start marker to measure the distance.
   if (timer_info->start() <= center) {
     const orbit_client_protos::TimerInfo* next_timer_info =
-        time_graph->FindNextFunctionCall(function_id, timer_info->end());
+        time_graph->FindNextScopeCall(function_id, timer_info->end());
     if (!next_timer_info) {
       return timer_info;
     }
@@ -126,7 +126,7 @@ bool LiveFunctionsController::OnAllNextButton() {
     const orbit_client_protos::TimerInfo* current_timer_info =
         current_timer_infos_.find(it.first)->second;
     const orbit_client_protos::TimerInfo* timer_info =
-        app_->GetMutableTimeGraph()->FindNextFunctionCall(function_id, current_timer_info->end());
+        app_->GetMutableTimeGraph()->FindNextScopeCall(function_id, current_timer_info->end());
     if (timer_info == nullptr) {
       return false;
     }
@@ -173,9 +173,8 @@ bool LiveFunctionsController::OnAllPreviousButton() {
 }
 
 void LiveFunctionsController::OnNextButton(uint64_t id) {
-  const orbit_client_protos::TimerInfo* timer_info =
-      app_->GetMutableTimeGraph()->FindNextFunctionCall(iterator_id_to_function_id_[id],
-                                                        current_timer_infos_[id]->end());
+  const orbit_client_protos::TimerInfo* timer_info = app_->GetMutableTimeGraph()->FindNextScopeCall(
+      iterator_id_to_function_id_[id], current_timer_infos_[id]->end());
   // If text_box is nullptr, then we have reached the right end of the timeline.
   if (timer_info != nullptr) {
     current_timer_infos_[id] = timer_info;
