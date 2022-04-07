@@ -21,7 +21,7 @@ struct Tetragon {
       : vertices(std::move(clockwise_ordered_vertices)) {}
   Tetragon(std::array<Vec2, 4> clockwise_ordered_vertices, float z = 0) {
     std::transform(clockwise_ordered_vertices.begin(), clockwise_ordered_vertices.end(),
-                   vertices.begin(), [z](Vec2 v) { return Vec2ToVec3(v, z); });
+                   vertices.begin(), [z](Vec2& v) { return Vec2ToVec3(v, z); });
   }
 
   std::array<Vec3, 4> vertices;
