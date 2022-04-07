@@ -1796,34 +1796,40 @@ orbit_base::Future<ErrorMessageOr<std::filesystem::path>> OrbitApp::RetrieveModu
     return it->second;
   }
 
-  auto local_symbols_path = FindModuleLocally(*module_data);
-
-  if (local_symbols_path.has_value()) {
-    return local_symbols_path;
-  }
+  Future<ErrorMessageOr<std::filesystem::path>> local_symbols_future =
+      FindModuleLocally(module_data);
 
   // TODO(b/177304549): [new UI] maybe come up with a better indicator whether orbit is connected
   // than process_manager != nullptr
   if (absl::GetFlag(FLAGS_local) || GetProcessManager() == nullptr) {
-    return local_symbols_path;
+    return local_symbols_future;
   }
 
-  auto final_result =
-      RetrieveModuleFromRemote(module_path)
-          .Then(main_thread_executor_,
-                [this, module_id, local_error_message = local_symbols_path.error().message()](
-                    const ErrorMessageOr<std::filesystem::path>& remote_result)
-                    -> ErrorMessageOr<std::filesystem::path> {
-                  modules_currently_loading_.erase(module_id);
+  Future<ErrorMessageOr<std::filesystem::path>> final_result =
+      orbit_base::UnwrapFuture(local_symbols_future.Then(
+          main_thread_executor_,
+          [this, module_id](ErrorMessageOr<std::filesystem::path> local_symbols_path)
+              -> Future<ErrorMessageOr<std::filesystem::path>> {
+            if (local_symbols_path.has_value()) {
+              return local_symbols_path;
+            }
 
-                  // If remote loading fails as well, we combine the error messages.
-                  if (remote_result.has_value()) return remote_result;
-                  return {ErrorMessage{
-                      absl::StrFormat("Did not find symbols locally or on remote for module \"%s\" "
-                                      "with build_id=\"%s\": %s\n%s",
-                                      module_id.first, module_id.second, local_error_message,
-                                      remote_result.error().message())}};
-                });
+            return RetrieveModuleFromRemote(module_id.first)
+                .Then(main_thread_executor_,
+                      [this, module_id, local_error_message = local_symbols_path.error().message()](
+                          const ErrorMessageOr<std::filesystem::path>& remote_result)
+                          -> ErrorMessageOr<std::filesystem::path> {
+                        modules_currently_loading_.erase(module_id);
+
+                        // If remote loading fails as well, we combine the error messages.
+                        if (remote_result.has_value()) return remote_result;
+                        return {ErrorMessage{
+                            absl::StrFormat("Did not find symbols locally or on remote for module "
+                                            "\"%s\" with build_id=\"%s\": %s\n%s",
+                                            module_id.first, module_id.second, local_error_message,
+                                            remote_result.error().message())}};
+                      });
+          }));
 
   modules_currently_loading_.emplace(module_id, final_result);
   return final_result;
@@ -1935,11 +1941,17 @@ static ErrorMessageOr<std::filesystem::path> FindModuleLocallyImpl(
   return ErrorMessage(error_message);
 }
 
-ErrorMessageOr<std::filesystem::path> OrbitApp::FindModuleLocally(const ModuleData& module_data) {
+Future<ErrorMessageOr<std::filesystem::path>> OrbitApp::FindModuleLocally(
+    const ModuleData* module_data) {
   ORBIT_SCOPE_FUNCTION;
-  const auto scoped_status = CreateScopedStatus(absl::StrFormat(
-      "Searching for symbols on local machine for module: \"%s\"...", module_data.file_path()));
-  return FindModuleLocallyImpl(symbol_helper_, module_data);
+  auto scoped_status = CreateScopedStatus(absl::StrFormat(
+      "Searching for symbols on local machine for module: \"%s\"...", module_data->file_path()));
+  return thread_pool_->Schedule(
+      [this, module_data,
+       scoped_status = std::move(scoped_status)]() -> ErrorMessageOr<std::filesystem::path> {
+        const ModuleData& module_data_ref{*module_data};
+        return FindModuleLocallyImpl(symbol_helper_, module_data_ref);
+      });
 }
 
 void OrbitApp::AddSymbols(const std::filesystem::path& module_file_path,
