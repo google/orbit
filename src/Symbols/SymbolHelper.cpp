@@ -147,6 +147,7 @@ static std::vector<fs::path> FindStructuredDebugDirectories() {
 
 ErrorMessageOr<void> SymbolHelper::VerifySymbolsFile(const fs::path& symbols_path,
                                                      const std::string& build_id) {
+  ORBIT_SCOPE_FUNCTION;
   auto symbols_file_or_error = CreateSymbolsFile(symbols_path, ObjectFileInfo());
   if (symbols_file_or_error.has_error()) {
     return ErrorMessage(absl::StrFormat("Unable to load symbols file \"%s\", error: %s",
@@ -177,6 +178,7 @@ SymbolHelper::SymbolHelper(fs::path cache_directory)
 ErrorMessageOr<fs::path> SymbolHelper::FindSymbolsFileLocally(
     const fs::path& module_path, const std::string& build_id,
     const ModuleInfo::ObjectFileType& object_file_type, absl::Span<const fs::path> paths) const {
+  ORBIT_SCOPE_FUNCTION;
   if (build_id.empty()) {
     return ErrorMessage(absl::StrFormat(
         "Could not find symbols file for module \"%s\", because it does not contain a build id",
@@ -235,6 +237,7 @@ ErrorMessageOr<fs::path> SymbolHelper::FindSymbolsFileLocally(
 
 [[nodiscard]] ErrorMessageOr<fs::path> SymbolHelper::FindSymbolsInCache(
     const fs::path& module_path, const std::string& build_id) const {
+  ORBIT_SCOPE_FUNCTION;
   fs::path cache_file_path = GenerateCachedFileName(module_path);
   std::error_code error;
   bool exists = fs::exists(cache_file_path, error);
@@ -313,6 +316,7 @@ ErrorMessageOr<fs::path> SymbolHelper::FindDebugInfoFileLocally(
 
 ErrorMessageOr<fs::path> SymbolHelper::FindDebugInfoFileInDebugStore(
     const fs::path& debug_directory, std::string_view build_id) {
+  ORBIT_SCOPE_FUNCTION;
   // Since the first two digits form the name of a sub-directory, we will need at least 3 digits to
   // generate a proper filename: build_id[0:2]/build_id[2:].debug
   if (build_id.size() < 3) {

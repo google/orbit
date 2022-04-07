@@ -1635,6 +1635,7 @@ void OrbitApp::SendErrorToUi(const std::string& title, const std::string& text) 
 
 orbit_base::Future<ErrorMessageOr<std::filesystem::path>> OrbitApp::RetrieveModuleFromRemote(
     const std::string& module_file_path) {
+  ORBIT_SCOPE_FUNCTION;
   ScopedStatus scoped_status = CreateScopedStatus(absl::StrFormat(
       "Searching for symbols on remote instance for module \"%s\"...", module_file_path));
 
@@ -1700,7 +1701,7 @@ orbit_base::Future<void> OrbitApp::RetrieveModulesAndLoadSymbols(
   for (const auto& module : modules_set) {
     // Explicitely do not handle the result.
     Future<void> future = RetrieveModuleAndLoadSymbolsAndHandleError(module).Then(
-        &immediate_executor, [](const SymbolLoadingAndErrorHandlingResult & /*result*/) -> void {});
+        &immediate_executor, [](const SymbolLoadingAndErrorHandlingResult& /*result*/) -> void {});
     futures.emplace_back(std::move(future));
   }
 
@@ -1753,6 +1754,7 @@ orbit_base::Future<ErrorMessageOr<void>> OrbitApp::RetrieveModuleAndLoadSymbols(
 
 orbit_base::Future<ErrorMessageOr<void>> OrbitApp::RetrieveModuleAndLoadSymbols(
     const std::string& module_path, const std::string& build_id) {
+  ORBIT_SCOPE_FUNCTION;
   ScopedMetric metric(metrics_uploader_, OrbitLogEvent::ORBIT_SYMBOL_LOAD);
 
   const ModuleData* const module_data = GetModuleByPathAndBuildId(module_path, build_id);
@@ -1781,6 +1783,7 @@ orbit_base::Future<ErrorMessageOr<void>> OrbitApp::RetrieveModuleAndLoadSymbols(
 
 orbit_base::Future<ErrorMessageOr<std::filesystem::path>> OrbitApp::RetrieveModule(
     const std::string& module_path, const std::string& build_id) {
+  ORBIT_SCOPE_FUNCTION;
   const ModuleData* module_data = GetModuleByPathAndBuildId(module_path, build_id);
 
   if (module_data == nullptr) {
@@ -1874,6 +1877,7 @@ orbit_base::Future<ErrorMessageOr<std::filesystem::path>> OrbitApp::RetrieveModu
 
 static ErrorMessageOr<std::filesystem::path> FindModuleLocallyImpl(
     const orbit_symbols::SymbolHelper& symbol_helper, const ModuleData& module_data) {
+  ORBIT_SCOPE_FUNCTION;
   if (absl::GetFlag(FLAGS_enable_unsafe_symbols)) {
     // First checkout if a symbol file override exists and if it does, use it
     OUTCOME_TRY(std::optional<std::filesystem::path> overriden_symbols_file,
@@ -1933,6 +1937,7 @@ static ErrorMessageOr<std::filesystem::path> FindModuleLocallyImpl(
 }
 
 ErrorMessageOr<std::filesystem::path> OrbitApp::FindModuleLocally(const ModuleData& module_data) {
+  ORBIT_SCOPE_FUNCTION;
   const auto scoped_status = CreateScopedStatus(absl::StrFormat(
       "Searching for symbols on local machine for module: \"%s\"...", module_data.file_path()));
   return FindModuleLocallyImpl(symbol_helper_, module_data);
@@ -1941,6 +1946,7 @@ ErrorMessageOr<std::filesystem::path> OrbitApp::FindModuleLocally(const ModuleDa
 void OrbitApp::AddSymbols(const std::filesystem::path& module_file_path,
                           const std::string& module_build_id,
                           const orbit_grpc_protos::ModuleSymbols& module_symbols) {
+  ORBIT_SCOPE_FUNCTION;
   ModuleData* module_data =
       GetMutableModuleByPathAndBuildId(module_file_path.string(), module_build_id);
   module_data->AddSymbols(module_symbols);
@@ -1960,6 +1966,7 @@ void OrbitApp::AddSymbols(const std::filesystem::path& module_file_path,
 orbit_base::Future<ErrorMessageOr<void>> OrbitApp::LoadSymbols(
     const std::filesystem::path& symbols_path, const std::string& module_file_path,
     const std::string& module_build_id) {
+  ORBIT_SCOPE_FUNCTION;
   auto module_id = std::make_pair(module_file_path, module_build_id);
   const auto it = symbols_currently_loading_.find(module_id);
   if (it != symbols_currently_loading_.end()) {
@@ -2233,6 +2240,7 @@ void OrbitApp::ShowPresetInExplorer(const PresetFile& preset) {
 }
 
 void OrbitApp::UpdateProcessAndModuleList() {
+  ORBIT_SCOPE_FUNCTION;
   functions_data_view_->ClearFunctions();
 
   auto module_infos = thread_pool_->Schedule(
@@ -2542,6 +2550,7 @@ void OrbitApp::SelectCallstackEvents(const std::vector<CallstackEvent>& selected
 }
 
 void OrbitApp::UpdateAfterSymbolLoading() {
+  ORBIT_SCOPE_FUNCTION;
   if (!HasCaptureData()) {
     return;
   }
