@@ -91,7 +91,8 @@ int MockBatcher::GetNumBoxes() const {
 
 // To check that everything is inside a rectangle, we just need to check the minimum and maximum
 // used coordinates.
-bool MockBatcher::IsEverythingInsideRectangle(Vec2 start, Vec2 end) const {
+bool MockBatcher::IsEverythingInsideRectangle(Vec2 start, Vec2 size) const {
+  Vec2 end = start + size;
   return IsInsideRectangle({min_point_[0], min_point_[1]}, start, end) &&
          IsInsideRectangle({max_point_[0], max_point_[1]}, start, end);
 }

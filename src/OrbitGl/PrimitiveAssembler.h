@@ -38,13 +38,13 @@ AddInternalMethods, ResetElements(), GetLayers() and DrawLayers().
 **/
 class PrimitiveAssembler {
  public:
+  static constexpr int32_t kCirclePoints = 22;
   explicit PrimitiveAssembler(Batcher* batcher, PickingManager* picking_manager = nullptr)
       : batcher_(batcher), picking_manager_(picking_manager) {
     ORBIT_CHECK(batcher_ != nullptr);
 
-    constexpr int32_t kSteps = 22;
-    const float angle = (kPiFloat * 2.f) / kSteps;
-    for (int32_t i = 1; i <= kSteps; i++) {
+    const float angle = (kPiFloat * 2.f) / kCirclePoints;
+    for (int32_t i = 1; i <= kCirclePoints; i++) {
       float new_x = sinf(angle * i);
       float new_y = cosf(angle * i);
       circle_points.emplace_back(Vec2(new_x, new_y));
@@ -84,19 +84,14 @@ class PrimitiveAssembler {
   void AddRoundedBox(Vec2 pos, Vec2 size, float z, float radius, const Color& color,
                      float margin = 0);
 
-  void AddBottomLeftRoundedCorner(Vec2 pos, float radius, float z, const Color& color);
-  void AddTopLeftRoundedCorner(Vec2 pos, float radius, float z, const Color& color);
-  void AddTopRightRoundedCorner(Vec2 pos, float radius, float z, const Color& color);
-  void AddBottomRightRoundedCorner(Vec2 pos, float radius, float z, const Color& color);
-
-  void AddTriangle(const Triangle& triangle, const Color& color,
-                   std::unique_ptr<PickingUserData> user_data = nullptr);
   // TODO(b/227744958) This should probably be removed and AddBox should be used instead
   void AddShadedTrapezium(const Tetragon& trapezium, const Color& color,
-                          std::unique_ptr<PickingUserData> user_data = nullptr,
+                          std::unique_ptr<PickingUserData> user_data,
                           ShadingDirection shading_direction = ShadingDirection::kLeftToRight);
   void AddTriangle(const Triangle& triangle, const Color& color,
                    std::shared_ptr<Pickable> pickable);
+  void AddTriangle(const Triangle& triangle, const Color& color,
+                   std::unique_ptr<PickingUserData> user_data = nullptr);
 
   void AddTetragonBorder(const Tetragon& tetragon, const Color& color,
                          std::unique_ptr<orbit_gl::PickingUserData> user_data);
@@ -113,12 +108,16 @@ class PrimitiveAssembler {
 
   static constexpr uint32_t kNumArcSides = 16;
 
- protected:
+ private:
+  [[nodiscard]] BatcherId GetBatcherId() const { return batcher_->GetBatcherId(); }
+
+  void AddBottomLeftRoundedCorner(Vec2 pos, float radius, float z, const Color& color);
+  void AddTopLeftRoundedCorner(Vec2 pos, float radius, float z, const Color& color);
+  void AddTopRightRoundedCorner(Vec2 pos, float radius, float z, const Color& color);
+  void AddBottomRightRoundedCorner(Vec2 pos, float radius, float z, const Color& color);
   void AddTriangle(const Triangle& triangle, const Color& color, const Color& picking_color,
                    std::unique_ptr<PickingUserData> user_data = nullptr);
 
- private:
-  [[nodiscard]] BatcherId GetBatcherId() const { return batcher_->GetBatcherId(); }
   void GetBoxGradientColors(const Color& color, std::array<Color, 4>* colors,
                             ShadingDirection shading_direction = ShadingDirection::kLeftToRight);
 
