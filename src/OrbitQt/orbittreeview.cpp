@@ -153,16 +153,20 @@ void OrbitTreeView::Refresh(RefreshMode refresh_mode) {
   }
 
   // Re-select previous selection
-  QItemSelectionModel* selection = selectionModel();
+  QItemSelectionModel* selection_model = selectionModel();
   QModelIndex index;
   // Don't re-trigger row selection callback when re-selecting.
   is_internal_refresh_ = true;
   std::vector<int> visible_selected_indices = model_->GetVisibleSelectedIndices();
-  selection->clearSelection();
+  selection_model->clearSelection();
+
+  QItemSelection selection{};
   for (int row : visible_selected_indices) {
     index = model_->CreateIndex(row, 0);
-    selection->select(index, QItemSelectionModel::Select | QItemSelectionModel::Rows);
+    selection.select(index, index);
   }
+  selection_model->select(selection, QItemSelectionModel::Select | QItemSelectionModel::Rows);
+
   is_internal_refresh_ = false;
 
   model_->GetDataView()->OnRefresh(visible_selected_indices, refresh_mode);
