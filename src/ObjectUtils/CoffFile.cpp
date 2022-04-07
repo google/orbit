@@ -32,6 +32,8 @@ class CoffFileImpl : public CoffFile {
  public:
   CoffFileImpl(std::filesystem::path file_path,
                llvm::object::OwningBinary<llvm::object::ObjectFile>&& owning_binary);
+  [[nodiscard]] ErrorMessageOr<void> Initialize();
+
   [[nodiscard]] ErrorMessageOr<orbit_grpc_protos::ModuleSymbols> LoadDebugSymbols() override;
   [[nodiscard]] bool HasDebugSymbols() const override;
   [[nodiscard]] std::string GetName() const override;
@@ -39,18 +41,19 @@ class CoffFileImpl : public CoffFile {
   [[nodiscard]] uint64_t GetLoadBias() const override;
   [[nodiscard]] std::string GetBuildId() const override;
   [[nodiscard]] uint64_t GetExecutableSegmentOffset() const override;
+  [[nodiscard]] uint64_t GetExecutableSegmentSize() const override;
   [[nodiscard]] bool IsElf() const override;
   [[nodiscard]] bool IsCoff() const override;
   [[nodiscard]] ErrorMessageOr<PdbDebugInfo> GetDebugPdbInfo() const override;
 
  private:
-  ErrorMessageOr<uint64_t> GetSectionOffsetForSymbol(const llvm::object::SymbolRef& symbol_ref);
-  ErrorMessageOr<SymbolInfo> CreateSymbolInfo(const llvm::object::SymbolRef& symbol_ref);
   [[nodiscard]] bool AreDebugSymbolsEmpty() const;
+
   const std::filesystem::path file_path_;
   llvm::object::OwningBinary<llvm::object::ObjectFile> owning_binary_;
   llvm::object::COFFObjectFile* object_file_;
   bool has_debug_info_;
+  uint64_t text_section_virtual_size_ = 0;
 };
 
 CoffFileImpl::CoffFileImpl(std::filesystem::path file_path,
@@ -63,6 +66,23 @@ CoffFileImpl::CoffFileImpl(std::filesystem::path file_path,
   if (dwarf_context != nullptr) {
     has_debug_info_ = true;
   }
+}
+
+ErrorMessageOr<void> CoffFileImpl::Initialize() {
+  // We assume that there is only one .text section in a PE/COFF file.
+  for (const llvm::object::SectionRef& section_ref : object_file_->sections()) {
+    const llvm::object::coff_section* coff_section = object_file_->getCOFFSection(section_ref);
+    // section_ref.isText() would also do, but it only checks IMAGE_SCN_CNT_CODE.
+    if ((coff_section->Characteristics & llvm::COFF::IMAGE_SCN_CNT_CODE) == 0) continue;
+    if ((coff_section->Characteristics & llvm::COFF::IMAGE_SCN_MEM_EXECUTE) == 0) continue;
+    text_section_virtual_size_ = coff_section->VirtualSize;
+    return outcome::success();
+  }
+
+  std::string error =
+      absl::StrFormat("No text section found in COFF file \"%s\".", file_path_.string());
+  ORBIT_ERROR("%s", error);
+  return ErrorMessage(std::move(error));
 }
 
 static void FillDebugSymbolsFromDWARF(llvm::DWARFContext* dwarf_context,
@@ -142,10 +162,13 @@ const std::filesystem::path& CoffFileImpl::GetFilePath() const { return file_pat
 std::string CoffFileImpl::GetName() const { return file_path_.filename().string(); }
 
 uint64_t CoffFileImpl::GetLoadBias() const { return object_file_->getImageBase(); }
+
 uint64_t CoffFileImpl::GetExecutableSegmentOffset() const {
   ORBIT_CHECK(object_file_->is64());
   return object_file_->getPE32PlusHeader()->BaseOfCode;
 }
+
+uint64_t CoffFileImpl::GetExecutableSegmentSize() const { return text_section_virtual_size_; }
 
 bool CoffFileImpl::IsElf() const { return false; }
 bool CoffFileImpl::IsCoff() const { return true; }
@@ -181,7 +204,8 @@ ErrorMessageOr<PdbDebugInfo> CoffFileImpl::GetDebugPdbInfo() const {
 std::string CoffFileImpl::GetBuildId() const {
   ErrorMessageOr<PdbDebugInfo> pdb_debug_info = GetDebugPdbInfo();
   if (pdb_debug_info.has_error()) {
-    ORBIT_LOG("WARNING: No PDB debug info found, cannot form build id (ignoring).");
+    ORBIT_LOG("WARNING: No PDB debug info found for \"%s\", cannot form build id (ignoring)",
+              file_path_.filename().string());
     return "";
   }
   return ComputeWindowsBuildId(pdb_debug_info.value().guid, pdb_debug_info.value().age);
@@ -208,14 +232,16 @@ ErrorMessageOr<std::unique_ptr<CoffFile>> CreateCoffFile(
     llvm::object::OwningBinary<llvm::object::ObjectFile>&& file) {
   llvm::object::COFFObjectFile* coff_object_file =
       llvm::dyn_cast<llvm::object::COFFObjectFile>(file.getBinary());
-  if (coff_object_file != nullptr) {
-    if (!coff_object_file->is64()) {
-      return ErrorMessage(absl::StrFormat("Only 64-bit object files are supported."));
-    }
-    return std::unique_ptr<CoffFile>(new CoffFileImpl(file_path, std::move(file)));
-  } else {
+  if (coff_object_file == nullptr) {
     return ErrorMessage(absl::StrFormat("Unable to load object file \"%s\":", file_path.string()));
   }
+  if (!coff_object_file->is64()) {
+    return ErrorMessage(absl::StrFormat("Only 64-bit object files are supported."));
+  }
+
+  auto coff_file = std::make_unique<CoffFileImpl>(file_path, std::move(file));
+  OUTCOME_TRY(coff_file->Initialize());
+  return coff_file;
 }
 
 }  // namespace orbit_object_utils

@@ -177,7 +177,7 @@ TEST(LinuxMap, ParseMaps) {
 
     const ModuleInfo* hello_module_info = nullptr;
     const ModuleInfo* no_symbols_module_info = nullptr;
-    ;
+
     if (result.value()[0].name() == "hello_world_elf") {
       hello_module_info = &result.value()[0];
       no_symbols_module_info = &result.value()[1];
