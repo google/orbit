@@ -8,25 +8,30 @@
 #include "TranslationStack.h"
 
 namespace orbit_gl {
+static void ExpectEqualHasZ(const HasZ<Vec2>& expected, const HasZ<Vec2>& actual) {
+  EXPECT_EQ(expected.shape, actual.shape);
+  EXPECT_EQ(expected.z, actual.z);
+}
+
 TEST(TranslationStack, PushAndPop) {
-  const Vec3 orig(0.5f, 0.5f, 0.5f);
-  const Vec3 orig_result(0, 0, 0.5f);
-  const Vec3 trans(1, 2, 3);
-  const Vec3 trans_result(1, 2, 3.5f);
+  const HasZ<Vec2> orig{{0.5f, 0.5f}, 0.5f};
+  const HasZ<Vec2> orig_result{{0, 0}, 0.5f};
+  const HasZ<Vec2> trans{{1, 2}, 3};
+  const HasZ<Vec2> trans_result{{1, 2}, 3.5f};
 
   TranslationStack stack;
   EXPECT_TRUE(stack.IsEmpty());
 
-  Vec3 result = stack.TranslateAndFloorVertex(orig);
-  EXPECT_EQ(orig_result, result);
+  HasZ<Vec2> result = stack.TranslateAndFloorVertex(orig);
+  ExpectEqualHasZ(orig_result, result);
 
-  stack.PushTranslation(trans[0], trans[1], trans[2]);
+  stack.PushTranslation(trans.shape[0], trans.shape[1], trans.z);
   result = stack.TranslateAndFloorVertex(orig);
-  EXPECT_EQ(trans_result, result);
+  ExpectEqualHasZ(trans_result, result);
 
   stack.PopTranslation();
   result = stack.TranslateAndFloorVertex(orig);
-  EXPECT_EQ(orig_result, result);
+  ExpectEqualHasZ(orig_result, result);
 }
 
 TEST(TranslationStack, RaisesOnError) {

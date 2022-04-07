@@ -32,20 +32,20 @@ void MockBatcher::AddLine(Vec2 from, Vec2 to, float z, const Color& color,
   AdjustDrawingBoundaries({from[0], from[1], z});
   AdjustDrawingBoundaries({to[0], to[1], z});
 }
-void MockBatcher::AddBox(const Tetragon& box, const std::array<Color, 4>& colors,
+void MockBatcher::AddBox(const Tetragon& box, float z, const std::array<Color, 4>& colors,
                          const Color& /*picking_color*/,
                          std::unique_ptr<PickingUserData> /*user_data*/) {
   num_boxes_by_color_[colors[0]]++;
   for (int i = 0; i < 4; i++) {
-    AdjustDrawingBoundaries(box.vertices[i]);
+    AdjustDrawingBoundaries(Vec2ToVec3(box.vertices[i], z));
   }
 }
-void MockBatcher::AddTriangle(const Triangle& triangle, const std::array<Color, 3>& colors,
+void MockBatcher::AddTriangle(const Triangle& triangle, float z, const std::array<Color, 3>& colors,
                               const Color& /*picking_color*/,
                               std::unique_ptr<PickingUserData> /*user_data*/) {
   num_triangles_by_color_[colors[0]]++;
   for (int i = 0; i < 3; i++) {
-    AdjustDrawingBoundaries(triangle.vertices[i]);
+    AdjustDrawingBoundaries(Vec2ToVec3(triangle.vertices[i], z));
   }
 }
 

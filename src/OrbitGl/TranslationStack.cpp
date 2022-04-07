@@ -7,9 +7,9 @@
 #include "OrbitBase/Logging.h"
 
 void orbit_gl::TranslationStack::PushTranslation(float x, float y, float z) {
-  const Vec3 translation(x, y, z);
   translation_stack_.push_back(current_translation_);
-  current_translation_ += translation;
+  current_translation_.shape += Vec2(x, y);
+  current_translation_.z += z;
 }
 
 void orbit_gl::TranslationStack::PopTranslation() {

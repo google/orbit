@@ -428,7 +428,7 @@ void ThreadTrack::DoUpdatePrimitives(PrimitiveAssembler& primitive_assembler,
         primitive_assembler.AddShadedBox(pos, size, draw_data.z, color, std::move(user_data));
         if (ShouldHaveBorder(timer_info, draw_data.histogram_selection_range, size[0])) {
           primitive_assembler.AddTetragonBorder(
-              MakeBox(pos, size, GlCanvas::kZValueBoxBorder), TimerTrack::kBoxBorderColor,
+              MakeBox(pos, size), GlCanvas::kZValueBoxBorder, TimerTrack::kBoxBorderColor,
               CreatePickingUserData(primitive_assembler, *timer_info));
         }
       } else {

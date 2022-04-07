@@ -17,10 +17,10 @@ class MockBatcher : public Batcher {
   explicit MockBatcher();
   void AddLine(Vec2 from, Vec2 to, float z, const Color& color, const Color& /*picking_color*/,
                std::unique_ptr<PickingUserData> /*user_data*/) override;
-  void AddBox(const Tetragon& box, const std::array<Color, 4>& colors,
+  void AddBox(const Tetragon& box, float z, const std::array<Color, 4>& colors,
               const Color& /*picking_color*/,
               std::unique_ptr<PickingUserData> /*user_data*/) override;
-  void AddTriangle(const Triangle& triangle, const std::array<Color, 3>& colors,
+  void AddTriangle(const Triangle& triangle, float z, const std::array<Color, 3>& colors,
                    const Color& /*picking_color*/,
                    std::unique_ptr<PickingUserData> /*user_data*/) override;
 

@@ -9,33 +9,39 @@
 
 #include "CoreMath.h"
 
+template <typename T>
+struct HasZ {
+  T shape;
+  float z{};
+};
+
 struct Line {
-  Vec3 start_point;
-  Vec3 end_point;
+  Vec2 start_point;
+  Vec2 end_point;
 };
 
 // TODO(b/227748244) Tetragon should store four Vec2
 struct Tetragon {
   Tetragon() = default;
-  Tetragon(std::array<Vec3, 4> clockwise_ordered_vartices)
-      : vertices(std::move(clockwise_ordered_vartices)) {}
+  Tetragon(std::array<Vec2, 4> clockwise_ordered_vertices)
+      : vertices(std::move(clockwise_ordered_vertices)) {}
 
-  std::array<Vec3, 4> vertices;
+  std::array<Vec2, 4> vertices;
 };
 
-[[nodiscard]] inline Tetragon MakeBox(const Vec2& pos, const Vec2& size, float z) {
-  return {{Vec3(pos[0], pos[1], z), Vec3(pos[0], pos[1] + size[1], z),
-           Vec3(pos[0] + size[0], pos[1] + size[1], z), Vec3(pos[0] + size[0], pos[1], z)}};
+[[nodiscard]] inline Tetragon MakeBox(const Vec2& pos, const Vec2& size) {
+  return {{Vec2(pos[0], pos[1]), Vec2(pos[0], pos[1] + size[1]),
+           Vec2(pos[0] + size[0], pos[1] + size[1]), Vec2(pos[0] + size[0], pos[1])}};
 }
 
 struct Triangle {
   Triangle() = default;
-  Triangle(Vec3 v0, Vec3 v1, Vec3 v2) {
+  Triangle(Vec2 v0, Vec2 v1, Vec2 v2) {
     vertices[0] = v0;
     vertices[1] = v1;
     vertices[2] = v2;
   }
-  Vec3 vertices[3];
+  std::array<Vec2, 3> vertices;
 };
 
 #endif

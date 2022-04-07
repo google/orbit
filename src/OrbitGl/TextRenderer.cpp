@@ -20,6 +20,7 @@
 #include <string>
 #include <utility>
 
+#include "Geometry.h"
 #include "GlCanvas.h"
 #include "Introspection/Introspection.h"
 #include "OrbitBase/ExecutablePath.h"
@@ -260,10 +261,11 @@ void TextRenderer::AddTextInternal(const char* text, ftgl::vec2* pen,
       float kerning = (i == 0) ? 0.0f : texture_glyph_get_kerning(glyph, text + i - 1);
       pen->x += kerning;
 
-      Vec3 pos0 = translations_.TranslateAndFloorVertex(
-          Vec3(pen->x + glyph->offset_x, pen->y - glyph->offset_y, z));
+      HasZ<Vec2> pos0has_z = translations_.TranslateAndFloorVertex(
+          {{pen->x + glyph->offset_x, pen->y - glyph->offset_y}, z});
+      const Vec2& pos0 = pos0has_z.shape;
       Vec2 pos1 = Vec2(pos0[0] + glyph->width, pos0[1] + glyph->height);
-      const float transformed_z = pos0[2];
+      const float transformed_z = pos0has_z.z;
 
       float s0 = glyph->s0;
       float t0 = glyph->t0;

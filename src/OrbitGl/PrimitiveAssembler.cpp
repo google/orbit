@@ -43,21 +43,21 @@ void PrimitiveAssembler::AddVerticalLine(Vec2 pos, float size, float z, const Co
   batcher_->AddLine(pos, pos + Vec2(0, size), z, color, picking_color, nullptr);
 }
 
-void PrimitiveAssembler::AddBox(const Tetragon& box, const std::array<Color, 4>& colors,
+void PrimitiveAssembler::AddBox(const Tetragon& box, float z, const std::array<Color, 4>& colors,
                                 std::unique_ptr<PickingUserData> user_data) {
   Color picking_color =
       PickingId::ToColor(PickingType::kBox, batcher_->GetNumElements(), GetBatcherId());
-  batcher_->AddBox(box, colors, picking_color, std::move(user_data));
+  batcher_->AddBox(box, z, colors, picking_color, std::move(user_data));
 }
 
-void PrimitiveAssembler::AddBox(const Tetragon& box, const Color& color,
+void PrimitiveAssembler::AddBox(const Tetragon& box, float z, const Color& color,
                                 std::unique_ptr<PickingUserData> user_data) {
   std::array<Color, 4> colors;
   colors.fill(color);
-  AddBox(box, colors, std::move(user_data));
+  AddBox(box, z, colors, std::move(user_data));
 }
 
-void PrimitiveAssembler::AddBox(const Tetragon& box, const Color& color,
+void PrimitiveAssembler::AddBox(const Tetragon& box, float z, const Color& color,
                                 std::shared_ptr<Pickable> pickable) {
   ORBIT_CHECK(picking_manager_ != nullptr);
 
@@ -65,7 +65,7 @@ void PrimitiveAssembler::AddBox(const Tetragon& box, const Color& color,
   std::array<Color, 4> colors;
   colors.fill(color);
 
-  batcher_->AddBox(box, colors, picking_color, nullptr);
+  batcher_->AddBox(box, z, colors, picking_color, nullptr);
 }
 
 void PrimitiveAssembler::AddShadedBox(Vec2 pos, Vec2 size, float z, const Color& color) {
@@ -83,19 +83,19 @@ void PrimitiveAssembler::AddShadedBox(Vec2 pos, Vec2 size, float z, const Color&
                                       ShadingDirection shading_direction) {
   std::array<Color, 4> colors;
   GetBoxGradientColors(color, &colors, shading_direction);
-  Tetragon box = MakeBox(pos, size, z);
-  AddBox(box, colors, std::move(user_data));
+  Tetragon box = MakeBox(pos, size);
+  AddBox(box, z, colors, std::move(user_data));
 }
 
 static std::vector<Triangle> GetUnitArcTriangles(float angle_0, float angle_1, uint32_t num_sides) {
   std::vector<Triangle> triangles;
-  const Vec3 origin(0, 0, 0);
+  const Vec2 origin(0, 0);
 
   float increment_radians = std::fabs(angle_1 - angle_0) / static_cast<float>(num_sides);
-  Vec3 last_point(cosf(angle_0), sinf(angle_0), 0);
+  Vec2 last_point(cosf(angle_0), sinf(angle_0));
   for (uint32_t i = 1; i <= num_sides; ++i) {
     float angle = angle_0 + static_cast<float>(i) * increment_radians;
-    Vec3 current_point(cosf(angle), sinf(angle), 0);
+    Vec2 current_point(cosf(angle), sinf(angle));
     triangles.emplace_back(Triangle(origin, last_point, current_point));
     last_point = current_point;
   }
@@ -114,10 +114,9 @@ static void AddRoundedCornerTriangles(PrimitiveAssembler* batcher,
     for (size_t i = 0; i < 3; ++i) {
       triangle.vertices[i][0] += pos[0];
       triangle.vertices[i][1] += pos[1];
-      triangle.vertices[i][2] = z;
     }
 
-    batcher->AddTriangle(triangle, color);
+    batcher->AddTriangle(triangle, z, color);
   }
 }
 
@@ -151,15 +150,14 @@ void PrimitiveAssembler::AddRoundedBox(Vec2 pos, Vec2 size, float z, float radiu
   pos -= extra_margin;
   size += 2.f * extra_margin;
 
-  Tetragon left_box = MakeBox(Vec2(pos[0], pos[1] + radius), Vec2(radius, size[1] - 2 * radius), z);
-  Tetragon middle_box =
-      MakeBox(Vec2(pos[0] + radius, pos[1]), Vec2(size[0] - 2 * radius, size[1]), z);
-  Tetragon right_box = MakeBox(Vec2(pos[0] + size[0] - radius, pos[1] + radius),
-                               Vec2(radius, size[1] - 2 * radius), z);
+  Tetragon left_box = MakeBox(Vec2(pos[0], pos[1] + radius), Vec2(radius, size[1] - 2 * radius));
+  Tetragon middle_box = MakeBox(Vec2(pos[0] + radius, pos[1]), Vec2(size[0] - 2 * radius, size[1]));
+  Tetragon right_box =
+      MakeBox(Vec2(pos[0] + size[0] - radius, pos[1] + radius), Vec2(radius, size[1] - 2 * radius));
 
-  AddBox(left_box, color);
-  AddBox(middle_box, color);
-  AddBox(right_box, color);
+  AddBox(left_box, z, color);
+  AddBox(middle_box, z, color);
+  AddBox(right_box, z, color);
 
   Vec2 bottom_left_pos(pos[0] + radius, pos[1] + radius);
   Vec2 top_left_pos(pos[0] + radius, pos[1] + size[1] - radius);
@@ -178,37 +176,37 @@ void PrimitiveAssembler::AddShadedBox(Vec2 pos, Vec2 size, float z, const Color&
   std::array<Color, 4> colors;
   GetBoxGradientColors(color, &colors, shading_direction);
   Color picking_color = picking_manager_->GetPickableColor(pickable, GetBatcherId());
-  Tetragon box = MakeBox(pos, size, z);
-  batcher_->AddBox(box, colors, picking_color, nullptr);
+  Tetragon box = MakeBox(pos, size);
+  batcher_->AddBox(box, z, colors, picking_color, nullptr);
 }
 
-void PrimitiveAssembler::AddTriangle(const Triangle& triangle, const Color& color,
+void PrimitiveAssembler::AddTriangle(const Triangle& triangle, float z, const Color& color,
                                      std::unique_ptr<PickingUserData> user_data) {
   Color picking_color =
       PickingId::ToColor(PickingType::kTriangle, batcher_->GetNumElements(), GetBatcherId());
 
-  AddTriangle(triangle, color, picking_color, std::move(user_data));
+  AddTriangle(triangle, z, color, picking_color, std::move(user_data));
 }
 
-void PrimitiveAssembler::AddTriangle(const Triangle& triangle, const Color& color,
+void PrimitiveAssembler::AddTriangle(const Triangle& triangle, float z, const Color& color,
                                      std::shared_ptr<Pickable> pickable) {
   ORBIT_CHECK(picking_manager_ != nullptr);
 
   Color picking_color = picking_manager_->GetPickableColor(pickable, GetBatcherId());
 
-  AddTriangle(triangle, color, picking_color, nullptr);
+  AddTriangle(triangle, z, color, picking_color, nullptr);
 }
 
-void PrimitiveAssembler::AddTriangle(const Triangle& triangle, const Color& color,
+void PrimitiveAssembler::AddTriangle(const Triangle& triangle, float z, const Color& color,
                                      const Color& picking_color,
                                      std::unique_ptr<PickingUserData> user_data) {
   std::array<Color, 3> colors;
   colors.fill(color);
-  batcher_->AddTriangle(triangle, colors, picking_color, std::move(user_data));
+  batcher_->AddTriangle(triangle, z, colors, picking_color, std::move(user_data));
 }
 
 // Draw a shaded trapezium with two sides parallel to the x-axis or y-axis.
-void PrimitiveAssembler::AddShadedTrapezium(const Tetragon& trapezium, const Color& color,
+void PrimitiveAssembler::AddShadedTrapezium(const Tetragon& trapezium, float z, const Color& color,
                                             std::unique_ptr<PickingUserData> user_data,
                                             ShadingDirection shading_direction) {
   std::array<Color, 4> colors;  // top_left, bottom_left, bottom_right, top_right.
@@ -217,11 +215,11 @@ void PrimitiveAssembler::AddShadedTrapezium(const Tetragon& trapezium, const Col
       PickingId::ToColor(PickingType::kTriangle, batcher_->GetNumElements(), GetBatcherId());
   Triangle triangle_1{trapezium.vertices[0], trapezium.vertices[3], trapezium.vertices[1]};
   std::array<Color, 3> colors_1{colors[0], colors[1], colors[2]};
-  batcher_->AddTriangle(triangle_1, colors_1, picking_color,
+  batcher_->AddTriangle(triangle_1, z, colors_1, picking_color,
                         std::make_unique<PickingUserData>(*user_data));
   Triangle triangle_2{trapezium.vertices[3], trapezium.vertices[2], trapezium.vertices[1]};
   std::array<Color, 3> colors_2{colors[1], colors[2], colors[3]};
-  batcher_->AddTriangle(triangle_2, colors_2, picking_color, std::move(user_data));
+  batcher_->AddTriangle(triangle_2, z, colors_2, picking_color, std::move(user_data));
 }
 
 void PrimitiveAssembler::AddCircle(const Vec2& position, float radius, float z, Color color) {
@@ -230,30 +228,28 @@ void PrimitiveAssembler::AddCircle(const Vec2& position, float radius, float z, 
     circle_points_scaled_by_radius.emplace_back(radius * point);
   }
 
-  Vec3 prev_point(position[0], position[1] - radius, z);
-  Vec3 point_0 = Vec3(position[0], position[1], z);
+  Vec2 prev_point(position[0], position[1] - radius);
+  Vec2 point_0(position[0], position[1]);
   for (size_t i = 0; i < circle_points_scaled_by_radius.size(); ++i) {
-    Vec3 new_point(position[0] + circle_points_scaled_by_radius[i][0],
-                   position[1] - circle_points_scaled_by_radius[i][1], z);
-    Vec3 point_1 = Vec3(prev_point[0], prev_point[1], z);
-    Vec3 point_2 = Vec3(new_point[0], new_point[1], z);
+    Vec2 new_point(position[0] + circle_points_scaled_by_radius[i][0],
+                   position[1] - circle_points_scaled_by_radius[i][1]);
+    Vec2 point_1(prev_point[0], prev_point[1]);
+    Vec2 point_2(new_point[0], new_point[1]);
     Triangle triangle(point_0, point_1, point_2);
-    AddTriangle(triangle, color);
+    AddTriangle(triangle, z, color);
     prev_point = new_point;
   }
 }
 
-void PrimitiveAssembler::AddTetragonBorder(const Tetragon& tetragon, const Color& color,
+void PrimitiveAssembler::AddTetragonBorder(const Tetragon& tetragon, float z, const Color& color,
                                            std::unique_ptr<orbit_gl::PickingUserData> user_data) {
-  float z = tetragon.vertices[0][2];
-  AddLine(Vec3ToVec2(tetragon.vertices[0]), Vec3ToVec2(tetragon.vertices[1]), z, color,
+  AddLine(tetragon.vertices[0], tetragon.vertices[1], z, color,
           std::make_unique<PickingUserData>(*user_data));
-  AddLine(Vec3ToVec2(tetragon.vertices[1]), Vec3ToVec2(tetragon.vertices[2]), z, color,
+  AddLine(tetragon.vertices[1], tetragon.vertices[2], z, color,
           std::make_unique<PickingUserData>(*user_data));
-  AddLine(Vec3ToVec2(tetragon.vertices[2]), Vec3ToVec2(tetragon.vertices[3]), z, color,
+  AddLine(tetragon.vertices[2], tetragon.vertices[3], z, color,
           std::make_unique<PickingUserData>(*user_data));
-  AddLine(Vec3ToVec2(tetragon.vertices[3]), Vec3ToVec2(tetragon.vertices[0]), z, color,
-          std::move(user_data));
+  AddLine(tetragon.vertices[3], tetragon.vertices[0], z, color, std::move(user_data));
 }
 
 void PrimitiveAssembler::GetBoxGradientColors(const Color& color, std::array<Color, 4>* colors,

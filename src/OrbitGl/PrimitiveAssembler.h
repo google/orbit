@@ -66,11 +66,11 @@ class PrimitiveAssembler {
   void AddVerticalLine(Vec2 pos, float size, float z, const Color& color,
                        std::shared_ptr<Pickable> pickable);
 
-  void AddBox(const Tetragon& box, const std::array<Color, 4>& colors,
+  void AddBox(const Tetragon& box, float z, const std::array<Color, 4>& colors,
               std::unique_ptr<PickingUserData> user_data = nullptr);
-  void AddBox(const Tetragon& box, const Color& color,
+  void AddBox(const Tetragon& box, float z, const Color& color,
               std::unique_ptr<PickingUserData> user_data = nullptr);
-  void AddBox(const Tetragon& box, const Color& color, std::shared_ptr<Pickable> pickable);
+  void AddBox(const Tetragon& box, float z, const Color& color, std::shared_ptr<Pickable> pickable);
 
   void AddShadedBox(Vec2 pos, Vec2 size, float z, const Color& color);
   void AddShadedBox(Vec2 pos, Vec2 size, float z, const Color& color,
@@ -89,16 +89,16 @@ class PrimitiveAssembler {
   void AddTopRightRoundedCorner(Vec2 pos, float radius, float z, const Color& color);
   void AddBottomRightRoundedCorner(Vec2 pos, float radius, float z, const Color& color);
 
-  void AddTriangle(const Triangle& triangle, const Color& color,
+  void AddTriangle(const Triangle& triangle, float z, const Color& color,
                    std::unique_ptr<PickingUserData> user_data = nullptr);
   // TODO(b/227744958) This should probably be removed and AddBox should be used instead
-  void AddShadedTrapezium(const Tetragon& trapezium, const Color& color,
+  void AddShadedTrapezium(const Tetragon& trapezium, float z, const Color& color,
                           std::unique_ptr<PickingUserData> user_data = nullptr,
                           ShadingDirection shading_direction = ShadingDirection::kLeftToRight);
-  void AddTriangle(const Triangle& triangle, const Color& color,
+  void AddTriangle(const Triangle& triangle, float z, const Color& color,
                    std::shared_ptr<Pickable> pickable);
 
-  void AddTetragonBorder(const Tetragon& tetragon, const Color& color,
+  void AddTetragonBorder(const Tetragon& tetragon, float z, const Color& color,
                          std::unique_ptr<orbit_gl::PickingUserData> user_data);
 
   void AddCircle(const Vec2& position, float radius, float z, Color color);
@@ -114,7 +114,8 @@ class PrimitiveAssembler {
   static constexpr uint32_t kNumArcSides = 16;
 
  protected:
-  void AddTriangle(const Triangle& triangle, const Color& color, const Color& picking_color,
+  void AddTriangle(const Triangle& triangle, float z, const Color& color,
+                   const Color& picking_color,
                    std::unique_ptr<PickingUserData> user_data = nullptr);
 
  private:

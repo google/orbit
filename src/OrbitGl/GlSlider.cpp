@@ -159,13 +159,12 @@ void GlSlider::DrawBackground(PrimitiveAssembler& primitive_assembler, float x, 
   const Color dark_border_color = GetDarkerColor(bar_color_);
   const float kEpsilon = 0.0001f;
 
-  Tetragon border_box =
-      MakeBox(Vec2(x, y), Vec2(width, height), GlCanvas::kZValueSliderBg - kEpsilon);
-  primitive_assembler.AddBox(border_box, dark_border_color, shared_from_this());
+  Tetragon border_box = MakeBox(Vec2(x, y), Vec2(width, height));
+  primitive_assembler.AddBox(border_box, GlCanvas::kZValueSliderBg - kEpsilon, dark_border_color,
+                             shared_from_this());
 
-  Tetragon bar_box =
-      MakeBox(Vec2(x + 1.f, y + 1.f), Vec2(width - 2.f, height - 2.f), GlCanvas::kZValueSliderBg);
-  primitive_assembler.AddBox(bar_box, bar_color_, shared_from_this());
+  Tetragon bar_box = MakeBox(Vec2(x + 1.f, y + 1.f), Vec2(width - 2.f, height - 2.f));
+  primitive_assembler.AddBox(bar_box, GlCanvas::kZValueSliderBg, bar_color_, shared_from_this());
 }
 
 void GlSlider::DrawSlider(PrimitiveAssembler& primitive_assembler, float x, float y, float width,
@@ -180,15 +179,15 @@ void GlSlider::DrawSlider(PrimitiveAssembler& primitive_assembler, float x, floa
   const Color light_border_color = GetLighterColor(color);
   const float kEpsilon = 0.0001f;
 
-  Tetragon dark_border_box =
-      MakeBox(Vec2(x, y), Vec2(width, height), GlCanvas::kZValueSlider - 2 * kEpsilon);
+  Tetragon dark_border_box = MakeBox(Vec2(x, y), Vec2(width, height));
 
-  primitive_assembler.AddBox(dark_border_box, dark_border_color, shared_from_this());
+  primitive_assembler.AddBox(dark_border_box, GlCanvas::kZValueSlider - 2 * kEpsilon,
+                             dark_border_color, shared_from_this());
 
-  Tetragon light_border_box = MakeBox(Vec2(x + 1.f, y + 1.f), Vec2(width - 2.f, height - 2.f),
-                                      GlCanvas::kZValueSlider - kEpsilon);
+  Tetragon light_border_box = MakeBox(Vec2(x + 1.f, y + 1.f), Vec2(width - 2.f, height - 2.f));
 
-  primitive_assembler.AddBox(light_border_box, light_border_color, shared_from_this());
+  primitive_assembler.AddBox(light_border_box, GlCanvas::kZValueSlider - kEpsilon,
+                             light_border_color, shared_from_this());
 
   // Slider itself
   const float kSliderOffset = 2.f;
@@ -200,9 +199,8 @@ void GlSlider::DrawSlider(PrimitiveAssembler& primitive_assembler, float x, floa
   } else {
     primitive_assembler.AddBox(
         MakeBox(Vec2(x + kSliderOffset, y + kSliderOffset),
-                Vec2(width - 2.f * kSliderOffset, height - 2.f * kSliderOffset),
-                GlCanvas::kZValueSlider),
-        slider_color_, shared_from_this());
+                Vec2(width - 2.f * kSliderOffset, height - 2.f * kSliderOffset)),
+        GlCanvas::kZValueSlider, slider_color_, shared_from_this());
   }
 }
 
@@ -302,18 +300,18 @@ void GlHorizontalSlider::Draw(PrimitiveAssembler& primitive_assembler, bool is_p
   const float width = slider_width;
 
   primitive_assembler.AddTriangle(
-      Triangle(Vec3(x + width - tri_size - 2.f, kHeightFactor * tri_size + tri_y_offset, z),
-               Vec3(x + width - 2.f, tri_y_offset + kHeightFactor / 2.f * tri_size, z),
-               Vec3(x + width - tri_size - 2.f, tri_y_offset, z)),
-      kWhite, shared_from_this());
+      Triangle(Vec2(x + width - tri_size - 2.f, kHeightFactor * tri_size + tri_y_offset),
+               Vec2(x + width - 2.f, tri_y_offset + kHeightFactor / 2.f * tri_size),
+               Vec2(x + width - tri_size - 2.f, tri_y_offset)),
+      z, kWhite, shared_from_this());
   primitive_assembler.AddVerticalLine(Vec2(x + width - slider_resize_pixel_margin_, 2.f),
                                       pixel_height_ - 4.f, z, kWhite, shared_from_this());
 
   primitive_assembler.AddTriangle(
-      Triangle(Vec3(x + tri_size + 2.f, kHeightFactor * tri_size + tri_y_offset, z),
-               Vec3(x + tri_size + 2.f, tri_y_offset, z),
-               Vec3(x + 2.f, tri_y_offset + kHeightFactor / 2.f * tri_size, z)),
-      kWhite, shared_from_this());
+      Triangle(Vec2(x + tri_size + 2.f, kHeightFactor * tri_size + tri_y_offset),
+               Vec2(x + tri_size + 2.f, tri_y_offset),
+               Vec2(x + 2.f, tri_y_offset + kHeightFactor / 2.f * tri_size)),
+      z, kWhite, shared_from_this());
   primitive_assembler.AddVerticalLine(Vec2(x + slider_resize_pixel_margin_ + 1, 2.f),
                                       pixel_height_ - 4.f, z, kWhite, shared_from_this());
 

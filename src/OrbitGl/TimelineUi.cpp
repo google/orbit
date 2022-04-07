@@ -54,14 +54,14 @@ void TimelineUi::RenderLabels(PrimitiveAssembler& primitive_assembler, TextRende
 void TimelineUi::RenderMargin(PrimitiveAssembler& primitive_assembler) const {
   Vec2 margin_pos = Vec2(GetPos()[0], GetPos()[1] + GetHeightWithoutMargin());
   Vec2 margin_size = Vec2(GetSize()[0], GetMarginHeight());
-  primitive_assembler.AddBox(MakeBox(margin_pos, margin_size, GlCanvas::kZValueOverlay),
+  primitive_assembler.AddBox(MakeBox(margin_pos, margin_size), GlCanvas::kZValueOverlay,
                              GlCanvas::kBackgroundColor);
 }
 
 void TimelineUi::RenderBackground(PrimitiveAssembler& primitive_assembler) const {
-  Tetragon background_box =
-      MakeBox(GetPos(), Vec2(GetWidth(), GetHeightWithoutMargin()), GlCanvas::kZValueTimeBar);
-  primitive_assembler.AddBox(background_box, GlCanvas::kTimeBarBackgroundColor);
+  Tetragon background_box = MakeBox(GetPos(), Vec2(GetWidth(), GetHeightWithoutMargin()));
+  primitive_assembler.AddBox(background_box, GlCanvas::kZValueTimeBar,
+                             GlCanvas::kTimeBarBackgroundColor);
 }
 
 void TimelineUi::RenderLabel(PrimitiveAssembler& primitive_assembler, TextRenderer& text_renderer,
@@ -88,8 +88,8 @@ void TimelineUi::RenderLabel(PrimitiveAssembler& primitive_assembler, TextRender
   size[1] += 2.f * kLabelsPadding;
   pos[0] -= kLabelsPadding;
   pos[1] -= kLabelsPadding;
-  Tetragon background_box = MakeBox(pos, size, label_z);
-  primitive_assembler.AddBox(background_box, background_color);
+  Tetragon background_box = MakeBox(pos, size);
+  primitive_assembler.AddBox(background_box, label_z, background_color);
 }
 
 void TimelineUi::RenderMouseLabel(PrimitiveAssembler& primitive_assembler,

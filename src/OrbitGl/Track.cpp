@@ -68,16 +68,16 @@ void Track::DrawTriangleFan(PrimitiveAssembler& primitive_assembler,
   }
 
   std::vector<Vec2> rotated_points = RotatePoints(points, rotation);
-  Vec3 position(pos[0], pos[1], z);
-  Vec3 pivot = position + Vec3(rotated_points[0][0], rotated_points[0][1], z);
+  Vec2 position(pos[0], pos[1]);
+  Vec2 pivot = position + Vec2(rotated_points[0][0], rotated_points[0][1]);
 
-  Vec3 vertices[2];
-  vertices[0] = position + Vec3(rotated_points[1][0], rotated_points[1][1], z);
+  Vec2 vertices[2];
+  vertices[0] = position + Vec2(rotated_points[1][0], rotated_points[1][1]);
 
   for (size_t i = 1; i < rotated_points.size() - 1; ++i) {
-    vertices[i % 2] = position + Vec3(rotated_points[i + 1][0], rotated_points[i + 1][1], z);
+    vertices[i % 2] = position + Vec2(rotated_points[i + 1][0], rotated_points[i + 1][1]);
     Triangle triangle(pivot, vertices[i % 2], vertices[(i + 1) % 2]);
-    primitive_assembler.AddTriangle(triangle, color, shared_from_this());
+    primitive_assembler.AddTriangle(triangle, z, color, shared_from_this());
   }
 }
 
@@ -126,8 +126,8 @@ void Track::DoDraw(PrimitiveAssembler& primitive_assembler, TextRenderer& text_r
   float tab_x0 = x0 + layout_->GetTrackTabOffset();
 
   const float indentation_x0 = tab_x0 + (indentation_level_ * layout_->GetTrackIndentOffset());
-  Tetragon box = MakeBox(Vec2(indentation_x0, y0), Vec2(label_width, label_height), track_z);
-  primitive_assembler.AddBox(box, track_background_color, shared_from_this());
+  Tetragon box = MakeBox(Vec2(indentation_x0, y0), Vec2(label_width, label_height));
+  primitive_assembler.AddBox(box, track_z, track_background_color, shared_from_this());
 
   Vec2 track_size = GetSize();
 
@@ -197,9 +197,9 @@ void Track::DoDraw(PrimitiveAssembler& primitive_assembler, TextRenderer& text_r
   // Draw track's content background.
   if (!picking) {
     if (layout_->GetDrawTrackBackground()) {
-      Tetragon box = MakeBox(Vec2(x0, y0 + label_height),
-                             Vec2(GetWidth(), GetHeight() - label_height), track_z);
-      primitive_assembler.AddBox(box, track_background_color, shared_from_this());
+      Tetragon box =
+          MakeBox(Vec2(x0, y0 + label_height), Vec2(GetWidth(), GetHeight() - label_height));
+      primitive_assembler.AddBox(box, track_z, track_background_color, shared_from_this());
     }
   }
 }

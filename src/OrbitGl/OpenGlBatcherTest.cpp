@@ -34,16 +34,16 @@ class FakeOpenGlBatcher : public OpenGlBatcher {
     Color picking_color = PickingId::ToColor(PickingType::kLine, GetNumElements(), GetBatcherId());
     return AddLine(from, to, z, color, picking_color, std::move(user_data));
   }
-  void AddBoxHelper(const Tetragon& box, const Color& color,
+  void AddBoxHelper(const Tetragon& box, float z, const Color& color,
                     std::unique_ptr<PickingUserData> user_data = nullptr) {
     Color picking_color = PickingId::ToColor(PickingType::kBox, GetNumElements(), GetBatcherId());
-    return AddBox(box, {color, color, color, color}, picking_color, std::move(user_data));
+    return AddBox(box, z, {color, color, color, color}, picking_color, std::move(user_data));
   }
-  void AddTriangleHelper(const Triangle& triangle, const Color& color,
+  void AddTriangleHelper(const Triangle& triangle, float z, const Color& color,
                          std::unique_ptr<PickingUserData> user_data = nullptr) {
     Color picking_color =
         PickingId::ToColor(PickingType::kTriangle, GetNumElements(), GetBatcherId());
-    return AddTriangle(triangle, {color, color, color}, picking_color, std::move(user_data));
+    return AddTriangle(triangle, z, {color, color, color}, picking_color, std::move(user_data));
   }
   const std::vector<Color>& GetDrawnLineColors() const { return drawn_line_colors_; }
   const std::vector<Color>& GetDrawnTriangleColors() const { return drawn_triangle_colors_; }
@@ -128,11 +128,10 @@ TEST(OpenGlBatcher, SimpleElementsDrawing) {
   batcher.AddLineHelper(Vec2(0, 0), Vec2(1, 0), 0, Color(255, 255, 255, 255));
   ExpectDraw(batcher, 1, 0, 0);
   EXPECT_EQ(batcher.GetDrawnLineColors()[0], Color(255, 255, 255, 255));
-  batcher.AddTriangleHelper(Triangle(Vec3(0, 0, 0), Vec3(0, 1, 0), Vec3(1, 0, 0)),
-                            Color(0, 255, 0, 255));
+  batcher.AddTriangleHelper(Triangle(Vec2(0, 0), Vec2(0, 1), Vec2(1, 0)), 0, Color(0, 255, 0, 255));
   ExpectDraw(batcher, 1, 1, 0);
   EXPECT_EQ(batcher.GetDrawnTriangleColors()[0], Color(0, 255, 0, 255));
-  batcher.AddBoxHelper(MakeBox(Vec2(0, 0), Vec2(1, 1), 0), Color(255, 0, 0, 255));
+  batcher.AddBoxHelper(MakeBox(Vec2(0, 0), Vec2(1, 1)), 0, Color(255, 0, 0, 255));
   ExpectDraw(batcher, 1, 1, 1);
   EXPECT_EQ(batcher.GetDrawnBoxColors()[0], Color(255, 0, 0, 255));
   batcher.ResetElements();
@@ -167,9 +166,9 @@ TEST(OpenGlBatcher, PickingSimpleElements) {
 
   batcher.AddLineHelper(Vec2(0, 0), Vec2(1, 0), 0, Color(255, 255, 255, 255),
                         std::move(line_user_data));
-  batcher.AddTriangleHelper(Triangle(Vec3(0, 0, 0), Vec3(0, 1, 0), Vec3(1, 0, 0)),
-                            Color(0, 255, 0, 255), std::move(triangle_user_data));
-  batcher.AddBoxHelper(MakeBox(Vec2(0, 0), Vec2(1, 1), 0), Color(255, 0, 0, 255),
+  batcher.AddTriangleHelper(Triangle(Vec2(0, 0), Vec2(0, 1), Vec2(1, 0)), 0, Color(0, 255, 0, 255),
+                            std::move(triangle_user_data));
+  batcher.AddBoxHelper(MakeBox(Vec2(0, 0), Vec2(1, 1)), 0, Color(255, 0, 0, 255),
                        std::move(box_user_data));
 
   for (auto layer : batcher.GetLayers()) {
@@ -198,9 +197,9 @@ TEST(OpenGlBatcher, MultipleDrawCalls) {
 
   batcher.AddLineHelper(Vec2(0, 0), Vec2(1, 0), 0, Color(255, 255, 255, 255),
                         std::move(line_user_data));
-  batcher.AddTriangleHelper(Triangle(Vec3(0, 0, 0), Vec3(0, 1, 0), Vec3(1, 0, 0)),
-                            Color(0, 255, 0, 255), std::move(triangle_user_data));
-  batcher.AddBoxHelper(MakeBox(Vec2(0, 0), Vec2(1, 1), 0), Color(255, 0, 0, 255),
+  batcher.AddTriangleHelper(Triangle(Vec2(0, 0), Vec2(0, 1), Vec2(1, 0)), 0, Color(0, 255, 0, 255),
+                            std::move(triangle_user_data));
+  batcher.AddBoxHelper(MakeBox(Vec2(0, 0), Vec2(1, 1)), 0, Color(255, 0, 0, 255),
                        std::move(box_user_data));
 
   for (auto layer : batcher.GetLayers()) {
@@ -223,22 +222,24 @@ TEST(OpenGlBatcher, MultipleDrawCalls) {
   EXPECT_DEATH((void)batcher.GetUserData(id), "size");
 }
 
-bool LineEq(const Line& lhs, const Line& rhs) {
+bool LineEq(const orbit_gl_internal::Line3D& lhs, const orbit_gl_internal::Line3D& rhs) {
   return lhs.start_point == rhs.start_point && lhs.end_point == rhs.end_point;
 }
 
 TEST(OpenGlBatcher, TranslationsAreAutomaticallyAdded) {
   FakeOpenGlBatcher batcher(BatcherId::kUi);
+
   batcher.AddLineHelper(Vec2(0.f, 0.f), Vec2(1.f, 1.f), 0.f, Color());
 
-  const orbit_gl_internal::PrimitiveBuffers& buffers = batcher.GetInternalBuffers(0.f);
-  const Line original_expectation{Vec3(0.f, 0.f, 0.f), Vec3(1.f, 1.f, 0.f)};
+  const orbit_gl_internal::Line3D original_expectation{Vec3(0.f, 0.f, 0.f), Vec3(1.f, 1.f, 0.f)};
   const Vec3 transform(10.f, 100.f, 0.1f);
-  const Line transformed_expectation{original_expectation.start_point + transform,
-                                     original_expectation.end_point + transform};
+  const orbit_gl_internal::Line3D transformed_expectation(
+      original_expectation.start_point + transform, original_expectation.end_point + transform);
+  const orbit_gl_internal::PrimitiveBuffers& buffers = batcher.GetInternalBuffers(0.f);
+
   auto it = buffers.line_buffer.lines_.begin();
 
-  const auto add_line_assert_eq = [&batcher, &it](const Line& expectation) {
+  const auto add_line_assert_eq = [&batcher, &it](const orbit_gl_internal::Line3D& expectation) {
     batcher.AddLineHelper(Vec2(0.f, 0.f), Vec2(1.f, 1.f), 0.f, Color());
     ++it;
     ASSERT_TRUE(LineEq(expectation, *it));
