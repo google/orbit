@@ -2794,7 +2794,7 @@ void OrbitApp::JumpToTimerAndZoom(uint64_t scope_id, JumpToTimerMode selection_m
       break;
     }
     case JumpToTimerMode::kLast: {
-      const auto* last_timer = GetMutableTimeGraph()->FindPreviousFunctionCall(
+      const auto* last_timer = GetMutableTimeGraph()->FindPreviousScopeCall(
           scope_id, std::numeric_limits<uint64_t>::max());
       if (last_timer != nullptr) GetMutableTimeGraph()->SelectAndZoom(last_timer);
       break;
