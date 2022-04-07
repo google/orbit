@@ -264,49 +264,45 @@ DataView::ActionStatus LiveFunctionsDataView::GetActionStatus(
   }
 
   bool is_capture_connected = app_->IsCaptureConnected(capture_data);
-  if (action == kMenuActionDisassembly || action == kMenuActionSourceCode) {
-    return is_capture_connected ? ActionStatus::kVisibleAndEnabled
-                                : ActionStatus::kVisibleButDisabled;
-  }
-
-  if ((action == kMenuActionSelect || action == kMenuActionUnselect) && !is_capture_connected) {
-    return ActionStatus::kVisibleButDisabled;
-  }
 
   std::function<bool(uint64_t, const FunctionInfo&)> is_visible_action_enabled;
-  if (action == kMenuActionSelect) {
-    is_visible_action_enabled = [this](uint64_t /*instrumented_function_id*/,
-                                       const FunctionInfo& instrumented_function) {
-      return !app_->IsFunctionSelected(instrumented_function) &&
-             instrumented_function.IsFunctionSelectable();
+  if (action == kMenuActionDisassembly || action == kMenuActionSourceCode) {
+    is_visible_action_enabled = [is_capture_connected](uint64_t /*scope_id*/,
+                                                       const FunctionInfo& /*function_info*/) {
+      return is_capture_connected;
+    };
+
+  } else if (action == kMenuActionSelect) {
+    is_visible_action_enabled = [this, is_capture_connected](uint64_t /*scope_id*/,
+                                                             const FunctionInfo& function_info) {
+      return is_capture_connected && !app_->IsFunctionSelected(function_info) &&
+             function_info.IsFunctionSelectable();
     };
 
   } else if (action == kMenuActionUnselect) {
-    is_visible_action_enabled = [this](uint64_t /*instrumented_function_id*/,
-                                       const FunctionInfo& instrumented_function) {
-      return app_->IsFunctionSelected(instrumented_function);
+    is_visible_action_enabled = [this, is_capture_connected](uint64_t /*scope_id*/,
+                                                             const FunctionInfo& function_info) {
+      return is_capture_connected && app_->IsFunctionSelected(function_info);
     };
 
   } else if (action == kMenuActionEnableFrameTrack) {
     is_visible_action_enabled = [this, &is_capture_connected, &capture_data](
-                                    uint64_t instrumented_function_id,
-                                    const FunctionInfo& instrumented_function) {
-      return is_capture_connected ? !app_->IsFrameTrackEnabled(instrumented_function)
-                                  : !capture_data.IsFrameTrackEnabled(instrumented_function_id);
+                                    uint64_t scope_id, const FunctionInfo& function_info) {
+      return is_capture_connected ? !app_->IsFrameTrackEnabled(function_info)
+                                  : !capture_data.IsFrameTrackEnabled(scope_id);
     };
 
   } else if (action == kMenuActionDisableFrameTrack) {
     is_visible_action_enabled = [this, &is_capture_connected, &capture_data](
-                                    uint64_t instrumented_function_id,
-                                    const FunctionInfo& instrumented_function) {
-      return is_capture_connected ? app_->IsFrameTrackEnabled(instrumented_function)
-                                  : capture_data.IsFrameTrackEnabled(instrumented_function_id);
+                                    uint64_t scope_id, const FunctionInfo& function_info) {
+      return is_capture_connected ? app_->IsFrameTrackEnabled(function_info)
+                                  : capture_data.IsFrameTrackEnabled(scope_id);
     };
 
   } else if (action == kMenuActionAddIterator) {
-    is_visible_action_enabled = [&capture_data](uint64_t instrumented_function_id,
-                                                const FunctionInfo& /*instrumented_function*/) {
-      const ScopeStats& stats = capture_data.GetScopeStatsOrDefault(instrumented_function_id);
+    is_visible_action_enabled = [&capture_data](uint64_t scope_id,
+                                                const FunctionInfo& /*function_info*/) {
+      const ScopeStats& stats = capture_data.GetScopeStatsOrDefault(scope_id);
       // We need at least one function call to a function so that adding iterators makes sense.
       return stats.count() > 0;
     };
@@ -315,14 +311,16 @@ DataView::ActionStatus LiveFunctionsDataView::GetActionStatus(
     return DataView::GetActionStatus(action, clicked_index, selected_indices);
   }
 
-  for (int index : selected_indices) {
-    uint64_t scope_id = GetScopeId(index);
-    const FunctionInfo& instrumented_function = *GetFunctionInfoFromRow(index);
-    if (is_visible_action_enabled(scope_id, instrumented_function)) {
-      return ActionStatus::kVisibleAndEnabled;
-    }
-  }
-  return ActionStatus::kVisibleButDisabled;
+  const bool enabled_for_any =
+      std::any_of(std::begin(selected_indices), std::end(selected_indices),
+                  [this, &is_visible_action_enabled](const int index) {
+                    const FunctionInfo* function_info = GetFunctionInfoFromRow(index);
+                    if (function_info == nullptr) return false;
+                    const uint64_t scope_id = GetScopeId(index);
+                    return is_visible_action_enabled(scope_id, *function_info);
+                  });
+
+  return enabled_for_any ? ActionStatus::kVisibleAndEnabled : ActionStatus::kVisibleButDisabled;
 }
 
 void LiveFunctionsDataView::OnIteratorRequested(const std::vector<int>& selection) {
