@@ -14,6 +14,8 @@
  * limitations under the License.
  */
 
+#include <memory>
+
 #include <unwindstack/PeCoffInterface.h>
 #include "PeCoffRuntimeFunctions.h"
 #include "unwindstack/Error.h"
@@ -51,32 +53,32 @@ TEST_F(PeCoffRuntimeFunctionsTest, init_succeeds_on_well_formed_data) {
   offset = SetRuntimeFunctionAtOffset(offset, 0x200, 0x300, 0x6100);
   offset = SetRuntimeFunctionAtOffset(offset, 0x300, 0x400, 0x6100);
 
-  PeCoffMemory pe_coff_memory(GetMemoryFake());
-  PeCoffRuntimeFunctions runtime_functions(&pe_coff_memory);
-  EXPECT_TRUE(runtime_functions.Init(0x5000, 0x5000 + 3 * 3 * sizeof(uint32_t)));
+  std::unique_ptr<PeCoffRuntimeFunctions> runtime_functions =
+      CreatePeCoffRuntimeFunctions(GetMemoryFake());
+  EXPECT_TRUE(runtime_functions->Init(0x5000, 0x5000 + 3 * 3 * sizeof(uint32_t)));
 }
 
 TEST_F(PeCoffRuntimeFunctionsTest, init_fails_due_to_bad_section_bounds) {
-  PeCoffMemory pe_coff_memory(GetMemoryFake());
-  PeCoffRuntimeFunctions runtime_functions(&pe_coff_memory);
-  EXPECT_FALSE(runtime_functions.Init(0x5000, 0x4000));
-  EXPECT_EQ(ERROR_INVALID_COFF, runtime_functions.GetLastError().code);
+  std::unique_ptr<PeCoffRuntimeFunctions> runtime_functions(
+      CreatePeCoffRuntimeFunctions(GetMemoryFake()));
+  EXPECT_FALSE(runtime_functions->Init(0x5000, 0x4000));
+  EXPECT_EQ(ERROR_INVALID_COFF, runtime_functions->GetLastError().code);
 }
 
 TEST_F(PeCoffRuntimeFunctionsTest, init_fails_due_to_incongruent_section_bounds) {
-  PeCoffMemory pe_coff_memory(GetMemoryFake());
-  PeCoffRuntimeFunctions runtime_functions(&pe_coff_memory);
-  EXPECT_FALSE(runtime_functions.Init(0x5000, 0x5004));
-  EXPECT_EQ(ERROR_INVALID_COFF, runtime_functions.GetLastError().code);
+  std::unique_ptr<PeCoffRuntimeFunctions> runtime_functions =
+      CreatePeCoffRuntimeFunctions(GetMemoryFake());
+  EXPECT_FALSE(runtime_functions->Init(0x5000, 0x5004));
+  EXPECT_EQ(ERROR_INVALID_COFF, runtime_functions->GetLastError().code);
 }
 
 TEST_F(PeCoffRuntimeFunctionsTest, init_fails_due_to_bad_memory) {
   GetMemoryFake()->SetData32(0x5000, 0x100);
-  PeCoffMemory pe_coff_memory(GetMemoryFake());
-  PeCoffRuntimeFunctions runtime_functions(&pe_coff_memory);
-  EXPECT_FALSE(runtime_functions.Init(0x5000, 0x5000 + 3 * sizeof(uint32_t)));
-  EXPECT_EQ(ERROR_MEMORY_INVALID, runtime_functions.GetLastError().code);
-  EXPECT_EQ(0x5000, runtime_functions.GetLastError().address);
+  std::unique_ptr<PeCoffRuntimeFunctions> runtime_functions(
+      CreatePeCoffRuntimeFunctions(GetMemoryFake()));
+  EXPECT_FALSE(runtime_functions->Init(0x5000, 0x5000 + 3 * sizeof(uint32_t)));
+  EXPECT_EQ(ERROR_MEMORY_INVALID, runtime_functions->GetLastError().code);
+  EXPECT_EQ(0x5000, runtime_functions->GetLastError().address);
 }
 
 TEST_F(PeCoffRuntimeFunctionsTest, find_function_at_the_start) {
@@ -87,12 +89,12 @@ TEST_F(PeCoffRuntimeFunctionsTest, find_function_at_the_start) {
   offset = SetRuntimeFunctionAtOffset(offset, 0x400, 0x500, 0x6300);
   offset = SetRuntimeFunctionAtOffset(offset, 0x500, 0x600, 0x6400);
 
-  PeCoffMemory pe_coff_memory(GetMemoryFake());
-  PeCoffRuntimeFunctions runtime_functions(&pe_coff_memory);
-  ASSERT_TRUE(runtime_functions.Init(0x5000, 0x5000 + 5 * 3 * sizeof(uint32_t)));
+  std::unique_ptr<PeCoffRuntimeFunctions> runtime_functions(
+      CreatePeCoffRuntimeFunctions(GetMemoryFake()));
+  ASSERT_TRUE(runtime_functions->Init(0x5000, 0x5000 + 5 * 3 * sizeof(uint32_t)));
 
   RuntimeFunction function;
-  EXPECT_TRUE(runtime_functions.FindRuntimeFunction(0x112, &function));
+  EXPECT_TRUE(runtime_functions->FindRuntimeFunction(0x112, &function));
   EXPECT_EQ(0x100, function.start_address);
   EXPECT_EQ(0x200, function.end_address);
   EXPECT_EQ(0x6000, function.unwind_info_offset);
@@ -106,12 +108,12 @@ TEST_F(PeCoffRuntimeFunctionsTest, find_function_in_the_middle) {
   offset = SetRuntimeFunctionAtOffset(offset, 0x400, 0x500, 0x6300);
   offset = SetRuntimeFunctionAtOffset(offset, 0x500, 0x600, 0x6400);
 
-  PeCoffMemory pe_coff_memory(GetMemoryFake());
-  PeCoffRuntimeFunctions runtime_functions(&pe_coff_memory);
-  ASSERT_TRUE(runtime_functions.Init(0x5000, 0x5000 + 5 * 3 * sizeof(uint32_t)));
+  std::unique_ptr<PeCoffRuntimeFunctions> runtime_functions(
+      CreatePeCoffRuntimeFunctions(GetMemoryFake()));
+  ASSERT_TRUE(runtime_functions->Init(0x5000, 0x5000 + 5 * 3 * sizeof(uint32_t)));
 
   RuntimeFunction function;
-  EXPECT_TRUE(runtime_functions.FindRuntimeFunction(0x304, &function));
+  EXPECT_TRUE(runtime_functions->FindRuntimeFunction(0x304, &function));
   EXPECT_EQ(0x300, function.start_address);
   EXPECT_EQ(0x400, function.end_address);
   EXPECT_EQ(0x6200, function.unwind_info_offset);
@@ -125,12 +127,12 @@ TEST_F(PeCoffRuntimeFunctionsTest, find_function_at_the_end) {
   offset = SetRuntimeFunctionAtOffset(offset, 0x400, 0x500, 0x6300);
   offset = SetRuntimeFunctionAtOffset(offset, 0x500, 0x600, 0x6400);
 
-  PeCoffMemory pe_coff_memory(GetMemoryFake());
-  PeCoffRuntimeFunctions runtime_functions(&pe_coff_memory);
-  ASSERT_TRUE(runtime_functions.Init(0x5000, 0x5000 + 5 * 3 * sizeof(uint32_t)));
+  std::unique_ptr<PeCoffRuntimeFunctions> runtime_functions(
+      CreatePeCoffRuntimeFunctions(GetMemoryFake()));
+  ASSERT_TRUE(runtime_functions->Init(0x5000, 0x5000 + 5 * 3 * sizeof(uint32_t)));
 
   RuntimeFunction function;
-  EXPECT_TRUE(runtime_functions.FindRuntimeFunction(0x520, &function));
+  EXPECT_TRUE(runtime_functions->FindRuntimeFunction(0x520, &function));
   EXPECT_EQ(0x500, function.start_address);
   EXPECT_EQ(0x600, function.end_address);
   EXPECT_EQ(0x6400, function.unwind_info_offset);
@@ -144,12 +146,12 @@ TEST_F(PeCoffRuntimeFunctionsTest, fails_to_find_function_when_address_too_large
   offset = SetRuntimeFunctionAtOffset(offset, 0x400, 0x500, 0x6300);
   offset = SetRuntimeFunctionAtOffset(offset, 0x500, 0x600, 0x6400);
 
-  PeCoffMemory pe_coff_memory(GetMemoryFake());
-  PeCoffRuntimeFunctions runtime_functions(&pe_coff_memory);
-  ASSERT_TRUE(runtime_functions.Init(0x5000, 0x5000 + 5 * 3 * sizeof(uint32_t)));
+  std::unique_ptr<PeCoffRuntimeFunctions> runtime_functions(
+      CreatePeCoffRuntimeFunctions(GetMemoryFake()));
+  ASSERT_TRUE(runtime_functions->Init(0x5000, 0x5000 + 5 * 3 * sizeof(uint32_t)));
 
   RuntimeFunction function;
-  EXPECT_FALSE(runtime_functions.FindRuntimeFunction(0x608, &function));
+  EXPECT_FALSE(runtime_functions->FindRuntimeFunction(0x608, &function));
 }
 
 TEST_F(PeCoffRuntimeFunctionsTest, fails_to_find_function_when_address_too_small) {
@@ -160,11 +162,11 @@ TEST_F(PeCoffRuntimeFunctionsTest, fails_to_find_function_when_address_too_small
   offset = SetRuntimeFunctionAtOffset(offset, 0x400, 0x500, 0x6300);
   offset = SetRuntimeFunctionAtOffset(offset, 0x500, 0x600, 0x6400);
 
-  PeCoffMemory pe_coff_memory(GetMemoryFake());
-  PeCoffRuntimeFunctions runtime_functions(&pe_coff_memory);
-  ASSERT_TRUE(runtime_functions.Init(0x5000, 0x5000 + 5 * 3 * sizeof(uint32_t)));
+  std::unique_ptr<PeCoffRuntimeFunctions> runtime_functions(
+      CreatePeCoffRuntimeFunctions(GetMemoryFake()));
+  ASSERT_TRUE(runtime_functions->Init(0x5000, 0x5000 + 5 * 3 * sizeof(uint32_t)));
 
   RuntimeFunction function;
-  EXPECT_FALSE(runtime_functions.FindRuntimeFunction(0x20, &function));
+  EXPECT_FALSE(runtime_functions->FindRuntimeFunction(0x20, &function));
 }
 }  // namespace unwindstack

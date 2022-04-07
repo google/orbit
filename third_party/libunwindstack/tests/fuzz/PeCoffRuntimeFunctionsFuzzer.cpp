@@ -16,6 +16,7 @@
 
 #include <inttypes.h>
 #include <cstddef>
+#include <memory>
 
 #include <unwindstack/Memory.h>
 #include <unwindstack/PeCoffInterface.h>
@@ -25,9 +26,9 @@ namespace {
 void FuzzPeCoffRuntimeFunctions(const uint8_t* data, size_t size) {
   std::shared_ptr<unwindstack::Memory> memory =
       unwindstack::Memory::CreateOfflineMemory(data, 0, size);
-  unwindstack::PeCoffMemory pe_coff_memory(memory.get());
-  unwindstack::PeCoffRuntimeFunctions pe_coff_runtime_functions(&pe_coff_memory);
-  pe_coff_runtime_functions.Init(0, size);
+  std::unique_ptr<unwindstack::PeCoffRuntimeFunctions> pe_coff_runtime_functions(
+      CreatePeCoffRuntimeFunctions(memory.get()));
+  pe_coff_runtime_functions->Init(0, size);
 }
 }  // namespace
 

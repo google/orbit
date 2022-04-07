@@ -16,6 +16,7 @@
 
 #include <inttypes.h>
 #include <cstddef>
+#include <memory>
 
 #include <unwindstack/Memory.h>
 #include <unwindstack/PeCoffInterface.h>
@@ -25,13 +26,13 @@ namespace {
 void FuzzPeCoffUnwindInfos(const uint8_t* data, size_t size) {
   std::shared_ptr<unwindstack::Memory> memory =
       unwindstack::Memory::CreateOfflineMemory(data, 0, size);
-  unwindstack::PeCoffMemory pe_coff_memory(memory.get());
-  unwindstack::PeCoffUnwindInfos pe_coff_unwind_infos(&pe_coff_memory);
+  std::unique_ptr<unwindstack::PeCoffUnwindInfos> pe_coff_unwind_infos(
+      CreatePeCoffUnwindInfos(memory.get()));
   unwindstack::UnwindInfo info;
   // Try all possible offsets to increase coverage. This will also test the parser
   // running over the end of the memory.
   for (size_t offset = 0; offset < size; ++offset) {
-    pe_coff_unwind_infos.GetUnwindInfo(offset, &info);
+    pe_coff_unwind_infos->GetUnwindInfo(offset, &info);
   }
 }
 }  // namespace

@@ -17,6 +17,8 @@
 #include "PeCoffEpilog.h"
 
 #include <map>
+#include <memory>
+#include <vector>
 
 #include <capstone/capstone.h>
 #include <capstone/x86.h>
@@ -26,14 +28,68 @@
 
 namespace unwindstack {
 
-PeCoffEpilog::~PeCoffEpilog() {
+class PeCoffEpilogImpl : public PeCoffEpilog {
+ public:
+  PeCoffEpilogImpl(Memory* object_file_memory, uint64_t text_section_vmaddr,
+                   uint64_t text_section_offset)
+      : file_memory_(object_file_memory),
+        text_section_vmaddr_(text_section_vmaddr),
+        text_section_offset_(text_section_offset) {}
+  ~PeCoffEpilogImpl();
+
+  // Needs to be called before one can use DetectAndHandleEpilog.
+  bool Init() override;
+
+  // Detects if the instructions from 'current_offset_from_start_of_function' onwards represent
+  // a function epilog. Returns true if an epilog was detected. The registers are updated to reflect
+  // the actions from executing the epilog (which effectively unwinds the current callframe).
+  // Returns false if no epilog was found *or* if an error occured. In the latter case, the error
+  // can be retrieved using GetLastError() and registers 'regs' are not updated.
+  bool DetectAndHandleEpilog(uint64_t function_start_address, uint64_t function_end_address,
+                             uint64_t current_offset_from_start_of_function, Memory* process_memory,
+                             Regs* regs) override;
+
+ private:
+  bool DetectAndHandleEpilog(const std::vector<uint8_t>& machine_code, Memory* process_memory,
+                             Regs* regs);
+
+  // The validation methods below check if the instructions satisfy the requirements imposed by the
+  // epilog specification, as outlined on
+  // https://docs.microsoft.com/en-us/cpp/build/prolog-and-epilog?view=msvc-170
+  // The corresponding handling methods must only be called after the validation was successful.
+  bool ValidateLeaInstruction();
+  void HandleLeaInstruction(RegsImpl<uint64_t>* registers);
+  bool ValidateAddInstruction();
+  void HandleAddInstruction(RegsImpl<uint64_t>* registers);
+  bool HandlePopInstruction(Memory* process_memory, RegsImpl<uint64_t>* registers);
+  bool HandleReturnInstruction(Memory* process_memory, RegsImpl<uint64_t>* registers);
+  bool ValidateJumpInstruction();
+  bool HandleJumpInstruction(Memory* process_memory, RegsImpl<uint64_t>* registers);
+
+  Memory* file_memory_;
+  uint64_t text_section_vmaddr_ = 0;
+  uint64_t text_section_offset_ = 0;
+
+  bool capstone_initialized_ = false;
+  csh capstone_handle_ = 0;
+  cs_insn* capstone_instruction_ = nullptr;
+};
+
+std::unique_ptr<PeCoffEpilog> CreatePeCoffEpilog(Memory* object_file_memory,
+                                                 uint64_t text_section_vmaddr,
+                                                 uint64_t text_section_offset) {
+  return std::make_unique<PeCoffEpilogImpl>(object_file_memory, text_section_vmaddr,
+                                            text_section_offset);
+}
+
+PeCoffEpilogImpl::~PeCoffEpilogImpl() {
   if (capstone_initialized_) {
     cs_free(capstone_instruction_, 1);
     cs_close(&capstone_handle_);
   }
 }
 
-bool PeCoffEpilog::Init() {
+bool PeCoffEpilogImpl::Init() {
   if (file_memory_ == nullptr) {
     return false;
   }
@@ -66,7 +122,7 @@ static uint16_t MapCapstoneToUnwindstackRegister(x86_reg capstone_reg) {
   return X86_64_REG_LAST;
 }
 
-bool PeCoffEpilog::ValidateLeaInstruction() {
+bool PeCoffEpilogImpl::ValidateLeaInstruction() {
   // Note that this instruction is only legal as the first instruction if frame pointers are
   // being used.
   // TODO: Do we need to check that this frame is using a frame pointer? Can be seen in the
@@ -101,7 +157,7 @@ bool PeCoffEpilog::ValidateLeaInstruction() {
   return true;
 }
 
-void PeCoffEpilog::HandleLeaInstruction(RegsImpl<uint64_t>* registers) {
+void PeCoffEpilogImpl::HandleLeaInstruction(RegsImpl<uint64_t>* registers) {
   cs_x86_op operand1 = capstone_instruction_->detail->x86.operands[1];
   x86_reg base_reg = operand1.mem.base;
   uint16_t unwindstack_base_reg = MapCapstoneToUnwindstackRegister(base_reg);
@@ -110,7 +166,7 @@ void PeCoffEpilog::HandleLeaInstruction(RegsImpl<uint64_t>* registers) {
   registers->set_sp(effective_address);
 }
 
-bool PeCoffEpilog::ValidateAddInstruction() {
+bool PeCoffEpilogImpl::ValidateAddInstruction() {
   CHECK(capstone_instruction_->detail->x86.op_count == 2);
   cs_x86_op operand0 = capstone_instruction_->detail->x86.operands[0];
   cs_x86_op operand1 = capstone_instruction_->detail->x86.operands[1];
@@ -132,14 +188,14 @@ bool PeCoffEpilog::ValidateAddInstruction() {
   return true;
 }
 
-void PeCoffEpilog::HandleAddInstruction(RegsImpl<uint64_t>* registers) {
+void PeCoffEpilogImpl::HandleAddInstruction(RegsImpl<uint64_t>* registers) {
   // An 'add' instruction in the epilog adds the immediate value to the stack pointer to deallocate
   // the stack frame.
   int64_t immediate_value = capstone_instruction_->detail->x86.operands[1].imm;
   registers->set_sp(registers->sp() + static_cast<uint64_t>(immediate_value));
 }
 
-bool PeCoffEpilog::HandlePopInstruction(Memory* process_memory, RegsImpl<uint64_t>* registers) {
+bool PeCoffEpilogImpl::HandlePopInstruction(Memory* process_memory, RegsImpl<uint64_t>* registers) {
   // Handling a pop instructions means to read the value on top of the stack, then setting the
   // register operand of the instruction with the read value, and increasing the stack pointer.
   CHECK(capstone_instruction_->detail->x86.op_count == 1);
@@ -161,7 +217,8 @@ bool PeCoffEpilog::HandlePopInstruction(Memory* process_memory, RegsImpl<uint64_
   return true;
 }
 
-bool PeCoffEpilog::HandleReturnInstruction(Memory* process_memory, RegsImpl<uint64_t>* registers) {
+bool PeCoffEpilogImpl::HandleReturnInstruction(Memory* process_memory,
+                                               RegsImpl<uint64_t>* registers) {
   // Handling the return means we have to read the return address from the top of the stack, and
   // then set stack pointer and pc accordingly.
   uint64_t return_address;
@@ -176,7 +233,7 @@ bool PeCoffEpilog::HandleReturnInstruction(Memory* process_memory, RegsImpl<uint
   return true;
 }
 
-bool PeCoffEpilog::ValidateJumpInstruction() {
+bool PeCoffEpilogImpl::ValidateJumpInstruction() {
   // It's not entirely clear how to distinguish between regular 'jmp' instructions and 'jmp'
   // instructions that are at the end of an epilog (e.g. due to tail call optimization).
   // There are some restrictions which 'jmp' instructions are allowed in epilogs, but this
@@ -205,7 +262,8 @@ bool PeCoffEpilog::ValidateJumpInstruction() {
   return true;
 }
 
-bool PeCoffEpilog::HandleJumpInstruction(Memory* process_memory, RegsImpl<uint64_t>* registers) {
+bool PeCoffEpilogImpl::HandleJumpInstruction(Memory* process_memory,
+                                             RegsImpl<uint64_t>* registers) {
   // Seeing a 'jmp' at the end of the epilog means we are jumping into some other function  that
   // will carry out prolog and at the end epilog instructions, setting up and unwinding a
   // callframe. We do not have to simulate all these steps by the function we are jumping to,
@@ -231,8 +289,8 @@ bool PeCoffEpilog::HandleJumpInstruction(Memory* process_memory, RegsImpl<uint64
 // Instructions are virtually executed and their effect reflected on the registers if we are indeed
 // in an epilog. Since we are detecting and handling the epilog at the same time, we must make sure
 // that registers are not changed if we detect later that we are indeed not in an epilog.
-bool PeCoffEpilog::DetectAndHandleEpilog(const std::vector<uint8_t>& machine_code,
-                                         Memory* process_memory, Regs* regs) {
+bool PeCoffEpilogImpl::DetectAndHandleEpilog(const std::vector<uint8_t>& machine_code,
+                                             Memory* process_memory, Regs* regs) {
   CHECK(process_memory != nullptr);
   // These values are all updated by capstone as we go through the machine code for disassembling.
   uint64_t current_offset = 0;
@@ -311,10 +369,10 @@ bool PeCoffEpilog::DetectAndHandleEpilog(const std::vector<uint8_t>& machine_cod
   return true;
 }
 
-bool PeCoffEpilog::DetectAndHandleEpilog(uint64_t function_start_address,
-                                         uint64_t function_end_address,
-                                         uint64_t current_offset_from_start_of_function,
-                                         Memory* process_memory, Regs* regs) {
+bool PeCoffEpilogImpl::DetectAndHandleEpilog(uint64_t function_start_address,
+                                             uint64_t function_end_address,
+                                             uint64_t current_offset_from_start_of_function,
+                                             Memory* process_memory, Regs* regs) {
   if (function_start_address + current_offset_from_start_of_function >= function_end_address) {
     last_error_.code = ERROR_INVALID_COFF;
     return false;
