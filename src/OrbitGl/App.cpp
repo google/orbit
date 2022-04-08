@@ -956,13 +956,11 @@ void OrbitApp::ShowSourceCode(const orbit_client_data::FunctionInfo& function) {
   auto loaded_module = RetrieveModuleWithDebugInfo(module);
 
   loaded_module
-      .Then(
+      .ThenIfSuccess(
           main_thread_executor_,
-          [this, module, function](const ErrorMessageOr<std::filesystem::path>& local_file_path)
-              -> ErrorMessageOr<void> {
-            if (local_file_path.has_error()) return local_file_path.error();
-
-            const auto elf_file = orbit_object_utils::CreateElfFile(local_file_path.value());
+          [this, module,
+           function](const std::filesystem::path& local_file_path) -> ErrorMessageOr<void> {
+            const auto elf_file = orbit_object_utils::CreateElfFile(local_file_path);
             const auto decl_line_info_or_error =
                 elf_file.value()->GetLocationOfFunction(function.address());
 
@@ -1856,17 +1854,15 @@ orbit_base::Future<ErrorMessageOr<std::filesystem::path>> OrbitApp::RetrieveModu
 orbit_base::Future<ErrorMessageOr<std::filesystem::path>> OrbitApp::RetrieveModuleWithDebugInfo(
     const std::string& module_path, const std::string& build_id) {
   auto loaded_module = RetrieveModule(module_path, build_id);
-  return loaded_module.Then(
+  return loaded_module.ThenIfSuccess(
       main_thread_executor_,
-      [this, module_path](const ErrorMessageOr<std::filesystem::path>& local_file_path)
-          -> ErrorMessageOr<std::filesystem::path> {
-        if (local_file_path.has_error()) return local_file_path;
-
-        auto elf_file = orbit_object_utils::CreateElfFile(local_file_path.value());
+      [this, module_path](
+          const std::filesystem::path& local_file_path) -> ErrorMessageOr<std::filesystem::path> {
+        auto elf_file = orbit_object_utils::CreateElfFile(local_file_path);
 
         if (elf_file.has_error()) return elf_file.error();
 
-        if (elf_file.value()->HasDebugInfo()) return local_file_path.value();
+        if (elf_file.value()->HasDebugInfo()) return local_file_path;
 
         if (!elf_file.value()->HasGnuDebuglink()) {
           return ErrorMessage{
