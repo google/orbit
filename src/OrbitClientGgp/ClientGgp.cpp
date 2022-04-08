@@ -44,7 +44,7 @@ ABSL_DECLARE_FLAG(uint64_t, max_local_marker_depth_per_command_buffer);
 using orbit_base::Future;
 
 using orbit_capture_client::CaptureClient;
-using orbit_capture_client::CaptureClientOptions;
+using orbit_capture_client::ClientCaptureOptions;
 using orbit_capture_client::CaptureEventProcessor;
 using orbit_capture_client::CaptureListener;
 
@@ -99,7 +99,7 @@ ErrorMessageOr<void> ClientGgp::RequestStartCapture(orbit_base::ThreadPool* thre
   }
 
   ORBIT_LOG("Capture pid %d", pid);
-  CaptureClientOptions options;
+  ClientCaptureOptions options;
   options.process_id = pid;
   options.unwinding_method =
       options_.use_framepointer_unwinding ? CaptureOptions::kFramePointers : CaptureOptions::kDwarf;

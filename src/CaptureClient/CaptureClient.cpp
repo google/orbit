@@ -45,15 +45,47 @@ using UnwindingMethod = orbit_grpc_protos::CaptureOptions::UnwindingMethod;
 
 using orbit_base::Future;
 
-// This is specifically for the code review, so that the diff is easy to read. Will move the
-// function before merging the PR.
-[[nodiscard]] std::vector<ApiFunction> FindApiFunctions(
-    const orbit_client_data::ModuleManager& module_manager);
-
 namespace {
 
+// Api functions are declared in Orbit.h. They are implemented in user code through the
+// ORBIT_API_INSTANTIATE macro. Those functions are used to query the tracee for Orbit specific
+// information, such as the memory location where Orbit should write function pointers to enable
+// the Api after having injected liborbit.so.
+std::vector<ApiFunction> FindApiFunctions(const orbit_client_data::ModuleManager& module_manager) {
+  // We have a different function name for each supported platform.
+  static const std::vector<std::string> kOrbitApiGetFunctionTableAddressPrefixes{
+      orbit_api_utils::kOrbitApiGetFunctionTableAddressPrefix,
+      orbit_api_utils::kOrbitApiGetFunctionTableAddressWinPrefix};
+  std::vector<ApiFunction> api_functions;
+  for (const ModuleData* module_data : module_manager.GetAllModuleData()) {
+    for (const std::string& orbit_api_get_function_table_address_prefix :
+         kOrbitApiGetFunctionTableAddressPrefixes) {
+      for (size_t i = 0; i <= kOrbitApiVersion; ++i) {
+        std::string function_name =
+            absl::StrFormat("%s%u", orbit_api_get_function_table_address_prefix, i);
+        const FunctionInfo* function_info = module_data->FindFunctionFromPrettyName(function_name);
+        if (function_info == nullptr) {
+          // Try both variants, with and without trailing parentheses, as the function name might or
+          // might not have them depending on the symbol loading library.
+          function_name.append("()");
+          function_info = module_data->FindFunctionFromPrettyName(function_name);
+        }
+        if (function_info == nullptr) continue;
+        ApiFunction api_function;
+        api_function.set_module_path(function_info->module_path());
+        api_function.set_module_build_id(function_info->module_build_id());
+        api_function.set_address(function_info->address());
+        api_function.set_name(function_name);
+        api_function.set_api_version(i);
+        api_functions.emplace_back(api_function);
+      }
+    }
+  }
+  return api_functions;
+}
+
 [[nodiscard]] orbit_grpc_protos::CaptureOptions ToGrpcCaptureOptions(
-    const CaptureClientOptions& options, const orbit_client_data::ModuleManager& module_manager) {
+    const ClientCaptureOptions& options, const orbit_client_data::ModuleManager& module_manager) {
   CaptureOptions capture_options;
   capture_options.set_trace_context_switches(options.collect_scheduling_info);
   capture_options.set_pid(options.process_id);
@@ -106,12 +138,11 @@ namespace {
 
 }  // namespace
 
-// TODO(b/187170164): This method contains a lot of arguments. Consider making it more structured.
 orbit_base::Future<ErrorMessageOr<CaptureListener::CaptureOutcome>> CaptureClient::Capture(
     orbit_base::ThreadPool* thread_pool,
     std::unique_ptr<CaptureEventProcessor> capture_event_processor,
     const orbit_client_data::ModuleManager& module_manager,
-    const CaptureClientOptions& capture_options) {
+    const ClientCaptureOptions& capture_options) {
   absl::MutexLock lock(&state_mutex_);
   if (state_ != State::kStopped) {
     return {
@@ -127,43 +158,6 @@ orbit_base::Future<ErrorMessageOr<CaptureListener::CaptureOutcome>> CaptureClien
        grpc_capture_options = ToGrpcCaptureOptions(capture_options, module_manager)]() {
         return CaptureSync(grpc_capture_options, capture_event_processor.get());
       });
-}
-
-// Api functions are declared in Orbit.h. They are implemented in user code through the
-// ORBIT_API_INSTANTIATE macro. Those functions are used to query the tracee for Orbit specific
-// information, such as the memory location where Orbit should write function pointers to enable
-// the Api after having injected liborbit.so.
-std::vector<ApiFunction> FindApiFunctions(const orbit_client_data::ModuleManager& module_manager) {
-  // We have a different function name for each supported platform.
-  static const std::vector<std::string> kOrbitApiGetFunctionTableAddressPrefixes{
-      orbit_api_utils::kOrbitApiGetFunctionTableAddressPrefix,
-      orbit_api_utils::kOrbitApiGetFunctionTableAddressWinPrefix};
-  std::vector<ApiFunction> api_functions;
-  for (const ModuleData* module_data : module_manager.GetAllModuleData()) {
-    for (const std::string& orbit_api_get_function_table_address_prefix :
-         kOrbitApiGetFunctionTableAddressPrefixes) {
-      for (size_t i = 0; i <= kOrbitApiVersion; ++i) {
-        std::string function_name =
-            absl::StrFormat("%s%u", orbit_api_get_function_table_address_prefix, i);
-        const FunctionInfo* function_info = module_data->FindFunctionFromPrettyName(function_name);
-        if (function_info == nullptr) {
-          // Try both variants, with and without trailing parentheses, as the function name might or
-          // might not have them depending on the symbol loading library.
-          function_name.append("()");
-          function_info = module_data->FindFunctionFromPrettyName(function_name);
-        }
-        if (function_info == nullptr) continue;
-        ApiFunction api_function;
-        api_function.set_module_path(function_info->module_path());
-        api_function.set_module_build_id(function_info->module_build_id());
-        api_function.set_address(function_info->address());
-        api_function.set_name(function_name);
-        api_function.set_api_version(i);
-        api_functions.emplace_back(api_function);
-      }
-    }
-  }
-  return api_functions;
 }
 
 ErrorMessageOr<CaptureListener::CaptureOutcome> CaptureClient::CaptureSync(

@@ -17,6 +17,7 @@
 
 #include "CaptureClient/CaptureEventProcessor.h"
 #include "CaptureClient/CaptureListener.h"
+#include "CaptureClient/ClientCaptureOptions.h"
 #include "ClientData/FunctionInfo.h"
 #include "ClientData/ModuleManager.h"
 #include "ClientData/ProcessData.h"
@@ -32,34 +33,6 @@
 
 namespace orbit_capture_client {
 
-struct CaptureClientOptions {
-  uint32_t process_id = 0;
-
-  absl::flat_hash_map<uint64_t, orbit_client_data::FunctionInfo> selected_functions;
-  orbit_client_data::TracepointInfoSet selected_tracepoints;
-
-  orbit_grpc_protos::CaptureOptions::DynamicInstrumentationMethod dynamic_instrumentation_method =
-      orbit_grpc_protos::CaptureOptions::DynamicInstrumentationMethod::
-          CaptureOptions_DynamicInstrumentationMethod_kDynamicInstrumentationMethodUnspecified;
-
-  orbit_grpc_protos::CaptureOptions::UnwindingMethod unwinding_method =
-      orbit_grpc_protos::CaptureOptions::UnwindingMethod::CaptureOptions_UnwindingMethod_kUndefined;
-
-  uint16_t stack_dump_size = 0;
-  uint64_t max_local_marker_depth_per_command_buffer = 0;
-  uint64_t memory_sampling_period_ms = 0;
-  double samples_per_second = 0;
-
-  bool collect_gpu_jobs = false;
-  bool collect_memory_info = false;
-  bool collect_scheduling_info = false;
-  bool collect_thread_states = false;
-  bool enable_api = false;
-  bool enable_introspection = false;
-  bool record_arguments = false;
-  bool record_return_values = false;
-};
-
 class CaptureClient {
  public:
   enum class State { kStopped = 0, kStarting, kStarted, kStopping };
@@ -71,7 +44,7 @@ class CaptureClient {
       orbit_base::ThreadPool* thread_pool,
       std::unique_ptr<CaptureEventProcessor> capture_event_processor,
       const orbit_client_data::ModuleManager& module_manager,
-      const CaptureClientOptions& capture_client_options);
+      const ClientCaptureOptions& capture_client_options);
 
   // Returns true if stop was initiated and false otherwise.
   // The latter can happen if for example the stop was already

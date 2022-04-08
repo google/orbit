@@ -42,7 +42,7 @@ using orbit_grpc_protos::CaptureOptions;
 using DynamicInstrumentationMethod =
     orbit_grpc_protos::CaptureOptions::DynamicInstrumentationMethod;
 using UnwindingMethod = orbit_grpc_protos::CaptureOptions::UnwindingMethod;
-using orbit_capture_client::CaptureClientOptions;
+using orbit_capture_client::ClientCaptureOptions;
 
 std::atomic<bool> exit_requested = false;
 
@@ -294,7 +294,7 @@ int main(int argc, char* argv[]) {
           (absl::GetFlag(FLAGS_instrument_offset) == 0),
       "Binary path and offset of the function to instrument need to be specified together");
 
-  CaptureClientOptions options;
+  ClientCaptureOptions options;
   options.process_id = absl::GetFlag(FLAGS_pid);
   if (options.process_id == 0) {
     const std::string pid_file_path = absl::GetFlag(FLAGS_pid_file_path);
@@ -306,7 +306,7 @@ int main(int argc, char* argv[]) {
   ORBIT_FAIL_IF(options.process_id == 0, "PID to capture not specified");
 
   options.samples_per_second = absl::GetFlag(FLAGS_sampling_rate);
-  ORBIT_LOG("samples_per_second=%f", options.samples_per_second);
+  ORBIT_LOG("samples_per_second=%.0f", options.samples_per_second);
   options.stack_dump_size = 65000;
   options.unwinding_method =
       absl::GetFlag(FLAGS_frame_pointers) ? CaptureOptions::kFramePointers : CaptureOptions::kDwarf;

@@ -93,7 +93,7 @@
 using orbit_base::Future;
 
 using orbit_capture_client::CaptureClient;
-using orbit_capture_client::CaptureClientOptions;
+using orbit_capture_client::ClientCaptureOptions;
 using orbit_capture_client::CaptureEventProcessor;
 using orbit_capture_client::CaptureListener;
 
@@ -1423,7 +1423,7 @@ void OrbitApp::StartCapture() {
     selected_functions_map.insert_or_assign(function_id++, function);
   }
 
-  CaptureClientOptions options;
+  ClientCaptureOptions options;
   options.selected_tracepoints = data_manager_->selected_tracepoints();
   options.collect_scheduling_info = !IsDevMode() || data_manager_->collect_scheduler_info();
   options.collect_thread_states = data_manager_->collect_thread_states();
