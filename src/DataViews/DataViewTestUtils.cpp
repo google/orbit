@@ -4,6 +4,8 @@
 
 #include "DataViewTestUtils.h"
 
+#include <absl/strings/str_split.h>
+#include <gmock/gmock-matchers.h>
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
 
@@ -55,6 +57,14 @@ void CheckCopySelectionIsInvoked(const FlattenContextMenu& context_menu,
   EXPECT_EQ(clipboard, expected_clipboard);
 }
 
+void ExpectSameLines(const std::string& actual, const std::string& expected) {
+  static const std::string delimeter = "\r\n";
+  std::vector<std::string> actual_lines = absl::StrSplit(actual, delimeter);
+  std::vector<std::string> expected_lines = absl::StrSplit(expected, delimeter);
+  std::sort(std::begin(actual_lines), std::end(actual_lines));
+  EXPECT_THAT(actual_lines, testing::UnorderedElementsAreArray(expected_lines));
+}
+
 void CheckExportToCsvIsInvoked(const FlattenContextMenu& context_menu, const MockAppInterface& app,
                                DataView& view, const std::string& expected_contents,
                                std::string_view action_name) {
@@ -77,7 +87,7 @@ void CheckExportToCsvIsInvoked(const FlattenContextMenu& context_menu, const Moc
   ErrorMessageOr<std::string> contents_or_error = orbit_base::ReadFileToString(temporary_file_path);
   ASSERT_THAT(contents_or_error, orbit_test_utils::HasNoError());
 
-  EXPECT_EQ(contents_or_error.value(), expected_contents);
+  ExpectSameLines(contents_or_error.value(), expected_contents);
 }
 
 void CheckContextMenuOrder(const FlattenContextMenu& context_menu) {
