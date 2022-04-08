@@ -28,6 +28,7 @@ target_sources(
          CaptureWindow.h
          CGroupAndProcessMemoryTrack.h
          CoreMath.h
+         DrawingInterface.h
          FramePointerValidatorClient.h
          FrameTrack.h
          FrameTrackOnlineProcessor.h
