@@ -31,7 +31,7 @@ class MemoryTrack : public GraphTrack<Dimension>, public AnnotationTrack {
                               module_manager, capture_data),
         AnnotationTrack() {
     // Memory tracks are collapsed by default.
-    this->collapse_toggle_->SetCollapsed(true);
+    this->SetCollapsed(true);
   }
   ~MemoryTrack() override = default;
 

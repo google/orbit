@@ -30,7 +30,7 @@ Track::Track(CaptureViewElement* parent, const orbit_gl::TimelineInfoInterface* 
       module_manager_(module_manager),
       capture_data_(capture_data) {
   collapse_toggle_ = std::make_shared<TriangleToggle>(
-      [this](bool is_collapsed) { OnCollapseToggle(is_collapsed); }, viewport, layout, this);
+      this, viewport, layout, [this](bool /*is_collapsed*/) { RequestUpdate(); });
 }
 
 std::vector<Vec2> GetRoundedCornerMask(float radius, uint32_t num_sides) {
@@ -94,6 +94,10 @@ void Track::UpdatePositionOfCollapseToggle() {
   collapse_toggle_->SetWidth(size);
   collapse_toggle_->SetHeight(size);
   collapse_toggle_->SetPos(toggle_pos[0], toggle_pos[1]);
+
+  // This makes sure that changes to the track "collapsible" property are correctly
+  // disabling the triangle toggle, even if they change during runtime.
+  collapse_toggle_->SetIsCollapsible(IsCollapsible());
 }
 
 std::unique_ptr<orbit_accessibility::AccessibleInterface> Track::CreateAccessibleInterface() {
@@ -170,9 +174,6 @@ void Track::DoDraw(PrimitiveAssembler& primitive_assembler, TextRenderer& text_r
                     GlCanvas::kBackgroundColor, 180.f, track_z);
   }
 
-  // Collapse toggle state management.
-  collapse_toggle_->SetIsCollapsible(this->IsCollapsible());
-
   // Draw label.
   if (!picking) {
     uint32_t font_size = layout_->CalculateZoomedFontSize();
@@ -226,8 +227,6 @@ Color Track::GetTrackBackgroundColor() const {
   return kDarkGrey;
 }
 
-void Track::OnCollapseToggle(bool /*is_collapsed*/) { RequestUpdate(); }
-
 bool Track::ShouldBeRendered() const {
   return CaptureViewElement::ShouldBeRendered() && !IsEmpty();
 }
@@ -240,6 +239,12 @@ float Track::DetermineZOffset() const {
     result = GlCanvas::kZOffsetMovingTrack;
   }
   return result;
+}
+
+void Track::SetCollapsed(bool collapsed) {
+  collapse_toggle_->SetCollapsed(collapsed);
+
+  RequestUpdate();
 }
 
 void Track::SetHeadless(bool value) {

@@ -34,15 +34,15 @@ PageFaultsTrack::PageFaultsTrack(CaptureViewElement* parent,
           module_manager, capture_data)} {
   // PageFaults track is collapsed by default. The major and minor page faults subtracks are
   // expanded by default, but not shown while the page faults track is collapsed.
-  collapse_toggle_->SetCollapsed(true);
+  SetCollapsed(true);
 }
 
 std::string PageFaultsTrack::GetLabel() const {
-  return collapse_toggle_->IsCollapsed() ? major_page_faults_track_->GetName() : GetName();
+  return IsCollapsed() ? major_page_faults_track_->GetName() : GetName();
 }
 
 float PageFaultsTrack::GetHeight() const {
-  if (collapse_toggle_->IsCollapsed()) {
+  if (IsCollapsed()) {
     return major_page_faults_track_->GetHeight();
   }
 
@@ -57,7 +57,7 @@ float PageFaultsTrack::GetHeight() const {
 }
 
 std::string PageFaultsTrack::GetTooltip() const {
-  if (collapse_toggle_->IsCollapsed()) return major_page_faults_track_->GetTooltip();
+  if (IsCollapsed()) return major_page_faults_track_->GetTooltip();
   return "Shows the minor and major page faults statistics.";
 }
 
@@ -76,7 +76,7 @@ void PageFaultsTrack::DoUpdatePrimitives(PrimitiveAssembler& primitive_assembler
 
 void PageFaultsTrack::UpdatePositionOfSubtracks() {
   const Vec2 pos = GetPos();
-  if (collapse_toggle_->IsCollapsed()) {
+  if (IsCollapsed()) {
     major_page_faults_track_->SetPos(pos[0], pos[1]);
     minor_page_faults_track_->SetVisible(false);
     major_page_faults_track_->SetHeadless(true);

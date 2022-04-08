@@ -65,7 +65,7 @@ GpuTrack::GpuTrack(CaptureViewElement* parent, const orbit_gl::TimelineInfoInter
       timeline_hash_{timeline_hash} {
   // Gpu are collapsed by default. Their subtracks are expanded by default, but are however not
   // shown while the Gpu track is collapsed.
-  collapse_toggle_->SetCollapsed(true);
+  SetCollapsed(true);
 }
 
 void GpuTrack::OnTimer(const TimerInfo& timer_info) {
@@ -85,7 +85,7 @@ void GpuTrack::OnTimer(const TimerInfo& timer_info) {
 
 void GpuTrack::UpdatePositionOfSubtracks() {
   const Vec2 pos = GetPos();
-  if (collapse_toggle_->IsCollapsed()) {
+  if (IsCollapsed()) {
     submission_track_->SetPos(pos[0], pos[1]);
     marker_track_->SetVisible(false);
     submission_track_->SetHeadless(true);
@@ -109,7 +109,7 @@ void GpuTrack::UpdatePositionOfSubtracks() {
 }
 
 float GpuTrack::GetHeight() const {
-  if (collapse_toggle_->IsCollapsed()) {
+  if (IsCollapsed()) {
     return submission_track_->GetHeight();
   }
   float height = layout_->GetTrackTabHeight();

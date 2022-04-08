@@ -205,7 +205,7 @@ bool ThreadTrack::IsTrackSelected() const {
 
 float ThreadTrack::GetDefaultBoxHeight() const {
   auto box_height = layout_->GetTextBoxHeight();
-  if (collapse_toggle_->IsCollapsed() && GetDepth() > 0) {
+  if (IsCollapsed() && GetDepth() > 0) {
     return box_height / static_cast<float>(GetDepth());
   }
   return box_height;
@@ -320,8 +320,7 @@ std::string ThreadTrack::GetTooltip() const {
 }
 
 float ThreadTrack::GetHeight() const {
-  const uint32_t depth =
-      collapse_toggle_->IsCollapsed() ? std::min<uint32_t>(1, GetDepth()) : GetDepth();
+  const uint32_t depth = IsCollapsed() ? std::min<uint32_t>(1, GetDepth()) : GetDepth();
 
   bool gap_between_tracks_and_timers =
       (!thread_state_bar_->IsEmpty() || !event_bar_->IsEmpty() || !tracepoint_bar_->IsEmpty()) &&
@@ -398,10 +397,10 @@ void ThreadTrack::DoUpdatePrimitives(PrimitiveAssembler& primitive_assembler,
   ORBIT_SCOPE_WITH_COLOR("ThreadTrack::DoUpdatePrimitives", kOrbitColorYellow);
   visible_timer_count_ = 0;
 
-  const internal::DrawData draw_data = GetDrawData(
-      min_tick, max_tick, GetPos()[0], GetWidth(), &primitive_assembler, timeline_info_, viewport_,
-      collapse_toggle_->IsCollapsed(), app_->selected_timer(), app_->GetScopeIdToHighlight(),
-      app_->GetGroupIdToHighlight(), app_->GetHistogramSelectionRange());
+  const internal::DrawData draw_data =
+      GetDrawData(min_tick, max_tick, GetPos()[0], GetWidth(), &primitive_assembler, timeline_info_,
+                  viewport_, IsCollapsed(), app_->selected_timer(), app_->GetScopeIdToHighlight(),
+                  app_->GetGroupIdToHighlight(), app_->GetHistogramSelectionRange());
 
   uint64_t resolution_in_pixels = draw_data.viewport->WorldToScreen({draw_data.track_width, 0})[0];
   for (uint32_t depth = 0; depth < GetDepth(); depth++) {
@@ -422,7 +421,7 @@ void ThreadTrack::DoUpdatePrimitives(PrimitiveAssembler& primitive_assembler,
 
       auto timer_duration = timer_info->end() - timer_info->start();
       if (timer_duration > draw_data.ns_per_pixel) {
-        if (!collapse_toggle_->IsCollapsed() && BoxHasRoomForText(text_renderer, size[0])) {
+        if (!IsCollapsed() && BoxHasRoomForText(text_renderer, size[0])) {
           DrawTimesliceText(text_renderer, *timer_info, draw_data.track_start_x, pos, size);
         }
         primitive_assembler.AddShadedBox(pos, size, draw_data.z, color, std::move(user_data));
