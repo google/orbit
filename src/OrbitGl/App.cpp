@@ -2785,29 +2785,29 @@ bool OrbitApp::HasFrameTrackInCaptureData(uint64_t instrumented_function_id) con
   return GetTimeGraph()->GetTrackContainer()->HasFrameTrack(instrumented_function_id);
 }
 
-void OrbitApp::JumpToTimerAndZoom(uint64_t function_id, JumpToTimerMode selection_mode) {
+void OrbitApp::JumpToTimerAndZoom(uint64_t scope_id, JumpToTimerMode selection_mode) {
   switch (selection_mode) {
     case JumpToTimerMode::kFirst: {
-      const auto* first_timer = GetMutableTimeGraph()->FindNextFunctionCall(
-          function_id, std::numeric_limits<uint64_t>::lowest());
+      const auto* first_timer = GetMutableTimeGraph()->FindNextScopeTimer(
+          scope_id, std::numeric_limits<uint64_t>::lowest());
       if (first_timer != nullptr) GetMutableTimeGraph()->SelectAndZoom(first_timer);
       break;
     }
     case JumpToTimerMode::kLast: {
-      const auto* last_timer = GetMutableTimeGraph()->FindPreviousFunctionCall(
-          function_id, std::numeric_limits<uint64_t>::max());
+      const auto* last_timer = GetMutableTimeGraph()->FindPreviousScopeTimer(
+          scope_id, std::numeric_limits<uint64_t>::max());
       if (last_timer != nullptr) GetMutableTimeGraph()->SelectAndZoom(last_timer);
       break;
     }
     case JumpToTimerMode::kMin: {
       auto [min_timer, unused_max_timer] =
-          GetMutableTimeGraph()->GetMinMaxTimerInfoForFunction(function_id);
+          GetMutableTimeGraph()->GetMinMaxTimerInfoForScope(scope_id);
       if (min_timer != nullptr) GetMutableTimeGraph()->SelectAndZoom(min_timer);
       break;
     }
     case JumpToTimerMode::kMax: {
       auto [unused_min_timer, max_timer] =
-          GetMutableTimeGraph()->GetMinMaxTimerInfoForFunction(function_id);
+          GetMutableTimeGraph()->GetMinMaxTimerInfoForScope(scope_id);
       if (max_timer != nullptr) GetMutableTimeGraph()->SelectAndZoom(max_timer);
       break;
     }

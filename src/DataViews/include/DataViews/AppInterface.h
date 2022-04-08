@@ -49,7 +49,7 @@ class AppInterface {
 
   // Functions needed by LiveFunctionsDataView
   enum class JumpToTimerMode { kFirst, kLast, kMin, kMax };
-  virtual void JumpToTimerAndZoom(uint64_t function_id, JumpToTimerMode selection_mode) = 0;
+  virtual void JumpToTimerAndZoom(uint64_t scope_id, JumpToTimerMode selection_mode) = 0;
   [[nodiscard]] virtual uint64_t GetHighlightedScopeId() const = 0;
   virtual void SetHighlightedScopeId(uint64_t highlighted_function_id) = 0;
   virtual void SetVisibleScopeIds(absl::flat_hash_set<uint64_t> visible_scope_ids) = 0;

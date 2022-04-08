@@ -244,10 +244,13 @@ class CaptureData {
   [[nodiscard]] const std::vector<uint64_t>* GetSortedTimerDurationsForScopeId(
       uint64_t scope_id) const;
 
+  // Returns all the timers corresponding to scopes with non-invalid ids
+  [[nodiscard]] std::vector<const TimerInfo*> GetAllScopeTimers(
+      uint64_t min_tick = std::numeric_limits<uint64_t>::min(),
+      uint64_t max_tick = std::numeric_limits<uint64_t>::max()) const;
+
  private:
   void UpdateTimerDurations();
-  void CollectDurations(const std::vector<const TimerInfo*>& timer);
-  void CollectDuration(const TimerInfo* timer);
 
   orbit_client_data::ProcessData process_;
   absl::flat_hash_map<uint64_t, orbit_grpc_protos::InstrumentedFunction> instrumented_functions_;

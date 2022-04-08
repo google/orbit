@@ -28,11 +28,14 @@ class TimerDataManager final {
   }
 
   [[nodiscard]] std::vector<const orbit_client_protos::TimerInfo*> GetTimers(
-      orbit_client_protos::TimerInfo_Type type) const {
+      orbit_client_protos::TimerInfo_Type type,
+      uint64_t min_tick = std::numeric_limits<uint64_t>::min(),
+      uint64_t max_tick = std::numeric_limits<uint64_t>::max()) const {
     std::vector<const orbit_client_protos::TimerInfo*> timers;
     absl::MutexLock lock(&mutex_);
     for (const std::unique_ptr<TimerData>& timer_datum : timer_data_) {
-      for (const orbit_client_protos::TimerInfo* timer : timer_datum->GetTimers()) {
+      for (const orbit_client_protos::TimerInfo* timer :
+           timer_datum->GetTimers(min_tick, max_tick)) {
         if (timer->type() == type) timers.push_back(timer);
       }
     }

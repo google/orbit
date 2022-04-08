@@ -99,11 +99,11 @@ class TimeGraph final : public orbit_gl::CaptureViewElement,
   enum class JumpDirection { kPrevious, kNext, kTop, kDown };
   void JumpToNeighborTimer(const orbit_client_protos::TimerInfo* from, JumpDirection jump_direction,
                            JumpScope jump_scope);
-  [[nodiscard]] const orbit_client_protos::TimerInfo* FindPreviousFunctionCall(
-      uint64_t function_address, uint64_t current_time,
+  [[nodiscard]] const orbit_client_protos::TimerInfo* FindPreviousScopeTimer(
+      uint64_t scope_id, uint64_t current_time,
       std::optional<uint32_t> thread_id = std::nullopt) const;
-  [[nodiscard]] const orbit_client_protos::TimerInfo* FindNextFunctionCall(
-      uint64_t function_address, uint64_t current_time,
+  [[nodiscard]] const orbit_client_protos::TimerInfo* FindNextScopeTimer(
+      uint64_t scope_id, uint64_t current_time,
       std::optional<uint32_t> thread_id = std::nullopt) const;
   [[nodiscard]] std::vector<const orbit_client_protos::TimerInfo*> GetAllTimersForHookedFunction(
       uint64_t function_address) const;
@@ -111,7 +111,7 @@ class TimeGraph final : public orbit_gl::CaptureViewElement,
       const;
   [[nodiscard]] std::pair<const orbit_client_protos::TimerInfo*,
                           const orbit_client_protos::TimerInfo*>
-  GetMinMaxTimerInfoForFunction(uint64_t function_id) const;
+  GetMinMaxTimerInfoForScope(uint64_t scope_id) const;
 
   void SelectAndZoom(const orbit_client_protos::TimerInfo* timer_info);
   [[nodiscard]] double GetCaptureTimeSpanUs() const;
