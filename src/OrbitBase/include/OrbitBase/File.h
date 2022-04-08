@@ -120,9 +120,10 @@ ErrorMessageOr<T> ReadFullyAtOffset(const unique_fd& fd, int64_t offset) {
 
 // Following functions make sure we call stl in exception-free manner
 ErrorMessageOr<bool> FileExists(const std::filesystem::path& path);
-ErrorMessageOr<void> MoveFile(const std::filesystem::path& from, const std::filesystem::path& to);
+ErrorMessageOr<void> MoveOrRenameFile(const std::filesystem::path& from,
+                                      const std::filesystem::path& to);
 ErrorMessageOr<bool> RemoveFile(const std::filesystem::path& file_path);
-ErrorMessageOr<bool> CreateDirectory(const std::filesystem::path& file_path);
+ErrorMessageOr<bool> CreateDirectories(const std::filesystem::path& file_path);
 ErrorMessageOr<void> ResizeFile(const std::filesystem::path& file_path, uint64_t new_size);
 ErrorMessageOr<uint64_t> FileSize(const std::filesystem::path& file_path);
 // Returns all files in directory; non recursively.

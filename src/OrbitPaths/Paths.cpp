@@ -9,13 +9,16 @@
 #include <filesystem>
 #include <string>
 
-#include "OrbitBase/File.h"
-#include "OrbitBase/Logging.h"
-
 #ifdef _WIN32
+// clang-format off
+#include <Windows.h>
 #include <KnownFolders.h>
+// clang-format on
 #include <shlobj.h>
 #endif
+
+#include "OrbitBase/File.h"
+#include "OrbitBase/Logging.h"
 
 ABSL_FLAG(std::string, log_dir, "", "Set directory for the log.");
 
@@ -40,10 +43,10 @@ static std::string GetEnvVar(const char* variable_name) {
 }
 
 static void CreateDirectoryOrDie(const std::filesystem::path& directory) {
-  auto create_directory_result = orbit_base::CreateDirectory(directory);
-  if (create_directory_result.has_error()) {
+  auto create_directories_result = orbit_base::CreateDirectories(directory);
+  if (create_directories_result.has_error()) {
     ORBIT_FATAL("Unable to create directory \"%s\": %s", directory.string(),
-                create_directory_result.error().message());
+                create_directories_result.error().message());
   }
 }
 

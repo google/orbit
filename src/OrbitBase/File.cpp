@@ -175,7 +175,8 @@ ErrorMessageOr<bool> FileExists(const std::filesystem::path& path) {
   return result;
 }
 
-ErrorMessageOr<void> MoveFile(const std::filesystem::path& from, const std::filesystem::path& to) {
+ErrorMessageOr<void> MoveOrRenameFile(const std::filesystem::path& from,
+                                      const std::filesystem::path& to) {
   std::error_code error;
   std::filesystem::rename(from, to, error);
   if (error) {
@@ -195,7 +196,7 @@ ErrorMessageOr<bool> RemoveFile(const std::filesystem::path& file_path) {
   return removed;
 }
 
-ErrorMessageOr<bool> CreateDirectory(const std::filesystem::path& file_path) {
+ErrorMessageOr<bool> CreateDirectories(const std::filesystem::path& file_path) {
   std::error_code error;
   bool created = std::filesystem::create_directories(file_path, error);
   if (error) {
