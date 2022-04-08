@@ -14,7 +14,7 @@ namespace orbit_gl {
 
 class MockBatcher : public Batcher {
  public:
-  explicit MockBatcher();
+  explicit MockBatcher(BatcherId batcher_id = BatcherId::kTimeGraph);
   void AddLine(Vec2 from, Vec2 to, float z, const Color& color, const Color& /*picking_color*/,
                std::unique_ptr<PickingUserData> /*user_data*/) override;
   void AddBox(const Tetragon& box, const std::array<Color, 4>& colors,
