@@ -12,12 +12,12 @@ namespace orbit_gl {
 
 namespace {
 
-Color kFakeColor{42, 42, 128, 43};
-Vec2 kTopLeft{0, 0};
-Vec2 kTopRight{5, 0};
-Vec2 kBottomRight{5, 5};
-Vec2 kBottomLeft{0, 5};
-Vec2 kBoxSize{5, 5};
+const Color kFakeColor{42, 42, 128, 43};
+const Vec2 kTopLeft{0, 0};
+const Vec2 kTopRight{5, 0};
+const Vec2 kBottomRight{5, 5};
+const Vec2 kBottomLeft{0, 5};
+const Vec2 kBoxSize{5, 5};
 
 class PrimitiveAssemblerTester : public PrimitiveAssembler {
  public:
@@ -93,7 +93,6 @@ TEST(PrimitiveAssembler, ComplexShapes) {
   PickingManager pm;
   PrimitiveAssemblerTester primitive_assembler_tester(&pm);
   std::shared_ptr<PickableMock> pickable = std::make_shared<PickableMock>();
-  std::unique_ptr<PickingUserData> picking_user_data;
 
   // AddShadedBox -> Should be just a box with shaded color.
   primitive_assembler_tester.AddShadedBox(kTopLeft, kBoxSize, 0, kFakeColor);
