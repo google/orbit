@@ -204,7 +204,6 @@ std::unique_ptr<CaptureData> GenerateTestCaptureData(
     stats.set_variance_ns(kStdDevNs[i] * kStdDevNs[i]);
     capture_data->AddScopeStats(kFunctionIds[i], std::move(stats));
   }
-
   return capture_data;
 }
 
@@ -477,8 +476,8 @@ TEST_F(LiveFunctionsDataViewTest, ContextMenuActionsAreInvoked) {
     }
     EXPECT_CALL(app_, GetCaptureData).WillRepeatedly(testing::ReturnRef(*capture_data_));
 
-    EXPECT_CALL(app_, GetAllTimersForHookedFunction)
-        .WillRepeatedly(testing::Return(kTimerPointers));
+    AddTimersToThreadTrackDataProvider(capture_data_->GetThreadTrackDataProvider());
+    capture_data_->OnCaptureComplete();
 
     std::string expected_contents("\"Name\",\"Thread\",\"Start\",\"End\",\"Duration (ns)\"\r\n");
     for (size_t i = 0; i < kNumTimers; ++i) {

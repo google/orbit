@@ -9,6 +9,7 @@
 #include <algorithm>
 #include <cmath>
 #include <cstdint>
+#include <iterator>
 #include <memory>
 #include <vector>
 
@@ -208,6 +209,17 @@ void CaptureData::UpdateTimerDurations() {
   for (auto& [id, timer_durations] : scope_id_to_timer_durations_) {
     std::sort(timer_durations.begin(), timer_durations.end());
   }
+}
+
+[[nodiscard]] std::vector<const TimerInfo*> CaptureData::GetAllTimersForScope(
+    uint64_t scope_id, uint64_t min_tick, uint64_t max_tick) const {
+  std::vector<const TimerInfo*> result;
+  const std::vector<const TimerInfo*> all_timers = GetAllScopeTimers(min_tick, max_tick);
+  std::copy_if(std::begin(all_timers), std::end(all_timers), std::back_inserter(result),
+               [this, scope_id](const TimerInfo* timer) {
+                 return scope_id_provider_->ProvideId(*timer) == scope_id;
+               });
+  return result;
 }
 
 }  // namespace orbit_client_data

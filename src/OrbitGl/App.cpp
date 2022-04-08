@@ -1700,7 +1700,7 @@ orbit_base::Future<void> OrbitApp::RetrieveModulesAndLoadSymbols(
   for (const auto& module : modules_set) {
     // Explicitely do not handle the result.
     Future<void> future = RetrieveModuleAndLoadSymbolsAndHandleError(module).Then(
-        &immediate_executor, [](const SymbolLoadingAndErrorHandlingResult & /*result*/) -> void {});
+        &immediate_executor, [](const SymbolLoadingAndErrorHandlingResult& /*result*/) -> void {});
     futures.emplace_back(std::move(future));
   }
 
@@ -2812,10 +2812,6 @@ void OrbitApp::JumpToTimerAndZoom(uint64_t scope_id, JumpToTimerMode selection_m
       break;
     }
   }
-}
-
-std::vector<const TimerInfo*> OrbitApp::GetAllTimersForHookedFunction(uint64_t function_id) const {
-  return GetTimeGraph()->GetAllTimersForHookedFunction(function_id);
 }
 
 [[nodiscard]] std::vector<const orbit_client_data::TimerChain*> OrbitApp::GetAllThreadTimerChains()
