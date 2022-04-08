@@ -390,7 +390,7 @@ void LiveFunctionsDataView::OnExportEventsToCsvRequested(const std::vector<int>&
     const uint64_t scope_id = GetScopeId(row);
 
     const std::string& scope_name = capture_data.GetScopeName(scope_id);
-    for (const TimerInfo* timer : capture_data.GetAllTimersForScope(scope_id)) {
+    for (const TimerInfo* timer : capture_data.GetTimersForScope(scope_id)) {
       std::string line;
       line.append(FormatValueForCsv(scope_name));
       line.append(kFieldSeparator);

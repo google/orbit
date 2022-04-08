@@ -211,10 +211,10 @@ void CaptureData::UpdateTimerDurations() {
   }
 }
 
-[[nodiscard]] std::vector<const TimerInfo*> CaptureData::GetAllTimersForScope(
+[[nodiscard]] std::vector<const TimerInfo*> CaptureData::GetTimersForScope(
     uint64_t scope_id, uint64_t min_tick, uint64_t max_tick) const {
-  std::vector<const TimerInfo*> result;
   const std::vector<const TimerInfo*> all_timers = GetAllScopeTimers(min_tick, max_tick);
+  std::vector<const TimerInfo*> result;
   std::copy_if(std::begin(all_timers), std::end(all_timers), std::back_inserter(result),
                [this, scope_id](const TimerInfo* timer) {
                  return scope_id_provider_->ProvideId(*timer) == scope_id;

@@ -249,7 +249,7 @@ class CaptureData {
       uint64_t min_tick = std::numeric_limits<uint64_t>::min(),
       uint64_t max_tick = std::numeric_limits<uint64_t>::max()) const;
 
-  [[nodiscard]] std::vector<const TimerInfo*> GetAllTimersForScope(
+  [[nodiscard]] std::vector<const TimerInfo*> GetTimersForScope(
       uint64_t scope_id, uint64_t min_tick = std::numeric_limits<uint64_t>::min(),
       uint64_t max_tick = std::numeric_limits<uint64_t>::max()) const;
 

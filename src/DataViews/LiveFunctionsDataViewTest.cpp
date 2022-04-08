@@ -204,16 +204,14 @@ std::unique_ptr<CaptureData> GenerateTestCaptureData(
     stats.set_variance_ns(kStdDevNs[i] * kStdDevNs[i]);
     capture_data->AddScopeStats(kFunctionIds[i], std::move(stats));
   }
-  return capture_data;
-}
 
-static void AddTimersToThreadTrackDataProvider(
-    orbit_client_data::ThreadTrackDataProvider* thread_track_data_provider) {
   for (const TimerInfo* timer_info : kTimerPointers) {
-    thread_track_data_provider->AddTimer(*timer_info);
+    capture_data->GetThreadTrackDataProvider()->AddTimer(*timer_info);
   }
 
-  thread_track_data_provider->OnCaptureComplete();
+  capture_data->OnCaptureComplete();
+
+  return capture_data;
 }
 
 class MockLiveFunctionsInterface : public orbit_data_views::LiveFunctionsInterface {
@@ -475,9 +473,6 @@ TEST_F(LiveFunctionsDataViewTest, ContextMenuActionsAreInvoked) {
       capture_data_->AddOrAssignThreadName(kThreadIds[i], kThreadNames[i]);
     }
     EXPECT_CALL(app_, GetCaptureData).WillRepeatedly(testing::ReturnRef(*capture_data_));
-
-    AddTimersToThreadTrackDataProvider(capture_data_->GetThreadTrackDataProvider());
-    capture_data_->OnCaptureComplete();
 
     std::string expected_contents("\"Name\",\"Thread\",\"Start\",\"End\",\"Duration (ns)\"\r\n");
     for (size_t i = 0; i < kNumTimers; ++i) {
@@ -838,9 +833,6 @@ TEST_F(LiveFunctionsDataViewTest, OnRefreshWithNoIndicesResetsHistogram) {
 }
 
 TEST_F(LiveFunctionsDataViewTest, HistogramIsProperlyUpdated) {
-  AddTimersToThreadTrackDataProvider(capture_data_->GetThreadTrackDataProvider());
-  capture_data_->OnCaptureComplete();
-
   EXPECT_CALL(app_, GetCaptureData).WillRepeatedly(testing::ReturnRef(*capture_data_));
   EXPECT_CALL(app_, ProvideScopeId).WillRepeatedly(Invoke([&](const TimerInfo& timer) {
     return timer.function_id();
