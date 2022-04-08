@@ -68,8 +68,8 @@ TEST(PrimitiveAssembler, BasicAdditions) {
   // Boxes
   Tetragon kFakeBox{std::array<Vec2, 4>{kTopLeft, kTopRight, kBottomRight, kBottomLeft}};
   primitive_assembler_tester.AddBox(kFakeBox, 0, {kFakeColor, kFakeColor, kFakeColor, kFakeColor});
-  primitive_assembler_tester.AddBox(kFakeBox,0, kFakeColor);
-  primitive_assembler_tester.AddBox(kFakeBox,0, kFakeColor, pickable);
+  primitive_assembler_tester.AddBox(kFakeBox, 0, kFakeColor);
+  primitive_assembler_tester.AddBox(kFakeBox, 0, kFakeColor, pickable);
   EXPECT_EQ(primitive_assembler_tester.GetNumBoxes(), kNumBoxes);
 
   EXPECT_EQ(primitive_assembler_tester.GetNumElements(), kNumLines + kNumTriangles + kNumBoxes);

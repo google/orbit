@@ -236,7 +236,7 @@ TEST(OpenGlBatcher, TranslationsAreAutomaticallyAdded) {
   const orbit_gl_internal::Line3D transformed_expectation(
       original_expectation.start_point + transform, original_expectation.end_point + transform);
 
-  const auto first_from_layer = [&batcher = std::as_const(batcher)](float z) {
+  const auto first_from_layer = [& batcher = std::as_const(batcher)](float z) {
     return *batcher.GetInternalBuffers(z).line_buffer.lines_.begin();
   };
 
