@@ -9,18 +9,11 @@
 
 #include "CoreMath.h"
 
-template <typename T>
-struct HasZ {
-  T shape;
-  float z{};
-};
-
 struct Line {
   Vec2 start_point;
   Vec2 end_point;
 };
 
-// TODO(b/227748244) Tetragon should store four Vec2
 struct Tetragon {
   Tetragon() = default;
   Tetragon(std::array<Vec2, 4> clockwise_ordered_vertices)

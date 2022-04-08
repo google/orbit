@@ -29,8 +29,7 @@ void OpenGlBatcher::AddLine(Vec2 from, Vec2 to, float z, const Color& color,
                             const Color& picking_color,
                             std::unique_ptr<PickingUserData> user_data) {
   Line line;
-  HasZ<Vec2> translated_start_with_z =
-      translations_.TranslateAndFloorVertex({{from[0], from[1]}, z});
+  Vec2Z translated_start_with_z = translations_.TranslateAndFloorVertex({{from[0], from[1]}, z});
   line.start_point = translated_start_with_z.shape;
   const float layer_z_value = translated_start_with_z.z;
 
@@ -38,7 +37,7 @@ void OpenGlBatcher::AddLine(Vec2 from, Vec2 to, float z, const Color& color,
   // TODO(b/195386885) This is a hack to address the issue that some horizontal lines in the graph
   // tracks are missing. We need a better solution for this issue.
   MoveLineToPixelCenterIfHorizontal(line);
-  auto& buffer = primitive_buffers_by_layer_[z];  // should it be layer_z_value ?
+  auto& buffer = primitive_buffers_by_layer_[layer_z_value];
 
   buffer.line_buffer.lines_.emplace_back(line, layer_z_value);
   buffer.line_buffer.colors_.push_back_n(color, 2);
@@ -51,7 +50,7 @@ void OpenGlBatcher::AddBox(const Tetragon& box, float z, const std::array<Color,
   Tetragon rounded_box = box;
   float layer_z_value{};
   for (size_t v = 0; v < 4; ++v) {
-    HasZ<Vec2> layered_vec2 = translations_.TranslateAndFloorVertex({rounded_box.vertices[v], z});
+    Vec2Z layered_vec2 = translations_.TranslateAndFloorVertex({rounded_box.vertices[v], z});
     rounded_box.vertices[v] = layered_vec2.shape;
     layer_z_value = layered_vec2.z;
   }
@@ -69,7 +68,7 @@ void OpenGlBatcher::AddTriangle(const Triangle& triangle, float z,
   Triangle rounded_tri = triangle;
   float layer_z_value{};
   for (auto& vertex : rounded_tri.vertices) {
-    HasZ<Vec2> layered_vec2 = translations_.TranslateAndFloorVertex({vertex, z});
+    Vec2Z layered_vec2 = translations_.TranslateAndFloorVertex({vertex, z});
     vertex = layered_vec2.shape;
     layer_z_value = layered_vec2.z;
   }

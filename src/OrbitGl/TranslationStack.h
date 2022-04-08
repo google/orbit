@@ -11,21 +11,27 @@
 #include "Geometry.h"
 
 namespace orbit_gl {
+
+struct Vec2Z {
+  Vec2 shape;
+  float z{};
+};
+
 class TranslationStack {
  public:
   void PushTranslation(float x, float y, float z = 0.f);
   void PopTranslation();
   [[nodiscard]] bool IsEmpty() const { return translation_stack_.empty(); }
 
-  [[nodiscard]] HasZ<Vec2> TranslateAndFloorVertex(const HasZ<Vec2>& input) const {
+  [[nodiscard]] Vec2Z TranslateAndFloorVertex(const Vec2Z& input) const {
     const Vec2 result_shape = input.shape + current_translation_.shape;
     const float result_z = input.z + current_translation_.z;
     return {{floorf(result_shape[0]), floorf(result_shape[1])}, result_z};
   }
 
  private:
-  std::vector<HasZ<Vec2>> translation_stack_;
-  HasZ<Vec2> current_translation_{{0.f, 0.f}, 0.f};
+  std::vector<Vec2Z> translation_stack_;
+  Vec2Z current_translation_{{0.f, 0.f}, 0.f};
 };
 }  // namespace orbit_gl
 

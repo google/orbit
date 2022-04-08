@@ -99,7 +99,7 @@ class FakeOpenGlBatcher : public OpenGlBatcher {
     }
   }
 
-  const orbit_gl_internal::PrimitiveBuffers& GetInternalBuffers(float layer) {
+  const orbit_gl_internal::PrimitiveBuffers& GetInternalBuffers(float layer) const {
     return primitive_buffers_by_layer_.at(layer);
   }
 
@@ -235,21 +235,23 @@ TEST(OpenGlBatcher, TranslationsAreAutomaticallyAdded) {
   const Vec3 transform(10.f, 100.f, 0.1f);
   const orbit_gl_internal::Line3D transformed_expectation(
       original_expectation.start_point + transform, original_expectation.end_point + transform);
-  const orbit_gl_internal::PrimitiveBuffers& buffers = batcher.GetInternalBuffers(0.f);
 
-  auto it = buffers.line_buffer.lines_.begin();
-
-  const auto add_line_assert_eq = [&batcher, &it](const orbit_gl_internal::Line3D& expectation) {
-    batcher.AddLineHelper(Vec2(0.f, 0.f), Vec2(1.f, 1.f), 0.f, Color());
-    ++it;
-    ASSERT_TRUE(LineEq(expectation, *it));
+  const auto first_from_layer = [&batcher = std::as_const(batcher)](float z) {
+    return *batcher.GetInternalBuffers(z).line_buffer.lines_.begin();
   };
 
-  ASSERT_TRUE(LineEq(original_expectation, *it));
+  const auto add_line_assert_eq =
+      [&batcher, &first_from_layer](const orbit_gl_internal::Line3D& expectation) {
+        batcher.AddLineHelper(Vec2(0.f, 0.f), Vec2(1.f, 1.f), 0.f, Color());
+        float expected_z = expectation.end_point[2];
+        ASSERT_TRUE(LineEq(expectation, first_from_layer(expected_z)));
+      };
+
+  ASSERT_TRUE(LineEq(original_expectation, first_from_layer(0.f)));
 
   batcher.PushTranslation(10, 100, 0.1f);
   // Should not affect previously added lines
-  ASSERT_TRUE(LineEq(original_expectation, *it));
+  ASSERT_TRUE(LineEq(original_expectation, first_from_layer(0.f)));
 
   add_line_assert_eq(transformed_expectation);
   batcher.PushTranslation(0, 0, 0.f);
