@@ -18,7 +18,7 @@
 #define _LIBUNWINDSTACK_PE_COFF_UNWIND_INFOS_H
 
 #include <string.h>
-#include <unordered_map>
+#include <memory>
 #include <vector>
 
 #include "PeCoffRuntimeFunctions.h"
@@ -68,24 +68,20 @@ struct UnwindInfo {
 
 class PeCoffUnwindInfos {
  public:
-  explicit PeCoffUnwindInfos(PeCoffMemory* pe_coff_memory) : pe_coff_memory_(pe_coff_memory) {}
+  virtual ~PeCoffUnwindInfos() {}
 
   // The value 'unwind_info_file_offset' is the file offset derived from the unwind info
   // offset in the RUNTIME_FUNCTION struct, which is a relative virtual address (RVA). Computing the
   // file offset from the unwind info RVA requires knowledge about the sections of the file, which
   // the class using 'PeCoffUnwindInfos' must use to pass in the right value here.
-  bool GetUnwindInfo(uint64_t unwind_info_file_offset, UnwindInfo* unwind_info);
+  virtual bool GetUnwindInfo(uint64_t unwind_info_file_offset, UnwindInfo* unwind_info) = 0;
   ErrorData GetLastError() const { return last_error_; }
 
- private:
-  bool ParseUnwindInfoAtOffset(uint64_t file_offset, UnwindInfo* unwind_info);
-
-  PeCoffMemory* pe_coff_memory_;
+ protected:
   ErrorData last_error_{ERROR_NONE, 0};
-
-  // This is a cache of unwind infos.
-  std::unordered_map<uint64_t, UnwindInfo> unwind_info_offset_to_unwind_info_;
 };
+
+std::unique_ptr<PeCoffUnwindInfos> CreatePeCoffUnwindInfos(Memory* object_file_memory);
 
 }  // namespace unwindstack
 

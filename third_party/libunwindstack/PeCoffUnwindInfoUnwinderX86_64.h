@@ -41,8 +41,8 @@ enum UnwindOpCode : uint8_t {
 
 class PeCoffUnwindInfoUnwinderX86_64 {
  public:
-  explicit PeCoffUnwindInfoUnwinderX86_64(PeCoffMemory* pe_coff_memory)
-      : unwind_infos_(new PeCoffUnwindInfos(pe_coff_memory)) {}
+  explicit PeCoffUnwindInfoUnwinderX86_64(Memory* object_file_memory)
+      : unwind_infos_(CreatePeCoffUnwindInfos(object_file_memory)) {}
 
   // This function should only be called when we know that we are not in the epilog of the function.
   // If one attempts to unwind using this when one is actually on an instruction in the epilog, the
