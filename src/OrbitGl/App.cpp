@@ -1700,7 +1700,7 @@ orbit_base::Future<void> OrbitApp::RetrieveModulesAndLoadSymbols(
   for (const auto& module : modules_set) {
     // Explicitely do not handle the result.
     Future<void> future = RetrieveModuleAndLoadSymbolsAndHandleError(module).Then(
-        &immediate_executor, [](const SymbolLoadingAndErrorHandlingResult & /*result*/) -> void {});
+        &immediate_executor, [](const SymbolLoadingAndErrorHandlingResult& /*result*/) -> void {});
     futures.emplace_back(std::move(future));
   }
 
@@ -2788,13 +2788,13 @@ bool OrbitApp::HasFrameTrackInCaptureData(uint64_t instrumented_function_id) con
 void OrbitApp::JumpToTimerAndZoom(uint64_t scope_id, JumpToTimerMode selection_mode) {
   switch (selection_mode) {
     case JumpToTimerMode::kFirst: {
-      const auto* first_timer = GetMutableTimeGraph()->FindNextScopeCall(
+      const auto* first_timer = GetMutableTimeGraph()->FindNextScopeTimer(
           scope_id, std::numeric_limits<uint64_t>::lowest());
       if (first_timer != nullptr) GetMutableTimeGraph()->SelectAndZoom(first_timer);
       break;
     }
     case JumpToTimerMode::kLast: {
-      const auto* last_timer = GetMutableTimeGraph()->FindPreviousScopeCall(
+      const auto* last_timer = GetMutableTimeGraph()->FindPreviousScopeTimer(
           scope_id, std::numeric_limits<uint64_t>::max());
       if (last_timer != nullptr) GetMutableTimeGraph()->SelectAndZoom(last_timer);
       break;

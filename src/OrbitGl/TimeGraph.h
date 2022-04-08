@@ -99,10 +99,10 @@ class TimeGraph final : public orbit_gl::CaptureViewElement,
   enum class JumpDirection { kPrevious, kNext, kTop, kDown };
   void JumpToNeighborTimer(const orbit_client_protos::TimerInfo* from, JumpDirection jump_direction,
                            JumpScope jump_scope);
-  [[nodiscard]] const orbit_client_protos::TimerInfo* FindPreviousScopeCall(
+  [[nodiscard]] const orbit_client_protos::TimerInfo* FindPreviousScopeTimer(
       uint64_t scope_id, uint64_t current_time,
       std::optional<uint32_t> thread_id = std::nullopt) const;
-  [[nodiscard]] const orbit_client_protos::TimerInfo* FindNextScopeCall(
+  [[nodiscard]] const orbit_client_protos::TimerInfo* FindNextScopeTimer(
       uint64_t scope_id, uint64_t current_time,
       std::optional<uint32_t> thread_id = std::nullopt) const;
   [[nodiscard]] std::vector<const orbit_client_protos::TimerInfo*> GetAllTimersForHookedFunction(

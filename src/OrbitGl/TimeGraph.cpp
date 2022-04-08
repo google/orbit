@@ -417,16 +417,16 @@ void TimeGraph::SelectAndMakeVisible(const TimerInfo* timer_info) {
   track_container_->VerticallyMoveIntoView(*timer_info);
 }
 
-const TimerInfo* TimeGraph::FindPreviousScopeCall(uint64_t scope_id, uint64_t current_time,
+const TimerInfo* TimeGraph::FindPreviousScopeTimer(uint64_t scope_id, uint64_t current_time,
                                                   std::optional<uint32_t> thread_id) const {
   const TimerInfo* previous_timer = nullptr;
   uint64_t goal_time = std::numeric_limits<uint64_t>::lowest();
 
-  std::vector<const TimerInfo*> timers = app_->GetCaptureData().GetAllScopeTimers(
-      std::numeric_limits<uint64_t>::lowest(), current_time);
+  std::vector<const TimerInfo*> timers =
+      capture_data_->GetAllScopeTimers(std::numeric_limits<uint64_t>::lowest(), current_time);
   for (const TimerInfo* current_timer : timers) {
     if ((thread_id && thread_id.value() != current_timer->thread_id()) ||
-        app_->GetCaptureData().ProvideScopeId(*current_timer) != scope_id) {
+        capture_data_->ProvideScopeId(*current_timer) != scope_id) {
       continue;
     }
     if ((current_timer->end() < current_time) && (goal_time < current_timer->end())) {
@@ -437,14 +437,14 @@ const TimerInfo* TimeGraph::FindPreviousScopeCall(uint64_t scope_id, uint64_t cu
   return previous_timer;
 }
 
-const TimerInfo* TimeGraph::FindNextScopeCall(uint64_t scope_id, uint64_t current_time,
+const TimerInfo* TimeGraph::FindNextScopeTimer(uint64_t scope_id, uint64_t current_time,
                                               std::optional<uint32_t> thread_id) const {
   const TimerInfo* next_timer = nullptr;
   uint64_t goal_time = std::numeric_limits<uint64_t>::max();
-  std::vector<const TimerInfo*> timers = app_->GetCaptureData().GetAllScopeTimers(current_time);
+  std::vector<const TimerInfo*> timers = capture_data_->GetAllScopeTimers(current_time);
   for (const TimerInfo* current_timer : timers) {
     if ((thread_id && thread_id.value() != current_timer->thread_id()) ||
-        app_->GetCaptureData().ProvideScopeId(*current_timer) != scope_id) {
+        capture_data_->ProvideScopeId(*current_timer) != scope_id) {
       continue;
     }
     if ((current_timer->end() > current_time) && (goal_time > current_timer->end())) {
@@ -480,8 +480,8 @@ std::pair<const TimerInfo*, const TimerInfo*> TimeGraph::GetMinMaxTimerInfoForSc
     uint64_t scope_id) const {
   const TimerInfo* min_timer = nullptr;
   const TimerInfo* max_timer = nullptr;
-  for (const TimerInfo* timer_info : app_->GetCaptureData().GetAllScopeTimers()) {
-    if (app_->GetCaptureData().ProvideScopeId(*timer_info) != scope_id) continue;
+  for (const TimerInfo* timer_info : capture_data_->GetAllScopeTimers()) {
+    if (capture_data_->ProvideScopeId(*timer_info) != scope_id) continue;
 
     const uint64_t elapsed_nanos = timer_info->end() - timer_info->start();
     if (min_timer == nullptr || elapsed_nanos < (min_timer->end() - min_timer->start())) {
@@ -568,7 +568,7 @@ void TimeGraph::JumpToNeighborTimer(const TimerInfo* from, JumpDirection jump_di
     jump_scope = JumpScope::kSameDepth;
   }
   const TimerInfo* goal = nullptr;
-  auto scope_id = app_->GetCaptureData().ProvideScopeId(*from);
+  auto scope_id = capture_data_->ProvideScopeId(*from);
   auto current_time = from->end();
   auto thread_id = from->thread_id();
   if (jump_direction == JumpDirection::kPrevious) {
@@ -577,10 +577,10 @@ void TimeGraph::JumpToNeighborTimer(const TimerInfo* from, JumpDirection jump_di
         goal = track_container_->FindPrevious(*from);
         break;
       case JumpScope::kSameFunction:
-        goal = FindPreviousScopeCall(scope_id, current_time);
+        goal = FindPreviousScopeTimer(scope_id, current_time);
         break;
       case JumpScope::kSameThreadSameFunction:
-        goal = FindPreviousScopeCall(scope_id, current_time, thread_id);
+        goal = FindPreviousScopeTimer(scope_id, current_time, thread_id);
         break;
       default:
         // Other choices are not implemented.
@@ -593,10 +593,10 @@ void TimeGraph::JumpToNeighborTimer(const TimerInfo* from, JumpDirection jump_di
         goal = track_container_->FindNext(*from);
         break;
       case JumpScope::kSameFunction:
-        goal = FindNextScopeCall(scope_id, current_time);
+        goal = FindNextScopeTimer(scope_id, current_time);
         break;
       case JumpScope::kSameThreadSameFunction:
-        goal = FindNextScopeCall(scope_id, current_time, thread_id);
+        goal = FindNextScopeTimer(scope_id, current_time, thread_id);
         break;
       default:
         ORBIT_UNREACHABLE();
