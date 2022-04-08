@@ -93,9 +93,9 @@
 using orbit_base::Future;
 
 using orbit_capture_client::CaptureClient;
-using orbit_capture_client::ClientCaptureOptions;
 using orbit_capture_client::CaptureEventProcessor;
 using orbit_capture_client::CaptureListener;
+using orbit_capture_client::ClientCaptureOptions;
 
 using orbit_capture_file::CaptureFile;
 
