@@ -26,7 +26,7 @@ void MemoryTrack<Dimension>::DoDraw(PrimitiveAssembler& primitive_assembler,
                                     const CaptureViewElement::DrawContext& draw_context) {
   GraphTrack<Dimension>::DoDraw(primitive_assembler, text_renderer, draw_context);
 
-  if (this->collapse_toggle_->IsCollapsed()) return;
+  if (this->IsCollapsed()) return;
   AnnotationTrack::DrawAnnotation(primitive_assembler, text_renderer, this->layout_,
                                   this->indentation_level_, GlCanvas::kZValueTrackText);
 }
