@@ -16,15 +16,15 @@ struct Line {
 
 struct Tetragon {
   Tetragon() = default;
-  Tetragon(std::array<Vec2, 4> clockwise_ordered_vertices)
+  explicit Tetragon(std::array<Vec2, 4> clockwise_ordered_vertices)
       : vertices(std::move(clockwise_ordered_vertices)) {}
 
   std::array<Vec2, 4> vertices;
 };
 
 [[nodiscard]] inline Tetragon MakeBox(const Vec2& pos, const Vec2& size) {
-  return {{Vec2(pos[0], pos[1]), Vec2(pos[0], pos[1] + size[1]),
-           Vec2(pos[0] + size[0], pos[1] + size[1]), Vec2(pos[0] + size[0], pos[1])}};
+  return Tetragon({Vec2(pos[0], pos[1]), Vec2(pos[0], pos[1] + size[1]),
+                   Vec2(pos[0] + size[0], pos[1] + size[1]), Vec2(pos[0] + size[0], pos[1])});
 }
 
 struct Triangle {
