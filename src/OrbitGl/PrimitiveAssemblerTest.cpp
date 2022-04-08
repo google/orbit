@@ -125,7 +125,7 @@ TEST(PrimitiveAssembler, ComplexShapes) {
   // AddShadedTrapezium -> 2 Triangles
   Vec2 kTopCentred = {(kTopLeft[0] + kTopRight[0]) / 2.f, kTopLeft[1]};
   primitive_assembler_tester.AddShadedTrapezium(
-      {{kTopLeft, kTopCentred, kBottomRight, kBottomLeft}, 0}, kFakeColor,
+      Tetragon{{kTopLeft, kTopCentred, kBottomRight, kBottomLeft}, 0}, kFakeColor,
       std::make_unique<PickingUserData>());
   EXPECT_EQ(primitive_assembler_tester.GetNumTriangles(), 2);
   EXPECT_EQ(primitive_assembler_tester.GetNumElements(), 2);
@@ -135,7 +135,7 @@ TEST(PrimitiveAssembler, ComplexShapes) {
 
   // AddTetragonBorder -> 4 Lines
   primitive_assembler_tester.AddTetragonBorder(
-      {{kBottomRight, kBottomLeft, kTopLeft, kTopRight}, 0}, kFakeColor,
+      Tetragon{{kBottomRight, kBottomLeft, kTopLeft, kTopRight}, 0}, kFakeColor,
       std::make_unique<PickingUserData>());
   EXPECT_EQ(primitive_assembler_tester.GetNumLines(), 4);
   EXPECT_EQ(primitive_assembler_tester.GetNumElements(), 4);

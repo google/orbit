@@ -28,8 +28,8 @@ struct Tetragon {
 };
 
 [[nodiscard]] inline Tetragon MakeBox(const Vec2& pos, const Vec2& size, float z) {
-  return {{Vec3(pos[0], pos[1], z), Vec3(pos[0], pos[1] + size[1], z),
-           Vec3(pos[0] + size[0], pos[1] + size[1], z), Vec3(pos[0] + size[0], pos[1], z)}};
+  return Tetragon{{Vec3(pos[0], pos[1], z), Vec3(pos[0], pos[1] + size[1], z),
+                   Vec3(pos[0] + size[0], pos[1] + size[1], z), Vec3(pos[0] + size[0], pos[1], z)}};
 }
 
 struct Triangle {
