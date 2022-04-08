@@ -16,6 +16,8 @@ namespace orbit_gl {
 // the future, which will move more methods into this interface.
 class TrackControlInterface {
  public:
+  virtual ~TrackControlInterface() = default;
+
   [[nodiscard]] virtual bool IsPinned() const = 0;
   virtual void SetPinned(bool value) = 0;
 
