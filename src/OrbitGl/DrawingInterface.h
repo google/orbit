@@ -11,6 +11,8 @@ namespace orbit_gl {
 
 class DrawingInterface {
  public:
+  ~DrawingInterface() = default;
+
   [[nodiscard]] virtual std::vector<float> GetLayers() const = 0;
   virtual void DrawLayer(float layer, bool picking) const = 0;
   virtual void Draw(bool picking) const = 0;
