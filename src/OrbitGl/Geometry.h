@@ -17,15 +17,19 @@ struct Line {
 // TODO(b/227748244) Tetragon should store four Vec2
 struct Tetragon {
   Tetragon() = default;
-  Tetragon(std::array<Vec3, 4> clockwise_ordered_vartices)
-      : vertices(std::move(clockwise_ordered_vartices)) {}
+  explicit Tetragon(std::array<Vec3, 4> clockwise_ordered_vertices)
+      : vertices(std::move(clockwise_ordered_vertices)) {}
+  explicit Tetragon(std::array<Vec2, 4> clockwise_ordered_vertices, float z = 0) {
+    std::transform(clockwise_ordered_vertices.begin(), clockwise_ordered_vertices.end(),
+                   vertices.begin(), [z](Vec2& v) { return Vec2ToVec3(v, z); });
+  }
 
   std::array<Vec3, 4> vertices;
 };
 
 [[nodiscard]] inline Tetragon MakeBox(const Vec2& pos, const Vec2& size, float z) {
-  return {{Vec3(pos[0], pos[1], z), Vec3(pos[0], pos[1] + size[1], z),
-           Vec3(pos[0] + size[0], pos[1] + size[1], z), Vec3(pos[0] + size[0], pos[1], z)}};
+  return Tetragon{{Vec3(pos[0], pos[1], z), Vec3(pos[0], pos[1] + size[1], z),
+                   Vec3(pos[0] + size[0], pos[1] + size[1], z), Vec3(pos[0] + size[0], pos[1], z)}};
 }
 
 struct Triangle {

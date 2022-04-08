@@ -12,6 +12,13 @@ namespace orbit_gl {
 
 namespace {
 
+const Color kFakeColor{42, 42, 128, 43};
+const Vec2 kTopLeft{0, 0};
+const Vec2 kTopRight{5, 0};
+const Vec2 kBottomRight{5, 5};
+const Vec2 kBottomLeft{0, 5};
+const Vec2 kBoxSize{5, 5};
+
 class PrimitiveAssemblerTester : public PrimitiveAssembler {
  public:
   explicit PrimitiveAssemblerTester(PickingManager* picking_manager = nullptr)
@@ -20,6 +27,9 @@ class PrimitiveAssemblerTester : public PrimitiveAssembler {
   [[nodiscard]] uint32_t GetNumTriangles() const { return mock_batcher_.GetNumTriangles(); }
   [[nodiscard]] uint32_t GetNumBoxes() const { return mock_batcher_.GetNumBoxes(); }
   [[nodiscard]] uint32_t GetNumElements() const { return mock_batcher_.GetNumElements(); }
+  [[nodiscard]] bool IsEverythingInsideRectangle(Vec2 pos, Vec2 size) const {
+    return mock_batcher_.IsEverythingInsideRectangle(pos, size);
+  }
 
  private:
   MockBatcher mock_batcher_;
@@ -28,7 +38,7 @@ class PrimitiveAssemblerTester : public PrimitiveAssembler {
 }  // namespace
 
 // TODO(http://b/228063067): Test all methods in Primitive Assembler
-TEST(PrimitiveAssembler, NullPickingManager) {
+TEST(PrimitiveAssembler, PickableInNullPickingManager) {
   PrimitiveAssemblerTester primitive_assembler_tester;
   std::shared_ptr<PickableMock> pickable = std::make_shared<PickableMock>();
   EXPECT_DEATH(primitive_assembler_tester.AddLine(Vec2(0, 0), Vec2(1, 0), 0,
@@ -36,16 +46,19 @@ TEST(PrimitiveAssembler, NullPickingManager) {
                "nullptr");
 }
 
+TEST(PrimitiveAssembler, StartNewFrame) {
+  PrimitiveAssemblerTester primitive_assembler_tester;
+  primitive_assembler_tester.AddLine(kTopLeft, kTopRight, 0, kFakeColor);
+  EXPECT_EQ(primitive_assembler_tester.GetNumLines(), 1);
+
+  primitive_assembler_tester.StartNewFrame();
+  EXPECT_EQ(primitive_assembler_tester.GetNumLines(), 0);
+}
+
 TEST(PrimitiveAssembler, BasicAdditions) {
   PickingManager pm;
   PrimitiveAssemblerTester primitive_assembler_tester(&pm);
   std::shared_ptr<PickableMock> pickable = std::make_shared<PickableMock>();
-
-  Color kFakeColor{42, 42, 128, 43};
-  Vec2 kTopLeft{0, 0};
-  Vec2 kTopRight{5, 0};
-  Vec2 kBottomRight{5, 5};
-  Vec2 kBottomLeft{0, 5};
 
   constexpr uint32_t kNumLines = 4;
   constexpr uint32_t kNumTriangles = 2;
@@ -72,8 +85,72 @@ TEST(PrimitiveAssembler, BasicAdditions) {
   primitive_assembler_tester.AddBox(kFakeBox, kFakeColor);
   primitive_assembler_tester.AddBox(kFakeBox, kFakeColor, pickable);
   EXPECT_EQ(primitive_assembler_tester.GetNumBoxes(), kNumBoxes);
-
   EXPECT_EQ(primitive_assembler_tester.GetNumElements(), kNumLines + kNumTriangles + kNumBoxes);
+  EXPECT_TRUE(primitive_assembler_tester.IsEverythingInsideRectangle(kTopLeft, kBoxSize));
+}
+
+TEST(PrimitiveAssembler, ComplexShapes) {
+  PickingManager pm;
+  PrimitiveAssemblerTester primitive_assembler_tester(&pm);
+  std::shared_ptr<PickableMock> pickable = std::make_shared<PickableMock>();
+
+  // AddShadedBox -> Should be just a box with shaded color.
+  primitive_assembler_tester.AddShadedBox(kTopLeft, kBoxSize, 0, kFakeColor);
+  primitive_assembler_tester.AddShadedBox(kTopLeft, kBoxSize, 0, kFakeColor,
+                                          ShadingDirection::kRightToLeft);
+  primitive_assembler_tester.AddShadedBox(kTopLeft, kBoxSize, 0, kFakeColor,
+                                          std::make_unique<PickingUserData>(),
+                                          ShadingDirection::kTopToBottom);
+  primitive_assembler_tester.AddShadedBox(kTopLeft, kBoxSize, 0, kFakeColor, pickable,
+                                          ShadingDirection::kLeftToRight);
+  EXPECT_EQ(primitive_assembler_tester.GetNumBoxes(), 4);
+  EXPECT_EQ(primitive_assembler_tester.GetNumElements(), 4);
+  EXPECT_TRUE(primitive_assembler_tester.IsEverythingInsideRectangle(kTopLeft, kBoxSize));
+
+  primitive_assembler_tester.StartNewFrame();
+
+  constexpr float kRoundedRadius = 2.f;
+
+  // AddRoundedBox -> 3 boxes + 4 rounding corners
+  primitive_assembler_tester.AddRoundedBox(kTopLeft, kBoxSize, 0, kRoundedRadius, kFakeColor);
+  EXPECT_EQ(primitive_assembler_tester.GetNumBoxes(), 3);
+  EXPECT_EQ(primitive_assembler_tester.GetNumTriangles(),
+            4 * primitive_assembler_tester.kNumArcSides);
+  EXPECT_EQ(primitive_assembler_tester.GetNumLines(), 0);
+  EXPECT_TRUE(primitive_assembler_tester.IsEverythingInsideRectangle(kTopLeft, kBoxSize));
+
+  primitive_assembler_tester.StartNewFrame();
+
+  // TODO(b/227744958) This should probably be removed and AddBox should be used instead
+  // AddShadedTrapezium -> 2 Triangles
+  Vec2 kTopCentred = {(kTopLeft[0] + kTopRight[0]) / 2.f, kTopLeft[1]};
+  primitive_assembler_tester.AddShadedTrapezium(
+      Tetragon{{kTopLeft, kTopCentred, kBottomRight, kBottomLeft}, 0}, kFakeColor,
+      std::make_unique<PickingUserData>());
+  EXPECT_EQ(primitive_assembler_tester.GetNumTriangles(), 2);
+  EXPECT_EQ(primitive_assembler_tester.GetNumElements(), 2);
+  EXPECT_TRUE(primitive_assembler_tester.IsEverythingInsideRectangle(kTopLeft, kBoxSize));
+
+  primitive_assembler_tester.StartNewFrame();
+
+  // AddTetragonBorder -> 4 Lines
+  primitive_assembler_tester.AddTetragonBorder(
+      Tetragon{{kBottomRight, kBottomLeft, kTopLeft, kTopRight}, 0}, kFakeColor,
+      std::make_unique<PickingUserData>());
+  EXPECT_EQ(primitive_assembler_tester.GetNumLines(), 4);
+  EXPECT_EQ(primitive_assembler_tester.GetNumElements(), 4);
+  EXPECT_TRUE(primitive_assembler_tester.IsEverythingInsideRectangle(kTopLeft, kBoxSize));
+
+  primitive_assembler_tester.StartNewFrame();
+
+  // AddCircle -> several Triangles
+  primitive_assembler_tester.AddCircle(kBottomRight, kRoundedRadius, 0, kFakeColor);
+  EXPECT_EQ(primitive_assembler_tester.GetNumTriangles(), PrimitiveAssembler::kCirclePoints);
+  EXPECT_EQ(primitive_assembler_tester.GetNumLines(), 0);
+  EXPECT_EQ(primitive_assembler_tester.GetNumBoxes(), 0);
+  EXPECT_TRUE(primitive_assembler_tester.IsEverythingInsideRectangle(
+      kBottomRight - Vec2{kRoundedRadius, kRoundedRadius},
+      {kRoundedRadius * 2.f, kRoundedRadius * 2.f}));
 }
 
 }  // namespace orbit_gl
