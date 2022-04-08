@@ -284,7 +284,7 @@ TEST(File, ReadStructureAtOffset) {
   EXPECT_STREQ(test_struct.char_array.data(), kCharArray);
 }
 
-TEST(File, MoveFile) {
+TEST(File, MoveOrRenameFile) {
   auto tmp_file_or_error = TemporaryFile::Create();
   ASSERT_THAT(tmp_file_or_error, HasNoError());
   auto tmp_file = std::move(tmp_file_or_error.value());
@@ -307,7 +307,7 @@ TEST(File, MoveFile) {
   ASSERT_THAT(exists_or_error, HasNoError());
   EXPECT_TRUE(exists_or_error.value());
 
-  auto move_result = MoveFile(tmp_file.file_path(), new_path);
+  auto move_result = MoveOrRenameFile(tmp_file.file_path(), new_path);
   ASSERT_THAT(move_result, HasNoError());
 
   exists_or_error = FileExists(new_path);
@@ -340,16 +340,16 @@ TEST(File, RemoveFile) {
   ASSERT_FALSE(exists_or_error.value());
 }
 
-TEST(File, CreateDirectory) {
+TEST(File, CreateDirectories) {
   auto tmp_file_or_error = TemporaryFile::Create();
   ASSERT_THAT(tmp_file_or_error, HasNoError());
   auto tmp_file = std::move(tmp_file_or_error.value());
 
   tmp_file.CloseAndRemove();
 
-  auto directory_created_or_error = CreateDirectory(tmp_file.file_path());
-  ASSERT_THAT(directory_created_or_error, HasNoError());
-  EXPECT_TRUE(directory_created_or_error.value());
+  auto directories_created_or_error = CreateDirectories(tmp_file.file_path());
+  ASSERT_THAT(directories_created_or_error, HasNoError());
+  EXPECT_TRUE(directories_created_or_error.value());
 
   auto exists_or_error = FileExists(tmp_file.file_path());
   ASSERT_THAT(exists_or_error, HasNoError());

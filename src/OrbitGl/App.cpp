@@ -1331,7 +1331,7 @@ orbit_base::Future<ErrorMessageOr<void>> OrbitApp::MoveCaptureFile(
     const std::filesystem::path& src, const std::filesystem::path& dest) {
   std::optional<absl::Duration> capture_length =
       capture_file_info_manager_.GetCaptureLengthByPath(src);
-  return thread_pool_->Schedule([src, dest]() { return orbit_base::MoveFile(src, dest); })
+  return thread_pool_->Schedule([src, dest]() { return orbit_base::MoveOrRenameFile(src, dest); })
       .ThenIfSuccess(main_thread_executor_, [this, dest, capture_length] {
         capture_file_info_manager_.AddOrTouchCaptureFile(dest, capture_length);
       });
