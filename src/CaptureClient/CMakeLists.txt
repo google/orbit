@@ -17,6 +17,7 @@ target_sources(CaptureClient PUBLIC
         include/CaptureClient/CaptureClient.h
         include/CaptureClient/CaptureListener.h
         include/CaptureClient/CaptureEventProcessor.h
+        include/CaptureClient/ClientCaptureOptions.h
         include/CaptureClient/GpuQueueSubmissionProcessor.h)
 
 target_sources(CaptureClient PRIVATE

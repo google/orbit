@@ -95,6 +95,7 @@ using orbit_base::Future;
 using orbit_capture_client::CaptureClient;
 using orbit_capture_client::CaptureEventProcessor;
 using orbit_capture_client::CaptureListener;
+using orbit_capture_client::ClientCaptureOptions;
 
 using orbit_capture_file::CaptureFile;
 
@@ -1422,31 +1423,35 @@ void OrbitApp::StartCapture() {
     selected_functions_map.insert_or_assign(function_id++, function);
   }
 
-  TracepointInfoSet selected_tracepoints = data_manager_->selected_tracepoints();
-  bool collect_scheduling_info = !IsDevMode() || data_manager_->collect_scheduler_info();
-  bool collect_thread_states = data_manager_->collect_thread_states();
-  bool collect_gpu_jobs = !IsDevMode() || data_manager_->trace_gpu_submissions();
-  bool enable_api = data_manager_->enable_api();
-  bool enable_introspection = IsDevMode() && data_manager_->enable_introspection();
-  const DynamicInstrumentationMethod dynamic_instrumentation_method =
-      data_manager_->dynamic_instrumentation_method();
-  double samples_per_second = data_manager_->samples_per_second();
-  uint16_t stack_dump_size = data_manager_->stack_dump_size();
-  const UnwindingMethod unwinding_method =
+  ClientCaptureOptions options;
+  options.selected_tracepoints = data_manager_->selected_tracepoints();
+  options.collect_scheduling_info = !IsDevMode() || data_manager_->collect_scheduler_info();
+  options.collect_thread_states = data_manager_->collect_thread_states();
+  options.collect_gpu_jobs = !IsDevMode() || data_manager_->trace_gpu_submissions();
+  options.enable_api = data_manager_->enable_api();
+  options.enable_introspection = IsDevMode() && data_manager_->enable_introspection();
+  options.dynamic_instrumentation_method = data_manager_->dynamic_instrumentation_method();
+  options.samples_per_second = data_manager_->samples_per_second();
+  options.stack_dump_size = data_manager_->stack_dump_size();
+  options.unwinding_method =
       IsDevMode() ? data_manager_->unwinding_method() : CaptureOptions::kDwarf;
-  uint64_t max_local_marker_depth_per_command_buffer =
+  options.max_local_marker_depth_per_command_buffer =
       data_manager_->max_local_marker_depth_per_command_buffer();
 
-  bool collect_memory_info = data_manager_->collect_memory_info();
-  uint64_t memory_sampling_period_ms = data_manager_->memory_sampling_period_ms();
+  options.collect_memory_info = data_manager_->collect_memory_info();
+  options.memory_sampling_period_ms = data_manager_->memory_sampling_period_ms();
+  options.selected_functions = std::move(selected_functions_map);
+  options.process_id = process->pid();
+  options.record_return_values = absl::GetFlag(FLAGS_show_return_values);
+  options.record_arguments = false;
 
   // In metrics, -1 indicates memory collection was turned off. See also the comment in
   // orbit_log_event.proto
   constexpr int64_t kMemoryCollectionDisabledMetricsValue = -1;
   int64_t memory_information_sampling_period_ms_for_metrics = kMemoryCollectionDisabledMetricsValue;
-  if (collect_memory_info) {
+  if (options.collect_memory_info) {
     memory_information_sampling_period_ms_for_metrics =
-        static_cast<int64_t>(memory_sampling_period_ms);
+        static_cast<int64_t>(options.memory_sampling_period_ms);
   }
 
   // Whether the Orbit custom vulkan layer is used by the process (game), is determined via the
@@ -1466,15 +1471,15 @@ void OrbitApp::StartCapture() {
       CreateCaptureStartData(
           selected_functions, user_defined_capture_data.frame_track_functions().size(),
           data_manager_->collect_thread_states(), memory_information_sampling_period_ms_for_metrics,
-          orbit_vulkan_layer_loaded_by_process, max_local_marker_depth_per_command_buffer,
-          dynamic_instrumentation_method, static_cast<uint64_t>(samples_per_second),
-          unwinding_method)};
+          orbit_vulkan_layer_loaded_by_process, options.max_local_marker_depth_per_command_buffer,
+          options.dynamic_instrumentation_method, static_cast<uint64_t>(options.samples_per_second),
+          options.unwinding_method)};
 
   metrics_capture_complete_data_ = orbit_metrics_uploader::CaptureCompleteData{};
 
   ORBIT_CHECK(capture_client_ != nullptr);
 
-  auto capture_event_processor = CreateCaptureEventProcessor(
+  std::unique_ptr<CaptureEventProcessor> capture_event_processor = CreateCaptureEventProcessor(
       this, process->name(), frame_track_function_ids, [this](const ErrorMessage& error) {
         capture_data_->reset_file_path();
         SendErrorToUi("Error saving capture", error.message());
@@ -1482,13 +1487,7 @@ void OrbitApp::StartCapture() {
       });
 
   Future<ErrorMessageOr<CaptureOutcome>> capture_result = capture_client_->Capture(
-      thread_pool_.get(), process->pid(), *module_manager_, std::move(selected_functions_map),
-      /*record_arguments=*/false, absl::GetFlag(FLAGS_show_return_values),
-      std::move(selected_tracepoints), samples_per_second, stack_dump_size, unwinding_method,
-      collect_scheduling_info, collect_thread_states, collect_gpu_jobs, enable_api,
-      enable_introspection, dynamic_instrumentation_method,
-      max_local_marker_depth_per_command_buffer, collect_memory_info, memory_sampling_period_ms,
-      std::move(capture_event_processor));
+      thread_pool_.get(), std::move(capture_event_processor), *module_manager_, options);
 
   // TODO(b/187250643): Refactor this to be more readable and maybe remove parts that are not needed
   // here (capture cancelled)
