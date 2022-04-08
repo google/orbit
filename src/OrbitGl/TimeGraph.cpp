@@ -418,7 +418,7 @@ void TimeGraph::SelectAndMakeVisible(const TimerInfo* timer_info) {
 }
 
 const TimerInfo* TimeGraph::FindPreviousScopeTimer(uint64_t scope_id, uint64_t current_time,
-                                                  std::optional<uint32_t> thread_id) const {
+                                                   std::optional<uint32_t> thread_id) const {
   const TimerInfo* previous_timer = nullptr;
   uint64_t goal_time = std::numeric_limits<uint64_t>::lowest();
 
@@ -438,7 +438,7 @@ const TimerInfo* TimeGraph::FindPreviousScopeTimer(uint64_t scope_id, uint64_t c
 }
 
 const TimerInfo* TimeGraph::FindNextScopeTimer(uint64_t scope_id, uint64_t current_time,
-                                              std::optional<uint32_t> thread_id) const {
+                                               std::optional<uint32_t> thread_id) const {
   const TimerInfo* next_timer = nullptr;
   uint64_t goal_time = std::numeric_limits<uint64_t>::max();
   std::vector<const TimerInfo*> timers = capture_data_->GetAllScopeTimers(current_time);
