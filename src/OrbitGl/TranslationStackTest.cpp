@@ -8,21 +8,21 @@
 #include "TranslationStack.h"
 
 namespace orbit_gl {
-static void ExpectEqualHasZ(const Vec2Z& expected, const Vec2Z& actual) {
+static void ExpectEqualHasZ(const LayeredVec2& expected, const LayeredVec2& actual) {
   EXPECT_EQ(expected.shape, actual.shape);
   EXPECT_EQ(expected.z, actual.z);
 }
 
 TEST(TranslationStack, PushAndPop) {
-  const Vec2Z orig{{0.5f, 0.5f}, 0.5f};
-  const Vec2Z orig_result{{0, 0}, 0.5f};
-  const Vec2Z trans{{1, 2}, 3};
-  const Vec2Z trans_result{{1, 2}, 3.5f};
+  const LayeredVec2 orig{{0.5f, 0.5f}, 0.5f};
+  const LayeredVec2 orig_result{{0, 0}, 0.5f};
+  const LayeredVec2 trans{{1, 2}, 3};
+  const LayeredVec2 trans_result{{1, 2}, 3.5f};
 
   TranslationStack stack;
   EXPECT_TRUE(stack.IsEmpty());
 
-  Vec2Z result = stack.TranslateAndFloorVertex(orig);
+  LayeredVec2 result = stack.TranslateAndFloorVertex(orig);
   ExpectEqualHasZ(orig_result, result);
 
   stack.PushTranslation(trans.shape[0], trans.shape[1], trans.z);

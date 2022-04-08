@@ -29,7 +29,7 @@ void OpenGlBatcher::AddLine(Vec2 from, Vec2 to, float z, const Color& color,
                             const Color& picking_color,
                             std::unique_ptr<PickingUserData> user_data) {
   Line line;
-  Vec2Z translated_start_with_z = translations_.TranslateAndFloorVertex({{from[0], from[1]}, z});
+  LayeredVec2 translated_start_with_z = translations_.TranslateAndFloorVertex({{from[0], from[1]}, z});
   line.start_point = translated_start_with_z.shape;
   const float layer_z_value = translated_start_with_z.z;
 
@@ -50,7 +50,7 @@ void OpenGlBatcher::AddBox(const Tetragon& box, float z, const std::array<Color,
   Tetragon rounded_box = box;
   float layer_z_value{};
   for (size_t v = 0; v < 4; ++v) {
-    Vec2Z layered_vec2 = translations_.TranslateAndFloorVertex({rounded_box.vertices[v], z});
+    LayeredVec2 layered_vec2 = translations_.TranslateAndFloorVertex({rounded_box.vertices[v], z});
     rounded_box.vertices[v] = layered_vec2.shape;
     layer_z_value = layered_vec2.z;
   }
@@ -68,7 +68,7 @@ void OpenGlBatcher::AddTriangle(const Triangle& triangle, float z,
   Triangle rounded_tri = triangle;
   float layer_z_value{};
   for (auto& vertex : rounded_tri.vertices) {
-    Vec2Z layered_vec2 = translations_.TranslateAndFloorVertex({vertex, z});
+    LayeredVec2 layered_vec2 = translations_.TranslateAndFloorVertex({vertex, z});
     vertex = layered_vec2.shape;
     layer_z_value = layered_vec2.z;
   }
