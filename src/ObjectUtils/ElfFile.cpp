@@ -64,6 +64,7 @@ class ElfFileImpl : public ElfFile {
   [[nodiscard]] ErrorMessageOr<ModuleSymbols> LoadSymbolsFromDynsym() override;
   [[nodiscard]] uint64_t GetLoadBias() const override;
   [[nodiscard]] uint64_t GetExecutableSegmentOffset() const override;
+  [[nodiscard]] uint64_t GetExecutableSegmentSize() const override;
   [[nodiscard]] bool HasDebugSymbols() const override;
   [[nodiscard]] bool HasDynsym() const override;
   [[nodiscard]] bool HasDebugInfo() const override;
@@ -100,6 +101,7 @@ class ElfFileImpl : public ElfFile {
 
   uint64_t load_bias_;
   uint64_t executable_segment_offset_;
+  uint64_t executable_segment_size_;
 };
 
 template <typename ElfT>
@@ -159,7 +161,8 @@ ElfFileImpl<ElfT>::ElfFileImpl(std::filesystem::path file_path,
       has_dynsym_section_(false),
       has_debug_info_section_(false),
       load_bias_{0},
-      executable_segment_offset_{0} {}
+      executable_segment_offset_{0},
+      executable_segment_size_{0} {}
 
 template <typename ElfT>
 ErrorMessageOr<void> ElfFileImpl<ElfT>::Initialize() {
@@ -440,6 +443,7 @@ ErrorMessageOr<void> ElfFileImpl<ElfT>::InitProgramHeaders() {
 
     load_bias_ = phdr.p_vaddr - phdr.p_offset;
     executable_segment_offset_ = phdr.p_offset;
+    executable_segment_size_ = phdr.p_memsz;
     return outcome::success();
   }
 
@@ -599,6 +603,11 @@ template <typename ElfT>
 uint64_t ElfFileImpl<ElfT>::GetExecutableSegmentOffset() const {
   return executable_segment_offset_;
 }
+
+template <typename ElfT>
+uint64_t ElfFileImpl<ElfT>::GetExecutableSegmentSize() const {
+  return executable_segment_size_;
+}
 }  // namespace
 
 ErrorMessageOr<std::unique_ptr<ElfFile>> CreateElfFileFromBuffer(
@@ -657,8 +666,6 @@ ErrorMessageOr<std::unique_ptr<ElfFile>> CreateElfFile(
 
 ErrorMessageOr<uint32_t> ElfFile::CalculateDebuglinkChecksum(
     const std::filesystem::path& file_path) {
-  // TODO(b/180995172): Make this read operation iterative since the potentially read files
-  // can be very large (gigabytes).
   ErrorMessageOr<orbit_base::unique_fd> fd_or_error = orbit_base::OpenFileForReading(file_path);
 
   if (fd_or_error.has_error()) {

@@ -21,7 +21,7 @@ namespace orbit_object_utils {
 class ObjectFile : public SymbolsFile {
  public:
   ObjectFile() = default;
-  virtual ~ObjectFile() = default;
+  ~ObjectFile() override = default;
 
   [[nodiscard]] virtual bool HasDebugSymbols() const = 0;
   [[nodiscard]] virtual std::string GetName() const = 0;
@@ -44,7 +44,15 @@ class ObjectFile : public SymbolsFile {
   // The same calculation applies for PE/COFF object files. Here, the address
   // to be subtracted is ImageBase as specified in the PE header.
   [[nodiscard]] virtual uint64_t GetLoadBias() const = 0;
+
+  // This is the offset of the text segment *when loaded into memory* relative to the base address.
+  // Note that, based on our definition of load bias, for ELF files this is the same as the offset
+  // in the file, while for COFF there is generally a difference.
   [[nodiscard]] virtual uint64_t GetExecutableSegmentOffset() const = 0;
+
+  // This is the size of the text segment *when loaded into memory*.
+  [[nodiscard]] virtual uint64_t GetExecutableSegmentSize() const = 0;
+
   [[nodiscard]] virtual bool IsElf() const = 0;
   [[nodiscard]] virtual bool IsCoff() const = 0;
 };

@@ -29,7 +29,7 @@ struct PdbDebugInfo {
 class CoffFile : public ObjectFile {
  public:
   CoffFile() = default;
-  virtual ~CoffFile() = default;
+  ~CoffFile() override = default;
 
   [[nodiscard]] virtual ErrorMessageOr<PdbDebugInfo> GetDebugPdbInfo() const = 0;
 };

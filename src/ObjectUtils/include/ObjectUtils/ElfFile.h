@@ -34,7 +34,7 @@ struct GnuDebugLinkInfo {
 class ElfFile : public ObjectFile {
  public:
   ElfFile() = default;
-  virtual ~ElfFile() = default;
+  ~ElfFile() override = default;
 
   [[nodiscard]] virtual ErrorMessageOr<orbit_grpc_protos::ModuleSymbols>
   LoadSymbolsFromDynsym() = 0;
