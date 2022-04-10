@@ -19,45 +19,6 @@ namespace orbit_gl {
 
 namespace orbit_gl_internal {
 
-struct Line3D {
-  Line3D() = default;
-
-  Line3D(const Line& line, float z) {
-    start_point = {line.start_point[0], line.start_point[1], z};
-    end_point = {line.end_point[0], line.end_point[1], z};
-  }
-
-  Line3D(const Vec3& start, const Vec3& end) {
-    start_point = start;
-    end_point = end;
-  }
-
-  Vec3 start_point;
-  Vec3 end_point;
-};
-
-struct Tetragon3D {
-  Tetragon3D() = default;
-
-  Tetragon3D(const Tetragon& tetragon, float z) {
-    std::transform(std::begin(tetragon.vertices), std::end(tetragon.vertices), std::begin(vertices),
-                   [z](const Vec2& vertex) { return Vec3(vertex[0], vertex[1], z); });
-  }
-
-  std::array<Vec3, 4> vertices;
-};
-
-struct Triangle3D {
-  Triangle3D() = default;
-
-  Triangle3D(const Triangle& triangle, float z) {
-    std::transform(std::begin(triangle.vertices), std::end(triangle.vertices), std::begin(vertices),
-                   [z](const Vec2& vertex) { return Vec3(vertex[0], vertex[1], z); });
-  }
-
-  std::array<Vec3, 3> vertices;
-};
-
 struct LineBuffer {
   void Reset() {
     lines_.Reset();
@@ -66,7 +27,7 @@ struct LineBuffer {
   }
 
   static const int NUM_LINES_PER_BLOCK = 64 * 1024;
-  orbit_containers::BlockChain<Line3D, NUM_LINES_PER_BLOCK> lines_;
+  orbit_containers::BlockChain<Line, NUM_LINES_PER_BLOCK> lines_;
   orbit_containers::BlockChain<Color, 2 * NUM_LINES_PER_BLOCK> colors_;
   orbit_containers::BlockChain<Color, 2 * NUM_LINES_PER_BLOCK> picking_colors_;
 };
@@ -79,7 +40,7 @@ struct BoxBuffer {
   }
 
   static const int NUM_BOXES_PER_BLOCK = 64 * 1024;
-  orbit_containers::BlockChain<Tetragon3D, NUM_BOXES_PER_BLOCK> boxes_;
+  orbit_containers::BlockChain<Tetragon, NUM_BOXES_PER_BLOCK> boxes_;
   orbit_containers::BlockChain<Color, 4 * NUM_BOXES_PER_BLOCK> colors_;
   orbit_containers::BlockChain<Color, 4 * NUM_BOXES_PER_BLOCK> picking_colors_;
 };
@@ -92,7 +53,7 @@ struct TriangleBuffer {
   }
 
   static const int NUM_TRIANGLES_PER_BLOCK = 64 * 1024;
-  orbit_containers::BlockChain<Triangle3D, NUM_TRIANGLES_PER_BLOCK> triangles_;
+  orbit_containers::BlockChain<Triangle, NUM_TRIANGLES_PER_BLOCK> triangles_;
   orbit_containers::BlockChain<Color, 3 * NUM_TRIANGLES_PER_BLOCK> colors_;
   orbit_containers::BlockChain<Color, 3 * NUM_TRIANGLES_PER_BLOCK> picking_colors_;
 };

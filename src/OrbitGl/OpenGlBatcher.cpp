@@ -29,7 +29,8 @@ void OpenGlBatcher::AddLine(Vec2 from, Vec2 to, float z, const Color& color,
                             const Color& picking_color,
                             std::unique_ptr<PickingUserData> user_data) {
   Line line;
-  LayeredVec2 translated_start_with_z = translations_.TranslateAndFloorVertex({{from[0], from[1]}, z});
+  LayeredVec2 translated_start_with_z =
+      translations_.TranslateAndFloorVertex({{from[0], from[1]}, z});
   line.start_point = translated_start_with_z.shape;
   const float layer_z_value = translated_start_with_z.z;
 
@@ -39,7 +40,7 @@ void OpenGlBatcher::AddLine(Vec2 from, Vec2 to, float z, const Color& color,
   MoveLineToPixelCenterIfHorizontal(line);
   auto& buffer = primitive_buffers_by_layer_[layer_z_value];
 
-  buffer.line_buffer.lines_.emplace_back(line, layer_z_value);
+  buffer.line_buffer.lines_.emplace_back(line);
   buffer.line_buffer.colors_.push_back_n(color, 2);
   buffer.line_buffer.picking_colors_.push_back_n(picking_color, 2);
   user_data_.push_back(std::move(user_data));
@@ -56,7 +57,7 @@ void OpenGlBatcher::AddBox(const Tetragon& box, float z, const std::array<Color,
   }
 
   auto& buffer = primitive_buffers_by_layer_[layer_z_value];
-  buffer.box_buffer.boxes_.emplace_back(rounded_box, layer_z_value);
+  buffer.box_buffer.boxes_.emplace_back(rounded_box);
   buffer.box_buffer.colors_.push_back(colors);
   buffer.box_buffer.picking_colors_.push_back_n(picking_color, 4);
   user_data_.push_back(std::move(user_data));
@@ -73,7 +74,7 @@ void OpenGlBatcher::AddTriangle(const Triangle& triangle, float z,
     layer_z_value = layered_vec2.z;
   }
   auto& buffer = primitive_buffers_by_layer_[layer_z_value];
-  buffer.triangle_buffer.triangles_.emplace_back(rounded_tri, layer_z_value);
+  buffer.triangle_buffer.triangles_.emplace_back(rounded_tri);
   buffer.triangle_buffer.colors_.push_back(colors);
   buffer.triangle_buffer.picking_colors_.push_back_n(picking_color, 3);
   user_data_.push_back(std::move(user_data));
@@ -113,9 +114,8 @@ void OpenGlBatcher::DrawLayer(float layer, bool picking) const {
 
 void OpenGlBatcher::DrawBoxBuffer(float layer, bool picking) const {
   auto& box_buffer = primitive_buffers_by_layer_.at(layer).box_buffer;
-  const orbit_containers::Block<orbit_gl_internal::Tetragon3D,
-                                orbit_gl_internal::BoxBuffer::NUM_BOXES_PER_BLOCK>* box_block =
-      box_buffer.boxes_.root();
+  const orbit_containers::Block<Tetragon, orbit_gl_internal::BoxBuffer::NUM_BOXES_PER_BLOCK>*
+      box_block = box_buffer.boxes_.root();
   const orbit_containers::Block<Color, orbit_gl_internal::BoxBuffer::NUM_BOXES_PER_BLOCK * 4>*
       color_block;
 
@@ -123,7 +123,7 @@ void OpenGlBatcher::DrawBoxBuffer(float layer, bool picking) const {
 
   while (box_block != nullptr) {
     if (auto num_elems = box_block->size()) {
-      glVertexPointer(3, GL_FLOAT, sizeof(Vec3), box_block->data());
+      glVertexPointer(2, GL_FLOAT, sizeof(Vec2), box_block->data());
       glColorPointer(4, GL_UNSIGNED_BYTE, sizeof(Color), color_block->data());
       glDrawArrays(GL_QUADS, 0, num_elems * 4);
     }
@@ -135,16 +135,15 @@ void OpenGlBatcher::DrawBoxBuffer(float layer, bool picking) const {
 
 void OpenGlBatcher::DrawLineBuffer(float layer, bool picking) const {
   auto& line_buffer = primitive_buffers_by_layer_.at(layer).line_buffer;
-  const orbit_containers::Block<orbit_gl_internal::Line3D,
-                                orbit_gl_internal::LineBuffer::NUM_LINES_PER_BLOCK>* line_block =
-      line_buffer.lines_.root();
+  const orbit_containers::Block<Line, orbit_gl_internal::LineBuffer::NUM_LINES_PER_BLOCK>*
+      line_block = line_buffer.lines_.root();
   const orbit_containers::Block<Color, orbit_gl_internal::LineBuffer::NUM_LINES_PER_BLOCK * 2>*
       color_block;
 
   color_block = !picking ? line_buffer.colors_.root() : line_buffer.picking_colors_.root();
   while (line_block != nullptr) {
     if (auto num_elems = line_block->size()) {
-      glVertexPointer(3, GL_FLOAT, sizeof(Vec3), line_block->data());
+      glVertexPointer(2, GL_FLOAT, sizeof(Vec2), line_block->data());
       glColorPointer(4, GL_UNSIGNED_BYTE, sizeof(Color), color_block->data());
       glDrawArrays(GL_LINES, 0, num_elems * 2);
     }
@@ -156,9 +155,9 @@ void OpenGlBatcher::DrawLineBuffer(float layer, bool picking) const {
 
 void OpenGlBatcher::DrawTriangleBuffer(float layer, bool picking) const {
   auto& triangle_buffer = primitive_buffers_by_layer_.at(layer).triangle_buffer;
-  const orbit_containers::Block<orbit_gl_internal::Triangle3D,
-                                orbit_gl_internal::TriangleBuffer::NUM_TRIANGLES_PER_BLOCK>*
-      triangle_block = triangle_buffer.triangles_.root();
+  const orbit_containers::Block<
+      Triangle, orbit_gl_internal::TriangleBuffer::NUM_TRIANGLES_PER_BLOCK>* triangle_block =
+      triangle_buffer.triangles_.root();
   const orbit_containers::Block<Color, orbit_gl_internal::TriangleBuffer::NUM_TRIANGLES_PER_BLOCK *
                                            3>* color_block;
 
@@ -166,7 +165,7 @@ void OpenGlBatcher::DrawTriangleBuffer(float layer, bool picking) const {
 
   while (triangle_block != nullptr) {
     if (int num_elems = triangle_block->size()) {
-      glVertexPointer(3, GL_FLOAT, sizeof(Vec3), triangle_block->data());
+      glVertexPointer(2, GL_FLOAT, sizeof(Vec2), triangle_block->data());
       glColorPointer(4, GL_UNSIGNED_BYTE, sizeof(Color), color_block->data());
       glDrawArrays(GL_TRIANGLES, 0, num_elems * 3);
     }

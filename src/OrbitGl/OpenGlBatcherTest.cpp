@@ -222,8 +222,17 @@ TEST(OpenGlBatcher, MultipleDrawCalls) {
   EXPECT_DEATH((void)batcher.GetUserData(id), "size");
 }
 
-bool LineEq(const orbit_gl_internal::Line3D& lhs, const orbit_gl_internal::Line3D& rhs) {
-  return lhs.start_point == rhs.start_point && lhs.end_point == rhs.end_point;
+struct Line3D {
+  Vec3 start_point;
+  Vec3 end_point;
+};
+
+void LineEq(const Line3D lhs, const Line& rhs) {
+  EXPECT_EQ(lhs.start_point[0], rhs.start_point[0]);
+  EXPECT_EQ(lhs.start_point[1], rhs.start_point[1]);
+
+  EXPECT_EQ(lhs.end_point[0], rhs.end_point[0]);
+  EXPECT_EQ(lhs.end_point[1], rhs.end_point[1]);
 }
 
 TEST(OpenGlBatcher, TranslationsAreAutomaticallyAdded) {
@@ -231,27 +240,26 @@ TEST(OpenGlBatcher, TranslationsAreAutomaticallyAdded) {
 
   batcher.AddLineHelper(Vec2(0.f, 0.f), Vec2(1.f, 1.f), 0.f, Color());
 
-  const orbit_gl_internal::Line3D original_expectation{Vec3(0.f, 0.f, 0.f), Vec3(1.f, 1.f, 0.f)};
+  const Line3D original_expectation{Vec3(0.f, 0.f, 0.f), Vec3(1.f, 1.f, 0.f)};
   const Vec3 transform(10.f, 100.f, 0.1f);
-  const orbit_gl_internal::Line3D transformed_expectation(
-      original_expectation.start_point + transform, original_expectation.end_point + transform);
+  const Line3D transformed_expectation{original_expectation.start_point + transform,
+                                       original_expectation.end_point + transform};
 
-  const auto first_from_layer = [& batcher = std::as_const(batcher)](float z) {
+  const auto first_from_layer = [&batcher = std::as_const(batcher)](float z) {
     return *batcher.GetInternalBuffers(z).line_buffer.lines_.begin();
   };
 
-  const auto add_line_assert_eq =
-      [&batcher, &first_from_layer](const orbit_gl_internal::Line3D& expectation) {
-        batcher.AddLineHelper(Vec2(0.f, 0.f), Vec2(1.f, 1.f), 0.f, Color());
-        float expected_z = expectation.end_point[2];
-        ASSERT_TRUE(LineEq(expectation, first_from_layer(expected_z)));
-      };
+  const auto add_line_assert_eq = [&batcher, &first_from_layer](const Line3D& expectation) {
+    batcher.AddLineHelper(Vec2(0.f, 0.f), Vec2(1.f, 1.f), 0.f, Color());
+    float expected_z = expectation.end_point[2];
+    LineEq(expectation, first_from_layer(expected_z));
+  };
 
-  ASSERT_TRUE(LineEq(original_expectation, first_from_layer(0.f)));
+  LineEq(original_expectation, first_from_layer(0.f));
 
   batcher.PushTranslation(10, 100, 0.1f);
   // Should not affect previously added lines
-  ASSERT_TRUE(LineEq(original_expectation, first_from_layer(0.f)));
+  LineEq(original_expectation, first_from_layer(0.f));
 
   add_line_assert_eq(transformed_expectation);
   batcher.PushTranslation(0, 0, 0.f);
