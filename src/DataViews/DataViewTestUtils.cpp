@@ -58,9 +58,10 @@ void CheckCopySelectionIsInvoked(const FlattenContextMenu& context_menu,
 }
 
 void ExpectSameLines(const std::string& actual, const std::string& expected) {
-  static const std::string delimeter = "\r\n";
-  std::vector<std::string> actual_lines = absl::StrSplit(actual, delimeter);
-  std::vector<std::string> expected_lines = absl::StrSplit(expected, delimeter);
+  static const std::string kDelimeter = "\r\n";
+
+  std::vector<std::string> actual_lines = absl::StrSplit(actual, kDelimeter);
+  std::vector<std::string> expected_lines = absl::StrSplit(expected, kDelimeter);
   std::sort(std::begin(actual_lines), std::end(actual_lines));
   EXPECT_THAT(actual_lines, testing::UnorderedElementsAreArray(expected_lines));
 }
