@@ -10,14 +10,12 @@
 namespace orbit_gl {
 
 // MockTimelineInfo is mocking TimelineInfoInterface supposing that all the timestamps are 0-based,
-// so the capture starts exactly at 0. The implementation is kind of similar than the used in
+// so the capture starts exactly at 0. The implementation is kind of similar than the one used in
 // TimeGraph but a bit simplified.
 class MockTimelineInfo : public TimelineInfoInterface {
  public:
-  MockTimelineInfo(double width = 0.f) : width_(width) {}
-  [[nodiscard]] uint64_t GetCaptureTimeSpanNs() const override {
-    return max_capture_ns - min_capture_ns;
-  }
+  explicit MockTimelineInfo(double width = 0.f) : width_(width) {}
+  [[nodiscard]] uint64_t GetCaptureTimeSpanNs() const override { return max_capture_ns_; }
   [[nodiscard]] double GetTimeWindowUs() const override {
     return (max_visible_ns_ - min_visible_ns_) / 1000.0f;
   }
@@ -48,15 +46,14 @@ class MockTimelineInfo : public TimelineInfoInterface {
   void SetMinMax(uint64_t min_tick, uint64_t max_tick) {
     min_visible_ns_ = min_tick;
     max_visible_ns_ = max_tick;
-    max_capture_ns = std::max(max_capture_ns, max_tick);
+    max_capture_ns_ = std::max(max_capture_ns_, max_tick);
   }
 
  private:
   double width_ = 0.f;
   uint64_t min_visible_ns_ = 0;
   uint64_t max_visible_ns_ = 0;
-  const uint64_t min_capture_ns = 0;
-  uint64_t max_capture_ns = 0;
+  uint64_t max_capture_ns_ = 0;
 };
 
 }  // namespace orbit_gl
