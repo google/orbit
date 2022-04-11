@@ -49,6 +49,7 @@ target_sources(
          MajorPageFaultsTrack.h
          MemoryTrack.h
          MinorPageFaultsTrack.h
+         MockTimelineInfo.h
          MultivariateTimeSeries.h
          PageFaultsTrack.h
          PickingManager.h
