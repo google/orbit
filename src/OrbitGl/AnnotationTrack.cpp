@@ -14,6 +14,7 @@ const Color kThresholdColor(179, 0, 80, 255);
 
 using orbit_gl::PickingUserData;
 using orbit_gl::PrimitiveAssembler;
+using orbit_gl::TextRenderer;
 
 void AnnotationTrack::DrawAnnotation(PrimitiveAssembler& primitive_assembler,
                                      TextRenderer& text_renderer, const TimeGraphLayout* layout,

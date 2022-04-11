@@ -46,6 +46,7 @@ using orbit_client_data::CaptureData;
 using orbit_gl::Batcher;
 using orbit_gl::PickingUserData;
 using orbit_gl::PrimitiveAssembler;
+using orbit_gl::TextRenderer;
 
 constexpr const char* kTimingDraw = "Draw";
 constexpr const char* kTimingDrawAndUpdatePrimitives = "Draw & Update Primitives";

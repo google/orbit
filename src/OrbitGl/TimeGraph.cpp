@@ -47,6 +47,7 @@ using orbit_gl::CGroupAndProcessMemoryTrack;
 using orbit_gl::PageFaultsTrack;
 using orbit_gl::PrimitiveAssembler;
 using orbit_gl::SystemMemoryTrack;
+using orbit_gl::TextRenderer;
 using orbit_gl::TrackManager;
 using orbit_gl::VariableTrack;
 

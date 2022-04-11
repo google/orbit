@@ -17,12 +17,12 @@
 #include "GpuDebugMarkerTrack.h"
 #include "GpuSubmissionTrack.h"
 #include "PickingManager.h"
+#include "TextRenderer.h"
 #include "TimerTrack.h"
 #include "Track.h"
 #include "Viewport.h"
 
 class OrbitApp;
-class TextRenderer;
 
 namespace orbit_gl {
 

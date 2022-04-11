@@ -37,7 +37,7 @@ class AnnotationTrack {
   }
 
   void DrawAnnotation(orbit_gl::PrimitiveAssembler& primitive_assembler,
-                      TextRenderer& text_renderer, const TimeGraphLayout* layout,
+                      orbit_gl::TextRenderer& text_renderer, const TimeGraphLayout* layout,
                       int indentation_level, float z);
 
  private:

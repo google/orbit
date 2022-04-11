@@ -114,8 +114,8 @@ class Track : public orbit_gl::CaptureViewElement, public std::enable_shared_fro
       const orbit_client_protos::TimerInfo& /*timer_info*/) const = 0;
 
  protected:
-  void DoDraw(orbit_gl::PrimitiveAssembler& primitive_assembler, TextRenderer& text_renderer,
-              const DrawContext& draw_context) override;
+  void DoDraw(orbit_gl::PrimitiveAssembler& primitive_assembler,
+              orbit_gl::TextRenderer& text_renderer, const DrawContext& draw_context) override;
   void DoUpdateLayout() override;
 
   void DrawTriangleFan(orbit_gl::PrimitiveAssembler& primitive_assembler,

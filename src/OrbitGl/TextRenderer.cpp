@@ -25,7 +25,7 @@
 #include "OrbitBase/ExecutablePath.h"
 #include "OrbitBase/Logging.h"
 
-using orbit_gl::PrimitiveAssembler;
+namespace orbit_gl {
 
 namespace {
 
@@ -503,3 +503,5 @@ void TextRenderer::Clear() {
     vertex_buffer_clear(buffer);
   }
 }
+
+}  // namespace orbit_gl

@@ -16,11 +16,11 @@
 #include "CoreMath.h"
 #include "PickingManager.h"
 #include "StringManager/StringManager.h"
+#include "TextRenderer.h"
 #include "TimerTrack.h"
 #include "Track.h"
 
 class OrbitApp;
-class TextRenderer;
 
 // This is a thin implementation of a `TimerTrack` to display Vulkan debug markers, used in the
 // `GpuTrack`.

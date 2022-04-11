@@ -39,6 +39,7 @@ using orbit_client_data::TimerChain;
 
 using orbit_gl::PickingUserData;
 using orbit_gl::PrimitiveAssembler;
+using orbit_gl::TextRenderer;
 
 using orbit_client_protos::TimerInfo;
 
