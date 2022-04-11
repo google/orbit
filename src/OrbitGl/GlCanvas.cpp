@@ -238,8 +238,6 @@ void GlCanvas::PrepareGlState() {
   glEnable(GL_TEXTURE_2D);
   glEnable(GL_COLOR_MATERIAL);
   picking_mode_ != PickingMode::kNone ? glDisable(GL_BLEND) : glEnable(GL_BLEND);
-  glEnable(GL_DEPTH_TEST);  // Enables Depth Testing
-  glDepthFunc(GL_LEQUAL);   // The Type Of Depth Testing To Do
   glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
   glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
 }

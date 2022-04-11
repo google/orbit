@@ -154,6 +154,7 @@ void TextRenderer::RenderLayer(float layer) {
   }
 
   glPushAttrib(GL_ENABLE_BIT | GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+  glDisable(GL_DEPTH_TEST);
   glEnable(GL_BLEND);
   glDepthMask(GL_FALSE);
   glBlendEquation(GL_FUNC_ADD);

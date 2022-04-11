@@ -393,7 +393,6 @@ void Orbit_ImGui_RenderDrawLists(ImDrawData* draw_data) {
   glBlendEquation(GL_FUNC_ADD);
   glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
   glDisable(GL_CULL_FACE);
-  glDisable(GL_DEPTH_TEST);
   glEnable(GL_SCISSOR_TEST);
 #ifdef GL_POLYGON_MODE
   glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
