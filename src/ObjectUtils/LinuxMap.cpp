@@ -95,11 +95,15 @@ ErrorMessageOr<std::vector<ModuleInfo>> ParseMaps(std::string_view proc_maps_dat
   std::vector<ModuleInfo> result;
 
   for (const std::string& line : proc_maps) {
-    std::vector<std::string> tokens = absl::StrSplit(line, ' ', absl::SkipEmpty());
-    // tokens[4] is the inode column. If inode equals 0, then the memory is not
-    // mapped to a file (might be heap, stack or something else)
-    if (tokens.size() != 6 || tokens[4] == "0") continue;
+    // The number of spaces from the inode to the path is variable, and the path can contain spaces,
+    // so we need to handle the path differently.
+    std::vector<std::string> tokens = absl::StrSplit(line, absl::MaxSplits(' ', 5));
 
+    // tokens[4] is the inode column. If inode equals 0, then the memory is not mapped to a file
+    // (might be heap, stack or something else).
+    if (tokens.size() < 6 || tokens[4] == "0") continue;
+
+    absl::StripLeadingAsciiWhitespace(&tokens[5]);
     const std::string& module_path = tokens[5];
 
     std::vector<std::string> addresses = absl::StrSplit(tokens[0], '-');
