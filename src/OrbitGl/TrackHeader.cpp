@@ -70,8 +70,8 @@ void TrackHeader::DoDraw(PrimitiveAssembler& primitive_assembler, TextRenderer& 
     //
     // top_left       tab_top_right
     //  __________________
-    // /                  \
-    // |__________________(
+    // /                   `
+    // |___________________(
     // [ Track content below]
 
     Vec2 top_left(indentation_x0, y0);
