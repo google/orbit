@@ -46,8 +46,6 @@ class MockAppInterface : public AppInterface {
   MOCK_METHOD(void, DeselectTimer, ());
   MOCK_METHOD(bool, IsCapturing, (), (const));
   MOCK_METHOD(void, JumpToTimerAndZoom, (uint64_t function_id, JumpToTimerMode selection_mode));
-  MOCK_METHOD(std::vector<const orbit_client_protos::TimerInfo*>, GetAllTimersForHookedFunction,
-              (uint64_t), (const));
   MOCK_METHOD(std::vector<const orbit_client_data::TimerChain*>, GetAllThreadTimerChains, (),
               (const));
 

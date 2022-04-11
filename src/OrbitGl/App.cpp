@@ -2813,10 +2813,6 @@ void OrbitApp::JumpToTimerAndZoom(uint64_t scope_id, JumpToTimerMode selection_m
   }
 }
 
-std::vector<const TimerInfo*> OrbitApp::GetAllTimersForHookedFunction(uint64_t function_id) const {
-  return GetTimeGraph()->GetAllTimersForHookedFunction(function_id);
-}
-
 [[nodiscard]] std::vector<const orbit_client_data::TimerChain*> OrbitApp::GetAllThreadTimerChains()
     const {
   return GetTimeGraph()->GetAllThreadTrackTimerChains();

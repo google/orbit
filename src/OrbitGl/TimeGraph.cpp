@@ -455,22 +455,6 @@ const TimerInfo* TimeGraph::FindNextScopeTimer(uint64_t scope_id, uint64_t curre
   return next_timer;
 }
 
-std::vector<const TimerInfo*> TimeGraph::GetAllTimersForHookedFunction(
-    uint64_t function_address) const {
-  std::vector<const TimerInfo*> timers;
-  std::vector<const TimerChain*> chains = GetAllThreadTrackTimerChains();
-  for (const TimerChain* chain : chains) {
-    ORBIT_CHECK(chain != nullptr);
-    for (const auto& block : *chain) {
-      for (uint64_t i = 0; i < block.size(); i++) {
-        const TimerInfo& timer = block[i];
-        if (timer.function_id() == function_address) timers.push_back(&timer);
-      }
-    }
-  }
-  return timers;
-}
-
 std::vector<const TimerChain*> TimeGraph::GetAllThreadTrackTimerChains() const {
   ORBIT_CHECK(thread_track_data_provider_ != nullptr);
   return thread_track_data_provider_->GetAllThreadTimerChains();

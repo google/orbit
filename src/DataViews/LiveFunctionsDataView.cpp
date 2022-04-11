@@ -385,15 +385,14 @@ void LiveFunctionsDataView::OnExportEventsToCsvRequested(const std::vector<int>&
   }
 
   for (int row : selection) {
-    const FunctionInfo& function = *GetFunctionInfoFromRow(row);
-    std::string function_name = function.pretty_name();
-
-    // TODO(b/228151558) Allow for csv export for manual instrumentation events
-    const uint64_t function_id = GetScopeId(row);
     const CaptureData& capture_data = app_->GetCaptureData();
-    for (const TimerInfo* timer : app_->GetAllTimersForHookedFunction(function_id)) {
+
+    const uint64_t scope_id = GetScopeId(row);
+
+    const std::string& scope_name = capture_data.GetScopeName(scope_id);
+    for (const TimerInfo* timer : capture_data.GetTimersForScope(scope_id)) {
       std::string line;
-      line.append(FormatValueForCsv(function_name));
+      line.append(FormatValueForCsv(scope_name));
       line.append(kFieldSeparator);
       line.append(FormatValueForCsv(absl::StrFormat(
           "%s [%lu]", capture_data.GetThreadName(timer->thread_id()), timer->thread_id())));
