@@ -19,6 +19,8 @@
 #include <utility>
 #include <vector>
 
+#include "OrbitBase/Result.h"
+
 namespace orbit_linux_tracing {
 
 class LibunwindstackResult {
@@ -48,6 +50,12 @@ class LibunwindstackUnwinder {
                                       const void* stack_dump, uint64_t stack_dump_size,
                                       bool offline_memory_only = false,
                                       size_t max_frames = kDefaultMaxFrames) = 0;
+
+  // Check, if for a given instruction pointer (absolute address), the frame pointer register is
+  // set correctly. It may rely on debug information (like Dwarf .debug_frame). Returns an error
+  // if the required debug information are not available.
+  virtual std::optional<bool> HasFramePointerSet(uint64_t instruction_pointer,
+                                                 unwindstack::Maps* maps) = 0;
 
   static std::unique_ptr<LibunwindstackUnwinder> Create();
   static std::string LibunwindstackErrorString(unwindstack::ErrorCode error_code);

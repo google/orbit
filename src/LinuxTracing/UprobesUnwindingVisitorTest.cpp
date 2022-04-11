@@ -67,6 +67,7 @@ class MockLibunwindstackUnwinder : public LibunwindstackUnwinder {
               (pid_t, unwindstack::Maps*, (const std::array<uint64_t, PERF_REG_X86_64_MAX>&),
                const void*, uint64_t, bool, size_t),
               (override));
+  MOCK_METHOD(std::optional<bool>, HasFramePointerSet, (uint64_t, unwindstack::Maps*), (override));
 };
 
 class MockUprobesReturnAddressManager : public UprobesReturnAddressManager {
