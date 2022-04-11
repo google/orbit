@@ -221,7 +221,7 @@ TEST(LinuxMap, ParseMapsWithPeTextMappedAnonymouslyAtExpectedOffset) {
   const std::filesystem::path libtest_path = test_path / "libtest.dll";
 
   const std::string data{
-      absl::StrFormat("100000-101000 r--p 00000000 01:02 42    %s\n"
+      absl::StrFormat("100000-101000 r--p 00000000 01:02 42    %1$s\n"
                       "101000-103000 r-xp 00000000 00:00 0\n",
                       libtest_path)};
   const auto result = ParseMaps(data);
@@ -248,14 +248,14 @@ TEST(LinuxMap, ParseMapsWithPeTextMappedAnonymouslyInMoreComplexExample) {
   // The addresses in these maps are not page-aligned, but it doesn't matter for the test's purpose.
   const std::string data{
       absl::StrFormat("10000-11000 r--p 00000000 00:00 0    [stack]\n"
-                      "100000-100C00 r--p 00000000 01:02 42    %s\n"  // The headers.
+                      "100000-100C00 r--p 00000000 01:02 42    %1$s\n"  // The headers.
                       "100C00-100D00 rw-p 00000000 00:00 0\n"
-                      "100D00-100E00 r--p 00000D00 01:02 42    %s\n"
+                      "100D00-100E00 r--p 00000D00 01:02 42    %1$s\n"
                       "100E00-100F00 rw-p 00000000 00:00 0    [special]\n"
-                      "100F00-101000 r--p 00000F00 01:02 42    %s\n"
+                      "100F00-101000 r--p 00000F00 01:02 42    %1$s\n"
                       "101000-103000 r-xp 00000000 00:00 0\n"  // The .text segment.
                       "200000-201000 r-xp 00000000 01:02 42    /path/to/nothing\n",
-                      libtest_path, libtest_path, libtest_path)};
+                      libtest_path)};
   const auto result = ParseMaps(data);
   ASSERT_THAT(result, HasNoError());
   ASSERT_EQ(result.value().size(), 1);
@@ -278,9 +278,9 @@ TEST(LinuxMap, ParseMapsWithPeTextMappedNotAnonymously) {
   const std::filesystem::path libtest_path = test_path / "libtest.dll";
 
   const std::string data{
-      absl::StrFormat("100000-101000 r--p 00000000 01:02 42    %s\n"
-                      "101000-103000 r-xp 00001000 01:02 42    %s\n",
-                      libtest_path, libtest_path)};
+      absl::StrFormat("100000-101000 r--p 00000000 01:02 42    %1$s\n"
+                      "101000-103000 r-xp 00001000 01:02 42    %1$s\n",
+                      libtest_path)};
   const auto result = ParseMaps(data);
   ASSERT_THAT(result, HasNoError());
   ASSERT_EQ(result.value().size(), 1);

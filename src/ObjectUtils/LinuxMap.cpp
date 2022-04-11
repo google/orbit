@@ -91,13 +91,14 @@ ErrorMessageOr<std::vector<ModuleInfo>> ReadModules(int32_t pid) {
 
 namespace {
 
-// Because of the requirements on the arguments of mmap, if the .text section of a Portable
-// Executable has an offset in the file (PointerToRawData, multiple of FileAlignment) that is not
-// congruent to the offset of that section when loaded into memory (VirtualAddress, multiple of
-// SectionAlignment) modulo the page size, Wine cannot create a file-backed mapping for the .text
-// section, and resorts to copying into an anonymous mapping. This means that, for PE binaries with
-// this property, we cannot simply associate an executable mapping to the corresponding file using
-// the path in the mapping.
+// If the .text section of a Portable Executable has an offset in the file (PointerToRawData,
+// multiple of FileAlignment) that is not congruent to the offset of that section when loaded into
+// memory (VirtualAddress, multiple of SectionAlignment) modulo the page size, Wine cannot create a
+// file-backed mapping for the .text section. This is because of the requirements on the arguments
+// of mmap. In such a case, Wine resorts to creating an anonymous mapping and copying the .text
+// section into it. This means that, for PE binaries with this property, we cannot simply associate
+// an executable mapping to the corresponding file using the path in the mapping.
+//
 // However, we can make an educated guess. The path of the PE will at least appear in the read-only
 // mapping that corresponds to the beginning of the file, which contains the headers (because the
 // offset in the file is zero and the address chosen for this mapping should always be multiple of
@@ -106,9 +107,18 @@ namespace {
 // size of such a mapping are compatible with the address range where the .text section would be
 // loaded based on the header for the section (in particular, VirtualAddress and VirtualSize), we
 // can be quite sure that this is the mapping we are looking for.
-// This class contains logic to help ParseMaps with this detection mechanism.
 // Note that we assume that a PE (or an ELF file) only has one .text section and one executable
 // mapping: this is what we observed and is what we support.
+//
+// This class contains logic to help ParseMaps with this detection mechanism. The intended usage is
+// as follows:
+// - Create a new instance of this class when a new file is encountered while parsing
+//   `/proc/[pid]/maps`;
+// - Call `MarkExecutableMapEncountered` when encountering an executable file mapping for the file
+//   this instance was created for.
+// - Use `TryIfAnonExecMapIsCoffTextSection` to query if an anonymous executable mapping is actually
+//   the PE .text section of the file this instance was created for. This will only return true once
+//   for each instance of this class, as it calls `MarkExecutableMapEncountered` on success.
 class FileMappedIntoMemory {
  public:
   FileMappedIntoMemory(std::string file_path, uint64_t first_map_start, uint64_t first_map_offset)
@@ -203,9 +213,10 @@ ErrorMessageOr<std::vector<ModuleInfo>> ParseMaps(std::string_view proc_maps_dat
     std::vector<std::string> tokens = absl::StrSplit(line, absl::MaxSplits(' ', 5));
     if (tokens.size() < 5) continue;
 
-    // tokens[4] is the inode column. If inode equals 0, then the memory is not backed by a file.
+    const std::string& inode = tokens[4];
+    // If inode equals 0, then the memory is not backed by a file.
     // If a map not backed by a file has a name, it's a special one like [stack], [heap], etc.
-    if (tokens[4] == "0" && tokens.size() == 6) continue;
+    if (inode == "0" && tokens.size() == 6) continue;
 
     std::vector<std::string> addresses = absl::StrSplit(tokens[0], '-');
     if (addresses.size() != 2) continue;
@@ -215,7 +226,7 @@ ErrorMessageOr<std::vector<ModuleInfo>> ParseMaps(std::string_view proc_maps_dat
     uint64_t offset = std::stoull(tokens[2], nullptr, 16);
 
     std::string module_path;
-    if (tokens[4] != "0") {  // The mapping is file-backed.
+    if (inode != "0") {  // The mapping is file-backed.
       if (tokens.size() == 6) {
         absl::StripLeadingAsciiWhitespace(&tokens[5]);
         module_path = tokens[5];
@@ -224,6 +235,7 @@ ErrorMessageOr<std::vector<ModuleInfo>> ParseMaps(std::string_view proc_maps_dat
           last_file_mapped_into_memory.emplace(module_path, start, offset);
         }
       } else {  // Unexpected: the mapping is file-backed but no path is present.
+        ORBIT_ERROR("Map at %#x-%#x has inode %s (not 0) but no path", start, end, inode);
         last_file_mapped_into_memory.reset();
         continue;
       }
