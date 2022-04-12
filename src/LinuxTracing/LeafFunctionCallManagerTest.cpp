@@ -56,7 +56,8 @@ class MockLibunwindstackUnwinder : public LibunwindstackUnwinder {
               (pid_t, unwindstack::Maps*, (const std::array<uint64_t, PERF_REG_X86_64_MAX>&),
                const void*, uint64_t, bool, size_t),
               (override));
-  MOCK_METHOD(std::optional<bool>, HasFramePointerSet, (uint64_t, unwindstack::Maps*), (override));
+  MOCK_METHOD(std::optional<bool>, HasFramePointerSet, (uint64_t, pid_t, unwindstack::Maps*),
+              (override));
 };
 
 class LeafFunctionCallManagerTest : public ::testing::Test {
@@ -170,7 +171,7 @@ TEST_F(LeafFunctionCallManagerTest, PatchCallerOfLeafFunctionReturnsErrorOnSmall
 
   unwindstack::Maps fake_maps{};
   EXPECT_CALL(maps_, Get()).WillRepeatedly(Return(&fake_maps));
-  EXPECT_CALL(unwinder_, HasFramePointerSet(kTargetAddress1, &fake_maps))
+  EXPECT_CALL(unwinder_, HasFramePointerSet(kTargetAddress1, _, &fake_maps))
       .Times(1)
       .WillOnce(Return(std::make_optional<bool>(false)));
 
@@ -195,7 +196,7 @@ TEST_F(LeafFunctionCallManagerTest,
   unwindstack::Maps fake_maps{};
   EXPECT_CALL(maps_, Get()).WillRepeatedly(Return(&fake_maps));
 
-  EXPECT_CALL(unwinder_, HasFramePointerSet(kTargetAddress1, &fake_maps))
+  EXPECT_CALL(unwinder_, HasFramePointerSet(kTargetAddress1, _, &fake_maps))
       .Times(1)
       .WillOnce(Return(std::make_optional<bool>(true)));
 
@@ -220,7 +221,7 @@ TEST_F(LeafFunctionCallManagerTest,
   unwindstack::Maps fake_maps{};
   EXPECT_CALL(maps_, Get()).WillRepeatedly(Return(&fake_maps));
 
-  EXPECT_CALL(unwinder_, HasFramePointerSet(kTargetAddress1, &fake_maps))
+  EXPECT_CALL(unwinder_, HasFramePointerSet(kTargetAddress1, _, &fake_maps))
       .Times(1)
       .WillOnce(Return(std::nullopt));
 
@@ -243,7 +244,7 @@ TEST_F(LeafFunctionCallManagerTest, PatchCallerOfLeafFunctionReturnsErrorOnUnwin
 
   unwindstack::Maps fake_maps{};
   EXPECT_CALL(maps_, Get()).WillRepeatedly(Return(&fake_maps));
-  EXPECT_CALL(unwinder_, HasFramePointerSet(kTargetAddress1, &fake_maps))
+  EXPECT_CALL(unwinder_, HasFramePointerSet(kTargetAddress1, _, &fake_maps))
       .Times(1)
       .WillOnce(Return(std::make_optional<bool>(false)));
 
@@ -259,7 +260,7 @@ TEST_F(LeafFunctionCallManagerTest, PatchCallerOfLeafFunctionReturnsErrorOnUnwin
 
   ::testing::Mock::VerifyAndClearExpectations(&unwinder_);
 
-  EXPECT_CALL(unwinder_, HasFramePointerSet(kTargetAddress1, &fake_maps))
+  EXPECT_CALL(unwinder_, HasFramePointerSet(kTargetAddress1, _, &fake_maps))
       .Times(1)
       .WillOnce(Return(std::make_optional<bool>(false)));
 
@@ -296,7 +297,7 @@ TEST_F(LeafFunctionCallManagerTest, PatchCallerOfLeafFunctionReturnsErrorOnNoFra
 
   unwindstack::Maps fake_maps{};
   EXPECT_CALL(maps_, Get()).WillRepeatedly(Return(&fake_maps));
-  EXPECT_CALL(unwinder_, HasFramePointerSet(kTargetAddress1, &fake_maps))
+  EXPECT_CALL(unwinder_, HasFramePointerSet(kTargetAddress1, _, &fake_maps))
       .Times(1)
       .WillOnce(Return(std::make_optional<bool>(false)));
 
@@ -331,7 +332,7 @@ TEST_F(LeafFunctionCallManagerTest,
 
   unwindstack::Maps fake_maps{};
   EXPECT_CALL(maps_, Get()).WillRepeatedly(Return(&fake_maps));
-  EXPECT_CALL(unwinder_, HasFramePointerSet(kTargetAddress1, &fake_maps))
+  EXPECT_CALL(unwinder_, HasFramePointerSet(kTargetAddress1, _, &fake_maps))
       .Times(1)
       .WillOnce(Return(std::make_optional<bool>(false)));
 
@@ -364,7 +365,7 @@ TEST_F(LeafFunctionCallManagerTest,
 
   unwindstack::Maps fake_maps{};
   EXPECT_CALL(maps_, Get()).WillRepeatedly(Return(&fake_maps));
-  EXPECT_CALL(unwinder_, HasFramePointerSetFromDwarfSection(kTargetAddress1, &fake_maps))
+  EXPECT_CALL(unwinder_, HasFramePointerSet(kTargetAddress1, _, &fake_maps))
       .Times(1)
       .WillOnce(Return(std::make_optional<bool>(false)));
 

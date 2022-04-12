@@ -54,7 +54,7 @@ class LibunwindstackUnwinder {
   // Check if, for a given instruction pointer (absolute address), the frame pointer register is
   // set correctly. It may rely on debug information (like Dwarf .debug_frame). Returns an error
   // if the required debug information is not available.
-  virtual std::optional<bool> HasFramePointerSet(uint64_t instruction_pointer,
+  virtual std::optional<bool> HasFramePointerSet(uint64_t instruction_pointer, pid_t pid,
                                                  unwindstack::Maps* maps) = 0;
 
   static std::unique_ptr<LibunwindstackUnwinder> Create();

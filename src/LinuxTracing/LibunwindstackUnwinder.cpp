@@ -73,7 +73,7 @@ class LibunwindstackUnwinderImpl : public LibunwindstackUnwinder {
                               bool offline_memory_only = false,
                               size_t max_frames = kDefaultMaxFrames) override;
 
-  std::optional<bool> HasFramePointerSet(uint64_t instruction_pointer,
+  std::optional<bool> HasFramePointerSet(uint64_t instruction_pointer, pid_t pid,
                                          unwindstack::Maps* maps) override;
 
  private:
@@ -125,6 +125,7 @@ LibunwindstackResult LibunwindstackUnwinderImpl::Unwind(
 
   return LibunwindstackResult{unwinder.ConsumeFrames(), unwinder.LastErrorCode()};
 }
+
 // This functions detects if a frame pointer register was set in the given program counter using
 // the given Dwarf section.
 // It does so by verifying if "Canonical Frame Address" gets computed immediately from $rbp (with
@@ -172,15 +173,16 @@ static std::optional<bool> HasFramePointerSetFromDwarfSection(
 }
 
 std::optional<bool> LibunwindstackUnwinderImpl::HasFramePointerSet(uint64_t instruction_pointer,
+                                                                   pid_t pid,
                                                                    unwindstack::Maps* maps) {
   unwindstack::MapInfo* map_info = maps->Find(instruction_pointer);
   if (map_info == nullptr) {
     return std::nullopt;
   }
 
-  // We don't have enough process memory collected to read the object file from memory (if memory
-  // mapped), so we don't even try and directly read from file.
-  unwindstack::Object* object = map_info->GetObject(nullptr, unwindstack::ARCH_X86_64);
+  std::shared_ptr<unwindstack::Memory> process_memory =
+      unwindstack::Memory::CreateProcessMemoryCached(pid);
+  unwindstack::Object* object = map_info->GetObject(process_memory, unwindstack::ARCH_X86_64);
   if (object == nullptr) {
     return std::nullopt;
   }
@@ -191,13 +193,14 @@ std::optional<bool> LibunwindstackUnwinderImpl::HasFramePointerSet(uint64_t inst
     return false;
   }
 
-  if (!elf->valid()) {
+  unwindstack::ElfInterface* elf_interface = elf->interface();
+  if (!elf->valid() || elf_interface == nullptr) {
     return std::nullopt;
   }
 
   uint64_t rel_pc = object->GetRelPc(instruction_pointer, map_info);
 
-  unwindstack::DwarfSection* debug_frame = elf->interface()->debug_frame();
+  unwindstack::DwarfSection* debug_frame = elf_interface->debug_frame();
 
   auto has_frame_pointer_set_from_debug_frame_or_error =
       orbit_linux_tracing::HasFramePointerSetFromDwarfSection(rel_pc, debug_frame,

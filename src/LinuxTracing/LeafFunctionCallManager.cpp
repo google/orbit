@@ -56,7 +56,7 @@ Callstack::CallstackType LeafFunctionCallManager::PatchCallerOfLeafFunction(
   }
 
   std::optional<bool> has_frame_pointer_or_error =
-      unwinder->HasFramePointerSet(rip, current_maps->Get());
+      unwinder->HasFramePointerSet(rip, event_data->pid, current_maps->Get());
 
   // If retrieving the debug information already failed here, we don't need to try unwinding.
   if (!has_frame_pointer_or_error.has_value()) {

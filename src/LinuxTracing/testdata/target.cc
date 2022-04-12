@@ -1,3 +1,7 @@
+// Copyright (c) 2022 The Orbit Authors. All rights reserved.
+// Use of this source code is governed by a BSD-style license that can be
+// found in the LICENSE file.
+
 // g++ target.cc -O0 -fno-omit-frame-pointer -momit-leaf-frame-pointer -o target_fp
 // g++ target.cc -O0 -fomit-frame-pointer -o target_no_fp
 
