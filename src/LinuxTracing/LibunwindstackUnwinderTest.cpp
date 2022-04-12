@@ -132,17 +132,6 @@ TEST(LibunwindstackUnwinder, DetectsFramePointerNotSetAtMovRspToRbp) {
   EXPECT_FALSE(has_frame_pointer_set_or_error.value());
 }
 
-TEST(LibunwindstackUnwinder, DetectsFramePointerNotSetAtRet) {
-  auto unwinder = LibunwindstackUnwinder::Create();
-
-  auto maps = CreateFakeMapsEntry("target_fp");
-
-  std::optional<bool> has_frame_pointer_set_or_error =
-      unwinder->HasFramePointerSet(0x1279, kProcessId, maps->Get());
-
-  ASSERT_TRUE(has_frame_pointer_set_or_error.has_value());
-  EXPECT_FALSE(has_frame_pointer_set_or_error.value());
-}
 TEST(LibunwindstackUnwinder, DetectsFramePointerSetAtLeave) {
   auto unwinder = LibunwindstackUnwinder::Create();
 
@@ -153,6 +142,18 @@ TEST(LibunwindstackUnwinder, DetectsFramePointerSetAtLeave) {
 
   ASSERT_TRUE(has_frame_pointer_set_or_error.has_value());
   EXPECT_TRUE(has_frame_pointer_set_or_error.value());
+}
+
+TEST(LibunwindstackUnwinder, DetectsFramePointerNotSetAtRet) {
+  auto unwinder = LibunwindstackUnwinder::Create();
+
+  auto maps = CreateFakeMapsEntry("target_fp");
+
+  std::optional<bool> has_frame_pointer_set_or_error =
+      unwinder->HasFramePointerSet(0x1279, kProcessId, maps->Get());
+
+  ASSERT_TRUE(has_frame_pointer_set_or_error.has_value());
+  EXPECT_FALSE(has_frame_pointer_set_or_error.value());
 }
 
 TEST(LibunwindstackUnwinder, FramePointerDetectionWorksWithCaching) {
