@@ -103,7 +103,13 @@ struct SectionHeader {
 // is already looked up in the string table.
 struct Section {
   Section() : name(""), vmsize(0), vmaddr(0), size(0), offset(0) {}
-
+  Section(std::string name_arg, uint32_t vmsize_arg, uint32_t vmaddr_arg, uint32_t size_arg,
+          uint32_t offset_arg)
+      : name(std::move(name_arg)),
+        vmsize(vmsize_arg),
+        vmaddr(vmaddr_arg),
+        size(size_arg),
+        offset(offset_arg) {}
   std::string name;
   uint32_t vmsize;
   uint32_t vmaddr;

@@ -14,11 +14,12 @@
  * limitations under the License.
  */
 
-#include "PeCoffUnwindInfoUnwinderX86_64.h"
+#include "PeCoffUnwindInfoEvaluator.h"
 
 #include <algorithm>
 #include <limits>
 
+#include "PeCoffUnwindInfos.h"
 #include "unwindstack/Error.h"
 #include "unwindstack/MachineX86_64.h"
 #include "unwindstack/RegsX86_64.h"
@@ -26,17 +27,24 @@
 
 #include "Check.h"
 
+#include <gmock/gmock.h>
 #include <gtest/gtest.h>
 
 namespace unwindstack {
 
-class PeCoffUnwindInfoUnwinderX86_64Test : public ::testing::Test {
+class MockPeCoffUnwindInfos : public PeCoffUnwindInfos {
  public:
-  PeCoffUnwindInfoUnwinderX86_64Test()
-      : object_file_memory_fake_(new MemoryFake),
-        unwinder_(object_file_memory_fake_.get()),
+  MockPeCoffUnwindInfos() {}
+
+  MOCK_METHOD(bool, GetUnwindInfo, (uint64_t, UnwindInfo*), (override));
+};
+
+class PeCoffUnwindInfoEvaluatorTest : public ::testing::Test {
+ public:
+  PeCoffUnwindInfoEvaluatorTest()
+      : unwind_info_evaluator_(CreatePeCoffUnwindInfoEvaluator()),
         process_mem_fake_(new MemoryFake) {}
-  ~PeCoffUnwindInfoUnwinderX86_64Test() {}
+  ~PeCoffUnwindInfoEvaluatorTest() {}
 
   // See
   // https://docs.microsoft.com/en-us/cpp/build/exception-handling-x64?view=msvc-160#operation-info
@@ -356,61 +364,29 @@ class PeCoffUnwindInfoUnwinderX86_64Test : public ::testing::Test {
     *unwind_info = new_unwind_info;
   }
 
-  uint64_t WriteUnwindInfoToFakeObjectFile(uint32_t file_offset, const UnwindInfo& unwind_info) {
-    uint64_t offset = file_offset;
-    object_file_memory_fake_->SetData8(offset, unwind_info.version_and_flags);
-    offset += sizeof(uint8_t);
-    object_file_memory_fake_->SetData8(offset, unwind_info.prolog_size);
-    offset += sizeof(uint8_t);
-    object_file_memory_fake_->SetData8(offset, unwind_info.num_codes);
-    offset += sizeof(uint8_t);
-    object_file_memory_fake_->SetData8(offset, unwind_info.frame_register_and_offset);
-    offset += sizeof(uint8_t);
-    for (const auto& unwind_code : unwind_info.unwind_codes) {
-      object_file_memory_fake_->SetData16(offset, unwind_code.frame_offset);
-      offset += sizeof(uint16_t);
-    }
-    // If the number of unwind codes is not even, add padding per specification.
-    if (unwind_info.unwind_codes.size() % 2 != 0) {
-      object_file_memory_fake_->SetData16(offset, 0x0000);
-      offset += sizeof(uint16_t);
-    }
-
-    if (unwind_info.HasChainedInfo()) {
-      object_file_memory_fake_->SetData32(offset, unwind_info.chained_info.start_address);
-      offset += sizeof(uint32_t);
-      object_file_memory_fake_->SetData32(offset, unwind_info.chained_info.end_address);
-      offset += sizeof(uint32_t);
-      object_file_memory_fake_->SetData32(offset, unwind_info.chained_info.unwind_info_offset);
-      offset += sizeof(uint32_t);
-    }
-
-    return offset;
-  }
-
  protected:
-  std::unique_ptr<MemoryFake> object_file_memory_fake_;
-  PeCoffUnwindInfoUnwinderX86_64 unwinder_;
+  std::unique_ptr<PeCoffUnwindInfoEvaluator> unwind_info_evaluator_;
   std::unique_ptr<MemoryFake> process_mem_fake_;
+
+  MockPeCoffUnwindInfos mock_unwind_infos_;
 
   // Stack pointer, 16-byte aligned, starting with a large value as we grow downwards
   uint64_t stack_pointer_ = std::numeric_limits<uint64_t>::max() & ~0x0F;
 };
 
-TEST_F(PeCoffUnwindInfoUnwinderX86_64Test, eval_fails_inconsistent_num_codes) {
+TEST_F(PeCoffUnwindInfoEvaluatorTest, eval_fails_inconsistent_num_codes) {
   UnwindInfo unwind_info;
   unwind_info.num_codes = 2;
 
   RegsX86_64 regs;
   constexpr uint64_t kCodeOffset = 0x0;
-  uint64_t frame_pointer = 0;
-  bool frame_pointer_used = false;
 
-  EXPECT_FALSE(unwinder_.Eval(process_mem_fake_.get(), &regs, unwind_info, kCodeOffset,
-                              &frame_pointer, &frame_pointer_used));
+
+  EXPECT_FALSE(unwind_info_evaluator_->Eval(process_mem_fake_.get(), &regs, unwind_info,
+                                            &mock_unwind_infos_, kCodeOffset));
 }
 
-TEST_F(PeCoffUnwindInfoUnwinderX86_64Test, eval_fails_with_unsupported_machframe_instruction) {
+TEST_F(PeCoffUnwindInfoEvaluatorTest, eval_fails_with_unsupported_machframe_instruction) {
   UnwindCode unwind_code;
   unwind_code.code_and_op.code_offset = 1;
   unwind_code.code_and_op.unwind_op_and_op_info = PackUnwindOpAndOpInfo(UWOP_PUSH_MACHFRAME, 0x00);
@@ -421,15 +397,13 @@ TEST_F(PeCoffUnwindInfoUnwinderX86_64Test, eval_fails_with_unsupported_machframe
 
   RegsX86_64 regs;
   constexpr uint64_t kCodeOffset = 0x0;
-  uint64_t frame_pointer = 0;
-  bool frame_pointer_used = false;
 
-  EXPECT_FALSE(unwinder_.Eval(process_mem_fake_.get(), &regs, unwind_info, kCodeOffset,
-                              &frame_pointer, &frame_pointer_used));
-  EXPECT_EQ(unwinder_.GetLastError().code, ERROR_UNSUPPORTED);
+  EXPECT_FALSE(unwind_info_evaluator_->Eval(process_mem_fake_.get(), &regs, unwind_info,
+                                            &mock_unwind_infos_, kCodeOffset));
+  EXPECT_EQ(unwind_info_evaluator_->GetLastError().code, ERROR_UNSUPPORTED);
 }
 
-TEST_F(PeCoffUnwindInfoUnwinderX86_64Test, eval_fails_with_unsupported_unwind_instruction) {
+TEST_F(PeCoffUnwindInfoEvaluatorTest, eval_fails_with_unsupported_unwind_instruction) {
   UnwindCode unwind_code;
   unwind_code.code_and_op.code_offset = 1;
   unwind_code.code_and_op.unwind_op_and_op_info =
@@ -441,15 +415,13 @@ TEST_F(PeCoffUnwindInfoUnwinderX86_64Test, eval_fails_with_unsupported_unwind_in
 
   RegsX86_64 regs;
   constexpr uint64_t kCodeOffset = 0x0;
-  uint64_t frame_pointer = 0;
-  bool frame_pointer_used = false;
 
-  EXPECT_FALSE(unwinder_.Eval(process_mem_fake_.get(), &regs, unwind_info, kCodeOffset,
-                              &frame_pointer, &frame_pointer_used));
-  EXPECT_EQ(unwinder_.GetLastError().code, ERROR_INVALID_COFF);
+  EXPECT_FALSE(unwind_info_evaluator_->Eval(process_mem_fake_.get(), &regs, unwind_info,
+                                            &mock_unwind_infos_, kCodeOffset));
+  EXPECT_EQ(unwind_info_evaluator_->GetLastError().code, ERROR_INVALID_COFF);
 }
 
-TEST_F(PeCoffUnwindInfoUnwinderX86_64Test, eval_succeeds_pushed_registers_only) {
+TEST_F(PeCoffUnwindInfoEvaluatorTest, eval_succeeds_pushed_registers_only) {
   std::vector<PushOp> push_ops;
   push_ops.emplace_back(PushOp{RDI, 0x100});
   push_ops.emplace_back(PushOp{RSI, 0x200});
@@ -465,14 +437,11 @@ TEST_F(PeCoffUnwindInfoUnwinderX86_64Test, eval_succeeds_pushed_registers_only) 
   RegsX86_64 regs;
   // We use unwind_info.prolog_size to unwind using all unwind codes.
   uint64_t code_offset = unwind_info.prolog_size;
-  uint64_t frame_pointer = 0;
-  bool frame_pointer_used = false;
 
   regs.set_sp(stack_pointer_);
 
-  EXPECT_TRUE(unwinder_.Eval(process_mem_fake_.get(), &regs, unwind_info, code_offset,
-                             &frame_pointer, &frame_pointer_used));
-  EXPECT_FALSE(frame_pointer_used);
+  EXPECT_TRUE(unwind_info_evaluator_->Eval(process_mem_fake_.get(), &regs, unwind_info,
+                                           &mock_unwind_infos_, code_offset));
 
   EXPECT_EQ(regs.sp(), stack_pointer_ + 3 * sizeof(uint64_t));
   EXPECT_EQ(regs[X86_64Reg::X86_64_REG_RDI], 0x100);
@@ -486,12 +455,12 @@ TEST_F(PeCoffUnwindInfoUnwinderX86_64Test, eval_succeeds_pushed_registers_only) 
 
   // Also validate that we skip successfully if code offset is before the unwind op.
   regs.set_sp(stack_pointer_);
-  EXPECT_TRUE(unwinder_.Eval(process_mem_fake_.get(), &regs, unwind_info, 0, &frame_pointer,
-                             &frame_pointer_used));
+  EXPECT_TRUE(unwind_info_evaluator_->Eval(process_mem_fake_.get(), &regs, unwind_info,
+                                           &mock_unwind_infos_, 0));
   EXPECT_EQ(regs.sp(), stack_pointer_);
 }
 
-TEST_F(PeCoffUnwindInfoUnwinderX86_64Test, eval_fails_invalid_memory_in_push_register_operation) {
+TEST_F(PeCoffUnwindInfoEvaluatorTest, eval_fails_invalid_memory_in_push_register_operation) {
   std::vector<PushOp> push_ops;
   push_ops.emplace_back(PushOp{RDI, 0x100});
 
@@ -501,20 +470,18 @@ TEST_F(PeCoffUnwindInfoUnwinderX86_64Test, eval_fails_invalid_memory_in_push_reg
 
   RegsX86_64 regs;
   uint64_t code_offset = unwind_info.prolog_size;
-  uint64_t frame_pointer = 0;
-  bool frame_pointer_used = false;
 
   regs.set_sp(stack_pointer_);
 
   process_mem_fake_->Clear();
 
-  EXPECT_FALSE(unwinder_.Eval(process_mem_fake_.get(), &regs, unwind_info, code_offset,
-                              &frame_pointer, &frame_pointer_used));
-  EXPECT_EQ(unwinder_.GetLastError().code, ERROR_MEMORY_INVALID);
-  EXPECT_EQ(unwinder_.GetLastError().address, regs.sp());
+  EXPECT_FALSE(unwind_info_evaluator_->Eval(process_mem_fake_.get(), &regs, unwind_info,
+                                            &mock_unwind_infos_, code_offset));
+  EXPECT_EQ(unwind_info_evaluator_->GetLastError().code, ERROR_MEMORY_INVALID);
+  EXPECT_EQ(unwind_info_evaluator_->GetLastError().address, regs.sp());
 }
 
-TEST_F(PeCoffUnwindInfoUnwinderX86_64Test, eval_succeeds_small_allocation) {
+TEST_F(PeCoffUnwindInfoEvaluatorTest, eval_succeeds_small_allocation) {
   constexpr uint64_t kReturnAddress = 0x2000;
   constexpr uint32_t kAllocation = 32;
   UnwindInfo unwind_info;
@@ -526,15 +493,12 @@ TEST_F(PeCoffUnwindInfoUnwinderX86_64Test, eval_succeeds_small_allocation) {
 
   RegsX86_64 regs;
   uint64_t code_offset = unwind_info.prolog_size;
-  uint64_t frame_pointer = 0;
-  bool frame_pointer_used = false;
 
   regs.set_sp(stack_pointer_);
 
   // We use unwind_info.prolog_size to unwind using all unwind codes.
-  EXPECT_TRUE(unwinder_.Eval(process_mem_fake_.get(), &regs, unwind_info, code_offset,
-                             &frame_pointer, &frame_pointer_used));
-  EXPECT_FALSE(frame_pointer_used);
+  EXPECT_TRUE(unwind_info_evaluator_->Eval(process_mem_fake_.get(), &regs, unwind_info,
+                                           &mock_unwind_infos_, code_offset));
   EXPECT_EQ(regs.sp(), stack_pointer_ + kAllocation);
 
   // Validate that stack pointer points to the return address.
@@ -544,12 +508,12 @@ TEST_F(PeCoffUnwindInfoUnwinderX86_64Test, eval_succeeds_small_allocation) {
 
   // Also validate that we skip successfully if code offset is before the unwind op.
   regs.set_sp(stack_pointer_);
-  EXPECT_TRUE(unwinder_.Eval(process_mem_fake_.get(), &regs, unwind_info, 0, &frame_pointer,
-                             &frame_pointer_used));
+  EXPECT_TRUE(unwind_info_evaluator_->Eval(process_mem_fake_.get(), &regs, unwind_info,
+                                           &mock_unwind_infos_, 0));
   EXPECT_EQ(regs.sp(), stack_pointer_);
 }
 
-TEST_F(PeCoffUnwindInfoUnwinderX86_64Test, eval_succeeds_large_allocation_op_info_zero) {
+TEST_F(PeCoffUnwindInfoEvaluatorTest, eval_succeeds_large_allocation_op_info_zero) {
   constexpr uint64_t kReturnAddress = 0x2000;
   constexpr uint32_t kAllocation = 1024;
   UnwindInfo unwind_info;
@@ -564,15 +528,12 @@ TEST_F(PeCoffUnwindInfoUnwinderX86_64Test, eval_succeeds_large_allocation_op_inf
 
   RegsX86_64 regs;
   uint64_t code_offset = unwind_info.prolog_size;
-  uint64_t frame_pointer = 0;
-  bool frame_pointer_used = false;
 
   regs.set_sp(stack_pointer_);
 
   // We use unwind_info.prolog_size to unwind using all unwind codes.
-  EXPECT_TRUE(unwinder_.Eval(process_mem_fake_.get(), &regs, unwind_info, code_offset,
-                             &frame_pointer, &frame_pointer_used));
-  EXPECT_FALSE(frame_pointer_used);
+  EXPECT_TRUE(unwind_info_evaluator_->Eval(process_mem_fake_.get(), &regs, unwind_info,
+                                           &mock_unwind_infos_, code_offset));
   EXPECT_EQ(regs.sp(), stack_pointer_ + kAllocation);
 
   // Validate that stack pointer points to the return address.
@@ -582,12 +543,12 @@ TEST_F(PeCoffUnwindInfoUnwinderX86_64Test, eval_succeeds_large_allocation_op_inf
 
   // Also validate that we skip successfully if code offset is before the unwind op.
   regs.set_sp(stack_pointer_);
-  EXPECT_TRUE(unwinder_.Eval(process_mem_fake_.get(), &regs, unwind_info, 0, &frame_pointer,
-                             &frame_pointer_used));
+  EXPECT_TRUE(unwind_info_evaluator_->Eval(process_mem_fake_.get(), &regs, unwind_info,
+                                           &mock_unwind_infos_, 0));
   EXPECT_EQ(regs.sp(), stack_pointer_);
 }
 
-TEST_F(PeCoffUnwindInfoUnwinderX86_64Test,
+TEST_F(PeCoffUnwindInfoEvaluatorTest,
        eval_fails_in_large_allocation_opinfo_zero_with_incomplete_opcodes) {
   constexpr uint32_t kAllocation = 1024;
   UnwindInfo unwind_info;
@@ -603,16 +564,14 @@ TEST_F(PeCoffUnwindInfoUnwinderX86_64Test,
 
   RegsX86_64 regs;
   uint64_t code_offset = unwind_info.prolog_size;
-  uint64_t frame_pointer = 0;
-  bool frame_pointer_used = false;
 
   // We use unwind_info.prolog_size to unwind using all unwind codes.
-  EXPECT_FALSE(unwinder_.Eval(process_mem_fake_.get(), &regs, unwind_info, code_offset,
-                              &frame_pointer, &frame_pointer_used));
-  EXPECT_EQ(unwinder_.GetLastError().code, ERROR_INVALID_COFF);
+  EXPECT_FALSE(unwind_info_evaluator_->Eval(process_mem_fake_.get(), &regs, unwind_info,
+                                            &mock_unwind_infos_, code_offset));
+  EXPECT_EQ(unwind_info_evaluator_->GetLastError().code, ERROR_INVALID_COFF);
 }
 
-TEST_F(PeCoffUnwindInfoUnwinderX86_64Test, eval_succeeds_large_allocation_op_info_one) {
+TEST_F(PeCoffUnwindInfoEvaluatorTest, eval_succeeds_large_allocation_op_info_one) {
   constexpr uint64_t kReturnAddress = 0x2000;
   constexpr uint32_t kAllocation = 8 * 100 * 1024;
   UnwindInfo unwind_info;
@@ -628,14 +587,11 @@ TEST_F(PeCoffUnwindInfoUnwinderX86_64Test, eval_succeeds_large_allocation_op_inf
   RegsX86_64 regs;
   // We use unwind_info.prolog_size to unwind using all unwind codes.
   uint64_t code_offset = unwind_info.prolog_size;
-  uint64_t frame_pointer = 0;
-  bool frame_pointer_used = false;
 
   regs.set_sp(stack_pointer_);
 
-  EXPECT_TRUE(unwinder_.Eval(process_mem_fake_.get(), &regs, unwind_info, code_offset,
-                             &frame_pointer, &frame_pointer_used));
-  EXPECT_FALSE(frame_pointer_used);
+  EXPECT_TRUE(unwind_info_evaluator_->Eval(process_mem_fake_.get(), &regs, unwind_info,
+                                           &mock_unwind_infos_, code_offset));
   EXPECT_EQ(regs.sp(), stack_pointer_ + kAllocation);
 
   // Validate that stack pointer points to the return address.
@@ -645,12 +601,12 @@ TEST_F(PeCoffUnwindInfoUnwinderX86_64Test, eval_succeeds_large_allocation_op_inf
 
   // Also validate that we skip successfully if code offset is before the unwind op.
   regs.set_sp(stack_pointer_);
-  EXPECT_TRUE(unwinder_.Eval(process_mem_fake_.get(), &regs, unwind_info, 0, &frame_pointer,
-                             &frame_pointer_used));
+  EXPECT_TRUE(unwind_info_evaluator_->Eval(process_mem_fake_.get(), &regs, unwind_info,
+                                           &mock_unwind_infos_, 0));
   EXPECT_EQ(regs.sp(), stack_pointer_);
 }
 
-TEST_F(PeCoffUnwindInfoUnwinderX86_64Test,
+TEST_F(PeCoffUnwindInfoEvaluatorTest,
        eval_fails_in_large_allocation_opinfo_one_with_incomplete_opcodes) {
   constexpr uint32_t kAllocation = 8 * 100 * 1024;
   UnwindInfo unwind_info;
@@ -666,17 +622,14 @@ TEST_F(PeCoffUnwindInfoUnwinderX86_64Test,
 
   RegsX86_64 regs;
   uint64_t code_offset = unwind_info.prolog_size;
-  uint64_t frame_pointer = 0;
-  bool frame_pointer_used = false;
 
   // We use unwind_info.prolog_size to unwind using all unwind codes.
-  EXPECT_FALSE(unwinder_.Eval(process_mem_fake_.get(), &regs, unwind_info, code_offset,
-                              &frame_pointer, &frame_pointer_used));
-  EXPECT_EQ(unwinder_.GetLastError().code, ERROR_INVALID_COFF);
+  EXPECT_FALSE(unwind_info_evaluator_->Eval(process_mem_fake_.get(), &regs, unwind_info,
+                                            &mock_unwind_infos_, code_offset));
+  EXPECT_EQ(unwind_info_evaluator_->GetLastError().code, ERROR_INVALID_COFF);
 }
 
-TEST_F(PeCoffUnwindInfoUnwinderX86_64Test,
-       eval_succeeds_stack_allocation_and_saved_registers_only) {
+TEST_F(PeCoffUnwindInfoEvaluatorTest, eval_succeeds_stack_allocation_and_saved_registers_only) {
   constexpr uint64_t kReturnAddress = 0x2000;
   constexpr uint32_t kAllocation = 1024;
 
@@ -696,14 +649,11 @@ TEST_F(PeCoffUnwindInfoUnwinderX86_64Test,
 
   RegsX86_64 regs;
   uint64_t code_offset = unwind_info.prolog_size;
-  uint64_t frame_pointer = 0;
-  bool frame_pointer_used = false;
 
   regs.set_sp(stack_pointer_);
 
-  EXPECT_TRUE(unwinder_.Eval(process_mem_fake_.get(), &regs, unwind_info, code_offset,
-                             &frame_pointer, &frame_pointer_used));
-  EXPECT_FALSE(frame_pointer_used);
+  EXPECT_TRUE(unwind_info_evaluator_->Eval(process_mem_fake_.get(), &regs, unwind_info,
+                                           &mock_unwind_infos_, code_offset));
   EXPECT_EQ(regs.sp(), stack_pointer_ + kAllocation);
 
   // Validate that stack pointer points to the return address.
@@ -718,12 +668,12 @@ TEST_F(PeCoffUnwindInfoUnwinderX86_64Test,
 
   // Also validate that we skip successfully if code offset is before the unwind op.
   regs.set_sp(stack_pointer_);
-  EXPECT_TRUE(unwinder_.Eval(process_mem_fake_.get(), &regs, unwind_info, 0, &frame_pointer,
-                             &frame_pointer_used));
+  EXPECT_TRUE(unwind_info_evaluator_->Eval(process_mem_fake_.get(), &regs, unwind_info,
+                                           &mock_unwind_infos_, 0));
   EXPECT_EQ(regs.sp(), stack_pointer_);
 }
 
-TEST_F(PeCoffUnwindInfoUnwinderX86_64Test, eval_fails_saved_registers_invalid_memory) {
+TEST_F(PeCoffUnwindInfoEvaluatorTest, eval_fails_saved_registers_invalid_memory) {
   std::vector<SaveOp> save_ops;
   save_ops.emplace_back(SaveOp{RDI, 0x100, 0x20});
 
@@ -735,18 +685,16 @@ TEST_F(PeCoffUnwindInfoUnwinderX86_64Test, eval_fails_saved_registers_invalid_me
 
   RegsX86_64 regs;
   uint64_t code_offset = unwind_info.prolog_size;
-  uint64_t frame_pointer = 0;
-  bool frame_pointer_used = false;
 
   regs.set_sp(stack_pointer_);
   process_mem_fake_->Clear();
 
-  EXPECT_FALSE(unwinder_.Eval(process_mem_fake_.get(), &regs, unwind_info, code_offset,
-                              &frame_pointer, &frame_pointer_used));
-  EXPECT_EQ(unwinder_.GetLastError().code, ERROR_MEMORY_INVALID);
+  EXPECT_FALSE(unwind_info_evaluator_->Eval(process_mem_fake_.get(), &regs, unwind_info,
+                                            &mock_unwind_infos_, code_offset));
+  EXPECT_EQ(unwind_info_evaluator_->GetLastError().code, ERROR_MEMORY_INVALID);
 }
 
-TEST_F(PeCoffUnwindInfoUnwinderX86_64Test, eval_fails_saved_registers_opcode_incomplete) {
+TEST_F(PeCoffUnwindInfoEvaluatorTest, eval_fails_saved_registers_opcode_incomplete) {
   std::vector<SaveOp> save_ops;
   save_ops.emplace_back(SaveOp{RDI, 0x100, 0x20});
 
@@ -761,17 +709,15 @@ TEST_F(PeCoffUnwindInfoUnwinderX86_64Test, eval_fails_saved_registers_opcode_inc
 
   RegsX86_64 regs;
   uint64_t code_offset = unwind_info.prolog_size;
-  uint64_t frame_pointer;
-  bool frame_pointer_used;
 
   regs.set_sp(stack_pointer_);
 
-  EXPECT_FALSE(unwinder_.Eval(process_mem_fake_.get(), &regs, unwind_info, code_offset,
-                              &frame_pointer, &frame_pointer_used));
-  EXPECT_EQ(unwinder_.GetLastError().code, ERROR_INVALID_COFF);
+  EXPECT_FALSE(unwind_info_evaluator_->Eval(process_mem_fake_.get(), &regs, unwind_info,
+                                            &mock_unwind_infos_, code_offset));
+  EXPECT_EQ(unwind_info_evaluator_->GetLastError().code, ERROR_INVALID_COFF);
 }
 
-TEST_F(PeCoffUnwindInfoUnwinderX86_64Test,
+TEST_F(PeCoffUnwindInfoEvaluatorTest,
        eval_succeeds_stack_allocation_and_saved_registers_large_offsets_only) {
   constexpr uint64_t kReturnAddress = 0x2000;
   constexpr uint32_t kAllocation = 8 * 100 * 1024;
@@ -792,14 +738,11 @@ TEST_F(PeCoffUnwindInfoUnwinderX86_64Test,
 
   RegsX86_64 regs;
   uint64_t code_offset = unwind_info.prolog_size;
-  uint64_t frame_pointer = 0;
-  bool frame_pointer_used = false;
 
   regs.set_sp(stack_pointer_);
 
-  EXPECT_TRUE(unwinder_.Eval(process_mem_fake_.get(), &regs, unwind_info, code_offset,
-                             &frame_pointer, &frame_pointer_used));
-  EXPECT_FALSE(frame_pointer_used);
+  EXPECT_TRUE(unwind_info_evaluator_->Eval(process_mem_fake_.get(), &regs, unwind_info,
+                                           &mock_unwind_infos_, code_offset));
   EXPECT_EQ(regs.sp(), stack_pointer_ + kAllocation);
 
   // Validate that stack pointer points to the return address.
@@ -814,12 +757,12 @@ TEST_F(PeCoffUnwindInfoUnwinderX86_64Test,
 
   // Also validate that we skip succeessfully if code offset is before the unwind op.
   regs.set_sp(stack_pointer_);
-  EXPECT_TRUE(unwinder_.Eval(process_mem_fake_.get(), &regs, unwind_info, 0, &frame_pointer,
-                             &frame_pointer_used));
+  EXPECT_TRUE(unwind_info_evaluator_->Eval(process_mem_fake_.get(), &regs, unwind_info,
+                                           &mock_unwind_infos_, 0));
   EXPECT_EQ(regs.sp(), stack_pointer_);
 }
 
-TEST_F(PeCoffUnwindInfoUnwinderX86_64Test, eval_fails_saved_registers_far_opcode_invalid_memory) {
+TEST_F(PeCoffUnwindInfoEvaluatorTest, eval_fails_saved_registers_far_opcode_invalid_memory) {
   constexpr uint32_t kLargeOffset = 8 * 100 * 1024;
 
   std::vector<SaveOp> save_ops;
@@ -833,18 +776,16 @@ TEST_F(PeCoffUnwindInfoUnwinderX86_64Test, eval_fails_saved_registers_far_opcode
 
   RegsX86_64 regs;
   uint64_t code_offset = unwind_info.prolog_size;
-  uint64_t frame_pointer = 0;
-  bool frame_pointer_used = false;
 
   regs.set_sp(stack_pointer_);
   process_mem_fake_->Clear();
 
-  EXPECT_FALSE(unwinder_.Eval(process_mem_fake_.get(), &regs, unwind_info, code_offset,
-                              &frame_pointer, &frame_pointer_used));
-  EXPECT_EQ(unwinder_.GetLastError().code, ERROR_MEMORY_INVALID);
+  EXPECT_FALSE(unwind_info_evaluator_->Eval(process_mem_fake_.get(), &regs, unwind_info,
+                                            &mock_unwind_infos_, code_offset));
+  EXPECT_EQ(unwind_info_evaluator_->GetLastError().code, ERROR_MEMORY_INVALID);
 }
 
-TEST_F(PeCoffUnwindInfoUnwinderX86_64Test, eval_fails_saved_registers_far_opcode_incomplete) {
+TEST_F(PeCoffUnwindInfoEvaluatorTest, eval_fails_saved_registers_far_opcode_incomplete) {
   constexpr uint32_t kLargeOffset = 8 * 100 * 1024;
 
   std::vector<SaveOp> save_ops;
@@ -861,15 +802,13 @@ TEST_F(PeCoffUnwindInfoUnwinderX86_64Test, eval_fails_saved_registers_far_opcode
 
   RegsX86_64 regs;
   uint64_t code_offset = unwind_info.prolog_size;
-  uint64_t frame_pointer = 0;
-  bool frame_pointer_used = false;
 
-  EXPECT_FALSE(unwinder_.Eval(process_mem_fake_.get(), &regs, unwind_info, code_offset,
-                              &frame_pointer, &frame_pointer_used));
-  EXPECT_EQ(unwinder_.GetLastError().code, ERROR_INVALID_COFF);
+  EXPECT_FALSE(unwind_info_evaluator_->Eval(process_mem_fake_.get(), &regs, unwind_info,
+                                            &mock_unwind_infos_, code_offset));
+  EXPECT_EQ(unwind_info_evaluator_->GetLastError().code, ERROR_INVALID_COFF);
 }
 
-TEST_F(PeCoffUnwindInfoUnwinderX86_64Test,
+TEST_F(PeCoffUnwindInfoEvaluatorTest,
        eval_succeeds_stack_allocation_and_saved_xmm128_registers_small_offsets) {
   constexpr uint64_t kReturnAddress = 0x2000;
   constexpr uint32_t kAllocation = 1024;
@@ -889,14 +828,11 @@ TEST_F(PeCoffUnwindInfoUnwinderX86_64Test,
 
   RegsX86_64 regs;
   uint64_t code_offset = unwind_info.prolog_size;
-  uint64_t frame_pointer = 0;
-  bool frame_pointer_used = false;
 
   regs.set_sp(stack_pointer_);
 
-  EXPECT_TRUE(unwinder_.Eval(process_mem_fake_.get(), &regs, unwind_info, code_offset,
-                             &frame_pointer, &frame_pointer_used));
-  EXPECT_FALSE(frame_pointer_used);
+  EXPECT_TRUE(unwind_info_evaluator_->Eval(process_mem_fake_.get(), &regs, unwind_info,
+                                           &mock_unwind_infos_, code_offset));
   EXPECT_EQ(regs.sp(), stack_pointer_ + kAllocation);
 
   // Validate that stack pointer points to the return address.
@@ -906,12 +842,12 @@ TEST_F(PeCoffUnwindInfoUnwinderX86_64Test,
 
   // Also validate that we skip successfully if code offset is before the unwind op.
   regs.set_sp(stack_pointer_);
-  EXPECT_TRUE(unwinder_.Eval(process_mem_fake_.get(), &regs, unwind_info, 0, &frame_pointer,
-                             &frame_pointer_used));
+  EXPECT_TRUE(unwind_info_evaluator_->Eval(process_mem_fake_.get(), &regs, unwind_info,
+                                           &mock_unwind_infos_, 0));
   EXPECT_EQ(regs.sp(), stack_pointer_);
 }
 
-TEST_F(PeCoffUnwindInfoUnwinderX86_64Test,
+TEST_F(PeCoffUnwindInfoEvaluatorTest,
        eval_succeeds_stack_allocation_and_saved_xmm128_registers_large_offsets_only) {
   constexpr uint64_t kReturnAddress = 0x2000;
   constexpr uint32_t kAllocation = 16 * 100 * 1024;
@@ -933,14 +869,11 @@ TEST_F(PeCoffUnwindInfoUnwinderX86_64Test,
 
   RegsX86_64 regs;
   uint64_t code_offset = unwind_info.prolog_size;
-  uint64_t frame_pointer = 0;
-  bool frame_pointer_used = false;
 
   regs.set_sp(stack_pointer_);
 
-  EXPECT_TRUE(unwinder_.Eval(process_mem_fake_.get(), &regs, unwind_info, code_offset,
-                             &frame_pointer, &frame_pointer_used));
-  EXPECT_FALSE(frame_pointer_used);
+  EXPECT_TRUE(unwind_info_evaluator_->Eval(process_mem_fake_.get(), &regs, unwind_info,
+                                           &mock_unwind_infos_, code_offset));
   EXPECT_EQ(regs.sp(), stack_pointer_ + kAllocation);
 
   // Validate that stack pointer points to the return address.
@@ -950,12 +883,12 @@ TEST_F(PeCoffUnwindInfoUnwinderX86_64Test,
 
   // Also validate that we skip successfully if code offset is before the unwind op.
   regs.set_sp(stack_pointer_);
-  EXPECT_TRUE(unwinder_.Eval(process_mem_fake_.get(), &regs, unwind_info, 0, &frame_pointer,
-                             &frame_pointer_used));
+  EXPECT_TRUE(unwind_info_evaluator_->Eval(process_mem_fake_.get(), &regs, unwind_info,
+                                           &mock_unwind_infos_, 0));
   EXPECT_EQ(regs.sp(), stack_pointer_);
 }
 
-TEST_F(PeCoffUnwindInfoUnwinderX86_64Test, eval_succeeds_set_frame_pointer_register) {
+TEST_F(PeCoffUnwindInfoEvaluatorTest, eval_succeeds_set_frame_pointer_register) {
   constexpr uint64_t kReturnAddress = 0x2000;
   constexpr uint32_t kAllocation = 0x30;
   UnwindInfo unwind_info;
@@ -983,14 +916,10 @@ TEST_F(PeCoffUnwindInfoUnwinderX86_64Test, eval_succeeds_set_frame_pointer_regis
   regs.set_sp(stack_pointer_);
 
   uint64_t code_offset = unwind_info.prolog_size;
-  uint64_t frame_pointer = 0;
-  bool frame_pointer_used = false;
 
   // We use unwind_info.prolog_size to unwind using all unwind codes.
-  EXPECT_TRUE(unwinder_.Eval(process_mem_fake_.get(), &regs, unwind_info, code_offset,
-                             &frame_pointer, &frame_pointer_used));
-  EXPECT_TRUE(frame_pointer_used);
-  EXPECT_EQ(frame_pointer, frame_pointer_value);
+  EXPECT_TRUE(unwind_info_evaluator_->Eval(process_mem_fake_.get(), &regs, unwind_info,
+                                           &mock_unwind_infos_, code_offset));
   EXPECT_EQ(regs.sp(), frame_begin);
   EXPECT_EQ(regs[X86_64Reg::X86_64_REG_RDI], 0x100);
   EXPECT_EQ(regs[X86_64Reg::X86_64_REG_R12], 0x200);
@@ -1001,13 +930,11 @@ TEST_F(PeCoffUnwindInfoUnwinderX86_64Test, eval_succeeds_set_frame_pointer_regis
   EXPECT_EQ(return_address, kReturnAddress);
 
   // Also validate that we skip successfully if code offset is before the unwind op.
-  frame_pointer_used = false;
-  EXPECT_TRUE(unwinder_.Eval(process_mem_fake_.get(), &regs, unwind_info, 0, &frame_pointer,
-                             &frame_pointer_used));
-  EXPECT_FALSE(frame_pointer_used);
+  EXPECT_TRUE(unwind_info_evaluator_->Eval(process_mem_fake_.get(), &regs, unwind_info,
+                                           &mock_unwind_infos_, 0));
 }
 
-TEST_F(PeCoffUnwindInfoUnwinderX86_64Test, eval_fails_set_frame_pointer_register_offset_too_large) {
+TEST_F(PeCoffUnwindInfoEvaluatorTest, eval_fails_set_frame_pointer_register_offset_too_large) {
   constexpr uint64_t kReturnAddress = 0x2000;
   constexpr uint32_t kAllocation = 0x10;
   UnwindInfo unwind_info;
@@ -1030,16 +957,14 @@ TEST_F(PeCoffUnwindInfoUnwinderX86_64Test, eval_fails_set_frame_pointer_register
   regs.set_sp(stack_pointer_);
 
   uint64_t code_offset = unwind_info.prolog_size;
-  uint64_t frame_pointer = 0;
-  bool frame_pointer_used = false;
 
   // We use unwind_info.prolog_size to unwind using all unwind codes.
-  EXPECT_FALSE(unwinder_.Eval(process_mem_fake_.get(), &regs, unwind_info, code_offset,
-                              &frame_pointer, &frame_pointer_used));
-  EXPECT_EQ(unwinder_.GetLastError().code, ERROR_INVALID_COFF);
+  EXPECT_FALSE(unwind_info_evaluator_->Eval(process_mem_fake_.get(), &regs, unwind_info,
+                                            &mock_unwind_infos_, code_offset));
+  EXPECT_EQ(unwind_info_evaluator_->GetLastError().code, ERROR_INVALID_COFF);
 }
 
-TEST_F(PeCoffUnwindInfoUnwinderX86_64Test,
+TEST_F(PeCoffUnwindInfoEvaluatorTest,
        eval_succeeds_stack_allocation_and_pushed_and_saved_registers) {
   constexpr uint64_t kReturnAddress = 0x2000;
   constexpr uint32_t kAllocation = 1024;
@@ -1064,14 +989,11 @@ TEST_F(PeCoffUnwindInfoUnwinderX86_64Test,
 
   RegsX86_64 regs;
   uint64_t code_offset = unwind_info.prolog_size;
-  uint64_t frame_pointer = 0;
-  bool frame_pointer_used = false;
 
   regs.set_sp(stack_pointer_);
 
-  EXPECT_TRUE(unwinder_.Eval(process_mem_fake_.get(), &regs, unwind_info, code_offset,
-                             &frame_pointer, &frame_pointer_used));
-  EXPECT_FALSE(frame_pointer_used);
+  EXPECT_TRUE(unwind_info_evaluator_->Eval(process_mem_fake_.get(), &regs, unwind_info,
+                                           &mock_unwind_infos_, code_offset));
   EXPECT_EQ(regs.sp(), stack_pointer_ + kAllocation + 3 * sizeof(uint64_t));
 
   // Validate that stack pointer points to the return address.
@@ -1089,12 +1011,12 @@ TEST_F(PeCoffUnwindInfoUnwinderX86_64Test,
 
   // Also validate that we skip successfully if code offset is before the unwind op.
   regs.set_sp(stack_pointer_);
-  EXPECT_TRUE(unwinder_.Eval(process_mem_fake_.get(), &regs, unwind_info, 0, &frame_pointer,
-                             &frame_pointer_used));
+  EXPECT_TRUE(unwind_info_evaluator_->Eval(process_mem_fake_.get(), &regs, unwind_info,
+                                           &mock_unwind_infos_, 0));
   EXPECT_EQ(regs.sp(), stack_pointer_);
 }
 
-TEST_F(PeCoffUnwindInfoUnwinderX86_64Test, succeeds_with_correct_chained_info) {
+TEST_F(PeCoffUnwindInfoEvaluatorTest, succeeds_with_correct_chained_info) {
   constexpr uint64_t kReturnAddress = 0x2000;
   constexpr uint32_t kAllocation = 1024;
 
@@ -1115,28 +1037,29 @@ TEST_F(PeCoffUnwindInfoUnwinderX86_64Test, succeeds_with_correct_chained_info) {
   PushStackFrame(options_chained, push_ops, save_ops, {}, &chained_info);
   EXPECT_EQ(3 + 2 * 3 + 2, chained_info.num_codes);
 
-  constexpr uint32_t kChainedInfoOffset = 0x3000;
+  constexpr uint32_t kChainedInfoVmAddress = 0x3000;
 
-  WriteUnwindInfoToFakeObjectFile(kChainedInfoOffset, chained_info);
+  EXPECT_CALL(mock_unwind_infos_, GetUnwindInfo(kChainedInfoVmAddress, testing::_))
+      .WillOnce([chained_info](uint64_t, UnwindInfo* unwind_info_result) {
+        *unwind_info_result = chained_info;
+        return true;
+      });
 
   UnwindInfo unwind_info;
   StackFrameOptions options;
   options.has_chained_info = true;
   options.stack_allocation = kAllocation;
-  options.chained_info_offset = kChainedInfoOffset;
+  options.chained_info_offset = kChainedInfoVmAddress;
   PushStackFrame(options, {}, {}, {}, &unwind_info);
   EXPECT_EQ(2, unwind_info.num_codes);
 
   RegsX86_64 regs;
   uint64_t code_offset = unwind_info.prolog_size;
-  uint64_t frame_pointer = 0;
-  bool frame_pointer_used = false;
 
   regs.set_sp(stack_pointer_);
 
-  EXPECT_TRUE(unwinder_.Eval(process_mem_fake_.get(), &regs, unwind_info, code_offset,
-                             &frame_pointer, &frame_pointer_used));
-  EXPECT_FALSE(frame_pointer_used);
+  EXPECT_TRUE(unwind_info_evaluator_->Eval(process_mem_fake_.get(), &regs, unwind_info,
+                                           &mock_unwind_infos_, code_offset));
   EXPECT_EQ(regs.sp(), stack_pointer_ + 2 * kAllocation + 3 * sizeof(uint64_t));
 
   // Validate that stack pointer points to the return address.
@@ -1154,44 +1077,39 @@ TEST_F(PeCoffUnwindInfoUnwinderX86_64Test, succeeds_with_correct_chained_info) {
 
   // Also validate that we skip the inner unwind info successfully if code offset is before the
   // unwind op. The chained info still must be executed in its entirety.
+  EXPECT_CALL(mock_unwind_infos_, GetUnwindInfo(kChainedInfoVmAddress, testing::_))
+      .WillOnce([chained_info](uint64_t, UnwindInfo* unwind_info_result) {
+        *unwind_info_result = chained_info;
+        return true;
+      });
+
   regs.set_sp(stack_pointer_);
-  EXPECT_TRUE(unwinder_.Eval(process_mem_fake_.get(), &regs, unwind_info, 0, &frame_pointer,
-                             &frame_pointer_used));
+  EXPECT_TRUE(unwind_info_evaluator_->Eval(process_mem_fake_.get(), &regs, unwind_info,
+                                           &mock_unwind_infos_, 0));
   EXPECT_EQ(regs.sp(), stack_pointer_ + kAllocation + 3 * sizeof(uint64_t));
 }
 
-TEST_F(PeCoffUnwindInfoUnwinderX86_64Test, fails_with_incorrect_chained_info_offset) {
-  constexpr uint64_t kReturnAddress = 0x2000;
-  constexpr uint32_t kAllocation = 1024;
-
-  UnwindInfo chained_info;
-  StackFrameOptions options_chained;
-  options_chained.return_address = kReturnAddress;
-  options_chained.stack_allocation = kAllocation;
-  PushStackFrame(options_chained, {}, {}, {}, &chained_info);
-  EXPECT_EQ(2, chained_info.num_codes);
-
-  constexpr uint32_t kChainedInfoOffset = 0x3000;
-  constexpr uint32_t kIncorrectChainedInfoOffset = 0x4000;
-  WriteUnwindInfoToFakeObjectFile(kChainedInfoOffset, chained_info);
+TEST_F(PeCoffUnwindInfoEvaluatorTest, fails_when_getting_chained_info_fails) {
+  constexpr uint32_t kChainedInfoVmAddress = 0x3000;
+  EXPECT_CALL(mock_unwind_infos_, GetUnwindInfo(kChainedInfoVmAddress, testing::_))
+      .WillOnce([](uint64_t, UnwindInfo*) { return false; });
 
   UnwindInfo unwind_info;
   StackFrameOptions options;
   options.has_chained_info = true;
+  constexpr uint32_t kAllocation = 1024;
   options.stack_allocation = kAllocation;
-  options.chained_info_offset = kIncorrectChainedInfoOffset;
+  options.chained_info_offset = kChainedInfoVmAddress;
   PushStackFrame(options, {}, {}, {}, &unwind_info);
   EXPECT_EQ(2, unwind_info.num_codes);
 
   RegsX86_64 regs;
   uint64_t code_offset = unwind_info.prolog_size;
-  uint64_t frame_pointer = 0;
-  bool frame_pointer_used = false;
 
   regs.set_sp(stack_pointer_);
 
-  EXPECT_FALSE(unwinder_.Eval(process_mem_fake_.get(), &regs, unwind_info, code_offset,
-                              &frame_pointer, &frame_pointer_used));
+  EXPECT_FALSE(unwind_info_evaluator_->Eval(process_mem_fake_.get(), &regs, unwind_info,
+                                            &mock_unwind_infos_, code_offset));
 }
 
 }  // namespace unwindstack

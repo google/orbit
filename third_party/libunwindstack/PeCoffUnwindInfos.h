@@ -70,18 +70,15 @@ class PeCoffUnwindInfos {
  public:
   virtual ~PeCoffUnwindInfos() {}
 
-  // The value 'unwind_info_file_offset' is the file offset derived from the unwind info
-  // offset in the RUNTIME_FUNCTION struct, which is a relative virtual address (RVA). Computing the
-  // file offset from the unwind info RVA requires knowledge about the sections of the file, which
-  // the class using 'PeCoffUnwindInfos' must use to pass in the right value here.
-  virtual bool GetUnwindInfo(uint64_t unwind_info_file_offset, UnwindInfo* unwind_info) = 0;
+  virtual bool GetUnwindInfo(uint64_t unwind_info_rva, UnwindInfo* unwind_info) = 0;
   ErrorData GetLastError() const { return last_error_; }
 
  protected:
   ErrorData last_error_{ERROR_NONE, 0};
 };
 
-std::unique_ptr<PeCoffUnwindInfos> CreatePeCoffUnwindInfos(Memory* object_file_memory);
+std::unique_ptr<PeCoffUnwindInfos> CreatePeCoffUnwindInfos(Memory* object_file_memory,
+                                                           const std::vector<Section>& sections);
 
 }  // namespace unwindstack
 

@@ -23,34 +23,57 @@ namespace unwindstack {
 
 class PeCoffUnwindInfosImpl : public PeCoffUnwindInfos {
  public:
-  explicit PeCoffUnwindInfosImpl(Memory* memory) : pe_coff_memory_(memory) {}
+  explicit PeCoffUnwindInfosImpl(Memory* memory, const std::vector<Section>& sections)
+      : pe_coff_memory_(memory), sections_(sections) {}
+
   bool GetUnwindInfo(uint64_t unwind_info_file_offset, UnwindInfo* unwind_info) override;
 
  private:
+  bool MapFromRVAToFileOffset(uint64_t rva, uint64_t* file_offset);
   bool ParseUnwindInfoAtOffset(uint64_t file_offset, UnwindInfo* unwind_info);
+
   PeCoffMemory pe_coff_memory_;
   // This is a cache of unwind infos.
-  std::unordered_map<uint64_t, UnwindInfo> unwind_info_offset_to_unwind_info_;
+  std::unordered_map<uint64_t, UnwindInfo> unwind_info_rva_to_unwind_info_;
+
+  std::vector<Section> sections_;
 };
 
-std::unique_ptr<PeCoffUnwindInfos> CreatePeCoffUnwindInfos(Memory* memory) {
-  return std::make_unique<PeCoffUnwindInfosImpl>(memory);
+std::unique_ptr<PeCoffUnwindInfos> CreatePeCoffUnwindInfos(Memory* memory,
+                                                           const std::vector<Section>& sections) {
+  return std::make_unique<PeCoffUnwindInfosImpl>(memory, sections);
 }
 
-bool PeCoffUnwindInfosImpl::GetUnwindInfo(uint64_t unwind_info_file_offset,
-                                          UnwindInfo* unwind_info) {
-  const auto& it = unwind_info_offset_to_unwind_info_.find(unwind_info_file_offset);
-  if (it != unwind_info_offset_to_unwind_info_.end()) {
+bool PeCoffUnwindInfosImpl::MapFromRVAToFileOffset(uint64_t rva, uint64_t* file_offset) {
+  for (auto& section : sections_) {
+    if (section.vmaddr <= rva && rva < section.vmaddr + section.vmsize) {
+      *file_offset = rva - section.vmaddr + section.offset;
+      return true;
+    }
+  }
+  last_error_.code = ERROR_INVALID_COFF;
+  return false;
+}
+
+bool PeCoffUnwindInfosImpl::GetUnwindInfo(uint64_t unwind_info_rva, UnwindInfo* unwind_info) {
+  const auto& it = unwind_info_rva_to_unwind_info_.find(unwind_info_rva);
+  if (it != unwind_info_rva_to_unwind_info_.end()) {
     *unwind_info = it->second;
     return true;
   }
 
-  UnwindInfo new_unwind_info;
-  if (!ParseUnwindInfoAtOffset(unwind_info_file_offset, &new_unwind_info)) {
+  uint64_t file_offset;
+  if (!MapFromRVAToFileOffset(unwind_info_rva, &file_offset)) {
+    last_error_.code = ERROR_INVALID_COFF;
     return false;
   }
 
-  unwind_info_offset_to_unwind_info_[unwind_info_file_offset] = new_unwind_info;
+  UnwindInfo new_unwind_info;
+  if (!ParseUnwindInfoAtOffset(file_offset, &new_unwind_info)) {
+    return false;
+  }
+
+  unwind_info_rva_to_unwind_info_[unwind_info_rva] = new_unwind_info;
   *unwind_info = new_unwind_info;
   return true;
 }
