@@ -34,9 +34,7 @@ GpuDebugMarkerTrack::GpuDebugMarkerTrack(CaptureViewElement* parent,
     : TimerTrack(parent, timeline_info, viewport, layout, app, module_manager, capture_data,
                  timer_data),
       string_manager_{app->GetStringManager()},
-      timeline_hash_{timeline_hash} {
-  draw_background_ = false;
-}
+      timeline_hash_{timeline_hash} {}
 
 std::string GpuDebugMarkerTrack::GetName() const {
   return absl::StrFormat(

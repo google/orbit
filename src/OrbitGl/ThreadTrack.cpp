@@ -266,7 +266,8 @@ void ThreadTrack::UpdatePositionOfSubtracks() {
   const float space_between_subtracks = layout_->GetSpaceBetweenThreadPanes();
 
   const Vec2 pos = GetPos();
-  float current_y = pos[1] + layout_->GetTrackTabHeight() + layout_->GetTrackContentTopMargin();
+  float current_y =
+      header_->GetPos()[1] + header_->GetHeight() + layout_->GetTrackContentTopMargin();
 
   thread_state_bar_->SetPos(pos[0], current_y);
   if (thread_state_bar_->ShouldBeRendered()) {
@@ -281,10 +282,7 @@ void ThreadTrack::UpdatePositionOfSubtracks() {
   tracepoint_bar_->SetPos(pos[0], current_y);
 }
 
-void ThreadTrack::OnPick(int x, int y) {
-  Track::OnPick(x, y);
-  app_->set_selected_thread_id(GetThreadId());
-}
+void ThreadTrack::SelectTrack() { app_->set_selected_thread_id(GetThreadId()); }
 
 std::vector<orbit_gl::CaptureViewElement*> ThreadTrack::GetAllChildren() const {
   auto result = Track::GetAllChildren();
@@ -337,7 +335,7 @@ float ThreadTrack::GetHeightAboveTimers() const {
   const float tracepoint_track_height = layout_->GetEventTrackHeightFromTid(GetThreadId());
   const float space_between_subtracks = layout_->GetSpaceBetweenThreadPanes();
 
-  float header_height = layout_->GetTrackTabHeight() + layout_->GetTrackContentTopMargin();
+  float header_height = header_->GetHeight() + layout_->GetTrackContentTopMargin();
   int track_count = 0;
   if (!thread_state_bar_->IsEmpty()) {
     header_height += thread_state_track_height;

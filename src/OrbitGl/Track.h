@@ -27,10 +27,14 @@
 #include "TextRenderer.h"
 #include "TimeGraphLayout.h"
 #include "TimelineInfoInterface.h"
+#include "TrackControlInterface.h"
+#include "TrackHeader.h"
 #include "TriangleToggle.h"
 #include "Viewport.h"
 
-class Track : public orbit_gl::CaptureViewElement, public std::enable_shared_from_this<Track> {
+class Track : public orbit_gl::CaptureViewElement,
+              public orbit_gl::TrackControlInterface,
+              public std::enable_shared_from_this<Track> {
  public:
   enum class Type {
     kTimerTrack,
@@ -57,7 +61,7 @@ class Track : public orbit_gl::CaptureViewElement, public std::enable_shared_fro
                  const orbit_client_data::CaptureData* capture_data);
   ~Track() override = default;
 
-  void OnDrag(int x, int y) override;
+  void OnPick(int x, int y) override;
 
   [[nodiscard]] virtual Type GetType() const = 0;
 
@@ -65,37 +69,43 @@ class Track : public orbit_gl::CaptureViewElement, public std::enable_shared_fro
   [[nodiscard]] virtual uint64_t GetMaxTime() const = 0;
 
   virtual void OnTimer(const orbit_client_protos::TimerInfo& /*timer_info*/) {}
-  [[nodiscard]] bool IsPinned() const { return pinned_; }
-  void SetPinned(bool value);
 
-  [[nodiscard]] bool IsMoving() const { return picked_ && mouse_pos_last_click_ != mouse_pos_cur_; }
-  [[nodiscard]] virtual std::string GetName() const = 0;
-  [[nodiscard]] virtual std::string GetLabel() const { return GetName(); }
-  [[nodiscard]] virtual int GetNumberOfPrioritizedTrailingCharacters() const { return 0; }
+  [[nodiscard]] bool IsPinned() const override { return pinned_; }
+  void SetPinned(bool value) override;
 
-  [[nodiscard]] virtual Color GetTrackBackgroundColor() const;
+  [[nodiscard]] bool IsMoving() const { return header_->IsBeingDragged(); }
+  void DragBy(float delta_y) override;
+  [[nodiscard]] bool Draggable() override { return true; }
 
-  [[nodiscard]] virtual bool IsCollapsible() const { return false; }
-  TriangleToggle* GetTriangleToggle() const { return collapse_toggle_.get(); }
+  [[nodiscard]] std::string GetLabel() const override { return GetName(); }
+  [[nodiscard]] int GetNumberOfPrioritizedTrailingCharacters() const override { return 0; }
+
+  [[nodiscard]] Color GetTrackBackgroundColor() const override;
+
+  [[nodiscard]] bool IsCollapsible() const override { return false; }
   [[nodiscard]] virtual uint32_t GetProcessId() const { return orbit_base::kInvalidProcessId; }
   [[nodiscard]] virtual bool IsEmpty() const = 0;
   [[nodiscard]] bool ShouldBeRendered() const override;
 
   [[nodiscard]] float DetermineZOffset() const override;
 
-  [[nodiscard]] virtual bool IsTrackSelected() const { return false; }
+  [[nodiscard]] bool IsTrackSelected() const override { return false; }
+  void SelectTrack() override{};
 
-  [[nodiscard]] virtual bool IsCollapsed() const { return collapse_toggle_->IsCollapsed(); }
+  [[nodiscard]] virtual bool IsCollapsed() const {
+    return header_->GetCollapseToggle()->IsCollapsed();
+  }
+
   void SetCollapsed(bool collapsed);
 
   [[nodiscard]] bool GetHeadless() const { return headless_; }
   void SetHeadless(bool value);
 
   void SetIndentationLevel(uint32_t level);
-  [[nodiscard]] uint32_t GetIndentationLevel() const { return indentation_level_; }
+  [[nodiscard]] uint32_t GetIndentationLevel() const override { return indentation_level_; }
 
   [[nodiscard]] std::vector<CaptureViewElement*> GetAllChildren() const override {
-    return {collapse_toggle_.get()};
+    return {header_.get()};
   }
 
   [[nodiscard]] virtual int GetVisiblePrimitiveCount() const { return 0; }
@@ -118,20 +128,16 @@ class Track : public orbit_gl::CaptureViewElement, public std::enable_shared_fro
               orbit_gl::TextRenderer& text_renderer, const DrawContext& draw_context) override;
   void DoUpdateLayout() override;
 
-  void DrawTriangleFan(orbit_gl::PrimitiveAssembler& primitive_assembler,
-                       const std::vector<Vec2>& points, const Vec2& pos, const Color& color,
-                       float rotation, float z);
   virtual void UpdatePositionOfSubtracks() {}
-  void UpdatePositionOfCollapseToggle();
 
   std::unique_ptr<orbit_accessibility::AccessibleInterface> CreateAccessibleInterface() override;
 
-  bool draw_background_ = true;
   bool pinned_ = false;
   bool headless_ = false;
   uint32_t indentation_level_ = 0;
   Type type_ = Type::kUnknown;
-  std::shared_ptr<TriangleToggle> collapse_toggle_;
+
+  std::shared_ptr<orbit_gl::TrackHeader> header_;
 
   const orbit_gl::TimelineInfoInterface* timeline_info_;
   const orbit_client_data::ModuleManager* module_manager_ = nullptr;
