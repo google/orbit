@@ -85,7 +85,7 @@ TEST(LinuxMap, CreateModuleNotElf) {
               testing::HasSubstr("The file was not recognized as a valid object file"));
 }
 
-TEST(LinuxMan, CreateModuleWithSoname) {
+TEST(LinuxMap, CreateModuleWithSoname) {
   const std::filesystem::path hello_world_path = orbit_test::GetTestdataDir() / "libtest-1.0.so";
 
   constexpr uint64_t kStartAddress = 23;
@@ -214,6 +214,218 @@ TEST(LinuxMap, ParseMapsWithSpacesInPath) {
   EXPECT_EQ(hello_module_info.build_id(), "d12d54bc5b72ccce54a408bdeda65e2530740ac8");
   EXPECT_EQ(hello_module_info.load_bias(), 0x0);
   EXPECT_EQ(hello_module_info.object_file_type(), ModuleInfo::kElfFile);
+}
+
+TEST(LinuxMap, ParseMapsWithPeTextMappedAnonymouslyAtExpectedOffset) {
+  const std::filesystem::path test_path = orbit_test::GetTestdataDir();
+  const std::filesystem::path libtest_path = test_path / "libtest.dll";
+
+  const std::string data{
+      absl::StrFormat("100000-101000 r--p 00000000 01:02 42    %1$s\n"
+                      "101000-103000 r-xp 00000000 00:00 0 \n",
+                      libtest_path)};
+  const auto result = ParseMaps(data);
+  ASSERT_THAT(result, HasNoError());
+  ASSERT_EQ(result.value().size(), 1);
+
+  const orbit_grpc_protos::ModuleInfo& libtest_module_info = result.value()[0];
+  EXPECT_EQ(libtest_module_info.name(), "libtest.dll");
+  EXPECT_EQ(libtest_module_info.file_path(), libtest_path);
+  EXPECT_EQ(libtest_module_info.file_size(), 96441);
+  EXPECT_EQ(libtest_module_info.address_start(), 0x101000);
+  EXPECT_EQ(libtest_module_info.address_end(), 0x103000);
+  EXPECT_EQ(libtest_module_info.build_id(), "");
+  EXPECT_EQ(libtest_module_info.load_bias(), 0x62640000);
+  EXPECT_EQ(libtest_module_info.executable_segment_offset(), 0x1000);
+  EXPECT_EQ(libtest_module_info.soname(), "");
+  EXPECT_EQ(libtest_module_info.object_file_type(), orbit_grpc_protos::ModuleInfo::kCoffFile);
+}
+
+TEST(LinuxMap, ParseMapsWithPeTextMappedAnonymouslyInMoreComplexExample) {
+  const std::filesystem::path test_path = orbit_test::GetTestdataDir();
+  const std::filesystem::path libtest_path = test_path / "libtest.dll";
+
+  // The addresses in these maps are not page-aligned, but it doesn't matter for the test's purpose.
+  const std::string data{
+      absl::StrFormat("10000-11000 r--p 00000000 00:00 0    [stack]\n"
+                      "100000-100C00 r--p 00000000 01:02 42    %1$s\n"  // The headers.
+                      "100C00-100D00 rw-p 00000000 00:00 0 \n"
+                      "100D00-100E00 r--p 00000D00 01:02 42    %1$s\n"
+                      "100E00-100F00 rw-p 00000000 00:00 0    [special]\n"
+                      "100F00-101000 r--p 00000F00 01:02 42    %1$s\n"
+                      "101000-103000 r-xp 00000000 00:00 0 \n"  // The .text segment.
+                      "200000-201000 r-xp 00000000 01:02 42    /path/to/nothing\n",
+                      libtest_path)};
+  const auto result = ParseMaps(data);
+  ASSERT_THAT(result, HasNoError());
+  ASSERT_EQ(result.value().size(), 1);
+
+  const orbit_grpc_protos::ModuleInfo& libtest_module_info = result.value()[0];
+  EXPECT_EQ(libtest_module_info.name(), "libtest.dll");
+  EXPECT_EQ(libtest_module_info.file_path(), libtest_path);
+  EXPECT_EQ(libtest_module_info.file_size(), 96441);
+  EXPECT_EQ(libtest_module_info.address_start(), 0x101000);
+  EXPECT_EQ(libtest_module_info.address_end(), 0x103000);
+  EXPECT_EQ(libtest_module_info.build_id(), "");
+  EXPECT_EQ(libtest_module_info.load_bias(), 0x62640000);
+  EXPECT_EQ(libtest_module_info.executable_segment_offset(), 0x1000);
+  EXPECT_EQ(libtest_module_info.soname(), "");
+  EXPECT_EQ(libtest_module_info.object_file_type(), orbit_grpc_protos::ModuleInfo::kCoffFile);
+}
+
+TEST(LinuxMap, ParseMapsWithPeTextMappedNotAnonymously) {
+  const std::filesystem::path test_path = orbit_test::GetTestdataDir();
+  const std::filesystem::path libtest_path = test_path / "libtest.dll";
+
+  const std::string data{
+      absl::StrFormat("100000-101000 r--p 00000000 01:02 42    %1$s\n"
+                      "101000-103000 r-xp 00001000 01:02 42    %1$s\n",
+                      libtest_path)};
+  const auto result = ParseMaps(data);
+  ASSERT_THAT(result, HasNoError());
+  ASSERT_EQ(result.value().size(), 1);
+
+  const orbit_grpc_protos::ModuleInfo& libtest_module_info = result.value()[0];
+  EXPECT_EQ(libtest_module_info.name(), "libtest.dll");
+  EXPECT_EQ(libtest_module_info.file_path(), libtest_path);
+  EXPECT_EQ(libtest_module_info.file_size(), 96441);
+  EXPECT_EQ(libtest_module_info.address_start(), 0x101000);
+  EXPECT_EQ(libtest_module_info.address_end(), 0x103000);
+  EXPECT_EQ(libtest_module_info.build_id(), "");
+  EXPECT_EQ(libtest_module_info.load_bias(), 0x62640000);
+  EXPECT_EQ(libtest_module_info.executable_segment_offset(), 0x1000);
+  EXPECT_EQ(libtest_module_info.soname(), "");
+  EXPECT_EQ(libtest_module_info.object_file_type(), orbit_grpc_protos::ModuleInfo::kCoffFile);
+}
+
+TEST(LinuxMap, ParseMapsWithPeTextMappedAnonymouslyAtLowerThanExpectedOffset) {
+  const std::filesystem::path test_path = orbit_test::GetTestdataDir();
+  const std::filesystem::path libtest_path = test_path / "libtest.dll";
+
+  // The addresses in these maps are not page-aligned, but it doesn't matter for the test's purpose.
+  const std::string data{
+      absl::StrFormat("100100-101000 r--p 00000100 01:02 42    %s\n"
+                      "100F00-103000 r-xp 00000000 00:00 0 \n",
+                      libtest_path)};
+  const auto result = ParseMaps(data);
+  ASSERT_THAT(result, HasNoError());
+  ASSERT_EQ(result.value().size(), 1);
+
+  const orbit_grpc_protos::ModuleInfo& libtest_module_info = result.value()[0];
+  EXPECT_EQ(libtest_module_info.name(), "libtest.dll");
+  EXPECT_EQ(libtest_module_info.file_path(), libtest_path);
+  EXPECT_EQ(libtest_module_info.file_size(), 96441);
+  EXPECT_EQ(libtest_module_info.address_start(), 0x100F00);
+  EXPECT_EQ(libtest_module_info.address_end(), 0x103000);
+  EXPECT_EQ(libtest_module_info.build_id(), "");
+  EXPECT_EQ(libtest_module_info.load_bias(), 0x62640000);
+  EXPECT_EQ(libtest_module_info.executable_segment_offset(), 0x1000);
+  EXPECT_EQ(libtest_module_info.soname(), "");
+  EXPECT_EQ(libtest_module_info.object_file_type(), orbit_grpc_protos::ModuleInfo::kCoffFile);
+}
+
+TEST(LinuxMap, ParseMapsWithPeTextMappedAnonymouslyAtExpectedOffsetAndFirstMapWithOffset) {
+  const std::filesystem::path test_path = orbit_test::GetTestdataDir();
+  const std::filesystem::path libtest_path = test_path / "libtest.dll";
+
+  // The addresses in these maps are not page-aligned, but it doesn't matter for the test's purpose.
+  const std::string data{
+      absl::StrFormat("100100-101000 r--p 00000100 01:02 42    %s\n"
+                      "101000-103000 r-xp 00000000 00:00 0 \n",
+                      libtest_path)};
+  const auto result = ParseMaps(data);
+  ASSERT_THAT(result, HasNoError());
+  ASSERT_EQ(result.value().size(), 1);
+
+  const orbit_grpc_protos::ModuleInfo& libtest_module_info = result.value()[0];
+  EXPECT_EQ(libtest_module_info.name(), "libtest.dll");
+  EXPECT_EQ(libtest_module_info.file_path(), libtest_path);
+  EXPECT_EQ(libtest_module_info.file_size(), 96441);
+  EXPECT_EQ(libtest_module_info.address_start(), 0x101000);
+  EXPECT_EQ(libtest_module_info.address_end(), 0x103000);
+  EXPECT_EQ(libtest_module_info.build_id(), "");
+  EXPECT_EQ(libtest_module_info.load_bias(), 0x62640000);
+  EXPECT_EQ(libtest_module_info.executable_segment_offset(), 0x1000);
+  EXPECT_EQ(libtest_module_info.soname(), "");
+  EXPECT_EQ(libtest_module_info.object_file_type(), orbit_grpc_protos::ModuleInfo::kCoffFile);
+}
+
+TEST(LinuxMap, ParseMapsWithPeTextMappedWithWrongName) {
+  const std::filesystem::path test_path = orbit_test::GetTestdataDir();
+  const std::filesystem::path libtest_path = test_path / "libtest.dll";
+
+  const std::string data{
+      absl::StrFormat("100000-101000 r--p 00000000 01:02 42    %s\n"
+                      "101000-103000 r-xp 00000000 00:00 42    /wrong/path\n",
+                      libtest_path)};
+  const auto result = ParseMaps(data);
+  ASSERT_THAT(result, HasNoError());
+  EXPECT_EQ(result.value().size(), 0);
+}
+
+TEST(LinuxMap, ParseMapsWithPeTextMappedAnonymouslyButNotExecutable) {
+  const std::filesystem::path test_path = orbit_test::GetTestdataDir();
+  const std::filesystem::path libtest_path = test_path / "libtest.dll";
+
+  const std::string data{
+      absl::StrFormat("100000-101000 r--p 00000000 01:02 42    %s\n"
+                      "101000-103000 r--p 00000000 00:00 0 \n",
+                      libtest_path)};
+  const auto result = ParseMaps(data);
+  ASSERT_THAT(result, HasNoError());
+  EXPECT_EQ(result.value().size(), 0);
+}
+
+TEST(LinuxMap, ParseMapsWithPeTextMappedAnonymouslyButExecutableMapAlreadyExists) {
+  const std::filesystem::path test_path = orbit_test::GetTestdataDir();
+  const std::filesystem::path libtest_path = test_path / "libtest.dll";
+
+  const std::string data{
+      absl::StrFormat("100000-101000 r-xp 00000000 01:02 42    %s\n"
+                      "101000-103000 r-xp 00000000 00:00 0 \n",
+                      libtest_path)};
+  const auto result = ParseMaps(data);
+  ASSERT_THAT(result, HasNoError());
+  ASSERT_EQ(result.value().size(), 1);
+
+  // This comes from the first mapping, not the second.
+  const orbit_grpc_protos::ModuleInfo& libtest_module_info = result.value()[0];
+  EXPECT_EQ(libtest_module_info.name(), "libtest.dll");
+  EXPECT_EQ(libtest_module_info.file_path(), libtest_path);
+  EXPECT_EQ(libtest_module_info.file_size(), 96441);
+  EXPECT_EQ(libtest_module_info.address_start(), 0x100000);
+  EXPECT_EQ(libtest_module_info.address_end(), 0x101000);
+  EXPECT_EQ(libtest_module_info.build_id(), "");
+  EXPECT_EQ(libtest_module_info.load_bias(), 0x62640000);
+  EXPECT_EQ(libtest_module_info.executable_segment_offset(), 0x1000);
+  EXPECT_EQ(libtest_module_info.soname(), "");
+  EXPECT_EQ(libtest_module_info.object_file_type(), orbit_grpc_protos::ModuleInfo::kCoffFile);
+}
+
+TEST(LinuxMap, ParseMapsWithPeTextMappedAnonymouslyAtOffsetTooHigh) {
+  const std::filesystem::path test_path = orbit_test::GetTestdataDir();
+  const std::filesystem::path libtest_path = test_path / "libtest.dll";
+
+  const std::string data{
+      absl::StrFormat("100000-101000 r--p 00000000 01:02 42    %s\n"
+                      "102000-103000 r-xp 00000000 00:00 0 \n",
+                      libtest_path)};
+  const auto result = ParseMaps(data);
+  ASSERT_THAT(result, HasNoError());
+  EXPECT_EQ(result.value().size(), 0);
+}
+
+TEST(LinuxMap, ParseMapsWithPeTextMappedAnonymouslyWithSizeTooSmall) {
+  const std::filesystem::path test_path = orbit_test::GetTestdataDir();
+  const std::filesystem::path libtest_path = test_path / "libtest.dll";
+
+  const std::string data{
+      absl::StrFormat("100000-101000 r--p 00000000 01:02 42    %s\n"
+                      "101000-102000 r-xp 00000000 00:00 0 \n",
+                      libtest_path)};
+  const auto result = ParseMaps(data);
+  ASSERT_THAT(result, HasNoError());
+  EXPECT_EQ(result.value().size(), 0);
 }
 
 }  // namespace orbit_object_utils
