@@ -76,6 +76,8 @@ class CaptureViewElement : public Pickable, public AccessibleInterfaceProvider {
   [[nodiscard]] virtual uint32_t GetLayoutFlags() const { return kScaleHorizontallyWithParent; }
   [[nodiscard]] virtual float DetermineZOffset() const { return 0.f; }
 
+  [[nodiscard]] bool LayoutHasChanged() const { return layout_has_changed_; }
+
  protected:
   struct DrawContext {
     uint64_t current_mouse_time_ns = 0;
@@ -90,6 +92,8 @@ class CaptureViewElement : public Pickable, public AccessibleInterfaceProvider {
   Vec2 picking_offset_ = Vec2(0, 0);
   bool picked_ = false;
   bool visible_ = true;
+
+  bool layout_has_changed_ = false;
 
   void Draw(PrimitiveAssembler& primitive_assembler, TextRenderer& text_renderer,
             const DrawContext& draw_context);
