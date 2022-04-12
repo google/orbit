@@ -14,13 +14,31 @@
  * limitations under the License.
  */
 
-#include "PeCoffUnwindInfoUnwinderX86_64.h"
+#include "PeCoffUnwindInfoEvaluator.h"
 
+#include <unwindstack/Log.h>
 #include <limits>
 #include "unwindstack/MachineX86_64.h"
 #include "unwindstack/Regs.h"
 
 namespace unwindstack {
+
+class PeCoffUnwindInfoEvaluatorImpl : public PeCoffUnwindInfoEvaluator {
+ public:
+  PeCoffUnwindInfoEvaluatorImpl() {}
+
+  // This function should only be called when we know that we are not in the epilog of the function.
+  // If one attempts to unwind using this when one is actually on an instruction in the epilog, the
+  // results will most likely be wrong.
+  // The function will skip unwind codes as needed based on 'current_code_offset', e.g. when we are
+  // in the middle of the prolog and not all instructions in the prolog have been executed yet.
+  bool Eval(Memory* process_memory, Regs* regs, const UnwindInfo& unwind_info,
+            PeCoffUnwindInfos* unwind_infos, uint64_t current_code_offset) override;
+};
+
+std::unique_ptr<PeCoffUnwindInfoEvaluator> CreatePeCoffUnwindInfoEvaluator() {
+  return std::make_unique<PeCoffUnwindInfoEvaluatorImpl>();
+}
 
 // The order of registers in PE/COFF unwind information is different from the libunwindstack
 // register order, so we have to map them to the right values. See
@@ -39,10 +57,10 @@ static uint16_t MapToUnwindstackRegister(uint8_t op_info_register) {
   return kMachineToUnwindstackRegister[op_info_register];
 }
 
-bool PeCoffUnwindInfoUnwinderX86_64::Eval(Memory* process_memory, Regs* regs,
-                                          const UnwindInfo& unwind_info,
-                                          uint64_t current_code_offset, uint64_t* frame_pointer,
-                                          bool* frame_pointer_used) {
+bool PeCoffUnwindInfoEvaluatorImpl::Eval(Memory* process_memory, Regs* regs,
+                                         const UnwindInfo& unwind_info,
+                                         PeCoffUnwindInfos* unwind_infos,
+                                         uint64_t current_code_offset) {
   // Data is parsed from the object file, so we have to assume that it may be inconsistent.
   if (unwind_info.num_codes != unwind_info.unwind_codes.size()) {
     last_error_.code = ERROR_INVALID_COFF;
@@ -143,8 +161,6 @@ bool PeCoffUnwindInfoUnwinderX86_64::Eval(Memory* process_memory, Regs* regs,
         }
         uint64_t new_sp_value = (*cur_regs)[reg] - frame_offset;
         cur_regs->set_sp(new_sp_value);
-        *frame_pointer = (*cur_regs)[reg];
-        *frame_pointer_used = true;
 
         op_idx += 1;
         break;
@@ -238,15 +254,15 @@ bool PeCoffUnwindInfoUnwinderX86_64::Eval(Memory* process_memory, Regs* regs,
 
   if (unwind_info.HasChainedInfo()) {
     UnwindInfo chained_unwind_info;
-    if (!unwind_infos_->GetUnwindInfo(unwind_info.chained_info.unwind_info_offset,
-                                      &chained_unwind_info)) {
+    if (!unwind_infos->GetUnwindInfo(unwind_info.chained_info.unwind_info_offset,
+                                     &chained_unwind_info)) {
       return false;
     }
 
     // We have to chain all unwind operations that are in the chained info, so we pass the max
     // uint64_t value as code offset.
-    return Eval(process_memory, regs, chained_unwind_info, std::numeric_limits<uint64_t>::max(),
-                frame_pointer, frame_pointer_used);
+    return Eval(process_memory, regs, chained_unwind_info, unwind_infos,
+                std::numeric_limits<uint64_t>::max());
   }
 
   return true;
