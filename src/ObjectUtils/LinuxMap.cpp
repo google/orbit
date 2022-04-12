@@ -250,6 +250,8 @@ ErrorMessageOr<std::vector<ModuleInfo>> ParseMaps(std::string_view proc_maps_dat
     if (inode != "0") {  // The mapping is file-backed.
       if (tokens.size() == 6) {
         module_path = tokens[5];
+        // Keep track of the last file we encountered. Only create a new FileMappedIntoMemory if
+        // this file mapping is backed by a different file than the previous file mapping.
         if (!last_file_mapped_into_memory.has_value() ||
             module_path != last_file_mapped_into_memory->GetFilePath()) {
           last_file_mapped_into_memory.emplace(module_path, start, offset);
