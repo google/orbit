@@ -33,11 +33,11 @@ class TextRendererInterface {
   virtual void Clear() = 0;
 
   virtual void RenderLayer(float layer) = 0;
-  virtual void RenderDebug(orbit_gl::PrimitiveAssembler* primitive_assembler) = 0;
+  virtual void RenderDebug(PrimitiveAssembler* primitive_assembler) = 0;
   [[nodiscard]] virtual std::vector<float> GetLayers() const = 0;
 
   virtual void AddText(const char* text, float x, float y, float z, TextFormatting formatting,
-                       Vec2* out_text_pos = nullptr, Vec2* out_text_size = nullptr) = 0;
+                       Vec2* out_text_pos, Vec2* out_text_size) = 0;
 
   virtual float AddTextTrailingCharsPrioritized(const char* text, float x, float y, float z,
                                                 TextFormatting formatting,

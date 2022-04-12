@@ -38,10 +38,10 @@ class TextRenderer : public TextRendererInterface {
 
   void Init() override;
   void Clear() override;
-  void SetViewport(orbit_gl::Viewport* viewport) { viewport_ = viewport; }
+  void SetViewport(Viewport* viewport) { viewport_ = viewport; }
 
   void RenderLayer(float layer) override;
-  void RenderDebug(orbit_gl::PrimitiveAssembler* primitive_assembler) override;
+  void RenderDebug(PrimitiveAssembler* primitive_assembler) override;
   [[nodiscard]] std::vector<float> GetLayers() const override;
 
   void AddText(const char* text, float x, float y, float z, TextFormatting formatting,
@@ -69,8 +69,7 @@ class TextRenderer : public TextRendererInterface {
   [[nodiscard]] ftgl::texture_glyph_t* MaybeLoadAndGetGlyph(ftgl::texture_font_t* self,
                                                             const char* character);
 
-  void DrawOutline(orbit_gl::PrimitiveAssembler* primitive_assembler,
-                   ftgl::vertex_buffer_t* buffer);
+  void DrawOutline(PrimitiveAssembler* primitive_assembler, ftgl::vertex_buffer_t* buffer);
 
  private:
   ftgl::texture_atlas_t* texture_atlas_;
@@ -80,7 +79,7 @@ class TextRenderer : public TextRendererInterface {
   bool texture_atlas_changed_;
   std::unordered_map<float, ftgl::vertex_buffer_t*> vertex_buffers_by_layer_;
   std::map<uint32_t, ftgl::texture_font_t*> fonts_by_size_;
-  orbit_gl::Viewport* viewport_;
+  Viewport* viewport_;
   GLuint shader_;
   ftgl::mat4 model_;
   ftgl::mat4 view_;
@@ -89,7 +88,7 @@ class TextRenderer : public TextRendererInterface {
   bool initialized_;
   static bool draw_outline_;
 
-  orbit_gl::TranslationStack translations_;
+  TranslationStack translations_;
 };
 
 inline ftgl::vec4 ColorToVec4(const Color& color) {
