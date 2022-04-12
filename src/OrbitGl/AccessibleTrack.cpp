@@ -21,6 +21,7 @@ namespace orbit_gl {
 
 namespace {
 
+// TODO (b/185854980): Remove the fake elements.
 class FakeTimerPane : public CaptureViewElement {
  public:
   explicit FakeTimerPane(Track* track, const TimeGraphLayout* layout)
@@ -33,8 +34,21 @@ class FakeTimerPane : public CaptureViewElement {
   }
 
   [[nodiscard]] Vec2 GetPos() const override {
-    CaptureViewElement* track_tab = track_->GetAllChildren()[0];
-    Vec2 pos{track_->GetPos()[0], track_tab->GetPos()[1] + track_tab->GetHeight()};
+    // The element is positioned after the last visible child. We can safely assume there's always
+    // one child due to the track header.
+    CaptureViewElement* last_child = *track_->GetNonHiddenChildren().rbegin();
+    float pos_y = last_child->GetPos()[1] + last_child->GetHeight();
+
+    if (track_->GetNonHiddenChildren().size() == 1) {
+      // If there's only one child, the track only has timers and a header. In this case add the
+      // content margin
+      pos_y += layout_->GetTrackContentTopMargin();
+    } else {
+      // Otherwise, it's a thread track and we need to include the space between panes.
+      // This is really hacky and will go away once this class vanishes, see the TODO on top.
+      pos_y += layout_->GetSpaceBetweenThreadPanes();
+    }
+    Vec2 pos{track_->GetPos()[0], pos_y};
     return pos;
   }
 
@@ -42,6 +56,7 @@ class FakeTimerPane : public CaptureViewElement {
     float height = track_->GetHeight();
     float track_header_height = GetPos()[1] - track_->GetPos()[1];
     height -= track_header_height;
+    height -= layout_->GetTrackContentBottomMargin();
     return height;
   }
 
@@ -62,6 +77,7 @@ int AccessibleTrack::AccessibleChildCount() const {
 
   // If any timers were rendered, report an additional element. The accessibility interface
   // simulates a "FakeTimerPane" to group all the timers together.
+  // TODO (b/185854980): Remove the fake elements.
   if (track_->GetVisiblePrimitiveCount() > 0) {
     return static_cast<int>(track_->GetNonHiddenChildren().size()) + 1;
   }
@@ -69,6 +85,7 @@ int AccessibleTrack::AccessibleChildCount() const {
   return static_cast<int>(track_->GetNonHiddenChildren().size());
 }
 
+// TODO (b/185854980): Remove the fake elements.
 const AccessibleInterface* AccessibleTrack::AccessibleChild(int index) const {
   ORBIT_CHECK(track_ != nullptr);
 

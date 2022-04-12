@@ -381,7 +381,7 @@ std::string TimerTrack::GetBoxTooltip(const PrimitiveAssembler& /*primitive_asse
 }
 
 float TimerTrack::GetHeightAboveTimers() const {
-  return layout_->GetTrackTabHeight() + layout_->GetTrackContentTopMargin();
+  return header_->GetHeight() + layout_->GetTrackContentTopMargin();
 }
 
 internal::DrawData TimerTrack::GetDrawData(
