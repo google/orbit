@@ -21,10 +21,10 @@
 #include "GlUtils.h"
 #include "ImGuiOrbit.h"
 #include "OpenGlBatcher.h"
+#include "OpenGlTextRenderer.h"
 #include "OrbitAccessibility/AccessibleInterface.h"
 #include "OrbitAccessibility/AccessibleWidgetBridge.h"
 #include "PickingManager.h"
-#include "TextRenderer.h"
 #include "Timer.h"
 #include "Viewport.h"
 
@@ -150,7 +150,7 @@ class GlCanvas : public orbit_gl::AccessibleInterfaceProvider {
   ImGuiContext* imgui_context_ = nullptr;
   double ref_time_click_;
   float track_container_click_scrolling_offset_ = 0;
-  orbit_gl::TextRenderer text_renderer_;
+  orbit_gl::OpenGlTextRenderer text_renderer_;
   PickingManager picking_manager_;
   bool double_clicking_;
   bool control_key_;

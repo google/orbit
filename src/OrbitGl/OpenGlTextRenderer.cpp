@@ -1,8 +1,8 @@
-// Copyright (c) 2020 The Orbit Authors. All rights reserved.
+// Copyright (c) 2022 The Orbit Authors. All rights reserved.
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#include "TextRenderer.h"
+#include "OpenGlTextRenderer.h"
 
 #include <float.h>
 #include <freetype-gl/shader.h>
@@ -45,17 +45,22 @@ int GetStringLineCount(const char* string) {
   return result;
 }
 
+inline ftgl::vec4 ColorToVec4(const Color& color) {
+  const float coeff = 1.f / 255.f;
+  ftgl::vec4 vec;
+  vec.r = color[0] * coeff;
+  vec.g = color[1] * coeff;
+  vec.b = color[2] * coeff;
+  vec.a = color[3] * coeff;
+  return vec;
+}
+
 }  // namespace
 
-bool TextRenderer::draw_outline_ = false;
+OpenGlTextRenderer::OpenGlTextRenderer()
+    : texture_atlas_(nullptr), texture_atlas_changed_(false), initialized_(false) {}
 
-TextRenderer::TextRenderer()
-    : texture_atlas_(nullptr),
-      texture_atlas_changed_(false),
-      viewport_(nullptr),
-      initialized_(false) {}
-
-TextRenderer::~TextRenderer() {
+OpenGlTextRenderer::~OpenGlTextRenderer() {
   for (const auto& pair : fonts_by_size_) {
     texture_font_delete(pair.second);
   }
@@ -71,7 +76,7 @@ TextRenderer::~TextRenderer() {
   }
 }
 
-void TextRenderer::Init() {
+void OpenGlTextRenderer::Init() {
   if (initialized_) return;
 
   int atlas_size = 2 * 1024;
@@ -113,7 +118,7 @@ void TextRenderer::Init() {
   initialized_ = true;
 }
 
-ftgl::texture_font_t* TextRenderer::GetFont(uint32_t size) {
+ftgl::texture_font_t* OpenGlTextRenderer::GetFont(uint32_t size) {
   ORBIT_CHECK(!fonts_by_size_.empty());
   if (fonts_by_size_.count(size) == 0) {
     auto iterator_next = fonts_by_size_.upper_bound(size);
@@ -132,8 +137,8 @@ ftgl::texture_font_t* TextRenderer::GetFont(uint32_t size) {
 // already and, if not, load it explicitly (in which case the texture atlas is updated). Note that
 // texture_font_get_glyph internally may load the glyph if it does not find it. We do not want
 // that as in that case, we do not know that the atlas has actually changed.
-ftgl::texture_glyph_t* TextRenderer::MaybeLoadAndGetGlyph(ftgl::texture_font_t* font,
-                                                          const char* character) {
+ftgl::texture_glyph_t* OpenGlTextRenderer::MaybeLoadAndGetGlyph(ftgl::texture_font_t* font,
+                                                                const char* character) {
   if (!texture_font_find_glyph(font, character)) {
     texture_font_load_glyph(font, character);
     texture_atlas_changed_ = true;
@@ -142,7 +147,7 @@ ftgl::texture_glyph_t* TextRenderer::MaybeLoadAndGetGlyph(ftgl::texture_font_t* 
   return texture_font_get_glyph(font, character);
 }
 
-void TextRenderer::RenderLayer(float layer) {
+void OpenGlTextRenderer::RenderLayer(float layer) {
   ORBIT_SCOPE_FUNCTION;
   if (vertex_buffers_by_layer_.count(layer) == 0) return;
   auto& buffer = vertex_buffers_by_layer_.at(layer);
@@ -197,15 +202,15 @@ void TextRenderer::RenderLayer(float layer) {
   glPopAttrib();
 }
 
-void TextRenderer::RenderDebug(PrimitiveAssembler* primitive_assembler) {
-  if (!draw_outline_) return;
+void OpenGlTextRenderer::RenderDebug(PrimitiveAssembler* primitive_assembler) {
+  if (!TextRenderer::draw_outline_) return;
   for (auto& [unused_layer, buffer] : vertex_buffers_by_layer_) {
     DrawOutline(primitive_assembler, buffer);
   }
 }
 
-void TextRenderer::DrawOutline(PrimitiveAssembler* primitive_assembler,
-                               ftgl::vertex_buffer_t* vertex_buffer) {
+void OpenGlTextRenderer::DrawOutline(PrimitiveAssembler* primitive_assembler,
+                                     ftgl::vertex_buffer_t* vertex_buffer) {
   if (vertex_buffer == nullptr) return;
   const Color color(255, 255, 255, 255);
 
@@ -228,9 +233,9 @@ void TextRenderer::DrawOutline(PrimitiveAssembler* primitive_assembler,
   }
 }
 
-void TextRenderer::AddTextInternal(const char* text, ftgl::vec2* pen,
-                                   const TextFormatting& formatting, float z,
-                                   ftgl::vec2* out_text_pos, ftgl::vec2* out_text_size) {
+void OpenGlTextRenderer::AddTextInternal(const char* text, ftgl::vec2* pen,
+                                         const TextFormatting& formatting, float z,
+                                         ftgl::vec2* out_text_pos, ftgl::vec2* out_text_size) {
   ftgl::texture_font_t* font = GetFont(formatting.font_size);
   ftgl::vec4 color = ColorToVec4(formatting.color);
   float r = color.red;
@@ -306,8 +311,14 @@ void TextRenderer::AddTextInternal(const char* text, ftgl::vec2* pen,
   }
 }
 
-void TextRenderer::AddText(const char* text, float x, float y, float z, TextFormatting formatting,
-                           Vec2* out_text_pos, Vec2* out_text_size) {
+void OpenGlTextRenderer::AddText(const char* text, float x, float y, float z,
+                                 TextFormatting formatting) {
+  AddText(text, x, y, z, formatting, nullptr, nullptr);
+}
+
+void OpenGlTextRenderer::AddText(const char* text, float x, float y, float z,
+                                 TextFormatting formatting, Vec2* out_text_pos,
+                                 Vec2* out_text_size) {
   if (strlen(text) == 0) {
     return;
   }
@@ -361,9 +372,9 @@ void TextRenderer::AddText(const char* text, float x, float y, float z, TextForm
   }
 }
 
-float TextRenderer::AddTextTrailingCharsPrioritized(const char* text, float x, float y, float z,
-                                                    TextFormatting formatting,
-                                                    size_t trailing_chars_length) {
+float OpenGlTextRenderer::AddTextTrailingCharsPrioritized(const char* text, float x, float y,
+                                                          float z, TextFormatting formatting,
+                                                          size_t trailing_chars_length) {
   if (!initialized_) {
     Init();
   }
@@ -441,15 +452,15 @@ float TextRenderer::AddTextTrailingCharsPrioritized(const char* text, float x, f
   return GetStringWidth(modified_text.c_str(), formatting.font_size);
 }
 
-float TextRenderer::GetStringWidth(const char* text, uint32_t font_size) {
+float OpenGlTextRenderer::GetStringWidth(const char* text, uint32_t font_size) {
   return viewport_->ScreenToWorld({GetStringWidthScreenSpace(text, font_size), 0})[0];
 }
 
-float TextRenderer::GetStringHeight(const char* text, uint32_t font_size) {
+float OpenGlTextRenderer::GetStringHeight(const char* text, uint32_t font_size) {
   return viewport_->ScreenToWorld({0, GetStringHeightScreenSpace(text, font_size)})[1];
 }
 
-int TextRenderer::GetStringWidthScreenSpace(const char* text, uint32_t font_size) {
+int OpenGlTextRenderer::GetStringWidthScreenSpace(const char* text, uint32_t font_size) {
   float string_width = 0;
 
   std::size_t len = strlen(text);
@@ -473,7 +484,7 @@ int TextRenderer::GetStringWidthScreenSpace(const char* text, uint32_t font_size
   return static_cast<int>(ceil(string_width));
 }
 
-int TextRenderer::GetStringHeightScreenSpace(const char* text, uint32_t font_size) {
+int OpenGlTextRenderer::GetStringHeightScreenSpace(const char* text, uint32_t font_size) {
   int max_height = 0.f;
   ftgl::texture_font_t* font = GetFont(font_size);
   for (std::size_t i = 0; i < strlen(text); ++i) {
@@ -488,7 +499,7 @@ int TextRenderer::GetStringHeightScreenSpace(const char* text, uint32_t font_siz
   return max_height;
 }
 
-std::vector<float> TextRenderer::GetLayers() const {
+std::vector<float> OpenGlTextRenderer::GetLayers() const {
   std::vector<float> layers;
   for (auto& [layer, unused_buffer] : vertex_buffers_by_layer_) {
     layers.push_back(layer);
@@ -496,7 +507,7 @@ std::vector<float> TextRenderer::GetLayers() const {
   return layers;
 };
 
-void TextRenderer::Clear() {
+void OpenGlTextRenderer::Clear() {
   pen_.x = 0.f;
   pen_.y = 0.f;
   for (auto& [unused_layer, buffer] : vertex_buffers_by_layer_) {

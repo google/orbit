@@ -36,6 +36,7 @@ class TextRendererInterface {
   virtual void RenderDebug(PrimitiveAssembler* primitive_assembler) = 0;
   [[nodiscard]] virtual std::vector<float> GetLayers() const = 0;
 
+  virtual void AddText(const char* text, float x, float y, float z, TextFormatting formatting) = 0;
   virtual void AddText(const char* text, float x, float y, float z, TextFormatting formatting,
                        Vec2* out_text_pos, Vec2* out_text_size) = 0;
 

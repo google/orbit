@@ -20,7 +20,6 @@ target_sources(
          BasicPageFaultsTrack.h
          Batcher.h
          BatcherInterface.h
-         OpenGlBatcher.h
          CallstackThreadBar.h
          CallTreeView.h
          CaptureStats.h
@@ -51,6 +50,8 @@ target_sources(
          MinorPageFaultsTrack.h
          MockTimelineInfo.h
          MultivariateTimeSeries.h
+         OpenGlBatcher.h
+         OpenGlTextRenderer.h
          PageFaultsTrack.h
          PickingManager.h
          PrimitiveAssembler.h
@@ -97,7 +98,6 @@ target_sources(
           App.cpp
           AsyncTrack.cpp
           BasicPageFaultsTrack.cpp
-          OpenGlBatcher.cpp
           CallstackThreadBar.cpp
           CallTreeView.cpp
           CaptureStats.cpp
@@ -122,6 +122,8 @@ target_sources(
           MajorPageFaultsTrack.cpp
           MemoryTrack.cpp
           MinorPageFaultsTrack.cpp
+          OpenGlBatcher.cpp
+          OpenGlTextRenderer.cpp
           PageFaultsTrack.cpp
           PickingManager.cpp
           PrimitiveAssembler.cpp
@@ -130,7 +132,6 @@ target_sources(
           SchedulingStats.cpp
           SimpleTimings.cpp
           SystemMemoryTrack.cpp
-          TextRenderer.cpp
           TimeGraph.cpp
           TimeGraphLayout.cpp
           TimelineTicks.cpp
