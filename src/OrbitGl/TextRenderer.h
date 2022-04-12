@@ -21,6 +21,7 @@
 #include "CoreMath.h"
 #include "PickingManager.h"
 #include "PrimitiveAssembler.h"
+#include "TextRendererInterface.h"
 #include "Viewport.h"
 
 namespace ftgl {
@@ -30,38 +31,28 @@ struct texture_font_t;
 
 namespace orbit_gl {
 
-class TextRenderer {
+class TextRenderer : public TextRendererInterface {
  public:
-  enum class HAlign { Left, Right };
-  enum class VAlign { Top, Middle, Bottom };
-
-  struct TextFormatting {
-    uint32_t font_size = 14;
-    Color color = Color(255, 255, 255, 255);
-    float max_size = -1.f;
-    HAlign halign = HAlign::Left;
-    VAlign valign = VAlign::Top;
-  };
-
   explicit TextRenderer();
   ~TextRenderer();
 
-  void Init();
-  void Clear();
+  void Init() override;
+  void Clear() override;
   void SetViewport(orbit_gl::Viewport* viewport) { viewport_ = viewport; }
 
-  void RenderLayer(float layer);
-  void RenderDebug(orbit_gl::PrimitiveAssembler* primitive_assembler);
-  [[nodiscard]] std::vector<float> GetLayers() const;
+  void RenderLayer(float layer) override;
+  void RenderDebug(orbit_gl::PrimitiveAssembler* primitive_assembler) override;
+  [[nodiscard]] std::vector<float> GetLayers() const override;
 
   void AddText(const char* text, float x, float y, float z, TextFormatting formatting,
-               Vec2* out_text_pos = nullptr, Vec2* out_text_size = nullptr);
+               Vec2* out_text_pos = nullptr, Vec2* out_text_size = nullptr) override;
 
   float AddTextTrailingCharsPrioritized(const char* text, float x, float y, float z,
-                                        TextFormatting formatting, size_t trailing_chars_length);
+                                        TextFormatting formatting,
+                                        size_t trailing_chars_length) override;
 
-  [[nodiscard]] float GetStringWidth(const char* text, uint32_t font_size);
-  [[nodiscard]] float GetStringHeight(const char* text, uint32_t font_size);
+  [[nodiscard]] float GetStringWidth(const char* text, uint32_t font_size) override;
+  [[nodiscard]] float GetStringHeight(const char* text, uint32_t font_size) override;
 
   void PushTranslation(float x, float y, float z = 0.f) { translations_.PushTranslation(x, y, z); }
   void PopTranslation() { translations_.PopTranslation(); }
