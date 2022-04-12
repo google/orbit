@@ -51,9 +51,9 @@ class LibunwindstackUnwinder {
                                       bool offline_memory_only = false,
                                       size_t max_frames = kDefaultMaxFrames) = 0;
 
-  // Check, if for a given instruction pointer (absolute address), the frame pointer register is
+  // Check if, for a given instruction pointer (absolute address), the frame pointer register is
   // set correctly. It may rely on debug information (like Dwarf .debug_frame). Returns an error
-  // if the required debug information are not available.
+  // if the required debug information is not available.
   virtual std::optional<bool> HasFramePointerSet(uint64_t instruction_pointer,
                                                  unwindstack::Maps* maps) = 0;
 

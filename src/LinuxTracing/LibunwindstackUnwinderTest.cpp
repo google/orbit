@@ -10,11 +10,9 @@
 #include "LibunwindstackUnwinder.h"
 #include "Test/Path.h"
 
-namespace {}  // namespace
-
 namespace orbit_linux_tracing {
 
-std::unique_ptr<LibunwindstackMaps> CreateFakeMapsEntry(std::string_view target) {
+static std::unique_ptr<LibunwindstackMaps> CreateFakeMapsEntry(std::string_view target) {
   std::string maps_file_entry = absl::StrFormat(
       "000000000000-000000001000 r--p 00000000 fe:00 123 %1$s\n"
       "000000001000-000000003000 r-xp 00001000 fe:00 123 %1$s\n"
@@ -25,54 +23,52 @@ std::unique_ptr<LibunwindstackMaps> CreateFakeMapsEntry(std::string_view target)
   return LibunwindstackMaps::ParseMaps(maps_file_entry);
 }
 
+// This is some disassembly of target.cc compiled with -fno-omit-frame-pointer and
+// -momit-leaf-frame-pointer (target_fp):
+//
 // 0000000000001215 <_Z9every_1usv>:
-//    1215:       48 c7 44 24 f8 00 00    movq   $0x0,-0x8(%rsp)
-//    121c:       00 00
-//    121e:       c7 44 24 f4 00 00 00    movl   $0x0,-0xc(%rsp)
-//    1225:       00
-//    1226:       81 7c 24 f4 55 01 00    cmpl   $0x155,-0xc(%rsp)
-//    122d:       00
-//    122e:       7f 12                   jg     1242 <_Z9every_1usv+0x2d>
-//    1230:       8b 44 24 f4             mov    -0xc(%rsp),%eax
-//    1234:       48 98                   cltq
-//    1236:       48 01 44 24 f8          add    %rax,-0x8(%rsp)
-//    123b:       83 44 24 f4 01          addl   $0x1,-0xc(%rsp)
-//    1240:       eb e4                   jmp    1226 <_Z9every_1usv+0x11>
-//    1242:       48 8b 44 24 f8          mov    -0x8(%rsp),%rax
-//    1247:       c3                      ret
+//    1215:       48 c7 44 24 f8 00 00 00 00   movq   $0x0,-0x8(%rsp)
+//    121e:       c7 44 24 f4 00 00 00 00      movl   $0x0,-0xc(%rsp)
+//    1226:       81 7c 24 f4 55 01 00 00      cmpl   $0x155,-0xc(%rsp)
+//    122e:       7f 12                        jg     1242 <_Z9every_1usv+0x2d>
+//    1230:       8b 44 24 f4                  mov    -0xc(%rsp),%eax
+//    1234:       48 98                        cltq
+//    1236:       48 01 44 24 f8               add    %rax,-0x8(%rsp)
+//    123b:       83 44 24 f4 01               addl   $0x1,-0xc(%rsp)
+//    1240:       eb e4                        jmp    1226 <_Z9every_1usv+0x11>
+//    1242:       48 8b 44 24 f8               mov    -0x8(%rsp),%rax
+//    1247:       c3                           ret
 //
 // 0000000000001248 <_Z10every_10usv>:
-//    1248:       55                      push   %rbp
-//    1249:       48 89 e5                mov    %rsp,%rbp
-//    124c:       48 83 ec 10             sub    $0x10,%rsp
-//    1250:       48 c7 45 f8 00 00 00    movq   $0x0,-0x8(%rbp)
-//    1257:       00
-//    1258:       c7 45 f4 00 00 00 00    movl   $0x0,-0xc(%rbp)
-//    125f:       83 7d f4 09             cmpl   $0x9,-0xc(%rbp)
-//    1263:       7f 0f                   jg     1274 <_Z10every_10usv+0x2c>
-//    1265:       e8 ab ff ff ff          call   1215 <_Z9every_1usv>
-//    126a:       48 01 45 f8             add    %rax,-0x8(%rbp)
-//    126e:       83 45 f4 01             addl   $0x1,-0xc(%rbp)
-//    1272:       eb eb                   jmp    125f <_Z10every_10usv+0x17>
-//    1274:       48 8b 45 f8             mov    -0x8(%rbp),%rax
-//    1278:       c9                      leave
-//    1279:       c3                      ret
+//    1248:       55                       push   %rbp
+//    1249:       48 89 e5                 mov    %rsp,%rbp
+//    124c:       48 83 ec 10              sub    $0x10,%rsp
+//    1250:       48 c7 45 f8 00 00 00 00  movq   $0x0,-0x8(%rbp)
+//    1258:       c7 45 f4 00 00 00 00     movl   $0x0,-0xc(%rbp)
+//    125f:       83 7d f4 09              cmpl   $0x9,-0xc(%rbp)
+//    1263:       7f 0f                    jg     1274 <_Z10every_10usv+0x2c>
+//    1265:       e8 ab ff ff ff           call   1215 <_Z9every_1usv>
+//    126a:       48 01 45 f8              add    %rax,-0x8(%rbp)
+//    126e:       83 45 f4 01              addl   $0x1,-0xc(%rbp)
+//    1272:       eb eb                    jmp    125f <_Z10every_10usv+0x17>
+//    1274:       48 8b 45 f8              mov    -0x8(%rbp),%rax
+//    1278:       c9                       leave
+//    1279:       c3                       ret
 
+// This is some disassembly of target.cc compiled with -fomit-leaf-frame-pointer (target_no_fp):
+//
 // 000000000000128c <_Z10every_10usv>:
-//     128c:       48 83 ec 10             sub    $0x10,%rsp
-//     1290:       48 c7 44 24 08 00 00    movq   $0x0,0x8(%rsp)
-//     1297:       00 00
-//     1299:       c7 44 24 04 00 00 00    movl   $0x0,0x4(%rsp)
-//     12a0:       00
-//     12a1:       eb 0f                   jmp    12b2 <_Z10every_10usv+0x26>
-//     12a3:       e8 b1 ff ff ff          call   1259 <_Z9every_1usv>
-//     12a8:       48 01 44 24 08          add    %rax,0x8(%rsp)
-//     12ad:       83 44 24 04 01          addl   $0x1,0x4(%rsp)
-//     12b2:       83 7c 24 04 09          cmpl   $0x9,0x4(%rsp)
-//     12b7:       7e ea                   jle    12a3 <_Z10every_10usv+0x17>
-//     12b9:       48 8b 44 24 08          mov    0x8(%rsp),%rax
-//     12be:       48 83 c4 10             add    $0x10,%rsp
-//     12c2:       c3
+//     128c:       48 83 ec 10                 sub    $0x10,%rsp
+//     1290:       48 c7 44 24 08 00 00 00 00  movq   $0x0,0x8(%rsp)
+//     1299:       c7 44 24 04 00 00 00 00     movl   $0x0,0x4(%rsp)
+//     12a1:       eb 0f                       jmp    12b2 <_Z10every_10usv+0x26>
+//     12a3:       e8 b1 ff ff ff              call   1259 <_Z9every_1usv>
+//     12a8:       48 01 44 24 08              add    %rax,0x8(%rsp)
+//     12ad:       83 44 24 04 01              addl   $0x1,0x4(%rsp)
+//     12b2:       83 7c 24 04 09              cmpl   $0x9,0x4(%rsp)
+//     12b7:       7e ea                       jle    12a3 <_Z10every_10usv+0x17>
+//     12b9:       48 8b 44 24 08              mov    0x8(%rsp),%rax
+//     12be:       48 83 c4 10 c3              add    $0x10,%rsp
 
 TEST(LibunwindstackUnwinder, DetectsFunctionWithFramePointerSet) {
   auto unwinder = LibunwindstackUnwinder::Create();
@@ -110,7 +106,7 @@ TEST(LibunwindstackUnwinder, DetectsFunctionWithoutFramePointer) {
   EXPECT_FALSE(has_frame_pointer_set_or_error.value());
 }
 
-TEST(LibunwindstackUnwinder, DetectsFramePointerNotSetAtPushRBP) {
+TEST(LibunwindstackUnwinder, DetectsFramePointerNotSetAtPushRbp) {
   auto unwinder = LibunwindstackUnwinder::Create();
 
   auto maps = CreateFakeMapsEntry("target_fp");
@@ -122,7 +118,7 @@ TEST(LibunwindstackUnwinder, DetectsFramePointerNotSetAtPushRBP) {
   EXPECT_FALSE(has_frame_pointer_set_or_error.value());
 }
 
-TEST(LibunwindstackUnwinder, DetectsFramePointerNotSetAtMovRSPToRBP) {
+TEST(LibunwindstackUnwinder, DetectsFramePointerNotSetAtMovRspToRbp) {
   auto unwinder = LibunwindstackUnwinder::Create();
 
   auto maps = CreateFakeMapsEntry("target_fp");
@@ -158,7 +154,7 @@ TEST(LibunwindstackUnwinder, DetectsFramePointerNotSetAtLeave) {
   EXPECT_FALSE(has_frame_pointer_set_or_error.value());
 }
 
-TEST(LibunwindstackUnwinder, FramePointerDetectionDoesWorkWithCaching) {
+TEST(LibunwindstackUnwinder, FramePointerDetectionWorksWithCaching) {
   auto unwinder = LibunwindstackUnwinder::Create();
 
   auto maps = CreateFakeMapsEntry("target_fp");

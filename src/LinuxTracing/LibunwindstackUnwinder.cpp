@@ -125,8 +125,12 @@ LibunwindstackResult LibunwindstackUnwinderImpl::Unwind(
 
   return LibunwindstackResult{unwinder.ConsumeFrames(), unwinder.LastErrorCode()};
 }
-
-std::optional<bool> HasFramePointerSet(
+// This functions detects if a frame pointer register was set in the given program counter using
+// the given Dwarf section.
+// It does so by verifying if "Canonical Frame Address" gets computed immediately from $rbp (with
+// offset 16 to skip the old frame pointer and the return address).
+// The function returns nullopt if the required Dwarf information is not available.
+static std::optional<bool> HasFramePointerSetFromDwarfSection(
     uint64_t rel_pc, unwindstack::DwarfSection* dwarf_section,
     std::map<uint64_t, unwindstack::DwarfLocations>* loc_regs_cache) {
   if (dwarf_section == nullptr) {
@@ -157,7 +161,7 @@ std::optional<bool> HasFramePointerSet(
     // From the Dwarf standard:
     //  "Typically, the CFA is defined to be the value of the stack pointer at the call site in the
     //  previous frame (which may be different from its value on entry to the current frame)"
-    // So for the frame pointer case, the "value of the stack point at the call site" is:
+    // So for the frame pointer case, the "value of the stack pointer at the call site" is:
     // $rbp + 8 (for the prev. frame pointer) + 8 (for the return address)
     if (loc->values[0] == unwindstack::X86_64_REG_RBP && loc->values[1] == 16) {
       return true;
@@ -174,7 +178,8 @@ std::optional<bool> LibunwindstackUnwinderImpl::HasFramePointerSet(uint64_t inst
     return std::nullopt;
   }
 
-  // We want the object to be read from file, so we don't need to pass in any process memory.
+  // We don't have enough process memory collected to read the object file from memory (if memory
+  // mapped), so we don't even try and directly read from file.
   unwindstack::Object* object = map_info->GetObject(nullptr, unwindstack::ARCH_X86_64);
   if (object == nullptr) {
     return std::nullopt;
@@ -186,8 +191,7 @@ std::optional<bool> LibunwindstackUnwinderImpl::HasFramePointerSet(uint64_t inst
     return false;
   }
 
-  unwindstack::ElfInterface* elf_interface = elf->interface();
-  if (elf_interface == nullptr) {
+  if (!elf->valid()) {
     return std::nullopt;
   }
 
@@ -196,7 +200,8 @@ std::optional<bool> LibunwindstackUnwinderImpl::HasFramePointerSet(uint64_t inst
   unwindstack::DwarfSection* debug_frame = elf->interface()->debug_frame();
 
   auto has_frame_pointer_set_from_debug_frame_or_error =
-      orbit_linux_tracing::HasFramePointerSet(rel_pc, debug_frame, &debug_frame_loc_regs_cache_);
+      orbit_linux_tracing::HasFramePointerSetFromDwarfSection(rel_pc, debug_frame,
+                                                              &debug_frame_loc_regs_cache_);
   if (!has_frame_pointer_set_from_debug_frame_or_error.has_value()) {
     return std::nullopt;
   }
@@ -206,7 +211,8 @@ std::optional<bool> LibunwindstackUnwinderImpl::HasFramePointerSet(uint64_t inst
 
   unwindstack::DwarfSection* eh_frame = elf->interface()->eh_frame();
   auto has_frame_pointer_set_from_eh_frame_or_error =
-      orbit_linux_tracing::HasFramePointerSet(rel_pc, eh_frame, &eh_frame_loc_regs_cache_);
+      orbit_linux_tracing::HasFramePointerSetFromDwarfSection(rel_pc, eh_frame,
+                                                              &eh_frame_loc_regs_cache_);
   if (!has_frame_pointer_set_from_eh_frame_or_error.has_value()) {
     return std::nullopt;
   }

@@ -364,7 +364,7 @@ TEST_F(LeafFunctionCallManagerTest,
 
   unwindstack::Maps fake_maps{};
   EXPECT_CALL(maps_, Get()).WillRepeatedly(Return(&fake_maps));
-  EXPECT_CALL(unwinder_, HasFramePointerSet(kTargetAddress1, &fake_maps))
+  EXPECT_CALL(unwinder_, HasFramePointerSetFromDwarfSection(kTargetAddress1, &fake_maps))
       .Times(1)
       .WillOnce(Return(std::make_optional<bool>(false)));
 

@@ -49,27 +49,27 @@ Callstack::CallstackType LeafFunctionCallManager::PatchCallerOfLeafFunction(
 
   const uint64_t rbp = event_data->GetRegisters()[PERF_REG_X86_BP];
   const uint64_t rsp = event_data->GetRegisters()[PERF_REG_X86_SP];
-  const uint64_t ip = event_data->GetRegisters()[PERF_REG_X86_IP];
+  const uint64_t rip = event_data->GetRegisters()[PERF_REG_X86_IP];
 
   if (rbp < rsp) {
     return Callstack::kFramePointerUnwindingError;
   }
 
-  // If the frame pointer register is set correctly at the current instruction, there is no need
-  // to patch the callstack and we can early out.
   std::optional<bool> has_frame_pointer_or_error =
-      unwinder->HasFramePointerSet(ip, current_maps->Get());
+      unwinder->HasFramePointerSet(rip, current_maps->Get());
 
   // If retrieving the debug information already failed here, we don't need to try unwinding.
   if (!has_frame_pointer_or_error.has_value()) {
     return Callstack::kStackTopDwarfUnwindingError;
   }
 
+  // If the frame pointer register is set correctly at the current instruction, there is no need
+  // to patch the callstack and we can early out.
   if (*has_frame_pointer_or_error) {
     return Callstack::kComplete;
   }
 
-  uint64_t stack_size = rbp - rsp;
+  const uint64_t stack_size = rbp - rsp;
 
   // TODO(b/228445173): If we are in a leaf function and the stack dump contains the return address
   //  we should be able to patch the stack even if the stack dump is not from $rsp to $rbp.
