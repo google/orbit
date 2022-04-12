@@ -28,6 +28,7 @@ target_sources(
          CaptureWindow.h
          CGroupAndProcessMemoryTrack.h
          CoreMath.h
+         DrawingInterface.h
          FramePointerValidatorClient.h
          FrameTrack.h
          FrameTrackOnlineProcessor.h
@@ -48,6 +49,7 @@ target_sources(
          MajorPageFaultsTrack.h
          MemoryTrack.h
          MinorPageFaultsTrack.h
+         MockTimelineInfo.h
          MultivariateTimeSeries.h
          PageFaultsTrack.h
          PickingManager.h

@@ -20,13 +20,12 @@
 #include "Test/Path.h"
 #include "TestUtils/TestUtils.h"
 
+using orbit_grpc_protos::ModuleInfo;
 using orbit_test_utils::HasNoError;
 
 namespace orbit_object_utils {
 
 TEST(LinuxMap, CreateModuleHelloWorld) {
-  using orbit_grpc_protos::ModuleInfo;
-
   const std::filesystem::path hello_world_path = orbit_test::GetTestdataDir() / "hello_world_elf";
 
   constexpr uint64_t kStartAddress = 23;
@@ -45,8 +44,6 @@ TEST(LinuxMap, CreateModuleHelloWorld) {
 }
 
 TEST(LinuxMap, CreateModuleOnDev) {
-  using orbit_grpc_protos::ModuleInfo;
-
   const std::filesystem::path dev_zero_path = "/dev/zero";
 
   constexpr uint64_t kStartAddress = 23;
@@ -58,8 +55,6 @@ TEST(LinuxMap, CreateModuleOnDev) {
 }
 
 TEST(LinuxMap, CreateCoffModule) {
-  using orbit_grpc_protos::ModuleInfo;
-
   const std::filesystem::path dll_path = orbit_test::GetTestdataDir() / "libtest.dll";
 
   constexpr uint64_t kStartAddress = 23;
@@ -80,8 +75,6 @@ TEST(LinuxMap, CreateCoffModule) {
 }
 
 TEST(LinuxMap, CreateModuleNotElf) {
-  using orbit_grpc_protos::ModuleInfo;
-
   const std::filesystem::path text_file = orbit_test::GetTestdataDir() / "textfile.txt";
 
   constexpr uint64_t kStartAddress = 23;
@@ -93,8 +86,6 @@ TEST(LinuxMap, CreateModuleNotElf) {
 }
 
 TEST(LinuxMan, CreateModuleWithSoname) {
-  using orbit_grpc_protos::ModuleInfo;
-
   const std::filesystem::path hello_world_path = orbit_test::GetTestdataDir() / "libtest-1.0.so";
 
   constexpr uint64_t kStartAddress = 23;
@@ -113,8 +104,6 @@ TEST(LinuxMan, CreateModuleWithSoname) {
 }
 
 TEST(LinuxMap, CreateModuleFileDoesNotExist) {
-  using orbit_grpc_protos::ModuleInfo;
-
   const std::filesystem::path file_path = "/not/a/valid/file/path";
 
   constexpr uint64_t kStartAddress = 23;
@@ -130,8 +119,6 @@ TEST(LinuxMap, ReadModules) {
 }
 
 TEST(LinuxMap, ParseMaps) {
-  using orbit_grpc_protos::ModuleInfo;
-
   {
     // Empty data
     const auto result = ParseMaps(std::string_view{""});
@@ -177,7 +164,7 @@ TEST(LinuxMap, ParseMaps) {
 
     const ModuleInfo* hello_module_info = nullptr;
     const ModuleInfo* no_symbols_module_info = nullptr;
-    ;
+
     if (result.value()[0].name() == "hello_world_elf") {
       hello_module_info = &result.value()[0];
       no_symbols_module_info = &result.value()[1];
@@ -204,6 +191,29 @@ TEST(LinuxMap, ParseMaps) {
     EXPECT_EQ(no_symbols_module_info->load_bias(), 0x400000);
     EXPECT_EQ(no_symbols_module_info->object_file_type(), ModuleInfo::kElfFile);
   }
+}
+
+TEST(LinuxMap, ParseMapsWithSpacesInPath) {
+  const std::filesystem::path test_path = orbit_test::GetTestdataDir();
+  // This file is a copy of hello_world_elf, but with the name containing spaces.
+  const std::filesystem::path hello_world_path = test_path / "hello world elf";
+
+  const std::string data{absl::StrFormat(
+      "7f6874290000-7f6874297000 r-xp 00000000 fe:01 661214                     %s\n",
+      hello_world_path)};
+  const auto result = ParseMaps(data);
+  ASSERT_THAT(result, HasNoError());
+  ASSERT_EQ(result.value().size(), 1);
+
+  const ModuleInfo& hello_module_info = result.value()[0];
+  EXPECT_EQ(hello_module_info.name(), "hello world elf");
+  EXPECT_EQ(hello_module_info.file_path(), hello_world_path);
+  EXPECT_EQ(hello_module_info.file_size(), 16616);
+  EXPECT_EQ(hello_module_info.address_start(), 0x7f6874290000);
+  EXPECT_EQ(hello_module_info.address_end(), 0x7f6874297000);
+  EXPECT_EQ(hello_module_info.build_id(), "d12d54bc5b72ccce54a408bdeda65e2530740ac8");
+  EXPECT_EQ(hello_module_info.load_bias(), 0x0);
+  EXPECT_EQ(hello_module_info.object_file_type(), ModuleInfo::kElfFile);
 }
 
 }  // namespace orbit_object_utils

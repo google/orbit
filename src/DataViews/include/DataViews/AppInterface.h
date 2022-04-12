@@ -55,8 +55,6 @@ class AppInterface {
   virtual void SetVisibleScopeIds(absl::flat_hash_set<uint64_t> visible_scope_ids) = 0;
   virtual void DeselectTimer() = 0;
   [[nodiscard]] virtual bool IsCapturing() const = 0;
-  [[nodiscard]] virtual std::vector<const orbit_client_protos::TimerInfo*>
-  GetAllTimersForHookedFunction(uint64_t function_id) const = 0;
   [[nodiscard]] virtual std::vector<const orbit_client_data::TimerChain*> GetAllThreadTimerChains()
       const = 0;
 

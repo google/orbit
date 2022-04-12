@@ -64,7 +64,7 @@ void MoveFilesProcess::TryMoveFilesAndRemoveDirIfNeeded(const std::filesystem::p
     const auto& new_file_path = dest_dir / file_name;
     ORBIT_LOG("Moving \"%s\" to \"%s\"...", file_path.string(), new_file_path.string());
     emit moveFileStarted(QString::fromStdString(file_path.string()));
-    auto move_result = orbit_base::MoveFile(file_path, new_file_path);
+    auto move_result = orbit_base::MoveOrRenameFile(file_path, new_file_path);
     if (move_result.has_error()) {
       ReportError(absl::StrFormat(R"(Unable to move "%s" to "%s": %s)", file_path.string(),
                                   new_file_path.string(), move_result.error().message()));

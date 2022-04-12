@@ -16,9 +16,29 @@
 
 #include "PeCoffUnwindInfos.h"
 
+#include <memory>
+#include <unordered_map>
+
 namespace unwindstack {
 
-bool PeCoffUnwindInfos::GetUnwindInfo(uint64_t unwind_info_file_offset, UnwindInfo* unwind_info) {
+class PeCoffUnwindInfosImpl : public PeCoffUnwindInfos {
+ public:
+  explicit PeCoffUnwindInfosImpl(Memory* memory) : pe_coff_memory_(memory) {}
+  bool GetUnwindInfo(uint64_t unwind_info_file_offset, UnwindInfo* unwind_info) override;
+
+ private:
+  bool ParseUnwindInfoAtOffset(uint64_t file_offset, UnwindInfo* unwind_info);
+  PeCoffMemory pe_coff_memory_;
+  // This is a cache of unwind infos.
+  std::unordered_map<uint64_t, UnwindInfo> unwind_info_offset_to_unwind_info_;
+};
+
+std::unique_ptr<PeCoffUnwindInfos> CreatePeCoffUnwindInfos(Memory* memory) {
+  return std::make_unique<PeCoffUnwindInfosImpl>(memory);
+}
+
+bool PeCoffUnwindInfosImpl::GetUnwindInfo(uint64_t unwind_info_file_offset,
+                                          UnwindInfo* unwind_info) {
   const auto& it = unwind_info_offset_to_unwind_info_.find(unwind_info_file_offset);
   if (it != unwind_info_offset_to_unwind_info_.end()) {
     *unwind_info = it->second;
@@ -35,14 +55,14 @@ bool PeCoffUnwindInfos::GetUnwindInfo(uint64_t unwind_info_file_offset, UnwindIn
   return true;
 }
 
-bool PeCoffUnwindInfos::ParseUnwindInfoAtOffset(uint64_t offset, UnwindInfo* unwind_info) {
+bool PeCoffUnwindInfosImpl::ParseUnwindInfoAtOffset(uint64_t offset, UnwindInfo* unwind_info) {
   // Need to remember the original offset for later
   const uint64_t base_offset = offset;
 
   constexpr uint64_t kUnwindInfoHeaderSize = 4;
   std::vector<uint8_t> data_info(kUnwindInfoHeaderSize);
-  pe_coff_memory_->set_cur_offset(offset);
-  if (!pe_coff_memory_->GetFully(static_cast<void*>(&data_info[0]), kUnwindInfoHeaderSize)) {
+  pe_coff_memory_.set_cur_offset(offset);
+  if (!pe_coff_memory_.GetFully(static_cast<void*>(&data_info[0]), kUnwindInfoHeaderSize)) {
     last_error_.code = ERROR_MEMORY_INVALID;
     last_error_.address = offset;
     return false;
@@ -60,11 +80,11 @@ bool PeCoffUnwindInfos::ParseUnwindInfoAtOffset(uint64_t offset, UnwindInfo* unw
   }
 
   unwind_info->unwind_codes.resize(unwind_info->num_codes);
-  pe_coff_memory_->set_cur_offset(offset + kUnwindInfoHeaderSize);
-  if (!pe_coff_memory_->GetFully(static_cast<void*>(&unwind_info->unwind_codes[0]),
-                                 unwind_info->num_codes * sizeof(UnwindCode))) {
+  pe_coff_memory_.set_cur_offset(offset + kUnwindInfoHeaderSize);
+  if (!pe_coff_memory_.GetFully(static_cast<void*>(&unwind_info->unwind_codes[0]),
+                                unwind_info->num_codes * sizeof(UnwindCode))) {
     last_error_.code = ERROR_MEMORY_INVALID;
-    last_error_.address = pe_coff_memory_->cur_offset();
+    last_error_.address = pe_coff_memory_.cur_offset();
     return false;
   }
 
@@ -79,12 +99,12 @@ bool PeCoffUnwindInfos::ParseUnwindInfoAtOffset(uint64_t offset, UnwindInfo* unw
         base_offset + kUnwindInfoHeaderSize +
         ((unwind_info->num_codes + 1) & ~1) * sizeof(UnwindCode);
 
-    pe_coff_memory_->set_cur_offset(runtime_function_offset);
-    if (!pe_coff_memory_->Get32(&(unwind_info->chained_info.start_address)) ||
-        !pe_coff_memory_->Get32(&(unwind_info->chained_info.end_address)) ||
-        !pe_coff_memory_->Get32(&(unwind_info->chained_info.unwind_info_offset))) {
+    pe_coff_memory_.set_cur_offset(runtime_function_offset);
+    if (!pe_coff_memory_.Get32(&(unwind_info->chained_info.start_address)) ||
+        !pe_coff_memory_.Get32(&(unwind_info->chained_info.end_address)) ||
+        !pe_coff_memory_.Get32(&(unwind_info->chained_info.unwind_info_offset))) {
       last_error_.code = ERROR_MEMORY_INVALID;
-      last_error_.address = pe_coff_memory_->cur_offset();
+      last_error_.address = pe_coff_memory_.cur_offset();
       return false;
     }
   }

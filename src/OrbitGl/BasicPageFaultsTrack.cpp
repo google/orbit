@@ -104,7 +104,8 @@ void BasicPageFaultsTrack::DrawSingleSeriesEntry(
 }
 
 bool BasicPageFaultsTrack::IsCollapsed() const {
-  return collapse_toggle_->IsCollapsed() || GetParent()->IsCollapsed();
+  return LineGraphTrack<kBasicPageFaultsTrackDimension>::IsCollapsed() ||
+         GetParent()->IsCollapsed();
 }
 
 float BasicPageFaultsTrack::GetAnnotatedTrackContentHeight() const {

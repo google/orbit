@@ -34,7 +34,7 @@ class PeCoffUnwindInfoUnwinderX86_64Test : public ::testing::Test {
  public:
   PeCoffUnwindInfoUnwinderX86_64Test()
       : object_file_memory_fake_(new MemoryFake),
-        unwinder_(new PeCoffMemory(object_file_memory_fake_.get())),
+        unwinder_(object_file_memory_fake_.get()),
         process_mem_fake_(new MemoryFake) {}
   ~PeCoffUnwindInfoUnwinderX86_64Test() {}
 

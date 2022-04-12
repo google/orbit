@@ -45,54 +45,13 @@ using UnwindingMethod = orbit_grpc_protos::CaptureOptions::UnwindingMethod;
 
 using orbit_base::Future;
 
-// TODO(b/187170164): This method contains a lot of arguments. Consider making it more structured.
-Future<ErrorMessageOr<CaptureListener::CaptureOutcome>> CaptureClient::Capture(
-    orbit_base::ThreadPool* thread_pool, uint32_t process_id,
-    const orbit_client_data::ModuleManager& module_manager,
-    absl::flat_hash_map<uint64_t, FunctionInfo> selected_functions, bool record_arguments,
-    bool record_return_values, TracepointInfoSet selected_tracepoints, double samples_per_second,
-    uint16_t stack_dump_size, UnwindingMethod unwinding_method, bool collect_scheduling_info,
-    bool collect_thread_state, bool collect_gpu_jobs, bool enable_api, bool enable_introspection,
-    DynamicInstrumentationMethod dynamic_instrumentation_method,
-    uint64_t max_local_marker_depth_per_command_buffer, bool collect_memory_info,
-    uint64_t memory_sampling_period_ms,
-    std::unique_ptr<CaptureEventProcessor> capture_event_processor) {
-  absl::MutexLock lock(&state_mutex_);
-  if (state_ != State::kStopped) {
-    return {
-        ErrorMessage("Capture cannot be started, the previous capture is still "
-                     "running/stopping.")};
-  }
-
-  state_ = State::kStarting;
-  ORBIT_LOG("State is now kStarting");
-
-  auto capture_result = thread_pool->Schedule(
-      [this, process_id, &module_manager, selected_functions = std::move(selected_functions),
-       record_arguments, record_return_values,
-       selected_tracepoints = std::move(selected_tracepoints), samples_per_second, stack_dump_size,
-       unwinding_method, collect_scheduling_info, collect_thread_state, collect_gpu_jobs,
-       enable_api, enable_introspection, dynamic_instrumentation_method,
-       max_local_marker_depth_per_command_buffer, collect_memory_info, memory_sampling_period_ms,
-       capture_event_processor = std::move(capture_event_processor)]() mutable {
-        return CaptureSync(process_id, module_manager, selected_functions, record_arguments,
-                           record_return_values, selected_tracepoints, samples_per_second,
-                           stack_dump_size, unwinding_method, collect_scheduling_info,
-                           collect_thread_state, collect_gpu_jobs, enable_api, enable_introspection,
-                           dynamic_instrumentation_method,
-                           max_local_marker_depth_per_command_buffer, collect_memory_info,
-                           memory_sampling_period_ms, capture_event_processor.get());
-      });
-
-  return capture_result;
-}
+namespace {
 
 // Api functions are declared in Orbit.h. They are implemented in user code through the
 // ORBIT_API_INSTANTIATE macro. Those functions are used to query the tracee for Orbit specific
 // information, such as the memory location where Orbit should write function pointers to enable
 // the Api after having injected liborbit.so.
-[[nodiscard]] static std::vector<ApiFunction> FindApiFunctions(
-    const orbit_client_data::ModuleManager& module_manager) {
+std::vector<ApiFunction> FindApiFunctions(const orbit_client_data::ModuleManager& module_manager) {
   // We have a different function name for each supported platform.
   static const std::vector<std::string> kOrbitApiGetFunctionTableAddressPrefixes{
       orbit_api_utils::kOrbitApiGetFunctionTableAddressPrefix,
@@ -125,15 +84,85 @@ Future<ErrorMessageOr<CaptureListener::CaptureOutcome>> CaptureClient::Capture(
   return api_functions;
 }
 
+[[nodiscard]] orbit_grpc_protos::CaptureOptions ToGrpcCaptureOptions(
+    const ClientCaptureOptions& options, const orbit_client_data::ModuleManager& module_manager) {
+  CaptureOptions capture_options;
+  capture_options.set_trace_context_switches(options.collect_scheduling_info);
+  capture_options.set_pid(options.process_id);
+  ORBIT_CHECK(options.unwinding_method != CaptureOptions::kUndefined);
+  capture_options.set_unwinding_method(options.unwinding_method);
+  capture_options.set_stack_dump_size(options.stack_dump_size);
+  capture_options.set_samples_per_second(options.samples_per_second);
+
+  capture_options.set_collect_memory_info(options.collect_memory_info);
+  constexpr const uint64_t kMsToNs = 1'000'000;
+  capture_options.set_memory_sampling_period_ns(options.memory_sampling_period_ms * kMsToNs);
+
+  capture_options.set_trace_thread_state(options.collect_thread_states);
+  capture_options.set_trace_gpu_driver(options.collect_gpu_jobs);
+  capture_options.set_max_local_marker_depth_per_command_buffer(
+      options.max_local_marker_depth_per_command_buffer);
+
+  for (const auto& [function_id, function] : options.selected_functions) {
+    InstrumentedFunction* instrumented_function = capture_options.add_instrumented_functions();
+    instrumented_function->set_file_path(function.module_path());
+    const ModuleData* module = module_manager.GetModuleByPathAndBuildId(function.module_path(),
+                                                                        function.module_build_id());
+    ORBIT_CHECK(module != nullptr);
+    instrumented_function->set_file_offset(function.FileOffset(module->load_bias()));
+    instrumented_function->set_file_build_id(function.module_build_id());
+    instrumented_function->set_function_id(function_id);
+    instrumented_function->set_function_size(function.size());
+    instrumented_function->set_function_name(function.pretty_name());
+    instrumented_function->set_record_arguments(options.record_arguments);
+    instrumented_function->set_record_return_value(options.record_return_values);
+  }
+
+  for (const auto& tracepoint : options.selected_tracepoints) {
+    TracepointInfo* instrumented_tracepoint = capture_options.add_instrumented_tracepoint();
+    instrumented_tracepoint->set_category(tracepoint.category());
+    instrumented_tracepoint->set_name(tracepoint.name());
+  }
+
+  capture_options.set_enable_api(options.enable_api);
+  capture_options.set_enable_introspection(options.enable_introspection);
+  ORBIT_CHECK(options.dynamic_instrumentation_method == CaptureOptions::kKernelUprobes ||
+              options.dynamic_instrumentation_method == CaptureOptions::kUserSpaceInstrumentation);
+  capture_options.set_dynamic_instrumentation_method(options.dynamic_instrumentation_method);
+
+  auto api_functions = FindApiFunctions(module_manager);
+  *(capture_options.mutable_api_functions()) = {api_functions.begin(), api_functions.end()};
+
+  return capture_options;
+}
+
+}  // namespace
+
+orbit_base::Future<ErrorMessageOr<CaptureListener::CaptureOutcome>> CaptureClient::Capture(
+    orbit_base::ThreadPool* thread_pool,
+    std::unique_ptr<CaptureEventProcessor> capture_event_processor,
+    const orbit_client_data::ModuleManager& module_manager,
+    const ClientCaptureOptions& capture_options) {
+  absl::MutexLock lock(&state_mutex_);
+  if (state_ != State::kStopped) {
+    return {
+        ErrorMessage("Capture cannot be started, the previous capture is still "
+                     "running/stopping.")};
+  }
+
+  state_ = State::kStarting;
+  ORBIT_LOG("State is now kStarting");
+
+  return thread_pool->Schedule(
+      [this, capture_event_processor = std::move(capture_event_processor),
+       grpc_capture_options = ToGrpcCaptureOptions(capture_options, module_manager)]() {
+        return CaptureSync(grpc_capture_options, capture_event_processor.get());
+      });
+}
+
 ErrorMessageOr<CaptureListener::CaptureOutcome> CaptureClient::CaptureSync(
-    uint32_t process_id, const orbit_client_data::ModuleManager& module_manager,
-    const absl::flat_hash_map<uint64_t, FunctionInfo>& selected_functions, bool record_arguments,
-    bool record_return_values, const TracepointInfoSet& selected_tracepoints,
-    double samples_per_second, uint16_t stack_dump_size, UnwindingMethod unwinding_method,
-    bool collect_scheduling_info, bool collect_thread_state, bool collect_gpu_jobs, bool enable_api,
-    bool enable_introspection, DynamicInstrumentationMethod dynamic_instrumentation_method,
-    uint64_t max_local_marker_depth_per_command_buffer, bool collect_memory_info,
-    uint64_t memory_sampling_period_ms, CaptureEventProcessor* capture_event_processor) {
+    orbit_grpc_protos::CaptureOptions capture_options,
+    CaptureEventProcessor* capture_event_processor) {
   ORBIT_SCOPE_FUNCTION;
   writes_done_failed_ = false;
   try_abort_ = false;
@@ -146,53 +175,7 @@ ErrorMessageOr<CaptureListener::CaptureOutcome> CaptureClient::CaptureSync(
   }
 
   CaptureRequest request;
-  CaptureOptions* capture_options = request.mutable_capture_options();
-  capture_options->set_trace_context_switches(collect_scheduling_info);
-  capture_options->set_pid(process_id);
-  ORBIT_CHECK(unwinding_method != CaptureOptions::kUndefined);
-  capture_options->set_unwinding_method(unwinding_method);
-  capture_options->set_stack_dump_size(stack_dump_size);
-  capture_options->set_samples_per_second(samples_per_second);
-
-  capture_options->set_collect_memory_info(collect_memory_info);
-  constexpr const uint64_t kMsToNs = 1'000'000;
-  capture_options->set_memory_sampling_period_ns(memory_sampling_period_ms * kMsToNs);
-
-  capture_options->set_trace_thread_state(collect_thread_state);
-  capture_options->set_trace_gpu_driver(collect_gpu_jobs);
-  capture_options->set_max_local_marker_depth_per_command_buffer(
-      max_local_marker_depth_per_command_buffer);
-  absl::flat_hash_map<uint64_t, InstrumentedFunction> instrumented_functions;
-  for (const auto& [function_id, function] : selected_functions) {
-    InstrumentedFunction* instrumented_function = capture_options->add_instrumented_functions();
-    instrumented_function->set_file_path(function.module_path());
-    const ModuleData* module = module_manager.GetModuleByPathAndBuildId(function.module_path(),
-                                                                        function.module_build_id());
-    ORBIT_CHECK(module != nullptr);
-    instrumented_function->set_file_offset(function.FileOffset(module->load_bias()));
-    instrumented_function->set_file_build_id(function.module_build_id());
-    instrumented_function->set_function_id(function_id);
-    instrumented_function->set_function_size(function.size());
-    instrumented_function->set_function_name(function.pretty_name());
-    instrumented_function->set_record_arguments(record_arguments);
-    instrumented_function->set_record_return_value(record_return_values);
-    instrumented_functions.insert_or_assign(function_id, *instrumented_function);
-  }
-
-  for (const auto& tracepoint : selected_tracepoints) {
-    TracepointInfo* instrumented_tracepoint = capture_options->add_instrumented_tracepoint();
-    instrumented_tracepoint->set_category(tracepoint.category());
-    instrumented_tracepoint->set_name(tracepoint.name());
-  }
-
-  capture_options->set_enable_api(enable_api);
-  capture_options->set_enable_introspection(enable_introspection);
-  ORBIT_CHECK(dynamic_instrumentation_method == CaptureOptions::kKernelUprobes ||
-              dynamic_instrumentation_method == CaptureOptions::kUserSpaceInstrumentation);
-  capture_options->set_dynamic_instrumentation_method(dynamic_instrumentation_method);
-
-  auto api_functions = FindApiFunctions(module_manager);
-  *(capture_options->mutable_api_functions()) = {api_functions.begin(), api_functions.end()};
+  *request.mutable_capture_options() = std::move(capture_options);
 
   bool request_write_succeeded;
   {

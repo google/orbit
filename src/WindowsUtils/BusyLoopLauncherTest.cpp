@@ -44,6 +44,15 @@ __declspec(noinline) void IncrementCounter(uint32_t* counter, std::atomic<bool>*
   }
 }
 
+void MaybeTerminateProcess(uint32_t process_id) {
+  ErrorMessageOr<SafeHandle> process_handle =
+      OpenProcess(PROCESS_ALL_ACCESS, /*inherit_handle=*/false, process_id);
+
+  if (process_handle.has_value()) {
+    ::TerminateProcess(*process_handle.value(), /*exit_code*/ 0);
+  }
+}
+
 }  // namespace
 
 TEST(BusyLoop, BusyLoopLauncher) {
@@ -77,6 +86,9 @@ TEST(BusyLoop, BusyLoopLauncher) {
 
   // Resume main thread.
   ASSERT_THAT(busy_loop_launcher.ResumeMainThread(), HasNoError());
+
+  // Kill process if not dead already.
+  MaybeTerminateProcess(busy_loop_info.process_id);
 
   // Wait for created process to exit.
   busy_loop_launcher.WaitForProcessToExit();

@@ -105,8 +105,6 @@ class TimeGraph final : public orbit_gl::CaptureViewElement,
   [[nodiscard]] const orbit_client_protos::TimerInfo* FindNextScopeTimer(
       uint64_t scope_id, uint64_t current_time,
       std::optional<uint32_t> thread_id = std::nullopt) const;
-  [[nodiscard]] std::vector<const orbit_client_protos::TimerInfo*> GetAllTimersForHookedFunction(
-      uint64_t function_address) const;
   [[nodiscard]] std::vector<const orbit_client_data::TimerChain*> GetAllThreadTrackTimerChains()
       const;
   [[nodiscard]] std::pair<const orbit_client_protos::TimerInfo*,

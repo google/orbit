@@ -20,12 +20,14 @@
 #include "OrbitBase/ThreadUtils.h"
 #include "OrbitBase/UniqueResource.h"
 
-namespace orbit_base {
+#ifdef _WIN32
+#include <Windows.h>
 
-#if defined(_WIN32)
 // Windows does not have TEMP_FAILURE_RETRY, shortcut to expression
 #define TEMP_FAILURE_RETRY(expression) (expression)
 #endif
+
+namespace orbit_base {
 
 static absl::Mutex log_file_mutex(absl::kConstInit);
 static orbit_base::unique_resource log_file{static_cast<FILE*>(nullptr), [](FILE* f) {
@@ -72,16 +74,6 @@ void InitLogFile(const std::filesystem::path& path) {
   }
 }
 
-void LogToFile(const std::string& message) {
-  absl::MutexLock lock(&log_file_mutex);
-  if (log_file.get() != nullptr) {
-    // Ignore any errors that can happen, we cannot do anything about them at this
-    // point anyways.
-    fwrite(message.c_str(), message.size(), 1, log_file.get());
-    fflush(log_file.get());
-  }
-}
-
 void LogStacktrace() {
   constexpr size_t kMaxDepth = 64;
   std::array<void*, kMaxDepth> raw_stack = {};
@@ -97,3 +89,20 @@ void LogStacktrace() {
 }
 
 }  // namespace orbit_base
+
+namespace orbit_base_internal {
+
+void LogToFile(const std::string& message) {
+  absl::MutexLock lock(&orbit_base::log_file_mutex);
+  if (orbit_base::log_file.get() != nullptr) {
+    // Ignore any errors that can happen, we cannot do anything about them at this point anyways.
+    fwrite(message.c_str(), message.size(), 1, orbit_base::log_file.get());
+    fflush(orbit_base::log_file.get());
+  }
+}
+
+#ifdef _WIN32
+void OutputDebugStringA(const char* str) { ::OutputDebugStringA(str); }
+#endif
+
+}  // namespace orbit_base_internal

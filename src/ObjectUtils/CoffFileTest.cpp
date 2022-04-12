@@ -122,3 +122,22 @@ TEST(CoffFile, GetsEmptyBuildIdIfPdbInfoIsNotPresent) {
 
   EXPECT_EQ("", coff_file_or_error.value()->GetBuildId());
 }
+
+TEST(CoffFile, GetExecutableSegmentOffsetAndSize) {
+  {
+    std::filesystem::path file_path = orbit_test::GetTestdataDir() / "dllmain.dll";
+    auto coff_file_or_error = CreateCoffFile(file_path);
+    ASSERT_THAT(coff_file_or_error, HasNoError());
+    const CoffFile& coff_file = *coff_file_or_error.value();
+    EXPECT_EQ(coff_file.GetExecutableSegmentOffset(), 0x1000);
+    EXPECT_EQ(coff_file.GetExecutableSegmentSize(), 0xce9e4);
+  }
+  {
+    std::filesystem::path file_path = orbit_test::GetTestdataDir() / "libtest.dll";
+    auto coff_file_or_error = CreateCoffFile(file_path);
+    ASSERT_THAT(coff_file_or_error, HasNoError());
+    const CoffFile& coff_file = *coff_file_or_error.value();
+    EXPECT_EQ(coff_file.GetExecutableSegmentOffset(), 0x1000);
+    EXPECT_EQ(coff_file.GetExecutableSegmentSize(), 0x1338);
+  }
+}
