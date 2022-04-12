@@ -35,7 +35,7 @@ class FakeTimerPane : public CaptureViewElement {
 
   [[nodiscard]] Vec2 GetPos() const override {
     // The element is positioned after the last visible child. We can safely assume there's always
-    // one child due to the track header.
+    // at least one child due to the track header.
     CaptureViewElement* last_child = *track_->GetNonHiddenChildren().rbegin();
     float pos_y = last_child->GetPos()[1] + last_child->GetHeight();
 
