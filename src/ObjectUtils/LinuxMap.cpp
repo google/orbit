@@ -213,6 +213,13 @@ ErrorMessageOr<std::vector<ModuleInfo>> ParseMaps(std::string_view proc_maps_dat
     std::vector<std::string> tokens = absl::StrSplit(line, absl::MaxSplits(' ', 5));
     if (tokens.size() < 5) continue;
 
+    if (tokens.size() == 6) {
+      absl::StripLeadingAsciiWhitespace(&tokens[5]);
+      if (tokens[5].empty()) {
+        tokens.pop_back();
+      }
+    }
+
     const std::string& inode = tokens[4];
     // If inode equals 0, then the memory is not backed by a file.
     // If a map not backed by a file has a name, it's a special one like [stack], [heap], etc.
@@ -228,7 +235,6 @@ ErrorMessageOr<std::vector<ModuleInfo>> ParseMaps(std::string_view proc_maps_dat
     std::string module_path;
     if (inode != "0") {  // The mapping is file-backed.
       if (tokens.size() == 6) {
-        absl::StripLeadingAsciiWhitespace(&tokens[5]);
         module_path = tokens[5];
         if (!last_file_mapped_into_memory.has_value() ||
             module_path != last_file_mapped_into_memory->GetFilePath()) {
