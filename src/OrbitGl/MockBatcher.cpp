@@ -8,19 +8,6 @@
 
 namespace orbit_gl {
 
-[[nodiscard]] static bool IsInBetween(float point, float min, float max) {
-  return point >= min && point <= max;
-}
-
-[[nodiscard]] static bool IsInsideRectangle(Vec2 point, Vec2 top_left, Vec2 bottom_right) {
-  for (int i = 0; i < 2; i++) {
-    if (!IsInBetween(point[i], top_left[i], bottom_right[i])) {
-      return false;
-    }
-  }
-  return true;
-}
-
 MockBatcher::MockBatcher(BatcherId batcher_id) : Batcher(batcher_id) { ResetElements(); }
 
 void MockBatcher::AddLine(Vec2 from, Vec2 to, float z, const Color& color,
@@ -92,9 +79,8 @@ int MockBatcher::GetNumBoxes() const {
 // To check that everything is inside a rectangle, we just need to check the minimum and maximum
 // used coordinates.
 bool MockBatcher::IsEverythingInsideRectangle(Vec2 start, Vec2 size) const {
-  Vec2 end = start + size;
-  return IsInsideRectangle({min_point_[0], min_point_[1]}, start, end) &&
-         IsInsideRectangle({max_point_[0], max_point_[1]}, start, end);
+  return IsInsideRectangle({min_point_[0], min_point_[1]}, start, size) &&
+         IsInsideRectangle({max_point_[0], max_point_[1]}, start, size);
 }
 
 bool MockBatcher::IsEverythingBetweenZLayers(float z_layer_min, float z_layer_max) const {

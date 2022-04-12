@@ -24,4 +24,17 @@ using Color = gte::Vector4<unsigned char>;
 [[nodiscard]] inline Vec2 Vec3ToVec2(const Vec3& v) { return {v[0], v[1]}; }
 [[nodiscard]] inline Vec3 Vec2ToVec3(Vec2 vertex, float z = 0) { return {vertex[0], vertex[1], z}; }
 
+[[nodiscard]] inline bool IsInBetween(float point, float min, float max) {
+  return point >= min && point <= max;
+}
+
+[[nodiscard]] inline bool IsInsideRectangle(Vec2 point, Vec2 top_left, Vec2 size) {
+  for (int i = 0; i < 2; i++) {
+    if (!IsInBetween(point[i], top_left[i], top_left[i] + size[i])) {
+      return false;
+    }
+  }
+  return true;
+}
+
 #endif  // ORBIT_GL_CORE_MATH_H_
