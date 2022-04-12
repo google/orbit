@@ -38,7 +38,7 @@ class TimeGraph final : public orbit_gl::CaptureViewElement,
   [[nodiscard]] float GetHeight() const override;
 
   void DrawAllElements(orbit_gl::PrimitiveAssembler& primitive_assembler,
-                       TextRenderer& text_renderer, PickingMode& picking_mode,
+                       orbit_gl::TextRenderer& text_renderer, PickingMode& picking_mode,
                        uint64_t current_mouse_time_ns);
   void DrawText(float layer);
 
@@ -119,7 +119,7 @@ class TimeGraph final : public orbit_gl::CaptureViewElement,
   [[nodiscard]] bool IsPartlyVisible(uint64_t min, uint64_t max) const;
   [[nodiscard]] bool IsVisible(VisibilityType vis_type, uint64_t min, uint64_t max) const;
 
-  [[nodiscard]] TextRenderer* GetTextRenderer() { return &text_renderer_static_; }
+  [[nodiscard]] orbit_gl::TextRenderer* GetTextRenderer() { return &text_renderer_static_; }
   [[nodiscard]] orbit_gl::PrimitiveAssembler& GetPrimitiveAssembler() {
     return primitive_assembler_;
   }
@@ -177,7 +177,7 @@ class TimeGraph final : public orbit_gl::CaptureViewElement,
       const orbit_gl::ModifierKeys& modifiers = orbit_gl::ModifierKeys()) override;
 
   AccessibleInterfaceProvider* accessible_parent_;
-  TextRenderer text_renderer_static_;
+  orbit_gl::TextRenderer text_renderer_static_;
 
   double ref_time_us_ = 0;
   double min_time_us_ = 0;

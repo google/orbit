@@ -27,6 +27,7 @@ constexpr const float kBoxHeightMultiplier = 1.5f;
 
 using orbit_gl::PickingUserData;
 using orbit_gl::PrimitiveAssembler;
+using orbit_gl::TextRenderer;
 
 template <size_t Dimension>
 GraphTrack<Dimension>::GraphTrack(CaptureViewElement* parent,

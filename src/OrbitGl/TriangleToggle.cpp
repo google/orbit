@@ -16,6 +16,7 @@
 #include "Track.h"
 
 using orbit_gl::PrimitiveAssembler;
+using orbit_gl::TextRenderer;
 
 TriangleToggle::TriangleToggle(CaptureViewElement* parent, const orbit_gl::Viewport* viewport,
                                const TimeGraphLayout* layout, StateChangeHandler handler)

@@ -28,6 +28,8 @@ struct vertex_buffer_t;
 struct texture_font_t;
 }  // namespace ftgl
 
+namespace orbit_gl {
+
 class TextRenderer {
  public:
   enum class HAlign { Left, Right };
@@ -108,5 +110,7 @@ inline ftgl::vec4 ColorToVec4(const Color& color) {
   vec.a = color[3] * coeff;
   return vec;
 }
+
+}  // namespace orbit_gl
 
 #endif  // ORBIT_GL_TEXT_RENDERER_H_

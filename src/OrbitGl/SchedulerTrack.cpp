@@ -19,6 +19,7 @@
 
 using orbit_client_protos::TimerInfo;
 using orbit_gl::PrimitiveAssembler;
+using orbit_gl::TextRenderer;
 
 const Color kInactiveColor(100, 100, 100, 255);
 const Color kSamePidColor(140, 140, 140, 255);

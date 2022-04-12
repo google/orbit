@@ -19,6 +19,7 @@
 
 using orbit_client_data::TimerData;
 using orbit_gl::PrimitiveAssembler;
+using orbit_gl::TextRenderer;
 
 Track::Track(CaptureViewElement* parent, const orbit_gl::TimelineInfoInterface* timeline_info,
              orbit_gl::Viewport* viewport, TimeGraphLayout* layout,

@@ -34,6 +34,7 @@ using orbit_client_protos::TimerInfo;
 
 using orbit_gl::PickingUserData;
 using orbit_gl::PrimitiveAssembler;
+using orbit_gl::TextRenderer;
 
 const Color TimerTrack::kHighlightColor = Color(100, 181, 246, 255);
 const Color TimerTrack::kBoxBorderColor = Color(255, 255, 255, 255);

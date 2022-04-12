@@ -67,12 +67,12 @@ class GraphTrack : public Track {
   }
 
  protected:
-  void DoDraw(orbit_gl::PrimitiveAssembler& primitive_assembler, TextRenderer& text_renderer,
-              const DrawContext& draw_context) override;
+  void DoDraw(orbit_gl::PrimitiveAssembler& primitive_assembler,
+              orbit_gl::TextRenderer& text_renderer, const DrawContext& draw_context) override;
 
   void DoUpdatePrimitives(orbit_gl::PrimitiveAssembler& primitive_assembler,
-                          TextRenderer& text_renderer, uint64_t min_tick, uint64_t max_tick,
-                          PickingMode picking_mode) override;
+                          orbit_gl::TextRenderer& text_renderer, uint64_t min_tick,
+                          uint64_t max_tick, PickingMode picking_mode) override;
 
   [[nodiscard]] virtual Color GetColor(size_t index) const;
   [[nodiscard]] virtual double GetGraphMaxValue() const { return series_.GetMax(); }
@@ -94,10 +94,10 @@ class GraphTrack : public Track {
   [[nodiscard]] uint32_t GetLegendFontSize(uint32_t indentation_level = 0) const;
 
   virtual void DrawLabel(orbit_gl::PrimitiveAssembler& primitive_assembler,
-                         TextRenderer& text_renderer, Vec2 target_pos, const std::string& text,
-                         const Color& text_color, const Color& font_color);
+                         orbit_gl::TextRenderer& text_renderer, Vec2 target_pos,
+                         const std::string& text, const Color& text_color, const Color& font_color);
   virtual void DrawLegend(orbit_gl::PrimitiveAssembler& primitive_assembler,
-                          TextRenderer& text_renderer,
+                          orbit_gl::TextRenderer& text_renderer,
                           const std::array<std::string, Dimension>& series_names,
                           const Color& legend_text_color);
   virtual void DrawSeries(orbit_gl::PrimitiveAssembler& primitive_assembler, uint64_t min_tick,
