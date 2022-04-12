@@ -200,9 +200,9 @@ void CaptureData::UpdateTimerDurations() {
   for (const TimerInfo* timer : GetAllScopeTimers()) {
     const uint64_t scope_id = ProvideScopeId(*timer);
 
-    if (scope_id == orbit_client_data::kInvalidScopeId) return;
-
-    scope_id_to_timer_durations_[scope_id].push_back(timer->end() - timer->start());
+    if (scope_id != orbit_client_data::kInvalidScopeId) {
+      scope_id_to_timer_durations_[scope_id].push_back(timer->end() - timer->start());
+    }
   }
 
   for (auto& [id, timer_durations] : scope_id_to_timer_durations_) {
