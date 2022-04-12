@@ -29,7 +29,7 @@ struct Timeout {};
 
   // We need to use a Qt::PreciseTimer because only that guarantees to never wake up earlier than
   // `duration`. Other types might wake up up to 5% too early. We are also adding an additional
-  // milliseconds to the duration because the Qt::PreciseTimer only guarantees 1 millisecond
+  // millisecond to the duration because the Qt::PreciseTimer only guarantees 1 millisecond
   // accuracy so it might still be early by less than a millisecond. Adding an additional
   // millisecond ensures that we keep the promise of not completing before the duration has passed.
   // Reference: https://doc.qt.io/qt-5/qtimer.html
