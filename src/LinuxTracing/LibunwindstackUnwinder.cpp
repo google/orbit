@@ -11,6 +11,7 @@
 
 #include <array>
 #include <cstdint>
+#include <map>
 
 #include "OrbitBase/Logging.h"  // IWYU pragma: keep
 
@@ -72,8 +73,16 @@ class LibunwindstackUnwinderImpl : public LibunwindstackUnwinder {
                               bool offline_memory_only = false,
                               size_t max_frames = kDefaultMaxFrames) override;
 
+  std::optional<bool> HasFramePointerSet(uint64_t instruction_pointer, pid_t pid,
+                                         unwindstack::Maps* maps) override;
+
  private:
   static const std::array<size_t, unwindstack::X86_64_REG_LAST> kUnwindstackRegsToPerfRegs;
+
+  std::map<uint64_t, unwindstack::DwarfLocations>
+      debug_frame_loc_regs_cache_;  // Single row indexed by pc_end.
+  std::map<uint64_t, unwindstack::DwarfLocations>
+      eh_frame_loc_regs_cache_;  // Single row indexed by pc_end.
 };
 
 const std::array<size_t, unwindstack::X86_64_REG_LAST>
@@ -117,6 +126,101 @@ LibunwindstackResult LibunwindstackUnwinderImpl::Unwind(
   return LibunwindstackResult{unwinder.ConsumeFrames(), unwinder.LastErrorCode()};
 }
 
+// This functions detects if a frame pointer register was set in the given program counter using
+// the given Dwarf section.
+// It does so by verifying if "Canonical Frame Address" gets computed immediately from $rbp (with
+// offset 16 to skip the old frame pointer and the return address).
+// The function returns nullopt if the required Dwarf information is not available.
+static std::optional<bool> HasFramePointerSetFromDwarfSection(
+    uint64_t rel_pc, unwindstack::DwarfSection* dwarf_section,
+    std::map<uint64_t, unwindstack::DwarfLocations>* loc_regs_cache) {
+  if (dwarf_section == nullptr) {
+    return false;
+  }
+
+  auto cache_it = loc_regs_cache->upper_bound(rel_pc);
+  if (cache_it == loc_regs_cache->end() || rel_pc < cache_it->second.pc_start) {
+    const unwindstack::DwarfFde* fde = dwarf_section->GetFdeFromPc(rel_pc);
+    if (fde == nullptr) {
+      return std::nullopt;
+    }
+    unwindstack::DwarfLocations loc_regs;
+    if (!dwarf_section->GetCfaLocationInfo(rel_pc, fde, &loc_regs, unwindstack::ARCH_X86_64)) {
+      return std::nullopt;
+    }
+    cache_it = loc_regs_cache->emplace(loc_regs.pc_end, std::move(loc_regs)).first;
+  }
+
+  unwindstack::DwarfLocations* loc_regs = &cache_it->second;
+  auto cfa_entry = loc_regs->find(unwindstack::CFA_REG);
+  if (cfa_entry == loc_regs->end()) {
+    return false;
+  }
+  const unwindstack::DwarfLocation* loc = &cfa_entry->second;
+  ORBIT_CHECK(loc != nullptr);
+  if (loc->type == unwindstack::DWARF_LOCATION_REGISTER) {
+    // From the Dwarf standard:
+    //  "Typically, the CFA is defined to be the value of the stack pointer at the call site in the
+    //  previous frame (which may be different from its value on entry to the current frame)"
+    // So for the frame pointer case, the "value of the stack pointer at the call site" is:
+    // $rbp + 8 (for the prev. frame pointer) + 8 (for the return address)
+    if (loc->values[0] == unwindstack::X86_64_REG_RBP && loc->values[1] == 16) {
+      return true;
+    }
+  }
+
+  return false;
+}
+
+std::optional<bool> LibunwindstackUnwinderImpl::HasFramePointerSet(uint64_t instruction_pointer,
+                                                                   pid_t pid,
+                                                                   unwindstack::Maps* maps) {
+  unwindstack::MapInfo* map_info = maps->Find(instruction_pointer);
+  if (map_info == nullptr) {
+    return std::nullopt;
+  }
+
+  std::shared_ptr<unwindstack::Memory> process_memory =
+      unwindstack::Memory::CreateProcessMemoryCached(pid);
+  unwindstack::Object* object = map_info->GetObject(process_memory, unwindstack::ARCH_X86_64);
+  if (object == nullptr) {
+    return std::nullopt;
+  }
+
+  auto* elf = dynamic_cast<unwindstack::Elf*>(object);
+  if (elf == nullptr) {
+    // TODO(b/228599622): Handle the PeCoff case.
+    return false;
+  }
+
+  unwindstack::ElfInterface* elf_interface = elf->interface();
+  if (!elf->valid() || elf_interface == nullptr) {
+    return std::nullopt;
+  }
+
+  uint64_t rel_pc = object->GetRelPc(instruction_pointer, map_info);
+
+  unwindstack::DwarfSection* debug_frame = elf_interface->debug_frame();
+
+  auto has_frame_pointer_set_from_debug_frame_or_error =
+      orbit_linux_tracing::HasFramePointerSetFromDwarfSection(rel_pc, debug_frame,
+                                                              &debug_frame_loc_regs_cache_);
+  if (!has_frame_pointer_set_from_debug_frame_or_error.has_value()) {
+    return std::nullopt;
+  }
+  if (*has_frame_pointer_set_from_debug_frame_or_error) {
+    return true;
+  }
+
+  unwindstack::DwarfSection* eh_frame = elf->interface()->eh_frame();
+  auto has_frame_pointer_set_from_eh_frame_or_error =
+      orbit_linux_tracing::HasFramePointerSetFromDwarfSection(rel_pc, eh_frame,
+                                                              &eh_frame_loc_regs_cache_);
+  if (!has_frame_pointer_set_from_eh_frame_or_error.has_value()) {
+    return std::nullopt;
+  }
+  return *has_frame_pointer_set_from_eh_frame_or_error;
+}
 }  // namespace
 
 std::unique_ptr<LibunwindstackUnwinder> LibunwindstackUnwinder::Create() {
