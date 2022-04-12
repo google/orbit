@@ -62,6 +62,7 @@ target_sources(
          StatusListener.h
          SystemMemoryTrack.h
          TextRenderer.h
+         TextRendererInterface.h
          ThreadBar.h
          ThreadStateBar.h
          ThreadTrack.h
