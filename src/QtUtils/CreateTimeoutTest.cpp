@@ -44,8 +44,8 @@ TEST(CreateTimeout, ParallelTimeoutsDontDeadlock) {
 
 TEST(CreateTimeout, MaintainsMinimumWaitTime) {
   using namespace std::chrono_literals;
-  std::array<std::chrono::milliseconds, 10> durations = {10ms, 20ms,  15ms, 25ms, 30ms,
-                                                         40ms, 100ms, 5ms,  1ms,  2ms};
+  std::array<std::chrono::milliseconds, 10> durations = {1ms,  2ms,  5ms,  10ms, 15ms,
+                                                         20ms, 25ms, 30ms, 40ms, 100ms};
 
   for (std::chrono::milliseconds duration : durations) {
     std::chrono::steady_clock::time_point start = std::chrono::steady_clock::now();

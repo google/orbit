@@ -16,6 +16,10 @@
 
 namespace orbit_qt_utils {
 
+// This helper type indicates an occured Timeout and is returned - wrapped in a future - by
+// `CreateTimeout`. It doesn't hold any data. It's most useful in conjunction with
+// `orbit_base::WhenAny` which returns a `std::variant` (wrapped in a future). You can determine
+// whether a timeout occured by checking whether it holds a value of type `Timeout`
 struct Timeout {};
 
 // Returns a future that completes at the earliest when `duration` has passed.
