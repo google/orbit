@@ -129,8 +129,9 @@ class FileMappedIntoMemory {
   FileMappedIntoMemory(std::string file_path, uint64_t first_map_start, uint64_t first_map_offset)
       : file_path_{std::move(file_path)}, base_address_{first_map_start - first_map_offset} {
     if (first_map_start < first_map_offset) {
-      // base_address_ is the result of an underflow. This shouldn't normally happen, so immediately
-      // coff_text_section_map_might_be_encountered_ to false and never use base_address_.
+      // In this case, base_address_ is the result of an underflow. This shouldn't normally happen,
+      // so immediately set coff_text_section_map_might_be_encountered_ to false and never use
+      // base_address_.
       coff_text_section_map_might_be_encountered_ = false;
     }
   }
