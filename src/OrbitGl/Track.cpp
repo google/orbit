@@ -15,10 +15,12 @@
 #include "OrbitBase/ThreadUtils.h"
 #include "TextRenderer.h"
 #include "TimeGraphLayout.h"
+#include "TrackRenderHelper.h"
 #include "Viewport.h"
 
 using orbit_client_data::TimerData;
 using orbit_gl::PrimitiveAssembler;
+using orbit_gl::TextRenderer;
 
 Track::Track(CaptureViewElement* parent, const orbit_gl::TimelineInfoInterface* timeline_info,
              orbit_gl::Viewport* viewport, TimeGraphLayout* layout,
@@ -29,71 +31,12 @@ Track::Track(CaptureViewElement* parent, const orbit_gl::TimelineInfoInterface* 
       timeline_info_(timeline_info),
       module_manager_(module_manager),
       capture_data_(capture_data) {
-  collapse_toggle_ = std::make_shared<TriangleToggle>(
-      [this](bool is_collapsed) { OnCollapseToggle(is_collapsed); }, viewport, layout, this);
+  header_ = std::make_shared<orbit_gl::TrackHeader>(this, viewport, layout, this);
 }
 
-std::vector<Vec2> GetRoundedCornerMask(float radius, uint32_t num_sides) {
-  std::vector<Vec2> points;
-  points.emplace_back(0.f, 0.f);
-  points.emplace_back(0.f, radius);
-
-  float increment_radians = 0.5f * kPiFloat / static_cast<float>(num_sides);
-  for (uint32_t i = 1; i < num_sides; ++i) {
-    float angle = kPiFloat + static_cast<float>(i) * increment_radians;
-    points.emplace_back(radius * cosf(angle) + radius, radius * sinf(angle) + radius);
-  }
-
-  points.emplace_back(radius, 0.f);
-  return points;
-}
-
-std::vector<Vec2> RotatePoints(const std::vector<Vec2>& points, float rotation) {
-  float cos_r = cosf(kPiFloat * rotation / 180.f);
-  float sin_r = sinf(kPiFloat * rotation / 180.f);
-  std::vector<Vec2> result;
-  for (const Vec2& point : points) {
-    float x_rotated = cos_r * point[0] + sin_r * point[1];
-    float y_rotated = sin_r * point[0] - cos_r * point[1];
-    result.emplace_back(x_rotated, y_rotated);
-  }
-  return result;
-}
-
-void Track::DrawTriangleFan(PrimitiveAssembler& primitive_assembler,
-                            const std::vector<Vec2>& points, const Vec2& pos, const Color& color,
-                            float rotation, float z) {
-  if (points.size() < 3) {
-    return;
-  }
-
-  std::vector<Vec2> rotated_points = RotatePoints(points, rotation);
-  Vec2 position(pos[0], pos[1]);
-  Vec2 pivot = position + Vec2(rotated_points[0][0], rotated_points[0][1]);
-
-  Vec2 vertices[2];
-  vertices[0] = position + Vec2(rotated_points[1][0], rotated_points[1][1]);
-
-  for (size_t i = 1; i < rotated_points.size() - 1; ++i) {
-    vertices[i % 2] = position + Vec2(rotated_points[i + 1][0], rotated_points[i + 1][1]);
-    Triangle triangle(pivot, vertices[i % 2], vertices[(i + 1) % 2]);
-    primitive_assembler.AddTriangle(triangle, z, color, shared_from_this());
-  }
-}
-
-void Track::UpdatePositionOfCollapseToggle() {
-  const float label_height = layout_->GetTrackTabHeight();
-  const float half_label_height = 0.5f * label_height;
-  const float x0 = GetPos()[0] + layout_->GetTrackTabOffset() +
-                   layout_->GetTrackIndentOffset() * indentation_level_;
-  const float button_offset = layout_->GetCollapseButtonOffset();
-  const float toggle_y_pos = GetPos()[1] + half_label_height;
-  Vec2 toggle_pos = Vec2(x0 + button_offset, toggle_y_pos);
-
-  float size = layout_->GetCollapseButtonSize(indentation_level_);
-  collapse_toggle_->SetWidth(size);
-  collapse_toggle_->SetHeight(size);
-  collapse_toggle_->SetPos(toggle_pos[0], toggle_pos[1]);
+void Track::OnPick(int x, int y) {
+  CaptureViewElement::OnPick(x, y);
+  SelectTrack();
 }
 
 std::unique_ptr<orbit_accessibility::AccessibleInterface> Track::CreateAccessibleInterface() {
@@ -104,114 +47,79 @@ void Track::DoDraw(PrimitiveAssembler& primitive_assembler, TextRenderer& text_r
                    const DrawContext& draw_context) {
   CaptureViewElement::DoDraw(primitive_assembler, text_renderer, draw_context);
 
-  if (headless_) return;
-
+  // An indentation level > 0 means this track is nested under a parent track. In this case, we
+  // don't want to draw any background for this track.
+  const bool draw_background = GetIndentationLevel() == 0 && layout_->GetDrawTrackBackground();
   const bool picking = draw_context.picking_mode != PickingMode::kNone;
+
+  // Tab and content are handled by child elements or inheriting classes, so we can early-out here
+  // if we don't need to draw any tab background.
+  // Same for picking - the track background is not pickable
+  if (picking || !draw_background) return;
 
   const float x0 = GetPos()[0];
   const float y0 = GetPos()[1];
-  float track_z = GlCanvas::kZValueTrack;
-  float text_z = GlCanvas::kZValueTrackText;
+  const float header_height = header_->GetHeight();
+  const float track_z = GlCanvas::kZValueTrack;
 
   Color track_background_color = GetTrackBackgroundColor();
-  if (!draw_background_) {
-    track_background_color[3] = 0;
-  }
-
-  // Draw tab.
-  float label_height = layout_->GetTrackTabHeight();
-  float half_label_height = 0.5f * label_height;
-  float label_width = layout_->GetTrackTabWidth();
-  float half_label_width = 0.5f * label_width;
-  float tab_x0 = x0 + layout_->GetTrackTabOffset();
-
-  const float indentation_x0 = tab_x0 + (indentation_level_ * layout_->GetTrackIndentOffset());
-  Tetragon box = MakeBox(Vec2(indentation_x0, y0), Vec2(label_width, label_height));
-  primitive_assembler.AddBox(box, track_z, track_background_color, shared_from_this());
 
   Vec2 track_size = GetSize();
 
   // Draw rounded corners.
-  if (!picking && draw_background_) {
-    float radius = std::min(layout_->GetRoundingRadius(), half_label_height);
-    radius = std::min(radius, half_label_width);
-    uint32_t sides = static_cast<uint32_t>(layout_->GetRoundingNumSides() + 0.5f);
-    auto rounded_corner = GetRoundedCornerMask(radius, sides);
+  float radius = std::min(layout_->GetRoundingRadius(), layout_->GetTrackTabHeight() * 0.5f);
+  uint32_t sides = static_cast<uint32_t>(layout_->GetRoundingNumSides() + 0.5f);
+  auto rounded_corner = orbit_gl::GetRoundedCornerMask(radius, sides);
 
-    // top_left       tab_top_right
-    //  __________________              content_top_right
-    // /                  \_______________
-    // |             tab_bottom_right     `
-    // |XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX|
-    // \__________________________________/
-    // content_bottom_left                      content_bottom_right
-    //
-    // In addition, there is a small margin before and after the track content
-    // defined by TrackContentTopMargin and TrackContentBottomMargin.
-    // Both margins are factored into the total height of each track.
-    Vec2 top_left(indentation_x0, y0);
-    Vec2 tab_top_right(top_left[0] + label_width, top_left[1]);
-    Vec2 tab_bottom_right(top_left[0] + label_width, top_left[1] + label_height);
-    Vec2 content_bottom_left(top_left[0] - tab_x0, top_left[1] + track_size[1]);
-    Vec2 content_bottom_right(top_left[0] + track_size[0], top_left[1] + track_size[1]);
-    Vec2 content_top_right(top_left[0] + track_size[0], top_left[1] + label_height);
+  // This draws the non-tab content of the track. The tab itself is a separate CaptureViewElement
+  // child of the track.
+  // Note that the top-left corner is not rounded due to the design of the track tab sitting
+  // in the top left.
+  //
+  // [ Header ] ________________________  content_top_right
+  // |                                  `
+  // |XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX|
+  // \__________________________________/
+  // content_bottom_left                 content_bottom_right
+  //
+  Vec2 content_bottom_left(x0, y0 + track_size[1]);
+  Vec2 content_bottom_right(x0 + track_size[0], y0 + track_size[1]);
 
-    DrawTriangleFan(primitive_assembler, rounded_corner, top_left, GlCanvas::kBackgroundColor, 90.f,
-                    track_z);
-    DrawTriangleFan(primitive_assembler, rounded_corner, tab_top_right, GlCanvas::kBackgroundColor,
-                    180.f, track_z);
-    DrawTriangleFan(primitive_assembler, rounded_corner, tab_bottom_right, track_background_color,
-                    0, track_z);
-    DrawTriangleFan(primitive_assembler, rounded_corner, content_bottom_left,
-                    GlCanvas::kBackgroundColor, 0, track_z);
-    DrawTriangleFan(primitive_assembler, rounded_corner, content_bottom_right,
-                    GlCanvas::kBackgroundColor, -90.f, track_z);
-    DrawTriangleFan(primitive_assembler, rounded_corner, content_top_right,
-                    GlCanvas::kBackgroundColor, 180.f, track_z);
-  }
+  // The track content starts underneath the track header, and we only draw the background
+  // starting
+  // there. This could be prevented by moving the track content into a separate child, but in the
+  // end, the design of track and track header will need to influence each other...
+  Vec2 content_top_right(x0 + track_size[0], y0 + header_height);
+  Vec2 content_top_left(x0, y0 + header_height);
 
-  // Collapse toggle state management.
-  collapse_toggle_->SetIsCollapsible(this->IsCollapsible());
-
-  // Draw label.
-  if (!picking) {
-    uint32_t font_size = layout_->CalculateZoomedFontSize();
-    // For the first 5 indentations, we decrease the font_size by 10 percent points (per
-    // indentation).
-    constexpr uint32_t kMaxIndentationLevel = 5;
-    uint32_t capped_indentation_level = std::min(indentation_level_, kMaxIndentationLevel);
-    font_size = (font_size * (10 - capped_indentation_level)) / 10;
-    float label_offset_x = layout_->GetTrackLabelOffsetX();
-
-    const Color kColor =
-        IsTrackSelected() ? GlCanvas::kTabTextColorSelected : Color(255, 255, 255, 255);
-
-    TextRenderer::TextFormatting formatting{font_size, kColor, label_width - label_offset_x};
-    formatting.valign = TextRenderer::VAlign::Middle;
-
-    text_renderer.AddTextTrailingCharsPrioritized(
-        GetLabel().c_str(), indentation_x0 + label_offset_x, y0 + half_label_height, text_z,
-        formatting, GetNumberOfPrioritizedTrailingCharacters());
-  }
+  auto shared_this = shared_from_this();
+  orbit_gl::DrawTriangleFan(primitive_assembler, rounded_corner, content_bottom_left,
+                            GlCanvas::kBackgroundColor, 0, track_z, shared_this);
+  orbit_gl::DrawTriangleFan(primitive_assembler, rounded_corner, content_bottom_right,
+                            GlCanvas::kBackgroundColor, -90.f, track_z, shared_this);
+  orbit_gl::DrawTriangleFan(primitive_assembler, rounded_corner, content_top_right,
+                            GlCanvas::kBackgroundColor, 180.f, track_z, shared_this);
 
   // Draw track's content background.
-  if (!picking) {
-    if (layout_->GetDrawTrackBackground()) {
-      Tetragon box =
-          MakeBox(Vec2(x0, y0 + label_height), Vec2(GetWidth(), GetHeight() - label_height));
-      primitive_assembler.AddBox(box, track_z, track_background_color, shared_from_this());
-    }
-  }
+  Tetragon box = MakeBox(content_top_left, Vec2(GetWidth(), GetHeight() - header_height));
+  primitive_assembler.AddBox(box, track_z, track_background_color, shared_from_this());
 }
 
 void Track::DoUpdateLayout() {
   CaptureViewElement::DoUpdateLayout();
 
+  header_->SetWidth(layout_->GetTrackTabWidth());
+  header_->SetPos(GetPos()[0] + layout_->GetTrackTabOffset(), GetPos()[1]);
   UpdatePositionOfSubtracks();
-  UpdatePositionOfCollapseToggle();
 }
 
 void Track::SetPinned(bool value) { pinned_ = value; }
+
+void Track::DragBy(float delta_y) {
+  if (!Draggable()) return;
+
+  SetPos(GetPos()[0], GetPos()[1] + delta_y);
+}
 
 Color Track::GetTrackBackgroundColor() const {
   uint32_t capture_process_id = capture_data_->process_id();
@@ -225,8 +133,6 @@ Color Track::GetTrackBackgroundColor() const {
   const Color kDarkGrey(50, 50, 50, 255);
   return kDarkGrey;
 }
-
-void Track::OnCollapseToggle(bool /*is_collapsed*/) { RequestUpdate(); }
 
 bool Track::ShouldBeRendered() const {
   return CaptureViewElement::ShouldBeRendered() && !IsEmpty();
@@ -242,11 +148,17 @@ float Track::DetermineZOffset() const {
   return result;
 }
 
+void Track::SetCollapsed(bool collapsed) {
+  header_->GetCollapseToggle()->SetCollapsed(collapsed);
+
+  RequestUpdate();
+}
+
 void Track::SetHeadless(bool value) {
   if (headless_ == value) return;
 
   headless_ = value;
-  collapse_toggle_->SetVisible(!headless_);
+  header_->SetVisible(!value);
   RequestUpdate();
 }
 
@@ -255,10 +167,4 @@ void Track::SetIndentationLevel(uint32_t level) {
 
   indentation_level_ = level;
   RequestUpdate();
-}
-
-void Track::OnDrag(int x, int y) {
-  CaptureViewElement::OnDrag(x, y);
-
-  SetPos(GetPos()[0], mouse_pos_cur_[1] - picking_offset_[1]);
 }

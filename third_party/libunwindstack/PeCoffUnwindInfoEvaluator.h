@@ -14,8 +14,8 @@
  * limitations under the License.
  */
 
-#ifndef _LIBUNWINDSTACK_PE_COFF_UNWIND_INFO_UNWINDER_X86_64_H
-#define _LIBUNWINDSTACK_PE_COFF_UNWIND_INFO_UNWINDER_X86_64_H
+#ifndef _LIBUNWINDSTACK_PE_COFF_UNWIND_INFO_EVALUATOR_H
+#define _LIBUNWINDSTACK_PE_COFF_UNWIND_INFO_EVALUATOR_H
 
 #include <memory>
 
@@ -39,26 +39,26 @@ enum UnwindOpCode : uint8_t {
   UWOP_PUSH_MACHFRAME = 10
 };
 
-class PeCoffUnwindInfoUnwinderX86_64 {
+class PeCoffUnwindInfoEvaluator {
  public:
-  explicit PeCoffUnwindInfoUnwinderX86_64(PeCoffMemory* pe_coff_memory)
-      : unwind_infos_(new PeCoffUnwindInfos(pe_coff_memory)) {}
+  virtual ~PeCoffUnwindInfoEvaluator() {}
 
   // This function should only be called when we know that we are not in the epilog of the function.
   // If one attempts to unwind using this when one is actually on an instruction in the epilog, the
   // results will most likely be wrong.
   // The function will skip unwind codes as needed based on 'current_code_offset', e.g. when we are
   // in the middle of the prolog and not all instructions in the prolog have been executed yet.
-  bool Eval(Memory* process_memory, Regs* regs, const UnwindInfo& unwind_info,
-            uint64_t current_code_offset, uint64_t* frame_pointer, bool* frame_pointer_used);
+  virtual bool Eval(Memory* process_memory, Regs* regs, const UnwindInfo& unwind_info,
+                    PeCoffUnwindInfos* unwind_infos, uint64_t current_code_offset) = 0;
 
   ErrorData GetLastError() const { return last_error_; }
 
- private:
+ protected:
   ErrorData last_error_{ERROR_NONE, 0};
-  std::unique_ptr<PeCoffUnwindInfos> unwind_infos_;
 };
+
+std::unique_ptr<PeCoffUnwindInfoEvaluator> CreatePeCoffUnwindInfoEvaluator();
 
 }  // namespace unwindstack
 
-#endif  // _LIBUNWINDSTACK_PE_COFF_UNWIND_INFO_UNWINDER_X86_64_H
+#endif  // _LIBUNWINDSTACK_PE_COFF_UNWIND_INFO_EVALUATOR_H

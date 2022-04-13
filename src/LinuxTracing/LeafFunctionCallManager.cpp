@@ -4,6 +4,7 @@
 
 #include "LeafFunctionCallManager.h"
 
+#include <absl/base/casts.h>
 #include <asm/perf_regs.h>
 #include <stddef.h>
 #include <sys/mman.h>
@@ -46,14 +47,32 @@ Callstack::CallstackType LeafFunctionCallManager::PatchCallerOfLeafFunction(
   ORBIT_CHECK(unwinder != nullptr);
   ORBIT_CHECK(event_data->GetCallchainSize() > 2);
 
-  uint64_t rbp = event_data->GetRegisters()[PERF_REG_X86_BP];
-  uint64_t rsp = event_data->GetRegisters()[PERF_REG_X86_SP];
+  const uint64_t rbp = event_data->GetRegisters()[PERF_REG_X86_BP];
+  const uint64_t rsp = event_data->GetRegisters()[PERF_REG_X86_SP];
+  const uint64_t rip = event_data->GetRegisters()[PERF_REG_X86_IP];
 
   if (rbp < rsp) {
     return Callstack::kFramePointerUnwindingError;
   }
 
-  uint64_t stack_size = rbp - rsp;
+  std::optional<bool> has_frame_pointer_or_error =
+      unwinder->HasFramePointerSet(rip, event_data->pid, current_maps->Get());
+
+  // If retrieving the debug information already failed here, we don't need to try unwinding.
+  if (!has_frame_pointer_or_error.has_value()) {
+    return Callstack::kStackTopDwarfUnwindingError;
+  }
+
+  // If the frame pointer register is set correctly at the current instruction, there is no need
+  // to patch the callstack and we can early out.
+  if (*has_frame_pointer_or_error) {
+    return Callstack::kComplete;
+  }
+
+  const uint64_t stack_size = rbp - rsp;
+
+  // TODO(b/228445173): If we are in a leaf function and the stack dump contains the return address
+  //  we should be able to patch the stack even if the stack dump is not from $rsp to $rbp.
   if (stack_size > stack_dump_size_) {
     return Callstack::kStackTopForDwarfUnwindingTooSmall;
   }
@@ -97,8 +116,8 @@ Callstack::CallstackType LeafFunctionCallManager::PatchCallerOfLeafFunction(
   uint64_t libunwindstack_leaf_caller_pc = libunwindstack_callstack[1].pc;
 
   // If the caller is not executable, we have an unwinding error.
-  unwindstack::MapInfo* map_info = current_maps->Find(libunwindstack_leaf_caller_pc);
-  if (map_info == nullptr || (map_info->flags() & PROT_EXEC) == 0) {
+  unwindstack::MapInfo* caller_map_info = current_maps->Find(libunwindstack_leaf_caller_pc);
+  if (caller_map_info == nullptr || (caller_map_info->flags() & PROT_EXEC) == 0) {
     return Callstack::kStackTopDwarfUnwindingError;
   }
 

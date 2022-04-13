@@ -102,8 +102,8 @@ class TimerTrack : public Track {
 
  protected:
   void DoUpdatePrimitives(orbit_gl::PrimitiveAssembler& primitive_assembler,
-                          TextRenderer& text_renderer, uint64_t min_tick, uint64_t max_tick,
-                          PickingMode /*picking_mode*/) override;
+                          orbit_gl::TextRenderer& text_renderer, uint64_t min_tick,
+                          uint64_t max_tick, PickingMode /*picking_mode*/) override;
 
   [[nodiscard]] virtual bool IsTimerActive(
       const orbit_client_protos::TimerInfo& /*timer_info*/) const {
@@ -117,7 +117,7 @@ class TimerTrack : public Track {
     return true;
   }
 
-  [[nodiscard]] bool DrawTimer(TextRenderer& text_renderer,
+  [[nodiscard]] bool DrawTimer(orbit_gl::TextRenderer& text_renderer,
                                const orbit_client_protos::TimerInfo* prev_timer_info,
                                const orbit_client_protos::TimerInfo* next_timer_info,
                                const internal::DrawData& draw_data,
@@ -130,8 +130,9 @@ class TimerTrack : public Track {
   }
   [[nodiscard]] std::string GetDisplayTime(const orbit_client_protos::TimerInfo&) const;
 
-  void DrawTimesliceText(TextRenderer& text_renderer, const orbit_client_protos::TimerInfo& timer,
-                         float min_x, Vec2 box_pos, Vec2 box_size);
+  void DrawTimesliceText(orbit_gl::TextRenderer& text_renderer,
+                         const orbit_client_protos::TimerInfo& timer, float min_x, Vec2 box_pos,
+                         Vec2 box_size);
 
   [[nodiscard]] static internal::DrawData GetDrawData(
       uint64_t min_tick, uint64_t max_tick, float track_pos_x, float track_width,
@@ -152,7 +153,8 @@ class TimerTrack : public Track {
         });
   }
 
-  [[nodiscard]] inline bool BoxHasRoomForText(TextRenderer& text_renderer, const float width) {
+  [[nodiscard]] inline bool BoxHasRoomForText(orbit_gl::TextRenderer& text_renderer,
+                                              const float width) {
     return text_renderer.GetStringWidth("w", layout_->CalculateZoomedFontSize()) < width;
   }
 

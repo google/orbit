@@ -21,10 +21,10 @@
 #include "GlUtils.h"
 #include "ImGuiOrbit.h"
 #include "OpenGlBatcher.h"
+#include "OpenGlTextRenderer.h"
 #include "OrbitAccessibility/AccessibleInterface.h"
 #include "OrbitAccessibility/AccessibleWidgetBridge.h"
 #include "PickingManager.h"
-#include "TextRenderer.h"
 #include "Timer.h"
 #include "Viewport.h"
 
@@ -68,7 +68,7 @@ class GlCanvas : public orbit_gl::AccessibleInterfaceProvider {
   }
   virtual void OnContextMenu(const std::string& /*a_Action*/, int /*a_MenuIndex*/) {}
 
-  [[nodiscard]] TextRenderer& GetTextRenderer() { return text_renderer_; }
+  [[nodiscard]] orbit_gl::TextRenderer& GetTextRenderer() { return text_renderer_; }
 
   [[nodiscard]] const Vec2i& GetMouseScreenPos() const { return mouse_move_pos_screen_; }
 
@@ -150,7 +150,7 @@ class GlCanvas : public orbit_gl::AccessibleInterfaceProvider {
   ImGuiContext* imgui_context_ = nullptr;
   double ref_time_click_;
   float track_container_click_scrolling_offset_ = 0;
-  TextRenderer text_renderer_;
+  orbit_gl::OpenGlTextRenderer text_renderer_;
   PickingManager picking_manager_;
   bool double_clicking_;
   bool control_key_;

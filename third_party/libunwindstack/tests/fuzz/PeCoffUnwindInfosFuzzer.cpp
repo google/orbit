@@ -16,22 +16,34 @@
 
 #include <inttypes.h>
 #include <cstddef>
+#include <limits>
+#include <memory>
 
 #include <unwindstack/Memory.h>
 #include <unwindstack/PeCoffInterface.h>
 #include "PeCoffUnwindInfos.h"
 
 namespace {
+
 void FuzzPeCoffUnwindInfos(const uint8_t* data, size_t size) {
   std::shared_ptr<unwindstack::Memory> memory =
       unwindstack::Memory::CreateOfflineMemory(data, 0, size);
-  unwindstack::PeCoffMemory pe_coff_memory(memory.get());
-  unwindstack::PeCoffUnwindInfos pe_coff_unwind_infos(&pe_coff_memory);
+
+  // Unwind infos are indexed using their relative virtual address, which the
+  // PeCoffUnwindInfos class internally converts to a file offset. We don't
+  // care about this mapping for fuzzing. With this "all_adresses" section as
+  // defined below, all possible input RVAs are mapped to the identical value as
+  // a file offset.
+  constexpr uint32_t kUint32Max = std::numeric_limits<uint32_t>::max();
+  std::vector<unwindstack::Section> sections{
+      unwindstack::Section{"all_addresses", kUint32Max, 0, kUint32Max, 0}};
+  std::unique_ptr<unwindstack::PeCoffUnwindInfos> pe_coff_unwind_infos(
+      CreatePeCoffUnwindInfos(memory.get(), sections));
   unwindstack::UnwindInfo info;
   // Try all possible offsets to increase coverage. This will also test the parser
   // running over the end of the memory.
   for (size_t offset = 0; offset < size; ++offset) {
-    pe_coff_unwind_infos.GetUnwindInfo(offset, &info);
+    pe_coff_unwind_infos->GetUnwindInfo(offset, &info);
   }
 }
 }  // namespace

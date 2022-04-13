@@ -28,7 +28,8 @@ uint64_t SymbolVirtualAddressToAbsoluteAddress(uint64_t symbol_address,
 
 uint64_t SymbolOffsetToAbsoluteAddress(uint64_t symbol_address, uint64_t module_base_address,
                                        uint64_t module_executable_section_offset) {
-  return SymbolVirtualAddressToAbsoluteAddress(symbol_address, module_base_address, /*load_bias=*/0,
+  return SymbolVirtualAddressToAbsoluteAddress(symbol_address, module_base_address,
+                                               /*module_load_bias=*/0,
                                                module_executable_section_offset);
 }
 

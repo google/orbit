@@ -15,10 +15,6 @@
 #include <mutex>
 #include <string>
 
-#ifdef _WIN32
-#include <Windows.h>
-#endif
-
 #include "OrbitBase/Result.h"
 
 #ifdef __clang__
@@ -130,11 +126,11 @@ struct FuzzingException {};
 #define ORBIT_INTERNAL_PLATFORM_ABORT() \
   throw orbit_base::FuzzingException {}
 #elif defined(_WIN32)
-#define ORBIT_INTERNAL_PLATFORM_LOG(message) \
-  do {                                       \
-    fprintf(stderr, "%s", message);          \
-    OutputDebugStringA(message);             \
-    orbit_base::LogToFile(message);          \
+#define ORBIT_INTERNAL_PLATFORM_LOG(message)          \
+  do {                                                \
+    fprintf(stderr, "%s", message);                   \
+    orbit_base_internal::OutputDebugStringA(message); \
+    orbit_base_internal::LogToFile(message);          \
   } while (0)
 #define ORBIT_INTERNAL_PLATFORM_ABORT() \
   do {                                  \
@@ -145,7 +141,7 @@ struct FuzzingException {};
 #define ORBIT_INTERNAL_PLATFORM_LOG(message) \
   do {                                       \
     fprintf(stderr, "%s", message);          \
-    orbit_base::LogToFile(message);          \
+    orbit_base_internal::LogToFile(message); \
   } while (0)
 #define ORBIT_INTERNAL_PLATFORM_ABORT() abort()
 #endif
@@ -162,9 +158,19 @@ std::string GetLogFileName();
 ErrorMessageOr<void> TryRemoveOldLogFiles(const std::filesystem::path& log_dir);
 
 void InitLogFile(const std::filesystem::path& path);
-void LogToFile(const std::string& message);
 
 void LogStacktrace();
 }  // namespace orbit_base
+
+namespace orbit_base_internal {
+
+void LogToFile(const std::string& message);
+
+#ifdef _WIN32
+// Add one indirection so that we can #include <Windows.h> in the .cpp instead of in this header.
+void OutputDebugStringA(const char* str);
+#endif
+
+}  // namespace orbit_base_internal
 
 #endif  // ORBIT_BASE_LOGGING_H_

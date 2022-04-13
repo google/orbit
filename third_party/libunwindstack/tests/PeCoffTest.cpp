@@ -31,13 +31,15 @@ namespace unwindstack {
 
 class MockPeCoffInterface : public PeCoffInterface {
  public:
-  MockPeCoffInterface() {}
+  MockPeCoffInterface() = default;
   MOCK_METHOD(bool, Init, (int64_t*), (override));
   MOCK_METHOD(const ErrorData&, last_error, (), (override));
   MOCK_METHOD(ErrorCode, LastErrorCode, (), (override));
   MOCK_METHOD(uint64_t, LastErrorAddress, (), (override));
   MOCK_METHOD(DwarfSection*, DebugFrameSection, (), (override));
   MOCK_METHOD(uint64_t, GetRelPc, (uint64_t, uint64_t), (const override));
+  MOCK_METHOD(bool, GetTextRange, (uint64_t*, uint64_t*), (const override));
+  MOCK_METHOD(uint64_t, GetTextOffsetInFile, (), (const override));
   MOCK_METHOD(bool, Step, (uint64_t, Regs*, Memory*, bool*, bool*), (override));
 };
 
@@ -53,7 +55,7 @@ template <typename PeCoffInterfaceType>
 class PeCoffTest : public ::testing::Test {
  public:
   PeCoffTest() : fake_(new PeCoffFake<PeCoffInterfaceType>) {}
-  ~PeCoffTest() {}
+  ~PeCoffTest() override = default;
 
   PeCoffFake<PeCoffInterfaceType>* GetFake() { return fake_.get(); }
   MemoryFake* ReleaseMemory() { return fake_->ReleaseMemoryFake(); }
@@ -157,6 +159,60 @@ TYPED_TEST(PeCoffTest, rel_pc_is_zero_for_invalid) {
   EXPECT_FALSE(coff.Init());
   EXPECT_FALSE(coff.valid());
   EXPECT_EQ(0, coff.GetRelPc(0, nullptr));
+}
+
+TYPED_TEST(PeCoffTest, text_range_is_correctly_passed_through_and_adjusted_by_image_base) {
+  this->GetFake()->Init();
+  FakePeCoff coff(this->ReleaseMemory());
+  EXPECT_TRUE(coff.Init());
+
+  constexpr uint64_t kAddr = 0x1000;
+  constexpr uint64_t kSize = 0x2000;
+
+  auto* mock_interface = new MockPeCoffInterface;
+  EXPECT_CALL(*mock_interface, GetTextRange).WillOnce([](uint64_t* addr, uint64_t* size) {
+    *addr = kAddr;
+    *size = kSize;
+    return true;
+  });
+  coff.SetFakePeCoffInterface(mock_interface);
+
+  uint64_t actual_addr;
+  uint64_t actual_size;
+  bool actual_result = coff.GetTextRange(&actual_addr, &actual_size);
+  ASSERT_TRUE(actual_result);
+  EXPECT_EQ(actual_addr, PeCoffFake<TypeParam>::kLoadBiasFake + kAddr);
+  EXPECT_EQ(actual_size, kSize);
+}
+
+TYPED_TEST(PeCoffTest, no_text_range_for_invalid) {
+  PeCoff coff(new MemoryFake);
+  EXPECT_FALSE(coff.Init());
+  EXPECT_FALSE(coff.valid());
+  uint64_t actual_addr;
+  uint64_t actual_size;
+  EXPECT_FALSE(coff.GetTextRange(&actual_addr, &actual_size));
+}
+
+TYPED_TEST(PeCoffTest, text_offset_in_file_is_correctly_passed_through) {
+  this->GetFake()->Init();
+  FakePeCoff coff(this->ReleaseMemory());
+  EXPECT_TRUE(coff.Init());
+
+  constexpr uint64_t kSize = 0x2000;
+
+  auto* mock_interface = new MockPeCoffInterface;
+  EXPECT_CALL(*mock_interface, GetTextOffsetInFile).WillOnce(testing::Return(kSize));
+  coff.SetFakePeCoffInterface(mock_interface);
+
+  EXPECT_EQ(coff.GetTextOffsetInFile(), kSize);
+}
+
+TYPED_TEST(PeCoffTest, zero_text_offset_in_file_for_invalid) {
+  PeCoff coff(new MemoryFake);
+  EXPECT_FALSE(coff.Init());
+  EXPECT_FALSE(coff.valid());
+  EXPECT_EQ(coff.GetTextOffsetInFile(), 0);
 }
 
 TYPED_TEST(PeCoffTest, step_if_signal_handler_returns_false) {

@@ -17,10 +17,10 @@
 #include "GpuDebugMarkerTrack.h"
 #include "PickingManager.h"
 #include "StringManager/StringManager.h"
+#include "TextRenderer.h"
 #include "Track.h"
 
 class OrbitApp;
-class TextRenderer;
 
 // This track displays the "vkQueueSubmit"s including its hardware execution times and -- if
 // available -- command buffer timings on a certain command queue. In order to visually separate

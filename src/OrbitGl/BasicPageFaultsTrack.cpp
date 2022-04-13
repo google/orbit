@@ -35,9 +35,7 @@ BasicPageFaultsTrack::BasicPageFaultsTrack(Track* parent,
       AnnotationTrack(),
       cgroup_name_(std::move(cgroup_name)),
       memory_sampling_period_ms_(memory_sampling_period_ms),
-      parent_(parent) {
-  draw_background_ = false;
-}
+      parent_(parent) {}
 
 void BasicPageFaultsTrack::AddValues(
     uint64_t timestamp_ns, const std::array<double, kBasicPageFaultsTrackDimension>& values) {
@@ -104,7 +102,8 @@ void BasicPageFaultsTrack::DrawSingleSeriesEntry(
 }
 
 bool BasicPageFaultsTrack::IsCollapsed() const {
-  return collapse_toggle_->IsCollapsed() || GetParent()->IsCollapsed();
+  return LineGraphTrack<kBasicPageFaultsTrackDimension>::IsCollapsed() ||
+         GetParent()->IsCollapsed();
 }
 
 float BasicPageFaultsTrack::GetAnnotatedTrackContentHeight() const {

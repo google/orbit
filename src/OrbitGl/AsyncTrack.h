@@ -40,8 +40,8 @@ class AsyncTrack final : public TimerTrack {
 
  protected:
   void DoUpdatePrimitives(orbit_gl::PrimitiveAssembler& primitive_assembler,
-                          TextRenderer& text_renderer, uint64_t min_tick, uint64_t max_tick,
-                          PickingMode picking_mode) override;
+                          orbit_gl::TextRenderer& text_renderer, uint64_t min_tick,
+                          uint64_t max_tick, PickingMode picking_mode) override;
   [[nodiscard]] float GetDefaultBoxHeight() const override;
   [[nodiscard]] std::string GetTimesliceText(
       const orbit_client_protos::TimerInfo& timer) const override;

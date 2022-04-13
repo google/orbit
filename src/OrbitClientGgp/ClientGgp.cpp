@@ -46,6 +46,7 @@ using orbit_base::Future;
 using orbit_capture_client::CaptureClient;
 using orbit_capture_client::CaptureEventProcessor;
 using orbit_capture_client::CaptureListener;
+using orbit_capture_client::ClientCaptureOptions;
 
 using orbit_client_data::FunctionInfo;
 using orbit_client_data::ProcessData;
@@ -98,17 +99,20 @@ ErrorMessageOr<void> ClientGgp::RequestStartCapture(orbit_base::ThreadPool* thre
   }
 
   ORBIT_LOG("Capture pid %d", pid);
-  TracepointInfoSet selected_tracepoints;
-  const UnwindingMethod unwinding_method =
+  ClientCaptureOptions options;
+  options.process_id = pid;
+  options.unwinding_method =
       options_.use_framepointer_unwinding ? CaptureOptions::kFramePointers : CaptureOptions::kDwarf;
-  bool collect_scheduling_info = true;
-  bool collect_thread_state = absl::GetFlag(FLAGS_thread_state);
-  bool collect_gpu_jobs = true;
-  bool enable_api = false;
-  bool enable_introspection = false;
-  DynamicInstrumentationMethod dynamic_instrumentation_method = CaptureOptions::kKernelUprobes;
-  uint64_t max_local_marker_depth_per_command_buffer =
+  options.collect_scheduling_info = true;
+  options.collect_thread_states = absl::GetFlag(FLAGS_thread_state);
+  options.collect_gpu_jobs = true;
+  options.enable_api = false;
+  options.enable_introspection = false;
+  options.dynamic_instrumentation_method = CaptureOptions::kKernelUprobes;
+  options.max_local_marker_depth_per_command_buffer =
       absl::GetFlag(FLAGS_max_local_marker_depth_per_command_buffer);
+  options.selected_functions = selected_functions_;
+  options.stack_dump_size = options_.stack_dump_size;
 
   std::filesystem::path file_path = GenerateFilePath();
 
@@ -119,14 +123,8 @@ ErrorMessageOr<void> ClientGgp::RequestStartCapture(orbit_base::ThreadPool* thre
                                             ORBIT_ERROR("%s", error.message());
                                           }));
 
-  Future<ErrorMessageOr<CaptureListener::CaptureOutcome>> result = capture_client_->Capture(
-      thread_pool, target_process_->pid(), module_manager_, selected_functions_,
-      /*record_arguments=*/false, /*record_return_values=*/false, selected_tracepoints,
-      options_.samples_per_second, options_.stack_dump_size, unwinding_method,
-      collect_scheduling_info, collect_thread_state, collect_gpu_jobs, enable_api,
-      enable_introspection, dynamic_instrumentation_method,
-      max_local_marker_depth_per_command_buffer, /*collect_memory_info=*/false, 0,
-      std::move(event_processor));
+  Future<ErrorMessageOr<CaptureListener::CaptureOutcome>> result =
+      capture_client_->Capture(thread_pool, std::move(event_processor), module_manager_, options);
 
   orbit_base::ImmediateExecutor executor;
 

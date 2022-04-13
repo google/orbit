@@ -11,6 +11,7 @@ target_include_directories(QtUtils PUBLIC include/)
 target_link_libraries(QtUtils PUBLIC OrbitBase OrbitGl Qt5::Core CONAN_PKG::abseil GTest::GTest)
 
 target_sources(QtUtils PUBLIC include/QtUtils/AssertNoQtLogWarnings.h
+                              include/QtUtils/CreateTimeout.h
                               include/QtUtils/EventLoop.h
                               include/QtUtils/ExecuteProcess.h
                               include/QtUtils/FutureWatcher.h
@@ -27,7 +28,8 @@ target_sources(FakeCliProgram PRIVATE FakeCliProgram/main.cpp)
 target_link_libraries(FakeCliProgram CONAN_PKG::abseil)
 
 add_executable(QtUtilsTests)
-target_sources(QtUtilsTests PRIVATE EventLoopTest.cpp
+target_sources(QtUtilsTests PRIVATE CreateTimeoutTest.cpp
+                                    EventLoopTest.cpp
                                     ExecuteProcessTest.cpp
                                     FutureWatcherTest.cpp
                                     MainThreadExecutorImplTest.cpp)

@@ -17,9 +17,9 @@
 #include "CoreMath.h"
 #include "ManualInstrumentationManager.h"
 #include "OpenGlBatcher.h"
+#include "OpenGlTextRenderer.h"
 #include "OrbitAccessibility/AccessibleInterface.h"
 #include "PickingManager.h"
-#include "TextRenderer.h"
 #include "TimeGraphLayout.h"
 #include "TimelineInfoInterface.h"
 #include "TimelineUi.h"
@@ -38,7 +38,7 @@ class TimeGraph final : public orbit_gl::CaptureViewElement,
   [[nodiscard]] float GetHeight() const override;
 
   void DrawAllElements(orbit_gl::PrimitiveAssembler& primitive_assembler,
-                       TextRenderer& text_renderer, PickingMode& picking_mode,
+                       orbit_gl::TextRenderer& text_renderer, PickingMode& picking_mode,
                        uint64_t current_mouse_time_ns);
   void DrawText(float layer);
 
@@ -99,19 +99,17 @@ class TimeGraph final : public orbit_gl::CaptureViewElement,
   enum class JumpDirection { kPrevious, kNext, kTop, kDown };
   void JumpToNeighborTimer(const orbit_client_protos::TimerInfo* from, JumpDirection jump_direction,
                            JumpScope jump_scope);
-  [[nodiscard]] const orbit_client_protos::TimerInfo* FindPreviousFunctionCall(
-      uint64_t function_address, uint64_t current_time,
+  [[nodiscard]] const orbit_client_protos::TimerInfo* FindPreviousScopeTimer(
+      uint64_t scope_id, uint64_t current_time,
       std::optional<uint32_t> thread_id = std::nullopt) const;
-  [[nodiscard]] const orbit_client_protos::TimerInfo* FindNextFunctionCall(
-      uint64_t function_address, uint64_t current_time,
+  [[nodiscard]] const orbit_client_protos::TimerInfo* FindNextScopeTimer(
+      uint64_t scope_id, uint64_t current_time,
       std::optional<uint32_t> thread_id = std::nullopt) const;
-  [[nodiscard]] std::vector<const orbit_client_protos::TimerInfo*> GetAllTimersForHookedFunction(
-      uint64_t function_address) const;
   [[nodiscard]] std::vector<const orbit_client_data::TimerChain*> GetAllThreadTrackTimerChains()
       const;
   [[nodiscard]] std::pair<const orbit_client_protos::TimerInfo*,
                           const orbit_client_protos::TimerInfo*>
-  GetMinMaxTimerInfoForFunction(uint64_t function_id) const;
+  GetMinMaxTimerInfoForScope(uint64_t scope_id) const;
 
   void SelectAndZoom(const orbit_client_protos::TimerInfo* timer_info);
   [[nodiscard]] double GetCaptureTimeSpanUs() const;
@@ -121,7 +119,7 @@ class TimeGraph final : public orbit_gl::CaptureViewElement,
   [[nodiscard]] bool IsPartlyVisible(uint64_t min, uint64_t max) const;
   [[nodiscard]] bool IsVisible(VisibilityType vis_type, uint64_t min, uint64_t max) const;
 
-  [[nodiscard]] TextRenderer* GetTextRenderer() { return &text_renderer_static_; }
+  [[nodiscard]] orbit_gl::TextRenderer* GetTextRenderer() { return &text_renderer_static_; }
   [[nodiscard]] orbit_gl::PrimitiveAssembler& GetPrimitiveAssembler() {
     return primitive_assembler_;
   }
@@ -179,7 +177,7 @@ class TimeGraph final : public orbit_gl::CaptureViewElement,
       const orbit_gl::ModifierKeys& modifiers = orbit_gl::ModifierKeys()) override;
 
   AccessibleInterfaceProvider* accessible_parent_;
-  TextRenderer text_renderer_static_;
+  orbit_gl::OpenGlTextRenderer text_renderer_static_;
 
   double ref_time_us_ = 0;
   double min_time_us_ = 0;

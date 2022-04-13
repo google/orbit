@@ -22,7 +22,10 @@
 
 using orbit_client_data::CaptureData;
 using orbit_client_protos::TimerInfo;
+
 using orbit_gl::PrimitiveAssembler;
+using orbit_gl::TextRenderer;
+
 using orbit_grpc_protos::InstrumentedFunction;
 
 namespace {
@@ -46,7 +49,7 @@ float FrameTrack::GetCappedMaximumToAverageRatio() const {
 }
 
 float FrameTrack::GetMaximumBoxHeight() const {
-  const bool is_collapsed = collapse_toggle_->IsCollapsed();
+  const bool is_collapsed = IsCollapsed();
   float scale_factor = is_collapsed ? 1.f : GetCappedMaximumToAverageRatio();
   return scale_factor * GetDefaultBoxHeight();
 }
@@ -67,7 +70,7 @@ FrameTrack::FrameTrack(CaptureViewElement* parent,
   // TODO(b/169554463): Support manual instrumentation.
 
   // Frame tracks are collapsed by default.
-  collapse_toggle_->SetCollapsed(true);
+  SetCollapsed(true);
 }
 
 float FrameTrack::GetHeight() const {

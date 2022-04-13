@@ -77,6 +77,7 @@ target_sources(LinuxTracingTests PRIVATE
         ContextSwitchManagerTest.cpp
         GpuTracepointVisitorTest.cpp
         LeafFunctionCallManagerTest.cpp
+        LibunwindstackUnwinderTest.cpp
         LinuxTracingUtilsTest.cpp
         LostAndDiscardedEventVisitorTest.cpp
         MockTracerListener.h

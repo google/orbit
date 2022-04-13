@@ -42,6 +42,7 @@ using orbit_grpc_protos::CaptureOptions;
 using DynamicInstrumentationMethod =
     orbit_grpc_protos::CaptureOptions::DynamicInstrumentationMethod;
 using UnwindingMethod = orbit_grpc_protos::CaptureOptions::UnwindingMethod;
+using orbit_capture_client::ClientCaptureOptions;
 
 std::atomic<bool> exit_requested = false;
 
@@ -293,63 +294,64 @@ int main(int argc, char* argv[]) {
           (absl::GetFlag(FLAGS_instrument_offset) == 0),
       "Binary path and offset of the function to instrument need to be specified together");
 
-  uint32_t process_id = absl::GetFlag(FLAGS_pid);
-  if (process_id == 0) {
+  ClientCaptureOptions options;
+  options.process_id = absl::GetFlag(FLAGS_pid);
+  if (options.process_id == 0) {
     const std::string pid_file_path = absl::GetFlag(FLAGS_pid_file_path);
     ORBIT_FAIL_IF(pid_file_path.empty(), "A PID or a path to a file is needed.");
     WaitForFileModification(pid_file_path);
-    process_id = ReadPidFromFile(pid_file_path);
+    options.process_id = ReadPidFromFile(pid_file_path);
   }
-  ORBIT_LOG("process_id=%d", process_id);
-  ORBIT_FAIL_IF(process_id == 0, "PID to capture not specified");
+  ORBIT_LOG("process_id=%d", options.process_id);
+  ORBIT_FAIL_IF(options.process_id == 0, "PID to capture not specified");
 
-  uint16_t samples_per_second = absl::GetFlag(FLAGS_sampling_rate);
-  ORBIT_LOG("samples_per_second=%u", samples_per_second);
-  constexpr uint16_t kStackDumpSize = 65000;
-  const UnwindingMethod unwinding_method =
+  options.samples_per_second = absl::GetFlag(FLAGS_sampling_rate);
+  ORBIT_LOG("samples_per_second=%.0f", options.samples_per_second);
+  options.stack_dump_size = 65000;
+  options.unwinding_method =
       absl::GetFlag(FLAGS_frame_pointers) ? CaptureOptions::kFramePointers : CaptureOptions::kDwarf;
-  ORBIT_LOG("unwinding_method=%s",
-            unwinding_method == CaptureOptions::kFramePointers ? "Frame pointers" : "DWARF");
+  ORBIT_LOG("unwinding_method=%s", options.unwinding_method == CaptureOptions::kFramePointers
+                                       ? "Frame pointers"
+                                       : "DWARF");
 
   std::string file_path = absl::GetFlag(FLAGS_instrument_path);
   uint64_t file_offset = absl::GetFlag(FLAGS_instrument_offset);
   bool instrument_function = !file_path.empty() && file_offset != 0;
   const int64_t function_size = absl::GetFlag(FLAGS_instrument_size);
   const std::string function_name = absl::GetFlag(FLAGS_instrument_name);
-  DynamicInstrumentationMethod instrumentation_method =
-      absl::GetFlag(FLAGS_user_space_instrumentation) ? CaptureOptions::kUserSpaceInstrumentation
-                                                      : CaptureOptions::kKernelUprobes;
+  options.dynamic_instrumentation_method = absl::GetFlag(FLAGS_user_space_instrumentation)
+                                               ? CaptureOptions::kUserSpaceInstrumentation
+                                               : CaptureOptions::kKernelUprobes;
   ORBIT_LOG("user_space_instrumentation=%d",
-            instrumentation_method == CaptureOptions::kUserSpaceInstrumentation);
+            options.dynamic_instrumentation_method == CaptureOptions::kUserSpaceInstrumentation);
   if (instrument_function) {
     ORBIT_LOG("file_path=%s", file_path);
     ORBIT_LOG("file_offset=%#x", file_offset);
-    if (instrumentation_method == CaptureOptions::kUserSpaceInstrumentation) {
+    if (options.dynamic_instrumentation_method == CaptureOptions::kUserSpaceInstrumentation) {
       ORBIT_FAIL_IF(function_size == -1, "User space instrumentation requires the function size");
       ORBIT_LOG("function_size=%d", function_size);
       ORBIT_FAIL_IF(function_name.empty(), "User space instrumentation requires the function name");
       ORBIT_LOG("function_name=%s", function_name);
     }
   }
-  constexpr bool kAlwaysRecordArguments = false;
-  constexpr bool kRecordReturnValues = false;
-
-  bool collect_scheduling_info = absl::GetFlag(FLAGS_scheduling);
-  ORBIT_LOG("collect_scheduling_info=%d", collect_scheduling_info);
-  bool collect_thread_state = absl::GetFlag(FLAGS_thread_state);
-  ORBIT_LOG("collect_thread_state=%d", collect_thread_state);
-  bool collect_gpu_jobs = absl::GetFlag(FLAGS_gpu_jobs);
-  ORBIT_LOG("collect_gpu_jobs=%d", collect_gpu_jobs);
-  bool enable_api = absl::GetFlag(FLAGS_orbit_api);
-  ORBIT_LOG("enable_api=%d", enable_api);
-  constexpr bool kEnableIntrospection = false;
+  options.record_arguments = false;
+  options.record_return_values = false;
+  options.collect_scheduling_info = absl::GetFlag(FLAGS_scheduling);
+  ORBIT_LOG("collect_scheduling_info=%d", options.collect_scheduling_info);
+  options.collect_thread_states = absl::GetFlag(FLAGS_thread_state);
+  ORBIT_LOG("collect_thread_states=%d", options.collect_thread_states);
+  options.collect_gpu_jobs = absl::GetFlag(FLAGS_gpu_jobs);
+  ORBIT_LOG("collect_gpu_jobs=%d", options.collect_gpu_jobs);
+  options.enable_api = absl::GetFlag(FLAGS_orbit_api);
+  ORBIT_LOG("enable_api=%d", options.enable_api);
+  options.enable_introspection = false;
   constexpr uint64_t kMaxLocalMarkerDepthPerCommandBuffer = std::numeric_limits<uint64_t>::max();
-  bool collect_memory_info = absl::GetFlag(FLAGS_memory_sampling_rate) > 0;
-  ORBIT_LOG("collect_memory_info=%d", collect_memory_info);
-  uint64_t memory_sampling_period_ms = 0;
-  if (collect_memory_info) {
-    memory_sampling_period_ms = 1'000 / absl::GetFlag(FLAGS_memory_sampling_rate);
-    ORBIT_LOG("memory_sampling_period_ms=%u", memory_sampling_period_ms);
+  options.max_local_marker_depth_per_command_buffer = kMaxLocalMarkerDepthPerCommandBuffer;
+  options.collect_memory_info = absl::GetFlag(FLAGS_memory_sampling_rate) > 0;
+  ORBIT_LOG("collect_memory_info=%d", options.collect_memory_info);
+  if (options.collect_memory_info) {
+    options.memory_sampling_period_ms = 1'000 / absl::GetFlag(FLAGS_memory_sampling_rate);
+    ORBIT_LOG("memory_sampling_period_ms=%u", options.memory_sampling_period_ms);
   }
 
   uint32_t grpc_port = absl::GetFlag(FLAGS_port);
@@ -366,17 +368,16 @@ int main(int argc, char* argv[]) {
       orbit_base::ThreadPool::Create(1, 1, absl::Seconds(1));
 
   orbit_client_data::ModuleManager module_manager;
-  absl::flat_hash_map<uint64_t, orbit_client_data::FunctionInfo> selected_functions;
   if (instrument_function) {
     constexpr uint64_t kInstrumentedFunctionId = 1;
     ManipulateModuleManagerAndSelectedFunctionsToAddInstrumentedFunctionFromOffset(
-        &module_manager, &selected_functions, file_path, function_name, file_offset, function_size,
-        kInstrumentedFunctionId);
+        &module_manager, &options.selected_functions, file_path, function_name, file_offset,
+        function_size, kInstrumentedFunctionId);
   }
 
-  if (enable_api) {
+  if (options.enable_api) {
     ErrorMessageOr<std::vector<orbit_grpc_protos::ModuleInfo>> modules_or_error =
-        orbit_object_utils::ReadModules(process_id);
+        orbit_object_utils::ReadModules(options.process_id);
     ORBIT_FAIL_IF(modules_or_error.has_error(), "%s", modules_or_error.error().message());
     for (const orbit_grpc_protos::ModuleInfo& module : modules_or_error.value()) {
       ManipulateModuleManagerToAddFunctionFromFunctionPrefixInSymtabIfExists(
@@ -397,7 +398,7 @@ int main(int argc, char* argv[]) {
         "VkPresentInfoKHR const*)"};
 
     ErrorMessageOr<std::vector<orbit_grpc_protos::ModuleInfo>> modules_or_error =
-        orbit_object_utils::ReadModules(process_id);
+        orbit_object_utils::ReadModules(options.process_id);
     ORBIT_FAIL_IF(modules_or_error.has_error(), "%s", modules_or_error.error().message());
     std::string libvulkan_file_path;
     for (const orbit_grpc_protos::ModuleInfo& module : modules_or_error.value()) {
@@ -409,7 +410,8 @@ int main(int argc, char* argv[]) {
     if (!libvulkan_file_path.empty()) {
       ORBIT_LOG("%s found: instrumenting %s", kGgpvlkModuleName, kQueuePresentFunctionName);
       ManipulateModuleManagerAndSelectedFunctionsToAddInstrumentedFunctionFromFunctionNameInDebugSymbols(
-          &module_manager, &selected_functions, libvulkan_file_path, kQueuePresentFunctionName,
+          &module_manager, &options.selected_functions, libvulkan_file_path,
+          kQueuePresentFunctionName,
           orbit_fake_client::FakeCaptureEventProcessor::kFrameBoundaryFunctionId);
       ORBIT_LOG("%s instrumented", kQueuePresentFunctionName);
     } else {
@@ -431,12 +433,7 @@ int main(int argc, char* argv[]) {
   }
 
   auto capture_outcome_future = capture_client.Capture(
-      thread_pool.get(), process_id, module_manager, selected_functions, kAlwaysRecordArguments,
-      kRecordReturnValues, orbit_client_data::TracepointInfoSet{}, samples_per_second,
-      kStackDumpSize, unwinding_method, collect_scheduling_info, collect_thread_state,
-      collect_gpu_jobs, enable_api, kEnableIntrospection, instrumentation_method,
-      kMaxLocalMarkerDepthPerCommandBuffer, collect_memory_info, memory_sampling_period_ms,
-      std::move(capture_event_processor));
+      thread_pool.get(), std::move(capture_event_processor), module_manager, options);
   ORBIT_LOG("Asked to start capture");
 
   absl::Time start_time = absl::Now();

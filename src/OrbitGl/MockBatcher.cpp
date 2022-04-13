@@ -21,7 +21,7 @@ namespace orbit_gl {
   return true;
 }
 
-MockBatcher::MockBatcher() : Batcher(BatcherId::kTimeGraph) { ResetElements(); }
+MockBatcher::MockBatcher(BatcherId batcher_id) : Batcher(batcher_id) { ResetElements(); }
 
 void MockBatcher::AddLine(Vec2 from, Vec2 to, float z, const Color& color,
                           const Color& /*picking_color*/,

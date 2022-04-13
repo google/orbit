@@ -18,6 +18,7 @@ class MockElfFile : public orbit_object_utils::ElfFile {
               (override));
   MOCK_METHOD(uint64_t, GetLoadBias, (), (const, override));
   MOCK_METHOD(uint64_t, GetExecutableSegmentOffset, (), (const, override));
+  MOCK_METHOD(uint64_t, GetExecutableSegmentSize, (), (const, override));
 
   MOCK_METHOD(bool, HasDynsym, (), (const, override));
   MOCK_METHOD(bool, HasDebugInfo, (), (const, override));

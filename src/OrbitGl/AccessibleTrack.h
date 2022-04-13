@@ -17,9 +17,10 @@ namespace orbit_gl {
 
 /*
  * Accessibility information for the track.
- * This will return the two "virtual" controls for the title tab and the timers in addition to the
- * actual children of the track.
- * The title tab is the first child and the timers pane is the last child.
+ * This will return a "virtual" control for the timers in addition to the actual children of the
+ * track. The timers pane is the last child.
+ *
+ * TODO (b/185854980): Remove the fake elements.
  */
 class AccessibleTrack : public AccessibleCaptureViewElement {
  public:
@@ -32,7 +33,6 @@ class AccessibleTrack : public AccessibleCaptureViewElement {
 
  private:
   Track* track_;
-  std::unique_ptr<CaptureViewElement> fake_tab_;
   std::unique_ptr<CaptureViewElement> fake_timers_pane_;
 };
 

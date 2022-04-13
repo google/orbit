@@ -71,10 +71,10 @@ target_sources(libunwindstack_common PRIVATE
   PeCoffInterface.cpp
   PeCoffRuntimeFunctions.cpp
   PeCoffRuntimeFunctions.h
+  PeCoffUnwindInfoEvaluator.h
+  PeCoffUnwindInfoEvaluator.cpp
   PeCoffUnwindInfos.cpp
   PeCoffUnwindInfos.h
-  PeCoffUnwindInfoUnwinderX86_64.h
-  PeCoffUnwindInfoUnwinderX86_64.cpp
   RegsArm64.cpp
   RegsArm.cpp
   Regs.cpp
@@ -260,8 +260,8 @@ target_sources(libunwindstack_tests PRIVATE
   tests/PeCoffFake.cpp
   tests/PeCoffRuntimeFunctionsTest.cpp
   tests/PeCoffTest.cpp
+  tests/PeCoffUnwindInfoEvaluatorTest.cpp
   tests/PeCoffUnwindInfosTest.cpp
-  tests/PeCoffUnwindInfoUnwinderX86_64Test.cpp
   tests/PeCoffEpilogTest.cpp
   tests/RegsInfoTest.cpp
   tests/RegsIterateTest.cpp

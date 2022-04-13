@@ -16,10 +16,11 @@
 #include "Track.h"
 
 using orbit_gl::PrimitiveAssembler;
+using orbit_gl::TextRenderer;
 
-TriangleToggle::TriangleToggle(StateChangeHandler handler, orbit_gl::Viewport* viewport,
-                               TimeGraphLayout* layout, Track* track)
-    : CaptureViewElement(track, viewport, layout), handler_(std::move(handler)) {}
+TriangleToggle::TriangleToggle(CaptureViewElement* parent, const orbit_gl::Viewport* viewport,
+                               const TimeGraphLayout* layout, StateChangeHandler handler)
+    : CaptureViewElement(parent, viewport, layout), handler_(std::move(handler)) {}
 
 void TriangleToggle::DoDraw(PrimitiveAssembler& primitive_assembler, TextRenderer& text_renderer,
                             const DrawContext& draw_context) {

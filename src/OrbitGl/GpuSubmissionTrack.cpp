@@ -40,9 +40,7 @@ GpuSubmissionTrack::GpuSubmissionTrack(Track* parent,
                  timer_data),
       timeline_hash_{timeline_hash},
       string_manager_{app->GetStringManager()},
-      parent_{parent} {
-  draw_background_ = false;
-}
+      parent_{parent} {}
 
 std::string GpuSubmissionTrack::GetName() const {
   return absl::StrFormat(
@@ -183,7 +181,7 @@ float GpuSubmissionTrack::GetHeight() const {
   if (has_vulkan_layer_command_buffer_timers_ && !collapsed) {
     depth *= 2;
   }
-  return layout_->GetTrackTabHeight() + layout_->GetTrackContentTopMargin() +
+  return header_->GetHeight() + layout_->GetTrackContentTopMargin() +
          layout_->GetTextBoxHeight() * depth + (num_gaps * layout_->GetSpaceBetweenGpuDepths()) +
          layout_->GetTrackContentBottomMargin();
 }

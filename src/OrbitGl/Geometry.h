@@ -5,6 +5,7 @@
 #ifndef ORBIT_GL_GEOMETRY_H_
 #define ORBIT_GL_GEOMETRY_H_
 
+#include <algorithm>
 #include <utility>
 
 #include "CoreMath.h"

@@ -22,6 +22,15 @@
 #include <gtest/gtest.h>
 
 namespace unwindstack {
+// Unwind infos are indexed using their relative virtual address, which the
+// PeCoffUnwindInfos class internally converts to a file offset. We add a
+// simple mapping using a section that captures all possible addresses with
+// the constants below.
+constexpr uint32_t kSectionSize = 0x1000;
+constexpr uint32_t kVmAddress = 0x6600;
+constexpr uint32_t kFileOffset = 0x4000;
+std::vector<unwindstack::Section> kSections{
+    unwindstack::Section{"all_addresses", kSectionSize, kVmAddress, kSectionSize, kFileOffset}};
 
 class PeCoffUnwindInfosTest : public ::testing::Test {
  public:
@@ -66,7 +75,7 @@ class PeCoffUnwindInfosTest : public ::testing::Test {
   uint64_t SetChainedInfoOffsetAtOffset(uint64_t offset) {
     // The PeCoffUnwindInfo class does not interpret chained infos, so it doesn't really
     // matter what values we put here.
-    RuntimeFunction chained_function{0x100, 0x200, 0x6000};
+    RuntimeFunction chained_function{0x100, 0x200, kFileOffset};
     memory_fake_->SetData32(offset, chained_function.start_address);
     offset += sizeof(uint32_t);
     memory_fake_->SetData32(offset, chained_function.end_address);
@@ -83,23 +92,23 @@ class PeCoffUnwindInfosTest : public ::testing::Test {
 };
 
 TEST_F(PeCoffUnwindInfosTest, get_unwind_info_succeeds_on_well_formed_data_no_chained_info) {
-  uint64_t offset = 0x6000;
+  uint64_t offset = kFileOffset;
   offset = SetUnwindInfoHeaderAtOffset(offset, 2, false);
   offset = SetUnwindOpCodeOrFrameOffsetAtOffset(offset, 0x1234);
   offset = SetUnwindOpCodeOrFrameOffsetAtOffset(offset, 0x2134);
 
-  PeCoffMemory pe_coff_memory(GetMemoryFake());
-  PeCoffUnwindInfos unwind_infos(&pe_coff_memory);
+  std::unique_ptr<PeCoffUnwindInfos> unwind_infos(
+      CreatePeCoffUnwindInfos(GetMemoryFake(), kSections));
 
   UnwindInfo unwind_info;
-  EXPECT_TRUE(unwind_infos.GetUnwindInfo(0x6000, &unwind_info));
-  EXPECT_EQ(ERROR_NONE, unwind_infos.GetLastError().code);
+  EXPECT_TRUE(unwind_infos->GetUnwindInfo(kVmAddress, &unwind_info));
+  EXPECT_EQ(ERROR_NONE, unwind_infos->GetLastError().code);
 
   EXPECT_EQ(2, unwind_info.num_codes);
 }
 
 TEST_F(PeCoffUnwindInfosTest, get_unwind_info_succeeds_multiple_times) {
-  uint64_t offset = 0x6000;
+  uint64_t offset = kFileOffset;
   offset = SetUnwindInfoHeaderAtOffset(offset, 2, false);
   offset = SetUnwindOpCodeOrFrameOffsetAtOffset(offset, 0x1234);
   offset = SetUnwindOpCodeOrFrameOffsetAtOffset(offset, 0x2134);
@@ -110,16 +119,16 @@ TEST_F(PeCoffUnwindInfosTest, get_unwind_info_succeeds_multiple_times) {
   offset = SetUnwindOpCodeOrFrameOffsetAtOffset(offset, 0x8756);
   offset = SetUnwindOpCodeOrFrameOffsetAtOffset(offset, 0x7658);
 
-  PeCoffMemory pe_coff_memory(GetMemoryFake());
-  PeCoffUnwindInfos unwind_infos(&pe_coff_memory);
+  std::unique_ptr<PeCoffUnwindInfos> unwind_infos(
+      CreatePeCoffUnwindInfos(GetMemoryFake(), kSections));
 
   UnwindInfo unwind_info;
-  EXPECT_TRUE(unwind_infos.GetUnwindInfo(0x6000, &unwind_info));
+  EXPECT_TRUE(unwind_infos->GetUnwindInfo(kVmAddress, &unwind_info));
 
   // This should read from the cache, though we don't verify that here. The returned
   // data should be the same, though.
   UnwindInfo unwind_info2;
-  EXPECT_TRUE(unwind_infos.GetUnwindInfo(0x6000, &unwind_info2));
+  EXPECT_TRUE(unwind_infos->GetUnwindInfo(kVmAddress, &unwind_info2));
 
   EXPECT_EQ(unwind_info.version_and_flags, unwind_info2.version_and_flags);
   EXPECT_EQ(unwind_info.prolog_size, unwind_info2.prolog_size);
@@ -129,26 +138,26 @@ TEST_F(PeCoffUnwindInfosTest, get_unwind_info_succeeds_multiple_times) {
 
 TEST_F(PeCoffUnwindInfosTest,
        get_unwind_info_succeeds_on_well_formed_data_chained_info_even_number_of_opcodes) {
-  uint64_t offset = 0x6000;
+  uint64_t offset = kFileOffset;
   offset = SetUnwindInfoHeaderAtOffset(offset, 2, true);
   offset = SetUnwindOpCodeOrFrameOffsetAtOffset(offset, 0x1234);
   offset = SetUnwindOpCodeOrFrameOffsetAtOffset(offset, 0x2134);
 
   offset = SetChainedInfoOffsetAtOffset(offset);
 
-  PeCoffMemory pe_coff_memory(GetMemoryFake());
-  PeCoffUnwindInfos unwind_infos(&pe_coff_memory);
+  std::unique_ptr<PeCoffUnwindInfos> unwind_infos(
+      CreatePeCoffUnwindInfos(GetMemoryFake(), kSections));
 
   UnwindInfo unwind_info;
-  EXPECT_TRUE(unwind_infos.GetUnwindInfo(0x6000, &unwind_info));
-  EXPECT_EQ(ERROR_NONE, unwind_infos.GetLastError().code);
+  EXPECT_TRUE(unwind_infos->GetUnwindInfo(kVmAddress, &unwind_info));
+  EXPECT_EQ(ERROR_NONE, unwind_infos->GetLastError().code);
 
   EXPECT_EQ(2, unwind_info.num_codes);
 }
 
 TEST_F(PeCoffUnwindInfosTest,
        get_unwind_info_succeeds_on_well_formed_data_chained_info_odd_number_of_opcodes) {
-  uint64_t offset = 0x6000;
+  uint64_t offset = kFileOffset;
   offset = SetUnwindInfoHeaderAtOffset(offset, 3, true);
   offset = SetUnwindOpCodeOrFrameOffsetAtOffset(offset, 0x1234);
   offset = SetUnwindOpCodeOrFrameOffsetAtOffset(offset, 0x2134);
@@ -159,66 +168,66 @@ TEST_F(PeCoffUnwindInfosTest,
 
   offset = SetChainedInfoOffsetAtOffset(offset);
 
-  PeCoffMemory pe_coff_memory(GetMemoryFake());
-  PeCoffUnwindInfos unwind_infos(&pe_coff_memory);
+  std::unique_ptr<PeCoffUnwindInfos> unwind_infos(
+      CreatePeCoffUnwindInfos(GetMemoryFake(), kSections));
 
   UnwindInfo unwind_info;
-  EXPECT_TRUE(unwind_infos.GetUnwindInfo(0x6000, &unwind_info));
-  EXPECT_EQ(ERROR_NONE, unwind_infos.GetLastError().code);
+  EXPECT_TRUE(unwind_infos->GetUnwindInfo(kVmAddress, &unwind_info));
+  EXPECT_EQ(ERROR_NONE, unwind_infos->GetLastError().code);
 
   EXPECT_EQ(3, unwind_info.num_codes);
 }
 
 TEST_F(PeCoffUnwindInfosTest, get_unwind_info_succeeds_with_exception_handler_data) {
-  uint64_t offset = 0x6000;
+  uint64_t offset = kFileOffset;
   offset = SetUnwindInfoHeaderAtOffset(offset, 2, false);
   offset = SetUnwindOpCodeOrFrameOffsetAtOffset(offset, 0x1234);
   offset = SetUnwindOpCodeOrFrameOffsetAtOffset(offset, 0x2134);
   offset = SetExceptionHandlerOffsetAtOffset(offset, 0x8000);
 
-  PeCoffMemory pe_coff_memory(GetMemoryFake());
-  PeCoffUnwindInfos unwind_infos(&pe_coff_memory);
+  std::unique_ptr<PeCoffUnwindInfos> unwind_infos(
+      CreatePeCoffUnwindInfos(GetMemoryFake(), kSections));
 
   UnwindInfo unwind_info;
-  EXPECT_TRUE(unwind_infos.GetUnwindInfo(0x6000, &unwind_info));
-  EXPECT_EQ(ERROR_NONE, unwind_infos.GetLastError().code);
+  EXPECT_TRUE(unwind_infos->GetUnwindInfo(kVmAddress, &unwind_info));
+  EXPECT_EQ(ERROR_NONE, unwind_infos->GetLastError().code);
 
   EXPECT_EQ(2, unwind_info.num_codes);
 }
 
 TEST_F(PeCoffUnwindInfosTest, get_unwind_info_fails_on_bad_version) {
-  uint64_t offset = 0x6000;
+  uint64_t offset = kFileOffset;
   offset = SetUnwindInfoHeaderAtOffset(offset, 2, false);
   offset = SetUnwindOpCodeOrFrameOffsetAtOffset(offset, 0x1234);
   offset = SetUnwindOpCodeOrFrameOffsetAtOffset(offset, 0x2134);
 
   // Clobber the version with 0.
-  GetMemoryFake()->SetData8(0x6000, 0x00);
+  GetMemoryFake()->SetData8(kFileOffset, 0x00);
 
-  PeCoffMemory pe_coff_memory(GetMemoryFake());
-  PeCoffUnwindInfos unwind_infos(&pe_coff_memory);
+  std::unique_ptr<PeCoffUnwindInfos> unwind_infos(
+      CreatePeCoffUnwindInfos(GetMemoryFake(), kSections));
 
   UnwindInfo unwind_info;
-  EXPECT_FALSE(unwind_infos.GetUnwindInfo(0x6000, &unwind_info));
-  EXPECT_EQ(ERROR_INVALID_COFF, unwind_infos.GetLastError().code);
+  EXPECT_FALSE(unwind_infos->GetUnwindInfo(kVmAddress, &unwind_info));
+  EXPECT_EQ(ERROR_INVALID_COFF, unwind_infos->GetLastError().code);
 }
 
 TEST_F(PeCoffUnwindInfosTest, get_unwind_info_fails_on_bad_memory) {
-  GetMemoryFake()->SetData8(0x6000, 0x1);
-  PeCoffMemory pe_coff_memory(GetMemoryFake());
-  PeCoffUnwindInfos unwind_infos(&pe_coff_memory);
+  GetMemoryFake()->SetData8(kFileOffset, 0x1);
+  std::unique_ptr<PeCoffUnwindInfos> unwind_infos(
+      CreatePeCoffUnwindInfos(GetMemoryFake(), kSections));
 
   UnwindInfo unwind_info;
-  EXPECT_FALSE(unwind_infos.GetUnwindInfo(0x6000, &unwind_info));
-  EXPECT_EQ(ERROR_MEMORY_INVALID, unwind_infos.GetLastError().code);
+  EXPECT_FALSE(unwind_infos->GetUnwindInfo(kVmAddress, &unwind_info));
+  EXPECT_EQ(ERROR_MEMORY_INVALID, unwind_infos->GetLastError().code);
 
   // We read the first 4 bytes with a GetFully, so we must fail on this address
   // (and not 0x6001, which is the first missing address).
-  EXPECT_EQ(0x6000, unwind_infos.GetLastError().address);
+  EXPECT_EQ(kFileOffset, unwind_infos->GetLastError().address);
 }
 
 TEST_F(PeCoffUnwindInfosTest, get_unwind_info_fails_on_incomplete_op_codes_memory) {
-  uint64_t offset = 0x6000;
+  uint64_t offset = kFileOffset;
   offset = SetUnwindInfoHeaderAtOffset(offset, 3, false);
 
   // Since we are using GetFully to get all op codes in a single memory read, we
@@ -228,17 +237,17 @@ TEST_F(PeCoffUnwindInfosTest, get_unwind_info_fails_on_incomplete_op_codes_memor
   offset = SetUnwindOpCodeOrFrameOffsetAtOffset(offset, 0x1234);
   offset = SetUnwindOpCodeOrFrameOffsetAtOffset(offset, 0x2134);
 
-  PeCoffMemory pe_coff_memory(GetMemoryFake());
-  PeCoffUnwindInfos unwind_infos(&pe_coff_memory);
+  std::unique_ptr<PeCoffUnwindInfos> unwind_infos(
+      CreatePeCoffUnwindInfos(GetMemoryFake(), kSections));
 
   UnwindInfo unwind_info;
-  EXPECT_FALSE(unwind_infos.GetUnwindInfo(0x6000, &unwind_info));
-  EXPECT_EQ(ERROR_MEMORY_INVALID, unwind_infos.GetLastError().code);
-  EXPECT_EQ(expected_error_address, unwind_infos.GetLastError().address);
+  EXPECT_FALSE(unwind_infos->GetUnwindInfo(kVmAddress, &unwind_info));
+  EXPECT_EQ(ERROR_MEMORY_INVALID, unwind_infos->GetLastError().code);
+  EXPECT_EQ(expected_error_address, unwind_infos->GetLastError().address);
 }
 
 TEST_F(PeCoffUnwindInfosTest, get_unwind_info_fails_on_incomplete_chained_info) {
-  uint64_t offset = 0x6000;
+  uint64_t offset = kFileOffset;
   offset = SetUnwindInfoHeaderAtOffset(offset, 2, true);
   offset = SetUnwindOpCodeOrFrameOffsetAtOffset(offset, 0x1234);
   offset = SetUnwindOpCodeOrFrameOffsetAtOffset(offset, 0x2134);
@@ -247,13 +256,13 @@ TEST_F(PeCoffUnwindInfosTest, get_unwind_info_fails_on_incomplete_chained_info) 
   // must fail on this address.
   const uint64_t expected_error_address = offset;
 
-  PeCoffMemory pe_coff_memory(GetMemoryFake());
-  PeCoffUnwindInfos unwind_infos(&pe_coff_memory);
+  std::unique_ptr<PeCoffUnwindInfos> unwind_infos(
+      CreatePeCoffUnwindInfos(GetMemoryFake(), kSections));
 
   UnwindInfo unwind_info;
-  EXPECT_FALSE(unwind_infos.GetUnwindInfo(0x6000, &unwind_info));
-  EXPECT_EQ(ERROR_MEMORY_INVALID, unwind_infos.GetLastError().code);
-  EXPECT_EQ(expected_error_address, unwind_infos.GetLastError().address);
+  EXPECT_FALSE(unwind_infos->GetUnwindInfo(kVmAddress, &unwind_info));
+  EXPECT_EQ(ERROR_MEMORY_INVALID, unwind_infos->GetLastError().code);
+  EXPECT_EQ(expected_error_address, unwind_infos->GetLastError().address);
 }
 
 }  // namespace unwindstack

@@ -205,16 +205,13 @@ std::unique_ptr<CaptureData> GenerateTestCaptureData(
     capture_data->AddScopeStats(kFunctionIds[i], std::move(stats));
   }
 
-  return capture_data;
-}
-
-static void AddTimersToThreadTrackDataProvider(
-    orbit_client_data::ThreadTrackDataProvider* thread_track_data_provider) {
   for (const TimerInfo* timer_info : kTimerPointers) {
-    thread_track_data_provider->AddTimer(*timer_info);
+    capture_data->GetThreadTrackDataProvider()->AddTimer(*timer_info);
   }
 
-  thread_track_data_provider->OnCaptureComplete();
+  capture_data->OnCaptureComplete();
+
+  return capture_data;
 }
 
 class MockLiveFunctionsInterface : public orbit_data_views::LiveFunctionsInterface {
@@ -477,9 +474,6 @@ TEST_F(LiveFunctionsDataViewTest, ContextMenuActionsAreInvoked) {
     }
     EXPECT_CALL(app_, GetCaptureData).WillRepeatedly(testing::ReturnRef(*capture_data_));
 
-    EXPECT_CALL(app_, GetAllTimersForHookedFunction)
-        .WillRepeatedly(testing::Return(kTimerPointers));
-
     std::string expected_contents("\"Name\",\"Thread\",\"Start\",\"End\",\"Duration (ns)\"\r\n");
     for (size_t i = 0; i < kNumTimers; ++i) {
       expected_contents += absl::StrFormat(R"("%s","%s [%lu]","%lu","%lu","%lu")"
@@ -523,7 +517,7 @@ TEST_F(LiveFunctionsDataViewTest, ContextMenuActionsAreInvoked) {
 
     EXPECT_CALL(app_, JumpToTimerAndZoom)
         .Times(1)
-        .WillOnce([](uint64_t /*function_id*/, JumpToTimerMode selection_mode) {
+        .WillOnce([](uint64_t /*scope_id*/, JumpToTimerMode selection_mode) {
           EXPECT_EQ(selection_mode, JumpToTimerMode::kFirst);
         });
     view_.OnContextMenu(std::string{kMenuActionJumpToFirst}, jump_to_first_index, {0});
@@ -536,7 +530,7 @@ TEST_F(LiveFunctionsDataViewTest, ContextMenuActionsAreInvoked) {
 
     EXPECT_CALL(app_, JumpToTimerAndZoom)
         .Times(1)
-        .WillOnce([](uint64_t /*function_id*/, JumpToTimerMode selection_mode) {
+        .WillOnce([](uint64_t /*scope_id*/, JumpToTimerMode selection_mode) {
           EXPECT_EQ(selection_mode, JumpToTimerMode::kLast);
         });
     view_.OnContextMenu(std::string{kMenuActionJumpToLast}, jump_to_last_index, {0});
@@ -549,7 +543,7 @@ TEST_F(LiveFunctionsDataViewTest, ContextMenuActionsAreInvoked) {
 
     EXPECT_CALL(app_, JumpToTimerAndZoom)
         .Times(1)
-        .WillOnce([](uint64_t /*function_id*/, JumpToTimerMode selection_mode) {
+        .WillOnce([](uint64_t /*scope_id*/, JumpToTimerMode selection_mode) {
           EXPECT_EQ(selection_mode, JumpToTimerMode::kMin);
         });
     view_.OnContextMenu(std::string{kMenuActionJumpToMin}, jump_to_min_index, {0});
@@ -562,7 +556,7 @@ TEST_F(LiveFunctionsDataViewTest, ContextMenuActionsAreInvoked) {
 
     EXPECT_CALL(app_, JumpToTimerAndZoom)
         .Times(1)
-        .WillOnce([](uint64_t /*function_id*/, JumpToTimerMode selection_mode) {
+        .WillOnce([](uint64_t /*scope_id*/, JumpToTimerMode selection_mode) {
           EXPECT_EQ(selection_mode, JumpToTimerMode::kMax);
         });
     view_.OnContextMenu(std::string{kMenuActionJumpToMax}, jump_to_max_index, {0});
@@ -839,9 +833,6 @@ TEST_F(LiveFunctionsDataViewTest, OnRefreshWithNoIndicesResetsHistogram) {
 }
 
 TEST_F(LiveFunctionsDataViewTest, HistogramIsProperlyUpdated) {
-  AddTimersToThreadTrackDataProvider(capture_data_->GetThreadTrackDataProvider());
-  capture_data_->OnCaptureComplete();
-
   EXPECT_CALL(app_, GetCaptureData).WillRepeatedly(testing::ReturnRef(*capture_data_));
   EXPECT_CALL(app_, ProvideScopeId).WillRepeatedly(Invoke([&](const TimerInfo& timer) {
     return timer.function_id();

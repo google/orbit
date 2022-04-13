@@ -17,6 +17,7 @@
 
 #include "CaptureClient/CaptureEventProcessor.h"
 #include "CaptureClient/CaptureListener.h"
+#include "CaptureClient/ClientCaptureOptions.h"
 #include "ClientData/FunctionInfo.h"
 #include "ClientData/ModuleManager.h"
 #include "ClientData/ProcessData.h"
@@ -40,19 +41,10 @@ class CaptureClient {
       : capture_service_{orbit_grpc_protos::CaptureService::NewStub(channel)} {}
 
   orbit_base::Future<ErrorMessageOr<CaptureListener::CaptureOutcome>> Capture(
-      orbit_base::ThreadPool* thread_pool, uint32_t process_id,
+      orbit_base::ThreadPool* thread_pool,
+      std::unique_ptr<CaptureEventProcessor> capture_event_processor,
       const orbit_client_data::ModuleManager& module_manager,
-      absl::flat_hash_map<uint64_t, orbit_client_data::FunctionInfo> selected_functions,
-      bool record_arguments, bool record_return_values,
-      orbit_client_data::TracepointInfoSet selected_tracepoints, double samples_per_second,
-      uint16_t stack_dump_size, orbit_grpc_protos::CaptureOptions::UnwindingMethod unwinding_method,
-      bool collect_scheduling_info, bool collect_thread_state, bool collect_gpu_jobs,
-      bool enable_api, bool enable_introspection,
-      orbit_grpc_protos::CaptureOptions::DynamicInstrumentationMethod
-          dynamic_instrumentation_method,
-      uint64_t max_local_marker_depth_per_command_buffer, bool collect_memory_info,
-      uint64_t memory_sampling_period_ms,
-      std::unique_ptr<CaptureEventProcessor> capture_event_processor);
+      const ClientCaptureOptions& capture_client_options);
 
   // Returns true if stop was initiated and false otherwise.
   // The latter can happen if for example the stop was already
@@ -76,17 +68,8 @@ class CaptureClient {
 
  private:
   ErrorMessageOr<CaptureListener::CaptureOutcome> CaptureSync(
-      uint32_t process_id, const orbit_client_data::ModuleManager& module_manager,
-      const absl::flat_hash_map<uint64_t, orbit_client_data::FunctionInfo>& selected_functions,
-      bool record_arguments, bool record_return_values,
-      const orbit_client_data::TracepointInfoSet& selected_tracepoints, double samples_per_second,
-      uint16_t stack_dump_size, orbit_grpc_protos::CaptureOptions::UnwindingMethod unwinding_method,
-      bool collect_scheduling_info, bool collect_thread_state, bool collect_gpu_jobs,
-      bool enable_api, bool enable_introspection,
-      orbit_grpc_protos::CaptureOptions::DynamicInstrumentationMethod
-          dynamic_instrumentation_method,
-      uint64_t max_local_marker_depth_per_command_buffer, bool collect_memory_info,
-      uint64_t memory_sampling_period_ms, CaptureEventProcessor* capture_event_processor);
+      orbit_grpc_protos::CaptureOptions capture_options,
+      CaptureEventProcessor* capture_event_processor);
 
   void ProcessEvents(
       CaptureEventProcessor* capture_event_processor,

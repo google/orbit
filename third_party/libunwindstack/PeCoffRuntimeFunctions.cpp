@@ -16,9 +16,28 @@
 
 #include "PeCoffRuntimeFunctions.h"
 
+#include <memory>
+
 namespace unwindstack {
 
-bool PeCoffRuntimeFunctions::Init(uint64_t pdata_begin, uint64_t pdata_end) {
+class PeCoffRuntimeFunctionsImpl : public PeCoffRuntimeFunctions {
+ public:
+  explicit PeCoffRuntimeFunctionsImpl(Memory* object_file_memory)
+      : pe_coff_memory_(object_file_memory) {}
+
+  bool Init(uint64_t pdata_begin, uint64_t pdata_end) override;
+  bool FindRuntimeFunction(uint64_t pc_rva, RuntimeFunction* runtime_function) const override;
+
+ private:
+  PeCoffMemory pe_coff_memory_;
+  std::vector<RuntimeFunction> runtime_functions_;
+};
+
+std::unique_ptr<PeCoffRuntimeFunctions> CreatePeCoffRuntimeFunctions(Memory* object_file_memory) {
+  return std::make_unique<PeCoffRuntimeFunctionsImpl>(object_file_memory);
+}
+
+bool PeCoffRuntimeFunctionsImpl::Init(uint64_t pdata_begin, uint64_t pdata_end) {
   // Since pdata_begin and pdata_end are read from the file, we can't CHECK here.
   if (pdata_end < pdata_begin) {
     last_error_.code = ERROR_INVALID_COFF;
@@ -31,10 +50,10 @@ bool PeCoffRuntimeFunctions::Init(uint64_t pdata_begin, uint64_t pdata_end) {
   }
 
   runtime_functions_.resize(pdata_size / sizeof(RuntimeFunction));
-  pe_coff_memory_->set_cur_offset(pdata_begin);
-  if (!pe_coff_memory_->GetFully(static_cast<void*>(&runtime_functions_[0]), pdata_size)) {
+  pe_coff_memory_.set_cur_offset(pdata_begin);
+  if (!pe_coff_memory_.GetFully(static_cast<void*>(&runtime_functions_[0]), pdata_size)) {
     last_error_.code = ERROR_MEMORY_INVALID;
-    last_error_.address = pe_coff_memory_->cur_offset();
+    last_error_.address = pe_coff_memory_.cur_offset();
     return false;
   }
   return true;
@@ -45,8 +64,8 @@ bool PeCoffRuntimeFunctions::Init(uint64_t pdata_begin, uint64_t pdata_end) {
 // (https://docs.microsoft.com/en-us/cpp/build/exception-handling-x64). Using a binary search here
 // for performance makes a huge difference (as opposed to a linear search) as this function is
 // called on every unwinding step and there can be a lot of entries in the vector.
-bool PeCoffRuntimeFunctions::FindRuntimeFunction(uint64_t pc_rva,
-                                                 RuntimeFunction* runtime_function) const {
+bool PeCoffRuntimeFunctionsImpl::FindRuntimeFunction(uint64_t pc_rva,
+                                                     RuntimeFunction* runtime_function) const {
   size_t begin = 0;
   size_t end = runtime_functions_.size();
   while (begin < end) {

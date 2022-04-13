@@ -20,7 +20,6 @@ target_sources(
          BasicPageFaultsTrack.h
          Batcher.h
          BatcherInterface.h
-         OpenGlBatcher.h
          CallstackThreadBar.h
          CallTreeView.h
          CaptureStats.h
@@ -28,6 +27,7 @@ target_sources(
          CaptureWindow.h
          CGroupAndProcessMemoryTrack.h
          CoreMath.h
+         DrawingInterface.h
          FramePointerValidatorClient.h
          FrameTrack.h
          FrameTrackOnlineProcessor.h
@@ -48,7 +48,10 @@ target_sources(
          MajorPageFaultsTrack.h
          MemoryTrack.h
          MinorPageFaultsTrack.h
+         MockTimelineInfo.h
          MultivariateTimeSeries.h
+         OpenGlBatcher.h
+         OpenGlTextRenderer.h
          PageFaultsTrack.h
          PickingManager.h
          PrimitiveAssembler.h
@@ -60,6 +63,7 @@ target_sources(
          StatusListener.h
          SystemMemoryTrack.h
          TextRenderer.h
+         TextRendererInterface.h
          ThreadBar.h
          ThreadStateBar.h
          ThreadTrack.h
@@ -74,7 +78,10 @@ target_sources(
          TracepointThreadBar.h
          Track.h
          TrackContainer.h
+         TrackControlInterface.h
+         TrackHeader.h
          TrackManager.h
+         TrackRenderHelper.h
          TrackTestData.h
          TranslationStack.h
          TriangleToggle.h
@@ -91,7 +98,6 @@ target_sources(
           App.cpp
           AsyncTrack.cpp
           BasicPageFaultsTrack.cpp
-          OpenGlBatcher.cpp
           CallstackThreadBar.cpp
           CallTreeView.cpp
           CaptureStats.cpp
@@ -116,6 +122,8 @@ target_sources(
           MajorPageFaultsTrack.cpp
           MemoryTrack.cpp
           MinorPageFaultsTrack.cpp
+          OpenGlBatcher.cpp
+          OpenGlTextRenderer.cpp
           PageFaultsTrack.cpp
           PickingManager.cpp
           PrimitiveAssembler.cpp
@@ -124,7 +132,6 @@ target_sources(
           SchedulingStats.cpp
           SimpleTimings.cpp
           SystemMemoryTrack.cpp
-          TextRenderer.cpp
           TimeGraph.cpp
           TimeGraphLayout.cpp
           TimelineTicks.cpp
@@ -137,7 +144,9 @@ target_sources(
           TracepointThreadBar.cpp
           Track.cpp
           TrackContainer.cpp
+          TrackHeader.cpp
           TrackManager.cpp
+          TrackRenderHelper.cpp
           TrackTestData.cpp
           TranslationStack.cpp
           TriangleToggle.cpp
@@ -192,6 +201,7 @@ target_sources(OrbitGlTests PRIVATE
                UnitTestSlider.h)
 
 target_sources(OrbitGlTests PRIVATE
+               BatcherTest.cpp
                CaptureStatsTest.cpp
                CaptureViewElementTest.cpp
                CaptureViewElementTester.cpp
@@ -212,6 +222,7 @@ target_sources(OrbitGlTests PRIVATE
                TimerInfosIteratorTest.cpp
                TranslationStackTest.cpp
                ThreadTrackTest.cpp
+               TrackHeaderTest.cpp
                TrackManagerTest.cpp
                ViewportTest.cpp)
 

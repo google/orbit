@@ -515,9 +515,7 @@ class OrbitApp final : public DataViewFactory,
 
   [[nodiscard]] bool HasFrameTrackInCaptureData(uint64_t instrumented_function_id) const override;
 
-  void JumpToTimerAndZoom(uint64_t function_id, JumpToTimerMode selection_mode) override;
-  [[nodiscard]] std::vector<const orbit_client_protos::TimerInfo*> GetAllTimersForHookedFunction(
-      uint64_t function_id) const override;
+  void JumpToTimerAndZoom(uint64_t scope_id, JumpToTimerMode selection_mode) override;
   [[nodiscard]] std::vector<const orbit_client_data::TimerChain*> GetAllThreadTimerChains()
       const override;
 

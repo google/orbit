@@ -34,9 +34,7 @@ GpuDebugMarkerTrack::GpuDebugMarkerTrack(CaptureViewElement* parent,
     : TimerTrack(parent, timeline_info, viewport, layout, app, module_manager, capture_data,
                  timer_data),
       string_manager_{app->GetStringManager()},
-      timeline_hash_{timeline_hash} {
-  draw_background_ = false;
-}
+      timeline_hash_{timeline_hash} {}
 
 std::string GpuDebugMarkerTrack::GetName() const {
   return absl::StrFormat(
@@ -113,7 +111,7 @@ std::string GpuDebugMarkerTrack::GetBoxTooltip(const PrimitiveAssembler& primiti
 
 float GpuDebugMarkerTrack::GetYFromTimer(const TimerInfo& timer_info) const {
   uint32_t depth = timer_info.depth();
-  if (collapse_toggle_->IsCollapsed()) {
+  if (IsCollapsed()) {
     depth = 0;
   }
   return GetPos()[1] + layout_->GetTrackTabHeight() + layout_->GetTrackContentTopMargin() +
@@ -121,14 +119,14 @@ float GpuDebugMarkerTrack::GetYFromTimer(const TimerInfo& timer_info) const {
 }
 
 float GpuDebugMarkerTrack::GetHeight() const {
-  bool collapsed = collapse_toggle_->IsCollapsed();
+  bool collapsed = IsCollapsed();
   uint32_t depth = collapsed ? std::min<uint32_t>(1, GetDepth()) : GetDepth();
   return layout_->GetTrackTabHeight() + layout_->GetTrackContentTopMargin() +
          layout_->GetTextBoxHeight() * depth + layout_->GetTrackContentBottomMargin();
 }
 
 bool GpuDebugMarkerTrack::TimerFilter(const TimerInfo& timer_info) const {
-  if (collapse_toggle_->IsCollapsed()) {
+  if (IsCollapsed()) {
     return timer_info.depth() == 0;
   }
   return true;
