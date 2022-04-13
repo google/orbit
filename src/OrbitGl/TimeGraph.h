@@ -67,7 +67,7 @@ class TimeGraph final : public orbit_gl::CaptureViewElement,
   [[nodiscard]] uint64_t GetTickFromUs(double micros) const override;
   [[nodiscard]] double GetUsFromTick(uint64_t time) const override;
   [[nodiscard]] uint64_t GetNsSinceStart(uint64_t time) const override;
-  [[nodiscard]] double GetTimeWindowUs() const override { return time_window_us_; }
+  [[nodiscard]] double GetTimeWindowUs() const override { return max_time_us_ - min_time_us_; }
   [[nodiscard]] double GetMinTimeUs() const override { return min_time_us_; }
   [[nodiscard]] double GetMaxTimeUs() const override { return max_time_us_; }
   [[nodiscard]] uint64_t GetCaptureTimeSpanNs() const override;
@@ -184,7 +184,6 @@ class TimeGraph final : public orbit_gl::CaptureViewElement,
   double max_time_us_ = 0;
   uint64_t capture_min_timestamp_ = std::numeric_limits<uint64_t>::max();
   uint64_t capture_max_timestamp_ = 0;
-  double time_window_us_ = 0;
 
   TimeGraphLayout layout_;
 
