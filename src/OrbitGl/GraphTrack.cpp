@@ -105,7 +105,7 @@ void GraphTrack<Dimension>::DoUpdatePrimitives(PrimitiveAssembler& primitive_ass
   float content_height = GetGraphContentHeight();
   Vec2 content_pos = GetPos();
   content_pos[1] += layout_->GetTrackTabHeight();
-  Tetragon box = MakeBox(content_pos, Vec2(GetWidth(), content_height + GetLegendHeight()));
+  Quad box = MakeBox(content_pos, Vec2(GetWidth(), content_height + GetLegendHeight()));
   primitive_assembler.AddBox(box, track_z, GetTrackBackgroundColor(), shared_from_this());
 
   const bool picking = picking_mode != PickingMode::kNone;
@@ -200,7 +200,7 @@ void GraphTrack<Dimension>::DrawLabel(PrimitiveAssembler& primitive_assembler,
 
   Vec2 arrow_box_position(text_box_position[0] - kTextLeftMargin,
                           text_box_position[1] - kTextBottomMargin);
-  Tetragon arrow_text_box = MakeBox(arrow_box_position, arrow_box_size);
+  Quad arrow_text_box = MakeBox(arrow_box_position, arrow_box_size);
   Vec2 arrow_extra_point(target_pos[0], target_pos[1]);
 
   primitive_assembler.AddBox(arrow_text_box, label_z, font_color);

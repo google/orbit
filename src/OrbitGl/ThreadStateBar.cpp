@@ -52,7 +52,7 @@ void ThreadStateBar::DoDraw(PrimitiveAssembler& primitive_assembler, TextRendere
                                  : GlCanvas::kZValueEventBar;
 
   // Draw a transparent track just for clicking.
-  Tetragon box = MakeBox(GetPos(), Vec2(GetWidth(), GetHeight()));
+  Quad box = MakeBox(GetPos(), Vec2(GetWidth(), GetHeight()));
   static const Color kTransparent{0, 0, 0, 0};
   primitive_assembler.AddBox(box, thread_state_bar_z, kTransparent, shared_from_this());
 }
@@ -204,14 +204,14 @@ void ThreadStateBar::DoUpdatePrimitives(PrimitiveAssembler& primitive_assembler,
         user_data->custom_data_ = &slice;
 
         if (slice.end_timestamp_ns() - slice.begin_timestamp_ns() > pixel_delta_ns) {
-          Tetragon box = MakeBox(pos, size);
+          Quad box = MakeBox(pos, size);
           primitive_assembler.AddBox(box, GlCanvas::kZValueEvent, color, std::move(user_data));
         } else {
           // Make this slice cover an entire pixel and don't draw subsequent slices that would
           // coincide with the same pixel.
           // Use AddBox instead of AddVerticalLine as otherwise the tops of Boxes and lines wouldn't
           // be properly aligned.
-          Tetragon box = MakeBox(pos, {pixel_width_in_world_coords, size[1]});
+          Quad box = MakeBox(pos, {pixel_width_in_world_coords, size[1]});
           primitive_assembler.AddBox(box, GlCanvas::kZValueEvent, color, std::move(user_data));
 
           if (pixel_delta_ns != 0) {

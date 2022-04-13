@@ -69,7 +69,7 @@ void CallstackThreadBar::DoDraw(PrimitiveAssembler& primitive_assembler,
                           : GlCanvas::kZValueEventBar;
   Color color = GetColor();
   const Vec2 pos = GetPos();
-  Tetragon box = MakeBox(pos, Vec2(GetWidth(), GetHeight()));
+  Quad box = MakeBox(pos, Vec2(GetWidth(), GetHeight()));
   primitive_assembler.AddBox(box, event_bar_z, color, shared_from_this());
 
   if (primitive_assembler.GetPickingManager()->IsThisElementPicked(this)) {
@@ -94,7 +94,7 @@ void CallstackThreadBar::DoDraw(PrimitiveAssembler& primitive_assembler,
     y1 = y0 + GetHeight();
 
     Color picked_color(0, 128, 255, 128);
-    Tetragon picked_box = MakeBox(Vec2(x0, y0), Vec2(x1 - x0, GetHeight()));
+    Quad picked_box = MakeBox(Vec2(x0, y0), Vec2(x1 - x0, GetHeight()));
     primitive_assembler.AddBox(picked_box, GlCanvas::kZValueUi, picked_color, shared_from_this());
   }
 }

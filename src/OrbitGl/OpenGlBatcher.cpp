@@ -30,11 +30,11 @@ void OpenGlBatcher::AddLine(Vec2 from, Vec2 to, float z, const Color& color,
                             std::unique_ptr<PickingUserData> user_data) {
   Line line;
   LayeredVec2 translated_start_with_z =
-      translations_.TranslateAndFloorVertex({{from[0], from[1]}, z});
+      translations_.TranslateXYZAndFloorXY({{from[0], from[1]}, z});
   line.start_point = translated_start_with_z.shape;
   const float layer_z_value = translated_start_with_z.z;
 
-  line.end_point = translations_.TranslateAndFloorVertex({{to[0], to[1]}, z}).shape;
+  line.end_point = translations_.TranslateXYZAndFloorXY({{to[0], to[1]}, z}).shape;
   // TODO(b/195386885) This is a hack to address the issue that some horizontal lines in the graph
   // tracks are missing. We need a better solution for this issue.
   MoveLineToPixelCenterIfHorizontal(line);
@@ -46,12 +46,12 @@ void OpenGlBatcher::AddLine(Vec2 from, Vec2 to, float z, const Color& color,
   user_data_.push_back(std::move(user_data));
 }
 
-void OpenGlBatcher::AddBox(const Tetragon& box, float z, const std::array<Color, 4>& colors,
+void OpenGlBatcher::AddBox(const Quad& box, float z, const std::array<Color, 4>& colors,
                            const Color& picking_color, std::unique_ptr<PickingUserData> user_data) {
-  Tetragon rounded_box = box;
+  Quad rounded_box = box;
   float layer_z_value{};
   for (size_t v = 0; v < 4; ++v) {
-    LayeredVec2 layered_vec2 = translations_.TranslateAndFloorVertex({rounded_box.vertices[v], z});
+    LayeredVec2 layered_vec2 = translations_.TranslateXYZAndFloorXY({rounded_box.vertices[v], z});
     rounded_box.vertices[v] = layered_vec2.shape;
     layer_z_value = layered_vec2.z;
   }
@@ -69,7 +69,7 @@ void OpenGlBatcher::AddTriangle(const Triangle& triangle, float z,
   Triangle rounded_tri = triangle;
   float layer_z_value{};
   for (auto& vertex : rounded_tri.vertices) {
-    LayeredVec2 layered_vec2 = translations_.TranslateAndFloorVertex({vertex, z});
+    LayeredVec2 layered_vec2 = translations_.TranslateXYZAndFloorXY({vertex, z});
     vertex = layered_vec2.shape;
     layer_z_value = layered_vec2.z;
   }
@@ -115,7 +115,7 @@ void OpenGlBatcher::DrawLayer(float layer, bool picking) const {
 
 void OpenGlBatcher::DrawBoxBuffer(float layer, bool picking) const {
   auto& box_buffer = primitive_buffers_by_layer_.at(layer).box_buffer;
-  const orbit_containers::Block<Tetragon, orbit_gl_internal::BoxBuffer::NUM_BOXES_PER_BLOCK>*
+  const orbit_containers::Block<Quad, orbit_gl_internal::BoxBuffer::NUM_BOXES_PER_BLOCK>*
       box_block = box_buffer.boxes_.root();
   const orbit_containers::Block<Color, orbit_gl_internal::BoxBuffer::NUM_BOXES_PER_BLOCK * 4>*
       color_block;

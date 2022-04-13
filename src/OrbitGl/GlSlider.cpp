@@ -159,11 +159,11 @@ void GlSlider::DrawBackground(PrimitiveAssembler& primitive_assembler, float x, 
   const Color dark_border_color = GetDarkerColor(bar_color_);
   const float kEpsilon = 0.0001f;
 
-  Tetragon border_box = MakeBox(Vec2(x, y), Vec2(width, height));
+  Quad border_box = MakeBox(Vec2(x, y), Vec2(width, height));
   primitive_assembler.AddBox(border_box, GlCanvas::kZValueSliderBg - kEpsilon, dark_border_color,
                              shared_from_this());
 
-  Tetragon bar_box = MakeBox(Vec2(x + 1.f, y + 1.f), Vec2(width - 2.f, height - 2.f));
+  Quad bar_box = MakeBox(Vec2(x + 1.f, y + 1.f), Vec2(width - 2.f, height - 2.f));
   primitive_assembler.AddBox(bar_box, GlCanvas::kZValueSliderBg, bar_color_, shared_from_this());
 }
 
@@ -179,12 +179,12 @@ void GlSlider::DrawSlider(PrimitiveAssembler& primitive_assembler, float x, floa
   const Color light_border_color = GetLighterColor(color);
   const float kEpsilon = 0.0001f;
 
-  Tetragon dark_border_box = MakeBox(Vec2(x, y), Vec2(width, height));
+  Quad dark_border_box = MakeBox(Vec2(x, y), Vec2(width, height));
 
   primitive_assembler.AddBox(dark_border_box, GlCanvas::kZValueSlider - 2 * kEpsilon,
                              dark_border_color, shared_from_this());
 
-  Tetragon light_border_box = MakeBox(Vec2(x + 1.f, y + 1.f), Vec2(width - 2.f, height - 2.f));
+  Quad light_border_box = MakeBox(Vec2(x + 1.f, y + 1.f), Vec2(width - 2.f, height - 2.f));
 
   primitive_assembler.AddBox(light_border_box, GlCanvas::kZValueSlider - kEpsilon,
                              light_border_color, shared_from_this());

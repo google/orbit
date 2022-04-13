@@ -22,15 +22,15 @@ TEST(TranslationStack, PushAndPop) {
   TranslationStack stack;
   EXPECT_TRUE(stack.IsEmpty());
 
-  LayeredVec2 result = stack.TranslateAndFloorVertex(orig);
+  LayeredVec2 result = stack.TranslateXYZAndFloorXY(orig);
   ExpectEqualHasZ(orig_result, result);
 
   stack.PushTranslation(trans.shape[0], trans.shape[1], trans.z);
-  result = stack.TranslateAndFloorVertex(orig);
+  result = stack.TranslateXYZAndFloorXY(orig);
   ExpectEqualHasZ(trans_result, result);
 
   stack.PopTranslation();
-  result = stack.TranslateAndFloorVertex(orig);
+  result = stack.TranslateXYZAndFloorXY(orig);
   ExpectEqualHasZ(orig_result, result);
 }
 

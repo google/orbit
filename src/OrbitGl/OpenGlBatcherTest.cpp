@@ -34,7 +34,7 @@ class FakeOpenGlBatcher : public OpenGlBatcher {
     Color picking_color = PickingId::ToColor(PickingType::kLine, GetNumElements(), GetBatcherId());
     return AddLine(from, to, z, color, picking_color, std::move(user_data));
   }
-  void AddBoxHelper(const Tetragon& box, float z, const Color& color,
+  void AddBoxHelper(const Quad& box, float z, const Color& color,
                     std::unique_ptr<PickingUserData> user_data = nullptr) {
     Color picking_color = PickingId::ToColor(PickingType::kBox, GetNumElements(), GetBatcherId());
     return AddBox(box, z, {color, color, color, color}, picking_color, std::move(user_data));

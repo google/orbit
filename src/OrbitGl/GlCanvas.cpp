@@ -19,6 +19,7 @@
 #include "OrbitAccessibility/AccessibleWidgetBridge.h"
 #include "OrbitBase/Logging.h"
 
+// TODO(b/227341686) z-values should not be of `float` type. E.g. make them `uint`.
 // Tracks: 0.0 - 0.1
 // Tracks - Moving: 0.1 - 0.2
 // Tracks - Pinned: 0.2 - 0.3

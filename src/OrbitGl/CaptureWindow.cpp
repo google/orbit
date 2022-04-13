@@ -502,7 +502,7 @@ void CaptureWindow::DrawScreenSpace() {
   auto margin_x1 = static_cast<float>(viewport_.GetScreenWidth());
   float margin_x0 = margin_x1 - GetRightMargin();
 
-  Tetragon box = MakeBox(Vec2(margin_x0, 0), Vec2(margin_x1 - margin_x0, canvas_height));
+  Quad box = MakeBox(Vec2(margin_x0, 0), Vec2(margin_x1 - margin_x0, canvas_height));
   primitive_assembler_.AddBox(box, GlCanvas::kZValueMargin, kBackgroundColor);
 }
 
@@ -811,7 +811,7 @@ void CaptureWindow::RenderSelectionOverlay() {
   std::string text = orbit_display_formats::GetDisplayTime(TicksToDuration(min_time, max_time));
   const Color color(0, 128, 0, 128);
 
-  Tetragon box = MakeBox(pos, size);
+  Quad box = MakeBox(pos, size);
   primitive_assembler_.AddBox(box, GlCanvas::kZValueOverlay, color);
 
   TextRenderer::HAlign alignment = select_stop_pos_world_[0] < select_start_pos_world_[0]

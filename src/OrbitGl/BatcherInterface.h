@@ -35,7 +35,7 @@ class BatcherInterface {
   virtual void ResetElements() = 0;
   virtual void AddLine(Vec2 from, Vec2 to, float z, const Color& color, const Color& picking_color,
                        std::unique_ptr<PickingUserData> user_data) = 0;
-  virtual void AddBox(const Tetragon& box, float z, const std::array<Color, 4>& colors,
+  virtual void AddBox(const Quad& box, float z, const std::array<Color, 4>& colors,
                       const Color& picking_color, std::unique_ptr<PickingUserData> user_data) = 0;
   virtual void AddTriangle(const Triangle& triangle, float z, const std::array<Color, 3>& colors,
                            const Color& picking_color,

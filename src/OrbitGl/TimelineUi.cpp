@@ -59,7 +59,7 @@ void TimelineUi::RenderMargin(PrimitiveAssembler& primitive_assembler) const {
 }
 
 void TimelineUi::RenderBackground(PrimitiveAssembler& primitive_assembler) const {
-  Tetragon background_box = MakeBox(GetPos(), Vec2(GetWidth(), GetHeightWithoutMargin()));
+  Quad background_box = MakeBox(GetPos(), Vec2(GetWidth(), GetHeightWithoutMargin()));
   primitive_assembler.AddBox(background_box, GlCanvas::kZValueTimeBar,
                              GlCanvas::kTimeBarBackgroundColor);
 }
@@ -88,7 +88,7 @@ void TimelineUi::RenderLabel(PrimitiveAssembler& primitive_assembler, TextRender
   size[1] += 2.f * kLabelsPadding;
   pos[0] -= kLabelsPadding;
   pos[1] -= kLabelsPadding;
-  Tetragon background_box = MakeBox(pos, size);
+  Quad background_box = MakeBox(pos, size);
   primitive_assembler.AddBox(background_box, label_z, background_color);
 }
 

@@ -221,7 +221,7 @@ bool TimerTrack::DrawTimer(TextRenderer& text_renderer, const TimerInfo* prev_ti
         world_x_info_right_overlap.world_x_start + world_x_info_right_overlap.world_x_width,
         world_timer_y + box_height);
     PrimitiveAssembler* primitive_assembler = draw_data.primitive_assembler;
-    Tetragon trapezium({top_left, bottom_left, bottom_right, top_right});
+    Quad trapezium({top_left, bottom_left, bottom_right, top_right});
     draw_data.primitive_assembler->AddShadedTrapezium(
         trapezium, draw_data.z, color,
         CreatePickingUserData(*primitive_assembler, *current_timer_info));
@@ -229,7 +229,7 @@ bool TimerTrack::DrawTimer(TextRenderer& text_renderer, const TimerInfo* prev_ti
         world_x_info_right_overlap.world_x_start - world_x_info_left_overlap.world_x_start;
 
     if (ShouldHaveBorder(current_timer_info, draw_data.histogram_selection_range, width)) {
-      primitive_assembler->AddTetragonBorder(
+      primitive_assembler->AddQuadBorder(
           trapezium, GlCanvas::kZValueBoxBorder, TimerTrack::kBoxBorderColor,
           CreatePickingUserData(*primitive_assembler, *current_timer_info));
     }

@@ -66,11 +66,11 @@ class PrimitiveAssembler {
   void AddVerticalLine(Vec2 pos, float size, float z, const Color& color,
                        std::shared_ptr<Pickable> pickable);
 
-  void AddBox(const Tetragon& box, float z, const std::array<Color, 4>& colors,
+  void AddBox(const Quad& box, float z, const std::array<Color, 4>& colors,
               std::unique_ptr<PickingUserData> user_data = nullptr);
-  void AddBox(const Tetragon& box, float z, const Color& color,
+  void AddBox(const Quad& box, float z, const Color& color,
               std::unique_ptr<PickingUserData> user_data = nullptr);
-  void AddBox(const Tetragon& box, float z, const Color& color, std::shared_ptr<Pickable> pickable);
+  void AddBox(const Quad& box, float z, const Color& color, std::shared_ptr<Pickable> pickable);
 
   void AddShadedBox(Vec2 pos, Vec2 size, float z, const Color& color);
   void AddShadedBox(Vec2 pos, Vec2 size, float z, const Color& color,
@@ -85,7 +85,7 @@ class PrimitiveAssembler {
                      float margin = 0);
 
   // TODO(b/227744958) This should probably be removed and AddBox should be used instead
-  void AddShadedTrapezium(const Tetragon& trapezium, float z, const Color& color,
+  void AddShadedTrapezium(const Quad& trapezium, float z, const Color& color,
                           std::unique_ptr<PickingUserData> user_data,
                           ShadingDirection shading_direction = ShadingDirection::kLeftToRight);
   void AddTriangle(const Triangle& triangle, float z, const Color& color,
@@ -93,8 +93,8 @@ class PrimitiveAssembler {
   void AddTriangle(const Triangle& triangle, float z, const Color& color,
                    std::unique_ptr<PickingUserData> user_data = nullptr);
 
-  void AddTetragonBorder(const Tetragon& tetragon, float z, const Color& color,
-                         std::unique_ptr<orbit_gl::PickingUserData> user_data);
+  void AddQuadBorder(const Quad& quad, float z, const Color& color,
+                     std::unique_ptr<orbit_gl::PickingUserData> user_data);
 
   void AddCircle(const Vec2& position, float radius, float z, Color color);
 

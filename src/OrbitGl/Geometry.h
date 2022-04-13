@@ -15,17 +15,17 @@ struct Line {
   Vec2 end_point;
 };
 
-struct Tetragon {
-  Tetragon() = default;
-  explicit Tetragon(std::array<Vec2, 4> clockwise_ordered_vertices)
+struct Quad {
+  Quad() = default;
+  explicit Quad(std::array<Vec2, 4> clockwise_ordered_vertices)
       : vertices(std::move(clockwise_ordered_vertices)) {}
 
   std::array<Vec2, 4> vertices;
 };
 
-[[nodiscard]] inline Tetragon MakeBox(const Vec2& pos, const Vec2& size) {
-  return Tetragon({Vec2(pos[0], pos[1]), Vec2(pos[0], pos[1] + size[1]),
-                   Vec2(pos[0] + size[0], pos[1] + size[1]), Vec2(pos[0] + size[0], pos[1])});
+[[nodiscard]] inline Quad MakeBox(const Vec2& pos, const Vec2& size) {
+  return Quad({Vec2(pos[0], pos[1]), Vec2(pos[0], pos[1] + size[1]),
+               Vec2(pos[0] + size[0], pos[1] + size[1]), Vec2(pos[0] + size[0], pos[1])});
 }
 
 struct Triangle {
