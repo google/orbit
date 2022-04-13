@@ -32,7 +32,7 @@ inline constexpr bool kDependentFalse = false;
 template <typename PeCoffInterfaceType>
 void PeCoffFake<PeCoffInterfaceType>::Init() {
   memory_->Clear();
-  uint64_t offset = SetDosHeader(0x1000);
+  uint64_t offset = SetDosHeader(kNewHeaderOffsetValue);
   offset = SetNewHeaderAtOffset(offset);
   offset = SetCoffHeaderAtOffset(offset);
 
@@ -186,13 +186,13 @@ uint64_t PeCoffFake<PeCoffInterfaceType>::SetOptionalHeaderAtOffset(uint64_t off
   } else {
     static_assert(kDependentFalse<PeCoffInterfaceType>, "AddressType size must be 4 or 8 bytes");
   }
-  offset = SetData8(offset, 0);   // major_linker_version
-  offset = SetData8(offset, 0);   // minor_linker_version
-  offset = SetData32(offset, 0);  // code_size
-  offset = SetData32(offset, 0);  // data_size
-  offset = SetData32(offset, 0);  // bss_size
-  offset = SetData32(offset, 0);  // entry
-  offset = SetData32(offset, 0);  // code_offset
+  offset = SetData8(offset, 0);                      // major_linker_version
+  offset = SetData8(offset, 0);                      // minor_linker_version
+  offset = SetData32(offset, kTextSectionFileSize);  // code_size
+  offset = SetData32(offset, 0);                     // data_size
+  offset = SetData32(offset, 0);                     // bss_size
+  offset = SetData32(offset, 0);                     // entry
+  offset = SetData32(offset, 0);                     // code_offset
 
   if constexpr (sizeof(typename PeCoffInterfaceType::AddressType) == 4) {
     // Data offset only exists in 32-bit PE/COFF.
@@ -297,7 +297,9 @@ uint64_t PeCoffFake<PeCoffInterfaceType>::SetSectionHeadersAtOffset(uint64_t off
                                                                     uint32_t debug_frame_vmsize,
                                                                     uint32_t debug_frame_filesize) {
   // Shorter than kSectionNameInHeaderSize (== 8) characters
-  offset = SetSectionHeaderAtOffset(offset, ".text", 0, kTextSectionOffsetFake, 0, 0);
+  offset =
+      SetSectionHeaderAtOffset(offset, ".text", kTextSectionMemorySize, kTextSectionMemoryOffset,
+                               kTextSectionFileSize, kTextSectionFileOffset);
   // Longer than kSectionNameInHeaderSize (== 8) characters
   offset = SetSectionHeaderAtOffset(offset, ".debug_frame", debug_frame_vmsize,
                                     kDebugFrameSectionFileOffset, debug_frame_filesize,

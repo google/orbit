@@ -45,13 +45,15 @@ bool IsPotentiallyPeCoffFile(const std::string& filename);
 class PeCoff : public Object {
  public:
   explicit PeCoff(Memory* memory) : memory_(memory) {}
-  virtual ~PeCoff() = default;
+  ~PeCoff() override = default;
 
   bool Init() override;
   bool valid() override { return valid_; }
   void Invalidate() override;
 
   int64_t GetLoadBias() override { return load_bias_; };
+  bool GetTextRange(uint64_t* addr, uint64_t* size) override;
+  uint64_t GetTextOffsetInFile() const;
 
   std::string GetBuildID() override;
   std::string GetSoname() override;

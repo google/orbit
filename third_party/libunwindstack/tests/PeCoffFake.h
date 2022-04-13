@@ -29,8 +29,20 @@ template <typename PeCoffInterfaceType>
 class PeCoffFake {
  public:
   static constexpr size_t kDosHeaderSizeInBytes = 0x40;
-  static constexpr uint64_t kDebugFrameSectionFileOffset = 0x2000;
+  // File offset for the new header.
+  static constexpr uint64_t kNewHeaderOffsetValue = 0xF8;
+
+  // Offset and size in the file of the .text section.
+  static constexpr uint64_t kTextSectionFileOffset = 0x400;
+  static constexpr uint64_t kTextSectionFileSize = 0x1000;
+  // Offset relative to the image base and size of the .text section when loaded into memory.
+  static constexpr uint64_t kTextSectionMemoryOffset = 0x2000;
+  static constexpr uint64_t kTextSectionMemorySize = 0xFFF;
+
+  // File offset and size for the .debug_frame section.
+  static constexpr uint64_t kDebugFrameSectionFileOffset = 0x3000;
   static constexpr uint64_t kDebugFrameSectionSize = 0x200;
+
   static constexpr int64_t kLoadBiasFake = 0x3100;
   static constexpr uint64_t kTextSectionOffsetFake = 0x200;
 
@@ -68,7 +80,6 @@ class PeCoffFake {
   uint64_t executable_section_offset_;
   std::unique_ptr<MemoryFake> memory_;
 
-  uint64_t InitPeCoffInterfaceFakeNoSectionHeaders();
   uint64_t SetData8(uint64_t offset, uint8_t value);
   uint64_t SetData16(uint64_t offset, uint16_t value);
   uint64_t SetData32(uint64_t offset, uint32_t value);

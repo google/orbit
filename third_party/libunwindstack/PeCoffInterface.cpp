@@ -351,7 +351,9 @@ bool PeCoffInterfaceImpl<AddressType>::InitSections() {
   for (size_t i = 0; i < sections_.size(); ++i) {
     if (sections_[i].name == ".text") {
       TextSectionData section_data;
-      section_data.executable_offset = sections_[i].vmaddr;
+      section_data.memory_size = sections_[i].vmsize;
+      section_data.memory_offset = sections_[i].vmaddr;
+      section_data.file_offset = sections_[i].offset;
       section_data.section_index = i;
       text_section_data_.emplace(section_data);
     }
@@ -444,7 +446,26 @@ uint64_t PeCoffInterfaceImpl<AddressType>::GetRelPc(uint64_t pc, uint64_t map_st
   if (!text_section_data_.has_value()) {
     return 0;
   }
-  return pc - map_start + optional_header_.image_base + text_section_data_->executable_offset;
+  return pc - map_start + optional_header_.image_base + text_section_data_->memory_offset;
+}
+
+template <typename AddressType>
+bool PeCoffInterfaceImpl<AddressType>::GetTextRange(uint64_t* addr, uint64_t* size) const {
+  if (!text_section_data_.has_value()) {
+    return false;
+  }
+
+  *addr = text_section_data_->memory_offset;
+  *size = text_section_data_->memory_size;
+  return true;
+}
+
+template <typename AddressType>
+uint64_t PeCoffInterfaceImpl<AddressType>::GetTextOffsetInFile() const {
+  if (!text_section_data_.has_value()) {
+    return 0;
+  }
+  return text_section_data_->file_offset;
 }
 
 template <typename AddressType>

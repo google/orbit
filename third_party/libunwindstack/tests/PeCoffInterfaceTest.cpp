@@ -147,7 +147,7 @@ TYPED_TEST(PeCoffInterfaceTest, dos_header_parsing_fails_wrong_magic_number) {
 
 TYPED_TEST(PeCoffInterfaceTest, new_header_parsing_fails_invalid_memory) {
   this->GetFake()->Init();
-  this->GetMemory()->ClearMemory(0x1000, 1);
+  this->GetMemory()->ClearMemory(PeCoffFake<TypeParam>::kNewHeaderOffsetValue, 1);
   TypeParam coff(this->GetMemory());
   int64_t load_bias;
   ASSERT_FALSE(coff.Init(&load_bias));
@@ -157,7 +157,7 @@ TYPED_TEST(PeCoffInterfaceTest, new_header_parsing_fails_invalid_memory) {
 TYPED_TEST(PeCoffInterfaceTest, new_header_parsing_fails_wrong_pe_signature) {
   this->GetFake()->Init();
   // Correct PE signature is 0x00004550
-  this->GetMemory()->SetData32(0x1000, 0x00004551);
+  this->GetMemory()->SetData32(PeCoffFake<TypeParam>::kNewHeaderOffsetValue, 0x00004551);
   TypeParam coff(this->GetMemory());
   int64_t load_bias;
   ASSERT_FALSE(coff.Init(&load_bias));
@@ -166,8 +166,8 @@ TYPED_TEST(PeCoffInterfaceTest, new_header_parsing_fails_wrong_pe_signature) {
 
 TYPED_TEST(PeCoffInterfaceTest, coff_header_parsing_fails_invalid_memory) {
   this->GetFake()->Init();
-  // COFF headers starts 4 bytes after the new header, which we have set at 0x1000.
-  constexpr uint16_t kCoffHeaderStart = 0x1004;
+  // COFF header starts 4 bytes after the new header.
+  constexpr uint16_t kCoffHeaderStart = PeCoffFake<TypeParam>::kNewHeaderOffsetValue + 4;
   this->GetMemory()->ClearMemory(kCoffHeaderStart, 1);
   TypeParam coff(this->GetMemory());
   int64_t load_bias;
@@ -319,7 +319,7 @@ TYPED_TEST(PeCoffInterfaceTest, get_correct_relative_pc) {
   ASSERT_TRUE(coff.Init(&load_bias));
 
   const uint64_t expected_relative_pc = 0x2200 - 0x2000 + PeCoffFake<TypeParam>::kLoadBiasFake +
-                                        PeCoffFake<TypeParam>::kTextSectionOffsetFake;
+                                        PeCoffFake<TypeParam>::kTextSectionMemoryOffset;
   EXPECT_EQ(expected_relative_pc, coff.GetRelPc(0x2200, 0x2000));
 }
 
@@ -332,6 +332,55 @@ TYPED_TEST(PeCoffInterfaceTest, get_zero_as_relative_pc_if_no_text_section) {
   int64_t load_bias;
   ASSERT_FALSE(coff.Init(&load_bias));
   EXPECT_EQ(0, coff.GetRelPc(0x2200, 0x2000));
+}
+
+TYPED_TEST(PeCoffInterfaceTest, get_correct_text_range) {
+  this->GetFake()->Init();
+  TypeParam coff(this->GetMemory());
+  int64_t load_bias;
+  ASSERT_TRUE(coff.Init(&load_bias));
+
+  uint64_t actual_addr;
+  uint64_t actual_size;
+  bool actual_result = coff.GetTextRange(&actual_addr, &actual_size);
+  ASSERT_TRUE(actual_result);
+  EXPECT_EQ(actual_addr, PeCoffFake<TypeParam>::kTextSectionMemoryOffset);
+  EXPECT_EQ(actual_size, PeCoffFake<TypeParam>::kTextSectionMemorySize);
+}
+
+TYPED_TEST(PeCoffInterfaceTest, get_no_text_range_if_no_text_section) {
+  uint64_t offset = this->GetFake()->InitNoSectionHeaders();
+  offset = this->GetFake()->SetSectionHeaderAtOffset(offset, ".no_text");
+  this->GetMemory()->SetData16(this->GetFake()->coff_header_nsects_offset(), 1);
+
+  TypeParam coff(this->GetMemory());
+  int64_t load_bias;
+  ASSERT_FALSE(coff.Init(&load_bias));
+
+  uint64_t actual_addr;
+  uint64_t actual_size;
+  bool actual_result = coff.GetTextRange(&actual_addr, &actual_size);
+  ASSERT_FALSE(actual_result);
+}
+
+TYPED_TEST(PeCoffInterfaceTest, get_correct_text_offset_in_file) {
+  this->GetFake()->Init();
+  TypeParam coff(this->GetMemory());
+  int64_t load_bias;
+  ASSERT_TRUE(coff.Init(&load_bias));
+  EXPECT_EQ(coff.GetTextOffsetInFile(), PeCoffFake<TypeParam>::kTextSectionFileOffset);
+}
+
+TYPED_TEST(PeCoffInterfaceTest, get_zero_text_offset_in_file_if_no_text_section) {
+  uint64_t offset = this->GetFake()->InitNoSectionHeaders();
+  offset = this->GetFake()->SetSectionHeaderAtOffset(offset, ".no_text", 1, 2, 3, 4);
+  this->GetMemory()->SetData16(this->GetFake()->coff_header_nsects_offset(), 1);
+
+  TypeParam coff(this->GetMemory());
+  int64_t load_bias;
+  ASSERT_FALSE(coff.Init(&load_bias));
+
+  EXPECT_EQ(coff.GetTextOffsetInFile(), 0);
 }
 
 template <typename AddressType>

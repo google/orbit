@@ -94,6 +94,27 @@ void PeCoff::Invalidate() {
   valid_ = false;
 }
 
+bool PeCoff::GetTextRange(uint64_t* addr, uint64_t* size) {
+  if (!valid_) {
+    return false;
+  }
+
+  if (interface_->GetTextRange(addr, size)) {
+    *addr += load_bias_;
+    return true;
+  }
+
+  return false;
+}
+
+uint64_t PeCoff::GetTextOffsetInFile() const {
+  if (!valid_) {
+    return 0;
+  }
+
+  return interface_->GetTextOffsetInFile();
+}
+
 std::string PeCoff::GetBuildID() {
   // Not implemented, don't use.
   CHECK(false);
