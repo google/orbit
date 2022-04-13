@@ -17,9 +17,9 @@
 #include "CoreMath.h"
 #include "ManualInstrumentationManager.h"
 #include "OpenGlBatcher.h"
+#include "OpenGlTextRenderer.h"
 #include "OrbitAccessibility/AccessibleInterface.h"
 #include "PickingManager.h"
-#include "TextRenderer.h"
 #include "TimeGraphLayout.h"
 #include "TimelineInfoInterface.h"
 #include "TimelineUi.h"
@@ -177,7 +177,7 @@ class TimeGraph final : public orbit_gl::CaptureViewElement,
       const orbit_gl::ModifierKeys& modifiers = orbit_gl::ModifierKeys()) override;
 
   AccessibleInterfaceProvider* accessible_parent_;
-  orbit_gl::TextRenderer text_renderer_static_;
+  orbit_gl::OpenGlTextRenderer text_renderer_static_;
 
   double ref_time_us_ = 0;
   double min_time_us_ = 0;
