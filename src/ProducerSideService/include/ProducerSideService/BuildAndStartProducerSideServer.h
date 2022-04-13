@@ -5,10 +5,14 @@
 #ifndef ORBIT_PRODUCER_SIDE_SERVICE_BUILD_AND_START_PRODUCER_SIDE_SERVER_H_
 #define ORBIT_PRODUCER_SIDE_SERVICE_BUILD_AND_START_PRODUCER_SIDE_SERVER_H_
 
+#include <memory>
+
+#include "OrbitBase/Result.h"
 #include "ProducerSideService/ProducerSideServer.h"
 
 namespace orbit_producer_side_service {
-[[nodiscard]] std::unique_ptr<ProducerSideServer> BuildAndStartProducerSideServer();
+
+ErrorMessageOr<std::unique_ptr<ProducerSideServer>> BuildAndStartProducerSideServer();
 }  // namespace orbit_producer_side_service
 
 #endif  // ORBIT_PRODUCER_SIDE_SERVICE_BUILD_AND_START_PRODUCER_SIDE_SERVER_H_

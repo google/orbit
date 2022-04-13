@@ -110,13 +110,13 @@ bool IsSshConnectionAlive(std::chrono::time_point<std::chrono::steady_clock> las
              .count() < timeout_in_seconds;
 }
 
-std::unique_ptr<OrbitGrpcServer> CreateGrpcServer(uint16_t grpc_port, bool dev_mode) {
+ErrorMessageOr<std::unique_ptr<OrbitGrpcServer>> CreateGrpcServer(uint16_t grpc_port,
+                                                                  bool dev_mode) {
   std::string grpc_address = absl::StrFormat("127.0.0.1:%d", grpc_port);
   ORBIT_LOG("Starting gRPC server at %s", grpc_address);
   std::unique_ptr<OrbitGrpcServer> grpc_server = OrbitGrpcServer::Create(grpc_address, dev_mode);
   if (grpc_server == nullptr) {
-    ORBIT_ERROR("Unable to start gRPC server");
-    return nullptr;
+    return ErrorMessage{"Unable to start gRPC server."};
   }
   ORBIT_LOG("gRPC server is running");
   return grpc_server;
@@ -136,20 +136,12 @@ ErrorMessageOr<void> OrbitService::Run(std::atomic<bool>* exit_requested) {
   ORBIT_LOG("**********************************");
 #endif
 
-  std::unique_ptr<OrbitGrpcServer> grpc_server = CreateGrpcServer(grpc_port_, dev_mode_);
-  if (grpc_server == nullptr) {
-    constexpr std::string_view kErrorMessage = "Unable to create gRPC server.";
-    ORBIT_ERROR("%s", kErrorMessage);
-    return ErrorMessage{std::string{kErrorMessage}};
-  }
+  OUTCOME_TRY(std::unique_ptr<OrbitGrpcServer> grpc_server,
+              CreateGrpcServer(grpc_port_, dev_mode_));
 
-  std::unique_ptr<ProducerSideServer> producer_side_server =
-      orbit_producer_side_service::BuildAndStartProducerSideServer();
-  if (producer_side_server == nullptr) {
-    constexpr std::string_view kErrorMessage = "Unable to build and start ProducerSideServer.";
-    ORBIT_ERROR("%s", kErrorMessage);
-    return ErrorMessage{std::string{kErrorMessage}};
-  }
+  OUTCOME_TRY(std::unique_ptr<ProducerSideServer> producer_side_server,
+              orbit_producer_side_service::BuildAndStartProducerSideServer());
+
   grpc_server->AddCaptureStartStopListener(producer_side_server.get());
 
   // The client is looking for the "READY" keyword to learn whether the service finish its start up
@@ -182,10 +174,7 @@ ErrorMessageOr<void> OrbitService::Run(std::atomic<bool>* exit_requested) {
       }
 
       if (!IsSshConnectionAlive(last_stdin_message_.value(), kWatchdogTimeoutInSeconds)) {
-        constexpr std::string_view kErrorMessage =
-            "Connection is not alive (watchdog timed out). Exiting main loop.";
-        ORBIT_ERROR("%s", kErrorMessage);
-        error_message.emplace(std::string{kErrorMessage});
+        error_message.emplace("Connection is not alive (watchdog timed out). Exiting main loop.");
         break;
       }
     }
