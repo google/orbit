@@ -98,6 +98,7 @@ class TrackManager {
   [[nodiscard]] std::vector<ThreadTrack*> GetSortedThreadTracks();
   // Filter tracks that are already sorted in sorted_tracks_.
   void UpdateVisibleTrackList();
+  void DeletePendingTracks();
 
   void AddTrack(const std::shared_ptr<Track>& track);
   void AddFrameTrack(const std::shared_ptr<FrameTrack>& frame_track);
@@ -119,6 +120,12 @@ class TrackManager {
   std::shared_ptr<SystemMemoryTrack> system_memory_track_;
   std::shared_ptr<CGroupAndProcessMemoryTrack> cgroup_and_process_memory_track_;
   std::shared_ptr<PageFaultsTrack> page_faults_track_;
+
+  // This intermediatly stores tracks that have been deleted from one of the track vectors above
+  // so they can safely be removed from the list of sorted and visible tracks.
+  // This makes sure tracks are always removed during UpdateLayout(), so no elements retains
+  // stale pointers returned in GetAllChildren() or GetNonHiddenChildren().
+  std::vector<std::shared_ptr<Track>> deleted_tracks_;
 
   Viewport* viewport_;
   TimeGraphLayout* layout_;
