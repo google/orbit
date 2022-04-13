@@ -8,6 +8,7 @@
 #include <sys/un.h>
 
 #include <filesystem>
+#include <memory>
 #include <system_error>
 
 #include "BuildAndStartProducerSideServerWithUri.h"
@@ -40,7 +41,7 @@ static ErrorMessageOr<void> VerifyThatTheSocketIsAvailable(std::string_view sock
   return outcome::success();
 }
 
-BuildAndStartReturnValue BuildAndStartProducerSideServer() {
+ErrorMessageOr<std::unique_ptr<ProducerSideServer>> BuildAndStartProducerSideServer() {
   const std::filesystem::path unix_domain_socket_dir =
       std::filesystem::path{orbit_producer_side_channel::kProducerSideUnixDomainSocketPath}
           .parent_path();
