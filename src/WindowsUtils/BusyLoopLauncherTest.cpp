@@ -56,6 +56,8 @@ void MaybeTerminateProcess(uint32_t process_id) {
 }  // namespace
 
 TEST(BusyLoop, BusyLoopLauncher) {
+  // Skipped due to http://b/228592301
+  GTEST_SKIP();
   // Start process that would normally exit instantly and install busy loop at entry point.
   BusyLoopLauncher busy_loop_launcher;
   ErrorMessageOr<BusyLoopInfo> result = busy_loop_launcher.StartWithBusyLoopAtEntryPoint(
