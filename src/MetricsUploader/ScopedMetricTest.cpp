@@ -14,17 +14,19 @@
 namespace orbit_metrics_uploader {
 
 using ::testing::_;
+using ::testing::AllOf;
 using ::testing::Ge;
+using ::testing::Lt;
 
 class MockUploader : public MetricsUploader {
  public:
-  MOCK_METHOD(bool, SendLogEvent, (OrbitLogEvent_LogEventType /*log_event_type*/), (override));
+  MOCK_METHOD(bool, SendLogEvent, (OrbitLogEvent::LogEventType /*log_event_type*/), (override));
   MOCK_METHOD(bool, SendLogEvent,
-              (OrbitLogEvent_LogEventType /*log_event_type*/,
+              (OrbitLogEvent::LogEventType /*log_event_type*/,
                std::chrono::milliseconds /*event_duration*/),
               (override));
   MOCK_METHOD(bool, SendLogEvent,
-              (OrbitLogEvent_LogEventType /*log_event_type*/,
+              (OrbitLogEvent::LogEventType /*log_event_type*/,
                std::chrono::milliseconds /*event_duration*/,
                OrbitLogEvent::StatusCode /*status_code*/),
               (override));
@@ -87,6 +89,46 @@ TEST(ScopedMetric, MoveAndSleep) {
     std::this_thread::sleep_for(sleep_time);
 
     [metric = std::move(metric), sleep_time]() { std::this_thread::sleep_for(sleep_time); }();
+  }
+}
+
+TEST(ScopedMetric, PauseAndResume) {
+  MockUploader uploader{};
+
+  std::chrono::milliseconds sleep_time{200};
+
+  EXPECT_CALL(uploader,
+              SendLogEvent(OrbitLogEvent::ORBIT_MAIN_WINDOW_OPEN,
+                           AllOf(Ge(sleep_time), Lt(sleep_time * 2)), OrbitLogEvent::SUCCESS))
+      .Times(3);
+
+  {
+    ScopedMetric metric{&uploader, OrbitLogEvent::ORBIT_MAIN_WINDOW_OPEN};
+    std::this_thread::sleep_for(sleep_time / 2);
+
+    metric.Pause();
+    std::this_thread::sleep_for(sleep_time);
+    metric.Resume();
+    std::this_thread::sleep_for(sleep_time / 2);
+  }
+
+  {
+    ScopedMetric metric{&uploader, OrbitLogEvent::ORBIT_MAIN_WINDOW_OPEN};
+    std::this_thread::sleep_for(sleep_time);
+
+    metric.Pause();
+    std::this_thread::sleep_for(sleep_time);
+  }
+
+  {
+    ScopedMetric metric{&uploader, OrbitLogEvent::ORBIT_MAIN_WINDOW_OPEN};
+    std::this_thread::sleep_for(sleep_time / 2);
+
+    metric.Pause();
+    ScopedMetric moved_metric{std::move(metric)};
+    std::this_thread::sleep_for(sleep_time);
+    moved_metric.Resume();
+    std::this_thread::sleep_for(sleep_time / 2);
   }
 }
 
