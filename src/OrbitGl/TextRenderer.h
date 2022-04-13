@@ -12,7 +12,6 @@ namespace orbit_gl {
 
 class TextRenderer : public TextRendererInterface {
  public:
-  explicit TextRenderer() {}
   void SetViewport(Viewport* viewport) { viewport_ = viewport; }
 
   void PushTranslation(float x, float y, float z = 0.f) { translations_.PushTranslation(x, y, z); }

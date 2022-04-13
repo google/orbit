@@ -45,7 +45,7 @@ int GetStringLineCount(const char* string) {
   return result;
 }
 
-inline ftgl::vec4 ColorToVec4(const Color& color) {
+ftgl::vec4 ColorToVec4(const Color& color) {
   const float coeff = 1.f / 255.f;
   ftgl::vec4 vec;
   vec.r = color[0] * coeff;
