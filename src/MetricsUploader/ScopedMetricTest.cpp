@@ -100,15 +100,16 @@ TEST(ScopedMetric, PauseAndResume) {
   EXPECT_CALL(uploader,
               SendLogEvent(OrbitLogEvent::ORBIT_MAIN_WINDOW_OPEN,
                            AllOf(Ge(sleep_time), Lt(sleep_time * 2)), OrbitLogEvent::SUCCESS))
-      .Times(2);
+      .Times(3);
 
   {
     ScopedMetric metric{&uploader, OrbitLogEvent::ORBIT_MAIN_WINDOW_OPEN};
-    std::this_thread::sleep_for(sleep_time);
+    std::this_thread::sleep_for(sleep_time / 2);
 
     metric.Pause();
     std::this_thread::sleep_for(sleep_time);
     metric.Resume();
+    std::this_thread::sleep_for(sleep_time / 2);
   }
 
   {
@@ -117,6 +118,17 @@ TEST(ScopedMetric, PauseAndResume) {
 
     metric.Pause();
     std::this_thread::sleep_for(sleep_time);
+  }
+
+  {
+    ScopedMetric metric{&uploader, OrbitLogEvent::ORBIT_MAIN_WINDOW_OPEN};
+    std::this_thread::sleep_for(sleep_time / 2);
+
+    metric.Pause();
+    ScopedMetric moved_metric{std::move(metric)};
+    std::this_thread::sleep_for(sleep_time);
+    moved_metric.Resume();
+    std::this_thread::sleep_for(sleep_time / 2);
   }
 }
 
