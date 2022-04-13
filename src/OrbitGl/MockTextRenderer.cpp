@@ -23,18 +23,40 @@ void MockTextRenderer::Clear() {
 
 void MockTextRenderer::AddText(const char* text, float x, float y, float z,
                                TextFormatting formatting) {
-  UpdateDrawingBoundaries({x, y, z});
-  UpdateDrawingBoundaries({x + GetStringWidth(text, formatting.font_size),
-                           y + GetStringHeight(text, formatting.font_size), z});
-  num_add_text_calls_++;
-  num_characters_in_add_text_.insert(strlen(text));
-  vertical_position_in_add_text.insert(y);
+  return AddText(text, x, y, z, formatting, nullptr, nullptr);
 }
 
 void MockTextRenderer::AddText(const char* text, float x, float y, float z,
-                               TextFormatting formatting, Vec2* /*out_text_pos*/,
-                               Vec2* /*out_text_size*/) {
-  return AddText(text, x, y, z, formatting);
+                               TextFormatting formatting, Vec2* out_text_pos, Vec2* out_text_size) {
+  float text_width = GetStringWidth(text, formatting.font_size);
+  float text_height = GetStringHeight(text, formatting.font_size);
+
+  float real_start_x = formatting.halign == HAlign::Left ? x : x - text_width;
+  float real_start_y;
+  switch (formatting.valign) {
+    case VAlign::Top:
+      real_start_y = y;
+      break;
+    case VAlign::Middle:
+      real_start_y = y - text_height / 2.f;
+      break;
+    case VAlign::Bottom:
+      real_start_y = y - text_height;
+      break;
+  }
+
+  UpdateDrawingBoundaries({real_start_x, real_start_y, z});
+  UpdateDrawingBoundaries({real_start_x + text_width, real_start_y + text_height, z});
+  num_add_text_calls_++;
+  num_characters_in_add_text_.insert(strlen(text));
+  vertical_position_in_add_text.insert(real_start_y);
+
+  if (out_text_pos != nullptr) {
+    *out_text_pos = {real_start_x, real_start_y};
+  }
+  if (out_text_size != nullptr) {
+    *out_text_size = {text_width, text_height};
+  }
 }
 
 float MockTextRenderer::AddTextTrailingCharsPrioritized(const char* text, float x, float y, float z,
