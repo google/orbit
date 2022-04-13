@@ -23,7 +23,7 @@ namespace orbit_producer_side_service {
 
 // Tries to connect to the unix socket associated with the given path. If the connection succeeds we
 // know that something is already listening there.
-static ErrorMessageOr<void> VerifyThatTheSocketIsAvailable(std::string_view socket_path) {
+static ErrorMessageOr<void> VerifySocketAvailability(std::string_view socket_path) {
   int socket_fd = socket(AF_UNIX, SOCK_STREAM, 0);
 
   sockaddr_un addr{};
@@ -55,11 +55,11 @@ ErrorMessageOr<std::unique_ptr<ProducerSideServer>> BuildAndStartProducerSideSer
 
   // gRPC won't tell us whether the socket is already in use. Instead it will delete the inode and
   // create their own one. So we fall back to checking whether we can connect to the socket here
-  // before we instruct gRPC to open it. Note, that here is a chance for a race condition. Someone
+  // before we instruct gRPC to open it. Note that here is a chance for a race condition. Someone
   // else could create a socket in between us checking and gRPC creating/overwriting the unix
   // socket. But due to gRPC's limitation there is only so much we can do about it.
-  OUTCOME_TRY(VerifyThatTheSocketIsAvailable(
-      orbit_producer_side_channel::kProducerSideUnixDomainSocketPath));
+  OUTCOME_TRY(
+      VerifySocketAvailability(orbit_producer_side_channel::kProducerSideUnixDomainSocketPath));
 
   std::string unix_socket_path(orbit_producer_side_channel::kProducerSideUnixDomainSocketPath);
   std::string uri = absl::StrFormat("unix:%s", unix_socket_path);
