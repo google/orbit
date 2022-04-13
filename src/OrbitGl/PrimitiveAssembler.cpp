@@ -242,7 +242,7 @@ void PrimitiveAssembler::AddCircle(const Vec2& position, float radius, float z, 
 }
 
 void PrimitiveAssembler::AddQuadBorder(const Quad& quad, float z, const Color& color,
-                                           std::unique_ptr<orbit_gl::PickingUserData> user_data) {
+                                       std::unique_ptr<orbit_gl::PickingUserData> user_data) {
   AddLine(quad.vertices[0], quad.vertices[1], z, color,
           std::make_unique<PickingUserData>(*user_data));
   AddLine(quad.vertices[1], quad.vertices[2], z, color,

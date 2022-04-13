@@ -58,7 +58,7 @@ void TriangleToggle::DoDraw(PrimitiveAssembler& primitive_assembler, TextRendere
     float original_width = 2 * half_triangle_base_width;
     float large_width = 2 * original_width;
     Quad box = MakeBox(Vec2(pos[0] - original_width, pos[1] - original_width),
-                           Vec2(large_width, large_width));
+                       Vec2(large_width, large_width));
     primitive_assembler.AddBox(box, z, color, shared_from_this());
   }
 }
