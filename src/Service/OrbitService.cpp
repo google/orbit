@@ -116,7 +116,7 @@ ErrorMessageOr<std::unique_ptr<OrbitGrpcServer>> CreateGrpcServer(uint16_t grpc_
   ORBIT_LOG("Starting gRPC server at %s", grpc_address);
   std::unique_ptr<OrbitGrpcServer> grpc_server = OrbitGrpcServer::Create(grpc_address, dev_mode);
   if (grpc_server == nullptr) {
-    return ErrorMessage{"Unable to start gRPC server"};
+    return ErrorMessage{"Unable to start gRPC server."};
   }
   ORBIT_LOG("gRPC server is running");
   return grpc_server;

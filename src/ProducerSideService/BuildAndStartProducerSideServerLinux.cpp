@@ -35,7 +35,7 @@ static ErrorMessageOr<void> VerifySocketAvailability(std::string_view socket_pat
     close(socket_fd);
 
     // TODO(b/229048915): Update the error message once the cloud collector is released.
-    return ErrorMessage{"Orbit Service is already running on the instance."};
+    return ErrorMessage{"OrbitService is already running on the instance."};
   }
 
   return outcome::success();
@@ -54,7 +54,7 @@ ErrorMessageOr<std::unique_ptr<ProducerSideServer>> BuildAndStartProducerSideSer
   }
 
   // gRPC won't tell us whether the socket is already in use. Instead it will delete the inode and
-  // create their own one. So we fall back to checking whether we can connect to the socket here
+  // create its own. So we fall back to checking whether we can connect to the socket here
   // before we instruct gRPC to open it. Note that here is a chance for a race condition. Someone
   // else could create a socket in between us checking and gRPC creating/overwriting the unix
   // socket. But due to gRPC's limitation there is only so much we can do about it.

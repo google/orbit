@@ -15,7 +15,7 @@ ErrorMessageOr<std::unique_ptr<ProducerSideServer>> BuildAndStartProducerSideSer
   auto producer_side_server = std::make_unique<ProducerSideServer>();
   ORBIT_LOG("Starting producer-side server at %s", uri);
   if (!producer_side_server->BuildAndStart(uri)) {
-    return ErrorMessage{"Unable to start producer-side server"};
+    return ErrorMessage{"Unable to start producer-side server."};
   }
   ORBIT_LOG("Producer-side server is running");
   return producer_side_server;
