@@ -13,6 +13,8 @@
 
 ABSL_DECLARE_FLAG(bool, devmode);
 
+ABSL_DECLARE_FLAG(bool, prefer_ini_files);
+
 ABSL_DECLARE_FLAG(bool, nodeploy);
 
 ABSL_DECLARE_FLAG(std::string, collector);

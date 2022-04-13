@@ -10,6 +10,9 @@
 
 ABSL_FLAG(bool, devmode, false, "Enable developer mode in the client's UI");
 
+ABSL_FLAG(bool, prefer_ini_files, false,
+          "Use ini files instead of the registry to store settings on Windows");
+
 ABSL_FLAG(bool, nodeploy, false, "Disable automatic deployment of OrbitService");
 
 ABSL_FLAG(std::string, collector, "", "Full path of collector to be deployed");

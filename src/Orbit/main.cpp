@@ -254,6 +254,10 @@ int main(int argc, char* argv[]) {
   QApplication::setOrganizationName("The Orbit Authors");
   QApplication::setApplicationName("orbitprofiler");
 
+  if (absl::GetFlag(FLAGS_prefer_ini_files)) {
+    QSettings::setDefaultFormat(QSettings::IniFormat);
+  }
+
   if (DevModeEnabledViaEnvironmentVariable()) {
     absl::SetFlag(&FLAGS_devmode, true);
   }
