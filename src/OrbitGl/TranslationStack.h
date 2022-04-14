@@ -13,7 +13,7 @@
 namespace orbit_gl {
 
 struct LayeredVec2 {
-  Vec2 shape;
+  Vec2 xy;
   float z{};
 };
 
@@ -26,7 +26,7 @@ class TranslationStack {
   // TODO(b/227341686) if we change the type of z-values to be non-float, the name should be made
   // less verbose, as it would be clear `z` is not floored.
   [[nodiscard]] LayeredVec2 TranslateXYZAndFloorXY(const LayeredVec2& input) const {
-    const Vec2 result_shape = input.shape + current_translation_.shape;
+    const Vec2 result_shape = input.xy + current_translation_.xy;
     const float result_z = input.z + current_translation_.z;
     return {{floorf(result_shape[0]), floorf(result_shape[1])}, result_z};
   }
