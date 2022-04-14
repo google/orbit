@@ -113,8 +113,22 @@ void CaptureWindow::PreRender() {
   }
 
   if (time_graph_ != nullptr) {
-    time_graph_->UpdateLayout();
-    UpdateChildrenPosAndSize();
+    int layout_loops = 0;
+
+    // Layout changes of one element may require other elements to be updated as well,
+    // so layouting needs to be done until all elements report that they do not need to
+    // be updated further. As layout requests bubble up, it's enough to check this for
+    // the root element (time graph) of the tree.
+    // During loading or capturing, only a single layouting loop is executed as we're
+    // streaming in data from a seperate thread (for performance reasons)
+    const int kMaxLayoutLoops =
+        (app_ != nullptr && (app_->IsCapturing() || app_->IsLoadingCapture())) ? 1 : 10;
+
+    // TODO (b/229222095) Log when the max loop count is exceeded
+    do {
+      UpdateChildrenPosAndSize();
+      time_graph_->UpdateLayout();
+    } while (++layout_loops < kMaxLayoutLoops && time_graph_->HasLayoutChanged());
   }
 }
 

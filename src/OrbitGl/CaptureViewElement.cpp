@@ -58,6 +58,8 @@ CaptureViewElement::EventResult CaptureViewElement::OnMouseWheel(
 }
 
 void CaptureViewElement::UpdateLayout() {
+  has_layout_changed_ = false;
+
   // Perform any layout changes of this element
   DoUpdateLayout();
 
@@ -166,6 +168,8 @@ std::vector<CaptureViewElement*> CaptureViewElement::GetChildrenVisibleInViewpor
 }
 
 void CaptureViewElement::RequestUpdate() {
+  has_layout_changed_ = true;
+
   if (parent_ != nullptr) {
     parent_->RequestUpdate();
   }
