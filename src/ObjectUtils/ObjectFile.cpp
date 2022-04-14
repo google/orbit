@@ -13,6 +13,7 @@
 #include <string>
 
 #include "GrpcProtos/symbol.pb.h"
+#include "Introspection/Introspection.h"
 #include "ObjectUtils/CoffFile.h"
 #include "ObjectUtils/ElfFile.h"
 #include "OrbitBase/Result.h"
@@ -21,6 +22,7 @@ namespace orbit_object_utils {
 
 ErrorMessageOr<std::unique_ptr<ObjectFile>> CreateObjectFile(
     const std::filesystem::path& file_path) {
+  ORBIT_SCOPE_FUNCTION;
   // TODO(hebecker): Remove this explicit construction of StringRef when we switch to LLVM10.
   const std::string file_path_str = file_path.string();
   const llvm::StringRef file_path_llvm{file_path_str};

@@ -49,6 +49,7 @@ target_link_libraries(
   ObjectUtils
   PUBLIC GrpcProtos
          OrbitBase
+         Introspection
          CONAN_PKG::abseil
          CONAN_PKG::llvm-core)
 
