@@ -13,8 +13,8 @@ enum ScopeType : uint8_t { kOther = 0, kHookedFunction = 1, kApiScope = 2, kApiS
 
 struct ScopeInfo {
   template <typename H>
-  friend H AbslHashValue(H h, const ScopeInfo& c) {
-    return H::combine(std::move(h), c.name, c.type);
+  friend H AbslHashValue(H h, const ScopeInfo& scope) {
+    return H::combine(std::move(h), scope.name, scope.type);
   }
 
   friend bool operator==(const ScopeInfo& lhs, const ScopeInfo& rhs) {
