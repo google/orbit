@@ -24,6 +24,7 @@
 #include <unwindstack/DwarfSection.h>
 #include <unwindstack/Error.h>
 #include <unwindstack/Memory.h>
+#include <unwindstack/PeCoffNativeUnwinder.h>
 
 namespace unwindstack {
 
@@ -152,8 +153,8 @@ class PeCoffInterface {
   virtual uint64_t GetRelPc(uint64_t pc, uint64_t map_start) const = 0;
   virtual bool GetTextRange(uint64_t* addr, uint64_t* size) const = 0;
   virtual uint64_t GetTextOffsetInFile() const = 0;
-  virtual bool Step(uint64_t rel_pc, Regs* regs, Memory* process_memory, bool* finished,
-                    bool* is_signal_frame) = 0;
+  virtual bool Step(uint64_t rel_pc, uint64_t pc_adjustment, Regs* regs, Memory* process_memory,
+                    bool* finished, bool* is_signal_frame) = 0;
 };
 
 template <typename AddressTypeArg>
@@ -175,8 +176,8 @@ class PeCoffInterfaceImpl : public PeCoffInterface {
   uint64_t GetRelPc(uint64_t pc, uint64_t map_start) const override;
   bool GetTextRange(uint64_t* addr, uint64_t* size) const override;
   uint64_t GetTextOffsetInFile() const override;
-  bool Step(uint64_t rel_pc, Regs* regs, Memory* process_memory, bool* finished,
-            bool* is_signal_frame) override;
+  bool Step(uint64_t rel_pc, uint64_t pc_adjustment, Regs* regs, Memory* process_memory,
+            bool* finished, bool* is_signal_frame) override;
 
   using AddressType = AddressTypeArg;
 
@@ -211,6 +212,8 @@ class PeCoffInterfaceImpl : public PeCoffInterface {
   std::unique_ptr<DwarfSection> debug_frame_;
   std::optional<DebugFrameSectionData> debug_frame_section_data_;
 
+  std::unique_ptr<PeCoffNativeUnwinder> native_unwinder_;
+
   ErrorData last_error_{ERROR_NONE, 0};
 
   bool ParseDosHeader(uint64_t offset);
@@ -224,6 +227,8 @@ class PeCoffInterfaceImpl : public PeCoffInterface {
   bool GetSectionName(const std::string& parsed_section_name_string, std::string* result);
   bool InitSections();
   bool InitDebugFrameSection();
+  bool MapFromRvaToFileOffset(uint64_t rva, uint64_t* file_offset);
+  bool InitNativeUnwinder();
 };
 
 using PeCoffInterface32 = PeCoffInterfaceImpl<uint32_t>;

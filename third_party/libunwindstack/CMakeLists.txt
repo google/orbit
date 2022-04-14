@@ -126,6 +126,7 @@ target_sources(libunwindstack_common PUBLIC
   include/unwindstack/Object.h
   include/unwindstack/PeCoff.h
   include/unwindstack/PeCoffInterface.h
+  include/unwindstack/PeCoffNativeUnwinder.h
   include/unwindstack/Regs.h
   include/unwindstack/RegsArm.h
   include/unwindstack/RegsArm64.h
@@ -179,6 +180,7 @@ add_library(libunwindstack STATIC
 # so we link to it explicitly here.
 find_library(liblog_static log_static REQUIRED)
 target_link_libraries(libunwindstack PUBLIC
+  CONAN_PKG::capstone
   CONAN_PKG::libunwindstack-android-dependencies
   CONAN_PKG::lzma_sdk
   ${liblog_static})

@@ -28,6 +28,11 @@ namespace unwindstack {
 template <typename PeCoffInterfaceType>
 class PeCoffFake {
  public:
+  // The following constants determine the basic layout and locations of the data
+  // in the fake PE/COFF file.
+
+  // This must be at 0x0.
+  static constexpr uint64_t kDosHeaderOffset = 0x0;
   static constexpr size_t kDosHeaderSizeInBytes = 0x40;
   // File offset for the new header.
   static constexpr uint64_t kNewHeaderOffsetValue = 0xF8;
@@ -43,8 +48,19 @@ class PeCoffFake {
   static constexpr uint64_t kDebugFrameSectionFileOffset = 0x3000;
   static constexpr uint64_t kDebugFrameSectionSize = 0x200;
 
-  static constexpr int64_t kLoadBiasFake = 0x3100;
-  static constexpr uint64_t kTextSectionOffsetFake = 0x200;
+  // File offset for the exception table, equivalent to the .pdata section, which consists
+  // of a list of RUNTIME_FUNCTION entries.
+  static constexpr uint64_t kExceptionTableFileOffset = 0x4000;
+  // This is the number of bytes for the RUNTIME_FUNCTION entries, which needs to be
+  // divisible by 12. This number here is 12 * 100 == 0x4b0.
+  static constexpr uint64_t kExceptionTableSize = 0x4b0;
+
+  // While this value determines the memory layout, our code only looks at the file content,
+  // so this value is only used in arithmetic converting virtual addresses to file offset.
+  static constexpr uint64_t kExceptionTableVmAddr = 0x5000;
+
+  // Fake load bias, does not change the layout of the file data.
+  static constexpr int64_t kLoadBiasFake = 0x31000;
 
   PeCoffFake() : memory_(new MemoryFake) {}
   ~PeCoffFake() = default;
@@ -97,6 +113,7 @@ class PeCoffFake {
   uint64_t SetSectionHeadersAtOffset(uint64_t offset, uint32_t debug_frame_vmsize,
                                      uint32_t debug_frame_filesize);
   uint64_t SetDebugFrameEntryAtOffset(uint64_t offset, uint32_t pc_start);
+  uint64_t SetRuntimeFunctionsAtOffset(uint64_t offset, uint64_t size);
 
   std::unique_ptr<MemoryFake> memory_fake_;
   std::vector<std::pair<uint64_t, std::string>> section_names_in_string_table_;

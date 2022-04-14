@@ -27,6 +27,7 @@
 #include "utils/MemoryFake.h"
 
 #include <unwindstack/Log.h>
+#include <unwindstack/PeCoffNativeUnwinder.h>
 
 #include "DwarfDebugFrame.h"
 #include "PeCoffFake.h"
@@ -387,8 +388,12 @@ template <typename AddressType>
 class PeCoffInterfaceFake : public PeCoffInterfaceImpl<AddressType> {
  public:
   PeCoffInterfaceFake(Memory* memory) : PeCoffInterfaceImpl<AddressType>(memory) {}
-  void SetFakeDebugFrameSection(DwarfSection* debug_frame_section) {
-    this->debug_frame_.reset(debug_frame_section);
+
+  void SetFakeDebugFrameSection(std::unique_ptr<DwarfSection> debug_frame_section) {
+    this->debug_frame_ = std::move(debug_frame_section);
+  }
+  void SetFakeNativeUnwinder(std::unique_ptr<PeCoffNativeUnwinder> native_unwinder) {
+    this->native_unwinder_ = std::move(native_unwinder);
   }
 };
 
@@ -396,9 +401,17 @@ template <typename AddressType>
 class MockDwarfSection : public DwarfDebugFrame<AddressType> {
  public:
   MockDwarfSection(Memory* memory) : DwarfDebugFrame<AddressType>(memory) {}
-  virtual ~MockDwarfSection() = default;
+  ~MockDwarfSection() override = default;
   MOCK_METHOD(bool, Init, (uint64_t, uint64_t, int64_t), (override));
   MOCK_METHOD(bool, Step, (uint64_t, Regs*, Memory*, bool*, bool*), (override));
+};
+
+class MockPeCoffNativeUnwinder : public PeCoffNativeUnwinder {
+ public:
+  MockPeCoffNativeUnwinder() = default;
+  ~MockPeCoffNativeUnwinder() override = default;
+  MOCK_METHOD(bool, Init, (), (override));
+  MOCK_METHOD(bool, Step, (uint64_t, uint64_t, Regs*, Memory*, bool*, bool*), (override));
 };
 
 TYPED_TEST(PeCoffInterfaceTest, step_succeeds_when_debug_frame_step_succeeds) {
@@ -407,36 +420,77 @@ TYPED_TEST(PeCoffInterfaceTest, step_succeeds_when_debug_frame_step_succeeds) {
   int64_t load_bias;
   ASSERT_TRUE(fake_coff.Init(&load_bias));
 
-  MockDwarfSection<typename TypeParam::AddressType>* mock_debug_frame_section =
-      new MockDwarfSection<typename TypeParam::AddressType>(nullptr);
-  fake_coff.SetFakeDebugFrameSection(mock_debug_frame_section);
-  EXPECT_CALL(*mock_debug_frame_section, Step(0x2000, nullptr, nullptr, nullptr, nullptr))
+  bool finished = false;
+  bool is_signal_frame = false;
+
+  auto mock_debug_frame_section =
+      std::make_unique<MockDwarfSection<typename TypeParam::AddressType>>(nullptr);
+  EXPECT_CALL(*mock_debug_frame_section,
+              Step(0x2000, nullptr, nullptr, &finished, &is_signal_frame))
       .WillOnce(::testing::Return(true));
-  EXPECT_TRUE(fake_coff.Step(0x2000, nullptr, nullptr, nullptr, nullptr));
+  fake_coff.SetFakeDebugFrameSection(std::move(mock_debug_frame_section));
+  EXPECT_TRUE(fake_coff.Step(0x2000, 0, nullptr, nullptr, &finished, &is_signal_frame));
 }
 
-TYPED_TEST(PeCoffInterfaceTest, step_fails_when_debug_frame_step_fails) {
+TYPED_TEST(PeCoffInterfaceTest, step_fails_when_debug_frame_and_native_step_fail) {
   this->GetFake()->Init();
   PeCoffInterfaceFake<typename TypeParam::AddressType> fake_coff(this->GetMemory());
   int64_t load_bias;
   ASSERT_TRUE(fake_coff.Init(&load_bias));
 
-  MockDwarfSection<typename TypeParam::AddressType>* mock_debug_frame_section =
-      new MockDwarfSection<typename TypeParam::AddressType>(nullptr);
-  fake_coff.SetFakeDebugFrameSection(mock_debug_frame_section);
-  EXPECT_CALL(*mock_debug_frame_section, Step(0x2000, nullptr, nullptr, nullptr, nullptr))
+  bool finished = false;
+  bool is_signal_frame = false;
+
+  auto mock_debug_frame_section =
+      std::make_unique<MockDwarfSection<typename TypeParam::AddressType>>(nullptr);
+  EXPECT_CALL(*mock_debug_frame_section,
+              Step(0x2000, nullptr, nullptr, &finished, &is_signal_frame))
       .WillOnce(::testing::Return(false));
-  EXPECT_FALSE(fake_coff.Step(0x2000, nullptr, nullptr, nullptr, nullptr));
+  fake_coff.SetFakeDebugFrameSection(std::move(mock_debug_frame_section));
+
+  auto mock_native_unwinder = std::make_unique<MockPeCoffNativeUnwinder>();
+  EXPECT_CALL(*mock_native_unwinder, Step(0x2000, 0, nullptr, nullptr, &finished, &is_signal_frame))
+      .WillOnce(::testing::Return(false));
+  fake_coff.SetFakeNativeUnwinder(std::move(mock_native_unwinder));
+
+  EXPECT_FALSE(fake_coff.Step(0x2000, 0, nullptr, nullptr, &finished, &is_signal_frame));
 }
 
-TYPED_TEST(PeCoffInterfaceTest, step_fails_when_debug_frame_is_nullptr) {
+TYPED_TEST(PeCoffInterfaceTest, step_fails_when_debug_frame_and_native_unwinder_are_nullptrs) {
   this->GetFake()->Init();
   PeCoffInterfaceFake<typename TypeParam::AddressType> fake_coff(this->GetMemory());
   int64_t load_bias;
   ASSERT_TRUE(fake_coff.Init(&load_bias));
 
   fake_coff.SetFakeDebugFrameSection(nullptr);
-  EXPECT_FALSE(fake_coff.Step(0x2000, nullptr, nullptr, nullptr, nullptr));
+  fake_coff.SetFakeNativeUnwinder(nullptr);
+  bool finished = false;
+  bool is_signal_frame = false;
+  EXPECT_FALSE(fake_coff.Step(0x2000, 0, nullptr, nullptr, &finished, &is_signal_frame));
+}
+
+TYPED_TEST(PeCoffInterfaceTest, step_succeeds_when_native_step_succeeds_and_debug_frame_fails) {
+  this->GetFake()->Init();
+  PeCoffInterfaceFake<typename TypeParam::AddressType> fake_coff(this->GetMemory());
+  int64_t load_bias;
+  ASSERT_TRUE(fake_coff.Init(&load_bias));
+
+  bool finished = false;
+  bool is_signal_frame = false;
+
+  auto mock_debug_frame_section =
+      std::make_unique<MockDwarfSection<typename TypeParam::AddressType>>(nullptr);
+  EXPECT_CALL(*mock_debug_frame_section,
+              Step(0x2000, nullptr, nullptr, &finished, &is_signal_frame))
+      .WillOnce(::testing::Return(false));
+  fake_coff.SetFakeDebugFrameSection(std::move(mock_debug_frame_section));
+
+  auto mock_native_unwinder = std::make_unique<MockPeCoffNativeUnwinder>();
+  EXPECT_CALL(*mock_native_unwinder, Step(0x2000, 0, nullptr, nullptr, &finished, &is_signal_frame))
+      .WillOnce(::testing::Return(true));
+  fake_coff.SetFakeNativeUnwinder(std::move(mock_native_unwinder));
+
+  EXPECT_TRUE(fake_coff.Step(0x2000, 0, nullptr, nullptr, &finished, &is_signal_frame));
 }
 
 // The remaining tests are not TYPED_TESTs, because they are specific to either the 32-bit or 64-bit

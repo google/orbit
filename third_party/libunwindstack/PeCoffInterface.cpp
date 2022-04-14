@@ -24,6 +24,7 @@
 #include <unwindstack/Regs.h>
 #include "Check.h"
 #include "DwarfDebugFrame.h"
+#include "PeCoffUnwindInfoUnwinderX86_64.h"
 
 namespace unwindstack {
 
@@ -433,12 +434,71 @@ bool PeCoffInterfaceImpl<AddressType>::Init(int64_t* load_bias) {
     return false;
   }
 
+  // Only initialize the native unwinder in the 64-bit case.
+  constexpr uint32_t kOptionalHeaderMagicPE32Plus = 0x020b;
+  if ((optional_header_.magic == kOptionalHeaderMagicPE32Plus) && !InitNativeUnwinder()) {
+    return false;
+  }
+
   if (optional_header_.image_base > static_cast<uint64_t>(std::numeric_limits<int64_t>::max())) {
     Log::Error("Value of ImageBase in PE/COFF file is too large.");
     return false;
   }
   *load_bias = static_cast<int64_t>(optional_header_.image_base);
   return true;
+}
+
+template <typename AddressType>
+bool PeCoffInterfaceImpl<AddressType>::MapFromRvaToFileOffset(uint64_t rva, uint64_t* file_offset) {
+  for (auto& section : sections_) {
+    if (section.vmaddr <= rva && rva < section.vmaddr + section.vmsize) {
+      *file_offset = rva - section.vmaddr + section.offset;
+      return true;
+    }
+  }
+  last_error_.code = ERROR_INVALID_COFF;
+  return false;
+}
+
+template <>
+bool PeCoffInterfaceImpl<uint64_t>::InitNativeUnwinder() {
+  constexpr int kCoffDataDirExceptionTableIndex = 3;
+  if (kCoffDataDirExceptionTableIndex >= optional_header_.data_dirs.size()) {
+    last_error_.code = ERROR_INVALID_COFF;
+    return false;
+  }
+  DataDirectory data_directory = optional_header_.data_dirs[kCoffDataDirExceptionTableIndex];
+  if (data_directory.vm_addr == 0) {
+    return false;
+  }
+  constexpr uint16_t kImageFileMachineAmd64 = 0x8664;
+  if (coff_header_.machine != kImageFileMachineAmd64) {
+    last_error_.code = ERROR_INVALID_COFF;
+    return false;
+  }
+
+  uint32_t rva = data_directory.vm_addr;
+  uint32_t size = data_directory.vm_size;
+
+  uint64_t pdata_file_begin;
+  if (!MapFromRvaToFileOffset(rva, &pdata_file_begin)) {
+    return false;
+  }
+  uint64_t pdata_file_end = pdata_file_begin + size;
+
+  if (!text_section_data_.has_value()) {
+    return false;
+  }
+
+  native_unwinder_ = std::make_unique<PeCoffUnwindInfoUnwinderX86_64>(
+      memory_, optional_header_.image_base, pdata_file_begin, pdata_file_end,
+      text_section_data_->memory_offset, text_section_data_->file_offset, sections_);
+  return native_unwinder_->Init();
+}
+
+template <>
+bool PeCoffInterfaceImpl<uint32_t>::InitNativeUnwinder() {
+  return false;
 }
 
 template <typename AddressType>
@@ -469,11 +529,18 @@ uint64_t PeCoffInterfaceImpl<AddressType>::GetTextOffsetInFile() const {
 }
 
 template <typename AddressType>
-bool PeCoffInterfaceImpl<AddressType>::Step(uint64_t rel_pc, Regs* regs, Memory* process_memory,
-                                            bool* finished, bool* is_signal_frame) {
+bool PeCoffInterfaceImpl<AddressType>::Step(uint64_t rel_pc, uint64_t pc_adjustment, Regs* regs,
+                                            Memory* process_memory, bool* finished,
+                                            bool* is_signal_frame) {
+  *is_signal_frame = false;
   // Try the debug_frame first since it contains the most specific and comprehensive unwind
   // information.
   if (debug_frame_ && debug_frame_->Step(rel_pc, regs, process_memory, finished, is_signal_frame)) {
+    return true;
+  }
+
+  if (native_unwinder_ && native_unwinder_->Step(rel_pc, pc_adjustment, regs, process_memory,
+                                                 finished, is_signal_frame)) {
     return true;
   }
   return false;

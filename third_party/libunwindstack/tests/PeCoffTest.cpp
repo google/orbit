@@ -40,7 +40,7 @@ class MockPeCoffInterface : public PeCoffInterface {
   MOCK_METHOD(uint64_t, GetRelPc, (uint64_t, uint64_t), (const override));
   MOCK_METHOD(bool, GetTextRange, (uint64_t*, uint64_t*), (const override));
   MOCK_METHOD(uint64_t, GetTextOffsetInFile, (), (const override));
-  MOCK_METHOD(bool, Step, (uint64_t, Regs*, Memory*, bool*, bool*), (override));
+  MOCK_METHOD(bool, Step, (uint64_t, uint64_t, Regs*, Memory*, bool*, bool*), (override));
 };
 
 class FakePeCoff : public PeCoff {
@@ -226,7 +226,7 @@ TYPED_TEST(PeCoffTest, step_succeeds_when_interface_step_succeeds) {
   this->GetFake()->Init();
   FakePeCoff coff(this->ReleaseMemory());
   MockPeCoffInterface* mock_interface = new MockPeCoffInterface;
-  EXPECT_CALL(*mock_interface, Step(0x2000, nullptr, nullptr, nullptr, nullptr))
+  EXPECT_CALL(*mock_interface, Step(0x2000, 0, nullptr, nullptr, nullptr, nullptr))
       .WillOnce(::testing::Return(true));
   coff.SetFakePeCoffInterface(mock_interface);
   EXPECT_TRUE(coff.Step(0x2000, nullptr, nullptr, nullptr, nullptr));
@@ -236,7 +236,7 @@ TYPED_TEST(PeCoffTest, steps_fails_when_interface_step_fails) {
   this->GetFake()->Init();
   FakePeCoff coff(this->ReleaseMemory());
   MockPeCoffInterface* mock_interface = new MockPeCoffInterface;
-  EXPECT_CALL(*mock_interface, Step(0x2000, nullptr, nullptr, nullptr, nullptr))
+  EXPECT_CALL(*mock_interface, Step(0x2000, 0, nullptr, nullptr, nullptr, nullptr))
       .WillOnce(::testing::Return(false));
   coff.SetFakePeCoffInterface(mock_interface);
   EXPECT_FALSE(coff.Step(0x2000, nullptr, nullptr, nullptr, nullptr));
