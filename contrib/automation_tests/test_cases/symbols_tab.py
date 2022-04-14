@@ -334,7 +334,7 @@ class VerifySymbolsLoaded(E2ETestCase):
             self.expect_true(functions_dataview.get_row_count() == 0, "Found no symbols")
 
 
-selected_function_icon : bool = true
+selected_function_icon : str = 'H'
 
 
 class FilterAndHookFunction(E2ETestCase):
