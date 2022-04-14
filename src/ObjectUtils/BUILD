@@ -17,6 +17,7 @@ orbit_cc_library(
     deps = [
         "//src/GrpcProtos:module_cc_proto",
         "//src/GrpcProtos:symbol_cc_proto",
+        "//src/Introspection",
         "//src/OrbitBase",
         "@com_google_absl//absl/base",
         "@com_google_absl//absl/memory",
