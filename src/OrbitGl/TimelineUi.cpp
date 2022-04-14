@@ -20,9 +20,6 @@ const Color kBackgroundColorSpecialLabels(68, 67, 69, 255);
 
 void TimelineUi::RenderLines(PrimitiveAssembler& primitive_assembler, uint64_t min_timestamp_ns,
                              uint64_t max_timestamp_ns) const {
-  const Color kMajorTickColor(255, 254, 253, 255);
-  const Color kMinorTickColor(255, 254, 253, 63);
-
   for (auto& [tick_type, tick_ns] :
        timeline_ticks_.GetAllTicks(min_timestamp_ns, max_timestamp_ns)) {
     float world_x = timeline_info_interface_->GetWorldFromUs(
@@ -54,7 +51,7 @@ void TimelineUi::RenderLabels(PrimitiveAssembler& primitive_assembler, TextRende
 void TimelineUi::RenderMargin(PrimitiveAssembler& primitive_assembler) const {
   Vec2 margin_pos = Vec2(GetPos()[0], GetPos()[1] + GetHeightWithoutMargin());
   Vec2 margin_size = Vec2(GetSize()[0], GetMarginHeight());
-  primitive_assembler.AddBox(MakeBox(margin_pos, margin_size), GlCanvas::kZValueOverlay,
+  primitive_assembler.AddBox(MakeBox(margin_pos, margin_size), GlCanvas::kZValueTimeBar,
                              GlCanvas::kBackgroundColor);
 }
 
