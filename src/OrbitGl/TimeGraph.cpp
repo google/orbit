@@ -103,6 +103,8 @@ void TimeGraph::UpdateCaptureMinMaxTimestamps() {
 
   capture_min_timestamp_ = capture_min_timestamp;
   capture_max_timestamp_ = capture_max_timestamp;
+
+  RequestUpdate();
 }
 
 void TimeGraph::ZoomAll() {
