@@ -212,6 +212,15 @@ void TrackManager::UpdateVisibleTrackList() {
   }
 }
 
+void TrackManager::DeletePendingTracks() {
+  for (auto& track : deleted_tracks_) {
+    sorted_tracks_.erase(std::remove(sorted_tracks_.begin(), sorted_tracks_.end(), track.get()),
+                         sorted_tracks_.end());
+  }
+
+  deleted_tracks_.clear();
+}
+
 std::vector<ThreadTrack*> TrackManager::GetSortedThreadTracks() {
   std::vector<ThreadTrack*> sorted_tracks;
   absl::flat_hash_map<ThreadTrack*, uint32_t> num_events_by_track;
@@ -303,6 +312,8 @@ int TrackManager::FindMovingTrackIndex() {
 }
 
 void TrackManager::UpdateTrackListForRendering() {
+  DeletePendingTracks();
+
   // Reorder threads if sorting isn't valid or once per second when capturing.
   if (sorting_invalidated_ ||
       (app_ != nullptr && app_->IsCapturing() && last_thread_reorder_.ElapsedMillis() > 1000.0)) {
@@ -342,9 +353,7 @@ void TrackManager::AddFrameTrack(const std::shared_ptr<FrameTrack>& frame_track)
 
 void TrackManager::RemoveFrameTrack(uint64_t function_id) {
   std::lock_guard<std::recursive_mutex> lock(mutex_);
-  sorted_tracks_.erase(
-      std::remove(sorted_tracks_.begin(), sorted_tracks_.end(), frame_tracks_[function_id].get()),
-      sorted_tracks_.end());
+  deleted_tracks_.push_back(frame_tracks_[function_id]);
   frame_tracks_.erase(function_id);
 
   visible_track_list_needs_update_ = true;
