@@ -48,8 +48,8 @@ void TracepointThreadBar::DoDraw(PrimitiveAssembler& primitive_assembler,
                           ? GlCanvas::kZValueEventBarPicking
                           : GlCanvas::kZValueEventBar;
   Color color = GetColor();
-  Tetragon box = MakeBox(GetPos(), Vec2(GetWidth(), -GetHeight()), event_bar_z);
-  primitive_assembler.AddBox(box, color, shared_from_this());
+  Quad box = MakeBox(GetPos(), Vec2(GetWidth(), -GetHeight()));
+  primitive_assembler.AddBox(box, event_bar_z, color, shared_from_this());
 }
 
 void TracepointThreadBar::DoUpdatePrimitives(PrimitiveAssembler& primitive_assembler,

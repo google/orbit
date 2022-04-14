@@ -8,22 +8,32 @@
 #include <vector>
 
 #include "CoreMath.h"
+#include "Geometry.h"
 
 namespace orbit_gl {
+
+struct LayeredVec2 {
+  Vec2 xy;
+  float z{};
+};
+
 class TranslationStack {
  public:
   void PushTranslation(float x, float y, float z = 0.f);
   void PopTranslation();
   [[nodiscard]] bool IsEmpty() const { return translation_stack_.empty(); }
 
-  [[nodiscard]] Vec3 TranslateAndFloorVertex(const Vec3& input) const {
-    const Vec3 result = input + current_translation_;
-    return Vec3(floorf(result[0]), floorf(result[1]), result[2]);
+  // TODO(b/227341686) if we change the type of z-values to be non-float, the name should be made
+  // less verbose, as it would be clear `z` is not floored.
+  [[nodiscard]] LayeredVec2 TranslateXYZAndFloorXY(const LayeredVec2& input) const {
+    const Vec2 result_shape = input.xy + current_translation_.xy;
+    const float result_z = input.z + current_translation_.z;
+    return {{floorf(result_shape[0]), floorf(result_shape[1])}, result_z};
   }
 
  private:
-  std::vector<Vec3> translation_stack_;
-  Vec3 current_translation_ = Vec3(0.f, 0.f, 0.f);
+  std::vector<LayeredVec2> translation_stack_;
+  LayeredVec2 current_translation_{{0.f, 0.f}, 0.f};
 };
 }  // namespace orbit_gl
 

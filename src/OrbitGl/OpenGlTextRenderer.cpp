@@ -20,6 +20,7 @@
 #include <string>
 #include <utility>
 
+#include "Geometry.h"
 #include "GlCanvas.h"
 #include "Introspection/Introspection.h"
 #include "OrbitBase/ExecutablePath.h"
@@ -158,6 +159,7 @@ void OpenGlTextRenderer::RenderLayer(float layer) {
   }
 
   glPushAttrib(GL_ENABLE_BIT | GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+  glDisable(GL_DEPTH_TEST);
   glEnable(GL_BLEND);
   glDepthMask(GL_FALSE);
   glBlendEquation(GL_FUNC_ADD);
@@ -265,10 +267,11 @@ void OpenGlTextRenderer::AddTextInternal(const char* text, ftgl::vec2* pen,
       float kerning = (i == 0) ? 0.0f : texture_glyph_get_kerning(glyph, text + i - 1);
       pen->x += kerning;
 
-      Vec3 pos0 = translations_.TranslateAndFloorVertex(
-          Vec3(pen->x + glyph->offset_x, pen->y - glyph->offset_y, z));
+      orbit_gl::LayeredVec2 pos0_layered = translations_.TranslateXYZAndFloorXY(
+          {{pen->x + glyph->offset_x, pen->y - glyph->offset_y}, z});
+      const Vec2& pos0 = pos0_layered.xy;
       Vec2 pos1 = Vec2(pos0[0] + glyph->width, pos0[1] + glyph->height);
-      const float transformed_z = pos0[2];
+      const float transformed_z = pos0_layered.z;
 
       float s0 = glyph->s0;
       float t0 = glyph->t0;

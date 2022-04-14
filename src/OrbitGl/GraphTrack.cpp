@@ -105,9 +105,8 @@ void GraphTrack<Dimension>::DoUpdatePrimitives(PrimitiveAssembler& primitive_ass
   float content_height = GetGraphContentHeight();
   Vec2 content_pos = GetPos();
   content_pos[1] += layout_->GetTrackTabHeight();
-  Tetragon box =
-      MakeBox(content_pos, Vec2(GetWidth(), content_height + GetLegendHeight()), track_z);
-  primitive_assembler.AddBox(box, GetTrackBackgroundColor(), shared_from_this());
+  Quad box = MakeBox(content_pos, Vec2(GetWidth(), content_height + GetLegendHeight()));
+  primitive_assembler.AddBox(box, track_z, GetTrackBackgroundColor(), shared_from_this());
 
   const bool picking = picking_mode != PickingMode::kNone;
   if (picking) return;
@@ -201,18 +200,18 @@ void GraphTrack<Dimension>::DrawLabel(PrimitiveAssembler& primitive_assembler,
 
   Vec2 arrow_box_position(text_box_position[0] - kTextLeftMargin,
                           text_box_position[1] - kTextBottomMargin);
-  Tetragon arrow_text_box = MakeBox(arrow_box_position, arrow_box_size, label_z);
-  Vec3 arrow_extra_point(target_pos[0], target_pos[1], label_z);
+  Quad arrow_text_box = MakeBox(arrow_box_position, arrow_box_size);
+  Vec2 arrow_extra_point(target_pos[0], target_pos[1]);
 
-  primitive_assembler.AddBox(arrow_text_box, font_color);
+  primitive_assembler.AddBox(arrow_text_box, label_z, font_color);
   if (arrow_is_left_directed) {
     primitive_assembler.AddTriangle(
         Triangle(arrow_text_box.vertices[0], arrow_text_box.vertices[1], arrow_extra_point),
-        font_color);
+        label_z, font_color);
   } else {
     primitive_assembler.AddTriangle(
         Triangle(arrow_text_box.vertices[2], arrow_text_box.vertices[3], arrow_extra_point),
-        font_color);
+        label_z, font_color);
   }
 }
 

@@ -40,26 +40,26 @@ void TriangleToggle::DoDraw(PrimitiveAssembler& primitive_assembler, TextRendere
 
   const Vec2 pos = GetPos();
   if (!picking) {
-    Vec3 position(pos[0], pos[1], 0.0f);
+    Vec2 position(pos[0], pos[1]);
 
     Triangle triangle;
     if (is_collapsed_) {
-      triangle = Triangle(position + Vec3(-half_triangle_height, half_triangle_base_width, z),
-                          position + Vec3(-half_triangle_height, -half_triangle_base_width, z),
-                          position + Vec3(half_triangle_base_width, 0.f, z));
+      triangle = Triangle(position + Vec2(-half_triangle_height, half_triangle_base_width),
+                          position + Vec2(-half_triangle_height, -half_triangle_base_width),
+                          position + Vec2(half_triangle_base_width, 0.f));
     } else {
-      triangle = Triangle(position + Vec3(half_triangle_base_width, -half_triangle_height, z),
-                          position + Vec3(-half_triangle_base_width, -half_triangle_height, z),
-                          position + Vec3(0.f, half_triangle_base_width, z));
+      triangle = Triangle(position + Vec2(half_triangle_base_width, -half_triangle_height),
+                          position + Vec2(-half_triangle_base_width, -half_triangle_height),
+                          position + Vec2(0.f, half_triangle_base_width));
     }
-    primitive_assembler.AddTriangle(triangle, color, shared_from_this());
+    primitive_assembler.AddTriangle(triangle, z, color, shared_from_this());
   } else {
     // When picking, draw a big square for easier picking.
     float original_width = 2 * half_triangle_base_width;
     float large_width = 2 * original_width;
-    Tetragon box = MakeBox(Vec2(pos[0] - original_width, pos[1] - original_width),
-                           Vec2(large_width, large_width), z);
-    primitive_assembler.AddBox(box, color, shared_from_this());
+    Quad box = MakeBox(Vec2(pos[0] - original_width, pos[1] - original_width),
+                       Vec2(large_width, large_width));
+    primitive_assembler.AddBox(box, z, color, shared_from_this());
   }
 }
 

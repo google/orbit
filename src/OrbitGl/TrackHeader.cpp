@@ -49,8 +49,8 @@ void TrackHeader::DoDraw(PrimitiveAssembler& primitive_assembler, TextRenderer& 
 
   const float indentation_x0 =
       x0 + (track_->GetIndentationLevel() * layout_->GetTrackIndentOffset());
-  Tetragon box = MakeBox(Vec2(indentation_x0, y0), Vec2(label_width, label_height), track_z);
-  primitive_assembler.AddBox(box, track_->GetTrackBackgroundColor(), shared_from_this());
+  Quad box = MakeBox(Vec2(indentation_x0, y0), Vec2(label_width, label_height));
+  primitive_assembler.AddBox(box, track_z, track_->GetTrackBackgroundColor(), shared_from_this());
 
   // Early-out: In picking mode, don't draw the text and rounded corners.
   if (picking) {

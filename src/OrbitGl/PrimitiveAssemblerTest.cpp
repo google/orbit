@@ -73,17 +73,16 @@ TEST(PrimitiveAssembler, BasicAdditions) {
   EXPECT_EQ(primitive_assembler_tester.GetNumLines(), kNumLines);
 
   // Triangles
-  Triangle kFakeTriangle{Vec2ToVec3(kTopLeft), Vec2ToVec3(kTopRight), Vec2ToVec3(kBottomRight)};
-  primitive_assembler_tester.AddTriangle(kFakeTriangle, kFakeColor);
-  primitive_assembler_tester.AddTriangle(kFakeTriangle, kFakeColor, pickable);
+  Triangle kFakeTriangle{kTopLeft, kTopRight, kBottomRight};
+  primitive_assembler_tester.AddTriangle(kFakeTriangle, 0, kFakeColor);
+  primitive_assembler_tester.AddTriangle(kFakeTriangle, 0, kFakeColor, pickable);
   EXPECT_EQ(primitive_assembler_tester.GetNumTriangles(), kNumTriangles);
 
   // Boxes
-  Tetragon kFakeBox{std::array<Vec3, 4>{Vec2ToVec3(kTopLeft), Vec2ToVec3(kTopRight),
-                                        Vec2ToVec3(kBottomRight), Vec2ToVec3(kBottomLeft)}};
-  primitive_assembler_tester.AddBox(kFakeBox, {kFakeColor, kFakeColor, kFakeColor, kFakeColor});
-  primitive_assembler_tester.AddBox(kFakeBox, kFakeColor);
-  primitive_assembler_tester.AddBox(kFakeBox, kFakeColor, pickable);
+  Quad kFakeBox{std::array<Vec2, 4>{kTopLeft, kTopRight, kBottomRight, kBottomLeft}};
+  primitive_assembler_tester.AddBox(kFakeBox, 0, {kFakeColor, kFakeColor, kFakeColor, kFakeColor});
+  primitive_assembler_tester.AddBox(kFakeBox, 0, kFakeColor);
+  primitive_assembler_tester.AddBox(kFakeBox, 0, kFakeColor, pickable);
   EXPECT_EQ(primitive_assembler_tester.GetNumBoxes(), kNumBoxes);
   EXPECT_EQ(primitive_assembler_tester.GetNumElements(), kNumLines + kNumTriangles + kNumBoxes);
   EXPECT_TRUE(primitive_assembler_tester.IsEverythingInsideRectangle(kTopLeft, kBoxSize));
@@ -125,7 +124,7 @@ TEST(PrimitiveAssembler, ComplexShapes) {
   // AddShadedTrapezium -> 2 Triangles
   Vec2 kTopCentred = {(kTopLeft[0] + kTopRight[0]) / 2.f, kTopLeft[1]};
   primitive_assembler_tester.AddShadedTrapezium(
-      Tetragon{{kTopLeft, kTopCentred, kBottomRight, kBottomLeft}, 0}, kFakeColor,
+      Quad{{kTopLeft, kTopCentred, kBottomRight, kBottomLeft}}, 0, kFakeColor,
       std::make_unique<PickingUserData>());
   EXPECT_EQ(primitive_assembler_tester.GetNumTriangles(), 2);
   EXPECT_EQ(primitive_assembler_tester.GetNumElements(), 2);
@@ -133,10 +132,9 @@ TEST(PrimitiveAssembler, ComplexShapes) {
 
   primitive_assembler_tester.StartNewFrame();
 
-  // AddTetragonBorder -> 4 Lines
-  primitive_assembler_tester.AddTetragonBorder(
-      Tetragon{{kBottomRight, kBottomLeft, kTopLeft, kTopRight}, 0}, kFakeColor,
-      std::make_unique<PickingUserData>());
+  // AddQuadBorder -> 4 Lines
+  primitive_assembler_tester.AddQuadBorder(Quad{{kBottomRight, kBottomLeft, kTopLeft, kTopRight}},
+                                           0, kFakeColor, std::make_unique<PickingUserData>());
   EXPECT_EQ(primitive_assembler_tester.GetNumLines(), 4);
   EXPECT_EQ(primitive_assembler_tester.GetNumElements(), 4);
   EXPECT_TRUE(primitive_assembler_tester.IsEverythingInsideRectangle(kTopLeft, kBoxSize));

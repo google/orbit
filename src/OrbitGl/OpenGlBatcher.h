@@ -5,7 +5,9 @@
 #ifndef ORBIT_GL_OPEN_GL_BATCHER_H_
 #define ORBIT_GL_OPEN_GL_BATCHER_H_
 
+#include <algorithm>
 #include <array>
+#include <iterator>
 #include <memory>
 #include <unordered_map>
 #include <vector>
@@ -38,7 +40,7 @@ struct BoxBuffer {
   }
 
   static const int NUM_BOXES_PER_BLOCK = 64 * 1024;
-  orbit_containers::BlockChain<Tetragon, NUM_BOXES_PER_BLOCK> boxes_;
+  orbit_containers::BlockChain<Quad, NUM_BOXES_PER_BLOCK> boxes_;
   orbit_containers::BlockChain<Color, 4 * NUM_BOXES_PER_BLOCK> colors_;
   orbit_containers::BlockChain<Color, 4 * NUM_BOXES_PER_BLOCK> picking_colors_;
 };
@@ -82,9 +84,10 @@ class OpenGlBatcher : public Batcher {
   void ResetElements() override;
   void AddLine(Vec2 from, Vec2 to, float z, const Color& color, const Color& picking_color,
                std::unique_ptr<PickingUserData> user_data = nullptr) override;
-  void AddBox(const Tetragon& box, const std::array<Color, 4>& colors, const Color& picking_color,
+  void AddBox(const Quad& box, float z, const std::array<Color, 4>& colors,
+              const Color& picking_color,
               std::unique_ptr<PickingUserData> user_data = nullptr) override;
-  void AddTriangle(const Triangle& triangle, const std::array<Color, 3>& colors,
+  void AddTriangle(const Triangle& triangle, float z, const std::array<Color, 3>& colors,
                    const Color& picking_color,
                    std::unique_ptr<PickingUserData> user_data = nullptr) override;
 

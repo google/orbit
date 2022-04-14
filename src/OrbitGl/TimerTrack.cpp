@@ -109,15 +109,6 @@ void TimerTrack::DrawTimesliceText(TextRenderer& text_renderer,
       GlCanvas::kZValueBox, formatting, elapsed_time_length);
 }
 
-// TODO(b/227748244) This method is only a temporary solution
-[[nodiscard]] inline Tetragon GetTetragonWithNewZ(const Tetragon& tetragon, float z) {
-  Tetragon result = tetragon;
-  for (Vec3& vertice : result.vertices) {
-    vertice[2] = z;
-  }
-  return result;
-}
-
 bool TimerTrack::DrawTimer(TextRenderer& text_renderer, const TimerInfo* prev_timer_info,
                            const TimerInfo* next_timer_info, const internal::DrawData& draw_data,
                            const TimerInfo* current_timer_info, uint64_t* min_ignore,
@@ -221,24 +212,25 @@ bool TimerTrack::DrawTimer(TextRenderer& text_renderer, const TimerInfo* prev_ti
         ToWorldX(end_or_next_start_us, end_us, draw_data.inv_time_window, draw_data.track_start_x,
                  draw_data.track_width);
 
-    Vec3 top_left(world_x_info_left_overlap.world_x_start, world_timer_y, draw_data.z);
-    Vec3 bottom_left(
+    Vec2 top_left(world_x_info_left_overlap.world_x_start, world_timer_y);
+    Vec2 bottom_left(
         world_x_info_left_overlap.world_x_start + world_x_info_left_overlap.world_x_width,
-        world_timer_y + box_height, draw_data.z);
-    Vec3 top_right(world_x_info_right_overlap.world_x_start, world_timer_y, draw_data.z);
-    Vec3 bottom_right(
+        world_timer_y + box_height);
+    Vec2 top_right(world_x_info_right_overlap.world_x_start, world_timer_y);
+    Vec2 bottom_right(
         world_x_info_right_overlap.world_x_start + world_x_info_right_overlap.world_x_width,
-        world_timer_y + box_height, draw_data.z);
+        world_timer_y + box_height);
     PrimitiveAssembler* primitive_assembler = draw_data.primitive_assembler;
-    Tetragon trapezium({top_left, bottom_left, bottom_right, top_right});
+    Quad trapezium({top_left, bottom_left, bottom_right, top_right});
     draw_data.primitive_assembler->AddShadedTrapezium(
-        trapezium, color, CreatePickingUserData(*primitive_assembler, *current_timer_info));
+        trapezium, draw_data.z, color,
+        CreatePickingUserData(*primitive_assembler, *current_timer_info));
     float width =
         world_x_info_right_overlap.world_x_start - world_x_info_left_overlap.world_x_start;
 
     if (ShouldHaveBorder(current_timer_info, draw_data.histogram_selection_range, width)) {
-      primitive_assembler->AddTetragonBorder(
-          GetTetragonWithNewZ(trapezium, GlCanvas::kZValueBoxBorder), TimerTrack::kBoxBorderColor,
+      primitive_assembler->AddQuadBorder(
+          trapezium, GlCanvas::kZValueBoxBorder, TimerTrack::kBoxBorderColor,
           CreatePickingUserData(*primitive_assembler, *current_timer_info));
     }
   } else {

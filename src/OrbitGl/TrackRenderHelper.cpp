@@ -45,16 +45,16 @@ void DrawTriangleFan(PrimitiveAssembler& primitive_assembler, const std::vector<
   }
 
   std::vector<Vec2> rotated_points = RotatePoints(points, rotation);
-  Vec3 position(pos[0], pos[1], z);
-  Vec3 pivot = position + Vec3(rotated_points[0][0], rotated_points[0][1], z);
+  Vec2 position(pos[0], pos[1]);
+  Vec2 pivot = position + Vec2(rotated_points[0][0], rotated_points[0][1]);
 
-  Vec3 vertices[2];
-  vertices[0] = position + Vec3(rotated_points[1][0], rotated_points[1][1], z);
+  Vec2 vertices[2];
+  vertices[0] = position + Vec2(rotated_points[1][0], rotated_points[1][1]);
 
   for (size_t i = 1; i < rotated_points.size() - 1; ++i) {
-    vertices[i % 2] = position + Vec3(rotated_points[i + 1][0], rotated_points[i + 1][1], z);
+    vertices[i % 2] = position + Vec2(rotated_points[i + 1][0], rotated_points[i + 1][1]);
     Triangle triangle(pivot, vertices[i % 2], vertices[(i + 1) % 2]);
-    primitive_assembler.AddTriangle(triangle, color, pickable);
+    primitive_assembler.AddTriangle(triangle, z, color, pickable);
   }
 }
 

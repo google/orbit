@@ -101,8 +101,8 @@ void Track::DoDraw(PrimitiveAssembler& primitive_assembler, TextRenderer& text_r
                             GlCanvas::kBackgroundColor, 180.f, track_z, shared_this);
 
   // Draw track's content background.
-  Tetragon box = MakeBox(content_top_left, Vec2(GetWidth(), GetHeight() - header_height), track_z);
-  primitive_assembler.AddBox(box, track_background_color, shared_from_this());
+  Quad box = MakeBox(content_top_left, Vec2(GetWidth(), GetHeight() - header_height));
+  primitive_assembler.AddBox(box, track_z, track_background_color, shared_from_this());
 }
 
 void Track::DoUpdateLayout() {
