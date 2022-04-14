@@ -16,7 +16,6 @@
 #include "ClientData/ScopeIdConstants.h"
 #include "ClientData/ScopeInfo.h"
 #include "ClientFlags/ClientFlags.h"
-#include "ClientProtos/capture_data.pb.h"
 #include "GrpcProtos/Constants.h"
 #include "OrbitBase/Logging.h"
 
@@ -63,13 +62,10 @@ uint64_t NameEqualityScopeIdProvider::FunctionIdToScopeId(uint64_t function_id) 
 }
 
 uint64_t NameEqualityScopeIdProvider::ProvideId(const TimerInfo& timer_info) {
-  ScopeType scope_type = ScopeTypeForTimerInfo(timer_info);
+  const ScopeType scope_type = ScopeTypeForTimerInfo(timer_info);
 
   if (scope_type == ScopeType::kOther) return orbit_client_data::kInvalidScopeId;
 
-  // Check if the `timer_info` corresponds to a hooked function event. Checking for `function_id`
-  // not being invalid is not sufficient, as e.g. frametrack events may also have non-invalid
-  // function_id
   if (scope_type == ScopeType::kHookedFunction) {
     return FunctionIdToScopeId(timer_info.function_id());
   }

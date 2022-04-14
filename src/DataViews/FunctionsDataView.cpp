@@ -79,8 +79,8 @@ bool FunctionsDataView::ShouldShowFrameTrackIcon(AppInterface* app, const Functi
          app->HasFrameTrackInCaptureData(instrumented_function_id.value());
 }
 
-std::string FunctionsDataView::BuildTypeColumnsString(AppInterface* app,
-                                                      const FunctionInfo& function) {
+std::string FunctionsDataView::BuildSelectedAndFrametrackIconsString(AppInterface* app,
+                                                                     const FunctionInfo& function) {
   std::string result = kUnselectedFunctionString;
   if (ShouldShowSelectedFunctionIcon(app, function)) {
     absl::StrAppend(&result, kSelectedFunctionString);
@@ -102,7 +102,7 @@ std::string FunctionsDataView::GetValue(int row, int column) {
 
   switch (column) {
     case kColumnSelected:
-      return BuildTypeColumnsString(app_, function);
+      return BuildSelectedAndFrametrackIconsString(app_, function);
     case kColumnName:
       return function.pretty_name();
     case kColumnSize:

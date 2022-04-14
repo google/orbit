@@ -91,6 +91,7 @@ target_sources(ClientDataTests PRIVATE
         ModuleDataTest.cpp
         ModuleManagerTest.cpp
         ProcessDataTest.cpp
+        ScopeInfoTest.cpp
         ScopeTreeTimerDataTest.cpp
         ThreadTrackDataManagerTest.cpp
         ThreadTrackDataProviderTest.cpp

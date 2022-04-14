@@ -54,6 +54,8 @@ class LiveFunctionsDataView : public DataView {
 
   void UpdateHistogramWithScopeIds(const std::vector<uint64_t>& scope_ids);
 
+  std::string GetToolTip(int /*row*/, int column) override;
+
  protected:
   [[nodiscard]] ActionStatus GetActionStatus(std::string_view action, int clicked_index,
                                              const std::vector<int>& selected_indices) override;
@@ -112,6 +114,8 @@ class LiveFunctionsDataView : public DataView {
         },
         ascending);
   }
+
+  [[nodiscard]] const orbit_client_data::ScopeInfo& GetScopeInfo(uint64_t scope_id) const;
 };
 
 }  // namespace orbit_data_views

@@ -4,6 +4,7 @@
 
 #ifndef ORBIT_CLIENT_DATA_SCOPE_INFO_H_
 #define ORBIT_CLIENT_DATA_SCOPE_INFO_H_
+
 #include <string>
 
 namespace orbit_client_data {

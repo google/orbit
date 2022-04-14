@@ -24,8 +24,8 @@ class FunctionsDataView : public DataView {
   static const std::string kApiScopeType;
   static const std::string kApiScopeAsyncType;
   static const std::string kHookedFunctionType;
-  static std::string BuildTypeColumnsString(AppInterface* app,
-                                            const orbit_client_data::FunctionInfo& function);
+  static std::string BuildSelectedAndFrametrackIconsString(AppInterface* app,
+                                                  const orbit_client_data::FunctionInfo& function);
   static bool ShouldShowFrameTrackIcon(AppInterface* app,
                                        const orbit_client_data::FunctionInfo& function);
 
