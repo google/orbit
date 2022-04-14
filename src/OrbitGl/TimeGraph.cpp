@@ -89,18 +89,32 @@ float TimeGraph::GetHeight() const {
 void TimeGraph::UpdateCaptureMinMaxTimestamps() {
   auto [tracks_min_time, tracks_max_time] = GetTrackManager()->GetTracksMinMaxTimestamps();
 
-  capture_min_timestamp_ = std::min(capture_min_timestamp_, tracks_min_time);
-  capture_max_timestamp_ = std::max(capture_max_timestamp_, tracks_max_time);
+  uint64_t capture_min_timestamp = std::min(capture_min_timestamp_, tracks_min_time);
+  uint64_t capture_max_timestamp = std::max(capture_max_timestamp_, tracks_max_time);
+
+  capture_min_timestamp =
+      std::min(capture_min_timestamp, capture_data_->GetCallstackData().min_time());
+  capture_max_timestamp =
+      std::max(capture_max_timestamp, capture_data_->GetCallstackData().max_time());
+
+  if (capture_min_timestamp == capture_min_timestamp_ &&
+      capture_max_timestamp == capture_max_timestamp_)
+    return;
+
+  capture_min_timestamp_ = capture_min_timestamp;
+  capture_max_timestamp_ = capture_max_timestamp;
+
+  RequestUpdate();
 }
 
 void TimeGraph::ZoomAll() {
   constexpr double kNumHistorySeconds = 2.f;
   UpdateCaptureMinMaxTimestamps();
-  max_time_us_ = TicksToMicroseconds(capture_min_timestamp_, capture_max_timestamp_);
-  min_time_us_ = max_time_us_ - (kNumHistorySeconds * 1000 * 1000);
-  if (min_time_us_ < 0) min_time_us_ = 0;
 
-  RequestUpdate();
+  double max_time_us = TicksToMicroseconds(capture_min_timestamp_, capture_max_timestamp_);
+  double min_time_us = max_time_us - (kNumHistorySeconds * 1000 * 1000);
+
+  SetMinMax(min_time_us, max_time_us);
 }
 
 void TimeGraph::Zoom(uint64_t min, uint64_t max) {
@@ -162,22 +176,27 @@ void TimeGraph::SetMinMax(double min_time_us, double max_time_us) {
   // Centering the interval in screen.
   const double center_time_us = (max_time_us + min_time_us) / 2.;
 
-  min_time_us_ = std::max(center_time_us - desired_time_window / 2, 0.0);
-  max_time_us_ = std::min(min_time_us_ + desired_time_window, GetCaptureTimeSpanUs());
+  min_time_us = std::max(center_time_us - desired_time_window / 2, 0.0);
+  max_time_us = std::min(min_time_us + desired_time_window, GetCaptureTimeSpanUs());
+
+  if (min_time_us == min_time_us_ && max_time_us == max_time_us_) return;
+
+  min_time_us_ = min_time_us;
+  max_time_us_ = max_time_us;
 
   RequestUpdate();
 }
 
 void TimeGraph::PanTime(int initial_x, int current_x, int width, double initial_time) {
-  time_window_us_ = max_time_us_ - min_time_us_;
-  double initial_local_time = static_cast<double>(initial_x) / width * time_window_us_;
-  double dt = static_cast<double>(current_x - initial_x) / width * time_window_us_;
+  double time_window_us = max_time_us_ - min_time_us_;
+  double initial_local_time = static_cast<double>(initial_x) / width * time_window_us;
+  double dt = static_cast<double>(current_x - initial_x) / width * time_window_us;
   double current_time = initial_time - dt;
-  min_time_us_ =
-      std::clamp(current_time - initial_local_time, 0.0, GetCaptureTimeSpanUs() - time_window_us_);
-  max_time_us_ = min_time_us_ + time_window_us_;
+  double min_time_us =
+      std::clamp(current_time - initial_local_time, 0.0, GetCaptureTimeSpanUs() - time_window_us);
+  double max_time_us = min_time_us + time_window_us;
 
-  RequestUpdate();
+  SetMinMax(min_time_us, max_time_us);
 }
 
 void TimeGraph::HorizontallyMoveIntoView(VisibilityType vis_type, uint64_t min, uint64_t max,
@@ -214,8 +233,10 @@ void TimeGraph::HorizontallyMoveIntoView(VisibilityType vis_type, const TimerInf
 void TimeGraph::UpdateHorizontalScroll(float ratio) {
   double time_span = GetCaptureTimeSpanUs();
   double time_window = max_time_us_ - min_time_us_;
-  min_time_us_ = ratio * (time_span - time_window);
-  max_time_us_ = min_time_us_ + time_window;
+  double min_time_us = ratio * (time_span - time_window);
+  double max_time_us = min_time_us + time_window;
+
+  SetMinMax(min_time_us, max_time_us);
 }
 
 double TimeGraph::GetTime(double ratio) const {
@@ -225,9 +246,6 @@ double TimeGraph::GetTime(double ratio) const {
 }
 
 void TimeGraph::ProcessTimer(const TimerInfo& timer_info, const InstrumentedFunction* function) {
-  capture_min_timestamp_ = std::min(capture_min_timestamp_, timer_info.start());
-  capture_max_timestamp_ = std::max(capture_max_timestamp_, timer_info.end());
-
   TrackManager* track_manager = GetTrackManager();
   // TODO(b/175869409): Change the way to create and get the tracks. Move this part to TrackManager.
   switch (timer_info.type()) {
@@ -368,9 +386,10 @@ void TimeGraph::ProcessAsyncTimer(const TimerInfo& timer_info) {
 }
 
 float TimeGraph::GetWorldFromTick(uint64_t time) const {
-  if (time_window_us_ > 0) {
+  double time_window_us = GetTimeWindowUs();
+  if (time_window_us > 0) {
     double start = TicksToMicroseconds(capture_min_timestamp_, time) - min_time_us_;
-    double normalized_start = start / time_window_us_;
+    double normalized_start = start / time_window_us;
     float pos = static_cast<float>(normalized_start * GetWidth());
     return pos;
   }
@@ -508,13 +527,7 @@ void TimeGraph::PrepareBatcherAndUpdatePrimitives(PickingMode picking_mode) {
 void TimeGraph::DoUpdateLayout() {
   CaptureViewElement::DoUpdateLayout();
 
-  capture_min_timestamp_ =
-      std::min(capture_min_timestamp_, capture_data_->GetCallstackData().min_time());
-  capture_max_timestamp_ =
-      std::max(capture_max_timestamp_, capture_data_->GetCallstackData().max_time());
-
-  time_window_us_ = max_time_us_ - min_time_us_;
-
+  UpdateCaptureMinMaxTimestamps();
   UpdateChildrenPosAndContainerSize();
 }
 
