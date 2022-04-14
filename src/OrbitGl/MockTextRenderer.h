@@ -33,9 +33,13 @@ class MockTextRenderer : public TextRenderer {
   [[nodiscard]] float GetStringWidth(const char* text, uint32_t font_size) override;
   [[nodiscard]] float GetStringHeight(const char* text, uint32_t font_size) override;
 
-  bool HasAddTextsSameLength() const { return num_characters_in_add_text_.size() <= 1; }
-  bool AreAddTextsAlignedVertically() const { return vertical_position_in_add_text.size() <= 1; }
-  const int GetNumAddTextCalls() const { return num_add_text_calls_; }
+  [[nodiscard]] bool HasAddTextsSameLength() const {
+    return num_characters_in_add_text_.size() <= 1;
+  }
+  [[nodiscard]] bool AreAddTextsAlignedVertically() const {
+    return vertical_position_in_add_text.size() <= 1;
+  }
+  [[nodiscard]] const int GetNumAddTextCalls() const { return num_add_text_calls_; }
   [[nodiscard]] bool IsTextInsideRectangle(Vec2 start, Vec2 size) const;
   [[nodiscard]] bool IsTextBetweenZLayers(float z_layer_min, float z_layer_max) const;
 

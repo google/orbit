@@ -79,13 +79,13 @@ float MockTextRenderer::GetStringHeight(const char* /*text*/, uint32_t font_size
 }
 
 [[nodiscard]] bool MockTextRenderer::IsTextInsideRectangle(Vec2 start, Vec2 size) const {
-  return IsInsideRectangle({min_point_[0], min_point_[1]}, start, size) &&
-         IsInsideRectangle({max_point_[0], max_point_[1]}, start, size);
+  return IsInsideRectangle(Vec3ToVec2(min_point_), start, size) &&
+         IsInsideRectangle(Vec3ToVec2(max_point_), start, size);
 }
 
 bool MockTextRenderer::IsTextBetweenZLayers(float z_layer_min, float z_layer_max) const {
-  return IsInBetween(min_point_[2], z_layer_min, z_layer_max) &&
-         IsInBetween(max_point_[2], z_layer_min, z_layer_max);
+  return IsElementOf(min_point_[2], ClosedInterval::FromValues(z_layer_min, z_layer_max)) &&
+         IsElementOf(max_point_[2], ClosedInterval::FromValues(z_layer_min, z_layer_max));
 }
 
 void MockTextRenderer::UpdateDrawingBoundaries(Vec3 point) {
