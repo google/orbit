@@ -127,7 +127,7 @@ void CaptureWindow::PreRender() {
     do {
       UpdateChildrenPosAndSize();
       time_graph_->UpdateLayout();
-    } while (time_graph_->LayoutHasChanged() || ++layout_loops < kMaxLayoutLoops);
+    } while (time_graph_->LayoutHasChanged() && ++layout_loops < kMaxLayoutLoops);
   }
 }
 
