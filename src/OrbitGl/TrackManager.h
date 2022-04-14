@@ -123,7 +123,7 @@ class TrackManager {
 
   // This intermediatly stores tracks that have been deleted from one of the track vectors above
   // so they can safely be removed from the list of sorted and visible tracks.
-  // This makes sure tracks are always removed during UpdateLayout(), so no elements retains
+  // This makes sure tracks are always removed during UpdateLayout(), so no elements retain
   // stale pointers returned in GetAllChildren() or GetNonHiddenChildren().
   std::vector<std::shared_ptr<Track>> deleted_tracks_;
 
