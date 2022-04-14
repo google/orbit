@@ -9,14 +9,11 @@
 
 namespace orbit_client_data {
 TEST(ScopeInfo, Hash) {
-  EXPECT_TRUE(
-      absl::VerifyTypeImplementsAbslHashCorrectly({ScopeInfo{},
-                                                   {"", ScopeType::kOther},
-                                                   {"", ScopeType::kHookedFunction},
-                                                   {"", ScopeType::kApiScope},
-                                                   {"kapiscope", ScopeType::kApiScope},
-                                                   {"kapiscope", ScopeType::kApiScopeAsync},
-                                                   {"kApiScope", ScopeType::kApiScope},
-                                                   {"kApiScope", ScopeType::kHookedFunction}}));
+  EXPECT_TRUE(absl::VerifyTypeImplementsAbslHashCorrectly(
+      {ScopeInfo{}, ScopeInfo{"", ScopeType::kOther}, ScopeInfo{"", ScopeType::kHookedFunction},
+       ScopeInfo{"", ScopeType::kApiScope}, ScopeInfo{"kapiscope", ScopeType::kApiScope},
+       ScopeInfo{"kapiscope", ScopeType::kApiScopeAsync},
+       ScopeInfo{"kApiScope", ScopeType::kApiScope},
+       ScopeInfo{"kApiScope", ScopeType::kHookedFunction}}));
 }
 }  // namespace orbit_client_data
