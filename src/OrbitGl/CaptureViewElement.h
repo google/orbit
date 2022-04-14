@@ -76,7 +76,7 @@ class CaptureViewElement : public Pickable, public AccessibleInterfaceProvider {
   [[nodiscard]] virtual uint32_t GetLayoutFlags() const { return kScaleHorizontallyWithParent; }
   [[nodiscard]] virtual float DetermineZOffset() const { return 0.f; }
 
-  [[nodiscard]] bool LayoutHasChanged() const { return layout_has_changed_; }
+  [[nodiscard]] bool HasLayoutChanged() const { return has_layout_changed_; }
 
  protected:
   struct DrawContext {
@@ -93,7 +93,7 @@ class CaptureViewElement : public Pickable, public AccessibleInterfaceProvider {
   bool picked_ = false;
   bool visible_ = true;
 
-  bool layout_has_changed_ = false;
+  bool has_layout_changed_ = false;
 
   void Draw(PrimitiveAssembler& primitive_assembler, TextRenderer& text_renderer,
             const DrawContext& draw_context);
