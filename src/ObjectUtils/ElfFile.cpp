@@ -38,6 +38,7 @@
 #include <vector>
 
 #include "GrpcProtos/symbol.pb.h"
+#include "Introspection/Introspection.h"
 #include "OrbitBase/File.h"
 #include "OrbitBase/Logging.h"
 #include "OrbitBase/ReadFileToString.h"
@@ -627,6 +628,7 @@ ErrorMessageOr<std::unique_ptr<ElfFile>> CreateElfFileFromBuffer(
 }
 
 ErrorMessageOr<std::unique_ptr<ElfFile>> CreateElfFile(const std::filesystem::path& file_path) {
+  ORBIT_SCOPE_FUNCTION;
   llvm::Expected<llvm::object::OwningBinary<llvm::object::ObjectFile>> object_file_or_error =
       llvm::object::ObjectFile::createObjectFile(file_path.string());
 

@@ -17,6 +17,7 @@
 #include <system_error>
 
 #include "GrpcProtos/symbol.pb.h"
+#include "Introspection/Introspection.h"
 #include "ObjectUtils/WindowsBuildIdUtils.h"
 #include "OrbitBase/Logging.h"
 #include "OrbitBase/Result.h"
@@ -230,6 +231,7 @@ ErrorMessageOr<std::unique_ptr<CoffFile>> CreateCoffFile(const std::filesystem::
 ErrorMessageOr<std::unique_ptr<CoffFile>> CreateCoffFile(
     const std::filesystem::path& file_path,
     llvm::object::OwningBinary<llvm::object::ObjectFile>&& file) {
+  ORBIT_SCOPE_FUNCTION;
   llvm::object::COFFObjectFile* coff_object_file =
       llvm::dyn_cast<llvm::object::COFFObjectFile>(file.getBinary());
   if (coff_object_file == nullptr) {
