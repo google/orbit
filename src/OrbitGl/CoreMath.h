@@ -21,7 +21,34 @@ using Vec4i = gte::Vector4<int>;
 
 using Color = gte::Vector4<unsigned char>;
 
+// TODO(b/229089446): Test these methods.
 [[nodiscard]] inline Vec2 Vec3ToVec2(const Vec3& v) { return {v[0], v[1]}; }
 [[nodiscard]] inline Vec3 Vec2ToVec3(Vec2 vertex, float z = 0) { return {vertex[0], vertex[1], z}; }
+
+namespace orbit_gl {
+
+struct ClosedInterval {
+  static ClosedInterval FromValues(float value_1, float value_2) {
+    return {std::min(value_1, value_2), std::max(value_1, value_2)};
+  }
+  float min;
+  float max;
+};
+
+[[nodiscard]] inline bool IsElementOf(float value, ClosedInterval closed_interval) {
+  return value >= closed_interval.min && value <= closed_interval.max;
+}
+
+[[nodiscard]] inline bool IsInsideRectangle(const Vec2& point, const Vec2& top_left,
+                                            const Vec2& size) {
+  for (int i = 0; i < 2; i++) {
+    if (!IsElementOf(point[i], ClosedInterval::FromValues(top_left[i], top_left[i] + size[i]))) {
+      return false;
+    }
+  }
+  return true;
+}
+
+}  // namespace orbit_gl
 
 #endif  // ORBIT_GL_CORE_MATH_H_
