@@ -73,7 +73,7 @@ class LiveFunctionsDataView : public DataView {
   uint64_t selected_scope_id_;
 
   enum ColumnIndex {
-    kColumnSelected,
+    kColumnType,
     kColumnName,
     kColumnCount,
     kColumnTimeTotal,

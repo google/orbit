@@ -21,8 +21,13 @@ class FunctionsDataView : public DataView {
   static const std::string kUnselectedFunctionString;
   static const std::string kSelectedFunctionString;
   static const std::string kFrameTrackString;
-  static std::string BuildSelectedColumnsString(AppInterface* app,
-                                                const orbit_client_data::FunctionInfo& function);
+  static const std::string kApiScopeType;
+  static const std::string kApiScopeAsyncType;
+  static const std::string kHookedFunctionType;
+  static std::string BuildTypeColumnsString(AppInterface* app,
+                                            const orbit_client_data::FunctionInfo& function);
+  static bool ShouldShowFrameTrackIcon(AppInterface* app,
+                                       const orbit_client_data::FunctionInfo& function);
 
   const std::vector<Column>& GetColumns() override;
   int GetDefaultSortingColumn() override { return kColumnAddressInModule; }
@@ -50,14 +55,12 @@ class FunctionsDataView : public DataView {
   };
 
  private:
+  static bool ShouldShowSelectedFunctionIcon(AppInterface* app,
+                                             const orbit_client_data::FunctionInfo& function);
   [[nodiscard]] const orbit_client_data::FunctionInfo* GetFunctionInfoFromRow(int row) override {
     return functions_[indices_[row]];
   }
 
-  static bool ShouldShowSelectedFunctionIcon(AppInterface* app,
-                                             const orbit_client_data::FunctionInfo& function);
-  static bool ShouldShowFrameTrackIcon(AppInterface* app,
-                                       const orbit_client_data::FunctionInfo& function);
   std::vector<const orbit_client_data::FunctionInfo*> functions_;
 };
 

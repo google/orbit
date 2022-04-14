@@ -173,6 +173,8 @@ TEST_F(FunctionsDataViewTest, ClearFunctionsRemovesAllElements) {
   ASSERT_EQ(view_.GetNumElements(), 0);
 }
 
+const std::string kSelectedFunctionIcon = "H";
+
 TEST_F(FunctionsDataViewTest, FunctionSelectionAppearsInFirstColumn) {
   bool function_selected = false;
   bool frame_track_enabled = false;
@@ -194,19 +196,19 @@ TEST_F(FunctionsDataViewTest, FunctionSelectionAppearsInFirstColumn) {
 
   function_selected = false;
   frame_track_enabled = false;
-  EXPECT_THAT(view_.GetValue(0, 0), testing::Not(testing::StartsWith("✓")));
+  EXPECT_THAT(view_.GetValue(0, 0), testing::Not(testing::StartsWith(kSelectedFunctionIcon)));
 
   function_selected = true;
   frame_track_enabled = false;
-  EXPECT_THAT(view_.GetValue(0, 0), testing::StartsWith("✓"));
+  EXPECT_THAT(view_.GetValue(0, 0), testing::StartsWith(kSelectedFunctionIcon));
 
   function_selected = false;
   frame_track_enabled = false;
-  EXPECT_THAT(view_.GetValue(0, 0), testing::Not(testing::StartsWith("✓")));
+  EXPECT_THAT(view_.GetValue(0, 0), testing::Not(testing::StartsWith(kSelectedFunctionIcon)));
 
   function_selected = true;
   frame_track_enabled = true;
-  EXPECT_THAT(view_.GetValue(0, 0), testing::StartsWith("✓"));
+  EXPECT_THAT(view_.GetValue(0, 0), testing::StartsWith(kSelectedFunctionIcon));
 }
 
 TEST_F(FunctionsDataViewTest, FrameTrackSelectionAppearsInFirstColumn) {

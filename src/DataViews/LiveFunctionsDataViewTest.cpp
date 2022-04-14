@@ -3,6 +3,7 @@
 // found in the LICENSE file.
 
 #include <absl/container/flat_hash_map.h>
+#include <absl/strings/str_cat.h>
 #include <absl/strings/str_format.h>
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
@@ -285,6 +286,9 @@ TEST_F(LiveFunctionsDataViewTest, ColumnValuesAreCorrect) {
   EXPECT_EQ(view_.GetValue(0, kColumnStdDev), GetExpectedDisplayTime(kStdDevNs[0]));
 }
 
+const std::string kSelectedFunctionIcon = "H";
+const std::string kDynamicallyInstumentedFunctionIcon = "D";
+
 TEST_F(LiveFunctionsDataViewTest, ColumnSelectedShowsRightResults) {
   bool function_selected = false;
   bool frame_track_enabled = false;
@@ -300,17 +304,20 @@ TEST_F(LiveFunctionsDataViewTest, ColumnSelectedShowsRightResults) {
       .WillRepeatedly(testing::ReturnPointee(&frame_track_enabled));
 
   AddFunctionsByIndices({0});
-  EXPECT_EQ(view_.GetValue(0, kColumnSelected), "");
+  EXPECT_EQ(view_.GetValue(0, kColumnSelected), "D");
 
   function_selected = true;
-  EXPECT_EQ(view_.GetValue(0, kColumnSelected), "✓");
+  EXPECT_EQ(view_.GetValue(0, kColumnSelected),
+            absl::StrCat(kSelectedFunctionIcon, " ", kDynamicallyInstumentedFunctionIcon));
 
   function_selected = false;
   frame_track_enabled = true;
-  EXPECT_EQ(view_.GetValue(0, kColumnSelected), "F");
+  EXPECT_EQ(view_.GetValue(0, kColumnSelected),
+            absl::StrCat("F ", kDynamicallyInstumentedFunctionIcon));
 
   function_selected = true;
-  EXPECT_EQ(view_.GetValue(0, kColumnSelected), "✓ F");
+  EXPECT_EQ(view_.GetValue(0, kColumnSelected),
+            absl::StrCat(kSelectedFunctionIcon, " F ", kDynamicallyInstumentedFunctionIcon));
 }
 
 TEST_F(LiveFunctionsDataViewTest, ContextMenuEntriesArePresentCorrectly) {
@@ -442,9 +449,9 @@ TEST_F(LiveFunctionsDataViewTest, ContextMenuActionsAreInvoked) {
   // Copy Selection
   {
     std::string expected_clipboard = absl::StrFormat(
-        "Hooked\tFunction\tCount\tTotal\tAvg\tMin\tMax\tStd Dev\tModule\tAddress\n"
-        "\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\n",
-        kPrettyNames[0], GetExpectedDisplayCount(kCounts[0]),
+        "Type\tFunction\tCount\tTotal\tAvg\tMin\tMax\tStd Dev\tModule\tAddress\n"
+        "%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\n",
+        kDynamicallyInstumentedFunctionIcon, kPrettyNames[0], GetExpectedDisplayCount(kCounts[0]),
         GetExpectedDisplayTime(kTotalTimeNs[0]), GetExpectedDisplayTime(kAvgTimeNs[0]),
         GetExpectedDisplayTime(kMinNs[0]), GetExpectedDisplayTime(kMaxNs[0]),
         GetExpectedDisplayTime(kStdDevNs[0]), kModulePaths[0],
@@ -455,11 +462,11 @@ TEST_F(LiveFunctionsDataViewTest, ContextMenuActionsAreInvoked) {
   // Export to CSV
   {
     std::string expected_contents = absl::StrFormat(
-        R"("Hooked","Function","Count","Total","Avg","Min","Max","Std Dev","Module","Address")"
+        R"("Type","Function","Count","Total","Avg","Min","Max","Std Dev","Module","Address")"
         "\r\n"
-        R"("","%s","%s","%s","%s","%s","%s","%s","%s","%s")"
+        R"("%s","%s","%s","%s","%s","%s","%s","%s","%s","%s")"
         "\r\n",
-        kPrettyNames[0], GetExpectedDisplayCount(kCounts[0]),
+        kDynamicallyInstumentedFunctionIcon, kPrettyNames[0], GetExpectedDisplayCount(kCounts[0]),
         GetExpectedDisplayTime(kTotalTimeNs[0]), GetExpectedDisplayTime(kAvgTimeNs[0]),
         GetExpectedDisplayTime(kMinNs[0]), GetExpectedDisplayTime(kMaxNs[0]),
         GetExpectedDisplayTime(kStdDevNs[0]), kModulePaths[0],

@@ -23,7 +23,8 @@ from test_cases.capture_window import Capture
 from test_cases.live_tab import VerifyFunctionCallCount
 
 Module = namedtuple("Module", ["name", "path", "is_loaded"])
-CACHE_LOCATION = "{appdata}\\OrbitProfiler\\cache\\".format(appdata=os.getenv('APPDATA'))
+CACHE_LOCATION = "{appdata}\\OrbitProfiler\\cache\\".format(
+    appdata=os.getenv('APPDATA'))
 
 
 def _show_symbols_and_functions_tabs(top_window):
@@ -54,7 +55,8 @@ def _find_and_close_error_dialog(top_window) -> str or None:
     if not module_path:
         return None
 
-    logging.info("Found error dialog for module {path}, closing.".format(path=module_path))
+    logging.info(
+        "Found error dialog for module {path}, closing.".format(path=module_path))
     find_control(window, 'Button', 'Cancel').click_input()
     return module_path
 
@@ -68,7 +70,8 @@ class ClearSymbolCache(E2ETestCase):
     """
 
     def _execute(self):
-        logging.info("Clearing symbol cache at {location}".format(location=CACHE_LOCATION))
+        logging.info("Clearing symbol cache at {location}".format(
+            location=CACHE_LOCATION))
         for file in os.listdir(CACHE_LOCATION):
             full_path = os.path.join(CACHE_LOCATION, file)
             if os.path.isfile(full_path):
@@ -98,7 +101,8 @@ class LoadAllSymbolsAndVerifyCache(E2ETestCase):
             Violating those conditions will result in test failure.
         """
         _show_symbols_and_functions_tabs(self.suite.top_window())
-        self._modules_dataview = DataViewPanel(self.find_control("Group", "ModulesDataView"))
+        self._modules_dataview = DataViewPanel(
+            self.find_control("Group", "ModulesDataView"))
         self._load_all_modules()
 
         modules_loading_result = self._wait_for_loading_and_collect_errors()
@@ -108,7 +112,8 @@ class LoadAllSymbolsAndVerifyCache(E2ETestCase):
 
         modules = self._gather_module_states()
         self._verify_all_modules_are_cached(modules)
-        self._verify_all_errors_were_raised(modules, modules_loading_result.errors)
+        self._verify_all_errors_were_raised(
+            modules, modules_loading_result.errors)
         logging.info("Done. Loading time: {time:.2f}s, module errors: {errors}".format(
             time=modules_loading_result.time, errors=modules_loading_result.errors))
 
@@ -143,13 +148,15 @@ class LoadAllSymbolsAndVerifyCache(E2ETestCase):
                 [module.name for module in module_set]))
 
     def _verify_all_errors_were_raised(self, all_modules: List[Module], errors: List[str]):
-        modules_not_loaded = set([module.path for module in all_modules if not module.is_loaded])
+        modules_not_loaded = set(
+            [module.path for module in all_modules if not module.is_loaded])
         error_set = set(errors)
         for module in modules_not_loaded:
             self.expect_true(module in error_set,
                              'Error has been raised for module {}'.format(module))
             error_set.remove(module)
-        self.expect_eq(0, len(error_set), 'All errors raised resulted in non-loadable modules')
+        self.expect_eq(0, len(error_set),
+                       'All errors raised resulted in non-loadable modules')
 
     def _wait_for_loading_and_collect_errors(self) -> ModulesLoadingResult:
         assume_loading_complete = 0
@@ -166,8 +173,10 @@ class LoadAllSymbolsAndVerifyCache(E2ETestCase):
             # show an error dialog. Then check if any of those is visible.
             # If not, try a few more times to make sure we didn't just accidentally query the UI while the status
             # message was being updated.
-            error_module = _find_and_close_error_dialog(self.suite.top_window())
-            status_message = self.find_control('StatusBar', recurse=False).texts()[0]
+            error_module = _find_and_close_error_dialog(
+                self.suite.top_window())
+            status_message = self.find_control(
+                'StatusBar', recurse=False).texts()[0]
             if "Copying debug info file" not in status_message and "Loading symbols" not in status_message:
                 status_message = None
 
@@ -186,7 +195,8 @@ class LoadAllSymbolsAndVerifyCache(E2ETestCase):
     def _gather_module_states(self) -> List[Module]:
         result = []
         for i in range(0, self._modules_dataview.get_row_count()):
-            is_loaded = self._modules_dataview.get_item_at(i, 0).texts()[0] == "*"
+            is_loaded = self._modules_dataview.get_item_at(i, 0).texts()[
+                0] == "*"
             name = self._modules_dataview.get_item_at(i, 1).texts()[0]
             path = self._modules_dataview.get_item_at(i, 2).texts()[0]
             result.append(Module(name, path, is_loaded))
@@ -235,8 +245,10 @@ class ForceAndVerifySymbolUpdate(E2ETestCase):
 
         Both modules need to exist in the local cache.
         """
-        dst_module = os.path.join(CACHE_LOCATION, full_module_path.replace("/", "_"))
-        src_module = os.path.join(CACHE_LOCATION, replace_with_module.replace("/", "_"))
+        dst_module = os.path.join(
+            CACHE_LOCATION, full_module_path.replace("/", "_"))
+        src_module = os.path.join(
+            CACHE_LOCATION, replace_with_module.replace("/", "_"))
         old_size = os.stat(dst_module).st_size
 
         os.unlink(os.path.join(CACHE_LOCATION, dst_module))
@@ -265,8 +277,10 @@ class LoadSymbols(E2ETestCase):
         """
         _show_symbols_and_functions_tabs(self.suite.top_window())
 
-        logging.info('Start loading symbols for module %s', module_search_string)
-        modules_dataview = DataViewPanel(self.find_control("Group", "ModulesDataView"))
+        logging.info('Start loading symbols for module %s',
+                     module_search_string)
+        modules_dataview = DataViewPanel(
+            self.find_control("Group", "ModulesDataView"))
 
         logging.info('Waiting for module list to be populated...')
         wait_for_condition(lambda: modules_dataview.get_row_count() > 0, 100)
@@ -287,7 +301,8 @@ class LoadSymbols(E2ETestCase):
             wait_for_condition(
                 lambda: _find_and_close_error_dialog(self.suite.top_window()) is not None)
         else:
-            wait_for_condition(lambda: modules_dataview.get_item_at(0, 0).texts()[0] == "*", 100)
+            wait_for_condition(lambda: modules_dataview.get_item_at(
+                0, 0).texts()[0] == "*", 100)
 
         VerifySymbolsLoaded(symbol_search_string=module_search_string,
                             expect_loaded=not expect_fail).execute(self.suite)
@@ -303,13 +318,15 @@ class VerifyModuleLoaded(E2ETestCase):
 
         logging.info('Start verifying module %s is %s.', module_search_string,
                      "loaded" if expect_loaded else "not loaded")
-        modules_dataview = DataViewPanel(self.find_control("Group", "ModulesDataView"))
+        modules_dataview = DataViewPanel(
+            self.find_control("Group", "ModulesDataView"))
         wait_for_condition(lambda: modules_dataview.get_row_count() > 0, 100)
         modules_dataview.filter.set_focus()
         modules_dataview.filter.set_edit_text('')
         send_keys(module_search_string)
         wait_for_condition(lambda: modules_dataview.get_row_count() > 0)
-        self.expect_true('*' in modules_dataview.get_item_at(0, 0).texts()[0], 'Module is loaded.')
+        self.expect_true('*' in modules_dataview.get_item_at(0,
+                         0).texts()[0], 'Module is loaded.')
 
 
 class VerifySymbolsLoaded(E2ETestCase):
@@ -318,7 +335,8 @@ class VerifySymbolsLoaded(E2ETestCase):
         logging.info(
             'Start verifying symbols with substring %s are {}loaded'.format(
                 "" if expect_loaded else "not "), symbol_search_string)
-        functions_dataview = DataViewPanel(self.find_control("Group", "FunctionsDataView"))
+        functions_dataview = DataViewPanel(
+            self.find_control("Group", "FunctionsDataView"))
 
         logging.info('Filtering symbols')
         functions_dataview.filter.set_focus()
@@ -327,11 +345,16 @@ class VerifySymbolsLoaded(E2ETestCase):
         if expect_loaded:
             logging.info('Verifying at least one symbol with substring %s has been loaded',
                          symbol_search_string)
-            self.expect_true(functions_dataview.get_row_count() > 1, "Found expected symbol(s)")
+            self.expect_true(functions_dataview.get_row_count()
+                             > 1, "Found expected symbol(s)")
         else:
             logging.info('Verifying no symbols with substring %s has been loaded',
                          symbol_search_string)
-            self.expect_true(functions_dataview.get_row_count() == 0, "Found no symbols")
+            self.expect_true(functions_dataview.get_row_count()
+                             == 0, "Found no symbols")
+
+
+selected_function_icon = 'H'
 
 
 class FilterAndHookFunction(E2ETestCase):
@@ -342,8 +365,10 @@ class FilterAndHookFunction(E2ETestCase):
     def _execute(self, function_search_string):
         _show_symbols_and_functions_tabs(self.suite.top_window())
 
-        logging.info('Hooking function based on search "%s"', function_search_string)
-        functions_dataview = DataViewPanel(self.find_control("Group", "FunctionsDataView"))
+        logging.info('Hooking function based on search "%s"',
+                     function_search_string)
+        functions_dataview = DataViewPanel(
+            self.find_control("Group", "FunctionsDataView"))
 
         logging.info('Waiting for function list to be populated...')
         wait_for_condition(lambda: functions_dataview.get_row_count() > 0, 100)
@@ -356,7 +381,8 @@ class FilterAndHookFunction(E2ETestCase):
         functions_dataview.get_item_at(0, 0).click_input('right')
 
         self.find_context_menu_item('Hook').click_input()
-        wait_for_condition(lambda: '✓' in functions_dataview.get_item_at(0, 0).texts()[0])
+        wait_for_condition(
+            lambda: selected_function_icon in functions_dataview.get_item_at(0, 0).texts()[0])
 
 
 class FilterAndEnableFrameTrackForFunction(E2ETestCase):
@@ -369,7 +395,8 @@ class FilterAndEnableFrameTrackForFunction(E2ETestCase):
 
         logging.info('Enabling frame track for function based on search "%s"',
                      function_search_string)
-        functions_dataview = DataViewPanel(self.find_control("Group", "FunctionsDataView"))
+        functions_dataview = DataViewPanel(
+            self.find_control("Group", "FunctionsDataView"))
 
         logging.info('Waiting for function list to be populated...')
         wait_for_condition(lambda: functions_dataview.get_row_count() > 0, 100)
@@ -382,7 +409,8 @@ class FilterAndEnableFrameTrackForFunction(E2ETestCase):
         functions_dataview.get_item_at(0, 0).click_input('right')
 
         self.find_context_menu_item('Enable frame track(s)').click_input()
-        wait_for_condition(lambda: '✓ F' in functions_dataview.get_item_at(0, 0).texts()[0])
+        wait_for_condition(
+            lambda: selected_function_icon + ' F' in functions_dataview.get_item_at(0, 0).texts()[0])
 
 
 class UnhookAllFunctions(E2ETestCase):
@@ -393,7 +421,8 @@ class UnhookAllFunctions(E2ETestCase):
     def _execute(self):
         _show_symbols_and_functions_tabs(self.suite.top_window())
 
-        functions_dataview = DataViewPanel(self.find_control("Group", "FunctionsDataView"))
+        functions_dataview = DataViewPanel(
+            self.find_control("Group", "FunctionsDataView"))
         logging.info('Waiting for function list to be populated...')
         wait_for_condition(lambda: functions_dataview.get_row_count() > 0, 100)
         functions_dataview.filter.set_focus()
@@ -413,8 +442,10 @@ class FilterAndHookMultipleFunctions(E2ETestCase):
     def _execute(self, function_search_string):
         _show_symbols_and_functions_tabs(self.suite.top_window())
 
-        logging.info('Hooking functions based on search "%s"', function_search_string)
-        functions_dataview = DataViewPanel(self.find_control("Group", "FunctionsDataView"))
+        logging.info('Hooking functions based on search "%s"',
+                     function_search_string)
+        functions_dataview = DataViewPanel(
+            self.find_control("Group", "FunctionsDataView"))
 
         logging.info('Waiting for function list to be populated...')
         wait_for_condition(lambda: functions_dataview.get_row_count() > 0, 100)
@@ -428,7 +459,8 @@ class FilterAndHookMultipleFunctions(E2ETestCase):
         for i in range(functions_dataview.get_row_count()):
             functions_dataview.get_item_at(i, 0).click_input('right')
             self.find_context_menu_item('Hook').click_input()
-            wait_for_condition(lambda: '✓' in functions_dataview.get_item_at(i, 0).texts()[0])
+            wait_for_condition(
+                lambda: selected_function_icon in functions_dataview.get_item_at(i, 0).texts()[0])
 
 
 class LoadAndVerifyHelloGgpPreset(E2ETestCase):
@@ -453,30 +485,36 @@ class LoadAndVerifyHelloGgpPreset(E2ETestCase):
                                 max_calls=3000).execute(self.suite)
 
     def _load_presets(self):
-        presets_panel = DataViewPanel(self.find_control('Group', 'PresetsDataView'))
+        presets_panel = DataViewPanel(
+            self.find_control('Group', 'PresetsDataView'))
 
         draw_frame_preset_row = presets_panel.find_first_item_row('draw_frame_in_hello_ggp_1_68', 1,
                                                                   True)
         issue_frame_token_preset_row = presets_panel.find_first_item_row(
             'ggp_issue_frame_token_in_hello_ggp_1_68', 1, True)
 
-        self.expect_true(draw_frame_preset_row is not None, 'Found draw_frame preset')
+        self.expect_true(draw_frame_preset_row is not None,
+                         'Found draw_frame preset')
         self.expect_true(issue_frame_token_preset_row is not None,
                          'Found ggp_issue_frame_token preset')
 
-        presets_panel.get_item_at(draw_frame_preset_row, 0).click_input(button='right')
+        presets_panel.get_item_at(
+            draw_frame_preset_row, 0).click_input(button='right')
         self.find_context_menu_item('Load Preset').click_input()
         logging.info('Loaded Preset DrawFrame')
 
-        presets_panel.get_item_at(issue_frame_token_preset_row, 0).click_input(button='right')
+        presets_panel.get_item_at(
+            issue_frame_token_preset_row, 0).click_input(button='right')
         self.find_context_menu_item('Load Preset').click_input()
         logging.info('Loaded Preset GgpIssueFrameToken')
 
     def _try_verify_functions_are_hooked(self):
         logging.info('Finding rows in the function list')
-        functions_panel = DataViewPanel(self.find_control('Group', 'FunctionsDataViewD'))
+        functions_panel = DataViewPanel(
+            self.find_control('Group', 'FunctionsDataViewD'))
         draw_frame_row = functions_panel.find_first_item_row('DrawFrame', 1)
-        issue_frame_token_row = functions_panel.find_first_item_row('GgpIssueFrameToken', 1)
+        issue_frame_token_row = functions_panel.find_first_item_row(
+            'GgpIssueFrameToken', 1)
 
         if draw_frame_row is None:
             return False
@@ -484,9 +522,9 @@ class LoadAndVerifyHelloGgpPreset(E2ETestCase):
             return False
 
         logging.info('Verifying hook status of functions')
-        self.expect_true('✓' in functions_panel.get_item_at(draw_frame_row, 0).texts()[0],
+        self.expect_true(selected_function_icon in functions_panel.get_item_at(draw_frame_row, 0).texts()[0],
                          'DrawFrame is marked as hooked')
-        self.expect_true('✓' in functions_panel.get_item_at(issue_frame_token_row, 0).texts()[0],
+        self.expect_true(selected_function_icon in functions_panel.get_item_at(issue_frame_token_row, 0).texts()[0],
                          'GgpIssueFrameToken is marked as hooked')
 
         return True
@@ -494,22 +532,23 @@ class LoadAndVerifyHelloGgpPreset(E2ETestCase):
 
 class VerifyFunctionHooked(E2ETestCase):
     """
-    Verfify wether or not function is hooked in the functions table in the symbols tab.
+    Verify whether or not function is hooked in the functions table in the symbols tab.
     """
 
     def _execute(self, function_search_string: str, expect_hooked: bool = True):
         _show_symbols_and_functions_tabs(self.suite.top_window())
 
-        functions_dataview = DataViewPanel(self.find_control("Group", "FunctionsDataView"))
+        functions_dataview = DataViewPanel(
+            self.find_control("Group", "FunctionsDataView"))
         functions_dataview.filter.set_focus()
         functions_dataview.filter.set_edit_text('')
         send_keys(function_search_string)
         row = functions_dataview.find_first_item_row(function_search_string, 1)
         if expect_hooked:
-            self.expect_true('✓' in functions_dataview.get_item_at(row, 0).texts()[0],
+            self.expect_true(selected_function_icon in functions_dataview.get_item_at(row, 0).texts()[0],
                              'Function is marked as hooked.')
         else:
-            self.expect_true('✓' not in functions_dataview.get_item_at(row, 0).texts()[0],
+            self.expect_true(selected_function_icon not in functions_dataview.get_item_at(row, 0).texts()[0],
                              'Function is not marked as hooked.')
 
 
@@ -527,14 +566,16 @@ class VerifyPresetStatus(E2ETestCase):
     def _execute(self, preset_name: str, expected_status: PresetStatus):
         _show_symbols_and_functions_tabs(self.suite.top_window())
 
-        presets_panel = DataViewPanel(self.find_control('Group', 'PresetsDataView'))
+        presets_panel = DataViewPanel(
+            self.find_control('Group', 'PresetsDataView'))
         preset_row = presets_panel.find_first_item_row(preset_name, 1, True)
         self.expect_true(preset_row is not None, 'Found preset.')
         status_text = presets_panel.get_item_at(preset_row, 0).texts()[0]
         if expected_status is PresetStatus.LOADABLE:
             self.expect_true('Yes' in status_text, 'Preset is loadable.')
         if expected_status is PresetStatus.PARTIALLY_LOADABLE:
-            self.expect_true('Partially' in status_text, 'Preset is partially loadable.')
+            self.expect_true('Partially' in status_text,
+                             'Preset is partially loadable.')
         if expected_status is PresetStatus.NOT_LOADABLE:
             self.expect_true('No' in status_text, 'Preset is not loadable.')
 
@@ -547,23 +588,27 @@ class LoadPreset(E2ETestCase):
     def _execute(self, preset_name: str):
         _show_symbols_and_functions_tabs(self.suite.top_window())
 
-        presets_panel = DataViewPanel(self.find_control('Group', 'PresetsDataView'))
+        presets_panel = DataViewPanel(
+            self.find_control('Group', 'PresetsDataView'))
         preset_row = presets_panel.find_first_item_row(preset_name, 1, True)
         self.expect_true(preset_row is not None, 'Found preset.')
         status_text = presets_panel.get_item_at(preset_row, 0).texts()[0]
 
         if 'No' in status_text:
-            app_menu = self.suite.top_window().descendants(control_type="MenuBar")[1]
+            app_menu = self.suite.top_window().descendants(
+                control_type="MenuBar")[1]
             app_menu.item_by_path("File->Open Preset...").click_input()
             dialog = self.suite.top_window().child_window(title_re="Select a file*")
             dialog.FileNameEdit.type_keys(preset_name)
             dialog.FileNameEdit.type_keys('{DOWN}{ENTER}')
 
-            message_box = self.suite.top_window().child_window(title_re="Preset loading failed*")
+            message_box = self.suite.top_window().child_window(
+                title_re="Preset loading failed*")
             self.expect_true(message_box is not None, 'Message box found.')
             message_box.Ok.click()
         else:
-            presets_panel.get_item_at(preset_row, 0).click_input(button='right')
+            presets_panel.get_item_at(
+                preset_row, 0).click_input(button='right')
             self.find_context_menu_item('Load Preset').click_input()
             logging.info('Loaded preset: %s', preset_name)
 
@@ -580,7 +625,8 @@ class SavePreset(E2ETestCase):
     """
 
     def _execute(self, preset_name: str):
-        app_menu = self.suite.top_window().descendants(control_type="MenuBar")[1]
+        app_menu = self.suite.top_window().descendants(
+            control_type="MenuBar")[1]
         app_menu.item_by_path("File->Save Preset As ...").click_input()
         dialog = self.suite.top_window().child_window(title_re="Specify*")
         dialog.FileNameCombo.type_keys(preset_name)
@@ -602,8 +648,10 @@ class ShowSourceCode(E2ETestCase):
     def _provoke_goto_source_action(self, function_search_string: str):
         _show_symbols_and_functions_tabs(self.suite.top_window())
 
-        logging.info('Start showing source code for function {}'.format(function_search_string))
-        functions_dataview = DataViewPanel(self.find_control("Group", "FunctionsDataView"))
+        logging.info('Start showing source code for function {}'.format(
+            function_search_string))
+        functions_dataview = DataViewPanel(
+            self.find_control("Group", "FunctionsDataView"))
 
         logging.info('Waiting for function list to be populated...')
         wait_for_condition(lambda: functions_dataview.get_row_count() > 0, 100)
@@ -647,7 +695,8 @@ class ShowSourceCode(E2ETestCase):
 
         wait_for_condition(lambda: get_file_open_dialog().is_visible())
         file_open_dialog = get_file_open_dialog()
-        logging.info("File Open Dialog is now visible. Looking for file edit...")
+        logging.info(
+            "File Open Dialog is now visible. Looking for file edit...")
 
         logging.info("File Edit was found. Entering file path...")
         file_edit = self.find_control(control_type="Edit",
@@ -677,7 +726,8 @@ class ShowSourceCode(E2ETestCase):
     def _handle_source_code_dialog(self):
         logging.info("Waiting for the source code dialog.")
 
-        source_code_dialog = self.suite.application.window(auto_id="CodeViewerDialog")
+        source_code_dialog = self.suite.application.window(
+            auto_id="CodeViewerDialog")
         source_code_dialog.wait('visible')
 
         logging.info("Found source code dialog. Checking contents...")
