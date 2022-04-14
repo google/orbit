@@ -8,7 +8,7 @@
 
 void orbit_gl::TranslationStack::PushTranslation(float x, float y, float z) {
   translation_stack_.push_back(current_translation_);
-  current_translation_.shape += Vec2(x, y);
+  current_translation_.xy += Vec2(x, y);
   current_translation_.z += z;
 }
 

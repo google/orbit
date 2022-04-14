@@ -31,10 +31,10 @@ void OpenGlBatcher::AddLine(Vec2 from, Vec2 to, float z, const Color& color,
   Line line;
   LayeredVec2 translated_start_with_z =
       translations_.TranslateXYZAndFloorXY({{from[0], from[1]}, z});
-  line.start_point = translated_start_with_z.shape;
+  line.start_point = translated_start_with_z.xy;
   const float layer_z_value = translated_start_with_z.z;
 
-  line.end_point = translations_.TranslateXYZAndFloorXY({{to[0], to[1]}, z}).shape;
+  line.end_point = translations_.TranslateXYZAndFloorXY({{to[0], to[1]}, z}).xy;
   // TODO(b/195386885) This is a hack to address the issue that some horizontal lines in the graph
   // tracks are missing. We need a better solution for this issue.
   MoveLineToPixelCenterIfHorizontal(line);
@@ -52,7 +52,7 @@ void OpenGlBatcher::AddBox(const Quad& box, float z, const std::array<Color, 4>&
   float layer_z_value{};
   for (size_t v = 0; v < 4; ++v) {
     LayeredVec2 layered_vec2 = translations_.TranslateXYZAndFloorXY({rounded_box.vertices[v], z});
-    rounded_box.vertices[v] = layered_vec2.shape;
+    rounded_box.vertices[v] = layered_vec2.xy;
     layer_z_value = layered_vec2.z;
   }
 
@@ -70,7 +70,7 @@ void OpenGlBatcher::AddTriangle(const Triangle& triangle, float z,
   float layer_z_value{};
   for (auto& vertex : rounded_tri.vertices) {
     LayeredVec2 layered_vec2 = translations_.TranslateXYZAndFloorXY({vertex, z});
-    vertex = layered_vec2.shape;
+    vertex = layered_vec2.xy;
     layer_z_value = layered_vec2.z;
   }
   auto& buffer = primitive_buffers_by_layer_[layer_z_value];

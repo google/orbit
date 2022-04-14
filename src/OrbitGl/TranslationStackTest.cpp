@@ -9,7 +9,7 @@
 
 namespace orbit_gl {
 static void ExpectEqualHasZ(const LayeredVec2& expected, const LayeredVec2& actual) {
-  EXPECT_EQ(expected.shape, actual.shape);
+  EXPECT_EQ(expected.xy, actual.xy);
   EXPECT_EQ(expected.z, actual.z);
 }
 
@@ -25,7 +25,7 @@ TEST(TranslationStack, PushAndPop) {
   LayeredVec2 result = stack.TranslateXYZAndFloorXY(orig);
   ExpectEqualHasZ(orig_result, result);
 
-  stack.PushTranslation(trans.shape[0], trans.shape[1], trans.z);
+  stack.PushTranslation(trans.xy[0], trans.xy[1], trans.z);
   result = stack.TranslateXYZAndFloorXY(orig);
   ExpectEqualHasZ(trans_result, result);
 

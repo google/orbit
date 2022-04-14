@@ -267,11 +267,11 @@ void OpenGlTextRenderer::AddTextInternal(const char* text, ftgl::vec2* pen,
       float kerning = (i == 0) ? 0.0f : texture_glyph_get_kerning(glyph, text + i - 1);
       pen->x += kerning;
 
-      orbit_gl::LayeredVec2 pos0has_z = translations_.TranslateXYZAndFloorXY(
+      orbit_gl::LayeredVec2 pos0_layered = translations_.TranslateXYZAndFloorXY(
           {{pen->x + glyph->offset_x, pen->y - glyph->offset_y}, z});
-      const Vec2& pos0 = pos0has_z.shape;
+      const Vec2& pos0 = pos0_layered.xy;
       Vec2 pos1 = Vec2(pos0[0] + glyph->width, pos0[1] + glyph->height);
-      const float transformed_z = pos0has_z.z;
+      const float transformed_z = pos0_layered.z;
 
       float s0 = glyph->s0;
       float t0 = glyph->t0;
