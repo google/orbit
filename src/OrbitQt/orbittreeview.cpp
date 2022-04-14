@@ -5,6 +5,7 @@
 #include "orbittreeview.h"
 
 #include <glad/glad.h>
+#include <qitemselectionmodel.h>
 #include <stddef.h>
 
 #include <QAbstractItemView>
@@ -153,16 +154,19 @@ void OrbitTreeView::Refresh(RefreshMode refresh_mode) {
   }
 
   // Re-select previous selection
-  QItemSelectionModel* selection = selectionModel();
-  QModelIndex index;
   // Don't re-trigger row selection callback when re-selecting.
   is_internal_refresh_ = true;
   std::vector<int> visible_selected_indices = model_->GetVisibleSelectedIndices();
-  selection->clearSelection();
+
+  QModelIndex index;
+  QItemSelection selection{};
   for (int row : visible_selected_indices) {
     index = model_->CreateIndex(row, 0);
-    selection->select(index, QItemSelectionModel::Select | QItemSelectionModel::Rows);
+    selection.select(index, index);
   }
+  selectionModel()->select(selection, QItemSelectionModel::Select | QItemSelectionModel::Rows |
+                                          QItemSelectionModel::Clear);
+
   is_internal_refresh_ = false;
 
   model_->GetDataView()->OnRefresh(visible_selected_indices, refresh_mode);
