@@ -75,6 +75,8 @@ uint64_t NameEqualityScopeIdProvider::ProvideId(const TimerInfo& timer_info) {
   // released.
   if (!absl::GetFlag(FLAGS_devmode)) return kInvalidScopeId;
 
+  ORBIT_CHECK(scope_type == ScopeType::kApiScope || scope_type == ScopeType::kApiScopeAsync);
+
   const ScopeInfo scope_info{timer_info.api_scope_name(), scope_type};
 
   const auto it = scope_info_to_id_.find(scope_info);
