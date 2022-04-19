@@ -27,7 +27,8 @@ void TimelineUi::RenderLines(PrimitiveAssembler& primitive_assembler, uint64_t m
     int screen_x = viewport_->WorldToScreen(Vec2(world_x, 0))[0];
     primitive_assembler.AddVerticalLine(
         Vec2(screen_x, GetPos()[1]), GetHeightWithoutMargin(), GlCanvas::kZValueTimeBar,
-        tick_type == TimelineTicks::TickType::kMajorTick ? kMajorTickColor : kMinorTickColor);
+        tick_type == TimelineTicks::TickType::kMajorTick ? kTimelineMajorTickColor
+                                                         : kTimelineMinorTickColor);
   }
 }
 

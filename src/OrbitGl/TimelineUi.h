@@ -13,8 +13,8 @@ namespace orbit_gl {
 
 namespace {
 
-const Color kMajorTickColor(255, 254, 253, 255);
-const Color kMinorTickColor(255, 254, 253, 63);
+inline Color kTimelineMajorTickColor(255, 254, 253, 255);
+inline Color kTimelineMinorTickColor(255, 254, 253, 63);
 
 }  // namespace
 

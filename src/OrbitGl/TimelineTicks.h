@@ -16,6 +16,8 @@ constexpr uint64_t kNanosecondsPerMicrosecond = 1000;
 constexpr uint64_t kNanosecondsPerSecond = 1000 * 1000 * 1000;
 constexpr uint64_t kNanosecondsPerMinute = 60 * kNanosecondsPerSecond;
 constexpr uint64_t kNanosecondsPerHour = 60 * kNanosecondsPerMinute;
+constexpr uint64_t kNanosecondsPerDay = 24 * kNanosecondsPerHour;
+constexpr uint64_t kNanosecondsPerMonth = 30 * kNanosecondsPerDay;
 
 // TimelineTicks class manages the logic about the ticks, scale and visible timestamps in the
 // timeline.
