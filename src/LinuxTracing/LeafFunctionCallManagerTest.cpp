@@ -219,7 +219,7 @@ TEST_F(
 
   // We expect `kStackDumpSize` here as size, as we do not want libunwindstack
   // to read out of bounds.
-  EXPECT_CALL(unwinder_, Unwind(event_data.pid, &fake_maps, _, _, kStackDumpSize * 2, _, _))
+  EXPECT_CALL(unwinder_, Unwind(event_data.pid, &fake_maps, _, _, kStackDumpSize, _, _))
       .Times(1)
       .WillOnce(Return(LibunwindstackResult{libunwindstack_callstack,
                                             unwindstack::ErrorCode::ERROR_INVALID_MAP}));
