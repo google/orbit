@@ -16,7 +16,10 @@
 
 #include "GrpcProtos/module.pb.h"
 #include "ObjectUtils/LinuxMap.h"
+#include "OrbitBase/File.h"
+#include "OrbitBase/ReadFileToString.h"
 #include "OrbitBase/Result.h"
+#include "OrbitBase/TemporaryFile.h"
 #include "Test/Path.h"
 #include "TestUtils/TestUtils.h"
 
@@ -195,19 +198,28 @@ TEST(LinuxMap, ParseMaps) {
 
 TEST(LinuxMap, ParseMapsWithSpacesInPath) {
   const std::filesystem::path test_path = orbit_test::GetTestdataDir();
-  // This file is a copy of hello_world_elf, but with the name containing spaces.
-  const std::filesystem::path hello_world_path = test_path / "hello world elf";
+  ErrorMessageOr<std::string> elf_contents_or_error =
+      orbit_base::ReadFileToString(test_path / "hello_world_elf");
+  ASSERT_THAT(elf_contents_or_error, HasNoError());
+  std::string& elf_contents = elf_contents_or_error.value();
+
+  // This file is created as a copy of hello_world_elf, but with the name containing spaces.
+  auto hello_world_elf_temporary_or_error = orbit_base::TemporaryFile::Create("hello world elf");
+  ASSERT_THAT(hello_world_elf_temporary_or_error, HasNoError());
+  orbit_base::TemporaryFile& hello_world_elf_temporary = hello_world_elf_temporary_or_error.value();
+
+  ASSERT_THAT(orbit_base::WriteFully(hello_world_elf_temporary.fd(), elf_contents), HasNoError());
 
   const std::string data{absl::StrFormat(
       "7f6874290000-7f6874297000 r-xp 00000000 fe:01 661214                     %s\n",
-      hello_world_path)};
+      hello_world_elf_temporary.file_path())};
   const auto result = ParseMaps(data);
   ASSERT_THAT(result, HasNoError());
   ASSERT_EQ(result.value().size(), 1);
 
   const ModuleInfo& hello_module_info = result.value()[0];
-  EXPECT_EQ(hello_module_info.name(), "hello world elf");
-  EXPECT_EQ(hello_module_info.file_path(), hello_world_path);
+  EXPECT_EQ(hello_module_info.name(), hello_world_elf_temporary.file_path().filename().string());
+  EXPECT_EQ(hello_module_info.file_path(), hello_world_elf_temporary.file_path());
   EXPECT_EQ(hello_module_info.file_size(), 16616);
   EXPECT_EQ(hello_module_info.address_start(), 0x7f6874290000);
   EXPECT_EQ(hello_module_info.address_end(), 0x7f6874297000);
