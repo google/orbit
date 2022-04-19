@@ -6,11 +6,13 @@
 
 #include <stdlib.h>
 
+#include <string_view>
+
 namespace orbit_base {
 
-ErrorMessageOr<TemporaryFile> TemporaryFile::Create() {
+ErrorMessageOr<TemporaryFile> TemporaryFile::Create(std::string_view prefix) {
   TemporaryFile temporary_file;
-  auto init_result = temporary_file.Init();
+  auto init_result = temporary_file.Init(prefix);
   if (init_result.has_error()) {
     return init_result.error();
   }
@@ -18,13 +20,14 @@ ErrorMessageOr<TemporaryFile> TemporaryFile::Create() {
   return temporary_file;
 }
 
-ErrorMessageOr<void> TemporaryFile::Init() {
+ErrorMessageOr<void> TemporaryFile::Init(std::string_view prefix) {
   std::error_code error;
   std::filesystem::path temporary_dir = std::filesystem::temp_directory_path(error);
   if (error) {
     return ErrorMessage{absl::StrFormat("Unable to get temporary dir: %s", error.message())};
   }
-  std::string file_path = (temporary_dir / "orbit_XXXXXX").string();
+  if (prefix.empty()) prefix = "orbit";
+  std::string file_path = (temporary_dir / absl::StrFormat("%s_XXXXXX", prefix)).string();
 
 #if defined(__linux)
   int fd = mkostemp(file_path.data(), O_CLOEXEC);
@@ -36,16 +39,12 @@ ErrorMessageOr<void> TemporaryFile::Init() {
 
   fd_ = unique_fd(fd);
 #elif defined(_WIN32)
-  // _mktemp_s requires string to be null-terminated.
-  file_path += '\0';
-  errno_t errnum = _mktemp_s(file_path.data(), file_path.size());
+  // _mktemp_s expects the `size` to include the NULL character at the end.
+  errno_t errnum = _mktemp_s(file_path.data(), file_path.size() + 1);
   if (errnum != 0) {
     return ErrorMessage{
         absl::StrFormat("Unable to create a temporary file: %s", SafeStrerror(errnum))};
   }
-
-  // get rid of '\0' at the end
-  file_path = std::string(file_path.c_str());
 
   auto fd_or_error = OpenNewFileForReadWrite(file_path);
   if (fd_or_error.has_error()) {
