@@ -958,8 +958,8 @@ void OrbitApp::ShowSourceCode(const orbit_client_data::FunctionInfo& function) {
   loaded_module
       .ThenIfSuccess(
           main_thread_executor_,
-          [this, module,
-           function](const std::filesystem::path& local_file_path) -> ErrorMessageOr<void> {
+          [this, module, function,
+           &metric](const std::filesystem::path& local_file_path) -> ErrorMessageOr<void> {
             const auto elf_file = orbit_object_utils::CreateElfFile(local_file_path);
             const auto decl_line_info_or_error =
                 elf_file.value()->GetLocationOfFunction(function.address());
@@ -996,11 +996,11 @@ void OrbitApp::ShowSourceCode(const orbit_client_data::FunctionInfo& function) {
             }
 
             main_window_->ShowSourceCode(source_file_path, line_info.source_line(),
-                                         std::move(code_report));
+                                         std::move(code_report), &metric);
             return outcome::success();
           })
       .Then(main_thread_executor_,
-            [this, metric = std::move(metric)](const ErrorMessageOr<void>& maybe_error) mutable {
+            [this, &metric](const ErrorMessageOr<void>& maybe_error) mutable {
               if (maybe_error.has_error()) {
                 SendErrorToUi("Error showing source code", maybe_error.error().message());
                 metric.SetStatusCode(orbit_metrics_uploader::OrbitLogEvent::INTERNAL_ERROR);

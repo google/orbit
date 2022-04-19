@@ -16,6 +16,7 @@
 #include "ClientProtos/capture_data.pb.h"
 #include "CodeReport/CodeReport.h"
 #include "CodeReport/DisassemblyReport.h"
+#include "MetricsUploader/ScopedMetric.h"
 #include "Statistics/Histogram.h"
 
 namespace orbit_gl {
@@ -34,7 +35,8 @@ class MainWindowInterface {
 
   virtual void ShowSourceCode(
       const std::filesystem::path& file_path, size_t line_number,
-      std::optional<std::unique_ptr<orbit_code_report::CodeReport>> code_report) = 0;
+      std::optional<std::unique_ptr<orbit_code_report::CodeReport>> code_report,
+      orbit_metrics_uploader::ScopedMetric* metric) = 0;
   virtual void ShowDisassembly(const orbit_client_data::FunctionInfo& function_info,
                                const std::string& assembly,
                                orbit_code_report::DisassemblyReport report) = 0;
