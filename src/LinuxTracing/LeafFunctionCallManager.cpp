@@ -71,15 +71,9 @@ Callstack::CallstackType LeafFunctionCallManager::PatchCallerOfLeafFunction(
 
   const uint64_t stack_size = rbp - rsp;
 
-  // TODO(b/228445173): If we are in a leaf function and the stack dump contains the return address
-  //  we should be able to patch the stack even if the stack dump is not from $rsp to $rbp.
-  if (stack_size > stack_dump_size_) {
-    return Callstack::kStackTopForDwarfUnwindingTooSmall;
-  }
-
-  const LibunwindstackResult& libunwindstack_result =
-      unwinder->Unwind(event_data->pid, current_maps->Get(), event_data->GetRegisters(),
-                       event_data->GetStackData(), stack_size, true);
+  const LibunwindstackResult& libunwindstack_result = unwinder->Unwind(
+      event_data->pid, current_maps->Get(), event_data->GetRegisters(), event_data->GetStackData(),
+      std::min<uint64_t>(stack_size, stack_dump_size_), true);
   const std::vector<unwindstack::FrameData>& libunwindstack_callstack =
       libunwindstack_result.frames();
 
@@ -90,10 +84,13 @@ Callstack::CallstackType LeafFunctionCallManager::PatchCallerOfLeafFunction(
     return Callstack::kStackTopDwarfUnwindingError;
   }
 
-  // In case of an intact frame pointer, the region from $rsp to $rbp will only include the locals
-  // of the current frame, and NOT the return address. Thus, unwinding will only report one frame
-  // (the instruction pointer) and we know that the original callchain is already correct.
   if (libunwindstack_callstack.size() == 1) {
+    if (stack_size > stack_dump_size_ && !libunwindstack_result.IsSuccess()) {
+      return Callstack::kStackTopForDwarfUnwindingTooSmall;
+    }
+    // In case of an intact frame pointer, the region from $rsp to $rbp will only include the locals
+    // of the current frame, and NOT the return address. Thus, unwinding will only report one frame
+    // (the instruction pointer) and we know that the original callchain is already correct.
     return Callstack::kComplete;
   }
 
