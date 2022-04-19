@@ -32,10 +32,10 @@ std::unique_ptr<NameEqualityScopeIdProvider> NameEqualityScopeIdProvider::Create
                 [](const auto& a, const auto& b) { return a.function_id() < b.function_id(); })
                 ->function_id();
 
-  absl::flat_hash_map<uint64_t, ScopeInfo> scope_id_to_info;
+  absl::flat_hash_map<uint64_t, const ScopeInfo> scope_id_to_info;
   for (const auto& instrumented_function : instrumented_functions) {
-    scope_id_to_info[instrumented_function.function_id()] = {instrumented_function.function_name(),
-                                                             ScopeType::kHookedFunction};
+    scope_id_to_info.insert({instrumented_function.function_id(),
+                             {instrumented_function.function_name(), ScopeType::kHookedFunction}});
   }
 
   return std::unique_ptr<NameEqualityScopeIdProvider>(
@@ -46,7 +46,7 @@ uint64_t NameEqualityScopeIdProvider::FunctionIdToScopeId(uint64_t function_id) 
   return function_id;
 }
 
-[[nodiscard]] static ScopeType ScopeTypeForTimerInfo(const TimerInfo& timer) {
+[[nodiscard]] static ScopeType ScopeTypeFromTimerInfo(const TimerInfo& timer) {
   switch (timer.type()) {
     case TimerInfo::kNone:
       return timer.function_id() != orbit_grpc_protos::kInvalidFunctionId
@@ -62,7 +62,7 @@ uint64_t NameEqualityScopeIdProvider::FunctionIdToScopeId(uint64_t function_id) 
 }
 
 uint64_t NameEqualityScopeIdProvider::ProvideId(const TimerInfo& timer_info) {
-  const ScopeType scope_type = ScopeTypeForTimerInfo(timer_info);
+  const ScopeType scope_type = ScopeTypeFromTimerInfo(timer_info);
 
   if (scope_type == ScopeType::kOther) return orbit_client_data::kInvalidScopeId;
 
@@ -83,7 +83,7 @@ uint64_t NameEqualityScopeIdProvider::ProvideId(const TimerInfo& timer_info) {
 
   uint64_t id = next_id_;
   scope_info_to_id_[scope_info] = id;
-  scope_id_to_info_[id] = scope_info;
+  scope_id_to_info_.insert({id, scope_info});
   next_id_++;
   return id;
 }

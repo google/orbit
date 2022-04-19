@@ -88,8 +88,7 @@ const std::vector<DataView::Column>& LiveFunctionsDataView::GetColumns() {
   return columns;
 }
 
-[[nodiscard]] static std::string BuildTypeColumnsString(
-    const orbit_client_data::ScopeInfo& scope_info) {
+[[nodiscard]] static std::string BuildTypeString(const orbit_client_data::ScopeInfo& scope_info) {
   switch (scope_info.type) {
     case orbit_client_data::ScopeType::kApiScope:
       return "MS";
@@ -117,12 +116,13 @@ std::string LiveFunctionsDataView::GetValue(int row, int column) {
   const FunctionInfo* function = GetFunctionInfoFromRow(row);
   switch (column) {
     case kColumnType: {
-      const std::string prefix =
+      const std::string state =
           function == nullptr
               ? ""
-              : FunctionsDataView::BuildSelectedAndFrametrackIconsString(app_, *function);
-
-      return absl::StrCat(prefix, prefix.empty() ? "" : " ", BuildTypeColumnsString(scope_info));
+              : FunctionsDataView::BuildSelectedAndFrameTrackString(app_, *function);
+      const std::string type_string = BuildTypeString(scope_info);
+      if (state.empty()) return type_string;
+      return absl::StrFormat("%s [%s]", type_string, state);
     }
     case kColumnName:
       return scope_info.name;

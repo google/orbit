@@ -52,14 +52,14 @@ class NameEqualityScopeIdProvider : public ScopeIdProvider {
   [[nodiscard]] const ScopeInfo& GetScopeInfo(uint64_t scope_id) const override;
 
  private:
-  explicit NameEqualityScopeIdProvider(uint64_t start_id,
-                                       absl::flat_hash_map<uint64_t, ScopeInfo> scope_id_to_info)
+  explicit NameEqualityScopeIdProvider(
+      uint64_t start_id, absl::flat_hash_map<uint64_t, const ScopeInfo> scope_id_to_info)
       : next_id_(start_id), scope_id_to_info_(std::move(scope_id_to_info)) {}
 
   absl::flat_hash_map<ScopeInfo, uint64_t> scope_info_to_id_;
   uint64_t next_id_{};
 
-  absl::flat_hash_map<uint64_t, ScopeInfo> scope_id_to_info_;
+  absl::flat_hash_map<uint64_t, const ScopeInfo> scope_id_to_info_;
 };
 
 }  // namespace orbit_client_data

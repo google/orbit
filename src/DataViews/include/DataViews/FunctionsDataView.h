@@ -21,10 +21,10 @@ class FunctionsDataView : public DataView {
   static const std::string kUnselectedFunctionString;
   static const std::string kSelectedFunctionString;
   static const std::string kFrameTrackString;
-  static const std::string kApiScopeType;
-  static const std::string kApiScopeAsyncType;
-  static const std::string kHookedFunctionType;
-  static std::string BuildSelectedAndFrametrackIconsString(
+  static const std::string kApiScopeTypeSting;
+  static const std::string kApiScopeAsyncTypeString;
+  static const std::string kHookedFunctionTypeString;
+  static std::string BuildSelectedAndFrameTrackString(
       AppInterface* app, const orbit_client_data::FunctionInfo& function);
   static bool ShouldShowFrameTrackIcon(AppInterface* app,
                                        const orbit_client_data::FunctionInfo& function);

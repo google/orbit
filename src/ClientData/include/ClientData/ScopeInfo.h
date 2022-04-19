@@ -11,6 +11,8 @@ namespace orbit_client_data {
 
 enum ScopeType : uint8_t { kOther = 0, kHookedFunction = 1, kApiScope = 2, kApiScopeAsync = 3 };
 
+// An instance of the type uniquely identifies a scope by its name and type. The type is hashable
+// and implements `==` and `!=` operators.
 struct ScopeInfo {
   template <typename H>
   friend H AbslHashValue(H h, const ScopeInfo& scope) {
@@ -20,6 +22,8 @@ struct ScopeInfo {
   friend bool operator==(const ScopeInfo& lhs, const ScopeInfo& rhs) {
     return lhs.type == rhs.type && lhs.name == rhs.name;
   }
+
+  friend bool operator!=(const ScopeInfo& lhs, const ScopeInfo& rhs) { return !(lhs == rhs); }
 
   std::string name;
   ScopeType type{};

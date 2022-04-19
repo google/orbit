@@ -38,9 +38,9 @@ FunctionsDataView::FunctionsDataView(AppInterface* app,
 const std::string FunctionsDataView::kUnselectedFunctionString = "";
 const std::string FunctionsDataView::kSelectedFunctionString = "H";
 const std::string FunctionsDataView::kFrameTrackString = "F";
-const std::string FunctionsDataView::kApiScopeType = "MS";
-const std::string FunctionsDataView::kApiScopeAsyncType = "MA";
-const std::string FunctionsDataView::kHookedFunctionType = "D";
+const std::string FunctionsDataView::kApiScopeTypeSting = "MS";
+const std::string FunctionsDataView::kApiScopeAsyncTypeString = "MA";
+const std::string FunctionsDataView::kHookedFunctionTypeString = "D";
 
 const std::vector<DataView::Column>& FunctionsDataView::GetColumns() {
   static const std::vector<Column> columns = [] {
@@ -79,8 +79,8 @@ bool FunctionsDataView::ShouldShowFrameTrackIcon(AppInterface* app, const Functi
          app->HasFrameTrackInCaptureData(instrumented_function_id.value());
 }
 
-std::string FunctionsDataView::BuildSelectedAndFrametrackIconsString(AppInterface* app,
-                                                                     const FunctionInfo& function) {
+std::string FunctionsDataView::BuildSelectedAndFrameTrackString(AppInterface* app,
+                                                                const FunctionInfo& function) {
   std::string result = kUnselectedFunctionString;
   if (ShouldShowSelectedFunctionIcon(app, function)) {
     absl::StrAppend(&result, kSelectedFunctionString);
@@ -102,7 +102,7 @@ std::string FunctionsDataView::GetValue(int row, int column) {
 
   switch (column) {
     case kColumnSelected:
-      return BuildSelectedAndFrametrackIconsString(app_, function);
+      return BuildSelectedAndFrameTrackString(app_, function);
     case kColumnName:
       return function.pretty_name();
     case kColumnSize:
@@ -217,7 +217,7 @@ void FunctionsDataView::DoFilter() {
   orbit_base::TaskGroup task_group;
 
   for (size_t i = 0; i < chunks.size(); ++i) {
-    task_group.AddTask([& chunk = chunks[i], &result = task_results[i], this]() {
+    task_group.AddTask([&chunk = chunks[i], &result = task_results[i], this]() {
       ORBIT_SCOPE("FunctionsDataView::DoFilter Task");
       for (const FunctionInfo*& function : chunk) {
         ORBIT_CHECK(function != nullptr);
