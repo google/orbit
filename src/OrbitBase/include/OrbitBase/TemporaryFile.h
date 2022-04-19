@@ -5,9 +5,13 @@
 #ifndef ORBIT_BASE_TEMPORARY_FILE_H_
 #define ORBIT_BASE_TEMPORARY_FILE_H_
 
+#include <string_view>
+
 #include "OrbitBase/File.h"
 
 namespace orbit_base {
+// Creates and opens a temporary file. It will be automatically deleted when this object gets out of
+// scope.
 class TemporaryFile final {
  public:
   ~TemporaryFile() { CloseAndRemove(); }
@@ -36,11 +40,14 @@ class TemporaryFile final {
   [[nodiscard]] const unique_fd& fd() const { return fd_; }
   [[nodiscard]] const std::filesystem::path& file_path() const { return file_path_; }
 
-  static ErrorMessageOr<TemporaryFile> Create();
+  // Call this function to create a new temporary file. The `prefix` is a component that is
+  // guaranteed to be incorporated into the filename. Leave it empty if you have no requirements to
+  // the filename.
+  static ErrorMessageOr<TemporaryFile> Create(std::string_view prefix = "");
 
  private:
   TemporaryFile() = default;
-  ErrorMessageOr<void> Init();
+  ErrorMessageOr<void> Init(std::string_view prefix);
 
   unique_fd fd_;
   std::filesystem::path file_path_;
