@@ -155,21 +155,28 @@ class FileMappedIntoMemory {
         "Executable map at %#x-%#x does NOT belong to \"%s\"", map_start, map_end, file_path_);
 
     if (cached_coff_file_ == nullptr) {
+      // Don't even try to create an ObjectFile from character or block devices.
+      if (absl::StartsWith(file_path_, "/dev/")) {
+        ORBIT_LOG("%s", error_message);
+        coff_text_section_map_might_be_encountered_ = false;
+        return false;
+      }
+
       auto object_file_or_error = CreateObjectFile(file_path_);
       if (object_file_or_error.has_error()) {
         ORBIT_LOG("%s", error_message);
         coff_text_section_map_might_be_encountered_ = false;
-        cached_coff_file_ = nullptr;
         return false;
       }
+
       // Remember: we are only detecting anonymous maps that correspond to .text sections of PEs,
       // because loadable sections of ELF files can always be file-mapped.
       if (!object_file_or_error.value()->IsCoff()) {
         ORBIT_LOG("%s", error_message);
         coff_text_section_map_might_be_encountered_ = false;
-        cached_coff_file_ = nullptr;
         return false;
       }
+
       cached_coff_file_ = std::move(object_file_or_error.value());
     }
 
