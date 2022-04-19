@@ -85,7 +85,7 @@ Callstack::CallstackType LeafFunctionCallManager::PatchCallerOfLeafFunction(
   }
 
   if (libunwindstack_callstack.size() == 1) {
-    if (stack_size > stack_dump_size_) {
+    if (stack_size > stack_dump_size_ && !libunwindstack_result.IsSuccess()) {
       return Callstack::kStackTopForDwarfUnwindingTooSmall;
     }
     // In case of an intact frame pointer, the region from $rsp to $rbp will only include the locals

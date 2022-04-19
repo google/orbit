@@ -194,7 +194,7 @@ TEST_F(LeafFunctionCallManagerTest, PatchCallerOfLeafFunctionReturnsErrorOnTooSm
 
 TEST_F(
     LeafFunctionCallManagerTest,
-    PatchCallerOfLeafFunctionReturnsSuccessAndPatchesCallchainEvenIfStackDumpDoesContainFullCaller) {
+    PatchCallerOfLeafFunctionReturnsSuccessAndPatchesCallchainEvenIfStackDumpDoesNotFullyContainCaller) {
   std::vector<uint64_t> callchain;
   callchain.push_back(kKernelAddress);
   callchain.push_back(kTargetAddress1);
