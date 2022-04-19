@@ -17,18 +17,17 @@ namespace orbit_gl {
 
 class TimelineUiTest : public TimelineUi {
  public:
-  inline static const int kBigScreenPixelsWidth = 2000;
-  inline static const int kSmallScreenMaxPixelsWidth = 700;
-  inline static const int kTinyScreenMaxPixelsWidth = 200;
+  static constexpr int kBigScreenPixelsWidth = 2000;
+  static constexpr int kSmallScreenMaxPixelsWidth = 700;
+  static constexpr int kTinyScreenMaxPixelsWidth = 200;
 
-  explicit TimelineUiTest(int width, MockTimelineInfo* mock_timeline_info, Viewport* viewport,
+  explicit TimelineUiTest(MockTimelineInfo* mock_timeline_info, Viewport* viewport,
                           TimeGraphLayout* layout)
       : TimelineUi(nullptr /*parent*/, mock_timeline_info, viewport, layout),
         primitive_assembler_(&mock_batcher_),
         viewport_(viewport),
         mock_timeline_info_(mock_timeline_info) {
-    mock_timeline_info_->SetWorldWidth(width);
-    viewport_->SetWorldSize(width, TimelineUi::GetHeight());
+    viewport->SetWorldSize(viewport->GetWorldWidth(), TimelineUi::GetHeight());
   }
 
   void TestUpdatePrimitives(uint64_t min_tick, uint64_t max_tick) {
@@ -59,8 +58,8 @@ class TimelineUiTest : public TimelineUi {
     // mt is between (MT-1, MT+1) or mt is between (4x(MT-1), 4x(MT+1)).
     EXPECT_GE(num_minor_ticks, num_major_ticks - 1);
     EXPECT_LE(num_minor_ticks, 4 * (num_major_ticks + 1));
-    EXPECT_TRUE(num_minor_ticks <= num_major_ticks + 1 ||
-                num_minor_ticks >= 4 * (num_major_ticks - 1));
+    EXPECT_THAT(num_minor_ticks, testing::AnyOf(testing::Le(num_major_ticks + 1),
+                                                testing::Ge(4 * (num_major_ticks - 1))));
 
     // Labels should all have the same number of digits, start at the same vertical position and
     // they will appear at the right of each major tick.
@@ -94,9 +93,11 @@ class TimelineUiTest : public TimelineUi {
 
 static void TestUpdatePrimitivesWithSeveralRanges(int world_width) {
   MockTimelineInfo mock_timeline_info;
-  Viewport viewport(0, 0);
+  mock_timeline_info.SetWorldWidth(world_width);
+
   TimeGraphLayout layout;
-  TimelineUiTest timeline_ui_test(world_width, &mock_timeline_info, &viewport, &layout);
+  Viewport viewport(world_width, 0);
+  TimelineUiTest timeline_ui_test(&mock_timeline_info, &viewport, &layout);
   timeline_ui_test.TestUpdatePrimitives(0, 100);
   timeline_ui_test.TestUpdatePrimitives(1'000'000'000, 1'000'000'100);
   timeline_ui_test.TestUpdatePrimitives(0, 999'999'000);
