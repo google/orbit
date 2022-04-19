@@ -10,7 +10,7 @@
 namespace orbit_client_data {
 TEST(ScopeInfo, Hash) {
   EXPECT_TRUE(absl::VerifyTypeImplementsAbslHashCorrectly(
-      {ScopeInfo{}, ScopeInfo{"", ScopeType::kInvalid},
+      {ScopeInfo{"", ScopeType::kInvalid},
        ScopeInfo{"", ScopeType::kDynamicallyInstrumentedFunction},
        ScopeInfo{"", ScopeType::kApiScope}, ScopeInfo{"kapiscope", ScopeType::kApiScope},
        ScopeInfo{"kapiscope", ScopeType::kApiScopeAsync},

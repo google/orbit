@@ -19,22 +19,29 @@ enum class ScopeType {
 // An instance of the type uniquely identifies a scope by its name and type. The type is hashable
 // and implements `==` and `!=` operators.
 //
-// DO NOT ADD FIELDS TO THE STRUCT. Especially, if they don't make sense for all the `ScopeType`s.
+// DO NOT ADD FIELDS TO THE CLASS. Especially, if they don't make sense for all the `ScopeType`s.
 // If you really have to, consider using std::variant or inheritance and removing ScopeType.
-struct ScopeInfo {
+class ScopeInfo {
+ public:
+  ScopeInfo(std::string name, ScopeType type) : name_(std::move(name)), type_(type) {}
+
+  [[nodiscard]] const std::string& GetName() const { return name_; }
+  [[nodiscard]] ScopeType GetType() const { return type_; }
+
   template <typename H>
   friend H AbslHashValue(H h, const ScopeInfo& scope) {
-    return H::combine(std::move(h), scope.name, scope.type);
+    return H::combine(std::move(h), scope.GetName(), scope.GetType());
   }
 
   friend bool operator==(const ScopeInfo& lhs, const ScopeInfo& rhs) {
-    return lhs.type == rhs.type && lhs.name == rhs.name;
+    return lhs.GetType() == rhs.GetType() && lhs.GetName() == rhs.GetName();
   }
 
   friend bool operator!=(const ScopeInfo& lhs, const ScopeInfo& rhs) { return !(lhs == rhs); }
 
-  std::string name;
-  ScopeType type{};
+ private:
+  std::string name_;
+  ScopeType type_;
 };
 
 }  // namespace orbit_client_data

@@ -71,7 +71,7 @@ static void TestProvideId(std::vector<orbit_client_protos::TimerInfo>& timer_inf
   const std::vector<uint64_t> ids = GetIds(id_provider.get(), timer_infos);
   AssertNameToIdIsBijective(timer_infos, ids);
   for (size_t i = 0; i < timer_infos.size(); ++i) {
-    EXPECT_EQ(id_provider->GetScopeInfo(ids[i]).name, timer_infos[i].api_scope_name());
+    EXPECT_EQ(id_provider->GetScopeInfo(ids[i]).GetName(), timer_infos[i].api_scope_name());
   }
 }
 

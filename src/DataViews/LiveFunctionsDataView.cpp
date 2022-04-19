@@ -90,7 +90,7 @@ const std::vector<DataView::Column>& LiveFunctionsDataView::GetColumns() {
 
 [[nodiscard]] static std::string BuildTypePartOfTypeColumnString(
     const orbit_client_data::ScopeInfo& scope_info) {
-  switch (scope_info.type) {
+  switch (scope_info.GetType()) {
     case orbit_client_data::ScopeType::kApiScope:
       return FunctionsDataView::kApiScopeTypeSting;
     case orbit_client_data::ScopeType::kApiScopeAsync:
@@ -126,7 +126,7 @@ std::string LiveFunctionsDataView::GetValue(int row, int column) {
       return absl::StrFormat("%s [%s]", type_string, state_string);
     }
     case kColumnName:
-      return scope_info.name;
+      return scope_info.GetName();
     case kColumnCount:
       return absl::StrFormat("%lu", stats.count());
     case kColumnTimeTotal:
@@ -189,7 +189,7 @@ void LiveFunctionsDataView::UpdateHistogramWithScopeIds(const std::vector<uint64
   }
 
   const uint64_t scope_id = scope_ids[0];
-  const std::string& scope_name = GetScopeInfo(scope_id).name;
+  const std::string& scope_name = GetScopeInfo(scope_id).GetName();
   app_->ShowHistogram(timer_durations, scope_name, scope_id);
 }
 
@@ -229,7 +229,7 @@ void LiveFunctionsDataView::DoSort() {
               is_selected = app_->IsFunctionSelected(it->second);
               is_frametrack_enabled = FunctionsDataView::ShouldShowFrameTrackIcon(app_, it->second);
             }
-            const orbit_client_data::ScopeType type = GetScopeInfo(id).type;
+            const orbit_client_data::ScopeType type = GetScopeInfo(id).GetType();
             return std::make_tuple(type, is_selected, is_frametrack_enabled);
           },
           ascending);
@@ -237,7 +237,8 @@ void LiveFunctionsDataView::DoSort() {
     }
     case kColumnName:
       sorter = MakeSorter(
-          [this](uint64_t id) { return absl::AsciiStrToLower(GetScopeInfo(id).name); }, ascending);
+          [this](uint64_t id) { return absl::AsciiStrToLower(GetScopeInfo(id).GetName()); },
+          ascending);
       break;
     case kColumnCount:
       sorter = ORBIT_STAT_SORT(count());
@@ -421,7 +422,7 @@ void LiveFunctionsDataView::OnExportEventsToCsvRequested(const std::vector<int>&
     const uint64_t scope_id = GetScopeId(row);
     const orbit_client_data::ScopeInfo& scope_info = GetScopeInfo(scope_id);
 
-    const std::string& scope_name = scope_info.name;
+    const std::string& scope_name = scope_info.GetName();
     for (const TimerInfo* timer : capture_data.GetTimersForScope(scope_id)) {
       std::string line;
       line.append(FormatValueForCsv(scope_name));
@@ -458,7 +459,7 @@ void LiveFunctionsDataView::DoFilter() {
   const std::vector<uint64_t> scope_ids = app_->GetCaptureData().GetAllProvidedScopeIds();
 
   for (const uint64_t scope_id : scope_ids) {
-    const std::string name = absl::AsciiStrToLower(GetScopeInfo(scope_id).name);
+    const std::string name = absl::AsciiStrToLower(GetScopeInfo(scope_id).GetName());
 
     bool match = true;
 
@@ -580,7 +581,7 @@ std::optional<FunctionInfo> LiveFunctionsDataView::CreateFunctionInfoFromInstrum
 
   const std::string& function_name =
       GetScopeInfo(app_->GetCaptureData().FunctionIdToScopeId(instrumented_function.function_id()))
-          .name;
+          .GetName();
 
   // size is unknown
   FunctionInfo result{instrumented_function.file_path(), instrumented_function.file_build_id(),
