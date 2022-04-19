@@ -9,10 +9,18 @@
 
 namespace orbit_client_data {
 
-enum ScopeType : uint8_t { kOther = 0, kHookedFunction = 1, kApiScope = 2, kApiScopeAsync = 3 };
+enum class ScopeType {
+  kInvalid = 0,
+  kDynamicallyInstrumentedFunction = 1,
+  kApiScope = 2,
+  kApiScopeAsync = 3
+};
 
 // An instance of the type uniquely identifies a scope by its name and type. The type is hashable
 // and implements `==` and `!=` operators.
+//
+// DO NOT ADD FIELDS TO THE STRUCT. Especially, if they don't make sense for all the `ScopeType`s.
+// If you really have to, consider using std::variant or inheritance and removing ScopeType.
 struct ScopeInfo {
   template <typename H>
   friend H AbslHashValue(H h, const ScopeInfo& scope) {

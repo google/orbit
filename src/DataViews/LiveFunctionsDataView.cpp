@@ -91,11 +91,11 @@ const std::vector<DataView::Column>& LiveFunctionsDataView::GetColumns() {
 [[nodiscard]] static std::string BuildTypeString(const orbit_client_data::ScopeInfo& scope_info) {
   switch (scope_info.type) {
     case orbit_client_data::ScopeType::kApiScope:
-      return "MS";
+      return FunctionsDataView::kApiScopeTypeSting;
     case orbit_client_data::ScopeType::kApiScopeAsync:
-      return "MA";
-    case orbit_client_data::ScopeType::kHookedFunction:
-      return "D";
+      return FunctionsDataView::kApiScopeAsyncTypeString;
+    case orbit_client_data::ScopeType::kDynamicallyInstrumentedFunction:
+      return FunctionsDataView::kDynamicallyInstrumentedFunctionTypeString;
     default:
       return "";
   }
@@ -217,6 +217,8 @@ void LiveFunctionsDataView::DoSort() {
 
   switch (sorting_column_) {
     case kColumnType: {
+      // We order by type first, then whether the function is selected, then by whether a frame
+      // track is enabled
       sorter = MakeSorter(
           [this](uint64_t id) -> std::tuple<orbit_client_data::ScopeType, bool, bool> {
             bool is_selected = false;
@@ -596,11 +598,11 @@ std::optional<FunctionInfo> LiveFunctionsDataView::CreateFunctionInfoFromInstrum
 std::string LiveFunctionsDataView::GetToolTip(int /*row*/, int column) {
   if (column != kColumnType) return "";
   return "Notation:\n"
-         "H — The function will be hooked on the next capture\n"
-         "F — Frametrack enabled\n"
          "D — Dynamically instrumented function\n"
          "MS — Synchronous manually instrumented scope\n"
-         "MA — Asynchronous manually instrumented scope";
+         "MA — Asynchronous manually instrumented scope\n"
+         "H — The function will be hooked on the next capture\n"
+         "F — Frame track enabled";
 }
 
 }  // namespace orbit_data_views

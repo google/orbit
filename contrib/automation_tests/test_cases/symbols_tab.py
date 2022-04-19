@@ -387,7 +387,7 @@ class FilterAndEnableFrameTrackForFunction(E2ETestCase):
 
         self.find_context_menu_item('Enable frame track(s)').click_input()
         
-        awaited_string : str = selected_function_string + ' ' + frame_track_enabled_function_string
+        awaited_string : str = selected_function_string + ' [' + frame_track_enabled_function_string + ']'
         wait_for_condition(lambda: awaited_string in functions_dataview.get_item_at(0, 0).texts()[0])
 
 

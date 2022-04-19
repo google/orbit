@@ -35,7 +35,7 @@ std::unique_ptr<NameEqualityScopeIdProvider> NameEqualityScopeIdProvider::Create
   absl::flat_hash_map<uint64_t, const ScopeInfo> scope_id_to_info;
   for (const auto& instrumented_function : instrumented_functions) {
     scope_id_to_info.insert({instrumented_function.function_id(),
-                             {instrumented_function.function_name(), ScopeType::kHookedFunction}});
+                             {instrumented_function.function_name(), ScopeType::kDynamicallyInstrumentedFunction}});
   }
 
   return std::unique_ptr<NameEqualityScopeIdProvider>(
@@ -50,23 +50,23 @@ uint64_t NameEqualityScopeIdProvider::FunctionIdToScopeId(uint64_t function_id) 
   switch (timer.type()) {
     case TimerInfo::kNone:
       return timer.function_id() != orbit_grpc_protos::kInvalidFunctionId
-                 ? ScopeType::kHookedFunction
-                 : ScopeType::kOther;
+                 ? ScopeType::kDynamicallyInstrumentedFunction
+                 : ScopeType::kInvalid;
     case TimerInfo::kApiScope:
       return ScopeType::kApiScope;
     case TimerInfo::kApiScopeAsync:
       return ScopeType::kApiScopeAsync;
     default:
-      return ScopeType::kOther;
+      return ScopeType::kInvalid;
   }
 }
 
 uint64_t NameEqualityScopeIdProvider::ProvideId(const TimerInfo& timer_info) {
   const ScopeType scope_type = ScopeTypeFromTimerInfo(timer_info);
 
-  if (scope_type == ScopeType::kOther) return orbit_client_data::kInvalidScopeId;
+  if (scope_type == ScopeType::kInvalid) return orbit_client_data::kInvalidScopeId;
 
-  if (scope_type == ScopeType::kHookedFunction) {
+  if (scope_type == ScopeType::kDynamicallyInstrumentedFunction) {
     return FunctionIdToScopeId(timer_info.function_id());
   }
 

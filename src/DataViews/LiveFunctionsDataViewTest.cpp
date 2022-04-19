@@ -5,6 +5,7 @@
 #include <absl/container/flat_hash_map.h>
 #include <absl/strings/str_cat.h>
 #include <absl/strings/str_format.h>
+#include <gmock/gmock-matchers.h>
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
 
@@ -22,6 +23,7 @@
 #include "DataViewTestUtils.h"
 #include "DataViews/AppInterface.h"
 #include "DataViews/DataView.h"
+#include "DataViews/FunctionsDataView.h"
 #include "DataViews/LiveFunctionsDataView.h"
 #include "DataViews/LiveFunctionsInterface.h"
 #include "DisplayFormats/DisplayFormats.h"
@@ -286,9 +288,6 @@ TEST_F(LiveFunctionsDataViewTest, ColumnValuesAreCorrect) {
   EXPECT_EQ(view_.GetValue(0, kColumnStdDev), GetExpectedDisplayTime(kStdDevNs[0]));
 }
 
-const std::string kSelectedFunctionIcon = "H";
-const std::string kDynamicallyInstumentedFunctionIcon = "D";
-
 TEST_F(LiveFunctionsDataViewTest, ColumnSelectedShowsRightResults) {
   bool function_selected = false;
   bool frame_track_enabled = false;
@@ -304,20 +303,38 @@ TEST_F(LiveFunctionsDataViewTest, ColumnSelectedShowsRightResults) {
       .WillRepeatedly(testing::ReturnPointee(&frame_track_enabled));
 
   AddFunctionsByIndices({0});
-  EXPECT_EQ(view_.GetValue(0, kColumnSelected), "D");
+  EXPECT_EQ(view_.GetValue(0, kColumnSelected),
+            orbit_data_views::FunctionsDataView::kDynamicallyInstrumentedFunctionTypeString);
 
   function_selected = true;
-  EXPECT_EQ(view_.GetValue(0, kColumnSelected),
-            absl::StrCat(kSelectedFunctionIcon, " ", kDynamicallyInstumentedFunctionIcon));
+  EXPECT_THAT(
+      view_.GetValue(0, kColumnSelected),
+      testing::AllOf(
+          testing::HasSubstr(
+              orbit_data_views::FunctionsDataView::kDynamicallyInstrumentedFunctionTypeString),
+          testing::HasSubstr(orbit_data_views::FunctionsDataView::kSelectedFunctionString),
+          testing::Not(
+              testing::HasSubstr(orbit_data_views::FunctionsDataView::kFrameTrackString))));
 
   function_selected = false;
   frame_track_enabled = true;
-  EXPECT_EQ(view_.GetValue(0, kColumnSelected),
-            absl::StrCat("F ", kDynamicallyInstumentedFunctionIcon));
+  EXPECT_THAT(
+      view_.GetValue(0, kColumnSelected),
+      testing::AllOf(
+          testing::HasSubstr(
+              orbit_data_views::FunctionsDataView::kDynamicallyInstrumentedFunctionTypeString),
+          testing::Not(
+              testing::HasSubstr(orbit_data_views::FunctionsDataView::kSelectedFunctionString)),
+          testing::HasSubstr(orbit_data_views::FunctionsDataView::kFrameTrackString)));
 
   function_selected = true;
-  EXPECT_EQ(view_.GetValue(0, kColumnSelected),
-            absl::StrCat(kSelectedFunctionIcon, " F ", kDynamicallyInstumentedFunctionIcon));
+  EXPECT_THAT(
+      view_.GetValue(0, kColumnSelected),
+      testing::AllOf(
+          testing::HasSubstr(
+              orbit_data_views::FunctionsDataView::kDynamicallyInstrumentedFunctionTypeString),
+          testing::HasSubstr(orbit_data_views::FunctionsDataView::kSelectedFunctionString),
+          testing::HasSubstr(orbit_data_views::FunctionsDataView::kFrameTrackString)));
 }
 
 TEST_F(LiveFunctionsDataViewTest, ContextMenuEntriesArePresentCorrectly) {
@@ -451,7 +468,8 @@ TEST_F(LiveFunctionsDataViewTest, ContextMenuActionsAreInvoked) {
     std::string expected_clipboard = absl::StrFormat(
         "Type\tFunction\tCount\tTotal\tAvg\tMin\tMax\tStd Dev\tModule\tAddress\n"
         "%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\n",
-        kDynamicallyInstumentedFunctionIcon, kPrettyNames[0], GetExpectedDisplayCount(kCounts[0]),
+        orbit_data_views::FunctionsDataView::kDynamicallyInstrumentedFunctionTypeString,
+        kPrettyNames[0], GetExpectedDisplayCount(kCounts[0]),
         GetExpectedDisplayTime(kTotalTimeNs[0]), GetExpectedDisplayTime(kAvgTimeNs[0]),
         GetExpectedDisplayTime(kMinNs[0]), GetExpectedDisplayTime(kMaxNs[0]),
         GetExpectedDisplayTime(kStdDevNs[0]), kModulePaths[0],
@@ -466,7 +484,8 @@ TEST_F(LiveFunctionsDataViewTest, ContextMenuActionsAreInvoked) {
         "\r\n"
         R"("%s","%s","%s","%s","%s","%s","%s","%s","%s","%s")"
         "\r\n",
-        kDynamicallyInstumentedFunctionIcon, kPrettyNames[0], GetExpectedDisplayCount(kCounts[0]),
+        orbit_data_views::FunctionsDataView::kDynamicallyInstrumentedFunctionTypeString,
+        kPrettyNames[0], GetExpectedDisplayCount(kCounts[0]),
         GetExpectedDisplayTime(kTotalTimeNs[0]), GetExpectedDisplayTime(kAvgTimeNs[0]),
         GetExpectedDisplayTime(kMinNs[0]), GetExpectedDisplayTime(kMaxNs[0]),
         GetExpectedDisplayTime(kStdDevNs[0]), kModulePaths[0],

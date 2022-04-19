@@ -40,7 +40,7 @@ const std::string FunctionsDataView::kSelectedFunctionString = "H";
 const std::string FunctionsDataView::kFrameTrackString = "F";
 const std::string FunctionsDataView::kApiScopeTypeSting = "MS";
 const std::string FunctionsDataView::kApiScopeAsyncTypeString = "MA";
-const std::string FunctionsDataView::kHookedFunctionTypeString = "D";
+const std::string FunctionsDataView::kDynamicallyInstrumentedFunctionTypeString = "D";
 
 const std::vector<DataView::Column>& FunctionsDataView::GetColumns() {
   static const std::vector<Column> columns = [] {

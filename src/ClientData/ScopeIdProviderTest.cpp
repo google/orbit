@@ -133,7 +133,7 @@ TEST(NameEqualityScopeIdProviderTest, CreateIsCorrect) {
             *std::max_element(std::begin(kFunctionIds), std::end(kFunctionIds)) + 1);
 
   for (size_t i = 0; i < kFunctionCount; ++i) {
-    const ScopeInfo expected{kFunctionNames[i], ScopeType::kHookedFunction};
+    const ScopeInfo expected{kFunctionNames[i], ScopeType::kDynamicallyInstrumentedFunction};
     EXPECT_EQ(id_provider->GetScopeInfo(kFunctionIds[i]), expected);
   }
 }

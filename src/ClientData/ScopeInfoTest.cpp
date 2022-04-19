@@ -10,10 +10,11 @@
 namespace orbit_client_data {
 TEST(ScopeInfo, Hash) {
   EXPECT_TRUE(absl::VerifyTypeImplementsAbslHashCorrectly(
-      {ScopeInfo{}, ScopeInfo{"", ScopeType::kOther}, ScopeInfo{"", ScopeType::kHookedFunction},
+      {ScopeInfo{}, ScopeInfo{"", ScopeType::kInvalid},
+       ScopeInfo{"", ScopeType::kDynamicallyInstrumentedFunction},
        ScopeInfo{"", ScopeType::kApiScope}, ScopeInfo{"kapiscope", ScopeType::kApiScope},
        ScopeInfo{"kapiscope", ScopeType::kApiScopeAsync},
        ScopeInfo{"kApiScope", ScopeType::kApiScope},
-       ScopeInfo{"kApiScope", ScopeType::kHookedFunction}}));
+       ScopeInfo{"kApiScope", ScopeType::kDynamicallyInstrumentedFunction}}));
 }
 }  // namespace orbit_client_data
