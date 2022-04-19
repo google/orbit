@@ -1700,7 +1700,7 @@ orbit_base::Future<void> OrbitApp::RetrieveModulesAndLoadSymbols(
   for (const auto& module : modules_set) {
     // Explicitely do not handle the result.
     Future<void> future = RetrieveModuleAndLoadSymbolsAndHandleError(module).Then(
-        &immediate_executor, [](const SymbolLoadingAndErrorHandlingResult & /*result*/) -> void {});
+        &immediate_executor, [](const SymbolLoadingAndErrorHandlingResult& /*result*/) -> void {});
     futures.emplace_back(std::move(future));
   }
 
@@ -1949,8 +1949,7 @@ Future<ErrorMessageOr<std::filesystem::path>> OrbitApp::FindModuleLocally(
   return thread_pool_->Schedule(
       [this, module_data,
        scoped_status = std::move(scoped_status)]() -> ErrorMessageOr<std::filesystem::path> {
-        const ModuleData& module_data_ref{*module_data};
-        return FindModuleLocallyImpl(symbol_helper_, module_data_ref);
+        return FindModuleLocallyImpl(symbol_helper_, *module_data);
       });
 }
 
