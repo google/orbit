@@ -40,7 +40,9 @@ class TimelineUiTest : public TimelineUi {
 
     // Major ticks should always be between 2 and 10, given scale set. In extremely small screens
     // (Width < 160), we don't force a minimum number of major ticks.
-    if (!is_small_screen) EXPECT_GE(num_major_ticks, 2);
+    if (!is_small_screen) {
+      EXPECT_GE(num_major_ticks, 2);
+    }
     EXPECT_LE(num_major_ticks, 10);
 
     // Depending on the scale, there should be 1 minor ticks or 4 between each major tick, which
