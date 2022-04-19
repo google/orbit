@@ -117,13 +117,13 @@ std::string LiveFunctionsDataView::GetValue(int row, int column) {
   const FunctionInfo* function = GetFunctionInfoFromRow(row);
   switch (column) {
     case kColumnType: {
-      const std::string state =
+      const std::string state_string =
           function == nullptr
               ? ""
               : FunctionsDataView::BuildSelectedAndFrameTrackString(app_, *function);
       const std::string type_string = BuildTypePartOfTypeColumnString(scope_info);
-      if (state.empty()) return type_string;
-      return absl::StrFormat("%s [%s]", type_string, state);
+      if (state_string.empty()) return type_string;
+      return absl::StrFormat("%s [%s]", type_string, state_string);
     }
     case kColumnName:
       return scope_info.name;
