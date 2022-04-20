@@ -235,7 +235,12 @@ void DataView::OnEnableFrameTrackRequested(const std::vector<int>& selection) {
     if (function == nullptr) continue;
     // Functions used as frame tracks must be hooked (selected), otherwise the
     // data to produce the frame track will not be captured.
-    if (app_->IsCaptureConnected(app_->GetCaptureData())) app_->SelectFunction(*function);
+    // TODO(b/228151393) The condition is supposed to prevent "selecting" a function when a capture
+    // is loaded with no connection to a process being established. Perhaps, resolution of the
+    // mentioned but would allow for a better way to check it.
+    if (!app_->HasCaptureData() || app_->IsCaptureConnected(app_->GetCaptureData())) {
+      app_->SelectFunction(*function);
+    }
 
     app_->EnableFrameTrack(*function);
     app_->AddFrameTrack(*function);
