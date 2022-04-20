@@ -10,6 +10,7 @@
 
 #include "GrpcProtos/services.grpc.pb.h"
 #include "GrpcProtos/services.pb.h"
+#include "WindowsUtils/ProcessLauncher.h"
 #include "WindowsUtils/ProcessList.h"
 
 namespace orbit_windows_process_service {
@@ -32,9 +33,24 @@ class ProcessServiceImpl final : public orbit_grpc_protos::ProcessService::Servi
       grpc::ServerContext* context, const orbit_grpc_protos::GetDebugInfoFileRequest* request,
       orbit_grpc_protos::GetDebugInfoFileResponse* response) override;
 
+  [[nodiscard]] grpc::Status LaunchProcess(
+      grpc::ServerContext* context, const orbit_grpc_protos::LaunchProcessRequest* request,
+      orbit_grpc_protos::LaunchProcessResponse* response) override;
+
+  [[nodiscard]] grpc::Status SuspendProcessSpinningAtEntryPoint(
+      grpc::ServerContext* context,
+      const orbit_grpc_protos::SuspendProcessSpinningAtEntryPointRequest* request,
+      orbit_grpc_protos::SuspendProcessSpinningAtEntryPointResponse* response) override;
+
+  [[nodiscard]] grpc::Status ResumeProcessSuspendedAtEntryPoint(
+      grpc::ServerContext* context,
+      const orbit_grpc_protos::ResumeProcessSuspendedAtEntryPointRequest* request,
+      orbit_grpc_protos::ResumeProcessSuspendedAtEntryPointResponse* response) override;
+
  private:
   absl::Mutex mutex_;
   std::unique_ptr<orbit_windows_utils::ProcessList> process_list_;
+  orbit_windows_utils::ProcessLauncher process_launcher_;
 
   static constexpr size_t kMaxGetProcessMemoryResponseSize = 8 * 1024 * 1024;
 };

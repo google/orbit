@@ -44,7 +44,25 @@ void ProcessLauncherWidget::on_BrowseWorkingDirButton_clicked() {
 }
 
 void ProcessLauncherWidget::on_LaunchButton_clicked() {
-  // TODO(b/225906734): Windows Process Launcher
+#ifdef _WIN32
+  ORBIT_CHECK(process_manager_ != nullptr);
+  QString process = ui_->ProcessComboBox->lineEdit()->text();
+  QString working_dir = ui_->WorkingDirComboBox->lineEdit()->text();
+  QString args = ui_->ArgumentsComboBox->lineEdit()->text();
+  bool pause_on_entry_point = ui_->PauseAtEntryPoingCheckBox->isChecked();
+
+  orbit_grpc_protos::ProcessToLaunch process_to_launch;
+  process_to_launch.set_executable_path(process.toStdString());
+  process_to_launch.set_working_directory(working_dir.toStdString());
+  process_to_launch.set_arguments(args.toStdString());
+  process_to_launch.set_spin_at_entry_point(pause_on_entry_point);
+  auto result = process_manager_->LaunchProcess(process_to_launch);
+  if (result.has_error()) {
+    ui_->ErrorLabel->setText(result.error().message().c_str());
+  } else {
+    emit ProcessLaunched(result.value());
+  }
+#endif  // _WIN32
 }
 
 }  // namespace orbit_session_setup

@@ -60,6 +60,7 @@ target_sources(
 target_link_libraries(
   SessionSetup
   PUBLIC  CaptureFileInfo
+          CaptureClient
           ClientData
           ClientFlags
           ClientServices

@@ -13,12 +13,14 @@ target_include_directories(ClientServices PRIVATE
 
 target_sources(ClientServices PUBLIC
         include/ClientServices/CrashManager.h
+        include/ClientServices/LaunchedProcess.h
         include/ClientServices/ProcessManager.h
         include/ClientServices/ProcessClient.h
         include/ClientServices/TracepointServiceClient.h)
 
 target_sources(ClientServices PRIVATE
         CrashManager.cpp
+        LaunchedProcess.cpp
         ProcessManager.cpp
         ProcessClient.cpp
         TracepointServiceClient.cpp)
@@ -27,3 +29,17 @@ target_link_libraries(ClientServices PUBLIC
         GrpcProtos
         Introspection
         OrbitBase)
+
+add_executable(ClientServicesTests)
+
+target_sources(ClientServicesTests PRIVATE
+        LaunchedProcessTest.cpp
+        MockProcessClient.h)
+
+target_link_libraries(
+        ClientServicesTests PRIVATE
+        ClientServices
+        TestUtils
+        GTest::Main)
+
+register_test(ClientServicesTests)

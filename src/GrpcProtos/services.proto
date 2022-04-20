@@ -10,6 +10,7 @@ import "capture.proto";
 import "code_block.proto";
 import "module.proto";
 import "process.proto";
+import "symbol.proto";
 import "tracepoint.proto";
 
 option cc_enable_arenas = true;
@@ -67,6 +68,26 @@ message GetDebugInfoFileResponse {
   string debug_info_file_path = 1;
 }
 
+message LaunchProcessRequest {
+  ProcessToLaunch process_to_launch = 1;
+}
+
+message LaunchProcessResponse {
+  ProcessInfo process_info = 1;
+}
+
+message SuspendProcessSpinningAtEntryPointRequest {
+  uint32 pid = 1;
+}
+
+message SuspendProcessSpinningAtEntryPointResponse {}
+
+message ResumeProcessSuspendedAtEntryPointRequest {
+  uint32 pid = 1;
+}
+
+message ResumeProcessSuspendedAtEntryPointResponse {}
+
 service ProcessService {
   rpc GetProcessList(GetProcessListRequest) returns (GetProcessListResponse) {}
 
@@ -77,6 +98,14 @@ service ProcessService {
 
   rpc GetDebugInfoFile(GetDebugInfoFileRequest)
       returns (GetDebugInfoFileResponse) {}
+
+  rpc LaunchProcess(LaunchProcessRequest) returns (LaunchProcessResponse) {}
+  rpc SuspendProcessSpinningAtEntryPoint(
+      SuspendProcessSpinningAtEntryPointRequest)
+      returns (SuspendProcessSpinningAtEntryPointResponse) {}
+  rpc ResumeProcessSuspendedAtEntryPoint(
+      ResumeProcessSuspendedAtEntryPointRequest)
+      returns (ResumeProcessSuspendedAtEntryPointResponse) {}
 }
 
 service TracepointService {

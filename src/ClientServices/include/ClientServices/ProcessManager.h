@@ -18,34 +18,20 @@
 
 #include "GrpcProtos/module.pb.h"
 #include "GrpcProtos/process.pb.h"
+#include "GrpcProtos/services.pb.h"
 #include "GrpcProtos/symbol.pb.h"
 #include "OrbitBase/Result.h"
 #include "absl/synchronization/mutex.h"
 
 namespace orbit_client_services {
 
-// This class is responsible for maintaining
-// process list. It periodically updates it
-// and calls callback to notify listeners when
-// the list is updated.
-//
-// Usage example:
-//
-// auto manager = ProcessListManager::Create(...);
-// auto callback = [&](const std::vector<ProcessInfo>& process_list) {
-//   // Update process list in UI
-// }
-// manager.SetProcessListUpdateListener(callback);
-//
-// To orderly shutdown the manager use following:
-//
-// manager.Shutdown();
-//
+// ProcessManager is used to access or launch processes on the target machine through OrbitService.
 class ProcessManager {
  public:
   ProcessManager() = default;
   virtual ~ProcessManager() = default;
 
+  // Set callback to periodically receive the list of processes running on the target.
   virtual void SetProcessListUpdateListener(
       const std::function<void(std::vector<orbit_grpc_protos::ProcessInfo>)>& listener) = 0;
 
@@ -61,11 +47,18 @@ class ProcessManager {
       const std::string& module_path,
       absl::Span<const std::string> additional_search_directories) = 0;
 
-  // Note that this method waits for the worker thread to stop, which could
-  // take up to refresh_timeout.
-  virtual void ShutdownAndWait() = 0;
+  // Process launching is only implemented on Windows for now.
+  // TODO(https://b/232009293): Profile from entry point on Stadia/Linux.
+#ifdef _WIN32
+  virtual ErrorMessageOr<orbit_grpc_protos::ProcessInfo> LaunchProcess(
+      const orbit_grpc_protos::ProcessToLaunch& process_to_launch) = 0;
+  [[nodiscard]] virtual bool IsProcessSpinningAtEntryPoint(uint32_t pid) = 0;
+  [[nodiscard]] virtual bool IsProcessSuspendedAtEntryPoint(uint32_t pid) = 0;
+  virtual void SuspendProcessSpinningAtEntryPoint(uint32_t pid) = 0;
+  virtual void ResumeProcessSuspendedAtEntryPoint(uint32_t pid) = 0;
+#endif
 
-  // Create ProcessManager with specified duration
+  // Create ProcessManager with specified refresh period.
   static std::unique_ptr<ProcessManager> Create(const std::shared_ptr<grpc::Channel>& channel,
                                                 absl::Duration refresh_timeout);
 };

@@ -15,6 +15,7 @@
 
 #include "GrpcProtos/module.pb.h"
 #include "GrpcProtos/process.pb.h"
+#include "GrpcProtos/symbol.pb.h"
 #include "ObjectUtils/ObjectFile.h"
 #include "OrbitBase/File.h"
 #include "OrbitBase/Logging.h"
@@ -41,9 +42,28 @@ using orbit_grpc_protos::GetProcessMemoryRequest;
 using orbit_grpc_protos::GetProcessMemoryResponse;
 using orbit_grpc_protos::ModuleInfo;
 using orbit_grpc_protos::ProcessInfo;
+using orbit_grpc_protos::ResumeProcessSuspendedAtEntryPointRequest;
+using orbit_grpc_protos::ResumeProcessSuspendedAtEntryPointResponse;
+using orbit_grpc_protos::SuspendProcessSpinningAtEntryPointRequest;
+using orbit_grpc_protos::SuspendProcessSpinningAtEntryPointResponse;
 
 using orbit_windows_utils::Module;
 using orbit_windows_utils::Process;
+
+namespace {
+
+[[nodiscard]] ProcessInfo ProcessInfoFromProcess(const Process* process) {
+  ProcessInfo process_info;
+  process_info.set_pid(process->pid);
+  process_info.set_name(process->name);
+  process_info.set_full_path(process->full_path);
+  process_info.set_build_id(process->build_id);
+  process_info.set_is_64_bit(process->is_64_bit);
+  process_info.set_cpu_usage(process->cpu_usage_percentage);
+  return process_info;
+}
+
+}  // namespace
 
 Status ProcessServiceImpl::GetProcessList(ServerContext*, const GetProcessListRequest*,
                                           GetProcessListResponse* response) {
@@ -63,13 +83,55 @@ Status ProcessServiceImpl::GetProcessList(ServerContext*, const GetProcessListRe
   }
 
   for (const Process* process : processes) {
-    ProcessInfo* process_info = response->add_processes();
-    process_info->set_pid(process->pid);
-    process_info->set_name(process->name);
-    process_info->set_full_path(process->full_path);
-    process_info->set_build_id(process->build_id);
-    process_info->set_is_64_bit(process->is_64_bit);
-    process_info->set_cpu_usage(process->cpu_usage_percentage);
+    *response->add_processes() = std::move(ProcessInfoFromProcess(process));
+  }
+
+  return Status::OK;
+}
+
+grpc::Status ProcessServiceImpl::LaunchProcess(
+    grpc::ServerContext* context, const orbit_grpc_protos::LaunchProcessRequest* request,
+    orbit_grpc_protos::LaunchProcessResponse* response) {
+  auto& process_to_launch = request->process_to_launch();
+
+  auto result = process_launcher_.LaunchProcess(
+      process_to_launch.executable_path(), process_to_launch.working_directory(),
+      process_to_launch.arguments(), process_to_launch.spin_at_entry_point());
+
+  if (result.has_error()) {
+    return Status(StatusCode::INVALID_ARGUMENT, result.error().message());
+  }
+
+  process_list_->Refresh();
+
+  uint32_t process_id = result.value();
+  std::optional<const Process*> process = process_list_->GetProcessByPid(process_id);
+  if (!process.has_value()) {
+    // The process might have already exited.
+    return Status(StatusCode::NOT_FOUND, "Launched process not found in process list");
+  }
+
+  *response->mutable_process_info() = std::move(ProcessInfoFromProcess(*process));
+  return Status::OK;
+}
+
+grpc::Status ProcessServiceImpl::SuspendProcessSpinningAtEntryPoint(
+    grpc::ServerContext* context, const SuspendProcessSpinningAtEntryPointRequest* request,
+    SuspendProcessSpinningAtEntryPointResponse* response) {
+  auto result = process_launcher_.SuspendProcessSpinningAtEntryPoint(request->pid());
+  if (result.has_error()) {
+    return Status(StatusCode::NOT_FOUND, result.error().message());
+  }
+
+  return Status::OK;
+}
+
+grpc::Status ProcessServiceImpl::ResumeProcessSuspendedAtEntryPoint(
+    grpc::ServerContext* context, const ResumeProcessSuspendedAtEntryPointRequest* request,
+    ResumeProcessSuspendedAtEntryPointResponse* response) {
+  auto result = process_launcher_.ResumeProcessSuspendedAtEntryPoint(request->pid());
+  if (result.has_error()) {
+    return Status(StatusCode::NOT_FOUND, result.error().message());
   }
 
   return Status::OK;

@@ -29,8 +29,14 @@ using orbit_grpc_protos::GetProcessListRequest;
 using orbit_grpc_protos::GetProcessListResponse;
 using orbit_grpc_protos::GetProcessMemoryRequest;
 using orbit_grpc_protos::GetProcessMemoryResponse;
+using orbit_grpc_protos::LaunchProcessRequest;
+using orbit_grpc_protos::LaunchProcessResponse;
 using orbit_grpc_protos::ModuleInfo;
 using orbit_grpc_protos::ProcessInfo;
+using orbit_grpc_protos::ResumeProcessSuspendedAtEntryPointRequest;
+using orbit_grpc_protos::ResumeProcessSuspendedAtEntryPointResponse;
+using orbit_grpc_protos::SuspendProcessSpinningAtEntryPointRequest;
+using orbit_grpc_protos::SuspendProcessSpinningAtEntryPointResponse;
 
 constexpr uint64_t kGrpcDefaultTimeoutMilliseconds = 3000;
 
@@ -124,6 +130,61 @@ ErrorMessageOr<std::string> ProcessClient::LoadProcessMemory(uint32_t pid, uint6
   }
 
   return std::move(*response.mutable_memory());
+}
+
+[[nodiscard]] ErrorMessageOr<orbit_grpc_protos::ProcessInfo> ProcessClient::LaunchProcess(
+    const orbit_grpc_protos::ProcessToLaunch& process_to_launch) {
+  LaunchProcessRequest request;
+  LaunchProcessResponse response;
+
+  *request.mutable_process_to_launch() = process_to_launch;
+
+  std::unique_ptr<grpc::ClientContext> context = CreateContext();
+  grpc::Status status = process_service_->LaunchProcess(context.get(), request, &response);
+
+  if (!status.ok()) {
+    ORBIT_ERROR("Grpc call failed: code=%d, message=%s", status.error_code(),
+                status.error_message());
+    return ErrorMessage(status.error_message());
+  }
+
+  return response.process_info();
+}
+
+ErrorMessageOr<void> ProcessClient::SuspendProcessSpinningAtEntryPoint(uint32_t pid) {
+  SuspendProcessSpinningAtEntryPointRequest request;
+  SuspendProcessSpinningAtEntryPointResponse response;
+  request.set_pid(pid);
+
+  std::unique_ptr<grpc::ClientContext> context = CreateContext();
+  grpc::Status status =
+      process_service_->SuspendProcessSpinningAtEntryPoint(context.get(), request, &response);
+
+  if (!status.ok()) {
+    ORBIT_ERROR("Grpc call failed: code=%d, message=%s", status.error_code(),
+                status.error_message());
+    return ErrorMessage(status.error_message());
+  }
+
+  return outcome::success();
+}
+
+ErrorMessageOr<void> ProcessClient::ResumeProcessSuspendedAtEntryPoint(uint32_t pid) {
+  ResumeProcessSuspendedAtEntryPointRequest request;
+  ResumeProcessSuspendedAtEntryPointResponse response;
+  request.set_pid(pid);
+
+  std::unique_ptr<grpc::ClientContext> context = CreateContext();
+  grpc::Status status =
+      process_service_->ResumeProcessSuspendedAtEntryPoint(context.get(), request, &response);
+
+  if (!status.ok()) {
+    ORBIT_ERROR("Grpc call failed: code=%d, message=%s", status.error_code(),
+                status.error_message());
+    return ErrorMessage(status.error_message());
+  }
+
+  return outcome::success();
 }
 
 }  // namespace orbit_client_services

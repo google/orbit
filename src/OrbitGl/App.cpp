@@ -748,7 +748,20 @@ void OrbitApp::PostInit(bool is_connected) {
     capture_client_ = std::make_unique<CaptureClient>(grpc_channel_);
 
     if (GetTargetProcess() != nullptr) {
-      std::ignore = UpdateProcessAndModuleList();
+      auto update_process_and_modules_future = UpdateProcessAndModuleList();
+
+#ifdef _WIN32
+      // A process launched "paused at entry point" will be spinning on a busy loop at this point.
+      // Suspend spinning process only after we've received module information and OrbitService
+      // has potentially injected shared libraries in the target process.
+      uint32_t pid = GetTargetProcess()->pid();
+      if (process_manager_->IsProcessSpinningAtEntryPoint(pid)) {
+        main_thread_executor_->ScheduleAfter(
+            update_process_and_modules_future, [this, pid](const ErrorMessageOr<void>& /*result*/) {
+              process_manager_->SuspendProcessSpinningAtEntryPoint(pid);
+            });
+      }
+#endif  // _WIN32
     }
 
     frame_pointer_validator_client_ =
@@ -1451,6 +1464,7 @@ void OrbitApp::StartCapture() {
   }
 
   ClientCaptureOptions options;
+  options.process_id = process->pid();
   options.selected_tracepoints = data_manager_->selected_tracepoints();
   options.collect_scheduling_info = !IsDevMode() || data_manager_->collect_scheduler_info();
   options.collect_thread_states = data_manager_->collect_thread_states();
@@ -1467,7 +1481,6 @@ void OrbitApp::StartCapture() {
   options.collect_memory_info = data_manager_->collect_memory_info();
   options.memory_sampling_period_ms = data_manager_->memory_sampling_period_ms();
   options.selected_functions = std::move(selected_functions_map);
-  options.process_id = process->pid();
   options.record_return_values = absl::GetFlag(FLAGS_show_return_values);
   options.record_arguments = false;
 
@@ -1514,6 +1527,14 @@ void OrbitApp::StartCapture() {
 
   Future<ErrorMessageOr<CaptureOutcome>> capture_result = capture_client_->Capture(
       thread_pool_.get(), std::move(capture_event_processor), *module_manager_, options);
+
+#ifdef _WIN32
+  // If process is suspended, resume it only after we've started capturing to make sure we catch
+  // events as early as possible in the process life cycle, i.e. before main is called.
+  if (process_manager_->IsProcessSuspendedAtEntryPoint(process->pid())) {
+    process_manager_->ResumeProcessSuspendedAtEntryPoint(process->pid());
+  }
+#endif  // _WIN32
 
   // TODO(b/187250643): Refactor this to be more readable and maybe remove parts that are not needed
   // here (capture cancelled)

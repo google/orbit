@@ -4,6 +4,7 @@
 
 #include "ClientServices/ProcessManager.h"
 
+#include <absl/container/flat_hash_map.h>
 #include <absl/synchronization/mutex.h>
 #include <grpcpp/channel.h>
 
@@ -13,6 +14,7 @@
 #include <thread>
 #include <utility>
 
+#include "ClientServices/LaunchedProcess.h"
 #include "ClientServices/ProcessClient.h"
 #include "OrbitBase/Logging.h"
 #include "OrbitBase/Result.h"
@@ -20,8 +22,10 @@
 namespace orbit_client_services {
 namespace {
 
+using orbit_client_services::LaunchedProcess;
 using orbit_grpc_protos::ModuleInfo;
 using orbit_grpc_protos::ProcessInfo;
+using orbit_grpc_protos::ProcessToLaunch;
 
 class ProcessManagerImpl final : public ProcessManager {
  public:
@@ -38,6 +42,14 @@ class ProcessManagerImpl final : public ProcessManager {
   void SetProcessListUpdateListener(
       const std::function<void(std::vector<orbit_grpc_protos::ProcessInfo>)>& listener) override;
 
+#ifdef _WIN32
+  ErrorMessageOr<ProcessInfo> LaunchProcess(const ProcessToLaunch& process_to_launch) override;
+  [[nodiscard]] bool IsProcessSpinningAtEntryPoint(uint32_t pid) override;
+  [[nodiscard]] bool IsProcessSuspendedAtEntryPoint(uint32_t pid) override;
+  void SuspendProcessSpinningAtEntryPoint(uint32_t pid) override;
+  void ResumeProcessSuspendedAtEntryPoint(uint32_t pid) override;
+#endif
+
   ErrorMessageOr<std::vector<ModuleInfo>> LoadModuleList(uint32_t pid) override;
 
   ErrorMessageOr<std::string> LoadProcessMemory(uint32_t pid, uint64_t address,
@@ -50,7 +62,7 @@ class ProcessManagerImpl final : public ProcessManager {
       absl::Span<const std::string> additional_search_directories) override;
 
   void Start();
-  void ShutdownAndWait() override;
+  void ShutdownAndWait();
 
  private:
   void WorkerFunction();
@@ -62,7 +74,12 @@ class ProcessManagerImpl final : public ProcessManager {
   bool shutdown_initiated_;
 
   absl::Mutex process_list_update_listener_mutex_;
-  std::function<void(std::vector<orbit_grpc_protos::ProcessInfo>)> process_list_update_listener_;
+  std::function<void(std::vector<orbit_grpc_protos::ProcessInfo>)> process_list_update_listener_
+      ABSL_GUARDED_BY(process_list_update_listener_mutex_);
+
+  absl::Mutex launched_processes_by_pid_mutex_;
+  absl::flat_hash_map<uint32_t, std::unique_ptr<LaunchedProcess>> launched_processes_by_pid_
+      ABSL_GUARDED_BY(launched_processes_by_pid_mutex_);
 
   std::thread worker_thread_;
 };
@@ -79,6 +96,56 @@ void ProcessManagerImpl::SetProcessListUpdateListener(
   process_list_update_listener_ = listener;
 }
 
+#ifdef _WIN32
+ErrorMessageOr<ProcessInfo> ProcessManagerImpl::LaunchProcess(
+    const ProcessToLaunch& process_to_launch) {
+  OUTCOME_TRY(std::unique_ptr<LaunchedProcess> launched_process,
+              LaunchedProcess::LaunchProcess(process_to_launch, process_client_.get()));
+  absl::MutexLock lock(&launched_processes_by_pid_mutex_);
+  const ProcessInfo process_info = launched_process->GetProcessInfo();
+  launched_processes_by_pid_.emplace(process_info.pid(), std::move(launched_process));
+  return process_info;
+}
+
+bool ProcessManagerImpl::IsProcessSpinningAtEntryPoint(uint32_t pid) {
+  absl::MutexLock lock(&launched_processes_by_pid_mutex_);
+  auto it = launched_processes_by_pid_.find(pid);
+  return it != launched_processes_by_pid_.end() ? it->second->IsProcessSpinningAtEntryPoint()
+                                                : false;
+}
+
+bool ProcessManagerImpl::IsProcessSuspendedAtEntryPoint(uint32_t pid) {
+  absl::MutexLock lock(&launched_processes_by_pid_mutex_);
+  auto it = launched_processes_by_pid_.find(pid);
+  return it != launched_processes_by_pid_.end() ? it->second->IsProcessSuspendedAtEntryPoint()
+                                                : false;
+}
+
+void ProcessManagerImpl::SuspendProcessSpinningAtEntryPoint(uint32_t pid) {
+  absl::MutexLock lock(&launched_processes_by_pid_mutex_);
+  auto it = launched_processes_by_pid_.find(pid);
+  ORBIT_CHECK(it != launched_processes_by_pid_.end());
+  ErrorMessageOr<void> result =
+      it->second->SuspendProcessSpinningAtEntryPoint(process_client_.get());
+  if (result.has_error()) {
+    // The process might have been terminated.
+    ORBIT_ERROR("Suspending spinning process: %s", result.error().message());
+  }
+}
+
+void ProcessManagerImpl::ResumeProcessSuspendedAtEntryPoint(uint32_t pid) {
+  absl::MutexLock lock(&launched_processes_by_pid_mutex_);
+  auto it = launched_processes_by_pid_.find(pid);
+  ORBIT_CHECK(it != launched_processes_by_pid_.end());
+  ErrorMessageOr<void> result =
+      it->second->ResumeProcessSuspendedAtEntryPoint(process_client_.get());
+  if (result.has_error()) {
+    // The process might have been terminated.
+    ORBIT_ERROR("Resuming suspended process: %s", result.error().message());
+  }
+}
+#endif  // _WIN32
+
 ErrorMessageOr<std::vector<ModuleInfo>> ProcessManagerImpl::LoadModuleList(uint32_t pid) {
   return process_client_->LoadModuleList(pid);
 }
@@ -94,6 +161,7 @@ void ProcessManagerImpl::Start() {
 }
 
 void ProcessManagerImpl::ShutdownAndWait() {
+  // Wait for the worker thread to stop, which could take up to refresh_timeout_.
   shutdown_mutex_.Lock();
   shutdown_initiated_ = true;
   shutdown_mutex_.Unlock();

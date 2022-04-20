@@ -75,6 +75,7 @@ proto_library(
         ":code_block_proto",
         ":module_proto",
         ":process_proto",
+        ":symbol_proto",
         ":tracepoint_proto",
     ],
 )
