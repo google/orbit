@@ -887,8 +887,7 @@ void OrbitApp::RenderImGuiDebugUI() {
 }
 
 void OrbitApp::Disassemble(uint32_t pid, const FunctionInfo& function) {
-  ScopedMetric metric{metrics_uploader_,
-                      orbit_metrics_uploader::OrbitLogEvent::ORBIT_DISASSEMBLY_SHOW};
+  ScopedMetric metric{metrics_uploader_, OrbitLogEvent::ORBIT_DISASSEMBLY_SHOW};
 
   ORBIT_CHECK(process_ != nullptr);
   const ModuleData* module = module_manager_->GetModuleByPathAndBuildId(function.module_path(),
@@ -901,8 +900,8 @@ void OrbitApp::Disassemble(uint32_t pid, const FunctionInfo& function) {
         "Error reading memory",
         absl::StrFormat(
             R"(Unable to calculate function "%s" address, likely because the module "%s" is not loaded.)",
-            function.pretty_name(), module->file_path()));
-    metric.SetStatusCode(orbit_metrics_uploader::OrbitLogEvent::INTERNAL_ERROR);
+            function.pretty_name(), module->file_path()),
+        std::move(metric));
     return;
   }
   thread_pool_->Schedule([this, metric = std::move(metric),
@@ -910,9 +909,9 @@ void OrbitApp::Disassemble(uint32_t pid, const FunctionInfo& function) {
                           function]() mutable {
     auto result = GetProcessManager()->LoadProcessMemory(pid, absolute_address, function.size());
     if (!result.has_value()) {
-      SendErrorToUi("Error reading memory", absl::StrFormat("Could not read process memory: %s.",
-                                                            result.error().message()));
-      metric.SetStatusCode(orbit_metrics_uploader::OrbitLogEvent::INTERNAL_ERROR);
+      SendErrorToUi("Error reading memory",
+                    absl::StrFormat("Could not read process memory: %s.", result.error().message()),
+                    std::move(metric));
       return;
     }
 
@@ -947,65 +946,67 @@ void OrbitApp::Disassemble(uint32_t pid, const FunctionInfo& function) {
 }
 
 void OrbitApp::ShowSourceCode(const orbit_client_data::FunctionInfo& function) {
-  ScopedMetric metric{metrics_uploader_,
-                      orbit_metrics_uploader::OrbitLogEvent::ORBIT_SOURCE_CODE_SHOW};
+  ScopedMetric metric{metrics_uploader_, OrbitLogEvent::ORBIT_SOURCE_CODE_SHOW};
 
   const ModuleData* module = module_manager_->GetModuleByPathAndBuildId(function.module_path(),
                                                                         function.module_build_id());
 
   auto loaded_module = RetrieveModuleWithDebugInfo(module);
 
-  loaded_module
-      .ThenIfSuccess(
-          main_thread_executor_,
-          [this, module, function,
-           &metric](const std::filesystem::path& local_file_path) -> ErrorMessageOr<void> {
-            const auto elf_file = orbit_object_utils::CreateElfFile(local_file_path);
-            const auto decl_line_info_or_error =
-                elf_file.value()->GetLocationOfFunction(function.address());
+  (void)loaded_module.Then(main_thread_executor_, [this, module, function,
+                                                   metric = std::move(metric)](
+                                                      const ErrorMessageOr<std::filesystem::path>&
+                                                          local_file_path_or_error) mutable {
+    std::string error_title = "Error showing source code";
+    if (local_file_path_or_error.has_error()) {
+      SendErrorToUi(error_title, local_file_path_or_error.error().message(), std::move(metric));
+      return;
+    }
 
-            if (decl_line_info_or_error.has_error()) {
-              return ErrorMessage{absl::StrFormat(
-                  R"(Could not find source code location of function "%s" in module "%s": %s)",
-                  function.pretty_name(), module->file_path(),
-                  decl_line_info_or_error.error().message())};
-            }
-            const auto& line_info = decl_line_info_or_error.value();
-            auto source_file_path =
-                std::filesystem::path{line_info.source_file()}.lexically_normal();
+    const auto elf_file = orbit_object_utils::CreateElfFile(local_file_path_or_error.value());
+    const auto decl_line_info_or_error =
+        elf_file.value()->GetLocationOfFunction(function.address());
+    if (decl_line_info_or_error.has_error()) {
+      SendErrorToUi(
+          error_title,
+          absl::StrFormat(
+              R"(Could not find source code location of function "%s" in module "%s": %s)",
+              function.pretty_name(), module->file_path(),
+              decl_line_info_or_error.error().message()),
+          std::move(metric));
+      return;
+    }
 
-            std::optional<std::unique_ptr<orbit_code_report::CodeReport>> code_report;
+    const auto& line_info = decl_line_info_or_error.value();
+    auto source_file_path = std::filesystem::path{line_info.source_file()}.lexically_normal();
 
-            if (HasCaptureData() && GetCaptureData().has_post_processed_sampling_data()) {
-              const auto& sampling_data = GetCaptureData().post_processed_sampling_data();
-              const auto absolute_address = function.GetAbsoluteAddress(*process_, *module);
+    std::optional<std::unique_ptr<orbit_code_report::CodeReport>> code_report;
 
-              if (!absolute_address.has_value()) {
-                return ErrorMessage{absl::StrFormat(
-                    R"(Unable calculate function "%s" address in memory, likely because the module "%s" is not loaded)",
-                    function.pretty_name(), module->file_path())};
-              }
+    if (HasCaptureData() && GetCaptureData().has_post_processed_sampling_data()) {
+      const auto& sampling_data = GetCaptureData().post_processed_sampling_data();
+      const auto absolute_address = function.GetAbsoluteAddress(*process_, *module);
 
-              const orbit_client_data::ThreadSampleData* summary = sampling_data.GetSummary();
-              if (summary != nullptr) {
-                code_report = std::make_unique<orbit_code_report::SourceCodeReport>(
-                    line_info.source_file(), function, absolute_address.value(),
-                    elf_file.value().get(), *summary,
-                    GetCaptureData().GetCallstackData().GetCallstackEventsCount());
-              }
-            }
+      if (!absolute_address.has_value()) {
+        SendErrorToUi(
+            error_title,
+            absl::StrFormat(
+                R"(Unable calculate function "%s" address in memory, likely because the module "%s" is not loaded)",
+                function.pretty_name(), module->file_path()),
+            std::move(metric));
+        return;
+      }
 
-            main_window_->ShowSourceCode(source_file_path, line_info.source_line(),
-                                         std::move(code_report), &metric);
-            return outcome::success();
-          })
-      .Then(main_thread_executor_,
-            [this, &metric](const ErrorMessageOr<void>& maybe_error) mutable {
-              if (maybe_error.has_error()) {
-                SendErrorToUi("Error showing source code", maybe_error.error().message());
-                metric.SetStatusCode(orbit_metrics_uploader::OrbitLogEvent::INTERNAL_ERROR);
-              }
-            });
+      const orbit_client_data::ThreadSampleData* summary = sampling_data.GetSummary();
+      if (summary != nullptr) {
+        code_report = std::make_unique<orbit_code_report::SourceCodeReport>(
+            line_info.source_file(), function, absolute_address.value(), elf_file.value().get(),
+            *summary, GetCaptureData().GetCallstackData().GetCallstackEventsCount());
+      }
+    }
+
+    main_window_->ShowSourceCode(source_file_path, line_info.source_line(), std::move(code_report),
+                                 &metric);
+  });
 }
 
 void OrbitApp::MainTick() {
@@ -1641,6 +1642,12 @@ void OrbitApp::SendErrorToUi(const std::string& title, const std::string& text) 
     ORBIT_CHECK(error_message_callback_);
     error_message_callback_(title, text);
   });
+}
+
+void OrbitApp::SendErrorToUi(const std::string& title, const std::string& text,
+                             ScopedMetric metric) {
+  SendErrorToUi(title, text);
+  metric.SetStatusCode(OrbitLogEvent::INTERNAL_ERROR);
 }
 
 orbit_base::Future<ErrorMessageOr<std::filesystem::path>> OrbitApp::RetrieveModuleFromRemote(
@@ -2710,13 +2717,12 @@ void OrbitApp::DeselectTracepoint(const TracepointInfo& tracepoint) {
 
 void OrbitApp::EnableFrameTrack(const FunctionInfo& function) {
   data_manager_->EnableFrameTrack(function);
-  metrics_uploader_->SendLogEvent(orbit_metrics_uploader::OrbitLogEvent::ORBIT_FRAME_TRACK_ENABLED);
+  metrics_uploader_->SendLogEvent(OrbitLogEvent::ORBIT_FRAME_TRACK_ENABLED);
 }
 
 void OrbitApp::DisableFrameTrack(const FunctionInfo& function) {
   data_manager_->DisableFrameTrack(function);
-  metrics_uploader_->SendLogEvent(
-      orbit_metrics_uploader::OrbitLogEvent::ORBIT_FRAME_TRACK_DISABLED);
+  metrics_uploader_->SendLogEvent(OrbitLogEvent::ORBIT_FRAME_TRACK_DISABLED);
 }
 
 void OrbitApp::AddFrameTrack(const FunctionInfo& function) {
@@ -2748,8 +2754,7 @@ void OrbitApp::AddFrameTrack(uint64_t instrumented_function_id) {
       AddFrameTrackTimers(instrumented_function_id);
     }
     TrySaveUserDefinedCaptureInfo();
-    metrics_uploader_->SendLogEvent(
-        orbit_metrics_uploader::OrbitLogEvent::ORBIT_FRAME_TRACK_ADDED_VISIBLE);
+    metrics_uploader_->SendLogEvent(OrbitLogEvent::ORBIT_FRAME_TRACK_ADDED_VISIBLE);
     return;
   }
 
@@ -2763,8 +2768,7 @@ void OrbitApp::AddFrameTrack(uint64_t instrumented_function_id) {
       function->function_name());
   main_window_->ShowWarningWithDontShowAgainCheckboxIfNeeded(
       title, message, kDontShowAgainEmptyFrameTrackWarningKey);
-  metrics_uploader_->SendLogEvent(
-      orbit_metrics_uploader::OrbitLogEvent::ORBIT_FRAME_TRACK_ADDED_INVISIBLE);
+  metrics_uploader_->SendLogEvent(OrbitLogEvent::ORBIT_FRAME_TRACK_ADDED_INVISIBLE);
 }
 
 void OrbitApp::RemoveFrameTrack(const FunctionInfo& function) {
@@ -2792,7 +2796,7 @@ void OrbitApp::RemoveFrameTrack(uint64_t instrumented_function_id) {
     GetMutableTimeGraph()->GetTrackContainer()->RemoveFrameTrack(instrumented_function_id);
     TrySaveUserDefinedCaptureInfo();
   }
-  metrics_uploader_->SendLogEvent(orbit_metrics_uploader::OrbitLogEvent::ORBIT_FRAME_TRACK_REMOVED);
+  metrics_uploader_->SendLogEvent(OrbitLogEvent::ORBIT_FRAME_TRACK_REMOVED);
 }
 
 bool OrbitApp::IsFrameTrackEnabled(const FunctionInfo& function) const {
