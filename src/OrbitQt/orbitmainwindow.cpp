@@ -148,6 +148,7 @@ using DynamicInstrumentationMethod =
 using UnwindingMethod = orbit_grpc_protos::CaptureOptions::UnwindingMethod;
 
 using orbit_metrics_uploader::OrbitLogEvent;
+using orbit_metrics_uploader::ScopedMetric;
 
 namespace {
 const QString kLightGrayColor = "rgb(117, 117, 117)";
@@ -408,10 +409,10 @@ void OrbitMainWindow::SetupMainWindow() {
             app_->SetHistogramSelectionRange(range);
           });
 
-  ui->topDownWidget->Initialize(app_.get());
-  ui->selectionTopDownWidget->Initialize(app_.get());
-  ui->bottomUpWidget->Initialize(app_.get());
-  ui->selectionBottomUpWidget->Initialize(app_.get());
+  ui->topDownWidget->Initialize(app_.get(), metrics_uploader_);
+  ui->selectionTopDownWidget->Initialize(app_.get(), metrics_uploader_);
+  ui->bottomUpWidget->Initialize(app_.get(), metrics_uploader_);
+  ui->selectionBottomUpWidget->Initialize(app_.get(), metrics_uploader_);
 
   ui->MainTabWidget->tabBar()->installEventFilter(this);
   ui->RightTabWidget->tabBar()->installEventFilter(this);
@@ -1693,7 +1694,8 @@ static std::optional<QString> TryApplyMappingAndReadSourceFile(
   return std::nullopt;
 }
 
-std::optional<QString> OrbitMainWindow::LoadSourceCode(const std::filesystem::path& file_path) {
+std::optional<QString> OrbitMainWindow::LoadSourceCode(const std::filesystem::path& file_path,
+                                                       ScopedMetric* metric) {
   {
     ErrorMessageOr<std::string> source_code_or_error = orbit_base::ReadFileToString(file_path);
     if (source_code_or_error.has_value()) {
@@ -1707,9 +1709,15 @@ std::optional<QString> OrbitMainWindow::LoadSourceCode(const std::filesystem::pa
   }
 
   {
+    metric->Pause();
     std::optional<orbit_source_paths_mapping_ui::UserAnswers> maybe_user_answers =
         orbit_source_paths_mapping_ui::AskUserForSourceFilePath(this, file_path);
-    if (!maybe_user_answers.has_value()) return std::nullopt;
+    metric->Resume();
+
+    if (!maybe_user_answers.has_value()) {
+      metric->SetStatusCode(orbit_metrics_uploader::OrbitLogEvent::CANCELLED);
+      return std::nullopt;
+    }
 
     ErrorMessageOr<std::string> file_contents_or_error =
         orbit_base::ReadFileToString(maybe_user_answers->local_file_path);
@@ -1717,6 +1725,7 @@ std::optional<QString> OrbitMainWindow::LoadSourceCode(const std::filesystem::pa
     if (file_contents_or_error.has_error()) {
       QMessageBox::critical(this, "Could not open source file",
                             QString::fromStdString(file_contents_or_error.error().message()));
+      metric->SetStatusCode(orbit_metrics_uploader::OrbitLogEvent::INTERNAL_ERROR);
       return std::nullopt;
     }
 
@@ -1733,7 +1742,11 @@ std::optional<QString> OrbitMainWindow::LoadSourceCode(const std::filesystem::pa
 
 void OrbitMainWindow::ShowSourceCode(
     const std::filesystem::path& file_path, size_t line_number,
-    std::optional<std::unique_ptr<orbit_code_report::CodeReport>> maybe_code_report) {
+    std::optional<std::unique_ptr<orbit_code_report::CodeReport>> maybe_code_report,
+    ScopedMetric* metric) {
+  const auto source_code = LoadSourceCode(file_path.lexically_normal(), metric);
+  if (!source_code.has_value()) return;
+
   auto code_viewer_dialog = std::make_unique<orbit_code_viewer::OwningDialog>();
 
   code_viewer_dialog->SetLineNumberTypes(
@@ -1741,12 +1754,8 @@ void OrbitMainWindow::ShowSourceCode(
   code_viewer_dialog->SetHighlightCurrentLine(true);
   code_viewer_dialog->setWindowTitle(QString::fromStdString(file_path.filename().string()));
 
-  const auto source_code = LoadSourceCode(file_path.lexically_normal());
-
-  if (!source_code.has_value()) return;
-
   auto syntax_highlighter = std::make_unique<orbit_syntax_highlighter::Cpp>();
-  code_viewer_dialog->SetMainContent(source_code.value(), std::move(syntax_highlighter));
+  code_viewer_dialog->SetMainContent(std::move(source_code.value()), std::move(syntax_highlighter));
   constexpr orbit_code_viewer::FontSizeInEm kHeatmapAreaWidth{1.3f};
 
   if (maybe_code_report.has_value()) {

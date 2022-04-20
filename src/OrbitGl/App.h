@@ -338,6 +338,8 @@ class OrbitApp final : public DataViewFactory,
   void SendInfoToUi(const std::string& title, const std::string& text);
   void SendWarningToUi(const std::string& title, const std::string& text);
   void SendErrorToUi(const std::string& title, const std::string& text) override;
+  void SendErrorToUi(const std::string& title, const std::string& text,
+                     orbit_metrics_uploader::ScopedMetric metric);
   void RenderImGuiDebugUI();
 
   // RetrieveModule retrieves a module file and returns the local file path (potentially from the
