@@ -175,12 +175,6 @@ std::string ThreadTrack::GetBoxTooltip(const PrimitiveAssembler& primitive_assem
   return result;
 }
 
-bool ThreadTrack::IsTimerActive(const TimerInfo& timer_info) const {
-  // TODO(b/179225487): Filtering for manually instrumented scopes is not yet supported.
-  return timer_info.type() == TimerInfo::kApiScope ||
-         app_->IsFunctionVisible(timer_info.function_id());
-}
-
 bool ThreadTrack::IsTrackSelected() const {
   return GetThreadId() != orbit_base::kAllProcessThreadsTid &&
          app_->selected_thread_id() == GetThreadId();

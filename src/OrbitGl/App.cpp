@@ -1700,7 +1700,7 @@ orbit_base::Future<void> OrbitApp::RetrieveModulesAndLoadSymbols(
   for (const auto& module : modules_set) {
     // Explicitely do not handle the result.
     Future<void> future = RetrieveModuleAndLoadSymbolsAndHandleError(module).Then(
-        &immediate_executor, [](const SymbolLoadingAndErrorHandlingResult & /*result*/) -> void {});
+        &immediate_executor, [](const SymbolLoadingAndErrorHandlingResult& /*result*/) -> void {});
     futures.emplace_back(std::move(future));
   }
 
@@ -2463,9 +2463,7 @@ void OrbitApp::SetVisibleScopeIds(absl::flat_hash_set<uint64_t> visible_scope_id
   RequestUpdatePrimitives();
 }
 
-bool OrbitApp::IsFunctionVisible(uint64_t function_address) {
-  return data_manager_->IsFunctionVisible(function_address);
-}
+bool OrbitApp::IsScopeVisible(uint64_t scope_id) { return data_manager_->IsScopeVisible(scope_id); }
 
 uint64_t OrbitApp::GetHighlightedScopeId() const { return data_manager_->highlighted_scope_id(); }
 

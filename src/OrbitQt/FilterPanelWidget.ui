@@ -38,7 +38,7 @@
       <string>FilterFunctions</string>
      </property>
      <property name="placeholderText">
-      <string>Filter Functions</string>
+      <string>Filter</string>
      </property>
      <property name="clearButtonEnabled">
       <bool>true</bool>

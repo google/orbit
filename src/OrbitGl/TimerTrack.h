@@ -105,10 +105,8 @@ class TimerTrack : public Track {
                           orbit_gl::TextRenderer& text_renderer, uint64_t min_tick,
                           uint64_t max_tick, PickingMode /*picking_mode*/) override;
 
-  [[nodiscard]] virtual bool IsTimerActive(
-      const orbit_client_protos::TimerInfo& /*timer_info*/) const {
-    return true;
-  }
+  [[nodiscard]] virtual bool IsTimerActive(const orbit_client_protos::TimerInfo& timer_info) const;
+
   [[nodiscard]] virtual Color GetTimerColor(const orbit_client_protos::TimerInfo& timer_info,
                                             bool is_selected, bool is_highlighted,
                                             const internal::DrawData& draw_data) const = 0;

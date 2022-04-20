@@ -468,7 +468,7 @@ class OrbitApp final : public DataViewFactory,
       uint64_t function_id) const;
 
   void SetVisibleScopeIds(absl::flat_hash_set<uint64_t> visible_scope_ids) override;
-  [[nodiscard]] bool IsFunctionVisible(uint64_t function_id);
+  [[nodiscard]] bool IsScopeVisible(uint64_t scope_id);
 
   [[nodiscard]] uint64_t GetHighlightedScopeId() const override;
   void SetHighlightedScopeId(uint64_t highlighted_scope_id) override;

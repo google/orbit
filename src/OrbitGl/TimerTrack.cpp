@@ -421,3 +421,8 @@ bool TimerTrack::ShouldHaveBorder(
   const uint64_t duration = timer->end() - timer->start();
   return range->min_duration <= duration && duration <= range->max_duration;
 }
+
+bool TimerTrack::IsTimerActive(const orbit_client_protos::TimerInfo& timer_info) const {
+  if (!app_->HasCaptureData()) return true;
+  return app_->IsScopeVisible(app_->GetCaptureData().ProvideScopeId(timer_info));
+}
