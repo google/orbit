@@ -6,6 +6,8 @@ found in the LICENSE file.
 
 import logging
 import os
+import tempfile
+import shutil
 
 from typing import List, Iterable
 from pywinauto.application import Application
@@ -15,13 +17,15 @@ from core.orbit_e2e import E2ETestCase, OrbitE2EError, wait_for_condition
 
 
 def _wait_for_main_window(application: Application, timeout=30):
-    wait_for_condition(lambda: application.top_window().class_name() == "OrbitMainWindow", max_seconds=timeout)
+    wait_for_condition(lambda: application.top_window().class_name() == "OrbitMainWindow",
+                       max_seconds=timeout)
     application.top_window().set_focus()
 
 
 def _wait_for_connection_window(application: Application):
-    wait_for_condition(lambda: application.top_window().class_name() == "orbit_session_setup::SessionSetupDialog",
-                       max_seconds=30)
+    wait_for_condition(
+        lambda: application.top_window().class_name() == "orbit_session_setup::SessionSetupDialog",
+        max_seconds=30)
     application.top_window().set_focus()
 
 
@@ -57,8 +61,13 @@ class LoadCapture(E2ETestCase):
         file_name_edit = self.find_control('Edit', 'File name:')
 
         if not os.path.isabs(capture_file_path):
+            # Copy the capture file into temporary location. We need write access to the file (see http://b/229836007)
+            # and we don't have this for files in the `automation_tests` directory.
             automation_tests_dir = os.path.join(os.path.dirname(__file__), '..')
-            capture_file_path = os.path.join(automation_tests_dir, capture_file_path)
+            src_path = os.path.join(automation_tests_dir, capture_file_path)
+            dst_path = os.path.join(tempfile.gettempdir(), os.path.basename(capture_file_path))
+            shutil.copyfile(src_path, dst_path)
+            capture_file_path = dst_path
 
         file_name_edit.set_edit_text(capture_file_path)
 
@@ -72,9 +81,9 @@ class LoadCapture(E2ETestCase):
         self.suite.top_window(force_update=True)
 
         logging.info("Waiting for capture to load...")
-        wait_for_condition(lambda: self.find_control(
-            'Window', 'Loading capture', raise_on_failure=False) is None,
-                           max_seconds=120)
+        wait_for_condition(
+            lambda: self.find_control('Window', 'Loading capture', raise_on_failure=False) is None,
+            max_seconds=120)
         logging.info("Capture Loading finished")
 
         if expect_fail:
@@ -195,7 +204,7 @@ class RefreshStadiaInstanceList(E2ETestCase):
 
         wait_for_condition(
             lambda: self.find_control('Group', 'InstanceListOverlay', raise_on_failure=False) is
-                    None, 100)
+            None, 100)
         logging.info('Loading done, overlay is hidden')
         self.expect_true(_get_number_of_instances_in_list(self) >= 1, 'Found at least one instance')
 
@@ -219,7 +228,7 @@ class SelectProjectAndVerifyItHasAtLeastOneInstance(E2ETestCase):
         # After project changing, loading takes place. Wait until the overlay is hidden
         wait_for_condition(
             lambda: self.find_control('Group', 'InstanceListOverlay', raise_on_failure=False) is
-                    None, 100)
+            None, 100)
         logging.info('Successfully selected project ' + project_name +
                      'and waited until loading is done')
         self.expect_true(_get_number_of_instances_in_list(self) >= 1, 'Found at least one instance')
@@ -242,7 +251,7 @@ class SelectNextProject(E2ETestCase):
         # After project changing, loading takes place. Wait until the overlay is hidden
         wait_for_condition(
             lambda: self.find_control('Group', 'InstanceListOverlay', raise_on_failure=False) is
-                    None, 100)
+            None, 100)
         logging.info('Successfully selected next project')
 
 
@@ -258,7 +267,7 @@ class TestAllInstancesCheckbox(E2ETestCase):
         # First wait until all loading is done.
         wait_for_condition(
             lambda: self.find_control('Group', 'InstanceListOverlay', raise_on_failure=False) is
-                    None, 100)
+            None, 100)
         check_box = self.find_control('CheckBox', 'AllInstancesCheckBox')
         logging.info('Found checkbox')
 
@@ -268,7 +277,7 @@ class TestAllInstancesCheckbox(E2ETestCase):
         logging.info('Clicked All Instances check box, waiting until loading is done')
         wait_for_condition(
             lambda: self.find_control('Group', 'InstanceListOverlay', raise_on_failure=False) is
-                    None, 100)
+            None, 100)
         self.expect_true(instance_count <= _get_number_of_instances_in_list(self),
                          'Instance list contains at least same amount of instances as before.')
         logging.info('Loading successful, instance number increased')
@@ -276,7 +285,7 @@ class TestAllInstancesCheckbox(E2ETestCase):
         check_box.click_input()
         wait_for_condition(
             lambda: self.find_control('Group', 'InstanceListOverlay', raise_on_failure=False) is
-                    None, 100)
+            None, 100)
         self.expect_true(
             _get_number_of_instances_in_list(self) >= 1,
             'Instance list contains at least one instance')
@@ -331,7 +340,8 @@ class WaitForConnectionToTargetInstanceAndProcess(E2ETestCase):
 
     def _execute(self, expected_instance: str, expected_process: str):
         window = self.suite.top_window()
-        self.expect_eq(window.class_name(), 'orbit_session_setup::ConnectToTargetDialog', 'Target connection dialog is visible')
+        self.expect_eq(window.class_name(), 'orbit_session_setup::ConnectToTargetDialog',
+                       'Target connection dialog is visible')
         instance_label = self.find_control('Text', expected_instance, raise_on_failure=False)
         self.expect_true(instance_label is not None, 'Found a label with the correct instance name')
         process_label = self.find_control('Text', expected_process, raise_on_failure=False)
