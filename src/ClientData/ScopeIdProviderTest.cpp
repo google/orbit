@@ -15,7 +15,6 @@
 
 #include "ClientData/ScopeIdProvider.h"
 #include "ClientData/ScopeInfo.h"
-#include "ClientFlags/ClientFlags.h"
 #include "ClientProtos/capture_data.pb.h"
 #include "GrpcProtos/Constants.h"
 #include "GrpcProtos/capture.pb.h"
@@ -76,27 +75,17 @@ static void TestProvideId(std::vector<orbit_client_protos::TimerInfo>& timer_inf
 }
 
 TEST(NameEqualityScopeIdProviderTest, ProvideIdIsCorrectForApiScope) {
-  // TODO (b/226565085) remove the flag when the manual instrumentation grouping feature is
-  // released.
-  absl::SetFlag(&FLAGS_devmode, true);
   auto timer_infos = MakeTimerInfos(kNames, orbit_client_protos::TimerInfo_Type_kApiScope);
   TestProvideId(timer_infos);
 }
 
 TEST(NameEqualityScopeIdProviderTest, ProvideIdIsCorrectForApiScopeAsync) {
-  // TODO (b/226565085) remove the flag when the manual instrumentation grouping feature is
-  // released.
-  absl::SetFlag(&FLAGS_devmode, true);
-
   auto async_timer_infos =
       MakeTimerInfos(kNames, orbit_client_protos::TimerInfo_Type_kApiScopeAsync);
   TestProvideId(async_timer_infos);
 }
 
 TEST(NameEqualityScopeIdProviderTest, SyncAndAsyncScopesOfTheSameNameGetDifferentIds) {
-  // TODO (b/226565085) remove the flag when the manual instrumentation grouping feature is
-  // released.
-  absl::SetFlag(&FLAGS_devmode, true);
   TimerInfo sync = MakeTimerInfo("A", orbit_client_protos::TimerInfo_Type_kApiScope);
   TimerInfo async = MakeTimerInfo("A", orbit_client_protos::TimerInfo_Type_kApiScopeAsync);
 
@@ -118,9 +107,6 @@ static void AddInstrumentedFunction(orbit_grpc_protos::CaptureOptions& capture_o
 }
 
 TEST(NameEqualityScopeIdProviderTest, CreateIsCorrect) {
-  // TODO (b/226565085) remove the flag when the manual instrumentation grouping feature is
-  // released.
-  absl::SetFlag(&FLAGS_devmode, true);
   orbit_grpc_protos::CaptureOptions capture_options;
   for (size_t i = 0; i < kFunctionCount; ++i) {
     AddInstrumentedFunction(capture_options, kFunctionIds[i], kFunctionNames[i]);

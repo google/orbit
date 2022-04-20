@@ -2505,20 +2505,8 @@ void OrbitApp::DeselectTimer() {
 uint64_t OrbitApp::GetScopeIdToHighlight() const {
   const orbit_client_protos::TimerInfo* timer_info = selected_timer();
 
-  uint64_t selected_function_id = timer_info != nullptr
-                                      ? GetCaptureData().ProvideScopeId(*timer_info)
-                                      : GetHighlightedScopeId();
-
-  // TODO (b/226565085) remove the flag when the manual instrumentation grouping feature is
-  // released. Highlighting of manually instrumented scopes is supported only in devmode.
-  if (IsDevMode()) return selected_function_id;
-
-  const InstrumentedFunction* function = GetInstrumentedFunction(selected_function_id);
-  if (function == nullptr) {
-    return orbit_grpc_protos::kInvalidFunctionId;
-  }
-
-  return selected_function_id;
+  if (timer_info == nullptr) return GetHighlightedScopeId();
+  return GetCaptureData().ProvideScopeId(*timer_info);
 }
 
 uint64_t OrbitApp::GetGroupIdToHighlight() const {
