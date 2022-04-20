@@ -15,7 +15,6 @@
 
 #include "ClientData/ScopeIdConstants.h"
 #include "ClientData/ScopeInfo.h"
-#include "ClientFlags/ClientFlags.h"
 #include "GrpcProtos/Constants.h"
 #include "OrbitBase/Logging.h"
 
@@ -70,10 +69,6 @@ uint64_t NameEqualityScopeIdProvider::ProvideId(const TimerInfo& timer_info) {
   if (scope_type == ScopeType::kDynamicallyInstrumentedFunction) {
     return FunctionIdToScopeId(timer_info.function_id());
   }
-
-  // TODO (b/226565085) remove the flag check when the manual instrumentation grouping feature is
-  // released.
-  if (!absl::GetFlag(FLAGS_devmode)) return kInvalidScopeId;
 
   ORBIT_CHECK(scope_type == ScopeType::kApiScope || scope_type == ScopeType::kApiScopeAsync);
 
