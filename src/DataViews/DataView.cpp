@@ -228,12 +228,14 @@ void DataView::OnEnableFrameTrackRequested(const std::vector<int>& selection) {
   metrics_uploader_->SendLogEvent(
       orbit_metrics_uploader::OrbitLogEvent::ORBIT_FRAME_TRACK_ENABLE_CLICKED);
 
+  ORBIT_CHECK(app_->HasCaptureData());
+
   for (int i : selection) {
     const FunctionInfo* function = GetFunctionInfoFromRow(i);
     if (function == nullptr) continue;
     // Functions used as frame tracks must be hooked (selected), otherwise the
     // data to produce the frame track will not be captured.
-    app_->SelectFunction(*function);
+    if (app_->IsCaptureConnected(app_->GetCaptureData())) app_->SelectFunction(*function);
 
     app_->EnableFrameTrack(*function);
     app_->AddFrameTrack(*function);
