@@ -87,6 +87,7 @@ class ThreadTrack final : public TimerTrack {
                           uint64_t max_tick, PickingMode picking_mode) override;
 
   [[nodiscard]] int64_t GetThreadId() const { return thread_id_; }
+  [[nodiscard]] bool IsTimerActive(const orbit_client_protos::TimerInfo& timer) const override;
   [[nodiscard]] bool IsTrackSelected() const override;
 
   [[nodiscard]] float GetDefaultBoxHeight() const override;

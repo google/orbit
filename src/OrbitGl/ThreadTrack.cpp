@@ -175,6 +175,11 @@ std::string ThreadTrack::GetBoxTooltip(const PrimitiveAssembler& primitive_assem
   return result;
 }
 
+bool ThreadTrack::IsTimerActive(const TimerInfo& timer_info) const {
+  if (!app_->HasCaptureData()) return TimerTrack::IsTimerActive(timer_info);
+  return app_->IsScopeVisible(app_->GetCaptureData().ProvideScopeId(timer_info));
+}
+
 bool ThreadTrack::IsTrackSelected() const {
   return GetThreadId() != orbit_base::kAllProcessThreadsTid &&
          app_->selected_thread_id() == GetThreadId();
