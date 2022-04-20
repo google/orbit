@@ -42,6 +42,8 @@ class CallTreeWidget : public QWidget {
   explicit CallTreeWidget(QWidget* parent = nullptr);
 
   void Initialize(OrbitApp* app, orbit_metrics_uploader::MetricsUploader* metrics_uploader) {
+    ORBIT_CHECK(app != nullptr);
+    ORBIT_CHECK(metrics_uploader != nullptr);
     app_ = app;
     metrics_uploader_ = metrics_uploader;
   }

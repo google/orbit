@@ -957,7 +957,7 @@ void OrbitApp::ShowSourceCode(const orbit_client_data::FunctionInfo& function) {
                                                    metric = std::move(metric)](
                                                       const ErrorMessageOr<std::filesystem::path>&
                                                           local_file_path_or_error) mutable {
-    std::string error_title = "Error showing source code";
+    const std::string error_title = "Error showing source code";
     if (local_file_path_or_error.has_error()) {
       SendErrorToUi(error_title, local_file_path_or_error.error().message(), std::move(metric));
       return;
