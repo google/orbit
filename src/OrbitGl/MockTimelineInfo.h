@@ -25,7 +25,7 @@ class MockTimelineInfo : public TimelineInfoInterface {
     return GetWorldFromUs(GetUsFromTick(time));
   }
   [[nodiscard]] float GetWorldFromUs(double micros) const override {
-    return (micros - GetMinTimeUs()) * width_ / GetTimeWindowUs();
+    return static_cast<float>((micros - GetMinTimeUs()) * width_ / GetTimeWindowUs());
   }
   [[nodiscard]] uint64_t GetTickFromWorld(float world_x) const override {
     double ratio = world_x / width_;

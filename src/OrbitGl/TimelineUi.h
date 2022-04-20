@@ -11,6 +11,9 @@
 
 namespace orbit_gl {
 
+inline const Color kTimelineMajorTickColor(255, 254, 253, 255);
+inline const Color kTimelineMinorTickColor(255, 254, 253, 63);
+
 // TimelineUi is the class which takes care of drawing the timeline in the CaptureWindows.
 class TimelineUi : public CaptureViewElement {
  public:
