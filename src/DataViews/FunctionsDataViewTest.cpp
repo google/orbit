@@ -552,6 +552,7 @@ TEST_F(FunctionsDataViewTest, ContextMenuActionsCallCorrespondingFunctionsInAppI
   CaptureData capture_data{{}, std::nullopt, {}, CaptureData::DataSource::kLiveCapture};
   EXPECT_CALL(app_, GetCaptureData).WillRepeatedly(testing::ReturnPointee(&capture_data));
   EXPECT_CALL(app_, IsCaptureConnected).WillRepeatedly(testing::Return(true));
+  EXPECT_CALL(app_, HasCaptureData).WillRepeatedly(testing::Return(true));
 
   view_.AddFunctions({&functions_[0]});
 
