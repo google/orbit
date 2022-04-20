@@ -2,10 +2,10 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
+#include <absl/hash/hash_testing.h>
 #include <gtest/gtest.h>
 
 #include "ClientData/ScopeInfo.h"
-#include "absl/hash/hash_testing.h"
 
 namespace orbit_client_data {
 TEST(ScopeInfo, Hash) {

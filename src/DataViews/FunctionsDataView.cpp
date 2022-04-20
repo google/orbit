@@ -38,7 +38,7 @@ FunctionsDataView::FunctionsDataView(AppInterface* app,
 const std::string FunctionsDataView::kUnselectedFunctionString = "";
 const std::string FunctionsDataView::kSelectedFunctionString = "H";
 const std::string FunctionsDataView::kFrameTrackString = "F";
-const std::string FunctionsDataView::kApiScopeTypeSting = "MS";
+const std::string FunctionsDataView::kApiScopeTypeString = "MS";
 const std::string FunctionsDataView::kApiScopeAsyncTypeString = "MA";
 const std::string FunctionsDataView::kDynamicallyInstrumentedFunctionTypeString = "D";
 

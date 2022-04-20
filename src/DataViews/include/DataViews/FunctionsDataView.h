@@ -21,7 +21,7 @@ class FunctionsDataView : public DataView {
   static const std::string kUnselectedFunctionString;
   static const std::string kSelectedFunctionString;
   static const std::string kFrameTrackString;
-  static const std::string kApiScopeTypeSting;
+  static const std::string kApiScopeTypeString;
   static const std::string kApiScopeAsyncTypeString;
   static const std::string kDynamicallyInstrumentedFunctionTypeString;
   static std::string BuildSelectedAndFrameTrackString(

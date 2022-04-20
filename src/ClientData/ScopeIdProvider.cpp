@@ -34,9 +34,9 @@ std::unique_ptr<NameEqualityScopeIdProvider> NameEqualityScopeIdProvider::Create
 
   absl::flat_hash_map<uint64_t, const ScopeInfo> scope_id_to_info;
   for (const auto& instrumented_function : instrumented_functions) {
-    scope_id_to_info.insert(
-        {instrumented_function.function_id(),
-         {instrumented_function.function_name(), ScopeType::kDynamicallyInstrumentedFunction}});
+    scope_id_to_info.try_emplace(instrumented_function.function_id(),
+                                 instrumented_function.function_name(),
+                                 ScopeType::kDynamicallyInstrumentedFunction);
   }
 
   return std::unique_ptr<NameEqualityScopeIdProvider>(
@@ -85,8 +85,8 @@ uint64_t NameEqualityScopeIdProvider::ProvideId(const TimerInfo& timer_info) {
   }
 
   uint64_t id = next_id_;
-  scope_info_to_id_[scope_info] = id;
-  scope_id_to_info_.insert({id, scope_info});
+  scope_info_to_id_.emplace(scope_info, id);
+  scope_id_to_info_.emplace(id, scope_info);
   next_id_++;
   return id;
 }
