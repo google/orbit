@@ -228,8 +228,6 @@ void DataView::OnEnableFrameTrackRequested(const std::vector<int>& selection) {
   metrics_uploader_->SendLogEvent(
       orbit_metrics_uploader::OrbitLogEvent::ORBIT_FRAME_TRACK_ENABLE_CLICKED);
 
-  ORBIT_CHECK(app_->HasCaptureData());
-
   for (int i : selection) {
     const FunctionInfo* function = GetFunctionInfoFromRow(i);
     if (function == nullptr) continue;
