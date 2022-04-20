@@ -288,7 +288,7 @@ TEST_F(CallstackDataViewTest, ColumnSelectedShowsRightResults) {
     EXPECT_EQ(view_.GetValue(0, kColumnSelected), "");
 
     function_selected = true;
-    EXPECT_EQ(view_.GetValue(0, kColumnSelected), "✓");
+    EXPECT_EQ(view_.GetValue(0, kColumnSelected), "H");
   }
 }
 

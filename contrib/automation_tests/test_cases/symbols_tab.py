@@ -334,6 +334,10 @@ class VerifySymbolsLoaded(E2ETestCase):
             self.expect_true(functions_dataview.get_row_count() == 0, "Found no symbols")
 
 
+selected_function_string : str = 'H'
+frame_track_enabled_string : str = 'F'
+
+
 class FilterAndHookFunction(E2ETestCase):
     """
     Hook a function based on a search string, and verify it is indicated as Hooked in the UI.
@@ -356,7 +360,7 @@ class FilterAndHookFunction(E2ETestCase):
         functions_dataview.get_item_at(0, 0).click_input('right')
 
         self.find_context_menu_item('Hook').click_input()
-        wait_for_condition(lambda: '✓' in functions_dataview.get_item_at(0, 0).texts()[0])
+        wait_for_condition(lambda: selected_function_string in functions_dataview.get_item_at(0, 0).texts()[0])
 
 
 class FilterAndEnableFrameTrackForFunction(E2ETestCase):
@@ -382,7 +386,9 @@ class FilterAndEnableFrameTrackForFunction(E2ETestCase):
         functions_dataview.get_item_at(0, 0).click_input('right')
 
         self.find_context_menu_item('Enable frame track(s)').click_input()
-        wait_for_condition(lambda: '✓ F' in functions_dataview.get_item_at(0, 0).texts()[0])
+        
+        awaited_string : str = selected_function_string + ' [' + frame_track_enabled_string + ']'
+        wait_for_condition(lambda: awaited_string in functions_dataview.get_item_at(0, 0).texts()[0])
 
 
 class UnhookAllFunctions(E2ETestCase):
@@ -428,7 +434,7 @@ class FilterAndHookMultipleFunctions(E2ETestCase):
         for i in range(functions_dataview.get_row_count()):
             functions_dataview.get_item_at(i, 0).click_input('right')
             self.find_context_menu_item('Hook').click_input()
-            wait_for_condition(lambda: '✓' in functions_dataview.get_item_at(i, 0).texts()[0])
+            wait_for_condition(lambda: selected_function_string in functions_dataview.get_item_at(i, 0).texts()[0])
 
 
 class LoadAndVerifyHelloGgpPreset(E2ETestCase):
@@ -484,9 +490,9 @@ class LoadAndVerifyHelloGgpPreset(E2ETestCase):
             return False
 
         logging.info('Verifying hook status of functions')
-        self.expect_true('✓' in functions_panel.get_item_at(draw_frame_row, 0).texts()[0],
+        self.expect_true(selected_function_string in functions_panel.get_item_at(draw_frame_row, 0).texts()[0],
                          'DrawFrame is marked as hooked')
-        self.expect_true('✓' in functions_panel.get_item_at(issue_frame_token_row, 0).texts()[0],
+        self.expect_true(selected_function_string in functions_panel.get_item_at(issue_frame_token_row, 0).texts()[0],
                          'GgpIssueFrameToken is marked as hooked')
 
         return True
@@ -506,10 +512,10 @@ class VerifyFunctionHooked(E2ETestCase):
         send_keys(function_search_string)
         row = functions_dataview.find_first_item_row(function_search_string, 1)
         if expect_hooked:
-            self.expect_true('✓' in functions_dataview.get_item_at(row, 0).texts()[0],
+            self.expect_true(selected_function_string in functions_dataview.get_item_at(row, 0).texts()[0],
                              'Function is marked as hooked.')
         else:
-            self.expect_true('✓' not in functions_dataview.get_item_at(row, 0).texts()[0],
+            self.expect_true(selected_function_string not in functions_dataview.get_item_at(row, 0).texts()[0],
                              'Function is not marked as hooked.')
 
 

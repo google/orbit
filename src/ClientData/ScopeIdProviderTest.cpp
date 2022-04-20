@@ -14,6 +14,7 @@
 #include <vector>
 
 #include "ClientData/ScopeIdProvider.h"
+#include "ClientData/ScopeInfo.h"
 #include "ClientFlags/ClientFlags.h"
 #include "ClientProtos/capture_data.pb.h"
 #include "GrpcProtos/Constants.h"
@@ -70,7 +71,7 @@ static void TestProvideId(std::vector<orbit_client_protos::TimerInfo>& timer_inf
   const std::vector<uint64_t> ids = GetIds(id_provider.get(), timer_infos);
   AssertNameToIdIsBijective(timer_infos, ids);
   for (size_t i = 0; i < timer_infos.size(); ++i) {
-    EXPECT_EQ(id_provider->GetScopeName(ids[i]), timer_infos[i].api_scope_name());
+    EXPECT_EQ(id_provider->GetScopeInfo(ids[i]).GetName(), timer_infos[i].api_scope_name());
   }
 }
 
@@ -126,13 +127,14 @@ TEST(NameEqualityScopeIdProviderTest, CreateIsCorrect) {
   }
 
   auto id_provider = NameEqualityScopeIdProvider::Create(capture_options);
-  TimerInfo timer_info = MakeTimerInfo("A", orbit_client_protos::TimerInfo_Type_kApiScope);
+  TimerInfo timer_info = MakeTimerInfo("A", TimerInfo::kApiScope);
 
   ASSERT_EQ(id_provider->ProvideId(timer_info),
             *std::max_element(std::begin(kFunctionIds), std::end(kFunctionIds)) + 1);
 
   for (size_t i = 0; i < kFunctionCount; ++i) {
-    EXPECT_EQ(id_provider->GetScopeName(kFunctionIds[i]), kFunctionNames[i]);
+    const ScopeInfo expected{kFunctionNames[i], ScopeType::kDynamicallyInstrumentedFunction};
+    EXPECT_EQ(id_provider->GetScopeInfo(kFunctionIds[i]), expected);
   }
 }
 

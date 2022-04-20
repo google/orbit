@@ -9,6 +9,7 @@
 
 #include <cstdint>
 
+#include "ClientData/ScopeInfo.h"
 #include "ClientData/TimerTrackDataIdManager.h"
 #include "GrpcProtos/capture.pb.h"
 
@@ -28,7 +29,7 @@ class ScopeIdProvider {
 
   [[nodiscard]] virtual std::vector<uint64_t> GetAllProvidedScopeIds() const = 0;
 
-  [[nodiscard]] virtual const std::string& GetScopeName(uint64_t scope_id) const = 0;
+  [[nodiscard]] virtual const ScopeInfo& GetScopeInfo(uint64_t scope_id) const = 0;
 };
 
 // This class, unless the timer does already have an id (`function_id`), it assigning an id for
@@ -48,18 +49,17 @@ class NameEqualityScopeIdProvider : public ScopeIdProvider {
 
   [[nodiscard]] std::vector<uint64_t> GetAllProvidedScopeIds() const override;
 
-  [[nodiscard]] const std::string& GetScopeName(uint64_t scope_id) const override;
+  [[nodiscard]] const ScopeInfo& GetScopeInfo(uint64_t scope_id) const override;
 
  private:
-  explicit NameEqualityScopeIdProvider(uint64_t start_id,
-                                       absl::flat_hash_map<uint64_t, std::string> scope_id_to_name)
-      : next_id_(start_id), scope_id_to_name_(std::move(scope_id_to_name)) {}
+  explicit NameEqualityScopeIdProvider(
+      uint64_t start_id, absl::flat_hash_map<uint64_t, const ScopeInfo> scope_id_to_info)
+      : next_id_(start_id), scope_id_to_info_(std::move(scope_id_to_info)) {}
 
-  absl::flat_hash_map<std::pair<orbit_client_protos::TimerInfo_Type, std::string>, uint64_t>
-      name_to_id_;
+  absl::flat_hash_map<ScopeInfo, uint64_t> scope_info_to_id_;
   uint64_t next_id_{};
 
-  absl::flat_hash_map<uint64_t, std::string> scope_id_to_name_;
+  absl::flat_hash_map<uint64_t, const ScopeInfo> scope_id_to_info_;
 };
 
 }  // namespace orbit_client_data

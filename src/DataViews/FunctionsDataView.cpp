@@ -36,8 +36,11 @@ FunctionsDataView::FunctionsDataView(AppInterface* app,
     : DataView(DataViewType::kFunctions, app, metrics_uploader) {}
 
 const std::string FunctionsDataView::kUnselectedFunctionString = "";
-const std::string FunctionsDataView::kSelectedFunctionString = "✓";
+const std::string FunctionsDataView::kSelectedFunctionString = "H";
 const std::string FunctionsDataView::kFrameTrackString = "F";
+const std::string FunctionsDataView::kApiScopeTypeString = "MS";
+const std::string FunctionsDataView::kApiScopeAsyncTypeString = "MA";
+const std::string FunctionsDataView::kDynamicallyInstrumentedFunctionTypeString = "D";
 
 const std::vector<DataView::Column>& FunctionsDataView::GetColumns() {
   static const std::vector<Column> columns = [] {
@@ -76,8 +79,8 @@ bool FunctionsDataView::ShouldShowFrameTrackIcon(AppInterface* app, const Functi
          app->HasFrameTrackInCaptureData(instrumented_function_id.value());
 }
 
-std::string FunctionsDataView::BuildSelectedColumnsString(AppInterface* app,
-                                                          const FunctionInfo& function) {
+std::string FunctionsDataView::BuildSelectedAndFrameTrackString(AppInterface* app,
+                                                                const FunctionInfo& function) {
   std::string result = kUnselectedFunctionString;
   if (ShouldShowSelectedFunctionIcon(app, function)) {
     absl::StrAppend(&result, kSelectedFunctionString);
@@ -99,7 +102,7 @@ std::string FunctionsDataView::GetValue(int row, int column) {
 
   switch (column) {
     case kColumnSelected:
-      return BuildSelectedColumnsString(app_, function);
+      return BuildSelectedAndFrameTrackString(app_, function);
     case kColumnName:
       return function.pretty_name();
     case kColumnSize:

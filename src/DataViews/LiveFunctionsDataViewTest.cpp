@@ -3,7 +3,9 @@
 // found in the LICENSE file.
 
 #include <absl/container/flat_hash_map.h>
+#include <absl/strings/str_cat.h>
 #include <absl/strings/str_format.h>
+#include <gmock/gmock-matchers.h>
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
 
@@ -21,6 +23,7 @@
 #include "DataViewTestUtils.h"
 #include "DataViews/AppInterface.h"
 #include "DataViews/DataView.h"
+#include "DataViews/FunctionsDataView.h"
 #include "DataViews/LiveFunctionsDataView.h"
 #include "DataViews/LiveFunctionsInterface.h"
 #include "DisplayFormats/DisplayFormats.h"
@@ -300,17 +303,38 @@ TEST_F(LiveFunctionsDataViewTest, ColumnSelectedShowsRightResults) {
       .WillRepeatedly(testing::ReturnPointee(&frame_track_enabled));
 
   AddFunctionsByIndices({0});
-  EXPECT_EQ(view_.GetValue(0, kColumnSelected), "");
+  EXPECT_EQ(view_.GetValue(0, kColumnSelected),
+            orbit_data_views::FunctionsDataView::kDynamicallyInstrumentedFunctionTypeString);
 
   function_selected = true;
-  EXPECT_EQ(view_.GetValue(0, kColumnSelected), "✓");
+  EXPECT_THAT(
+      view_.GetValue(0, kColumnSelected),
+      testing::AllOf(
+          testing::HasSubstr(
+              orbit_data_views::FunctionsDataView::kDynamicallyInstrumentedFunctionTypeString),
+          testing::HasSubstr(orbit_data_views::FunctionsDataView::kSelectedFunctionString),
+          testing::Not(
+              testing::HasSubstr(orbit_data_views::FunctionsDataView::kFrameTrackString))));
 
   function_selected = false;
   frame_track_enabled = true;
-  EXPECT_EQ(view_.GetValue(0, kColumnSelected), "F");
+  EXPECT_THAT(
+      view_.GetValue(0, kColumnSelected),
+      testing::AllOf(
+          testing::HasSubstr(
+              orbit_data_views::FunctionsDataView::kDynamicallyInstrumentedFunctionTypeString),
+          testing::Not(
+              testing::HasSubstr(orbit_data_views::FunctionsDataView::kSelectedFunctionString)),
+          testing::HasSubstr(orbit_data_views::FunctionsDataView::kFrameTrackString)));
 
   function_selected = true;
-  EXPECT_EQ(view_.GetValue(0, kColumnSelected), "✓ F");
+  EXPECT_THAT(
+      view_.GetValue(0, kColumnSelected),
+      testing::AllOf(
+          testing::HasSubstr(
+              orbit_data_views::FunctionsDataView::kDynamicallyInstrumentedFunctionTypeString),
+          testing::HasSubstr(orbit_data_views::FunctionsDataView::kSelectedFunctionString),
+          testing::HasSubstr(orbit_data_views::FunctionsDataView::kFrameTrackString)));
 }
 
 TEST_F(LiveFunctionsDataViewTest, ContextMenuEntriesArePresentCorrectly) {
@@ -442,8 +466,9 @@ TEST_F(LiveFunctionsDataViewTest, ContextMenuActionsAreInvoked) {
   // Copy Selection
   {
     std::string expected_clipboard = absl::StrFormat(
-        "Hooked\tFunction\tCount\tTotal\tAvg\tMin\tMax\tStd Dev\tModule\tAddress\n"
-        "\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\n",
+        "Type\tFunction\tCount\tTotal\tAvg\tMin\tMax\tStd Dev\tModule\tAddress\n"
+        "%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\n",
+        orbit_data_views::FunctionsDataView::kDynamicallyInstrumentedFunctionTypeString,
         kPrettyNames[0], GetExpectedDisplayCount(kCounts[0]),
         GetExpectedDisplayTime(kTotalTimeNs[0]), GetExpectedDisplayTime(kAvgTimeNs[0]),
         GetExpectedDisplayTime(kMinNs[0]), GetExpectedDisplayTime(kMaxNs[0]),
@@ -455,10 +480,11 @@ TEST_F(LiveFunctionsDataViewTest, ContextMenuActionsAreInvoked) {
   // Export to CSV
   {
     std::string expected_contents = absl::StrFormat(
-        R"("Hooked","Function","Count","Total","Avg","Min","Max","Std Dev","Module","Address")"
+        R"("Type","Function","Count","Total","Avg","Min","Max","Std Dev","Module","Address")"
         "\r\n"
-        R"("","%s","%s","%s","%s","%s","%s","%s","%s","%s")"
+        R"("%s","%s","%s","%s","%s","%s","%s","%s","%s","%s")"
         "\r\n",
+        orbit_data_views::FunctionsDataView::kDynamicallyInstrumentedFunctionTypeString,
         kPrettyNames[0], GetExpectedDisplayCount(kCounts[0]),
         GetExpectedDisplayTime(kTotalTimeNs[0]), GetExpectedDisplayTime(kAvgTimeNs[0]),
         GetExpectedDisplayTime(kMinNs[0]), GetExpectedDisplayTime(kMaxNs[0]),

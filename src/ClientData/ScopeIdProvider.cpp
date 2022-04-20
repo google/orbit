@@ -14,6 +14,7 @@
 #include <vector>
 
 #include "ClientData/ScopeIdConstants.h"
+#include "ClientData/ScopeInfo.h"
 #include "ClientFlags/ClientFlags.h"
 #include "GrpcProtos/Constants.h"
 #include "OrbitBase/Logging.h"
@@ -31,59 +32,75 @@ std::unique_ptr<NameEqualityScopeIdProvider> NameEqualityScopeIdProvider::Create
                 [](const auto& a, const auto& b) { return a.function_id() < b.function_id(); })
                 ->function_id();
 
-  absl::flat_hash_map<uint64_t, std::string> scope_id_to_name;
+  absl::flat_hash_map<uint64_t, const ScopeInfo> scope_id_to_info;
   for (const auto& instrumented_function : instrumented_functions) {
-    scope_id_to_name[instrumented_function.function_id()] = instrumented_function.function_name();
+    scope_id_to_info.try_emplace(instrumented_function.function_id(),
+                                 instrumented_function.function_name(),
+                                 ScopeType::kDynamicallyInstrumentedFunction);
   }
 
   return std::unique_ptr<NameEqualityScopeIdProvider>(
-      new NameEqualityScopeIdProvider(max_id + 1, std::move(scope_id_to_name)));
+      new NameEqualityScopeIdProvider(max_id + 1, std::move(scope_id_to_info)));
 }
 
 uint64_t NameEqualityScopeIdProvider::FunctionIdToScopeId(uint64_t function_id) const {
   return function_id;
 }
 
+[[nodiscard]] static ScopeType ScopeTypeFromTimerInfo(const TimerInfo& timer) {
+  switch (timer.type()) {
+    case TimerInfo::kNone:
+      return timer.function_id() != orbit_grpc_protos::kInvalidFunctionId
+                 ? ScopeType::kDynamicallyInstrumentedFunction
+                 : ScopeType::kInvalid;
+    case TimerInfo::kApiScope:
+      return ScopeType::kApiScope;
+    case TimerInfo::kApiScopeAsync:
+      return ScopeType::kApiScopeAsync;
+    default:
+      return ScopeType::kInvalid;
+  }
+}
+
 uint64_t NameEqualityScopeIdProvider::ProvideId(const TimerInfo& timer_info) {
-  // Check if the `timer_info` corresponds to a hooked function event. Checking for `function_id`
-  // not being invalid is not sufficient, as e.g. frametrack events may also have non-invalid
-  // function_id
-  if (timer_info.function_id() != orbit_grpc_protos::kInvalidFunctionId &&
-      timer_info.type() == orbit_client_protos::TimerInfo::kNone) {
+  const ScopeType scope_type = ScopeTypeFromTimerInfo(timer_info);
+
+  if (scope_type == ScopeType::kInvalid) return orbit_client_data::kInvalidScopeId;
+
+  if (scope_type == ScopeType::kDynamicallyInstrumentedFunction) {
     return FunctionIdToScopeId(timer_info.function_id());
   }
 
   // TODO (b/226565085) remove the flag check when the manual instrumentation grouping feature is
   // released.
-  if (absl::GetFlag(FLAGS_devmode) &&
-      (timer_info.type() == orbit_client_protos::TimerInfo_Type_kApiScope ||
-       timer_info.type() == orbit_client_protos::TimerInfo_Type_kApiScopeAsync)) {
-    const auto key = std::make_pair(timer_info.type(), timer_info.api_scope_name());
+  if (!absl::GetFlag(FLAGS_devmode)) return kInvalidScopeId;
 
-    const auto it = name_to_id_.find(key);
-    if (it != name_to_id_.end()) {
-      return it->second;
-    }
+  ORBIT_CHECK(scope_type == ScopeType::kApiScope || scope_type == ScopeType::kApiScopeAsync);
 
-    uint64_t id = next_id_;
-    name_to_id_[key] = id;
-    scope_id_to_name_[id] = timer_info.api_scope_name();
-    next_id_++;
-    return id;
+  const ScopeInfo scope_info{timer_info.api_scope_name(), scope_type};
+
+  const auto it = scope_info_to_id_.find(scope_info);
+  if (it != scope_info_to_id_.end()) {
+    return it->second;
   }
-  return orbit_client_data::kInvalidScopeId;
+
+  uint64_t id = next_id_;
+  scope_info_to_id_.emplace(scope_info, id);
+  scope_id_to_info_.emplace(id, scope_info);
+  next_id_++;
+  return id;
 }
 
 [[nodiscard]] std::vector<uint64_t> NameEqualityScopeIdProvider::GetAllProvidedScopeIds() const {
   std::vector<uint64_t> ids;
-  std::transform(std::begin(scope_id_to_name_), std::end(scope_id_to_name_),
+  std::transform(std::begin(scope_id_to_info_), std::end(scope_id_to_info_),
                  std::back_inserter(ids), [](const auto& entry) { return entry.first; });
   return ids;
 }
 
-const std::string& NameEqualityScopeIdProvider::GetScopeName(uint64_t scope_id) const {
-  const auto it = scope_id_to_name_.find(scope_id);
-  ORBIT_CHECK(it != scope_id_to_name_.end());
+const ScopeInfo& NameEqualityScopeIdProvider::GetScopeInfo(uint64_t scope_id) const {
+  const auto it = scope_id_to_info_.find(scope_id);
+  ORBIT_CHECK(it != scope_id_to_info_.end());
   return it->second;
 }
 
