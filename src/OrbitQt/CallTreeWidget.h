@@ -29,6 +29,7 @@
 
 #include "CallTreeView.h"
 #include "CallTreeViewItemModel.h"
+#include "MetricsUploader/MetricsUploader.h"
 #include "absl/strings/str_split.h"
 #include "ui_CallTreeWidget.h"
 
@@ -40,10 +41,14 @@ class CallTreeWidget : public QWidget {
  public:
   explicit CallTreeWidget(QWidget* parent = nullptr);
 
-  void Initialize(OrbitApp* app) { app_ = app; }
+  void Initialize(OrbitApp* app, orbit_metrics_uploader::MetricsUploader* metrics_uploader) {
+    app_ = app;
+    metrics_uploader_ = metrics_uploader;
+  }
   void Deinitialize() {
     ClearCallTreeView();
     app_ = nullptr;
+    metrics_uploader_ = nullptr;
   }
 
   void SetTopDownView(std::unique_ptr<CallTreeView> top_down_view);
@@ -127,6 +132,7 @@ class CallTreeWidget : public QWidget {
   std::unique_ptr<Ui::CallTreeWidget> ui_;
   QTimer* search_typing_finished_timer_ = new QTimer{this};
   OrbitApp* app_ = nullptr;
+  orbit_metrics_uploader::MetricsUploader* metrics_uploader_ = nullptr;
   std::unique_ptr<CallTreeViewItemModel> model_;
   std::unique_ptr<QIdentityProxyModel> hide_values_proxy_model_;
   std::unique_ptr<HighlightCustomFilterSortFilterProxyModel> search_proxy_model_;

@@ -44,12 +44,14 @@
 #include "ClientData/ModuleData.h"
 #include "CopyKeySequenceEnabledTreeView.h"
 #include "DataViews/FunctionsDataView.h"
+#include "MetricsUploader/orbit_log_event.pb.h"
 #include "OrbitBase/Logging.h"
 
 using orbit_client_data::CaptureData;
 using orbit_client_data::FunctionInfo;
 using orbit_client_data::ModuleData;
 using orbit_client_data::ModuleManager;
+using orbit_metrics_uploader::OrbitLogEvent;
 
 CallTreeWidget::CallTreeWidget(QWidget* parent)
     : QWidget{parent}, ui_{std::make_unique<Ui::CallTreeWidget>()} {
@@ -630,10 +632,12 @@ void CallTreeWidget::OnCustomContextMenuRequested(const QPoint& point) {
       app_->DeselectFunction(*function);
     }
   } else if (action->text() == kActionDisassembly) {
+    metrics_uploader_->SendLogEvent(OrbitLogEvent::ORBIT_DISASSEMBLY_REQUESTED);
     for (const FunctionInfo* function : functions) {
       app_->Disassemble(app_->GetCaptureData().process_id(), *function);
     }
   } else if (action->text() == kActionSourceCode) {
+    metrics_uploader_->SendLogEvent(OrbitLogEvent::ORBIT_SOURCE_CODE_REQUESTED);
     for (const FunctionInfo* function : functions) {
       app_->ShowSourceCode(*function);
     }

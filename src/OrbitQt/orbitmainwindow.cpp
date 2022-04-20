@@ -409,10 +409,10 @@ void OrbitMainWindow::SetupMainWindow() {
             app_->SetHistogramSelectionRange(range);
           });
 
-  ui->topDownWidget->Initialize(app_.get());
-  ui->selectionTopDownWidget->Initialize(app_.get());
-  ui->bottomUpWidget->Initialize(app_.get());
-  ui->selectionBottomUpWidget->Initialize(app_.get());
+  ui->topDownWidget->Initialize(app_.get(), metrics_uploader_);
+  ui->selectionTopDownWidget->Initialize(app_.get(), metrics_uploader_);
+  ui->bottomUpWidget->Initialize(app_.get(), metrics_uploader_);
+  ui->selectionBottomUpWidget->Initialize(app_.get(), metrics_uploader_);
 
   ui->MainTabWidget->tabBar()->installEventFilter(this);
   ui->RightTabWidget->tabBar()->installEventFilter(this);
