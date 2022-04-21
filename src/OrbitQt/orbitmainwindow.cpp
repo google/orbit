@@ -202,7 +202,7 @@ OrbitMainWindow::OrbitMainWindow(TargetConfiguration target_configuration,
   // SymbolPaths.txt deprecation code
   // If file does not exist, do nothing. (It means the user never used an older Orbit version or
   // manually deleted the file)
-  if (!fs::is_regular_file(orbit_paths::GetSymbolsFilePath())) return;
+  if (!std::filesystem::is_regular_file(orbit_paths::GetSymbolsFilePath())) return;
 
   // If it exists, check if it starts with deprecation note.
   ErrorMessageOr<bool> symbol_paths_file_has_depr_note =
@@ -224,7 +224,7 @@ OrbitMainWindow::OrbitMainWindow(TargetConfiguration target_configuration,
   // This merging here via a hash set of the std::string representation only accomplishes that
   // paths with the same string representation are only added once.
   absl::flat_hash_set<std::string> already_seen_paths;
-  std::vector<fs::path> dirs_to_save;
+  std::vector<std::filesystem::path> dirs_to_save;
 
   for (const auto& dir : orbit_symbols::ReadSymbolsFile(orbit_paths::GetSymbolsFilePath())) {
     if (!already_seen_paths.contains(dir.string())) {
