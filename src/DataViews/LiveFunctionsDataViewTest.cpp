@@ -466,7 +466,7 @@ TEST_F(LiveFunctionsDataViewTest, ContextMenuActionsAreInvoked) {
   // Copy Selection
   {
     std::string expected_clipboard = absl::StrFormat(
-        "Type\tFunction\tCount\tTotal\tAvg\tMin\tMax\tStd Dev\tModule\tAddress\n"
+        "Type\tName\tCount\tTotal\tAvg\tMin\tMax\tStd Dev\tModule\tAddress\n"
         "%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\n",
         orbit_data_views::FunctionsDataView::kDynamicallyInstrumentedFunctionTypeString,
         kPrettyNames[0], GetExpectedDisplayCount(kCounts[0]),
@@ -480,7 +480,7 @@ TEST_F(LiveFunctionsDataViewTest, ContextMenuActionsAreInvoked) {
   // Export to CSV
   {
     std::string expected_contents = absl::StrFormat(
-        R"("Type","Function","Count","Total","Avg","Min","Max","Std Dev","Module","Address")"
+        R"("Type","Name","Count","Total","Avg","Min","Max","Std Dev","Module","Address")"
         "\r\n"
         R"("%s","%s","%s","%s","%s","%s","%s","%s","%s","%s")"
         "\r\n",

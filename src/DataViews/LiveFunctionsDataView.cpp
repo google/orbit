@@ -74,7 +74,7 @@ const std::vector<DataView::Column>& LiveFunctionsDataView::GetColumns() {
     std::vector<Column> columns;
     columns.resize(kNumColumns);
     columns[kColumnType] = {"Type", .0f, SortingOrder::kDescending};
-    columns[kColumnName] = {"Function", .4f, SortingOrder::kAscending};
+    columns[kColumnName] = {"Name", .4f, SortingOrder::kAscending};
     columns[kColumnCount] = {"Count", .0f, SortingOrder::kDescending};
     columns[kColumnTimeTotal] = {"Total", .075f, SortingOrder::kDescending};
     columns[kColumnTimeAvg] = {"Avg", .075f, SortingOrder::kDescending};
