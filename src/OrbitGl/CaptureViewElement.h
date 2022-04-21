@@ -69,7 +69,26 @@ class CaptureViewElement : public Pickable, public AccessibleInterfaceProvider {
   [[nodiscard]] virtual std::vector<CaptureViewElement*> GetNonHiddenChildren() const;
   [[nodiscard]] std::vector<CaptureViewElement*> GetChildrenVisibleInViewport() const;
 
-  virtual void RequestUpdate();
+  // Specifies the type of render data that has been invalidated and needs update
+  enum class RequestUpdateScope {
+    kDraw = 1,  // Only "::Draw" will be called next frame. Use this when neither timers nor
+                // time-dependent data needs to be updated
+    kDrawAndUpdatePrimitives =
+        2  // Both ::Draw and ::UpdatePrimitives will be called next frame. Use this whenever timers
+           // or time-dependent data needs to be updated
+  };
+
+  // Indicate that data has changed that requires an update of the UI.
+  // This will bubble up and notify the parent. In the next frame, *all* elements will be redrawn
+  // (i.e. will have `Draw` and / or `UpdatePrimitives` called, depending on the
+  // `RequestUpdateScope`), not only the ones that called this method.
+  //
+  // Usage:
+  // * Call this whenever your element performs any action that requires redrawing.
+  // * Make sure to ONLY call it when actual changes are present - e.g. for setters, make sure that
+  //   the newly set value differs from the previous one before calling this to avoid unneeded
+  //   redraws.
+  void RequestUpdate(RequestUpdateScope scope = RequestUpdateScope::kDrawAndUpdatePrimitives);
 
   enum LayoutFlags : uint32_t { kNone = 0, kScaleHorizontallyWithParent = 1 << 0 };
 
@@ -93,6 +112,8 @@ class CaptureViewElement : public Pickable, public AccessibleInterfaceProvider {
   bool picked_ = false;
   bool visible_ = true;
 
+  bool draw_requested_ = false;
+  bool update_primitives_requested_ = false;
   bool has_layout_changed_ = false;
 
   void Draw(PrimitiveAssembler& primitive_assembler, TextRenderer& text_renderer,

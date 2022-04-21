@@ -368,7 +368,7 @@ void TrackContainer::SetIteratorOverlayData(
     const absl::flat_hash_map<uint64_t, uint64_t>& iterator_id_to_function_id) {
   iterator_timer_info_ = iterator_timer_info;
   iterator_id_to_function_id_ = iterator_id_to_function_id;
-  RequestUpdate();
+  RequestUpdate(RequestUpdateScope::kDraw);
 }
 
 void TrackContainer::DoDraw(PrimitiveAssembler& primitive_assembler, TextRenderer& text_renderer,

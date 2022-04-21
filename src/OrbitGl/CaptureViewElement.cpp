@@ -19,6 +19,7 @@ void CaptureViewElement::Draw(PrimitiveAssembler& primitive_assembler, TextRende
                               const DrawContext& draw_context) {
   ORBIT_SCOPE_FUNCTION;
 
+  draw_requested_ = false;
   primitive_assembler.PushTranslation(0, 0, DetermineZOffset());
   text_renderer.PushTranslation(0, 0, DetermineZOffset());
 
@@ -30,12 +31,16 @@ void CaptureViewElement::Draw(PrimitiveAssembler& primitive_assembler, TextRende
 
   text_renderer.PopTranslation();
   primitive_assembler.PopTranslation();
+
+  ORBIT_CHECK(!draw_requested_);
 }
 
 void CaptureViewElement::UpdatePrimitives(PrimitiveAssembler& primitive_assembler,
                                           TextRenderer& text_renderer, uint64_t min_tick,
                                           uint64_t max_tick, PickingMode picking_mode) {
   ORBIT_SCOPE_FUNCTION;
+
+  update_primitives_requested_ = false;
 
   primitive_assembler.PushTranslation(0, 0, DetermineZOffset());
   text_renderer.PushTranslation(0, 0, DetermineZOffset());
@@ -50,6 +55,8 @@ void CaptureViewElement::UpdatePrimitives(PrimitiveAssembler& primitive_assemble
 
   text_renderer.PopTranslation();
   primitive_assembler.PopTranslation();
+
+  ORBIT_CHECK(!update_primitives_requested_);
 }
 
 CaptureViewElement::EventResult CaptureViewElement::OnMouseWheel(
@@ -106,12 +113,12 @@ void CaptureViewElement::OnPick(int x, int y) {
 
 void CaptureViewElement::OnRelease() {
   picked_ = false;
-  RequestUpdate();
+  RequestUpdate(RequestUpdateScope::kDraw);
 }
 
 void CaptureViewElement::OnDrag(int x, int y) {
   mouse_pos_cur_ = viewport_->ScreenToWorld(Vec2i(x, y));
-  RequestUpdate();
+  RequestUpdate(RequestUpdateScope::kDraw);
 }
 
 bool CaptureViewElement::ContainsPoint(const Vec2& pos) {
@@ -167,11 +174,22 @@ std::vector<CaptureViewElement*> CaptureViewElement::GetChildrenVisibleInViewpor
   return result;
 }
 
-void CaptureViewElement::RequestUpdate() {
+void CaptureViewElement::RequestUpdate(RequestUpdateScope scope) {
+  switch (scope) {
+    case orbit_gl::CaptureViewElement::RequestUpdateScope::kDraw:
+      draw_requested_ = true;
+      break;
+    case orbit_gl::CaptureViewElement::RequestUpdateScope::kDrawAndUpdatePrimitives:
+      draw_requested_ = true;
+      update_primitives_requested_ = true;
+      break;
+    default:
+      ORBIT_UNREACHABLE();
+  }
   has_layout_changed_ = true;
 
   if (parent_ != nullptr) {
-    parent_->RequestUpdate();
+    parent_->RequestUpdate(scope);
   }
 }
 
