@@ -176,9 +176,8 @@ std::string ThreadTrack::GetBoxTooltip(const PrimitiveAssembler& primitive_assem
 }
 
 bool ThreadTrack::IsTimerActive(const TimerInfo& timer_info) const {
-  // TODO(b/179225487): Filtering for manually instrumented scopes is not yet supported.
-  return timer_info.type() == TimerInfo::kApiScope ||
-         app_->IsFunctionVisible(timer_info.function_id());
+  if (!app_->HasCaptureData()) return TimerTrack::IsTimerActive(timer_info);
+  return app_->IsScopeVisible(app_->GetCaptureData().ProvideScopeId(timer_info));
 }
 
 bool ThreadTrack::IsTrackSelected() const {
