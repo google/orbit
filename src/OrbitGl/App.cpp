@@ -1718,7 +1718,7 @@ orbit_base::Future<void> OrbitApp::RetrieveModulesAndLoadSymbols(
   for (const auto& module : modules_set) {
     // Explicitely do not handle the result.
     Future<void> future = RetrieveModuleAndLoadSymbolsAndHandleError(module).Then(
-        &immediate_executor, [](const SymbolLoadingAndErrorHandlingResult & /*result*/) -> void {});
+        &immediate_executor, [](const SymbolLoadingAndErrorHandlingResult& /*result*/) -> void {});
     futures.emplace_back(std::move(future));
   }
 
@@ -2808,32 +2808,29 @@ bool OrbitApp::HasFrameTrackInCaptureData(uint64_t instrumented_function_id) con
 }
 
 void OrbitApp::JumpToTimerAndZoom(uint64_t scope_id, JumpToTimerMode selection_mode) {
+  const auto* first_last_min_max_timers =
+      GetCaptureData().GetFirstLastMinMaxTimersForScopeId(scope_id);
+  if (first_last_min_max_timers == nullptr) return;
+  const TimerInfo* timer_to_zoom{};
   switch (selection_mode) {
     case JumpToTimerMode::kFirst: {
-      const auto* first_timer = GetMutableTimeGraph()->FindNextScopeTimer(
-          scope_id, std::numeric_limits<uint64_t>::lowest());
-      if (first_timer != nullptr) GetMutableTimeGraph()->SelectAndZoom(first_timer);
+      timer_to_zoom = first_last_min_max_timers->first;
       break;
     }
     case JumpToTimerMode::kLast: {
-      const auto* last_timer = GetMutableTimeGraph()->FindPreviousScopeTimer(
-          scope_id, std::numeric_limits<uint64_t>::max());
-      if (last_timer != nullptr) GetMutableTimeGraph()->SelectAndZoom(last_timer);
+      timer_to_zoom = first_last_min_max_timers->last;
       break;
     }
     case JumpToTimerMode::kMin: {
-      auto [min_timer, unused_max_timer] =
-          GetMutableTimeGraph()->GetMinMaxTimerInfoForScope(scope_id);
-      if (min_timer != nullptr) GetMutableTimeGraph()->SelectAndZoom(min_timer);
+      timer_to_zoom = first_last_min_max_timers->min;
       break;
     }
     case JumpToTimerMode::kMax: {
-      auto [unused_min_timer, max_timer] =
-          GetMutableTimeGraph()->GetMinMaxTimerInfoForScope(scope_id);
-      if (max_timer != nullptr) GetMutableTimeGraph()->SelectAndZoom(max_timer);
+      timer_to_zoom = first_last_min_max_timers->max;
       break;
     }
   }
+  GetMutableTimeGraph()->SelectAndZoom(timer_to_zoom);
 }
 
 [[nodiscard]] std::vector<const orbit_client_data::TimerChain*> OrbitApp::GetAllThreadTimerChains()

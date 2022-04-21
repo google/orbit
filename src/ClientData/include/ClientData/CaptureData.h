@@ -244,6 +244,32 @@ class CaptureData {
   [[nodiscard]] const std::vector<uint64_t>* GetSortedTimerDurationsForScopeId(
       uint64_t scope_id) const;
 
+  // This is a hack allowing for fast jumps to timers. The class should be removed after the way we
+  // store the `timer_info`s is refactored.
+  class FirstLastMinMaxTimers {
+   public:
+    explicit FirstLastMinMaxTimers(const TimerInfo* first_timer_observed)
+        : first(first_timer_observed),
+          last(first_timer_observed),
+          min(first_timer_observed),
+          max(first_timer_observed) {}
+
+    void Update(const TimerInfo* new_timer);
+
+    const TimerInfo* first;
+    const TimerInfo* last;
+    const TimerInfo* min;
+    const TimerInfo* max;
+
+   private:
+    [[nodiscard]] static uint64_t Elapsed(const TimerInfo* timer) {
+      return timer->end() - timer->start();
+    }
+  };
+
+  [[nodiscard]] const FirstLastMinMaxTimers* GetFirstLastMinMaxTimersForScopeId(
+      uint64_t scope_id) const;
+
   // Returns all the timers corresponding to scopes with non-invalid ids
   [[nodiscard]] std::vector<const TimerInfo*> GetAllScopeTimers(
       uint64_t min_tick = std::numeric_limits<uint64_t>::min(),
@@ -254,7 +280,8 @@ class CaptureData {
       uint64_t max_tick = std::numeric_limits<uint64_t>::max()) const;
 
  private:
-  void UpdateTimerDurations();
+  void UpdateTimerDurationsAndFirstLastMinMaxTimers();
+  void UpdateFirstLastMinMaxTimers();
 
   orbit_client_data::ProcessData process_;
   absl::flat_hash_map<uint64_t, orbit_grpc_protos::InstrumentedFunction> instrumented_functions_;
@@ -297,6 +324,8 @@ class CaptureData {
   std::unique_ptr<ThreadTrackDataProvider> thread_track_data_provider_;
 
   absl::flat_hash_map<uint64_t, std::vector<uint64_t>> scope_id_to_timer_durations_;
+
+  absl::flat_hash_map<uint64_t, FirstLastMinMaxTimers> scope_id_to_first_last_min_max_timers_;
 };
 
 }  // namespace orbit_client_data

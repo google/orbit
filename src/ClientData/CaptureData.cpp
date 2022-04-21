@@ -15,6 +15,7 @@
 
 #include "ClientData/ModuleData.h"
 #include "ClientData/ScopeIdConstants.h"
+#include "ClientProtos/capture_data.pb.h"
 #include "ObjectUtils/Address.h"
 #include "OrbitBase/Result.h"
 
@@ -99,7 +100,7 @@ void CaptureData::AddScopeStats(uint64_t scope_id, ScopeStats stats) {
 
 void CaptureData::OnCaptureComplete() {
   thread_track_data_provider_->OnCaptureComplete();
-  UpdateTimerDurations();
+  UpdateTimerDurationsAndFirstLastMinMaxTimers();
 }
 
 const InstrumentedFunction* CaptureData::GetInstrumentedFunctionById(uint64_t function_id) const {
@@ -179,6 +180,13 @@ const std::vector<uint64_t>* CaptureData::GetSortedTimerDurationsForScopeId(
   return &it->second;
 }
 
+const CaptureData::FirstLastMinMaxTimers* CaptureData::GetFirstLastMinMaxTimersForScopeId(
+    uint64_t scope_id) const {
+  const auto it = scope_id_to_first_last_min_max_timers_.find(scope_id);
+  if (it == scope_id_to_first_last_min_max_timers_.end()) return nullptr;
+  return &it->second;
+}
+
 [[nodiscard]] std::vector<const TimerInfo*> CaptureData::GetAllScopeTimers(
     uint64_t min_tick, uint64_t max_tick) const {
   std::vector<const TimerInfo*> result;
@@ -195,7 +203,7 @@ const std::vector<uint64_t>* CaptureData::GetSortedTimerDurationsForScopeId(
   return result;
 }
 
-void CaptureData::UpdateTimerDurations() {
+void CaptureData::UpdateTimerDurationsAndFirstLastMinMaxTimers() {
   ORBIT_SCOPE_FUNCTION;
   scope_id_to_timer_durations_.clear();
   for (const TimerInfo* timer : GetAllScopeTimers()) {
@@ -203,6 +211,13 @@ void CaptureData::UpdateTimerDurations() {
 
     if (scope_id != orbit_client_data::kInvalidScopeId) {
       scope_id_to_timer_durations_[scope_id].push_back(timer->end() - timer->start());
+
+      const auto it = scope_id_to_first_last_min_max_timers_.find(scope_id);
+      if (it == scope_id_to_first_last_min_max_timers_.end()) {
+        scope_id_to_first_last_min_max_timers_.try_emplace(scope_id, timer);
+      } else {
+        it->second.Update(timer);
+      }
     }
   }
 
@@ -220,6 +235,21 @@ void CaptureData::UpdateTimerDurations() {
                  return scope_id_provider_->ProvideId(*timer) == scope_id;
                });
   return result;
+}
+
+void CaptureData::FirstLastMinMaxTimers::Update(const TimerInfo* new_timer) {
+  if (first == nullptr || first->end() > new_timer->end()) {
+    first = new_timer;
+  }
+  if (last == nullptr || last->end() < new_timer->end()) {
+    last = new_timer;
+  }
+  if (min == nullptr || Elapsed(min) > Elapsed(new_timer)) {
+    min = new_timer;
+  }
+  if (max == nullptr || Elapsed(max) < Elapsed(new_timer)) {
+    max = new_timer;
+  }
 }
 
 }  // namespace orbit_client_data
