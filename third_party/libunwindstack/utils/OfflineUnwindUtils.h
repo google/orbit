@@ -14,8 +14,7 @@
  * limitations under the License.
  */
 
-#ifndef _LIBUNWINDSTACK_UTILS_OFFLINE_UNWIND_UTILS_H
-#define _LIBUNWINDSTACK_UTILS_OFFLINE_UNWIND_UTILS_H
+#pragma once
 
 #include <cstddef>
 #include <filesystem>
@@ -187,5 +186,3 @@ class OfflineUnwindUtils {
 };
 
 }  // namespace unwindstack
-
-#endif  // _LIBUNWINDSTACK_UTILS_OFFLINE_UNWIND_UTILS_H

@@ -14,8 +14,7 @@
  * limitations under the License.
  */
 
-#ifndef _LIBUNWINDSTACK_UNWINDER_H
-#define _LIBUNWINDSTACK_UNWINDER_H
+#pragma once
 
 #include <stdint.h>
 #include <sys/types.h>
@@ -202,5 +201,3 @@ class ThreadUnwinder : public UnwinderFromPid {
 };
 
 }  // namespace unwindstack
-
-#endif  // _LIBUNWINDSTACK_UNWINDER_H

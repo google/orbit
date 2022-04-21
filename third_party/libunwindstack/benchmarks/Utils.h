@@ -14,8 +14,7 @@
  * limitations under the License.
  */
 
-#ifndef _LIBUNWINDSTACK_UTILS_H
-#define _LIBUNWINDSTACK_UTILS_H
+#pragma once
 
 #include <benchmark/benchmark.h>
 #include <stdint.h>
@@ -66,5 +65,3 @@ class MemoryTracker {
   // total number of iterations of the ranged for loop across all runs of a single benchmark.
   size_t total_iterations_ = 0;
 };
-
-#endif  // _LIBUNWINDSTACK_UTILS_h

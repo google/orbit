@@ -14,8 +14,7 @@
  * limitations under the License.
  */
 
-#ifndef _LIBUNWINDSTACK_DWARF_SECTION_H
-#define _LIBUNWINDSTACK_DWARF_SECTION_H
+#pragma once
 
 #include <stdint.h>
 
@@ -180,5 +179,3 @@ class DwarfSectionImpl : public DwarfSection {
 };
 
 }  // namespace unwindstack
-
-#endif  // _LIBUNWINDSTACK_DWARF_SECTION_H

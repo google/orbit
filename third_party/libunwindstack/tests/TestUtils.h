@@ -14,8 +14,7 @@
  * limitations under the License.
  */
 
-#ifndef _LIBUNWINDSTACK_TESTS_TEST_UTILS_H
-#define _LIBUNWINDSTACK_TESTS_TEST_UTILS_H
+#pragma once
 
 #include <signal.h>
 #include <stdint.h>
@@ -48,5 +47,3 @@ static inline void DoNotOptimize(Tp const& value) {
 }
 
 }  // namespace unwindstack
-
-#endif  // _LIBUNWINDSTACK_TESTS_TEST_UTILS_H

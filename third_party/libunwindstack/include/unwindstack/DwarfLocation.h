@@ -14,8 +14,7 @@
  * limitations under the License.
  */
 
-#ifndef _LIBUNWINDSTACK_DWARF_LOCATION_H
-#define _LIBUNWINDSTACK_DWARF_LOCATION_H
+#pragma once
 
 #include <stdint.h>
 
@@ -49,5 +48,3 @@ struct DwarfLocations : public std::unordered_map<uint32_t, DwarfLocation> {
 };
 
 }  // namespace unwindstack
-
-#endif  // _LIBUNWINDSTACK_DWARF_LOCATION_H

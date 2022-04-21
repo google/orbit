@@ -26,8 +26,7 @@
  * SUCH DAMAGE.
  */
 
-#ifndef _LIBUNWINDSTACK_UCONTEXT_X86_64_H
-#define _LIBUNWINDSTACK_UCONTEXT_X86_64_H
+#pragma once
 
 #include <stdint.h>
 
@@ -78,5 +77,3 @@ struct x86_64_ucontext_t {
 };
 
 }  // namespace unwindstack
-
-#endif  // _LIBUNWINDSTACK_UCONTEXT_X86_64_H

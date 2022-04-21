@@ -14,8 +14,7 @@
  * limitations under the License.
  */
 
-#ifndef _LIBUNWINDSTACK_MEMORY_XZ_H
-#define _LIBUNWINDSTACK_MEMORY_XZ_H
+#pragma once
 
 #include <atomic>
 #include <memory>
@@ -71,5 +70,3 @@ class MemoryXz : public Memory {
 };
 
 }  // namespace unwindstack
-
-#endif  // _LIBUNWINDSTACK_MEMORY_XZ_H

@@ -14,8 +14,7 @@
  * limitations under the License.
  */
 
-#ifndef _LIBUNWINDSTACK_ANDROID_UNWINDER_H
-#define _LIBUNWINDSTACK_ANDROID_UNWINDER_H
+#pragma once
 
 #include <stdint.h>
 #include <sys/types.h>
@@ -160,5 +159,3 @@ class AndroidRemoteUnwinder : public AndroidUnwinder {
 };
 
 }  // namespace unwindstack
-
-#endif  // _LIBUNWINDSTACK_ANDROID_UNWINDER_H

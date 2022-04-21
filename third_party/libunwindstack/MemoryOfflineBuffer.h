@@ -14,8 +14,7 @@
  * limitations under the License.
  */
 
-#ifndef _LIBUNWINDSTACK_MEMORY_OFFLINE_BUFFER_H
-#define _LIBUNWINDSTACK_MEMORY_OFFLINE_BUFFER_H
+#pragma once
 
 #include <stdint.h>
 
@@ -39,5 +38,3 @@ class MemoryOfflineBuffer : public Memory {
 };
 
 }  // namespace unwindstack
-
-#endif  // _LIBUNWINDSTACK_MEMORY_OFFLINE_BUFFER_H

@@ -14,8 +14,7 @@
  * limitations under the License.
  */
 
-#ifndef _LIBUNWINDSTACK_DEXFILESDATA_H
-#define _LIBUNWINDSTACK_DEXFILESDATA_H
+#pragma once
 
 namespace unwindstack {
 
@@ -41,5 +40,3 @@ static constexpr uint32_t kDexData[] = {
 };
 
 }  // namespace unwindstack
-
-#endif  // _LIBUNWINDSTACK_DEXFILESDATA_H

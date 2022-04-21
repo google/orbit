@@ -14,8 +14,7 @@
  * limitations under the License.
  */
 
-#ifndef _LIBUNWINDSTACK_REGS_MIPS_H
-#define _LIBUNWINDSTACK_REGS_MIPS_H
+#pragma once
 
 #include <stdint.h>
 
@@ -56,5 +55,3 @@ class RegsMips : public RegsImpl<uint32_t> {
 };
 
 }  // namespace unwindstack
-
-#endif  // _LIBUNWINDSTACK_REGS_MIPS_H

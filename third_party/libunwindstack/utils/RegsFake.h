@@ -14,8 +14,7 @@
  * limitations under the License.
  */
 
-#ifndef _LIBUNWINDSTACK_UTILS_REGS_FAKE_H
-#define _LIBUNWINDSTACK_UTILS_REGS_FAKE_H
+#pragma once
 
 #include <stdint.h>
 
@@ -115,5 +114,3 @@ class RegsImplFake : public RegsImpl<TypeParam> {
 };
 
 }  // namespace unwindstack
-
-#endif  // _LIBUNWINDSTACK_UTILS_REGS_FAKE_H

@@ -26,8 +26,7 @@
  * SUCH DAMAGE.
  */
 
-#ifndef _LIBUNWINDSTACK_REGS_GET_LOCAL_H
-#define _LIBUNWINDSTACK_REGS_GET_LOCAL_H
+#pragma once
 
 namespace unwindstack {
 
@@ -91,7 +90,4 @@ inline __attribute__((__always_inline__)) void RegsGetLocal(Regs* regs) {
   AsmGetRegs(regs->RawData());
 }
 
-
 }  // namespace unwindstack
-
-#endif  // _LIBUNWINDSTACK_REGS_GET_LOCAL_H

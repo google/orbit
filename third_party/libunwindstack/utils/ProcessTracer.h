@@ -14,8 +14,7 @@
  * limitations under the License.
  */
 
-#ifndef _LIBUNWINDSTACK_UTILS_PROCESS_TRACER_H
-#define _LIBUNWINDSTACK_UTILS_PROCESS_TRACER_H
+#pragma once
 
 #include <sys/types.h>
 
@@ -87,5 +86,3 @@ class ProcessTracer final {
   pid_t cur_attached_tid_ = kNoThreadAttached;
 };
 }  // namespace unwindstack
-
-#endif  // _LIBUNWINDSTACK_UTILS_PROCESS_TRACER_H

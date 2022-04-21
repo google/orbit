@@ -14,8 +14,7 @@
  * limitations under the License.
  */
 
-#ifndef _LIBUNWINDSTACK_ERROR_H
-#define _LIBUNWINDSTACK_ERROR_H
+#pragma once
 
 #include <stdint.h>
 
@@ -91,5 +90,3 @@ struct ErrorData {
 };
 
 }  // namespace unwindstack
-
-#endif  // _LIBUNWINDSTACK_ERROR_H

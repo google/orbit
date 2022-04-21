@@ -26,8 +26,7 @@
  * SUCH DAMAGE.
  */
 
-#ifndef _LIBUNWINDSTACK_USER_MIPS_H
-#define _LIBUNWINDSTACK_USER_MIPS_H
+#pragma once
 
 namespace unwindstack {
 
@@ -41,5 +40,3 @@ struct mips_user_regs {
 };
 
 }  // namespace unwindstack
-
-#endif  // _LIBUNWINDSTACK_USER_MIPS_H

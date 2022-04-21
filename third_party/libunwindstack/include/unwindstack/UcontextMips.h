@@ -26,8 +26,7 @@
  * SUCH DAMAGE.
  */
 
-#ifndef _LIBUNWINDSTACK_UCONTEXT_MIPS_H
-#define _LIBUNWINDSTACK_UCONTEXT_MIPS_H
+#pragma once
 
 #include <stdint.h>
 
@@ -58,5 +57,3 @@ struct mips_ucontext_t {
 };
 
 }  // namespace unwindstack
-
-#endif  // _LIBUNWINDSTACK_UCONTEXT_MIPS_H

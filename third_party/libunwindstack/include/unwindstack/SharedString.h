@@ -14,8 +14,7 @@
  * limitations under the License.
  */
 
-#ifndef _LIBUNWINDSTACK_SHAREDSTRING_H
-#define _LIBUNWINDSTACK_SHAREDSTRING_H
+#pragma once
 
 #include <memory>
 #include <string>
@@ -73,4 +72,3 @@ static inline std::string operator+(const char* a, const SharedString& b) {
 }
 
 }  // namespace unwindstack
-#endif  // _LIBUNWINDSTACK_SHAREDSTRING_H

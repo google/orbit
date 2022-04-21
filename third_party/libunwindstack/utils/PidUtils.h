@@ -14,8 +14,7 @@
  * limitations under the License.
  */
 
-#ifndef _LIBUNWINDSTACK_UTILS_PID_UTILS_H
-#define _LIBUNWINDSTACK_UTILS_PID_UTILS_H
+#pragma once
 
 #include <stdint.h>
 #include <sys/types.h>
@@ -39,5 +38,3 @@ bool Detach(pid_t pid);
 bool RunWhenQuiesced(pid_t pid, bool leave_attached, std::function<PidRunEnum()> fn);
 
 }  // namespace unwindstack
-
-#endif  // _LIBUNWINDSTACK_UTILS_PID_UTILS_H

@@ -14,8 +14,7 @@
  * limitations under the License.
  */
 
-#ifndef _LIBUNWINDSTACK_CHECK_H
-#define _LIBUNWINDSTACK_CHECK_H
+#pragma once
 
 #include <stdlib.h>
 
@@ -30,5 +29,3 @@ namespace unwindstack {
   }
 
 }  // namespace unwindstack
-
-#endif  // _LIBUNWINDSTACK_CHECK_H

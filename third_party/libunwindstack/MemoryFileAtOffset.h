@@ -14,8 +14,7 @@
  * limitations under the License.
  */
 
-#ifndef _LIBUNWINDSTACK_MEMORY_FILE_AT_OFFSET_H
-#define _LIBUNWINDSTACK_MEMORY_FILE_AT_OFFSET_H
+#pragma once
 
 #include <stdint.h>
 
@@ -45,5 +44,3 @@ class MemoryFileAtOffset : public Memory {
 };
 
 }  // namespace unwindstack
-
-#endif  // _LIBUNWINDSTACK_MEMORY_FILE_AT_OFFSET_H

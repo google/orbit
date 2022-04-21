@@ -14,8 +14,7 @@
  * limitations under the License.
  */
 
-#ifndef _LIBUNWINDSTACK_MAP_INFO_H
-#define _LIBUNWINDSTACK_MAP_INFO_H
+#pragma once
 
 #include <stdint.h>
 
@@ -248,5 +247,3 @@ class MapInfo {
 };
 
 }  // namespace unwindstack
-
-#endif  // _LIBUNWINDSTACK_MAP_INFO_H

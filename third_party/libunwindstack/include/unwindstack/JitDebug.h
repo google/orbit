@@ -14,8 +14,7 @@
  * limitations under the License.
  */
 
-#ifndef _LIBUNWINDSTACK_JIT_DEBUG_H
-#define _LIBUNWINDSTACK_JIT_DEBUG_H
+#pragma once
 
 #include <stdint.h>
 
@@ -36,5 +35,3 @@ std::unique_ptr<JitDebug> CreateJitDebug(ArchEnum arch, std::shared_ptr<Memory>&
                                          std::vector<std::string> search_libs = {});
 
 }  // namespace unwindstack
-
-#endif  // _LIBUNWINDSTACK_JIT_DEBUG_H

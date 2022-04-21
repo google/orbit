@@ -14,8 +14,7 @@
  * limitations under the License.
  */
 
-#ifndef _LIBUNWINDSTACK_DWARF_STRUCTS_H
-#define _LIBUNWINDSTACK_DWARF_STRUCTS_H
+#pragma once
 
 #include <stdint.h>
 
@@ -51,5 +50,3 @@ struct DwarfFde {
 constexpr uint16_t CFA_REG = static_cast<uint16_t>(-1);
 
 }  // namespace unwindstack
-
-#endif  // _LIBUNWINDSTACK_DWARF_STRUCTS_H

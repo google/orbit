@@ -14,8 +14,7 @@
  * limitations under the License.
  */
 
-#ifndef _LIBUNWINDSTACK_GLOBAL_DEBUG_IMPL_H
-#define _LIBUNWINDSTACK_GLOBAL_DEBUG_IMPL_H
+#pragma once
 
 #include <stdint.h>
 #include <string.h>
@@ -435,5 +434,3 @@ std::unique_ptr<GlobalDebugInterface<Symfile>> CreateGlobalDebugImpl(
 }
 
 }  // namespace unwindstack
-
-#endif  // _LIBUNWINDSTACK_GLOBAL_DEBUG_IMPL_H
