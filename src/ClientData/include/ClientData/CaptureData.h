@@ -30,6 +30,7 @@
 #include "ClientData/PostProcessedSamplingData.h"
 #include "ClientData/ProcessData.h"
 #include "ClientData/ScopeIdProvider.h"
+#include "ClientData/ScopeInfo.h"
 #include "ClientData/ScopeStats.h"
 #include "ClientData/ThreadStateSliceInfo.h"
 #include "ClientData/ThreadTrackDataProvider.h"
@@ -246,6 +247,8 @@ class CaptureData {
 
   // Returns all the timers corresponding to scopes with non-invalid ids
   [[nodiscard]] std::vector<const TimerInfo*> GetAllScopeTimers(
+      absl::flat_hash_set<ScopeType> types = {ScopeType::kApiScope, ScopeType::kApiScopeAsync,
+                                              ScopeType::kDynamicallyInstrumentedFunction},
       uint64_t min_tick = std::numeric_limits<uint64_t>::min(),
       uint64_t max_tick = std::numeric_limits<uint64_t>::max()) const;
 
