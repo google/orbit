@@ -244,8 +244,8 @@ class CaptureData {
   [[nodiscard]] const std::vector<uint64_t>* GetSortedTimerDurationsForScopeId(
       uint64_t scope_id) const;
 
-  // This is a hack allowing for fast jumps to timers. The class should be removed after the way we
-  // store the `timer_info`s is refactored.
+  // TODO(b/205037572) This is a hack allowing for fast jumps to timers. The class should be removed
+  // after the way we store the `timer_info`s is refactored.
   class FirstLastMinMaxTimers {
    public:
     explicit FirstLastMinMaxTimers(const TimerInfo* first_timer_observed)
