@@ -49,7 +49,7 @@ class SamplingReportDataView : public DataView {
   void SetStackEventsCount(uint32_t stack_events_count);
   orbit_client_data::ThreadID GetThreadID() const { return tid_; }
 
-  void OnExportEventsToCsvRequested(const std::vector<int>& /*selection*/) override;
+  void OnExportEventsToCsvRequested(const std::vector<int>& selection) override;
 
  protected:
   [[nodiscard]] ActionStatus GetActionStatus(std::string_view action, int clicked_index,

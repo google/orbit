@@ -297,22 +297,15 @@ void DataView::OnExportToCsvRequested() {
   std::string save_file = app_->GetSaveFile(".csv");
   if (save_file.empty()) return;
 
-  auto send_error = [&](const std::string& error_msg) {
-    app_->SendErrorToUi(std::string{kMenuActionExportToCsv}, error_msg);
-  };
+  const std::string kErrorWindowTitle{kMenuActionExportToCsv};
 
   ErrorMessageOr<orbit_base::unique_fd> result = orbit_base::OpenFileForWriting(save_file);
-  if (result.has_error()) {
-    send_error(
-        absl::StrFormat("Failed to open \"%s\" file: %s", save_file, result.error().message()));
+  if (IsError(result, kErrorWindowTitle,
+              absl::StrFormat("Failed to open \"%s\" file: ", save_file))) {
     return;
   }
 
   const orbit_base::unique_fd& fd = result.value();
-
-  constexpr const char* kFieldSeparator = ",";
-  // CSV RFC requires lines to end with CRLF
-  constexpr const char* kLineSeparator = "\r\n";
 
   size_t num_columns = GetColumns().size();
   {
@@ -324,9 +317,8 @@ void DataView::OnExportToCsvRequested() {
 
     header_line.append(kLineSeparator);
     auto write_result = orbit_base::WriteFully(fd, header_line);
-    if (write_result.has_error()) {
-      send_error(absl::StrFormat("Error writing to \"%s\": %s", save_file,
-                                 write_result.error().message()));
+    if (IsError(result, kErrorWindowTitle,
+                absl::StrFormat("Error writing to \"%s\" file: ", save_file))) {
       return;
     }
   }
@@ -340,9 +332,8 @@ void DataView::OnExportToCsvRequested() {
     }
     line.append(kLineSeparator);
     auto write_result = orbit_base::WriteFully(fd, line);
-    if (write_result.has_error()) {
-      send_error(absl::StrFormat("Error writing to \"%s\": %s", save_file,
-                                 write_result.error().message()));
+    if (IsError(result, kErrorWindowTitle,
+                absl::StrFormat("Error writing to \"%s\" file: ", save_file))) {
       return;
     }
   }
@@ -374,21 +365,13 @@ void DataView::OnCopySelectionRequested(const std::vector<int>& selection) {
 }
 
 std::optional<orbit_base::unique_fd> DataView::GetCSVSaveFile(
-    std::string_view error_window_title) const {
-  auto send_error = [&](const std::string& error_msg) {
-    app_->SendErrorToUi(std::string{error_window_title}, error_msg);
-  };
-
-  std::string file_path = app_->GetSaveFile(".csv");
-  if (file_path.empty()) return std::nullopt;
-
+    std::string_view file_path, const std::string& error_window_title,
+    const std::string& error_prefix) const {
   ErrorMessageOr<orbit_base::unique_fd> result = orbit_base::OpenFileForWriting(file_path);
-  if (result.has_error()) {
-    send_error(
-        absl::StrFormat("Failed to open \"%s\" file: %s", file_path, result.error().message()));
+  if (IsError(result, error_window_title, error_prefix)) {
     return std::nullopt;
   }
-  return {result.value()};
+  return std::move(result.value());
 }
 
 }  // namespace orbit_data_views

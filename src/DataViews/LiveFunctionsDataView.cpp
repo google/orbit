@@ -384,20 +384,16 @@ void LiveFunctionsDataView::OnJumpToRequested(const std::string& action,
 }
 
 void LiveFunctionsDataView::OnExportEventsToCsvRequested(const std::vector<int>& selection) {
-  auto send_error = [&](const std::string& error_msg) {
-    app_->SendErrorToUi("Export all events to CSV", error_msg);
-  };
-
   std::string file_path = app_->GetSaveFile(".csv");
   if (file_path.empty()) return;
 
-  ErrorMessageOr<orbit_base::unique_fd> result = orbit_base::OpenFileForWriting(file_path);
-  if (result.has_error()) {
-    send_error(
-        absl::StrFormat("Failed to open \"%s\" file: %s", file_path, result.error().message()));
-    return;
-  }
-  const orbit_base::unique_fd& fd = result.value();
+  const std::string kErrorWindowTitle = "Export all events to CSV";
+  const std::string kErrorWritingMessagePrefix =
+      absl::StrFormat("Error writing to \"%s\": ", file_path);
+
+  const std::optional<orbit_base::unique_fd> fd = GetCSVSaveFile(
+      file_path, kErrorWindowTitle, absl::StrFormat("Failed to open \"%s\" file: ", file_path));
+  if (!fd) return;
 
   // Write header line
   constexpr const char* kFieldSeparator = ",";
@@ -409,10 +405,8 @@ void LiveFunctionsDataView::OnExportEventsToCsvRequested(const std::vector<int>&
       kNames, kFieldSeparator,
       [](std::string* out, const std::string& name) { out->append(FormatValueForCsv(name)); });
   header_line.append(kLineSeparator);
-  auto write_result = orbit_base::WriteFully(fd, header_line);
-  if (write_result.has_error()) {
-    send_error(
-        absl::StrFormat("Error writing to \"%s\": %s", file_path, write_result.error().message()));
+  auto write_result = orbit_base::WriteFully(*fd, header_line);
+  if (IsError(write_result, kErrorWindowTitle, kErrorWritingMessagePrefix)) {
     return;
   }
 
@@ -437,10 +431,8 @@ void LiveFunctionsDataView::OnExportEventsToCsvRequested(const std::vector<int>&
       line.append(FormatValueForCsv(absl::StrFormat("%lu", timer->end() - timer->start())));
       line.append(kLineSeparator);
 
-      auto write_result = orbit_base::WriteFully(fd, line);
-      if (write_result.has_error()) {
-        send_error(absl::StrFormat("Error writing to \"%s\": %s", file_path,
-                                   write_result.error().message()));
+      auto write_result = orbit_base::WriteFully(*fd, line);
+      if (IsError(write_result, kErrorWindowTitle, kErrorWritingMessagePrefix)) {
         return;
       }
     }

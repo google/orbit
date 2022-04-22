@@ -6,6 +6,8 @@
 #define DATA_VIEWS_DATA_VIEW_H_
 
 #include <absl/container/flat_hash_set.h>
+#include <absl/strings/str_cat.h>
+#include <absl/strings/str_join.h>
 #include <stddef.h>
 #include <stdint.h>
 
@@ -181,7 +183,31 @@ class DataView {
     return nullptr;
   }
   [[nodiscard]] std::optional<orbit_base::unique_fd> GetCSVSaveFile(
-      std::string_view error_window_title) const;
+      std::string_view file_path, const std::string& error_window_title,
+      const std::string& error_prefix) const;
+
+  template <typename T>
+  [[nodiscard]] bool IsError(const ErrorMessageOr<T>& error_message_or,
+                             const std::string& error_window_title,
+                             const std::string& error_prefix) const {
+    if (error_message_or.has_error()) {
+      app_->SendErrorToUi(error_window_title,
+                          absl::StrCat(error_prefix, error_message_or.error().message()));
+      return true;
+    }
+    return false;
+  }
+
+  static constexpr const char* kFieldSeparator = ",";
+  // CSV RFC requires lines to end with CRLF
+  static constexpr const char* kLineSeparator = "\r\n";
+
+  template <typename Range>
+  ErrorMessageOr<void> WriteHeaderToCSV(const Range& column_titles) {
+    std::string header_line = absl::StrJoin(
+        column_titles, kFieldSeparator,
+        [](std::string* out, const std::string& name) { out->append(FormatValueForCsv(name)); });
+  }
 
   enum class ActionStatus { kInvisible, kVisibleButDisabled, kVisibleAndEnabled };
   [[nodiscard]] virtual ActionStatus GetActionStatus(std::string_view action, int clicked_index,

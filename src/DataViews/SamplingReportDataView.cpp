@@ -452,6 +452,18 @@ SampledFunction& SamplingReportDataView::GetSampledFunction(unsigned int row) {
   return functions_[indices_[row]];
 }
 
-void SamplingReportDataView::OnExportEventsToCsvRequested(const std::vector<int>& /*selection*/) {}
+void SamplingReportDataView::OnExportEventsToCsvRequested(const std::vector<int>& /*selection*/) {
+  std::string file_path = app_->GetSaveFile(".csv");
+  if (file_path.empty()) return;
+
+  const std::string kErrorWindowTitle = "Export sampled stacks to CSV";
+
+  const std::optional<orbit_base::unique_fd> fd = GetCSVSaveFile(
+      file_path, kErrorWindowTitle, absl::StrFormat("Failed to open \"%s\" file: ", file_path));
+  if (!fd) return;
+
+  const std::array<std::string, kNumColumns> kNames{
+      "Thread", "Timestamp (ns)", "Names main/foo/leaf", "Addresses main_addr/foo_addr/leaf_addr"};
+}
 
 }  // namespace orbit_data_views
