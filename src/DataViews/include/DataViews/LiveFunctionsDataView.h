@@ -20,6 +20,7 @@
 #include "DataViews/DataView.h"
 #include "DataViews/LiveFunctionsInterface.h"
 #include "GrpcProtos/capture.pb.h"
+#include "OrbitBase/Result.h"
 
 namespace orbit_data_views {
 
@@ -92,6 +93,9 @@ class LiveFunctionsDataView : public DataView {
   // The row does not necessarily refer to a dynamically instrumented function. If it does, a
   // pointer to the corresponding FunctionInfo is returned. `nullptr` is returned otherwise.
   [[nodiscard]] const orbit_client_data::FunctionInfo* GetFunctionInfoFromRow(int row) override;
+
+  [[nodiscard]] ErrorMessageOr<void> WriteEventsToCSVFile(const std::vector<int>& selection,
+                                                          const std::string& file_path) const;
 
   void UpdateHistogramWithIndices(const std::vector<int>& visible_selected_indices);
 

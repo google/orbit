@@ -383,17 +383,9 @@ void LiveFunctionsDataView::OnJumpToRequested(const std::string& action,
   }
 }
 
-void LiveFunctionsDataView::OnExportEventsToCsvRequested(const std::vector<int>& selection) {
-  std::string file_path = app_->GetSaveFile(".csv");
-  if (file_path.empty()) return;
-
-  const std::string kErrorWindowTitle = "Export all events to CSV";
-  const std::string kErrorWritingMessagePrefix =
-      absl::StrFormat("Error writing to \"%s\": ", file_path);
-
-  const std::optional<orbit_base::unique_fd> fd = GetCSVSaveFile(
-      file_path, kErrorWindowTitle, absl::StrFormat("Failed to open \"%s\" file: ", file_path));
-  if (!fd) return;
+[[nodiscard]] ErrorMessageOr<void> LiveFunctionsDataView::WriteEventsToCSVFile(
+    const std::vector<int>& selection, const std::string& file_path) const {
+  OUTCOME_TRY(auto fd, orbit_base::OpenFileForWriting(file_path));
 
   // Write header line
   constexpr const char* kFieldSeparator = ",";
@@ -405,10 +397,7 @@ void LiveFunctionsDataView::OnExportEventsToCsvRequested(const std::vector<int>&
       kNames, kFieldSeparator,
       [](std::string* out, const std::string& name) { out->append(FormatValueForCsv(name)); });
   header_line.append(kLineSeparator);
-  auto write_result = orbit_base::WriteFully(*fd, header_line);
-  if (IsError(write_result, kErrorWindowTitle, kErrorWritingMessagePrefix)) {
-    return;
-  }
+  OUTCOME_TRY(orbit_base::WriteFully(fd, header_line));
 
   for (int row : selection) {
     const CaptureData& capture_data = app_->GetCaptureData();
@@ -431,12 +420,20 @@ void LiveFunctionsDataView::OnExportEventsToCsvRequested(const std::vector<int>&
       line.append(FormatValueForCsv(absl::StrFormat("%lu", timer->end() - timer->start())));
       line.append(kLineSeparator);
 
-      auto write_result = orbit_base::WriteFully(*fd, line);
-      if (IsError(write_result, kErrorWindowTitle, kErrorWritingMessagePrefix)) {
-        return;
-      }
+      OUTCOME_TRY(orbit_base::WriteFully(fd, line));
     }
   }
+
+  return outcome::success();
+}
+
+void LiveFunctionsDataView::OnExportEventsToCsvRequested(const std::vector<int>& selection) {
+  std::string file_path = app_->GetSaveFile(".csv");
+  if (file_path.empty()) return;
+
+  const std::string kErrorWindowTitle = "Export all events to CSV";
+
+  ReportErrorIfAny(WriteEventsToCSVFile(selection, file_path), kErrorWindowTitle);
 }
 
 void LiveFunctionsDataView::DoFilter() {

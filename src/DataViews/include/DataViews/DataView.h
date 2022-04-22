@@ -182,20 +182,15 @@ class DataView {
   [[nodiscard]] virtual const orbit_client_data::FunctionInfo* GetFunctionInfoFromRow(int /*row*/) {
     return nullptr;
   }
-  [[nodiscard]] std::optional<orbit_base::unique_fd> GetCSVSaveFile(
-      std::string_view file_path, const std::string& error_window_title,
-      const std::string& error_prefix) const;
+
+  ErrorMessageOr<void> ExportToCSVFile(const std::string& file_path);
 
   template <typename T>
-  [[nodiscard]] bool IsError(const ErrorMessageOr<T>& error_message_or,
-                             const std::string& error_window_title,
-                             const std::string& error_prefix) const {
+  void ReportErrorIfAny(const ErrorMessageOr<T>& error_message_or,
+                        const std::string& error_window_title) const {
     if (error_message_or.has_error()) {
-      app_->SendErrorToUi(error_window_title,
-                          absl::StrCat(error_prefix, error_message_or.error().message()));
-      return true;
+      app_->SendErrorToUi(error_window_title, error_message_or.error().message());
     }
-    return false;
   }
 
   static constexpr const char* kFieldSeparator = ",";

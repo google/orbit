@@ -458,12 +458,13 @@ void SamplingReportDataView::OnExportEventsToCsvRequested(const std::vector<int>
 
   const std::string kErrorWindowTitle = "Export sampled stacks to CSV";
 
-  const std::optional<orbit_base::unique_fd> fd = GetCSVSaveFile(
-      file_path, kErrorWindowTitle, absl::StrFormat("Failed to open \"%s\" file: ", file_path));
-  if (!fd) return;
+  // const std::optional<orbit_base::unique_fd> fd = GetCSVSaveFile(
+  //     file_path, kErrorWindowTitle, absl::StrFormat("Failed to open \"%s\" file: ", file_path));
+  // if (!fd) return;
 
-  const std::array<std::string, kNumColumns> kNames{
-      "Thread", "Timestamp (ns)", "Names main/foo/leaf", "Addresses main_addr/foo_addr/leaf_addr"};
+  // const std::array<std::string, kNumColumns> kNames{
+  //     "Thread", "Timestamp (ns)", "Names main/foo/leaf", "Addresses
+  //     main_addr/foo_addr/leaf_addr"};
 }
 
 }  // namespace orbit_data_views

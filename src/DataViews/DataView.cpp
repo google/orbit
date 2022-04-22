@@ -293,19 +293,8 @@ void DataView::OnSourceCodeRequested(const std::vector<int>& selection) {
   }
 }
 
-void DataView::OnExportToCsvRequested() {
-  std::string save_file = app_->GetSaveFile(".csv");
-  if (save_file.empty()) return;
-
-  const std::string kErrorWindowTitle{kMenuActionExportToCsv};
-
-  ErrorMessageOr<orbit_base::unique_fd> result = orbit_base::OpenFileForWriting(save_file);
-  if (IsError(result, kErrorWindowTitle,
-              absl::StrFormat("Failed to open \"%s\" file: ", save_file))) {
-    return;
-  }
-
-  const orbit_base::unique_fd& fd = result.value();
+ErrorMessageOr<void> DataView::ExportToCSVFile(const std::string& file_path) {
+  OUTCOME_TRY(auto fd, orbit_base::OpenFileForWriting(file_path));
 
   size_t num_columns = GetColumns().size();
   {
@@ -316,11 +305,7 @@ void DataView::OnExportToCsvRequested() {
     }
 
     header_line.append(kLineSeparator);
-    auto write_result = orbit_base::WriteFully(fd, header_line);
-    if (IsError(result, kErrorWindowTitle,
-                absl::StrFormat("Error writing to \"%s\" file: ", save_file))) {
-      return;
-    }
+    OUTCOME_TRY(orbit_base::WriteFully(fd, header_line));
   }
 
   size_t num_elements = GetNumElements();
@@ -331,12 +316,18 @@ void DataView::OnExportToCsvRequested() {
       if (j < num_columns - 1) line.append(kFieldSeparator);
     }
     line.append(kLineSeparator);
-    auto write_result = orbit_base::WriteFully(fd, line);
-    if (IsError(result, kErrorWindowTitle,
-                absl::StrFormat("Error writing to \"%s\" file: ", save_file))) {
-      return;
-    }
+    OUTCOME_TRY(orbit_base::WriteFully(fd, line));
   }
+  return outcome::success();
+}
+
+void DataView::OnExportToCsvRequested() {
+  std::string save_file = app_->GetSaveFile(".csv");
+  if (save_file.empty()) return;
+
+  const std::string kErrorWindowTitle{kMenuActionExportToCsv};
+
+  ReportErrorIfAny(ExportToCSVFile(save_file), kErrorWindowTitle);
 }
 
 void DataView::OnCopySelectionRequested(const std::vector<int>& selection) {
@@ -362,16 +353,6 @@ void DataView::OnCopySelectionRequested(const std::vector<int>& selection) {
   }
 
   app_->SetClipboard(clipboard);
-}
-
-std::optional<orbit_base::unique_fd> DataView::GetCSVSaveFile(
-    std::string_view file_path, const std::string& error_window_title,
-    const std::string& error_prefix) const {
-  ErrorMessageOr<orbit_base::unique_fd> result = orbit_base::OpenFileForWriting(file_path);
-  if (IsError(result, error_window_title, error_prefix)) {
-    return std::nullopt;
-  }
-  return std::move(result.value());
 }
 
 }  // namespace orbit_data_views
