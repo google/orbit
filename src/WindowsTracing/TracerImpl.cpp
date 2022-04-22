@@ -7,6 +7,7 @@
 #include "GrpcProtos/module.pb.h"
 #include "OrbitBase/Logging.h"
 #include "OrbitBase/Profiling.h"
+#include "WindowsTracing/ListModulesETW.h"
 #include "WindowsUtils/ListModules.h"
 #include "WindowsUtils/ListThreads.h"
 
@@ -26,7 +27,8 @@ void TracerImpl::Start() {
   ORBIT_CHECK(krabs_tracer_ == nullptr);
   SendModulesSnapshot();
   SendThreadNamesSnapshot();
-  krabs_tracer_ = std::make_unique<KrabsTracer>(capture_options_, listener_);
+  krabs_tracer_ = std::make_unique<KrabsTracer>(capture_options_.pid(),
+                                                capture_options_.samples_per_second(), listener_);
   krabs_tracer_->Start();
 }
 
@@ -43,6 +45,11 @@ void TracerImpl::SendModulesSnapshot() {
   modules_snapshot.set_timestamp_ns(orbit_base::CaptureTimestampNs());
 
   std::vector<Module> modules = orbit_windows_utils::ListModules(pid);
+  if (modules.empty()) {
+    // Fallback etw module enumeration which involves more work.
+    modules = ListModulesEtw(pid);
+  }
+
   if (modules.empty()) {
     ORBIT_ERROR("Unable to load modules for %u", pid);
     return;

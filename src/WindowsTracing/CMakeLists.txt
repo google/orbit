@@ -20,6 +20,7 @@ target_include_directories(WindowsTracing PRIVATE
         ${CMAKE_CURRENT_LIST_DIR})
 
 target_sources(WindowsTracing PUBLIC
+        include/WindowsTracing/ListModulesEtw.h
         include/WindowsTracing/Tracer.h
         include/WindowsTracing/TracerListener.h)
 
@@ -29,6 +30,7 @@ target_sources(WindowsTracing PRIVATE
         EtwEventTypes.h
         KrabsTracer.cpp
         KrabsTracer.h
+        ListModulesEtw.cpp
         Tracer.cpp
         TracerImpl.h
         TracerImpl.cpp)
@@ -37,6 +39,7 @@ target_include_directories(WindowsTracing INTERFACE ${CMAKE_CURRENT_SOURCE_DIR}/
 
 target_link_libraries(WindowsTracing PUBLIC
         GrpcProtos
+        Introspection
         ObjectUtils
         OrbitBase
         WindowsUtils
@@ -48,7 +51,8 @@ target_link_libraries(WindowsTracing PUBLIC
 add_executable(WindowsTracingTests)
 
 target_sources(WindowsTracingTests PRIVATE
-        ContextSwitchManagerTest.cpp)
+        ContextSwitchManagerTest.cpp
+        ListModulesEtwTest.cpp)
 
 target_link_libraries(WindowsTracingTests PRIVATE
         WindowsTracing
