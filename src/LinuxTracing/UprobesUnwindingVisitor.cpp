@@ -305,6 +305,7 @@ void UprobesUnwindingVisitor::Visit(uint64_t event_timestamp,
       callstack->set_type(Callstack::kFramePointerUnwindingError);
       callstack->add_pcs(top_ip);
       listener_->OnCallstackSample(std::move(sample));
+      return;
     }
   }
 
