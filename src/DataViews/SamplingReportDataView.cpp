@@ -470,10 +470,10 @@ ErrorMessageOr<void> SamplingReportDataView::WriteStackEventsToCSVFile(
   const std::vector<orbit_client_data::CallstackEvent> callstack_events =
       GetThreadID() != orbit_base::kAllProcessThreadsTid
           ? callstack_data->GetCallstackEventsOfTidInTimeRange(GetThreadID(),
-                                                              std::numeric_limits<uint64_t>::min(),
-                                                              std::numeric_limits<uint64_t>::max())
+                                                               std::numeric_limits<uint64_t>::min(),
+                                                               std::numeric_limits<uint64_t>::max())
           : callstack_data->GetCallstackEventsInTimeRange(std::numeric_limits<uint64_t>::min(),
-                                                         std::numeric_limits<uint64_t>::max());
+                                                          std::numeric_limits<uint64_t>::max());
 
   for (const orbit_client_data::CallstackEvent& event : callstack_events) {
     std::vector<std::string> cells;
