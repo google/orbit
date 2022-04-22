@@ -212,7 +212,9 @@ float ThreadTrack::GetDefaultBoxHeight() const {
 }
 
 Color ThreadTrack::GetTimerColor(const TimerInfo& timer_info, const internal::DrawData& draw_data) {
-  const uint64_t scope_id = app_->GetCaptureData().ProvideScopeId(timer_info);
+  const uint64_t scope_id = app_->HasCaptureData()
+                                ? app_->GetCaptureData().ProvideScopeId(timer_info)
+                                : orbit_client_data::kInvalidScopeId;
   const uint64_t group_id = timer_info.group_id();
   const bool is_selected = &timer_info == draw_data.selected_timer;
   const bool is_scope_id_highlighted =
