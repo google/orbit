@@ -245,20 +245,21 @@ void UprobesUnwindingVisitor::Visit(uint64_t event_timestamp,
   sample.set_timestamp_ns(event_timestamp);
 
   Callstack* callstack = sample.mutable_callstack();
+  callstack->set_type(Callstack::kComplete);
+
+  bool has_unwinding_error = false;
 
   // Callstacks with only two frames (the first is in the kernel, the second is the sampled address)
   // are unwinding errors.
   // Note that this doesn't exclude samples inside the main function of any thread as the main
   // function is never the outermost frame. For example, for the main thread the outermost function
   // is _start, followed by __libc_start_main. For other threads, the outermost function is clone.
-  if (event_data.GetCallchainSize() == 2) {
+  if (!has_unwinding_error && event_data.GetCallchainSize() == 2) {
     if (unwind_error_counter_ != nullptr) {
       ++(*unwind_error_counter_);
     }
     callstack->set_type(Callstack::kFramePointerUnwindingError);
-    callstack->add_pcs(event_data.GetCallchain()[1]);
-    listener_->OnCallstackSample(std::move(sample));
-    return;
+    has_unwinding_error = true;
   }
 
   uint64_t top_ip = event_data.GetCallchain()[1];
@@ -266,29 +267,27 @@ void UprobesUnwindingVisitor::Visit(uint64_t event_timestamp,
   // Some samples can actually fall inside u(ret)probes code. Set their type accordingly, as we
   // don't want to show the unnamed uprobes module in the samples.
   unwindstack::MapInfo* top_ip_map_info = current_maps_->Find(top_ip);
-  if (top_ip_map_info != nullptr && top_ip_map_info->name() == "[uprobes]") {
+  if (!has_unwinding_error && top_ip_map_info != nullptr &&
+      top_ip_map_info->name() == "[uprobes]") {
     if (samples_in_uretprobes_counter_ != nullptr) {
       ++(*samples_in_uretprobes_counter_);
     }
     callstack->set_type(Callstack::kInUprobes);
-    callstack->add_pcs(top_ip);
-    listener_->OnCallstackSample(std::move(sample));
-    return;
+    has_unwinding_error = true;
   }
+
   // Similar to the previous case, but for user space instrumentation. We consider whether a sample:
   // - fell directly inside a user space instrumentation trampoline (entry or return); or
   // - fell inside liborbituserspaceinstrumentation.so or a module called by this, AND also
   //   includes a previous frame corresponding to a trampoline, usually where unwinding stopped.
   // We don't simply check if any frame is in the trampoline as that's normal before calling
   // PatchCallchain.
-  if (user_space_instrumentation_addresses_ != nullptr &&
+  if (!has_unwinding_error && user_space_instrumentation_addresses_ != nullptr &&
       CallchainIsInUserSpaceInstrumentation(event_data.GetCallchain(),
                                             event_data.GetCallchainSize(), *current_maps_,
                                             *user_space_instrumentation_addresses_)) {
     callstack->set_type(Callstack::kInUserSpaceInstrumentation);
-    callstack->add_pcs(top_ip);
-    listener_->OnCallstackSample(std::move(sample));
-    return;
+    has_unwinding_error = true;
   }
 
   // The leaf function is not guaranteed to have the frame pointer for all our targets. Though, we
@@ -296,34 +295,38 @@ void UprobesUnwindingVisitor::Visit(uint64_t event_timestamp,
   // perf_event_open to give us "almost" correct callstacks (the caller of the leaf function will be
   // missing). We do a plausibility check for this assumption by checking if the callstack only
   // contains executable code.
-  // TODO(b/187690455): As soon as we actually have frame pointers in all non-leaf functions, we can
-  //  report an unwinding error here. Till that point this check will always fail, because the
-  //  caller of __libc_start_main will be invalid since libc doesn't have frame-pointers. This
-  //  prevents us from testing the current implementation, which will have "almost" correct
-  //  callstack.
-  for (uint64_t frame_index = 1; frame_index < event_data.GetCallchainSize(); ++frame_index) {
-    unwindstack::MapInfo* map_info = current_maps_->Find(event_data.GetCallchain()[frame_index]);
-    if (map_info == nullptr || (map_info->flags() & PROT_EXEC) == 0) {
-      break;
+  if (!has_unwinding_error) {
+    for (uint64_t frame_index = 1; frame_index < event_data.GetCallchainSize(); ++frame_index) {
+      unwindstack::MapInfo* map_info = current_maps_->Find(event_data.GetCallchain()[frame_index]);
+      if (map_info == nullptr || (map_info->flags() & PROT_EXEC) == 0) {
+        if (unwind_error_counter_ != nullptr) {
+          ++(*unwind_error_counter_);
+        }
+        callstack->set_type(Callstack::kFramePointerUnwindingError);
+        has_unwinding_error = true;
+        break;
+      }
     }
   }
 
-  Callstack::CallstackType leaf_function_patching_status =
-      leaf_function_call_manager_->PatchCallerOfLeafFunction(&event_data, current_maps_, unwinder_);
-  if (leaf_function_patching_status != Callstack::kComplete) {
-    if (unwind_error_counter_ != nullptr) {
-      ++(*unwind_error_counter_);
+  if (!has_unwinding_error) {
+    Callstack::CallstackType leaf_function_patching_status =
+        leaf_function_call_manager_->PatchCallerOfLeafFunction(&event_data, current_maps_,
+                                                               unwinder_);
+    if (leaf_function_patching_status != Callstack::kComplete) {
+      if (unwind_error_counter_ != nullptr) {
+        ++(*unwind_error_counter_);
+      }
+      callstack->set_type(leaf_function_patching_status);
+      has_unwinding_error = true;
     }
-    callstack->set_type(leaf_function_patching_status);
-    callstack->add_pcs(top_ip);
-    listener_->OnCallstackSample(std::move(sample));
-    return;
   }
 
   // Apparently quite a corner case, but easy to observe: the library injected by user space
   // instrumentation didn't appear in the callchain because it called a leaf function in another
   // module, but after calling PatchCallerOfLeafFunction it's now the second innermost frame.
-  if (user_space_instrumentation_addresses_ != nullptr && event_data.GetCallchainSize() >= 4) {
+  if (!has_unwinding_error && user_space_instrumentation_addresses_ != nullptr &&
+      event_data.GetCallchainSize() >= 4) {
     unwindstack::MapInfo* second_ip_map_info = current_maps_->Find(event_data.GetCallchain()[2]);
     if (second_ip_map_info != nullptr &&
         second_ip_map_info->name() ==
@@ -335,24 +338,20 @@ void UprobesUnwindingVisitor::Visit(uint64_t event_timestamp,
               return user_space_instrumentation_addresses_->IsInEntryOrReturnTrampoline(frame);
             })) {
       callstack->set_type(Callstack::kInUserSpaceInstrumentation);
-      callstack->add_pcs(top_ip);
-      listener_->OnCallstackSample(std::move(sample));
-      return;
+      has_unwinding_error = true;
     }
   }
 
-  if (!return_address_manager_->PatchCallchain(event_data.tid, event_data.ips.get(),
+  if (!has_unwinding_error &&
+      !return_address_manager_->PatchCallchain(event_data.tid, event_data.ips.get(),
                                                event_data.GetCallchainSize(), current_maps_)) {
     if (unwind_error_counter_ != nullptr) {
       ++(*unwind_error_counter_);
     }
     callstack->set_type(Callstack::kCallstackPatchingFailed);
-    callstack->add_pcs(top_ip);
-    listener_->OnCallstackSample(std::move(sample));
-    return;
+    has_unwinding_error = true;
   }
 
-  callstack->set_type(Callstack::kComplete);
   // Skip the first frame as the top of a perf_event_open callchain is always inside kernel code.
   callstack->add_pcs(event_data.GetCallchain()[1]);
   // Only the address of the top of the stack is correct. Frame-based unwinding

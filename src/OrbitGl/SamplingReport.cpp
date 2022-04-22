@@ -156,8 +156,9 @@ std::string SamplingReport::GetSelectedCallstackString() const {
   std::string type_string =
       (callstack_type == CallstackType::kComplete)
           ? ""
-          : absl::StrFormat("  -  Unwind error (%s)",
-                            orbit_client_data::CallstackTypeToString(callstack_type));
+          : absl::StrFormat(
+                "  -  <span style=\" color:#ff8000; font-weight: bold;\">Unwind error (%s)</span>",
+                orbit_client_data::CallstackTypeToString(callstack_type));
   return absl::StrFormat(
       "%i of %i unique callstacks  [%i/%i total samples] (%.2f%%)%s", selected_callstack_index_ + 1,
       selected_sorted_callstack_report_->callstack_counts.size(), num_occurrences, total_callstacks,

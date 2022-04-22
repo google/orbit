@@ -211,6 +211,12 @@ void CallstackDataView::SetFunctionsToHighlight(
 
 bool CallstackDataView::GetDisplayColor(int row, int /*column*/, unsigned char& red,
                                         unsigned char& green, unsigned char& blue) {
+  if (callstack_->IsUnwindingError() && row != 0) {
+    red = 255;
+    green = 128;
+    blue = 0;
+    return true;
+  }
   CallstackDataViewFrame frame = GetFrameFromRow(row);
   if (functions_to_highlight_.contains(frame.address)) {
     red = 200;
