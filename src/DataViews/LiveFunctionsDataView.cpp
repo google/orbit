@@ -286,7 +286,9 @@ DataView::ActionStatus LiveFunctionsDataView::GetActionStatus(
   const CaptureData& capture_data = app_->GetCaptureData();
   if (action == kMenuActionJumpToFirst || action == kMenuActionJumpToLast ||
       action == kMenuActionJumpToMin || action == kMenuActionJumpToMax) {
-    if (selected_indices.size() != 1) return ActionStatus::kVisibleButDisabled;
+    if (app_->IsCapturing() || selected_indices.size() != 1) {
+      return ActionStatus::kVisibleButDisabled;
+    }
 
     uint64_t scope_id = GetScopeId(selected_indices[0]);
     const ScopeStats& stats = capture_data.GetScopeStatsOrDefault(scope_id);
