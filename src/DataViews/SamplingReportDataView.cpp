@@ -236,6 +236,8 @@ DataView::ActionStatus SamplingReportDataView::GetActionStatus(
     return ActionStatus::kVisibleButDisabled;
   }
 
+  if (action == kMenuActionExportEventsToCsv) return ActionStatus::kVisibleAndEnabled;
+
   std::function<bool(const FunctionInfo*)> is_visible_action_enabled;
   if (action == kMenuActionSelect) {
     is_visible_action_enabled = [this](const FunctionInfo* function) {
@@ -449,5 +451,7 @@ const SampledFunction& SamplingReportDataView::GetSampledFunction(unsigned int r
 SampledFunction& SamplingReportDataView::GetSampledFunction(unsigned int row) {
   return functions_[indices_[row]];
 }
+
+void SamplingReportDataView::OnExportEventsToCsvRequested(const std::vector<int>& /*selection*/) {}
 
 }  // namespace orbit_data_views

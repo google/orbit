@@ -373,4 +373,22 @@ void DataView::OnCopySelectionRequested(const std::vector<int>& selection) {
   app_->SetClipboard(clipboard);
 }
 
+std::optional<orbit_base::unique_fd> DataView::GetCSVSaveFile(
+    std::string_view error_window_title) const {
+  auto send_error = [&](const std::string& error_msg) {
+    app_->SendErrorToUi(std::string{error_window_title}, error_msg);
+  };
+
+  std::string file_path = app_->GetSaveFile(".csv");
+  if (file_path.empty()) return std::nullopt;
+
+  ErrorMessageOr<orbit_base::unique_fd> result = orbit_base::OpenFileForWriting(file_path);
+  if (result.has_error()) {
+    send_error(
+        absl::StrFormat("Failed to open \"%s\" file: %s", file_path, result.error().message()));
+    return std::nullopt;
+  }
+  return {result.value()};
+}
+
 }  // namespace orbit_data_views

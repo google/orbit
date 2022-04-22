@@ -22,6 +22,7 @@
 #include "DataViews/AppInterface.h"
 #include "DataViews/DataViewType.h"
 #include "MetricsUploader/MetricsUploader.h"
+#include "OrbitBase/File.h"
 #include "OrbitBase/Logging.h"
 #include "OrbitBase/Result.h"
 
@@ -179,6 +180,8 @@ class DataView {
   [[nodiscard]] virtual const orbit_client_data::FunctionInfo* GetFunctionInfoFromRow(int /*row*/) {
     return nullptr;
   }
+  [[nodiscard]] std::optional<orbit_base::unique_fd> GetCSVSaveFile(
+      std::string_view error_window_title) const;
 
   enum class ActionStatus { kInvisible, kVisibleButDisabled, kVisibleAndEnabled };
   [[nodiscard]] virtual ActionStatus GetActionStatus(std::string_view action, int clicked_index,
