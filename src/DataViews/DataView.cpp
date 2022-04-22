@@ -6,7 +6,9 @@
 
 #include <absl/strings/str_replace.h>
 
+#include <algorithm>
 #include <cstddef>
+#include <iterator>
 #include <memory>
 
 #include "ClientData/FunctionInfo.h"
@@ -296,17 +298,12 @@ void DataView::OnSourceCodeRequested(const std::vector<int>& selection) {
 ErrorMessageOr<void> DataView::ExportToCSVFile(const std::string& file_path) {
   OUTCOME_TRY(auto fd, orbit_base::OpenFileForWriting(file_path));
 
-  size_t num_columns = GetColumns().size();
-  {
-    std::string header_line;
-    for (size_t i = 0; i < num_columns; ++i) {
-      header_line.append(FormatValueForCsv(GetColumns()[i].header));
-      if (i < num_columns - 1) header_line.append(kFieldSeparator);
-    }
+  std::vector<std::string> column_names;
+  std::transform(std::begin(GetColumns()), std::end(GetColumns()), std::back_inserter(column_names),
+                 [](const Column& column) { return column.header; });
+  OUTCOME_TRY(WriteHeaderToCSV(fd, column_names));
 
-    header_line.append(kLineSeparator);
-    OUTCOME_TRY(orbit_base::WriteFully(fd, header_line));
-  }
+  const size_t num_columns = column_names.size();
 
   size_t num_elements = GetNumElements();
   for (size_t i = 0; i < num_elements; ++i) {

@@ -198,10 +198,13 @@ class DataView {
   static constexpr const char* kLineSeparator = "\r\n";
 
   template <typename Range>
-  ErrorMessageOr<void> WriteHeaderToCSV(const Range& column_titles) {
+  ErrorMessageOr<void> WriteHeaderToCSV(const orbit_base::unique_fd& fd,
+                                        const Range& column_titles) const {
     std::string header_line = absl::StrJoin(
         column_titles, kFieldSeparator,
         [](std::string* out, const std::string& name) { out->append(FormatValueForCsv(name)); });
+    header_line.append(kLineSeparator);
+    return orbit_base::WriteFully(fd, header_line);
   }
 
   enum class ActionStatus { kInvisible, kVisibleButDisabled, kVisibleAndEnabled };

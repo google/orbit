@@ -388,16 +388,11 @@ void LiveFunctionsDataView::OnJumpToRequested(const std::string& action,
   OUTCOME_TRY(auto fd, orbit_base::OpenFileForWriting(file_path));
 
   // Write header line
-  constexpr const char* kFieldSeparator = ",";
-  constexpr const char* kLineSeparator = "\r\n";
   constexpr size_t kNumColumns = 5;
   const std::array<std::string, kNumColumns> kNames{"Name", "Thread", "Start", "End",
                                                     "Duration (ns)"};
-  std::string header_line = absl::StrJoin(
-      kNames, kFieldSeparator,
-      [](std::string* out, const std::string& name) { out->append(FormatValueForCsv(name)); });
-  header_line.append(kLineSeparator);
-  OUTCOME_TRY(orbit_base::WriteFully(fd, header_line));
+
+  OUTCOME_TRY(WriteHeaderToCSV(fd, kNames));
 
   for (int row : selection) {
     const CaptureData& capture_data = app_->GetCaptureData();
