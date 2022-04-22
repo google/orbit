@@ -47,6 +47,10 @@ void SamplingReport::ClearReport() {
   }
 }
 
+const orbit_client_data::CallstackData* SamplingReport::GetCallstackData() const {
+  return callstack_data_;
+}
+
 void SamplingReport::FillReport() {
   const std::vector<const ThreadSampleData*>& sample_data =
       post_processed_sampling_data_->GetSortedThreadSampleData();

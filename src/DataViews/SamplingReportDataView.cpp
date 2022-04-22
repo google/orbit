@@ -464,15 +464,15 @@ ErrorMessageOr<void> SamplingReportDataView::WriteStackEventsToCSVFile(
   static const std::string kFramesSeparator = "/";
 
   OUTCOME_TRY(WriteLineToCSV(fd, kNames));
-  const orbit_client_data::CallstackData& callstack_data =
-      app_->GetCaptureData().GetCallstackData();
+  const orbit_client_data::CallstackData* callstack_data = sampling_report_->GetCallstackData();
+  ORBIT_CHECK(callstack_data != nullptr);
 
   const std::vector<orbit_client_data::CallstackEvent> callstack_events =
       GetThreadID() != orbit_base::kAllProcessThreadsTid
-          ? callstack_data.GetCallstackEventsOfTidInTimeRange(GetThreadID(),
+          ? callstack_data->GetCallstackEventsOfTidInTimeRange(GetThreadID(),
                                                               std::numeric_limits<uint64_t>::min(),
                                                               std::numeric_limits<uint64_t>::max())
-          : callstack_data.GetCallstackEventsInTimeRange(std::numeric_limits<uint64_t>::min(),
+          : callstack_data->GetCallstackEventsInTimeRange(std::numeric_limits<uint64_t>::min(),
                                                          std::numeric_limits<uint64_t>::max());
 
   for (const orbit_client_data::CallstackEvent& event : callstack_events) {
@@ -481,7 +481,7 @@ ErrorMessageOr<void> SamplingReportDataView::WriteStackEventsToCSVFile(
     cells.push_back(absl::StrFormat("%u", event.timestamp_ns()));
 
     const orbit_client_data::CallstackInfo* callstack =
-        callstack_data.GetCallstack(event.callstack_id());
+        callstack_data->GetCallstack(event.callstack_id());
 
     std::vector<std::string> names;
     std::vector<std::string> addresses;

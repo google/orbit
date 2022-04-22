@@ -246,6 +246,7 @@ class MockSamplingReportInterface : public orbit_data_views::SamplingReportInter
   MOCK_METHOD(void, SetCallstackDataView, (orbit_data_views::CallstackDataView*));
   MOCK_METHOD(void, OnSelectAddresses,
               (const absl::flat_hash_set<uint64_t>&, orbit_client_data::ThreadID));
+  MOCK_METHOD(const orbit_client_data::CallstackData*, GetCallstackData, (), (const));
 };
 
 class SamplingReportDataViewTest : public testing::Test {
