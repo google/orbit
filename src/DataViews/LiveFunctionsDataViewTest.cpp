@@ -340,6 +340,7 @@ TEST_F(LiveFunctionsDataViewTest, ColumnSelectedShowsRightResults) {
 TEST_F(LiveFunctionsDataViewTest, ContextMenuEntriesArePresentCorrectly) {
   AddFunctionsByIndices({0, 1, 2});
   bool capture_connected;
+  bool is_capturing;
   std::array<bool, kNumFunctions> functions_selected{false, true, true};
   std::array<bool, kNumFunctions> frame_track_enabled{false, false, true};
   for (size_t i = 0; i < kNumFunctions; i++) {
@@ -356,6 +357,7 @@ TEST_F(LiveFunctionsDataViewTest, ContextMenuEntriesArePresentCorrectly) {
   };
   EXPECT_CALL(app_, GetCaptureData).WillRepeatedly(testing::ReturnRef(*capture_data_));
   EXPECT_CALL(app_, IsCaptureConnected).WillRepeatedly(testing::ReturnPointee(&capture_connected));
+  EXPECT_CALL(app_, IsCapturing).WillRepeatedly(testing::ReturnPointee(&is_capturing));
   EXPECT_CALL(app_, IsFunctionSelected(testing::A<const orbit_client_data::FunctionInfo&>()))
       .WillRepeatedly([&](const FunctionInfo& function) -> bool {
         std::optional<size_t> index = get_index_from_function_info(function);
@@ -393,9 +395,10 @@ TEST_F(LiveFunctionsDataViewTest, ContextMenuEntriesArePresentCorrectly) {
     CheckSingleAction(context_menu, kMenuActionAddIterator, add_iterators);
 
     // Jump actions are only available for single selection with non-zero counts.
-    ContextMenuEntry jump_to_direction = selected_indices.size() == 1 && total_counts > 0
-                                             ? ContextMenuEntry::kEnabled
-                                             : ContextMenuEntry::kDisabled;
+    ContextMenuEntry jump_to_direction =
+        selected_indices.size() == 1 && total_counts > 0 && !is_capturing
+            ? ContextMenuEntry::kEnabled
+            : ContextMenuEntry::kDisabled;
     CheckSingleAction(context_menu, kMenuActionJumpToFirst, jump_to_direction);
     CheckSingleAction(context_menu, kMenuActionJumpToLast, jump_to_direction);
     CheckSingleAction(context_menu, kMenuActionJumpToMin, jump_to_direction);
@@ -434,17 +437,17 @@ TEST_F(LiveFunctionsDataViewTest, ContextMenuEntriesArePresentCorrectly) {
     CheckSingleAction(context_menu, kMenuActionDisableFrameTrack, disable_frametrack);
   };
 
-  capture_connected = false;
-  verify_context_menu_action_availability({0});
-  verify_context_menu_action_availability({1});
-  verify_context_menu_action_availability({2});
-  verify_context_menu_action_availability({0, 1, 2});
+  for (bool capture_connected_value : {false, true}) {
+    for (bool is_capturing_value : {false, true}) {
+      capture_connected = capture_connected_value;
+      is_capturing = is_capturing_value;
 
-  capture_connected = true;
-  verify_context_menu_action_availability({0});
-  verify_context_menu_action_availability({1});
-  verify_context_menu_action_availability({2});
-  verify_context_menu_action_availability({0, 1, 2});
+      verify_context_menu_action_availability({0});
+      verify_context_menu_action_availability({1});
+      verify_context_menu_action_availability({2});
+      verify_context_menu_action_availability({0, 1, 2});
+    }
+  }
 }
 
 TEST_F(LiveFunctionsDataViewTest, ContextMenuActionsAreInvoked) {
