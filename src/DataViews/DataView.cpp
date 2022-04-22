@@ -301,7 +301,7 @@ ErrorMessageOr<void> DataView::ExportToCSVFile(const std::string& file_path) {
   std::vector<std::string> column_names;
   std::transform(std::begin(GetColumns()), std::end(GetColumns()), std::back_inserter(column_names),
                  [](const Column& column) { return column.header; });
-  OUTCOME_TRY(WriteHeaderToCSV(fd, column_names));
+  OUTCOME_TRY(WriteLineToCSV(fd, column_names));
 
   const size_t num_columns = column_names.size();
 

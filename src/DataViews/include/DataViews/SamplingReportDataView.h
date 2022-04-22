@@ -18,6 +18,7 @@
 #include "DataViews/CallstackDataView.h"
 #include "DataViews/DataView.h"
 #include "DataViews/SamplingReportInterface.h"
+#include "OrbitBase/Result.h"
 #include "absl/container/flat_hash_set.h"
 
 class SamplingReport;
@@ -52,6 +53,8 @@ class SamplingReportDataView : public DataView {
   void OnExportEventsToCsvRequested(const std::vector<int>& selection) override;
 
  protected:
+  ErrorMessageOr<void> WriteStackEventsToCSVFile(const std::string& file_path);
+
   [[nodiscard]] ActionStatus GetActionStatus(std::string_view action, int clicked_index,
                                              const std::vector<int>& selected_indices) override;
   void DoSort() override;

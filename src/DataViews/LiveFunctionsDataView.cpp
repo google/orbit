@@ -392,7 +392,7 @@ void LiveFunctionsDataView::OnJumpToRequested(const std::string& action,
   const std::array<std::string, kNumColumns> kNames{"Name", "Thread", "Start", "End",
                                                     "Duration (ns)"};
 
-  OUTCOME_TRY(WriteHeaderToCSV(fd, kNames));
+  OUTCOME_TRY(WriteLineToCSV(fd, kNames));
 
   for (int row : selection) {
     const CaptureData& capture_data = app_->GetCaptureData();

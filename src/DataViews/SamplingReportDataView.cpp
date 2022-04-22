@@ -16,9 +16,12 @@
 #include <cstdint>
 #include <filesystem>
 #include <functional>
+#include <iterator>
 #include <memory>
 #include <utility>
+#include <vector>
 
+#include "ClientData/CallstackType.h"
 #include "ClientData/CaptureData.h"
 #include "ClientData/FunctionInfo.h"
 #include "ClientData/ModuleAndFunctionLookup.h"
@@ -452,19 +455,56 @@ SampledFunction& SamplingReportDataView::GetSampledFunction(unsigned int row) {
   return functions_[indices_[row]];
 }
 
+ErrorMessageOr<void> SamplingReportDataView::WriteStackEventsToCSVFile(
+    const std::string& file_path) {
+  OUTCOME_TRY(auto fd, orbit_base::OpenFileForWriting(file_path));
+
+  static const std::vector<std::string> kNames{"Thread", "Timestamp (ns)", "Names leaf/foo/main",
+                                               "Addresses leaf_addr/foo_addr/main_addr"};
+  static const std::string kFramesSeparator = "/";
+
+  OUTCOME_TRY(WriteLineToCSV(fd, kNames));
+  const orbit_client_data::CallstackData& callstack_data =
+      app_->GetCaptureData().GetCallstackData();
+
+  const std::vector<orbit_client_data::CallstackEvent> callstack_events =
+      GetThreadID() != orbit_base::kAllProcessThreadsTid
+          ? callstack_data.GetCallstackEventsOfTidInTimeRange(GetThreadID(),
+                                                              std::numeric_limits<uint64_t>::min(),
+                                                              std::numeric_limits<uint64_t>::max())
+          : callstack_data.GetCallstackEventsInTimeRange(std::numeric_limits<uint64_t>::min(),
+                                                         std::numeric_limits<uint64_t>::max());
+
+  for (const orbit_client_data::CallstackEvent& event : callstack_events) {
+    std::vector<std::string> cells;
+    cells.push_back(absl::StrFormat("%u", event.thread_id()));
+    cells.push_back(absl::StrFormat("%u", event.timestamp_ns()));
+
+    const orbit_client_data::CallstackInfo* callstack =
+        callstack_data.GetCallstack(event.callstack_id());
+
+    std::vector<std::string> names;
+    std::vector<std::string> addresses;
+    for (const uint64_t address : callstack->frames()) {
+      names.push_back(orbit_client_data::GetFunctionNameByAddress(*app_->GetModuleManager(),
+                                                                  app_->GetCaptureData(), address));
+      addresses.push_back(absl::StrFormat("%#llx", address));
+    }
+    cells.push_back(absl::StrJoin(names, kFramesSeparator));
+    cells.push_back(absl::StrJoin(addresses, kFramesSeparator));
+
+    OUTCOME_TRY(WriteLineToCSV(fd, cells));
+  }
+
+  return outcome::success();
+}
+
 void SamplingReportDataView::OnExportEventsToCsvRequested(const std::vector<int>& /*selection*/) {
   std::string file_path = app_->GetSaveFile(".csv");
   if (file_path.empty()) return;
-
   const std::string kErrorWindowTitle = "Export sampled stacks to CSV";
 
-  // const std::optional<orbit_base::unique_fd> fd = GetCSVSaveFile(
-  //     file_path, kErrorWindowTitle, absl::StrFormat("Failed to open \"%s\" file: ", file_path));
-  // if (!fd) return;
-
-  // const std::array<std::string, kNumColumns> kNames{
-  //     "Thread", "Timestamp (ns)", "Names main/foo/leaf", "Addresses
-  //     main_addr/foo_addr/leaf_addr"};
+  ReportErrorIfAny(WriteStackEventsToCSVFile(file_path), kErrorWindowTitle);
 }
 
 }  // namespace orbit_data_views
