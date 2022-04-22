@@ -209,7 +209,10 @@ const std::vector<uint64_t>* CaptureData::GetSortedTimerDurationsForScopeId(
 void CaptureData::UpdateTimerDurations() {
   ORBIT_SCOPE_FUNCTION;
   scope_id_to_timer_durations_.clear();
-  for (const TimerInfo* timer : GetAllScopeTimers()) {
+
+  static const absl::flat_hash_set<ScopeType> all_valid_scope_types = {
+      ScopeType::kApiScope, ScopeType::kApiScopeAsync, ScopeType::kDynamicallyInstrumentedFunction};
+  for (const TimerInfo* timer : GetAllScopeTimers(all_valid_scope_types)) {
     const uint64_t scope_id = ProvideScopeId(*timer);
 
     if (scope_id != orbit_client_data::kInvalidScopeId) {

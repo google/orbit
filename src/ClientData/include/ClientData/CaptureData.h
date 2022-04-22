@@ -247,8 +247,7 @@ class CaptureData {
 
   // Returns all the timers corresponding to scopes with non-invalid ids
   [[nodiscard]] std::vector<const TimerInfo*> GetAllScopeTimers(
-      absl::flat_hash_set<ScopeType> types = {ScopeType::kApiScope, ScopeType::kApiScopeAsync,
-                                              ScopeType::kDynamicallyInstrumentedFunction},
+      absl::flat_hash_set<ScopeType> types,
       uint64_t min_tick = std::numeric_limits<uint64_t>::min(),
       uint64_t max_tick = std::numeric_limits<uint64_t>::max()) const;
 

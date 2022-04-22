@@ -109,7 +109,7 @@ class TimeGraph final : public orbit_gl::CaptureViewElement,
       const;
   [[nodiscard]] std::pair<const orbit_client_protos::TimerInfo*,
                           const orbit_client_protos::TimerInfo*>
-  GetMinMaxTimerInfoForScope(uint64_t scope_id) const;
+  GetMinMaxTimerForScope(uint64_t scope_id) const;
 
   void SelectAndZoom(const orbit_client_protos::TimerInfo* timer_info);
   [[nodiscard]] double GetCaptureTimeSpanUs() const;
