@@ -80,7 +80,7 @@ Status ProcessServiceImpl::GetModuleList(ServerContext* /*context*/,
                                          GetModuleListResponse* response) {
   std::vector<Module> modules = orbit_windows_utils::ListModules(request->process_id());
   if (modules.empty()) {
-    // Fallback etw module enumeration which involves more work.
+    // Fallback on etw module enumeration which involves more work.
     modules = orbit_windows_tracing::ListModulesEtw(request->process_id());
   }
 

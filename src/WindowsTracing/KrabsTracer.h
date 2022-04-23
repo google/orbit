@@ -15,6 +15,7 @@
 #include "OrbitBase/ThreadConstants.h"
 #include "WindowsTracing/TracerListener.h"
 #include "WindowsUtils/ListModules.h"
+#include "WindowsUtils/PathConverter.h"
 
 namespace orbit_windows_tracing {
 
@@ -40,7 +41,7 @@ class KrabsTracer {
   void Stop();
 
   krabs::kernel_trace& GetTrace() { return trace_; }
-  [[nodiscard]] bool ProviderEnabled(ProviderFlags provider) const;
+  [[nodiscard]] bool IsProviderEnabled(ProviderFlags provider) const;
   [[nodiscard]] std::vector<orbit_windows_utils::Module> GetLoadedModules() const;
 
  private:
@@ -80,6 +81,7 @@ class KrabsTracer {
 
   mutable absl::Mutex modules_mutex_;
   std::vector<orbit_windows_utils::Module> modules_ ABSL_GUARDED_BY(modules_mutex_);
+  std::unique_ptr<orbit_windows_utils::PathConverter> path_converter_;
 };
 
 }  // namespace orbit_windows_tracing

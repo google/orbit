@@ -46,7 +46,7 @@ void TracerImpl::SendModulesSnapshot() {
 
   std::vector<Module> modules = orbit_windows_utils::ListModules(pid);
   if (modules.empty()) {
-    // Fallback etw module enumeration which involves more work.
+    // Fallback on etw module enumeration which involves more work.
     modules = ListModulesEtw(pid);
   }
 

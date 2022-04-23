@@ -17,6 +17,7 @@
 #include "OrbitBase/StringConversion.h"
 #include "OrbitBase/ThreadUtils.h"
 #include "WindowsUtils/AdjustTokenPrivilege.h"
+#include "WindowsUtils/PathConverter.h"
 
 // clang-format off
 #include "fileapi.h"
@@ -27,6 +28,7 @@ namespace orbit_windows_tracing {
 using orbit_grpc_protos::Callstack;
 using orbit_grpc_protos::FullCallstackSample;
 using orbit_grpc_protos::SchedulingSlice;
+using orbit_windows_utils::PathConverter;
 
 KrabsTracer::KrabsTracer(uint32_t pid, double sampling_frequency_hz, TracerListener* listener)
     : KrabsTracer(pid, sampling_frequency_hz, listener, ProviderFlags::kAll) {}
@@ -41,6 +43,14 @@ KrabsTracer::KrabsTracer(uint32_t pid, double sampling_frequency_hz, TracerListe
       stack_walk_provider_(EVENT_TRACE_FLAG_PROFILE, krabs::guids::stack_walk) {
   SetTraceProperties();
   EnableProviders();
+
+  auto result = orbit_windows_utils::PathConverter::Create();
+  if (result.has_error()) {
+    ORBIT_LOG("Could not create path converter, module paths will contain device names: %s",
+              result.error().message());
+  } else {
+    path_converter_ = std::move(result.value());
+  }
 }
 
 void KrabsTracer::SetTraceProperties() {
@@ -54,30 +64,30 @@ void KrabsTracer::SetTraceProperties() {
   trace_.set_trace_properties(&properties);
 }
 
-bool KrabsTracer::ProviderEnabled(ProviderFlags provider) const {
+bool KrabsTracer::IsProviderEnabled(ProviderFlags provider) const {
   return (providers_ & provider) != 0;
 }
 
 void KrabsTracer::EnableProviders() {
-  if (ProviderEnabled(ProviderFlags::kThread)) {
+  if (IsProviderEnabled(ProviderFlags::kThread)) {
     thread_provider_.add_on_event_callback(
         [this](const auto& record, const auto& context) { OnThreadEvent(record, context); });
     trace_.enable(thread_provider_);
   }
 
-  if (ProviderEnabled(ProviderFlags::kContextSwitch)) {
+  if (IsProviderEnabled(ProviderFlags::kContextSwitch)) {
     context_switch_provider_.add_on_event_callback(
         [this](const auto& record, const auto& context) { OnThreadEvent(record, context); });
     trace_.enable(context_switch_provider_);
   }
 
-  if (ProviderEnabled(ProviderFlags::kStackWalk)) {
+  if (IsProviderEnabled(ProviderFlags::kStackWalk)) {
     stack_walk_provider_.add_on_event_callback(
         [this](const auto& record, const auto& context) { OnStackWalkEvent(record, context); });
     trace_.enable(stack_walk_provider_);
   }
 
-  if (ProviderEnabled(ProviderFlags::kImageLoad)) {
+  if (IsProviderEnabled(ProviderFlags::kImageLoad)) {
     image_load_provider_.add_on_event_callback(
         [this](const auto& record, const auto& context) { OnImageLoadEvent(record, context); });
     trace_.enable(image_load_provider_);
@@ -113,7 +123,9 @@ void KrabsTracer::Start() {
   context_switch_manager_ = std::make_unique<ContextSwitchManager>(listener_);
   SetIsSystemProfilePrivilegeEnabled(true);
   log_file_ = trace_.open();
-  SetupStackTracing();
+  if (IsProviderEnabled(ProviderFlags::kStackWalk)) {
+    SetupStackTracing();
+  }
   trace_thread_ = std::make_unique<std::thread>(&KrabsTracer::Run, this);
 }
 
@@ -220,6 +232,17 @@ void KrabsTracer::OnImageLoadEvent(const EVENT_RECORD& record,
     module.file_size = parser.parse<uint64_t>(L"ImageSize");
     module.address_start = parser.parse<uint64_t>(L"ImageBase");
     module.address_end = module.address_start + module.file_size;
+
+    // The full path at this point contains the device name and not the drive letter, try to
+    // convert it so that it takes a more conventional form.
+    if (path_converter_) {
+      ErrorMessageOr<std::string> result = path_converter_->DeviceToDrive(module.full_path);
+      if (result.has_value()) {
+        module.full_path = result.value();
+      } else {
+        ORBIT_ERROR("Calling \"DeviceToDrive\": %s", result.error().message());
+      }
+    }
 
     auto coff_file_or_error = orbit_object_utils::CreateCoffFile(module.full_path);
     if (coff_file_or_error.has_value()) {

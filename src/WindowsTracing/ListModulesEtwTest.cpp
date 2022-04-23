@@ -1,4 +1,4 @@
-// Copyright (c) 2021 The Orbit Authors. All rights reserved.
+// Copyright (c) 2022 The Orbit Authors. All rights reserved.
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
@@ -15,32 +15,25 @@
 
 #include "OrbitBase/Logging.h"
 #include "OrbitBase/ThreadUtils.h"
+#include "OrbitBase/ExecutablePath.h"
 #include "WindowsTracing/ListModulesEtw.h"
+#include "WindowsUtils/PathConverter.h"
 
 namespace orbit_windows_tracing {
 
 using orbit_windows_utils::Module;
 
-static std::string GetCurrentModulePath() {
-  HMODULE module_handle = NULL;
-  GetModuleHandleEx(GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS, (LPCTSTR)GetCurrentModulePath,
-                    &module_handle);
-  ORBIT_CHECK(module_handle);
-  char module_name[MAX_PATH] = {0};
-  GetModuleFileNameA(module_handle, module_name, MAX_PATH);
-  return module_name;
-}
-
-TEST(ListModules, ContainsCurrentModule) {
+TEST(ListModulesEtw, ContainsCurrentExecutable) {
   uint32_t pid = orbit_base::GetCurrentProcessId();
   std::vector<Module> modules = ListModulesEtw(pid);
   EXPECT_NE(modules.size(), 0);
 
-  // The full path return by ETW contains the device name, not the drive letter.
-  std::string this_module_name = std::filesystem::path(GetCurrentModulePath()).filename().string();
+  std::filesystem::path this_module_path = orbit_base::GetExecutablePath();
   bool found_this_module = false;
   for (const Module& module : modules) {
-    if (module.name == this_module_name) {
+    ORBIT_LOG("Module name: %s", module.name);
+    ORBIT_LOG("Module full_path: %s", module.full_path);
+    if (module.full_path == this_module_path) {
       found_this_module = true;
       break;
     }
