@@ -22,11 +22,7 @@ void orbit_gl::CaptureViewElementTester::CheckDrawFlags(CaptureViewElement* elem
   EXPECT_EQ(element->HasLayoutChanged(), draw || update_primitives);
 }
 
-void orbit_gl::CaptureViewElementTester::SimulateDrawLoop(CaptureViewElement* element, bool draw,
-                                                          bool update_primitives) {
-  primitive_assembler_.StartNewFrame();
-  text_renderer_.Clear();
-
+void orbit_gl::CaptureViewElementTester::SimulatePreRender(CaptureViewElement* element) {
   const int kMaxLayoutLoops = layout_.GetMaxLayoutingLoops();
   int layout_loops = 0;
 
@@ -35,6 +31,14 @@ void orbit_gl::CaptureViewElementTester::SimulateDrawLoop(CaptureViewElement* el
   } while (++layout_loops < kMaxLayoutLoops && element->HasLayoutChanged());
 
   EXPECT_LT(layout_loops, kMaxLayoutLoops);
+}
+
+void orbit_gl::CaptureViewElementTester::SimulateDrawLoop(CaptureViewElement* element, bool draw,
+                                                          bool update_primitives) {
+  SimulatePreRender(element);
+
+  primitive_assembler_.StartNewFrame();
+  text_renderer_.Clear();
 
   if (draw) {
     element->Draw(primitive_assembler_, text_renderer_, CaptureViewElement::DrawContext());

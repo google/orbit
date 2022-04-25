@@ -39,6 +39,13 @@ class CaptureViewElementTester {
   // and an update / render loop.
   void CheckDrawFlags(CaptureViewElement* element, bool draw, bool update_primitives);
 
+  // Run layout updates without rendering. This is equal to what would happen during
+  // CaptureWindow::PreRender. You'll want to use this when you want to verify that a particular
+  // functionality is executed during PreRender, and you don't care about what happens during
+  // rendering, or explicitely want to check that rendering is not required.
+  // Usually, you should be good with simply using `SimulateDrawLoop`.
+  void SimulatePreRender(CaptureViewElement* element);
+
   // Simulate a cycle of `UpdateLayout`, followed by rendering.
   // Depending on the parameters, `Draw`, `UpdatePrimitives`, or both are executed.
   // Most of the times, you'll probably want to use `SimulateDrawLoopAndCheckFlags` instead.
