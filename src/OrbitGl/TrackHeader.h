@@ -40,7 +40,9 @@ class TrackHeader : public CaptureViewElement, public std::enable_shared_from_th
   void OnDrag(int x, int y) override;
   [[nodiscard]] bool Draggable() override;
 
-  [[nodiscard]] bool IsBeingDragged() { return picked_ && mouse_pos_last_click_ != mouse_pos_cur_; }
+  [[nodiscard]] bool IsBeingDragged() {
+    return picked_ && mouse_pos_last_click_[1] != mouse_pos_cur_[1];
+  }
 
  protected:
   void DoDraw(PrimitiveAssembler& primitive_assembler, TextRenderer& text_renderer,

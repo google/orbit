@@ -499,11 +499,6 @@ std::pair<const TimerInfo*, const TimerInfo*> TimeGraph::GetMinMaxTimerInfoForSc
   return std::make_pair(min_timer, max_timer);
 }
 
-void TimeGraph::RequestUpdate() {
-  CaptureViewElement::RequestUpdate();
-  update_primitives_requested_ = true;
-}
-
 void TimeGraph::PrepareBatcherAndUpdatePrimitives(PickingMode picking_mode) {
   ORBIT_SCOPE_FUNCTION;
   ORBIT_CHECK(app_->GetStringManager() != nullptr);
@@ -519,8 +514,8 @@ void TimeGraph::PrepareBatcherAndUpdatePrimitives(PickingMode picking_mode) {
   CaptureViewElement::UpdatePrimitives(primitive_assembler_, text_renderer_static_, min_tick,
                                        max_tick, picking_mode);
 
-  if (!absl::GetFlag(FLAGS_enforce_full_redraw)) {
-    update_primitives_requested_ = false;
+  if (absl::GetFlag(FLAGS_enforce_full_redraw)) {
+    RequestUpdate();
   }
 }
 
@@ -617,9 +612,11 @@ void TimeGraph::DrawAllElements(PrimitiveAssembler& primitive_assembler,
   const bool picking = picking_mode != PickingMode::kNone;
 
   DrawContext context{current_mouse_time_ns, picking_mode};
+  // `Draw` is called in any case - the batcher has already been cleared if this method is called,
+  // so we need to re-fill it.
   Draw(primitive_assembler, text_renderer, context);
 
-  if ((!picking && update_primitives_requested_) || picking) {
+  if (picking || update_primitives_requested_) {
     PrepareBatcherAndUpdatePrimitives(picking_mode);
   }
 }

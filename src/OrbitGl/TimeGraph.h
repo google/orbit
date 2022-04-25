@@ -42,8 +42,6 @@ class TimeGraph final : public orbit_gl::CaptureViewElement,
                        uint64_t current_mouse_time_ns);
   void DrawText(float layer);
 
-  void RequestUpdate() override;
-
   // TODO(b/214282122): Move Process Timers function outside the UI.
   void ProcessTimer(const orbit_client_protos::TimerInfo& timer_info,
                     const orbit_grpc_protos::InstrumentedFunction* function);
@@ -113,7 +111,9 @@ class TimeGraph final : public orbit_gl::CaptureViewElement,
 
   void SelectAndZoom(const orbit_client_protos::TimerInfo* timer_info);
   [[nodiscard]] double GetCaptureTimeSpanUs() const;
-  [[nodiscard]] bool IsRedrawNeeded() const { return update_primitives_requested_; }
+  [[nodiscard]] bool IsRedrawNeeded() const {
+    return draw_requested_ || update_primitives_requested_;
+  }
 
   [[nodiscard]] bool IsFullyVisible(uint64_t min, uint64_t max) const;
   [[nodiscard]] bool IsPartlyVisible(uint64_t min, uint64_t max) const;
@@ -186,8 +186,6 @@ class TimeGraph final : public orbit_gl::CaptureViewElement,
   uint64_t capture_max_timestamp_ = 0;
 
   TimeGraphLayout layout_;
-
-  bool update_primitives_requested_ = false;
 
   orbit_gl::OpenGlBatcher batcher_;
   orbit_gl::PrimitiveAssembler primitive_assembler_;
