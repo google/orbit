@@ -4,7 +4,7 @@
 
 #include "Button.h"
 
-#include "AccessibleCaptureViewElement.h"
+#include "AccessibleButton.h"
 
 namespace orbit_gl {
 
@@ -23,7 +23,7 @@ void Button::SetHeight(float height) {
 
 void Button::SetLabel(const std::string& label) {
   if (label_ == label) return;
-  
+
   label_ = label;
   RequestUpdate(RequestUpdateScope::kDraw);
 }
@@ -36,8 +36,7 @@ void Button::DoUpdateLayout() {
 }
 
 std::unique_ptr<orbit_accessibility::AccessibleInterface> Button::CreateAccessibleInterface() {
-  // TODO: Should be `AccessibleButton`
-  return std::make_unique<AccessibleCaptureViewElement>(this, "TODO");
+  return std::make_unique<AccessibleButton>(this);
 }
 
 }  // namespace orbit_gl
