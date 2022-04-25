@@ -21,6 +21,13 @@ void Button::SetHeight(float height) {
   RequestUpdate();
 }
 
+void Button::SetLabel(const std::string& label) {
+  if (label_ == label) return;
+  
+  label_ = label;
+  RequestUpdate(RequestUpdateScope::kDraw);
+}
+
 void Button::DoUpdateLayout() {
   CaptureViewElement::DoUpdateLayout();
 
