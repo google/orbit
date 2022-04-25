@@ -295,13 +295,14 @@ void DataView::OnSourceCodeRequested(const std::vector<int>& selection) {
   }
 }
 
-ErrorMessageOr<void> DataView::ExportToCsv(const std::string& file_path) {
+ErrorMessageOr<void> DataView::ExportToCsv(const std::string_view file_path) {
   OUTCOME_TRY(auto fd, orbit_base::OpenFileForWriting(file_path));
 
   std::vector<std::string> column_names;
-  std::transform(std::begin(GetColumns()), std::end(GetColumns()), std::back_inserter(column_names),
+  const std::vector<Column>& columns = GetColumns();
+  std::transform(std::begin(columns), std::end(columns), std::back_inserter(column_names),
                  [](const Column& column) { return column.header; });
-  OUTCOME_TRY(WriteLineToCSV(fd, column_names));
+  OUTCOME_TRY(WriteLineToCsv(fd, column_names));
 
   const size_t num_columns = column_names.size();
 
@@ -322,9 +323,7 @@ void DataView::OnExportToCsvRequested() {
   std::string save_file = app_->GetSaveFile(".csv");
   if (save_file.empty()) return;
 
-  const std::string kErrorWindowTitle{kMenuActionExportToCsv};
-
-  ReportErrorIfAny(ExportToCsv(save_file), kErrorWindowTitle);
+  ReportErrorIfAny(ExportToCsv(save_file), kMenuActionExportToCsv);
 }
 
 void DataView::OnCopySelectionRequested(const std::vector<int>& selection) {

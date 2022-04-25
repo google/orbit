@@ -51,8 +51,9 @@ void SamplingReport::ClearReport() {
   }
 }
 
-const orbit_client_data::CallstackData* SamplingReport::GetCallstackData() const {
-  return callstack_data_;
+const orbit_client_data::CallstackData& SamplingReport::GetCallstackData() const {
+  ORBIT_CHECK(callstack_data_ != nullptr);
+  return *callstack_data_;
 }
 
 [[nodiscard]] std::optional<absl::flat_hash_set<uint64_t>> SamplingReport::GetSelectedCallstackIds()

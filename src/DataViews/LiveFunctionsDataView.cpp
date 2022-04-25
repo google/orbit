@@ -392,7 +392,7 @@ void LiveFunctionsDataView::OnJumpToRequested(const std::string& action,
   const std::array<std::string, kNumColumns> kNames{"Name", "Thread", "Start", "End",
                                                     "Duration (ns)"};
 
-  OUTCOME_TRY(WriteLineToCSV(fd, kNames));
+  OUTCOME_TRY(WriteLineToCsv(fd, kNames));
 
   for (int row : selection) {
     const CaptureData& capture_data = app_->GetCaptureData();
@@ -426,9 +426,7 @@ void LiveFunctionsDataView::OnExportEventsToCsvRequested(const std::vector<int>&
   std::string file_path = app_->GetSaveFile(".csv");
   if (file_path.empty()) return;
 
-  const std::string kErrorWindowTitle = "Export all events to CSV";
-
-  ReportErrorIfAny(WriteEventsToCsv(selection, file_path), kErrorWindowTitle);
+  ReportErrorIfAny(WriteEventsToCsv(selection, file_path), "Export all events to CSV");
 }
 
 void LiveFunctionsDataView::DoFilter() {

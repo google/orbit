@@ -16,6 +16,7 @@
 #include <memory>
 #include <optional>
 #include <string>
+#include <string_view>
 #include <utility>
 #include <vector>
 
@@ -61,9 +62,9 @@ constexpr std::string_view kMenuActionCopySelection = "Copy Selection";
 constexpr std::string_view kMenuActionExportToCsv = "Export to CSV";
 constexpr std::string_view kMenuActionExportEventsToCsv = "Export events to CSV";
 
-static constexpr const char* kFieldSeparator = ",";
+static constexpr std::string_view kFieldSeparator = ",";
 // CSV RFC requires lines to end with CRLF
-static constexpr const char* kLineSeparator = "\r\n";
+static constexpr std::string_view kLineSeparator = "\r\n";
 
 // Values in the DataView may contain commas, for example, functions with arguments. We quote all
 // values in the output and also escape quotes (with a second quote) in values to ensure the CSV
@@ -72,7 +73,7 @@ static constexpr const char* kLineSeparator = "\r\n";
 std::string FormatValueForCsv(std::string_view value);
 
 template <typename Range>
-ErrorMessageOr<void> WriteLineToCSV(const orbit_base::unique_fd& fd, const Range& cells) {
+ErrorMessageOr<void> WriteLineToCsv(const orbit_base::unique_fd& fd, const Range& cells) {
   std::string header_line = absl::StrJoin(
       cells, kFieldSeparator,
       [](std::string* out, const std::string& name) { out->append(FormatValueForCsv(name)); });
@@ -196,13 +197,13 @@ class DataView {
     return nullptr;
   }
 
-  ErrorMessageOr<void> ExportToCsv(const std::string& file_path);
+  ErrorMessageOr<void> ExportToCsv(std::string_view file_path);
 
   template <typename T>
   void ReportErrorIfAny(const ErrorMessageOr<T>& error_message_or,
-                        const std::string& error_window_title) const {
+                        std::string_view error_window_title) const {
     if (error_message_or.has_error()) {
-      app_->SendErrorToUi(error_window_title, error_message_or.error().message());
+      app_->SendErrorToUi(std::string{error_window_title}, error_message_or.error().message());
     }
   }
 
