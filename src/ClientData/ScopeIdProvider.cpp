@@ -32,14 +32,18 @@ std::unique_ptr<NameEqualityScopeIdProvider> NameEqualityScopeIdProvider::Create
                 ->function_id();
 
   absl::flat_hash_map<uint64_t, const ScopeInfo> scope_id_to_info;
+  absl::flat_hash_map<const ScopeInfo, uint64_t> scope_info_to_id;
+
   for (const auto& instrumented_function : instrumented_functions) {
-    scope_id_to_info.try_emplace(instrumented_function.function_id(),
-                                 instrumented_function.function_name(),
-                                 ScopeType::kDynamicallyInstrumentedFunction);
+    const uint64_t scope_id = instrumented_function.function_id();
+    const ScopeInfo scope_info(instrumented_function.function_name(),
+                               ScopeType::kDynamicallyInstrumentedFunction);
+    scope_id_to_info.emplace(scope_id, scope_info);
+    scope_info_to_id.emplace(scope_info, scope_id);
   }
 
-  return std::unique_ptr<NameEqualityScopeIdProvider>(
-      new NameEqualityScopeIdProvider(max_id + 1, std::move(scope_id_to_info)));
+  return std::unique_ptr<NameEqualityScopeIdProvider>(new NameEqualityScopeIdProvider(
+      max_id + 1, std::move(scope_info_to_id), std::move(scope_id_to_info)));
 }
 
 uint64_t NameEqualityScopeIdProvider::FunctionIdToScopeId(uint64_t function_id) const {
@@ -68,20 +72,18 @@ uint64_t NameEqualityScopeIdProvider::ProvideId(const TimerInfo& timer_info) {
 
   const ScopeInfo scope_info{timer_info.api_scope_name(), scope_type};
 
-  uint64_t id{};
-
   if (scope_type == ScopeType::kDynamicallyInstrumentedFunction) {
-    id = FunctionIdToScopeId(timer_info.function_id());
-  } else {
-    ORBIT_CHECK(scope_type == ScopeType::kApiScope || scope_type == ScopeType::kApiScopeAsync);
-
-    const auto it = scope_info_to_id_.find(scope_info);
-    if (it != scope_info_to_id_.end()) {
-      return it->second;
-    }
-    id = next_id_;
-    next_id_++;
+    return FunctionIdToScopeId(timer_info.function_id());
   }
+
+  ORBIT_CHECK(scope_type == ScopeType::kApiScope || scope_type == ScopeType::kApiScopeAsync);
+
+  const auto it = scope_info_to_id_.find(scope_info);
+  if (it != scope_info_to_id_.end()) {
+    return it->second;
+  }
+  const uint64_t id = next_id_;
+  next_id_++;
 
   scope_info_to_id_.emplace(scope_info, id);
   scope_id_to_info_.emplace(id, scope_info);
