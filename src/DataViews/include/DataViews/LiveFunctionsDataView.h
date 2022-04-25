@@ -95,7 +95,7 @@ class LiveFunctionsDataView : public DataView {
   [[nodiscard]] const orbit_client_data::FunctionInfo* GetFunctionInfoFromRow(int row) override;
 
   [[nodiscard]] ErrorMessageOr<void> WriteEventsToCsv(const std::vector<int>& selection,
-                                                          const std::string& file_path) const;
+                                                      const std::string& file_path) const;
 
   void UpdateHistogramWithIndices(const std::vector<int>& visible_selected_indices);
 
