@@ -455,8 +455,7 @@ SampledFunction& SamplingReportDataView::GetSampledFunction(unsigned int row) {
   return functions_[indices_[row]];
 }
 
-ErrorMessageOr<void> SamplingReportDataView::WriteStackEventsToCSVFile(
-    const std::string& file_path) {
+ErrorMessageOr<void> SamplingReportDataView::WriteStackEventsToCsv(const std::string& file_path) {
   OUTCOME_TRY(auto fd, orbit_base::OpenFileForWriting(file_path));
 
   static const std::vector<std::string> kNames{"Thread", "Timestamp (ns)", "Names leaf/foo/main",
@@ -510,9 +509,8 @@ ErrorMessageOr<void> SamplingReportDataView::WriteStackEventsToCSVFile(
 void SamplingReportDataView::OnExportEventsToCsvRequested(const std::vector<int>& /*selection*/) {
   std::string file_path = app_->GetSaveFile(".csv");
   if (file_path.empty()) return;
-  const std::string kErrorWindowTitle = "Export sampled stacks to CSV";
 
-  ReportErrorIfAny(WriteStackEventsToCSVFile(file_path), kErrorWindowTitle);
+  ReportErrorIfAny(WriteStackEventsToCsv(file_path), "Export sampled stacks to CSV");
 }
 
 }  // namespace orbit_data_views

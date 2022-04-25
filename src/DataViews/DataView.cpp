@@ -295,7 +295,7 @@ void DataView::OnSourceCodeRequested(const std::vector<int>& selection) {
   }
 }
 
-ErrorMessageOr<void> DataView::ExportToCSVFile(const std::string& file_path) {
+ErrorMessageOr<void> DataView::ExportToCsv(const std::string& file_path) {
   OUTCOME_TRY(auto fd, orbit_base::OpenFileForWriting(file_path));
 
   std::vector<std::string> column_names;
@@ -324,7 +324,7 @@ void DataView::OnExportToCsvRequested() {
 
   const std::string kErrorWindowTitle{kMenuActionExportToCsv};
 
-  ReportErrorIfAny(ExportToCSVFile(save_file), kErrorWindowTitle);
+  ReportErrorIfAny(ExportToCsv(save_file), kErrorWindowTitle);
 }
 
 void DataView::OnCopySelectionRequested(const std::vector<int>& selection) {

@@ -61,11 +61,24 @@ constexpr std::string_view kMenuActionCopySelection = "Copy Selection";
 constexpr std::string_view kMenuActionExportToCsv = "Export to CSV";
 constexpr std::string_view kMenuActionExportEventsToCsv = "Export events to CSV";
 
+static constexpr const char* kFieldSeparator = ",";
+// CSV RFC requires lines to end with CRLF
+static constexpr const char* kLineSeparator = "\r\n";
+
 // Values in the DataView may contain commas, for example, functions with arguments. We quote all
 // values in the output and also escape quotes (with a second quote) in values to ensure the CSV
 // files can be imported correctly in spreadsheet applications. The formatting follows the
 // specification in https://tools.ietf.org/html/rfc4180.
 std::string FormatValueForCsv(std::string_view value);
+
+template <typename Range>
+ErrorMessageOr<void> WriteLineToCSV(const orbit_base::unique_fd& fd, const Range& cells) {
+  std::string header_line = absl::StrJoin(
+      cells, kFieldSeparator,
+      [](std::string* out, const std::string& name) { out->append(FormatValueForCsv(name)); });
+  header_line.append(kLineSeparator);
+  return orbit_base::WriteFully(fd, header_line);
+}
 
 class DataView {
  public:
@@ -183,7 +196,7 @@ class DataView {
     return nullptr;
   }
 
-  ErrorMessageOr<void> ExportToCSVFile(const std::string& file_path);
+  ErrorMessageOr<void> ExportToCsv(const std::string& file_path);
 
   template <typename T>
   void ReportErrorIfAny(const ErrorMessageOr<T>& error_message_or,
@@ -191,19 +204,6 @@ class DataView {
     if (error_message_or.has_error()) {
       app_->SendErrorToUi(error_window_title, error_message_or.error().message());
     }
-  }
-
-  static constexpr const char* kFieldSeparator = ",";
-  // CSV RFC requires lines to end with CRLF
-  static constexpr const char* kLineSeparator = "\r\n";
-
-  template <typename Range>
-  ErrorMessageOr<void> WriteLineToCSV(const orbit_base::unique_fd& fd, const Range& cells) const {
-    std::string header_line = absl::StrJoin(
-        cells, kFieldSeparator,
-        [](std::string* out, const std::string& name) { out->append(FormatValueForCsv(name)); });
-    header_line.append(kLineSeparator);
-    return orbit_base::WriteFully(fd, header_line);
   }
 
   enum class ActionStatus { kInvisible, kVisibleButDisabled, kVisibleAndEnabled };

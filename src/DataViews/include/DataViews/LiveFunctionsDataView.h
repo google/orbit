@@ -94,7 +94,7 @@ class LiveFunctionsDataView : public DataView {
   // pointer to the corresponding FunctionInfo is returned. `nullptr` is returned otherwise.
   [[nodiscard]] const orbit_client_data::FunctionInfo* GetFunctionInfoFromRow(int row) override;
 
-  [[nodiscard]] ErrorMessageOr<void> WriteEventsToCSVFile(const std::vector<int>& selection,
+  [[nodiscard]] ErrorMessageOr<void> WriteEventsToCsv(const std::vector<int>& selection,
                                                           const std::string& file_path) const;
 
   void UpdateHistogramWithIndices(const std::vector<int>& visible_selected_indices);

@@ -383,7 +383,7 @@ void LiveFunctionsDataView::OnJumpToRequested(const std::string& action,
   }
 }
 
-[[nodiscard]] ErrorMessageOr<void> LiveFunctionsDataView::WriteEventsToCSVFile(
+[[nodiscard]] ErrorMessageOr<void> LiveFunctionsDataView::WriteEventsToCsv(
     const std::vector<int>& selection, const std::string& file_path) const {
   OUTCOME_TRY(auto fd, orbit_base::OpenFileForWriting(file_path));
 
@@ -428,7 +428,7 @@ void LiveFunctionsDataView::OnExportEventsToCsvRequested(const std::vector<int>&
 
   const std::string kErrorWindowTitle = "Export all events to CSV";
 
-  ReportErrorIfAny(WriteEventsToCSVFile(selection, file_path), kErrorWindowTitle);
+  ReportErrorIfAny(WriteEventsToCsv(selection, file_path), kErrorWindowTitle);
 }
 
 void LiveFunctionsDataView::DoFilter() {

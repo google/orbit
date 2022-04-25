@@ -53,8 +53,6 @@ class SamplingReportDataView : public DataView {
   void OnExportEventsToCsvRequested(const std::vector<int>& selection) override;
 
  protected:
-  ErrorMessageOr<void> WriteStackEventsToCSVFile(const std::string& file_path);
-
   [[nodiscard]] ActionStatus GetActionStatus(std::string_view action, int clicked_index,
                                              const std::vector<int>& selected_indices) override;
   void DoSort() override;
@@ -81,6 +79,8 @@ class SamplingReportDataView : public DataView {
       const orbit_client_data::SampledFunction& function) const;
   [[nodiscard]] std::string BuildToolTipUnwindErrors(
       const orbit_client_data::SampledFunction& function) const;
+
+  ErrorMessageOr<void> WriteStackEventsToCsv(const std::string& file_path);
 
   std::vector<orbit_client_data::SampledFunction> functions_;
   // We need to keep user's selected function ids such that if functions_ changes, the
