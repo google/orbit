@@ -4,14 +4,18 @@
 
 #include "SamplingReport.h"
 
+#include <absl/container/flat_hash_set.h>
 #include <absl/meta/type_traits.h>
 #include <absl/strings/str_format.h>
 
 #include <algorithm>
+#include <iterator>
+#include <optional>
 
 #include "App.h"
 #include "ClientData/CallstackInfo.h"
 #include "ClientData/CallstackType.h"
+#include "ClientData/PostProcessedSamplingData.h"
 #include "ClientProtos/capture_data.pb.h"
 #include "OrbitBase/Logging.h"
 
@@ -49,6 +53,21 @@ void SamplingReport::ClearReport() {
 
 const orbit_client_data::CallstackData* SamplingReport::GetCallstackData() const {
   return callstack_data_;
+}
+
+[[nodiscard]] std::optional<absl::flat_hash_set<uint64_t>> SamplingReport::GetSelectedCallstackIds()
+    const {
+  if (!selected_sorted_callstack_report_) return std::nullopt;
+
+  absl::flat_hash_set<uint64_t> result;
+  const std::vector<CallstackCount>& selected_callstacks =
+      selected_sorted_callstack_report_->callstack_counts;
+  std::transform(std::begin(selected_callstacks), std::end(selected_callstacks),
+                 std::inserter(result, result.begin()), [](const CallstackCount& callstack_count) {
+                   return callstack_count.callstack_id;
+                 });
+
+  return result;
 }
 
 void SamplingReport::FillReport() {

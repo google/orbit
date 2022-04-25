@@ -475,7 +475,15 @@ ErrorMessageOr<void> SamplingReportDataView::WriteStackEventsToCSVFile(
           : callstack_data->GetCallstackEventsInTimeRange(std::numeric_limits<uint64_t>::min(),
                                                           std::numeric_limits<uint64_t>::max());
 
+  std::optional<absl::flat_hash_set<uint64_t>> selected_callstack_ids =
+      sampling_report_->GetSelectedCallstackIds();
+
   for (const orbit_client_data::CallstackEvent& event : callstack_events) {
+    if (selected_callstack_ids.has_value() &&
+        !selected_callstack_ids->contains(event.callstack_id())) {
+      continue;
+    }
+
     std::vector<std::string> cells;
     cells.push_back(absl::StrFormat("%u", event.thread_id()));
     cells.push_back(absl::StrFormat("%u", event.timestamp_ns()));

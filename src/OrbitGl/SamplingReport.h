@@ -54,6 +54,8 @@ class SamplingReport : public orbit_data_views::SamplingReportInterface {
   [[nodiscard]] bool has_summary() const { return has_summary_; }
   void ClearReport();
   [[nodiscard]] const orbit_client_data::CallstackData* GetCallstackData() const override;
+  [[nodiscard]] std::optional<absl::flat_hash_set<uint64_t>> GetSelectedCallstackIds()
+      const override;
 
  private:
   void FillReport();
