@@ -122,7 +122,9 @@ void CaptureWindow::PreRender() {
     // During loading or capturing, only a single layouting loop is executed as we're
     // streaming in data from a seperate thread (for performance reasons)
     const int kMaxLayoutLoops =
-        (app_ != nullptr && (app_->IsCapturing() || app_->IsLoadingCapture())) ? 1 : 10;
+        (app_ != nullptr && (app_->IsCapturing() || app_->IsLoadingCapture()))
+            ? 1
+            : time_graph_->GetLayout().GetMaxLayoutingLoops();
 
     // TODO (b/229222095) Log when the max loop count is exceeded
     do {

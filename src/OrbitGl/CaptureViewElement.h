@@ -137,6 +137,8 @@ class CaptureViewElement : public Pickable, public AccessibleInterfaceProvider {
   float width_ = 0.;
   Vec2 pos_ = Vec2(0, 0);
   CaptureViewElement* parent_;
+
+  friend class CaptureViewElementTester;
 };
 }  // namespace orbit_gl
 

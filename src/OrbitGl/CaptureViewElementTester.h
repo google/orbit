@@ -6,6 +6,10 @@
 #define ORBIT_GL_CAPTURE_VIEW_ELEMENT_TESTER_H_
 
 #include "CaptureViewElement.h"
+#include "MockBatcher.h"
+#include "MockTextRenderer.h"
+#include "PickingManager.h"
+#include "PrimitiveAssembler.h"
 
 namespace orbit_gl {
 
@@ -14,10 +18,37 @@ namespace orbit_gl {
 // See CaptureViewElementTest.cpp for usage.
 class CaptureViewElementTester {
  public:
+  CaptureViewElementTester();
+
   void RunTests(CaptureViewElement* element);
 
   Viewport* GetViewport() { return &viewport_; }
   TimeGraphLayout* GetLayout() { return &layout_; }
+
+  // Check if internal flags for `element` as set correctly
+  //  * draw: Expect draw_required_ to be set
+  //  * update_primitives: Expect update_primitives_required_ to be set
+  // Use this to verify that `UpdateLayout` or any other layout-changing methods work correctly.
+  // You usually want to call this once to check the initial state, then call your setters, then
+  // call this again. You will want to check that:
+  //  * A call to a setter correctly updates the value, and sets draw_required_ or
+  //    update_primitives_required_ as needed
+  //  * A call to a setter that does not change the value will *not* result in any of the flags
+  //    to be set
+  // In most cases, you'll want to use `SimulateDrawLoopAndCheckFlags` to combine flag checking
+  // and an update / render loop.
+  void CheckDrawFlags(CaptureViewElement* element, bool draw, bool update_primitives);
+
+  // Simulate a cycle of `UpdateLayout`, followed by rendering.
+  // Depending on the parameters, `Draw`, `UpdatePrimitives`, or both are executed.
+  // Most of the times, you'll probably want to use `SimulateDrawLoopAndCheckFlags` instead.
+  void SimulateDrawLoop(CaptureViewElement* element, bool draw, bool update_primitives);
+
+  // Combination of `SimulateDrawLoop` and `CheckDrawFlags` (before and after rendering) for
+  // convenience.
+  // See `CheckDrawFlags` for a description of flag checking.
+  void SimulateDrawLoopAndCheckFlags(CaptureViewElement* element, bool draw,
+                                     bool update_primitives);
 
  protected:
   Viewport viewport_ = Viewport(100, 100);
@@ -25,6 +56,12 @@ class CaptureViewElementTester {
 
  private:
   void TestWidthPropagationToChildren(CaptureViewElement* element);
+
+  MockBatcher batcher_;
+  MockTextRenderer text_renderer_;
+  PickingManager picking_manager_;
+
+  PrimitiveAssembler primitive_assembler_;
 };
 
 }  // namespace orbit_gl
