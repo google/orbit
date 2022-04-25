@@ -70,13 +70,13 @@ uint64_t NameEqualityScopeIdProvider::ProvideId(const TimerInfo& timer_info) {
 
   if (scope_type == ScopeType::kInvalid) return orbit_client_data::kInvalidScopeId;
 
-  const ScopeInfo scope_info{timer_info.api_scope_name(), scope_type};
-
   if (scope_type == ScopeType::kDynamicallyInstrumentedFunction) {
     return FunctionIdToScopeId(timer_info.function_id());
   }
 
   ORBIT_CHECK(scope_type == ScopeType::kApiScope || scope_type == ScopeType::kApiScopeAsync);
+
+  const ScopeInfo scope_info{timer_info.api_scope_name(), scope_type};
 
   const auto it = scope_info_to_id_.find(scope_info);
   if (it != scope_info_to_id_.end()) {

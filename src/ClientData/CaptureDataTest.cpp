@@ -29,40 +29,13 @@ namespace orbit_client_data {
 
 namespace {
 
-class MockScopeIdProvider : public ScopeIdProvider {
- public:
-  MOCK_METHOD(uint64_t, FunctionIdToScopeId, (uint64_t function_id), (const));
-  MOCK_METHOD(uint64_t, ProvideId, (const TimerInfo& timer_info));
-  MOCK_METHOD(const ScopeInfo&, GetScopeInfo, (uint64_t scope_id), (const));
-  MOCK_METHOD(std::vector<uint64_t>, GetAllProvidedScopeIds, (), (const));
-};
-
-class CaptureDataTest : public testing::Test {
- public:
-  explicit CaptureDataTest()
-      : capture_data_{capture_started_, std::nullopt, {}, CaptureData::DataSource::kLiveCapture} {
-    EXPECT_CALL(scope_id_provider_, ProvideId)
-        .WillRepeatedly(testing::Invoke([](const TimerInfo& timer_info) {
-          if (timer_info.function_id() == 0) return kInvalidScopeId;
-          return timer_info.function_id();
-        }));
-    EXPECT_CALL(scope_id_provider_, FunctionIdToScopeId)
-        .WillRepeatedly(testing::Invoke([](uint64_t function_id) { return function_id; }));
-  }
-
- protected:
-  MockScopeIdProvider scope_id_provider_;
-  orbit_grpc_protos::CaptureStarted capture_started_;
-  CaptureData capture_data_;
-};
-
-}  // namespace
-
 constexpr size_t kTimersForFirstId = 3;
 constexpr size_t kTimersForSecondId = 2;
 constexpr size_t kTimerCount = kTimersForFirstId + kTimersForSecondId;
 constexpr uint64_t kFirstId = 1;
 constexpr uint64_t kSecondId = 2;
+const std::string kFirstName = "foo()";
+const std::string kSecondName = "bar()";
 constexpr std::array<uint64_t, kTimerCount> kTimerIds = {kFirstId, kFirstId, kFirstId, kSecondId,
                                                          kSecondId};
 constexpr std::array<uint64_t, kTimerCount> kStarts = {10, 20, 30, 40, 50};
@@ -125,6 +98,32 @@ static void ExpectStatsEqual(const ScopeStats& actual, const ScopeStats& other) 
   EXPECT_NEAR(actual.variance_ns(), other.variance_ns(), 1.0);
   EXPECT_NEAR(actual.ComputeStdDevNs(), other.ComputeStdDevNs(), 1.0);
 }
+
+void AddInstrumentedFunction(orbit_grpc_protos::CaptureOptions& capture_options,
+                             uint64_t function_id, const std::string& name) {
+  orbit_grpc_protos::InstrumentedFunction* function = capture_options.add_instrumented_functions();
+  function->set_function_id(function_id);
+  function->set_function_name(name);
+}
+
+[[nodiscard]] orbit_grpc_protos::CaptureStarted CreateCaptureStarted() {
+  orbit_grpc_protos::CaptureStarted capture_started;
+  AddInstrumentedFunction(*capture_started.mutable_capture_options(), kFirstId, kFirstName);
+  AddInstrumentedFunction(*capture_started.mutable_capture_options(), kSecondId, kSecondName);
+  return capture_started;
+}
+
+class CaptureDataTest : public testing::Test {
+ public:
+  explicit CaptureDataTest()
+      : capture_data_{
+            CreateCaptureStarted(), std::nullopt, {}, CaptureData::DataSource::kLiveCapture} {}
+
+ protected:
+  CaptureData capture_data_;
+};
+
+}  // namespace
 
 TEST_F(CaptureDataTest, UpdateScopeStatsIsCorrect) {
   for (const TimerInfo& timer : kTimerInfos) {
