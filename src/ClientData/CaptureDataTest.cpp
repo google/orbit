@@ -200,7 +200,7 @@ TEST_F(CaptureDataTest, VarianceIsCorrectOnRepeatedScimitarDataset) {
 
 TEST_F(CaptureDataTest, UpdateTimerDurationsIsCorrect) {
   for (const TimerInfo& timer : kTimerInfos) {
-    capture_data_.GetThreadTrackDataProvider()->AddTimer(timer); 
+    capture_data_.GetThreadTrackDataProvider()->AddTimer(timer);
   }
 
   capture_data_.OnCaptureComplete();
