@@ -1284,7 +1284,7 @@ TEST_F(UprobesUnwindingVisitorTest, VisitPatchableCallchainSampleSendsCompleteCa
 
   EXPECT_CALL(maps_, Find).WillRepeatedly(Return(&kTargetMapInfo));
   auto fake_patch_callchain = [](pid_t /*tid*/, uint64_t* callchain, uint64_t callchain_size,
-                                 orbit_linux_tracing::LibunwindstackMaps*
+                                 orbit_linux_tracing::LibunwindstackMaps *
                                  /*maps*/) -> bool {
     ORBIT_CHECK(callchain != nullptr);
     ORBIT_CHECK(callchain_size == 4);
@@ -1373,7 +1373,7 @@ TEST_F(UprobesUnwindingVisitorTest,
 
   auto fake_patch_caller_of_leaf_function = [](const CallchainSamplePerfEventData* event_data,
                                                LibunwindstackMaps* /*maps*/,
-                                               orbit_linux_tracing::LibunwindstackUnwinder*
+                                               orbit_linux_tracing::LibunwindstackUnwinder *
                                                /*unwinder*/) -> Callstack::CallstackType {
     ORBIT_CHECK(event_data != nullptr);
     std::vector<uint64_t> patched_callchain;
