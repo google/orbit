@@ -26,7 +26,7 @@ class CallstackInfo {
   [[nodiscard]] CallstackType type() const { return type_; }
   void set_type(CallstackType type) { type_ = type; }
 
-  bool IsUnwindingError() const { return type_ != CallstackType::kComplete; }
+  [[nodiscard]] bool IsUnwindingError() const { return type_ != CallstackType::kComplete; }
 
   friend bool operator==(const CallstackInfo& lhs, const CallstackInfo& rhs) {
     return lhs.type_ == rhs.type_ && lhs.frames_ == rhs.frames_;
