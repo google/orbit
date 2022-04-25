@@ -8,6 +8,8 @@
 #include <absl/container/flat_hash_set.h>
 #include <stdint.h>
 
+#include <vector>
+
 #include "ClientData/CallstackType.h"
 #include "DataViews/CallstackDataView.h"
 
@@ -20,6 +22,9 @@ class SamplingReportInterface {
   virtual void SetCallstackDataView(CallstackDataView* data_view) = 0;
   virtual void OnSelectAddresses(const absl::flat_hash_set<uint64_t>& addresses,
                                  orbit_client_data::ThreadID thread_id) = 0;
+  [[nodiscard]] virtual const orbit_client_data::CallstackData& GetCallstackData() const = 0;
+  [[nodiscard]] virtual std::optional<absl::flat_hash_set<uint64_t>> GetSelectedCallstackIds()
+      const = 0;
 };
 
 }  // namespace orbit_data_views

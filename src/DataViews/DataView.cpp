@@ -6,7 +6,9 @@
 
 #include <absl/strings/str_replace.h>
 
+#include <algorithm>
 #include <cstddef>
+#include <iterator>
 #include <memory>
 
 #include "ClientData/FunctionInfo.h"
@@ -293,43 +295,16 @@ void DataView::OnSourceCodeRequested(const std::vector<int>& selection) {
   }
 }
 
-void DataView::OnExportToCsvRequested() {
-  std::string save_file = app_->GetSaveFile(".csv");
-  if (save_file.empty()) return;
+ErrorMessageOr<void> DataView::ExportToCsv(const std::string_view file_path) {
+  OUTCOME_TRY(auto fd, orbit_base::OpenFileForWriting(file_path));
 
-  auto send_error = [&](const std::string& error_msg) {
-    app_->SendErrorToUi(std::string{kMenuActionExportToCsv}, error_msg);
-  };
+  std::vector<std::string> column_names;
+  const std::vector<Column>& columns = GetColumns();
+  std::transform(std::begin(columns), std::end(columns), std::back_inserter(column_names),
+                 [](const Column& column) { return column.header; });
+  OUTCOME_TRY(WriteLineToCsv(fd, column_names));
 
-  ErrorMessageOr<orbit_base::unique_fd> result = orbit_base::OpenFileForWriting(save_file);
-  if (result.has_error()) {
-    send_error(
-        absl::StrFormat("Failed to open \"%s\" file: %s", save_file, result.error().message()));
-    return;
-  }
-
-  const orbit_base::unique_fd& fd = result.value();
-
-  constexpr const char* kFieldSeparator = ",";
-  // CSV RFC requires lines to end with CRLF
-  constexpr const char* kLineSeparator = "\r\n";
-
-  size_t num_columns = GetColumns().size();
-  {
-    std::string header_line;
-    for (size_t i = 0; i < num_columns; ++i) {
-      header_line.append(FormatValueForCsv(GetColumns()[i].header));
-      if (i < num_columns - 1) header_line.append(kFieldSeparator);
-    }
-
-    header_line.append(kLineSeparator);
-    auto write_result = orbit_base::WriteFully(fd, header_line);
-    if (write_result.has_error()) {
-      send_error(absl::StrFormat("Error writing to \"%s\": %s", save_file,
-                                 write_result.error().message()));
-      return;
-    }
-  }
+  const size_t num_columns = column_names.size();
 
   size_t num_elements = GetNumElements();
   for (size_t i = 0; i < num_elements; ++i) {
@@ -339,13 +314,16 @@ void DataView::OnExportToCsvRequested() {
       if (j < num_columns - 1) line.append(kFieldSeparator);
     }
     line.append(kLineSeparator);
-    auto write_result = orbit_base::WriteFully(fd, line);
-    if (write_result.has_error()) {
-      send_error(absl::StrFormat("Error writing to \"%s\": %s", save_file,
-                                 write_result.error().message()));
-      return;
-    }
+    OUTCOME_TRY(orbit_base::WriteFully(fd, line));
   }
+  return outcome::success();
+}
+
+void DataView::OnExportToCsvRequested() {
+  std::string save_file = app_->GetSaveFile(".csv");
+  if (save_file.empty()) return;
+
+  ReportErrorIfAny(ExportToCsv(save_file), kMenuActionExportToCsv);
 }
 
 void DataView::OnCopySelectionRequested(const std::vector<int>& selection) {

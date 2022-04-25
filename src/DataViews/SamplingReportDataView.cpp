@@ -16,9 +16,12 @@
 #include <cstdint>
 #include <filesystem>
 #include <functional>
+#include <iterator>
 #include <memory>
 #include <utility>
+#include <vector>
 
+#include "ClientData/CallstackType.h"
 #include "ClientData/CaptureData.h"
 #include "ClientData/FunctionInfo.h"
 #include "ClientData/ModuleAndFunctionLookup.h"
@@ -236,6 +239,8 @@ DataView::ActionStatus SamplingReportDataView::GetActionStatus(
     return ActionStatus::kVisibleButDisabled;
   }
 
+  if (action == kMenuActionExportEventsToCsv) return ActionStatus::kVisibleAndEnabled;
+
   std::function<bool(const FunctionInfo*)> is_visible_action_enabled;
   if (action == kMenuActionSelect) {
     is_visible_action_enabled = [this](const FunctionInfo* function) {
@@ -448,6 +453,65 @@ const SampledFunction& SamplingReportDataView::GetSampledFunction(unsigned int r
 
 SampledFunction& SamplingReportDataView::GetSampledFunction(unsigned int row) {
   return functions_[indices_[row]];
+}
+
+ErrorMessageOr<void> SamplingReportDataView::WriteStackEventsToCsv(const std::string& file_path) {
+  OUTCOME_TRY(auto fd, orbit_base::OpenFileForWriting(file_path));
+
+  static const std::vector<std::string> kNames{"Thread", "Timestamp (ns)", "Names leaf/foo/main",
+                                               "Addresses leaf_addr/foo_addr/main_addr"};
+  constexpr std::string_view kFramesSeparator = "/";
+
+  OUTCOME_TRY(WriteLineToCsv(fd, kNames));
+  const orbit_client_data::CallstackData& callstack_data = sampling_report_->GetCallstackData();
+
+  const std::vector<orbit_client_data::CallstackEvent> callstack_events =
+      GetThreadID() != orbit_base::kAllProcessThreadsTid
+          ? callstack_data.GetCallstackEventsOfTidInTimeRange(GetThreadID(),
+                                                              std::numeric_limits<uint64_t>::min(),
+                                                              std::numeric_limits<uint64_t>::max())
+          : callstack_data.GetCallstackEventsInTimeRange(std::numeric_limits<uint64_t>::min(),
+                                                         std::numeric_limits<uint64_t>::max());
+
+  std::optional<absl::flat_hash_set<uint64_t>> selected_callstack_ids =
+      sampling_report_->GetSelectedCallstackIds();
+
+  for (const orbit_client_data::CallstackEvent& event : callstack_events) {
+    if (selected_callstack_ids.has_value() &&
+        !selected_callstack_ids->contains(event.callstack_id())) {
+      continue;
+    }
+
+    std::vector<std::string> cells;
+    cells.push_back(absl::StrFormat("%u", event.thread_id()));
+    cells.push_back(absl::StrFormat("%u", event.timestamp_ns()));
+
+    const orbit_client_data::CallstackInfo* callstack =
+        callstack_data.GetCallstack(event.callstack_id());
+
+    std::vector<std::string> names;
+    std::vector<std::string> addresses;
+    for (const uint64_t address : callstack->frames()) {
+      names.push_back(orbit_client_data::GetFunctionNameByAddress(*app_->GetModuleManager(),
+                                                                  app_->GetCaptureData(), address));
+      addresses.push_back(absl::StrFormat("%#llx", address));
+    }
+    cells.push_back(absl::StrJoin(names, kFramesSeparator));
+    cells.push_back(absl::StrJoin(addresses, kFramesSeparator));
+
+    OUTCOME_TRY(WriteLineToCsv(fd, cells));
+  }
+
+  return outcome::success();
+}
+
+// The argument `selection` is ignored as the selected functions are more conveniently obtained as
+// `sampling_report_->GetSelectedCallstackIds()`
+void SamplingReportDataView::OnExportEventsToCsvRequested(const std::vector<int>& /*selection*/) {
+  std::string file_path = app_->GetSaveFile(".csv");
+  if (file_path.empty()) return;
+
+  ReportErrorIfAny(WriteStackEventsToCsv(file_path), "Export sampled stacks to CSV");
 }
 
 }  // namespace orbit_data_views

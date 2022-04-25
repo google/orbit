@@ -18,6 +18,7 @@
 #include "DataViews/CallstackDataView.h"
 #include "DataViews/DataView.h"
 #include "DataViews/SamplingReportInterface.h"
+#include "OrbitBase/Result.h"
 #include "absl/container/flat_hash_set.h"
 
 class SamplingReport;
@@ -49,6 +50,8 @@ class SamplingReportDataView : public DataView {
   void SetStackEventsCount(uint32_t stack_events_count);
   orbit_client_data::ThreadID GetThreadID() const { return tid_; }
 
+  void OnExportEventsToCsvRequested(const std::vector<int>& selection) override;
+
  protected:
   [[nodiscard]] ActionStatus GetActionStatus(std::string_view action, int clicked_index,
                                              const std::vector<int>& selected_indices) override;
@@ -76,6 +79,8 @@ class SamplingReportDataView : public DataView {
       const orbit_client_data::SampledFunction& function) const;
   [[nodiscard]] std::string BuildToolTipUnwindErrors(
       const orbit_client_data::SampledFunction& function) const;
+
+  ErrorMessageOr<void> WriteStackEventsToCsv(const std::string& file_path);
 
   std::vector<orbit_client_data::SampledFunction> functions_;
   // We need to keep user's selected function ids such that if functions_ changes, the
