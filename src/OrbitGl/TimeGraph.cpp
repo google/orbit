@@ -442,11 +442,11 @@ static bool ThreadMatches(const std::optional<uint32_t>& target_thread_id, const
   return !target_thread_id || *target_thread_id == timer->thread_id();
 }
 
-static void UpdatePreviousTimerAndGoalTime(const TimerInfo** previous_timer, uint64_t& goal_time,
+static void UpdatePreviousTimerAndGoalTime(const TimerInfo** previous_timer, uint64_t* goal_time,
                                            const TimerInfo* current_timer, uint64_t current_time) {
-  if ((current_timer->end() < current_time) && (goal_time < current_timer->end())) {
+  if ((current_timer->end() < current_time) && (*goal_time < current_timer->end())) {
     *previous_timer = current_timer;
-    goal_time = current_timer->end();
+    *goal_time = current_timer->end();
   }
 }
 
@@ -463,6 +463,9 @@ const TimerInfo* TimeGraph::FindPreviousScopeTimer(uint64_t scope_id, uint64_t c
   const orbit_client_data::ScopeType type = capture_data_->GetScopeInfo(scope_id).GetType();
   if (type == orbit_client_data::ScopeType::kInvalid) return nullptr;
 
+  // If the type of the timer in question is `kDynamicallyInstrumentedFunction` or `kApiScope`, it
+  // is stored in Thread Track, which we have an efficient search for. That implementation relies on
+  // blockchain structure and cannot be generalized for the other tracks.
   if (type == orbit_client_data::ScopeType::kDynamicallyInstrumentedFunction ||
       type == orbit_client_data::ScopeType::kApiScope) {
     return FindPreviousThreadTrackTimer(scope_id, current_time, thread_id);
@@ -476,7 +479,7 @@ const TimerInfo* TimeGraph::FindPreviousScopeTimer(uint64_t scope_id, uint64_t c
   for (const TimerInfo* current_timer : timers) {
     if (ThreadMatches(thread_id, current_timer) &&
         capture_data_->ProvideScopeId(*current_timer) == scope_id) {
-      UpdatePreviousTimerAndGoalTime(&previous_timer, goal_time, current_timer, current_time);
+      UpdatePreviousTimerAndGoalTime(&previous_timer, &goal_time, current_timer, current_time);
     }
   }
   return previous_timer;
@@ -538,7 +541,7 @@ const TimerInfo* TimeGraph::FindPreviousThreadTrackTimer(uint64_t scope_id, uint
         const TimerInfo& timer_info = block[i];
         if (ThreadMatches(thread_id, &timer_info) &&
             capture_data_->ProvideScopeId(timer_info) == scope_id) {
-          UpdatePreviousTimerAndGoalTime(&previous_timer, goal_time, &timer_info, current_time);
+          UpdatePreviousTimerAndGoalTime(&previous_timer, &goal_time, &timer_info, current_time);
         }
       }
     }
@@ -562,7 +565,7 @@ static void UpdateMinMaxTimers(const TimerInfo** min_timer, const TimerInfo** ma
   }
 }
 
-std::pair<const TimerInfo*, const TimerInfo*> TimeGraph::GetMinMaxTimerInfoForThreadTrackScope(
+std::pair<const TimerInfo*, const TimerInfo*> TimeGraph::GetMinMaxTimerForThreadTrackScope(
     uint64_t scope_id) const {
   const TimerInfo* min_timer = nullptr;
   const TimerInfo* max_timer = nullptr;
@@ -586,7 +589,7 @@ std::pair<const TimerInfo*, const TimerInfo*> TimeGraph::GetMinMaxTimerForScope(
 
   if (type == orbit_client_data::ScopeType::kDynamicallyInstrumentedFunction ||
       type == orbit_client_data::ScopeType::kApiScope) {
-    return GetMinMaxTimerInfoForThreadTrackScope(scope_id);
+    return GetMinMaxTimerForThreadTrackScope(scope_id);
   }
 
   const TimerInfo* min_timer = nullptr;

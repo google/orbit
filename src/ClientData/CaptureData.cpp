@@ -184,6 +184,9 @@ const std::vector<uint64_t>* CaptureData::GetSortedTimerDurationsForScopeId(
     const absl::flat_hash_set<ScopeType> types, uint64_t min_tick, uint64_t max_tick) const {
   std::vector<const TimerInfo*> result;
 
+  // The timers corresponding to dynamically instrumented functions and manual instrumentation
+  // (kApiScope)  are stored in ThreadTracks. Hence, they're acquired separately from the manual
+  // async (kApiScope).
   if (types.contains(ScopeType::kApiScope) ||
       types.contains(ScopeType::kDynamicallyInstrumentedFunction)) {
     for (const uint32_t thread_id : GetThreadTrackDataProvider()->GetAllThreadIds()) {

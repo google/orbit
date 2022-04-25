@@ -182,7 +182,7 @@ class TimeGraph final : public orbit_gl::CaptureViewElement,
   [[nodiscard]] const TimerInfo* FindPreviousThreadTrackTimer(
       uint64_t scope_id, uint64_t current_time, std::optional<uint32_t> thread_id) const;
 
-  std::pair<const TimerInfo*, const TimerInfo*> GetMinMaxTimerInfoForThreadTrackScope(
+  std::pair<const TimerInfo*, const TimerInfo*> GetMinMaxTimerForThreadTrackScope(
       uint64_t scope_id) const;
 
   AccessibleInterfaceProvider* accessible_parent_;
