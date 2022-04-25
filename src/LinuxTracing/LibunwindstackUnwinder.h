@@ -9,6 +9,7 @@
 #include <unwindstack/Error.h>
 #include <unwindstack/MachineX86_64.h>
 #include <unwindstack/Maps.h>
+#include <unwindstack/RegsX86_64.h>
 #include <unwindstack/Unwinder.h>
 
 #include <array>
@@ -20,7 +21,6 @@
 #include <vector>
 
 #include "OrbitBase/Result.h"
-#include "unwindstack/RegsX86_64.h"
 
 namespace orbit_linux_tracing {
 
