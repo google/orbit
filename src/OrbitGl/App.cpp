@@ -2820,14 +2820,12 @@ void OrbitApp::JumpToTimerAndZoom(uint64_t scope_id, JumpToTimerMode selection_m
       break;
     }
     case JumpToTimerMode::kMin: {
-      auto [min_timer, unused_max_timer] =
-          GetMutableTimeGraph()->GetMinMaxTimerInfoForScope(scope_id);
+      auto [min_timer, unused_max_timer] = GetMutableTimeGraph()->GetMinMaxTimerForScope(scope_id);
       if (min_timer != nullptr) GetMutableTimeGraph()->SelectAndZoom(min_timer);
       break;
     }
     case JumpToTimerMode::kMax: {
-      auto [unused_min_timer, max_timer] =
-          GetMutableTimeGraph()->GetMinMaxTimerInfoForScope(scope_id);
+      auto [unused_min_timer, max_timer] = GetMutableTimeGraph()->GetMinMaxTimerForScope(scope_id);
       if (max_timer != nullptr) GetMutableTimeGraph()->SelectAndZoom(max_timer);
       break;
     }

@@ -107,7 +107,7 @@ class TimeGraph final : public orbit_gl::CaptureViewElement,
       const;
   [[nodiscard]] std::pair<const orbit_client_protos::TimerInfo*,
                           const orbit_client_protos::TimerInfo*>
-  GetMinMaxTimerInfoForScope(uint64_t scope_id) const;
+  GetMinMaxTimerForScope(uint64_t scope_id) const;
 
   void SelectAndZoom(const orbit_client_protos::TimerInfo* timer_info);
   [[nodiscard]] double GetCaptureTimeSpanUs() const;
@@ -175,6 +175,15 @@ class TimeGraph final : public orbit_gl::CaptureViewElement,
   [[nodiscard]] EventResult OnMouseWheel(
       const Vec2& mouse_pos, int delta,
       const orbit_gl::ModifierKeys& modifiers = orbit_gl::ModifierKeys()) override;
+
+  [[nodiscard]] const TimerInfo* FindNextThreadTrackTimer(uint64_t scope_id, uint64_t current_time,
+                                                          std::optional<uint32_t> thread_id) const;
+
+  [[nodiscard]] const TimerInfo* FindPreviousThreadTrackTimer(
+      uint64_t scope_id, uint64_t current_time, std::optional<uint32_t> thread_id) const;
+
+  std::pair<const TimerInfo*, const TimerInfo*> GetMinMaxTimerForThreadTrackScope(
+      uint64_t scope_id) const;
 
   AccessibleInterfaceProvider* accessible_parent_;
   orbit_gl::OpenGlTextRenderer text_renderer_static_;
