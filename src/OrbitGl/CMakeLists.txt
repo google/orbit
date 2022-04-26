@@ -223,6 +223,7 @@ target_sources(OrbitGlTests PRIVATE
                SimpleTimingsTest.cpp
                SliderTest.cpp
                ShortenStringWithEllipsisTest.cpp
+               TimeGraphTest.cpp
                TimelineTicksTest.cpp
                TimelineUiTest.cpp
                TimerInfosIteratorTest.cpp

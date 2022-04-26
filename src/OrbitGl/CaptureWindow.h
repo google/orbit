@@ -15,7 +15,6 @@
 #include "CaptureClient/AppInterface.h"
 #include "CaptureStats.h"
 #include "GlCanvas.h"
-#include "GlSlider.h"
 #include "OrbitAccessibility/AccessibleWidgetBridge.h"
 #include "PickingManager.h"
 #include "PrimitiveAssembler.h"
@@ -63,17 +62,13 @@ class CaptureWindow : public GlCanvas {
   void Draw() override;
   void UpdateChildrenPosAndSize();
 
-  virtual void DrawScreenSpace();
   void RenderAllLayers();
 
-  [[nodiscard]] float GetRightMargin() const { return right_margin_; }
-  void UpdateRightMargin(float margin) { right_margin_ = margin; }
   virtual void RenderText(float layer);
   virtual bool ShouldSkipRendering() const;
 
   virtual void ToggleRecording();
 
-  orbit_gl::GlSlider* FindSliderUnderMouseCursor(int x, int y);
 
   void RenderHelpUi();
   void RenderSelectionOverlay();
@@ -81,11 +76,6 @@ class CaptureWindow : public GlCanvas {
 
   void UpdateHorizontalScroll(float ratio);
   void UpdateVerticalScroll(float ratio);
-  void UpdateHorizontalZoom(float normalized_start, float normalized_end);
-  void UpdateVerticalSliderFromWorld();
-  void UpdateHorizontalSliderFromWorld();
-
-  void ProcessSliderMouseMoveEvents(int x, int y);
 
   [[nodiscard]] virtual const char* GetHelpText() const;
   [[nodiscard]] virtual bool ShouldAutoZoom() const;
@@ -94,10 +84,6 @@ class CaptureWindow : public GlCanvas {
 
   std::unique_ptr<TimeGraph> time_graph_ = nullptr;
   bool draw_help_;
-  std::shared_ptr<orbit_gl::GlSlider> slider_;
-  std::shared_ptr<orbit_gl::GlSlider> vertical_slider_;
-  float right_margin_ = 0;
-  orbit_gl::GlSlider* last_mouseover_slider_ = nullptr;
 
   uint64_t select_start_time_ = 0;
   uint64_t select_stop_time_ = 0;

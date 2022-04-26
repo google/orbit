@@ -74,18 +74,43 @@ TimeGraph::TimeGraph(AccessibleInterfaceProvider* parent, OrbitApp* app,
 
   const orbit_client_data::ModuleManager* module_manager =
       app != nullptr ? app->GetModuleManager() : nullptr;
+
   track_container_ = std::make_unique<orbit_gl::TrackContainer>(this, this, viewport, &layout_,
                                                                 app_, module_manager, capture_data);
   timeline_ui_ = std::make_unique<orbit_gl::TimelineUi>(
       /*parent=*/this, /*timeline_info_interface=*/this, viewport, &layout_);
+
+  slider_ = std::make_shared<orbit_gl::GlHorizontalSlider>(
+      /*parent=*/this, /*timeline_info_interface*/ this, viewport, &layout_);
+  vertical_slider_ = std::make_shared<orbit_gl::GlVerticalSlider>(
+      /*parent=*/this, /*timeline_info_interface*/ this, viewport, &layout_);
+
+  slider_->SetDragCallback([&](float ratio) {
+    this->UpdateHorizontalScroll(ratio);
+    RequestUpdate();
+  });
+  slider_->SetResizeCallback([&](float normalized_start, float normalized_end) {
+    this->UpdateHorizontalZoom(normalized_start, normalized_end);
+    RequestUpdate();
+  });
+
+  vertical_slider_->SetDragCallback([&](float ratio) {
+    track_container_->UpdateVerticalScroll(ratio);
+    RequestUpdate();
+  });
+
+  vertical_slider_->SetOrthogonalSliderPixelHeight(slider_->GetPixelHeight());
+  slider_->SetOrthogonalSliderPixelHeight(vertical_slider_->GetPixelHeight());
+
+  // Needed because unit-tests rely on children positions before drawing.
+  SetWidth(viewport_->GetWorldWidth());
+  UpdateChildrenPosAndContainerSize();
   if (absl::GetFlag(FLAGS_enforce_full_redraw)) {
     RequestUpdate();
   }
 }
 
-float TimeGraph::GetHeight() const {
-  return viewport_->GetWorldHeight() - layout_.GetBottomMargin();
-}
+float TimeGraph::GetHeight() const { return viewport_->GetWorldHeight(); }
 
 void TimeGraph::UpdateCaptureMinMaxTimestamps() {
   auto [tracks_min_time, tracks_max_time] = GetTrackManager()->GetTracksMinMaxTimestamps();
@@ -240,6 +265,10 @@ void TimeGraph::UpdateHorizontalScroll(float ratio) {
   SetMinMax(min_time_us, max_time_us);
 }
 
+void TimeGraph::UpdateHorizontalZoom(float normalized_start, float normalized_end) {
+  SetMinMax(normalized_start * GetCaptureTimeSpanUs(), normalized_end * GetCaptureTimeSpanUs());
+}
+
 double TimeGraph::GetTime(double ratio) const {
   double current_width = max_time_us_ - min_time_us_;
   double delta = ratio * current_width;
@@ -362,6 +391,42 @@ void TimeGraph::ProcessPageFaultsTrackingTimer(const TimerInfo& timer_info) {
   }
   ORBIT_CHECK(track != nullptr);
   track->OnTimer(timer_info);
+}
+
+void TimeGraph::ProcessSliderMouseMoveEvents(int x, int y) {
+  orbit_gl::GlSlider* slider = FindSliderUnderMouseCursor(x, y);
+  if (slider != last_mouseover_slider_) {
+    if (last_mouseover_slider_ != nullptr) {
+      last_mouseover_slider_->OnMouseLeave();
+    }
+    last_mouseover_slider_ = slider;
+    if (slider != nullptr) {
+      slider->OnMouseEnter();
+    }
+  }
+
+  if (slider != nullptr) {
+    slider->OnMouseMove(x, y);
+  }
+}
+
+// TODO(b/230441102): Refactor this using the new MouseEvent.
+void TimeGraph::SetIsMouseOver(bool value) {
+  if (!value && last_mouseover_slider_ != nullptr) {
+    last_mouseover_slider_->OnMouseLeave();
+    last_mouseover_slider_ = nullptr;
+    RequestUpdate(RequestUpdateScope::kDraw);
+  }
+}
+
+orbit_gl::GlSlider* TimeGraph::FindSliderUnderMouseCursor(int x, int y) {
+  for (orbit_gl::GlSlider* slider : {vertical_slider_.get(), slider_.get()}) {
+    if (slider->ContainsScreenSpacePoint(x, y)) {
+      return slider;
+    }
+  }
+
+  return nullptr;
 }
 
 orbit_gl::CaptureViewElement::EventResult TimeGraph::OnMouseWheel(
@@ -630,21 +695,112 @@ void TimeGraph::DoUpdateLayout() {
 }
 
 void TimeGraph::UpdateChildrenPosAndContainerSize() {
-  // Special case: TimeGraph will set TrackContainer height based on its free space.
-  float total_height_without_track_container = 0;
-  for (orbit_gl::CaptureViewElement* child : GetNonHiddenChildren()) {
-    if (child != track_container_.get()) {
-      total_height_without_track_container += child->GetHeight();
-    }
-  }
-  track_container_->SetHeight(GetHeight() - total_height_without_track_container);
+  // TimeGraph's children (if vertical slider is visible)
+  // ________________________________________
+  // |            TIMELINE            | |   |
+  // |--------------------------------| |   |
+  // |--------------------------------|M|   |
+  // |                                |A| S |
+  // |                                |R| L |
+  // |         TRACK CONTAINER        |G| I |
+  // |                                |I| D |
+  // |                                |N| E |
+  // |                                |S| R |
+  // |________________________________|_|___|
+  // |       HORIZONTAL SLIDER          |
+  // |----------------------------------|
+  //
+  // TimeGraph's children (if vertical slider is invisible)
+  // ________________________________________
+  // |            TIMELINE                | |
+  // |------------------------------------| |
+  // |------------------------------------|M|
+  // |                                    |A|
+  // |                                    |R|
+  // |         TRACK CONTAINER            |G|
+  // |                                    |I|
+  // |                                    |N|
+  // |                                    |S|
+  // |____________________________________|_|
+  // |       HORIZONTAL SLIDER              |
+  // |--------------------------------------|
 
-  // Update position of visible children.
-  float current_pos_y = GetPos()[1];
-  for (orbit_gl::CaptureViewElement* child : GetNonHiddenChildren()) {
-    child->SetPos(GetPos()[0], current_pos_y);
-    current_pos_y += child->GetHeight();
-  }
+  // First we calculate TrackContainer's height. TimeGraph will set TrackContainer height based on
+  // its free space.
+  float total_height_without_track_container =
+      GetHeight() - slider_->GetHeight() - timeline_ui_->GetHeight();
+  track_container_->SetHeight(total_height_without_track_container);
+
+  // After we set positions.
+  float timegraph_current_x = GetPos()[0];
+  float timegraph_current_y = GetPos()[1];
+
+  timeline_ui_->SetPos(timegraph_current_x, timegraph_current_y);
+  timegraph_current_y += timeline_ui_->GetHeight();
+
+  track_container_->SetPos(timegraph_current_x, timegraph_current_y);
+  timegraph_current_y += track_container_->GetHeight();
+
+  slider_->SetPos(timegraph_current_x, timegraph_current_y);
+
+  vertical_slider_->SetWidth(layout_.GetSliderWidth());
+  // TODO(b/230441392): TimeBarMargin shouldn't be part of the timeline.
+  vertical_slider_->SetPos(GetWidth() - vertical_slider_->GetWidth(),
+                           track_container_->GetPos()[1] - layout_.GetTimeBarMargin());
+
+  // TODO(b/230442062): Refactor this to be part of Slider::UpdateLayout(). Set visibility of the
+  // vertical slider should be inside of this method.
+  UpdateVerticalSliderFromWorld();
+
+  // Now we can set width of every child.
+  const float vertical_slider_width =
+      (vertical_slider_->IsVisible() ? vertical_slider_->GetWidth() : 0.f);
+  const float total_right_margin = layout_.GetRightMargin() + vertical_slider_width;
+  timeline_ui_->SetWidth(GetWidth() - total_right_margin);
+  track_container_->SetWidth(GetWidth() - total_right_margin);
+  slider_->SetWidth(GetWidth() - vertical_slider_width);
+
+  // TODO(b/230442062): Refactor this to be part of Slider::UpdateLayout().
+  UpdateHorizontalSliderFromWorld();
+}
+
+float TimeGraph::GetRightMargin() const {
+  return layout_.GetRightMargin() +
+         (vertical_slider_->IsVisible() ? vertical_slider_->GetWidth() : 0.f);
+}
+
+void TimeGraph::UpdateHorizontalSliderFromWorld() {
+  double time_span = GetCaptureTimeSpanUs();
+  double start = GetMinTimeUs();
+  double stop = GetMaxTimeUs();
+  double width = stop - start;
+  double max_start = time_span - width;
+
+  constexpr double kEpsilon = 1e-8;
+  double ratio = max_start > kEpsilon ? start / max_start : 0;
+  int slider_width = static_cast<int>(GetLayout().GetSliderWidth());
+  slider_->SetPixelHeight(slider_width);
+  slider_->SetNormalizedLength(static_cast<float>(width / time_span));
+  slider_->SetNormalizedPosition(static_cast<float>(ratio));
+
+  slider_->SetOrthogonalSliderPixelHeight(vertical_slider_->IsVisible() ? slider_width : 0);
+  slider_->SetWidth(GetWidth() - (vertical_slider_->IsVisible() ? slider_width : 0));
+}
+
+void TimeGraph::UpdateVerticalSliderFromWorld() {
+  vertical_slider_->SetWidth(layout_.GetSliderWidth());
+  float visible_tracks_height = GetTrackContainer()->GetVisibleTracksTotalHeight();
+  float max = std::max(0.f, visible_tracks_height - viewport_->GetWorldHeight());
+  float pos_ratio = max > 0 ? GetTrackContainer()->GetVerticalScrollingOffset() / max : 0.f;
+  float size_ratio =
+      visible_tracks_height > 0 ? viewport_->GetWorldHeight() / visible_tracks_height : 1.f;
+  int slider_width = static_cast<int>(GetLayout().GetSliderWidth());
+  vertical_slider_->SetPixelHeight(slider_width);
+  vertical_slider_->SetNormalizedPosition(pos_ratio);
+  vertical_slider_->SetNormalizedLength(size_ratio);
+  // Vertical slider won't be visible if all tracks are already visible.
+  vertical_slider_->SetVisible(size_ratio < 1.f);
+  vertical_slider_->SetOrthogonalSliderPixelHeight(slider_width);
 }
 
 void TimeGraph::SelectAndZoom(const TimerInfo* timer_info) {
@@ -724,6 +880,30 @@ void TimeGraph::DrawAllElements(PrimitiveAssembler& primitive_assembler,
   }
 }
 
+void TimeGraph::DoDraw(orbit_gl::PrimitiveAssembler& primitive_assembler,
+                       orbit_gl::TextRenderer& /*text_renderer*/,
+                       const DrawContext& /*draw_context*/) {
+  ORBIT_SCOPE("TimeGraph::DoDraw");
+
+  // TODO(b/230442062): Move IsThisElementPicked directly to Slider methods.
+  if (GetCaptureTimeSpanNs() > 0) {
+    slider_->Draw(primitive_assembler,
+                  primitive_assembler.GetPickingManager()->IsThisElementPicked(slider_.get()));
+    if (vertical_slider_->IsVisible()) {
+      vertical_slider_->Draw(
+          primitive_assembler,
+          primitive_assembler.GetPickingManager()->IsThisElementPicked(vertical_slider_.get()));
+    }
+  }
+
+  // Right vertical margin of the Tracks to make them look nicer. If the vertical slider is visible,
+  // the margin will be between the slider and the tracks.
+  Vec2 right_margin_pos{GetWidth() - GetRightMargin(), GetPos()[1]};
+
+  Quad box = MakeBox(right_margin_pos, GetSize() - (right_margin_pos - GetPos()));
+  primitive_assembler.AddBox(box, GlCanvas::kZValueMargin, GlCanvas::kBackgroundColor);
+}
+
 void TimeGraph::DrawText(float layer) { text_renderer_static_.RenderLayer(layer); }
 
 bool TimeGraph::IsFullyVisible(uint64_t min, uint64_t max) const {
@@ -752,7 +932,7 @@ bool TimeGraph::IsVisible(VisibilityType vis_type, uint64_t min, uint64_t max) c
 }
 
 std::vector<orbit_gl::CaptureViewElement*> TimeGraph::GetAllChildren() const {
-  return {GetTimelineUi(), GetTrackContainer()};
+  return {GetTimelineUi(), GetTrackContainer(), GetHorizontalSlider(), GetVerticalSlider()};
 }
 
 std::unique_ptr<orbit_accessibility::AccessibleInterface> TimeGraph::CreateAccessibleInterface() {

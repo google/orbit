@@ -15,6 +15,7 @@
 #include "ClientData/CaptureData.h"
 #include "ClientProtos/capture_data.pb.h"
 #include "CoreMath.h"
+#include "GlSlider.h"
 #include "ManualInstrumentationManager.h"
 #include "OpenGlBatcher.h"
 #include "OpenGlTextRenderer.h"
@@ -28,8 +29,7 @@
 
 class OrbitApp;
 
-class TimeGraph final : public orbit_gl::CaptureViewElement,
-                        public orbit_gl::TimelineInfoInterface {
+class TimeGraph : public orbit_gl::CaptureViewElement, public orbit_gl::TimelineInfoInterface {
  public:
   explicit TimeGraph(AccessibleInterfaceProvider* parent, OrbitApp* app,
                      orbit_gl::Viewport* viewport, orbit_client_data::CaptureData* capture_data,
@@ -54,6 +54,8 @@ class TimeGraph final : public orbit_gl::CaptureViewElement,
   [[nodiscard]] orbit_gl::TrackContainer* GetTrackContainer() const {
     return track_container_.get();
   }
+  [[nodiscard]] orbit_gl::GlSlider* GetHorizontalSlider() const { return slider_.get(); }
+  [[nodiscard]] orbit_gl::GlSlider* GetVerticalSlider() const { return vertical_slider_.get(); }
   [[nodiscard]] orbit_gl::TimelineUi* GetTimelineUi() const { return timeline_ui_.get(); }
   [[nodiscard]] orbit_gl::TrackManager* GetTrackManager() const {
     return track_container_->GetTrackManager();
@@ -126,6 +128,7 @@ class TimeGraph final : public orbit_gl::CaptureViewElement,
   [[nodiscard]] orbit_gl::Batcher& GetBatcher() { return batcher_; }
 
   void UpdateHorizontalScroll(float ratio);
+  void UpdateHorizontalZoom(float normalized_start, float normalized_end);
   [[nodiscard]] const TimeGraphLayout& GetLayout() const { return layout_; }
   [[nodiscard]] TimeGraphLayout& GetLayout() { return layout_; }
 
@@ -159,10 +162,20 @@ class TimeGraph final : public orbit_gl::CaptureViewElement,
     return accessible_parent_;
   }
 
+  // TODO(Slider refactor bug): Refactor slider methods.
+  orbit_gl::GlSlider* FindSliderUnderMouseCursor(int x, int y);
+  void ProcessSliderMouseMoveEvents(int x, int y);
+  void SetIsMouseOver(bool value);
+
  protected:
+  void DoDraw(orbit_gl::PrimitiveAssembler& primitive_assembler,
+              orbit_gl::TextRenderer& text_renderer, const DrawContext& draw_context) override;
   void PrepareBatcherAndUpdatePrimitives(PickingMode picking_mode);
   void DoUpdateLayout() override;
   void UpdateChildrenPosAndContainerSize();
+  void UpdateVerticalSliderFromWorld();
+  void UpdateHorizontalSliderFromWorld();
+  [[nodiscard]] float GetRightMargin() const;
 
   [[nodiscard]] std::unique_ptr<orbit_accessibility::AccessibleInterface>
   CreateAccessibleInterface() override;
@@ -170,6 +183,9 @@ class TimeGraph final : public orbit_gl::CaptureViewElement,
   void ProcessSystemMemoryTrackingTimer(const orbit_client_protos::TimerInfo& timer_info);
   void ProcessCGroupAndProcessMemoryTrackingTimer(const orbit_client_protos::TimerInfo& timer_info);
   void ProcessPageFaultsTrackingTimer(const orbit_client_protos::TimerInfo& timer_info);
+
+  std::shared_ptr<orbit_gl::GlSlider> slider_;
+  std::shared_ptr<orbit_gl::GlSlider> vertical_slider_;
 
  private:
   [[nodiscard]] EventResult OnMouseWheel(
@@ -199,6 +215,7 @@ class TimeGraph final : public orbit_gl::CaptureViewElement,
   orbit_gl::OpenGlBatcher batcher_;
   orbit_gl::PrimitiveAssembler primitive_assembler_;
 
+  orbit_gl::GlSlider* last_mouseover_slider_ = nullptr;
   std::unique_ptr<orbit_gl::TrackContainer> track_container_;
   std::unique_ptr<orbit_gl::TimelineUi> timeline_ui_;
 

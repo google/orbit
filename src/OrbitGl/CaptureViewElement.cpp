@@ -11,9 +11,7 @@ namespace orbit_gl {
 
 CaptureViewElement::CaptureViewElement(CaptureViewElement* parent, const Viewport* viewport,
                                        const TimeGraphLayout* layout)
-    : viewport_(viewport), layout_(layout), parent_(parent) {
-  ORBIT_CHECK(layout != nullptr);
-}
+    : viewport_(viewport), layout_(layout), parent_(parent) {}
 
 void CaptureViewElement::Draw(PrimitiveAssembler& primitive_assembler, TextRenderer& text_renderer,
                               const DrawContext& draw_context) {
@@ -117,12 +115,12 @@ void CaptureViewElement::OnDrag(int x, int y) {
   RequestUpdate(RequestUpdateScope::kDraw);
 }
 
-bool CaptureViewElement::ContainsPoint(const Vec2& pos) {
+bool CaptureViewElement::ContainsPoint(const Vec2& pos) const {
   return pos[0] >= GetPos()[0] && pos[0] <= GetPos()[0] + GetSize()[0] && pos[1] >= GetPos()[1] &&
          pos[1] <= GetPos()[1] + GetSize()[1];
 }
 
-bool CaptureViewElement::IsMouseOver(const Vec2& mouse_pos) {
+bool CaptureViewElement::IsMouseOver(const Vec2& mouse_pos) const {
   if (parent_ != nullptr && !parent_->IsMouseOver(mouse_pos)) {
     return false;
   }

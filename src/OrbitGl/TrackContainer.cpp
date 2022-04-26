@@ -48,10 +48,9 @@ TrackContainer::TrackContainer(CaptureViewElement* parent, TimelineInfoInterface
 }
 
 float TrackContainer::GetVisibleTracksTotalHeight() const {
-  // Top and Bottom Margin. TODO: Margins should be treated in a different way (http://b/192070555).
-  float visible_tracks_total_height = layout_->GetTracksTopMargin() + layout_->GetBottomMargin();
+  float visible_tracks_total_height = 0.f;
 
-  // Track height including space between them
+  // Track height including space between them.
   for (auto& track : GetNonHiddenChildren()) {
     visible_tracks_total_height += (track->GetHeight() + layout_->GetSpaceBetweenTracks());
   }
@@ -379,9 +378,14 @@ void TrackContainer::DoDraw(PrimitiveAssembler& primitive_assembler, TextRendere
   DrawOverlay(primitive_assembler, text_renderer, draw_context.picking_mode);
 }
 
+void TrackContainer::UpdateVerticalScroll(float ratio) {
+  float range = std::max(0.f, GetVisibleTracksTotalHeight() - GetHeight());
+  float new_scrolling_offset = ratio * range;
+  SetVerticalScrollingOffset(new_scrolling_offset);
+}
+
 void TrackContainer::SetVerticalScrollingOffset(float value) {
-  float clamped_value =
-      std::max(std::min(value, GetVisibleTracksTotalHeight() - viewport_->GetWorldHeight()), 0.f);
+  float clamped_value = std::max(std::min(value, GetVisibleTracksTotalHeight() - GetHeight()), 0.f);
   if (clamped_value == vertical_scrolling_offset_) return;
 
   vertical_scrolling_offset_ = clamped_value;

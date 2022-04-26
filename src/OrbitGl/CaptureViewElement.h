@@ -38,15 +38,16 @@ class CaptureViewElement : public Pickable, public AccessibleInterfaceProvider {
   [[nodiscard]] virtual Vec2 GetPos() const { return pos_; }
 
   void SetWidth(float width);
-  [[nodiscard]] float GetWidth() const { return width_; }
+  // TODO(b/230442062): This method shouldn't be virtual. Fix it after refactoring sliders.
+  [[nodiscard]] virtual float GetWidth() const { return width_; }
 
   // Height should be defined in every particular capture view element.
   [[nodiscard]] virtual float GetHeight() const = 0;
   [[nodiscard]] Vec2 GetSize() const { return Vec2(GetWidth(), GetHeight()); }
-  [[nodiscard]] virtual bool ShouldBeRendered() const { return GetVisible(); }
+  [[nodiscard]] virtual bool ShouldBeRendered() const { return IsVisible(); }
 
   void SetVisible(bool value);
-  [[nodiscard]] bool GetVisible() const { return visible_; }
+  [[nodiscard]] bool IsVisible() const { return visible_; }
 
   // Pickable
   void OnPick(int x, int y) override;
@@ -54,11 +55,11 @@ class CaptureViewElement : public Pickable, public AccessibleInterfaceProvider {
   void OnDrag(int x, int y) override;
   [[nodiscard]] bool Draggable() override { return true; }
 
-  [[nodiscard]] bool ContainsPoint(const Vec2& pos);
+  [[nodiscard]] bool ContainsPoint(const Vec2& pos) const;
 
   // This also checks IsMouseOver() for the parent, and only returns true if the mouse
   // position is included in all parents up to the root
-  [[nodiscard]] bool IsMouseOver(const Vec2& mouse_pos);
+  [[nodiscard]] bool IsMouseOver(const Vec2& mouse_pos) const;
 
   enum class EventResult { kHandled, kIgnored };
   [[nodiscard]] EventResult HandleMouseWheelEvent(const Vec2& mouse_pos, int delta,

@@ -58,7 +58,8 @@ template <typename SliderClass>
 std::pair<std::unique_ptr<SliderClass>, std::unique_ptr<Viewport>> Setup() {
   std::unique_ptr<Viewport> viewport = std::make_unique<Viewport>(150, 1050);
 
-  std::unique_ptr<SliderClass> slider = std::make_unique<SliderClass>(*viewport);
+  std::unique_ptr<SliderClass> slider =
+      std::make_unique<SliderClass>(nullptr, nullptr, viewport.get(), nullptr);
   slider->SetPixelHeight(15);
   slider->SetOrthogonalSliderPixelHeight(50);
 
@@ -328,7 +329,7 @@ TEST(Slider, MouseEnterAndLeave) {
 
 TEST(Slider, ContainsScreenSpacePoint) {
   Viewport viewport(100, 100);
-  GlVerticalSlider slider(viewport);
+  GlVerticalSlider slider(nullptr, nullptr, &viewport, nullptr);
   EXPECT_TRUE(slider.ContainsScreenSpacePoint(95, 50));
   EXPECT_FALSE(slider.ContainsScreenSpacePoint(50, 50));
 }

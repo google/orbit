@@ -9,79 +9,8 @@
 #include "CaptureClient/AppInterface.h"
 #include "CaptureWindow.h"
 #include "TrackTestData.h"
-#include "UnitTestSlider.h"
 
 namespace orbit_gl {
-
-class UnitTestCaptureWindow : public CaptureWindow, public testing::Test {
- public:
-  explicit UnitTestCaptureWindow() : CaptureWindow(nullptr) {
-    slider_ = std::make_unique<UnitTestHorizontalSlider>(viewport_);
-    vertical_slider_ = std::make_unique<UnitTestVerticalSlider>(viewport_);
-  }
-};
-
-TEST_F(UnitTestCaptureWindow, SlidersRespondToMouseOver) {
-  Resize(100, 200);
-
-  GlSlider* slider = FindSliderUnderMouseCursor(50, 50);
-  EXPECT_EQ(nullptr, slider);
-  slider = FindSliderUnderMouseCursor(95, 10);
-  EXPECT_EQ(vertical_slider_.get(), slider);
-  slider = FindSliderUnderMouseCursor(5, 195);
-  EXPECT_EQ(slider_.get(), slider);
-  slider = FindSliderUnderMouseCursor(95, 195);
-  EXPECT_EQ(nullptr, slider);
-
-  UnitTestHorizontalSlider* unit_test_slider =
-      dynamic_cast<UnitTestHorizontalSlider*>(slider_.get());
-  UnitTestVerticalSlider* unit_test_vertical_slider =
-      dynamic_cast<UnitTestVerticalSlider*>(vertical_slider_.get());
-  ;
-
-  MouseMoved(95, 10, false, false, false);
-  EXPECT_TRUE(unit_test_vertical_slider->IsMouseOver());
-
-  MouseMoved(5, 195, false, false, false);
-  EXPECT_FALSE(unit_test_vertical_slider->IsMouseOver());
-  EXPECT_TRUE(unit_test_slider->IsMouseOver());
-
-  MouseMoved(50, 50, false, false, false);
-  EXPECT_FALSE(dynamic_cast<UnitTestVerticalSlider*>(vertical_slider_.get())->IsMouseOver());
-  EXPECT_FALSE(unit_test_slider->IsMouseOver());
-}
-
-TEST_F(UnitTestCaptureWindow, SlidersBehaveCorrectlyWithMouseDown) {
-  Resize(100, 200);
-  MouseMoved(5, 195, true, false, false);
-
-  UnitTestHorizontalSlider* unit_test_slider =
-      dynamic_cast<UnitTestHorizontalSlider*>(slider_.get());
-  UnitTestVerticalSlider* unit_test_vertical_slider =
-      dynamic_cast<UnitTestVerticalSlider*>(vertical_slider_.get());
-
-  EXPECT_FALSE(unit_test_vertical_slider->IsMouseOver());
-  EXPECT_FALSE(unit_test_slider->IsMouseOver());
-
-  MouseMoved(95, 10, false, false, false);
-  LeftDown(95, 10);
-  EXPECT_TRUE(unit_test_vertical_slider->IsMouseOver());
-  MouseMoved(50, 50, true, false, false);
-  EXPECT_TRUE(unit_test_vertical_slider->IsMouseOver());
-  LeftUp();
-  EXPECT_FALSE(unit_test_vertical_slider->IsMouseOver());
-}
-
-TEST_F(UnitTestCaptureWindow, SlidersRespondToMouseLeave) {
-  Resize(100, 200);
-  MouseMoved(95, 10, false, false, false);
-
-  UnitTestVerticalSlider* unit_test_vertical_slider =
-      dynamic_cast<UnitTestVerticalSlider*>(vertical_slider_.get());
-  EXPECT_TRUE(unit_test_vertical_slider->IsMouseOver());
-  SetIsMouseOver(false);
-  EXPECT_FALSE(unit_test_vertical_slider->IsMouseOver());
-}
 
 class CaptureClientAppInterfaceFake : public orbit_capture_client::CaptureControlInterface {
   [[nodiscard]] orbit_capture_client::CaptureClient::State GetCaptureState() const {
@@ -127,11 +56,11 @@ class NavigationTestCaptureWindow : public CaptureWindow, public testing::Test {
 
  protected:
   void ExpectInitialState(bool allow_small_imprecision = false) {
-    EXPECT_LT(vertical_slider_->GetLengthRatio(), 1.0);
-    EXPECT_DOUBLE_EQ(vertical_slider_->GetPosRatio(), 0.0);
+    EXPECT_LT(time_graph_->GetVerticalSlider()->GetLengthRatio(), 1.0);
+    EXPECT_DOUBLE_EQ(time_graph_->GetVerticalSlider()->GetPosRatio(), 0.0);
 
-    EXPECT_DOUBLE_EQ(slider_->GetLengthRatio(), 1.0);
-    EXPECT_DOUBLE_EQ(slider_->GetPosRatio(), 0.0);
+    EXPECT_DOUBLE_EQ(time_graph_->GetHorizontalSlider()->GetLengthRatio(), 1.0);
+    EXPECT_DOUBLE_EQ(time_graph_->GetHorizontalSlider()->GetPosRatio(), 0.0);
 
     if (allow_small_imprecision) {
       EXPECT_NEAR(time_graph_->GetMaxTimeUs() * 1000, time_graph_->GetCaptureMax(), kTimeEpsilonUs);
@@ -144,24 +73,24 @@ class NavigationTestCaptureWindow : public CaptureWindow, public testing::Test {
 
   enum struct PosWithinCapture { kLeft, kRight, kMiddle, kAnywhere };
   void ExpectIsHorizontallyZoomedIn(PosWithinCapture pos) {
-    EXPECT_LT(slider_->GetLengthRatio(), 1.0);
+    EXPECT_LT(time_graph_->GetHorizontalSlider()->GetLengthRatio(), 1.0);
     EXPECT_LT(time_graph_->GetMaxTimeUs() - time_graph_->GetMinTimeUs(),
               time_graph_->GetCaptureTimeSpanUs());
 
     switch (pos) {
       case PosWithinCapture::kLeft:
-        EXPECT_DOUBLE_EQ(slider_->GetPosRatio(), 0.0);
+        EXPECT_DOUBLE_EQ(time_graph_->GetHorizontalSlider()->GetPosRatio(), 0.0);
         EXPECT_LT(time_graph_->GetMaxTimeUs() * 1000, time_graph_->GetCaptureMax());
         EXPECT_DOUBLE_EQ(time_graph_->GetMinTimeUs() * 1000, 0);
         break;
       case PosWithinCapture::kRight:
         // TODO (b/226376252): This should also check if pos + size == 100%
-        EXPECT_GT(slider_->GetPosRatio(), 0.0);
+        EXPECT_GT(time_graph_->GetHorizontalSlider()->GetPosRatio(), 0.0);
         EXPECT_DOUBLE_EQ(time_graph_->GetMaxTimeUs() * 1000, time_graph_->GetCaptureMax());
         EXPECT_GT(time_graph_->GetMinTimeUs() * 1000, 0);
         break;
       case PosWithinCapture::kMiddle:
-        EXPECT_NEAR(slider_->GetPosRatio(), 0.5, 0.01);
+        EXPECT_NEAR(time_graph_->GetHorizontalSlider()->GetPosRatio(), 0.5, 0.01);
         EXPECT_NEAR(time_graph_->GetCaptureMax() - time_graph_->GetMaxTimeUs() * 1000,
                     time_graph_->GetMinTimeUs() * 1000 - time_graph_->GetCaptureMin(), 1);
         break;
@@ -229,7 +158,7 @@ TEST_F(NavigationTestCaptureWindow, ZoomTimeWorksAtRandomPositions) {
     PreRender();
     ExpectIsHorizontallyZoomedIn(PosWithinCapture::kAnywhere);
 
-    float last_slider_pos = slider_->GetPosRatio();
+    float last_slider_pos = time_graph_->GetHorizontalSlider()->GetPosRatio();
     double last_min_time = time_graph_->GetMinTimeUs();
     double last_max_time = time_graph_->GetMaxTimeUs();
     MouseWheelMoved(x, y, 1, false);
@@ -238,7 +167,8 @@ TEST_F(NavigationTestCaptureWindow, ZoomTimeWorksAtRandomPositions) {
 
     MouseWheelMoved(x, y, -1, false);
     PreRender();
-    EXPECT_NEAR(slider_->GetPosRatio(), last_slider_pos, kSliderPosEpsilon);
+    EXPECT_NEAR(time_graph_->GetHorizontalSlider()->GetPosRatio(), last_slider_pos,
+                kSliderPosEpsilon);
     EXPECT_NEAR(time_graph_->GetMinTimeUs(), last_min_time, kTimeEpsilonUs);
     EXPECT_NEAR(time_graph_->GetMaxTimeUs(), last_max_time, kTimeEpsilonUs);
 
@@ -252,7 +182,7 @@ TEST_F(NavigationTestCaptureWindow, ZoomTimeWorksAtRandomPositions) {
     PreRender();
     ExpectIsHorizontallyZoomedIn(PosWithinCapture::kAnywhere);
 
-    last_slider_pos = slider_->GetPosRatio();
+    last_slider_pos = time_graph_->GetHorizontalSlider()->GetPosRatio();
     last_min_time = time_graph_->GetMinTimeUs();
     last_max_time = time_graph_->GetMaxTimeUs();
     KeyPressed('W', false, false, false);
@@ -261,7 +191,8 @@ TEST_F(NavigationTestCaptureWindow, ZoomTimeWorksAtRandomPositions) {
 
     KeyPressed('S', false, false, false);
     PreRender();
-    EXPECT_NEAR(slider_->GetPosRatio(), last_slider_pos, kSliderPosEpsilon);
+    EXPECT_NEAR(time_graph_->GetHorizontalSlider()->GetPosRatio(), last_slider_pos,
+                kSliderPosEpsilon);
     EXPECT_NEAR(time_graph_->GetMinTimeUs(), last_min_time, kTimeEpsilonUs);
     EXPECT_NEAR(time_graph_->GetMaxTimeUs(), last_max_time, kTimeEpsilonUs);
 
@@ -356,12 +287,12 @@ TEST_F(NavigationTestCaptureWindow, PanTimeWorksAsExpected) {
   KeyPressed('W', false, false, false);
   KeyPressed('D', false, false, false);
   PreRender();
-  EXPECT_GT(slider_->GetPosRatio(), 0.0);
+  EXPECT_GT(time_graph_->GetHorizontalSlider()->GetPosRatio(), 0.0);
   EXPECT_GT(time_graph_->GetMinTimeUs(), 0.0);
 
   KeyPressed('A', false, false, false);
   PreRender();
-  EXPECT_EQ(slider_->GetPosRatio(), 0.0);
+  EXPECT_EQ(time_graph_->GetHorizontalSlider()->GetPosRatio(), 0.0);
   EXPECT_EQ(time_graph_->GetMinTimeUs(), 0.0);
 }
 

@@ -52,9 +52,12 @@ bool GlSlider::ContainsScreenSpacePoint(int x, int y) const {
          y <= GetPos()[1] + GetSize()[1];
 }
 
-GlSlider::GlSlider(Viewport& viewport, bool is_vertical)
-    : is_vertical_(is_vertical),
-      viewport_(viewport),
+GlSlider::GlSlider(CaptureViewElement* parent, TimelineInfoInterface* timeline_info,
+                   Viewport* viewport, TimeGraphLayout* layout, bool is_vertical)
+    : CaptureViewElement(parent, viewport, layout),
+      is_vertical_(is_vertical),
+      timeline_info_(timeline_info),
+      viewport_(*viewport),
       pos_ratio_(0),
       right_edge_ratio_(0),
       length_ratio_(0),
@@ -269,6 +272,11 @@ void GlVerticalSlider::Draw(PrimitiveAssembler& primitive_assembler, bool is_pic
 
 float GlVerticalSlider::GetBarPixelLength() const { return GetSize()[1]; }
 
+std::unique_ptr<orbit_accessibility::AccessibleInterface>
+GlVerticalSlider::CreateAccessibleInterface() {
+  return std::make_unique<AccessibleCaptureViewElement>(this, "Vertical Slider");
+}
+
 void GlHorizontalSlider::Draw(PrimitiveAssembler& primitive_assembler, bool is_picked) {
   primitive_assembler.PushTranslation(static_cast<int>(GetPos()[0]), static_cast<int>(GetPos()[1]));
 
@@ -333,5 +341,10 @@ void GlHorizontalSlider::Draw(PrimitiveAssembler& primitive_assembler, bool is_p
 }
 
 float GlHorizontalSlider::GetBarPixelLength() const { return GetSize()[0]; }
+
+std::unique_ptr<orbit_accessibility::AccessibleInterface>
+GlHorizontalSlider::CreateAccessibleInterface() {
+  return std::make_unique<AccessibleCaptureViewElement>(this, "Horizontal Slider");
+}
 
 }  // namespace orbit_gl
