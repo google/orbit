@@ -118,16 +118,16 @@ static bool CallchainIsInUserSpaceInstrumentation(
       });
 }
 
-void UprobesUnwindingVisitor::HandleErrorCasesAndPatchStackSample(
-    Callstack* callstack, const LibunwindstackResult& libunwindstack_result) {
+orbit_grpc_protos::Callstack::CallstackType
+UprobesUnwindingVisitor::ComputeCallstackTypeFromStackSample(
+    const LibunwindstackResult& libunwindstack_result) {
   if (libunwindstack_result.frames().front().map_name == "[uprobes]") {
     // Some samples can actually fall inside u(ret)probes code. They cannot be unwound by
     // libunwindstack (even when the unwinding is reported as successful, the result is wrong).
     if (samples_in_uretprobes_counter_ != nullptr) {
       ++(*samples_in_uretprobes_counter_);
     }
-    callstack->set_type(Callstack::kInUprobes);
-    return;
+    return Callstack::kInUprobes;
   }
   if (user_space_instrumentation_addresses_ != nullptr &&
       CallstackIsInUserSpaceInstrumentation(libunwindstack_result.frames(),
@@ -141,8 +141,7 @@ void UprobesUnwindingVisitor::HandleErrorCasesAndPatchStackSample(
     //   trampoline).
     // We don't simply check if any frame is in the trampoline as we want to distinguish from the
     // kCallstackPatchingFailed case below.
-    callstack->set_type(Callstack::kInUserSpaceInstrumentation);
-    return;
+    return Callstack::kInUserSpaceInstrumentation;
   }
   if (libunwindstack_result.frames().size() > 1 &&
       (libunwindstack_result.frames().back().map_name == "[uprobes]" ||
@@ -158,8 +157,7 @@ void UprobesUnwindingVisitor::HandleErrorCasesAndPatchStackSample(
     if (unwind_error_counter_ != nullptr) {
       ++(*unwind_error_counter_);
     }
-    callstack->set_type(Callstack::kCallstackPatchingFailed);
-    return;
+    return Callstack::kCallstackPatchingFailed;
   }
   if (!libunwindstack_result.IsSuccess() || libunwindstack_result.frames().size() == 1) {
     // Callstacks with only one frame (the sampled address) are also unwinding errors, that were not
@@ -171,11 +169,10 @@ void UprobesUnwindingVisitor::HandleErrorCasesAndPatchStackSample(
     if (unwind_error_counter_ != nullptr) {
       ++(*unwind_error_counter_);
     }
-    callstack->set_type(Callstack::kDwarfUnwindingError);
-    return;
+    return Callstack::kDwarfUnwindingError;
   }
 
-  callstack->set_type(Callstack::kComplete);
+  return Callstack::kComplete;
 }
 
 void UprobesUnwindingVisitor::Visit(uint64_t event_timestamp,
@@ -203,7 +200,7 @@ void UprobesUnwindingVisitor::Visit(uint64_t event_timestamp,
   sample.set_timestamp_ns(event_timestamp);
 
   Callstack* callstack = sample.mutable_callstack();
-  HandleErrorCasesAndPatchStackSample(callstack, libunwindstack_result);
+  callstack->set_type(ComputeCallstackTypeFromStackSample(libunwindstack_result));
   for (const unwindstack::FrameData& libunwindstack_frame : libunwindstack_result.frames()) {
     SendFullAddressInfoToListener(listener_, libunwindstack_frame);
     callstack->add_pcs(libunwindstack_frame.pc);
@@ -213,10 +210,9 @@ void UprobesUnwindingVisitor::Visit(uint64_t event_timestamp,
   listener_->OnCallstackSample(std::move(sample));
 }
 
-void UprobesUnwindingVisitor::HandleErrorCasesAndPatchCallchain(
-    Callstack* callstack, const CallchainSamplePerfEventData& event_data) {
-  callstack->set_type(Callstack::kComplete);
-
+[[nodiscard]] orbit_grpc_protos::Callstack::CallstackType
+UprobesUnwindingVisitor::ComputeCallstackTypeFromCallchainAndPatch(
+    const CallchainSamplePerfEventData& event_data) {
   // Callstacks with only two frames (the first is in the kernel, the second is the sampled address)
   // are unwinding errors.
   // Note that this doesn't exclude samples inside the main function of any thread as the main
@@ -226,8 +222,7 @@ void UprobesUnwindingVisitor::HandleErrorCasesAndPatchCallchain(
     if (unwind_error_counter_ != nullptr) {
       ++(*unwind_error_counter_);
     }
-    callstack->set_type(Callstack::kFramePointerUnwindingError);
-    return;
+    return Callstack::kFramePointerUnwindingError;
   }
 
   uint64_t top_ip = event_data.GetCallchain()[1];
@@ -239,8 +234,7 @@ void UprobesUnwindingVisitor::HandleErrorCasesAndPatchCallchain(
     if (samples_in_uretprobes_counter_ != nullptr) {
       ++(*samples_in_uretprobes_counter_);
     }
-    callstack->set_type(Callstack::kInUprobes);
-    return;
+    return Callstack::kInUprobes;
   }
 
   // Similar to the previous case, but for user space instrumentation. We consider whether a sample:
@@ -253,8 +247,7 @@ void UprobesUnwindingVisitor::HandleErrorCasesAndPatchCallchain(
       CallchainIsInUserSpaceInstrumentation(event_data.GetCallchain(),
                                             event_data.GetCallchainSize(), *current_maps_,
                                             *user_space_instrumentation_addresses_)) {
-    callstack->set_type(Callstack::kInUserSpaceInstrumentation);
-    return;
+    return Callstack::kInUserSpaceInstrumentation;
   }
 
   // The leaf function is not guaranteed to have the frame pointer for all our targets. Though, we
@@ -268,8 +261,7 @@ void UprobesUnwindingVisitor::HandleErrorCasesAndPatchCallchain(
       if (unwind_error_counter_ != nullptr) {
         ++(*unwind_error_counter_);
       }
-      callstack->set_type(Callstack::kFramePointerUnwindingError);
-      return;
+      return Callstack::kFramePointerUnwindingError;
     }
   }
 
@@ -279,8 +271,7 @@ void UprobesUnwindingVisitor::HandleErrorCasesAndPatchCallchain(
     if (unwind_error_counter_ != nullptr) {
       ++(*unwind_error_counter_);
     }
-    callstack->set_type(leaf_function_patching_status);
-    return;
+    return leaf_function_patching_status;
   }
 
   // Apparently quite a corner case, but easy to observe: the library injected by user space
@@ -297,8 +288,7 @@ void UprobesUnwindingVisitor::HandleErrorCasesAndPatchCallchain(
             event_data.GetCallchain() + event_data.GetCallchainSize(), [this](uint64_t frame) {
               return user_space_instrumentation_addresses_->IsInEntryOrReturnTrampoline(frame);
             })) {
-      callstack->set_type(Callstack::kInUserSpaceInstrumentation);
-      return;
+      return Callstack::kInUserSpaceInstrumentation;
     }
   }
 
@@ -307,9 +297,11 @@ void UprobesUnwindingVisitor::HandleErrorCasesAndPatchCallchain(
     if (unwind_error_counter_ != nullptr) {
       ++(*unwind_error_counter_);
     }
-    callstack->set_type(Callstack::kCallstackPatchingFailed);
-    return;
+
+    return Callstack::kCallstackPatchingFailed;
   }
+
+  return Callstack::kComplete;
 }
 
 void UprobesUnwindingVisitor::Visit(uint64_t event_timestamp,
@@ -330,7 +322,7 @@ void UprobesUnwindingVisitor::Visit(uint64_t event_timestamp,
   sample.set_timestamp_ns(event_timestamp);
 
   Callstack* callstack = sample.mutable_callstack();
-  HandleErrorCasesAndPatchCallchain(callstack, event_data);
+  callstack->set_type(ComputeCallstackTypeFromCallchainAndPatch(event_data));
 
   // Skip the first frame as the top of a perf_event_open callchain is always inside kernel code.
   callstack->add_pcs(event_data.GetCallchain()[1]);

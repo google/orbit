@@ -98,10 +98,10 @@ class UprobesUnwindingVisitor : public PerfEventVisitor {
                  uint64_t function_id);
   void OnUretprobes(uint64_t timestamp_ns, pid_t pid, pid_t tid, std::optional<uint64_t> ax);
 
-  void HandleErrorCasesAndPatchStackSample(orbit_grpc_protos::Callstack* callstack,
-                                           const LibunwindstackResult& libunwindstack_result);
-  void HandleErrorCasesAndPatchCallchain(orbit_grpc_protos::Callstack* callstack,
-                                         const CallchainSamplePerfEventData& event_data);
+  [[nodiscard]] orbit_grpc_protos::Callstack::CallstackType ComputeCallstackTypeFromStackSample(
+      const LibunwindstackResult& libunwindstack_result);
+  [[nodiscard]] orbit_grpc_protos::Callstack::CallstackType
+  ComputeCallstackTypeFromCallchainAndPatch(const CallchainSamplePerfEventData& event_data);
 
   TracerListener* listener_;
 

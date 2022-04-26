@@ -613,7 +613,7 @@ TEST_F(UprobesUnwindingVisitorTest, VisitEmptyStackSampleWithoutUprobesDoesNothi
 }
 
 TEST_F(UprobesUnwindingVisitorTest,
-       VisitInvalidStackSampleWithoutUprobesSendsUnwindingErrorAndAddressInfo) {
+       VisitInvalidStackSampleWithoutUprobesSendsUnwindingErrorAndAddressInfos) {
   StackSamplePerfEvent event = BuildFakeStackSamplePerfEvent();
 
   EXPECT_CALL(return_address_manager_, PatchSample).Times(1).WillRepeatedly(Return());
@@ -643,7 +643,6 @@ TEST_F(UprobesUnwindingVisitorTest,
 
   PerfEvent{std::move(event)}.Accept(&visitor_);
 
-  // On unwinding errors, only the first frame is added to the Callstack.
   EXPECT_THAT(actual_callstack_sample.callstack().pcs(),
               ElementsAre(kTargetAddress1, kTargetAddress2));
   EXPECT_EQ(actual_callstack_sample.callstack().type(),
@@ -665,7 +664,7 @@ TEST_F(UprobesUnwindingVisitorTest,
 }
 
 TEST_F(UprobesUnwindingVisitorTest,
-       VisitSingleFrameStackSampleWithoutUprobesSendsUnwindingErrorAndAddressInfo) {
+       VisitSingleFrameStackSampleWithoutUprobesSendsUnwindingErrorAndAddressInfos) {
   StackSamplePerfEvent event = BuildFakeStackSamplePerfEvent();
 
   EXPECT_CALL(return_address_manager_, PatchSample).Times(1).WillOnce(Return());
