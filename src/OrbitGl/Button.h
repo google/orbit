@@ -5,6 +5,8 @@
 #ifndef ORBIT_GL_BUTTON_H_
 #define ORBIT_GL_BUTTON_H_
 
+#include <functional>
+
 #include "CaptureViewElement.h"
 #include "TimeGraphLayout.h"
 #include "Viewport.h"
@@ -23,6 +25,11 @@ class Button : public CaptureViewElement {
   void SetLabel(const std::string& label);
   [[nodiscard]] const std::string& GetLabel() const { return label_; }
 
+  using MouseReleaseCallback = std::function<void(Button*)>;
+  void SetMouseReleaseCallback(MouseReleaseCallback callback);
+
+  void OnRelease() override;
+
  protected:
   void DoUpdateLayout() override;
 
@@ -32,6 +39,8 @@ class Button : public CaptureViewElement {
 
   float height_ = 0.f;
   std::string label_;
+
+  MouseReleaseCallback mouse_release_callback_ = nullptr;
 };
 }  // namespace orbit_gl
 
