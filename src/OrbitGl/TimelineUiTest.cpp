@@ -68,7 +68,7 @@ class TimelineUiTest : public TimelineUi {
     // position and they will appear at the right of each major tick. The only exception is about
     // labels with the same number of digits when the number of hours is greater than 100. The hour
     // part of the iso timestamp will have 2 digits when it's smaller than 100.
-    if (max_tick <= 100 * kNanosecondsPerHour) {
+    if (max_tick < 100 * kNanosecondsPerHour) {
       EXPECT_TRUE(mock_text_renderer_.HasAddTextsSameLength());
     }
     EXPECT_TRUE(mock_text_renderer_.AreAddTextsAlignedVertically());
@@ -106,10 +106,12 @@ static void TestUpdatePrimitivesWithSeveralRanges(int world_width) {
   Viewport viewport(world_width, 0);
   TimelineUiTest timeline_ui_test(&mock_timeline_info, &viewport, &layout);
   timeline_ui_test.TestUpdatePrimitives(0, 100);
-  timeline_ui_test.TestUpdatePrimitives(1'000'000'000, 1'000'000'100);
-  timeline_ui_test.TestUpdatePrimitives(0, 999'999'000);
-  timeline_ui_test.TestUpdatePrimitives(0, 999'999'999);
-  timeline_ui_test.TestUpdatePrimitives(0, 1'000'000'000);
+  timeline_ui_test.TestUpdatePrimitives(kNanosecondsPerSecond, kNanosecondsPerSecond + 100);
+  timeline_ui_test.TestUpdatePrimitives(0, kNanosecondsPerSecond - 100);
+  timeline_ui_test.TestUpdatePrimitives(0, kNanosecondsPerSecond - 1);
+  timeline_ui_test.TestUpdatePrimitives(0, kNanosecondsPerSecond);
+  timeline_ui_test.TestUpdatePrimitives(0, 59 * kNanosecondsPerMinute);
+  timeline_ui_test.TestUpdatePrimitives(90 * kNanosecondsPerHour, 100 * kNanosecondsPerHour);
 
   // Maximum supported timestamp: 1 Month.
   std::mt19937 gen;
