@@ -34,7 +34,7 @@ using orbit_grpc_protos::Callstack;
 //     (b) We are in a leaf function that modified $rbp. The complete callchain is broken and should
 //         be reported as unwinding error.
 // As libunwindstack does not report us the canonical frame address (CFA) from an unwinding step, we
-// can not differentiate between (2a) and (2b) reliably. However, we do perform the following
+// cannot differentiate between (2a) and (2b) reliably. However, we do perform the following
 // validity checks (for the reasoning remember that the stack grows downwards):
 // (I)   If the CFA is computed using $rbp + 16, we know the $rbp was correct, i.e. case (2a)
 // (II)  If $rbp is below $rsp, $rbp is not a frame pointer, i.e. case (2b)
@@ -82,8 +82,8 @@ Callstack::CallstackType LeafFunctionCallManager::PatchCallerOfLeafFunction(
       event_data->pid, current_maps->Get(), event_data->GetRegisters(), event_data->GetStackData(),
       std::min<uint64_t>(stack_size, stack_dump_size_), true, /*max_frames=*/1);
 
-  // If unwinding a single frame yields a success, we are in the outer-most frame, i.e. don't have
-  // a caller to patch in.
+  // If unwinding a single frame yields a success, we are in the outer-most frame, i.e. we don't
+  // have a caller to patch in.
   if (libunwindstack_result.IsSuccess()) {
     return Callstack::kComplete;
   }
@@ -106,7 +106,7 @@ Callstack::CallstackType LeafFunctionCallManager::PatchCallerOfLeafFunction(
   if (new_rbp != rbp) {
     // If the $rbp after unwinding is below the sampled $rbp, the sampled $rbp could not be a valid
     // frame pointer (remember the stack grows downwards).
-    // Note, that in addition to this check, we also check if the complete callchain is in
+    // Note that, in addition to this check, we also check if the complete callchain is in
     // executable code in the UprobesUnwindingVisitor.
     if (new_rbp < rbp) {
       return Callstack::kFramePointerUnwindingError;
