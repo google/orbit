@@ -55,13 +55,13 @@ class TimelineUiTest : public TimelineUi {
 
     // Depending on the scale, there should be 1, 2 or 4 minor ticks between each major tick, which
     // means that (calling MT to the number of major ticks, and mt to the number of minor ticks)
-    // mt is between (MT-1, MT+1), (2*(MT-1), 2x(MT+1)) or (4x(MT-1), 4x(MT+1)).
+    // mt is between (MT-1, MT+1), (2*(MT-1), 2*(MT+1)) or (4*(MT-1), 4*(MT+1)).
     EXPECT_GE(num_minor_ticks, num_major_ticks - 1);
     EXPECT_LE(num_minor_ticks, 4 * (num_major_ticks + 1));
     EXPECT_THAT(num_minor_ticks,
                 testing::AnyOf(testing::Le(num_major_ticks + 1),
                                testing::AllOf(testing::Ge(2 * (num_major_ticks - 1)),
-                                              testing::Le(2 * num_major_ticks + 1)),
+                                              testing::Le(2 * (num_major_ticks + 1))),
                                testing::Ge(4 * (num_major_ticks - 1))));
 
     // Generally, labels should all have the same number of digits, start at the same vertical
