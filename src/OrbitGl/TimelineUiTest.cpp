@@ -53,17 +53,24 @@ class TimelineUiTest : public TimelineUi {
     }
     EXPECT_LE(num_major_ticks, 10);
 
-    // Depending on the scale, there should be 1 minor ticks or 4 between each major tick, which
+    // Depending on the scale, there should be 1, 2 or 4 minor ticks between each major tick, which
     // means that (calling MT to the number of major ticks, and mt to the number of minor ticks)
-    // mt is between (MT-1, MT+1) or mt is between (4x(MT-1), 4x(MT+1)).
+    // mt is between (MT-1, MT+1), (2*(MT-1), 2x(MT+1)) or (4x(MT-1), 4x(MT+1)).
     EXPECT_GE(num_minor_ticks, num_major_ticks - 1);
     EXPECT_LE(num_minor_ticks, 4 * (num_major_ticks + 1));
-    EXPECT_THAT(num_minor_ticks, testing::AnyOf(testing::Le(num_major_ticks + 1),
-                                                testing::Ge(4 * (num_major_ticks - 1))));
+    EXPECT_THAT(num_minor_ticks,
+                testing::AnyOf(testing::Le(num_major_ticks + 1),
+                               testing::AllOf(testing::Ge(2 * (num_major_ticks - 1)),
+                                              testing::Le(2 * num_major_ticks + 1)),
+                               testing::Ge(4 * (num_major_ticks - 1))));
 
-    // Labels should all have the same number of digits, start at the same vertical position and
-    // they will appear at the right of each major tick.
-    EXPECT_TRUE(mock_text_renderer_.HasAddTextsSameLength());
+    // Generally, labels should all have the same number of digits, start at the same vertical
+    // position and they will appear at the right of each major tick. The only exception is about
+    // labels with the same number of digits when the number of hours is greater than 100. The hour
+    // part of the iso timestamp will have 2 digits when it's smaller than 100.
+    if (max_tick <= 100 * kNanosecondsPerHour) {
+      EXPECT_TRUE(mock_text_renderer_.HasAddTextsSameLength());
+    }
     EXPECT_TRUE(mock_text_renderer_.AreAddTextsAlignedVertically());
 
     // TODO(b/218311326): In some cases, small screens (Width < 700) failed in the condition between
@@ -106,7 +113,7 @@ static void TestUpdatePrimitivesWithSeveralRanges(int world_width) {
 
   // Maximum supported timestamp: 1 Month.
   std::mt19937 gen;
-  std::uniform_int_distribution<> distrib(0, kNanosecondsPerMonth);
+  std::uniform_int_distribution<uint64_t> distrib(0, kNanosecondsPerMonth);
 
   for (int i = 0; i < 100; i++) {
     uint64_t timestamp_1 = distrib(gen);
