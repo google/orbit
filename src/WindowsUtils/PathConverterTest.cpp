@@ -22,14 +22,7 @@ TEST(PathConverter, ListDevices) {
       converter->GetDeviceToVolumeInfoMap();
 
   ASSERT_FALSE(device_to_volume_info_map.empty());
-
-  for (const auto& [device, volume_info] : device_to_volume_info_map) {
-    std::string paths;
-    for (const std::string& path : volume_info.paths) {
-      paths += path + " ";
-    }
-    ORBIT_LOG("device: %s volume: %s paths: %s", device, volume_info.volume_name, paths);
-  }
+  ORBIT_LOG("%s", converter->ToString());
 }
 
 TEST(PathConverter, ContainsCurrentDrive) {

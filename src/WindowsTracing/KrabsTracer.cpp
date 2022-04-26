@@ -240,7 +240,8 @@ void KrabsTracer::OnImageLoadEvent(const EVENT_RECORD& record,
       if (result.has_value()) {
         module.full_path = result.value();
       } else {
-        ORBIT_ERROR("Calling \"DeviceToDrive\": %s", result.error().message());
+        ORBIT_ERROR("Calling \"DeviceToDrive\": %s %s", result.error().message(),
+                    path_converter_->ToString());
       }
     }
 

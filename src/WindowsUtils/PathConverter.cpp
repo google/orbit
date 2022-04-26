@@ -113,8 +113,23 @@ class PathConverterImpl : public orbit_windows_utils::PathConverter {
         return volume_info.paths[0] + suffix;
       }
     }
-    return ErrorMessage(absl::StrFormat("Could not convert path %s", full_path));
+
+    return ErrorMessage(absl::StrFormat("Could not convert path %s\n %s", full_path, ToString()));
   }
+
+   std::string ToString() const override {
+     std::string summary =
+         absl::StrFormat("PathConverter has %u device names:", device_to_volume_info_map_.size());
+     for (const auto& [device, volume_info] : device_to_volume_info_map_) {
+       std::string paths;
+       for (const std::string& path : volume_info.paths) {
+         paths += path + " ";
+       }
+       summary += absl::StrFormat("device: %s volume: %s paths: %s\n", device,
+                                  volume_info.volume_name, paths);
+     }
+     return summary;
+   }
 
  private:
   absl::flat_hash_map<std::string, VolumeInfo> device_to_volume_info_map_;

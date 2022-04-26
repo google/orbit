@@ -26,6 +26,9 @@ struct PathConverter {
   // Return a map of device names to VolumeInfo objects.
   virtual const absl::flat_hash_map<std::string, VolumeInfo>& GetDeviceToVolumeInfoMap() = 0;
 
+  // Return a summary of the path converter as string.
+  [[nodiscard]] virtual std::string ToString() const = 0;
+
   // Create a converter.
   static ErrorMessageOr<std::unique_ptr<PathConverter>> Create();
 };

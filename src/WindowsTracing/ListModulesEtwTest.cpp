@@ -26,19 +26,17 @@ using orbit_windows_utils::Module;
 TEST(ListModulesEtw, ContainsCurrentExecutable) {
   uint32_t pid = orbit_base::GetCurrentProcessId();
   std::vector<Module> modules = ListModulesEtw(pid);
-  EXPECT_NE(modules.size(), 0);
+  ASSERT_NE(modules.size(), 0);
 
   std::filesystem::path this_module_path = orbit_base::GetExecutablePath();
   bool found_this_module = false;
   for (const Module& module : modules) {
-    ORBIT_LOG("Module name: %s", module.name);
-    ORBIT_LOG("Module full_path: %s", module.full_path);
-    if (module.full_path == this_module_path) {
-      found_this_module = true;
-      break;
+    if (std::filesystem::path(module.full_path).filename() == this_module_path.filename()) {
+      return;
     }
   }
-  EXPECT_TRUE(found_this_module);
+
+  FAIL() << "ListModulesEtw did not find current executable";
 }
 
 }  // namespace orbit_windows_tracing
