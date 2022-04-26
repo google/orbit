@@ -197,5 +197,8 @@ TEST(CaptureViewElement, RequestUpdateBubblesUpAndIsClearedAfterDrawLoop) {
   // ... and a request with the default value should also require "UpdatePrimitives"
   child.GetAllChildren()[0]->RequestUpdate();
   tester.SimulateDrawLoopAndCheckFlags(&root, true, true);
+
+  // Finally: There shouldn't be any draws required after a render loop has happened
+  tester.SimulateDrawLoopAndCheckFlags(&root, false, false);
 }
 }  // namespace orbit_gl
