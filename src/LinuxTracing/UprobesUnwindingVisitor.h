@@ -15,6 +15,7 @@
 #include <utility>
 #include <vector>
 
+#include "GrpcProtos/capture.pb.h"
 #include "LeafFunctionCallManager.h"
 #include "LibunwindstackMaps.h"
 #include "LibunwindstackUnwinder.h"
@@ -96,6 +97,11 @@ class UprobesUnwindingVisitor : public PerfEventVisitor {
                  std::optional<perf_event_sample_regs_user_sp_ip_arguments> registers,
                  uint64_t function_id);
   void OnUretprobes(uint64_t timestamp_ns, pid_t pid, pid_t tid, std::optional<uint64_t> ax);
+
+  [[nodiscard]] orbit_grpc_protos::Callstack::CallstackType ComputeCallstackTypeFromStackSample(
+      const LibunwindstackResult& libunwindstack_result);
+  [[nodiscard]] orbit_grpc_protos::Callstack::CallstackType
+  ComputeCallstackTypeFromCallchainAndPatch(const CallchainSamplePerfEventData& event_data);
 
   TracerListener* listener_;
 

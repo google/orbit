@@ -613,7 +613,7 @@ TEST_F(UprobesUnwindingVisitorTest, VisitEmptyStackSampleWithoutUprobesDoesNothi
 }
 
 TEST_F(UprobesUnwindingVisitorTest,
-       VisitInvalidStackSampleWithoutUprobesSendsUnwindingErrorAndAddressInfo) {
+       VisitInvalidStackSampleWithoutUprobesSendsUnwindingErrorAndAddressInfos) {
   StackSamplePerfEvent event = BuildFakeStackSamplePerfEvent();
 
   EXPECT_CALL(return_address_manager_, PatchSample).Times(1).WillRepeatedly(Return());
@@ -634,7 +634,7 @@ TEST_F(UprobesUnwindingVisitorTest,
       [&actual_address_infos](orbit_grpc_protos::FullAddressInfo actual_address_info) {
         actual_address_infos.push_back(std::move(actual_address_info));
       };
-  EXPECT_CALL(listener_, OnAddressInfo).Times(1).WillRepeatedly(Invoke(save_address_info));
+  EXPECT_CALL(listener_, OnAddressInfo).Times(2).WillRepeatedly(Invoke(save_address_info));
 
   std::atomic<uint64_t> unwinding_errors = 0;
   std::atomic<uint64_t> discarded_samples_in_uretprobes_counter = 0;
@@ -643,23 +643,28 @@ TEST_F(UprobesUnwindingVisitorTest,
 
   PerfEvent{std::move(event)}.Accept(&visitor_);
 
-  // On unwinding errors, only the first frame is added to the Callstack.
-  EXPECT_THAT(actual_callstack_sample.callstack().pcs(), ElementsAre(kTargetAddress1));
+  EXPECT_THAT(actual_callstack_sample.callstack().pcs(),
+              ElementsAre(kTargetAddress1, kTargetAddress2));
   EXPECT_EQ(actual_callstack_sample.callstack().type(),
             orbit_grpc_protos::Callstack::kDwarfUnwindingError);
-  EXPECT_THAT(actual_address_infos,
-              UnorderedElementsAre(AllOf(
-                  Property(&orbit_grpc_protos::FullAddressInfo::absolute_address, kTargetAddress1),
-                  Property(&orbit_grpc_protos::FullAddressInfo::function_name, kFunctionName1),
-                  Property(&orbit_grpc_protos::FullAddressInfo::offset_in_function, 0),
-                  Property(&orbit_grpc_protos::FullAddressInfo::module_name, kTargetName))));
+  EXPECT_THAT(
+      actual_address_infos,
+      UnorderedElementsAre(
+          AllOf(Property(&orbit_grpc_protos::FullAddressInfo::absolute_address, kTargetAddress1),
+                Property(&orbit_grpc_protos::FullAddressInfo::function_name, kFunctionName1),
+                Property(&orbit_grpc_protos::FullAddressInfo::offset_in_function, 0),
+                Property(&orbit_grpc_protos::FullAddressInfo::module_name, kTargetName)),
+          AllOf(Property(&orbit_grpc_protos::FullAddressInfo::absolute_address, kTargetAddress2),
+                Property(&orbit_grpc_protos::FullAddressInfo::function_name, kFunctionName2),
+                Property(&orbit_grpc_protos::FullAddressInfo::offset_in_function, 0),
+                Property(&orbit_grpc_protos::FullAddressInfo::module_name, kTargetName))));
 
   EXPECT_EQ(unwinding_errors, 1);
   EXPECT_EQ(discarded_samples_in_uretprobes_counter, 0);
 }
 
 TEST_F(UprobesUnwindingVisitorTest,
-       VisitSingleFrameStackSampleWithoutUprobesSendsUnwindingErrorAndAddressInfo) {
+       VisitSingleFrameStackSampleWithoutUprobesSendsUnwindingErrorAndAddressInfos) {
   StackSamplePerfEvent event = BuildFakeStackSamplePerfEvent();
 
   EXPECT_CALL(return_address_manager_, PatchSample).Times(1).WillOnce(Return());
@@ -723,7 +728,7 @@ TEST_F(UprobesUnwindingVisitorTest, VisitStackSampleWithinUprobeSendsInUprobesCa
       [&actual_address_infos](orbit_grpc_protos::FullAddressInfo actual_address_info) {
         actual_address_infos.push_back(std::move(actual_address_info));
       };
-  EXPECT_CALL(listener_, OnAddressInfo).Times(1).WillRepeatedly(Invoke(save_address_info));
+  EXPECT_CALL(listener_, OnAddressInfo).Times(2).WillRepeatedly(Invoke(save_address_info));
 
   std::atomic<uint64_t> unwinding_errors = 0;
   std::atomic<uint64_t> discarded_samples_in_uretprobes_counter = 0;
@@ -732,15 +737,20 @@ TEST_F(UprobesUnwindingVisitorTest, VisitStackSampleWithinUprobeSendsInUprobesCa
 
   PerfEvent{std::move(event)}.Accept(&visitor_);
 
-  EXPECT_THAT(actual_callstack_sample.callstack().pcs(), ElementsAre(kUprobesMapsStart));
+  EXPECT_THAT(actual_callstack_sample.callstack().pcs(),
+              ElementsAre(kUprobesMapsStart, kTargetAddress2));
   EXPECT_EQ(actual_callstack_sample.callstack().type(), orbit_grpc_protos::Callstack::kInUprobes);
   EXPECT_THAT(
       actual_address_infos,
       UnorderedElementsAre(
           AllOf(Property(&orbit_grpc_protos::FullAddressInfo::absolute_address, kUprobesMapsStart),
-                Property(&orbit_grpc_protos::FullAddressInfo::function_name, "[uprobes]"),
+                Property(&orbit_grpc_protos::FullAddressInfo::function_name, kUprobesName),
                 Property(&orbit_grpc_protos::FullAddressInfo::offset_in_function, 0),
-                Property(&orbit_grpc_protos::FullAddressInfo::module_name, "[uprobes]"))));
+                Property(&orbit_grpc_protos::FullAddressInfo::module_name, kUprobesName)),
+          AllOf(Property(&orbit_grpc_protos::FullAddressInfo::absolute_address, kTargetAddress2),
+                Property(&orbit_grpc_protos::FullAddressInfo::function_name, kFunctionName2),
+                Property(&orbit_grpc_protos::FullAddressInfo::offset_in_function, 0),
+                Property(&orbit_grpc_protos::FullAddressInfo::module_name, kTargetName))));
 
   EXPECT_EQ(unwinding_errors, 0);
   EXPECT_EQ(discarded_samples_in_uretprobes_counter, 1);
@@ -763,7 +773,12 @@ TEST_F(
   orbit_grpc_protos::FullCallstackSample actual_callstack_sample;
   EXPECT_CALL(listener_, OnCallstackSample).Times(1).WillOnce(SaveArg<0>(&actual_callstack_sample));
 
-  EXPECT_CALL(listener_, OnAddressInfo).Times(0);
+  std::vector<orbit_grpc_protos::FullAddressInfo> actual_address_infos;
+  auto save_address_info =
+      [&actual_address_infos](orbit_grpc_protos::FullAddressInfo actual_address_info) {
+        actual_address_infos.push_back(std::move(actual_address_info));
+      };
+  EXPECT_CALL(listener_, OnAddressInfo).Times(2).WillRepeatedly(Invoke(save_address_info));
 
   std::atomic<uint64_t> unwinding_errors = 0;
   std::atomic<uint64_t> discarded_samples_in_uretprobes_counter = 0;
@@ -772,9 +787,23 @@ TEST_F(
 
   PerfEvent{std::move(event)}.Accept(&visitor_);
 
-  EXPECT_THAT(actual_callstack_sample.callstack().pcs(), ElementsAre(kEntryTrampolineAddress));
+  EXPECT_THAT(actual_callstack_sample.callstack().pcs(),
+              ElementsAre(kEntryTrampolineAddress, kTargetAddress2));
   EXPECT_EQ(actual_callstack_sample.callstack().type(),
             orbit_grpc_protos::Callstack::kInUserSpaceInstrumentation);
+  EXPECT_THAT(
+      actual_address_infos,
+      UnorderedElementsAre(
+          AllOf(Property(&orbit_grpc_protos::FullAddressInfo::absolute_address,
+                         kEntryTrampolineAddress),
+                Property(&orbit_grpc_protos::FullAddressInfo::function_name,
+                         kEntryTrampolineFunctionName),
+                Property(&orbit_grpc_protos::FullAddressInfo::offset_in_function, 0),
+                Property(&orbit_grpc_protos::FullAddressInfo::module_name, "")),
+          AllOf(Property(&orbit_grpc_protos::FullAddressInfo::absolute_address, kTargetAddress2),
+                Property(&orbit_grpc_protos::FullAddressInfo::function_name, kFunctionName2),
+                Property(&orbit_grpc_protos::FullAddressInfo::offset_in_function, 0),
+                Property(&orbit_grpc_protos::FullAddressInfo::module_name, kTargetName))));
 
   EXPECT_EQ(unwinding_errors, 0);
   EXPECT_EQ(discarded_samples_in_uretprobes_counter, 0);
@@ -803,7 +832,7 @@ TEST_F(
       [&actual_address_infos](orbit_grpc_protos::FullAddressInfo actual_address_info) {
         actual_address_infos.push_back(std::move(actual_address_info));
       };
-  EXPECT_CALL(listener_, OnAddressInfo).Times(1).WillRepeatedly(Invoke(save_address_info));
+  EXPECT_CALL(listener_, OnAddressInfo).Times(4).WillRepeatedly(Invoke(save_address_info));
 
   std::atomic<uint64_t> unwinding_errors = 0;
   std::atomic<uint64_t> discarded_samples_in_uretprobes_counter = 0;
@@ -814,15 +843,34 @@ TEST_F(
 
   // While this is a Callstack::kInUserSpaceInstrumentation, the innermost frame we used is still
   // one of the "regular" frames in the target, i.e., kFrame1.
-  EXPECT_THAT(actual_callstack_sample.callstack().pcs(), ElementsAre(kTargetAddress1));
+  EXPECT_THAT(actual_callstack_sample.callstack().pcs(),
+              ElementsAre(kTargetAddress1, kUserSpaceLibraryAddress, kTargetAddress3,
+                          kEntryTrampolineAddress));
   EXPECT_EQ(actual_callstack_sample.callstack().type(),
             orbit_grpc_protos::Callstack::kInUserSpaceInstrumentation);
-  EXPECT_THAT(actual_address_infos,
-              UnorderedElementsAre(AllOf(
-                  Property(&orbit_grpc_protos::FullAddressInfo::absolute_address, kTargetAddress1),
-                  Property(&orbit_grpc_protos::FullAddressInfo::function_name, kFunctionName1),
-                  Property(&orbit_grpc_protos::FullAddressInfo::offset_in_function, 0),
-                  Property(&orbit_grpc_protos::FullAddressInfo::module_name, kTargetName))));
+  EXPECT_THAT(
+      actual_address_infos,
+      UnorderedElementsAre(
+          AllOf(Property(&orbit_grpc_protos::FullAddressInfo::absolute_address, kTargetAddress1),
+                Property(&orbit_grpc_protos::FullAddressInfo::function_name, kFunctionName1),
+                Property(&orbit_grpc_protos::FullAddressInfo::offset_in_function, 0),
+                Property(&orbit_grpc_protos::FullAddressInfo::module_name, kTargetName)),
+          AllOf(Property(&orbit_grpc_protos::FullAddressInfo::absolute_address,
+                         kUserSpaceLibraryAddress),
+                Property(&orbit_grpc_protos::FullAddressInfo::function_name,
+                         kUserSpaceLibraryFunctionName),
+                Property(&orbit_grpc_protos::FullAddressInfo::offset_in_function, 0),
+                Property(&orbit_grpc_protos::FullAddressInfo::module_name, kUserSpaceLibraryName)),
+          AllOf(Property(&orbit_grpc_protos::FullAddressInfo::absolute_address, kTargetAddress3),
+                Property(&orbit_grpc_protos::FullAddressInfo::function_name, kFunctionName3),
+                Property(&orbit_grpc_protos::FullAddressInfo::offset_in_function, 0),
+                Property(&orbit_grpc_protos::FullAddressInfo::module_name, kTargetName)),
+          AllOf(Property(&orbit_grpc_protos::FullAddressInfo::absolute_address,
+                         kEntryTrampolineAddress),
+                Property(&orbit_grpc_protos::FullAddressInfo::function_name,
+                         kEntryTrampolineFunctionName),
+                Property(&orbit_grpc_protos::FullAddressInfo::offset_in_function, 0),
+                Property(&orbit_grpc_protos::FullAddressInfo::module_name, ""))));
 
   EXPECT_EQ(unwinding_errors, 0);
   EXPECT_EQ(discarded_samples_in_uretprobes_counter, 0);
@@ -904,7 +952,7 @@ TEST_F(UprobesUnwindingVisitorTest, VisitStackSampleStoppedAtUprobesSendsPatchin
       [&actual_address_infos](orbit_grpc_protos::FullAddressInfo actual_address_info) {
         actual_address_infos.push_back(std::move(actual_address_info));
       };
-  EXPECT_CALL(listener_, OnAddressInfo).Times(1).WillRepeatedly(Invoke(save_address_info));
+  EXPECT_CALL(listener_, OnAddressInfo).Times(2).WillRepeatedly(Invoke(save_address_info));
 
   std::atomic<uint64_t> unwinding_errors = 0;
   std::atomic<uint64_t> discarded_samples_in_uretprobes_counter = 0;
@@ -913,15 +961,21 @@ TEST_F(UprobesUnwindingVisitorTest, VisitStackSampleStoppedAtUprobesSendsPatchin
 
   PerfEvent{std::move(event)}.Accept(&visitor_);
 
-  EXPECT_THAT(actual_callstack_sample.callstack().pcs(), ElementsAre(kTargetAddress1));
+  EXPECT_THAT(actual_callstack_sample.callstack().pcs(),
+              ElementsAre(kTargetAddress1, kUprobesMapsStart));
   EXPECT_EQ(actual_callstack_sample.callstack().type(),
             orbit_grpc_protos::Callstack::kCallstackPatchingFailed);
-  EXPECT_THAT(actual_address_infos,
-              UnorderedElementsAre(AllOf(
-                  Property(&orbit_grpc_protos::FullAddressInfo::absolute_address, kTargetAddress1),
-                  Property(&orbit_grpc_protos::FullAddressInfo::function_name, kFunctionName1),
-                  Property(&orbit_grpc_protos::FullAddressInfo::offset_in_function, 0),
-                  Property(&orbit_grpc_protos::FullAddressInfo::module_name, kTargetName))));
+  EXPECT_THAT(
+      actual_address_infos,
+      UnorderedElementsAre(
+          AllOf(Property(&orbit_grpc_protos::FullAddressInfo::absolute_address, kTargetAddress1),
+                Property(&orbit_grpc_protos::FullAddressInfo::function_name, kFunctionName1),
+                Property(&orbit_grpc_protos::FullAddressInfo::offset_in_function, 0),
+                Property(&orbit_grpc_protos::FullAddressInfo::module_name, kTargetName)),
+          AllOf(Property(&orbit_grpc_protos::FullAddressInfo::absolute_address, kUprobesMapsStart),
+                Property(&orbit_grpc_protos::FullAddressInfo::function_name, kUprobesName),
+                Property(&orbit_grpc_protos::FullAddressInfo::offset_in_function, 0),
+                Property(&orbit_grpc_protos::FullAddressInfo::module_name, kUprobesName))));
 
   EXPECT_EQ(unwinding_errors, 1);
   EXPECT_EQ(discarded_samples_in_uretprobes_counter, 0);
@@ -948,7 +1002,7 @@ TEST_F(UprobesUnwindingVisitorTest,
       [&actual_address_infos](orbit_grpc_protos::FullAddressInfo actual_address_info) {
         actual_address_infos.push_back(std::move(actual_address_info));
       };
-  EXPECT_CALL(listener_, OnAddressInfo).Times(1).WillRepeatedly(Invoke(save_address_info));
+  EXPECT_CALL(listener_, OnAddressInfo).Times(2).WillRepeatedly(Invoke(save_address_info));
 
   std::atomic<uint64_t> unwinding_errors = 0;
   std::atomic<uint64_t> discarded_samples_in_uretprobes_counter = 0;
@@ -957,15 +1011,23 @@ TEST_F(UprobesUnwindingVisitorTest,
 
   PerfEvent{std::move(event)}.Accept(&visitor_);
 
-  EXPECT_THAT(actual_callstack_sample.callstack().pcs(), ElementsAre(kTargetAddress1));
+  EXPECT_THAT(actual_callstack_sample.callstack().pcs(),
+              ElementsAre(kTargetAddress1, kReturnTrampolineAddress));
   EXPECT_EQ(actual_callstack_sample.callstack().type(),
             orbit_grpc_protos::Callstack::kCallstackPatchingFailed);
-  EXPECT_THAT(actual_address_infos,
-              UnorderedElementsAre(AllOf(
-                  Property(&orbit_grpc_protos::FullAddressInfo::absolute_address, kTargetAddress1),
-                  Property(&orbit_grpc_protos::FullAddressInfo::function_name, kFunctionName1),
-                  Property(&orbit_grpc_protos::FullAddressInfo::offset_in_function, 0),
-                  Property(&orbit_grpc_protos::FullAddressInfo::module_name, kTargetName))));
+  EXPECT_THAT(
+      actual_address_infos,
+      UnorderedElementsAre(
+          AllOf(Property(&orbit_grpc_protos::FullAddressInfo::absolute_address, kTargetAddress1),
+                Property(&orbit_grpc_protos::FullAddressInfo::function_name, kFunctionName1),
+                Property(&orbit_grpc_protos::FullAddressInfo::offset_in_function, 0),
+                Property(&orbit_grpc_protos::FullAddressInfo::module_name, kTargetName)),
+          AllOf(Property(&orbit_grpc_protos::FullAddressInfo::absolute_address,
+                         kReturnTrampolineAddress),
+                Property(&orbit_grpc_protos::FullAddressInfo::function_name,
+                         kReturnTrampolineFunctionName),
+                Property(&orbit_grpc_protos::FullAddressInfo::offset_in_function, 0),
+                Property(&orbit_grpc_protos::FullAddressInfo::module_name, ""))));
 
   EXPECT_EQ(unwinding_errors, 1);
   EXPECT_EQ(discarded_samples_in_uretprobes_counter, 0);
@@ -1061,7 +1123,8 @@ TEST_F(UprobesUnwindingVisitorTest, VisitCallchainSampleInsideUprobeCodeSendsInU
 
   PerfEvent{std::move(event)}.Accept(&visitor_);
 
-  EXPECT_THAT(actual_callstack_sample.callstack().pcs(), ElementsAre(kUprobesMapsStart));
+  EXPECT_THAT(actual_callstack_sample.callstack().pcs(),
+              ElementsAre(kUprobesMapsStart, kTargetAddress2, kTargetAddress3));
   EXPECT_EQ(actual_callstack_sample.callstack().type(), orbit_grpc_protos::Callstack::kInUprobes);
 
   EXPECT_EQ(unwinding_errors, 0);
@@ -1098,7 +1161,8 @@ TEST_F(
 
   PerfEvent{std::move(event)}.Accept(&visitor_);
 
-  EXPECT_THAT(actual_callstack_sample.callstack().pcs(), ElementsAre(kEntryTrampolineAddress));
+  EXPECT_THAT(actual_callstack_sample.callstack().pcs(),
+              ElementsAre(kEntryTrampolineAddress, kTargetAddress2, kTargetAddress3));
   EXPECT_EQ(actual_callstack_sample.callstack().type(),
             orbit_grpc_protos::Callstack::kInUserSpaceInstrumentation);
 
@@ -1140,7 +1204,9 @@ TEST_F(
 
   // While this is a Callstack::kInUserSpaceInstrumentation, the innermost frame we used is still
   // one of the "regular" frames in the target, i.e., at kTargetAddress1.
-  EXPECT_THAT(actual_callstack_sample.callstack().pcs(), ElementsAre(kTargetAddress1));
+  EXPECT_THAT(actual_callstack_sample.callstack().pcs(),
+              ElementsAre(kTargetAddress1, kUserSpaceLibraryAddress, kTargetAddress3,
+                          kEntryTrampolineAddress));
   EXPECT_EQ(actual_callstack_sample.callstack().type(),
             orbit_grpc_protos::Callstack::kInUserSpaceInstrumentation);
 
@@ -1194,7 +1260,9 @@ TEST_F(
 
   // While this is a Callstack::kInUserSpaceInstrumentation, the innermost frame we used is still
   // one of the "regular" frames in the target, i.e., at kTargetAddress1.
-  EXPECT_THAT(actual_callstack_sample.callstack().pcs(), ElementsAre(kTargetAddress1));
+  EXPECT_THAT(actual_callstack_sample.callstack().pcs(),
+              ElementsAre(kTargetAddress1, kUserSpaceLibraryAddress, kTargetAddress3,
+                          kEntryTrampolineAddress));
   EXPECT_EQ(actual_callstack_sample.callstack().type(),
             orbit_grpc_protos::Callstack::kInUserSpaceInstrumentation);
 
@@ -1279,7 +1347,8 @@ TEST_F(UprobesUnwindingVisitorTest, VisitUnpatchableCallchainSampleSendsPatching
 
   PerfEvent{std::move(event)}.Accept(&visitor_);
 
-  EXPECT_THAT(actual_callstack_sample.callstack().pcs(), ElementsAre(kTargetAddress1));
+  EXPECT_THAT(actual_callstack_sample.callstack().pcs(),
+              ElementsAre(kTargetAddress1, kUprobesMapsStart, kTargetAddress3));
   EXPECT_EQ(actual_callstack_sample.callstack().type(),
             orbit_grpc_protos::Callstack::kCallstackPatchingFailed);
 
@@ -1367,7 +1436,8 @@ TEST_F(
 
   PerfEvent{std::move(event)}.Accept(&visitor_);
 
-  EXPECT_THAT(actual_callstack_sample.callstack().pcs(), ElementsAre(kTargetAddress1));
+  EXPECT_THAT(actual_callstack_sample.callstack().pcs(),
+              ElementsAre(kTargetAddress1, kTargetAddress3));
   EXPECT_EQ(actual_callstack_sample.callstack().type(),
             orbit_grpc_protos::Callstack::kFramePointerUnwindingError);
 
