@@ -85,6 +85,10 @@ bool TimeGraphLayout::DrawProperties() {
   FLOAT_SLIDER_MIN_MAX(scale_, kMinScale, kMaxScale);
   ImGui::Checkbox("Draw Track Background", &draw_track_background_);
 
+  if (ImGui::SliderInt("Maximum # of layout loops", &max_layouting_loops_, 1, 100)) {
+    needs_redraw = true;
+  }
+
   return needs_redraw;
 }
 

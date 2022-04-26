@@ -6,10 +6,6 @@
 #include <gtest/gtest.h>
 
 #include "CaptureViewElementTester.h"
-#include "MockBatcher.h"
-#include "MockTextRenderer.h"
-#include "PickingManager.h"
-#include "PrimitiveAssembler.h"
 
 namespace orbit_gl {
 
@@ -186,58 +182,23 @@ TEST(CaptureViewElement, MouseWheelEventRecursesToCorrectChildren) {
             container_elem.HandleMouseWheelEvent(kPosOnChild2, kDelta));
 }
 
-class CaptureViewElementRoot : public CaptureViewElement, public ::testing::Test {
- public:
-  CaptureViewElementRoot() : CaptureViewElement(nullptr, &kViewport, &kLayout) {}
-  [[nodiscard]] float GetHeight() const override { return 0; }
-
- private:
-  [[nodiscard]] std::unique_ptr<orbit_accessibility::AccessibleInterface>
-  CreateAccessibleInterface() override {
-    return nullptr;
-  }
-};
-
-TEST_F(CaptureViewElementRoot, RequestUpdateBubblesUpAndIsClearedAfterDrawLoop) {
-  MockBatcher batcher;
-  MockTextRenderer text_renderer;
-  PickingManager picking_manager;
-
-  PrimitiveAssembler primitive_assembler(&batcher, &picking_manager);
-
-  auto simulate_draw_loop_and_check_flags = [&](bool draw, bool update_primitives) {
-    EXPECT_EQ(draw_requested_, draw);
-    EXPECT_EQ(update_primitives_requested_, update_primitives);
-    EXPECT_EQ(HasLayoutChanged(), draw || update_primitives);
-
-    UpdateLayout();
-    if (draw) {
-      Draw(primitive_assembler, text_renderer, CaptureViewElement::DrawContext());
-    }
-    if (update_primitives) {
-      UpdatePrimitives(primitive_assembler, text_renderer, 0, 0, PickingMode::kNone);
-    }
-
-    EXPECT_FALSE(draw_requested_);
-    EXPECT_FALSE(update_primitives_requested_);
-    EXPECT_FALSE(HasLayoutChanged());
-  };
-
-  EXPECT_FALSE(draw_requested_);
-  EXPECT_FALSE(update_primitives_requested_);
-  EXPECT_FALSE(HasLayoutChanged());
-
-  UnitTestCaptureViewContainerElement child(this, &kViewport, &kLayout, 1);
+TEST(CaptureViewElement, RequestUpdateBubblesUpAndIsClearedAfterDrawLoop) {
+  CaptureViewElementTester tester;
+  UnitTestCaptureViewContainerElement root(nullptr, &kViewport, &kLayout);
+  UnitTestCaptureViewContainerElement child(&root, &kViewport, &kLayout, 1);
 
   // On creating the child, we expect everything to be invalidated as a new child has been added
-  simulate_draw_loop_and_check_flags(true, true);
+  tester.SimulateDrawLoopAndCheckFlags(&root, true, true);
 
   // A "Draw" request should only set the "draw" flag
-  child.GetAllChildren()[0]->RequestUpdate(RequestUpdateScope::kDraw);
-  simulate_draw_loop_and_check_flags(true, false);
+  child.GetAllChildren()[0]->RequestUpdate(CaptureViewElement::RequestUpdateScope::kDraw);
+  tester.SimulateDrawLoopAndCheckFlags(&root, true, false);
 
   // ... and a request with the default value should also require "UpdatePrimitives"
   child.GetAllChildren()[0]->RequestUpdate();
-  simulate_draw_loop_and_check_flags(true, true);
+  tester.SimulateDrawLoopAndCheckFlags(&root, true, true);
+
+  // Finally: There shouldn't be any draws required after a render loop has happened
+  tester.SimulateDrawLoopAndCheckFlags(&root, false, false);
 }
 }  // namespace orbit_gl

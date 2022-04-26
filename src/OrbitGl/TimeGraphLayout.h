@@ -59,6 +59,8 @@ class TimeGraphLayout {
     return lround(GetFontSize() * GetScale());
   }
 
+  int GetMaxLayoutingLoops() const { return max_layouting_loops_; }
+
  protected:
   float text_box_height_;
   float core_height_;
@@ -98,6 +100,8 @@ class TimeGraphLayout {
 
   bool draw_properties_ = false;
   bool draw_track_background_ = true;
+
+  int max_layouting_loops_ = 10;
 
  private:
   float GetEventTrackHeight() const { return event_track_height_ * scale_; }
