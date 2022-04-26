@@ -6,6 +6,7 @@
 #define ORBIT_GL_BUTTON_H_
 
 #include <functional>
+#include <memory>
 
 #include "CaptureViewElement.h"
 #include "TimeGraphLayout.h"
@@ -30,8 +31,14 @@ class Button : public CaptureViewElement {
 
   void OnRelease() override;
 
+  static const Color kHighlightColor;
+  static const Color kBaseColor;
+  static const Color kTextColor;
+
  protected:
   void DoUpdateLayout() override;
+  void DoDraw(PrimitiveAssembler& primitive_assembler, TextRenderer& text_renderer,
+              const DrawContext& draw_context) override;
 
  private:
   [[nodiscard]] virtual std::unique_ptr<orbit_accessibility::AccessibleInterface>
