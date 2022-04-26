@@ -12,10 +12,8 @@ namespace orbit_gl {
 MockTextRenderer::MockTextRenderer() { Clear(); }
 
 void MockTextRenderer::Clear() {
-  min_point_ = Vec3{std::numeric_limits<float>::max(), std::numeric_limits<float>::max(),
-                    std::numeric_limits<float>::max()};
-  max_point_ = Vec3{std::numeric_limits<float>::lowest(), std::numeric_limits<float>::lowest(),
-                    std::numeric_limits<float>::lowest()};
+  min_point_ = Vec2{std::numeric_limits<float>::max(), std::numeric_limits<float>::max()};
+  max_point_ = Vec2{std::numeric_limits<float>::lowest(), std::numeric_limits<float>::lowest()};
   num_characters_in_add_text_.clear();
   vertical_position_in_add_text.clear();
   num_add_text_calls_ = 0;
@@ -45,8 +43,9 @@ void MockTextRenderer::AddText(const char* text, float x, float y, float z,
       break;
   }
 
-  UpdateDrawingBoundaries({real_start_x, real_start_y, z});
-  UpdateDrawingBoundaries({real_start_x + text_width, real_start_y + text_height, z});
+  AdjustDrawingBoundaries({real_start_x, real_start_y});
+  AdjustDrawingBoundaries({real_start_x + text_width, real_start_y + text_height});
+  z_layers_.insert(z);
   num_add_text_calls_++;
   num_characters_in_add_text_.insert(strlen(text));
   vertical_position_in_add_text.insert(real_start_y);
@@ -79,22 +78,22 @@ float MockTextRenderer::GetStringHeight(const char* /*text*/, uint32_t font_size
 }
 
 [[nodiscard]] bool MockTextRenderer::IsTextInsideRectangle(Vec2 start, Vec2 size) const {
-  return IsInsideRectangle(Vec3ToVec2(min_point_), start, size) &&
-         IsInsideRectangle(Vec3ToVec2(max_point_), start, size);
+  if (!GetNumAddTextCalls()) return true;
+  return IsInsideRectangle(min_point_, start, size) && IsInsideRectangle(max_point_, start, size);
 }
 
 bool MockTextRenderer::IsTextBetweenZLayers(float z_layer_min, float z_layer_max) const {
-  return IsElementOf(min_point_[2], ClosedInterval::FromValues(z_layer_min, z_layer_max)) &&
-         IsElementOf(max_point_[2], ClosedInterval::FromValues(z_layer_min, z_layer_max));
+  return std::find_if_not(
+             z_layers_.begin(), z_layers_.end(), [z_layer_min, z_layer_max](float layer) {
+               return IsElementOf(layer, ClosedInterval::FromValues(z_layer_min, z_layer_max));
+             }) == z_layers_.end();
 }
 
-void MockTextRenderer::UpdateDrawingBoundaries(Vec3 point) {
+void MockTextRenderer::AdjustDrawingBoundaries(Vec2 point) {
   min_point_[0] = std::min(point[0], min_point_[0]);
   min_point_[1] = std::min(point[1], min_point_[1]);
-  min_point_[2] = std::min(point[2], min_point_[2]);
   max_point_[0] = std::max(point[0], max_point_[0]);
   max_point_[1] = std::max(point[1], max_point_[1]);
-  max_point_[2] = std::max(point[2], max_point_[2]);
 }
 
 }  // namespace orbit_gl

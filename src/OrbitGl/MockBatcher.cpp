@@ -16,24 +16,27 @@ void MockBatcher::AddLine(Vec2 from, Vec2 to, float z, const Color& color,
   num_lines_by_color_[color]++;
   if (from[0] == to[0]) num_vertical_lines_++;
   if (from[1] == to[1]) num_horizontal_lines_++;
-  AdjustDrawingBoundaries({from[0], from[1], z});
-  AdjustDrawingBoundaries({to[0], to[1], z});
+  AdjustDrawingBoundaries({from[0], from[1]});
+  AdjustDrawingBoundaries({to[0], to[1]});
+  z_layers_.insert(z);
 }
 void MockBatcher::AddBox(const Quad& box, float z, const std::array<Color, 4>& colors,
                          const Color& /*picking_color*/,
                          std::unique_ptr<PickingUserData> /*user_data*/) {
   num_boxes_by_color_[colors[0]]++;
   for (int i = 0; i < 4; i++) {
-    AdjustDrawingBoundaries(Vec2ToVec3(box.vertices[i], z));
+    AdjustDrawingBoundaries(box.vertices[i]);
   }
+  z_layers_.insert(z);
 }
 void MockBatcher::AddTriangle(const Triangle& triangle, float z, const std::array<Color, 3>& colors,
                               const Color& /*picking_color*/,
                               std::unique_ptr<PickingUserData> /*user_data*/) {
   num_triangles_by_color_[colors[0]]++;
   for (int i = 0; i < 3; i++) {
-    AdjustDrawingBoundaries(Vec2ToVec3(triangle.vertices[i], z));
+    AdjustDrawingBoundaries(triangle.vertices[i]);
   }
+  z_layers_.insert(z);
 }
 
 void MockBatcher::ResetElements() {
@@ -42,10 +45,9 @@ void MockBatcher::ResetElements() {
   num_boxes_by_color_.clear();
   num_horizontal_lines_ = 0;
   num_vertical_lines_ = 0;
-  min_point_ = Vec3{std::numeric_limits<float>::max(), std::numeric_limits<float>::max(),
-                    std::numeric_limits<float>::max()};
-  max_point_ = Vec3{std::numeric_limits<float>::lowest(), std::numeric_limits<float>::lowest(),
-                    std::numeric_limits<float>::lowest()};
+  min_point_ = Vec2{std::numeric_limits<float>::max(), std::numeric_limits<float>::max()};
+  max_point_ = Vec2{std::numeric_limits<float>::lowest(), std::numeric_limits<float>::lowest()};
+  z_layers_.clear();
 }
 
 uint32_t MockBatcher::GetNumElements() const {
@@ -79,22 +81,22 @@ int MockBatcher::GetNumBoxes() const {
 // To check that everything is inside a rectangle, we just need to check the minimum and maximum
 // used coordinates.
 bool MockBatcher::IsEverythingInsideRectangle(Vec2 start, Vec2 size) const {
-  return IsInsideRectangle(Vec3ToVec2(min_point_), start, size) &&
-         IsInsideRectangle(Vec3ToVec2(max_point_), start, size);
+  if (!GetNumElements()) return true;
+  return IsInsideRectangle(min_point_, start, size) && IsInsideRectangle(max_point_, start, size);
 }
 
 bool MockBatcher::IsEverythingBetweenZLayers(float z_layer_min, float z_layer_max) const {
-  return IsElementOf(min_point_[2], ClosedInterval::FromValues(z_layer_min, z_layer_max)) &&
-         IsElementOf(max_point_[2], ClosedInterval::FromValues(z_layer_min, z_layer_max));
+  return std::find_if_not(
+             z_layers_.begin(), z_layers_.end(), [z_layer_min, z_layer_max](float layer) {
+               return IsElementOf(layer, ClosedInterval::FromValues(z_layer_min, z_layer_max));
+             }) == z_layers_.end();
 }
 
-void MockBatcher::AdjustDrawingBoundaries(Vec3 point) {
+void MockBatcher::AdjustDrawingBoundaries(Vec2 point) {
   min_point_[0] = std::min(point[0], min_point_[0]);
   min_point_[1] = std::min(point[1], min_point_[1]);
-  min_point_[2] = std::min(point[2], min_point_[2]);
   max_point_[0] = std::max(point[0], max_point_[0]);
   max_point_[1] = std::max(point[1], max_point_[1]);
-  max_point_[2] = std::max(point[2], max_point_[2]);
 }
 
 }  // namespace orbit_gl

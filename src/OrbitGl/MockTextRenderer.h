@@ -20,7 +20,9 @@ class MockTextRenderer : public TextRenderer {
 
   MOCK_METHOD(void, RenderLayer, (float), (override));
   MOCK_METHOD(void, RenderDebug, (PrimitiveAssembler*), (override));
-  MOCK_METHOD(std::vector<float>, GetLayers, (), (const override));
+  [[nodiscard]] std::vector<float> GetLayers() const override {
+    return std::vector<float>(z_layers_.begin(), z_layers_.end());
+  }
 
   void AddText(const char* text, float x, float y, float z, TextFormatting formatting) override;
   void AddText(const char* text, float x, float y, float z, TextFormatting formatting,
@@ -44,10 +46,11 @@ class MockTextRenderer : public TextRenderer {
   [[nodiscard]] bool IsTextBetweenZLayers(float z_layer_min, float z_layer_max) const;
 
  private:
-  void UpdateDrawingBoundaries(Vec3 point);
-  Vec3 min_point_;
-  Vec3 max_point_;
+  void AdjustDrawingBoundaries(Vec2 point);
 
+  Vec2 min_point_;
+  Vec2 max_point_;
+  std::set<float> z_layers_;
   std::set<uint32_t> num_characters_in_add_text_;
   std::set<float> vertical_position_in_add_text;
   int num_add_text_calls_ = 0;
