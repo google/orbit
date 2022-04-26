@@ -296,15 +296,16 @@ void UprobesUnwindingVisitor::Visit(uint64_t event_timestamp,
   // perf_event_open to give us "almost" correct callstacks (the caller of the leaf function will be
   // missing). We do a plausibility check for this assumption by checking if the callstack only
   // contains executable code.
-  // TODO(b/187690455): As soon as we actually have frame pointers in all non-leaf functions, we can
-  //  report an unwinding error here. Till that point this check will always fail, because the
-  //  caller of __libc_start_main will be invalid since libc doesn't have frame-pointers. This
-  //  prevents us from testing the current implementation, which will have "almost" correct
-  //  callstack.
   for (uint64_t frame_index = 1; frame_index < event_data.GetCallchainSize(); ++frame_index) {
     unwindstack::MapInfo* map_info = current_maps_->Find(event_data.GetCallchain()[frame_index]);
     if (map_info == nullptr || (map_info->flags() & PROT_EXEC) == 0) {
-      break;
+      if (unwind_error_counter_ != nullptr) {
+        ++(*unwind_error_counter_);
+      }
+      callstack->set_type(Callstack::kFramePointerUnwindingError);
+      callstack->add_pcs(top_ip);
+      listener_->OnCallstackSample(std::move(sample));
+      return;
     }
   }
 

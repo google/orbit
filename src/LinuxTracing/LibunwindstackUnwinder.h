@@ -9,6 +9,7 @@
 #include <unwindstack/Error.h>
 #include <unwindstack/MachineX86_64.h>
 #include <unwindstack/Maps.h>
+#include <unwindstack/RegsX86_64.h>
 #include <unwindstack/Unwinder.h>
 
 #include <array>
@@ -26,11 +27,13 @@ namespace orbit_linux_tracing {
 class LibunwindstackResult {
  public:
   explicit LibunwindstackResult(
-      std::vector<unwindstack::FrameData> frames,
+      std::vector<unwindstack::FrameData> frames, unwindstack::RegsX86_64 regs,
       unwindstack::ErrorCode error_code = unwindstack::ErrorCode::ERROR_NONE)
-      : frames_{std::move(frames)}, error_code_{error_code} {}
+      : frames_{std::move(frames)}, regs_{std::move(regs)}, error_code_{error_code} {}
 
   [[nodiscard]] const std::vector<unwindstack::FrameData>& frames() const { return frames_; }
+
+  [[nodiscard]] const unwindstack::RegsX86_64& regs() const { return regs_; }
 
   [[nodiscard]] unwindstack::ErrorCode error_code() const { return error_code_; }
 
@@ -38,6 +41,7 @@ class LibunwindstackResult {
 
  private:
   std::vector<unwindstack::FrameData> frames_;
+  unwindstack::RegsX86_64 regs_;
   unwindstack::ErrorCode error_code_;
 };
 
