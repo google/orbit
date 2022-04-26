@@ -20,6 +20,7 @@ target_sources(
          BasicPageFaultsTrack.h
          Batcher.h
          BatcherInterface.h
+         Button.h
          CallstackThreadBar.h
          CallTreeView.h
          CaptureStats.h
@@ -98,6 +99,7 @@ target_sources(
           App.cpp
           AsyncTrack.cpp
           BasicPageFaultsTrack.cpp
+          Button.cpp
           CallstackThreadBar.cpp
           CallTreeView.cpp
           CaptureStats.cpp
@@ -203,6 +205,7 @@ target_sources(OrbitGlTests PRIVATE
 
 target_sources(OrbitGlTests PRIVATE
                BatcherTest.cpp
+               ButtonTest.cpp
                CaptureStatsTest.cpp
                CaptureViewElementTest.cpp
                CaptureViewElementTester.cpp
