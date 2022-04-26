@@ -25,16 +25,16 @@ class CaptureViewElementTester {
   Viewport* GetViewport() { return &viewport_; }
   TimeGraphLayout* GetLayout() { return &layout_; }
 
-  // Check if internal flags for `element` as set correctly
-  //  * draw: Expect draw_required_ to be set
+  // Check if internal flags for `element` are set correctly:
+  //  * draw: Expect draw_required_ to be set.
   //  * update_primitives: Expect update_primitives_required_ to be set
   // Use this to verify that `UpdateLayout` or any other layout-changing methods work correctly.
   // You usually want to call this once to check the initial state, then call your setters, then
   // call this again. You will want to check that:
   //  * A call to a setter correctly updates the value, and sets draw_required_ or
-  //    update_primitives_required_ as needed
+  //    update_primitives_required_ as needed.
   //  * A call to a setter that does not change the value will *not* result in any of the flags
-  //    to be set
+  //    to be set.
   // In most cases, you'll want to use `SimulateDrawLoopAndCheckFlags` to combine flag checking
   // and an update / render loop.
   void CheckDrawFlags(CaptureViewElement* element, bool draw, bool update_primitives);
