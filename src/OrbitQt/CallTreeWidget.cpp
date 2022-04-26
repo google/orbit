@@ -594,8 +594,16 @@ void CallTreeWidget::OnCustomContextMenuRequested(const QPoint& point) {
   bool enable_copy = ui_->callTreeTreeView->selectionModel()->hasSelection();
 
   QMenu menu{ui_->callTreeTreeView};
-  menu.addAction(kActionExpandRecursively)->setEnabled(enable_expand_recursively);
-  menu.addAction(kActionCollapseRecursively)->setEnabled(enable_collapse_recursively);
+  const QString kAltClickShortcut = QStringLiteral("\tALT+Click");
+  bool is_expanded = ui_->callTreeTreeView->isExpanded(index);
+  QString action_expand_recursively = (!is_expanded & enable_expand_recursively)
+                                          ? kActionExpandRecursively + kAltClickShortcut
+                                          : kActionExpandRecursively;
+  menu.addAction(action_expand_recursively)->setEnabled(enable_expand_recursively);
+  QString action_collapse_recursively = (is_expanded & enable_collapse_recursively)
+                                            ? kActionCollapseRecursively + kAltClickShortcut
+                                            : kActionCollapseRecursively;
+  menu.addAction(action_collapse_recursively)->setEnabled(enable_collapse_recursively);
   menu.addAction(kActionCollapseChildrenRecursively)->setEnabled(enable_collapse_recursively);
   menu.addSeparator();
   menu.addAction(kActionExpandAll);
