@@ -43,7 +43,7 @@ class DataManager final {
 
   [[nodiscard]] bool IsFunctionSelected(const FunctionInfo& function) const;
   [[nodiscard]] std::vector<FunctionInfo> GetSelectedFunctions() const;
-  [[nodiscard]] bool IsFunctionVisible(uint64_t function_address) const;
+  [[nodiscard]] bool IsScopeVisible(uint64_t scope_id) const;
   [[nodiscard]] uint64_t highlighted_scope_id() const;
   [[nodiscard]] uint64_t highlighted_group_id() const;
   [[nodiscard]] uint32_t selected_thread_id() const;

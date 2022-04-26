@@ -10,4 +10,4 @@ if  [ -f "/c/Program Files/LLVM/bin/clang-format.exe" ]; then
   clang_format_path="/c/Program Files/LLVM/bin/clang-format.exe";
 fi
 
-find src/ \( -name '*.cpp' -o -name '*.h' \) ! -name 'resource.h' | xargs "$clang_format_path" -i
+find src/ \( -name '*.cpp' -o -name '*.h' -o -name '*.proto' \) ! -name 'resource.h' | xargs "$clang_format_path" -i

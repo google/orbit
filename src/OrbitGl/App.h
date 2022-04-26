@@ -338,6 +338,8 @@ class OrbitApp final : public DataViewFactory,
   void SendInfoToUi(const std::string& title, const std::string& text);
   void SendWarningToUi(const std::string& title, const std::string& text);
   void SendErrorToUi(const std::string& title, const std::string& text) override;
+  void SendErrorToUi(const std::string& title, const std::string& text,
+                     orbit_metrics_uploader::ScopedMetric metric);
   void RenderImGuiDebugUI();
 
   // RetrieveModule retrieves a module file and returns the local file path (potentially from the
@@ -468,7 +470,7 @@ class OrbitApp final : public DataViewFactory,
       uint64_t function_id) const;
 
   void SetVisibleScopeIds(absl::flat_hash_set<uint64_t> visible_scope_ids) override;
-  [[nodiscard]] bool IsFunctionVisible(uint64_t function_id);
+  [[nodiscard]] bool IsScopeVisible(uint64_t scope_id);
 
   [[nodiscard]] uint64_t GetHighlightedScopeId() const override;
   void SetHighlightedScopeId(uint64_t highlighted_scope_id) override;

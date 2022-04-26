@@ -74,7 +74,7 @@ const std::vector<DataView::Column>& LiveFunctionsDataView::GetColumns() {
     std::vector<Column> columns;
     columns.resize(kNumColumns);
     columns[kColumnType] = {"Type", .0f, SortingOrder::kDescending};
-    columns[kColumnName] = {"Function", .4f, SortingOrder::kAscending};
+    columns[kColumnName] = {"Name", .4f, SortingOrder::kAscending};
     columns[kColumnCount] = {"Count", .0f, SortingOrder::kDescending};
     columns[kColumnTimeTotal] = {"Total", .075f, SortingOrder::kDescending};
     columns[kColumnTimeAvg] = {"Avg", .075f, SortingOrder::kDescending};
@@ -286,7 +286,9 @@ DataView::ActionStatus LiveFunctionsDataView::GetActionStatus(
   const CaptureData& capture_data = app_->GetCaptureData();
   if (action == kMenuActionJumpToFirst || action == kMenuActionJumpToLast ||
       action == kMenuActionJumpToMin || action == kMenuActionJumpToMax) {
-    if (selected_indices.size() != 1) return ActionStatus::kVisibleButDisabled;
+    if (app_->IsCapturing() || selected_indices.size() != 1) {
+      return ActionStatus::kVisibleButDisabled;
+    }
 
     uint64_t scope_id = GetScopeId(selected_indices[0]);
     const ScopeStats& stats = capture_data.GetScopeStatsOrDefault(scope_id);
@@ -383,38 +385,16 @@ void LiveFunctionsDataView::OnJumpToRequested(const std::string& action,
   }
 }
 
-void LiveFunctionsDataView::OnExportEventsToCsvRequested(const std::vector<int>& selection) {
-  auto send_error = [&](const std::string& error_msg) {
-    app_->SendErrorToUi("Export all events to CSV", error_msg);
-  };
-
-  std::string file_path = app_->GetSaveFile(".csv");
-  if (file_path.empty()) return;
-
-  ErrorMessageOr<orbit_base::unique_fd> result = orbit_base::OpenFileForWriting(file_path);
-  if (result.has_error()) {
-    send_error(
-        absl::StrFormat("Failed to open \"%s\" file: %s", file_path, result.error().message()));
-    return;
-  }
-  const orbit_base::unique_fd& fd = result.value();
+[[nodiscard]] ErrorMessageOr<void> LiveFunctionsDataView::WriteEventsToCsv(
+    const std::vector<int>& selection, const std::string& file_path) const {
+  OUTCOME_TRY(auto fd, orbit_base::OpenFileForWriting(file_path));
 
   // Write header line
-  constexpr const char* kFieldSeparator = ",";
-  constexpr const char* kLineSeparator = "\r\n";
   constexpr size_t kNumColumns = 5;
   const std::array<std::string, kNumColumns> kNames{"Name", "Thread", "Start", "End",
                                                     "Duration (ns)"};
-  std::string header_line = absl::StrJoin(
-      kNames, kFieldSeparator,
-      [](std::string* out, const std::string& name) { out->append(FormatValueForCsv(name)); });
-  header_line.append(kLineSeparator);
-  auto write_result = orbit_base::WriteFully(fd, header_line);
-  if (write_result.has_error()) {
-    send_error(
-        absl::StrFormat("Error writing to \"%s\": %s", file_path, write_result.error().message()));
-    return;
-  }
+
+  OUTCOME_TRY(WriteLineToCsv(fd, kNames));
 
   for (int row : selection) {
     const CaptureData& capture_data = app_->GetCaptureData();
@@ -437,14 +417,18 @@ void LiveFunctionsDataView::OnExportEventsToCsvRequested(const std::vector<int>&
       line.append(FormatValueForCsv(absl::StrFormat("%lu", timer->end() - timer->start())));
       line.append(kLineSeparator);
 
-      auto write_result = orbit_base::WriteFully(fd, line);
-      if (write_result.has_error()) {
-        send_error(absl::StrFormat("Error writing to \"%s\": %s", file_path,
-                                   write_result.error().message()));
-        return;
-      }
+      OUTCOME_TRY(orbit_base::WriteFully(fd, line));
     }
   }
+
+  return outcome::success();
+}
+
+void LiveFunctionsDataView::OnExportEventsToCsvRequested(const std::vector<int>& selection) {
+  std::string file_path = app_->GetSaveFile(".csv");
+  if (file_path.empty()) return;
+
+  ReportErrorIfAny(WriteEventsToCsv(selection, file_path), "Export all events to CSV");
 }
 
 void LiveFunctionsDataView::DoFilter() {

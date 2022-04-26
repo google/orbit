@@ -69,9 +69,9 @@ std::vector<FunctionInfo> DataManager::GetSelectedFunctions() const {
   return {selected_functions_.begin(), selected_functions_.end()};
 }
 
-bool DataManager::IsFunctionVisible(uint64_t function_id) const {
+bool DataManager::IsScopeVisible(uint64_t scope_id) const {
   ORBIT_CHECK(std::this_thread::get_id() == main_thread_id_);
-  return visible_scope_ids_.contains(function_id);
+  return visible_scope_ids_.contains(scope_id);
 }
 
 uint64_t DataManager::highlighted_scope_id() const {

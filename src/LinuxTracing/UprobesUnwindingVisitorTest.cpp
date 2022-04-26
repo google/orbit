@@ -542,7 +542,7 @@ TEST_F(UprobesUnwindingVisitorTest,
   EXPECT_CALL(unwinder_, Unwind(event.data.pid, nullptr, _, _, event.data.dyn_size, _, _))
       .Times(1)
       .WillOnce(Return(
-          LibunwindstackResult{libunwindstack_callstack, unwindstack::ErrorCode::ERROR_NONE}));
+          LibunwindstackResult{libunwindstack_callstack, {}, unwindstack::ErrorCode::ERROR_NONE}));
 
   orbit_grpc_protos::FullCallstackSample actual_callstack_sample;
   EXPECT_CALL(listener_, OnCallstackSample).Times(1).WillOnce(SaveArg<0>(&actual_callstack_sample));
@@ -595,7 +595,7 @@ TEST_F(UprobesUnwindingVisitorTest, VisitEmptyStackSampleWithoutUprobesDoesNothi
   EXPECT_CALL(unwinder_, Unwind(event.data.pid, nullptr, _, _, event.data.dyn_size, _, _))
       .Times(1)
       .WillOnce(Return(
-          LibunwindstackResult{empty_callstack, unwindstack::ErrorCode::ERROR_MEMORY_INVALID}));
+          LibunwindstackResult{empty_callstack, {}, unwindstack::ErrorCode::ERROR_MEMORY_INVALID}));
 
   EXPECT_CALL(listener_, OnCallstackSample).Times(0);
 
@@ -623,8 +623,8 @@ TEST_F(UprobesUnwindingVisitorTest,
 
   EXPECT_CALL(unwinder_, Unwind(event.data.pid, nullptr, _, _, event.data.dyn_size, _, _))
       .Times(1)
-      .WillOnce(Return(LibunwindstackResult{libunwindstack_callstack,
-                                            unwindstack::ErrorCode::ERROR_MEMORY_INVALID}));
+      .WillOnce(Return(LibunwindstackResult{
+          libunwindstack_callstack, {}, unwindstack::ErrorCode::ERROR_MEMORY_INVALID}));
 
   orbit_grpc_protos::FullCallstackSample actual_callstack_sample;
   EXPECT_CALL(listener_, OnCallstackSample).Times(1).WillOnce(SaveArg<0>(&actual_callstack_sample));
@@ -674,8 +674,8 @@ TEST_F(UprobesUnwindingVisitorTest,
 
   EXPECT_CALL(unwinder_, Unwind(event.data.pid, nullptr, _, _, event.data.dyn_size, _, _))
       .Times(1)
-      .WillOnce(
-          Return(LibunwindstackResult{incomplete_callstack, unwindstack::ErrorCode::ERROR_NONE}));
+      .WillOnce(Return(
+          LibunwindstackResult{incomplete_callstack, {}, unwindstack::ErrorCode::ERROR_NONE}));
 
   orbit_grpc_protos::FullCallstackSample actual_callstack_sample;
   EXPECT_CALL(listener_, OnCallstackSample).Times(1).WillOnce(SaveArg<0>(&actual_callstack_sample));
@@ -718,7 +718,7 @@ TEST_F(UprobesUnwindingVisitorTest, VisitStackSampleWithinUprobeSendsInUprobesCa
 
   EXPECT_CALL(unwinder_, Unwind(event.data.pid, nullptr, _, _, event.data.dyn_size, _, _))
       .Times(1)
-      .WillOnce(Return(LibunwindstackResult{callstack, unwindstack::ErrorCode::ERROR_NONE}));
+      .WillOnce(Return(LibunwindstackResult{callstack, {}, unwindstack::ErrorCode::ERROR_NONE}));
 
   orbit_grpc_protos::FullCallstackSample actual_callstack_sample;
   EXPECT_CALL(listener_, OnCallstackSample).Times(1).WillOnce(SaveArg<0>(&actual_callstack_sample));
@@ -768,7 +768,7 @@ TEST_F(
 
   EXPECT_CALL(unwinder_, Unwind(event.data.pid, nullptr, _, _, event.data.dyn_size, _, _))
       .Times(1)
-      .WillOnce(Return(LibunwindstackResult{callstack, unwindstack::ErrorCode::ERROR_NONE}));
+      .WillOnce(Return(LibunwindstackResult{callstack, {}, unwindstack::ErrorCode::ERROR_NONE}));
 
   orbit_grpc_protos::FullCallstackSample actual_callstack_sample;
   EXPECT_CALL(listener_, OnCallstackSample).Times(1).WillOnce(SaveArg<0>(&actual_callstack_sample));
@@ -822,7 +822,7 @@ TEST_F(
 
   EXPECT_CALL(unwinder_, Unwind(event.data.pid, nullptr, _, _, event.data.dyn_size, _, _))
       .Times(1)
-      .WillOnce(Return(LibunwindstackResult{callstack, unwindstack::ErrorCode::ERROR_NONE}));
+      .WillOnce(Return(LibunwindstackResult{callstack, {}, unwindstack::ErrorCode::ERROR_NONE}));
 
   orbit_grpc_protos::FullCallstackSample actual_callstack_sample;
   EXPECT_CALL(listener_, OnCallstackSample).Times(1).WillOnce(SaveArg<0>(&actual_callstack_sample));
@@ -888,7 +888,7 @@ TEST_F(
 
   EXPECT_CALL(unwinder_, Unwind(event.data.pid, nullptr, _, _, event.data.dyn_size, _, _))
       .Times(1)
-      .WillOnce(Return(LibunwindstackResult{callstack, unwindstack::ErrorCode::ERROR_NONE}));
+      .WillOnce(Return(LibunwindstackResult{callstack, {}, unwindstack::ErrorCode::ERROR_NONE}));
 
   orbit_grpc_protos::FullCallstackSample actual_callstack_sample;
   EXPECT_CALL(listener_, OnCallstackSample).Times(1).WillOnce(SaveArg<0>(&actual_callstack_sample));
@@ -942,7 +942,7 @@ TEST_F(UprobesUnwindingVisitorTest, VisitStackSampleStoppedAtUprobesSendsPatchin
 
   EXPECT_CALL(unwinder_, Unwind(event.data.pid, nullptr, _, _, event.data.dyn_size, _, _))
       .Times(1)
-      .WillOnce(Return(LibunwindstackResult{callstack, unwindstack::ErrorCode::ERROR_NONE}));
+      .WillOnce(Return(LibunwindstackResult{callstack, {}, unwindstack::ErrorCode::ERROR_NONE}));
 
   orbit_grpc_protos::FullCallstackSample actual_callstack_sample;
   EXPECT_CALL(listener_, OnCallstackSample).Times(1).WillOnce(SaveArg<0>(&actual_callstack_sample));
@@ -992,7 +992,7 @@ TEST_F(UprobesUnwindingVisitorTest,
 
   EXPECT_CALL(unwinder_, Unwind(event.data.pid, nullptr, _, _, event.data.dyn_size, _, _))
       .Times(1)
-      .WillOnce(Return(LibunwindstackResult{callstack, unwindstack::ErrorCode::ERROR_NONE}));
+      .WillOnce(Return(LibunwindstackResult{callstack, {}, unwindstack::ErrorCode::ERROR_NONE}));
 
   orbit_grpc_protos::FullCallstackSample actual_callstack_sample;
   EXPECT_CALL(listener_, OnCallstackSample).Times(1).WillOnce(SaveArg<0>(&actual_callstack_sample));

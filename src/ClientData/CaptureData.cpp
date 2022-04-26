@@ -15,6 +15,7 @@
 
 #include "ClientData/ModuleData.h"
 #include "ClientData/ScopeIdConstants.h"
+#include "ClientData/ScopeInfo.h"
 #include "ObjectUtils/Address.h"
 #include "OrbitBase/Result.h"
 
@@ -180,25 +181,41 @@ const std::vector<uint64_t>* CaptureData::GetSortedTimerDurationsForScopeId(
 }
 
 [[nodiscard]] std::vector<const TimerInfo*> CaptureData::GetAllScopeTimers(
-    uint64_t min_tick, uint64_t max_tick) const {
+    const absl::flat_hash_set<ScopeType> types, uint64_t min_tick, uint64_t max_tick) const {
   std::vector<const TimerInfo*> result;
 
-  for (const uint32_t thread_id : GetThreadTrackDataProvider()->GetAllThreadIds()) {
-    const std::vector<const TimerInfo*> thread_track_timers =
-        GetThreadTrackDataProvider()->GetTimers(thread_id, min_tick, max_tick);
-    result.insert(std::end(result), std::begin(thread_track_timers), std::end(thread_track_timers));
+  // The timers corresponding to dynamically instrumented functions and manual instrumentation
+  // (kApiScope)  are stored in ThreadTracks. Hence, they're acquired separately from the manual
+  // async (kApiScope).
+  if (types.contains(ScopeType::kApiScope) ||
+      types.contains(ScopeType::kDynamicallyInstrumentedFunction)) {
+    for (const uint32_t thread_id : GetThreadTrackDataProvider()->GetAllThreadIds()) {
+      const std::vector<const TimerInfo*> thread_track_timers =
+          GetThreadTrackDataProvider()->GetTimers(thread_id, min_tick, max_tick);
+      std::copy_if(std::begin(thread_track_timers), std::end(thread_track_timers),
+                   std::back_inserter(result), [this, &types](const TimerInfo* timer) {
+                     return types.contains(GetScopeInfo(ProvideScopeId(*timer)).GetType());
+                   });
+    }
   }
 
-  const std::vector<const TimerInfo*> async_scope_timers =
-      timer_data_manager_.GetTimers(orbit_client_protos::TimerInfo::kApiScopeAsync);
-  result.insert(std::end(result), std::begin(async_scope_timers), std::end(async_scope_timers));
+  if (types.contains(ScopeType::kApiScopeAsync)) {
+    std::vector<const TimerInfo*> async_timer_infos = timer_data_manager_.GetTimers(
+        orbit_client_protos::TimerInfo::kApiScopeAsync, min_tick, max_tick);
+
+    result.insert(std::end(result), std::begin(async_timer_infos), std::end(async_timer_infos));
+  }
+
   return result;
 }
 
 void CaptureData::UpdateTimerDurations() {
   ORBIT_SCOPE_FUNCTION;
   scope_id_to_timer_durations_.clear();
-  for (const TimerInfo* timer : GetAllScopeTimers()) {
+
+  static const absl::flat_hash_set<ScopeType> all_valid_scope_types = {
+      ScopeType::kApiScope, ScopeType::kApiScopeAsync, ScopeType::kDynamicallyInstrumentedFunction};
+  for (const TimerInfo* timer : GetAllScopeTimers(all_valid_scope_types)) {
     const uint64_t scope_id = ProvideScopeId(*timer);
 
     if (scope_id != orbit_client_data::kInvalidScopeId) {
@@ -213,7 +230,8 @@ void CaptureData::UpdateTimerDurations() {
 
 [[nodiscard]] std::vector<const TimerInfo*> CaptureData::GetTimersForScope(
     uint64_t scope_id, uint64_t min_tick, uint64_t max_tick) const {
-  const std::vector<const TimerInfo*> all_timers = GetAllScopeTimers(min_tick, max_tick);
+  const std::vector<const TimerInfo*> all_timers =
+      GetAllScopeTimers({GetScopeInfo(scope_id).GetType()}, min_tick, max_tick);
   std::vector<const TimerInfo*> result;
   std::copy_if(std::begin(all_timers), std::end(all_timers), std::back_inserter(result),
                [this, scope_id](const TimerInfo* timer) {

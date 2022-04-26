@@ -104,7 +104,8 @@ class OrbitMainWindow final : public QMainWindow, public orbit_gl::MainWindowInt
   void ShowTooltip(std::string_view message) override;
   void ShowSourceCode(
       const std::filesystem::path& file_path, size_t line_number,
-      std::optional<std::unique_ptr<orbit_code_report::CodeReport>> maybe_code_report) override;
+      std::optional<std::unique_ptr<orbit_code_report::CodeReport>> maybe_code_report,
+      orbit_metrics_uploader::ScopedMetric* metric) override;
   void ShowDisassembly(const orbit_client_data::FunctionInfo& function_info,
                        const std::string& assembly,
                        orbit_code_report::DisassemblyReport report) override;
@@ -223,7 +224,8 @@ class OrbitMainWindow final : public QMainWindow, public orbit_gl::MainWindowInt
 
   void UpdateCaptureToolbarIconOpacity();
 
-  std::optional<QString> LoadSourceCode(const std::filesystem::path& file_path);
+  std::optional<QString> LoadSourceCode(const std::filesystem::path& file_path,
+                                        orbit_metrics_uploader::ScopedMetric* metric);
 
  private:
   std::shared_ptr<orbit_base::MainThreadExecutor> main_thread_executor_;

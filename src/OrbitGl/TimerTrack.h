@@ -105,10 +105,14 @@ class TimerTrack : public Track {
                           orbit_gl::TextRenderer& text_renderer, uint64_t min_tick,
                           uint64_t max_tick, PickingMode /*picking_mode*/) override;
 
+  // TODO(b/179225487): Filtering is implemented only in `ThreadTrack`, that is, only the timers
+  // corresponding to dynamically instrumented functions synchonous manual
+  // instrumentation can be filtered.
   [[nodiscard]] virtual bool IsTimerActive(
       const orbit_client_protos::TimerInfo& /*timer_info*/) const {
     return true;
   }
+
   [[nodiscard]] virtual Color GetTimerColor(const orbit_client_protos::TimerInfo& timer_info,
                                             bool is_selected, bool is_highlighted,
                                             const internal::DrawData& draw_data) const = 0;

@@ -168,6 +168,7 @@ TEST_F(LeafFunctionCallManagerTest, PatchCallerOfLeafFunctionReturnsErrorOnTooSm
   CallchainSamplePerfEventData event_data = BuildFakeCallchainSamplePerfEventData(callchain);
   event_data.regs->bp = 2 * kStackDumpSize;
   event_data.regs->sp = 0;
+  event_data.regs->ip = kTargetAddress1;
 
   unwindstack::Maps fake_maps{};
   EXPECT_CALL(maps_, Get()).WillRepeatedly(Return(&fake_maps));
@@ -177,15 +178,17 @@ TEST_F(LeafFunctionCallManagerTest, PatchCallerOfLeafFunctionReturnsErrorOnTooSm
 
   // The stack dump is too small, so we are only able to unwind the instruction
   // pointer.
-  std::vector<unwindstack::FrameData> libunwindstack_callstack;
-  libunwindstack_callstack.push_back(kFrame1);
+  unwindstack::RegsX86_64 libunwindstack_regs{};
+  libunwindstack_regs[unwindstack::X86_64_REG_RBP] = event_data.regs->bp;
+  libunwindstack_regs[unwindstack::X86_64_REG_RSP] = event_data.regs->sp;
+  libunwindstack_regs.set_pc(event_data.regs->ip);
 
   // We expect `kStackDumpSize` here as size, as we do not want libunwindstack
   // to read out of bounds.
-  EXPECT_CALL(unwinder_, Unwind(event_data.pid, &fake_maps, _, _, kStackDumpSize, _, _))
+  EXPECT_CALL(unwinder_, Unwind(event_data.pid, &fake_maps, _, _, kStackDumpSize, _, 1))
       .Times(1)
-      .WillOnce(Return(LibunwindstackResult{libunwindstack_callstack,
-                                            unwindstack::ErrorCode::ERROR_INVALID_MAP}));
+      .WillOnce(Return(LibunwindstackResult{
+          {kFrame1}, libunwindstack_regs, unwindstack::ErrorCode::ERROR_INVALID_MAP}));
 
   EXPECT_EQ(Callstack::kStackTopForDwarfUnwindingTooSmall,
             leaf_function_call_manager_.PatchCallerOfLeafFunction(&event_data, &maps_, &unwinder_));
@@ -204,6 +207,7 @@ TEST_F(
   CallchainSamplePerfEventData event_data = BuildFakeCallchainSamplePerfEventData(callchain);
   event_data.regs->bp = kStackDumpSize * 2;
   event_data.regs->sp = 0;
+  event_data.regs->ip = kTargetAddress1;
 
   unwindstack::Maps fake_maps{};
   EXPECT_CALL(maps_, Get()).WillRepeatedly(Return(&fake_maps));
@@ -213,16 +217,17 @@ TEST_F(
 
   // The stack dump is too small to fully contain the caller's frame, but large
   // enough to actually unwind the caller successfully.
-  std::vector<unwindstack::FrameData> libunwindstack_callstack;
-  libunwindstack_callstack.push_back(kFrame1);
-  libunwindstack_callstack.push_back(kFrame2);
+  unwindstack::RegsX86_64 libunwindstack_regs{};
+  libunwindstack_regs[unwindstack::X86_64_REG_RBP] = event_data.regs->bp;
+  libunwindstack_regs[unwindstack::X86_64_REG_RSP] = kStackDumpSize;
+  libunwindstack_regs.set_pc(kTargetAddress2 + 1);
 
   // We expect `kStackDumpSize` here as size, as we do not want libunwindstack
   // to read out of bounds.
-  EXPECT_CALL(unwinder_, Unwind(event_data.pid, &fake_maps, _, _, kStackDumpSize, _, _))
+  EXPECT_CALL(unwinder_, Unwind(event_data.pid, &fake_maps, _, _, kStackDumpSize, _, 1))
       .Times(1)
-      .WillOnce(Return(LibunwindstackResult{libunwindstack_callstack,
-                                            unwindstack::ErrorCode::ERROR_INVALID_MAP}));
+      .WillOnce(Return(LibunwindstackResult{
+          {kFrame1}, libunwindstack_regs, unwindstack::ErrorCode::ERROR_INVALID_MAP}));
 
   EXPECT_CALL(maps_, Find(_)).WillRepeatedly(Return(&kTargetMapInfo));
 
@@ -246,6 +251,7 @@ TEST_F(LeafFunctionCallManagerTest,
   CallchainSamplePerfEventData event_data = BuildFakeCallchainSamplePerfEventData(callchain);
   event_data.regs->bp = 2 * kStackDumpSize;
   event_data.regs->sp = 0;
+  event_data.regs->ip = kTargetAddress1;
 
   unwindstack::Maps fake_maps{};
   EXPECT_CALL(maps_, Get()).WillRepeatedly(Return(&fake_maps));
@@ -271,6 +277,7 @@ TEST_F(LeafFunctionCallManagerTest,
   CallchainSamplePerfEventData event_data = BuildFakeCallchainSamplePerfEventData(callchain);
   event_data.regs->bp = 2 * kStackDumpSize;
   event_data.regs->sp = 0;
+  event_data.regs->ip = kTargetAddress1;
 
   unwindstack::Maps fake_maps{};
   EXPECT_CALL(maps_, Get()).WillRepeatedly(Return(&fake_maps));
@@ -293,8 +300,9 @@ TEST_F(LeafFunctionCallManagerTest, PatchCallerOfLeafFunctionReturnsErrorOnUnwin
   callchain.push_back(kTargetAddress3 + 1);
 
   CallchainSamplePerfEventData event_data = BuildFakeCallchainSamplePerfEventData(callchain);
-  event_data.regs->bp = kStackDumpSize;
+  event_data.regs->bp = kStackDumpSize / 2;
   event_data.regs->sp = 10;
+  event_data.regs->ip = kTargetAddress1;
 
   unwindstack::Maps fake_maps{};
   EXPECT_CALL(maps_, Get()).WillRepeatedly(Return(&fake_maps));
@@ -302,11 +310,18 @@ TEST_F(LeafFunctionCallManagerTest, PatchCallerOfLeafFunctionReturnsErrorOnUnwin
       .Times(1)
       .WillOnce(Return(std::make_optional<bool>(false)));
 
+  unwindstack::RegsX86_64 libunwindstack_regs{};
+  libunwindstack_regs[unwindstack::X86_64_REG_RBP] = event_data.regs->bp;
+  libunwindstack_regs[unwindstack::X86_64_REG_RSP] = 20;
+  libunwindstack_regs.set_pc(kNonExecutableMapsStart);
+
   // Usually, we should get at least the instruction pointer as frame, even on unwinding errors.
   // However, we should also support empty callstacks and treat them as unwinding error.
-  EXPECT_CALL(unwinder_, Unwind(event_data.pid, &fake_maps, _, _, kStackDumpSize - 10, _, _))
+  EXPECT_CALL(unwinder_, Unwind(event_data.pid, &fake_maps, _, _,
+                                event_data.regs->bp - event_data.regs->sp + 16, _, 1))
       .Times(1)
-      .WillOnce(Return(LibunwindstackResult{{}, unwindstack::ErrorCode::ERROR_INVALID_MAP}));
+      .WillOnce(Return(LibunwindstackResult{
+          {}, libunwindstack_regs, unwindstack::ErrorCode::ERROR_INVALID_MAP}));
 
   EXPECT_EQ(Callstack::kStackTopDwarfUnwindingError,
             leaf_function_call_manager_.PatchCallerOfLeafFunction(&event_data, &maps_, &unwinder_));
@@ -321,18 +336,41 @@ TEST_F(LeafFunctionCallManagerTest, PatchCallerOfLeafFunctionReturnsErrorOnUnwin
   // Unwinding errors could also result in non-executable code:
   std::vector<unwindstack::FrameData> libunwindstack_callstack;
   libunwindstack_callstack.push_back(kFrame1);
-  libunwindstack_callstack.push_back(kNonExecutableFrame);
 
-  EXPECT_CALL(unwinder_, Unwind(event_data.pid, &fake_maps, _, _, kStackDumpSize - 10, _, _))
+  libunwindstack_regs[unwindstack::X86_64_REG_RBP] = event_data.regs->bp;
+  libunwindstack_regs[unwindstack::X86_64_REG_RSP] = 20;
+  libunwindstack_regs.set_pc(kNonExecutableMapsStart);
+
+  EXPECT_CALL(unwinder_, Unwind(event_data.pid, &fake_maps, _, _,
+                                event_data.regs->bp - event_data.regs->sp + 16, _, 1))
       .Times(1)
-      .WillOnce(Return(LibunwindstackResult{libunwindstack_callstack,
-                                            unwindstack::ErrorCode::ERROR_INVALID_MAP}));
+      .WillOnce(Return(LibunwindstackResult{
+          {kFrame1}, libunwindstack_regs, unwindstack::ErrorCode::ERROR_INVALID_MAP}));
 
   EXPECT_CALL(maps_, Find(kNonExecutableMapsStart))
       .Times(1)
       .WillOnce(Return(&kNonExecutableMapInfo));
 
   EXPECT_EQ(Callstack::kStackTopDwarfUnwindingError,
+            leaf_function_call_manager_.PatchCallerOfLeafFunction(&event_data, &maps_, &unwinder_));
+  EXPECT_THAT(event_data.CopyOfIpsAsVector(), ElementsAreArray(callchain));
+}
+
+TEST_F(LeafFunctionCallManagerTest, PatchCallerOfLeafFunctionReturnsErrorOnNoFramePointerInRbp) {
+  std::vector<uint64_t> callchain;
+  callchain.push_back(kKernelAddress);
+  callchain.push_back(kTargetAddress1);
+  // Increment by one as the return address is the next address.
+  callchain.push_back(kTargetAddress2 + 1);
+  callchain.push_back(kTargetAddress3 + 1);
+
+  CallchainSamplePerfEventData event_data = BuildFakeCallchainSamplePerfEventData(callchain);
+  // bp < sp indicates that bp was used as general purpose register
+  event_data.regs->bp = 1;
+  event_data.regs->sp = 10;
+  event_data.regs->ip = kTargetAddress1;
+
+  EXPECT_EQ(Callstack::kFramePointerUnwindingError,
             leaf_function_call_manager_.PatchCallerOfLeafFunction(&event_data, &maps_, &unwinder_));
   EXPECT_THAT(event_data.CopyOfIpsAsVector(), ElementsAreArray(callchain));
 }
@@ -346,7 +384,7 @@ TEST_F(LeafFunctionCallManagerTest, PatchCallerOfLeafFunctionReturnsErrorOnNoFra
   callchain.push_back(kTargetAddress3 + 1);
 
   CallchainSamplePerfEventData event_data = BuildFakeCallchainSamplePerfEventData(callchain);
-  event_data.regs->bp = kStackDumpSize;
+  event_data.regs->bp = kStackDumpSize / 10;
   event_data.regs->sp = 10;
 
   unwindstack::Maps fake_maps{};
@@ -355,16 +393,16 @@ TEST_F(LeafFunctionCallManagerTest, PatchCallerOfLeafFunctionReturnsErrorOnNoFra
       .Times(1)
       .WillOnce(Return(std::make_optional<bool>(false)));
 
-  // When libunwindstack reports more than two frames, there are no frame pointers.
-  std::vector<unwindstack::FrameData> libunwindstack_callstack;
-  libunwindstack_callstack.push_back(kFrame1);
-  libunwindstack_callstack.push_back(kFrame2);
-  libunwindstack_callstack.push_back(kFrame3);
+  unwindstack::RegsX86_64 libunwindstack_regs{};
+  libunwindstack_regs[unwindstack::X86_64_REG_RBP] = event_data.regs->bp - 10;
+  libunwindstack_regs[unwindstack::X86_64_REG_RSP] = 20;
+  libunwindstack_regs.set_pc(kTargetAddress2);
 
-  EXPECT_CALL(unwinder_, Unwind(event_data.pid, &fake_maps, _, _, kStackDumpSize - 10, _, _))
+  EXPECT_CALL(unwinder_, Unwind(event_data.pid, &fake_maps, _, _,
+                                event_data.regs->bp - event_data.regs->sp + 16, _, 1))
       .Times(1)
-      .WillOnce(Return(LibunwindstackResult{libunwindstack_callstack,
-                                            unwindstack::ErrorCode::ERROR_INVALID_MAP}));
+      .WillOnce(Return(LibunwindstackResult{
+          {kFrame1}, libunwindstack_regs, unwindstack::ErrorCode::ERROR_INVALID_MAP}));
 
   EXPECT_EQ(Callstack::kFramePointerUnwindingError,
             leaf_function_call_manager_.PatchCallerOfLeafFunction(&event_data, &maps_, &unwinder_));
@@ -381,8 +419,9 @@ TEST_F(LeafFunctionCallManagerTest,
   callchain.push_back(kTargetAddress3 + 1);
 
   CallchainSamplePerfEventData event_data = BuildFakeCallchainSamplePerfEventData(callchain);
-  event_data.regs->bp = kStackDumpSize;
+  event_data.regs->bp = kStackDumpSize / 2;
   event_data.regs->sp = 10;
+  event_data.regs->ip = kTargetAddress1;
 
   unwindstack::Maps fake_maps{};
   EXPECT_CALL(maps_, Get()).WillRepeatedly(Return(&fake_maps));
@@ -390,15 +429,18 @@ TEST_F(LeafFunctionCallManagerTest,
       .Times(1)
       .WillOnce(Return(std::make_optional<bool>(false)));
 
-  // When libunwindstack reports exactly one frame (the ip), the innermost function has frame
-  // pointers.
-  std::vector<unwindstack::FrameData> libunwindstack_callstack;
-  libunwindstack_callstack.push_back(kFrame1);
+  // When libunwindstack reports a different, but valid, rbp after unwinding,
+  // the innermost function has frame pointers.
+  unwindstack::RegsX86_64 libunwindstack_regs{};
+  libunwindstack_regs[unwindstack::X86_64_REG_RBP] = event_data.regs->bp + 10;
+  libunwindstack_regs[unwindstack::X86_64_REG_RSP] = 20;
+  libunwindstack_regs.set_pc(kTargetAddress2);
 
-  EXPECT_CALL(unwinder_, Unwind(event_data.pid, &fake_maps, _, _, kStackDumpSize - 10, _, _))
+  EXPECT_CALL(unwinder_, Unwind(event_data.pid, &fake_maps, _, _,
+                                event_data.regs->bp - event_data.regs->sp + 16, _, 1))
       .Times(1)
-      .WillOnce(Return(LibunwindstackResult{libunwindstack_callstack,
-                                            unwindstack::ErrorCode::ERROR_INVALID_MAP}));
+      .WillOnce(Return(LibunwindstackResult{
+          {kFrame1}, libunwindstack_regs, unwindstack::ErrorCode::ERROR_INVALID_MAP}));
 
   EXPECT_EQ(Callstack::kComplete,
             leaf_function_call_manager_.PatchCallerOfLeafFunction(&event_data, &maps_, &unwinder_));
@@ -414,8 +456,9 @@ TEST_F(LeafFunctionCallManagerTest,
   callchain.push_back(kTargetAddress3 + 1);
 
   CallchainSamplePerfEventData event_data = BuildFakeCallchainSamplePerfEventData(callchain);
-  event_data.regs->bp = kStackDumpSize;
+  event_data.regs->bp = kStackDumpSize / 2;
   event_data.regs->sp = 10;
+  event_data.regs->ip = kTargetAddress1;
 
   unwindstack::Maps fake_maps{};
   EXPECT_CALL(maps_, Get()).WillRepeatedly(Return(&fake_maps));
@@ -423,14 +466,16 @@ TEST_F(LeafFunctionCallManagerTest,
       .Times(1)
       .WillOnce(Return(std::make_optional<bool>(false)));
 
-  std::vector<unwindstack::FrameData> libunwindstack_callstack;
-  libunwindstack_callstack.push_back(kFrame1);
-  libunwindstack_callstack.push_back(kFrame2);
+  unwindstack::RegsX86_64 libunwindstack_regs{};
+  libunwindstack_regs[unwindstack::X86_64_REG_RBP] = event_data.regs->bp;
+  libunwindstack_regs[unwindstack::X86_64_REG_RSP] = 20;
+  libunwindstack_regs.set_pc(kTargetAddress2 + 1);
 
-  EXPECT_CALL(unwinder_, Unwind(event_data.pid, &fake_maps, _, _, kStackDumpSize - 10, _, _))
+  EXPECT_CALL(unwinder_, Unwind(event_data.pid, &fake_maps, _, _,
+                                event_data.regs->bp - event_data.regs->sp + 16, _, 1))
       .Times(1)
-      .WillOnce(Return(LibunwindstackResult{libunwindstack_callstack,
-                                            unwindstack::ErrorCode::ERROR_INVALID_MAP}));
+      .WillOnce(Return(LibunwindstackResult{
+          {kFrame1}, libunwindstack_regs, unwindstack::ErrorCode::ERROR_INVALID_MAP}));
 
   EXPECT_CALL(maps_, Find(_)).WillRepeatedly(Return(&kTargetMapInfo));
 
