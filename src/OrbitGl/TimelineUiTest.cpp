@@ -83,10 +83,30 @@ class TimelineUiTest : public TimelineUi {
     // Boxes: One box per each label + Background box + margin box.
     EXPECT_EQ(num_boxes, num_labels + 2);
 
-    // Everything should be between kZValueTimeBar and kZValueTimeBarMouseLabel.
+    // Everything should be between kZValueTimeBar and kZValueTimeBarLabel.
     EXPECT_TRUE(mock_text_renderer_.IsTextBetweenZLayers(GlCanvas::kZValueTimeBar,
-                                                         GlCanvas::kZValueTimeBarMouseLabel));
+                                                         GlCanvas::kZValueTimeBarLabel));
     EXPECT_TRUE(mock_batcher_.IsEverythingBetweenZLayers(GlCanvas::kZValueTimeBar,
+                                                         GlCanvas::kZValueTimeBarLabel));
+  }
+
+  void TestDraw(uint64_t min_tick, uint64_t max_tick, uint64_t mouse_tick) {
+    mock_text_renderer_.Clear();
+    mock_batcher_.ResetElements();
+    mock_timeline_info_->SetMinMax(min_tick, max_tick);
+
+    DrawContext context;
+    context.current_mouse_time_ns = mouse_tick;
+    Draw(primitive_assembler_, mock_text_renderer_, context);
+
+    // One box and one label, both at kZValueTimeBarMouseLabel position.
+    EXPECT_EQ(mock_batcher_.GetNumBoxes(), 1);
+    EXPECT_EQ(mock_batcher_.GetNumElements(), 1);
+    EXPECT_EQ(mock_text_renderer_.GetNumAddTextCalls(), 1);
+
+    EXPECT_TRUE(mock_text_renderer_.IsTextBetweenZLayers(GlCanvas::kZValueTimeBarMouseLabel,
+                                                         GlCanvas::kZValueTimeBarMouseLabel));
+    EXPECT_TRUE(mock_batcher_.IsEverythingBetweenZLayers(GlCanvas::kZValueTimeBarMouseLabel,
                                                          GlCanvas::kZValueTimeBarMouseLabel));
   }
 
@@ -125,9 +145,29 @@ static void TestUpdatePrimitivesWithSeveralRanges(int world_width) {
   }
 }
 
-TEST(TimelineUI, UpdatePrimitives) {
+TEST(TimelineUi, UpdatePrimitives) {
   TestUpdatePrimitivesWithSeveralRanges(TimelineUiTest::kBigScreenPixelsWidth);
   TestUpdatePrimitivesWithSeveralRanges(TimelineUiTest::kTinyScreenMaxPixelsWidth);
+}
+
+TEST(TimelineUi, Draw) {
+  int width = TimelineUiTest::kBigScreenPixelsWidth;
+  MockTimelineInfo mock_timeline_info;
+  mock_timeline_info.SetWorldWidth(width);
+
+  TimeGraphLayout layout;
+  Viewport viewport(width, 0);
+  TimelineUiTest timeline_ui_test(&mock_timeline_info, &viewport, &layout);
+
+  const uint64_t kMinTick = 0;
+  const uint64_t kMaxTick = 1000;
+
+  // Testing different positions of the mouse in the screen.
+  timeline_ui_test.TestDraw(kMinTick, kMaxTick, kMinTick);
+  timeline_ui_test.TestDraw(kMinTick, kMaxTick, kMinTick + 1);
+  timeline_ui_test.TestDraw(kMinTick, kMaxTick, (kMinTick + kMaxTick) / 2);
+  timeline_ui_test.TestDraw(kMinTick, kMaxTick, kMaxTick - 1);
+  timeline_ui_test.TestDraw(kMinTick, kMaxTick, kMaxTick);
 }
 
 }  // namespace orbit_gl
