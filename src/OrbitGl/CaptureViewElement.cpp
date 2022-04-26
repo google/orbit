@@ -31,8 +31,6 @@ void CaptureViewElement::Draw(PrimitiveAssembler& primitive_assembler, TextRende
 
   text_renderer.PopTranslation();
   primitive_assembler.PopTranslation();
-
-  ORBIT_CHECK(!draw_requested_);
 }
 
 void CaptureViewElement::UpdatePrimitives(PrimitiveAssembler& primitive_assembler,
@@ -55,8 +53,6 @@ void CaptureViewElement::UpdatePrimitives(PrimitiveAssembler& primitive_assemble
 
   text_renderer.PopTranslation();
   primitive_assembler.PopTranslation();
-
-  ORBIT_CHECK(!update_primitives_requested_);
 }
 
 CaptureViewElement::EventResult CaptureViewElement::OnMouseWheel(
