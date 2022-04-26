@@ -71,12 +71,6 @@ static void ExpectSameLines(const std::string_view& actual, const std::string_vi
   ErrorMessageOr<orbit_base::TemporaryFile> temporary_file_or_error =
       orbit_base::TemporaryFile::Create();
   EXPECT_THAT(temporary_file_or_error, orbit_test_utils::HasNoError());
-
-  // We actually only need a temporary file path, so let's call `CloseAndRemove` and reuse the
-  // filepath. The TemporaryFile instance will still take care of deleting our new file when it
-  // gets out of scope.
-  temporary_file_or_error.value().CloseAndRemove();
-
   return std::move(temporary_file_or_error.value());
 }
 
@@ -87,6 +81,11 @@ void CheckExportToCsvIsInvoked(const FlattenContextMenu& context_menu, const Moc
   EXPECT_TRUE(action_index != kInvalidActionIndex);
 
   orbit_base::TemporaryFile temporary_file = GetTemporaryFilePath();
+
+  // We actually only need a temporary file path, so let's call `CloseAndRemove` and reuse the
+  // filepath. The TemporaryFile instance will still take care of deleting our new file when it
+  // gets out of scope.
+  temporary_file.CloseAndRemove();
 
   EXPECT_CALL(app, GetSaveFile)
       .Times(1)

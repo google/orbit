@@ -45,9 +45,7 @@ const std::string kExpectedFileContent =
 
 TEST(DataView, WriteLineToCsvIsCorrect) {
   orbit_base::TemporaryFile temporary_file = orbit_data_views::GetTemporaryFilePath();
-  auto file_or_error = orbit_base::OpenFileForWriting(temporary_file.file_path().string());
-  EXPECT_THAT(file_or_error, orbit_test_utils::HasNoError());
-  EXPECT_THAT(orbit_data_views::WriteLineToCsv(file_or_error.value(), kValues),
+  EXPECT_THAT(orbit_data_views::WriteLineToCsv(temporary_file.fd(), kValues),
               orbit_test_utils::HasNoError());
 
   ErrorMessageOr<std::string> contents_or_error =
