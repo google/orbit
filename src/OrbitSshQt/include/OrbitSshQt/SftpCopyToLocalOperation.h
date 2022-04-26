@@ -25,12 +25,13 @@ namespace details {
 enum class SftpCopyToLocalOperationState {
   kInitial,
   kNoOperation,
-  kStarted,
   kRemoteFileOpened,
   kLocalFileOpened,
-  kLocalFileWritten,
-  kLocalFileClosed,
+  kStarted,
   kShutdown,
+  kCopyDone,
+  kLocalFileClosed,
+  kRemoteFileClosed,
   kDone,
   kError
 };
