@@ -38,11 +38,57 @@ void SftpCopyToLocalOperation::CopyFileToLocal(std::filesystem::path source,
 }
 
 outcome::result<void> SftpCopyToLocalOperation::shutdown() {
-  data_event_connection_ = std::nullopt;
+  switch (CurrentState()) {
+    case State::kInitial:
+    case State::kNoOperation:
+    case State::kRemoteFileOpened:
+    case State::kLocalFileOpened:
+    case State::kStarted:
+      ORBIT_UNREACHABLE();
+    case State::kShutdown:
+    case State::kCopyDone: {
+      local_file_.close();
+      SetState(State::kLocalFileClosed);
+      ABSL_FALLTHROUGH_INTENDED;
+    }
+    case State::kLocalFileClosed: {
+      OUTCOME_TRY(sftp_file_->Close());
+      SetState(State::kRemoteFileClosed);
+      ABSL_FALLTHROUGH_INTENDED;
+    }
+    case State::kRemoteFileClosed: {
+      about_to_shutdown_connection_ = std::nullopt;
+      data_event_connection_ = std::nullopt;
+      SetState(State::kDone);
+      ABSL_FALLTHROUGH_INTENDED;
+    }
+    case State::kDone:
+      break;
+    case State::kError:
+      ORBIT_UNREACHABLE();
+  }
+
   return outcome::success();
 }
 
-outcome::result<void> SftpCopyToLocalOperation::run() { return startup(); }
+outcome::result<void> SftpCopyToLocalOperation::run() {
+  ORBIT_CHECK(CurrentState() == State::kStarted);
+
+  constexpr size_t kReadBufferMaxSize = 1 * 1024 * 1024;
+
+  while (true) {
+    OUTCOME_TRY(auto&& read_buffer, sftp_file_->Read(kReadBufferMaxSize));
+    if (read_buffer.empty()) {
+      // This is end of file
+
+      SetState(State::kCopyDone);
+      break;
+    }
+
+    local_file_.write(read_buffer.data(), read_buffer.size());
+  }
+  return outcome::success();
+}
 
 outcome::result<void> SftpCopyToLocalOperation::startup() {
   if (!data_event_connection_) {
@@ -61,7 +107,6 @@ outcome::result<void> SftpCopyToLocalOperation::startup() {
       SetState(State::kRemoteFileOpened);
       ABSL_FALLTHROUGH_INTENDED;
     }
-    case State::kStarted:
     case State::kRemoteFileOpened: {
       local_file_.setFileName(QString::fromStdString(destination_.string()));
       const auto open_result = local_file_.open(QIODevice::WriteOnly);
@@ -72,34 +117,15 @@ outcome::result<void> SftpCopyToLocalOperation::startup() {
       ABSL_FALLTHROUGH_INTENDED;
     }
     case State::kLocalFileOpened: {
-      constexpr size_t kReadBufferMaxSize = 1 * 1024 * 1024;
-
-      while (true) {
-        OUTCOME_TRY(auto&& read_buffer, sftp_file_->Read(kReadBufferMaxSize));
-        if (read_buffer.empty()) {
-          // This is end of file
-          SetState(State::kLocalFileWritten);
-          break;
-        }
-
-        local_file_.write(read_buffer.data(), read_buffer.size());
-      }
-      ABSL_FALLTHROUGH_INTENDED;
-    }
-    case State::kLocalFileWritten: {
-      local_file_.close();
-      SetState(State::kLocalFileClosed);
-      ABSL_FALLTHROUGH_INTENDED;
-    }
-    case State::kLocalFileClosed: {
-      OUTCOME_TRY(sftp_file_->Close());
-      about_to_shutdown_connection_ = std::nullopt;
-      SetState(State::kDone);
-      ABSL_FALLTHROUGH_INTENDED;
-    }
-    case State::kShutdown:
-    case State::kDone:
+      SetState(State::kStarted);
       break;
+    }
+    case State::kStarted:
+    case State::kShutdown:
+    case State::kCopyDone:
+    case State::kLocalFileClosed:
+    case State::kRemoteFileClosed:
+    case State::kDone:
     case State::kError:
       ORBIT_UNREACHABLE();
   };
