@@ -20,7 +20,7 @@ struct VolumeInfo {
 };
 
 struct PathConverter {
-  // Transforms an input of the form "/Device/..." to "C:/..." using the first matching path.
+  // Transform an input of the form "\Device\HarddiskVolumeN\..." to "C:\...".
   virtual ErrorMessageOr<std::string> DeviceToDrive(std::string_view full_path) = 0;
 
   // Return a map of device names to VolumeInfo objects.

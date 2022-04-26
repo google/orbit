@@ -61,6 +61,4 @@ target_link_libraries(WindowsTracingTests PRIVATE
 
 SET_TARGET_PROPERTIES(WindowsTracingTests PROPERTIES LINK_FLAGS "/MANIFESTUAC:\"level='requireAdministrator' uiAccess='false'\"")
 
-register_test(WindowsTracingTests)
-
-
+register_test(WindowsTracingTests PROPERTIES RUN_SERIAL TRUE)
