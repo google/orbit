@@ -601,7 +601,7 @@ TEST_F(SamplingReportDataViewTest, ContextMenuActionsAreInvoked) {
   }
 
   // Export Callstack Events to CSV
-  { 
+  {
     EXPECT_CALL(sampling_report_, GetCallstackData).WillRepeatedly(ReturnRef(*kCallstackData));
     EXPECT_CALL(sampling_report_, GetSelectedCallstackIds)
         .Times(4)
