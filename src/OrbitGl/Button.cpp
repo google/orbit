@@ -9,13 +9,23 @@
 namespace orbit_gl {
 
 Button::Button(CaptureViewElement* parent, const Viewport* viewport, const TimeGraphLayout* layout)
-    : CaptureViewElement(parent, viewport, layout) {}
+    : CaptureViewElement(parent, viewport, layout) {
+  SetWidth(layout->GetMinButtonSize());
+  SetHeight(layout->GetMinButtonSize());
+}
 
 void Button::SetHeight(float height) {
   if (height == height_) return;
 
   height_ = height;
   RequestUpdate();
+}
+
+void Button::DoUpdateLayout() {
+  CaptureViewElement::DoUpdateLayout();
+
+  SetWidth(std::max(GetWidth(), layout_->GetMinButtonSize()));
+  SetHeight(std::max(GetHeight(), layout_->GetMinButtonSize()));
 }
 
 std::unique_ptr<orbit_accessibility::AccessibleInterface> Button::CreateAccessibleInterface() {

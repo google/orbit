@@ -20,6 +20,9 @@ class Button : public CaptureViewElement {
 
   void SetHeight(float height);
 
+ protected:
+  void DoUpdateLayout() override;
+
  private:
   [[nodiscard]] virtual std::unique_ptr<orbit_accessibility::AccessibleInterface>
   CreateAccessibleInterface() override;

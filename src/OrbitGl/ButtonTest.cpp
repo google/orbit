@@ -48,4 +48,17 @@ TEST(Button, SizeGettersAndSettersWork) {
   EXPECT_EQ(button.GetSize(), size);
 }
 
+TEST(Button, SizeCannotBeZero) {
+  orbit_gl::CaptureViewElementTester tester;
+  Button button(nullptr, tester.GetViewport(), tester.GetLayout());
+
+  button.SetWidth(0.f);
+  button.SetHeight(0.f);
+
+  tester.SimulatePreRender(&button);
+
+  EXPECT_EQ(button.GetWidth(), tester.GetLayout()->GetMinButtonSize());
+  EXPECT_EQ(button.GetHeight(), tester.GetLayout()->GetMinButtonSize());
+}
+
 }  // namespace orbit_gl
