@@ -10,6 +10,7 @@
 
 #include "DataViews/DataView.h"
 #include "MockAppInterface.h"
+#include "OrbitBase/TemporaryFile.h"
 
 namespace orbit_data_views {
 
@@ -37,6 +38,8 @@ void CheckContextMenuOrder(const FlattenContextMenu& context_menu);
 
 [[nodiscard]] FlattenContextMenu FlattenContextMenuWithGroupingAndCheckOrder(
     const std::vector<DataView::ActionGroup>& menu_with_grouping);
+
+orbit_base::TemporaryFile GetTemporaryFilePath();
 
 }  // namespace orbit_data_views
 

@@ -3,6 +3,7 @@
 // found in the LICENSE file.
 #include <absl/container/flat_hash_set.h>
 #include <absl/strings/str_format.h>
+#include <absl/strings/str_join.h>
 #include <gmock/gmock-actions.h>
 #include <gmock/gmock-function-mocker.h>
 #include <gmock/gmock-spec-builders.h>
@@ -10,8 +11,15 @@
 #include <gtest/gtest.h>
 
 #include <algorithm>
+#include <cstddef>
+#include <cstdint>
+#include <iterator>
 #include <memory>
+#include <string>
+#include <vector>
 
+#include "ClientData/CallstackData.h"
+#include "ClientData/CallstackInfo.h"
 #include "ClientData/CaptureData.h"
 #include "ClientData/ModuleAndFunctionLookup.h"
 #include "ClientData/ModuleData.h"
@@ -111,6 +119,75 @@ constexpr std::array<float, kNumFunctions> kSampledInclusivePercents{0.08f, 0.16
 constexpr std::array<uint32_t, kNumFunctions> kSampledUnwindErrors{30, 8, 2, 0};
 constexpr std::array<float, kNumFunctions> kSampledUnwindErrorPercents{0.8f, 0.2f, 0.06f, 0.0f};
 constexpr uint32_t kStackEventsCount = 3700;
+
+constexpr size_t kCallstackInfoNum = 3;
+const std::vector<orbit_client_data::CallstackInfo> kCallstackInfos = [] {
+  std::array<std::vector<uint64_t>, kCallstackInfoNum> array_of_vectors_of_frames = {
+      std::vector<uint64_t>{kSampledAbsoluteAddresses[0], kSampledAbsoluteAddresses[2],
+                            kSampledAbsoluteAddresses[1]},
+      std::vector<uint64_t>{kSampledAbsoluteAddresses[2], kSampledAbsoluteAddresses[0],
+                            kSampledAbsoluteAddresses[2]},
+      std::vector<uint64_t>{kSampledAbsoluteAddresses[2], kSampledAbsoluteAddresses[1]}};
+  std::vector<orbit_client_data::CallstackInfo> result;
+  std::transform(std::begin(array_of_vectors_of_frames), std::end(array_of_vectors_of_frames),
+                 std::back_inserter(result),
+                 [](const std::vector<uint64_t>& frames) -> orbit_client_data::CallstackInfo {
+                   return {frames, orbit_client_data::CallstackType::kComplete};
+                 });
+  return result;
+}();
+constexpr std::array<uint64_t, kCallstackInfoNum> kTimestamps = {123456, 456789, 789456};
+constexpr std::array<uint32_t, kCallstackInfoNum> kTIDs = {321, 321, 987};
+constexpr std::array<uint64_t, kCallstackInfoNum> kCallstackIds = {123, 345, 567};
+const absl::flat_hash_set<uint64_t> kSelectedCallstackIds = {kCallstackIds[1], kCallstackIds[2]};
+
+const std::unique_ptr<const orbit_client_data::CallstackData> kCallstackData = [] {
+  auto result = std::make_unique<orbit_client_data::CallstackData>();
+  for (size_t i = 0; i < kCallstackInfoNum; ++i) {
+    result->AddUniqueCallstack(kCallstackIds[i], kCallstackInfos[i]);
+    result->AddCallstackEvent({kTimestamps[i], kCallstackIds[i], kTIDs[i]});
+  }
+  return result;
+}();
+
+[[nodiscard]] std::string GetPrettyName(uint64_t address) {
+  const size_t index = std::distance(std::begin(kSampledAbsoluteAddresses),
+                                     std::find(std::begin(kSampledAbsoluteAddresses),
+                                               std::end(kSampledAbsoluteAddresses), address));
+  return kModuleIsLoaded[index] ? kFunctionPrettyNames[index] : "???";
+}
+
+[[nodiscard]] std::string BuildExpectedExportEventsToCsvString(std::vector<size_t> indices) {
+  std::string result =
+      "\"Thread\",\"Timestamp (ns)\",\"Names leaf/foo/main\",\"Addresses "
+      "leaf_addr/foo_addr/main_addr\"";
+  result.append(orbit_data_views::kLineSeparator);
+  for (size_t index : indices) {
+    result.append(orbit_data_views::FormatValueForCsv(absl::StrFormat("%u", kTIDs[index])));
+    result.append(orbit_data_views::kFieldSeparator);
+
+    result.append(orbit_data_views::FormatValueForCsv(absl::StrFormat("%u", kTimestamps[index])));
+    result.append(orbit_data_views::kFieldSeparator);
+
+    const std::vector<uint64_t>& frames = kCallstackInfos[index].frames();
+    std::vector<std::string> names;
+    std::vector<std::string> address_strs;
+
+    std::transform(std::begin(frames), std::end(frames), std::back_inserter(names),
+                   [](uint64_t address) { return GetPrettyName(address); });
+    std::transform(std::begin(frames), std::end(frames), std::back_inserter(address_strs),
+                   [](uint64_t address) { return absl::StrFormat("%#llx", address); });
+
+    constexpr std::string_view kFramesSeparator = "/";
+    result.append(orbit_data_views::FormatValueForCsv(absl::StrJoin(names, kFramesSeparator)));
+    result.append(orbit_data_views::kFieldSeparator);
+
+    result.append(
+        orbit_data_views::FormatValueForCsv(absl::StrJoin(address_strs, kFramesSeparator)));
+    result.append(orbit_data_views::kLineSeparator);
+  }
+  return result;
+}
 
 std::unique_ptr<CaptureData> GenerateTestCaptureData(
     orbit_client_data::ModuleManager* module_manager) {
@@ -521,6 +598,40 @@ TEST_F(SamplingReportDataViewTest, ContextMenuActionsAreInvoked) {
         GetExpectedDisplayModuleNameByIndex(0, module_manager_, *capture_data_),
         GetExpectedDisplayAddressByIndex(0), GetExpectedDisplayUnwindErrorsByIndex(0, true));
     CheckExportToCsvIsInvoked(context_menu, app_, view_, expected_contents);
+  }
+
+  // Export Callstack Events to CSV
+  { 
+    EXPECT_CALL(sampling_report_, GetCallstackData).WillRepeatedly(ReturnRef(*kCallstackData));
+    EXPECT_CALL(sampling_report_, GetSelectedCallstackIds)
+        .Times(4)
+        .WillOnce(Return(std::nullopt))
+        .WillOnce(Return(std::nullopt))
+        .WillOnce(Return(kSelectedCallstackIds))
+        .WillOnce(Return(kSelectedCallstackIds));
+
+    // all threads, no active selection
+    view_.SetThreadID(orbit_base::kAllProcessThreadsTid);
+    CheckExportToCsvIsInvoked(context_menu, app_, view_,
+                              BuildExpectedExportEventsToCsvString({0, 1, 2}),
+                              orbit_data_views::kMenuActionExportEventsToCsv);
+
+    // one thread, no active selection
+    view_.SetThreadID(kTIDs[0]);
+    CheckExportToCsvIsInvoked(context_menu, app_, view_,
+                              BuildExpectedExportEventsToCsvString({0, 1}),
+                              orbit_data_views::kMenuActionExportEventsToCsv);
+
+    // all threads, an active selection
+    view_.SetThreadID(orbit_base::kAllProcessThreadsTid);
+    CheckExportToCsvIsInvoked(context_menu, app_, view_,
+                              BuildExpectedExportEventsToCsvString({1, 2}),
+                              orbit_data_views::kMenuActionExportEventsToCsv);
+
+    // one thread, an active selection
+    view_.SetThreadID(kTIDs[0]);
+    CheckExportToCsvIsInvoked(context_menu, app_, view_, BuildExpectedExportEventsToCsvString({1}),
+                              orbit_data_views::kMenuActionExportEventsToCsv);
   }
 
   // Go to Disassembly
