@@ -9,6 +9,7 @@
 
 #include "Batcher.h"
 #include "Geometry.h"
+#include "absl/container/btree_map.h"
 
 namespace orbit_gl {
 
@@ -27,18 +28,25 @@ class MockBatcher : public Batcher {
   void ResetElements() override;
   [[nodiscard]] uint32_t GetNumElements() const override;
 
-  [[nodiscard]] std::vector<float> GetLayers() const override { return {}; };
+  [[nodiscard]] std::vector<float> GetLayers() const override {
+    return std::vector<float>(z_layers_.begin(), z_layers_.end());
+  }
+
   virtual void DrawLayer(float /*layer*/, bool /*picking*/) const override{};
 
   [[nodiscard]] const PickingUserData* GetUserData(PickingId /*id*/) const override {
     return nullptr;
   }
 
-  [[nodiscard]] int GetNumLinesByColor(Color color) const { return num_lines_by_color_.at(color); }
-  [[nodiscard]] int GetNumTrianglesByColor(Color color) const {
-    return num_triangles_by_color_.at(color);
+  [[nodiscard]] int GetNumLinesByColor(Color color) const {
+    return num_lines_by_color_.contains(color) ? num_lines_by_color_.at(color) : 0;
   }
-  [[nodiscard]] int GetNumBoxesByColor(Color color) const { return num_boxes_by_color_.at(color); }
+  [[nodiscard]] int GetNumTrianglesByColor(Color color) const {
+    return num_triangles_by_color_.contains(color) ? num_triangles_by_color_.at(color) : 0;
+  }
+  [[nodiscard]] int GetNumBoxesByColor(Color color) const {
+    return num_boxes_by_color_.contains(color) ? num_boxes_by_color_.at(color) : 0;
+  }
   [[nodiscard]] int GetNumHorizontalLines() const { return num_horizontal_lines_; }
   [[nodiscard]] int GetNumVerticalLines() const { return num_vertical_lines_; }
   [[nodiscard]] int GetNumLines() const;
@@ -49,15 +57,16 @@ class MockBatcher : public Batcher {
   [[nodiscard]] bool IsEverythingBetweenZLayers(float z_layer_min, float z_layer_max) const;
 
  private:
-  void AdjustDrawingBoundaries(Vec3 point);
+  void AdjustDrawingBoundaries(Vec2 point);
 
-  Vec3 min_point_;
-  Vec3 max_point_;
+  Vec2 min_point_;
+  Vec2 max_point_;
+  std::set<float> z_layers_;
   int num_vertical_lines_;
   int num_horizontal_lines_;
-  std::map<Color, int> num_lines_by_color_;
-  std::map<Color, int> num_triangles_by_color_;
-  std::map<Color, int> num_boxes_by_color_;
+  absl::btree_map<Color, int> num_lines_by_color_;
+  absl::btree_map<Color, int> num_triangles_by_color_;
+  absl::btree_map<Color, int> num_boxes_by_color_;
 };
 
 }  // namespace orbit_gl
