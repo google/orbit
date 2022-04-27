@@ -44,10 +44,10 @@ class CaptureViewElement : public Pickable, public AccessibleInterfaceProvider {
   // Height should be defined in every particular capture view element.
   [[nodiscard]] virtual float GetHeight() const = 0;
   [[nodiscard]] Vec2 GetSize() const { return Vec2(GetWidth(), GetHeight()); }
-  [[nodiscard]] virtual bool ShouldBeRendered() const { return IsVisible(); }
+  [[nodiscard]] virtual bool ShouldBeRendered() const { return GetVisible(); }
 
   void SetVisible(bool value);
-  [[nodiscard]] bool IsVisible() const { return visible_; }
+  [[nodiscard]] bool GetVisible() const { return visible_; }
 
   // Pickable
   void OnPick(int x, int y) override;

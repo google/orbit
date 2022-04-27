@@ -391,6 +391,7 @@ void CaptureWindow::SetIsMouseOver(bool value) {
   GlCanvas::SetIsMouseOver(value);
 
   if (time_graph_ != nullptr) {
+    // TODO(b/230441102): Replace by CaptureViewElement's MouseEvent
     time_graph_->SetIsMouseOver(value);
   }
 }

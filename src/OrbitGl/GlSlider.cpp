@@ -52,12 +52,12 @@ bool GlSlider::ContainsScreenSpacePoint(int x, int y) const {
          y <= GetPos()[1] + GetSize()[1];
 }
 
-GlSlider::GlSlider(CaptureViewElement* parent, Viewport* viewport, TimeGraphLayout* layout,
-                   TimelineInfoInterface* timeline_info, bool is_vertical)
+GlSlider::GlSlider(CaptureViewElement* parent, const Viewport* viewport,
+                   const TimeGraphLayout* layout, TimelineInfoInterface* timeline_info,
+                   bool is_vertical)
     : CaptureViewElement(parent, viewport, layout),
       is_vertical_(is_vertical),
       timeline_info_(timeline_info),
-      viewport_(*viewport),
       pos_ratio_(0),
       right_edge_ratio_(0),
       length_ratio_(0),
@@ -171,7 +171,8 @@ void GlSlider::DrawBackground(PrimitiveAssembler& primitive_assembler, float x, 
 }
 
 void GlSlider::DrawSlider(PrimitiveAssembler& primitive_assembler, float x, float y, float width,
-                          float height, ShadingDirection shading_direction, bool is_picked) {
+                          float height, ShadingDirection shading_direction) {
+  bool is_picked = primitive_assembler.GetPickingManager()->IsThisElementPicked(this);
   bool mouse_over_slider = false;
   if (is_mouse_over_) {
     mouse_over_slider = PosIsInSlider(mouse_pos_[0], mouse_pos_[1]);
@@ -249,7 +250,10 @@ bool GlSlider::HandlePageScroll(float click_value) {
   return true;
 }
 
-void GlVerticalSlider::Draw(PrimitiveAssembler& primitive_assembler, bool is_picked) {
+void GlVerticalSlider::DoDraw(PrimitiveAssembler& primitive_assembler,
+                              TextRenderer& /*text_renderer*/,
+                              const DrawContext& /*draw_context*/) {
+  // TODO(b/230442062): This should be part of CaptureViewElement.
   primitive_assembler.PushTranslation(static_cast<int>(GetPos()[0]), static_cast<int>(GetPos()[1]));
 
   float bar_pixel_len = GetBarPixelLength();
@@ -264,8 +268,7 @@ void GlVerticalSlider::Draw(PrimitiveAssembler& primitive_assembler, bool is_pic
   float start = ceilf(pos_ratio_ * non_slider_height);
 
   ShadingDirection shading_direction = ShadingDirection::kRightToLeft;
-  DrawSlider(primitive_assembler, 0, start, GetPixelHeight(), slider_height, shading_direction,
-             is_picked);
+  DrawSlider(primitive_assembler, 0, start, GetPixelHeight(), slider_height, shading_direction);
 
   primitive_assembler.PopTranslation();
 }
@@ -277,7 +280,10 @@ GlVerticalSlider::CreateAccessibleInterface() {
   return std::make_unique<AccessibleCaptureViewElement>(this, "Vertical Slider");
 }
 
-void GlHorizontalSlider::Draw(PrimitiveAssembler& primitive_assembler, bool is_picked) {
+void GlHorizontalSlider::DoDraw(PrimitiveAssembler& primitive_assembler,
+                                TextRenderer& /*text_renderer*/,
+                                const DrawContext& /*draw_context*/) {
+  // TODO(b/230442062): This should be part of CaptureViewElement.
   primitive_assembler.PushTranslation(static_cast<int>(GetPos()[0]), static_cast<int>(GetPos()[1]));
 
   float bar_pixel_len = GetBarPixelLength();
@@ -289,8 +295,7 @@ void GlHorizontalSlider::Draw(PrimitiveAssembler& primitive_assembler, bool is_p
   float start = floorf(pos_ratio_ * non_slider_width);
 
   ShadingDirection shading_direction = ShadingDirection::kTopToBottom;
-  DrawSlider(primitive_assembler, start, 0, slider_width, GetPixelHeight(), shading_direction,
-             is_picked);
+  DrawSlider(primitive_assembler, start, 0, slider_width, GetPixelHeight(), shading_direction);
 
   const float kEpsilon = 0.0001f;
 
@@ -324,6 +329,7 @@ void GlHorizontalSlider::Draw(PrimitiveAssembler& primitive_assembler, bool is_p
                                       pixel_height_ - 4.f, z, kWhite, shared_from_this());
 
   // Highlight the scale part of the slider
+  bool is_picked = primitive_assembler.GetPickingManager()->IsThisElementPicked(this);
   if (is_picked) {
     if (drag_type_ == DragType::kScaleMax) {
       primitive_assembler.AddShadedBox(Vec2(x + width - slider_resize_pixel_margin_, 2),

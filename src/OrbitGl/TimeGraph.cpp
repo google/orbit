@@ -754,7 +754,7 @@ void TimeGraph::UpdateChildrenPosAndContainerSize() {
 
   // Now we can set width of every child.
   const float vertical_slider_width =
-      (vertical_slider_->IsVisible() ? vertical_slider_->GetWidth() : 0.f);
+      (vertical_slider_->GetVisible() ? vertical_slider_->GetWidth() : 0.f);
   const float total_right_margin = layout_.GetRightMargin() + vertical_slider_width;
   timeline_ui_->SetWidth(GetWidth() - total_right_margin);
   track_container_->SetWidth(GetWidth() - total_right_margin);
@@ -766,7 +766,7 @@ void TimeGraph::UpdateChildrenPosAndContainerSize() {
 
 float TimeGraph::GetRightMargin() const {
   return layout_.GetRightMargin() +
-         (vertical_slider_->IsVisible() ? vertical_slider_->GetWidth() : 0.f);
+         (vertical_slider_->GetVisible() ? vertical_slider_->GetWidth() : 0.f);
 }
 
 void TimeGraph::UpdateHorizontalSliderFromWorld() {
@@ -783,8 +783,8 @@ void TimeGraph::UpdateHorizontalSliderFromWorld() {
   slider_->SetNormalizedLength(static_cast<float>(width / time_span));
   slider_->SetNormalizedPosition(static_cast<float>(ratio));
 
-  slider_->SetOrthogonalSliderPixelHeight(vertical_slider_->IsVisible() ? slider_width : 0);
-  slider_->SetWidth(GetWidth() - (vertical_slider_->IsVisible() ? slider_width : 0));
+  slider_->SetOrthogonalSliderPixelHeight(vertical_slider_->GetVisible() ? slider_width : 0);
+  slider_->SetWidth(GetWidth() - (vertical_slider_->GetVisible() ? slider_width : 0));
 }
 
 void TimeGraph::UpdateVerticalSliderFromWorld() {
@@ -889,7 +889,7 @@ void TimeGraph::DoDraw(orbit_gl::PrimitiveAssembler& primitive_assembler,
   if (GetCaptureTimeSpanNs() > 0) {
     slider_->Draw(primitive_assembler,
                   primitive_assembler.GetPickingManager()->IsThisElementPicked(slider_.get()));
-    if (vertical_slider_->IsVisible()) {
+    if (vertical_slider_->GetVisible()) {
       vertical_slider_->Draw(
           primitive_assembler,
           primitive_assembler.GetPickingManager()->IsThisElementPicked(vertical_slider_.get()));
