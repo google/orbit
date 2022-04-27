@@ -294,12 +294,12 @@ TEST_F(ElfTest, rel_pc) {
   elf.FakeSetInterface(interface);
 
   elf.FakeSetValid(true);
-  MapInfo map_info(nullptr, nullptr, 0x1000, 0x2000, 0, 0, "");
+  auto map_info = MapInfo::Create(0x1000, 0x2000, 0, 0, "");
 
-  ASSERT_EQ(0x101U, elf.GetRelPc(0x1101, &map_info));
+  ASSERT_EQ(0x101U, elf.GetRelPc(0x1101, map_info.get()));
 
   elf.FakeSetValid(false);
-  ASSERT_EQ(0x101U, elf.GetRelPc(0x1101, &map_info));
+  ASSERT_EQ(0x101U, elf.GetRelPc(0x1101, map_info.get()));
 }
 
 void ElfTest::VerifyStepIfSignalHandler(uint64_t load_bias) {

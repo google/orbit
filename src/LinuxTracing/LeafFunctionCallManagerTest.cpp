@@ -44,7 +44,7 @@ namespace {
 
 class MockLibunwindstackMaps : public LibunwindstackMaps {
  public:
-  MOCK_METHOD(unwindstack::MapInfo*, Find, (uint64_t), (override));
+  MOCK_METHOD(std::shared_ptr<unwindstack::MapInfo>, Find, (uint64_t), (override));
   MOCK_METHOD(unwindstack::Maps*, Get, (), (override));
   MOCK_METHOD(void, AddAndSort,
               (uint64_t, uint64_t, uint64_t, uint64_t, const std::string&, uint64_t), (override));
@@ -64,13 +64,13 @@ class LeafFunctionCallManagerTest : public ::testing::Test {
  protected:
   void SetUp() override {
     EXPECT_CALL(maps_, Find(AllOf(Ge(kUprobesMapsStart), Lt(kUprobesMapsEnd))))
-        .WillRepeatedly(Return(&kUprobesMapInfo));
+        .WillRepeatedly(Return(kUprobesMapInfo));
 
     EXPECT_CALL(maps_, Find(AllOf(Ge(kTargetMapsStart), Lt(kTargetMapsEnd))))
-        .WillRepeatedly(Return(&kTargetMapInfo));
+        .WillRepeatedly(Return(kTargetMapInfo));
 
     EXPECT_CALL(maps_, Find(AllOf(Ge(kNonExecutableMapsStart), Lt(kNonExecutableMapsEnd))))
-        .WillRepeatedly(Return(&kNonExecutableMapInfo));
+        .WillRepeatedly(Return(kNonExecutableMapInfo));
   }
 
   void TearDown() override {}
@@ -101,15 +101,17 @@ class LeafFunctionCallManagerTest : public ::testing::Test {
   static inline const std::string kTargetName = "target";
   static inline const std::string kNonExecutableName = "data";
 
-  static inline unwindstack::MapInfo kUprobesMapInfo{
-      nullptr, nullptr, kUprobesMapsStart, kUprobesMapsEnd, 0, PROT_EXEC | PROT_READ, kUprobesName};
+  static inline const std::shared_ptr<unwindstack::MapInfo> kUprobesMapInfo =
+      unwindstack::MapInfo::Create(kUprobesMapsStart, kUprobesMapsEnd, 0, PROT_EXEC | PROT_READ,
+                                   kUprobesName);
 
-  static inline unwindstack::MapInfo kTargetMapInfo{
-      nullptr, nullptr, kTargetMapsStart, kTargetMapsEnd, 0, PROT_EXEC | PROT_READ, kTargetName};
+  static inline const std::shared_ptr<unwindstack::MapInfo> kTargetMapInfo =
+      unwindstack::MapInfo::Create(kTargetMapsStart, kTargetMapsEnd, 0, PROT_EXEC | PROT_READ,
+                                   kTargetName);
 
-  static inline unwindstack::MapInfo kNonExecutableMapInfo{
-      nullptr, nullptr,   kNonExecutableMapsStart, kNonExecutableMapsEnd,
-      0,       PROT_READ, kNonExecutableName};
+  static inline const std::shared_ptr<unwindstack::MapInfo> kNonExecutableMapInfo =
+      unwindstack::MapInfo::Create(kNonExecutableMapsStart, kNonExecutableMapsEnd, 0, PROT_READ,
+                                   kNonExecutableName);
 
   static inline unwindstack::FrameData kFrame1{
       .pc = kTargetAddress1,
@@ -229,7 +231,7 @@ TEST_F(
       .WillOnce(Return(LibunwindstackResult{
           {kFrame1}, libunwindstack_regs, unwindstack::ErrorCode::ERROR_INVALID_MAP}));
 
-  EXPECT_CALL(maps_, Find(_)).WillRepeatedly(Return(&kTargetMapInfo));
+  EXPECT_CALL(maps_, Find(_)).WillRepeatedly(Return(kTargetMapInfo));
 
   EXPECT_EQ(Callstack::kComplete,
             leaf_function_call_manager_.PatchCallerOfLeafFunction(&event_data, &maps_, &unwinder_));
@@ -349,7 +351,7 @@ TEST_F(LeafFunctionCallManagerTest, PatchCallerOfLeafFunctionReturnsErrorOnUnwin
 
   EXPECT_CALL(maps_, Find(kNonExecutableMapsStart))
       .Times(1)
-      .WillOnce(Return(&kNonExecutableMapInfo));
+      .WillOnce(Return(kNonExecutableMapInfo));
 
   EXPECT_EQ(Callstack::kStackTopDwarfUnwindingError,
             leaf_function_call_manager_.PatchCallerOfLeafFunction(&event_data, &maps_, &unwinder_));
@@ -477,7 +479,7 @@ TEST_F(LeafFunctionCallManagerTest,
       .WillOnce(Return(LibunwindstackResult{
           {kFrame1}, libunwindstack_regs, unwindstack::ErrorCode::ERROR_INVALID_MAP}));
 
-  EXPECT_CALL(maps_, Find(_)).WillRepeatedly(Return(&kTargetMapInfo));
+  EXPECT_CALL(maps_, Find(_)).WillRepeatedly(Return(kTargetMapInfo));
 
   EXPECT_EQ(Callstack::kComplete,
             leaf_function_call_manager_.PatchCallerOfLeafFunction(&event_data, &maps_, &unwinder_));

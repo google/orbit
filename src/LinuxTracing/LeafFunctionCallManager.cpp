@@ -128,7 +128,8 @@ Callstack::CallstackType LeafFunctionCallManager::PatchCallerOfLeafFunction(
   uint64_t libunwindstack_leaf_caller_pc = new_regs.pc();
 
   // If the caller is not executable, we have an unwinding error.
-  unwindstack::MapInfo* caller_map_info = current_maps->Find(libunwindstack_leaf_caller_pc);
+  std::shared_ptr<unwindstack::MapInfo> caller_map_info =
+      current_maps->Find(libunwindstack_leaf_caller_pc);
   if (caller_map_info == nullptr || (caller_map_info->flags() & PROT_EXEC) == 0) {
     return Callstack::kStackTopDwarfUnwindingError;
   }

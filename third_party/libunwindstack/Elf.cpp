@@ -15,7 +15,9 @@
  */
 
 #include <elf.h>
+#include <inttypes.h>
 #include <string.h>
+#include <sys/mman.h>
 
 #include <memory>
 #include <mutex>
@@ -29,6 +31,9 @@
 #include <unwindstack/Memory.h>
 #include <unwindstack/Object.h>
 #include <unwindstack/Regs.h>
+#include <unwindstack/SharedString.h>
+
+#include <android-base/stringprintf.h>
 
 #include "ElfInterfaceArm.h"
 #include "Symbols.h"

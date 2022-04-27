@@ -16,6 +16,8 @@
 
 #include <stdint.h>
 
+#include <memory>
+
 #include <gtest/gtest.h>
 
 #include <unwindstack/Elf.h>
@@ -170,27 +172,27 @@ TEST_F(RegsTest, rel_pc_arm) {
 }
 
 TEST_F(RegsTest, elf_invalid) {
-  MapInfo map_info(nullptr, nullptr, 0x1000, 0x2000, 0, 0, "");
+  auto map_info = MapInfo::Create(0x1000, 0x2000, 0, 0, "");
   Elf* invalid_elf = new Elf(nullptr);
-  map_info.set_object(invalid_elf);
+  map_info->set_object(invalid_elf);
 
-  EXPECT_EQ(0x500U, invalid_elf->GetRelPc(0x1500, &map_info));
+  EXPECT_EQ(0x500U, invalid_elf->GetRelPc(0x1500, map_info.get()));
   EXPECT_EQ(2U, GetPcAdjustment(0x500U, invalid_elf, ARCH_ARM));
   EXPECT_EQ(2U, GetPcAdjustment(0x511U, invalid_elf, ARCH_ARM));
 
-  EXPECT_EQ(0x600U, invalid_elf->GetRelPc(0x1600, &map_info));
+  EXPECT_EQ(0x600U, invalid_elf->GetRelPc(0x1600, map_info.get()));
   EXPECT_EQ(4U, GetPcAdjustment(0x600U, invalid_elf, ARCH_ARM64));
 
-  EXPECT_EQ(0x700U, invalid_elf->GetRelPc(0x1700, &map_info));
+  EXPECT_EQ(0x700U, invalid_elf->GetRelPc(0x1700, map_info.get()));
   EXPECT_EQ(1U, GetPcAdjustment(0x700U, invalid_elf, ARCH_X86));
 
-  EXPECT_EQ(0x800U, invalid_elf->GetRelPc(0x1800, &map_info));
+  EXPECT_EQ(0x800U, invalid_elf->GetRelPc(0x1800, map_info.get()));
   EXPECT_EQ(1U, GetPcAdjustment(0x800U, invalid_elf, ARCH_X86_64));
 
-  EXPECT_EQ(0x900U, invalid_elf->GetRelPc(0x1900, &map_info));
+  EXPECT_EQ(0x900U, invalid_elf->GetRelPc(0x1900, map_info.get()));
   EXPECT_EQ(8U, GetPcAdjustment(0x900U, invalid_elf, ARCH_MIPS));
 
-  EXPECT_EQ(0xa00U, invalid_elf->GetRelPc(0x1a00, &map_info));
+  EXPECT_EQ(0xa00U, invalid_elf->GetRelPc(0x1a00, map_info.get()));
   EXPECT_EQ(8U, GetPcAdjustment(0xa00U, invalid_elf, ARCH_MIPS64));
 }
 

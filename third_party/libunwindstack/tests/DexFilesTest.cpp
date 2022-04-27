@@ -72,22 +72,22 @@ class DexFilesTest : public ::testing::Test {
     ASSERT_TRUE(maps_->Parse());
 
     // Global variable in a section that is not readable.
-    MapInfo* map_info = maps_->Get(kMapGlobalNonReadable);
+    MapInfo* map_info = maps_->Get(kMapGlobalNonReadable).get();
     ASSERT_TRUE(map_info != nullptr);
     CreateFakeElf(map_info, 0x2800, 0x2000, 0x2000, 0x3000);
 
     // Global variable not set by default.
-    map_info = maps_->Get(kMapGlobalSetToZero);
+    map_info = maps_->Get(kMapGlobalSetToZero).get();
     ASSERT_TRUE(map_info != nullptr);
     CreateFakeElf(map_info, 0x2800, 0x2000, 0x2000, 0x3000);
 
     // Global variable set in this map.
-    map_info = maps_->Get(kMapGlobal);
+    map_info = maps_->Get(kMapGlobal).get();
     ASSERT_TRUE(map_info != nullptr);
     CreateFakeElf(map_info, 0xf1800, 0xf1000, 0xf1000, 0x10000);
 
     // Global variable set in this map, but there is an empty map before rw map.
-    map_info = maps_->Get(kMapGlobalAfterEmpty);
+    map_info = maps_->Get(kMapGlobalAfterEmpty).get();
     ASSERT_TRUE(map_info != nullptr);
     CreateFakeElf(map_info, 0x3800, 0x3000, 0x3000, 0xd000);
   }
@@ -278,7 +278,7 @@ TEST_F(DexFilesTest, get_method_information_search_libs) {
   EXPECT_EQ("nothing", method_name);
   EXPECT_EQ(0x124U, method_offset);
 
-  MapInfo* map_info = maps_->Get(kMapGlobal);
+  auto map_info = maps_->Get(kMapGlobal);
   map_info->set_name("/system/lib/libart.so");
   dex_files_ = CreateDexFiles(ARCH_ARM, process_memory_, libs);
   // Set the rw map to the same name or this will not scan this entry.

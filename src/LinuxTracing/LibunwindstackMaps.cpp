@@ -13,7 +13,7 @@ class LibunwindstackMapsImpl : public LibunwindstackMaps {
   explicit LibunwindstackMapsImpl(std::unique_ptr<unwindstack::BufferMaps> maps)
       : maps_{std::move(maps)} {}
 
-  unwindstack::MapInfo* Find(uint64_t pc) override { return maps_->Find(pc); }
+  std::shared_ptr<unwindstack::MapInfo> Find(uint64_t pc) override { return maps_->Find(pc); }
 
   unwindstack::Maps* Get() override { return maps_.get(); }
 

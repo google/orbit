@@ -29,7 +29,7 @@ namespace unwindstack {
 template <>
 bool GlobalDebugInterface<DexFile>::Load(Maps* maps, std::shared_ptr<Memory>& memory, uint64_t addr,
                                          uint64_t size, /*out*/ std::shared_ptr<DexFile>& dex) {
-  dex = DexFile::Create(addr, size, memory.get(), maps->Find(addr));
+  dex = DexFile::Create(addr, size, memory.get(), maps->Find(addr).get());
   return dex.get() != nullptr;
 }
 

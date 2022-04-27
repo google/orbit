@@ -174,7 +174,7 @@ static std::optional<bool> HasFramePointerSetFromDwarfSection(
 std::optional<bool> LibunwindstackUnwinderImpl::HasFramePointerSet(uint64_t instruction_pointer,
                                                                    pid_t pid,
                                                                    unwindstack::Maps* maps) {
-  unwindstack::MapInfo* map_info = maps->Find(instruction_pointer);
+  std::shared_ptr<unwindstack::MapInfo> map_info = maps->Find(instruction_pointer);
   if (map_info == nullptr) {
     return std::nullopt;
   }
@@ -197,7 +197,7 @@ std::optional<bool> LibunwindstackUnwinderImpl::HasFramePointerSet(uint64_t inst
     return std::nullopt;
   }
 
-  uint64_t rel_pc = object->GetRelPc(instruction_pointer, map_info);
+  uint64_t rel_pc = object->GetRelPc(instruction_pointer, map_info.get());
 
   unwindstack::DwarfSection* debug_frame = elf_interface->debug_frame();
 

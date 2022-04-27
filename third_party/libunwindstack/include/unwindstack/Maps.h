@@ -50,7 +50,7 @@ class Maps {
   Maps(Maps&&) = default;
   Maps& operator=(Maps&&) = default;
 
-  virtual MapInfo* Find(uint64_t pc);
+  virtual std::shared_ptr<MapInfo> Find(uint64_t pc);
 
   virtual bool Parse();
 
@@ -61,23 +61,23 @@ class Maps {
 
   void Sort();
 
-  typedef std::vector<std::unique_ptr<MapInfo>>::iterator iterator;
+  typedef std::vector<std::shared_ptr<MapInfo>>::iterator iterator;
   iterator begin() { return maps_.begin(); }
   iterator end() { return maps_.end(); }
 
-  typedef std::vector<std::unique_ptr<MapInfo>>::const_iterator const_iterator;
+  typedef std::vector<std::shared_ptr<MapInfo>>::const_iterator const_iterator;
   const_iterator begin() const { return maps_.begin(); }
   const_iterator end() const { return maps_.end(); }
 
   size_t Total() { return maps_.size(); }
 
-  MapInfo* Get(size_t index) {
+  std::shared_ptr<MapInfo> Get(size_t index) {
     if (index >= maps_.size()) return nullptr;
-    return maps_[index].get();
+    return maps_[index];
   }
 
  protected:
-  std::vector<std::unique_ptr<MapInfo>> maps_;
+  std::vector<std::shared_ptr<MapInfo>> maps_;
 };
 
 class RemoteMaps : public Maps {
@@ -102,7 +102,7 @@ class LocalUpdatableMaps : public Maps {
   LocalUpdatableMaps();
   virtual ~LocalUpdatableMaps() = default;
 
-  MapInfo* Find(uint64_t pc) override;
+  std::shared_ptr<MapInfo> Find(uint64_t pc) override;
 
   bool Parse() override;
 
@@ -110,9 +110,7 @@ class LocalUpdatableMaps : public Maps {
 
   bool Reparse(/*out*/ bool* any_changed = nullptr);
 
- protected:
-  std::vector<std::unique_ptr<MapInfo>> saved_maps_;
-
+ private:
   pthread_rwlock_t maps_rwlock_;
 };
 

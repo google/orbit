@@ -14,19 +14,24 @@
  * limitations under the License.
  */
 
+#include <sys/mman.h>
 #include <unwindstack/MapInfo.h>
 #include <unwindstack/Object.h>
+
+#include <android-base/stringprintf.h>
 
 namespace unwindstack {
 
 bool Object::cache_enabled_;
-std::unordered_map<std::string, std::pair<std::shared_ptr<Object>, bool>>* Object::cache_;
+std::unordered_map<std::string, std::unordered_map<uint64_t, std::shared_ptr<Object>>>*
+    Object::cache_;
 std::mutex* Object::cache_lock_;
 
 void Object::SetCachingEnabled(bool enable) {
   if (!cache_enabled_ && enable) {
     cache_enabled_ = true;
-    cache_ = new std::unordered_map<std::string, std::pair<std::shared_ptr<Object>, bool>>;
+    cache_ =
+        new std::unordered_map<std::string, std::unordered_map<uint64_t, std::shared_ptr<Object>>>;
     cache_lock_ = new std::mutex;
   } else if (cache_enabled_ && !enable) {
     cache_enabled_ = false;
@@ -44,58 +49,66 @@ void Object::CacheUnlock() {
 }
 
 void Object::CacheAdd(MapInfo* info) {
-  // If object_offset != 0, then cache both name:offset and name.
-  // The cached name is used to do lookups if multiple maps for the same
-  // named object file exist.
-  // For example, if there are two maps boot.odex:1000 and boot.odex:2000
-  // where each reference the entire boot.odex, the cache will properly
-  // use the same cached object.
-
-  if (info->offset() == 0 || info->object_offset() != 0) {
-    (*cache_)[info->name()] = std::make_pair(info->object(), true);
+  if (!info->object()->valid()) {
+    return;
   }
-
-  if (info->offset() != 0) {
-    // The second element in the pair indicates whether object_offset should
-    // be set to offset when getting out of the cache.
-    std::string key = std::string(info->name()) + ':' + std::to_string(info->offset());
-    (*cache_)[key] = std::make_pair(info->object(), info->object_offset() != 0);
-  }
-}
-
-bool Object::CacheAfterCreateMemory(MapInfo* info) {
-  if (info->name().empty() || info->offset() == 0 || info->object_offset() == 0) {
-    return false;
-  }
-
-  auto entry = cache_->find(info->name());
-  if (entry == cache_->end()) {
-    return false;
-  }
-
-  // In this case, the whole file is the object, and the name has already
-  // been cached. Add an entry at name:offset to get this directly out
-  // of the cache next time.
-  info->set_object(entry->second.first);
-  std::string key = std::string(info->name()) + ':' + std::to_string(info->offset());
-  (*cache_)[key] = std::make_pair(info->object(), true);
-  return true;
+  (*cache_)[std::string(info->name())].emplace(info->object_start_offset(), info->object());
 }
 
 bool Object::CacheGet(MapInfo* info) {
-  std::string name(info->name());
-  if (info->offset() != 0) {
-    name += ':' + std::to_string(info->offset());
+  auto name_entry = cache_->find(std::string(info->name()));
+  if (name_entry == cache_->end()) {
+    return false;
   }
-  auto entry = cache_->find(name);
-  if (entry != cache_->end()) {
-    info->set_object(entry->second.first);
-    if (entry->second.second) {
-      info->set_object_offset(info->offset());
+  // First look to see if there is a zero offset entry, this indicates
+  // the whole object is the file.
+  auto& offset_cache = name_entry->second;
+  uint64_t object_start_offset = 0;
+  auto entry = offset_cache.find(object_start_offset);
+  if (entry == offset_cache.end()) {
+    // Try and find using the current offset.
+    object_start_offset = info->offset();
+    entry = offset_cache.find(object_start_offset);
+    if (entry == offset_cache.end()) {
+      // If this is an execute map, then see if the previous read-only
+      // map is the start of the object.
+      if (!(info->flags() & PROT_EXEC)) {
+        return false;
+      }
+      auto prev_map = info->GetPrevRealMap();
+      if (prev_map == nullptr || info->offset() <= prev_map->offset() ||
+          (prev_map->flags() != PROT_READ)) {
+        return false;
+      }
+      object_start_offset = prev_map->offset();
+      entry = offset_cache.find(object_start_offset);
+      if (entry == offset_cache.end()) {
+        return false;
+      }
     }
-    return true;
   }
-  return false;
+
+  info->set_object(entry->second);
+  info->set_object_start_offset(object_start_offset);
+  info->set_object_offset(info->offset() - object_start_offset);
+  return true;
+}
+
+std::string Object::GetPrintableBuildID(std::string& build_id) {
+  if (build_id.empty()) {
+    return "";
+  }
+  std::string printable_build_id;
+  for (const char& c : build_id) {
+    // Use %hhx to avoid sign extension on abis that have signed chars.
+    printable_build_id += android::base::StringPrintf("%02hhx", c);
+  }
+  return printable_build_id;
+}
+
+std::string Object::GetPrintableBuildID() {
+  std::string build_id = GetBuildID();
+  return Elf::GetPrintableBuildID(build_id);
 }
 
 }  // namespace unwindstack

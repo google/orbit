@@ -66,15 +66,15 @@ class JitDebugTest : public ::testing::Test {
                        "200000-210000 rw-p 01ee000 00:00 0 /fake/elf4\n"));
     ASSERT_TRUE(maps_->Parse());
 
-    MapInfo* map_info = maps_->Get(3);
+    MapInfo* map_info = maps_->Get(3).get();
     ASSERT_TRUE(map_info != nullptr);
     CreateFakeElf(map_info, 0x2800, 0x2000, 0x2000, 0x3000);
 
-    map_info = maps_->Get(5);
+    map_info = maps_->Get(5).get();
     ASSERT_TRUE(map_info != nullptr);
     CreateFakeElf(map_info, 0x2800, 0x2000, 0x2000, 0x3000);
 
-    map_info = maps_->Get(7);
+    map_info = maps_->Get(7).get();
     ASSERT_TRUE(map_info != nullptr);
     CreateFakeElf(map_info, 0xee800, 0xee000, 0xee000, 0x10000);
   }
@@ -415,7 +415,7 @@ TEST_F(JitDebugTest, get_elf_search_libs) {
   EXPECT_TRUE(jit_debug_->Find(maps_.get(), 0x1500) == nullptr);
 
   // Change the name of the map that includes the value and verify this works.
-  MapInfo* map_info = maps_->Get(5);
+  auto map_info = maps_->Get(5);
   map_info->set_name("/system/lib/libart.so");
   map_info = maps_->Get(6);
   map_info->set_name("/system/lib/libart.so");

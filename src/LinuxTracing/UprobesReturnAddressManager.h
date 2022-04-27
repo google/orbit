@@ -105,7 +105,7 @@ class UprobesReturnAddressManager {
         continue;
       }
 
-      unwindstack::MapInfo* map_info = maps->Find(ip);
+      std::shared_ptr<unwindstack::MapInfo> map_info = maps->Find(ip);
       if (map_info != nullptr && map_info->name() == "[uprobes]") {
         frames_to_patch.push_back(i);
       }

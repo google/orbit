@@ -287,7 +287,7 @@ bool SaveData(pid_t tid, const std::filesystem::path& cwd, bool is_main_thread, 
   std::vector<std::pair<uint64_t, uint64_t>> stacks;
   unwindstack::Maps* maps = unwinder.GetMaps();
   uint64_t sp_map_start = 0;
-  unwindstack::MapInfo* map_info = maps->Find(sp);
+  auto map_info = maps->Find(sp);
   if (map_info != nullptr) {
     stacks.emplace_back(std::make_pair(sp, map_info->end()));
     sp_map_start = map_info->start();
@@ -306,18 +306,18 @@ bool SaveData(pid_t tid, const std::filesystem::path& cwd, bool is_main_thread, 
         continue;
       }
 
-      auto info = FillInAndGetMapInfo(maps_by_start, map_info);
+      auto info = FillInAndGetMapInfo(maps_by_start, map_info.get());
       bool file_copied = false;
       SaveMapInformation(unwinder.GetProcessMemory(), info, &file_copied);
 
       // If you are using a a linker that creates two maps (one read-only, one
       // read-executable), it's necessary to capture the previous map
       // information if needed.
-      unwindstack::MapInfo* prev_map = map_info->prev_map();
+      auto prev_map = map_info->prev_map();
       if (prev_map != nullptr && map_info->offset() != 0 && prev_map->offset() == 0 &&
           prev_map->flags() == PROT_READ && map_info->name() == prev_map->name() &&
           maps_by_start.count(prev_map->start()) == 0) {
-        info = FillInAndGetMapInfo(maps_by_start, prev_map);
+        info = FillInAndGetMapInfo(maps_by_start, prev_map.get());
         SaveMapInformation(unwinder.GetProcessMemory(), info, &file_copied);
       }
     }

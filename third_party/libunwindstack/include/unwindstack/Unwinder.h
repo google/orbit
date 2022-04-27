@@ -150,7 +150,7 @@ class Unwinder {
                          uint64_t pc_adjustment);
 
   size_t max_frames_;
-  Maps* maps_;
+  Maps* maps_ = nullptr;
   Regs* regs_;
   std::vector<FrameData> frames_;
   std::shared_ptr<Memory> process_memory_;

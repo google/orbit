@@ -150,8 +150,8 @@ TYPED_TEST(PeCoffTest, rel_pc_is_correctly_passed_through) {
       .WillOnce(::testing::Return(kMockReturnValue));
   coff.SetFakePeCoffInterface(mock_interface);
 
-  MapInfo map_info(nullptr, nullptr, /*start=*/kMapStart, /*end=*/kMapEnd, 0, 0, "no_name");
-  EXPECT_EQ(kMockReturnValue, coff.GetRelPc(kPcValue, &map_info));
+  auto map_info = MapInfo::Create(/*start=*/kMapStart, /*end=*/kMapEnd, 0, 0, "no_name");
+  EXPECT_EQ(kMockReturnValue, coff.GetRelPc(kPcValue, map_info.get()));
 }
 
 TYPED_TEST(PeCoffTest, rel_pc_is_zero_for_invalid) {

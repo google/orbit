@@ -36,15 +36,15 @@ class Elf;
 class MapInfo;
 
 struct LocalFrameData {
-  LocalFrameData(MapInfo* map_info, uint64_t pc, uint64_t rel_pc, const std::string& function_name,
-                 uint64_t function_offset)
+  LocalFrameData(std::shared_ptr<MapInfo>& map_info, uint64_t pc, uint64_t rel_pc,
+                 const std::string& function_name, uint64_t function_offset)
       : map_info(map_info),
         pc(pc),
         rel_pc(rel_pc),
         function_name(function_name),
         function_offset(function_offset) {}
 
-  MapInfo* map_info;
+  std::shared_ptr<MapInfo> map_info;
   uint64_t pc;
   uint64_t rel_pc;
   std::string function_name;
@@ -68,7 +68,7 @@ class LocalUnwinder {
 
   bool ShouldSkipLibrary(const std::string& map_name);
 
-  MapInfo* GetMapInfo(uint64_t pc);
+  std::shared_ptr<MapInfo> GetMapInfo(uint64_t pc);
 
   ErrorCode LastErrorCode() { return last_error_.code; }
   uint64_t LastErrorAddress() { return last_error_.address; }

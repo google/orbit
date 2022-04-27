@@ -55,7 +55,7 @@ namespace {
 
 class MockLibunwindstackMaps : public LibunwindstackMaps {
  public:
-  MOCK_METHOD(unwindstack::MapInfo*, Find, (uint64_t), (override));
+  MOCK_METHOD(std::shared_ptr<unwindstack::MapInfo>, Find, (uint64_t), (override));
   MOCK_METHOD(unwindstack::Maps*, Get, (), (override));
   MOCK_METHOD(void, AddAndSort,
               (uint64_t, uint64_t, uint64_t, uint64_t, const std::string&, uint64_t), (override));
@@ -96,13 +96,13 @@ class UprobesUnwindingVisitorTest : public ::testing::Test {
  protected:
   void SetUp() override {
     EXPECT_CALL(maps_, Find(AllOf(Ge(kUprobesMapsStart), Lt(kUprobesMapsEnd))))
-        .WillRepeatedly(Return(&kUprobesMapInfo));
+        .WillRepeatedly(Return(kUprobesMapInfo));
 
     EXPECT_CALL(maps_, Find(AllOf(Ge(kTargetMapsStart), Lt(kTargetMapsEnd))))
-        .WillRepeatedly(Return(&kTargetMapInfo));
+        .WillRepeatedly(Return(kTargetMapInfo));
 
     EXPECT_CALL(maps_, Find(AllOf(Ge(kNonExecutableMapsStart), Lt(kNonExecutableMapsEnd))))
-        .WillRepeatedly(Return(&kNonExecutableMapInfo));
+        .WillRepeatedly(Return(kNonExecutableMapInfo));
   }
 
   static constexpr uint32_t kStackDumpSize = 128;
@@ -116,13 +116,9 @@ class UprobesUnwindingVisitorTest : public ::testing::Test {
   static inline const std::string kUserSpaceLibraryName = "/path/to/library.so";
   static constexpr uint64_t kUserSpaceLibraryMapsStart = 0xCCCCCCCCCCCCCC00LU;
   static constexpr uint64_t kUserSpaceLibraryMapsEnd = 0xCCCCCCCCCCCCCCFFLU;
-  static inline unwindstack::MapInfo kUserSpaceLibraryMapInfo{nullptr,
-                                                              nullptr,
-                                                              kUserSpaceLibraryMapsStart,
-                                                              kUserSpaceLibraryMapsEnd,
-                                                              0,
-                                                              PROT_EXEC | PROT_READ,
-                                                              kUserSpaceLibraryName};
+  static inline const std::shared_ptr<unwindstack::MapInfo> kUserSpaceLibraryMapInfo =
+      unwindstack::MapInfo::Create(kUserSpaceLibraryMapsStart, kUserSpaceLibraryMapsEnd, 0,
+                                   PROT_EXEC | PROT_READ, kUserSpaceLibraryName);
 
   static constexpr uint64_t kUserSpaceLibraryAddress = kUserSpaceLibraryMapsStart;
   static inline const std::string kUserSpaceLibraryFunctionName = "payload";
@@ -179,8 +175,9 @@ class UprobesUnwindingVisitorTest : public ::testing::Test {
   static inline const std::string kUprobesName = "[uprobes]";
   static constexpr uint64_t kUprobesMapsStart = 0x7FFFFFFFE000;
   static constexpr uint64_t kUprobesMapsEnd = 0x7FFFFFFFE001;
-  static inline unwindstack::MapInfo kUprobesMapInfo{
-      nullptr, nullptr, kUprobesMapsStart, kUprobesMapsEnd, 0, PROT_EXEC | PROT_READ, kUprobesName};
+  static inline const std::shared_ptr<unwindstack::MapInfo> kUprobesMapInfo =
+      unwindstack::MapInfo::Create(kUprobesMapsStart, kUprobesMapsEnd, 0, PROT_EXEC | PROT_READ,
+                                   kUprobesName);
 
   static inline const unwindstack::FrameData kUprobesFrame{
       .pc = kUprobesMapsStart,
@@ -193,8 +190,9 @@ class UprobesUnwindingVisitorTest : public ::testing::Test {
   static inline const std::string kTargetName = "target";
   static constexpr uint64_t kTargetMapsStart = 100;
   static constexpr uint64_t kTargetMapsEnd = 400;
-  static inline unwindstack::MapInfo kTargetMapInfo{
-      nullptr, nullptr, kTargetMapsStart, kTargetMapsEnd, 0, PROT_EXEC | PROT_READ, kTargetName};
+  static inline const std::shared_ptr<unwindstack::MapInfo> kTargetMapInfo =
+      unwindstack::MapInfo::Create(kTargetMapsStart, kTargetMapsEnd, 0, PROT_EXEC | PROT_READ,
+                                   kTargetName);
 
   static constexpr uint64_t kTargetAddress1 = 100;
   static constexpr uint64_t kTargetAddress2 = 200;
@@ -229,13 +227,9 @@ class UprobesUnwindingVisitorTest : public ::testing::Test {
   static constexpr uint64_t kNonExecutableMapsEnd = 600;
   static inline const std::string kNonExecutableName = "data";
 
-  static inline unwindstack::MapInfo kNonExecutableMapInfo{nullptr,
-                                                           nullptr,
-                                                           kNonExecutableMapsStart,
-                                                           kNonExecutableMapsEnd,
-                                                           0,
-                                                           PROT_EXEC | PROT_READ,
-                                                           kNonExecutableName};
+  static inline const std::shared_ptr<unwindstack::MapInfo> kNonExecutableMapInfo =
+      unwindstack::MapInfo::Create(kNonExecutableMapsStart, kNonExecutableMapsEnd, 0,
+                                   PROT_EXEC | PROT_READ, kNonExecutableName);
 };
 
 StackSamplePerfEvent BuildFakeStackSamplePerfEvent() {
@@ -1048,7 +1042,7 @@ TEST_F(UprobesUnwindingVisitorTest, VisitValidCallchainSampleWithoutUprobesSends
 
   CallchainSamplePerfEvent event = BuildFakeCallchainSamplePerfEvent(callchain);
 
-  EXPECT_CALL(maps_, Find).WillRepeatedly(Return(&kTargetMapInfo));
+  EXPECT_CALL(maps_, Find).WillRepeatedly(Return(kTargetMapInfo));
   EXPECT_CALL(return_address_manager_, PatchCallchain).Times(1).WillOnce(Return(true));
   EXPECT_CALL(leaf_function_call_manager_, PatchCallerOfLeafFunction)
       .Times(1)
@@ -1076,7 +1070,7 @@ TEST_F(UprobesUnwindingVisitorTest, VisitSingleFrameCallchainSampleDoesNothing) 
 
   CallchainSamplePerfEvent event = BuildFakeCallchainSamplePerfEvent(callchain);
 
-  EXPECT_CALL(maps_, Find).WillRepeatedly(Return(&kTargetMapInfo));
+  EXPECT_CALL(maps_, Find).WillRepeatedly(Return(kTargetMapInfo));
   EXPECT_CALL(return_address_manager_, PatchCallchain).Times(0);
   EXPECT_CALL(leaf_function_call_manager_, PatchCallerOfLeafFunction).Times(0);
 
@@ -1106,8 +1100,8 @@ TEST_F(UprobesUnwindingVisitorTest, VisitCallchainSampleInsideUprobeCodeSendsInU
 
   CallchainSamplePerfEvent event = BuildFakeCallchainSamplePerfEvent(callchain);
 
-  EXPECT_CALL(maps_, Find(_)).WillRepeatedly(Return(&kTargetMapInfo));
-  EXPECT_CALL(maps_, Find(kUprobesMapsStart)).WillRepeatedly(Return(&kUprobesMapInfo));
+  EXPECT_CALL(maps_, Find(_)).WillRepeatedly(Return(kTargetMapInfo));
+  EXPECT_CALL(maps_, Find(kUprobesMapsStart)).WillRepeatedly(Return(kUprobesMapInfo));
   EXPECT_CALL(return_address_manager_, PatchCallchain).Times(0);
   EXPECT_CALL(leaf_function_call_manager_, PatchCallerOfLeafFunction).Times(0);
 
@@ -1144,7 +1138,7 @@ TEST_F(
 
   CallchainSamplePerfEvent event = BuildFakeCallchainSamplePerfEvent(callchain);
 
-  EXPECT_CALL(maps_, Find(_)).WillRepeatedly(Return(&kTargetMapInfo));
+  EXPECT_CALL(maps_, Find(_)).WillRepeatedly(Return(kTargetMapInfo));
   EXPECT_CALL(maps_, Find(kEntryTrampolineAddress)).WillRepeatedly(Return(nullptr));
   EXPECT_CALL(return_address_manager_, PatchCallchain).Times(0);
   EXPECT_CALL(leaf_function_call_manager_, PatchCallerOfLeafFunction).Times(0);
@@ -1184,9 +1178,9 @@ TEST_F(
 
   CallchainSamplePerfEvent event = BuildFakeCallchainSamplePerfEvent(callchain);
 
-  EXPECT_CALL(maps_, Find(_)).WillRepeatedly(Return(&kTargetMapInfo));
+  EXPECT_CALL(maps_, Find(_)).WillRepeatedly(Return(kTargetMapInfo));
   EXPECT_CALL(maps_, Find(AllOf(Ge(kUserSpaceLibraryMapsStart), Lt(kUserSpaceLibraryMapsEnd))))
-      .WillRepeatedly(Return(&kUserSpaceLibraryMapInfo));
+      .WillRepeatedly(Return(kUserSpaceLibraryMapInfo));
   EXPECT_CALL(return_address_manager_, PatchCallchain).Times(0);
   EXPECT_CALL(leaf_function_call_manager_, PatchCallerOfLeafFunction).Times(0);
 
@@ -1228,9 +1222,9 @@ TEST_F(
 
   CallchainSamplePerfEvent event = BuildFakeCallchainSamplePerfEvent(callchain);
 
-  EXPECT_CALL(maps_, Find(_)).WillRepeatedly(Return(&kTargetMapInfo));
+  EXPECT_CALL(maps_, Find(_)).WillRepeatedly(Return(kTargetMapInfo));
   EXPECT_CALL(maps_, Find(AllOf(Ge(kUserSpaceLibraryMapsStart), Lt(kUserSpaceLibraryMapsEnd))))
-      .WillRepeatedly(Return(&kUserSpaceLibraryMapInfo));
+      .WillRepeatedly(Return(kUserSpaceLibraryMapInfo));
   EXPECT_CALL(return_address_manager_, PatchCallchain).Times(0);
   EXPECT_CALL(leaf_function_call_manager_, PatchCallerOfLeafFunction)
       .Times(1)
@@ -1281,7 +1275,7 @@ TEST_F(UprobesUnwindingVisitorTest, VisitPatchableCallchainSampleSendsCompleteCa
 
   CallchainSamplePerfEvent event = BuildFakeCallchainSamplePerfEvent(callchain);
 
-  EXPECT_CALL(maps_, Find).WillRepeatedly(Return(&kTargetMapInfo));
+  EXPECT_CALL(maps_, Find).WillRepeatedly(Return(kTargetMapInfo));
   auto fake_patch_callchain = [](pid_t /*tid*/, uint64_t* callchain, uint64_t callchain_size,
                                  orbit_linux_tracing::LibunwindstackMaps *
                                  /*maps*/) -> bool {
@@ -1329,7 +1323,7 @@ TEST_F(UprobesUnwindingVisitorTest, VisitUnpatchableCallchainSampleSendsPatching
 
   CallchainSamplePerfEvent event = BuildFakeCallchainSamplePerfEvent(callchain);
 
-  EXPECT_CALL(maps_, Find).WillRepeatedly(Return(&kTargetMapInfo));
+  EXPECT_CALL(maps_, Find).WillRepeatedly(Return(kTargetMapInfo));
   EXPECT_CALL(leaf_function_call_manager_, PatchCallerOfLeafFunction)
       .Times(1)
       .WillOnce(Return(Callstack::kComplete));
@@ -1367,7 +1361,7 @@ TEST_F(UprobesUnwindingVisitorTest,
 
   CallchainSamplePerfEvent event = BuildFakeCallchainSamplePerfEvent(callchain);
 
-  EXPECT_CALL(maps_, Find).WillRepeatedly(Return(&kTargetMapInfo));
+  EXPECT_CALL(maps_, Find).WillRepeatedly(Return(kTargetMapInfo));
   EXPECT_CALL(return_address_manager_, PatchCallchain).Times(1).WillRepeatedly(Return(true));
 
   auto fake_patch_caller_of_leaf_function = [](const CallchainSamplePerfEventData* event_data,
@@ -1419,7 +1413,7 @@ TEST_F(
 
   CallchainSamplePerfEvent event = BuildFakeCallchainSamplePerfEvent(callchain);
 
-  EXPECT_CALL(maps_, Find).WillRepeatedly(Return(&kTargetMapInfo));
+  EXPECT_CALL(maps_, Find).WillRepeatedly(Return(kTargetMapInfo));
   EXPECT_CALL(return_address_manager_, PatchCallchain).Times(0);
 
   EXPECT_CALL(leaf_function_call_manager_, PatchCallerOfLeafFunction)

@@ -51,8 +51,7 @@ class MapInfoGetBuildIDTest : public ::testing::Test {
     elf_interface_ = new ElfInterfaceFake(memory_);
     elf_->FakeSetInterface(elf_interface_);
     elf_container_.reset(elf_);
-    map_info_.reset(
-        new MapInfo(nullptr, nullptr, 0x1000, 0x20000, 0, PROT_READ | PROT_WRITE, tf_->path));
+    map_info_ = MapInfo::Create(0x1000, 0x20000, 0, PROT_READ | PROT_WRITE, tf_->path);
   }
 
   void TearDown() override { delete memory_; }
@@ -63,15 +62,15 @@ class MapInfoGetBuildIDTest : public ::testing::Test {
   ElfFake* elf_;
   ElfInterfaceFake* elf_interface_;
   std::unique_ptr<ElfFake> elf_container_;
-  std::unique_ptr<MapInfo> map_info_;
+  std::shared_ptr<MapInfo> map_info_;
   std::unique_ptr<TemporaryFile> tf_;
 };
 
 TEST_F(MapInfoGetBuildIDTest, no_elf_and_no_valid_elf_in_memory) {
-  MapInfo info(nullptr, nullptr, 0x1000, 0x2000, 0, PROT_READ, "");
+  auto info = MapInfo::Create(0x1000, 0x2000, 0, PROT_READ, "");
 
-  EXPECT_EQ("", info.GetBuildID());
-  EXPECT_EQ("", info.GetPrintableBuildID());
+  EXPECT_EQ("", info->GetBuildID());
+  EXPECT_EQ("", info->GetPrintableBuildID());
 }
 
 TEST_F(MapInfoGetBuildIDTest, from_elf) {
@@ -198,9 +197,16 @@ TEST_F(MapInfoGetBuildIDTest, multiple_thread_elf_exists_in_memory) {
 }
 
 TEST_F(MapInfoGetBuildIDTest, real_elf) {
-  MapInfo map_info(nullptr, nullptr, 0x1000, 0x20000, 0, PROT_READ | PROT_WRITE,
-                   GetOfflineFilesDirectory() + "empty_arm64/libc.so");
-  EXPECT_EQ("6df0590c4920f4c7b9f34fe833f37d54", map_info.GetPrintableBuildID());
+  auto map_info = MapInfo::Create(0x1000, 0x20000, 0, PROT_READ | PROT_WRITE,
+                                  GetOfflineFilesDirectory() + "empty_arm64/libc.so");
+  EXPECT_EQ("6df0590c4920f4c7b9f34fe833f37d54", map_info->GetPrintableBuildID());
+}
+
+TEST_F(MapInfoGetBuildIDTest, in_device_map) {
+  auto map_info =
+      MapInfo::Create(0x1000, 0x20000, 0, PROT_READ | PROT_WRITE | MAPS_FLAGS_DEVICE_MAP,
+                      GetOfflineFilesDirectory() + "empty_arm64/libc.so");
+  EXPECT_EQ("", map_info->GetPrintableBuildID());
 }
 
 }  // namespace unwindstack

@@ -76,7 +76,7 @@ class UnwinderTest : public ::testing::Test {
                              const char* name, Object* object = nullptr) {
     std::string str_name(name);
     maps_->Add(start, end, offset, flags, name, static_cast<uint64_t>(-1));
-    MapInfo* map_info = maps_->Find(start);
+    MapInfo* map_info = maps_->Find(start).get();
     if (object != nullptr) {
       map_info->set_object(object);
     }
@@ -927,7 +927,7 @@ TEST_F(UnwinderTest, map_ignore_suffixes) {
 
   ASSERT_EQ(2U, unwinder.NumFrames());
   // Make sure the object was not initialized.
-  MapInfo* map_info = maps_->Find(0x53000);
+  MapInfo* map_info = maps_->Find(0x53000).get();
   ASSERT_TRUE(map_info != nullptr);
   EXPECT_TRUE(map_info->object() == nullptr);
 
@@ -1769,6 +1769,22 @@ TEST_F(UnwinderDeathTest, set_jit_debug_error) {
   std::shared_ptr<Memory> process_memory(new MemoryFake);
   Unwinder unwinder(10, &maps, process_memory);
   ASSERT_DEATH(CreateJitDebug(ARCH_UNKNOWN, process_memory), "");
+}
+
+TEST_F(UnwinderTest, unwinder_from_pid_with_external_maps) {
+  LocalMaps map;
+  ASSERT_TRUE(map.Parse());
+
+  UnwinderFromPid unwinder1(10, getpid(), &map);
+  unwinder1.SetArch(Regs::CurrentArch());
+  ASSERT_EQ(&map, unwinder1.GetMaps());
+  ASSERT_TRUE(unwinder1.Init());
+  ASSERT_EQ(&map, unwinder1.GetMaps());
+
+  UnwinderFromPid unwinder2(10, getpid(), Regs::CurrentArch(), &map);
+  ASSERT_EQ(&map, unwinder2.GetMaps());
+  ASSERT_TRUE(unwinder2.Init());
+  ASSERT_EQ(&map, unwinder2.GetMaps());
 }
 
 TEST_F(UnwinderDeathTest, set_dex_files_error) {
