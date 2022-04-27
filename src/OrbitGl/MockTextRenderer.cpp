@@ -78,7 +78,7 @@ float MockTextRenderer::GetStringHeight(const char* /*text*/, uint32_t font_size
 }
 
 [[nodiscard]] bool MockTextRenderer::IsTextInsideRectangle(Vec2 start, Vec2 size) const {
-  if (!GetNumAddTextCalls()) return true;
+  if (GetNumAddTextCalls() == 0) return true;
   return IsInsideRectangle(min_point_, start, size) && IsInsideRectangle(max_point_, start, size);
 }
 
