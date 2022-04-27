@@ -588,6 +588,68 @@ TEST_F(UprobesUnwindingVisitorTest,
   EXPECT_EQ(discarded_samples_in_uretprobes_counter, 0);
 }
 
+TEST_F(
+    UprobesUnwindingVisitorTest,
+    VisitValidStackSampleWithNullptrMapInfosSendsCompleteCallstackAndAddressInfosWithoutModuleName) {
+  StackSamplePerfEvent event = BuildFakeStackSamplePerfEvent();
+
+  EXPECT_CALL(return_address_manager_, PatchSample).Times(1).WillOnce(Return());
+  EXPECT_CALL(maps_, Get).Times(1).WillOnce(Return(nullptr));
+
+  unwindstack::FrameData frame_1_no_map_info = kFrame1;
+  frame_1_no_map_info.map_info = nullptr;
+  unwindstack::FrameData frame_2_no_map_info = kFrame2;
+  frame_2_no_map_info.map_info = nullptr;
+  unwindstack::FrameData frame_3_no_map_info = kFrame3;
+  frame_3_no_map_info.map_info = nullptr;
+  std::vector<unwindstack::FrameData> libunwindstack_callstack{
+      frame_1_no_map_info, frame_2_no_map_info, frame_3_no_map_info};
+
+  EXPECT_CALL(unwinder_, Unwind(event.data.pid, nullptr, _, _, event.data.dyn_size, _, _))
+      .Times(1)
+      .WillOnce(Return(
+          LibunwindstackResult{libunwindstack_callstack, {}, unwindstack::ErrorCode::ERROR_NONE}));
+
+  orbit_grpc_protos::FullCallstackSample actual_callstack_sample;
+  EXPECT_CALL(listener_, OnCallstackSample).Times(1).WillOnce(SaveArg<0>(&actual_callstack_sample));
+
+  std::vector<orbit_grpc_protos::FullAddressInfo> actual_address_infos;
+  auto save_address_info =
+      [&actual_address_infos](orbit_grpc_protos::FullAddressInfo actual_address_info) {
+        actual_address_infos.push_back(std::move(actual_address_info));
+      };
+  EXPECT_CALL(listener_, OnAddressInfo).Times(3).WillRepeatedly(Invoke(save_address_info));
+
+  std::atomic<uint64_t> unwinding_errors = 0;
+  std::atomic<uint64_t> discarded_samples_in_uretprobes_counter = 0;
+  visitor_.SetUnwindErrorsAndDiscardedSamplesCounters(&unwinding_errors,
+                                                      &discarded_samples_in_uretprobes_counter);
+
+  PerfEvent{std::move(event)}.Accept(&visitor_);
+
+  EXPECT_THAT(actual_callstack_sample.callstack().pcs(),
+              ElementsAre(kTargetAddress1, kTargetAddress2, kTargetAddress3));
+  EXPECT_EQ(actual_callstack_sample.callstack().type(), orbit_grpc_protos::Callstack::kComplete);
+  EXPECT_THAT(
+      actual_address_infos,
+      UnorderedElementsAre(
+          AllOf(Property(&orbit_grpc_protos::FullAddressInfo::absolute_address, kTargetAddress1),
+                Property(&orbit_grpc_protos::FullAddressInfo::function_name, kFunctionName1),
+                Property(&orbit_grpc_protos::FullAddressInfo::offset_in_function, 0),
+                Property(&orbit_grpc_protos::FullAddressInfo::module_name, "")),
+          AllOf(Property(&orbit_grpc_protos::FullAddressInfo::absolute_address, kTargetAddress2),
+                Property(&orbit_grpc_protos::FullAddressInfo::function_name, kFunctionName2),
+                Property(&orbit_grpc_protos::FullAddressInfo::offset_in_function, 0),
+                Property(&orbit_grpc_protos::FullAddressInfo::module_name, "")),
+          AllOf(Property(&orbit_grpc_protos::FullAddressInfo::absolute_address, kTargetAddress3),
+                Property(&orbit_grpc_protos::FullAddressInfo::function_name, kFunctionName3),
+                Property(&orbit_grpc_protos::FullAddressInfo::offset_in_function, 0),
+                Property(&orbit_grpc_protos::FullAddressInfo::module_name, ""))));
+
+  EXPECT_EQ(unwinding_errors, 0);
+  EXPECT_EQ(discarded_samples_in_uretprobes_counter, 0);
+}
+
 TEST_F(UprobesUnwindingVisitorTest, VisitEmptyStackSampleWithoutUprobesDoesNothing) {
   StackSamplePerfEvent event = BuildFakeStackSamplePerfEvent();
 
@@ -1288,8 +1350,7 @@ TEST_F(UprobesUnwindingVisitorTest, VisitPatchableCallchainSampleSendsCompleteCa
 
   EXPECT_CALL(maps_, Find).WillRepeatedly(Return(kTargetMapInfo));
   auto fake_patch_callchain = [](pid_t /*tid*/, uint64_t* callchain, uint64_t callchain_size,
-                                 orbit_linux_tracing::LibunwindstackMaps *
-                                 /*maps*/) -> bool {
+                                 orbit_linux_tracing::LibunwindstackMaps*) -> bool {
     ORBIT_CHECK(callchain != nullptr);
     ORBIT_CHECK(callchain_size == 4);
     callchain[2] = kTargetAddress2 + 1;
@@ -1375,10 +1436,9 @@ TEST_F(UprobesUnwindingVisitorTest,
   EXPECT_CALL(maps_, Find).WillRepeatedly(Return(kTargetMapInfo));
   EXPECT_CALL(return_address_manager_, PatchCallchain).Times(1).WillRepeatedly(Return(true));
 
-  auto fake_patch_caller_of_leaf_function = [](const CallchainSamplePerfEventData* event_data,
-                                               LibunwindstackMaps* /*maps*/,
-                                               orbit_linux_tracing::LibunwindstackUnwinder *
-                                               /*unwinder*/) -> Callstack::CallstackType {
+  auto fake_patch_caller_of_leaf_function =
+      [](const CallchainSamplePerfEventData* event_data, LibunwindstackMaps* /*maps*/,
+         orbit_linux_tracing::LibunwindstackUnwinder*) -> Callstack::CallstackType {
     ORBIT_CHECK(event_data != nullptr);
     std::vector<uint64_t> patched_callchain;
     EXPECT_THAT(event_data->CopyOfIpsAsVector(),
