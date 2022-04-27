@@ -9,7 +9,8 @@ add_library(OrbitGl STATIC)
 
 target_sources(
   OrbitGl
-  PUBLIC AccessibleCaptureViewElement.h
+  PUBLIC AccessibleButton.h
+         AccessibleCaptureViewElement.h
          AccessibleInterfaceProvider.h
          AccessibleTimeGraph.h
          AccessibleTrack.h
