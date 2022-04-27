@@ -96,7 +96,8 @@ Color GlSlider::GetDarkerColor(const Color& color) {
 }
 
 void GlSlider::OnDrag(int x, int y) {
-  float value = is_vertical_ ? y : x;
+  CaptureViewElement::OnDrag(x, y);
+  float value = is_vertical_ ? y - GetPos()[1] : x - GetPos()[0];
   float slider_pos = PosToPixel(pos_ratio_);
   float slider_right_pos = LenToPixel(right_edge_ratio_);
 
@@ -133,7 +134,8 @@ void GlSlider::OnDrag(int x, int y) {
 }
 
 void GlSlider::OnPick(int x, int y) {
-  float value = is_vertical_ ? y : x;
+  CaptureViewElement::OnPick(x, y);
+  float value = is_vertical_ ? y - GetPos()[1] : x - GetPos()[0];
 
   float slider_pos = PosToPixel(pos_ratio_);
   float slider_length = LenToPixel(length_ratio_);

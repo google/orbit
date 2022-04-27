@@ -126,8 +126,8 @@ class GlVerticalSlider : public GlSlider {
                    const TimeGraphLayout* layout, TimelineInfoInterface* timeline_info)
       : GlSlider(parent, viewport, layout, timeline_info, true) {}
 
-  void DoDraw(PrimitiveAssembler& primitive_assembler, TextRenderer& /*text_renderer*/,
-              const DrawContext& /*draw_context*/) override;
+  void DoDraw(PrimitiveAssembler& primitive_assembler, TextRenderer& text_renderer,
+              const DrawContext& draw_context) override;
 
   [[nodiscard]] float GetWidth() const override { return pixel_height_; }
 
@@ -149,8 +149,8 @@ class GlHorizontalSlider : public GlSlider {
     can_resize_ = true;
   }
 
-  void DoDraw(PrimitiveAssembler& primitive_assembler, TextRenderer& /*text_renderer*/,
-              const DrawContext& /*draw_context*/) override;
+  void DoDraw(PrimitiveAssembler& primitive_assembler, TextRenderer& text_renderer,
+              const DrawContext& draw_context) override;
 
   [[nodiscard]] float GetWidth() const override {
     return viewport_->GetScreenWidth() - orthogonal_slider_size_;
