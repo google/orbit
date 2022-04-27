@@ -20,6 +20,9 @@ class Button : public CaptureViewElement {
 
   void SetHeight(float height);
 
+  void SetLabel(const std::string& label);
+  [[nodiscard]] const std::string& GetLabel() const { return label_; }
+
  protected:
   void DoUpdateLayout() override;
 
@@ -28,6 +31,7 @@ class Button : public CaptureViewElement {
   CreateAccessibleInterface() override;
 
   float height_ = 0.f;
+  std::string label_;
 };
 }  // namespace orbit_gl
 

@@ -61,4 +61,18 @@ TEST(Button, SizeCannotBeZero) {
   EXPECT_EQ(button.GetHeight(), tester.GetLayout()->GetMinButtonSize());
 }
 
+TEST(Button, LabelWorksAsExpected) {
+  orbit_gl::CaptureViewElementTester tester;
+  Button button(nullptr, tester.GetViewport(), tester.GetLayout());
+
+  tester.SimulateDrawLoopAndCheckFlags(&button, true, true);
+
+  const std::string kLabel = "UnitTest";
+  button.SetLabel(kLabel);
+
+  tester.SimulateDrawLoopAndCheckFlags(&button, true, false);
+
+  EXPECT_EQ(button.GetLabel(), kLabel);
+}
+
 }  // namespace orbit_gl
