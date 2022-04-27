@@ -80,6 +80,7 @@
 #include "OrbitBase/Logging.h"
 #include "OrbitBase/MainThreadExecutor.h"
 #include "OrbitBase/Result.h"
+#include "OrbitBase/StopToken.h"
 #include "OrbitBase/ThreadConstants.h"
 #include "OrbitBase/UniqueResource.h"
 #include "OrbitBase/WhenAll.h"
@@ -1651,7 +1652,7 @@ void OrbitApp::SendErrorToUi(const std::string& title, const std::string& text,
 }
 
 orbit_base::Future<ErrorMessageOr<std::filesystem::path>> OrbitApp::RetrieveModuleFromRemote(
-    const std::string& module_file_path) {
+    const std::string& module_file_path, orbit_base::StopToken* stop_token) {
   ORBIT_SCOPE_FUNCTION;
   ScopedStatus scoped_status = CreateScopedStatus(absl::StrFormat(
       "Searching for symbols on remote instance for module \"%s\"...", module_file_path));
@@ -1665,8 +1666,8 @@ orbit_base::Future<ErrorMessageOr<std::filesystem::path>> OrbitApp::RetrieveModu
                                                   {absl::GetFlag(FLAGS_instance_symbols_folder)});
       });
 
-  auto download_file = [this, module_file_path, scoped_status = std::move(scoped_status)](
-                           ErrorMessageOr<std::string> result) mutable
+  auto download_file = [this, module_file_path, scoped_status = std::move(scoped_status),
+                        stop_token](ErrorMessageOr<std::string> result) mutable
       -> orbit_base::Future<ErrorMessageOr<std::filesystem::path>> {
     if (result.has_error()) return result.error();
 
@@ -1684,17 +1685,21 @@ orbit_base::Future<ErrorMessageOr<std::filesystem::path>> OrbitApp::RetrieveModu
         std::chrono::steady_clock::now();
     ORBIT_LOG("Copying \"%s\" started", debug_file_path);
     orbit_base::Future<ErrorMessageOr<void>> copy_result =
-        secure_copy_callback_(debug_file_path, local_debug_file_path.string());
+        secure_copy_callback_(debug_file_path, local_debug_file_path.string(), stop_token);
 
     orbit_base::ImmediateExecutor immediate_executor{};
     return copy_result.Then(
         &immediate_executor,
         [debug_file_path, local_debug_file_path, scoped_status = std::move(scoped_status),
-         copy_begin](ErrorMessageOr<void> sftp_result) -> ErrorMessageOr<std::filesystem::path> {
+         copy_begin,
+         stop_token](ErrorMessageOr<void> sftp_result) -> ErrorMessageOr<std::filesystem::path> {
           if (sftp_result.has_error()) {
             return ErrorMessage{
                 absl::StrFormat("Could not copy debug info file from the remote: %s",
                                 sftp_result.error().message())};
+          }
+          if (stop_token->IsStopRequested()) {
+            return ErrorMessage{"User canceled"};
           }
           const auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(
               std::chrono::steady_clock::now() - copy_begin);
@@ -1718,7 +1723,7 @@ orbit_base::Future<void> OrbitApp::RetrieveModulesAndLoadSymbols(
   for (const auto& module : modules_set) {
     // Explicitely do not handle the result.
     Future<void> future = RetrieveModuleAndLoadSymbolsAndHandleError(module).Then(
-        &immediate_executor, [](const SymbolLoadingAndErrorHandlingResult & /*result*/) -> void {});
+        &immediate_executor, [](const SymbolLoadingAndErrorHandlingResult& /*result*/) -> void {});
     futures.emplace_back(std::move(future));
   }
 
@@ -1811,7 +1816,7 @@ orbit_base::Future<ErrorMessageOr<std::filesystem::path>> OrbitApp::RetrieveModu
 
   const auto it = modules_currently_loading_.find(module_id);
   if (it != modules_currently_loading_.end()) {
-    return it->second;
+    return it->second.second;
   }
 
   Future<ErrorMessageOr<std::filesystem::path>> local_symbols_future =
@@ -1823,21 +1828,27 @@ orbit_base::Future<ErrorMessageOr<std::filesystem::path>> OrbitApp::RetrieveModu
     return local_symbols_future;
   }
 
+  auto unique_stop_token = std::make_unique<orbit_base::StopToken>();
+  orbit_base::StopToken* stop_token = unique_stop_token.get();
+
   Future<ErrorMessageOr<std::filesystem::path>> final_result =
       orbit_base::UnwrapFuture(local_symbols_future.Then(
           main_thread_executor_,
-          [this, module_id](ErrorMessageOr<std::filesystem::path> local_symbols_path)
+          [this, module_id, stop_token](ErrorMessageOr<std::filesystem::path> local_symbols_path)
               -> Future<ErrorMessageOr<std::filesystem::path>> {
             if (local_symbols_path.has_value()) {
+              size_t erase_result = modules_currently_loading_.erase(module_id);
+              ORBIT_CHECK(erase_result == 1);
               return local_symbols_path;
             }
 
-            return RetrieveModuleFromRemote(module_id.first)
+            return RetrieveModuleFromRemote(module_id.first, stop_token)
                 .Then(main_thread_executor_,
                       [this, module_id, local_error_message = local_symbols_path.error().message()](
                           const ErrorMessageOr<std::filesystem::path>& remote_result)
                           -> ErrorMessageOr<std::filesystem::path> {
-                        modules_currently_loading_.erase(module_id);
+                        size_t erase_result = modules_currently_loading_.erase(module_id);
+                        ORBIT_CHECK(erase_result == 1);
 
                         // If remote loading fails as well, we combine the error messages.
                         if (remote_result.has_value()) return remote_result;
@@ -1849,7 +1860,8 @@ orbit_base::Future<ErrorMessageOr<std::filesystem::path>> OrbitApp::RetrieveModu
                       });
           }));
 
-  modules_currently_loading_.emplace(module_id, final_result);
+  modules_currently_loading_.emplace(module_id,
+                                     std::make_pair(std::move(unique_stop_token), final_result));
   return final_result;
 }
 

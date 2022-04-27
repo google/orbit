@@ -96,9 +96,11 @@
 #include "LiveFunctionsController.h"
 #include "MetricsUploader/orbit_log_event.pb.h"
 #include "OrbitBase/ExecutablePath.h"
+#include "OrbitBase/ImmediateExecutor.h"
 #include "OrbitBase/Logging.h"
 #include "OrbitBase/ReadFileToString.h"
 #include "OrbitBase/Result.h"
+#include "OrbitBase/StopToken.h"
 #include "OrbitGgp/Instance.h"
 #include "OrbitPaths/Paths.h"
 #include "OrbitVersion/OrbitVersion.h"
@@ -1569,9 +1571,11 @@ void OrbitMainWindow::SetTarget(const StadiaTarget& target) {
   const orbit_session_setup::StadiaConnection* connection = target.GetConnection();
   ServiceDeployManager* service_deploy_manager = connection->GetServiceDeployManager();
   app_->SetSecureCopyCallback([service_deploy_manager](std::string_view source,
-                                                       std::string_view destination) {
+                                                       std::string_view destination,
+                                                       orbit_base::StopToken* stop_token) {
     ORBIT_CHECK(service_deploy_manager != nullptr);
-    return service_deploy_manager->CopyFileToLocal(std::string{source}, std::string{destination});
+    return service_deploy_manager->CopyFileToLocal(std::string{source}, std::string{destination},
+                                                   stop_token);
   });
 
   QObject::connect(service_deploy_manager, &ServiceDeployManager::socketErrorOccurred, this,

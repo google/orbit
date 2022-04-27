@@ -14,6 +14,7 @@
 #include <system_error>
 
 #include "OrbitBase/Result.h"
+#include "OrbitBase/StopToken.h"
 #include "OrbitSsh/SftpFile.h"
 #include "OrbitSshQt/ScopedConnection.h"
 #include "OrbitSshQt/Session.h"
@@ -49,7 +50,8 @@ class SftpCopyToLocalOperation
   friend StateMachineHelper;
 
  public:
-  explicit SftpCopyToLocalOperation(Session* session, SftpChannel* channel);
+  explicit SftpCopyToLocalOperation(Session* session, SftpChannel* channel,
+                                    orbit_base::StopToken* stop_token);
 
   void CopyFileToLocal(std::filesystem::path source, std::filesystem::path destination);
 
@@ -71,6 +73,8 @@ class SftpCopyToLocalOperation
 
   std::filesystem::path source_;
   std::filesystem::path destination_;
+
+  orbit_base::StopToken* stop_token_;
 
   void HandleChannelShutdown();
   void HandleEagain();

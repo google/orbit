@@ -24,10 +24,12 @@
 
 #include "ClientFlags/ClientFlags.h"
 #include "MetricsUploader/ScopedMetric.h"
+#include "OrbitBase/File.h"
 #include "OrbitBase/Future.h"
 #include "OrbitBase/Logging.h"
 #include "OrbitBase/Promise.h"
 #include "OrbitBase/Result.h"
+#include "OrbitBase/StopToken.h"
 #include "OrbitSsh/AddrAndPort.h"
 #include "OrbitSshQt/ScopedConnection.h"
 #include "OrbitSshQt/Session.h"
@@ -47,6 +49,8 @@ constexpr std::chrono::milliseconds kSshWatchdogInterval{1000};
 constexpr std::chrono::seconds kServiceStartupTimeout{10};
 
 namespace orbit_session_setup {
+
+using orbit_base::StopToken;
 
 namespace {
 template <typename Func>
@@ -315,31 +319,32 @@ ErrorMessageOr<void> ServiceDeployManager::CopyOrbitServicePackage() {
 }
 
 orbit_base::Future<ErrorMessageOr<void>> ServiceDeployManager::CopyFileToLocal(
-    std::string source, std::string destination) {
+    std::string source, std::string destination, StopToken* stop_token) {
   orbit_base::Promise<ErrorMessageOr<void>> promise;
   auto future = promise.GetFuture();
 
   // This schedules the call of `CopyFileToLocalImpl` on the background thread.
-  QMetaObject::invokeMethod(this,
-                            [this, source = std::move(source), destination = std::move(destination),
-                             promise = std::move(promise)]() mutable {
-                              CopyFileToLocalImpl(std::move(promise), source, destination);
-                            });
+  QMetaObject::invokeMethod(
+      this, [this, source = std::move(source), destination = std::move(destination),
+             promise = std::move(promise), stop_token]() mutable {
+        CopyFileToLocalImpl(std::move(promise), source, destination, stop_token);
+      });
 
   return future;
 }
 
 void ServiceDeployManager::CopyFileToLocalImpl(orbit_base::Promise<ErrorMessageOr<void>> promise,
                                                std::string_view source,
-                                               std::string_view destination) {
+                                               std::string_view destination,
+                                               StopToken* stop_token) {
   ORBIT_CHECK(QThread::currentThread() == thread());
 
   if (copy_file_operation_in_progress_) {
-    waiting_copy_operations_.emplace_back([this, promise = std::move(promise),
-                                           source = std::string{source},
-                                           destination = std::string{destination}]() mutable {
-      CopyFileToLocalImpl(std::move(promise), source, destination);
-    });
+    waiting_copy_operations_.emplace_back(
+        [this, promise = std::move(promise), source = std::string{source},
+         destination = std::string{destination}, stop_token]() mutable {
+          CopyFileToLocalImpl(std::move(promise), source, destination, stop_token);
+        });
     return;
   }
 
@@ -348,8 +353,8 @@ void ServiceDeployManager::CopyFileToLocalImpl(orbit_base::Promise<ErrorMessageO
   ORBIT_LOG("Copying remote \"%s\" to local \"%s\"", source, destination);
 
   // NOLINTNEXTLINE - Unfortunately we have to fall back to a raw `new` here.
-  auto operation =
-      new orbit_ssh_qt::SftpCopyToLocalOperation{&session_.value(), sftp_channel_.get()};
+  auto operation = new orbit_ssh_qt::SftpCopyToLocalOperation{&session_.value(),
+                                                              sftp_channel_.get(), stop_token};
 
   // Making operation a child of the ServiceDeployManager ensures it will be deleted at the latest
   // when ServiceDeployManager gets deleted. That's important when the copy procedure gets aborted
@@ -361,8 +366,8 @@ void ServiceDeployManager::CopyFileToLocalImpl(orbit_base::Promise<ErrorMessageO
   // By having a single handler we don't need to worry about sharing resources that are not supposed
   // to be shared like the promise.
   auto finish_handler = [this, promise = std::move(promise), source = std::string{source},
-                         destination = std::string{destination},
-                         operation](ErrorMessageOr<void> result) mutable {
+                         destination = std::string{destination}, operation,
+                         stop_token](ErrorMessageOr<void> result) mutable {
     if (promise.HasResult()) return;
 
     operation->deleteLater();  // We can't just call `delete operation;` here because that also
@@ -383,6 +388,16 @@ void ServiceDeployManager::CopyFileToLocalImpl(orbit_base::Promise<ErrorMessageO
           ErrorMessage{absl::StrFormat(R"(Error copying remote "%s" to "%s": %s)", source,
                                        destination, result.error().message())});
       return;
+    }
+
+    if (stop_token->IsStopRequested()) {
+      ErrorMessageOr<bool> remove_result = orbit_base::RemoveFile(destination);
+      if (remove_result.has_error()) {
+        ORBIT_ERROR("Error while deleting partially downloaded file: %s",
+                    remove_result.error().message());
+      } else if (!remove_result.value()) {
+        ORBIT_ERROR("Unable to delete partially downloaded file");
+      }
     }
 
     promise.SetResult(outcome::success());

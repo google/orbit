@@ -12,6 +12,7 @@
 #include <utility>
 
 #include "OrbitBase/Logging.h"
+#include "OrbitBase/StopToken.h"
 #include "OrbitSsh/SftpFile.h"
 #include "OrbitSshQt/Error.h"
 #include "OrbitSshQt/ScopedConnection.h"
@@ -21,8 +22,10 @@
 
 namespace orbit_ssh_qt {
 
-SftpCopyToLocalOperation::SftpCopyToLocalOperation(Session* session, SftpChannel* channel)
-    : session_(session), channel_(channel) {
+SftpCopyToLocalOperation::SftpCopyToLocalOperation(Session* session, SftpChannel* channel,
+                                                   orbit_base::StopToken* stop_token)
+    : session_(session), channel_(channel), stop_token_(stop_token) {
+  ORBIT_CHECK(stop_token_ != nullptr);
   about_to_shutdown_connection_.emplace(
       QObject::connect(channel_, &SftpChannel::aboutToShutdown, this,
                        &SftpCopyToLocalOperation::HandleChannelShutdown));
@@ -77,6 +80,11 @@ outcome::result<void> SftpCopyToLocalOperation::run() {
   constexpr size_t kReadBufferMaxSize = 1 * 1024 * 1024;
 
   while (true) {
+    if (stop_token_->IsStopRequested()) {
+      SetState(State::kCopyDone);
+      break;
+    }
+
     OUTCOME_TRY(auto&& read_buffer, sftp_file_->Read(kReadBufferMaxSize));
     if (read_buffer.empty()) {
       // This is end of file
