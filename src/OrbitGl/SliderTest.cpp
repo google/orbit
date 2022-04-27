@@ -322,11 +322,18 @@ TEST(Slider, ContainsScreenSpacePoint) {
   Viewport* viewport = tester.GetViewport();
 
   GlVerticalSlider slider(nullptr, viewport, tester.GetLayout(), nullptr);
-  // We expect VerticalSlider to be in the right part of the screen.
-  EXPECT_TRUE(slider.ContainsScreenSpacePoint(viewport->GetScreenWidth() - 5,
-                                              viewport->GetScreenHeight() / 2));
-  EXPECT_FALSE(slider.ContainsScreenSpacePoint(viewport->GetScreenWidth() / 2,
-                                               viewport->GetScreenHeight() / 2));
+  tester.SimulatePreRender(&slider);
+
+  Vec2 slider_pos = slider.GetPos();
+  Vec2 slider_size = slider.GetSize();
+  Vec2 middle_point_slider{slider_pos[0] + slider_size[0] / 2.f,
+                           slider_pos[1] + slider_size[1] / 2.f};
+  Vec2 outside_point_slider{slider_pos[0] + slider_size[0] * 2.f,
+                            slider_pos[1] + slider_size[1] * 2.f};
+  EXPECT_TRUE(slider.ContainsScreenSpacePoint(static_cast<int>(middle_point_slider[0]),
+                                              static_cast<int>(middle_point_slider[1])));
+  EXPECT_FALSE(slider.ContainsScreenSpacePoint(static_cast<int>(outside_point_slider[0]),
+                                               static_cast<int>(outside_point_slider[1])));
 }
 
 }  // namespace orbit_gl
