@@ -4,6 +4,7 @@
 
 #include <gtest/gtest.h>
 
+#include "CaptureViewElementTester.h"
 #include "TimeGraph.h"
 #include "TrackTestData.h"
 #include "Viewport.h"
@@ -27,6 +28,11 @@ class UnitTestTimeGraph : public testing::Test {
     }
   }
 
+  void SimulatePreRender() {
+    CaptureViewElementTester tester;
+    tester.SimulatePreRender(time_graph_.get());
+  }
+
   orbit_gl::GlSlider* FindSliderUnderMouseCursor(int x, int y) {
     return time_graph_->FindSliderUnderMouseCursor(x, y);
   }
@@ -40,6 +46,8 @@ class UnitTestTimeGraph : public testing::Test {
 };
 
 TEST_F(UnitTestTimeGraph, SlidersRespondToMouseOver) {
+  SimulatePreRender();
+
   Vec2 kMouseCenteredPos{50, 100};
   GlSlider* slider = FindSliderUnderMouseCursor(static_cast<int>(kMouseCenteredPos[0]),
                                                 static_cast<int>(kMouseCenteredPos[1]));

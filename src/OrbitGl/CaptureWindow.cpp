@@ -93,8 +93,6 @@ void CaptureWindow::PreRender() {
   }
 
   if (time_graph_ != nullptr) {
-    // Window resizing could have modified viewport's width.
-    time_graph_->SetWidth(viewport_.GetWorldWidth());
     int layout_loops = 0;
 
     // Layout changes of one element may require other elements to be updated as well,

@@ -94,7 +94,6 @@ class GlSlider : public CaptureViewElement, public std::enable_shared_from_this<
   static const float kGradientFactor;
   const bool is_vertical_;
   bool is_mouse_over_ = false;
-  Vec2i mouse_pos_ = Vec2i(-1, -1);
 
   TimelineInfoInterface* timeline_info_;
 
@@ -130,14 +129,10 @@ class GlVerticalSlider : public GlSlider {
   void DoDraw(PrimitiveAssembler& primitive_assembler, TextRenderer& /*text_renderer*/,
               const DrawContext& /*draw_context*/) override;
 
-  [[nodiscard]] Vec2 GetPos() const override {
-    return Vec2(viewport_->GetScreenWidth() - pixel_height_, 0);
-  }
-
   [[nodiscard]] float GetWidth() const override { return pixel_height_; }
 
-  [[nodiscard]] virtual float GetHeight() const override {
-    return viewport_->GetScreenHeight() - orthogonal_slider_size_;
+  [[nodiscard]] float GetHeight() const override {
+    return viewport_->GetScreenHeight() - GetPos()[1] - orthogonal_slider_size_;
   }
 
   std::unique_ptr<orbit_accessibility::AccessibleInterface> CreateAccessibleInterface() override;
@@ -157,14 +152,10 @@ class GlHorizontalSlider : public GlSlider {
   void DoDraw(PrimitiveAssembler& primitive_assembler, TextRenderer& /*text_renderer*/,
               const DrawContext& /*draw_context*/) override;
 
-  [[nodiscard]] virtual Vec2 GetPos() const override {
-    return Vec2(0, viewport_->GetScreenHeight() - pixel_height_);
-  }
-
   [[nodiscard]] float GetWidth() const override {
     return viewport_->GetScreenWidth() - orthogonal_slider_size_;
   }
-  [[nodiscard]] virtual float GetHeight() const override { return pixel_height_; }
+  [[nodiscard]] float GetHeight() const override { return pixel_height_; }
 
   std::unique_ptr<orbit_accessibility::AccessibleInterface> CreateAccessibleInterface() override;
 

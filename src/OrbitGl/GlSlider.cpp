@@ -35,8 +35,6 @@ void GlSlider::OnMouseLeave() {
 }
 
 void GlSlider::OnMouseMove(int x, int y) {
-  mouse_pos_ = Vec2i(x, y) - Vec2i(static_cast<int>(GetPos()[0]), static_cast<int>(GetPos()[1]));
-
   if (can_resize_ && QGuiApplication::instance() != nullptr) {
     if (PosIsInMinResizeArea(x, y) || PosIsInMaxResizeArea(x, y)) {
       QCursor cursor = is_vertical_ ? Qt::SizeVerCursor : Qt::SizeHorCursor;
@@ -175,7 +173,8 @@ void GlSlider::DrawSlider(PrimitiveAssembler& primitive_assembler, float x, floa
   bool is_picked = primitive_assembler.GetPickingManager()->IsThisElementPicked(this);
   bool mouse_over_slider = false;
   if (is_mouse_over_) {
-    mouse_over_slider = PosIsInSlider(mouse_pos_[0], mouse_pos_[1]);
+    mouse_over_slider =
+        PosIsInSlider(static_cast<int>(mouse_pos_cur_[0]), static_cast<int>(mouse_pos_cur_[1]));
   }
 
   Color color = mouse_over_slider ? selected_color_ : slider_color_;

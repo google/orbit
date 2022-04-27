@@ -85,19 +85,13 @@ TimeGraph::TimeGraph(AccessibleInterfaceProvider* parent, OrbitApp* app,
   vertical_slider_ = std::make_shared<orbit_gl::GlVerticalSlider>(
       /*parent=*/this, viewport, &layout_, /*timeline_info_interface=*/this);
 
-  slider_->SetDragCallback([&](float ratio) {
-    this->UpdateHorizontalScroll(ratio);
-    RequestUpdate();
-  });
+  slider_->SetDragCallback([&](float ratio) { this->UpdateHorizontalScroll(ratio); });
   slider_->SetResizeCallback([&](float normalized_start, float normalized_end) {
     this->UpdateHorizontalZoom(normalized_start, normalized_end);
-    RequestUpdate();
   });
 
-  vertical_slider_->SetDragCallback([&](float ratio) {
-    track_container_->UpdateVerticalScroll(ratio);
-    RequestUpdate();
-  });
+  vertical_slider_->SetDragCallback(
+      [&](float ratio) { track_container_->UpdateVerticalScroll(ratio); });
 
   vertical_slider_->SetOrthogonalSliderPixelHeight(slider_->GetPixelHeight());
   slider_->SetOrthogonalSliderPixelHeight(vertical_slider_->GetPixelHeight());
@@ -689,6 +683,8 @@ void TimeGraph::PrepareBatcherAndUpdatePrimitives(PickingMode picking_mode) {
 
 void TimeGraph::DoUpdateLayout() {
   CaptureViewElement::DoUpdateLayout();
+  // Window resizing could have modified viewport's width.
+  SetWidth(viewport_->GetWorldWidth());
 
   UpdateCaptureMinMaxTimestamps();
   UpdateChildrenPosAndContainerSize();
@@ -744,9 +740,8 @@ void TimeGraph::UpdateChildrenPosAndContainerSize() {
   slider_->SetPos(timegraph_current_x, timegraph_current_y);
 
   vertical_slider_->SetWidth(layout_.GetSliderWidth());
-  // TODO(b/230441392): TimeBarMargin shouldn't be part of the timeline.
   vertical_slider_->SetPos(GetWidth() - vertical_slider_->GetWidth(),
-                           track_container_->GetPos()[1] - layout_.GetTimeBarMargin());
+                           track_container_->GetPos()[1]);
 
   // TODO(b/230442062): Refactor this to be part of Slider::UpdateLayout(). Set visibility of the
   // vertical slider should be inside of this method.
@@ -881,20 +876,9 @@ void TimeGraph::DrawAllElements(PrimitiveAssembler& primitive_assembler,
 }
 
 void TimeGraph::DoDraw(orbit_gl::PrimitiveAssembler& primitive_assembler,
-                       orbit_gl::TextRenderer& /*text_renderer*/,
-                       const DrawContext& /*draw_context*/) {
+                       orbit_gl::TextRenderer& text_renderer, const DrawContext& draw_context) {
   ORBIT_SCOPE("TimeGraph::DoDraw");
-
-  // TODO(b/230442062): Move IsThisElementPicked directly to Slider methods.
-  if (GetCaptureTimeSpanNs() > 0) {
-    slider_->Draw(primitive_assembler,
-                  primitive_assembler.GetPickingManager()->IsThisElementPicked(slider_.get()));
-    if (vertical_slider_->GetVisible()) {
-      vertical_slider_->Draw(
-          primitive_assembler,
-          primitive_assembler.GetPickingManager()->IsThisElementPicked(vertical_slider_.get()));
-    }
-  }
+  CaptureViewElement::DoDraw(primitive_assembler, text_renderer, draw_context);
 
   // Right vertical margin of the Tracks to make them look nicer. If the vertical slider is visible,
   // the margin will be between the slider and the tracks.
