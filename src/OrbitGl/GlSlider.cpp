@@ -52,8 +52,8 @@ bool GlSlider::ContainsScreenSpacePoint(int x, int y) const {
          y <= GetPos()[1] + GetSize()[1];
 }
 
-GlSlider::GlSlider(CaptureViewElement* parent, TimelineInfoInterface* timeline_info,
-                   Viewport* viewport, TimeGraphLayout* layout, bool is_vertical)
+GlSlider::GlSlider(CaptureViewElement* parent, Viewport* viewport, TimeGraphLayout* layout,
+                   TimelineInfoInterface* timeline_info, bool is_vertical)
     : CaptureViewElement(parent, viewport, layout),
       is_vertical_(is_vertical),
       timeline_info_(timeline_info),

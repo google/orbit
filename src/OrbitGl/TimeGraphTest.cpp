@@ -6,7 +6,6 @@
 
 #include "TimeGraph.h"
 #include "TrackTestData.h"
-#include "UnitTestSlider.h"
 #include "Viewport.h"
 
 namespace orbit_gl {

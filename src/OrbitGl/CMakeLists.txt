@@ -200,8 +200,7 @@ target_sources(OrbitGlTests PRIVATE
                CaptureViewElementTester.h
                MockBatcher.h
                MockTextRenderer.h
-               PickingManagerTest.h
-               UnitTestSlider.h)
+               PickingManagerTest.h)
 
 target_sources(OrbitGlTests PRIVATE
                BatcherTest.cpp

@@ -62,8 +62,8 @@ class GlSlider : public CaptureViewElement, public std::enable_shared_from_this<
   [[nodiscard]] bool ContainsScreenSpacePoint(int x, int y) const;
 
  protected:
-  explicit GlSlider(CaptureViewElement* parent, TimelineInfoInterface* timeline_info,
-                    Viewport* viewport, TimeGraphLayout* layout, bool is_vertical);
+  explicit GlSlider(CaptureViewElement* parent, Viewport* viewport, TimeGraphLayout* layout,
+                    TimelineInfoInterface* timeline_info, bool is_vertical);
 
   static Color GetLighterColor(const Color& color);
   static Color GetDarkerColor(const Color& color);
@@ -124,9 +124,9 @@ class GlSlider : public CaptureViewElement, public std::enable_shared_from_this<
 
 class GlVerticalSlider : public GlSlider {
  public:
-  GlVerticalSlider(CaptureViewElement* parent, TimelineInfoInterface* timeline_info,
-                   Viewport* viewport, TimeGraphLayout* layout)
-      : GlSlider(parent, timeline_info, viewport, layout, true) {}
+  GlVerticalSlider(CaptureViewElement* parent, Viewport* viewport, TimeGraphLayout* layout,
+                   TimelineInfoInterface* timeline_info)
+      : GlSlider(parent, viewport, layout, timeline_info, true) {}
 
   void Draw(PrimitiveAssembler& primitive_assembler, bool is_picked) override;
 
@@ -148,9 +148,9 @@ class GlVerticalSlider : public GlSlider {
 
 class GlHorizontalSlider : public GlSlider {
  public:
-  GlHorizontalSlider(CaptureViewElement* parent, TimelineInfoInterface* timeline_info,
-                     Viewport* viewport, TimeGraphLayout* layout)
-      : GlSlider(parent, timeline_info, viewport, layout, false) {
+  GlHorizontalSlider(CaptureViewElement* parent, Viewport* viewport, TimeGraphLayout* layout,
+                     TimelineInfoInterface* timeline_info)
+      : GlSlider(parent, viewport, layout, timeline_info, false) {
     can_resize_ = true;
   }
 

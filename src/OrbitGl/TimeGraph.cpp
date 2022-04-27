@@ -81,9 +81,9 @@ TimeGraph::TimeGraph(AccessibleInterfaceProvider* parent, OrbitApp* app,
       /*parent=*/this, /*timeline_info_interface=*/this, viewport, &layout_);
 
   slider_ = std::make_shared<orbit_gl::GlHorizontalSlider>(
-      /*parent=*/this, /*timeline_info_interface*/ this, viewport, &layout_);
+      /*parent=*/this, viewport, &layout_, /*timeline_info_interface=*/this);
   vertical_slider_ = std::make_shared<orbit_gl::GlVerticalSlider>(
-      /*parent=*/this, /*timeline_info_interface*/ this, viewport, &layout_);
+      /*parent=*/this, viewport, &layout_, /*timeline_info_interface=*/this);
 
   slider_->SetDragCallback([&](float ratio) {
     this->UpdateHorizontalScroll(ratio);
