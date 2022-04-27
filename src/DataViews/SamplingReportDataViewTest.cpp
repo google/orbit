@@ -137,7 +137,7 @@ const std::vector<orbit_client_data::CallstackInfo> kCallstackInfos = [] {
   return result;
 }();
 constexpr std::array<uint64_t, kCallstackInfoNum> kTimestamps = {123456, 456789, 789456};
-constexpr std::array<uint32_t, kCallstackInfoNum> kTIDs = {321, 321, 987};
+constexpr std::array<uint32_t, kCallstackInfoNum> kTids = {321, 321, 987};
 constexpr std::array<uint64_t, kCallstackInfoNum> kCallstackIds = {123, 345, 567};
 const absl::flat_hash_set<uint64_t> kSelectedCallstackIds = {kCallstackIds[1], kCallstackIds[2]};
 
@@ -145,7 +145,7 @@ const std::unique_ptr<const orbit_client_data::CallstackData> kCallstackData = [
   auto result = std::make_unique<orbit_client_data::CallstackData>();
   for (size_t i = 0; i < kCallstackInfoNum; ++i) {
     result->AddUniqueCallstack(kCallstackIds[i], kCallstackInfos[i]);
-    result->AddCallstackEvent({kTimestamps[i], kCallstackIds[i], kTIDs[i]});
+    result->AddCallstackEvent({kTimestamps[i], kCallstackIds[i], kTids[i]});
   }
   return result;
 }();
@@ -163,7 +163,7 @@ const std::unique_ptr<const orbit_client_data::CallstackData> kCallstackData = [
       "leaf_addr/foo_addr/main_addr\"";
   result.append(orbit_data_views::kLineSeparator);
   for (size_t index : indices) {
-    result.append(orbit_data_views::FormatValueForCsv(absl::StrFormat("%u", kTIDs[index])));
+    result.append(orbit_data_views::FormatValueForCsv(absl::StrFormat("%u", kTids[index])));
     result.append(orbit_data_views::kFieldSeparator);
 
     result.append(orbit_data_views::FormatValueForCsv(absl::StrFormat("%u", kTimestamps[index])));
@@ -610,26 +610,26 @@ TEST_F(SamplingReportDataViewTest, ContextMenuActionsAreInvoked) {
         .WillOnce(Return(kSelectedCallstackIds))
         .WillOnce(Return(kSelectedCallstackIds));
 
-    // all threads, no active selection
+    // Test the case of all threads, no active selection
     view_.SetThreadID(orbit_base::kAllProcessThreadsTid);
     CheckExportToCsvIsInvoked(context_menu, app_, view_,
                               BuildExpectedExportEventsToCsvString({0, 1, 2}),
                               orbit_data_views::kMenuActionExportEventsToCsv);
 
-    // one thread, no active selection
-    view_.SetThreadID(kTIDs[0]);
+    // Test the case of one thread, no active selection
+    view_.SetThreadID(kTids[0]);
     CheckExportToCsvIsInvoked(context_menu, app_, view_,
                               BuildExpectedExportEventsToCsvString({0, 1}),
                               orbit_data_views::kMenuActionExportEventsToCsv);
 
-    // all threads, an active selection
+    // Test the case of all threads, with an active selection
     view_.SetThreadID(orbit_base::kAllProcessThreadsTid);
     CheckExportToCsvIsInvoked(context_menu, app_, view_,
                               BuildExpectedExportEventsToCsvString({1, 2}),
                               orbit_data_views::kMenuActionExportEventsToCsv);
 
-    // one thread, an active selection
-    view_.SetThreadID(kTIDs[0]);
+    // Test the case of one thread, with an active selection
+    view_.SetThreadID(kTids[0]);
     CheckExportToCsvIsInvoked(context_menu, app_, view_, BuildExpectedExportEventsToCsvString({1}),
                               orbit_data_views::kMenuActionExportEventsToCsv);
   }

@@ -30,20 +30,20 @@ TEST(DataView, FormatValueForCsvEscapesQuotesInString) {
   EXPECT_EQ(kExpectedResult, FormatValueForCsv(kInput));
 }
 
-constexpr uint64_t kValuesNum = 5;
-const std::array<std::string, kValuesNum> kValues = {"a", "b", "c", "d", "e"};
-const std::array<std::string, kValuesNum> kCSVFormattedValues = [] {
-  std::array<std::string, kValuesNum> result;
-  std::transform(std::begin(kValues), std::end(kValues), std::begin(result),
-                 [](const std::string& value) { return FormatValueForCsv(value); });
-  return result;
-}();
-
-const std::string kExpectedFileContent =
-    absl::StrCat(absl::StrJoin(kCSVFormattedValues, orbit_data_views::kFieldSeparator),
-                 orbit_data_views::kLineSeparator);
-
 TEST(DataView, WriteLineToCsvIsCorrect) {
+  constexpr uint64_t kValuesNum = 5;
+  const std::array<std::string, kValuesNum> kValues = {"a", "b", "c", "d", "e"};
+  const std::array<std::string, kValuesNum> kCsvFormattedValues = [&kValues] {
+    std::array<std::string, kValuesNum> result;
+    std::transform(std::begin(kValues), std::end(kValues), std::begin(result),
+                   [](const std::string& value) { return FormatValueForCsv(value); });
+    return result;
+  }();
+
+  const std::string kExpectedFileContent =
+      absl::StrCat(absl::StrJoin(kCsvFormattedValues, orbit_data_views::kFieldSeparator),
+                   orbit_data_views::kLineSeparator);
+
   orbit_base::TemporaryFile temporary_file = orbit_data_views::GetTemporaryFilePath();
   EXPECT_THAT(orbit_data_views::WriteLineToCsv(temporary_file.fd(), kValues),
               orbit_test_utils::HasNoError());
