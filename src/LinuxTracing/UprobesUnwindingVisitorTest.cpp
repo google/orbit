@@ -179,8 +179,16 @@ class UprobesUnwindingVisitorTest : public ::testing::Test {
       unwindstack::MapInfo::Create(kUprobesMapsStart, kUprobesMapsEnd, 0, PROT_EXEC | PROT_READ,
                                    kUprobesName);
 
-  static inline const unwindstack::FrameData kUprobesFrame{
+  static inline const unwindstack::FrameData kUprobesFrame1{
       .pc = kUprobesMapsStart,
+      .function_name = "uprobe",
+      .function_offset = 0,
+      .map_name = kUprobesName,
+      .map_start = kUprobesMapsStart,
+  };
+
+  static inline const unwindstack::FrameData kUprobesFrame2{
+      .pc = kUprobesMapsStart + 1,
       .function_name = "uprobe",
       .function_offset = 0,
       .map_name = kUprobesName,
@@ -708,7 +716,7 @@ TEST_F(UprobesUnwindingVisitorTest, VisitStackSampleWithinUprobeSendsInUprobesCa
   EXPECT_CALL(return_address_manager_, PatchSample).Times(1).WillOnce(Return());
   EXPECT_CALL(maps_, Get).Times(1).WillOnce(Return(nullptr));
 
-  std::vector<unwindstack::FrameData> callstack{kUprobesFrame, kFrame2};
+  std::vector<unwindstack::FrameData> callstack{kUprobesFrame2, kFrame2};
 
   EXPECT_CALL(unwinder_, Unwind(event.data.pid, nullptr, _, _, event.data.dyn_size, _, _))
       .Times(1)
@@ -732,14 +740,15 @@ TEST_F(UprobesUnwindingVisitorTest, VisitStackSampleWithinUprobeSendsInUprobesCa
   PerfEvent{std::move(event)}.Accept(&visitor_);
 
   EXPECT_THAT(actual_callstack_sample.callstack().pcs(),
-              ElementsAre(kUprobesMapsStart, kTargetAddress2));
+              ElementsAre(kUprobesMapsStart + 1, kTargetAddress2));
   EXPECT_EQ(actual_callstack_sample.callstack().type(), orbit_grpc_protos::Callstack::kInUprobes);
   EXPECT_THAT(
       actual_address_infos,
       UnorderedElementsAre(
-          AllOf(Property(&orbit_grpc_protos::FullAddressInfo::absolute_address, kUprobesMapsStart),
+          AllOf(Property(&orbit_grpc_protos::FullAddressInfo::absolute_address,
+                         kUprobesMapsStart + 1),
                 Property(&orbit_grpc_protos::FullAddressInfo::function_name, kUprobesName),
-                Property(&orbit_grpc_protos::FullAddressInfo::offset_in_function, 0),
+                Property(&orbit_grpc_protos::FullAddressInfo::offset_in_function, 1),
                 Property(&orbit_grpc_protos::FullAddressInfo::module_name, kUprobesName)),
           AllOf(Property(&orbit_grpc_protos::FullAddressInfo::absolute_address, kTargetAddress2),
                 Property(&orbit_grpc_protos::FullAddressInfo::function_name, kFunctionName2),
@@ -932,7 +941,7 @@ TEST_F(UprobesUnwindingVisitorTest, VisitStackSampleStoppedAtUprobesSendsPatchin
   EXPECT_CALL(return_address_manager_, PatchSample).Times(1).WillOnce(Return());
   EXPECT_CALL(maps_, Get).Times(1).WillOnce(Return(nullptr));
 
-  std::vector<unwindstack::FrameData> callstack{kFrame1, kUprobesFrame};
+  std::vector<unwindstack::FrameData> callstack{kFrame1, kUprobesFrame1};
 
   EXPECT_CALL(unwinder_, Unwind(event.data.pid, nullptr, _, _, event.data.dyn_size, _, _))
       .Times(1)

@@ -37,7 +37,6 @@ static void SendFullAddressInfoToListener(TracerListener* listener,
 
   FullAddressInfo address_info;
   address_info.set_absolute_address(libunwindstack_frame.pc);
-  address_info.set_offset_in_function(libunwindstack_frame.function_offset);
   address_info.set_module_name(libunwindstack_frame.map_name);
 
   // For addresses falling directly inside u(ret)probes code, unwindstack::FrameData has limited
@@ -48,8 +47,10 @@ static void SendFullAddressInfoToListener(TracerListener* listener,
   // corresponding unwinding error.
   if (libunwindstack_frame.map_name == "[uprobes]") {
     address_info.set_function_name("[uprobes]");
+    address_info.set_offset_in_function(libunwindstack_frame.pc - libunwindstack_frame.map_start);
   } else {
     address_info.set_function_name(libunwindstack_frame.function_name);
+    address_info.set_offset_in_function(libunwindstack_frame.function_offset);
   }
 
   listener->OnAddressInfo(std::move(address_info));
