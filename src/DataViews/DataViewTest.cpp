@@ -33,7 +33,7 @@ TEST(DataView, FormatValueForCsvEscapesQuotesInString) {
 TEST(DataView, WriteLineToCsvIsCorrect) {
   constexpr uint64_t kValuesNum = 5;
   const std::array<std::string, kValuesNum> kValues = {"a", "b", "c", "d", "e"};
-  const std::array<std::string, kValuesNum> kCsvFormattedValues = [&kValues] {
+  const std::array<std::string, kValuesNum> kCsvFormattedValues = [&] {
     std::array<std::string, kValuesNum> result;
     std::transform(std::begin(kValues), std::end(kValues), std::begin(result),
                    [](const std::string& value) { return FormatValueForCsv(value); });
