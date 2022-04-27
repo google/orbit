@@ -663,6 +663,10 @@ class OrbitApp final : public DataViewFactory,
   // TODO(b/234586730) Replace pair with struct
   absl::flat_hash_set<std::pair<std::string, std::string>> modules_with_symbol_loading_error_;
 
+  // Set of modules for which the download is disabled.
+  // ONLY access this from the main thread.
+  absl::flat_hash_set<std::string> download_disabled_modules_;
+
   orbit_string_manager::StringManager string_manager_;
   std::shared_ptr<grpc::Channel> grpc_channel_;
 

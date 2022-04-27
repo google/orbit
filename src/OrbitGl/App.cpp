@@ -768,6 +768,9 @@ void OrbitApp::PostInit(bool is_connected) {
 
     capture_client_ = std::make_unique<CaptureClient>(grpc_channel_);
 
+    orbit_client_symbols::QSettingsBasedStorageManager storage_manager;
+    download_disabled_modules_ = storage_manager.LoadDisabledModulePaths();
+
     if (GetTargetProcess() != nullptr) {
       std::ignore = UpdateProcessAndModuleList();
     }
@@ -1746,11 +1749,15 @@ orbit_base::Future<void> OrbitApp::LoadSymbolsManually(
 
   orbit_base::ImmediateExecutor immediate_executor;
   for (const auto& module : modules_set) {
+    download_disabled_modules_.erase(module->file_path());
+
     // Explicitely do not handle the result.
     Future<void> future = RetrieveModuleAndLoadSymbolsAndHandleError(module).Then(
-        &immediate_executor, [](const SymbolLoadingAndErrorHandlingResult & /*result*/) -> void {});
+        &immediate_executor, [](const SymbolLoadingAndErrorHandlingResult& /*result*/) -> void {});
     futures.emplace_back(std::move(future));
   }
+  orbit_client_symbols::QSettingsBasedStorageManager storage_manager;
+  storage_manager.SaveDisabledModulePaths(download_disabled_modules_);
 
   return orbit_base::WhenAll(futures);
 }
@@ -1884,7 +1891,8 @@ orbit_base::Future<ErrorMessageOr<CanceledOr<std::filesystem::path>>> OrbitApp::
 
   // TODO(b/177304549): [new UI] maybe come up with a better indicator whether orbit is connected
   // than process_manager != nullptr
-  if (absl::GetFlag(FLAGS_local) || GetProcessManager() == nullptr) {
+  if (absl::GetFlag(FLAGS_local) || GetProcessManager() == nullptr ||
+      download_disabled_modules_.contains(module_path)) {
     orbit_base::ImmediateExecutor executor;
     return local_symbols_future.ThenIfSuccess(
         &executor, [](const std::filesystem::path& result) -> CanceledOr<std::filesystem::path> {
@@ -3135,6 +3143,10 @@ SymbolLoadingState OrbitApp::GetSymbolLoadingStateForModule(const ModuleData* mo
   }
 
   if (module->is_loaded()) return SymbolLoadingState::kLoaded;
+
+  if (download_disabled_modules_.contains(module->file_path())) {
+    return SymbolLoadingState::kDisabled;
+  }
 
   if (modules_with_symbol_loading_error_.contains(module_id)) {
     return SymbolLoadingState::kError;
