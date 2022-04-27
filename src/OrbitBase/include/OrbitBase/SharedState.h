@@ -16,9 +16,10 @@
 
 namespace orbit_base_internal {
 
-// SharedState<T> is an implementation detail of the Future<T> / Promise<T> facility.
+// SharedState<T> is an implementation detail of the Future<T> / Promise<T> / StopSource / StopToken
+// facility.
 //
-// Don't use this class outside of Promise<T> / Future<T>!
+// Don't use this class outside of Promise<T> / Future<T> / StopSource / StopToken!
 template <typename T>
 struct SharedState {
   absl::Mutex mutex;
