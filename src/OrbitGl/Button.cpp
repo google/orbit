@@ -29,7 +29,7 @@ void Button::SetLabel(const std::string& label) {
 }
 
 void Button::SetMouseReleaseCallback(MouseReleaseCallback callback) {
-  mouse_release_callback_ = callback;
+  mouse_release_callback_ = std::move(callback);
 }
 
 void Button::OnRelease() {
