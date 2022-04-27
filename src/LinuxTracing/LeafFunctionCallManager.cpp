@@ -131,6 +131,11 @@ Callstack::CallstackType LeafFunctionCallManager::PatchCallerOfLeafFunction(
   std::shared_ptr<unwindstack::MapInfo> caller_map_info =
       current_maps->Find(libunwindstack_leaf_caller_pc);
   if (caller_map_info == nullptr || (caller_map_info->flags() & PROT_EXEC) == 0) {
+    // As above, if the error was because the stack sample was too small, the user can act and
+    // increase the stack size. So we report that case separately.
+    if (stack_size > stack_dump_size_) {
+      return Callstack::kStackTopForDwarfUnwindingTooSmall;
+    }
     return Callstack::kStackTopDwarfUnwindingError;
   }
 
