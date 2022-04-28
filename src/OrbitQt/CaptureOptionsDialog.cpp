@@ -48,21 +48,32 @@ CaptureOptionsDialog::CaptureOptionsDialog(QWidget* parent)
   ui_->unwindingMethodComboBox->addItem("Frame pointers",
                                         static_cast<int>(CaptureOptions::kFramePointers));
 
-  QObject::connect(ui_->unwindingMethodComboBox, &QComboBox::currentTextChanged,
-                   ui_->unwindingMethodWidget, [this](const QString& /*unused*/) {
-                     auto unwinding_method = static_cast<UnwindingMethod>(
-                         ui_->unwindingMethodComboBox->currentData().toInt());
-                     if (unwinding_method == CaptureOptions::kFramePointers) {
-                       ui_->unwindingMethodWidget->setStyleSheet("QWidget { color:#ff8000; }");
-                       ui_->unwindingMethodWidget->setToolTip(
-                           "Frame-pointer unwinding is experimental.\n"
-                           "Successful unwinding requires all binaries to be compiled with\n"
-                           "'-fno-omit-frame-pointer' and optionally '-momit-leaf-frame-pointer'.");
-                     } else {
-                       ui_->unwindingMethodWidget->setStyleSheet("QWidget { color : white; }");
-                       ui_->unwindingMethodWidget->setToolTip("");
-                     }
-                   });
+  const QString kFramePointerTooltip =
+      "Frame-pointer unwinding is experimental.\n"
+      "Successful unwinding requires all binaries to be compiled with\n"
+      "'-fno-omit-frame-pointer', but '-momit-leaf-frame-pointer' is\n"
+      "also supported.";
+
+  int frame_pointer_item_index =
+      ui_->unwindingMethodComboBox->findData(static_cast<int>(CaptureOptions::kFramePointers));
+  ui_->unwindingMethodComboBox->setItemData(frame_pointer_item_index, QColor(255, 128, 0, 255),
+                                            Qt::ForegroundRole);
+  ui_->unwindingMethodComboBox->setItemData(frame_pointer_item_index, kFramePointerTooltip,
+                                            Qt::ToolTipRole);
+
+  QObject::connect(
+      ui_->unwindingMethodComboBox, &QComboBox::currentTextChanged, ui_->unwindingMethodWidget,
+      [this, kFramePointerTooltip]() {
+        auto unwinding_method =
+            static_cast<UnwindingMethod>(ui_->unwindingMethodComboBox->currentData().toInt());
+        if (unwinding_method == CaptureOptions::kFramePointers) {
+          ui_->unwindingMethodComboBox->setStyleSheet("QComboBox:editable { color:#ff8000; }");
+          ui_->unwindingMethodWidget->setToolTip(kFramePointerTooltip);
+        } else {
+          ui_->unwindingMethodComboBox->setStyleSheet("QComboBox:editable { color : white; }");
+          ui_->unwindingMethodWidget->setToolTip("");
+        }
+      });
 
   ui_->maxCopyRawStackSizeLineEdit->setText(QString::number(kMaxCopyRawStackSizeDefaultValue));
   ui_->dynamicInstrumentationMethodComboBox->addItem(
