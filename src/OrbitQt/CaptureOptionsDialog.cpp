@@ -47,6 +47,23 @@ CaptureOptionsDialog::CaptureOptionsDialog(QWidget* parent)
   ui_->unwindingMethodComboBox->addItem("DWARF", static_cast<int>(CaptureOptions::kDwarf));
   ui_->unwindingMethodComboBox->addItem("Frame pointers",
                                         static_cast<int>(CaptureOptions::kFramePointers));
+
+  QObject::connect(ui_->unwindingMethodComboBox, &QComboBox::currentTextChanged,
+                   ui_->unwindingMethodWidget, [this](const QString& /*unused*/) {
+                     auto unwinding_method = static_cast<UnwindingMethod>(
+                         ui_->unwindingMethodComboBox->currentData().toInt());
+                     if (unwinding_method == CaptureOptions::kFramePointers) {
+                       ui_->unwindingMethodWidget->setStyleSheet("QWidget { color:#ff8000; }");
+                       ui_->unwindingMethodWidget->setToolTip(
+                           "Frame-pointer unwinding is experimental.\n"
+                           "Successful unwinding requires all binaries to be compiled with\n"
+                           "'-fno-omit-frame-pointer' and optionally '-momit-leaf-frame-pointer'.");
+                     } else {
+                       ui_->unwindingMethodWidget->setStyleSheet("QWidget { color : white; }");
+                       ui_->unwindingMethodWidget->setToolTip("");
+                     }
+                   });
+
   ui_->maxCopyRawStackSizeLineEdit->setText(QString::number(kMaxCopyRawStackSizeDefaultValue));
   ui_->dynamicInstrumentationMethodComboBox->addItem(
       "Kernel (Uprobes)", static_cast<int>(CaptureOptions::kKernelUprobes));
