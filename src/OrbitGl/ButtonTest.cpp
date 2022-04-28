@@ -118,7 +118,6 @@ TEST(Button, Rendering) {
   EXPECT_TRUE(batcher.IsEverythingInsideRectangle(kPos, kSize));
   EXPECT_TRUE(batcher.IsEverythingBetweenZLayers(GlCanvas::kZValueUi, GlCanvas::kZValueUi));
 
-  // EXPECT_EQ(text_renderer.GetLayers().size(), 1);
   EXPECT_EQ(text_renderer.GetNumAddTextCalls(), 1);
   EXPECT_TRUE(text_renderer.AreAddTextsAlignedVertically());
   EXPECT_TRUE(text_renderer.IsTextInsideRectangle(kPos, kSize));

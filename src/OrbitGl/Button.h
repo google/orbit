@@ -6,7 +6,6 @@
 #define ORBIT_GL_BUTTON_H_
 
 #include <functional>
-#include <memory>
 
 #include "CaptureViewElement.h"
 #include "TimeGraphLayout.h"
