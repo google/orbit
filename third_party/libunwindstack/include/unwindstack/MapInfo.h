@@ -74,7 +74,7 @@ class MapInfo {
   // Cached data for mapped object files.
   // We allocate this structure lazily since there are much fewer objects than maps.
   struct ObjectFields {
-    ObjectFields() : load_bias_(INT64_MAX), build_id_(0) {}
+    ObjectFields() : load_bias_(UINT64_MAX), build_id_(0) {}
 
     std::shared_ptr<Object> object_;
     // The offset of the beginning of this mapping to the beginning of the
@@ -88,7 +88,7 @@ class MapInfo {
     // shared libraries into a read-only and read-execute map.
     uint64_t object_start_offset_ = 0;
 
-    std::atomic_int64_t load_bias_;
+    std::atomic_uint64_t load_bias_;
 
     // This is a pointer to a new'd std::string.
     // Using an atomic value means that we don't need to lock and will
@@ -101,6 +101,10 @@ class MapInfo {
     // Protect the creation of the object instance.
     std::mutex object_mutex_;
   };
+
+  // True if the file named by this map is not actually readable and the
+  // object is using the data in memory.
+  bool ObjectFileNotReadable();
 
   // This is the previous map with the same name that is not empty and with
   // a 0 offset. For example, this set of maps:
@@ -120,6 +124,15 @@ class MapInfo {
   //       a name different from the current map, then GetNextRealMap()
   //       returns nullptr.
   std::shared_ptr<MapInfo> GetNextRealMap();
+
+  // This is guaranteed to give out the object file associated with the MapInfo
+  // object. The invariant is that once the object file is set under the
+  // lock in a MapInfo object it never changes and is not freed until
+  // the MapInfo object is destructed.
+  inline Object* GetCachedObj() {
+    std::lock_guard<std::mutex> guard(object_mutex());
+    return object().get();
+  }
 
   inline uint64_t start() const { return start_; }
   inline void set_start(uint64_t value) { start_ = value; }
@@ -149,8 +162,8 @@ class MapInfo {
     GetObjectFields().object_start_offset_ = value;
   }
 
-  inline std::atomic_int64_t& load_bias() { return GetObjectFields().load_bias_; }
-  inline void set_load_bias(int64_t value) { GetObjectFields().load_bias_ = value; }
+  inline std::atomic_uint64_t& load_bias() { return GetObjectFields().load_bias_; }
+  inline void set_load_bias(uint64_t value) { GetObjectFields().load_bias_ = value; }
 
   inline std::atomic<SharedString*>& build_id() { return GetObjectFields().build_id_; }
   inline void set_build_id(SharedString* value) { GetObjectFields().build_id_ = value; }
@@ -169,7 +182,18 @@ class MapInfo {
   // This function guarantees it will never return nullptr.
   Object* GetObject(const std::shared_ptr<Memory>& process_memory, ArchEnum expected_arch);
 
+  // Guaranteed to return the proper value if GetElf() has been called.
+  uint64_t GetLoadBias();
+
+  // Will get the proper value even if GetElf() hasn't been called.
   uint64_t GetLoadBias(const std::shared_ptr<Memory>& process_memory);
+
+  // This returns the name of the map plus the soname if this particular
+  // map represents an elf file that is contained inside of another file.
+  // The format of this soname embedded name is:
+  //   file.apk!libutils.so
+  // Otherwise, this function only returns the name of the map.
+  std::string GetFullName();
 
   Memory* CreateMemory(const std::shared_ptr<Memory>& process_memory);
 

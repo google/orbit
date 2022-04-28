@@ -126,27 +126,31 @@ class UprobesUnwindingVisitorTest : public ::testing::Test {
       .pc = kUserSpaceLibraryAddress,
       .function_name = kUserSpaceLibraryFunctionName,
       .function_offset = 0,
-      .map_name = kUserSpaceLibraryName,
-      .map_start = kUserSpaceLibraryMapsStart,
+      .map_info = kUserSpaceLibraryMapInfo,
   };
 
   static constexpr uint64_t kEntryTrampolineAddress = 0xAAAAAAAAAAAAAA00LU;
-  static constexpr uint64_t kReturnTrampolineAddress = 0xBBBBBBBBBBBBBB00LU;
   static inline const std::string kEntryTrampolineFunctionName = "entry_trampoline";
-  static inline const std::string kReturnTrampolineFunctionName = "return_trampoline";
+  static inline const std::shared_ptr<unwindstack::MapInfo> kEntryTrampolineMapInfo =
+      unwindstack::MapInfo::Create(kEntryTrampolineAddress, kEntryTrampolineAddress + 0x1000, 0,
+                                   PROT_EXEC | PROT_READ, "");
   static inline const unwindstack::FrameData kEntryTrampolineFrame{
       .pc = kEntryTrampolineAddress,
       .function_name = kEntryTrampolineFunctionName,
       .function_offset = 0,
-      .map_name = "",
-      .map_start = kEntryTrampolineAddress,
+      .map_info = kEntryTrampolineMapInfo,
   };
+
+  static constexpr uint64_t kReturnTrampolineAddress = 0xBBBBBBBBBBBBBB00LU;
+  static inline const std::string kReturnTrampolineFunctionName = "return_trampoline";
+  static inline const std::shared_ptr<unwindstack::MapInfo> kReturnTrampolineMapInfo =
+      unwindstack::MapInfo::Create(kReturnTrampolineAddress, kReturnTrampolineAddress + 0x1000, 0,
+                                   PROT_EXEC | PROT_READ, "");
   static inline const unwindstack::FrameData kReturnTrampolineFrame{
       .pc = kReturnTrampolineAddress,
       .function_name = kReturnTrampolineFunctionName,
       .function_offset = 0,
-      .map_name = "",
-      .map_start = kReturnTrampolineAddress,
+      .map_info = kReturnTrampolineMapInfo,
   };
 
   class FakeUserSpaceInstrumentationAddresses : public UserSpaceInstrumentationAddresses {
@@ -183,16 +187,14 @@ class UprobesUnwindingVisitorTest : public ::testing::Test {
       .pc = kUprobesMapsStart,
       .function_name = "uprobe",
       .function_offset = 0,
-      .map_name = kUprobesName,
-      .map_start = kUprobesMapsStart,
+      .map_info = kUprobesMapInfo,
   };
 
   static inline const unwindstack::FrameData kUprobesFrame2{
       .pc = kUprobesMapsStart + 1,
       .function_name = "uprobe",
       .function_offset = 0,
-      .map_name = kUprobesName,
-      .map_start = kUprobesMapsStart,
+      .map_info = kUprobesMapInfo,
   };
 
   static inline const std::string kTargetName = "target";
@@ -214,21 +216,21 @@ class UprobesUnwindingVisitorTest : public ::testing::Test {
       .pc = kTargetAddress1,
       .function_name = kFunctionName1,
       .function_offset = 0,
-      .map_name = kTargetName,
+      .map_info = kTargetMapInfo,
   };
 
   static inline const unwindstack::FrameData kFrame2{
       .pc = kTargetAddress2,
       .function_name = kFunctionName2,
       .function_offset = 0,
-      .map_name = kTargetName,
+      .map_info = kTargetMapInfo,
   };
 
   static inline const unwindstack::FrameData kFrame3{
       .pc = kTargetAddress3,
       .function_name = kFunctionName3,
       .function_offset = 0,
-      .map_name = kTargetName,
+      .map_info = kTargetMapInfo,
   };
 
   static constexpr uint64_t kNonExecutableMapsStart = 500;

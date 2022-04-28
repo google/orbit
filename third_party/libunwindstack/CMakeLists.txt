@@ -14,6 +14,7 @@ cmake_minimum_required(VERSION 3.15)
 
 add_library(libunwindstack_common OBJECT)
 target_sources(libunwindstack_common PRIVATE
+  AndroidUnwinder.cpp
   ArmExidx.cpp
   ArmExidx.h
   Check.h
@@ -43,7 +44,6 @@ target_sources(libunwindstack_common PRIVATE
   Global.cpp
   GlobalDebugImpl.h
   JitDebug.cpp
-  LocalUnwinder.cpp
 
   # LogAndroid is needed in the tests, while the lib needs LogStdout.
   # So we compile the `_common` target without both.
@@ -100,6 +100,7 @@ endif()
 
 target_sources(libunwindstack_common PUBLIC
   include/GlobalDebugInterface.h
+  include/unwindstack/AndroidUnwinder.h
   include/unwindstack/Arch.h
   include/unwindstack/DexFiles.h
   include/unwindstack/DwarfError.h
@@ -112,7 +113,6 @@ target_sources(libunwindstack_common PUBLIC
   include/unwindstack/Error.h
   include/unwindstack/Global.h
   include/unwindstack/JitDebug.h
-  include/unwindstack/LocalUnwinder.h
   include/unwindstack/Log.h
   include/unwindstack/MachineArm.h
   include/unwindstack/MachineArm64.h
@@ -198,6 +198,11 @@ add_executable(libunwindstack_tests)
 target_sources(libunwindstack_tests PRIVATE
   $<TARGET_OBJECTS:libunwindstack_common>
   LogAndroid.cpp
+
+  # AndroidUnwinderTest are broken and need to be investigated,
+  # but we currently don't use this part of the library.
+  # tests/AndroidUnwinderTest.cpp
+
   tests/ArmExidxDecodeTest.cpp
   tests/ArmExidxExtractTest.cpp
 
@@ -228,11 +233,6 @@ target_sources(libunwindstack_tests PRIVATE
   tests/GlobalTest.cpp
   tests/IsolatedSettings.cpp
   tests/JitDebugTest.cpp
-
-  # LocalUnwinderTests are broken and need to be investigated,
-  # but we currently don't use this part of the library.
-  # tests/LocalUnwinderTest.cpp
-
   tests/LocalUpdatableMapsTest.cpp
   tests/LogFake.cpp
   tests/MapInfoCreateMemoryTest.cpp
@@ -257,8 +257,8 @@ target_sources(libunwindstack_tests PRIVATE
   tests/MemoryTest.cpp
   tests/MemoryThreadCacheTest.cpp
   tests/MemoryXzTest.cpp
+  tests/ObjectBuildIdTest.cpp
   tests/ObjectCacheTest.cpp
-  tests/ObjectTest.cpp
   tests/PeCoffInterfaceTest.cpp
   tests/PeCoffFake.cpp
   tests/PeCoffRuntimeFunctionsTest.cpp
@@ -270,6 +270,7 @@ target_sources(libunwindstack_tests PRIVATE
   tests/RegsInfoTest.cpp
   tests/RegsIterateTest.cpp
   tests/RegsStepIfSignalHandlerTest.cpp
+  tests/RegsRemoteTest.cpp
   tests/RegsTest.cpp
   tests/SymbolsTest.cpp
 
@@ -283,6 +284,7 @@ target_sources(libunwindstack_tests PRIVATE
   tests/VerifyBionicTerminationTest.cpp
   utils/MemoryFake.cpp
   utils/OfflineUnwindUtils.cpp
+  utils/PidUtils.cpp
   utils/ProcessTracer.cpp)
 
 # Some tests call dlopen/dlsym/dlclose which requires the

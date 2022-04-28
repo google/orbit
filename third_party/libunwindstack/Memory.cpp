@@ -369,7 +369,7 @@ size_t MemoryRange::Read(uint64_t addr, void* dst, size_t size) {
   return memory_->Read(read_addr, dst, read_length);
 }
 
-void MemoryRanges::Insert(MemoryRange* memory) {
+bool MemoryRanges::Insert(MemoryRange* memory) {
   uint64_t last_addr;
   if (__builtin_add_overflow(memory->offset(), memory->length(), &last_addr)) {
     // This should never happen in the real world. However, it is possible
@@ -378,7 +378,12 @@ void MemoryRanges::Insert(MemoryRange* memory) {
     // value.
     last_addr = UINT64_MAX;
   }
-  maps_.emplace(last_addr, memory);
+  auto entry = maps_.try_emplace(last_addr, memory);
+  if (entry.second) {
+    return true;
+  }
+  delete memory;
+  return false;
 }
 
 size_t MemoryRanges::Read(uint64_t addr, void* dst, size_t size) {

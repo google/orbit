@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2016 The Android Open Source Project
+ * Copyright (C) 2022 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,21 +14,30 @@
  * limitations under the License.
  */
 
-#include <gtest/gtest.h>
+#ifndef _LIBUNWINDSTACK_UTILS_PID_UTILS_H
+#define _LIBUNWINDSTACK_UTILS_PID_UTILS_H
 
-#include <unwindstack/Object.h>
-#include <string>
+#include <stdint.h>
+#include <sys/types.h>
+
+#include <functional>
 
 namespace unwindstack {
 
-TEST(ObjectTest, get_printable_build_id_empty) {
-  std::string empty;
-  ASSERT_EQ("", Object::GetPrintableBuildID(empty));
-}
+enum PidRunEnum : uint8_t {
+  PID_RUN_KEEP_GOING,
+  PID_RUN_PASS,
+  PID_RUN_FAIL,
+};
 
-TEST(ObjectTest, get_printable_build_id_check) {
-  std::string empty = {'\xff', '\x45', '\x40', '\x0f'};
-  ASSERT_EQ("ff45400f", Object::GetPrintableBuildID(empty));
-}
+bool Quiesce(pid_t pid);
+
+bool Attach(pid_t pid);
+
+bool Detach(pid_t pid);
+
+bool RunWhenQuiesced(pid_t pid, bool leave_attached, std::function<PidRunEnum()> fn);
 
 }  // namespace unwindstack
+
+#endif  // _LIBUNWINDSTACK_UTILS_PID_UTILS_H

@@ -18,6 +18,7 @@
 #include <sys/ptrace.h>
 #include <sys/uio.h>
 
+#include <algorithm>
 #include <vector>
 
 #include <unwindstack/MapInfo.h>
@@ -25,27 +26,26 @@
 #include <unwindstack/Regs.h>
 #include <unwindstack/RegsArm.h>
 #include <unwindstack/RegsArm64.h>
-#include <unwindstack/RegsMips.h>
-#include <unwindstack/RegsMips64.h>
 #include <unwindstack/RegsX86.h>
 #include <unwindstack/RegsX86_64.h>
 #include <unwindstack/UserArm.h>
 #include <unwindstack/UserArm64.h>
-#include <unwindstack/UserMips.h>
-#include <unwindstack/UserMips64.h>
 #include <unwindstack/UserX86.h>
 #include <unwindstack/UserX86_64.h>
 
 namespace unwindstack {
 
 // The largest user structure.
-constexpr size_t MAX_USER_REGS_SIZE = sizeof(mips64_user_regs) + 10;
+// constexpr size_t MAX_USER_REGS_SIZE = sizeof(mips64_user_regs) + 10;
+static constexpr size_t kMaxUserRegsSize = std::max(
+    sizeof(arm_user_regs),
+    std::max(sizeof(arm64_user_regs), std::max(sizeof(x86_user_regs), sizeof(x86_64_user_regs))));
 
 // This function assumes that reg_data is already aligned to a 64 bit value.
 // If not this could crash with an unaligned access.
 Regs* Regs::RemoteGet(pid_t pid) {
   // Make the buffer large enough to contain the largest registers type.
-  std::vector<uint64_t> buffer(MAX_USER_REGS_SIZE / sizeof(uint64_t));
+  std::vector<uint64_t> buffer(kMaxUserRegsSize / sizeof(uint64_t));
   struct iovec io;
   io.iov_base = buffer.data();
   io.iov_len = buffer.size() * sizeof(uint64_t);
@@ -54,6 +54,7 @@ Regs* Regs::RemoteGet(pid_t pid) {
     return nullptr;
   }
 
+  // Infer the process architecture from the size of its register structure.
   switch (io.iov_len) {
   case sizeof(x86_user_regs):
     return RegsX86::Read(buffer.data());
@@ -63,12 +64,33 @@ Regs* Regs::RemoteGet(pid_t pid) {
     return RegsArm::Read(buffer.data());
   case sizeof(arm64_user_regs):
     return RegsArm64::Read(buffer.data());
-  case sizeof(mips_user_regs):
-    return RegsMips::Read(buffer.data());
-  case sizeof(mips64_user_regs):
-    return RegsMips64::Read(buffer.data());
   }
   return nullptr;
+}
+
+ArchEnum Regs::RemoteGetArch(pid_t pid) {
+  // Make the buffer large enough to contain the largest registers type.
+  std::vector<uint64_t> buffer(kMaxUserRegsSize / sizeof(uint64_t));
+  struct iovec io;
+  io.iov_base = buffer.data();
+  io.iov_len = buffer.size() * sizeof(uint64_t);
+
+  if (ptrace(PTRACE_GETREGSET, pid, NT_PRSTATUS, reinterpret_cast<void*>(&io)) == -1) {
+    return ARCH_UNKNOWN;
+  }
+
+  // Infer the process architecture from the size of its register structure.
+  switch (io.iov_len) {
+    case sizeof(x86_user_regs):
+      return ARCH_X86;
+    case sizeof(x86_64_user_regs):
+      return ARCH_X86_64;
+    case sizeof(arm_user_regs):
+      return ARCH_ARM;
+    case sizeof(arm64_user_regs):
+      return ARCH_ARM64;
+  }
+  return ARCH_UNKNOWN;
 }
 
 Regs* Regs::CreateFromUcontext(ArchEnum arch, void* ucontext) {
@@ -81,11 +103,6 @@ Regs* Regs::CreateFromUcontext(ArchEnum arch, void* ucontext) {
       return RegsArm::CreateFromUcontext(ucontext);
     case ARCH_ARM64:
       return RegsArm64::CreateFromUcontext(ucontext);
-    case ARCH_MIPS:
-      return RegsMips::CreateFromUcontext(ucontext);
-    case ARCH_MIPS64:
-      return RegsMips64::CreateFromUcontext(ucontext);
-    case ARCH_UNKNOWN:
     default:
       return nullptr;
   }

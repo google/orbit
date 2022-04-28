@@ -84,6 +84,7 @@ class Regs {
   virtual Regs* Clone() = 0;
 
   static ArchEnum CurrentArch();
+  static ArchEnum RemoteGetArch(pid_t pid);
   static Regs* RemoteGet(pid_t pid);
   static Regs* CreateFromUcontext(ArchEnum arch, void* ucontext);
   static Regs* CreateFromLocal();

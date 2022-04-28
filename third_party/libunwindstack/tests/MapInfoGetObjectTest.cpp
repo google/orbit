@@ -309,6 +309,37 @@ TEST_F(MapInfoGetObjectTest, file_backed_non_zero_offset_partial_file_whole_elf6
   ASSERT_TRUE(object->memory()->ReadFully(0x1000, buffer.data(), 1));
 }
 
+// Verify that if the offset is non-zero and there is an elf at that
+// offset, that only part of the file is used. Further verify that if the
+// the initial map is smaller than elf header size, we can still read the elf.
+TEST_F(MapInfoGetObjectTest, file_backed_non_zero_offset_partial_file_whole_elf64_small_map_range) {
+  auto info = MapInfo::Create(0x7000, 0x7004, 0x1000, PROT_READ, elf_.path);
+
+  std::vector<uint8_t> buffer(0x4000);
+  memset(buffer.data(), 0, buffer.size());
+  Elf64_Ehdr ehdr;
+  TestInitEhdr<Elf64_Ehdr>(&ehdr, ELFCLASS64, EM_AARCH64);
+  ehdr.e_shoff = 0x2000;
+  ehdr.e_shentsize = sizeof(Elf64_Shdr) + 100;
+  ehdr.e_shnum = 4;
+  memcpy(&buffer[info->offset()], &ehdr, sizeof(ehdr));
+  ASSERT_TRUE(android::base::WriteFully(elf_.fd, buffer.data(), buffer.size()));
+
+  Object* object = info->GetObject(process_memory_, ARCH_ARM64);
+  ASSERT_TRUE(object != nullptr);
+  ASSERT_TRUE(object->valid());
+  ASSERT_TRUE(object->memory() != nullptr);
+  ASSERT_EQ(0U, info->object_offset());
+
+  // Verify the memory is a valid elf.
+  memset(buffer.data(), 0, buffer.size());
+  ASSERT_TRUE(object->memory()->ReadFully(0, buffer.data(), 0x1000));
+  ASSERT_EQ(0, memcmp(buffer.data(), &ehdr, sizeof(ehdr)));
+
+  // Read past the end of what would normally be the size of the map.
+  ASSERT_TRUE(object->memory()->ReadFully(0x1000, buffer.data(), 1));
+}
+
 TEST_F(MapInfoGetObjectTest, check_device_maps) {
   // Create valid elf data in process memory for this to verify that only
   // the name is causing invalid elf data.

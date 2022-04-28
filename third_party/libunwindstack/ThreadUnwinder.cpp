@@ -72,6 +72,10 @@ static void SignalHandler(int, siginfo_t*, void* sigcontext) {
 ThreadUnwinder::ThreadUnwinder(size_t max_frames, Maps* maps)
     : UnwinderFromPid(max_frames, getpid(), Regs::CurrentArch(), maps) {}
 
+ThreadUnwinder::ThreadUnwinder(size_t max_frames, Maps* maps,
+                               std::shared_ptr<Memory>& process_memory)
+    : UnwinderFromPid(max_frames, getpid(), Regs::CurrentArch(), maps, process_memory) {}
+
 ThreadUnwinder::ThreadUnwinder(size_t max_frames, const ThreadUnwinder* unwinder)
     : UnwinderFromPid(max_frames, getpid(), Regs::CurrentArch()) {
   process_memory_ = unwinder->process_memory_;
@@ -147,11 +151,11 @@ ThreadEntry* ThreadUnwinder::SendSignalToThread(int signal, pid_t tid) {
   return nullptr;
 }
 
-void ThreadUnwinder::UnwindWithSignal(int signal, pid_t tid,
+void ThreadUnwinder::UnwindWithSignal(int signal, pid_t tid, std::unique_ptr<Regs>* initial_regs,
                                       const std::vector<std::string>* initial_map_names_to_skip,
                                       const std::vector<std::string>* map_suffixes_to_ignore) {
   ClearErrors();
-  if (tid == pid_) {
+  if (tid == static_cast<pid_t>(android::base::GetThreadId())) {
     last_error_.code = ERROR_UNSUPPORTED;
     return;
   }
@@ -166,6 +170,9 @@ void ThreadUnwinder::UnwindWithSignal(int signal, pid_t tid,
   }
 
   std::unique_ptr<Regs> regs(Regs::CreateFromUcontext(Regs::CurrentArch(), entry->GetUcontext()));
+  if (initial_regs != nullptr) {
+    initial_regs->reset(regs->Clone());
+  }
   SetRegs(regs.get());
   UnwinderFromPid::Unwind(initial_map_names_to_skip, map_suffixes_to_ignore);
 

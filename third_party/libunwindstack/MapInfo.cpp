@@ -23,6 +23,8 @@
 #include <mutex>
 #include <string>
 
+#include <android-base/strings.h>
+
 #include <unwindstack/Elf.h>
 #include <unwindstack/MapInfo.h>
 #include <unwindstack/Maps.h>
@@ -32,6 +34,12 @@
 #include "MemoryRange.h"
 
 namespace unwindstack {
+
+bool MapInfo::ObjectFileNotReadable() {
+  const std::string& map_name = name();
+  return memory_backed_object() && !map_name.empty() && map_name[0] != '[' &&
+         !android::base::StartsWith(map_name, "/memfd:");
+}
 
 std::shared_ptr<MapInfo> MapInfo::GetPrevRealMap() {
   if (name().empty()) {
@@ -121,7 +129,11 @@ Memory* MapInfo::GetFileMemory() {
   // and reinit to that size. This is needed because the dynamic linker
   // only maps in a portion of the original elf, and never the symbol
   // file data.
-  uint64_t map_size = end() - start();
+  //
+  // For maps with MAPS_FLAGS_JIT_SYMFILE_MAP, the map range is for a JIT function,
+  // which can be smaller than elf header size. So make sure map_size is large enough
+  // to read elf header.
+  uint64_t map_size = std::max<uint64_t>(end() - start(), sizeof(ElfTypes64::Ehdr));
   if (!memory->Init(name(), offset(), map_size)) {
     return nullptr;
   }
@@ -237,12 +249,15 @@ Memory* MapInfo::CreateMemory(const std::shared_ptr<Memory>& process_memory) {
   // the r-x section, which is not quite the right information.
   set_object_start_offset(prev_real_map->offset());
 
-  MemoryRanges* ranges = new MemoryRanges;
-  ranges->Insert(new MemoryRange(process_memory, prev_real_map->start(),
-                                 prev_real_map->end() - prev_real_map->start(), 0));
-  ranges->Insert(new MemoryRange(process_memory, start(), end() - start(), object_offset()));
-
-  return ranges;
+  std::unique_ptr<MemoryRanges> ranges(new MemoryRanges);
+  if (!ranges->Insert(new MemoryRange(process_memory, prev_real_map->start(),
+                                      prev_real_map->end() - prev_real_map->start(), 0))) {
+    return nullptr;
+  }
+  if (!ranges->Insert(new MemoryRange(process_memory, start(), end() - start(), object_offset()))) {
+    return nullptr;
+  }
+  return ranges.release();
 }
 
 class ScopedObjectCacheLock {
@@ -324,25 +339,31 @@ bool MapInfo::GetFunctionName(uint64_t addr, SharedString* name, uint64_t* func_
   return object()->GetFunctionName(addr, name, func_offset);
 }
 
-uint64_t MapInfo::GetLoadBias(const std::shared_ptr<Memory>& process_memory) {
-  int64_t cur_load_bias = load_bias().load();
-  if (cur_load_bias != INT64_MAX) {
+uint64_t MapInfo::GetLoadBias() {
+  uint64_t cur_load_bias = load_bias().load();
+  if (cur_load_bias != UINT64_MAX) {
     return cur_load_bias;
   }
 
-  {
-    // Make sure no other thread is trying to add the elf to this map.
-    std::lock_guard<std::mutex> guard(object_mutex());
-    if (object() != nullptr) {
-      if (object()->valid()) {
-        cur_load_bias = object()->GetLoadBias();
-        set_load_bias(cur_load_bias);
-        return cur_load_bias;
-      } else {
-        set_load_bias(0);
-        return 0;
-      }
-    }
+  Object* cached_obj = GetCachedObj();
+  if (cached_obj == nullptr) {
+    return UINT64_MAX;
+  }
+
+  if (cached_obj->valid()) {
+    cur_load_bias = cached_obj->GetLoadBias();
+    set_load_bias(cur_load_bias);
+    return cur_load_bias;
+  }
+
+  set_load_bias(0);
+  return 0;
+}
+
+uint64_t MapInfo::GetLoadBias(const std::shared_ptr<Memory>& process_memory) {
+  uint64_t cur_load_bias = GetLoadBias();
+  if (cur_load_bias != UINT64_MAX) {
+    return cur_load_bias;
   }
 
   if (IsElf()) {
@@ -366,6 +387,23 @@ MapInfo::~MapInfo() {
   }
 }
 
+std::string MapInfo::GetFullName() {
+  Object* cached_obj = GetCachedObj();
+  if (cached_obj == nullptr || object_start_offset() == 0 || name().empty()) {
+    return name();
+  }
+
+  std::string soname = cached_obj->GetSoname();
+  if (soname.empty()) {
+    return name();
+  }
+
+  std::string full_name(name());
+  full_name += '!';
+  full_name += soname;
+  return full_name;
+}
+
 SharedString MapInfo::GetBuildID() {
   SharedString* id = build_id().load();
   if (id != nullptr) {
@@ -376,14 +414,10 @@ SharedString MapInfo::GetBuildID() {
   // time it should be detected and only one thread should win and
   // save the data.
 
-  // Now need to see if the elf object exists.
-  // Make sure no other thread is trying to add the object to this map.
-  object_mutex().lock();
-  Object* obj = object().get();
-  object_mutex().unlock();
   std::string result;
-  if (obj != nullptr) {
-    result = obj->GetBuildID();
+  Object* cached_obj = GetCachedObj();
+  if (cached_obj != nullptr) {
+    result = cached_obj->GetBuildID();
   } else {
     // This will only work if we can get the file associated with this memory.
     // If this is only available in memory, then the section name information

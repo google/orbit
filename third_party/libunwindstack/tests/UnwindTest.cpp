@@ -40,6 +40,7 @@
 #include <unwindstack/Unwinder.h>
 
 #include "MemoryRemote.h"
+#include "PidUtils.h"
 #include "TestUtils.h"
 
 namespace unwindstack {
@@ -128,6 +129,14 @@ static void VerifyUnwindFrames(Unwinder* unwinder,
   }
 
   ASSERT_TRUE(expected_function_names.empty()) << ErrorMsg(expected_function_names, unwinder);
+
+  // Verify that the load bias of every map with a MapInfo is has been initialized.
+  for (auto& frame : unwinder->frames()) {
+    if (frame.map_info == nullptr) {
+      continue;
+    }
+    ASSERT_NE(UINT64_MAX, frame.map_info->GetLoadBias()) << "Frame " << frame.num << " failed";
+  }
 }
 
 static void VerifyUnwind(Unwinder* unwinder, std::vector<const char*> expected_function_names) {
@@ -228,28 +237,15 @@ TEST_F(UnwindTest, local_use_from_pid_check_for_leak) {
   TestCheckForLeaks(LocalUnwind, &test_type);
 }
 
-void WaitForRemote(pid_t pid, uint64_t addr, bool leave_attached, bool* completed) {
-  *completed = false;
-  // Need to sleep before attempting first ptrace. Without this, on the
-  // host it becomes impossible to attach and ptrace sets errno to EPERM.
-  usleep(1000);
-  for (size_t i = 0; i < 4000; i++) {
-    ASSERT_TRUE(TestAttach(pid));
-
-    MemoryRemote memory(pid);
-    // Read the remote value to see if we are ready.
+static bool WaitForRemote(pid_t pid, bool leave_attached, uint64_t addr) {
+  MemoryRemote memory(pid);
+  return RunWhenQuiesced(pid, leave_attached, [addr, &memory]() {
     bool value;
     if (memory.ReadFully(addr, &value, sizeof(value)) && value) {
-      *completed = true;
+      return PID_RUN_PASS;
     }
-    if (!*completed || !leave_attached) {
-      ASSERT_TRUE(TestDetach(pid));
-    }
-    if (*completed) {
-      break;
-    }
-    usleep(5000);
-  }
+    return PID_RUN_KEEP_GOING;
+  });
 }
 
 TEST_F(UnwindTest, remote) {
@@ -261,9 +257,7 @@ TEST_F(UnwindTest, remote) {
   ASSERT_NE(-1, pid);
   TestScopedPidReaper reap(pid);
 
-  bool completed;
-  WaitForRemote(pid, reinterpret_cast<uint64_t>(&g_ready_for_remote), true, &completed);
-  ASSERT_TRUE(completed) << "Timed out waiting for remote process to be ready.";
+  ASSERT_TRUE(WaitForRemote(pid, true, reinterpret_cast<uint64_t>(&g_ready_for_remote)));
 
   RemoteMaps maps(pid);
   ASSERT_TRUE(maps.Parse());
@@ -272,7 +266,7 @@ TEST_F(UnwindTest, remote) {
 
   VerifyUnwind(pid, &maps, regs.get(), kFunctionOrder);
 
-  ASSERT_TRUE(TestDetach(pid));
+  ASSERT_TRUE(Detach(pid));
 }
 
 TEST_F(UnwindTest, unwind_from_pid_remote) {
@@ -284,9 +278,7 @@ TEST_F(UnwindTest, unwind_from_pid_remote) {
   ASSERT_NE(-1, pid);
   TestScopedPidReaper reap(pid);
 
-  bool completed;
-  WaitForRemote(pid, reinterpret_cast<uint64_t>(&g_ready_for_remote), true, &completed);
-  ASSERT_TRUE(completed) << "Timed out waiting for remote process to be ready.";
+  ASSERT_TRUE(WaitForRemote(pid, true, reinterpret_cast<uint64_t>(&g_ready_for_remote)));
 
   std::unique_ptr<Regs> regs(Regs::RemoteGet(pid));
   ASSERT_TRUE(regs.get() != nullptr);
@@ -296,7 +288,7 @@ TEST_F(UnwindTest, unwind_from_pid_remote) {
 
   VerifyUnwind(&unwinder, kFunctionOrder);
 
-  ASSERT_TRUE(TestDetach(pid));
+  ASSERT_TRUE(Detach(pid));
 }
 
 static void RemoteCheckForLeaks(void (*unwind_func)(void*)) {
@@ -308,13 +300,11 @@ static void RemoteCheckForLeaks(void (*unwind_func)(void*)) {
   ASSERT_NE(-1, pid);
   TestScopedPidReaper reap(pid);
 
-  bool completed;
-  WaitForRemote(pid, reinterpret_cast<uint64_t>(&g_ready_for_remote), true, &completed);
-  ASSERT_TRUE(completed) << "Timed out waiting for remote process to be ready.";
+  ASSERT_TRUE(WaitForRemote(pid, true, reinterpret_cast<uint64_t>(&g_ready_for_remote)));
 
   TestCheckForLeaks(unwind_func, &pid);
 
-  ASSERT_TRUE(TestDetach(pid));
+  ASSERT_TRUE(Detach(pid));
 }
 
 static void RemoteUnwind(void* data) {
@@ -360,8 +350,8 @@ TEST_F(UnwindTest, from_context) {
   act.sa_sigaction = SignalHandler;
   act.sa_flags = SA_RESTART | SA_SIGINFO | SA_ONSTACK;
   ASSERT_EQ(0, sigaction(SIGUSR1, &act, &oldact));
-  // Wait for the tid to get set.
-  for (size_t i = 0; i < 100; i++) {
+  // Wait 20 seconds for the tid to get set.
+  for (time_t start_time = time(nullptr); time(nullptr) - start_time < 20;) {
     if (tid.load() != 0) {
       break;
     }
@@ -370,9 +360,9 @@ TEST_F(UnwindTest, from_context) {
   ASSERT_NE(0, tid.load());
   ASSERT_EQ(0, tgkill(getpid(), tid.load(), SIGUSR1)) << "Error: " << strerror(errno);
 
-  // Wait for context data.
+  // Wait 20 seconds for context data.
   void* ucontext;
-  for (size_t i = 0; i < 2000; i++) {
+  for (time_t start_time = time(nullptr); time(nullptr) - start_time < 20;) {
     ucontext = reinterpret_cast<void*>(g_ucontext.load());
     if (ucontext != nullptr) {
       break;
@@ -408,14 +398,11 @@ static void RemoteThroughSignal(int signal, unsigned int sa_flags) {
   ASSERT_NE(-1, pid);
   TestScopedPidReaper reap(pid);
 
-  bool completed;
   if (signal != SIGSEGV) {
-    WaitForRemote(pid, reinterpret_cast<uint64_t>(&g_ready_for_remote), false, &completed);
-    ASSERT_TRUE(completed) << "Timed out waiting for remote process to be ready.";
+    ASSERT_TRUE(WaitForRemote(pid, false, reinterpret_cast<uint64_t>(&g_ready_for_remote)));
     ASSERT_EQ(0, kill(pid, SIGUSR1));
   }
-  WaitForRemote(pid, reinterpret_cast<uint64_t>(&g_signal_ready_for_remote), true, &completed);
-  ASSERT_TRUE(completed) << "Timed out waiting for remote process to be in signal handler.";
+  ASSERT_TRUE(WaitForRemote(pid, true, reinterpret_cast<uint64_t>(&g_signal_ready_for_remote)));
 
   RemoteMaps maps(pid);
   ASSERT_TRUE(maps.Parse());
@@ -424,7 +411,7 @@ static void RemoteThroughSignal(int signal, unsigned int sa_flags) {
 
   VerifyUnwind(pid, &maps, regs.get(), kFunctionSignalOrder);
 
-  ASSERT_TRUE(TestDetach(pid));
+  ASSERT_TRUE(Detach(pid));
 }
 
 TEST_F(UnwindTest, remote_through_signal) {
@@ -459,8 +446,8 @@ TEST_F(UnwindTest, multiple_threads_unwind_same_map) {
   size_t frames[kNumConcurrentThreads];
   for (size_t i = 0; i < kNumConcurrentThreads; i++) {
     std::thread* thread = new std::thread([i, &frames, &maps, &process_memory, &wait]() {
-      while (wait)
-        ;
+      while (wait) {
+      }
       std::unique_ptr<Regs> regs(Regs::CreateFromLocal());
       RegsGetLocal(regs.get());
 
@@ -487,12 +474,40 @@ TEST_F(UnwindTest, thread_unwind) {
     OuterFunction(TEST_TYPE_LOCAL_WAIT_FOR_FINISH);
   });
 
-  while (tid.load() == 0)
-    ;
+  while (tid.load() == 0) {
+  }
 
   ThreadUnwinder unwinder(512);
   ASSERT_TRUE(unwinder.Init());
   unwinder.UnwindWithSignal(SIGRTMIN, tid);
+  VerifyUnwindFrames(&unwinder, kFunctionOrder);
+
+  g_finish = true;
+  thread.join();
+}
+
+TEST_F(UnwindTest, thread_unwind_copy_regs) {
+  ResetGlobals();
+
+  std::atomic_int tid(0);
+  std::thread thread([&tid]() {
+    tid = android::base::GetThreadId();
+    OuterFunction(TEST_TYPE_LOCAL_WAIT_FOR_FINISH);
+  });
+
+  while (tid.load() == 0) {
+  }
+
+  ThreadUnwinder unwinder(512);
+  ASSERT_TRUE(unwinder.Init());
+  std::unique_ptr<Regs> initial_regs;
+  unwinder.UnwindWithSignal(SIGRTMIN, tid, &initial_regs);
+  ASSERT_TRUE(initial_regs != nullptr);
+  // Verify the initial registers match the first frame pc/sp.
+  ASSERT_TRUE(unwinder.NumFrames() != 0);
+  auto initial_frame = unwinder.frames()[0];
+  ASSERT_EQ(initial_regs->pc(), initial_frame.pc);
+  ASSERT_EQ(initial_regs->sp(), initial_frame.sp);
   VerifyUnwindFrames(&unwinder, kFunctionOrder);
 
   g_finish = true;
@@ -508,8 +523,8 @@ TEST_F(UnwindTest, thread_unwind_with_external_maps) {
     OuterFunction(TEST_TYPE_LOCAL_WAIT_FOR_FINISH);
   });
 
-  while (tid.load() == 0)
-    ;
+  while (tid.load() == 0) {
+  }
 
   LocalMaps maps;
   ASSERT_TRUE(maps.Parse());
@@ -534,12 +549,34 @@ TEST_F(UnwindTest, thread_unwind_cur_pid) {
   EXPECT_EQ(ERROR_UNSUPPORTED, unwinder.LastErrorCode());
 }
 
+TEST_F(UnwindTest, thread_unwind_cur_thread) {
+  std::thread thread([]() {
+    ThreadUnwinder unwinder(512);
+    ASSERT_TRUE(unwinder.Init());
+    unwinder.UnwindWithSignal(SIGRTMIN, android::base::GetThreadId());
+    EXPECT_EQ(0U, unwinder.NumFrames());
+    EXPECT_EQ(ERROR_UNSUPPORTED, unwinder.LastErrorCode());
+  });
+  thread.join();
+}
+
+TEST_F(UnwindTest, thread_unwind_cur_pid_from_thread) {
+  std::thread thread([]() {
+    ThreadUnwinder unwinder(512);
+    ASSERT_TRUE(unwinder.Init());
+    unwinder.UnwindWithSignal(SIGRTMIN, getpid());
+    EXPECT_NE(0U, unwinder.NumFrames());
+    EXPECT_NE(ERROR_UNSUPPORTED, unwinder.LastErrorCode());
+  });
+  thread.join();
+}
+
 static std::thread* CreateUnwindThread(std::atomic_int& tid, ThreadUnwinder& unwinder,
                                        std::atomic_bool& start_unwinding,
                                        std::atomic_int& unwinders) {
   return new std::thread([&tid, &unwinder, &start_unwinding, &unwinders]() {
-    while (!start_unwinding.load())
-      ;
+    while (!start_unwinding.load()) {
+    }
 
     ThreadUnwinder thread_unwinder(512, &unwinder);
     // Allow the unwind to timeout since this will be doing multiple
@@ -565,8 +602,8 @@ TEST_F(UnwindTest, thread_unwind_same_thread_from_threads) {
     OuterFunction(TEST_TYPE_LOCAL_WAIT_FOR_FINISH);
   });
 
-  while (g_waiters.load() != 1)
-    ;
+  while (g_waiters.load() != 1) {
+  }
 
   ThreadUnwinder unwinder(512);
   ASSERT_TRUE(unwinder.Init());
@@ -579,8 +616,8 @@ TEST_F(UnwindTest, thread_unwind_same_thread_from_threads) {
   }
 
   start_unwinding = true;
-  while (unwinders.load() != kNumThreads)
-    ;
+  while (unwinders.load() != kNumThreads) {
+  }
 
   for (auto* thread : threads) {
     thread->join();
@@ -605,8 +642,8 @@ TEST_F(UnwindTest, thread_unwind_multiple_thread_from_threads) {
     threads.push_back(thread);
   }
 
-  while (g_waiters.load() != kNumThreads)
-    ;
+  while (g_waiters.load() != kNumThreads) {
+  }
 
   ThreadUnwinder unwinder(512);
   ASSERT_TRUE(unwinder.Init());
@@ -619,8 +656,8 @@ TEST_F(UnwindTest, thread_unwind_multiple_thread_from_threads) {
   }
 
   start_unwinding = true;
-  while (unwinders.load() != kNumThreads)
-    ;
+  while (unwinders.load() != kNumThreads) {
+  }
 
   for (auto* thread : unwinder_threads) {
     thread->join();
@@ -655,8 +692,8 @@ TEST_F(UnwindTest, thread_unwind_multiple_thread_from_threads_updatable_maps) {
     threads.push_back(thread);
   }
 
-  while (g_waiters.load() != kNumThreads)
-    ;
+  while (g_waiters.load() != kNumThreads) {
+  }
 
   ThreadUnwinder unwinder(512, &maps);
   ASSERT_TRUE(unwinder.Init());
@@ -669,8 +706,8 @@ TEST_F(UnwindTest, thread_unwind_multiple_thread_from_threads_updatable_maps) {
   }
 
   start_unwinding = true;
-  while (unwinders.load() != kNumThreads)
-    ;
+  while (unwinders.load() != kNumThreads) {
+  }
 
   for (auto* thread : unwinder_threads) {
     thread->join();

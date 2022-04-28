@@ -14,29 +14,10 @@
  * limitations under the License.
  */
 
-#include <unwindstack/LocalUnwinder.h>
+#include <stdint.h>
+#include <stdlib.h>
 
-#include <vector>
-
-extern "C" void TestlibLevel4(void* unwinder_data, void* frame_data) {
-  unwindstack::LocalUnwinder* unwinder =
-      reinterpret_cast<unwindstack::LocalUnwinder*>(unwinder_data);
-  std::vector<unwindstack::LocalFrameData>* frame_info =
-      reinterpret_cast<std::vector<unwindstack::LocalFrameData>*>(frame_data);
-  unwinder->Unwind(frame_info, 256);
-}
-
-extern "C" void TestlibLevel3(void* unwinder_data, void* frame_data) {
-  TestlibLevel4(unwinder_data, frame_data);
-}
-
-extern "C" void TestlibLevel2(void* unwinder_data, void* frame_data) {
-  TestlibLevel3(unwinder_data, frame_data);
-}
-
-extern "C" void TestlibLevel1(void* unwinder_data, void* frame_data) {
-  TestlibLevel2(unwinder_data, frame_data);
-}
+#include "TestUtils.h"
 
 // The loop in this function is only guaranteed to not be optimized away by the compiler
 // if optimizations are turned off. This is partially because the compiler doesn't have
@@ -46,7 +27,17 @@ extern "C" void TestlibLevel1(void* unwinder_data, void* frame_data) {
 //  1. The loop iteration variable is volatile.
 //  2. A call to this function should be wrapped in TestUtils::DoNotOptimize().
 extern "C" int BusyWait() {
-  for (volatile size_t i = 0; i < 1000000; ++i)
-    ;
+  for (size_t i = 0; i < 1000000;) {
+    unwindstack::DoNotOptimize(i++);
+  }
   return 0;
+}
+
+// Do a loop that guarantees the terminating leaf frame will be in
+// the this library and not a function from a different library.
+extern "C" void WaitForever() {
+  bool run = true;
+  while (run) {
+    unwindstack::DoNotOptimize(run = true);
+  }
 }

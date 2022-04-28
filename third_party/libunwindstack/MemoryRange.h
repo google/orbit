@@ -53,7 +53,7 @@ class MemoryRanges : public Memory {
   MemoryRanges() = default;
   virtual ~MemoryRanges() = default;
 
-  void Insert(MemoryRange* memory);
+  bool Insert(MemoryRange* memory);
 
   size_t Read(uint64_t addr, void* dst, size_t size) override;
 
