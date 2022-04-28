@@ -75,4 +75,24 @@ TEST(Button, LabelWorksAsExpected) {
   EXPECT_EQ(button.GetLabel(), kLabel);
 }
 
+TEST(Button, MouseReleaseCallback) {
+  orbit_gl::CaptureViewElementTester tester;
+  Button button(nullptr, tester.GetViewport(), tester.GetLayout());
+
+  uint32_t mouse_released_called = 0;
+  auto callback = [&](Button* button_param) {
+    if (button_param == &button) mouse_released_called++;
+  };
+  button.SetMouseReleaseCallback(callback);
+
+  uint32_t mouse_released_called_expected = 0;
+  button.OnRelease();
+  EXPECT_EQ(mouse_released_called, ++mouse_released_called_expected);
+  button.OnRelease();
+  EXPECT_EQ(mouse_released_called, ++mouse_released_called_expected);
+  button.SetMouseReleaseCallback(nullptr);
+  button.OnRelease();
+  EXPECT_EQ(mouse_released_called, mouse_released_called_expected);
+}
+
 }  // namespace orbit_gl

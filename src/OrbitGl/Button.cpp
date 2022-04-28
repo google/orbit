@@ -28,6 +28,17 @@ void Button::SetLabel(const std::string& label) {
   RequestUpdate(RequestUpdateScope::kDraw);
 }
 
+void Button::SetMouseReleaseCallback(MouseReleaseCallback callback) {
+  mouse_release_callback_ = std::move(callback);
+}
+
+void Button::OnRelease() {
+  CaptureViewElement::OnRelease();
+  if (mouse_release_callback_ != nullptr) {
+    mouse_release_callback_(this);
+  }
+}
+
 void Button::DoUpdateLayout() {
   CaptureViewElement::DoUpdateLayout();
 
