@@ -103,8 +103,8 @@ TEST(Button, Rendering) {
   button.SetLabel("Test");
   const Vec2 kSize(400, 50);
   const Vec2 kPos(10, 10);
-  button.SetHeight(kSize[1]);
   button.SetWidth(kSize[0]);
+  button.SetHeight(kSize[1]);
   button.SetPos(kPos[0], kPos[1]);
 
   tester.SimulateDrawLoop(&button, true, false);

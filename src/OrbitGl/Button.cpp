@@ -9,16 +9,16 @@
 
 // TODO (b/230726102): Code below is copied from GlSlider. This should live in a central place.
 namespace {
-const float kGradientFactor = 0.25f;
+constexpr float kGradientFactor = 0.25f;
 
-Color GetLighterColor(const Color& color) {
+[[nodiscard]] Color GetLighterColor(const Color& color) {
   const float kLocalGradientFactor = 1.0f + kGradientFactor;
   return Color(static_cast<unsigned char>(color[0] * kLocalGradientFactor),
                static_cast<unsigned char>(color[1] * kLocalGradientFactor),
                static_cast<unsigned char>(color[2] * kLocalGradientFactor), 255);
 }
 
-Color GetDarkerColor(const Color& color) {
+[[nodiscard]] Color GetDarkerColor(const Color& color) {
   const float kLocalGradientFactor = 1.0f - kGradientFactor;
   return Color(static_cast<unsigned char>(color[0] * kLocalGradientFactor),
                static_cast<unsigned char>(color[1] * kLocalGradientFactor),
