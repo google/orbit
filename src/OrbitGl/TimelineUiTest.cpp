@@ -28,6 +28,7 @@ class TimelineUiTest : public TimelineUi {
         viewport_(viewport),
         mock_timeline_info_(mock_timeline_info) {
     viewport->SetWorldSize(viewport->GetWorldWidth(), TimelineUi::GetHeight());
+    SetWidth(viewport_->GetWorldWidth());
   }
 
   void TestUpdatePrimitives(uint64_t min_tick, uint64_t max_tick) {
@@ -88,6 +89,17 @@ class TimelineUiTest : public TimelineUi {
                                                          GlCanvas::kZValueTimeBarLabel));
     EXPECT_TRUE(mock_batcher_.IsEverythingBetweenZLayers(GlCanvas::kZValueTimeBar,
                                                          GlCanvas::kZValueTimeBarLabel));
+
+    // The label is the only thing that can be out of the expected space for the timeline.
+    const char* kOneMonthLabel = "730:00:00.000000000";
+    const float kMaxSizeLabel =
+        mock_text_renderer_.GetStringWidth(kOneMonthLabel, layout_->GetFontSize());
+    const Vec2 kExpectedMinPos{GetPos()[0] - kMaxSizeLabel, GetPos()[1]};
+    const Vec2 kExpectedMaxPos{GetPos() + Vec2{GetSize()[0] + kMaxSizeLabel, GetSize()[1]}};
+    EXPECT_TRUE(mock_text_renderer_.IsTextInsideRectangle(kExpectedMinPos,
+                                                          kExpectedMaxPos - kExpectedMinPos));
+    EXPECT_TRUE(mock_batcher_.IsEverythingInsideRectangle(kExpectedMinPos,
+                                                          kExpectedMaxPos - kExpectedMinPos));
   }
 
   void TestDraw(uint64_t min_tick, uint64_t max_tick, uint64_t mouse_tick) {

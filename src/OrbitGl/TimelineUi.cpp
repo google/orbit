@@ -8,6 +8,7 @@
 
 #include "AccessibleCaptureViewElement.h"
 #include "ClientFlags/ClientFlags.h"
+#include "CoreMath.h"
 #include "DisplayFormats/DisplayFormats.h"
 #include "GlCanvas.h"
 #include "TimelineTicks.h"
@@ -24,11 +25,13 @@ void TimelineUi::RenderLines(PrimitiveAssembler& primitive_assembler, uint64_t m
        timeline_ticks_.GetAllTicks(min_timestamp_ns, max_timestamp_ns)) {
     float world_x = timeline_info_interface_->GetWorldFromUs(
         tick_ns / static_cast<double>(kNanosecondsPerMicrosecond));
-    int screen_x = viewport_->WorldToScreen(Vec2(world_x, 0))[0];
-    primitive_assembler.AddVerticalLine(
-        Vec2(screen_x, GetPos()[1]), GetHeightWithoutMargin(), GlCanvas::kZValueTimeBar,
-        tick_type == TimelineTicks::TickType::kMajorTick ? kTimelineMajorTickColor
-                                                         : kTimelineMinorTickColor);
+    if (IsElementOf(world_x, ClosedInterval::FromValues(GetPos()[0], GetPos()[0] + GetSize()[0]))) {
+      int screen_x = viewport_->WorldToScreen(Vec2(world_x, 0))[0];
+      primitive_assembler.AddVerticalLine(
+          Vec2(screen_x, GetPos()[1]), GetHeightWithoutMargin(), GlCanvas::kZValueTimeBar,
+          tick_type == TimelineTicks::TickType::kMajorTick ? kTimelineMajorTickColor
+                                                           : kTimelineMinorTickColor);
+    }
   }
 }
 
@@ -73,6 +76,12 @@ void TimelineUi::RenderLabel(PrimitiveAssembler& primitive_assembler, TextRender
 
   std::string label = GetLabel(tick_ns, number_of_decimal_places);
   float world_x = GetTickWorldXPos(tick_ns);
+  // Checking that at least some part of the label will be visible.
+  if (world_x + text_renderer.GetStringWidth(label.c_str(), layout_->GetFontSize()) < GetPos()[0] ||
+      world_x > GetPos()[0] + GetSize()[0]) {
+    return;
+  }
+
   Vec2 pos, size;
   float label_middle_y = GetPos()[1] + GetHeightWithoutMargin() / 2.f;
   text_renderer.AddText(label.c_str(), world_x + kLabelsPadding + extra_left_margin, label_middle_y,
