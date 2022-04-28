@@ -45,7 +45,7 @@ CaptureOptionsDialog::CaptureOptionsDialog(QWidget* parent)
                    });
 
   ui_->unwindingMethodComboBox->addItem("DWARF", static_cast<int>(CaptureOptions::kDwarf));
-  ui_->unwindingMethodComboBox->addItem("Frame pointers",
+  ui_->unwindingMethodComboBox->addItem("Frame pointers (experimental)",
                                         static_cast<int>(CaptureOptions::kFramePointers));
 
   const QString kFramePointerTooltip =
