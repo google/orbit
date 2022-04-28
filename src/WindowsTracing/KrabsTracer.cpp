@@ -41,16 +41,9 @@ KrabsTracer::KrabsTracer(uint32_t pid, double sampling_frequency_hz, TracerListe
       providers_(providers),
       trace_(KERNEL_LOGGER_NAME),
       stack_walk_provider_(EVENT_TRACE_FLAG_PROFILE, krabs::guids::stack_walk) {
+  path_converter_ = orbit_windows_utils::PathConverter::Create();
   SetTraceProperties();
   EnableProviders();
-
-  auto result = orbit_windows_utils::PathConverter::Create();
-  if (result.has_error()) {
-    ORBIT_LOG("Could not create path converter, module paths will contain device names: %s",
-              result.error().message());
-  } else {
-    path_converter_ = std::move(result.value());
-  }
 }
 
 void KrabsTracer::SetTraceProperties() {
@@ -235,14 +228,12 @@ void KrabsTracer::OnImageLoadEvent(const EVENT_RECORD& record,
 
     // The full path at this point contains the device name and not the drive letter, try to
     // convert it so that it takes a more conventional form.
-    if (path_converter_) {
-      ErrorMessageOr<std::string> result = path_converter_->DeviceToDrive(module.full_path);
-      if (result.has_value()) {
-        module.full_path = result.value();
-      } else {
-        ORBIT_ERROR("Calling \"DeviceToDrive\": %s %s", result.error().message(),
-                    path_converter_->ToString());
-      }
+    ErrorMessageOr<std::string> result = path_converter_->DeviceToDrive(module.full_path);
+    if (result.has_value()) {
+      module.full_path = result.value();
+    } else {
+      ORBIT_ERROR("Calling \"DeviceToDrive\": %s %s", result.error().message(),
+                  path_converter_->ToString());
     }
 
     auto coff_file_or_error = orbit_object_utils::CreateCoffFile(module.full_path);

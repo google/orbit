@@ -18,7 +18,7 @@ namespace {
 using orbit_windows_utils::VolumeInfo;
 
 // https://docs.microsoft.com/en-us/windows/win32/fileio/displaying-volume-paths
-ErrorMessageOr<std::vector<std::string>> GetVolumePaths(const char* volume) {
+std::vector<std::string> GetVolumePaths(const char* volume) {
   DWORD buffer_size = 1024;
   std::string paths(buffer_size, 0);
 
@@ -36,7 +36,8 @@ ErrorMessageOr<std::vector<std::string>> GetVolumePaths(const char* volume) {
   }
 
   if (!success) {
-    return orbit_base::GetLastErrorAsErrorMessage("GetVolumePathNamesForVolumeNameA");
+    ORBIT_ERROR("Calling GetVolumePathNamesForVolumeNameA: %s", orbit_base::GetLastErrorAsString());
+    return {};
   }
 
   // Return paths as vector.
@@ -48,14 +49,15 @@ ErrorMessageOr<std::vector<std::string>> GetVolumePaths(const char* volume) {
 }
 
 // Return a map of device names to VolumeInfo objects.
-ErrorMessageOr<absl::flat_hash_map<std::string, VolumeInfo>> BuildDeviceToVolumeInfoMap() {
+absl::flat_hash_map<std::string, VolumeInfo> BuildDeviceToVolumeInfoMap() {
   absl::flat_hash_map<std::string, VolumeInfo> device_to_volume_info_map;
 
   // Enumerate all volumes in the system.
   char volume_name[MAX_PATH] = "";
   HANDLE find_handle = FindFirstVolumeA(volume_name, ARRAYSIZE(volume_name));
   if (find_handle == INVALID_HANDLE_VALUE) {
-    return orbit_base::GetLastErrorAsErrorMessage("FindFirstVolumeA");
+    ORBIT_ERROR("Calling FindFirstVolumeA: %s", orbit_base::GetLastErrorAsString());
+    return {};
   }
   orbit_base::unique_resource handle_closer(find_handle, FindVolumeClose);
 
@@ -65,8 +67,8 @@ ErrorMessageOr<absl::flat_hash_map<std::string, VolumeInfo>> BuildDeviceToVolume
     size_t last_index = std::strlen(volume_name) - 1;
     if (volume_name[0] != '\\' || volume_name[1] != '\\' || volume_name[2] != '?' ||
         volume_name[3] != '\\' || volume_name[last_index] != '\\') {
-      return ErrorMessage(
-          absl::StrFormat("FindFirstVolumeA/FindNextVolumeA returned a bad path: %s", volume_name));
+      ORBIT_ERROR("FindFirstVolumeA/FindNextVolumeA returned a bad path: %s", volume_name);
+      return {};
     }
 
     char device_name[MAX_PATH] = "";
@@ -75,20 +77,22 @@ ErrorMessageOr<absl::flat_hash_map<std::string, VolumeInfo>> BuildDeviceToVolume
     // Get device name from volume name, skipping the "\\?\" prefix.
     ORBIT_CHECK(volume_name_length > 4);
     if (QueryDosDeviceA(&volume_name[4], device_name, ARRAYSIZE(device_name)) == 0) {
-      return orbit_base::GetLastErrorAsErrorMessage("QueryDosDeviceA");
+      ORBIT_ERROR("Calling QueryDosDeviceA: %s", orbit_base::GetLastErrorAsString());
+      return {};
     }
     volume_name[last_index] = '\\';
 
     VolumeInfo volume_info;
     volume_info.device_name = absl::StrFormat("%s%s", device_name, "\\");
     volume_info.volume_name = volume_name;
-    OUTCOME_TRY(volume_info.paths, GetVolumePaths(volume_name));
+    volume_info.paths = GetVolumePaths(volume_name);
     device_to_volume_info_map.emplace(volume_info.device_name, volume_info);
 
     //  Move on to the next volume.
     if (!FindNextVolumeA(find_handle, volume_name, ARRAYSIZE(volume_name))) {
       if (GetLastError() != ERROR_NO_MORE_FILES) {
-        return orbit_base::GetLastErrorAsErrorMessage("FindNextVolumeA");
+        ORBIT_ERROR("Calling FindNextVolumeA: %s", orbit_base::GetLastErrorAsString());
+        return device_to_volume_info_map;
       }
       break;
     }
@@ -99,8 +103,7 @@ ErrorMessageOr<absl::flat_hash_map<std::string, VolumeInfo>> BuildDeviceToVolume
 
 class PathConverterImpl : public orbit_windows_utils::PathConverter {
  public:
-  PathConverterImpl(absl::flat_hash_map<std::string, VolumeInfo> device_to_volume_info_map)
-      : device_to_volume_info_map_(std::move(device_to_volume_info_map)) {}
+  PathConverterImpl() : device_to_volume_info_map_(BuildDeviceToVolumeInfoMap()) {}
 
   const absl::flat_hash_map<std::string, VolumeInfo>& GetDeviceToVolumeInfoMap() override {
     return device_to_volume_info_map_;
@@ -139,9 +142,8 @@ class PathConverterImpl : public orbit_windows_utils::PathConverter {
 
 namespace orbit_windows_utils {
 
-ErrorMessageOr<std::unique_ptr<PathConverter>> PathConverter::Create() {
-  OUTCOME_TRY(auto device_to_volume_info_map, BuildDeviceToVolumeInfoMap());
-  return std::make_unique<PathConverterImpl>(device_to_volume_info_map);
+std::unique_ptr<PathConverter> PathConverter::Create() {
+  return std::make_unique<PathConverterImpl>();
 }
 
 }  // namespace orbit_windows_utils

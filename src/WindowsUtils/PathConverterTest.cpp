@@ -14,28 +14,20 @@ using orbit_test_utils::HasValue;
 using orbit_windows_utils::PathConverter;
 
 TEST(PathConverter, ListDevices) {
-  ErrorMessageOr<std::unique_ptr<PathConverter>> converter_or_error = PathConverter::Create();
-  ASSERT_THAT(converter_or_error, HasValue());
-  const std::unique_ptr<PathConverter>& converter = converter_or_error.value();
-
+  std::unique_ptr<PathConverter> path_converter = PathConverter::Create();
   const absl::flat_hash_map<std::string, VolumeInfo>& device_to_volume_info_map =
-      converter->GetDeviceToVolumeInfoMap();
-
+      path_converter->GetDeviceToVolumeInfoMap();
   ASSERT_FALSE(device_to_volume_info_map.empty());
-  ORBIT_LOG("%s", converter->ToString());
 }
 
 TEST(PathConverter, ContainsCurrentDrive) {
-  ErrorMessageOr<std::unique_ptr<PathConverter>> converter_or_error = PathConverter::Create();
-  ASSERT_THAT(converter_or_error, HasValue());
-  const std::unique_ptr<PathConverter>& converter = converter_or_error.value();
+  std::unique_ptr<PathConverter> path_converter = PathConverter::Create();
   const absl::flat_hash_map<std::string, VolumeInfo>& device_to_volume_info_map =
-      converter->GetDeviceToVolumeInfoMap();
+      path_converter->GetDeviceToVolumeInfoMap();
 
   std::string current_drive = orbit_base::GetExecutablePath().root_name().string() + "\\";
 
   for (const auto& [device, volume_info] : device_to_volume_info_map) {
-    std::string paths;
     for (const std::string& path : volume_info.paths) {
       if (path == current_drive) {
         return;
@@ -43,7 +35,8 @@ TEST(PathConverter, ContainsCurrentDrive) {
     }
   }
 
-  FAIL() << "device_to_volume_info_map does not contain current drive.";
+  FAIL() << "device_to_volume_info_map does not contain current drive.\n"
+         << path_converter->ToString();
 }
 
 }  // namespace orbit_windows_utils

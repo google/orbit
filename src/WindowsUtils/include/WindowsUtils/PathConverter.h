@@ -30,7 +30,7 @@ struct PathConverter {
   [[nodiscard]] virtual std::string ToString() const = 0;
 
   // Create a converter.
-  static ErrorMessageOr<std::unique_ptr<PathConverter>> Create();
+  static std::unique_ptr<PathConverter> Create();
 };
 
 }  // namespace orbit_windows_utils
