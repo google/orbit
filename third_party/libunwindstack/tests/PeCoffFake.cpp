@@ -36,20 +36,33 @@ void PeCoffFake<PeCoffInterfaceType>::Init() {
   offset = SetNewHeaderAtOffset(offset);
   offset = SetCoffHeaderAtOffset(offset);
 
+  // We have to remember the section headers offset, as we have to write section headers
+  // later when we know all sections.
   uint64_t section_headers_offset = SetOptionalHeaderAtOffset(offset);
 
+  // .debug_frame section
   offset = SetDebugFrameEntryAtOffset(kDebugFrameSectionFileOffset, 0x2100);
   uint64_t debug_frame_vmsize = offset - kDebugFrameSectionFileOffset;
 
   // Invalid entry after the .debug_frame section. We want to validate that this entry does *not*
   // get parsed.
-  offset = SetDebugFrameEntryAtOffset(kDebugFrameSectionFileOffset + 0x200, 0x10000);
-  uint64_t debug_frame_filesize = offset - kDebugFrameSectionFileOffset;
+  uint64_t debug_frame_section_end_offset =
+      SetDebugFrameEntryAtOffset(kDebugFrameSectionFileOffset + 0x200, 0x10000);
+  uint64_t debug_frame_filesize = debug_frame_section_end_offset - kDebugFrameSectionFileOffset;
 
   CHECK(debug_frame_vmsize <= std::numeric_limits<uint32_t>::max());
   CHECK(debug_frame_filesize <= std::numeric_limits<uint32_t>::max());
-  SetSectionHeadersAtOffset(section_headers_offset, static_cast<uint32_t>(debug_frame_vmsize),
-                            static_cast<uint32_t>(debug_frame_filesize));
+  uint64_t section_headers_end_offset =
+      SetSectionHeadersAtOffset(section_headers_offset, static_cast<uint32_t>(debug_frame_vmsize),
+                                static_cast<uint32_t>(debug_frame_filesize));
+
+  // We don't want any accidental overlap between the different regions of the file, including
+  // headers and the various sections.
+  CHECK(section_headers_end_offset <= kTextSectionFileOffset);
+  CHECK(kTextSectionFileOffset + kTextSectionFileSize <= kDebugFrameSectionFileOffset);
+  CHECK(debug_frame_section_end_offset <= kExceptionTableFileOffset);
+
+  SetRuntimeFunctionsAtOffset(kExceptionTableFileOffset, kExceptionTableSize);
 }
 
 template <typename PeCoffInterfaceType>
@@ -125,11 +138,11 @@ template <typename PeCoffInterfaceType>
 uint64_t PeCoffFake<PeCoffInterfaceType>::SetDosHeader(uint32_t new_header_offset_value) {
   CHECK(memory_);
   std::vector<uint8_t> zero_data(kDosHeaderSizeInBytes, 0);
-  memory_->SetMemory(0, zero_data);
+  memory_->SetMemory(kDosHeaderOffset, zero_data);
 
   SetDosHeaderMagicValue();
   SetDosHeaderOffsetToNewHeader(new_header_offset_value);
-  return new_header_offset_value;
+  return static_cast<uint64_t>(new_header_offset_value);
 }
 
 template <typename PeCoffInterfaceType>
@@ -139,7 +152,15 @@ uint64_t PeCoffFake<PeCoffInterfaceType>::SetNewHeaderAtOffset(uint64_t offset) 
 
 template <typename PeCoffInterfaceType>
 uint64_t PeCoffFake<PeCoffInterfaceType>::SetCoffHeaderAtOffset(uint64_t offset) {
-  offset = SetData16(offset, 0);  // machine
+  if constexpr (sizeof(typename PeCoffInterfaceType::AddressType) == 4) {
+    constexpr uint16_t kImageFileMachineI386 = 0x014c;
+    offset = SetData16(offset, kImageFileMachineI386);  // machine
+  } else if constexpr (sizeof(typename PeCoffInterfaceType::AddressType) == 8) {
+    constexpr uint16_t kImageFileMachineAmd64 = 0x8664;
+    offset = SetData16(offset, kImageFileMachineAmd64);  // machine
+  } else {
+    static_assert(kDependentFalse<PeCoffInterfaceType>, "AddressType size must be 4 or 8 bytes");
+  }
 
   // We remember the location of the number of sections here, so we can set it correctly later
   // when we initialize the sections.
@@ -229,12 +250,27 @@ uint64_t PeCoffFake<PeCoffInterfaceType>::SetOptionalHeaderAtOffset(uint64_t off
   offset = SetData32(offset, 0);  // loader_flags
 
   optional_header_num_data_dirs_offset_ = offset;
-  constexpr uint32_t kNumDirDataEntries = 10;
-  offset = SetData32(offset, kNumDirDataEntries);  // num_dir_data_entries
 
-  for (uint32_t i = 0; i < kNumDirDataEntries; ++i) {
-    offset = SetData32(offset, 0);
-    offset = SetData32(offset, 0);
+  struct DataDirEntry {
+    uint32_t vmaddr;
+    uint32_t vmsize;
+  };
+
+  std::vector<DataDirEntry> kDataDirs{{0, 0}, {0, 0}, {0, 0}, {0, 0}, {0, 0}, {0, 0}, {0, 0}};
+  constexpr int kCoffDataDirExceptionTableIndex = 3;
+  // Note that the official documentation of the PE format calls this entry the "exception table".
+  // It's the same as the .pdata section. See
+  // https://docs.microsoft.com/en-us/windows/win32/debug/pe-format for details.
+  kDataDirs[kCoffDataDirExceptionTableIndex].vmaddr = kExceptionTableVmAddr;
+  kDataDirs[kCoffDataDirExceptionTableIndex].vmsize = kExceptionTableSize;
+
+  CHECK(kDataDirs.size() < std::numeric_limits<uint32_t>::max());
+  const uint32_t num_data_dir_entries = static_cast<uint32_t>(kDataDirs.size());
+  offset = SetData32(offset, num_data_dir_entries);
+
+  for (const auto& data_dir : kDataDirs) {
+    offset = SetData32(offset, data_dir.vmaddr);
+    offset = SetData32(offset, data_dir.vmsize);
   }
 
   SetData16(optional_header_size_offset_, offset - optional_header_start_offset_);
@@ -300,11 +336,13 @@ uint64_t PeCoffFake<PeCoffInterfaceType>::SetSectionHeadersAtOffset(uint64_t off
   offset =
       SetSectionHeaderAtOffset(offset, ".text", kTextSectionMemorySize, kTextSectionMemoryOffset,
                                kTextSectionFileSize, kTextSectionFileOffset);
+  offset = SetSectionHeaderAtOffset(offset, ".pdata", kExceptionTableSize, kExceptionTableVmAddr,
+                                    kExceptionTableSize, kExceptionTableFileOffset);
   // Longer than kSectionNameInHeaderSize (== 8) characters
   offset = SetSectionHeaderAtOffset(offset, ".debug_frame", debug_frame_vmsize,
-                                    kDebugFrameSectionFileOffset, debug_frame_filesize,
+                                    /*vmaddr=*/kDebugFrameSectionFileOffset, debug_frame_filesize,
                                     kDebugFrameSectionFileOffset);
-  SetData16(coff_header_nsects_offset_, 2);
+  SetData16(coff_header_nsects_offset_, 3);
 
   CHECK(offset <= std::numeric_limits<uint32_t>::max());
   const uint32_t actual_symoff = static_cast<uint32_t>(offset);
@@ -346,6 +384,16 @@ uint64_t PeCoffFake<PeCoffInterfaceType>::SetDebugFrameEntryAtOffset(uint64_t of
   // augmentation string.
   offset = SetData8(offset, 0x0);
   return offset;
+}
+
+template <typename PeCoffInterfaceType>
+uint64_t PeCoffFake<PeCoffInterfaceType>::SetRuntimeFunctionsAtOffset(uint64_t offset,
+                                                                      uint64_t size) {
+  // Each RUNTIME_FUNCTION entry has 3 values of type uint32_t.
+  CHECK(size % (3 * sizeof(uint32_t)) == 0);
+  std::vector<uint8_t> bytes(size);
+  memory_->SetMemory(offset, bytes);
+  return offset + size;
 }
 
 // Instantiate all of the needed template functions.
