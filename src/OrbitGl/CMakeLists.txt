@@ -210,6 +210,7 @@ target_sources(OrbitGlTests PRIVATE
                CaptureViewElementTest.cpp
                CaptureViewElementTester.cpp
                CaptureWindowTest.cpp
+               CoreMathTest.cpp
                GlUtilsTest.cpp
                GpuTrackTest.cpp
                MockBatcher.cpp

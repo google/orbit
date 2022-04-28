@@ -26,7 +26,7 @@ void TimelineUi::RenderLines(PrimitiveAssembler& primitive_assembler, uint64_t m
        timeline_ticks_.GetAllTicks(min_timestamp_ns, max_timestamp_ns)) {
     float world_x = timeline_info_interface_->GetWorldFromUs(
         tick_ns / static_cast<double>(kNanosecondsPerMicrosecond));
-    if (IsElementOf(world_x, timeline_x_visible_range)) {
+    if (timeline_x_visible_range.Contains(world_x)) {
       int screen_x = viewport_->WorldToScreen(Vec2(world_x, 0))[0];
       primitive_assembler.AddVerticalLine(
           Vec2(screen_x, GetPos()[1]), GetHeightWithoutMargin(), GlCanvas::kZValueTimeBar,

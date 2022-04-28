@@ -36,18 +36,20 @@ struct ClosedInterval {
     return this->min <= closed_interval.max && this->max >= closed_interval.min;
   }
 
+  [[nodiscard]] bool Contains(float value) { return this->min <= value && this->max >= value; }
+
+  bool operator==(ClosedInterval const& interval) const {
+    return this->min == interval.min && this->max == interval.max;
+  }
+
   float min;
   float max;
 };
 
-[[nodiscard]] inline bool IsElementOf(float value, ClosedInterval closed_interval) {
-  return value >= closed_interval.min && value <= closed_interval.max;
-}
-
 [[nodiscard]] inline bool IsInsideRectangle(const Vec2& point, const Vec2& top_left,
                                             const Vec2& size) {
   for (int i = 0; i < 2; i++) {
-    if (!IsElementOf(point[i], ClosedInterval::FromValues(top_left[i], top_left[i] + size[i]))) {
+    if (!ClosedInterval::FromValues(top_left[i], top_left[i] + size[i]).Contains(point[i])) {
       return false;
     }
   }
