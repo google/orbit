@@ -80,7 +80,7 @@ void TimelineUi::RenderLabel(PrimitiveAssembler& primitive_assembler, TextRender
   // Check that the label is visible or partially visible.
   if (ClosedInterval label_x_interval{
           world_x, world_x + text_renderer.GetStringWidth(label.c_str(), layout_->GetFontSize())};
-      label_x_interval.Intersects(ClosedInterval{GetPos()[0], GetPos()[0] + GetWidth()})) {
+      !label_x_interval.Intersects(ClosedInterval{GetPos()[0], GetPos()[0] + GetWidth()})) {
     return;
   }
 
