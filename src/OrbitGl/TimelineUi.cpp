@@ -21,11 +21,12 @@ const Color kBackgroundColorSpecialLabels(68, 67, 69, 255);
 
 void TimelineUi::RenderLines(PrimitiveAssembler& primitive_assembler, uint64_t min_timestamp_ns,
                              uint64_t max_timestamp_ns) const {
+  ClosedInterval timeline_x_visible_range = ClosedInterval{GetPos()[0], GetPos()[0] + GetSize()[0]};
   for (auto& [tick_type, tick_ns] :
        timeline_ticks_.GetAllTicks(min_timestamp_ns, max_timestamp_ns)) {
     float world_x = timeline_info_interface_->GetWorldFromUs(
         tick_ns / static_cast<double>(kNanosecondsPerMicrosecond));
-    if (IsElementOf(world_x, ClosedInterval::FromValues(GetPos()[0], GetPos()[0] + GetSize()[0]))) {
+    if (IsElementOf(world_x, timeline_x_visible_range)) {
       int screen_x = viewport_->WorldToScreen(Vec2(world_x, 0))[0];
       primitive_assembler.AddVerticalLine(
           Vec2(screen_x, GetPos()[1]), GetHeightWithoutMargin(), GlCanvas::kZValueTimeBar,
@@ -76,9 +77,10 @@ void TimelineUi::RenderLabel(PrimitiveAssembler& primitive_assembler, TextRender
 
   std::string label = GetLabel(tick_ns, number_of_decimal_places);
   float world_x = GetTickWorldXPos(tick_ns);
-  // Checking that at least some part of the label will be visible.
-  if (world_x + text_renderer.GetStringWidth(label.c_str(), layout_->GetFontSize()) < GetPos()[0] ||
-      world_x > GetPos()[0] + GetSize()[0]) {
+  // Check that the label is visible or partially visible.
+  if (ClosedInterval label_x_interval{
+          world_x, world_x + text_renderer.GetStringWidth(label.c_str(), layout_->GetFontSize())};
+      label_x_interval.Intersects(ClosedInterval{GetPos()[0], GetPos()[0] + GetWidth()})) {
     return;
   }
 

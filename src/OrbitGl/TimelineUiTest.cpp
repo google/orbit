@@ -92,10 +92,10 @@ class TimelineUiTest : public TimelineUi {
 
     // The label is the only thing that can be out of the expected space for the timeline.
     const char* kOneMonthLabel = "730:00:00.000000000";
-    const float kMaxSizeLabel =
+    const float kMaxLabelWidth =
         mock_text_renderer_.GetStringWidth(kOneMonthLabel, layout_->GetFontSize());
-    const Vec2 kExpectedMinPos{GetPos()[0] - kMaxSizeLabel, GetPos()[1]};
-    const Vec2 kExpectedMaxPos{GetPos() + Vec2{GetSize()[0] + kMaxSizeLabel, GetSize()[1]}};
+    const Vec2 kExpectedMinPos{GetPos()[0] - kMaxLabelWidth, GetPos()[1]};
+    const Vec2 kExpectedMaxPos{GetPos() + Vec2{GetSize()[0] + kMaxLabelWidth, GetSize()[1]}};
     EXPECT_TRUE(mock_text_renderer_.IsTextInsideRectangle(kExpectedMinPos,
                                                           kExpectedMaxPos - kExpectedMinPos));
     EXPECT_TRUE(mock_batcher_.IsEverythingInsideRectangle(kExpectedMinPos,
