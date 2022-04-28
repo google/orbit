@@ -113,6 +113,41 @@ void Maps::Sort() {
   }
 }
 
+Maps::iterator Maps::Insert(iterator pos, uint64_t start, uint64_t end, uint64_t offset,
+                            uint64_t flags, const std::string& name) {
+  std::shared_ptr<MapInfo> prev_map = nullptr;
+  if (pos != maps_.end()) {
+    prev_map = (*pos)->prev_map();
+  } else if (!maps_.empty()) {
+    prev_map = maps_.back();
+  }
+
+  std::shared_ptr<MapInfo> map_info = MapInfo::Create(start, end, offset, flags, name);
+
+  if (prev_map != nullptr) prev_map->set_next_map(map_info);
+  if (pos != maps_.end()) (*pos)->set_prev_map(map_info);
+
+  map_info->set_prev_map(prev_map);
+  if (pos != maps_.end()) map_info->set_next_map(*pos);
+
+  return maps_.insert(pos, std::move(map_info));
+}
+
+Maps::iterator Maps::Insert(iterator pos, uint64_t start, uint64_t end, uint64_t offset,
+                            uint64_t flags, const std::string& name, uint64_t load_bias) {
+  auto it = Insert(pos, start, end, offset, flags, name);
+  (*it)->set_load_bias(load_bias);
+  return it;
+}
+
+Maps::iterator Maps::erase(const_iterator pos) {
+  std::shared_ptr<MapInfo> prev_map = (*pos)->prev_map();
+  std::shared_ptr<MapInfo> next_map = (*pos)->next_map();
+  if (prev_map != nullptr) prev_map->set_next_map(next_map);
+  if (next_map != nullptr) next_map->set_prev_map(prev_map);
+  return maps_.erase(pos);
+}
+
 bool BufferMaps::Parse() {
   std::string content(buffer_);
   std::shared_ptr<MapInfo> prev_map;

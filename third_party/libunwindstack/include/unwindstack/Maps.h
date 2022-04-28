@@ -70,6 +70,15 @@ class Maps {
   const_iterator begin() const { return maps_.begin(); }
   const_iterator end() const { return maps_.end(); }
 
+  // Inserts a new MapInfo before pos and returns an iterator pointing to the inserted MapInfo.
+  iterator Insert(iterator pos, uint64_t start, uint64_t end, uint64_t offset, uint64_t flags,
+                  const std::string& name);
+  iterator Insert(iterator pos, uint64_t start, uint64_t end, uint64_t offset, uint64_t flags,
+                  const std::string& name, uint64_t load_bias);
+
+  // Removes the MapInfo at pos and returns the iterator following the removed MapInfo.
+  iterator erase(const_iterator pos);
+
   size_t Total() { return maps_.size(); }
 
   std::shared_ptr<MapInfo> Get(size_t index) {
