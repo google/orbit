@@ -419,6 +419,7 @@ TEST_F(UnwindTest, remote_through_signal) {
 }
 
 TEST_F(UnwindTest, remote_through_signal_sa_siginfo) {
+  GTEST_SKIP() << "Test is flaky";
   RemoteThroughSignal(SIGUSR1, SA_SIGINFO);
 }
 
