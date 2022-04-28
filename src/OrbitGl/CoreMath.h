@@ -38,7 +38,7 @@ struct ClosedInterval {
 
   [[nodiscard]] bool Contains(float value) { return this->min <= value && this->max >= value; }
 
-  bool operator==(ClosedInterval const& interval) const {
+  bool operator==(const ClosedInterval& interval) const {
     return this->min == interval.min && this->max == interval.max;
   }
 
