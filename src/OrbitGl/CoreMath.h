@@ -31,6 +31,11 @@ struct ClosedInterval {
   static ClosedInterval FromValues(float value_1, float value_2) {
     return {std::min(value_1, value_2), std::max(value_1, value_2)};
   }
+
+  [[nodiscard]] bool Intersects(const ClosedInterval& closed_interval) const {
+    return this->min <= closed_interval.max && this->max >= closed_interval.min;
+  }
+
   float min;
   float max;
 };
