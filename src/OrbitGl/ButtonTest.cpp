@@ -93,11 +93,6 @@ TEST(Button, MouseReleaseCallback) {
   button.SetMouseReleaseCallback(nullptr);
   button.OnRelease();
   EXPECT_EQ(mouse_released_called, mouse_released_called_expected);
-
-  Button button_with_wrong_callback(nullptr, tester.GetViewport(), tester.GetLayout());
-  button_with_wrong_callback.SetMouseReleaseCallback(callback);
-  button_with_wrong_callback.OnRelease();
-  EXPECT_EQ(mouse_released_called, mouse_released_called_expected);
 }
 
 }  // namespace orbit_gl
