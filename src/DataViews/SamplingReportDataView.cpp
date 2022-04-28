@@ -483,7 +483,9 @@ ErrorMessageOr<void> SamplingReportDataView::WriteStackEventsToCsv(const std::st
     }
 
     std::vector<std::string> cells;
-    cells.push_back(absl::StrFormat("%u", event.thread_id()));
+    const uint32_t thread_id = event.thread_id();
+    cells.push_back(
+        absl::StrFormat("%s [%u]", app_->GetCaptureData().GetThreadName(thread_id), thread_id));
     cells.push_back(absl::StrFormat("%u", event.timestamp_ns()));
 
     const orbit_client_data::CallstackInfo* callstack =

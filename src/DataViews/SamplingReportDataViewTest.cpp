@@ -138,6 +138,8 @@ const std::vector<orbit_client_data::CallstackInfo> kCallstackInfos = [] {
 }();
 constexpr std::array<uint64_t, kCallstackInfoNum> kTimestamps = {123456, 456789, 789456};
 constexpr std::array<uint32_t, kCallstackInfoNum> kTids = {321, 321, 987};
+const std::array<std::string, kCallstackInfoNum> kThreadNames = {"Thread 321", "Thread 321",
+                                                                 "Thread 987"};
 constexpr std::array<uint64_t, kCallstackInfoNum> kCallstackIds = {123, 345, 567};
 const absl::flat_hash_set<uint64_t> kSelectedCallstackIds = {kCallstackIds[1], kCallstackIds[2]};
 
@@ -163,7 +165,8 @@ const std::unique_ptr<const orbit_client_data::CallstackData> kCallstackData = [
       "leaf_addr/foo_addr/main_addr\"";
   result.append(orbit_data_views::kLineSeparator);
   for (size_t index : indices) {
-    result.append(orbit_data_views::FormatValueForCsv(absl::StrFormat("%u", kTids[index])));
+    result.append(orbit_data_views::FormatValueForCsv(
+        absl::StrFormat("%s [%u]", kThreadNames[index], kTids[index])));
     result.append(orbit_data_views::kFieldSeparator);
 
     result.append(orbit_data_views::FormatValueForCsv(absl::StrFormat("%u", kTimestamps[index])));
@@ -234,6 +237,10 @@ std::unique_ptr<CaptureData> GenerateTestCaptureData(
                                     CaptureData::DataSource::kLiveCapture);
   ProcessData* process = capture_data.get()->mutable_process();
   process->UpdateModuleInfos(modules);
+
+  for (size_t i = 0; i < kCallstackInfoNum; ++i) {
+    capture_data->AddOrAssignThreadName(kTids[i], kThreadNames[i]);
+  }
 
   return capture_data;
 }
