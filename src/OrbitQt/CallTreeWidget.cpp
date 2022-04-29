@@ -42,7 +42,7 @@
 #include "ClientData/CaptureData.h"
 #include "ClientData/ModuleAndFunctionLookup.h"
 #include "ClientData/ModuleData.h"
-#include "CopyKeySequenceEnabledTreeView.h"
+#include "CustomSignalsTreeView.h"
 #include "DataViews/FunctionsDataView.h"
 #include "MetricsUploader/orbit_log_event.pb.h"
 #include "OrbitBase/Logging.h"
@@ -61,8 +61,10 @@ CallTreeWidget::CallTreeWidget(QWidget* parent)
   search_typing_finished_timer_->setSingleShot(true);
 
   connect(ui_->callTreeTreeView, &QTreeView::expanded, this, &CallTreeWidget::OnRowExpanded);
-  connect(ui_->callTreeTreeView, &CopyKeySequenceEnabledTreeView::copyKeySequencePressed, this,
+  connect(ui_->callTreeTreeView, &CustomSignalsTreeView::copyKeySequencePressed, this,
           &CallTreeWidget::OnCopyKeySequencePressed);
+  connect(ui_->callTreeTreeView, &CustomSignalsTreeView::altKeyAndMousePressed, this,
+          &CallTreeWidget::OnAltKeyAndMousePressed);
   connect(ui_->callTreeTreeView, &QTreeView::customContextMenuRequested, this,
           &CallTreeWidget::OnCustomContextMenuRequested);
   connect(ui_->searchLineEdit, &QLineEdit::textEdited, this,
@@ -417,6 +419,20 @@ static void CollapseRecursively(QTreeView* tree_view, const QModelIndex& index) 
   }
 }
 
+void CallTreeWidget::OnAltKeyAndMousePressed(const QPoint& point) {
+  QModelIndex index = ui_->callTreeTreeView->indexAt(point);
+  if (!index.isValid()) return;
+
+  if (ui_->callTreeTreeView->isExpanded(index)) {
+    CollapseRecursively(ui_->callTreeTreeView, index);
+  } else {
+    DisableThreadOrFunctionColumnResizeOnRowExpanded();
+    ExpandRecursively(ui_->callTreeTreeView, index);
+    ReEnableThreadOrFunctionColumnResizeOnRowExpanded();
+    ResizeThreadOrFunctionColumnToShowVisibleDescendants(index);
+  }
+}
+
 static void CollapseChildrenRecursively(QTreeView* tree_view, const QModelIndex& index) {
   if (!index.isValid()) {
     return;
@@ -578,8 +594,16 @@ void CallTreeWidget::OnCustomContextMenuRequested(const QPoint& point) {
   bool enable_copy = ui_->callTreeTreeView->selectionModel()->hasSelection();
 
   QMenu menu{ui_->callTreeTreeView};
-  menu.addAction(kActionExpandRecursively)->setEnabled(enable_expand_recursively);
-  menu.addAction(kActionCollapseRecursively)->setEnabled(enable_collapse_recursively);
+  const QString kAltClickShortcut = QStringLiteral("\tALT+Click");
+  bool is_expanded = ui_->callTreeTreeView->isExpanded(index);
+  QString action_expand_recursively = (!is_expanded & enable_expand_recursively)
+                                          ? kActionExpandRecursively + kAltClickShortcut
+                                          : kActionExpandRecursively;
+  menu.addAction(action_expand_recursively)->setEnabled(enable_expand_recursively);
+  QString action_collapse_recursively = (is_expanded & enable_collapse_recursively)
+                                            ? kActionCollapseRecursively + kAltClickShortcut
+                                            : kActionCollapseRecursively;
+  menu.addAction(action_collapse_recursively)->setEnabled(enable_collapse_recursively);
   menu.addAction(kActionCollapseChildrenRecursively)->setEnabled(enable_collapse_recursively);
   menu.addSeparator();
   menu.addAction(kActionExpandAll);
