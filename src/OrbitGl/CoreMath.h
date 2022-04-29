@@ -36,10 +36,12 @@ struct ClosedInterval {
     return this->min <= value && this->max >= value;
   }
 
-  [[nodiscard]] bool operator==(const ClosedInterval& other) const {
-    return this->min == other.min && this->max == other.max;
+  [[nodiscard]] friend bool operator==(const ClosedInterval& lhs, const ClosedInterval& rhs) {
+    return std::tie(lhs.min, lhs.max) == std::tie(rhs.min, rhs.max);
   }
-  [[nodiscard]] bool operator!=(const ClosedInterval& other) const { return !(other == *this); }
+  [[nodiscard]] friend bool operator!=(const ClosedInterval& lhs, const ClosedInterval& rhs) {
+    return !(lhs == rhs);
+  }
 
   float min;
   float max;
