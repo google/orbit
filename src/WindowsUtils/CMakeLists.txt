@@ -31,6 +31,7 @@ target_sources(WindowsUtils PUBLIC
         include/WindowsUtils/ListThreads.h
         include/WindowsUtils/OpenProcess.h
         include/WindowsUtils/PathConverter.h
+        include/WindowsUtils/ProcessLauncher.h
         include/WindowsUtils/ProcessList.h
         include/WindowsUtils/ReadProcessMemory.h
         include/WindowsUtils/SafeHandle.h
@@ -48,6 +49,7 @@ target_sources(WindowsUtils PRIVATE
         ListThreads.cpp
         OpenProcess.cpp
         PathConverter.cpp
+        ProcessLauncher.cpp
         ProcessList.cpp
         ReadProcessMemory.cpp
         SafeHandle.cpp
@@ -70,6 +72,7 @@ target_sources(WindowsUtilsTests PRIVATE
         ListThreadsTest.cpp
         OpenProcessTest.cpp
         PathConverterTest.cpp
+        ProcessLauncherTest.cpp
         ProcessListTest.cpp
         ReadProcessMemoryTest.cpp
         SafeHandleTest.cpp

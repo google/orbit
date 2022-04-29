@@ -32,6 +32,7 @@ class BusyLoopLauncher : public DebugEventListener {
   ErrorMessageOr<void> SuspendMainThreadAndRemoveBusyLoop();
   ErrorMessageOr<void> ResumeMainThread();
 
+  bool IsProcessSuspended() const { return state_ == State::kMainThreadSuspended; }
   void WaitForProcessToExit();
 
  protected:
