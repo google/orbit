@@ -39,7 +39,6 @@ class TimeGraphLayout {
   float GetRoundingRadius() const { return rounding_radius_ * scale_; }
   float GetRoundingNumSides() const { return rounding_num_sides_; }
   float GetTextOffset() const { return text_offset_ * scale_; }
-  float GetBottomMargin() const;
   float GetTracksTopMargin() const { return GetTimeBarHeight() + GetTimeBarMargin(); }
   float GetRightMargin() const { return right_margin_; }
   float GetMinButtonSize() const { return min_button_size_; }

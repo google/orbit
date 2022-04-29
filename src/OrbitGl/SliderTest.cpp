@@ -10,9 +10,8 @@
 #include <memory>
 #include <utility>
 
-#include "Geometry.h"
+#include "CaptureViewElementTester.h"
 #include "GlSlider.h"
-#include "UnitTestSlider.h"
 #include "Viewport.h"
 
 namespace orbit_gl {
@@ -56,9 +55,11 @@ void PickDragRelease(GlSlider& slider, int start, int end = -1, int other_dim = 
 
 template <typename SliderClass>
 std::pair<std::unique_ptr<SliderClass>, std::unique_ptr<Viewport>> Setup() {
+  orbit_gl::CaptureViewElementTester tester;
   std::unique_ptr<Viewport> viewport = std::make_unique<Viewport>(150, 1050);
 
-  std::unique_ptr<SliderClass> slider = std::make_unique<SliderClass>(*viewport);
+  std::unique_ptr<SliderClass> slider =
+      std::make_unique<SliderClass>(nullptr, viewport.get(), tester.GetLayout(), nullptr);
   slider->SetPixelHeight(15);
   slider->SetOrthogonalSliderPixelHeight(50);
 
@@ -316,21 +317,23 @@ TEST(Slider, BreakScale) {
   TestBreakScaling<GlVerticalSlider, 1>();
 }
 
-TEST(Slider, MouseEnterAndLeave) {
-  Viewport viewport(100, 100);
-  UnitTestVerticalSlider slider(viewport);
-  EXPECT_FALSE(slider.IsMouseOver());
-  slider.OnMouseEnter();
-  EXPECT_TRUE(slider.IsMouseOver());
-  slider.OnMouseLeave();
-  EXPECT_FALSE(slider.IsMouseOver());
-}
-
 TEST(Slider, ContainsScreenSpacePoint) {
-  Viewport viewport(100, 100);
-  GlVerticalSlider slider(viewport);
-  EXPECT_TRUE(slider.ContainsScreenSpacePoint(95, 50));
-  EXPECT_FALSE(slider.ContainsScreenSpacePoint(50, 50));
+  CaptureViewElementTester tester;
+  Viewport* viewport = tester.GetViewport();
+
+  GlVerticalSlider slider(nullptr, viewport, tester.GetLayout(), nullptr);
+  tester.SimulatePreRender(&slider);
+
+  Vec2 slider_pos = slider.GetPos();
+  Vec2 slider_size = slider.GetSize();
+  Vec2 middle_point_slider{slider_pos[0] + slider_size[0] / 2.f,
+                           slider_pos[1] + slider_size[1] / 2.f};
+  Vec2 outside_point_slider{slider_pos[0] + slider_size[0] * 2.f,
+                            slider_pos[1] + slider_size[1] * 2.f};
+  EXPECT_TRUE(slider.ContainsScreenSpacePoint(static_cast<int>(middle_point_slider[0]),
+                                              static_cast<int>(middle_point_slider[1])));
+  EXPECT_FALSE(slider.ContainsScreenSpacePoint(static_cast<int>(outside_point_slider[0]),
+                                               static_cast<int>(outside_point_slider[1])));
 }
 
 }  // namespace orbit_gl

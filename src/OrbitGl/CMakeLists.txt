@@ -201,8 +201,7 @@ target_sources(OrbitGlTests PRIVATE
                CaptureViewElementTester.h
                MockBatcher.h
                MockTextRenderer.h
-               PickingManagerTest.h
-               UnitTestSlider.h)
+               PickingManagerTest.h)
 
 target_sources(OrbitGlTests PRIVATE
                BatcherTest.cpp
@@ -224,6 +223,7 @@ target_sources(OrbitGlTests PRIVATE
                SimpleTimingsTest.cpp
                SliderTest.cpp
                ShortenStringWithEllipsisTest.cpp
+               TimeGraphTest.cpp
                TimelineTicksTest.cpp
                TimelineUiTest.cpp
                TimerInfosIteratorTest.cpp

@@ -83,26 +83,6 @@ CaptureWindow::CaptureWindow(OrbitApp* app) : GlCanvas(), app_{app}, capture_cli
   scoped_frame_times_[kTimingDrawAndUpdatePrimitives] =
       std::make_unique<orbit_gl::SimpleTimings>(30);
   scoped_frame_times_[kTimingFrame] = std::make_unique<orbit_gl::SimpleTimings>(30);
-
-  slider_ = std::make_shared<orbit_gl::GlHorizontalSlider>(viewport_);
-  vertical_slider_ = std::make_shared<orbit_gl::GlVerticalSlider>(viewport_);
-
-  slider_->SetDragCallback([&](float ratio) {
-    this->UpdateHorizontalScroll(ratio);
-    RequestUpdatePrimitives();
-  });
-  slider_->SetResizeCallback([&](float normalized_start, float normalized_end) {
-    this->UpdateHorizontalZoom(normalized_start, normalized_end);
-    RequestUpdatePrimitives();
-  });
-
-  vertical_slider_->SetDragCallback([&](float ratio) {
-    this->UpdateVerticalScroll(ratio);
-    RequestUpdatePrimitives();
-  });
-
-  vertical_slider_->SetOrthogonalSliderPixelHeight(slider_->GetPixelHeight());
-  slider_->SetOrthogonalSliderPixelHeight(vertical_slider_->GetPixelHeight());
 }
 
 void CaptureWindow::PreRender() {
@@ -128,7 +108,6 @@ void CaptureWindow::PreRender() {
 
     // TODO (b/229222095) Log when the max loop count is exceeded
     do {
-      UpdateChildrenPosAndSize();
       time_graph_->UpdateLayout();
     } while (++layout_loops < kMaxLayoutLoops && time_graph_->HasLayoutChanged());
   }
@@ -144,8 +123,8 @@ void CaptureWindow::ZoomAll() {
 void CaptureWindow::MouseMoved(int x, int y, bool left, bool right, bool middle) {
   GlCanvas::MouseMoved(x, y, left, right, middle);
 
-  if (!(left || right || middle)) {
-    ProcessSliderMouseMoveEvents(x, y);
+  if (time_graph_ != nullptr && !(left || right || middle)) {
+    time_graph_->ProcessSliderMouseMoveEvents(x, y);
   }
 
   if (time_graph_ == nullptr) return;
@@ -187,7 +166,9 @@ void CaptureWindow::LeftUp() {
     RequestUpdatePrimitives();
   }
 
-  ProcessSliderMouseMoveEvents(mouse_move_pos_screen_[0], mouse_move_pos_screen_[1]);
+  if (time_graph_ != nullptr) {
+    time_graph_->ProcessSliderMouseMoveEvents(mouse_move_pos_screen_[0], mouse_move_pos_screen_[1]);
+  }
 }
 
 void CaptureWindow::HandlePickedElement(PickingMode picking_mode, PickingId picking_id, int x,
@@ -285,7 +266,9 @@ bool CaptureWindow::RightUp() {
     }
   }
 
-  ProcessSliderMouseMoveEvents(mouse_move_pos_screen_[0], mouse_move_pos_screen_[1]);
+  if (time_graph_ != nullptr) {
+    time_graph_->ProcessSliderMouseMoveEvents(mouse_move_pos_screen_[0], mouse_move_pos_screen_[1]);
+  }
 
   return GlCanvas::RightUp();
 }
@@ -405,10 +388,9 @@ void CaptureWindow::KeyPressed(unsigned int key_code, bool ctrl, bool shift, boo
 void CaptureWindow::SetIsMouseOver(bool value) {
   GlCanvas::SetIsMouseOver(value);
 
-  if (!value && last_mouseover_slider_ != nullptr) {
-    last_mouseover_slider_->OnMouseLeave();
-    last_mouseover_slider_ = nullptr;
-    RequestRedraw();
+  if (time_graph_ != nullptr) {
+    // TODO(b/230441102): Replace by CaptureViewElement's MouseEvent
+    time_graph_->SetIsMouseOver(value);
   }
 }
 
@@ -453,8 +435,6 @@ void CaptureWindow::Draw() {
     }
   }
 
-  DrawScreenSpace();
-
   if (picking_mode_ == PickingMode::kNone) {
     text_renderer_.RenderDebug(&primitive_assembler_);
   }
@@ -479,47 +459,6 @@ void CaptureWindow::Draw() {
   }
 
   last_frame_start_time_ = orbit_base::CaptureTimestampNs();
-}
-
-void CaptureWindow::UpdateChildrenPosAndSize() {
-  UpdateVerticalSliderFromWorld();
-  // Horizontal slider width depends on the visibility of vertical slider.
-  UpdateHorizontalSliderFromWorld();
-
-  const TimeGraphLayout& layout = time_graph_->GetLayout();
-  float right_margin = layout.GetRightMargin();
-  if (vertical_slider_->IsVisible()) {
-    int slider_width = static_cast<int>(time_graph_->GetLayout().GetSliderWidth());
-    right_margin += slider_width;
-  }
-
-  UpdateRightMargin(right_margin);
-
-  time_graph_->SetWidth(viewport_.GetWorldWidth() - right_margin);
-}
-
-void CaptureWindow::DrawScreenSpace() {
-  ORBIT_SCOPE("CaptureWindow::DrawScreenSpace");
-  if (time_graph_ == nullptr) return;
-  uint64_t time_span = time_graph_->GetCaptureTimeSpanNs();
-
-  Color col = slider_->GetBarColor();
-  auto canvas_height = static_cast<float>(viewport_.GetScreenHeight());
-
-  if (time_span > 0) {
-    slider_->Draw(primitive_assembler_, picking_manager_.IsThisElementPicked(slider_.get()));
-    if (vertical_slider_->IsVisible()) {
-      vertical_slider_->Draw(primitive_assembler_,
-                             picking_manager_.IsThisElementPicked(vertical_slider_.get()));
-    }
-  }
-
-  // Right vertical margin.
-  auto margin_x1 = static_cast<float>(viewport_.GetScreenWidth());
-  float margin_x0 = margin_x1 - GetRightMargin();
-
-  Quad box = MakeBox(Vec2(margin_x0, 0), Vec2(margin_x1 - margin_x0, canvas_height));
-  primitive_assembler_.AddBox(box, GlCanvas::kZValueMargin, kBackgroundColor);
 }
 
 void CaptureWindow::RenderAllLayers() {
@@ -552,92 +491,12 @@ void CaptureWindow::RenderAllLayers() {
   }
 }
 
-void CaptureWindow::UpdateHorizontalScroll(float ratio) {
-  if (time_graph_ == nullptr) return;
-  time_graph_->UpdateHorizontalScroll(ratio);
-}
-
-void CaptureWindow::UpdateVerticalScroll(float ratio) {
-  if (time_graph_ == nullptr) return;
-  float range = std::max(0.f, time_graph_->GetTrackContainer()->GetVisibleTracksTotalHeight() -
-                                  viewport_.GetWorldHeight());
-  float new_scrolling_offset = ratio * range;
-  time_graph_->GetTrackContainer()->SetVerticalScrollingOffset(new_scrolling_offset);
-}
-
-void CaptureWindow::UpdateHorizontalZoom(float normalized_start, float normalized_end) {
-  if (time_graph_ == nullptr) return;
-  double time_span = time_graph_->GetCaptureTimeSpanUs();
-  time_graph_->SetMinMax(normalized_start * time_span, normalized_end * time_span);
-}
-
-void CaptureWindow::UpdateHorizontalSliderFromWorld() {
-  if (time_graph_ == nullptr) return;
-  double time_span = time_graph_->GetCaptureTimeSpanUs();
-  double start = time_graph_->GetMinTimeUs();
-  double stop = time_graph_->GetMaxTimeUs();
-  double width = stop - start;
-  double max_start = time_span - width;
-
-  constexpr double kEpsilon = 1e-8;
-  double ratio =
-      capture_client_app_->IsCapturing() ? 1 : (max_start > kEpsilon ? start / max_start : 0);
-  int slider_width = static_cast<int>(time_graph_->GetLayout().GetSliderWidth());
-  slider_->SetPixelHeight(slider_width);
-  slider_->SetNormalizedLength(static_cast<float>(width / time_span));
-  slider_->SetNormalizedPosition(static_cast<float>(ratio));
-
-  slider_->SetOrthogonalSliderPixelHeight(vertical_slider_->IsVisible() ? slider_width : 0);
-}
-
-void CaptureWindow::ProcessSliderMouseMoveEvents(int x, int y) {
-  orbit_gl::GlSlider* slider = FindSliderUnderMouseCursor(x, y);
-  if (slider != last_mouseover_slider_) {
-    if (last_mouseover_slider_ != nullptr) {
-      last_mouseover_slider_->OnMouseLeave();
-    }
-    last_mouseover_slider_ = slider;
-    if (slider != nullptr) {
-      slider->OnMouseEnter();
-    }
-  }
-
-  if (slider != nullptr) {
-    slider->OnMouseMove(x, y);
-  }
-}
-
-void CaptureWindow::UpdateVerticalSliderFromWorld() {
-  if (time_graph_ == nullptr) return;
-  float visible_tracks_height = time_graph_->GetTrackContainer()->GetVisibleTracksTotalHeight();
-  float max = std::max(0.f, visible_tracks_height - viewport_.GetWorldHeight());
-  float pos_ratio =
-      max > 0 ? time_graph_->GetTrackContainer()->GetVerticalScrollingOffset() / max : 0.f;
-  float size_ratio =
-      visible_tracks_height > 0 ? viewport_.GetWorldHeight() / visible_tracks_height : 1.f;
-  int slider_width = static_cast<int>(time_graph_->GetLayout().GetSliderWidth());
-  vertical_slider_->SetPixelHeight(slider_width);
-  vertical_slider_->SetNormalizedPosition(pos_ratio);
-  vertical_slider_->SetNormalizedLength(size_ratio);
-  vertical_slider_->SetOrthogonalSliderPixelHeight(slider_width);
-}
-
 void CaptureWindow::ToggleRecording() {
   capture_client_app_->ToggleCapture();
   draw_help_ = false;
 #ifdef __linux__
   ZoomAll();
 #endif
-}
-
-orbit_gl::GlSlider* CaptureWindow::FindSliderUnderMouseCursor(int x, int y) {
-  for (orbit_gl::GlSlider* slider : {vertical_slider_.get(), slider_.get()}) {
-    if (slider->ContainsScreenSpacePoint(x, y)) {
-      return slider;
-    }
-  }
-
-  return nullptr;
 }
 
 bool CaptureWindow::ShouldSkipRendering() const {

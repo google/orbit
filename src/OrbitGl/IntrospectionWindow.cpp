@@ -242,11 +242,6 @@ void IntrospectionWindow::Draw() {
   CaptureWindow::Draw();
 }
 
-void IntrospectionWindow::DrawScreenSpace() {
-  ORBIT_SCOPE_FUNCTION;
-  CaptureWindow::DrawScreenSpace();
-}
-
 void IntrospectionWindow::RenderText(float layer) {
   ORBIT_SCOPE_FUNCTION;
   CaptureWindow::RenderText(layer);

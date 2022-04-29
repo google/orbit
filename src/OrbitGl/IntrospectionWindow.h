@@ -31,7 +31,6 @@ class IntrospectionWindow : public CaptureWindow {
 
  protected:
   void Draw() override;
-  void DrawScreenSpace() override;
   void RenderText(float layer) override;
   bool ShouldSkipRendering() const override { return false; };
 

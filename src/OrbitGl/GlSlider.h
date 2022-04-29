@@ -9,6 +9,7 @@
 #include <memory>
 #include <utility>
 
+#include "CaptureViewElement.h"
 #include "CoreMath.h"
 #include "PickingManager.h"
 #include "PrimitiveAssembler.h"
@@ -16,16 +17,11 @@
 
 namespace orbit_gl {
 
-class GlSlider : public Pickable, public std::enable_shared_from_this<GlSlider> {
+class GlSlider : public CaptureViewElement, public std::enable_shared_from_this<GlSlider> {
  public:
   ~GlSlider() override = default;
 
   [[nodiscard]] bool Draggable() override { return true; }
-  [[nodiscard]] virtual bool IsVisible() const { return true; }
-  virtual void Draw(PrimitiveAssembler& primitive_assembler, bool is_picked) = 0;
-
-  [[nodiscard]] virtual Vec2 GetPos() const = 0;
-  [[nodiscard]] virtual Vec2 GetSize() const = 0;
 
   void SetNormalizedPosition(float start_ratio);  // [0,1]
   void SetNormalizedLength(float length_ratio);   // [0,1]
@@ -65,7 +61,9 @@ class GlSlider : public Pickable, public std::enable_shared_from_this<GlSlider> 
   [[nodiscard]] bool ContainsScreenSpacePoint(int x, int y) const;
 
  protected:
-  explicit GlSlider(Viewport& viewport, bool is_vertical);
+  explicit GlSlider(CaptureViewElement* parent, const Viewport* viewport,
+                    const TimeGraphLayout* layout, TimelineInfoInterface* timeline_info,
+                    bool is_vertical);
 
   static Color GetLighterColor(const Color& color);
   static Color GetDarkerColor(const Color& color);
@@ -73,7 +71,7 @@ class GlSlider : public Pickable, public std::enable_shared_from_this<GlSlider> 
   void DrawBackground(PrimitiveAssembler& primitive_assembler, float x, float y, float width,
                       float height);
   void DrawSlider(PrimitiveAssembler& primitive_assembler, float x, float y, float width,
-                  float height, ShadingDirection shading_direction, bool is_picked);
+                  float height, ShadingDirection shading_direction);
 
   [[nodiscard]] bool PosIsInMinResizeArea(int x, int y) const;
   [[nodiscard]] bool PosIsInMaxResizeArea(int x, int y) const;
@@ -96,9 +94,8 @@ class GlSlider : public Pickable, public std::enable_shared_from_this<GlSlider> 
   static const float kGradientFactor;
   const bool is_vertical_;
   bool is_mouse_over_ = false;
-  Vec2i mouse_pos_ = Vec2i(-1, -1);
 
-  Viewport& viewport_;
+  TimelineInfoInterface* timeline_info_;
 
   float pos_ratio_;  // Position of the data window in [0, 1], relative to the visible data size
   float right_edge_ratio_;  // Right edge of the data in [0, 1], relative to the visible data size
@@ -125,17 +122,20 @@ class GlSlider : public Pickable, public std::enable_shared_from_this<GlSlider> 
 
 class GlVerticalSlider : public GlSlider {
  public:
-  GlVerticalSlider(Viewport& viewport) : GlSlider(viewport, true) {}
+  GlVerticalSlider(CaptureViewElement* parent, const Viewport* viewport,
+                   const TimeGraphLayout* layout, TimelineInfoInterface* timeline_info)
+      : GlSlider(parent, viewport, layout, timeline_info, true) {}
 
-  void Draw(PrimitiveAssembler& primitive_assembler, bool is_picked) override;
-  [[nodiscard]] bool IsVisible() const override { return GetLengthRatio() < 1.f; }
+  void DoDraw(PrimitiveAssembler& primitive_assembler, TextRenderer& text_renderer,
+              const DrawContext& draw_context) override;
 
-  [[nodiscard]] Vec2 GetPos() const override {
-    return Vec2(viewport_.GetScreenWidth() - pixel_height_, 0);
+  [[nodiscard]] float GetWidth() const override { return pixel_height_; }
+
+  [[nodiscard]] float GetHeight() const override {
+    return viewport_->GetScreenHeight() - GetPos()[1] - orthogonal_slider_size_;
   }
-  [[nodiscard]] Vec2 GetSize() const override {
-    return Vec2(pixel_height_, viewport_.GetScreenHeight() - orthogonal_slider_size_);
-  }
+
+  std::unique_ptr<orbit_accessibility::AccessibleInterface> CreateAccessibleInterface() override;
 
  protected:
   [[nodiscard]] float GetBarPixelLength() const override;
@@ -143,16 +143,21 @@ class GlVerticalSlider : public GlSlider {
 
 class GlHorizontalSlider : public GlSlider {
  public:
-  GlHorizontalSlider(Viewport& viewport) : GlSlider(viewport, false) { can_resize_ = true; }
-
-  void Draw(PrimitiveAssembler& primitive_assembler, bool is_picked) override;
-
-  [[nodiscard]] virtual Vec2 GetPos() const override {
-    return Vec2(0, viewport_.GetScreenHeight() - pixel_height_);
+  GlHorizontalSlider(CaptureViewElement* parent, const Viewport* viewport,
+                     const TimeGraphLayout* layout, TimelineInfoInterface* timeline_info)
+      : GlSlider(parent, viewport, layout, timeline_info, false) {
+    can_resize_ = true;
   }
-  [[nodiscard]] virtual Vec2 GetSize() const override {
-    return Vec2(viewport_.GetScreenWidth() - orthogonal_slider_size_, pixel_height_);
+
+  void DoDraw(PrimitiveAssembler& primitive_assembler, TextRenderer& text_renderer,
+              const DrawContext& draw_context) override;
+
+  [[nodiscard]] float GetWidth() const override {
+    return viewport_->GetScreenWidth() - orthogonal_slider_size_;
   }
+  [[nodiscard]] float GetHeight() const override { return pixel_height_; }
+
+  std::unique_ptr<orbit_accessibility::AccessibleInterface> CreateAccessibleInterface() override;
 
  protected:
   [[nodiscard]] float GetBarPixelLength() const override;

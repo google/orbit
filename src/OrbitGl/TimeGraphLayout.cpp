@@ -103,12 +103,6 @@ float TimeGraphLayout::GetCollapseButtonSize(int indentation_level) const {
   return button_size_without_scaling * sqrt(scale_);
 }
 
-float TimeGraphLayout::GetBottomMargin() const {
-  // The bottom consists of the slider (where we have to take the width, as it
-  // is rotated).
-  return GetSliderWidth();
-}
-
 float TimeGraphLayout::GetEventTrackHeightFromTid(uint32_t tid) const {
   float height = GetEventTrackHeight();
   if (tid == orbit_base::kAllProcessThreadsTid) {

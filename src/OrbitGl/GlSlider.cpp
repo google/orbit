@@ -35,8 +35,6 @@ void GlSlider::OnMouseLeave() {
 }
 
 void GlSlider::OnMouseMove(int x, int y) {
-  mouse_pos_ = Vec2i(x, y) - Vec2i(static_cast<int>(GetPos()[0]), static_cast<int>(GetPos()[1]));
-
   if (can_resize_ && QGuiApplication::instance() != nullptr) {
     if (PosIsInMinResizeArea(x, y) || PosIsInMaxResizeArea(x, y)) {
       QCursor cursor = is_vertical_ ? Qt::SizeVerCursor : Qt::SizeHorCursor;
@@ -52,9 +50,12 @@ bool GlSlider::ContainsScreenSpacePoint(int x, int y) const {
          y <= GetPos()[1] + GetSize()[1];
 }
 
-GlSlider::GlSlider(Viewport& viewport, bool is_vertical)
-    : is_vertical_(is_vertical),
-      viewport_(viewport),
+GlSlider::GlSlider(CaptureViewElement* parent, const Viewport* viewport,
+                   const TimeGraphLayout* layout, TimelineInfoInterface* timeline_info,
+                   bool is_vertical)
+    : CaptureViewElement(parent, viewport, layout),
+      is_vertical_(is_vertical),
+      timeline_info_(timeline_info),
       pos_ratio_(0),
       right_edge_ratio_(0),
       length_ratio_(0),
@@ -95,7 +96,8 @@ Color GlSlider::GetDarkerColor(const Color& color) {
 }
 
 void GlSlider::OnDrag(int x, int y) {
-  float value = is_vertical_ ? y : x;
+  CaptureViewElement::OnDrag(x, y);
+  float value = is_vertical_ ? y - GetPos()[1] : x - GetPos()[0];
   float slider_pos = PosToPixel(pos_ratio_);
   float slider_right_pos = LenToPixel(right_edge_ratio_);
 
@@ -132,7 +134,8 @@ void GlSlider::OnDrag(int x, int y) {
 }
 
 void GlSlider::OnPick(int x, int y) {
-  float value = is_vertical_ ? y : x;
+  CaptureViewElement::OnPick(x, y);
+  float value = is_vertical_ ? y - GetPos()[1] : x - GetPos()[0];
 
   float slider_pos = PosToPixel(pos_ratio_);
   float slider_length = LenToPixel(length_ratio_);
@@ -168,10 +171,12 @@ void GlSlider::DrawBackground(PrimitiveAssembler& primitive_assembler, float x, 
 }
 
 void GlSlider::DrawSlider(PrimitiveAssembler& primitive_assembler, float x, float y, float width,
-                          float height, ShadingDirection shading_direction, bool is_picked) {
+                          float height, ShadingDirection shading_direction) {
+  bool is_picked = primitive_assembler.GetPickingManager()->IsThisElementPicked(this);
   bool mouse_over_slider = false;
   if (is_mouse_over_) {
-    mouse_over_slider = PosIsInSlider(mouse_pos_[0], mouse_pos_[1]);
+    mouse_over_slider =
+        PosIsInSlider(static_cast<int>(mouse_pos_cur_[0]), static_cast<int>(mouse_pos_cur_[1]));
   }
 
   Color color = mouse_over_slider ? selected_color_ : slider_color_;
@@ -246,7 +251,10 @@ bool GlSlider::HandlePageScroll(float click_value) {
   return true;
 }
 
-void GlVerticalSlider::Draw(PrimitiveAssembler& primitive_assembler, bool is_picked) {
+void GlVerticalSlider::DoDraw(PrimitiveAssembler& primitive_assembler,
+                              TextRenderer& /*text_renderer*/,
+                              const DrawContext& /*draw_context*/) {
+  // TODO(b/230442062): This should be part of CaptureViewElement.
   primitive_assembler.PushTranslation(static_cast<int>(GetPos()[0]), static_cast<int>(GetPos()[1]));
 
   float bar_pixel_len = GetBarPixelLength();
@@ -261,15 +269,22 @@ void GlVerticalSlider::Draw(PrimitiveAssembler& primitive_assembler, bool is_pic
   float start = ceilf(pos_ratio_ * non_slider_height);
 
   ShadingDirection shading_direction = ShadingDirection::kRightToLeft;
-  DrawSlider(primitive_assembler, 0, start, GetPixelHeight(), slider_height, shading_direction,
-             is_picked);
+  DrawSlider(primitive_assembler, 0, start, GetPixelHeight(), slider_height, shading_direction);
 
   primitive_assembler.PopTranslation();
 }
 
 float GlVerticalSlider::GetBarPixelLength() const { return GetSize()[1]; }
 
-void GlHorizontalSlider::Draw(PrimitiveAssembler& primitive_assembler, bool is_picked) {
+std::unique_ptr<orbit_accessibility::AccessibleInterface>
+GlVerticalSlider::CreateAccessibleInterface() {
+  return std::make_unique<AccessibleCaptureViewElement>(this, "Vertical Slider");
+}
+
+void GlHorizontalSlider::DoDraw(PrimitiveAssembler& primitive_assembler,
+                                TextRenderer& /*text_renderer*/,
+                                const DrawContext& /*draw_context*/) {
+  // TODO(b/230442062): This should be part of CaptureViewElement.
   primitive_assembler.PushTranslation(static_cast<int>(GetPos()[0]), static_cast<int>(GetPos()[1]));
 
   float bar_pixel_len = GetBarPixelLength();
@@ -281,8 +296,7 @@ void GlHorizontalSlider::Draw(PrimitiveAssembler& primitive_assembler, bool is_p
   float start = floorf(pos_ratio_ * non_slider_width);
 
   ShadingDirection shading_direction = ShadingDirection::kTopToBottom;
-  DrawSlider(primitive_assembler, start, 0, slider_width, GetPixelHeight(), shading_direction,
-             is_picked);
+  DrawSlider(primitive_assembler, start, 0, slider_width, GetPixelHeight(), shading_direction);
 
   const float kEpsilon = 0.0001f;
 
@@ -316,6 +330,7 @@ void GlHorizontalSlider::Draw(PrimitiveAssembler& primitive_assembler, bool is_p
                                       pixel_height_ - 4.f, z, kWhite, shared_from_this());
 
   // Highlight the scale part of the slider
+  bool is_picked = primitive_assembler.GetPickingManager()->IsThisElementPicked(this);
   if (is_picked) {
     if (drag_type_ == DragType::kScaleMax) {
       primitive_assembler.AddShadedBox(Vec2(x + width - slider_resize_pixel_margin_, 2),
@@ -333,5 +348,10 @@ void GlHorizontalSlider::Draw(PrimitiveAssembler& primitive_assembler, bool is_p
 }
 
 float GlHorizontalSlider::GetBarPixelLength() const { return GetSize()[0]; }
+
+std::unique_ptr<orbit_accessibility::AccessibleInterface>
+GlHorizontalSlider::CreateAccessibleInterface() {
+  return std::make_unique<AccessibleCaptureViewElement>(this, "Horizontal Slider");
+}
 
 }  // namespace orbit_gl
