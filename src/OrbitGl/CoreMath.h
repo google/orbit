@@ -5,6 +5,8 @@
 #ifndef ORBIT_GL_CORE_MATH_H_
 #define ORBIT_GL_CORE_MATH_H_
 
+#include <tuple>
+
 #include "GteVector2.h"
 #include "GteVector3.h"
 #include "GteVector4.h"
