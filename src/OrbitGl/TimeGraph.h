@@ -78,7 +78,6 @@ class TimeGraph : public orbit_gl::CaptureViewElement, public orbit_gl::Timeline
   void Zoom(const orbit_client_protos::TimerInfo& timer_info);
   void Zoom(uint64_t min, uint64_t max);
   void ZoomTime(float zoom_value, double mouse_ratio);
-  void VerticalZoom(float zoom_value, float mouse_world_y_pos);
   void SetMinMax(double min_time_us, double max_time_us);
   void PanTime(int initial_x, int current_x, int width, double initial_time);
 
@@ -93,7 +92,6 @@ class TimeGraph : public orbit_gl::CaptureViewElement, public orbit_gl::Timeline
                                 double distance = 0.3);
 
   [[nodiscard]] double GetTime(double ratio) const;
-  void SelectAndMakeVisible(const orbit_client_protos::TimerInfo* timer_info);
 
   enum class JumpScope { kSameDepth, kSameThread, kSameFunction, kSameThreadSameFunction };
   enum class JumpDirection { kPrevious, kNext, kTop, kDown };
@@ -117,18 +115,9 @@ class TimeGraph : public orbit_gl::CaptureViewElement, public orbit_gl::Timeline
     return draw_requested_ || update_primitives_requested_;
   }
 
-  [[nodiscard]] bool IsFullyVisible(uint64_t min, uint64_t max) const;
-  [[nodiscard]] bool IsPartlyVisible(uint64_t min, uint64_t max) const;
-  [[nodiscard]] bool IsVisible(VisibilityType vis_type, uint64_t min, uint64_t max) const;
-
   [[nodiscard]] orbit_gl::TextRenderer* GetTextRenderer() { return &text_renderer_static_; }
-  [[nodiscard]] orbit_gl::PrimitiveAssembler& GetPrimitiveAssembler() {
-    return primitive_assembler_;
-  }
   [[nodiscard]] orbit_gl::Batcher& GetBatcher() { return batcher_; }
 
-  void UpdateHorizontalScroll(float ratio);
-  void UpdateHorizontalZoom(float normalized_start, float normalized_end);
   [[nodiscard]] const TimeGraphLayout& GetLayout() const { return layout_; }
   [[nodiscard]] TimeGraphLayout& GetLayout() { return layout_; }
 
@@ -191,6 +180,15 @@ class TimeGraph : public orbit_gl::CaptureViewElement, public orbit_gl::Timeline
   [[nodiscard]] EventResult OnMouseWheel(
       const Vec2& mouse_pos, int delta,
       const orbit_gl::ModifierKeys& modifiers = orbit_gl::ModifierKeys()) override;
+
+  void UpdateHorizontalScroll(float ratio);
+  void UpdateHorizontalZoom(float normalized_start, float normalized_end);
+  void VerticalZoom(float zoom_value, float mouse_world_y_pos);
+
+  void SelectAndMakeVisible(const orbit_client_protos::TimerInfo* timer_info);
+  [[nodiscard]] bool IsFullyVisible(uint64_t min, uint64_t max) const;
+  [[nodiscard]] bool IsPartlyVisible(uint64_t min, uint64_t max) const;
+  [[nodiscard]] bool IsVisible(VisibilityType vis_type, uint64_t min, uint64_t max) const;
 
   [[nodiscard]] const TimerInfo* FindNextThreadTrackTimer(uint64_t scope_id, uint64_t current_time,
                                                           std::optional<uint32_t> thread_id) const;
