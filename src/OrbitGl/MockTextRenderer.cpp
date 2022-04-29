@@ -34,10 +34,15 @@ void MockTextRenderer::AddText(const char* text, float x, float y, float z,
 
   float real_start_x = x;
 
-  if (formatting.halign == HAlign::Right) {
-    real_start_x -= text_width;
-  } else if (formatting.halign == HAlign::Centered) {
-    real_start_x -= text_width / 2.f;
+  switch (formatting.halign) {
+    case HAlign::Left:
+      break;
+    case HAlign::Right:
+      real_start_x -= text_width;
+      break;
+    case HAlign::Centered:
+      real_start_x -= text_width / 2.f;
+      break;
   }
   float real_start_y;
   switch (formatting.valign) {
