@@ -42,6 +42,9 @@ class MockGgpClient : public orbit_ggp::Client {
               (override));
   MOCK_METHOD(Future<ErrorMessageOr<SshInfo>>, GetSshInfoAsync,
               (const QString& /*instance_id*/, std::optional<Project> /*project*/), (override));
+  MOCK_METHOD(Future<ErrorMessageOr<SshInfo>>, GetSshInfoAsync,
+              (const QString& /*instance_id*/, std::optional<Project> /*project*/, int /*retry*/),
+              (override));
   MOCK_METHOD(Future<ErrorMessageOr<QVector<Project>>>, GetProjectsAsync, (), (override));
   MOCK_METHOD(Future<ErrorMessageOr<Project>>, GetDefaultProjectAsync, (), (override));
   MOCK_METHOD(Future<ErrorMessageOr<Instance>>, DescribeInstanceAsync,

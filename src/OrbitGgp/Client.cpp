@@ -31,6 +31,26 @@
 
 ABSL_FLAG(uint32_t, ggp_timeout_seconds, 20, "Timeout for Ggp commands in seconds");
 
+constexpr int kNumberOfRetries = 3;
+
+namespace {
+template <typename T>
+orbit_base::Future<ErrorMessageOr<T>> RetryTask(
+    int retry, std::function<orbit_base::Future<ErrorMessageOr<T>>()> async_task) {
+  orbit_base::ImmediateExecutor executor;
+  return orbit_base::UnwrapFuture(async_task().Then(
+      &executor,
+      [retry, async_task](ErrorMessageOr<T> result) -> orbit_base::Future<ErrorMessageOr<T>> {
+        if (result.has_value()) return {result.value()};
+
+        if (retry > 0) {
+          return RetryTask(retry - 1, async_task);
+        }
+        return result.error();
+      }));
+}
+}  // namespace
+
 namespace orbit_ggp {
 
 using orbit_base::Future;
@@ -47,6 +67,9 @@ class ClientImpl : public Client, public QObject {
                                                               int retry) override;
   Future<ErrorMessageOr<SshInfo>> GetSshInfoAsync(const QString& instance_id,
                                                   std::optional<Project> project) override;
+  Future<ErrorMessageOr<SshInfo>> GetSshInfoAsync(const QString& instance_id,
+                                                  std::optional<Project> project,
+                                                  int retry) override;
   Future<ErrorMessageOr<QVector<Project>>> GetProjectsAsync() override;
   Future<ErrorMessageOr<Project>> GetDefaultProjectAsync() override;
   Future<ErrorMessageOr<Instance>> DescribeInstanceAsync(const QString& instance_id) override;
@@ -89,7 +112,7 @@ ErrorMessageOr<std::unique_ptr<Client>> CreateClient(QString ggp_program,
 
 Future<ErrorMessageOr<QVector<Instance>>> ClientImpl::GetInstancesAsync(
     InstanceListScope scope, std::optional<Project> project) {
-  return GetInstancesAsync(scope, project, 3);
+  return GetInstancesAsync(scope, project, kNumberOfRetries);
 }
 
 Future<ErrorMessageOr<QVector<Instance>>> ClientImpl::GetInstancesAsync(
@@ -103,40 +126,49 @@ Future<ErrorMessageOr<QVector<Instance>>> ClientImpl::GetInstancesAsync(
     arguments.append(project.value().id);
   }
 
-  Future<ErrorMessageOr<QByteArray>> ggp_call_future =
-      orbit_qt_utils::ExecuteProcess(ggp_program_, arguments, this, absl::FromChrono(timeout_));
+  std::function<Future<ErrorMessageOr<QVector<Instance>>>()> call_ggp_and_create_instance_list =
+      [client_ptr = QPointer<ClientImpl>(this),
+       arguments = std::move(arguments)]() -> Future<ErrorMessageOr<QVector<Instance>>> {
+    if (client_ptr == nullptr) return ErrorMessage{"orbit_ggp::Client no longer exists"};
 
-  orbit_base::ImmediateExecutor executor;
-  return orbit_base::UnwrapFuture(ggp_call_future.Then(
-      &executor,
-      [=,
-       client_ptr = QPointer<ClientImpl>(this)](ErrorMessageOr<QByteArray> ggp_call_result) mutable
-      -> Future<ErrorMessageOr<QVector<Instance>>> {
-        if (client_ptr == nullptr) return ErrorMessage{"orbit_ggp::Client no longer exists"};
+    orbit_base::ImmediateExecutor executor;
+    return orbit_qt_utils::ExecuteProcess(client_ptr->ggp_program_, arguments, client_ptr,
+                                          absl::FromChrono(client_ptr->timeout_))
+        .ThenIfSuccess(&executor, [](const QByteArray& json) -> ErrorMessageOr<QVector<Instance>> {
+          return Instance::GetListFromJson(json);
+        });
+  };
 
-        if (ggp_call_result.has_error()) {
-          if (retry > 0) {
-            return client_ptr->GetInstancesAsync(scope, project, retry - 1);
-          }
-          return ggp_call_result.error();
-        }
-        return Instance::GetListFromJson(ggp_call_result.value());
-      }));
+  return RetryTask(retry, call_ggp_and_create_instance_list);
 }
 
 Future<ErrorMessageOr<SshInfo>> ClientImpl::GetSshInfoAsync(const QString& instance_id,
                                                             std::optional<Project> project) {
+  return GetSshInfoAsync(instance_id, std::move(project), kNumberOfRetries);
+}
+
+Future<ErrorMessageOr<SshInfo>> ClientImpl::GetSshInfoAsync(const QString& instance_id,
+                                                            std::optional<Project> project,
+                                                            int retry) {
   QStringList arguments{"ssh", "init", "-s", "--instance", instance_id};
   if (project != std::nullopt) {
     arguments.append("--project");
     arguments.append(project.value().id);
   }
 
-  orbit_base::ImmediateExecutor executor;
-  return orbit_qt_utils::ExecuteProcess(ggp_program_, arguments, this, absl::FromChrono(timeout_))
-      .ThenIfSuccess(&executor, [](const QByteArray& json) -> ErrorMessageOr<SshInfo> {
-        return SshInfo::CreateFromJson(json);
-      });
+  std::function<Future<ErrorMessageOr<SshInfo>>()> call_ggp_and_create_ssh_info =
+      [client_ptr = QPointer<ClientImpl>(this),
+       arguments = std::move(arguments)]() -> Future<ErrorMessageOr<SshInfo>> {
+    if (client_ptr == nullptr) return {ErrorMessage{"orbit_ggp::Client no longer exists"}};
+
+    orbit_base::ImmediateExecutor executor;
+    return orbit_qt_utils::ExecuteProcess(client_ptr->ggp_program_, arguments, client_ptr,
+                                          absl::FromChrono(client_ptr->timeout_))
+        .ThenIfSuccess(&executor, [](const QByteArray& json) -> ErrorMessageOr<SshInfo> {
+          return SshInfo::CreateFromJson(json);
+        });
+  };
+  return RetryTask(retry, std::move(call_ggp_and_create_ssh_info));
 }
 
 Future<ErrorMessageOr<QVector<Project>>> ClientImpl::GetProjectsAsync() {

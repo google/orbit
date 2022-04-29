@@ -280,13 +280,13 @@ TEST_F(OrbitGgpClientTest, GetSshInfoAsyncClientGetsDestroyed) {
 
     future = client.value()->GetSshInfoAsync(test_instance_id, std::nullopt);
 
-    future.Then(main_thread_executor_.get(), [&future_is_resolved](
-                                                 const ErrorMessageOr<SshInfo>& ssh_info_result) {
-      EXPECT_FALSE(future_is_resolved);
-      future_is_resolved = true;
-      EXPECT_THAT(ssh_info_result, HasError("killed because the parent object was destroyed"));
-      QCoreApplication::exit();
-    });
+    future.Then(main_thread_executor_.get(),
+                [&future_is_resolved](const ErrorMessageOr<SshInfo>& ssh_info_result) {
+                  EXPECT_FALSE(future_is_resolved);
+                  future_is_resolved = true;
+                  EXPECT_THAT(ssh_info_result, HasError("orbit_ggp::Client no longer exists"));
+                  QCoreApplication::exit();
+                });
   }
 
   QCoreApplication::exec();

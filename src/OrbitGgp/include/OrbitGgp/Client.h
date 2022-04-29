@@ -42,6 +42,8 @@ class Client {
       InstanceListScope scope, std::optional<Project> project, int retry) = 0;
   [[nodiscard]] virtual orbit_base::Future<ErrorMessageOr<SshInfo>> GetSshInfoAsync(
       const QString& instance_id, std::optional<Project> project) = 0;
+  [[nodiscard]] virtual orbit_base::Future<ErrorMessageOr<SshInfo>> GetSshInfoAsync(
+      const QString& instance_id, std::optional<Project> project, int retry) = 0;
   [[nodiscard]] virtual orbit_base::Future<ErrorMessageOr<QVector<Project>>> GetProjectsAsync() = 0;
   [[nodiscard]] virtual orbit_base::Future<ErrorMessageOr<Project>> GetDefaultProjectAsync() = 0;
   [[nodiscard]] virtual orbit_base::Future<ErrorMessageOr<Instance>> DescribeInstanceAsync(
