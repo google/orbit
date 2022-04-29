@@ -7,28 +7,41 @@
 #include <absl/base/casts.h>
 #include <evntrace.h>
 
+#include <filesystem>
 #include <optional>
 
 #include "EtwEventTypes.h"
+#include "ObjectUtils/CoffFile.h"
 #include "OrbitBase/Logging.h"
 #include "OrbitBase/Profiling.h"
+#include "OrbitBase/StringConversion.h"
 #include "OrbitBase/ThreadUtils.h"
 #include "WindowsUtils/AdjustTokenPrivilege.h"
+#include "WindowsUtils/PathConverter.h"
+
+// clang-format off
+#include "fileapi.h"
+// clang-format on
 
 namespace orbit_windows_tracing {
 
 using orbit_grpc_protos::Callstack;
 using orbit_grpc_protos::FullCallstackSample;
 using orbit_grpc_protos::SchedulingSlice;
+using orbit_windows_utils::PathConverter;
 
-KrabsTracer::KrabsTracer(orbit_grpc_protos::CaptureOptions capture_options,
-                         TracerListener* listener)
-    : capture_options_(std::move(capture_options)),
+KrabsTracer::KrabsTracer(uint32_t pid, double sampling_frequency_hz, TracerListener* listener)
+    : KrabsTracer(pid, sampling_frequency_hz, listener, ProviderFlags::kAll) {}
+
+KrabsTracer::KrabsTracer(uint32_t pid, double sampling_frequency_hz, TracerListener* listener,
+                         ProviderFlags providers)
+    : target_pid_(pid),
+      sampling_frequency_hz_(sampling_frequency_hz),
       listener_(listener),
-      target_pid_(capture_options_.pid()),
-
+      providers_(providers),
       trace_(KERNEL_LOGGER_NAME),
       stack_walk_provider_(EVENT_TRACE_FLAG_PROFILE, krabs::guids::stack_walk) {
+  path_converter_ = orbit_windows_utils::PathConverter::Create();
   SetTraceProperties();
   EnableProviders();
 }
@@ -44,18 +57,34 @@ void KrabsTracer::SetTraceProperties() {
   trace_.set_trace_properties(&properties);
 }
 
+bool KrabsTracer::IsProviderEnabled(ProviderFlags provider) const {
+  return (providers_ & provider) != 0;
+}
+
 void KrabsTracer::EnableProviders() {
-  thread_provider_.add_on_event_callback(
-      [this](const auto& record, const auto& context) { OnThreadEvent(record, context); });
-  trace_.enable(thread_provider_);
+  if (IsProviderEnabled(ProviderFlags::kThread)) {
+    thread_provider_.add_on_event_callback(
+        [this](const auto& record, const auto& context) { OnThreadEvent(record, context); });
+    trace_.enable(thread_provider_);
+  }
 
-  context_switch_provider_.add_on_event_callback(
-      [this](const auto& record, const auto& context) { OnThreadEvent(record, context); });
-  trace_.enable(context_switch_provider_);
+  if (IsProviderEnabled(ProviderFlags::kContextSwitch)) {
+    context_switch_provider_.add_on_event_callback(
+        [this](const auto& record, const auto& context) { OnThreadEvent(record, context); });
+    trace_.enable(context_switch_provider_);
+  }
 
-  stack_walk_provider_.add_on_event_callback(
-      [this](const auto& record, const auto& context) { OnStackWalkEvent(record, context); });
-  trace_.enable(stack_walk_provider_);
+  if (IsProviderEnabled(ProviderFlags::kStackWalk)) {
+    stack_walk_provider_.add_on_event_callback(
+        [this](const auto& record, const auto& context) { OnStackWalkEvent(record, context); });
+    trace_.enable(stack_walk_provider_);
+  }
+
+  if (IsProviderEnabled(ProviderFlags::kImageLoad)) {
+    image_load_provider_.add_on_event_callback(
+        [this](const auto& record, const auto& context) { OnImageLoadEvent(record, context); });
+    trace_.enable(image_load_provider_);
+  }
 }
 
 void KrabsTracer::SetIsSystemProfilePrivilegeEnabled(bool value) {
@@ -65,10 +94,8 @@ void KrabsTracer::SetIsSystemProfilePrivilegeEnabled(bool value) {
 
 void KrabsTracer::SetupStackTracing() {
   // Set sampling frequency for ETW trace. Note that the session handle must be 0.
-  const double frequency = capture_options_.samples_per_second();
-  ORBIT_CHECK(frequency >= 0);
-  if (frequency == 0) return;
-  double period_ns = 1'000'000'000.0 / frequency;
+  ORBIT_CHECK(sampling_frequency_hz_ >= 0);
+  double period_ns = 1'000'000'000.0 / sampling_frequency_hz_;
   static uint64_t performance_counter_period_ns = orbit_base::GetPerformanceCounterPeriodNs();
   TRACE_PROFILE_INTERVAL interval = {0};
   interval.Interval = static_cast<ULONG>(period_ns / performance_counter_period_ns);
@@ -89,7 +116,9 @@ void KrabsTracer::Start() {
   context_switch_manager_ = std::make_unique<ContextSwitchManager>(listener_);
   SetIsSystemProfilePrivilegeEnabled(true);
   log_file_ = trace_.open();
-  SetupStackTracing();
+  if (IsProviderEnabled(ProviderFlags::kStackWalk)) {
+    SetupStackTracing();
+  }
   trace_thread_ = std::make_unique<std::thread>(&KrabsTracer::Run, this);
 }
 
@@ -178,6 +207,53 @@ void KrabsTracer::OnStackWalkEvent(const EVENT_RECORD& record,
   }
 
   listener_->OnCallstackSample(sample);
+}
+
+void KrabsTracer::OnImageLoadEvent(const EVENT_RECORD& record,
+                                   const krabs::trace_context& context) {
+  krabs::schema schema(record, context.schema_locator);
+  krabs::parser parser(schema);
+
+  if (record.EventHeader.EventDescriptor.Opcode == kImageLoadEventDcStart) {
+    uint32_t pid = parser.parse<uint32_t>(L"ProcessId");
+    if (pid != target_pid_) return;
+    ++stats_.num_image_load_events_for_target_pid;
+
+    orbit_windows_utils::Module module;
+    module.full_path = orbit_base::ToStdString(parser.parse<std::wstring>(L"FileName"));
+    module.name = std::filesystem::path(module.full_path).filename().string();
+    module.file_size = parser.parse<uint64_t>(L"ImageSize");
+    module.address_start = parser.parse<uint64_t>(L"ImageBase");
+    module.address_end = module.address_start + module.file_size;
+
+    // The full path at this point contains the device name and not the drive letter, try to
+    // convert it so that it takes a more conventional form.
+    ErrorMessageOr<std::string> result = path_converter_->DeviceToDrive(module.full_path);
+    if (result.has_value()) {
+      module.full_path = result.value();
+    } else {
+      ORBIT_ERROR("Calling \"DeviceToDrive\": %s %s", result.error().message(),
+                  path_converter_->ToString());
+    }
+
+    auto coff_file_or_error = orbit_object_utils::CreateCoffFile(module.full_path);
+    if (coff_file_or_error.has_value()) {
+      module.build_id = coff_file_or_error.value()->GetBuildId();
+    } else {
+      ORBIT_ERROR("Could not create Coff file for module \"%s\", build-id will be empty",
+                  module.full_path);
+    }
+
+    absl::MutexLock lock{&modules_mutex_};
+    modules_.emplace_back(std::move(module));
+  }
+}
+
+std::vector<orbit_windows_utils::Module> KrabsTracer::GetLoadedModules() const {
+  std::vector<orbit_windows_utils::Module> modules;
+  absl::MutexLock lock{&modules_mutex_};
+  modules = modules_;
+  return modules;
 }
 
 void KrabsTracer::OutputStats() {

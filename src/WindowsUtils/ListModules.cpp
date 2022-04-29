@@ -10,6 +10,7 @@
 #include <filesystem>
 
 #include "ObjectUtils/CoffFile.h"
+#include "OrbitBase/GetLastError.h"
 #include "OrbitBase/Logging.h"
 #include "OrbitBase/StringConversion.h"
 #include "OrbitBase/UniqueResource.h"
@@ -32,7 +33,8 @@ std::vector<Module> ListModules(uint32_t pid) {
   // Take a snapshot of all modules in the specified process.
   module_snap_handle = CreateToolhelp32Snapshot(TH32CS_SNAPMODULE, pid);
   if (module_snap_handle == INVALID_HANDLE_VALUE) {
-    ORBIT_ERROR("Calling CreateToolhelp32Snapshot for modules");
+    ORBIT_ERROR("Calling CreateToolhelp32Snapshot for modules: %s",
+                orbit_base::GetLastErrorAsString());
     return {};
   }
   SafeHandle handle_closer(module_snap_handle);

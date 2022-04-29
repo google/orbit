@@ -59,6 +59,12 @@ static constexpr uint8_t kEtwFileIoReadWriteEventWrite = 68;
 // https://docs.microsoft.com/en-us/windows/win32/etw/stackwalk-event
 static constexpr uint8_t kStackWalkEventStack = 32;
 
+// https://docs.microsoft.com/is-is/windows/win32/etw/image-load
+static constexpr uint8_t kImageLoadEventLoad = 10;
+static constexpr uint8_t kImageLoadEventUnload = 2;
+static constexpr uint8_t kImageLoadEventDcStart = 3;
+static constexpr uint8_t kImageLoadEventDcEnd = 4;
+
 }  // namespace orbit_windows_tracing
 
 #endif  // WINDOWS_TRACING_EVENT_TYPES_H_

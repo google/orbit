@@ -19,6 +19,7 @@
 #include "OrbitBase/File.h"
 #include "OrbitBase/Logging.h"
 #include "OrbitBase/Result.h"
+#include "WindowsTracing/ListModulesETW.h"
 #include "WindowsUtils/FindDebugSymbols.h"
 #include "WindowsUtils/ListModules.h"
 #include "WindowsUtils/ProcessList.h"
@@ -78,6 +79,11 @@ Status ProcessServiceImpl::GetModuleList(ServerContext* /*context*/,
                                          const GetModuleListRequest* request,
                                          GetModuleListResponse* response) {
   std::vector<Module> modules = orbit_windows_utils::ListModules(request->process_id());
+  if (modules.empty()) {
+    // Fallback on etw module enumeration which involves more work.
+    modules = orbit_windows_tracing::ListModulesEtw(request->process_id());
+  }
+
   if (modules.empty()) {
     return Status(StatusCode::NOT_FOUND, "Error listing modules");
   }
