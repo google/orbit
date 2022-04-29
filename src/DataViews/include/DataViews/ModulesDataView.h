@@ -6,6 +6,7 @@
 #define DATA_VIEWS_MODULES_DATA_VIEW_H_
 
 #include <absl/container/flat_hash_map.h>
+#include <absl/flags/flag.h>
 #include <stdint.h>
 
 #include <string>
@@ -13,6 +14,7 @@
 
 #include "ClientData/ModuleData.h"
 #include "ClientData/ProcessData.h"
+#include "ClientFlags/ClientFlags.h"
 #include "DataViews/AppInterface.h"
 #include "DataViews/DataView.h"
 
@@ -21,7 +23,8 @@ namespace orbit_data_views {
 class ModulesDataView : public DataView {
  public:
   explicit ModulesDataView(AppInterface* app,
-                           orbit_metrics_uploader::MetricsUploader* metrics_uploader);
+                           orbit_metrics_uploader::MetricsUploader* metrics_uploader,
+                           bool new_ui = absl::GetFlag(FLAGS_devmode));
 
   const std::vector<Column>& GetColumns() override;
   int GetDefaultSortingColumn() override { return kColumnFileSize; }
@@ -48,13 +51,18 @@ class ModulesDataView : public DataView {
   [[nodiscard]] orbit_client_data::ModuleData* GetModuleDataFromRow(int row) const override {
     return start_address_to_module_.at(indices_[row]);
   }
+  [[nodiscard]] std::string GetSymbolLoadingStateForModuleString(
+      const orbit_client_data::ModuleData* module);
+
+  // TODO(b/202140068) remove when auto symbol loading is released
+  bool new_ui_;
 
   absl::flat_hash_map<uint64_t, orbit_client_data::ModuleInMemory>
       start_address_to_module_in_memory_;
   absl::flat_hash_map<uint64_t, orbit_client_data::ModuleData*> start_address_to_module_;
 
   enum ColumnIndex {
-    kColumnLoaded,
+    kColumnSymbols,
     kColumnName,
     kColumnPath,
     kColumnAddressRange,
