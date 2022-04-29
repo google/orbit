@@ -7,29 +7,32 @@
 
 #include <memory>
 
-#include "OrbitBase/SharedState.h"
+#include "OrbitBase/Logging.h"
+#include "OrbitBase/StopState.h"
 
 namespace orbit_base {
 
-// Forward declaration for befriending
-class StopSource;
-
+// StopToken together with StopSource is designed to enable thread safe task cancellation. Create a
+// StopToken from StopSource::GetStopToken and it into a thread on creation. Then check periodically
+// whether StopToken::IsStopRequested, to see if a stop has been requested by the corresponding
+// StopSource.
 class StopToken {
-  friend StopSource;
+  friend class StopSource;
 
  public:
-  explicit StopToken() = default;
-
   // Returns true if StopToken has a stop-state, otherwise false. If StopToken has a stop-state and
   // a stop has already been requested, this function still returns true.
-  [[nodiscard]] bool IsStopPossible() const { return shared_stop_state_.use_count() > 0; }
-  [[nodiscard]] bool IsStopRequested() const;
+  [[nodiscard]] bool IsStopPossible() const { return shared_stop_state_ != nullptr; }
+  [[nodiscard]] bool IsStopRequested() const {
+    ORBIT_CHECK(IsStopPossible());
+    return shared_stop_state_->IsStopped();
+  }
 
  private:
-  explicit StopToken(std::shared_ptr<orbit_base_internal::SharedState<void>> shared_state)
-      : shared_stop_state_(std::move(shared_state)) {}
+  explicit StopToken(std::shared_ptr<orbit_base_internal::StopState> shared_stop_state)
+      : shared_stop_state_(std::move(shared_stop_state)) {}
 
-  std::shared_ptr<orbit_base_internal::SharedState<void>> shared_stop_state_;
+  std::shared_ptr<orbit_base_internal::StopState> shared_stop_state_;
 };
 
 }  // namespace orbit_base

@@ -8,51 +8,54 @@
 #include <memory>
 
 #include "OrbitBase/SharedState.h"
+#include "OrbitBase/StopSource.h"
 #include "OrbitBase/StopToken.h"
 
 namespace orbit_base {
 
-TEST(StopToken, Constructor) {
-  StopToken stop_token{};
-  EXPECT_FALSE(stop_token.IsStopPossible());
-  EXPECT_DEATH((void)stop_token.IsStopRequested(), "");
+class StopTokenTest : public testing::Test {
+ protected:
+  StopTokenTest() : stop_token_(stop_source_.GetStopToken()) {}
+
+  void RequestStop() { stop_source_.RequestStop(); }
+
+ private:
+  StopSource stop_source_;
+
+ protected:
+  StopToken stop_token_;
+};
+
+TEST_F(StopTokenTest, RequestStop) {
+  ASSERT_TRUE(stop_token_.IsStopPossible());
+  EXPECT_FALSE(stop_token_.IsStopRequested());
+  RequestStop();
+  ASSERT_TRUE(stop_token_.IsStopPossible());
+  EXPECT_TRUE(stop_token_.IsStopRequested());
 }
 
-TEST(StopToken, Copy) {
-  {  // ctor
-    StopToken stop_token{};
+TEST_F(StopTokenTest, Copy) {
+  StopToken stop_token_copy{stop_token_};
+  ASSERT_TRUE(stop_token_copy.IsStopPossible());
+  EXPECT_FALSE(stop_token_copy.IsStopRequested());
 
-    StopToken stop_token_copy{stop_token};
-    EXPECT_FALSE(stop_token_copy.IsStopPossible());
-  }
-  {  // assignment
-    StopToken stop_token{};
-    EXPECT_FALSE(stop_token.IsStopPossible());
-
-    StopToken stop_token_copy = stop_token;
-    EXPECT_FALSE(stop_token_copy.IsStopPossible());
-  }
+  RequestStop();
+  ASSERT_TRUE(stop_token_copy.IsStopPossible());
+  EXPECT_TRUE(stop_token_copy.IsStopRequested());
 }
 
-TEST(StopToken, Move) {
-  {  // ctor
-    StopToken stop_token{};
+TEST_F(StopTokenTest, Move) {
+  StopToken moved_stop_token{std::move(stop_token_)};
 
-    StopToken stop_token_moved{std::move(stop_token)};
-    EXPECT_FALSE(stop_token_moved.IsStopPossible());
-  }
-  {  // assignment
-    StopToken stop_token{};
+  ASSERT_TRUE(moved_stop_token.IsStopPossible());
+  EXPECT_FALSE(moved_stop_token.IsStopRequested());
 
-    StopToken stop_token_moved = std::move(stop_token);
-    EXPECT_FALSE(stop_token_moved.IsStopPossible());
-  }
-}
+  RequestStop();
+  ASSERT_TRUE(moved_stop_token.IsStopPossible());
+  EXPECT_TRUE(moved_stop_token.IsStopRequested());
 
-TEST(StopToken, InvalidAccess) {
-  StopToken stop_token{};
-  EXPECT_FALSE(stop_token.IsStopPossible());
-  EXPECT_DEATH((void)stop_token.IsStopRequested(), "");
+  // Moved from token is not valid anymore.
+  EXPECT_FALSE(stop_token_.IsStopPossible());
 }
 
 }  // namespace orbit_base

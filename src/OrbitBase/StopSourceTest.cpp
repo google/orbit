@@ -45,14 +45,6 @@ TEST(StopSource, MoveStopPossible) {
   }
 }
 
-TEST(StopSource, InvalidAccessAfterMove) {
-  StopSource stop_source;
-  StopSource stop_source_moved{std::move(stop_source)};
-
-  EXPECT_DEATH(stop_source.RequestStop(), "");
-  EXPECT_DEATH((void)stop_source.GetStopToken(), "");
-}
-
 TEST(StopSource, RequestStop) {
   StopSource stop_source{};
 

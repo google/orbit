@@ -41,6 +41,7 @@ target_sources(OrbitBase PRIVATE
         include/OrbitBase/SimpleExecutor.h
         include/OrbitBase/StringConversion.h
         include/OrbitBase/StopSource.h
+        include/OrbitBase/StopState.h
         include/OrbitBase/StopToken.h
         include/OrbitBase/TaskGroup.h
         include/OrbitBase/TemporaryFile.h
@@ -61,8 +62,6 @@ target_sources(OrbitBase PRIVATE
         ReadFileToString.cpp
         SafeStrerror.cpp
         SimpleExecutor.cpp
-        StopSource.cpp
-        StopToken.cpp
         StringConversion.cpp
         TemporaryFile.cpp
         ThreadPool.cpp
