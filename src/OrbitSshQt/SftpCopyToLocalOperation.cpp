@@ -33,30 +33,29 @@ void SftpCopyToLocalOperation::CopyFileToLocal(std::filesystem::path source,
   source_ = std::move(source);
   destination_ = std::move(destination);
 
-  SetState(State::kNoOperation);
+  SetState(State::kOpenRemoteFile);
   OnEvent();
 }
 
 outcome::result<void> SftpCopyToLocalOperation::shutdown() {
   switch (CurrentState()) {
     case State::kInitial:
-    case State::kNoOperation:
-    case State::kRemoteFileOpened:
-    case State::kLocalFileOpened:
+    case State::kOpenRemoteFile:
+    case State::kOpenLocalFile:
     case State::kStarted:
       ORBIT_UNREACHABLE();
     case State::kShutdown:
-    case State::kCopyDone: {
+    case State::kCloseLocalFile: {
       local_file_.close();
-      SetState(State::kLocalFileClosed);
+      SetState(State::kCloseRemoteFile);
       ABSL_FALLTHROUGH_INTENDED;
     }
-    case State::kLocalFileClosed: {
+    case State::kCloseRemoteFile: {
       OUTCOME_TRY(sftp_file_->Close());
-      SetState(State::kRemoteFileClosed);
+      SetState(State::kCloseEventConnections);
       ABSL_FALLTHROUGH_INTENDED;
     }
-    case State::kRemoteFileClosed: {
+    case State::kCloseEventConnections: {
       about_to_shutdown_connection_ = std::nullopt;
       data_event_connection_ = std::nullopt;
       SetState(State::kDone);
@@ -81,7 +80,7 @@ outcome::result<void> SftpCopyToLocalOperation::run() {
     if (read_buffer.empty()) {
       // This is end of file
 
-      SetState(State::kCopyDone);
+      SetState(State::kCloseLocalFile);
       break;
     }
 
@@ -98,33 +97,29 @@ outcome::result<void> SftpCopyToLocalOperation::startup() {
 
   switch (CurrentState()) {
     case State::kInitial:
-    case State::kNoOperation: {
+    case State::kOpenRemoteFile: {
       OUTCOME_TRY(auto&& sftp_file,
                   orbit_ssh::SftpFile::Open(session_->GetRawSession(), channel_->GetRawSftp(),
                                             source_.string(), orbit_ssh::FxfFlags::kRead,
                                             0 /* mode - not applicable for kRead */));
       sftp_file_ = std::move(sftp_file);
-      SetState(State::kRemoteFileOpened);
+      SetState(State::kOpenLocalFile);
       ABSL_FALLTHROUGH_INTENDED;
     }
-    case State::kRemoteFileOpened: {
+    case State::kOpenLocalFile: {
       local_file_.setFileName(QString::fromStdString(destination_.string()));
       const auto open_result = local_file_.open(QIODevice::WriteOnly);
       if (!open_result) {
         return Error::kCouldNotOpenFile;
       }
-      SetState(State::kLocalFileOpened);
-      ABSL_FALLTHROUGH_INTENDED;
-    }
-    case State::kLocalFileOpened: {
       SetState(State::kStarted);
       break;
     }
     case State::kStarted:
     case State::kShutdown:
-    case State::kCopyDone:
-    case State::kLocalFileClosed:
-    case State::kRemoteFileClosed:
+    case State::kCloseLocalFile:
+    case State::kCloseRemoteFile:
+    case State::kCloseEventConnections:
     case State::kDone:
     case State::kError:
       ORBIT_UNREACHABLE();
