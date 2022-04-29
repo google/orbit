@@ -31,6 +31,8 @@
 
 ABSL_FLAG(uint32_t, ggp_timeout_seconds, 20, "Timeout for Ggp commands in seconds");
 
+constexpr int kNumberOfRetries = 3;
+
 namespace {
 template <typename T>
 orbit_base::Future<ErrorMessageOr<T>> RetryTask(
@@ -110,7 +112,7 @@ ErrorMessageOr<std::unique_ptr<Client>> CreateClient(QString ggp_program,
 
 Future<ErrorMessageOr<QVector<Instance>>> ClientImpl::GetInstancesAsync(
     InstanceListScope scope, std::optional<Project> project) {
-  return GetInstancesAsync(scope, project, 3);
+  return GetInstancesAsync(scope, project, kNumberOfRetries);
 }
 
 Future<ErrorMessageOr<QVector<Instance>>> ClientImpl::GetInstancesAsync(
@@ -142,7 +144,7 @@ Future<ErrorMessageOr<QVector<Instance>>> ClientImpl::GetInstancesAsync(
 
 Future<ErrorMessageOr<SshInfo>> ClientImpl::GetSshInfoAsync(const QString& instance_id,
                                                             std::optional<Project> project) {
-  return GetSshInfoAsync(instance_id, std::move(project), 3);
+  return GetSshInfoAsync(instance_id, std::move(project), kNumberOfRetries);
 }
 
 Future<ErrorMessageOr<SshInfo>> ClientImpl::GetSshInfoAsync(const QString& instance_id,
