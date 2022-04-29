@@ -57,6 +57,9 @@ class CaptureViewElementTester {
   void SimulateDrawLoopAndCheckFlags(CaptureViewElement* element, bool draw,
                                      bool update_primitives);
 
+  const MockBatcher& GetBatcher() const { return batcher_; }
+  const MockTextRenderer& GetTextRenderer() const { return text_renderer_; }
+
  protected:
   Viewport viewport_ = Viewport(100, 100);
   TimeGraphLayout layout_;

@@ -27,6 +27,9 @@ void MockTextRenderer::AddText(const char* text, float x, float y, float z,
 void MockTextRenderer::AddText(const char* text, float x, float y, float z,
                                TextFormatting formatting, Vec2* out_text_pos, Vec2* out_text_size) {
   float text_width = GetStringWidth(text, formatting.font_size);
+  if (formatting.max_size > 0) {
+    text_width = std::min(text_width, formatting.max_size);
+  }
   float text_height = GetStringHeight(text, formatting.font_size);
 
   float real_start_x = formatting.halign == HAlign::Left ? x : x - text_width;
