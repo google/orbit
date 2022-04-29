@@ -468,7 +468,7 @@ void UprobesUnwindingVisitor::Visit(uint64_t event_timestamp, const MmapPerfEven
   // constructor.
   if (event_data.filename == "[uprobes]") {
     current_maps_->AddAndSort(event_data.address, event_data.address + event_data.length, 0,
-                              PROT_EXEC, event_data.filename, UINT64_MAX);
+                              PROT_EXEC, event_data.filename);
     return;
   }
 
@@ -484,8 +484,7 @@ void UprobesUnwindingVisitor::Visit(uint64_t event_timestamp, const MmapPerfEven
 
   // For flags we assume PROT_READ and PROT_EXEC, MMAP event does not return flags.
   current_maps_->AddAndSort(module_info.address_start(), module_info.address_end(),
-                            event_data.page_offset, PROT_READ | PROT_EXEC, event_data.filename,
-                            module_info.load_bias());
+                            event_data.page_offset, PROT_READ | PROT_EXEC, event_data.filename);
 
   orbit_grpc_protos::ModuleUpdateEvent module_update_event;
   module_update_event.set_pid(event_data.pid);
