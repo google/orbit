@@ -79,6 +79,96 @@ TEST(MapsTest, map_add) {
   ASSERT_EQ(0U, info1->load_bias().load());
 }
 
+TEST(MapsTest, map_insert) {
+  Maps maps;
+
+  // Insert in empty Maps.
+  const auto it1 = maps.Insert(maps.end(), 0x1000, 0x2000, 0x3000, PROT_READ, "fake_map", 0x4000);
+  ASSERT_EQ(maps.Total(), 1);
+  const std::shared_ptr<MapInfo> info1 = maps.Get(0);
+  // Maps are: [info1]
+  EXPECT_EQ(*it1, info1);
+  EXPECT_EQ(info1->start(), 0x1000);
+  EXPECT_EQ(info1->end(), 0x2000);
+  EXPECT_EQ(info1->offset(), 0x3000);
+  EXPECT_EQ(info1->flags(), PROT_READ);
+  EXPECT_EQ(info1->name(), "fake_map");
+  EXPECT_EQ(info1->load_bias(), 0x4000);
+  EXPECT_EQ(info1->prev_map(), nullptr);
+  EXPECT_EQ(info1->next_map(), nullptr);
+
+  // Insert at begin().
+  const auto it2 = maps.Insert(maps.begin(), 0x2000, 0x3000, 0, PROT_READ, "");
+  ASSERT_EQ(maps.Total(), 2);
+  const std::shared_ptr<MapInfo> info2 = maps.Get(0);
+  // Maps are: [info2, info1]
+  EXPECT_EQ(*it2, info2);
+  EXPECT_EQ(info2->prev_map(), nullptr);
+  EXPECT_EQ(info2->next_map(), maps.Get(1));
+  EXPECT_EQ(maps.Get(1)->prev_map(), info2);
+  EXPECT_EQ(maps.Get(1)->next_map(), nullptr);
+
+  // Insert in the middle.
+  const auto it3 = maps.Insert(maps.begin() + 1, 0x3000, 0x4000, 0, PROT_READ, "");
+  ASSERT_EQ(maps.Total(), 3);
+  const std::shared_ptr<MapInfo> info3 = maps.Get(1);
+  // Maps are: [info2, info3, info1]
+  EXPECT_EQ(*it3, info3);
+  EXPECT_EQ(info3->prev_map(), maps.Get(0));
+  EXPECT_EQ(info3->next_map(), maps.Get(2));
+  EXPECT_EQ(maps.Get(0)->prev_map(), nullptr);
+  EXPECT_EQ(maps.Get(0)->next_map(), info3);
+  EXPECT_EQ(maps.Get(2)->prev_map(), info3);
+  EXPECT_EQ(maps.Get(2)->next_map(), nullptr);
+
+  // Insert at end().
+  const auto it4 = maps.Insert(maps.end(), 0x4000, 0x5000, 0, PROT_READ, "");
+  ASSERT_EQ(maps.Total(), 4);
+  const std::shared_ptr<MapInfo> info4 = maps.Get(3);
+  // Maps are: [info2, info3, info1, info4]
+  EXPECT_EQ(*it4, info4);
+  EXPECT_EQ(info4->prev_map(), maps.Get(2));
+  EXPECT_EQ(info4->next_map(), nullptr);
+  EXPECT_EQ(maps.Get(2)->prev_map(), maps.Get(1));
+  EXPECT_EQ(maps.Get(2)->next_map(), info4);
+}
+
+TEST(MapsTest, map_erase) {
+  Maps maps;
+  maps.Add(0x1000, 0x2000, 0, PROT_READ, "", 0);
+  maps.Add(0x2000, 0x3000, 0, PROT_READ, "", 0);
+  maps.Add(0x3000, 0x4000, 0, PROT_READ, "", 0);
+  maps.Add(0x4000, 0x5000, 0, PROT_READ, "", 0);
+
+  // Erase at begin().
+  const auto it1 = maps.erase(maps.begin());
+  ASSERT_EQ(maps.Total(), 3);
+  EXPECT_EQ(*it1, maps.Get(0));
+  EXPECT_EQ(maps.Get(0)->prev_map(), nullptr);
+  EXPECT_EQ(maps.Get(0)->next_map(), maps.Get(1));
+
+  // Erase in the middle.
+  const auto it2 = maps.erase(maps.begin() + 1);
+  ASSERT_EQ(maps.Total(), 2);
+  EXPECT_EQ(*it2, maps.Get(1));
+  EXPECT_EQ(maps.Get(0)->prev_map(), nullptr);
+  EXPECT_EQ(maps.Get(0)->next_map(), maps.Get(1));
+  EXPECT_EQ(maps.Get(1)->prev_map(), maps.Get(0));
+  EXPECT_EQ(maps.Get(1)->next_map(), nullptr);
+
+  // Erase from the end (end() - 1).
+  const auto it3 = maps.erase(maps.end() - 1);
+  ASSERT_EQ(maps.Total(), 1);
+  EXPECT_EQ(it3, maps.end());
+  EXPECT_EQ(maps.Get(0)->prev_map(), nullptr);
+  EXPECT_EQ(maps.Get(0)->next_map(), nullptr);
+
+  // Erase the only remaining MapInfo.
+  const auto it4 = maps.erase(maps.begin());
+  ASSERT_EQ(maps.Total(), 0);
+  EXPECT_EQ(it4, maps.end());
+}
+
 TEST(MapsTest, map_move) {
   Maps maps;
 
