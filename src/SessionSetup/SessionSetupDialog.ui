@@ -82,12 +82,9 @@
           <number>0</number>
          </property>
          <item>
-          <widget class="orbit_session_setup::ConnectToStadiaWidget" name="stadiaWidget" native="true"/>
-         </item>
-         <item>
           <widget class="QFrame" name="localFrame">
            <property name="visible">
-            <bool>false</bool>
+            <bool>true</bool>
            </property>
            <property name="frameShape">
             <enum>QFrame::StyledPanel</enum>
@@ -95,41 +92,51 @@
            <property name="frameShadow">
             <enum>QFrame::Raised</enum>
            </property>
-           <layout class="QHBoxLayout" name="horizontalLayout">
+           <layout class="QVBoxLayout" name="verticalLayout_6">
             <item>
-             <widget class="QRadioButton" name="localProfilingRadioButton">
-              <property name="font">
-               <font>
-                <pointsize>12</pointsize>
-               </font>
-              </property>
-              <property name="text">
-               <string>Local profiling</string>
-              </property>
-             </widget>
+             <layout class="QHBoxLayout" name="horizontalLayout">
+              <item>
+               <widget class="QRadioButton" name="localProfilingRadioButton">
+                <property name="font">
+                 <font>
+                  <pointsize>12</pointsize>
+                 </font>
+                </property>
+                <property name="text">
+                 <string>Local profiling</string>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <spacer name="horizontalSpacer">
+                <property name="orientation">
+                 <enum>Qt::Horizontal</enum>
+                </property>
+                <property name="sizeHint" stdset="0">
+                 <size>
+                  <width>0</width>
+                  <height>20</height>
+                 </size>
+                </property>
+               </spacer>
+              </item>
+              <item>
+               <widget class="QLabel" name="localProfilingStatusMessage">
+                <property name="text">
+                 <string/>
+                </property>
+               </widget>
+              </item>
+             </layout>
             </item>
             <item>
-             <spacer name="horizontalSpacer">
-              <property name="orientation">
-               <enum>Qt::Horizontal</enum>
-              </property>
-              <property name="sizeHint" stdset="0">
-               <size>
-                <width>0</width>
-                <height>20</height>
-               </size>
-              </property>
-             </spacer>
-            </item>
-            <item>
-             <widget class="QLabel" name="localProfilingStatusMessage">
-              <property name="text">
-               <string/>
-              </property>
-             </widget>
+             <widget class="orbit_session_setup::ProcessLauncherWidget" name="processLauncherWidget" native="true"/>
             </item>
            </layout>
           </widget>
+         </item>
+         <item>
+          <widget class="orbit_session_setup::ConnectToStadiaWidget" name="stadiaWidget" native="true"/>
          </item>
          <item>
           <widget class="orbit_capture_file_info::LoadCaptureWidget" name="loadCaptureWidget" native="true"/>
@@ -335,6 +342,12 @@
    <class>orbit_session_setup::TargetLabel</class>
    <extends>QWidget</extends>
    <header>SessionSetup/TargetLabel.h</header>
+  </customwidget>
+  <customwidget>
+   <class>orbit_session_setup::ProcessLauncherWidget</class>
+   <extends>QWidget</extends>
+   <header>SessionSetup/ProcessLauncherWidget.h</header>
+   <container>1</container>
   </customwidget>
  </customwidgets>
  <resources>

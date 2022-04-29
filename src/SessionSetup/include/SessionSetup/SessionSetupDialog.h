@@ -52,6 +52,7 @@ class SessionSetupDialog : public QDialog {
   void TearDownProcessManager();
   void ProcessSelectionChanged(const QModelIndex& current);
   void ConnectToLocal();
+  void ProcessLaunched();
 
  signals:
   void ProcessSelected();
