@@ -80,21 +80,21 @@ TimeGraph::TimeGraph(AccessibleInterfaceProvider* parent, OrbitApp* app,
   timeline_ui_ = std::make_unique<orbit_gl::TimelineUi>(
       /*parent=*/this, /*timeline_info_interface=*/this, viewport, &layout_);
 
-  slider_ = std::make_shared<orbit_gl::GlHorizontalSlider>(
+  horizontal_slider_ = std::make_shared<orbit_gl::GlHorizontalSlider>(
       /*parent=*/this, viewport, &layout_, /*timeline_info_interface=*/this);
   vertical_slider_ = std::make_shared<orbit_gl::GlVerticalSlider>(
       /*parent=*/this, viewport, &layout_, /*timeline_info_interface=*/this);
 
-  slider_->SetDragCallback([&](float ratio) { this->UpdateHorizontalScroll(ratio); });
-  slider_->SetResizeCallback([&](float normalized_start, float normalized_end) {
+  horizontal_slider_->SetDragCallback([&](float ratio) { this->UpdateHorizontalScroll(ratio); });
+  horizontal_slider_->SetResizeCallback([&](float normalized_start, float normalized_end) {
     this->UpdateHorizontalZoom(normalized_start, normalized_end);
   });
 
   vertical_slider_->SetDragCallback(
       [&](float ratio) { track_container_->UpdateVerticalScroll(ratio); });
 
-  vertical_slider_->SetOrthogonalSliderPixelHeight(slider_->GetPixelHeight());
-  slider_->SetOrthogonalSliderPixelHeight(vertical_slider_->GetPixelHeight());
+  vertical_slider_->SetOrthogonalSliderPixelHeight(horizontal_slider_->GetPixelHeight());
+  horizontal_slider_->SetOrthogonalSliderPixelHeight(vertical_slider_->GetPixelHeight());
 
   if (absl::GetFlag(FLAGS_enforce_full_redraw)) {
     RequestUpdate();
@@ -411,7 +411,7 @@ void TimeGraph::SetIsMouseOver(bool value) {
 }
 
 orbit_gl::GlSlider* TimeGraph::FindSliderUnderMouseCursor(int x, int y) {
-  for (orbit_gl::GlSlider* slider : {vertical_slider_.get(), slider_.get()}) {
+  for (orbit_gl::GlSlider* slider : {vertical_slider_.get(), horizontal_slider_.get()}) {
     if (slider->ContainsScreenSpacePoint(x, y)) {
       return slider;
     }
@@ -706,7 +706,7 @@ void TimeGraph::UpdateChildrenPosAndContainerSize() {
   // First we calculate TrackContainer's height. TimeGraph will set TrackContainer height based on
   // its free space.
   float total_height_without_track_container =
-      GetHeight() - slider_->GetHeight() - timeline_ui_->GetHeight();
+      GetHeight() - horizontal_slider_->GetHeight() - timeline_ui_->GetHeight();
   track_container_->SetHeight(total_height_without_track_container);
 
   // After we set positions.
@@ -726,8 +726,8 @@ void TimeGraph::UpdateChildrenPosAndContainerSize() {
   vertical_slider_->SetPos(GetWidth() - vertical_slider_->GetWidth(), timegraph_current_y);
 
   timegraph_current_y += track_container_->GetHeight();
-  slider_->SetWidth(GetWidth() - vertical_slider_->GetWidth());
-  slider_->SetPos(timegraph_current_x, timegraph_current_y);
+  horizontal_slider_->SetWidth(GetWidth() - vertical_slider_->GetWidth());
+  horizontal_slider_->SetPos(timegraph_current_x, timegraph_current_y);
 
   // TODO(b/230442062): Refactor this to be part of Slider::UpdateLayout().
   UpdateHorizontalSliderFromWorld();
@@ -749,9 +749,9 @@ void TimeGraph::UpdateHorizontalSliderFromWorld() {
   constexpr double kEpsilon = 1e-8;
   double ratio = max_start > kEpsilon ? start / max_start : 0;
   int slider_width = static_cast<int>(GetLayout().GetSliderWidth());
-  slider_->SetPixelHeight(slider_width);
-  slider_->SetNormalizedLength(static_cast<float>(width / time_span));
-  slider_->SetNormalizedPosition(static_cast<float>(ratio));
+  horizontal_slider_->SetPixelHeight(slider_width);
+  horizontal_slider_->SetNormalizedLength(static_cast<float>(width / time_span));
+  horizontal_slider_->SetNormalizedPosition(static_cast<float>(ratio));
 }
 
 void TimeGraph::UpdateVerticalSliderFromWorld() {

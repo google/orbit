@@ -54,7 +54,7 @@ class TimeGraph : public orbit_gl::CaptureViewElement, public orbit_gl::Timeline
   [[nodiscard]] orbit_gl::TrackContainer* GetTrackContainer() const {
     return track_container_.get();
   }
-  [[nodiscard]] orbit_gl::GlSlider* GetHorizontalSlider() const { return slider_.get(); }
+  [[nodiscard]] orbit_gl::GlSlider* GetHorizontalSlider() const { return horizontal_slider_.get(); }
   [[nodiscard]] orbit_gl::GlSlider* GetVerticalSlider() const { return vertical_slider_.get(); }
   [[nodiscard]] orbit_gl::TimelineUi* GetTimelineUi() const { return timeline_ui_.get(); }
   [[nodiscard]] orbit_gl::TrackManager* GetTrackManager() const {
@@ -184,7 +184,7 @@ class TimeGraph : public orbit_gl::CaptureViewElement, public orbit_gl::Timeline
   void ProcessCGroupAndProcessMemoryTrackingTimer(const orbit_client_protos::TimerInfo& timer_info);
   void ProcessPageFaultsTrackingTimer(const orbit_client_protos::TimerInfo& timer_info);
 
-  std::shared_ptr<orbit_gl::GlSlider> slider_;
+  std::shared_ptr<orbit_gl::GlSlider> horizontal_slider_;
   std::shared_ptr<orbit_gl::GlSlider> vertical_slider_;
 
  private:
