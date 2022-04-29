@@ -24,13 +24,13 @@ namespace orbit_ssh_qt {
 namespace details {
 enum class SftpCopyToLocalOperationState {
   kInitial,
-  kNoOperation,
-  kStarted,
-  kRemoteFileOpened,
-  kLocalFileOpened,
-  kLocalFileWritten,
-  kLocalFileClosed,
+  kOpenRemoteFile,
+  kOpenLocalFile,
+  kStarted,  // This is the running state, where the data transfer happens
   kShutdown,
+  kCloseLocalFile,
+  kCloseRemoteFile,
+  kCloseEventConnections,
   kDone,
   kError
 };

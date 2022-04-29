@@ -33,16 +33,61 @@ void SftpCopyToLocalOperation::CopyFileToLocal(std::filesystem::path source,
   source_ = std::move(source);
   destination_ = std::move(destination);
 
-  SetState(State::kNoOperation);
+  SetState(State::kOpenRemoteFile);
   OnEvent();
 }
 
 outcome::result<void> SftpCopyToLocalOperation::shutdown() {
-  data_event_connection_ = std::nullopt;
+  switch (CurrentState()) {
+    case State::kInitial:
+    case State::kOpenRemoteFile:
+    case State::kOpenLocalFile:
+    case State::kStarted:
+      ORBIT_UNREACHABLE();
+    case State::kShutdown:
+    case State::kCloseLocalFile: {
+      local_file_.close();
+      SetState(State::kCloseRemoteFile);
+      ABSL_FALLTHROUGH_INTENDED;
+    }
+    case State::kCloseRemoteFile: {
+      OUTCOME_TRY(sftp_file_->Close());
+      SetState(State::kCloseEventConnections);
+      ABSL_FALLTHROUGH_INTENDED;
+    }
+    case State::kCloseEventConnections: {
+      about_to_shutdown_connection_ = std::nullopt;
+      data_event_connection_ = std::nullopt;
+      SetState(State::kDone);
+      ABSL_FALLTHROUGH_INTENDED;
+    }
+    case State::kDone:
+      break;
+    case State::kError:
+      ORBIT_UNREACHABLE();
+  }
+
   return outcome::success();
 }
 
-outcome::result<void> SftpCopyToLocalOperation::run() { return startup(); }
+outcome::result<void> SftpCopyToLocalOperation::run() {
+  ORBIT_CHECK(CurrentState() == State::kStarted);
+
+  constexpr size_t kReadBufferMaxSize = 1 * 1024 * 1024;
+
+  while (true) {
+    OUTCOME_TRY(auto&& read_buffer, sftp_file_->Read(kReadBufferMaxSize));
+    if (read_buffer.empty()) {
+      // This is end of file
+
+      SetState(State::kCloseLocalFile);
+      break;
+    }
+
+    local_file_.write(read_buffer.data(), read_buffer.size());
+  }
+  return outcome::success();
+}
 
 outcome::result<void> SftpCopyToLocalOperation::startup() {
   if (!data_event_connection_) {
@@ -52,54 +97,30 @@ outcome::result<void> SftpCopyToLocalOperation::startup() {
 
   switch (CurrentState()) {
     case State::kInitial:
-    case State::kNoOperation: {
+    case State::kOpenRemoteFile: {
       OUTCOME_TRY(auto&& sftp_file,
                   orbit_ssh::SftpFile::Open(session_->GetRawSession(), channel_->GetRawSftp(),
                                             source_.string(), orbit_ssh::FxfFlags::kRead,
                                             0 /* mode - not applicable for kRead */));
       sftp_file_ = std::move(sftp_file);
-      SetState(State::kRemoteFileOpened);
+      SetState(State::kOpenLocalFile);
       ABSL_FALLTHROUGH_INTENDED;
     }
-    case State::kStarted:
-    case State::kRemoteFileOpened: {
+    case State::kOpenLocalFile: {
       local_file_.setFileName(QString::fromStdString(destination_.string()));
       const auto open_result = local_file_.open(QIODevice::WriteOnly);
       if (!open_result) {
         return Error::kCouldNotOpenFile;
       }
-      SetState(State::kLocalFileOpened);
-      ABSL_FALLTHROUGH_INTENDED;
-    }
-    case State::kLocalFileOpened: {
-      constexpr size_t kReadBufferMaxSize = 1 * 1024 * 1024;
-
-      while (true) {
-        OUTCOME_TRY(auto&& read_buffer, sftp_file_->Read(kReadBufferMaxSize));
-        if (read_buffer.empty()) {
-          // This is end of file
-          SetState(State::kLocalFileWritten);
-          break;
-        }
-
-        local_file_.write(read_buffer.data(), read_buffer.size());
-      }
-      ABSL_FALLTHROUGH_INTENDED;
-    }
-    case State::kLocalFileWritten: {
-      local_file_.close();
-      SetState(State::kLocalFileClosed);
-      ABSL_FALLTHROUGH_INTENDED;
-    }
-    case State::kLocalFileClosed: {
-      OUTCOME_TRY(sftp_file_->Close());
-      about_to_shutdown_connection_ = std::nullopt;
-      SetState(State::kDone);
-      ABSL_FALLTHROUGH_INTENDED;
-    }
-    case State::kShutdown:
-    case State::kDone:
+      SetState(State::kStarted);
       break;
+    }
+    case State::kStarted:
+    case State::kShutdown:
+    case State::kCloseLocalFile:
+    case State::kCloseRemoteFile:
+    case State::kCloseEventConnections:
+    case State::kDone:
     case State::kError:
       ORBIT_UNREACHABLE();
   };
