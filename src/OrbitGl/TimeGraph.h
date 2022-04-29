@@ -162,7 +162,7 @@ class TimeGraph : public orbit_gl::CaptureViewElement, public orbit_gl::Timeline
     return accessible_parent_;
   }
 
-  // TODO(Slider refactor bug): Refactor slider methods.
+  // TODO(b/230442062): Refactor slider methods.
   orbit_gl::GlSlider* FindSliderUnderMouseCursor(int x, int y);
   void ProcessSliderMouseMoveEvents(int x, int y);
   void SetIsMouseOver(bool value);

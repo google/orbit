@@ -28,10 +28,7 @@ class UnitTestTimeGraph : public testing::Test {
     }
   }
 
-  void SimulatePreRender() {
-    CaptureViewElementTester tester;
-    tester.SimulatePreRender(time_graph_.get());
-  }
+  void SimulatePreRender() { tester_.SimulatePreRender(time_graph_.get()); }
 
   orbit_gl::GlSlider* FindSliderUnderMouseCursor(int x, int y) {
     return time_graph_->FindSliderUnderMouseCursor(x, y);
@@ -40,6 +37,7 @@ class UnitTestTimeGraph : public testing::Test {
   [[nodiscard]] GlSlider* VerticalSlider() { return time_graph_->GetVerticalSlider(); }
 
  private:
+  CaptureViewElementTester tester_;
   std::unique_ptr<TimeGraph> time_graph_;
   std::unique_ptr<Viewport> viewport_;
   std::unique_ptr<orbit_client_data::CaptureData> capture_data_;

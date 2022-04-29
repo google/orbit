@@ -96,9 +96,6 @@ TimeGraph::TimeGraph(AccessibleInterfaceProvider* parent, OrbitApp* app,
   vertical_slider_->SetOrthogonalSliderPixelHeight(slider_->GetPixelHeight());
   slider_->SetOrthogonalSliderPixelHeight(vertical_slider_->GetPixelHeight());
 
-  // Needed because unit-tests rely on children positions before drawing.
-  SetWidth(viewport_->GetWorldWidth());
-  UpdateChildrenPosAndContainerSize();
   if (absl::GetFlag(FLAGS_enforce_full_redraw)) {
     RequestUpdate();
   }
