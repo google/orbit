@@ -5,6 +5,8 @@
 #ifndef ORBIT_GL_CORE_MATH_H_
 #define ORBIT_GL_CORE_MATH_H_
 
+#include <tuple>
+
 #include "GteVector2.h"
 #include "GteVector3.h"
 #include "GteVector4.h"
@@ -28,26 +30,29 @@ using Color = gte::Vector4<unsigned char>;
 namespace orbit_gl {
 
 struct ClosedInterval {
-  static ClosedInterval FromValues(float value_1, float value_2) {
-    return {std::min(value_1, value_2), std::max(value_1, value_2)};
-  }
-
   [[nodiscard]] bool Intersects(const ClosedInterval& closed_interval) const {
     return this->min <= closed_interval.max && this->max >= closed_interval.min;
+  }
+
+  [[nodiscard]] bool Contains(float value) const {
+    return this->min <= value && this->max >= value;
+  }
+
+  [[nodiscard]] friend bool operator==(const ClosedInterval& lhs, const ClosedInterval& rhs) {
+    return std::tie(lhs.min, lhs.max) == std::tie(rhs.min, rhs.max);
+  }
+  [[nodiscard]] friend bool operator!=(const ClosedInterval& lhs, const ClosedInterval& rhs) {
+    return !(lhs == rhs);
   }
 
   float min;
   float max;
 };
 
-[[nodiscard]] inline bool IsElementOf(float value, ClosedInterval closed_interval) {
-  return value >= closed_interval.min && value <= closed_interval.max;
-}
-
 [[nodiscard]] inline bool IsInsideRectangle(const Vec2& point, const Vec2& top_left,
                                             const Vec2& size) {
   for (int i = 0; i < 2; i++) {
-    if (!IsElementOf(point[i], ClosedInterval::FromValues(top_left[i], top_left[i] + size[i]))) {
+    if (!ClosedInterval{top_left[i], top_left[i] + size[i]}.Contains(point[i])) {
       return false;
     }
   }
