@@ -9,20 +9,6 @@
 
 namespace orbit_qt {
 
-// A specialization of `QIntValidator` that only accepts values that are a multiple of
-// `multiple_of_`.
-class MultipleOfValidator : public QIntValidator {
- public:
-  explicit MultipleOfValidator(QObject* parent = nullptr) : QIntValidator(parent) {}
-  MultipleOfValidator(int bottom, int top, int multiple_of, QObject* parent = nullptr)
-      : QIntValidator(bottom, top, parent), multiple_of_{multiple_of} {}
-  void setMultipleOf(int multiple_of) { multiple_of_ = multiple_of; }
-  [[nodiscard]] QValidator::State validate(QString& input, int& pos) const override;
-
- private:
-  int multiple_of_ = 1;
-};
-
 // A `QSpinBox` that takes a custom validator. If the `validator_` is not set (nullptr), it will
 // fallback to `QSpinBox::validate`.
 class MultipleOfSpinBox : public QSpinBox {
