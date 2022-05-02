@@ -5,6 +5,7 @@
 #define ORBIT_QT_Q_MULTIPLE_OF_EIGHT_SPIN_BOX_H_
 
 #include <QSpinBox>
+#include <memory>
 
 namespace orbit_qt {
 
