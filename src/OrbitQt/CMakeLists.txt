@@ -118,7 +118,7 @@ target_sources(OrbitQtTests
                 AnnotatingSourceCodeDialogTest.cpp
                 CallTreeViewItemModelTest.cpp
                 HistogramWidgetTest.cpp
-                MultipleOfSpinBoxTest.cpp
+        MultipleOfValidatorTest.cpp
                 StatusListenerImplTest.cpp
                 TutorialOverlayTest.cpp
                 TrackTypeItemModelTest.cpp)
