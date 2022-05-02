@@ -4,9 +4,14 @@
 
 #include "CaptureFile/CaptureFile.h"
 
+#include <google/protobuf/io/coded_stream.h>
+#include <google/protobuf/io/zero_copy_stream_impl.h>
+
 #include "CaptureFileConstants.h"
 #include "OrbitBase/Align.h"
 #include "OrbitBase/File.h"
+#include "OrbitBase/Result.h"
+#include "OrbitBase/SafeStrerror.h"
 #include "ProtoSectionInputStreamImpl.h"
 
 namespace orbit_capture_file {
@@ -18,10 +23,12 @@ using orbit_base::unique_fd;
 constexpr uint64_t kMaxNumberOfSections = std::numeric_limits<uint16_t>::max();
 
 struct CaptureFileHeader {
-  std::array<char, kFileSignature.size()> signature;
-  uint32_t version;
+  static constexpr uint64_t kSignatureSize = kFileSignature.size();
+  static constexpr uint64_t kFileFormatVersionSize = sizeof(uint32_t);
   uint64_t capture_section_offset;
   uint64_t section_list_offset;
+  static constexpr uint64_t kSectionListOffsetFieldOffset =
+      kSignatureSize + kFileFormatVersionSize + sizeof(capture_section_offset);
 };
 
 class CaptureFileImpl : public CaptureFile {
@@ -164,19 +171,57 @@ ErrorMessageOr<void> CaptureFileImpl::ReadSectionList() {
   return outcome::success();
 }
 
-ErrorMessageOr<void> CaptureFileImpl::ReadHeader() {
-  OUTCOME_TRY(auto&& header, orbit_base::ReadFullyAtOffset<CaptureFileHeader>(fd_, 0));
-  header_ = header;
+ErrorMessageOr<void> ValidateSignature(google::protobuf::io::CodedInputStream* coded_input,
+                                       google::protobuf::io::FileInputStream* raw_input) {
+  std::array<char, kFileSignature.size()> signature{};
+  if (!coded_input->ReadRaw(static_cast<void*>(&signature), sizeof(signature))) {
+    return ErrorMessage{
+        absl::StrFormat("Failed to read the file signature. (IO subsystem error: %s)",
+                        SafeStrerror(raw_input->GetErrno()))};
+  }
 
-  if (std::memcmp(header_.signature.data(), kFileSignature.data(), kFileSignature.size()) != 0) {
+  if (std::memcmp(signature.data(), kFileSignature.data(), kFileSignature.size()) != 0) {
     return ErrorMessage{"Invalid file signature"};
   }
 
-  if (header_.version != kFileVersion) {
+  return outcome::success();
+}
+
+ErrorMessageOr<void> ValidateFileVersion(google::protobuf::io::CodedInputStream* coded_input,
+                                         google::protobuf::io::FileInputStream* raw_input) {
+  uint32_t version{};
+  if (!coded_input->ReadLittleEndian32(&version)) {
     return ErrorMessage{
-        absl::StrFormat("Incompatible version %d, expected %d", header_.version, kFileVersion)};
+        absl::StrFormat("Could not read the file's version. (IO subsystem error: %s)",
+                        SafeStrerror(raw_input->GetErrno()))};
   }
 
+  if (version != kFileVersion) {
+    return ErrorMessage{
+        absl::StrFormat("Incompatible version %d, expected %d", version, kFileVersion)};
+  }
+
+  return outcome::success();
+}
+
+ErrorMessageOr<void> CaptureFileImpl::ReadHeader() {
+  google::protobuf::io::FileInputStream raw_input{fd_.get()};
+  google::protobuf::io::CodedInputStream coded_input{&raw_input};
+
+  OUTCOME_TRY(ValidateSignature(&coded_input, &raw_input));
+  OUTCOME_TRY(ValidateFileVersion(&coded_input, &raw_input));
+
+  CaptureFileHeader header{};
+
+  if (!coded_input.ReadLittleEndian64(&header.capture_section_offset)) {
+    return ErrorMessage{"Could not read the capture section's offset value"};
+  }
+
+  if (!coded_input.ReadLittleEndian64(&header.section_list_offset)) {
+    return ErrorMessage{"Could not read the section list's offset value"};
+  }
+
+  header_ = header;
   return outcome::success();
 }
 
@@ -246,9 +291,9 @@ ErrorMessageOr<uint64_t> CaptureFileImpl::AddUserDataSection(uint64_t section_si
 
   // Now update section list offset in the header if necessary
   if (header_.section_list_offset != section_list_offset) {
-    uint64_t section_list_offset_field_offset = offsetof(CaptureFileHeader, section_list_offset);
-    OUTCOME_TRY(orbit_base::WriteFullyAtOffset(
-        fd_, &section_list_offset, sizeof(section_list_offset), section_list_offset_field_offset));
+    OUTCOME_TRY(orbit_base::WriteFullyAtOffset(fd_, &section_list_offset,
+                                               sizeof(section_list_offset),
+                                               CaptureFileHeader::kSectionListOffsetFieldOffset));
 
     header_.section_list_offset = section_list_offset;
   }
