@@ -44,8 +44,8 @@ float GlCanvas::kZValueOverlayLabel = 0.45f;
 float GlCanvas::kZValueEventBarPicking = 0.49f;
 float GlCanvas::kZValueUi = 0.61f;
 float GlCanvas::kZValueMargin = 0.85f;
-float GlCanvas::kZValueSliderBg = 0.87f;
-float GlCanvas::kZValueSlider = 0.89f;
+float GlCanvas::kZValueButtonBg = 0.87f;
+float GlCanvas::kZValueButton = 0.89f;
 
 float GlCanvas::kZOffsetMovingTrack = 0.1f;
 float GlCanvas::kZOffsetPinnedTrack = 0.2f;

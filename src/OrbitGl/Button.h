@@ -12,8 +12,12 @@
 #include "Viewport.h"
 
 namespace orbit_gl {
-class Button : public CaptureViewElement {
+
+// A Button can be clicked to produce an event and also will react when the mouse is over it.
+class Button : public CaptureViewElement, public std::enable_shared_from_this<Button> {
  public:
+  const float kSymbolsPaddingSize = 3.f;
+  const float kSymbolsWide = 3.f;
   explicit Button(CaptureViewElement* parent, const Viewport* viewport,
                   const TimeGraphLayout* layout);
 
@@ -33,6 +37,7 @@ class Button : public CaptureViewElement {
   static const Color kHighlightColor;
   static const Color kBaseColor;
   static const Color kTextColor;
+  static const Color kSymbolsColor;
 
  protected:
   void DoUpdateLayout() override;
@@ -48,6 +53,7 @@ class Button : public CaptureViewElement {
 
   MouseReleaseCallback mouse_release_callback_ = nullptr;
 };
+
 }  // namespace orbit_gl
 
 #endif

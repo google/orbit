@@ -17,10 +17,12 @@
 #include "CoreMath.h"
 #include "GlSlider.h"
 #include "ManualInstrumentationManager.h"
+#include "MinusButton.h"
 #include "OpenGlBatcher.h"
 #include "OpenGlTextRenderer.h"
 #include "OrbitAccessibility/AccessibleInterface.h"
 #include "PickingManager.h"
+#include "PlusButton.h"
 #include "TimeGraphLayout.h"
 #include "TimelineInfoInterface.h"
 #include "TimelineUi.h"
@@ -57,6 +59,8 @@ class TimeGraph : public orbit_gl::CaptureViewElement, public orbit_gl::Timeline
   [[nodiscard]] orbit_gl::GlSlider* GetHorizontalSlider() const { return horizontal_slider_.get(); }
   [[nodiscard]] orbit_gl::GlSlider* GetVerticalSlider() const { return vertical_slider_.get(); }
   [[nodiscard]] orbit_gl::TimelineUi* GetTimelineUi() const { return timeline_ui_.get(); }
+  [[nodiscard]] orbit_gl::Button* GetPlusButton() const { return plus_button_.get(); }
+  [[nodiscard]] orbit_gl::Button* GetMinusButton() const { return minus_button_.get(); }
   [[nodiscard]] orbit_gl::TrackManager* GetTrackManager() const {
     return track_container_->GetTrackManager();
   }
@@ -213,6 +217,9 @@ class TimeGraph : public orbit_gl::CaptureViewElement, public orbit_gl::Timeline
 
   std::unique_ptr<orbit_gl::TrackContainer> track_container_;
   std::unique_ptr<orbit_gl::TimelineUi> timeline_ui_;
+  // A shared ptr is needed for the buttons because they are pickable.
+  std::shared_ptr<orbit_gl::PlusButton> plus_button_;
+  std::shared_ptr<orbit_gl::MinusButton> minus_button_;
 
   ManualInstrumentationManager* manual_instrumentation_manager_;
   orbit_client_data::ThreadTrackDataProvider* thread_track_data_provider_ = nullptr;

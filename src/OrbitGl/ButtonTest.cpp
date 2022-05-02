@@ -116,12 +116,13 @@ TEST(Button, Rendering) {
   // drawn.
   EXPECT_GE(batcher.GetNumBoxes(), 1);
   EXPECT_TRUE(batcher.IsEverythingInsideRectangle(kPos, kSize));
-  EXPECT_TRUE(batcher.IsEverythingBetweenZLayers(GlCanvas::kZValueUi, GlCanvas::kZValueUi));
+  EXPECT_TRUE(
+      batcher.IsEverythingBetweenZLayers(GlCanvas::kZValueButtonBg, GlCanvas::kZValueButton));
 
   EXPECT_EQ(text_renderer.GetNumAddTextCalls(), 1);
   EXPECT_TRUE(text_renderer.AreAddTextsAlignedVertically());
   EXPECT_TRUE(text_renderer.IsTextInsideRectangle(kPos, kSize));
-  EXPECT_TRUE(text_renderer.IsTextBetweenZLayers(GlCanvas::kZValueUi, GlCanvas::kZValueUi));
+  EXPECT_TRUE(text_renderer.IsTextBetweenZLayers(GlCanvas::kZValueButton, GlCanvas::kZValueButton));
 
   tester.SimulateDrawLoop(&button, false, true);
   // Verify that `UpdatePrimitives` has no effect - all rendering of the button should be done in

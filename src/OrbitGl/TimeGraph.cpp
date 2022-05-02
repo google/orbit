@@ -96,6 +96,14 @@ TimeGraph::TimeGraph(AccessibleInterfaceProvider* parent, OrbitApp* app,
   vertical_slider_->SetOrthogonalSliderPixelHeight(horizontal_slider_->GetPixelHeight());
   horizontal_slider_->SetOrthogonalSliderPixelHeight(vertical_slider_->GetPixelHeight());
 
+  plus_button_ = std::make_shared<orbit_gl::PlusButton>(/*parent=*/this, viewport, &layout_);
+  plus_button_->SetMouseReleaseCallback([&](orbit_gl::Button* /*button*/) { ZoomTime(1, 0.5); });
+  plus_button_->SetLabel("Plus Button");
+
+  minus_button_ = std::make_shared<orbit_gl::MinusButton>(/*parent=*/this, viewport, &layout_);
+  minus_button_->SetMouseReleaseCallback([&](orbit_gl::Button* /*button*/) { ZoomTime(-1, 0.5); });
+  minus_button_->SetLabel("Minus Button");
+
   if (absl::GetFlag(FLAGS_enforce_full_redraw)) {
     RequestUpdate();
   }
@@ -662,19 +670,21 @@ void TimeGraph::DoUpdateLayout() {
 
 void TimeGraph::UpdateChildrenPosAndContainerSize() {
   // TimeGraph's children:
-  // __________________________________
-  // |            TIMELINE            |
-  // |--------------------------------|-|
-  // |--------------------------------|M|---|
-  // |                                |A| S |
-  // |                                |R| L |
-  // |         TRACK CONTAINER        |G| I |
-  // |                                |I| D |
-  // |                                |N| E |
-  // |                                |S| R |
-  // |________________________________|_|___|
-  // |       HORIZONTAL SLIDER          |
-  // |----------------------------------|
+  // __________________________________________
+  // |            TIMELINE            |   |  +  |
+  // |                                |   |  -  |
+  // |--------------------------------|   |-----|
+  // |             MARGIN                       |
+  // |--------------------------------| M |-----|
+  // |                                | A |  S  |
+  // |                                | R |  L  |
+  // |         TRACK CONTAINER        | G |  I  |
+  // |                                | I |  D  |
+  // |                                | N |  E  |
+  // |                                |   |  R  |
+  // |________________________________|___|_____|
+  // |       HORIZONTAL SLIDER            |
+  // |------------------------------------|
 
   // First we calculate TrackContainer's height. TimeGraph will set TrackContainer height based on
   // its free space.
@@ -689,6 +699,15 @@ void TimeGraph::UpdateChildrenPosAndContainerSize() {
 
   timeline_ui_->SetWidth(GetWidth() - total_right_margin);
   timeline_ui_->SetPos(timegraph_current_x, timegraph_current_y);
+
+  plus_button_->SetWidth(layout_.GetButtonSize());
+  plus_button_->SetHeight(layout_.GetButtonSize());
+  plus_button_->SetPos(GetWidth() - plus_button_->GetWidth(), timegraph_current_y);
+
+  minus_button_->SetWidth(layout_.GetButtonSize());
+  minus_button_->SetHeight(layout_.GetButtonSize());
+  minus_button_->SetPos(GetWidth() - minus_button_->GetWidth(),
+                        timegraph_current_y + plus_button_->GetHeight());
 
   // TODO(b/230441392): Margin between timeline and tracks shouldn't be part of the timeline.
   timegraph_current_y += timeline_ui_->GetHeight();
@@ -858,7 +877,8 @@ bool TimeGraph::IsVisible(VisibilityType vis_type, uint64_t min, uint64_t max) c
 }
 
 std::vector<orbit_gl::CaptureViewElement*> TimeGraph::GetAllChildren() const {
-  return {GetTimelineUi(), GetTrackContainer(), GetHorizontalSlider(), GetVerticalSlider()};
+  return {GetTimelineUi(),     GetPlusButton(),       GetMinusButton(),
+          GetTrackContainer(), GetHorizontalSlider(), GetVerticalSlider()};
 }
 
 std::unique_ptr<orbit_accessibility::AccessibleInterface> TimeGraph::CreateAccessibleInterface() {

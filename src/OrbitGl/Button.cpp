@@ -31,6 +31,7 @@ namespace orbit_gl {
 const Color Button::kHighlightColor(75, 75, 75, 255);
 const Color Button::kBaseColor(68, 68, 68, 255);
 const Color Button::kTextColor(255, 255, 255, 255);
+const Color Button::kSymbolsColor(191, 191, 192, 255);
 
 Button::Button(CaptureViewElement* parent, const Viewport* viewport, const TimeGraphLayout* layout)
     : CaptureViewElement(parent, viewport, layout) {
@@ -70,9 +71,9 @@ void Button::DoUpdateLayout() {
   SetHeight(std::max(GetHeight(), layout_->GetMinButtonSize()));
 }
 
-void Button::DoDraw(PrimitiveAssembler& primitive_assembler, TextRenderer& text_renderer,
+void Button::DoDraw(PrimitiveAssembler& primitive_assembler, TextRenderer& /*text_renderer*/,
                     const DrawContext& /*draw_context*/) {
-  const float z = GlCanvas::kZValueUi;
+  const float z = GlCanvas::kZValueButton;
   const Vec2 pos = GetPos();
   const Vec2 size = GetSize();
 
@@ -85,30 +86,21 @@ void Button::DoDraw(PrimitiveAssembler& primitive_assembler, TextRenderer& text_
   Vec2 size_w_border = size;
 
   // Dark border
-  primitive_assembler.AddBox(MakeBox(pos_w_border, size_w_border), z, kDarkBorderColor);
+  primitive_assembler.AddBox(MakeBox(pos_w_border, size_w_border), z, kDarkBorderColor,
+                             shared_from_this());
   pos_w_border += kBorderSize;
   size_w_border -= kBorderSize + kBorderSize;
 
   // Light border
-  primitive_assembler.AddBox(MakeBox(pos_w_border, size_w_border), z, kLightBorderColor);
+  primitive_assembler.AddBox(MakeBox(pos_w_border, size_w_border), z, kLightBorderColor,
+                             shared_from_this());
   pos_w_border += kBorderSize;
   size_w_border -= kBorderSize + kBorderSize;
 
   // Button itself
   const Color slider_color = IsMouseOver() ? kHighlightColor : kBaseColor;
-  primitive_assembler.AddShadedBox(pos_w_border, size_w_border, z, slider_color,
+  primitive_assembler.AddShadedBox(pos_w_border, size_w_border, z, slider_color, shared_from_this(),
                                    ShadingDirection::kTopToBottom);
-
-  TextRendererInterface::TextFormatting format;
-  format.color = kTextColor;
-  format.valign = TextRendererInterface::VAlign::Middle;
-  format.halign = TextRendererInterface::HAlign::Centered;
-  format.max_size = GetSize()[0];
-  format.font_size = layout_->CalculateZoomedFontSize();
-
-  const float x = pos[0] + size[0] / 2.f;
-  const float y = pos[1] + size[1] / 2.f;
-  text_renderer.AddText(label_.c_str(), x, y, z, format);
 }
 
 std::unique_ptr<orbit_accessibility::AccessibleInterface> Button::CreateAccessibleInterface() {
