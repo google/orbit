@@ -40,6 +40,9 @@ target_sources(OrbitBase PRIVATE
         include/OrbitBase/SharedState.h
         include/OrbitBase/SimpleExecutor.h
         include/OrbitBase/StringConversion.h
+        include/OrbitBase/StopSource.h
+        include/OrbitBase/StopState.h
+        include/OrbitBase/StopToken.h
         include/OrbitBase/TaskGroup.h
         include/OrbitBase/TemporaryFile.h
         include/OrbitBase/ThreadConstants.h
@@ -111,6 +114,8 @@ target_sources(OrbitBaseTests PRIVATE
         ResultTest.cpp
         SimpleExecutorTest.cpp
         StringConversionTest.cpp
+        StopSourceTest.cpp
+        StopTokenTest.cpp
         TaskGroupTest.cpp
         TemporaryFileTest.cpp
         ThreadUtilsTest.cpp
