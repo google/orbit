@@ -688,11 +688,11 @@ void TimeGraph::DoUpdateLayout() {
 }
 
 void TimeGraph::UpdateChildrenPosAndContainerSize() {
-  // TimeGraph's children (if vertical slider is visible)
-  // ________________________________________
-  // |            TIMELINE            | |   |
-  // |--------------------------------| |   |
-  // |--------------------------------|M|   |
+  // TimeGraph's children:
+  // __________________________________
+  // |            TIMELINE            |
+  // |--------------------------------|-|
+  // |--------------------------------|M|---|
   // |                                |A| S |
   // |                                |R| L |
   // |         TRACK CONTAINER        |G| I |
@@ -702,21 +702,6 @@ void TimeGraph::UpdateChildrenPosAndContainerSize() {
   // |________________________________|_|___|
   // |       HORIZONTAL SLIDER          |
   // |----------------------------------|
-  //
-  // TimeGraph's children (if vertical slider is invisible)
-  // ________________________________________
-  // |            TIMELINE                | |
-  // |------------------------------------| |
-  // |------------------------------------|M|
-  // |                                    |A|
-  // |                                    |R|
-  // |         TRACK CONTAINER            |G|
-  // |                                    |I|
-  // |                                    |N|
-  // |                                    |S|
-  // |____________________________________|_|
-  // |       HORIZONTAL SLIDER              |
-  // |--------------------------------------|
 
   // First we calculate TrackContainer's height. TimeGraph will set TrackContainer height based on
   // its free space.
@@ -727,33 +712,26 @@ void TimeGraph::UpdateChildrenPosAndContainerSize() {
   // After we set positions.
   float timegraph_current_x = GetPos()[0];
   float timegraph_current_y = GetPos()[1];
+  const float total_right_margin = layout_.GetRightMargin() + vertical_slider_->GetWidth();
 
+  timeline_ui_->SetWidth(GetWidth() - total_right_margin);
   timeline_ui_->SetPos(timegraph_current_x, timegraph_current_y);
+
+  // TODO(b/230441392): Margin between timeline and tracks shouldn't be part of the timeline.
   timegraph_current_y += timeline_ui_->GetHeight();
-
+  track_container_->SetWidth(GetWidth() - total_right_margin);
   track_container_->SetPos(timegraph_current_x, timegraph_current_y);
-  timegraph_current_y += track_container_->GetHeight();
-
-  slider_->SetPos(timegraph_current_x, timegraph_current_y);
 
   vertical_slider_->SetWidth(layout_.GetSliderWidth());
-  vertical_slider_->SetPos(GetWidth() - vertical_slider_->GetWidth(),
-                           track_container_->GetPos()[1]);
+  vertical_slider_->SetPos(GetWidth() - vertical_slider_->GetWidth(), timegraph_current_y);
 
-  // TODO(b/230442062): Refactor this to be part of Slider::UpdateLayout(). Set visibility of the
-  // vertical slider should be inside of this method.
-  UpdateVerticalSliderFromWorld();
-
-  // Now we can set width of every child.
-  const float vertical_slider_width =
-      (vertical_slider_->GetVisible() ? vertical_slider_->GetWidth() : 0.f);
-  const float total_right_margin = layout_.GetRightMargin() + vertical_slider_width;
-  timeline_ui_->SetWidth(GetWidth() - total_right_margin);
-  track_container_->SetWidth(GetWidth() - total_right_margin);
-  slider_->SetWidth(GetWidth() - vertical_slider_width);
+  timegraph_current_y += track_container_->GetHeight();
+  slider_->SetWidth(GetWidth() - vertical_slider_->GetWidth());
+  slider_->SetPos(timegraph_current_x, timegraph_current_y);
 
   // TODO(b/230442062): Refactor this to be part of Slider::UpdateLayout().
   UpdateHorizontalSliderFromWorld();
+  UpdateVerticalSliderFromWorld();
 }
 
 float TimeGraph::GetRightMargin() const {
@@ -774,25 +752,18 @@ void TimeGraph::UpdateHorizontalSliderFromWorld() {
   slider_->SetPixelHeight(slider_width);
   slider_->SetNormalizedLength(static_cast<float>(width / time_span));
   slider_->SetNormalizedPosition(static_cast<float>(ratio));
-
-  slider_->SetOrthogonalSliderPixelHeight(vertical_slider_->GetVisible() ? slider_width : 0);
-  slider_->SetWidth(GetWidth() - (vertical_slider_->GetVisible() ? slider_width : 0));
 }
 
 void TimeGraph::UpdateVerticalSliderFromWorld() {
-  vertical_slider_->SetWidth(layout_.GetSliderWidth());
   float visible_tracks_height = GetTrackContainer()->GetVisibleTracksTotalHeight();
-  float max = std::max(0.f, visible_tracks_height - viewport_->GetWorldHeight());
+  float max = std::max(0.f, visible_tracks_height - vertical_slider_->GetHeight());
   float pos_ratio = max > 0 ? GetTrackContainer()->GetVerticalScrollingOffset() / max : 0.f;
   float size_ratio =
-      visible_tracks_height > 0 ? viewport_->GetWorldHeight() / visible_tracks_height : 1.f;
+      visible_tracks_height > 0 ? vertical_slider_->GetHeight() / visible_tracks_height : 1.f;
   int slider_width = static_cast<int>(GetLayout().GetSliderWidth());
   vertical_slider_->SetPixelHeight(slider_width);
   vertical_slider_->SetNormalizedPosition(pos_ratio);
   vertical_slider_->SetNormalizedLength(size_ratio);
-  // Vertical slider won't be visible if all tracks are already visible.
-  vertical_slider_->SetVisible(size_ratio < 1.f);
-  vertical_slider_->SetOrthogonalSliderPixelHeight(slider_width);
 }
 
 void TimeGraph::SelectAndZoom(const TimerInfo* timer_info) {
