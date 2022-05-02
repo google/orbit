@@ -64,7 +64,10 @@ int mmap_task_event_open(pid_t pid, int32_t cpu) {
   perf_event_attr pe = generic_event_attr();
   pe.type = PERF_TYPE_SOFTWARE;
   pe.config = PERF_COUNT_SW_DUMMY;
+  // Generate events for mmap (and mprotect) calls with the PROT_EXEC flag set.
   pe.mmap = 1;
+  // Generate events for mmap (and mprotect) calls that do not have the PROT_EXEC flag set.
+  pe.mmap_data = 1;
   pe.task = 1;
 
   return generic_event_open(&pe, pid, cpu);

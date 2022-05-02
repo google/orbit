@@ -4,6 +4,7 @@
 
 #include "PerfEventReaders.h"
 
+#include <linux/perf_event.h>
 #include <stddef.h>
 #include <string.h>
 
@@ -114,6 +115,18 @@ MmapPerfEvent ConsumeMmapPerfEvent(PerfEventRingBuffer* ring_buffer,
   uint64_t timestamp = sample_id.time;
   int32_t pid = static_cast<int32_t>(sample_id.pid);
 
+  const bool executable = (header.misc & PERF_RECORD_MISC_MMAP_DATA) == 0;
+
+  // mmap events for anonymous maps have filename "//anon". Make it "" for simplicity.
+  if (filename == "//anon") {
+    filename.clear();
+  }
+  // mmap events for anonymous maps usually have page_offset == address. Make it 0 for clarity.
+  uint64_t page_offset = mmap_event.page_offset;
+  if ((filename.empty() || filename[0] == '[') && page_offset == mmap_event.address) {
+    page_offset = 0;
+  }
+
   // Consider moving this to MMAP2 event which has more information (like flags)
   return MmapPerfEvent{
       .timestamp = timestamp,
@@ -122,8 +135,9 @@ MmapPerfEvent ConsumeMmapPerfEvent(PerfEventRingBuffer* ring_buffer,
           {
               .address = mmap_event.address,
               .length = mmap_event.length,
-              .page_offset = mmap_event.page_offset,
+              .page_offset = page_offset,
               .filename = std::move(filename),
+              .executable = executable,
               .pid = pid,
           },
   };
