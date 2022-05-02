@@ -7,33 +7,8 @@
 namespace orbit_qt {
 
 QValidator::State MultipleOfSpinBox::validate(QString& input, int& pos) const {
-  if (validator_ == nullptr) {
-    return QSpinBox::validate(input, pos);
-  }
-  return validator_->validate(input, pos);
+  MultipleOfValidator validator{minimum(), maximum(), singleStep()};
+  return validator.validate(input, pos);
 }
 
-QValidator::State MultipleOfValidator::validate(QString& input, int& pos) const {
-  if (input.isEmpty()) {
-    return QValidator::State::Intermediate;
-  }
-
-  QValidator::State state = QIntValidator::validate(input, pos);
-  if (state == QValidator::Invalid) {
-    return state;
-  }
-
-  bool valid = false;
-  int input_value = input.toInt(&valid);
-  if (!valid) {
-    return QValidator::State::Invalid;
-  }
-  if (input_value >= bottom() && input_value <= top() && input_value % multiple_of_ == 0) {
-    return QValidator::State::Acceptable;
-  }
-  if (input_value <= top()) {
-    return QValidator::State::Intermediate;
-  }
-  return QValidator::State::Invalid;
-}
 }  // namespace orbit_qt

@@ -5,7 +5,7 @@
 #include <gmock/gmock-matchers.h>
 #include <gtest/gtest.h>
 
-#include "MultipleOfSpinBox.h"
+#include "MultipleOfValidator.h"
 
 namespace orbit_qt {
 TEST(MultipleOfSpinBox, Validate) {
@@ -62,6 +62,10 @@ TEST(MultipleOfSpinBox, Validate) {
 
   QString thousand_twenty_four = QString::fromStdString("1024");
   EXPECT_EQ(validator.validate(thousand_twenty_four, pos), QValidator::State::Invalid);
+
+  // Values that have the same number of characters as the maximum, may not become valid anymore
+  QString five_hundred_eleven = QString::fromStdString("511");
+  EXPECT_EQ(validator.validate(five_hundred_eleven, pos), QValidator::State::Invalid);
 
   // Non-numbers are invalid
   QString chars = QString::fromStdString("abc");
