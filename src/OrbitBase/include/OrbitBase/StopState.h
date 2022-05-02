@@ -10,7 +10,11 @@
 namespace orbit_base_internal {
 
 // StopState is an implementation detail of StopSource and StopToken and is not intended to be used
-// outside of StopSource and StopToken
+// outside of StopSource and StopToken.
+//
+// StopState is a simple wrapper around a bool protected by a mutex. A StopState is not stopped on
+// creation (IsStopped() returns false) and can be stopped once by calling Stop(). Afterwards
+// IsStopped() returns true.
 class StopState {
  public:
   [[nodiscard]] bool IsStopped() const {
@@ -24,7 +28,7 @@ class StopState {
 
  private:
   mutable absl::Mutex mutex_;
-  bool stopped_ = false;
+  bool stopped_ ABSL_GUARDED_BY(mutex_) = false;
 };
 
 }  // namespace orbit_base_internal

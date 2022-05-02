@@ -14,9 +14,8 @@
 namespace orbit_base {
 
 // StopSource together with StopToken is designed to enable thread safe task cancellation. Create a
-// StopSource in the thread that starts a new thread and give that new thread a StopToken (from
-// StopSource::GetStopToken). Then the a stop can be requested from the outer thread by calling
-// StopSource::RequestStop
+// StopSource when creating a new task and give that task a StopToken via StopSource::GetStopToken.
+// Then the a stop can be requested from any thread by calling StopSource::RequestStop.
 class StopSource {
  public:
   explicit StopSource() : shared_stop_state_(std::make_shared<orbit_base_internal::StopState>()) {}
