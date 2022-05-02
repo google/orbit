@@ -7,6 +7,8 @@
 #include <asm/perf_regs.h>
 #include <sys/mman.h>
 #include <unwindstack/MapInfo.h>
+#include <unwindstack/Object.h>
+#include <unwindstack/PeCoff.h>
 #include <unwindstack/SharedString.h>
 #include <unwindstack/Unwinder.h>
 
@@ -480,13 +482,39 @@ void UprobesUnwindingVisitor::Visit(uint64_t event_timestamp, const MmapPerfEven
   if (!event_data.executable) {
     return;
   }
-  // Don't try to send a ModuleUpdateEvent for anonymous maps.
-  if (event_data.filename.empty() || event_data.filename[0] == '[') {
-    return;
+
+  std::string module_path;
+  if (!event_data.filename.empty() && event_data.filename[0] != '[') {
+    // This is a file mapping.
+    module_path = event_data.filename;
+  } else if (event_data.filename.empty()) {
+    // This is an anonymous mapping, and not a "special" one like [stack], [heap], etc.
+    std::shared_ptr<unwindstack::MapInfo> added_map_info = current_maps_->Find(event_data.address);
+    ORBIT_CHECK(added_map_info != nullptr);  // This is the mapping added with AddAndSort above.
+    std::shared_ptr<unwindstack::Memory> process_memory =
+        unwindstack::Memory::CreateProcessMemory(event_data.pid);
+    unwindstack::Object* object =
+        added_map_info->GetObject(process_memory, unwindstack::ARCH_X86_64);
+    if (dynamic_cast<unwindstack::PeCoff*>(object) != nullptr) {
+      // This anonymous executable map corresponds to a PE. We know that this was detected from the
+      // previous file mapping, see MapInfo::GetFileMemoryFromAnonExecMapIfPeCoffTextSection. Find
+      // such mapping and get its file. Note that this assumes that at least the headers of the PE
+      // are already mapped (with a non-executable file mapping).
+      std::shared_ptr<unwindstack::MapInfo> map_info = added_map_info->prev_map();
+      while (map_info != nullptr) {
+        if (!map_info->name().empty() && map_info->name().c_str()[0] != '[') {
+          module_path = map_info->name();
+          break;
+        }
+        map_info = map_info->prev_map();
+      }
+    }
   }
 
+  if (module_path.empty()) return;
+
   ErrorMessageOr<orbit_grpc_protos::ModuleInfo> module_info_or_error =
-      orbit_object_utils::CreateModule(event_data.filename, event_data.address,
+      orbit_object_utils::CreateModule(module_path, event_data.address,
                                        event_data.address + event_data.length);
   if (module_info_or_error.has_error()) {
     ORBIT_ERROR("Unable to create module: %s", module_info_or_error.error().message());
