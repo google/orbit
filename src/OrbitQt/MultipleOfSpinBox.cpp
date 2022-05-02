@@ -4,6 +4,8 @@
 
 #include "MultipleOfSpinBox.h"
 
+#include "MultipleOfValidator.h"
+
 namespace orbit_qt {
 
 QValidator::State MultipleOfSpinBox::validate(QString& input, int& pos) const {
