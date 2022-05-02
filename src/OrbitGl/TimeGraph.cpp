@@ -756,8 +756,9 @@ void TimeGraph::UpdateHorizontalSliderFromWorld() {
 
 void TimeGraph::UpdateVerticalSliderFromWorld() {
   float visible_tracks_height = GetTrackContainer()->GetVisibleTracksTotalHeight();
-  float max = std::max(0.f, visible_tracks_height - vertical_slider_->GetHeight());
-  float pos_ratio = max > 0 ? GetTrackContainer()->GetVerticalScrollingOffset() / max : 0.f;
+  float max_height = std::max(0.f, visible_tracks_height - vertical_slider_->GetHeight());
+  float pos_ratio =
+      max_height > 0 ? GetTrackContainer()->GetVerticalScrollingOffset() / max_height : 0.f;
   float size_ratio =
       visible_tracks_height > 0 ? vertical_slider_->GetHeight() / visible_tracks_height : 1.f;
   int slider_width = static_cast<int>(GetLayout().GetSliderWidth());
