@@ -12,8 +12,10 @@
 
 namespace orbit_windows_utils {
 
-// Class used to launch a process, optionally pausing it at the entry point and
-// maintaining information required to suspend and resume the process main thread.
+// Class used to launch a process, optionally pausing it at the entry point and maintaining
+// information required to suspend and resume the process' main thread. A "paused" process is
+// initially busy-looping at entry point. To remove the busy loop but remain paused at entry,
+// we call "SuspendProcess". "ResumeProcess" can then be called to resume normal execution.
 class ProcessLauncher {
  public:
   ErrorMessageOr<uint32_t> LaunchProcess(const std::filesystem::path& executable,
@@ -23,7 +25,7 @@ class ProcessLauncher {
 
   // Suspend a process that is currently spinning ("paused") at entry point and replace the busy
   // loop by the original instructions. This call will fail if the process can't be found or if it
-  // is not in the paused state.
+  // is not in the spinning state.
   ErrorMessageOr<void> SuspendProcess(uint32_t process_id);
 
   // Resume a process that was suspended using the "SuspendProcess" method above. This call will
