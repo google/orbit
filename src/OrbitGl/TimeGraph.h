@@ -60,6 +60,7 @@ class TimeGraph : public orbit_gl::CaptureViewElement, public orbit_gl::Timeline
   [[nodiscard]] orbit_gl::TrackManager* GetTrackManager() const {
     return track_container_->GetTrackManager();
   }
+  [[nodiscard]] float GetTimelineWidth() const { return GetTimelineUi()->GetWidth(); }
 
   [[nodiscard]] float GetWorldFromTick(uint64_t time) const override;
   [[nodiscard]] float GetWorldFromUs(double micros) const override;
