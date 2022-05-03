@@ -19,6 +19,8 @@ target_sources(
           FilterPanelWidget.h
           FilterPanelWidgetAction.h
           HistogramWidget.h
+          MultipleOfSpinBox.h
+          MultipleOfValidator.h
           orbitaboutdialog.h
           orbitdataviewpanel.h
           orbiteventiterator.h
@@ -48,6 +50,8 @@ target_sources(
           FilterPanelWidget.cpp
           FilterPanelWidgetAction.cpp
           HistogramWidget.cpp
+          MultipleOfSpinBox.cpp
+          MultipleOfValidator.cpp
           StatusListenerImpl.cpp
           orbitaboutdialog.cpp
           orbitaboutdialog.ui
@@ -116,6 +120,7 @@ target_sources(OrbitQtTests
                 AnnotatingSourceCodeDialogTest.cpp
                 CallTreeViewItemModelTest.cpp
                 HistogramWidgetTest.cpp
+                MultipleOfValidatorTest.cpp
                 StatusListenerImplTest.cpp
                 TutorialOverlayTest.cpp
                 TrackTypeItemModelTest.cpp)
