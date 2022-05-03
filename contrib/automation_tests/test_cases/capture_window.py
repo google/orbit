@@ -258,6 +258,12 @@ class ToggleCollapsedStateOfAllTracks(CaptureWindowE2ETestCaseBase):
 
 
 class FilterTracks(CaptureWindowE2ETestCaseBase):
+
+    def _log_and_compare_number_of_tracks(self, expected_track_count):
+        logging.info("Tracks expected: '{}'".format(expected_track_count))
+        logging.info("Tracks found: '{}'".format(len(self._find_tracks())))
+        return len(self._find_tracks()) == expected_track_count
+
     """
     Set a filter in the capture tab.
     """
@@ -277,8 +283,9 @@ class FilterTracks(CaptureWindowE2ETestCaseBase):
         # Using send_keys instead of set_edit_text directly because set_edit_text ignores the wait timings...
         keyboard.send_keys(filter_string)
 
+        # The logging below is added to debug http://b/229709116 and can be removed when the bug is fixed.
         if expected_track_count is not None:
-            wait_for_condition(lambda: len(self._find_tracks()) == expected_track_count)
+            wait_for_condition(lambda: self._log_and_compare_number_of_tracks(expected_track_count))
 
 
 class ZoomOut(CaptureWindowE2ETestCaseBase):
