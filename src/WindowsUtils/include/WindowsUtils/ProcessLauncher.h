@@ -21,7 +21,13 @@ class ProcessLauncher {
                                          const std::string_view arguments,
                                          bool pause_at_entry_point);
 
+  // Suspend a process that is currently spinning ("paused") at entry point and replace the busy
+  // loop by the original instructions. This call will fail if the process can't be found or if it
+  // is not in the paused state.
   ErrorMessageOr<void> SuspendProcess(uint32_t process_id);
+
+  // Resume a process that was suspended using the "SuspendProcess" method above. This call will
+  // fail if the process can't be found or if it is not in the suspended state.
   ErrorMessageOr<void> ResumeProcess(uint32_t process_id);
 
  private:
