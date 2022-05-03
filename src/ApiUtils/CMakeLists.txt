@@ -5,6 +5,7 @@
 add_library(ApiUtils STATIC)
 
 target_sources(ApiUtils PUBLIC
+        include/ApiUtils/ApiEnableInfo.h
         include/ApiUtils/Event.h
         include/ApiUtils/EncodedEvent.h
         include/ApiUtils/EncodedString.h

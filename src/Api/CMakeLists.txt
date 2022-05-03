@@ -8,7 +8,11 @@ project(Api)
 
 add_library(Api SHARED)
 
+if (WIN32)
+set_target_properties(Api PROPERTIES OUTPUT_NAME "OrbitApi")
+else()
 set_target_properties(Api PROPERTIES OUTPUT_NAME "orbit")
+endif()
 
 target_sources(Api PRIVATE
         LockFreeApiEventProducer.h

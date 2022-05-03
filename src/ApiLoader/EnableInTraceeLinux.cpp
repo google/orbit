@@ -2,7 +2,9 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
+// clang-format off
 #include "ApiLoader/EnableInTracee.h"
+// clang-format on
 
 #include <absl/base/casts.h>
 #include <absl/container/flat_hash_map.h>
@@ -130,8 +132,8 @@ ErrorMessageOr<void> SetApiEnabledInTracee(const CaptureOptions& capture_options
     // aligning executable_segment_offset as well.
     void* api_function_address =
         absl::bit_cast<void*>(orbit_object_utils::SymbolVirtualAddressToAbsoluteAddress(
-            api_function.address(), module_info->address_start(), module_info->load_bias(),
-            module_info->executable_segment_offset()));
+            api_function.relative_virtual_address(), module_info->address_start(),
+            module_info->load_bias(), module_info->executable_segment_offset()));
     uint64_t function_table_address = 0;
     if (absl::StartsWith(api_function.name(), kOrbitApiGetFunctionTableAddressPrefix)) {
       // The target is a native Linux binary.

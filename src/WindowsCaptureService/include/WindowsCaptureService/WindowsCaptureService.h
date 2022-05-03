@@ -18,6 +18,10 @@ class WindowsCaptureService final : public orbit_capture_service_base::CaptureSe
       grpc::ServerContext* context,
       grpc::ServerReaderWriter<orbit_grpc_protos::CaptureResponse,
                                orbit_grpc_protos::CaptureRequest>* reader_writer) override;
+
+ private:
+  void EnableApiInTracee(const orbit_grpc_protos::CaptureOptions& capture_options);
+  void DisableApiInTracee(const orbit_grpc_protos::CaptureOptions& capture_options);
 };
 
 }  // namespace orbit_windows_capture_service

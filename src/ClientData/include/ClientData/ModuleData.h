@@ -39,6 +39,7 @@ class ModuleData final {
   [[nodiscard]] uint64_t executable_segment_offset() const {
     return module_info_.executable_segment_offset();
   }
+  [[nodiscard]] uint64_t address_start() const { return module_info_.address_start(); }
   [[nodiscard]] bool is_loaded() const;
   // Returns true of module was unloaded and false otherwise
   [[nodiscard]] bool UpdateIfChangedAndUnload(orbit_grpc_protos::ModuleInfo info);

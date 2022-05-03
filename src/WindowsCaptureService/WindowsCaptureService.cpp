@@ -7,7 +7,10 @@
 #include <grpcpp/grpcpp.h>
 #include <stdint.h>
 
+#include "ApiLoader/EnableInTracee.h"
+#include "CaptureServiceBase/CommonProducerCaptureEventBuilders.h"
 #include "CaptureServiceBase/GrpcStartStopCaptureRequestWaiter.h"
+#include "GrpcProtos/Constants.h"
 #include "GrpcProtos/capture.pb.h"
 #include "OrbitBase/ThreadUtils.h"
 #include "ProducerEventProcessor/GrpcClientCaptureEventCollector.h"
@@ -15,6 +18,7 @@
 
 namespace orbit_windows_capture_service {
 
+using orbit_capture_service_base::CaptureStartStopListener;
 using orbit_grpc_protos::CaptureOptions;
 using orbit_grpc_protos::CaptureRequest;
 using orbit_grpc_protos::CaptureResponse;
@@ -41,17 +45,59 @@ grpc::Status WindowsCaptureService::Capture(
   const CaptureOptions& capture_options =
       grpc_start_stop_capture_request_waiter.WaitForStartCaptureRequest();
 
+  if (capture_options.enable_api()) {
+    EnableApiInTracee(capture_options);
+  }
+
   StartEventProcessing(capture_options);
   TracingHandler tracing_handler{producer_event_processor_.get()};
   tracing_handler.Start(capture_options);
+
+  for (CaptureStartStopListener* listener : capture_start_stop_listeners_) {
+    listener->OnCaptureStartRequested(capture_options, producer_event_processor_.get());
+  }
+
   StopCaptureReason stop_capture_reason =
       grpc_start_stop_capture_request_waiter.WaitForStopCaptureRequest();
+
+  for (CaptureStartStopListener* listener : capture_start_stop_listeners_) {
+    listener->OnCaptureStopRequested();
+    ORBIT_LOG("CaptureStartStopListener stopped: one or more producers finished capturing");
+  }
+
+  if (capture_options.enable_api()) {
+    DisableApiInTracee(capture_options);
+  }
+
   tracing_handler.Stop();
   FinalizeEventProcessing(stop_capture_reason);
 
   TerminateCapture();
 
   return grpc::Status::OK;
+}
+
+void WindowsCaptureService::EnableApiInTracee(const CaptureOptions& capture_options) {
+  auto result = orbit_api_loader::EnableApiInTracee(capture_options);
+  if (!result.has_error()) return;
+
+  std::string error = absl::StrFormat("Could not enable Orbit API: %s", result.error().message());
+  ORBIT_ERROR("%s", error);
+  producer_event_processor_->ProcessEvent(
+      orbit_grpc_protos::kRootProducerId,
+      orbit_capture_service_base::CreateErrorEnablingOrbitApiEvent(orbit_base::CaptureTimestampNs(),
+                                                                   error));
+}
+
+void WindowsCaptureService::DisableApiInTracee(const CaptureOptions& capture_options) {
+  auto result = orbit_api_loader::DisableApiInTracee(capture_options);
+  if (!result.has_error()) return;
+
+  std::string error = absl::StrFormat("Could not disable Orbit API: %s", result.error().message());
+  ORBIT_ERROR("%s", error);
+  producer_event_processor_->ProcessEvent(
+      orbit_grpc_protos::kRootProducerId,
+      orbit_capture_service_base::CreateWarningEvent(orbit_base::CaptureTimestampNs(), error));
 }
 
 }  // namespace orbit_windows_capture_service
