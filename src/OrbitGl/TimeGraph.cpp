@@ -429,7 +429,7 @@ orbit_gl::CaptureViewElement::EventResult TimeGraph::OnMouseWheel(
   if (modifiers.ctrl) {
     VerticalZoom(delta_normalized, mouse_pos[1]);
   } else {
-    double mouse_ratio = mouse_pos[0] / GetWidth();
+    double mouse_ratio = mouse_pos[0] / GetTimelineWidth();
     ZoomTime(delta_normalized, mouse_ratio);
   }
 
@@ -447,7 +447,7 @@ float TimeGraph::GetWorldFromTick(uint64_t time) const {
   if (time_window_us > 0) {
     double start = TicksToMicroseconds(capture_min_timestamp_, time) - min_time_us_;
     double normalized_start = start / time_window_us;
-    float pos = static_cast<float>(normalized_start * GetWidth());
+    float pos = static_cast<float>(normalized_start * GetTimelineWidth());
     return pos;
   }
 
@@ -465,7 +465,7 @@ double TimeGraph::GetUsFromTick(uint64_t time) const {
 uint64_t TimeGraph::GetNsSinceStart(uint64_t time) const { return time - capture_min_timestamp_; }
 
 uint64_t TimeGraph::GetTickFromWorld(float world_x) const {
-  double ratio = GetWidth() > 0 ? static_cast<double>(world_x / GetWidth()) : 0;
+  double ratio = GetTimelineWidth() > 0 ? static_cast<double>(world_x / GetTimelineWidth()) : 0;
   auto time_span_ns = static_cast<uint64_t>(1000 * GetTime(ratio));
   return capture_min_timestamp_ + time_span_ns;
 }

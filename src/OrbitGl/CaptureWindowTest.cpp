@@ -112,13 +112,15 @@ class NavigationTestCaptureWindow : public CaptureWindow, public testing::Test {
   }
 };
 
-TEST_F(NavigationTestCaptureWindow, ZoomTimeWorksInTheMiddleOfTimeGraph) {
+TEST_F(NavigationTestCaptureWindow, ZoomTimeWorksInTheMiddleOfTimeline) {
   PreRender();
   ExpectInitialState();
-  const Vec2i kTimeGraphSize = viewport_.WorldToScreen(time_graph_->GetSize());
+  TimelineUi* timeline_ui = time_graph_->GetTimelineUi();
+  const Vec2i kTimelineSize = viewport_.WorldToScreen(timeline_ui->GetSize());
+  const Vec2i kTimelinePos = viewport_.WorldToScreen(timeline_ui->GetPos());
 
-  int x = kTimeGraphSize[0] / 2;
-  int y = kTimeGraphSize[1] - kBottomSafetyMargin;
+  int x = kTimelinePos[0] + kTimelineSize[0] / 2;
+  int y = kTimelinePos[1] + kTimelineSize[1] / 2;
 
   MouseWheelMoved(x, y, 1, false);
   PreRender();
@@ -142,16 +144,16 @@ TEST_F(NavigationTestCaptureWindow, ZoomTimeWorksInTheMiddleOfTimeGraph) {
 TEST_F(NavigationTestCaptureWindow, ZoomTimeWorksAtRandomPositions) {
   PreRender();
   ExpectInitialState();
-  const Vec2i kTimeGraphSize = viewport_.WorldToScreen(time_graph_->GetSize());
+  const Vec2i kTimelineSize = viewport_.WorldToScreen(time_graph_->GetTimelineUi()->GetSize());
 
   std::random_device rd;
   std::mt19937 mt(rd());
-  std::uniform_int_distribution<int> dist(0, kTimeGraphSize[0]);
+  std::uniform_int_distribution<int> dist(0, kTimelineSize[0]);
 
   constexpr int kNumTries = 100;
   for (int i = 0; i < kNumTries; ++i) {
     int x = dist(mt);
-    int y = kTimeGraphSize[1] - kBottomSafetyMargin;
+    int y = kTimelineSize[1] - kBottomSafetyMargin;
 
     // Zoom in twice, then zoom out twice. Check that the intermediate states match
     MouseWheelMoved(x, y, 1, false);
@@ -202,13 +204,16 @@ TEST_F(NavigationTestCaptureWindow, ZoomTimeWorksAtRandomPositions) {
   }
 }
 
-TEST_F(NavigationTestCaptureWindow, ZoomTimeWorksAtTheRightOfTimeGraph) {
+TEST_F(NavigationTestCaptureWindow, ZoomTimeWorksAtTheRightOfTimeline) {
   PreRender();
   ExpectInitialState();
-  const Vec2i kTimeGraphSize = viewport_.WorldToScreen(time_graph_->GetSize());
 
-  int x = kTimeGraphSize[0];
-  int y = kTimeGraphSize[1] - kBottomSafetyMargin;
+  TimelineUi* timeline_ui = time_graph_->GetTimelineUi();
+  const Vec2i kTimelineSize = viewport_.WorldToScreen(timeline_ui->GetSize());
+  const Vec2i kTimelinePos = viewport_.WorldToScreen(timeline_ui->GetPos());
+
+  int x = kTimelinePos[0] + kTimelineSize[0];
+  int y = kTimelinePos[1] + kTimelineSize[1] / 2;
 
   MouseWheelMoved(x, y, 1, false);
   PreRender();
@@ -229,17 +234,18 @@ TEST_F(NavigationTestCaptureWindow, ZoomTimeWorksAtTheRightOfTimeGraph) {
   ExpectInitialState();
 }
 
-TEST_F(NavigationTestCaptureWindow, ZoomTimeWorksAtTheLeftOfTimeGraph) {
+TEST_F(NavigationTestCaptureWindow, ZoomTimeWorksAtTheLeftOfTimeline) {
   PreRender();
   ExpectInitialState();
-  const Vec2i kTimeGraphSize = viewport_.WorldToScreen(time_graph_->GetSize());
 
-  int x = kTimeGraphSize[0] / 2;
-  int y = kTimeGraphSize[1] - kBottomSafetyMargin;
+  const Vec2i kTimelinePos = viewport_.WorldToScreen(time_graph_->GetTimelineUi()->GetPos());
+
+  int x = kTimelinePos[0];
+  int y = kTimelinePos[1];
 
   MouseWheelMoved(x, y, 1, false);
   PreRender();
-  ExpectIsHorizontallyZoomedIn(PosWithinCapture::kMiddle);
+  ExpectIsHorizontallyZoomedIn(PosWithinCapture::kLeft);
 
   MouseWheelMoved(x, y, -1, false);
   PreRender();
@@ -249,7 +255,7 @@ TEST_F(NavigationTestCaptureWindow, ZoomTimeWorksAtTheLeftOfTimeGraph) {
   MouseMoved(x, y, false, false, false);
   KeyPressed('W', false, false, false);
   PreRender();
-  ExpectIsHorizontallyZoomedIn(PosWithinCapture::kMiddle);
+  ExpectIsHorizontallyZoomedIn(PosWithinCapture::kLeft);
 
   KeyPressed('S', false, false, false);
   PreRender();
