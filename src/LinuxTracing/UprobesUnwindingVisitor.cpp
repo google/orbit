@@ -457,18 +457,31 @@ void UprobesUnwindingVisitor::Visit(uint64_t event_timestamp, const MmapPerfEven
   ORBIT_CHECK(listener_ != nullptr);
   ORBIT_CHECK(current_maps_ != nullptr);
 
-  // Obviously the uprobes map cannot be successfully processed by orbit_object_utils::CreateModule,
-  // but it's important that current_maps_ contain it.
-  // For example, UprobesReturnAddressManager::PatchCallchain needs it to check whether a program
-  // counter is inside the uprobes map, and UprobesUnwindingVisitor::Visit( const
-  // StackSamplePerfEvent*) needs it to throw away incorrectly-unwound samples.
-  // As below we are only adding maps successfully parsed with orbit_object_utils::CreateModule, we
-  // add the uprobes map manually. We are using the same values that that uprobes map would get if
-  // unwindstack::BufferMaps was built by passing the full content of /proc/<pid>/maps to its
-  // constructor.
-  if (event_data.filename == "[uprobes]") {
-    current_maps_->AddAndSort(event_data.address, event_data.address + event_data.length, 0,
-                              PROT_EXEC, event_data.filename);
+  // PERF_RECORD_MMAP events do not contain the flags, but only distinguish between executable and
+  // non-executable. This is all we need, so simply assume PROT_READ | PROT_EXEC for executable
+  // mappings and PROT_READ for non-executable mappings. If we wanted the exact flags, we could
+  // switch to PERF_RECORD_MMAP2 events.
+  if (!event_data.executable) {
+    current_maps_->AddAndSort(event_data.address, event_data.address + event_data.length,
+                              event_data.page_offset, PROT_READ, event_data.filename);
+  } else {
+    // Note that this case also covers the addition of the [uprobes] map that gets created the first
+    // time a uprobe is hit in a process. It is important that current_maps_ contains it. For
+    // example, UprobesReturnAddressManager::PatchCallchain needs it to check whether a program
+    // counter is inside the uprobes map, and UprobesUnwindingVisitor::Visit(uint64_t, const
+    // StackSamplePerfEventData&) needs it to throw away incorrectly-unwound samples. This is a case
+    // where the flags are incorrect, because the [uprobes] map is not readable and only executable,
+    // but again, this doesn't matter.
+    current_maps_->AddAndSort(event_data.address, event_data.address + event_data.length,
+                              event_data.page_offset, PROT_READ | PROT_EXEC, event_data.filename);
+  }
+
+  // Don't try to send a ModuleUpdateEvent for non-executable maps.
+  if (!event_data.executable) {
+    return;
+  }
+  // Don't try to send a ModuleUpdateEvent for anonymous maps.
+  if (event_data.filename.empty() || event_data.filename[0] == '[') {
     return;
   }
 
@@ -479,12 +492,7 @@ void UprobesUnwindingVisitor::Visit(uint64_t event_timestamp, const MmapPerfEven
     ORBIT_ERROR("Unable to create module: %s", module_info_or_error.error().message());
     return;
   }
-
   auto& module_info = module_info_or_error.value();
-
-  // For flags we assume PROT_READ and PROT_EXEC, MMAP event does not return flags.
-  current_maps_->AddAndSort(module_info.address_start(), module_info.address_end(),
-                            event_data.page_offset, PROT_READ | PROT_EXEC, event_data.filename);
 
   orbit_grpc_protos::ModuleUpdateEvent module_update_event;
   module_update_event.set_pid(event_data.pid);

@@ -166,6 +166,7 @@ struct MmapPerfEventData {
   uint64_t length;
   uint64_t page_offset;
   std::string filename;
+  bool executable;
   pid_t pid;
 };
 using MmapPerfEvent = TypedPerfEvent<MmapPerfEventData>;
