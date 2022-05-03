@@ -353,8 +353,8 @@ void ServiceDeployManager::CopyFileToLocalImpl(orbit_base::Promise<ErrorMessageO
   ORBIT_LOG("Copying remote \"%s\" to local \"%s\"", source, destination);
 
   // NOLINTNEXTLINE - Unfortunately we have to fall back to a raw `new` here.
-  auto operation = new orbit_ssh_qt::SftpCopyToLocalOperation{
-      &session_.value(), sftp_channel_.get(), std::move(stop_token)};
+  auto operation = new orbit_ssh_qt::SftpCopyToLocalOperation{&session_.value(),
+                                                              sftp_channel_.get(), stop_token};
 
   // Making operation a child of the ServiceDeployManager ensures it will be deleted at the latest
   // when ServiceDeployManager gets deleted. That's important when the copy procedure gets aborted
@@ -366,8 +366,8 @@ void ServiceDeployManager::CopyFileToLocalImpl(orbit_base::Promise<ErrorMessageO
   // By having a single handler we don't need to worry about sharing resources that are not supposed
   // to be shared like the promise.
   auto finish_handler = [this, promise = std::move(promise), source = std::string{source},
-                         destination = std::string{destination},
-                         operation](ErrorMessageOr<void> result) mutable {
+                         destination = std::string{destination}, operation,
+                         stop_token = std::move(stop_token)](ErrorMessageOr<void> result) mutable {
     if (promise.HasResult()) return;
 
     operation->deleteLater();  // We can't just call `delete operation;` here because that also
@@ -381,6 +381,11 @@ void ServiceDeployManager::CopyFileToLocalImpl(orbit_base::Promise<ErrorMessageO
       QMetaObject::invokeMethod(this, std::move(waiting_copy_operations_.front()),
                                 Qt::QueuedConnection);
       waiting_copy_operations_.pop_front();
+    }
+
+    if (stop_token.IsStopRequested()) {
+      promise.SetResult(ErrorMessage{"User canceled download."});
+      return;
     }
 
     if (result.has_error()) {

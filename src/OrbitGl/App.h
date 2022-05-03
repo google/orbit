@@ -623,10 +623,14 @@ class OrbitApp final : public DataViewFactory,
   std::shared_ptr<SamplingReport> sampling_report_;
   std::shared_ptr<SamplingReport> selection_report_ = nullptr;
 
-  using ModuleLoadOperation =
-      std::pair<orbit_base::StopSource, orbit_base::Future<ErrorMessageOr<std::filesystem::path>>>;
+  struct ModuleLoadOperation {
+    orbit_base::StopSource stop_source;
+    orbit_base::Future<ErrorMessageOr<std::filesystem::path>> future;
+  };
+  // ONLY access this from the main thread
   absl::flat_hash_map<std::pair<std::string, std::string>, ModuleLoadOperation>
       modules_currently_loading_;
+  // ONLY access this from the main thread
   absl::flat_hash_map<std::pair<std::string, std::string>, orbit_base::Future<ErrorMessageOr<void>>>
       symbols_currently_loading_;
 

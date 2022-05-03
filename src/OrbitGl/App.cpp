@@ -1686,22 +1686,18 @@ orbit_base::Future<ErrorMessageOr<std::filesystem::path>> OrbitApp::RetrieveModu
     const std::chrono::time_point<std::chrono::steady_clock> copy_begin =
         std::chrono::steady_clock::now();
     ORBIT_LOG("Copying \"%s\" started", debug_file_path);
-    orbit_base::Future<ErrorMessageOr<void>> copy_result =
-        main_window_->DownloadFileFromInstance(debug_file_path, local_debug_file_path, stop_token);
+    orbit_base::Future<ErrorMessageOr<void>> copy_result = main_window_->DownloadFileFromInstance(
+        debug_file_path, local_debug_file_path, std::move(stop_token));
 
     orbit_base::ImmediateExecutor immediate_executor{};
     return copy_result.Then(
         &immediate_executor,
         [debug_file_path, local_debug_file_path, scoped_status = std::move(scoped_status),
-         copy_begin, stop_token = std::move(stop_token)](
-            ErrorMessageOr<void> sftp_result) -> ErrorMessageOr<std::filesystem::path> {
+         copy_begin](ErrorMessageOr<void> sftp_result) -> ErrorMessageOr<std::filesystem::path> {
           if (sftp_result.has_error()) {
             return ErrorMessage{
                 absl::StrFormat("Could not copy debug info file from the remote: %s",
                                 sftp_result.error().message())};
-          }
-          if (stop_token.IsStopRequested()) {
-            return ErrorMessage{"User canceled download."};
           }
           const auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(
               std::chrono::steady_clock::now() - copy_begin);
@@ -1818,8 +1814,7 @@ orbit_base::Future<ErrorMessageOr<std::filesystem::path>> OrbitApp::RetrieveModu
 
   const auto it = modules_currently_loading_.find(module_id);
   if (it != modules_currently_loading_.end()) {
-    const ModuleLoadOperation& operation{it->second};
-    return operation.second;
+    return it->second.future;
   }
 
   Future<ErrorMessageOr<std::filesystem::path>> local_symbols_future =
@@ -1862,7 +1857,7 @@ orbit_base::Future<ErrorMessageOr<std::filesystem::path>> OrbitApp::RetrieveModu
           }));
 
   modules_currently_loading_.emplace(module_id,
-                                     std::make_pair(std::move(stop_source), final_result));
+                                     ModuleLoadOperation{std::move(stop_source), final_result});
   return final_result;
 }
 
