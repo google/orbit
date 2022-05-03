@@ -14,24 +14,23 @@ namespace orbit_session_setup {
 
 ProcessLauncherWidget::ProcessLauncherWidget(QWidget* parent)
     : QWidget(parent),
-      ui(new Ui::ProcessLauncherWidget),
+      ui_(std::make_unique<Ui::ProcessLauncherWidget>()),
       last_launched_process_or_error_(ErrorMessage()) {
-  ui->setupUi(this);
-  ui->ProcessComboBox->lineEdit()->setPlaceholderText("Process");
-  ui->WorkingDirComboBox->lineEdit()->setPlaceholderText("Working directory");
-  ui->ArgumentsComboBox->lineEdit()->setPlaceholderText("Arguments");
-  ui->ErrorLabel->setText("");
+  ui_->setupUi(this);
+  ui_->ProcessComboBox->lineEdit()->setPlaceholderText("Process");
+  ui_->WorkingDirComboBox->lineEdit()->setPlaceholderText("Working directory");
+  ui_->ArgumentsComboBox->lineEdit()->setPlaceholderText("Arguments");
+  ui_->ErrorLabel->setText("");
 
-  ui->gridLayout_2->setColumnStretch(0, 90);
+  ui_->gridLayout_2->setColumnStretch(0, 90);
 }
 
-ProcessLauncherWidget::~ProcessLauncherWidget() { delete ui; }
+ProcessLauncherWidget::~ProcessLauncherWidget() {}
 
 void ProcessLauncherWidget::on_BrowseProcessButton_clicked() {
-  QStringList list = QFileDialog::getOpenFileNames(this, "Select an executable file...");
-  for (auto& file : list) {
-    ui->ProcessComboBox->lineEdit()->setText(file);
-    break;
+  QString file = QFileDialog::getOpenFileName(this, "Select an executable file...");
+  if (!file.isEmpty()) {
+    ui_->ProcessComboBox->lineEdit()->setText(file);
   }
 }
 
@@ -57,13 +56,24 @@ void ProcessLauncherWidget::on_LaunchButton_clicked() {
 }
 
 void ProcessLauncherWidget::on_BrowseWorkingDirButton_clicked() {
-  ORBIT_LOG("ProcessLauncherWidget::on_BrowseWorkingDirButton_clicked()");
-  QString dir = QFileDialog::getExistingDirectory(
+  QString directory = QFileDialog::getExistingDirectory(
       this, tr("Open Directory"), "/home",
       QFileDialog::ShowDirsOnly | QFileDialog::DontResolveSymlinks);
-  ui->WorkingDirComboBox->lineEdit()->setText(dir);
+  if (!directory.isEmpty()) {
+    ui_->WorkingDirComboBox->lineEdit()->setText(directory);
+  }
 }
 
-QPushButton* ProcessLauncherWidget::GetLaunchButton() { return ui->LaunchButton; }
+void ProcessLauncherWidget::SetProcessManager(
+    orbit_client_services::ProcessManager* process_manager) {
+  process_manager_ = process_manager;
+}
+
+QPushButton* ProcessLauncherWidget::GetLaunchButton() { return ui_->LaunchButton; }
+
+const ErrorMessageOr<orbit_grpc_protos::ProcessInfo>&
+ProcessLauncherWidget::GetLastLaunchedProcessOrError() const {
+  return last_launched_process_or_error_;
+}
 
 }  // namespace orbit_session_setup
