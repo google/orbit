@@ -317,7 +317,8 @@ ErrorMessageOr<void> ServiceDeployManager::CopyOrbitServicePackage() {
 }
 
 orbit_base::Future<ErrorMessageOr<void>> ServiceDeployManager::CopyFileToLocal(
-    std::string source, std::string destination, orbit_base::StopToken stop_token) {
+    std::filesystem::path source, std::filesystem::path destination,
+    orbit_base::StopToken stop_token) {
   orbit_base::Promise<ErrorMessageOr<void>> promise;
   auto future = promise.GetFuture();
 
@@ -325,22 +326,23 @@ orbit_base::Future<ErrorMessageOr<void>> ServiceDeployManager::CopyFileToLocal(
   QMetaObject::invokeMethod(
       this, [this, source = std::move(source), destination = std::move(destination),
              promise = std::move(promise), stop_token = std::move(stop_token)]() mutable {
-        CopyFileToLocalImpl(std::move(promise), source, destination, std::move(stop_token));
+        CopyFileToLocalImpl(std::move(promise), std::move(source), std::move(destination),
+                            std::move(stop_token));
       });
 
   return future;
 }
 
 void ServiceDeployManager::CopyFileToLocalImpl(orbit_base::Promise<ErrorMessageOr<void>> promise,
-                                               std::string_view source,
-                                               std::string_view destination,
+                                               std::filesystem::path source,
+                                               std::filesystem::path destination,
                                                orbit_base::StopToken stop_token) {
   ORBIT_CHECK(QThread::currentThread() == thread());
 
   if (copy_file_operation_in_progress_) {
     waiting_copy_operations_.emplace_back(
-        [this, promise = std::move(promise), source = std::string{source},
-         destination = std::string{destination}, stop_token = std::move(stop_token)]() mutable {
+        [this, promise = std::move(promise), source = std::move(source),
+         destination = std::move(destination), stop_token = std::move(stop_token)]() mutable {
           CopyFileToLocalImpl(std::move(promise), source, destination, std::move(stop_token));
         });
     return;
@@ -406,7 +408,7 @@ void ServiceDeployManager::CopyFileToLocalImpl(orbit_base::Promise<ErrorMessageO
                      (*shared_finish_handler)(ErrorMessage{error_code.message()});
                    });
 
-  operation->CopyFileToLocal(source, destination);
+  operation->CopyFileToLocal(std::move(source), std::move(destination));
 }
 
 ErrorMessageOr<void> ServiceDeployManager::CopyOrbitServiceExecutable(

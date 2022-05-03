@@ -326,11 +326,6 @@ class OrbitApp final : public DataViewFactory,
   void SetClipboardCallback(ClipboardCallback callback) {
     clipboard_callback_ = std::move(callback);
   }
-  using SecureCopyCallback = std::function<orbit_base::Future<ErrorMessageOr<void>>(
-      std::string_view, std::string_view, orbit_base::StopToken)>;
-  void SetSecureCopyCallback(SecureCopyCallback callback) {
-    secure_copy_callback_ = std::move(callback);
-  }
 
   void SetStatusListener(StatusListener* listener) { status_listener_ = listener; }
 
@@ -610,7 +605,6 @@ class OrbitApp final : public DataViewFactory,
   CallTreeViewCallback selection_bottom_up_view_callback_;
   SaveFileCallback save_file_callback_;
   ClipboardCallback clipboard_callback_;
-  SecureCopyCallback secure_copy_callback_;
   TimerSelectedCallback timer_selected_callback_;
 
   std::vector<orbit_data_views::DataView*> panels_;

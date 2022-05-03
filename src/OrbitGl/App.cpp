@@ -1687,7 +1687,7 @@ orbit_base::Future<ErrorMessageOr<std::filesystem::path>> OrbitApp::RetrieveModu
         std::chrono::steady_clock::now();
     ORBIT_LOG("Copying \"%s\" started", debug_file_path);
     orbit_base::Future<ErrorMessageOr<void>> copy_result =
-        secure_copy_callback_(debug_file_path, local_debug_file_path.string(), stop_token);
+        main_window_->DownloadFileFromInstance(debug_file_path, local_debug_file_path, stop_token);
 
     orbit_base::ImmediateExecutor immediate_executor{};
     return copy_result.Then(

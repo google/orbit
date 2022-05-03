@@ -54,8 +54,8 @@ class ServiceDeployManager : public QObject {
       orbit_metrics_uploader::MetricsUploader* metrics_uploader = nullptr);
 
   // This method copies remote source file to local destination.
-  orbit_base::Future<ErrorMessageOr<void>> CopyFileToLocal(std::string source,
-                                                           std::string destination,
+  orbit_base::Future<ErrorMessageOr<void>> CopyFileToLocal(std::filesystem::path source,
+                                                           std::filesystem::path destination,
                                                            orbit_base::StopToken stop_token);
 
   void Shutdown();
@@ -108,7 +108,7 @@ class ServiceDeployManager : public QObject {
   std::deque<orbit_base::AnyInvocable<void()>> waiting_copy_operations_;
 
   void CopyFileToLocalImpl(orbit_base::Promise<ErrorMessageOr<void>> promise,
-                           std::string_view source, std::string_view destination,
+                           std::filesystem::path source, std::filesystem::path destination,
                            orbit_base::StopToken stop_token);
   ErrorMessageOr<GrpcPort> ExecImpl();
 
