@@ -33,7 +33,7 @@ class UnitTestTimeGraph : public testing::Test {
   orbit_gl::GlSlider* FindSliderUnderMouseCursor(int x, int y) {
     return time_graph_->FindSliderUnderMouseCursor(x, y);
   }
-  [[nodiscard]] GlSlider* Slider() { return time_graph_->GetHorizontalSlider(); }
+  [[nodiscard]] GlSlider* HorizontalSlider() { return time_graph_->GetHorizontalSlider(); }
   [[nodiscard]] GlSlider* VerticalSlider() { return time_graph_->GetVerticalSlider(); }
 
  private:
@@ -51,21 +51,21 @@ TEST_F(UnitTestTimeGraph, SlidersRespondToMouseOver) {
                                                 static_cast<int>(kMouseCenteredPos[1]));
   EXPECT_EQ(nullptr, slider);
   EXPECT_FALSE(VerticalSlider()->IsMouseOver(kMouseCenteredPos));
-  EXPECT_FALSE(Slider()->IsMouseOver(kMouseCenteredPos));
+  EXPECT_FALSE(HorizontalSlider()->IsMouseOver(kMouseCenteredPos));
 
   Vec2 kMouseRightPos{95, 100};
   slider = FindSliderUnderMouseCursor(static_cast<int>(kMouseRightPos[0]),
                                       static_cast<int>(kMouseRightPos[1]));
   EXPECT_EQ(VerticalSlider(), slider);
   EXPECT_TRUE(VerticalSlider()->IsMouseOver(kMouseRightPos));
-  EXPECT_FALSE(Slider()->IsMouseOver(kMouseRightPos));
+  EXPECT_FALSE(HorizontalSlider()->IsMouseOver(kMouseRightPos));
 
   Vec2 kMouseBottomLeftPos{5, 195};
   slider = FindSliderUnderMouseCursor(static_cast<int>(kMouseBottomLeftPos[0]),
                                       static_cast<int>(kMouseBottomLeftPos[1]));
-  EXPECT_EQ(Slider(), slider);
+  EXPECT_EQ(HorizontalSlider(), slider);
   EXPECT_FALSE(VerticalSlider()->IsMouseOver(kMouseBottomLeftPos));
-  EXPECT_TRUE(Slider()->IsMouseOver(kMouseBottomLeftPos));
+  EXPECT_TRUE(HorizontalSlider()->IsMouseOver(kMouseBottomLeftPos));
 }
 
 }  // namespace orbit_gl
