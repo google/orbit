@@ -12,6 +12,7 @@
 #include <utility>
 
 #include "OrbitBase/Logging.h"
+#include "OrbitBase/StopToken.h"
 #include "OrbitSsh/SftpFile.h"
 #include "OrbitSshQt/Error.h"
 #include "OrbitSshQt/ScopedConnection.h"
@@ -21,8 +22,9 @@
 
 namespace orbit_ssh_qt {
 
-SftpCopyToLocalOperation::SftpCopyToLocalOperation(Session* session, SftpChannel* channel)
-    : session_(session), channel_(channel) {
+SftpCopyToLocalOperation::SftpCopyToLocalOperation(Session* session, SftpChannel* channel,
+                                                   orbit_base::StopToken stop_token)
+    : session_(session), channel_(channel), stop_token_(std::move(stop_token)) {
   about_to_shutdown_connection_.emplace(
       QObject::connect(channel_, &SftpChannel::aboutToShutdown, this,
                        &SftpCopyToLocalOperation::HandleChannelShutdown));
@@ -45,6 +47,17 @@ outcome::result<void> SftpCopyToLocalOperation::shutdown() {
     case State::kStarted:
       ORBIT_UNREACHABLE();
     case State::kShutdown:
+    case State::kCloseAndDeletePartialFile: {
+      local_file_.close();
+      bool remove_result = local_file_.remove();
+      if (!remove_result) {
+        ORBIT_ERROR("Unable to remove partially downloaded file %s",
+                    local_file_.fileName().toStdString());
+      }
+      // The local file is already closed, therefore this jumps directly to state kCloseRemoteFile
+      SetState(State::kCloseRemoteFile);
+      return shutdown();
+    }
     case State::kCloseLocalFile: {
       local_file_.close();
       SetState(State::kCloseRemoteFile);
@@ -76,6 +89,11 @@ outcome::result<void> SftpCopyToLocalOperation::run() {
   constexpr size_t kReadBufferMaxSize = 1 * 1024 * 1024;
 
   while (true) {
+    if (stop_token_.IsStopRequested()) {
+      SetState(State::kCloseAndDeletePartialFile);
+      break;
+    }
+
     OUTCOME_TRY(auto&& read_buffer, sftp_file_->Read(kReadBufferMaxSize));
     if (read_buffer.empty()) {
       // This is end of file
@@ -117,6 +135,7 @@ outcome::result<void> SftpCopyToLocalOperation::startup() {
     }
     case State::kStarted:
     case State::kShutdown:
+    case State::kCloseAndDeletePartialFile:
     case State::kCloseLocalFile:
     case State::kCloseRemoteFile:
     case State::kCloseEventConnections:

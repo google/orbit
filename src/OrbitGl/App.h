@@ -75,6 +75,8 @@
 #include "OrbitBase/Logging.h"
 #include "OrbitBase/MainThreadExecutor.h"
 #include "OrbitBase/Result.h"
+#include "OrbitBase/StopSource.h"
+#include "OrbitBase/StopToken.h"
 #include "OrbitBase/ThreadPool.h"
 #include "OrbitPaths/Paths.h"
 #include "SamplingReport.h"
@@ -324,8 +326,8 @@ class OrbitApp final : public DataViewFactory,
   void SetClipboardCallback(ClipboardCallback callback) {
     clipboard_callback_ = std::move(callback);
   }
-  using SecureCopyCallback =
-      std::function<orbit_base::Future<ErrorMessageOr<void>>(std::string_view, std::string_view)>;
+  using SecureCopyCallback = std::function<orbit_base::Future<ErrorMessageOr<void>>(
+      std::string_view, std::string_view, orbit_base::StopToken)>;
   void SetSecureCopyCallback(SecureCopyCallback callback) {
     secure_copy_callback_ = std::move(callback);
   }
@@ -545,7 +547,7 @@ class OrbitApp final : public DataViewFactory,
       const orbit_preset_file::PresetFile& preset_file);
 
   [[nodiscard]] orbit_base::Future<ErrorMessageOr<std::filesystem::path>> RetrieveModuleFromRemote(
-      const std::string& module_file_path);
+      const std::string& module_file_path, orbit_base::StopToken stop_token);
 
   void SelectFunctionsFromHashes(const orbit_client_data::ModuleData* module,
                                  absl::Span<const uint64_t> function_hashes);
@@ -627,8 +629,9 @@ class OrbitApp final : public DataViewFactory,
   std::shared_ptr<SamplingReport> sampling_report_;
   std::shared_ptr<SamplingReport> selection_report_ = nullptr;
 
-  absl::flat_hash_map<std::pair<std::string, std::string>,
-                      orbit_base::Future<ErrorMessageOr<std::filesystem::path>>>
+  using ModuleLoadOperation =
+      std::pair<orbit_base::StopSource, orbit_base::Future<ErrorMessageOr<std::filesystem::path>>>;
+  absl::flat_hash_map<std::pair<std::string, std::string>, ModuleLoadOperation>
       modules_currently_loading_;
   absl::flat_hash_map<std::pair<std::string, std::string>, orbit_base::Future<ErrorMessageOr<void>>>
       symbols_currently_loading_;

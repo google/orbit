@@ -173,6 +173,7 @@ target_link_libraries(
          GrpcProtos
          MetricsUploader
          OrbitAccessibility
+         OrbitBase
          OrbitPaths
          PresetFile
          StringManager

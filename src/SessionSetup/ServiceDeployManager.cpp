@@ -24,10 +24,12 @@
 
 #include "ClientFlags/ClientFlags.h"
 #include "MetricsUploader/ScopedMetric.h"
+#include "OrbitBase/File.h"
 #include "OrbitBase/Future.h"
 #include "OrbitBase/Logging.h"
 #include "OrbitBase/Promise.h"
 #include "OrbitBase/Result.h"
+#include "OrbitBase/StopToken.h"
 #include "OrbitSsh/AddrAndPort.h"
 #include "OrbitSshQt/ScopedConnection.h"
 #include "OrbitSshQt/Session.h"
@@ -315,31 +317,32 @@ ErrorMessageOr<void> ServiceDeployManager::CopyOrbitServicePackage() {
 }
 
 orbit_base::Future<ErrorMessageOr<void>> ServiceDeployManager::CopyFileToLocal(
-    std::string source, std::string destination) {
+    std::string source, std::string destination, orbit_base::StopToken stop_token) {
   orbit_base::Promise<ErrorMessageOr<void>> promise;
   auto future = promise.GetFuture();
 
   // This schedules the call of `CopyFileToLocalImpl` on the background thread.
-  QMetaObject::invokeMethod(this,
-                            [this, source = std::move(source), destination = std::move(destination),
-                             promise = std::move(promise)]() mutable {
-                              CopyFileToLocalImpl(std::move(promise), source, destination);
-                            });
+  QMetaObject::invokeMethod(
+      this, [this, source = std::move(source), destination = std::move(destination),
+             promise = std::move(promise), stop_token = std::move(stop_token)]() mutable {
+        CopyFileToLocalImpl(std::move(promise), source, destination, std::move(stop_token));
+      });
 
   return future;
 }
 
 void ServiceDeployManager::CopyFileToLocalImpl(orbit_base::Promise<ErrorMessageOr<void>> promise,
                                                std::string_view source,
-                                               std::string_view destination) {
+                                               std::string_view destination,
+                                               orbit_base::StopToken stop_token) {
   ORBIT_CHECK(QThread::currentThread() == thread());
 
   if (copy_file_operation_in_progress_) {
-    waiting_copy_operations_.emplace_back([this, promise = std::move(promise),
-                                           source = std::string{source},
-                                           destination = std::string{destination}]() mutable {
-      CopyFileToLocalImpl(std::move(promise), source, destination);
-    });
+    waiting_copy_operations_.emplace_back(
+        [this, promise = std::move(promise), source = std::string{source},
+         destination = std::string{destination}, stop_token = std::move(stop_token)]() mutable {
+          CopyFileToLocalImpl(std::move(promise), source, destination, std::move(stop_token));
+        });
     return;
   }
 
@@ -348,8 +351,8 @@ void ServiceDeployManager::CopyFileToLocalImpl(orbit_base::Promise<ErrorMessageO
   ORBIT_LOG("Copying remote \"%s\" to local \"%s\"", source, destination);
 
   // NOLINTNEXTLINE - Unfortunately we have to fall back to a raw `new` here.
-  auto operation =
-      new orbit_ssh_qt::SftpCopyToLocalOperation{&session_.value(), sftp_channel_.get()};
+  auto operation = new orbit_ssh_qt::SftpCopyToLocalOperation{
+      &session_.value(), sftp_channel_.get(), std::move(stop_token)};
 
   // Making operation a child of the ServiceDeployManager ensures it will be deleted at the latest
   // when ServiceDeployManager gets deleted. That's important when the copy procedure gets aborted

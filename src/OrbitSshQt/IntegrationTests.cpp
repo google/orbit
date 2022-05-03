@@ -26,6 +26,7 @@
 
 #include "OrbitBase/Logging.h"
 #include "OrbitBase/Result.h"
+#include "OrbitBase/StopSource.h"
 #include "OrbitSsh/Context.h"
 #include "OrbitSsh/Credentials.h"
 #include "OrbitSshQt/Session.h"
@@ -237,7 +238,9 @@ TEST(OrbitSshQtTests, CopyToLocalTest) {
 
   orbit_ssh_qt::SftpChannel channel{&session};
 
-  orbit_ssh_qt::SftpCopyToLocalOperation sftp_copy_to_local{&session, &channel};
+  orbit_base::StopSource stop_source;
+  orbit_ssh_qt::SftpCopyToLocalOperation sftp_copy_to_local{&session, &channel,
+                                                            stop_source.GetStopToken()};
 
   session.ConnectToServer(creds);
   ORBIT_LOG("connect to server");
