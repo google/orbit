@@ -69,7 +69,6 @@ class CaptureWindow : public GlCanvas {
 
   virtual void ToggleRecording();
 
-
   void RenderHelpUi();
   void RenderSelectionOverlay();
   void SelectTimer(const orbit_client_protos::TimerInfo* timer_info);
