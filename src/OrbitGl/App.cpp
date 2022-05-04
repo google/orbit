@@ -1653,10 +1653,15 @@ void OrbitApp::SendErrorToUi(const std::string& title, const std::string& text,
 }
 
 orbit_base::Future<ErrorMessageOr<std::filesystem::path>> OrbitApp::RetrieveModuleFromRemote(
-    const std::string& module_file_path, orbit_base::StopToken stop_token) {
+    const std::string& module_file_path) {
   ORBIT_SCOPE_FUNCTION;
   ScopedStatus scoped_status = CreateScopedStatus(absl::StrFormat(
       "Searching for symbols on remote instance for module \"%s\"...", module_file_path));
+
+  const auto it = symbol_files_currently_downloading_.find(module_file_path);
+  if (it != symbol_files_currently_downloading_.end()) {
+    return it->second.future;
+  }
 
   orbit_base::Future<ErrorMessageOr<std::string>> check_file_on_remote =
       thread_pool_->Schedule([process_manager = GetProcessManager(), module_file_path]() {
@@ -1667,9 +1672,11 @@ orbit_base::Future<ErrorMessageOr<std::filesystem::path>> OrbitApp::RetrieveModu
                                                   {absl::GetFlag(FLAGS_instance_symbols_folder)});
       });
 
+  orbit_base::StopSource stop_source{};
+
   auto download_file = [this, module_file_path, scoped_status = std::move(scoped_status),
                         stop_token =
-                            std::move(stop_token)](ErrorMessageOr<std::string> result) mutable
+                            stop_source.GetStopToken()](ErrorMessageOr<std::string> result) mutable
       -> orbit_base::Future<ErrorMessageOr<std::filesystem::path>> {
     if (result.has_error()) return result.error();
 
@@ -1706,7 +1713,18 @@ orbit_base::Future<ErrorMessageOr<std::filesystem::path>> OrbitApp::RetrieveModu
         });
   };
 
-  return UnwrapFuture(check_file_on_remote.Then(main_thread_executor_, std::move(download_file)));
+  Future<ErrorMessageOr<std::filesystem::path>> chained_result_future =
+      UnwrapFuture(check_file_on_remote.Then(main_thread_executor_, std::move(download_file)));
+
+  symbol_files_currently_downloading_.emplace(
+      module_file_path,
+      OrbitApp::ModuleLoadOperation{std::move(stop_source), chained_result_future});
+  chained_result_future.Then(main_thread_executor_,
+                             [this, module_file_path](const auto& /*result*/) {
+                               symbol_files_currently_downloading_.erase(module_file_path);
+                             });
+
+  return chained_result_future;
 }
 
 orbit_base::Future<void> OrbitApp::RetrieveModulesAndLoadSymbols(
@@ -1814,7 +1832,7 @@ orbit_base::Future<ErrorMessageOr<std::filesystem::path>> OrbitApp::RetrieveModu
 
   const auto it = symbol_files_currently_retrieved_.find(module_id);
   if (it != symbol_files_currently_retrieved_.end()) {
-    return it->second.future;
+    return it->second;
   }
 
   Future<ErrorMessageOr<std::filesystem::path>> local_symbols_future =
@@ -1826,17 +1844,14 @@ orbit_base::Future<ErrorMessageOr<std::filesystem::path>> OrbitApp::RetrieveModu
     return local_symbols_future;
   }
 
-  orbit_base::StopSource stop_source{};
-
   Future<ErrorMessageOr<std::filesystem::path>> final_result =
       orbit_base::UnwrapFuture(local_symbols_future.Then(
           main_thread_executor_,
-          [this, module_id, stop_token = stop_source.GetStopToken()](
-              ErrorMessageOr<std::filesystem::path> local_symbols_path)
+          [this, module_id](ErrorMessageOr<std::filesystem::path> local_symbols_path)
               -> Future<ErrorMessageOr<std::filesystem::path>> {
             if (local_symbols_path.has_value()) return local_symbols_path;
 
-            return RetrieveModuleFromRemote(module_id.first, std::move(stop_token))
+            return RetrieveModuleFromRemote(module_id.first)
                 .Then(main_thread_executor_,
                       [module_id, local_error_message = local_symbols_path.error().message()](
                           const ErrorMessageOr<std::filesystem::path>& remote_result)
@@ -1851,8 +1866,7 @@ orbit_base::Future<ErrorMessageOr<std::filesystem::path>> OrbitApp::RetrieveModu
                       });
           }));
 
-  symbol_files_currently_retrieved_.emplace(
-      module_id, ModuleLoadOperation{std::move(stop_source), final_result});
+  symbol_files_currently_retrieved_.emplace(module_id, final_result);
   final_result.Then(main_thread_executor_, [this, module_id](const auto& /*result*/) {
     symbol_files_currently_retrieved_.erase(module_id);
   });
