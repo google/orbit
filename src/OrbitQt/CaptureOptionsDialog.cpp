@@ -33,16 +33,16 @@ CaptureOptionsDialog::CaptureOptionsDialog(QWidget* parent)
   QObject::connect(ui_->framePointerUnwindingRadioButton, qOverload<bool>(&QRadioButton::toggled),
                    ui_->maxCopyRawStackSizeWidget,
                    [this](bool checked) { ui_->maxCopyRawStackSizeWidget->setEnabled(checked); });
-  QObject::connect(ui_->collectMemoryInfoCheckBox, qOverload<bool>(&QCheckBox::toggled),
-                   ui_->memoryHorizontalLayout, [this](bool checked) {
+  QObject::connect(ui_->collectMemoryInfoCheckBox, qOverload<bool>(&QCheckBox::toggled), this,
+                   [this](bool checked) {
                      ui_->memorySamplingPeriodMsLabel->setEnabled(checked);
                      ui_->memorySamplingPeriodMsLineEdit->setEnabled(checked);
                      ui_->memoryWarningThresholdKbLabel->setEnabled(checked);
                      ui_->memoryWarningThresholdKbLineEdit->setEnabled(checked);
                    });
 
-  QObject::connect(ui_->samplingCheckBox, qOverload<bool>(&QCheckBox::toggled),
-                   ui_->samplingPeriodMsHorizontalLayout, [this](bool checked) {
+  QObject::connect(ui_->samplingCheckBox, qOverload<bool>(&QCheckBox::toggled), this,
+                   [this](bool checked) {
                      ui_->samplingPeriodMsLabel->setEnabled(checked);
                      ui_->samplingPeriodMsDoubleSpinBox->setEnabled(checked);
                      ui_->unwindingMethodGroupBox->setEnabled(checked);
@@ -52,23 +52,8 @@ CaptureOptionsDialog::CaptureOptionsDialog(QWidget* parent)
   ui_->samplingPeriodMsDoubleSpinBox->setEnabled(ui_->samplingCheckBox->isChecked());
   ui_->unwindingMethodGroupBox->setEnabled(ui_->samplingCheckBox->isChecked());
 
-  ui_->framePointerUnwindingRadioButton->setToolTip(
-      "Frame-pointer unwinding has lower overhead, but requires all\n"
-      "binaries to be compiled with '-fno-omit-frame-pointer'.\n"
-      "Orbit also supports compiling with '-momit-leaf-frame-pointer'\n"
-      "in addition to '-fno-omit-frame-pointer', but this is optional.\n\n"
-      "Callstack samples containing functions not compiled with frame\n"
-      "pointers will result in unwinding errors.");
-
   ui_->maxCopyRawStackSizeSpinBox->setValue(kMaxCopyRawStackSizeDefaultValue);
   ui_->maxCopyRawStackSizeWidget->setEnabled(ui_->framePointerUnwindingRadioButton->isChecked());
-  ui_->maxCopyRawStackSizeLabel->setToolTip(QString::fromStdString(
-      "To improve performance, we don't require to preserve the frame pointer register on leaf\n"
-      "functions ('-momit-leaf-frame-pointer'). In order to recover the frame corresponding to "
-      "the\n"
-      "caller of a leaf function, we need to copy a portion of the raw stack and DWARF-unwind the\n"
-      "first frame. Specify how much data Orbit should copy. A larger value reduces the number of\n"
-      "unwind errors, but increases the performance overhead of sampling."));
 
   ui_->localMarkerDepthLineEdit->setValidator(&uint64_validator_);
 
@@ -87,7 +72,7 @@ CaptureOptionsDialog::CaptureOptionsDialog(QWidget* parent)
   if (!absl::GetFlag(FLAGS_devmode)) {
     // TODO(b/198748597): Don't hide samplingCheckBox once disabling sampling completely is exposed.
     ui_->samplingCheckBox->hide();
-    ui_->unwindingMethodGroupBox->hide();
+    //ui_->unwindingMethodGroupBox->hide();
     ui_->schedulerCheckBox->hide();
     ui_->devModeGroupBox->hide();
   }
