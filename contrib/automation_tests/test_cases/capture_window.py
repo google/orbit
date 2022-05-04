@@ -308,7 +308,8 @@ class CaptureE2ETestCaseBase(E2ETestCase):
         self.find_control("TabItem", "Capture").click_input()
 
     def _set_capture_options(self, collect_thread_states: bool, collect_system_memory_usage: bool,
-                             user_space_instrumentation: bool, manual_instrumentation: bool):
+                             user_space_instrumentation: bool, manual_instrumentation: bool,
+                             frame_pointer_unwinding: bool, sampling_period_ms: float):
         capture_tab = self.find_control('Group', "CaptureTab")
 
         logging.info('Opening "Capture Options" dialog')
@@ -331,6 +332,38 @@ class CaptureE2ETestCaseBase(E2ETestCase):
         if collect_system_memory_usage_checkbox.get_toggle_state() != collect_system_memory_usage:
             logging.info('Toggling "Collect memory usage and page faults information" checkbox')
             collect_system_memory_usage_checkbox.click_input()
+
+        logging.info('Setting sampling period to {}.'.format(sampling_period_ms))
+        sampling_period_spin_box = self.find_control('Spinner', 'SamplingPeriodMsDoubleSpinBox',
+                                                     parent=capture_options_dialog)
+        sampling_period_spin_box.set_focus()
+        sampling_period_ms_str = str(sampling_period_ms)
+        current_sampling_period_ms_str = sampling_period_spin_box.texts()[0]
+
+        # Check if Qt is expecting german floating points
+        if ',' in current_sampling_period_ms_str:
+            sampling_period_ms_str = sampling_period_ms_str.replace('.', ',')
+
+        # Select all
+        send_keys("^a")
+        send_keys(sampling_period_ms_str)
+
+        if sampling_period_spin_box.texts()[0] != sampling_period_ms_str:
+            raise RuntimeError(
+                'Setting sampling period failed. Expected "{}", but got "{}'.format(sampling_period_ms_str,
+                                                                                    sampling_period_spin_box.texts()[
+                                                                                        0]))
+
+        if frame_pointer_unwinding:
+            logging.info('Setting sampling method to "Frame pointers".')
+            frame_pointer_unwinding_radio_button = self.find_control('RadioButton', 'FramePointerRadioButton',
+                                                                     parent=capture_options_dialog)
+            frame_pointer_unwinding_radio_button.click_input()
+        else:
+            logging.info('Setting sampling method to "DWARF".')
+            dwarf_unwinding_radio_button = self.find_control('RadioButton', 'DWARFRadioButton',
+                                                             parent=capture_options_dialog)
+            dwarf_unwinding_radio_button.click_input()
 
         if user_space_instrumentation:
             logging.info('Setting dynamic instrumentation method to "Orbit".')
@@ -355,11 +388,15 @@ class CaptureE2ETestCaseBase(E2ETestCase):
 
     def _set_up_and_start_capture(self, collect_thread_states: bool,
                                   collect_system_memory_usage: bool,
-                                  user_space_instrumentation: bool, manual_instrumentation: bool,
+                                  user_space_instrumentation: bool,
+                                  manual_instrumentation: bool,
+                                  frame_pointer_unwinding: bool,
+                                  sampling_period_ms: float,
                                   toggle_capture_button):
         self._show_capture_window()
         self._set_capture_options(collect_thread_states, collect_system_memory_usage,
-                                  user_space_instrumentation, manual_instrumentation)
+                                  user_space_instrumentation, manual_instrumentation, frame_pointer_unwinding,
+                                  sampling_period_ms)
         logging.info('Starting to capture')
         toggle_capture_button.click_input()
 
@@ -393,11 +430,14 @@ class Capture(CaptureE2ETestCaseBase):
                  collect_thread_states: bool = False,
                  collect_system_memory_usage: bool = False,
                  user_space_instrumentation: bool = False,
-                 manual_instrumentation: bool = False):
+                 manual_instrumentation: bool = False,
+                 frame_pointer_unwinding: bool = False,
+                 sampling_period_ms: float = 1.0):
         capture_tab = self.find_control('Group', "CaptureTab")
         toggle_capture_button = self.find_control('Button', 'Toggle Capture', parent=capture_tab)
         self._set_up_and_start_capture(collect_thread_states, collect_system_memory_usage,
                                        user_space_instrumentation, manual_instrumentation,
+                                       frame_pointer_unwinding, sampling_period_ms,
                                        toggle_capture_button)
         logging.info('Capturing for {} seconds'.format(length_in_seconds))
         time.sleep(length_in_seconds)
