@@ -140,7 +140,7 @@ TEST_F(ElfTest, elf_invalid) {
 
   bool finished;
   bool is_signal_frame;
-  ASSERT_FALSE(elf.Step(0, nullptr, nullptr, &finished, &is_signal_frame));
+  ASSERT_FALSE(elf.Step(0, 0, nullptr, nullptr, &finished, &is_signal_frame));
   EXPECT_EQ(ERROR_INVALID_ELF, elf.GetLastErrorCode());
 }
 
@@ -374,7 +374,7 @@ TEST_F(ElfTest, step_in_interface) {
   EXPECT_CALL(*interface, Step(0x1000, &regs, &process_memory, &finished, &is_signal_frame))
       .WillOnce(::testing::Return(true));
 
-  ASSERT_TRUE(elf.Step(0x1000, &regs, &process_memory, &finished, &is_signal_frame));
+  ASSERT_TRUE(elf.Step(0x1000, 0, &regs, &process_memory, &finished, &is_signal_frame));
 }
 
 TEST_F(ElfTest, get_global_invalid_elf) {

@@ -234,7 +234,7 @@ void Unwinder::Unwind(const std::vector<std::string>* initial_map_names_to_skip,
           if (object->StepIfSignalHandler(rel_pc, regs_, process_memory_.get())) {
             stepped = true;
             is_signal_frame = true;
-          } else if (object->Step(step_pc, regs_, process_memory_.get(), &finished,
+          } else if (object->Step(step_pc, pc_adjustment, regs_, process_memory_.get(), &finished,
                                   &is_signal_frame)) {
             stepped = true;
           }
