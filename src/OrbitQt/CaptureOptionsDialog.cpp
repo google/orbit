@@ -72,7 +72,7 @@ CaptureOptionsDialog::CaptureOptionsDialog(QWidget* parent)
   if (!absl::GetFlag(FLAGS_devmode)) {
     // TODO(b/198748597): Don't hide samplingCheckBox once disabling sampling completely is exposed.
     ui_->samplingCheckBox->hide();
-    // ui_->unwindingMethodGroupBox->hide();
+    ui_->unwindingMethodGroupBox->hide();
     ui_->schedulerCheckBox->hide();
     ui_->devModeGroupBox->hide();
   }
