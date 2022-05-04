@@ -1812,8 +1812,8 @@ orbit_base::Future<ErrorMessageOr<std::filesystem::path>> OrbitApp::RetrieveModu
 
   auto module_id = std::make_pair(module_path, build_id);
 
-  const auto it = modules_currently_loading_.find(module_id);
-  if (it != modules_currently_loading_.end()) {
+  const auto it = symbol_files_currently_retrieved_.find(module_id);
+  if (it != symbol_files_currently_retrieved_.end()) {
     return it->second.future;
   }
 
@@ -1835,7 +1835,7 @@ orbit_base::Future<ErrorMessageOr<std::filesystem::path>> OrbitApp::RetrieveModu
               ErrorMessageOr<std::filesystem::path> local_symbols_path)
               -> Future<ErrorMessageOr<std::filesystem::path>> {
             if (local_symbols_path.has_value()) {
-              modules_currently_loading_.erase(module_id);
+              symbol_files_currently_retrieved_.erase(module_id);
               return local_symbols_path;
             }
 
@@ -1844,7 +1844,7 @@ orbit_base::Future<ErrorMessageOr<std::filesystem::path>> OrbitApp::RetrieveModu
                       [this, module_id, local_error_message = local_symbols_path.error().message()](
                           const ErrorMessageOr<std::filesystem::path>& remote_result)
                           -> ErrorMessageOr<std::filesystem::path> {
-                        modules_currently_loading_.erase(module_id);
+                        symbol_files_currently_retrieved_.erase(module_id);
 
                         // If remote loading fails as well, we combine the error messages.
                         if (remote_result.has_value()) return remote_result;
@@ -1856,8 +1856,8 @@ orbit_base::Future<ErrorMessageOr<std::filesystem::path>> OrbitApp::RetrieveModu
                       });
           }));
 
-  modules_currently_loading_.emplace(module_id,
-                                     ModuleLoadOperation{std::move(stop_source), final_result});
+  symbol_files_currently_retrieved_.emplace(
+      module_id, ModuleLoadOperation{std::move(stop_source), final_result});
   return final_result;
 }
 

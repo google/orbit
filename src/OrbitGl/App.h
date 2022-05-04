@@ -629,7 +629,7 @@ class OrbitApp final : public DataViewFactory,
   };
   // ONLY access this from the main thread
   absl::flat_hash_map<std::pair<std::string, std::string>, ModuleLoadOperation>
-      modules_currently_loading_;
+      symbol_files_currently_retrieved_;
   // ONLY access this from the main thread
   absl::flat_hash_map<std::pair<std::string, std::string>, orbit_base::Future<ErrorMessageOr<void>>>
       symbols_currently_loading_;
