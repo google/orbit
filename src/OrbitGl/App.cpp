@@ -1447,8 +1447,7 @@ void OrbitApp::StartCapture() {
   options.dynamic_instrumentation_method = data_manager_->dynamic_instrumentation_method();
   options.samples_per_second = data_manager_->samples_per_second();
   options.stack_dump_size = data_manager_->stack_dump_size();
-  options.unwinding_method =
-      IsDevMode() ? data_manager_->unwinding_method() : CaptureOptions::kDwarf;
+  options.unwinding_method = data_manager_->unwinding_method();
   options.max_local_marker_depth_per_command_buffer =
       data_manager_->max_local_marker_depth_per_command_buffer();
 
@@ -1721,7 +1720,7 @@ orbit_base::Future<void> OrbitApp::RetrieveModulesAndLoadSymbols(
   for (const auto& module : modules_set) {
     // Explicitely do not handle the result.
     Future<void> future = RetrieveModuleAndLoadSymbolsAndHandleError(module).Then(
-        &immediate_executor, [](const SymbolLoadingAndErrorHandlingResult & /*result*/) -> void {});
+        &immediate_executor, [](const SymbolLoadingAndErrorHandlingResult& /*result*/) -> void {});
     futures.emplace_back(std::move(future));
   }
 

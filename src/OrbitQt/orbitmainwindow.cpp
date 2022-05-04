@@ -1116,32 +1116,27 @@ void OrbitMainWindow::LoadCaptureOptionsIntoApp() {
     app_->SetSamplesPerSecond(0.0);
   }
 
-  if (!app_->IsDevMode()) {
-    app_->SetUnwindingMethod(orbit_qt::CaptureOptionsDialog::kCallstackUnwindingMethodDefaultValue);
-    app_->SetStackDumpSize(std::numeric_limits<uint16_t>::max());
-  } else {
-    UnwindingMethod unwinding_method = static_cast<UnwindingMethod>(
-        settings
-            .value(kCallstackUnwindingMethodSettingKey,
-                   static_cast<int>(
-                       orbit_qt::CaptureOptionsDialog::kCallstackUnwindingMethodDefaultValue))
-            .toInt());
-    if (unwinding_method == CaptureOptions::kUndefined) {
-      ORBIT_ERROR("Unknown unwinding method specified; Using default unwinding method");
-      unwinding_method = orbit_qt::CaptureOptionsDialog::kCallstackUnwindingMethodDefaultValue;
-    }
-    app_->SetUnwindingMethod(unwinding_method);
+  UnwindingMethod unwinding_method = static_cast<UnwindingMethod>(
+      settings
+          .value(kCallstackUnwindingMethodSettingKey,
+                 static_cast<int>(
+                     orbit_qt::CaptureOptionsDialog::kCallstackUnwindingMethodDefaultValue))
+          .toInt());
+  if (unwinding_method == CaptureOptions::kUndefined) {
+    ORBIT_ERROR("Unknown unwinding method specified; Using default unwinding method");
+    unwinding_method = orbit_qt::CaptureOptionsDialog::kCallstackUnwindingMethodDefaultValue;
+  }
+  app_->SetUnwindingMethod(unwinding_method);
 
-    if (unwinding_method == CaptureOptions::kFramePointers) {
-      uint16_t stack_dump_size = static_cast<uint16_t>(
-          settings
-              .value(kMaxCopyRawStackSizeSettingKey,
-                     orbit_qt::CaptureOptionsDialog::kMaxCopyRawStackSizeDefaultValue)
-              .toUInt());
-      app_->SetStackDumpSize(stack_dump_size);
-    } else {
-      app_->SetStackDumpSize(std::numeric_limits<uint16_t>::max());
-    }
+  if (unwinding_method == CaptureOptions::kFramePointers) {
+    uint16_t stack_dump_size = static_cast<uint16_t>(
+        settings
+            .value(kMaxCopyRawStackSizeSettingKey,
+                   orbit_qt::CaptureOptionsDialog::kMaxCopyRawStackSizeDefaultValue)
+            .toUInt());
+    app_->SetStackDumpSize(stack_dump_size);
+  } else {
+    app_->SetStackDumpSize(std::numeric_limits<uint16_t>::max());
   }
 
   app_->SetCollectSchedulerInfo(settings.value(kCollectSchedulerInfoSettingKey, true).toBool());
