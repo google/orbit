@@ -19,6 +19,7 @@
 #include "ClientProtos/capture_data.pb.h"
 #include "DataViews/AppInterface.h"
 #include "DataViews/PresetLoadState.h"
+#include "DataViews/SymbolLoadingState.h"
 #include "OrbitBase/Future.h"
 #include "PresetFile/PresetFile.h"
 
@@ -107,6 +108,11 @@ class MockAppInterface : public AppInterface {
 
   MOCK_METHOD(uint64_t, ProvideScopeId, (const orbit_client_protos::TimerInfo& timer_info),
               (const));
+
+  MOCK_METHOD(bool, IsModuleDownloading, (const orbit_client_data::ModuleData* module),
+              (const, override));
+  MOCK_METHOD(SymbolLoadingState, GetSymbolLoadingStateForModule,
+              (const orbit_client_data::ModuleData* module), (const, override));
 };
 
 }  // namespace orbit_data_views
