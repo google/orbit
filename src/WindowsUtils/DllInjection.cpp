@@ -89,11 +89,12 @@ ErrorMessageOr<Module> FindModule(uint32_t pid, std::string_view module_name) {
 }
 
 ErrorMessageOr<Module> FindModuleWithRetries(uint32_t pid, std::string_view module_name,
-                                             uint32_t num_retries) {
+                                             uint32_t num_retries,
+                                             uint64_t time_between_retries_ms) {
   while (true) {
     ErrorMessageOr<Module> result = FindModule(pid, module_name);
     if (result.has_value() || num_retries-- <= 0) return result;
-    std::this_thread::sleep_for(std::chrono::milliseconds(250));
+    std::this_thread::sleep_for(std::chrono::milliseconds(time_between_retries_ms));
   }
 }
 
@@ -115,7 +116,9 @@ ErrorMessageOr<void> InjectDllInternal(uint32_t pid, const std::filesystem::path
 
   // Find injected dll in target process. Allow for retries as the loading might take some time.
   constexpr uint32_t kNumRetries = 10;
-  OUTCOME_TRY(Module module, FindModuleWithRetries(pid, dll_path.filename().string(), kNumRetries));
+  constexpr uint64_t kTimeBetweenRetriesMs = 250;
+  OUTCOME_TRY(Module module, FindModuleWithRetries(pid, dll_path.filename().string(), kNumRetries,
+                                                   kTimeBetweenRetriesMs));
 
   ORBIT_LOG("Module \"%s\" successfully injected in process %u", dll_name, pid);
   return outcome::success();
