@@ -1739,7 +1739,7 @@ orbit_base::Future<void> OrbitApp::RetrieveModulesAndLoadSymbols(
   for (const auto& module : modules_set) {
     // Explicitely do not handle the result.
     Future<void> future = RetrieveModuleAndLoadSymbolsAndHandleError(module).Then(
-        &immediate_executor, [](const SymbolLoadingAndErrorHandlingResult& /*result*/) -> void {});
+        &immediate_executor, [](const SymbolLoadingAndErrorHandlingResult & /*result*/) -> void {});
     futures.emplace_back(std::move(future));
   }
 
