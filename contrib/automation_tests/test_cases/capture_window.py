@@ -311,7 +311,7 @@ class CaptureE2ETestCaseBase(E2ETestCase):
         capture_options_dialog = self.find_control('Window', 'Capture Options')
 
         collect_thread_states_checkbox = self.find_control('CheckBox',
-                                                           'Collect thread states',
+                                                           'CollectThreadStatesCheckBox',
                                                            parent=capture_options_dialog)
         if collect_thread_states_checkbox.get_toggle_state() != collect_thread_states:
             logging.info('Toggling "Collect thread states" checkbox')
@@ -319,27 +319,25 @@ class CaptureE2ETestCaseBase(E2ETestCase):
 
         collect_system_memory_usage_checkbox = self.find_control(
             'CheckBox',
-            'Collect memory usage and page faults information',
+            'CollectMemoryInfoCheckBox',
             parent=capture_options_dialog)
         if collect_system_memory_usage_checkbox.get_toggle_state() != collect_system_memory_usage:
             logging.info('Toggling "Collect memory usage and page faults information" checkbox')
             collect_system_memory_usage_checkbox.click_input()
 
-        # Choosing the combo box entry with the 'select' function does not work reliably. So we click into the control
-        # to set the keyboard focus ('set_focus' does not work). Then we use the up, down and enter keys to select the
-        # entry.
-        dynamic_instrumentation_method_combobox = self.find_control(
-            'ComboBox', 'DynamicInstrumentationMethodComboBox', parent=capture_options_dialog)
-        dynamic_instrumentation_method_combobox.click_input()
         if user_space_instrumentation:
             logging.info('Setting dynamic instrumentation method to "Orbit".')
-            keyboard.send_keys('{DOWN}{ENTER}')
+            user_space_radio_button = self.find_control('RadioButton', 'UserSpaceInstrumentationRadioButton',
+                                                        parent=capture_options_dialog)
+            user_space_radio_button.click_input()
         else:
             logging.info('Setting dynamic instrumentation method to "Kernel (Uprobes)".')
-            keyboard.send_keys('{UP}{ENTER}')
+            uprobes_radio_button = self.find_control('RadioButton', 'UprobesRadioButton',
+                                                     parent=capture_options_dialog)
+            uprobes_radio_button.click_input()
 
         manual_instrumentation_checkbox = self.find_control('CheckBox',
-                                                            'Enable Orbit Api in target',
+                                                            'ApiCheckBox',
                                                             parent=capture_options_dialog)
         if manual_instrumentation_checkbox.get_toggle_state() != manual_instrumentation:
             logging.info('Toggling "Enable Orbit Api in target" checkbox')
