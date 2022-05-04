@@ -83,6 +83,12 @@
          </property>
          <item>
           <widget class="QFrame" name="localFrame">
+           <property name="sizePolicy">
+            <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+             <horstretch>0</horstretch>
+             <verstretch>0</verstretch>
+            </sizepolicy>
+           </property>
            <property name="visible">
             <bool>true</bool>
            </property>
