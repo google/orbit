@@ -288,7 +288,7 @@ p, li { white-space: pre-wrap; }
        <item>
         <widget class="QGroupBox" name="dynamicInstrumentationGroupBox">
          <property name="toolTip">
-          <string>Method 'Orbit' has lower overhead but is still experimental.</string>
+          <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Method &lt;span style=&quot; font-weight:600;&quot;&gt;Orbit&lt;/span&gt; has lower overhead but is still experimental.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
          </property>
          <property name="title">
           <string>Dynamic instrumentation</string>
