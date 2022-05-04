@@ -23,6 +23,7 @@ class ProcessLauncherWidget : public QWidget {
 
  public:
   explicit ProcessLauncherWidget(QWidget* parent = nullptr);
+  ~ProcessLauncherWidget() override;
   void SetProcessManager(orbit_client_services::ProcessManager* process_manager);
 
  signals:

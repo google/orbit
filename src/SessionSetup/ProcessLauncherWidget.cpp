@@ -22,6 +22,8 @@ ProcessLauncherWidget::ProcessLauncherWidget(QWidget* parent)
   ui_->gridLayout_2->setColumnStretch(0, 90);
 }
 
+ProcessLauncherWidget ::~ProcessLauncherWidget() {}
+
 void ProcessLauncherWidget::on_BrowseProcessButton_clicked() {
   QString file = QFileDialog::getOpenFileName(this, "Select an executable file...");
   if (!file.isEmpty()) {
