@@ -1834,18 +1834,13 @@ orbit_base::Future<ErrorMessageOr<std::filesystem::path>> OrbitApp::RetrieveModu
           [this, module_id, stop_token = stop_source.GetStopToken()](
               ErrorMessageOr<std::filesystem::path> local_symbols_path)
               -> Future<ErrorMessageOr<std::filesystem::path>> {
-            if (local_symbols_path.has_value()) {
-              symbol_files_currently_retrieved_.erase(module_id);
-              return local_symbols_path;
-            }
+            if (local_symbols_path.has_value()) return local_symbols_path;
 
             return RetrieveModuleFromRemote(module_id.first, std::move(stop_token))
                 .Then(main_thread_executor_,
-                      [this, module_id, local_error_message = local_symbols_path.error().message()](
+                      [module_id, local_error_message = local_symbols_path.error().message()](
                           const ErrorMessageOr<std::filesystem::path>& remote_result)
                           -> ErrorMessageOr<std::filesystem::path> {
-                        symbol_files_currently_retrieved_.erase(module_id);
-
                         // If remote loading fails as well, we combine the error messages.
                         if (remote_result.has_value()) return remote_result;
                         return {ErrorMessage{
@@ -1858,6 +1853,10 @@ orbit_base::Future<ErrorMessageOr<std::filesystem::path>> OrbitApp::RetrieveModu
 
   symbol_files_currently_retrieved_.emplace(
       module_id, ModuleLoadOperation{std::move(stop_source), final_result});
+  final_result.Then(main_thread_executor_, [this, module_id](const auto& /*result*/) {
+    symbol_files_currently_retrieved_.erase(module_id);
+  });
+
   return final_result;
 }
 
