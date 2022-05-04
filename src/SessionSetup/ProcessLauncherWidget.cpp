@@ -24,36 +24,16 @@ ProcessLauncherWidget::ProcessLauncherWidget(QWidget* parent)
 
 ProcessLauncherWidget ::~ProcessLauncherWidget() {}
 
+void ProcessLauncherWidget::SetProcessManager(
+    orbit_client_services::ProcessManager* process_manager) {
+  process_manager_ = process_manager;
+}
+
 void ProcessLauncherWidget::on_BrowseProcessButton_clicked() {
   QString file = QFileDialog::getOpenFileName(this, "Select an executable file...");
   if (!file.isEmpty()) {
     ui_->ProcessComboBox->lineEdit()->setText(file);
   }
-}
-
-void ProcessLauncherWidget::on_LaunchButton_clicked() {
-  // TODO(b/225906734): Windows Process Launcher
-  // The code below is for reference. It shows how a subsequent PR will trigger a process launch and
-  // set the error label on failure.
-  //
-  // ORBIT_CHECK(process_manager_ != nullptr);
-  // QString process = ui->ProcessComboBox->lineEdit()->text();
-  // QString working_dir = ui->WorkingDirComboBox->lineEdit()->text();
-  // QString args = ui->ArgumentsComboBox->lineEdit()->text();
-  // bool pause_on_entry_point = ui->PauseAtEntryPoingCheckBox->isChecked();
-  //
-  // orbit_grpc_protos::ProcessToLaunch process_to_launch;
-  // process_to_launch.set_executable_path(process.toStdString());
-  // process_to_launch.set_working_directory(working_dir.toStdString());
-  // process_to_launch.set_arguments(args.toStdString());
-  // process_to_launch.set_spin_at_entry_point(pause_on_entry_point);
-  // auto result = process_manager_->LaunchProcess(process_to_launch);
-  //  if (result.has_error()) {
-  //    ui->ErrorLabel->setText(result.error().message().c_str());
-  // }
-  // else {
-  //  emit ProcessLaunched(result.value());
-  // }
 }
 
 void ProcessLauncherWidget::on_BrowseWorkingDirButton_clicked() {
@@ -63,9 +43,8 @@ void ProcessLauncherWidget::on_BrowseWorkingDirButton_clicked() {
   }
 }
 
-void ProcessLauncherWidget::SetProcessManager(
-    orbit_client_services::ProcessManager* process_manager) {
-  process_manager_ = process_manager;
+void ProcessLauncherWidget::on_LaunchButton_clicked() {
+  // TODO(b/225906734): Windows Process Launcher
 }
 
 }  // namespace orbit_session_setup
