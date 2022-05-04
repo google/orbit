@@ -40,34 +40,6 @@ using orbit_user_space_instrumentation::ExecuteInProcessWithMicrosoftCallingConv
 
 namespace {
 
-ErrorMessageOr<absl::flat_hash_map<std::string, ModuleInfo>> GetModulesByPathForPid(int32_t pid) {
-  OUTCOME_TRY(auto&& module_infos, orbit_object_utils::ReadModules(pid));
-  absl::flat_hash_map<std::string, ModuleInfo> result;
-  for (ModuleInfo& module_info : module_infos) {
-    result.emplace(module_info.file_path(), std::move(module_info));
-  }
-  return result;
-}
-
-[[nodiscard]] const ModuleInfo* FindModuleInfoForApiFunction(
-    const ApiFunction& api_function,
-    const absl::flat_hash_map<std::string, ModuleInfo>& modules_by_path) {
-  auto module_info_it = modules_by_path.find(api_function.module_path());
-  if (module_info_it == modules_by_path.end()) {
-    ORBIT_ERROR("Could not find module \"%s\" when initializing Orbit Api.",
-                api_function.module_path());
-    return nullptr;
-  }
-  const ModuleInfo& module_info = module_info_it->second;
-  if (module_info.build_id() != api_function.module_build_id()) {
-    ORBIT_ERROR("Build-id mismatch for \"%s\" when initializing Orbit Api",
-                api_function.module_path());
-    return nullptr;
-  }
-
-  return &module_info;
-}
-
 ErrorMessageOr<std::string> GetLibOrbitPath() {
   // When packaged, liborbit.so is found alongside OrbitService.  In development, it is found in
   // "../lib", relative to OrbitService.
@@ -117,23 +89,15 @@ ErrorMessageOr<void> SetApiEnabledInTracee(const CaptureOptions& capture_options
               DlsymInTracee(pid, handle, kSetEnabledWineFunction));
 
   // Initialize all api function tables.
-  OUTCOME_TRY(auto&& modules_by_path, GetModulesByPathForPid(pid));
   for (const ApiFunction& api_function : capture_options.api_functions()) {
     // Filter api functions.
     ORBIT_CHECK(absl::StartsWith(api_function.name(), kOrbitApiGetFunctionTableAddressPrefix) ||
                 absl::StartsWith(api_function.name(), kOrbitApiGetFunctionTableAddressWinPrefix));
 
-    // Get ModuleInfo associated with function.
-    const ModuleInfo* module_info = FindModuleInfoForApiFunction(api_function, modules_by_path);
-    if (module_info == nullptr) continue;
-
     // Get address of function table by calling "orbit_api_get_function_table_address_vN" in tracee.
     // Note that the address start is always page_aligned and we need to account for that by
     // aligning executable_segment_offset as well.
-    void* api_function_address =
-        absl::bit_cast<void*>(orbit_object_utils::SymbolVirtualAddressToAbsoluteAddress(
-            api_function.relative_virtual_address(), module_info->address_start(),
-            module_info->load_bias(), module_info->executable_segment_offset()));
+    void* api_function_address = absl::bit_cast<void*>(api_function.absolute_virtual_address());
     uint64_t function_table_address = 0;
     if (absl::StartsWith(api_function.name(), kOrbitApiGetFunctionTableAddressPrefix)) {
       // The target is a native Linux binary.
