@@ -350,7 +350,7 @@ void ServiceDeployManager::CopyFileToLocalImpl(orbit_base::Promise<ErrorMessageO
 
   copy_file_operation_in_progress_ = true;
 
-  ORBIT_LOG("Copying remote \"%s\" to local \"%s\"", source, destination);
+  ORBIT_LOG("Copying remote \"%s\" to local \"%s\"", source.string(), destination.string());
 
   // NOLINTNEXTLINE - Unfortunately we have to fall back to a raw `new` here.
   auto operation = new orbit_ssh_qt::SftpCopyToLocalOperation{&session_.value(),
@@ -365,8 +365,7 @@ void ServiceDeployManager::CopyFileToLocalImpl(orbit_base::Promise<ErrorMessageO
   // from the ::stopped and ::errorOccured signals (see below).
   // By having a single handler we don't need to worry about sharing resources that are not supposed
   // to be shared like the promise.
-  auto finish_handler = [this, promise = std::move(promise), source = std::string{source},
-                         destination = std::string{destination}, operation,
+  auto finish_handler = [this, promise = std::move(promise), source, destination, operation,
                          stop_token = std::move(stop_token)](ErrorMessageOr<void> result) mutable {
     if (promise.HasResult()) return;
 
@@ -390,8 +389,8 @@ void ServiceDeployManager::CopyFileToLocalImpl(orbit_base::Promise<ErrorMessageO
 
     if (result.has_error()) {
       promise.SetResult(
-          ErrorMessage{absl::StrFormat(R"(Error copying remote "%s" to "%s": %s)", source,
-                                       destination, result.error().message())});
+          ErrorMessage{absl::StrFormat(R"(Error copying remote "%s" to "%s": %s)", source.string(),
+                                       destination.string(), result.error().message())});
       return;
     }
 
