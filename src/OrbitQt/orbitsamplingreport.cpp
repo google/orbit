@@ -116,7 +116,7 @@ void OrbitSamplingReport::Initialize(orbit_data_views::DataView* callstack_data_
                      notice_box);
       notice_box_layout->addWidget(notice_label, 0, 0);
       auto* notice_button = new QPushButton(notice_box);
-      notice_button->setText("Acknowledge");
+      notice_button->setText("Hide");
       QObject::connect(notice_button, &QPushButton::clicked, notice_box,
                        [notice_box]() { notice_box->hide(); });
       notice_button->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
