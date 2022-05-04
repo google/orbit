@@ -17,6 +17,8 @@
 #include "CodeReport/CodeReport.h"
 #include "CodeReport/DisassemblyReport.h"
 #include "MetricsUploader/ScopedMetric.h"
+#include "OrbitBase/Future.h"
+#include "OrbitBase/StopToken.h"
 #include "Statistics/Histogram.h"
 
 namespace orbit_gl {
@@ -51,6 +53,10 @@ class MainWindowInterface {
   enum class SymbolErrorHandlingResult { kReloadRequired, kSymbolLoadingCancelled };
   virtual SymbolErrorHandlingResult HandleSymbolError(
       const ErrorMessage& error, const orbit_client_data::ModuleData* module) = 0;
+
+  virtual orbit_base::Future<ErrorMessageOr<void>> DownloadFileFromInstance(
+      std::filesystem::path path_on_instance, std::filesystem::path local_path,
+      orbit_base::StopToken stop_token) = 0;
 
   virtual ~MainWindowInterface() = default;
 };

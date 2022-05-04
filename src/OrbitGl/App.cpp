@@ -80,6 +80,8 @@
 #include "OrbitBase/Logging.h"
 #include "OrbitBase/MainThreadExecutor.h"
 #include "OrbitBase/Result.h"
+#include "OrbitBase/StopSource.h"
+#include "OrbitBase/StopToken.h"
 #include "OrbitBase/ThreadConstants.h"
 #include "OrbitBase/UniqueResource.h"
 #include "OrbitBase/WhenAll.h"
@@ -1651,7 +1653,7 @@ void OrbitApp::SendErrorToUi(const std::string& title, const std::string& text,
 }
 
 orbit_base::Future<ErrorMessageOr<std::filesystem::path>> OrbitApp::RetrieveModuleFromRemote(
-    const std::string& module_file_path) {
+    const std::string& module_file_path, orbit_base::StopToken stop_token) {
   ORBIT_SCOPE_FUNCTION;
   ScopedStatus scoped_status = CreateScopedStatus(absl::StrFormat(
       "Searching for symbols on remote instance for module \"%s\"...", module_file_path));
@@ -1665,8 +1667,9 @@ orbit_base::Future<ErrorMessageOr<std::filesystem::path>> OrbitApp::RetrieveModu
                                                   {absl::GetFlag(FLAGS_instance_symbols_folder)});
       });
 
-  auto download_file = [this, module_file_path, scoped_status = std::move(scoped_status)](
-                           ErrorMessageOr<std::string> result) mutable
+  auto download_file = [this, module_file_path, scoped_status = std::move(scoped_status),
+                        stop_token =
+                            std::move(stop_token)](ErrorMessageOr<std::string> result) mutable
       -> orbit_base::Future<ErrorMessageOr<std::filesystem::path>> {
     if (result.has_error()) return result.error();
 
@@ -1683,8 +1686,8 @@ orbit_base::Future<ErrorMessageOr<std::filesystem::path>> OrbitApp::RetrieveModu
     const std::chrono::time_point<std::chrono::steady_clock> copy_begin =
         std::chrono::steady_clock::now();
     ORBIT_LOG("Copying \"%s\" started", debug_file_path);
-    orbit_base::Future<ErrorMessageOr<void>> copy_result =
-        secure_copy_callback_(debug_file_path, local_debug_file_path.string());
+    orbit_base::Future<ErrorMessageOr<void>> copy_result = main_window_->DownloadFileFromInstance(
+        debug_file_path, local_debug_file_path, std::move(stop_token));
 
     orbit_base::ImmediateExecutor immediate_executor{};
     return copy_result.Then(
@@ -1811,7 +1814,7 @@ orbit_base::Future<ErrorMessageOr<std::filesystem::path>> OrbitApp::RetrieveModu
 
   const auto it = modules_currently_loading_.find(module_id);
   if (it != modules_currently_loading_.end()) {
-    return it->second;
+    return it->second.future;
   }
 
   Future<ErrorMessageOr<std::filesystem::path>> local_symbols_future =
@@ -1823,16 +1826,20 @@ orbit_base::Future<ErrorMessageOr<std::filesystem::path>> OrbitApp::RetrieveModu
     return local_symbols_future;
   }
 
+  orbit_base::StopSource stop_source{};
+
   Future<ErrorMessageOr<std::filesystem::path>> final_result =
       orbit_base::UnwrapFuture(local_symbols_future.Then(
           main_thread_executor_,
-          [this, module_id](ErrorMessageOr<std::filesystem::path> local_symbols_path)
+          [this, module_id, stop_token = stop_source.GetStopToken()](
+              ErrorMessageOr<std::filesystem::path> local_symbols_path)
               -> Future<ErrorMessageOr<std::filesystem::path>> {
             if (local_symbols_path.has_value()) {
+              modules_currently_loading_.erase(module_id);
               return local_symbols_path;
             }
 
-            return RetrieveModuleFromRemote(module_id.first)
+            return RetrieveModuleFromRemote(module_id.first, std::move(stop_token))
                 .Then(main_thread_executor_,
                       [this, module_id, local_error_message = local_symbols_path.error().message()](
                           const ErrorMessageOr<std::filesystem::path>& remote_result)
@@ -1849,7 +1856,8 @@ orbit_base::Future<ErrorMessageOr<std::filesystem::path>> OrbitApp::RetrieveModu
                       });
           }));
 
-  modules_currently_loading_.emplace(module_id, final_result);
+  modules_currently_loading_.emplace(module_id,
+                                     ModuleLoadOperation{std::move(stop_source), final_result});
   return final_result;
 }
 

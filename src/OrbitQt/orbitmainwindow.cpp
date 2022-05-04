@@ -96,9 +96,11 @@
 #include "LiveFunctionsController.h"
 #include "MetricsUploader/orbit_log_event.pb.h"
 #include "OrbitBase/ExecutablePath.h"
+#include "OrbitBase/Future.h"
 #include "OrbitBase/Logging.h"
 #include "OrbitBase/ReadFileToString.h"
 #include "OrbitBase/Result.h"
+#include "OrbitBase/StopToken.h"
 #include "OrbitGgp/Instance.h"
 #include "OrbitPaths/Paths.h"
 #include "OrbitVersion/OrbitVersion.h"
@@ -1568,11 +1570,6 @@ void OrbitMainWindow::OnStadiaConnectionError(std::error_code error) {
 void OrbitMainWindow::SetTarget(const StadiaTarget& target) {
   const orbit_session_setup::StadiaConnection* connection = target.GetConnection();
   ServiceDeployManager* service_deploy_manager = connection->GetServiceDeployManager();
-  app_->SetSecureCopyCallback([service_deploy_manager](std::string_view source,
-                                                       std::string_view destination) {
-    ORBIT_CHECK(service_deploy_manager != nullptr);
-    return service_deploy_manager->CopyFileToLocal(std::string{source}, std::string{destination});
-  });
 
   QObject::connect(service_deploy_manager, &ServiceDeployManager::socketErrorOccurred, this,
                    &OrbitMainWindow::OnStadiaConnectionError, Qt::UniqueConnection);
@@ -1849,4 +1846,17 @@ orbit_gl::MainWindowInterface::SymbolErrorHandlingResult OrbitMainWindow::Handle
       return SymbolErrorHandlingResult::kReloadRequired;
   }
   ORBIT_UNREACHABLE();
+}
+
+orbit_base::Future<ErrorMessageOr<void>> OrbitMainWindow::DownloadFileFromInstance(
+    std::filesystem::path path_on_instance, std::filesystem::path local_path,
+    orbit_base::StopToken stop_token) {
+  ORBIT_CHECK(is_connected_);
+  ORBIT_CHECK(std::holds_alternative<StadiaTarget>(target_configuration_));
+  ServiceDeployManager* service_deploy_manager =
+      std::get<StadiaTarget>(target_configuration_).GetConnection()->GetServiceDeployManager();
+  ORBIT_CHECK(service_deploy_manager != nullptr);
+
+  return service_deploy_manager->CopyFileToLocal(std::move(path_on_instance), std::move(local_path),
+                                                 std::move(stop_token));
 }

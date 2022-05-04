@@ -43,6 +43,7 @@
 #include "MainWindowInterface.h"
 #include "MetricsUploader/MetricsUploader.h"
 #include "OrbitBase/CrashHandler.h"
+#include "OrbitBase/Future.h"
 #include "OrbitBase/MainThreadExecutor.h"
 #include "SessionSetup/ServiceDeployManager.h"
 #include "SessionSetup/TargetConfiguration.h"
@@ -120,6 +121,10 @@ class OrbitMainWindow final : public QMainWindow, public orbit_gl::MainWindowInt
 
   void ShowHistogram(const std::vector<uint64_t>* data, const std::string& function_name,
                      uint64_t function_id) override;
+
+  orbit_base::Future<ErrorMessageOr<void>> DownloadFileFromInstance(
+      std::filesystem::path path_on_instance, std::filesystem::path local_path,
+      orbit_base::StopToken stop_token) override;
 
  protected:
   void closeEvent(QCloseEvent* event) override;

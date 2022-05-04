@@ -75,6 +75,8 @@
 #include "OrbitBase/Logging.h"
 #include "OrbitBase/MainThreadExecutor.h"
 #include "OrbitBase/Result.h"
+#include "OrbitBase/StopSource.h"
+#include "OrbitBase/StopToken.h"
 #include "OrbitBase/ThreadPool.h"
 #include "OrbitPaths/Paths.h"
 #include "SamplingReport.h"
@@ -324,11 +326,6 @@ class OrbitApp final : public DataViewFactory,
   void SetClipboardCallback(ClipboardCallback callback) {
     clipboard_callback_ = std::move(callback);
   }
-  using SecureCopyCallback =
-      std::function<orbit_base::Future<ErrorMessageOr<void>>(std::string_view, std::string_view)>;
-  void SetSecureCopyCallback(SecureCopyCallback callback) {
-    secure_copy_callback_ = std::move(callback);
-  }
 
   void SetStatusListener(StatusListener* listener) { status_listener_ = listener; }
 
@@ -545,7 +542,7 @@ class OrbitApp final : public DataViewFactory,
       const orbit_preset_file::PresetFile& preset_file);
 
   [[nodiscard]] orbit_base::Future<ErrorMessageOr<std::filesystem::path>> RetrieveModuleFromRemote(
-      const std::string& module_file_path);
+      const std::string& module_file_path, orbit_base::StopToken stop_token);
 
   void SelectFunctionsFromHashes(const orbit_client_data::ModuleData* module,
                                  absl::Span<const uint64_t> function_hashes);
@@ -608,7 +605,6 @@ class OrbitApp final : public DataViewFactory,
   CallTreeViewCallback selection_bottom_up_view_callback_;
   SaveFileCallback save_file_callback_;
   ClipboardCallback clipboard_callback_;
-  SecureCopyCallback secure_copy_callback_;
   TimerSelectedCallback timer_selected_callback_;
 
   std::vector<orbit_data_views::DataView*> panels_;
@@ -627,9 +623,14 @@ class OrbitApp final : public DataViewFactory,
   std::shared_ptr<SamplingReport> sampling_report_;
   std::shared_ptr<SamplingReport> selection_report_ = nullptr;
 
-  absl::flat_hash_map<std::pair<std::string, std::string>,
-                      orbit_base::Future<ErrorMessageOr<std::filesystem::path>>>
+  struct ModuleLoadOperation {
+    orbit_base::StopSource stop_source;
+    orbit_base::Future<ErrorMessageOr<std::filesystem::path>> future;
+  };
+  // ONLY access this from the main thread
+  absl::flat_hash_map<std::pair<std::string, std::string>, ModuleLoadOperation>
       modules_currently_loading_;
+  // ONLY access this from the main thread
   absl::flat_hash_map<std::pair<std::string, std::string>, orbit_base::Future<ErrorMessageOr<void>>>
       symbols_currently_loading_;
 
