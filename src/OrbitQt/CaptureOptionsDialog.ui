@@ -66,7 +66,7 @@
       <property name="geometry">
        <rect>
         <x>0</x>
-        <y>0</y>
+        <y>-161</y>
         <width>470</width>
         <height>767</height>
        </rect>
@@ -110,6 +110,9 @@
           </property>
           <item>
            <widget class="QCheckBox" name="samplingCheckBox">
+            <property name="accessibleName">
+             <string>SamplingCheckBox</string>
+            </property>
             <property name="text">
              <string>Enable callstack sampling</string>
             </property>
@@ -129,6 +132,9 @@
             </item>
             <item>
              <widget class="QDoubleSpinBox" name="samplingPeriodMsDoubleSpinBox">
+              <property name="accessibleName">
+               <string>SamplingPeriodMsDoubleSpinBox</string>
+              </property>
               <property name="decimals">
                <number>1</number>
               </property>
@@ -184,6 +190,9 @@
              </property>
              <item>
               <widget class="QRadioButton" name="dwarfUnwindingRadioButton">
+               <property name="accessibleName">
+                <string>DWARFRadioButton</string>
+               </property>
                <property name="text">
                 <string>DWARF</string>
                </property>
@@ -198,6 +207,9 @@ p, li { white-space: pre-wrap; }
 &lt;/style&gt;&lt;/head&gt;&lt;body style=&quot; font-family:'Sans'; font-size:9pt; font-weight:400; font-style:normal;&quot;&gt;
 &lt;p style=&quot; margin-top:12px; margin-bottom:12px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;Frame-pointer unwinding has lower overhead, but requires all binaries to be compiled with &lt;span style=&quot; font-weight:600;&quot;&gt;&amp;#8209;fno&amp;#8209;omit&amp;#8209;frame&amp;#8209;pointer&lt;/span&gt;.&lt;br /&gt;However, Orbit still supports leaf functions that do not set the frame pointer, which means it also supports binaries compiled with &lt;span style=&quot; font-weight:600;&quot;&gt;&amp;#8209;momit&amp;#8209;leaf&amp;#8209;frame&amp;#8209;pointer&lt;/span&gt; (as long as &lt;span style=&quot; font-weight:600;&quot;&gt;&amp;#8209;fno&amp;#8209;omit&amp;#8209;frame&amp;#8209;pointer&lt;/span&gt; is used).&lt;/p&gt;
 &lt;p style=&quot; margin-top:12px; margin-bottom:12px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;Callstack samples containing functions not compiled with frame pointers will result in unwinding errors.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+               </property>
+               <property name="accessibleName">
+                <string>FramePointerRadioButton</string>
                </property>
                <property name="text">
                 <string>Frame pointers | requires special build settings ⓘ</string>
@@ -234,6 +246,9 @@ p, li { white-space: pre-wrap; }
                 </item>
                 <item>
                  <widget class="orbit_qt::MultipleOfSpinBox" name="maxCopyRawStackSizeSpinBox">
+                  <property name="accessibleName">
+                   <string>MaxCopyRawStackSizeSpinBox</string>
+                  </property>
                   <property name="minimum">
                    <number>16</number>
                   </property>
@@ -296,6 +311,9 @@ p, li { white-space: pre-wrap; }
           </property>
           <item>
            <widget class="QRadioButton" name="uprobesRadioButton">
+            <property name="accessibleName">
+             <string>UprobesRadioButton</string>
+            </property>
             <property name="text">
              <string>Kernel (uprobes)</string>
             </property>
@@ -303,6 +321,9 @@ p, li { white-space: pre-wrap; }
           </item>
           <item>
            <widget class="QRadioButton" name="userSpaceRadioButton">
+            <property name="accessibleName">
+             <string>UserSpaceInstrumentationRadioButton</string>
+            </property>
             <property name="text">
              <string>Orbit | experimental ⓘ</string>
             </property>
@@ -319,6 +340,9 @@ p, li { white-space: pre-wrap; }
          <layout class="QVBoxLayout" name="verticalLayout_9">
           <item>
            <widget class="QCheckBox" name="apiCheckBox">
+            <property name="accessibleName">
+             <string>ApiCheckBox</string>
+            </property>
             <property name="text">
              <string>Enable Orbit Api in target</string>
             </property>
@@ -335,6 +359,9 @@ p, li { white-space: pre-wrap; }
          <layout class="QVBoxLayout" name="verticalLayout_5">
           <item>
            <widget class="QCheckBox" name="collectMemoryInfoCheckBox">
+            <property name="accessibleName">
+             <string>CollectMemoryInfoCheckBox</string>
+            </property>
             <property name="text">
              <string>Collect memory usage and page faults information</string>
             </property>
@@ -393,6 +420,9 @@ p, li { white-space: pre-wrap; }
               <property name="toolTip">
                <string>The default value is 8388608 KB, i.e., 8GB.</string>
               </property>
+              <property name="accessibleName">
+               <string>MemoryWarningThresholdKbLineEdit</string>
+              </property>
               <property name="inputMethodHints">
                <set>Qt::ImhDigitsOnly</set>
               </property>
@@ -414,6 +444,9 @@ p, li { white-space: pre-wrap; }
          <layout class="QVBoxLayout" name="verticalLayout_8">
           <item>
            <widget class="QCheckBox" name="schedulerCheckBox">
+            <property name="accessibleName">
+             <string>CollectSchedulerInfoCheckBox</string>
+            </property>
             <property name="text">
              <string>Collect scheduler information</string>
             </property>
@@ -424,6 +457,9 @@ p, li { white-space: pre-wrap; }
           </item>
           <item>
            <widget class="QCheckBox" name="threadStateCheckBox">
+            <property name="accessibleName">
+             <string>CollectThreadStatesCheckBox</string>
+            </property>
             <property name="text">
              <string>Collect thread states</string>
             </property>
@@ -445,6 +481,9 @@ p, li { white-space: pre-wrap; }
            <layout class="QHBoxLayout" name="localMarkerDepthHorizontalLayout">
             <item>
              <widget class="QCheckBox" name="localMarkerDepthCheckBox">
+              <property name="accessibleName">
+               <string>LocalMarkerDepthCheckBox</string>
+              </property>
               <property name="text">
                <string>Limit local depth of markers per command buffer to:</string>
               </property>
@@ -458,6 +497,9 @@ p, li { white-space: pre-wrap; }
               <property name="toolTip">
                <string>Limits the maximum depth of Vulkan debug markers per command buffer to the given value.
 Setting the value to &quot;0&quot; will disable Vulkan debug marker tracking.</string>
+              </property>
+              <property name="accessibleName">
+               <string>LocalMarkerDepthLineEdit</string>
               </property>
               <property name="inputMethodHints">
                <set>Qt::ImhDigitsOnly</set>
@@ -480,6 +522,9 @@ Setting the value to &quot;0&quot; will disable Vulkan debug marker tracking.</s
          <layout class="QVBoxLayout" name="verticalLayout_10">
           <item>
            <widget class="QCheckBox" name="gpuSubmissionsCheckBox">
+            <property name="accessibleName">
+             <string>GpuSubmissionsCheckBox</string>
+            </property>
             <property name="text">
              <string>Trace GPU queue submissions</string>
             </property>
@@ -490,6 +535,9 @@ Setting the value to &quot;0&quot; will disable Vulkan debug marker tracking.</s
           </item>
           <item>
            <widget class="QCheckBox" name="introspectionCheckBox">
+            <property name="accessibleName">
+             <string>EnableIntrospectionCheckBox</string>
+            </property>
             <property name="text">
              <string>Enable introspection</string>
             </property>
