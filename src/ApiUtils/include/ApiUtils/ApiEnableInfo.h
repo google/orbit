@@ -8,13 +8,14 @@
 #include <stdint.h>
 
 #include <type_traits>
+
 namespace orbit_api {
 
-// This structure is used on Windows when calling "orbit_api_set_enabled_from_struct" remotely
+// This structure is used on Windows when calling "OrbitApiSetEnabledFromStruct" remotely
 // using the "CreateRemoteThread" api, which takes in a single parameter for the thread function.
 // This struct needs to be POD so that we can easily copy it in a remote process address space.
 struct ApiEnableInfo {
-  // Address of orbit_api_get_function_table_address_vN function.
+  // Address of orbit_api_get_function_table_address_win_vN function.
   uint64_t orbit_api_function_address;
   uint64_t api_version;
   bool api_enabled;

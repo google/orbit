@@ -9,7 +9,7 @@
 #include <absl/strings/match.h>
 
 #include "ApiUtils/GetFunctionTableAddressPrefix.h"
-#include "Apiutils/ApiEnableInfo.h"
+#include "ApiUtils/ApiEnableInfo.h"
 #include "OrbitBase/ExecutablePath.h"
 #include "OrbitBase/Logging.h"
 #include "WindowsUtils/DllInjection.h"
@@ -46,7 +46,7 @@ ErrorMessageOr<void> SetApiEnabledInTracee(const CaptureOptions& capture_options
     ORBIT_CHECK(absl::StartsWith(api_function.name(), kOrbitApiGetFunctionTableAddressWinPrefix));
 
     // Set up ApiEnableInfo to be passed as thread function parameter.
-    orbit_api::ApiEnableInfo enable_info = {0};
+    orbit_api::ApiEnableInfo enable_info{};
     enable_info.orbit_api_function_address = api_function.absolute_virtual_address();
     enable_info.api_version = api_function.api_version();
     enable_info.api_enabled = enabled;
@@ -55,8 +55,8 @@ ErrorMessageOr<void> SetApiEnabledInTracee(const CaptureOptions& capture_options
     std::vector<char> parameter(sizeof(enable_info), 0);
     std::memcpy(parameter.data(), &enable_info, sizeof(enable_info));
 
-    // Call "orbit_api_set_enabled_from_struct" in the remote process.
-    constexpr const char* kSetEnabledFunction = "orbit_api_set_enabled_from_struct";
+    // Call "OrbitApiSetEnabledFromStruct" in the remote process.
+    constexpr const char* kSetEnabledFunction = "OrbitApiSetEnabledFromStruct";
     OUTCOME_TRY(orbit_windows_utils::CreateRemoteThread(
         capture_options.pid(), liborbit_path.filename().string(), kSetEnabledFunction, parameter));
   }

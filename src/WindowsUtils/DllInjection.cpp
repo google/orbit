@@ -93,7 +93,7 @@ ErrorMessageOr<Module> FindModuleWithRetries(uint32_t pid, std::string_view modu
   while (true) {
     ErrorMessageOr<Module> result = FindModule(pid, module_name);
     if (result.has_value() || num_retries-- <= 0) return result;
-    std::this_thread::sleep_for(std::chrono::milliseconds(50));
+    std::this_thread::sleep_for(std::chrono::milliseconds(250));
   }
 }
 
@@ -114,7 +114,7 @@ ErrorMessageOr<void> InjectDllInternal(uint32_t pid, const std::filesystem::path
   OUTCOME_TRY(CreateRemoteThread(pid, "kernel32.dll", "LoadLibraryA", dll_name));
 
   // Find injected dll in target process. Allow for retries as the loading might take some time.
-  constexpr uint32_t kNumRetries = 50;
+  constexpr uint32_t kNumRetries = 10;
   OUTCOME_TRY(Module module, FindModuleWithRetries(pid, dll_path.filename().string(), kNumRetries));
 
   ORBIT_LOG("Module \"%s\" successfully injected in process %u", dll_name, pid);
