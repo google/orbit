@@ -19,6 +19,7 @@ target_sources(
           include/SessionSetup/OtherUserDialog.h
           include/SessionSetup/PersistentStorage.h
           include/SessionSetup/ProcessItemModel.h
+          include/SessionSetup/ProcessLauncherWidget.h
           include/SessionSetup/RetrieveInstances.h
           include/SessionSetup/RetrieveInstancesWidget.h
           include/SessionSetup/ServiceDeployManager.h
@@ -43,6 +44,8 @@ target_sources(
           OverlayWidget.ui
           PersistentStorage.cpp
           ProcessItemModel.cpp
+          ProcessLauncherWidget.cpp
+          ProcessLauncherWidget.ui
           RetrieveInstances.cpp
           RetrieveInstancesWidget.cpp
           RetrieveInstancesWidget.ui
