@@ -9,6 +9,7 @@
 #include <QWidget>
 #include <memory>
 
+#include "ClientData/ProcessData.h"
 #include "ClientServices/ProcessManager.h"
 
 namespace Ui {
@@ -22,19 +23,10 @@ class ProcessLauncherWidget : public QWidget {
 
  public:
   explicit ProcessLauncherWidget(QWidget* parent = nullptr);
-  ~ProcessLauncherWidget() override;
-
   void SetProcessManager(orbit_client_services::ProcessManager* process_manager);
-  [[nodiscard]] QPushButton* GetLaunchButton();
-  [[nodiscard]] const ErrorMessageOr<orbit_grpc_protos::ProcessInfo>&
-  GetLastLaunchedProcessOrError() const;
 
-  struct ProcessToLaunch {
-    std::string executable_path;
-    std::string working_directory;
-    std::string arguments;
-    bool spin_on_entry_point;
-  };
+ signals:
+  void ProcessLaunched(const orbit_grpc_protos::ProcessInfo& process_info);
 
  private slots:
   void on_BrowseProcessButton_clicked();
@@ -43,8 +35,6 @@ class ProcessLauncherWidget : public QWidget {
 
  private:
   std::unique_ptr<Ui::ProcessLauncherWidget> ui_;
-
-  ErrorMessageOr<orbit_grpc_protos::ProcessInfo> last_launched_process_or_error_;
   orbit_client_services::ProcessManager* process_manager_ = nullptr;
 };
 

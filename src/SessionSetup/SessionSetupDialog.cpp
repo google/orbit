@@ -130,7 +130,7 @@ SessionSetupDialog::SessionSetupDialog(SshConnectionArtifacts* ssh_connection_ar
   QObject::connect(ui_->processFilterLineEdit, &QLineEdit::textChanged, &process_proxy_model_,
                    &QSortFilterProxyModel::setFilterFixedString);
   QObject::connect(ui_->confirmButton, &QPushButton::clicked, this, &QDialog::accept);
-  QObject::connect(ui_->processLauncherWidget->GetLaunchButton(), &QPushButton::clicked, this,
+  QObject::connect(ui_->processLauncherWidget, &ProcessLauncherWidget::ProcessLaunched, this,
                    &SessionSetupDialog::ProcessLaunched);
   QObject::connect(ui_->loadCaptureWidget, &LoadCaptureWidget::FileSelected, this,
                    [this](std::filesystem::path path) { selected_file_path_ = std::move(path); });
@@ -506,14 +506,10 @@ void SessionSetupDialog::SetupLocalProcessManager() {
   ui_->processLauncherWidget->SetProcessManager(process_manager_.get());
 }
 
-void SessionSetupDialog::ProcessLaunched() {
-  const ErrorMessageOr<orbit_grpc_protos::ProcessInfo>& process_info_or_error =
-      ui_->processLauncherWidget->GetLastLaunchedProcessOrError();
-  if (process_info_or_error.has_value()) {
-    process_ = std::make_unique<orbit_client_data::ProcessData>(process_info_or_error.value());
-    emit ProcessSelected();
-    accept();
-  }
+void SessionSetupDialog::ProcessLaunched(const orbit_grpc_protos::ProcessInfo& process_info) {
+  process_ = std::make_unique<orbit_client_data::ProcessData>(process_info);
+  emit ProcessSelected();
+  accept();
 }
 
 void SessionSetupDialog::SetTargetAndStateMachineInitialState(StadiaTarget target) {
