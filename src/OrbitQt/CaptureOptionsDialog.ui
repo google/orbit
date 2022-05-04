@@ -9,8 +9,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>478</width>
-    <height>610</height>
+    <width>504</width>
+    <height>678</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -20,411 +20,13 @@
    <bool>true</bool>
   </property>
   <layout class="QGridLayout" name="gridLayout">
+   <property name="leftMargin">
+    <number>9</number>
+   </property>
    <property name="verticalSpacing">
     <number>9</number>
    </property>
-   <item row="0" column="0">
-    <layout class="QVBoxLayout" name="verticalLayout">
-     <property name="spacing">
-      <number>12</number>
-     </property>
-     <item>
-      <widget class="QGroupBox" name="groupBox">
-       <property name="title">
-        <string>General</string>
-       </property>
-       <layout class="QVBoxLayout" name="verticalLayout_3">
-        <item>
-         <widget class="QCheckBox" name="samplingCheckBox">
-          <property name="text">
-           <string>Enable callstack sampling</string>
-          </property>
-          <property name="checked">
-           <bool>true</bool>
-          </property>
-         </widget>
-        </item>
-        <item>
-         <layout class="QHBoxLayout" name="samplingPeriodMsHorizontalLayout">
-          <item>
-           <widget class="QLabel" name="samplingPeriodMsLabel">
-            <property name="text">
-             <string>Callstack sampling period (ms):</string>
-            </property>
-           </widget>
-          </item>
-          <item>
-           <widget class="QDoubleSpinBox" name="samplingPeriodMsDoubleSpinBox">
-            <property name="decimals">
-             <number>1</number>
-            </property>
-            <property name="minimum">
-             <double>0.100000000000000</double>
-            </property>
-            <property name="maximum">
-             <double>10.000000000000000</double>
-            </property>
-            <property name="singleStep">
-             <double>0.100000000000000</double>
-            </property>
-            <property name="value">
-             <double>1.000000000000000</double>
-            </property>
-           </widget>
-          </item>
-          <item>
-           <spacer name="samplingPeriodMsHorizontalSpacer">
-            <property name="orientation">
-             <enum>Qt::Horizontal</enum>
-            </property>
-            <property name="sizeHint" stdset="0">
-             <size>
-              <width>40</width>
-              <height>20</height>
-             </size>
-            </property>
-           </spacer>
-          </item>
-         </layout>
-        </item>
-        <item>
-         <widget class="QWidget" name="unwindingMethodWidget" native="true">
-          <layout class="QHBoxLayout" name="horizontalLayout">
-           <property name="leftMargin">
-            <number>0</number>
-           </property>
-           <property name="topMargin">
-            <number>0</number>
-           </property>
-           <property name="rightMargin">
-            <number>0</number>
-           </property>
-           <property name="bottomMargin">
-            <number>0</number>
-           </property>
-           <item>
-            <widget class="QLabel" name="unwindingMethodLabel">
-             <property name="text">
-              <string>Callstack unwinding method:</string>
-             </property>
-            </widget>
-           </item>
-           <item>
-            <widget class="QComboBox" name="unwindingMethodComboBox"/>
-           </item>
-           <item>
-            <spacer name="unwindingMethodHorizontalSpacer">
-             <property name="orientation">
-              <enum>Qt::Horizontal</enum>
-             </property>
-             <property name="sizeType">
-              <enum>QSizePolicy::Expanding</enum>
-             </property>
-             <property name="sizeHint" stdset="0">
-              <size>
-               <width>112</width>
-               <height>20</height>
-              </size>
-             </property>
-            </spacer>
-           </item>
-          </layout>
-         </widget>
-        </item>
-        <item>
-         <widget class="QWidget" name="maxCopyRawStackSizeWidget" native="true">
-          <layout class="QHBoxLayout" name="horizontalLayout_4" stretch="0,0,0">
-           <property name="leftMargin">
-            <number>0</number>
-           </property>
-           <property name="topMargin">
-            <number>0</number>
-           </property>
-           <property name="rightMargin">
-            <number>0</number>
-           </property>
-           <property name="bottomMargin">
-            <number>0</number>
-           </property>
-           <item>
-            <widget class="QLabel" name="maxCopyRawStackSizeLabel">
-             <property name="toolTip">
-              <string/>
-             </property>
-             <property name="text">
-              <string>[Frame pointers only] Max raw stack size to copy (Bytes):</string>
-             </property>
-            </widget>
-           </item>
-           <item>
-            <widget class="QLineEdit" name="maxCopyRawStackSizeLineEdit">
-             <property name="enabled">
-              <bool>true</bool>
-             </property>
-             <property name="maxLength">
-              <number>5</number>
-             </property>
-            </widget>
-           </item>
-           <item>
-            <spacer name="maxCopyRawStackSizeSpacer">
-             <property name="orientation">
-              <enum>Qt::Horizontal</enum>
-             </property>
-             <property name="sizeHint" stdset="0">
-              <size>
-               <width>80</width>
-               <height>20</height>
-              </size>
-             </property>
-            </spacer>
-           </item>
-          </layout>
-         </widget>
-        </item>
-        <item>
-         <widget class="QCheckBox" name="schedulerCheckBox">
-          <property name="text">
-           <string>Collect scheduler information</string>
-          </property>
-          <property name="checked">
-           <bool>true</bool>
-          </property>
-         </widget>
-        </item>
-        <item>
-         <widget class="QCheckBox" name="threadStateCheckBox">
-          <property name="text">
-           <string>Collect thread states</string>
-          </property>
-         </widget>
-        </item>
-        <item>
-         <widget class="QCheckBox" name="gpuSubmissionsCheckBox">
-          <property name="text">
-           <string>Trace GPU queue submissions</string>
-          </property>
-          <property name="checked">
-           <bool>true</bool>
-          </property>
-         </widget>
-        </item>
-        <item>
-         <widget class="QCheckBox" name="apiCheckBox">
-          <property name="text">
-           <string>Enable Orbit Api in target</string>
-          </property>
-         </widget>
-        </item>
-        <item>
-         <widget class="QCheckBox" name="introspectionCheckBox">
-          <property name="text">
-           <string>Enable introspection</string>
-          </property>
-         </widget>
-        </item>
-        <item>
-         <widget class="QWidget" name="dynamicInstrumentationMethodWidget" native="true">
-          <property name="toolTip">
-           <string>Method 'Orbit' has lower overhead but is still experimental.</string>
-          </property>
-          <layout class="QHBoxLayout" name="horizontalLayout_3">
-           <property name="leftMargin">
-            <number>0</number>
-           </property>
-           <property name="topMargin">
-            <number>0</number>
-           </property>
-           <property name="rightMargin">
-            <number>0</number>
-           </property>
-           <property name="bottomMargin">
-            <number>0</number>
-           </property>
-           <item>
-            <widget class="QLabel" name="label_2">
-             <property name="text">
-              <string>Dynamic Instrumentation method:</string>
-             </property>
-            </widget>
-           </item>
-           <item>
-            <widget class="QComboBox" name="dynamicInstrumentationMethodComboBox">
-             <property name="minimumSize">
-              <size>
-               <width>170</width>
-               <height>0</height>
-              </size>
-             </property>
-             <property name="accessibleName">
-              <string>DynamicInstrumentationMethodComboBox</string>
-             </property>
-            </widget>
-           </item>
-           <item>
-            <spacer name="horizontalSpacer">
-             <property name="orientation">
-              <enum>Qt::Horizontal</enum>
-             </property>
-             <property name="sizeHint" stdset="0">
-              <size>
-               <width>40</width>
-               <height>20</height>
-              </size>
-             </property>
-            </spacer>
-           </item>
-          </layout>
-         </widget>
-        </item>
-       </layout>
-      </widget>
-     </item>
-     <item>
-      <widget class="QGroupBox" name="groupBox_4">
-       <property name="title">
-        <string>Memory tracing</string>
-       </property>
-       <layout class="QVBoxLayout" name="verticalLayout_5">
-        <item>
-         <widget class="QCheckBox" name="collectMemoryInfoCheckBox">
-          <property name="text">
-           <string>Collect memory usage and page faults information</string>
-          </property>
-         </widget>
-        </item>
-        <item>
-         <layout class="QHBoxLayout" name="memoryHorizontalLayout">
-          <item>
-           <widget class="QLabel" name="memorySamplingPeriodMsLabel">
-            <property name="text">
-             <string>Sampling period (ms):</string>
-            </property>
-           </widget>
-          </item>
-          <item>
-           <widget class="QLineEdit" name="memorySamplingPeriodMsLineEdit">
-            <property name="enabled">
-             <bool>false</bool>
-            </property>
-            <property name="accessibleName">
-             <string>MemorySamplingPeriodEdit</string>
-            </property>
-            <property name="inputMethodHints">
-             <set>Qt::ImhDigitsOnly</set>
-            </property>
-            <property name="text">
-             <string>10</string>
-            </property>
-           </widget>
-          </item>
-          <item>
-           <spacer name="horizontalSpacer_2">
-            <property name="orientation">
-             <enum>Qt::Horizontal</enum>
-            </property>
-            <property name="sizeHint" stdset="0">
-             <size>
-              <width>60</width>
-              <height>20</height>
-             </size>
-            </property>
-           </spacer>
-          </item>
-          <item>
-           <widget class="QLabel" name="memoryWarningThresholdKbLabel">
-            <property name="text">
-             <string>Warning threshold (kB):</string>
-            </property>
-           </widget>
-          </item>
-          <item>
-           <widget class="QLineEdit" name="memoryWarningThresholdKbLineEdit">
-            <property name="enabled">
-             <bool>false</bool>
-            </property>
-            <property name="toolTip">
-             <string>The default value is 8388608 KB, i.e., 8GB.</string>
-            </property>
-            <property name="inputMethodHints">
-             <set>Qt::ImhDigitsOnly</set>
-            </property>
-            <property name="text">
-             <string>8388608</string>
-            </property>
-           </widget>
-          </item>
-         </layout>
-        </item>
-       </layout>
-      </widget>
-     </item>
-     <item>
-      <widget class="QGroupBox" name="groupBox_2">
-       <property name="toolTip">
-        <string>This requires Orbit's Vulkan layer to be loaded by the target process.</string>
-       </property>
-       <property name="title">
-        <string>Vulkan layer (requires Orbit's Vulkan layer to be loaded by the target)</string>
-       </property>
-       <layout class="QVBoxLayout" name="verticalLayout_4">
-        <item>
-         <layout class="QHBoxLayout" name="localMarkerDepthHorizontalLayout">
-          <item>
-           <widget class="QCheckBox" name="localMarkerDepthCheckBox">
-            <property name="text">
-             <string>Limit local depth of markers per command buffer to:</string>
-            </property>
-           </widget>
-          </item>
-          <item>
-           <widget class="QLineEdit" name="localMarkerDepthLineEdit">
-            <property name="enabled">
-             <bool>false</bool>
-            </property>
-            <property name="toolTip">
-             <string>Limits the maximum depth of Vulkan debug markers per command buffer to the given value.
-Setting the value to &quot;0&quot; will disable Vulkan debug marker tracking.</string>
-            </property>
-            <property name="inputMethodHints">
-             <set>Qt::ImhDigitsOnly</set>
-            </property>
-            <property name="text">
-             <string>3</string>
-            </property>
-           </widget>
-          </item>
-         </layout>
-        </item>
-       </layout>
-      </widget>
-     </item>
-    </layout>
-   </item>
-   <item row="1" column="0">
-    <spacer name="verticalSpacer">
-     <property name="orientation">
-      <enum>Qt::Vertical</enum>
-     </property>
-     <property name="sizeHint" stdset="0">
-      <size>
-       <width>0</width>
-       <height>0</height>
-      </size>
-     </property>
-    </spacer>
-   </item>
-   <item row="2" column="0">
-    <widget class="Line" name="line">
-     <property name="styleSheet">
-      <string notr="true">background: #353535</string>
-     </property>
-     <property name="orientation">
-      <enum>Qt::Horizontal</enum>
-     </property>
-    </widget>
-   </item>
-   <item row="3" column="0">
+   <item row="4" column="0">
     <layout class="QHBoxLayout" name="horizontalLayout_2">
      <item>
       <widget class="QLabel" name="label">
@@ -445,8 +47,534 @@ Setting the value to &quot;0&quot; will disable Vulkan debug marker tracking.</s
      </item>
     </layout>
    </item>
+   <item row="3" column="0">
+    <widget class="Line" name="line">
+     <property name="styleSheet">
+      <string notr="true">background: #353535</string>
+     </property>
+     <property name="orientation">
+      <enum>Qt::Horizontal</enum>
+     </property>
+    </widget>
+   </item>
+   <item row="1" column="0">
+    <widget class="QScrollArea" name="scrollArea">
+     <property name="widgetResizable">
+      <bool>true</bool>
+     </property>
+     <widget class="QWidget" name="scrollAreaWidgetContents">
+      <property name="geometry">
+       <rect>
+        <x>0</x>
+        <y>0</y>
+        <width>470</width>
+        <height>767</height>
+       </rect>
+      </property>
+      <layout class="QVBoxLayout" name="verticalLayout_3">
+       <property name="spacing">
+        <number>6</number>
+       </property>
+       <property name="leftMargin">
+        <number>9</number>
+       </property>
+       <property name="topMargin">
+        <number>9</number>
+       </property>
+       <property name="rightMargin">
+        <number>9</number>
+       </property>
+       <property name="bottomMargin">
+        <number>9</number>
+       </property>
+       <item>
+        <widget class="QGroupBox" name="samplingGroupBox">
+         <property name="title">
+          <string>Sampling</string>
+         </property>
+         <layout class="QVBoxLayout" name="verticalLayout_2">
+          <property name="spacing">
+           <number>6</number>
+          </property>
+          <property name="leftMargin">
+           <number>9</number>
+          </property>
+          <property name="topMargin">
+           <number>9</number>
+          </property>
+          <property name="rightMargin">
+           <number>9</number>
+          </property>
+          <property name="bottomMargin">
+           <number>9</number>
+          </property>
+          <item>
+           <widget class="QCheckBox" name="samplingCheckBox">
+            <property name="accessibleName">
+             <string>SamplingCheckBox</string>
+            </property>
+            <property name="text">
+             <string>Enable callstack sampling</string>
+            </property>
+            <property name="checked">
+             <bool>true</bool>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <layout class="QHBoxLayout" name="samplingPeriodMsHorizontalLayout">
+            <item>
+             <widget class="QLabel" name="samplingPeriodMsLabel">
+              <property name="text">
+               <string>Callstack sampling period (ms):</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QDoubleSpinBox" name="samplingPeriodMsDoubleSpinBox">
+              <property name="accessibleName">
+               <string>SamplingPeriodMsDoubleSpinBox</string>
+              </property>
+              <property name="decimals">
+               <number>1</number>
+              </property>
+              <property name="minimum">
+               <double>0.100000000000000</double>
+              </property>
+              <property name="maximum">
+               <double>10.000000000000000</double>
+              </property>
+              <property name="singleStep">
+               <double>0.100000000000000</double>
+              </property>
+              <property name="value">
+               <double>1.000000000000000</double>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <spacer name="samplingPeriodMsHorizontalSpacer">
+              <property name="orientation">
+               <enum>Qt::Horizontal</enum>
+              </property>
+              <property name="sizeHint" stdset="0">
+               <size>
+                <width>40</width>
+                <height>20</height>
+               </size>
+              </property>
+             </spacer>
+            </item>
+           </layout>
+          </item>
+          <item>
+           <widget class="QGroupBox" name="unwindingMethodGroupBox">
+            <property name="title">
+             <string>Unwinding method</string>
+            </property>
+            <layout class="QVBoxLayout" name="verticalLayout_6">
+             <property name="spacing">
+              <number>0</number>
+             </property>
+             <property name="leftMargin">
+              <number>4</number>
+             </property>
+             <property name="topMargin">
+              <number>4</number>
+             </property>
+             <property name="rightMargin">
+              <number>4</number>
+             </property>
+             <property name="bottomMargin">
+              <number>4</number>
+             </property>
+             <item>
+              <widget class="QRadioButton" name="dwarfUnwindingRadioButton">
+               <property name="accessibleName">
+                <string>DWARFRadioButton</string>
+               </property>
+               <property name="text">
+                <string>DWARF</string>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="QRadioButton" name="framePointerUnwindingRadioButton">
+               <property name="toolTip">
+                <string>&lt;!DOCTYPE HTML PUBLIC &quot;-//W3C//DTD HTML 4.0//EN&quot; &quot;http://www.w3.org/TR/REC-html40/strict.dtd&quot;&gt;
+&lt;html&gt;&lt;head&gt;&lt;meta name=&quot;qrichtext&quot; content=&quot;1&quot; /&gt;&lt;style type=&quot;text/css&quot;&gt;
+p, li { white-space: pre-wrap; }
+&lt;/style&gt;&lt;/head&gt;&lt;body style=&quot; font-family:'Sans'; font-size:9pt; font-weight:400; font-style:normal;&quot;&gt;
+&lt;p style=&quot; margin-top:12px; margin-bottom:12px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;Frame-pointer unwinding has lower overhead, but requires all binaries to be compiled with &lt;span style=&quot; font-weight:600;&quot;&gt;&amp;#8209;fno&amp;#8209;omit&amp;#8209;frame&amp;#8209;pointer&lt;/span&gt;.&lt;br /&gt;However, Orbit still supports leaf functions that do not set the frame pointer, which means it also supports binaries compiled with &lt;span style=&quot; font-weight:600;&quot;&gt;&amp;#8209;momit&amp;#8209;leaf&amp;#8209;frame&amp;#8209;pointer&lt;/span&gt; (as long as &lt;span style=&quot; font-weight:600;&quot;&gt;&amp;#8209;fno&amp;#8209;omit&amp;#8209;frame&amp;#8209;pointer&lt;/span&gt; is used).&lt;/p&gt;
+&lt;p style=&quot; margin-top:12px; margin-bottom:12px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;Callstack samples containing functions not compiled with frame pointers will result in unwinding errors.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+               </property>
+               <property name="accessibleName">
+                <string>FramePointerRadioButton</string>
+               </property>
+               <property name="text">
+                <string>Frame pointers | requires special build settings ⓘ</string>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="QWidget" name="maxCopyRawStackSizeWidget" native="true">
+               <layout class="QHBoxLayout" name="horizontalLayout_4" stretch="0,0,0">
+                <property name="spacing">
+                 <number>6</number>
+                </property>
+                <property name="leftMargin">
+                 <number>20</number>
+                </property>
+                <property name="topMargin">
+                 <number>0</number>
+                </property>
+                <property name="rightMargin">
+                 <number>0</number>
+                </property>
+                <property name="bottomMargin">
+                 <number>0</number>
+                </property>
+                <item>
+                 <widget class="QLabel" name="maxCopyRawStackSizeLabel">
+                  <property name="toolTip">
+                   <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;To improve performance, we don't require to preserve the frame pointer register on leaf functions (&lt;span style=&quot; font-weight:600;&quot;&gt;‑momit‑leaf‑frame‑pointer&lt;/span&gt;).&lt;/p&gt;&lt;p&gt;In order to recover the frame corresponding to the caller of a leaf function, we need to copy a portion of the raw stack and DWARF-unwind the first frame. Specify how much data Orbit should copy. A larger value reduces the number of unwind errors, but increases the performance overhead of sampling.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+                  </property>
+                  <property name="text">
+                   <string>Max raw stack size to copy (multiple of 8 Bytes):</string>
+                  </property>
+                 </widget>
+                </item>
+                <item>
+                 <widget class="orbit_qt::MultipleOfSpinBox" name="maxCopyRawStackSizeSpinBox">
+                  <property name="accessibleName">
+                   <string>MaxCopyRawStackSizeSpinBox</string>
+                  </property>
+                  <property name="minimum">
+                   <number>16</number>
+                  </property>
+                  <property name="maximum">
+                   <number>65528</number>
+                  </property>
+                  <property name="singleStep">
+                   <number>8</number>
+                  </property>
+                  <property name="value">
+                   <number>512</number>
+                  </property>
+                 </widget>
+                </item>
+                <item>
+                 <spacer name="maxCopyRawStackSizeSpacer">
+                  <property name="orientation">
+                   <enum>Qt::Horizontal</enum>
+                  </property>
+                  <property name="sizeHint" stdset="0">
+                   <size>
+                    <width>80</width>
+                    <height>20</height>
+                   </size>
+                  </property>
+                 </spacer>
+                </item>
+               </layout>
+              </widget>
+             </item>
+            </layout>
+           </widget>
+          </item>
+         </layout>
+        </widget>
+       </item>
+       <item>
+        <widget class="QGroupBox" name="dynamicInstrumentationGroupBox">
+         <property name="toolTip">
+          <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Method &lt;span style=&quot; font-weight:600;&quot;&gt;Orbit&lt;/span&gt; has lower overhead but is still experimental.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+         </property>
+         <property name="title">
+          <string>Dynamic instrumentation</string>
+         </property>
+         <layout class="QVBoxLayout" name="verticalLayout_7">
+          <property name="spacing">
+           <number>6</number>
+          </property>
+          <property name="leftMargin">
+           <number>9</number>
+          </property>
+          <property name="topMargin">
+           <number>9</number>
+          </property>
+          <property name="rightMargin">
+           <number>9</number>
+          </property>
+          <property name="bottomMargin">
+           <number>9</number>
+          </property>
+          <item>
+           <widget class="QRadioButton" name="uprobesRadioButton">
+            <property name="accessibleName">
+             <string>UprobesRadioButton</string>
+            </property>
+            <property name="text">
+             <string>Kernel (uprobes)</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QRadioButton" name="userSpaceRadioButton">
+            <property name="accessibleName">
+             <string>UserSpaceInstrumentationRadioButton</string>
+            </property>
+            <property name="text">
+             <string>Orbit | experimental ⓘ</string>
+            </property>
+           </widget>
+          </item>
+         </layout>
+        </widget>
+       </item>
+       <item>
+        <widget class="QGroupBox" name="manualInstrumentationGroupBox">
+         <property name="title">
+          <string>Manual Instrumentation</string>
+         </property>
+         <layout class="QVBoxLayout" name="verticalLayout_9">
+          <item>
+           <widget class="QCheckBox" name="apiCheckBox">
+            <property name="accessibleName">
+             <string>ApiCheckBox</string>
+            </property>
+            <property name="text">
+             <string>Enable Orbit Api in target</string>
+            </property>
+           </widget>
+          </item>
+         </layout>
+        </widget>
+       </item>
+       <item>
+        <widget class="QGroupBox" name="memoryTracingGroupBox">
+         <property name="title">
+          <string>Memory tracing</string>
+         </property>
+         <layout class="QVBoxLayout" name="verticalLayout_5">
+          <item>
+           <widget class="QCheckBox" name="collectMemoryInfoCheckBox">
+            <property name="accessibleName">
+             <string>CollectMemoryInfoCheckBox</string>
+            </property>
+            <property name="text">
+             <string>Collect memory usage and page faults information</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <layout class="QHBoxLayout" name="memoryHorizontalLayout">
+            <item>
+             <widget class="QLabel" name="memorySamplingPeriodMsLabel">
+              <property name="text">
+               <string>Sampling period (ms):</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QLineEdit" name="memorySamplingPeriodMsLineEdit">
+              <property name="enabled">
+               <bool>true</bool>
+              </property>
+              <property name="accessibleName">
+               <string>MemorySamplingPeriodEdit</string>
+              </property>
+              <property name="inputMethodHints">
+               <set>Qt::ImhDigitsOnly</set>
+              </property>
+              <property name="text">
+               <string>10</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <spacer name="horizontalSpacer_2">
+              <property name="orientation">
+               <enum>Qt::Horizontal</enum>
+              </property>
+              <property name="sizeHint" stdset="0">
+               <size>
+                <width>60</width>
+                <height>20</height>
+               </size>
+              </property>
+             </spacer>
+            </item>
+            <item>
+             <widget class="QLabel" name="memoryWarningThresholdKbLabel">
+              <property name="text">
+               <string>Warning threshold (kB):</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QLineEdit" name="memoryWarningThresholdKbLineEdit">
+              <property name="enabled">
+               <bool>true</bool>
+              </property>
+              <property name="toolTip">
+               <string>The default value is 8388608 KB, i.e., 8GB.</string>
+              </property>
+              <property name="accessibleName">
+               <string>MemoryWarningThresholdKbLineEdit</string>
+              </property>
+              <property name="inputMethodHints">
+               <set>Qt::ImhDigitsOnly</set>
+              </property>
+              <property name="text">
+               <string>8388608</string>
+              </property>
+             </widget>
+            </item>
+           </layout>
+          </item>
+         </layout>
+        </widget>
+       </item>
+       <item>
+        <widget class="QGroupBox" name="schedulingGroupBox">
+         <property name="title">
+          <string>Scheduling</string>
+         </property>
+         <layout class="QVBoxLayout" name="verticalLayout_8">
+          <item>
+           <widget class="QCheckBox" name="schedulerCheckBox">
+            <property name="accessibleName">
+             <string>CollectSchedulerInfoCheckBox</string>
+            </property>
+            <property name="text">
+             <string>Collect scheduler information</string>
+            </property>
+            <property name="checked">
+             <bool>true</bool>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QCheckBox" name="threadStateCheckBox">
+            <property name="accessibleName">
+             <string>CollectThreadStatesCheckBox</string>
+            </property>
+            <property name="text">
+             <string>Collect thread states</string>
+            </property>
+           </widget>
+          </item>
+         </layout>
+        </widget>
+       </item>
+       <item>
+        <widget class="QGroupBox" name="vulkanLayerGroupBox">
+         <property name="toolTip">
+          <string>This requires Orbit's Vulkan layer to be loaded by the target process.</string>
+         </property>
+         <property name="title">
+          <string>Vulkan layer (requires Orbit's Vulkan layer to be loaded by the target)</string>
+         </property>
+         <layout class="QVBoxLayout" name="verticalLayout_4">
+          <item>
+           <layout class="QHBoxLayout" name="localMarkerDepthHorizontalLayout">
+            <item>
+             <widget class="QCheckBox" name="localMarkerDepthCheckBox">
+              <property name="accessibleName">
+               <string>LocalMarkerDepthCheckBox</string>
+              </property>
+              <property name="text">
+               <string>Limit local depth of markers per command buffer to:</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QLineEdit" name="localMarkerDepthLineEdit">
+              <property name="enabled">
+               <bool>false</bool>
+              </property>
+              <property name="toolTip">
+               <string>Limits the maximum depth of Vulkan debug markers per command buffer to the given value.
+Setting the value to &quot;0&quot; will disable Vulkan debug marker tracking.</string>
+              </property>
+              <property name="accessibleName">
+               <string>LocalMarkerDepthLineEdit</string>
+              </property>
+              <property name="inputMethodHints">
+               <set>Qt::ImhDigitsOnly</set>
+              </property>
+              <property name="text">
+               <string>3</string>
+              </property>
+             </widget>
+            </item>
+           </layout>
+          </item>
+         </layout>
+        </widget>
+       </item>
+       <item>
+        <widget class="QGroupBox" name="devModeGroupBox">
+         <property name="title">
+          <string>Dev. Mode</string>
+         </property>
+         <layout class="QVBoxLayout" name="verticalLayout_10">
+          <item>
+           <widget class="QCheckBox" name="gpuSubmissionsCheckBox">
+            <property name="accessibleName">
+             <string>GpuSubmissionsCheckBox</string>
+            </property>
+            <property name="text">
+             <string>Trace GPU queue submissions</string>
+            </property>
+            <property name="checked">
+             <bool>true</bool>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QCheckBox" name="introspectionCheckBox">
+            <property name="accessibleName">
+             <string>EnableIntrospectionCheckBox</string>
+            </property>
+            <property name="text">
+             <string>Enable introspection</string>
+            </property>
+           </widget>
+          </item>
+         </layout>
+        </widget>
+       </item>
+       <item>
+        <spacer name="verticalSpacer">
+         <property name="orientation">
+          <enum>Qt::Vertical</enum>
+         </property>
+         <property name="sizeType">
+          <enum>QSizePolicy::MinimumExpanding</enum>
+         </property>
+         <property name="sizeHint" stdset="0">
+          <size>
+           <width>0</width>
+           <height>8</height>
+          </size>
+         </property>
+        </spacer>
+       </item>
+      </layout>
+     </widget>
+    </widget>
+   </item>
   </layout>
  </widget>
+ <customwidgets>
+  <customwidget>
+   <class>orbit_qt::MultipleOfSpinBox</class>
+   <extends>QSpinBox</extends>
+   <header>MultipleOfSpinBox.h</header>
+  </customwidget>
+ </customwidgets>
  <resources/>
  <connections>
   <connection>
@@ -482,38 +610,6 @@ Setting the value to &quot;0&quot; will disable Vulkan debug marker tracking.</s
    </hints>
   </connection>
   <connection>
-   <sender>collectMemoryInfoCheckBox</sender>
-   <signal>toggled(bool)</signal>
-   <receiver>memorySamplingPeriodMsLineEdit</receiver>
-   <slot>setEnabled(bool)</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>239</x>
-     <y>103</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>173</x>
-     <y>128</y>
-    </hint>
-   </hints>
-  </connection>
-  <connection>
-   <sender>collectMemoryInfoCheckBox</sender>
-   <signal>toggled(bool)</signal>
-   <receiver>memoryWarningThresholdKbLineEdit</receiver>
-   <slot>setEnabled(bool)</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>239</x>
-     <y>103</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>413</x>
-     <y>128</y>
-    </hint>
-   </hints>
-  </connection>
-  <connection>
    <sender>memorySamplingPeriodMsLineEdit</sender>
    <signal>editingFinished()</signal>
    <receiver>CaptureOptionsDialog</receiver>
@@ -542,38 +638,6 @@ Setting the value to &quot;0&quot; will disable Vulkan debug marker tracking.</s
     <hint type="destinationlabel">
      <x>239</x>
      <y>203</y>
-    </hint>
-   </hints>
-  </connection>
-  <connection>
-   <sender>samplingCheckBox</sender>
-   <signal>toggled(bool)</signal>
-   <receiver>samplingPeriodMsDoubleSpinBox</receiver>
-   <slot>setEnabled(bool)</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>238</x>
-     <y>51</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>202</x>
-     <y>80</y>
-    </hint>
-   </hints>
-  </connection>
-  <connection>
-   <sender>samplingCheckBox</sender>
-   <signal>toggled(bool)</signal>
-   <receiver>unwindingMethodComboBox</receiver>
-   <slot>setEnabled(bool)</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>238</x>
-     <y>50</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>259</x>
-     <y>110</y>
     </hint>
    </hints>
   </connection>

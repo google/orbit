@@ -30,55 +30,51 @@ CaptureOptionsDialog::CaptureOptionsDialog(QWidget* parent)
 
   QObject::connect(ui_->buttonBox, &QDialogButtonBox::accepted, this, &QDialog::accept);
   QObject::connect(ui_->buttonBox, &QDialogButtonBox::rejected, this, &QDialog::reject);
-  QObject::connect(ui_->unwindingMethodComboBox, qOverload<int>(&QComboBox::currentIndexChanged),
-                   ui_->maxCopyRawStackSizeLineEdit, [this]() {
-                     auto unwinding_method = ui_->unwindingMethodComboBox->currentData().toInt();
-                     ui_->maxCopyRawStackSizeLineEdit->setEnabled(unwinding_method ==
-                                                                  CaptureOptions::kFramePointers);
-                   });
-  QObject::connect(ui_->maxCopyRawStackSizeLineEdit, &QLineEdit::editingFinished,
-                   ui_->maxCopyRawStackSizeLineEdit, [this]() {
-                     if (ui_->maxCopyRawStackSizeLineEdit->text().isEmpty()) {
-                       ui_->maxCopyRawStackSizeLineEdit->setText(
-                           QString::number(kMaxCopyRawStackSizeDefaultValue));
-                     }
+  QObject::connect(ui_->framePointerUnwindingRadioButton, qOverload<bool>(&QRadioButton::toggled),
+                   ui_->maxCopyRawStackSizeWidget,
+                   [this](bool checked) { ui_->maxCopyRawStackSizeWidget->setEnabled(checked); });
+  QObject::connect(ui_->collectMemoryInfoCheckBox, qOverload<bool>(&QCheckBox::toggled), this,
+                   [this](bool checked) {
+                     ui_->memorySamplingPeriodMsLabel->setEnabled(checked);
+                     ui_->memorySamplingPeriodMsLineEdit->setEnabled(checked);
+                     ui_->memoryWarningThresholdKbLabel->setEnabled(checked);
+                     ui_->memoryWarningThresholdKbLineEdit->setEnabled(checked);
                    });
 
-  ui_->unwindingMethodComboBox->addItem("DWARF", static_cast<int>(CaptureOptions::kDwarf));
-  ui_->unwindingMethodComboBox->addItem("Frame pointers",
-                                        static_cast<int>(CaptureOptions::kFramePointers));
-  ui_->maxCopyRawStackSizeLineEdit->setText(QString::number(kMaxCopyRawStackSizeDefaultValue));
-  ui_->dynamicInstrumentationMethodComboBox->addItem(
-      "Kernel (Uprobes)", static_cast<int>(CaptureOptions::kKernelUprobes));
-  ui_->dynamicInstrumentationMethodComboBox->addItem(
-      "Orbit", static_cast<int>(CaptureOptions::kUserSpaceInstrumentation));
-  if (!absl::GetFlag(FLAGS_devmode)) {
-    // TODO(b/198748597): Don't hide samplingCheckBox once disabling sampling completely is exposed.
-    ui_->samplingCheckBox->hide();
-    ui_->unwindingMethodWidget->hide();
-    ui_->maxCopyRawStackSizeWidget->hide();
-    ui_->schedulerCheckBox->hide();
-    ui_->gpuSubmissionsCheckBox->hide();
-    ui_->introspectionCheckBox->hide();
-  }
+  QObject::connect(ui_->samplingCheckBox, qOverload<bool>(&QCheckBox::toggled), this,
+                   [this](bool checked) {
+                     ui_->samplingPeriodMsLabel->setEnabled(checked);
+                     ui_->samplingPeriodMsDoubleSpinBox->setEnabled(checked);
+                     ui_->unwindingMethodGroupBox->setEnabled(checked);
+                   });
+
+  ui_->samplingPeriodMsLabel->setEnabled(ui_->samplingCheckBox->isChecked());
+  ui_->samplingPeriodMsDoubleSpinBox->setEnabled(ui_->samplingCheckBox->isChecked());
+  ui_->unwindingMethodGroupBox->setEnabled(ui_->samplingCheckBox->isChecked());
+
+  ui_->maxCopyRawStackSizeSpinBox->setValue(kMaxCopyRawStackSizeDefaultValue);
+  ui_->maxCopyRawStackSizeWidget->setEnabled(ui_->framePointerUnwindingRadioButton->isChecked());
 
   ui_->localMarkerDepthLineEdit->setValidator(&uint64_validator_);
+
+  ui_->memorySamplingPeriodMsLabel->setEnabled(ui_->collectMemoryInfoCheckBox->isChecked());
+  ui_->memorySamplingPeriodMsLineEdit->setEnabled(ui_->collectMemoryInfoCheckBox->isChecked());
+  ui_->memoryWarningThresholdKbLabel->setEnabled(ui_->collectMemoryInfoCheckBox->isChecked());
+  ui_->memoryWarningThresholdKbLineEdit->setEnabled(ui_->collectMemoryInfoCheckBox->isChecked());
   ui_->memorySamplingPeriodMsLineEdit->setValidator(new UInt64Validator(
       1, std::numeric_limits<uint64_t>::max(), ui_->memorySamplingPeriodMsLineEdit));
   ui_->memoryWarningThresholdKbLineEdit->setValidator(&uint64_validator_);
-  ui_->maxCopyRawStackSizeLineEdit->setValidator(
-      new UInt64Validator(0, kMaxCopyRawStackSizeMaxValue, ui_->maxCopyRawStackSizeLineEdit));
-
-  ui_->maxCopyRawStackSizeLabel->setToolTip(QString::fromStdString(
-      "To improve performance, we don't require to preserve the frame pointer register on leaf\n"
-      "functions (-momit-leaf-frame-pointer). In order to recover the frame corresponding to the\n"
-      "caller of a leaf function, we need to copy a portion of the raw stack and DWARF-unwind the\n"
-      "first frame. Specify how much data Orbit should copy. A larger value reduces the number of\n"
-      "unwind errors, but increases the performance overhead of sampling."));
-
   if (!absl::GetFlag(FLAGS_enable_warning_threshold)) {
     ui_->memoryWarningThresholdKbLabel->hide();
     ui_->memoryWarningThresholdKbLineEdit->hide();
+  }
+
+  if (!absl::GetFlag(FLAGS_devmode)) {
+    // TODO(b/198748597): Don't hide samplingCheckBox once disabling sampling completely is exposed.
+    ui_->samplingCheckBox->hide();
+    ui_->unwindingMethodGroupBox->hide();
+    ui_->schedulerCheckBox->hide();
+    ui_->devModeGroupBox->hide();
   }
 }
 
@@ -97,24 +93,38 @@ double CaptureOptionsDialog::GetSamplingPeriodMs() const {
 }
 
 void CaptureOptionsDialog::SetUnwindingMethod(UnwindingMethod unwinding_method) {
-  int index = ui_->unwindingMethodComboBox->findData(static_cast<int>(unwinding_method));
-  ORBIT_CHECK(index >= 0);
-  return ui_->unwindingMethodComboBox->setCurrentIndex(index);
+  switch (unwinding_method) {
+    case CaptureOptions::kDwarf:
+      ui_->dwarfUnwindingRadioButton->setChecked(true);
+      break;
+    case CaptureOptions::kFramePointers:
+      ui_->framePointerUnwindingRadioButton->setChecked(true);
+      break;
+    default:
+      ORBIT_UNREACHABLE();
+  }
 }
 
 UnwindingMethod CaptureOptionsDialog::GetUnwindingMethod() const {
-  return static_cast<UnwindingMethod>(ui_->unwindingMethodComboBox->currentData().toInt());
+  if (ui_->dwarfUnwindingRadioButton->isChecked()) {
+    ORBIT_CHECK(!ui_->framePointerUnwindingRadioButton->isChecked());
+    return CaptureOptions::kDwarf;
+  }
+  if (ui_->framePointerUnwindingRadioButton->isChecked()) {
+    ORBIT_CHECK(!ui_->dwarfUnwindingRadioButton->isChecked());
+    return CaptureOptions::kFramePointers;
+  }
+  ORBIT_UNREACHABLE();
 }
 
 void CaptureOptionsDialog::SetMaxCopyRawStackSize(uint16_t stack_dump_size) {
-  ui_->maxCopyRawStackSizeLineEdit->setText(QString::number(stack_dump_size));
+  ORBIT_CHECK(stack_dump_size % 8 == 0);
+  ui_->maxCopyRawStackSizeSpinBox->setValue(stack_dump_size);
 }
 
 uint16_t CaptureOptionsDialog::GetMaxCopyRawStackSize() const {
-  ORBIT_CHECK(!ui_->maxCopyRawStackSizeLineEdit->text().isEmpty());
-  bool valid = false;
-  uint16_t result = ui_->maxCopyRawStackSizeLineEdit->text().toUShort(&valid);
-  ORBIT_CHECK(valid);
+  uint16_t result = ui_->maxCopyRawStackSizeSpinBox->value();
+  ORBIT_CHECK(result % 8 == 0);
   return result;
 }
 
@@ -149,14 +159,28 @@ void CaptureOptionsDialog::SetEnableApi(bool enable_api) {
 bool CaptureOptionsDialog::GetEnableApi() const { return ui_->apiCheckBox->isChecked(); }
 
 void CaptureOptionsDialog::SetDynamicInstrumentationMethod(DynamicInstrumentationMethod method) {
-  const int index = ui_->dynamicInstrumentationMethodComboBox->findData(static_cast<int>(method));
-  ORBIT_CHECK(index >= 0);
-  ui_->dynamicInstrumentationMethodComboBox->setCurrentIndex(index);
+  switch (method) {
+    case CaptureOptions::kKernelUprobes:
+      ui_->uprobesRadioButton->setChecked(true);
+      break;
+    case CaptureOptions::kUserSpaceInstrumentation:
+      ui_->userSpaceRadioButton->setChecked(true);
+      break;
+    default:
+      ORBIT_UNREACHABLE();
+  }
 }
 
 DynamicInstrumentationMethod CaptureOptionsDialog::GetDynamicInstrumentationMethod() const {
-  return static_cast<DynamicInstrumentationMethod>(
-      ui_->dynamicInstrumentationMethodComboBox->currentData().toInt());
+  if (ui_->uprobesRadioButton->isChecked()) {
+    ORBIT_CHECK(!ui_->userSpaceRadioButton->isChecked());
+    return CaptureOptions::kKernelUprobes;
+  }
+  if (ui_->userSpaceRadioButton->isChecked()) {
+    ORBIT_CHECK(!ui_->uprobesRadioButton->isChecked());
+    return CaptureOptions::kUserSpaceInstrumentation;
+  }
+  ORBIT_UNREACHABLE();
 }
 
 void CaptureOptionsDialog::SetEnableIntrospection(bool enable_introspection) {
