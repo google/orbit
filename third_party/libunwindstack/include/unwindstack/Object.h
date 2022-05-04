@@ -57,8 +57,8 @@ class Object {
   virtual uint64_t GetRelPc(uint64_t pc, MapInfo* map_info) = 0;
 
   virtual bool StepIfSignalHandler(uint64_t rel_pc, Regs* regs, Memory* process_memory) = 0;
-  virtual bool Step(uint64_t rel_pc, Regs* regs, Memory* process_memory, bool* finished,
-                    bool* is_signal_frame) = 0;
+  virtual bool Step(uint64_t rel_pc, uint64_t pc_adjustment, Regs* regs, Memory* process_memory,
+                    bool* finished, bool* is_signal_frame) = 0;
 
   virtual Memory* memory() = 0;
 

@@ -229,7 +229,7 @@ TYPED_TEST(PeCoffTest, step_succeeds_when_interface_step_succeeds) {
   EXPECT_CALL(*mock_interface, Step(0x2000, 0, nullptr, nullptr, nullptr, nullptr))
       .WillOnce(::testing::Return(true));
   coff.SetFakePeCoffInterface(mock_interface);
-  EXPECT_TRUE(coff.Step(0x2000, nullptr, nullptr, nullptr, nullptr));
+  EXPECT_TRUE(coff.Step(0x2000, 0, nullptr, nullptr, nullptr, nullptr));
 }
 
 TYPED_TEST(PeCoffTest, steps_fails_when_interface_step_fails) {
@@ -239,7 +239,7 @@ TYPED_TEST(PeCoffTest, steps_fails_when_interface_step_fails) {
   EXPECT_CALL(*mock_interface, Step(0x2000, 0, nullptr, nullptr, nullptr, nullptr))
       .WillOnce(::testing::Return(false));
   coff.SetFakePeCoffInterface(mock_interface);
-  EXPECT_FALSE(coff.Step(0x2000, nullptr, nullptr, nullptr, nullptr));
+  EXPECT_FALSE(coff.Step(0x2000, 0, nullptr, nullptr, nullptr, nullptr));
 }
 
 TYPED_TEST(PeCoffTest, returns_correct_memory_ptr) {

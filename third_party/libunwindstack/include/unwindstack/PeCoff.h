@@ -65,8 +65,8 @@ class PeCoff : public Object {
   uint64_t GetRelPc(uint64_t pc, MapInfo* map_info) override;
 
   bool StepIfSignalHandler(uint64_t rel_pc, Regs* regs, Memory* process_memory) override;
-  bool Step(uint64_t rel_pc, Regs* regs, Memory* process_memory, bool* finished,
-            bool* is_signal_frame) override;
+  bool Step(uint64_t rel_pc, uint64_t pc_adjustment, Regs* regs, Memory* process_memory,
+            bool* finished, bool* is_signal_frame) override;
 
   Memory* memory() override { return memory_.get(); }
 

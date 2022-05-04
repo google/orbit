@@ -191,8 +191,8 @@ bool Elf::StepIfSignalHandler(uint64_t rel_pc, Regs* regs, Memory* process_memor
 }
 
 // The relative pc is always relative to the start of the map from which it comes.
-bool Elf::Step(uint64_t rel_pc, Regs* regs, Memory* process_memory, bool* finished,
-               bool* is_signal_frame) {
+bool Elf::Step(uint64_t rel_pc, uint64_t /*pc_adjustment*/, Regs* regs, Memory* process_memory,
+               bool* finished, bool* is_signal_frame) {
   if (!valid_) {
     return false;
   }
