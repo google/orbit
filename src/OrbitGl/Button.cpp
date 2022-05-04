@@ -101,10 +101,11 @@ void Button::DoDraw(PrimitiveAssembler& primitive_assembler, TextRenderer& text_
   TextRendererInterface::TextFormatting format;
   format.color = kTextColor;
   format.valign = TextRendererInterface::VAlign::Middle;
+  format.halign = TextRendererInterface::HAlign::Centered;
   format.max_size = GetSize()[0];
   format.font_size = layout_->CalculateZoomedFontSize();
 
-  const float x = pos[0];
+  const float x = pos[0] + size[0] / 2.f;
   const float y = pos[1] + size[1] / 2.f;
   text_renderer.AddText(label_.c_str(), x, y, z, format);
 }

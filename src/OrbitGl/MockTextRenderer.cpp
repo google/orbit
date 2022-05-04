@@ -32,7 +32,18 @@ void MockTextRenderer::AddText(const char* text, float x, float y, float z,
   }
   float text_height = GetStringHeight(text, formatting.font_size);
 
-  float real_start_x = formatting.halign == HAlign::Left ? x : x - text_width;
+  float real_start_x = x;
+
+  switch (formatting.halign) {
+    case HAlign::Left:
+      break;
+    case HAlign::Right:
+      real_start_x -= text_width;
+      break;
+    case HAlign::Centered:
+      real_start_x -= text_width / 2.f;
+      break;
+  }
   float real_start_y;
   switch (formatting.valign) {
     case VAlign::Top:

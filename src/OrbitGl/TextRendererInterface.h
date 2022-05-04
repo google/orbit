@@ -17,7 +17,7 @@ namespace orbit_gl {
 
 class TextRendererInterface {
  public:
-  enum class HAlign { Left, Right };
+  enum class HAlign { Left, Right, Centered };
   enum class VAlign { Top, Middle, Bottom };
 
   struct TextFormatting {

@@ -335,9 +335,18 @@ void OpenGlTextRenderer::AddText(const char* text, float x, float y, float z,
     return;
   }
 
-  if (formatting.halign == HAlign::Right) {
-    float string_width = GetStringWidth(text, formatting.font_size);
-    pen_.x -= std::min(string_width, formatting.max_size > 0 ? formatting.max_size : FLT_MAX);
+  float string_width = GetStringWidth(text, formatting.font_size);
+  string_width = std::min(string_width, formatting.max_size > 0 ? formatting.max_size : FLT_MAX);
+
+  switch (formatting.halign) {
+    case HAlign::Left:
+      break;
+    case HAlign::Right:
+      pen_.x -= string_width;
+      break;
+    case HAlign::Centered:
+      pen_.x -= string_width / 2.f;
+      break;
   }
 
   ftgl::vec2 out_screen_pos;
