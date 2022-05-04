@@ -190,7 +190,7 @@ std::string SamplingReport::GetSelectedCallstackString() const {
       100.f * num_occurrences / total_callstacks, type_string);
 }
 
-double SamplingReport::UnwindErrorRatio(uint32_t thread_id) const {
+double SamplingReport::ComputeUnwindErrorRatio(uint32_t thread_id) const {
   if (post_processed_sampling_data_ == nullptr) {
     return 0.;
   }
