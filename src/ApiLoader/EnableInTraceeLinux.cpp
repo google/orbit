@@ -97,7 +97,7 @@ ErrorMessageOr<void> SetApiEnabledInTracee(const CaptureOptions& capture_options
     // Get address of function table by calling "orbit_api_get_function_table_address_vN" in tracee.
     // Note that the address start is always page_aligned and we need to account for that by
     // aligning executable_segment_offset as well.
-    void* api_function_address = absl::bit_cast<void*>(api_function.absolute_virtual_address());
+    void* api_function_address = absl::bit_cast<void*>(api_function.absolute_address());
     uint64_t function_table_address = 0;
     if (absl::StartsWith(api_function.name(), kOrbitApiGetFunctionTableAddressPrefix)) {
       // The target is a native Linux binary.

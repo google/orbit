@@ -325,7 +325,7 @@ void orbit_api_set_enabled_wine(uint64_t address, uint64_t api_version, bool ena
 // This function is a wrapper around "orbit_api_set_enabled" that takes in a single parameter.
 // It is needed on Windows as our method for remote code execution is based on "CreateRemoteThread"
 // which takes in a single parameter.
-ORBIT_EXPORT void OrbitApiSetEnabledFromStruct(orbit_api::ApiEnableInfo* info) {
+ORBIT_EXPORT void orbit_api_set_enabled_from_struct(orbit_api::ApiEnableInfo* info) {
   void* (*orbit_api_get_address_of_function_table)() =
       absl::bit_cast<void* (*)()>(info->orbit_api_function_address);
   void* api_function_table_address = orbit_api_get_address_of_function_table();

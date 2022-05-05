@@ -80,8 +80,8 @@ std::vector<ApiFunction> FindApiFunctions(const orbit_client_data::ModuleManager
         ApiFunction api_function;
         api_function.set_module_path(function_info->module_path());
         api_function.set_module_build_id(function_info->module_build_id());
-        api_function.set_relative_virtual_address(function_info->address());
-        api_function.set_absolute_virtual_address(absolute_address);
+        api_function.set_relative_address(function_info->address());
+        api_function.set_absolute_address(absolute_address);
         api_function.set_name(function_name);
         api_function.set_api_version(i);
         api_functions.emplace_back(api_function);

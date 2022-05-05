@@ -11,7 +11,7 @@
 
 namespace orbit_api {
 
-// This structure is used on Windows when calling "OrbitApiSetEnabledFromStruct" remotely
+// This structure is used on Windows when calling "orbit_api_set_enabled_from_struct" remotely
 // using the "CreateRemoteThread" api, which takes in a single parameter for the thread function.
 // This struct needs to be POD so that we can easily copy it in a remote process address space.
 struct ApiEnableInfo {
