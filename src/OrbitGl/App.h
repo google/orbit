@@ -640,7 +640,7 @@ class OrbitApp final : public DataViewFactory,
   // ONLY access this from the main thread.
   absl::flat_hash_map<std::pair<std::string, std::string>,
                       orbit_base::Future<ErrorMessageOr<std::filesystem::path>>>
-      symbol_files_currently_retrieved_;
+      symbol_files_currently_being_retrieved_;
 
   // Map of "module ID" (file path and build ID) to symbol loading future, that holds all symbol
   // loading operations that are currently in progress. Since retrieving and downloading a file can

@@ -1672,7 +1672,7 @@ orbit_base::Future<ErrorMessageOr<std::filesystem::path>> OrbitApp::RetrieveModu
                                                   {absl::GetFlag(FLAGS_instance_symbols_folder)});
       });
 
-  orbit_base::StopSource stop_source{};
+  orbit_base::StopSource stop_source;
 
   auto download_file = [this, module_file_path, scoped_status = std::move(scoped_status),
                         stop_token =
@@ -1719,10 +1719,11 @@ orbit_base::Future<ErrorMessageOr<std::filesystem::path>> OrbitApp::RetrieveModu
   symbol_files_currently_downloading_.emplace(
       module_file_path,
       OrbitApp::ModuleLoadOperation{std::move(stop_source), chained_result_future});
-  chained_result_future.Then(main_thread_executor_,
-                             [this, module_file_path](const auto& /*result*/) {
-                               symbol_files_currently_downloading_.erase(module_file_path);
-                             });
+  chained_result_future.Then(
+      main_thread_executor_,
+      [this, module_file_path](const ErrorMessageOr<std::filesystem::path>& /*result*/) {
+        symbol_files_currently_downloading_.erase(module_file_path);
+      });
 
   return chained_result_future;
 }
@@ -1844,8 +1845,8 @@ orbit_base::Future<ErrorMessageOr<std::filesystem::path>> OrbitApp::RetrieveModu
 
   auto module_id = std::make_pair(module_path, build_id);
 
-  const auto it = symbol_files_currently_retrieved_.find(module_id);
-  if (it != symbol_files_currently_retrieved_.end()) {
+  const auto it = symbol_files_currently_being_retrieved_.find(module_id);
+  if (it != symbol_files_currently_being_retrieved_.end()) {
     return it->second;
   }
 
@@ -1880,10 +1881,11 @@ orbit_base::Future<ErrorMessageOr<std::filesystem::path>> OrbitApp::RetrieveModu
                       });
           }));
 
-  symbol_files_currently_retrieved_.emplace(module_id, final_result);
-  final_result.Then(main_thread_executor_, [this, module_id](const auto& /*result*/) {
-    symbol_files_currently_retrieved_.erase(module_id);
-  });
+  symbol_files_currently_being_retrieved_.emplace(module_id, final_result);
+  final_result.Then(main_thread_executor_,
+                    [this, module_id](const ErrorMessageOr<std::filesystem::path>& /*result*/) {
+                      symbol_files_currently_being_retrieved_.erase(module_id);
+                    });
 
   return final_result;
 }
