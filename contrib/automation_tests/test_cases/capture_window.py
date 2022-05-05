@@ -579,7 +579,7 @@ class SetAndCheckMemorySamplingPeriod(E2ETestCase):
         logging.info('Selecting "Collect memory usage and page faults information" checkbox')
         collect_system_memory_usage_checkbox = self.find_control(
             'CheckBox',
-            'Collect memory usage and page faults information',
+            'CollectMemoryInfoCheckBox',
             parent=self.find_control('Window', 'Capture Options'))
         if not collect_system_memory_usage_checkbox.get_toggle_state():
             collect_system_memory_usage_checkbox.click_input()
