@@ -292,14 +292,14 @@ TEST_F(ModulesDataViewTest, ColumnSortingShowsRightResults) {
 }
 
 TEST_F(ModulesDataViewTest, SymbolLoadingColumnContent) {
-  const int kIndex = 0;
+  constexpr int kIndex = 0;
   AddModulesByIndices({kIndex});
   const ModuleData* module = module_manager_.GetModuleByPathAndBuildId(
       modules_in_memory_[kIndex].file_path(), modules_in_memory_[kIndex].build_id());
 
-  auto get_content_for = [this, module, kIndex](SymbolLoadingState state) -> std::string {
+  auto get_content_for = [this, module](SymbolLoadingState state) -> std::string {
     EXPECT_CALL(app_, GetSymbolLoadingStateForModule(module)).WillOnce(testing::Return(state));
-    return view_.GetValue(kIndex, kColumnSymbols);
+    return view_.GetValue(0, kColumnSymbols);
   };
 
   EXPECT_EQ(get_content_for(SymbolLoadingState::kUnknown), "");
@@ -311,12 +311,12 @@ TEST_F(ModulesDataViewTest, SymbolLoadingColumnContent) {
 }
 
 TEST_F(ModulesDataViewTest, SymbolLoadingColor) {
-  const int kIndex = 0;
+  constexpr int kIndex = 0;
   AddModulesByIndices({kIndex});
   const ModuleData* module = module_manager_.GetModuleByPathAndBuildId(
       modules_in_memory_[kIndex].file_path(), modules_in_memory_[kIndex].build_id());
 
-  auto check_color_correct_for = [this, module, kIndex](SymbolLoadingState state) {
+  auto check_color_correct_for = [this, module](SymbolLoadingState state) {
     uint8_t red = 0;
     uint8_t green = 0;
     uint8_t blue = 0;
@@ -327,7 +327,7 @@ TEST_F(ModulesDataViewTest, SymbolLoadingColor) {
     uint8_t view_green = 0;
     uint8_t view_blue = 0;
     bool view_default_color =
-        !view_.GetDisplayColor(kIndex, kColumnSymbols, view_red, view_green, view_blue);
+        !view_.GetDisplayColor(0, kColumnSymbols, view_red, view_green, view_blue);
     EXPECT_EQ(default_color, view_default_color);
     EXPECT_EQ(red, view_red);
     EXPECT_EQ(green, view_green);
