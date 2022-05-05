@@ -6,7 +6,6 @@
 #define DATA_VIEWS_MODULES_DATA_VIEW_H_
 
 #include <absl/container/flat_hash_map.h>
-#include <absl/flags/flag.h>
 #include <stdint.h>
 
 #include <string>
@@ -14,7 +13,6 @@
 
 #include "ClientData/ModuleData.h"
 #include "ClientData/ProcessData.h"
-#include "ClientFlags/ClientFlags.h"
 #include "DataViews/AppInterface.h"
 #include "DataViews/DataView.h"
 
