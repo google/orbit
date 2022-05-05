@@ -18,18 +18,10 @@
 #include "MetricsUploader/MetricsUploaderStub.h"
 #include "MockAppInterface.h"
 
+namespace orbit_data_views {
+
 using orbit_client_data::ModuleData;
 using orbit_client_data::ModuleInMemory;
-using orbit_data_views::CheckCopySelectionIsInvoked;
-using orbit_data_views::CheckExportToCsvIsInvoked;
-using orbit_data_views::ContextMenuEntry;
-using orbit_data_views::FlattenContextMenu;
-using orbit_data_views::FlattenContextMenuWithGroupingAndCheckOrder;
-using orbit_data_views::GetActionIndexOnMenu;
-using orbit_data_views::kInvalidActionIndex;
-using orbit_data_views::kMenuActionCopySelection;
-using orbit_data_views::kMenuActionExportToCsv;
-using orbit_data_views::kMenuActionLoadSymbols;
 using orbit_grpc_protos::ModuleInfo;
 
 namespace {
@@ -287,3 +279,5 @@ TEST_F(ModulesDataViewTest, ColumnSortingShowsRightResults) {
   // Sort by address range descending
   { sort_and_verify(kColumnAddressRange, orbit_data_views::DataView::SortingOrder::kDescending); }
 }
+
+}  // namespace orbit_data_views
