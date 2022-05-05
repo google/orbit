@@ -384,42 +384,6 @@ void TimeGraph::ProcessPageFaultsTrackingTimer(const TimerInfo& timer_info) {
   track->OnTimer(timer_info);
 }
 
-void TimeGraph::ProcessSliderMouseMoveEvents(int x, int y) {
-  orbit_gl::GlSlider* slider = FindSliderUnderMouseCursor(x, y);
-  if (slider != last_mouseover_slider_) {
-    if (last_mouseover_slider_ != nullptr) {
-      last_mouseover_slider_->OnMouseLeave();
-    }
-    last_mouseover_slider_ = slider;
-    if (slider != nullptr) {
-      slider->OnMouseEnter();
-    }
-  }
-
-  if (slider != nullptr) {
-    slider->OnMouseMove(x, y);
-  }
-}
-
-// TODO(b/230441102): Refactor this using the new MouseEvent.
-void TimeGraph::SetIsMouseOver(bool value) {
-  if (!value && last_mouseover_slider_ != nullptr) {
-    last_mouseover_slider_->OnMouseLeave();
-    last_mouseover_slider_ = nullptr;
-    RequestUpdate(RequestUpdateScope::kDraw);
-  }
-}
-
-orbit_gl::GlSlider* TimeGraph::FindSliderUnderMouseCursor(int x, int y) {
-  for (orbit_gl::GlSlider* slider : {vertical_slider_.get(), horizontal_slider_.get()}) {
-    if (slider->ContainsScreenSpacePoint(x, y)) {
-      return slider;
-    }
-  }
-
-  return nullptr;
-}
-
 orbit_gl::CaptureViewElement::EventResult TimeGraph::OnMouseWheel(
     const Vec2& mouse_pos, int delta, const orbit_gl::ModifierKeys& modifiers) {
   if (delta == 0) return EventResult::kIgnored;

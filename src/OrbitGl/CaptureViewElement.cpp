@@ -60,6 +60,17 @@ CaptureViewElement::EventResult CaptureViewElement::OnMouseWheel(
   return EventResult::kIgnored;
 }
 
+void CaptureViewElement::OnMouseMove(const Vec2& mouse_pos) {
+  if (IsMouseOver(mouse_pos) && !IsMouseOver(mouse_pos_cur_)) {
+    OnMouseEnter();
+  }
+  if (!IsMouseOver(mouse_pos) && IsMouseOver(mouse_pos_cur_)) {
+    OnMouseLeave();
+  }
+
+  mouse_pos_cur_ = mouse_pos;
+}
+
 void CaptureViewElement::UpdateLayout() {
   has_layout_changed_ = false;
 
@@ -130,19 +141,53 @@ bool CaptureViewElement::IsMouseOver(const Vec2& mouse_pos) const {
   return ContainsPoint(mouse_pos);
 }
 
-CaptureViewElement::EventResult CaptureViewElement::HandleMouseWheelEvent(
-    const Vec2& mouse_pos, int delta, const ModifierKeys& modifiers) {
+CaptureViewElement::EventResult CaptureViewElement::HandleMouseEvent(
+    MouseEvent mouse_event, const ModifierKeys& modifiers) {
+  Vec2 mouse_pos = mouse_event.mouse_position;
+
+  // MouseMoved without any click should be handled by all the elements.
+  if (mouse_event.event_type == EventType::kMouseMoved && !mouse_event.left && !mouse_event.right &&
+      !mouse_event.middle) {
+    OnMouseMove(mouse_pos);
+    for (CaptureViewElement* child : GetAllChildren()) {
+      std::ignore = child->HandleMouseEvent(mouse_event, modifiers);
+    }
+  }
+
   if (!IsMouseOver(mouse_pos)) {
     return EventResult::kIgnored;
   }
 
   for (CaptureViewElement* child : GetAllChildren()) {
-    if (child->HandleMouseWheelEvent(mouse_pos, delta, modifiers) == EventResult::kHandled) {
+    if (child->HandleMouseEvent(mouse_event, modifiers) == EventResult::kHandled) {
       return EventResult::kHandled;
     }
   }
 
-  return OnMouseWheel(mouse_pos, delta, modifiers);
+  const Vec2 kOutsidePosition{std::numeric_limits<float>::max(), std::numeric_limits<float>::max()};
+  switch (mouse_event.event_type) {
+    case EventType::kMouseOut:
+      return HandleMouseEvent(MouseEvent{EventType::kMouseMoved, kOutsidePosition});
+    case EventType::kMouseWheelUp:
+    case EventType::kMouseWheelDown:
+      return OnMouseWheel(mouse_pos, mouse_event.event_type == EventType::kMouseWheelUp ? 1 : -1,
+                          modifiers);
+    case EventType::kLeftUp:
+      return HandleMouseEvent(MouseEvent{EventType::kMouseMoved, mouse_pos}, modifiers);
+    case EventType::kLeftDown:
+      break;
+    case EventType::kRightUp:
+      return HandleMouseEvent(MouseEvent{EventType::kMouseMoved, mouse_pos}, modifiers);
+      break;
+    case EventType::kRightDown:
+      break;
+    case EventType::kInvalidEvent:
+      ORBIT_ERROR("Mouse Invalid Event");
+      break;
+    default:
+      break;
+  }
+  return EventResult::kIgnored;
 }
 
 std::vector<CaptureViewElement*> CaptureViewElement::GetNonHiddenChildren() const {

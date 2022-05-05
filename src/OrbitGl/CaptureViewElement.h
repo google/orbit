@@ -60,10 +60,31 @@ class CaptureViewElement : public Pickable, public AccessibleInterfaceProvider {
   // This also checks IsMouseOver() for the parent, and only returns true if the mouse
   // position is included in all parents up to the root
   [[nodiscard]] bool IsMouseOver(const Vec2& mouse_pos) const;
+  virtual void OnMouseEnter(){};
+  virtual void OnMouseLeave(){};
+
+  enum class EventType {
+    kMouseMoved,
+    kMouseOut,
+    kMouseWheelUp,
+    kMouseWheelDown,
+    kLeftUp,
+    kLeftDown,
+    kRightUp,
+    kRightDown,
+    kInvalidEvent
+  };
+  struct MouseEvent {
+    EventType event_type = EventType::kInvalidEvent;
+    Vec2 mouse_position = {0.f, 0.f};
+    bool left = false;
+    bool right = false;
+    bool middle = false;
+  };
 
   enum class EventResult { kHandled, kIgnored };
-  [[nodiscard]] EventResult HandleMouseWheelEvent(const Vec2& mouse_pos, int delta,
-                                                  const ModifierKeys& modifiers = ModifierKeys());
+  [[nodiscard]] EventResult HandleMouseEvent(MouseEvent mouse_event,
+                                             const ModifierKeys& modifiers = ModifierKeys());
 
   [[nodiscard]] virtual CaptureViewElement* GetParent() const { return parent_; }
   [[nodiscard]] virtual std::vector<CaptureViewElement*> GetAllChildren() const { return {}; }
@@ -133,6 +154,7 @@ class CaptureViewElement : public Pickable, public AccessibleInterfaceProvider {
 
   [[nodiscard]] virtual EventResult OnMouseWheel(const Vec2& mouse_pos, int delta,
                                                  const ModifierKeys& modifiers);
+  virtual void OnMouseMove(const Vec2& mouse_pos);
 
  private:
   float width_ = 0.;

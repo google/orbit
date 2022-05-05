@@ -163,11 +163,6 @@ class TimeGraph : public orbit_gl::CaptureViewElement, public orbit_gl::Timeline
     return accessible_parent_;
   }
 
-  // TODO(b/230442062): Refactor slider methods.
-  orbit_gl::GlSlider* FindSliderUnderMouseCursor(int x, int y);
-  void ProcessSliderMouseMoveEvents(int x, int y);
-  void SetIsMouseOver(bool value);
-
  protected:
   void DoDraw(orbit_gl::PrimitiveAssembler& primitive_assembler,
               orbit_gl::TextRenderer& text_renderer, const DrawContext& draw_context) override;
@@ -216,7 +211,6 @@ class TimeGraph : public orbit_gl::CaptureViewElement, public orbit_gl::Timeline
   orbit_gl::OpenGlBatcher batcher_;
   orbit_gl::PrimitiveAssembler primitive_assembler_;
 
-  orbit_gl::GlSlider* last_mouseover_slider_ = nullptr;
   std::unique_ptr<orbit_gl::TrackContainer> track_container_;
   std::unique_ptr<orbit_gl::TimelineUi> timeline_ui_;
 

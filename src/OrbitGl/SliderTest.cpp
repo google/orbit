@@ -111,7 +111,7 @@ static void TestDragType() {
     EXPECT_EQ(drag_count, 2);
     EXPECT_EQ(size_count, 0);
   }
-  EXPECT_EQ(pos, kPos);
+  EXPECT_NEAR(pos, kPos, kEpsilon);
   EXPECT_EQ(size, kSize);
 
   PickDragRelease<dim>(*slider, 75 * scale - kOffset);
@@ -122,7 +122,7 @@ static void TestDragType() {
     EXPECT_EQ(drag_count, 3);
     EXPECT_EQ(size_count, 0);
   }
-  EXPECT_EQ(pos, kPos);
+  EXPECT_NEAR(pos, kPos, kEpsilon);
   EXPECT_EQ(size, kSize);
 
   drag_count = 0;

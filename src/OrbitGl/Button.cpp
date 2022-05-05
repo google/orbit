@@ -95,7 +95,8 @@ void Button::DoDraw(PrimitiveAssembler& primitive_assembler, TextRenderer& text_
   size_w_border -= kBorderSize + kBorderSize;
 
   // Button itself
-  primitive_assembler.AddShadedBox(pos_w_border, size_w_border, z, kBaseColor,
+  const Color slider_color = IsMouseOver(mouse_pos_cur_) ? kHighlightColor : kBaseColor;
+  primitive_assembler.AddShadedBox(pos_w_border, size_w_border, z, slider_color,
                                    ShadingDirection::kTopToBottom);
 
   TextRendererInterface::TextFormatting format;

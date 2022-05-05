@@ -20,18 +20,16 @@ class UnitTestTimeGraph : public testing::Test {
                                               capture_data_.get(), nullptr);
   }
 
-  // TODO(b/230441102): Temporal solution while we implement mouse moved methods for
-  // CaptureViewElements.
-  void MouseMoved(int x, int y, bool left, bool right, bool middle) {
-    if (!(left || right || middle)) {
-      time_graph_->ProcessSliderMouseMoveEvents(x, y);
-    }
-  }
-
   void SimulatePreRender() { tester_.SimulatePreRender(time_graph_.get()); }
 
   orbit_gl::GlSlider* FindSliderUnderMouseCursor(int x, int y) {
-    return time_graph_->FindSliderUnderMouseCursor(x, y);
+    if (HorizontalSlider()->IsMouseOver(viewport_->ScreenToWorld({x, y}))) {
+      return HorizontalSlider();
+    }
+    if (VerticalSlider()->IsMouseOver(viewport_->ScreenToWorld({x, y}))) {
+      return VerticalSlider();
+    }
+    return nullptr;
   }
   [[nodiscard]] GlSlider* HorizontalSlider() { return time_graph_->GetHorizontalSlider(); }
   [[nodiscard]] GlSlider* VerticalSlider() { return time_graph_->GetVerticalSlider(); }

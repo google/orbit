@@ -171,15 +171,20 @@ TEST(CaptureViewElement, MouseWheelEventRecursesToCorrectChildren) {
       .WillRepeatedly(Return(CaptureViewElement::EventResult::kHandled));
 
   EXPECT_EQ(CaptureViewElement::EventResult::kIgnored,
-            container_elem.HandleMouseWheelEvent(kPosOutside, kDelta));
+            container_elem.HandleMouseEvent(CaptureViewElement::MouseEvent{
+                CaptureViewElement::EventType::kMouseWheelUp, kPosOutside}));
   EXPECT_EQ(CaptureViewElement::EventResult::kIgnored,
-            container_elem.HandleMouseWheelEvent(kPosBetweenChildren, kDelta));
+            container_elem.HandleMouseEvent(CaptureViewElement::MouseEvent{
+                CaptureViewElement::EventType::kMouseWheelUp, kPosBetweenChildren}));
   EXPECT_EQ(CaptureViewElement::EventResult::kIgnored,
-            container_elem.HandleMouseWheelEvent(kPosOnChild0, kDelta));
+            container_elem.HandleMouseEvent(CaptureViewElement::MouseEvent{
+                CaptureViewElement::EventType::kMouseWheelUp, kPosOnChild0}));
   EXPECT_EQ(CaptureViewElement::EventResult::kIgnored,
-            container_elem.HandleMouseWheelEvent(kPosOnChild1, kDelta));
+            container_elem.HandleMouseEvent(CaptureViewElement::MouseEvent{
+                CaptureViewElement::EventType::kMouseWheelUp, kPosOnChild1}));
   EXPECT_EQ(CaptureViewElement::EventResult::kHandled,
-            container_elem.HandleMouseWheelEvent(kPosOnChild2, kDelta));
+            container_elem.HandleMouseEvent(CaptureViewElement::MouseEvent{
+                CaptureViewElement::EventType::kMouseWheelUp, kPosOnChild2}));
 }
 
 TEST(CaptureViewElement, RequestUpdateBubblesUpAndIsClearedAfterDrawLoop) {
