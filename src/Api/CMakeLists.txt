@@ -8,7 +8,12 @@ project(Api)
 
 add_library(Api SHARED)
 
+if (WIN32)
+# We don't use "orbit" to avoid a naming clash with Orbit.exe's pdb file.
+set_target_properties(Api PROPERTIES OUTPUT_NAME "OrbitApi")
+else()
 set_target_properties(Api PROPERTIES OUTPUT_NAME "orbit")
+endif()
 
 target_sources(Api PRIVATE
         LockFreeApiEventProducer.h

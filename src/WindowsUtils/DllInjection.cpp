@@ -89,11 +89,12 @@ ErrorMessageOr<Module> FindModule(uint32_t pid, std::string_view module_name) {
 }
 
 ErrorMessageOr<Module> FindModuleWithRetries(uint32_t pid, std::string_view module_name,
-                                             uint32_t num_retries) {
+                                             uint32_t num_retries,
+                                             uint64_t time_between_retries_ms) {
   while (true) {
     ErrorMessageOr<Module> result = FindModule(pid, module_name);
     if (result.has_value() || num_retries-- <= 0) return result;
-    std::this_thread::sleep_for(std::chrono::milliseconds(50));
+    std::this_thread::sleep_for(std::chrono::milliseconds(time_between_retries_ms));
   }
 }
 
@@ -106,23 +107,41 @@ ErrorMessageOr<void> EnsureModuleIsNotAlreadyLoaded(uint32_t pid, std::string_vi
   return outcome::success();
 }
 
-}  // namespace
-
-ErrorMessageOr<void> InjectDll(uint32_t pid, std::filesystem::path dll_path) {
+ErrorMessageOr<void> InjectDllInternal(uint32_t pid, const std::filesystem::path& dll_path) {
   const std::string dll_name = dll_path.string();
   ORBIT_SCOPED_TIMED_LOG("Injecting dll \"%s\" in process %u", dll_name, pid);
-
-  OUTCOME_TRY(ValidatePath(dll_path));
-  OUTCOME_TRY(EnsureModuleIsNotAlreadyLoaded(pid, dll_path.filename().string()));
 
   // Inject dll by calling "LoadLibraryA" in remote process with the name of our dll as parameter.
   OUTCOME_TRY(CreateRemoteThread(pid, "kernel32.dll", "LoadLibraryA", dll_name));
 
   // Find injected dll in target process. Allow for retries as the loading might take some time.
   constexpr uint32_t kNumRetries = 10;
-  OUTCOME_TRY(Module module, FindModuleWithRetries(pid, dll_path.filename().string(), kNumRetries));
+  constexpr uint64_t kTimeBetweenRetriesMs = 250;
+  OUTCOME_TRY(Module module, FindModuleWithRetries(pid, dll_path.filename().string(), kNumRetries,
+                                                   kTimeBetweenRetriesMs));
 
   ORBIT_LOG("Module \"%s\" successfully injected in process %u", dll_name, pid);
+  return outcome::success();
+}
+
+}  // namespace
+
+ErrorMessageOr<void> InjectDll(uint32_t pid, std::filesystem::path dll_path) {
+  OUTCOME_TRY(ValidatePath(dll_path));
+  OUTCOME_TRY(EnsureModuleIsNotAlreadyLoaded(pid, dll_path.filename().string()));
+  OUTCOME_TRY(InjectDllInternal(pid, dll_path));
+  return outcome::success();
+}
+
+ErrorMessageOr<void> InjectDllIfNotLoaded(uint32_t pid, std::filesystem::path dll_path) {
+  OUTCOME_TRY(ValidatePath(dll_path));
+
+  if (EnsureModuleIsNotAlreadyLoaded(pid, dll_path.filename().string()).has_error()) {
+    // Dll is already loaded, no more work to do.
+    return outcome::success();
+  }
+
+  OUTCOME_TRY(InjectDllInternal(pid, dll_path));
   return outcome::success();
 }
 

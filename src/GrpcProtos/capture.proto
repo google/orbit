@@ -33,7 +33,8 @@ message InstrumentedFunction {
 message ApiFunction {
   string module_path = 1;
   string module_build_id = 2;
-  uint64 address = 3;
+  uint64 relative_address = 3;
+  uint64 absolute_address = 6;
   string name = 4;
   uint64 api_version = 5;
 }

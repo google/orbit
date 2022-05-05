@@ -322,10 +322,15 @@ static void AddOrbitApiToCaptureOptions(orbit_grpc_protos::CaptureOptions* captu
       "%s%u", orbit_api_utils::kOrbitApiGetFunctionTableAddressPrefix, kOrbitApiVersion);
   for (const orbit_grpc_protos::SymbolInfo& symbol_info : module_symbols.symbol_infos()) {
     if (symbol_info.demangled_name() == api_function_name) {
+      uint64_t absolute_address = orbit_object_utils::SymbolVirtualAddressToAbsoluteAddress(
+          symbol_info.address(), module_info.address_start(), module_info.load_bias(),
+          module_info.executable_segment_offset());
+
       orbit_grpc_protos::ApiFunction* api_function = capture_options->add_api_functions();
       api_function->set_module_path(module_info.file_path());
       api_function->set_module_build_id(module_info.build_id());
-      api_function->set_address(symbol_info.address());
+      api_function->set_relative_address(symbol_info.address());
+      api_function->set_absolute_address(absolute_address);
       api_function->set_name(api_function_name);
       api_function->set_api_version(kOrbitApiVersion);
       break;
