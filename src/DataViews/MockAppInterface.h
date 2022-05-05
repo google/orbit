@@ -113,6 +113,11 @@ class MockAppInterface : public AppInterface {
               (const, override));
   MOCK_METHOD(SymbolLoadingState, GetSymbolLoadingStateForModule,
               (const orbit_client_data::ModuleData* module), (const, override));
+
+  MOCK_METHOD(bool, IsSymbolLoadingInProgressForModule,
+              (const orbit_client_data::ModuleData* module), (const, override));
+  MOCK_METHOD(void, RequestSymbolDownloadStop,
+              (absl::Span<const orbit_client_data::ModuleData* const>), (override));
 };
 
 }  // namespace orbit_data_views

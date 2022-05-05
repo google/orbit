@@ -51,6 +51,10 @@ class ModulesDataView : public DataView {
   [[nodiscard]] std::string GetSymbolLoadingStateForModuleString(
       const orbit_client_data::ModuleData* module);
 
+  // TODO(b/202140068) Remove this method when new ui is activated
+  [[nodiscard, deprecated]] DataView::ActionStatus OldUiGetActionStatus(
+      std::string_view action, int clicked_index, const std::vector<int>& selected_indices);
+
   // TODO(b/202140068) remove when auto symbol loading is released
   bool new_ui_;
 

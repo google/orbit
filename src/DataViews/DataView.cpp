@@ -116,9 +116,9 @@ std::vector<DataView::ActionGroup> DataView::GetContextMenuWithGrouping(
   };
 
   // Hooking related actions
-  try_add_action_group({kMenuActionLoadSymbols, kMenuActionSelect, kMenuActionUnselect,
-                        kMenuActionEnableFrameTrack, kMenuActionDisableFrameTrack,
-                        kMenuActionVerifyFramePointers});
+  try_add_action_group({kMenuActionLoadSymbols, kMenuActionStopDownload, kMenuActionSelect,
+                        kMenuActionUnselect, kMenuActionEnableFrameTrack,
+                        kMenuActionDisableFrameTrack, kMenuActionVerifyFramePointers});
 
   try_add_action_group({kMenuActionDisassembly, kMenuActionSourceCode});
 
@@ -139,6 +139,8 @@ void DataView::OnContextMenu(const std::string& action, int /*menu_index*/,
                              const std::vector<int>& item_indices) {
   if (action == kMenuActionLoadSymbols) {
     OnLoadSymbolsRequested(item_indices);
+  } else if (action == kMenuActionStopDownload) {
+    OnStopDownloadRequested(item_indices);
   } else if (action == kMenuActionSelect) {
     OnSelectRequested(item_indices);
   } else if (action == kMenuActionUnselect) {
@@ -198,6 +200,18 @@ void DataView::OnLoadSymbolsRequested(const std::vector<int>& selection) {
   metrics_uploader_->SendLogEvent(
       orbit_metrics_uploader::OrbitLogEvent::ORBIT_LOAD_SYMBOLS_CLICKED);
   app_->RetrieveModulesAndLoadSymbols(modules_to_load);
+}
+
+void DataView::OnStopDownloadRequested(const std::vector<int>& selection) {
+  std::vector<const ModuleData*> modules_to_stop;
+  for (int index : selection) {
+    const ModuleData* module = GetModuleDataFromRow(index);
+    ORBIT_CHECK(module != nullptr);
+    if (app_->IsModuleDownloading(module)) {
+      modules_to_stop.push_back(module);
+    }
+  }
+  app_->RequestSymbolDownloadStop(modules_to_stop);
 }
 
 void DataView::OnSelectRequested(const std::vector<int>& selection) {

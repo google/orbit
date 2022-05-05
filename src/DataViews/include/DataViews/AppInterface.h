@@ -122,6 +122,11 @@ class AppInterface {
       const orbit_client_data::ModuleData* module) const = 0;
   [[nodiscard]] virtual SymbolLoadingState GetSymbolLoadingStateForModule(
       const orbit_client_data::ModuleData* module) const = 0;
+
+  [[nodiscard]] virtual bool IsSymbolLoadingInProgressForModule(
+      const orbit_client_data::ModuleData* module) const = 0;
+  virtual void RequestSymbolDownloadStop(
+      absl::Span<const orbit_client_data::ModuleData* const> modules) = 0;
 };
 
 }  // namespace orbit_data_views

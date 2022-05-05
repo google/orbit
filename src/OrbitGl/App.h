@@ -537,6 +537,11 @@ class OrbitApp final : public DataViewFactory,
   [[nodiscard]] orbit_data_views::SymbolLoadingState GetSymbolLoadingStateForModule(
       const orbit_client_data::ModuleData* module) const override;
 
+  [[nodiscard]] bool IsSymbolLoadingInProgressForModule(
+      const orbit_client_data::ModuleData* module) const override;
+  void RequestSymbolDownloadStop(
+      absl::Span<const orbit_client_data::ModuleData* const> modules) override;
+
  private:
   void UpdateModulesAbortCaptureIfModuleWithoutBuildIdNeedsReload(
       absl::Span<const orbit_grpc_protos::ModuleInfo> module_infos);

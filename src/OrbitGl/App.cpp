@@ -3071,3 +3071,23 @@ SymbolLoadingState OrbitApp::GetSymbolLoadingStateForModule(const ModuleData* mo
 
   return SymbolLoadingState::kUnknown;
 }
+
+bool OrbitApp::IsSymbolLoadingInProgressForModule(
+    const orbit_client_data::ModuleData* module) const {
+  ORBIT_CHECK(module != nullptr);
+  ORBIT_CHECK(main_thread_id_ == std::this_thread::get_id());
+  return symbols_currently_loading_.contains(
+      std::make_pair(module->file_path(), module->build_id()));
+}
+
+void OrbitApp::RequestSymbolDownloadStop(absl::Span<const ModuleData* const> modules) {
+  ORBIT_CHECK(main_thread_id_ == std::this_thread::get_id());
+
+  for (const auto* module : modules) {
+    if (!symbol_files_currently_downloading_.contains(module->file_path())) {
+      // Download already ended
+      continue;
+    }
+    symbol_files_currently_downloading_.at(module->file_path()).stop_source.RequestStop();
+  }
+}
