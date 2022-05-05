@@ -30,7 +30,7 @@ constexpr int kViewportWidth = 600;
 constexpr int kViewportHeight = 100;
 
 constexpr double kSliderPosEpsilon = 0.0001;
-constexpr double kTimeEpsilonUs = 0.0001;
+constexpr double kTimeEpsilonUs = 0.0000001;
 
 class NavigationTestCaptureWindow : public CaptureWindow, public testing::Test {
  public:
@@ -63,8 +63,8 @@ class NavigationTestCaptureWindow : public CaptureWindow, public testing::Test {
     EXPECT_DOUBLE_EQ(time_graph_->GetHorizontalSlider()->GetPosRatio(), 0.0);
 
     if (allow_small_imprecision) {
-      EXPECT_NEAR(time_graph_->GetMaxTimeUs() * 1000, time_graph_->GetCaptureMax(), kTimeEpsilonUs);
-      EXPECT_NEAR(time_graph_->GetMinTimeUs() * 1000, 0, kTimeEpsilonUs);
+      EXPECT_NEAR(time_graph_->GetMaxTimeUs(), time_graph_->GetCaptureMax() / 1000, kTimeEpsilonUs);
+      EXPECT_NEAR(time_graph_->GetMinTimeUs(), 0, kTimeEpsilonUs);
     } else {
       EXPECT_DOUBLE_EQ(time_graph_->GetMaxTimeUs() * 1000, time_graph_->GetCaptureMax());
       EXPECT_DOUBLE_EQ(time_graph_->GetMinTimeUs() * 1000, 0);
@@ -152,8 +152,8 @@ TEST_F(NavigationTestCaptureWindow, ZoomTimeWorksAtRandomPositions) {
 
   constexpr int kNumTries = 100;
   for (int i = 0; i < kNumTries; ++i) {
-    int x = dist(mt);
-    int y = kTimelineSize[1] - kBottomSafetyMargin;
+    const int x = dist(mt);
+    const int y = kTimelineSize[1] - kBottomSafetyMargin;
 
     // Zoom in twice, then zoom out twice. Check that the intermediate states match
     MouseWheelMoved(x, y, 1, false);

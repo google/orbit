@@ -158,6 +158,8 @@ class TimeGraph : public orbit_gl::CaptureViewElement, public orbit_gl::Timeline
   void SetIsMouseOver(bool value);
 
  protected:
+  static constexpr double kTimeGraphMinTimeWindowsUs = 0.1; /* 100 ns */
+
   void DoDraw(orbit_gl::PrimitiveAssembler& primitive_assembler,
               orbit_gl::TextRenderer& text_renderer, const DrawContext& draw_context) override;
   void PrepareBatcherAndUpdatePrimitives(PickingMode picking_mode);

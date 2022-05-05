@@ -164,6 +164,14 @@ void TimeGraph::ZoomTime(float zoom_value, double mouse_ratio) {
   double min_time_us = ref_time_us_ - time_left / scale;
   double max_time_us = ref_time_us_ + time_right / scale;
 
+  const double duration = max_time_us - min_time_us;
+
+  if (duration < kTimeGraphMinTimeWindowsUs) {
+    const double diff = kTimeGraphMinTimeWindowsUs - duration;
+    min_time_us -= diff * mouse_ratio;
+    max_time_us += diff * (1. - mouse_ratio);
+  }
+
   SetMinMax(min_time_us, max_time_us);
 }
 
@@ -187,14 +195,17 @@ void TimeGraph::VerticalZoom(float zoom_value, float mouse_world_y_pos) {
 // it.
 void TimeGraph::SetMinMax(double min_time_us, double max_time_us) {
   constexpr double kTimeGraphMinTimeWindowsUs = 0.1; /* 100 ns */
-  const double desired_time_window =
-      std::max(max_time_us - min_time_us, kTimeGraphMinTimeWindowsUs);
 
-  // Centering the interval in screen.
-  const double center_time_us = (max_time_us + min_time_us) / 2.;
+  // Center the interval on screen if needed
+  if (max_time_us - min_time_us < kTimeGraphMinTimeWindowsUs || min_time_us < 0. ||
+      max_time_us > GetCaptureTimeSpanUs()) {
+    const double desired_time_window =
+        std::max(max_time_us - min_time_us, kTimeGraphMinTimeWindowsUs);
+    const double center_time_us = (max_time_us + min_time_us) / 2.;
 
-  min_time_us = std::max(center_time_us - desired_time_window / 2, 0.0);
-  max_time_us = std::min(min_time_us + desired_time_window, GetCaptureTimeSpanUs());
+    min_time_us = std::max(center_time_us - desired_time_window / 2, 0.0);
+    max_time_us = std::min(min_time_us + desired_time_window, GetCaptureTimeSpanUs());
+  }
 
   if (min_time_us == min_time_us_ && max_time_us == max_time_us_) return;
 
