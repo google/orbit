@@ -21,7 +21,7 @@ namespace orbit_data_views {
 class ModulesDataView : public DataView {
  public:
   explicit ModulesDataView(AppInterface* app,
-                           orbit_metrics_uploader::MetricsUploader* metrics_uploader);
+                           orbit_metrics_uploader::MetricsUploader* metrics_uploader, bool new_ui);
 
   const std::vector<Column>& GetColumns() override;
   int GetDefaultSortingColumn() override { return kColumnFileSize; }
@@ -48,13 +48,18 @@ class ModulesDataView : public DataView {
   [[nodiscard]] orbit_client_data::ModuleData* GetModuleDataFromRow(int row) const override {
     return start_address_to_module_.at(indices_[row]);
   }
+  [[nodiscard]] std::string GetSymbolLoadingStateForModuleString(
+      const orbit_client_data::ModuleData* module);
+
+  // TODO(b/202140068) remove when auto symbol loading is released
+  bool new_ui_;
 
   absl::flat_hash_map<uint64_t, orbit_client_data::ModuleInMemory>
       start_address_to_module_in_memory_;
   absl::flat_hash_map<uint64_t, orbit_client_data::ModuleData*> start_address_to_module_;
 
   enum ColumnIndex {
-    kColumnLoaded,
+    kColumnSymbols,
     kColumnName,
     kColumnPath,
     kColumnAddressRange,

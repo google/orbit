@@ -3,33 +3,29 @@
 // found in the LICENSE file.
 
 #include <absl/strings/str_format.h>
+#include <gmock/gmock-actions.h>
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
 
+#include <cstdint>
 #include <filesystem>
 #include <string>
 
 #include "ClientData/ProcessData.h"
 #include "DataViewTestUtils.h"
+#include "DataViews/AppInterface.h"
 #include "DataViews/DataView.h"
 #include "DataViews/ModulesDataView.h"
+#include "DataViews/SymbolLoadingState.h"
 #include "DisplayFormats/DisplayFormats.h"
 #include "GrpcProtos/module.pb.h"
 #include "MetricsUploader/MetricsUploaderStub.h"
 #include "MockAppInterface.h"
 
+namespace orbit_data_views {
+
 using orbit_client_data::ModuleData;
 using orbit_client_data::ModuleInMemory;
-using orbit_data_views::CheckCopySelectionIsInvoked;
-using orbit_data_views::CheckExportToCsvIsInvoked;
-using orbit_data_views::ContextMenuEntry;
-using orbit_data_views::FlattenContextMenu;
-using orbit_data_views::FlattenContextMenuWithGroupingAndCheckOrder;
-using orbit_data_views::GetActionIndexOnMenu;
-using orbit_data_views::kInvalidActionIndex;
-using orbit_data_views::kMenuActionCopySelection;
-using orbit_data_views::kMenuActionExportToCsv;
-using orbit_data_views::kMenuActionLoadSymbols;
 using orbit_grpc_protos::ModuleInfo;
 
 namespace {
@@ -44,7 +40,7 @@ const std::array<std::string, kNumModules> kFilePaths{
 const std::array<std::string, kNumModules> kBuildIds{"build_id_0", "build_id_1", "build_id_2"};
 
 // ModulesDataView also has column index constants defined, but they are declared as private.
-constexpr int kColumnLoaded = 0;
+constexpr int kColumnSymbols = 0;
 constexpr int kColumnName = 1;
 constexpr int kColumnPath = 2;
 constexpr int kColumnAddressRange = 3;
@@ -61,7 +57,7 @@ std::string GetExpectedDisplayFileSizeByIndex(size_t index) {
 
 class ModulesDataViewTest : public testing::Test {
  public:
-  explicit ModulesDataViewTest() : view_{&app_, &metrics_uploader_} {
+  explicit ModulesDataViewTest() : view_{&app_, &metrics_uploader_, true} {
     view_.Init();
     for (size_t i = 0; i < kNumModules; i++) {
       ModuleInMemory module_in_memory{kStartAddresses[i], kEndAddresses[i], kFilePaths[i],
@@ -114,11 +110,14 @@ TEST_F(ModulesDataViewTest, HasValidDefaultSortingColumn) {
 TEST_F(ModulesDataViewTest, ColumnValuesAreCorrect) {
   AddModulesByIndices({0});
 
+  EXPECT_CALL(app_, GetSymbolLoadingStateForModule)
+      .WillOnce(testing::Return(SymbolLoadingState::kUnknown));
+
   EXPECT_EQ(view_.GetValue(0, kColumnName), kNames[0]);
   EXPECT_EQ(view_.GetValue(0, kColumnPath), kFilePaths[0]);
   EXPECT_EQ(view_.GetValue(0, kColumnAddressRange), GetExpectedDisplayAddressRangeByIndex(0));
   EXPECT_EQ(view_.GetValue(0, kColumnFileSize), GetExpectedDisplayFileSizeByIndex(0));
-  EXPECT_EQ(view_.GetValue(0, kColumnLoaded), "");
+  EXPECT_EQ(view_.GetValue(0, kColumnSymbols), "");
 }
 
 TEST_F(ModulesDataViewTest, ContextMenuEntriesArePresent) {
@@ -150,9 +149,11 @@ TEST_F(ModulesDataViewTest, ContextMenuActionsAreInvoked) {
 
   // Copy Selection
   {
+    EXPECT_CALL(app_, GetSymbolLoadingStateForModule)
+        .WillOnce(testing::Return(SymbolLoadingState::kLoaded));
     std::string expected_clipboard = absl::StrFormat(
-        "Loaded\tName\tPath\tAddress Range\tFile Size\n"
-        "\t%s\t%s\t%s\t%s\n",
+        "Symbols\tName\tPath\tAddress Range\tFile Size\n"
+        "Loaded\t%s\t%s\t%s\t%s\n",
         kNames[0], kFilePaths[0], GetExpectedDisplayAddressRangeByIndex(0),
         GetExpectedDisplayFileSizeByIndex(0));
     CheckCopySelectionIsInvoked(context_menu, app_, view_, expected_clipboard);
@@ -160,10 +161,12 @@ TEST_F(ModulesDataViewTest, ContextMenuActionsAreInvoked) {
 
   // Export to CSV
   {
+    EXPECT_CALL(app_, GetSymbolLoadingStateForModule)
+        .WillOnce(testing::Return(SymbolLoadingState::kLoaded));
     std::string expected_contents =
-        absl::StrFormat(R"("Loaded","Name","Path","Address Range","File Size")"
+        absl::StrFormat(R"("Symbols","Name","Path","Address Range","File Size")"
                         "\r\n"
-                        R"("","%s","%s","%s","%s")"
+                        R"("Loaded","%s","%s","%s","%s")"
                         "\r\n",
                         kNames[0], kFilePaths[0], GetExpectedDisplayAddressRangeByIndex(0),
                         GetExpectedDisplayFileSizeByIndex(0));
@@ -287,3 +290,56 @@ TEST_F(ModulesDataViewTest, ColumnSortingShowsRightResults) {
   // Sort by address range descending
   { sort_and_verify(kColumnAddressRange, orbit_data_views::DataView::SortingOrder::kDescending); }
 }
+
+TEST_F(ModulesDataViewTest, SymbolLoadingColumnContent) {
+  constexpr int kIndex = 0;
+  AddModulesByIndices({kIndex});
+  const ModuleData* module = module_manager_.GetModuleByPathAndBuildId(
+      modules_in_memory_[kIndex].file_path(), modules_in_memory_[kIndex].build_id());
+
+  auto get_content_for = [this, module](SymbolLoadingState state) -> std::string {
+    EXPECT_CALL(app_, GetSymbolLoadingStateForModule(module)).WillOnce(testing::Return(state));
+    return view_.GetValue(0, kColumnSymbols);
+  };
+
+  EXPECT_EQ(get_content_for(SymbolLoadingState::kUnknown), "");
+  EXPECT_EQ(get_content_for(SymbolLoadingState::kDisabled), "Disabled");
+  EXPECT_EQ(get_content_for(SymbolLoadingState::kDownloading), "Downloading...");
+  EXPECT_EQ(get_content_for(SymbolLoadingState::kError), "Error");
+  EXPECT_EQ(get_content_for(SymbolLoadingState::kLoading), "Loading...");
+  EXPECT_EQ(get_content_for(SymbolLoadingState::kLoaded), "Loaded");
+}
+
+TEST_F(ModulesDataViewTest, SymbolLoadingColor) {
+  constexpr int kIndex = 0;
+  AddModulesByIndices({kIndex});
+  const ModuleData* module = module_manager_.GetModuleByPathAndBuildId(
+      modules_in_memory_[kIndex].file_path(), modules_in_memory_[kIndex].build_id());
+
+  auto check_color_correct_for = [this, module](SymbolLoadingState state) {
+    uint8_t red = 0;
+    uint8_t green = 0;
+    uint8_t blue = 0;
+    bool default_color = !state.GetDisplayColor(red, green, blue);
+
+    EXPECT_CALL(app_, GetSymbolLoadingStateForModule(module)).WillOnce(testing::Return(state));
+    uint8_t view_red = 0;
+    uint8_t view_green = 0;
+    uint8_t view_blue = 0;
+    bool view_default_color =
+        !view_.GetDisplayColor(0, kColumnSymbols, view_red, view_green, view_blue);
+    EXPECT_EQ(default_color, view_default_color);
+    EXPECT_EQ(red, view_red);
+    EXPECT_EQ(green, view_green);
+    EXPECT_EQ(blue, view_blue);
+  };
+
+  check_color_correct_for(SymbolLoadingState::kUnknown);
+  check_color_correct_for(SymbolLoadingState::kDisabled);
+  check_color_correct_for(SymbolLoadingState::kDownloading);
+  check_color_correct_for(SymbolLoadingState::kError);
+  check_color_correct_for(SymbolLoadingState::kLoading);
+  check_color_correct_for(SymbolLoadingState::kLoaded);
+}
+
+}  // namespace orbit_data_views

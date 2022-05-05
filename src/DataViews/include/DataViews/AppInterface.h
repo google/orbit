@@ -18,6 +18,7 @@
 #include "ClientData/ProcessData.h"
 #include "ClientProtos/capture_data.pb.h"
 #include "DataViews/PresetLoadState.h"
+#include "DataViews/SymbolLoadingState.h"
 #include "GrpcProtos/tracepoint.pb.h"
 #include "OrbitBase/Future.h"
 #include "PresetFile/PresetFile.h"
@@ -116,6 +117,11 @@ class AppInterface {
 
   [[nodiscard]] virtual const orbit_statistics::BinomialConfidenceIntervalEstimator&
   GetConfidenceIntervalEstimator() const = 0;
+
+  [[nodiscard]] virtual bool IsModuleDownloading(
+      const orbit_client_data::ModuleData* module) const = 0;
+  [[nodiscard]] virtual SymbolLoadingState GetSymbolLoadingStateForModule(
+      const orbit_client_data::ModuleData* module) const = 0;
 };
 
 }  // namespace orbit_data_views

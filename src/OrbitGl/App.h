@@ -57,6 +57,7 @@
 #include "DataViews/ModulesDataView.h"
 #include "DataViews/PresetLoadState.h"
 #include "DataViews/PresetsDataView.h"
+#include "DataViews/SymbolLoadingState.h"
 #include "DataViews/TracepointsDataView.h"
 #include "FramePointerValidatorClient.h"
 #include "FrameTrackOnlineProcessor.h"
@@ -530,6 +531,11 @@ class OrbitApp final : public DataViewFactory,
   GetHistogramSelectionRange() const {
     return histogram_selection_range_;
   }
+
+  [[nodiscard]] bool IsModuleDownloading(
+      const orbit_client_data::ModuleData* module) const override;
+  [[nodiscard]] orbit_data_views::SymbolLoadingState GetSymbolLoadingStateForModule(
+      const orbit_client_data::ModuleData* module) const override;
 
  private:
   void UpdateModulesAbortCaptureIfModuleWithoutBuildIdNeedsReload(

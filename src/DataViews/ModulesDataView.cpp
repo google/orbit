@@ -15,6 +15,7 @@
 #include <cstdint>
 #include <functional>
 
+#include "ClientData/ModuleData.h"
 #include "ClientData/ProcessData.h"
 #include "ClientFlags/ClientFlags.h"
 #include "DataViews/CompareAscendingOrDescending.h"
@@ -30,21 +31,31 @@ using orbit_client_data::ProcessData;
 namespace orbit_data_views {
 
 ModulesDataView::ModulesDataView(AppInterface* app,
-                                 orbit_metrics_uploader::MetricsUploader* metrics_uploader)
-    : DataView(DataViewType::kModules, app, metrics_uploader) {}
+                                 orbit_metrics_uploader::MetricsUploader* metrics_uploader,
+                                 bool new_ui)
+    : DataView(DataViewType::kModules, app, metrics_uploader), new_ui_(new_ui) {}
 
 const std::vector<DataView::Column>& ModulesDataView::GetColumns() {
-  static const std::vector<Column> columns = [] {
+  static const std::vector<Column> columns = [this] {
     std::vector<Column> columns;
     columns.resize(kNumColumns);
-    columns[kColumnLoaded] = {"Loaded", .0f, SortingOrder::kDescending};
+    if (new_ui_) {
+      columns[kColumnSymbols] = {"Symbols", .175f, SortingOrder::kDescending};
+    } else {
+      columns[kColumnSymbols] = {"Loaded", .0f, SortingOrder::kDescending};
+    }
     columns[kColumnName] = {"Name", .2f, SortingOrder::kAscending};
-    columns[kColumnPath] = {"Path", .5f, SortingOrder::kAscending};
-    columns[kColumnAddressRange] = {"Address Range", .15f, SortingOrder::kAscending};
-    columns[kColumnFileSize] = {"File Size", .0f, SortingOrder::kDescending};
+    columns[kColumnPath] = {"Path", .45f, SortingOrder::kAscending};
+    columns[kColumnAddressRange] = {"Address Range", .075f, SortingOrder::kAscending};
+    columns[kColumnFileSize] = {"File Size", .1f, SortingOrder::kDescending};
     return columns;
   }();
   return columns;
+}
+
+std::string ModulesDataView::GetSymbolLoadingStateForModuleString(const ModuleData* module) {
+  SymbolLoadingState loading_state = app_->GetSymbolLoadingStateForModule(module);
+  return loading_state.GetDescription();
 }
 
 std::string ModulesDataView::GetValue(int row, int col) {
@@ -53,8 +64,12 @@ std::string ModulesDataView::GetValue(int row, int col) {
   const ModuleInMemory& memory_space = start_address_to_module_in_memory_.at(start_address);
 
   switch (col) {
-    case kColumnLoaded:
+    case kColumnSymbols: {
+      if (new_ui_) {
+        return GetSymbolLoadingStateForModuleString(module);
+      }
       return module->is_loaded() ? "*" : "";
+    }
     case kColumnName:
       return module->name();
     case kColumnPath:
@@ -87,7 +102,7 @@ void ModulesDataView::DoSort() {
   std::function<bool(uint64_t, uint64_t)> sorter = nullptr;
 
   switch (sorting_column_) {
-    case kColumnLoaded:
+    case kColumnSymbols:
       sorter = ORBIT_PROC_SORT(is_loaded());
       break;
     case kColumnName:
@@ -209,6 +224,11 @@ void ModulesDataView::OnRefreshButtonClicked() {
 bool ModulesDataView::GetDisplayColor(int row, int /*column*/, unsigned char& red,
                                       unsigned char& green, unsigned char& blue) {
   const ModuleData* module = GetModuleDataFromRow(row);
+
+  if (new_ui_) {
+    return app_->GetSymbolLoadingStateForModule(module).GetDisplayColor(red, green, blue);
+  }
+
   if (module->is_loaded()) {
     red = 42;
     green = 218;

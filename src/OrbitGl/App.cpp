@@ -53,11 +53,13 @@
 #include "CodeReport/Disassembler.h"
 #include "CodeReport/DisassemblyReport.h"
 #include "CodeReport/SourceCodeReport.h"
+#include "DataViews/AppInterface.h"
 #include "DataViews/DataView.h"
 #include "DataViews/DataViewType.h"
 #include "DataViews/FunctionsDataView.h"
 #include "DataViews/ModulesDataView.h"
 #include "DataViews/PresetsDataView.h"
+#include "DataViews/SymbolLoadingState.h"
 #include "FrameTrackOnlineProcessor.h"
 #include "GlCanvas.h"
 #include "GrpcProtos/Constants.h"
@@ -131,6 +133,7 @@ using orbit_data_views::DataView;
 using orbit_data_views::FunctionsDataView;
 using orbit_data_views::ModulesDataView;
 using orbit_data_views::PresetsDataView;
+using orbit_data_views::SymbolLoadingState;
 using orbit_data_views::TracepointsDataView;
 
 using orbit_gl::MainWindowInterface;
@@ -2645,7 +2648,8 @@ orbit_data_views::DataView* OrbitApp::GetOrCreateDataView(DataViewType type) {
 
     case DataViewType::kModules:
       if (!modules_data_view_) {
-        modules_data_view_ = DataView::CreateAndInit<ModulesDataView>(this, metrics_uploader_);
+        modules_data_view_ =
+            DataView::CreateAndInit<ModulesDataView>(this, metrics_uploader_, IsDevMode());
         panels_.push_back(modules_data_view_.get());
       }
       return modules_data_view_.get();
@@ -3042,4 +3046,28 @@ OrbitApp::GetConfidenceIntervalEstimator() const {
 void OrbitApp::ShowHistogram(const std::vector<uint64_t>* data, const std::string& scope_name,
                              uint64_t scope_id) {
   main_window_->ShowHistogram(data, scope_name, scope_id);
+}
+
+[[nodiscard]] bool OrbitApp::IsModuleDownloading(const ModuleData* module) const {
+  ORBIT_CHECK(module != nullptr);
+  ORBIT_CHECK(main_thread_id_ == std::this_thread::get_id());
+  return symbol_files_currently_downloading_.contains(module->file_path());
+}
+
+SymbolLoadingState OrbitApp::GetSymbolLoadingStateForModule(const ModuleData* module) const {
+  ORBIT_CHECK(module != nullptr);
+  ORBIT_CHECK(main_thread_id_ == std::this_thread::get_id());
+
+  if (IsModuleDownloading(module)) return SymbolLoadingState::kDownloading;
+
+  if (symbols_currently_loading_.contains(
+          std::make_pair(module->file_path(), module->build_id()))) {
+    return SymbolLoadingState::kLoading;
+  }
+
+  if (module->is_loaded()) return SymbolLoadingState::kLoaded;
+
+  // TODO(b/202140068) add missing error and disabled case
+
+  return SymbolLoadingState::kUnknown;
 }
