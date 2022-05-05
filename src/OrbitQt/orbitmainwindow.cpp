@@ -1122,7 +1122,8 @@ void OrbitMainWindow::LoadCaptureOptionsIntoApp() {
                  static_cast<int>(
                      orbit_qt::CaptureOptionsDialog::kCallstackUnwindingMethodDefaultValue))
           .toInt());
-  if (unwinding_method == CaptureOptions::kUndefined) {
+  if (unwinding_method != CaptureOptions::kFramePointers &&
+      unwinding_method != CaptureOptions::kDwarf) {
     ORBIT_ERROR("Unknown unwinding method specified; Using default unwinding method");
     unwinding_method = orbit_qt::CaptureOptionsDialog::kCallstackUnwindingMethodDefaultValue;
   }
