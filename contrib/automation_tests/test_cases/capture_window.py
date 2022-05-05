@@ -307,17 +307,7 @@ class CaptureE2ETestCaseBase(E2ETestCase):
         logging.info('Showing capture window')
         self.find_control("TabItem", "Capture").click_input()
 
-    def _set_capture_options(self, collect_thread_states: bool, collect_system_memory_usage: bool,
-                             user_space_instrumentation: bool, manual_instrumentation: bool,
-                             frame_pointer_unwinding: bool, sampling_period_ms: float):
-        capture_tab = self.find_control('Group', "CaptureTab")
-
-        logging.info('Opening "Capture Options" dialog')
-        capture_options_button = self.find_control('Button', 'Capture Options', parent=capture_tab)
-        capture_options_button.click_input()
-
-        capture_options_dialog = self.find_control('Window', 'Capture Options')
-
+    def _set_collect_thread_states_capture_option(self, collect_thread_states: bool, capture_options_dialog):
         collect_thread_states_checkbox = self.find_control('CheckBox',
                                                            'CollectThreadStatesCheckBox',
                                                            parent=capture_options_dialog)
@@ -325,6 +315,7 @@ class CaptureE2ETestCaseBase(E2ETestCase):
             logging.info('Toggling "Collect thread states" checkbox')
             collect_thread_states_checkbox.click_input()
 
+    def _set_collect_system_memory_usage_capture_option(self, collect_system_memory_usage, capture_options_dialog):
         collect_system_memory_usage_checkbox = self.find_control(
             'CheckBox',
             'CollectMemoryInfoCheckBox',
@@ -333,6 +324,40 @@ class CaptureE2ETestCaseBase(E2ETestCase):
             logging.info('Toggling "Collect memory usage and page faults information" checkbox')
             collect_system_memory_usage_checkbox.click_input()
 
+    def _set_dynamic_instrumentation_method_capture_option(self, user_space_instrumentation: bool,
+                                                           capture_options_dialog):
+        if user_space_instrumentation:
+            logging.info('Setting dynamic instrumentation method to "Orbit".')
+            user_space_radio_button = self.find_control('RadioButton', 'UserSpaceInstrumentationRadioButton',
+                                                        parent=capture_options_dialog)
+            user_space_radio_button.click_input()
+        else:
+            logging.info('Setting dynamic instrumentation method to "Kernel (Uprobes)".')
+            uprobes_radio_button = self.find_control('RadioButton', 'UprobesRadioButton',
+                                                     parent=capture_options_dialog)
+            uprobes_radio_button.click_input()
+
+    def _set_manual_instrumentation_capture_option(self, manual_instrumentation: bool, capture_options_dialog):
+        manual_instrumentation_checkbox = self.find_control('CheckBox',
+                                                            'ApiCheckBox',
+                                                            parent=capture_options_dialog)
+        if manual_instrumentation_checkbox.get_toggle_state() != manual_instrumentation:
+            logging.info('Toggling "Enable Orbit Api in target" checkbox')
+            manual_instrumentation_checkbox.click_input()
+
+    def _set_unwinding_method_capture_option(self, frame_pointer_unwinding: bool, capture_options_dialog):
+        if frame_pointer_unwinding:
+            logging.info('Setting sampling method to "Frame pointers".')
+            frame_pointer_unwinding_radio_button = self.find_control('RadioButton', 'FramePointerRadioButton',
+                                                                     parent=capture_options_dialog)
+            frame_pointer_unwinding_radio_button.click_input()
+        else:
+            logging.info('Setting sampling method to "DWARF".')
+            dwarf_unwinding_radio_button = self.find_control('RadioButton', 'DWARFRadioButton',
+                                                             parent=capture_options_dialog)
+            dwarf_unwinding_radio_button.click_input()
+
+    def _set_sampling_period_ms_capture_option(self, sampling_period_ms: float, capture_options_dialog):
         logging.info('Setting sampling period to {}.'.format(sampling_period_ms))
         sampling_period_spin_box = self.find_control('Spinner', 'SamplingPeriodMsDoubleSpinBox',
                                                      parent=capture_options_dialog)
@@ -354,34 +379,23 @@ class CaptureE2ETestCaseBase(E2ETestCase):
                                                                                     sampling_period_spin_box.texts()[
                                                                                         0]))
 
-        if frame_pointer_unwinding:
-            logging.info('Setting sampling method to "Frame pointers".')
-            frame_pointer_unwinding_radio_button = self.find_control('RadioButton', 'FramePointerRadioButton',
-                                                                     parent=capture_options_dialog)
-            frame_pointer_unwinding_radio_button.click_input()
-        else:
-            logging.info('Setting sampling method to "DWARF".')
-            dwarf_unwinding_radio_button = self.find_control('RadioButton', 'DWARFRadioButton',
-                                                             parent=capture_options_dialog)
-            dwarf_unwinding_radio_button.click_input()
+    def _set_capture_options(self, collect_thread_states: bool, collect_system_memory_usage: bool,
+                             user_space_instrumentation: bool, manual_instrumentation: bool,
+                             frame_pointer_unwinding: bool, sampling_period_ms: float):
+        capture_tab = self.find_control('Group', "CaptureTab")
 
-        if user_space_instrumentation:
-            logging.info('Setting dynamic instrumentation method to "Orbit".')
-            user_space_radio_button = self.find_control('RadioButton', 'UserSpaceInstrumentationRadioButton',
-                                                        parent=capture_options_dialog)
-            user_space_radio_button.click_input()
-        else:
-            logging.info('Setting dynamic instrumentation method to "Kernel (Uprobes)".')
-            uprobes_radio_button = self.find_control('RadioButton', 'UprobesRadioButton',
-                                                     parent=capture_options_dialog)
-            uprobes_radio_button.click_input()
+        logging.info('Opening "Capture Options" dialog')
+        capture_options_button = self.find_control('Button', 'Capture Options', parent=capture_tab)
+        capture_options_button.click_input()
 
-        manual_instrumentation_checkbox = self.find_control('CheckBox',
-                                                            'ApiCheckBox',
-                                                            parent=capture_options_dialog)
-        if manual_instrumentation_checkbox.get_toggle_state() != manual_instrumentation:
-            logging.info('Toggling "Enable Orbit Api in target" checkbox')
-            manual_instrumentation_checkbox.click_input()
+        capture_options_dialog = self.find_control('Window', 'Capture Options')
+
+        self._set_collect_thread_states_capture_option(collect_thread_states, capture_options_dialog)
+        self._set_collect_system_memory_usage_capture_option(collect_system_memory_usage, capture_options_dialog)
+        self._set_dynamic_instrumentation_method_capture_option(user_space_instrumentation, capture_options_dialog)
+        self._set_manual_instrumentation_capture_option(manual_instrumentation, capture_options_dialog)
+        self._set_unwinding_method_capture_option(frame_pointer_unwinding, capture_options_dialog)
+        self._set_sampling_period_ms_capture_option(sampling_period_ms, capture_options_dialog)
 
         logging.info('Saving "Capture Options"')
         self.find_control('Button', 'OK', parent=capture_options_dialog).click_input()
