@@ -14,6 +14,7 @@
 #include <algorithm>
 #include <cstdint>
 #include <functional>
+#include <tuple>
 
 #include "ClientData/ModuleData.h"
 #include "ClientData/ProcessData.h"
@@ -275,7 +276,7 @@ void ModulesDataView::OnRefreshButtonClicked() {
     ORBIT_LOG("Unable to refresh module list, no process selected");
     return;
   }
-  app_->UpdateProcessAndModuleList();
+  std::ignore = app_->UpdateProcessAndModuleList();
 }
 
 bool ModulesDataView::GetDisplayColor(int row, int /*column*/, unsigned char& red,

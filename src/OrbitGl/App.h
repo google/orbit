@@ -372,7 +372,7 @@ class OrbitApp final : public DataViewFactory,
   orbit_base::Future<ErrorMessageOr<std::filesystem::path>> RetrieveModuleWithDebugInfo(
       const std::string& module_path, const std::string& build_id);
 
-  void UpdateProcessAndModuleList() override;
+  orbit_base::Future<ErrorMessageOr<void>> UpdateProcessAndModuleList() override;
   orbit_base::Future<std::vector<ErrorMessageOr<void>>> ReloadModules(
       absl::Span<const orbit_grpc_protos::ModuleInfo> module_infos);
   void RefreshUIAfterModuleReload();
