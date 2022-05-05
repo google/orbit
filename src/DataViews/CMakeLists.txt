@@ -32,6 +32,7 @@ target_sources(DataViews PUBLIC
         include/DataViews/PresetLoadState.h
         include/DataViews/SamplingReportDataView.h        
         include/DataViews/SamplingReportInterface.h
+        include/DataViews/SymbolLoadingState.h
         include/DataViews/TracepointsDataView.h)
 
 target_include_directories(DataViews PUBLIC include/)
