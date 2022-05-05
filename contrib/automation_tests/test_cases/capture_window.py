@@ -307,16 +307,7 @@ class CaptureE2ETestCaseBase(E2ETestCase):
         logging.info('Showing capture window')
         self.find_control("TabItem", "Capture").click_input()
 
-    def _set_capture_options(self, collect_thread_states: bool, collect_system_memory_usage: bool,
-                             user_space_instrumentation: bool, manual_instrumentation: bool):
-        capture_tab = self.find_control('Group', "CaptureTab")
-
-        logging.info('Opening "Capture Options" dialog')
-        capture_options_button = self.find_control('Button', 'Capture Options', parent=capture_tab)
-        capture_options_button.click_input()
-
-        capture_options_dialog = self.find_control('Window', 'Capture Options')
-
+    def _set_collect_thread_states_capture_option(self, collect_thread_states: bool, capture_options_dialog):
         collect_thread_states_checkbox = self.find_control('CheckBox',
                                                            'CollectThreadStatesCheckBox',
                                                            parent=capture_options_dialog)
@@ -324,6 +315,7 @@ class CaptureE2ETestCaseBase(E2ETestCase):
             logging.info('Toggling "Collect thread states" checkbox')
             collect_thread_states_checkbox.click_input()
 
+    def _set_collect_system_memory_usage_capture_option(self, collect_system_memory_usage, capture_options_dialog):
         collect_system_memory_usage_checkbox = self.find_control(
             'CheckBox',
             'CollectMemoryInfoCheckBox',
@@ -332,6 +324,8 @@ class CaptureE2ETestCaseBase(E2ETestCase):
             logging.info('Toggling "Collect memory usage and page faults information" checkbox')
             collect_system_memory_usage_checkbox.click_input()
 
+    def _set_dynamic_instrumentation_method_capture_option(self, user_space_instrumentation: bool,
+                                                           capture_options_dialog):
         if user_space_instrumentation:
             logging.info('Setting dynamic instrumentation method to "Orbit".')
             user_space_radio_button = self.find_control('RadioButton', 'UserSpaceInstrumentationRadioButton',
@@ -343,6 +337,7 @@ class CaptureE2ETestCaseBase(E2ETestCase):
                                                      parent=capture_options_dialog)
             uprobes_radio_button.click_input()
 
+    def _set_manual_instrumentation_capture_option(self, manual_instrumentation: bool, capture_options_dialog):
         manual_instrumentation_checkbox = self.find_control('CheckBox',
                                                             'ApiCheckBox',
                                                             parent=capture_options_dialog)
@@ -350,16 +345,72 @@ class CaptureE2ETestCaseBase(E2ETestCase):
             logging.info('Toggling "Enable Orbit Api in target" checkbox')
             manual_instrumentation_checkbox.click_input()
 
+    def _set_unwinding_method_capture_option(self, frame_pointer_unwinding: bool, capture_options_dialog):
+        if frame_pointer_unwinding:
+            logging.info('Setting sampling method to "Frame pointers".')
+            frame_pointer_unwinding_radio_button = self.find_control('RadioButton', 'FramePointerRadioButton',
+                                                                     parent=capture_options_dialog)
+            frame_pointer_unwinding_radio_button.click_input()
+        else:
+            logging.info('Setting sampling method to "DWARF".')
+            dwarf_unwinding_radio_button = self.find_control('RadioButton', 'DWARFRadioButton',
+                                                             parent=capture_options_dialog)
+            dwarf_unwinding_radio_button.click_input()
+
+    def _set_sampling_period_ms_capture_option(self, sampling_period_ms: float, capture_options_dialog):
+        logging.info('Setting sampling period to {}.'.format(sampling_period_ms))
+        sampling_period_spin_box = self.find_control('Spinner', 'SamplingPeriodMsDoubleSpinBox',
+                                                     parent=capture_options_dialog)
+        sampling_period_spin_box.set_focus()
+        sampling_period_ms_str = str(sampling_period_ms)
+        current_sampling_period_ms_str = sampling_period_spin_box.texts()[0]
+
+        # Check if Qt is expecting german floating points
+        if ',' in current_sampling_period_ms_str:
+            sampling_period_ms_str = sampling_period_ms_str.replace('.', ',')
+
+        # Select all
+        send_keys("^a")
+        send_keys(sampling_period_ms_str)
+
+        if sampling_period_spin_box.texts()[0] != sampling_period_ms_str:
+            raise RuntimeError(
+                'Setting sampling period failed. Expected "{}", but got "{}'.format(sampling_period_ms_str,
+                                                                                    sampling_period_spin_box.texts()[
+                                                                                        0]))
+
+    def _set_capture_options(self, collect_thread_states: bool, collect_system_memory_usage: bool,
+                             user_space_instrumentation: bool, manual_instrumentation: bool,
+                             frame_pointer_unwinding: bool, sampling_period_ms: float):
+        capture_tab = self.find_control('Group', "CaptureTab")
+
+        logging.info('Opening "Capture Options" dialog')
+        capture_options_button = self.find_control('Button', 'Capture Options', parent=capture_tab)
+        capture_options_button.click_input()
+
+        capture_options_dialog = self.find_control('Window', 'Capture Options')
+
+        self._set_collect_thread_states_capture_option(collect_thread_states, capture_options_dialog)
+        self._set_collect_system_memory_usage_capture_option(collect_system_memory_usage, capture_options_dialog)
+        self._set_dynamic_instrumentation_method_capture_option(user_space_instrumentation, capture_options_dialog)
+        self._set_manual_instrumentation_capture_option(manual_instrumentation, capture_options_dialog)
+        self._set_unwinding_method_capture_option(frame_pointer_unwinding, capture_options_dialog)
+        self._set_sampling_period_ms_capture_option(sampling_period_ms, capture_options_dialog)
+
         logging.info('Saving "Capture Options"')
         self.find_control('Button', 'OK', parent=capture_options_dialog).click_input()
 
     def _set_up_and_start_capture(self, collect_thread_states: bool,
                                   collect_system_memory_usage: bool,
-                                  user_space_instrumentation: bool, manual_instrumentation: bool,
+                                  user_space_instrumentation: bool,
+                                  manual_instrumentation: bool,
+                                  frame_pointer_unwinding: bool,
+                                  sampling_period_ms: float,
                                   toggle_capture_button):
         self._show_capture_window()
         self._set_capture_options(collect_thread_states, collect_system_memory_usage,
-                                  user_space_instrumentation, manual_instrumentation)
+                                  user_space_instrumentation, manual_instrumentation, frame_pointer_unwinding,
+                                  sampling_period_ms)
         logging.info('Starting to capture')
         toggle_capture_button.click_input()
 
@@ -393,11 +444,14 @@ class Capture(CaptureE2ETestCaseBase):
                  collect_thread_states: bool = False,
                  collect_system_memory_usage: bool = False,
                  user_space_instrumentation: bool = False,
-                 manual_instrumentation: bool = False):
+                 manual_instrumentation: bool = False,
+                 frame_pointer_unwinding: bool = False,
+                 sampling_period_ms: float = 1.0):
         capture_tab = self.find_control('Group', "CaptureTab")
         toggle_capture_button = self.find_control('Button', 'Toggle Capture', parent=capture_tab)
         self._set_up_and_start_capture(collect_thread_states, collect_system_memory_usage,
                                        user_space_instrumentation, manual_instrumentation,
+                                       frame_pointer_unwinding, sampling_period_ms,
                                        toggle_capture_button)
         logging.info('Capturing for {} seconds'.format(length_in_seconds))
         time.sleep(length_in_seconds)
