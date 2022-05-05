@@ -46,6 +46,8 @@ struct CaptureCompleteData {
   int64_t number_of_manual_start_async_timers = 0;
   int64_t number_of_manual_stop_async_timers = 0;
   int64_t number_of_manual_tracked_value_timers = 0;
+  int64_t number_of_callstack_samples = 0;
+  int64_t number_of_unwinding_errors = 0;
   std::filesystem::path file_path;
 };
 

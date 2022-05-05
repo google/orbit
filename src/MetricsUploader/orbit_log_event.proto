@@ -98,7 +98,7 @@ message OrbitLogEvent {
 // instrumented functions and information that is available at capture stop,
 // like duration of the capture. It is sent when the user stops the capture, or
 // when the capture is aborted because of an error.
-// NextID: 24
+// NextID: 29
 message OrbitCaptureData {
   // Duration of the capture in milliseconds. This is a measure of time from
   // when the user started a capture until the user ends it.
@@ -221,4 +221,10 @@ message OrbitCaptureData {
     CALLSTACK_UNWINDING_METHOD_FRAME_POINTER = 2;
   }
   CallstackUnwindingMethod callstack_unwinding_method = 26;
+
+  // Total number of callstack samples in the capture.
+  int64 number_of_callstack_samples = 27;
+
+  // Total number of callstack samples marked as unwinding error in the capture.
+  int64 number_of_unwinding_errors = 28;
 }
