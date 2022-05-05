@@ -635,7 +635,7 @@ class OrbitApp final : public DataViewFactory,
   // Map of "module ID" (file path and build ID) to symbol file retrieving future, that holds all
   // symbol retrieving operations currently in progress. (Retrieving here means finding locally or
   // downloading from the instance). Since downloading a symbols file can be part of the retrieval,
-  // if a module ID is contained in symbol_files_currently_downloading_, it is also contianed in
+  // if a module ID is contained in symbol_files_currently_downloading_, it is also contained in
   // symbol_files_currently_being_retrieved_.
   // ONLY access this from the main thread.
   absl::flat_hash_map<std::pair<std::string, std::string>,
