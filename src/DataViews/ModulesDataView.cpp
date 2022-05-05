@@ -40,14 +40,14 @@ const std::vector<DataView::Column>& ModulesDataView::GetColumns() {
     std::vector<Column> columns;
     columns.resize(kNumColumns);
     if (new_ui_) {
-      columns[kColumnSymbols] = {"Symbols", .0f, SortingOrder::kDescending};
+      columns[kColumnSymbols] = {"Symbols", .175f, SortingOrder::kDescending};
     } else {
       columns[kColumnSymbols] = {"Loaded", .0f, SortingOrder::kDescending};
     }
     columns[kColumnName] = {"Name", .2f, SortingOrder::kAscending};
-    columns[kColumnPath] = {"Path", .5f, SortingOrder::kAscending};
-    columns[kColumnAddressRange] = {"Address Range", .15f, SortingOrder::kAscending};
-    columns[kColumnFileSize] = {"File Size", .0f, SortingOrder::kDescending};
+    columns[kColumnPath] = {"Path", .45f, SortingOrder::kAscending};
+    columns[kColumnAddressRange] = {"Address Range", .075f, SortingOrder::kAscending};
+    columns[kColumnFileSize] = {"File Size", .1f, SortingOrder::kDescending};
     return columns;
   }();
   return columns;

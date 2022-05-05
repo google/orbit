@@ -292,7 +292,7 @@ TEST_F(ModulesDataViewTest, ColumnSortingShowsRightResults) {
 }
 
 TEST_F(ModulesDataViewTest, SymbolLoadingColumnContent) {
-  constexpr int kIndex = 0;
+  const int kIndex = 0;
   AddModulesByIndices({kIndex});
   const ModuleData* module = module_manager_.GetModuleByPathAndBuildId(
       modules_in_memory_[kIndex].file_path(), modules_in_memory_[kIndex].build_id());
@@ -311,7 +311,7 @@ TEST_F(ModulesDataViewTest, SymbolLoadingColumnContent) {
 }
 
 TEST_F(ModulesDataViewTest, SymbolLoadingColor) {
-  constexpr int kIndex = 0;
+  const int kIndex = 0;
   AddModulesByIndices({kIndex});
   const ModuleData* module = module_manager_.GetModuleByPathAndBuildId(
       modules_in_memory_[kIndex].file_path(), modules_in_memory_[kIndex].build_id());
