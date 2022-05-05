@@ -35,6 +35,7 @@ namespace orbit_data_views {
 
 // Hooking related actions
 constexpr std::string_view kMenuActionLoadSymbols = "Load Symbols";
+constexpr std::string_view kMenuActionStopDownload = "Stop downloading...";
 constexpr std::string_view kMenuActionSelect = "Hook";
 constexpr std::string_view kMenuActionUnselect = "Unhook";
 constexpr std::string_view kMenuActionEnableFrameTrack = "Enable frame track(s)";
@@ -171,6 +172,7 @@ class DataView {
   [[nodiscard]] virtual bool ResetOnRefresh() const { return true; }
 
   void OnLoadSymbolsRequested(const std::vector<int>& selection);
+  void OnStopDownloadRequested(const std::vector<int>& selection);
   virtual void OnSelectRequested(const std::vector<int>& selection);
   virtual void OnUnselectRequested(const std::vector<int>& selection);
   void OnEnableFrameTrackRequested(const std::vector<int>& selection);

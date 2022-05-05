@@ -19,6 +19,7 @@
 #include "ClientData/ProcessData.h"
 #include "ClientFlags/ClientFlags.h"
 #include "DataViews/CompareAscendingOrDescending.h"
+#include "DataViews/DataView.h"
 #include "DataViews/DataViewType.h"
 #include "DisplayFormats/DisplayFormats.h"
 #include "OrbitBase/Append.h"
@@ -132,6 +133,62 @@ DataView::ActionStatus ModulesDataView::GetActionStatus(std::string_view action,
       !absl::GetFlag(FLAGS_enable_frame_pointer_validator)) {
     return ActionStatus::kInvisible;
   }
+
+  if (!new_ui_) return OldUiGetActionStatus(action, clicked_index, selected_indices);
+
+  // transform selected_indices into modules
+  std::vector<const ModuleData*> modules;
+  modules.reserve(selected_indices.size());
+  for (int index : selected_indices) {
+    const ModuleData* module = GetModuleDataFromRow(index);
+    ORBIT_CHECK(module);
+    modules.emplace_back(module);
+  }
+
+  if (action == kMenuActionVerifyFramePointers) {
+    bool at_least_one_module_is_loaded =
+        std::any_of(modules.begin(), modules.end(),
+                    [](const ModuleData* module) { return module->is_loaded(); });
+
+    return at_least_one_module_is_loaded ? ActionStatus::kVisibleAndEnabled
+                                         : ActionStatus::kVisibleButDisabled;
+  }
+
+  bool at_least_one_module_can_be_loaded =
+      std::any_of(modules.begin(), modules.end(), [this](const ModuleData* module) {
+        return !app_->IsSymbolLoadingInProgressForModule(module);
+      });
+
+  bool at_least_one_module_is_downloading =
+      std::any_of(modules.begin(), modules.end(),
+                  [this](const ModuleData* module) { return app_->IsModuleDownloading(module); });
+
+  if (action == kMenuActionLoadSymbols) {
+    if (at_least_one_module_can_be_loaded) {
+      return ActionStatus::kVisibleAndEnabled;
+    }
+    // if no module can be loaded, but there are current downloads in progress, do *not* show the
+    // "Load Symbols" action at all. The "Stop Download..." action will be there instead of "Load
+    // Symbols"
+    if (at_least_one_module_is_downloading) {
+      return ActionStatus::kInvisible;
+    }
+    // Otherwise (no module can be loaded and no module is currently downloading), then show the
+    // *disabled* "Load Symbols" action.
+    return ActionStatus::kVisibleButDisabled;
+  }
+
+  if (action == kMenuActionStopDownload) {
+    return at_least_one_module_is_downloading ? ActionStatus::kVisibleAndEnabled
+                                              : ActionStatus::kInvisible;
+  }
+
+  return DataView::GetActionStatus(action, clicked_index, selected_indices);
+}
+
+DataView::ActionStatus ModulesDataView::OldUiGetActionStatus(
+    std::string_view action, int clicked_index, const std::vector<int>& selected_indices) {
+  if (action == kMenuActionStopDownload) return ActionStatus::kInvisible;
 
   std::function<bool(const ModuleData*)> is_visible_action_enabled;
   if (action == kMenuActionLoadSymbols) {
