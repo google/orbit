@@ -1653,10 +1653,15 @@ void OrbitApp::SendErrorToUi(const std::string& title, const std::string& text,
 }
 
 orbit_base::Future<ErrorMessageOr<std::filesystem::path>> OrbitApp::RetrieveModuleFromRemote(
-    const std::string& module_file_path, orbit_base::StopToken stop_token) {
+    const std::string& module_file_path) {
   ORBIT_SCOPE_FUNCTION;
   ScopedStatus scoped_status = CreateScopedStatus(absl::StrFormat(
       "Searching for symbols on remote instance for module \"%s\"...", module_file_path));
+
+  const auto it = symbol_files_currently_downloading_.find(module_file_path);
+  if (it != symbol_files_currently_downloading_.end()) {
+    return it->second.future;
+  }
 
   orbit_base::Future<ErrorMessageOr<std::string>> check_file_on_remote =
       thread_pool_->Schedule([process_manager = GetProcessManager(), module_file_path]() {
@@ -1667,9 +1672,11 @@ orbit_base::Future<ErrorMessageOr<std::filesystem::path>> OrbitApp::RetrieveModu
                                                   {absl::GetFlag(FLAGS_instance_symbols_folder)});
       });
 
+  orbit_base::StopSource stop_source;
+
   auto download_file = [this, module_file_path, scoped_status = std::move(scoped_status),
                         stop_token =
-                            std::move(stop_token)](ErrorMessageOr<std::string> result) mutable
+                            stop_source.GetStopToken()](ErrorMessageOr<std::string> result) mutable
       -> orbit_base::Future<ErrorMessageOr<std::filesystem::path>> {
     if (result.has_error()) return result.error();
 
@@ -1706,7 +1713,19 @@ orbit_base::Future<ErrorMessageOr<std::filesystem::path>> OrbitApp::RetrieveModu
         });
   };
 
-  return UnwrapFuture(check_file_on_remote.Then(main_thread_executor_, std::move(download_file)));
+  Future<ErrorMessageOr<std::filesystem::path>> chained_result_future =
+      UnwrapFuture(check_file_on_remote.Then(main_thread_executor_, std::move(download_file)));
+
+  symbol_files_currently_downloading_.emplace(
+      module_file_path,
+      OrbitApp::ModuleLoadOperation{std::move(stop_source), chained_result_future});
+  chained_result_future.Then(
+      main_thread_executor_,
+      [this, module_file_path](const ErrorMessageOr<std::filesystem::path>& /*result*/) {
+        symbol_files_currently_downloading_.erase(module_file_path);
+      });
+
+  return chained_result_future;
 }
 
 orbit_base::Future<void> OrbitApp::RetrieveModulesAndLoadSymbols(
@@ -1775,6 +1794,10 @@ orbit_base::Future<ErrorMessageOr<void>> OrbitApp::RetrieveModuleAndLoadSymbols(
 orbit_base::Future<ErrorMessageOr<void>> OrbitApp::RetrieveModuleAndLoadSymbols(
     const std::string& module_path, const std::string& build_id) {
   ORBIT_SCOPE_FUNCTION;
+  ORBIT_CHECK(main_thread_id_ == std::this_thread::get_id());
+
+  // TODO (b/231455031) Make sure this scoped metric gets the state CANCELLED when the user stops
+  // the download.
   ScopedMetric metric(metrics_uploader_, OrbitLogEvent::ORBIT_SYMBOL_LOAD);
 
   const ModuleData* const module_data = GetModuleByPathAndBuildId(module_path, build_id);
@@ -1784,6 +1807,13 @@ orbit_base::Future<ErrorMessageOr<void>> OrbitApp::RetrieveModuleAndLoadSymbols(
   }
   if (module_data->is_loaded()) return {outcome::success()};
 
+  const auto module_id = std::make_pair(module_data->file_path(), module_data->build_id());
+
+  const auto it = symbols_currently_loading_.find(module_id);
+  if (it != symbols_currently_loading_.end()) {
+    return it->second;
+  }
+
   orbit_base::Future<ErrorMessageOr<void>> load_result = orbit_base::UnwrapFuture(
       RetrieveModule(module_path, build_id)
           .ThenIfSuccess(main_thread_executor_, [this, module_path, build_id](
@@ -1791,12 +1821,15 @@ orbit_base::Future<ErrorMessageOr<void>> OrbitApp::RetrieveModuleAndLoadSymbols(
             return LoadSymbols(local_file_path, module_path, build_id);
           }));
 
-  load_result.Then(main_thread_executor_,
-                   [metric = std::move(metric)](const ErrorMessageOr<void>& result) mutable {
-                     if (result.has_error()) {
-                       metric.SetStatusCode(OrbitLogEvent::INTERNAL_ERROR);
-                     }
-                   });
+  load_result.Then(main_thread_executor_, [this, metric = std::move(metric),
+                                           module_id](const ErrorMessageOr<void>& result) mutable {
+    if (result.has_error()) {
+      metric.SetStatusCode(OrbitLogEvent::INTERNAL_ERROR);
+    }
+    symbols_currently_loading_.erase(module_id);
+  });
+
+  symbols_currently_loading_.emplace(module_id, load_result);
 
   return load_result;
 }
@@ -1812,9 +1845,9 @@ orbit_base::Future<ErrorMessageOr<std::filesystem::path>> OrbitApp::RetrieveModu
 
   auto module_id = std::make_pair(module_path, build_id);
 
-  const auto it = modules_currently_loading_.find(module_id);
-  if (it != modules_currently_loading_.end()) {
-    return it->second.future;
+  const auto it = symbol_files_currently_being_retrieved_.find(module_id);
+  if (it != symbol_files_currently_being_retrieved_.end()) {
+    return it->second;
   }
 
   Future<ErrorMessageOr<std::filesystem::path>> local_symbols_future =
@@ -1826,26 +1859,18 @@ orbit_base::Future<ErrorMessageOr<std::filesystem::path>> OrbitApp::RetrieveModu
     return local_symbols_future;
   }
 
-  orbit_base::StopSource stop_source{};
-
   Future<ErrorMessageOr<std::filesystem::path>> final_result =
       orbit_base::UnwrapFuture(local_symbols_future.Then(
           main_thread_executor_,
-          [this, module_id, stop_token = stop_source.GetStopToken()](
-              ErrorMessageOr<std::filesystem::path> local_symbols_path)
+          [this, module_id](ErrorMessageOr<std::filesystem::path> local_symbols_path)
               -> Future<ErrorMessageOr<std::filesystem::path>> {
-            if (local_symbols_path.has_value()) {
-              modules_currently_loading_.erase(module_id);
-              return local_symbols_path;
-            }
+            if (local_symbols_path.has_value()) return local_symbols_path;
 
-            return RetrieveModuleFromRemote(module_id.first, std::move(stop_token))
+            return RetrieveModuleFromRemote(module_id.first)
                 .Then(main_thread_executor_,
-                      [this, module_id, local_error_message = local_symbols_path.error().message()](
+                      [module_id, local_error_message = local_symbols_path.error().message()](
                           const ErrorMessageOr<std::filesystem::path>& remote_result)
                           -> ErrorMessageOr<std::filesystem::path> {
-                        modules_currently_loading_.erase(module_id);
-
                         // If remote loading fails as well, we combine the error messages.
                         if (remote_result.has_value()) return remote_result;
                         return {ErrorMessage{
@@ -1856,8 +1881,12 @@ orbit_base::Future<ErrorMessageOr<std::filesystem::path>> OrbitApp::RetrieveModu
                       });
           }));
 
-  modules_currently_loading_.emplace(module_id,
-                                     ModuleLoadOperation{std::move(stop_source), final_result});
+  symbol_files_currently_being_retrieved_.emplace(module_id, final_result);
+  final_result.Then(main_thread_executor_,
+                    [this, module_id](const ErrorMessageOr<std::filesystem::path>& /*result*/) {
+                      symbol_files_currently_being_retrieved_.erase(module_id);
+                    });
+
   return final_result;
 }
 
@@ -2003,20 +2032,6 @@ orbit_base::Future<ErrorMessageOr<void>> OrbitApp::LoadSymbols(
     const std::filesystem::path& symbols_path, const std::string& module_file_path,
     const std::string& module_build_id) {
   ORBIT_SCOPE_FUNCTION;
-  auto module_id = std::make_pair(module_file_path, module_build_id);
-  const auto it = symbols_currently_loading_.find(module_id);
-  if (it != symbols_currently_loading_.end()) {
-    return it->second;
-  }
-
-  // This additional check is here to avoid a race condition. See http://b/205002963 for details.
-  const ModuleData* module_data = GetModuleByPathAndBuildId(module_file_path, module_build_id);
-  if (module_data->is_loaded()) {
-    ORBIT_ERROR(
-        "LoadSymbols was called with the symbols for module '%s' (buildid = '%s') already loaded.",
-        module_file_path, module_build_id);
-    return ErrorMessageOr<void>{outcome::success()};
-  }
 
   auto scoped_status = CreateScopedStatus(absl::StrFormat(
       R"(Loading symbols for "%s" from file "%s"...)", module_file_path, symbols_path.string()));
@@ -2031,14 +2046,11 @@ orbit_base::Future<ErrorMessageOr<void>> OrbitApp::LoadSymbols(
       });
 
   auto add_symbols =
-      [this, module_id, scoped_status = std::move(scoped_status)](
+      [this, module_file_path, module_build_id, scoped_status = std::move(scoped_status)](
           const ErrorMessageOr<orbit_grpc_protos::ModuleSymbols>& symbols_result) mutable
       -> ErrorMessageOr<void> {
-    symbols_currently_loading_.erase(module_id);
-
     if (symbols_result.has_error()) return symbols_result.error();
 
-    auto& [module_file_path, module_build_id] = module_id;
     AddSymbols(module_file_path, module_build_id, symbols_result.value());
 
     std::string message =
@@ -2049,9 +2061,7 @@ orbit_base::Future<ErrorMessageOr<void>> OrbitApp::LoadSymbols(
     return outcome::success();
   };
 
-  auto result_future = load_symbols_from_file.Then(main_thread_executor_, std::move(add_symbols));
-  symbols_currently_loading_.emplace(module_id, result_future);
-  return result_future;
+  return load_symbols_from_file.Then(main_thread_executor_, std::move(add_symbols));
 }
 
 ErrorMessageOr<std::vector<const ModuleData*>> OrbitApp::GetLoadedModulesByPath(
