@@ -297,7 +297,7 @@ TEST_F(ModulesDataViewTest, SymbolLoadingColumnContent) {
   const ModuleData* module = module_manager_.GetModuleByPathAndBuildId(
       modules_in_memory_[kIndex].file_path(), modules_in_memory_[kIndex].build_id());
 
-  auto get_content_for = [this, module](SymbolLoadingState state) -> std::string {
+  auto get_content_for = [this, module, kIndex](SymbolLoadingState state) -> std::string {
     EXPECT_CALL(app_, GetSymbolLoadingStateForModule(module)).WillOnce(testing::Return(state));
     return view_.GetValue(kIndex, kColumnSymbols);
   };
@@ -316,7 +316,7 @@ TEST_F(ModulesDataViewTest, SymbolLoadingColor) {
   const ModuleData* module = module_manager_.GetModuleByPathAndBuildId(
       modules_in_memory_[kIndex].file_path(), modules_in_memory_[kIndex].build_id());
 
-  auto check_color_correct_for = [this, module](SymbolLoadingState state) {
+  auto check_color_correct_for = [this, module, kIndex](SymbolLoadingState state) {
     uint8_t red = 0;
     uint8_t green = 0;
     uint8_t blue = 0;
