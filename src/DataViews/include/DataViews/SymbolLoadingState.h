@@ -13,6 +13,8 @@
 
 namespace orbit_data_views {
 
+// Class to represent the current state of symbol loading for a certain module. Also provides a
+// textual description for each state via GetDescription and a color via GetDisplayColor
 struct SymbolLoadingState {
   // TODO(b/202140068) remove unknown when not needed anymore
   enum State { kUnknown, kDisabled, kDownloading, kError, kLoading, kLoaded } state;
@@ -41,7 +43,6 @@ struct SymbolLoadingState {
   bool GetDisplayColor(unsigned char& red, unsigned char& green, unsigned char& blue) const {
     switch (state) {
       case kUnknown:
-        ABSL_FALLTHROUGH_INTENDED;
       case kLoaded:
         return false;
       case kDisabled: {
@@ -51,7 +52,6 @@ struct SymbolLoadingState {
         break;
       }
       case kDownloading:
-        ABSL_FALLTHROUGH_INTENDED;
       case kLoading: {
         red = 55;
         green = 138;

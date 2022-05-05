@@ -2649,7 +2649,8 @@ orbit_data_views::DataView* OrbitApp::GetOrCreateDataView(DataViewType type) {
 
     case DataViewType::kModules:
       if (!modules_data_view_) {
-        modules_data_view_ = DataView::CreateAndInit<ModulesDataView>(this, metrics_uploader_);
+        modules_data_view_ =
+            DataView::CreateAndInit<ModulesDataView>(this, metrics_uploader_, IsDevMode());
         panels_.push_back(modules_data_view_.get());
       }
       return modules_data_view_.get();
