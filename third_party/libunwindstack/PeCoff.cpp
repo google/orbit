@@ -128,8 +128,10 @@ std::string PeCoff::GetSoname() {
 }
 
 bool PeCoff::GetFunctionName(uint64_t, SharedString*, uint64_t*) {
-  // Not implemented, don't use.
-  CHECK(false);
+  // For PE/COFF, in many cases getting the function name will require access to a separate PDB
+  // file and the ability to parse that file. Alternatives would be to get the name from the export
+  // directory (only for dlls and for public symbols) or from .debug_info if the file has DWARF
+  // information (e.g. for Wine dlls).
   return false;
 }
 

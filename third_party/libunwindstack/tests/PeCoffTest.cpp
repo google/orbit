@@ -119,11 +119,11 @@ TYPED_TEST(PeCoffTest, getting_soname_aborts) {
   ASSERT_DEATH(coff.GetSoname(), "");
 }
 
-TYPED_TEST(PeCoffTest, getting_function_name_aborts) {
+TYPED_TEST(PeCoffTest, getting_function_name_fails) {
   this->GetFake()->Init();
   PeCoff coff(this->ReleaseMemory());
   EXPECT_TRUE(coff.Init());
-  ASSERT_DEATH(coff.GetFunctionName(0, nullptr, nullptr), "");
+  EXPECT_FALSE(coff.GetFunctionName(0, nullptr, nullptr));
 }
 
 TYPED_TEST(PeCoffTest, getting_global_variable_offset_aborts) {
