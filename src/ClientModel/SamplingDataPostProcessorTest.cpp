@@ -458,6 +458,7 @@ class SamplingDataPostProcessorTest : public ::testing::Test {
       const ThreadSampleData& actual_thread_sample_data, uint32_t expected_thread_id) {
     EXPECT_EQ(actual_thread_sample_data.thread_id, expected_thread_id);
     EXPECT_EQ(actual_thread_sample_data.samples_count, 5);
+    EXPECT_EQ(actual_thread_sample_data.unwinding_errors_count, 0);
     EXPECT_THAT(
         actual_thread_sample_data.sampled_callstack_id_to_events,
         UnorderedElementsAre(
@@ -506,6 +507,7 @@ class SamplingDataPostProcessorTest : public ::testing::Test {
       const ThreadSampleData& actual_thread_sample_data, uint32_t expected_thread_id) {
     EXPECT_EQ(actual_thread_sample_data.thread_id, expected_thread_id);
     EXPECT_EQ(actual_thread_sample_data.samples_count, 5);
+    EXPECT_EQ(actual_thread_sample_data.unwinding_errors_count, 3);
     EXPECT_THAT(
         actual_thread_sample_data.sampled_callstack_id_to_events,
         UnorderedElementsAre(
@@ -557,6 +559,7 @@ class SamplingDataPostProcessorTest : public ::testing::Test {
       const ThreadSampleData& actual_thread_sample_data, uint32_t expected_thread_id) {
     EXPECT_EQ(actual_thread_sample_data.thread_id, expected_thread_id);
     EXPECT_EQ(actual_thread_sample_data.samples_count, 5);
+    EXPECT_EQ(actual_thread_sample_data.unwinding_errors_count, 5);
     EXPECT_THAT(
         actual_thread_sample_data.sampled_callstack_id_to_events,
         UnorderedElementsAre(
@@ -595,6 +598,7 @@ class SamplingDataPostProcessorTest : public ::testing::Test {
       const ThreadSampleData& actual_thread_sample_data, uint32_t expected_thread_id) {
     EXPECT_EQ(actual_thread_sample_data.thread_id, expected_thread_id);
     EXPECT_EQ(actual_thread_sample_data.samples_count, 5);
+    EXPECT_EQ(actual_thread_sample_data.unwinding_errors_count, 0);
     EXPECT_THAT(
         actual_thread_sample_data.sampled_callstack_id_to_events,
         UnorderedElementsAre(
@@ -657,6 +661,7 @@ class SamplingDataPostProcessorTest : public ::testing::Test {
       const ThreadSampleData& actual_thread_sample_data) {
     EXPECT_EQ(actual_thread_sample_data.thread_id, kThreadId1);
     EXPECT_EQ(actual_thread_sample_data.samples_count, 2);
+    EXPECT_EQ(actual_thread_sample_data.unwinding_errors_count, 0);
     EXPECT_THAT(
         actual_thread_sample_data.sampled_callstack_id_to_events,
         UnorderedElementsAre(
@@ -699,6 +704,7 @@ class SamplingDataPostProcessorTest : public ::testing::Test {
       const ThreadSampleData& actual_thread_sample_data) {
     EXPECT_EQ(actual_thread_sample_data.thread_id, kThreadId2);
     EXPECT_EQ(actual_thread_sample_data.samples_count, 3);
+    EXPECT_EQ(actual_thread_sample_data.unwinding_errors_count, 0);
     EXPECT_THAT(
         actual_thread_sample_data.sampled_callstack_id_to_events,
         UnorderedElementsAre(
@@ -751,6 +757,7 @@ class SamplingDataPostProcessorTest : public ::testing::Test {
             CallstackIdToCallstackEventsEq(std::make_pair(
                 kCallstack4Id, std::vector<CallstackEvent>{{500, kCallstack4Id, kThreadId2}}))));
     EXPECT_EQ(actual_thread_sample_data.samples_count, 5);
+    EXPECT_EQ(actual_thread_sample_data.unwinding_errors_count, 0);
     EXPECT_THAT(actual_thread_sample_data.sampled_address_to_count,
                 UnorderedElementsAre(std::make_pair(kFunction1Instruction1AbsoluteAddress, 5),
                                      std::make_pair(kFunction2Instruction1AbsoluteAddress, 3),
@@ -787,6 +794,7 @@ class SamplingDataPostProcessorTest : public ::testing::Test {
       const ThreadSampleData& actual_thread_sample_data) {
     EXPECT_EQ(actual_thread_sample_data.thread_id, kThreadId1);
     EXPECT_EQ(actual_thread_sample_data.samples_count, 2);
+    EXPECT_EQ(actual_thread_sample_data.unwinding_errors_count, 1);
     EXPECT_THAT(
         actual_thread_sample_data.sampled_callstack_id_to_events,
         UnorderedElementsAre(
@@ -829,6 +837,7 @@ class SamplingDataPostProcessorTest : public ::testing::Test {
       const ThreadSampleData& actual_thread_sample_data) {
     EXPECT_EQ(actual_thread_sample_data.thread_id, kThreadId2);
     EXPECT_EQ(actual_thread_sample_data.samples_count, 3);
+    EXPECT_EQ(actual_thread_sample_data.unwinding_errors_count, 2);
     EXPECT_THAT(
         actual_thread_sample_data.sampled_callstack_id_to_events,
         UnorderedElementsAre(
@@ -863,6 +872,7 @@ class SamplingDataPostProcessorTest : public ::testing::Test {
       const ThreadSampleData& actual_thread_sample_data, uint32_t expected_thread_id) {
     EXPECT_EQ(actual_thread_sample_data.thread_id, expected_thread_id);
     EXPECT_EQ(actual_thread_sample_data.samples_count, 5);
+    EXPECT_EQ(actual_thread_sample_data.unwinding_errors_count, 3);
     EXPECT_THAT(
         actual_thread_sample_data.sampled_callstack_id_to_events,
         UnorderedElementsAre(

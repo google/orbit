@@ -190,6 +190,19 @@ std::string SamplingReport::GetSelectedCallstackString() const {
       100.f * num_occurrences / total_callstacks, type_string);
 }
 
+double SamplingReport::ComputeUnwindErrorRatio(uint32_t thread_id) const {
+  if (post_processed_sampling_data_ == nullptr) {
+    return 0.;
+  }
+  auto* thread_sampling_data =
+      post_processed_sampling_data_->GetThreadSampleDataByThreadId(thread_id);
+  if (thread_sampling_data == nullptr) {
+    return 0.;
+  }
+  return static_cast<double>(thread_sampling_data->unwinding_errors_count) /
+         thread_sampling_data->samples_count;
+}
+
 std::string SamplingReport::GetSelectedCallstackTooltipString() const {
   if (selected_sorted_callstack_report_ == nullptr) {
     return "";

@@ -43,6 +43,7 @@ struct ThreadSampleData {
 
   ThreadID thread_id = 0;
   uint32_t samples_count = 0;
+  uint32_t unwinding_errors_count = 0;
   absl::flat_hash_map<uint64_t, std::vector<orbit_client_data::CallstackEvent>>
       sampled_callstack_id_to_events;
   absl::flat_hash_map<uint64_t, uint32_t> sampled_address_to_count;

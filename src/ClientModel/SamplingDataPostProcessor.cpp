@@ -328,6 +328,9 @@ void SamplingDataPostProcessor::FillThreadSampleDataSampleReports(
       if (auto it = thread_sample_data->resolved_address_to_error_count.find(absolute_address);
           it != thread_sample_data->resolved_address_to_error_count.end()) {
         function.unwind_errors = it->second;
+        // We only write the innermost frame into "resolved_address_to_error_count", so we get the
+        // sum of all samples with unwinding errors by computing the sum of errors per function.
+        thread_sample_data->unwinding_errors_count += function.unwind_errors;
         function.unwind_errors_percent = 100.f * it->second / thread_sample_data->samples_count;
       }
       function.absolute_address = absolute_address;
