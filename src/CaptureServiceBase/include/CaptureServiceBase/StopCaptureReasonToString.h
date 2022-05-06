@@ -13,7 +13,7 @@
 namespace orbit_capture_service_base {
 
 [[nodiscard]] std::string StopCaptureReasonToString(
-    const OrbitCaptureBase::StopCaptureReason& stop_capture_reason) {
+    OrbitCaptureBase::StopCaptureReason stop_capture_reason) {
   switch (stop_capture_reason) {
     case StopCaptureReason::kClientStop:
       return "client_stop";
