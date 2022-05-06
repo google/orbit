@@ -135,7 +135,9 @@ void CaptureWindow::MouseMoved(int x, int y, bool left, bool right, bool middle)
     Vec2 mouse_pos_world = viewport_.ScreenToWorld({x, y});
     time_graph_->GetTrackContainer()->SetVerticalScrollingOffset(
         track_container_click_scrolling_offset_ + mouse_click_pos_world_[1] - mouse_pos_world[1]);
-    time_graph_->PanTime(mouse_click_screen[0], x, viewport_.GetScreenWidth(), ref_time_click_);
+
+    int width = viewport_.WorldToScreen(Vec2(time_graph_->GetTimelineWidth(), 0))[0];
+    time_graph_->PanTime(mouse_click_screen[0], x, width, ref_time_click_);
 
     click_was_drag_ = true;
   }
@@ -152,7 +154,10 @@ void CaptureWindow::LeftDown(int x, int y) {
   click_was_drag_ = false;
 
   if (time_graph_ == nullptr) return;
-  ref_time_click_ = time_graph_->GetTime(static_cast<double>(x) / viewport_.GetScreenWidth());
+
+  float world_x = viewport_.ScreenToWorld(Vec2i(x, y))[0];
+  ref_time_click_ = time_graph_->GetUsFromTick(time_graph_->GetTickFromWorld(world_x)) +
+                    time_graph_->GetMinTimeUs();
   track_container_click_scrolling_offset_ =
       time_graph_->GetTrackContainer()->GetVerticalScrollingOffset();
 }
@@ -286,12 +291,15 @@ void CaptureWindow::ZoomHorizontally(int delta, int mouse_x) {
 
 void CaptureWindow::Pan(float ratio) {
   if (time_graph_ == nullptr) return;
-  double ref_time = time_graph_->GetTime(static_cast<double>(mouse_move_pos_screen_[0]) /
-                                         viewport_.GetScreenWidth());
-  time_graph_->PanTime(mouse_move_pos_screen_[0],
-                       mouse_move_pos_screen_[0] +
-                           static_cast<int>(ratio * static_cast<float>(viewport_.GetScreenWidth())),
-                       viewport_.GetScreenWidth(), ref_time);
+
+  float world_x = viewport_.ScreenToWorld(mouse_move_pos_screen_)[0];
+  double ref_time = time_graph_->GetUsFromTick(time_graph_->GetTickFromWorld(world_x)) +
+                    time_graph_->GetMinTimeUs();
+  int width = viewport_.WorldToScreen(Vec2(time_graph_->GetTimelineWidth(), 0))[0];
+  time_graph_->PanTime(
+      mouse_move_pos_screen_[0],
+      mouse_move_pos_screen_[0] + static_cast<int>(ratio * static_cast<float>(width)), width,
+      ref_time);
   RequestUpdatePrimitives();
 }
 
