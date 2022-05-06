@@ -30,7 +30,7 @@ class VerifyHelloGgpBottomUpContents(E2ETestCase):
             raise RuntimeError('Less than 10 rows in the bottom-up view')
 
         first_row_tree_item = tree_view_table.get_item_at(0, 0)
-        if first_row_tree_item.window_text() != 'ioctl':
+        if not first_row_tree_item.window_text().endswith('ioctl'):
             raise RuntimeError('First item of the bottom-up view is not "ioctl"')
         logging.info('Verified that first item is "ioctl"')
 

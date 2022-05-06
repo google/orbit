@@ -34,7 +34,8 @@ def main(argv):
     test_cases = [
         ConnectToStadiaInstance(),
         FilterAndSelectFirstProcess(process_filter='hello_ggp'),
-        LoadSymbols(module_search_string="libc-2.24"),
+        LoadSymbols(module_search_string='libc-2.24'),
+        LoadSymbols(module_search_string='libdrm.so.2'),
         Capture(frame_pointer_unwinding=False),
         VerifyHelloGgpBottomUpContents(),
         Capture(frame_pointer_unwinding=True, sampling_period_ms=0.1),
