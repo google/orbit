@@ -396,29 +396,32 @@ void LiveFunctionsDataView::OnJumpToRequested(const std::string& action,
 
   OUTCOME_TRY(WriteLineToCsv(fd, kNames));
 
-  for (int row : selection) {
-    const CaptureData& capture_data = app_->GetCaptureData();
+  absl::flat_hash_set<uint64_t> selected_scope_ids;
+  std::transform(std::begin(selection), std::end(selection),
+                 std::inserter(selected_scope_ids, std::begin(selected_scope_ids)),
+                 [this](int row) { return GetScopeId(row); });
 
-    const uint64_t scope_id = GetScopeId(row);
-    const orbit_client_data::ScopeInfo& scope_info = GetScopeInfo(scope_id);
+  const CaptureData& capture_data = app_->GetCaptureData();
 
-    const std::string& scope_name = scope_info.GetName();
-    for (const TimerInfo* timer : capture_data.GetTimersForScope(scope_id)) {
-      std::string line;
-      line.append(FormatValueForCsv(scope_name));
-      line.append(kFieldSeparator);
-      line.append(FormatValueForCsv(absl::StrFormat(
-          "%s [%lu]", capture_data.GetThreadName(timer->thread_id()), timer->thread_id())));
-      line.append(kFieldSeparator);
-      line.append(FormatValueForCsv(absl::StrFormat("%lu", timer->start())));
-      line.append(kFieldSeparator);
-      line.append(FormatValueForCsv(absl::StrFormat("%lu", timer->end())));
-      line.append(kFieldSeparator);
-      line.append(FormatValueForCsv(absl::StrFormat("%lu", timer->end() - timer->start())));
-      line.append(kLineSeparator);
+  for (const TimerInfo* timer :
+       capture_data.GetAllScopeTimers(orbit_client_data::kAllValidScopeTypes)) {
+    const uint64_t scope_id = capture_data.ProvideScopeId(*timer);
+    if (!selected_scope_ids.contains(scope_id)) continue;
 
-      OUTCOME_TRY(orbit_base::WriteFully(fd, line));
-    }
+    std::string line;
+    line.append(FormatValueForCsv(capture_data.GetScopeInfo(scope_id).GetName()));
+    line.append(kFieldSeparator);
+    line.append(FormatValueForCsv(absl::StrFormat(
+        "%s [%lu]", capture_data.GetThreadName(timer->thread_id()), timer->thread_id())));
+    line.append(kFieldSeparator);
+    line.append(FormatValueForCsv(absl::StrFormat("%lu", timer->start())));
+    line.append(kFieldSeparator);
+    line.append(FormatValueForCsv(absl::StrFormat("%lu", timer->end())));
+    line.append(kFieldSeparator);
+    line.append(FormatValueForCsv(absl::StrFormat("%lu", timer->end() - timer->start())));
+    line.append(kLineSeparator);
+
+    OUTCOME_TRY(orbit_base::WriteFully(fd, line));
   }
 
   return outcome::success();
