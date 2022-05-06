@@ -194,8 +194,6 @@ void TimeGraph::VerticalZoom(float zoom_value, float mouse_world_y_pos) {
 // TODO(b/214280802): include SetMinMax in the TimelineInfoInterface, so the scrollbar could call
 // it.
 void TimeGraph::SetMinMax(double min_time_us, double max_time_us) {
-  constexpr double kTimeGraphMinTimeWindowsUs = 0.1; /* 100 ns */
-
   // Center the interval on screen if needed
   if (max_time_us - min_time_us < kTimeGraphMinTimeWindowsUs || min_time_us < 0. ||
       max_time_us > GetCaptureTimeSpanUs()) {
