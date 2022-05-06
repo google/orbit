@@ -79,7 +79,7 @@ class AppInterface {
   // Functions needed by ModulesDataView
   virtual void OnValidateFramePointers(
       std::vector<const orbit_client_data::ModuleData*> modules_to_validate) = 0;
-  virtual void UpdateProcessAndModuleList() = 0;
+  virtual orbit_base::Future<ErrorMessageOr<void>> UpdateProcessAndModuleList() = 0;
 
   // Functions needed by TracepointsDataView
   virtual void SelectTracepoint(const orbit_grpc_protos::TracepointInfo& info) = 0;

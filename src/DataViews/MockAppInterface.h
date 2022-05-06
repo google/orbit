@@ -67,7 +67,7 @@ class MockAppInterface : public AppInterface {
 
   MOCK_METHOD(void, OnValidateFramePointers, (std::vector<const orbit_client_data::ModuleData*>),
               (override));
-  MOCK_METHOD(void, UpdateProcessAndModuleList, (), (override));
+  MOCK_METHOD(orbit_base::Future<ErrorMessageOr<void>>, UpdateProcessAndModuleList, (), (override));
 
   // This needs to be called from the main thread.
   MOCK_METHOD(bool, IsCaptureConnected, (const orbit_client_data::CaptureData&), (const, override));

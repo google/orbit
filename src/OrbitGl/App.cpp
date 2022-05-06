@@ -28,6 +28,7 @@
 #include <ratio>
 #include <string>
 #include <thread>
+#include <tuple>
 #include <utility>
 
 #include "CaptureClient/CaptureListener.h"
@@ -738,7 +739,7 @@ void OrbitApp::PostInit(bool is_connected) {
     capture_client_ = std::make_unique<CaptureClient>(grpc_channel_);
 
     if (GetTargetProcess() != nullptr) {
-      UpdateProcessAndModuleList();
+      std::ignore = UpdateProcessAndModuleList();
     }
 
     frame_pointer_validator_client_ =
@@ -2286,8 +2287,7 @@ void OrbitApp::ShowPresetInExplorer(const PresetFile& preset) {
 
   SendErrorToUi("%s", "Unable to show preset file in explorer.");
 }
-
-void OrbitApp::UpdateProcessAndModuleList() {
+orbit_base::Future<ErrorMessageOr<void>> OrbitApp::UpdateProcessAndModuleList() {
   ORBIT_SCOPE_FUNCTION;
   functions_data_view_->ClearFunctions();
 
@@ -2301,7 +2301,7 @@ void OrbitApp::UpdateProcessAndModuleList() {
       });
 
   // `all_modules_reloaded` is a future in a future. So we have to unwrap here.
-  orbit_base::UnwrapFuture(all_reloaded_modules)
+  return orbit_base::UnwrapFuture(all_reloaded_modules)
       .ThenIfSuccess(main_thread_executor_,
                      [this](const std::vector<ErrorMessageOr<void>>& reload_results) {
                        // We ignore whether reloading a particular module failed to preserve the
@@ -2318,6 +2318,7 @@ void OrbitApp::UpdateProcessAndModuleList() {
           ORBIT_ERROR("%s", error_message);
           SendErrorToUi("%s", error_message);
         }
+        return result;
       });
 }
 
