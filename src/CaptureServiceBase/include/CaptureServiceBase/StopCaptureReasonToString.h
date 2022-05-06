@@ -13,17 +13,17 @@
 namespace orbit_capture_service_base {
 
 [[nodiscard]] std::string StopCaptureReasonToString(
-    OrbitCaptureBase::StopCaptureReason stop_capture_reason) {
+    CaptureServiceBase::StopCaptureReason stop_capture_reason) {
   switch (stop_capture_reason) {
-    case StopCaptureReason::kClientStop:
+    case CaptureServiceBase::StopCaptureReason::kClientStop:
       return "client_stop";
-    case StopCaptureReason::kMemoryWatchdog:
+    case CaptureServiceBase::StopCaptureReason::kMemoryWatchdog:
       return "memory_watchdog";
-    case StopCaptureReason::kExceededMaxDurationLimit:
+    case CaptureServiceBase::StopCaptureReason::kExceededMaxDurationLimit:
       return "exceeded_max_duration_limit";
-    case StopCaptureReason::kGuestOrcStop:
+    case CaptureServiceBase::StopCaptureReason::kGuestOrcStop:
       return "guestorc_stop";
-    case StopCaptureReason::kGuestOrcConnectionFailure:
+    case CaptureServiceBase::StopCaptureReason::kGuestOrcConnectionFailure:
       return "guestorc_connection_failure";
   }
 
@@ -32,4 +32,4 @@ namespace orbit_capture_service_base {
 
 }  // namespace orbit_capture_service_base
 
-#endif  // CAPTURE_SERVICE_BASE_STOP_CAPTURE_REASON_TO_STRINGE_H_
+#endif  // CAPTURE_SERVICE_BASE_STOP_CAPTURE_REASON_TO_STRING_H_
