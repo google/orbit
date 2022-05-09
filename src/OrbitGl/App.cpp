@@ -674,6 +674,13 @@ void OrbitApp::OnErrorsWithPerfEventOpenEvent(
   });
 }
 
+void OrbitApp::OnWarningInstrumentingWithUprobesEvent(
+    orbit_grpc_protos::WarningInstrumentingWithUprobesEvent
+    /*warning_instrumenting_with_uprobes_event*/) {
+  // TODO(b/232072696): Display WarningInstrumentingWithUprobesEvent in the Capture Log.
+  ORBIT_UNREACHABLE();
+}
+
 void OrbitApp::OnErrorEnablingOrbitApiEvent(
     orbit_grpc_protos::ErrorEnablingOrbitApiEvent error_enabling_orbit_api_event) {
   main_thread_executor_->Schedule(

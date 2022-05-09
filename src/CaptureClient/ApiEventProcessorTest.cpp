@@ -72,6 +72,11 @@ class MockCaptureListener : public CaptureListener {
       void, OnErrorsWithPerfEventOpenEvent,
       (orbit_grpc_protos::ErrorsWithPerfEventOpenEvent /*errors_with_perf_event_open_event*/),
       (override));
+  MOCK_METHOD(
+      void, OnWarningInstrumentingWithUprobesEvent,
+      (orbit_grpc_protos::
+           WarningInstrumentingWithUprobesEvent /*warning_instrumenting_with_uprobes_event*/),
+      (override));
   MOCK_METHOD(void, OnErrorEnablingOrbitApiEvent,
               (orbit_grpc_protos::ErrorEnablingOrbitApiEvent /*error_enabling_orbit_api_event*/),
               (override));

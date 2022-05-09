@@ -135,4 +135,13 @@ void TracingHandler::OnOutOfOrderEventsDiscardedEvent(
   producer_event_processor_->ProcessEvent(kLinuxTracingProducerId, std::move(event));
 }
 
+void TracingHandler::OnWarningInstrumentingWithUprobesEvent(
+    orbit_grpc_protos::WarningInstrumentingWithUprobesEvent
+        warning_instrumenting_with_uprobes_event) {
+  orbit_grpc_protos::ProducerCaptureEvent event;
+  *event.mutable_warning_instrumenting_with_uprobes_event() =
+      std::move(warning_instrumenting_with_uprobes_event);
+  producer_event_processor_->ProcessEvent(kLinuxTracingProducerId, std::move(event));
+}
+
 }  // namespace orbit_linux_capture_service
