@@ -483,8 +483,9 @@ void OrbitMainWindow::SetupHintFrame() {
 }
 
 void OrbitMainWindow::SetupTargetLabel() {
-  auto* target_widget = new QWidget();
-  target_widget->setStyleSheet(QString("background-color: %1").arg(kMediumGrayColor));
+  target_widget_ = new QWidget(this);
+  target_widget_->setAccessibleName("Target");
+  target_widget_->setStyleSheet(QString("background-color: %1").arg(kMediumGrayColor));
   target_label_ = new TargetLabel{};
   target_label_->setContentsMargins(6, 0, 0, 0);
   auto* disconnect_target_button = new QPushButton("End Session");
@@ -492,17 +493,18 @@ void OrbitMainWindow::SetupTargetLabel() {
   target_layout->addWidget(target_label_);
   target_layout->addWidget(disconnect_target_button);
   target_layout->setMargin(0);
-  target_widget->setLayout(target_layout);
+  target_widget_->setLayout(target_layout);
+  target_widget_->setFixedHeight(ui->menuBar->height());
 
-  ui->menuBar->setCornerWidget(target_widget, Qt::TopRightCorner);
+  UpdateTargetLabelPosition();
 
   QObject::connect(disconnect_target_button, &QPushButton::clicked, this,
                    [this] { on_actionEnd_Session_triggered(); });
 
-  QObject::connect(target_label_, &TargetLabel::SizeChanged, this, [this, target_widget]() {
+  QObject::connect(target_label_, &TargetLabel::SizeChanged, this, [this]() {
     target_label_->adjustSize();
-    target_widget->adjustSize();
-    ui->menuBar->setCornerWidget(target_widget, Qt::TopRightCorner);
+    target_widget_->adjustSize();
+    UpdateTargetLabelPosition();
   });
 }
 
@@ -1544,6 +1546,11 @@ void OrbitMainWindow::closeEvent(QCloseEvent* event) {
   Exit(kQuitOrbitReturnCode);
 }
 
+void OrbitMainWindow::resizeEvent(QResizeEvent* event) {
+  QMainWindow::resizeEvent(event);
+  UpdateTargetLabelPosition();
+}
+
 void OrbitMainWindow::OnStadiaConnectionError(std::error_code error) {
   ORBIT_CHECK(std::holds_alternative<StadiaTarget>(target_configuration_));
   const StadiaTarget& target = std::get<StadiaTarget>(target_configuration_);
@@ -1609,6 +1616,11 @@ void OrbitMainWindow::SetTarget(const LocalTarget& target) {
 void OrbitMainWindow::SetTarget(const orbit_session_setup::FileTarget& target) {
   target_label_->ChangeToFileTarget(target);
   OpenCapture(target.GetCaptureFilePath().string());
+}
+
+void OrbitMainWindow::UpdateTargetLabelPosition() {
+  int target_widget_width = target_widget_->width();
+  target_widget_->move(width() - target_widget_width, 0);
 }
 
 void OrbitMainWindow::OnProcessListUpdated(

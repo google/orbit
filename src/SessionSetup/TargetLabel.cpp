@@ -107,6 +107,7 @@ void TargetLabel::ChangeToFileTarget(const fs::path& path) {
   Clear();
   SetFile(path);
   ui_->targetLabel->setVisible(false);
+  setAccessibleName("File target");
   emit SizeChanged();
 }
 
@@ -128,6 +129,7 @@ void TargetLabel::ChangeToStadiaTarget(const QString& process_name, double cpu_u
   SetProcessCpuUsageInPercent(cpu_usage);
   ui_->targetLabel->setVisible(true);
   ui_->fileLabel->setVisible(false);
+  setAccessibleName("Stadia target");
 }
 
 void TargetLabel::ChangeToLocalTarget(const LocalTarget& local_target) {
@@ -145,6 +147,7 @@ void TargetLabel::ChangeToLocalTarget(const QString& process_name, double cpu_us
   SetProcessCpuUsageInPercent(cpu_usage);
   ui_->targetLabel->setVisible(true);
   ui_->fileLabel->setVisible(false);
+  setAccessibleName("Local target");
 }
 
 bool TargetLabel::SetProcessCpuUsageInPercent(double cpu_usage) {
