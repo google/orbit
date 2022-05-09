@@ -33,6 +33,8 @@
 #include <unwindstack/Maps.h>
 #include <unwindstack/Memory.h>
 #include <unwindstack/Object.h>
+#include <unwindstack/PeCoff.h>
+#include <unwindstack/PeCoffInterface.h>
 
 #include "ElfTestUtils.h"
 #include "utils/MemoryFake.h"
@@ -471,6 +473,58 @@ TEST_F(MapInfoCreateMemoryTest, valid_rosegment_offset_overflow) {
   ASSERT_EQ(0x1000UL, bytes);
   for (size_t i = 0; i < bytes; i++) {
     ASSERT_EQ(0x5d, buffer[i]) << "Failed at byte " << i;
+  }
+}
+
+template <class>
+inline constexpr bool kAlwaysFalseV = false;
+
+template <typename PeCoffInterfaceType>
+class MapInfoCreateMemoryForPeTest : public ::testing::Test {
+ public:
+  MapInfoCreateMemoryForPeTest() {
+    std::string file_name;
+    if constexpr (std::is_same_v<PeCoffInterfaceType, PeCoffInterface32>) {
+      file_name = "libtest32.dll";
+    } else if constexpr (std::is_same_v<PeCoffInterfaceType, PeCoffInterface64>) {
+      file_name = "libtest.dll";
+    } else {
+      static_assert(kAlwaysFalseV<PeCoffInterfaceType>, "non-exhaustive if");
+    }
+    std::string file_path = android::base::GetExecutableDirectory() + "/tests/files/" + file_name;
+
+    maps_.Add(0x100000, 0x101000, 0, PROT_READ, file_path, 0);
+    maps_.Add(0x101000, 0x103000, 0x1000, PROT_READ | PROT_EXEC, file_path, 0);
+  }
+
+  Maps* GetMaps() { return &maps_; }
+
+  const std::shared_ptr<Memory>& GetProcessMemory() { return this->process_memory_; }
+
+ private:
+  Maps maps_;
+  std::shared_ptr<Memory> process_memory_ = std::make_shared<MemoryFake>();
+};
+
+using PeCoffInterfaceTypes = ::testing::Types<PeCoffInterface32, PeCoffInterface64>;
+TYPED_TEST_SUITE(MapInfoCreateMemoryForPeTest, PeCoffInterfaceTypes);
+
+TYPED_TEST(MapInfoCreateMemoryForPeTest, correctly_initializes_memory_for_pe) {
+  {
+    std::shared_ptr<MapInfo> map_info = this->GetMaps()->Get(0);
+    std::unique_ptr<Memory> memory{map_info->CreateMemory(this->GetProcessMemory())};
+    EXPECT_NE(memory, nullptr);
+    EXPECT_EQ(map_info->object_offset(), 0);
+    EXPECT_EQ(map_info->object_start_offset(), 0);
+    EXPECT_FALSE(map_info->memory_backed_object());
+  }
+  {
+    std::shared_ptr<MapInfo> map_info = this->GetMaps()->Get(1);
+    std::unique_ptr<Memory> memory{map_info->CreateMemory(this->GetProcessMemory())};
+    EXPECT_NE(memory, nullptr);
+    EXPECT_EQ(map_info->object_offset(), 0x1000);
+    EXPECT_EQ(map_info->object_start_offset(), 0);
+    EXPECT_FALSE(map_info->memory_backed_object());
   }
 }
 

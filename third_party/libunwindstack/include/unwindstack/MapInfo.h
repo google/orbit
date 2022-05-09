@@ -222,6 +222,8 @@ class MapInfo {
   Memory* GetFileMemory();
   bool InitFileMemoryFromPreviousReadOnlyMap(MemoryFileAtOffset* memory);
 
+  Memory* GetFileMemoryFromAnonExecMapIfPeCoffTextSection();
+
   // Protect the creation of the object instance.
   std::mutex& object_mutex() { return GetObjectFields().object_mutex_; }
 
