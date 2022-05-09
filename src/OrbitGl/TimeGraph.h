@@ -92,6 +92,8 @@ class TimeGraph : public orbit_gl::CaptureViewElement, public orbit_gl::Timeline
                                 const orbit_client_protos::TimerInfo& timer_info,
                                 double distance = 0.3);
 
+  [[nodiscard]] double GetTime(double ratio) const;
+
   enum class JumpScope { kSameDepth, kSameThread, kSameFunction, kSameThreadSameFunction };
   enum class JumpDirection { kPrevious, kNext, kTop, kDown };
   void JumpToNeighborTimer(const orbit_client_protos::TimerInfo* from, JumpDirection jump_direction,

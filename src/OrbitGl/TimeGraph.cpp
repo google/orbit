@@ -269,6 +269,12 @@ void TimeGraph::UpdateHorizontalZoom(float normalized_start, float normalized_en
   SetMinMax(normalized_start * GetCaptureTimeSpanUs(), normalized_end * GetCaptureTimeSpanUs());
 }
 
+double TimeGraph::GetTime(double ratio) const {
+  double current_width = max_time_us_ - min_time_us_;
+  double delta = ratio * current_width;
+  return min_time_us_ + delta;
+}
+
 void TimeGraph::ProcessTimer(const TimerInfo& timer_info, const InstrumentedFunction* function) {
   TrackManager* track_manager = GetTrackManager();
   // TODO(b/175869409): Change the way to create and get the tracks. Move this part to TrackManager.
@@ -469,12 +475,7 @@ uint64_t TimeGraph::GetNsSinceStart(uint64_t time) const { return time - capture
 
 uint64_t TimeGraph::GetTickFromWorld(float world_x) const {
   double ratio = GetTimelineWidth() > 0 ? static_cast<double>(world_x / GetTimelineWidth()) : 0;
-
-  double current_width = max_time_us_ - min_time_us_;
-  double delta = ratio * current_width;
-  double time_at_pos = min_time_us_ + delta;
-  uint64_t time_span_ns = static_cast<uint64_t>(1000 * time_at_pos);
-
+  auto time_span_ns = static_cast<uint64_t>(1000 * GetTime(ratio));
   return capture_min_timestamp_ + time_span_ns;
 }
 
