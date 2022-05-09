@@ -38,6 +38,8 @@ const CaptureCompleteData kTestCompleteData{
     107 /*number_of_manual_start_async_timers*/,
     108 /*number_of_manual_stop_async_timers*/,
     109 /*number_of_manual_tracked_value_timers*/,
+    110 /*number_of_callstack_samples*/,
+    111 /*number_of_unwinding_errors*/,
     std::filesystem::path{"/test/path"} /*file_path*/
 };
 
@@ -75,7 +77,9 @@ bool HasSameCaptureCompleteData(const OrbitCaptureData& capture_data,
          capture_data.number_of_manual_stop_async_timers() ==
              complete_data.number_of_manual_stop_async_timers &&
          capture_data.number_of_manual_tracked_value_timers() ==
-             complete_data.number_of_manual_tracked_value_timers;
+             complete_data.number_of_manual_tracked_value_timers &&
+         capture_data.number_of_callstack_samples() == complete_data.number_of_callstack_samples &&
+         capture_data.number_of_unwinding_errors() == complete_data.number_of_unwinding_errors;
 }
 
 }  // namespace

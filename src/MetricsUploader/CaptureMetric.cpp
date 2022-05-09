@@ -48,6 +48,8 @@ void CaptureMetric::SetCaptureCompleteData(const CaptureCompleteData& complete_d
       complete_data.number_of_manual_stop_async_timers);
   capture_data_.set_number_of_manual_tracked_value_timers(
       complete_data.number_of_manual_tracked_value_timers);
+  capture_data_.set_number_of_callstack_samples(complete_data.number_of_callstack_samples);
+  capture_data_.set_number_of_unwinding_errors(complete_data.number_of_unwinding_errors);
   file_path_ = complete_data.file_path;
 }
 

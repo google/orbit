@@ -438,6 +438,15 @@ Future<void> OrbitApp::OnCaptureComplete() {
         ORBIT_CHECK(capture_stopped_callback_);
         capture_stopped_callback_();
 
+        const orbit_client_data::ThreadSampleData* all_threads_sample_data =
+            GetCaptureData().post_processed_sampling_data().GetSummary();
+        if (all_threads_sample_data != nullptr) {
+          metrics_capture_complete_data_.number_of_callstack_samples =
+              all_threads_sample_data->samples_count;
+          metrics_capture_complete_data_.number_of_unwinding_errors =
+              all_threads_sample_data->unwinding_errors_count;
+        }
+
         FireRefreshCallbacks();
       });
 }
