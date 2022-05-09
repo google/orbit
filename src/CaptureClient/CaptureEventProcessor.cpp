@@ -87,6 +87,9 @@ class CaptureEventProcessorForListener : public CaptureEventProcessor {
       const orbit_grpc_protos::ClockResolutionEvent& clock_resolution_event);
   void ProcessErrorsWithPerfEventOpenEvent(
       const orbit_grpc_protos::ErrorsWithPerfEventOpenEvent& errors_with_perf_event_open_event);
+  void ProcessWarningInstrumentingWithUprobesEvent(
+      const orbit_grpc_protos::WarningInstrumentingWithUprobesEvent&
+          warning_instrumenting_with_uprobes_event);
   void ProcessErrorEnablingOrbitApiEvent(
       const orbit_grpc_protos::ErrorEnablingOrbitApiEvent& error_enabling_orbit_api_event);
   void ProcessErrorEnablingUserSpaceInstrumentationEvent(
@@ -230,6 +233,9 @@ void CaptureEventProcessorForListener::ProcessEvent(const ClientCaptureEvent& ev
     case ClientCaptureEvent::kErrorsWithPerfEventOpenEvent:
       ProcessErrorsWithPerfEventOpenEvent(event.errors_with_perf_event_open_event());
       break;
+    case ClientCaptureEvent::kWarningInstrumentingWithUprobesEvent:
+      ProcessWarningInstrumentingWithUprobesEvent(event.warning_instrumenting_with_uprobes_event());
+      break;
     case ClientCaptureEvent::kErrorEnablingOrbitApiEvent:
       ProcessErrorEnablingOrbitApiEvent(event.error_enabling_orbit_api_event());
       break;
@@ -252,8 +258,6 @@ void CaptureEventProcessorForListener::ProcessEvent(const ClientCaptureEvent& ev
       break;
     case ClientCaptureEvent::EVENT_NOT_SET:
       ORBIT_ERROR("CaptureEvent::EVENT_NOT_SET read from Capture's gRPC stream");
-      break;
-    default:
       break;
   }
 }
@@ -650,6 +654,13 @@ void CaptureEventProcessorForListener::ProcessClockResolutionEvent(
 void CaptureEventProcessorForListener::ProcessErrorsWithPerfEventOpenEvent(
     const orbit_grpc_protos::ErrorsWithPerfEventOpenEvent& errors_with_perf_event_open_event) {
   capture_listener_->OnErrorsWithPerfEventOpenEvent(errors_with_perf_event_open_event);
+}
+
+void CaptureEventProcessorForListener::ProcessWarningInstrumentingWithUprobesEvent(
+    const orbit_grpc_protos::WarningInstrumentingWithUprobesEvent&
+        warning_instrumenting_with_uprobes_event) {
+  capture_listener_->OnWarningInstrumentingWithUprobesEvent(
+      warning_instrumenting_with_uprobes_event);
 }
 
 void CaptureEventProcessorForListener::ProcessErrorEnablingOrbitApiEvent(

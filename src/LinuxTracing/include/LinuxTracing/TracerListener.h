@@ -30,6 +30,9 @@ class TracerListener {
       orbit_grpc_protos::LostPerfRecordsEvent lost_perf_records_event) = 0;
   virtual void OnOutOfOrderEventsDiscardedEvent(
       orbit_grpc_protos::OutOfOrderEventsDiscardedEvent out_of_order_events_discarded_event) = 0;
+  virtual void OnWarningInstrumentingWithUprobesEvent(
+      orbit_grpc_protos::WarningInstrumentingWithUprobesEvent
+          warning_instrumenting_with_uprobes_event) = 0;
 };
 
 }  // namespace orbit_linux_tracing

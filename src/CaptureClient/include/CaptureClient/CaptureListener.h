@@ -65,6 +65,9 @@ class CaptureListener {
       orbit_grpc_protos::ClockResolutionEvent clock_resolution_event) = 0;
   virtual void OnErrorsWithPerfEventOpenEvent(
       orbit_grpc_protos::ErrorsWithPerfEventOpenEvent errors_with_perf_event_open_event) = 0;
+  virtual void OnWarningInstrumentingWithUprobesEvent(
+      orbit_grpc_protos::WarningInstrumentingWithUprobesEvent
+          warning_instrumenting_with_uprobes_event) = 0;
   virtual void OnErrorEnablingOrbitApiEvent(
       orbit_grpc_protos::ErrorEnablingOrbitApiEvent error_enabling_orbit_api_event) = 0;
   virtual void OnErrorEnablingUserSpaceInstrumentationEvent(

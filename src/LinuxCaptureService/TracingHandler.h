@@ -61,6 +61,9 @@ class TracingHandler : public orbit_linux_tracing::TracerListener {
       orbit_grpc_protos::LostPerfRecordsEvent lost_perf_records_event) override;
   void OnOutOfOrderEventsDiscardedEvent(orbit_grpc_protos::OutOfOrderEventsDiscardedEvent
                                             out_of_order_events_discarded_event) override;
+  void OnWarningInstrumentingWithUprobesEvent(
+      orbit_grpc_protos::WarningInstrumentingWithUprobesEvent
+          warning_instrumenting_with_uprobes_event) override;
 
   void ProcessFunctionEntry(const orbit_grpc_protos::FunctionEntry& function_entry) {
     tracer_->ProcessFunctionEntry(function_entry);

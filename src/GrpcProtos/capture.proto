@@ -748,6 +748,12 @@ message ErrorsWithPerfEventOpenEvent {
   repeated bytes failed_to_open = 2;
 }
 
+message WarningInstrumentingWithUprobesEvent {
+  uint64 timestamp_ns = 1;
+  repeated FunctionThatFailedToBeInstrumented
+      functions_that_failed_to_instrument = 2;
+}
+
 message LostPerfRecordsEvent {
   uint64 duration_ns = 1;
   uint64 end_timestamp_ns = 2;
@@ -768,7 +774,7 @@ message ClientCaptureEvent {
     // numbers starting with 16.
     //
     // Next high-frequency ID: 13
-    // Next lower-frequency ID: 49
+    // Next lower-frequency ID: 50
     // Please keep these alphabetically ordered.
 
     // Even though AddressInfo is a high-frequency event
@@ -813,6 +819,8 @@ message ClientCaptureEvent {
     ThreadStateSlice thread_state_slice = 7;
     TracepointEvent tracepoint_event = 8;
     WarningEvent warning_event = 32;
+    WarningInstrumentingWithUprobesEvent
+        warning_instrumenting_with_uprobes_event = 49;
     WarningInstrumentingWithUserSpaceInstrumentationEvent
         warning_instrumenting_with_user_space_instrumentation_event = 48;
   }
@@ -827,7 +835,7 @@ message ProducerCaptureEvent {
     // numbers starting with 16.
     //
     // Next high-frequency ID: No high-frequency index left.
-    // Next lower-frequency ID: 48
+    // Next lower-frequency ID: 49
     //
     // Please keep these alphabetically ordered.
     ApiEvent api_event = 10;
@@ -875,6 +883,8 @@ message ProducerCaptureEvent {
     ThreadNamesSnapshot thread_names_snapshot = 24;
     ThreadStateSlice thread_state_slice = 9;
     WarningEvent warning_event = 30;
+    WarningInstrumentingWithUprobesEvent
+        warning_instrumenting_with_uprobes_event = 48;
     WarningInstrumentingWithUserSpaceInstrumentationEvent
         warning_instrumenting_with_user_space_instrumentation_event = 47;
   }
