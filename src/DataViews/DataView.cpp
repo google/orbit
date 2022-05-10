@@ -245,8 +245,10 @@ void DataView::OnEnableFrameTrackRequested(const std::vector<int>& selection) {
   metrics_uploader_->SendLogEvent(OrbitLogEvent::ORBIT_FRAME_TRACK_ENABLE_CLICKED);
 
   for (int i : selection) {
+    if (!IsScopeDynamicallyInstrumentedFunction(GetScopeId(i))) continue;
+
     const FunctionInfo* function = GetFunctionInfoFromRow(i);
-    if (function == nullptr) continue;
+    ORBIT_CHECK(function != nullptr);
     // Functions used as frame tracks must be hooked (selected), otherwise the
     // data to produce the frame track will not be captured.
     // The condition is supposed to prevent "selecting" a function when a capture
@@ -264,8 +266,10 @@ void DataView::OnDisableFrameTrackRequested(const std::vector<int>& selection) {
   metrics_uploader_->SendLogEvent(OrbitLogEvent::ORBIT_FRAME_TRACK_DISABLE_CLICKED);
 
   for (int i : selection) {
+    if (!IsScopeDynamicallyInstrumentedFunction(GetScopeId(i))) continue;
+
     const FunctionInfo* function = GetFunctionInfoFromRow(i);
-    if (function == nullptr) continue;
+    ORBIT_CHECK(function != nullptr);
 
     // When we remove a frame track, we do not unhook (deselect) the function as
     // it may have been selected manually (not as part of adding a frame track).
@@ -363,6 +367,16 @@ void DataView::OnCopySelectionRequested(const std::vector<int>& selection) {
   }
 
   app_->SetClipboard(clipboard);
+}
+
+uint64_t DataView::GetScopeId(uint32_t row) const {
+  ORBIT_CHECK(row < indices_.size());
+  return indices_[row];
+}
+
+[[nodiscard]] bool DataView::IsScopeDynamicallyInstrumentedFunction(uint64_t scope_id) const {
+  return app_->GetCaptureData().GetScopeInfo(scope_id).GetType() ==
+         orbit_client_data::ScopeType::kDynamicallyInstrumentedFunction;
 }
 
 }  // namespace orbit_data_views

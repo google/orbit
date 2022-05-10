@@ -62,7 +62,6 @@ class LiveFunctionsDataView : public DataView {
                                              const std::vector<int>& selected_indices) override;
   void DoFilter() override;
   void DoSort() override;
-  [[nodiscard]] uint64_t GetScopeId(uint32_t row) const;
   [[nodiscard]] std::optional<orbit_client_data::FunctionInfo>
   CreateFunctionInfoFromInstrumentedFunction(
       const orbit_grpc_protos::InstrumentedFunction& instrumented_function);

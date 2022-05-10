@@ -189,6 +189,7 @@ class DataView {
   void OnCopySelectionRequested(const std::vector<int>& selection);
   void OnExportToCsvRequested();
   virtual void OnExportEventsToCsvRequested(const std::vector<int>& /*selection*/) {}
+  [[nodiscard]] virtual uint64_t GetScopeId(uint32_t row) const;
 
  protected:
   [[nodiscard]] virtual const orbit_client_data::ModuleData* GetModuleDataFromRow(
@@ -212,6 +213,8 @@ class DataView {
   enum class ActionStatus { kInvisible, kVisibleButDisabled, kVisibleAndEnabled };
   [[nodiscard]] virtual ActionStatus GetActionStatus(std::string_view action, int clicked_index,
                                                      const std::vector<int>& selected_indices);
+
+  [[nodiscard]] bool IsScopeDynamicallyInstrumentedFunction(uint64_t scope_id) const;
 
   void InitSortingOrders();
   virtual void DoSort() {}

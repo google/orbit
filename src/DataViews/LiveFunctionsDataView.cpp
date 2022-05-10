@@ -359,7 +359,9 @@ DataView::ActionStatus LiveFunctionsDataView::GetActionStatus(
 
 void LiveFunctionsDataView::OnIteratorRequested(const std::vector<int>& selection) {
   for (int i : selection) {
-    uint64_t scope_id = GetScopeId(i);
+    const uint64_t scope_id = GetScopeId(i);
+    if (!IsScopeDynamicallyInstrumentedFunction(scope_id)) continue;
+
     const FunctionInfo* instrumented_function = GetFunctionInfoFromRow(i);
     ORBIT_CHECK(instrumented_function != nullptr);
     const ScopeStats& stats = app_->GetCaptureData().GetScopeStatsOrDefault(scope_id);
@@ -536,11 +538,6 @@ void LiveFunctionsDataView::OnRefresh(const std::vector<int>& visible_selected_i
   if (mode != RefreshMode::kOnSort) {
     UpdateHistogramWithIndices(visible_selected_indices);
   }
-}
-
-uint64_t LiveFunctionsDataView::GetScopeId(uint32_t row) const {
-  ORBIT_CHECK(row < indices_.size());
-  return indices_[row];
 }
 
 const FunctionInfo* LiveFunctionsDataView::GetFunctionInfoFromRow(int row) {
