@@ -361,7 +361,8 @@ void LiveFunctionsDataView::OnIteratorRequested(const std::vector<int>& selectio
   for (int i : selection) {
     uint64_t scope_id = GetScopeId(i);
     const FunctionInfo* instrumented_function = GetFunctionInfoFromRow(i);
-    ORBIT_CHECK(instrumented_function != nullptr);
+    if (instrumented_function == nullptr) continue;
+
     const ScopeStats& stats = app_->GetCaptureData().GetScopeStatsOrDefault(scope_id);
     if (stats.count() > 0) {
       live_functions_->AddIterator(scope_id, instrumented_function);
