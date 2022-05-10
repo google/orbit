@@ -335,7 +335,7 @@ class FilterAndSelectFirstProcess(E2ETestCase):
 class WaitForConnectionToTargetInstanceAndProcess(E2ETestCase):
     """
     Assumes Orbit has been started with --target_process and --target_instance parameters.
-    Verifies the contents of the connection window and waits for the main window to appear.
+    Waits for the main window to appear and checks the contents of the target label.
     """
 
     def _execute(self, expected_instance: str, expected_process: str):
