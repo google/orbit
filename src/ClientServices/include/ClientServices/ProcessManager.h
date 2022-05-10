@@ -25,13 +25,14 @@
 
 namespace orbit_client_services {
 
-// ProcessManager is used to access or launch processes on the target machine through OrbitService.
+// ProcessManager is used to query information about existing processes on the target machine as
+// well as launching new ones.
 class ProcessManager {
  public:
   ProcessManager() = default;
   virtual ~ProcessManager() = default;
 
-  // Set callback to periodically receive the list of processes running on the target.
+  // Set callback to periodically receive a list of processes running on the target machine.
   virtual void SetProcessListUpdateListener(
       const std::function<void(std::vector<orbit_grpc_protos::ProcessInfo>)>& listener) = 0;
 
@@ -47,8 +48,6 @@ class ProcessManager {
       const std::string& module_path,
       absl::Span<const std::string> additional_search_directories) = 0;
 
-  // Process launching is only implemented on Windows for now.
-  // TODO(https://b/232009293): Profile from entry point on Stadia/Linux.
 #ifdef _WIN32
   virtual ErrorMessageOr<orbit_grpc_protos::ProcessInfo> LaunchProcess(
       const orbit_grpc_protos::ProcessToLaunch& process_to_launch) = 0;

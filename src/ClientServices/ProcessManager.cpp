@@ -87,7 +87,7 @@ class ProcessManagerImpl final : public ProcessManager {
 ProcessManagerImpl::ProcessManagerImpl(const std::shared_ptr<grpc::Channel>& channel,
                                        absl::Duration refresh_timeout)
     : refresh_timeout_(refresh_timeout), shutdown_initiated_(false) {
-  process_client_ = std::make_unique<ProcessClient>(channel);
+  process_client_ = ProcessClient::Create(channel);
 }
 
 void ProcessManagerImpl::SetProcessListUpdateListener(
@@ -99,11 +99,12 @@ void ProcessManagerImpl::SetProcessListUpdateListener(
 #ifdef _WIN32
 ErrorMessageOr<ProcessInfo> ProcessManagerImpl::LaunchProcess(
     const ProcessToLaunch& process_to_launch) {
-  OUTCOME_TRY(std::unique_ptr<LaunchedProcess> launched_process,
+  OUTCOME_TRY(LaunchedProcess launched_process,
               LaunchedProcess::LaunchProcess(process_to_launch, process_client_.get()));
   absl::MutexLock lock(&launched_processes_by_pid_mutex_);
-  const ProcessInfo process_info = launched_process->GetProcessInfo();
-  launched_processes_by_pid_.emplace(process_info.pid(), std::move(launched_process));
+  const ProcessInfo process_info = launched_process.GetProcessInfo();
+  launched_processes_by_pid_.emplace(
+      process_info.pid(), std::make_unique<LaunchedProcess>(std::move(launched_process)));
   return process_info;
 }
 

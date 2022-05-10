@@ -11,15 +11,13 @@ namespace orbit_client_services {
 using orbit_grpc_protos::ProcessInfo;
 using orbit_grpc_protos::ProcessToLaunch;
 
-ErrorMessageOr<std::unique_ptr<LaunchedProcess>> LaunchedProcess::LaunchProcess(
+ErrorMessageOr<LaunchedProcess> LaunchedProcess::LaunchProcess(
     const orbit_grpc_protos::ProcessToLaunch& process_to_launch, ProcessClient* client) {
   OUTCOME_TRY(ProcessInfo process_info, client->LaunchProcess(process_to_launch));
   LaunchedProcess::State initial_state = process_to_launch.spin_at_entry_point()
                                              ? LaunchedProcess::State::kSpinningAtEntryPoint
                                              : LaunchedProcess::State::kExecutingOrExited;
-  // Using "new" to access non-public constructor.
-  return std::unique_ptr<LaunchedProcess>(
-      new LaunchedProcess(initial_state, std::move(process_info)));
+  return LaunchedProcess(initial_state, process_info);
 }
 
 LaunchedProcess::LaunchedProcess(State initial_state, orbit_grpc_protos::ProcessInfo process_info)

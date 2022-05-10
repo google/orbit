@@ -2,11 +2,11 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#ifndef CLIENT_SERVICES_LAUNCHED_PROCESS_
-#define CLIENT_SERVICES_LAUNCHED_PROCESS_
+#ifndef CLIENT_SERVICES_LAUNCHED_PROCESS_H_
+#define CLIENT_SERVICES_LAUNCHED_PROCESS_H_
 
 #include "ClientServices/ProcessClient.h"
-#include "GrpcProtos/capture.pb.h"
+#include "GrpcProtos/services.pb.h"
 #include "OrbitBase/Result.h"
 
 namespace orbit_client_services {
@@ -16,15 +16,14 @@ namespace orbit_client_services {
 class LaunchedProcess {
  public:
   // A LaunchedProcess can only be created by launching a process.
-  static ErrorMessageOr<std::unique_ptr<LaunchedProcess>> LaunchProcess(
+  static ErrorMessageOr<LaunchedProcess> LaunchProcess(
       const orbit_grpc_protos::ProcessToLaunch& process_to_launch, ProcessClient* client);
+  LaunchedProcess(LaunchedProcess&&) = default;
 
   // Prevent other creation methods.
   LaunchedProcess() = delete;
   LaunchedProcess(const LaunchedProcess&) = delete;
-  LaunchedProcess(const LaunchedProcess&&) = delete;
   LaunchedProcess& operator=(const LaunchedProcess&) = delete;
-  LaunchedProcess& operator=(const LaunchedProcess&&) = delete;
 
   // Suspend a process spinning at entry point and restore its original instructions.
   [[nodiscard]] ErrorMessageOr<void> SuspendProcessSpinningAtEntryPoint(ProcessClient* client);
@@ -46,4 +45,4 @@ class LaunchedProcess {
 
 }  // namespace orbit_client_services
 
-#endif  // CLIENT_SERVICES_LAUNCHED_PROCESS_
+#endif  // CLIENT_SERVICES_LAUNCHED_PROCESS_H_

@@ -30,12 +30,12 @@ TEST(LaunchedProcess, LaunchProcess) {
   EXPECT_CALL(mock_process_client, LaunchProcess).Times(1);
 
   // "LaunchedProcess::LaunchProcess" function will invoke "MockProcessClient::LaunchProcess".
-  ErrorMessageOr<std::unique_ptr<LaunchedProcess>> launch_result =
+  ErrorMessageOr<LaunchedProcess> launch_result =
       LaunchedProcess::LaunchProcess(process_to_launch, &mock_process_client);
 
   // Make sure the returned "LaunchedProcess" is valid and is not set as "spinning on entry point".
   ASSERT_THAT(launch_result, HasValue());
-  LaunchedProcess& launched_process = *launch_result.value();
+  LaunchedProcess& launched_process = launch_result.value();
   ASSERT_FALSE(launched_process.IsProcessSpinningAtEntryPoint());
   ASSERT_FALSE(launched_process.IsProcessSuspendedAtEntryPoint());
   ASSERT_TRUE(launched_process.IsProcessExecutingOrExited());
@@ -57,12 +57,12 @@ TEST(LaunchedProcess, LaunchProcessSpinningAtEntryPoint) {
   EXPECT_CALL(mock_process_client, LaunchProcess).Times(1);
 
   // "LaunchedProcess::LaunchProcess" function will invoke "MockProcessClient::LaunchProcess".
-  ErrorMessageOr<std::unique_ptr<LaunchedProcess>> launch_result =
+  ErrorMessageOr<LaunchedProcess> launch_result =
       LaunchedProcess::LaunchProcess(process_to_launch, &mock_process_client);
 
   // Make sure the returned "LaunchedProcess" is valid and is set as "spinning on entry point".
   ASSERT_THAT(launch_result, HasValue());
-  LaunchedProcess& launched_process = *launch_result.value();
+  LaunchedProcess& launched_process = launch_result.value();
   ASSERT_TRUE(launched_process.IsProcessSpinningAtEntryPoint());
   ASSERT_FALSE(launched_process.IsProcessSuspendedAtEntryPoint());
   ASSERT_FALSE(launched_process.IsProcessExecutingOrExited());
