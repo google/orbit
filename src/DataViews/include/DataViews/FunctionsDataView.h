@@ -10,10 +10,10 @@
 
 #include "ClientData/FunctionInfo.h"
 #include "DataViews/AppInterface.h"
-#include "DataViews/DataView.h"
+#include "DataViews/ScopeDataView.h"
 
 namespace orbit_data_views {
-class FunctionsDataView : public DataView {
+class FunctionsDataView : public ScopeDataView {
  public:
   explicit FunctionsDataView(AppInterface* app,
                              orbit_metrics_uploader::MetricsUploader* metrics_uploader);

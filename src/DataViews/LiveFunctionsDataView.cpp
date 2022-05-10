@@ -38,6 +38,7 @@
 #include "DataViews/DataView.h"
 #include "DataViews/DataViewType.h"
 #include "DataViews/FunctionsDataView.h"
+#include "DataViews/ScopeDataView.h"
 #include "DisplayFormats/DisplayFormats.h"
 #include "GrpcProtos/Constants.h"
 #include "Introspection/Introspection.h"
@@ -63,7 +64,7 @@ namespace orbit_data_views {
 LiveFunctionsDataView::LiveFunctionsDataView(
     LiveFunctionsInterface* live_functions, AppInterface* app,
     orbit_metrics_uploader::MetricsUploader* metrics_uploader)
-    : DataView(DataViewType::kLiveFunctions, app, metrics_uploader),
+    : ScopeDataView(DataViewType::kLiveFunctions, app, metrics_uploader),
       live_functions_(live_functions),
       selected_scope_id_(orbit_grpc_protos::kInvalidFunctionId) {
   update_period_ms_ = 300;

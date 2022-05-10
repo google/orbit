@@ -33,7 +33,7 @@ namespace orbit_data_views {
 
 FunctionsDataView::FunctionsDataView(AppInterface* app,
                                      orbit_metrics_uploader::MetricsUploader* metrics_uploader)
-    : DataView(DataViewType::kFunctions, app, metrics_uploader) {}
+    : ScopeDataView(DataViewType::kFunctions, app, metrics_uploader) {}
 
 const std::string FunctionsDataView::kUnselectedFunctionString = "";
 const std::string FunctionsDataView::kSelectedFunctionString = "H";

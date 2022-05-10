@@ -10,6 +10,7 @@
 #include <cstddef>
 #include <iterator>
 #include <memory>
+#include <optional>
 
 #include "ClientData/FunctionInfo.h"
 #include "MetricsUploader/orbit_log_event.pb.h"
@@ -245,7 +246,9 @@ void DataView::OnEnableFrameTrackRequested(const std::vector<int>& selection) {
   metrics_uploader_->SendLogEvent(OrbitLogEvent::ORBIT_FRAME_TRACK_ENABLE_CLICKED);
 
   for (int i : selection) {
-    if (!IsScopeDynamicallyInstrumentedFunction(GetScopeId(i))) continue;
+    std::optional<uint64_t> scope_id = GetScopeIdFromRow(i);
+    ORBIT_CHECK(scope_id.has_value());
+    if (!IsScopeDynamicallyInstrumentedFunction(*scope_id)) continue;
 
     const FunctionInfo* function = GetFunctionInfoFromRow(i);
     ORBIT_CHECK(function != nullptr);
@@ -266,7 +269,9 @@ void DataView::OnDisableFrameTrackRequested(const std::vector<int>& selection) {
   metrics_uploader_->SendLogEvent(OrbitLogEvent::ORBIT_FRAME_TRACK_DISABLE_CLICKED);
 
   for (int i : selection) {
-    if (!IsScopeDynamicallyInstrumentedFunction(GetScopeId(i))) continue;
+    std::optional<uint64_t> scope_id = GetScopeIdFromRow(i);
+    ORBIT_CHECK(scope_id.has_value());
+    if (!IsScopeDynamicallyInstrumentedFunction(*scope_id)) continue;
 
     const FunctionInfo* function = GetFunctionInfoFromRow(i);
     ORBIT_CHECK(function != nullptr);
@@ -367,11 +372,6 @@ void DataView::OnCopySelectionRequested(const std::vector<int>& selection) {
   }
 
   app_->SetClipboard(clipboard);
-}
-
-uint64_t DataView::GetScopeId(uint32_t row) const {
-  ORBIT_CHECK(row < indices_.size());
-  return indices_[row];
 }
 
 [[nodiscard]] bool DataView::IsScopeDynamicallyInstrumentedFunction(uint64_t scope_id) const {
