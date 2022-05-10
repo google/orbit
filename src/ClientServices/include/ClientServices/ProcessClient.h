@@ -25,6 +25,8 @@ namespace orbit_client_services {
 // This class handles the client calls related to process service.
 class ProcessClient {
  public:
+  virtual ~ProcessClient() = default;
+
   virtual ErrorMessageOr<std::vector<orbit_grpc_protos::ProcessInfo>> GetProcessList() = 0;
   virtual ErrorMessageOr<std::vector<orbit_grpc_protos::ModuleInfo>> LoadModuleList(
       uint32_t pid) = 0;
