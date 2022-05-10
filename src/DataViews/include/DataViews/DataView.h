@@ -218,7 +218,7 @@ class DataView {
   virtual void DoFilter() {}
   FilterCallback filter_callback_;
 
-  // Contains a list of scope_id in the displayed order
+  // TODO(b/232085051) The field is used inconsistently in the subclasses
   std::vector<uint64_t> indices_;
   std::vector<SortingOrder> sorting_orders_;
   int sorting_column_ = 0;
