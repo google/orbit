@@ -238,7 +238,9 @@ void LiveFunctionsDataView::DoSort() {
     }
     case kColumnName:
       sorter = MakeSorter(
-          [this](uint64_t id) { return absl::AsciiStrToLower(GetScopeInfoFromScopeId(id).GetName()); },
+          [this](uint64_t id) {
+            return absl::AsciiStrToLower(GetScopeInfoFromScopeId(id).GetName());
+          },
           ascending);
       break;
     case kColumnCount:
@@ -565,7 +567,8 @@ std::optional<FunctionInfo> LiveFunctionsDataView::CreateFunctionInfoFromInstrum
   }
 
   const std::string& function_name =
-      GetScopeInfoFromScopeId(app_->GetCaptureData().FunctionIdToScopeId(instrumented_function.function_id()))
+      GetScopeInfoFromScopeId(
+          app_->GetCaptureData().FunctionIdToScopeId(instrumented_function.function_id()))
           .GetName();
 
   // size is unknown

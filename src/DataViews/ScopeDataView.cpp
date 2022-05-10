@@ -58,7 +58,8 @@ bool ScopeDataView::IsScopeDynamicallyInstrumentedFunction(uint64_t scope_id) co
          orbit_client_data::ScopeType::kDynamicallyInstrumentedFunction;
 }
 
-const orbit_client_data::ScopeInfo& ScopeDataView::GetScopeInfoFromScopeId(uint64_t scope_id) const {
+const orbit_client_data::ScopeInfo& ScopeDataView::GetScopeInfoFromScopeId(
+    uint64_t scope_id) const {
   ORBIT_CHECK(app_ != nullptr && app_->HasCaptureData());
   return app_->GetCaptureData().GetScopeInfo(scope_id);
 }
