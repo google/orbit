@@ -128,6 +128,7 @@ class OrbitMainWindow final : public QMainWindow, public orbit_gl::MainWindowInt
 
  protected:
   void closeEvent(QCloseEvent* event) override;
+  void resizeEvent(QResizeEvent* event) override;
 
  public slots:
   void OnFilterFunctionsTextChanged(const QString& text);
@@ -198,6 +199,8 @@ class OrbitMainWindow final : public QMainWindow, public orbit_gl::MainWindowInt
   void SetTarget(const orbit_session_setup::LocalTarget& target);
   void SetTarget(const orbit_session_setup::FileTarget& target);
 
+  void UpdateTargetLabelPosition();
+
   void OnProcessListUpdated(const std::vector<orbit_grpc_protos::ProcessInfo>& processes);
 
   void ExecuteSymbolLocationsDialog(std::optional<const orbit_client_data::ModuleData*> module);
@@ -242,6 +245,7 @@ class OrbitMainWindow final : public QMainWindow, public orbit_gl::MainWindowInt
   std::unique_ptr<OrbitGLWidget> introspection_widget_ = nullptr;
   QFrame* hint_frame_ = nullptr;
   orbit_session_setup::TargetLabel* target_label_ = nullptr;
+  QWidget* target_widget_ = nullptr;
   QPushButton* capture_log_button_ = nullptr;
 
   QStringList command_line_flags_;
