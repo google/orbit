@@ -27,8 +27,8 @@ the python installation to match the bitness of the program under test, it needs
 to be run from 64 bit python.
 
 This automation script covers the following workflow:
- - check the contents of the "Connecting to Stadia Target" dialog
  - wait for the main window
+ - verify the contents of the target label
  - take a short capture
  - verify a track named "hello_ggp_stand" exists
 """

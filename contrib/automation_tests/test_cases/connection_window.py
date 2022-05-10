@@ -335,18 +335,17 @@ class FilterAndSelectFirstProcess(E2ETestCase):
 class WaitForConnectionToTargetInstanceAndProcess(E2ETestCase):
     """
     Assumes Orbit has been started with --target_process and --target_instance parameters.
-    Verifies the contents of the connection window and waits for the main window to appear.
+    Waits for the main window to appear and checks the contents of the target label.
     """
 
     def _execute(self, expected_instance: str, expected_process: str):
-        window = self.suite.top_window()
-        self.expect_eq(window.class_name(), 'orbit_session_setup::ConnectToTargetDialog',
-                       'Target connection dialog is visible')
-        instance_label = self.find_control('Text', expected_instance, raise_on_failure=False)
-        self.expect_true(instance_label is not None, 'Found a label with the correct instance name')
-        process_label = self.find_control('Text', expected_process, raise_on_failure=False)
-        self.expect_true(process_label is not None, 'Found a label with the correct process name')
-        logging.info('Verified labels in ConnectToTargetDialog, waiting for main window')
-        _wait_for_main_window(self.suite.application, timeout=60)
+        _wait_for_main_window(self.suite.application, timeout=120)
         # As there is a new top window (Orbit main window), we need to update the top window.
         self.suite.top_window(True)
+
+        # Check the target label
+        target_widget = self.find_control('Group', 'Target')
+        stadia_target = self.find_control('Group', 'Stadia target', parent=target_widget)
+        label = stadia_target.descendants(control_type='Text')[-1]
+        self.expect_true(label.texts()[0].startswith(expected_process), 'Found expected instance')
+        self.expect_true(label.texts()[0].endswith(expected_instance), 'Found expected process')
