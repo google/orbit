@@ -175,8 +175,8 @@ class DataView {
   void OnStopDownloadRequested(const std::vector<int>& selection);
   virtual void OnSelectRequested(const std::vector<int>& selection);
   virtual void OnUnselectRequested(const std::vector<int>& selection);
-  void OnEnableFrameTrackRequested(const std::vector<int>& selection);
-  void OnDisableFrameTrackRequested(const std::vector<int>& selection);
+  virtual void OnEnableFrameTrackRequested(const std::vector<int>& /*selection*/) {}
+  virtual void OnDisableFrameTrackRequested(const std::vector<int>& /*selection*/) {}
   virtual void OnIteratorRequested(const std::vector<int>& /*selection*/) {}
   void OnVerifyFramePointersRequested(const std::vector<int>& selection);
   void OnDisassemblyRequested(const std::vector<int>& selection);
@@ -191,10 +191,6 @@ class DataView {
   virtual void OnExportEventsToCsvRequested(const std::vector<int>& /*selection*/) {}
 
  protected:
-  [[nodiscard]] virtual std::optional<uint64_t> GetScopeIdFromRow(uint32_t /*row*/) const {
-    return std::nullopt;
-  }
-
   [[nodiscard]] virtual const orbit_client_data::ModuleData* GetModuleDataFromRow(
       int /*row*/) const {
     return nullptr;
@@ -216,8 +212,6 @@ class DataView {
   enum class ActionStatus { kInvisible, kVisibleButDisabled, kVisibleAndEnabled };
   [[nodiscard]] virtual ActionStatus GetActionStatus(std::string_view action, int clicked_index,
                                                      const std::vector<int>& selected_indices);
-
-  [[nodiscard]] bool IsScopeDynamicallyInstrumentedFunction(uint64_t scope_id) const;
 
   void InitSortingOrders();
   virtual void DoSort() {}

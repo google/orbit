@@ -16,6 +16,7 @@ target_sources(DataViews PRIVATE
         ModulesDataView.cpp
         PresetsDataView.cpp
         SamplingReportDataView.cpp
+        ScopeDataView.cpp
         TracepointsDataView.cpp)
 
 target_sources(DataViews PUBLIC

@@ -576,12 +576,6 @@ std::optional<FunctionInfo> LiveFunctionsDataView::CreateFunctionInfoFromInstrum
   return result;
 }
 
-[[nodiscard]] const orbit_client_data::ScopeInfo& LiveFunctionsDataView::GetScopeInfo(
-    uint64_t scope_id) const {
-  ORBIT_CHECK(app_ != nullptr && app_->HasCaptureData());
-  return app_->GetCaptureData().GetScopeInfo(scope_id);
-}
-
 std::string LiveFunctionsDataView::GetToolTip(int /*row*/, int column) {
   if (column != kColumnType) return "";
   return "Notation:\n"

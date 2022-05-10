@@ -242,48 +242,6 @@ void DataView::OnUnselectRequested(const std::vector<int>& selection) {
   }
 }
 
-void DataView::OnEnableFrameTrackRequested(const std::vector<int>& selection) {
-  metrics_uploader_->SendLogEvent(OrbitLogEvent::ORBIT_FRAME_TRACK_ENABLE_CLICKED);
-
-  for (int i : selection) {
-    std::optional<uint64_t> scope_id = GetScopeIdFromRow(i);
-    ORBIT_CHECK(scope_id.has_value());
-    if (!IsScopeDynamicallyInstrumentedFunction(*scope_id)) continue;
-
-    const FunctionInfo* function = GetFunctionInfoFromRow(i);
-    ORBIT_CHECK(function != nullptr);
-    // Functions used as frame tracks must be hooked (selected), otherwise the
-    // data to produce the frame track will not be captured.
-    // The condition is supposed to prevent "selecting" a function when a capture
-    // is loaded with no connection to a process being established.
-    if (GetActionStatus(kMenuActionSelect, i, {i}) == ActionStatus::kVisibleAndEnabled) {
-      app_->SelectFunction(*function);
-    }
-
-    app_->EnableFrameTrack(*function);
-    app_->AddFrameTrack(*function);
-  }
-}
-
-void DataView::OnDisableFrameTrackRequested(const std::vector<int>& selection) {
-  metrics_uploader_->SendLogEvent(OrbitLogEvent::ORBIT_FRAME_TRACK_DISABLE_CLICKED);
-
-  for (int i : selection) {
-    std::optional<uint64_t> scope_id = GetScopeIdFromRow(i);
-    ORBIT_CHECK(scope_id.has_value());
-    if (!IsScopeDynamicallyInstrumentedFunction(*scope_id)) continue;
-
-    const FunctionInfo* function = GetFunctionInfoFromRow(i);
-    ORBIT_CHECK(function != nullptr);
-
-    // When we remove a frame track, we do not unhook (deselect) the function as
-    // it may have been selected manually (not as part of adding a frame track).
-    // However, disable the frame track, so it is not recreated on the next capture.
-    app_->DisableFrameTrack(*function);
-    app_->RemoveFrameTrack(*function);
-  }
-}
-
 void DataView::OnVerifyFramePointersRequested(const std::vector<int>& selection) {
   std::vector<const ModuleData*> modules_to_validate;
   modules_to_validate.reserve(selection.size());
@@ -372,11 +330,6 @@ void DataView::OnCopySelectionRequested(const std::vector<int>& selection) {
   }
 
   app_->SetClipboard(clipboard);
-}
-
-[[nodiscard]] bool DataView::IsScopeDynamicallyInstrumentedFunction(uint64_t scope_id) const {
-  return app_->GetCaptureData().GetScopeInfo(scope_id).GetType() ==
-         orbit_client_data::ScopeType::kDynamicallyInstrumentedFunction;
 }
 
 }  // namespace orbit_data_views

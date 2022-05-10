@@ -117,8 +117,6 @@ class LiveFunctionsDataView : public ScopeDataView {
         },
         ascending);
   }
-
-  [[nodiscard]] const orbit_client_data::ScopeInfo& GetScopeInfo(uint64_t scope_id) const;
 };
 
 }  // namespace orbit_data_views

@@ -11,21 +11,23 @@
 
 namespace orbit_data_views {
 
+// The abstract class for all the DataView to that deal with scopes to inherit from.
 class ScopeDataView : public DataView {
  public:
   ScopeDataView(DataViewType type, AppInterface* app,
                 orbit_metrics_uploader::MetricsUploader* metrics_uploader)
       : DataView(type, app, metrics_uploader) {}
 
- protected:
-  [[nodiscard]] std::optional<uint64_t> GetScopeIdFromRow(uint32_t row) const override {
-    return GetScopeId(row);
-  }
+  void OnEnableFrameTrackRequested(const std::vector<int>& selection) override;
 
-  [[nodiscard]] uint64_t GetScopeId(uint32_t row) const {
-    ORBIT_CHECK(row < indices_.size());
-    return indices_[row];
-  }
+  void OnDisableFrameTrackRequested(const std::vector<int>& selection) override;
+
+ protected:
+  [[nodiscard]] uint64_t GetScopeId(uint32_t row) const;
+
+  [[nodiscard]] bool IsScopeDynamicallyInstrumentedFunction(uint64_t scope_id) const;
+
+  [[nodiscard]] const orbit_client_data::ScopeInfo& GetScopeInfo(uint64_t scope_id) const;
 };
 
 }  // namespace orbit_data_views
