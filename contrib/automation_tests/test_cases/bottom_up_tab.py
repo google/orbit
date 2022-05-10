@@ -15,7 +15,7 @@ from typing import Sequence, Set
 class VerifyHelloGgpBottomUpContents(E2ETestCase):
     """
     Verify that the first rows of the bottom-up view are in line with hello_ggp.
-    In particular, we expect the first row to be "ioctl", the second row to be "drm*",
+    In particular, we expect one of the first three rows to be "ioctl", the first child of the "ioctl" row to be "drm*",
     and a reasonable total number of rows.
     """
 
@@ -29,19 +29,24 @@ class VerifyHelloGgpBottomUpContents(E2ETestCase):
         if tree_view_table.get_row_count() < 10:
             raise RuntimeError('Less than 10 rows in the bottom-up view')
 
-        first_row_tree_item = tree_view_table.get_item_at(0, 0)
-        if not first_row_tree_item.window_text().endswith('ioctl'):
-            raise RuntimeError('First item of the bottom-up view is not "ioctl"')
-        logging.info('Verified that first item is "ioctl"')
+        ioctl_row = -1
+        for row in range(3):
+            row_tree_item = tree_view_table.get_item_at(row, 0)
+            if row_tree_item.window_text().endswith('ioctl'):
+                ioctl_row = row
+        if ioctl_row == -1:
+            raise RuntimeError('"ioctl" is not among the first three item of the bottom-up view')
+        logging.info('Verified that "ioctl" is one of the first three items')
 
-        first_row_tree_item.double_click_input()
-        logging.info('Expanded the first item')
+        ioctl_row_tree_item = tree_view_table.get_item_at(ioctl_row, 0)
+        ioctl_row_tree_item.double_click_input()
+        logging.info('Expanded the "ioctl" item')
 
-        second_row_tree_item = tree_view_table.get_item_at(1, 0)
-        if not second_row_tree_item.window_text().startswith('drm'):
-            raise RuntimeError('First child of the first item ("ioctl") '
-                               'of the bottom-up view doesn\'t start with "drm"')
-        logging.info('Verified that first child of the first item starts with "drm"')
+        first_ioctl_child_tree_item = tree_view_table.get_item_at(ioctl_row + 1, 0)
+        if not first_ioctl_child_tree_item.window_text().startswith('drm'):
+            raise RuntimeError(
+                'First child of the "ioctl" item in the bottom-up view doesn\'t start with "drm"')
+        logging.info('Verified that first child of the "ioctl" item starts with "drm"')
 
 
 class VerifyBottomUpContentForLoadedCapture(E2ETestCase):

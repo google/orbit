@@ -25,8 +25,8 @@ This automation script covers a basic workflow:
  - select a process
  - take a capture
  - verify that the bottom-up view contains at least 10 rows
- - verify that the first item is "ioctl"
- - verify that the first child of the first item starts with "drm"
+ - verify that one of the first three items is "ioctl"
+ - verify that the first child of the "ioctl" item starts with "drm"
 """
 
 
