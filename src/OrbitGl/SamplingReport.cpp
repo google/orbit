@@ -131,6 +131,7 @@ void SamplingReport::OnSelectAddresses(const absl::flat_hash_set<uint64_t>& addr
     if (selected_addresses_ != addresses || selected_thread_id_ != thread_id) {
       selected_addresses_ = addresses;
       selected_thread_id_ = thread_id;
+      selected_callstack_index_ = 0;
       UpdateDisplayedCallstack();
     }
   }
