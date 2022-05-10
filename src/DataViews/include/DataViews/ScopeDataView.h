@@ -23,11 +23,12 @@ class ScopeDataView : public DataView {
   void OnDisableFrameTrackRequested(const std::vector<int>& selection) override;
 
  protected:
-  [[nodiscard]] uint64_t GetScopeId(uint32_t row) const;
+  [[nodiscard]] uint64_t GetScopeIdFromRow(uint32_t row) const;
 
   [[nodiscard]] bool IsScopeDynamicallyInstrumentedFunction(uint64_t scope_id) const;
 
-  [[nodiscard]] const orbit_client_data::ScopeInfo& GetScopeInfo(uint64_t scope_id) const;
+  [[nodiscard]] const orbit_client_data::ScopeInfo& GetScopeInfoFromScopeId(
+      uint64_t scope_id) const;
 };
 
 }  // namespace orbit_data_views
