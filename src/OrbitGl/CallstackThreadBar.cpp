@@ -248,6 +248,8 @@ bool CallstackThreadBar::IsEmpty() const {
   return absl::StrReplaceAll(fn_name, {{"&", "&amp;"}, {"<", "&lt;"}, {">", "&gt;"}});
 }
 
+constexpr const char* kErrorColorString = "#ffb000";
+
 std::string CallstackThreadBar::FormatCallstackForTooltip(const CallstackInfo& callstack,
                                                           int max_line_length, int max_lines,
                                                           int bottom_n_lines) const {
@@ -260,13 +262,25 @@ std::string CallstackThreadBar::FormatCallstackForTooltip(const CallstackInfo& c
   const int top_n = std::min(max_lines, size) - bottom_n;
 
   for (int i = 0; i < top_n; ++i) {
-    result.append("<br/>" + SafeGetFormattedFunctionName(callstack, i, max_line_length));
+    // The first frame is always correct.
+    if (callstack.IsUnwindingError() && i > 0) {
+      result.append(absl::StrFormat("<br/><span style=\" color:%s;\">%s</span>", kErrorColorString,
+                                    SafeGetFormattedFunctionName(callstack, i, max_line_length)));
+    } else {
+      result.append("<br/>" + SafeGetFormattedFunctionName(callstack, i, max_line_length));
+    }
   }
   if (max_lines < size) {
     result += "<br/><i>... shortened for readability ...</i>";
   }
   for (int i = size - bottom_n; i < size; ++i) {
-    result.append("<br/>" + SafeGetFormattedFunctionName(callstack, i, max_line_length));
+    // The first frame is always correct.
+    if (callstack.IsUnwindingError() && i > 0) {
+      result.append(absl::StrFormat("<br/><span style=\" color:%s;\">%s</span>", kErrorColorString,
+                                    SafeGetFormattedFunctionName(callstack, i, max_line_length)));
+    } else {
+      result.append("<br/>" + SafeGetFormattedFunctionName(callstack, i, max_line_length));
+    }
   }
 
   return result;
@@ -294,13 +308,13 @@ std::string CallstackThreadBar::GetSampleTooltip(const PrimitiveAssembler& primi
   std::string function_name = SafeGetFormattedFunctionName(*callstack, 0, -1);
   std::string result =
       absl::StrFormat("<b>%s</b><br/><i>Stack sample</i><br/><br/>", function_name.c_str());
-  if (callstack->type() == CallstackType::kComplete) {
-    result += "<b>Callstack:</b>" + FormatCallstackForTooltip(*callstack);
-  } else {
+  if (callstack->IsUnwindingError()) {
     result += absl::StrFormat(
-        "<b>Callstack not available:</b> the stack could not be unwound successfully.<br/>%s",
-        orbit_client_data::CallstackTypeToDescription(callstack->type()));
+        "<span style=\" color:%s;\"><b>Unwinding error:</b> the stack could not be unwound "
+        "successfully.<br/>%s</span>",
+        kErrorColorString, orbit_client_data::CallstackTypeToDescription(callstack->type()));
   }
+  result += "<br/><br/><b>Callstack:</b>" + FormatCallstackForTooltip(*callstack);
   return result +
          "<br/><br/><i>To select samples, click the bar & drag across multiple samples</i>";
 }
