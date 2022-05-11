@@ -294,13 +294,12 @@ std::string CallstackThreadBar::GetSampleTooltip(const PrimitiveAssembler& primi
   std::string function_name = SafeGetFormattedFunctionName(*callstack, 0, -1);
   std::string result =
       absl::StrFormat("<b>%s</b><br/><i>Stack sample</i><br/><br/>", function_name.c_str());
-  if (callstack->type() == CallstackType::kComplete) {
-    result += "<b>Callstack:</b>" + FormatCallstackForTooltip(*callstack);
-  } else {
+  if (callstack->type() != CallstackType::kComplete) {
     result += absl::StrFormat(
-        "<b>Callstack not available:</b> the stack could not be unwound successfully.<br/>%s",
+        "<b>Unwinding error:</b> the stack could not be unwound successfully.<br/>%s",
         orbit_client_data::CallstackTypeToDescription(callstack->type()));
   }
+  result += "<br/><br/><b>Callstack:</b>" + FormatCallstackForTooltip(*callstack);
   return result +
          "<br/><br/><i>To select samples, click the bar & drag across multiple samples</i>";
 }
