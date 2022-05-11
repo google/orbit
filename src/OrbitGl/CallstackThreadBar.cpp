@@ -248,9 +248,7 @@ bool CallstackThreadBar::IsEmpty() const {
   return absl::StrReplaceAll(fn_name, {{"&", "&amp;"}, {"<", "&lt;"}, {">", "&gt;"}});
 }
 
-namespace {
-static std::string kErrorColorString = "#ffb000";
-}  // namespace
+constexpr const char* kErrorColorString = "#ffb000";
 
 std::string CallstackThreadBar::FormatCallstackForTooltip(const CallstackInfo& callstack,
                                                           int max_line_length, int max_lines,
