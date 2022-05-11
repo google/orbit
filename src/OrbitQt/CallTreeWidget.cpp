@@ -594,13 +594,13 @@ void CallTreeWidget::OnCustomContextMenuRequested(const QPoint& point) {
   bool enable_copy = ui_->callTreeTreeView->selectionModel()->hasSelection();
 
   QMenu menu{ui_->callTreeTreeView};
-  const QString kAltClickShortcut = QStringLiteral("\tALT+Click");
+  static const QString kAltClickShortcut = QStringLiteral("\tALT+Click");
   bool is_expanded = ui_->callTreeTreeView->isExpanded(index);
-  QString action_expand_recursively = (!is_expanded & enable_expand_recursively)
+  QString action_expand_recursively = (!is_expanded && enable_expand_recursively)
                                           ? kActionExpandRecursively + kAltClickShortcut
                                           : kActionExpandRecursively;
   menu.addAction(action_expand_recursively)->setEnabled(enable_expand_recursively);
-  QString action_collapse_recursively = (is_expanded & enable_collapse_recursively)
+  QString action_collapse_recursively = (is_expanded && enable_collapse_recursively)
                                             ? kActionCollapseRecursively + kAltClickShortcut
                                             : kActionCollapseRecursively;
   menu.addAction(action_collapse_recursively)->setEnabled(enable_collapse_recursively);
@@ -623,14 +623,14 @@ void CallTreeWidget::OnCustomContextMenuRequested(const QPoint& point) {
     return;
   }
 
-  if (action->text() == kActionExpandRecursively) {
+  if (action->text() == action_expand_recursively) {
     for (const QModelIndex& selected_index : selected_tree_indices) {
       DisableThreadOrFunctionColumnResizeOnRowExpanded();
       ExpandRecursively(ui_->callTreeTreeView, selected_index);
       ReEnableThreadOrFunctionColumnResizeOnRowExpanded();
       ResizeThreadOrFunctionColumnToShowVisibleDescendants(selected_index);
     }
-  } else if (action->text() == kActionCollapseRecursively) {
+  } else if (action->text() == action_collapse_recursively) {
     for (const QModelIndex& selected_index : selected_tree_indices) {
       CollapseRecursively(ui_->callTreeTreeView, selected_index);
     }
