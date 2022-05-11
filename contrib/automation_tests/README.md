@@ -55,11 +55,6 @@ To run a test, e.g. orbit_instrument_function, execute
 python orbit_instrument_function.py
 ```
 
-Besides the test scripts, the folder contains the needed test data to set the test up and 
-a folder "flags". For each script $TestName.py there is an empty file flags/$TestName.
-If this file is not present the test is considered disabled and will not be executed during 
-the nightly runs - it will silently be considered to have passed.
-
 ## Adding Tests - Tips & Tricks
 
 ### Element Names
