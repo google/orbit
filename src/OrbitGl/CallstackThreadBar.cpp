@@ -260,13 +260,23 @@ std::string CallstackThreadBar::FormatCallstackForTooltip(const CallstackInfo& c
   const int top_n = std::min(max_lines, size) - bottom_n;
 
   for (int i = 0; i < top_n; ++i) {
-    result.append("<br/>" + SafeGetFormattedFunctionName(callstack, i, max_line_length));
+    if (callstack.IsUnwindingError() && i > 0) {
+      result.append("<br/><span style=\" color:#ffb000;\">" +
+                    SafeGetFormattedFunctionName(callstack, i, max_line_length) + "</span>");
+    } else {
+      result.append("<br/>" + SafeGetFormattedFunctionName(callstack, i, max_line_length));
+    }
   }
   if (max_lines < size) {
     result += "<br/><i>... shortened for readability ...</i>";
   }
   for (int i = size - bottom_n; i < size; ++i) {
-    result.append("<br/>" + SafeGetFormattedFunctionName(callstack, i, max_line_length));
+    if (callstack.IsUnwindingError() && i > 0) {
+      result.append("<br/><span style=\" color:#ffb000;\">" +
+                    SafeGetFormattedFunctionName(callstack, i, max_line_length) + "</span>");
+    } else {
+      result.append("<br/>" + SafeGetFormattedFunctionName(callstack, i, max_line_length));
+    }
   }
 
   return result;
@@ -294,9 +304,10 @@ std::string CallstackThreadBar::GetSampleTooltip(const PrimitiveAssembler& primi
   std::string function_name = SafeGetFormattedFunctionName(*callstack, 0, -1);
   std::string result =
       absl::StrFormat("<b>%s</b><br/><i>Stack sample</i><br/><br/>", function_name.c_str());
-  if (callstack->type() != CallstackType::kComplete) {
+  if (callstack->IsUnwindingError()) {
     result += absl::StrFormat(
-        "<b>Unwinding error:</b> the stack could not be unwound successfully.<br/>%s",
+        "<span style=\" color:#ffb000;\"><b>Unwinding error:</b> the stack could not be unwound "
+        "successfully.<br/>%s</span>",
         orbit_client_data::CallstackTypeToDescription(callstack->type()));
   }
   result += "<br/><br/><b>Callstack:</b>" + FormatCallstackForTooltip(*callstack);
