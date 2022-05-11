@@ -336,4 +336,40 @@ TEST(Slider, ContainsScreenSpacePoint) {
                                                static_cast<int>(outside_point_slider[1])));
 }
 
+TEST(Slider, MouseMoveRequestRedraw) {
+  CaptureViewElementTester tester;
+  Viewport* viewport = tester.GetViewport();
+
+  std::shared_ptr<GlHorizontalSlider> slider{
+      std::make_shared<GlHorizontalSlider>(nullptr, viewport, tester.GetLayout(), nullptr)};
+  tester.SimulatePreRender(slider.get());
+
+  Vec2 kPosInSlider = slider->GetPos();
+  Vec2 kPosOutOfSlider{-1, -1};
+
+  // Going in the slider should trigger a redraw.
+  std::ignore = slider->HandleMouseEvent(
+      CaptureViewElement::MouseEvent{CaptureViewElement::EventType::kMouseMove, kPosInSlider});
+  tester.SimulateDrawLoopAndCheckFlags(slider.get(), true, false);
+  std::ignore = slider->HandleMouseEvent(
+      CaptureViewElement::MouseEvent{CaptureViewElement::EventType::kMouseMove, kPosInSlider});
+  tester.SimulateDrawLoopAndCheckFlags(slider.get(), false, false);
+
+  // Going out of the slider should also trigger a redraw.
+  std::ignore = slider->HandleMouseEvent(
+      CaptureViewElement::MouseEvent{CaptureViewElement::EventType::kMouseLeave});
+  tester.SimulateDrawLoopAndCheckFlags(slider.get(), true, false);
+
+  std::ignore = slider->HandleMouseEvent(
+      CaptureViewElement::MouseEvent{CaptureViewElement::EventType::kMouseMove, kPosOutOfSlider});
+  std::ignore = slider->HandleMouseEvent(
+      CaptureViewElement::MouseEvent{CaptureViewElement::EventType::kMouseLeave});
+  tester.SimulateDrawLoopAndCheckFlags(slider.get(), false, false);
+
+  // Going in the slider again should trigger another redraw.
+  std::ignore = slider->HandleMouseEvent(
+      CaptureViewElement::MouseEvent{CaptureViewElement::EventType::kMouseMove, kPosInSlider});
+  tester.SimulateDrawLoopAndCheckFlags(slider.get(), true, false);
+}
+
 }  // namespace orbit_gl

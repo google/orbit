@@ -20,24 +20,26 @@ namespace orbit_gl {
 
 const float GlSlider::kGradientFactor = 0.25f;
 
-void GlSlider::OnMouseEnter() {
-  CaptureViewElement::OnMouseEnter();
+CaptureViewElement::EventResult GlSlider::OnMouseEnter() {
+  std::ignore = CaptureViewElement::OnMouseEnter();
   if (QGuiApplication::instance() != nullptr) {
     QGuiApplication::setOverrideCursor(Qt::ArrowCursor);
   }
   RequestUpdate(RequestUpdateScope::kDraw);
+  return EventResult::kIgnored;
 }
 
-void GlSlider::OnMouseLeave() {
-  CaptureViewElement::OnMouseLeave();
+CaptureViewElement::EventResult GlSlider::OnMouseLeave() {
+  std::ignore = CaptureViewElement::OnMouseLeave();
   if (QGuiApplication::instance() != nullptr) {
     QGuiApplication::restoreOverrideCursor();
   }
   RequestUpdate(RequestUpdateScope::kDraw);
+  return EventResult::kIgnored;
 }
 
-void GlSlider::OnMouseMove(const Vec2& mouse_pos) {
-  CaptureViewElement::OnMouseMove(mouse_pos);
+CaptureViewElement::EventResult GlSlider::OnMouseMove(const Vec2& mouse_pos) {
+  std::ignore = CaptureViewElement::OnMouseMove(mouse_pos);
   if (can_resize_ && QGuiApplication::instance() != nullptr) {
     if (PosIsInMinResizeArea(mouse_pos) || PosIsInMaxResizeArea(mouse_pos)) {
       QCursor cursor = is_vertical_ ? Qt::SizeVerCursor : Qt::SizeHorCursor;
@@ -46,6 +48,7 @@ void GlSlider::OnMouseMove(const Vec2& mouse_pos) {
       QGuiApplication::changeOverrideCursor(Qt::ArrowCursor);
     }
   }
+  return EventResult::kIgnored;
 }
 
 bool GlSlider::ContainsScreenSpacePoint(int x, int y) const {
@@ -178,11 +181,8 @@ void GlSlider::DrawBackground(PrimitiveAssembler& primitive_assembler, float x, 
 void GlSlider::DrawSlider(PrimitiveAssembler& primitive_assembler, float x, float y, float width,
                           float height, ShadingDirection shading_direction) {
   bool is_picked = primitive_assembler.GetPickingManager()->IsThisElementPicked(this);
-  bool mouse_over_slider = false;
 
-  mouse_over_slider = IsMouseOver(mouse_pos_cur_);
-
-  Color color = mouse_over_slider ? selected_color_ : slider_color_;
+  Color color = IsMouseOver() ? selected_color_ : slider_color_;
   const Color dark_border_color = GetDarkerColor(bar_color_);
   const Color light_border_color = GetLighterColor(color);
   const float kEpsilon = 0.0001f;

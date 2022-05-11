@@ -2,6 +2,7 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
+#include <gmock/gmock.h>
 #include <gtest/gtest.h>
 
 #include "CaptureViewElementTester.h"
@@ -22,17 +23,32 @@ class UnitTestTimeGraph : public testing::Test {
 
   void SimulatePreRender() { tester_.SimulatePreRender(time_graph_.get()); }
 
-  orbit_gl::GlSlider* FindSliderUnderMouseCursor(int x, int y) {
-    if (HorizontalSlider()->IsMouseOver(viewport_->ScreenToWorld({x, y}))) {
-      return HorizontalSlider();
-    }
-    if (VerticalSlider()->IsMouseOver(viewport_->ScreenToWorld({x, y}))) {
-      return VerticalSlider();
-    }
-    return nullptr;
-  }
+  const TimeGraph* GetTimeGraph() { return time_graph_.get(); }
   [[nodiscard]] GlSlider* HorizontalSlider() { return time_graph_->GetHorizontalSlider(); }
   [[nodiscard]] GlSlider* VerticalSlider() { return time_graph_->GetVerticalSlider(); }
+  [[nodiscard]] TimelineUi* TimelineUi() { return time_graph_->GetTimelineUi(); }
+
+  void MouseMove(const Vec2& pos) {
+    std::ignore = time_graph_->HandleMouseEvent(
+        CaptureViewElement::MouseEvent{CaptureViewElement::EventType::kMouseMove, pos});
+  }
+  void MouseLeave() {
+    std::ignore = time_graph_->HandleMouseEvent(
+        CaptureViewElement::MouseEvent{CaptureViewElement::EventType::kMouseLeave});
+  }
+  void MouseWheelUp(const Vec2& pos) {
+    std::ignore = time_graph_->HandleMouseEvent(
+        CaptureViewElement::MouseEvent{CaptureViewElement::EventType::kMouseWheelUp, pos});
+  }
+  void CheckMouseIsOnlyOverAChild(CaptureViewElement* child_over_mouse) {
+    EXPECT_TRUE(time_graph_->IsMouseOver());
+    EXPECT_TRUE(child_over_mouse->IsMouseOver());
+    for (auto child : GetTimeGraph()->GetNonHiddenChildren()) {
+      if (child != child_over_mouse) {
+        EXPECT_FALSE(child->IsMouseOver());
+      }
+    }
+  }
 
  private:
   CaptureViewElementTester tester_;
@@ -41,29 +57,51 @@ class UnitTestTimeGraph : public testing::Test {
   std::unique_ptr<orbit_client_data::CaptureData> capture_data_;
 };
 
-TEST_F(UnitTestTimeGraph, SlidersRespondToMouseOver) {
+TEST_F(UnitTestTimeGraph, MouseMove) {
   SimulatePreRender();
 
-  Vec2 kMouseCenteredPos{50, 100};
-  GlSlider* slider = FindSliderUnderMouseCursor(static_cast<int>(kMouseCenteredPos[0]),
-                                                static_cast<int>(kMouseCenteredPos[1]));
-  EXPECT_EQ(nullptr, slider);
-  EXPECT_FALSE(VerticalSlider()->IsMouseOver(kMouseCenteredPos));
-  EXPECT_FALSE(HorizontalSlider()->IsMouseOver(kMouseCenteredPos));
+  EXPECT_FALSE(GetTimeGraph()->IsMouseOver());
 
-  Vec2 kMouseRightPos{95, 100};
-  slider = FindSliderUnderMouseCursor(static_cast<int>(kMouseRightPos[0]),
-                                      static_cast<int>(kMouseRightPos[1]));
-  EXPECT_EQ(VerticalSlider(), slider);
-  EXPECT_TRUE(VerticalSlider()->IsMouseOver(kMouseRightPos));
-  EXPECT_FALSE(HorizontalSlider()->IsMouseOver(kMouseRightPos));
+  MouseMove(HorizontalSlider()->GetPos());
+  CheckMouseIsOnlyOverAChild(HorizontalSlider());
 
-  Vec2 kMouseBottomLeftPos{5, 195};
-  slider = FindSliderUnderMouseCursor(static_cast<int>(kMouseBottomLeftPos[0]),
-                                      static_cast<int>(kMouseBottomLeftPos[1]));
-  EXPECT_EQ(HorizontalSlider(), slider);
-  EXPECT_FALSE(VerticalSlider()->IsMouseOver(kMouseBottomLeftPos));
-  EXPECT_TRUE(HorizontalSlider()->IsMouseOver(kMouseBottomLeftPos));
+  MouseMove(VerticalSlider()->GetPos());
+  CheckMouseIsOnlyOverAChild(VerticalSlider());
+
+  MouseMove(TimelineUi()->GetPos());
+  CheckMouseIsOnlyOverAChild(TimelineUi());
+}
+
+TEST_F(UnitTestTimeGraph, MouseLeave) {
+  SimulatePreRender();
+
+  MouseMove(HorizontalSlider()->GetPos());
+  MouseLeave();
+  EXPECT_FALSE(GetTimeGraph()->IsMouseOver());
+  for (CaptureViewElement* child : GetTimeGraph()->GetNonHiddenChildren()) {
+    EXPECT_FALSE(child->IsMouseOver());
+  }
+}
+
+TEST_F(UnitTestTimeGraph, MouseWheel) {
+  SimulatePreRender();
+  const TimeGraph* time_graph = GetTimeGraph();
+
+  float time_window_us = time_graph->GetTimeWindowUs();
+  Vec2 kCenteredMousePosition{time_graph->GetPos()[0] + time_graph->GetSize()[0] / 2.f,
+                              time_graph->GetPos()[1] + time_graph->GetSize()[1] / 2.f};
+  MouseMove(kCenteredMousePosition);
+  MouseWheelUp(kCenteredMousePosition);
+
+  // MouseWheel in the center should modify the time window. This will change soon.
+  EXPECT_NE(time_window_us, time_graph->GetTimeWindowUs());
+
+  time_window_us = time_graph->GetTimeWindowUs();
+  MouseMove(time_graph->GetTimelineUi()->GetPos());
+  MouseWheelUp(time_graph->GetTimelineUi()->GetPos());
+
+  // MouseWheel in the timeline should modify the time windows.
+  EXPECT_NE(time_window_us, time_graph->GetTimeWindowUs());
 }
 
 }  // namespace orbit_gl

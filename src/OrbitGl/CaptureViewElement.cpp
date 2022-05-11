@@ -60,15 +60,27 @@ CaptureViewElement::EventResult CaptureViewElement::OnMouseWheel(
   return EventResult::kIgnored;
 }
 
-void CaptureViewElement::OnMouseMove(const Vec2& mouse_pos) {
-  if (IsMouseOver(mouse_pos) && !IsMouseOver(mouse_pos_cur_)) {
-    OnMouseEnter();
+CaptureViewElement::EventResult CaptureViewElement::OnMouseMove(const Vec2& mouse_pos) {
+  if (ShouldReactToMouseOver(mouse_pos) && !is_mouse_over_) {
+    std::ignore = OnMouseEnter();
   }
-  if (!IsMouseOver(mouse_pos) && IsMouseOver(mouse_pos_cur_)) {
-    OnMouseLeave();
+  if (!ShouldReactToMouseOver(mouse_pos) && is_mouse_over_) {
+    std::ignore = OnMouseLeave();
   }
 
   mouse_pos_cur_ = mouse_pos;
+  // Ignoring the event, so mouse position is updated for its ancestors as well.
+  return EventResult::kIgnored;
+}
+
+CaptureViewElement::EventResult CaptureViewElement::OnMouseEnter() {
+  is_mouse_over_ = true;
+  return EventResult::kIgnored;
+}
+
+CaptureViewElement::EventResult CaptureViewElement::OnMouseLeave() {
+  is_mouse_over_ = false;
+  return EventResult::kIgnored;
 }
 
 void CaptureViewElement::UpdateLayout() {
@@ -129,12 +141,12 @@ void CaptureViewElement::OnDrag(int x, int y) {
 }
 
 bool CaptureViewElement::ContainsPoint(const Vec2& pos) const {
-  return pos[0] >= GetPos()[0] && pos[0] <= GetPos()[0] + GetSize()[0] && pos[1] >= GetPos()[1] &&
-         pos[1] <= GetPos()[1] + GetSize()[1];
+  return pos[0] >= GetPos()[0] && pos[0] < GetPos()[0] + GetSize()[0] && pos[1] >= GetPos()[1] &&
+         pos[1] < GetPos()[1] + GetSize()[1];
 }
 
-bool CaptureViewElement::IsMouseOver(const Vec2& mouse_pos) const {
-  if (parent_ != nullptr && !parent_->IsMouseOver(mouse_pos)) {
+bool CaptureViewElement::ShouldReactToMouseOver(const Vec2& mouse_pos) const {
+  if (parent_ != nullptr && !parent_->ShouldReactToMouseOver(mouse_pos)) {
     return false;
   }
 
@@ -145,16 +157,8 @@ CaptureViewElement::EventResult CaptureViewElement::HandleMouseEvent(
     MouseEvent mouse_event, const ModifierKeys& modifiers) {
   Vec2 mouse_pos = mouse_event.mouse_position;
 
-  // MouseMoved without any click should be handled by all the elements.
-  if (mouse_event.event_type == EventType::kMouseMoved && !mouse_event.left && !mouse_event.right &&
-      !mouse_event.middle) {
-    OnMouseMove(mouse_pos);
-    for (CaptureViewElement* child : GetAllChildren()) {
-      std::ignore = child->HandleMouseEvent(mouse_event, modifiers);
-    }
-  }
-
-  if (!IsMouseOver(mouse_pos)) {
+  // If the mouse is not over, it only should react to MouseMove (to update mouse_over flag).
+  if (!is_mouse_over_ && mouse_event.event_type != EventType::kMouseMove) {
     return EventResult::kIgnored;
   }
 
@@ -166,25 +170,28 @@ CaptureViewElement::EventResult CaptureViewElement::HandleMouseEvent(
 
   const Vec2 kOutsidePosition{std::numeric_limits<float>::max(), std::numeric_limits<float>::max()};
   switch (mouse_event.event_type) {
-    case EventType::kMouseOut:
-      return HandleMouseEvent(MouseEvent{EventType::kMouseMoved, kOutsidePosition});
+    case EventType::kMouseMove: {
+      if (!mouse_event.left && !mouse_event.right && !mouse_event.middle) {
+        return OnMouseMove(mouse_pos);
+      }
+      // Currently being handled using PickingManager (OnPick and OnDrag).
+      return EventResult::kIgnored;
+    }
+    case EventType::kMouseLeave:
+      return OnMouseLeave();
     case EventType::kMouseWheelUp:
+      return OnMouseWheel(mouse_pos, 1, modifiers);
     case EventType::kMouseWheelDown:
-      return OnMouseWheel(mouse_pos, mouse_event.event_type == EventType::kMouseWheelUp ? 1 : -1,
-                          modifiers);
+      return OnMouseWheel(mouse_pos, -1, modifiers);
     case EventType::kLeftUp:
-      return HandleMouseEvent(MouseEvent{EventType::kMouseMoved, mouse_pos}, modifiers);
     case EventType::kLeftDown:
-      break;
     case EventType::kRightUp:
-      return HandleMouseEvent(MouseEvent{EventType::kMouseMoved, mouse_pos}, modifiers);
-      break;
     case EventType::kRightDown:
-      break;
+      // Currently being handled using PickingManager (OnPick, OnDrag, OnRelease).
+      return EventResult::kIgnored;
     case EventType::kInvalidEvent:
-      ORBIT_ERROR("Mouse Invalid Event");
-      break;
     default:
+      ORBIT_ERROR("Mouse Invalid Event");
       break;
   }
   return EventResult::kIgnored;

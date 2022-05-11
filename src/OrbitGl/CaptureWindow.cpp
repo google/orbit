@@ -127,7 +127,7 @@ void CaptureWindow::MouseMoved(int x, int y, bool left, bool right, bool middle)
 
   if (!(left || right || middle)) {
     std::ignore = time_graph_->HandleMouseEvent(CaptureViewElement::MouseEvent{
-        CaptureViewElement::EventType::kMouseMoved, viewport_.ScreenToWorld({x, y})});
+        CaptureViewElement::EventType::kMouseMove, viewport_.ScreenToWorld({x, y})});
   }
 
   // Pan
@@ -270,7 +270,7 @@ bool CaptureWindow::RightUp() {
 
   if (time_graph_ != nullptr) {
     std::ignore = time_graph_->HandleMouseEvent(
-        CaptureViewElement::MouseEvent{CaptureViewElement::EventType::kMouseMoved,
+        CaptureViewElement::MouseEvent{CaptureViewElement::EventType::kMouseMove,
                                        viewport_.ScreenToWorld(mouse_move_pos_screen_)});
   }
 
@@ -397,7 +397,7 @@ void CaptureWindow::SetIsMouseOver(bool value) {
 
   if (time_graph_ != nullptr && !value) {
     std::ignore = time_graph_->HandleMouseEvent(
-        CaptureViewElement::MouseEvent{CaptureViewElement::EventType::kMouseOut});
+        CaptureViewElement::MouseEvent{CaptureViewElement::EventType::kMouseLeave});
   }
 }
 

@@ -55,25 +55,24 @@ class CaptureViewElement : public Pickable, public AccessibleInterfaceProvider {
   void OnDrag(int x, int y) override;
   [[nodiscard]] bool Draggable() override { return true; }
 
-  [[nodiscard]] bool ContainsPoint(const Vec2& pos) const;
-
-  // This also checks IsMouseOver() for the parent, and only returns true if the mouse
+  // This also checks ShouldReactToMouseOver() for the parent, and only returns true if the mouse
   // position is included in all parents up to the root
-  [[nodiscard]] bool IsMouseOver(const Vec2& mouse_pos) const;
-  virtual void OnMouseEnter(){};
-  virtual void OnMouseLeave(){};
+  [[nodiscard]] bool ShouldReactToMouseOver(const Vec2& mouse_pos) const;
+
+  [[nodiscard]] bool IsMouseOver() const { return is_mouse_over_; }
 
   enum class EventType {
-    kMouseMoved,
-    kMouseOut,
+    kInvalidEvent,
+    kMouseMove,
+    kMouseLeave,
     kMouseWheelUp,
     kMouseWheelDown,
     kLeftUp,
     kLeftDown,
     kRightUp,
-    kRightDown,
-    kInvalidEvent
+    kRightDown
   };
+
   struct MouseEvent {
     EventType event_type = EventType::kInvalidEvent;
     Vec2 mouse_position = {0.f, 0.f};
@@ -152,11 +151,16 @@ class CaptureViewElement : public Pickable, public AccessibleInterfaceProvider {
 
   virtual void DoUpdateLayout() {}
 
+  [[nodiscard]] bool ContainsPoint(const Vec2& pos) const;
   [[nodiscard]] virtual EventResult OnMouseWheel(const Vec2& mouse_pos, int delta,
                                                  const ModifierKeys& modifiers);
-  virtual void OnMouseMove(const Vec2& mouse_pos);
+  [[nodiscard]] virtual EventResult OnMouseMove(const Vec2& mouse_pos);
+  [[nodiscard]] virtual EventResult OnMouseEnter();
+  [[nodiscard]] virtual EventResult OnMouseLeave();
 
  private:
+  bool is_mouse_over_ = false;
+
   float width_ = 0.;
   Vec2 pos_ = Vec2(0, 0);
   CaptureViewElement* parent_;
