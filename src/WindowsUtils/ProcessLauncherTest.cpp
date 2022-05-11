@@ -26,7 +26,13 @@ using orbit_test_utils::HasNoError;
 
 }  // namespace
 
-TEST(ProcessLauncher, LaunchProcess) {}
+TEST(ProcessLauncher, LaunchProcess) {
+  ProcessLauncher launcher;
+  auto launch_result =
+      launcher.LaunchProcess(GetTestExecutablePath(), /*working_directory=*/"", /*arguments=*/"",
+                             /*pause_at_entry_point*/ false);
+  ASSERT_THAT(launch_result, HasNoError());
+}
 
 TEST(ProcessLauncher, LaunchSuspendResumeProcess) {
   ProcessLauncher launcher;

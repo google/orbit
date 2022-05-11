@@ -44,7 +44,6 @@ class ProcessClientImpl : public ProcessClient {
  public:
   explicit ProcessClientImpl(const std::shared_ptr<grpc::Channel>& channel)
       : process_service_(orbit_grpc_protos::ProcessService::NewStub(channel)) {}
-  ProcessClientImpl() = default;
   virtual ~ProcessClientImpl() = default;
 
   ErrorMessageOr<std::vector<orbit_grpc_protos::ProcessInfo>> GetProcessList() override;
