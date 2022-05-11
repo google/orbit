@@ -175,8 +175,8 @@ class DataView {
   void OnStopDownloadRequested(const std::vector<int>& selection);
   virtual void OnSelectRequested(const std::vector<int>& selection);
   virtual void OnUnselectRequested(const std::vector<int>& selection);
-  void OnEnableFrameTrackRequested(const std::vector<int>& selection);
-  void OnDisableFrameTrackRequested(const std::vector<int>& selection);
+  virtual void OnEnableFrameTrackRequested(const std::vector<int>& /*selection*/) {}
+  virtual void OnDisableFrameTrackRequested(const std::vector<int>& /*selection*/) {}
   virtual void OnIteratorRequested(const std::vector<int>& /*selection*/) {}
   void OnVerifyFramePointersRequested(const std::vector<int>& selection);
   void OnDisassemblyRequested(const std::vector<int>& selection);
@@ -218,7 +218,7 @@ class DataView {
   virtual void DoFilter() {}
   FilterCallback filter_callback_;
 
-  // Contains a list of scope_id in the displayed order
+  // TODO(b/232085051) The field is used inconsistently in the subclasses
   std::vector<uint64_t> indices_;
   std::vector<SortingOrder> sorting_orders_;
   int sorting_column_ = 0;

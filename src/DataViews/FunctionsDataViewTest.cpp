@@ -549,7 +549,11 @@ TEST_F(FunctionsDataViewTest, ContextMenuActionsCallCorrespondingFunctionsInAppI
       .Times(testing::AnyNumber())
       .WillRepeatedly(testing::Return(false));
 
-  CaptureData capture_data{{}, std::nullopt, {}, CaptureData::DataSource::kLiveCapture};
+  orbit_grpc_protos::CaptureStarted capture_started;
+  capture_started.mutable_capture_options()->add_instrumented_functions()->set_function_id(0);
+
+  CaptureData capture_data{
+      capture_started, std::nullopt, {}, CaptureData::DataSource::kLiveCapture};
   EXPECT_CALL(app_, GetCaptureData).WillRepeatedly(testing::ReturnPointee(&capture_data));
   EXPECT_CALL(app_, IsCaptureConnected).WillRepeatedly(testing::Return(true));
   EXPECT_CALL(app_, HasCaptureData).WillRepeatedly(testing::Return(true));
