@@ -59,7 +59,8 @@ void OrbitSamplingReport::Initialize(orbit_data_views::DataView* callstack_data_
   for (orbit_data_views::SamplingReportDataView& report_data_view : report->GetThreadDataViews()) {
     ORBIT_SCOPE("SamplingReportDataView tab creation");
     auto* tab = new QWidget();
-    tab->setObjectName(QStringLiteral("tab"));
+    tab->setObjectName(QStringLiteral("samplingReportThreadTab"));
+    tab->setAccessibleName(QStringLiteral("SamplingReportThreadTab"));
 
     auto* gridLayout_2 = new QGridLayout(tab);
     gridLayout_2->setObjectName(QStringLiteral("gridLayout_2"));
@@ -77,7 +78,8 @@ void OrbitSamplingReport::Initialize(orbit_data_views::DataView* callstack_data_
       treeView->GetTreeView()->sortByColumn(column, order);
     }
 
-    treeView->setObjectName(QStringLiteral("treeView"));
+    treeView->setObjectName(QStringLiteral("samplingReportDataView"));
+    treeView->setAccessibleName(QStringLiteral("SamplingReportDataView"));
     gridLayout_2->addWidget(treeView, 0, 0, 1, 1);
     treeView->Initialize(&report_data_view, SelectionType::kExtended, FontType::kDefault);
     {

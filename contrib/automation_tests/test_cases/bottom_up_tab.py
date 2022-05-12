@@ -208,3 +208,52 @@ class VerifyBottomUpContentForLoadedCapture(E2ETestCase):
         self._verify_rows_when_node_recursively_expanded(tree_view_table)
         self._verify_rows_when_tree_expanded(tree_view_table)
         self._verify_rows_on_search(tab, tree_view_table)
+
+
+class VerifyBottomUpContentForTriangleExe(E2ETestCase):
+    """
+    Verify that the top function in the bottom-up view (i.e., the function with the highest exclusive count) is
+    `absl::GetCurrentTimeNanos()`, and verify its caller and its caller's caller.
+    """
+
+    def _execute(self):
+        self.find_control("TabItem", "Bottom-Up").click_input()
+        logging.info("Switched to the 'Bottom-Up' tab")
+        tab = self.find_control('Group', 'bottomUpTab')
+        tree_view_table = Table(self.find_control('Tree', parent=tab))
+
+        logging.info(
+            "Verifying the function with the highest exclusive count and its callers from the bottom-up view"
+        )
+
+        first_row_tree_item = tree_view_table.get_item_at(0, 0)
+        expected_function = "absl::GetCurrentTimeNanos()"
+        self.expect_eq(first_row_tree_item.window_text(), expected_function,
+                       f"Top item of the bottom-up view is '{expected_function}'")
+
+        row_count_before_expansion = tree_view_table.get_row_count()
+        first_row_tree_item.double_click_input()
+        row_count_after_expansion = tree_view_table.get_row_count()
+        self.expect_true(row_count_after_expansion > row_count_before_expansion,
+                         f"The '{expected_function}' node has at least one caller")
+
+        first_child_tree_item = tree_view_table.get_item_at(1, 0)
+        expected_function = "absl::Now()"
+        self.expect_eq(first_child_tree_item.window_text(), expected_function,
+                       f"Top child of the top item of the bottom-up view is '{expected_function}'")
+
+        row_count_before_expansion = tree_view_table.get_row_count()
+        first_child_tree_item.double_click_input()
+        row_count_after_expansion = tree_view_table.get_row_count()
+        self.expect_true(row_count_after_expansion > row_count_before_expansion,
+                         f"The '{expected_function}' node has at least one caller")
+
+        first_grandchild_tree_item = tree_view_table.get_item_at(2, 0)
+        expected_function = "yeti::internal::video_ipc::HostMappedSlotBackedFrameSender::AcquireSlot(absl::Time)"
+        self.expect_eq(
+            first_grandchild_tree_item.window_text(), expected_function,
+            f"Top grandchild of the top item of the bottom-up view is '{expected_function}'")
+
+        logging.info(
+            "Verified the function with the highest exclusive count and its callers from the bottom-up view"
+        )
