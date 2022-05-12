@@ -104,8 +104,7 @@ class UprobesUnwindingVisitor : public PerfEventVisitor {
   [[nodiscard]] orbit_grpc_protos::Callstack::CallstackType
   ComputeCallstackTypeFromCallchainAndPatch(const CallchainSamplePerfEventData& event_data);
 
-  void SendFullAddressInfoToListener(TracerListener* listener,
-                                     const unwindstack::FrameData& libunwindstack_frame);
+  void SendFullAddressInfoToListener(const unwindstack::FrameData& libunwindstack_frame);
 
   TracerListener* listener_;
 

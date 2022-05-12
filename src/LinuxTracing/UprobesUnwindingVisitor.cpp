@@ -97,10 +97,9 @@ static bool CallchainIsInUserSpaceInstrumentation(
 }
 
 void UprobesUnwindingVisitor::SendFullAddressInfoToListener(
-    TracerListener* listener, const unwindstack::FrameData& libunwindstack_frame) {
-  ORBIT_CHECK(listener != nullptr);
-
-  if (known_linux_address_infos_.contains(libunwindstack_frame.pc)) {
+    const unwindstack::FrameData& libunwindstack_frame) {
+  auto [unused_it, inserted] = known_linux_address_infos_.insert(libunwindstack_frame.pc);
+  if (!inserted) {
     return;
   }
   known_linux_address_infos_.insert(libunwindstack_frame.pc);
@@ -129,7 +128,8 @@ void UprobesUnwindingVisitor::SendFullAddressInfoToListener(
     address_info.set_offset_in_function(libunwindstack_frame.function_offset);
   }
 
-  listener->OnAddressInfo(std::move(address_info));
+  ORBIT_CHECK(listener_ != nullptr);
+  listener_->OnAddressInfo(std::move(address_info));
 }
 
 orbit_grpc_protos::Callstack::CallstackType
@@ -218,7 +218,7 @@ void UprobesUnwindingVisitor::Visit(uint64_t event_timestamp,
   Callstack* callstack = sample.mutable_callstack();
   callstack->set_type(ComputeCallstackTypeFromStackSample(libunwindstack_result));
   for (const unwindstack::FrameData& libunwindstack_frame : libunwindstack_result.frames()) {
-    SendFullAddressInfoToListener(listener_, libunwindstack_frame);
+    SendFullAddressInfoToListener(libunwindstack_frame);
     callstack->add_pcs(libunwindstack_frame.pc);
   }
 
