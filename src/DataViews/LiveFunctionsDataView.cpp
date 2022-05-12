@@ -529,9 +529,9 @@ void LiveFunctionsDataView::OnDataChanged() {
 
 void LiveFunctionsDataView::OnTimer() {
   if (!app_->IsCapturing()) return;
-  for (uint64_t missing_scope_id : FetchMissingScopeIds()) {
-    indices_.push_back(missing_scope_id);
-  }
+
+  const std::vector<uint64_t> missing_scope_ids = FetchMissingScopeIds();
+  indices_.insert(std::end(indices_), std::begin(missing_scope_ids), std::end(missing_scope_ids));
 
   OnSort(sorting_column_, {});
 }
@@ -595,15 +595,13 @@ std::string LiveFunctionsDataView::GetToolTip(int /*row*/, int column) {
 [[nodiscard]] std::vector<uint64_t> LiveFunctionsDataView::FetchMissingScopeIds() const {
   if (!app_->HasCaptureData()) return {};
 
-  std::vector<uint64_t> result = app_->GetCaptureData().GetAllProvidedScopeIds();
-  const absl::flat_hash_set<uint64_t> known_scope_ids(std::begin(indices_), std::end(indices_));
-
+  std::vector<uint64_t> all_scope_ids = app_->GetCaptureData().GetAllProvidedScopeIds();
+  absl::flat_hash_set<uint64_t> known_scope_ids(std::begin(indices_), std::end(indices_));
   const auto last = std::remove_if(
-      std::begin(result), std::end(result),
+      std::begin(all_scope_ids), std::end(all_scope_ids),
       [&known_scope_ids](uint64_t scope_id) { return known_scope_ids.contains(scope_id); });
-  result.erase(last, std::end(result));
-
-  return result;
+  all_scope_ids.erase(last, std::end(all_scope_ids));
+  return all_scope_ids;
 }
 
 }  // namespace orbit_data_views
