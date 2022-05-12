@@ -39,7 +39,6 @@ OrbitTreeView::OrbitTreeView(QWidget* parent) : QTreeView(parent) {
   setItemsExpandable(false);
   setContextMenuPolicy(Qt::CustomContextMenu);
   setSelectionBehavior(QTreeView::SelectRows);
-  setTextElideMode(Qt::ElideMiddle);
 
   connect(header(), SIGNAL(sortIndicatorChanged(int, Qt::SortOrder)), this,
           SLOT(OnSort(int, Qt::SortOrder)));
