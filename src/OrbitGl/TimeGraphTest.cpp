@@ -23,10 +23,10 @@ class UnitTestTimeGraph : public testing::Test {
 
   void SimulatePreRender() { tester_.SimulatePreRender(time_graph_.get()); }
 
-  const TimeGraph* GetTimeGraph() { return time_graph_.get(); }
+  [[nodiscard]] TimeGraph* GetTimeGraph() const { return time_graph_.get(); }
   [[nodiscard]] GlSlider* HorizontalSlider() const { return time_graph_->GetHorizontalSlider(); }
   [[nodiscard]] GlSlider* VerticalSlider() const { return time_graph_->GetVerticalSlider(); }
-  [[nodiscard]] TimelineUi* TimelineUi() const { return time_graph_->GetTimelineUi(); }
+  [[nodiscard]] TimelineUi* GetTimelineUi() const { return time_graph_->GetTimelineUi(); }
 
   void MouseMove(const Vec2& pos) {
     EXPECT_EQ(time_graph_->HandleMouseEvent(CaptureViewElement::MouseEvent{
@@ -71,8 +71,8 @@ TEST_F(UnitTestTimeGraph, MouseMove) {
   MouseMove(VerticalSlider()->GetPos());
   CheckMouseIsOnlyOverAChild(VerticalSlider());
 
-  MouseMove(TimelineUi()->GetPos());
-  CheckMouseIsOnlyOverAChild(TimelineUi());
+  MouseMove(GetTimelineUi()->GetPos());
+  CheckMouseIsOnlyOverAChild(GetTimelineUi());
 }
 
 TEST_F(UnitTestTimeGraph, MouseLeave) {
