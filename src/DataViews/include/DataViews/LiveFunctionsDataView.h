@@ -117,6 +117,8 @@ class LiveFunctionsDataView : public ScopeDataView {
         },
         ascending);
   }
+
+  [[nodiscard]] std::vector<uint64_t> FetchMissingScopeIds() const;
 };
 
 }  // namespace orbit_data_views
