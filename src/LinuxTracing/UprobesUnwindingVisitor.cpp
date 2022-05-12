@@ -33,37 +33,6 @@ using orbit_grpc_protos::FullAddressInfo;
 using orbit_grpc_protos::FullCallstackSample;
 using orbit_grpc_protos::FunctionCall;
 
-static void SendFullAddressInfoToListener(TracerListener* listener,
-                                          const unwindstack::FrameData& libunwindstack_frame) {
-  ORBIT_CHECK(listener != nullptr);
-
-  FullAddressInfo address_info;
-  address_info.set_absolute_address(libunwindstack_frame.pc);
-
-  // Careful: unwindstack::FrameData::map_info might contain nullptr.
-  if (libunwindstack_frame.map_info != nullptr) {
-    address_info.set_module_name(libunwindstack_frame.map_info->name());
-  }
-
-  // For addresses falling directly inside u(ret)probes code, unwindstack::FrameData has limited
-  // information. Nonetheless, we can send a perfectly meaningful FullAddressInfo, treating
-  // u(ret)probes code as a single function. This makes sense as the only affected virtual addresses
-  // I observed are 0x7fffffffe000 (~1% of uprobes addresses) and 0x7fffffffe001 (~99%). This way
-  // the client can show more information for such a frame, in particular when associated with the
-  // corresponding unwinding error.
-  if (libunwindstack_frame.map_info != nullptr &&
-      libunwindstack_frame.map_info->name() == "[uprobes]") {
-    address_info.set_function_name("[uprobes]");
-    address_info.set_offset_in_function(libunwindstack_frame.pc -
-                                        libunwindstack_frame.map_info->start());
-  } else {
-    address_info.set_function_name(libunwindstack_frame.function_name);
-    address_info.set_offset_in_function(libunwindstack_frame.function_offset);
-  }
-
-  listener->OnAddressInfo(std::move(address_info));
-}
-
 static bool CallstackIsInUserSpaceInstrumentation(
     const std::vector<unwindstack::FrameData>& frames,
     const UserSpaceInstrumentationAddresses& user_space_instrumentation_addresses) {
@@ -125,6 +94,41 @@ static bool CallchainIsInUserSpaceInstrumentation(
       [&user_space_instrumentation_addresses](uint64_t frame) {
         return user_space_instrumentation_addresses.IsInEntryOrReturnTrampoline(frame);
       });
+}
+
+void UprobesUnwindingVisitor::SendFullAddressInfoToListener(
+    const unwindstack::FrameData& libunwindstack_frame) {
+  auto [unused_it, inserted] = known_linux_address_infos_.insert(libunwindstack_frame.pc);
+  if (!inserted) {
+    return;
+  }
+
+  FullAddressInfo address_info;
+  address_info.set_absolute_address(libunwindstack_frame.pc);
+
+  // Careful: unwindstack::FrameData::map_info might contain nullptr.
+  if (libunwindstack_frame.map_info != nullptr) {
+    address_info.set_module_name(libunwindstack_frame.map_info->name());
+  }
+
+  // For addresses falling directly inside u(ret)probes code, unwindstack::FrameData has limited
+  // information. Nonetheless, we can send a perfectly meaningful FullAddressInfo, treating
+  // u(ret)probes code as a single function. This makes sense as the only affected virtual addresses
+  // I observed are 0x7fffffffe000 (~1% of uprobes addresses) and 0x7fffffffe001 (~99%). This way
+  // the client can show more information for such a frame, in particular when associated with the
+  // corresponding unwinding error.
+  if (libunwindstack_frame.map_info != nullptr &&
+      libunwindstack_frame.map_info->name() == "[uprobes]") {
+    address_info.set_function_name("[uprobes]");
+    address_info.set_offset_in_function(libunwindstack_frame.pc -
+                                        libunwindstack_frame.map_info->start());
+  } else {
+    address_info.set_function_name(libunwindstack_frame.function_name);
+    address_info.set_offset_in_function(libunwindstack_frame.function_offset);
+  }
+
+  ORBIT_CHECK(listener_ != nullptr);
+  listener_->OnAddressInfo(std::move(address_info));
 }
 
 orbit_grpc_protos::Callstack::CallstackType
@@ -213,7 +217,7 @@ void UprobesUnwindingVisitor::Visit(uint64_t event_timestamp,
   Callstack* callstack = sample.mutable_callstack();
   callstack->set_type(ComputeCallstackTypeFromStackSample(libunwindstack_result));
   for (const unwindstack::FrameData& libunwindstack_frame : libunwindstack_result.frames()) {
-    SendFullAddressInfoToListener(listener_, libunwindstack_frame);
+    SendFullAddressInfoToListener(libunwindstack_frame);
     callstack->add_pcs(libunwindstack_frame.pc);
   }
 
