@@ -214,18 +214,18 @@ void GlSlider::DrawSlider(PrimitiveAssembler& primitive_assembler, float x, floa
 }
 
 bool GlSlider::PosIsInMinResizeArea(const Vec2& pos) const {
-  float relevant_value = is_vertical_ ? pos[1] : pos[0];
+  float relevant_value = is_vertical_ ? pos[1] - GetPos()[1] : pos[0] - GetPos()[0];
   return PosIsInSlider(pos) && relevant_value <= GetSliderPixelPos() + slider_resize_pixel_margin_;
 }
 
 bool GlSlider::PosIsInMaxResizeArea(const Vec2& pos) const {
-  float relevant_value = is_vertical_ ? pos[1] : pos[0];
+  float relevant_value = is_vertical_ ? pos[1] - GetPos()[1] : pos[0] - GetPos()[0];
   return PosIsInSlider(pos) && relevant_value >= GetSliderPixelPos() + GetSliderPixelLength() -
                                                      slider_resize_pixel_margin_;
 }
 
 bool GlSlider::PosIsInSlider(const Vec2& pos) const {
-  float relevant_value = is_vertical_ ? pos[1] : pos[0];
+  float relevant_value = is_vertical_ ? pos[1] - GetPos()[1] : pos[0] - GetPos()[0];
   return relevant_value >= GetSliderPixelPos() &&
          relevant_value <= GetSliderPixelPos() + GetSliderPixelLength();
 }
