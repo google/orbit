@@ -102,7 +102,6 @@ void UprobesUnwindingVisitor::SendFullAddressInfoToListener(
   if (!inserted) {
     return;
   }
-  known_linux_address_infos_.insert(libunwindstack_frame.pc);
 
   FullAddressInfo address_info;
   address_info.set_absolute_address(libunwindstack_frame.pc);
