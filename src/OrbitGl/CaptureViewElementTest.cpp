@@ -213,28 +213,18 @@ TEST(CaptureViewElement, MouseWheelEventRecursesToCorrectChildren) {
       .Times(Exactly(1))
       .WillRepeatedly(Return(CaptureViewElement::EventResult::kHandled));
 
-  std::ignore = container_elem.HandleMouseEvent(
-      CaptureViewElement::MouseEvent{CaptureViewElement::EventType::kMouseMove, kPosOutside});
   EXPECT_EQ(CaptureViewElement::EventResult::kIgnored,
             container_elem.HandleMouseEvent(CaptureViewElement::MouseEvent{
                 CaptureViewElement::EventType::kMouseWheelUp, kPosOutside}));
-  std::ignore = container_elem.HandleMouseEvent(CaptureViewElement::MouseEvent{
-      CaptureViewElement::EventType::kMouseMove, kPosBetweenChildren});
   EXPECT_EQ(CaptureViewElement::EventResult::kIgnored,
             container_elem.HandleMouseEvent(CaptureViewElement::MouseEvent{
                 CaptureViewElement::EventType::kMouseWheelUp, kPosBetweenChildren}));
-  std::ignore = container_elem.HandleMouseEvent(
-      CaptureViewElement::MouseEvent{CaptureViewElement::EventType::kMouseMove, kPosOnChild0});
   EXPECT_EQ(CaptureViewElement::EventResult::kIgnored,
             container_elem.HandleMouseEvent(CaptureViewElement::MouseEvent{
                 CaptureViewElement::EventType::kMouseWheelUp, kPosOnChild0}));
-  std::ignore = container_elem.HandleMouseEvent(
-      CaptureViewElement::MouseEvent{CaptureViewElement::EventType::kMouseMove, kPosOnChild1});
   EXPECT_EQ(CaptureViewElement::EventResult::kIgnored,
             container_elem.HandleMouseEvent(CaptureViewElement::MouseEvent{
                 CaptureViewElement::EventType::kMouseWheelUp, kPosOnChild1}));
-  std::ignore = container_elem.HandleMouseEvent(
-      CaptureViewElement::MouseEvent{CaptureViewElement::EventType::kMouseMove, kPosOnChild2});
   EXPECT_EQ(CaptureViewElement::EventResult::kHandled,
             container_elem.HandleMouseEvent(CaptureViewElement::MouseEvent{
                 CaptureViewElement::EventType::kMouseWheelUp, kPosOnChild2}));

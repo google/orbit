@@ -2,7 +2,6 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#include <gmock/gmock.h>
 #include <gtest/gtest.h>
 
 #include "CaptureViewElementTester.h"
@@ -19,6 +18,7 @@ class UnitTestTimeGraph : public testing::Test {
     viewport_ = std::make_unique<Viewport>(100, 200);
     time_graph_ = std::make_unique<TimeGraph>(nullptr, nullptr, viewport_.get(),
                                               capture_data_.get(), nullptr);
+    time_graph_->ZoomAll();
   }
 
   void SimulatePreRender() { tester_.SimulatePreRender(time_graph_.get()); }
@@ -87,17 +87,15 @@ TEST_F(UnitTestTimeGraph, MouseWheel) {
   SimulatePreRender();
   const TimeGraph* time_graph = GetTimeGraph();
 
-  float time_window_us = time_graph->GetTimeWindowUs();
+  double time_window_us = time_graph->GetTimeWindowUs();
   Vec2 kCenteredMousePosition{time_graph->GetPos()[0] + time_graph->GetSize()[0] / 2.f,
                               time_graph->GetPos()[1] + time_graph->GetSize()[1] / 2.f};
-  MouseMove(kCenteredMousePosition);
   MouseWheelUp(kCenteredMousePosition);
 
   // MouseWheel in the center should modify the time window. This will change soon.
   EXPECT_NE(time_window_us, time_graph->GetTimeWindowUs());
 
   time_window_us = time_graph->GetTimeWindowUs();
-  MouseMove(time_graph->GetTimelineUi()->GetPos());
   MouseWheelUp(time_graph->GetTimelineUi()->GetPos());
 
   // MouseWheel in the timeline should modify the time windows.

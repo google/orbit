@@ -73,9 +73,11 @@ class CaptureViewElement : public Pickable, public AccessibleInterfaceProvider {
     kRightDown
   };
 
+  const inline static Vec2 kOutsidePosition{std::numeric_limits<float>::max(),
+                                            std::numeric_limits<float>::max()};
   struct MouseEvent {
     EventType event_type = EventType::kInvalidEvent;
-    Vec2 mouse_position = {0.f, 0.f};
+    Vec2 mouse_position = kOutsidePosition;
     bool left = false;
     bool right = false;
     bool middle = false;

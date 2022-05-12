@@ -157,18 +157,20 @@ CaptureViewElement::EventResult CaptureViewElement::HandleMouseEvent(
     MouseEvent mouse_event, const ModifierKeys& modifiers) {
   Vec2 mouse_pos = mouse_event.mouse_position;
 
-  // If the mouse is not over, it only should react to MouseMove (to update mouse_over flag).
-  if (!is_mouse_over_ && mouse_event.event_type != EventType::kMouseMove) {
+  if (mouse_event.event_type != EventType::kMouseLeave && !ShouldReactToMouseOver(mouse_pos)) {
     return EventResult::kIgnored;
   }
 
   for (CaptureViewElement* child : GetAllChildren()) {
-    if (child->HandleMouseEvent(mouse_event, modifiers) == EventResult::kHandled) {
+    if (child->IsMouseOver() && !child->ShouldReactToMouseOver(mouse_pos)) {
+      std::ignore = child->HandleMouseEvent(MouseEvent{EventType::kMouseLeave});
+    }
+    if (child->ShouldReactToMouseOver(mouse_pos) &&
+        child->HandleMouseEvent(mouse_event, modifiers) == EventResult::kHandled) {
       return EventResult::kHandled;
     }
   }
 
-  const Vec2 kOutsidePosition{std::numeric_limits<float>::max(), std::numeric_limits<float>::max()};
   switch (mouse_event.event_type) {
     case EventType::kMouseMove: {
       if (!mouse_event.left && !mouse_event.right && !mouse_event.middle) {

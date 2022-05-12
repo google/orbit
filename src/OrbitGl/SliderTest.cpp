@@ -345,7 +345,6 @@ TEST(Slider, MouseMoveRequestRedraw) {
   tester.SimulatePreRender(slider.get());
 
   Vec2 kPosInSlider = slider->GetPos();
-  Vec2 kPosOutOfSlider{-1, -1};
 
   // Going in the slider should trigger a redraw.
   std::ignore = slider->HandleMouseEvent(
@@ -359,12 +358,6 @@ TEST(Slider, MouseMoveRequestRedraw) {
   std::ignore = slider->HandleMouseEvent(
       CaptureViewElement::MouseEvent{CaptureViewElement::EventType::kMouseLeave});
   tester.SimulateDrawLoopAndCheckFlags(slider.get(), true, false);
-
-  std::ignore = slider->HandleMouseEvent(
-      CaptureViewElement::MouseEvent{CaptureViewElement::EventType::kMouseMove, kPosOutOfSlider});
-  std::ignore = slider->HandleMouseEvent(
-      CaptureViewElement::MouseEvent{CaptureViewElement::EventType::kMouseLeave});
-  tester.SimulateDrawLoopAndCheckFlags(slider.get(), false, false);
 
   // Going in the slider again should trigger another redraw.
   std::ignore = slider->HandleMouseEvent(
