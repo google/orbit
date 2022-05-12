@@ -107,7 +107,7 @@ TEST(CaptureViewElementTesterTest, PassesAllTestsOnExistingElement) {
 const Viewport kViewport(100, 100);
 const TimeGraphLayout kLayout;
 
-TEST(CaptureViewElement, VisibleElementsReactToMouseOver) {
+TEST(CaptureViewElement, ContainsPointRecursively) {
   UnitTestCaptureViewLeafElement elem(nullptr, &kViewport, &kLayout);
   elem.SetWidth(kViewport.GetWorldWidth());
   float pos_x = elem.GetPos()[0];
@@ -121,7 +121,7 @@ TEST(CaptureViewElement, VisibleElementsReactToMouseOver) {
   EXPECT_FALSE(elem.ContainsPointRecursively({pos_x + elem.GetWidth(), pos_y + elem.GetHeight()}));
 }
 
-TEST(CaptureViewElement, ElementsOutsideOfTheParentDontReactToMouseOver) {
+TEST(CaptureViewElement, ContainsPointRecursivelyForElementsOutsideOfTheParent) {
   const int kChildCount = 2;
   UnitTestCaptureViewContainerElement elem(nullptr, &kViewport, &kLayout, kChildCount);
 

@@ -270,7 +270,7 @@ bool CaptureWindow::RightUp() {
 
   if (time_graph_ != nullptr) {
     std::ignore = time_graph_->HandleMouseEvent(
-        CaptureViewElement::MouseEvent{CaptureViewElement::MouseEventType::kMouseMove,
+        CaptureViewElement::MouseEvent{CaptureViewElement::MouseEventType::kRightUp,
                                        viewport_.ScreenToWorld(mouse_move_pos_screen_)});
   }
 

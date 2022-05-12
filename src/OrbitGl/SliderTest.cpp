@@ -351,14 +351,17 @@ TEST(Slider, MouseMoveRequestRedraw) {
                 CaptureViewElement::MouseEventType::kMouseMove, kPosInSlider}),
             CaptureViewElement::EventResult::kIgnored);
   tester.SimulateDrawLoopAndCheckFlags(slider.get(), true, false);
+
   EXPECT_EQ(slider->HandleMouseEvent(CaptureViewElement::MouseEvent{
                 CaptureViewElement::MouseEventType::kMouseMove, kPosInSlider}),
             CaptureViewElement::EventResult::kIgnored);
   tester.SimulateDrawLoopAndCheckFlags(slider.get(), true, false);
+
   EXPECT_EQ(slider->HandleMouseEvent(
                 CaptureViewElement::MouseEvent{CaptureViewElement::MouseEventType::kMouseLeave}),
             CaptureViewElement::EventResult::kIgnored);
   tester.SimulateDrawLoopAndCheckFlags(slider.get(), true, false);
+
   EXPECT_EQ(slider->HandleMouseEvent(CaptureViewElement::MouseEvent{
                 CaptureViewElement::MouseEventType::kMouseMove, kPosInSlider}),
             CaptureViewElement::EventResult::kIgnored);
