@@ -61,11 +61,8 @@ CaptureViewElement::EventResult CaptureViewElement::OnMouseWheel(
 }
 
 CaptureViewElement::EventResult CaptureViewElement::OnMouseMove(const Vec2& mouse_pos) {
-  if (ShouldReactToMouseOver(mouse_pos) && !is_mouse_over_) {
+  if (ContainsPointRecursively(mouse_pos) && !is_mouse_over_) {
     std::ignore = OnMouseEnter();
-  }
-  if (!ShouldReactToMouseOver(mouse_pos) && is_mouse_over_) {
-    std::ignore = OnMouseLeave();
   }
 
   mouse_pos_cur_ = mouse_pos;
@@ -145,8 +142,8 @@ bool CaptureViewElement::ContainsPoint(const Vec2& pos) const {
          pos[1] < GetPos()[1] + GetSize()[1];
 }
 
-bool CaptureViewElement::ShouldReactToMouseOver(const Vec2& mouse_pos) const {
-  if (parent_ != nullptr && !parent_->ShouldReactToMouseOver(mouse_pos)) {
+bool CaptureViewElement::ContainsPointRecursively(const Vec2& mouse_pos) const {
+  if (parent_ != nullptr && !parent_->ContainsPointRecursively(mouse_pos)) {
     return false;
   }
 
@@ -157,41 +154,46 @@ CaptureViewElement::EventResult CaptureViewElement::HandleMouseEvent(
     MouseEvent mouse_event, const ModifierKeys& modifiers) {
   Vec2 mouse_pos = mouse_event.mouse_position;
 
-  if (mouse_event.event_type != EventType::kMouseLeave && !ShouldReactToMouseOver(mouse_pos)) {
+  if (mouse_event.event_type != MouseEventType::kMouseLeave &&
+      !ContainsPointRecursively(mouse_pos)) {
     return EventResult::kIgnored;
   }
 
   for (CaptureViewElement* child : GetAllChildren()) {
-    if (child->IsMouseOver() && !child->ShouldReactToMouseOver(mouse_pos)) {
-      std::ignore = child->HandleMouseEvent(MouseEvent{EventType::kMouseLeave});
+    if (child->IsMouseOver() && !child->ContainsPointRecursively(mouse_pos)) {
+      std::ignore = child->HandleMouseEvent(MouseEvent{MouseEventType::kMouseLeave});
     }
-    if (child->ShouldReactToMouseOver(mouse_pos) &&
+    if (child->ContainsPointRecursively(mouse_pos) &&
         child->HandleMouseEvent(mouse_event, modifiers) == EventResult::kHandled) {
       return EventResult::kHandled;
     }
   }
 
   switch (mouse_event.event_type) {
-    case EventType::kMouseMove: {
+    case MouseEventType::kMouseMove: {
       if (!mouse_event.left && !mouse_event.right && !mouse_event.middle) {
         return OnMouseMove(mouse_pos);
       }
       // Currently being handled using PickingManager (OnPick and OnDrag).
       return EventResult::kIgnored;
     }
-    case EventType::kMouseLeave:
+    case MouseEventType::kMouseLeave:
       return OnMouseLeave();
-    case EventType::kMouseWheelUp:
+    case MouseEventType::kMouseWheelUp:
       return OnMouseWheel(mouse_pos, 1, modifiers);
-    case EventType::kMouseWheelDown:
+    case MouseEventType::kMouseWheelDown:
       return OnMouseWheel(mouse_pos, -1, modifiers);
-    case EventType::kLeftUp:
-    case EventType::kLeftDown:
-    case EventType::kRightUp:
-    case EventType::kRightDown:
+    case MouseEventType::kLeftUp:
+      [[fallthrough]];
+    case MouseEventType::kLeftDown:
+      [[fallthrough]];
+    case MouseEventType::kRightUp:
+      [[fallthrough]];
+    case MouseEventType::kRightDown:
       // Currently being handled using PickingManager (OnPick, OnDrag, OnRelease).
       return EventResult::kIgnored;
-    case EventType::kInvalidEvent:
+    case MouseEventType::kInvalidEvent:
+      [[fallthrough]];
     default:
       ORBIT_ERROR("Mouse Invalid Event");
       break;

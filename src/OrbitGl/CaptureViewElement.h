@@ -55,13 +55,13 @@ class CaptureViewElement : public Pickable, public AccessibleInterfaceProvider {
   void OnDrag(int x, int y) override;
   [[nodiscard]] bool Draggable() override { return true; }
 
-  // This also checks ShouldReactToMouseOver() for the parent, and only returns true if the mouse
-  // position is included in all parents up to the root
-  [[nodiscard]] bool ShouldReactToMouseOver(const Vec2& mouse_pos) const;
+  // This also checks ContainsPointRecursively() for the parent, and only returns true if the mouse
+  // position is included in all parents up to the root.
+  [[nodiscard]] bool ContainsPointRecursively(const Vec2& mouse_pos) const;
 
   [[nodiscard]] bool IsMouseOver() const { return is_mouse_over_; }
 
-  enum class EventType {
+  enum class MouseEventType {
     kInvalidEvent,
     kMouseMove,
     kMouseLeave,
@@ -76,7 +76,7 @@ class CaptureViewElement : public Pickable, public AccessibleInterfaceProvider {
   const inline static Vec2 kOutsidePosition{std::numeric_limits<float>::max(),
                                             std::numeric_limits<float>::max()};
   struct MouseEvent {
-    EventType event_type = EventType::kInvalidEvent;
+    MouseEventType event_type = MouseEventType::kInvalidEvent;
     Vec2 mouse_position = kOutsidePosition;
     bool left = false;
     bool right = false;

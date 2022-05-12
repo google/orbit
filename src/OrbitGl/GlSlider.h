@@ -83,9 +83,9 @@ class GlSlider : public CaptureViewElement, public std::enable_shared_from_this<
     return value * LenToPixel(1.0f - length_ratio_);
   }
 
-  [[nodiscard]] virtual EventResult OnMouseMove(const Vec2& mouse_pos) override;
-  [[nodiscard]] virtual EventResult OnMouseEnter() override;
-  [[nodiscard]] virtual EventResult OnMouseLeave() override;
+  [[nodiscard]] EventResult OnMouseMove(const Vec2& mouse_pos) override;
+  [[nodiscard]] EventResult OnMouseEnter() override;
+  [[nodiscard]] EventResult OnMouseLeave() override;
   [[nodiscard]] bool HandlePageScroll(float click_value);
 
  protected:

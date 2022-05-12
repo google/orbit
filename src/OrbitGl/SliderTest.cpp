@@ -346,22 +346,22 @@ TEST(Slider, MouseMoveRequestRedraw) {
 
   Vec2 kPosInSlider = slider->GetPos();
 
-  // Going in the slider should trigger a redraw.
-  std::ignore = slider->HandleMouseEvent(
-      CaptureViewElement::MouseEvent{CaptureViewElement::EventType::kMouseMove, kPosInSlider});
+  // Any mouse move or mouse leave should trigger a redraw in the slider.
+  EXPECT_EQ(slider->HandleMouseEvent(CaptureViewElement::MouseEvent{
+                CaptureViewElement::MouseEventType::kMouseMove, kPosInSlider}),
+            CaptureViewElement::EventResult::kIgnored);
   tester.SimulateDrawLoopAndCheckFlags(slider.get(), true, false);
-  std::ignore = slider->HandleMouseEvent(
-      CaptureViewElement::MouseEvent{CaptureViewElement::EventType::kMouseMove, kPosInSlider});
-  tester.SimulateDrawLoopAndCheckFlags(slider.get(), false, false);
-
-  // Going out of the slider should also trigger a redraw.
-  std::ignore = slider->HandleMouseEvent(
-      CaptureViewElement::MouseEvent{CaptureViewElement::EventType::kMouseLeave});
+  EXPECT_EQ(slider->HandleMouseEvent(CaptureViewElement::MouseEvent{
+                CaptureViewElement::MouseEventType::kMouseMove, kPosInSlider}),
+            CaptureViewElement::EventResult::kIgnored);
   tester.SimulateDrawLoopAndCheckFlags(slider.get(), true, false);
-
-  // Going in the slider again should trigger another redraw.
-  std::ignore = slider->HandleMouseEvent(
-      CaptureViewElement::MouseEvent{CaptureViewElement::EventType::kMouseMove, kPosInSlider});
+  EXPECT_EQ(slider->HandleMouseEvent(
+                CaptureViewElement::MouseEvent{CaptureViewElement::MouseEventType::kMouseLeave}),
+            CaptureViewElement::EventResult::kIgnored);
+  tester.SimulateDrawLoopAndCheckFlags(slider.get(), true, false);
+  EXPECT_EQ(slider->HandleMouseEvent(CaptureViewElement::MouseEvent{
+                CaptureViewElement::MouseEventType::kMouseMove, kPosInSlider}),
+            CaptureViewElement::EventResult::kIgnored);
   tester.SimulateDrawLoopAndCheckFlags(slider.get(), true, false);
 }
 

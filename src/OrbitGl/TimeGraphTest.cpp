@@ -24,21 +24,24 @@ class UnitTestTimeGraph : public testing::Test {
   void SimulatePreRender() { tester_.SimulatePreRender(time_graph_.get()); }
 
   const TimeGraph* GetTimeGraph() { return time_graph_.get(); }
-  [[nodiscard]] GlSlider* HorizontalSlider() { return time_graph_->GetHorizontalSlider(); }
-  [[nodiscard]] GlSlider* VerticalSlider() { return time_graph_->GetVerticalSlider(); }
-  [[nodiscard]] TimelineUi* TimelineUi() { return time_graph_->GetTimelineUi(); }
+  [[nodiscard]] GlSlider* HorizontalSlider() const { return time_graph_->GetHorizontalSlider(); }
+  [[nodiscard]] GlSlider* VerticalSlider() const { return time_graph_->GetVerticalSlider(); }
+  [[nodiscard]] TimelineUi* TimelineUi() const { return time_graph_->GetTimelineUi(); }
 
   void MouseMove(const Vec2& pos) {
-    std::ignore = time_graph_->HandleMouseEvent(
-        CaptureViewElement::MouseEvent{CaptureViewElement::EventType::kMouseMove, pos});
+    EXPECT_EQ(time_graph_->HandleMouseEvent(CaptureViewElement::MouseEvent{
+                  CaptureViewElement::MouseEventType::kMouseMove, pos}),
+              CaptureViewElement::EventResult::kIgnored);
   }
   void MouseLeave() {
-    std::ignore = time_graph_->HandleMouseEvent(
-        CaptureViewElement::MouseEvent{CaptureViewElement::EventType::kMouseLeave});
+    EXPECT_EQ(time_graph_->HandleMouseEvent(
+                  CaptureViewElement::MouseEvent{CaptureViewElement::MouseEventType::kMouseLeave}),
+              CaptureViewElement::EventResult::kIgnored);
   }
   void MouseWheelUp(const Vec2& pos) {
-    std::ignore = time_graph_->HandleMouseEvent(
-        CaptureViewElement::MouseEvent{CaptureViewElement::EventType::kMouseWheelUp, pos});
+    EXPECT_EQ(time_graph_->HandleMouseEvent(CaptureViewElement::MouseEvent{
+                  CaptureViewElement::MouseEventType::kMouseWheelUp, pos}),
+              CaptureViewElement::EventResult::kHandled);
   }
   void CheckMouseIsOnlyOverAChild(CaptureViewElement* child_over_mouse) {
     EXPECT_TRUE(time_graph_->IsMouseOver());

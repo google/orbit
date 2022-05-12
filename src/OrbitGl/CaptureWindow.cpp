@@ -125,10 +125,9 @@ void CaptureWindow::MouseMoved(int x, int y, bool left, bool right, bool middle)
   GlCanvas::MouseMoved(x, y, left, right, middle);
   if (time_graph_ == nullptr) return;
 
-  if (!(left || right || middle)) {
-    std::ignore = time_graph_->HandleMouseEvent(CaptureViewElement::MouseEvent{
-        CaptureViewElement::EventType::kMouseMove, viewport_.ScreenToWorld({x, y})});
-  }
+  std::ignore = time_graph_->HandleMouseEvent(
+      CaptureViewElement::MouseEvent{CaptureViewElement::MouseEventType::kMouseMove,
+                                     viewport_.ScreenToWorld({x, y}), left, right, middle});
 
   // Pan
   if (left && !picking_manager_.IsDragging() && !capture_client_app_->IsCapturing()) {
@@ -168,8 +167,9 @@ void CaptureWindow::LeftUp() {
   }
 
   if (time_graph_ != nullptr) {
-    std::ignore = time_graph_->HandleMouseEvent(CaptureViewElement::MouseEvent{
-        CaptureViewElement::EventType::kLeftUp, viewport_.ScreenToWorld(mouse_move_pos_screen_)});
+    std::ignore = time_graph_->HandleMouseEvent(
+        CaptureViewElement::MouseEvent{CaptureViewElement::MouseEventType::kLeftUp,
+                                       viewport_.ScreenToWorld(mouse_move_pos_screen_)});
   }
 }
 
@@ -270,7 +270,7 @@ bool CaptureWindow::RightUp() {
 
   if (time_graph_ != nullptr) {
     std::ignore = time_graph_->HandleMouseEvent(
-        CaptureViewElement::MouseEvent{CaptureViewElement::EventType::kMouseMove,
+        CaptureViewElement::MouseEvent{CaptureViewElement::MouseEventType::kMouseMove,
                                        viewport_.ScreenToWorld(mouse_move_pos_screen_)});
   }
 
@@ -306,9 +306,10 @@ void CaptureWindow::MouseWheelMoved(int x, int y, int delta, bool ctrl) {
     orbit_gl::ModifierKeys modifiers;
     modifiers.ctrl = ctrl;
     std::ignore = time_graph_->HandleMouseEvent(
-        CaptureViewElement::MouseEvent{(delta > 0 ? CaptureViewElement::EventType::kMouseWheelUp
-                                                  : CaptureViewElement::EventType::kMouseWheelDown),
-                                       viewport_.ScreenToWorld(Vec2i(x, y))},
+        CaptureViewElement::MouseEvent{
+            (delta > 0 ? CaptureViewElement::MouseEventType::kMouseWheelUp
+                       : CaptureViewElement::MouseEventType::kMouseWheelDown),
+            viewport_.ScreenToWorld(Vec2i(x, y))},
         modifiers);
   }
 }
@@ -397,7 +398,7 @@ void CaptureWindow::SetIsMouseOver(bool value) {
 
   if (time_graph_ != nullptr && !value) {
     std::ignore = time_graph_->HandleMouseEvent(
-        CaptureViewElement::MouseEvent{CaptureViewElement::EventType::kMouseLeave});
+        CaptureViewElement::MouseEvent{CaptureViewElement::MouseEventType::kMouseLeave});
   }
 }
 
