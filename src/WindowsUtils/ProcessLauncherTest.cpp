@@ -26,7 +26,13 @@ using orbit_test_utils::HasNoError;
 
 }  // namespace
 
-TEST(ProcessLauncher, LaunchProcess) {}
+TEST(ProcessLauncher, LaunchProcess) {
+  ProcessLauncher launcher;
+  auto launch_result =
+      launcher.LaunchProcess(GetTestExecutablePath(), /*working_directory=*/"", /*arguments=*/"",
+                             /*pause_at_entry_point*/ false);
+  ASSERT_THAT(launch_result, HasNoError());
+}
 
 TEST(ProcessLauncher, LaunchSuspendResumeProcess) {
   ProcessLauncher launcher;
@@ -36,10 +42,10 @@ TEST(ProcessLauncher, LaunchSuspendResumeProcess) {
   ASSERT_THAT(launch_result, HasNoError());
   uint32_t process_id = launch_result.value();
 
-  auto suspend_result = launcher.SuspendProcess(process_id);
+  auto suspend_result = launcher.SuspendProcessSpinningAtEntryPoint(process_id);
   ASSERT_THAT(suspend_result, HasNoError());
 
-  auto resume_result = launcher.ResumeProcess(process_id);
+  auto resume_result = launcher.ResumeProcessSuspendedAtEntryPoint(process_id);
   ASSERT_THAT(resume_result, HasNoError());
 }
 
@@ -54,13 +60,13 @@ TEST(ProcessLauncher, LaunchNonExistingProcess) {
 
 TEST(ProcessLauncher, SuspendNonExistingProcess) {
   ProcessLauncher launcher;
-  auto result = launcher.SuspendProcess(orbit_base::kInvalidProcessId);
+  auto result = launcher.SuspendProcessSpinningAtEntryPoint(orbit_base::kInvalidProcessId);
   ASSERT_THAT(result, HasError("Trying to suspend unknown process"));
 }
 
 TEST(ProcessLauncher, ResumeNonExistingProcess) {
   ProcessLauncher launcher;
-  auto result = launcher.ResumeProcess(orbit_base::kInvalidProcessId);
+  auto result = launcher.ResumeProcessSuspendedAtEntryPoint(orbit_base::kInvalidProcessId);
   ASSERT_THAT(result, HasError("Trying to resume unknown process"));
 }
 

@@ -43,7 +43,7 @@ ErrorMessageOr<uint32_t> ProcessLauncher::LaunchProcessPausedAtEntryPoint(
   return pid;
 }
 
-ErrorMessageOr<void> ProcessLauncher::SuspendProcess(uint32_t process_id) {
+ErrorMessageOr<void> ProcessLauncher::SuspendProcessSpinningAtEntryPoint(uint32_t process_id) {
   absl::MutexLock lock(&mutex_);
   auto it = busy_loop_launchers_by_pid_.find(process_id);
   if (it == busy_loop_launchers_by_pid_.end()) {
@@ -54,7 +54,7 @@ ErrorMessageOr<void> ProcessLauncher::SuspendProcess(uint32_t process_id) {
   return outcome::success();
 }
 
-ErrorMessageOr<void> ProcessLauncher::ResumeProcess(uint32_t process_id) {
+ErrorMessageOr<void> ProcessLauncher::ResumeProcessSuspendedAtEntryPoint(uint32_t process_id) {
   absl::MutexLock lock(&mutex_);
   auto it = busy_loop_launchers_by_pid_.find(process_id);
   if (it == busy_loop_launchers_by_pid_.end()) {
