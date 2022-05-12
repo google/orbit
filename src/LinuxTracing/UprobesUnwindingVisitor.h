@@ -6,6 +6,7 @@
 #define LINUX_TRACING_UPROBES_UNWINDING_VISITOR_H_
 
 #include <absl/container/flat_hash_map.h>
+#include <absl/container/flat_hash_set.h>
 #include <sys/types.h>
 
 #include <atomic>
@@ -103,6 +104,9 @@ class UprobesUnwindingVisitor : public PerfEventVisitor {
   [[nodiscard]] orbit_grpc_protos::Callstack::CallstackType
   ComputeCallstackTypeFromCallchainAndPatch(const CallchainSamplePerfEventData& event_data);
 
+  void SendFullAddressInfoToListener(TracerListener* listener,
+                                     const unwindstack::FrameData& libunwindstack_frame);
+
   TracerListener* listener_;
 
   UprobesFunctionCallManager* function_call_manager_;
@@ -118,6 +122,7 @@ class UprobesUnwindingVisitor : public PerfEventVisitor {
 
   absl::flat_hash_map<pid_t, std::vector<std::tuple<uint64_t, uint64_t, uint32_t>>>
       uprobe_sps_ips_cpus_per_thread_{};
+  absl::flat_hash_set<uint64_t> known_linux_address_infos_{};
 };
 
 }  // namespace orbit_linux_tracing
