@@ -19,61 +19,64 @@ TEST(Button, CaptureViewElementWorksAsIntended) {
 
 TEST(Button, SizeGettersAndSettersWork) {
   orbit_gl::CaptureViewElementTester tester;
-  Button button(nullptr, tester.GetViewport(), tester.GetLayout());
+  std::shared_ptr<Button> button =
+      std::make_shared<Button>(nullptr, tester.GetViewport(), tester.GetLayout());
 
   Vec2 size(10.f, 10.f);
-  button.SetWidth(size[0]);
-  button.SetHeight(size[1]);
+  button->SetWidth(size[0]);
+  button->SetHeight(size[1]);
 
-  tester.SimulateDrawLoopAndCheckFlags(&button, true, true);
+  tester.SimulateDrawLoopAndCheckFlags(button.get(), true, true);
 
-  EXPECT_EQ(button.GetWidth(), size[0]);
-  EXPECT_EQ(button.GetHeight(), size[1]);
-  EXPECT_EQ(button.GetSize(), size);
+  EXPECT_EQ(button->GetWidth(), size[0]);
+  EXPECT_EQ(button->GetHeight(), size[1]);
+  EXPECT_EQ(button->GetSize(), size);
 
   // Setting width / height to the same values should not request an update
-  button.SetWidth(size[0]);
-  button.SetHeight(size[1]);
+  button->SetWidth(size[0]);
+  button->SetHeight(size[1]);
 
-  tester.SimulateDrawLoopAndCheckFlags(&button, false, false);
+  tester.SimulateDrawLoopAndCheckFlags(button.get(), false, false);
 
   // Changing to a different size should affect the property and flags again
   size = Vec2(15.f, 20.f);
-  button.SetWidth(size[0]);
-  button.SetHeight(size[1]);
+  button->SetWidth(size[0]);
+  button->SetHeight(size[1]);
 
-  tester.SimulateDrawLoopAndCheckFlags(&button, true, true);
+  tester.SimulateDrawLoopAndCheckFlags(button.get(), true, true);
 
-  EXPECT_EQ(button.GetWidth(), size[0]);
-  EXPECT_EQ(button.GetHeight(), size[1]);
-  EXPECT_EQ(button.GetSize(), size);
+  EXPECT_EQ(button->GetWidth(), size[0]);
+  EXPECT_EQ(button->GetHeight(), size[1]);
+  EXPECT_EQ(button->GetSize(), size);
 }
 
 TEST(Button, SizeCannotBeZero) {
   orbit_gl::CaptureViewElementTester tester;
-  Button button(nullptr, tester.GetViewport(), tester.GetLayout());
+  std::shared_ptr<Button> button =
+      std::make_shared<Button>(nullptr, tester.GetViewport(), tester.GetLayout());
 
-  button.SetWidth(0.f);
-  button.SetHeight(0.f);
+  button->SetWidth(0.f);
+  button->SetHeight(0.f);
 
-  tester.SimulatePreRender(&button);
+  tester.SimulatePreRender(button.get());
 
-  EXPECT_EQ(button.GetWidth(), tester.GetLayout()->GetMinButtonSize());
-  EXPECT_EQ(button.GetHeight(), tester.GetLayout()->GetMinButtonSize());
+  EXPECT_EQ(button->GetWidth(), tester.GetLayout()->GetMinButtonSize());
+  EXPECT_EQ(button->GetHeight(), tester.GetLayout()->GetMinButtonSize());
 }
 
 TEST(Button, LabelWorksAsExpected) {
   orbit_gl::CaptureViewElementTester tester;
-  Button button(nullptr, tester.GetViewport(), tester.GetLayout());
+  std::shared_ptr<Button> button =
+      std::make_shared<Button>(nullptr, tester.GetViewport(), tester.GetLayout());
 
-  tester.SimulateDrawLoopAndCheckFlags(&button, true, true);
+  tester.SimulateDrawLoopAndCheckFlags(button.get(), true, true);
 
   const std::string kLabel = "UnitTest";
-  button.SetLabel(kLabel);
+  button->SetLabel(kLabel);
 
-  tester.SimulateDrawLoopAndCheckFlags(&button, true, false);
+  tester.SimulateDrawLoopAndCheckFlags(button.get(), true, false);
 
-  EXPECT_EQ(button.GetLabel(), kLabel);
+  EXPECT_EQ(button->GetLabel(), kLabel);
 }
 
 TEST(Button, MouseReleaseCallback) {
@@ -98,16 +101,17 @@ TEST(Button, MouseReleaseCallback) {
 
 TEST(Button, Rendering) {
   orbit_gl::CaptureViewElementTester tester;
-  Button button(nullptr, tester.GetViewport(), tester.GetLayout());
+  std::shared_ptr<Button> button =
+      std::make_shared<Button>(nullptr, tester.GetViewport(), tester.GetLayout());
 
-  button.SetLabel("Test");
+  button->SetLabel("Test");
   const Vec2 kSize(400, 50);
   const Vec2 kPos(10, 10);
-  button.SetWidth(kSize[0]);
-  button.SetHeight(kSize[1]);
-  button.SetPos(kPos[0], kPos[1]);
+  button->SetWidth(kSize[0]);
+  button->SetHeight(kSize[1]);
+  button->SetPos(kPos[0], kPos[1]);
 
-  tester.SimulateDrawLoop(&button, true, false);
+  tester.SimulateDrawLoop(button.get(), true, false);
 
   const MockBatcher& batcher = tester.GetBatcher();
   const MockTextRenderer& text_renderer = tester.GetTextRenderer();
@@ -119,22 +123,13 @@ TEST(Button, Rendering) {
   EXPECT_TRUE(
       batcher.IsEverythingBetweenZLayers(GlCanvas::kZValueButtonBg, GlCanvas::kZValueButton));
 
-  EXPECT_EQ(text_renderer.GetNumAddTextCalls(), 1);
-  EXPECT_TRUE(text_renderer.AreAddTextsAlignedVertically());
-  EXPECT_TRUE(text_renderer.IsTextInsideRectangle(kPos, kSize));
-  EXPECT_TRUE(text_renderer.IsTextBetweenZLayers(GlCanvas::kZValueButton, GlCanvas::kZValueButton));
+  EXPECT_EQ(text_renderer.GetNumAddTextCalls(), 0);
 
-  tester.SimulateDrawLoop(&button, false, true);
+  tester.SimulateDrawLoop(button.get(), false, true);
   // Verify that `UpdatePrimitives` has no effect - all rendering of the button should be done in
   // `Draw`
   EXPECT_EQ(batcher.GetNumElements(), 0);
   EXPECT_EQ(text_renderer.GetNumAddTextCalls(), 0);
-
-  // Make sure a small text is cut to the button extents
-  const Vec2 kSmallSize = Vec2(tester.GetLayout()->GetMinButtonSize(), kSize[1]);
-  button.SetWidth(kSmallSize[0]);
-  tester.SimulateDrawLoop(&button, true, false);
-  EXPECT_TRUE(text_renderer.IsTextInsideRectangle(kPos, kSmallSize));
 }
 
 }  // namespace orbit_gl
