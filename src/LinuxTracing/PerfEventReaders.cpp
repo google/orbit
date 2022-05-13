@@ -106,7 +106,7 @@ MmapPerfEvent ConsumeMmapPerfEvent(PerfEventRingBuffer* ring_buffer,
   std::vector<char> filename_vector(filename_size);
   ring_buffer->ReadRawAtOffset(&filename_vector[0], filename_offset, filename_size);
   // This is a bit paranoid but you never know
-  filename_vector[filename_size - 1] = '\0';
+  filename_vector.back() = '\0';
   std::string filename(filename_vector.data());
 
   ring_buffer->SkipRecord(header);
