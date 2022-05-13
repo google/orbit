@@ -217,7 +217,7 @@ void FunctionsDataView::DoFilter() {
   orbit_base::TaskGroup task_group;
 
   for (size_t i = 0; i < chunks.size(); ++i) {
-    task_group.AddTask([&chunk = chunks[i], &result = task_results[i], this]() {
+    task_group.AddTask([& chunk = chunks[i], &result = task_results[i], this]() {
       ORBIT_SCOPE("FunctionsDataView::DoFilter Task");
       for (const FunctionInfo*& function : chunk) {
         ORBIT_CHECK(function != nullptr);
