@@ -11,12 +11,12 @@ target_sources(DataViews PRIVATE
         DataView.cpp
         DataViewUtils.h
         DataViewUtils.cpp
+        FrametrackDataView.cpp
         FunctionsDataView.cpp
         LiveFunctionsDataView.cpp
         ModulesDataView.cpp
         PresetsDataView.cpp
         SamplingReportDataView.cpp
-        ScopeDataView.cpp
         TracepointsDataView.cpp)
 
 target_sources(DataViews PUBLIC
@@ -25,6 +25,7 @@ target_sources(DataViews PUBLIC
         include/DataViews/CallstackDataView.h
         include/DataViews/DataView.h
         include/DataViews/DataViewType.h
+        include/DataViews/FrametrackDataView.h
         include/DataViews/FunctionsDataView.h
         include/DataViews/LiveFunctionsDataView.h
         include/DataViews/LiveFunctionsInterface.h
@@ -33,7 +34,6 @@ target_sources(DataViews PUBLIC
         include/DataViews/PresetLoadState.h
         include/DataViews/SamplingReportDataView.h        
         include/DataViews/SamplingReportInterface.h
-        include/DataViews/ScopeDataView.h
         include/DataViews/SymbolLoadingState.h
         include/DataViews/TracepointsDataView.h)
 

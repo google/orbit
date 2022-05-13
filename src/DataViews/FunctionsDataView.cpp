@@ -33,7 +33,7 @@ namespace orbit_data_views {
 
 FunctionsDataView::FunctionsDataView(AppInterface* app,
                                      orbit_metrics_uploader::MetricsUploader* metrics_uploader)
-    : ScopeDataView(DataViewType::kFunctions, app, metrics_uploader) {}
+    : FrametrackDataView(DataViewType::kFunctions, app, metrics_uploader) {}
 
 const std::string FunctionsDataView::kUnselectedFunctionString = "";
 const std::string FunctionsDataView::kSelectedFunctionString = "H";
@@ -217,7 +217,7 @@ void FunctionsDataView::DoFilter() {
   orbit_base::TaskGroup task_group;
 
   for (size_t i = 0; i < chunks.size(); ++i) {
-    task_group.AddTask([& chunk = chunks[i], &result = task_results[i], this]() {
+    task_group.AddTask([&chunk = chunks[i], &result = task_results[i], this]() {
       ORBIT_SCOPE("FunctionsDataView::DoFilter Task");
       for (const FunctionInfo*& function : chunk) {
         ORBIT_CHECK(function != nullptr);
@@ -257,6 +257,11 @@ void FunctionsDataView::AddFunctions(
 void FunctionsDataView::ClearFunctions() {
   functions_.clear();
   OnDataChanged();
+}
+
+bool FunctionsDataView::IsRowFunction(uint32_t row) const {
+  ORBIT_CHECK(row < indices_.size());
+  return true;
 }
 
 }  // namespace orbit_data_views

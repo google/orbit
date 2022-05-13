@@ -10,10 +10,10 @@
 
 #include "ClientData/FunctionInfo.h"
 #include "DataViews/AppInterface.h"
-#include "DataViews/ScopeDataView.h"
+#include "DataViews/FrametrackDataView.h"
 
 namespace orbit_data_views {
-class FunctionsDataView : public ScopeDataView {
+class FunctionsDataView : public FrametrackDataView {
  public:
   explicit FunctionsDataView(AppInterface* app,
                              orbit_metrics_uploader::MetricsUploader* metrics_uploader);
@@ -42,6 +42,8 @@ class FunctionsDataView : public ScopeDataView {
                                              const std::vector<int>& selected_indices) override;
   void DoSort() override;
   void DoFilter() override;
+
+  [[nodiscard]] bool IsRowFunction(uint32_t row) const override;
 
   std::vector<std::string> filter_tokens_;
 

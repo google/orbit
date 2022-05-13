@@ -37,8 +37,8 @@
 #include "DataViews/CompareAscendingOrDescending.h"
 #include "DataViews/DataView.h"
 #include "DataViews/DataViewType.h"
+#include "DataViews/FrametrackDataView.h"
 #include "DataViews/FunctionsDataView.h"
-#include "DataViews/ScopeDataView.h"
 #include "DisplayFormats/DisplayFormats.h"
 #include "GrpcProtos/Constants.h"
 #include "Introspection/Introspection.h"
@@ -64,7 +64,7 @@ namespace orbit_data_views {
 LiveFunctionsDataView::LiveFunctionsDataView(
     LiveFunctionsInterface* live_functions, AppInterface* app,
     orbit_metrics_uploader::MetricsUploader* metrics_uploader)
-    : ScopeDataView(DataViewType::kLiveFunctions, app, metrics_uploader),
+    : FrametrackDataView(DataViewType::kLiveFunctions, app, metrics_uploader),
       live_functions_(live_functions),
       selected_scope_id_(orbit_grpc_protos::kInvalidFunctionId) {
   update_period_ms_ = 300;
@@ -362,9 +362,9 @@ DataView::ActionStatus LiveFunctionsDataView::GetActionStatus(
 
 void LiveFunctionsDataView::OnIteratorRequested(const std::vector<int>& selection) {
   for (int i : selection) {
-    const uint64_t scope_id = GetScopeIdFromRow(i);
-    if (!IsScopeDynamicallyInstrumentedFunction(scope_id)) continue;
+    if (!IsRowFunction(i)) continue;
 
+    const uint64_t scope_id = GetScopeIdFromRow(i);
     const FunctionInfo* instrumented_function = GetFunctionInfoFromRow(i);
     ORBIT_CHECK(instrumented_function != nullptr);
     const ScopeStats& stats = app_->GetCaptureData().GetScopeStatsOrDefault(scope_id);
@@ -602,6 +602,17 @@ std::string LiveFunctionsDataView::GetToolTip(int /*row*/, int column) {
       [&known_scope_ids](uint64_t scope_id) { return known_scope_ids.contains(scope_id); });
   all_scope_ids.erase(last, std::end(all_scope_ids));
   return all_scope_ids;
+}
+
+bool LiveFunctionsDataView::IsRowFunction(uint32_t row) const {
+  return GetScopeInfoFromScopeId(GetScopeIdFromRow(row)).GetType() ==
+         orbit_client_data::ScopeType::kDynamicallyInstrumentedFunction;
+}
+
+const orbit_client_data::ScopeInfo& LiveFunctionsDataView::GetScopeInfoFromScopeId(
+    uint64_t scope_id) const {
+  ORBIT_CHECK(app_ != nullptr && app_->HasCaptureData());
+  return app_->GetCaptureData().GetScopeInfo(scope_id);
 }
 
 }  // namespace orbit_data_views

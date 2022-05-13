@@ -17,14 +17,14 @@
 #include "ClientData/FunctionInfo.h"
 #include "DataViews/AppInterface.h"
 #include "DataViews/CompareAscendingOrDescending.h"
+#include "DataViews/FrametrackDataView.h"
 #include "DataViews/LiveFunctionsInterface.h"
-#include "DataViews/ScopeDataView.h"
 #include "GrpcProtos/capture.pb.h"
 #include "OrbitBase/Result.h"
 
 namespace orbit_data_views {
 
-class LiveFunctionsDataView : public ScopeDataView {
+class LiveFunctionsDataView : public FrametrackDataView {
  public:
   explicit LiveFunctionsDataView(LiveFunctionsInterface* live_functions, AppInterface* app,
                                  orbit_metrics_uploader::MetricsUploader* metrics_uploader);
@@ -65,6 +65,8 @@ class LiveFunctionsDataView : public ScopeDataView {
   [[nodiscard]] std::optional<orbit_client_data::FunctionInfo>
   CreateFunctionInfoFromInstrumentedFunction(
       const orbit_grpc_protos::InstrumentedFunction& instrumented_function);
+
+  [[nodiscard]] bool IsRowFunction(uint32_t row) const override;
 
   // Maps scope_ids corresponding to dynamically instrumented functions to FunctionInfo instances
   absl::flat_hash_map<uint64_t, orbit_client_data::FunctionInfo> scope_id_to_function_info_{};
@@ -118,7 +120,15 @@ class LiveFunctionsDataView : public ScopeDataView {
         ascending);
   }
 
+  [[nodiscard]] uint64_t GetScopeIdFromRow(uint32_t row) const {
+    ORBIT_CHECK(row < indices_.size());
+    return indices_[row];
+  }
+
   [[nodiscard]] std::vector<uint64_t> FetchMissingScopeIds() const;
+
+  [[nodiscard]] const orbit_client_data::ScopeInfo& GetScopeInfoFromScopeId(
+      uint64_t scope_id) const;
 };
 
 }  // namespace orbit_data_views

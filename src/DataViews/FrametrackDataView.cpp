@@ -2,23 +2,18 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#include "DataViews/ScopeDataView.h"
+#include "DataViews/FrametrackDataView.h"
 
 #include <vector>
 
 namespace orbit_data_views {
 
-uint64_t ScopeDataView::GetScopeIdFromRow(uint32_t row) const {
-  ORBIT_CHECK(row < indices_.size());
-  return indices_[row];
-}
-
-void ScopeDataView::OnEnableFrameTrackRequested(const std::vector<int>& selection) {
+void FrametrackDataView::OnEnableFrameTrackRequested(const std::vector<int>& selection) {
   metrics_uploader_->SendLogEvent(
       orbit_metrics_uploader::OrbitLogEvent::ORBIT_FRAME_TRACK_ENABLE_CLICKED);
 
   for (int i : selection) {
-    if (!IsScopeDynamicallyInstrumentedFunction(GetScopeIdFromRow(i))) continue;
+    if (!IsRowFunction(i)) continue;
 
     const orbit_client_data::FunctionInfo* function = GetFunctionInfoFromRow(i);
     ORBIT_CHECK(function != nullptr);
@@ -35,12 +30,12 @@ void ScopeDataView::OnEnableFrameTrackRequested(const std::vector<int>& selectio
   }
 }
 
-void ScopeDataView::OnDisableFrameTrackRequested(const std::vector<int>& selection) {
+void FrametrackDataView::OnDisableFrameTrackRequested(const std::vector<int>& selection) {
   metrics_uploader_->SendLogEvent(
       orbit_metrics_uploader::OrbitLogEvent::ORBIT_FRAME_TRACK_DISABLE_CLICKED);
 
   for (int i : selection) {
-    if (!IsScopeDynamicallyInstrumentedFunction(GetScopeIdFromRow(i))) continue;
+    if (!IsRowFunction(i)) continue;
 
     const orbit_client_data::FunctionInfo* function = GetFunctionInfoFromRow(i);
     ORBIT_CHECK(function != nullptr);
@@ -51,17 +46,6 @@ void ScopeDataView::OnDisableFrameTrackRequested(const std::vector<int>& selecti
     app_->DisableFrameTrack(*function);
     app_->RemoveFrameTrack(*function);
   }
-}
-
-bool ScopeDataView::IsScopeDynamicallyInstrumentedFunction(uint64_t scope_id) const {
-  return GetScopeInfoFromScopeId(scope_id).GetType() ==
-         orbit_client_data::ScopeType::kDynamicallyInstrumentedFunction;
-}
-
-const orbit_client_data::ScopeInfo& ScopeDataView::GetScopeInfoFromScopeId(
-    uint64_t scope_id) const {
-  ORBIT_CHECK(app_ != nullptr && app_->HasCaptureData());
-  return app_->GetCaptureData().GetScopeInfo(scope_id);
 }
 
 }  // namespace orbit_data_views
