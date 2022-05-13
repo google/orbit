@@ -70,6 +70,13 @@ class GlSlider : public CaptureViewElement, public std::enable_shared_from_this<
   void DrawSlider(PrimitiveAssembler& primitive_assembler, float x, float y, float width,
                   float height, ShadingDirection shading_direction);
 
+  [[nodiscard]] EventResult OnMouseMove(const Vec2& mouse_pos) override;
+  [[nodiscard]] EventResult OnMouseEnter() override;
+  [[nodiscard]] EventResult OnMouseLeave() override;
+  [[nodiscard]] bool HandlePageScroll(float click_value);
+
+ protected:
+  [[nodiscard]] virtual float GetBarPixelLength() const = 0;
   [[nodiscard]] bool PosIsInMinResizeArea(const Vec2& pos) const;
   [[nodiscard]] bool PosIsInMaxResizeArea(const Vec2& pos) const;
   [[nodiscard]] bool PosIsInSlider(const Vec2& pos) const;
@@ -82,14 +89,6 @@ class GlSlider : public CaptureViewElement, public std::enable_shared_from_this<
   [[nodiscard]] float PosToPixel(float value) const {
     return value * LenToPixel(1.0f - length_ratio_);
   }
-
-  [[nodiscard]] EventResult OnMouseMove(const Vec2& mouse_pos) override;
-  [[nodiscard]] EventResult OnMouseEnter() override;
-  [[nodiscard]] EventResult OnMouseLeave() override;
-  [[nodiscard]] bool HandlePageScroll(float click_value);
-
- protected:
-  [[nodiscard]] virtual float GetBarPixelLength() const = 0;
 
   static const float kGradientFactor;
   const bool is_vertical_;

@@ -73,11 +73,11 @@ class CaptureViewElement : public Pickable, public AccessibleInterfaceProvider {
     kRightDown
   };
 
-  const inline static Vec2 kOutsidePosition{std::numeric_limits<float>::max(),
+  const inline static Vec2 kInvalidPosition{std::numeric_limits<float>::max(),
                                             std::numeric_limits<float>::max()};
   struct MouseEvent {
     MouseEventType event_type = MouseEventType::kInvalidEvent;
-    Vec2 mouse_position = kOutsidePosition;
+    Vec2 mouse_position = kInvalidPosition;
     bool left = false;
     bool right = false;
     bool middle = false;
@@ -130,6 +130,7 @@ class CaptureViewElement : public Pickable, public AccessibleInterfaceProvider {
   const TimeGraphLayout* layout_;
 
   Vec2 mouse_pos_last_click_;
+  // TODO(b/232530544): Consider not storing mouse position and getting it only while drawing.
   Vec2 mouse_pos_cur_;
   Vec2 picking_offset_ = Vec2(0, 0);
   bool picked_ = false;

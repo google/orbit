@@ -77,6 +77,7 @@ CaptureViewElement::EventResult CaptureViewElement::OnMouseEnter() {
 
 CaptureViewElement::EventResult CaptureViewElement::OnMouseLeave() {
   is_mouse_over_ = false;
+  mouse_pos_cur_ = kInvalidPosition;
   return EventResult::kIgnored;
 }
 
@@ -184,16 +185,12 @@ CaptureViewElement::EventResult CaptureViewElement::HandleMouseEvent(
     case MouseEventType::kMouseWheelDown:
       return OnMouseWheel(mouse_pos, -1, modifiers);
     case MouseEventType::kLeftUp:
-      [[fallthrough]];
     case MouseEventType::kLeftDown:
-      [[fallthrough]];
     case MouseEventType::kRightUp:
-      [[fallthrough]];
     case MouseEventType::kRightDown:
       // Currently being handled using PickingManager (OnPick, OnDrag, OnRelease).
       return EventResult::kIgnored;
     case MouseEventType::kInvalidEvent:
-      [[fallthrough]];
     default:
       ORBIT_ERROR("Mouse Invalid Event");
       break;

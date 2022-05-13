@@ -183,7 +183,7 @@ void GlSlider::DrawSlider(PrimitiveAssembler& primitive_assembler, float x, floa
                           float height, ShadingDirection shading_direction) {
   bool is_picked = primitive_assembler.GetPickingManager()->IsThisElementPicked(this);
 
-  Color color = IsMouseOver() && PosIsInSlider(mouse_pos_cur_) ? selected_color_ : slider_color_;
+  Color color = (IsMouseOver() && PosIsInSlider(mouse_pos_cur_)) ? selected_color_ : slider_color_;
   const Color dark_border_color = GetDarkerColor(bar_color_);
   const Color light_border_color = GetLighterColor(color);
   const float kEpsilon = 0.0001f;
