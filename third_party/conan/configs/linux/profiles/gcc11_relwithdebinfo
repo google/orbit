@@ -1,0 +1,4 @@
+include(gcc11_common)
+
+[settings]
+build_type=RelWithDebInfo
