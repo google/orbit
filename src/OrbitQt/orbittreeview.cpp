@@ -204,37 +204,38 @@ void OrbitTreeView::Link(OrbitTreeView* link) {
 
 void OrbitTreeView::ShowContextMenu(const QPoint& pos) {
   QModelIndex index = indexAt(pos);
-  if (index.isValid()) {
-    int clicked_index = index.row();
+  if (!index.isValid()) return;
 
-    QModelIndexList selection_list = selectionModel()->selectedIndexes();
-    std::set<int> selection_set;
-    for (QModelIndex& selected_index : selection_list) {
-      selection_set.insert(selected_index.row());
-    }
-    std::vector<int> selected_indices(selection_set.begin(), selection_set.end());
+  QModelIndexList selection_list = selectionModel()->selectedIndexes();
+  if (selection_list.isEmpty()) return;
 
-    const std::vector<orbit_data_views::DataView::ActionGroup> menu_with_grouping =
-        model_->GetDataView()->GetContextMenuWithGrouping(clicked_index, selected_indices);
-    if (menu_with_grouping.empty()) return;
-
-    QMenu context_menu(tr("ContextMenu"), this);
-    std::vector<std::unique_ptr<QAction>> actions;
-    for (size_t i = 0; i < menu_with_grouping.size(); ++i) {
-      if (i > 0) context_menu.addSeparator();
-
-      for (const orbit_data_views::DataView::Action& action : menu_with_grouping[i]) {
-        actions.push_back(std::make_unique<QAction>(QString::fromStdString(action.name)));
-        actions.back()->setEnabled(action.enabled);
-        size_t action_index = actions.size();
-        connect(actions.back().get(), &QAction::triggered,
-                [this, action, action_index] { OnMenuClicked(action.name, action_index); });
-        context_menu.addAction(actions.back().get());
-      }
-    }
-
-    context_menu.exec(mapToGlobal(pos));
+  std::set<int> selection_set;
+  for (QModelIndex& selected_index : selection_list) {
+    selection_set.insert(selected_index.row());
   }
+  std::vector<int> selected_indices(selection_set.begin(), selection_set.end());
+
+  int clicked_index = index.row();
+  const std::vector<orbit_data_views::DataView::ActionGroup> menu_with_grouping =
+      model_->GetDataView()->GetContextMenuWithGrouping(clicked_index, selected_indices);
+  if (menu_with_grouping.empty()) return;
+
+  QMenu context_menu(tr("ContextMenu"), this);
+  std::vector<std::unique_ptr<QAction>> actions;
+  for (size_t i = 0; i < menu_with_grouping.size(); ++i) {
+    if (i > 0) context_menu.addSeparator();
+
+    for (const orbit_data_views::DataView::Action& action : menu_with_grouping[i]) {
+      actions.push_back(std::make_unique<QAction>(QString::fromStdString(action.name)));
+      actions.back()->setEnabled(action.enabled);
+      size_t action_index = actions.size();
+      connect(actions.back().get(), &QAction::triggered,
+              [this, action, action_index] { OnMenuClicked(action.name, action_index); });
+      context_menu.addAction(actions.back().get());
+    }
+  }
+
+  context_menu.exec(mapToGlobal(pos));
 }
 
 void OrbitTreeView::OnMenuClicked(const std::string& action, int menu_index) {
