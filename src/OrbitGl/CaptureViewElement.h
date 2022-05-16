@@ -55,9 +55,8 @@ class CaptureViewElement : public Pickable, public AccessibleInterfaceProvider {
   void OnDrag(int x, int y) override;
   [[nodiscard]] bool Draggable() override { return true; }
 
-  // This also checks ContainsPointRecursively() for the parent, and only returns true if the mouse
-  // position is included in all parents up to the root.
-  [[nodiscard]] bool ContainsPointRecursively(const Vec2& mouse_pos) const;
+  // Recursively check if self and all parents up to the root contain a given point.
+  [[nodiscard]] bool ContainsPointRecursively(const Vec2& point) const;
 
   [[nodiscard]] bool IsMouseOver() const { return is_mouse_over_; }
 

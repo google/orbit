@@ -143,12 +143,12 @@ bool CaptureViewElement::ContainsPoint(const Vec2& pos) const {
          pos[1] < GetPos()[1] + GetSize()[1];
 }
 
-bool CaptureViewElement::ContainsPointRecursively(const Vec2& mouse_pos) const {
-  if (parent_ != nullptr && !parent_->ContainsPointRecursively(mouse_pos)) {
+bool CaptureViewElement::ContainsPointRecursively(const Vec2& point) const {
+  if (parent_ != nullptr && !parent_->ContainsPointRecursively(point)) {
     return false;
   }
 
-  return ContainsPoint(mouse_pos);
+  return ContainsPoint(point);
 }
 
 CaptureViewElement::EventResult CaptureViewElement::HandleMouseEvent(
@@ -181,9 +181,9 @@ CaptureViewElement::EventResult CaptureViewElement::HandleMouseEvent(
     case MouseEventType::kMouseLeave:
       return OnMouseLeave();
     case MouseEventType::kMouseWheelUp:
-      return OnMouseWheel(mouse_pos, 1, modifiers);
+      return OnMouseWheel(mouse_pos, /* delta= */ 1, modifiers);
     case MouseEventType::kMouseWheelDown:
-      return OnMouseWheel(mouse_pos, -1, modifiers);
+      return OnMouseWheel(mouse_pos, /* delta= */ -1, modifiers);
     case MouseEventType::kLeftUp:
     case MouseEventType::kLeftDown:
     case MouseEventType::kRightUp:
@@ -192,7 +192,7 @@ CaptureViewElement::EventResult CaptureViewElement::HandleMouseEvent(
       return EventResult::kIgnored;
     case MouseEventType::kInvalidEvent:
     default:
-      ORBIT_ERROR("Mouse Invalid Event");
+      ORBIT_ERROR("Invalid Mouse Event");
       break;
   }
   return EventResult::kIgnored;

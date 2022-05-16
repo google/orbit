@@ -104,7 +104,7 @@ Color GlSlider::GetDarkerColor(const Color& color) {
 
 void GlSlider::OnDrag(int x, int y) {
   CaptureViewElement::OnDrag(x, y);
-  Vec2 world_pos = viewport_->ScreenToWorld({x, y});
+  Vec2 world_pos = viewport_->ScreenToWorld(Vec2i(x, y));
   float value = is_vertical_ ? world_pos[1] - GetPos()[1] : world_pos[0] - GetPos()[0];
   float slider_pos = PosToPixel(pos_ratio_);
   float slider_right_pos = LenToPixel(right_edge_ratio_);
@@ -143,7 +143,7 @@ void GlSlider::OnDrag(int x, int y) {
 
 void GlSlider::OnPick(int x, int y) {
   CaptureViewElement::OnPick(x, y);
-  Vec2 world_pos = viewport_->ScreenToWorld({x, y});
+  Vec2 world_pos = viewport_->ScreenToWorld(Vec2i(x, y));
   float value = is_vertical_ ? world_pos[1] - GetPos()[1] : world_pos[0] - GetPos()[0];
 
   float slider_pos = PosToPixel(pos_ratio_);

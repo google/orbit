@@ -127,7 +127,7 @@ void CaptureWindow::MouseMoved(int x, int y, bool left, bool right, bool middle)
 
   std::ignore = time_graph_->HandleMouseEvent(
       CaptureViewElement::MouseEvent{CaptureViewElement::MouseEventType::kMouseMove,
-                                     viewport_.ScreenToWorld({x, y}), left, right, middle});
+                                     viewport_.ScreenToWorld(Vec2i(x, y)), left, right, middle});
 
   // Pan
   if (left && !picking_manager_.IsDragging() && !capture_client_app_->IsCapturing()) {
