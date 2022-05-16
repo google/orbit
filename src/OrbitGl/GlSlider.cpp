@@ -20,29 +20,36 @@ namespace orbit_gl {
 
 const float GlSlider::kGradientFactor = 0.25f;
 
-void GlSlider::OnMouseEnter() {
-  is_mouse_over_ = true;
+CaptureViewElement::EventResult GlSlider::OnMouseEnter() {
+  EventResult event_result = CaptureViewElement::OnMouseEnter();
   if (QGuiApplication::instance() != nullptr) {
     QGuiApplication::setOverrideCursor(Qt::ArrowCursor);
   }
+  RequestUpdate(RequestUpdateScope::kDraw);
+  return event_result;
 }
 
-void GlSlider::OnMouseLeave() {
-  is_mouse_over_ = false;
+CaptureViewElement::EventResult GlSlider::OnMouseLeave() {
+  EventResult event_result = CaptureViewElement::OnMouseLeave();
   if (QGuiApplication::instance() != nullptr) {
     QGuiApplication::restoreOverrideCursor();
   }
+  RequestUpdate(RequestUpdateScope::kDraw);
+  return event_result;
 }
 
-void GlSlider::OnMouseMove(int x, int y) {
+CaptureViewElement::EventResult GlSlider::OnMouseMove(const Vec2& mouse_pos) {
+  EventResult event_result = CaptureViewElement::OnMouseMove(mouse_pos);
   if (can_resize_ && QGuiApplication::instance() != nullptr) {
-    if (PosIsInMinResizeArea(x, y) || PosIsInMaxResizeArea(x, y)) {
+    if (PosIsInMinResizeArea(mouse_pos) || PosIsInMaxResizeArea(mouse_pos)) {
       QCursor cursor = is_vertical_ ? Qt::SizeVerCursor : Qt::SizeHorCursor;
       QGuiApplication::changeOverrideCursor(cursor);
     } else {
       QGuiApplication::changeOverrideCursor(Qt::ArrowCursor);
     }
   }
+  RequestUpdate(RequestUpdateScope::kDraw);
+  return event_result;
 }
 
 bool GlSlider::ContainsScreenSpacePoint(int x, int y) const {
@@ -97,7 +104,8 @@ Color GlSlider::GetDarkerColor(const Color& color) {
 
 void GlSlider::OnDrag(int x, int y) {
   CaptureViewElement::OnDrag(x, y);
-  float value = is_vertical_ ? y - GetPos()[1] : x - GetPos()[0];
+  Vec2 world_pos = viewport_->ScreenToWorld(Vec2i(x, y));
+  float value = is_vertical_ ? world_pos[1] - GetPos()[1] : world_pos[0] - GetPos()[0];
   float slider_pos = PosToPixel(pos_ratio_);
   float slider_right_pos = LenToPixel(right_edge_ratio_);
 
@@ -135,7 +143,8 @@ void GlSlider::OnDrag(int x, int y) {
 
 void GlSlider::OnPick(int x, int y) {
   CaptureViewElement::OnPick(x, y);
-  float value = is_vertical_ ? y - GetPos()[1] : x - GetPos()[0];
+  Vec2 world_pos = viewport_->ScreenToWorld(Vec2i(x, y));
+  float value = is_vertical_ ? world_pos[1] - GetPos()[1] : world_pos[0] - GetPos()[0];
 
   float slider_pos = PosToPixel(pos_ratio_);
   float slider_length = LenToPixel(length_ratio_);
@@ -145,10 +154,10 @@ void GlSlider::OnPick(int x, int y) {
     return;
   }
 
-  if (can_resize_ && PosIsInMinResizeArea(x, y)) {
+  if (can_resize_ && PosIsInMinResizeArea(world_pos)) {
     drag_type_ = DragType::kScaleMin;
     picking_pixel_offset_ = value - slider_pos;
-  } else if (can_resize_ && PosIsInMaxResizeArea(x, y)) {
+  } else if (can_resize_ && PosIsInMaxResizeArea(world_pos)) {
     drag_type_ = DragType::kScaleMax;
     picking_pixel_offset_ = slider_pos + slider_length - value;
   } else {
@@ -173,13 +182,8 @@ void GlSlider::DrawBackground(PrimitiveAssembler& primitive_assembler, float x, 
 void GlSlider::DrawSlider(PrimitiveAssembler& primitive_assembler, float x, float y, float width,
                           float height, ShadingDirection shading_direction) {
   bool is_picked = primitive_assembler.GetPickingManager()->IsThisElementPicked(this);
-  bool mouse_over_slider = false;
-  if (is_mouse_over_) {
-    mouse_over_slider =
-        PosIsInSlider(static_cast<int>(mouse_pos_cur_[0]), static_cast<int>(mouse_pos_cur_[1]));
-  }
 
-  Color color = mouse_over_slider ? selected_color_ : slider_color_;
+  Color color = (IsMouseOver() && PosIsInSlider(mouse_pos_cur_)) ? selected_color_ : slider_color_;
   const Color dark_border_color = GetDarkerColor(bar_color_);
   const Color light_border_color = GetLighterColor(color);
   const float kEpsilon = 0.0001f;
@@ -209,19 +213,19 @@ void GlSlider::DrawSlider(PrimitiveAssembler& primitive_assembler, float x, floa
   }
 }
 
-bool GlSlider::PosIsInMinResizeArea(int x, int y) const {
-  int relevant_value = is_vertical_ ? y : x;
-  return PosIsInSlider(x, y) && relevant_value <= GetSliderPixelPos() + slider_resize_pixel_margin_;
+bool GlSlider::PosIsInMinResizeArea(const Vec2& pos) const {
+  float relevant_value = is_vertical_ ? pos[1] - GetPos()[1] : pos[0] - GetPos()[0];
+  return PosIsInSlider(pos) && relevant_value <= GetSliderPixelPos() + slider_resize_pixel_margin_;
 }
 
-bool GlSlider::PosIsInMaxResizeArea(int x, int y) const {
-  int relevant_value = is_vertical_ ? y : x;
-  return PosIsInSlider(x, y) && relevant_value >= GetSliderPixelPos() + GetSliderPixelLength() -
-                                                      slider_resize_pixel_margin_;
+bool GlSlider::PosIsInMaxResizeArea(const Vec2& pos) const {
+  float relevant_value = is_vertical_ ? pos[1] - GetPos()[1] : pos[0] - GetPos()[0];
+  return PosIsInSlider(pos) && relevant_value >= GetSliderPixelPos() + GetSliderPixelLength() -
+                                                     slider_resize_pixel_margin_;
 }
 
-bool GlSlider::PosIsInSlider(int x, int y) const {
-  int relevant_value = is_vertical_ ? y : x;
+bool GlSlider::PosIsInSlider(const Vec2& pos) const {
+  float relevant_value = is_vertical_ ? pos[1] - GetPos()[1] : pos[0] - GetPos()[0];
   return relevant_value >= GetSliderPixelPos() &&
          relevant_value <= GetSliderPixelPos() + GetSliderPixelLength();
 }

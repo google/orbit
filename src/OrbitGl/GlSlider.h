@@ -55,9 +55,6 @@ class GlSlider : public CaptureViewElement, public std::enable_shared_from_this<
 
   [[nodiscard]] bool CanResize() const { return can_resize_; }
 
-  void OnMouseEnter();
-  void OnMouseLeave();
-  void OnMouseMove(int x, int y);
   [[nodiscard]] bool ContainsScreenSpacePoint(int x, int y) const;
 
  protected:
@@ -73,9 +70,16 @@ class GlSlider : public CaptureViewElement, public std::enable_shared_from_this<
   void DrawSlider(PrimitiveAssembler& primitive_assembler, float x, float y, float width,
                   float height, ShadingDirection shading_direction);
 
-  [[nodiscard]] bool PosIsInMinResizeArea(int x, int y) const;
-  [[nodiscard]] bool PosIsInMaxResizeArea(int x, int y) const;
-  [[nodiscard]] bool PosIsInSlider(int x, int y) const;
+  [[nodiscard]] EventResult OnMouseMove(const Vec2& mouse_pos) override;
+  [[nodiscard]] EventResult OnMouseEnter() override;
+  [[nodiscard]] EventResult OnMouseLeave() override;
+  [[nodiscard]] bool HandlePageScroll(float click_value);
+
+ protected:
+  [[nodiscard]] virtual float GetBarPixelLength() const = 0;
+  [[nodiscard]] bool PosIsInMinResizeArea(const Vec2& pos) const;
+  [[nodiscard]] bool PosIsInMaxResizeArea(const Vec2& pos) const;
+  [[nodiscard]] bool PosIsInSlider(const Vec2& pos) const;
 
   [[nodiscard]] float PixelToLen(float value) const { return value / GetBarPixelLength(); }
   [[nodiscard]] float LenToPixel(float value) const { return value * GetBarPixelLength(); }
@@ -86,14 +90,8 @@ class GlSlider : public CaptureViewElement, public std::enable_shared_from_this<
     return value * LenToPixel(1.0f - length_ratio_);
   }
 
-  [[nodiscard]] bool HandlePageScroll(float click_value);
-
- protected:
-  [[nodiscard]] virtual float GetBarPixelLength() const = 0;
-
   static const float kGradientFactor;
   const bool is_vertical_;
-  bool is_mouse_over_ = false;
 
   TimelineInfoInterface* timeline_info_;
 

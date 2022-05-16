@@ -111,7 +111,7 @@ static void TestDragType() {
     EXPECT_EQ(drag_count, 2);
     EXPECT_EQ(size_count, 0);
   }
-  EXPECT_EQ(pos, kPos);
+  EXPECT_NEAR(pos, kPos, kEpsilon);
   EXPECT_EQ(size, kSize);
 
   PickDragRelease<dim>(*slider, 75 * scale - kOffset);
@@ -122,7 +122,7 @@ static void TestDragType() {
     EXPECT_EQ(drag_count, 3);
     EXPECT_EQ(size_count, 0);
   }
-  EXPECT_EQ(pos, kPos);
+  EXPECT_NEAR(pos, kPos, kEpsilon);
   EXPECT_EQ(size, kSize);
 
   drag_count = 0;
@@ -334,6 +334,38 @@ TEST(Slider, ContainsScreenSpacePoint) {
                                               static_cast<int>(middle_point_slider[1])));
   EXPECT_FALSE(slider.ContainsScreenSpacePoint(static_cast<int>(outside_point_slider[0]),
                                                static_cast<int>(outside_point_slider[1])));
+}
+
+TEST(Slider, MouseMoveRequestRedraw) {
+  CaptureViewElementTester tester;
+  Viewport* viewport = tester.GetViewport();
+
+  std::shared_ptr<GlHorizontalSlider> slider{
+      std::make_shared<GlHorizontalSlider>(nullptr, viewport, tester.GetLayout(), nullptr)};
+  tester.SimulatePreRender(slider.get());
+
+  Vec2 kPosInSlider = slider->GetPos();
+
+  // Any mouse move or mouse leave should trigger a redraw in the slider.
+  EXPECT_EQ(slider->HandleMouseEvent(CaptureViewElement::MouseEvent{
+                CaptureViewElement::MouseEventType::kMouseMove, kPosInSlider}),
+            CaptureViewElement::EventResult::kIgnored);
+  tester.SimulateDrawLoopAndCheckFlags(slider.get(), true, false);
+
+  EXPECT_EQ(slider->HandleMouseEvent(CaptureViewElement::MouseEvent{
+                CaptureViewElement::MouseEventType::kMouseMove, kPosInSlider}),
+            CaptureViewElement::EventResult::kIgnored);
+  tester.SimulateDrawLoopAndCheckFlags(slider.get(), true, false);
+
+  EXPECT_EQ(slider->HandleMouseEvent(
+                CaptureViewElement::MouseEvent{CaptureViewElement::MouseEventType::kMouseLeave}),
+            CaptureViewElement::EventResult::kIgnored);
+  tester.SimulateDrawLoopAndCheckFlags(slider.get(), true, false);
+
+  EXPECT_EQ(slider->HandleMouseEvent(CaptureViewElement::MouseEvent{
+                CaptureViewElement::MouseEventType::kMouseMove, kPosInSlider}),
+            CaptureViewElement::EventResult::kIgnored);
+  tester.SimulateDrawLoopAndCheckFlags(slider.get(), true, false);
 }
 
 }  // namespace orbit_gl

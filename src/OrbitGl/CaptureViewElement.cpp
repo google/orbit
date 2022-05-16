@@ -60,6 +60,27 @@ CaptureViewElement::EventResult CaptureViewElement::OnMouseWheel(
   return EventResult::kIgnored;
 }
 
+CaptureViewElement::EventResult CaptureViewElement::OnMouseMove(const Vec2& mouse_pos) {
+  if (ContainsPointRecursively(mouse_pos) && !is_mouse_over_) {
+    std::ignore = OnMouseEnter();
+  }
+
+  mouse_pos_cur_ = mouse_pos;
+  // Ignoring the event, so mouse position is updated for its ancestors as well.
+  return EventResult::kIgnored;
+}
+
+CaptureViewElement::EventResult CaptureViewElement::OnMouseEnter() {
+  is_mouse_over_ = true;
+  return EventResult::kIgnored;
+}
+
+CaptureViewElement::EventResult CaptureViewElement::OnMouseLeave() {
+  is_mouse_over_ = false;
+  mouse_pos_cur_ = kInvalidPosition;
+  return EventResult::kIgnored;
+}
+
 void CaptureViewElement::UpdateLayout() {
   has_layout_changed_ = false;
 
@@ -118,31 +139,63 @@ void CaptureViewElement::OnDrag(int x, int y) {
 }
 
 bool CaptureViewElement::ContainsPoint(const Vec2& pos) const {
-  return pos[0] >= GetPos()[0] && pos[0] <= GetPos()[0] + GetSize()[0] && pos[1] >= GetPos()[1] &&
-         pos[1] <= GetPos()[1] + GetSize()[1];
+  return pos[0] >= GetPos()[0] && pos[0] < GetPos()[0] + GetSize()[0] && pos[1] >= GetPos()[1] &&
+         pos[1] < GetPos()[1] + GetSize()[1];
 }
 
-bool CaptureViewElement::IsMouseOver(const Vec2& mouse_pos) const {
-  if (parent_ != nullptr && !parent_->IsMouseOver(mouse_pos)) {
+bool CaptureViewElement::ContainsPointRecursively(const Vec2& point) const {
+  if (parent_ != nullptr && !parent_->ContainsPointRecursively(point)) {
     return false;
   }
 
-  return ContainsPoint(mouse_pos);
+  return ContainsPoint(point);
 }
 
-CaptureViewElement::EventResult CaptureViewElement::HandleMouseWheelEvent(
-    const Vec2& mouse_pos, int delta, const ModifierKeys& modifiers) {
-  if (!IsMouseOver(mouse_pos)) {
+CaptureViewElement::EventResult CaptureViewElement::HandleMouseEvent(
+    MouseEvent mouse_event, const ModifierKeys& modifiers) {
+  Vec2 mouse_pos = mouse_event.mouse_position;
+
+  if (mouse_event.event_type != MouseEventType::kMouseLeave &&
+      !ContainsPointRecursively(mouse_pos)) {
     return EventResult::kIgnored;
   }
 
   for (CaptureViewElement* child : GetAllChildren()) {
-    if (child->HandleMouseWheelEvent(mouse_pos, delta, modifiers) == EventResult::kHandled) {
+    if (child->IsMouseOver() && !child->ContainsPointRecursively(mouse_pos)) {
+      std::ignore = child->HandleMouseEvent(MouseEvent{MouseEventType::kMouseLeave});
+    }
+    if (child->ContainsPointRecursively(mouse_pos) &&
+        child->HandleMouseEvent(mouse_event, modifiers) == EventResult::kHandled) {
       return EventResult::kHandled;
     }
   }
 
-  return OnMouseWheel(mouse_pos, delta, modifiers);
+  switch (mouse_event.event_type) {
+    case MouseEventType::kMouseMove: {
+      if (!mouse_event.left && !mouse_event.right && !mouse_event.middle) {
+        return OnMouseMove(mouse_pos);
+      }
+      // Currently being handled using PickingManager (OnPick and OnDrag).
+      return EventResult::kIgnored;
+    }
+    case MouseEventType::kMouseLeave:
+      return OnMouseLeave();
+    case MouseEventType::kMouseWheelUp:
+      return OnMouseWheel(mouse_pos, /* delta= */ 1, modifiers);
+    case MouseEventType::kMouseWheelDown:
+      return OnMouseWheel(mouse_pos, /* delta= */ -1, modifiers);
+    case MouseEventType::kLeftUp:
+    case MouseEventType::kLeftDown:
+    case MouseEventType::kRightUp:
+    case MouseEventType::kRightDown:
+      // Currently being handled using PickingManager (OnPick, OnDrag, OnRelease).
+      return EventResult::kIgnored;
+    case MouseEventType::kInvalidEvent:
+    default:
+      ORBIT_ERROR("Invalid Mouse Event");
+      break;
+  }
+  return EventResult::kIgnored;
 }
 
 std::vector<CaptureViewElement*> CaptureViewElement::GetNonHiddenChildren() const {

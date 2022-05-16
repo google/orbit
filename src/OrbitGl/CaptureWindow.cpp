@@ -44,6 +44,7 @@ using orbit_accessibility::AccessibleWidgetBridge;
 
 using orbit_client_data::CaptureData;
 using orbit_gl::Batcher;
+using orbit_gl::CaptureViewElement;
 using orbit_gl::PickingUserData;
 using orbit_gl::PrimitiveAssembler;
 using orbit_gl::TextRenderer;
@@ -122,12 +123,11 @@ void CaptureWindow::ZoomAll() {
 
 void CaptureWindow::MouseMoved(int x, int y, bool left, bool right, bool middle) {
   GlCanvas::MouseMoved(x, y, left, right, middle);
-
-  if (time_graph_ != nullptr && !(left || right || middle)) {
-    time_graph_->ProcessSliderMouseMoveEvents(x, y);
-  }
-
   if (time_graph_ == nullptr) return;
+
+  std::ignore = time_graph_->HandleMouseEvent(
+      CaptureViewElement::MouseEvent{CaptureViewElement::MouseEventType::kMouseMove,
+                                     viewport_.ScreenToWorld(Vec2i(x, y)), left, right, middle});
 
   // Pan
   if (left && !picking_manager_.IsDragging() && !capture_client_app_->IsCapturing()) {
@@ -171,7 +171,9 @@ void CaptureWindow::LeftUp() {
   }
 
   if (time_graph_ != nullptr) {
-    time_graph_->ProcessSliderMouseMoveEvents(mouse_move_pos_screen_[0], mouse_move_pos_screen_[1]);
+    std::ignore = time_graph_->HandleMouseEvent(
+        CaptureViewElement::MouseEvent{CaptureViewElement::MouseEventType::kLeftUp,
+                                       viewport_.ScreenToWorld(mouse_move_pos_screen_)});
   }
 }
 
@@ -271,7 +273,9 @@ bool CaptureWindow::RightUp() {
   }
 
   if (time_graph_ != nullptr) {
-    time_graph_->ProcessSliderMouseMoveEvents(mouse_move_pos_screen_[0], mouse_move_pos_screen_[1]);
+    std::ignore = time_graph_->HandleMouseEvent(
+        CaptureViewElement::MouseEvent{CaptureViewElement::MouseEventType::kRightUp,
+                                       viewport_.ScreenToWorld(mouse_move_pos_screen_)});
   }
 
   return GlCanvas::RightUp();
@@ -307,8 +311,12 @@ void CaptureWindow::MouseWheelMoved(int x, int y, int delta, bool ctrl) {
   if (time_graph_ != nullptr) {
     orbit_gl::ModifierKeys modifiers;
     modifiers.ctrl = ctrl;
-    std::ignore =
-        time_graph_->HandleMouseWheelEvent(viewport_.ScreenToWorld(Vec2i(x, y)), delta, modifiers);
+    std::ignore = time_graph_->HandleMouseEvent(
+        CaptureViewElement::MouseEvent{
+            (delta > 0 ? CaptureViewElement::MouseEventType::kMouseWheelUp
+                       : CaptureViewElement::MouseEventType::kMouseWheelDown),
+            viewport_.ScreenToWorld(Vec2i(x, y))},
+        modifiers);
   }
 }
 
@@ -394,9 +402,9 @@ void CaptureWindow::KeyPressed(unsigned int key_code, bool ctrl, bool shift, boo
 void CaptureWindow::SetIsMouseOver(bool value) {
   GlCanvas::SetIsMouseOver(value);
 
-  if (time_graph_ != nullptr) {
-    // TODO(b/230441102): Replace by CaptureViewElement's MouseEvent
-    time_graph_->SetIsMouseOver(value);
+  if (time_graph_ != nullptr && !value) {
+    std::ignore = time_graph_->HandleMouseEvent(
+        CaptureViewElement::MouseEvent{CaptureViewElement::MouseEventType::kMouseLeave});
   }
 }
 

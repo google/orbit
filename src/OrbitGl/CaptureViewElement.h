@@ -55,15 +55,36 @@ class CaptureViewElement : public Pickable, public AccessibleInterfaceProvider {
   void OnDrag(int x, int y) override;
   [[nodiscard]] bool Draggable() override { return true; }
 
-  [[nodiscard]] bool ContainsPoint(const Vec2& pos) const;
+  // Recursively check if self and all parents up to the root contain a given point.
+  [[nodiscard]] bool ContainsPointRecursively(const Vec2& point) const;
 
-  // This also checks IsMouseOver() for the parent, and only returns true if the mouse
-  // position is included in all parents up to the root
-  [[nodiscard]] bool IsMouseOver(const Vec2& mouse_pos) const;
+  [[nodiscard]] bool IsMouseOver() const { return is_mouse_over_; }
+
+  enum class MouseEventType {
+    kInvalidEvent,
+    kMouseMove,
+    kMouseLeave,
+    kMouseWheelUp,
+    kMouseWheelDown,
+    kLeftUp,
+    kLeftDown,
+    kRightUp,
+    kRightDown
+  };
+
+  const inline static Vec2 kInvalidPosition{std::numeric_limits<float>::max(),
+                                            std::numeric_limits<float>::max()};
+  struct MouseEvent {
+    MouseEventType event_type = MouseEventType::kInvalidEvent;
+    Vec2 mouse_position = kInvalidPosition;
+    bool left = false;
+    bool right = false;
+    bool middle = false;
+  };
 
   enum class EventResult { kHandled, kIgnored };
-  [[nodiscard]] EventResult HandleMouseWheelEvent(const Vec2& mouse_pos, int delta,
-                                                  const ModifierKeys& modifiers = ModifierKeys());
+  [[nodiscard]] EventResult HandleMouseEvent(MouseEvent mouse_event,
+                                             const ModifierKeys& modifiers = ModifierKeys());
 
   [[nodiscard]] virtual CaptureViewElement* GetParent() const { return parent_; }
   [[nodiscard]] virtual std::vector<CaptureViewElement*> GetAllChildren() const { return {}; }
@@ -108,6 +129,7 @@ class CaptureViewElement : public Pickable, public AccessibleInterfaceProvider {
   const TimeGraphLayout* layout_;
 
   Vec2 mouse_pos_last_click_;
+  // TODO(b/232530544): Consider not storing mouse position and getting it only while drawing.
   Vec2 mouse_pos_cur_;
   Vec2 picking_offset_ = Vec2(0, 0);
   bool picked_ = false;
@@ -131,10 +153,16 @@ class CaptureViewElement : public Pickable, public AccessibleInterfaceProvider {
 
   virtual void DoUpdateLayout() {}
 
+  [[nodiscard]] bool ContainsPoint(const Vec2& pos) const;
   [[nodiscard]] virtual EventResult OnMouseWheel(const Vec2& mouse_pos, int delta,
                                                  const ModifierKeys& modifiers);
+  [[nodiscard]] virtual EventResult OnMouseMove(const Vec2& mouse_pos);
+  [[nodiscard]] virtual EventResult OnMouseEnter();
+  [[nodiscard]] virtual EventResult OnMouseLeave();
 
  private:
+  bool is_mouse_over_ = false;
+
   float width_ = 0.;
   Vec2 pos_ = Vec2(0, 0);
   CaptureViewElement* parent_;
