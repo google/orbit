@@ -10,7 +10,6 @@
 #include <cstddef>
 #include <iterator>
 #include <memory>
-#include <optional>
 
 #include "ClientData/FunctionInfo.h"
 #include "MetricsUploader/orbit_log_event.pb.h"
@@ -239,6 +238,40 @@ void DataView::OnUnselectRequested(const std::vector<int>& selection) {
       app_->DisableFrameTrack(*function);
       app_->RemoveFrameTrack(*function);
     }
+  }
+}
+
+void DataView::OnEnableFrameTrackRequested(const std::vector<int>& selection) {
+  metrics_uploader_->SendLogEvent(OrbitLogEvent::ORBIT_FRAME_TRACK_ENABLE_CLICKED);
+
+  for (int i : selection) {
+    const FunctionInfo* function = GetFunctionInfoFromRow(i);
+    if (function == nullptr) continue;
+    // Functions used as frame tracks must be hooked (selected), otherwise the
+    // data to produce the frame track will not be captured.
+    // The condition is supposed to prevent "selecting" a function when a capture
+    // is loaded with no connection to a process being established.
+    if (GetActionStatus(kMenuActionSelect, i, {i}) == ActionStatus::kVisibleAndEnabled) {
+      app_->SelectFunction(*function);
+    }
+
+    app_->EnableFrameTrack(*function);
+    app_->AddFrameTrack(*function);
+  }
+}
+
+void DataView::OnDisableFrameTrackRequested(const std::vector<int>& selection) {
+  metrics_uploader_->SendLogEvent(OrbitLogEvent::ORBIT_FRAME_TRACK_DISABLE_CLICKED);
+
+  for (int i : selection) {
+    const FunctionInfo* function = GetFunctionInfoFromRow(i);
+    if (function == nullptr) continue;
+
+    // When we remove a frame track, we do not unhook (deselect) the function as
+    // it may have been selected manually (not as part of adding a frame track).
+    // However, disable the frame track, so it is not recreated on the next capture.
+    app_->DisableFrameTrack(*function);
+    app_->RemoveFrameTrack(*function);
   }
 }
 

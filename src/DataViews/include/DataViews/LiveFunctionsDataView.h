@@ -17,14 +17,14 @@
 #include "ClientData/FunctionInfo.h"
 #include "DataViews/AppInterface.h"
 #include "DataViews/CompareAscendingOrDescending.h"
+#include "DataViews/DataView.h"
 #include "DataViews/LiveFunctionsInterface.h"
-#include "DataViews/ScopeDataView.h"
 #include "GrpcProtos/capture.pb.h"
 #include "OrbitBase/Result.h"
 
 namespace orbit_data_views {
 
-class LiveFunctionsDataView : public ScopeDataView {
+class LiveFunctionsDataView : public DataView {
  public:
   explicit LiveFunctionsDataView(LiveFunctionsInterface* live_functions, AppInterface* app,
                                  orbit_metrics_uploader::MetricsUploader* metrics_uploader);
@@ -62,6 +62,7 @@ class LiveFunctionsDataView : public ScopeDataView {
                                              const std::vector<int>& selected_indices) override;
   void DoFilter() override;
   void DoSort() override;
+  [[nodiscard]] uint64_t GetScopeId(uint32_t row) const;
   [[nodiscard]] std::optional<orbit_client_data::FunctionInfo>
   CreateFunctionInfoFromInstrumentedFunction(
       const orbit_grpc_protos::InstrumentedFunction& instrumented_function);
@@ -119,6 +120,8 @@ class LiveFunctionsDataView : public ScopeDataView {
   }
 
   [[nodiscard]] std::vector<uint64_t> FetchMissingScopeIds() const;
+
+  [[nodiscard]] const orbit_client_data::ScopeInfo& GetScopeInfo(uint64_t scope_id) const;
 };
 
 }  // namespace orbit_data_views
