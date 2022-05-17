@@ -16,7 +16,6 @@ target_sources(DataViews PRIVATE
         ModulesDataView.cpp
         PresetsDataView.cpp
         SamplingReportDataView.cpp
-        ScopeDataView.cpp
         TracepointsDataView.cpp)
 
 target_sources(DataViews PUBLIC
@@ -33,7 +32,6 @@ target_sources(DataViews PUBLIC
         include/DataViews/PresetLoadState.h
         include/DataViews/SamplingReportDataView.h        
         include/DataViews/SamplingReportInterface.h
-        include/DataViews/ScopeDataView.h
         include/DataViews/SymbolLoadingState.h
         include/DataViews/TracepointsDataView.h)
 

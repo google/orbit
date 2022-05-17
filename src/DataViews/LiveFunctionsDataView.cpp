@@ -38,7 +38,6 @@
 #include "DataViews/DataView.h"
 #include "DataViews/DataViewType.h"
 #include "DataViews/FunctionsDataView.h"
-#include "DataViews/ScopeDataView.h"
 #include "DisplayFormats/DisplayFormats.h"
 #include "GrpcProtos/Constants.h"
 #include "Introspection/Introspection.h"
@@ -64,7 +63,7 @@ namespace orbit_data_views {
 LiveFunctionsDataView::LiveFunctionsDataView(
     LiveFunctionsInterface* live_functions, AppInterface* app,
     orbit_metrics_uploader::MetricsUploader* metrics_uploader)
-    : ScopeDataView(DataViewType::kLiveFunctions, app, metrics_uploader),
+    : DataView(DataViewType::kLiveFunctions, app, metrics_uploader),
       live_functions_(live_functions),
       selected_scope_id_(orbit_grpc_protos::kInvalidFunctionId) {
   update_period_ms_ = 300;
@@ -111,9 +110,9 @@ std::string LiveFunctionsDataView::GetValue(int row, int column) {
     return "";
   }
 
-  const uint64_t scope_id = GetScopeIdFromRow(row);
+  const uint64_t scope_id = GetScopeId(row);
   const ScopeStats& stats = app_->GetCaptureData().GetScopeStatsOrDefault(scope_id);
-  const orbit_client_data::ScopeInfo& scope_info = GetScopeInfoFromScopeId(scope_id);
+  const orbit_client_data::ScopeInfo& scope_info = GetScopeInfo(scope_id);
 
   const FunctionInfo* function = GetFunctionInfoFromRow(row);
   switch (column) {
@@ -160,7 +159,7 @@ void LiveFunctionsDataView::UpdateHighlightedFunctionId(const std::vector<int>& 
   if (rows.empty()) {
     app_->SetHighlightedScopeId(orbit_grpc_protos::kInvalidFunctionId);
   } else {
-    app_->SetHighlightedScopeId(GetScopeIdFromRow(rows[0]));
+    app_->SetHighlightedScopeId(GetScopeId(rows[0]));
   }
 }
 
@@ -190,7 +189,7 @@ void LiveFunctionsDataView::UpdateHistogramWithScopeIds(const std::vector<uint64
   }
 
   const uint64_t scope_id = scope_ids[0];
-  const std::string& scope_name = GetScopeInfoFromScopeId(scope_id).GetName();
+  const std::string& scope_name = GetScopeInfo(scope_id).GetName();
   app_->ShowHistogram(timer_durations, scope_name, scope_id);
 }
 
@@ -230,7 +229,7 @@ void LiveFunctionsDataView::DoSort() {
               is_selected = app_->IsFunctionSelected(it->second);
               is_frametrack_enabled = FunctionsDataView::ShouldShowFrameTrackIcon(app_, it->second);
             }
-            const orbit_client_data::ScopeType type = GetScopeInfoFromScopeId(id).GetType();
+            const orbit_client_data::ScopeType type = GetScopeInfo(id).GetType();
             return std::make_tuple(type, is_selected, is_frametrack_enabled);
           },
           ascending);
@@ -238,9 +237,7 @@ void LiveFunctionsDataView::DoSort() {
     }
     case kColumnName:
       sorter = MakeSorter(
-          [this](uint64_t id) {
-            return absl::AsciiStrToLower(GetScopeInfoFromScopeId(id).GetName());
-          },
+          [this](uint64_t id) { return absl::AsciiStrToLower(GetScopeInfo(id).GetName()); },
           ascending);
       break;
     case kColumnCount:
@@ -293,7 +290,7 @@ DataView::ActionStatus LiveFunctionsDataView::GetActionStatus(
       return ActionStatus::kVisibleButDisabled;
     }
 
-    uint64_t scope_id = GetScopeIdFromRow(selected_indices[0]);
+    uint64_t scope_id = GetScopeId(selected_indices[0]);
     const ScopeStats& stats = capture_data.GetScopeStatsOrDefault(scope_id);
     if (stats.count() == 0) return ActionStatus::kVisibleButDisabled;
 
@@ -353,7 +350,7 @@ DataView::ActionStatus LiveFunctionsDataView::GetActionStatus(
                   [this, &is_visible_action_enabled](const int index) {
                     const FunctionInfo* function_info = GetFunctionInfoFromRow(index);
                     if (function_info == nullptr) return false;
-                    const uint64_t scope_id = GetScopeIdFromRow(index);
+                    const uint64_t scope_id = GetScopeId(index);
                     return is_visible_action_enabled(scope_id, *function_info);
                   });
 
@@ -362,11 +359,10 @@ DataView::ActionStatus LiveFunctionsDataView::GetActionStatus(
 
 void LiveFunctionsDataView::OnIteratorRequested(const std::vector<int>& selection) {
   for (int i : selection) {
-    const uint64_t scope_id = GetScopeIdFromRow(i);
-    if (!IsScopeDynamicallyInstrumentedFunction(scope_id)) continue;
-
+    uint64_t scope_id = GetScopeId(i);
     const FunctionInfo* instrumented_function = GetFunctionInfoFromRow(i);
-    ORBIT_CHECK(instrumented_function != nullptr);
+    if (instrumented_function == nullptr) continue;
+
     const ScopeStats& stats = app_->GetCaptureData().GetScopeStatsOrDefault(scope_id);
     if (stats.count() > 0) {
       live_functions_->AddIterator(scope_id, instrumented_function);
@@ -378,7 +374,7 @@ void LiveFunctionsDataView::OnIteratorRequested(const std::vector<int>& selectio
 void LiveFunctionsDataView::OnJumpToRequested(const std::string& action,
                                               const std::vector<int>& selection) {
   ORBIT_CHECK(selection.size() == 1);
-  auto scope_id = GetScopeIdFromRow(selection[0]);
+  auto scope_id = GetScopeId(selection[0]);
   if (action == kMenuActionJumpToFirst) {
     app_->JumpToTimerAndZoom(scope_id, AppInterface::JumpToTimerMode::kFirst);
   } else if (action == kMenuActionJumpToLast) {
@@ -404,7 +400,7 @@ void LiveFunctionsDataView::OnJumpToRequested(const std::string& action,
   absl::flat_hash_set<uint64_t> selected_scope_ids;
   std::transform(std::begin(selection), std::end(selection),
                  std::inserter(selected_scope_ids, std::begin(selected_scope_ids)),
-                 [this](int row) { return GetScopeIdFromRow(row); });
+                 [this](int row) { return GetScopeId(row); });
 
   const CaptureData& capture_data = app_->GetCaptureData();
 
@@ -451,7 +447,7 @@ void LiveFunctionsDataView::DoFilter() {
   const std::vector<uint64_t> scope_ids = app_->GetCaptureData().GetAllProvidedScopeIds();
 
   for (const uint64_t scope_id : scope_ids) {
-    const std::string name = absl::AsciiStrToLower(GetScopeInfoFromScopeId(scope_id).GetName());
+    const std::string name = absl::AsciiStrToLower(GetScopeInfo(scope_id).GetName());
 
     bool match = true;
 
@@ -472,7 +468,7 @@ void LiveFunctionsDataView::DoFilter() {
   // Filter drawn textboxes
   absl::flat_hash_set<uint64_t> visible_scope_ids;
   for (size_t i = 0; i < indices_.size(); ++i) {
-    visible_scope_ids.insert(GetScopeIdFromRow(i));
+    visible_scope_ids.insert(GetScopeId(i));
   }
   app_->SetVisibleScopeIds(std::move(visible_scope_ids));
 }
@@ -546,6 +542,11 @@ void LiveFunctionsDataView::OnRefresh(const std::vector<int>& visible_selected_i
   }
 }
 
+uint64_t LiveFunctionsDataView::GetScopeId(uint32_t row) const {
+  ORBIT_CHECK(row < indices_.size());
+  return indices_[row];
+}
+
 const FunctionInfo* LiveFunctionsDataView::GetFunctionInfoFromRow(int row) {
   ORBIT_CHECK(static_cast<unsigned int>(row) < indices_.size());
   const auto it = scope_id_to_function_info_.find(indices_[row]);
@@ -570,8 +571,7 @@ std::optional<FunctionInfo> LiveFunctionsDataView::CreateFunctionInfoFromInstrum
   }
 
   const std::string& function_name =
-      GetScopeInfoFromScopeId(
-          app_->GetCaptureData().FunctionIdToScopeId(instrumented_function.function_id()))
+      GetScopeInfo(app_->GetCaptureData().FunctionIdToScopeId(instrumented_function.function_id()))
           .GetName();
 
   // size is unknown
@@ -580,6 +580,12 @@ std::optional<FunctionInfo> LiveFunctionsDataView::CreateFunctionInfoFromInstrum
                       function_name};
 
   return result;
+}
+
+[[nodiscard]] const orbit_client_data::ScopeInfo& LiveFunctionsDataView::GetScopeInfo(
+    uint64_t scope_id) const {
+  ORBIT_CHECK(app_ != nullptr && app_->HasCaptureData());
+  return app_->GetCaptureData().GetScopeInfo(scope_id);
 }
 
 std::string LiveFunctionsDataView::GetToolTip(int /*row*/, int column) {
