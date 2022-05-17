@@ -30,11 +30,12 @@ namespace orbit_gl {
 
 const Color Button::kHighlightColor(75, 75, 75, 255);
 const Color Button::kBaseColor(68, 68, 68, 255);
-const Color Button::kTextColor(255, 255, 255, 255);
-const Color Button::kSymbolsColor(191, 191, 192, 255);
 
-Button::Button(CaptureViewElement* parent, const Viewport* viewport, const TimeGraphLayout* layout)
-    : CaptureViewElement(parent, viewport, layout) {
+Button::Button(CaptureViewElement* parent, const Viewport* viewport, const TimeGraphLayout* layout,
+               std::string label, SymbolType symbol_type)
+    : CaptureViewElement(parent, viewport, layout),
+      label_(std::move(label)),
+      symbol_type_{symbol_type} {
   SetWidth(layout->GetMinButtonSize());
   SetHeight(layout->GetMinButtonSize());
 }
@@ -101,6 +102,32 @@ void Button::DoDraw(PrimitiveAssembler& primitive_assembler, TextRenderer& /*tex
   const Color slider_color = IsMouseOver() ? kHighlightColor : kBaseColor;
   primitive_assembler.AddShadedBox(pos_w_border, size_w_border, z, slider_color, shared_from_this(),
                                    ShadingDirection::kTopToBottom);
+  DrawSymbol(primitive_assembler);
+}
+
+void Button::DrawSymbol(PrimitiveAssembler& primitive_assembler) {
+  const Color kSymbolColor(191, 191, 192, 255);
+  const float kSymbolPaddingSize = 3.f;
+  const float kSymbolWide = 3.f;
+
+  switch (symbol_type_) {
+    case SymbolType::kNoSymbol:
+      break;
+    case SymbolType::kPlusSymbol:
+      primitive_assembler.AddBox(MakeBox({GetPos()[0] + (GetWidth() - kSymbolWide) / 2.f,
+                                          GetPos()[1] + kSymbolPaddingSize},
+                                         {kSymbolWide, GetWidth() - 2 * kSymbolPaddingSize}),
+                                 GlCanvas::kZValueButton, kSymbolColor, shared_from_this());
+      [[fallthrough]];
+    case SymbolType::kMinusSymbol:
+      primitive_assembler.AddBox(MakeBox({GetPos()[0] + kSymbolPaddingSize,
+                                          GetPos()[1] + (GetHeight() - kSymbolWide) / 2.f},
+                                         {GetWidth() - 2 * kSymbolPaddingSize, kSymbolWide}),
+                                 GlCanvas::kZValueButton, kSymbolColor, shared_from_this());
+      break;
+    default:
+      ORBIT_UNREACHABLE();
+  }
 }
 
 std::unique_ptr<orbit_accessibility::AccessibleInterface> Button::CreateAccessibleInterface() {

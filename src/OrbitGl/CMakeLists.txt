@@ -50,14 +50,12 @@ target_sources(
          MajorPageFaultsTrack.h
          MemoryTrack.h
          MinorPageFaultsTrack.h
-         MinusButton.h
          MockTimelineInfo.h
          MultivariateTimeSeries.h
          OpenGlBatcher.h
          OpenGlTextRenderer.h
          PageFaultsTrack.h
          PickingManager.h
-         PlusButton.h
          PrimitiveAssembler.h
          SamplingReport.h
          SchedulerTrack.h
@@ -127,12 +125,10 @@ target_sources(
           MajorPageFaultsTrack.cpp
           MemoryTrack.cpp
           MinorPageFaultsTrack.cpp
-          MinusButton.cpp
           OpenGlBatcher.cpp
           OpenGlTextRenderer.cpp
           PageFaultsTrack.cpp
           PickingManager.cpp
-          PlusButton.cpp
           PrimitiveAssembler.cpp
           SamplingReport.cpp
           SchedulerTrack.cpp

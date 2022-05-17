@@ -44,6 +44,7 @@ using orbit_client_data::CaptureData;
 using orbit_client_data::TimerChain;
 using orbit_client_protos::TimerInfo;
 
+using orbit_gl::Button;
 using orbit_gl::CGroupAndProcessMemoryTrack;
 using orbit_gl::PageFaultsTrack;
 using orbit_gl::PrimitiveAssembler;
@@ -96,13 +97,15 @@ TimeGraph::TimeGraph(AccessibleInterfaceProvider* parent, OrbitApp* app,
   vertical_slider_->SetOrthogonalSliderPixelHeight(horizontal_slider_->GetPixelHeight());
   horizontal_slider_->SetOrthogonalSliderPixelHeight(vertical_slider_->GetPixelHeight());
 
-  plus_button_ = std::make_shared<orbit_gl::PlusButton>(/*parent=*/this, viewport, &layout_);
-  plus_button_->SetMouseReleaseCallback([&](orbit_gl::Button* /*button*/) { ZoomTime(1, 0.5); });
-  plus_button_->SetLabel("Plus Button");
+  plus_button_ = std::make_shared<Button>(/*parent=*/this, viewport, &layout_, "Plus Button",
+                                          Button::SymbolType::kPlusSymbol);
+  plus_button_->SetMouseReleaseCallback(
+      [&](Button* /*button*/) { ZoomTime(/*zoom_value=*/1, /*mouse_ratio=*/0.5); });
 
-  minus_button_ = std::make_shared<orbit_gl::MinusButton>(/*parent=*/this, viewport, &layout_);
-  minus_button_->SetMouseReleaseCallback([&](orbit_gl::Button* /*button*/) { ZoomTime(-1, 0.5); });
-  minus_button_->SetLabel("Minus Button");
+  minus_button_ = std::make_shared<Button>(/*parent=*/this, viewport, &layout_, "Minus Button",
+                                           Button::SymbolType::kMinusSymbol);
+  minus_button_->SetMouseReleaseCallback(
+      [&](Button* /*button*/) { ZoomTime(/*zoom_value=*/-1, /*mouse_ratio=*/0.5); });
 
   if (absl::GetFlag(FLAGS_enforce_full_redraw)) {
     RequestUpdate();
@@ -670,7 +673,7 @@ void TimeGraph::DoUpdateLayout() {
 
 void TimeGraph::UpdateChildrenPosAndContainerSize() {
   // TimeGraph's children:
-  // __________________________________________
+  // ___________________________________________
   // |            TIMELINE            |   |  +  |
   // |                                |   |  -  |
   // |--------------------------------|   |-----|

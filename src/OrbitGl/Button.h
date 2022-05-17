@@ -16,10 +16,10 @@ namespace orbit_gl {
 // A Button can be clicked to produce an event and also will react when the mouse is over it.
 class Button : public CaptureViewElement, public std::enable_shared_from_this<Button> {
  public:
-  const float kSymbolsPaddingSize = 3.f;
-  const float kSymbolsWide = 3.f;
+  enum class SymbolType { kNoSymbol, kPlusSymbol, kMinusSymbol };
   explicit Button(CaptureViewElement* parent, const Viewport* viewport,
-                  const TimeGraphLayout* layout);
+                  const TimeGraphLayout* layout, std::string label = "",
+                  SymbolType symbol_type = SymbolType::kNoSymbol);
 
   [[nodiscard]] float GetHeight() const override { return height_; }
   [[nodiscard]] uint32_t GetLayoutFlags() const override { return LayoutFlags::kNone; }
@@ -45,11 +45,13 @@ class Button : public CaptureViewElement, public std::enable_shared_from_this<Bu
               const DrawContext& draw_context) override;
 
  private:
+  void DrawSymbol(PrimitiveAssembler& primitive_assembler);
   [[nodiscard]] virtual std::unique_ptr<orbit_accessibility::AccessibleInterface>
   CreateAccessibleInterface() override;
 
   float height_ = 0.f;
   std::string label_;
+  SymbolType symbol_type_;
 
   MouseReleaseCallback mouse_release_callback_ = nullptr;
 };
