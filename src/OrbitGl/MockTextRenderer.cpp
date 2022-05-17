@@ -44,7 +44,7 @@ void MockTextRenderer::AddText(const char* text, float x, float y, float z,
       real_start_x -= text_width / 2.f;
       break;
   }
-  float real_start_y;
+  float real_start_y = y;
   switch (formatting.valign) {
     case VAlign::Top:
       real_start_y = y;
