@@ -20,7 +20,7 @@ from core.common_controls import DataViewPanel
 from core.orbit_e2e import E2ETestCase, wait_for_condition, find_control
 
 from test_cases.capture_window import Capture
-from test_cases.live_tab import VerifyFunctionCallCount
+from test_cases.live_tab import VerifyScopeTypeAndCallCount
 
 Module = namedtuple("Module", ["name", "path", "is_loaded"])
 CACHE_LOCATION = "{appdata}\\OrbitProfiler\\cache\\".format(appdata=os.getenv('APPDATA'))
@@ -453,9 +453,9 @@ class LoadAndVerifyHelloGgpPreset(E2ETestCase):
         Capture().execute(self.suite)
 
         logging.info('Verifying function call counts')
-        VerifyFunctionCallCount(function_name='DrawFrame', min_calls=30,
+        VerifyScopeTypeAndCallCount(function_name='DrawFrame', min_calls=30,
                                 max_calls=3000).execute(self.suite)
-        VerifyFunctionCallCount(function_name='GgpIssueFrameToken', min_calls=30,
+        VerifyScopeTypeAndCallCount(function_name='GgpIssueFrameToken', min_calls=30,
                                 max_calls=3000).execute(self.suite)
 
     def _load_presets(self):

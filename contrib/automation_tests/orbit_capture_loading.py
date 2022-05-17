@@ -11,7 +11,7 @@ from test_cases.capture_window import Capture, CheckTimers, CheckThreadStates, F
     ToggleCollapsedStateOfAllTracks, VerifyTracksExist
 from test_cases.connection_window import ConnectToStadiaInstance, FilterAndSelectFirstProcess, LoadCapture, \
     LoadLatestCapture
-from test_cases.live_tab import AddIterator, VerifyFunctionCallCount
+from test_cases.live_tab import AddIterator, VerifyScopeTypeAndCallCount
 from test_cases.main_window import EndSession
 
 """Verify loading a capture in Orbit using pywinauto.
@@ -74,7 +74,7 @@ def main(argv):
         VerifyTracksExist(track_names=["Page*", "*System*", "*CGroup*"], allow_duplicates=True),
 
         AddIterator(function_name="TestFunc2"),
-        VerifyFunctionCallCount(function_name="TestFunc2", min_calls=1257, max_calls=1257),
+        VerifyScopeTypeAndCallCount(function_name="TestFunc2", min_calls=1257, max_calls=1257),
 
         # Let's take a capture with the current version and verify this can be loaded
         EndSession(),

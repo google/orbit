@@ -10,7 +10,7 @@ from core.orbit_e2e import E2ETestSuite
 from test_cases.connection_window import FilterAndSelectFirstProcess, ConnectToStadiaInstance
 from test_cases.capture_window import Capture, CheckTimers
 from test_cases.symbols_tab import LoadSymbols, FilterAndHookFunction
-from test_cases.live_tab import VerifyFunctionCallCount
+from test_cases.live_tab import VerifyScopeTypeAndCallCount
 """Instrument a single function using user space instrumentation on Silenus.
 
 Before this script is run there needs to be a gamelet reserved and our version
@@ -37,7 +37,7 @@ def main(argv):
         FilterAndHookFunction(function_search_string="Render"),
         Capture(user_space_instrumentation=True),
         CheckTimers(track_name_filter="triangle.exe", require_all=False),
-        VerifyFunctionCallCount(function_name="Render", min_calls=1000, max_calls=15000),
+        VerifyScopeTypeAndCallCount(function_name="Render", min_calls=1000, max_calls=15000),
     ]
     suite = E2ETestSuite(test_name="User Space Instrumentation on Silenus", test_cases=test_cases)
     suite.execute()
