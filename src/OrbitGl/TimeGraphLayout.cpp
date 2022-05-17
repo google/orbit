@@ -36,7 +36,8 @@ TimeGraphLayout::TimeGraphLayout() {
   text_offset_ = 5.f;
   right_margin_ = 10.f;
   min_button_size_ = 5.f;
-  button_size_ = 15.f;
+  button_width_ = 15.f;
+  button_height_ = 15.f;
   toolbar_icon_height_ = 24.f;
   generic_fixed_spacer_width_ = 10.f;
   scale_ = 1.f;
@@ -79,7 +80,8 @@ bool TimeGraphLayout::DrawProperties() {
   FLOAT_SLIDER(rounding_num_sides_);
   FLOAT_SLIDER(text_offset_);
   FLOAT_SLIDER(right_margin_);
-  FLOAT_SLIDER_MIN_MAX(button_size_, min_button_size_, 50.f);
+  FLOAT_SLIDER_MIN_MAX(button_width_, min_button_size_, 50.f);
+  FLOAT_SLIDER_MIN_MAX(button_height_, min_button_size_, 50.f);
   FLOAT_SLIDER_MIN_MAX(track_tab_width_, 0, 1000.f);
   FLOAT_SLIDER_MIN_MAX(track_content_bottom_margin_, 0, 20.f);
   FLOAT_SLIDER_MIN_MAX(track_content_top_margin_, 0, 20.f);

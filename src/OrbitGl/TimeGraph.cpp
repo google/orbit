@@ -703,12 +703,12 @@ void TimeGraph::UpdateChildrenPosAndContainerSize() {
   timeline_ui_->SetWidth(GetWidth() - total_right_margin);
   timeline_ui_->SetPos(timegraph_current_x, timegraph_current_y);
 
-  plus_button_->SetWidth(layout_.GetButtonSize());
-  plus_button_->SetHeight(layout_.GetButtonSize());
+  plus_button_->SetWidth(layout_.GetButtonWidth());
+  plus_button_->SetHeight(layout_.GetButtonHeight());
   plus_button_->SetPos(GetWidth() - plus_button_->GetWidth(), timegraph_current_y);
 
-  minus_button_->SetWidth(layout_.GetButtonSize());
-  minus_button_->SetHeight(layout_.GetButtonSize());
+  minus_button_->SetWidth(layout_.GetButtonWidth());
+  minus_button_->SetHeight(layout_.GetButtonHeight());
   minus_button_->SetPos(GetWidth() - minus_button_->GetWidth(),
                         timegraph_current_y + plus_button_->GetHeight());
 

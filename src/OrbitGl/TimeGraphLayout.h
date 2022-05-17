@@ -42,7 +42,8 @@ class TimeGraphLayout {
   float GetTracksTopMargin() const { return GetTimeBarHeight() + GetTimeBarMargin(); }
   float GetRightMargin() const { return right_margin_; }
   float GetMinButtonSize() const { return min_button_size_; }
-  float GetButtonSize() const { return button_size_; }
+  float GetButtonWidth() const { return button_width_; }
+  float GetButtonHeight() const { return button_height_; }
   float GetSpaceBetweenTracks() const { return space_between_tracks_ * scale_; }
   float GetSpaceBetweenCores() const { return space_between_cores_ * scale_; }
   float GetSpaceBetweenGpuDepths() const { return space_between_gpu_depths_ * scale_; }
@@ -87,7 +88,8 @@ class TimeGraphLayout {
   float text_offset_;
   float right_margin_;
   float min_button_size_;
-  float button_size_;
+  float button_width_;
+  float button_height_;
 
   uint32_t font_size_;
 
