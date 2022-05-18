@@ -458,12 +458,12 @@ class LoadAndVerifyHelloGgpPreset(E2ETestCase):
         logging.info('Verifying function call counts')
         VerifyScopeTypeAndHitCount(function_name='DrawFrame',
                                    scope_type="D",
-                                   min_calls=30,
-                                   max_calls=3000).execute(self.suite)
+                                   min_hits=30,
+                                   max_hits=3000).execute(self.suite)
         VerifyScopeTypeAndHitCount(function_name='GgpIssueFrameToken',
                                    scope_type="D",
-                                   min_calls=30,
-                                   max_calls=3000).execute(self.suite)
+                                   min_hits=30,
+                                   max_hits=3000).execute(self.suite)
 
     def _load_presets(self):
         presets_panel = DataViewPanel(self.find_control('Group', 'PresetsDataView'))

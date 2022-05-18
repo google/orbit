@@ -67,8 +67,8 @@ def main(argv):
         AddIterator(function_name="TestFunc2"),
         VerifyScopeTypeAndHitCount(scope_name="TestFunc2",
                                    scope_type="D",
-                                   min_calls=1257,
-                                   max_calls=1257),
+                                   min_hits=1257,
+                                   max_hits=1257),
 
         # Let's take a capture with the current version and verify this can be loaded
         EndSession(),

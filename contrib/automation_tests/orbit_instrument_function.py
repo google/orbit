@@ -43,8 +43,8 @@ def main(argv):
         Capture(),
         VerifyScopeTypeAndHitCount(scope_name='DrawFrame',
                                    scope_type="D",
-                                   min_calls=30,
-                                   max_calls=3000),
+                                   min_hits=30,
+                                   max_hits=3000),
         CheckTimers(track_name_filter="All Threads", expect_exists=False),
         CheckTimers(track_name_filter="hello_ggp_stand")
     ]
