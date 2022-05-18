@@ -20,9 +20,12 @@ def main(argv):
         VerifyTracksExist(track_names=[
             "Scheduler", ("*sdma0*", "*vce0*"), "gfx", "All Threads", "hello_ggp_stand"
         ]),
-        SelectTrack(track_index=4),
-        DeselectTrack(),
         SelectTrack(track_index=0, expect_failure=True),  # Scheduler track cannot be selected
+        SelectTrack(track_index=4),
+        # TODO(b/233028574): SelectTrack doesn't release the clicked track properly and can't be followed
+        # directly with MoveTrack(). It needs to run DeselectTrack() to release the track before moving
+        # tracks.
+        DeselectTrack(),
         MoveTrack(track_index=4, new_index=0),
         MoveTrack(track_index=0, new_index=3),
         MoveTrack(track_index=3, new_index=4),
