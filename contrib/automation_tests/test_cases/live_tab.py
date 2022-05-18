@@ -19,13 +19,14 @@ class LiveTabTestCase(E2ETestCase):
         self._live_tab = None
 
     def execute(self, suite):
+        self.find_control("TabItem", "Live", parent=suite.top_window()).click_input()
         self._live_tab = self.find_control("Group", "liveTab", parent=suite.top_window())
         super().execute(suite)
 
-    def find_function_cell(self, function_name) -> Tuple[BaseWrapper, int]:
+    def _find_scope_cell(self, scope_name) -> Tuple[BaseWrapper, int]:
         children = self.find_control('Tree', parent=self._live_tab).children()
         for i in range(len(children)):
-            if function_name in children[i].window_text():
+            if scope_name in children[i].window_text():
                 return children[i], i
         return None, -1
 
@@ -46,7 +47,7 @@ class AddIterator(LiveTabTestCase):
         count_all_buttons_before = len(self._live_tab.descendants(control_type='Button'))
 
         # Find function_name in the live tab and add an iterator
-        cell, _ = self.find_function_cell(function_name)
+        cell, _ = self._find_scope_cell(function_name)
         self.expect_true(cell is not None, 'Found row containing function "%s"' % function_name)
         cell.click_input(button='right')
         self.find_context_menu_item('Add iterator(s)').click_input()
@@ -62,7 +63,7 @@ class AddFrameTrack(LiveTabTestCase):
     """
 
     def _execute(self, function_name):
-        cell, index = self.find_function_cell(function_name)
+        cell, index = self._find_scope_cell(function_name)
         cell.click_input(button='right')
         self.find_context_menu_item('Enable frame track(s)').click_input()
 
@@ -70,24 +71,30 @@ class AddFrameTrack(LiveTabTestCase):
         wait_for_condition(lambda: "F" in tree_view.children()[index - 1].window_text())
 
 
-class VerifyFunctionCallCount(LiveTabTestCase):
+class VerifyScopeTypeAndHitCount(LiveTabTestCase):
     """
-    Verify the amount of times a hooked function has been called according to the
-    live-tab
+    Verify the amount of times a scope has been hit and its type 
+    according to the live-tab.
+    "Scope" is any entity that we display aggregated statistics for
+    under the Live tab. It could be Dynamic instrumentation (type "D")
+    or Manual (types "MS" and "MA" for synchronous and asynchronous respectively).
     """
 
-    def _execute(self, function_name, min_calls=1, max_calls=pow(2, 33) - 1):
-        cell, index = self.find_function_cell(function_name)
+    def _execute(self, scope_name, scope_type, min_hits=1, max_hits=pow(2, 33) - 1):
+        cell, index = self._find_scope_cell(scope_name)
         children = self.find_control('Tree', parent=self._live_tab).children()
 
-        call_count = int(children[index + 1].window_text())
-        hook_status = children[index - 1].window_text()
+        hit_count = int(children[index + 1].window_text())
+        actual_scope_type = children[index - 1].window_text()
 
-        logging.info('Found a call count of %s, hook status: %s', call_count, hook_status)
+        logging.info('Found a hit count of %s, scope type: %s', hit_count, actual_scope_type)
         self.expect_true(
-            min_calls <= call_count <= max_calls,
-            'Call count for function "%s" expected to be between %s and %s, was %s' %
-            (function_name, min_calls, max_calls, call_count))
+            min_hits <= hit_count <= max_hits,
+            'Hit count for scope "%s" expected to be between %s and %s, was %s' %
+            (scope_name, min_hits, max_hits, hit_count))
+        self.expect_true(
+            actual_scope_type.startswith(scope_type),
+            'Scope "%s" expected to be of type %s , was %s' % (scope_name, scope_type, scope_type))
 
 
 class VerifyOneFunctionWasCalled(LiveTabTestCase):

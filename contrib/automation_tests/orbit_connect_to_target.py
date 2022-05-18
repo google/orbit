@@ -9,7 +9,6 @@ from absl import app
 from core.orbit_e2e import E2ETestSuite
 from test_cases.capture_window import VerifyTracksExist, Capture
 from test_cases.connection_window import WaitForConnectionToTargetInstanceAndProcess
-
 """
 Verifies existence and contents of the ConnectToTargetDialog, and takes a short
 capture once the main window appears.
@@ -40,11 +39,10 @@ def main(argv):
                            "the expected instance ID or label.")
 
     test_cases = [
-        WaitForConnectionToTargetInstanceAndProcess(expected_instance=argv[1], expected_process="hello_ggp_stand"),
+        WaitForConnectionToTargetInstanceAndProcess(expected_instance=argv[1],
+                                                    expected_process="hello_ggp_stand"),
         Capture(),
-        VerifyTracksExist(track_names=[
-             "hello_ggp_stand"
-        ])
+        VerifyTracksExist(track_names=["hello_ggp_stand"])
     ]
     suite = E2ETestSuite(test_name="Connect to target", test_cases=test_cases)
     suite.execute()

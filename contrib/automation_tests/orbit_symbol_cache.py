@@ -11,7 +11,6 @@ from test_cases.connection_window import FilterAndSelectFirstProcess, ConnectToS
 from test_cases.symbols_tab import LoadAllSymbolsAndVerifyCache, ClearSymbolCache, LoadSymbols, \
     ForceAndVerifySymbolUpdate
 from test_cases.main_window import EndSession
-
 """
 Test symbol loading with and without local caching.
 
@@ -53,7 +52,6 @@ def main(argv):
         FilterAndSelectFirstProcess(process_filter='hello_ggp'),
         ForceAndVerifySymbolUpdate(full_module_path="/user/local/cloudcast/lib/libggp.so",
                                    replace_with_module="/mnt/developer/hello_ggp_standalone")
-
     ]
     suite = E2ETestSuite(test_name="Symbol loading and caching", test_cases=test_cases)
     suite.execute()

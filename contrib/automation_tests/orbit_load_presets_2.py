@@ -10,7 +10,7 @@ from core.orbit_e2e import E2ETestSuite
 from test_cases.connection_window import FilterAndSelectFirstProcess, ConnectToStadiaInstance
 from test_cases.symbols_tab import FilterAndHookFunction, SavePreset, UnhookAllFunctions, LoadPreset, VerifyFunctionHooked, VerifyPresetStatus, PresetStatus, VerifyModuleLoaded
 from test_cases.capture_window import Capture
-from test_cases.live_tab import VerifyFunctionCallCount
+from test_cases.live_tab import VerifyScopeTypeAndHitCount
 from test_cases.main_window import EndSession
 """Verify preset functionality in Orbit works as expected.
 
@@ -44,8 +44,14 @@ def main(argv):
         VerifyFunctionHooked(function_search_string='GgpIssueFrameToken'),
         # Verify that the functions from the presets end up in the capture.
         Capture(),
-        VerifyFunctionCallCount(function_name='DrawFrame', min_calls=30, max_calls=3000),
-        VerifyFunctionCallCount(function_name='GgpIssueFrameToken', min_calls=30, max_calls=3000),
+        VerifyScopeTypeAndHitCount(scope_name='DrawFrame',
+                                   scope_type="D",
+                                   min_hits=30,
+                                   max_hits=3000),
+        VerifyScopeTypeAndHitCount(scope_name='GgpIssueFrameToken',
+                                   scope_type="D",
+                                   min_hits=30,
+                                   max_hits=3000),
         # Create a new preset. Unhooking and applying this preset results in the function being hooked.
         UnhookAllFunctions(),
         FilterAndHookFunction(function_search_string="ClockNowMicroSeconds"),
