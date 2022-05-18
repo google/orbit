@@ -40,6 +40,18 @@ Button::Button(CaptureViewElement* parent, const Viewport* viewport, const TimeG
   SetHeight(layout->GetMinButtonSize());
 }
 
+CaptureViewElement::EventResult Button::OnMouseEnter() {
+  EventResult event_result = CaptureViewElement::OnMouseEnter();
+  RequestUpdate(RequestUpdateScope::kDraw);
+  return event_result;
+}
+
+CaptureViewElement::EventResult Button::OnMouseLeave() {
+  EventResult event_result = CaptureViewElement::OnMouseLeave();
+  RequestUpdate(RequestUpdateScope::kDraw);
+  return event_result;
+}
+
 void Button::SetHeight(float height) {
   if (height == height_) return;
 
@@ -107,8 +119,11 @@ void Button::DoDraw(PrimitiveAssembler& primitive_assembler, TextRenderer& /*tex
 
 void Button::DrawSymbol(PrimitiveAssembler& primitive_assembler) {
   const Color kSymbolColor(191, 191, 192, 255);
+  const Color kHighlightedSymbolColor(255, 255, 255, 255);
   const float kSymbolPaddingSize = 3.f;
   const float kSymbolWide = 3.f;
+
+  Color symbol_color = IsMouseOver() ? kHighlightedSymbolColor : kSymbolColor;
 
   switch (symbol_type_) {
     case SymbolType::kNoSymbol:
@@ -117,13 +132,13 @@ void Button::DrawSymbol(PrimitiveAssembler& primitive_assembler) {
       primitive_assembler.AddBox(MakeBox({GetPos()[0] + (GetWidth() - kSymbolWide) / 2.f,
                                           GetPos()[1] + kSymbolPaddingSize},
                                          {kSymbolWide, GetHeight() - 2 * kSymbolPaddingSize}),
-                                 GlCanvas::kZValueButton, kSymbolColor, shared_from_this());
+                                 GlCanvas::kZValueButton, symbol_color, shared_from_this());
       [[fallthrough]];
     case SymbolType::kMinusSymbol:
       primitive_assembler.AddBox(MakeBox({GetPos()[0] + kSymbolPaddingSize,
                                           GetPos()[1] + (GetHeight() - kSymbolWide) / 2.f},
                                          {GetWidth() - 2 * kSymbolPaddingSize, kSymbolWide}),
-                                 GlCanvas::kZValueButton, kSymbolColor, shared_from_this());
+                                 GlCanvas::kZValueButton, symbol_color, shared_from_this());
       break;
     default:
       ORBIT_UNREACHABLE();
