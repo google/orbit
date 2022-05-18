@@ -23,7 +23,7 @@ class LiveTabTestCase(E2ETestCase):
         self._live_tab = self.find_control("Group", "liveTab", parent=suite.top_window())
         super().execute(suite)
 
-    def find_scope_cell(self, scope_name) -> Tuple[BaseWrapper, int]:
+    def _find_scope_cell(self, scope_name) -> Tuple[BaseWrapper, int]:
         children = self.find_control('Tree', parent=self._live_tab).children()
         for i in range(len(children)):
             if scope_name in children[i].window_text():
@@ -47,7 +47,7 @@ class AddIterator(LiveTabTestCase):
         count_all_buttons_before = len(self._live_tab.descendants(control_type='Button'))
 
         # Find function_name in the live tab and add an iterator
-        cell, _ = self.find_scope_cell(function_name)
+        cell, _ = self._find_scope_cell(function_name)
         self.expect_true(cell is not None, 'Found row containing function "%s"' % function_name)
         cell.click_input(button='right')
         self.find_context_menu_item('Add iterator(s)').click_input()
@@ -63,7 +63,7 @@ class AddFrameTrack(LiveTabTestCase):
     """
 
     def _execute(self, function_name):
-        cell, index = self.find_scope_cell(function_name)
+        cell, index = self._find_scope_cell(function_name)
         cell.click_input(button='right')
         self.find_context_menu_item('Enable frame track(s)').click_input()
 
@@ -74,11 +74,14 @@ class AddFrameTrack(LiveTabTestCase):
 class VerifyScopeTypeAndHitCount(LiveTabTestCase):
     """
     Verify the amount of times a scope has been hit and its type 
-    according to the live-tab
+    according to the live-tab.
+    "Scope" is any entity that we display aggregated statistics for
+    under the Live tab. It could be Dynamic instrumentation (type "D")
+    or Manual (types "MS" and "MA" for synchronous and asynchronous respectively).
     """
 
     def _execute(self, scope_name, scope_type, min_hits=1, max_hits=pow(2, 33) - 1):
-        cell, index = self.find_scope_cell(scope_name)
+        cell, index = self._find_scope_cell(scope_name)
         children = self.find_control('Tree', parent=self._live_tab).children()
 
         hit_count = int(children[index + 1].window_text())
