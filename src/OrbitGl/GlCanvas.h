@@ -113,8 +113,8 @@ class GlCanvas : public orbit_gl::AccessibleInterfaceProvider {
   static float kZValueEventBarPicking;
   static float kZValueUi;
   static float kZValueMargin;
-  static float kZValueSliderBg;
-  static float kZValueSlider;
+  static float kZValueButtonBg;
+  static float kZValueButton;
 
   static float kZOffsetMovingTrack;
   static float kZOffsetPinnedTrack;

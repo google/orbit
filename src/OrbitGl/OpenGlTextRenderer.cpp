@@ -226,11 +226,11 @@ void OpenGlTextRenderer::DrawOutline(PrimitiveAssembler* primitive_assembler,
     vertex_t v2 = *static_cast<const vertex_t*>(vector_get(vertex_buffer->vertices, i2));
 
     // TODO: This should be pickable??
-    primitive_assembler->AddLine(Vec2(v0.x, v0.y), Vec2(v1.x, v1.y), GlCanvas::kZValueSlider,
+    primitive_assembler->AddLine(Vec2(v0.x, v0.y), Vec2(v1.x, v1.y), GlCanvas::kZValueButton,
                                  color);
-    primitive_assembler->AddLine(Vec2(v1.x, v1.y), Vec2(v2.x, v2.y), GlCanvas::kZValueSlider,
+    primitive_assembler->AddLine(Vec2(v1.x, v1.y), Vec2(v2.x, v2.y), GlCanvas::kZValueButton,
                                  color);
-    primitive_assembler->AddLine(Vec2(v2.x, v2.y), Vec2(v0.x, v0.y), GlCanvas::kZValueSlider,
+    primitive_assembler->AddLine(Vec2(v2.x, v2.y), Vec2(v0.x, v0.y), GlCanvas::kZValueButton,
                                  color);
   }
 }

@@ -30,10 +30,12 @@ namespace orbit_gl {
 
 const Color Button::kHighlightColor(75, 75, 75, 255);
 const Color Button::kBaseColor(68, 68, 68, 255);
-const Color Button::kTextColor(255, 255, 255, 255);
 
-Button::Button(CaptureViewElement* parent, const Viewport* viewport, const TimeGraphLayout* layout)
-    : CaptureViewElement(parent, viewport, layout) {
+Button::Button(CaptureViewElement* parent, const Viewport* viewport, const TimeGraphLayout* layout,
+               std::string label, SymbolType symbol_type)
+    : CaptureViewElement(parent, viewport, layout),
+      label_(std::move(label)),
+      symbol_type_{symbol_type} {
   SetWidth(layout->GetMinButtonSize());
   SetHeight(layout->GetMinButtonSize());
 }
@@ -70,9 +72,9 @@ void Button::DoUpdateLayout() {
   SetHeight(std::max(GetHeight(), layout_->GetMinButtonSize()));
 }
 
-void Button::DoDraw(PrimitiveAssembler& primitive_assembler, TextRenderer& text_renderer,
+void Button::DoDraw(PrimitiveAssembler& primitive_assembler, TextRenderer& /*text_renderer*/,
                     const DrawContext& /*draw_context*/) {
-  const float z = GlCanvas::kZValueUi;
+  const float z = GlCanvas::kZValueButton;
   const Vec2 pos = GetPos();
   const Vec2 size = GetSize();
 
@@ -85,30 +87,47 @@ void Button::DoDraw(PrimitiveAssembler& primitive_assembler, TextRenderer& text_
   Vec2 size_w_border = size;
 
   // Dark border
-  primitive_assembler.AddBox(MakeBox(pos_w_border, size_w_border), z, kDarkBorderColor);
+  primitive_assembler.AddBox(MakeBox(pos_w_border, size_w_border), z, kDarkBorderColor,
+                             shared_from_this());
   pos_w_border += kBorderSize;
   size_w_border -= kBorderSize + kBorderSize;
 
   // Light border
-  primitive_assembler.AddBox(MakeBox(pos_w_border, size_w_border), z, kLightBorderColor);
+  primitive_assembler.AddBox(MakeBox(pos_w_border, size_w_border), z, kLightBorderColor,
+                             shared_from_this());
   pos_w_border += kBorderSize;
   size_w_border -= kBorderSize + kBorderSize;
 
   // Button itself
   const Color slider_color = IsMouseOver() ? kHighlightColor : kBaseColor;
-  primitive_assembler.AddShadedBox(pos_w_border, size_w_border, z, slider_color,
+  primitive_assembler.AddShadedBox(pos_w_border, size_w_border, z, slider_color, shared_from_this(),
                                    ShadingDirection::kTopToBottom);
+  DrawSymbol(primitive_assembler);
+}
 
-  TextRendererInterface::TextFormatting format;
-  format.color = kTextColor;
-  format.valign = TextRendererInterface::VAlign::Middle;
-  format.halign = TextRendererInterface::HAlign::Centered;
-  format.max_size = GetSize()[0];
-  format.font_size = layout_->CalculateZoomedFontSize();
+void Button::DrawSymbol(PrimitiveAssembler& primitive_assembler) {
+  const Color kSymbolColor(191, 191, 192, 255);
+  const float kSymbolPaddingSize = 3.f;
+  const float kSymbolWide = 3.f;
 
-  const float x = pos[0] + size[0] / 2.f;
-  const float y = pos[1] + size[1] / 2.f;
-  text_renderer.AddText(label_.c_str(), x, y, z, format);
+  switch (symbol_type_) {
+    case SymbolType::kNoSymbol:
+      break;
+    case SymbolType::kPlusSymbol:
+      primitive_assembler.AddBox(MakeBox({GetPos()[0] + (GetWidth() - kSymbolWide) / 2.f,
+                                          GetPos()[1] + kSymbolPaddingSize},
+                                         {kSymbolWide, GetHeight() - 2 * kSymbolPaddingSize}),
+                                 GlCanvas::kZValueButton, kSymbolColor, shared_from_this());
+      [[fallthrough]];
+    case SymbolType::kMinusSymbol:
+      primitive_assembler.AddBox(MakeBox({GetPos()[0] + kSymbolPaddingSize,
+                                          GetPos()[1] + (GetHeight() - kSymbolWide) / 2.f},
+                                         {GetWidth() - 2 * kSymbolPaddingSize, kSymbolWide}),
+                                 GlCanvas::kZValueButton, kSymbolColor, shared_from_this());
+      break;
+    default:
+      ORBIT_UNREACHABLE();
+  }
 }
 
 std::unique_ptr<orbit_accessibility::AccessibleInterface> Button::CreateAccessibleInterface() {

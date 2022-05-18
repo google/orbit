@@ -172,11 +172,11 @@ void GlSlider::DrawBackground(PrimitiveAssembler& primitive_assembler, float x, 
   const float kEpsilon = 0.0001f;
 
   Quad border_box = MakeBox(Vec2(x, y), Vec2(width, height));
-  primitive_assembler.AddBox(border_box, GlCanvas::kZValueSliderBg - kEpsilon, dark_border_color,
+  primitive_assembler.AddBox(border_box, GlCanvas::kZValueButtonBg - kEpsilon, dark_border_color,
                              shared_from_this());
 
   Quad bar_box = MakeBox(Vec2(x + 1.f, y + 1.f), Vec2(width - 2.f, height - 2.f));
-  primitive_assembler.AddBox(bar_box, GlCanvas::kZValueSliderBg, bar_color_, shared_from_this());
+  primitive_assembler.AddBox(bar_box, GlCanvas::kZValueButtonBg, bar_color_, shared_from_this());
 }
 
 void GlSlider::DrawSlider(PrimitiveAssembler& primitive_assembler, float x, float y, float width,
@@ -190,12 +190,12 @@ void GlSlider::DrawSlider(PrimitiveAssembler& primitive_assembler, float x, floa
 
   Quad dark_border_box = MakeBox(Vec2(x, y), Vec2(width, height));
 
-  primitive_assembler.AddBox(dark_border_box, GlCanvas::kZValueSlider - 2 * kEpsilon,
+  primitive_assembler.AddBox(dark_border_box, GlCanvas::kZValueButton - 2 * kEpsilon,
                              dark_border_color, shared_from_this());
 
   Quad light_border_box = MakeBox(Vec2(x + 1.f, y + 1.f), Vec2(width - 2.f, height - 2.f));
 
-  primitive_assembler.AddBox(light_border_box, GlCanvas::kZValueSlider - kEpsilon,
+  primitive_assembler.AddBox(light_border_box, GlCanvas::kZValueButton - kEpsilon,
                              light_border_color, shared_from_this());
 
   // Slider itself
@@ -203,13 +203,13 @@ void GlSlider::DrawSlider(PrimitiveAssembler& primitive_assembler, float x, floa
   if (!is_picked) {
     primitive_assembler.AddShadedBox(
         Vec2(x + kSliderOffset, y + kSliderOffset),
-        Vec2(width - 2.f * kSliderOffset, height - 2.f * kSliderOffset), GlCanvas::kZValueSlider,
+        Vec2(width - 2.f * kSliderOffset, height - 2.f * kSliderOffset), GlCanvas::kZValueButton,
         color, shared_from_this(), shading_direction);
   } else {
     primitive_assembler.AddBox(
         MakeBox(Vec2(x + kSliderOffset, y + kSliderOffset),
                 Vec2(width - 2.f * kSliderOffset, height - 2.f * kSliderOffset)),
-        GlCanvas::kZValueSlider, slider_color_, shared_from_this());
+        GlCanvas::kZValueButton, slider_color_, shared_from_this());
   }
 }
 
@@ -313,7 +313,7 @@ void GlHorizontalSlider::DoDraw(PrimitiveAssembler& primitive_assembler,
   tri_size = std::min(tri_size, pixel_height_ - tri_size * kHeightFactor - 2.f);
   const float tri_y_offset = (pixel_height_ - tri_size * kHeightFactor) / 2.f;
   const Color kWhite = GetLighterColor(GetLighterColor(bar_color_));
-  const float z = GlCanvas::kZValueSlider + 2 * kEpsilon;
+  const float z = GlCanvas::kZValueButton + 2 * kEpsilon;
   const float x = start;
   const float width = slider_width;
 
@@ -339,12 +339,12 @@ void GlHorizontalSlider::DoDraw(PrimitiveAssembler& primitive_assembler,
     if (drag_type_ == DragType::kScaleMax) {
       primitive_assembler.AddShadedBox(Vec2(x + width - slider_resize_pixel_margin_, 2),
                                        Vec2(slider_resize_pixel_margin_ - 2, pixel_height_ - 4),
-                                       GlCanvas::kZValueSlider + kEpsilon, selected_color_,
+                                       GlCanvas::kZValueButton + kEpsilon, selected_color_,
                                        ShadingDirection::kTopToBottom);
     } else if (drag_type_ == DragType::kScaleMin) {
       primitive_assembler.AddShadedBox(
           Vec2(x + 2, 2), Vec2(slider_resize_pixel_margin_ - 2, pixel_height_ - 4),
-          GlCanvas::kZValueSlider + kEpsilon, selected_color_, ShadingDirection::kTopToBottom);
+          GlCanvas::kZValueButton + kEpsilon, selected_color_, ShadingDirection::kTopToBottom);
     }
   }
 
