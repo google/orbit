@@ -11,9 +11,8 @@ from test_cases.capture_window import Capture, CheckTimers, CheckThreadStates, F
     ToggleCollapsedStateOfAllTracks, VerifyTracksExist
 from test_cases.connection_window import ConnectToStadiaInstance, FilterAndSelectFirstProcess, LoadCapture, \
     LoadLatestCapture
-from test_cases.live_tab import AddIterator, VerifyScopeTypeAndCallCount
+from test_cases.live_tab import AddIterator, VerifyScopeTypeAndHitCount
 from test_cases.main_window import EndSession
-
 """Verify loading a capture in Orbit using pywinauto.
 
 Before this script is run there needs to be a gamelet reserved and
@@ -49,32 +48,27 @@ def main(argv):
     test_cases = [
         LoadCapture(capture_file_path="testdata\\OrbitTest_1-64.orbit", expect_fail=True),
         LoadCapture(capture_file_path="testdata\\OrbitTest_1-72.orbit"),
-
         FilterTracks(filter_string="Scheduler", expected_track_count=1),
         CheckTimers(track_name_filter='Scheduler*'),
-
         FilterTracks(filter_string="Frame", expected_track_count=1),
         CheckTimers(track_name_filter='Frame track*'),  # Verify the frame track has timers
-
         FilterTracks(filter_string="DynamicName_", expected_track_count=5),
-
         FilterTracks(filter_string="_var", expected_track_count=6),
-
         FilterTracks(filter_string="OrbitThread_", expected_track_count=1),
         ToggleCollapsedStateOfAllTracks(),
         CheckTimers(track_name_filter="OrbitThread_*"),
         CheckThreadStates(track_name_filter='OrbitThread_*'),
-
         FilterTracks(filter_string="ORBIT_ASYNC_TASKS", expected_track_count=1),
         CheckTimers(track_name_filter="ORBIT_ASYNC_TASKS"),
         FilterTracks(filter_string="ORBIT_START_ASYNC_TEST", expected_track_count=1),
         CheckTimers(track_name_filter="ORBIT_START_ASYNC_TEST"),
-
         FilterTracks(filter_string=""),
         VerifyTracksExist(track_names=["Page*", "*System*", "*CGroup*"], allow_duplicates=True),
-
         AddIterator(function_name="TestFunc2"),
-        VerifyScopeTypeAndCallCount(function_name="TestFunc2", min_calls=1257, max_calls=1257),
+        VerifyScopeTypeAndHitCount(scope_name="TestFunc2",
+                                   scope_type="D",
+                                   min_calls=1257,
+                                   max_calls=1257),
 
         # Let's take a capture with the current version and verify this can be loaded
         EndSession(),
@@ -86,7 +80,9 @@ def main(argv):
         # If we took the capture around midnight, we need to ensure to also look for the next day. Remember, the strings
         # get created before the tests run. Thus the `today_string` might be actually from the day before the capture
         # gets auto-saved.
-        LoadLatestCapture(filter_strings=[f"hello_ggp_stand_{today_string}", f"hello_ggp_stand_{tomorrow_string}"]),
+        LoadLatestCapture(filter_strings=[
+            f"hello_ggp_stand_{today_string}", f"hello_ggp_stand_{tomorrow_string}"
+        ]),
         VerifyTracksExist(track_names="hello_ggp_stand*", allow_duplicates=True)
     ]
     suite = E2ETestSuite(test_name="Capture Loading", test_cases=test_cases)

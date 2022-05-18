@@ -10,7 +10,7 @@ from core.orbit_e2e import E2ETestSuite
 from test_cases.connection_window import FilterAndSelectFirstProcess, ConnectToStadiaInstance
 from test_cases.capture_window import Capture
 from test_cases.symbols_tab import LoadSymbols, FilterAndHookFunction
-from test_cases.live_tab import VerifyScopeTypeAndCallCount
+from test_cases.live_tab import VerifyScopeTypeAndHitCount
 """Instrument a single function in Orbit using user space instrumentation.
 
 Before this script is run there needs to be a gamelet reserved and
@@ -35,7 +35,10 @@ def main(argv):
         LoadSymbols(module_search_string="hello_ggp"),
         FilterAndHookFunction(function_search_string='DrawFrame'),
         Capture(user_space_instrumentation=True),
-        VerifyScopeTypeAndCallCount(function_name='DrawFrame', min_calls=30, max_calls=3000),
+        VerifyScopeTypeAndHitCount(scope_name='DrawFrame',
+                                   scope_type="D",
+                                   min_calls=30,
+                                   max_calls=3000),
     ]
     suite = E2ETestSuite(test_name="User Space Instrumentation", test_cases=test_cases)
     suite.execute()

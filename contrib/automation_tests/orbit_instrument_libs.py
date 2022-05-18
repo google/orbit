@@ -10,7 +10,7 @@ from core.orbit_e2e import E2ETestSuite, E2ETestCase
 from test_cases.connection_window import FilterAndSelectFirstProcess, ConnectToStadiaInstance
 from test_cases.capture_window import Capture
 from test_cases.symbols_tab import LoadSymbols, FilterAndHookMultipleFunctions
-from test_cases.live_tab import VerifyOneFunctionWasCalled
+from test_cases.live_tab import VerifyOneFunctionWasHit
 """Instrument function from libggp.
 
 Before this script is run there needs to be a gamelet reserved and
@@ -46,9 +46,9 @@ def main(argv):
         LoadSymbols(module_search_string="libggp"),
         FilterAndHookMultipleFunctions(function_search_string='GgpIssueFrameToken_v'),
         Capture(),
-        VerifyOneFunctionWasCalled(function_name_contains='GgpIssueFrameToken_v',
-                                   min_calls=30,
-                                   max_calls=3000)
+        VerifyOneFunctionWasHit(function_name_contains='GgpIssueFrameToken_v',
+                                min_calls=30,
+                                max_calls=3000)
     ]
     suite = E2ETestSuite(test_name="Instrument libggp", test_cases=test_cases)
     suite.execute()

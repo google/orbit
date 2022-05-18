@@ -40,13 +40,11 @@ def main(argv):
         LoadCapture(capture_file_path="testdata\\OrbitTest_1-72.orbit"),
         VerifyTopDownContentForLoadedCapture(selection_tab=False),
         VerifyBottomUpContentForLoadedCapture(selection_tab=False),
-
         ZoomOut(),
         FilterTracks(filter_string='threads{)}'),
         SelectAllCallstacksFromTrack(track_name_filter='All Threads'),
         VerifyTopDownContentForLoadedCapture(selection_tab=True),
         VerifyBottomUpContentForLoadedCapture(selection_tab=True),
-
         SelectAllCallstackFromTopDownTab(),
         VerifyTopDownContentForLoadedCapture(selection_tab=True),
         VerifyBottomUpContentForLoadedCapture(selection_tab=True),

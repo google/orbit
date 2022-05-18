@@ -71,28 +71,27 @@ class AddFrameTrack(LiveTabTestCase):
         wait_for_condition(lambda: "F" in tree_view.children()[index - 1].window_text())
 
 
-class VerifyScopeTypeAndCallCount(LiveTabTestCase):
+class VerifyScopeTypeAndHitCount(LiveTabTestCase):
     """
-    Verify the amount of times a scope has been called and its type 
+    Verify the amount of times a scope has been hit and its type 
     according to the live-tab
     """
 
-    def _execute(self, scope_name, min_calls=1, max_calls=pow(2, 33) - 1, scope_type=None):
+    def _execute(self, scope_name, scope_type, min_hits=1, max_hits=pow(2, 33) - 1):
         cell, index = self.find_scope_cell(scope_name)
         children = self.find_control('Tree', parent=self._live_tab).children()
 
-        call_count = int(children[index + 1].window_text())
+        hit_count = int(children[index + 1].window_text())
         actual_scope_type = children[index - 1].window_text()
 
-        logging.info('Found a call count of %s, scope type: %s', call_count, actual_scope_type)
+        logging.info('Found a hit count of %s, scope type: %s', hit_count, actual_scope_type)
         self.expect_true(
-            min_calls <= call_count <= max_calls,
-            'Call count for scope "%s" expected to be between %s and %s, was %s' %
-            (scope_name, min_calls, max_calls, call_count))
+            min_hits <= hit_count <= max_hits,
+            'Hit count for scope "%s" expected to be between %s and %s, was %s' %
+            (scope_name, min_hits, max_hits, hit_count))
         self.expect_true(
-            scope_type is None or scope_type == actual_scope_type,
-            'Scope "%s" expected to be of type %s , was %s' %
-            (scope_name, scope_type, scope_type))
+            actual_scope_type.startswith(scope_type),
+            'Scope "%s" expected to be of type %s , was %s' % (scope_name, scope_type, scope_type))
 
 
 class VerifyOneFunctionWasCalled(LiveTabTestCase):

@@ -10,8 +10,8 @@ from core.orbit_e2e import E2ETestSuite
 from test_cases.connection_window import FilterAndSelectFirstProcess, ConnectToStadiaInstance
 from test_cases.capture_window import Capture, CheckTimers, VerifyTracksDoNotExist, VerifyTracksExist, ToggleCollapsedStateOfAllTracks, FilterTracks
 from test_cases.symbols_tab import LoadSymbols
-from test_cases.live_tab import VerifyScopeTypeAndCallCount
-"""Test Orbit"s manual instrumentation.
+from test_cases.live_tab import VerifyScopeTypeAndHitCount
+"""Test Orbit's manual instrumentation.
 
 Before this script is run there needs to be a gamelet reserved and
 "OrbitTestManualInstrumentation 3 10 100000" has to be started. Note that the 
@@ -36,9 +36,9 @@ def main(argv):
         "float_var", "int64_var", "int_var", "uint64_var", "uint_var", "ORBIT_ASYNC_TASKS",
         "ORBIT_START_ASYNC_TEST"
     ]
-    scope_types = ["MA", "MS", "MS","MS","MS","MA","MS","MS","MS","MS","MS"]
+    scope_types = ["MA", "MS", "MS", "MS", "MS", "MA", "MS", "MS", "MS", "MS", "MS"]
     scope_names = [
-        "ORBIT_ASYNC_TASKS", "TestFunc", "Sleep for two milliseconds", 
+        "ORBIT_ASYNC_TASKS", "TestFunc", "Sleep for two milliseconds",
         "Sleeping for two milliseconds with group id", "ORBIT_START_TEST with group id",
         "ORBIT_START_ASYNC_TEST", "ORBIT_START_TEST", "ORBIT_SCOPE_TEST",
         "ORBIT_SCOPE_TEST_WITH_COLOR", "BusyWork", "TestFunc2"
@@ -58,8 +58,9 @@ def main(argv):
         FilterTracks(filter_string="OrbitThread_", expected_track_count=3),
         ToggleCollapsedStateOfAllTracks(),
         CheckTimers(track_name_filter="OrbitThread_*")
-    ] + [ 
-        VerifyScopeTypeAndCallCount(scope_name=name, scope_type=type) for name, type in zip(scope_names, scope_types)
+    ] + [
+        VerifyScopeTypeAndHitCount(scope_name=name, scope_type=type)
+        for name, type in zip(scope_names, scope_types)
     ] + [
         # Take another capture without manual instrumentation and assert that the tracks are gone.
         Capture(manual_instrumentation=False),

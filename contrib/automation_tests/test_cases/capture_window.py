@@ -307,7 +307,8 @@ class CaptureE2ETestCaseBase(E2ETestCase):
         logging.info('Showing capture window')
         self.find_control("TabItem", "Capture").click_input()
 
-    def _set_collect_thread_states_capture_option(self, collect_thread_states: bool, capture_options_dialog):
+    def _set_collect_thread_states_capture_option(self, collect_thread_states: bool,
+                                                  capture_options_dialog):
         collect_thread_states_checkbox = self.find_control('CheckBox',
                                                            'CollectThreadStatesCheckBox',
                                                            parent=capture_options_dialog)
@@ -315,11 +316,11 @@ class CaptureE2ETestCaseBase(E2ETestCase):
             logging.info('Toggling "Collect thread states" checkbox')
             collect_thread_states_checkbox.click_input()
 
-    def _set_collect_system_memory_usage_capture_option(self, collect_system_memory_usage, capture_options_dialog):
-        collect_system_memory_usage_checkbox = self.find_control(
-            'CheckBox',
-            'CollectMemoryInfoCheckBox',
-            parent=capture_options_dialog)
+    def _set_collect_system_memory_usage_capture_option(self, collect_system_memory_usage,
+                                                        capture_options_dialog):
+        collect_system_memory_usage_checkbox = self.find_control('CheckBox',
+                                                                 'CollectMemoryInfoCheckBox',
+                                                                 parent=capture_options_dialog)
         if collect_system_memory_usage_checkbox.get_toggle_state() != collect_system_memory_usage:
             logging.info('Toggling "Collect memory usage and page faults information" checkbox')
             collect_system_memory_usage_checkbox.click_input()
@@ -328,16 +329,19 @@ class CaptureE2ETestCaseBase(E2ETestCase):
                                                            capture_options_dialog):
         if user_space_instrumentation:
             logging.info('Setting dynamic instrumentation method to "Orbit".')
-            user_space_radio_button = self.find_control('RadioButton', 'UserSpaceInstrumentationRadioButton',
+            user_space_radio_button = self.find_control('RadioButton',
+                                                        'UserSpaceInstrumentationRadioButton',
                                                         parent=capture_options_dialog)
             user_space_radio_button.click_input()
         else:
             logging.info('Setting dynamic instrumentation method to "Kernel (Uprobes)".')
-            uprobes_radio_button = self.find_control('RadioButton', 'UprobesRadioButton',
+            uprobes_radio_button = self.find_control('RadioButton',
+                                                     'UprobesRadioButton',
                                                      parent=capture_options_dialog)
             uprobes_radio_button.click_input()
 
-    def _set_manual_instrumentation_capture_option(self, manual_instrumentation: bool, capture_options_dialog):
+    def _set_manual_instrumentation_capture_option(self, manual_instrumentation: bool,
+                                                   capture_options_dialog):
         manual_instrumentation_checkbox = self.find_control('CheckBox',
                                                             'ApiCheckBox',
                                                             parent=capture_options_dialog)
@@ -345,21 +349,26 @@ class CaptureE2ETestCaseBase(E2ETestCase):
             logging.info('Toggling "Enable Orbit Api in target" checkbox')
             manual_instrumentation_checkbox.click_input()
 
-    def _set_unwinding_method_capture_option(self, frame_pointer_unwinding: bool, capture_options_dialog):
+    def _set_unwinding_method_capture_option(self, frame_pointer_unwinding: bool,
+                                             capture_options_dialog):
         if frame_pointer_unwinding:
             logging.info('Setting sampling method to "Frame pointers".')
-            frame_pointer_unwinding_radio_button = self.find_control('RadioButton', 'FramePointerRadioButton',
+            frame_pointer_unwinding_radio_button = self.find_control('RadioButton',
+                                                                     'FramePointerRadioButton',
                                                                      parent=capture_options_dialog)
             frame_pointer_unwinding_radio_button.click_input()
         else:
             logging.info('Setting sampling method to "DWARF".')
-            dwarf_unwinding_radio_button = self.find_control('RadioButton', 'DWARFRadioButton',
+            dwarf_unwinding_radio_button = self.find_control('RadioButton',
+                                                             'DWARFRadioButton',
                                                              parent=capture_options_dialog)
             dwarf_unwinding_radio_button.click_input()
 
-    def _set_sampling_period_ms_capture_option(self, sampling_period_ms: float, capture_options_dialog):
+    def _set_sampling_period_ms_capture_option(self, sampling_period_ms: float,
+                                               capture_options_dialog):
         logging.info('Setting sampling period to {}.'.format(sampling_period_ms))
-        sampling_period_spin_box = self.find_control('Spinner', 'SamplingPeriodMsDoubleSpinBox',
+        sampling_period_spin_box = self.find_control('Spinner',
+                                                     'SamplingPeriodMsDoubleSpinBox',
                                                      parent=capture_options_dialog)
         sampling_period_spin_box.set_focus()
         sampling_period_ms_str = str(sampling_period_ms)
@@ -374,10 +383,9 @@ class CaptureE2ETestCaseBase(E2ETestCase):
         send_keys(sampling_period_ms_str)
 
         if sampling_period_spin_box.texts()[0] != sampling_period_ms_str:
-            raise RuntimeError(
-                'Setting sampling period failed. Expected "{}", but got "{}'.format(sampling_period_ms_str,
-                                                                                    sampling_period_spin_box.texts()[
-                                                                                        0]))
+            raise RuntimeError('Setting sampling period failed. Expected "{}", but got "{}'.format(
+                sampling_period_ms_str,
+                sampling_period_spin_box.texts()[0]))
 
     def _set_capture_options(self, collect_thread_states: bool, collect_system_memory_usage: bool,
                              user_space_instrumentation: bool, manual_instrumentation: bool,
@@ -390,10 +398,14 @@ class CaptureE2ETestCaseBase(E2ETestCase):
 
         capture_options_dialog = self.find_control('Window', 'Capture Options')
 
-        self._set_collect_thread_states_capture_option(collect_thread_states, capture_options_dialog)
-        self._set_collect_system_memory_usage_capture_option(collect_system_memory_usage, capture_options_dialog)
-        self._set_dynamic_instrumentation_method_capture_option(user_space_instrumentation, capture_options_dialog)
-        self._set_manual_instrumentation_capture_option(manual_instrumentation, capture_options_dialog)
+        self._set_collect_thread_states_capture_option(collect_thread_states,
+                                                       capture_options_dialog)
+        self._set_collect_system_memory_usage_capture_option(collect_system_memory_usage,
+                                                             capture_options_dialog)
+        self._set_dynamic_instrumentation_method_capture_option(user_space_instrumentation,
+                                                                capture_options_dialog)
+        self._set_manual_instrumentation_capture_option(manual_instrumentation,
+                                                        capture_options_dialog)
         self._set_unwinding_method_capture_option(frame_pointer_unwinding, capture_options_dialog)
         self._set_sampling_period_ms_capture_option(sampling_period_ms, capture_options_dialog)
 
@@ -402,15 +414,13 @@ class CaptureE2ETestCaseBase(E2ETestCase):
 
     def _set_up_and_start_capture(self, collect_thread_states: bool,
                                   collect_system_memory_usage: bool,
-                                  user_space_instrumentation: bool,
-                                  manual_instrumentation: bool,
-                                  frame_pointer_unwinding: bool,
-                                  sampling_period_ms: float,
+                                  user_space_instrumentation: bool, manual_instrumentation: bool,
+                                  frame_pointer_unwinding: bool, sampling_period_ms: float,
                                   toggle_capture_button):
         self._show_capture_window()
         self._set_capture_options(collect_thread_states, collect_system_memory_usage,
-                                  user_space_instrumentation, manual_instrumentation, frame_pointer_unwinding,
-                                  sampling_period_ms)
+                                  user_space_instrumentation, manual_instrumentation,
+                                  frame_pointer_unwinding, sampling_period_ms)
         logging.info('Starting to capture')
         toggle_capture_button.click_input()
 
@@ -631,10 +641,10 @@ class SetAndCheckMemorySamplingPeriod(E2ETestCase):
 
     def _enable_collect_system_memory_usage(self):
         logging.info('Selecting "Collect memory usage and page faults information" checkbox')
-        collect_system_memory_usage_checkbox = self.find_control(
-            'CheckBox',
-            'CollectMemoryInfoCheckBox',
-            parent=self.find_control('Window', 'Capture Options'))
+        collect_system_memory_usage_checkbox = self.find_control('CheckBox',
+                                                                 'CollectMemoryInfoCheckBox',
+                                                                 parent=self.find_control(
+                                                                     'Window', 'Capture Options'))
         if not collect_system_memory_usage_checkbox.get_toggle_state():
             collect_system_memory_usage_checkbox.click_input()
 

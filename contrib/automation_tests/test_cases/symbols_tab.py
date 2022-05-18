@@ -20,7 +20,7 @@ from core.common_controls import DataViewPanel
 from core.orbit_e2e import E2ETestCase, wait_for_condition, find_control
 
 from test_cases.capture_window import Capture
-from test_cases.live_tab import VerifyScopeTypeAndCallCount
+from test_cases.live_tab import VerifyScopeTypeAndHitCount
 
 Module = namedtuple("Module", ["name", "path", "is_loaded"])
 CACHE_LOCATION = "{appdata}\\OrbitProfiler\\cache\\".format(appdata=os.getenv('APPDATA'))
@@ -334,8 +334,8 @@ class VerifySymbolsLoaded(E2ETestCase):
             self.expect_true(functions_dataview.get_row_count() == 0, "Found no symbols")
 
 
-selected_function_string : str = 'H'
-frame_track_enabled_string : str = 'F'
+selected_function_string: str = 'H'
+frame_track_enabled_string: str = 'F'
 
 
 class FilterAndHookFunction(E2ETestCase):
@@ -360,7 +360,8 @@ class FilterAndHookFunction(E2ETestCase):
         functions_dataview.get_item_at(0, 0).click_input('right')
 
         self.find_context_menu_item('Hook').click_input()
-        wait_for_condition(lambda: selected_function_string in functions_dataview.get_item_at(0, 0).texts()[0])
+        wait_for_condition(
+            lambda: selected_function_string in functions_dataview.get_item_at(0, 0).texts()[0])
 
 
 class FilterAndEnableFrameTrackForFunction(E2ETestCase):
@@ -386,9 +387,10 @@ class FilterAndEnableFrameTrackForFunction(E2ETestCase):
         functions_dataview.get_item_at(0, 0).click_input('right')
 
         self.find_context_menu_item('Enable frame track(s)').click_input()
-        
-        awaited_string : str = selected_function_string + ' ' + frame_track_enabled_string
-        wait_for_condition(lambda: awaited_string in functions_dataview.get_item_at(0, 0).texts()[0])
+
+        awaited_string: str = selected_function_string + ' ' + frame_track_enabled_string
+        wait_for_condition(
+            lambda: awaited_string in functions_dataview.get_item_at(0, 0).texts()[0])
 
 
 class UnhookAllFunctions(E2ETestCase):
@@ -434,7 +436,8 @@ class FilterAndHookMultipleFunctions(E2ETestCase):
         for i in range(functions_dataview.get_row_count()):
             functions_dataview.get_item_at(i, 0).click_input('right')
             self.find_context_menu_item('Hook').click_input()
-            wait_for_condition(lambda: selected_function_string in functions_dataview.get_item_at(i, 0).texts()[0])
+            wait_for_condition(
+                lambda: selected_function_string in functions_dataview.get_item_at(i, 0).texts()[0])
 
 
 class LoadAndVerifyHelloGgpPreset(E2ETestCase):
@@ -453,10 +456,14 @@ class LoadAndVerifyHelloGgpPreset(E2ETestCase):
         Capture().execute(self.suite)
 
         logging.info('Verifying function call counts')
-        VerifyScopeTypeAndCallCount(function_name='DrawFrame', min_calls=30,
-                                max_calls=3000).execute(self.suite)
-        VerifyScopeTypeAndCallCount(function_name='GgpIssueFrameToken', min_calls=30,
-                                max_calls=3000).execute(self.suite)
+        VerifyScopeTypeAndHitCount(function_name='DrawFrame',
+                                   scope_type="D",
+                                   min_calls=30,
+                                   max_calls=3000).execute(self.suite)
+        VerifyScopeTypeAndHitCount(function_name='GgpIssueFrameToken',
+                                   scope_type="D",
+                                   min_calls=30,
+                                   max_calls=3000).execute(self.suite)
 
     def _load_presets(self):
         presets_panel = DataViewPanel(self.find_control('Group', 'PresetsDataView'))
@@ -490,10 +497,13 @@ class LoadAndVerifyHelloGgpPreset(E2ETestCase):
             return False
 
         logging.info('Verifying hook status of functions')
-        self.expect_true(selected_function_string in functions_panel.get_item_at(draw_frame_row, 0).texts()[0],
-                         'DrawFrame is marked as hooked')
-        self.expect_true(selected_function_string in functions_panel.get_item_at(issue_frame_token_row, 0).texts()[0],
-                         'GgpIssueFrameToken is marked as hooked')
+        self.expect_true(
+            selected_function_string in functions_panel.get_item_at(draw_frame_row, 0).texts()[0],
+            'DrawFrame is marked as hooked')
+        self.expect_true(
+            selected_function_string in functions_panel.get_item_at(issue_frame_token_row,
+                                                                    0).texts()[0],
+            'GgpIssueFrameToken is marked as hooked')
 
         return True
 
@@ -512,11 +522,13 @@ class VerifyFunctionHooked(E2ETestCase):
         send_keys(function_search_string)
         row = functions_dataview.find_first_item_row(function_search_string, 1)
         if expect_hooked:
-            self.expect_true(selected_function_string in functions_dataview.get_item_at(row, 0).texts()[0],
-                             'Function is marked as hooked.')
+            self.expect_true(
+                selected_function_string in functions_dataview.get_item_at(row, 0).texts()[0],
+                'Function is marked as hooked.')
         else:
-            self.expect_true(selected_function_string not in functions_dataview.get_item_at(row, 0).texts()[0],
-                             'Function is not marked as hooked.')
+            self.expect_true(
+                selected_function_string not in functions_dataview.get_item_at(row, 0).texts()[0],
+                'Function is not marked as hooked.')
 
 
 class PresetStatus(enum.Enum):

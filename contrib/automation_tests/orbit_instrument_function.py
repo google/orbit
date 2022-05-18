@@ -10,7 +10,7 @@ from core.orbit_e2e import E2ETestSuite
 from test_cases.connection_window import FilterAndSelectFirstProcess, ConnectToStadiaInstance
 from test_cases.capture_window import Capture, CheckTimers, ExpandTrack
 from test_cases.symbols_tab import LoadSymbols, FilterAndHookFunction
-from test_cases.live_tab import VerifyScopeTypeAndCallCount
+from test_cases.live_tab import VerifyScopeTypeAndHitCount
 """Instrument a single function in Orbit using pywinauto.
 
 Before this script is run there needs to be a gamelet reserved and
@@ -41,7 +41,10 @@ def main(argv):
         CheckTimers(track_name_filter="hello_ggp_stand", expect_exists=False),
         FilterAndHookFunction(function_search_string='DrawFrame'),
         Capture(),
-        VerifyScopeTypeAndCallCount(function_name='DrawFrame', min_calls=30, max_calls=3000),
+        VerifyScopeTypeAndHitCount(scope_name='DrawFrame',
+                                   scope_type="D",
+                                   min_calls=30,
+                                   max_calls=3000),
         CheckTimers(track_name_filter="All Threads", expect_exists=False),
         CheckTimers(track_name_filter="hello_ggp_stand")
     ]
