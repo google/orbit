@@ -37,8 +37,8 @@ def main(argv):
         Capture(user_space_instrumentation=True),
         VerifyScopeTypeAndHitCount(scope_name='DrawFrame',
                                    scope_type="D",
-                                   min_calls=30,
-                                   max_calls=3000),
+                                   min_hits=30,
+                                   max_hits=3000),
     ]
     suite = E2ETestSuite(test_name="User Space Instrumentation", test_cases=test_cases)
     suite.execute()

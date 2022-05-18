@@ -39,8 +39,8 @@ def main(argv):
         CheckTimers(track_name_filter="triangle.exe", require_all=False),
         VerifyScopeTypeAndHitCount(scope_name="Render",
                                    scope_type="D",
-                                   min_calls=1000,
-                                   max_calls=15000),
+                                   min_hits=1000,
+                                   max_hits=15000),
     ]
     suite = E2ETestSuite(test_name="User Space Instrumentation on Silenus", test_cases=test_cases)
     suite.execute()
