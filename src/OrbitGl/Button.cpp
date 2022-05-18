@@ -116,7 +116,7 @@ void Button::DrawSymbol(PrimitiveAssembler& primitive_assembler) {
     case SymbolType::kPlusSymbol:
       primitive_assembler.AddBox(MakeBox({GetPos()[0] + (GetWidth() - kSymbolWide) / 2.f,
                                           GetPos()[1] + kSymbolPaddingSize},
-                                         {kSymbolWide, GetWidth() - 2 * kSymbolPaddingSize}),
+                                         {kSymbolWide, GetHeight() - 2 * kSymbolPaddingSize}),
                                  GlCanvas::kZValueButton, kSymbolColor, shared_from_this());
       [[fallthrough]];
     case SymbolType::kMinusSymbol:
