@@ -456,11 +456,11 @@ class LoadAndVerifyHelloGgpPreset(E2ETestCase):
         Capture().execute(self.suite)
 
         logging.info('Verifying function call counts')
-        VerifyScopeTypeAndHitCount(function_name='DrawFrame',
+        VerifyScopeTypeAndHitCount(scope_name='DrawFrame',
                                    scope_type="D",
                                    min_hits=30,
                                    max_hits=3000).execute(self.suite)
-        VerifyScopeTypeAndHitCount(function_name='GgpIssueFrameToken',
+        VerifyScopeTypeAndHitCount(scope_name='GgpIssueFrameToken',
                                    scope_type="D",
                                    min_hits=30,
                                    max_hits=3000).execute(self.suite)
