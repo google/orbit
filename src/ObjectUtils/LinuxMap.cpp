@@ -149,22 +149,23 @@ class FileMappedIntoMemory {
       return false;
     }
 
-    ORBIT_LOG("Trying if executable map at %#x-%#x belongs to \"%s\"", map_start, map_end,
+    ORBIT_LOG("Trying if anonymous executable map at %#x-%#x belongs to \"%s\"", map_start, map_end,
               file_path_);
-    std::string error_message = absl::StrFormat(
-        "Executable map at %#x-%#x does NOT belong to \"%s\"", map_start, map_end, file_path_);
+    const std::string error_message =
+        absl::StrFormat("No, anonymous executable map at %#x-%#x does NOT belong to \"%s\"",
+                        map_start, map_end, file_path_);
 
     if (cached_coff_file_ == nullptr) {
       // Don't even try to create an ObjectFile from character or block devices.
       if (absl::StartsWith(file_path_, "/dev/")) {
-        ORBIT_LOG("%s", error_message);
+        ORBIT_LOG("%s: this is a device file", error_message);
         coff_text_section_map_might_be_encountered_ = false;
         return false;
       }
 
       auto object_file_or_error = CreateObjectFile(file_path_);
       if (object_file_or_error.has_error()) {
-        ORBIT_LOG("%s", error_message);
+        ORBIT_LOG("%s: %s", error_message, object_file_or_error.error().message());
         coff_text_section_map_might_be_encountered_ = false;
         return false;
       }
@@ -172,7 +173,7 @@ class FileMappedIntoMemory {
       // Remember: we are only detecting anonymous maps that correspond to .text sections of PEs,
       // because loadable sections of ELF files can always be file-mapped.
       if (!object_file_or_error.value()->IsCoff()) {
-        ORBIT_LOG("%s", error_message);
+        ORBIT_LOG("%s: object file is not a PE", error_message);
         coff_text_section_map_might_be_encountered_ = false;
         return false;
       }
@@ -182,8 +183,15 @@ class FileMappedIntoMemory {
 
     ORBIT_CHECK(cached_coff_file_ != nullptr);
 
-    if (map_end <= base_address_ + cached_coff_file_->GetExecutableSegmentOffset()) {
-      ORBIT_LOG("%s", error_message);
+    // The address range at which the text section of the PE is supposed to be mapped.
+    const uint64_t expected_text_start =
+        base_address_ + cached_coff_file_->GetExecutableSegmentOffset();
+    const uint64_t expected_text_end =
+        expected_text_start + cached_coff_file_->GetExecutableSegmentSize();
+
+    if (map_end <= expected_text_start) {
+      ORBIT_LOG("%s: map is before the expected address range of the .text section (%#x-%#x)",
+                error_message, expected_text_start, expected_text_end);
       // Don't set coff_text_section_map_might_be_encountered_ to false in this case, the entry we
       // are looking for could come later.
       return false;
@@ -193,16 +201,15 @@ class FileMappedIntoMemory {
     // section of the PE is supposed to be mapped. We consider the address at which the first byte
     // of this file is mapped (base_address_), and the address range of the .text section relative
     // to the image base when loaded into memory (determined by VirtualAddress and VirtualSize).
-    if (map_start <= base_address_ + cached_coff_file_->GetExecutableSegmentOffset() &&
-        map_end >= base_address_ + cached_coff_file_->GetExecutableSegmentOffset() +
-                       cached_coff_file_->GetExecutableSegmentSize()) {
-      ORBIT_LOG("Guessing that executable map at %#x-%#x belongs to \"%s\"", map_start, map_end,
-                file_path_);
+    if (map_start <= expected_text_start && map_end >= expected_text_end) {
+      ORBIT_LOG("Guessing that anonymous executable map at %#x-%#x belongs to \"%s\"", map_start,
+                map_end, file_path_);
       MarkExecutableMapEncountered();
       return true;
     }
 
-    ORBIT_LOG("%s", error_message);
+    ORBIT_LOG("%s: map does not contain the expected address range of the .text section (%#x-%#x)",
+              error_message, expected_text_start, expected_text_end);
     coff_text_section_map_might_be_encountered_ = false;
     cached_coff_file_ = nullptr;
     return false;
