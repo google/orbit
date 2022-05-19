@@ -73,21 +73,38 @@ void TimelineUi::RenderLabel(PrimitiveAssembler& primitive_assembler, TextRender
       is_mouse_label ? GlCanvas::kZValueTimeBarMouseLabel : GlCanvas::kZValueTimeBarLabel;
 
   // We add a pixel separation between the label and the major ticks so they don't intersect.
-  float extra_left_margin = is_mouse_label ? 0.f : kPixelsBetweenMajorTicksAndLabels;
+  float label_extra_margin = is_mouse_label ? 0.f : kPixelsBetweenMajorTicksAndLabels;
 
   std::string label = GetLabel(tick_ns, number_of_decimal_places);
   float world_x = GetTickWorldXPos(tick_ns);
+  float label_width = text_renderer.GetStringWidth(label.c_str(), layout_->GetFontSize());
   // Check that the label is visible or partially visible.
-  if (ClosedInterval label_x_interval{
-          world_x, world_x + text_renderer.GetStringWidth(label.c_str(), layout_->GetFontSize())};
+  if (ClosedInterval label_x_interval{world_x, world_x + label_width};
       !label_x_interval.Intersects(ClosedInterval{GetPos()[0], GetPos()[0] + GetWidth()})) {
     return;
   }
 
+  float label_start_x = world_x + kLabelsPadding + label_extra_margin;
+
+  // Flip mouse label if it doesn't fit at the right and rather it fits all the way at the left.
+  if (is_mouse_label) {
+    float label_at_right_start_x = label_start_x;
+    float label_at_left_start_x = world_x - kLabelsPadding - label_extra_margin - label_width;
+    ClosedInterval left_margin_x_range{std::numeric_limits<float>::lowest(), GetPos()[0]};
+    ClosedInterval right_margin_x_range{GetPos()[0] + GetWidth(),
+                                        std::numeric_limits<float>::max()};
+    ClosedInterval label_at_left_range{label_at_left_start_x, label_at_left_start_x + label_width};
+    ClosedInterval label_at_right_range{label_at_right_start_x,
+                                        label_at_right_start_x + label_width};
+    if (label_at_right_range.Intersects(right_margin_x_range) &&
+        !label_at_left_range.Intersects(left_margin_x_range)) {
+      label_start_x = label_at_left_start_x;
+    }
+  }
+
   Vec2 pos, size;
   float label_middle_y = GetPos()[1] + GetHeightWithoutMargin() / 2.f;
-  text_renderer.AddText(label.c_str(), world_x + kLabelsPadding + extra_left_margin, label_middle_y,
-                        label_z, /*text_formatting=*/
+  text_renderer.AddText(label.c_str(), label_start_x, label_middle_y, label_z, /*text_formatting=*/
                         {layout_->GetFontSize(), Color(255, 255, 255, 255), -1.f,
                          TextRenderer::HAlign::Left, TextRenderer::VAlign::Middle},
                         /*out_text_pos=*/&pos, /*out_text_size=*/&size);
