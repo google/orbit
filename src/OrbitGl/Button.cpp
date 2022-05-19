@@ -28,9 +28,6 @@ constexpr float kGradientFactor = 0.25f;
 
 namespace orbit_gl {
 
-const Color Button::kHighlightColor(75, 75, 75, 255);
-const Color Button::kBaseColor(68, 68, 68, 255);
-
 Button::Button(CaptureViewElement* parent, const Viewport* viewport, const TimeGraphLayout* layout,
                std::string label, SymbolType symbol_type)
     : CaptureViewElement(parent, viewport, layout),
@@ -38,6 +35,18 @@ Button::Button(CaptureViewElement* parent, const Viewport* viewport, const TimeG
       symbol_type_{symbol_type} {
   SetWidth(layout->GetMinButtonSize());
   SetHeight(layout->GetMinButtonSize());
+}
+
+CaptureViewElement::EventResult Button::OnMouseEnter() {
+  EventResult event_result = CaptureViewElement::OnMouseEnter();
+  RequestUpdate(RequestUpdateScope::kDraw);
+  return event_result;
+}
+
+CaptureViewElement::EventResult Button::OnMouseLeave() {
+  EventResult event_result = CaptureViewElement::OnMouseLeave();
+  RequestUpdate(RequestUpdateScope::kDraw);
+  return event_result;
 }
 
 void Button::SetHeight(float height) {
@@ -78,6 +87,8 @@ void Button::DoDraw(PrimitiveAssembler& primitive_assembler, TextRenderer& /*tex
   const Vec2 pos = GetPos();
   const Vec2 size = GetSize();
 
+  const Color kHighlightColor(75, 75, 75, 255);
+  const Color kBaseColor(68, 68, 68, 255);
   const Color kDarkBorderColor = GetDarkerColor(kBaseColor);
   const Color kLightBorderColor = GetLighterColor(kBaseColor);
 
@@ -106,9 +117,12 @@ void Button::DoDraw(PrimitiveAssembler& primitive_assembler, TextRenderer& /*tex
 }
 
 void Button::DrawSymbol(PrimitiveAssembler& primitive_assembler) {
-  const Color kSymbolColor(191, 191, 192, 255);
+  const Color kSymbolBaseColor(191, 191, 192, 255);
+  const Color kSymbolHighlightColor(255, 255, 255, 255);
   const float kSymbolPaddingSize = 3.f;
   const float kSymbolWide = 3.f;
+
+  Color symbol_color = IsMouseOver() ? kSymbolHighlightColor : kSymbolBaseColor;
 
   switch (symbol_type_) {
     case SymbolType::kNoSymbol:
@@ -117,13 +131,13 @@ void Button::DrawSymbol(PrimitiveAssembler& primitive_assembler) {
       primitive_assembler.AddBox(MakeBox({GetPos()[0] + (GetWidth() - kSymbolWide) / 2.f,
                                           GetPos()[1] + kSymbolPaddingSize},
                                          {kSymbolWide, GetHeight() - 2 * kSymbolPaddingSize}),
-                                 GlCanvas::kZValueButton, kSymbolColor, shared_from_this());
+                                 GlCanvas::kZValueButton, symbol_color, shared_from_this());
       [[fallthrough]];
     case SymbolType::kMinusSymbol:
       primitive_assembler.AddBox(MakeBox({GetPos()[0] + kSymbolPaddingSize,
                                           GetPos()[1] + (GetHeight() - kSymbolWide) / 2.f},
                                          {GetWidth() - 2 * kSymbolPaddingSize, kSymbolWide}),
-                                 GlCanvas::kZValueButton, kSymbolColor, shared_from_this());
+                                 GlCanvas::kZValueButton, symbol_color, shared_from_this());
       break;
     default:
       ORBIT_UNREACHABLE();

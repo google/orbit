@@ -34,15 +34,12 @@ class Button : public CaptureViewElement, public std::enable_shared_from_this<Bu
 
   void OnRelease() override;
 
-  static const Color kHighlightColor;
-  static const Color kBaseColor;
-  static const Color kTextColor;
-  static const Color kSymbolsColor;
-
  protected:
   void DoUpdateLayout() override;
   void DoDraw(PrimitiveAssembler& primitive_assembler, TextRenderer& text_renderer,
               const DrawContext& draw_context) override;
+  [[nodiscard]] EventResult OnMouseEnter() override;
+  [[nodiscard]] EventResult OnMouseLeave() override;
 
  private:
   void DrawSymbol(PrimitiveAssembler& primitive_assembler);
