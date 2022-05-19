@@ -97,7 +97,7 @@ class VerifyScopeTypeAndHitCount(LiveTabTestCase):
             'Scope "%s" expected to be of type %s , was %s' % (scope_name, scope_type, scope_type))
 
 
-class VerifyOneFunctionWasCalled(LiveTabTestCase):
+class VerifyOneFunctionWasHit(LiveTabTestCase):
     """
     Verify that at least one of the functions matching the function name has 
     received the given number of hits.
