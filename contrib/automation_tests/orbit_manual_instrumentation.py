@@ -55,7 +55,12 @@ def main(argv):
         # the timers in the thread tracks and the scopes under Live tab
         Capture(manual_instrumentation=True),
         VerifyTracksExist(track_names=tracks),
-        FilterTracks(filter_string="OrbitThread_", expected_track_count=3),
+        # Occationally there are four threads named OrbitThread_*. This seems to be a side effect
+        # of injecting the library for manual instrumentation. So the test below is relaxed to
+        # check for three or four threads.
+        FilterTracks(filter_string="OrbitThread_",
+                     expected_minimum_track_count=3,
+                     expected_maximum_track_count=4),
         ToggleCollapsedStateOfAllTracks(),
         CheckTimers(track_name_filter="OrbitThread_*")
     ] + [

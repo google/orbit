@@ -258,21 +258,21 @@ class ToggleCollapsedStateOfAllTracks(CaptureWindowE2ETestCaseBase):
 
 
 class FilterTracks(CaptureWindowE2ETestCaseBase):
-
-    def _log_and_compare_number_of_tracks(self, expected_track_count):
-        logging.info("Tracks expected: '{}'".format(expected_track_count))
-        logging.info("Tracks found: '{}'".format(len(self._find_tracks())))
-        return len(self._find_tracks()) == expected_track_count
-
     """
     Set a filter in the capture tab.
     """
 
-    def _execute(self, filter_string: str = "", expected_track_count=None):
+    def _execute(self,
+                 filter_string: str = "",
+                 expected_track_count=None,
+                 expected_minimum_track_count=None,
+                 expected_maximum_track_count=None):
         """
         :param filter_string: The string to be entered in the filter edit. Note that pywinauto's `keyboard.send_keys` is
             used, so certain special characters need to be escaped by enclosing them in {}.
-        :param expected_track_count: If not None, this test will verify the amount of tracks after filtering
+        :param expected_track_count: If not None, this test will verify that the number of tracks after filtering is exactly this.
+        :param expected_minimum_track_count: If not None, this test will verify that the number of tracks after filtering is at least this.
+        :param expected_maximum_track_count: If not None, this test will verify that the number of tracks after filtering is at most this.
         """
         toolbar = self.find_control("ToolBar", "CaptureToolBar")
         track_filter = self.find_control("Edit", "FilterTracks", parent=toolbar)
@@ -283,9 +283,14 @@ class FilterTracks(CaptureWindowE2ETestCaseBase):
         # Using send_keys instead of set_edit_text directly because set_edit_text ignores the wait timings...
         keyboard.send_keys(filter_string)
 
-        # The logging below is added to debug http://b/229709116 and can be removed when the bug is fixed.
         if expected_track_count is not None:
-            wait_for_condition(lambda: self._log_and_compare_number_of_tracks(expected_track_count))
+            wait_for_condition(lambda: len(self._find_tracks()) == expected_track_count)
+
+        if expected_minimum_track_count is not None:
+            wait_for_condition(lambda: len(self._find_tracks()) >= expected_minimum_track_count)
+
+        if expected_maximum_track_count is not None:
+            wait_for_condition(lambda: len(self._find_tracks()) <= expected_maximum_track_count)
 
 
 class ZoomOut(CaptureWindowE2ETestCaseBase):
