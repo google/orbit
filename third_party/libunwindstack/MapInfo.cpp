@@ -23,6 +23,7 @@
 #include <mutex>
 #include <string>
 
+#include <android-base/stringprintf.h>
 #include <android-base/strings.h>
 
 #include <unwindstack/Elf.h>
@@ -271,10 +272,17 @@ Memory* MapInfo::GetFileMemoryFromAnonExecMapIfPeCoffTextSection() {
     return nullptr;
   }
 
+  Log::Info("Trying if anonymous executable map at %#lx-%#lx belongs to \"%s\"", start(), end(),
+            prev_name.c_str());
+  const std::string error_message = android::base::StringPrintf(
+      "No, anonymous executable map at %#lx-%#lx does NOT belong to \"%s\"", start(), end(),
+      prev_name.c_str());
+
   auto file_memory = std::make_unique<MemoryFileAtOffset>();
   // Always use zero as offset because the headers of a PE should always be right at the beginning
   // of the file.
   if (!file_memory->Init(prev_name, 0)) {
+    Log::Info("%s: could not open the file", error_message.c_str());
     return nullptr;
   }
 
@@ -284,6 +292,7 @@ Memory* MapInfo::GetFileMemoryFromAnonExecMapIfPeCoffTextSection() {
   PeCoff pe{file_memory.release()};
   if (!pe.Init()) {
     // The candidate file path doesn't correspond to a PE/COFF.
+    Log::Info("%s: this is not a PE", error_message.c_str());
     return nullptr;
   }
 
@@ -294,12 +303,14 @@ Memory* MapInfo::GetFileMemoryFromAnonExecMapIfPeCoffTextSection() {
   uint64_t image_base_plus_text_virtual_address{};  // Image base + offset in memory.
   uint64_t text_virtual_size{};                     // Size in memory.
   if (!pe.GetTextRange(&image_base_plus_text_virtual_address, &text_virtual_size)) {
+    Log::Info("%s: could not get the expected address range of the .text section",
+              error_message.c_str());
     return nullptr;
   }
   const uint64_t text_virtual_address =
       image_base_plus_text_virtual_address - pe.GetLoadBias();  // Offset in memory.
 
-  // The addresses at which the text section of the PE is supposed to be mapped.
+  // The address range at which the text section of the PE is supposed to be mapped.
   const uint64_t expected_text_start = text_virtual_address + base_address;
   const uint64_t expected_text_end = expected_text_start + text_virtual_size;
 
@@ -316,12 +327,16 @@ Memory* MapInfo::GetFileMemoryFromAnonExecMapIfPeCoffTextSection() {
   if (start() > expected_text_start || end() < expected_text_end) {
     // This map doesn't fully contain the address range at which the text section of the PE is
     // supposed to be mapped.
+    Log::Info(
+        "%s: map does not contain the expected address range of the .text section (%#lx-%#lx)",
+        error_message.c_str(), expected_text_start, expected_text_end);
     return nullptr;
   }
 
   auto memory = std::make_unique<MemoryFileAtOffset>();
   // Always map the whole PE, as we always need the headers.
   if (!memory->Init(prev_name, 0)) {
+    Log::Info("%s: could not open the file again", error_message.c_str());
     return nullptr;
   }
 
@@ -330,8 +345,8 @@ Memory* MapInfo::GetFileMemoryFromAnonExecMapIfPeCoffTextSection() {
   const uint64_t text_pointer_to_raw_data = pe.GetTextOffsetInFile();
   const uint64_t offset = text_pointer_to_raw_data - (expected_text_start - start());
 
-  Log::Info("Guessing that executable map at %#lx-%#lx belongs to \"%s\" at offset %#lx", start(),
-            end(), prev_name.c_str(), offset);
+  Log::Info("Guessing that anonymous executable map at %#lx-%#lx belongs to \"%s\" at offset %#lx",
+            start(), end(), prev_name.c_str(), offset);
 
   // Set some ObjectFields, like GetFileMemory does.
   set_memory_backed_object(false);
