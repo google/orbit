@@ -34,9 +34,6 @@ class Button : public CaptureViewElement, public std::enable_shared_from_this<Bu
 
   void OnRelease() override;
 
-  static const Color kHighlightColor;
-  static const Color kBaseColor;
-
  protected:
   void DoUpdateLayout() override;
   void DoDraw(PrimitiveAssembler& primitive_assembler, TextRenderer& text_renderer,

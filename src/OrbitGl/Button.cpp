@@ -28,9 +28,6 @@ constexpr float kGradientFactor = 0.25f;
 
 namespace orbit_gl {
 
-const Color Button::kHighlightColor(75, 75, 75, 255);
-const Color Button::kBaseColor(68, 68, 68, 255);
-
 Button::Button(CaptureViewElement* parent, const Viewport* viewport, const TimeGraphLayout* layout,
                std::string label, SymbolType symbol_type)
     : CaptureViewElement(parent, viewport, layout),
@@ -90,6 +87,8 @@ void Button::DoDraw(PrimitiveAssembler& primitive_assembler, TextRenderer& /*tex
   const Vec2 pos = GetPos();
   const Vec2 size = GetSize();
 
+  const Color kHighlightColor(75, 75, 75, 255);
+  const Color kBaseColor(68, 68, 68, 255);
   const Color kDarkBorderColor = GetDarkerColor(kBaseColor);
   const Color kLightBorderColor = GetLighterColor(kBaseColor);
 
@@ -118,12 +117,12 @@ void Button::DoDraw(PrimitiveAssembler& primitive_assembler, TextRenderer& /*tex
 }
 
 void Button::DrawSymbol(PrimitiveAssembler& primitive_assembler) {
-  const Color kSymbolColor(191, 191, 192, 255);
-  const Color kHighlightedSymbolColor(255, 255, 255, 255);
+  const Color kSymbolBaseColor(191, 191, 192, 255);
+  const Color kSymbolHighlightColor(255, 255, 255, 255);
   const float kSymbolPaddingSize = 3.f;
   const float kSymbolWide = 3.f;
 
-  Color symbol_color = IsMouseOver() ? kHighlightedSymbolColor : kSymbolColor;
+  Color symbol_color = IsMouseOver() ? kSymbolHighlightColor : kSymbolBaseColor;
 
   switch (symbol_type_) {
     case SymbolType::kNoSymbol:
