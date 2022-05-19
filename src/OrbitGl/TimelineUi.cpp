@@ -86,19 +86,15 @@ void TimelineUi::RenderLabel(PrimitiveAssembler& primitive_assembler, TextRender
 
   float label_start_x = world_x + kLabelsPadding + label_extra_margin;
 
-  // Flip mouse label if it doesn't fit at the right and rather it fits all the way at the left.
+  // Flip mouse label if it doesn't fit on the right and rather it fits all the way on the left.
   if (is_mouse_label) {
-    float label_at_right_start_x = label_start_x;
-    float label_at_left_start_x = world_x - kLabelsPadding - label_extra_margin - label_width;
-    ClosedInterval left_margin_x_range{std::numeric_limits<float>::lowest(), GetPos()[0]};
-    ClosedInterval right_margin_x_range{GetPos()[0] + GetWidth(),
-                                        std::numeric_limits<float>::max()};
-    ClosedInterval label_at_left_range{label_at_left_start_x, label_at_left_start_x + label_width};
-    ClosedInterval label_at_right_range{label_at_right_start_x,
-                                        label_at_right_start_x + label_width};
-    if (label_at_right_range.Intersects(right_margin_x_range) &&
-        !label_at_left_range.Intersects(left_margin_x_range)) {
-      label_start_x = label_at_left_start_x;
+    float right_margin_x = GetPos()[0] + GetWidth();
+    if (label_start_x + label_width >= right_margin_x) {
+      // If there is no enough space on the right, check whether there is enough space on the left
+      if (float label_at_left_start_x = world_x - kLabelsPadding - label_extra_margin - label_width;
+          label_at_left_start_x >= GetPos()[0]) {
+        label_start_x = label_at_left_start_x;
+      }
     }
   }
 
