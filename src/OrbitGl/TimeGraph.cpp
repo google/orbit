@@ -880,8 +880,8 @@ bool TimeGraph::IsVisible(VisibilityType vis_type, uint64_t min, uint64_t max) c
 }
 
 std::vector<orbit_gl::CaptureViewElement*> TimeGraph::GetAllChildren() const {
-  return {GetTimelineUi(),     GetPlusButton(),       GetMinusButton(),
-          GetTrackContainer(), GetHorizontalSlider(), GetVerticalSlider()};
+  return {GetTimelineUi(), GetTrackContainer(), GetHorizontalSlider(),
+          GetPlusButton(), GetMinusButton(),    GetVerticalSlider()};
 }
 
 std::unique_ptr<orbit_accessibility::AccessibleInterface> TimeGraph::CreateAccessibleInterface() {
