@@ -31,6 +31,9 @@ namespace orbit_gl {
 
 template <typename T>
 struct ClosedInterval {
+  static_assert(std::is_arithmetic_v<T>,
+                "T needs to be an arithmetic type (integral or floating point type).");
+  ClosedInterval(T a, T b) : min(a), max(b) {}
   [[nodiscard]] bool Intersects(const ClosedInterval& closed_interval) const {
     return this->min <= closed_interval.max && this->max >= closed_interval.min;
   }
