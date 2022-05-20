@@ -193,10 +193,11 @@ void TimelineUi::UpdateNumDecimalsInLabels(uint64_t min_timestamp_ns, uint64_t m
 
 void TimelineUi::DoDraw(PrimitiveAssembler& primitive_assembler, TextRenderer& text_renderer,
                         const DrawContext& draw_context) {
-  const uint64_t mouse_timestamp_ns =
-      timeline_info_interface_->GetNsSinceStart(draw_context.current_mouse_time_ns);
-
-  RenderMouseLabel(primitive_assembler, text_renderer, mouse_timestamp_ns);
+  if (draw_context.current_mouse_time_ns) {
+    const uint64_t mouse_timestamp_ns =
+        timeline_info_interface_->GetNsSinceStart(draw_context.current_mouse_time_ns.value());
+    RenderMouseLabel(primitive_assembler, text_renderer, mouse_timestamp_ns);
+  }
 }
 
 void TimelineUi::DoUpdatePrimitives(PrimitiveAssembler& primitive_assembler,

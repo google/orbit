@@ -420,6 +420,12 @@ orbit_gl::CaptureViewElement::EventResult TimeGraph::OnMouseWheel(
   return EventResult::kHandled;
 }
 
+orbit_gl::CaptureViewElement::EventResult TimeGraph::OnMouseLeave() {
+  EventResult event_result = CaptureViewElement::OnMouseLeave();
+  RequestUpdate(RequestUpdateScope::kDraw);
+  return event_result;
+}
+
 void TimeGraph::ProcessAsyncTimer(const TimerInfo& timer_info) {
   const std::string& track_name = timer_info.api_scope_name();
   AsyncTrack* track = GetTrackManager()->GetOrCreateAsyncTrack(track_name);
@@ -825,10 +831,16 @@ void TimeGraph::JumpToNeighborTimer(const TimerInfo* from, JumpDirection jump_di
 }
 
 void TimeGraph::DrawAllElements(PrimitiveAssembler& primitive_assembler,
-                                TextRenderer& text_renderer, PickingMode& picking_mode,
-                                uint64_t current_mouse_time_ns) {
+                                TextRenderer& text_renderer, PickingMode& picking_mode) {
   const bool picking = picking_mode != PickingMode::kNone;
 
+  std::optional<uint64_t> current_mouse_time_ns = GetTickFromWorld(mouse_pos_cur_[0]);
+  // Check if the mouse is over the TimeGraph and inside the timeline visible time range.
+  if (!IsMouseOver() ||
+      !orbit_gl::ClosedInterval<uint64_t>{GetTickFromUs(min_time_us_), GetTickFromUs(max_time_us_)}
+           .Contains(current_mouse_time_ns.value())) {
+    current_mouse_time_ns = std::nullopt;
+  }
   DrawContext context{current_mouse_time_ns, picking_mode};
   // `Draw` is called in any case - the batcher has already been cleared if this method is called,
   // so we need to re-fill it.
@@ -843,6 +855,15 @@ void TimeGraph::DoDraw(orbit_gl::PrimitiveAssembler& primitive_assembler,
                        orbit_gl::TextRenderer& text_renderer, const DrawContext& draw_context) {
   ORBIT_SCOPE("TimeGraph::DoDraw");
   CaptureViewElement::DoDraw(primitive_assembler, text_renderer, draw_context);
+
+  // Vertical green line at mouse x position.
+  if (draw_context.picking_mode == PickingMode::kNone && draw_context.current_mouse_time_ns) {
+    const Color kGreenLineColor{0, 255, 0, 127};
+    Vec2 green_line_pos = {GetWorldFromTick(draw_context.current_mouse_time_ns.value()),
+                           GetPos()[1]};
+    primitive_assembler.AddVerticalLine(green_line_pos, GetHeight(), GlCanvas::kZValueUi,
+                                        kGreenLineColor);
+  }
 
   // Right vertical margin of the Tracks to make them look nicer. If the vertical slider is visible,
   // the margin will be between the slider and the tracks.

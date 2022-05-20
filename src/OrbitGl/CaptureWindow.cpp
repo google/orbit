@@ -430,20 +430,12 @@ void CaptureWindow::Draw() {
   }
 
   if (time_graph_ != nullptr) {
-    uint64_t timegraph_current_mouse_time_ns =
-        time_graph_->GetTickFromWorld(viewport_.ScreenToWorld(GetMouseScreenPos())[0]);
-    time_graph_->DrawAllElements(primitive_assembler_, GetTextRenderer(), picking_mode_,
-                                 timegraph_current_mouse_time_ns);
+    time_graph_->DrawAllElements(primitive_assembler_, GetTextRenderer(), picking_mode_);
   }
 
   RenderSelectionOverlay();
 
   if (picking_mode_ == PickingMode::kNone) {
-    Vec2 pos = viewport_.ScreenToWorld(Vec2i(mouse_move_pos_screen_[0], 0));
-    // Vertical green line at mouse x position
-    primitive_assembler_.AddVerticalLine(pos, viewport_.GetWorldHeight(), kZValueUi,
-                                         Color(0, 255, 0, 127));
-
     if (draw_help_) {
       RenderHelpUi();
     }

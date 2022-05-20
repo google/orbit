@@ -73,17 +73,20 @@ void GraphTrack<Dimension>::DoDraw(PrimitiveAssembler& primitive_assembler,
   if (IsEmpty() || IsCollapsed()) return;
 
   // Draw label
-  const std::array<double, Dimension>& values =
-      series_.GetPreviousOrFirstEntry(draw_context.current_mouse_time_ns);
-  uint64_t first_time = series_.StartTimeInNs();
-  uint64_t label_time = std::max(draw_context.current_mouse_time_ns, first_time);
-  float point_x = timeline_info_->GetWorldFromTick(label_time);
-  float point_y = GetLabelYFromValues(values);
-  std::string text = GetLabelTextFromValues(values);
-  const Color kBlack(0, 0, 0, 255);
-  const Color kTransparentWhite(255, 255, 255, 180);
-  DrawLabel(primitive_assembler, text_renderer, Vec2(point_x, point_y), text, kBlack,
-            kTransparentWhite);
+  if (draw_context.current_mouse_time_ns) {
+    uint64_t current_mouse_time_ns = draw_context.current_mouse_time_ns.value();
+    const std::array<double, Dimension>& values =
+        series_.GetPreviousOrFirstEntry(current_mouse_time_ns);
+    uint64_t first_time = series_.StartTimeInNs();
+    uint64_t label_time = std::max(current_mouse_time_ns, first_time);
+    float point_x = timeline_info_->GetWorldFromTick(label_time);
+    float point_y = GetLabelYFromValues(values);
+    std::string text = GetLabelTextFromValues(values);
+    const Color kBlack(0, 0, 0, 255);
+    const Color kTransparentWhite(255, 255, 255, 180);
+    DrawLabel(primitive_assembler, text_renderer, Vec2(point_x, point_y), text, kBlack,
+              kTransparentWhite);
+  }
 
   if (!HasLegend()) return;
 
