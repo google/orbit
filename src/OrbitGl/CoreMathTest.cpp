@@ -8,19 +8,19 @@
 
 namespace orbit_gl {
 
-const ClosedInterval kSmallClosedInterval{0, 3};
+const ClosedInterval<int> kSmallClosedInterval{0, 3};
 
 TEST(ClosedInterval, Intersects) {
-  EXPECT_TRUE((ClosedInterval{0, 3}.Intersects(ClosedInterval{1, 2})));
-  EXPECT_TRUE((ClosedInterval{1, 2}.Intersects(ClosedInterval{0, 3})));
-  EXPECT_TRUE((ClosedInterval{0, 1}.Intersects(ClosedInterval{1, 2})));
-  EXPECT_TRUE((ClosedInterval{1, 2}.Intersects(ClosedInterval{0, 1})));
-  EXPECT_FALSE((ClosedInterval{0, 1}.Intersects(ClosedInterval{2, 3})));
-  EXPECT_FALSE((ClosedInterval{2, 3}.Intersects(ClosedInterval{0, 1})));
+  EXPECT_TRUE((ClosedInterval<int>{0, 3}.Intersects(ClosedInterval<int>{1, 2})));
+  EXPECT_TRUE((ClosedInterval<int>{1, 2}.Intersects(ClosedInterval<int>{0, 3})));
+  EXPECT_TRUE((ClosedInterval<int>{0, 1}.Intersects(ClosedInterval<int>{1, 2})));
+  EXPECT_TRUE((ClosedInterval<int>{1, 2}.Intersects(ClosedInterval<int>{0, 1})));
+  EXPECT_FALSE((ClosedInterval<int>{0, 1}.Intersects(ClosedInterval<int>{2, 3})));
+  EXPECT_FALSE((ClosedInterval<int>{2, 3}.Intersects(ClosedInterval<int>{0, 1})));
 
-  EXPECT_TRUE(kSmallClosedInterval.Intersects(ClosedInterval{1, 1}));
-  EXPECT_TRUE(kSmallClosedInterval.Intersects(ClosedInterval{3, 3}));
-  EXPECT_FALSE(kSmallClosedInterval.Intersects(ClosedInterval{4, 4}));
+  EXPECT_TRUE(kSmallClosedInterval.Intersects(ClosedInterval<int>{1, 1}));
+  EXPECT_TRUE(kSmallClosedInterval.Intersects(ClosedInterval<int>{3, 3}));
+  EXPECT_FALSE(kSmallClosedInterval.Intersects(ClosedInterval<int>{4, 4}));
 }
 
 TEST(ClosedInterval, Contains) {
@@ -30,8 +30,8 @@ TEST(ClosedInterval, Contains) {
   EXPECT_TRUE(kSmallClosedInterval.Contains(3));
   EXPECT_FALSE(kSmallClosedInterval.Contains(4));
 
-  EXPECT_TRUE((ClosedInterval{1, 1}.Contains(1)));
-  EXPECT_FALSE((ClosedInterval{1, 1}.Contains(2)));
+  EXPECT_TRUE((ClosedInterval<int>{1, 1}.Contains(1)));
+  EXPECT_FALSE((ClosedInterval<int>{1, 1}.Contains(2)));
 }
 
 TEST(CoreMath, IsInsideRectangle) {

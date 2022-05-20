@@ -29,14 +29,13 @@ using Color = gte::Vector4<unsigned char>;
 
 namespace orbit_gl {
 
+template <typename T>
 struct ClosedInterval {
   [[nodiscard]] bool Intersects(const ClosedInterval& closed_interval) const {
     return this->min <= closed_interval.max && this->max >= closed_interval.min;
   }
 
-  [[nodiscard]] bool Contains(float value) const {
-    return this->min <= value && this->max >= value;
-  }
+  [[nodiscard]] bool Contains(T value) const { return this->min <= value && this->max >= value; }
 
   [[nodiscard]] friend bool operator==(const ClosedInterval& lhs, const ClosedInterval& rhs) {
     return std::tie(lhs.min, lhs.max) == std::tie(rhs.min, rhs.max);
@@ -45,14 +44,14 @@ struct ClosedInterval {
     return !(lhs == rhs);
   }
 
-  float min;
-  float max;
+  T min;
+  T max;
 };
 
 [[nodiscard]] inline bool IsInsideRectangle(const Vec2& point, const Vec2& top_left,
                                             const Vec2& size) {
   for (int i = 0; i < 2; i++) {
-    if (!ClosedInterval{top_left[i], top_left[i] + size[i]}.Contains(point[i])) {
+    if (!ClosedInterval<float>{top_left[i], top_left[i] + size[i]}.Contains(point[i])) {
       return false;
     }
   }

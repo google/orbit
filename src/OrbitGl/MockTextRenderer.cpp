@@ -99,7 +99,7 @@ float MockTextRenderer::GetStringHeight(const char* /*text*/, uint32_t font_size
 bool MockTextRenderer::IsTextBetweenZLayers(float z_layer_min, float z_layer_max) const {
   return std::find_if_not(z_layers_.begin(), z_layers_.end(),
                           [z_layer_min, z_layer_max](float layer) {
-                            return ClosedInterval{z_layer_min, z_layer_max}.Contains(layer);
+                            return ClosedInterval<float>{z_layer_min, z_layer_max}.Contains(layer);
                           }) == z_layers_.end();
 }
 

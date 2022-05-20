@@ -21,7 +21,7 @@ const Color kBackgroundColorSpecialLabels(68, 67, 69, 255);
 
 void TimelineUi::RenderLines(PrimitiveAssembler& primitive_assembler, uint64_t min_timestamp_ns,
                              uint64_t max_timestamp_ns) const {
-  ClosedInterval timeline_x_visible_range = ClosedInterval{GetPos()[0], GetPos()[0] + GetSize()[0]};
+  ClosedInterval<float> timeline_x_visible_range{GetPos()[0], GetPos()[0] + GetSize()[0]};
   for (auto& [tick_type, tick_ns] :
        timeline_ticks_.GetAllTicks(min_timestamp_ns, max_timestamp_ns)) {
     float world_x = timeline_info_interface_->GetWorldFromUs(
@@ -79,8 +79,8 @@ void TimelineUi::RenderLabel(PrimitiveAssembler& primitive_assembler, TextRender
   float world_x = GetTickWorldXPos(tick_ns);
   float label_width = text_renderer.GetStringWidth(label.c_str(), layout_->GetFontSize());
   // Check that the label is visible or partially visible.
-  if (ClosedInterval label_x_interval{world_x, world_x + label_width};
-      !label_x_interval.Intersects(ClosedInterval{GetPos()[0], GetPos()[0] + GetWidth()})) {
+  if (ClosedInterval<float> label_x_interval{world_x, world_x + label_width};
+      !label_x_interval.Intersects(ClosedInterval<float>{GetPos()[0], GetPos()[0] + GetWidth()})) {
     return;
   }
 
