@@ -8,30 +8,40 @@
 
 namespace orbit_gl {
 
-const ClosedInterval kSmallClosedInterval{0, 3};
+template <typename T>
+struct ClosedIntervalTest : public testing::Test {
+  using MyParamType = T;
+};
 
-TEST(ClosedInterval, Intersects) {
-  EXPECT_TRUE((ClosedInterval{0, 3}.Intersects(ClosedInterval{1, 2})));
-  EXPECT_TRUE((ClosedInterval{1, 2}.Intersects(ClosedInterval{0, 3})));
-  EXPECT_TRUE((ClosedInterval{0, 1}.Intersects(ClosedInterval{1, 2})));
-  EXPECT_TRUE((ClosedInterval{1, 2}.Intersects(ClosedInterval{0, 1})));
-  EXPECT_FALSE((ClosedInterval{0, 1}.Intersects(ClosedInterval{2, 3})));
-  EXPECT_FALSE((ClosedInterval{2, 3}.Intersects(ClosedInterval{0, 1})));
+using MyTypes = testing::Types<int, float>;
+TYPED_TEST_SUITE(ClosedIntervalTest, MyTypes);
 
-  EXPECT_TRUE(kSmallClosedInterval.Intersects(ClosedInterval{1, 1}));
-  EXPECT_TRUE(kSmallClosedInterval.Intersects(ClosedInterval{3, 3}));
-  EXPECT_FALSE(kSmallClosedInterval.Intersects(ClosedInterval{4, 4}));
+TYPED_TEST(ClosedIntervalTest, Intersects) {
+  using Type = typename TestFixture::MyParamType;
+  EXPECT_TRUE((ClosedInterval<Type>{0, 3}.Intersects(ClosedInterval<Type>{1, 2})));
+  EXPECT_TRUE((ClosedInterval<Type>{1, 2}.Intersects(ClosedInterval<Type>{0, 3})));
+  EXPECT_TRUE((ClosedInterval<Type>{0, 1}.Intersects(ClosedInterval<Type>{1, 2})));
+  EXPECT_TRUE((ClosedInterval<Type>{1, 2}.Intersects(ClosedInterval<Type>{0, 1})));
+  EXPECT_FALSE((ClosedInterval<Type>{0, 1}.Intersects(ClosedInterval<Type>{2, 3})));
+  EXPECT_FALSE((ClosedInterval<Type>{2, 3}.Intersects(ClosedInterval<Type>{0, 1})));
+
+  const ClosedInterval<Type> kSmallClosedInterval{0, 3};
+  EXPECT_TRUE(kSmallClosedInterval.Intersects(ClosedInterval<Type>{1, 1}));
+  EXPECT_TRUE(kSmallClosedInterval.Intersects(ClosedInterval<Type>{3, 3}));
+  EXPECT_FALSE(kSmallClosedInterval.Intersects(ClosedInterval<Type>{4, 4}));
 }
 
-TEST(ClosedInterval, Contains) {
+TYPED_TEST(ClosedIntervalTest, Contains) {
+  using Type = typename TestFixture::MyParamType;
+  const ClosedInterval<Type> kSmallClosedInterval{0, 3};
   EXPECT_FALSE(kSmallClosedInterval.Contains(-1));
   EXPECT_TRUE(kSmallClosedInterval.Contains(0));
   EXPECT_TRUE(kSmallClosedInterval.Contains(1));
   EXPECT_TRUE(kSmallClosedInterval.Contains(3));
   EXPECT_FALSE(kSmallClosedInterval.Contains(4));
 
-  EXPECT_TRUE((ClosedInterval{1, 1}.Contains(1)));
-  EXPECT_FALSE((ClosedInterval{1, 1}.Contains(2)));
+  EXPECT_TRUE((ClosedInterval<Type>{1, 1}.Contains(1)));
+  EXPECT_FALSE((ClosedInterval<Type>{1, 1}.Contains(2)));
 }
 
 TEST(CoreMath, IsInsideRectangle) {
