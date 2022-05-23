@@ -282,7 +282,9 @@ void ConnectToStadiaWidget::LoadCredentials() {
     return;
   }
 
-  auto future = ggp_client_->GetSshInfoAsync(selected_instance_.value().id, selected_project_);
+  std::optional<Project> selected_project = ui_->retrieveInstancesWidget->GetSelectedProject();
+
+  auto future = ggp_client_->GetSshInfoAsync(selected_instance_.value().id, selected_project);
   future.Then(main_thread_executor_.get(),
               [this, instance_id](ErrorMessageOr<orbit_ggp::SshInfo> ssh_info_result) {
                 OnSshInfoLoaded(std::move(ssh_info_result), instance_id);

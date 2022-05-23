@@ -102,7 +102,6 @@ class ConnectToStadiaWidget : public QWidget {
   std::unique_ptr<orbit_ggp::Client> ggp_client_;
   std::optional<QString> remembered_instance_id_;
   QVector<orbit_ggp::Project> projects_;
-  std::optional<orbit_ggp::Project> selected_project_;
   std::shared_ptr<orbit_qt_utils::MainThreadExecutorImpl> main_thread_executor_;
   orbit_metrics_uploader::MetricsUploader* metrics_uploader_ = nullptr;
 
