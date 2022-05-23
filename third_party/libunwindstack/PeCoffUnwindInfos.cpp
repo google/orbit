@@ -96,8 +96,10 @@ bool PeCoffUnwindInfosImpl::ParseUnwindInfoAtOffset(uint64_t offset, UnwindInfo*
   unwind_info->num_codes = data_info[2];
   unwind_info->frame_register_and_offset = data_info[3];
 
-  // 0x01 is the only version that exists right now.
-  if (unwind_info->GetVersion() != 0x01) {
+  // Version 1 is the only documented one:
+  // https://docs.microsoft.com/en-us/cpp/build/exception-handling-x64#struct-unwind_info
+  // However, there is also an undocumented version 2 that adds the UWOP_EPILOG opcode.
+  if (unwind_info->GetVersion() != 0x01 && unwind_info->GetVersion() != 0x02) {
     last_error_.code = ERROR_INVALID_COFF;
     return false;
   }

@@ -33,7 +33,8 @@ enum UnwindOpCode : uint8_t {
   UWOP_SET_FPREG = 3,
   UWOP_SAVE_NONVOL = 4,
   UWOP_SAVE_NONVOL_FAR = 5,
-  // There are no codes 6 and 7
+  UWOP_EPILOG = 6,  // Only in UNWIND_INFOs with version 2.
+  // There are no opcodes 6 and 7 in version 1. There is no opcode 7 in version 2 either.
   UWOP_SAVE_XMM128 = 8,
   UWOP_SAVE_XMM128_FAR = 9,
   UWOP_PUSH_MACHFRAME = 10
