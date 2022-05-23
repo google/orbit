@@ -39,6 +39,7 @@ class RetrieveInstancesWidget : public QWidget {
     ORBIT_CHECK(retrieve_instances_ != nullptr);
     retrieve_instances_->SetMetricsUploader(metrics_uploader);
   }
+  [[nodiscard]] std::optional<orbit_ggp::Project> GetSelectedProject() const;
 
  signals:
   void LoadingStarted();
@@ -50,7 +51,6 @@ class RetrieveInstancesWidget : public QWidget {
  private:
   void SetupStateMachine();
   [[nodiscard]] orbit_ggp::Client::InstanceListScope GetSelectedInstanceListScope() const;
-  [[nodiscard]] std::optional<orbit_ggp::Project> GetSelectedProject() const;
   void InitialLoad(const std::optional<orbit_ggp::Project>& remembered_project);
   void OnInstancesLoadingReturned(
       const ErrorMessageOr<QVector<orbit_ggp::Instance>>& loading_result);
