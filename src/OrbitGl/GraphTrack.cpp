@@ -157,7 +157,7 @@ template <size_t Dimension>
 void GraphTrack<Dimension>::DrawMouseLabel(PrimitiveAssembler& primitive_assembler,
                                            TextRenderer& text_renderer,
                                            const DrawContext& draw_context) {
-  if (!draw_context.current_mouse_time_ns.has_value()) return;
+  if (!draw_context.current_mouse_tick.has_value()) return;
 
   const float kTextLeftMargin = 2.f;
   const float kTextRightMargin = kTextLeftMargin;
@@ -167,7 +167,7 @@ void GraphTrack<Dimension>::DrawMouseLabel(PrimitiveAssembler& primitive_assembl
   const Color kBlack(0, 0, 0, 255);
   const Color kTransparentWhite(255, 255, 255, 180);
 
-  uint64_t current_mouse_time_ns = draw_context.current_mouse_time_ns.value();
+  uint64_t current_mouse_time_ns = draw_context.current_mouse_tick.value();
   const std::array<double, Dimension>& values =
       series_.GetPreviousOrFirstEntry(current_mouse_time_ns);
   uint64_t first_time = series_.StartTimeInNs();

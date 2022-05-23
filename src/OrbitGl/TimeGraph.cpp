@@ -859,10 +859,9 @@ void TimeGraph::DoDraw(orbit_gl::PrimitiveAssembler& primitive_assembler,
 
   // Vertical green line at mouse x position.
   if (draw_context.picking_mode == PickingMode::kNone &&
-      draw_context.current_mouse_time_ns.has_value()) {
+      draw_context.current_mouse_tick.has_value()) {
     const Color kGreenLineColor{0, 255, 0, 127};
-    Vec2 green_line_pos = {GetWorldFromTick(draw_context.current_mouse_time_ns.value()),
-                           GetPos()[1]};
+    Vec2 green_line_pos = {GetWorldFromTick(draw_context.current_mouse_tick.value()), GetPos()[1]};
     primitive_assembler.AddVerticalLine(green_line_pos, GetHeight(), GlCanvas::kZValueUi,
                                         kGreenLineColor);
   }
