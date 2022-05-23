@@ -44,7 +44,8 @@ class PeCoffUnwindInfosTest : public ::testing::Test {
       // after shifting, this value must be 0x04.
       flags |= 0x04 << 3;
     }
-    // Only version "1" is supported.
+    // Only version "1" is documented, set it here. But we also support undocumented version "2",
+    // which has a dedicated test below.
     uint8_t version_and_flags = flags | 0x01;
     memory_fake_->SetData8(offset, version_and_flags);
     offset += sizeof(uint8_t);
@@ -195,21 +196,42 @@ TEST_F(PeCoffUnwindInfosTest, get_unwind_info_succeeds_with_exception_handler_da
   EXPECT_EQ(2, unwind_info.num_codes);
 }
 
+TEST_F(PeCoffUnwindInfosTest, get_unwind_info_succeeds_on_version_2) {
+  uint64_t offset = kFileOffset;
+  offset = SetUnwindInfoHeaderAtOffset(offset, 2, false);
+  offset = SetUnwindOpCodeOrFrameOffsetAtOffset(offset, 0x1234);
+  offset = SetUnwindOpCodeOrFrameOffsetAtOffset(offset, 0x2134);
+
+  // Set the version to 2. Note that this also clears the flags.
+  GetMemoryFake()->SetData8(kFileOffset, 0x02);
+
+  std::unique_ptr<PeCoffUnwindInfos> unwind_infos(
+      CreatePeCoffUnwindInfos(GetMemoryFake(), kSections));
+
+  UnwindInfo unwind_info;
+  EXPECT_TRUE(unwind_infos->GetUnwindInfo(kVmAddress, &unwind_info));
+  EXPECT_EQ(ERROR_NONE, unwind_infos->GetLastError().code);
+
+  EXPECT_EQ(2, unwind_info.num_codes);
+}
+
 TEST_F(PeCoffUnwindInfosTest, get_unwind_info_fails_on_bad_version) {
   uint64_t offset = kFileOffset;
   offset = SetUnwindInfoHeaderAtOffset(offset, 2, false);
   offset = SetUnwindOpCodeOrFrameOffsetAtOffset(offset, 0x1234);
   offset = SetUnwindOpCodeOrFrameOffsetAtOffset(offset, 0x2134);
 
-  // Clobber the version with 0.
-  GetMemoryFake()->SetData8(kFileOffset, 0x00);
+  for (uint8_t bad_version : {0x00, 0x03, 0x04, 0x05, 0x06, 0x07}) {
+    // Clobber the version.
+    GetMemoryFake()->SetData8(kFileOffset, bad_version);
 
-  std::unique_ptr<PeCoffUnwindInfos> unwind_infos(
-      CreatePeCoffUnwindInfos(GetMemoryFake(), kSections));
+    std::unique_ptr<PeCoffUnwindInfos> unwind_infos(
+        CreatePeCoffUnwindInfos(GetMemoryFake(), kSections));
 
-  UnwindInfo unwind_info;
-  EXPECT_FALSE(unwind_infos->GetUnwindInfo(kVmAddress, &unwind_info));
-  EXPECT_EQ(ERROR_INVALID_COFF, unwind_infos->GetLastError().code);
+    UnwindInfo unwind_info;
+    EXPECT_FALSE(unwind_infos->GetUnwindInfo(kVmAddress, &unwind_info));
+    EXPECT_EQ(ERROR_INVALID_COFF, unwind_infos->GetLastError().code);
+  }
 }
 
 TEST_F(PeCoffUnwindInfosTest, get_unwind_info_fails_on_bad_memory) {

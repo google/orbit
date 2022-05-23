@@ -302,7 +302,7 @@ class PeCoffUnwindInfoEvaluatorTest : public ::testing::Test {
 
   // Effectively simulates creating a stack frame and executing the prolog of a function, which
   // is given by the data supplied to this function. For example, the return address to be pushed
-  // onto the stack, the stack allocation size, and pushed registers are provided. The correspoding
+  // onto the stack, the stack allocation size, and pushed registers are provided. The corresponding
   // unwind info that one can use to unwind the stack frame is created alongside the simulated
   // operations.
   // Does not verify data. For the stack frame to make sense, saved registers must not
@@ -381,7 +381,6 @@ TEST_F(PeCoffUnwindInfoEvaluatorTest, eval_fails_inconsistent_num_codes) {
   RegsX86_64 regs;
   constexpr uint64_t kCodeOffset = 0x0;
 
-
   EXPECT_FALSE(unwind_info_evaluator_->Eval(process_mem_fake_.get(), &regs, unwind_info,
                                             &mock_unwind_infos_, kCodeOffset));
 }
@@ -407,7 +406,7 @@ TEST_F(PeCoffUnwindInfoEvaluatorTest, eval_fails_with_unsupported_unwind_instruc
   UnwindCode unwind_code;
   unwind_code.code_and_op.code_offset = 1;
   unwind_code.code_and_op.unwind_op_and_op_info =
-      PackUnwindOpAndOpInfo(static_cast<UnwindOpCode>(6), 0x00);
+      PackUnwindOpAndOpInfo(static_cast<UnwindOpCode>(7), 0x00);
 
   UnwindInfo unwind_info;
   unwind_info.unwind_codes.emplace_back(unwind_code);
@@ -419,6 +418,45 @@ TEST_F(PeCoffUnwindInfoEvaluatorTest, eval_fails_with_unsupported_unwind_instruc
   EXPECT_FALSE(unwind_info_evaluator_->Eval(process_mem_fake_.get(), &regs, unwind_info,
                                             &mock_unwind_infos_, kCodeOffset));
   EXPECT_EQ(unwind_info_evaluator_->GetLastError().code, ERROR_INVALID_COFF);
+}
+
+TEST_F(PeCoffUnwindInfoEvaluatorTest, eval_fails_with_epilog_instruction_in_version_1) {
+  UnwindCode unwind_code;
+  unwind_code.code_and_op.code_offset = 1;
+  unwind_code.code_and_op.unwind_op_and_op_info = PackUnwindOpAndOpInfo(UWOP_EPILOG, 0x00);
+
+  UnwindInfo unwind_info;
+  unwind_info.version_and_flags = 0x01;
+  unwind_info.unwind_codes.emplace_back(unwind_code);
+  unwind_info.num_codes = unwind_info.unwind_codes.size();
+
+  RegsX86_64 regs;
+  uint64_t code_offset = unwind_code.code_and_op.code_offset;
+
+  EXPECT_FALSE(unwind_info_evaluator_->Eval(process_mem_fake_.get(), &regs, unwind_info,
+                                            &mock_unwind_infos_, code_offset));
+  EXPECT_EQ(unwind_info_evaluator_->GetLastError().code, ERROR_INVALID_COFF);
+}
+
+TEST_F(PeCoffUnwindInfoEvaluatorTest, eval_succeeds_with_epilog_instruction_in_version_2) {
+  UnwindCode unwind_code1;
+  unwind_code1.code_and_op.code_offset = 1;
+  unwind_code1.code_and_op.unwind_op_and_op_info = PackUnwindOpAndOpInfo(UWOP_EPILOG, 0x00);
+
+  // UWOP_EPILOG takes two slots.
+  UnwindCode unwind_code2;
+
+  UnwindInfo unwind_info;
+  unwind_info.version_and_flags = 0x02;
+  unwind_info.unwind_codes.emplace_back(unwind_code1);
+  unwind_info.unwind_codes.emplace_back(unwind_code2);
+  unwind_info.num_codes = unwind_info.unwind_codes.size();
+
+  RegsX86_64 regs;
+  uint64_t code_offset = unwind_code1.code_and_op.code_offset;
+
+  EXPECT_TRUE(unwind_info_evaluator_->Eval(process_mem_fake_.get(), &regs, unwind_info,
+                                           &mock_unwind_infos_, code_offset));
 }
 
 TEST_F(PeCoffUnwindInfoEvaluatorTest, eval_succeeds_pushed_registers_only) {
@@ -755,7 +793,7 @@ TEST_F(PeCoffUnwindInfoEvaluatorTest,
   EXPECT_EQ(regs[X86_64Reg::X86_64_REG_RSI], 0x200);
   EXPECT_EQ(regs[X86_64Reg::X86_64_REG_R12], 0x300);
 
-  // Also validate that we skip succeessfully if code offset is before the unwind op.
+  // Also validate that we skip successfully if code offset is before the unwind op.
   regs.set_sp(stack_pointer_);
   EXPECT_TRUE(unwind_info_evaluator_->Eval(process_mem_fake_.get(), &regs, unwind_info,
                                            &mock_unwind_infos_, 0));
