@@ -224,6 +224,20 @@ bool PeCoffUnwindInfoEvaluatorImpl::Eval(Memory* process_memory, Regs* regs,
         op_idx += 3;
         break;
       }
+      case UWOP_EPILOG: {
+        // This is an undocumented opcode from the rare and undocumented version 2 of UNWIND_INFO.
+        // We know that it takes two slots, but the meaning of the operation info and of the second
+        // slot is not certain. The purpose seems to be to describe the location of the epilogs of
+        // the function, which would speed up unwinding by removing the need for epilog detection.
+        if (unwind_info.GetVersion() != 2) {
+          last_error_.code = ERROR_INVALID_COFF;
+          return false;
+        }
+        // As this is rare and undocumented, just do nothing for now and rely on epilog detection as
+        // in version 1.
+        op_idx += 2;
+        break;
+      }
       case UWOP_SAVE_XMM128: {
         // We do not actually have to save the XMM registers here and in the UWOP_SAVE_XMM128_FAR
         // case, we just have to skip the unwind codes. XMM registers are not read by other unwind
