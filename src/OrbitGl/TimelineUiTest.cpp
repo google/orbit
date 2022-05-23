@@ -102,19 +102,21 @@ class TimelineUiTest : public TimelineUi {
                                                           kExpectedMaxPos - kExpectedMinPos));
   }
 
-  void TestDraw(uint64_t min_tick, uint64_t max_tick, uint64_t mouse_tick) {
+  void TestDraw(uint64_t min_tick, uint64_t max_tick, std::optional<uint64_t> mouse_tick) {
     mock_text_renderer_.Clear();
     mock_batcher_.ResetElements();
     mock_timeline_info_->SetMinMax(min_tick, max_tick);
 
     DrawContext context;
-    context.current_mouse_time_ns = mouse_tick;
+    context.current_mouse_tick = mouse_tick;
     Draw(primitive_assembler_, mock_text_renderer_, context);
 
     // One box and one label, both at kZValueTimeBarMouseLabel position.
-    EXPECT_EQ(mock_batcher_.GetNumBoxes(), 1);
-    EXPECT_EQ(mock_batcher_.GetNumElements(), 1);
-    EXPECT_EQ(mock_text_renderer_.GetNumAddTextCalls(), 1);
+    const int kNumMouseLabels = mouse_tick.has_value() ? 1 : 0;
+
+    EXPECT_EQ(mock_batcher_.GetNumBoxes(), kNumMouseLabels);
+    EXPECT_EQ(mock_batcher_.GetNumElements(), kNumMouseLabels);
+    EXPECT_EQ(mock_text_renderer_.GetNumAddTextCalls(), kNumMouseLabels);
 
     EXPECT_TRUE(mock_text_renderer_.IsTextBetweenZLayers(GlCanvas::kZValueTimeBarMouseLabel,
                                                          GlCanvas::kZValueTimeBarMouseLabel));
@@ -174,12 +176,14 @@ TEST(TimelineUi, Draw) {
   const uint64_t kMinTick = 0;
   const uint64_t kMaxTick = 1000;
 
-  // Testing different positions of the mouse in the screen.
-  timeline_ui_test.TestDraw(kMinTick, kMaxTick, kMinTick);
-  timeline_ui_test.TestDraw(kMinTick, kMaxTick, kMinTick + 1);
-  timeline_ui_test.TestDraw(kMinTick, kMaxTick, (kMinTick + kMaxTick) / 2);
-  timeline_ui_test.TestDraw(kMinTick, kMaxTick, kMaxTick - 1);
-  timeline_ui_test.TestDraw(kMinTick, kMaxTick, kMaxTick);
+  // Testing different positions of the mouse in the screen. It is expected that mouse_tick is
+  // between than min_tick and max_tick or either nullopt.
+  timeline_ui_test.TestDraw(kMinTick, kMaxTick, /*mouse_tick=*/kMinTick);
+  timeline_ui_test.TestDraw(kMinTick, kMaxTick, /*mouse_tick=*/kMinTick + 1);
+  timeline_ui_test.TestDraw(kMinTick, kMaxTick, /*mouse_tick=*/(kMinTick + kMaxTick) / 2);
+  timeline_ui_test.TestDraw(kMinTick, kMaxTick, /*mouse_tick=*/kMaxTick - 1);
+  timeline_ui_test.TestDraw(kMinTick, kMaxTick, /*mouse_tick=*/kMaxTick);
+  timeline_ui_test.TestDraw(kMinTick, kMaxTick, /*mouse_tick=*/std::nullopt);
 }
 
 }  // namespace orbit_gl

@@ -72,18 +72,7 @@ void GraphTrack<Dimension>::DoDraw(PrimitiveAssembler& primitive_assembler,
   Track::DoDraw(primitive_assembler, text_renderer, draw_context);
   if (IsEmpty() || IsCollapsed()) return;
 
-  // Draw label
-  const std::array<double, Dimension>& values =
-      series_.GetPreviousOrFirstEntry(draw_context.current_mouse_time_ns);
-  uint64_t first_time = series_.StartTimeInNs();
-  uint64_t label_time = std::max(draw_context.current_mouse_time_ns, first_time);
-  float point_x = timeline_info_->GetWorldFromTick(label_time);
-  float point_y = GetLabelYFromValues(values);
-  std::string text = GetLabelTextFromValues(values);
-  const Color kBlack(0, 0, 0, 255);
-  const Color kTransparentWhite(255, 255, 255, 180);
-  DrawLabel(primitive_assembler, text_renderer, Vec2(point_x, point_y), text, kBlack,
-            kTransparentWhite);
+  DrawMouseLabel(primitive_assembler, text_renderer, draw_context);
 
   if (!HasLegend()) return;
 
@@ -165,16 +154,27 @@ uint32_t GraphTrack<Dimension>::GetLegendFontSize(uint32_t indentation_level) co
 }
 
 template <size_t Dimension>
-void GraphTrack<Dimension>::DrawLabel(PrimitiveAssembler& primitive_assembler,
-                                      TextRenderer& text_renderer, Vec2 target_pos,
-                                      const std::string& text, const Color& text_color,
-                                      const Color& font_color) {
-  uint32_t font_size = GetLegendFontSize(indentation_level_);
+void GraphTrack<Dimension>::DrawMouseLabel(PrimitiveAssembler& primitive_assembler,
+                                           TextRenderer& text_renderer,
+                                           const DrawContext& draw_context) {
+  if (!draw_context.current_mouse_tick.has_value()) return;
+
   const float kTextLeftMargin = 2.f;
   const float kTextRightMargin = kTextLeftMargin;
   const float kTextTopMargin = layout_->GetTextOffset();
   const float kTextBottomMargin = kTextTopMargin;
   const float kSpaceBetweenLines = layout_->GetTextOffset();
+  const Color kBlack(0, 0, 0, 255);
+  const Color kTransparentWhite(255, 255, 255, 180);
+
+  uint64_t current_mouse_time_ns = draw_context.current_mouse_tick.value();
+  const std::array<double, Dimension>& values =
+      series_.GetPreviousOrFirstEntry(current_mouse_time_ns);
+  uint64_t first_time = series_.StartTimeInNs();
+  uint64_t label_time = std::max(current_mouse_time_ns, first_time);
+  Vec2 target_point_pos{timeline_info_->GetWorldFromTick(label_time), GetLabelYFromValues(values)};
+  std::string text = GetLabelTextFromValues(values);
+  uint32_t font_size = GetLegendFontSize(indentation_level_);
 
   std::vector<std::string> lines = absl::StrSplit(text, '\n');
   float text_width = 0;
@@ -188,30 +188,31 @@ void GraphTrack<Dimension>::DrawLabel(PrimitiveAssembler& primitive_assembler,
   float arrow_width = text_box_size[1] / 2.f;
   Vec2 arrow_box_size(text_box_size[0] + kTextLeftMargin + kTextRightMargin,
                       text_box_size[1] + kTextTopMargin + kTextBottomMargin);
-  bool arrow_is_left_directed = target_pos[0] < arrow_box_size[0] + arrow_width;
+  bool arrow_is_left_directed = target_point_pos[0] < arrow_box_size[0] + arrow_width;
   Vec2 text_box_position(
-      target_pos[0] + (arrow_is_left_directed ? arrow_width + kTextLeftMargin
-                                              : -arrow_width - kTextRightMargin - text_box_size[0]),
-      target_pos[1] - text_box_size[1] / 2.f);
+      target_point_pos[0] + (arrow_is_left_directed
+                                 ? arrow_width + kTextLeftMargin
+                                 : -arrow_width - kTextRightMargin - text_box_size[0]),
+      target_point_pos[1] - text_box_size[1] / 2.f);
 
   float label_z = GlCanvas::kZValueTrackLabel;
   text_renderer.AddText(text.c_str(), text_box_position[0], text_box_position[1], label_z,
-                        {font_size, text_color, text_box_size[0]});
+                        {font_size, kBlack, text_box_size[0]});
 
   Vec2 arrow_box_position(text_box_position[0] - kTextLeftMargin,
                           text_box_position[1] - kTextBottomMargin);
   Quad arrow_text_box = MakeBox(arrow_box_position, arrow_box_size);
-  Vec2 arrow_extra_point(target_pos[0], target_pos[1]);
+  Vec2 arrow_extra_point(target_point_pos[0], target_point_pos[1]);
 
-  primitive_assembler.AddBox(arrow_text_box, label_z, font_color);
+  primitive_assembler.AddBox(arrow_text_box, label_z, kTransparentWhite);
   if (arrow_is_left_directed) {
     primitive_assembler.AddTriangle(
         Triangle(arrow_text_box.vertices[0], arrow_text_box.vertices[1], arrow_extra_point),
-        label_z, font_color);
+        label_z, kTransparentWhite);
   } else {
     primitive_assembler.AddTriangle(
         Triangle(arrow_text_box.vertices[2], arrow_text_box.vertices[3], arrow_extra_point),
-        label_z, font_color);
+        label_z, kTransparentWhite);
   }
 }
 

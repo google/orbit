@@ -39,8 +39,7 @@ class TimeGraph : public orbit_gl::CaptureViewElement, public orbit_gl::Timeline
   [[nodiscard]] float GetHeight() const override;
 
   void DrawAllElements(orbit_gl::PrimitiveAssembler& primitive_assembler,
-                       orbit_gl::TextRenderer& text_renderer, PickingMode& picking_mode,
-                       uint64_t current_mouse_time_ns);
+                       orbit_gl::TextRenderer& text_renderer, PickingMode& picking_mode);
   void DrawText(float layer);
 
   // TODO(b/214282122): Move Process Timers function outside the UI.
@@ -181,6 +180,7 @@ class TimeGraph : public orbit_gl::CaptureViewElement, public orbit_gl::Timeline
   [[nodiscard]] EventResult OnMouseWheel(
       const Vec2& mouse_pos, int delta,
       const orbit_gl::ModifierKeys& modifiers = orbit_gl::ModifierKeys()) override;
+  [[nodiscard]] EventResult OnMouseLeave() override;
 
   void UpdateHorizontalScroll(float ratio);
   void UpdateHorizontalZoom(float normalized_start, float normalized_end);
