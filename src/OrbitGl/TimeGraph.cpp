@@ -422,6 +422,7 @@ orbit_gl::CaptureViewElement::EventResult TimeGraph::OnMouseWheel(
 
 orbit_gl::CaptureViewElement::EventResult TimeGraph::OnMouseLeave() {
   EventResult event_result = CaptureViewElement::OnMouseLeave();
+  // A redraw is needed since the mouse green line won't be drawn anymore.
   RequestUpdate(RequestUpdateScope::kDraw);
   return event_result;
 }
@@ -857,7 +858,8 @@ void TimeGraph::DoDraw(orbit_gl::PrimitiveAssembler& primitive_assembler,
   CaptureViewElement::DoDraw(primitive_assembler, text_renderer, draw_context);
 
   // Vertical green line at mouse x position.
-  if (draw_context.picking_mode == PickingMode::kNone && draw_context.current_mouse_time_ns) {
+  if (draw_context.picking_mode == PickingMode::kNone &&
+      draw_context.current_mouse_time_ns.has_value()) {
     const Color kGreenLineColor{0, 255, 0, 127};
     Vec2 green_line_pos = {GetWorldFromTick(draw_context.current_mouse_time_ns.value()),
                            GetPos()[1]};

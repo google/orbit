@@ -93,9 +93,9 @@ class GraphTrack : public Track {
       const std::array<double, Dimension>& values) const;
   [[nodiscard]] uint32_t GetLegendFontSize(uint32_t indentation_level = 0) const;
 
-  virtual void DrawLabel(orbit_gl::PrimitiveAssembler& primitive_assembler,
-                         orbit_gl::TextRenderer& text_renderer, Vec2 target_pos,
-                         const std::string& text, const Color& text_color, const Color& font_color);
+  virtual void DrawMouseLabel(orbit_gl::PrimitiveAssembler& primitive_assembler,
+                              orbit_gl::TextRenderer& text_renderer,
+                              const DrawContext& draw_context);
   virtual void DrawLegend(orbit_gl::PrimitiveAssembler& primitive_assembler,
                           orbit_gl::TextRenderer& text_renderer,
                           const std::array<std::string, Dimension>& series_names,

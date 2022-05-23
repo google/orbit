@@ -121,7 +121,7 @@ class CaptureViewElement : public Pickable, public AccessibleInterfaceProvider {
 
  protected:
   struct DrawContext {
-    std::optional<uint64_t> current_mouse_time_ns = std::nullopt;
+    std::optional<uint64_t> current_mouse_time_ns;
     PickingMode picking_mode = PickingMode::kNone;
   };
 
