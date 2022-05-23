@@ -53,6 +53,9 @@ class ObjectFile : public SymbolsFile {
   // This is the size of the text segment *when loaded into memory*.
   [[nodiscard]] virtual uint64_t GetExecutableSegmentSize() const = 0;
 
+  // Size of the object when loaded into memory.
+  [[nodiscard]] virtual uint64_t GetImageSize() const = 0;
+
   [[nodiscard]] virtual bool IsElf() const = 0;
   [[nodiscard]] virtual bool IsCoff() const = 0;
 };

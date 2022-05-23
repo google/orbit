@@ -66,6 +66,7 @@ class ElfFileImpl : public ElfFile {
   [[nodiscard]] uint64_t GetLoadBias() const override;
   [[nodiscard]] uint64_t GetExecutableSegmentOffset() const override;
   [[nodiscard]] uint64_t GetExecutableSegmentSize() const override;
+  [[nodiscard]] uint64_t GetImageSize() const override;
   [[nodiscard]] bool HasDebugSymbols() const override;
   [[nodiscard]] bool HasDynsym() const override;
   [[nodiscard]] bool HasDebugInfo() const override;
@@ -103,6 +104,7 @@ class ElfFileImpl : public ElfFile {
   uint64_t load_bias_;
   uint64_t executable_segment_offset_;
   uint64_t executable_segment_size_;
+  uint64_t image_size_;
 };
 
 template <typename ElfT>
@@ -163,7 +165,8 @@ ElfFileImpl<ElfT>::ElfFileImpl(std::filesystem::path file_path,
       has_debug_info_section_(false),
       load_bias_{0},
       executable_segment_offset_{0},
-      executable_segment_size_{0} {}
+      executable_segment_size_{0},
+      image_size_{0} {}
 
 template <typename ElfT>
 ErrorMessageOr<void> ElfFileImpl<ElfT>::Initialize() {
@@ -432,6 +435,21 @@ ErrorMessageOr<void> ElfFileImpl<ElfT>::InitProgramHeaders() {
     return ErrorMessage(std::move(error));
   }
 
+  // Compute the image size as the difference between the end address of the last loadable segment
+  // and the start address of the first loadable segment.
+  std::optional<uint64_t> first_loadable_segment_vaddr;
+  for (const typename ElfT::Phdr& phdr : range.get()) {
+    if (phdr.p_type != llvm::ELF::PT_LOAD) {
+      continue;
+    }
+
+    if (!first_loadable_segment_vaddr.has_value()) {
+      first_loadable_segment_vaddr = phdr.p_vaddr;
+    }
+    image_size_ =
+        std::max(image_size_, phdr.p_vaddr + phdr.p_memsz - first_loadable_segment_vaddr.value());
+  }
+
   // Find the executable segment and calculate the load bias based on that segment.
   for (const typename ElfT::Phdr& phdr : range.get()) {
     if (phdr.p_type != llvm::ELF::PT_LOAD) {
@@ -608,6 +626,11 @@ uint64_t ElfFileImpl<ElfT>::GetExecutableSegmentOffset() const {
 template <typename ElfT>
 uint64_t ElfFileImpl<ElfT>::GetExecutableSegmentSize() const {
   return executable_segment_size_;
+}
+
+template <typename ElfT>
+uint64_t ElfFileImpl<ElfT>::GetImageSize() const {
+  return image_size_;
 }
 }  // namespace
 
