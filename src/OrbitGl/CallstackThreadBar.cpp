@@ -226,22 +226,23 @@ bool CallstackThreadBar::IsEmpty() const {
   return callstack_count == 0;
 }
 
-CallstackThreadBar::ModuleAndFunctionNameToFormat CallstackThreadBar::SafeGetModuleAndFunctionNames(
-    const CallstackInfo& callstack, size_t frame_index) const {
+CallstackThreadBar::UnformattedModuleAndFunctionName
+CallstackThreadBar::SafeGetModuleAndFunctionName(const CallstackInfo& callstack,
+                                                 size_t frame_index) const {
   ORBIT_CHECK(capture_data_ != nullptr);
   if (frame_index >= callstack.frames().size()) {
-    ModuleAndFunctionNameToFormat module_and_function_name_to_format;
-    module_and_function_name_to_format.module_name =
-        orbit_client_data::kUnknownFunctionOrModuleName;
-    module_and_function_name_to_format.module_is_unknown = true;
-    module_and_function_name_to_format.function_name =
-        orbit_client_data::kUnknownFunctionOrModuleName;
-    module_and_function_name_to_format.function_is_unknown = true;
-    return module_and_function_name_to_format;
+    static const UnformattedModuleAndFunctionName kFrameIndexTooLargeModuleAndFunctionName = [] {
+      UnformattedModuleAndFunctionName module_and_function_name;
+      module_and_function_name.module_name = orbit_client_data::kUnknownFunctionOrModuleName;
+      module_and_function_name.module_is_unknown = true;
+      module_and_function_name.function_name = orbit_client_data::kUnknownFunctionOrModuleName;
+      module_and_function_name.function_is_unknown = true;
+      return module_and_function_name;
+    }();
+    return kFrameIndexTooLargeModuleAndFunctionName;
   }
 
   const uint64_t address = callstack.frames()[frame_index];
-  ModuleAndFunctionNameToFormat module_and_function_name;
 
   const auto& [module_path, unused_module_build_id] =
       orbit_client_data::FindModulePathAndBuildIdByAddress(*module_manager_, *capture_data_,
@@ -258,31 +259,30 @@ CallstackThreadBar::ModuleAndFunctionNameToFormat CallstackThreadBar::SafeGetMod
           ? absl::StrFormat("[unknown@%#x]", address)
           : function_name;
 
-  ModuleAndFunctionNameToFormat module_and_function_name_to_format;
-  module_and_function_name_to_format.module_name = unknown_module_path_or_module_name;
-  module_and_function_name_to_format.module_is_unknown =
+  UnformattedModuleAndFunctionName module_and_function_name;
+  module_and_function_name.module_name = unknown_module_path_or_module_name;
+  module_and_function_name.module_is_unknown =
       (module_path == orbit_client_data::kUnknownFunctionOrModuleName);
-  module_and_function_name_to_format.function_name = function_name_or_unknown_with_address;
-  module_and_function_name_to_format.function_is_unknown =
+  module_and_function_name.function_name = function_name_or_unknown_with_address;
+  module_and_function_name.function_is_unknown =
       (function_name == orbit_client_data::kUnknownFunctionOrModuleName);
-  return module_and_function_name_to_format;
+  return module_and_function_name;
 }
 
 std::string CallstackThreadBar::FormatModuleName(
-    const CallstackThreadBar::ModuleAndFunctionNameToFormat& module_and_function_name) {
+    const CallstackThreadBar::UnformattedModuleAndFunctionName& module_and_function_name) {
   return module_and_function_name.module_is_unknown
              ? absl::StrFormat("<i>%s</i>", module_and_function_name.module_name)
              : module_and_function_name.module_name;
 }
 
 std::string CallstackThreadBar::FormatFunctionName(
-    const CallstackThreadBar::ModuleAndFunctionNameToFormat& module_and_function_name,
+    const CallstackThreadBar::UnformattedModuleAndFunctionName& module_and_function_name,
     int max_length) {
   const std::string& function_name = module_and_function_name.function_name;
   const std::string shortened_function_name =
-      (max_length > 0)
-          ? orbit_gl::ShortenStringWithEllipsis(function_name, static_cast<size_t>(max_length))
-          : function_name;
+      (max_length > 0) ? ShortenStringWithEllipsis(function_name, static_cast<size_t>(max_length))
+                       : function_name;
   // Simple HTML escaping.
   const std::string escaped_function_name =
       absl::StrReplaceAll(shortened_function_name, {{"&", "&amp;"}, {"<", "&lt;"}, {">", "&gt;"}});
@@ -303,12 +303,13 @@ std::string CallstackThreadBar::FormatCallstackForTooltip(const CallstackInfo& c
   const int top_n = std::min(kMaxLines, callstack_size) - bottom_n;
 
   constexpr int kShortenedForReadabilityFakeIndex = -1;
+  constexpr const char* kShortenedForReadabilityString = "<i>... shortened for readability ...</i>";
   std::vector<int> frame_indices_to_display;
   for (int i = 0; i < top_n; ++i) {
     frame_indices_to_display.push_back(i);
   }
   if (kMaxLines < callstack_size) {
-    frame_indices_to_display.push_back(-1);
+    frame_indices_to_display.push_back(kShortenedForReadabilityFakeIndex);
   }
   for (int i = callstack_size - bottom_n; i < callstack_size; ++i) {
     frame_indices_to_display.push_back(i);
@@ -317,13 +318,13 @@ std::string CallstackThreadBar::FormatCallstackForTooltip(const CallstackInfo& c
   std::string result;
   for (int frame_index : frame_indices_to_display) {
     if (frame_index == kShortenedForReadabilityFakeIndex) {
-      result += "<i>... shortened for readability ...</i><br/>";
+      result.append(kShortenedForReadabilityString).append("<br/>");
       continue;
     }
 
     static const std::string kModuleFunctionSeparator{" | "};
-    const ModuleAndFunctionNameToFormat module_and_function_name =
-        SafeGetModuleAndFunctionNames(callstack, frame_index);
+    const UnformattedModuleAndFunctionName module_and_function_name =
+        SafeGetModuleAndFunctionName(callstack, frame_index);
     const std::string formatted_module_name = FormatModuleName(module_and_function_name);
     const std::string formatted_function_name = FormatFunctionName(
         module_and_function_name, kMaxLineLength - module_and_function_name.module_name.size() -
@@ -361,8 +362,8 @@ std::string CallstackThreadBar::GetSampleTooltip(const PrimitiveAssembler& primi
     return unknown_return_text;
   }
 
-  ModuleAndFunctionNameToFormat innermost_module_and_function_name =
-      SafeGetModuleAndFunctionNames(*callstack, 0);
+  UnformattedModuleAndFunctionName innermost_module_and_function_name =
+      SafeGetModuleAndFunctionName(*callstack, 0);
   std::string innermost_formatted_function_name =
       FormatFunctionName(innermost_module_and_function_name, -1);
   std::string innermost_formatted_module_name =

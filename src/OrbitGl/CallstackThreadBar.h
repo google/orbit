@@ -52,18 +52,18 @@ class CallstackThreadBar : public ThreadBar {
  private:
   void SelectCallstacks();
 
-  struct ModuleAndFunctionNameToFormat {
+  struct UnformattedModuleAndFunctionName {
     std::string module_name;
     bool module_is_unknown;
     std::string function_name;
     bool function_is_unknown;
   };
-  [[nodiscard]] ModuleAndFunctionNameToFormat SafeGetModuleAndFunctionNames(
+  [[nodiscard]] UnformattedModuleAndFunctionName SafeGetModuleAndFunctionName(
       const orbit_client_data::CallstackInfo& callstack, size_t frame_index) const;
   [[nodiscard]] static std::string FormatModuleName(
-      const CallstackThreadBar::ModuleAndFunctionNameToFormat& module_and_function_name);
+      const CallstackThreadBar::UnformattedModuleAndFunctionName& module_and_function_name);
   [[nodiscard]] static std::string FormatFunctionName(
-      const CallstackThreadBar::ModuleAndFunctionNameToFormat& module_and_function_name,
+      const CallstackThreadBar::UnformattedModuleAndFunctionName& module_and_function_name,
       int max_length);
   [[nodiscard]] std::string FormatCallstackForTooltip(
       const orbit_client_data::CallstackInfo& callstack) const;
