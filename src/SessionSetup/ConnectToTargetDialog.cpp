@@ -5,6 +5,7 @@
 #include "SessionSetup/ConnectToTargetDialog.h"
 
 #include <absl/flags/flag.h>
+#include <qobjectdefs.h>
 
 #include <QApplication>
 #include <QMessageBox>
@@ -118,7 +119,10 @@ ErrorMessageOr<void> ConnectToTargetDialog::OnAsyncDataAvailable(
       [dialog = QPointer<ConnectToTargetDialog>(this)](
           std::vector<orbit_grpc_protos::ProcessInfo> process_list) {
         if (dialog == nullptr) return;
-        dialog->OnProcessListUpdate(std::move(process_list));
+        QMetaObject::invokeMethod(dialog,
+                                  [dialog, process_list = std::move(process_list)]() mutable {
+                                    dialog->OnProcessListUpdate(std::move(process_list));
+                                  });
       });
   SetStatusMessage("Waiting for process to launch.");
 
