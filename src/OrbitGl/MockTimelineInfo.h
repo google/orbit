@@ -51,7 +51,7 @@ class MockTimelineInfo : public TimelineInfoInterface {
 
   void ZoomTime(int delta, double mouse_ratio) override {
     double ratio =
-        (delta > 0) ? (1 + kIncrementalZoomingRatio) : (1 / (1 + kIncrementalZoomingRatio));
+        (delta > 0) ? (1 + kIncrementalZoomTimeRatio) : (1 / (1 + kIncrementalZoomTimeRatio));
     double alpha = ratio - 1.;
     uint64_t visible_range_ns = max_visible_ns_ - min_visible_ns_;
     uint64_t mouse_timestamp_ns =
