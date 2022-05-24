@@ -80,7 +80,7 @@ class TimeGraph : public orbit_gl::CaptureViewElement, public orbit_gl::Timeline
   void ZoomAll();
   void Zoom(const orbit_client_protos::TimerInfo& timer_info);
   void Zoom(uint64_t min, uint64_t max);
-  void ZoomTime(float zoom_value, double mouse_ratio);
+  void ZoomTime(int delta, double mouse_ratio) override;
   void SetMinMax(double min_time_us, double max_time_us);
   void PanTime(int initial_x, int current_x, int width, double initial_time);
 

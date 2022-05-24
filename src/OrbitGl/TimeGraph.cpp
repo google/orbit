@@ -159,9 +159,9 @@ void TimeGraph::Zoom(const TimerInfo& timer_info) { Zoom(timer_info.start(), tim
 
 double TimeGraph::GetCaptureTimeSpanUs() const { return GetCaptureTimeSpanNs() * 0.001; }
 
-void TimeGraph::ZoomTime(float zoom_value, double mouse_ratio) {
-  static double increment_ratio = 0.1;
-  double scale = (zoom_value > 0) ? (1 + increment_ratio) : (1 / (1 + increment_ratio));
+void TimeGraph::ZoomTime(int delta, double mouse_ratio) {
+  double scale = (delta > 0) ? (1 + orbit_gl::kIncrementalZoomTimeRatio)
+                             : (1 / (1 + orbit_gl::kIncrementalZoomTimeRatio));
   // The horizontal zoom could have been triggered from the margin of TimeGraph, so we clamp the
   // mouse_ratio to ensure it is between 0 and 1.
   mouse_ratio = std::clamp(mouse_ratio, 0., 1.);
@@ -414,7 +414,7 @@ orbit_gl::CaptureViewElement::EventResult TimeGraph::OnMouseWheel(
     VerticalZoom(delta_normalized, mouse_pos[1]);
   } else {
     double mouse_ratio = mouse_pos[0] / GetTimelineWidth();
-    ZoomTime(delta_normalized, mouse_ratio);
+    ZoomTime(delta, mouse_ratio);
   }
 
   return EventResult::kHandled;

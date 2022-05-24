@@ -49,6 +49,22 @@ class MockTimelineInfo : public TimelineInfoInterface {
     max_capture_ns_ = std::max(max_capture_ns_, max_tick);
   }
 
+  void ZoomTime(int delta, double mouse_ratio) override {
+    double ratio =
+        (delta > 0) ? (1 + kIncrementalZoomingRatio) : (1 / (1 + kIncrementalZoomingRatio));
+    double alpha = ratio - 1.;
+    uint64_t visible_range_ns = max_visible_ns_ - min_visible_ns_;
+    uint64_t mouse_timestamp_ns =
+        min_visible_ns_ + static_cast<uint64_t>(mouse_ratio * visible_range_ns);
+
+    uint64_t desired_min_visible_ns =
+        static_cast<uint64_t>(min_visible_ns_ * (1. - alpha) + mouse_timestamp_ns * alpha);
+    uint64_t desired_max_visible_ns =
+        static_cast<uint64_t>(max_visible_ns_ * (1. - alpha) + mouse_timestamp_ns * alpha);
+
+    SetMinMax(desired_min_visible_ns, desired_max_visible_ns);
+  }
+
  private:
   double width_ = 0.f;
   uint64_t min_visible_ns_ = 0;

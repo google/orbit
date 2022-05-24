@@ -9,6 +9,8 @@
 
 namespace orbit_gl {
 
+constexpr float kIncrementalZoomTimeRatio = 0.1;
+
 class TimelineInfoInterface {
  public:
   virtual ~TimelineInfoInterface() = default;
@@ -23,6 +25,8 @@ class TimelineInfoInterface {
   [[nodiscard]] virtual double GetTimeWindowUs() const = 0;
   [[nodiscard]] virtual double GetMinTimeUs() const = 0;
   [[nodiscard]] virtual double GetMaxTimeUs() const = 0;
+
+  virtual void ZoomTime(int delta, double mouse_ratio) = 0;
 
   [[nodiscard]] virtual uint64_t GetCaptureTimeSpanNs() const = 0;
 };
