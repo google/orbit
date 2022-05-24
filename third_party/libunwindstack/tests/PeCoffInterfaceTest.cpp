@@ -38,7 +38,7 @@ template <typename PeCoffInterfaceType>
 class PeCoffInterfaceTest : public ::testing::Test {
  public:
   PeCoffInterfaceTest() : fake_(new PeCoffFake<PeCoffInterfaceType>) {}
-  ~PeCoffInterfaceTest() {}
+  ~PeCoffInterfaceTest() override = default;
 
   PeCoffFake<PeCoffInterfaceType>* GetFake() { return fake_.get(); }
   MemoryFake* GetMemory() { return fake_->GetMemoryFake(); }
@@ -56,7 +56,7 @@ template <typename PeCoffInterfaceType>
 class PeCoffInterfaceFileTest : public ::testing::Test {
  public:
   PeCoffInterfaceFileTest() : memory_(nullptr) {}
-  ~PeCoffInterfaceFileTest() {}
+  ~PeCoffInterfaceFileTest() override = default;
 
   static std::unique_ptr<MemoryBuffer> ReadFile(const char* filename) {
     std::string dir = android::base::GetExecutableDirectory() + "/tests/files/";

@@ -346,18 +346,26 @@ bool PeCoffInterfaceImpl<AddressType>::InitSections() {
     section.vmsize = section_header.vmsize;
     section.offset = section_header.offset;
     section.size = section_header.size;
+    section.flags = section_header.flags;
     sections_.emplace_back(section);
   }
 
   for (size_t i = 0; i < sections_.size(); ++i) {
-    if (sections_[i].name == ".text") {
+    // Find the .text section as the first section with characteristics IMAGE_SCN_CNT_CODE and
+    // IMAGE_SCN_MEM_EXECUTE. We prefer this to looking for a section with name ".text", because we
+    // have observed that this is not very reliable: for example, changing the section names can be
+    // used as a simple means of obfuscation.
+    constexpr uint32_t kImageScnCntCode = 0x00000020;
+    constexpr uint32_t kImageScnMemExecute = 0x20000000;
+    if (!text_section_data_.has_value() && (sections_[i].flags & kImageScnCntCode) != 0 &&
+        (sections_[i].flags & kImageScnMemExecute) != 0) {
       TextSectionData section_data;
       section_data.memory_size = sections_[i].vmsize;
       section_data.memory_offset = sections_[i].vmaddr;
       section_data.file_offset = sections_[i].offset;
-      section_data.section_index = i;
       text_section_data_.emplace(section_data);
     }
+
     if (sections_[i].name == ".debug_frame") {
       DebugFrameSectionData section_data;
       section_data.file_offset = sections_[i].offset;

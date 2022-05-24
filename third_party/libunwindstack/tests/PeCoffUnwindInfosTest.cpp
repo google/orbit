@@ -29,13 +29,14 @@ namespace unwindstack {
 constexpr uint32_t kSectionSize = 0x1000;
 constexpr uint32_t kVmAddress = 0x6600;
 constexpr uint32_t kFileOffset = 0x4000;
-std::vector<unwindstack::Section> kSections{
-    unwindstack::Section{"all_addresses", kSectionSize, kVmAddress, kSectionSize, kFileOffset}};
+constexpr uint32_t kSectionFlags = 0x40000040;
+std::vector<unwindstack::Section> kSections{unwindstack::Section{
+    "all_addresses", kSectionSize, kVmAddress, kSectionSize, kFileOffset, kSectionFlags}};
 
 class PeCoffUnwindInfosTest : public ::testing::Test {
  public:
   PeCoffUnwindInfosTest() : memory_fake_(new MemoryFake) {}
-  ~PeCoffUnwindInfosTest() {}
+  ~PeCoffUnwindInfosTest() override = default;
 
   uint64_t SetUnwindInfoHeaderAtOffset(uint64_t offset, uint8_t num_codes, bool chained) {
     uint8_t flags = 0x00;

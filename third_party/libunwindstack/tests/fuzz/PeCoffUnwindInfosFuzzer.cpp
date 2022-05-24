@@ -36,7 +36,7 @@ void FuzzPeCoffUnwindInfos(const uint8_t* data, size_t size) {
   // a file offset.
   constexpr uint32_t kUint32Max = std::numeric_limits<uint32_t>::max();
   std::vector<unwindstack::Section> sections{
-      unwindstack::Section{"all_addresses", kUint32Max, 0, kUint32Max, 0}};
+      unwindstack::Section{"all_addresses", kUint32Max, 0, kUint32Max, 0, 0}};
   std::unique_ptr<unwindstack::PeCoffUnwindInfos> pe_coff_unwind_infos(
       CreatePeCoffUnwindInfos(memory.get(), sections));
   unwindstack::UnwindInfo info;

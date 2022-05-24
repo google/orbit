@@ -103,24 +103,26 @@ struct SectionHeader {
 // Represents preprocessed data of a section that we need for further processing. Section name
 // is already looked up in the string table.
 struct Section {
-  Section() : name(""), vmsize(0), vmaddr(0), size(0), offset(0) {}
+  Section() : name(""), vmsize(0), vmaddr(0), size(0), offset(0), flags(0) {}
   Section(std::string name_arg, uint32_t vmsize_arg, uint32_t vmaddr_arg, uint32_t size_arg,
-          uint32_t offset_arg)
+          uint32_t offset_arg, uint32_t flags_arg)
       : name(std::move(name_arg)),
         vmsize(vmsize_arg),
         vmaddr(vmaddr_arg),
         size(size_arg),
-        offset(offset_arg) {}
+        offset(offset_arg),
+        flags(flags_arg) {}
   std::string name;
   uint32_t vmsize;
   uint32_t vmaddr;
   uint32_t size;    // Size in file
   uint32_t offset;  // Offset in file
+  uint32_t flags;
 };
 
 class PeCoffMemory {
  public:
-  PeCoffMemory(Memory* memory) : memory_(memory), cur_offset_(0) {}
+  explicit PeCoffMemory(Memory* memory) : memory_(memory), cur_offset_(0) {}
 
   bool Get8(uint8_t* value);
   bool Get16(uint16_t* value);
@@ -199,7 +201,6 @@ class PeCoffInterfaceImpl : public PeCoffInterface {
     uint64_t memory_size = 0;
     uint64_t memory_offset = 0;
     uint64_t file_offset = 0;
-    size_t section_index = 0;
   };
   std::optional<TextSectionData> text_section_data_;
 
