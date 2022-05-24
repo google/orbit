@@ -159,15 +159,16 @@ void TimeGraph::Zoom(const TimerInfo& timer_info) { Zoom(timer_info.start(), tim
 
 double TimeGraph::GetCaptureTimeSpanUs() const { return GetCaptureTimeSpanNs() * 0.001; }
 
-void TimeGraph::ZoomTime(float zoom_value, double mouse_ratio) {
-  static double increment_ratio = 0.1;
-  double scale = (zoom_value > 0) ? (1 + increment_ratio) : (1 / (1 + increment_ratio));
+void TimeGraph::ZoomTime(int zoom_delta, double center_time_ratio) {
+  constexpr double kIncrementalZoomTimeRatio = 0.1;
+  double scale =
+      (zoom_delta > 0) ? (1 + kIncrementalZoomTimeRatio) : (1 / (1 + kIncrementalZoomTimeRatio));
   // The horizontal zoom could have been triggered from the margin of TimeGraph, so we clamp the
   // mouse_ratio to ensure it is between 0 and 1.
-  mouse_ratio = std::clamp(mouse_ratio, 0., 1.);
+  center_time_ratio = std::clamp(center_time_ratio, 0., 1.);
 
   double current_time_window_us = max_time_us_ - min_time_us_;
-  ref_time_us_ = min_time_us_ + mouse_ratio * current_time_window_us;
+  ref_time_us_ = min_time_us_ + center_time_ratio * current_time_window_us;
 
   double time_left = std::max(ref_time_us_ - min_time_us_, 0.0);
   double time_right = std::max(max_time_us_ - ref_time_us_, 0.0);
@@ -179,8 +180,8 @@ void TimeGraph::ZoomTime(float zoom_value, double mouse_ratio) {
 
   if (duration < kTimeGraphMinTimeWindowsUs) {
     const double diff = kTimeGraphMinTimeWindowsUs - duration;
-    min_time_us -= diff * mouse_ratio;
-    max_time_us += diff * (1. - mouse_ratio);
+    min_time_us -= diff * center_time_ratio;
+    max_time_us += diff * (1. - center_time_ratio);
   }
 
   SetMinMax(min_time_us, max_time_us);
@@ -414,7 +415,7 @@ orbit_gl::CaptureViewElement::EventResult TimeGraph::OnMouseWheel(
     VerticalZoom(delta_normalized, mouse_pos[1]);
   } else {
     double mouse_ratio = mouse_pos[0] / GetTimelineWidth();
-    ZoomTime(delta_normalized, mouse_ratio);
+    ZoomTime(delta, mouse_ratio);
   }
 
   return EventResult::kHandled;

@@ -24,6 +24,8 @@ class TimelineInfoInterface {
   [[nodiscard]] virtual double GetMinTimeUs() const = 0;
   [[nodiscard]] virtual double GetMaxTimeUs() const = 0;
 
+  virtual void ZoomTime(int zoom_delta, double center_time_ratio) = 0;
+
   [[nodiscard]] virtual uint64_t GetCaptureTimeSpanNs() const = 0;
 };
 

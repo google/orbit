@@ -5,6 +5,8 @@
 #ifndef ORBIT_GL_MOCK_TIMELINE_INFO_H_
 #define ORBIT_GL_MOCK_TIMELINE_INFO_H_
 
+#include <gmock/gmock.h>
+
 #include "TimelineInfoInterface.h"
 
 namespace orbit_gl {
@@ -48,6 +50,8 @@ class MockTimelineInfo : public TimelineInfoInterface {
     max_visible_ns_ = max_tick;
     max_capture_ns_ = std::max(max_capture_ns_, max_tick);
   }
+
+  MOCK_METHOD(void, ZoomTime, (int, double), (override));
 
  private:
   double width_ = 0.f;
