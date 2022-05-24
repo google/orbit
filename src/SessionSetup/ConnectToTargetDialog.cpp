@@ -5,7 +5,6 @@
 #include "SessionSetup/ConnectToTargetDialog.h"
 
 #include <absl/flags/flag.h>
-#include <qobjectdefs.h>
 
 #include <QApplication>
 #include <QMessageBox>
