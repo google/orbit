@@ -160,7 +160,7 @@ void TimeGraph::Zoom(const TimerInfo& timer_info) { Zoom(timer_info.start(), tim
 double TimeGraph::GetCaptureTimeSpanUs() const { return GetCaptureTimeSpanNs() * 0.001; }
 
 void TimeGraph::ZoomTime(int zoom_delta, double center_time_ratio) {
-  constexpr float kIncrementalZoomTimeRatio = 0.1;
+  constexpr double kIncrementalZoomTimeRatio = 0.1;
   double scale =
       (zoom_delta > 0) ? (1 + kIncrementalZoomTimeRatio) : (1 / (1 + kIncrementalZoomTimeRatio));
   // The horizontal zoom could have been triggered from the margin of TimeGraph, so we clamp the
