@@ -226,60 +226,116 @@ bool CallstackThreadBar::IsEmpty() const {
   return callstack_count == 0;
 }
 
-[[nodiscard]] std::string CallstackThreadBar::SafeGetFormattedFunctionName(
-    const CallstackInfo& callstack, size_t frame_index, int max_line_length) const {
+CallstackThreadBar::ModuleAndFunctionNameToFormat CallstackThreadBar::SafeGetModuleAndFunctionNames(
+    const CallstackInfo& callstack, size_t frame_index) const {
   ORBIT_CHECK(capture_data_ != nullptr);
   if (frame_index >= callstack.frames().size()) {
-    return std::string("<i>") + orbit_client_data::kUnknownFunctionOrModuleName + "</i>";
+    ModuleAndFunctionNameToFormat module_and_function_name_to_format;
+    module_and_function_name_to_format.module_name =
+        orbit_client_data::kUnknownFunctionOrModuleName;
+    module_and_function_name_to_format.module_is_unknown = true;
+    module_and_function_name_to_format.function_name =
+        orbit_client_data::kUnknownFunctionOrModuleName;
+    module_and_function_name_to_format.function_is_unknown = true;
+    return module_and_function_name_to_format;
   }
 
-  const uint64_t addr = callstack.frames()[frame_index];
+  const uint64_t address = callstack.frames()[frame_index];
+  ModuleAndFunctionNameToFormat module_and_function_name;
+
+  const auto& [module_path, unused_module_build_id] =
+      orbit_client_data::FindModulePathAndBuildIdByAddress(*module_manager_, *capture_data_,
+                                                           address);
+  const std::string unknown_module_path_or_module_name =
+      (module_path == orbit_client_data::kUnknownFunctionOrModuleName)
+          ? module_path
+          : std::filesystem::path(module_path).filename().string();
+
   const std::string& function_name =
-      orbit_client_data::GetFunctionNameByAddress(*module_manager_, *capture_data_, addr);
-  if (function_name == orbit_client_data::kUnknownFunctionOrModuleName) {
-    return std::string("<i>") + absl::StrFormat("[unknown@%#x]", addr) + "</i>";
-  }
-
-  std::string fn_name =
-      max_line_length >= 0
-          ? orbit_gl::ShortenStringWithEllipsis(function_name, static_cast<size_t>(max_line_length))
+      orbit_client_data::GetFunctionNameByAddress(*module_manager_, *capture_data_, address);
+  const std::string function_name_or_unknown_with_address =
+      (function_name == orbit_client_data::kUnknownFunctionOrModuleName)
+          ? absl::StrFormat("[unknown@%#x]", address)
           : function_name;
-  // Simple HTML escaping
-  return absl::StrReplaceAll(fn_name, {{"&", "&amp;"}, {"<", "&lt;"}, {">", "&gt;"}});
+
+  ModuleAndFunctionNameToFormat module_and_function_name_to_format;
+  module_and_function_name_to_format.module_name = unknown_module_path_or_module_name;
+  module_and_function_name_to_format.module_is_unknown =
+      (module_path == orbit_client_data::kUnknownFunctionOrModuleName);
+  module_and_function_name_to_format.function_name = function_name_or_unknown_with_address;
+  module_and_function_name_to_format.function_is_unknown =
+      (function_name == orbit_client_data::kUnknownFunctionOrModuleName);
+  return module_and_function_name_to_format;
 }
 
-constexpr const char* kErrorColorString = "#ffb000";
+std::string CallstackThreadBar::FormatModuleName(
+    const CallstackThreadBar::ModuleAndFunctionNameToFormat& module_and_function_name) {
+  return module_and_function_name.module_is_unknown
+             ? absl::StrFormat("<i>%s</i>", module_and_function_name.module_name)
+             : module_and_function_name.module_name;
+}
 
-std::string CallstackThreadBar::FormatCallstackForTooltip(const CallstackInfo& callstack,
-                                                          int max_line_length, int max_lines,
-                                                          int bottom_n_lines) const {
-  std::string result;
-  int size = static_cast<int>(callstack.frames().size());
-  if (max_lines <= 0) {
-    max_lines = size;
-  }
-  const int bottom_n = std::min(std::min(max_lines - 1, bottom_n_lines), size);
-  const int top_n = std::min(max_lines, size) - bottom_n;
+std::string CallstackThreadBar::FormatFunctionName(
+    const CallstackThreadBar::ModuleAndFunctionNameToFormat& module_and_function_name,
+    int max_length) {
+  const std::string& function_name = module_and_function_name.function_name;
+  const std::string shortened_function_name =
+      (max_length > 0)
+          ? orbit_gl::ShortenStringWithEllipsis(function_name, static_cast<size_t>(max_length))
+          : function_name;
+  // Simple HTML escaping.
+  const std::string escaped_function_name =
+      absl::StrReplaceAll(shortened_function_name, {{"&", "&amp;"}, {"<", "&lt;"}, {">", "&gt;"}});
+  return module_and_function_name.function_is_unknown
+             ? absl::StrFormat("<i>%s</i>", escaped_function_name)
+             : escaped_function_name;
+}
 
+constexpr const char* kUnwindErrorColorString = "#ffb000";
+
+std::string CallstackThreadBar::FormatCallstackForTooltip(const CallstackInfo& callstack) const {
+  constexpr int kMaxLineLength = 100;
+  constexpr int kMaxLines = 20;
+  constexpr int kBottomLineCount = 5;
+
+  int callstack_size = static_cast<int>(callstack.frames().size());
+  const int bottom_n = std::min(std::min(kMaxLines - 1, kBottomLineCount), callstack_size);
+  const int top_n = std::min(kMaxLines, callstack_size) - bottom_n;
+
+  constexpr int kShortenedForReadabilityFakeIndex = -1;
+  std::vector<int> frame_indices_to_display;
   for (int i = 0; i < top_n; ++i) {
-    // The first frame is always correct.
-    if (callstack.IsUnwindingError() && i > 0) {
-      result.append(absl::StrFormat("<br/><span style=\" color:%s;\">%s</span>", kErrorColorString,
-                                    SafeGetFormattedFunctionName(callstack, i, max_line_length)));
-    } else {
-      result.append("<br/>" + SafeGetFormattedFunctionName(callstack, i, max_line_length));
+    frame_indices_to_display.push_back(i);
+  }
+  if (kMaxLines < callstack_size) {
+    frame_indices_to_display.push_back(-1);
+  }
+  for (int i = callstack_size - bottom_n; i < callstack_size; ++i) {
+    frame_indices_to_display.push_back(i);
+  }
+
+  std::string result;
+  for (int frame_index : frame_indices_to_display) {
+    if (frame_index == kShortenedForReadabilityFakeIndex) {
+      result += "<i>... shortened for readability ...</i><br/>";
+      continue;
     }
-  }
-  if (max_lines < size) {
-    result += "<br/><i>... shortened for readability ...</i>";
-  }
-  for (int i = size - bottom_n; i < size; ++i) {
+
+    static const std::string kModuleFunctionSeparator{" | "};
+    const ModuleAndFunctionNameToFormat module_and_function_name =
+        SafeGetModuleAndFunctionNames(callstack, frame_index);
+    const std::string formatted_module_name = FormatModuleName(module_and_function_name);
+    const std::string formatted_function_name = FormatFunctionName(
+        module_and_function_name, kMaxLineLength - module_and_function_name.module_name.size() -
+                                      kModuleFunctionSeparator.size());
+    const std::string formatted_module_and_function_name =
+        formatted_module_name + kModuleFunctionSeparator + formatted_function_name;
     // The first frame is always correct.
-    if (callstack.IsUnwindingError() && i > 0) {
-      result.append(absl::StrFormat("<br/><span style=\" color:%s;\">%s</span>", kErrorColorString,
-                                    SafeGetFormattedFunctionName(callstack, i, max_line_length)));
+    if (callstack.IsUnwindingError() && frame_index > 0) {
+      result += absl::StrFormat("<span style=\"color:%s;\">%s</span><br/>", kUnwindErrorColorString,
+                                formatted_module_and_function_name);
     } else {
-      result.append("<br/>" + SafeGetFormattedFunctionName(callstack, i, max_line_length));
+      result.append(formatted_module_and_function_name).append("<br/>");
     }
   }
 
@@ -305,18 +361,31 @@ std::string CallstackThreadBar::GetSampleTooltip(const PrimitiveAssembler& primi
     return unknown_return_text;
   }
 
-  std::string function_name = SafeGetFormattedFunctionName(*callstack, 0, -1);
-  std::string result =
-      absl::StrFormat("<b>%s</b><br/><i>Stack sample</i><br/><br/>", function_name.c_str());
+  ModuleAndFunctionNameToFormat innermost_module_and_function_name =
+      SafeGetModuleAndFunctionNames(*callstack, 0);
+  std::string innermost_formatted_function_name =
+      FormatFunctionName(innermost_module_and_function_name, -1);
+  std::string innermost_formatted_module_name =
+      FormatModuleName(innermost_module_and_function_name);
+
+  std::string result;
+  result += absl::StrFormat("<b>%s</b><br/>", innermost_formatted_function_name);
+  result += "<i>Stack sample</i><br/>";
+  result += "<br/>";
+  result += absl::StrFormat("<b>Module: </b>%s<br/>", innermost_formatted_module_name);
+  result += "<br/>";
   if (callstack->IsUnwindingError()) {
-    result += absl::StrFormat(
-        "<span style=\" color:%s;\"><b>Unwinding error:</b> the stack could not be unwound "
-        "successfully.<br/>%s</span>",
-        kErrorColorString, orbit_client_data::CallstackTypeToDescription(callstack->type()));
+    result += absl::StrFormat("<span style=\"color:%s;\">", kUnwindErrorColorString);
+    result += "<b>Unwinding error:</b> the stack could not be unwound successfully.<br/>";
+    result += orbit_client_data::CallstackTypeToDescription(callstack->type());
+    result += "</span><br/>";
+    result += "<br/>";
   }
-  result += "<br/><br/><b>Callstack:</b>" + FormatCallstackForTooltip(*callstack);
-  return result +
-         "<br/><br/><i>To select samples, click the bar & drag across multiple samples</i>";
+  result += "<b>Callstack:</b><br/>";
+  result += FormatCallstackForTooltip(*callstack);
+  result += "<br/>";
+  result += "<i>To select samples, click the bar & drag across multiple samples</i>";
+  return result;
 }
 
 }  // namespace orbit_gl

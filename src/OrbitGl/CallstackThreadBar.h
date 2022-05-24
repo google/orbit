@@ -51,13 +51,22 @@ class CallstackThreadBar : public ThreadBar {
 
  private:
   void SelectCallstacks();
-  [[nodiscard]] std::string SafeGetFormattedFunctionName(
-      const orbit_client_data::CallstackInfo& callstack, size_t frame_index,
-      int max_line_length) const;
-  [[nodiscard]] std::string FormatCallstackForTooltip(
-      const orbit_client_data::CallstackInfo& callstack, int max_line_length = 80,
-      int max_lines = 20, int bottom_n_lines = 5) const;
 
+  struct ModuleAndFunctionNameToFormat {
+    std::string module_name;
+    bool module_is_unknown;
+    std::string function_name;
+    bool function_is_unknown;
+  };
+  [[nodiscard]] ModuleAndFunctionNameToFormat SafeGetModuleAndFunctionNames(
+      const orbit_client_data::CallstackInfo& callstack, size_t frame_index) const;
+  [[nodiscard]] static std::string FormatModuleName(
+      const CallstackThreadBar::ModuleAndFunctionNameToFormat& module_and_function_name);
+  [[nodiscard]] static std::string FormatFunctionName(
+      const CallstackThreadBar::ModuleAndFunctionNameToFormat& module_and_function_name,
+      int max_length);
+  [[nodiscard]] std::string FormatCallstackForTooltip(
+      const orbit_client_data::CallstackInfo& callstack) const;
   [[nodiscard]] std::string GetSampleTooltip(const PrimitiveAssembler& primitive_assembler,
                                              PickingId id) const;
 };
