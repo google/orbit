@@ -115,8 +115,9 @@ ErrorMessageOr<void> ConnectToTargetDialog::OnAsyncDataAvailable(
   process_manager_ = orbit_client_services::ProcessManager::Create(
       stadia_connection_.value().GetGrpcChannel(), absl::Milliseconds(1000));
   process_manager_->SetProcessListUpdateListener(
-      [this](std::vector<orbit_grpc_protos::ProcessInfo> process_list) {
-        OnProcessListUpdate(std::move(process_list));
+      [dialog = QPointer<ConnectToTargetDialog>(this)](std::vector<orbit_grpc_protos::ProcessInfo> process_list) {
+        if (dialog == nullptr) return;
+        dialog->OnProcessListUpdate(std::move(process_list));
       });
   SetStatusMessage("Waiting for process to launch.");
 
