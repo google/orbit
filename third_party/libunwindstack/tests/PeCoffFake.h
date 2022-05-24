@@ -44,9 +44,12 @@ class PeCoffFake {
   static constexpr uint64_t kTextSectionMemoryOffset = 0x2000;
   static constexpr uint64_t kTextSectionMemorySize = 0xFFF;
 
-  // File offset and size for the .debug_frame section.
+  static constexpr uint32_t kTextSectionFlags = 0x20000020;
+
+  // File offset for the .debug_frame section.
   static constexpr uint64_t kDebugFrameSectionFileOffset = 0x3000;
-  static constexpr uint64_t kDebugFrameSectionSize = 0x200;
+
+  static constexpr uint32_t kDebugFrameSectionFlags = 0x40000040;
 
   // File offset for the exception table, equivalent to the .pdata section, which consists
   // of a list of RUNTIME_FUNCTION entries.
@@ -58,6 +61,8 @@ class PeCoffFake {
   // While this value determines the memory layout, our code only looks at the file content,
   // so this value is only used in arithmetic converting virtual addresses to file offset.
   static constexpr uint64_t kExceptionTableVmAddr = 0x5000;
+
+  static constexpr uint32_t kPdataSectionFlags = 0x40000040;
 
   // Fake load bias, does not change the layout of the file data.
   static constexpr int64_t kLoadBiasFake = 0x31000;
@@ -74,9 +79,9 @@ class PeCoffFake {
 
   // Returns the offset where the section *would* go, so tests can add data there as desired.
   uint64_t InitNoSectionHeaders();
-  uint64_t SetSectionHeaderAtOffset(uint64_t offset, std::string section_name, uint64_t vmsize = 0,
-                                    uint64_t vmaddr = 0, uint64_t size = 0,
-                                    uint64_t file_offset = 0);
+  uint64_t SetSectionHeaderAtOffset(uint64_t offset, const std::string& section_name,
+                                    uint64_t vmsize = 0, uint64_t vmaddr = 0, uint64_t size = 0,
+                                    uint64_t file_offset = 0, uint32_t flags = 0);
 
   uint64_t coff_header_nsects_offset() const { return coff_header_nsects_offset_; };
   uint64_t coff_header_symoff_offset() const { return coff_header_symoff_offset_; };
@@ -85,7 +90,6 @@ class PeCoffFake {
   uint64_t optional_header_num_data_dirs_offset() const {
     return optional_header_num_data_dirs_offset_;
   };
-  uint64_t executable_section_offset() const { return executable_section_offset_; };
 
  private:
   uint64_t coff_header_nsects_offset_;
@@ -93,7 +97,6 @@ class PeCoffFake {
   uint64_t optional_header_size_offset_;
   uint64_t optional_header_start_offset_;
   uint64_t optional_header_num_data_dirs_offset_;
-  uint64_t executable_section_offset_;
   std::unique_ptr<MemoryFake> memory_;
 
   uint64_t SetData8(uint64_t offset, uint8_t value);
@@ -115,7 +118,6 @@ class PeCoffFake {
   uint64_t SetDebugFrameEntryAtOffset(uint64_t offset, uint32_t pc_start);
   uint64_t SetRuntimeFunctionsAtOffset(uint64_t offset, uint64_t size);
 
-  std::unique_ptr<MemoryFake> memory_fake_;
   std::vector<std::pair<uint64_t, std::string>> section_names_in_string_table_;
 };
 

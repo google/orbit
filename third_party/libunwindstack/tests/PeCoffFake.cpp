@@ -279,11 +279,9 @@ uint64_t PeCoffFake<PeCoffInterfaceType>::SetOptionalHeaderAtOffset(uint64_t off
 }
 
 template <typename PeCoffInterfaceType>
-uint64_t PeCoffFake<PeCoffInterfaceType>::SetSectionHeaderAtOffset(uint64_t offset,
-                                                                   std::string section_name,
-                                                                   uint64_t vmsize, uint64_t vmaddr,
-                                                                   uint64_t size,
-                                                                   uint64_t file_offset) {
+uint64_t PeCoffFake<PeCoffInterfaceType>::SetSectionHeaderAtOffset(
+    uint64_t offset, const std::string& section_name, uint64_t vmsize, uint64_t vmaddr,
+    uint64_t size, uint64_t file_offset, uint32_t flags) {
   CHECK(memory_);
   std::string name_in_header = section_name;
   if (section_name.size() > kSectionNameInHeaderSize) {
@@ -311,7 +309,7 @@ uint64_t PeCoffFake<PeCoffInterfaceType>::SetSectionHeaderAtOffset(uint64_t offs
   offset = SetData32(offset, 0);  // lineoff
   offset = SetData16(offset, 0);  // nrel
   offset = SetData16(offset, 0);  // nline
-  offset = SetData32(offset, 0);  // flagsd
+  offset = SetData32(offset, flags);
   return offset;
 };
 
@@ -335,13 +333,14 @@ uint64_t PeCoffFake<PeCoffInterfaceType>::SetSectionHeadersAtOffset(uint64_t off
   // Shorter than kSectionNameInHeaderSize (== 8) characters
   offset =
       SetSectionHeaderAtOffset(offset, ".text", kTextSectionMemorySize, kTextSectionMemoryOffset,
-                               kTextSectionFileSize, kTextSectionFileOffset);
-  offset = SetSectionHeaderAtOffset(offset, ".pdata", kExceptionTableSize, kExceptionTableVmAddr,
-                                    kExceptionTableSize, kExceptionTableFileOffset);
+                               kTextSectionFileSize, kTextSectionFileOffset, kTextSectionFlags);
+  offset =
+      SetSectionHeaderAtOffset(offset, ".pdata", kExceptionTableSize, kExceptionTableVmAddr,
+                               kExceptionTableSize, kExceptionTableFileOffset, kPdataSectionFlags);
   // Longer than kSectionNameInHeaderSize (== 8) characters
   offset = SetSectionHeaderAtOffset(offset, ".debug_frame", debug_frame_vmsize,
                                     /*vmaddr=*/kDebugFrameSectionFileOffset, debug_frame_filesize,
-                                    kDebugFrameSectionFileOffset);
+                                    kDebugFrameSectionFileOffset, kDebugFrameSectionFlags);
   SetData16(coff_header_nsects_offset_, 3);
 
   CHECK(offset <= std::numeric_limits<uint32_t>::max());
