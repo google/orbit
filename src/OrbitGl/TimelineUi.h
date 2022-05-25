@@ -21,9 +21,7 @@ class TimelineUi : public CaptureViewElement {
                       Viewport* viewport, TimeGraphLayout* layout)
       : CaptureViewElement(parent, viewport, layout), timeline_info_interface_(timeline_info) {}
 
-  [[nodiscard]] float GetHeight() const override {
-    return GetHeightWithoutMargin() + GetMarginHeight();
-  }
+  [[nodiscard]] float GetHeight() const override { return layout_->GetTimeBarHeight(); }
 
   std::unique_ptr<orbit_accessibility::AccessibleInterface> CreateAccessibleInterface() override;
 
@@ -36,7 +34,6 @@ class TimelineUi : public CaptureViewElement {
                    uint64_t max_timestamp_ns) const;
   void RenderLabels(PrimitiveAssembler& primitive_assembler, TextRenderer& text_renderer,
                     uint64_t min_timestamp_ns, uint64_t max_timestamp_ns) const;
-  void RenderMargin(PrimitiveAssembler& primitive_assembler) const;
   void RenderBackground(PrimitiveAssembler& primitive_assembler) const;
   void RenderLabel(PrimitiveAssembler& primitive_assembler, TextRenderer& text_renderer,
                    uint64_t tick_ns, uint32_t number_of_decimal_places, Color background_color,
@@ -49,8 +46,6 @@ class TimelineUi : public CaptureViewElement {
   [[nodiscard]] bool WillLabelsOverlap(TextRenderer& text_renderer,
                                        const std::vector<uint64_t>& tick_list) const;
   [[nodiscard]] float GetTickWorldXPos(uint64_t tick_ns) const;
-  [[nodiscard]] float GetHeightWithoutMargin() const { return layout_->GetTimeBarHeight(); }
-  [[nodiscard]] float GetMarginHeight() const { return layout_->GetTimeBarMargin(); }
   [[nodiscard]] uint32_t GetNumDecimalsInLabels() const { return num_decimals_in_labels_; }
   void UpdateNumDecimalsInLabels(uint64_t min_timestamp_ns, uint64_t max_timestamp_ns);
 

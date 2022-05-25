@@ -81,8 +81,8 @@ class TimelineUiTest : public TimelineUi {
     }
     EXPECT_LE(num_labels, num_major_ticks + 1);
 
-    // Boxes: One box per each label + Background box + margin box.
-    EXPECT_EQ(num_boxes, num_labels + 2);
+    // Boxes: One box per each label + Background box.
+    EXPECT_EQ(num_boxes, num_labels + 1);
 
     // Everything should be between kZValueTimeBar and kZValueTimeBarLabel.
     EXPECT_TRUE(mock_text_renderer_.IsTextBetweenZLayers(GlCanvas::kZValueTimeBar,

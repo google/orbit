@@ -20,6 +20,7 @@ TimeGraphLayout::TimeGraphLayout() {
   space_between_cores_ = 2.f;
   space_between_gpu_depths_ = 2.f;
   space_between_tracks_ = 10.f;
+  space_between_tracks_and_timeline_ = 10.f;
   space_between_thread_panes_ = 5.f;
   space_between_subtracks_ = 0.f;
   track_label_offset_x_ = 30.f;
@@ -42,7 +43,6 @@ TimeGraphLayout::TimeGraphLayout() {
   generic_fixed_spacer_width_ = 10.f;
   scale_ = 1.f;
   time_bar_height_ = 30.f;
-  time_bar_margin_ = 10.f;
   font_size_ = 14;
 };
 
@@ -64,11 +64,11 @@ bool TimeGraphLayout::DrawProperties() {
   FLOAT_SLIDER(space_between_cores_);
   FLOAT_SLIDER(space_between_gpu_depths_);
   FLOAT_SLIDER(space_between_tracks_);
+  FLOAT_SLIDER(space_between_tracks_and_timeline_);
   FLOAT_SLIDER(space_between_thread_panes_);
   FLOAT_SLIDER(space_between_subtracks_);
   FLOAT_SLIDER(slider_width_);
   FLOAT_SLIDER(time_bar_height_);
-  FLOAT_SLIDER(time_bar_margin_);
   FLOAT_SLIDER(track_tab_height_);
   FLOAT_SLIDER(track_tab_offset_);
   FLOAT_SLIDER(track_indent_offset_);

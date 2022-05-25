@@ -29,7 +29,7 @@ void TimelineUi::RenderLines(PrimitiveAssembler& primitive_assembler, uint64_t m
     if (timeline_x_visible_range.Contains(world_x)) {
       int screen_x = viewport_->WorldToScreen(Vec2(world_x, 0))[0];
       primitive_assembler.AddVerticalLine(
-          Vec2(screen_x, GetPos()[1]), GetHeightWithoutMargin(), GlCanvas::kZValueTimeBar,
+          Vec2(screen_x, GetPos()[1]), GetHeight(), GlCanvas::kZValueTimeBar,
           tick_type == TimelineTicks::TickType::kMajorTick ? kTimelineMajorTickColor
                                                            : kTimelineMinorTickColor);
     }
@@ -53,15 +53,8 @@ void TimelineUi::RenderLabels(PrimitiveAssembler& primitive_assembler, TextRende
   }
 }
 
-void TimelineUi::RenderMargin(PrimitiveAssembler& primitive_assembler) const {
-  Vec2 margin_pos = Vec2(GetPos()[0], GetPos()[1] + GetHeightWithoutMargin());
-  Vec2 margin_size = Vec2(GetSize()[0], GetMarginHeight());
-  primitive_assembler.AddBox(MakeBox(margin_pos, margin_size), GlCanvas::kZValueTimeBar,
-                             GlCanvas::kBackgroundColor);
-}
-
 void TimelineUi::RenderBackground(PrimitiveAssembler& primitive_assembler) const {
-  Quad background_box = MakeBox(GetPos(), Vec2(GetWidth(), GetHeightWithoutMargin()));
+  Quad background_box = MakeBox(GetPos(), GetSize());
   primitive_assembler.AddBox(background_box, GlCanvas::kZValueTimeBar,
                              GlCanvas::kTimeBarBackgroundColor);
 }
@@ -99,7 +92,7 @@ void TimelineUi::RenderLabel(PrimitiveAssembler& primitive_assembler, TextRender
   }
 
   Vec2 pos, size;
-  float label_middle_y = GetPos()[1] + GetHeightWithoutMargin() / 2.f;
+  float label_middle_y = GetPos()[1] + GetHeight() / 2.f;
   text_renderer.AddText(label.c_str(), label_start_x, label_middle_y, label_z, /*text_formatting=*/
                         {layout_->GetFontSize(), Color(255, 255, 255, 255), -1.f,
                          TextRenderer::HAlign::Left, TextRenderer::VAlign::Middle},
@@ -216,8 +209,6 @@ void TimelineUi::DoUpdatePrimitives(PrimitiveAssembler& primitive_assembler,
   UpdateNumDecimalsInLabels(min_timestamp_ns, max_timestamp_ns);
   RenderLines(primitive_assembler, min_timestamp_ns, max_timestamp_ns);
   RenderLabels(primitive_assembler, text_renderer, min_timestamp_ns, max_timestamp_ns);
-  // TODO(http://b/217719000): Hack needed to not draw tracks on timeline's margin.
-  RenderMargin(primitive_assembler);
 }
 
 std::unique_ptr<orbit_accessibility::AccessibleInterface> TimelineUi::CreateAccessibleInterface() {

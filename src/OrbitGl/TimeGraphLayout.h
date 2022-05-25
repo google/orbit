@@ -29,7 +29,6 @@ class TimeGraphLayout {
   float GetTrackLabelOffsetX() const { return track_label_offset_x_; }
   float GetSliderWidth() const { return slider_width_; }
   float GetTimeBarHeight() const { return time_bar_height_; }
-  float GetTimeBarMargin() const { return time_bar_margin_; }
   float GetTrackTabWidth() const { return track_tab_width_; }
   float GetTrackTabHeight() const { return track_tab_height_ * scale_; }
   float GetTrackTabOffset() const { return track_tab_offset_; }
@@ -39,12 +38,14 @@ class TimeGraphLayout {
   float GetRoundingRadius() const { return rounding_radius_ * scale_; }
   float GetRoundingNumSides() const { return rounding_num_sides_; }
   float GetTextOffset() const { return text_offset_ * scale_; }
-  float GetTracksTopMargin() const { return GetTimeBarHeight() + GetTimeBarMargin(); }
   float GetRightMargin() const { return right_margin_; }
   float GetMinButtonSize() const { return min_button_size_; }
   float GetButtonWidth() const { return button_width_; }
   float GetButtonHeight() const { return button_height_; }
   float GetSpaceBetweenTracks() const { return space_between_tracks_ * scale_; }
+  float GetSpaceBetweenTracksAndTimeline() const {
+    return space_between_tracks_and_timeline_ * scale_;
+  }
   float GetSpaceBetweenCores() const { return space_between_cores_ * scale_; }
   float GetSpaceBetweenGpuDepths() const { return space_between_gpu_depths_ * scale_; }
   float GetSpaceBetweenThreadPanes() const { return space_between_thread_panes_ * scale_; }
@@ -75,7 +76,6 @@ class TimeGraphLayout {
   float track_label_offset_x_;
   float slider_width_;
   float time_bar_height_;
-  float time_bar_margin_;
   float track_tab_width_;
   float track_tab_height_;
   float track_tab_offset_;
@@ -96,6 +96,7 @@ class TimeGraphLayout {
   float space_between_cores_;
   float space_between_gpu_depths_;
   float space_between_tracks_;
+  float space_between_tracks_and_timeline_;
   float space_between_thread_panes_;
   float space_between_subtracks_;
   float generic_fixed_spacer_width_;
