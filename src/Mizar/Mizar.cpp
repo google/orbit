@@ -10,7 +10,7 @@
 
 #include "CaptureClient/LoadCapture.h"
 #include "CaptureFile/CaptureFile.h"
-#include "MizarData.h"
+#include "MizarData/MizarData.h"
 #include "OrbitBase/Logging.h"
 
 int main(int argc, char* argv[]) {

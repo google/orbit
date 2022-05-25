@@ -10,10 +10,7 @@ add_executable(Mizar)
 
 target_sources(
   Mizar
-  PRIVATE Mizar.cpp
-          MizarData.h
-          MizarData.cpp
-          MizarDataProvider.h)
+  PRIVATE Mizar.cpp)
 
 target_include_directories(Mizar PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}) 
 
@@ -21,6 +18,7 @@ target_link_libraries(Mizar
 PRIVATE CaptureClient
         CaptureFile
         ClientData
+        MizarData
         OrbitBase
         Threads::Threads
 )
