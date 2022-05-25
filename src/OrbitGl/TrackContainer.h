@@ -58,6 +58,7 @@ class TrackContainer final : public CaptureViewElement {
           iterator_timer_info,
       const absl::flat_hash_map<uint64_t, uint64_t>& iterator_id_to_function_id);
   void UpdateVerticalScroll(float ratio);
+  void PanVertically(int delta);
   [[nodiscard]] float GetVerticalScrollingOffset() const { return vertical_scrolling_offset_; }
   void SetVerticalScrollingOffset(float value);
 

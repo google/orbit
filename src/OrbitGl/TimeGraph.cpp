@@ -409,13 +409,11 @@ orbit_gl::CaptureViewElement::EventResult TimeGraph::OnMouseWheel(
     const Vec2& mouse_pos, int delta, const orbit_gl::ModifierKeys& modifiers) {
   if (delta == 0) return EventResult::kIgnored;
 
-  const float delta_normalized = delta < 0 ? -1.f : 1.f;
-
   if (modifiers.ctrl) {
-    VerticalZoom(delta_normalized, mouse_pos[1]);
-  } else {
-    double mouse_ratio = mouse_pos[0] / GetTimelineWidth();
+    double mouse_ratio = (mouse_pos[0] - GetPos()[0]) / GetTimelineWidth();
     ZoomTime(delta, mouse_ratio);
+  } else {
+    track_container_->PanVertically(delta);
   }
 
   return EventResult::kHandled;

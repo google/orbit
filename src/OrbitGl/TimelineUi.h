@@ -17,7 +17,7 @@ inline const Color kTimelineMinorTickColor(255, 254, 253, 63);
 // TimelineUi is the class which takes care of drawing the timeline in the CaptureWindows.
 class TimelineUi : public CaptureViewElement {
  public:
-  explicit TimelineUi(CaptureViewElement* parent, const TimelineInfoInterface* timeline_info,
+  explicit TimelineUi(CaptureViewElement* parent, TimelineInfoInterface* timeline_info,
                       Viewport* viewport, TimeGraphLayout* layout)
       : CaptureViewElement(parent, viewport, layout), timeline_info_interface_(timeline_info) {}
 
@@ -26,6 +26,11 @@ class TimelineUi : public CaptureViewElement {
   }
 
   std::unique_ptr<orbit_accessibility::AccessibleInterface> CreateAccessibleInterface() override;
+
+ protected:
+  [[nodiscard]] EventResult OnMouseWheel(
+      const Vec2& mouse_pos, int delta,
+      const orbit_gl::ModifierKeys& modifiers = orbit_gl::ModifierKeys()) override;
 
  private:
   void DoDraw(PrimitiveAssembler& primitive_assembler, TextRenderer& text_renderer,
@@ -54,7 +59,7 @@ class TimelineUi : public CaptureViewElement {
   [[nodiscard]] uint32_t GetNumDecimalsInLabels() const { return num_decimals_in_labels_; }
   void UpdateNumDecimalsInLabels(uint64_t min_timestamp_ns, uint64_t max_timestamp_ns);
 
-  const TimelineInfoInterface* timeline_info_interface_;
+  TimelineInfoInterface* timeline_info_interface_;
   TimelineTicks timeline_ticks_;
   uint32_t num_decimals_in_labels_ = 0;
 };

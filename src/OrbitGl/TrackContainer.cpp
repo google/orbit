@@ -384,6 +384,11 @@ void TrackContainer::UpdateVerticalScroll(float ratio) {
   SetVerticalScrollingOffset(new_scrolling_offset);
 }
 
+void TrackContainer::PanVertically(int delta) {
+  const int kPixelsPerDeltaInPanning = 25;
+  SetVerticalScrollingOffset(vertical_scrolling_offset_ - kPixelsPerDeltaInPanning * delta);
+}
+
 void TrackContainer::SetVerticalScrollingOffset(float value) {
   float clamped_value = std::max(std::min(value, GetVisibleTracksTotalHeight() - GetHeight()), 0.f);
   if (clamped_value == vertical_scrolling_offset_) return;
