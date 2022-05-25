@@ -51,13 +51,24 @@ class CallstackThreadBar : public ThreadBar {
 
  private:
   void SelectCallstacks();
-  [[nodiscard]] std::string SafeGetFormattedFunctionName(
-      const orbit_client_data::CallstackInfo& callstack, size_t frame_index,
-      int max_line_length) const;
-  [[nodiscard]] std::string FormatCallstackForTooltip(
-      const orbit_client_data::CallstackInfo& callstack, int max_line_length = 80,
-      int max_lines = 20, int bottom_n_lines = 5) const;
 
+  struct UnformattedModuleAndFunctionName {
+    // {module,function}_is_unknown doesn't imply that {module,function}_name is empty.
+    // Rather, it indicates that the name might need to be formatted differently.
+    std::string module_name;
+    bool module_is_unknown;
+    std::string function_name;
+    bool function_is_unknown;
+  };
+  [[nodiscard]] UnformattedModuleAndFunctionName SafeGetModuleAndFunctionName(
+      const orbit_client_data::CallstackInfo& callstack, size_t frame_index) const;
+  [[nodiscard]] static std::string FormatModuleName(
+      const CallstackThreadBar::UnformattedModuleAndFunctionName& module_and_function_name);
+  [[nodiscard]] static std::string FormatFunctionName(
+      const CallstackThreadBar::UnformattedModuleAndFunctionName& module_and_function_name,
+      int max_length);
+  [[nodiscard]] std::string FormatCallstackForTooltip(
+      const orbit_client_data::CallstackInfo& callstack) const;
   [[nodiscard]] std::string GetSampleTooltip(const PrimitiveAssembler& primitive_assembler,
                                              PickingId id) const;
 };
