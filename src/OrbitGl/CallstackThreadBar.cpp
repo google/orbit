@@ -294,7 +294,7 @@ std::string CallstackThreadBar::FormatFunctionName(
 constexpr const char* kUnwindErrorColorString = "#ffb000";
 
 std::string CallstackThreadBar::FormatCallstackForTooltip(const CallstackInfo& callstack) const {
-  constexpr int kMaxLineLength = 100;
+  constexpr int kMaxLineLength = 120;
   constexpr int kMaxLines = 20;
   constexpr int kBottomLineCount = 5;
 
@@ -370,6 +370,7 @@ std::string CallstackThreadBar::GetSampleTooltip(const PrimitiveAssembler& primi
       FormatModuleName(innermost_module_and_function_name);
 
   std::string result;
+  result.append("<p style=\"white-space:pre;\">");  // Prevent word wrapping.
   result += absl::StrFormat("<b>%s</b><br/>", innermost_formatted_function_name);
   result += "<i>Stack sample</i><br/>";
   result += "<br/>";
@@ -386,6 +387,7 @@ std::string CallstackThreadBar::GetSampleTooltip(const PrimitiveAssembler& primi
   result += FormatCallstackForTooltip(*callstack);
   result += "<br/>";
   result += "<i>To select samples, click the bar & drag across multiple samples</i>";
+  result.append("</p>");
   return result;
 }
 
