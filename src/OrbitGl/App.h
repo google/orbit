@@ -25,6 +25,7 @@
 #include <vector>
 
 #include "CallTreeView.h"
+#include "CaptureClient/AbstractCaptureListener.h"
 #include "CaptureClient/AppInterface.h"
 #include "CaptureClient/CaptureClient.h"
 #include "CaptureClient/CaptureListener.h"
@@ -88,7 +89,7 @@
 #include "Symbols/SymbolHelper.h"
 
 class OrbitApp final : public DataViewFactory,
-                       public orbit_capture_client::CaptureListener,
+                       public orbit_capture_client::AbstractCaptureListener,
                        public orbit_data_views::AppInterface,
                        public orbit_capture_client::CaptureControlInterface {
  public:
@@ -171,15 +172,7 @@ class OrbitApp final : public DataViewFactory,
   void OnCaptureFinished(const orbit_grpc_protos::CaptureFinished& capture_finished) override;
   void OnTimer(const orbit_client_protos::TimerInfo& timer_info) override;
   void OnKeyAndString(uint64_t key, std::string str) override;
-  void OnUniqueCallstack(uint64_t callstack_id,
-                         orbit_client_data::CallstackInfo callstack) override;
-  void OnCallstackEvent(orbit_client_data::CallstackEvent callstack_event) override;
-  void OnThreadName(uint32_t thread_id, std::string thread_name) override;
-  void OnThreadStateSlice(orbit_client_data::ThreadStateSliceInfo thread_state_slice) override;
-  void OnAddressInfo(orbit_client_data::LinuxAddressInfo address_info) override;
-  void OnUniqueTracepointInfo(uint64_t tracepoint_id,
-                              orbit_client_data::TracepointInfo tracepoint_info) override;
-  void OnTracepointEvent(orbit_client_data::TracepointEventInfo tracepoint_event_info) override;
+
   void OnModuleUpdate(uint64_t timestamp_ns, orbit_grpc_protos::ModuleInfo module_info) override;
   void OnModulesSnapshot(uint64_t timestamp_ns,
                          std::vector<orbit_grpc_protos::ModuleInfo> module_infos) override;
@@ -683,11 +676,6 @@ class OrbitApp final : public DataViewFactory,
   orbit_client_data::ProcessData* process_ = nullptr;
 
   std::unique_ptr<FramePointerValidatorClient> frame_pointer_validator_client_;
-
-  // TODO(b/166767590): This is mostly written during capture by the capture thread on the
-  //  CaptureListener parts of App, but may be read also during capturing by all threads.
-  //  Currently, it is not properly synchronized (and thus it can't live at DataManager).
-  std::unique_ptr<orbit_client_data::CaptureData> capture_data_;
 
   orbit_gl::FrameTrackOnlineProcessor frame_track_online_processor_;
 

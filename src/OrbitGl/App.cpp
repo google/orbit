@@ -32,6 +32,7 @@
 #include <utility>
 
 #include "CaptureClient/CaptureListener.h"
+#include "CaptureClient/LoadCapture.h"
 #include "CaptureFile/CaptureFile.h"
 #include "CaptureFile/CaptureFileHelpers.h"
 #include "CaptureWindow.h"
@@ -501,41 +502,6 @@ void OrbitApp::OnApiTrackValue(const orbit_client_data::ApiTrackValue& api_track
 
 void OrbitApp::OnKeyAndString(uint64_t key, std::string str) {
   string_manager_.AddIfNotPresent(key, std::move(str));
-}
-
-void OrbitApp::OnUniqueCallstack(uint64_t callstack_id, CallstackInfo callstack) {
-  GetMutableCaptureData().AddUniqueCallstack(callstack_id, std::move(callstack));
-}
-
-void OrbitApp::OnCallstackEvent(CallstackEvent callstack_event) {
-  GetMutableCaptureData().AddCallstackEvent(std::move(callstack_event));
-}
-
-void OrbitApp::OnThreadName(uint32_t thread_id, std::string thread_name) {
-  GetMutableCaptureData().AddOrAssignThreadName(thread_id, std::move(thread_name));
-}
-
-void OrbitApp::OnThreadStateSlice(ThreadStateSliceInfo thread_state_slice) {
-  GetMutableCaptureData().AddThreadStateSlice(std::move(thread_state_slice));
-}
-
-void OrbitApp::OnAddressInfo(LinuxAddressInfo address_info) {
-  GetMutableCaptureData().InsertAddressInfo(std::move(address_info));
-}
-
-void OrbitApp::OnUniqueTracepointInfo(uint64_t tracepoint_id,
-                                      orbit_client_data::TracepointInfo tracepoint_info) {
-  GetMutableCaptureData().AddUniqueTracepointInfo(tracepoint_id, std::move(tracepoint_info));
-}
-
-void OrbitApp::OnTracepointEvent(orbit_client_data::TracepointEventInfo tracepoint_event_info) {
-  uint32_t capture_process_id = GetCaptureData().process_id();
-  bool is_same_pid_as_target = capture_process_id == tracepoint_event_info.pid();
-
-  GetMutableCaptureData().AddTracepointEventAndMapToThreads(
-      tracepoint_event_info.timestamp_ns(), tracepoint_event_info.tracepoint_id(),
-      tracepoint_event_info.pid(), tracepoint_event_info.tid(), tracepoint_event_info.cpu(),
-      is_same_pid_as_target);
 }
 
 void OrbitApp::UpdateModulesAbortCaptureIfModuleWithoutBuildIdNeedsReload(
@@ -1260,43 +1226,6 @@ orbit_data_views::PresetLoadState OrbitApp::GetPresetLoadState(const PresetFile&
   return GetPresetLoadStateForProcess(preset, GetTargetProcess());
 }
 
-static ErrorMessageOr<CaptureListener::CaptureOutcome> LoadCaptureFromNewFormat(
-    CaptureListener* listener, CaptureFile* capture_file,
-    std::atomic<bool>* capture_loading_cancellation_requested) {
-  ORBIT_SCOPED_TIMED_LOG("Loading capture in new format from \"%s\"",
-                         capture_file->GetFilePath().string());
-  absl::flat_hash_set<uint64_t> frame_track_function_ids;
-
-  std::optional<uint64_t> section_index =
-      capture_file->FindSectionByType(orbit_capture_file::kSectionTypeUserData);
-  if (section_index.has_value()) {
-    orbit_client_protos::UserDefinedCaptureInfo user_defined_capture_info;
-    auto proto_input_stream = capture_file->CreateProtoSectionInputStream(section_index.value());
-    OUTCOME_TRY(proto_input_stream->ReadMessage(&user_defined_capture_info));
-    const auto& loaded_frame_track_function_ids =
-        user_defined_capture_info.frame_tracks_info().frame_track_function_ids();
-    frame_track_function_ids = {loaded_frame_track_function_ids.begin(),
-                                loaded_frame_track_function_ids.end()};
-  }
-
-  std::unique_ptr<CaptureEventProcessor> capture_event_processor =
-      CaptureEventProcessor::CreateForCaptureListener(listener, capture_file->GetFilePath(),
-                                                      frame_track_function_ids);
-
-  auto capture_section_input_stream = capture_file->CreateCaptureSectionInputStream();
-  while (true) {
-    if (*capture_loading_cancellation_requested) {
-      return CaptureListener::CaptureOutcome::kCancelled;
-    }
-    ClientCaptureEvent event;
-    OUTCOME_TRY(capture_section_input_stream->ReadMessage(&event));
-    capture_event_processor->ProcessEvent(event);
-    if (event.event_case() == ClientCaptureEvent::kCaptureFinished) {
-      return CaptureListener::CaptureOutcome::kComplete;
-    }
-  }
-}
-
 Future<ErrorMessageOr<CaptureListener::CaptureOutcome>> OrbitApp::LoadCaptureFromFile(
     const std::filesystem::path& file_path) {
   if (capture_window_ != nullptr) {
@@ -1321,8 +1250,8 @@ Future<ErrorMessageOr<CaptureListener::CaptureOutcome>> OrbitApp::LoadCaptureFro
                                                ? OrbitLogEvent::ORBIT_CAPTURE_LOAD_V2
                                                : OrbitLogEvent::ORBIT_CAPTURE_LOAD};
     if (capture_file_or_error.has_value()) {
-      load_result = LoadCaptureFromNewFormat(this, capture_file_or_error.value().get(),
-                                             &capture_loading_cancellation_requested_);
+      load_result = LoadCapture(this, capture_file_or_error.value().get(),
+                                &capture_loading_cancellation_requested_);
     } else {
       load_result = capture_file_or_error.error();
     }
