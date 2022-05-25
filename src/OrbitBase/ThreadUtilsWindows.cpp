@@ -40,7 +40,10 @@ uint32_t GetCurrentThreadIdNative() {
   return current_tid;
 }
 
-uint32_t GetCurrentProcessIdNative() { return ::GetCurrentProcessId(); }
+uint32_t GetCurrentProcessIdNative() {
+  static uint32_t current_pid = ::GetCurrentProcessId();
+  return current_pid;
+}
 
 uint32_t FromNativeThreadId(uint32_t tid) {
   ORBIT_CHECK(IsMultipleOfFour(tid) || tid == kInvalidWindowsThreadId);

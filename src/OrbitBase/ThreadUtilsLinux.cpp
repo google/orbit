@@ -40,7 +40,10 @@ pid_t GetCurrentThreadIdNative() {
   return current_tid;
 }
 
-pid_t GetCurrentProcessIdNative() { return getpid(); }
+pid_t GetCurrentProcessIdNative() {
+  static pid_t current_pid = getpid();
+  return current_pid;
+}
 
 uint32_t FromNativeThreadId(pid_t tid) {
   ORBIT_CHECK(tid == kInvalidLinuxThreadId || tid >= 0);
