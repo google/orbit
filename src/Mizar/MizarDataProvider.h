@@ -5,6 +5,7 @@
 #ifndef MIZAR_MIZAR_DATA_PROVIDER_H_
 #define MIZAR_MIZAR_DATA_PROVIDER_H_
 
+#include <cstdint>
 #include <string>
 
 #include "ClientData/CaptureData.h"
@@ -17,7 +18,7 @@ class MizarDataProvider {
 
   [[nodiscard]] virtual std::string GetFunctionNameFromAddress(uint64_t address) const = 0;
 
-  [[nodiscard]] virtual orbit_client_data::CaptureData& GetCaptureData() const = 0;
+  [[nodiscard]] virtual orbit_client_data::CaptureData* GetCaptureData() const = 0;
 };
 
 }  // namespace orbit_mizar

@@ -18,9 +18,9 @@ target_sources(
 target_include_directories(Mizar PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}) 
 
 target_link_libraries(Mizar 
-PRIVATE pthread  
-        CaptureClient
+PRIVATE CaptureClient
         CaptureFile
         ClientData
         OrbitBase
+        Threads::Threads
 )

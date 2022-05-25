@@ -29,8 +29,8 @@ class MizarData : public orbit_capture_client::AbstractCaptureListener, public M
     return address_info->function_name();
   }
 
-  [[nodiscard]] orbit_client_data::CaptureData& GetCaptureData() const override {
-    return *capture_data_;
+  [[nodiscard]] orbit_client_data::CaptureData* GetCaptureData() const override {
+    return capture_data_.get();
   }
 
   void OnCaptureStarted(const orbit_grpc_protos::CaptureStarted& capture_started,
@@ -41,7 +41,10 @@ class MizarData : public orbit_capture_client::AbstractCaptureListener, public M
   }
 
   void OnTimer(const orbit_client_protos::TimerInfo& timer_info) override;
+
+  // Ignored, as we only load D, MS and sampling data.
   void OnKeyAndString(uint64_t /*key*/, std::string /*str*/) override {}
+
   void OnModuleUpdate(uint64_t /*timestamp_ns*/,
                       orbit_grpc_protos::ModuleInfo /*module_info*/) override {}
   void OnModulesSnapshot(uint64_t /*timestamp_ns*/,

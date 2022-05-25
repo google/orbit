@@ -7,7 +7,6 @@
 
 #include "CaptureClient/CaptureListener.h"
 #include "ClientData/CaptureData.h"
-#include "StringManager/StringManager.h"
 
 namespace orbit_capture_client {
 

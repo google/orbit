@@ -13,7 +13,7 @@ void MizarData::OnCaptureStarted(const orbit_grpc_protos::CaptureStarted& captur
                                  std::optional<std::filesystem::path> file_path,
                                  absl::flat_hash_set<uint64_t> frame_track_function_ids) {
   capture_data_ = std::make_unique<orbit_client_data::CaptureData>(
-      capture_started, file_path, std::move(frame_track_function_ids),
+      capture_started, std::move(file_path), std::move(frame_track_function_ids),
       orbit_client_data::CaptureData::DataSource::kLoadedCapture);
 }
 

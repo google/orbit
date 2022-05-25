@@ -4,6 +4,9 @@
 
 #include "CaptureClient/LoadCapture.h"
 
+#include "CaptureClient/CaptureEventProcessor.h"
+#include "ClientProtos/user_defined_capture_info.pb.h"
+
 namespace orbit_capture_client {
 
 [[nodiscard]] ErrorMessageOr<CaptureListener::CaptureOutcome> LoadCapture(

@@ -5,9 +5,8 @@
 #ifndef CAPTURE_CLIENT_LOAD_CAPTURE_H_
 #define CAPTURE_CLIENT_LOAD_CAPTURE_H_
 
-#include "CaptureClient/CaptureEventProcessor.h"
+#include "CaptureClient/CaptureListener.h"
 #include "CaptureFile/CaptureFile.h"
-#include "ClientProtos/user_defined_capture_info.pb.h"
 
 namespace orbit_capture_client {
 
