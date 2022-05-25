@@ -53,6 +53,8 @@ class CallstackThreadBar : public ThreadBar {
   void SelectCallstacks();
 
   struct UnformattedModuleAndFunctionName {
+    // {module,function}_is_unknown doesn't imply that {module,function}_name is empty.
+    // Rather, it indicates that the name might need to be formatted differently.
     std::string module_name;
     bool module_is_unknown;
     std::string function_name;

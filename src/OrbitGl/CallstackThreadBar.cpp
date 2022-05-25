@@ -295,11 +295,15 @@ constexpr const char* kUnwindErrorColorString = "#ffb000";
 
 std::string CallstackThreadBar::FormatCallstackForTooltip(const CallstackInfo& callstack) const {
   constexpr int kMaxLineLength = 120;
+  // If the callstack has more than `kMaxLines` frames, we only show the `kBottomLineCount`
+  // outermost frames and the `kMaxLines - kBottomLineCount` innermost frames, separated by
+  // `kShortenedForReadabilityString`.
   constexpr int kMaxLines = 20;
   constexpr int kBottomLineCount = 5;
+  static_assert(kBottomLineCount < kMaxLines);
 
   int callstack_size = static_cast<int>(callstack.frames().size());
-  const int bottom_n = std::min(std::min(kMaxLines - 1, kBottomLineCount), callstack_size);
+  const int bottom_n = std::min(kBottomLineCount, callstack_size);
   const int top_n = std::min(kMaxLines, callstack_size) - bottom_n;
 
   constexpr int kShortenedForReadabilityFakeIndex = -1;
@@ -308,7 +312,7 @@ std::string CallstackThreadBar::FormatCallstackForTooltip(const CallstackInfo& c
   for (int i = 0; i < top_n; ++i) {
     frame_indices_to_display.push_back(i);
   }
-  if (kMaxLines < callstack_size) {
+  if (callstack_size > kMaxLines) {
     frame_indices_to_display.push_back(kShortenedForReadabilityFakeIndex);
   }
   for (int i = callstack_size - bottom_n; i < callstack_size; ++i) {
