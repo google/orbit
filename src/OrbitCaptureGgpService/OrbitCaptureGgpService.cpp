@@ -30,6 +30,7 @@ void OrbitCaptureGgpService::RunServer() {
 
   ORBIT_LOG("Starting gRPC capture ggp server at %s", server_address);
   ServerBuilder builder;
+  builder.SetMaxReceiveMessageSize(std::numeric_limits<int32_t>::max());
   builder.AddListeningPort(server_address, grpc::InsecureServerCredentials());
   builder.RegisterService(&ggp_capture_service);
   std::unique_ptr<Server> server(builder.BuildAndStart());

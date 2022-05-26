@@ -20,6 +20,7 @@ bool ProducerSideServer::BuildAndStart(const std::string& uri) {
   ORBIT_CHECK(server_ == nullptr);
 
   grpc::ServerBuilder builder;
+  builder.SetMaxReceiveMessageSize(std::numeric_limits<int32_t>::max());
   builder.AddListeningPort(uri, grpc::InsecureServerCredentials());
 
   builder.RegisterService(&producer_side_service_);
