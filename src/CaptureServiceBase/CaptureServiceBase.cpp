@@ -91,7 +91,7 @@ void CaptureServiceBase::FinalizeEventProcessing(StopCaptureReason stop_capture_
                                           std::move(capture_finished));
 
   client_capture_event_collector_->StopAndWait();
-  ORBIT_LOG("Finished processing CaptureFinisedEvent");
+  ORBIT_LOG("Finished processing CaptureFinishedEvent");
 }
 
 }  // namespace orbit_capture_service_base
