@@ -384,7 +384,7 @@ void TrackContainer::UpdateVerticalScroll(float ratio) {
   SetVerticalScrollingOffset(new_scrolling_offset);
 }
 
-void TrackContainer::PanVertically(int delta) {
+void TrackContainer::ScrollVertically(int delta) {
   const int kPixelsPerDeltaInPanning = 25;
   SetVerticalScrollingOffset(vertical_scrolling_offset_ - kPixelsPerDeltaInPanning * delta);
 }

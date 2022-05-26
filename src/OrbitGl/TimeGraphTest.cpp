@@ -39,7 +39,7 @@ class UnitTestTimeGraph : public testing::Test {
               CaptureViewElement::EventResult::kIgnored);
   }
   void MouseWheelUp(const Vec2& pos, bool ctrl = false) {
-    orbit_gl::ModifierKeys modifier_keys;
+    ModifierKeys modifier_keys;
     modifier_keys.ctrl = ctrl;
     EXPECT_EQ(
         time_graph_->HandleMouseEvent(
@@ -49,7 +49,7 @@ class UnitTestTimeGraph : public testing::Test {
   }
 
   void MouseWheelDown(const Vec2& pos, bool ctrl = false) {
-    orbit_gl::ModifierKeys modifier_keys;
+    ModifierKeys modifier_keys;
     modifier_keys.ctrl = ctrl;
     EXPECT_EQ(time_graph_->HandleMouseEvent(
                   CaptureViewElement::MouseEvent{

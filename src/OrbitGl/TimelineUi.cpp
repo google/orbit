@@ -19,8 +19,8 @@ constexpr float kLabelsPadding = 4.f;
 constexpr float kPixelsBetweenMajorTicksAndLabels = 1.f;
 const Color kBackgroundColorSpecialLabels(68, 67, 69, 255);
 
-orbit_gl::CaptureViewElement::EventResult TimelineUi::OnMouseWheel(
-    const Vec2& mouse_pos, int delta, const orbit_gl::ModifierKeys& /*modifiers*/) {
+CaptureViewElement::EventResult TimelineUi::OnMouseWheel(const Vec2& mouse_pos, int delta,
+                                                         const ModifierKeys& /*modifiers*/) {
   if (delta == 0) return EventResult::kIgnored;
 
   double mouse_ratio = (mouse_pos[0] - GetPos()[0]) / GetWidth();
