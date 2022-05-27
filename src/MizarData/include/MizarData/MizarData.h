@@ -6,7 +6,7 @@
 #define MIZAR_MIZAR_DATA_H_
 
 #include <memory>
-#include <string_view>
+#include <optional>
 
 #include "CaptureClient/AbstractCaptureListener.h"
 #include "CaptureClient/CaptureListener.h"
@@ -25,12 +25,8 @@ class MizarData : public orbit_capture_client::AbstractCaptureListener<MizarData
  public:
   virtual ~MizarData() = default;
 
-  [[nodiscard]] std::string GetFunctionNameFromAddress(uint64_t address) const override {
-    const orbit_client_data::LinuxAddressInfo* address_info =
-        GetCaptureData().GetAddressInfo(address);
-    ORBIT_CHECK(address_info != nullptr);
-    return address_info->function_name();
-  }
+  [[nodiscard]] std::optional<std::string> GetFunctionNameFromAddress(
+      uint64_t address) const override;
 
   void OnCaptureStarted(const orbit_grpc_protos::CaptureStarted& capture_started,
                         std::optional<std::filesystem::path> file_path,

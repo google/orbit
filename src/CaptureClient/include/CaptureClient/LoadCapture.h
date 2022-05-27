@@ -10,6 +10,7 @@
 
 namespace orbit_capture_client {
 
+// TODO(b/234110675) Add a smoke test
 [[nodiscard]] ErrorMessageOr<CaptureListener::CaptureOutcome> LoadCapture(
     CaptureListener* listener, orbit_capture_file::CaptureFile* capture_file,
     std::atomic<bool>* capture_loading_cancellation_requested);

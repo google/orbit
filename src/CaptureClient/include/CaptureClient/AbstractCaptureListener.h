@@ -11,7 +11,8 @@
 namespace orbit_capture_client {
 
 // TODO(b/234109592) Add a unit-test.
-// This is CRTP. `Derived` should implement a public method
+// This is CRTP.  It provides implementations for CaptureListener virtual methods that are shared
+// between `OrbitApp` and `MizarData`. `Derived` should implement a public method
 // `orbit_client_data::CaptureData& Derived::GetMutableCaptureData()`
 template <typename Derived>
 class AbstractCaptureListener : public CaptureListener {

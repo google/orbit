@@ -6,6 +6,7 @@
 #define MIZAR_MIZAR_DATA_PROVIDER_H_
 
 #include <cstdint>
+#include <optional>
 #include <string>
 
 #include "ClientData/CaptureData.h"
@@ -13,11 +14,13 @@
 
 namespace orbit_mizar {
 
+// Handles one of the two datasets Mizar operates on
 class MizarDataProvider : public orbit_client_data::OwnsCaptureData {
  public:
   virtual ~MizarDataProvider() = default;
 
-  [[nodiscard]] virtual std::string GetFunctionNameFromAddress(uint64_t address) const = 0;
+  [[nodiscard]] virtual std::optional<std::string> GetFunctionNameFromAddress(
+      uint64_t address) const = 0;
 };
 
 }  // namespace orbit_mizar

@@ -27,4 +27,11 @@ void MizarData::OnTimer(const orbit_client_protos::TimerInfo& timer_info) {
   }
 }
 
+std::optional<std::string> MizarData::GetFunctionNameFromAddress(uint64_t address) const {
+  const orbit_client_data::LinuxAddressInfo* address_info =
+      GetCaptureData().GetAddressInfo(address);
+  if (address_info == nullptr) return std::nullopt;
+  return address_info->function_name();
+}
+
 }  // namespace orbit_mizar
