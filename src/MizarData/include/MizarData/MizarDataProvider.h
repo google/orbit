@@ -9,16 +9,15 @@
 #include <string>
 
 #include "ClientData/CaptureData.h"
+#include "ClientData/OwnsCaptureData.h"
 
 namespace orbit_mizar {
 
-class MizarDataProvider {
+class MizarDataProvider : public orbit_client_data::OwnsCaptureData {
  public:
   virtual ~MizarDataProvider() = default;
 
   [[nodiscard]] virtual std::string GetFunctionNameFromAddress(uint64_t address) const = 0;
-
-  [[nodiscard]] virtual orbit_client_data::CaptureData* GetCaptureData() const = 0;
 };
 
 }  // namespace orbit_mizar

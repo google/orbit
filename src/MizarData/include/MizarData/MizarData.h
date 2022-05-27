@@ -20,24 +20,23 @@
 
 namespace orbit_mizar {
 
-class MizarData : public orbit_capture_client::AbstractCaptureListener, public MizarDataProvider {
+class MizarData : public orbit_capture_client::AbstractCaptureListener<MizarData>,
+                  public MizarDataProvider {
  public:
+  virtual ~MizarData() = default;
+
   [[nodiscard]] std::string GetFunctionNameFromAddress(uint64_t address) const override {
     const orbit_client_data::LinuxAddressInfo* address_info =
-        capture_data_->GetAddressInfo(address);
+        GetCaptureData().GetAddressInfo(address);
     ORBIT_CHECK(address_info != nullptr);
     return address_info->function_name();
-  }
-
-  [[nodiscard]] orbit_client_data::CaptureData* GetCaptureData() const override {
-    return capture_data_.get();
   }
 
   void OnCaptureStarted(const orbit_grpc_protos::CaptureStarted& capture_started,
                         std::optional<std::filesystem::path> file_path,
                         absl::flat_hash_set<uint64_t> frame_track_function_ids) override;
   void OnCaptureFinished(const orbit_grpc_protos::CaptureFinished& /*capture_finished*/) override {
-    capture_data_->OnCaptureComplete();
+    GetMutableCaptureData().OnCaptureComplete();
   }
 
   void OnTimer(const orbit_client_protos::TimerInfo& timer_info) override;

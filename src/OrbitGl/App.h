@@ -89,7 +89,7 @@
 #include "Symbols/SymbolHelper.h"
 
 class OrbitApp final : public DataViewFactory,
-                       public orbit_capture_client::AbstractCaptureListener,
+                       public orbit_capture_client::AbstractCaptureListener<OrbitApp>,
                        public orbit_data_views::AppInterface,
                        public orbit_capture_client::CaptureControlInterface {
  public:
@@ -136,16 +136,6 @@ class OrbitApp final : public DataViewFactory,
   void ClearCapture();
 
   [[nodiscard]] bool IsLoadingCapture() const;
-
-  [[nodiscard]] bool HasCaptureData() const override { return capture_data_ != nullptr; }
-  [[nodiscard]] orbit_client_data::CaptureData& GetMutableCaptureData() override {
-    ORBIT_CHECK(capture_data_ != nullptr);
-    return *capture_data_;
-  }
-  [[nodiscard]] const orbit_client_data::CaptureData& GetCaptureData() const override {
-    ORBIT_CHECK(capture_data_ != nullptr);
-    return *capture_data_;
-  }
 
   [[nodiscard]] const orbit_client_data::ModuleManager* GetModuleManager() const override {
     ORBIT_CHECK(module_manager_ != nullptr);
@@ -441,13 +431,13 @@ class OrbitApp final : public DataViewFactory,
     data_manager_->set_memory_sampling_period_ms(memory_sampling_period_ms);
   }
   [[nodiscard]] uint64_t GetMemorySamplingPeriodMs() const {
-    return capture_data_->memory_sampling_period_ns() / 1'000'000;
+    return GetCaptureData().memory_sampling_period_ns() / 1'000'000;
   }
   void SetMemoryWarningThresholdKb(uint64_t memory_warning_threshold_kb) {
     data_manager_->set_memory_warning_threshold_kb(memory_warning_threshold_kb);
   }
   [[nodiscard]] uint64_t GetMemoryWarningThresholdKb() const {
-    return capture_data_->memory_warning_threshold_kb();
+    return GetCaptureData().memory_warning_threshold_kb();
   }
 
   // TODO(kuebler): Move them to a separate controller at some point

@@ -23,7 +23,6 @@ target_sources(CaptureClient PUBLIC
         include/CaptureClient/LoadCapture.h)
 
 target_sources(CaptureClient PRIVATE
-        AbstractCaptureListener.cpp
         ApiEventProcessor.cpp
         CaptureClient.cpp
         CaptureEventProcessor.cpp

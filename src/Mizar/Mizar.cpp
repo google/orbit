@@ -30,7 +30,7 @@ int main(int argc, char* argv[]) {
   orbit_mizar::MizarData data;
   auto status = orbit_capture_client::LoadCapture(&data, capture_file_or_error.value().get(),
                                                   &capture_loading_cancellation_requested);
-  const auto& callstack_data = data.GetCaptureData()->GetCallstackData();
+  const auto& callstack_data = data.GetCaptureData().GetCallstackData();
   std::vector<orbit_client_data::CallstackEvent> callstack_events =
       callstack_data.GetCallstackEventsInTimeRange(std::numeric_limits<uint64_t>::min(),
                                                    std::numeric_limits<uint64_t>::max());
@@ -44,7 +44,7 @@ int main(int argc, char* argv[]) {
     }
   }
 
-  for (auto name : names) {
+  for (const auto& name : names) {
     ORBIT_LOG("%s", name);
   }
 
