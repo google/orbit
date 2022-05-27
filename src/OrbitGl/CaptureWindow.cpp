@@ -657,14 +657,14 @@ void CaptureWindow::RenderHelpUi() {
 
 const char* CaptureWindow::GetHelpText() const {
   const char* help_message =
-      "Start/Stop Capture: 'F5'\n"
-      "Pan: 'A','D' or \"Left Click + Drag\"\n"
-      "Scroll: Arrow keys or Mouse Wheel\n"
-      "Timeline Zoom: 'W', 'S' or \"Ctrl + Mouse Wheel\"\n"
-      "Zoom to specific time range: \"Ctrl + Right Click + Drag\"\n"
-      "UI scale: \"Ctrl + '+'/'-' \"\n"
-      "Select: Left Click\n"
-      "Measure: \"Right Click + Drag\"\n"
+      "Start/Stop Capture: 'F5'\n\n"
+      "Pan: 'A','D' or \"Left Click + Drag\"\n\n"
+      "Scroll: Arrow Keys or Mouse Wheel\n\n"
+      "Timeline Zoom (10%): 'W', 'S' or \"Ctrl + Mouse Wheel\"\n\n"
+      "Zoom to Time Range: \"Ctrl + Right Click + Drag\"\n\n"
+      "Select: Left Click\n\n"
+      "Measure: \"Right Click + Drag\"\n\n"
+      "UI Scale (10%): \"Ctrl + '+'/'-' \"\n\n"
       "Toggle Help: Ctrl + 'H'";
   return help_message;
 }
