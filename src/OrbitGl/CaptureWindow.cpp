@@ -332,6 +332,10 @@ void CaptureWindow::MouseWheelMovedHorizontally(int x, int y, int delta, bool ct
 
 void CaptureWindow::KeyPressed(unsigned int key_code, bool ctrl, bool shift, bool alt) {
   GlCanvas::KeyPressed(key_code, ctrl, shift, alt);
+  const float kPanRatioPerLeftAndRightArrowKeys = 0.1;
+  const float kScrollingRatioPerUpAndDownArrowKeys = 0.05;
+  const float kScrollingRatioPerPageUpAndDown = 0.9;
+
   // TODO(b/234116147): Move this part to TimeGraph and manage events similarly to HandleMouseEvent.
   switch (key_code) {
     case ' ':
@@ -340,10 +344,10 @@ void CaptureWindow::KeyPressed(unsigned int key_code, bool ctrl, bool shift, boo
       }
       break;
     case 'A':
-      Pan(0.1f);
+      Pan(kPanRatioPerLeftAndRightArrowKeys);
       break;
     case 'D':
-      Pan(-0.1f);
+      Pan(-kPanRatioPerLeftAndRightArrowKeys);
       break;
     case 'W':
       ZoomHorizontally(1, mouse_move_pos_screen_[0]);
@@ -354,10 +358,12 @@ void CaptureWindow::KeyPressed(unsigned int key_code, bool ctrl, bool shift, boo
     case 'X':
       ToggleRecording();
       break;
+    // For arrow keys, we will scroll horizontally or vertically if no timer is selected. Otherwise,
+    // jump to the neighbour timer in that direction.
     case 18:  // Left
       if (time_graph_ == nullptr) return;
       if (app_ == nullptr || app_->selected_timer() == nullptr) {
-        Pan(0.1f);
+        Pan(kPanRatioPerLeftAndRightArrowKeys);
       } else if (shift) {
         time_graph_->JumpToNeighborTimer(app_->selected_timer(),
                                          TimeGraph::JumpDirection::kPrevious,
@@ -375,7 +381,7 @@ void CaptureWindow::KeyPressed(unsigned int key_code, bool ctrl, bool shift, boo
     case 20:  // Right
       if (time_graph_ == nullptr) return;
       if (app_ == nullptr || app_->selected_timer() == nullptr) {
-        Pan(-0.1f);
+        Pan(-kPanRatioPerLeftAndRightArrowKeys);
       } else if (shift) {
         time_graph_->JumpToNeighborTimer(app_->selected_timer(), TimeGraph::JumpDirection::kNext,
                                          TimeGraph::JumpScope::kSameFunction);
@@ -390,7 +396,8 @@ void CaptureWindow::KeyPressed(unsigned int key_code, bool ctrl, bool shift, boo
     case 19:  // Up
       if (time_graph_ == nullptr) return;
       if (app_ == nullptr || app_->selected_timer() == nullptr) {
-        time_graph_->GetTrackContainer()->OnVerticalScroll(/*delta=*/1);
+        time_graph_->GetTrackContainer()->IncrementVerticalScroll(
+            /*ratio=*/kScrollingRatioPerUpAndDownArrowKeys);
       } else {
         time_graph_->JumpToNeighborTimer(app_->selected_timer(), TimeGraph::JumpDirection::kTop,
                                          TimeGraph::JumpScope::kSameThread);
@@ -399,7 +406,8 @@ void CaptureWindow::KeyPressed(unsigned int key_code, bool ctrl, bool shift, boo
     case 21:  // Down
       if (time_graph_ == nullptr) return;
       if (app_ == nullptr || app_->selected_timer() == nullptr) {
-        time_graph_->GetTrackContainer()->OnVerticalScroll(/*delta=*/-1);
+        time_graph_->GetTrackContainer()->IncrementVerticalScroll(
+            /*ratio=*/-kScrollingRatioPerUpAndDownArrowKeys);
       } else {
         time_graph_->JumpToNeighborTimer(app_->selected_timer(), TimeGraph::JumpDirection::kDown,
                                          TimeGraph::JumpScope::kSameThread);
@@ -407,11 +415,13 @@ void CaptureWindow::KeyPressed(unsigned int key_code, bool ctrl, bool shift, boo
       break;
     case 22:  // Page Up
       if (time_graph_ == nullptr) return;
-      time_graph_->GetTrackContainer()->OnPageUp();
+      time_graph_->GetTrackContainer()->IncrementVerticalScroll(
+          /*ratio=*/kScrollingRatioPerPageUpAndDown);
       break;
     case 23:  // Page Down
       if (time_graph_ == nullptr) return;
-      time_graph_->GetTrackContainer()->OnPageDown();
+      time_graph_->GetTrackContainer()->IncrementVerticalScroll(
+          /*ratio=*/-kScrollingRatioPerPageUpAndDown);
       break;
     case '+':
       if (time_graph_ == nullptr) return;

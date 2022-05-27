@@ -60,11 +60,8 @@ class TrackContainer final : public CaptureViewElement {
   void UpdateVerticalScrollUsingRatio(float ratio);
   [[nodiscard]] float GetVerticalScrollingOffset() const { return vertical_scrolling_offset_; }
   void SetVerticalScrollingOffset(float value);
-  void OnVerticalScroll(int delta);
-  const float kHeightRatioPerPageUpAndDown = 0.9f;
-  void OnPageUp() { IncrementVerticalScroll(kHeightRatioPerPageUpAndDown * GetHeight()); }
-  void OnPageDown() { IncrementVerticalScroll(-kHeightRatioPerPageUpAndDown * GetHeight()); }
 
+  void IncrementVerticalScroll(float ratio);
   [[nodiscard]] bool HasFrameTrack(uint64_t function_id) const;
   void RemoveFrameTrack(uint64_t function_id);
 
@@ -82,7 +79,6 @@ class TrackContainer final : public CaptureViewElement {
   CreateAccessibleInterface() override;
 
  private:
-  void IncrementVerticalScroll(float world_delta_y);
   void DrawOverlay(PrimitiveAssembler& primitive_assembler, TextRenderer& text_renderer,
                    PickingMode picking_mode);
   void DrawIteratorBox(PrimitiveAssembler& primitive_assembler, TextRenderer& text_renderer,

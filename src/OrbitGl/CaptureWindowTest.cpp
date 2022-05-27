@@ -292,13 +292,19 @@ TEST_F(NavigationTestCaptureWindow, PanTimeWorksAsExpected) {
   // TODO (b/226386133): Extend this test
   PreRender();
   ExpectInitialState();
+  const double kEpsilon = 1e-9;
 
   int x = 0;
   int y = viewport_.GetScreenHeight() - kBottomSafetyMargin;
 
   // Pan time - need to zoom in a bit first, then pan slighty right and back again
   MouseMoved(x, y, false, false, false);
-  KeyPressed('W', false, false, false);
+  for (int i = 0; i < 10; i++) {
+    KeyPressed('W', false, false, false);
+  }
+
+  EXPECT_DOUBLE_EQ(time_graph_->GetHorizontalSlider()->GetPosRatio(), 0.0);
+
   KeyPressed('D', false, false, false);
   PreRender();
   EXPECT_GT(time_graph_->GetHorizontalSlider()->GetPosRatio(), 0.0);
@@ -306,20 +312,26 @@ TEST_F(NavigationTestCaptureWindow, PanTimeWorksAsExpected) {
 
   KeyPressed('A', false, false, false);
   PreRender();
-  EXPECT_EQ(time_graph_->GetHorizontalSlider()->GetPosRatio(), 0.0);
-  EXPECT_EQ(time_graph_->GetMinTimeUs(), 0.0);
+  EXPECT_NEAR(time_graph_->GetHorizontalSlider()->GetPosRatio(), 0.0, kEpsilon);
+  EXPECT_NEAR(time_graph_->GetMinTimeUs(), 0.0, kEpsilon);
 
-  // Right arrow
-  KeyPressed(20, false, false, false);
+  const int kRightArrowKeyCode = 20;
+  const int kLeftArrowKeyCode = 18;
+  KeyPressed(kRightArrowKeyCode, false, false, false);
   PreRender();
   EXPECT_GT(time_graph_->GetHorizontalSlider()->GetPosRatio(), 0.0);
   EXPECT_GT(time_graph_->GetMinTimeUs(), 0.0);
 
-  // Left Arrow
-  KeyPressed(18, false, false, false);
+  double min_time_us_after_right_arrow = time_graph_->GetMinTimeUs();
+  KeyPressed(kRightArrowKeyCode, false, false, false);
+  KeyPressed(kLeftArrowKeyCode, false, false, false);
+  // A right arrow key pressed followed by a left one should return to the original position.
+  EXPECT_NEAR(min_time_us_after_right_arrow, time_graph_->GetMinTimeUs(), kEpsilon);
+
+  KeyPressed(kLeftArrowKeyCode, false, false, false);
   PreRender();
-  EXPECT_EQ(time_graph_->GetHorizontalSlider()->GetPosRatio(), 0.0);
-  EXPECT_EQ(time_graph_->GetMinTimeUs(), 0.0);
+  EXPECT_NEAR(time_graph_->GetHorizontalSlider()->GetPosRatio(), 0.0, kEpsilon);
+  EXPECT_NEAR(time_graph_->GetMinTimeUs(), 0.0, kEpsilon);
 }
 
 TEST_F(NavigationTestCaptureWindow, Scrolling) {

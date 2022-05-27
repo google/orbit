@@ -408,12 +408,13 @@ void TimeGraph::ProcessPageFaultsTrackingTimer(const TimerInfo& timer_info) {
 orbit_gl::CaptureViewElement::EventResult TimeGraph::OnMouseWheel(
     const Vec2& mouse_pos, int delta, const orbit_gl::ModifierKeys& modifiers) {
   if (delta == 0) return EventResult::kIgnored;
+  const float kScrollingRatioPerDelta = 0.05;
 
   if (modifiers.ctrl) {
     double mouse_ratio = (mouse_pos[0] - GetPos()[0]) / GetTimelineWidth();
     ZoomTime(delta, mouse_ratio);
   } else {
-    track_container_->OnVerticalScroll(delta);
+    track_container_->IncrementVerticalScroll(delta * kScrollingRatioPerDelta);
   }
 
   return EventResult::kHandled;
