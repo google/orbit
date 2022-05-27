@@ -19,6 +19,16 @@ constexpr float kLabelsPadding = 4.f;
 constexpr float kPixelsBetweenMajorTicksAndLabels = 1.f;
 const Color kBackgroundColorSpecialLabels(68, 67, 69, 255);
 
+CaptureViewElement::EventResult TimelineUi::OnMouseWheel(const Vec2& mouse_pos, int delta,
+                                                         const ModifierKeys& /*modifiers*/) {
+  if (delta == 0) return EventResult::kIgnored;
+
+  double mouse_ratio = (mouse_pos[0] - GetPos()[0]) / GetWidth();
+  timeline_info_interface_->ZoomTime(delta, mouse_ratio);
+
+  return EventResult::kHandled;
+}
+
 void TimelineUi::RenderLines(PrimitiveAssembler& primitive_assembler, uint64_t min_timestamp_ns,
                              uint64_t max_timestamp_ns) const {
   ClosedInterval<float> timeline_x_visible_range{GetPos()[0], GetPos()[0] + GetSize()[0]};

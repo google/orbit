@@ -2,6 +2,7 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
+#include <gmock/gmock.h>
 #include <gtest/gtest.h>
 
 #include <random>
@@ -184,6 +185,30 @@ TEST(TimelineUi, Draw) {
   timeline_ui_test.TestDraw(kMinTick, kMaxTick, /*mouse_tick=*/kMaxTick - 1);
   timeline_ui_test.TestDraw(kMinTick, kMaxTick, /*mouse_tick=*/kMaxTick);
   timeline_ui_test.TestDraw(kMinTick, kMaxTick, /*mouse_tick=*/std::nullopt);
+}
+
+TEST(TimelineUi, OnMouseWheel) {
+  using ::testing::_;
+  using ::testing::Exactly;
+  using ::testing::Return;
+
+  int width = TimelineUiTest::kBigScreenPixelsWidth;
+  MockTimelineInfo mock_timeline_info;
+  mock_timeline_info.SetWorldWidth(width);
+
+  TimeGraphLayout layout;
+  Viewport viewport(width, 0);
+  TimelineUiTest timeline_ui_test(&mock_timeline_info, &viewport, &layout);
+  const Vec2 pos_inside_timeline = timeline_ui_test.GetPos();
+
+  EXPECT_CALL(mock_timeline_info, ZoomTime(1, _)).Times(Exactly(1));
+  EXPECT_CALL(mock_timeline_info, ZoomTime(-1, _)).Times(Exactly(1));
+  EXPECT_EQ(CaptureViewElement::EventResult::kHandled,
+            timeline_ui_test.HandleMouseEvent(
+                {CaptureViewElement::MouseEventType::kMouseWheelUp, pos_inside_timeline}));
+  EXPECT_EQ(CaptureViewElement::EventResult::kHandled,
+            timeline_ui_test.HandleMouseEvent(
+                {CaptureViewElement::MouseEventType::kMouseWheelDown, pos_inside_timeline}));
 }
 
 }  // namespace orbit_gl
