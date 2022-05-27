@@ -384,8 +384,13 @@ void TrackContainer::UpdateVerticalScrollUsingRatio(float ratio) {
   SetVerticalScrollingOffset(new_scrolling_offset);
 }
 
-void TrackContainer::IncrementVerticalScroll(float delta_y) {
-  SetVerticalScrollingOffset(vertical_scrolling_offset_ - delta_y);
+void TrackContainer::OnVerticalScroll(int delta) {
+  const int kPixelsPerDelta = 25;
+  IncrementVerticalScroll(kPixelsPerDelta * delta);
+}
+
+void TrackContainer::IncrementVerticalScroll(float world_delta_y) {
+  SetVerticalScrollingOffset(vertical_scrolling_offset_ - world_delta_y);
 }
 
 void TrackContainer::SetVerticalScrollingOffset(float value) {

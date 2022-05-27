@@ -413,8 +413,7 @@ orbit_gl::CaptureViewElement::EventResult TimeGraph::OnMouseWheel(
     double mouse_ratio = (mouse_pos[0] - GetPos()[0]) / GetTimelineWidth();
     ZoomTime(delta, mouse_ratio);
   } else {
-    const int kPixelsPerDelta = 25;
-    track_container_->IncrementVerticalScroll(kPixelsPerDelta * delta);
+    track_container_->OnVerticalScroll(delta);
   }
 
   return EventResult::kHandled;

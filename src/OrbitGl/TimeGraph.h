@@ -83,6 +83,7 @@ class TimeGraph : public orbit_gl::CaptureViewElement, public orbit_gl::Timeline
   void ZoomTime(int zoom_delta, double center_time_ratio) override;
   void SetMinMax(double min_time_us, double max_time_us);
   void PanTime(int initial_x, int current_x, int width, double initial_time);
+  void VerticalZoom(float zoom_value, float mouse_world_y_pos);
 
   enum class VisibilityType {
     kPartlyVisible,
@@ -184,7 +185,6 @@ class TimeGraph : public orbit_gl::CaptureViewElement, public orbit_gl::Timeline
 
   void UpdateHorizontalScroll(float ratio);
   void UpdateHorizontalZoom(float normalized_start, float normalized_end);
-  void VerticalZoom(float zoom_value, float mouse_world_y_pos);
 
   void SelectAndMakeVisible(const orbit_client_protos::TimerInfo* timer_info);
   [[nodiscard]] bool IsFullyVisible(uint64_t min, uint64_t max) const;
