@@ -3,7 +3,6 @@
 // found in the LICENSE file.
 
 #include <absl/container/flat_hash_set.h>
-#include <unistd.h>
 
 #include <iostream>
 #include <string>
