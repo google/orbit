@@ -26,7 +26,7 @@ int main(int argc, char* argv[]) {
   }
   std::atomic<bool> capture_loading_cancellation_requested = false;
 
-  orbit_mizar::MizarData data;
+  orbit_mizar_data::MizarData data;
   auto status = orbit_capture_client::LoadCapture(&data, capture_file_or_error.value().get(),
                                                   &capture_loading_cancellation_requested);
   const auto& callstack_data = data.GetCaptureData().GetCallstackData();

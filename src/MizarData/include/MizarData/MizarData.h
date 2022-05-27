@@ -12,13 +12,11 @@
 #include "CaptureClient/CaptureListener.h"
 #include "CaptureFile/CaptureFile.h"
 #include "ClientData/CaptureData.h"
-#include "ClientData/LinuxAddressInfo.h"
-#include "ClientData/ModuleData.h"
 #include "ClientData/ModuleManager.h"
 #include "MizarDataProvider.h"
 #include "OrbitBase/Logging.h"
 
-namespace orbit_mizar {
+namespace orbit_mizar_data {
 
 class MizarData : public orbit_capture_client::AbstractCaptureListener<MizarData>,
                   public MizarDataProvider {
@@ -67,6 +65,6 @@ class MizarData : public orbit_capture_client::AbstractCaptureListener<MizarData
                                         /*out_of_order_events_discarded_event*/) override {}
 };
 
-}  // namespace orbit_mizar
+}  // namespace orbit_mizar_data
 
 #endif  // MIZAR_MIZAR_DATA_H_

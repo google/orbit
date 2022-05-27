@@ -17,9 +17,17 @@ target_sources(MizarData PRIVATE
 
 
 target_link_libraries(
-        MizarData 
+        MizarData PUBLIC CaptureClient
         PRIVATE 
-                CaptureClient
                 CaptureFile
                 ClientData
                 OrbitBase)
+
+add_executable(MizarDataTests)
+
+target_sources(MizarDataTests PRIVATE MizarDataTest.cpp)
+target_link_libraries(MizarDataTests PRIVATE GrpcProtos
+                                                MizarData
+                                                GTest::GTest
+                                                GTest::Main)
+register_test(MizarDataTests)

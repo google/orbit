@@ -6,8 +6,10 @@
 
 #include "ClientData/ScopeIdConstants.h"
 #include "ClientData/ScopeInfo.h"
+#include "ClientData/ThreadTrackDataProvider.h"
+#include "OrbitBase/Logging.h"
 
-namespace orbit_mizar {
+namespace orbit_mizar_data {
 
 void MizarData::OnCaptureStarted(const orbit_grpc_protos::CaptureStarted& capture_started,
                                  std::optional<std::filesystem::path> file_path,
@@ -34,4 +36,4 @@ std::optional<std::string> MizarData::GetFunctionNameFromAddress(uint64_t addres
   return address_info->function_name();
 }
 
-}  // namespace orbit_mizar
+}  // namespace orbit_mizar_data

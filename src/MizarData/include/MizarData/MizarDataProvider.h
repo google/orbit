@@ -12,7 +12,7 @@
 #include "ClientData/CaptureData.h"
 #include "ClientData/OwnsCaptureData.h"
 
-namespace orbit_mizar {
+namespace orbit_mizar_data {
 
 // Handles one of the two datasets Mizar operates on
 class MizarDataProvider : public orbit_client_data::OwnsCaptureData {
@@ -23,6 +23,6 @@ class MizarDataProvider : public orbit_client_data::OwnsCaptureData {
       uint64_t address) const = 0;
 };
 
-}  // namespace orbit_mizar
+}  // namespace orbit_mizar_data
 
 #endif  // MIZAR_MIZAR_DATA_PROVIDER_H_
