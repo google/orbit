@@ -32,7 +32,7 @@ namespace orbit_linux_tracing {
 // For thread states, we are able to collect partial slices at the beginning and at the end of the
 // capture, hence the ProcessInitialState and ProcessRemainingOpenStates methods.
 // Also, we only process thread states of the process with pid specified with
-// SetThreadStatePidFilter (so that we can collect thread states only for the process we are
+// SetThreadStatePidFilters (so that we can collect thread states only for the process we are
 // profiling). For this we also need the system-wide association between tids and pids.
 class SwitchesStatesNamesVisitor : public PerfEventVisitor {
  public:
@@ -47,7 +47,9 @@ class SwitchesStatesNamesVisitor : public PerfEventVisitor {
   void SetProduceSchedulingSlices(bool produce_scheduling_slices) {
     produce_scheduling_slices_ = produce_scheduling_slices;
   }
-  void SetThreadStatePidFilter(pid_t pid) { thread_state_pid_filter_ = pid; }
+  void SetThreadStatePidFilters(std::set<pid_t> pids) {
+    thread_state_pid_filters_ = {pids.begin(), pids.end()};
+  }
 
   void ProcessInitialTidToPidAssociation(pid_t tid, pid_t pid);
   void Visit(uint64_t event_timestamp, const ForkPerfEventData& event_data) override;
@@ -73,8 +75,7 @@ class SwitchesStatesNamesVisitor : public PerfEventVisitor {
 
   bool TidMatchesPidFilter(pid_t tid);
   std::optional<pid_t> GetPidOfTid(pid_t tid);
-  static constexpr pid_t kPidFilterNoThreadState = -1;
-  pid_t thread_state_pid_filter_ = kPidFilterNoThreadState;
+  std::vector<pid_t> thread_state_pid_filters_;
   absl::flat_hash_map<pid_t, pid_t> tid_to_pid_association_;
 
   ContextSwitchManager switch_manager_;

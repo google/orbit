@@ -64,9 +64,16 @@ class SwitchesStatesNamesVisitorTest : public ::testing::Test {
   // For ThreadStateSlice-related tests.
   static constexpr pid_t kTid1 = kTid;
   static constexpr pid_t kTid2 = 43;
+  static constexpr pid_t kTid3 = 45;
+  static constexpr pid_t kTid4 = 46;
+  static constexpr pid_t kPid1 = kPid;
+  static constexpr pid_t kPid2 = 47;
   static constexpr const char* kComm2 = "comm2";
+  static constexpr const char* kComm3 = "comm3";
   static constexpr uint32_t kCpu1 = kCpu;
   static constexpr uint32_t kCpu2 = 2;
+  static constexpr uint32_t kCpu3 = 3;
+  static constexpr uint32_t kCpu4 = 4;
   static constexpr uint64_t kStartTimestampNs = 100;
   static constexpr uint64_t kWakeTimestampNs1 = 110;
   static constexpr uint64_t kInTimestampNs1 = 111;
@@ -389,25 +396,48 @@ TEST_F(SwitchesStatesNamesVisitorTest,
 }
 
 void SwitchesStatesNamesVisitorTest::ProcessFakeEventsForThreadStateTests() {
-  // kTid1
+  // kPid1, kTid1
   visitor_.ProcessInitialState(kStartTimestampNs, kTid1, 'D');
+  visitor_.ProcessInitialState(kStartTimestampNs, kTid3, 'D');
+  (void)kComm2;
+  (void)kCpu1;
+  (void)kCpu2;
   PerfEvent{MakeFakeSchedWakeupPerfEvent(kTid1, kWakeTimestampNs1)}.Accept(&visitor_);
   PerfEvent{MakeFakeSchedSwitchPerfEvent(kCpu1, kPrevTid, kPrevTid, kRunnableStateMask, kTid1,
                                          kInTimestampNs1)}
       .Accept(&visitor_);
   PerfEvent{
-      MakeFakeSchedSwitchPerfEvent(kCpu1, kPid, kTid1, kDeadStateMask, kNextTid, kOutTimestampNs1)}
+      MakeFakeSchedSwitchPerfEvent(kCpu1, kPid1, kTid1, kDeadStateMask, kNextTid, kOutTimestampNs1)}
       .Accept(&visitor_);
 
-  // kTid2
+  // kPid1, kTid2
   PerfEvent{MakeFakeTaskNewtaskPerfEvent(kTid2, kComm2, kNewTimestampNs2)}.Accept(&visitor_);
   PerfEvent{MakeFakeSchedSwitchPerfEvent(kCpu2, kPrevTid, kPrevTid, kRunnableStateMask, kTid2,
                                          kInTimestampNs2)}
       .Accept(&visitor_);
-  PerfEvent{MakeFakeSchedSwitchPerfEvent(kCpu2, kPid, kTid2, kInterruptibleSleepStateMask, kNextTid,
-                                         kOutTimestampNs2)}
+  PerfEvent{MakeFakeSchedSwitchPerfEvent(kCpu2, kPid1, kTid2, kInterruptibleSleepStateMask,
+                                         kNextTid, kOutTimestampNs2)}
       .Accept(&visitor_);
   PerfEvent{MakeFakeSchedWakeupPerfEvent(kTid2, kWakeTimestampNs2)}.Accept(&visitor_);
+
+  // kPid2, kTid3
+  PerfEvent{MakeFakeSchedWakeupPerfEvent(kTid3, kWakeTimestampNs1)}.Accept(&visitor_);
+  PerfEvent{MakeFakeSchedSwitchPerfEvent(kCpu3, kPrevTid, kPrevTid, kRunnableStateMask, kTid3,
+                                         kInTimestampNs1)}
+      .Accept(&visitor_);
+  PerfEvent{
+      MakeFakeSchedSwitchPerfEvent(kCpu3, kPid2, kTid3, kDeadStateMask, kNextTid, kOutTimestampNs1)}
+      .Accept(&visitor_);
+
+  // kPid2, kTid4
+  PerfEvent{MakeFakeTaskNewtaskPerfEvent(kTid4, kComm3, kNewTimestampNs2)}.Accept(&visitor_);
+  PerfEvent{MakeFakeSchedSwitchPerfEvent(kCpu4, kPrevTid, kPrevTid, kRunnableStateMask, kTid4,
+                                         kInTimestampNs2)}
+      .Accept(&visitor_);
+  PerfEvent{MakeFakeSchedSwitchPerfEvent(kCpu4, kPid2, kTid4, kInterruptibleSleepStateMask,
+                                         kNextTid, kOutTimestampNs2)}
+      .Accept(&visitor_);
+  PerfEvent{MakeFakeSchedWakeupPerfEvent(kTid3, kWakeTimestampNs2)}.Accept(&visitor_);
 
   visitor_.ProcessRemainingOpenStates(kStopTimestampNs);
 }
@@ -416,7 +446,7 @@ TEST_F(SwitchesStatesNamesVisitorTest, NoThreadStatesWithoutSetThreadStatePidFil
   visitor_.ProcessInitialTidToPidAssociation(kTid1, kPid);
   PerfEvent{MakeFakeForkPerfEvent(kPid, kTid2)}.Accept(&visitor_);
 
-  EXPECT_CALL(mock_listener_, OnThreadName).Times(1);
+  EXPECT_CALL(mock_listener_, OnThreadName).Times(2);
   EXPECT_CALL(mock_listener_, OnThreadStateSlice).Times(0);
 
   ProcessFakeEventsForThreadStateTests();
@@ -425,9 +455,9 @@ TEST_F(SwitchesStatesNamesVisitorTest, NoThreadStatesWithoutSetThreadStatePidFil
 }
 
 TEST_F(SwitchesStatesNamesVisitorTest, NoThreadStatesOfUnknownPid) {
-  visitor_.SetThreadStatePidFilter(kPid);
+  visitor_.SetThreadStatePidFilters({kPid});
 
-  EXPECT_CALL(mock_listener_, OnThreadName).Times(1);
+  EXPECT_CALL(mock_listener_, OnThreadName).Times(2);
   EXPECT_CALL(mock_listener_, OnThreadStateSlice).Times(0);
 
   ProcessFakeEventsForThreadStateTests();
@@ -437,12 +467,12 @@ TEST_F(SwitchesStatesNamesVisitorTest, NoThreadStatesOfUnknownPid) {
 
 TEST_F(SwitchesStatesNamesVisitorTest, NoThreadStatesOfUninterestingPid) {
   constexpr pid_t kPidFilter = 99;
-  visitor_.SetThreadStatePidFilter(kPidFilter);
+  visitor_.SetThreadStatePidFilters({kPidFilter});
 
   visitor_.ProcessInitialTidToPidAssociation(kTid1, kPid);
   PerfEvent{MakeFakeForkPerfEvent(kPid, kTid2)}.Accept(&visitor_);
 
-  EXPECT_CALL(mock_listener_, OnThreadName).Times(1);
+  EXPECT_CALL(mock_listener_, OnThreadName).Times(2);
   EXPECT_CALL(mock_listener_, OnThreadStateSlice).Times(0);
 
   ProcessFakeEventsForThreadStateTests();
@@ -451,12 +481,12 @@ TEST_F(SwitchesStatesNamesVisitorTest, NoThreadStatesOfUninterestingPid) {
 }
 
 TEST_F(SwitchesStatesNamesVisitorTest, VariousThreadStateSlicesFromAllPossibleEvents) {
-  visitor_.SetThreadStatePidFilter(kPid);
+  visitor_.SetThreadStatePidFilters({kPid1, kPid2});
 
   visitor_.ProcessInitialTidToPidAssociation(kTid1, kPid);
   PerfEvent{MakeFakeForkPerfEvent(kPid, kTid2)}.Accept(&visitor_);
 
-  EXPECT_CALL(mock_listener_, OnThreadName).Times(1);
+  EXPECT_CALL(mock_listener_, OnThreadName).Times(2);
   std::vector<ThreadStateSlice> actual_thread_state_slices;
   const auto save_thread_state_slice_arg = [&](ThreadStateSlice actual_thread_state_slice) {
     actual_thread_state_slices.emplace_back(std::move(actual_thread_state_slice));

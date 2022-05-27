@@ -13,6 +13,7 @@
 #include "LinuxTracing/TracerListener.h"
 #include "OrbitBase/Logging.h"
 #include "OrbitBase/ThreadConstants.h"
+#include "OrbitBase/ThreadUtils.h"
 
 namespace orbit_linux_tracing {
 
@@ -54,7 +55,7 @@ void SwitchesStatesNamesVisitor::Visit(uint64_t /*event_timestamp*/,
 }
 
 bool SwitchesStatesNamesVisitor::TidMatchesPidFilter(pid_t tid) {
-  if (thread_state_pid_filter_ == kPidFilterNoThreadState) {
+  if (thread_state_pid_filters_.empty()) {
     return false;
   }
 
@@ -63,7 +64,13 @@ bool SwitchesStatesNamesVisitor::TidMatchesPidFilter(pid_t tid) {
     return false;
   }
 
-  return tid_to_pid_it->second == thread_state_pid_filter_;
+  for (const pid_t thread_state_pid_filter : thread_state_pid_filters_) {
+    if (tid_to_pid_it->second == thread_state_pid_filter) {
+      return true;
+    }
+  }
+
+  return false;
 }
 
 std::optional<pid_t> SwitchesStatesNamesVisitor::GetPidOfTid(pid_t tid) {

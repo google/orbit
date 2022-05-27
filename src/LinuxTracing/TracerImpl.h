@@ -137,6 +137,7 @@ class TracerImpl : public Tracer {
   static constexpr uint32_t IDLE_TIME_ON_EMPTY_DEFERRED_EVENTS_US = 5000;
 
   bool trace_context_switches_;
+  bool introspection_enabled_;
   pid_t target_pid_;
   std::optional<uint64_t> sampling_period_ns_;
   uint16_t stack_dump_size_;

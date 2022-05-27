@@ -64,6 +64,7 @@ TracerImpl::TracerImpl(
     std::unique_ptr<UserSpaceInstrumentationAddresses> user_space_instrumentation_addresses,
     TracerListener* listener)
     : trace_context_switches_{capture_options.trace_context_switches()},
+      introspection_enabled_{capture_options.enable_introspection()},
       target_pid_{orbit_base::ToNativeProcessId(capture_options.pid())},
       unwinding_method_{capture_options.unwinding_method()},
       trace_thread_state_{capture_options.trace_thread_state()},
@@ -512,7 +513,11 @@ void TracerImpl::InitSwitchesStatesNamesVisitor() {
   switches_states_names_visitor_ = std::make_unique<SwitchesStatesNamesVisitor>(listener_);
   switches_states_names_visitor_->SetProduceSchedulingSlices(trace_context_switches_);
   if (trace_thread_state_) {
-    switches_states_names_visitor_->SetThreadStatePidFilter(target_pid_);
+    std::set<pid_t> pids = {target_pid_};
+    if (introspection_enabled_) {
+      pids.insert(orbit_base::GetCurrentProcessIdNative());
+    }
+    switches_states_names_visitor_->SetThreadStatePidFilters(pids);
   }
   switches_states_names_visitor_->SetThreadStateCounter(&stats_.thread_state_count);
   event_processor_.AddVisitor(switches_states_names_visitor_.get());
