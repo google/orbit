@@ -172,6 +172,16 @@ TEST(CaptureViewElement, IsMouseOver) {
   EXPECT_FALSE(container_elem.IsMouseOver());
   EXPECT_FALSE(child0->IsMouseOver());
   EXPECT_FALSE(child1->IsMouseOver());
+
+  // Moving as part of left-click dragging shouldn't modify mouse_over. This is because highlighting
+  // of some elements rely on that and we only want to highlight them when we move the mouse without
+  // any modifier.
+  EXPECT_EQ(container_elem.HandleMouseEvent(CaptureViewElement::MouseEvent{
+                CaptureViewElement::MouseEventType::kMouseMove, kPosOnChild1, /*left=*/true}),
+            CaptureViewElement::EventResult::kIgnored);
+  EXPECT_FALSE(container_elem.IsMouseOver());
+  EXPECT_FALSE(child0->IsMouseOver());
+  EXPECT_FALSE(child1->IsMouseOver());
 }
 
 TEST(CaptureViewElement, MouseWheelEventRecursesToCorrectChildren) {

@@ -88,6 +88,8 @@ TEST(Button, MouseReleaseCallback) {
     if (button_param == &button) mouse_released_called++;
   };
   button.SetMouseReleaseCallback(callback);
+  std::ignore =
+      button.HandleMouseEvent({CaptureViewElement::MouseEventType::kMouseMove, button.GetPos()});
 
   uint32_t mouse_released_called_expected = 0;
   button.OnRelease();
@@ -95,6 +97,12 @@ TEST(Button, MouseReleaseCallback) {
   button.OnRelease();
   EXPECT_EQ(mouse_released_called, ++mouse_released_called_expected);
   button.SetMouseReleaseCallback(nullptr);
+  button.OnRelease();
+  EXPECT_EQ(mouse_released_called, mouse_released_called_expected);
+
+  // Releasing outside of the button shouldn't call the callback.
+  std::ignore = button.HandleMouseEvent({CaptureViewElement::MouseEventType::kMouseLeave});
+  button.SetMouseReleaseCallback(callback);
   button.OnRelease();
   EXPECT_EQ(mouse_released_called, mouse_released_called_expected);
 }

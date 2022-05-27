@@ -69,6 +69,8 @@ void Button::SetMouseReleaseCallback(MouseReleaseCallback callback) {
 
 void Button::OnRelease() {
   CaptureViewElement::OnRelease();
+  if (!IsMouseOver()) return;
+
   if (mouse_release_callback_ != nullptr) {
     mouse_release_callback_(this);
   }
