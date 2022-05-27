@@ -111,8 +111,7 @@ TEST_F(UnitTestTimeGraph, MouseWheel) {
                               time_graph->GetPos()[1] + time_graph->GetSize()[1] / 2.f};
   MouseWheelUp(kCenteredMousePosition, /*ctrl=*/false);
 
-  // MouseWheel should pan vertically when ctrl is not pressed and therefore not modify the
-  // time_window.
+  // MouseWheel should scroll when ctrl is not pressed and therefore not modify the time_window.
   // TODO(b/233855224): Test that vertical panning works as expected.
   EXPECT_EQ(original_time_window_us, time_graph->GetTimeWindowUs());
 

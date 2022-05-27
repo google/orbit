@@ -92,7 +92,7 @@ TimeGraph::TimeGraph(AccessibleInterfaceProvider* parent, OrbitApp* app,
   });
 
   vertical_slider_->SetDragCallback(
-      [&](float ratio) { track_container_->UpdateVerticalScroll(ratio); });
+      [&](float ratio) { track_container_->UpdateVerticalScrollUsingRatio(ratio); });
 
   vertical_slider_->SetOrthogonalSliderPixelHeight(horizontal_slider_->GetPixelHeight());
   horizontal_slider_->SetOrthogonalSliderPixelHeight(vertical_slider_->GetPixelHeight());
@@ -413,7 +413,8 @@ orbit_gl::CaptureViewElement::EventResult TimeGraph::OnMouseWheel(
     double mouse_ratio = (mouse_pos[0] - GetPos()[0]) / GetTimelineWidth();
     ZoomTime(delta, mouse_ratio);
   } else {
-    track_container_->ScrollVertically(delta);
+    const int kPixelsPerDelta = 25;
+    track_container_->IncrementVerticalScroll(kPixelsPerDelta * delta);
   }
 
   return EventResult::kHandled;

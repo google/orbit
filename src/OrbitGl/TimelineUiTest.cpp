@@ -199,16 +199,16 @@ TEST(TimelineUi, OnMouseWheel) {
   TimeGraphLayout layout;
   Viewport viewport(width, 0);
   TimelineUiTest timeline_ui_test(&mock_timeline_info, &viewport, &layout);
-  const Vec2 kMousePosInsideTimeline = timeline_ui_test.GetPos();
+  const Vec2 pos_inside_timeline = timeline_ui_test.GetPos();
 
   EXPECT_CALL(mock_timeline_info, ZoomTime(1, _)).Times(Exactly(1));
   EXPECT_CALL(mock_timeline_info, ZoomTime(-1, _)).Times(Exactly(1));
   EXPECT_EQ(CaptureViewElement::EventResult::kHandled,
             timeline_ui_test.HandleMouseEvent(
-                {CaptureViewElement::MouseEventType::kMouseWheelUp, kMousePosInsideTimeline}));
+                {CaptureViewElement::MouseEventType::kMouseWheelUp, pos_inside_timeline}));
   EXPECT_EQ(CaptureViewElement::EventResult::kHandled,
             timeline_ui_test.HandleMouseEvent(
-                {CaptureViewElement::MouseEventType::kMouseWheelDown, kMousePosInsideTimeline}));
+                {CaptureViewElement::MouseEventType::kMouseWheelDown, pos_inside_timeline}));
 }
 
 }  // namespace orbit_gl

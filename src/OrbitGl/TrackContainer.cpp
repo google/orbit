@@ -378,15 +378,14 @@ void TrackContainer::DoDraw(PrimitiveAssembler& primitive_assembler, TextRendere
   DrawOverlay(primitive_assembler, text_renderer, draw_context.picking_mode);
 }
 
-void TrackContainer::UpdateVerticalScroll(float ratio) {
+void TrackContainer::UpdateVerticalScrollUsingRatio(float ratio) {
   float range = std::max(0.f, GetVisibleTracksTotalHeight() - GetHeight());
   float new_scrolling_offset = ratio * range;
   SetVerticalScrollingOffset(new_scrolling_offset);
 }
 
-void TrackContainer::ScrollVertically(int delta) {
-  const int kPixelsPerDeltaInPanning = 25;
-  SetVerticalScrollingOffset(vertical_scrolling_offset_ - kPixelsPerDeltaInPanning * delta);
+void TrackContainer::IncrementVerticalScroll(float delta_y) {
+  SetVerticalScrollingOffset(vertical_scrolling_offset_ - delta_y);
 }
 
 void TrackContainer::SetVerticalScrollingOffset(float value) {

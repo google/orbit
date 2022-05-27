@@ -122,11 +122,11 @@ TEST_F(NavigationTestCaptureWindow, ZoomTimeWorksInTheMiddleOfTimeline) {
   int x = kTimelinePos[0] + kTimelineSize[0] / 2;
   int y = kTimelinePos[1] + kTimelineSize[1] / 2;
 
-  MouseWheelMoved(x, y, 1, false);
+  MouseWheelMoved(x, y, 1, /*ctrl=*/false);
   PreRender();
   ExpectIsHorizontallyZoomedIn(PosWithinCapture::kMiddle);
 
-  MouseWheelMoved(x, y, -1, false);
+  MouseWheelMoved(x, y, -1, /*ctrl=*/false);
   PreRender();
   ExpectInitialState();
 
@@ -156,25 +156,25 @@ TEST_F(NavigationTestCaptureWindow, ZoomTimeWorksAtRandomPositions) {
     const int y = kTimelineSize[1] - kBottomSafetyMargin;
 
     // Zoom in twice, then zoom out twice. Check that the intermediate states match
-    MouseWheelMoved(x, y, 1, true);
+    MouseWheelMoved(x, y, 1, /*ctrl=*/true);
     PreRender();
     ExpectIsHorizontallyZoomedIn(PosWithinCapture::kAnywhere);
 
     float last_slider_pos = time_graph_->GetHorizontalSlider()->GetPosRatio();
     double last_min_time = time_graph_->GetMinTimeUs();
     double last_max_time = time_graph_->GetMaxTimeUs();
-    MouseWheelMoved(x, y, 1, true);
+    MouseWheelMoved(x, y, 1, /*ctrl=*/true);
     PreRender();
     ExpectIsHorizontallyZoomedIn(PosWithinCapture::kAnywhere);
 
-    MouseWheelMoved(x, y, -1, true);
+    MouseWheelMoved(x, y, -1, /*ctrl=*/true);
     PreRender();
     EXPECT_NEAR(time_graph_->GetHorizontalSlider()->GetPosRatio(), last_slider_pos,
                 kSliderPosEpsilon);
     EXPECT_NEAR(time_graph_->GetMinTimeUs(), last_min_time, kTimeEpsilonUs);
     EXPECT_NEAR(time_graph_->GetMaxTimeUs(), last_max_time, kTimeEpsilonUs);
 
-    MouseWheelMoved(x, y, -1, true);
+    MouseWheelMoved(x, y, -1, /*ctrl=*/true);
     PreRender();
     ExpectInitialState(true);
 
@@ -215,11 +215,11 @@ TEST_F(NavigationTestCaptureWindow, ZoomTimeWorksAtTheRightOfTimeline) {
   int x = kTimelinePos[0] + kTimelineSize[0];
   int y = kTimelinePos[1] + kTimelineSize[1] / 2;
 
-  MouseWheelMoved(x, y, 1, true);
+  MouseWheelMoved(x, y, 1, /*ctrl=*/true);
   PreRender();
   ExpectIsHorizontallyZoomedIn(PosWithinCapture::kRight);
 
-  MouseWheelMoved(x, y, -1, true);
+  MouseWheelMoved(x, y, -1, /*ctrl=*/true);
   PreRender();
   ExpectInitialState();
 
@@ -243,11 +243,11 @@ TEST_F(NavigationTestCaptureWindow, ZoomTimeWorksAtTheLeftOfTimeline) {
   int x = kTimelinePos[0];
   int y = kTimelinePos[1];
 
-  MouseWheelMoved(x, y, 1, false);
+  MouseWheelMoved(x, y, 1, /*ctrl=*/false);
   PreRender();
   ExpectIsHorizontallyZoomedIn(PosWithinCapture::kLeft);
 
-  MouseWheelMoved(x, y, -1, false);
+  MouseWheelMoved(x, y, -1, /*ctrl=*/false);
   PreRender();
   ExpectInitialState();
 
@@ -271,7 +271,6 @@ TEST_F(NavigationTestCaptureWindow, VerticalZoomWorksAsExpected) {
   int y = kTimeGraphSize[1] - kBottomSafetyMargin;
   MouseMoved(x, y, /*left=*/false, /*right=*/false, /*middle=*/false);
 
-  // float old_height = time_graph_->GetTrackContainer()->GetVisibleTracksTotalHeight();
   KeyPressed('+', /*ctrl=*/true, /*shift=*/false, /*alt=*/false);
   PreRender();
   // TODO(b/168101815): Add ctrl + '+' for VerticalZoom.
