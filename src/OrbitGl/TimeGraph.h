@@ -191,6 +191,8 @@ class TimeGraph : public orbit_gl::CaptureViewElement, public orbit_gl::Timeline
   [[nodiscard]] bool IsPartlyVisible(uint64_t min, uint64_t max) const;
   [[nodiscard]] bool IsVisible(VisibilityType vis_type, uint64_t min, uint64_t max) const;
 
+  void DrawMarginsBetweenChildren(orbit_gl::PrimitiveAssembler& primitive_assembler) const;
+
   [[nodiscard]] const TimerInfo* FindNextThreadTrackTimer(uint64_t scope_id, uint64_t current_time,
                                                           std::optional<uint32_t> thread_id) const;
 

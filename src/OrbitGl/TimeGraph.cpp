@@ -685,7 +685,7 @@ void TimeGraph::UpdateChildrenPosAndContainerSize() {
   // |            TIMELINE            |   |  +  |
   // |                                |   |  -  |
   // |--------------------------------|   |-----|
-  // |             MARGIN                       |
+  // |     SPACE TRACKS - TIMELINE              |
   // |--------------------------------| M |-----|
   // |                                | A |  S  |
   // |                                | R |  L  |
@@ -699,8 +699,9 @@ void TimeGraph::UpdateChildrenPosAndContainerSize() {
 
   // First we calculate TrackContainer's height. TimeGraph will set TrackContainer height based on
   // its free space.
-  float total_height_without_track_container =
-      GetHeight() - horizontal_slider_->GetHeight() - timeline_ui_->GetHeight();
+  float total_height_without_track_container = GetHeight() - horizontal_slider_->GetHeight() -
+                                               timeline_ui_->GetHeight() -
+                                               layout_.GetSpaceBetweenTracksAndTimeline();
   track_container_->SetHeight(total_height_without_track_container);
 
   // After we set positions.
@@ -720,8 +721,7 @@ void TimeGraph::UpdateChildrenPosAndContainerSize() {
   minus_button_->SetPos(GetWidth() - minus_button_->GetWidth(),
                         timegraph_current_y + plus_button_->GetHeight());
 
-  // TODO(b/230441392): Margin between timeline and tracks shouldn't be part of the timeline.
-  timegraph_current_y += timeline_ui_->GetHeight();
+  timegraph_current_y += timeline_ui_->GetHeight() + layout_.GetSpaceBetweenTracksAndTimeline();
   track_container_->SetWidth(GetWidth() - total_right_margin);
   track_container_->SetPos(timegraph_current_x, timegraph_current_y);
 
@@ -867,10 +867,22 @@ void TimeGraph::DoDraw(orbit_gl::PrimitiveAssembler& primitive_assembler,
                                         kGreenLineColor);
   }
 
-  // Right vertical margin of the Tracks to make them look nicer. If the vertical slider is visible,
-  // the margin will be between the slider and the tracks.
-  Vec2 right_margin_pos{GetWidth() - GetRightMargin(), GetPos()[1]};
+  // TODO(http://b/217719000): We are drawing boxes in margin positions because some elements are
+  // being drawn partially outside the TrackContainer space. This hack is needed until we assure
+  // that no element is drawn outside of its parent's area.
+  DrawMarginsBetweenChildren(primitive_assembler);
+}
 
+void TimeGraph::DrawMarginsBetweenChildren(
+    orbit_gl::PrimitiveAssembler& primitive_assembler) const {
+  // Margin between the Tracks and the Timeline.
+  Vec2 timeline_margin_pos = Vec2(GetPos()[0], GetPos()[1] + timeline_ui_->GetHeight());
+  Vec2 timeline_margin_size = Vec2(GetSize()[0], layout_.GetSpaceBetweenTracksAndTimeline());
+  primitive_assembler.AddBox(MakeBox(timeline_margin_pos, timeline_margin_size),
+                             GlCanvas::kZValueTimeBar, GlCanvas::kBackgroundColor);
+
+  // Margin between the Tracks and the vertical scrollbar.
+  Vec2 right_margin_pos{GetWidth() - GetRightMargin(), GetPos()[1]};
   Quad box = MakeBox(right_margin_pos, GetSize() - (right_margin_pos - GetPos()));
   primitive_assembler.AddBox(box, GlCanvas::kZValueMargin, GlCanvas::kBackgroundColor);
 }
