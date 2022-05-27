@@ -70,6 +70,8 @@ bool OrbitGrpcServerImpl::Init(std::string_view server_address, bool dev_mode) {
   grpc::reflection::InitProtoReflectionServerBuilderPlugin();
 
   grpc::ServerBuilder builder;
+
+  // Increase maximum receive size for unbounded "CaptureOptions" message.
   builder.SetMaxReceiveMessageSize(std::numeric_limits<int32_t>::max());
 
   builder.AddListeningPort(std::string(server_address), grpc::InsecureServerCredentials());
