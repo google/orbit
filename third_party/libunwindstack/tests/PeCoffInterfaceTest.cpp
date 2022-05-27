@@ -22,7 +22,6 @@
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
 
-#include <Check.h>
 #include <MemoryBuffer.h>
 #include "utils/MemoryFake.h"
 
@@ -319,20 +318,31 @@ TYPED_TEST(PeCoffInterfaceTest, get_correct_relative_pc) {
   int64_t load_bias;
   ASSERT_TRUE(coff.Init(&load_bias));
 
-  const uint64_t expected_relative_pc = 0x2200 - 0x2000 + PeCoffFake<TypeParam>::kLoadBiasFake +
+  constexpr uint64_t kAbsolutePc = 0x2200;
+  constexpr uint64_t kMapStart = 0x2000;
+  ASSERT_TRUE(kAbsolutePc - kMapStart < PeCoffFake<TypeParam>::kTextSectionMemorySize);
+  const uint64_t expected_relative_pc = kAbsolutePc - kMapStart +
+                                        PeCoffFake<TypeParam>::kLoadBiasFake +
                                         PeCoffFake<TypeParam>::kTextSectionMemoryOffset;
-  EXPECT_EQ(expected_relative_pc, coff.GetRelPc(0x2200, 0x2000));
+  EXPECT_EQ(expected_relative_pc,
+            coff.GetRelPc(kAbsolutePc, kMapStart, PeCoffFake<TypeParam>::kTextSectionFileOffset));
 }
 
-TYPED_TEST(PeCoffInterfaceTest, get_zero_as_relative_pc_if_no_text_section) {
-  uint64_t offset = this->GetFake()->InitNoSectionHeaders();
-  offset = this->GetFake()->SetSectionHeaderAtOffset(offset, ".no_text");
-  this->GetMemory()->SetData16(this->GetFake()->coff_header_nsects_offset(), 1);
-
+TYPED_TEST(PeCoffInterfaceTest, get_zero_as_relative_pc_if_map_offset_outside_of_any_section) {
+  this->GetFake()->Init();
   TypeParam coff(this->GetMemory());
   int64_t load_bias;
-  ASSERT_FALSE(coff.Init(&load_bias));
-  EXPECT_EQ(0, coff.GetRelPc(0x2200, 0x2000));
+  ASSERT_TRUE(coff.Init(&load_bias));
+
+  constexpr uint64_t kMapOffset1 = 0;
+  constexpr uint64_t kMapStart1 = 0x2000 + kMapOffset1;
+  constexpr uint64_t kAbsolutePc1 = kMapStart1 + 0x200;
+  EXPECT_EQ(0, coff.GetRelPc(kAbsolutePc1, kMapStart1, kMapOffset1));
+
+  constexpr uint64_t kMapOffset2 = 0x100000;
+  constexpr uint64_t kMapStart2 = 0x2000 + kMapOffset2;
+  constexpr uint64_t kAbsolutePc2 = kMapStart2 + 0x200;
+  EXPECT_EQ(0, coff.GetRelPc(kAbsolutePc2, kMapStart2, kMapOffset2));
 }
 
 TYPED_TEST(PeCoffInterfaceTest, get_correct_text_range) {

@@ -37,7 +37,7 @@ class MockPeCoffInterface : public PeCoffInterface {
   MOCK_METHOD(ErrorCode, LastErrorCode, (), (override));
   MOCK_METHOD(uint64_t, LastErrorAddress, (), (override));
   MOCK_METHOD(DwarfSection*, DebugFrameSection, (), (override));
-  MOCK_METHOD(uint64_t, GetRelPc, (uint64_t, uint64_t), (const override));
+  MOCK_METHOD(uint64_t, GetRelPc, (uint64_t, uint64_t, uint64_t), (override));
   MOCK_METHOD(bool, GetTextRange, (uint64_t*, uint64_t*), (const override));
   MOCK_METHOD(uint64_t, GetTextOffsetInFile, (), (const override));
   MOCK_METHOD(bool, Step, (uint64_t, uint64_t, Regs*, Memory*, bool*, bool*), (override));
@@ -141,16 +141,18 @@ TYPED_TEST(PeCoffTest, rel_pc_is_correctly_passed_through) {
   constexpr uint64_t kPcValue = 0x2000;
   constexpr uint64_t kMapStart = 0x1000;
   constexpr uint64_t kMapEnd = 0x4000;
+  constexpr uint64_t kMapObjectOffset = 0x200;
 
   // This test is not testing whether the GetRelPc computation is correct, only whether the
   // return value from PeCoffInterface::GetRelPc is correctly passed through.
   constexpr uint64_t kMockReturnValue = 0x3000;
   MockPeCoffInterface* mock_interface = new MockPeCoffInterface;
-  EXPECT_CALL(*mock_interface, GetRelPc(kPcValue, kMapStart))
+  EXPECT_CALL(*mock_interface, GetRelPc(kPcValue, kMapStart, kMapObjectOffset))
       .WillOnce(::testing::Return(kMockReturnValue));
   coff.SetFakePeCoffInterface(mock_interface);
 
   auto map_info = MapInfo::Create(/*start=*/kMapStart, /*end=*/kMapEnd, 0, 0, "no_name");
+  map_info->set_object_offset(kMapObjectOffset);
   EXPECT_EQ(kMockReturnValue, coff.GetRelPc(kPcValue, map_info.get()));
 }
 
