@@ -332,9 +332,9 @@ void CaptureWindow::MouseWheelMovedHorizontally(int x, int y, int delta, bool ct
 
 void CaptureWindow::KeyPressed(unsigned int key_code, bool ctrl, bool shift, bool alt) {
   GlCanvas::KeyPressed(key_code, ctrl, shift, alt);
-  const float kPanRatioPerLeftAndRightArrowKeys = 0.1;
-  const float kScrollingRatioPerUpAndDownArrowKeys = 0.05;
-  const float kScrollingRatioPerPageUpAndDown = 0.9;
+  const float kPanRatioPerLeftAndRightArrowKeys = 0.1f;
+  const float kScrollingRatioPerUpAndDownArrowKeys = 0.05f;
+  const float kScrollingRatioPerPageUpAndDown = 0.9f;
 
   // TODO(b/234116147): Move this part to TimeGraph and manage events similarly to HandleMouseEvent.
   switch (key_code) {
