@@ -12,9 +12,9 @@
 #include <string>
 
 #include "ClientData/CaptureData.h"
+#include "ClientData/CaptureDataHolder.h"
 #include "ClientData/FunctionInfo.h"
 #include "ClientData/ModuleData.h"
-#include "ClientData/OwnsCaptureData.h"
 #include "ClientData/PostProcessedSamplingData.h"
 #include "ClientData/ProcessData.h"
 #include "ClientProtos/capture_data.pb.h"
@@ -28,7 +28,7 @@
 
 namespace orbit_data_views {
 
-class AppInterface : public orbit_client_data::OwnsCaptureData {
+class AppInterface : public orbit_client_data::CaptureDataHolder {
  public:
   virtual ~AppInterface() = default;
 

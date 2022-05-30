@@ -7,7 +7,6 @@
 #include "ClientData/ScopeIdConstants.h"
 #include "ClientData/ScopeInfo.h"
 #include "ClientData/ThreadTrackDataProvider.h"
-#include "OrbitBase/Logging.h"
 
 namespace orbit_mizar_data {
 

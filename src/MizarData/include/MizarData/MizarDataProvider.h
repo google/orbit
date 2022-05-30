@@ -2,20 +2,21 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#ifndef MIZAR_MIZAR_DATA_PROVIDER_H_
-#define MIZAR_MIZAR_DATA_PROVIDER_H_
+#ifndef MIZAR_DATA_MIZAR_DATA_PROVIDER_H_
+#define MIZAR_DATA_MIZAR_DATA_PROVIDER_H_
 
 #include <stdint.h>
+
 #include <optional>
 #include <string>
 
 #include "ClientData/CaptureData.h"
-#include "ClientData/OwnsCaptureData.h"
+#include "ClientData/CaptureDataHolder.h"
 
 namespace orbit_mizar_data {
 
 // Handles one of the two datasets Mizar operates on
-class MizarDataProvider : public orbit_client_data::OwnsCaptureData {
+class MizarDataProvider : public orbit_client_data::CaptureDataHolder {
  public:
   virtual ~MizarDataProvider() = default;
 
@@ -25,4 +26,4 @@ class MizarDataProvider : public orbit_client_data::OwnsCaptureData {
 
 }  // namespace orbit_mizar_data
 
-#endif  // MIZAR_MIZAR_DATA_PROVIDER_H_
+#endif  // MIZAR_DATA_MIZAR_DATA_PROVIDER_H_

@@ -2,8 +2,8 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#ifndef CLIENT_DATA_OWNS_CAPTURE_DATA_H_
-#define CLIENT_DATA_OWNS_CAPTURE_DATA_H_
+#ifndef CLIENT_DATA_CAPTURE_DATA_HOLDER_H_
+#define CLIENT_DATA_CAPTURE_DATA_HOLDER_H_
 
 #include <functional>
 #include <memory>
@@ -14,9 +14,9 @@
 
 namespace orbit_client_data {
 
-class OwnsCaptureData {
+class CaptureDataHolder {
  public:
-  virtual ~OwnsCaptureData() = default;
+  virtual ~CaptureDataHolder() = default;
 
   // TODO(b/234095077): The two methods should not return ref, as capture_data_ doesn't
   // necessarily store a value. They should either return a pointer, or
@@ -52,4 +52,4 @@ class OwnsCaptureData {
 };
 }  // namespace orbit_client_data
 
-#endif  // CLIENT_DATA_OWNS_CAPTURE_DATA_H_
+#endif  // CLIENT_DATA_CAPTURE_DATA_HOLDER_H_

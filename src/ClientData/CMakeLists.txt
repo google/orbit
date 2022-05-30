@@ -19,13 +19,13 @@ target_sources(ClientData PUBLIC
         include/ClientData/CallstackInfo.h
         include/ClientData/CallstackType.h
         include/ClientData/CaptureData.h
+        include/ClientData/CaptureDataHolder.h
         include/ClientData/DataManager.h
         include/ClientData/FunctionInfo.h
         include/ClientData/LinuxAddressInfo.h
         include/ClientData/ModuleAndFunctionLookup.h
         include/ClientData/ModuleData.h
         include/ClientData/ModuleManager.h
-        include/ClientData/OwnsCaptureData.h
         include/ClientData/PostProcessedSamplingData.h
         include/ClientData/ProcessData.h
         include/ClientData/ScopeIdConstants.h
