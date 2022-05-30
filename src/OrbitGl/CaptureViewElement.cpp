@@ -65,7 +65,7 @@ CaptureViewElement::EventResult CaptureViewElement::OnMouseMove(const Vec2& mous
     std::ignore = OnMouseEnter();
   }
 
-  // Ignoring the event, so mouse move is executed for its ancestors as well.
+  // Ignore this event and let it be handled by its ancestors as well.
   return EventResult::kIgnored;
 }
 

@@ -101,7 +101,8 @@ TEST(Button, MouseReleaseCallback) {
   EXPECT_EQ(mouse_released_called, mouse_released_called_expected);
 
   // Releasing outside of the button shouldn't call the callback.
-  std::ignore = button.HandleMouseEvent({CaptureViewElement::MouseEventType::kMouseLeave});
+  EXPECT_EQ(button.HandleMouseEvent({CaptureViewElement::MouseEventType::kMouseLeave}),
+            CaptureViewElement::EventResult::kIgnored);
   button.SetMouseReleaseCallback(callback);
   button.OnRelease();
   EXPECT_EQ(mouse_released_called, mouse_released_called_expected);
