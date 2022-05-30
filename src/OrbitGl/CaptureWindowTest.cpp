@@ -71,6 +71,13 @@ class NavigationTestCaptureWindow : public CaptureWindow, public testing::Test {
     }
   }
 
+  void ExpectScrolledDownFromInitialState() {
+    EXPECT_GT(time_graph_->GetVerticalSlider()->GetPosRatio(), 0.0);
+
+    EXPECT_DOUBLE_EQ(time_graph_->GetHorizontalSlider()->GetLengthRatio(), 1.0);
+    EXPECT_DOUBLE_EQ(time_graph_->GetHorizontalSlider()->GetPosRatio(), 0.0);
+  }
+
   enum struct PosWithinCapture { kLeft, kRight, kMiddle, kAnywhere };
   void ExpectIsHorizontallyZoomedIn(PosWithinCapture pos) {
     EXPECT_LT(time_graph_->GetHorizontalSlider()->GetLengthRatio(), 1.0);
@@ -271,28 +278,33 @@ TEST_F(NavigationTestCaptureWindow, VerticalZoomWorksAsExpected) {
   int y = kTimeGraphSize[1] - kBottomSafetyMargin;
   MouseMoved(x, y, /*left=*/false, /*right=*/false, /*middle=*/false);
 
+  float old_height = time_graph_->GetTrackContainer()->GetVisibleTracksTotalHeight();
   KeyPressed('+', /*ctrl=*/true, /*shift=*/false, /*alt=*/false);
   PreRender();
-  // TODO(b/168101815): Add ctrl + '+' for VerticalZoom.
-  // EXPECT_GT(time_graph_->GetTrackContainer()->GetVisibleTracksTotalHeight(), old_height);
+  EXPECT_GT(time_graph_->GetTrackContainer()->GetVisibleTracksTotalHeight(), old_height);
 
   KeyPressed('-', /*ctrl=*/true, /*shift=*/false, /*alt=*/false);
   PreRender();
-  // TODO(b/168101815): Add ctrl + '-' for VerticalZoom.
-  // EXPECT_EQ(time_graph_->GetTrackContainer()->GetVisibleTracksTotalHeight(), old_height);
+  EXPECT_EQ(time_graph_->GetTrackContainer()->GetVisibleTracksTotalHeight(), old_height);
 }
 
 TEST_F(NavigationTestCaptureWindow, PanTimeWorksAsExpected) {
   // TODO (b/226386133): Extend this test
   PreRender();
   ExpectInitialState();
+  const double kEpsilon = 1e-9;
 
   int x = 0;
   int y = viewport_.GetScreenHeight() - kBottomSafetyMargin;
 
   // Pan time - need to zoom in a bit first, then pan slighty right and back again
   MouseMoved(x, y, false, false, false);
-  KeyPressed('W', false, false, false);
+  for (int i = 0; i < 10; i++) {
+    KeyPressed('W', false, false, false);
+  }
+
+  EXPECT_DOUBLE_EQ(time_graph_->GetHorizontalSlider()->GetPosRatio(), 0.0);
+
   KeyPressed('D', false, false, false);
   PreRender();
   EXPECT_GT(time_graph_->GetHorizontalSlider()->GetPosRatio(), 0.0);
@@ -300,8 +312,63 @@ TEST_F(NavigationTestCaptureWindow, PanTimeWorksAsExpected) {
 
   KeyPressed('A', false, false, false);
   PreRender();
-  EXPECT_EQ(time_graph_->GetHorizontalSlider()->GetPosRatio(), 0.0);
-  EXPECT_EQ(time_graph_->GetMinTimeUs(), 0.0);
+  EXPECT_NEAR(time_graph_->GetHorizontalSlider()->GetPosRatio(), 0.0, kEpsilon);
+  EXPECT_NEAR(time_graph_->GetMinTimeUs(), 0.0, kEpsilon);
+
+  const int kRightArrowKeyCode = 20;
+  const int kLeftArrowKeyCode = 18;
+  KeyPressed(kRightArrowKeyCode, false, false, false);
+  PreRender();
+  EXPECT_GT(time_graph_->GetHorizontalSlider()->GetPosRatio(), 0.0);
+  EXPECT_GT(time_graph_->GetMinTimeUs(), 0.0);
+
+  double min_time_us_after_right_arrow = time_graph_->GetMinTimeUs();
+  KeyPressed(kRightArrowKeyCode, false, false, false);
+  KeyPressed(kLeftArrowKeyCode, false, false, false);
+  // A right arrow key pressed followed by a left one should return to the original position.
+  EXPECT_NEAR(min_time_us_after_right_arrow, time_graph_->GetMinTimeUs(), kEpsilon);
+
+  KeyPressed(kLeftArrowKeyCode, false, false, false);
+  PreRender();
+  EXPECT_NEAR(time_graph_->GetHorizontalSlider()->GetPosRatio(), 0.0, kEpsilon);
+  EXPECT_NEAR(time_graph_->GetMinTimeUs(), 0.0, kEpsilon);
+}
+
+TEST_F(NavigationTestCaptureWindow, Scrolling) {
+  PreRender();
+  ExpectInitialState();
+
+  int x = 0;
+  int y = viewport_.GetScreenHeight() - kBottomSafetyMargin;
+
+  // Mouse Wheel should scroll up and down.
+  MouseWheelMoved(x, y, -1, /*ctrl=*/false);
+  PreRender();
+  ExpectScrolledDownFromInitialState();
+
+  MouseWheelMoved(x, y, 1, /*ctrl=*/false);
+  PreRender();
+  ExpectInitialState();
+
+  // Down
+  KeyPressed(21, false, false, false);
+  PreRender();
+  ExpectScrolledDownFromInitialState();
+
+  // Up
+  KeyPressed(19, false, false, false);
+  PreRender();
+  ExpectInitialState();
+
+  // Page Down
+  KeyPressed(23, false, false, false);
+  PreRender();
+  ExpectScrolledDownFromInitialState();
+
+  // Page Up
+  KeyPressed(22, false, false, false);
+  PreRender();
+  ExpectInitialState();
 }
 
 }  // namespace orbit_gl

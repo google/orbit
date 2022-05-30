@@ -45,6 +45,7 @@ using orbit_accessibility::AccessibleWidgetBridge;
 using orbit_client_data::CaptureData;
 using orbit_gl::Batcher;
 using orbit_gl::CaptureViewElement;
+using orbit_gl::ModifierKeys;
 using orbit_gl::PickingUserData;
 using orbit_gl::PrimitiveAssembler;
 using orbit_gl::TextRenderer;
@@ -306,7 +307,7 @@ void CaptureWindow::MouseWheelMoved(int x, int y, int delta, bool ctrl) {
   GlCanvas::MouseWheelMoved(x, y, delta, ctrl);
 
   if (time_graph_ != nullptr) {
-    orbit_gl::ModifierKeys modifiers;
+    ModifierKeys modifiers;
     modifiers.ctrl = ctrl;
     std::ignore = time_graph_->HandleMouseEvent(
         CaptureViewElement::MouseEvent{
@@ -331,7 +332,11 @@ void CaptureWindow::MouseWheelMovedHorizontally(int x, int y, int delta, bool ct
 
 void CaptureWindow::KeyPressed(unsigned int key_code, bool ctrl, bool shift, bool alt) {
   GlCanvas::KeyPressed(key_code, ctrl, shift, alt);
+  const float kPanRatioPerLeftAndRightArrowKeys = 0.1f;
+  const float kScrollingRatioPerUpAndDownArrowKeys = 0.05f;
+  const float kScrollingRatioPerPageUpAndDown = 0.9f;
 
+  // TODO(b/234116147): Move this part to TimeGraph and manage events similarly to HandleMouseEvent.
   switch (key_code) {
     case ' ':
       if (!shift) {
@@ -339,10 +344,10 @@ void CaptureWindow::KeyPressed(unsigned int key_code, bool ctrl, bool shift, boo
       }
       break;
     case 'A':
-      Pan(0.1f);
+      Pan(kPanRatioPerLeftAndRightArrowKeys);
       break;
     case 'D':
-      Pan(-0.1f);
+      Pan(-kPanRatioPerLeftAndRightArrowKeys);
       break;
     case 'W':
       ZoomHorizontally(1, mouse_move_pos_screen_[0]);
@@ -353,9 +358,13 @@ void CaptureWindow::KeyPressed(unsigned int key_code, bool ctrl, bool shift, boo
     case 'X':
       ToggleRecording();
       break;
+    // For arrow keys, we will scroll horizontally or vertically if no timer is selected. Otherwise,
+    // jump to the neighbour timer in that direction.
     case 18:  // Left
       if (time_graph_ == nullptr) return;
-      if (shift) {
+      if (app_ == nullptr || app_->selected_timer() == nullptr) {
+        Pan(kPanRatioPerLeftAndRightArrowKeys);
+      } else if (shift) {
         time_graph_->JumpToNeighborTimer(app_->selected_timer(),
                                          TimeGraph::JumpDirection::kPrevious,
                                          TimeGraph::JumpScope::kSameFunction);
@@ -371,7 +380,9 @@ void CaptureWindow::KeyPressed(unsigned int key_code, bool ctrl, bool shift, boo
       break;
     case 20:  // Right
       if (time_graph_ == nullptr) return;
-      if (shift) {
+      if (app_ == nullptr || app_->selected_timer() == nullptr) {
+        Pan(-kPanRatioPerLeftAndRightArrowKeys);
+      } else if (shift) {
         time_graph_->JumpToNeighborTimer(app_->selected_timer(), TimeGraph::JumpDirection::kNext,
                                          TimeGraph::JumpScope::kSameFunction);
       } else if (alt) {
@@ -383,15 +394,46 @@ void CaptureWindow::KeyPressed(unsigned int key_code, bool ctrl, bool shift, boo
       }
       break;
     case 19:  // Up
-
       if (time_graph_ == nullptr) return;
-      time_graph_->JumpToNeighborTimer(app_->selected_timer(), TimeGraph::JumpDirection::kTop,
-                                       TimeGraph::JumpScope::kSameThread);
+      if (app_ == nullptr || app_->selected_timer() == nullptr) {
+        time_graph_->GetTrackContainer()->IncrementVerticalScroll(
+            /*ratio=*/kScrollingRatioPerUpAndDownArrowKeys);
+      } else {
+        time_graph_->JumpToNeighborTimer(app_->selected_timer(), TimeGraph::JumpDirection::kTop,
+                                         TimeGraph::JumpScope::kSameThread);
+      }
       break;
     case 21:  // Down
       if (time_graph_ == nullptr) return;
-      time_graph_->JumpToNeighborTimer(app_->selected_timer(), TimeGraph::JumpDirection::kDown,
-                                       TimeGraph::JumpScope::kSameThread);
+      if (app_ == nullptr || app_->selected_timer() == nullptr) {
+        time_graph_->GetTrackContainer()->IncrementVerticalScroll(
+            /*ratio=*/-kScrollingRatioPerUpAndDownArrowKeys);
+      } else {
+        time_graph_->JumpToNeighborTimer(app_->selected_timer(), TimeGraph::JumpDirection::kDown,
+                                         TimeGraph::JumpScope::kSameThread);
+      }
+      break;
+    case 22:  // Page Up
+      if (time_graph_ == nullptr) return;
+      time_graph_->GetTrackContainer()->IncrementVerticalScroll(
+          /*ratio=*/kScrollingRatioPerPageUpAndDown);
+      break;
+    case 23:  // Page Down
+      if (time_graph_ == nullptr) return;
+      time_graph_->GetTrackContainer()->IncrementVerticalScroll(
+          /*ratio=*/-kScrollingRatioPerPageUpAndDown);
+      break;
+    case '+':
+      if (time_graph_ == nullptr) return;
+      if (ctrl) {
+        time_graph_->VerticalZoom(1, viewport_.ScreenToWorld(mouse_move_pos_screen_)[1]);
+      }
+      break;
+    case '-':
+      if (time_graph_ == nullptr) return;
+      if (ctrl) {
+        time_graph_->VerticalZoom(-1, viewport_.ScreenToWorld(mouse_move_pos_screen_)[1]);
+      }
       break;
   }
 }
@@ -625,12 +667,14 @@ void CaptureWindow::RenderHelpUi() {
 
 const char* CaptureWindow::GetHelpText() const {
   const char* help_message =
-      "Start/Stop Capture: 'F5'\n"
-      "Pan: 'A','D' or \"Left Click + Drag\"\n"
-      "Zoom: 'W', 'S', Scroll or \"Ctrl + Right Click + Drag\"\n"
-      "Vertical Zoom: \"Ctrl + Scroll\"\n"
-      "Select: Left Click\n"
-      "Measure: \"Right Click + Drag\"\n"
+      "Start/Stop Capture: 'F5'\n\n"
+      "Pan: 'A','D' or \"Left Click + Drag\"\n\n"
+      "Scroll: Arrow Keys or Mouse Wheel\n\n"
+      "Timeline Zoom (10%): 'W', 'S' or \"Ctrl + Mouse Wheel\"\n\n"
+      "Zoom to Time Range: \"Ctrl + Right Click + Drag\"\n\n"
+      "Select: Left Click\n\n"
+      "Measure: \"Right Click + Drag\"\n\n"
+      "UI Scale (10%): \"Ctrl + '+'/'-' \"\n\n"
       "Toggle Help: Ctrl + 'H'";
   return help_message;
 }
