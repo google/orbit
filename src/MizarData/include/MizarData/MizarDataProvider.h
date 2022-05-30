@@ -5,7 +5,7 @@
 #ifndef MIZAR_MIZAR_DATA_PROVIDER_H_
 #define MIZAR_MIZAR_DATA_PROVIDER_H_
 
-#include <cstdint>
+#include <stdint.h>
 #include <optional>
 #include <string>
 
