@@ -65,8 +65,7 @@ CaptureViewElement::EventResult CaptureViewElement::OnMouseMove(const Vec2& mous
     std::ignore = OnMouseEnter();
   }
 
-  mouse_pos_cur_ = mouse_pos;
-  // Ignoring the event, so mouse position is updated for its ancestors as well.
+  // Ignore this event and let it be handled by its ancestors as well.
   return EventResult::kIgnored;
 }
 
@@ -170,6 +169,7 @@ CaptureViewElement::EventResult CaptureViewElement::HandleMouseEvent(
     }
   }
 
+  mouse_pos_cur_ = mouse_pos;
   switch (mouse_event.event_type) {
     case MouseEventType::kMouseMove: {
       if (!mouse_event.left && !mouse_event.right && !mouse_event.middle) {
