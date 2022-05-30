@@ -4,6 +4,7 @@
 
 #include <absl/container/flat_hash_set.h>
 #include <gmock/gmock.h>
+#include <google/protobuf/util/message_differencer.h>
 #include <gtest/gtest.h>
 
 #include <array>
@@ -18,6 +19,8 @@
 #include "MizarData/MizarData.h"
 
 namespace orbit_mizar_data {
+
+using google::protobuf::util::MessageDifferencer;
 
 constexpr size_t kTimersNum = 5;
 constexpr std::array<uint64_t, kTimersNum> kStarts{10, 20, 30, 40, 50};
@@ -64,7 +67,7 @@ const orbit_grpc_protos::CaptureStarted kCaptureStarted = [] {
   return result;
 }();
 
-absl::flat_hash_set<orbit_client_data::ScopeType> kStoredScopeTypes = {
+const absl::flat_hash_set<orbit_client_data::ScopeType> kStoredScopeTypes = {
     orbit_client_data::ScopeType::kApiScope,
     orbit_client_data::ScopeType::kDynamicallyInstrumentedFunction};
 
@@ -74,19 +77,11 @@ static void CallOnCaptureStarted(MizarData& data) {
   data.OnCaptureStarted(kCaptureStarted, "path/to/file", {});
 }
 
-bool operator==(const TimerInfo a, const TimerInfo b) {
-  return a.thread_id() == b.thread_id() && a.start() == b.start() && a.end() == b.end() &&
-         a.function_id() == b.function_id() && a.api_scope_name() == b.api_scope_name() &&
-         a.type() == b.type() && a.thread_id() == b.thread_id();
-}
-
 MATCHER(TimerInfosEq, "") {
   const TimerInfo& a = std::get<0>(arg);
   const TimerInfo& b = std::get<1>(arg);
 
-  return a.thread_id() == b.thread_id() && a.start() == b.start() && a.end() == b.end() &&
-         a.function_id() == b.function_id() && a.api_scope_name() == b.api_scope_name() &&
-         a.type() == b.type() && a.thread_id() == b.thread_id();
+  return MessageDifferencer::Equivalent(a, b);
 }
 
 TEST(MizarDataTest, OnCaptureStartedInitializesCaptureData) {
