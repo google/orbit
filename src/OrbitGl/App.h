@@ -645,6 +645,11 @@ class OrbitApp final : public DataViewFactory,
   absl::flat_hash_map<std::pair<std::string, std::string>, orbit_base::Future<ErrorMessageOr<void>>>
       symbols_currently_loading_;
 
+  // Set of modules where an symbol loading error has occurred. The module identifier is file path
+  // and build ID.
+  // ONLY access this from the main thread.
+  absl::flat_hash_set<std::pair<std::string, std::string>> modules_with_symbol_loading_error_;
+
   orbit_string_manager::StringManager string_manager_;
   std::shared_ptr<grpc::Channel> grpc_channel_;
 
