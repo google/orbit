@@ -181,7 +181,6 @@ void GlCanvas::RightDown(int x, int y) {
 
   select_start_pos_world_ = select_stop_pos_world_ = mouse_click_pos_world_;
   is_selecting_ = true;
-  SetPickingMode(PickingMode::kClick);
 
   Orbit_ImGui_MouseButtonCallback(imgui_context_, 1, true);
   RequestRedraw();
