@@ -32,6 +32,7 @@
 #include <utility>
 
 #include "CaptureClient/CaptureListener.h"
+#include "CaptureClient/LoadCapture.h"
 #include "CaptureFile/CaptureFile.h"
 #include "CaptureFile/CaptureFileHelpers.h"
 #include "CaptureWindow.h"
@@ -324,9 +325,9 @@ void OrbitApp::OnCaptureFinished(const CaptureFinished& capture_finished) {
         break;
     }
 
-    ORBIT_CHECK(capture_data_ != nullptr);
-    if (capture_data_->file_path().has_value()) {
-      capture_file_info_manager_.AddOrTouchCaptureFile(capture_data_->file_path().value(),
+    ORBIT_CHECK(HasCaptureData());
+    if (GetCaptureData().file_path().has_value()) {
+      capture_file_info_manager_.AddOrTouchCaptureFile(GetCaptureData().file_path().value(),
                                                        GetCaptureTime());
     }
   });
@@ -345,73 +346,73 @@ void OrbitApp::OnCaptureStarted(const orbit_grpc_protos::CaptureStarted& capture
     metrics_capture_complete_data_.file_path = file_path.value();
   }
 
-  main_thread_executor_->Schedule([this, &initialization_complete, &mutex, &capture_started,
-                                   file_path = std::move(file_path),
-                                   frame_track_function_ids =
-                                       std::move(frame_track_function_ids)]() mutable {
-    absl::flat_hash_map<Track::Type, bool> track_type_visibility;
-    bool had_capture = capture_window_->GetTimeGraph();
-    if (had_capture) {
-      track_type_visibility =
-          capture_window_->GetTimeGraph()->GetTrackManager()->GetAllTrackTypesVisibility();
-    }
+  main_thread_executor_->Schedule(
+      [this, &initialization_complete, &mutex, &capture_started, file_path = std::move(file_path),
+       frame_track_function_ids = std::move(frame_track_function_ids)]() mutable {
+        absl::flat_hash_map<Track::Type, bool> track_type_visibility;
+        bool had_capture = capture_window_->GetTimeGraph();
+        if (had_capture) {
+          track_type_visibility =
+              capture_window_->GetTimeGraph()->GetTrackManager()->GetAllTrackTypesVisibility();
+        }
 
-    ClearCapture();
+        ClearCapture();
 
-    // It is safe to do this write on the main thread, as the capture thread is suspended until
-    // this task is completely executed.
-    capture_data_ = std::make_unique<CaptureData>(
-        capture_started, file_path, std::move(frame_track_function_ids), data_source_);
-    capture_data_->set_memory_warning_threshold_kb(data_manager_->memory_warning_threshold_kb());
-    capture_window_->CreateTimeGraph(capture_data_.get());
-    orbit_gl::TrackManager* track_manager = GetMutableTimeGraph()->GetTrackManager();
-    track_manager->SetIsDataFromSavedCapture(data_source_ ==
-                                             CaptureData::DataSource::kLoadedCapture);
-    if (had_capture) {
-      track_manager->RestoreAllTrackTypesVisibility(track_type_visibility);
-    }
+        // It is safe to do this write on the main thread, as the capture thread is suspended until
+        // this task is completely executed.
+        ConstructCaptureData(capture_started, file_path, std::move(frame_track_function_ids),
+                             data_source_);
+        GetMutableCaptureData().set_memory_warning_threshold_kb(
+            data_manager_->memory_warning_threshold_kb());
+        capture_window_->CreateTimeGraph(&GetMutableCaptureData());
+        orbit_gl::TrackManager* track_manager = GetMutableTimeGraph()->GetTrackManager();
+        track_manager->SetIsDataFromSavedCapture(data_source_ ==
+                                                 CaptureData::DataSource::kLoadedCapture);
+        if (had_capture) {
+          track_manager->RestoreAllTrackTypesVisibility(track_type_visibility);
+        }
 
-    frame_track_online_processor_ =
-        orbit_gl::FrameTrackOnlineProcessor(GetCaptureData(), GetMutableTimeGraph());
+        frame_track_online_processor_ =
+            orbit_gl::FrameTrackOnlineProcessor(GetCaptureData(), GetMutableTimeGraph());
 
-    ORBIT_CHECK(capture_started_callback_ != nullptr);
-    capture_started_callback_(file_path);
+        ORBIT_CHECK(capture_started_callback_ != nullptr);
+        capture_started_callback_(file_path);
 
-    if (!capture_data_->instrumented_functions().empty()) {
-      ORBIT_CHECK(select_live_tab_callback_);
-      select_live_tab_callback_();
-    }
+        if (!GetCaptureData().instrumented_functions().empty()) {
+          ORBIT_CHECK(select_live_tab_callback_);
+          select_live_tab_callback_();
+        }
 
-    FireRefreshCallbacks();
+        FireRefreshCallbacks();
 
-    main_window_->AppendToCaptureLog(
-        MainWindowInterface::CaptureLogSeverity::kInfo, absl::ZeroDuration(),
-        absl::StrFormat(
-            "Capture started on %s.",
-            absl::FormatTime(absl::FromUnixNanos(capture_started.capture_start_unix_time_ns()),
-                             absl::LocalTimeZone())));
+        main_window_->AppendToCaptureLog(
+            MainWindowInterface::CaptureLogSeverity::kInfo, absl::ZeroDuration(),
+            absl::StrFormat(
+                "Capture started on %s.",
+                absl::FormatTime(absl::FromUnixNanos(capture_started.capture_start_unix_time_ns()),
+                                 absl::LocalTimeZone())));
 
-    orbit_version::Version capture_version{capture_started.orbit_version_major(),
-                                           capture_started.orbit_version_minor()};
-    orbit_version::Version current_version = orbit_version::GetVersion();
-    if (capture_version > current_version) {
-      std::string warning_message = absl::Substitute(
-          "The capture was taken with Orbit version $0.$1, which is higher than the "
-          "current version. Please open the capture using Orbit v$0.$1 or above.",
-          capture_version.major_version, capture_version.minor_version);
-      main_window_->AppendToCaptureLog(MainWindowInterface::CaptureLogSeverity::kSevereWarning,
-                                       absl::ZeroDuration(), warning_message);
-      SendWarningToUi("Capture", warning_message);
-    }
-    absl::MutexLock lock(&mutex);
-    initialization_complete = true;
-  });
+        orbit_version::Version capture_version{capture_started.orbit_version_major(),
+                                               capture_started.orbit_version_minor()};
+        orbit_version::Version current_version = orbit_version::GetVersion();
+        if (capture_version > current_version) {
+          std::string warning_message = absl::Substitute(
+              "The capture was taken with Orbit version $0.$1, which is higher than the "
+              "current version. Please open the capture using Orbit v$0.$1 or above.",
+              capture_version.major_version, capture_version.minor_version);
+          main_window_->AppendToCaptureLog(MainWindowInterface::CaptureLogSeverity::kSevereWarning,
+                                           absl::ZeroDuration(), warning_message);
+          SendWarningToUi("Capture", warning_message);
+        }
+        absl::MutexLock lock(&mutex);
+        initialization_complete = true;
+      });
 
   mutex.Await(absl::Condition(&initialization_complete));
 }
 
 Future<void> OrbitApp::OnCaptureComplete() {
-  capture_data_->OnCaptureComplete();
+  GetMutableCaptureData().OnCaptureComplete();
 
   GetMutableCaptureData().FilterBrokenCallstacks();
   PostProcessedSamplingData post_processed_sampling_data =
@@ -501,41 +502,6 @@ void OrbitApp::OnApiTrackValue(const orbit_client_data::ApiTrackValue& api_track
 
 void OrbitApp::OnKeyAndString(uint64_t key, std::string str) {
   string_manager_.AddIfNotPresent(key, std::move(str));
-}
-
-void OrbitApp::OnUniqueCallstack(uint64_t callstack_id, CallstackInfo callstack) {
-  GetMutableCaptureData().AddUniqueCallstack(callstack_id, std::move(callstack));
-}
-
-void OrbitApp::OnCallstackEvent(CallstackEvent callstack_event) {
-  GetMutableCaptureData().AddCallstackEvent(std::move(callstack_event));
-}
-
-void OrbitApp::OnThreadName(uint32_t thread_id, std::string thread_name) {
-  GetMutableCaptureData().AddOrAssignThreadName(thread_id, std::move(thread_name));
-}
-
-void OrbitApp::OnThreadStateSlice(ThreadStateSliceInfo thread_state_slice) {
-  GetMutableCaptureData().AddThreadStateSlice(std::move(thread_state_slice));
-}
-
-void OrbitApp::OnAddressInfo(LinuxAddressInfo address_info) {
-  GetMutableCaptureData().InsertAddressInfo(std::move(address_info));
-}
-
-void OrbitApp::OnUniqueTracepointInfo(uint64_t tracepoint_id,
-                                      orbit_client_data::TracepointInfo tracepoint_info) {
-  GetMutableCaptureData().AddUniqueTracepointInfo(tracepoint_id, std::move(tracepoint_info));
-}
-
-void OrbitApp::OnTracepointEvent(orbit_client_data::TracepointEventInfo tracepoint_event_info) {
-  uint32_t capture_process_id = GetCaptureData().process_id();
-  bool is_same_pid_as_target = capture_process_id == tracepoint_event_info.pid();
-
-  GetMutableCaptureData().AddTracepointEventAndMapToThreads(
-      tracepoint_event_info.timestamp_ns(), tracepoint_event_info.tracepoint_id(),
-      tracepoint_event_info.pid(), tracepoint_event_info.tid(), tracepoint_event_info.cpu(),
-      is_same_pid_as_target);
 }
 
 void OrbitApp::UpdateModulesAbortCaptureIfModuleWithoutBuildIdNeedsReload(
@@ -699,13 +665,14 @@ void OrbitApp::OnLostPerfRecordsEvent(
         uint64_t lost_end_timestamp_ns = lost_perf_records_event.end_timestamp_ns();
         uint64_t lost_start_timestamp_ns =
             lost_end_timestamp_ns - lost_perf_records_event.duration_ns();
-        if (capture_data_->incomplete_data_intervals().empty()) {
+        if (GetCaptureData().incomplete_data_intervals().empty()) {
           // This is only reported once in the Capture Log.
           main_window_->AppendToCaptureLog(MainWindowInterface::CaptureLogSeverity::kWarning,
                                            GetCaptureTimeAt(lost_start_timestamp_ns),
                                            kIncompleteDataLogMessage);
         }
-        capture_data_->AddIncompleteDataInterval(lost_start_timestamp_ns, lost_end_timestamp_ns);
+        GetMutableCaptureData().AddIncompleteDataInterval(lost_start_timestamp_ns,
+                                                          lost_end_timestamp_ns);
       });
 }
 
@@ -716,13 +683,13 @@ void OrbitApp::OnOutOfOrderEventsDiscardedEvent(
     uint64_t discarded_end_timestamp_ns = out_of_order_events_discarded_event.end_timestamp_ns();
     uint64_t discarded_start_timestamp_ns =
         discarded_end_timestamp_ns - out_of_order_events_discarded_event.duration_ns();
-    if (capture_data_->incomplete_data_intervals().empty()) {
+    if (GetCaptureData().incomplete_data_intervals().empty()) {
       main_window_->AppendToCaptureLog(MainWindowInterface::CaptureLogSeverity::kWarning,
                                        GetCaptureTimeAt(discarded_start_timestamp_ns),
                                        kIncompleteDataLogMessage);
     }
-    capture_data_->AddIncompleteDataInterval(discarded_start_timestamp_ns,
-                                             discarded_end_timestamp_ns);
+    GetMutableCaptureData().AddIncompleteDataInterval(discarded_start_timestamp_ns,
+                                                      discarded_end_timestamp_ns);
   });
 }
 
@@ -1260,43 +1227,6 @@ orbit_data_views::PresetLoadState OrbitApp::GetPresetLoadState(const PresetFile&
   return GetPresetLoadStateForProcess(preset, GetTargetProcess());
 }
 
-static ErrorMessageOr<CaptureListener::CaptureOutcome> LoadCaptureFromNewFormat(
-    CaptureListener* listener, CaptureFile* capture_file,
-    std::atomic<bool>* capture_loading_cancellation_requested) {
-  ORBIT_SCOPED_TIMED_LOG("Loading capture in new format from \"%s\"",
-                         capture_file->GetFilePath().string());
-  absl::flat_hash_set<uint64_t> frame_track_function_ids;
-
-  std::optional<uint64_t> section_index =
-      capture_file->FindSectionByType(orbit_capture_file::kSectionTypeUserData);
-  if (section_index.has_value()) {
-    orbit_client_protos::UserDefinedCaptureInfo user_defined_capture_info;
-    auto proto_input_stream = capture_file->CreateProtoSectionInputStream(section_index.value());
-    OUTCOME_TRY(proto_input_stream->ReadMessage(&user_defined_capture_info));
-    const auto& loaded_frame_track_function_ids =
-        user_defined_capture_info.frame_tracks_info().frame_track_function_ids();
-    frame_track_function_ids = {loaded_frame_track_function_ids.begin(),
-                                loaded_frame_track_function_ids.end()};
-  }
-
-  std::unique_ptr<CaptureEventProcessor> capture_event_processor =
-      CaptureEventProcessor::CreateForCaptureListener(listener, capture_file->GetFilePath(),
-                                                      frame_track_function_ids);
-
-  auto capture_section_input_stream = capture_file->CreateCaptureSectionInputStream();
-  while (true) {
-    if (*capture_loading_cancellation_requested) {
-      return CaptureListener::CaptureOutcome::kCancelled;
-    }
-    ClientCaptureEvent event;
-    OUTCOME_TRY(capture_section_input_stream->ReadMessage(&event));
-    capture_event_processor->ProcessEvent(event);
-    if (event.event_case() == ClientCaptureEvent::kCaptureFinished) {
-      return CaptureListener::CaptureOutcome::kComplete;
-    }
-  }
-}
-
 Future<ErrorMessageOr<CaptureListener::CaptureOutcome>> OrbitApp::LoadCaptureFromFile(
     const std::filesystem::path& file_path) {
   if (capture_window_ != nullptr) {
@@ -1321,8 +1251,8 @@ Future<ErrorMessageOr<CaptureListener::CaptureOutcome>> OrbitApp::LoadCaptureFro
                                                ? OrbitLogEvent::ORBIT_CAPTURE_LOAD_V2
                                                : OrbitLogEvent::ORBIT_CAPTURE_LOAD};
     if (capture_file_or_error.has_value()) {
-      load_result = LoadCaptureFromNewFormat(this, capture_file_or_error.value().get(),
-                                             &capture_loading_cancellation_requested_);
+      load_result = LoadCapture(this, capture_file_or_error.value().get(),
+                                &capture_loading_cancellation_requested_);
     } else {
       load_result = capture_file_or_error.error();
     }
@@ -1507,7 +1437,7 @@ void OrbitApp::StartCapture() {
 
   std::unique_ptr<CaptureEventProcessor> capture_event_processor = CreateCaptureEventProcessor(
       this, process->name(), frame_track_function_ids, [this](const ErrorMessage& error) {
-        capture_data_->reset_file_path();
+        GetMutableCaptureData().reset_file_path();
         SendErrorToUi("Error saving capture", error.message());
         ORBIT_ERROR("%s", error.message());
       });
@@ -1577,7 +1507,7 @@ void OrbitApp::ClearCapture() {
   if (capture_window_ != nullptr) {
     capture_window_->ClearTimeGraph();
   }
-  capture_data_.reset();
+  ResetCaptureData();
 
   string_manager_.Clear();
 
@@ -2758,7 +2688,8 @@ void OrbitApp::AddFrameTrack(const FunctionInfo& function) {
   if (!HasCaptureData()) return;
 
   std::optional<uint64_t> instrumented_function_id =
-      orbit_client_data::FindInstrumentedFunctionIdSlow(*module_manager_, *capture_data_, function);
+      orbit_client_data::FindInstrumentedFunctionIdSlow(*module_manager_, GetCaptureData(),
+                                                        function);
   // If the function is not instrumented - ignore it. This happens when user
   // enables frame tracks for a not instrumented function from the function list.
   if (!instrumented_function_id) return;
@@ -2805,7 +2736,8 @@ void OrbitApp::RemoveFrameTrack(const FunctionInfo& function) {
   if (!HasCaptureData()) return;
 
   std::optional<uint64_t> instrumented_function_id =
-      orbit_client_data::FindInstrumentedFunctionIdSlow(*module_manager_, *capture_data_, function);
+      orbit_client_data::FindInstrumentedFunctionIdSlow(*module_manager_, GetCaptureData(),
+                                                        function);
   // If the function is not instrumented - ignore it. This happens when user
   // enables frame tracks for a not instrumented function from the function list.
   if (!instrumented_function_id) return;

@@ -12,6 +12,7 @@
 #include <string>
 
 #include "ClientData/CaptureData.h"
+#include "ClientData/CaptureDataHolder.h"
 #include "ClientData/FunctionInfo.h"
 #include "ClientData/ModuleData.h"
 #include "ClientData/PostProcessedSamplingData.h"
@@ -27,7 +28,7 @@
 
 namespace orbit_data_views {
 
-class AppInterface {
+class AppInterface : public orbit_client_data::CaptureDataHolder {
  public:
   virtual ~AppInterface() = default;
 
@@ -59,9 +60,6 @@ class AppInterface {
   [[nodiscard]] virtual std::vector<const orbit_client_data::TimerChain*> GetAllThreadTimerChains()
       const = 0;
 
-  // Function needed by CallstackDataView
-  [[nodiscard]] virtual orbit_client_data::CaptureData& GetMutableCaptureData() = 0;
-
   // Functions needed by SamplingReportsDataView
   [[nodiscard]] virtual bool IsFunctionSelected(
       const orbit_client_data::SampledFunction& func) const = 0;
@@ -71,8 +69,6 @@ class AppInterface {
   [[nodiscard]] virtual bool HasFrameTrackInCaptureData(
       uint64_t instrumented_function_id) const = 0;
 
-  [[nodiscard]] virtual bool HasCaptureData() const = 0;
-  [[nodiscard]] virtual const orbit_client_data::CaptureData& GetCaptureData() const = 0;
   [[nodiscard]] virtual const orbit_client_data::ModuleManager* GetModuleManager() const = 0;
   [[nodiscard]] virtual orbit_client_data::ModuleManager* GetMutableModuleManager() = 0;
 
