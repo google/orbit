@@ -157,7 +157,7 @@ DataView::ActionStatus ModulesDataView::GetActionStatus(std::string_view action,
 
   bool at_least_one_module_can_be_loaded =
       std::any_of(modules.begin(), modules.end(), [this](const ModuleData* module) {
-        return !app_->IsSymbolLoadingInProgressForModule(module);
+        return !module->is_loaded() && !app_->IsSymbolLoadingInProgressForModule(module);
       });
 
   bool at_least_one_module_is_downloading =
