@@ -1661,10 +1661,12 @@ orbit_base::Future<ErrorMessageOr<std::filesystem::path>> OrbitApp::RetrieveModu
   symbol_files_currently_downloading_.emplace(
       module_file_path,
       OrbitApp::ModuleLoadOperation{std::move(stop_source), chained_result_future});
+  FireRefreshCallbacks(orbit_data_views::DataViewType::kModules);
   chained_result_future.Then(
       main_thread_executor_,
       [this, module_file_path](const ErrorMessageOr<std::filesystem::path>& /*result*/) {
         symbol_files_currently_downloading_.erase(module_file_path);
+        FireRefreshCallbacks(orbit_data_views::DataViewType::kModules);
       });
 
   return chained_result_future;
@@ -1769,9 +1771,11 @@ orbit_base::Future<ErrorMessageOr<void>> OrbitApp::RetrieveModuleAndLoadSymbols(
       metric.SetStatusCode(OrbitLogEvent::INTERNAL_ERROR);
     }
     symbols_currently_loading_.erase(module_id);
+    FireRefreshCallbacks(orbit_data_views::DataViewType::kModules);
   });
 
   symbols_currently_loading_.emplace(module_id, load_result);
+  FireRefreshCallbacks(orbit_data_views::DataViewType::kModules);
 
   return load_result;
 }
