@@ -12,13 +12,15 @@ target_include_directories(CaptureClient PRIVATE
         ${CMAKE_CURRENT_LIST_DIR})
 
 target_sources(CaptureClient PUBLIC
+        include/CaptureClient/AbstractCaptureListener.h
         include/CaptureClient/ApiEventProcessor.h
         include/CaptureClient/AppInterface.h
         include/CaptureClient/CaptureClient.h
         include/CaptureClient/CaptureListener.h
         include/CaptureClient/CaptureEventProcessor.h
         include/CaptureClient/ClientCaptureOptions.h
-        include/CaptureClient/GpuQueueSubmissionProcessor.h)
+        include/CaptureClient/GpuQueueSubmissionProcessor.h
+        include/CaptureClient/LoadCapture.h)
 
 target_sources(CaptureClient PRIVATE
         ApiEventProcessor.cpp
@@ -26,6 +28,7 @@ target_sources(CaptureClient PRIVATE
         CaptureEventProcessor.cpp
         CompositeEventProcessor.cpp
         GpuQueueSubmissionProcessor.cpp
+        LoadCapture.cpp
         SaveToFileEventProcessor.cpp)
 
 target_link_libraries(CaptureClient PUBLIC
