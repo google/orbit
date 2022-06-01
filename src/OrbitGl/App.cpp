@@ -1747,9 +1747,12 @@ orbit_base::Future<ErrorMessageOr<void>> OrbitApp::RetrieveModuleAndLoadSymbols(
     metric.SetStatusCode(OrbitLogEvent::INTERNAL_ERROR);
     return {ErrorMessage{absl::StrFormat("Module \"%s\" was not found", module_path)}};
   }
-  if (module_data->is_loaded()) return {outcome::success()};
 
   const auto module_id = std::make_pair(module_data->file_path(), module_data->build_id());
+
+  modules_with_symbol_loading_error_.erase(module_id);
+
+  if (module_data->is_loaded()) return {outcome::success()};
 
   const auto it = symbols_currently_loading_.find(module_id);
   if (it != symbols_currently_loading_.end()) {
@@ -1772,7 +1775,6 @@ orbit_base::Future<ErrorMessageOr<void>> OrbitApp::RetrieveModuleAndLoadSymbols(
     symbols_currently_loading_.erase(module_id);
   });
 
-  modules_with_symbol_loading_error_.erase(module_id);
   symbols_currently_loading_.emplace(module_id, load_result);
 
   return load_result;

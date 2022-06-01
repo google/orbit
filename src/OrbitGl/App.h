@@ -632,6 +632,7 @@ class OrbitApp final : public DataViewFactory,
   // if a module ID is contained in symbol_files_currently_downloading_, it is also contained in
   // symbol_files_currently_being_retrieved_.
   // ONLY access this from the main thread.
+  // TODO(b/234586730) Replace pair with struct
   absl::flat_hash_map<std::pair<std::string, std::string>,
                       orbit_base::Future<ErrorMessageOr<std::filesystem::path>>>
       symbol_files_currently_being_retrieved_;
@@ -642,12 +643,14 @@ class OrbitApp final : public DataViewFactory,
   // symbol_files_currently_being_retrieved_ or symbol_files_currently_downloading_, it is also
   // contained in symbols_currently_loading_.
   // ONLY access this from the main thread.
+  // TODO(b/234586730) Replace pair with struct
   absl::flat_hash_map<std::pair<std::string, std::string>, orbit_base::Future<ErrorMessageOr<void>>>
       symbols_currently_loading_;
 
-  // Set of modules where an symbol loading error has occurred. The module identifier is file path
-  // and build ID.
+  // Set of modules where a symbol loading error has occurred. The module identifier consists of
+  // file path and build ID.
   // ONLY access this from the main thread.
+  // TODO(b/234586730) Replace pair with struct
   absl::flat_hash_set<std::pair<std::string, std::string>> modules_with_symbol_loading_error_;
 
   orbit_string_manager::StringManager string_manager_;
