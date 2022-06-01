@@ -4,6 +4,7 @@
 
 #include "MizarData/MizarData.h"
 
+#include <QStringLiteral>
 #include <memory>
 
 #include "ClientData/ModuleAndFunctionLookup.h"
