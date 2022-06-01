@@ -19,6 +19,7 @@
 #include <stdlib.h>
 
 #include <QProcess>
+#include <algorithm>
 #include <chrono>
 #include <cinttypes>
 #include <cstddef>
@@ -2267,6 +2268,46 @@ orbit_base::Future<ErrorMessageOr<void>> OrbitApp::UpdateProcessAndModuleList() 
         }
         return result;
       });
+}
+
+void OrbitApp::LoadAllSymbols() {
+  std::vector<const ModuleData*> all_modules = module_manager_->GetAllModuleData();
+
+  auto ggpvlk_it = std::find_if(
+      all_modules.begin(), all_modules.end(),
+      [](const ModuleData* module) { return absl::StrContains(module->file_path(), "ggpvlk.so"); });
+  if (ggpvlk_it != all_modules.end()) {
+    const ModuleData* ggpvlk_module{*ggpvlk_it};
+    if (!ggpvlk_module->is_loaded()) {
+      std::ignore = RetrieveModuleAndLoadSymbols(ggpvlk_module);
+      all_modules.erase(ggpvlk_it);
+    }
+  }
+
+  const ProcessData* process = GetTargetProcess();
+  if (process == nullptr) {
+    // Orbit is not currently connected, so this uses the process from capture data, which then is
+    // from the capture that was loaded from file.
+    process = GetCaptureData().process();
+  }
+  ORBIT_CHECK(process != nullptr);
+  auto main_module_it =
+      std::find_if(all_modules.begin(), all_modules.end(), [process](const ModuleData* module) {
+        return absl::StrContains(module->file_path(), process->full_path());
+      });
+  if (main_module_it != all_modules.end()) {
+    const ModuleData* main_module{*main_module_it};
+    if (!main_module->is_loaded()) {
+      std::ignore = RetrieveModuleAndLoadSymbols(main_module);
+      all_modules.erase(main_module_it);
+    }
+  }
+
+  for (const auto* module : all_modules) {
+    if (module->is_loaded()) continue;
+    std::ignore = RetrieveModuleAndLoadSymbols(module);
+  }
+  FireRefreshCallbacks(DataViewType::kModules);
 }
 
 void OrbitApp::RefreshUIAfterModuleReload() {
