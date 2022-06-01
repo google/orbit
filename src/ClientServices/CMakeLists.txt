@@ -15,13 +15,15 @@ target_sources(ClientServices PUBLIC
         include/ClientServices/CrashManager.h
         include/ClientServices/ProcessManager.h
         include/ClientServices/ProcessClient.h
-        include/ClientServices/TracepointServiceClient.h)
+        include/ClientServices/TracepointServiceClient.h
+        include/ClientServices/WindowsProcessLauncherClient.h)
 
 target_sources(ClientServices PRIVATE
         CrashManager.cpp
         ProcessManager.cpp
         ProcessClient.cpp
-        TracepointServiceClient.cpp)
+        TracepointServiceClient.cpp
+        WindowsProcessLauncherClient.cpp)
 
 target_link_libraries(ClientServices PUBLIC
         GrpcProtos
