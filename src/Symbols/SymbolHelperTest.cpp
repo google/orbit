@@ -7,6 +7,7 @@
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
 
+#include <cstdint>
 #include <filesystem>
 #include <string>
 
@@ -224,9 +225,20 @@ TEST(SymbolHelper, FindSymbolsFileLocally) {
   }
 }
 
+constexpr uint64_t kNoSymbolsElfDebugFileSize = 45856;
+constexpr uint64_t kIncorrectSymbolsFileSize = 123456;
+
 TEST(SymbolHelper, FindSymbolsInCache) {
   const std::filesystem::path testdata_directory = orbit_test::GetTestdataDir();
   SymbolHelper symbol_helper(testdata_directory, {});
+
+  // This is more of a smoke test (looking for the same-size file)
+  {
+    const fs::path file = "no_symbols_elf.debug";
+    const auto result = symbol_helper.FindSymbolsInCache(file, kNoSymbolsElfDebugFileSize);
+    ASSERT_THAT(result, HasValue());
+    EXPECT_EQ(result.value(), testdata_directory / file);
+  }
 
   // This is more of a smoke test (looking for the same elf file)
   {
@@ -244,6 +256,13 @@ TEST(SymbolHelper, FindSymbolsInCache) {
         symbol_helper.FindSymbolsInCache(file, "efaecd92f773bb4ebcf213b84f43b322-3");
     ASSERT_THAT(result, HasValue());
     EXPECT_THAT(result.value(), testdata_directory / file);
+  }
+
+  // a file in cache has different size
+  {
+    const fs::path file_path = "no_symbols_elf.debug";
+    const auto result = symbol_helper.FindSymbolsInCache(file_path, kIncorrectSymbolsFileSize);
+    EXPECT_THAT(result, HasError("Symbol file size doesn't match"));
   }
 
   // elf file in cache does not have symbols
@@ -344,15 +363,13 @@ TEST(SymbolHelper, VerifySymbolsFile) {
   {
     // a file of matching file size
     fs::path symbols_file = testdata_directory / "no_symbols_elf.debug";
-    const uint64_t correct_expected_size = 45856;
-    const auto result = SymbolHelper::VerifySymbolsFile(symbols_file, correct_expected_size);
+    const auto result = SymbolHelper::VerifySymbolsFile(symbols_file, kNoSymbolsElfDebugFileSize);
     EXPECT_THAT(result, HasNoError());
   }
   {
     // a file of mis-matching file size
     fs::path symbols_file = testdata_directory / "no_symbols_elf.debug";
-    const uint64_t incorrect_expected_size = 123456;
-    const auto result = SymbolHelper::VerifySymbolsFile(symbols_file, incorrect_expected_size);
+    const auto result = SymbolHelper::VerifySymbolsFile(symbols_file, kIncorrectSymbolsFileSize);
     EXPECT_THAT(result, HasError("file size doesn't match"));
   }
   {

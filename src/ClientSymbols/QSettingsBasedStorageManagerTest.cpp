@@ -45,7 +45,7 @@ TEST(QSettingsBasedStorageManager, LoadAndSavePaths) {
 }
 
 TEST(QSettingsBasedStorageManager, LoadAndSaveModuleSymbolFileMappings) {
-  QCoreApplication::setOrganizationDomain(kOrgName);
+  QCoreApplication::setOrganizationName(kOrgName);
   QCoreApplication::setApplicationName(
       "QSettingsBasedStorageManager.LoadAndSaveModuleSymbolFileMappings");
 

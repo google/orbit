@@ -90,6 +90,16 @@ static ErrorMessageOr<std::filesystem::path> FindSymbolsPath(
     return symbols_paths_or_error;
   }
 
+  if (auto symbols_paths_or_error =
+          symbol_helper.FindSymbolsInCache(module_data.file_path(), module_data.build_id());
+      symbols_paths_or_error.has_value()) {
+    LogSymbolsFound(module_data.file_path(), symbols_paths_or_error.value().string());
+    return symbols_paths_or_error;
+  }
+
+  // If the symbol file is neither in the search paths, nor a file with the expected build id is not
+  // in caches, as the last resort, we try to find in caches the symbol file of the same size as the
+  // module. Useful when the module file contains the symbols itself and lacks build id.
   OUTCOME_TRY(auto symbols_paths,
               symbol_helper.FindSymbolsInCache(module_data.file_path(), module_data.file_size()));
 
@@ -117,7 +127,6 @@ void MizarData::LoadSymbols(orbit_client_data::ModuleData& module_data) {
   if (maybe_error.has_error()) {
     ORBIT_LOG("Symbols could not be loaded for module: %s, because %s", module_data.file_path(),
               maybe_error.error().message());
-    return;
   }
 }
 

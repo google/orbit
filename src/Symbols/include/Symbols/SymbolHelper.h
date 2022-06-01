@@ -17,6 +17,7 @@
 
 #include "GrpcProtos/module.pb.h"
 #include "GrpcProtos/symbol.pb.h"
+#include "Introspection/Introspection.h"
 #include "ObjectUtils/SymbolsFile.h"
 #include "OrbitBase/Result.h"
 
@@ -60,9 +61,25 @@ class SymbolHelper {
       const std::filesystem::path& debug_directory, std::string_view build_id);
 
  private:
-  ErrorMessageOr<std::filesystem::path> FindSymbolsInCache(
-      const std::filesystem::path& module_path,
-      std::function<ErrorMessageOr<void>(const std::filesystem::path&)>) const;
+  template <typename Verifier>
+  ErrorMessageOr<std::filesystem::path> FindSymbolsInCacheImpl(
+      const std::filesystem::path& module_path, Verifier verify) const {
+    ORBIT_SCOPE_FUNCTION;
+    std::filesystem::path cache_file_path = GenerateCachedFileName(module_path);
+    std::error_code error;
+    bool exists = std::filesystem::exists(cache_file_path, error);
+    if (error) {
+      return ErrorMessage{
+          absl::StrFormat("Unable to stat \"%s\": %s", cache_file_path.string(), error.message())};
+    }
+    if (!exists) {
+      return ErrorMessage(absl::StrFormat("Unable to find symbols in cache for module \"%s\"",
+                                          module_path.string()));
+    }
+    OUTCOME_TRY(verify(cache_file_path));
+    return cache_file_path;
+  }
+
   const std::filesystem::path cache_directory_;
   const std::vector<std::filesystem::path> structured_debug_directories_;
 };

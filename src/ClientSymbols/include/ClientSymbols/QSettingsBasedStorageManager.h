@@ -18,7 +18,8 @@ class QSettingsBasedStorageManager : public PersistentStorageManager {
  public:
   QSettingsBasedStorageManager()
       : organization_(QCoreApplication::organizationName()),
-        application_(QCoreApplication::applicationName()) {}
+        application_(QCoreApplication::applicationName()),
+        settings_{organization_, application_} {}
 
   QSettingsBasedStorageManager(QString organization, QString application)
       : organization_(std::move(organization)), application_(std::move(application)) {}
@@ -29,10 +30,9 @@ class QSettingsBasedStorageManager : public PersistentStorageManager {
   [[nodiscard]] ModuleSymbolFileMappings LoadModuleSymbolFileMappings() override;
 
  private:
-  QSettings MakeSettings() { return QSettings{organization_, application_}; }
-
   QString organization_;
   QString application_;
+  QSettings settings_;
 };
 
 }  // namespace orbit_client_symbols
