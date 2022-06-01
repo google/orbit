@@ -235,8 +235,9 @@ ErrorMessageOr<fs::path> SymbolHelper::FindSymbolsFileLocally(
       module_path.string()));
 }
 
-[[nodiscard]] ErrorMessageOr<fs::path> SymbolHelper::FindSymbolsInCache(
-    const fs::path& module_path, const std::string& build_id) const {
+ErrorMessageOr<fs::path> SymbolHelper::FindSymbolsInCache(
+    const fs::path& module_path,
+    std::function<ErrorMessageOr<void>(const std::filesystem::path&)> verify) const {
   ORBIT_SCOPE_FUNCTION;
   fs::path cache_file_path = GenerateCachedFileName(module_path);
   std::error_code error;
@@ -249,8 +250,33 @@ ErrorMessageOr<fs::path> SymbolHelper::FindSymbolsFileLocally(
     return ErrorMessage(
         absl::StrFormat("Unable to find symbols in cache for module \"%s\"", module_path.string()));
   }
-  OUTCOME_TRY(VerifySymbolsFile(cache_file_path, build_id));
+  OUTCOME_TRY(verify(cache_file_path));
   return cache_file_path;
+}
+
+ErrorMessageOr<fs::path> SymbolHelper::FindSymbolsInCache(const fs::path& module_path,
+                                                          const std::string& build_id) const {
+  return FindSymbolsInCache(module_path, [&build_id](const std::filesystem::path& cache_file_path) {
+    return VerifySymbolsFile(cache_file_path, build_id);
+  });
+}
+
+ErrorMessageOr<void> SymbolHelper::VerifySymbolsFile(const std::filesystem::path& symbols_path,
+                                                     uint64_t expected_file_size) {
+  if (const uint64_t actual_file_size = std::filesystem::file_size(symbols_path);
+      actual_file_size != expected_file_size) {
+    return ErrorMessage(absl::StrFormat("Symbol file size doesn't match. Expected: %u, Actual: %u ",
+                                        expected_file_size, actual_file_size));
+  }
+  return outcome::success();
+}
+
+ErrorMessageOr<fs::path> SymbolHelper::FindSymbolsInCache(const fs::path& module_path,
+                                                          uint64_t expected_file_size) const {
+  return FindSymbolsInCache(module_path,
+                            [&expected_file_size](const std::filesystem::path& cache_file_path) {
+                              return VerifySymbolsFile(cache_file_path, expected_file_size);
+                            });
 }
 
 ErrorMessageOr<ModuleSymbols> SymbolHelper::LoadSymbolsFromFile(

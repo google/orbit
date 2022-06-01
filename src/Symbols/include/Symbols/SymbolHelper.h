@@ -30,18 +30,21 @@ class SymbolHelper {
       : cache_directory_(std::move(cache_directory)),
         structured_debug_directories_{std::move(structured_debug_directories)} {};
 
-  [[nodiscard]] ErrorMessageOr<std::filesystem::path> FindSymbolsFileLocally(
+  ErrorMessageOr<std::filesystem::path> FindSymbolsFileLocally(
       const std::filesystem::path& module_path, const std::string& build_id,
       const orbit_grpc_protos::ModuleInfo::ObjectFileType& object_file_type,
       absl::Span<const std::filesystem::path> paths) const;
-  [[nodiscard]] ErrorMessageOr<std::filesystem::path> FindSymbolsInCache(
-      const std::filesystem::path& module_path, const std::string& build_id) const;
-  [[nodiscard]] static ErrorMessageOr<orbit_grpc_protos::ModuleSymbols> LoadSymbolsFromFile(
+  ErrorMessageOr<std::filesystem::path> FindSymbolsInCache(const std::filesystem::path& module_path,
+                                                           const std::string& build_id) const;
+  ErrorMessageOr<std::filesystem::path> FindSymbolsInCache(const std::filesystem::path& module_path,
+                                                           uint64_t expected_file_size) const;
+  static ErrorMessageOr<orbit_grpc_protos::ModuleSymbols> LoadSymbolsFromFile(
       const std::filesystem::path& file_path,
       const orbit_object_utils::ObjectFileInfo& object_file_info);
-  [[nodiscard]] static ErrorMessageOr<void> VerifySymbolsFile(
-      const std::filesystem::path& symbols_path, const std::string& build_id);
-
+  static ErrorMessageOr<void> VerifySymbolsFile(const std::filesystem::path& symbols_path,
+                                                const std::string& build_id);
+  static ErrorMessageOr<void> VerifySymbolsFile(const std::filesystem::path& symbols_path,
+                                                uint64_t expected_file_size);
   [[nodiscard]] std::filesystem::path GenerateCachedFileName(
       const std::filesystem::path& file_path) const;
 
@@ -57,6 +60,9 @@ class SymbolHelper {
       const std::filesystem::path& debug_directory, std::string_view build_id);
 
  private:
+  ErrorMessageOr<std::filesystem::path> FindSymbolsInCache(
+      const std::filesystem::path& module_path,
+      std::function<ErrorMessageOr<void>(const std::filesystem::path&)>) const;
   const std::filesystem::path cache_directory_;
   const std::vector<std::filesystem::path> structured_debug_directories_;
 };

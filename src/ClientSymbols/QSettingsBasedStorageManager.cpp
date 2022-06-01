@@ -18,7 +18,7 @@ constexpr const char* kModuleSymbolFileMappingSymbolFileKey =
 namespace orbit_client_symbols {
 
 std::vector<std::filesystem::path> QSettingsBasedStorageManager::LoadPaths() {
-  QSettings settings{};
+  QSettings settings = MakeSettings();
   const int size = settings.beginReadArray(kSymbolPathsSettingsKey);
   std::vector<std::filesystem::path> paths{};
   paths.reserve(size);
@@ -31,7 +31,7 @@ std::vector<std::filesystem::path> QSettingsBasedStorageManager::LoadPaths() {
 }
 
 void QSettingsBasedStorageManager::SavePaths(absl::Span<const std::filesystem::path> paths) {
-  QSettings settings{};
+  QSettings settings = MakeSettings();
   settings.beginWriteArray(kSymbolPathsSettingsKey, static_cast<int>(paths.size()));
   for (size_t i = 0; i < paths.size(); ++i) {
     settings.setArrayIndex(static_cast<int>(i));
@@ -42,7 +42,7 @@ void QSettingsBasedStorageManager::SavePaths(absl::Span<const std::filesystem::p
 
 void QSettingsBasedStorageManager::SaveModuleSymbolFileMappings(
     const ModuleSymbolFileMappings& mappings) {
-  QSettings settings{};
+  QSettings settings = MakeSettings();
   settings.beginWriteArray(kModuleSymbolFileMappingKey, static_cast<int>(mappings.size()));
   int index = 0;
   for (const auto& [module_path, symbol_file_path] : mappings) {
@@ -57,7 +57,7 @@ void QSettingsBasedStorageManager::SaveModuleSymbolFileMappings(
 
 [[nodiscard]] ModuleSymbolFileMappings
 QSettingsBasedStorageManager::LoadModuleSymbolFileMappings() {
-  QSettings settings{};
+  QSettings settings = MakeSettings();
   const int size = settings.beginReadArray(kModuleSymbolFileMappingKey);
   ModuleSymbolFileMappings mappings{};
   mappings.reserve(size);

@@ -342,6 +342,20 @@ TEST(SymbolHelper, GenerateCachedFileName) {
 TEST(SymbolHelper, VerifySymbolsFile) {
   const std::filesystem::path testdata_directory = orbit_test::GetTestdataDir();
   {
+    // a file of matching file size
+    fs::path symbols_file = testdata_directory / "no_symbols_elf.debug";
+    const uint64_t correct_expected_size = 45856;
+    const auto result = SymbolHelper::VerifySymbolsFile(symbols_file, correct_expected_size);
+    EXPECT_THAT(result, HasNoError());
+  }
+  {
+    // a file of mis-matching file size
+    fs::path symbols_file = testdata_directory / "no_symbols_elf.debug";
+    const uint64_t incorrect_expected_size = 123456;
+    const auto result = SymbolHelper::VerifySymbolsFile(symbols_file, incorrect_expected_size);
+    EXPECT_THAT(result, HasError("file size doesn't match"));
+  }
+  {
     // valid elf file containing symbols and matching build id
     fs::path symbols_file = testdata_directory / "no_symbols_elf.debug";
     std::string build_id = "b5413574bbacec6eacb3b89b1012d0e2cd92ec6b";

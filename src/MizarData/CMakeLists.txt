@@ -17,10 +17,13 @@ target_sources(MizarData PRIVATE
 
 
 target_link_libraries(
-        MizarData PUBLIC CaptureClient
-        PRIVATE 
-                CaptureFile
+        MizarData 
+        PUBLIC  CaptureClient 
+                OrbitPaths
+                Symbols
+        PRIVATE CaptureFile
                 ClientData
+                ClientSymbols
                 OrbitBase)
 
 add_executable(MizarDataTests)
