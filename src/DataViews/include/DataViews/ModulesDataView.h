@@ -41,7 +41,7 @@ class ModulesDataView : public DataView {
   void OnSelect(const std::vector<int>& rows) override {
     selected_indices_.clear();
     for (int row : rows) {
-      selected_indices_.insert(indices_[row]);
+      selected_indices_.insert(indices_.at(row));
     }
   }
 
