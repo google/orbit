@@ -89,7 +89,7 @@ void TrackHeader::DoDraw(PrimitiveAssembler& primitive_assembler, TextRenderer& 
 
   // Draw label.
 
-  uint32_t font_size = layout_->CalculateZoomedFontSize();
+  uint32_t font_size = layout_->GetFontSize();
   // For the first 5 indentations, we decrease the font_size by 10 percent points (per
   // indentation).
   constexpr uint32_t kMaxIndentationLevel = 5;

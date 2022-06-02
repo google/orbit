@@ -226,7 +226,7 @@ void FrameTrack::DoDraw(PrimitiveAssembler& primitive_assembler, TextRenderer& t
   std::string avg_time =
       orbit_display_formats::GetDisplayTime(absl::Nanoseconds(stats_.ComputeAverageTimeNs()));
   std::string label = absl::StrFormat("Avg: %s", avg_time);
-  uint32_t font_size = layout_->CalculateZoomedFontSize();
+  uint32_t font_size = layout_->GetFontSize();
   float string_width = text_renderer.GetStringWidth(label.c_str(), font_size);
   Vec2 white_text_box_position(pos[0] + layout_->GetRightMargin(), y);
 

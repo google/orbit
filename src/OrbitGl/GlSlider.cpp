@@ -69,11 +69,7 @@ GlSlider::GlSlider(CaptureViewElement* parent, const Viewport* viewport,
       picking_pixel_offset_(0),
       selected_color_(75, 75, 75, 255),
       slider_color_(68, 68, 68, 255),
-      bar_color_(61, 61, 61, 255),
-      min_slider_pixel_length_(20),
-      pixel_height_(15),
-      orthogonal_slider_size_(15),
-      slider_resize_pixel_margin_(6) {}
+      bar_color_(61, 61, 61, 255) {}
 
 void GlSlider::SetNormalizedPosition(float start_ratio)  // [0,1]
 {
@@ -83,7 +79,7 @@ void GlSlider::SetNormalizedPosition(float start_ratio)  // [0,1]
 
 void GlSlider::SetNormalizedLength(float length_ratio)  // [0,1]
 {
-  float min_length = min_slider_pixel_length_ / GetBarPixelLength();
+  float min_length = GetMinSliderPixelLength() / GetBarPixelLength();
   length_ratio_ = std::clamp(length_ratio, min_length, 1.f);
   right_edge_ratio_ = pos_ratio_ * (1.0f - length_ratio_) + length_ratio_;
 }
@@ -117,7 +113,7 @@ void GlSlider::OnDrag(int x, int y) {
       break;
     case DragType::kScaleMin: {
       float new_pos = std::clamp(value - picking_pixel_offset_, 0.f,
-                                 slider_right_pos - min_slider_pixel_length_);
+                                 slider_right_pos - GetMinSliderPixelLength());
       SetNormalizedLength(PixelToLen(slider_right_pos - new_pos));
       SetNormalizedPosition(PixelToPos(new_pos));
       break;
@@ -215,13 +211,13 @@ void GlSlider::DrawSlider(PrimitiveAssembler& primitive_assembler, float x, floa
 
 bool GlSlider::PosIsInMinResizeArea(const Vec2& pos) const {
   float relevant_value = is_vertical_ ? pos[1] - GetPos()[1] : pos[0] - GetPos()[0];
-  return PosIsInSlider(pos) && relevant_value <= GetSliderPixelPos() + slider_resize_pixel_margin_;
+  return PosIsInSlider(pos) && relevant_value <= GetSliderPixelPos() + GetSliderResizeMargin();
 }
 
 bool GlSlider::PosIsInMaxResizeArea(const Vec2& pos) const {
   float relevant_value = is_vertical_ ? pos[1] - GetPos()[1] : pos[0] - GetPos()[0];
-  return PosIsInSlider(pos) && relevant_value >= GetSliderPixelPos() + GetSliderPixelLength() -
-                                                     slider_resize_pixel_margin_;
+  return PosIsInSlider(pos) &&
+         relevant_value >= GetSliderPixelPos() + GetSliderPixelLength() - GetSliderResizeMargin();
 }
 
 bool GlSlider::PosIsInSlider(const Vec2& pos) const {
@@ -268,17 +264,17 @@ void GlVerticalSlider::DoDraw(PrimitiveAssembler& primitive_assembler,
   const Color dark_border_color = GetDarkerColor(bar_color_);
 
   // Background
-  DrawBackground(primitive_assembler, 0, 0, GetPixelHeight(), bar_pixel_len);
+  DrawBackground(primitive_assembler, 0, 0, GetSliderWide(), bar_pixel_len);
 
   float start = ceilf(pos_ratio_ * non_slider_height);
 
   ShadingDirection shading_direction = ShadingDirection::kRightToLeft;
-  DrawSlider(primitive_assembler, 0, start, GetPixelHeight(), slider_height, shading_direction);
+  DrawSlider(primitive_assembler, 0, start, GetSliderWide(), slider_height, shading_direction);
 
   primitive_assembler.PopTranslation();
 }
 
-float GlVerticalSlider::GetBarPixelLength() const { return GetSize()[1]; }
+float GlVerticalSlider::GetBarPixelLength() const { return GetHeight(); }
 
 std::unique_ptr<orbit_accessibility::AccessibleInterface>
 GlVerticalSlider::CreateAccessibleInterface() {
@@ -295,12 +291,12 @@ void GlHorizontalSlider::DoDraw(PrimitiveAssembler& primitive_assembler,
   float slider_width = ceilf(length_ratio_ * bar_pixel_len);
   float non_slider_width = bar_pixel_len - slider_width;
 
-  DrawBackground(primitive_assembler, 0, 0, bar_pixel_len, GetPixelHeight());
+  DrawBackground(primitive_assembler, 0, 0, bar_pixel_len, GetSliderWide());
 
   float start = floorf(pos_ratio_ * non_slider_width);
 
   ShadingDirection shading_direction = ShadingDirection::kTopToBottom;
-  DrawSlider(primitive_assembler, start, 0, slider_width, GetPixelHeight(), shading_direction);
+  DrawSlider(primitive_assembler, start, 0, slider_width, GetSliderWide(), shading_direction);
 
   const float kEpsilon = 0.0001f;
 
@@ -309,9 +305,9 @@ void GlHorizontalSlider::DoDraw(PrimitiveAssembler& primitive_assembler,
   // Triangle is 3 pixels smaller than the area - there is a 2 pixel border around the scrollbar,
   // and there is no margin between the border and the triangle to make it as big as possible.
   // On the other side, there is a 1 pixel margin between the triangle and the vertical line
-  float tri_size = slider_resize_pixel_margin_ - 3.f;
-  tri_size = std::min(tri_size, pixel_height_ - tri_size * kHeightFactor - 2.f);
-  const float tri_y_offset = (pixel_height_ - tri_size * kHeightFactor) / 2.f;
+  float tri_size = GetSliderResizeMargin() - 3.f;
+  tri_size = std::min(tri_size, GetSliderWide() - tri_size * kHeightFactor - 2.f);
+  const float tri_y_offset = (GetSliderWide() - tri_size * kHeightFactor) / 2.f;
   const Color kWhite = GetLighterColor(GetLighterColor(bar_color_));
   const float z = GlCanvas::kZValueButton + 2 * kEpsilon;
   const float x = start;
@@ -322,28 +318,28 @@ void GlHorizontalSlider::DoDraw(PrimitiveAssembler& primitive_assembler,
                Vec2(x + width - 2.f, tri_y_offset + kHeightFactor / 2.f * tri_size),
                Vec2(x + width - tri_size - 2.f, tri_y_offset)),
       z, kWhite, shared_from_this());
-  primitive_assembler.AddVerticalLine(Vec2(x + width - slider_resize_pixel_margin_, 2.f),
-                                      pixel_height_ - 4.f, z, kWhite, shared_from_this());
+  primitive_assembler.AddVerticalLine(Vec2(x + width - GetSliderResizeMargin(), 2.f),
+                                      GetSliderWide() - 4.f, z, kWhite, shared_from_this());
 
   primitive_assembler.AddTriangle(
       Triangle(Vec2(x + tri_size + 2.f, kHeightFactor * tri_size + tri_y_offset),
                Vec2(x + tri_size + 2.f, tri_y_offset),
                Vec2(x + 2.f, tri_y_offset + kHeightFactor / 2.f * tri_size)),
       z, kWhite, shared_from_this());
-  primitive_assembler.AddVerticalLine(Vec2(x + slider_resize_pixel_margin_ + 1, 2.f),
-                                      pixel_height_ - 4.f, z, kWhite, shared_from_this());
+  primitive_assembler.AddVerticalLine(Vec2(x + GetSliderResizeMargin() + 1, 2.f),
+                                      GetSliderWide() - 4.f, z, kWhite, shared_from_this());
 
   // Highlight the scale part of the slider
   bool is_picked = primitive_assembler.GetPickingManager()->IsThisElementPicked(this);
   if (is_picked) {
     if (drag_type_ == DragType::kScaleMax) {
-      primitive_assembler.AddShadedBox(Vec2(x + width - slider_resize_pixel_margin_, 2),
-                                       Vec2(slider_resize_pixel_margin_ - 2, pixel_height_ - 4),
+      primitive_assembler.AddShadedBox(Vec2(x + width - GetSliderResizeMargin(), 2),
+                                       Vec2(GetSliderResizeMargin() - 2, GetSliderWide() - 4),
                                        GlCanvas::kZValueButton + kEpsilon, selected_color_,
                                        ShadingDirection::kTopToBottom);
     } else if (drag_type_ == DragType::kScaleMin) {
       primitive_assembler.AddShadedBox(
-          Vec2(x + 2, 2), Vec2(slider_resize_pixel_margin_ - 2, pixel_height_ - 4),
+          Vec2(x + 2, 2), Vec2(GetSliderResizeMargin() - 2, GetSliderWide() - 4),
           GlCanvas::kZValueButton + kEpsilon, selected_color_, ShadingDirection::kTopToBottom);
     }
   }
@@ -351,7 +347,7 @@ void GlHorizontalSlider::DoDraw(PrimitiveAssembler& primitive_assembler,
   primitive_assembler.PopTranslation();
 }
 
-float GlHorizontalSlider::GetBarPixelLength() const { return GetSize()[0]; }
+float GlHorizontalSlider::GetBarPixelLength() const { return GetWidth(); }
 
 std::unique_ptr<orbit_accessibility::AccessibleInterface>
 GlHorizontalSlider::CreateAccessibleInterface() {

@@ -27,8 +27,10 @@ class TimeGraphLayout {
   float GetTrackContentBottomMargin() const { return track_content_bottom_margin_ * scale_; }
   float GetTrackContentTopMargin() const { return track_content_top_margin_ * scale_; }
   float GetTrackLabelOffsetX() const { return track_label_offset_x_; }
-  float GetSliderWidth() const { return slider_width_; }
-  float GetTimeBarHeight() const { return time_bar_height_; }
+  float GetSliderWide() const { return slider_wide_ * scale_; }
+  float GetMinSliderLength() const { return min_slider_length_ * scale_; }
+  float GetSliderResizeMargin() const;
+  float GetTimeBarHeight() const { return time_bar_height_ * scale_; }
   float GetTrackTabWidth() const { return track_tab_width_; }
   float GetTrackTabHeight() const { return track_tab_height_ * scale_; }
   float GetTrackTabOffset() const { return track_tab_offset_; }
@@ -38,10 +40,10 @@ class TimeGraphLayout {
   float GetRoundingRadius() const { return rounding_radius_ * scale_; }
   float GetRoundingNumSides() const { return rounding_num_sides_; }
   float GetTextOffset() const { return text_offset_ * scale_; }
-  float GetRightMargin() const { return right_margin_; }
+  float GetRightMargin() const { return right_margin_ * scale_; }
   float GetMinButtonSize() const { return min_button_size_; }
-  float GetButtonWidth() const { return button_width_; }
-  float GetButtonHeight() const { return button_height_; }
+  float GetButtonWidth() const { return button_width_ * scale_; }
+  float GetButtonHeight() const { return button_height_ * scale_; }
   float GetSpaceBetweenTracks() const { return space_between_tracks_ * scale_; }
   float GetSpaceBetweenTracksAndTimeline() const {
     return space_between_tracks_and_timeline_ * scale_;
@@ -50,17 +52,13 @@ class TimeGraphLayout {
   float GetSpaceBetweenGpuDepths() const { return space_between_gpu_depths_ * scale_; }
   float GetSpaceBetweenThreadPanes() const { return space_between_thread_panes_ * scale_; }
   float GetSpaceBetweenSubtracks() const { return space_between_subtracks_ * scale_; }
-  float GetToolbarIconHeight() const { return toolbar_icon_height_; }
   float GetGenericFixedSpacerWidth() const { return generic_fixed_spacer_width_; }
   float GetScale() const { return scale_; }
   void SetScale(float value) { scale_ = std::clamp(value, kMinScale, kMaxScale); }
   void SetDrawProperties(bool value) { draw_properties_ = value; }
   bool DrawProperties();
   bool GetDrawTrackBackground() const { return draw_track_background_; }
-  uint32_t GetFontSize() const { return font_size_; }
-  [[nodiscard]] uint32_t CalculateZoomedFontSize() const {
-    return lround(GetFontSize() * GetScale());
-  }
+  uint32_t GetFontSize() const { return lround(font_size_ * scale_); }
 
   int GetMaxLayoutingLoops() const { return max_layouting_loops_; }
 
@@ -74,7 +72,8 @@ class TimeGraphLayout {
   float track_content_bottom_margin_;
   float track_content_top_margin_;
   float track_label_offset_x_;
-  float slider_width_;
+  float slider_wide_;
+  float min_slider_length_;
   float time_bar_height_;
   float track_tab_width_;
   float track_tab_height_;

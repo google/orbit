@@ -56,12 +56,13 @@ void PickDragRelease(GlSlider& slider, int start, int end = -1, int other_dim = 
 template <typename SliderClass>
 std::pair<std::unique_ptr<SliderClass>, std::unique_ptr<Viewport>> Setup() {
   orbit_gl::CaptureViewElementTester tester;
-  std::unique_ptr<Viewport> viewport = std::make_unique<Viewport>(150, 1050);
+  // Making space for the orthogonal slider as well.
+  int orthogonal_slider_wide = static_cast<int>(tester.GetLayout()->GetSliderWide());
+  std::unique_ptr<Viewport> viewport =
+      std::make_unique<Viewport>(100 + orthogonal_slider_wide, 1000 + orthogonal_slider_wide);
 
   std::unique_ptr<SliderClass> slider =
       std::make_unique<SliderClass>(nullptr, viewport.get(), tester.GetLayout(), nullptr);
-  slider->SetPixelHeight(15);
-  slider->SetOrthogonalSliderPixelHeight(50);
 
   // Set the slider to be 50% of the maximum size, position in the middle
   slider->SetNormalizedPosition(0.5f);

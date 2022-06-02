@@ -24,7 +24,8 @@ TimeGraphLayout::TimeGraphLayout() {
   space_between_thread_panes_ = 5.f;
   space_between_subtracks_ = 0.f;
   track_label_offset_x_ = 30.f;
-  slider_width_ = 15.f;
+  slider_wide_ = 15.f;
+  min_slider_length_ = 20.f;
   track_tab_width_ = 350.f;
   track_tab_height_ = 25.f;
   track_tab_offset_ = 0.f;
@@ -67,7 +68,7 @@ bool TimeGraphLayout::DrawProperties() {
   FLOAT_SLIDER(space_between_tracks_and_timeline_);
   FLOAT_SLIDER(space_between_thread_panes_);
   FLOAT_SLIDER(space_between_subtracks_);
-  FLOAT_SLIDER(slider_width_);
+  FLOAT_SLIDER(slider_wide_);
   FLOAT_SLIDER(time_bar_height_);
   FLOAT_SLIDER(track_tab_height_);
   FLOAT_SLIDER(track_tab_offset_);
@@ -112,4 +113,10 @@ float TimeGraphLayout::GetEventTrackHeightFromTid(uint32_t tid) const {
     height *= GetAllThreadsEventTrackScale();
   }
   return height;
+}
+
+float TimeGraphLayout::GetSliderResizeMargin() const {
+  // The resize part of the slider is 1/3 of the min length.
+  const float kRatioMinSliderLenghtResizePart = 3.f;
+  return GetMinSliderLength() / kRatioMinSliderLenghtResizePart;
 }
