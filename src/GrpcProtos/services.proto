@@ -67,6 +67,18 @@ message GetDebugInfoFileResponse {
   string debug_info_file_path = 1;
 }
 
+service ProcessService {
+  rpc GetProcessList(GetProcessListRequest) returns (GetProcessListResponse) {}
+
+  rpc GetModuleList(GetModuleListRequest) returns (GetModuleListResponse) {}
+
+  rpc GetProcessMemory(GetProcessMemoryRequest)
+      returns (GetProcessMemoryResponse) {}
+
+  rpc GetDebugInfoFile(GetDebugInfoFileRequest)
+      returns (GetDebugInfoFileResponse) {}
+}
+
 message ProcessToLaunch {
   string executable_path = 1;
   string working_directory = 2;
@@ -93,18 +105,6 @@ message ResumeProcessSuspendedAtEntryPointRequest {
 }
 
 message ResumeProcessSuspendedAtEntryPointResponse {}
-
-service ProcessService {
-  rpc GetProcessList(GetProcessListRequest) returns (GetProcessListResponse) {}
-
-  rpc GetModuleList(GetModuleListRequest) returns (GetModuleListResponse) {}
-
-  rpc GetProcessMemory(GetProcessMemoryRequest)
-      returns (GetProcessMemoryResponse) {}
-
-  rpc GetDebugInfoFile(GetDebugInfoFileRequest)
-      returns (GetDebugInfoFileResponse) {}
-}
 
 service WindowsProcessLauncherService {
   rpc LaunchProcess(LaunchProcessRequest) returns (LaunchProcessResponse) {}

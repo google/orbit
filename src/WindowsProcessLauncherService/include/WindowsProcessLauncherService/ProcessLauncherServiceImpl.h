@@ -14,6 +14,10 @@
 
 namespace orbit_windows_process_launcher_service {
 
+// WindowsProcessLauncherServiceImpl wraps orbit_windows_utils::ProcessLauncher in a grpc service.
+// LaunchProcess can start the process in paused mode such that it is spinning at the entry point.
+// To remove the busy loop but remain paused at entry, we call "SuspendProcessSpinningAtEntryPoint".
+// "ResumeProcessSuspendedAtEntryPointRequest" can then be called to resume normal execution.
 class WindowsProcessLauncherServiceImpl final
     : public orbit_grpc_protos::WindowsProcessLauncherService::Service {
  public:

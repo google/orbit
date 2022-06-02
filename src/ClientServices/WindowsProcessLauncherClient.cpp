@@ -62,18 +62,6 @@ class WindowsProcessLauncherClientImpl : public WindowsProcessLauncherClient {
       ABSL_GUARDED_BY(launched_processes_by_pid_mutex_);
 };
 
-constexpr uint64_t kGrpcDefaultTimeoutMilliseconds = 3000;
-
-std::unique_ptr<grpc::ClientContext> CreateContext(
-    uint64_t timeout_milliseconds = kGrpcDefaultTimeoutMilliseconds) {
-  auto context = std::make_unique<grpc::ClientContext>();
-  std::chrono::system_clock::time_point deadline =
-      std::chrono::system_clock::now() + std::chrono::milliseconds(timeout_milliseconds);
-  context->set_deadline(deadline);
-
-  return context;
-}
-
 }  // namespace
 
 ErrorMessageOr<orbit_grpc_protos::ProcessInfo> WindowsProcessLauncherClientImpl::LaunchProcess(
@@ -84,12 +72,12 @@ ErrorMessageOr<orbit_grpc_protos::ProcessInfo> WindowsProcessLauncherClientImpl:
 
   *request.mutable_process_to_launch() = process_to_launch;
 
-  std::unique_ptr<grpc::ClientContext> context = CreateContext();
+  std::unique_ptr<grpc::ClientContext> context = std::make_unique<grpc::ClientContext>();
   grpc::Status status =
       windows_process_launcher_service_->LaunchProcess(context.get(), request, &response);
 
   if (!status.ok()) {
-    ORBIT_ERROR("\"LaunchProcess\" grpc call failed: code=%d, message=%s", status.error_code(),
+    ORBIT_ERROR("\"LaunchProcess\" gRPC call failed: code=%d, message=%s", status.error_code(),
                 status.error_message());
     return ErrorMessage(status.error_message());
   }
@@ -117,12 +105,12 @@ ErrorMessageOr<void> WindowsProcessLauncherClientImpl::SuspendProcessSpinningAtE
   SuspendProcessSpinningAtEntryPointResponse response;
   request.set_pid(pid);
 
-  std::unique_ptr<grpc::ClientContext> context = CreateContext();
+  std::unique_ptr<grpc::ClientContext> context = std::make_unique<grpc::ClientContext>();
   grpc::Status status = windows_process_launcher_service_->SuspendProcessSpinningAtEntryPoint(
       context.get(), request, &response);
 
   if (!status.ok()) {
-    ORBIT_ERROR("\"SuspendProcessSpinningAtEntryPoint\" grpc call failed: code=%d, message=%s",
+    ORBIT_ERROR("\"SuspendProcessSpinningAtEntryPoint\" gRPC call failed: code=%d, message=%s",
                 status.error_code(), status.error_message());
     return ErrorMessage(status.error_message());
   }
@@ -139,12 +127,12 @@ ErrorMessageOr<void> WindowsProcessLauncherClientImpl::ResumeProcessSuspendedAtE
   ResumeProcessSuspendedAtEntryPointResponse response;
   request.set_pid(pid);
 
-  std::unique_ptr<grpc::ClientContext> context = CreateContext();
+  std::unique_ptr<grpc::ClientContext> context = std::make_unique<grpc::ClientContext>();
   grpc::Status status = windows_process_launcher_service_->ResumeProcessSuspendedAtEntryPoint(
       context.get(), request, &response);
 
   if (!status.ok()) {
-    ORBIT_ERROR("\"ResumeProcessSuspendedAtEntryPoint\" grpc call failed: code=%d, message=%s",
+    ORBIT_ERROR("\"ResumeProcessSuspendedAtEntryPoint\" gRPC call failed: code=%d, message=%s",
                 status.error_code(), status.error_message());
     return ErrorMessage(status.error_message());
   }

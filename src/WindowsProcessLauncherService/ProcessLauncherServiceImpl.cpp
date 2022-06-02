@@ -19,6 +19,7 @@ using grpc::Status;
 using grpc::StatusCode;
 
 using orbit_grpc_protos::ProcessInfo;
+using orbit_grpc_protos::ProcessToLaunch;
 using orbit_grpc_protos::ResumeProcessSuspendedAtEntryPointRequest;
 using orbit_grpc_protos::ResumeProcessSuspendedAtEntryPointResponse;
 using orbit_grpc_protos::SuspendProcessSpinningAtEntryPointRequest;
@@ -44,7 +45,7 @@ namespace {
 grpc::Status WindowsProcessLauncherServiceImpl::LaunchProcess(
     grpc::ServerContext* context, const orbit_grpc_protos::LaunchProcessRequest* request,
     orbit_grpc_protos::LaunchProcessResponse* response) {
-  auto& process_to_launch = request->process_to_launch();
+  const ProcessToLaunch& process_to_launch = request->process_to_launch();
 
   auto result = process_launcher_.LaunchProcess(
       process_to_launch.executable_path(), process_to_launch.working_directory(),
@@ -54,7 +55,10 @@ grpc::Status WindowsProcessLauncherServiceImpl::LaunchProcess(
     return Status(StatusCode::INVALID_ARGUMENT, result.error().message());
   }
 
-  std::ignore = process_list_->Refresh();
+  auto process_list_result = process_list_->Refresh();
+  if (process_list_result.has_error()) {
+    return Status(StatusCode::UNKNOWN, process_list_result.error().message());
+  }
 
   uint32_t process_id = result.value();
   std::optional<const Process*> process = process_list_->GetProcessByPid(process_id);

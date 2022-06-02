@@ -22,7 +22,8 @@
 
 namespace orbit_client_services {
 
-// This class handles the client calls related to launching a Windows process.
+// This class handles the client calls related to launching a Windows process. This class is
+// thread-safe.
 class WindowsProcessLauncherClient {
  public:
   virtual ~WindowsProcessLauncherClient() = default;
