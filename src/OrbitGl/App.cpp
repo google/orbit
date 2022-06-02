@@ -1747,9 +1747,12 @@ orbit_base::Future<ErrorMessageOr<void>> OrbitApp::RetrieveModuleAndLoadSymbols(
     metric.SetStatusCode(OrbitLogEvent::INTERNAL_ERROR);
     return {ErrorMessage{absl::StrFormat("Module \"%s\" was not found", module_path)}};
   }
-  if (module_data->is_loaded()) return {outcome::success()};
 
   const auto module_id = std::make_pair(module_data->file_path(), module_data->build_id());
+
+  modules_with_symbol_loading_error_.erase(module_id);
+
+  if (module_data->is_loaded()) return {outcome::success()};
 
   const auto it = symbols_currently_loading_.find(module_id);
   if (it != symbols_currently_loading_.end()) {
@@ -1766,6 +1769,7 @@ orbit_base::Future<ErrorMessageOr<void>> OrbitApp::RetrieveModuleAndLoadSymbols(
   load_result.Then(main_thread_executor_, [this, metric = std::move(metric),
                                            module_id](const ErrorMessageOr<void>& result) mutable {
     if (result.has_error()) {
+      modules_with_symbol_loading_error_.emplace(module_id);
       metric.SetStatusCode(OrbitLogEvent::INTERNAL_ERROR);
     }
     symbols_currently_loading_.erase(module_id);
@@ -3002,13 +3006,16 @@ SymbolLoadingState OrbitApp::GetSymbolLoadingStateForModule(const ModuleData* mo
 
   if (IsModuleDownloading(module)) return SymbolLoadingState::kDownloading;
 
-  if (symbols_currently_loading_.contains(
-          std::make_pair(module->file_path(), module->build_id()))) {
+  auto module_id = std::make_pair(module->file_path(), module->build_id());
+  if (symbols_currently_loading_.contains(module_id)) {
     return SymbolLoadingState::kLoading;
   }
 
   if (module->is_loaded()) return SymbolLoadingState::kLoaded;
 
+  if (modules_with_symbol_loading_error_.contains(module_id)) {
+    return SymbolLoadingState::kError;
+  }
   // TODO(b/202140068) add missing error and disabled case
 
   return SymbolLoadingState::kUnknown;
