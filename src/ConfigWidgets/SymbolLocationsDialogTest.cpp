@@ -2,6 +2,7 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
+#include <absl/container/flat_hash_set.h>
 #include <gmock/gmock-actions.h>
 #include <gmock/gmock-function-mocker.h>
 #include <gmock/gmock-matchers.h>
@@ -38,8 +39,10 @@ class MockPersistentStorageManager : public orbit_client_symbols::PersistentStor
  public:
   MOCK_METHOD(void, SavePaths, (absl::Span<const std::filesystem::path>), (override));
   MOCK_METHOD(std::vector<std::filesystem::path>, LoadPaths, (), (override));
-  MOCK_METHOD(void, SaveModuleSymbolFileMappings, ((const ModuleSymbolFileMappings&)), (override));
+  MOCK_METHOD(void, SaveModuleSymbolFileMappings, (const ModuleSymbolFileMappings&), (override));
   MOCK_METHOD((ModuleSymbolFileMappings), LoadModuleSymbolFileMappings, (), (override));
+  MOCK_METHOD(void, SaveDisabledModulePaths, (absl::flat_hash_set<std::string>), (override));
+  MOCK_METHOD(absl::flat_hash_set<std::string>, LoadDisabledModulePaths, (), (override));
 };
 
 class MockMetricsUploader : public orbit_metrics_uploader::MetricsUploader {

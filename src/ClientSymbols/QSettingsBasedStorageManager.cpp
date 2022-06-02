@@ -4,6 +4,8 @@
 
 #include "ClientSymbols/QSettingsBasedStorageManager.h"
 
+#include <absl/container/flat_hash_set.h>
+
 #include <QSettings>
 #include <filesystem>
 #include <memory>
@@ -14,12 +16,14 @@ constexpr const char* kModuleSymbolFileMappingKey = "module_symbol_file_mapping_
 constexpr const char* kModuleSymbolFileMappingModuleKey = "module_symbol_file_mapping_module_key";
 constexpr const char* kModuleSymbolFileMappingSymbolFileKey =
     "module_symbol_file_mapping_symbol_file_key";
+constexpr const char* kDisabledModulesKey = "disabled_modules_key";
+constexpr const char* kDisabledModuleKey = "disabled_module_key";
 
 namespace orbit_client_symbols {
 
 std::vector<std::filesystem::path> QSettingsBasedStorageManager::LoadPaths() {
   const int size = settings_.beginReadArray(kSymbolPathsSettingsKey);
-  std::vector<std::filesystem::path> paths{};
+  std::vector<std::filesystem::path> paths;
   paths.reserve(size);
   for (int i = 0; i < size; ++i) {
     settings_.setArrayIndex(i);
@@ -55,7 +59,7 @@ void QSettingsBasedStorageManager::SaveModuleSymbolFileMappings(
 [[nodiscard]] ModuleSymbolFileMappings
 QSettingsBasedStorageManager::LoadModuleSymbolFileMappings() {
   const int size = settings_.beginReadArray(kModuleSymbolFileMappingKey);
-  ModuleSymbolFileMappings mappings{};
+  ModuleSymbolFileMappings mappings;
   mappings.reserve(size);
   for (int i = 0; i < size; ++i) {
     settings_.setArrayIndex(i);
@@ -68,6 +72,30 @@ QSettingsBasedStorageManager::LoadModuleSymbolFileMappings() {
   }
   settings_.endArray();
   return mappings;
+}
+
+void QSettingsBasedStorageManager::SaveDisabledModulePaths(absl::flat_hash_set<std::string> paths) {
+  settings_.beginWriteArray(kDisabledModulesKey, static_cast<int>(paths.size()));
+  int index = 0;
+  for (const auto& path : paths) {
+    settings_.setArrayIndex(index);
+    settings_.setValue(kDisabledModuleKey, QString::fromStdString(path));
+    index++;
+  }
+  settings_.endArray();
+}
+
+[[nodiscard]] absl::flat_hash_set<std::string>
+QSettingsBasedStorageManager::LoadDisabledModulePaths() {
+  const int size = settings_.beginReadArray(kDisabledModulesKey);
+  absl::flat_hash_set<std::string> paths;
+  paths.reserve(size);
+  for (int i = 0; i < size; ++i) {
+    settings_.setArrayIndex(i);
+    paths.insert(settings_.value(kDisabledModuleKey).toString().toStdString());
+  }
+  settings_.endArray();
+  return paths;
 }
 
 }  // namespace orbit_client_symbols
