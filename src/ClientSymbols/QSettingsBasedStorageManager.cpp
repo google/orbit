@@ -18,59 +18,55 @@ constexpr const char* kModuleSymbolFileMappingSymbolFileKey =
 namespace orbit_client_symbols {
 
 std::vector<std::filesystem::path> QSettingsBasedStorageManager::LoadPaths() {
-  QSettings settings{};
-  const int size = settings.beginReadArray(kSymbolPathsSettingsKey);
+  const int size = settings_.beginReadArray(kSymbolPathsSettingsKey);
   std::vector<std::filesystem::path> paths{};
   paths.reserve(size);
   for (int i = 0; i < size; ++i) {
-    settings.setArrayIndex(i);
-    paths.emplace_back(settings.value(kDirectoryPathKey).toString().toStdString());
+    settings_.setArrayIndex(i);
+    paths.emplace_back(settings_.value(kDirectoryPathKey).toString().toStdString());
   }
-  settings.endArray();
+  settings_.endArray();
   return paths;
 }
 
 void QSettingsBasedStorageManager::SavePaths(absl::Span<const std::filesystem::path> paths) {
-  QSettings settings{};
-  settings.beginWriteArray(kSymbolPathsSettingsKey, static_cast<int>(paths.size()));
+  settings_.beginWriteArray(kSymbolPathsSettingsKey, static_cast<int>(paths.size()));
   for (size_t i = 0; i < paths.size(); ++i) {
-    settings.setArrayIndex(static_cast<int>(i));
-    settings.setValue(kDirectoryPathKey, QString::fromStdString(paths[i].string()));
+    settings_.setArrayIndex(static_cast<int>(i));
+    settings_.setValue(kDirectoryPathKey, QString::fromStdString(paths[i].string()));
   }
-  settings.endArray();
+  settings_.endArray();
 }
 
 void QSettingsBasedStorageManager::SaveModuleSymbolFileMappings(
     const ModuleSymbolFileMappings& mappings) {
-  QSettings settings{};
-  settings.beginWriteArray(kModuleSymbolFileMappingKey, static_cast<int>(mappings.size()));
+  settings_.beginWriteArray(kModuleSymbolFileMappingKey, static_cast<int>(mappings.size()));
   int index = 0;
   for (const auto& [module_path, symbol_file_path] : mappings) {
-    settings.setArrayIndex(index);
-    settings.setValue(kModuleSymbolFileMappingModuleKey, QString::fromStdString(module_path));
-    settings.setValue(kModuleSymbolFileMappingSymbolFileKey,
-                      QString::fromStdString(symbol_file_path.string()));
+    settings_.setArrayIndex(index);
+    settings_.setValue(kModuleSymbolFileMappingModuleKey, QString::fromStdString(module_path));
+    settings_.setValue(kModuleSymbolFileMappingSymbolFileKey,
+                       QString::fromStdString(symbol_file_path.string()));
     ++index;
   }
-  settings.endArray();
+  settings_.endArray();
 }
 
 [[nodiscard]] ModuleSymbolFileMappings
 QSettingsBasedStorageManager::LoadModuleSymbolFileMappings() {
-  QSettings settings{};
-  const int size = settings.beginReadArray(kModuleSymbolFileMappingKey);
+  const int size = settings_.beginReadArray(kModuleSymbolFileMappingKey);
   ModuleSymbolFileMappings mappings{};
   mappings.reserve(size);
   for (int i = 0; i < size; ++i) {
-    settings.setArrayIndex(i);
+    settings_.setArrayIndex(i);
 
     std::string module_path =
-        settings.value(kModuleSymbolFileMappingModuleKey).toString().toStdString();
+        settings_.value(kModuleSymbolFileMappingModuleKey).toString().toStdString();
     std::filesystem::path symbol_file_path = std::filesystem::path{
-        settings.value(kModuleSymbolFileMappingSymbolFileKey).toString().toStdString()};
+        settings_.value(kModuleSymbolFileMappingSymbolFileKey).toString().toStdString()};
     mappings[module_path] = symbol_file_path;
   }
-  settings.endArray();
+  settings_.endArray();
   return mappings;
 }
 

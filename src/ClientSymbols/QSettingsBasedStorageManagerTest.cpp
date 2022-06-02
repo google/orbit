@@ -22,7 +22,7 @@ constexpr const char* kOrgName = "The Orbit Authors";
 namespace orbit_client_symbols {
 
 TEST(QSettingsBasedStorageManager, LoadAndSavePaths) {
-  QCoreApplication::setOrganizationDomain(kOrgName);
+  QCoreApplication::setOrganizationName(kOrgName);
   QCoreApplication::setApplicationName("QSettingsBasedStorageManager.LoadAndSavePaths");
 
   {  // clear before test;
@@ -45,7 +45,7 @@ TEST(QSettingsBasedStorageManager, LoadAndSavePaths) {
 }
 
 TEST(QSettingsBasedStorageManager, LoadAndSaveModuleSymbolFileMappings) {
-  QCoreApplication::setOrganizationDomain(kOrgName);
+  QCoreApplication::setOrganizationName(kOrgName);
   QCoreApplication::setApplicationName(
       "QSettingsBasedStorageManager.LoadAndSaveModuleSymbolFileMappings");
 

@@ -235,22 +235,30 @@ ErrorMessageOr<fs::path> SymbolHelper::FindSymbolsFileLocally(
       module_path.string()));
 }
 
-[[nodiscard]] ErrorMessageOr<fs::path> SymbolHelper::FindSymbolsInCache(
-    const fs::path& module_path, const std::string& build_id) const {
-  ORBIT_SCOPE_FUNCTION;
-  fs::path cache_file_path = GenerateCachedFileName(module_path);
-  std::error_code error;
-  bool exists = fs::exists(cache_file_path, error);
-  if (error) {
-    return ErrorMessage{
-        absl::StrFormat("Unable to stat \"%s\": %s", cache_file_path.string(), error.message())};
+ErrorMessageOr<fs::path> SymbolHelper::FindSymbolsInCache(const fs::path& module_path,
+                                                          const std::string& build_id) const {
+  return FindSymbolsInCacheImpl(module_path,
+                                [&build_id](const std::filesystem::path& cache_file_path) {
+                                  return VerifySymbolsFile(cache_file_path, build_id);
+                                });
+}
+
+ErrorMessageOr<void> SymbolHelper::VerifySymbolsFile(const std::filesystem::path& symbols_path,
+                                                     uint64_t expected_file_size) {
+  OUTCOME_TRY(const uint64_t actual_file_size, orbit_base::FileSize(symbols_path));
+  if (actual_file_size != expected_file_size) {
+    return ErrorMessage(absl::StrFormat("Symbol file size doesn't match. Expected: %u, Actual: %u ",
+                                        expected_file_size, actual_file_size));
   }
-  if (!exists) {
-    return ErrorMessage(
-        absl::StrFormat("Unable to find symbols in cache for module \"%s\"", module_path.string()));
-  }
-  OUTCOME_TRY(VerifySymbolsFile(cache_file_path, build_id));
-  return cache_file_path;
+  return outcome::success();
+}
+
+ErrorMessageOr<fs::path> SymbolHelper::FindSymbolsInCache(const fs::path& module_path,
+                                                          uint64_t expected_file_size) const {
+  return FindSymbolsInCacheImpl(
+      module_path, [&expected_file_size](const std::filesystem::path& cache_file_path) {
+        return VerifySymbolsFile(cache_file_path, expected_file_size);
+      });
 }
 
 ErrorMessageOr<ModuleSymbols> SymbolHelper::LoadSymbolsFromFile(
@@ -312,6 +320,25 @@ ErrorMessageOr<fs::path> SymbolHelper::FindDebugInfoFileLocally(
   return ErrorMessage{
       absl::StrFormat("Could not find a file with debug info with filename \"%s\" and checksum %#x",
                       filename, checksum)};
+}
+
+template <typename Verifier>
+ErrorMessageOr<fs::path> SymbolHelper::FindSymbolsInCacheImpl(const fs::path& module_path,
+                                                              Verifier&& verify) const {
+  ORBIT_SCOPE_FUNCTION;
+  fs::path cache_file_path = GenerateCachedFileName(module_path);
+  std::error_code error;
+  OUTCOME_TRY(const bool exists, orbit_base::FileExists(cache_file_path));
+  if (error) {
+    return ErrorMessage{
+        absl::StrFormat("Unable to stat \"%s\": %s", cache_file_path.string(), error.message())};
+  }
+  if (!exists) {
+    return ErrorMessage(
+        absl::StrFormat("Unable to find symbols in cache for module \"%s\"", module_path.string()));
+  }
+  OUTCOME_TRY(verify(cache_file_path));
+  return cache_file_path;
 }
 
 ErrorMessageOr<fs::path> SymbolHelper::FindDebugInfoFileInDebugStore(

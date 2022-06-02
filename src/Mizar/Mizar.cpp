@@ -39,7 +39,8 @@ int main(int argc, char* argv[]) {
     const orbit_client_data::CallstackInfo* callstack =
         callstack_data.GetCallstack(event.callstack_id());
     for (auto addr : callstack->frames()) {
-      names.insert(data.GetFunctionNameFromAddress(addr).value());
+      std::optional<std::string> name = data.GetFunctionNameFromAddress(addr);
+      if (name.has_value()) names.insert(name.value());
     }
   }
 

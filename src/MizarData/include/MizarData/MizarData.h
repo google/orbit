@@ -2,19 +2,24 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#ifndef MIZAR_MIZAR_DATA_H_
-#define MIZAR_MIZAR_DATA_H_
+#ifndef MIZAR_DATA_MIZAR_DATA_H_
+#define MIZAR_DATA_MIZAR_DATA_H_
 
 #include <memory>
 #include <optional>
+#include <vector>
 
 #include "CaptureClient/AbstractCaptureListener.h"
 #include "CaptureClient/CaptureListener.h"
 #include "CaptureFile/CaptureFile.h"
 #include "ClientData/CaptureData.h"
+#include "ClientData/ModuleData.h"
 #include "ClientData/ModuleManager.h"
+#include "GrpcProtos/module.pb.h"
 #include "MizarDataProvider.h"
 #include "OrbitBase/Logging.h"
+#include "OrbitPaths/Paths.h"
+#include "Symbols/SymbolHelper.h"
 
 namespace orbit_mizar_data {
 
@@ -29,8 +34,10 @@ class MizarData : public orbit_capture_client::AbstractCaptureListener<MizarData
   void OnCaptureStarted(const orbit_grpc_protos::CaptureStarted& capture_started,
                         std::optional<std::filesystem::path> file_path,
                         absl::flat_hash_set<uint64_t> frame_track_function_ids) override;
+
   void OnCaptureFinished(const orbit_grpc_protos::CaptureFinished& /*capture_finished*/) override {
     GetMutableCaptureData().OnCaptureComplete();
+    LoadSymbolsForAllModules();
   }
 
   void OnTimer(const orbit_client_protos::TimerInfo& timer_info) override;
@@ -39,9 +46,13 @@ class MizarData : public orbit_capture_client::AbstractCaptureListener<MizarData
   void OnKeyAndString(uint64_t /*key*/, std::string /*str*/) override {}
 
   void OnModuleUpdate(uint64_t /*timestamp_ns*/,
-                      orbit_grpc_protos::ModuleInfo /*module_info*/) override {}
+                      orbit_grpc_protos::ModuleInfo module_info) override {
+    UpdateModules({module_info});
+  }
   void OnModulesSnapshot(uint64_t /*timestamp_ns*/,
-                         std::vector<orbit_grpc_protos::ModuleInfo> /*module_infos*/) override {}
+                         std::vector<orbit_grpc_protos::ModuleInfo> module_infos) override {
+    UpdateModules(module_infos);
+  }
   void OnThreadStateSlice(orbit_client_data::ThreadStateSliceInfo /*thread_state_slice*/) override {
   }
   void OnApiStringEvent(const orbit_client_data::ApiStringEvent& /*unused*/) override {}
@@ -63,8 +74,18 @@ class MizarData : public orbit_capture_client::AbstractCaptureListener<MizarData
       orbit_grpc_protos::LostPerfRecordsEvent /*lost_perf_records_event*/) override {}
   void OnOutOfOrderEventsDiscardedEvent(orbit_grpc_protos::OutOfOrderEventsDiscardedEvent
                                         /*out_of_order_events_discarded_event*/) override {}
+
+ private:
+  void UpdateModules(const std::vector<orbit_grpc_protos::ModuleInfo>& module_infos);
+
+  void LoadSymbolsForAllModules();
+
+  void LoadSymbols(orbit_client_data::ModuleData& module_data);
+
+  std::unique_ptr<orbit_client_data::ModuleManager> module_manager_;
+  orbit_symbols::SymbolHelper symbol_helper_{orbit_paths::CreateOrGetCacheDir()};
 };
 
 }  // namespace orbit_mizar_data
 
-#endif  // MIZAR_MIZAR_DATA_H_
+#endif  // MIZAR_DATA_MIZAR_DATA_H_
