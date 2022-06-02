@@ -62,7 +62,7 @@ def main(argv):
                      expected_minimum_track_count=3,
                      expected_maximum_track_count=4),
         ToggleCollapsedStateOfAllTracks(),
-        # For the same reason explained above 'FilterTracks' we only check if at leat one track
+        # For the same reason explained above 'FilterTracks' we only check if at least one track
         # contains timers; strictly speaking there are three tracks with timers and there might
         # be anotherone without timers.
         CheckTimers(track_name_filter="OrbitThread_*", require_all=False)
