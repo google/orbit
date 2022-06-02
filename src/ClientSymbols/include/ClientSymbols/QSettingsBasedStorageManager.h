@@ -20,10 +20,8 @@ class QSettingsBasedStorageManager : public PersistentStorageManager {
       : QSettingsBasedStorageManager(QCoreApplication::organizationName(),
                                      QCoreApplication::applicationName()) {}
 
-  QSettingsBasedStorageManager(QString organization, QString application)
-      : organization_(std::move(organization)),
-        application_(std::move(application)),
-        settings_{organization_, application_} {}
+  QSettingsBasedStorageManager(const QString& organization, const QString& application)
+      : settings_{organization, application} {}
 
   void SavePaths(absl::Span<const std::filesystem::path> paths) override;
   [[nodiscard]] std::vector<std::filesystem::path> LoadPaths() override;
@@ -31,8 +29,6 @@ class QSettingsBasedStorageManager : public PersistentStorageManager {
   [[nodiscard]] ModuleSymbolFileMappings LoadModuleSymbolFileMappings() override;
 
  private:
-  QString organization_;
-  QString application_;
   QSettings settings_;
 };
 

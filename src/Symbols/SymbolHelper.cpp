@@ -322,6 +322,25 @@ ErrorMessageOr<fs::path> SymbolHelper::FindDebugInfoFileLocally(
                       filename, checksum)};
 }
 
+template <typename Verifier>
+ErrorMessageOr<fs::path> SymbolHelper::FindSymbolsInCacheImpl(const fs::path& module_path,
+                                                              Verifier&& verify) const {
+  ORBIT_SCOPE_FUNCTION;
+  fs::path cache_file_path = GenerateCachedFileName(module_path);
+  std::error_code error;
+  OUTCOME_TRY(const bool exists, orbit_base::FileExists(cache_file_path));
+  if (error) {
+    return ErrorMessage{
+        absl::StrFormat("Unable to stat \"%s\": %s", cache_file_path.string(), error.message())};
+  }
+  if (!exists) {
+    return ErrorMessage(
+        absl::StrFormat("Unable to find symbols in cache for module \"%s\"", module_path.string()));
+  }
+  OUTCOME_TRY(verify(cache_file_path));
+  return cache_file_path;
+}
+
 ErrorMessageOr<fs::path> SymbolHelper::FindDebugInfoFileInDebugStore(
     const fs::path& debug_directory, std::string_view build_id) {
   ORBIT_SCOPE_FUNCTION;
