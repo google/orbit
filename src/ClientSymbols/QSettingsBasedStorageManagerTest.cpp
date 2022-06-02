@@ -23,8 +23,8 @@ constexpr const char* kOrgName = "The Orbit Authors";
 namespace orbit_client_symbols {
 
 class QSettingsBasedStorageManagerTest : public ::testing::Test {
- protected:
-  void SetUp() override {
+ public:
+  QSettingsBasedStorageManagerTest() {
     QCoreApplication::setOrganizationName(kOrgName);
 
     const testing::TestInfo* test_info = testing::UnitTest::GetInstance()->current_test_info();
@@ -32,10 +32,9 @@ class QSettingsBasedStorageManagerTest : public ::testing::Test {
     const QString test_name{test_info->name()};
     QCoreApplication::setApplicationName(QString("%1.%2").arg(test_suite_name).arg(test_name));
 
-    {  // clear before test;
-      QSettings settings;
-      settings.clear();
-    }
+    // clear before test;
+    QSettings settings;
+    settings.clear();
   }
 };
 
@@ -85,8 +84,10 @@ TEST_F(QSettingsBasedStorageManagerTest, LoadAndSaveDisabledModulePaths) {
 
   QSettingsBasedStorageManager manager;
   absl::flat_hash_set<std::string> loaded_paths = manager.LoadDisabledModulePaths();
-
   EXPECT_THAT(loaded_paths, testing::UnorderedElementsAreArray(paths));
+
+  manager.SaveDisabledModulePaths({});
+  EXPECT_TRUE(manager.LoadDisabledModulePaths().empty());
 }
 
 }  // namespace orbit_client_symbols

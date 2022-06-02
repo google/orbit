@@ -23,7 +23,7 @@ namespace orbit_client_symbols {
 
 std::vector<std::filesystem::path> QSettingsBasedStorageManager::LoadPaths() {
   const int size = settings_.beginReadArray(kSymbolPathsSettingsKey);
-  std::vector<std::filesystem::path> paths{};
+  std::vector<std::filesystem::path> paths;
   paths.reserve(size);
   for (int i = 0; i < size; ++i) {
     settings_.setArrayIndex(i);
@@ -59,7 +59,7 @@ void QSettingsBasedStorageManager::SaveModuleSymbolFileMappings(
 [[nodiscard]] ModuleSymbolFileMappings
 QSettingsBasedStorageManager::LoadModuleSymbolFileMappings() {
   const int size = settings_.beginReadArray(kModuleSymbolFileMappingKey);
-  ModuleSymbolFileMappings mappings{};
+  ModuleSymbolFileMappings mappings;
   mappings.reserve(size);
   for (int i = 0; i < size; ++i) {
     settings_.setArrayIndex(i);
@@ -88,7 +88,7 @@ void QSettingsBasedStorageManager::SaveDisabledModulePaths(absl::flat_hash_set<s
 [[nodiscard]] absl::flat_hash_set<std::string>
 QSettingsBasedStorageManager::LoadDisabledModulePaths() {
   const int size = settings_.beginReadArray(kDisabledModulesKey);
-  absl::flat_hash_set<std::string> paths{};
+  absl::flat_hash_set<std::string> paths;
   paths.reserve(size);
   for (int i = 0; i < size; ++i) {
     settings_.setArrayIndex(i);
