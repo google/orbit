@@ -18,7 +18,6 @@
 using orbit_grpc_protos::SymbolInfo;
 using orbit_object_utils::CoffFile;
 using orbit_object_utils::CreateCoffFile;
-using orbit_object_utils::PdbDebugInfo;
 using orbit_test_utils::HasError;
 using orbit_test_utils::HasNoError;
 
@@ -36,20 +35,34 @@ TEST(CoffFile, LoadDebugSymbols) {
 
   std::vector<SymbolInfo> symbol_infos(symbols_result.value().symbol_infos().begin(),
                                        symbols_result.value().symbol_infos().end());
-  EXPECT_EQ(symbol_infos.size(), 35);
+  EXPECT_EQ(symbol_infos.size(), 52);
 
-  SymbolInfo& symbol_info = symbol_infos[4];
+  // From the DWARF debug info (but also in the COFF symbol table).
+  SymbolInfo& symbol_info = symbol_infos[0];
   EXPECT_EQ(symbol_info.demangled_name(), "pre_c_init");
   uint64_t expected_address =
       0x0 + coff_file->GetExecutableSegmentOffset() + coff_file->GetLoadBias();
   EXPECT_EQ(symbol_info.address(), expected_address);
   EXPECT_EQ(symbol_info.size(), 0xc);
 
-  symbol_info = symbol_infos[5];
+  symbol_info = symbol_infos[7];
   EXPECT_EQ(symbol_info.demangled_name(), "PrintHelloWorld");
   expected_address = 0x03a0 + coff_file->GetExecutableSegmentOffset() + coff_file->GetLoadBias();
   EXPECT_EQ(symbol_info.address(), expected_address);
   EXPECT_EQ(symbol_info.size(), 0x1b);
+
+  // Only from the COFF symbol table.
+  symbol_info = symbol_infos[36];
+  EXPECT_EQ(symbol_info.demangled_name(), "puts");
+  expected_address = 0x10a8 + coff_file->GetExecutableSegmentOffset() + coff_file->GetLoadBias();
+  EXPECT_EQ(symbol_info.address(), expected_address);
+  EXPECT_EQ(symbol_info.size(), 0x8);  // One six-byte jump plus two bytes of padding.
+
+  symbol_info = symbol_infos.back();
+  EXPECT_EQ(symbol_info.demangled_name(), "register_frame_ctor");
+  expected_address = 0x1300 + coff_file->GetExecutableSegmentOffset() + coff_file->GetLoadBias();
+  EXPECT_EQ(symbol_info.address(), expected_address);
+  EXPECT_EQ(symbol_info.size(), 0);  // Size of the last function cannot be deduced.
 }
 
 TEST(CoffFile, HasDebugSymbols) {
