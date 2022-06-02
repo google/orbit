@@ -5,6 +5,8 @@
 #ifndef CLIENT_SYMBOLS_Q_SETTINGS_BASED_STORAGE_MANAGER_H_
 #define CLIENT_SYMBOLS_Q_SETTINGS_BASED_STORAGE_MANAGER_H_
 
+#include <absl/container/flat_hash_set.h>
+
 #include <QCoreApplication>
 #include <QSettings>
 #include <QString>
@@ -27,6 +29,8 @@ class QSettingsBasedStorageManager : public PersistentStorageManager {
   [[nodiscard]] std::vector<std::filesystem::path> LoadPaths() override;
   void SaveModuleSymbolFileMappings(const ModuleSymbolFileMappings& mappings) override;
   [[nodiscard]] ModuleSymbolFileMappings LoadModuleSymbolFileMappings() override;
+  void SaveDisabledModulePaths(absl::flat_hash_set<std::string> paths) override;
+  [[nodiscard]] absl::flat_hash_set<std::string> LoadDisabledModulePaths() override;
 
  private:
   QSettings settings_;

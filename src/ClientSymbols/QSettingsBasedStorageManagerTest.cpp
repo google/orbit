@@ -3,6 +3,7 @@
 // found in the LICENSE file.
 
 #include <absl/container/flat_hash_map.h>
+#include <absl/container/flat_hash_set.h>
 #include <gmock/gmock-matchers.h>
 #include <gtest/gtest.h>
 
@@ -70,6 +71,22 @@ TEST_F(QSettingsBasedStorageManagerTest, LoadAndSaveModuleSymbolFileMappings) {
       manager.LoadModuleSymbolFileMappings();
 
   EXPECT_THAT(loaded_mappings, testing::UnorderedElementsAreArray(mappings));
+}
+
+TEST_F(QSettingsBasedStorageManagerTest, LoadAndSaveDisabledModulePaths) {
+  absl::flat_hash_set<std::string> paths{"/path/to/module1", "/path/to/module2",
+                                         "/other/module/path"};
+
+  {
+    QSettingsBasedStorageManager manager;
+    EXPECT_TRUE(manager.LoadDisabledModulePaths().empty());
+    manager.SaveDisabledModulePaths(paths);
+  }
+
+  QSettingsBasedStorageManager manager;
+  absl::flat_hash_set<std::string> loaded_paths = manager.LoadDisabledModulePaths();
+
+  EXPECT_THAT(loaded_paths, testing::UnorderedElementsAreArray(paths));
 }
 
 }  // namespace orbit_client_symbols

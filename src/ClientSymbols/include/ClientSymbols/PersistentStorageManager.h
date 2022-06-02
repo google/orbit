@@ -6,6 +6,7 @@
 #define CLIENT_SYMBOLS_PERSISTENT_STORAGE_MANAGER_H
 
 #include <absl/container/flat_hash_map.h>
+#include <absl/container/flat_hash_set.h>
 #include <absl/types/span.h>
 
 #include <filesystem>
@@ -29,6 +30,9 @@ class PersistentStorageManager {
 
   virtual void SaveModuleSymbolFileMappings(const ModuleSymbolFileMappings& mappings) = 0;
   [[nodiscard]] virtual ModuleSymbolFileMappings LoadModuleSymbolFileMappings() = 0;
+
+  virtual void SaveDisabledModulePaths(absl::flat_hash_set<std::string> paths) = 0;
+  [[nodiscard]] virtual absl::flat_hash_set<std::string> LoadDisabledModulePaths() = 0;
 };
 
 }  // namespace orbit_client_symbols
