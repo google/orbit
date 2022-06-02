@@ -86,6 +86,7 @@ void OrbitSamplingReport::Initialize(orbit_data_views::DataView* callstack_data_
       ORBIT_SCOPE("resizeSections");
       treeView->GetTreeView()->header()->resizeSections(QHeaderView::ResizeToContents);
     }
+    treeView->GetTreeView()->SetIsMultiSelection(true);
 
     treeView->Link(ui_->CallstackTreeView);
 

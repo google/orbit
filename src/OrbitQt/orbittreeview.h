@@ -50,6 +50,7 @@ class OrbitTreeView : public QTreeView {
   bool HasRefreshButton() const;
   void OnRefreshButtonClicked();
   void SetIsInternalRefresh(bool status) { is_internal_refresh_ = status; }
+  void SetIsMultiSelection(bool status) { is_multi_selection_ = status; }
 
  public slots:
   void columnResized(int column, int oldSize, int newSize);
@@ -70,6 +71,7 @@ class OrbitTreeView : public QTreeView {
   std::vector<float> column_ratios_;
   bool maintain_user_column_ratios_ = false;
   bool is_internal_refresh_ = false;
+  bool is_multi_selection_ = false;
 };
 
 #endif  // ORBIT_QT_ORBIT_TREE_VIEW_H_

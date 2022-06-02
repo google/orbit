@@ -293,9 +293,16 @@ void OrbitTreeView::selectionChanged(const QItemSelection& selected,
 
   // Row selection callback.
   std::vector<int> selected_rows;
-  QModelIndexList selected_indexes = selectionModel()->selectedIndexes();
-  for (QModelIndex& index : selected_indexes) {
-    selected_rows.push_back(index.row());
+  if (is_multi_selection_) {
+    QModelIndexList selected_indexes = selectionModel()->selectedIndexes();
+    for (QModelIndex& index : selected_indexes) {
+      selected_rows.push_back(index.row());
+    }
+  } else {
+    QModelIndex index = selectionModel()->currentIndex();
+    if (index.isValid()) {
+      selected_rows.push_back(index.row());
+    }
   }
 
   OnRowsSelected(selected_rows);
