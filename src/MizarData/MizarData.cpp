@@ -4,9 +4,14 @@
 
 #include "MizarData/MizarData.h"
 
+#include <absl/container/flat_hash_set.h>
+
 #include <QStringLiteral>
+#include <iterator>
 #include <memory>
 
+#include "ClientData/CallstackData.h"
+#include "ClientData/CallstackEvent.h"
 #include "ClientData/ModuleAndFunctionLookup.h"
 #include "ClientData/ModuleData.h"
 #include "ClientData/ModuleManager.h"
@@ -18,6 +23,23 @@
 #include "OrbitBase/Result.h"
 
 namespace orbit_mizar_data {
+
+[[nodiscard]] absl::flat_hash_map<uint64_t, std::string> MizarData::AllAddressToName() const {
+  absl::flat_hash_map<uint64_t, std::string> result;
+
+  GetCaptureData().GetCallstackData().ForEachUniqueCallstack(
+      [&result, this](const uint64_t /*callstack_id*/,
+                      const orbit_client_data::CallstackInfo& info) {
+        for (const uint64_t address : info.frames()) {
+          std::optional<std::string> name = this->GetFunctionNameFromAddress(address);
+          if (name.has_value()) {
+            result[address] = name.value();
+          }
+        }
+      });
+
+  return result;
+}
 
 void MizarData::OnCaptureStarted(const orbit_grpc_protos::CaptureStarted& capture_started,
                                  std::optional<std::filesystem::path> file_path,

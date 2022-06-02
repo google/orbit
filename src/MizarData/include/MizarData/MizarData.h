@@ -5,6 +5,8 @@
 #ifndef MIZAR_DATA_MIZAR_DATA_H_
 #define MIZAR_DATA_MIZAR_DATA_H_
 
+#include <absl/container/flat_hash_set.h>
+
 #include <memory>
 #include <optional>
 #include <vector>
@@ -28,7 +30,10 @@ class MizarData : public orbit_capture_client::AbstractCaptureListener<MizarData
  public:
   virtual ~MizarData() = default;
 
-  [[nodiscard]] std::optional<std::string> GetFunctionNameFromAddress(
+  [[nodiscard]] absl::flat_hash_map<uint64_t, std::string> AllAddressToName() const;
+
+  // virtual for testing purposes
+  [[nodiscard]] virtual std::optional<std::string> GetFunctionNameFromAddress(
       uint64_t address) const override;
 
   void OnCaptureStarted(const orbit_grpc_protos::CaptureStarted& capture_started,
