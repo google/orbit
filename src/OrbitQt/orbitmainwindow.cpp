@@ -182,6 +182,7 @@ OrbitMainWindow::OrbitMainWindow(TargetConfiguration target_configuration,
   DataViewFactory* data_view_factory = app_.get();
   ui->ModulesList->Initialize(data_view_factory->GetOrCreateDataView(DataViewType::kModules),
                               SelectionType::kExtended, FontType::kDefault);
+  ui->ModulesList->GetTreeView()->SetIsMultiSelection(true);
   ui->FunctionsList->Initialize(data_view_factory->GetOrCreateDataView(DataViewType::kFunctions),
                                 SelectionType::kExtended, FontType::kDefault);
   ui->PresetsList->Initialize(data_view_factory->GetOrCreateDataView(DataViewType::kPresets),

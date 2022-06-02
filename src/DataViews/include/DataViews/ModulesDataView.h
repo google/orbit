@@ -38,6 +38,13 @@ class ModulesDataView : public DataView {
                  orbit_client_data::ModuleInMemory module_in_memory);
   void UpdateModules(const orbit_client_data::ProcessData* process);
 
+  void OnSelect(const std::vector<int>& rows) override {
+    selected_indices_.clear();
+    for (int row : rows) {
+      selected_indices_.insert(indices_.at(row));
+    }
+  }
+
  protected:
   [[nodiscard]] ActionStatus GetActionStatus(std::string_view action, int clicked_index,
                                              const std::vector<int>& selected_indices) override;

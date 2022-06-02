@@ -304,6 +304,7 @@ void OrbitTreeView::selectionChanged(const QItemSelection& selected,
       selected_rows.push_back(index.row());
     }
   }
+
   OnRowsSelected(selected_rows);
 }
 
