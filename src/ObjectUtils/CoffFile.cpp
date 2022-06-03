@@ -112,16 +112,18 @@ uint64_t kUnknownSymbolSize = std::numeric_limits<uint64_t>::max();
 
 std::optional<SymbolInfo> CoffFileImpl::CreateSymbolInfo(
     const llvm::object::SymbolRef& symbol_ref) {
-  ORBIT_CHECK(symbol_ref.getType());
-  ORBIT_CHECK(symbol_ref.getType().get() == llvm::object::SymbolRef::ST_Function);
+  llvm::Expected<llvm::object::SymbolRef::Type> type = symbol_ref.getType();
+  ORBIT_CHECK(type);
+  ORBIT_CHECK(type.get() == llvm::object::SymbolRef::ST_Function);
 
-  if (!symbol_ref.getFlags() ||
-      (symbol_ref.getFlags().get() & llvm::object::BasicSymbolRef::SF_Undefined) != 0) {
+  llvm::Expected<uint32_t> flags = symbol_ref.getFlags();
+  if (!flags || (flags.get() & llvm::object::BasicSymbolRef::SF_Undefined) != 0) {
     return std::nullopt;
   }
 
   // The symbol's "Value" is the offset in the section.
-  if (!symbol_ref.getValue()) {
+  llvm::Expected<uint64_t> value = symbol_ref.getValue();
+  if (!value) {
     return std::nullopt;
   }
   auto section_offset = GetVirtualAddressOfSymbolSection(symbol_ref);
@@ -129,12 +131,12 @@ std::optional<SymbolInfo> CoffFileImpl::CreateSymbolInfo(
     return std::nullopt;
   }
 
-  const std::string name = symbol_ref.getName() ? symbol_ref.getName().get().str() : "";
-  const uint64_t symbol_virtual_address =
-      GetLoadBias() + section_offset.value() + symbol_ref.getValue().get();
+  llvm::Expected<llvm::StringRef> name = symbol_ref.getName();
+  const std::string name_or_empty = name ? name.get().str() : "";
+  const uint64_t symbol_virtual_address = GetLoadBias() + section_offset.value() + value.get();
 
   SymbolInfo symbol_info;
-  symbol_info.set_demangled_name(llvm::demangle(name));
+  symbol_info.set_demangled_name(llvm::demangle(name_or_empty));
   symbol_info.set_address(symbol_virtual_address);
 
   // The COFF symbol table doesn't contain the size of symbols. Set a placeholder for now.
@@ -154,8 +156,8 @@ void CoffFileImpl::AddNewDebugSymbolsFromCoffSymbolTable(
   std::vector<SymbolInfo> new_symbol_infos;
 
   for (const auto& symbol_ref : symbol_range) {
-    if (!symbol_ref.getType() ||
-        symbol_ref.getType().get() != llvm::object::SymbolRef::ST_Function) {
+    llvm::Expected<llvm::object::SymbolRef::Type> type = symbol_ref.getType();
+    if (!type || type.get() != llvm::object::SymbolRef::ST_Function) {
       // The symbol is not a function (or has unknown type). We skip it as we only list symbols of
       // functions, ignoring sections and variables.
       continue;
