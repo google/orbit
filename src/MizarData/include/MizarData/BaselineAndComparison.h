@@ -17,11 +17,12 @@ namespace orbit_mizar_data {
 
 struct MizarDataWithSampledFunctionId {
   MizarDataWithSampledFunctionId(
-      MizarData data, absl::flat_hash_map<uint64_t, uint64_t> address_to_sampled_function_id)
+      std::unique_ptr<MizarDataProvider> data,
+      absl::flat_hash_map<uint64_t, uint64_t> address_to_sampled_function_id)
       : data(std::move(data)),
         address_to_sampled_function_id(std::move(address_to_sampled_function_id)) {}
 
-  MizarData data;
+  std::unique_ptr<MizarDataProvider> data;
   absl::flat_hash_map<uint64_t, uint64_t> address_to_sampled_function_id;
 };
 
@@ -48,8 +49,8 @@ class BaselineAndComparison {
   absl::flat_hash_map<uint64_t, std::string> sampled_function_id_to_name_;
 };
 
-orbit_mizar_data::BaselineAndComparison CreateBaselineAndComparison(MizarData baseline,
-                                                                    MizarData comparison);
+orbit_mizar_data::BaselineAndComparison CreateBaselineAndComparison(
+    std::unique_ptr<MizarDataProvider> baseline, std::unique_ptr<MizarDataProvider> comparison);
 
 }  // namespace orbit_mizar_data
 

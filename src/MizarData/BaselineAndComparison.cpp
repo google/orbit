@@ -17,12 +17,12 @@
 
 namespace orbit_mizar_data {
 
-orbit_mizar_data::BaselineAndComparison CreateBaselineAndComparison(MizarData baseline,
-                                                                    MizarData comparison) {
+orbit_mizar_data::BaselineAndComparison CreateBaselineAndComparison(
+    std::unique_ptr<MizarDataProvider> baseline, std::unique_ptr<MizarDataProvider> comparison) {
   const absl::flat_hash_map<uint64_t, std::string> baseline_address_to_name =
-      baseline.AllAddressToName();
+      baseline->AllAddressToName();
   const absl::flat_hash_map<uint64_t, std::string> comparison_address_to_name =
-      comparison.AllAddressToName();
+      comparison->AllAddressToName();
 
   auto [baseline_address_to_frame_id, comparison_address_to_frame_id, frame_id_to_name] =
       AssignSampledFunctionIds(baseline_address_to_name, comparison_address_to_name);
