@@ -513,6 +513,8 @@ void TracerImpl::InitSwitchesStatesNamesVisitor() {
   switches_states_names_visitor_ = std::make_unique<SwitchesStatesNamesVisitor>(listener_);
   switches_states_names_visitor_->SetProduceSchedulingSlices(trace_context_switches_);
   if (trace_thread_state_) {
+    // Filter thread states using target process id. We also send OrbitService's thread states when
+    // introspection is enabled for more context on what our own threads are doing when capturing.
     std::set<pid_t> pids = {target_pid_};
     if (introspection_enabled_) {
       pids.insert(orbit_base::GetCurrentProcessIdNative());
