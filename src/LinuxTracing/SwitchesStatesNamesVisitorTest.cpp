@@ -396,12 +396,10 @@ TEST_F(SwitchesStatesNamesVisitorTest,
 }
 
 void SwitchesStatesNamesVisitorTest::ProcessFakeEventsForThreadStateTests() {
-  // kPid1, kTid1
   visitor_.ProcessInitialState(kStartTimestampNs, kTid1, 'D');
   visitor_.ProcessInitialState(kStartTimestampNs, kTid3, 'D');
-  (void)kComm2;
-  (void)kCpu1;
-  (void)kCpu2;
+
+  // kPid1, kTid1
   PerfEvent{MakeFakeSchedWakeupPerfEvent(kTid1, kWakeTimestampNs1)}.Accept(&visitor_);
   PerfEvent{MakeFakeSchedSwitchPerfEvent(kCpu1, kPrevTid, kPrevTid, kRunnableStateMask, kTid1,
                                          kInTimestampNs1)}
@@ -437,12 +435,12 @@ void SwitchesStatesNamesVisitorTest::ProcessFakeEventsForThreadStateTests() {
   PerfEvent{MakeFakeSchedSwitchPerfEvent(kCpu4, kPid2, kTid4, kInterruptibleSleepStateMask,
                                          kNextTid, kOutTimestampNs2)}
       .Accept(&visitor_);
-  PerfEvent{MakeFakeSchedWakeupPerfEvent(kTid3, kWakeTimestampNs2)}.Accept(&visitor_);
+  PerfEvent{MakeFakeSchedWakeupPerfEvent(kTid4, kWakeTimestampNs2)}.Accept(&visitor_);
 
   visitor_.ProcessRemainingOpenStates(kStopTimestampNs);
 }
 
-TEST_F(SwitchesStatesNamesVisitorTest, NoThreadStatesWithoutSetThreadStatePidFilter) {
+TEST_F(SwitchesStatesNamesVisitorTest, NoThreadStatesWithoutSetThreadStatePidFilters) {
   visitor_.ProcessInitialTidToPidAssociation(kTid1, kPid);
   PerfEvent{MakeFakeForkPerfEvent(kPid, kTid2)}.Accept(&visitor_);
 
@@ -484,6 +482,9 @@ TEST_F(SwitchesStatesNamesVisitorTest, VariousThreadStateSlicesFromAllPossibleEv
   visitor_.SetThreadStatePidFilters({kPid1, kPid2});
 
   visitor_.ProcessInitialTidToPidAssociation(kTid1, kPid);
+  // visitor_.ProcessInitialTidToPidAssociation(kTid2, kPid);
+  visitor_.ProcessInitialTidToPidAssociation(kTid3, kPid2);
+  visitor_.ProcessInitialTidToPidAssociation(kTid4, kPid2);
   PerfEvent{MakeFakeForkPerfEvent(kPid, kTid2)}.Accept(&visitor_);
 
   EXPECT_CALL(mock_listener_, OnThreadName).Times(2);
@@ -492,39 +493,64 @@ TEST_F(SwitchesStatesNamesVisitorTest, VariousThreadStateSlicesFromAllPossibleEv
     actual_thread_state_slices.emplace_back(std::move(actual_thread_state_slice));
   };
   EXPECT_CALL(mock_listener_, OnThreadStateSlice)
-      .Times(8)
+      .Times(16)
       .WillRepeatedly(save_thread_state_slice_arg);
 
   ProcessFakeEventsForThreadStateTests();
 
-  EXPECT_EQ(thread_state_counter_, 8);
-  EXPECT_THAT(actual_thread_state_slices,
-              // UnorderedElementsAre because ProcessRemainingOpenStates could process in any order.
-              ::testing::UnorderedElementsAre(
-                  ThreadStateSliceEq(MakeThreadStateSlice(
-                      kTid1, ThreadStateSlice::kUninterruptibleSleep,
-                      kWakeTimestampNs1 - kStartTimestampNs, kWakeTimestampNs1)),
-                  ThreadStateSliceEq(MakeThreadStateSlice(kTid1, ThreadStateSlice::kRunnable,
-                                                          kInTimestampNs1 - kWakeTimestampNs1,
-                                                          kInTimestampNs1)),
-                  ThreadStateSliceEq(MakeThreadStateSlice(kTid1, ThreadStateSlice::kRunning,
-                                                          kOutTimestampNs1 - kInTimestampNs1,
-                                                          kOutTimestampNs1)),
-                  ThreadStateSliceEq(MakeThreadStateSlice(kTid1, ThreadStateSlice::kDead,
-                                                          kStopTimestampNs - kOutTimestampNs1,
-                                                          kStopTimestampNs)),
-                  ThreadStateSliceEq(MakeThreadStateSlice(kTid2, ThreadStateSlice::kRunnable,
-                                                          kInTimestampNs2 - kNewTimestampNs2,
-                                                          kInTimestampNs2)),
-                  ThreadStateSliceEq(MakeThreadStateSlice(kTid2, ThreadStateSlice::kRunning,
-                                                          kOutTimestampNs2 - kInTimestampNs2,
-                                                          kOutTimestampNs2)),
-                  ThreadStateSliceEq(MakeThreadStateSlice(
-                      kTid2, ThreadStateSlice::kInterruptibleSleep,
-                      kWakeTimestampNs2 - kOutTimestampNs2, kWakeTimestampNs2)),
-                  ThreadStateSliceEq(MakeThreadStateSlice(kTid2, ThreadStateSlice::kRunnable,
-                                                          kStopTimestampNs - kWakeTimestampNs2,
-                                                          kStopTimestampNs))));
+  EXPECT_EQ(thread_state_counter_, 16);
+  EXPECT_THAT(
+      actual_thread_state_slices,
+      // UnorderedElementsAre because ProcessRemainingOpenStates could process in any order.
+      ::testing::UnorderedElementsAre(
+          ThreadStateSliceEq(MakeThreadStateSlice(kTid1, ThreadStateSlice::kUninterruptibleSleep,
+                                                  kWakeTimestampNs1 - kStartTimestampNs,
+                                                  kWakeTimestampNs1)),
+          ThreadStateSliceEq(MakeThreadStateSlice(kTid1, ThreadStateSlice::kRunnable,
+                                                  kInTimestampNs1 - kWakeTimestampNs1,
+                                                  kInTimestampNs1)),
+          ThreadStateSliceEq(MakeThreadStateSlice(kTid1, ThreadStateSlice::kRunning,
+                                                  kOutTimestampNs1 - kInTimestampNs1,
+                                                  kOutTimestampNs1)),
+          ThreadStateSliceEq(MakeThreadStateSlice(kTid1, ThreadStateSlice::kDead,
+                                                  kStopTimestampNs - kOutTimestampNs1,
+                                                  kStopTimestampNs)),
+          ThreadStateSliceEq(MakeThreadStateSlice(kTid2, ThreadStateSlice::kRunnable,
+                                                  kInTimestampNs2 - kNewTimestampNs2,
+                                                  kInTimestampNs2)),
+          ThreadStateSliceEq(MakeThreadStateSlice(kTid2, ThreadStateSlice::kRunning,
+                                                  kOutTimestampNs2 - kInTimestampNs2,
+                                                  kOutTimestampNs2)),
+          ThreadStateSliceEq(MakeThreadStateSlice(kTid2, ThreadStateSlice::kInterruptibleSleep,
+                                                  kWakeTimestampNs2 - kOutTimestampNs2,
+                                                  kWakeTimestampNs2)),
+          ThreadStateSliceEq(MakeThreadStateSlice(kTid2, ThreadStateSlice::kRunnable,
+                                                  kStopTimestampNs - kWakeTimestampNs2,
+                                                  kStopTimestampNs)),
+          ThreadStateSliceEq(MakeThreadStateSlice(kTid3, ThreadStateSlice::kUninterruptibleSleep,
+                                                  kWakeTimestampNs1 - kStartTimestampNs,
+                                                  kWakeTimestampNs1)),
+          ThreadStateSliceEq(MakeThreadStateSlice(kTid3, ThreadStateSlice::kRunnable,
+                                                  kInTimestampNs1 - kWakeTimestampNs1,
+                                                  kInTimestampNs1)),
+          ThreadStateSliceEq(MakeThreadStateSlice(kTid3, ThreadStateSlice::kRunning,
+                                                  kOutTimestampNs1 - kInTimestampNs1,
+                                                  kOutTimestampNs1)),
+          ThreadStateSliceEq(MakeThreadStateSlice(kTid3, ThreadStateSlice::kDead,
+                                                  kStopTimestampNs - kOutTimestampNs1,
+                                                  kStopTimestampNs)),
+          ThreadStateSliceEq(MakeThreadStateSlice(kTid4, ThreadStateSlice::kRunnable,
+                                                  kInTimestampNs2 - kNewTimestampNs2,
+                                                  kInTimestampNs2)),
+          ThreadStateSliceEq(MakeThreadStateSlice(kTid4, ThreadStateSlice::kRunning,
+                                                  kOutTimestampNs2 - kInTimestampNs2,
+                                                  kOutTimestampNs2)),
+          ThreadStateSliceEq(MakeThreadStateSlice(kTid4, ThreadStateSlice::kInterruptibleSleep,
+                                                  kWakeTimestampNs2 - kOutTimestampNs2,
+                                                  kWakeTimestampNs2)),
+          ThreadStateSliceEq(MakeThreadStateSlice(kTid4, ThreadStateSlice::kRunnable,
+                                                  kStopTimestampNs - kWakeTimestampNs2,
+                                                  kStopTimestampNs))));
 }
 
 }  // namespace orbit_linux_tracing

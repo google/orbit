@@ -31,8 +31,8 @@ namespace orbit_linux_tracing {
 // and is updated with ForkPerfEvents (and also ExitPerfEvents, see Visit(const ExitPerfEvent&)).
 // For thread states, we are able to collect partial slices at the beginning and at the end of the
 // capture, hence the ProcessInitialState and ProcessRemainingOpenStates methods.
-// Also, we only process thread states of the process with pid specified with
-// SetThreadStatePidFilters (so that we can collect thread states only for the process we are
+// Also, we only process thread states of the processes with pids specified with
+// SetThreadStatePidFilters (so that we can collect thread states only for the processes we are
 // profiling). For this we also need the system-wide association between tids and pids.
 class SwitchesStatesNamesVisitor : public PerfEventVisitor {
  public:
