@@ -102,13 +102,10 @@ std::optional<uint64_t> CoffFileImpl::GetVirtualAddressOfSymbolSection(
   int32_t section_index = coff_symbol_ref.getSectionNumber();
   llvm::Expected<const llvm::object::coff_section*> section =
       object_file_->getSection(section_index);
-  if (!section) {
-    return std::nullopt;
-  }
-  return section.get()->VirtualAddress;
+  return section ? std::make_optional(section.get()->VirtualAddress) : std::nullopt;
 }
 
-uint64_t kUnknownSymbolSize = std::numeric_limits<uint64_t>::max();
+constexpr uint64_t kUnknownSymbolSize = std::numeric_limits<uint64_t>::max();
 
 std::optional<SymbolInfo> CoffFileImpl::CreateSymbolInfo(
     const llvm::object::SymbolRef& symbol_ref) {
@@ -230,6 +227,26 @@ void FillDebugSymbolsFromDwarf(llvm::DWARFContext* dwarf_context,
   std::sort(sorted_symbol_infos->begin(), sorted_symbol_infos->end(), &SymbolInfoLessByAddress);
 }
 
+static void DeduceDebugSymbolMissingSizes(std::vector<SymbolInfo>* sorted_symbol_infos) {
+  // We don't have sizes for functions obtained from the COFF symbol table. For these, compute the
+  // size as the distance from the address of the next function.
+  for (size_t i = 0; i < sorted_symbol_infos->size(); ++i) {
+    SymbolInfo& symbol_info = sorted_symbol_infos->at(i);
+    if (symbol_info.size() != kUnknownSymbolSize) {
+      // This function symbol was from DWARF debug info and already has a size.
+      continue;
+    }
+
+    if (i < sorted_symbol_infos->size() - 1) {
+      // Deduce the size as the distance from the next function's address.
+      symbol_info.set_size(sorted_symbol_infos->at(i + 1).address() - symbol_info.address());
+    } else {
+      // If the last symbol doesn't have a size, we can't deduce it, and we just set it to zero.
+      symbol_info.set_size(0);
+    }
+  }
+}
+
 // The COFF symbol table doesn't contain the size of functions. If present, the DWARF debug info
 // contains the sizes. However, we observed that the DWARF debug info misses some functions compared
 // to the COFF symbol table.
@@ -256,23 +273,7 @@ ErrorMessageOr<ModuleSymbols> CoffFileImpl::LoadDebugSymbols() {
     AddNewDebugSymbolsFromCoffSymbolTable(object_file_->symbols(), &sorted_symbol_infos);
   }
 
-  // We don't have sizes for functions obtained from the COFF symbol table. Compute it as the
-  // distance from the address of the next function.
-  for (size_t i = 0; i < sorted_symbol_infos.size(); ++i) {
-    SymbolInfo& symbol_info = sorted_symbol_infos[i];
-    if (symbol_info.size() != kUnknownSymbolSize) {
-      // This function symbol was from DWARF debug info and already has a size.
-      continue;
-    }
-
-    if (i < sorted_symbol_infos.size() - 1) {
-      // Deduce the size as the distance from the next function's address.
-      symbol_info.set_size(sorted_symbol_infos[i + 1].address() - symbol_info.address());
-    } else {
-      // If the last symbol doesn't have a size, we can't deduce it, and we just set it to zero.
-      symbol_info.set_size(0);
-    }
-  }
+  DeduceDebugSymbolMissingSizes(&sorted_symbol_infos);
 
   if (sorted_symbol_infos.empty()) {
     return ErrorMessage(
