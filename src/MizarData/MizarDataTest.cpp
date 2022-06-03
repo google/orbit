@@ -23,6 +23,10 @@
 #include "GrpcProtos/capture.pb.h"
 #include "MizarData/MizarData.h"
 
+using ::testing::Invoke;
+using ::testing::UnorderedElementsAre;
+using ::testing::UnorderedPointwise;
+
 namespace orbit_mizar_data {
 
 using google::protobuf::util::MessageDifferencer;
@@ -115,7 +119,7 @@ TEST(MizarDataTest, OnTimerAddsDAndMSAndOnlyThem) {
   std::transform(std::begin(stored_timers_ptrs), std::end(stored_timers_ptrs),
                  std::back_inserter(stored_timers), [](const TimerInfo* ptr) { return (*ptr); });
 
-  EXPECT_THAT(stored_timers, testing::UnorderedPointwise(TimerInfosEq(), kTimersToStore));
+  EXPECT_THAT(stored_timers, UnorderedPointwise(TimerInfosEq(), kTimersToStore));
 }
 
 constexpr uint64_t kFunctionAddress = 0xBEAF;
@@ -150,9 +154,6 @@ static const orbit_client_data::CallstackEvent kCallstackEvent(kTime, kCallstack
 static const absl::flat_hash_map<uint64_t, std::string> kSymbolsTable = {
     {kFunctionAddress, kFunctionName}, {kAnotherFunctionAddress, "food()"}};
 
-using ::testing::Invoke;
-using ::testing::UnorderedElementsAreArray;
-
 TEST(MizarDataTest, AllAddressToNameIsCorrect) {
   MockMizarData data;
 
@@ -170,6 +171,6 @@ TEST(MizarDataTest, AllAddressToNameIsCorrect) {
   data.OnCaptureFinished({});
 
   EXPECT_THAT(data.AllAddressToName(),
-              UnorderedElementsAreArray({make_pair(kFunctionAddress, kFunctionName)}));
+              UnorderedElementsAre(std::make_pair(kFunctionAddress, kFunctionName)));
 }
 }  // namespace orbit_mizar_data

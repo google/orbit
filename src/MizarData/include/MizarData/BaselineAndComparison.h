@@ -20,6 +20,9 @@ struct MizarDataWithSampledFunctionId {
   absl::flat_hash_map<uint64_t, uint64_t> address_to_sampled_function_id;
 };
 
+// The class owns the data from two capture files via owning two instances of
+// `MizarDataWithSampledFunctionId`. Also owns the map from sampled function ids to the
+// corresponding function names.
 class BaselineAndComparison {
  public:
   BaselineAndComparison(MizarDataWithSampledFunctionId baseline,

@@ -25,6 +25,8 @@
 
 namespace orbit_mizar_data {
 
+// This class is used by Mizar to read a capture file and load the symbols.
+// Also owns a map from the function absolute addresses to their names.
 class MizarData : public orbit_capture_client::AbstractCaptureListener<MizarData>,
                   public MizarDataProvider {
  public:
