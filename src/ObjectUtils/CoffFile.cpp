@@ -227,7 +227,7 @@ void FillDebugSymbolsFromDwarf(llvm::DWARFContext* dwarf_context,
   std::sort(sorted_symbol_infos->begin(), sorted_symbol_infos->end(), &SymbolInfoLessByAddress);
 }
 
-static void DeduceDebugSymbolMissingSizes(std::vector<SymbolInfo>* sorted_symbol_infos) {
+void DeduceDebugSymbolMissingSizes(std::vector<SymbolInfo>* sorted_symbol_infos) {
   // We don't have sizes for functions obtained from the COFF symbol table. For these, compute the
   // size as the distance from the address of the next function.
   for (size_t i = 0; i < sorted_symbol_infos->size(); ++i) {
