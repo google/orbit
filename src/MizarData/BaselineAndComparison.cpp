@@ -13,11 +13,12 @@
 
 #include "BaselineAndComparisonHelper.h"
 #include "ClientData/CaptureData.h"
+#include "MizarData/MizarData.h"
 
 namespace orbit_mizar_data {
 
-orbit_mizar_data::BaselineAndComparison CreateBaselineAndComparison(const MizarData& baseline,
-                                                                    const MizarData& comparison) {
+orbit_mizar_data::BaselineAndComparison CreateBaselineAndComparison(MizarData baseline,
+                                                                    MizarData comparison) {
   const absl::flat_hash_map<uint64_t, std::string> baseline_address_to_name =
       baseline.AllAddressToName();
   const absl::flat_hash_map<uint64_t, std::string> comparison_address_to_name =
@@ -26,9 +27,12 @@ orbit_mizar_data::BaselineAndComparison CreateBaselineAndComparison(const MizarD
   auto [baseline_address_to_frame_id, comparison_address_to_frame_id, frame_id_to_name] =
       AssignSampledFunctionIds(baseline_address_to_name, comparison_address_to_name);
 
-  return BaselineAndComparison({baseline, std::move(baseline_address_to_frame_id)},
-                               {comparison, std::move(comparison_address_to_frame_id)},
-                               std::move(frame_id_to_name));
+  MizarDataWithSampledFunctionId baseline_with_ids(std::move(baseline),
+                                                   std::move(baseline_address_to_frame_id));
+
+  return {{std::move(baseline), std::move(baseline_address_to_frame_id)},
+          {std::move(comparison), std::move(comparison_address_to_frame_id)},
+          std::move(frame_id_to_name)};
 }
 
 }  // namespace orbit_mizar_data

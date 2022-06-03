@@ -30,6 +30,13 @@ namespace orbit_mizar_data {
 class MizarData : public orbit_capture_client::AbstractCaptureListener<MizarData>,
                   public MizarDataProvider {
  public:
+  MizarData() = default;
+  MizarData(MizarData&) = delete;
+  MizarData& operator=(const MizarData& other) = delete;
+
+  MizarData(MizarData&& other) = default;
+  MizarData& operator=(MizarData&& other) = delete;
+
   virtual ~MizarData() = default;
 
   [[nodiscard]] absl::flat_hash_map<uint64_t, std::string> AllAddressToName() const;

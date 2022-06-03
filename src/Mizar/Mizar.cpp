@@ -47,7 +47,8 @@ int main(int argc, char* argv[]) {
     return 1;
   }
 
-  orbit_mizar_data::BaselineAndComparison bac = CreateBaselineAndComparison(baseline, comparison);
+  orbit_mizar_data::BaselineAndComparison bac =
+      CreateBaselineAndComparison(std::move(baseline), std::move(comparison));
   for (auto& [id, name] : bac.sampled_function_id_to_name()) {
     ORBIT_LOG("%u %s", id, name);
   }

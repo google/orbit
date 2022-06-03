@@ -16,6 +16,14 @@ namespace orbit_client_data {
 
 class CaptureDataHolder {
  public:
+  CaptureDataHolder() = default;
+
+  CaptureDataHolder(CaptureDataHolder&) = delete;
+  CaptureDataHolder& operator=(const CaptureDataHolder& other) = delete;
+
+  CaptureDataHolder(CaptureDataHolder&&) = default;
+  CaptureDataHolder& operator=(CaptureDataHolder&& other) = default;
+
   virtual ~CaptureDataHolder() = default;
 
   // TODO(b/234095077): The two methods should not return ref, as capture_data_ doesn't
