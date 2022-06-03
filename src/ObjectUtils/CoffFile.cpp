@@ -54,7 +54,7 @@ class CoffFileImpl : public CoffFile {
       const llvm::object::SymbolRef& symbol_ref);
   void AddNewDebugSymbolsFromCoffSymbolTable(
       const llvm::object::ObjectFile::symbol_iterator_range& symbol_range,
-      std::vector<SymbolInfo>* sorted_symbol_infos);
+      std::vector<SymbolInfo>* symbol_infos);
   [[nodiscard]] bool AreDebugSymbolsEmpty() const;
 
   const std::filesystem::path file_path_;
@@ -118,22 +118,24 @@ std::optional<SymbolInfo> CoffFileImpl::CreateSymbolInfo(
     return std::nullopt;
   }
 
+  llvm::Expected<llvm::StringRef> name = symbol_ref.getName();
+  if (!name) {
+    return std::nullopt;
+  }
+
   // The symbol's "Value" is the offset in the section.
   llvm::Expected<uint64_t> value = symbol_ref.getValue();
   if (!value) {
     return std::nullopt;
   }
-  auto section_offset = GetVirtualAddressOfSymbolSection(symbol_ref);
+  std::optional<uint64_t> section_offset = GetVirtualAddressOfSymbolSection(symbol_ref);
   if (!section_offset.has_value()) {
     return std::nullopt;
   }
-
-  llvm::Expected<llvm::StringRef> name = symbol_ref.getName();
-  const std::string name_or_empty = name ? name.get().str() : "";
   const uint64_t symbol_virtual_address = GetLoadBias() + section_offset.value() + value.get();
 
   SymbolInfo symbol_info;
-  symbol_info.set_demangled_name(llvm::demangle(name_or_empty));
+  symbol_info.set_demangled_name(llvm::demangle(name.get().str()));
   symbol_info.set_address(symbol_virtual_address);
 
   // The COFF symbol table doesn't contain the size of symbols. Set a placeholder for now.
@@ -149,7 +151,10 @@ bool SymbolInfoLessByAddress(const SymbolInfo& lhs, const SymbolInfo& rhs) {
 
 void CoffFileImpl::AddNewDebugSymbolsFromCoffSymbolTable(
     const llvm::object::ObjectFile::symbol_iterator_range& symbol_range,
-    std::vector<SymbolInfo>* sorted_symbol_infos) {
+    std::vector<SymbolInfo>* symbol_infos) {
+  // Sort so that we can use std::lower_bound below.
+  std::sort(symbol_infos->begin(), symbol_infos->end(), &SymbolInfoLessByAddress);
+
   std::vector<SymbolInfo> new_symbol_infos;
 
   for (const auto& symbol_ref : symbol_range) {
@@ -166,16 +171,15 @@ void CoffFileImpl::AddNewDebugSymbolsFromCoffSymbolTable(
     }
     SymbolInfo& symbol_info = symbol_or_error.value();
 
-    auto symbol_from_dwarf_it =
-        std::lower_bound(sorted_symbol_infos->begin(), sorted_symbol_infos->end(), symbol_info,
-                         &SymbolInfoLessByAddress);
-    if (symbol_from_dwarf_it != sorted_symbol_infos->end() &&
+    auto symbol_from_dwarf_it = std::lower_bound(symbol_infos->begin(), symbol_infos->end(),
+                                                 symbol_info, &SymbolInfoLessByAddress);
+    if (symbol_from_dwarf_it != symbol_infos->end() &&
         symbol_info.address() == symbol_from_dwarf_it->address()) {
       // A symbol with this exact address was already extracted from the DWARF debug info.
       continue;
     }
 
-    if (symbol_from_dwarf_it != sorted_symbol_infos->begin()) {
+    if (symbol_from_dwarf_it != symbol_infos->begin()) {
       symbol_from_dwarf_it--;
       if (symbol_info.address() < symbol_from_dwarf_it->address() + symbol_from_dwarf_it->size()) {
         // The address of this symbol from the COFF symbol table is inside the address range of a
@@ -190,15 +194,13 @@ void CoffFileImpl::AddNewDebugSymbolsFromCoffSymbolTable(
   ORBIT_LOG(
       "Added %u function symbols from COFF symbol table on top of %u from DWARF debug info for "
       "\"%s\"",
-      new_symbol_infos.size(), sorted_symbol_infos->size(), file_path_.string());
-  sorted_symbol_infos->insert(sorted_symbol_infos->end(),
-                              std::make_move_iterator(new_symbol_infos.begin()),
-                              std::make_move_iterator(new_symbol_infos.end()));
-  std::sort(sorted_symbol_infos->begin(), sorted_symbol_infos->end(), &SymbolInfoLessByAddress);
+      new_symbol_infos.size(), symbol_infos->size(), file_path_.string());
+  symbol_infos->insert(symbol_infos->end(), std::make_move_iterator(new_symbol_infos.begin()),
+                       std::make_move_iterator(new_symbol_infos.end()));
 }
 
 void FillDebugSymbolsFromDwarf(llvm::DWARFContext* dwarf_context,
-                               std::vector<SymbolInfo>* sorted_symbol_infos) {
+                               std::vector<SymbolInfo>* symbol_infos) {
   for (const auto& info_section : dwarf_context->compile_units()) {
     for (uint32_t index = 0; index < info_section->getNumDIEs(); ++index) {
       llvm::DWARFDie full_die = info_section->getDIEAtIndex(index);
@@ -212,7 +214,7 @@ void FillDebugSymbolsFromDwarf(llvm::DWARFContext* dwarf_context,
           continue;
         }
 
-        SymbolInfo& symbol_info = sorted_symbol_infos->emplace_back();
+        SymbolInfo& symbol_info = symbol_infos->emplace_back();
         // The method getName will fall back to ShortName if LinkageName is not present,
         // so this should never return an empty name.
         std::string name(full_die.getName(llvm::DINameKind::LinkageName));
@@ -223,23 +225,23 @@ void FillDebugSymbolsFromDwarf(llvm::DWARFContext* dwarf_context,
       }
     }
   }
-
-  std::sort(sorted_symbol_infos->begin(), sorted_symbol_infos->end(), &SymbolInfoLessByAddress);
 }
 
-void DeduceDebugSymbolMissingSizes(std::vector<SymbolInfo>* sorted_symbol_infos) {
+void DeduceDebugSymbolMissingSizes(std::vector<SymbolInfo>* symbol_infos) {
   // We don't have sizes for functions obtained from the COFF symbol table. For these, compute the
   // size as the distance from the address of the next function.
-  for (size_t i = 0; i < sorted_symbol_infos->size(); ++i) {
-    SymbolInfo& symbol_info = sorted_symbol_infos->at(i);
+  std::sort(symbol_infos->begin(), symbol_infos->end(), &SymbolInfoLessByAddress);
+
+  for (size_t i = 0; i < symbol_infos->size(); ++i) {
+    SymbolInfo& symbol_info = symbol_infos->at(i);
     if (symbol_info.size() != kUnknownSymbolSize) {
       // This function symbol was from DWARF debug info and already has a size.
       continue;
     }
 
-    if (i < sorted_symbol_infos->size() - 1) {
+    if (i < symbol_infos->size() - 1) {
       // Deduce the size as the distance from the next function's address.
-      symbol_info.set_size(sorted_symbol_infos->at(i + 1).address() - symbol_info.address());
+      symbol_info.set_size(symbol_infos->at(i + 1).address() - symbol_info.address());
     } else {
       // If the last symbol doesn't have a size, we can't deduce it, and we just set it to zero.
       symbol_info.set_size(0);
@@ -261,21 +263,21 @@ void DeduceDebugSymbolMissingSizes(std::vector<SymbolInfo>* sorted_symbol_infos)
 // don't have a simple way to deduce that the two addresses belong to the same function, such
 // function will appear twice in the symbol list. We accept this.
 ErrorMessageOr<ModuleSymbols> CoffFileImpl::LoadDebugSymbols() {
-  std::vector<SymbolInfo> sorted_symbol_infos;
+  std::vector<SymbolInfo> symbol_infos;
 
   const std::unique_ptr<llvm::DWARFContext> dwarf_context =
       llvm::DWARFContext::create(*object_file_);
   if (dwarf_context != nullptr) {
-    FillDebugSymbolsFromDwarf(dwarf_context.get(), &sorted_symbol_infos);
+    FillDebugSymbolsFromDwarf(dwarf_context.get(), &symbol_infos);
   }
 
   if (object_file_->getSymbolTable() != 0 && object_file_->getNumberOfSymbols() != 0) {
-    AddNewDebugSymbolsFromCoffSymbolTable(object_file_->symbols(), &sorted_symbol_infos);
+    AddNewDebugSymbolsFromCoffSymbolTable(object_file_->symbols(), &symbol_infos);
   }
 
-  DeduceDebugSymbolMissingSizes(&sorted_symbol_infos);
+  DeduceDebugSymbolMissingSizes(&symbol_infos);
 
-  if (sorted_symbol_infos.empty()) {
+  if (symbol_infos.empty()) {
     return ErrorMessage(
         "Unable to load symbols from PE/COFF file, not even a single symbol of type function "
         "found.");
@@ -284,7 +286,7 @@ ErrorMessageOr<ModuleSymbols> CoffFileImpl::LoadDebugSymbols() {
   ModuleSymbols module_symbols;
   module_symbols.set_load_bias(GetLoadBias());
   module_symbols.set_symbols_file_path(file_path_.string());
-  for (SymbolInfo& symbol_info : sorted_symbol_infos) {
+  for (SymbolInfo& symbol_info : symbol_infos) {
     *module_symbols.add_symbol_infos() = std::move(symbol_info);
   }
   return module_symbols;
