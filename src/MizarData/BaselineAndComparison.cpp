@@ -27,9 +27,6 @@ orbit_mizar_data::BaselineAndComparison CreateBaselineAndComparison(
   auto [baseline_address_to_frame_id, comparison_address_to_frame_id, frame_id_to_name] =
       AssignSampledFunctionIds(baseline_address_to_name, comparison_address_to_name);
 
-  MizarDataWithSampledFunctionId baseline_with_ids(std::move(baseline),
-                                                   std::move(baseline_address_to_frame_id));
-
   return {{std::move(baseline), std::move(baseline_address_to_frame_id)},
           {std::move(comparison), std::move(comparison_address_to_frame_id)},
           std::move(frame_id_to_name)};
