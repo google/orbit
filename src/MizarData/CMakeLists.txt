@@ -34,7 +34,8 @@ add_executable(MizarDataTests)
 
 target_sources(MizarDataTests PRIVATE 
                 BaselineAndComparisonTest.cpp
-                MizarDataTest.cpp)
+                MizarDataTest.cpp
+                MizarDataWithSampledFunctionIdTest.cpp)
 
 target_link_libraries(MizarDataTests PRIVATE GrpcProtos
                                                 MizarData
