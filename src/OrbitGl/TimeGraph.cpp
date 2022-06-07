@@ -726,7 +726,10 @@ void TimeGraph::UpdateChildrenPosAndContainerSize() {
 
   timegraph_current_y += track_container_->GetHeight();
   horizontal_slider_->SetWidth(GetWidth() - vertical_slider_->GetWidth());
-  horizontal_slider_->SetPos(timegraph_current_x, ceil(timegraph_current_y));
+  // The horizontal slider should be at the bottom of the TimeGraph. Because how OpenGl renders, the
+  // way to assure that there is no pixels below the scrollbar is by making a ceiling.
+  horizontal_slider_->SetPos(timegraph_current_x,
+                             ceil(GetHeight() - horizontal_slider_->GetHeight()));
 
   // TODO(b/230442062): Refactor this to be part of Slider::UpdateLayout().
   UpdateHorizontalSliderFromWorld();
