@@ -9,7 +9,6 @@
 #include <absl/container/flat_hash_map.h>
 #include <stdint.h>
 
-#include <functional>
 #include <limits>
 #include <map>
 #include <memory>
@@ -20,6 +19,7 @@
 #include "ClientData/CallstackEvent.h"
 #include "ClientData/CallstackInfo.h"
 #include "ClientProtos/capture_data.pb.h"
+#include "OrbitBase/Logging.h"
 
 namespace orbit_client_data {
 
@@ -51,16 +51,44 @@ class CallstackData {
   [[nodiscard]] std::vector<orbit_client_data::CallstackEvent> GetCallstackEventsOfTidInTimeRange(
       uint32_t tid, uint64_t time_begin, uint64_t time_end) const;
 
-  void ForEachCallstackEvent(
-      const std::function<void(const orbit_client_data::CallstackEvent&)>& action) const;
+  template <typename Action>
+  void ForEachCallstackEvent(Action&& action) const {
+    std::lock_guard<std::recursive_mutex> lock(mutex_);
+    for (const auto& [unused_tid, events] : callstack_events_by_tid_) {
+      for (const auto& [unused_timestamp, event] : events) {
+        action(event);
+      }
+    }
+  }
 
-  void ForEachCallstackEventInTimeRange(
-      uint64_t min_timestamp, uint64_t max_timestamp,
-      const std::function<void(const orbit_client_data::CallstackEvent&)>& action) const;
+  template <typename Action>
+  void ForEachCallstackEventInTimeRange(uint64_t min_timestamp, uint64_t max_timestamp,
+                                        Action&& action) const {
+    std::lock_guard<std::recursive_mutex> lock(mutex_);
+    ORBIT_CHECK(min_timestamp <= max_timestamp);
+    for (const auto& [unused_tid, events] : callstack_events_by_tid_) {
+      for (auto event_it = events.lower_bound(min_timestamp);
+           event_it != events.upper_bound(max_timestamp); ++event_it) {
+        action(event_it->second);
+      }
+    }
+  }
 
-  void ForEachCallstackEventOfTidInTimeRange(
-      uint32_t tid, uint64_t min_timestamp, uint64_t max_timestamp,
-      const std::function<void(const orbit_client_data::CallstackEvent&)>& action) const;
+  template <typename Action>
+  void ForEachCallstackEventOfTidInTimeRange(uint32_t tid, uint64_t min_timestamp,
+                                             uint64_t max_timestamp, Action&& action) const {
+    std::lock_guard<std::recursive_mutex> lock(mutex_);
+    ORBIT_CHECK(min_timestamp <= max_timestamp);
+    const auto& tid_and_events_it = callstack_events_by_tid_.find(tid);
+    if (tid_and_events_it == callstack_events_by_tid_.end()) {
+      return;
+    }
+    const auto& events = tid_and_events_it->second;
+    for (auto event_it = events.lower_bound(min_timestamp);
+         event_it != events.upper_bound(max_timestamp); ++event_it) {
+      action(event_it->second);
+    }
+  }
 
   [[nodiscard]] uint64_t max_time() const {
     std::lock_guard<std::recursive_mutex> lock(mutex_);
@@ -76,9 +104,13 @@ class CallstackData {
 
   [[nodiscard]] bool HasCallstack(uint64_t callstack_id) const;
 
-  void ForEachUniqueCallstack(
-      const std::function<void(uint64_t callstack_id, const CallstackInfo& callstack)>& action)
-      const;
+  template <typename Action>
+  void ForEachUniqueCallstack(Action&& action) const {
+    std::lock_guard<std::recursive_mutex> lock(mutex_);
+    for (const auto& [callstack_id, callstack_ptr] : unique_callstacks_) {
+      action(callstack_id, *callstack_ptr);
+    }
+  }
 
   // Assuming that, for each thread, the outermost frame of each callstack is always the same,
   // update the type of all the kComplete callstacks that have the outermost frame not matching the

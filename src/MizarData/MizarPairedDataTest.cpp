@@ -39,11 +39,15 @@ constexpr uint64_t kCompleteCallstackId = 1;
 constexpr uint64_t kInCompleteCallstackId = 2;
 constexpr uint64_t kAnotherCompleteCallstackId = 3;
 
-constexpr uint64_t kTime = 123;
+constexpr uint64_t kTime0 = 123;
+constexpr uint64_t kTime1 = kTime0 + 1;
+constexpr uint64_t kTime2 = kTime0 + 2;
+constexpr uint64_t kTime3 = kTime0 + 3;
+constexpr uint64_t kTime4 = kTime0 + 4;
 constexpr uint64_t kTID = 0x3AD1;
 constexpr uint64_t kAnotherTID = 0x3AD2;
 
-static const absl::flat_hash_map<uint64_t, uint64_t> kAddressToId = {
+const absl::flat_hash_map<uint64_t, uint64_t> kAddressToId = {
     {kAddressFood, 1}, {kAddressCall, 2}, {kAddressBefore, 3}};
 
 const std::unique_ptr<orbit_client_data::CallstackData> kCallstackData = [] {
@@ -52,10 +56,10 @@ const std::unique_ptr<orbit_client_data::CallstackData> kCallstackData = [] {
   callstack_data->AddUniqueCallstack(kInCompleteCallstackId, kInCompleteCallstack);
   callstack_data->AddUniqueCallstack(kAnotherCompleteCallstackId, kAnotherCompleteCallstack);
 
-  callstack_data->AddCallstackEvent({kTime, kCompleteCallstackId, kTID});
-  callstack_data->AddCallstackEvent({kTime + 1, kCompleteCallstackId, kTID});
-  callstack_data->AddCallstackEvent({kTime + 2, kInCompleteCallstackId, kTID});
-  callstack_data->AddCallstackEvent({kTime + 3, kAnotherCompleteCallstackId, kAnotherTID});
+  callstack_data->AddCallstackEvent({kTime0, kCompleteCallstackId, kTID});
+  callstack_data->AddCallstackEvent({kTime1, kCompleteCallstackId, kTID});
+  callstack_data->AddCallstackEvent({kTime2, kInCompleteCallstackId, kTID});
+  callstack_data->AddCallstackEvent({kTime3, kAnotherCompleteCallstackId, kAnotherTID});
 
   return callstack_data;
 }();
@@ -70,7 +74,8 @@ class MockMizarData {
   MOCK_METHOD(const MockCaptureData&, GetCaptureData, (), (const));
 };
 
-static std::vector<uint64_t> IdsForCallstacks(const std::vector<uint64_t>& addresses) {
+[[nodiscard]] static std::vector<uint64_t> IdsForCallstacks(
+    const std::vector<uint64_t>& addresses) {
   std::vector<uint64_t> good_addresses;
   std::copy_if(std::begin(addresses), std::end(addresses), std::back_inserter(good_addresses),
                [](uint64_t address) { return kAddressToId.contains(address); });
@@ -86,17 +91,15 @@ const std::vector<uint64_t> kInCompleteCallstackIds =
 const std::vector<uint64_t> kAnotherCompleteCallstackIds =
     IdsForCallstacks(kAnotherCompleteCallstack.frames());
 
-TEST(MizarDataWithSampledFunctionId, ForeachCallstackIsCorrect) {
+TEST(MizarPairedDataTest, ForeachCallstackIsCorrect) {
   auto capture_data = std::make_unique<MockCaptureData>();
   auto data = std::make_unique<MockMizarData>();
 
   EXPECT_CALL(*capture_data, GetCallstackData).WillRepeatedly(testing::ReturnRef(*kCallstackData));
   EXPECT_CALL(*data, GetCaptureData).WillRepeatedly(testing::ReturnRef(*capture_data));
 
-  MizarDataWithSampledFunctionId<MockMizarData> mizar_data_with_sampled_function_id(std::move(data),
-                                                                                    kAddressToId);
+  MizarPairedData<MockMizarData> mizar_paired_data(std::move(data), kAddressToId);
 
-  ORBIT_LOG("%u", kCallstackData->GetCallstackEventsOfTidCount(kTID));
   std::vector<std::vector<uint64_t>> actual_ids_fed_to_action;
   auto action = [&actual_ids_fed_to_action](const std::vector<uint64_t> ids) {
     actual_ids_fed_to_action.push_back(ids);
@@ -104,23 +107,22 @@ TEST(MizarDataWithSampledFunctionId, ForeachCallstackIsCorrect) {
 
   // All threads, all timestamps
   actual_ids_fed_to_action.clear();
-  mizar_data_with_sampled_function_id.ForEachCallstackEvent(orbit_base::kAllProcessThreadsTid, 0,
-                                                            kTime + 4, action);
+  mizar_paired_data.ForEachCallstackEvent(orbit_base::kAllProcessThreadsTid, 0, kTime4, action);
   EXPECT_THAT(actual_ids_fed_to_action,
               testing::UnorderedElementsAre(kCompleteCallstackIds, kCompleteCallstackIds,
                                             kInCompleteCallstackIds, kAnotherCompleteCallstackIds));
 
   // One thread, all timestamps
   actual_ids_fed_to_action.clear();
-  mizar_data_with_sampled_function_id.ForEachCallstackEvent(kTID, 0, kTime + 4, action);
+  mizar_paired_data.ForEachCallstackEvent(kTID, 0, kTime4, action);
   EXPECT_THAT(actual_ids_fed_to_action,
               testing::UnorderedElementsAre(kCompleteCallstackIds, kCompleteCallstackIds,
                                             kInCompleteCallstackIds));
 
   // All threads, some timestamps
   actual_ids_fed_to_action.clear();
-  mizar_data_with_sampled_function_id.ForEachCallstackEvent(orbit_base::kAllProcessThreadsTid,
-                                                            kTime + 1, kTime + 4, action);
+  mizar_paired_data.ForEachCallstackEvent(orbit_base::kAllProcessThreadsTid, kTime1, kTime4,
+                                          action);
   EXPECT_THAT(actual_ids_fed_to_action,
               testing::UnorderedElementsAre(kCompleteCallstackIds, kInCompleteCallstackIds,
                                             kAnotherCompleteCallstackIds));
