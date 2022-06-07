@@ -30,10 +30,7 @@ static absl::flat_hash_map<uint64_t, uint64_t> AddressToSampledFunctionId(
   return address_to_frame_id;
 }
 
-[[nodiscard]] std::tuple<absl::flat_hash_map<uint64_t, uint64_t>,
-                         absl::flat_hash_map<uint64_t, uint64_t>,
-                         absl::flat_hash_map<uint64_t, std::string>>
-AssignSampledFunctionIds(
+[[nodiscard]] AddressToIdAndIdToName AssignSampledFunctionIds(
     const absl::flat_hash_map<uint64_t, std::string>& baseline_address_to_name,
     const absl::flat_hash_map<uint64_t, std::string>& comparison_address_to_name) {
   absl::flat_hash_set<std::string> baseline_names = ValueSet(baseline_address_to_name);
@@ -56,8 +53,8 @@ AssignSampledFunctionIds(
   absl::flat_hash_map<uint64_t, uint64_t> comparison_address_to_sampled_function_id =
       AddressToSampledFunctionId(comparison_address_to_name, name_to_frame_id);
 
-  return std::make_tuple(baseline_address_to_sampled_function_id,
-                         comparison_address_to_sampled_function_id, frame_id_to_name);
+  return {std::move(baseline_address_to_sampled_function_id),
+          std::move(comparison_address_to_sampled_function_id), std::move(frame_id_to_name)};
 }
 
 }  // namespace orbit_mizar_data

@@ -41,8 +41,7 @@ class MizarData : public orbit_capture_client::AbstractCaptureListener<MizarData
 
   [[nodiscard]] absl::flat_hash_map<uint64_t, std::string> AllAddressToName() const override;
 
-  // virtual for testing purposes
-  [[nodiscard]] virtual std::optional<std::string> GetFunctionNameFromAddress(
+  [[nodiscard]] std::optional<std::string> GetFunctionNameFromAddress(
       uint64_t address) const override;
 
   void OnCaptureStarted(const orbit_grpc_protos::CaptureStarted& capture_started,

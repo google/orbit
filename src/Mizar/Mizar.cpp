@@ -19,6 +19,7 @@
   OUTCOME_TRY(auto capture_file, orbit_capture_file::CaptureFile::OpenForReadWrite(path));
   std::atomic<bool> capture_loading_cancellation_requested = false;
 
+  // The treatment is the same for CaptureOutcome::kComplete, CaptureOutcome::kCancelled
   std::ignore = orbit_capture_client::LoadCapture(data, capture_file.get(),
                                                   &capture_loading_cancellation_requested);
   return outcome::success();

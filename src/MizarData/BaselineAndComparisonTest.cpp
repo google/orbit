@@ -21,51 +21,57 @@ namespace orbit_mizar_data {
 constexpr size_t kFunctionNum = 3;
 constexpr std::array<uint64_t, kFunctionNum> kBaselineFunctionAddresses = {0xF00D, 0xBEAF, 0xDEAF};
 constexpr std::array<uint64_t, kFunctionNum> kComparisonFunctionAddresses = {0x0FF, 0xCAFE, 0xDEA};
-static const std::vector<std::string> kBaselineFunctionNames = {"foo()", "bar()", "biz()"};
-static const std::vector<std::string> kComparisonFunctionNames = {"foo()", "bar()", "fiz()"};
+const std::array<std::string, kFunctionNum> kBaselineFunctionNames = {"foo()", "bar()", "biz()"};
+const std::array<std::string, kFunctionNum> kComparisonFunctionNames = {"foo()", "bar()", "fiz()"};
 
 template <typename Container>
-auto Commons(const Container& a, const Container& b) {
-  typedef typename Container::value_type E;
-  absl::flat_hash_set<E> a_set(std::begin(a), std::end(a));
+[[nodiscard]] static auto Commons(const Container& a, const Container& b) {
+  using E = typename Container::value_type;
+  using std::begin;
+  using std::end;
+
+  absl::flat_hash_set<E> a_set(begin(a), end(a));
   std::vector<E> result;
-  std::copy_if(std::begin(b), std::end(b), std::back_inserter(result),
+  std::copy_if(begin(b), end(b), std::back_inserter(result),
                [&a_set](const E& element) { return a_set.contains(element); });
   return result;
 }
 
-static const std::vector<std::string> kCommonFunctionNames =
+const std::vector<std::string> kCommonFunctionNames =
     Commons(kBaselineFunctionNames, kComparisonFunctionNames);
 
 template <typename Container, typename AnotherContainer>
 auto MakeMap(const Container& keys, const AnotherContainer& values) {
-  typedef typename Container::value_type K;
-  typedef typename AnotherContainer::value_type V;
+  using K = typename Container::value_type;
+  using V = typename AnotherContainer::value_type;
+  using std::begin;
+  using std::end;
 
   absl::flat_hash_map<K, V> result;
-  std::transform(std::begin(keys), std::end(keys), std::begin(values),
+  std::transform(begin(keys), end(keys), begin(values),
                  std::inserter(result, std::begin(result)),
                  [](const K& k, const V& v) { return std::make_pair(k, v); });
   return result;
 }
 
-static const absl::flat_hash_map<uint64_t, std::string> kBaselineAddressToName =
+const absl::flat_hash_map<uint64_t, std::string> kBaselineAddressToName =
     MakeMap(kBaselineFunctionAddresses, kBaselineFunctionNames);
-static const absl::flat_hash_map<uint64_t, std::string> kComparisonAddressToName =
+const absl::flat_hash_map<uint64_t, std::string> kComparisonAddressToName =
     MakeMap(kComparisonFunctionAddresses, kComparisonFunctionNames);
 
-void ExpectCorrectNames(const absl::flat_hash_map<uint64_t, uint64_t>& address_to_id,
-                        const absl::flat_hash_map<uint64_t, std::string>& id_to_name,
-                        const absl::flat_hash_map<uint64_t, std::string>& address_to_name) {
+static void ExpectCorrectNames(const absl::flat_hash_map<uint64_t, uint64_t>& address_to_id,
+                               const absl::flat_hash_map<uint64_t, std::string>& id_to_name,
+                               const absl::flat_hash_map<uint64_t, std::string>& address_to_name) {
   for (const auto& [address, id] : address_to_id) {
     if (id_to_name.contains(address)) {
+      EXPECT_TRUE(address_to_name.contains(address));
       EXPECT_EQ(id_to_name.at(address), address_to_name.at(address));
     }
   }
 }
 
 template <typename K, typename V>
-std::vector<V> Values(const absl::flat_hash_map<K, V>& map) {
+[[nodiscard]] static std::vector<V> Values(const absl::flat_hash_map<K, V>& map) {
   std::vector<V> values;
   std::transform(std::begin(map), std::end(map), std::back_inserter(values),
                  [](const std::pair<K, V> pair) { return pair.second; });

@@ -33,7 +33,7 @@ namespace orbit_mizar_data {
         for (const uint64_t address : info.frames()) {
           std::optional<std::string> name = this->GetFunctionNameFromAddress(address);
           if (name.has_value()) {
-            result[address] = name.value();
+            result.try_emplace(address, std::move(name.value()));
           }
         }
       });
