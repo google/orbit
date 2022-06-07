@@ -310,8 +310,15 @@ InstrumentedProcess::InstrumentFunctions(const CaptureOptions& capture_options) 
       result.function_ids_to_error_messages[function_id] = message;
       continue;
     }
-    constexpr uint64_t kMaxFunctionPrologueBackupSize = 20;
-    const uint64_t backup_size = std::min(kMaxFunctionPrologueBackupSize, function.function_size());
+    // Getting the machine code of the function serves multiple purposes: we need to have a backup
+    // of the code since we intend to overwrite the first five bytes with a jump. Also we need to
+    // relocate all instructions that get overwritten into the trampoline. Finally we check if the
+    // function contains a jump back into the first five bytes (which would prohibit
+    // instrumentation). For the first two reasons 20 bytes would be enough; the 200 is chosen
+    // somewhat arbitrarily to cover all cases of jumps into the first five bytes we encountered in
+    // the wild. Compare the comment of CheckForJumpIntoFirstFiveBytes in Trampoline.cpp.
+    constexpr uint64_t kMaxFunctionBackupSize = 200;
+    const uint64_t backup_size = std::min(kMaxFunctionBackupSize, function.function_size());
     if (backup_size == 0) {
       const std::string message = absl::StrFormat(
           "Can't instrument function \"%s\" since it has size zero.", function.function_name());
