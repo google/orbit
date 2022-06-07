@@ -4,7 +4,7 @@
 
 #include "SessionSetup/SessionSetupUtils.h"
 
-#include <QStringList>
+#include <QUrl>
 
 #include "OrbitBase/Logging.h"
 
@@ -45,6 +45,20 @@ std::unique_ptr<orbit_client_data::ProcessData> TryToFindProcessData(
   }
 
   return nullptr;
+}
+
+std::optional<ConnectionTarget> SplitTargetUri(const QString& target_uri) {
+  QUrl url(target_uri);
+
+  if (!url.isValid()) return std::nullopt;
+  if (url.scheme() != kCustomProtocol) return std::nullopt;
+  if (url.authority().isEmpty()) return std::nullopt;
+  if (url.query().isEmpty()) return std::nullopt;
+
+  const QString instance = url.authority() + url.path();
+  const QString process = url.query();
+
+  return ConnectionTarget(process, instance);
 }
 
 }  // namespace orbit_session_setup
