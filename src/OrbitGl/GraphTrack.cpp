@@ -149,7 +149,7 @@ uint32_t GraphTrack<Dimension>::GetLegendFontSize(uint32_t indentation_level) co
   constexpr uint32_t kMinIndentationLevel = 1;
   int capped_indentation_level = std::max(indentation_level, kMinIndentationLevel);
 
-  uint32_t font_size = layout_->CalculateZoomedFontSize();
+  uint32_t font_size = layout_->GetFontSize();
   return (font_size * (10 - capped_indentation_level)) / 10;
 }
 

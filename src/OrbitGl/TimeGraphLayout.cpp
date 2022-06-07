@@ -25,6 +25,7 @@ TimeGraphLayout::TimeGraphLayout() {
   space_between_subtracks_ = 0.f;
   track_label_offset_x_ = 30.f;
   slider_width_ = 15.f;
+  min_slider_length_ = 20.f;
   track_tab_width_ = 350.f;
   track_tab_height_ = 25.f;
   track_tab_offset_ = 0.f;
@@ -112,4 +113,10 @@ float TimeGraphLayout::GetEventTrackHeightFromTid(uint32_t tid) const {
     height *= GetAllThreadsEventTrackScale();
   }
   return height;
+}
+
+float TimeGraphLayout::GetSliderResizeMargin() const {
+  // The resize part of the slider is 1/3 of the min length.
+  const float kRatioMinSliderLengthResizePart = 3.f;
+  return GetMinSliderLength() / kRatioMinSliderLengthResizePart;
 }

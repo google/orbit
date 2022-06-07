@@ -25,14 +25,9 @@ class GlSlider : public CaptureViewElement, public std::enable_shared_from_this<
 
   void SetNormalizedPosition(float start_ratio);  // [0,1]
   void SetNormalizedLength(float length_ratio);   // [0,1]
+  [[nodiscard]] float GetSliderWidth() const { return layout_->GetSliderWidth(); }
 
   [[nodiscard]] Color GetBarColor() const { return slider_color_; }
-
-  void SetPixelHeight(int height) { pixel_height_ = height; }
-  [[nodiscard]] int GetPixelHeight() const { return pixel_height_; }
-
-  void SetOrthogonalSliderPixelHeight(int size) { orthogonal_slider_size_ = size; }
-  [[nodiscard]] int GetOrthogonalSliderSize() const { return orthogonal_slider_size_; }
 
   // Parameter: Position in [0, 1], relative to the size of the current data window
   using DragCallback = std::function<void(float)>;
@@ -48,7 +43,7 @@ class GlSlider : public CaptureViewElement, public std::enable_shared_from_this<
   void OnPick(int x, int y) override;
   void OnDrag(int x, int y) override;
 
-  [[nodiscard]] float GetMinSliderPixelLength() const { return min_slider_pixel_length_; }
+  [[nodiscard]] float GetMinSliderPixelLength() const { return layout_->GetMinSliderLength(); }
 
   [[nodiscard]] float GetSliderPixelPos() const { return PosToPixel(pos_ratio_); }
   [[nodiscard]] float GetSliderPixelLength() const { return LenToPixel(length_ratio_); }
@@ -75,7 +70,7 @@ class GlSlider : public CaptureViewElement, public std::enable_shared_from_this<
   [[nodiscard]] EventResult OnMouseLeave() override;
   [[nodiscard]] bool HandlePageScroll(float click_value);
 
- protected:
+  [[nodiscard]] float GetSliderResizeMargin() const { return layout_->GetSliderResizeMargin(); }
   [[nodiscard]] virtual float GetBarPixelLength() const = 0;
   [[nodiscard]] bool PosIsInMinResizeArea(const Vec2& pos) const;
   [[nodiscard]] bool PosIsInMaxResizeArea(const Vec2& pos) const;
@@ -106,13 +101,8 @@ class GlSlider : public CaptureViewElement, public std::enable_shared_from_this<
   Color selected_color_;
   Color slider_color_;
   Color bar_color_;
-  int min_slider_pixel_length_;
-  int pixel_height_;
-  int orthogonal_slider_size_;
 
   bool can_resize_ = false;
-
-  int slider_resize_pixel_margin_;
 
   enum class DragType { kPan, kScaleMin, kScaleMax, kNone };
   DragType drag_type_ = DragType::kNone;
@@ -127,10 +117,10 @@ class GlVerticalSlider : public GlSlider {
   void DoDraw(PrimitiveAssembler& primitive_assembler, TextRenderer& text_renderer,
               const DrawContext& draw_context) override;
 
-  [[nodiscard]] float GetWidth() const override { return pixel_height_; }
+  [[nodiscard]] float GetWidth() const override { return GetSliderWidth(); }
 
   [[nodiscard]] float GetHeight() const override {
-    return viewport_->GetScreenHeight() - GetPos()[1] - orthogonal_slider_size_;
+    return viewport_->GetScreenHeight() - GetPos()[1] - layout_->GetSliderWidth();
   }
 
   std::unique_ptr<orbit_accessibility::AccessibleInterface> CreateAccessibleInterface() override;
@@ -151,9 +141,9 @@ class GlHorizontalSlider : public GlSlider {
               const DrawContext& draw_context) override;
 
   [[nodiscard]] float GetWidth() const override {
-    return viewport_->GetScreenWidth() - orthogonal_slider_size_;
+    return viewport_->GetScreenWidth() - layout_->GetSliderWidth();
   }
-  [[nodiscard]] float GetHeight() const override { return pixel_height_; }
+  [[nodiscard]] float GetHeight() const override { return GetSliderWidth(); }
 
   std::unique_ptr<orbit_accessibility::AccessibleInterface> CreateAccessibleInterface() override;
 

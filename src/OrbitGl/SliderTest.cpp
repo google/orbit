@@ -54,27 +54,30 @@ void PickDragRelease(GlSlider& slider, int start, int end = -1, int other_dim = 
 }
 
 template <typename SliderClass>
-std::pair<std::unique_ptr<SliderClass>, std::unique_ptr<Viewport>> Setup() {
-  orbit_gl::CaptureViewElementTester tester;
-  std::unique_ptr<Viewport> viewport = std::make_unique<Viewport>(150, 1050);
+std::tuple<std::unique_ptr<SliderClass>, std::unique_ptr<Viewport>,
+           std::unique_ptr<CaptureViewElementTester>>
+Setup() {
+  std::unique_ptr<CaptureViewElementTester> tester = std::make_unique<CaptureViewElementTester>();
+  // Making space for the orthogonal slider as well.
+  int orthogonal_slider_width = static_cast<int>(tester->GetLayout()->GetSliderWidth());
+  std::unique_ptr<Viewport> viewport =
+      std::make_unique<Viewport>(100 + orthogonal_slider_width, 1000 + orthogonal_slider_width);
 
   std::unique_ptr<SliderClass> slider =
-      std::make_unique<SliderClass>(nullptr, viewport.get(), tester.GetLayout(), nullptr);
-  slider->SetPixelHeight(15);
-  slider->SetOrthogonalSliderPixelHeight(50);
+      std::make_unique<SliderClass>(nullptr, viewport.get(), tester->GetLayout(), nullptr);
 
   // Set the slider to be 50% of the maximum size, position in the middle
   slider->SetNormalizedPosition(0.5f);
   slider->SetNormalizedLength(0.5f);
 
-  return std::make_pair(std::move(slider), std::move(viewport));
+  return std::make_tuple(std::move(slider), std::move(viewport), std::move(tester));
 }
 
 const float kEpsilon = 0.01f;
 
 template <typename SliderClass, int dim>
 static void TestDragType() {
-  auto [slider, viewport] = Setup<SliderClass>();
+  auto [slider, viewport, tester] = Setup<SliderClass>();
 
   const float kPos = 0.5f;
   const float kSize = 0.5f;
@@ -148,7 +151,7 @@ TEST(Slider, DragType) {
 
 template <typename SliderClass, int dim>
 static void TestScroll(float slider_length = 0.25) {
-  auto [slider, viewport] = Setup<SliderClass>();
+  auto [slider, viewport, tester] = Setup<SliderClass>();
 
   // Use different scales for x and y to make sure dims are chosen correctly
   int scale = static_cast<int>(pow(10, dim));
@@ -173,7 +176,7 @@ TEST(Slider, Scroll) {
 
 template <typename SliderClass, int dim>
 static void TestDrag(float slider_length = 0.25) {
-  auto [slider, viewport] = Setup<SliderClass>();
+  auto [slider, viewport, tester] = Setup<SliderClass>();
 
   // Use different scales for x and y to make sure dims are chosen correctly
   int scale = static_cast<int>(pow(10, dim));
@@ -221,7 +224,7 @@ TEST(Slider, DragBreakTests) {
 
 template <typename SliderClass, int dim>
 static void TestScaling() {
-  auto [slider, viewport] = Setup<SliderClass>();
+  auto [slider, viewport, tester] = Setup<SliderClass>();
 
   if (!slider->CanResize()) {
     return;
@@ -283,7 +286,7 @@ TEST(Slider, Scale) {
 
 template <typename SliderClass, int dim>
 static void TestBreakScaling() {
-  auto [slider, viewport] = Setup<SliderClass>();
+  auto [slider, viewport, tester] = Setup<SliderClass>();
 
   if (!slider->CanResize()) {
     return;

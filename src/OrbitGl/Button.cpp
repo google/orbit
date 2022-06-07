@@ -121,8 +121,10 @@ void Button::DoDraw(PrimitiveAssembler& primitive_assembler, TextRenderer& /*tex
 void Button::DrawSymbol(PrimitiveAssembler& primitive_assembler) {
   const Color kSymbolBaseColor(191, 191, 192, 255);
   const Color kSymbolHighlightColor(255, 255, 255, 255);
-  const float kSymbolPaddingSize = 3.f;
-  const float kSymbolWide = 3.f;
+  // Symbol width and the padding are related to the size of the button, so they can scale
+  // proportionally if the button size changes.
+  const float symbol_padding_size = GetWidth() / 5.f;
+  const float symbol_width = GetWidth() / 5.f;
 
   Color symbol_color = IsMouseOver() ? kSymbolHighlightColor : kSymbolBaseColor;
 
@@ -130,15 +132,15 @@ void Button::DrawSymbol(PrimitiveAssembler& primitive_assembler) {
     case SymbolType::kNoSymbol:
       break;
     case SymbolType::kPlusSymbol:
-      primitive_assembler.AddBox(MakeBox({GetPos()[0] + (GetWidth() - kSymbolWide) / 2.f,
-                                          GetPos()[1] + kSymbolPaddingSize},
-                                         {kSymbolWide, GetHeight() - 2 * kSymbolPaddingSize}),
+      primitive_assembler.AddBox(MakeBox({GetPos()[0] + (GetWidth() - symbol_width) / 2.f,
+                                          GetPos()[1] + symbol_padding_size},
+                                         {symbol_width, GetHeight() - 2 * symbol_padding_size}),
                                  GlCanvas::kZValueButton, symbol_color, shared_from_this());
       [[fallthrough]];
     case SymbolType::kMinusSymbol:
-      primitive_assembler.AddBox(MakeBox({GetPos()[0] + kSymbolPaddingSize,
-                                          GetPos()[1] + (GetHeight() - kSymbolWide) / 2.f},
-                                         {GetWidth() - 2 * kSymbolPaddingSize, kSymbolWide}),
+      primitive_assembler.AddBox(MakeBox({GetPos()[0] + symbol_padding_size,
+                                          GetPos()[1] + (GetHeight() - symbol_width) / 2.f},
+                                         {GetWidth() - 2 * symbol_padding_size, symbol_width}),
                                  GlCanvas::kZValueButton, symbol_color, shared_from_this());
       break;
     default:

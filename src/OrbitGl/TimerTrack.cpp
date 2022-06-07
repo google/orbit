@@ -101,7 +101,7 @@ void TimerTrack::DrawTimesliceText(TextRenderer& text_renderer,
   float pos_x = std::max(box_pos[0], min_x);
   float max_size = box_pos[0] + box_size[0] - pos_x;
 
-  TextRenderer::TextFormatting formatting{layout_->CalculateZoomedFontSize(), kTextWhite, max_size};
+  TextRenderer::TextFormatting formatting{layout_->GetFontSize(), kTextWhite, max_size};
   formatting.valign = TextRenderer::VAlign::Bottom;
 
   text_renderer.AddTextTrailingCharsPrioritized(

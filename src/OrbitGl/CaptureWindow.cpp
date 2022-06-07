@@ -740,7 +740,7 @@ void CaptureWindow::RenderSelectionOverlay() {
                                        ? TextRenderer::HAlign::Left
                                        : TextRenderer::HAlign::Right;
   TextRenderer::TextFormatting formatting;
-  formatting.font_size = time_graph_->GetLayout().CalculateZoomedFontSize();
+  formatting.font_size = time_graph_->GetLayout().GetFontSize();
   formatting.color = Color(255, 255, 255, 255);
   formatting.halign = alignment;
 

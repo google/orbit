@@ -159,7 +159,7 @@ class TimerTrack : public Track {
 
   [[nodiscard]] inline bool BoxHasRoomForText(orbit_gl::TextRenderer& text_renderer,
                                               const float width) {
-    return text_renderer.GetStringWidth("w", layout_->CalculateZoomedFontSize()) < width;
+    return text_renderer.GetStringWidth("w", layout_->GetFontSize()) < width;
   }
 
   [[nodiscard]] bool ShouldHaveBorder(

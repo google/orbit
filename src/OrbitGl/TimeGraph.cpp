@@ -94,9 +94,6 @@ TimeGraph::TimeGraph(AccessibleInterfaceProvider* parent, OrbitApp* app,
   vertical_slider_->SetDragCallback(
       [&](float ratio) { track_container_->UpdateVerticalScrollUsingRatio(ratio); });
 
-  vertical_slider_->SetOrthogonalSliderPixelHeight(horizontal_slider_->GetPixelHeight());
-  horizontal_slider_->SetOrthogonalSliderPixelHeight(vertical_slider_->GetPixelHeight());
-
   plus_button_ = std::make_shared<Button>(/*parent=*/this, viewport, &layout_, "Plus Button",
                                           Button::SymbolType::kPlusSymbol);
   plus_button_->SetMouseReleaseCallback(
@@ -729,7 +726,10 @@ void TimeGraph::UpdateChildrenPosAndContainerSize() {
 
   timegraph_current_y += track_container_->GetHeight();
   horizontal_slider_->SetWidth(GetWidth() - vertical_slider_->GetWidth());
-  horizontal_slider_->SetPos(timegraph_current_x, timegraph_current_y);
+  // The horizontal slider should be at the bottom of the TimeGraph. Because how OpenGl renders, the
+  // way to assure that there is no pixels below the scrollbar is by making a ceiling.
+  horizontal_slider_->SetPos(timegraph_current_x,
+                             ceil(GetHeight() - horizontal_slider_->GetHeight()));
 
   // TODO(b/230442062): Refactor this to be part of Slider::UpdateLayout().
   UpdateHorizontalSliderFromWorld();
@@ -750,8 +750,6 @@ void TimeGraph::UpdateHorizontalSliderFromWorld() {
 
   constexpr double kEpsilon = 1e-8;
   double ratio = max_start > kEpsilon ? start / max_start : 0;
-  int slider_width = static_cast<int>(GetLayout().GetSliderWidth());
-  horizontal_slider_->SetPixelHeight(slider_width);
   horizontal_slider_->SetNormalizedLength(static_cast<float>(width / time_span));
   horizontal_slider_->SetNormalizedPosition(static_cast<float>(ratio));
 }
@@ -763,8 +761,6 @@ void TimeGraph::UpdateVerticalSliderFromWorld() {
       max_height > 0 ? GetTrackContainer()->GetVerticalScrollingOffset() / max_height : 0.f;
   float size_ratio =
       visible_tracks_height > 0 ? vertical_slider_->GetHeight() / visible_tracks_height : 1.f;
-  int slider_width = static_cast<int>(GetLayout().GetSliderWidth());
-  vertical_slider_->SetPixelHeight(slider_width);
   vertical_slider_->SetNormalizedPosition(pos_ratio);
   vertical_slider_->SetNormalizedLength(size_ratio);
 }
