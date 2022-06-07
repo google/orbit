@@ -5,7 +5,6 @@
 #ifndef CONFIG_WIDGETS_SYMBOL_LOCATIONS_DIALOG_H_
 #define CONFIG_WIDGETS_SYMBOL_LOCATIONS_DIALOG_H_
 
-#include <ClientData/ModuleData.h>
 #include <absl/types/span.h>
 
 #include <QDialog>
@@ -15,6 +14,7 @@
 #include <tuple>
 #include <vector>
 
+#include "ClientData/ModuleData.h"
 #include "ClientSymbols/PersistentStorageManager.h"
 #include "MetricsUploader/MetricsUploader.h"
 #include "MetricsUploader/ScopedMetric.h"
