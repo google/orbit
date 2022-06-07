@@ -1,0 +1,10 @@
+# Ignore reason: These files are needed in unit tests
+ignorePaths:
+  - third_party/libunwindstack/offline_files/apk_rorx_arm64/run
+  - third_party/libunwindstack/offline_files/apk_rorx_unreadable_arm64/run
+  - third_party/libunwindstack/offline_files/apk_rx_arm64/run
+  - third_party/libunwindstack/offline_files/apk_rx_unreadable_arm64/run
+  - third_party/libunwindstack/tests/files/boot_arm.oat
+  - third_party/libunwindstack/tests/files/boot_arm.oat.gnu_debugdata
+  - third_party/libunwindstack/tests/files/libtest.dll
+  - third_party/libunwindstack/tests/files/libtest32.dl
