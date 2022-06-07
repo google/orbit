@@ -27,7 +27,7 @@ class MizarPairedData {
       : data_(std::move(data)),
         address_to_sampled_function_id_(std::move(address_to_sampled_function_id)) {}
 
-  // Action is a callable that does not return and takes a single argument of type
+  // Action is a void callable that takes a single argument of type
   // `const std::vector<uint64_t>` representing a callstack sample, each element of the vector is a
   // sampled function id.
   template <typename Action>
