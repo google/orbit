@@ -48,8 +48,7 @@ auto MakeMap(const Container& keys, const AnotherContainer& values) {
   using std::end;
 
   absl::flat_hash_map<K, V> result;
-  std::transform(begin(keys), end(keys), begin(values),
-                 std::inserter(result, std::begin(result)),
+  std::transform(begin(keys), end(keys), begin(values), std::inserter(result, std::begin(result)),
                  [](const K& k, const V& v) { return std::make_pair(k, v); });
   return result;
 }
