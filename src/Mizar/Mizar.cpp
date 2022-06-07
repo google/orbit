@@ -5,50 +5,55 @@
 #include <absl/container/flat_hash_set.h>
 
 #include <iostream>
+#include <memory>
 #include <string>
 
 #include "CaptureClient/LoadCapture.h"
 #include "CaptureFile/CaptureFile.h"
+#include "MizarData/BaselineAndComparison.h"
 #include "MizarData/MizarData.h"
 #include "OrbitBase/Logging.h"
 
-int main(int argc, char* argv[]) {
-  // The main in its current state is used to testing/experimenting and serves no other purpose
-  if (argc < 2) {
-    ORBIT_ERROR("No file path given");
-    return 1;
-  }
-  const std::filesystem::path path = argv[1];
-  auto capture_file_or_error = orbit_capture_file::CaptureFile::OpenForReadWrite(path);
-  if (capture_file_or_error.has_error()) {
-    ORBIT_ERROR("%s", capture_file_or_error.error().message());
-    return 1;
-  }
+[[nodiscard]] static ErrorMessageOr<void> LoadCapture(orbit_mizar_data::MizarData* data,
+                                                      std::filesystem::path path) {
+  OUTCOME_TRY(auto capture_file, orbit_capture_file::CaptureFile::OpenForReadWrite(path));
   std::atomic<bool> capture_loading_cancellation_requested = false;
 
-  orbit_mizar_data::MizarData data;
-  auto status = orbit_capture_client::LoadCapture(&data, capture_file_or_error.value().get(),
+  // The treatment is the same for CaptureOutcome::kComplete, CaptureOutcome::kCancelled
+  std::ignore = orbit_capture_client::LoadCapture(data, capture_file.get(),
                                                   &capture_loading_cancellation_requested);
-  const auto& callstack_data = data.GetCaptureData().GetCallstackData();
-  std::vector<orbit_client_data::CallstackEvent> callstack_events =
-      callstack_data.GetCallstackEventsInTimeRange(std::numeric_limits<uint64_t>::min(),
-                                                   std::numeric_limits<uint64_t>::max());
+  return outcome::success();
+}
 
-  absl::flat_hash_set<std::string> names;
-  for (auto event : callstack_events) {
-    const orbit_client_data::CallstackInfo* callstack =
-        callstack_data.GetCallstack(event.callstack_id());
-    for (auto addr : callstack->frames()) {
-      std::optional<std::string> name = data.GetFunctionNameFromAddress(addr);
-      if (name.has_value()) names.insert(name.value());
-    }
+int main(int argc, char* argv[]) {
+  // The main in its current state is used to testing/experimenting and serves no other purpose
+  if (argc < 3) {
+    ORBIT_ERROR("Two filepaths should be given");
+    return 1;
+  }
+  auto baseline = std::make_unique<orbit_mizar_data::MizarData>();
+  auto comparison = std::make_unique<orbit_mizar_data::MizarData>();
+
+  const std::filesystem::path baseline_path = argv[1];
+  const std::filesystem::path comparison_path = argv[2];
+
+  auto baseline_error_message = LoadCapture(baseline.get(), baseline_path);
+  if (baseline_error_message.has_error()) {
+    ORBIT_ERROR("%s", baseline_error_message.error().message());
+    return 1;
   }
 
-  for (const auto& name : names) {
-    ORBIT_LOG("%s", name);
+  auto comparison_error_message = LoadCapture(comparison.get(), comparison_path);
+  if (comparison_error_message.has_error()) {
+    ORBIT_ERROR("%s", comparison_error_message.error().message());
+    return 1;
   }
 
-  ORBIT_LOG("total stack sample count %u, total number of functions %u",
-            callstack_data.GetCallstackEventsCount(), names.size());
+  orbit_mizar_data::BaselineAndComparison bac =
+      CreateBaselineAndComparison(std::move(baseline), std::move(comparison));
+  for (const auto& [id, name] : bac.sampled_function_id_to_name()) {
+    ORBIT_LOG("%u %s", id, name);
+  }
+  ORBIT_LOG("Total number of common names %u  ", bac.sampled_function_id_to_name().size());
   return 0;
 }

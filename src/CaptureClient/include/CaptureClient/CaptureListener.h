@@ -28,6 +28,14 @@ class CaptureListener {
  public:
   enum class CaptureOutcome { kComplete, kCancelled };
 
+  CaptureListener() = default;
+
+  CaptureListener(CaptureListener&) = default;
+  CaptureListener& operator=(const CaptureListener& other) = default;
+
+  CaptureListener(CaptureListener&&) = default;
+  CaptureListener& operator=(CaptureListener&& other) = default;
+
   virtual ~CaptureListener() = default;
 
   virtual void OnCaptureStarted(const orbit_grpc_protos::CaptureStarted& capture_started,

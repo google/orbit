@@ -17,6 +17,14 @@ namespace orbit_capture_client {
 template <typename Derived>
 class AbstractCaptureListener : public CaptureListener {
  public:
+  AbstractCaptureListener() = default;
+
+  AbstractCaptureListener(AbstractCaptureListener&) = default;
+  AbstractCaptureListener& operator=(const AbstractCaptureListener& other) = default;
+
+  AbstractCaptureListener(AbstractCaptureListener&&) = default;
+  AbstractCaptureListener& operator=(AbstractCaptureListener&& other) = default;
+
   virtual ~AbstractCaptureListener() = default;
 
   void OnAddressInfo(orbit_client_data::LinuxAddressInfo address_info) override {

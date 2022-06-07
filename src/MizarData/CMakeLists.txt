@@ -7,12 +7,16 @@ cmake_minimum_required(VERSION 3.15)
 add_library(MizarData STATIC)
 
 target_sources(MizarData PUBLIC 
+         include/MizarData/BaselineAndComparison.h
          include/MizarData/MizarData.h
          include/MizarData/MizarDataProvider.h)
 
 target_include_directories(MizarData PUBLIC ${CMAKE_CURRENT_LIST_DIR}/include) 
 
 target_sources(MizarData PRIVATE
+                BaselineAndComparison.cpp
+                BaselineAndComparisonHelper.h
+                BaselineAndComparisonHelper.cpp
                 MizarData.cpp)
 
 
@@ -28,7 +32,10 @@ target_link_libraries(
 
 add_executable(MizarDataTests)
 
-target_sources(MizarDataTests PRIVATE MizarDataTest.cpp)
+target_sources(MizarDataTests PRIVATE 
+                BaselineAndComparisonTest.cpp
+                MizarDataTest.cpp)
+
 target_link_libraries(MizarDataTests PRIVATE GrpcProtos
                                                 MizarData
                                                 GTest::GTest

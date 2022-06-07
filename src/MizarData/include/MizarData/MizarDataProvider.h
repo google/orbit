@@ -18,10 +18,19 @@ namespace orbit_mizar_data {
 // Handles one of the two datasets Mizar operates on
 class MizarDataProvider : public orbit_client_data::CaptureDataHolder {
  public:
+  MizarDataProvider() = default;
+
+  MizarDataProvider(MizarDataProvider&) = delete;
+  MizarDataProvider& operator=(const MizarDataProvider& other) = delete;
+
+  MizarDataProvider(MizarDataProvider&&) = default;
+  MizarDataProvider& operator=(MizarDataProvider&& other) = default;
+
   virtual ~MizarDataProvider() = default;
 
   [[nodiscard]] virtual std::optional<std::string> GetFunctionNameFromAddress(
       uint64_t address) const = 0;
+  [[nodiscard]] virtual absl::flat_hash_map<uint64_t, std::string> AllAddressToName() const = 0;
 };
 
 }  // namespace orbit_mizar_data

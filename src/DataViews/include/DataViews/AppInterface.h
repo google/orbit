@@ -30,6 +30,7 @@ namespace orbit_data_views {
 
 class AppInterface : public orbit_client_data::CaptureDataHolder {
  public:
+  AppInterface() = default;
   virtual ~AppInterface() = default;
 
   // Functions needed by DataView
