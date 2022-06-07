@@ -117,6 +117,6 @@ float TimeGraphLayout::GetEventTrackHeightFromTid(uint32_t tid) const {
 
 float TimeGraphLayout::GetSliderResizeMargin() const {
   // The resize part of the slider is 1/3 of the min length.
-  const float kRatioMinSliderLenghtResizePart = 3.f;
-  return GetMinSliderLength() / kRatioMinSliderLenghtResizePart;
+  const float kRatioMinSliderLengthResizePart = 3.f;
+  return GetMinSliderLength() / kRatioMinSliderLengthResizePart;
 }
