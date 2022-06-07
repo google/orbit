@@ -121,13 +121,27 @@ TEST_F(ModulesDataViewTest, ColumnValuesAreCorrect) {
 }
 
 TEST_F(ModulesDataViewTest, ContextMenuEntriesArePresent) {
-  AddModulesByIndices({0});
+  constexpr size_t kIndex = 0;
+
+  AddModulesByIndices({kIndex});
   FlattenContextMenu context_menu =
-      FlattenContextMenuWithGroupingAndCheckOrder(view_.GetContextMenuWithGrouping(0, {0}));
+      FlattenContextMenuWithGroupingAndCheckOrder(view_.GetContextMenuWithGrouping(0, {kIndex}));
 
   CheckSingleAction(context_menu, kMenuActionCopySelection, ContextMenuEntry::kEnabled);
   CheckSingleAction(context_menu, kMenuActionExportToCsv, ContextMenuEntry::kEnabled);
   CheckSingleAction(context_menu, kMenuActionLoadSymbols, ContextMenuEntry::kEnabled);
+
+  // Load Symbols should be disabled when module is loaded successfully.
+
+  const ModuleInMemory& module_in_memory = modules_in_memory_[kIndex];
+  ModuleData* module = module_manager_.GetMutableModuleByPathAndBuildId(
+      module_in_memory.file_path(), module_in_memory.build_id());
+  module->AddSymbols({});
+  EXPECT_TRUE(module->is_loaded());
+
+  context_menu =
+      FlattenContextMenuWithGroupingAndCheckOrder(view_.GetContextMenuWithGrouping(0, {kIndex}));
+  CheckSingleAction(context_menu, kMenuActionLoadSymbols, ContextMenuEntry::kDisabled);
 }
 
 TEST_F(ModulesDataViewTest, ContextMenuActionsAreInvoked) {
