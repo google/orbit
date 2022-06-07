@@ -20,6 +20,20 @@
 #include "ClientData/CaptureData.h"
 #include "MizarData/BaselineAndComparison.h"
 
+namespace {
+
+class MockCaptureData {
+ public:
+  MOCK_METHOD(const orbit_client_data::CallstackData&, GetCallstackData, (), (const));
+};
+
+class MockMizarData {
+ public:
+  MOCK_METHOD(const MockCaptureData&, GetCaptureData, (), (const));
+};
+
+}  // namespace
+
 namespace orbit_mizar_data {
 
 constexpr uint64_t kAddressFood = 0xF00D;
@@ -64,16 +78,6 @@ const std::unique_ptr<orbit_client_data::CallstackData> kCallstackData = [] {
   return callstack_data;
 }();
 
-class MockCaptureData {
- public:
-  MOCK_METHOD(const orbit_client_data::CallstackData&, GetCallstackData, (), (const));
-};
-
-class MockMizarData {
- public:
-  MOCK_METHOD(const MockCaptureData&, GetCaptureData, (), (const));
-};
-
 [[nodiscard]] static std::vector<uint64_t> IdsForCallstacks(
     const std::vector<uint64_t>& addresses) {
   std::vector<uint64_t> good_addresses;
@@ -91,7 +95,7 @@ const std::vector<uint64_t> kInCompleteCallstackIds =
 const std::vector<uint64_t> kAnotherCompleteCallstackIds =
     IdsForCallstacks(kAnotherCompleteCallstack.frames());
 
-TEST(MizarPairedDataTest, ForeachCallstackIsCorrect) {
+void foo() {
   auto capture_data = std::make_unique<MockCaptureData>();
   auto data = std::make_unique<MockMizarData>();
 
@@ -99,7 +103,6 @@ TEST(MizarPairedDataTest, ForeachCallstackIsCorrect) {
   EXPECT_CALL(*data, GetCaptureData).WillRepeatedly(testing::ReturnRef(*capture_data));
 
   MizarPairedData<MockMizarData> mizar_paired_data(std::move(data), kAddressToId);
-
   std::vector<std::vector<uint64_t>> actual_ids_fed_to_action;
   auto action = [&actual_ids_fed_to_action](const std::vector<uint64_t> ids) {
     actual_ids_fed_to_action.push_back(ids);
@@ -127,5 +130,7 @@ TEST(MizarPairedDataTest, ForeachCallstackIsCorrect) {
               testing::UnorderedElementsAre(kCompleteCallstackIds, kInCompleteCallstackIds,
                                             kAnotherCompleteCallstackIds));
 }
+
+TEST(MizarPairedDataTest, ForeachCallstackIsCorrect) { foo(); }
 
 }  // namespace orbit_mizar_data

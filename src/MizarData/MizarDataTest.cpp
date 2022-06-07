@@ -27,6 +27,13 @@ using ::testing::Invoke;
 using ::testing::UnorderedElementsAre;
 using ::testing::UnorderedPointwise;
 
+namespace {
+class MockMizarData : public orbit_mizar_data::MizarData {
+ public:
+  MOCK_METHOD(std::optional<std::string>, GetFunctionNameFromAddress, (uint64_t), (const override));
+};
+}  // namespace
+
 namespace orbit_mizar_data {
 
 using google::protobuf::util::MessageDifferencer;
@@ -139,11 +146,6 @@ TEST(MizarDataTest, GetFunctionNameFromAddressIsCorrect) {
 
   EXPECT_FALSE(data.GetFunctionNameFromAddress(kUnknownFunctionAddress));
 }
-
-class MockMizarData : public MizarData {
- public:
-  MOCK_METHOD(std::optional<std::string>, GetFunctionNameFromAddress, (uint64_t), (const override));
-};
 
 const uint64_t kTime = 951753;
 const orbit_client_data::CallstackInfo kCallstackInfo({kFunctionAddress, kUnknownFunctionAddress,
