@@ -121,10 +121,10 @@ void Button::DoDraw(PrimitiveAssembler& primitive_assembler, TextRenderer& /*tex
 void Button::DrawSymbol(PrimitiveAssembler& primitive_assembler) {
   const Color kSymbolBaseColor(191, 191, 192, 255);
   const Color kSymbolHighlightColor(255, 255, 255, 255);
-  // Symbol wide and the padding are related to the size of the button, so they can scale
+  // Symbol width and the padding are related to the size of the button, so they can scale
   // proportionally if the button size changes.
   const float symbol_padding_size = GetWidth() / 5.f;
-  const float symbol_wide = GetWidth() / 5.f;
+  const float symbol_width = GetWidth() / 5.f;
 
   Color symbol_color = IsMouseOver() ? kSymbolHighlightColor : kSymbolBaseColor;
 
@@ -132,15 +132,15 @@ void Button::DrawSymbol(PrimitiveAssembler& primitive_assembler) {
     case SymbolType::kNoSymbol:
       break;
     case SymbolType::kPlusSymbol:
-      primitive_assembler.AddBox(MakeBox({GetPos()[0] + (GetWidth() - symbol_wide) / 2.f,
+      primitive_assembler.AddBox(MakeBox({GetPos()[0] + (GetWidth() - symbol_width) / 2.f,
                                           GetPos()[1] + symbol_padding_size},
-                                         {symbol_wide, GetHeight() - 2 * symbol_padding_size}),
+                                         {symbol_width, GetHeight() - 2 * symbol_padding_size}),
                                  GlCanvas::kZValueButton, symbol_color, shared_from_this());
       [[fallthrough]];
     case SymbolType::kMinusSymbol:
       primitive_assembler.AddBox(MakeBox({GetPos()[0] + symbol_padding_size,
-                                          GetPos()[1] + (GetHeight() - symbol_wide) / 2.f},
-                                         {GetWidth() - 2 * symbol_padding_size, symbol_wide}),
+                                          GetPos()[1] + (GetHeight() - symbol_width) / 2.f},
+                                         {GetWidth() - 2 * symbol_padding_size, symbol_width}),
                                  GlCanvas::kZValueButton, symbol_color, shared_from_this());
       break;
     default:

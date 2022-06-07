@@ -59,9 +59,9 @@ std::tuple<std::unique_ptr<SliderClass>, std::unique_ptr<Viewport>,
 Setup() {
   std::unique_ptr<CaptureViewElementTester> tester = std::make_unique<CaptureViewElementTester>();
   // Making space for the orthogonal slider as well.
-  int orthogonal_slider_wide = static_cast<int>(tester->GetLayout()->GetSliderWide());
+  int orthogonal_slider_width = static_cast<int>(tester->GetLayout()->GetSliderWidth());
   std::unique_ptr<Viewport> viewport =
-      std::make_unique<Viewport>(100 + orthogonal_slider_wide, 1000 + orthogonal_slider_wide);
+      std::make_unique<Viewport>(100 + orthogonal_slider_width, 1000 + orthogonal_slider_width);
 
   std::unique_ptr<SliderClass> slider =
       std::make_unique<SliderClass>(nullptr, viewport.get(), tester->GetLayout(), nullptr);

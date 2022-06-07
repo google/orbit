@@ -25,7 +25,7 @@ class GlSlider : public CaptureViewElement, public std::enable_shared_from_this<
 
   void SetNormalizedPosition(float start_ratio);  // [0,1]
   void SetNormalizedLength(float length_ratio);   // [0,1]
-  [[nodiscard]] float GetSliderWide() const { return layout_->GetSliderWide(); }
+  [[nodiscard]] float GetSliderWidth() const { return layout_->GetSliderWidth(); }
 
   [[nodiscard]] Color GetBarColor() const { return slider_color_; }
 
@@ -117,10 +117,10 @@ class GlVerticalSlider : public GlSlider {
   void DoDraw(PrimitiveAssembler& primitive_assembler, TextRenderer& text_renderer,
               const DrawContext& draw_context) override;
 
-  [[nodiscard]] float GetWidth() const override { return GetSliderWide(); }
+  [[nodiscard]] float GetWidth() const override { return GetSliderWidth(); }
 
   [[nodiscard]] float GetHeight() const override {
-    return viewport_->GetScreenHeight() - GetPos()[1] - layout_->GetSliderWide();
+    return viewport_->GetScreenHeight() - GetPos()[1] - layout_->GetSliderWidth();
   }
 
   std::unique_ptr<orbit_accessibility::AccessibleInterface> CreateAccessibleInterface() override;
@@ -141,9 +141,9 @@ class GlHorizontalSlider : public GlSlider {
               const DrawContext& draw_context) override;
 
   [[nodiscard]] float GetWidth() const override {
-    return viewport_->GetScreenWidth() - layout_->GetSliderWide();
+    return viewport_->GetScreenWidth() - layout_->GetSliderWidth();
   }
-  [[nodiscard]] float GetHeight() const override { return GetSliderWide(); }
+  [[nodiscard]] float GetHeight() const override { return GetSliderWidth(); }
 
   std::unique_ptr<orbit_accessibility::AccessibleInterface> CreateAccessibleInterface() override;
 

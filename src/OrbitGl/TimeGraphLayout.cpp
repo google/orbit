@@ -24,7 +24,7 @@ TimeGraphLayout::TimeGraphLayout() {
   space_between_thread_panes_ = 5.f;
   space_between_subtracks_ = 0.f;
   track_label_offset_x_ = 30.f;
-  slider_wide_ = 15.f;
+  slider_width_ = 15.f;
   min_slider_length_ = 20.f;
   track_tab_width_ = 350.f;
   track_tab_height_ = 25.f;
@@ -68,7 +68,7 @@ bool TimeGraphLayout::DrawProperties() {
   FLOAT_SLIDER(space_between_tracks_and_timeline_);
   FLOAT_SLIDER(space_between_thread_panes_);
   FLOAT_SLIDER(space_between_subtracks_);
-  FLOAT_SLIDER(slider_wide_);
+  FLOAT_SLIDER(slider_width_);
   FLOAT_SLIDER(time_bar_height_);
   FLOAT_SLIDER(track_tab_height_);
   FLOAT_SLIDER(track_tab_offset_);

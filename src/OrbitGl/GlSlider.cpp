@@ -264,12 +264,12 @@ void GlVerticalSlider::DoDraw(PrimitiveAssembler& primitive_assembler,
   const Color dark_border_color = GetDarkerColor(bar_color_);
 
   // Background
-  DrawBackground(primitive_assembler, 0, 0, GetSliderWide(), bar_pixel_len);
+  DrawBackground(primitive_assembler, 0, 0, GetSliderWidth(), bar_pixel_len);
 
   float start = ceilf(pos_ratio_ * non_slider_height);
 
   ShadingDirection shading_direction = ShadingDirection::kRightToLeft;
-  DrawSlider(primitive_assembler, 0, start, GetSliderWide(), slider_height, shading_direction);
+  DrawSlider(primitive_assembler, 0, start, GetSliderWidth(), slider_height, shading_direction);
 
   primitive_assembler.PopTranslation();
 }
@@ -291,12 +291,12 @@ void GlHorizontalSlider::DoDraw(PrimitiveAssembler& primitive_assembler,
   float slider_width = ceilf(length_ratio_ * bar_pixel_len);
   float non_slider_width = bar_pixel_len - slider_width;
 
-  DrawBackground(primitive_assembler, 0, 0, bar_pixel_len, GetSliderWide());
+  DrawBackground(primitive_assembler, 0, 0, bar_pixel_len, GetSliderWidth());
 
   float start = floorf(pos_ratio_ * non_slider_width);
 
   ShadingDirection shading_direction = ShadingDirection::kTopToBottom;
-  DrawSlider(primitive_assembler, start, 0, slider_width, GetSliderWide(), shading_direction);
+  DrawSlider(primitive_assembler, start, 0, slider_width, GetSliderWidth(), shading_direction);
 
   const float kEpsilon = 0.0001f;
 
@@ -306,8 +306,8 @@ void GlHorizontalSlider::DoDraw(PrimitiveAssembler& primitive_assembler,
   // and there is no margin between the border and the triangle to make it as big as possible.
   // On the other side, there is a 1 pixel margin between the triangle and the vertical line
   float tri_size = GetSliderResizeMargin() - 3.f;
-  tri_size = std::min(tri_size, GetSliderWide() - tri_size * kHeightFactor - 2.f);
-  const float tri_y_offset = (GetSliderWide() - tri_size * kHeightFactor) / 2.f;
+  tri_size = std::min(tri_size, GetSliderWidth() - tri_size * kHeightFactor - 2.f);
+  const float tri_y_offset = (GetSliderWidth() - tri_size * kHeightFactor) / 2.f;
   const Color kWhite = GetLighterColor(GetLighterColor(bar_color_));
   const float z = GlCanvas::kZValueButton + 2 * kEpsilon;
   const float x = start;
@@ -319,7 +319,7 @@ void GlHorizontalSlider::DoDraw(PrimitiveAssembler& primitive_assembler,
                Vec2(x + width - tri_size - 2.f, tri_y_offset)),
       z, kWhite, shared_from_this());
   primitive_assembler.AddVerticalLine(Vec2(x + width - GetSliderResizeMargin(), 2.f),
-                                      GetSliderWide() - 4.f, z, kWhite, shared_from_this());
+                                      GetSliderWidth() - 4.f, z, kWhite, shared_from_this());
 
   primitive_assembler.AddTriangle(
       Triangle(Vec2(x + tri_size + 2.f, kHeightFactor * tri_size + tri_y_offset),
@@ -327,19 +327,19 @@ void GlHorizontalSlider::DoDraw(PrimitiveAssembler& primitive_assembler,
                Vec2(x + 2.f, tri_y_offset + kHeightFactor / 2.f * tri_size)),
       z, kWhite, shared_from_this());
   primitive_assembler.AddVerticalLine(Vec2(x + GetSliderResizeMargin() + 1, 2.f),
-                                      GetSliderWide() - 4.f, z, kWhite, shared_from_this());
+                                      GetSliderWidth() - 4.f, z, kWhite, shared_from_this());
 
   // Highlight the scale part of the slider
   bool is_picked = primitive_assembler.GetPickingManager()->IsThisElementPicked(this);
   if (is_picked) {
     if (drag_type_ == DragType::kScaleMax) {
       primitive_assembler.AddShadedBox(Vec2(x + width - GetSliderResizeMargin(), 2),
-                                       Vec2(GetSliderResizeMargin() - 2, GetSliderWide() - 4),
+                                       Vec2(GetSliderResizeMargin() - 2, GetSliderWidth() - 4),
                                        GlCanvas::kZValueButton + kEpsilon, selected_color_,
                                        ShadingDirection::kTopToBottom);
     } else if (drag_type_ == DragType::kScaleMin) {
       primitive_assembler.AddShadedBox(
-          Vec2(x + 2, 2), Vec2(GetSliderResizeMargin() - 2, GetSliderWide() - 4),
+          Vec2(x + 2, 2), Vec2(GetSliderResizeMargin() - 2, GetSliderWidth() - 4),
           GlCanvas::kZValueButton + kEpsilon, selected_color_, ShadingDirection::kTopToBottom);
     }
   }

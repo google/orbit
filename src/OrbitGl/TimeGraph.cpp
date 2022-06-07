@@ -721,7 +721,7 @@ void TimeGraph::UpdateChildrenPosAndContainerSize() {
   track_container_->SetWidth(GetWidth() - total_right_margin);
   track_container_->SetPos(timegraph_current_x, timegraph_current_y);
 
-  vertical_slider_->SetWidth(layout_.GetSliderWide());
+  vertical_slider_->SetWidth(layout_.GetSliderWidth());
   vertical_slider_->SetPos(GetWidth() - vertical_slider_->GetWidth(), timegraph_current_y);
 
   timegraph_current_y += track_container_->GetHeight();
