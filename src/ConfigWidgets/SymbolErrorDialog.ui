@@ -77,7 +77,7 @@
      <item>
       <widget class="QLabel" name="label_2">
        <property name="text">
-        <string>Orbit attemps to load symbols to accurately label functions with their names, resolve callstack and more. When symbols can't be loaded, function names will be displayed as ???.</string>
+        <string>Orbit attempts to load symbols to accurately label functions with their names, resolve callstack and more. When symbols can't be loaded, function names will be displayed as ???.</string>
        </property>
        <property name="wordWrap">
         <bool>true</bool>
