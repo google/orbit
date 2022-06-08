@@ -268,16 +268,16 @@ ErrorMessageOr<std::optional<std::filesystem::path>> GetOverrideSymbolFileForMod
 // Searches through an inout modules list for a module which paths contains path_substring. If one
 // is found the module is erased from the modules list and returned. If not found, std::nullopt is
 // returned.
-std::optional<const ModuleData*> FindAndEraseModuleByPathSubstringFromModuleList(
-    std::vector<const ModuleData*>& modules, std::string_view path_substring) {
+[[nodiscard]] std::optional<const ModuleData*> FindAndEraseModuleByPathSubstringFromModuleList(
+    std::vector<const ModuleData*>* modules, std::string_view path_substring) {
   auto module_it =
-      std::find_if(modules.begin(), modules.end(), [&path_substring](const ModuleData* module) {
+      std::find_if(modules->begin(), modules->end(), [path_substring](const ModuleData* module) {
         return absl::StrContains(module->file_path(), path_substring);
       });
-  if (module_it == modules.end()) return std::nullopt;
+  if (module_it == modules->end()) return std::nullopt;
 
   const ModuleData* module{*module_it};
-  modules.erase(module_it);
+  modules->erase(module_it);
   return module;
 }
 
@@ -286,22 +286,20 @@ std::optional<const ModuleData*> FindAndEraseModuleByPathSubstringFromModuleList
 // the the modules list (substring is contained in module path). If a module is found, it is amended
 // to the result vector. After iterating through the prio_substring list, all remaining (not found)
 // modules are added to the result vector.
-std::vector<const ModuleData*> SortModuleListWithPrioritizationList(
+[[nodiscard]] std::vector<const ModuleData*> SortModuleListWithPrioritizationList(
     std::vector<const ModuleData*> modules, absl::Span<std::string_view const> prio_substrings) {
   std::vector<const ModuleData*> prioritized_modules;
   prioritized_modules.reserve(modules.size());
 
   for (const auto& substring : prio_substrings) {
     std::optional<const ModuleData*> module_opt =
-        FindAndEraseModuleByPathSubstringFromModuleList(modules, substring);
+        FindAndEraseModuleByPathSubstringFromModuleList(&modules, substring);
     if (!module_opt.has_value()) continue;
 
     prioritized_modules.push_back(module_opt.value());
   }
 
-  for (const auto& module : modules) {
-    prioritized_modules.push_back(module);
-  }
+  prioritized_modules.insert(prioritized_modules.end(), modules.begin(), modules.end());
 
   return prioritized_modules;
 }
@@ -2317,8 +2315,7 @@ Future<std::vector<ErrorMessageOr<void>>> OrbitApp::LoadAllSymbols() {
   const ProcessData& process = GetConnectedOrLoadedProcess();
 
   std::vector<const ModuleData*> sorted_module_list = SortModuleListWithPrioritizationList(
-      module_manager_->GetAllModuleData(),
-      std::vector<std::string_view>{kGgpVlkModulePathSubstring, process.full_path()});
+      module_manager_->GetAllModuleData(), {kGgpVlkModulePathSubstring, process.full_path()});
 
   std::vector<Future<ErrorMessageOr<void>>> loading_futures;
 
