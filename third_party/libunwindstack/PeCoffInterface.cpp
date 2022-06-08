@@ -458,9 +458,21 @@ bool PeCoffInterfaceImpl<AddressType>::Init(int64_t* load_bias) {
 
 template <typename AddressType>
 bool PeCoffInterfaceImpl<AddressType>::MapFromRvaToFileOffset(uint64_t rva, uint64_t* file_offset) {
-  for (auto& section : sections_) {
+  for (const Section& section : sections_) {
     if (section.vmaddr <= rva && rva < section.vmaddr + section.vmsize) {
       *file_offset = rva - section.vmaddr + section.offset;
+      return true;
+    }
+  }
+  last_error_.code = ERROR_INVALID_COFF;
+  return false;
+}
+
+template <typename AddressType>
+bool PeCoffInterfaceImpl<AddressType>::MapFromFileOffsetToRva(uint64_t file_offset, uint64_t* rva) {
+  for (const Section& section : sections_) {
+    if (section.offset <= file_offset && file_offset < section.offset + section.size) {
+      *rva = file_offset - section.offset + section.vmaddr;
       return true;
     }
   }
@@ -510,11 +522,13 @@ bool PeCoffInterfaceImpl<uint32_t>::InitNativeUnwinder() {
 }
 
 template <typename AddressType>
-uint64_t PeCoffInterfaceImpl<AddressType>::GetRelPc(uint64_t pc, uint64_t map_start) const {
-  if (!text_section_data_.has_value()) {
+uint64_t PeCoffInterfaceImpl<AddressType>::GetRelPc(uint64_t pc, uint64_t map_start,
+                                                    uint64_t map_object_offset) {
+  uint64_t map_rva;
+  if (!MapFromFileOffsetToRva(map_object_offset, &map_rva)) {
     return 0;
   }
-  return pc - map_start + optional_header_.image_base + text_section_data_->memory_offset;
+  return pc - map_start + optional_header_.image_base + map_rva;
 }
 
 template <typename AddressType>

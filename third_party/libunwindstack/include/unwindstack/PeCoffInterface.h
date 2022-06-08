@@ -152,7 +152,7 @@ class PeCoffInterface {
   virtual ErrorCode LastErrorCode() = 0;
   virtual uint64_t LastErrorAddress() = 0;
   virtual DwarfSection* DebugFrameSection() = 0;
-  virtual uint64_t GetRelPc(uint64_t pc, uint64_t map_start) const = 0;
+  virtual uint64_t GetRelPc(uint64_t pc, uint64_t map_start, uint64_t map_object_offset) = 0;
   virtual bool GetTextRange(uint64_t* addr, uint64_t* size) const = 0;
   virtual uint64_t GetTextOffsetInFile() const = 0;
   virtual bool Step(uint64_t rel_pc, uint64_t pc_adjustment, Regs* regs, Memory* process_memory,
@@ -175,7 +175,7 @@ class PeCoffInterfaceImpl : public PeCoffInterface {
   uint64_t LastErrorAddress() override { return last_error_.address; }
 
   DwarfSection* DebugFrameSection() override { return debug_frame_.get(); }
-  uint64_t GetRelPc(uint64_t pc, uint64_t map_start) const override;
+  uint64_t GetRelPc(uint64_t pc, uint64_t map_start, uint64_t map_object_offset) override;
   bool GetTextRange(uint64_t* addr, uint64_t* size) const override;
   uint64_t GetTextOffsetInFile() const override;
   bool Step(uint64_t rel_pc, uint64_t pc_adjustment, Regs* regs, Memory* process_memory,
@@ -229,6 +229,7 @@ class PeCoffInterfaceImpl : public PeCoffInterface {
   bool InitSections();
   bool InitDebugFrameSection();
   bool MapFromRvaToFileOffset(uint64_t rva, uint64_t* file_offset);
+  bool MapFromFileOffsetToRva(uint64_t file_offset, uint64_t* rva);
   bool InitNativeUnwinder();
 };
 
