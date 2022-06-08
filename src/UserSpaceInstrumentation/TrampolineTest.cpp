@@ -1173,6 +1173,10 @@ extern "C" __attribute__((noinline, naked)) int UnconditionalJump8BitOffsetBackT
 // This will fail to create a trampoline since the function contains an unconditional jump to an
 // eight bit offset which points back into the first five bytes of the function.
 TEST_F(InstrumentFunctionTest, UnconditionalJump8BitOffsetBackToBeginning) {
+// Exclude gcc builds: the inline assembly above gets messed up by the compiler.
+#if defined(ORBIT_COVERAGE_BUILD) || !defined(__clang__) || !defined(NDEBUG)
+  GTEST_SKIP();
+#endif
   RunChild(&UnconditionalJump8BitOffsetBackToBeginning,
            "UnconditionalJump8BitOffsetBackToBeginning");
   PrepareInstrumentation(kEntryPayloadFunctionName, kExitPayloadFunctionName);
@@ -1202,6 +1206,10 @@ extern "C" __attribute__((noinline, naked)) int UnconditionalJump32BitOffsetBack
 // This will fail to create a trampoline since the function contains an unconditional jump to a
 // 32 bit offset which points back into the first five bytes of the function.
 TEST_F(InstrumentFunctionTest, UnconditionalJump32BitOffsetBackToBeginning) {
+// Exclude gcc builds: the inline assembly above gets messed up by the compiler.
+#if defined(ORBIT_COVERAGE_BUILD) || !defined(__clang__) || !defined(NDEBUG)
+  GTEST_SKIP();
+#endif
   RunChild(&UnconditionalJump32BitOffsetBackToBeginning,
            "UnconditionalJump32BitOffsetBackToBeginning");
   PrepareInstrumentation(kEntryPayloadFunctionName, kExitPayloadFunctionName);
@@ -1231,6 +1239,10 @@ extern "C" __attribute__((noinline, naked)) int ConditionalJump8BitOffsetBackToB
 // This will fail to create a trampoline since the function contains a conditional jump to an
 // eight bit offset which points back into the first five bytes of the function.
 TEST_F(InstrumentFunctionTest, ConditionalJump8BitOffsetBackToBeginning) {
+// Exclude gcc builds: the inline assembly above gets messed up by the compiler.
+#if defined(ORBIT_COVERAGE_BUILD) || !defined(__clang__) || !defined(NDEBUG)
+  GTEST_SKIP();
+#endif
   RunChild(&ConditionalJump8BitOffsetBackToBeginning, "ConditionalJump8BitOffsetBackToBeginning");
   PrepareInstrumentation(kEntryPayloadFunctionName, kExitPayloadFunctionName);
   ErrorMessageOr<uint64_t> result = CreateTrampoline(
@@ -1260,6 +1272,10 @@ extern "C" __attribute__((noinline, naked)) int ConditionalJump32BitOffsetBackTo
 // This will fail to create a trampoline since the function contains a conditional jump to a
 // 32 bit offset which points back into the first five bytes of the function.
 TEST_F(InstrumentFunctionTest, ConditionalJump32BitOffsetBackToBeginning) {
+// Exclude gcc builds: the inline assembly above gets messed up by the compiler.
+#if defined(ORBIT_COVERAGE_BUILD) || !defined(__clang__) || !defined(NDEBUG)
+  GTEST_SKIP();
+#endif
   RunChild(&ConditionalJump32BitOffsetBackToBeginning, "ConditionalJump32BitOffsetBackToBeginning");
   PrepareInstrumentation(kEntryPayloadFunctionName, kExitPayloadFunctionName);
   ErrorMessageOr<uint64_t> result = CreateTrampoline(
