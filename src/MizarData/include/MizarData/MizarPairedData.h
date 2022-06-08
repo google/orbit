@@ -12,6 +12,7 @@
 #include <memory>
 
 #include "ClientData/CallstackData.h"
+#include "MizarData/SampledFunctionId.h"
 #include "OrbitBase/ThreadConstants.h"
 
 namespace orbit_mizar_data {
@@ -22,10 +23,8 @@ namespace orbit_mizar_data {
 template <typename Data>
 class MizarPairedData {
  public:
-  MizarPairedData(std::unique_ptr<Data> data,
-                  absl::flat_hash_map<uint64_t, uint64_t> address_to_sampled_function_id)
-      : data_(std::move(data)),
-        address_to_sampled_function_id_(std::move(address_to_sampled_function_id)) {}
+  MizarPairedData(std::unique_ptr<Data> data, absl::flat_hash_map<uint64_t, SFID> address_to_sfid)
+      : data_(std::move(data)), address_to_sfid_(std::move(address_to_sfid)) {}
 
   // Action is a void callable that takes a single argument of type
   // `const std::vector<uint64_t>` representing a callstack sample, each element of the vector is a
@@ -40,8 +39,8 @@ class MizarPairedData {
         [this, &callstack_data, &action](const orbit_client_data::CallstackEvent& event) -> void {
       const orbit_client_data::CallstackInfo* callstack =
           callstack_data.GetCallstack(event.callstack_id());
-      const std::vector<uint64_t> sampled_function_ids = FramesWithIds(callstack);
-      std::invoke(std::forward<Action>(action), sampled_function_ids);
+      const std::vector<SFID> sfids = CallstackWithSFIDs(callstack);
+      std::invoke(std::forward<Action>(action), sfids);
     };
 
     if (tid == orbit_base::kAllProcessThreadsTid) {
@@ -54,20 +53,19 @@ class MizarPairedData {
   }
 
  private:
-  [[nodiscard]] std::vector<uint64_t> FramesWithIds(
+  [[nodiscard]] std::vector<SFID> CallstackWithSFIDs(
       const orbit_client_data::CallstackInfo* callstack) const {
     if (callstack->frames().empty()) return {};
     if (callstack->type() != orbit_client_data::CallstackType::kComplete) {
-      return CallstackWithIds({callstack->frames()[0]});
+      return CallstackWithSFIDs({callstack->frames()[0]});
     }
-    return CallstackWithIds(callstack->frames());
+    return CallstackWithSFIDs(callstack->frames());
   }
 
-  [[nodiscard]] std::vector<uint64_t> CallstackWithIds(const std::vector<uint64_t>& frames) const {
-    std::vector<uint64_t> result;
+  [[nodiscard]] std::vector<SFID> CallstackWithSFIDs(const std::vector<uint64_t>& frames) const {
+    std::vector<SFID> result;
     for (const uint64_t address : frames) {
-      if (auto it = address_to_sampled_function_id_.find(address);
-          it != address_to_sampled_function_id_.end()) {
+      if (auto it = address_to_sfid_.find(address); it != address_to_sfid_.end()) {
         result.push_back(it->second);
       }
     }
@@ -75,7 +73,7 @@ class MizarPairedData {
   }
 
   std::unique_ptr<Data> data_;
-  absl::flat_hash_map<uint64_t, uint64_t> address_to_sampled_function_id_;
+  absl::flat_hash_map<uint64_t, SFID> address_to_sfid_;
 };
 
 }  // namespace orbit_mizar_data

@@ -61,8 +61,8 @@ constexpr uint64_t kTime4 = kTime0 + 4;
 constexpr uint64_t kTID = 0x3AD1;
 constexpr uint64_t kAnotherTID = 0x3AD2;
 
-const absl::flat_hash_map<uint64_t, uint64_t> kAddressToId = {
-    {kAddressFood, 1}, {kAddressCall, 2}, {kAddressBefore, 3}};
+const absl::flat_hash_map<uint64_t, SFID> kAddressToId = {
+    {kAddressFood, SFID(1)}, {kAddressCall, SFID(2)}, {kAddressBefore, SFID(3)}};
 
 const std::unique_ptr<orbit_client_data::CallstackData> kCallstackData = [] {
   auto callstack_data = std::make_unique<orbit_client_data::CallstackData>();
@@ -78,22 +78,21 @@ const std::unique_ptr<orbit_client_data::CallstackData> kCallstackData = [] {
   return callstack_data;
 }();
 
-[[nodiscard]] static std::vector<uint64_t> IdsForCallstacks(
-    const std::vector<uint64_t>& addresses) {
+[[nodiscard]] static std::vector<SFID> SFIDsForCallstacks(const std::vector<uint64_t>& addresses) {
   std::vector<uint64_t> good_addresses;
   std::copy_if(std::begin(addresses), std::end(addresses), std::back_inserter(good_addresses),
                [](uint64_t address) { return kAddressToId.contains(address); });
-  std::vector<uint64_t> ids;
+  std::vector<SFID> ids;
   std::transform(std::begin(good_addresses), std::end(good_addresses), std::back_inserter(ids),
-                 [](uint64_t address) { return kAddressToId.at(address); });
+                 [](uint64_t address) { return SFID(kAddressToId.at(address)); });
   return ids;
 }
 
-const std::vector<uint64_t> kCompleteCallstackIds = IdsForCallstacks(kCompleteCallstack.frames());
-const std::vector<uint64_t> kInCompleteCallstackIds =
-    IdsForCallstacks({kInCompleteCallstack.frames()[0]});
-const std::vector<uint64_t> kAnotherCompleteCallstackIds =
-    IdsForCallstacks(kAnotherCompleteCallstack.frames());
+const std::vector<SFID> kCompleteCallstackIds = SFIDsForCallstacks(kCompleteCallstack.frames());
+const std::vector<SFID> kInCompleteCallstackIds =
+    SFIDsForCallstacks({kInCompleteCallstack.frames()[0]});
+const std::vector<SFID> kAnotherCompleteCallstackIds =
+    SFIDsForCallstacks(kAnotherCompleteCallstack.frames());
 
 void foo() {
   auto capture_data = std::make_unique<MockCaptureData>();
@@ -103,8 +102,8 @@ void foo() {
   EXPECT_CALL(*data, GetCaptureData).WillRepeatedly(testing::ReturnRef(*capture_data));
 
   MizarPairedData<MockMizarData> mizar_paired_data(std::move(data), kAddressToId);
-  std::vector<std::vector<uint64_t>> actual_ids_fed_to_action;
-  auto action = [&actual_ids_fed_to_action](const std::vector<uint64_t> ids) {
+  std::vector<std::vector<SFID>> actual_ids_fed_to_action;
+  auto action = [&actual_ids_fed_to_action](const std::vector<SFID> ids) {
     actual_ids_fed_to_action.push_back(ids);
   };
 

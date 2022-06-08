@@ -51,9 +51,9 @@ int main(int argc, char* argv[]) {
 
   orbit_mizar_data::BaselineAndComparison bac =
       CreateBaselineAndComparison(std::move(baseline), std::move(comparison));
-  for (const auto& [id, name] : bac.sampled_function_id_to_name()) {
-    ORBIT_LOG("%u %s", id, name);
+  for (const auto& [sfid, name] : bac.sfid_to_name()) {
+    ORBIT_LOG("%s %s", static_cast<std::string>(sfid), name);
   }
-  ORBIT_LOG("Total number of common names %u  ", bac.sampled_function_id_to_name().size());
+  ORBIT_LOG("Total number of common names %u  ", bac.sfid_to_name().size());
   return 0;
 }
