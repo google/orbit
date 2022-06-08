@@ -411,6 +411,7 @@ class OrbitApp final : public DataViewFactory,
       const std::string& path, const std::string& build_id) const override {
     return module_manager_->GetModuleByPathAndBuildId(path, build_id);
   }
+  [[nodiscard]] const orbit_client_data::ProcessData& GetConnectedOrLoadedProcess() const;
 
   void SetCollectSchedulerInfo(bool collect_scheduler_info);
   void SetCollectThreadStates(bool collect_thread_states);
@@ -576,6 +577,12 @@ class OrbitApp final : public DataViewFactory,
 
   void ShowHistogram(const std::vector<uint64_t>* data, const std::string& scope_name,
                      uint64_t scope_id) override;
+
+  // Triggers symbol loading for all modules in ModuleManager that are not loaded yet. This is done
+  // with a simple prioritization. The module `ggpvlk.so` is queued to be loaded first, the "main
+  // module" (binary of the process) is queued to be loaded second. All other modules are queued in
+  // no particular order.
+  orbit_base::Future<std::vector<ErrorMessageOr<void>>> LoadAllSymbols();
 
   std::atomic<bool> capture_loading_cancellation_requested_ = false;
   std::atomic<orbit_client_data::CaptureData::DataSource> data_source_{

@@ -19,9 +19,11 @@
 #include <stdlib.h>
 
 #include <QProcess>
+#include <algorithm>
 #include <chrono>
 #include <cinttypes>
 #include <cstddef>
+#include <iterator>
 #include <limits>
 #include <memory>
 #include <optional>
@@ -164,6 +166,7 @@ using UnwindingMethod = orbit_grpc_protos::CaptureOptions::UnwindingMethod;
 namespace {
 
 constexpr const char* kLibOrbitVulkanLayerSoFileName = "libOrbitVulkanLayer.so";
+constexpr std::string_view kGgpVlkModulePathSubstring = "ggpvlk.so";
 
 orbit_data_views::PresetLoadState GetPresetLoadStateForProcess(const PresetFile& preset,
                                                                const ProcessData* process) {
@@ -260,6 +263,45 @@ ErrorMessageOr<std::optional<std::filesystem::path>> GetOverrideSymbolFileForMod
   }
 
   return symbol_file_path;
+}
+
+// Searches through an inout modules list for a module which paths contains path_substring. If one
+// is found the module is erased from the modules list and returned. If not found, std::nullopt is
+// returned.
+[[nodiscard]] std::optional<const ModuleData*> FindAndEraseModuleByPathSubstringFromModuleList(
+    std::vector<const ModuleData*>* modules, std::string_view path_substring) {
+  auto module_it =
+      std::find_if(modules->begin(), modules->end(), [path_substring](const ModuleData* module) {
+        return absl::StrContains(module->file_path(), path_substring);
+      });
+  if (module_it == modules->end()) return std::nullopt;
+
+  const ModuleData* module{*module_it};
+  modules->erase(module_it);
+  return module;
+}
+
+// Sorts a vector of modules with a prioritization list of module path substrings. This is done in a
+// simple fashion by iterating through the prio_substrings list and searching for each substring in
+// the the modules list (substring is contained in module path). If a module is found, it is amended
+// to the result vector. After iterating through the prio_substring list, all remaining (not found)
+// modules are added to the result vector.
+[[nodiscard]] std::vector<const ModuleData*> SortModuleListWithPrioritizationList(
+    std::vector<const ModuleData*> modules, absl::Span<std::string_view const> prio_substrings) {
+  std::vector<const ModuleData*> prioritized_modules;
+  prioritized_modules.reserve(modules.size());
+
+  for (const auto& substring : prio_substrings) {
+    std::optional<const ModuleData*> module_opt =
+        FindAndEraseModuleByPathSubstringFromModuleList(&modules, substring);
+    if (!module_opt.has_value()) continue;
+
+    prioritized_modules.push_back(module_opt.value());
+  }
+
+  prioritized_modules.insert(prioritized_modules.end(), modules.begin(), modules.end());
+
+  return prioritized_modules;
 }
 
 }  // namespace
@@ -2269,6 +2311,23 @@ orbit_base::Future<ErrorMessageOr<void>> OrbitApp::UpdateProcessAndModuleList() 
       });
 }
 
+Future<std::vector<ErrorMessageOr<void>>> OrbitApp::LoadAllSymbols() {
+  const ProcessData& process = GetConnectedOrLoadedProcess();
+
+  std::vector<const ModuleData*> sorted_module_list = SortModuleListWithPrioritizationList(
+      module_manager_->GetAllModuleData(), {kGgpVlkModulePathSubstring, process.full_path()});
+
+  std::vector<Future<ErrorMessageOr<void>>> loading_futures;
+
+  for (const ModuleData* module : sorted_module_list) {
+    if (module->is_loaded()) continue;
+
+    loading_futures.push_back(RetrieveModuleAndLoadSymbols(module));
+  }
+
+  return orbit_base::WhenAll(absl::MakeConstSpan(loading_futures));
+}
+
 void OrbitApp::RefreshUIAfterModuleReload() {
   modules_data_view_->UpdateModules(GetTargetProcess());
 
@@ -3043,4 +3102,15 @@ void OrbitApp::RequestSymbolDownloadStop(absl::Span<const ModuleData* const> mod
     }
     symbol_files_currently_downloading_.at(module->file_path()).stop_source.RequestStop();
   }
+}
+
+const ProcessData& OrbitApp::GetConnectedOrLoadedProcess() const {
+  const ProcessData* process_ptr = GetTargetProcess();  // This is the connected Process
+  if (process_ptr == nullptr) {
+    // Orbit is not currently connected, so this uses the process from capture data, which then is
+    // from the capture that was loaded from file.
+    process_ptr = GetCaptureData().process();
+  }
+  ORBIT_CHECK(process_ptr != nullptr);
+  return *process_ptr;
 }
