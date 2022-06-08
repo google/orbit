@@ -80,13 +80,16 @@ constexpr uint64_t kOffsetOfFunctionIdInCallToEntryPayload = 178;
 // Check if somewhere in the code of `function` there is a (conditional) jump back to the first five
 // bytes of the function (which we intend to overwrite with a jump into the trampoline). If so we
 // must not instrument the function. Note that the entire function is not necessarily available
-// here; we'll just disassemble and check whatever we have.
+// here; we'll just disassemble and check whatever we have. Specifically, we are checking for
+// conditional and unconditional jumps to 8 and 32 bit offsets (jumps to 16 bit offsets are only
+// available in x86 only, this is for x64 only).
 // This is merely a heuristic. There can be other jumps either further down in the function or in
 // different places in the same translation unit that target the first five bytes of a function.
 // However analysing existing code shows that many of the problematic jumps are in small functions
 // that are written in assembly. These are detected by the function below.
-bool CheckForJumpIntoFirstFiveBytes(uint64_t function_address, const std::vector<uint8_t>& function,
-                                    csh capstone_handle) {
+bool CheckForRelativeJumpIntoFirstFiveBytes(uint64_t function_address,
+                                            const std::vector<uint8_t>& function,
+                                            csh capstone_handle) {
   cs_insn* instruction = cs_malloc(capstone_handle);
   ORBIT_FAIL_IF(instruction == nullptr, "Failed to allocate memory for capstone disassembler.");
   orbit_base::unique_resource scope_exit{instruction,
@@ -96,19 +99,16 @@ bool CheckForJumpIntoFirstFiveBytes(uint64_t function_address, const std::vector
   size_t code_size = function.size();
   uint64_t disassemble_address = function_address;
 
-  // Disassemble until we processed the first kBytesToDisassemble bytes or we run out of
-  // instructions in this function.
+  // Disassemble until we run out of instructions in this function.
   while (cs_disasm_iter(capstone_handle, &code_pointer, &code_size, &disassemble_address,
                         instruction)) {
-    const uint64_t original_instruction_address = disassemble_address - instruction->size;
     if ((instruction->detail->x86.opcode[0] == 0xeb) ||
         ((instruction->detail->x86.opcode[0] & 0xf0) == 0x70)) {
-      // 0xeb is an uncoditional jump to an 8 bit immediate offset.
-      // 0x7? are conditional jumps to an 8 bit immediate offset.
+      // 0xeb is an uncoditional jump to a 8 bit immediate offset.
+      // 0x7? are conditional jumps to a 8 bit immediate offset.
       const int8_t immediate = *absl::bit_cast<int8_t*>(
           instruction->bytes + instruction->detail->x86.encoding.imm_offset);
-      const uint64_t jump_target_address =
-          original_instruction_address + instruction->size + immediate;
+      const uint64_t jump_target_address = disassemble_address + immediate;
       if (jump_target_address >= function_address &&
           jump_target_address < function_address + kSizeOfJmp) {
         return true;
@@ -116,12 +116,11 @@ bool CheckForJumpIntoFirstFiveBytes(uint64_t function_address, const std::vector
     } else if ((instruction->detail->x86.opcode[0] == 0xe9) ||
                (instruction->detail->x86.opcode[0] == 0x0f &&
                 (instruction->detail->x86.opcode[1] & 0xf0) == 0x80)) {
-      // 0xe9 is an uncoditional jump to an 32 bit immediate offset.
+      // 0xe9 is an uncoditional jump to a 32 bit immediate offset.
       // 0x0f 0x8? are conditional jumps to a 32 bit immediate offset.
       const int32_t immediate = *absl::bit_cast<int32_t*>(
           instruction->bytes + instruction->detail->x86.encoding.imm_offset);
-      const uint64_t jump_target_address =
-          original_instruction_address + instruction->size + immediate;
+      const uint64_t jump_target_address = disassemble_address + immediate;
       if (jump_target_address >= function_address &&
           jump_target_address < function_address + kSizeOfJmp) {
         return true;
@@ -1168,10 +1167,11 @@ ErrorMessageOr<uint64_t> CreateTrampoline(pid_t pid, uint64_t function_address,
                                           uint64_t return_trampoline_address, csh capstone_handle,
                                           absl::flat_hash_map<uint64_t, uint64_t>& relocation_map) {
   const bool harmful_jump =
-      CheckForJumpIntoFirstFiveBytes(function_address, function, capstone_handle);
+      CheckForRelativeJumpIntoFirstFiveBytes(function_address, function, capstone_handle);
   if (harmful_jump) {
     return ErrorMessage(
-        "Failed to create trampoline since the function contains a jump into its own prolog.");
+        "Failed to create trampoline since the function contains a jump back into the first five "
+        "bytes of the function.");
   }
 
   MachineCode trampoline;

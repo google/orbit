@@ -1154,7 +1154,7 @@ TEST_F(InstrumentFunctionTest, CheckNoX87UnderflowInReturnTrampoline) {
   RestartAndRemoveInstrumentation();
 }
 
-extern "C" __attribute__((noinline, naked)) int UnconditionalJump8BitOffsetBackIntoProlog() {
+extern "C" __attribute__((noinline, naked)) int UnconditionalJump8BitOffsetBackToBeginning() {
   __asm__ __volatile__(
       "nop \n\t"
       "nop \n\t"
@@ -1170,21 +1170,20 @@ extern "C" __attribute__((noinline, naked)) int UnconditionalJump8BitOffsetBackI
       :);
 }
 
-// This will fail to create a trampoline since the function contains an unconditional jump to a
+// This will fail to create a trampoline since the function contains an unconditional jump to an
 // eight bit offset which points back into the first five bytes of the function.
-TEST_F(InstrumentFunctionTest, UnconditionalJump8BitOffsetBackIntoProlog) {
-  RunChild(&UnconditionalJump8BitOffsetBackIntoProlog, "UnconditionalJump8BitOffsetBackIntoProlog");
+TEST_F(InstrumentFunctionTest, UnconditionalJump8BitOffsetBackToBeginning) {
+  RunChild(&UnconditionalJump8BitOffsetBackToBeginning,
+           "UnconditionalJump8BitOffsetBackToBeginning");
   PrepareInstrumentation(kEntryPayloadFunctionName, kExitPayloadFunctionName);
   ErrorMessageOr<uint64_t> result = CreateTrampoline(
       pid_, function_address_, function_code_, trampoline_address_, entry_payload_function_address_,
       return_trampoline_address_, capstone_handle_, relocation_map_);
-  EXPECT_THAT(
-      result,
-      HasError(
-          "Failed to create trampoline since the function contains a jump into its own prolog."));
+  EXPECT_THAT(result,
+              HasError("Failed to create trampoline since the function contains a jump back into"));
 }
 
-extern "C" __attribute__((noinline, naked)) int UnconditionalJump32BitOffsetBackIntoProlog() {
+extern "C" __attribute__((noinline, naked)) int UnconditionalJump32BitOffsetBackToBeginning() {
   __asm__ __volatile__(
       "nop \n\t"
       "nop \n\t"
@@ -1202,20 +1201,18 @@ extern "C" __attribute__((noinline, naked)) int UnconditionalJump32BitOffsetBack
 
 // This will fail to create a trampoline since the function contains an unconditional jump to a
 // 32 bit offset which points back into the first five bytes of the function.
-TEST_F(InstrumentFunctionTest, UnconditionalJump32BitOffsetBackIntoProlog) {
-  RunChild(&UnconditionalJump32BitOffsetBackIntoProlog,
-           "UnconditionalJump32BitOffsetBackIntoProlog");
+TEST_F(InstrumentFunctionTest, UnconditionalJump32BitOffsetBackToBeginning) {
+  RunChild(&UnconditionalJump32BitOffsetBackToBeginning,
+           "UnconditionalJump32BitOffsetBackToBeginning");
   PrepareInstrumentation(kEntryPayloadFunctionName, kExitPayloadFunctionName);
   ErrorMessageOr<uint64_t> result = CreateTrampoline(
       pid_, function_address_, function_code_, trampoline_address_, entry_payload_function_address_,
       return_trampoline_address_, capstone_handle_, relocation_map_);
-  EXPECT_THAT(
-      result,
-      HasError(
-          "Failed to create trampoline since the function contains a jump into its own prolog."));
+  EXPECT_THAT(result,
+              HasError("Failed to create trampoline since the function contains a jump back into"));
 }
 
-extern "C" __attribute__((noinline, naked)) int ConditionalJump8BitOffsetBackIntoProlog() {
+extern "C" __attribute__((noinline, naked)) int ConditionalJump8BitOffsetBackToBeginning() {
   __asm__ __volatile__(
       "nop \n\t"
       "nop \n\t"
@@ -1231,21 +1228,19 @@ extern "C" __attribute__((noinline, naked)) int ConditionalJump8BitOffsetBackInt
       :);
 }
 
-// This will fail to create a trampoline since the function contains a conditional jump to a
+// This will fail to create a trampoline since the function contains a conditional jump to an
 // eight bit offset which points back into the first five bytes of the function.
-TEST_F(InstrumentFunctionTest, ConditionalJump8BitOffsetBackIntoProlog) {
-  RunChild(&ConditionalJump8BitOffsetBackIntoProlog, "ConditionalJump8BitOffsetBackIntoProlog");
+TEST_F(InstrumentFunctionTest, ConditionalJump8BitOffsetBackToBeginning) {
+  RunChild(&ConditionalJump8BitOffsetBackToBeginning, "ConditionalJump8BitOffsetBackToBeginning");
   PrepareInstrumentation(kEntryPayloadFunctionName, kExitPayloadFunctionName);
   ErrorMessageOr<uint64_t> result = CreateTrampoline(
       pid_, function_address_, function_code_, trampoline_address_, entry_payload_function_address_,
       return_trampoline_address_, capstone_handle_, relocation_map_);
-  EXPECT_THAT(
-      result,
-      HasError(
-          "Failed to create trampoline since the function contains a jump into its own prolog."));
+  EXPECT_THAT(result,
+              HasError("Failed to create trampoline since the function contains a jump back into"));
 }
 
-extern "C" __attribute__((noinline, naked)) int ConditionalJump32BitOffsetBackIntoProlog() {
+extern "C" __attribute__((noinline, naked)) int ConditionalJump32BitOffsetBackToBeginning() {
   __asm__ __volatile__(
       "nop \n\t"
       "nop \n\t"
@@ -1264,19 +1259,17 @@ extern "C" __attribute__((noinline, naked)) int ConditionalJump32BitOffsetBackIn
 
 // This will fail to create a trampoline since the function contains a conditional jump to a
 // 32 bit offset which points back into the first five bytes of the function.
-TEST_F(InstrumentFunctionTest, ConditionalJump32BitOffsetBackIntoProlog) {
-  RunChild(&ConditionalJump32BitOffsetBackIntoProlog, "ConditionalJump32BitOffsetBackIntoProlog");
+TEST_F(InstrumentFunctionTest, ConditionalJump32BitOffsetBackToBeginning) {
+  RunChild(&ConditionalJump32BitOffsetBackToBeginning, "ConditionalJump32BitOffsetBackToBeginning");
   PrepareInstrumentation(kEntryPayloadFunctionName, kExitPayloadFunctionName);
   ErrorMessageOr<uint64_t> result = CreateTrampoline(
       pid_, function_address_, function_code_, trampoline_address_, entry_payload_function_address_,
       return_trampoline_address_, capstone_handle_, relocation_map_);
-  EXPECT_THAT(
-      result,
-      HasError(
-          "Failed to create trampoline since the function contains a jump into its own prolog."));
+  EXPECT_THAT(result,
+              HasError("Failed to create trampoline since the function contains a jump back into"));
 }
 
-extern "C" __attribute__((noinline, naked)) int LongConditionalJump32BitOffsetBackIntoProlog() {
+extern "C" __attribute__((noinline, naked)) int LongConditionalJump32BitOffsetBackToBeginning() {
   __asm__ __volatile__(
       "xor %%eax, %%eax \n\t"
       "ret \n\t"
@@ -1292,9 +1285,9 @@ extern "C" __attribute__((noinline, naked)) int LongConditionalJump32BitOffsetBa
 // This will create a trampoline. The function contains a conditional jump to a
 // 32 bit offset which points back into the first five bytes of the function. However the jump is
 // occurring after the 200 byte limit and therefore it stays undetected.
-TEST_F(InstrumentFunctionTest, LongConditionalJump32BitOffsetBackIntoProlog) {
-  RunChild(&LongConditionalJump32BitOffsetBackIntoProlog,
-           "LongConditionalJump32BitOffsetBackIntoProlog");
+TEST_F(InstrumentFunctionTest, LongConditionalJump32BitOffsetBackToBeginning) {
+  RunChild(&LongConditionalJump32BitOffsetBackToBeginning,
+           "LongConditionalJump32BitOffsetBackToBeginning");
   PrepareInstrumentation(kEntryPayloadFunctionName, kExitPayloadFunctionName);
   ErrorMessageOr<uint64_t> result = CreateTrampoline(
       pid_, function_address_, function_code_, trampoline_address_, entry_payload_function_address_,
