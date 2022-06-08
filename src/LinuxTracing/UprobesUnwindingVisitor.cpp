@@ -487,6 +487,8 @@ void UprobesUnwindingVisitor::Visit(uint64_t event_timestamp, const MmapPerfEven
     return;
   }
 
+  // TODO(b/235481314,b/235480245): Handle binaries with multiple executable mappings and PEs with
+  //  multiple executable sections.
   std::string module_path;
   if (!event_data.filename.empty() && event_data.filename[0] != '[') {
     // This is a file mapping.
