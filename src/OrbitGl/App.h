@@ -411,6 +411,7 @@ class OrbitApp final : public DataViewFactory,
       const std::string& path, const std::string& build_id) const override {
     return module_manager_->GetModuleByPathAndBuildId(path, build_id);
   }
+  [[nodiscard]] const orbit_client_data::ProcessData& GetConnectedOrLoadedProcess() const;
 
   void SetCollectSchedulerInfo(bool collect_scheduler_info);
   void SetCollectThreadStates(bool collect_thread_states);
@@ -581,7 +582,7 @@ class OrbitApp final : public DataViewFactory,
   // with a simple prioritization. The module `ggpvlk.so` is queued to be loaded first, the "main
   // module" (binary of the process) is queued to be loaded second. All other modules are queued in
   // no particular order.
-  void LoadAllSymbols();
+  orbit_base::Future<std::vector<ErrorMessageOr<void>>> LoadAllSymbols();
 
   std::atomic<bool> capture_loading_cancellation_requested_ = false;
   std::atomic<orbit_client_data::CaptureData::DataSource> data_source_{
