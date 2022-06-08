@@ -1,0 +1,135 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>StopSymbolDownloadDialog</class>
+ <widget class="QDialog" name="StopSymbolDownloadDialog">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>400</width>
+    <height>256</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>Stop Symbol Download</string>
+  </property>
+  <layout class="QVBoxLayout" name="verticalLayout" stretch="3,1,4,1,1,0">
+   <item>
+    <widget class="QLabel" name="label">
+     <property name="text">
+      <string>Symbols for this module are still downloading</string>
+     </property>
+    </widget>
+   </item>
+   <item>
+    <widget class="QLabel" name="moduleLabel">
+     <property name="text">
+      <string></string>
+     </property>
+    </widget>
+   </item>
+   <item>
+    <widget class="QLabel" name="label_2">
+     <property name="text">
+      <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Once downloaded, these symbols will be cached locally and will load quickly for subsequent sessions.&lt;br/&gt;If you don't need to load symbols for this module, you can stop this download.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+     </property>
+     <property name="wordWrap">
+      <bool>true</bool>
+     </property>
+    </widget>
+   </item>
+   <item>
+    <widget class="QCheckBox" name="rememberCheckBox">
+     <property name="text">
+      <string>Never download symbols for this module</string>
+     </property>
+    </widget>
+   </item>
+   <item>
+    <spacer name="verticalSpacer">
+     <property name="orientation">
+      <enum>Qt::Vertical</enum>
+     </property>
+     <property name="sizeHint" stdset="0">
+      <size>
+       <width>20</width>
+       <height>40</height>
+      </size>
+     </property>
+    </spacer>
+   </item>
+   <item>
+    <layout class="QHBoxLayout" name="horizontalLayout">
+     <item>
+      <spacer name="horizontalSpacer">
+       <property name="orientation">
+        <enum>Qt::Horizontal</enum>
+       </property>
+       <property name="sizeHint" stdset="0">
+        <size>
+         <width>40</width>
+         <height>20</height>
+        </size>
+       </property>
+      </spacer>
+     </item>
+     <item>
+      <widget class="QPushButton" name="cancelButton">
+       <property name="text">
+        <string>Cancel</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QPushButton" name="stopDownloadButton">
+       <property name="text">
+        <string>Stop downloading</string>
+       </property>
+      </widget>
+     </item>
+    </layout>
+   </item>
+  </layout>
+ </widget>
+ <tabstops>
+  <tabstop>stopDownloadButton</tabstop>
+  <tabstop>cancelButton</tabstop>
+  <tabstop>rememberCheckBox</tabstop>
+ </tabstops>
+ <resources/>
+ <connections>
+  <connection>
+   <sender>stopDownloadButton</sender>
+   <signal>clicked()</signal>
+   <receiver>StopSymbolDownloadDialog</receiver>
+   <slot>accept()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>365</x>
+     <y>241</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>302</x>
+     <y>173</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>cancelButton</sender>
+   <signal>clicked()</signal>
+   <receiver>StopSymbolDownloadDialog</receiver>
+   <slot>reject()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>257</x>
+     <y>234</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>243</x>
+     <y>199</y>
+    </hint>
+   </hints>
+  </connection>
+ </connections>
+ <slots/>
+</ui>
