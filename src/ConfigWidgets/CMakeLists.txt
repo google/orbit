@@ -9,8 +9,10 @@ add_library(ConfigWidgets STATIC)
 
 target_include_directories(ConfigWidgets PUBLIC include/)
 target_include_directories(ConfigWidgets PRIVATE ${CMAKE_CURRENT_BINARY_DIR})
-target_link_libraries(ConfigWidgets PUBLIC OrbitBase
+target_link_libraries(ConfigWidgets PUBLIC ClientFlags
+                                           OrbitBase
                                            SourcePathsMapping
+                                           CONAN_PKG::abseil
                                            Qt5::Core
                                            Qt5::Gui
                                            Qt5::Widgets)
