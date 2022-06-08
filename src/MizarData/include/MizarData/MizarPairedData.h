@@ -41,7 +41,7 @@ class MizarPairedData {
       const orbit_client_data::CallstackInfo* callstack =
           callstack_data.GetCallstack(event.callstack_id());
       const std::vector<uint64_t> sampled_function_ids = FramesWithIds(callstack);
-      std::forward<Action>(action)(sampled_function_ids);
+      std::invoke(std::forward<Action>(action), sampled_function_ids);
     };
 
     if (tid == orbit_base::kAllProcessThreadsTid) {

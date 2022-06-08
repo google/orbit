@@ -56,7 +56,7 @@ class CallstackData {
     std::lock_guard<std::recursive_mutex> lock(mutex_);
     for (const auto& [unused_tid, events] : callstack_events_by_tid_) {
       for (const auto& [unused_timestamp, event] : events) {
-        action(event);
+        std::invoke(std::forward<Action>(action), event);
       }
     }
   }
@@ -69,7 +69,7 @@ class CallstackData {
     for (const auto& [unused_tid, events] : callstack_events_by_tid_) {
       for (auto event_it = events.lower_bound(min_timestamp);
            event_it != events.upper_bound(max_timestamp); ++event_it) {
-        action(event_it->second);
+        std::invoke(std::forward<Action>(action), event_it->second);
       }
     }
   }
@@ -86,7 +86,7 @@ class CallstackData {
     const auto& events = tid_and_events_it->second;
     for (auto event_it = events.lower_bound(min_timestamp);
          event_it != events.upper_bound(max_timestamp); ++event_it) {
-      action(event_it->second);
+      std::invoke(std::forward<Action>(action), event_it->second);
     }
   }
 
@@ -108,7 +108,7 @@ class CallstackData {
   void ForEachUniqueCallstack(Action&& action) const {
     std::lock_guard<std::recursive_mutex> lock(mutex_);
     for (const auto& [callstack_id, callstack_ptr] : unique_callstacks_) {
-      action(callstack_id, *callstack_ptr);
+      std::invoke(std::forward<Action>(action), callstack_id, *callstack_ptr);
     }
   }
 
