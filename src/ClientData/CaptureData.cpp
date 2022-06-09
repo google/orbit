@@ -29,7 +29,7 @@ CaptureData::CaptureData(const CaptureStarted& capture_started,
                          std::optional<std::filesystem::path> file_path,
                          absl::flat_hash_set<uint64_t> frame_track_function_ids,
                          DataSource data_source)
-    : memory_sampling_period_ns_(capture_started.capture_options().memory_sampling_period_ns()),
+    : capture_started_(capture_started),
       selection_callstack_data_(std::make_unique<CallstackData>()),
       frame_track_function_ids_{std::move(frame_track_function_ids)},
       file_path_{std::move(file_path)},
