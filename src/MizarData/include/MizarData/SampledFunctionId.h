@@ -19,7 +19,10 @@ class SFID {
  public:
   constexpr explicit SFID(uint64_t id) : id_(id) {}
 
-  friend bool operator==(const SFID& lhs, const SFID& rhs) { return lhs.id_ == rhs.id_; }
+  [[nodiscard]] friend bool operator==(const SFID& lhs, const SFID& rhs) {
+    return lhs.id_ == rhs.id_;
+  }
+  [[nodiscard]] friend bool operator!=(const SFID& lhs, const SFID& rhs) { return !(lhs == rhs); }
 
   template <typename H>
   friend H AbslHashValue(H h, const SFID& c) {
@@ -27,7 +30,7 @@ class SFID {
   }
 
   // For debug purposes
-  explicit operator std::string() const { return std::to_string(id_); }
+  [[nodiscard]] explicit operator std::string() const { return std::to_string(id_); }
 
  private:
   uint64_t id_;

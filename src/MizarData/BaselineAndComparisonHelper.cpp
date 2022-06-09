@@ -16,7 +16,7 @@ template <typename K, typename V>
 [[nodiscard]] static absl::flat_hash_set<V> ValueSet(const absl::flat_hash_map<K, V>& map) {
   absl::flat_hash_set<V> result;
   std::transform(std::begin(map), std::end(map), std::inserter(result, std::begin(result)),
-                 std::mem_fn(&std::pair<std::add_const_t<K>, V>::second));
+                 [](const std::pair<K, V> pair) { return pair.second; });
   return result;
 }
 
