@@ -94,7 +94,7 @@ const std::vector<SFID> kInCompleteCallstackIds =
 const std::vector<SFID> kAnotherCompleteCallstackIds =
     SFIDsForCallstacks(kAnotherCompleteCallstack.frames());
 
-void foo() {
+TEST(MizarPairedDataTest, ForeachCallstackIsCorrect) {
   auto capture_data = std::make_unique<MockCaptureData>();
   auto data = std::make_unique<MockMizarData>();
 
@@ -129,7 +129,5 @@ void foo() {
               testing::UnorderedElementsAre(kCompleteCallstackIds, kInCompleteCallstackIds,
                                             kAnotherCompleteCallstackIds));
 }
-
-TEST(MizarPairedDataTest, ForeachCallstackIsCorrect) { foo(); }
 
 }  // namespace orbit_mizar_data
