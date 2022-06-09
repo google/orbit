@@ -46,7 +46,7 @@ class BaselineAndComparisonTmpl {
     uint64_t total_callstacks = 0;
     absl::flat_hash_map<SFID, InclusiveAndExclusive> counts;
     for (const uint32_t tid : config.tids) {
-      data.ForEachCallstackEvent(tid, config.start_ns, config.end_ns,
+      data.ForEachCallstackEvent(tid, config.start_ns, config.start_ns + config.duration_ns,
                                  [&total_callstacks, &counts](const std::vector<SFID>& callstack) {
                                    total_callstacks++;
                                    if (callstack.empty()) return;

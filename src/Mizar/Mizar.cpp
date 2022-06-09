@@ -53,15 +53,15 @@ int main(int argc, char* argv[]) {
   orbit_mizar_data::BaselineAndComparison bac =
       CreateBaselineAndComparison(std::move(baseline), std::move(comparison));
 
-  const uint64_t start = 0;
-  const uint64_t end = std::numeric_limits<uint64_t>::max();
+  constexpr uint64_t kStart = 0;
+  constexpr uint64_t kDuration = std::numeric_limits<uint64_t>::max();
 
   const orbit_mizar_data::SamplingWithFrameTrackComparisonReport report =
       bac.MakeSamplingWithFrameTrackReport(
           orbit_mizar_data::BaselineSamplingWithFrameTrackReportConfig{
-              {orbit_base::kAllProcessThreadsTid}, start, end},
+              {orbit_base::kAllProcessThreadsTid}, kStart, kDuration},
           orbit_mizar_data::ComparisonSamplingWithFrameTrackReportConfig{
-              {orbit_base::kAllProcessThreadsTid}, start, end});
+              {orbit_base::kAllProcessThreadsTid}, kStart, kDuration});
 
   for (const auto& [sfid, name] : bac.sfid_to_name()) {
     const uint64_t baseline_cnt = report.baseline_sampling_counts.GetExclusiveCnt(sfid);

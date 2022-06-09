@@ -9,7 +9,7 @@
 #include <absl/container/flat_hash_set.h>
 #include <stdint.h>
 
-#include <cstdint>
+#include <utility>
 
 #include "MizarData/SampledFunctionId.h"
 #include "OrbitBase/Logging.h"
@@ -17,31 +17,25 @@
 namespace orbit_mizar_data {
 
 struct HalfOfSamplingWithFrameTrackReportConfig {
-  HalfOfSamplingWithFrameTrackReportConfig() = delete;
-
   explicit HalfOfSamplingWithFrameTrackReportConfig(absl::flat_hash_set<uint32_t> tids,
-                                                    uint64_t start_ns, uint64_t end_ns)
-      : tids(std::move(tids)), start_ns(start_ns), end_ns(end_ns) {
-    ORBIT_CHECK(start_ns < end_ns);
-  }
+                                                    uint64_t start_ns, uint64_t duration_ns)
+      : tids(std::move(tids)), start_ns(start_ns), duration_ns(duration_ns) {}
 
   absl::flat_hash_set<uint32_t> tids{};
   uint64_t start_ns{};
-  uint64_t end_ns{};
+  uint64_t duration_ns{};
 };
 
-struct BaselineSamplingWithFrameTrackReportConfig
-    : public HalfOfSamplingWithFrameTrackReportConfig {
+struct BaselineSamplingWithFrameTrackReportConfig : HalfOfSamplingWithFrameTrackReportConfig {
   explicit BaselineSamplingWithFrameTrackReportConfig(absl::flat_hash_set<uint32_t> tids,
-                                                      uint64_t start_ns, uint64_t end_ns)
-      : HalfOfSamplingWithFrameTrackReportConfig(tids, start_ns, end_ns) {}
+                                                      uint64_t start_ns, uint64_t duration_ns)
+      : HalfOfSamplingWithFrameTrackReportConfig(std::move(tids), start_ns, duration_ns) {}
 };
 
-struct ComparisonSamplingWithFrameTrackReportConfig
-    : public HalfOfSamplingWithFrameTrackReportConfig {
+struct ComparisonSamplingWithFrameTrackReportConfig : HalfOfSamplingWithFrameTrackReportConfig {
   explicit ComparisonSamplingWithFrameTrackReportConfig(absl::flat_hash_set<uint32_t> tids,
-                                                        uint64_t start_ns, uint64_t end_ns)
-      : HalfOfSamplingWithFrameTrackReportConfig(tids, start_ns, end_ns) {}
+                                                        uint64_t start_ns, uint64_t duration_ns)
+      : HalfOfSamplingWithFrameTrackReportConfig(std::move(tids), start_ns, duration_ns) {}
 };
 
 struct InclusiveAndExclusive {

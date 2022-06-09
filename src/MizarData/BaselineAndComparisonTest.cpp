@@ -96,7 +96,7 @@ constexpr size_t kSFIDCnt = 3;
 constexpr SFID kSFIDFirst = SFID(1);
 constexpr SFID kSFIDSecond = SFID(2);
 constexpr SFID kSFIDThird = SFID(3);
-const std::array<SFID, kSFIDCnt> kSFIDs = {kSFIDFirst, kSFIDSecond, kSFIDThird};
+constexpr std::array<SFID, kSFIDCnt> kSFIDs = {kSFIDFirst, kSFIDSecond, kSFIDThird};
 
 const std::vector<std::vector<SFID>> kCallstacks = {
     std::vector<SFID>{kSFIDFirst, kSFIDSecond, kSFIDThird}, {kSFIDSecond}, {}};
@@ -107,10 +107,10 @@ class MockPairedData {
   explicit MockPairedData(std::vector<std::vector<SFID>> callstacks)
       : callstacks_(std::move(callstacks)) {}
 
+  template <typename Action>
   void ForEachCallstackEvent(uint32_t /*tid*/, uint64_t /*min_timestamp*/,
-                             uint64_t /*max_timestamp*/,
-                             std::function<void(const std::vector<SFID>&)> action) const {
-    std::for_each(std::begin(callstacks_), std::end(callstacks_), std::move(action));
+                             uint64_t /*max_timestamp*/, Action&& action) const {
+    std::for_each(std::begin(callstacks_), std::end(callstacks_), std::forward<Action>(action));
   }
 
  private:
