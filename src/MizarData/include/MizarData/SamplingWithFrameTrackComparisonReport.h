@@ -16,6 +16,8 @@
 
 namespace orbit_mizar_data {
 
+// The struct represents the part of configuration relevant to one of the two captures under
+// comparison.
 struct HalfOfSamplingWithFrameTrackReportConfig {
   explicit HalfOfSamplingWithFrameTrackReportConfig(absl::flat_hash_set<uint32_t> tids,
                                                     uint64_t start_ns, uint64_t duration_ns)
