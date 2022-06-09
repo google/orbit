@@ -58,14 +58,12 @@ const absl::flat_hash_map<uint64_t, std::string> kBaselineAddressToName =
 const absl::flat_hash_map<uint64_t, std::string> kComparisonAddressToName =
     MakeMap(kComparisonFunctionAddresses, kComparisonFunctionNames);
 
-static void ExpectCorrectNames(const absl::flat_hash_map<uint64_t, uint64_t>& address_to_id,
-                               const absl::flat_hash_map<uint64_t, std::string>& id_to_name,
+static void ExpectCorrectNames(const absl::flat_hash_map<uint64_t, SFID>& address_to_sfid,
+                               const absl::flat_hash_map<SFID, std::string>& sfid_to_name,
                                const absl::flat_hash_map<uint64_t, std::string>& address_to_name) {
-  for (const auto& [address, id] : address_to_id) {
-    if (id_to_name.contains(address)) {
-      EXPECT_TRUE(address_to_name.contains(address));
-      EXPECT_EQ(id_to_name.at(address), address_to_name.at(address));
-    }
+  for (const auto& [address, sfid] : address_to_sfid) {
+    EXPECT_TRUE(sfid_to_name.contains(sfid));
+    EXPECT_EQ(sfid_to_name.at(sfid), address_to_name.at(address));
   }
 }
 
@@ -78,22 +76,18 @@ template <typename K, typename V>
 }
 
 TEST(BaselineAndComparisonTest, BaselineAndComparisonHelperIsCorrect) {
-  const auto [baseline_address_to_sampled_function_id, comparison_address_to_sampled_function_id,
-              sampled_function_id_id_to_name] =
+  const auto [baseline_address_to_sfid, comparison_address_to_sfid, sfid_to_name] =
       AssignSampledFunctionIds(kBaselineAddressToName, kComparisonAddressToName);
 
-  EXPECT_EQ(baseline_address_to_sampled_function_id.size(), kCommonFunctionNames.size());
-  EXPECT_EQ(comparison_address_to_sampled_function_id.size(), kCommonFunctionNames.size());
-  EXPECT_EQ(sampled_function_id_id_to_name.size(), kCommonFunctionNames.size());
+  EXPECT_EQ(baseline_address_to_sfid.size(), kCommonFunctionNames.size());
+  EXPECT_EQ(comparison_address_to_sfid.size(), kCommonFunctionNames.size());
+  EXPECT_EQ(sfid_to_name.size(), kCommonFunctionNames.size());
 
-  ExpectCorrectNames(baseline_address_to_sampled_function_id, sampled_function_id_id_to_name,
-                     kBaselineAddressToName);
-  ExpectCorrectNames(comparison_address_to_sampled_function_id, sampled_function_id_id_to_name,
-                     kComparisonAddressToName);
+  ExpectCorrectNames(baseline_address_to_sfid, sfid_to_name, kBaselineAddressToName);
+  ExpectCorrectNames(comparison_address_to_sfid, sfid_to_name, kComparisonAddressToName);
 
-  EXPECT_THAT(
-      Values(baseline_address_to_sampled_function_id),
-      testing::UnorderedElementsAreArray(Values(comparison_address_to_sampled_function_id)));
+  EXPECT_THAT(Values(baseline_address_to_sfid),
+              testing::UnorderedElementsAreArray(Values(comparison_address_to_sfid)));
 }
 
 }  // namespace orbit_mizar_data

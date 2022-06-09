@@ -13,6 +13,7 @@
 #include "ClientData/CaptureData.h"
 #include "MizarData/MizarData.h"
 #include "MizarData/MizarPairedData.h"
+#include "MizarData/SampledFunctionId.h"
 
 namespace orbit_mizar_data {
 
@@ -23,20 +24,19 @@ class BaselineAndComparison {
  public:
   BaselineAndComparison(MizarPairedData<MizarDataProvider> baseline,
                         MizarPairedData<MizarDataProvider> comparison,
-                        absl::flat_hash_map<uint64_t, std::string> sampled_function_id_to_name)
+                        absl::flat_hash_map<SFID, std::string> sfid_to_name)
       : baseline_(std::move(baseline)),
         comparison_(std::move(comparison)),
-        sampled_function_id_to_name_(std::move(sampled_function_id_to_name)) {}
+        sfid_to_name_(std::move(sfid_to_name)) {}
 
-  [[nodiscard]] const absl::flat_hash_map<uint64_t, std::string>& sampled_function_id_to_name()
-      const {
-    return sampled_function_id_to_name_;
+  [[nodiscard]] const absl::flat_hash_map<SFID, std::string>& sfid_to_name() const {
+    return sfid_to_name_;
   }
 
  private:
   MizarPairedData<MizarDataProvider> baseline_;
   MizarPairedData<MizarDataProvider> comparison_;
-  absl::flat_hash_map<uint64_t, std::string> sampled_function_id_to_name_;
+  absl::flat_hash_map<SFID, std::string> sfid_to_name_;
 };
 
 orbit_mizar_data::BaselineAndComparison CreateBaselineAndComparison(

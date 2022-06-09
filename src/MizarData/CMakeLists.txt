@@ -10,7 +10,8 @@ target_sources(MizarData PUBLIC
          include/MizarData/BaselineAndComparison.h
          include/MizarData/MizarData.h
          include/MizarData/MizarDataProvider.h
-         include/MizarData/MizarPairedData.h)
+         include/MizarData/MizarPairedData.h
+         include/MizarData/SampledFunctionId.h)
 
 target_include_directories(MizarData PUBLIC ${CMAKE_CURRENT_LIST_DIR}/include) 
 
