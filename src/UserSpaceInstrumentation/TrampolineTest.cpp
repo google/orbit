@@ -623,8 +623,8 @@ class InstrumentFunctionTest : public testing::Test {
     ORBIT_CHECK(!return_trampoline_or_error.value()->EnsureMemoryExecutable().has_error());
 
     // Copy the beginning of the function over into this process.
-    constexpr uint64_t kMaxFunctionPrologueBackupSize = 200;
-    const uint64_t bytes_to_copy = std::min(size_of_function, kMaxFunctionPrologueBackupSize);
+    constexpr uint64_t kMaxFunctionBackupSize = 200;
+    const uint64_t bytes_to_copy = std::min(size_of_function, kMaxFunctionBackupSize);
     ErrorMessageOr<std::vector<uint8_t>> function_backup =
         ReadTraceesMemory(pid_, function_address_, bytes_to_copy);
     ORBIT_CHECK(function_backup.has_value());

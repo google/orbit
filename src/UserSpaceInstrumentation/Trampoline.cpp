@@ -104,7 +104,7 @@ bool CheckForRelativeJumpIntoFirstFiveBytes(uint64_t function_address,
                         instruction)) {
     if ((instruction->detail->x86.opcode[0] == 0xeb) ||
         ((instruction->detail->x86.opcode[0] & 0xf0) == 0x70)) {
-      // 0xeb is an uncoditional jump to a 8 bit immediate offset.
+      // 0xeb is an unconditional jump to a 8 bit immediate offset.
       // 0x7? are conditional jumps to a 8 bit immediate offset.
       const int8_t immediate = *absl::bit_cast<int8_t*>(
           instruction->bytes + instruction->detail->x86.encoding.imm_offset);
@@ -116,7 +116,7 @@ bool CheckForRelativeJumpIntoFirstFiveBytes(uint64_t function_address,
     } else if ((instruction->detail->x86.opcode[0] == 0xe9) ||
                (instruction->detail->x86.opcode[0] == 0x0f &&
                 (instruction->detail->x86.opcode[1] & 0xf0) == 0x80)) {
-      // 0xe9 is an uncoditional jump to a 32 bit immediate offset.
+      // 0xe9 is an unconditional jump to a 32 bit immediate offset.
       // 0x0f 0x8? are conditional jumps to a 32 bit immediate offset.
       const int32_t immediate = *absl::bit_cast<int32_t*>(
           instruction->bytes + instruction->detail->x86.encoding.imm_offset);
