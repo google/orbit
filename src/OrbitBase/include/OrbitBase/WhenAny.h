@@ -14,22 +14,9 @@
 #include "OrbitBase/FutureHelpers.h"
 #include "OrbitBase/Logging.h"
 #include "OrbitBase/Promise.h"
+#include "OrbitBase/VoidToMonostate.h"
 
 namespace orbit_base_internal {
-
-// A small helper type trait that maps `void` to `std::monostate` and every other `T` to itself.
-template <typename T>
-struct VoidToMonostate {
-  using type = T;
-};
-
-template <>
-struct VoidToMonostate<void> {
-  using type = std::monostate;
-};
-
-template <typename T>
-using VoidToMonostate_t = typename VoidToMonostate<T>::type;
 
 template <typename... Ts>
 class SharedStateWhenAny {
@@ -52,14 +39,6 @@ class SharedStateWhenAny {
   orbit_base::Promise<std::variant<Ts...>> promise ABSL_GUARDED_BY(mutex);
   mutable absl::Mutex mutex;
 };
-
-// A small helper type trait that checks whether a certain index of a parameter pack `Args` is of
-// type `std::monostate`. If yes the resulting type will be `std::true_type`, otherwise
-// `std::false_type`.
-template <size_t index, typename... Args>
-using IsMonostate =
-    std::is_same<std::variant_alternative_t<index, std::variant<VoidToMonostate_t<Args>...>>,
-                 std::monostate>;
 
 template <typename... Args, std::size_t... Indices>
 orbit_base::Future<std::variant<VoidToMonostate_t<Args>...>> WhenAnyImpl(
