@@ -17,14 +17,10 @@
 #include <thread>
 
 #include "ApiInterface/Orbit.h"
+#include "OrbitBase/Attributes.h"
 #include "OrbitBase/ThreadUtils.h"
-ORBIT_API_INSTANTIATE;
 
-#if __linux__
-#define NO_INLINE __attribute__((noinline))
-#else
-#define NO_INLINE __declspec(noinline)
-#endif
+ORBIT_API_INSTANTIATE;
 
 #define ORBIT_SCOPE_FUNCTION ORBIT_SCOPE(__FUNCTION__)
 
@@ -71,21 +67,21 @@ void OrbitTestImpl::Loop() {
   }
 }
 
-void NO_INLINE OrbitTestImpl::TestFunc(uint32_t depth) {
+void ORBIT_NOINLINE OrbitTestImpl::TestFunc(uint32_t depth) {
   ORBIT_SCOPE_FUNCTION;
   if (depth == recurse_depth_) return;
   TestFunc(depth + 1);
   std::this_thread::sleep_for(std::chrono::microseconds(sleep_us_));
 }
 
-void NO_INLINE OrbitTestImpl::TestFunc2(uint32_t depth) {
+void ORBIT_NOINLINE OrbitTestImpl::TestFunc2(uint32_t depth) {
   ORBIT_SCOPE_FUNCTION;
   if (depth == recurse_depth_) return;
   TestFunc(depth + 1);
   BusyWork(sleep_us_);
 }
 
-void NO_INLINE OrbitTestImpl::BusyWork(uint64_t microseconds) {
+void ORBIT_NOINLINE OrbitTestImpl::BusyWork(uint64_t microseconds) {
   ORBIT_SCOPE_FUNCTION;
   auto start = std::chrono::system_clock::now();
   while (true) {
@@ -95,9 +91,11 @@ void NO_INLINE OrbitTestImpl::BusyWork(uint64_t microseconds) {
   }
 }
 
-static void NO_INLINE SleepFor1Ms() { std::this_thread::sleep_for(std::chrono::milliseconds(1)); }
+static void ORBIT_NOINLINE SleepFor1Ms() {
+  std::this_thread::sleep_for(std::chrono::milliseconds(1));
+}
 
-static void NO_INLINE SleepFor2Ms() {
+static void ORBIT_NOINLINE SleepFor2Ms() {
   ORBIT_SCOPE("Sleep for two milliseconds");
   ORBIT_SCOPE_WITH_COLOR("Sleep for two milliseconds", kOrbitColorTeal);
   ORBIT_SCOPE_WITH_COLOR("Sleep for two milliseconds", kOrbitColorOrange);

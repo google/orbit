@@ -20,6 +20,7 @@ target_sources(OrbitBase PRIVATE
         include/OrbitBase/AnyInvocable.h
         include/OrbitBase/AnyMovable.h
         include/OrbitBase/Append.h
+        include/OrbitBase/Attributes.h
         include/OrbitBase/Chunk.h
         include/OrbitBase/CrashHandler.h
         include/OrbitBase/ExecutablePath.h
