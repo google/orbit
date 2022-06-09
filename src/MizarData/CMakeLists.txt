@@ -24,7 +24,7 @@ target_sources(MizarData PRIVATE
 
 target_link_libraries(
         MizarData 
-        PUBLIC  CaptureClient 
+        PUBLIC  CaptureClient  
                 OrbitPaths
                 Symbols
         PRIVATE CaptureFile
