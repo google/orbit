@@ -310,9 +310,7 @@ InstrumentedProcess::InstrumentFunctions(const CaptureOptions& capture_options) 
       result.function_ids_to_error_messages[function_id] = message;
       continue;
     }
-    constexpr uint64_t kMaxFunctionPrologueBackupSize = 20;
-    const uint64_t backup_size = std::min(kMaxFunctionPrologueBackupSize, function.function_size());
-    if (backup_size == 0) {
+    if (function.function_size() == 0) {
       const std::string message = absl::StrFormat(
           "Can't instrument function \"%s\" since it has size zero.", function.function_name());
       ORBIT_ERROR("%s", message);
@@ -334,10 +332,18 @@ InstrumentedProcess::InstrumentFunctions(const CaptureOptions& capture_options) 
           continue;
         }
         const uint64_t trampoline_address = trampoline_address_or_error.value();
-        TrampolineData trampoline_data;
-        trampoline_data.trampoline_address = trampoline_address;
-        OUTCOME_TRY(auto&& function_data, ReadTraceesMemory(pid_, function_address, backup_size));
-        trampoline_data.function_data = function_data;
+        // We need the machine code of the function for two purposes: We need to relocate the
+        // instructions that get overwritten into the trampoline and we also need to check if the
+        // function contains a jump back into the first five bytes (which would prohibit
+        // instrumentation). For the first reason 20 bytes would be enough; the 200 is chosen
+        // somewhat arbitrarily to cover all cases of jumps into the first five bytes we encountered
+        // in the wild. Specifically this covers all relative jumps to a signed 8 bit offset.
+        // Compare the comment of CheckForRelativeJumpIntoFirstFiveBytes in Trampoline.cpp.
+        constexpr uint64_t kMaxFunctionReadSize = 200;
+        const uint64_t function_read_size =
+            std::min(kMaxFunctionReadSize, function.function_size());
+        OUTCOME_TRY(auto&& function_data,
+                    ReadTraceesMemory(pid_, function_address, function_read_size));
         auto address_after_prologue_or_error =
             CreateTrampoline(pid_, function_address, function_data, trampoline_address,
                              entry_payload_function_address_, return_trampoline_address_,
@@ -351,6 +357,17 @@ InstrumentedProcess::InstrumentFunctions(const CaptureOptions& capture_options) 
           OUTCOME_TRY(ReleaseMostRecentlyAllocatedTrampolineMemory(module_address_range));
           continue;
         }
+        TrampolineData trampoline_data;
+        trampoline_data.trampoline_address = trampoline_address;
+        // We'll overwrite the first five bytes of the function and the rest of the instruction that
+        // we clobbered. Since we'll need to restore that when we remove the instrumentation we need
+        // a backup.
+        constexpr uint64_t kMaxFunctionBackupSize = 20;
+        const uint64_t function_backup_size =
+            std::min(kMaxFunctionBackupSize, function.function_size());
+        OUTCOME_TRY(auto&& function_backup_data,
+                    ReadTraceesMemory(pid_, function_address, function_backup_size));
+        trampoline_data.function_data = function_backup_data;
         trampoline_data.address_after_prologue = address_after_prologue_or_error.value();
         trampoline_map_.emplace(function_address, trampoline_data);
       }

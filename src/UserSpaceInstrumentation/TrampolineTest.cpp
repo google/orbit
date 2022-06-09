@@ -623,8 +623,8 @@ class InstrumentFunctionTest : public testing::Test {
     ORBIT_CHECK(!return_trampoline_or_error.value()->EnsureMemoryExecutable().has_error());
 
     // Copy the beginning of the function over into this process.
-    constexpr uint64_t kMaxFunctionPrologueBackupSize = 20;
-    const uint64_t bytes_to_copy = std::min(size_of_function, kMaxFunctionPrologueBackupSize);
+    constexpr uint64_t kMaxFunctionBackupSize = 200;
+    const uint64_t bytes_to_copy = std::min(size_of_function, kMaxFunctionBackupSize);
     ErrorMessageOr<std::vector<uint8_t>> function_backup =
         ReadTraceesMemory(pid_, function_address_, bytes_to_copy);
     ORBIT_CHECK(function_backup.has_value());
@@ -857,9 +857,12 @@ TEST_F(InstrumentFunctionTest, UnconditionalJump32BitOffset) {
 // The rip relative address is translated to the new code position.
 extern "C" __attribute__((noinline, naked)) int ConditionalJump8BitOffset() {
   __asm__ __volatile__(
+      "jnz loop_label_jcc \n\t"
+      "nop \n\t"
+      "nop \n\t"
+      "nop \n\t"
       "loop_label_jcc: \n\t"
       "xor %%eax, %%eax \n\t"
-      "jnz loop_label_jcc \n\t"
       "nop \n\t"
       "nop \n\t"
       "ret \n\t"
@@ -1149,6 +1152,190 @@ TEST_F(InstrumentFunctionTest, CheckNoX87UnderflowInReturnTrampoline) {
                          address_after_prologue_or_error.value(), trampoline_address_);
   EXPECT_THAT(result, HasNoError());
   RestartAndRemoveInstrumentation();
+}
+
+extern "C" __attribute__((noinline, naked)) int UnconditionalJump8BitOffsetBackToBeginning() {
+  __asm__ __volatile__(
+      "nop \n\t"
+      "nop \n\t"
+      "nop \n\t"
+      "nop \n\t"
+      "nop \n\t"
+      ".byte 0xeb \n\t"  // jmp -7 (which is the first nop)
+      ".byte 0xf9 \n\t"
+      "xor %%eax, %%eax \n\t"
+      "ret \n\t"
+      :
+      :
+      :);
+}
+
+// This will fail to create a trampoline since the function contains an unconditional jump to an
+// eight bit offset which points back into the first five bytes of the function.
+TEST_F(InstrumentFunctionTest, UnconditionalJump8BitOffsetBackToBeginning) {
+// Exclude gcc builds: the inline assembly above gets messed up by the compiler.
+#if defined(ORBIT_COVERAGE_BUILD) || !defined(__clang__) || !defined(NDEBUG)
+  GTEST_SKIP();
+#endif
+  RunChild(&UnconditionalJump8BitOffsetBackToBeginning,
+           "UnconditionalJump8BitOffsetBackToBeginning");
+  PrepareInstrumentation(kEntryPayloadFunctionName, kExitPayloadFunctionName);
+  ErrorMessageOr<uint64_t> result = CreateTrampoline(
+      pid_, function_address_, function_code_, trampoline_address_, entry_payload_function_address_,
+      return_trampoline_address_, capstone_handle_, relocation_map_);
+  EXPECT_THAT(result,
+              HasError("Failed to create trampoline since the function contains a jump back into"));
+}
+
+extern "C" __attribute__((noinline, naked)) int UnconditionalJump32BitOffsetBackToBeginning() {
+  __asm__ __volatile__(
+      "nop \n\t"
+      "nop \n\t"
+      "nop \n\t"
+      "nop \n\t"
+      "nop \n\t"
+      ".byte 0xe9 \n\t"  // jmp -10 (which is the first nop)
+      ".long 0xfffffff6 \n\t"
+      "xor %%eax, %%eax \n\t"
+      "ret \n\t"
+      :
+      :
+      :);
+}
+
+// This will fail to create a trampoline since the function contains an unconditional jump to a
+// 32 bit offset which points back into the first five bytes of the function.
+TEST_F(InstrumentFunctionTest, UnconditionalJump32BitOffsetBackToBeginning) {
+// Exclude gcc builds: the inline assembly above gets messed up by the compiler.
+#if defined(ORBIT_COVERAGE_BUILD) || !defined(__clang__) || !defined(NDEBUG)
+  GTEST_SKIP();
+#endif
+  RunChild(&UnconditionalJump32BitOffsetBackToBeginning,
+           "UnconditionalJump32BitOffsetBackToBeginning");
+  PrepareInstrumentation(kEntryPayloadFunctionName, kExitPayloadFunctionName);
+  ErrorMessageOr<uint64_t> result = CreateTrampoline(
+      pid_, function_address_, function_code_, trampoline_address_, entry_payload_function_address_,
+      return_trampoline_address_, capstone_handle_, relocation_map_);
+  EXPECT_THAT(result,
+              HasError("Failed to create trampoline since the function contains a jump back into"));
+}
+
+extern "C" __attribute__((noinline, naked)) int ConditionalJump8BitOffsetBackToBeginning() {
+  __asm__ __volatile__(
+      "nop \n\t"
+      "nop \n\t"
+      "nop \n\t"
+      "nop \n\t"
+      "nop \n\t"
+      ".byte 0x70 \n\t"  // jo -7 (which is the first nop)
+      ".byte 0xf9 \n\t"
+      "xor %%eax, %%eax \n\t"
+      "ret \n\t"
+      :
+      :
+      :);
+}
+
+// This will fail to create a trampoline since the function contains a conditional jump to an
+// eight bit offset which points back into the first five bytes of the function.
+TEST_F(InstrumentFunctionTest, ConditionalJump8BitOffsetBackToBeginning) {
+// Exclude gcc builds: the inline assembly above gets messed up by the compiler.
+#if defined(ORBIT_COVERAGE_BUILD) || !defined(__clang__) || !defined(NDEBUG)
+  GTEST_SKIP();
+#endif
+  RunChild(&ConditionalJump8BitOffsetBackToBeginning, "ConditionalJump8BitOffsetBackToBeginning");
+  PrepareInstrumentation(kEntryPayloadFunctionName, kExitPayloadFunctionName);
+  ErrorMessageOr<uint64_t> result = CreateTrampoline(
+      pid_, function_address_, function_code_, trampoline_address_, entry_payload_function_address_,
+      return_trampoline_address_, capstone_handle_, relocation_map_);
+  EXPECT_THAT(result,
+              HasError("Failed to create trampoline since the function contains a jump back into"));
+}
+
+extern "C" __attribute__((noinline, naked)) int ConditionalJump32BitOffsetBackToBeginning() {
+  __asm__ __volatile__(
+      "nop \n\t"
+      "nop \n\t"
+      "nop \n\t"
+      "nop \n\t"
+      "nop \n\t"
+      ".byte 0x0f \n\t"  // jo -7 (which is the last nop)
+      ".byte 0x80 \n\t"
+      ".long 0xfffffff9 \n\t"
+      "xor %%eax, %%eax \n\t"
+      "ret \n\t"
+      :
+      :
+      :);
+}
+
+// This will fail to create a trampoline since the function contains a conditional jump to a
+// 32 bit offset which points back into the first five bytes of the function.
+TEST_F(InstrumentFunctionTest, ConditionalJump32BitOffsetBackToBeginning) {
+// Exclude gcc builds: the inline assembly above gets messed up by the compiler.
+#if defined(ORBIT_COVERAGE_BUILD) || !defined(__clang__) || !defined(NDEBUG)
+  GTEST_SKIP();
+#endif
+  RunChild(&ConditionalJump32BitOffsetBackToBeginning, "ConditionalJump32BitOffsetBackToBeginning");
+  PrepareInstrumentation(kEntryPayloadFunctionName, kExitPayloadFunctionName);
+  ErrorMessageOr<uint64_t> result = CreateTrampoline(
+      pid_, function_address_, function_code_, trampoline_address_, entry_payload_function_address_,
+      return_trampoline_address_, capstone_handle_, relocation_map_);
+  EXPECT_THAT(result,
+              HasError("Failed to create trampoline since the function contains a jump back into"));
+}
+
+extern "C" __attribute__((noinline, naked)) int LongConditionalJump32BitOffsetBackToBeginning() {
+  __asm__ __volatile__(
+      "xor %%eax, %%eax \n\t"
+      "ret \n\t"
+      ".octa 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 \n\t"  // 256 bytes of zeros
+      ".byte 0x0f \n\t"                                            // jo -263 (which is the ret)
+      ".byte 0x80 \n\t"
+      ".long 0xfffffef9 \n\t"
+      :
+      :
+      :);
+}
+
+// This will create a trampoline. The function contains a conditional jump to a
+// 32 bit offset which points back into the first five bytes of the function. However the jump is
+// occurring after the 200 byte limit and therefore it stays undetected.
+TEST_F(InstrumentFunctionTest, LongConditionalJump32BitOffsetBackToBeginning) {
+  RunChild(&LongConditionalJump32BitOffsetBackToBeginning,
+           "LongConditionalJump32BitOffsetBackToBeginning");
+  PrepareInstrumentation(kEntryPayloadFunctionName, kExitPayloadFunctionName);
+  ErrorMessageOr<uint64_t> result = CreateTrampoline(
+      pid_, function_address_, function_code_, trampoline_address_, entry_payload_function_address_,
+      return_trampoline_address_, capstone_handle_, relocation_map_);
+  EXPECT_THAT(result, HasNoError());
+}
+
+extern "C" __attribute__((noinline, naked)) int UnableToDisassembleBadInstruction() {
+  __asm__ __volatile__(
+      "nop \n\t"
+      "nop \n\t"
+      "nop \n\t"
+      "nop \n\t"
+      "ret \n\t"
+      ".byte 0x06 \n\t"  // bad instruction
+      ".byte 0x0f \n\t"  // jo -12 (which is the first nop)
+      ".byte 0x80 \n\t"
+      ".long 0xfffffff4 \n\t"
+      :
+      :
+      :);
+}
+
+// This will create a trampoline. There is a conditional jump back to the start but the disassembler
+// gets confused before it reaches this and so we don't detect it.
+TEST_F(InstrumentFunctionTest, UnableToDisassembleBadInstruction) {
+  RunChild(&UnableToDisassembleBadInstruction, "UnableToDisassembleBadInstruction");
+  PrepareInstrumentation(kEntryPayloadFunctionName, kExitPayloadFunctionName);
+  ErrorMessageOr<uint64_t> result = CreateTrampoline(
+      pid_, function_address_, function_code_, trampoline_address_, entry_payload_function_address_,
+      return_trampoline_address_, capstone_handle_, relocation_map_);
+  EXPECT_THAT(result, HasNoError());
 }
 
 }  // namespace orbit_user_space_instrumentation

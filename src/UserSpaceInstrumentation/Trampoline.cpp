@@ -77,6 +77,59 @@ constexpr uint64_t kOffsetOfFunctionIdInCallToEntryPayload = 178;
   return result;
 }
 
+// Check if somewhere in the code of `function` there is a (conditional) jump back to the first five
+// bytes of the function (which we intend to overwrite with a jump into the trampoline). If so we
+// must not instrument the function. Note that the entire function is not necessarily available
+// here; we'll just disassemble and check whatever we have. Specifically, we are checking for
+// conditional and unconditional jumps to 8 and 32 bit offsets (jumps to 16 bit offsets are only
+// available in x86 only, this is for x64 only).
+// This is merely a heuristic. There can be other jumps either further down in the function or in
+// different places in the same translation unit that target the first five bytes of a function.
+// However analysing existing code shows that many of the problematic jumps are in small functions
+// that are written in assembly. These are detected by the function below.
+bool CheckForRelativeJumpIntoFirstFiveBytes(uint64_t function_address,
+                                            const std::vector<uint8_t>& function,
+                                            csh capstone_handle) {
+  cs_insn* instruction = cs_malloc(capstone_handle);
+  ORBIT_FAIL_IF(instruction == nullptr, "Failed to allocate memory for capstone disassembler.");
+  orbit_base::unique_resource scope_exit{instruction,
+                                         [](cs_insn* instruction) { cs_free(instruction, 1); }};
+
+  const uint8_t* code_pointer = function.data();
+  size_t code_size = function.size();
+  uint64_t disassemble_address = function_address;
+
+  // Disassemble until we run out of instructions in this function.
+  while (cs_disasm_iter(capstone_handle, &code_pointer, &code_size, &disassemble_address,
+                        instruction)) {
+    if ((instruction->detail->x86.opcode[0] == 0xeb) ||
+        ((instruction->detail->x86.opcode[0] & 0xf0) == 0x70)) {
+      // 0xeb is an unconditional jump to a 8 bit immediate offset.
+      // 0x7? are conditional jumps to a 8 bit immediate offset.
+      const int8_t immediate = *absl::bit_cast<int8_t*>(
+          instruction->bytes + instruction->detail->x86.encoding.imm_offset);
+      const uint64_t jump_target_address = disassemble_address + immediate;
+      if (jump_target_address >= function_address &&
+          jump_target_address < function_address + kSizeOfJmp) {
+        return true;
+      }
+    } else if ((instruction->detail->x86.opcode[0] == 0xe9) ||
+               (instruction->detail->x86.opcode[0] == 0x0f &&
+                (instruction->detail->x86.opcode[1] & 0xf0) == 0x80)) {
+      // 0xe9 is an unconditional jump to a 32 bit immediate offset.
+      // 0x0f 0x8? are conditional jumps to a 32 bit immediate offset.
+      const int32_t immediate = *absl::bit_cast<int32_t*>(
+          instruction->bytes + instruction->detail->x86.encoding.imm_offset);
+      const uint64_t jump_target_address = disassemble_address + immediate;
+      if (jump_target_address >= function_address &&
+          jump_target_address < function_address + kSizeOfJmp) {
+        return true;
+      }
+    }
+  }
+  return false;
+}
+
 // This code is executed immediately after the control is passed to the instrumented function. The
 // top of the stack contains the return address. Above that are the parameters passed via the stack.
 // Some registers contain the parameters for the instrumented function not passed via the stack.
@@ -1113,6 +1166,14 @@ ErrorMessageOr<uint64_t> CreateTrampoline(pid_t pid, uint64_t function_address,
                                           uint64_t entry_payload_function_address,
                                           uint64_t return_trampoline_address, csh capstone_handle,
                                           absl::flat_hash_map<uint64_t, uint64_t>& relocation_map) {
+  const bool harmful_jump =
+      CheckForRelativeJumpIntoFirstFiveBytes(function_address, function, capstone_handle);
+  if (harmful_jump) {
+    return ErrorMessage(
+        "Failed to create trampoline since the function contains a jump back into the first five "
+        "bytes of the function.");
+  }
+
   MachineCode trampoline;
   // Add code to backup register state, execute the payload and restore the register state.
   AppendBackupCode(trampoline);
