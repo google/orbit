@@ -84,7 +84,7 @@ const std::unique_ptr<orbit_client_data::CallstackData> kCallstackData = [] {
                [](uint64_t address) { return kAddressToId.contains(address); });
   std::vector<SFID> ids;
   std::transform(std::begin(good_addresses), std::end(good_addresses), std::back_inserter(ids),
-                 [](uint64_t address) { return SFID(kAddressToId.at(address)); });
+                 [](uint64_t address) { return kAddressToId.at(address); });
   return ids;
 }
 
