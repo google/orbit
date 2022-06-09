@@ -1702,7 +1702,7 @@ orbit_base::Future<ErrorMessageOr<std::filesystem::path>> OrbitApp::RetrieveModu
 
   symbol_files_currently_downloading_.emplace(
       module_file_path,
-      OrbitApp::ModuleLoadOperation{std::move(stop_source), chained_result_future});
+      OrbitApp::ModuleDownloadOperation{std::move(stop_source), chained_result_future});
   FireRefreshCallbacks(orbit_data_views::DataViewType::kModules);
   chained_result_future.Then(
       main_thread_executor_,
