@@ -394,6 +394,14 @@ TYPED_TEST(PeCoffInterfaceTest, get_zero_text_offset_in_file_if_no_text_section)
   EXPECT_EQ(coff.GetTextOffsetInFile(), 0);
 }
 
+TYPED_TEST(PeCoffInterfaceTest, get_correct_size_of_image) {
+  this->GetFake()->Init();
+  TypeParam coff(this->GetMemory());
+  int64_t load_bias;
+  ASSERT_TRUE(coff.Init(&load_bias));
+  EXPECT_EQ(coff.GetSizeOfImage(), PeCoffFake<TypeParam>::kSizeOfImage);
+}
+
 template <typename AddressType>
 class PeCoffInterfaceFake : public PeCoffInterfaceImpl<AddressType> {
  public:

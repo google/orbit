@@ -37,6 +37,9 @@ class PeCoffFake {
   // File offset for the new header.
   static constexpr uint64_t kNewHeaderOffsetValue = 0xF8;
 
+  // Size of the whole PE when loaded into memory.
+  static constexpr uint64_t kSizeOfImage = 0x10000;
+
   // Offset and size in the file of the .text section.
   static constexpr uint64_t kTextSectionFileOffset = 0x400;
   static constexpr uint64_t kTextSectionFileSize = 0x1000;

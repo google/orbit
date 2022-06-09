@@ -40,6 +40,7 @@ class MockPeCoffInterface : public PeCoffInterface {
   MOCK_METHOD(uint64_t, GetRelPc, (uint64_t, uint64_t, uint64_t), (override));
   MOCK_METHOD(bool, GetTextRange, (uint64_t*, uint64_t*), (const override));
   MOCK_METHOD(uint64_t, GetTextOffsetInFile, (), (const override));
+  MOCK_METHOD(uint64_t, GetSizeOfImage, (), (const override));
   MOCK_METHOD(bool, Step, (uint64_t, uint64_t, Regs*, Memory*, bool*, bool*), (override));
 };
 
@@ -215,6 +216,27 @@ TYPED_TEST(PeCoffTest, zero_text_offset_in_file_for_invalid) {
   EXPECT_FALSE(coff.Init());
   EXPECT_FALSE(coff.valid());
   EXPECT_EQ(coff.GetTextOffsetInFile(), 0);
+}
+
+TYPED_TEST(PeCoffTest, size_of_image_is_correctly_passed_through) {
+  this->GetFake()->Init();
+  FakePeCoff coff(this->ReleaseMemory());
+  EXPECT_TRUE(coff.Init());
+
+  constexpr uint64_t kSizeOfImage = 0x2000;
+
+  auto* mock_interface = new MockPeCoffInterface;
+  EXPECT_CALL(*mock_interface, GetSizeOfImage).WillOnce(testing::Return(kSizeOfImage));
+  coff.SetFakePeCoffInterface(mock_interface);
+
+  EXPECT_EQ(coff.GetSizeOfImage(), kSizeOfImage);
+}
+
+TYPED_TEST(PeCoffTest, zero_size_of_image_for_invalid) {
+  PeCoff coff(new MemoryFake);
+  EXPECT_FALSE(coff.Init());
+  EXPECT_FALSE(coff.valid());
+  EXPECT_EQ(coff.GetSizeOfImage(), 0);
 }
 
 TYPED_TEST(PeCoffTest, step_if_signal_handler_returns_false) {

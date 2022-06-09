@@ -551,6 +551,11 @@ uint64_t PeCoffInterfaceImpl<AddressType>::GetTextOffsetInFile() const {
 }
 
 template <typename AddressType>
+uint64_t PeCoffInterfaceImpl<AddressType>::GetSizeOfImage() const {
+  return optional_header_.image_size;
+}
+
+template <typename AddressType>
 bool PeCoffInterfaceImpl<AddressType>::Step(uint64_t rel_pc, uint64_t pc_adjustment, Regs* regs,
                                             Memory* process_memory, bool* finished,
                                             bool* is_signal_frame) {

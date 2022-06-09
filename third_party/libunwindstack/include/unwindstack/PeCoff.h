@@ -54,6 +54,7 @@ class PeCoff : public Object {
   int64_t GetLoadBias() override { return load_bias_; };
   bool GetTextRange(uint64_t* addr, uint64_t* size) override;
   uint64_t GetTextOffsetInFile() const;
+  uint64_t GetSizeOfImage() const;
 
   std::string GetBuildID() override;
   std::string GetSoname() override;
