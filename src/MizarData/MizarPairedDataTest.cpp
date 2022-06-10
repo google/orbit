@@ -20,17 +20,25 @@
 #include "ClientData/CaptureData.h"
 #include "MizarData/BaselineAndComparison.h"
 
+using ::testing::ElementsAre;
+using ::testing::Return;
+using ::testing::ReturnRef;
+using ::testing::UnorderedElementsAre;
+
 namespace {
 
 class MockCaptureData {
  public:
   MOCK_METHOD(const orbit_client_data::CallstackData&, GetCallstackData, (), (const));
+  MOCK_METHOD(std::vector<const TimerInfo*>, GetTimersForScope, (uint64_t, uint64_t, uint64_t),
+              (const));
 };
 
 class MockMizarData {
  public:
   MOCK_METHOD(const MockCaptureData&, GetCaptureData, (), (const));
   MOCK_METHOD(uint64_t, GetCaptureStartTimestampNs, (), (const));
+  MOCK_METHOD(uint64_t, GetNominalSamplingPeriodNs, (), (const));
 };
 
 }  // namespace
@@ -55,10 +63,10 @@ constexpr uint64_t kInCompleteCallstackId = 2;
 constexpr uint64_t kAnotherCompleteCallstackId = 3;
 
 constexpr uint64_t kCaptureStart = 123;
-constexpr uint64_t kRelativeTime1 = 1;
-constexpr uint64_t kRelativeTime2 = 2;
-constexpr uint64_t kRelativeTime3 = 3;
-constexpr uint64_t kRelativeTime4 = 4;
+constexpr uint64_t kRelativeTime1 = 10;
+constexpr uint64_t kRelativeTime2 = 20;
+constexpr uint64_t kRelativeTime3 = 30;
+constexpr uint64_t kRelativeTime4 = 40;
 constexpr uint64_t kTID = 0x3AD1;
 constexpr uint64_t kAnotherTID = 0x3AD2;
 
@@ -96,15 +104,57 @@ const std::vector<SFID> kInCompleteCallstackIds =
 const std::vector<SFID> kAnotherCompleteCallstackIds =
     SFIDsForCallstacks(kAnotherCompleteCallstack.frames());
 
-TEST(MizarPairedDataTest, ForeachCallstackIsCorrect) {
-  auto capture_data = std::make_unique<MockCaptureData>();
-  auto data = std::make_unique<MockMizarData>();
+constexpr size_t kInvocationsCount = 3;
+constexpr std::array<uint64_t, kInvocationsCount> kStarts = {
+    kCaptureStart, kCaptureStart + kRelativeTime2 - 1, kCaptureStart + kRelativeTime4};
+const std::array<uint64_t, kInvocationsCount> kEnds = [] {
+  std::array<uint64_t, kInvocationsCount> result{};
+  std::transform(std::begin(kStarts), std::end(kStarts), std::begin(result),
+                 [](const uint64_t start) { return start + 1; });
+  return result;
+}();
 
-  EXPECT_CALL(*capture_data, GetCallstackData).WillRepeatedly(testing::ReturnRef(*kCallstackData));
-  EXPECT_CALL(*data, GetCaptureData).WillRepeatedly(testing::ReturnRef(*capture_data));
-  EXPECT_CALL(*data, GetCaptureStartTimestampNs).WillRepeatedly(testing::Return(kCaptureStart));
+const std::array<orbit_client_protos::TimerInfo, kInvocationsCount> kTimers = [] {
+  std::array<orbit_client_protos::TimerInfo, kInvocationsCount> result;
+  std::transform(std::begin(kStarts), std::end(kStarts), std::begin(kEnds), std::begin(result),
+                 [](const uint64_t start, const uint64_t end) {
+                   orbit_client_protos::TimerInfo timer;
+                   timer.set_start(start);
+                   timer.set_end(end);
+                   timer.set_thread_id(kTID);
+                   return timer;
+                 });
+  return result;
+}();
 
-  MizarPairedData<MockMizarData> mizar_paired_data(std::move(data), kAddressToId);
+const std::vector<const orbit_client_protos::TimerInfo*> kTimerPtrs = [] {
+  std::vector<const orbit_client_protos::TimerInfo*> result;
+  std::transform(std::begin(kTimers), std::end(kTimers), std::back_inserter(result),
+                 [](const TimerInfo& timer) { return &timer; });
+  return result;
+}();
+
+constexpr uint64_t kSamplingPeriod = 10;
+
+class MizarPairedDataTest : public ::testing::Test {
+ public:
+  MizarPairedDataTest()
+      : capture_data_(std::make_unique<MockCaptureData>()),
+        data_(std::make_unique<MockMizarData>()) {
+    EXPECT_CALL(*capture_data_, GetCallstackData).WillRepeatedly(ReturnRef(*kCallstackData));
+    EXPECT_CALL(*capture_data_, GetTimersForScope).WillRepeatedly(Return(kTimerPtrs));
+    EXPECT_CALL(*data_, GetCaptureData).WillRepeatedly(ReturnRef(*capture_data_));
+    EXPECT_CALL(*data_, GetCaptureStartTimestampNs).WillRepeatedly(Return(kCaptureStart));
+    EXPECT_CALL(*data_, GetNominalSamplingPeriodNs).WillRepeatedly(Return(kSamplingPeriod));
+  }
+
+ protected:
+  std::unique_ptr<MockCaptureData> capture_data_;
+  std::unique_ptr<MockMizarData> data_;
+};
+
+TEST_F(MizarPairedDataTest, ForeachCallstackIsCorrect) {
+  MizarPairedData<MockMizarData> mizar_paired_data(std::move(data_), kAddressToId);
   std::vector<std::vector<SFID>> actual_ids_fed_to_action;
   auto action = [&actual_ids_fed_to_action](const std::vector<SFID> ids) {
     actual_ids_fed_to_action.push_back(ids);
@@ -115,23 +165,30 @@ TEST(MizarPairedDataTest, ForeachCallstackIsCorrect) {
   mizar_paired_data.ForEachCallstackEvent(orbit_base::kAllProcessThreadsTid, 0, kRelativeTime4,
                                           action);
   EXPECT_THAT(actual_ids_fed_to_action,
-              testing::UnorderedElementsAre(kCompleteCallstackIds, kCompleteCallstackIds,
-                                            kInCompleteCallstackIds, kAnotherCompleteCallstackIds));
+              UnorderedElementsAre(kCompleteCallstackIds, kCompleteCallstackIds,
+                                   kInCompleteCallstackIds, kAnotherCompleteCallstackIds));
 
   // One thread, all timestamps
   actual_ids_fed_to_action.clear();
   mizar_paired_data.ForEachCallstackEvent(kTID, 0, kRelativeTime4, action);
-  EXPECT_THAT(actual_ids_fed_to_action,
-              testing::UnorderedElementsAre(kCompleteCallstackIds, kCompleteCallstackIds,
-                                            kInCompleteCallstackIds));
+  EXPECT_THAT(
+      actual_ids_fed_to_action,
+      UnorderedElementsAre(kCompleteCallstackIds, kCompleteCallstackIds, kInCompleteCallstackIds));
 
   // All threads, some timestamps
   actual_ids_fed_to_action.clear();
   mizar_paired_data.ForEachCallstackEvent(orbit_base::kAllProcessThreadsTid, kRelativeTime1,
                                           kRelativeTime4, action);
   EXPECT_THAT(actual_ids_fed_to_action,
-              testing::UnorderedElementsAre(kCompleteCallstackIds, kInCompleteCallstackIds,
-                                            kAnotherCompleteCallstackIds));
+              UnorderedElementsAre(kCompleteCallstackIds, kInCompleteCallstackIds,
+                                   kAnotherCompleteCallstackIds));
+}
+
+TEST_F(MizarPairedDataTest, ActiveInvocationTimesIsCorrect) {
+  MizarPairedData<MockMizarData> mizar_paired_data(std::move(data_), kAddressToId);
+  std::vector<uint64_t> actual_active_invocation_times =
+      mizar_paired_data.ActiveInvocationTimes(1, 0, std::numeric_limits<uint64_t>::max());
+  EXPECT_THAT(actual_active_invocation_times, ElementsAre(kSamplingPeriod * 2, kSamplingPeriod));
 }
 
 }  // namespace orbit_mizar_data

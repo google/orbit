@@ -11,6 +11,7 @@
 
 #include <utility>
 
+#include "ClientData/ScopeStats.h"
 #include "MizarData/SampledFunctionId.h"
 #include "OrbitBase/Logging.h"
 
@@ -20,24 +21,33 @@ namespace orbit_mizar_data {
 // comparison.
 struct HalfOfSamplingWithFrameTrackReportConfig {
   explicit HalfOfSamplingWithFrameTrackReportConfig(absl::flat_hash_set<uint32_t> tids,
-                                                    uint64_t start_ns, uint64_t duration_ns)
-      : tids(std::move(tids)), start_relative_ns(start_ns), duration_ns(duration_ns) {}
+                                                    uint64_t start_ns, uint64_t duration_ns,
+                                                    uint64_t frame_track_scope_id)
+      : tids(std::move(tids)),
+        start_relative_ns(start_ns),
+        duration_ns(duration_ns),
+        frame_track_scope_id(frame_track_scope_id) {}
 
   absl::flat_hash_set<uint32_t> tids{};
   uint64_t start_relative_ns{};  // nanoseconds elapsed since capture start
   uint64_t duration_ns{};
+  uint64_t frame_track_scope_id{};
 };
 
 struct BaselineSamplingWithFrameTrackReportConfig : HalfOfSamplingWithFrameTrackReportConfig {
   explicit BaselineSamplingWithFrameTrackReportConfig(absl::flat_hash_set<uint32_t> tids,
-                                                      uint64_t start_ns, uint64_t duration_ns)
-      : HalfOfSamplingWithFrameTrackReportConfig(std::move(tids), start_ns, duration_ns) {}
+                                                      uint64_t start_ns, uint64_t duration_ns,
+                                                      uint64_t frame_track_scope_id)
+      : HalfOfSamplingWithFrameTrackReportConfig(std::move(tids), start_ns, duration_ns,
+                                                 frame_track_scope_id) {}
 };
 
 struct ComparisonSamplingWithFrameTrackReportConfig : HalfOfSamplingWithFrameTrackReportConfig {
   explicit ComparisonSamplingWithFrameTrackReportConfig(absl::flat_hash_set<uint32_t> tids,
-                                                        uint64_t start_ns, uint64_t duration_ns)
-      : HalfOfSamplingWithFrameTrackReportConfig(std::move(tids), start_ns, duration_ns) {}
+                                                        uint64_t start_ns, uint64_t duration_ns,
+                                                        uint64_t frame_track_scope_id)
+      : HalfOfSamplingWithFrameTrackReportConfig(std::move(tids), start_ns, duration_ns,
+                                                 frame_track_scope_id) {}
 };
 
 struct InclusiveAndExclusive {
@@ -79,6 +89,8 @@ class SamplingCounts {
 struct SamplingWithFrameTrackComparisonReport {
   SamplingCounts baseline_sampling_counts;
   SamplingCounts comparison_sampling_counts;
+  orbit_client_data::ScopeStats baseline_frame_track_stats;
+  orbit_client_data::ScopeStats comparison_frame_track_stats;
 };
 
 }  // namespace orbit_mizar_data

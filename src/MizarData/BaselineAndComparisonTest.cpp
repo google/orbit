@@ -18,6 +18,9 @@
 #include "MizarData/BaselineAndComparison.h"
 #include "OrbitBase/ThreadConstants.h"
 
+using ::testing::DoubleNear;
+using ::testing::UnorderedElementsAreArray;
+
 namespace orbit_mizar_data {
 
 constexpr size_t kFunctionNum = 3;
@@ -89,7 +92,7 @@ TEST(BaselineAndComparisonTest, BaselineAndComparisonHelperIsCorrect) {
   ExpectCorrectNames(comparison_address_to_sfid, sfid_to_name, kComparisonAddressToName);
 
   EXPECT_THAT(Values(baseline_address_to_sfid),
-              testing::UnorderedElementsAreArray(Values(comparison_address_to_sfid)));
+              UnorderedElementsAreArray(Values(comparison_address_to_sfid)));
 }
 
 constexpr size_t kSFIDCnt = 3;
@@ -101,11 +104,15 @@ constexpr std::array<SFID, kSFIDCnt> kSFIDs = {kSFIDFirst, kSFIDSecond, kSFIDThi
 const std::vector<std::vector<SFID>> kCallstacks = {
     std::vector<SFID>{kSFIDFirst, kSFIDSecond, kSFIDThird}, {kSFIDSecond}, {}};
 
+const std::vector<uint64_t> kFrameTrackActiveTimes = {300, 100, 200};
+
 namespace {
 class MockPairedData {
  public:
-  explicit MockPairedData(std::vector<std::vector<SFID>> callstacks)
-      : callstacks_(std::move(callstacks)) {}
+  explicit MockPairedData(std::vector<std::vector<SFID>> callstacks,
+                          std::vector<uint64_t> frame_track_active_times)
+      : callstacks_(std::move(callstacks)),
+        frame_track_active_times_(std::move(frame_track_active_times)) {}
 
   template <typename Action>
   void ForEachCallstackEvent(uint32_t /*tid*/, uint64_t /*min_timestamp*/,
@@ -113,19 +120,25 @@ class MockPairedData {
     std::for_each(std::begin(callstacks_), std::end(callstacks_), std::forward<Action>(action));
   }
 
+  [[nodiscard]] std::vector<uint64_t> ActiveInvocationTimes(uint64_t /*_*/, uint64_t /*_*/,
+                                                            uint64_t /*_*/) const {
+    return frame_track_active_times_;
+  };
+
  private:
   std::vector<std::vector<SFID>> callstacks_;
+  std::vector<uint64_t> frame_track_active_times_;
 };
 }  // namespace
 
 TEST(BaselineAndComparisonTest, MakeSamplingWithFrameTrackReportIsCorrect) {
-  MockPairedData full(kCallstacks);
-  MockPairedData empty({});
+  MockPairedData full(kCallstacks, kFrameTrackActiveTimes);
+  MockPairedData empty({}, {});
 
   BaselineAndComparisonTmpl<MockPairedData> bac(full, empty, {});
-  SamplingWithFrameTrackComparisonReport report = bac.MakeSamplingWithFrameTrackReport(
-      BaselineSamplingWithFrameTrackReportConfig{{orbit_base::kAllProcessThreadsTid}, 0, 1},
-      ComparisonSamplingWithFrameTrackReportConfig{{orbit_base::kAllProcessThreadsTid}, 0, 1});
+  const SamplingWithFrameTrackComparisonReport report = bac.MakeSamplingWithFrameTrackReport(
+      BaselineSamplingWithFrameTrackReportConfig{{orbit_base::kAllProcessThreadsTid}, 0, 1, 1},
+      ComparisonSamplingWithFrameTrackReportConfig{{orbit_base::kAllProcessThreadsTid}, 0, 1, 1});
 
   EXPECT_EQ(report.baseline_sampling_counts.GetTotalCallstacks(), kCallstacks.size());
 
@@ -142,6 +155,18 @@ TEST(BaselineAndComparisonTest, MakeSamplingWithFrameTrackReportIsCorrect) {
     EXPECT_EQ(report.comparison_sampling_counts.GetExclusiveCount(sfid), 0);
     EXPECT_EQ(report.comparison_sampling_counts.GetInclusiveCount(sfid), 0);
   }
+
+  constexpr uint64_t kExpectedFullActiveFrameTime = 200;
+  EXPECT_EQ(report.baseline_frame_track_stats.ComputeAverageTimeNs(), kExpectedFullActiveFrameTime);
+  EXPECT_EQ(report.comparison_frame_track_stats.ComputeAverageTimeNs(), 0);
+
+  constexpr double kExpectedFullActiveFrameTimeVariance = 6666.66666;
+  EXPECT_THAT(report.baseline_frame_track_stats.variance_ns(),
+              DoubleNear(kExpectedFullActiveFrameTimeVariance, 1e-3));
+  EXPECT_THAT(report.comparison_frame_track_stats.variance_ns(), DoubleNear(0, 1e-3));
+
+  EXPECT_EQ(report.baseline_frame_track_stats.count(), kFrameTrackActiveTimes.size());
+  EXPECT_EQ(report.comparison_frame_track_stats.count(), 0);
 }
 
 }  // namespace orbit_mizar_data
