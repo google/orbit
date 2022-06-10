@@ -527,6 +527,12 @@ class OrbitApp final : public DataViewFactory,
   void RequestSymbolDownloadStop(
       absl::Span<const orbit_client_data::ModuleData* const> modules) override;
 
+  // Triggers symbol loading for all modules in ModuleManager that are not loaded yet. This is done
+  // with a simple prioritization. The module `ggpvlk.so` is queued to be loaded first, the "main
+  // module" (binary of the process) is queued to be loaded second. All other modules are queued in
+  // no particular order.
+  orbit_base::Future<std::vector<ErrorMessageOr<orbit_base::CanceledOr<void>>>> LoadAllSymbols();
+
  private:
   void UpdateModulesAbortCaptureIfModuleWithoutBuildIdNeedsReload(
       absl::Span<const orbit_grpc_protos::ModuleInfo> module_infos);
@@ -578,12 +584,6 @@ class OrbitApp final : public DataViewFactory,
 
   void ShowHistogram(const std::vector<uint64_t>* data, const std::string& scope_name,
                      uint64_t scope_id) override;
-
-  // Triggers symbol loading for all modules in ModuleManager that are not loaded yet. This is done
-  // with a simple prioritization. The module `ggpvlk.so` is queued to be loaded first, the "main
-  // module" (binary of the process) is queued to be loaded second. All other modules are queued in
-  // no particular order.
-  orbit_base::Future<std::vector<ErrorMessageOr<orbit_base::CanceledOr<void>>>> LoadAllSymbols();
 
   std::atomic<bool> capture_loading_cancellation_requested_ = false;
   std::atomic<orbit_client_data::CaptureData::DataSource> data_source_{
