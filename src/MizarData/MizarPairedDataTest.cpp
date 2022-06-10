@@ -186,9 +186,10 @@ TEST_F(MizarPairedDataTest, ForeachCallstackIsCorrect) {
 
 TEST_F(MizarPairedDataTest, ActiveInvocationTimesIsCorrect) {
   MizarPairedData<MockMizarData> mizar_paired_data(std::move(data_), kAddressToId);
-  std::vector<uint64_t> actual_active_invocation_times =
-      mizar_paired_data.ActiveInvocationTimes({kTID, kAnotherTID}, 1, 0, std::numeric_limits<uint64_t>::max());
-  EXPECT_THAT(actual_active_invocation_times, ElementsAre(kSamplingPeriod * 2, kSamplingPeriod * 2));
+  std::vector<uint64_t> actual_active_invocation_times = mizar_paired_data.ActiveInvocationTimes(
+      {kTID, kAnotherTID}, 1, 0, std::numeric_limits<uint64_t>::max());
+  EXPECT_THAT(actual_active_invocation_times,
+              ElementsAre(kSamplingPeriod * 2, kSamplingPeriod * 2));
 }
 
 }  // namespace orbit_mizar_data
