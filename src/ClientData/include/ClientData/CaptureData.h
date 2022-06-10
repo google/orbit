@@ -51,7 +51,7 @@ namespace orbit_client_data {
 class CaptureData {
  public:
   enum class DataSource { kLiveCapture, kLoadedCapture };
-  explicit CaptureData(const orbit_grpc_protos::CaptureStarted& capture_started,
+  explicit CaptureData(orbit_grpc_protos::CaptureStarted capture_started,
                        std::optional<std::filesystem::path> file_path,
                        absl::flat_hash_set<uint64_t> frame_track_function_ids,
                        DataSource data_source);
@@ -71,7 +71,9 @@ class CaptureData {
     return instrumented_functions_;
   }
 
-  [[nodiscard]] uint64_t memory_sampling_period_ns() const { return memory_sampling_period_ns_; }
+  [[nodiscard]] uint64_t GetMemorySamplingPeriodNs() const {
+    return capture_started_.capture_options().memory_sampling_period_ns();
+  }
   [[nodiscard]] uint64_t memory_warning_threshold_kb() const {
     return memory_warning_threshold_kb_;
   }
@@ -255,12 +257,17 @@ class CaptureData {
       uint64_t scope_id, uint64_t min_tick = std::numeric_limits<uint64_t>::min(),
       uint64_t max_tick = std::numeric_limits<uint64_t>::max()) const;
 
+  [[nodiscard]] const orbit_grpc_protos::CaptureStarted& GetCaptureStarted() const {
+    return capture_started_;
+  }
+
  private:
   void UpdateTimerDurations();
 
+  orbit_grpc_protos::CaptureStarted capture_started_;
+
   orbit_client_data::ProcessData process_;
   absl::flat_hash_map<uint64_t, orbit_grpc_protos::InstrumentedFunction> instrumented_functions_;
-  uint64_t memory_sampling_period_ns_;
   uint64_t memory_warning_threshold_kb_;
 
   CallstackData callstack_data_;
