@@ -1415,6 +1415,10 @@ void OrbitApp::StartCapture() {
     return;
   }
 
+  if (IsDevMode()) {
+    RequestSymbolDownloadStop(module_manager_->GetAllModuleData());
+  }
+
   if (capture_window_ != nullptr) {
     capture_window_->set_draw_help(false);
   }
