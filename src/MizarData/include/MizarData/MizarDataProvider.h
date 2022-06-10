@@ -31,6 +31,8 @@ class MizarDataProvider : public orbit_client_data::CaptureDataHolder {
   [[nodiscard]] virtual std::optional<std::string> GetFunctionNameFromAddress(
       uint64_t address) const = 0;
   [[nodiscard]] virtual absl::flat_hash_map<uint64_t, std::string> AllAddressToName() const = 0;
+
+  [[nodiscard]] virtual uint64_t GetCaptureStartTimestampNs() const = 0;
 };
 
 }  // namespace orbit_mizar_data

@@ -13,6 +13,7 @@
 #include "ClientData/CaptureData.h"
 #include "MizarData/MizarData.h"
 #include "MizarData/MizarPairedData.h"
+#include "MizarData/NonWrappingAddition.h"
 #include "MizarData/SampledFunctionId.h"
 #include "MizarData/SamplingWithFrameTrackComparisonReport.h"
 
@@ -46,7 +47,8 @@ class BaselineAndComparisonTmpl {
     uint64_t total_callstacks = 0;
     absl::flat_hash_map<SFID, InclusiveAndExclusive> counts;
     for (const uint32_t tid : config.tids) {
-      data.ForEachCallstackEvent(tid, config.start_ns, config.start_ns + config.duration_ns,
+      data.ForEachCallstackEvent(tid, config.start_relative_ns,
+                                 NonWrappingAddition(config.start_relative_ns, config.duration_ns),
                                  [&total_callstacks, &counts](const std::vector<SFID>& callstack) {
                                    total_callstacks++;
                                    if (callstack.empty()) return;
