@@ -64,8 +64,8 @@ int main(int argc, char* argv[]) {
               {orbit_base::kAllProcessThreadsTid}, kStart, kDuration});
 
   for (const auto& [sfid, name] : bac.sfid_to_name()) {
-    const uint64_t baseline_cnt = report.baseline_sampling_counts.GetExclusiveCnt(sfid);
-    const uint64_t comparison_cnt = report.baseline_sampling_counts.GetExclusiveCnt(sfid);
+    const uint64_t baseline_cnt = report.baseline_sampling_counts.GetExclusiveCount(sfid);
+    const uint64_t comparison_cnt = report.baseline_sampling_counts.GetExclusiveCount(sfid);
     if (baseline_cnt > 0 || comparison_cnt > 0) {
       ORBIT_LOG("%s %.2f %.2f", static_cast<std::string>(sfid), baseline_cnt, comparison_cnt);
     }

@@ -129,18 +129,18 @@ TEST(BaselineAndComparisonTest, MakeSamplingWithFrameTrackReportIsCorrect) {
 
   EXPECT_EQ(report.baseline_sampling_counts.GetTotalCallstacks(), kCallstacks.size());
 
-  EXPECT_EQ(report.baseline_sampling_counts.GetExclusiveCnt(kSFIDFirst), 0);
-  EXPECT_EQ(report.baseline_sampling_counts.GetExclusiveCnt(kSFIDSecond), 1);
-  EXPECT_EQ(report.baseline_sampling_counts.GetExclusiveCnt(kSFIDThird), 1);
+  EXPECT_EQ(report.baseline_sampling_counts.GetExclusiveCount(kSFIDFirst), 0);
+  EXPECT_EQ(report.baseline_sampling_counts.GetExclusiveCount(kSFIDSecond), 1);
+  EXPECT_EQ(report.baseline_sampling_counts.GetExclusiveCount(kSFIDThird), 1);
 
-  EXPECT_EQ(report.baseline_sampling_counts.GetInclusiveCnt(kSFIDFirst), 1);
-  EXPECT_EQ(report.baseline_sampling_counts.GetInclusiveCnt(kSFIDSecond), 2);
-  EXPECT_EQ(report.baseline_sampling_counts.GetInclusiveCnt(kSFIDThird), 1);
+  EXPECT_EQ(report.baseline_sampling_counts.GetInclusiveCount(kSFIDFirst), 1);
+  EXPECT_EQ(report.baseline_sampling_counts.GetInclusiveCount(kSFIDSecond), 2);
+  EXPECT_EQ(report.baseline_sampling_counts.GetInclusiveCount(kSFIDThird), 1);
 
   EXPECT_EQ(report.comparison_sampling_counts.GetTotalCallstacks(), 0);
   for (const SFID sfid : kSFIDs) {
-    EXPECT_EQ(report.comparison_sampling_counts.GetExclusiveCnt(sfid), 0);
-    EXPECT_EQ(report.comparison_sampling_counts.GetInclusiveCnt(sfid), 0);
+    EXPECT_EQ(report.comparison_sampling_counts.GetExclusiveCount(sfid), 0);
+    EXPECT_EQ(report.comparison_sampling_counts.GetInclusiveCount(sfid), 0);
   }
 }
 

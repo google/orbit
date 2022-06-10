@@ -51,22 +51,22 @@ class SamplingCounts {
                           uint64_t total_callstacks)
       : counts_(std::move(counts)), total_callstacks_(total_callstacks) {}
 
-  [[nodiscard]] uint64_t GetInclusiveCnt(SFID sfid) const {
+  [[nodiscard]] uint64_t GetInclusiveCount(SFID sfid) const {
     if (const auto it = counts_.find(sfid); it != counts_.end()) return it->second.inclusive;
     return 0;
   }
-  [[nodiscard]] uint64_t GetExclusiveCnt(SFID sfid) const {
+  [[nodiscard]] uint64_t GetExclusiveCount(SFID sfid) const {
     if (const auto it = counts_.find(sfid); it != counts_.end()) return it->second.exclusive;
     return 0;
   }
 
   [[nodiscard]] double GetInclusiveRate(SFID sfid) const {
     if (total_callstacks_ == 0) return 0;
-    return static_cast<double>(GetInclusiveCnt(sfid)) / GetTotalCallstacks();
+    return static_cast<double>(GetInclusiveCount(sfid)) / GetTotalCallstacks();
   }
   [[nodiscard]] double GetExclusiveRate(SFID sfid) const {
     if (total_callstacks_ == 0) return 0;
-    return static_cast<double>(GetExclusiveCnt(sfid)) / GetTotalCallstacks();
+    return static_cast<double>(GetExclusiveCount(sfid)) / GetTotalCallstacks();
   }
 
   [[nodiscard]] uint64_t GetTotalCallstacks() const { return total_callstacks_; }
