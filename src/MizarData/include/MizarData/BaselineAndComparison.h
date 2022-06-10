@@ -47,7 +47,7 @@ class BaselineAndComparisonTmpl {
   [[nodiscard]] orbit_client_data::ScopeStats MakeFrameTrackStats(
       const PairedData& data, const HalfOfSamplingWithFrameTrackReportConfig& config) const {
     const std::vector<uint64_t> active_invocation_times = data.ActiveInvocationTimes(
-        config.frame_track_scope_id, config.start_relative_ns,
+        config.tids, config.frame_track_scope_id, config.start_relative_ns,
         NonWrappingAddition(config.start_relative_ns, config.duration_ns));
     orbit_client_data::ScopeStats stats;
     for (const uint64_t active_invocation_time : active_invocation_times) {

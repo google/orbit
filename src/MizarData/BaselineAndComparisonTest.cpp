@@ -3,6 +3,7 @@
 // found in the LICENSE file.
 
 #include <absl/container/flat_hash_map.h>
+#include <absl/container/flat_hash_set.h>
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
 
@@ -120,8 +121,9 @@ class MockPairedData {
     std::for_each(std::begin(callstacks_), std::end(callstacks_), std::forward<Action>(action));
   }
 
-  [[nodiscard]] std::vector<uint64_t> ActiveInvocationTimes(uint64_t /*_*/, uint64_t /*_*/,
-                                                            uint64_t /*_*/) const {
+  [[nodiscard]] std::vector<uint64_t> ActiveInvocationTimes(
+      const absl::flat_hash_set<uint32_t>& /*_*/, uint64_t /*_*/, uint64_t /*_*/,
+      uint64_t /*_*/) const {
     return frame_track_active_times_;
   };
 
