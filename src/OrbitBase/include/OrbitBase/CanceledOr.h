@@ -11,11 +11,17 @@
 
 namespace orbit_base {
 
+// Type to indicate a CanceledOr type is canceled.
 struct Canceled {};
 
+// CanceledOr can be used as the return type of an cancelable operation. Based on std::variant.
+// Check whether CanceledOr object is canceled, use orbit_base::IsCanceled. Get the value of a non
+// canceled CanceledOr with std::get<T>().
 template <typename T>
-using CanceledOr = std::variant<orbit_base_internal::VoidToMonostate_t<T>, Canceled>;
+using CanceledOr = std::variant<VoidToMonostate_t<T>, Canceled>;
 
+// Free function to quickly check whether a CanceledOr type is canceled. Abstracts
+// std::holds_alternative
 template <typename T>
 [[nodiscard]] bool IsCanceled(const std::variant<T, Canceled>& canceled_or) {
   return std::holds_alternative<Canceled>(canceled_or);

@@ -8,7 +8,7 @@
 #include <cstddef>
 #include <variant>
 
-namespace orbit_base_internal {
+namespace orbit_base {
 
 // A small helper type trait that maps `void` to `std::monostate` and every other `T` to itself.
 template <typename T>
@@ -32,6 +32,6 @@ using IsMonostate =
     std::is_same<std::variant_alternative_t<index, std::variant<VoidToMonostate_t<Args>...>>,
                  std::monostate>;
 
-}  // namespace orbit_base_internal
+}  // namespace orbit_base
 
 #endif  // ORBIT_BASE_VOID_TO_MONOSTATE_H_
