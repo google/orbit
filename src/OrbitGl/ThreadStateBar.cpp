@@ -158,8 +158,8 @@ std::string ThreadStateBar::GetThreadStateSliceTooltip(PrimitiveAssembler& primi
 
   const auto* thread_state_slice =
       static_cast<const ThreadStateSliceInfo*>(user_data->custom_data_);
-  auto begin_ns = std::chrono::nanoseconds(thread_state_slice -> begin_timestamp_ns());
-  auto end_ns = std::chrono::nanoseconds(thread_state_slice -> end_timestamp_ns());
+  auto begin_ns = std::chrono::nanoseconds(thread_state_slice->begin_timestamp_ns());
+  auto end_ns = std::chrono::nanoseconds(thread_state_slice->end_timestamp_ns());
 
 
   return absl::StrFormat(
