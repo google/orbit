@@ -36,9 +36,9 @@ class MizarPairedData {
 
   // The function estimates how much of CPU-time has been actually spent by the threads in `tids`
   // during each of the frames. scope-id is used as a frame-track. This time does not include the
-  // time the process was waiting, de-scheduled, or the VM itself was de-scheduled. This is achieved
-  // by counting how many callstack samples have been obtained during each frame and them multiplied
-  // by the sampling period.
+  // time the process was waiting, de-scheduled, or the VM itself was de-scheduled. The estimate is
+  // obtained via counting how many callstack samples have been obtained during each frame and then
+  // multiplying the counter by the sampling period.
   [[nodiscard]] std::vector<uint64_t> ActiveInvocationTimes(
       const absl::flat_hash_set<uint32_t>& tids, uint64_t frame_track_scope_id,
       uint64_t min_relative_timestamp_ns, uint64_t max_relative_timestamp_ns) const {
