@@ -3,11 +3,12 @@
 // found in the LICENSE file.
 
 #include <absl/container/flat_hash_map.h>
-#include <gmock/gmock-matchers.h>
+#include <gmock/gmock.h>
 #include <gtest/gtest.h>
 
 #include <algorithm>
 #include <cstdint>
+#include <functional>
 #include <iterator>
 #include <string>
 #include <utility>
@@ -15,6 +16,7 @@
 
 #include "BaselineAndComparisonHelper.h"
 #include "MizarData/BaselineAndComparison.h"
+#include "OrbitBase/ThreadConstants.h"
 
 namespace orbit_mizar_data {
 
@@ -88,6 +90,58 @@ TEST(BaselineAndComparisonTest, BaselineAndComparisonHelperIsCorrect) {
 
   EXPECT_THAT(Values(baseline_address_to_sfid),
               testing::UnorderedElementsAreArray(Values(comparison_address_to_sfid)));
+}
+
+constexpr size_t kSFIDCnt = 3;
+constexpr SFID kSFIDFirst = SFID(1);
+constexpr SFID kSFIDSecond = SFID(2);
+constexpr SFID kSFIDThird = SFID(3);
+constexpr std::array<SFID, kSFIDCnt> kSFIDs = {kSFIDFirst, kSFIDSecond, kSFIDThird};
+
+const std::vector<std::vector<SFID>> kCallstacks = {
+    std::vector<SFID>{kSFIDFirst, kSFIDSecond, kSFIDThird}, {kSFIDSecond}, {}};
+
+namespace {
+class MockPairedData {
+ public:
+  explicit MockPairedData(std::vector<std::vector<SFID>> callstacks)
+      : callstacks_(std::move(callstacks)) {}
+
+  template <typename Action>
+  void ForEachCallstackEvent(uint32_t /*tid*/, uint64_t /*min_timestamp*/,
+                             uint64_t /*max_timestamp*/, Action&& action) const {
+    std::for_each(std::begin(callstacks_), std::end(callstacks_), std::forward<Action>(action));
+  }
+
+ private:
+  std::vector<std::vector<SFID>> callstacks_;
+};
+}  // namespace
+
+TEST(BaselineAndComparisonTest, MakeSamplingWithFrameTrackReportIsCorrect) {
+  MockPairedData full(kCallstacks);
+  MockPairedData empty({});
+
+  BaselineAndComparisonTmpl<MockPairedData> bac(full, empty, {});
+  SamplingWithFrameTrackComparisonReport report = bac.MakeSamplingWithFrameTrackReport(
+      BaselineSamplingWithFrameTrackReportConfig{{orbit_base::kAllProcessThreadsTid}, 0, 1},
+      ComparisonSamplingWithFrameTrackReportConfig{{orbit_base::kAllProcessThreadsTid}, 0, 1});
+
+  EXPECT_EQ(report.baseline_sampling_counts.GetTotalCallstacks(), kCallstacks.size());
+
+  EXPECT_EQ(report.baseline_sampling_counts.GetExclusiveCount(kSFIDFirst), 0);
+  EXPECT_EQ(report.baseline_sampling_counts.GetExclusiveCount(kSFIDSecond), 1);
+  EXPECT_EQ(report.baseline_sampling_counts.GetExclusiveCount(kSFIDThird), 1);
+
+  EXPECT_EQ(report.baseline_sampling_counts.GetInclusiveCount(kSFIDFirst), 1);
+  EXPECT_EQ(report.baseline_sampling_counts.GetInclusiveCount(kSFIDSecond), 2);
+  EXPECT_EQ(report.baseline_sampling_counts.GetInclusiveCount(kSFIDThird), 1);
+
+  EXPECT_EQ(report.comparison_sampling_counts.GetTotalCallstacks(), 0);
+  for (const SFID sfid : kSFIDs) {
+    EXPECT_EQ(report.comparison_sampling_counts.GetExclusiveCount(sfid), 0);
+    EXPECT_EQ(report.comparison_sampling_counts.GetInclusiveCount(sfid), 0);
+  }
 }
 
 }  // namespace orbit_mizar_data
