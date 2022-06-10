@@ -24,6 +24,7 @@
 
 #include "ClientFlags/ClientFlags.h"
 #include "MetricsUploader/ScopedMetric.h"
+#include "OrbitBase/CanceledOr.h"
 #include "OrbitBase/File.h"
 #include "OrbitBase/Future.h"
 #include "OrbitBase/Logging.h"
@@ -47,6 +48,8 @@ static const std::string kSigDestinationPath = "/tmp/orbitprofiler.deb.asc";
 constexpr std::string_view kSshWatchdogPassphrase = "start_watchdog";
 constexpr std::chrono::milliseconds kSshWatchdogInterval{1000};
 constexpr std::chrono::seconds kServiceStartupTimeout{10};
+
+using orbit_base::CanceledOr;
 
 namespace orbit_session_setup {
 
@@ -316,10 +319,10 @@ ErrorMessageOr<void> ServiceDeployManager::CopyOrbitServicePackage() {
   return outcome::success();
 }
 
-orbit_base::Future<ErrorMessageOr<void>> ServiceDeployManager::CopyFileToLocal(
+orbit_base::Future<ErrorMessageOr<CanceledOr<void>>> ServiceDeployManager::CopyFileToLocal(
     std::filesystem::path source, std::filesystem::path destination,
     orbit_base::StopToken stop_token) {
-  orbit_base::Promise<ErrorMessageOr<void>> promise;
+  orbit_base::Promise<ErrorMessageOr<CanceledOr<void>>> promise;
   auto future = promise.GetFuture();
 
   // This schedules the call of `CopyFileToLocalImpl` on the background thread.
@@ -333,10 +336,9 @@ orbit_base::Future<ErrorMessageOr<void>> ServiceDeployManager::CopyFileToLocal(
   return future;
 }
 
-void ServiceDeployManager::CopyFileToLocalImpl(orbit_base::Promise<ErrorMessageOr<void>> promise,
-                                               std::filesystem::path source,
-                                               std::filesystem::path destination,
-                                               orbit_base::StopToken stop_token) {
+void ServiceDeployManager::CopyFileToLocalImpl(
+    orbit_base::Promise<ErrorMessageOr<CanceledOr<void>>> promise, std::filesystem::path source,
+    std::filesystem::path destination, orbit_base::StopToken stop_token) {
   ORBIT_CHECK(QThread::currentThread() == thread());
 
   if (copy_file_operation_in_progress_) {
@@ -383,7 +385,7 @@ void ServiceDeployManager::CopyFileToLocalImpl(orbit_base::Promise<ErrorMessageO
     }
 
     if (stop_token.IsStopRequested()) {
-      promise.SetResult(ErrorMessage{"User canceled download."});
+      promise.SetResult(orbit_base::Canceled{});
       return;
     }
 

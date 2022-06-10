@@ -17,6 +17,7 @@
 #include "CodeReport/CodeReport.h"
 #include "CodeReport/DisassemblyReport.h"
 #include "MetricsUploader/ScopedMetric.h"
+#include "OrbitBase/CanceledOr.h"
 #include "OrbitBase/Future.h"
 #include "OrbitBase/StopToken.h"
 #include "Statistics/Histogram.h"
@@ -54,7 +55,7 @@ class MainWindowInterface {
   virtual SymbolErrorHandlingResult HandleSymbolError(
       const ErrorMessage& error, const orbit_client_data::ModuleData* module) = 0;
 
-  virtual orbit_base::Future<ErrorMessageOr<void>> DownloadFileFromInstance(
+  virtual orbit_base::Future<ErrorMessageOr<orbit_base::CanceledOr<void>>> DownloadFileFromInstance(
       std::filesystem::path path_on_instance, std::filesystem::path local_path,
       orbit_base::StopToken stop_token) = 0;
 

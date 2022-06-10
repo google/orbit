@@ -72,6 +72,7 @@
 #include "ManualInstrumentationManager.h"
 #include "MetricsUploader/CaptureMetric.h"
 #include "MetricsUploader/MetricsUploader.h"
+#include "OrbitBase/CanceledOr.h"
 #include "OrbitBase/CrashHandler.h"
 #include "OrbitBase/Future.h"
 #include "OrbitBase/Logging.h"
@@ -325,7 +326,7 @@ class OrbitApp final : public DataViewFactory,
 
   // RetrieveModule retrieves a module file and returns the local file path (potentially from the
   // local cache). Only modules with a .symtab section will be considered.
-  orbit_base::Future<ErrorMessageOr<std::filesystem::path>> RetrieveModule(
+  orbit_base::Future<ErrorMessageOr<orbit_base::CanceledOr<std::filesystem::path>>> RetrieveModule(
       const std::string& module_path, const std::string& build_id);
   orbit_base::Future<void> RetrieveModulesAndLoadSymbols(
       absl::Span<const orbit_client_data::ModuleData* const> modules) override;
@@ -343,9 +344,9 @@ class OrbitApp final : public DataViewFactory,
 
   // RetrieveModuleAndSymbols is a helper function which first retrieves the module by calling
   // `RetrieveModule` and afterwards load the symbols by calling `LoadSymbols`.
-  orbit_base::Future<ErrorMessageOr<void>> RetrieveModuleAndLoadSymbols(
+  orbit_base::Future<ErrorMessageOr<orbit_base::CanceledOr<void>>> RetrieveModuleAndLoadSymbols(
       const orbit_client_data::ModuleData* module);
-  orbit_base::Future<ErrorMessageOr<void>> RetrieveModuleAndLoadSymbols(
+  orbit_base::Future<ErrorMessageOr<orbit_base::CanceledOr<void>>> RetrieveModuleAndLoadSymbols(
       const std::string& module_path, const std::string& build_id);
 
   // This method is pretty similar to `RetrieveModule`, but it also requires debug information to be
@@ -536,8 +537,8 @@ class OrbitApp final : public DataViewFactory,
   ErrorMessageOr<void> ConvertPresetToNewFormatIfNecessary(
       const orbit_preset_file::PresetFile& preset_file);
 
-  [[nodiscard]] orbit_base::Future<ErrorMessageOr<std::filesystem::path>> RetrieveModuleFromRemote(
-      const std::string& module_file_path);
+  [[nodiscard]] orbit_base::Future<ErrorMessageOr<orbit_base::CanceledOr<std::filesystem::path>>>
+  RetrieveModuleFromRemote(const std::string& module_file_path);
 
   void SelectFunctionsFromHashes(const orbit_client_data::ModuleData* module,
                                  absl::Span<const uint64_t> function_hashes);
@@ -582,7 +583,7 @@ class OrbitApp final : public DataViewFactory,
   // with a simple prioritization. The module `ggpvlk.so` is queued to be loaded first, the "main
   // module" (binary of the process) is queued to be loaded second. All other modules are queued in
   // no particular order.
-  orbit_base::Future<std::vector<ErrorMessageOr<void>>> LoadAllSymbols();
+  orbit_base::Future<std::vector<ErrorMessageOr<orbit_base::CanceledOr<void>>>> LoadAllSymbols();
 
   std::atomic<bool> capture_loading_cancellation_requested_ = false;
   std::atomic<orbit_client_data::CaptureData::DataSource> data_source_{
@@ -626,7 +627,7 @@ class OrbitApp final : public DataViewFactory,
 
   struct ModuleDownloadOperation {
     orbit_base::StopSource stop_source;
-    orbit_base::Future<ErrorMessageOr<std::filesystem::path>> future;
+    orbit_base::Future<ErrorMessageOr<orbit_base::CanceledOr<std::filesystem::path>>> future;
   };
   // Map of module file path to download operation future, that holds all symbol downloads that
   // are currently in progress.
@@ -640,8 +641,9 @@ class OrbitApp final : public DataViewFactory,
   // symbol_files_currently_being_retrieved_.
   // ONLY access this from the main thread.
   // TODO(b/234586730) Replace pair with struct
-  absl::flat_hash_map<std::pair<std::string, std::string>,
-                      orbit_base::Future<ErrorMessageOr<std::filesystem::path>>>
+  absl::flat_hash_map<
+      std::pair<std::string, std::string>,
+      orbit_base::Future<ErrorMessageOr<orbit_base::CanceledOr<std::filesystem::path>>>>
       symbol_files_currently_being_retrieved_;
 
   // Map of "module ID" (file path and build ID) to symbol loading future, that holds all symbol
@@ -651,7 +653,8 @@ class OrbitApp final : public DataViewFactory,
   // contained in symbols_currently_loading_.
   // ONLY access this from the main thread.
   // TODO(b/234586730) Replace pair with struct
-  absl::flat_hash_map<std::pair<std::string, std::string>, orbit_base::Future<ErrorMessageOr<void>>>
+  absl::flat_hash_map<std::pair<std::string, std::string>,
+                      orbit_base::Future<ErrorMessageOr<orbit_base::CanceledOr<void>>>>
       symbols_currently_loading_;
 
   // Set of modules where a symbol loading error has occurred. The module identifier consists of
