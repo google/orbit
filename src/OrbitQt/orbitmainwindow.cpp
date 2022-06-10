@@ -1476,6 +1476,9 @@ void OrbitMainWindow::ExecuteSymbolLocationsDialog(
 
 void OrbitMainWindow::on_actionSymbolLocationsDialog_triggered() {
   ExecuteSymbolLocationsDialog(std::nullopt);
+  if (app_->IsDevMode()) {
+    std::ignore = app_->LoadAllSymbols();
+  }
 }
 
 void OrbitMainWindow::OnCaptureCleared() {

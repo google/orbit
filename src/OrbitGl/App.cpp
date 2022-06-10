@@ -493,6 +493,10 @@ Future<void> OrbitApp::OnCaptureComplete() {
         }
 
         FireRefreshCallbacks();
+
+        if (IsDevMode()) {
+          std::ignore = LoadAllSymbols();
+        }
       });
 }
 
@@ -503,6 +507,9 @@ Future<void> OrbitApp::OnCaptureCancelled() {
     capture_failed_callback_();
 
     ClearCapture();
+    if (IsDevMode()) {
+      std::ignore = LoadAllSymbols();
+    }
   });
 }
 
@@ -515,6 +522,9 @@ Future<void> OrbitApp::OnCaptureFailed(ErrorMessage error_message) {
 
         ClearCapture();
         SendErrorToUi("Error in capture", error_message.message());
+        if (IsDevMode()) {
+          std::ignore = LoadAllSymbols();
+        }
       });
 }
 
@@ -1403,6 +1413,10 @@ void OrbitApp::StartCapture() {
     SendErrorToUi("Error starting capture",
                   "No process selected. Please select a target process for the capture.");
     return;
+  }
+
+  if (IsDevMode()) {
+    RequestSymbolDownloadStop(module_manager_->GetAllModuleData());
   }
 
   if (capture_window_ != nullptr) {
@@ -2336,6 +2350,12 @@ orbit_base::Future<ErrorMessageOr<void>> OrbitApp::UpdateProcessAndModuleList() 
                        (void)reload_results;
 
                        RefreshUIAfterModuleReload();
+                     })
+      .ThenIfSuccess(main_thread_executor_,
+                     [this]() {
+                       if (IsDevMode()) {
+                         std::ignore = LoadAllSymbols();
+                       }
                      })
       .Then(main_thread_executor_, [this](const ErrorMessageOr<void>& result) {
         if (result.has_error()) {
