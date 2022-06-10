@@ -5,6 +5,8 @@
 #ifndef CLIENT_DATA_THREAD_STATE_SLICE_INFO_H_
 #define CLIENT_DATA_THREAD_STATE_SLICE_INFO_H_
 
+#include <sys/types.h>
+#include <cstdint>
 #include "GrpcProtos/capture.pb.h"
 
 namespace orbit_client_data {
