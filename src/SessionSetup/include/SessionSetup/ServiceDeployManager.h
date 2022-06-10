@@ -22,6 +22,7 @@
 #include "DeploymentConfigurations.h"
 #include "MetricsUploader/MetricsUploader.h"
 #include "OrbitBase/AnyInvocable.h"
+#include "OrbitBase/CanceledOr.h"
 #include "OrbitBase/Future.h"
 #include "OrbitBase/Promise.h"
 #include "OrbitBase/Result.h"
@@ -54,9 +55,9 @@ class ServiceDeployManager : public QObject {
       orbit_metrics_uploader::MetricsUploader* metrics_uploader = nullptr);
 
   // This method copies remote source file to local destination.
-  orbit_base::Future<ErrorMessageOr<void>> CopyFileToLocal(std::filesystem::path source,
-                                                           std::filesystem::path destination,
-                                                           orbit_base::StopToken stop_token);
+  orbit_base::Future<ErrorMessageOr<orbit_base::CanceledOr<void>>> CopyFileToLocal(
+      std::filesystem::path source, std::filesystem::path destination,
+      orbit_base::StopToken stop_token);
 
   void Shutdown();
   void Cancel();
@@ -107,9 +108,10 @@ class ServiceDeployManager : public QObject {
   bool copy_file_operation_in_progress_ = false;
   std::deque<orbit_base::AnyInvocable<void()>> waiting_copy_operations_;
 
-  void CopyFileToLocalImpl(orbit_base::Promise<ErrorMessageOr<void>> promise,
-                           std::filesystem::path source, std::filesystem::path destination,
-                           orbit_base::StopToken stop_token);
+  void CopyFileToLocalImpl(
+      orbit_base::Promise<ErrorMessageOr<orbit_base::CanceledOr<void>>> promise,
+      std::filesystem::path source, std::filesystem::path destination,
+      orbit_base::StopToken stop_token);
   ErrorMessageOr<GrpcPort> ExecImpl();
 
   void StartWatchdog();

@@ -95,6 +95,7 @@
 #include "Introspection/Introspection.h"
 #include "LiveFunctionsController.h"
 #include "MetricsUploader/orbit_log_event.pb.h"
+#include "OrbitBase/CanceledOr.h"
 #include "OrbitBase/ExecutablePath.h"
 #include "OrbitBase/Future.h"
 #include "OrbitBase/Logging.h"
@@ -1857,9 +1858,10 @@ orbit_gl::MainWindowInterface::SymbolErrorHandlingResult OrbitMainWindow::Handle
   ORBIT_UNREACHABLE();
 }
 
-orbit_base::Future<ErrorMessageOr<void>> OrbitMainWindow::DownloadFileFromInstance(
-    std::filesystem::path path_on_instance, std::filesystem::path local_path,
-    orbit_base::StopToken stop_token) {
+orbit_base::Future<ErrorMessageOr<orbit_base::CanceledOr<void>>>
+OrbitMainWindow::DownloadFileFromInstance(std::filesystem::path path_on_instance,
+                                          std::filesystem::path local_path,
+                                          orbit_base::StopToken stop_token) {
   ORBIT_CHECK(is_connected_);
   ORBIT_CHECK(std::holds_alternative<StadiaTarget>(target_configuration_));
   ServiceDeployManager* service_deploy_manager =
