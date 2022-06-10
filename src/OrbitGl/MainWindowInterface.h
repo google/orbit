@@ -59,6 +59,10 @@ class MainWindowInterface {
       std::filesystem::path path_on_instance, std::filesystem::path local_path,
       orbit_base::StopToken stop_token) = 0;
 
+  // Returns orbit_base::Canceled if the user chooses cancel in the dialog, void otherwise
+  virtual orbit_base::CanceledOr<void> DisplayStopDownloadDialog(
+      const orbit_client_data::ModuleData* module) = 0;
+
   virtual ~MainWindowInterface() = default;
 };
 

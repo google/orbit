@@ -127,6 +127,9 @@ class OrbitMainWindow final : public QMainWindow, public orbit_gl::MainWindowInt
       std::filesystem::path path_on_instance, std::filesystem::path local_path,
       orbit_base::StopToken stop_token) override;
 
+  orbit_base::CanceledOr<void> DisplayStopDownloadDialog(
+      const orbit_client_data::ModuleData* module) override;
+
  protected:
   void closeEvent(QCloseEvent* event) override;
   void resizeEvent(QResizeEvent* event) override;

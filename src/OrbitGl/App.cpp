@@ -3172,6 +3172,13 @@ void OrbitApp::RequestSymbolDownloadStop(absl::Span<const ModuleData* const> mod
       // Download already ended
       continue;
     }
+    CanceledOr<void> canceled_or = main_window_->DisplayStopDownloadDialog(module);
+    if (orbit_base::IsCanceled(canceled_or)) continue;
+
+    if (!symbol_files_currently_downloading_.contains(module->file_path())) {
+      // Download already ended (while user was looking at the dialog)
+      continue;
+    }
     symbol_files_currently_downloading_.at(module->file_path()).stop_source.RequestStop();
   }
 }

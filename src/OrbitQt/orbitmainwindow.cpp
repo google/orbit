@@ -83,6 +83,7 @@
 #include "CodeViewer/FontSizeInEm.h"
 #include "CodeViewer/OwningDialog.h"
 #include "ConfigWidgets/SourcePathsMappingDialog.h"
+#include "ConfigWidgets/StopSymbolDownloadDialog.h"
 #include "ConfigWidgets/SymbolErrorDialog.h"
 #include "ConfigWidgets/SymbolLocationsDialog.h"
 #include "DataViewFactory.h"
@@ -1873,4 +1874,31 @@ OrbitMainWindow::DownloadFileFromInstance(std::filesystem::path path_on_instance
 
   return service_deploy_manager->CopyFileToLocal(std::move(path_on_instance), std::move(local_path),
                                                  std::move(stop_token));
+}
+
+orbit_base::CanceledOr<void> OrbitMainWindow::DisplayStopDownloadDialog(
+    const orbit_client_data::ModuleData* module) {
+  using orbit_config_widgets::StopSymbolDownloadDialog;
+  using Result = StopSymbolDownloadDialog::Result;
+
+  StopSymbolDownloadDialog dialog{module};
+  Result dialog_result = dialog.Exec();
+
+  orbit_base::CanceledOr<void> return_canceled_or;
+  switch (dialog_result) {
+    case orbit_config_widgets::StopSymbolDownloadDialog::Result::kCancel:
+      return_canceled_or = orbit_base::Canceled{};
+      break;
+    case orbit_config_widgets::StopSymbolDownloadDialog::Result::kStopAndDisable: {
+      orbit_client_symbols::QSettingsBasedStorageManager storage_manager;
+      absl::flat_hash_set<std::string> disabled_modules = storage_manager.LoadDisabledModulePaths();
+      disabled_modules.emplace(module->file_path());
+      storage_manager.SaveDisabledModulePaths(disabled_modules);
+      [[fallthrough]];
+    }
+    case orbit_config_widgets::StopSymbolDownloadDialog::Result::kStop:
+      break;
+  }
+
+  return return_canceled_or;
 }
