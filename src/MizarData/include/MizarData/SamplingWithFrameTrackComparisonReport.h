@@ -21,10 +21,10 @@ namespace orbit_mizar_data {
 struct HalfOfSamplingWithFrameTrackReportConfig {
   explicit HalfOfSamplingWithFrameTrackReportConfig(absl::flat_hash_set<uint32_t> tids,
                                                     uint64_t start_ns, uint64_t duration_ns)
-      : tids(std::move(tids)), start_ns(start_ns), duration_ns(duration_ns) {}
+      : tids(std::move(tids)), start_relative_ns(start_ns), duration_ns(duration_ns) {}
 
   absl::flat_hash_set<uint32_t> tids{};
-  uint64_t start_ns{};
+  uint64_t start_relative_ns{};  // nanoseconds elapsed since capture start
   uint64_t duration_ns{};
 };
 

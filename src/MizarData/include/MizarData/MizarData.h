@@ -44,6 +44,10 @@ class MizarData : public orbit_capture_client::AbstractCaptureListener<MizarData
   [[nodiscard]] std::optional<std::string> GetFunctionNameFromAddress(
       uint64_t address) const override;
 
+  [[nodiscard]] uint64_t GetCaptureStartTimestampNs() const override {
+    return GetCaptureData().GetCaptureStarted().capture_start_timestamp_ns();
+  }
+
   void OnCaptureStarted(const orbit_grpc_protos::CaptureStarted& capture_started,
                         std::optional<std::filesystem::path> file_path,
                         absl::flat_hash_set<uint64_t> frame_track_function_ids) override;

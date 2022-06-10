@@ -29,9 +29,11 @@ class MizarPairedData {
   // Action is a void callable that takes a single argument of type
   // `const std::vector<uint64_t>` representing a callstack sample, each element of the vector is a
   // sampled function id.
+  // `min_relative_timestamp_ns` and `max_relative_timestamp_ns` are the nanoseconds elapsed since
+  // capture start.
   template <typename Action>
-  void ForEachCallstackEvent(uint32_t tid, uint64_t min_timestamp, uint64_t max_timestamp,
-                             Action&& action) const {
+  void ForEachCallstackEvent(uint32_t tid, uint64_t min_relative_timestamp_ns,
+                             uint64_t max_relative_timestamp_ns, Action&& action) const {
     const orbit_client_data::CallstackData& callstack_data =
         data_->GetCaptureData().GetCallstackData();
 
@@ -43,11 +45,16 @@ class MizarPairedData {
       std::invoke(std::forward<Action>(action), sfids);
     };
 
+    const uint64_t min_timestamp_ns =
+        data_->GetCaptureStartTimestampNs() + min_relative_timestamp_ns;
+    const uint64_t max_timestamp_ns =
+        data_->GetCaptureStartTimestampNs() + max_relative_timestamp_ns;
+
     if (tid == orbit_base::kAllProcessThreadsTid) {
-      callstack_data.ForEachCallstackEventInTimeRange(min_timestamp, max_timestamp,
+      callstack_data.ForEachCallstackEventInTimeRange(min_timestamp_ns, max_timestamp_ns,
                                                       action_on_callstack_events);
     } else {
-      callstack_data.ForEachCallstackEventOfTidInTimeRange(tid, min_timestamp, max_timestamp,
+      callstack_data.ForEachCallstackEventOfTidInTimeRange(tid, min_timestamp_ns, max_timestamp_ns,
                                                            action_on_callstack_events);
     }
   }
