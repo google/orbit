@@ -137,9 +137,42 @@ class HideValuesForBottomUpProxyModel : public QIdentityProxyModel {
 
 }  // namespace
 
+static void ExpandRecursively(QTreeView* tree_view, const QModelIndex& index) {
+  if (!index.isValid()) {
+    return;
+  }
+  for (int i = 0; i < index.model()->rowCount(index); ++i) {
+    const QModelIndex& child = index.child(i, 0);
+    ExpandRecursively(tree_view, child);
+  }
+  if (!tree_view->isExpanded(index)) {
+    tree_view->expand(index);
+  }
+}
+
+static void CollapseRecursively(QTreeView* tree_view, const QModelIndex& index) {
+  if (!index.isValid()) {
+    return;
+  }
+  for (int i = 0; i < index.model()->rowCount(index); ++i) {
+    const QModelIndex& child = index.child(i, 0);
+    CollapseRecursively(tree_view, child);
+  }
+  if (tree_view->isExpanded(index)) {
+    tree_view->collapse(index);
+  }
+}
+
 void CallTreeWidget::SetTopDownView(std::unique_ptr<CallTreeView> top_down_view) {
+  // Expand recursively if CallTreeView contains information for a single thread.
+  bool should_expand = top_down_view->thread_count() == 1;
+
   SetCallTreeView(std::move(top_down_view),
                   std::make_unique<HideValuesForTopDownProxyModel>(nullptr));
+
+  if (should_expand) {
+    ExpandRecursively(ui_->callTreeTreeView, ui_->callTreeTreeView->model()->index(0, 0));
+  }
 }
 
 void CallTreeWidget::SetBottomUpView(std::unique_ptr<CallTreeView> bottom_up_view) {
@@ -392,32 +425,6 @@ const QString CallTreeWidget::kActionDisassembly = QStringLiteral("Go to &Disass
 const QString CallTreeWidget::kActionSourceCode = QStringLiteral("Go to &Source Code");
 const QString CallTreeWidget::kActionSelectCallstacks = QStringLiteral("Select these callstacks");
 const QString CallTreeWidget::kActionCopySelection = QStringLiteral("Copy Selection");
-
-static void ExpandRecursively(QTreeView* tree_view, const QModelIndex& index) {
-  if (!index.isValid()) {
-    return;
-  }
-  for (int i = 0; i < index.model()->rowCount(index); ++i) {
-    const QModelIndex& child = index.child(i, 0);
-    ExpandRecursively(tree_view, child);
-  }
-  if (!tree_view->isExpanded(index)) {
-    tree_view->expand(index);
-  }
-}
-
-static void CollapseRecursively(QTreeView* tree_view, const QModelIndex& index) {
-  if (!index.isValid()) {
-    return;
-  }
-  for (int i = 0; i < index.model()->rowCount(index); ++i) {
-    const QModelIndex& child = index.child(i, 0);
-    CollapseRecursively(tree_view, child);
-  }
-  if (tree_view->isExpanded(index)) {
-    tree_view->collapse(index);
-  }
-}
 
 void CallTreeWidget::OnAltKeyAndMousePressed(const QPoint& point) {
   QModelIndex index = ui_->callTreeTreeView->indexAt(point);
