@@ -21,6 +21,7 @@ target_sources(OrbitBase PRIVATE
         include/OrbitBase/AnyMovable.h
         include/OrbitBase/Append.h
         include/OrbitBase/Attributes.h
+        include/OrbitBase/CanceledOr.h
         include/OrbitBase/Chunk.h
         include/OrbitBase/CrashHandler.h
         include/OrbitBase/ExecutablePath.h
@@ -50,6 +51,7 @@ target_sources(OrbitBase PRIVATE
         include/OrbitBase/ThreadPool.h
         include/OrbitBase/ThreadUtils.h
         include/OrbitBase/UniqueResource.h
+        include/OrbitBase/VoidToMonostate.h
         include/OrbitBase/WhenAll.h
         include/OrbitBase/WhenAny.h
         include/OrbitBase/WriteStringToFile.h)
@@ -100,6 +102,7 @@ target_sources(OrbitBaseTests PRIVATE
         AnyInvocableTest.cpp
         AnyMovableTest.cpp
         AppendTest.cpp
+        CanceledOrTest.cpp
         ChunkTest.cpp
         ExecutablePathTest.cpp
         ExecutorTest.cpp

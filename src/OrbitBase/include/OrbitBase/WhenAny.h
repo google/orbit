@@ -14,22 +14,9 @@
 #include "OrbitBase/FutureHelpers.h"
 #include "OrbitBase/Logging.h"
 #include "OrbitBase/Promise.h"
+#include "OrbitBase/VoidToMonostate.h"
 
 namespace orbit_base_internal {
-
-// A small helper type trait that maps `void` to `std::monostate` and every other `T` to itself.
-template <typename T>
-struct VoidToMonostate {
-  using type = T;
-};
-
-template <>
-struct VoidToMonostate<void> {
-  using type = std::monostate;
-};
-
-template <typename T>
-using VoidToMonostate_t = typename VoidToMonostate<T>::type;
 
 template <typename... Ts>
 class SharedStateWhenAny {
@@ -53,28 +40,20 @@ class SharedStateWhenAny {
   mutable absl::Mutex mutex;
 };
 
-// A small helper type trait that checks whether a certain index of a parameter pack `Args` is of
-// type `std::monostate`. If yes the resulting type will be `std::true_type`, otherwise
-// `std::false_type`.
-template <size_t index, typename... Args>
-using IsMonostate =
-    std::is_same<std::variant_alternative_t<index, std::variant<VoidToMonostate_t<Args>...>>,
-                 std::monostate>;
-
 template <typename... Args, std::size_t... Indices>
-orbit_base::Future<std::variant<VoidToMonostate_t<Args>...>> WhenAnyImpl(
+orbit_base::Future<std::variant<orbit_base::VoidToMonostate_t<Args>...>> WhenAnyImpl(
     orbit_base::Future<Args>... futures, std::index_sequence<Indices...> /* indexes */) {
   ORBIT_CHECK(futures.IsValid() && ...);
 
-  auto shared_state =
-      std::make_shared<orbit_base_internal::SharedStateWhenAny<VoidToMonostate_t<Args>...>>();
+  auto shared_state = std::make_shared<
+      orbit_base_internal::SharedStateWhenAny<orbit_base::VoidToMonostate_t<Args>...>>();
 
   (RegisterContinuationOrCallDirectly(
        futures,
        // Having the lambda expression taking a parameter pack as its arguments allows us to express
        // 0 arguments (void) and 1 argument (any other T) in a single continuation.
        [shared_state](const auto&... arguments) {
-         if constexpr (IsMonostate<Indices, Args...>::value) {
+         if constexpr (orbit_base::IsMonostate<Indices, Args...>::value) {
            shared_state->template SetResult<Indices>(std::monostate{});
          } else {
            // `arguments` is a parameter pack of at most 1 argument. In this if-constexpr-branch we
@@ -95,9 +74,8 @@ namespace orbit_base {
 // The returning future will contain a variant that holds the value of the completed future.
 // Note that a future of type `Future<void>` will be represented as `std::monostate` in the variant.
 template <typename Arg0, typename... Args>
-[[nodiscard]] Future<std::variant<orbit_base_internal::VoidToMonostate_t<Arg0>,
-                                  orbit_base_internal::VoidToMonostate_t<Args>...>>
-WhenAny(Future<Arg0> future0, Future<Args>... futures) {
+[[nodiscard]] Future<std::variant<VoidToMonostate_t<Arg0>, VoidToMonostate_t<Args>...>> WhenAny(
+    Future<Arg0> future0, Future<Args>... futures) {
   return orbit_base_internal::WhenAnyImpl<Arg0, Args...>(
       std::move(future0), std::move(futures)...,
       std::make_index_sequence<1 + sizeof...(futures)>());
