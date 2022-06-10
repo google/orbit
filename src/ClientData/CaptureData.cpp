@@ -25,20 +25,20 @@ using orbit_grpc_protos::ProcessInfo;
 
 namespace orbit_client_data {
 
-CaptureData::CaptureData(const CaptureStarted& capture_started,
+CaptureData::CaptureData(CaptureStarted capture_started,
                          std::optional<std::filesystem::path> file_path,
                          absl::flat_hash_set<uint64_t> frame_track_function_ids,
                          DataSource data_source)
-    : capture_started_(capture_started),
+    : capture_started_(std::move(capture_started)),
       selection_callstack_data_(std::make_unique<CallstackData>()),
       frame_track_function_ids_{std::move(frame_track_function_ids)},
       file_path_{std::move(file_path)},
-      scope_id_provider_(NameEqualityScopeIdProvider::Create(capture_started.capture_options())),
+      scope_id_provider_(NameEqualityScopeIdProvider::Create(capture_started_.capture_options())),
       thread_track_data_provider_(
           std::make_unique<ThreadTrackDataProvider>(data_source == DataSource::kLoadedCapture)) {
   ProcessInfo process_info;
-  process_info.set_pid(capture_started.process_id());
-  std::filesystem::path executable_path{capture_started.executable_path()};
+  process_info.set_pid(capture_started_.process_id());
+  std::filesystem::path executable_path{capture_started_.executable_path()};
   process_info.set_full_path(executable_path.string());
   process_info.set_name(executable_path.filename().string());
   process_info.set_is_64_bit(true);
@@ -47,7 +47,7 @@ CaptureData::CaptureData(const CaptureStarted& capture_started,
   absl::flat_hash_map<uint64_t, FunctionInfo> instrumented_functions;
 
   for (const auto& instrumented_function :
-       capture_started.capture_options().instrumented_functions()) {
+       capture_started_.capture_options().instrumented_functions()) {
     instrumented_functions_.insert_or_assign(instrumented_function.function_id(),
                                              instrumented_function);
   }

@@ -51,7 +51,7 @@ namespace orbit_client_data {
 class CaptureData {
  public:
   enum class DataSource { kLiveCapture, kLoadedCapture };
-  explicit CaptureData(const orbit_grpc_protos::CaptureStarted& capture_started,
+  explicit CaptureData(orbit_grpc_protos::CaptureStarted capture_started,
                        std::optional<std::filesystem::path> file_path,
                        absl::flat_hash_set<uint64_t> frame_track_function_ids,
                        DataSource data_source);
