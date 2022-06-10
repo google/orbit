@@ -12,6 +12,7 @@
 #include <memory>
 
 #include "ClientData/CallstackData.h"
+#include "MizarData/SafeTimestampAdd.h"
 #include "MizarData/SampledFunctionId.h"
 #include "OrbitBase/ThreadConstants.h"
 
@@ -46,9 +47,9 @@ class MizarPairedData {
     };
 
     const uint64_t min_timestamp_ns =
-        data_->GetCaptureStartTimestampNs() + min_relative_timestamp_ns;
+        SafeTimestampsAdd(data_->GetCaptureStartTimestampNs(), min_relative_timestamp_ns);
     const uint64_t max_timestamp_ns =
-        data_->GetCaptureStartTimestampNs() + max_relative_timestamp_ns;
+        SafeTimestampsAdd(data_->GetCaptureStartTimestampNs(), max_relative_timestamp_ns);
 
     if (tid == orbit_base::kAllProcessThreadsTid) {
       callstack_data.ForEachCallstackEventInTimeRange(min_timestamp_ns, max_timestamp_ns,
