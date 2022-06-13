@@ -19,6 +19,7 @@
 
 #include "ClientData/CallstackData.h"
 #include "ClientProtos/capture_data.pb.h"
+#include "MizarData/MizarDataProvider.h"
 #include "MizarData/NonWrappingAddition.h"
 #include "MizarData/SampledFunctionId.h"
 #include "OrbitBase/ThreadConstants.h"
@@ -29,9 +30,10 @@ namespace orbit_mizar_data {
 // it will be compared against. In particular, it is aware of the functions that has been sampled in
 // the other capture. Also, it is aware of the sampled function ids assigned to the functions.
 template <typename Data>
-class MizarPairedData {
+class MizarPairedDataTmpl {
  public:
-  MizarPairedData(std::unique_ptr<Data> data, absl::flat_hash_map<uint64_t, SFID> address_to_sfid)
+  MizarPairedDataTmpl(std::unique_ptr<Data> data,
+                      absl::flat_hash_map<uint64_t, SFID> address_to_sfid)
       : data_(std::move(data)), address_to_sfid_(std::move(address_to_sfid)) {}
 
   // The function estimates how much of CPU-time has been actually spent by the threads in `tids`
@@ -143,6 +145,8 @@ class MizarPairedData {
   std::unique_ptr<Data> data_;
   absl::flat_hash_map<uint64_t, SFID> address_to_sfid_;
 };
+
+using MizarPairedData = MizarPairedDataTmpl<MizarDataProvider>;
 
 }  // namespace orbit_mizar_data
 

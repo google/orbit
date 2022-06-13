@@ -134,13 +134,16 @@ class MockPairedData {
 }  // namespace
 
 TEST(BaselineAndComparisonTest, MakeSamplingWithFrameTrackReportIsCorrect) {
-  MockPairedData full(kCallstacks, kFrameTrackActiveTimes);
-  MockPairedData empty({}, {});
+  auto full = MakeBaseline<MockPairedData>(kCallstacks, kFrameTrackActiveTimes);
+  auto empty =
+      MakeComparison<MockPairedData>(std::vector<std::vector<SFID>>{}, std::vector<uint64_t>{});
 
-  BaselineAndComparisonTmpl<MockPairedData> bac(full, empty, {});
+  BaselineAndComparisonTmpl<MockPairedData> bac(std::move(full), std::move(empty), {});
   const SamplingWithFrameTrackComparisonReport report = bac.MakeSamplingWithFrameTrackReport(
-      BaselineSamplingWithFrameTrackReportConfig{{orbit_base::kAllProcessThreadsTid}, 0, 1, 1},
-      ComparisonSamplingWithFrameTrackReportConfig{{orbit_base::kAllProcessThreadsTid}, 0, 1, 1});
+      orbit_mizar_data::MakeBaseline<orbit_mizar_data::HalfOfSamplingWithFrameTrackReportConfig>(
+          absl::flat_hash_set<uint32_t>{orbit_base::kAllProcessThreadsTid}, 0, 1, 1),
+      orbit_mizar_data::MakeComparison<orbit_mizar_data::HalfOfSamplingWithFrameTrackReportConfig>(
+          absl::flat_hash_set<uint32_t>{orbit_base::kAllProcessThreadsTid}, 0, 1, 1));
 
   EXPECT_EQ(report.baseline_sampling_counts.GetTotalCallstacks(), kCallstacks.size());
 

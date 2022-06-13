@@ -155,7 +155,7 @@ class MizarPairedDataTest : public ::testing::Test {
 };
 
 TEST_F(MizarPairedDataTest, ForeachCallstackIsCorrect) {
-  MizarPairedData<MockMizarData> mizar_paired_data(std::move(data_), kAddressToId);
+  MizarPairedDataTmpl<MockMizarData> mizar_paired_data(std::move(data_), kAddressToId);
   std::vector<std::vector<SFID>> actual_ids_fed_to_action;
   auto action = [&actual_ids_fed_to_action](const std::vector<SFID> ids) {
     actual_ids_fed_to_action.push_back(ids);
@@ -186,7 +186,7 @@ TEST_F(MizarPairedDataTest, ForeachCallstackIsCorrect) {
 }
 
 TEST_F(MizarPairedDataTest, ActiveInvocationTimesIsCorrect) {
-  MizarPairedData<MockMizarData> mizar_paired_data(std::move(data_), kAddressToId);
+  MizarPairedDataTmpl<MockMizarData> mizar_paired_data(std::move(data_), kAddressToId);
   std::vector<uint64_t> actual_active_invocation_times = mizar_paired_data.ActiveInvocationTimes(
       {kTID, kAnotherTID}, 1, 0, std::numeric_limits<uint64_t>::max());
   EXPECT_THAT(actual_active_invocation_times,
