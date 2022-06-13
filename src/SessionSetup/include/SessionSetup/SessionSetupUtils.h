@@ -17,6 +17,7 @@
 
 namespace orbit_session_setup {
 
+const int kMaxProcessNameLength = 15;
 [[nodiscard]] orbit_ssh::Credentials CredentialsFromSshInfo(const orbit_ggp::SshInfo& ssh_info);
 [[nodiscard]] std::shared_ptr<grpc::Channel> CreateGrpcChannel(uint16_t port);
 [[nodiscard]] std::unique_ptr<orbit_client_data::ProcessData> TryToFindProcessData(

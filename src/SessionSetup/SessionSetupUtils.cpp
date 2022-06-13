@@ -32,12 +32,14 @@ std::shared_ptr<grpc::Channel> CreateGrpcChannel(uint16_t port) {
 std::unique_ptr<orbit_client_data::ProcessData> TryToFindProcessData(
     std::vector<orbit_grpc_protos::ProcessInfo> process_list,
     const std::string& process_name_or_path) {
+  std::string shortened_process_name = process_name_or_path.substr(0, kMaxProcessNameLength);
+
   std::sort(
       process_list.begin(), process_list.end(),
       [](const orbit_grpc_protos::ProcessInfo& lhs,
          const orbit_grpc_protos::ProcessInfo& rhs) -> bool { return lhs.pid() > rhs.pid(); });
   for (auto& process : process_list) {
-    if (process.full_path() == process_name_or_path || process.name() == process_name_or_path) {
+    if (process.full_path() == process_name_or_path || process.name() == shortened_process_name) {
       return std::make_unique<orbit_client_data::ProcessData>(process);
     }
   }
