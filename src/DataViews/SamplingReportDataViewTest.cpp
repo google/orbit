@@ -708,7 +708,7 @@ TEST_F(SamplingReportDataViewTest, ContextMenuActionsAreInvoked) {
           EXPECT_EQ(build_id, kModuleBuildIds[2]);
           return module_manager_.GetMutableModuleByPathAndBuildId(module_path, build_id);
         });
-    EXPECT_CALL(app_, RetrieveModulesAndLoadSymbols)
+    EXPECT_CALL(app_, LoadSymbolsManually)
         .Times(1)
         .WillOnce(testing::Return(orbit_base::Future<void>{}));
     view_.OnContextMenu(std::string{kMenuActionLoadSymbols}, load_symbols_index, {0});

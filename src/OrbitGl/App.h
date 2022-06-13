@@ -328,7 +328,7 @@ class OrbitApp final : public DataViewFactory,
   // local cache). Only modules with a .symtab section will be considered.
   orbit_base::Future<ErrorMessageOr<orbit_base::CanceledOr<std::filesystem::path>>> RetrieveModule(
       const std::string& module_path, const std::string& build_id);
-  orbit_base::Future<void> RetrieveModulesAndLoadSymbols(
+  orbit_base::Future<void> LoadSymbolsManually(
       absl::Span<const orbit_client_data::ModuleData* const> modules) override;
 
   enum class SymbolLoadingAndErrorHandlingResult {

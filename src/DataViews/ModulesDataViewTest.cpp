@@ -155,7 +155,7 @@ TEST_F(ModulesDataViewTest, ContextMenuActionsAreInvoked) {
     const int load_symbols_index = GetActionIndexOnMenu(context_menu, kMenuActionLoadSymbols);
     EXPECT_TRUE(load_symbols_index != kInvalidActionIndex);
 
-    EXPECT_CALL(app_, RetrieveModulesAndLoadSymbols)
+    EXPECT_CALL(app_, LoadSymbolsManually)
         .Times(1)
         .WillOnce(testing::Return(orbit_base::Future<void>{}));
     view_.OnContextMenu(std::string{kMenuActionLoadSymbols}, load_symbols_index, {0});
@@ -189,7 +189,7 @@ TEST_F(ModulesDataViewTest, ContextMenuActionsAreInvoked) {
 }
 
 TEST_F(ModulesDataViewTest, LoadModuleOnDoubleClick) {
-  EXPECT_CALL(app_, RetrieveModulesAndLoadSymbols)
+  EXPECT_CALL(app_, LoadSymbolsManually)
       .Times(1)
       .WillOnce(testing::Return(orbit_base::Future<void>{}));
 

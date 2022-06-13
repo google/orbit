@@ -1736,7 +1736,7 @@ OrbitApp::RetrieveModuleFromRemote(const std::string& module_file_path) {
   return chained_result_future;
 }
 
-orbit_base::Future<void> OrbitApp::RetrieveModulesAndLoadSymbols(
+orbit_base::Future<void> OrbitApp::LoadSymbolsManually(
     absl::Span<const ModuleData* const> modules) {
   // Use a set, to filter out duplicates
   absl::flat_hash_set<const ModuleData*> modules_set(modules.begin(), modules.end());

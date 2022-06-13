@@ -199,7 +199,7 @@ void DataView::OnLoadSymbolsRequested(const std::vector<int>& selection) {
   }
   metrics_uploader_->SendLogEvent(
       orbit_metrics_uploader::OrbitLogEvent::ORBIT_LOAD_SYMBOLS_CLICKED);
-  app_->RetrieveModulesAndLoadSymbols(modules_to_load);
+  app_->LoadSymbolsManually(modules_to_load);
 }
 
 void DataView::OnStopDownloadRequested(const std::vector<int>& selection) {
