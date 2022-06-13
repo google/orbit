@@ -53,24 +53,31 @@ int main(int argc, char* argv[]) {
   orbit_mizar_data::BaselineAndComparison bac =
       CreateBaselineAndComparison(std::move(baseline), std::move(comparison));
 
-  constexpr uint64_t kStart = 0;
+  constexpr uint64_t kStart = 20'000'000'000;  // Here we omit the first 20s of the capture, that
+                                               // correspond for initialisation
   constexpr uint64_t kDuration = std::numeric_limits<uint64_t>::max();
 
   const orbit_mizar_data::SamplingWithFrameTrackComparisonReport report =
       bac.MakeSamplingWithFrameTrackReport(
           orbit_mizar_data::BaselineSamplingWithFrameTrackReportConfig{
-              {orbit_base::kAllProcessThreadsTid}, kStart, kDuration},
+              {orbit_base::kAllProcessThreadsTid}, kStart, kDuration, 1},
           orbit_mizar_data::ComparisonSamplingWithFrameTrackReportConfig{
-              {orbit_base::kAllProcessThreadsTid}, kStart, kDuration});
+              {orbit_base::kAllProcessThreadsTid}, kStart, kDuration, 1});
 
   for (const auto& [sfid, name] : bac.sfid_to_name()) {
     const uint64_t baseline_cnt = report.baseline_sampling_counts.GetExclusiveCount(sfid);
     const uint64_t comparison_cnt = report.baseline_sampling_counts.GetExclusiveCount(sfid);
     if (baseline_cnt > 0 || comparison_cnt > 0) {
-      ORBIT_LOG("%s %.2f %.2f", static_cast<std::string>(sfid), baseline_cnt, comparison_cnt);
+      ORBIT_LOG("%s %s %.2f %.2f", name, static_cast<std::string>(sfid), baseline_cnt,
+                comparison_cnt);
     }
   }
   ORBIT_LOG("Total number of common names %u  ", bac.sfid_to_name().size());
-
+  ORBIT_LOG("Baseline mean frametime %u ns, stddev %u",
+            report.baseline_frame_track_stats.ComputeAverageTimeNs(),
+            report.baseline_frame_track_stats.ComputeStdDevNs());
+  ORBIT_LOG("Comparison mean frametime %u ns, stddev %u",
+            report.comparison_frame_track_stats.ComputeAverageTimeNs(),
+            report.comparison_frame_track_stats.ComputeStdDevNs());
   return 0;
 }

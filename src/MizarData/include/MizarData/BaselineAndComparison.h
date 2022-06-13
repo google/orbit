@@ -37,13 +37,27 @@ class BaselineAndComparisonTmpl {
 
   [[nodiscard]] SamplingWithFrameTrackComparisonReport MakeSamplingWithFrameTrackReport(
       BaselineSamplingWithFrameTrackReportConfig baseline_config,
-      ComparisonSamplingWithFrameTrackReportConfig comparison_config) {
-    return {MakeCounts(baseline_, baseline_config), MakeCounts(comparison_, comparison_config)};
+      ComparisonSamplingWithFrameTrackReportConfig comparison_config) const {
+    return {MakeCounts(baseline_, baseline_config), MakeCounts(comparison_, comparison_config),
+            MakeFrameTrackStats(baseline_, baseline_config),
+            MakeFrameTrackStats(comparison_, comparison_config)};
   }
 
  private:
-  [[nodiscard]] SamplingCounts MakeCounts(const PairedData& data,
-                                          const HalfOfSamplingWithFrameTrackReportConfig& config) {
+  [[nodiscard]] orbit_client_data::ScopeStats MakeFrameTrackStats(
+      const PairedData& data, const HalfOfSamplingWithFrameTrackReportConfig& config) const {
+    const std::vector<uint64_t> active_invocation_times = data.ActiveInvocationTimes(
+        config.tids, config.frame_track_scope_id, config.start_relative_ns,
+        NonWrappingAddition(config.start_relative_ns, config.duration_ns));
+    orbit_client_data::ScopeStats stats;
+    for (const uint64_t active_invocation_time : active_invocation_times) {
+      stats.UpdateStats(active_invocation_time);
+    }
+    return stats;
+  }
+
+  [[nodiscard]] SamplingCounts MakeCounts(
+      const PairedData& data, const HalfOfSamplingWithFrameTrackReportConfig& config) const {
     uint64_t total_callstacks = 0;
     absl::flat_hash_map<SFID, InclusiveAndExclusive> counts;
     for (const uint32_t tid : config.tids) {

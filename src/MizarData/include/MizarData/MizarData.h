@@ -48,6 +48,12 @@ class MizarData : public orbit_capture_client::AbstractCaptureListener<MizarData
     return GetCaptureData().GetCaptureStarted().capture_start_timestamp_ns();
   }
 
+  [[nodiscard]] uint64_t GetNominalSamplingPeriodNs() const override {
+    const double samples_per_second =
+        GetCaptureData().GetCaptureStarted().capture_options().samples_per_second();
+    return static_cast<uint64_t>(1'000'000'000 / samples_per_second);
+  }
+
   void OnCaptureStarted(const orbit_grpc_protos::CaptureStarted& capture_started,
                         std::optional<std::filesystem::path> file_path,
                         absl::flat_hash_set<uint64_t> frame_track_function_ids) override;
