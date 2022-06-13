@@ -333,7 +333,7 @@ class OrbitApp final : public DataViewFactory,
 
   enum class SymbolLoadingAndErrorHandlingResult {
     kSymbolsLoadedSuccessfully,
-    kCancelled,
+    kCanceled,
   };
   // RetrieveModuleAndLoadSymbolsAndHandleError attempts to retrieve the module and loads the
   // symbols via RetrieveModuleAndLoadSymbols and when that fails handles the error with

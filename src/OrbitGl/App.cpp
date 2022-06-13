@@ -1765,7 +1765,7 @@ OrbitApp::RetrieveModuleAndLoadSymbolsAndHandleError(const ModuleData* module) {
           -> Future<SymbolLoadingAndErrorHandlingResult> {
         if (!load_result.has_error()) {
           if (orbit_base::IsCanceled(load_result.value())) {
-            return {SymbolLoadingAndErrorHandlingResult::kCancelled};
+            return {SymbolLoadingAndErrorHandlingResult::kCanceled};
           }
           return {SymbolLoadingAndErrorHandlingResult::kSymbolsLoadedSuccessfully};
         }
@@ -1776,7 +1776,7 @@ OrbitApp::RetrieveModuleAndLoadSymbolsAndHandleError(const ModuleData* module) {
         switch (error_handling_result) {
           case MainWindowInterface::SymbolErrorHandlingResult::kSymbolLoadingCancelled: {
             metrics_uploader_->SendLogEvent(OrbitLogEvent::ORBIT_SYMBOL_LOADING_ERROR_CANCELLED);
-            return {SymbolLoadingAndErrorHandlingResult::kCancelled};
+            return {SymbolLoadingAndErrorHandlingResult::kCanceled};
           }
           case MainWindowInterface::SymbolErrorHandlingResult::kReloadRequired: {
             return RetrieveModuleAndLoadSymbolsAndHandleError(module).Then(
