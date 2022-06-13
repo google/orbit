@@ -61,7 +61,8 @@ class PeCoffEpilogImpl : public PeCoffEpilog {
   void HandleLeaInstruction(RegsImpl<uint64_t>* registers);
   bool ValidateAddInstruction();
   void HandleAddInstruction(RegsImpl<uint64_t>* registers);
-  bool HandlePopInstruction(Memory* process_memory, RegsImpl<uint64_t>* registers);
+  bool ValidatePopInstruction();
+  bool HandleEightByteRegisterPopInstruction(Memory* process_memory, RegsImpl<uint64_t>* registers);
   bool HandleReturnInstruction(Memory* process_memory, RegsImpl<uint64_t>* registers);
   bool ValidateJumpInstruction();
   bool HandleJumpInstruction(Memory* process_memory, RegsImpl<uint64_t>* registers);
@@ -195,15 +196,26 @@ void PeCoffEpilogImpl::HandleAddInstruction(RegsImpl<uint64_t>* registers) {
   registers->set_sp(registers->sp() + static_cast<uint64_t>(immediate_value));
 }
 
-bool PeCoffEpilogImpl::HandlePopInstruction(Memory* process_memory, RegsImpl<uint64_t>* registers) {
-  // Handling a pop instructions means to read the value on top of the stack, then setting the
-  // register operand of the instruction with the read value, and increasing the stack pointer.
+bool PeCoffEpilogImpl::ValidatePopInstruction() {
+  // All pop instructions have exactly one operand.
+  CHECK(capstone_instruction_->detail->x86.op_count == 1);
+  cs_x86_op operand = capstone_instruction_->detail->x86.operands[0];
+
+  // Only "8-byte register pops" are allowed in an epilog.
+  return operand.type == X86_OP_REG && operand.size == 8;
+}
+
+bool PeCoffEpilogImpl::HandleEightByteRegisterPopInstruction(Memory* process_memory,
+                                                             RegsImpl<uint64_t>* registers) {
   CHECK(capstone_instruction_->detail->x86.op_count == 1);
   cs_x86_op operand = capstone_instruction_->detail->x86.operands[0];
   CHECK(operand.type == X86_OP_REG);
+  CHECK(operand.size == 8);
   x86_reg reg = operand.reg;
   uint16_t unwindstack_reg = MapCapstoneToUnwindstackRegister(reg);
 
+  // Handling a pop instruction means reading the value on top of the stack, then setting the
+  // register operand of the instruction with the read value, and increasing the stack pointer.
   uint64_t value;
   if (!process_memory->Read64(registers->sp(), &value)) {
     last_error_.code = ERROR_MEMORY_INVALID;
@@ -264,7 +276,7 @@ bool PeCoffEpilogImpl::ValidateJumpInstruction() {
 
 bool PeCoffEpilogImpl::HandleJumpInstruction(Memory* process_memory,
                                              RegsImpl<uint64_t>* registers) {
-  // Seeing a 'jmp' at the end of the epilog means we are jumping into some other function  that
+  // Seeing a 'jmp' at the end of the epilog means we are jumping into some other function that
   // will carry out prolog and at the end epilog instructions, setting up and unwinding a
   // callframe. We do not have to simulate all these steps by the function we are jumping to,
   // the return address leading back to the function that called the current function is already
@@ -328,7 +340,10 @@ bool PeCoffEpilogImpl::DetectAndHandleEpilog(const std::vector<uint8_t>& machine
       }
       HandleAddInstruction(updated_regs);
     } else if (capstone_instruction_->id == X86_INS_POP) {
-      if (!HandlePopInstruction(process_memory, updated_regs)) {
+      if (!ValidatePopInstruction()) {
+        return false;
+      }
+      if (!HandleEightByteRegisterPopInstruction(process_memory, updated_regs)) {
         return false;
       }
     } else if (capstone_instruction_->id == X86_INS_RET ||

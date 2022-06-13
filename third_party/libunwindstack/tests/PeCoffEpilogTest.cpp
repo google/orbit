@@ -405,7 +405,7 @@ TEST_F(PeCoffEpilogTest, detects_non_epilog_add_instruction_not_immediate_added_
   EXPECT_EQ(pe_coff_epilog_->GetLastError().code, ERROR_NONE);
 }
 
-TEST_F(PeCoffEpilogTest, detects_non_epilog_instruction_destination_not_register) {
+TEST_F(PeCoffEpilogTest, detects_non_epilog_add_instruction_destination_not_register) {
   std::vector<uint8_t> machine_code{0x48, 0x01, 0x04, 0x24, 0xc3};  // add [rsp], rax and ret
 
   SetMemoryInFakeFile(kTextSectionFileOffset, machine_code);
@@ -420,7 +420,7 @@ TEST_F(PeCoffEpilogTest, detects_non_epilog_instruction_destination_not_register
   EXPECT_EQ(pe_coff_epilog_->GetLastError().code, ERROR_NONE);
 }
 
-TEST_F(PeCoffEpilogTest, detects_non_epilog_instruction_immediate_negative) {
+TEST_F(PeCoffEpilogTest, detects_non_epilog_add_instruction_immediate_negative) {
   // The immediate value represents the stack allocation size, so must be non-negative.
   std::vector<uint8_t> machine_code{0x48, 0x83, 0xc4, 0xff, 0xc3};  // add rsp, -1 and ret
 
@@ -553,6 +553,36 @@ TEST_F(PeCoffEpilogTest, succeeds_for_pop_instructions_and_ret_only) {
   EXPECT_EQ(regs[X86_64Reg::X86_64_REG_R12], 0x200);
   EXPECT_EQ(regs[X86_64Reg::X86_64_REG_RBX], 0x300);
   EXPECT_EQ(regs[X86_64Reg::X86_64_REG_R11], 0x400);
+}
+
+TEST_F(PeCoffEpilogTest, detects_non_epilog_pop_to_memory) {
+  std::vector<uint8_t> machine_code{0x8f, 0x41, 0x70, 0xc3};  // pop QWORD PTR [rcx+0x70]; ret
+
+  SetMemoryInFakeFile(kTextSectionFileOffset, machine_code);
+  const uint64_t function_end_address = kFunctionStartAddress + machine_code.size();
+
+  RegsX86_64 regs;
+  regs.set_sp(0);
+
+  EXPECT_FALSE(pe_coff_epilog_->DetectAndHandleEpilog(kFunctionStartAddress, function_end_address,
+                                                      kCurrentOffsetFromStartOfFunction,
+                                                      process_mem_fake_.get(), &regs));
+  EXPECT_EQ(pe_coff_epilog_->GetLastError().code, ERROR_NONE);
+}
+
+TEST_F(PeCoffEpilogTest, detects_non_epilog_pop_to_two_byte_register) {
+  std::vector<uint8_t> machine_code{0x66, 0x5e, 0xc3};  // pop si; ret
+
+  SetMemoryInFakeFile(kTextSectionFileOffset, machine_code);
+  const uint64_t function_end_address = kFunctionStartAddress + machine_code.size();
+
+  RegsX86_64 regs;
+  regs.set_sp(0);
+
+  EXPECT_FALSE(pe_coff_epilog_->DetectAndHandleEpilog(kFunctionStartAddress, function_end_address,
+                                                      kCurrentOffsetFromStartOfFunction,
+                                                      process_mem_fake_.get(), &regs));
+  EXPECT_EQ(pe_coff_epilog_->GetLastError().code, ERROR_NONE);
 }
 
 TEST_F(PeCoffEpilogTest, fails_with_invalid_memory_on_register_store_location) {
