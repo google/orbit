@@ -17,7 +17,7 @@
    <item>
     <widget class="QLabel" name="label">
      <property name="text">
-      <string>Symbols for this module are still downloading</string>
+      <string>Symbols for this module are still being downloaded</string>
      </property>
     </widget>
    </item>
@@ -41,7 +41,7 @@
    <item>
     <widget class="QCheckBox" name="rememberCheckBox">
      <property name="text">
-      <string>Never download symbols for this module</string>
+      <string>Never automatically download symbols for this module</string>
      </property>
     </widget>
    </item>
