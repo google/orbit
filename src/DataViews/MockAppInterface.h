@@ -78,7 +78,7 @@ class MockAppInterface : public AppInterface {
               (const std::string&, const std::string&), (const, override));
   MOCK_METHOD(orbit_client_data::ModuleData*, GetMutableModuleByPathAndBuildId,
               (const std::string&, const std::string&), (override));
-  MOCK_METHOD(orbit_base::Future<void>, RetrieveModulesAndLoadSymbols,
+  MOCK_METHOD(orbit_base::Future<void>, LoadSymbolsManually,
               (absl::Span<const orbit_client_data::ModuleData* const>), (override));
 
   MOCK_METHOD(void, SelectFunction, (const orbit_client_data::FunctionInfo&), (override));

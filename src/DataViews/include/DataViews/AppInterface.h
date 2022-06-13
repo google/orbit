@@ -94,7 +94,7 @@ class AppInterface : public orbit_client_data::CaptureDataHolder {
       const std::string& path, const std::string& build_id) const = 0;
   [[nodiscard]] virtual orbit_client_data::ModuleData* GetMutableModuleByPathAndBuildId(
       const std::string& path, const std::string& build_id) = 0;
-  virtual orbit_base::Future<void> RetrieveModulesAndLoadSymbols(
+  virtual orbit_base::Future<void> LoadSymbolsManually(
       absl::Span<const orbit_client_data::ModuleData* const> modules) = 0;
 
   virtual void SelectFunction(const orbit_client_data::FunctionInfo& func) = 0;
