@@ -32,26 +32,31 @@ TEST(SessionSetupUtils, CredentialsFromSshInfoWorksCorrectly) {
   EXPECT_EQ(info.user.toStdString(), credentials.user);
 }
 
+// Tests below need to be adjusted if the name changes, they are conveniently set up
+// for process names that are exactly at the length limit
+static_assert(kMaxProcessNameLength == 15);
+
 const uint32_t kPid = 100;
-const char* kProcessName = "process_name";
-const char* kProcessPath = "/path/to/process_name";
+const char* kFullProcessName = "ok_process_name_long";
+const char* kShortProcessName = "ok_process_name";
+const char* kProcessPath = "/path/to/ok_process_name_long";
 
 std::vector<orbit_grpc_protos::ProcessInfo> SetupTestProcessList() {
   using orbit_grpc_protos::ProcessInfo;
 
   ProcessInfo expected_target_process;
   expected_target_process.set_pid(kPid);
-  expected_target_process.set_name(kProcessName);
+  expected_target_process.set_name(kShortProcessName);
   expected_target_process.set_full_path(kProcessPath);
 
   ProcessInfo lower_pid_process1;
   lower_pid_process1.set_pid(kPid - 1);
-  lower_pid_process1.set_name(kProcessName);
+  lower_pid_process1.set_name(kShortProcessName);
   lower_pid_process1.set_full_path(kProcessPath);
 
   ProcessInfo lower_pid_process2;
   lower_pid_process2.set_pid(kPid - 2);
-  lower_pid_process2.set_name(kProcessName);
+  lower_pid_process2.set_name(kShortProcessName);
   lower_pid_process2.set_full_path(kProcessPath);
 
   ProcessInfo different_process1;
@@ -70,10 +75,16 @@ std::vector<orbit_grpc_protos::ProcessInfo> SetupTestProcessList() {
           lower_pid_process2};
 }
 
-TEST(SessionSetupUtils, TryToFindProcessDataFindsProcessByName) {
+TEST(SessionSetupUtils, TryToFindProcessDataFindsProcessByShortName) {
   std::vector<orbit_grpc_protos::ProcessInfo> processes = SetupTestProcessList();
 
-  EXPECT_EQ(kPid, TryToFindProcessData(processes, kProcessName)->pid());
+  EXPECT_EQ(kPid, TryToFindProcessData(processes, kShortProcessName)->pid());
+}
+
+TEST(SessionSetupUtils, TryToFindProcessDataFindsProcessByLongName) {
+  std::vector<orbit_grpc_protos::ProcessInfo> processes = SetupTestProcessList();
+
+  EXPECT_EQ(kPid, TryToFindProcessData(processes, kFullProcessName)->pid());
 }
 
 TEST(SessionSetupUtils, TryToFindProcessDataFindsProcessByPath) {
