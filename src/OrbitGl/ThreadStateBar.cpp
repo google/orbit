@@ -17,6 +17,7 @@
 #include "DisplayFormats/DisplayFormats.h"
 #include "Geometry.h"
 #include "GlCanvas.h"
+#include "GlUtils.h"
 #include "GrpcProtos/capture.pb.h"
 #include "OrbitBase/Logging.h"
 #include "PrimitiveAssembler.h"
@@ -158,20 +159,19 @@ std::string ThreadStateBar::GetThreadStateSliceTooltip(PrimitiveAssembler& primi
 
   const auto* thread_state_slice =
       static_cast<const ThreadStateSliceInfo*>(user_data->custom_data_);
-  auto begin_ns = std::chrono::nanoseconds(thread_state_slice->begin_timestamp_ns());
-  auto end_ns = std::chrono::nanoseconds(thread_state_slice->end_timestamp_ns());
+  auto begin_ns = thread_state_slice->begin_timestamp_ns();
+  auto end_ns = thread_state_slice->end_timestamp_ns();
 
   return absl::StrFormat(
       "<b>%s</b><br/>"
       "<i>Thread state</i><br/>"
-      "<br/>"
       "<br/>"
       "%s"
       "<br/>"
       "<b>Time:</b> %s",
       GetThreadStateName(thread_state_slice->thread_state()),
       GetThreadStateDescription(thread_state_slice->thread_state()),
-      orbit_display_formats::GetDisplayTime(absl::FromChrono(end_ns - begin_ns)));
+      orbit_display_formats::GetDisplayTime(TicksToDuration(begin_ns, end_ns)));
 }
 
 void ThreadStateBar::DoUpdatePrimitives(PrimitiveAssembler& primitive_assembler,
