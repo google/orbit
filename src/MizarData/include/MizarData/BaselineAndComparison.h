@@ -39,7 +39,7 @@ class BaselineAndComparisonTmpl {
       BaselineSamplingWithFrameTrackReportConfig baseline_config,
       ComparisonSamplingWithFrameTrackReportConfig comparison_config) const {
     return {MakeCounts(baseline_, baseline_config), MakeCounts(comparison_, comparison_config),
-            MakeFrameTrackStats(baseline_, comparison_config),
+            MakeFrameTrackStats(baseline_, baseline_config),
             MakeFrameTrackStats(comparison_, comparison_config)};
   }
 

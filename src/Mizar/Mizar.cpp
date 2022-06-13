@@ -53,7 +53,8 @@ int main(int argc, char* argv[]) {
   orbit_mizar_data::BaselineAndComparison bac =
       CreateBaselineAndComparison(std::move(baseline), std::move(comparison));
 
-  constexpr uint64_t kStart = 20'000'000'000;
+  constexpr uint64_t kStart = 20'000'000'000;  // Here we omit the first 20s of the capture, that
+                                               // correspond for initialisation
   constexpr uint64_t kDuration = std::numeric_limits<uint64_t>::max();
 
   const orbit_mizar_data::SamplingWithFrameTrackComparisonReport report =

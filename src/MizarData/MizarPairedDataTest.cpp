@@ -64,9 +64,10 @@ constexpr uint64_t kAnotherCompleteCallstackId = 3;
 
 constexpr uint64_t kCaptureStart = 123;
 constexpr uint64_t kRelativeTime1 = 10;
-constexpr uint64_t kRelativeTime2 = 20;
-constexpr uint64_t kRelativeTime3 = 30;
-constexpr uint64_t kRelativeTime4 = 40;
+constexpr uint64_t kRelativeTime2 = 15;
+constexpr uint64_t kRelativeTime3 = 20;
+constexpr uint64_t kRelativeTime4 = 30;
+constexpr uint64_t kRelativeTime5 = 40;
 constexpr uint64_t kTID = 0x3AD1;
 constexpr uint64_t kAnotherTID = 0x3AD2;
 
@@ -81,9 +82,9 @@ const std::unique_ptr<orbit_client_data::CallstackData> kCallstackData = [] {
 
   callstack_data->AddCallstackEvent({kCaptureStart, kCompleteCallstackId, kTID});
   callstack_data->AddCallstackEvent({kCaptureStart + kRelativeTime1, kCompleteCallstackId, kTID});
-  callstack_data->AddCallstackEvent({kCaptureStart + kRelativeTime2, kInCompleteCallstackId, kTID});
+  callstack_data->AddCallstackEvent({kCaptureStart + kRelativeTime3, kInCompleteCallstackId, kTID});
   callstack_data->AddCallstackEvent(
-      {kCaptureStart + kRelativeTime3, kAnotherCompleteCallstackId, kAnotherTID});
+      {kCaptureStart + kRelativeTime4, kAnotherCompleteCallstackId, kAnotherTID});
 
   return callstack_data;
 }();
@@ -106,7 +107,7 @@ const std::vector<SFID> kAnotherCompleteCallstackIds =
 
 constexpr size_t kInvocationsCount = 3;
 constexpr std::array<uint64_t, kInvocationsCount> kStarts = {
-    kCaptureStart, kCaptureStart + kRelativeTime2 - 1, kCaptureStart + kRelativeTime4};
+    kCaptureStart, kCaptureStart + kRelativeTime2, kCaptureStart + kRelativeTime5};
 const std::array<uint64_t, kInvocationsCount> kEnds = [] {
   std::array<uint64_t, kInvocationsCount> result{};
   std::transform(std::begin(kStarts), std::end(kStarts), std::begin(result),
@@ -162,7 +163,7 @@ TEST_F(MizarPairedDataTest, ForeachCallstackIsCorrect) {
 
   // All threads, all timestamps
   actual_ids_fed_to_action.clear();
-  mizar_paired_data.ForEachCallstackEvent(orbit_base::kAllProcessThreadsTid, 0, kRelativeTime4,
+  mizar_paired_data.ForEachCallstackEvent(orbit_base::kAllProcessThreadsTid, 0, kRelativeTime5,
                                           action);
   EXPECT_THAT(actual_ids_fed_to_action,
               UnorderedElementsAre(kCompleteCallstackIds, kCompleteCallstackIds,
@@ -170,7 +171,7 @@ TEST_F(MizarPairedDataTest, ForeachCallstackIsCorrect) {
 
   // One thread, all timestamps
   actual_ids_fed_to_action.clear();
-  mizar_paired_data.ForEachCallstackEvent(kTID, 0, kRelativeTime4, action);
+  mizar_paired_data.ForEachCallstackEvent(kTID, 0, kRelativeTime5, action);
   EXPECT_THAT(
       actual_ids_fed_to_action,
       UnorderedElementsAre(kCompleteCallstackIds, kCompleteCallstackIds, kInCompleteCallstackIds));
@@ -178,7 +179,7 @@ TEST_F(MizarPairedDataTest, ForeachCallstackIsCorrect) {
   // All threads, some timestamps
   actual_ids_fed_to_action.clear();
   mizar_paired_data.ForEachCallstackEvent(orbit_base::kAllProcessThreadsTid, kRelativeTime1,
-                                          kRelativeTime4, action);
+                                          kRelativeTime5, action);
   EXPECT_THAT(actual_ids_fed_to_action,
               UnorderedElementsAre(kCompleteCallstackIds, kInCompleteCallstackIds,
                                    kAnotherCompleteCallstackIds));
