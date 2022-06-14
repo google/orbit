@@ -155,8 +155,8 @@ class ConnectToStadiaInstance(E2ETestCase):
         # In the new UI, use small waits until the process list is active, and then some more for the
         # semi-transparent "loading" Overlay of the tables to disappear
         wait_for_condition(
-            lambda: self.find_control('Custom', 'ProcessesFrame').is_enabled() is True, 25)
-        wait_for_condition(lambda: self.find_control('Table', 'ProcessList').is_active(), 10)
+            lambda: self.find_control('Custom', 'ProcessesFrame').is_enabled() is True, 50)
+        wait_for_condition(lambda: self.find_control('Table', 'ProcessList').is_active(), 20)
         # This is a bit annoying, but since the overlay is invisible when loading is done, we need to check for
         # absence of the overlay... not sure if there is a better way
         wait_for_condition(lambda: self.find_control(
