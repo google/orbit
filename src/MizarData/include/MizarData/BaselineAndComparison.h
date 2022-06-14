@@ -21,7 +21,7 @@
 namespace orbit_mizar_data {
 
 template <typename T, typename U>
-using EnableIfUConvertibleToU = std::enable_if_t<std::is_convertible_v<U, T>>;
+using EnableIfUConvertibleToT = std::enable_if_t<std::is_convertible_v<U, T>>;
 
 template <typename T>
 class BaselineOrComparison {
@@ -32,7 +32,7 @@ class BaselineOrComparison {
   T* operator->() { return &value_; }
 
  protected:
-  template <typename U, typename = EnableIfUConvertibleToU<U, T>>
+  template <typename U, typename = EnableIfUConvertibleToT<U, T>>
   explicit BaselineOrComparison(U&& value) : value_(std::forward<T>(value)) {}
   BaselineOrComparison(BaselineOrComparison&& other) = default;
 
@@ -43,14 +43,14 @@ class BaselineOrComparison {
 template <typename T>
 class Baseline : public BaselineOrComparison<T> {
  public:
-  template <typename U, typename = EnableIfUConvertibleToU<U, T>>
+  template <typename U, typename = EnableIfUConvertibleToT<U, T>>
   explicit Baseline(U&& value) : BaselineOrComparison<T>(std::forward<U>(value)) {}
 };
 
 template <typename T>
 class Comparison : public BaselineOrComparison<T> {
  public:
-  template <typename U, typename = EnableIfUConvertibleToU<U, T>>
+  template <typename U, typename = EnableIfUConvertibleToT<U, T>>
   explicit Comparison(U&& value) : BaselineOrComparison<T>(std::forward<U>(value)) {}
 };
 
