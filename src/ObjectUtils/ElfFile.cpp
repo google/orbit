@@ -435,14 +435,14 @@ ErrorMessageOr<void> ElfFileImpl<ElfT>::InitProgramHeaders() {
     return ErrorMessage(std::move(error));
   }
 
-  // Compute the image size as the difference between the end address of the last loadable segment
-  // and the start address of the first loadable segment.
+  // Compute image_size_ as the difference between the end address of the last loadable segment
+  // and the start address of the first loadable segment. This is as defined by
+  // ObjectFile::GetImageSize and follows SizeOfImage of PEs; however, it can be changed if needed.
   std::optional<uint64_t> first_loadable_segment_vaddr;
   for (const typename ElfT::Phdr& phdr : range.get()) {
     if (phdr.p_type != llvm::ELF::PT_LOAD) {
       continue;
     }
-
     if (!first_loadable_segment_vaddr.has_value()) {
       first_loadable_segment_vaddr = phdr.p_vaddr;
     }
