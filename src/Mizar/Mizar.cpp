@@ -59,10 +59,14 @@ int main(int argc, char* argv[]) {
 
   const orbit_mizar_data::SamplingWithFrameTrackComparisonReport report =
       bac.MakeSamplingWithFrameTrackReport(
-          orbit_mizar_data::BaselineSamplingWithFrameTrackReportConfig{
-              {orbit_base::kAllProcessThreadsTid}, kStart, kDuration, 1},
-          orbit_mizar_data::ComparisonSamplingWithFrameTrackReportConfig{
-              {orbit_base::kAllProcessThreadsTid}, kStart, kDuration, 1});
+          orbit_mizar_data::MakeBaseline<
+              orbit_mizar_data::HalfOfSamplingWithFrameTrackReportConfig>(
+              absl::flat_hash_set<uint32_t>{orbit_base::kAllProcessThreadsTid}, kStart, kDuration,
+              1),
+          orbit_mizar_data::MakeComparison<
+              orbit_mizar_data::HalfOfSamplingWithFrameTrackReportConfig>(
+              absl::flat_hash_set<uint32_t>{orbit_base::kAllProcessThreadsTid}, kStart, kDuration,
+              1));
 
   for (const auto& [sfid, name] : bac.sfid_to_name()) {
     const uint64_t baseline_cnt = report.baseline_sampling_counts.GetExclusiveCount(sfid);

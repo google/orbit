@@ -34,22 +34,6 @@ struct HalfOfSamplingWithFrameTrackReportConfig {
   uint64_t frame_track_scope_id{};
 };
 
-struct BaselineSamplingWithFrameTrackReportConfig : HalfOfSamplingWithFrameTrackReportConfig {
-  explicit BaselineSamplingWithFrameTrackReportConfig(absl::flat_hash_set<uint32_t> tids,
-                                                      uint64_t start_ns, uint64_t duration_ns,
-                                                      uint64_t frame_track_scope_id)
-      : HalfOfSamplingWithFrameTrackReportConfig(std::move(tids), start_ns, duration_ns,
-                                                 frame_track_scope_id) {}
-};
-
-struct ComparisonSamplingWithFrameTrackReportConfig : HalfOfSamplingWithFrameTrackReportConfig {
-  explicit ComparisonSamplingWithFrameTrackReportConfig(absl::flat_hash_set<uint32_t> tids,
-                                                        uint64_t start_ns, uint64_t duration_ns,
-                                                        uint64_t frame_track_scope_id)
-      : HalfOfSamplingWithFrameTrackReportConfig(std::move(tids), start_ns, duration_ns,
-                                                 frame_track_scope_id) {}
-};
-
 struct InclusiveAndExclusive {
   uint64_t inclusive{};
   uint64_t exclusive{};

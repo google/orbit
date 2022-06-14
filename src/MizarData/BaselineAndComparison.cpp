@@ -14,6 +14,7 @@
 #include "BaselineAndComparisonHelper.h"
 #include "ClientData/CaptureData.h"
 #include "MizarData/MizarData.h"
+#include "MizarData/MizarDataProvider.h"
 
 namespace orbit_mizar_data {
 
@@ -22,9 +23,10 @@ orbit_mizar_data::BaselineAndComparison CreateBaselineAndComparison(
   auto [baseline_address_sfid, comparison_address_to_sfid, sfid_to_name] =
       AssignSampledFunctionIds(baseline->AllAddressToName(), comparison->AllAddressToName());
 
-  return {{std::move(baseline), std::move(baseline_address_sfid)},
-          {std::move(comparison), std::move(comparison_address_to_sfid)},
-          std::move(sfid_to_name)};
+  return {
+      MakeBaseline<MizarPairedData>(std::move(baseline), std::move(baseline_address_sfid)),
+      MakeComparison<MizarPairedData>(std::move(comparison), std::move(comparison_address_to_sfid)),
+      std::move(sfid_to_name)};
 }
 
 }  // namespace orbit_mizar_data
