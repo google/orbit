@@ -155,7 +155,10 @@ uint64_t PeCoff::GetRelPc(uint64_t pc, MapInfo* map_info) {
   if (!valid_) {
     return 0;
   }
-  return interface_->GetRelPc(pc, map_info->start(), map_info->object_offset());
+  if (map_info->object_offset() == 0 && map_info->object_rva() != 0) {
+    return interface_->GetRelPcWithMapRva(pc, map_info->start(), map_info->object_rva());
+  }
+  return interface_->GetRelPcWithMapOffset(pc, map_info->start(), map_info->object_offset());
 }
 
 bool PeCoff::StepIfSignalHandler(uint64_t, Regs*, Memory*) {
