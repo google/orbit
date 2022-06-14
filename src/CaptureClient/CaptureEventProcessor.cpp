@@ -71,6 +71,7 @@ class CaptureEventProcessorForListener : public CaptureEventProcessor {
   void ProcessInternedString(orbit_grpc_protos::InternedString interned_string);
   void ProcessModuleUpdate(orbit_grpc_protos::ModuleUpdateEvent module_update);
   void ProcessModulesSnapshot(const orbit_grpc_protos::ModulesSnapshot& modules_snapshot);
+  void ProcessPresentEvent(const orbit_grpc_protos::PresentEvent& present_event);
   void ProcessGpuJob(const orbit_grpc_protos::GpuJob& gpu_job);
   void ProcessThreadName(const orbit_grpc_protos::ThreadName& thread_name);
   void ProcessThreadNamesSnapshot(
@@ -171,6 +172,9 @@ void CaptureEventProcessorForListener::ProcessEvent(const ClientCaptureEvent& ev
       break;
     case ClientCaptureEvent::kModulesSnapshot:
       ProcessModulesSnapshot(event.modules_snapshot());
+      break;
+    case ClientCaptureEvent::kPresentEvent:
+      ProcessPresentEvent(event.present_event());
       break;
     case ClientCaptureEvent::kThreadNamesSnapshot:
       ProcessThreadNamesSnapshot(event.thread_names_snapshot());
@@ -347,6 +351,11 @@ void CaptureEventProcessorForListener::ProcessModulesSnapshot(
   capture_listener_->OnModulesSnapshot(
       modules_snapshot.timestamp_ns(),
       {modules_snapshot.modules().begin(), modules_snapshot.modules().end()});
+}
+
+void CaptureEventProcessorForListener::ProcessPresentEvent(
+    const orbit_grpc_protos::PresentEvent& present_event) {
+  capture_listener_->OnPresentEvent(present_event);
 }
 
 void CaptureEventProcessorForListener::ProcessGpuJob(const GpuJob& gpu_job) {

@@ -44,6 +44,7 @@ class TracingHandler : public orbit_windows_tracing::TracerListener {
   void OnModuleUpdate(orbit_grpc_protos::ModuleUpdateEvent module_update_event) override;
   void OnModulesSnapshot(orbit_grpc_protos::ModulesSnapshot modules_snapshot) override;
   void OnThreadNamesSnapshot(orbit_grpc_protos::ThreadNamesSnapshot thread_names_snapshot) override;
+  void OnPresentEvent(orbit_grpc_protos::PresentEvent present_event) override;
 
  private:
   orbit_producer_event_processor::ProducerEventProcessor* producer_event_processor_;

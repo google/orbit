@@ -28,6 +28,8 @@ target_sources(WindowsTracing PRIVATE
         ContextSwitchManager.cpp
         ContextSwitchManager.h
         EtwEventTypes.h
+        GraphicsEtwProvider.cpp
+        GraphicsEtwProvider.h
         KrabsTracer.cpp
         KrabsTracer.h
         ListModulesEtw.cpp
@@ -42,6 +44,7 @@ target_link_libraries(WindowsTracing PUBLIC
         Introspection
         ObjectUtils
         OrbitBase
+        PresentMon
         WindowsUtils
         krabsetw
         CONAN_PKG::abseil

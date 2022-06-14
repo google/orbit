@@ -359,6 +359,18 @@ void TimeGraph::ProcessApiTrackValueEvent(const orbit_client_data::ApiTrackValue
   track->AddValue(time, track_event.value());
 }
 
+void TimeGraph::ProcessPresentEvent(const orbit_grpc_protos::PresentEvent& present_event) {
+  VariableTrack* track = GetTrackManager()->GetOrCreateVariableTrack("Frame Time [ms]");
+  uint64_t timestamp_ns = present_event.begin_timestamp_ns();
+  uint64_t dt = last_present_event_ == 0 ? 0 : timestamp_ns - last_present_event_;
+  last_present_event_ = timestamp_ns;
+  track->AddValue(timestamp_ns, dt*0.000'001);
+
+  double fps = dt > 0 ? 1'000'000'000.0 / static_cast<double>(dt) : 0.0;
+  VariableTrack* fps_track = GetTrackManager()->GetOrCreateVariableTrack("FPS");
+  fps_track->AddValue(timestamp_ns, fps);
+}
+
 void TimeGraph::ProcessSystemMemoryTrackingTimer(const TimerInfo& timer_info) {
   SystemMemoryTrack* track = GetTrackManager()->GetSystemMemoryTrack();
   if (track == nullptr) {
