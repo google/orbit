@@ -7,4 +7,4 @@ ignorePaths:
   - third_party/libunwindstack/tests/files/boot_arm.oat
   - third_party/libunwindstack/tests/files/boot_arm.oat.gnu_debugdata
   - third_party/libunwindstack/tests/files/libtest.dll
-  - third_party/libunwindstack/tests/files/libtest32.dl
+  - third_party/libunwindstack/tests/files/libtest32.dll
