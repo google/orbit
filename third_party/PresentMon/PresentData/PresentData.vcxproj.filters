@@ -1,0 +1,43 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <ClInclude Include="Debug.hpp" />
+    <ClInclude Include="MixedRealityTraceConsumer.hpp" />
+    <ClInclude Include="PresentMonTraceConsumer.hpp" />
+    <ClInclude Include="TraceConsumer.hpp" />
+    <ClInclude Include="TraceSession.hpp" />
+    <ClInclude Include="ETW\Microsoft_Windows_D3D9.h">
+      <Filter>ETW</Filter>
+    </ClInclude>
+    <ClInclude Include="ETW\Microsoft_Windows_Dwm_Core.h">
+      <Filter>ETW</Filter>
+    </ClInclude>
+    <ClInclude Include="ETW\Microsoft_Windows_DXGI.h">
+      <Filter>ETW</Filter>
+    </ClInclude>
+    <ClInclude Include="ETW\Microsoft_Windows_DxgKrnl.h">
+      <Filter>ETW</Filter>
+    </ClInclude>
+    <ClInclude Include="ETW\Microsoft_Windows_EventMetadata.h">
+      <Filter>ETW</Filter>
+    </ClInclude>
+    <ClInclude Include="ETW\Microsoft_Windows_Win32k.h">
+      <Filter>ETW</Filter>
+    </ClInclude>
+    <ClInclude Include="ETW\NT_Process.h">
+      <Filter>ETW</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="Debug.cpp" />
+    <ClCompile Include="MixedRealityTraceConsumer.cpp" />
+    <ClCompile Include="PresentMonTraceConsumer.cpp" />
+    <ClCompile Include="TraceConsumer.cpp" />
+    <ClCompile Include="TraceSession.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <Filter Include="ETW">
+      <UniqueIdentifier>{52014f4c-b511-4bc3-a029-ded458b8b84b}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+</Project>

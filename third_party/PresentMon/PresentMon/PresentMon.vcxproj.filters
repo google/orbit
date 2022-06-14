@@ -1,0 +1,45 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <ClCompile Include="CommandLine.cpp" />
+    <ClCompile Include="Console.cpp" />
+    <ClCompile Include="ConsumerThread.cpp" />
+    <ClCompile Include="CsvOutput.cpp" />
+    <ClCompile Include="LateStageReprojectionData.cpp" />
+    <ClCompile Include="MainThread.cpp" />
+    <ClCompile Include="OutputThread.cpp" />
+    <ClCompile Include="Privilege.cpp" />
+    <ClCompile Include="TraceSession.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="LateStageReprojectionData.hpp" />
+    <ClInclude Include="PresentMon.hpp" />
+    <ClInclude Include="..\build\obj\generated\version.h">
+      <Filter>generated</Filter>
+    </ClInclude>
+    <ClInclude Include="..\build\obj\generated\command_line_options.inl">
+      <Filter>generated</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <Filter Include="generated">
+      <UniqueIdentifier>{f09f81fa-1336-4ff5-8273-d1c8f9c8871e}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="docs">
+      <UniqueIdentifier>{8cd50319-dd68-4a65-94f0-7a4c40e4f4e5}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <Text Include="..\CONTRIBUTING.md">
+      <Filter>docs</Filter>
+    </Text>
+    <Text Include="..\LICENSE.txt">
+      <Filter>docs</Filter>
+    </Text>
+  </ItemGroup>
+  <ItemGroup>
+    <CustomBuild Include="..\README.md">
+      <Filter>docs</Filter>
+    </CustomBuild>
+  </ItemGroup>
+</Project>
