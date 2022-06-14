@@ -829,4 +829,29 @@ TEST_F(PeCoffEpilogTest, succeeds_for_general_case_with_add_as_first_instruction
   EXPECT_EQ(regs[X86_64Reg::X86_64_REG_RBX], 0x300);
 }
 
+TEST_F(PeCoffEpilogTest, error_is_reset_for_every_invocation) {
+  {
+    // Cannot read memory.
+    RegsX86_64 regs;
+    constexpr uint64_t kFunctionEndAddressFakeValue = kFunctionStartAddress + 1;
+    EXPECT_FALSE(pe_coff_epilog_->DetectAndHandleEpilog(
+        kFunctionStartAddress, kFunctionEndAddressFakeValue, kCurrentOffsetFromStartOfFunction,
+        process_mem_fake_.get(), &regs));
+    EXPECT_EQ(pe_coff_epilog_->GetLastError().code, ERROR_MEMORY_INVALID);
+  }
+
+  {
+    // No ret instruction.
+    std::vector<uint8_t> machine_code{0x48, 0x83, 0xc4, 0x28};  // add sp, 0x28
+    SetMemoryInFakeFile(kTextSectionFileOffset, machine_code);
+    const uint64_t function_end_address = kFunctionStartAddress + machine_code.size();
+
+    RegsX86_64 regs;
+    EXPECT_FALSE(pe_coff_epilog_->DetectAndHandleEpilog(kFunctionStartAddress, function_end_address,
+                                                        kCurrentOffsetFromStartOfFunction,
+                                                        process_mem_fake_.get(), &regs));
+    EXPECT_EQ(pe_coff_epilog_->GetLastError().code, ERROR_NONE);
+  }
+}
+
 }  // namespace unwindstack

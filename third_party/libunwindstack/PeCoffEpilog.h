@@ -36,8 +36,10 @@ class PeCoffEpilog {
   // Detects if the instructions from 'current_offset_from_start_of_function' onwards represent
   // a function epilog. Returns true if an epilog was detected. The registers are updated to reflect
   // the actions from executing the epilog (which effectively unwinds the current callframe).
-  // Returns false if no epilog was found *or* if an error occured. In the latter case, the error
+  // Returns false if no epilog was found *or* if an error occurred. In the latter case, the error
   // can be retrieved using GetLastError() and registers 'regs' are not updated.
+  // TODO(b/235952532): Change the interface to only use the bool return value to indicate whether
+  //  an error occurred. Use a bool* parameter to return whether an epilog was detected.
   virtual bool DetectAndHandleEpilog(uint64_t function_start_address, uint64_t function_end_address,
                                      uint64_t current_offset_from_start_of_function,
                                      Memory* process_memory, Regs* regs) = 0;

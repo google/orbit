@@ -388,6 +388,8 @@ bool PeCoffEpilogImpl::DetectAndHandleEpilog(uint64_t function_start_address,
                                              uint64_t function_end_address,
                                              uint64_t current_offset_from_start_of_function,
                                              Memory* process_memory, Regs* regs) {
+  last_error_ = {ERROR_NONE, 0};
+
   if (function_start_address + current_offset_from_start_of_function >= function_end_address) {
     last_error_.code = ERROR_INVALID_COFF;
     return false;
