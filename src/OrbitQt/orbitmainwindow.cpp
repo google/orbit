@@ -1886,17 +1886,17 @@ orbit_base::CanceledOr<void> OrbitMainWindow::DisplayStopDownloadDialog(
 
   orbit_base::CanceledOr<void> return_canceled_or;
   switch (dialog_result) {
-    case orbit_config_widgets::StopSymbolDownloadDialog::Result::kCancel:
+    case Result::kCancel:
       return_canceled_or = orbit_base::Canceled{};
       break;
-    case orbit_config_widgets::StopSymbolDownloadDialog::Result::kStopAndDisable: {
+    case Result::kStopAndDisable: {
       orbit_client_symbols::QSettingsBasedStorageManager storage_manager;
       absl::flat_hash_set<std::string> disabled_modules = storage_manager.LoadDisabledModulePaths();
       disabled_modules.emplace(module->file_path());
       storage_manager.SaveDisabledModulePaths(disabled_modules);
       [[fallthrough]];
     }
-    case orbit_config_widgets::StopSymbolDownloadDialog::Result::kStop:
+    case Result::kStop:
       break;
   }
 
