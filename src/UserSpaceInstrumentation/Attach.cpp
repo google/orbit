@@ -122,8 +122,13 @@ ErrorMessageOr<void> DetachAndContinueProcess(pid_t pid) {
   auto tids = GetTidsOfProcess(pid);
   for (auto tid : tids) {
     if (ptrace(PTRACE_DETACH, tid, nullptr, nullptr) == -1) {
-      return ErrorMessage(
-          absl::StrFormat("Error while detaching from thread %d: %s", tid, SafeStrerror(errno)));
+      // Failing with "no such process" is fine here: The thread might have been created (in running
+      // state) while we were attached.
+      constexpr int kErrnoNoSuchProcess = 3;
+      if (errno != kErrnoNoSuchProcess) {
+        return ErrorMessage(
+            absl::StrFormat("Error while detaching from thread %d: %s", tid, SafeStrerror(errno)));
+      }
     }
   }
   return outcome::success();
