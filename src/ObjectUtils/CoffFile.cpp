@@ -43,6 +43,7 @@ class CoffFileImpl : public CoffFile {
   [[nodiscard]] std::string GetBuildId() const override;
   [[nodiscard]] uint64_t GetExecutableSegmentOffset() const override;
   [[nodiscard]] uint64_t GetExecutableSegmentSize() const override;
+  [[nodiscard]] uint64_t GetImageSize() const override;
   [[nodiscard]] bool IsElf() const override;
   [[nodiscard]] bool IsCoff() const override;
   [[nodiscard]] ErrorMessageOr<PdbDebugInfo> GetDebugPdbInfo() const override;
@@ -334,6 +335,10 @@ uint64_t CoffFileImpl::GetExecutableSegmentOffset() const {
 }
 
 uint64_t CoffFileImpl::GetExecutableSegmentSize() const { return text_section_virtual_size_; }
+
+uint64_t CoffFileImpl::GetImageSize() const {
+  return object_file_->getPE32PlusHeader()->SizeOfImage;
+}
 
 bool CoffFileImpl::IsElf() const { return false; }
 bool CoffFileImpl::IsCoff() const { return true; }
