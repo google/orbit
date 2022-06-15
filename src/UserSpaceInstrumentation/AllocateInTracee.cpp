@@ -155,16 +155,16 @@ namespace {
 }  // namespace
 
 ErrorMessageOr<std::unique_ptr<MemoryInTracee>> MemoryInTracee::Create(pid_t pid, uint64_t address,
-                                                                       uint64_t size) {
+                                                                       uint64_t size, int flags) {
   // Syscall will be equivalent to:
-  // `mmap(address, size, PROT_WRITE, MAP_PRIVATE | MAP_ANONYMOUS, -1, 0)`
+  // `mmap(address, size, PROT_WRITE, flags, -1, 0)`
   // We just set `PROT_WRITE` but this permits also read access (on x86) although the read flag will
   // not show up in /proc/pid/maps. Setting `PROT_READ` explicitly would be clearer but under some
   // circumstances (personality setting READ_IMPLIES_EXEC) `PROT_READ` sets the flag permitting
   // execution and we want to avoid that.
   constexpr uint64_t kSyscallNumberMmap = 9;
-  auto result_or_error = SyscallInTracee(pid, kSyscallNumberMmap, address, size, PROT_WRITE,
-                                         MAP_PRIVATE | MAP_ANONYMOUS, static_cast<uint64_t>(-1), 0,
+  auto result_or_error = SyscallInTracee(pid, kSyscallNumberMmap, address, size, PROT_WRITE, flags,
+                                         static_cast<uint64_t>(-1), 0,
                                          /*exclude_address=*/0);
   if (result_or_error.has_error()) {
     return ErrorMessage(absl::StrFormat(
@@ -243,7 +243,7 @@ ErrorMessageOr<void> MemoryInTracee::EnsureMemoryWritable() {
 }
 
 ErrorMessageOr<std::unique_ptr<AutomaticMemoryInTracee>> AutomaticMemoryInTracee::Create(
-    pid_t pid, uint64_t address, uint64_t size) {
+    pid_t pid, uint64_t address, uint64_t size, int flags) {
   // Syscall will be equivalent to:
   // `mmap(address, size, PROT_WRITE, MAP_PRIVATE | MAP_ANONYMOUS, -1, 0)`
   // We just set `PROT_WRITE` but this permits also read access (on x86) although the read flag will
@@ -251,8 +251,8 @@ ErrorMessageOr<std::unique_ptr<AutomaticMemoryInTracee>> AutomaticMemoryInTracee
   // circumstances (personality setting READ_IMPLIES_EXEC) `PROT_READ` sets the flag permitting
   // execution and we want to avoid that.
   constexpr uint64_t kSyscallNumberMmap = 9;
-  auto result_or_error = SyscallInTracee(pid, kSyscallNumberMmap, address, size, PROT_WRITE,
-                                         MAP_PRIVATE | MAP_ANONYMOUS, static_cast<uint64_t>(-1), 0,
+  auto result_or_error = SyscallInTracee(pid, kSyscallNumberMmap, address, size, PROT_WRITE, flags,
+                                         static_cast<uint64_t>(-1), 0,
                                          /*exclude_address=*/0);
   if (result_or_error.has_error()) {
     return ErrorMessage(

@@ -5,6 +5,7 @@
 #ifndef USER_SPACE_INSTRUMENTATION_ALLOCATE_IN_TRACEE_H_
 #define USER_SPACE_INSTRUMENTATION_ALLOCATE_IN_TRACEE_H_
 
+#include <sys/mman.h>
 #include <sys/types.h>
 
 #include <cstdint>
@@ -23,7 +24,7 @@ namespace orbit_user_space_instrumentation {
 // The memory gets allocated in writable state. In case one wants to execute code in the segment, it
 // needs to be made executable with `EnsureMemoryExecutable` later. `Free` deallocates the memory.
 // This needs to be done manually - if MemoryInTracee goes out of scope without being freed the
-// memory inthe tracee will leak.
+// memory in the tracee will leak.
 // Note that for each of the non-const member functions we need to execute code in the tracee. So we
 // need to be attached; the tracee needs to be stopped.
 class MemoryInTracee {
@@ -43,11 +44,11 @@ class MemoryInTracee {
   // write permissions. The memory allocated will start at `address`. `address` needs to be aligned
   // to page boundaries. If the memory mapping can not be placed at `address` an error is returned.
   // If `address` is zero the placement of memory will be arbitrary (compare the documentation of
-  // mmap: https://man7.org/linux/man-pages/man2/mmap.2.html). Assumes we are already attached to
-  // the tracee `pid` using `AttachAndStopProcess`.
-  [[nodiscard]] static ErrorMessageOr<std::unique_ptr<MemoryInTracee>> Create(pid_t pid,
-                                                                              uint64_t address,
-                                                                              uint64_t size);
+  // mmap: https://man7.org/linux/man-pages/man2/mmap.2.html). Optionally one can specify the
+  // `flags`passed to mmap.
+  // Assumes we are already attached to the tracee `pid` using `AttachAndStopProcess`.
+  [[nodiscard]] static ErrorMessageOr<std::unique_ptr<MemoryInTracee>> Create(
+      pid_t pid, uint64_t address, uint64_t size, int flags = MAP_PRIVATE | MAP_ANONYMOUS);
 
   // Free address range previously allocated with AllocateInTracee using munmap.
   // Assumes we are already attached to the tracee using `AttachAndStopProcess`.
@@ -90,7 +91,7 @@ class AutomaticMemoryInTracee : public MemoryInTracee {
   AutomaticMemoryInTracee& operator=(AutomaticMemoryInTracee&&) = delete;
 
   [[nodiscard]] static ErrorMessageOr<std::unique_ptr<AutomaticMemoryInTracee>> Create(
-      pid_t pid, uint64_t address, uint64_t size);
+      pid_t pid, uint64_t address, uint64_t size, int flags = MAP_PRIVATE | MAP_ANONYMOUS);
 
   ~AutomaticMemoryInTracee() override;
 
