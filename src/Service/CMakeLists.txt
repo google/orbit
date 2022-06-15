@@ -24,16 +24,16 @@ target_link_libraries(OrbitServiceLib PUBLIC
 )
 
 if(WIN32)
-target_link_libraries(OrbitServiceLib PUBLIC
-        WindowsCaptureService
-        WindowsProcessService)
+        target_link_libraries(OrbitServiceLib PUBLIC
+                WindowsCaptureService
+                WindowsProcessService)
 else()
-target_link_libraries(OrbitServiceLib PUBLIC
-        CrashService
-        FramePointerValidatorService
-        LinuxCaptureService
-        ProcessService
-        TracepointService)
+        target_link_libraries(OrbitServiceLib PUBLIC
+                CrashService
+                FramePointerValidatorService
+                LinuxCaptureService
+                ProcessService
+                TracepointService)
 endif()
 
 project(OrbitService)

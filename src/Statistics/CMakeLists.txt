@@ -9,6 +9,7 @@ add_library(Statistics STATIC)
 target_sources(Statistics PUBLIC
                 include/Statistics/BinomialConfidenceInterval.h
                 include/Statistics/DataSet.h
+                include/Statistics/Gaussian.h
                 include/Statistics/Histogram.h
                 include/Statistics/StatisticsUtils.h)
 
@@ -26,8 +27,10 @@ target_link_libraries(Statistics PRIVATE OrbitBase)
 
 add_executable(StatisticsTests)
 
-target_sources(StatisticsTests PRIVATE 
+target_sources(StatisticsTests PRIVATE
+          GaussianTest.cpp
           HistogramTest.cpp
+          StatisticsUtilTest.cpp
           WilsonBinomialConfidenceIntervalEstimatorTest.cpp)
 
 target_link_libraries(

@@ -11,6 +11,7 @@
 #include "CaptureClient/LoadCapture.h"
 #include "CaptureFile/CaptureFile.h"
 #include "MizarData/BaselineAndComparison.h"
+#include "MizarData/BaselineOrComparison.h"
 #include "MizarData/MizarData.h"
 #include "MizarData/SamplingWithFrameTrackComparisonReport.h"
 #include "OrbitBase/Logging.h"
@@ -28,15 +29,24 @@
 
 int main(int argc, char* argv[]) {
   // The main in its current state is used to testing/experimenting and serves no other purpose
-  if (argc < 3) {
-    ORBIT_ERROR("Two filepaths should be given");
+  if (argc < 7) {
+    ORBIT_ERROR(
+        "Example: \n "
+        "$./Mizar path/to/baseline baseline_tid baseline_start_ms path/to/comparison "
+        "comparison_tid comparison_start_ms");
     return 1;
   }
   auto baseline = std::make_unique<orbit_mizar_data::MizarData>();
   auto comparison = std::make_unique<orbit_mizar_data::MizarData>();
 
   const std::filesystem::path baseline_path = argv[1];
-  const std::filesystem::path comparison_path = argv[2];
+  const std::filesystem::path comparison_path = argv[4];
+  const uint32_t baseline_tid = static_cast<uint32_t>(std::stoul(argv[2]));
+  const uint32_t comparison_tid = static_cast<uint32_t>(std::stoul(argv[5]));
+
+  constexpr uint64_t kNsInMs = 1'000'000;
+  const uint64_t baseline_start_ns = static_cast<uint64_t>(std::stoull(argv[3])) * kNsInMs;
+  const uint64_t comparison_start_ns = static_cast<uint64_t>(std::stoull(argv[6])) * kNsInMs;
 
   auto baseline_error_message = LoadCapture(baseline.get(), baseline_path);
   if (baseline_error_message.has_error()) {
@@ -53,35 +63,37 @@ int main(int argc, char* argv[]) {
   orbit_mizar_data::BaselineAndComparison bac =
       CreateBaselineAndComparison(std::move(baseline), std::move(comparison));
 
-  constexpr uint64_t kStart = 20'000'000'000;  // Here we omit the first 20s of the capture, that
-                                               // correspond for initialisation
   constexpr uint64_t kDuration = std::numeric_limits<uint64_t>::max();
 
   const orbit_mizar_data::SamplingWithFrameTrackComparisonReport report =
       bac.MakeSamplingWithFrameTrackReport(
           orbit_mizar_data::MakeBaseline<
               orbit_mizar_data::HalfOfSamplingWithFrameTrackReportConfig>(
-              absl::flat_hash_set<uint32_t>{orbit_base::kAllProcessThreadsTid}, kStart, kDuration,
-              1),
+              absl::flat_hash_set<uint32_t>{baseline_tid}, baseline_start_ns, kDuration, 1),
           orbit_mizar_data::MakeComparison<
               orbit_mizar_data::HalfOfSamplingWithFrameTrackReportConfig>(
-              absl::flat_hash_set<uint32_t>{orbit_base::kAllProcessThreadsTid}, kStart, kDuration,
-              1));
+              absl::flat_hash_set<uint32_t>{comparison_tid}, comparison_start_ns, kDuration, 1));
 
   for (const auto& [sfid, name] : bac.sfid_to_name()) {
-    const uint64_t baseline_cnt = report.baseline_sampling_counts.GetExclusiveCount(sfid);
-    const uint64_t comparison_cnt = report.baseline_sampling_counts.GetExclusiveCount(sfid);
-    if (baseline_cnt > 0 || comparison_cnt > 0) {
-      ORBIT_LOG("%s %s %.2f %.2f", name, static_cast<std::string>(sfid), baseline_cnt,
+    const uint64_t baseline_cnt =
+        report.GetSamplingCounts<orbit_mizar_data::Baseline>()->GetExclusiveCount(sfid);
+    const uint64_t comparison_cnt =
+        report.GetSamplingCounts<orbit_mizar_data::Comparison>()->GetExclusiveCount(sfid);
+    const double pvalue = report.GetComparisonResult(sfid).pvalue;
+    if (pvalue < 0.05) {
+      ORBIT_LOG("%s %.2f %s %u %u", name, pvalue, static_cast<std::string>(sfid), baseline_cnt,
                 comparison_cnt);
     }
   }
+  ORBIT_LOG("Callstack count %u vs %u ",
+            report.GetSamplingCounts<orbit_mizar_data::Baseline>()->GetTotalCallstacks(),
+            report.GetSamplingCounts<orbit_mizar_data::Comparison>()->GetTotalCallstacks());
   ORBIT_LOG("Total number of common names %u  ", bac.sfid_to_name().size());
   ORBIT_LOG("Baseline mean frametime %u ns, stddev %u",
-            report.baseline_frame_track_stats.ComputeAverageTimeNs(),
-            report.baseline_frame_track_stats.ComputeStdDevNs());
+            report.GetFrameTrackStats<orbit_mizar_data::Baseline>()->ComputeAverageTimeNs(),
+            report.GetFrameTrackStats<orbit_mizar_data::Baseline>()->ComputeStdDevNs());
   ORBIT_LOG("Comparison mean frametime %u ns, stddev %u",
-            report.comparison_frame_track_stats.ComputeAverageTimeNs(),
-            report.comparison_frame_track_stats.ComputeStdDevNs());
+            report.GetFrameTrackStats<orbit_mizar_data::Comparison>()->ComputeAverageTimeNs(),
+            report.GetFrameTrackStats<orbit_mizar_data::Comparison>()->ComputeStdDevNs());
   return 0;
 }

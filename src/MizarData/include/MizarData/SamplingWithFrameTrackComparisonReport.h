@@ -12,10 +12,19 @@
 #include <utility>
 
 #include "ClientData/ScopeStats.h"
+#include "MizarData/BaselineOrComparison.h"
 #include "MizarData/SampledFunctionId.h"
 #include "OrbitBase/Logging.h"
 
 namespace orbit_mizar_data {
+
+// Whatever is usually referred to as "Statistical Test" we call "Comparison" in the project to save
+// confusion with Unit tests.
+struct ComparisonResult {
+  double statistic{};
+  double pvalue{};  // The term from Statistics. TL;DR: The smaller it is, the less we believe in
+                    // the assumption under test (e.g. no difference in active function time).
+};
 
 // The struct represents the part of configuration relevant to one of the two captures under
 // comparison.
@@ -70,11 +79,51 @@ class SamplingCounts {
   uint64_t total_callstacks_{};
 };
 
-struct SamplingWithFrameTrackComparisonReport {
-  SamplingCounts baseline_sampling_counts;
-  SamplingCounts comparison_sampling_counts;
-  orbit_client_data::ScopeStats baseline_frame_track_stats;
-  orbit_client_data::ScopeStats comparison_frame_track_stats;
+class SamplingWithFrameTrackComparisonReport {
+ public:
+  explicit SamplingWithFrameTrackComparisonReport(
+      Baseline<SamplingCounts> baseline_sampling_counts,
+      Baseline<orbit_client_data::ScopeStats> baseline_frame_track_stats,
+      Comparison<SamplingCounts> comparison_sampling_counts,
+      Comparison<orbit_client_data::ScopeStats> comparison_frame_track_stats,
+      absl::flat_hash_map<SFID, ComparisonResult> fid_to_comparison_results)
+      : baseline_sampling_counts_(std::move(baseline_sampling_counts)),
+        baseline_frame_track_stats_(std::move(baseline_frame_track_stats)),
+        comparison_sampling_counts_(std::move(comparison_sampling_counts)),
+        comparison_frame_track_stats_(std::move(comparison_frame_track_stats)),
+        fid_to_comparison_results_(std::move(fid_to_comparison_results)) {}
+
+  template <template <typename> typename Wrapper>
+  const Wrapper<SamplingCounts>& GetSamplingCounts() const {
+    if constexpr (std::is_same_v<Wrapper<SamplingCounts>, Baseline<SamplingCounts>>) {
+      return baseline_sampling_counts_;
+    } else {
+      return comparison_sampling_counts_;
+    }
+  }
+
+  template <template <typename> typename Wrapper>
+  const Wrapper<orbit_client_data::ScopeStats>& GetFrameTrackStats() const {
+    if constexpr (std::is_same_v<Wrapper<orbit_client_data::ScopeStats>,
+                                 Baseline<orbit_client_data::ScopeStats>>) {
+      return baseline_frame_track_stats_;
+    } else {
+      return comparison_frame_track_stats_;
+    }
+  }
+
+  [[nodiscard]] const ComparisonResult& GetComparisonResult(SFID sfid) const {
+    return fid_to_comparison_results_.at(sfid);
+  }
+
+ private:
+  Baseline<SamplingCounts> baseline_sampling_counts_;
+  Baseline<orbit_client_data::ScopeStats> baseline_frame_track_stats_;
+
+  Comparison<SamplingCounts> comparison_sampling_counts_;
+  Comparison<orbit_client_data::ScopeStats> comparison_frame_track_stats_;
+
+  absl::flat_hash_map<SFID, ComparisonResult> fid_to_comparison_results_;
 };
 
 }  // namespace orbit_mizar_data
