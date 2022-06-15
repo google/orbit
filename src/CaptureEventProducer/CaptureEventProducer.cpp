@@ -10,6 +10,7 @@
 #include <chrono>
 
 #include "OrbitBase/Logging.h"
+#include "OrbitBase/ThreadUtils.h"
 
 using orbit_grpc_protos::ProducerSideService;
 using orbit_grpc_protos::ReceiveCommandsAndSendEventsRequest;
@@ -109,6 +110,7 @@ bool CaptureEventProducer::NotifyAllEventsSent() {
 
 void CaptureEventProducer::ConnectAndReceiveCommandsThread() {
   ORBIT_CHECK(producer_side_service_stub_ != nullptr);
+  orbit_base::SetCurrentThreadName("ConnectAndReceiveCommandsThread");
 
   while (true) {
     {
