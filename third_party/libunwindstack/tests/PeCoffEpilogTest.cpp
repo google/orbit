@@ -97,23 +97,37 @@ struct EpilogOptions {
 class PeCoffEpilogTest : public ::testing::Test {
  public:
   // For all tests, we'll have a minimum setup where the machine code to be tested for being an
-  // epilog is exactly the machine code we write into the file at offset kTextSectionFileOffset
-  // and there is no machine code above this start address. Since we want to (implicitly) test that
-  // the address arithmetic is carried out correctly, which needs to convert from relative virtual
+  // epilog is exactly the machine code we write into the file at offset kTextSectionFileOffset and
+  // there is no machine code above this start address. Since we want to (implicitly) test that the
+  // address arithmetic is carried out correctly, which needs to convert from relative virtual
   // addresses to file offsets, we use some non-zero values here.
   static constexpr uint64_t kFunctionStartAddress = 0x1000;
   static constexpr uint64_t kCurrentOffsetFromStartOfFunction = 0;
   static constexpr uint64_t kTextSectionVmaddr = kFunctionStartAddress;
   static constexpr uint64_t kTextSectionFileOffset = 0x100;
+  static constexpr uint64_t kTextSectionSize = 0x200;
+  static inline const Section kTextSection{
+      ".text", kTextSectionSize, kTextSectionVmaddr, kTextSectionSize, kTextSectionFileOffset, 0};
+
+  static constexpr uint64_t kSecondFunctionStartAddress = 0x2000;
+  static constexpr uint64_t kSecondTextSectionVmaddr = kSecondFunctionStartAddress;
+  static constexpr uint64_t kSecondTextSectionFileOffset = 0x300;
+  static constexpr uint64_t kSecondTextSectionSize = 0x400;
+  static inline const Section kSecondTextSection{".text2",
+                                                 kSecondTextSectionSize,
+                                                 kSecondTextSectionVmaddr,
+                                                 kSecondTextSectionSize,
+                                                 kSecondTextSectionFileOffset,
+                                                 0};
 
   PeCoffEpilogTest()
       : process_mem_fake_(new MemoryFake),
         file_mem_fake_(new MemoryFake),
         pe_coff_epilog_(
-            CreatePeCoffEpilog(file_mem_fake_.get(), kTextSectionVmaddr, kTextSectionFileOffset)) {}
-  ~PeCoffEpilogTest() {}
+            CreatePeCoffEpilog(file_mem_fake_.get(), {kTextSection, kSecondTextSection})) {}
+  ~PeCoffEpilogTest() override = default;
 
-  void SetUp() { ASSERT_TRUE(pe_coff_epilog_->Init()); }
+  void SetUp() override { ASSERT_TRUE(pe_coff_epilog_->Init()); }
 
   // Builds machine code according to the desired epilog structure as specified in the 'options'
   // argument. A good source for understanding and validating instruction encoding can be found
@@ -265,7 +279,7 @@ TEST_F(PeCoffEpilogTest, fails_if_end_address_is_smaller_than_start_address) {
   EXPECT_EQ(pe_coff_epilog_->GetLastError().code, ERROR_INVALID_COFF);
 }
 
-TEST_F(PeCoffEpilogTest, fails_if_function_start_smaller_than_text_section) {
+TEST_F(PeCoffEpilogTest, fails_if_function_start_smaller_than_text_section_start) {
   RegsX86_64 regs;
   regs.set_sp(0);
 
@@ -278,7 +292,20 @@ TEST_F(PeCoffEpilogTest, fails_if_function_start_smaller_than_text_section) {
   EXPECT_EQ(pe_coff_epilog_->GetLastError().code, ERROR_INVALID_COFF);
 }
 
-TEST_F(PeCoffEpilogTest, fails_with_error_if_disassembling_fails) {
+TEST_F(PeCoffEpilogTest, fails_if_function_start_larger_than_text_section_end) {
+  RegsX86_64 regs;
+  regs.set_sp(0);
+
+  constexpr uint64_t kFunctionStartAddress = kTextSectionVmaddr + kTextSectionSize;
+  constexpr uint64_t kFunctionEndAddress = kFunctionStartAddress + 1;
+
+  EXPECT_FALSE(pe_coff_epilog_->DetectAndHandleEpilog(kFunctionStartAddress, kFunctionEndAddress,
+                                                      kCurrentOffsetFromStartOfFunction,
+                                                      process_mem_fake_.get(), &regs));
+  EXPECT_EQ(pe_coff_epilog_->GetLastError().code, ERROR_INVALID_COFF);
+}
+
+TEST_F(PeCoffEpilogTest, fails_if_disassembling_fails) {
   std::vector<uint8_t> machine_code{0x48, 0x81, 0xc1, 0x07,
                                     0xc3};  // bogus machine code, two bytes are missing
 
@@ -376,7 +403,7 @@ TEST_F(PeCoffEpilogTest, detects_non_epilog_missing_ret_instruction) {
 }
 
 TEST_F(PeCoffEpilogTest, detects_non_epilog_add_instruction_not_rsp) {
-  std::vector<uint8_t> machine_code{0x48, 0x83, 0xc1, 0x07, 0xc3};  // add rcx, 0x7 and ret
+  std::vector<uint8_t> machine_code{0x48, 0x83, 0xc1, 0x07, 0xc3};  // add rcx, 0x7; ret
 
   SetMemoryInFakeFile(kTextSectionFileOffset, machine_code);
   const uint64_t function_end_address = kFunctionStartAddress + machine_code.size();
@@ -391,7 +418,7 @@ TEST_F(PeCoffEpilogTest, detects_non_epilog_add_instruction_not_rsp) {
 }
 
 TEST_F(PeCoffEpilogTest, detects_non_epilog_add_instruction_not_immediate_added_to_rsp) {
-  std::vector<uint8_t> machine_code{0x48, 0x01, 0xc4, 0xc3};  // add rsp, rax and ret
+  std::vector<uint8_t> machine_code{0x48, 0x01, 0xc4, 0xc3};  // add rsp, rax; ret
 
   SetMemoryInFakeFile(kTextSectionFileOffset, machine_code);
   const uint64_t function_end_address = kFunctionStartAddress + machine_code.size();
@@ -406,7 +433,7 @@ TEST_F(PeCoffEpilogTest, detects_non_epilog_add_instruction_not_immediate_added_
 }
 
 TEST_F(PeCoffEpilogTest, detects_non_epilog_add_instruction_destination_not_register) {
-  std::vector<uint8_t> machine_code{0x48, 0x01, 0x04, 0x24, 0xc3};  // add [rsp], rax and ret
+  std::vector<uint8_t> machine_code{0x48, 0x01, 0x04, 0x24, 0xc3};  // add [rsp], rax; ret
 
   SetMemoryInFakeFile(kTextSectionFileOffset, machine_code);
   const uint64_t function_end_address = kFunctionStartAddress + machine_code.size();
@@ -422,7 +449,7 @@ TEST_F(PeCoffEpilogTest, detects_non_epilog_add_instruction_destination_not_regi
 
 TEST_F(PeCoffEpilogTest, detects_non_epilog_add_instruction_immediate_negative) {
   // The immediate value represents the stack allocation size, so must be non-negative.
-  std::vector<uint8_t> machine_code{0x48, 0x83, 0xc4, 0xff, 0xc3};  // add rsp, -1 and ret
+  std::vector<uint8_t> machine_code{0x48, 0x83, 0xc4, 0xff, 0xc3};  // add rsp, -1; ret
 
   SetMemoryInFakeFile(kTextSectionFileOffset, machine_code);
   const uint64_t function_end_address = kFunctionStartAddress + machine_code.size();
@@ -493,7 +520,7 @@ TEST_F(PeCoffEpilogTest, succeeds_for_lea_with_large_displacement_and_ret_only) 
 }
 
 TEST_F(PeCoffEpilogTest, detects_non_epilog_instruction_lea_destination_is_not_rsp) {
-  std::vector<uint8_t> machine_code{0x48, 0x8d, 0x75, 0x00, 0xc3};  // lea rsi,[rbp+0x0] and ret
+  std::vector<uint8_t> machine_code{0x48, 0x8d, 0x75, 0x00, 0xc3};  // lea rsi,[rbp+0x0]; ret
 
   SetMemoryInFakeFile(kTextSectionFileOffset, machine_code);
   const uint64_t function_end_address = kFunctionStartAddress + machine_code.size();
@@ -827,6 +854,27 @@ TEST_F(PeCoffEpilogTest, succeeds_for_general_case_with_add_as_first_instruction
   EXPECT_EQ(regs[X86_64Reg::X86_64_REG_RDI], 0x100);
   EXPECT_EQ(regs[X86_64Reg::X86_64_REG_R12], 0x200);
   EXPECT_EQ(regs[X86_64Reg::X86_64_REG_RBX], 0x300);
+}
+
+TEST_F(PeCoffEpilogTest, succeeds_with_pc_not_in_first_executable_section) {
+  EpilogOptions options;
+  options.return_address = 0x1234;
+  options.ret_instruction_bytes = {0xc3};  // ret
+  std::vector<uint8_t> machine_code = BuildEpilog(options);
+
+  SetMemoryInFakeFile(kSecondTextSectionFileOffset, machine_code);
+  const uint64_t function_end_address = kSecondFunctionStartAddress + machine_code.size();
+
+  RegsX86_64 regs;
+  regs.set_sp(0);
+
+  EXPECT_TRUE(pe_coff_epilog_->DetectAndHandleEpilog(
+      kSecondFunctionStartAddress, function_end_address, kCurrentOffsetFromStartOfFunction,
+      process_mem_fake_.get(), &regs));
+  EXPECT_EQ(pe_coff_epilog_->GetLastError().code, ERROR_NONE);
+
+  EXPECT_EQ(regs.pc(), options.return_address);
+  EXPECT_EQ(regs.sp(), expected_stack_pointer_after_unwind_);
 }
 
 TEST_F(PeCoffEpilogTest, error_is_reset_for_every_invocation) {

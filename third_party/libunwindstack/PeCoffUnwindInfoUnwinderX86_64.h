@@ -36,13 +36,11 @@ class PeCoffUnwindInfoUnwinderX86_64 : public PeCoffNativeUnwinder {
  public:
   explicit PeCoffUnwindInfoUnwinderX86_64(Memory* object_file_memory, int64_t image_base,
                                           uint64_t pdata_begin, uint64_t pdata_end,
-                                          uint64_t text_section_vmaddr,
-                                          uint64_t text_section_offset,
                                           const std::vector<Section>& sections)
       : runtime_functions_(CreatePeCoffRuntimeFunctions(object_file_memory)),
         unwind_infos_(CreatePeCoffUnwindInfos(object_file_memory, sections)),
         unwind_info_evaluator_(CreatePeCoffUnwindInfoEvaluator()),
-        epilog_(CreatePeCoffEpilog(object_file_memory, text_section_vmaddr, text_section_offset)),
+        epilog_(CreatePeCoffEpilog(object_file_memory, sections)),
         image_base_(image_base),
         pdata_begin_(pdata_begin),
         pdata_end_(pdata_end) {}

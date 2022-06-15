@@ -511,8 +511,7 @@ bool PeCoffInterfaceImpl<uint64_t>::InitNativeUnwinder() {
   }
 
   native_unwinder_ = std::make_unique<PeCoffUnwindInfoUnwinderX86_64>(
-      memory_, optional_header_.image_base, pdata_file_begin, pdata_file_end,
-      text_section_data_->memory_offset, text_section_data_->file_offset, sections_);
+      memory_, optional_header_.image_base, pdata_file_begin, pdata_file_end, sections_);
   return native_unwinder_->Init();
 }
 
