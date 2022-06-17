@@ -31,7 +31,7 @@ class BaselineOrComparison {
   BaselineOrComparison(BaselineOrComparison&& other) = default;
 
   template <typename... Args>
-  explicit BaselineOrComparison(std::in_place_t /*_*/, Args&&... args)
+  explicit BaselineOrComparison(std::in_place_t, Args&&... args)
       : value_(T(std::forward<T>(args)...)) {}
 
  private:

@@ -126,8 +126,8 @@ class MockPairedData {
   }
 
   [[nodiscard]] std::vector<uint64_t> ActiveInvocationTimes(
-      const absl::flat_hash_set<uint32_t>& /*_*/, uint64_t /*_*/, uint64_t /*_*/,
-      uint64_t /*_*/) const {
+      const absl::flat_hash_set<uint32_t>& /*tids*/, uint64_t /*frame_track_scope_id*/,
+      uint64_t /*min_relative_timestamp_ns*/, uint64_t /*max_relative_timestamp_ns*/) const {
     return frame_track_active_times_;
   };
 
@@ -138,10 +138,11 @@ class MockPairedData {
 
 class MockFunctionTimeComparator {
  public:
-  MockFunctionTimeComparator(const Baseline<SamplingCounts>& /*_*/,
-                             const Baseline<orbit_client_data::ScopeStats>& /*_*/,
-                             const Comparison<SamplingCounts>& /*_*/,
-                             const Comparison<orbit_client_data::ScopeStats>& /*_*/) {}
+  MockFunctionTimeComparator(
+      const Baseline<SamplingCounts>& /*baseline_counts*/,
+      const Baseline<orbit_client_data::ScopeStats>& /*baseline_frame_stats*/,
+      const Comparison<SamplingCounts>& /*comparison_counts*/,
+      const Comparison<orbit_client_data::ScopeStats>& /*comparison_frame_stats*/) {}
 
   [[nodiscard]] ComparisonResult Compare(SFID /*_*/) const { return {kStatistic, kPvalue}; };
 };
