@@ -96,15 +96,15 @@ TEST(BaselineAndComparisonTest, BaselineAndComparisonHelperIsCorrect) {
               UnorderedElementsAreArray(Values(comparison_address_to_sfid)));
 }
 
-constexpr size_t kSFIDCnt = 3;
-constexpr SFID kSFIDFirst = SFID(1);
-constexpr SFID kSFIDSecond = SFID(2);
-constexpr SFID kSFIDThird = SFID(3);
-constexpr std::array<SFID, kSFIDCnt> kSFIDs = {kSFIDFirst, kSFIDSecond, kSFIDThird};
-const absl::flat_hash_map<SFID, std::string> kSFIDToName = MakeMap(kSFIDs, kBaselineFunctionNames);
+constexpr size_t kSfidCount = 3;
+constexpr SFID kSfidFirst = SFID(1);
+constexpr SFID kSfidSecond = SFID(2);
+constexpr SFID kSfidThird = SFID(3);
+constexpr std::array<SFID, kSfidCount> kSfids = {kSfidFirst, kSfidSecond, kSfidThird};
+const absl::flat_hash_map<SFID, std::string> kSfidToName = MakeMap(kSfids, kBaselineFunctionNames);
 
 const std::vector<std::vector<SFID>> kCallstacks = {
-    std::vector<SFID>{kSFIDThird, kSFIDSecond, kSFIDFirst}, {kSFIDSecond}, {}};
+    std::vector<SFID>{kSfidThird, kSfidSecond, kSfidFirst}, {kSfidSecond}, {}};
 
 const std::vector<uint64_t> kFrameTrackActiveTimes = {300, 100, 200};
 
@@ -154,7 +154,7 @@ TEST(BaselineAndComparisonTest, MakeSamplingWithFrameTrackReportIsCorrect) {
       MakeComparison<MockPairedData>(std::vector<std::vector<SFID>>{}, std::vector<uint64_t>{});
 
   BaselineAndComparisonTmpl<MockPairedData, MockFunctionTimeComparator> bac(
-      std::move(full), std::move(empty), {kSFIDToName});
+      std::move(full), std::move(empty), {kSfidToName});
   const SamplingWithFrameTrackComparisonReport report = bac.MakeSamplingWithFrameTrackReport(
       orbit_mizar_data::MakeBaseline<orbit_mizar_data::HalfOfSamplingWithFrameTrackReportConfig>(
           absl::flat_hash_set<uint32_t>{orbit_base::kAllProcessThreadsTid}, 0, 1, 1),
@@ -163,16 +163,16 @@ TEST(BaselineAndComparisonTest, MakeSamplingWithFrameTrackReportIsCorrect) {
 
   EXPECT_EQ(report.GetSamplingCounts<Baseline>()->GetTotalCallstacks(), kCallstacks.size());
 
-  EXPECT_EQ(report.GetSamplingCounts<Baseline>()->GetExclusiveCount(kSFIDFirst), 0);
-  EXPECT_EQ(report.GetSamplingCounts<Baseline>()->GetExclusiveCount(kSFIDSecond), 1);
-  EXPECT_EQ(report.GetSamplingCounts<Baseline>()->GetExclusiveCount(kSFIDThird), 1);
+  EXPECT_EQ(report.GetSamplingCounts<Baseline>()->GetExclusiveCount(kSfidFirst), 0);
+  EXPECT_EQ(report.GetSamplingCounts<Baseline>()->GetExclusiveCount(kSfidSecond), 1);
+  EXPECT_EQ(report.GetSamplingCounts<Baseline>()->GetExclusiveCount(kSfidThird), 1);
 
-  EXPECT_EQ(report.GetSamplingCounts<Baseline>()->GetInclusiveCount(kSFIDFirst), 1);
-  EXPECT_EQ(report.GetSamplingCounts<Baseline>()->GetInclusiveCount(kSFIDSecond), 2);
-  EXPECT_EQ(report.GetSamplingCounts<Baseline>()->GetInclusiveCount(kSFIDThird), 1);
+  EXPECT_EQ(report.GetSamplingCounts<Baseline>()->GetInclusiveCount(kSfidFirst), 1);
+  EXPECT_EQ(report.GetSamplingCounts<Baseline>()->GetInclusiveCount(kSfidSecond), 2);
+  EXPECT_EQ(report.GetSamplingCounts<Baseline>()->GetInclusiveCount(kSfidThird), 1);
 
   EXPECT_EQ(report.GetSamplingCounts<Comparison>()->GetTotalCallstacks(), 0);
-  for (const SFID sfid : kSFIDs) {
+  for (const SFID sfid : kSfids) {
     EXPECT_EQ(report.GetSamplingCounts<Comparison>()->GetExclusiveCount(sfid), 0);
     EXPECT_EQ(report.GetSamplingCounts<Comparison>()->GetInclusiveCount(sfid), 0);
 

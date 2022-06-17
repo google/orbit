@@ -10,7 +10,7 @@
 namespace orbit_statistics {
 
 // Cumulative density function of the standard (zero mean, unit variance) Gaussian distribution.
-[[nodiscard]] inline double GaussianCDF(double x) { return std::erfc(-x / std::sqrt(2)) / 2; }
+[[nodiscard]] inline double GaussianCdf(double x) { return std::erfc(-x / std::sqrt(2)) / 2; }
 
 }  // namespace orbit_statistics
 

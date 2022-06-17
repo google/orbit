@@ -42,8 +42,8 @@ constexpr uint64_t kTotalCallstacksComparison = 200;
 constexpr double kRateBaseline = 0.1;
 constexpr double kRateComparison = 0.15;
 
-constexpr uint64_t kFramesCntBaseline = 1000;
-constexpr uint64_t kFramesCntComparison = 1300;
+constexpr uint64_t kFramesCountBaseline = 1000;
+constexpr uint64_t kFramesCountComparison = 1300;
 
 constexpr double kFrametimeVarBaseline = 100;
 constexpr double kFrametimeVarComparison = 150;
@@ -69,8 +69,9 @@ class ActiveFunctionTimePerFrameComparatorTest : public ::testing::Test {
     EXPECT_CALL(*comparison_frame_track_stats_, ComputeAverageTimeNs)
         .WillRepeatedly(Return(kAvgFrametimeComparison));
 
-    EXPECT_CALL(*baseline_frame_track_stats_, count).WillRepeatedly(Return(kFramesCntBaseline));
-    EXPECT_CALL(*comparison_frame_track_stats_, count).WillRepeatedly(Return(kFramesCntComparison));
+    EXPECT_CALL(*baseline_frame_track_stats_, count).WillRepeatedly(Return(kFramesCountBaseline));
+    EXPECT_CALL(*comparison_frame_track_stats_, count)
+        .WillRepeatedly(Return(kFramesCountComparison));
 
     EXPECT_CALL(*baseline_frame_track_stats_, variance_ns)
         .WillRepeatedly(Return(kFrametimeVarBaseline));

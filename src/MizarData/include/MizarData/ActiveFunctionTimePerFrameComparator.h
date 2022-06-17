@@ -2,8 +2,8 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#ifndef MIZAR_STATISTICS_ACTIVE_FUNCTION_TIME_PER_FRAME_COMPARATOR_H_
-#define MIZAR_STATISTICS_ACTIVE_FUNCTION_TIME_PER_FRAME_COMPARATOR_H_
+#ifndef MIZAR_DATA_ACTIVE_FUNCTION_TIME_PER_FRAME_COMPARATOR_H_
+#define MIZAR_DATA_ACTIVE_FUNCTION_TIME_PER_FRAME_COMPARATOR_H_
 
 #include <utility>
 
@@ -16,6 +16,10 @@
 namespace orbit_mizar_data {
 
 // TODO(b/236130122) it should be moved to a new library
+// Implements the statistical hypothesis testing procedure aimed to test the equality of total
+// CPU-time of the sampled functions given the sampled rates and the frame track stats.
+// Under the assumption of equality the distribution of the statistic is approximated with normal
+// distribution.
 template <typename Counts, typename FrameTrackStats>
 class ActiveFunctionTimePerFrameComparatorTmpl {
  public:
@@ -39,7 +43,7 @@ class ActiveFunctionTimePerFrameComparatorTmpl {
 
     const double stat = non_normalized_stat.mean / std::sqrt(non_normalized_stat.variance);
 
-    const double pvalue_right_tail = orbit_statistics::GaussianCDF(stat);
+    const double pvalue_right_tail = orbit_statistics::GaussianCdf(stat);
     if (std::isnan(pvalue_right_tail)) return {stat, 1.0};
 
     // But the test is two-tailed. So by the symmetry of Normal distribution we have
@@ -80,4 +84,4 @@ using ActiveFunctionTimePerFrameComparator =
 
 }  // namespace orbit_mizar_data
 
-#endif  // MIZAR_STATISTICS_ACTIVE_FUNCTION_TIME_PER_FRAME_COMPARATOR_H_
+#endif  // MIZAR_DATA_ACTIVE_FUNCTION_TIME_PER_FRAME_COMPARATOR_H_

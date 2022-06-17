@@ -22,8 +22,10 @@ namespace orbit_mizar_data {
 // confusion with Unit tests.
 struct ComparisonResult {
   double statistic{};
-  double pvalue{};  // The term from Statistics. TL;DR: The smaller it is, the less we believe in
-                    // the assumption under test (e.g. no difference in active function time).
+
+  // The term from Statistics. TL;DR: The smaller it is, the less we believe in the assumption under
+  // test (e.g. no difference in active function time).
+  double pvalue{};
 };
 
 // The struct represents the part of configuration relevant to one of the two captures under
@@ -79,6 +81,8 @@ class SamplingCounts {
   uint64_t total_callstacks_{};
 };
 
+// The data class that contains the data we report as results of comparison of the sampling data
+// with frame track
 class SamplingWithFrameTrackComparisonReport {
  public:
   explicit SamplingWithFrameTrackComparisonReport(

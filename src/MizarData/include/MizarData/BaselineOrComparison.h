@@ -13,11 +13,12 @@ namespace orbit_mizar_data {
 template <typename T, typename U>
 using EnableIfUConvertibleToT = std::enable_if_t<std::is_convertible_v<U, T>>;
 
+// The base class for the `Baseline<T>` and `Comparison<T>` wrappers. These classes are needed to
+// promote type-safety, reducing a change of misusing the baseline-related value instead of the
+// comparison-related value and vice versa.
 template <typename T>
 class BaselineOrComparison {
  public:
-  ~BaselineOrComparison() = default;
-
   const T* operator->() const { return &value_; }
   T* operator->() { return &value_; }
 

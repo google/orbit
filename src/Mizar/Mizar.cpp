@@ -64,15 +64,18 @@ int main(int argc, char* argv[]) {
       CreateBaselineAndComparison(std::move(baseline), std::move(comparison));
 
   constexpr uint64_t kDuration = std::numeric_limits<uint64_t>::max();
+  constexpr uint64_t kFrameTrackScopeId = 1;
 
   const orbit_mizar_data::SamplingWithFrameTrackComparisonReport report =
       bac.MakeSamplingWithFrameTrackReport(
           orbit_mizar_data::MakeBaseline<
               orbit_mizar_data::HalfOfSamplingWithFrameTrackReportConfig>(
-              absl::flat_hash_set<uint32_t>{baseline_tid}, baseline_start_ns, kDuration, 1),
+              absl::flat_hash_set<uint32_t>{baseline_tid}, baseline_start_ns, kDuration,
+              kFrameTrackScopeId),
           orbit_mizar_data::MakeComparison<
               orbit_mizar_data::HalfOfSamplingWithFrameTrackReportConfig>(
-              absl::flat_hash_set<uint32_t>{comparison_tid}, comparison_start_ns, kDuration, 1));
+              absl::flat_hash_set<uint32_t>{comparison_tid}, comparison_start_ns, kDuration,
+              kFrameTrackScopeId));
 
   for (const auto& [sfid, name] : bac.sfid_to_name()) {
     const uint64_t baseline_cnt =
