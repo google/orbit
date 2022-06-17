@@ -14,7 +14,7 @@
     }
   ],
 
-  "hwasan-postsubmit": [
+  "hwasan-presubmit": [
     {
       "name": "libunwindstack_unit_test"
     }
