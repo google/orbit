@@ -53,6 +53,12 @@ using orbit_client_data::ModuleData;
 using orbit_client_data::ModuleManager;
 using orbit_metrics_uploader::OrbitLogEvent;
 
+[[nodiscard]] static std::optional<float> FloatFromIndex(const QModelIndex& index) {
+  bool is_float = false;
+  float value = index.data(Qt::EditRole).toFloat(&is_float);
+  return is_float ? std::optional<float>(value) : std::optional<float>(std::nullopt);
+}
+
 CallTreeWidget::CallTreeWidget(QWidget* parent)
     : QWidget{parent}, ui_{std::make_unique<Ui::CallTreeWidget>()} {
   ui_->setupUi(this);
@@ -71,6 +77,8 @@ CallTreeWidget::CallTreeWidget(QWidget* parent)
           &CallTreeWidget::OnSearchLineEditTextEdited);
   connect(search_typing_finished_timer_, &QTimer::timeout, this,
           &CallTreeWidget::OnSearchTypingFinishedTimerTimout);
+  connect(ui_->horizontalSlider, &QSlider::valueChanged, this,
+          &CallTreeWidget::OnSliderValueChanged);
 }
 
 void CallTreeWidget::SetCallTreeView(std::unique_ptr<CallTreeView> call_tree_view,
@@ -163,6 +171,27 @@ static void CollapseRecursively(QTreeView* tree_view, const QModelIndex& index) 
   }
 }
 
+// Nodes with an inclusive percentage over `expansion_threshold` will be expanded, the other nodes
+// are collapsed recursively.
+static void ExpandRecursivelyWithThreshold(QTreeView* tree_view, const QModelIndex& index,
+                              float expansion_threshold = 0.f) {
+  if (!index.isValid()) {
+    return;
+  }
+  for (int i = 0; i < index.model()->rowCount(index); ++i) {
+    const QModelIndex& child = index.child(i, 0);
+    std::optional<float> inclusive_percent = FloatFromIndex(index.sibling(index.row(), 1));
+    if (inclusive_percent.has_value() && inclusive_percent.value() > expansion_threshold) {
+      if (!tree_view->isExpanded(index)) {
+        tree_view->expand(index);
+      }
+      ExpandRecursivelyWithThreshold(tree_view, child, expansion_threshold);
+    } else {
+      CollapseRecursively(tree_view, index);
+    }
+  }
+}
+
 void CallTreeWidget::SetTopDownView(std::unique_ptr<CallTreeView> top_down_view) {
   // Expand recursively if CallTreeView contains information for a single thread.
   bool should_expand = top_down_view->thread_count() == 1;
@@ -171,7 +200,9 @@ void CallTreeWidget::SetTopDownView(std::unique_ptr<CallTreeView> top_down_view)
                   std::make_unique<HideValuesForTopDownProxyModel>(nullptr));
 
   if (should_expand) {
-    ExpandRecursively(ui_->callTreeTreeView, ui_->callTreeTreeView->model()->index(0, 0));
+    float expansion_threshold = 100.f - ui_->horizontalSlider->value();
+    ExpandRecursivelyWithThreshold(ui_->callTreeTreeView, ui_->callTreeTreeView->model()->index(0, 0),
+                      expansion_threshold);
   }
 }
 
@@ -740,6 +771,12 @@ void CallTreeWidget::OnSearchTypingFinishedTimerTimout() {
   }
 }
 
+void CallTreeWidget::OnSliderValueChanged(int value){ 
+    ORBIT_SCOPE_FUNCTION;
+    ORBIT_LOG("Slider value: %i", value); 
+    ExpandRecursivelyWithThreshold(ui_->callTreeTreeView, ui_->callTreeTreeView->model()->index(0, 0), 100-value);
+}
+
 const QColor CallTreeWidget::HighlightCustomFilterSortFilterProxyModel::kHighlightColor{Qt::green};
 
 QVariant CallTreeWidget::HighlightCustomFilterSortFilterProxyModel::data(const QModelIndex& index,
@@ -809,9 +846,8 @@ QVariant CallTreeWidget::HookedIdentityProxyModel::data(const QModelIndex& index
 void CallTreeWidget::ProgressBarItemDelegate::paint(QPainter* painter,
                                                     const QStyleOptionViewItem& option,
                                                     const QModelIndex& index) const {
-  bool is_float = false;
-  float inclusive_percent = index.data(Qt::EditRole).toFloat(&is_float);
-  if (!is_float) {
+  std::optional<float> inclusive_percent = FloatFromIndex(index);
+  if (!inclusive_percent.has_value()) {
     QStyledItemDelegate::paint(painter, option, index);
     return;
   }
@@ -829,7 +865,7 @@ void CallTreeWidget::ProgressBarItemDelegate::paint(QPainter* painter,
   option_progress_bar.palette = option.palette;
   option_progress_bar.minimum = 0;
   option_progress_bar.maximum = 100;
-  option_progress_bar.progress = static_cast<int>(round(inclusive_percent));
+  option_progress_bar.progress = static_cast<int>(round(inclusive_percent.value()));
 
   const QColor bar_background_color = option.palette.color(QPalette::Disabled, QPalette::Base);
   option_progress_bar.palette.setColor(QPalette::Base, bar_background_color);
