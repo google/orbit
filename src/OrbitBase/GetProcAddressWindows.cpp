@@ -12,11 +12,13 @@
 #include <absl/strings/str_format.h>
 
 #include "OrbitBase/GetLastError.h"
+#include "OrbitBase/StringConversion.h"
 
 namespace orbit_base {
 
 ErrorMessageOr<void*> GetProcAddress(const std::string& module, const std::string& function) {
-  HMODULE module_handle = GetModuleHandleA(module.c_str());
+  std::wstring w_module = orbit_base::ToStdWString(module);
+  HMODULE module_handle = GetModuleHandleW(w_module.c_str());
   if (module_handle == nullptr) {
     return ErrorMessage(
         absl::StrFormat("Could not find module \"%s\" while looking for function \"%s\": %s",

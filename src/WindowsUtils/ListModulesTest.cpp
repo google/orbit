@@ -16,6 +16,7 @@
 #include <vector>
 
 #include "OrbitBase/Logging.h"
+#include "OrbitBase/StringConversion.h"
 #include "OrbitBase/ThreadUtils.h"
 #include "WindowsUtils/ListModules.h"
 #include "WindowsUtils/ListThreads.h"
@@ -27,9 +28,9 @@ static std::string GetCurrentModuleName() {
   GetModuleHandleEx(GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS, (LPCTSTR)GetCurrentModuleName,
                     &module_handle);
   ORBIT_CHECK(module_handle);
-  char module_name[MAX_PATH] = {0};
-  GetModuleFileNameA(module_handle, module_name, MAX_PATH);
-  return module_name;
+  wchar_t module_name[MAX_PATH] = {0};
+  GetModuleFileNameW(module_handle, module_name, MAX_PATH);
+  return orbit_base::ToStdString(module_name);
 }
 
 TEST(ListModules, ContainsCurrentModule) {

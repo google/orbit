@@ -18,15 +18,15 @@ namespace orbit_base {
 
 std::filesystem::path GetExecutablePath() {
   constexpr uint32_t kMaxPath = 2048;
-  char exe_file_name[kMaxPath] = {0};
-  if (!GetModuleFileNameA(/*hModule=*/nullptr, exe_file_name, kMaxPath)) {
-    ORBIT_FATAL("%s", GetLastErrorAsString("GetModuleFileNameA"));
+  wchar_t exe_file_name[kMaxPath] = {0};
+  if (!GetModuleFileNameW(/*hModule=*/nullptr, exe_file_name, kMaxPath)) {
+    ORBIT_FATAL("%s", GetLastErrorAsString("GetModuleFileNameW"));
   }
 
   // Clean up "../" inside full path
-  char exe_full_path[kMaxPath] = {0};
-  if (!GetFullPathNameA(exe_file_name, kMaxPath, exe_full_path, nullptr)) {
-    ORBIT_FATAL("%s", GetLastErrorAsString("GetFullPathNameA"));
+  wchar_t exe_full_path[kMaxPath] = {0};
+  if (!GetFullPathNameW(exe_file_name, kMaxPath, exe_full_path, nullptr)) {
+    ORBIT_FATAL("%s", GetLastErrorAsString("GetFullPathNameW"));
   }
 
   return std::filesystem::path(exe_full_path);
@@ -39,16 +39,16 @@ ErrorMessageOr<std::filesystem::path> GetExecutablePath(uint32_t pid) {
   }
 
   constexpr uint32_t kMaxPath = 2048;
-  char exe_file_name[kMaxPath] = {0};
+  wchar_t exe_file_name[kMaxPath] = {0};
 
-  if (!GetModuleFileNameExA(handle, /*hModule=*/nullptr, exe_file_name, kMaxPath)) {
-    return orbit_base::GetLastErrorAsErrorMessage("GetModuleFileNameExA");
+  if (!GetModuleFileNameExW(handle, /*hModule=*/nullptr, exe_file_name, kMaxPath)) {
+    return orbit_base::GetLastErrorAsErrorMessage("GetModuleFileNameExW");
   }
 
   // Clean up "../" inside full path
-  char exe_full_path[kMaxPath] = {0};
-  if (!GetFullPathNameA(exe_file_name, kMaxPath, exe_full_path, nullptr)) {
-    return orbit_base::GetLastErrorAsErrorMessage("GetFullPathNameA");
+  wchar_t exe_full_path[kMaxPath] = {0};
+  if (!GetFullPathNameW(exe_file_name, kMaxPath, exe_full_path, nullptr)) {
+    return orbit_base::GetLastErrorAsErrorMessage("GetFullPathNameW");
   }
 
   return std::filesystem::path(exe_full_path);

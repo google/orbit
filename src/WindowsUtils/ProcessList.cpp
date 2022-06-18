@@ -145,7 +145,7 @@ ErrorMessageOr<void> ProcessListImpl::Refresh() {
     if (it == process_infos_.end()) {
       ProcessInfo& process_info = process_infos_[pid];
       std::string process_name = orbit_base::ToStdString(process_entry.szExeFile);
-      char full_path[MAX_PATH] = {0};
+      wchar_t full_path[MAX_PATH] = {0};
       // Assume 64 bit as the default.
       bool is_64_bit = true;
 
@@ -162,15 +162,15 @@ ErrorMessageOr<void> ProcessListImpl::Refresh() {
           is_64_bit = result.value();
         }
 
-        DWORD buffer_size = sizeof(full_path);
-        if (QueryFullProcessImageNameA(handle, 0, full_path, &buffer_size) == 0) {
+        DWORD num_chars = sizeof(full_path) / sizeof(full_path[0]);
+        if (QueryFullProcessImageNameW(handle, 0, full_path, &num_chars) == 0) {
           ORBIT_ERROR("Calling GetModuleFileNameExA for pid %u", pid);
         }
       }
 
       Process& process = process_info.process;
       process.pid = pid;
-      process.full_path = full_path;
+      process.full_path = orbit_base::ToStdString(full_path);
       process.name = process_name;
       process.is_64_bit = is_64_bit;
     } else {
