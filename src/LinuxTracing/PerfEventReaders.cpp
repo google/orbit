@@ -303,13 +303,11 @@ SchedWakeupPerfEvent ConsumeSchedWakeupPerfEvent(PerfEventRingBuffer* ring_buffe
       .timestamp = ring_buffer_record.sample_id.time,
       .ordered_stream = PerfEventOrderedStream::FileDescriptor(ring_buffer->GetFileDescriptor()),
       .data =
-          {
-              // The tracepoint format calls the woken tid "data.pid" but it's effectively the
-              // thread id.
-              .woken_tid = sched_wakeup.pid,
-              .woker_tid = static_cast<pid_t>(ring_buffer_record.sample_id.tid),
-              .woker_pid = static_cast<pid_t>(ring_buffer_record.sample_id.pid)
-          },
+          {// The tracepoint format calls the woken tid "data.pid" but it's effectively the
+           // thread id.
+           .woken_tid = sched_wakeup.pid,
+           .woker_tid = static_cast<pid_t>(ring_buffer_record.sample_id.tid),
+           .woker_pid = static_cast<pid_t>(ring_buffer_record.sample_id.pid)},
   };
 }
 

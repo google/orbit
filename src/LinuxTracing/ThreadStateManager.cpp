@@ -27,14 +27,14 @@ using orbit_grpc_protos::ThreadStateSlice;
 // larger timestamp) and replace it with the thread state carried by the tracepoint.
 
 void ThreadStateManager::OnInitialState(uint64_t timestamp_ns, pid_t tid,
-                                        ThreadStateSlice::ThreadState state, 
-                                        pid_t woker_tid, pid_t woker_pid) {
+                                        ThreadStateSlice::ThreadState state, pid_t woker_tid,
+                                        pid_t woker_pid) {
   ORBIT_CHECK(!tid_open_states_.contains(tid));
   tid_open_states_.emplace(tid, OpenState{state, timestamp_ns, woker_tid, woker_pid});
 }
 
-void ThreadStateManager::OnNewTask(uint64_t timestamp_ns, pid_t tid,
-                                        pid_t woker_tid, pid_t woker_pid) {
+void ThreadStateManager::OnNewTask(uint64_t timestamp_ns, pid_t tid, pid_t woker_tid,
+                                   pid_t woker_pid) {
   static constexpr ThreadStateSlice::ThreadState kNewState = ThreadStateSlice::kRunnable;
 
   if (auto open_state_it = tid_open_states_.find(tid);
@@ -46,8 +46,7 @@ void ThreadStateManager::OnNewTask(uint64_t timestamp_ns, pid_t tid,
   tid_open_states_.insert_or_assign(tid, OpenState{kNewState, timestamp_ns, woker_tid, woker_pid});
 }
 
-std::optional<ThreadStateSlice> ThreadStateManager::OnSchedWakeup(uint64_t timestamp_ns,
-                                                                  pid_t tid,
+std::optional<ThreadStateSlice> ThreadStateManager::OnSchedWakeup(uint64_t timestamp_ns, pid_t tid,
                                                                   pid_t woker_tid,
                                                                   pid_t woker_pid) {
   static constexpr ThreadStateSlice::ThreadState kNewState = ThreadStateSlice::kRunnable;
@@ -55,14 +54,16 @@ std::optional<ThreadStateSlice> ThreadStateManager::OnSchedWakeup(uint64_t times
   auto open_state_it = tid_open_states_.find(tid);
   if (open_state_it == tid_open_states_.end()) {
     ORBIT_ERROR("Processed sched:sched_wakeup but previous state of thread %d is unknown", tid);
-    tid_open_states_.insert_or_assign(tid, OpenState{kNewState, timestamp_ns, woker_tid, woker_pid});
+    tid_open_states_.insert_or_assign(tid,
+                                      OpenState{kNewState, timestamp_ns, woker_tid, woker_pid});
     return std::nullopt;
   }
 
   const OpenState& open_state = open_state_it->second;
   if (timestamp_ns < open_state.begin_timestamp_ns) {
     // As noted above, overwrite the thread state retrieved at the beginning.
-    tid_open_states_.insert_or_assign(tid, OpenState{kNewState, timestamp_ns, woker_tid, woker_pid});
+    tid_open_states_.insert_or_assign(tid,
+                                      OpenState{kNewState, timestamp_ns, woker_tid, woker_pid});
     return std::nullopt;
   }
 

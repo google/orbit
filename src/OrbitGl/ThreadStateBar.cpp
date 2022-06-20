@@ -170,26 +170,21 @@ std::string ThreadStateBar::GetThreadStateSliceTooltip(PrimitiveAssembler& primi
       "<br/>"
       "%s",
       GetThreadStateName(thread_state_slice->thread_state()),
-      GetThreadStateDescription(thread_state_slice->thread_state())
-    );
+      GetThreadStateDescription(thread_state_slice->thread_state()));
   std::string woker_info;
-  if(thread_state_slice->woker_tid() != 0u){
-  woker_info = absl::StrFormat(
-      "<br/>"
-      "<b>Woker process:</b> %s [%d]"
-      "<br/>"
-      "<b>Woker thread:</b> %s [%d]",
-      process_name,
-      thread_state_slice->woker_pid(),
-      thread_name,
-      thread_state_slice->woker_tid()
-    ); 
+  if (thread_state_slice->woker_tid() != 0u) {
+    woker_info = absl::StrFormat(
+        "<br/>"
+        "<b>Woker process:</b> %s [%d]"
+        "<br/>"
+        "<b>Woker thread:</b> %s [%d]",
+        process_name, thread_state_slice->woker_pid(), thread_name,
+        thread_state_slice->woker_tid());
   }
   std::string time = absl::StrFormat(
       "<br/>"
       "<b>Time:</b> %s",
-      orbit_display_formats::GetDisplayTime(TicksToDuration(begin_ns, end_ns))
-    );
+      orbit_display_formats::GetDisplayTime(TicksToDuration(begin_ns, end_ns)));
   return description + woker_info + time;
 }
 

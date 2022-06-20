@@ -553,7 +553,8 @@ void CaptureEventProcessorForListener::ProcessThreadNamesSnapshot(
 void CaptureEventProcessorForListener::ProcessThreadStateSlice(
     const ThreadStateSlice& thread_state_slice) {
   ThreadStateSliceInfo slice_info{
-      thread_state_slice.tid(), thread_state_slice.woker_tid(),
+      thread_state_slice.tid(),
+      thread_state_slice.woker_tid(),
       thread_state_slice.woker_pid(),
       thread_state_slice.thread_state(),
       thread_state_slice.end_timestamp_ns() - thread_state_slice.duration_ns(),
