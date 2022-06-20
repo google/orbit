@@ -7,6 +7,7 @@
 #include <absl/strings/str_format.h>
 
 #include <memory>
+#include <string>
 #include <utility>
 
 #include "App.h"
@@ -161,17 +162,35 @@ std::string ThreadStateBar::GetThreadStateSliceTooltip(PrimitiveAssembler& primi
       static_cast<const ThreadStateSliceInfo*>(user_data->custom_data_);
   uint64_t begin_ns = thread_state_slice->begin_timestamp_ns();
   uint64_t end_ns = thread_state_slice->end_timestamp_ns();
-
-  return absl::StrFormat(
+  std::string thread_name = capture_data_->GetThreadName(thread_state_slice->woker_tid());
+  std::string process_name = capture_data_->GetThreadName(thread_state_slice->woker_pid());
+  std::string description = absl::StrFormat(
       "<b>%s</b><br/>"
       "<i>Thread state</i><br/>"
       "<br/>"
-      "%s"
+      "%s",
+      GetThreadStateName(thread_state_slice->thread_state()),
+      GetThreadStateDescription(thread_state_slice->thread_state())
+    );
+  std::string woker_info;
+  if(thread_state_slice->woker_tid() != 0u){
+  woker_info = absl::StrFormat(
+      "<br/>"
+      "<b>Woker process:</b> %s [%d]"
+      "<br/>"
+      "<b>Woker thread:</b> %s [%d]",
+      process_name,
+      thread_state_slice->woker_pid(),
+      thread_name,
+      thread_state_slice->woker_tid()
+    ); 
+  }
+  std::string time = absl::StrFormat(
       "<br/>"
       "<b>Time:</b> %s",
-      GetThreadStateName(thread_state_slice->thread_state()),
-      GetThreadStateDescription(thread_state_slice->thread_state()),
-      orbit_display_formats::GetDisplayTime(TicksToDuration(begin_ns, end_ns)));
+      orbit_display_formats::GetDisplayTime(TicksToDuration(begin_ns, end_ns))
+    );
+  return description + woker_info + time;
 }
 
 void ThreadStateBar::DoUpdatePrimitives(PrimitiveAssembler& primitive_assembler,

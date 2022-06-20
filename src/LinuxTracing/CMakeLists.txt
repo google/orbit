@@ -96,3 +96,11 @@ target_link_libraries(LinuxTracingTests PRIVATE
         GTest::Main)
 
 register_test(LinuxTracingTests)
+
+add_executable(SampleProgram)
+
+target_sources(SampleProgram PRIVATE
+        SampleProgram.cpp)
+
+target_link_libraries(SampleProgram PRIVATE
+        OrbitBase)
