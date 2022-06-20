@@ -110,7 +110,7 @@ bool CaptureEventProducer::NotifyAllEventsSent() {
 
 void CaptureEventProducer::ConnectAndReceiveCommandsThread() {
   ORBIT_CHECK(producer_side_service_stub_ != nullptr);
-  orbit_base::SetCurrentThreadName("ConnectAndReceiveCommandsThread");
+  orbit_base::SetCurrentThreadName("ConnectRcvCmds");
 
   while (true) {
     {
