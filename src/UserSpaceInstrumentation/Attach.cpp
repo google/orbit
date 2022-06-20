@@ -123,7 +123,8 @@ ErrorMessageOr<void> DetachAndContinueProcess(pid_t pid) {
   for (auto tid : tids) {
     if (ptrace(PTRACE_DETACH, tid, nullptr, nullptr) == -1) {
       // Failing with "no such process" is fine here: The thread might have been created (in running
-      // state) while we were attached.
+      // state) after we attached to the other threads of this process and therefore we never
+      // attached to this thread.
       constexpr int kErrnoNoSuchProcess = 3;
       if (errno != kErrnoNoSuchProcess) {
         return ErrorMessage(
