@@ -144,7 +144,7 @@ class MockFunctionTimeComparator {
       const Comparison<SamplingCounts>& /*comparison_counts*/,
       const Comparison<orbit_client_data::ScopeStats>& /*comparison_frame_stats*/) {}
 
-  [[nodiscard]] ComparisonResult Compare(SFID /*_*/) const { return {kStatistic, kPvalue}; };
+  [[nodiscard]] ComparisonResult Compare(SFID /*sfid*/) const { return {kStatistic, kPvalue}; };
 };
 
 }  // namespace
@@ -178,9 +178,9 @@ TEST(BaselineAndComparisonTest, MakeSamplingWithFrameTrackReportIsCorrect) {
     EXPECT_EQ(report.GetSamplingCounts<Comparison>()->GetInclusiveCount(sfid), 0);
 
     ComparisonResult comparision_result = report.GetComparisonResult(sfid);
-    constexpr double kTol = 1e-6;
-    EXPECT_THAT(comparision_result.statistic, DoubleNear(kStatistic, kTol));
-    EXPECT_THAT(comparision_result.pvalue, DoubleNear(kPvalue, kTol));
+    constexpr double kTolerance = 1e-6;
+    EXPECT_THAT(comparision_result.statistic, DoubleNear(kStatistic, kTolerance));
+    EXPECT_THAT(comparision_result.pvalue, DoubleNear(kPvalue, kTolerance));
   }
 
   constexpr uint64_t kExpectedFullActiveFrameTime = 200;

@@ -51,7 +51,7 @@ class BaselineAndComparisonTmpl {
                                       comparison_sampling_counts, comparison_frame_stats);
 
     absl::flat_hash_map<SFID, ComparisonResult> sfid_to_comparison_result;
-    for (const auto& [sfid, _] : sfid_to_name_) {
+    for (const auto& [sfid, unused_name] : sfid_to_name_) {
       sfid_to_comparison_result.try_emplace(sfid, comparator.Compare(sfid));
     }
 
