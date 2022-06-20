@@ -61,6 +61,14 @@ ABSL_FLAG(std::vector<std::string>, additional_symbol_paths, {},
           "Additional local symbol locations (comma-separated)");
 ABSL_FLAG(bool, launched_from_vsi, false, "Indicates Orbit was launched from VSI.");
 
+// TestHub custom protocol support
+ABSL_FLAG(std::string, target_uri, "",
+          "Target URI in the format orbitprofiler://instance?process. Specify this to skip the "
+          "connection setup and open the main window instead. If the process can't be found or "
+          "deployment is aborted by the user Orbit will exit with return code -1 immediately. "
+          "If multiple instances of the same process exist, the one with the highest PID will be "
+          "chosen.");
+
 // Clears QSettings. This is intended for e2e tests.
 ABSL_FLAG(bool, clear_settings, false,
           "Clears user defined settings. This includes symbol locations and source path mappings.");

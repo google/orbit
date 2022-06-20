@@ -364,6 +364,17 @@ int main(int argc, char* argv[]) {
                                                    QString::fromStdString(target_instance));
   }
 
+  const std::string& target_uri = absl::GetFlag(FLAGS_target_uri);
+  if (!target_uri.empty()) {
+    auto maybe_target = orbit_session_setup::SplitTargetUri(QString::fromStdString(target_uri));
+    if (!maybe_target.has_value()) {
+      ORBIT_LOG("Invalid target URI specified.");
+      DisplayErrorToUser("Invalid target URI specified.");
+      return -1;
+    }
+    target = maybe_target.value();
+  }
+
   if (capture_file_paths.size() > 0 && target.has_value()) {
     ORBIT_LOG(
         "Aborting startup: User specified a process and instance to connect to, and one or "
