@@ -12,6 +12,7 @@
 #include <iterator>
 #include <mutex>
 #include <thread>
+
 #include "OrbitBase/ThreadUtils.h"
 
 static std::atomic<bool> exit_requested;
@@ -24,14 +25,14 @@ constexpr int kSigint = 2;
 
 std::thread my_threads[kNumOfThreads];
 
-void SignalHandler( int signum ) {
+void SignalHandler(int signum) {
   std::cout << "Cleaning up!" << std::endl;
   exit_requested.store(false);
   num++;
   for (auto& my_thread : my_threads) {
     my_thread.join();
   }
-  exit(signum);  
+  exit(signum);
 }
 
 static void DoWork(int thread_num) {
@@ -54,11 +55,11 @@ int main() {
   // When a thread detects that num has changed it unlocks the mutex. One of the kNumOfThreads
   // threads locks the mutex again and waits for another change of num and so on.
   // Output should show kNumOfThreads + 1 different threads when being instrumented by Orbit.
-  // One of the threads (main) should only work approx. every 100 ms for a very short while and 
-  // then sleep. Only one of the other threads should be running. Every time main runs, the 
-  // running non-main thread should change. The new running thread should show the previous 
-  // non-main running thread in the tooltip in the "Was Blocked By Thread" field (in the first 
-  // blue slice). 
+  // One of the threads (main) should only work approx. every 100 ms for a very short while and
+  // then sleep. Only one of the other threads should be running. Every time main runs, the
+  // running non-main thread should change. The new running thread should show the previous
+  // non-main running thread in the tooltip in the "Was Blocked By Thread" field (in the first
+  // blue slice).
   signal(kSigint, SignalHandler);
   exit_requested.store(true);
   for (int i = 0; i < kNumOfThreads; i++) {

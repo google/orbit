@@ -47,9 +47,10 @@ namespace orbit_linux_tracing {
 class ThreadStateManager {
  public:
   void OnInitialState(uint64_t timestamp_ns, pid_t tid,
-                      orbit_grpc_protos::ThreadStateSlice::ThreadState state, pid_t was_blocked_by_thread = 0u,
-                      pid_t was_blocked_by_process = 0u);
-  void OnNewTask(uint64_t timestamp_ns, pid_t tid, pid_t was_blocked_by_thread, pid_t was_blocked_by_process);
+                      orbit_grpc_protos::ThreadStateSlice::ThreadState state,
+                      pid_t was_blocked_by_thread = 0u, pid_t was_blocked_by_process = 0u);
+  void OnNewTask(uint64_t timestamp_ns, pid_t tid, pid_t was_blocked_by_thread,
+                 pid_t was_blocked_by_process);
   [[nodiscard]] std::optional<orbit_grpc_protos::ThreadStateSlice> OnSchedWakeup(
       uint64_t timestamp_ns, pid_t tid, pid_t was_blocked_by_thread, pid_t was_blocked_by_process);
   [[nodiscard]] std::optional<orbit_grpc_protos::ThreadStateSlice> OnSchedSwitchIn(

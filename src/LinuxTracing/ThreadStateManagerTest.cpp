@@ -25,7 +25,8 @@ TEST(ThreadStateManager, OneThread) {
   ThreadStateManager manager;
   std::optional<ThreadStateSlice> slice;
 
-  manager.OnInitialState(100, kTid, ThreadStateSlice::kRunnable, kWasBlockedByTid, kWasBlockedByPid);
+  manager.OnInitialState(100, kTid, ThreadStateSlice::kRunnable, kWasBlockedByTid,
+                         kWasBlockedByPid);
 
   slice = manager.OnSchedSwitchIn(200, kTid);
   ASSERT_TRUE(slice.has_value());
@@ -114,7 +115,8 @@ TEST(ThreadStateManager, TwoThreads) {
   ThreadStateManager manager;
   std::optional<ThreadStateSlice> slice;
 
-  manager.OnInitialState(100, kTid1, ThreadStateSlice::kRunnable, kWasBlockedByTid1, kWasBlockedByPid1);
+  manager.OnInitialState(100, kTid1, ThreadStateSlice::kRunnable, kWasBlockedByTid1,
+                         kWasBlockedByPid1);
 
   slice = manager.OnSchedSwitchIn(200, kTid1);
   ASSERT_TRUE(slice.has_value());
@@ -254,7 +256,7 @@ TEST(ThreadStateManager, StaleInitialStateWithSwitchIn) {
 
   slice = manager.OnSchedSwitchIn(100, kTid);
   EXPECT_FALSE(slice.has_value());
-  
+
   slice = manager.OnSchedSwitchOut(200, kTid, ThreadStateSlice::kRunnable);
   ASSERT_TRUE(slice.has_value());
   EXPECT_EQ(slice->tid(), kTid);
@@ -368,7 +370,8 @@ TEST(ThreadStateManager, NoStateChangeWithSwitchIn) {
   ThreadStateManager manager;
   std::optional<ThreadStateSlice> slice;
 
-  manager.OnInitialState(100, kTid, ThreadStateSlice::kRunnable, kWasBlockedByTid, kWasBlockedByPid);
+  manager.OnInitialState(100, kTid, ThreadStateSlice::kRunnable, kWasBlockedByTid,
+                         kWasBlockedByPid);
 
   slice = manager.OnSchedSwitchIn(200, kTid);
   ASSERT_TRUE(slice.has_value());

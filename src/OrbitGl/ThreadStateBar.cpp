@@ -170,8 +170,10 @@ std::string ThreadStateBar::GetThreadStateSliceTooltip(PrimitiveAssembler& primi
       GetThreadStateName(thread_state_slice->thread_state()),
       GetThreadStateDescription(thread_state_slice->thread_state()));
   if (thread_state_slice->was_blocked_by_thread() != 0u) {
-  std::string thread_name = capture_data_->GetThreadName(thread_state_slice->was_blocked_by_thread());
-  std::string process_name = capture_data_->GetThreadName(thread_state_slice->was_blocked_by_process());
+    std::string thread_name =
+        capture_data_->GetThreadName(thread_state_slice->was_blocked_by_thread());
+    std::string process_name =
+        capture_data_->GetThreadName(thread_state_slice->was_blocked_by_process());
     tooltip += absl::StrFormat(
         "<br/>"
         "<b>Was Blocked By Process:</b> %s [%d]"

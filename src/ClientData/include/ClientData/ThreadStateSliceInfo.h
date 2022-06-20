@@ -17,7 +17,8 @@ namespace orbit_client_data {
 // See `orbit_grpc_protos::ThreadStateSlice::ThreadState` for further information.
 class ThreadStateSliceInfo {
  public:
-  explicit ThreadStateSliceInfo(uint32_t tid, uint32_t was_blocked_by_thread, uint32_t was_blocked_by_process,
+  explicit ThreadStateSliceInfo(uint32_t tid, uint32_t was_blocked_by_thread,
+                                uint32_t was_blocked_by_process,
                                 orbit_grpc_protos::ThreadStateSlice::ThreadState thread_state,
                                 uint64_t begin_timestamp_ns, uint64_t end_timestamp_ns)
       : tid_{tid},
