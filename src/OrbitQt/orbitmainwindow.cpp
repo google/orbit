@@ -177,7 +177,6 @@ OrbitMainWindow::OrbitMainWindow(TargetConfiguration target_configuration,
       metrics_uploader_(metrics_uploader) {
   SetupMainWindow();
 
-  SetupTargetLabel();
   SetupStatusBarLogButton();
   SetupHintFrame();
 
@@ -265,6 +264,7 @@ void OrbitMainWindow::SetupMainWindow() {
   DataViewFactory* data_view_factory = app_.get();
 
   ui->setupUi(this);
+  SetupTargetLabel();
   RestoreMainWindowGeometry();
 
   ui->splitter_2->setSizes({5000, 5000});
