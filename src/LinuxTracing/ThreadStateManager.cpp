@@ -27,14 +27,14 @@ using orbit_grpc_protos::ThreadStateSlice;
 // larger timestamp) and replace it with the thread state carried by the tracepoint.
 
 void ThreadStateManager::OnInitialState(uint64_t timestamp_ns, pid_t tid,
-                                        ThreadStateSlice::ThreadState state, pid_t woker_tid,
-                                        pid_t woker_pid) {
+                                        ThreadStateSlice::ThreadState state, pid_t was_blocked_by_thread,
+                                        pid_t was_blocked_by_process) {
   ORBIT_CHECK(!tid_open_states_.contains(tid));
-  tid_open_states_.emplace(tid, OpenState{state, timestamp_ns, woker_tid, woker_pid});
+  tid_open_states_.emplace(tid, OpenState{state, timestamp_ns, was_blocked_by_thread, was_blocked_by_process});
 }
 
-void ThreadStateManager::OnNewTask(uint64_t timestamp_ns, pid_t tid, pid_t woker_tid,
-                                   pid_t woker_pid) {
+void ThreadStateManager::OnNewTask(uint64_t timestamp_ns, pid_t tid, pid_t was_blocked_by_thread,
+                                   pid_t was_blocked_by_process) {
   static constexpr ThreadStateSlice::ThreadState kNewState = ThreadStateSlice::kRunnable;
 
   if (auto open_state_it = tid_open_states_.find(tid);
@@ -43,19 +43,19 @@ void ThreadStateManager::OnNewTask(uint64_t timestamp_ns, pid_t tid, pid_t woker
     ORBIT_ERROR("Processed task:task_newtask but thread %d was already known", tid);
     return;
   }
-  tid_open_states_.insert_or_assign(tid, OpenState{kNewState, timestamp_ns, woker_tid, woker_pid});
+  tid_open_states_.insert_or_assign(tid, OpenState{kNewState, timestamp_ns, was_blocked_by_thread, was_blocked_by_process});
 }
 
 std::optional<ThreadStateSlice> ThreadStateManager::OnSchedWakeup(uint64_t timestamp_ns, pid_t tid,
-                                                                  pid_t woker_tid,
-                                                                  pid_t woker_pid) {
+                                                                  pid_t was_blocked_by_thread,
+                                                                  pid_t was_blocked_by_process) {
   static constexpr ThreadStateSlice::ThreadState kNewState = ThreadStateSlice::kRunnable;
 
   auto open_state_it = tid_open_states_.find(tid);
   if (open_state_it == tid_open_states_.end()) {
     ORBIT_ERROR("Processed sched:sched_wakeup but previous state of thread %d is unknown", tid);
     tid_open_states_.insert_or_assign(tid,
-                                      OpenState{kNewState, timestamp_ns, woker_tid, woker_pid});
+                                      OpenState{kNewState, timestamp_ns, was_blocked_by_thread, was_blocked_by_process});
     return std::nullopt;
   }
 
@@ -63,7 +63,7 @@ std::optional<ThreadStateSlice> ThreadStateManager::OnSchedWakeup(uint64_t times
   if (timestamp_ns < open_state.begin_timestamp_ns) {
     // As noted above, overwrite the thread state retrieved at the beginning.
     tid_open_states_.insert_or_assign(tid,
-                                      OpenState{kNewState, timestamp_ns, woker_tid, woker_pid});
+                                      OpenState{kNewState, timestamp_ns, was_blocked_by_thread, was_blocked_by_process});
     return std::nullopt;
   }
 
@@ -84,7 +84,7 @@ std::optional<ThreadStateSlice> ThreadStateManager::OnSchedWakeup(uint64_t times
   slice.set_thread_state(open_state.state);
   slice.set_duration_ns(timestamp_ns - open_state.begin_timestamp_ns);
   slice.set_end_timestamp_ns(timestamp_ns);
-  tid_open_states_.insert_or_assign(tid, OpenState{kNewState, timestamp_ns, woker_tid, woker_pid});
+  tid_open_states_.insert_or_assign(tid, OpenState{kNewState, timestamp_ns, was_blocked_by_thread, was_blocked_by_process});
   return slice;
 }
 
@@ -119,8 +119,8 @@ std::optional<ThreadStateSlice> ThreadStateManager::OnSchedSwitchIn(uint64_t tim
   slice.set_thread_state(open_state.state);
   slice.set_duration_ns(timestamp_ns - open_state.begin_timestamp_ns);
   slice.set_end_timestamp_ns(timestamp_ns);
-  slice.set_woker_tid(open_state.woker_tid);
-  slice.set_woker_pid(open_state.woker_pid);
+  slice.set_was_blocked_by_thread(open_state.was_blocked_by_thread);
+  slice.set_was_blocked_by_process(open_state.was_blocked_by_process);
   tid_open_states_.insert_or_assign(tid, OpenState{kNewState, timestamp_ns, 0, 0});
   return slice;
 }

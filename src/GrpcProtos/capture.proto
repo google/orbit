@@ -545,8 +545,8 @@ message ThreadStateSlice {
   uint64 duration_ns = 6;
   uint64 end_timestamp_ns = 5;
 
-  uint32 woker_tid = 7;
-  uint32 woker_pid = 8;
+  uint32 was_blocked_by_thread = 7;
+  uint32 was_blocked_by_process = 8;
 }
 
 message AddressInfo {

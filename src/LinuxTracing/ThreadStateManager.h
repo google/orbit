@@ -47,11 +47,11 @@ namespace orbit_linux_tracing {
 class ThreadStateManager {
  public:
   void OnInitialState(uint64_t timestamp_ns, pid_t tid,
-                      orbit_grpc_protos::ThreadStateSlice::ThreadState state, pid_t woker_tid = 0u,
-                      pid_t woker_pid = 0u);
-  void OnNewTask(uint64_t timestamp_ns, pid_t tid, pid_t woker_tid, pid_t woker_pid);
+                      orbit_grpc_protos::ThreadStateSlice::ThreadState state, pid_t was_blocked_by_thread = 0u,
+                      pid_t was_blocked_by_process = 0u);
+  void OnNewTask(uint64_t timestamp_ns, pid_t tid, pid_t was_blocked_by_thread, pid_t was_blocked_by_process);
   [[nodiscard]] std::optional<orbit_grpc_protos::ThreadStateSlice> OnSchedWakeup(
-      uint64_t timestamp_ns, pid_t tid, pid_t woker_tid, pid_t woker_pid);
+      uint64_t timestamp_ns, pid_t tid, pid_t was_blocked_by_thread, pid_t was_blocked_by_process);
   [[nodiscard]] std::optional<orbit_grpc_protos::ThreadStateSlice> OnSchedSwitchIn(
       uint64_t timestamp_ns, pid_t tid);
   [[nodiscard]] std::optional<orbit_grpc_protos::ThreadStateSlice> OnSchedSwitchOut(
@@ -62,19 +62,19 @@ class ThreadStateManager {
  private:
   struct OpenState {
     OpenState(orbit_grpc_protos::ThreadStateSlice::ThreadState state, uint64_t begin_timestamp_ns,
-              pid_t woker_tid, pid_t woker_pid)
+              pid_t was_blocked_by_thread, pid_t was_blocked_by_process)
         : state{state},
           begin_timestamp_ns{begin_timestamp_ns},
-          woker_tid{woker_tid},
-          woker_pid{woker_pid} {}
+          was_blocked_by_thread{was_blocked_by_thread},
+          was_blocked_by_process{was_blocked_by_process} {}
     orbit_grpc_protos::ThreadStateSlice::ThreadState state;
     uint64_t begin_timestamp_ns;
     // The next two fields are optional, we use them to transfer info between interruptible sleep
     // state (gray) and runnable state (blue) so we can know which tid and pid caused the thread to
     // turn into a runnable state if you don't need them just put zeros when using the OpenState
     // struct.
-    pid_t woker_tid = 0u;
-    pid_t woker_pid = 0u;
+    pid_t was_blocked_by_thread = 0u;
+    pid_t was_blocked_by_process = 0u;
   };
 
   absl::flat_hash_map<pid_t, OpenState> tid_open_states_;

@@ -17,19 +17,19 @@ namespace orbit_client_data {
 // See `orbit_grpc_protos::ThreadStateSlice::ThreadState` for further information.
 class ThreadStateSliceInfo {
  public:
-  explicit ThreadStateSliceInfo(uint32_t tid, uint32_t woker_tid, uint32_t woker_pid,
+  explicit ThreadStateSliceInfo(uint32_t tid, uint32_t was_blocked_by_thread, uint32_t was_blocked_by_process,
                                 orbit_grpc_protos::ThreadStateSlice::ThreadState thread_state,
                                 uint64_t begin_timestamp_ns, uint64_t end_timestamp_ns)
       : tid_{tid},
-        woker_tid_(woker_tid),
-        woker_pid_{woker_pid},
+        was_blocked_by_thread_(was_blocked_by_thread),
+        was_blocked_by_process_{was_blocked_by_process},
         thread_state_{thread_state},
         begin_timestamp_ns_{begin_timestamp_ns},
         end_timestamp_ns_{end_timestamp_ns} {}
 
   [[nodiscard]] uint32_t tid() const { return tid_; }
-  [[nodiscard]] uint32_t woker_tid() const { return woker_tid_; }
-  [[nodiscard]] uint32_t woker_pid() const { return woker_pid_; }
+  [[nodiscard]] uint32_t was_blocked_by_thread() const { return was_blocked_by_thread_; }
+  [[nodiscard]] uint32_t was_blocked_by_process() const { return was_blocked_by_process_; }
   [[nodiscard]] orbit_grpc_protos::ThreadStateSlice::ThreadState thread_state() const {
     return thread_state_;
   }
@@ -39,8 +39,8 @@ class ThreadStateSliceInfo {
  private:
   // pid is absent as we don't yet get that information from the service.
   uint32_t tid_;
-  uint32_t woker_tid_;
-  uint32_t woker_pid_;
+  uint32_t was_blocked_by_thread_;
+  uint32_t was_blocked_by_process_;
   orbit_grpc_protos::ThreadStateSlice::ThreadState thread_state_;
   uint64_t begin_timestamp_ns_;
   uint64_t end_timestamp_ns_;
