@@ -17,6 +17,7 @@
 #include "OrbitGgp/Client.h"
 #include "OrbitGgp/SshInfo.h"
 #include "QtUtils/MainThreadExecutorImpl.h"
+#include "SessionSetupUtils.h"
 #include "TargetConfiguration.h"
 #include "grpcpp/channel.h"
 
@@ -24,14 +25,6 @@ namespace Ui {
 class ConnectToTargetDialog;  // IWYU pragma: keep
 }
 namespace orbit_session_setup {
-
-struct ConnectionTarget {
-  QString process_name_or_path;
-  QString instance_name_or_id;
-
-  ConnectionTarget(const QString& process_name_or_path, const QString& instance_name_or_id)
-      : process_name_or_path(process_name_or_path), instance_name_or_id(instance_name_or_id) {}
-};
 
 // Simple dialog to show progress while connecting to a specified instance id and process id.
 // This takes care of establishing the connection and deploying Orbit service, and will either
