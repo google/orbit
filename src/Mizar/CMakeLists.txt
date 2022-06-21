@@ -18,6 +18,7 @@ target_link_libraries(Mizar
 PRIVATE CaptureClient
         CaptureFile
         ClientData
+        MizarBase
         MizarData
         OrbitBase
         Threads::Threads
