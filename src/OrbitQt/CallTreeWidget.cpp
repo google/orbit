@@ -174,7 +174,7 @@ static void CollapseRecursively(QTreeView* tree_view, const QModelIndex& index) 
 // Nodes with an inclusive percentage over `expansion_threshold` will be expanded, the other nodes
 // are collapsed recursively.
 static void ExpandRecursivelyWithThreshold(QTreeView* tree_view, const QModelIndex& index,
-                              float expansion_threshold = 0.f) {
+                                           float expansion_threshold = 0.f) {
   if (!index.isValid()) {
     return;
   }
@@ -201,8 +201,8 @@ void CallTreeWidget::SetTopDownView(std::unique_ptr<CallTreeView> top_down_view)
 
   if (should_expand) {
     float expansion_threshold = 100.f - ui_->horizontalSlider->value();
-    ExpandRecursivelyWithThreshold(ui_->callTreeTreeView, ui_->callTreeTreeView->model()->index(0, 0),
-                      expansion_threshold);
+    ExpandRecursivelyWithThreshold(
+        ui_->callTreeTreeView, ui_->callTreeTreeView->model()->index(0, 0), expansion_threshold);
   }
 }
 
@@ -771,10 +771,12 @@ void CallTreeWidget::OnSearchTypingFinishedTimerTimout() {
   }
 }
 
-void CallTreeWidget::OnSliderValueChanged(int value){ 
-    ORBIT_SCOPE_FUNCTION;
-    ORBIT_LOG("Slider value: %i", value); 
-    ExpandRecursivelyWithThreshold(ui_->callTreeTreeView, ui_->callTreeTreeView->model()->index(0, 0), 100-value);
+void CallTreeWidget::OnSliderValueChanged(int value) {
+  ORBIT_SCOPE_FUNCTION;
+  ORBIT_CHECK(value >= 0);
+  ORBIT_CHECK(value <= 100);
+  ExpandRecursivelyWithThreshold(ui_->callTreeTreeView, ui_->callTreeTreeView->model()->index(0, 0),
+                                 100 - value);
 }
 
 const QColor CallTreeWidget::HighlightCustomFilterSortFilterProxyModel::kHighlightColor{Qt::green};
