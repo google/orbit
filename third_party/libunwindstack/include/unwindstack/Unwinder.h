@@ -65,8 +65,11 @@ class Unwinder {
 
   virtual ~Unwinder() = default;
 
-  virtual void Unwind(const std::vector<std::string>* initial_map_names_to_skip = nullptr,
-                      const std::vector<std::string>* map_suffixes_to_ignore = nullptr);
+  virtual void Unwind(
+      const std::vector<std::string>* initial_map_names_to_skip = nullptr,
+      const std::vector<std::string>* map_suffixes_to_ignore = nullptr,
+      const std::map<std::string, std::map<uint64_t /*function_start*/, uint64_t /*size*/>>*
+          functions_to_stop = nullptr);
 
   size_t NumFrames() const { return frames_.size(); }
 
@@ -167,7 +170,9 @@ class UnwinderFromPid : public Unwinder {
   bool Init();
 
   void Unwind(const std::vector<std::string>* initial_map_names_to_skip = nullptr,
-              const std::vector<std::string>* map_suffixes_to_ignore = nullptr) override;
+              const std::vector<std::string>* map_suffixes_to_ignore = nullptr,
+              const std::map<std::string, std::map<uint64_t /*function_start*/, uint64_t /*size*/>>*
+                  functions_to_stop = nullptr) override;
 
  protected:
   pid_t pid_;
@@ -186,7 +191,9 @@ class ThreadUnwinder : public UnwinderFromPid {
 
   void SetObjects(ThreadUnwinder* unwinder);
 
-  void Unwind(const std::vector<std::string>*, const std::vector<std::string>*) override {}
+  void Unwind(const std::vector<std::string>*, const std::vector<std::string>*,
+              const std::map<std::string,
+                             std::map<uint64_t /*function_start*/, uint64_t /*size*/>>*) override {}
 
   void UnwindWithSignal(int signal, pid_t tid, std::unique_ptr<Regs>* initial_regs = nullptr,
                         const std::vector<std::string>* initial_map_names_to_skip = nullptr,

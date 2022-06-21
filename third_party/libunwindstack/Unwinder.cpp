@@ -121,8 +121,40 @@ static bool ShouldStop(const std::vector<std::string>* map_suffixes_to_ignore,
                    map_name.substr(pos + 1)) != map_suffixes_to_ignore->end();
 }
 
-void Unwinder::Unwind(const std::vector<std::string>* initial_map_names_to_skip,
-                      const std::vector<std::string>* map_suffixes_to_ignore) {
+static bool ShouldStop(
+    const Object* object,
+    const std::map<std::string, std::map<uint64_t /*function_start*/, uint64_t /*size*/>>*
+        functions_to_stop,
+    const std::string& map_name, uint64_t rel_pc) {
+  if (object == nullptr) {
+    return false;
+  }
+  if (functions_to_stop == nullptr) {
+    return false;
+  }
+  auto functions_it = functions_to_stop->find(map_name);
+  if (functions_it == functions_to_stop->end()) {
+    return false;
+  }
+
+  auto function_it = functions_it->second.upper_bound(rel_pc);
+  if (function_it == functions_it->second.begin()) {
+    return false;
+  }
+
+  --function_it;
+
+  uint64_t function_start = function_it->first;
+  CHECK(function_start <= rel_pc);
+  uint64_t size = function_it->second;
+  return (rel_pc < function_start + size);
+}
+
+void Unwinder::Unwind(
+    const std::vector<std::string>* initial_map_names_to_skip,
+    const std::vector<std::string>* map_suffixes_to_ignore,
+    const std::map<std::string, std::map<uint64_t /*function_start*/, uint64_t /*size*/>>*
+        functions_to_stop) {
   CHECK(arch_ != ARCH_UNKNOWN);
   ClearErrors();
 
@@ -210,6 +242,16 @@ void Unwinder::Unwind(const std::vector<std::string>* initial_map_names_to_skip,
 
       // Once a frame is added, stop skipping frames.
       initial_map_names_to_skip = nullptr;
+    }
+    if (map_info != nullptr && ShouldStop(object, functions_to_stop, map_info->name(), rel_pc)) {
+      if (frame != nullptr) {
+        if (!resolve_names_ ||
+            !object->GetFunctionName(step_pc, &frame->function_name, &frame->function_offset)) {
+          frame->function_name = "";
+          frame->function_offset = 0;
+        }
+      }
+      break;
     }
     adjust_pc = true;
 
@@ -411,12 +453,15 @@ bool UnwinderFromPid::Init() {
   return true;
 }
 
-void UnwinderFromPid::Unwind(const std::vector<std::string>* initial_map_names_to_skip,
-                             const std::vector<std::string>* map_suffixes_to_ignore) {
+void UnwinderFromPid::Unwind(
+    const std::vector<std::string>* initial_map_names_to_skip,
+    const std::vector<std::string>* map_suffixes_to_ignore,
+    const std::map<std::string, std::map<uint64_t /*function_start*/, uint64_t /*size*/>>*
+        functions_to_stop) {
   if (!Init()) {
     return;
   }
-  Unwinder::Unwind(initial_map_names_to_skip, map_suffixes_to_ignore);
+  Unwinder::Unwind(initial_map_names_to_skip, map_suffixes_to_ignore, functions_to_stop);
 }
 
 FrameData Unwinder::BuildFrameFromPcOnly(uint64_t pc, ArchEnum arch, Maps* maps,
