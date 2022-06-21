@@ -260,6 +260,7 @@ file(COPY "third_party/DIA SDK/LICENSE" DESTINATION "${CMAKE_BINARY_DIR}/license
 file(COPY third_party/cppwin32/LICENSE DESTINATION ${CMAKE_BINARY_DIR}/licenses/cppwin32/)
 file(COPY third_party/cppwin32/cppwin32/winmd/LICENSE DESTINATION ${CMAKE_BINARY_DIR}/licenses/winmd/)
 file(COPY third_party/minhook/LICENSE.txt DESTINATION ${CMAKE_BINARY_DIR}/licenses/minhook/)
+file(COPY third_party/PresentMon/LICENSE.txt DESTINATION ${CMAKE_BINARY_DIR}/licenses/PresentMon/)
 file(REMOVE ${CMAKE_BINARY_DIR}/licenses/freetype/licenses/LICENSE.TXT)
 file(REMOVE ${CMAKE_BINARY_DIR}/licenses/freetype/licenses/GPLv2.TXT)
 
