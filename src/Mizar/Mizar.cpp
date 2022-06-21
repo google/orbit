@@ -3,9 +3,12 @@
 // found in the LICENSE file.
 
 #include <absl/container/flat_hash_set.h>
+#include <absl/flags/flag.h>
+#include <absl/flags/parse.h>
 
 #include <iostream>
 #include <memory>
+#include <optional>
 #include <string>
 
 #include "CaptureClient/LoadCapture.h"
@@ -27,26 +30,39 @@
   return outcome::success();
 }
 
-int main(int argc, char* argv[]) {
-  // The main in its current state is used to testing/experimenting and serves no other purpose
-  if (argc < 7) {
-    ORBIT_ERROR(
-        "Example: \n "
-        "$./Mizar path/to/baseline baseline_tid baseline_start_ms path/to/comparison "
-        "comparison_tid comparison_start_ms");
-    return 1;
-  }
-  auto baseline = std::make_unique<orbit_mizar_data::MizarData>();
-  auto comparison = std::make_unique<orbit_mizar_data::MizarData>();
+ABSL_FLAG(std::string, baseline_path, "", "The path to the baseline capture file");
+ABSL_FLAG(std::string, comparison_path, "", "The path to the comparison capture file");
+ABSL_FLAG(uint32_t, baseline_tid, 0, "Frame track TID for baseline");
+ABSL_FLAG(uint32_t, comparison_tid, 0, "The path to the comparison capture file");
+ABSL_FLAG(uint64_t, baseline_start_ms, 0, "Start time in ms for baseline");
+ABSL_FLAG(uint64_t, comparison_start_ms, 0, "Start time in ms for comparison");
 
-  const std::filesystem::path baseline_path = argv[1];
-  const std::filesystem::path comparison_path = argv[4];
-  const uint32_t baseline_tid = static_cast<uint32_t>(std::stoul(argv[2]));
-  const uint32_t comparison_tid = static_cast<uint32_t>(std::stoul(argv[5]));
+static std::string ExpandPathHomeFolder(const std::string& path) {
+  const std::string kHomeForderEnvVariable = "HOME";
+  if (path[0] == '~') return getenv(kHomeForderEnvVariable.c_str()) + path.substr(1);
+  return path;
+}
+
+int main(int argc, char** argv) {
+  // The main in its current state is used to testing/experimenting and serves no other purpose
+  absl::ParseCommandLine(argc, argv);
+
+  const std::filesystem::path baseline_path =
+      ExpandPathHomeFolder(absl::GetFlag(FLAGS_baseline_path));
+  const std::filesystem::path comparison_path =
+      ExpandPathHomeFolder(absl::GetFlag(FLAGS_comparison_path).substr(1));
+  const uint32_t baseline_tid = absl::GetFlag(FLAGS_baseline_tid);
+  const uint32_t comparison_tid = absl::GetFlag(FLAGS_comparison_tid);
 
   constexpr uint64_t kNsInMs = 1'000'000;
-  const uint64_t baseline_start_ns = static_cast<uint64_t>(std::stoull(argv[3])) * kNsInMs;
-  const uint64_t comparison_start_ns = static_cast<uint64_t>(std::stoull(argv[6])) * kNsInMs;
+  const uint64_t baseline_start_ns = absl::GetFlag(FLAGS_baseline_start_ms) * kNsInMs;
+  const uint64_t comparison_start_ns = absl::GetFlag(FLAGS_comparison_start_ms) * kNsInMs;
+
+  ORBIT_LOG("%s %s %u %u %u %u ", baseline_path, comparison_path, baseline_tid, comparison_tid,
+            baseline_start_ns, comparison_start_ns);
+
+  auto baseline = std::make_unique<orbit_mizar_data::MizarData>();
+  auto comparison = std::make_unique<orbit_mizar_data::MizarData>();
 
   auto baseline_error_message = LoadCapture(baseline.get(), baseline_path);
   if (baseline_error_message.has_error()) {

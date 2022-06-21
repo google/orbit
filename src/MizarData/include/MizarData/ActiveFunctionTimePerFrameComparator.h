@@ -20,6 +20,8 @@ namespace orbit_mizar_data {
 // CPU-time of the sampled functions given the sampled rates and the frame track stats.
 // Under the assumption of equality the distribution of the statistic is approximated with normal
 // distribution.
+// See "Sampling Data without timestamps + Frametrack" section in go/orbit-comparison-tool-design
+// for more detail.
 template <typename Counts, typename FrameTrackStats>
 class ActiveFunctionTimePerFrameComparatorTmpl {
  public:

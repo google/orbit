@@ -62,10 +62,10 @@ constexpr double kTolerance = 1e-3;
 class ActiveFunctionTimePerFrameComparatorTest : public ::testing::Test {
  public:
   ActiveFunctionTimePerFrameComparatorTest()
-      : baseline_counts_(std::in_place_t{}),
-        comparison_counts_(std::in_place_t{}),
-        baseline_frame_track_stats_(std::in_place_t{}),
-        comparison_frame_track_stats_(std::in_place_t{}) {}
+      : baseline_counts_(std::in_place),
+        comparison_counts_(std::in_place),
+        baseline_frame_track_stats_(std::in_place),
+        comparison_frame_track_stats_(std::in_place) {}
 
  protected:
   Baseline<MockCounts> baseline_counts_;
