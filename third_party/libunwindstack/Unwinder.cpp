@@ -122,35 +122,29 @@ static bool ShouldStop(const std::vector<std::string>* map_suffixes_to_ignore,
 }
 
 static bool ShouldStop(
-    const std::map<std::string /*module_path*/,
-                   std::map<uint64_t /*function_start*/, uint64_t /*size*/>>* functions_to_stop_at,
-    const std::string& map_name, uint64_t rel_pc) {
+    const std::map<uint64_t /*function_start*/, uint64_t /*size*/>* functions_to_stop_at,
+    uint64_t pc) {
   if (functions_to_stop_at == nullptr) {
     return false;
   }
-  auto functions_it = functions_to_stop_at->find(map_name);
-  if (functions_it == functions_to_stop_at->end()) {
-    return false;
-  }
 
-  auto function_it = functions_it->second.upper_bound(rel_pc);
-  if (function_it == functions_it->second.begin()) {
+  auto function_it = functions_to_stop_at->upper_bound(pc);
+  if (function_it == functions_to_stop_at->begin()) {
     return false;
   }
 
   --function_it;
 
   uint64_t function_start = function_it->first;
-  CHECK(function_start <= rel_pc);
+  CHECK(function_start <= pc);
   uint64_t size = function_it->second;
-  return (rel_pc < function_start + size);
+  return (pc < function_start + size);
 }
 
-void Unwinder::Unwind(const std::vector<std::string>* initial_map_names_to_skip,
-                      const std::vector<std::string>* map_suffixes_to_ignore,
-                      const std::map<std::string /*module_path*/,
-                                     std::map<uint64_t /*function_start*/, uint64_t /*size*/>>*
-                          functions_to_stop_at) {
+void Unwinder::Unwind(
+    const std::vector<std::string>* initial_map_names_to_skip,
+    const std::vector<std::string>* map_suffixes_to_ignore,
+    const std::map<uint64_t /*function_start*/, uint64_t /*size*/>* functions_to_stop_at) {
   CHECK(arch_ != ARCH_UNKNOWN);
   ClearErrors();
 
@@ -239,7 +233,7 @@ void Unwinder::Unwind(const std::vector<std::string>* initial_map_names_to_skip,
       // Once a frame is added, stop skipping frames.
       initial_map_names_to_skip = nullptr;
     }
-    if (map_info != nullptr && ShouldStop(functions_to_stop_at, map_info->name(), rel_pc)) {
+    if (map_info != nullptr && ShouldStop(functions_to_stop_at, cur_pc)) {
       if (frame != nullptr) {
         if (!resolve_names_ ||
             !object->GetFunctionName(step_pc, &frame->function_name, &frame->function_offset)) {
@@ -452,9 +446,7 @@ bool UnwinderFromPid::Init() {
 void UnwinderFromPid::Unwind(
     const std::vector<std::string>* initial_map_names_to_skip,
     const std::vector<std::string>* map_suffixes_to_ignore,
-    const std::map<std::string /*module_path*/,
-                   std::map<uint64_t /*function_start*/, uint64_t /*size*/>>*
-        functions_to_stop_at) {
+    const std::map<uint64_t /*function_start*/, uint64_t /*size*/>* functions_to_stop_at) {
   if (!Init()) {
     return;
   }
