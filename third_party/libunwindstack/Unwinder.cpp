@@ -122,14 +122,14 @@ static bool ShouldStop(const std::vector<std::string>* map_suffixes_to_ignore,
 }
 
 static bool ShouldStop(
-    const std::map<std::string, std::map<uint64_t /*function_start*/, uint64_t /*size*/>>*
-        functions_to_stop,
+    const std::map<std::string /*module_path*/,
+                   std::map<uint64_t /*function_start*/, uint64_t /*size*/>>* functions_to_stop_at,
     const std::string& map_name, uint64_t rel_pc) {
-  if (functions_to_stop == nullptr) {
+  if (functions_to_stop_at == nullptr) {
     return false;
   }
-  auto functions_it = functions_to_stop->find(map_name);
-  if (functions_it == functions_to_stop->end()) {
+  auto functions_it = functions_to_stop_at->find(map_name);
+  if (functions_it == functions_to_stop_at->end()) {
     return false;
   }
 
@@ -146,11 +146,11 @@ static bool ShouldStop(
   return (rel_pc < function_start + size);
 }
 
-void Unwinder::Unwind(
-    const std::vector<std::string>* initial_map_names_to_skip,
-    const std::vector<std::string>* map_suffixes_to_ignore,
-    const std::map<std::string, std::map<uint64_t /*function_start*/, uint64_t /*size*/>>*
-        functions_to_stop) {
+void Unwinder::Unwind(const std::vector<std::string>* initial_map_names_to_skip,
+                      const std::vector<std::string>* map_suffixes_to_ignore,
+                      const std::map<std::string /*module_path*/,
+                                     std::map<uint64_t /*function_start*/, uint64_t /*size*/>>*
+                          functions_to_stop_at) {
   CHECK(arch_ != ARCH_UNKNOWN);
   ClearErrors();
 
@@ -239,7 +239,7 @@ void Unwinder::Unwind(
       // Once a frame is added, stop skipping frames.
       initial_map_names_to_skip = nullptr;
     }
-    if (map_info != nullptr && ShouldStop(functions_to_stop, map_info->name(), rel_pc)) {
+    if (map_info != nullptr && ShouldStop(functions_to_stop_at, map_info->name(), rel_pc)) {
       if (frame != nullptr) {
         if (!resolve_names_ ||
             !object->GetFunctionName(step_pc, &frame->function_name, &frame->function_offset)) {
@@ -452,12 +452,13 @@ bool UnwinderFromPid::Init() {
 void UnwinderFromPid::Unwind(
     const std::vector<std::string>* initial_map_names_to_skip,
     const std::vector<std::string>* map_suffixes_to_ignore,
-    const std::map<std::string, std::map<uint64_t /*function_start*/, uint64_t /*size*/>>*
-        functions_to_stop) {
+    const std::map<std::string /*module_path*/,
+                   std::map<uint64_t /*function_start*/, uint64_t /*size*/>>*
+        functions_to_stop_at) {
   if (!Init()) {
     return;
   }
-  Unwinder::Unwind(initial_map_names_to_skip, map_suffixes_to_ignore, functions_to_stop);
+  Unwinder::Unwind(initial_map_names_to_skip, map_suffixes_to_ignore, functions_to_stop_at);
 }
 
 FrameData Unwinder::BuildFrameFromPcOnly(uint64_t pc, ArchEnum arch, Maps* maps,
