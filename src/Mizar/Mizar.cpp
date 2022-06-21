@@ -58,9 +58,6 @@ int main(int argc, char** argv) {
   const uint64_t baseline_start_ns = absl::GetFlag(FLAGS_baseline_start_ms) * kNsInMs;
   const uint64_t comparison_start_ns = absl::GetFlag(FLAGS_comparison_start_ms) * kNsInMs;
 
-  ORBIT_LOG("%s %s %u %u %u %u ", baseline_path, comparison_path, baseline_tid, comparison_tid,
-            baseline_start_ns, comparison_start_ns);
-
   auto baseline = std::make_unique<orbit_mizar_data::MizarData>();
   auto comparison = std::make_unique<orbit_mizar_data::MizarData>();
 
