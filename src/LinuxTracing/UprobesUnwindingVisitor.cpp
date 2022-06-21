@@ -483,6 +483,115 @@ void UprobesUnwindingVisitor::Visit(uint64_t event_timestamp,
   return_address_manager_->ProcessFunctionExit(event_data.tid);
 }
 
+[[nodiscard]] static std::shared_ptr<unwindstack::MapInfo> FindFileMapInfoPrecedingAnonMapInfo(
+    const std::shared_ptr<unwindstack::MapInfo>& anon_map_info) {
+  ORBIT_CHECK(anon_map_info->name().empty());
+  // Scan the maps backwards until a file mapping is encountered, by skipping over anonymous
+  // mappings.
+  // Note that when the first character of a map name is '[', the mapping is a special one like
+  // [stack], [heap], etc.: even if such a mapping has a name, it's still not a file mapping.
+  std::shared_ptr<unwindstack::MapInfo> map_info_it = anon_map_info->prev_map();
+  while (map_info_it != nullptr &&
+         (map_info_it->name().empty() || map_info_it->name().c_str()[0] == '[')) {
+    map_info_it = map_info_it->prev_map();
+  }
+
+  if (map_info_it == nullptr || (map_info_it->flags() & unwindstack::MAPS_FLAGS_DEVICE_MAP) != 0) {
+    // This is unexpected if anon_map_info was detected to belong to a PE.
+    return nullptr;
+  }
+  return map_info_it;
+}
+
+[[nodiscard]] static std::shared_ptr<unwindstack::MapInfo> FindFirstMapInfoForSameFile(
+    const std::shared_ptr<unwindstack::MapInfo>& file_map_info) {
+  const std::string file_path = file_map_info->name();
+  ORBIT_CHECK(!file_path.empty());
+  std::shared_ptr<unwindstack::MapInfo> first_map_info_for_file_path;
+  // Scan the maps backwards. Stop when a file mapping for a different file is found. Skip over
+  // anonymous mappings.
+  // Note that when the first character of a map name is '[', the mapping is a special one like
+  // [stack], [heap], etc.: even if such a mapping has a name, it's still not a file mapping.
+  std::shared_ptr<unwindstack::MapInfo> map_info_it = file_map_info;
+  while (map_info_it != nullptr &&
+         (map_info_it->name().empty() || map_info_it->name().c_str()[0] == '[' ||
+          map_info_it->name() == file_path)) {
+    if (map_info_it->name() == file_path) {
+      first_map_info_for_file_path = map_info_it;
+    }
+    map_info_it = map_info_it->prev_map();
+  }
+  // Assigned at least by the first iteration of the loop.
+  ORBIT_CHECK(first_map_info_for_file_path != nullptr);
+  return first_map_info_for_file_path;
+}
+
+[[nodiscard]] static std::pair<uint64_t, uint64_t>
+FindExecutableAddressRangeForSameFileFromFirstMapInfo(
+    const std::shared_ptr<unwindstack::MapInfo>& first_map_info, const unwindstack::PeCoff* pe,
+    const std::shared_ptr<unwindstack::Memory>& process_memory) {
+  uint64_t min_exec_map_start = std::numeric_limits<uint64_t>::max();
+  uint64_t max_exec_map_end = 0;
+
+  // Scan the maps forward. Stop when a file mapping for a different file is found.
+  // Note that when the first character of a map name is '[', the mapping is a special one like
+  // [stack], [heap], etc.: even if such a mapping has a name, it's still not a file mapping.
+  std::shared_ptr<unwindstack::MapInfo> map_info_it = first_map_info;
+  while (map_info_it != nullptr &&
+         (map_info_it->name().empty() || map_info_it->name().c_str()[0] == '[' ||
+          map_info_it->name() == first_map_info->name())) {
+    const bool is_executable_file_mapping = ((map_info_it->flags() & PROT_EXEC) != 0) &&
+                                            (map_info_it->name() == first_map_info->name());
+
+    const bool is_anonymous_executable_mapping_of_pe =
+        (pe != nullptr) && ((map_info_it->flags() & PROT_EXEC) != 0) &&
+        (map_info_it->name().empty()) &&
+        (dynamic_cast<unwindstack::PeCoff*>(
+             map_info_it->GetObject(process_memory, unwindstack::ARCH_X86_64)) != nullptr);
+
+    if (is_executable_file_mapping || is_anonymous_executable_mapping_of_pe) {
+      min_exec_map_start = std::min(min_exec_map_start, map_info_it->start());
+      max_exec_map_end = std::max(max_exec_map_end, map_info_it->end());
+    }
+    map_info_it = map_info_it->next_map();
+  }
+
+  return {min_exec_map_start, max_exec_map_end};
+}
+
+// We use PERF_RECORD_MMAP events to keep current_maps_ up to date, which is necessary for
+// unwinding.
+//
+// In addition, whenever a new executable mapping appears, it's possible that a module has been
+// newly mapped or has been re-mapped differently. We want to send a ModuleUpdateEvent in these
+// cases, so that the client has an up-to-date snapshot of the modules of the target. Ideally, for
+// each new executable file mapping we would send a ModuleUpdateEvent with the address range and
+// file for that mapping.
+//
+// But just like for orbit_object_utils::ParseMaps, things are more complicated. We observed that in
+// some cases a single loadable segment of an ELF file or a single executable section of a PE can be
+// loaded into memory with multiple adjacent file mappings. In addition, some PEs can have multiple
+// executable sections. And finally, the executable sections (and all other sections) of a PE can
+// have an offset in the file that doesn't fulfill the requirements of mmap for file mappings, in
+// which case Wine has to create an anonymous mapping and copy the section into it.
+//
+// In all these cases, we want to create a ModuleUpdateEvent with an address range that includes
+// all the executable mappings of the module. To find them, we proceed as follows:
+// - We start from the new executable mapping.
+// - If this mapping is anonymous, and we know that it belongs to a PE, we scan the maps backwards
+//   to find the file; if it does not belong to a PE, we stop and won't send any ModuleUpdateEvent.
+// - We scan the maps backwards to find the file mapping that is the start of the module.
+// - From here, we scan the maps forwards to find all the executable mappings that belong to the
+//   module; if the module is a PE, we also have to consider anonymous mappings and detect whether
+//   they actually belong to the PE.
+//
+// Note that, just like in orbit_object_utils::ParseMaps:
+// - The ModuleInfo in the ModuleUpdateEvent will carry executable_segment_offset with the
+//   assumption that the value of ObjectFile::GetExecutableSegmentOffset correspond to the *first*
+//   executable mapping.
+// - In the case of multiple executable sections, these are not necessarily adjacent, while the
+//   ModuleInfo in the ModuleUpdateEvent as constructed will represent a single contiguous address
+//   range. We believe this is fine.
 void UprobesUnwindingVisitor::Visit(uint64_t event_timestamp, const MmapPerfEventData& event_data) {
   ORBIT_CHECK(listener_ != nullptr);
   ORBIT_CHECK(current_maps_ != nullptr);
@@ -506,57 +615,73 @@ void UprobesUnwindingVisitor::Visit(uint64_t event_timestamp, const MmapPerfEven
                               event_data.page_offset, PROT_READ | PROT_EXEC, event_data.filename);
   }
 
-  // Don't try to send a ModuleUpdateEvent for non-executable maps.
   if (!event_data.executable) {
+    // Don't try to send a ModuleUpdateEvent when non-executable mappings are added.
+    return;
+  }
+  if (!event_data.filename.empty() && event_data.filename[0] == '[') {
+    // The new mapping is a "special" executable mapping like [vdso], [vsyscall], [uprobes].
     return;
   }
 
-  // TODO(b/235481314,b/235480245): Handle binaries with multiple executable mappings and PEs with
-  //  multiple executable sections.
-  std::string module_path;
-  if (!event_data.filename.empty() && event_data.filename[0] != '[') {
-    // This is a file mapping.
-    module_path = event_data.filename;
-  } else if (event_data.filename.empty()) {
-    // This is an anonymous mapping, and not a "special" one like [stack], [heap], etc.
-    std::shared_ptr<unwindstack::MapInfo> added_map_info = current_maps_->Find(event_data.address);
-    ORBIT_CHECK(added_map_info != nullptr);  // This is the mapping added with AddAndSort above.
-    std::shared_ptr<unwindstack::Memory> process_memory =
-        unwindstack::Memory::CreateProcessMemory(event_data.pid);
-    unwindstack::Object* object =
-        added_map_info->GetObject(process_memory, unwindstack::ARCH_X86_64);
-    if (dynamic_cast<unwindstack::PeCoff*>(object) != nullptr) {
-      // This anonymous executable map corresponds to a PE. We know that this was detected from the
-      // previous file mapping, see MapInfo::GetFileMemoryFromAnonExecMapIfPeCoffTextSection. Find
-      // such mapping and get its file. Note that this assumes that at least the headers of the PE
-      // are already mapped (with a non-executable file mapping).
-      std::shared_ptr<unwindstack::MapInfo> map_info = added_map_info->prev_map();
-      while (map_info != nullptr) {
-        if (!map_info->name().empty() && map_info->name().c_str()[0] != '[') {
-          module_path = map_info->name();
-          break;
-        }
-        map_info = map_info->prev_map();
-      }
+  const std::shared_ptr<unwindstack::MapInfo> added_map_info =
+      current_maps_->Find(event_data.address);
+  ORBIT_CHECK(added_map_info != nullptr);  // This is the mapping added with AddAndSort above.
+
+  const std::shared_ptr<unwindstack::Memory> process_memory =
+      unwindstack::Memory::CreateProcessMemory(event_data.pid);
+  auto* const pe = dynamic_cast<unwindstack::PeCoff*>(
+      added_map_info->GetObject(process_memory, unwindstack::ARCH_X86_64));
+
+  // If this is an anonymous executable mapping, we verify whether it belongs to a section of a PE
+  // that was mapped anonymously by Wine because its alignment doesn't obey the requirements of
+  // mmap. If this is not the case, we don't try to send a ModuleUpdateEvent because of this map.
+  if (event_data.filename.empty() && pe == nullptr) {
+    return;
+  }
+
+  std::shared_ptr<unwindstack::MapInfo> closest_file_map_info;
+  if (!event_data.filename.empty()) {
+    closest_file_map_info = added_map_info;
+  } else {
+    // This anonymous executable map corresponds to a PE. We know that this was detected from the
+    // previous file mapping, see MapInfo::GetFileMemoryFromAnonExecMapIfPeCoffTextSection. Find
+    // such mapping and get its file. Note that this assumes that at least the headers of the PE
+    // are already mapped (with a non-executable file mapping).
+    closest_file_map_info = FindFileMapInfoPrecedingAnonMapInfo(added_map_info);
+    if (closest_file_map_info == nullptr) {
+      ORBIT_ERROR("No file mapping found preceding anon exec map at %#x-%#x that belongs to a PE",
+                  added_map_info->start(), added_map_info->end());
+      return;
     }
   }
 
-  if (module_path.empty()) return;
+  // Find the first file mapping with the same name (file path) as the file mapping we just found.
+  // For ELF files, this should correspond to (the first part of) the first loadable segment.
+  // For PEs, this should correspond to the headers.
+  const std::shared_ptr<unwindstack::MapInfo> first_map_info_for_module =
+      FindFirstMapInfoForSameFile(closest_file_map_info);
+  const std::string module_path = closest_file_map_info->name();
+
+  // We want to find the first and the last executable map for this file so that we can create a
+  // ModuleUpdateEvent that encompasses all of them.
+  auto [min_exec_map_start, max_exec_map_end] =
+      FindExecutableAddressRangeForSameFileFromFirstMapInfo(first_map_info_for_module, pe,
+                                                            process_memory);
+  if (min_exec_map_start >= max_exec_map_end) {
+    return;
+  }
 
   ErrorMessageOr<orbit_grpc_protos::ModuleInfo> module_info_or_error =
-      orbit_object_utils::CreateModule(module_path, event_data.address,
-                                       event_data.address + event_data.length);
+      orbit_object_utils::CreateModule(module_path, min_exec_map_start, max_exec_map_end);
   if (module_info_or_error.has_error()) {
     ORBIT_ERROR("Unable to create module: %s", module_info_or_error.error().message());
     return;
   }
-  auto& module_info = module_info_or_error.value();
-
   orbit_grpc_protos::ModuleUpdateEvent module_update_event;
   module_update_event.set_pid(event_data.pid);
   module_update_event.set_timestamp_ns(event_timestamp);
-  *module_update_event.mutable_module() = std::move(module_info);
-
+  *module_update_event.mutable_module() = std::move(module_info_or_error.value());
   listener_->OnModuleUpdate(std::move(module_update_event));
 }
 
