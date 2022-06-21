@@ -112,7 +112,7 @@ class MizarPairedDataTmpl {
                                                uint64_t max_timestamp_ns) const {
     uint64_t count = 0;
     ForEachCallstackEventOfTidInTimeRange(tid, min_timestamp_ns, max_timestamp_ns,
-                                          [&count](const auto& /*_*/) { count++; });
+                                          [&count](const auto& /*callstack*/) { count++; });
     return count;
   }
 

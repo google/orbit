@@ -15,6 +15,7 @@ namespace orbit_mizar_data {
 
 // The class represents a sampled function id. These ids are the same for the same function across
 // all the captures.
+// TODO (b/236358265) rename to `SampledFunctionId`.
 class SFID {
  public:
   constexpr explicit SFID(uint64_t id) : id_(id) {}

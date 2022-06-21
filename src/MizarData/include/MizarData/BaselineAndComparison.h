@@ -5,14 +5,13 @@
 #ifndef MIZAR_DATA_BASELINE_AND_COMPARISON_H_
 #define MIZAR_DATA_BASELINE_AND_COMPARISON_H_
 
+#include <absl/container/flat_hash_map.h>
 #include <stdint.h>
 
 #include <string>
-#include <type_traits>
 
-#include "ClientData/CallstackData.h"
-#include "ClientData/CaptureData.h"
-#include "MizarData/MizarData.h"
+#include "MizarData/ActiveFunctionTimePerFrameComparator.h"
+#include "MizarData/BaselineOrComparison.h"
 #include "MizarData/MizarPairedData.h"
 #include "MizarData/NonWrappingAddition.h"
 #include "MizarData/SampledFunctionId.h"
@@ -20,54 +19,10 @@
 
 namespace orbit_mizar_data {
 
-template <typename T, typename U>
-using EnableIfUConvertibleToT = std::enable_if_t<std::is_convertible_v<U, T>>;
-
-template <typename T>
-class BaselineOrComparison {
- public:
-  ~BaselineOrComparison() = default;
-
-  const T* operator->() const { return &value_; }
-  T* operator->() { return &value_; }
-
- protected:
-  template <typename U, typename = EnableIfUConvertibleToT<U, T>>
-  explicit BaselineOrComparison(U&& value) : value_(std::forward<T>(value)) {}
-  BaselineOrComparison(BaselineOrComparison&& other) = default;
-
- private:
-  T value_;
-};
-
-template <typename T>
-class Baseline : public BaselineOrComparison<T> {
- public:
-  template <typename U, typename = EnableIfUConvertibleToT<U, T>>
-  explicit Baseline(U&& value) : BaselineOrComparison<T>(std::forward<U>(value)) {}
-};
-
-template <typename T>
-class Comparison : public BaselineOrComparison<T> {
- public:
-  template <typename U, typename = EnableIfUConvertibleToT<U, T>>
-  explicit Comparison(U&& value) : BaselineOrComparison<T>(std::forward<U>(value)) {}
-};
-
-template <typename T, typename... Args>
-Baseline<T> MakeBaseline(Args&&... args) {
-  return Baseline<T>(T(std::forward<Args>(args)...));
-}
-
-template <typename T, typename... Args>
-Comparison<T> MakeComparison(Args&&... args) {
-  return Comparison<T>(T(std::forward<Args>(args)...));
-}
-
 // The class owns the data from two capture files via owning two instances of
 // `PairedData`. Also owns the map from sampled function ids to the
 // corresponding function names.
-template <typename PairedData>
+template <typename PairedData, typename FunctionTimeComparator>
 class BaselineAndComparisonTmpl {
  public:
   BaselineAndComparisonTmpl(Baseline<PairedData> baseline, Comparison<PairedData> comparison,
@@ -83,14 +38,32 @@ class BaselineAndComparisonTmpl {
   [[nodiscard]] SamplingWithFrameTrackComparisonReport MakeSamplingWithFrameTrackReport(
       Baseline<HalfOfSamplingWithFrameTrackReportConfig> baseline_config,
       Comparison<HalfOfSamplingWithFrameTrackReportConfig> comparison_config) const {
-    return {MakeCounts(baseline_, baseline_config), MakeCounts(comparison_, comparison_config),
-            MakeFrameTrackStats(baseline_, baseline_config),
-            MakeFrameTrackStats(comparison_, comparison_config)};
+    Baseline<SamplingCounts> baseline_sampling_counts = MakeCounts(baseline_, baseline_config);
+    Baseline<orbit_client_data::ScopeStats> baseline_frame_stats =
+        MakeFrameTrackStats(baseline_, baseline_config);
+
+    Comparison<SamplingCounts> comparison_sampling_counts =
+        MakeCounts(comparison_, comparison_config);
+    Comparison<orbit_client_data::ScopeStats> comparison_frame_stats =
+        MakeFrameTrackStats(comparison_, comparison_config);
+
+    FunctionTimeComparator comparator(baseline_sampling_counts, baseline_frame_stats,
+                                      comparison_sampling_counts, comparison_frame_stats);
+
+    absl::flat_hash_map<SFID, ComparisonResult> sfid_to_comparison_result;
+    for (const auto& [sfid, unused_name] : sfid_to_name_) {
+      sfid_to_comparison_result.try_emplace(sfid, comparator.Compare(sfid));
+    }
+
+    return SamplingWithFrameTrackComparisonReport(
+        std::move(baseline_sampling_counts), std::move(baseline_frame_stats),
+        std::move(comparison_sampling_counts), std::move(comparison_frame_stats),
+        std::move(sfid_to_comparison_result));
   }
 
  private:
-  template <template <class> class Wrapper>
-  [[nodiscard]] orbit_client_data::ScopeStats MakeFrameTrackStats(
+  template <template <typename> typename Wrapper>
+  [[nodiscard]] Wrapper<orbit_client_data::ScopeStats> MakeFrameTrackStats(
       const Wrapper<PairedData>& data,
       const Wrapper<HalfOfSamplingWithFrameTrackReportConfig>& config) const {
     const std::vector<uint64_t> active_invocation_times = data->ActiveInvocationTimes(
@@ -100,11 +73,11 @@ class BaselineAndComparisonTmpl {
     for (const uint64_t active_invocation_time : active_invocation_times) {
       stats.UpdateStats(active_invocation_time);
     }
-    return stats;
+    return Wrapper<orbit_client_data::ScopeStats>(stats);
   }
 
-  template <template <class> class Wrapper>
-  [[nodiscard]] SamplingCounts MakeCounts(
+  template <template <typename> typename Wrapper>
+  [[nodiscard]] Wrapper<SamplingCounts> MakeCounts(
       const Wrapper<PairedData>& data,
       const Wrapper<HalfOfSamplingWithFrameTrackReportConfig>& config) const {
     uint64_t total_callstacks = 0;
@@ -119,10 +92,11 @@ class BaselineAndComparisonTmpl {
             for (const SFID sfid : callstack) {
               counts[sfid].inclusive++;
             }
-            counts[callstack.back()].exclusive++;
+            counts[callstack.front()].exclusive++;
           });
     }
-    return SamplingCounts(std::move(counts), total_callstacks);
+
+    return Wrapper<SamplingCounts>(SamplingCounts(std::move(counts), total_callstacks));
   }
 
   Baseline<PairedData> baseline_;
@@ -130,7 +104,8 @@ class BaselineAndComparisonTmpl {
   absl::flat_hash_map<SFID, std::string> sfid_to_name_;
 };
 
-using BaselineAndComparison = BaselineAndComparisonTmpl<MizarPairedData>;
+using BaselineAndComparison =
+    BaselineAndComparisonTmpl<MizarPairedData, ActiveFunctionTimePerFrameComparator>;
 
 BaselineAndComparison CreateBaselineAndComparison(std::unique_ptr<MizarDataProvider> baseline,
                                                   std::unique_ptr<MizarDataProvider> comparison);
