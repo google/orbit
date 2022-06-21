@@ -10,8 +10,8 @@
 
 #include <string>
 
+#include "MizarBase/BaselineOrComparison.h"
 #include "MizarData/ActiveFunctionTimePerFrameComparator.h"
-#include "MizarData/BaselineOrComparison.h"
 #include "MizarData/MizarPairedData.h"
 #include "MizarData/NonWrappingAddition.h"
 #include "MizarData/SampledFunctionId.h"
@@ -24,6 +24,11 @@ namespace orbit_mizar_data {
 // corresponding function names.
 template <typename PairedData, typename FunctionTimeComparator>
 class BaselineAndComparisonTmpl {
+  template <typename T>
+  using Baseline = ::orbit_mizar_base::Baseline<T>;
+  template <typename T>
+  using Comparison = ::orbit_mizar_base::Comparison<T>;
+
  public:
   BaselineAndComparisonTmpl(Baseline<PairedData> baseline, Comparison<PairedData> comparison,
                             absl::flat_hash_map<SFID, std::string> sfid_to_name)
@@ -38,14 +43,15 @@ class BaselineAndComparisonTmpl {
   [[nodiscard]] SamplingWithFrameTrackComparisonReport MakeSamplingWithFrameTrackReport(
       Baseline<HalfOfSamplingWithFrameTrackReportConfig> baseline_config,
       Comparison<HalfOfSamplingWithFrameTrackReportConfig> comparison_config) const {
-    Baseline<SamplingCounts> baseline_sampling_counts = MakeCounts(baseline_, baseline_config);
+    Baseline<SamplingCounts> baseline_sampling_counts =
+        Call(MakeCounts, baseline_, baseline_config);
     Baseline<orbit_client_data::ScopeStats> baseline_frame_stats =
-        MakeFrameTrackStats(baseline_, baseline_config);
+        Call(MakeFrameTrackStats, baseline_, baseline_config);
 
     Comparison<SamplingCounts> comparison_sampling_counts =
-        MakeCounts(comparison_, comparison_config);
+        Call(MakeCounts, comparison_, comparison_config);
     Comparison<orbit_client_data::ScopeStats> comparison_frame_stats =
-        MakeFrameTrackStats(comparison_, comparison_config);
+        Call(MakeFrameTrackStats, comparison_, comparison_config);
 
     FunctionTimeComparator comparator(baseline_sampling_counts, baseline_frame_stats,
                                       comparison_sampling_counts, comparison_frame_stats);
@@ -62,41 +68,36 @@ class BaselineAndComparisonTmpl {
   }
 
  private:
-  template <template <typename> typename Wrapper>
-  [[nodiscard]] Wrapper<orbit_client_data::ScopeStats> MakeFrameTrackStats(
-      const Wrapper<PairedData>& data,
-      const Wrapper<HalfOfSamplingWithFrameTrackReportConfig>& config) const {
-    const std::vector<uint64_t> active_invocation_times = data->ActiveInvocationTimes(
-        config->tids, config->frame_track_scope_id, config->start_relative_ns,
-        NonWrappingAddition(config->start_relative_ns, config->duration_ns));
+  [[nodiscard]] static orbit_client_data::ScopeStats MakeFrameTrackStats(
+      const PairedData& data, const HalfOfSamplingWithFrameTrackReportConfig& config) {
+    const std::vector<uint64_t> active_invocation_times = data.ActiveInvocationTimes(
+        config.tids, config.frame_track_scope_id, config.start_relative_ns,
+        NonWrappingAddition(config.start_relative_ns, config.duration_ns));
     orbit_client_data::ScopeStats stats;
     for (const uint64_t active_invocation_time : active_invocation_times) {
       stats.UpdateStats(active_invocation_time);
     }
-    return Wrapper<orbit_client_data::ScopeStats>(stats);
+    return stats;
   }
 
-  template <template <typename> typename Wrapper>
-  [[nodiscard]] Wrapper<SamplingCounts> MakeCounts(
-      const Wrapper<PairedData>& data,
-      const Wrapper<HalfOfSamplingWithFrameTrackReportConfig>& config) const {
+  [[nodiscard]] static SamplingCounts MakeCounts(
+      const PairedData& data, const HalfOfSamplingWithFrameTrackReportConfig& config) {
     uint64_t total_callstacks = 0;
     absl::flat_hash_map<SFID, InclusiveAndExclusive> counts;
-    for (const uint32_t tid : config->tids) {
-      data->ForEachCallstackEvent(
-          tid, config->start_relative_ns,
-          NonWrappingAddition(config->start_relative_ns, config->duration_ns),
-          [&total_callstacks, &counts](const std::vector<SFID>& callstack) {
-            total_callstacks++;
-            if (callstack.empty()) return;
-            for (const SFID sfid : callstack) {
-              counts[sfid].inclusive++;
-            }
-            counts[callstack.front()].exclusive++;
-          });
+    for (const uint32_t tid : config.tids) {
+      data.ForEachCallstackEvent(tid, config.start_relative_ns,
+                                 NonWrappingAddition(config.start_relative_ns, config.duration_ns),
+                                 [&total_callstacks, &counts](const std::vector<SFID>& callstack) {
+                                   total_callstacks++;
+                                   if (callstack.empty()) return;
+                                   for (const SFID sfid : callstack) {
+                                     counts[sfid].inclusive++;
+                                   }
+                                   counts[callstack.front()].exclusive++;
+                                 });
     }
 
-    return Wrapper<SamplingCounts>(SamplingCounts(std::move(counts), total_callstacks));
+    return SamplingCounts(std::move(counts), total_callstacks);
   }
 
   Baseline<PairedData> baseline_;

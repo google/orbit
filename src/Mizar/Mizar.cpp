@@ -13,11 +13,20 @@
 
 #include "CaptureClient/LoadCapture.h"
 #include "CaptureFile/CaptureFile.h"
+#include "MizarBase/BaselineOrComparison.h"
 #include "MizarData/BaselineAndComparison.h"
-#include "MizarData/BaselineOrComparison.h"
 #include "MizarData/MizarData.h"
 #include "MizarData/SamplingWithFrameTrackComparisonReport.h"
 #include "OrbitBase/Logging.h"
+
+template <typename T>
+using Baseline = ::orbit_mizar_base::Baseline<T>;
+
+template <typename T>
+using Comparison = ::orbit_mizar_base::Comparison<T>;
+
+using ::orbit_mizar_base::MakeBaseline;
+using ::orbit_mizar_base::MakeComparison;
 
 [[nodiscard]] static ErrorMessageOr<void> LoadCapture(orbit_mizar_data::MizarData* data,
                                                       std::filesystem::path path) {
@@ -81,35 +90,30 @@ int main(int argc, char** argv) {
 
   const orbit_mizar_data::SamplingWithFrameTrackComparisonReport report =
       bac.MakeSamplingWithFrameTrackReport(
-          orbit_mizar_data::MakeBaseline<
-              orbit_mizar_data::HalfOfSamplingWithFrameTrackReportConfig>(
+          MakeBaseline<orbit_mizar_data::HalfOfSamplingWithFrameTrackReportConfig>(
               absl::flat_hash_set<uint32_t>{baseline_tid}, baseline_start_ns, kDuration,
               kFrameTrackScopeId),
-          orbit_mizar_data::MakeComparison<
-              orbit_mizar_data::HalfOfSamplingWithFrameTrackReportConfig>(
+          MakeComparison<orbit_mizar_data::HalfOfSamplingWithFrameTrackReportConfig>(
               absl::flat_hash_set<uint32_t>{comparison_tid}, comparison_start_ns, kDuration,
               kFrameTrackScopeId));
 
   for (const auto& [sfid, name] : bac.sfid_to_name()) {
-    const uint64_t baseline_cnt =
-        report.GetSamplingCounts<orbit_mizar_data::Baseline>()->GetExclusiveCount(sfid);
-    const uint64_t comparison_cnt =
-        report.GetSamplingCounts<orbit_mizar_data::Comparison>()->GetExclusiveCount(sfid);
+    const uint64_t baseline_cnt = report.GetSamplingCounts<Baseline>()->GetExclusiveCount(sfid);
+    const uint64_t comparison_cnt = report.GetSamplingCounts<Comparison>()->GetExclusiveCount(sfid);
     const double pvalue = report.GetComparisonResult(sfid).pvalue;
     if (pvalue < 0.05) {
       ORBIT_LOG("%s %.2f %s %u %u", name, pvalue, static_cast<std::string>(sfid), baseline_cnt,
                 comparison_cnt);
     }
   }
-  ORBIT_LOG("Callstack count %u vs %u ",
-            report.GetSamplingCounts<orbit_mizar_data::Baseline>()->GetTotalCallstacks(),
-            report.GetSamplingCounts<orbit_mizar_data::Comparison>()->GetTotalCallstacks());
+  ORBIT_LOG("Callstack count %u vs %u ", report.GetSamplingCounts<Baseline>()->GetTotalCallstacks(),
+            report.GetSamplingCounts<Comparison>()->GetTotalCallstacks());
   ORBIT_LOG("Total number of common names %u  ", bac.sfid_to_name().size());
   ORBIT_LOG("Baseline mean frametime %u ns, stddev %u",
-            report.GetFrameTrackStats<orbit_mizar_data::Baseline>()->ComputeAverageTimeNs(),
-            report.GetFrameTrackStats<orbit_mizar_data::Baseline>()->ComputeStdDevNs());
+            report.GetFrameTrackStats<Baseline>()->ComputeAverageTimeNs(),
+            report.GetFrameTrackStats<Baseline>()->ComputeStdDevNs());
   ORBIT_LOG("Comparison mean frametime %u ns, stddev %u",
-            report.GetFrameTrackStats<orbit_mizar_data::Comparison>()->ComputeAverageTimeNs(),
-            report.GetFrameTrackStats<orbit_mizar_data::Comparison>()->ComputeStdDevNs());
+            report.GetFrameTrackStats<Comparison>()->ComputeAverageTimeNs(),
+            report.GetFrameTrackStats<Comparison>()->ComputeStdDevNs());
   return 0;
 }

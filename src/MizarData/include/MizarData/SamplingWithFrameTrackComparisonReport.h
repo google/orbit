@@ -12,7 +12,7 @@
 #include <utility>
 
 #include "ClientData/ScopeStats.h"
-#include "MizarData/BaselineOrComparison.h"
+#include "MizarBase/BaselineOrComparison.h"
 #include "MizarData/SampledFunctionId.h"
 #include "OrbitBase/Logging.h"
 
@@ -85,6 +85,11 @@ class SamplingCounts {
 // with frame track
 class SamplingWithFrameTrackComparisonReport {
  public:
+  template <typename T>
+  using Baseline = ::orbit_mizar_base::Baseline<T>;
+  template <typename T>
+  using Comparison = ::orbit_mizar_base::Comparison<T>;
+
   explicit SamplingWithFrameTrackComparisonReport(
       Baseline<SamplingCounts> baseline_sampling_counts,
       Baseline<orbit_client_data::ScopeStats> baseline_frame_track_stats,
@@ -97,6 +102,7 @@ class SamplingWithFrameTrackComparisonReport {
         comparison_frame_track_stats_(std::move(comparison_frame_track_stats)),
         fid_to_comparison_results_(std::move(fid_to_comparison_results)) {}
 
+  // TODO(b/236714217) de-template the getter
   template <template <typename> typename Wrapper>
   const Wrapper<SamplingCounts>& GetSamplingCounts() const {
     if constexpr (std::is_same_v<Wrapper<SamplingCounts>, Baseline<SamplingCounts>>) {
@@ -106,6 +112,7 @@ class SamplingWithFrameTrackComparisonReport {
     }
   }
 
+  // TODO(b/236714217) de-template the getter
   template <template <typename> typename Wrapper>
   const Wrapper<orbit_client_data::ScopeStats>& GetFrameTrackStats() const {
     if constexpr (std::is_same_v<Wrapper<orbit_client_data::ScopeStats>,

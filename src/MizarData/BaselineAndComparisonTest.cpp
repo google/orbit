@@ -16,11 +16,21 @@
 #include <vector>
 
 #include "BaselineAndComparisonHelper.h"
+#include "MizarBase/BaselineOrComparison.h"
 #include "MizarData/BaselineAndComparison.h"
 #include "OrbitBase/ThreadConstants.h"
 
 using ::testing::DoubleNear;
 using ::testing::UnorderedElementsAreArray;
+
+template <typename T>
+using Baseline = ::orbit_mizar_base::Baseline<T>;
+
+template <typename T>
+using Comparison = ::orbit_mizar_base::Comparison<T>;
+
+using ::orbit_mizar_base::MakeBaseline;
+using ::orbit_mizar_base::MakeComparison;
 
 namespace orbit_mizar_data {
 
@@ -157,9 +167,9 @@ TEST(BaselineAndComparisonTest, MakeSamplingWithFrameTrackReportIsCorrect) {
   BaselineAndComparisonTmpl<MockPairedData, MockFunctionTimeComparator> bac(
       std::move(full), std::move(empty), {kSfidToName});
   const SamplingWithFrameTrackComparisonReport report = bac.MakeSamplingWithFrameTrackReport(
-      orbit_mizar_data::MakeBaseline<orbit_mizar_data::HalfOfSamplingWithFrameTrackReportConfig>(
+      MakeBaseline<orbit_mizar_data::HalfOfSamplingWithFrameTrackReportConfig>(
           absl::flat_hash_set<uint32_t>{orbit_base::kAllProcessThreadsTid}, 0, 1, 1),
-      orbit_mizar_data::MakeComparison<orbit_mizar_data::HalfOfSamplingWithFrameTrackReportConfig>(
+      MakeComparison<orbit_mizar_data::HalfOfSamplingWithFrameTrackReportConfig>(
           absl::flat_hash_set<uint32_t>{orbit_base::kAllProcessThreadsTid}, 0, 1, 1));
 
   EXPECT_EQ(report.GetSamplingCounts<Baseline>()->GetTotalCallstacks(), kCallstacks.size());
