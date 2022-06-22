@@ -49,14 +49,18 @@ class UprobesUnwindingVisitor : public PerfEventVisitor {
       TracerListener* listener, UprobesFunctionCallManager* function_call_manager,
       UprobesReturnAddressManager* uprobes_return_address_manager, LibunwindstackMaps* initial_maps,
       LibunwindstackUnwinder* unwinder, LeafFunctionCallManager* leaf_function_call_manager,
-      UserSpaceInstrumentationAddresses* user_space_instrumentation_addresses)
+      UserSpaceInstrumentationAddresses* user_space_instrumentation_addresses,
+      const std::map<uint64_t, uint64_t>* absolute_address_to_size_of_functions_to_stop_at =
+          nullptr /*TODO(kuebler): Don't make this parameter default*/)
       : listener_{listener},
         function_call_manager_{function_call_manager},
         return_address_manager_{uprobes_return_address_manager},
         current_maps_{initial_maps},
         unwinder_{unwinder},
         leaf_function_call_manager_{leaf_function_call_manager},
-        user_space_instrumentation_addresses_{user_space_instrumentation_addresses} {
+        user_space_instrumentation_addresses_{user_space_instrumentation_addresses},
+        absolute_address_to_size_of_functions_to_stop_at_{
+            absolute_address_to_size_of_functions_to_stop_at} {
     ORBIT_CHECK(listener_ != nullptr);
     ORBIT_CHECK(function_call_manager_ != nullptr);
     ORBIT_CHECK(return_address_manager_ != nullptr);
@@ -115,6 +119,8 @@ class UprobesUnwindingVisitor : public PerfEventVisitor {
   LeafFunctionCallManager* leaf_function_call_manager_;
 
   UserSpaceInstrumentationAddresses* user_space_instrumentation_addresses_;
+
+  const std::map<uint64_t, uint64_t>* absolute_address_to_size_of_functions_to_stop_at_;
 
   std::atomic<uint64_t>* unwind_error_counter_ = nullptr;
   std::atomic<uint64_t>* samples_in_uretprobes_counter_ = nullptr;

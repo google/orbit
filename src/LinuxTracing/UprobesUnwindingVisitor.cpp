@@ -131,6 +131,25 @@ void UprobesUnwindingVisitor::SendFullAddressInfoToListener(
   listener_->OnAddressInfo(std::move(address_info));
 }
 
+static inline bool IsPcInFunctionsToStopAt(
+    const std::map<uint64_t, uint64_t>* absolute_address_to_size_of_functions_to_stop_at,
+    uint64_t pc) {
+  if (absolute_address_to_size_of_functions_to_stop_at == nullptr) {
+    return false;
+  }
+  auto function_it = absolute_address_to_size_of_functions_to_stop_at->upper_bound(pc);
+  if (function_it == absolute_address_to_size_of_functions_to_stop_at->begin()) {
+    return false;
+  }
+
+  --function_it;
+
+  uint64_t function_start = function_it->first;
+  ORBIT_CHECK(function_start <= pc);
+  uint64_t size = function_it->second;
+  return (pc < function_start + size);
+}
+
 orbit_grpc_protos::Callstack::CallstackType
 UprobesUnwindingVisitor::ComputeCallstackTypeFromStackSample(
     const LibunwindstackResult& libunwindstack_result) {
@@ -174,13 +193,18 @@ UprobesUnwindingVisitor::ComputeCallstackTypeFromStackSample(
     }
     return Callstack::kCallstackPatchingFailed;
   }
-  if (!libunwindstack_result.IsSuccess() || libunwindstack_result.frames().size() == 1) {
+  if (!libunwindstack_result.IsSuccess() ||
+      (libunwindstack_result.frames().size() == 1 &&
+       !IsPcInFunctionsToStopAt(absolute_address_to_size_of_functions_to_stop_at_,
+                                libunwindstack_result.frames().at(0).pc))) {
     // Callstacks with only one frame (the sampled address) are also unwinding errors, that were not
     // reported as such by LibunwindstackUnwinder::Unwind.
     // Note that this doesn't exclude samples inside the main function of any thread as the main
     // function is never the outermost frame. For example, for the main thread the outermost
     // function is _start, followed by __libc_start_main. For other threads, the outermost function
     // is clone.
+    // The only exception are callstacks where the single frame is inside a function we forced the
+    // unwinder to stop at (e.g. __wine_syscall_dispatcher).
     if (unwind_error_counter_ != nullptr) {
       ++(*unwind_error_counter_);
     }
