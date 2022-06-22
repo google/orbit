@@ -52,7 +52,7 @@ class ThreadStateManager {
   void OnNewTask(uint64_t timestamp_ns, pid_t tid, pid_t was_created_by_tid,
                  pid_t was_created_by_pid);
   [[nodiscard]] std::optional<orbit_grpc_protos::ThreadStateSlice> OnSchedWakeup(
-      uint64_t timestamp_ns, pid_t tid, pid_t wakeup_tid, pid_t wakeup_pid);
+      uint64_t timestamp_ns, pid_t tid, pid_t was_blocked_by_tid, pid_t was_blocked_by_pid);
   [[nodiscard]] std::optional<orbit_grpc_protos::ThreadStateSlice> OnSchedSwitchIn(
       uint64_t timestamp_ns, pid_t tid);
   [[nodiscard]] std::optional<orbit_grpc_protos::ThreadStateSlice> OnSchedSwitchOut(
