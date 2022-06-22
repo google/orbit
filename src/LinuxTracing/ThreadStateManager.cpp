@@ -11,6 +11,7 @@
 #include <type_traits>
 #include <utility>
 
+#include "GrpcProtos/capture.pb.h"
 #include "OrbitBase/Logging.h"
 
 namespace orbit_linux_tracing {
@@ -27,15 +28,13 @@ using orbit_grpc_protos::ThreadStateSlice;
 // larger timestamp) and replace it with the thread state carried by the tracepoint.
 
 void ThreadStateManager::OnInitialState(uint64_t timestamp_ns, pid_t tid,
-                                        ThreadStateSlice::ThreadState state,
-                                        pid_t was_blocked_by_thread, pid_t was_blocked_by_process) {
+                                        ThreadStateSlice::ThreadState state) {
   ORBIT_CHECK(!tid_open_states_.contains(tid));
-  tid_open_states_.emplace(
-      tid, OpenState{state, timestamp_ns, was_blocked_by_thread, was_blocked_by_process});
+  tid_open_states_.emplace(tid, OpenState{state, timestamp_ns});
 }
 
-void ThreadStateManager::OnNewTask(uint64_t timestamp_ns, pid_t tid, pid_t was_blocked_by_thread,
-                                   pid_t was_blocked_by_process) {
+void ThreadStateManager::OnNewTask(uint64_t timestamp_ns, pid_t tid, pid_t was_created_by_tid,
+                                   pid_t was_created_by_pid) {
   static constexpr ThreadStateSlice::ThreadState kNewState = ThreadStateSlice::kRunnable;
 
   if (auto open_state_it = tid_open_states_.find(tid);
@@ -45,27 +44,33 @@ void ThreadStateManager::OnNewTask(uint64_t timestamp_ns, pid_t tid, pid_t was_b
     return;
   }
   tid_open_states_.insert_or_assign(
-      tid, OpenState{kNewState, timestamp_ns, was_blocked_by_thread, was_blocked_by_process});
+      tid, OpenState{kNewState, timestamp_ns, was_created_by_tid, was_created_by_pid,
+                     orbit_grpc_protos::ThreadStateSlice_WakeupReason::
+                         ThreadStateSlice_WakeupReason_kCreated});
 }
 
 std::optional<ThreadStateSlice> ThreadStateManager::OnSchedWakeup(uint64_t timestamp_ns, pid_t tid,
-                                                                  pid_t was_blocked_by_thread,
-                                                                  pid_t was_blocked_by_process) {
+                                                                  pid_t wakeup_tid,
+                                                                  pid_t wakeup_pid) {
   static constexpr ThreadStateSlice::ThreadState kNewState = ThreadStateSlice::kRunnable;
 
   auto open_state_it = tid_open_states_.find(tid);
   if (open_state_it == tid_open_states_.end()) {
     ORBIT_ERROR("Processed sched:sched_wakeup but previous state of thread %d is unknown", tid);
-    tid_open_states_.insert_or_assign(
-        tid, OpenState{kNewState, timestamp_ns, was_blocked_by_thread, was_blocked_by_process});
+    tid_open_states_.insert_or_assign(tid,
+                                      OpenState{kNewState, timestamp_ns, wakeup_tid, wakeup_pid,
+                                                orbit_grpc_protos::ThreadStateSlice_WakeupReason::
+                                                    ThreadStateSlice_WakeupReason_kBlocked});
     return std::nullopt;
   }
 
   const OpenState& open_state = open_state_it->second;
   if (timestamp_ns < open_state.begin_timestamp_ns) {
     // As noted above, overwrite the thread state retrieved at the beginning.
-    tid_open_states_.insert_or_assign(
-        tid, OpenState{kNewState, timestamp_ns, was_blocked_by_thread, was_blocked_by_process});
+    tid_open_states_.insert_or_assign(tid,
+                                      OpenState{kNewState, timestamp_ns, wakeup_tid, wakeup_pid,
+                                                orbit_grpc_protos::ThreadStateSlice_WakeupReason::
+                                                    ThreadStateSlice_WakeupReason_kBlocked});
     return std::nullopt;
   }
 
@@ -86,8 +91,13 @@ std::optional<ThreadStateSlice> ThreadStateManager::OnSchedWakeup(uint64_t times
   slice.set_thread_state(open_state.state);
   slice.set_duration_ns(timestamp_ns - open_state.begin_timestamp_ns);
   slice.set_end_timestamp_ns(timestamp_ns);
-  tid_open_states_.insert_or_assign(
-      tid, OpenState{kNewState, timestamp_ns, was_blocked_by_thread, was_blocked_by_process});
+  slice.set_wakeup_tid(open_state.wakeup_tid);
+  slice.set_wakeup_pid(open_state.wakeup_pid);
+  slice.set_wakeup_reason(open_state.wakeup_reason);
+  tid_open_states_.insert_or_assign(tid,
+                                    OpenState{kNewState, timestamp_ns, wakeup_tid, wakeup_pid,
+                                              orbit_grpc_protos::ThreadStateSlice_WakeupReason::
+                                                  ThreadStateSlice_WakeupReason_kBlocked});
   return slice;
 }
 
@@ -98,13 +108,13 @@ std::optional<ThreadStateSlice> ThreadStateManager::OnSchedSwitchIn(uint64_t tim
   auto open_state_it = tid_open_states_.find(tid);
   if (open_state_it == tid_open_states_.end()) {
     ORBIT_ERROR("Processed sched:sched_switch(in) but previous state of thread %d is unknown", tid);
-    tid_open_states_.insert_or_assign(tid, OpenState{kNewState, timestamp_ns, 0, 0});
+    tid_open_states_.insert_or_assign(tid, OpenState{kNewState, timestamp_ns});
     return std::nullopt;
   }
 
   const OpenState& open_state = open_state_it->second;
   if (timestamp_ns < open_state.begin_timestamp_ns) {
-    tid_open_states_.insert_or_assign(tid, OpenState{kNewState, timestamp_ns, 0, 0});
+    tid_open_states_.insert_or_assign(tid, OpenState{kNewState, timestamp_ns});
     return std::nullopt;
   }
 
@@ -122,9 +132,10 @@ std::optional<ThreadStateSlice> ThreadStateManager::OnSchedSwitchIn(uint64_t tim
   slice.set_thread_state(open_state.state);
   slice.set_duration_ns(timestamp_ns - open_state.begin_timestamp_ns);
   slice.set_end_timestamp_ns(timestamp_ns);
-  slice.set_was_blocked_by_thread(open_state.was_blocked_by_thread);
-  slice.set_was_blocked_by_process(open_state.was_blocked_by_process);
-  tid_open_states_.insert_or_assign(tid, OpenState{kNewState, timestamp_ns, 0, 0});
+  slice.set_wakeup_tid(open_state.wakeup_tid);
+  slice.set_wakeup_pid(open_state.wakeup_pid);
+  slice.set_wakeup_reason(open_state.wakeup_reason);
+  tid_open_states_.insert_or_assign(tid, OpenState{kNewState, timestamp_ns});
   return slice;
 }
 
@@ -134,13 +145,13 @@ std::optional<ThreadStateSlice> ThreadStateManager::OnSchedSwitchOut(
   if (open_state_it == tid_open_states_.end()) {
     ORBIT_ERROR("Processed sched:sched_switch(out) but previous state of thread %d is unknown",
                 tid);
-    tid_open_states_.insert_or_assign(tid, OpenState{new_state, timestamp_ns, 0, 0});
+    tid_open_states_.insert_or_assign(tid, OpenState{new_state, timestamp_ns});
     return std::nullopt;
   }
 
   const OpenState& open_state = open_state_it->second;
   if (timestamp_ns < open_state.begin_timestamp_ns) {
-    tid_open_states_.insert_or_assign(tid, OpenState{new_state, timestamp_ns, 0, 0});
+    tid_open_states_.insert_or_assign(tid, OpenState{new_state, timestamp_ns});
     return std::nullopt;
   }
 
@@ -166,10 +177,13 @@ std::optional<ThreadStateSlice> ThreadStateManager::OnSchedSwitchOut(
   slice.set_thread_state(adjusted_open_state_state);
   slice.set_duration_ns(timestamp_ns - open_state.begin_timestamp_ns);
   slice.set_end_timestamp_ns(timestamp_ns);
+  slice.set_wakeup_tid(open_state.wakeup_tid);
+  slice.set_wakeup_pid(open_state.wakeup_pid);
+  slice.set_wakeup_reason(open_state.wakeup_reason);
 
   // Note: If the thread exits but the new_state is kZombie instead of kDead,
   // the switch to kDead will never be reported.
-  tid_open_states_.insert_or_assign(tid, OpenState{new_state, timestamp_ns, 0, 0});
+  tid_open_states_.insert_or_assign(tid, OpenState{new_state, timestamp_ns});
   return slice;
 }
 
@@ -181,6 +195,9 @@ std::vector<ThreadStateSlice> ThreadStateManager::OnCaptureFinished(uint64_t tim
     slice.set_thread_state(open_state.state);
     slice.set_duration_ns(timestamp_ns - open_state.begin_timestamp_ns);
     slice.set_end_timestamp_ns(timestamp_ns);
+    slice.set_wakeup_tid(open_state.wakeup_tid);
+    slice.set_wakeup_pid(open_state.wakeup_pid);
+    slice.set_wakeup_reason(open_state.wakeup_reason);
     slices.emplace_back(std::move(slice));
   }
   return slices;

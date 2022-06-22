@@ -12,6 +12,7 @@
 #include <vector>
 
 #include "GrpcProtos/capture.pb.h"
+#include "OrbitBase/ThreadConstants.h"
 #include "ThreadStateManager.h"
 
 namespace orbit_linux_tracing {
@@ -25,8 +26,7 @@ TEST(ThreadStateManager, OneThread) {
   ThreadStateManager manager;
   std::optional<ThreadStateSlice> slice;
 
-  manager.OnInitialState(100, kTid, ThreadStateSlice::kRunnable, kWasBlockedByTid,
-                         kWasBlockedByPid);
+  manager.OnInitialState(100, kTid, ThreadStateSlice::kRunnable);
 
   slice = manager.OnSchedSwitchIn(200, kTid);
   ASSERT_TRUE(slice.has_value());
@@ -34,8 +34,8 @@ TEST(ThreadStateManager, OneThread) {
   EXPECT_EQ(slice->thread_state(), ThreadStateSlice::kRunnable);
   EXPECT_EQ(slice->duration_ns(), 100);
   EXPECT_EQ(slice->end_timestamp_ns(), 200);
-  EXPECT_EQ(slice->was_blocked_by_process(), kWasBlockedByPid);
-  EXPECT_EQ(slice->was_blocked_by_thread(), kWasBlockedByTid);
+  EXPECT_EQ(slice->wakeup_pid(), orbit_base::kInvalidProcessId);
+  EXPECT_EQ(slice->wakeup_tid(), orbit_base::kInvalidThreadId);
 
   slice = manager.OnSchedSwitchOut(300, kTid, ThreadStateSlice::kInterruptibleSleep);
   ASSERT_TRUE(slice.has_value());
@@ -57,8 +57,8 @@ TEST(ThreadStateManager, OneThread) {
   EXPECT_EQ(slice->thread_state(), ThreadStateSlice::kRunnable);
   EXPECT_EQ(slice->duration_ns(), 100);
   EXPECT_EQ(slice->end_timestamp_ns(), 500);
-  EXPECT_EQ(slice->was_blocked_by_process(), kWasBlockedByPid);
-  EXPECT_EQ(slice->was_blocked_by_thread(), kWasBlockedByTid);
+  EXPECT_EQ(slice->wakeup_pid(), kWasBlockedByPid);
+  EXPECT_EQ(slice->wakeup_tid(), kWasBlockedByTid);
 
   std::vector<ThreadStateSlice> slices = manager.OnCaptureFinished(600);
   ASSERT_TRUE(!slices.empty());
@@ -72,12 +72,12 @@ TEST(ThreadStateManager, OneThread) {
 
 TEST(ThreadStateManager, NewTask) {
   constexpr pid_t kTid = 42;
-  constexpr pid_t kWasBlockedByTid = 420;
-  constexpr pid_t kWasBlockedByPid = 4200;
+  constexpr pid_t kWasCreatedByTid = 420;
+  constexpr pid_t kWasCreatedByPid = 4200;
   ThreadStateManager manager;
   std::optional<ThreadStateSlice> slice;
 
-  manager.OnNewTask(100, kTid, kWasBlockedByTid, kWasBlockedByPid);
+  manager.OnNewTask(100, kTid, kWasCreatedByTid, kWasCreatedByPid);
 
   slice = manager.OnSchedSwitchIn(200, kTid);
   ASSERT_TRUE(slice.has_value());
@@ -85,8 +85,8 @@ TEST(ThreadStateManager, NewTask) {
   EXPECT_EQ(slice->thread_state(), ThreadStateSlice::kRunnable);
   EXPECT_EQ(slice->duration_ns(), 100);
   EXPECT_EQ(slice->end_timestamp_ns(), 200);
-  EXPECT_EQ(slice->was_blocked_by_process(), kWasBlockedByPid);
-  EXPECT_EQ(slice->was_blocked_by_thread(), kWasBlockedByTid);
+  EXPECT_EQ(slice->wakeup_pid(), kWasCreatedByPid);
+  EXPECT_EQ(slice->wakeup_tid(), kWasCreatedByTid);
 
   slice = manager.OnSchedSwitchOut(300, kTid, ThreadStateSlice::kRunnable);
   ASSERT_TRUE(slice.has_value());
@@ -110,13 +110,12 @@ TEST(ThreadStateManager, TwoThreads) {
   constexpr pid_t kTid2 = 52;
   constexpr pid_t kWasBlockedByTid1 = 420;
   constexpr pid_t kWasBlockedByPid1 = 4200;
-  constexpr pid_t kWasBlockedByTid2 = 520;
-  constexpr pid_t kWasBlockedByPid2 = 5200;
+  constexpr pid_t kWasCreatedByTid2 = 520;
+  constexpr pid_t kWasCreatedByPid2 = 5200;
   ThreadStateManager manager;
   std::optional<ThreadStateSlice> slice;
 
-  manager.OnInitialState(100, kTid1, ThreadStateSlice::kRunnable, kWasBlockedByTid1,
-                         kWasBlockedByPid1);
+  manager.OnInitialState(100, kTid1, ThreadStateSlice::kRunnable);
 
   slice = manager.OnSchedSwitchIn(200, kTid1);
   ASSERT_TRUE(slice.has_value());
@@ -124,10 +123,10 @@ TEST(ThreadStateManager, TwoThreads) {
   EXPECT_EQ(slice->thread_state(), ThreadStateSlice::kRunnable);
   EXPECT_EQ(slice->duration_ns(), 100);
   EXPECT_EQ(slice->end_timestamp_ns(), 200);
-  EXPECT_EQ(slice->was_blocked_by_process(), kWasBlockedByPid1);
-  EXPECT_EQ(slice->was_blocked_by_thread(), kWasBlockedByTid1);
+  EXPECT_EQ(slice->wakeup_pid(), orbit_base::kInvalidProcessId);
+  EXPECT_EQ(slice->wakeup_tid(), orbit_base::kInvalidThreadId);
 
-  manager.OnNewTask(250, kTid2, kWasBlockedByTid2, kWasBlockedByPid2);
+  manager.OnNewTask(250, kTid2, kWasCreatedByTid2, kWasCreatedByPid2);
 
   slice = manager.OnSchedSwitchOut(300, kTid1, ThreadStateSlice::kInterruptibleSleep);
   ASSERT_TRUE(slice.has_value());
@@ -142,8 +141,8 @@ TEST(ThreadStateManager, TwoThreads) {
   EXPECT_EQ(slice->thread_state(), ThreadStateSlice::kRunnable);
   EXPECT_EQ(slice->duration_ns(), 100);
   EXPECT_EQ(slice->end_timestamp_ns(), 350);
-  EXPECT_EQ(slice->was_blocked_by_process(), kWasBlockedByPid2);
-  EXPECT_EQ(slice->was_blocked_by_thread(), kWasBlockedByTid2);
+  EXPECT_EQ(slice->wakeup_pid(), kWasCreatedByPid2);
+  EXPECT_EQ(slice->wakeup_tid(), kWasCreatedByTid2);
 
   slice = manager.OnSchedWakeup(400, kTid1, kWasBlockedByTid1, kWasBlockedByPid1);
   ASSERT_TRUE(slice.has_value());
@@ -165,8 +164,8 @@ TEST(ThreadStateManager, TwoThreads) {
   EXPECT_EQ(slice->thread_state(), ThreadStateSlice::kRunnable);
   EXPECT_EQ(slice->duration_ns(), 100);
   EXPECT_EQ(slice->end_timestamp_ns(), 500);
-  EXPECT_EQ(slice->was_blocked_by_process(), kWasBlockedByPid1);
-  EXPECT_EQ(slice->was_blocked_by_thread(), kWasBlockedByTid1);
+  EXPECT_EQ(slice->wakeup_pid(), kWasBlockedByPid1);
+  EXPECT_EQ(slice->wakeup_tid(), kWasBlockedByTid1);
 
   std::vector<ThreadStateSlice> slices = manager.OnCaptureFinished(600);
   ASSERT_TRUE(slices.size() >= 2);
@@ -206,14 +205,14 @@ TEST(ThreadStateManager, SwitchOutAfterInitialStateRunnable) {
 
 TEST(ThreadStateManager, StaleInitialStateWithNewTask) {
   constexpr pid_t kTid = 42;
-  constexpr pid_t kWasBlockedByTid = 420;
-  constexpr pid_t kWasBlockedByPid = 4200;
+  constexpr pid_t kWasCreatedByTid = 420;
+  constexpr pid_t kWasCreatedByPid = 4200;
   ThreadStateManager manager;
   std::optional<ThreadStateSlice> slice;
 
   manager.OnInitialState(150, kTid, ThreadStateSlice::kRunnable);
 
-  manager.OnNewTask(100, kTid, kWasBlockedByTid, kWasBlockedByPid);
+  manager.OnNewTask(100, kTid, kWasCreatedByTid, kWasCreatedByPid);
 
   slice = manager.OnSchedSwitchIn(200, kTid);
   ASSERT_TRUE(slice.has_value());
@@ -221,8 +220,8 @@ TEST(ThreadStateManager, StaleInitialStateWithNewTask) {
   EXPECT_EQ(slice->thread_state(), ThreadStateSlice::kRunnable);
   EXPECT_EQ(slice->duration_ns(), 100);
   EXPECT_EQ(slice->end_timestamp_ns(), 200);
-  EXPECT_EQ(slice->was_blocked_by_process(), kWasBlockedByPid);
-  EXPECT_EQ(slice->was_blocked_by_thread(), kWasBlockedByTid);
+  EXPECT_EQ(slice->wakeup_pid(), kWasCreatedByPid);
+  EXPECT_EQ(slice->wakeup_tid(), kWasCreatedByTid);
 }
 
 TEST(ThreadStateManager, StaleInitialStateWithSchedWakeup) {
@@ -243,8 +242,8 @@ TEST(ThreadStateManager, StaleInitialStateWithSchedWakeup) {
   EXPECT_EQ(slice->thread_state(), ThreadStateSlice::kRunnable);
   EXPECT_EQ(slice->duration_ns(), 100);
   EXPECT_EQ(slice->end_timestamp_ns(), 200);
-  EXPECT_EQ(slice->was_blocked_by_process(), kWasBlockedByPid);
-  EXPECT_EQ(slice->was_blocked_by_thread(), kWasBlockedByTid);
+  EXPECT_EQ(slice->wakeup_pid(), kWasBlockedByPid);
+  EXPECT_EQ(slice->wakeup_tid(), kWasBlockedByTid);
 }
 
 TEST(ThreadStateManager, StaleInitialStateWithSwitchIn) {
@@ -283,8 +282,8 @@ TEST(ThreadStateManager, StaleInitialStateWithSwitchOut) {
   EXPECT_EQ(slice->thread_state(), ThreadStateSlice::kInterruptibleSleep);
   EXPECT_EQ(slice->duration_ns(), 100);
   EXPECT_EQ(slice->end_timestamp_ns(), 200);
-  EXPECT_EQ(slice->was_blocked_by_process(), 0u);
-  EXPECT_EQ(slice->was_blocked_by_thread(), 0u);
+  EXPECT_EQ(slice->wakeup_pid(), orbit_base::kInvalidProcessId);
+  EXPECT_EQ(slice->wakeup_tid(), orbit_base::kInvalidThreadId);
 }
 
 TEST(ThreadStateManager, UnknownInitialStateWithSchedWakeup) {
@@ -303,8 +302,8 @@ TEST(ThreadStateManager, UnknownInitialStateWithSchedWakeup) {
   EXPECT_EQ(slice->thread_state(), ThreadStateSlice::kRunnable);
   EXPECT_EQ(slice->duration_ns(), 100);
   EXPECT_EQ(slice->end_timestamp_ns(), 200);
-  EXPECT_EQ(slice->was_blocked_by_process(), kWasBlockedByPid);
-  EXPECT_EQ(slice->was_blocked_by_thread(), kWasBlockedByTid);
+  EXPECT_EQ(slice->wakeup_pid(), kWasBlockedByPid);
+  EXPECT_EQ(slice->wakeup_tid(), kWasBlockedByTid);
 }
 
 TEST(ThreadStateManager, UnknownInitialStateWithSwitchIn) {
@@ -359,19 +358,16 @@ TEST(ThreadStateManager, NoStateChangeWithSchedWakeup) {
   EXPECT_EQ(slice->thread_state(), ThreadStateSlice::kRunnable);
   EXPECT_EQ(slice->duration_ns(), 100);
   EXPECT_EQ(slice->end_timestamp_ns(), 200);
-  EXPECT_EQ(slice->was_blocked_by_process(), 0u);
-  EXPECT_EQ(slice->was_blocked_by_thread(), 0u);
+  EXPECT_EQ(slice->wakeup_pid(), orbit_base::kInvalidProcessId);
+  EXPECT_EQ(slice->wakeup_tid(), orbit_base::kInvalidThreadId);
 }
 
 TEST(ThreadStateManager, NoStateChangeWithSwitchIn) {
   constexpr pid_t kTid = 42;
-  constexpr pid_t kWasBlockedByTid = 420;
-  constexpr pid_t kWasBlockedByPid = 4200;
   ThreadStateManager manager;
   std::optional<ThreadStateSlice> slice;
 
-  manager.OnInitialState(100, kTid, ThreadStateSlice::kRunnable, kWasBlockedByTid,
-                         kWasBlockedByPid);
+  manager.OnInitialState(100, kTid, ThreadStateSlice::kRunnable);
 
   slice = manager.OnSchedSwitchIn(200, kTid);
   ASSERT_TRUE(slice.has_value());
@@ -379,8 +375,8 @@ TEST(ThreadStateManager, NoStateChangeWithSwitchIn) {
   EXPECT_EQ(slice->thread_state(), ThreadStateSlice::kRunnable);
   EXPECT_EQ(slice->duration_ns(), 100);
   EXPECT_EQ(slice->end_timestamp_ns(), 200);
-  EXPECT_EQ(slice->was_blocked_by_process(), kWasBlockedByPid);
-  EXPECT_EQ(slice->was_blocked_by_thread(), kWasBlockedByTid);
+  EXPECT_EQ(slice->wakeup_pid(), orbit_base::kInvalidProcessId);
+  EXPECT_EQ(slice->wakeup_tid(), orbit_base::kInvalidThreadId);
 
   slice = manager.OnSchedSwitchIn(250, kTid);
   EXPECT_FALSE(slice.has_value());

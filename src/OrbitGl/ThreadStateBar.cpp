@@ -96,6 +96,19 @@ static Color GetThreadStateColor(ThreadStateSlice::ThreadState state) {
   }
 }
 
+static std::string GetWakeupReason(ThreadStateSliceInfo::WakeupReason reason) {
+  switch (reason) {
+    case ThreadStateSliceInfo::kNotApplicable:
+      return "Not Applicable";
+    case ThreadStateSliceInfo::kBlocked:
+      return "Blocked";
+    case ThreadStateSliceInfo::kCreated:
+      return "Created";
+    default:
+      ORBIT_UNREACHABLE();
+  }
+}
+
 static std::string GetThreadStateName(ThreadStateSlice::ThreadState state) {
   switch (state) {
     case ThreadStateSlice::kRunning:
@@ -160,8 +173,7 @@ std::string ThreadStateBar::GetThreadStateSliceTooltip(PrimitiveAssembler& primi
 
   const auto* thread_state_slice =
       static_cast<const ThreadStateSliceInfo*>(user_data->custom_data_);
-  uint64_t begin_ns = thread_state_slice->begin_timestamp_ns();
-  uint64_t end_ns = thread_state_slice->end_timestamp_ns();
+
   std::string tooltip = absl::StrFormat(
       "<b>%s</b><br/>"
       "<i>Thread state</i><br/>"
@@ -169,23 +181,27 @@ std::string ThreadStateBar::GetThreadStateSliceTooltip(PrimitiveAssembler& primi
       "%s",
       GetThreadStateName(thread_state_slice->thread_state()),
       GetThreadStateDescription(thread_state_slice->thread_state()));
-  if (thread_state_slice->was_blocked_by_thread() != 0u) {
-    std::string thread_name =
-        capture_data_->GetThreadName(thread_state_slice->was_blocked_by_thread());
-    std::string process_name =
-        capture_data_->GetThreadName(thread_state_slice->was_blocked_by_process());
+
+  if (thread_state_slice->wakeup_tid() != orbit_base::kInvalidThreadId) {
+    std::string blocked_or_created = GetWakeupReason(thread_state_slice->wakeup_reason());
+    std::string thread_name = capture_data_->GetThreadName(thread_state_slice->wakeup_tid());
+    std::string process_name = capture_data_->GetThreadName(thread_state_slice->wakeup_pid());
     tooltip += absl::StrFormat(
         "<br/>"
-        "<b>Was Blocked By Process:</b> %s [%d]"
+        "<b>Was %s By Process:</b> %s [%d]"
         "<br/>"
-        "<b>Was Blocked By Thread:</b> %s [%d]",
-        process_name, thread_state_slice->was_blocked_by_process(), thread_name,
-        thread_state_slice->was_blocked_by_thread());
+        "<b>Was %s By Thread:</b> %s [%d]",
+        blocked_or_created, process_name, thread_state_slice->wakeup_pid(), blocked_or_created,
+        thread_name, thread_state_slice->wakeup_tid());
   }
+
+  uint64_t begin_ns = thread_state_slice->begin_timestamp_ns();
+  uint64_t end_ns = thread_state_slice->end_timestamp_ns();
   tooltip += absl::StrFormat(
       "<br/>"
       "<b>Time:</b> %s",
       orbit_display_formats::GetDisplayTime(TicksToDuration(begin_ns, end_ns)));
+
   return tooltip;
 }
 

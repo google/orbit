@@ -13,6 +13,7 @@
 
 #include "GrpcProtos/capture.pb.h"
 #include "OrbitBase/Logging.h"
+#include "OrbitBase/ThreadConstants.h"
 #include "absl/container/flat_hash_map.h"
 
 namespace orbit_linux_tracing {
@@ -47,12 +48,11 @@ namespace orbit_linux_tracing {
 class ThreadStateManager {
  public:
   void OnInitialState(uint64_t timestamp_ns, pid_t tid,
-                      orbit_grpc_protos::ThreadStateSlice::ThreadState state,
-                      pid_t was_blocked_by_thread = 0u, pid_t was_blocked_by_process = 0u);
-  void OnNewTask(uint64_t timestamp_ns, pid_t tid, pid_t was_blocked_by_thread,
-                 pid_t was_blocked_by_process);
+                      orbit_grpc_protos::ThreadStateSlice::ThreadState state);
+  void OnNewTask(uint64_t timestamp_ns, pid_t tid, pid_t was_created_by_tid,
+                 pid_t was_created_by_pid);
   [[nodiscard]] std::optional<orbit_grpc_protos::ThreadStateSlice> OnSchedWakeup(
-      uint64_t timestamp_ns, pid_t tid, pid_t was_blocked_by_thread, pid_t was_blocked_by_process);
+      uint64_t timestamp_ns, pid_t tid, pid_t wakeup_tid, pid_t wakeup_pid);
   [[nodiscard]] std::optional<orbit_grpc_protos::ThreadStateSlice> OnSchedSwitchIn(
       uint64_t timestamp_ns, pid_t tid);
   [[nodiscard]] std::optional<orbit_grpc_protos::ThreadStateSlice> OnSchedSwitchOut(
@@ -63,19 +63,25 @@ class ThreadStateManager {
  private:
   struct OpenState {
     OpenState(orbit_grpc_protos::ThreadStateSlice::ThreadState state, uint64_t begin_timestamp_ns,
-              pid_t was_blocked_by_thread, pid_t was_blocked_by_process)
+              pid_t wakeup_tid = orbit_base::kInvalidThreadId,
+              pid_t wakeup_pid = orbit_base::kInvalidProcessId,
+              orbit_grpc_protos::ThreadStateSlice_WakeupReason wakeup_reason = orbit_grpc_protos::
+                  ThreadStateSlice_WakeupReason::ThreadStateSlice_WakeupReason_kNotApplicable)
         : state{state},
           begin_timestamp_ns{begin_timestamp_ns},
-          was_blocked_by_thread{was_blocked_by_thread},
-          was_blocked_by_process{was_blocked_by_process} {}
+          wakeup_tid{wakeup_tid},
+          wakeup_pid{wakeup_pid},
+          wakeup_reason{wakeup_reason} {}
     orbit_grpc_protos::ThreadStateSlice::ThreadState state;
     uint64_t begin_timestamp_ns;
-    // The next two fields are optional, we use them to transfer info between interruptible sleep
-    // state (gray) and runnable state (blue) so we can know which tid and pid caused the thread to
-    // turn into a runnable state if you don't need them just put zeros when using the OpenState
-    // struct.
-    pid_t was_blocked_by_thread = 0u;
-    pid_t was_blocked_by_process = 0u;
+    // The next two fields are optional. We use them to transfer info between interruptible sleep
+    // state (gray) and runnable state (blue), so we can know which tid and pid caused the thread to
+    // turn into a runnable state.
+    pid_t wakeup_tid = orbit_base::kInvalidThreadId;
+    pid_t wakeup_pid = orbit_base::kInvalidProcessId;
+    // the following field explains the relation between this thread and the thread that woke it up.
+    orbit_grpc_protos::ThreadStateSlice_WakeupReason wakeup_reason = orbit_grpc_protos::
+        ThreadStateSlice_WakeupReason::ThreadStateSlice_WakeupReason_kNotApplicable;
   };
 
   absl::flat_hash_map<pid_t, OpenState> tid_open_states_;

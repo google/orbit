@@ -181,8 +181,8 @@ using GenericTracepointPerfEvent = TypedPerfEvent<GenericTracepointPerfEventData
 struct TaskNewtaskPerfEventData {
   char comm[16];
   pid_t new_tid;
-  pid_t was_blocked_by_thread;
-  pid_t was_blocked_by_process;  // Could be zero if we don't have access to the process id.
+  pid_t was_created_by_tid;
+  pid_t was_created_by_pid;
 };
 using TaskNewtaskPerfEvent = TypedPerfEvent<TaskNewtaskPerfEventData>;
 
@@ -203,8 +203,8 @@ using SchedSwitchPerfEvent = TypedPerfEvent<SchedSwitchPerfEventData>;
 
 struct SchedWakeupPerfEventData {
   pid_t woken_tid;
-  pid_t was_blocked_by_thread;
-  pid_t was_blocked_by_process;  // Could be zero if we don't have access to the process id.
+  pid_t was_blocked_by_tid;
+  pid_t was_blocked_by_pid;
 };
 using SchedWakeupPerfEvent = TypedPerfEvent<SchedWakeupPerfEventData>;
 

@@ -17,8 +17,10 @@
 #include "ClientData/CallstackInfo.h"
 #include "ClientData/CallstackType.h"
 #include "ClientData/LinuxAddressInfo.h"
+#include "ClientData/ThreadStateSliceInfo.h"
 #include "ClientProtos/capture_data.pb.h"
 #include "GrpcProtos/Constants.h"
+#include "GrpcProtos/capture.pb.h"
 #include "OrbitBase/Logging.h"
 
 namespace orbit_capture_client {
@@ -550,15 +552,32 @@ void CaptureEventProcessorForListener::ProcessThreadNamesSnapshot(
   }
 }
 
+ThreadStateSliceInfo::WakeupReason WakeupReasonConversion(
+    orbit_grpc_protos::ThreadStateSlice_WakeupReason reason) {
+  switch (reason) {
+    case orbit_grpc_protos::ThreadStateSlice_WakeupReason::
+        ThreadStateSlice_WakeupReason_kNotApplicable:
+      return ThreadStateSliceInfo::kNotApplicable;
+    case orbit_grpc_protos::ThreadStateSlice_WakeupReason::ThreadStateSlice_WakeupReason_kBlocked:
+      return ThreadStateSliceInfo::kBlocked;
+    case orbit_grpc_protos::ThreadStateSlice_WakeupReason::ThreadStateSlice_WakeupReason_kCreated:
+      return ThreadStateSliceInfo::kCreated;
+    default:
+      ORBIT_UNREACHABLE();
+  }
+}
+
 void CaptureEventProcessorForListener::ProcessThreadStateSlice(
     const ThreadStateSlice& thread_state_slice) {
   ThreadStateSliceInfo slice_info{
       thread_state_slice.tid(),
-      thread_state_slice.was_blocked_by_thread(),
-      thread_state_slice.was_blocked_by_process(),
       thread_state_slice.thread_state(),
       thread_state_slice.end_timestamp_ns() - thread_state_slice.duration_ns(),
-      thread_state_slice.end_timestamp_ns()};
+      thread_state_slice.end_timestamp_ns(),
+      thread_state_slice.wakeup_tid(),
+      thread_state_slice.wakeup_pid(),
+      WakeupReasonConversion(thread_state_slice.wakeup_reason()),
+  };
 
   gpu_queue_submission_processor_.UpdateBeginCaptureTime(slice_info.begin_timestamp_ns());
 
