@@ -56,7 +56,7 @@ std::optional<ConnectionTarget> SplitTargetUri(const QString& target_uri) {
   if (url.query().isEmpty()) return std::nullopt;
 
   const QString instance = url.authority() + url.path();
-  const QString process = url.query();
+  const QString process = url.query(QUrl::FullyDecoded);
 
   return ConnectionTarget(process, instance);
 }
