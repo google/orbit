@@ -631,6 +631,61 @@ TEST_F(UnwinderTest, sp_not_in_map) {
   EXPECT_EQ(PROT_READ | PROT_WRITE, frame->map_info->flags());
 }
 
+// Verify that unwinding stops at the requested function.
+TEST_F(UnwinderTest, unwind_stops_at_requested_function) {
+  ElfInterfaceFake::FakePushFunctionData(FunctionData("Frame0", 0));
+  ElfInterfaceFake::FakePushFunctionData(FunctionData("Frame1", 1));
+  ElfInterfaceFake::FakePushFunctionData(FunctionData("Frame2", 2));
+
+  regs_.set_pc(0x1000);
+  regs_.set_sp(0x10000);
+  ElfInterfaceFake::FakePushStepData(StepData(0x1104, 0x10010, false));
+  ElfInterfaceFake::FakePushStepData(StepData(0x1204, 0x10020, false));
+  ElfInterfaceFake::FakePushStepData(StepData(0, 0, true));
+
+  Unwinder unwinder(64, maps_.get(), &regs_, process_memory_);
+  std::map<uint64_t /*function_start*/, uint64_t /*size*/> functions_to_stop_at{{0x1100, 100}};
+  unwinder.Unwind(nullptr, nullptr, &functions_to_stop_at);
+  EXPECT_EQ(ERROR_NONE, unwinder.LastErrorCode());
+  EXPECT_EQ(WARNING_NONE, unwinder.warnings());
+
+  ASSERT_EQ(2U, unwinder.NumFrames());
+
+  auto* frame = &unwinder.frames()[0];
+  EXPECT_EQ(0U, frame->num);
+  EXPECT_EQ(0U, frame->rel_pc);
+  EXPECT_EQ(0x1000U, frame->pc);
+  EXPECT_EQ(0x10000U, frame->sp);
+  EXPECT_EQ("Frame0", frame->function_name);
+  EXPECT_EQ(0U, frame->function_offset);
+  ASSERT_TRUE(frame->map_info != nullptr);
+  EXPECT_EQ("/system/fake/libc.so", frame->map_info->name());
+  EXPECT_EQ("/system/fake/libc.so", frame->map_info->GetFullName());
+  EXPECT_EQ(0U, frame->map_info->object_start_offset());
+  EXPECT_EQ(0U, frame->map_info->offset());
+  EXPECT_EQ(0x1000U, frame->map_info->start());
+  EXPECT_EQ(0x8000U, frame->map_info->end());
+  EXPECT_EQ(0U, frame->map_info->GetLoadBias());
+  EXPECT_EQ(PROT_READ | PROT_WRITE, frame->map_info->flags());
+
+  frame = &unwinder.frames()[1];
+  EXPECT_EQ(1U, frame->num);
+  EXPECT_EQ(0x100U, frame->rel_pc);
+  EXPECT_EQ(0x1100U, frame->pc);
+  EXPECT_EQ(0x10010U, frame->sp);
+  EXPECT_EQ("Frame1", frame->function_name);
+  EXPECT_EQ(1U, frame->function_offset);
+  ASSERT_TRUE(frame->map_info != nullptr);
+  EXPECT_EQ("/system/fake/libc.so", frame->map_info->name());
+  EXPECT_EQ("/system/fake/libc.so", frame->map_info->GetFullName());
+  EXPECT_EQ(0U, frame->map_info->object_start_offset());
+  EXPECT_EQ(0U, frame->map_info->offset());
+  EXPECT_EQ(0x1000U, frame->map_info->start());
+  EXPECT_EQ(0x8000U, frame->map_info->end());
+  EXPECT_EQ(0U, frame->map_info->GetLoadBias());
+  EXPECT_EQ(PROT_READ | PROT_WRITE, frame->map_info->flags());
+}
+
 // Verify PC in a device stops the unwind.
 TEST_F(UnwinderTest, pc_in_device_stops_unwind) {
   ElfInterfaceFake::FakePushFunctionData(FunctionData("Frame0", 0));
