@@ -166,7 +166,7 @@ class CaptureData {
     callstack_data_.AddCallstackEvent(std::move(callstack_event));
   }
 
-  void FilterBrokenCallstacks() { callstack_data_.UpdateCallstackTypeBasedOnMajorityStart(); }
+  void FilterBrokenCallstacks();
 
   void AddUniqueTracepointInfo(uint64_t tracepoint_id, TracepointInfo tracepoint_info) {
     tracepoint_data_.AddUniqueTracepointInfo(tracepoint_id, std::move(tracepoint_info));

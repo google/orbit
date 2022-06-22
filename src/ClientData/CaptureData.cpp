@@ -103,6 +103,19 @@ void CaptureData::OnCaptureComplete() {
   UpdateTimerDurations();
 }
 
+void CaptureData::FilterBrokenCallstacks() {
+  std::map<uint64_t, uint64_t> absolute_address_to_size_of_functions_to_stop_unwinding_at{};
+  for (const orbit_grpc_protos::FunctionToStopUnwindingAt& function_to_stop_unwinding_at :
+       capture_started_.capture_options().functions_to_stop_unwinding_at()) {
+    auto [unused_it, inserted] =
+        absolute_address_to_size_of_functions_to_stop_unwinding_at.insert_or_assign(
+            function_to_stop_unwinding_at.absolute_address(), function_to_stop_unwinding_at.size());
+    ORBIT_CHECK(inserted);
+  }
+  callstack_data_.UpdateCallstackTypeBasedOnMajorityStart(
+      absolute_address_to_size_of_functions_to_stop_unwinding_at);
+}
+
 const InstrumentedFunction* CaptureData::GetInstrumentedFunctionById(uint64_t function_id) const {
   auto instrumented_functions_it = instrumented_functions_.find(function_id);
   if (instrumented_functions_it == instrumented_functions_.end()) {

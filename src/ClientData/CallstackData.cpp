@@ -13,6 +13,7 @@
 #include "ClientData/CallstackEvent.h"
 #include "ClientData/CallstackInfo.h"
 #include "ClientData/CallstackType.h"
+#include "ClientData/ModuleAndFunctionLookup.h"
 #include "OrbitBase/Logging.h"
 
 namespace orbit_client_data {
@@ -130,7 +131,25 @@ std::shared_ptr<CallstackInfo> CallstackData::GetCallstackPtr(uint64_t callstack
   return nullptr;
 }
 
-void CallstackData::UpdateCallstackTypeBasedOnMajorityStart() {
+static inline bool IsPcInFunctionsToStopAt(
+    const std::map<uint64_t, uint64_t>& absolute_address_to_size_of_functions_to_stop_unwinding_at,
+    uint64_t pc) {
+  auto function_it = absolute_address_to_size_of_functions_to_stop_unwinding_at.upper_bound(pc);
+  if (function_it == absolute_address_to_size_of_functions_to_stop_unwinding_at.begin()) {
+    return false;
+  }
+
+  --function_it;
+
+  uint64_t function_start = function_it->first;
+  ORBIT_CHECK(function_start <= pc);
+  uint64_t size = function_it->second;
+  return (pc < function_start + size);
+}
+
+void CallstackData::UpdateCallstackTypeBasedOnMajorityStart(
+    const std::map<uint64_t, uint64_t>&
+        absolute_address_to_size_of_functions_to_stop_unwinding_at) {
   std::lock_guard<std::recursive_mutex> lock(mutex_);
 
   absl::flat_hash_set<uint64_t> callstack_ids_to_filter;
@@ -151,7 +170,10 @@ void CallstackData::UpdateCallstackTypeBasedOnMajorityStart() {
       const auto& frames = callstack.frames();
       ORBIT_CHECK(!frames.empty());
       uint64_t outer_frame = *frames.rbegin();
-      ++count_by_outer_frame[outer_frame];
+      if (!IsPcInFunctionsToStopAt(absolute_address_to_size_of_functions_to_stop_unwinding_at,
+                                   outer_frame)) {
+        ++count_by_outer_frame[outer_frame];
+      }
     }
 
     // Find the outer frame with the most occurrences.
@@ -192,7 +214,10 @@ void CallstackData::UpdateCallstackTypeBasedOnMajorityStart() {
 
       const auto& frames = unique_callstacks_.at(event.callstack_id())->frames();
       ORBIT_CHECK(!frames.empty());
-      if (*frames.rbegin() != majority_outer_frame) {
+      uint64_t outermost_frame = *frames.rbegin();
+      if (outermost_frame != majority_outer_frame &&
+          !IsPcInFunctionsToStopAt(absolute_address_to_size_of_functions_to_stop_unwinding_at,
+                                   outermost_frame)) {
         callstack_ids_to_filter.insert(event.callstack_id());
       }
     }
