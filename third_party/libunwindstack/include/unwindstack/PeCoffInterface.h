@@ -155,6 +155,7 @@ class PeCoffInterface {
   virtual uint64_t GetRelPc(uint64_t pc, uint64_t map_start, uint64_t map_object_offset) = 0;
   virtual bool GetTextRange(uint64_t* addr, uint64_t* size) const = 0;
   virtual uint64_t GetTextOffsetInFile() const = 0;
+  virtual uint64_t GetSizeOfImage() const = 0;
   virtual bool Step(uint64_t rel_pc, uint64_t pc_adjustment, Regs* regs, Memory* process_memory,
                     bool* finished, bool* is_signal_frame) = 0;
 };
@@ -178,6 +179,7 @@ class PeCoffInterfaceImpl : public PeCoffInterface {
   uint64_t GetRelPc(uint64_t pc, uint64_t map_start, uint64_t map_object_offset) override;
   bool GetTextRange(uint64_t* addr, uint64_t* size) const override;
   uint64_t GetTextOffsetInFile() const override;
+  uint64_t GetSizeOfImage() const override;
   bool Step(uint64_t rel_pc, uint64_t pc_adjustment, Regs* regs, Memory* process_memory,
             bool* finished, bool* is_signal_frame) override;
 

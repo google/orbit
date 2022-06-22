@@ -118,6 +118,13 @@ uint64_t PeCoff::GetTextOffsetInFile() const {
   return interface_->GetTextOffsetInFile();
 }
 
+uint64_t PeCoff::GetSizeOfImage() const {
+  if (!valid_) {
+    return 0;
+  }
+  return interface_->GetSizeOfImage();
+}
+
 std::string PeCoff::GetBuildID() {
   // Not implemented, don't use.
   CHECK(false);

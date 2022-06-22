@@ -223,20 +223,20 @@ uint64_t PeCoffFake<PeCoffInterfaceType>::SetOptionalHeaderAtOffset(uint64_t off
   // image_base
   offset = SetMax64(offset, kLoadBiasFake, sizeof(typename PeCoffInterfaceType::AddressType));
 
-  offset = SetData32(offset, 0x1000);  // sect_alignment
-  offset = SetData32(offset, 0x200);   // file_alignment
-  offset = SetData16(offset, 0);       // major_os_system_version
-  offset = SetData16(offset, 0);       // minor_os_system_version
-  offset = SetData16(offset, 0);       // major_image_version
-  offset = SetData16(offset, 0);       // minor_image_version
-  offset = SetData16(offset, 0);       // major_subsystem_version
-  offset = SetData16(offset, 0);       // minor_subsystem_version
-  offset = SetData32(offset, 0);       // reserved1
-  offset = SetData32(offset, 0);       // image_size
-  offset = SetData32(offset, 0);       // header_size
-  offset = SetData32(offset, 0);       // checksum
-  offset = SetData16(offset, 0);       // subsystem
-  offset = SetData16(offset, 0);       // dll_flags
+  offset = SetData32(offset, 0x1000);        // sect_alignment
+  offset = SetData32(offset, 0x200);         // file_alignment
+  offset = SetData16(offset, 0);             // major_os_system_version
+  offset = SetData16(offset, 0);             // minor_os_system_version
+  offset = SetData16(offset, 0);             // major_image_version
+  offset = SetData16(offset, 0);             // minor_image_version
+  offset = SetData16(offset, 0);             // major_subsystem_version
+  offset = SetData16(offset, 0);             // minor_subsystem_version
+  offset = SetData32(offset, 0);             // reserved1
+  offset = SetData32(offset, kSizeOfImage);  // image_size
+  offset = SetData32(offset, 0);             // header_size
+  offset = SetData32(offset, 0);             // checksum
+  offset = SetData16(offset, 0);             // subsystem
+  offset = SetData16(offset, 0);             // dll_flags
 
   // stack_reserve_size
   offset = SetMax64(offset, 0, sizeof(typename PeCoffInterfaceType::AddressType));
