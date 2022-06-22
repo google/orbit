@@ -61,7 +61,8 @@ class LibunwindstackUnwinder {
   virtual std::optional<bool> HasFramePointerSet(uint64_t instruction_pointer, pid_t pid,
                                                  unwindstack::Maps* maps) = 0;
 
-  static std::unique_ptr<LibunwindstackUnwinder> Create();
+  static std::unique_ptr<LibunwindstackUnwinder> Create(
+      const std::map<uint64_t, uint64_t>* absolute_address_to_size_of_functions_to_stop_at);
   static std::string LibunwindstackErrorString(unwindstack::ErrorCode error_code);
 
  protected:

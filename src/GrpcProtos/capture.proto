@@ -39,7 +39,7 @@ message ApiFunction {
   uint64 api_version = 5;
 }
 
-// NextId: 19
+// NextId: 20
 message CaptureOptions {
   reserved 17;
 
@@ -64,6 +64,7 @@ message CaptureOptions {
   DynamicInstrumentationMethod dynamic_instrumentation_method = 18;
 
   repeated InstrumentedFunction instrumented_functions = 5;
+  map<uint64, uint64> absolute_address_to_size_of_functions_to_stop_at = 19;
 
   bool trace_thread_state = 8;
 
