@@ -4,6 +4,9 @@
 
 #include <gtest/gtest.h>
 
+#include <memory>
+#include <mutex>
+#include <tuple>
 #include <utility>
 #include <vector>
 
@@ -11,6 +14,11 @@
 
 namespace {
 struct TestTag {};
+
+struct Integer {
+  [[nodiscard]] Integer Add(const Integer& other) const { return {value + other.value}; }
+  int value{};
+};
 
 }  // namespace
 
@@ -38,6 +46,12 @@ TEST(TypedefTest, CanInstantiate) {
 
   Wrapper<std::string> wrapper_of_string_literal("foo");
   EXPECT_EQ(*wrapper_of_string_literal, "foo");
+
+  Wrapper<std::unique_ptr<int>> wrapper_of_unique_ptr(std::make_unique<int>(kConstInt));
+  EXPECT_EQ(**wrapper_of_unique_ptr, kConstInt);
+
+  Wrapper<std::mutex> wrapper_of_mutex(std::in_place);  // test it compiles
+  std::ignore = wrapper_of_mutex;
 }
 
 TEST(TypedefTest, CallIsCorrect) {
@@ -51,6 +65,14 @@ TEST(TypedefTest, CallIsCorrect) {
   {
     auto add = [](int i, int j) { return i + j; };
     const Wrapper<int> sum_wrapped = Apply(add, kFirstWrapped, kSecondWrapped);
+    EXPECT_EQ(*sum_wrapped, kSum);
+  }
+
+  {
+    auto add = [](const std::unique_ptr<int>& i, const std::unique_ptr<int>& j) { return *i + *j; };
+    Wrapper<std::unique_ptr<int>> first(std::make_unique<int>(kFirst));
+    Wrapper<std::unique_ptr<int>> second(std::make_unique<int>(kFirst));
+    const Wrapper<int> sum_wrapped = Apply(add, first, second);
     EXPECT_EQ(*sum_wrapped, kSum);
   }
 
@@ -71,6 +93,13 @@ TEST(TypedefTest, CallIsCorrect) {
     const Wrapper<void> sum_wrapped = Apply(returns_void, kFirstWrapped);
     std::ignore = sum_wrapped;
     EXPECT_TRUE(was_called);
+  }
+
+  {
+    Wrapper<Integer> first(Integer{kFirst});
+    Wrapper<Integer> second(Integer{kSecond});
+    Wrapper<Integer> sum_wrapped = Apply(&Integer::Add, first, second);
+    EXPECT_EQ(sum_wrapped->value, kSum);
   }
 }
 
