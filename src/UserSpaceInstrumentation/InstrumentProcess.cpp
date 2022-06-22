@@ -10,13 +10,18 @@
 #include <linux/seccomp.h>
 #include <unistd.h>
 
+#include <cstdint>
 #include <filesystem>
 #include <mutex>
 #include <optional>
+#include <string>
+#include <thread>
 #include <vector>
 
 #include "AccessTraceesMemory.h"
 #include "AllocateInTracee.h"
+#include "ExecuteMachineCode.h"
+#include "MachineCode.h"
 #include "ObjectUtils/Address.h"
 #include "ObjectUtils/LinuxMap.h"
 #include "OrbitBase/ExecutablePath.h"
@@ -24,6 +29,7 @@
 #include "OrbitBase/GetProcessIds.h"
 #include "OrbitBase/Logging.h"
 #include "OrbitBase/Profiling.h"
+#include "OrbitBase/Result.h"
 #include "OrbitBase/ThreadUtils.h"
 #include "OrbitBase/UniqueResource.h"
 #include "ReadSeccompModeOfThread.h"
@@ -101,6 +107,124 @@ bool IsBlocklisted(std::string_view function_name) {
                                                            "__memalign",
                                                            "_mid_memalign"};
   return kBlocklist.contains(function_name);
+}
+
+// MachineCodeForCloneCall creates the code to spawn a new thread inside the target process by using
+// the clone syscall. This thread is used to execute the initialization code inside the target.
+// Note that calling the result of the clone call a "thread" is a bit of a misnomer: We
+// do not create a new data structure for thread local storage but use the one of the thread we
+// halted.
+ErrorMessageOr<MachineCode> MachineCodeForCloneCall(pid_t pid, void* library_handle,
+                                                    uint64_t top_of_stack) {
+  constexpr uint64_t kCloneFlags =
+      CLONE_FILES | CLONE_FS | CLONE_IO | CLONE_SIGHAND | CLONE_SYSVSEM | CLONE_THREAD | CLONE_VM;
+  constexpr uint32_t kSyscallNumberClone = 0x38;
+  constexpr uint32_t kSyscallNumberExit = 0x3c;
+  constexpr const char* kInitializeInstrumentationFunctionName = "InitializeInstrumentation";
+  OUTCOME_TRY(void* initialize_instrumentation_function_address,
+              DlsymInTracee(pid, library_handle, kInitializeInstrumentationFunctionName));
+  MachineCode code;
+  code.AppendBytes({0x48, 0xbf})
+      .AppendImmediate64(kCloneFlags)  // mov kCloneFlags, rdi
+      .AppendBytes({0x48, 0xbe})
+      .AppendImmediate64(top_of_stack)  // mov top_of_stack, rsi
+      .AppendBytes({0x48, 0xba})
+      .AppendImmediate64(0x0)  // mov parent_tid, rdx
+      .AppendBytes({0x49, 0xba})
+      .AppendImmediate64(0x0)  // mov child_tid, r10
+      .AppendBytes({0x49, 0xb8})
+      .AppendImmediate64(0x0)           // mov tls, r8
+      .AppendBytes({0x48, 0xc7, 0xc0})  // mov kSyscallNumberClone, rax
+      .AppendImmediate32(kSyscallNumberClone)
+      .AppendBytes({0x0f, 0x05})                          // syscall (clone)
+      .AppendBytes({0x48, 0x85, 0xc0})                    // testq	rax, rax
+      .AppendBytes({0x0f, 0x84, 0x01, 0x00, 0x00, 0x00})  // jz 0x01(rip)
+      .AppendBytes({0xcc})                                // int3
+      .AppendBytes({0x48, 0xb8})
+      .AppendImmediate64(absl::bit_cast<uint64_t>(
+          initialize_instrumentation_function_address))  // mov initialize_instrumentation, rax
+      .AppendBytes({0xff, 0xd0})                         // call rax
+      .AppendBytes({0x48, 0xc7, 0xc7, 0x00, 0x00, 0x00, 0x00})  // mov 0x0, rdi
+      .AppendBytes({0x48, 0xc7, 0xc0})                          // mov kSyscallNumberExit, rax
+      .AppendImmediate32(kSyscallNumberExit)
+      .AppendBytes({0x0f, 0x05});  // syscall (exit)
+  return code;
+}
+
+ErrorMessageOr<void> WaitForThreadToExit(pid_t pid, pid_t tid) {
+  // In all tests the thread exited in one to three rounds of waiting for one millisecond. To make
+  // sure that we never stall OrbitService here we return an error when the thread requires an
+  // excessive amount of time to exit.
+  constexpr int kNumberOfRetries = 3000;
+  int count = 0;
+  auto tids = orbit_base::GetTidsOfProcess(pid);
+  while (std::find(tids.begin(), tids.end(), tid) != tids.end()) {
+    if (count++ > kNumberOfRetries) {
+      return ErrorMessage("Initilization thread injected into target process failed to exit.");
+    }
+    std::this_thread::sleep_for(std::chrono::milliseconds{1});
+    tids = orbit_base::GetTidsOfProcess(pid);
+  }
+  return outcome::success();
+}
+
+// These are the names of the threads that we will be spawned when
+// liborbituserspaceinstrumentation.so is injected into the target process.
+std::multiset<std::string> GetExpectedOrbitThreadNames() {
+  static const std::multiset<std::string> kThreadNames{"default-executo", "resolver-execut",
+                                                       "grpc_global_tim", "grpc_global_tim",
+                                                       "ConnectRcvCmds",  "ForwarderThread"};
+  return kThreadNames;
+}
+
+ErrorMessageOr<std::vector<pid_t>> GetNewOrbitThreads(
+    pid_t pid, const absl::flat_hash_set<pid_t>& tids_before_injection) {
+  // Waiting for one second was enough to have all the threads being spawned every single time
+  // when running in the unit tests. Reducing the wait time to 900 ms lead to multiple rounds in the
+  // loop.
+  // However, tests with real target processes show that the threads usually spawn in ~90 ms with
+  // very little variance. Presumably this is due to some initilization in grpc that already had
+  // happened in the real target processes.
+  // We choose a three second (300 x 10 ms) timeout and query the existing threads every 10 ms.
+  constexpr int kNumberOfRetries = 300;
+  std::chrono::milliseconds kWaitingPeriod{10};
+  std::vector<pid_t> orbit_threads;
+  std::multiset<std::string> orbit_threads_names;
+  int count = 0;
+  while (orbit_threads_names != GetExpectedOrbitThreadNames()) {
+    if (count++ >= kNumberOfRetries) {
+      return ErrorMessage(
+          "Unable to find threads spawned by library injected for user space instrumentation.");
+    }
+    std::this_thread::sleep_for(kWaitingPeriod);
+    orbit_threads.clear();
+    orbit_threads_names.clear();
+    const auto tids = orbit_base::GetTidsOfProcess(pid);
+    for (const auto tid : tids) {
+      if (tids_before_injection.contains(tid)) {
+        continue;
+      }
+      const std::string tid_name = orbit_base::GetThreadName(tid);
+      if (GetExpectedOrbitThreadNames().count(tid_name) == 0) {
+        continue;
+      }
+      orbit_threads.push_back(tid);
+      orbit_threads_names.insert(tid_name);
+    }
+  }
+  return orbit_threads;
+}
+
+ErrorMessageOr<void> SetOrbitThreadsInTarget(pid_t pid, void* library_handle,
+                                             const std::vector<pid_t>& orbit_threads) {
+  ORBIT_CHECK(orbit_threads.size() == GetExpectedOrbitThreadNames().size());
+  constexpr const char* kSetOrbitThreadsFunctionName = "SetOrbitThreads";
+  OUTCOME_TRY(void* set_orbit_threads_function_address,
+              DlsymInTracee(pid, library_handle, kSetOrbitThreadsFunctionName));
+  OUTCOME_TRY(ExecuteInProcess(pid, set_orbit_threads_function_address, orbit_threads[0],
+                               orbit_threads[1], orbit_threads[2], orbit_threads[3],
+                               orbit_threads[4], orbit_threads[5]));
+  return outcome::success();
 }
 
 }  // namespace
@@ -213,11 +337,11 @@ ErrorMessageOr<std::unique_ptr<InstrumentedProcess>> InstrumentedProcess::Create
   const pid_t pid = orbit_base::ToNativeProcessId(capture_options.pid());
   process->pid_ = pid;
   OUTCOME_TRY(AttachAndStopProcess(pid));
-  orbit_base::unique_resource detach_on_exit{pid, [](int32_t pid) {
-                                               if (DetachAndContinueProcess(pid).has_error()) {
-                                                 ORBIT_ERROR("Detaching from %i", pid);
-                                               }
-                                             }};
+  orbit_base::unique_resource detach_on_exit_1{pid, [](int32_t pid) {
+                                                 if (DetachAndContinueProcess(pid).has_error()) {
+                                                   ORBIT_ERROR("Detaching from %i", pid);
+                                                 }
+                                               }};
 
   if (AnyThreadIsInStrictSeccompMode(pid)) {
     return ErrorMessage("At least one thread of the target process is in strict seccomp mode.");
@@ -244,15 +368,15 @@ ErrorMessageOr<std::unique_ptr<InstrumentedProcess>> InstrumentedProcess::Create
   constexpr const char* kStartNewCaptureFunctionName = "StartNewCapture";
   constexpr const char* kEntryPayloadFunctionName = "EntryPayload";
   constexpr const char* kExitPayloadFunctionName = "ExitPayload";
-  OUTCOME_TRY(auto&& start_new_capture_function_address,
+  OUTCOME_TRY(void* start_new_capture_function_address,
               DlsymInTracee(pid, library_handle, kStartNewCaptureFunctionName));
   process->start_new_capture_function_address_ =
       absl::bit_cast<uint64_t>(start_new_capture_function_address);
-  OUTCOME_TRY(auto&& entry_payload_function_address,
+  OUTCOME_TRY(void* entry_payload_function_address,
               DlsymInTracee(pid, library_handle, kEntryPayloadFunctionName));
   process->entry_payload_function_address_ =
       absl::bit_cast<uint64_t>(entry_payload_function_address);
-  OUTCOME_TRY(auto&& exit_payload_function_address,
+  OUTCOME_TRY(void* exit_payload_function_address,
               DlsymInTracee(pid, library_handle, kExitPayloadFunctionName));
   process->exit_payload_function_address_ = absl::bit_cast<uint64_t>(exit_payload_function_address);
 
@@ -263,6 +387,41 @@ ErrorMessageOr<std::unique_ptr<InstrumentedProcess>> InstrumentedProcess::Create
   auto result = CreateReturnTrampoline(pid, process->exit_payload_function_address_,
                                        process->return_trampoline_address_);
   OUTCOME_TRY(return_trampoline_memory->EnsureMemoryExecutable());
+
+  // Keep track of the threads in the target process before we initialize the user space
+  // instrumentation library.
+  const auto tids_as_vector = orbit_base::GetTidsOfProcess(pid);
+  const absl::flat_hash_set<pid_t> tids_before_injection(tids_as_vector.begin(),
+                                                         tids_as_vector.end());
+
+  // Call initialization code in a new thread.
+  constexpr uint64_t kStackSize = 8ULL * 1024ULL * 1024ULL;
+  OUTCOME_TRY(auto&& thread_stack_memory, MemoryInTracee::Create(pid, 0, kStackSize));
+  const uint64_t top_of_stack = thread_stack_memory->GetAddress() + kStackSize;
+  OUTCOME_TRY(auto&& code, MachineCodeForCloneCall(pid, library_handle, top_of_stack));
+  const uint64_t code_size = code.GetResultAsVector().size();
+  OUTCOME_TRY(auto&& code_memory, MemoryInTracee::Create(pid, 0, code_size));
+  OUTCOME_TRY(auto&& init_thread_tid, ExecuteMachineCode(*code_memory, code));
+
+  // Manually detach such that we can wait for the initilization to finish and detect the newly
+  // spawned threads.
+  detach_on_exit_1.release();
+  if (DetachAndContinueProcess(pid).has_error()) {
+    return ErrorMessage(absl::StrFormat("Unable to detach from process %i", pid));
+  }
+  OUTCOME_TRY(WaitForThreadToExit(pid, init_thread_tid));
+  OUTCOME_TRY(auto&& orbit_threads, GetNewOrbitThreads(pid, tids_before_injection));
+
+  // Attach again in order to set the newly created thread ids and get rid of the allocated memory.
+  OUTCOME_TRY(AttachAndStopProcess(pid));
+  orbit_base::unique_resource detach_on_exit_2{pid, [](int32_t pid) {
+                                                 if (DetachAndContinueProcess(pid).has_error()) {
+                                                   ORBIT_ERROR("Detaching from %i", pid);
+                                                 }
+                                               }};
+  OUTCOME_TRY(SetOrbitThreadsInTarget(pid, library_handle, orbit_threads));
+  OUTCOME_TRY(thread_stack_memory->Free());
+  OUTCOME_TRY(code_memory->Free());
 
   return process;
 }
