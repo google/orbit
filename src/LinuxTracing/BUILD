@@ -36,7 +36,6 @@ orbit_cc_library(
 
 orbit_cc_test(
     name = "LinuxTracingTests",
-    exclude = ["ThreadDepedencyTestApp.cpp"],
     deps = [
         ":LinuxTracing",
         "//src/GrpcProtos:capture_cc_proto",
