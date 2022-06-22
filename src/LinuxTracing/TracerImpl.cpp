@@ -181,7 +181,8 @@ void TracerImpl::InitUprobesEventVisitor() {
   uprobes_unwinding_visitor_ = std::make_unique<UprobesUnwindingVisitor>(
       listener_, &function_call_manager_, &return_address_manager_.value(), maps_.get(),
       unwinder_.get(), leaf_function_call_manager_.get(),
-      user_space_instrumentation_addresses_.get(), &absolute_address_to_size_of_functions_to_stop_at_);
+      user_space_instrumentation_addresses_.get(),
+      &absolute_address_to_size_of_functions_to_stop_at_);
   uprobes_unwinding_visitor_->SetUnwindErrorsAndDiscardedSamplesCounters(
       &stats_.unwind_error_count, &stats_.samples_in_uretprobes_count);
   event_processor_.AddVisitor(uprobes_unwinding_visitor_.get());
