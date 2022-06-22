@@ -552,18 +552,19 @@ void CaptureEventProcessorForListener::ProcessThreadNamesSnapshot(
   }
 }
 
-ThreadStateSliceInfo::WakeupReason WakeupReasonConversion(
-    orbit_grpc_protos::ThreadStateSlice_WakeupReason reason) {
+[[nodiscard]] static ThreadStateSliceInfo::WakeupReason toWakeupReason(
+    orbit_grpc_protos::ThreadStateSlice::WakeupReason reason) {
   switch (reason) {
-    case orbit_grpc_protos::ThreadStateSlice_WakeupReason::
+    case orbit_grpc_protos::ThreadStateSlice::WakeupReason::
         ThreadStateSlice_WakeupReason_kNotApplicable:
-      return ThreadStateSliceInfo::kNotApplicable;
-    case orbit_grpc_protos::ThreadStateSlice_WakeupReason::ThreadStateSlice_WakeupReason_kBlocked:
-      return ThreadStateSliceInfo::kBlocked;
-    case orbit_grpc_protos::ThreadStateSlice_WakeupReason::ThreadStateSlice_WakeupReason_kCreated:
-      return ThreadStateSliceInfo::kCreated;
+      return ThreadStateSliceInfo::WakeupReason::kNotApplicable;
+    case orbit_grpc_protos::ThreadStateSlice::WakeupReason::
+        ThreadStateSlice_WakeupReason_kUnblocked:
+      return ThreadStateSliceInfo::WakeupReason::kUnblocked;
+    case orbit_grpc_protos::ThreadStateSlice::WakeupReason::ThreadStateSlice_WakeupReason_kCreated:
+      return ThreadStateSliceInfo::WakeupReason::kCreated;
     default:
-      ORBIT_UNREACHABLE();
+      return ThreadStateSliceInfo::WakeupReason::kNotApplicable;
   }
 }
 
@@ -576,7 +577,7 @@ void CaptureEventProcessorForListener::ProcessThreadStateSlice(
       thread_state_slice.end_timestamp_ns(),
       thread_state_slice.wakeup_tid(),
       thread_state_slice.wakeup_pid(),
-      WakeupReasonConversion(thread_state_slice.wakeup_reason()),
+      toWakeupReason(thread_state_slice.wakeup_reason()),
   };
 
   gpu_queue_submission_processor_.UpdateBeginCaptureTime(slice_info.begin_timestamp_ns());

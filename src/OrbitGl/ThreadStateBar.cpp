@@ -96,16 +96,16 @@ static Color GetThreadStateColor(ThreadStateSlice::ThreadState state) {
   }
 }
 
-static std::string GetWakeupReason(ThreadStateSliceInfo::WakeupReason reason) {
+[[nodiscard]] static std::string GetWakeupReason(ThreadStateSliceInfo::WakeupReason reason) {
   switch (reason) {
-    case ThreadStateSliceInfo::kNotApplicable:
+    case ThreadStateSliceInfo::WakeupReason::kNotApplicable:
       return "Not Applicable";
-    case ThreadStateSliceInfo::kBlocked:
+    case ThreadStateSliceInfo::WakeupReason::kUnblocked:
       return "Blocked";
-    case ThreadStateSliceInfo::kCreated:
+    case ThreadStateSliceInfo::WakeupReason::kCreated:
       return "Created";
     default:
-      ORBIT_UNREACHABLE();
+      return "Not Applicable";
   }
 }
 

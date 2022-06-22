@@ -65,8 +65,8 @@ class ThreadStateManager {
     OpenState(orbit_grpc_protos::ThreadStateSlice::ThreadState state, uint64_t begin_timestamp_ns,
               pid_t wakeup_tid = orbit_base::kInvalidThreadId,
               pid_t wakeup_pid = orbit_base::kInvalidProcessId,
-              orbit_grpc_protos::ThreadStateSlice_WakeupReason wakeup_reason = orbit_grpc_protos::
-                  ThreadStateSlice_WakeupReason::ThreadStateSlice_WakeupReason_kNotApplicable)
+              orbit_grpc_protos::ThreadStateSlice::WakeupReason wakeup_reason = orbit_grpc_protos::
+                  ThreadStateSlice::WakeupReason::ThreadStateSlice_WakeupReason_kNotApplicable)
         : state{state},
           begin_timestamp_ns{begin_timestamp_ns},
           wakeup_tid{wakeup_tid},
@@ -80,7 +80,7 @@ class ThreadStateManager {
     pid_t wakeup_tid = orbit_base::kInvalidThreadId;
     pid_t wakeup_pid = orbit_base::kInvalidProcessId;
     // the following field explains the relation between this thread and the thread that woke it up.
-    orbit_grpc_protos::ThreadStateSlice_WakeupReason wakeup_reason = orbit_grpc_protos::
+    orbit_grpc_protos::ThreadStateSlice::WakeupReason wakeup_reason = orbit_grpc_protos::
         ThreadStateSlice_WakeupReason::ThreadStateSlice_WakeupReason_kNotApplicable;
   };
 

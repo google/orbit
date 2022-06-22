@@ -549,7 +549,7 @@ message ThreadStateSlice {
   uint32 wakeup_pid = 8;
   enum WakeupReason {
     kNotApplicable = 0;
-    kBlocked = 1;
+    kUnblocked = 1;
     kCreated = 2;
   }
   WakeupReason wakeup_reason = 9;
