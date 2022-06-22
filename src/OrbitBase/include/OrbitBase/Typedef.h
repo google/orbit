@@ -48,22 +48,22 @@ class Typedef {
   constexpr Typedef(Typedef<Tag, U>&& other) : value_(std::move(other.value_)) {}
 
   template <typename U, typename = EnableIfUIsNotConvertibleToT<T, U>, typename = void>
-  explicit Typedef(const Typedef<Tag, U>& other) : value_(other.value_) {}
+  constexpr explicit Typedef(const Typedef<Tag, U>& other) : value_(other.value_) {}
 
   template <typename U, typename = EnableIfUIsNotConvertibleToT<T, U>, typename = void>
-  explicit Typedef(Typedef<Tag, U>&& other) : value_(std::move(other.value_)) {}
+  constexpr explicit Typedef(Typedef<Tag, U>&& other) : value_(std::move(other.value_)) {}
 
-  Typedef& operator=(Typedef const&) = default;
-  Typedef& operator=(Typedef&&) = default;
+  constexpr Typedef& operator=(Typedef const&) = default;
+  constexpr Typedef& operator=(Typedef&&) = default;
 
   template <typename U, typename = EnableIfUConvertibleToT<T, U>>
-  Typedef& operator=(const Typedef<Tag, U>& other) {
+  constexpr Typedef& operator=(const Typedef<Tag, U>& other) {
     value_ = other.value_;
     return *this;
   }
 
   template <typename U, typename = EnableIfUConvertibleToT<T, U>>
-  Typedef& operator=(Typedef<Tag, U>&& other) {
+  constexpr Typedef& operator=(Typedef<Tag, U>&& other) {
     value_ = std::move(other.value_);
     return *this;
   }
