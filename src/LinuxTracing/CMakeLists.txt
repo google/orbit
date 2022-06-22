@@ -97,11 +97,4 @@ target_link_libraries(LinuxTracingTests PRIVATE
 
 register_test(LinuxTracingTests)
 
-add_executable(ThreadDepedencyTestApp)
-
-target_sources(ThreadDepedencyTestApp PRIVATE
-        ThreadDepedencyTestApp.cpp)
-
-target_link_libraries(ThreadDepedencyTestApp PRIVATE
-        OrbitBase)
         
