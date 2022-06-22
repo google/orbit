@@ -889,7 +889,7 @@ TEST_F(UprobesUnwindingVisitorTest,
 }
 
 TEST_F(UprobesUnwindingVisitorTest,
-       VisitSingleFrameStackSampleOutsideAnyFunctionToStopSendsUnwindingErrorAndAddressInfos) {
+       VisitSingleFrameStackSampleOutsideOfAnyFunctionToStopAtSendsUnwindingErrorAndAddressInfos) {
   StackSamplePerfEvent event = BuildFakeStackSamplePerfEvent();
 
   absolute_address_to_size_of_functions_to_stop_at_[kTargetAddress2] = 100;
