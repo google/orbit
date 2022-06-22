@@ -18,13 +18,14 @@
 
 #include <memory>
 #include <unordered_map>
+#include <utility>
 
 namespace unwindstack {
 
 class PeCoffUnwindInfosImpl : public PeCoffUnwindInfos {
  public:
-  explicit PeCoffUnwindInfosImpl(Memory* memory, const std::vector<Section>& sections)
-      : pe_coff_memory_(memory), sections_(sections) {}
+  explicit PeCoffUnwindInfosImpl(Memory* memory, std::vector<Section> sections)
+      : pe_coff_memory_(memory), sections_(std::move(sections)) {}
 
   bool GetUnwindInfo(uint64_t unwind_info_file_offset, UnwindInfo* unwind_info) override;
 
@@ -40,8 +41,8 @@ class PeCoffUnwindInfosImpl : public PeCoffUnwindInfos {
 };
 
 std::unique_ptr<PeCoffUnwindInfos> CreatePeCoffUnwindInfos(Memory* memory,
-                                                           const std::vector<Section>& sections) {
-  return std::make_unique<PeCoffUnwindInfosImpl>(memory, sections);
+                                                           std::vector<Section> sections) {
+  return std::make_unique<PeCoffUnwindInfosImpl>(memory, std::move(sections));
 }
 
 bool PeCoffUnwindInfosImpl::MapFromRVAToFileOffset(uint64_t rva, uint64_t* file_offset) {

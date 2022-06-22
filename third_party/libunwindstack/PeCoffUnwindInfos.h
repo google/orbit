@@ -78,7 +78,7 @@ class PeCoffUnwindInfos {
 };
 
 std::unique_ptr<PeCoffUnwindInfos> CreatePeCoffUnwindInfos(Memory* object_file_memory,
-                                                           const std::vector<Section>& sections);
+                                                           std::vector<Section> sections);
 
 }  // namespace unwindstack
 

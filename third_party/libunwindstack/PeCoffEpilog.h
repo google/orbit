@@ -22,6 +22,7 @@
 #include <unwindstack/Error.h>
 #include <unwindstack/Memory.h>
 #include <unwindstack/Regs.h>
+#include "unwindstack/PeCoffInterface.h"
 
 namespace unwindstack {
 
@@ -51,8 +52,7 @@ class PeCoffEpilog {
 };
 
 std::unique_ptr<PeCoffEpilog> CreatePeCoffEpilog(Memory* object_file_memory,
-                                                 uint64_t text_section_vmaddr,
-                                                 uint64_t text_section_offset);
+                                                 std::vector<Section> sections);
 
 }  // namespace unwindstack
 

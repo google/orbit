@@ -70,8 +70,7 @@ class MockPeCoffUnwindInfoEvaluator : public PeCoffUnwindInfoEvaluator {
 
 class TestPeCoffUnwindInfoUnwinderX86_64 : public PeCoffUnwindInfoUnwinderX86_64 {
  public:
-  TestPeCoffUnwindInfoUnwinderX86_64()
-      : PeCoffUnwindInfoUnwinderX86_64(nullptr, 0, 0, 0, 0, 0, {}) {}
+  TestPeCoffUnwindInfoUnwinderX86_64() : PeCoffUnwindInfoUnwinderX86_64(nullptr, 0, 0, 0, {}) {}
 
   void SetFakeRuntimeFuntions(std::unique_ptr<MockPeCoffRuntimeFunctions> runtime_functions) {
     this->runtime_functions_ = std::move(runtime_functions);

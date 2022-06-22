@@ -25,17 +25,15 @@
 
 #include <unwindstack/MachineX86_64.h>
 #include "Check.h"
+#include "unwindstack/PeCoffInterface.h"
 
 namespace unwindstack {
 
 class PeCoffEpilogImpl : public PeCoffEpilog {
  public:
-  PeCoffEpilogImpl(Memory* object_file_memory, uint64_t text_section_vmaddr,
-                   uint64_t text_section_offset)
-      : file_memory_(object_file_memory),
-        text_section_vmaddr_(text_section_vmaddr),
-        text_section_offset_(text_section_offset) {}
-  ~PeCoffEpilogImpl();
+  PeCoffEpilogImpl(Memory* object_file_memory, std::vector<Section> sections)
+      : file_memory_(object_file_memory), sections_(std::move(sections)) {}
+  ~PeCoffEpilogImpl() override;
 
   // Needs to be called before one can use DetectAndHandleEpilog.
   bool Init() override;
@@ -67,9 +65,10 @@ class PeCoffEpilogImpl : public PeCoffEpilog {
   bool ValidateJumpInstruction();
   bool HandleJumpInstruction(Memory* process_memory, RegsImpl<uint64_t>* registers);
 
+  bool MapFromRvaToFileOffset(uint64_t rva, uint64_t* file_offset);
+
   Memory* file_memory_;
-  uint64_t text_section_vmaddr_ = 0;
-  uint64_t text_section_offset_ = 0;
+  std::vector<Section> sections_;
 
   bool capstone_initialized_ = false;
   csh capstone_handle_ = 0;
@@ -77,10 +76,8 @@ class PeCoffEpilogImpl : public PeCoffEpilog {
 };
 
 std::unique_ptr<PeCoffEpilog> CreatePeCoffEpilog(Memory* object_file_memory,
-                                                 uint64_t text_section_vmaddr,
-                                                 uint64_t text_section_offset) {
-  return std::make_unique<PeCoffEpilogImpl>(object_file_memory, text_section_vmaddr,
-                                            text_section_offset);
+                                                 std::vector<Section> sections) {
+  return std::make_unique<PeCoffEpilogImpl>(object_file_memory, std::move(sections));
 }
 
 PeCoffEpilogImpl::~PeCoffEpilogImpl() {
@@ -106,6 +103,17 @@ bool PeCoffEpilogImpl::Init() {
   capstone_instruction_ = cs_malloc(capstone_handle_);
   capstone_initialized_ = true;
   return true;
+}
+
+bool PeCoffEpilogImpl::MapFromRvaToFileOffset(uint64_t rva, uint64_t* file_offset) {
+  for (const Section& section : sections_) {
+    if (section.vmaddr <= rva && rva < section.vmaddr + section.vmsize) {
+      *file_offset = rva - section.vmaddr + section.offset;
+      return true;
+    }
+  }
+  last_error_.code = ERROR_INVALID_COFF;
+  return false;
 }
 
 static uint16_t MapCapstoneToUnwindstackRegister(x86_reg capstone_reg) {
@@ -394,25 +402,26 @@ bool PeCoffEpilogImpl::DetectAndHandleEpilog(uint64_t function_start_address,
     last_error_.code = ERROR_INVALID_COFF;
     return false;
   }
-  if (function_start_address < text_section_vmaddr_) {
+
+  const uint64_t current_address = function_start_address + current_offset_from_start_of_function;
+
+  uint64_t start_offset{};
+  if (!MapFromRvaToFileOffset(current_address, &start_offset)) {
     last_error_.code = ERROR_INVALID_COFF;
     return false;
   }
-  size_t code_size =
-      function_end_address - (function_start_address + current_offset_from_start_of_function);
+
+  size_t code_size = function_end_address - current_address;
   std::vector<uint8_t> code;
   code.resize(code_size);
-  // Map from relative virtual address (RVA) to file offset.
-  uint64_t start_offset = function_start_address + current_offset_from_start_of_function -
-                          text_section_vmaddr_ + text_section_offset_;
-  CHECK(file_memory_ != nullptr);
 
+  CHECK(file_memory_ != nullptr);
   // Note: It may be tempting to try reading the machine code from the process memory, which also
   // contains the machine code (as the process has the object file loaded). However, normally only
   // the stack portion relevant for unwinding is readily available in 'process_memory'. While other
   // memory accesses are supported, they involve stopping the target process to read out the memory.
   // Overall this is slower (seen in experiments) and directly affects the target process.
-  if (!file_memory_->ReadFully(start_offset, static_cast<void*>(&code[0]), code_size)) {
+  if (!file_memory_->ReadFully(start_offset, static_cast<void*>(code.data()), code_size)) {
     last_error_.code = ERROR_MEMORY_INVALID;
     last_error_.address = start_offset;
     return false;
