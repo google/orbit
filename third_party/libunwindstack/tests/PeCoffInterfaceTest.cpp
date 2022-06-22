@@ -312,7 +312,7 @@ TYPED_TEST(PeCoffInterfaceTest, debug_frame_section_parsed_correctly) {
   ASSERT_EQ(dwarf_fde2, nullptr);
 }
 
-TYPED_TEST(PeCoffInterfaceTest, get_correct_relative_pc) {
+TYPED_TEST(PeCoffInterfaceTest, gets_correct_relative_pc) {
   this->GetFake()->Init();
   TypeParam coff(this->GetMemory());
   int64_t load_bias;
@@ -328,7 +328,7 @@ TYPED_TEST(PeCoffInterfaceTest, get_correct_relative_pc) {
             coff.GetRelPc(kAbsolutePc, kMapStart, PeCoffFake<TypeParam>::kTextSectionFileOffset));
 }
 
-TYPED_TEST(PeCoffInterfaceTest, get_zero_as_relative_pc_if_map_offset_outside_of_any_section) {
+TYPED_TEST(PeCoffInterfaceTest, gets_zero_as_relative_pc_if_map_offset_outside_of_any_section) {
   this->GetFake()->Init();
   TypeParam coff(this->GetMemory());
   int64_t load_bias;
@@ -345,7 +345,7 @@ TYPED_TEST(PeCoffInterfaceTest, get_zero_as_relative_pc_if_map_offset_outside_of
   EXPECT_EQ(0, coff.GetRelPc(kAbsolutePc2, kMapStart2, kMapOffset2));
 }
 
-TYPED_TEST(PeCoffInterfaceTest, get_correct_text_range) {
+TYPED_TEST(PeCoffInterfaceTest, gets_correct_text_range) {
   this->GetFake()->Init();
   TypeParam coff(this->GetMemory());
   int64_t load_bias;
@@ -359,7 +359,7 @@ TYPED_TEST(PeCoffInterfaceTest, get_correct_text_range) {
   EXPECT_EQ(actual_size, PeCoffFake<TypeParam>::kTextSectionMemorySize);
 }
 
-TYPED_TEST(PeCoffInterfaceTest, get_no_text_range_if_no_text_section) {
+TYPED_TEST(PeCoffInterfaceTest, gets_no_text_range_if_no_text_section) {
   uint64_t offset = this->GetFake()->InitNoSectionHeaders();
   offset = this->GetFake()->SetSectionHeaderAtOffset(offset, ".no_text");
   this->GetMemory()->SetData16(this->GetFake()->coff_header_nsects_offset(), 1);
@@ -382,7 +382,7 @@ TYPED_TEST(PeCoffInterfaceTest, get_correct_text_offset_in_file) {
   EXPECT_EQ(coff.GetTextOffsetInFile(), PeCoffFake<TypeParam>::kTextSectionFileOffset);
 }
 
-TYPED_TEST(PeCoffInterfaceTest, get_zero_text_offset_in_file_if_no_text_section) {
+TYPED_TEST(PeCoffInterfaceTest, gets_zero_text_offset_in_file_if_no_text_section) {
   uint64_t offset = this->GetFake()->InitNoSectionHeaders();
   offset = this->GetFake()->SetSectionHeaderAtOffset(offset, ".no_text", 1, 2, 3, 4);
   this->GetMemory()->SetData16(this->GetFake()->coff_header_nsects_offset(), 1);
@@ -394,7 +394,7 @@ TYPED_TEST(PeCoffInterfaceTest, get_zero_text_offset_in_file_if_no_text_section)
   EXPECT_EQ(coff.GetTextOffsetInFile(), 0);
 }
 
-TYPED_TEST(PeCoffInterfaceTest, get_correct_size_of_image) {
+TYPED_TEST(PeCoffInterfaceTest, gets_correct_size_of_image) {
   this->GetFake()->Init();
   TypeParam coff(this->GetMemory());
   int64_t load_bias;
