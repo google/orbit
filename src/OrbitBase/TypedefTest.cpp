@@ -134,14 +134,14 @@ TEST(TypedefTest, AssignmentIsCorrect) {
     EXPECT_EQ(wrapped_a_other->value, kValueOther);
   }
 
-   {
+  {
     Wrapper<B> wrapped_b(B{{kValue}});
     Wrapper<A> wrapped_a_other(A{kValueOther});
     wrapped_a_other = wrapped_b;
     EXPECT_EQ(wrapped_a_other->value, kValueOther);
   }
 
-   {
+  {
     Wrapper<B> wrapped_b(B{{kValue}});
     Wrapper<A> wrapped_a_other(A{kValueOther});
     wrapped_a_other = std::move(wrapped_b);
@@ -160,6 +160,30 @@ TEST(TypedefTest, CallIsCorrect) {
   {
     auto add = [](int i, int j) { return i + j; };
     const Wrapper<int> sum_wrapped = Apply(add, kFirstWrapped, kSecondWrapped);
+    EXPECT_EQ(*sum_wrapped, kSum);
+  }
+
+  {
+    auto add = [](int& i, int j) {
+      int sum = i + j;
+      i = j;
+      return sum;
+    };
+
+    Wrapper<int> first(kFirst);
+    Wrapper<int> second(kSecond);
+    const Wrapper<int> sum_wrapped = Apply(add, first, second);
+    EXPECT_EQ(*sum_wrapped, kSum);
+    EXPECT_EQ(*first, kSecond);
+    EXPECT_EQ(*second, kSecond);
+  }
+
+  {
+    auto add = [](int&& i, int&& j) { return i + j; };
+
+    Wrapper<int> first(kFirst);
+    Wrapper<int> second(kSecond);
+    const Wrapper<int> sum_wrapped = Apply(add, std::move(first), std::move(second));
     EXPECT_EQ(*sum_wrapped, kSum);
   }
 

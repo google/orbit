@@ -75,23 +75,45 @@ class Typedef {
 template <typename Tag>
 class Typedef<Tag, void> {};
 
-// `action` is a callable that takes const-refs or values. `args` are the args wrapped in `Typedef`s
-// with the same `Tag`. The args are unwrapped, `action` is invoked on them. The returned value is
-// wrapped in a `Typedef` with the same `Tag` and returned.
-template <typename Tag, typename Action, typename... Args,
-          typename Return = std::invoke_result_t<Action, Args...>,
-          typename = std::enable_if_t<!std::is_void_v<Return>>>
-[[nodiscard]] Typedef<Tag, Return> Apply(Action&& action, const Typedef<Tag, Args>&... args) {
-  return Typedef<Tag, Return>(std::invoke(std::forward<Action>(action), (*args)...));
-}
+template <typename>
+struct TypedefTag {};
 
-// Overload for void functions.
-template <typename Tag, typename Action, typename... Args,
-          typename Return = std::invoke_result_t<Action, Args...>,
-          typename = std::enable_if_t<std::is_void_v<Return>>>
-Typedef<Tag, void> Apply(Action&& action, const Typedef<Tag, Args>&... args) {
-  std::invoke(std::forward<Action>(action), (*args)...);
-  return Typedef<Tag, void>();
+template <typename Tag, typename T>
+struct TypedefTag<Typedef<Tag, T>> {
+  using tag = Tag;
+};
+
+template <typename T>
+using TypedefTagT = typename TypedefTag<T>::tag;
+
+template <typename T, typename...>
+struct AreSame : std::true_type {};
+
+template <typename T, typename U, typename... TT>
+struct AreSame<T, U, TT...>
+    : std::integral_constant<bool, std::is_same<T, U>{} && AreSame<T, TT...>{}> {};
+
+template <typename Head, typename... Tail>
+struct First {
+  using type = Head;
+};
+
+// `action` is a callable. `args` are its args wrapped in `Typedef`s  with the same `Tag`. The args
+// are unwrapped, `action` is invoked on them. The returned value is wrapped in a `Typedef` with the
+// same `Tag` and returned.
+template <typename Action, typename... Args,
+          typename Tag = typename First<TypedefTagT<std::decay_t<Args>>...>::type>
+auto Apply(Action&& action, Args&&... args) {
+  static_assert(AreSame<TypedefTagT<std::decay_t<Args>>...>{}, "Typedef tags don't match.");
+
+  using R = decltype(std::invoke(std::forward<Action>(action), (*std::forward<Args>(args))...));
+  if constexpr (!std::is_same_v<void, R>) {
+    return Typedef<Tag, R>(
+        std::invoke(std::forward<Action>(action), (*std::forward<Args>(args))...));
+  } else {
+    std::invoke(std::forward<Action>(action), (*std::forward<Args>(args))...);
+    return Typedef<Tag, void>();
+  }
 }
 
 }  // namespace orbit_base
