@@ -72,22 +72,22 @@ target_sources(OrbitBase PRIVATE
         WhenAll.cpp
         WriteStringToFile.cpp)
 
-if(WIN32)
-        target_sources(OrbitBase PRIVATE
-                include/OrbitBase/GetLastError.h
-                include/OrbitBase/GetProcAddress.h)
+if (WIN32)
+target_sources(OrbitBase PRIVATE
+        include/OrbitBase/GetLastError.h
+        include/OrbitBase/GetProcAddress.h)
 
-        target_sources(OrbitBase PRIVATE
-                ExecutablePathWindows.cpp
-                GetLastErrorWindows.cpp
-                GetProcAddressWindows.cpp
-                ThreadUtilsWindows.cpp)
+target_sources(OrbitBase PRIVATE
+        ExecutablePathWindows.cpp
+        GetLastErrorWindows.cpp
+        GetProcAddressWindows.cpp
+        ThreadUtilsWindows.cpp)
 else()
-        target_sources(OrbitBase PRIVATE
-                ExecutablePathLinux.cpp
-                ExecuteCommandLinux.cpp
-                GetProcessIdsLinux.cpp
-                ThreadUtilsLinux.cpp)
+target_sources(OrbitBase PRIVATE
+        ExecutablePathLinux.cpp
+        ExecuteCommandLinux.cpp
+        GetProcessIdsLinux.cpp
+        ThreadUtilsLinux.cpp)
 endif()
 
 target_link_libraries(OrbitBase PUBLIC
@@ -130,22 +130,22 @@ target_sources(OrbitBaseTests PRIVATE
         WriteStringToFileTest.cpp
 )
 
-if(WIN32)
-        target_sources(OrbitBaseTests PRIVATE
-                GetProcAddressTest.cpp)
+if (WIN32)
+target_sources(OrbitBaseTests PRIVATE
+        GetProcAddressTest.cpp)
 else()
-        target_sources(OrbitBaseTests PRIVATE
-                ExecutablePathLinuxTest.cpp
-                ExecuteCommandLinuxTest.cpp
-                GetProcessIdsLinuxTest.cpp)
+target_sources(OrbitBaseTests PRIVATE
+        ExecutablePathLinuxTest.cpp
+        ExecuteCommandLinuxTest.cpp
+        GetProcessIdsLinuxTest.cpp)
 endif()
 
 # Threadpool test contains some sleeps we couldn't work around - disable them on the CI
 # since they are flaky there (but they work fine on local workstations).
-if(NOT(WIN32 AND "$ENV{QT_QPA_PLATFORM}" STREQUAL "offscreen"))
-        target_sources(OrbitBaseTests PRIVATE
-                ThreadPoolTest.cpp
-        )
+if (NOT (WIN32 AND "$ENV{QT_QPA_PLATFORM}" STREQUAL "offscreen"))
+target_sources(OrbitBaseTests PRIVATE
+        ThreadPoolTest.cpp
+)
 endif()
 
 target_link_libraries(OrbitBaseTests PRIVATE
