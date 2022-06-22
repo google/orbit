@@ -632,7 +632,7 @@ TEST_F(UnwinderTest, sp_not_in_map) {
 }
 
 // Verify that unwinding stops at the requested function.
-TEST_F(UnwinderTest, verify_unwind_stops_at_requested_function) {
+TEST_F(UnwinderTest, unwind_stops_at_requested_function) {
   ElfInterfaceFake::FakePushFunctionData(FunctionData("Frame0", 0));
   ElfInterfaceFake::FakePushFunctionData(FunctionData("Frame1", 1));
   ElfInterfaceFake::FakePushFunctionData(FunctionData("Frame2", 2));
