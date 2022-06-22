@@ -14,10 +14,16 @@ namespace orbit_base {
 template <typename T, typename U>
 using EnableIfUConvertibleToT = std::enable_if_t<std::is_convertible_v<U, T>>;
 
+template <typename T, typename U>
+using EnableIfUIsNotConvertibleToT = std::enable_if_t<!std::is_convertible_v<U, T>>;
+
 // Strong typedef
 template <typename Tag, typename T>
 class Typedef {
  public:
+  template <typename OtherTag, typename U>
+  friend class Typedef;
+
   [[nodiscard]] constexpr const T* operator->() const { return &value_; }
   [[nodiscard]] constexpr T* operator->() { return &value_; }
 
@@ -34,6 +40,33 @@ class Typedef {
       : value_(T(std::forward<T>(args)...)) {}
 
   constexpr Typedef(Typedef&& other) = default;
+
+  template <typename U, typename = EnableIfUConvertibleToT<T, U>>
+  constexpr Typedef(const Typedef<Tag, U>& other) : value_(other.value_) {}
+
+  template <typename U, typename = EnableIfUConvertibleToT<T, U>>
+  constexpr Typedef(Typedef<Tag, U>&& other) : value_(std::move(other.value_)) {}
+
+  template <typename U, typename = EnableIfUIsNotConvertibleToT<T, U>, typename = void>
+  explicit Typedef(const Typedef<Tag, U>& other) : value_(other.value_) {}
+
+  template <typename U, typename = EnableIfUIsNotConvertibleToT<T, U>, typename = void>
+  explicit Typedef(Typedef<Tag, U>&& other) : value_(std::move(other.value_)) {}
+
+  Typedef& operator=(Typedef const&) = default;
+  Typedef& operator=(Typedef&&) = default;
+
+  template <typename U, typename = EnableIfUConvertibleToT<T, U>>
+  Typedef& operator=(const Typedef<Tag, U>& other) {
+    value_ = other.value_;
+    return *this;
+  }
+
+  template <typename U, typename = EnableIfUConvertibleToT<T, U>>
+  Typedef& operator=(Typedef<Tag, U>&& other) {
+    value_ = std::move(other.value_);
+    return *this;
+  }
 
  private:
   T value_;
