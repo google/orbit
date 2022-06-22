@@ -13,6 +13,7 @@
 
 #include "OrbitBase/Logging.h"
 #include "OrbitBase/Profiling.h"
+#include "OrbitBase/StringConversion.h"
 #include "OrbitBase/ThreadUtils.h"
 #include "WindowsUtils/ProcessList.h"
 
@@ -23,12 +24,13 @@ TEST(ProcessList, ContainsCurrentProcess) {
   std::vector<const Process*> processes = process_list->GetProcesses();
   EXPECT_NE(processes.size(), 0);
 
-  char this_exe_file_name[MAX_PATH] = {0};
-  GetModuleFileNameA(NULL, this_exe_file_name, MAX_PATH);
+  wchar_t this_exe_file_name[MAX_PATH] = {0};
+  GetModuleFileNameW(NULL, this_exe_file_name, MAX_PATH);
+  std::string file_name = orbit_base::ToStdString(this_exe_file_name);
 
   bool found_this_exe = false;
   for (const Process* process : processes) {
-    if (process->full_path == this_exe_file_name) {
+    if (process->full_path == file_name) {
       found_this_exe = true;
       break;
     }
