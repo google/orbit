@@ -631,7 +631,7 @@ TEST_F(UnwinderTest, sp_not_in_map) {
   EXPECT_EQ(PROT_READ | PROT_WRITE, frame->map_info->flags());
 }
 
-// Verify that initial map names frames are removed.
+// Verify that unwinding stops at the requested function.
 TEST_F(UnwinderTest, verify_unwind_stops_at_requested_function) {
   ElfInterfaceFake::FakePushFunctionData(FunctionData("Frame0", 0));
   ElfInterfaceFake::FakePushFunctionData(FunctionData("Frame1", 1));
