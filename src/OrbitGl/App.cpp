@@ -1419,7 +1419,7 @@ void OrbitApp::StartCapture() {
   }
 
   if (IsDevMode()) {
-    RequestSymbolDownloadStop(module_manager_->GetAllModuleData());
+    RequestSymbolDownloadStop(module_manager_->GetAllModuleData(), false);
   }
 
   if (capture_window_ != nullptr) {
@@ -3164,7 +3164,8 @@ bool OrbitApp::IsSymbolLoadingInProgressForModule(
       std::make_pair(module->file_path(), module->build_id()));
 }
 
-void OrbitApp::RequestSymbolDownloadStop(absl::Span<const ModuleData* const> modules) {
+void OrbitApp::RequestSymbolDownloadStop(absl::Span<const ModuleData* const> modules,
+                                         bool show_dialog) {
   ORBIT_CHECK(main_thread_id_ == std::this_thread::get_id());
 
   for (const auto* module : modules) {
@@ -3172,8 +3173,10 @@ void OrbitApp::RequestSymbolDownloadStop(absl::Span<const ModuleData* const> mod
       // Download already ended
       continue;
     }
-    CanceledOr<void> canceled_or = main_window_->DisplayStopDownloadDialog(module);
-    if (orbit_base::IsCanceled(canceled_or)) continue;
+    if (show_dialog) {
+      CanceledOr<void> canceled_or = main_window_->DisplayStopDownloadDialog(module);
+      if (orbit_base::IsCanceled(canceled_or)) continue;
+    }
 
     if (!symbol_files_currently_downloading_.contains(module->file_path())) {
       // Download already ended (while user was looking at the dialog)
@@ -3181,6 +3184,11 @@ void OrbitApp::RequestSymbolDownloadStop(absl::Span<const ModuleData* const> mod
     }
     symbol_files_currently_downloading_.at(module->file_path()).stop_source.RequestStop();
   }
+}
+
+void OrbitApp::RequestSymbolDownloadStop(
+    absl::Span<const orbit_client_data::ModuleData* const> modules) {
+  RequestSymbolDownloadStop(modules, true);
 }
 
 const ProcessData& OrbitApp::GetConnectedOrLoadedProcess() const {

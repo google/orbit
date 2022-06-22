@@ -585,6 +585,9 @@ class OrbitApp final : public DataViewFactory,
   void ShowHistogram(const std::vector<uint64_t>* data, const std::string& scope_name,
                      uint64_t scope_id) override;
 
+  void RequestSymbolDownloadStop(absl::Span<const orbit_client_data::ModuleData* const> modules,
+                                 bool show_dialog);
+
   std::atomic<bool> capture_loading_cancellation_requested_ = false;
   std::atomic<orbit_client_data::CaptureData::DataSource> data_source_{
       orbit_client_data::CaptureData::DataSource::kLiveCapture};
