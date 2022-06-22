@@ -50,7 +50,8 @@ class UprobesUnwindingVisitor : public PerfEventVisitor {
       UprobesReturnAddressManager* uprobes_return_address_manager, LibunwindstackMaps* initial_maps,
       LibunwindstackUnwinder* unwinder, LeafFunctionCallManager* leaf_function_call_manager,
       UserSpaceInstrumentationAddresses* user_space_instrumentation_addresses,
-      const std::map<uint64_t, uint64_t>* absolute_address_to_size_of_functions_to_stop_at = nullptr)
+      const std::map<uint64_t, uint64_t>* absolute_address_to_size_of_functions_to_stop_at =
+          nullptr /*TODO(kuebler): Don't make this parameter default*/)
       : listener_{listener},
         function_call_manager_{function_call_manager},
         return_address_manager_{uprobes_return_address_manager},

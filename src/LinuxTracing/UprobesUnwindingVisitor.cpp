@@ -131,7 +131,7 @@ void UprobesUnwindingVisitor::SendFullAddressInfoToListener(
   listener_->OnAddressInfo(std::move(address_info));
 }
 
-static inline bool IsPcInFunctionsToStop(
+static inline bool IsPcInFunctionsToStopAt(
     const std::map<uint64_t, uint64_t>* absolute_address_to_size_of_functions_to_stop_at,
     uint64_t pc) {
   if (absolute_address_to_size_of_functions_to_stop_at == nullptr) {
@@ -195,8 +195,8 @@ UprobesUnwindingVisitor::ComputeCallstackTypeFromStackSample(
   }
   if (!libunwindstack_result.IsSuccess() ||
       (libunwindstack_result.frames().size() == 1 &&
-       !IsPcInFunctionsToStop(absolute_address_to_size_of_functions_to_stop_at_,
-                   libunwindstack_result.frames().at(0).pc))) {
+       !IsPcInFunctionsToStopAt(absolute_address_to_size_of_functions_to_stop_at_,
+                                libunwindstack_result.frames().at(0).pc))) {
     // Callstacks with only one frame (the sampled address) are also unwinding errors, that were not
     // reported as such by LibunwindstackUnwinder::Unwind.
     // Note that this doesn't exclude samples inside the main function of any thread as the main

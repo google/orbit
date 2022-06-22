@@ -843,9 +843,8 @@ TEST_F(UprobesUnwindingVisitorTest,
   EXPECT_EQ(discarded_samples_in_uretprobes_counter, 0);
 }
 
-TEST_F(
-    UprobesUnwindingVisitorTest,
-    VisitSingleFrameStackSampleInFunctionToStopWithoutUprobesSendsCompleteCallstackAndAddressInfos) {
+TEST_F(UprobesUnwindingVisitorTest,
+       VisitSingleFrameStackSampleInFunctionToStopAtSendsCompleteCallstackAndAddressInfos) {
   StackSamplePerfEvent event = BuildFakeStackSamplePerfEvent();
 
   absolute_address_to_size_of_functions_to_stop_at_[kTargetAddress1] = 100;
@@ -889,9 +888,8 @@ TEST_F(
   EXPECT_EQ(discarded_samples_in_uretprobes_counter, 0);
 }
 
-TEST_F(
-    UprobesUnwindingVisitorTest,
-    VisitSingleFrameStackSamplOutsideAFunctionToStopWithoutUprobesSendsUnwindingErrroAndAddressInfos) {
+TEST_F(UprobesUnwindingVisitorTest,
+       VisitSingleFrameStackSampleOutsideAnyFunctionToStopSendsUnwindingErrorAndAddressInfos) {
   StackSamplePerfEvent event = BuildFakeStackSamplePerfEvent();
 
   absolute_address_to_size_of_functions_to_stop_at_[kTargetAddress2] = 100;
