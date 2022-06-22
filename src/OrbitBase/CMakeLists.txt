@@ -122,8 +122,8 @@ target_sources(OrbitBaseTests PRIVATE
         StopTokenTest.cpp
         TaskGroupTest.cpp
         TemporaryFileTest.cpp
-        ThreadUtilsTest.cpp
         TypedefTest.cpp
+        ThreadUtilsTest.cpp
         UniqueResourceTest.cpp
         WhenAllTest.cpp
         WhenAnyTest.cpp

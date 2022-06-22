@@ -12,12 +12,6 @@
 namespace {
 struct TestTag {};
 
-struct AddStruct {
-  int operator()(int i, int j) { return i + j; }
-
-  static int Add(int i, const int& j) { return i + j; }
-};
-
 }  // namespace
 
 static int Add(int i, int j) { return i + j; }
@@ -56,30 +50,25 @@ TEST(TypedefTest, CallIsCorrect) {
 
   {
     auto add = [](int i, int j) { return i + j; };
-    const Wrapper<int> sum_wrapped = Call(add, kFirstWrapped, kSecondWrapped);
+    const Wrapper<int> sum_wrapped = Apply(add, kFirstWrapped, kSecondWrapped);
     EXPECT_EQ(*sum_wrapped, kSum);
   }
 
   {
     auto add = [](const int& i, const int& j) { return i + j; };
-    const Wrapper<int> sum_wrapped = Call(add, kFirstWrapped, kSecondWrapped);
+    const Wrapper<int> sum_wrapped = Apply(add, kFirstWrapped, kSecondWrapped);
     EXPECT_EQ(*sum_wrapped, kSum);
   }
 
   {
-    const Wrapper<int> sum_wrapped = Call(Add, kFirstWrapped, kSecondWrapped);
-    EXPECT_EQ(*sum_wrapped, kSum);
-  }
-
-  {
-    const Wrapper<int> sum_wrapped = Call(AddStruct::Add, kFirstWrapped, kSecondWrapped);
+    const Wrapper<int> sum_wrapped = Apply(Add, kFirstWrapped, kSecondWrapped);
     EXPECT_EQ(*sum_wrapped, kSum);
   }
 
   {
     bool was_called = false;
     auto returns_void = [&was_called](int /*i*/) { was_called = true; };
-    const Wrapper<void> sum_wrapped = Call(returns_void, kFirstWrapped);
+    const Wrapper<void> sum_wrapped = Apply(returns_void, kFirstWrapped);
     std::ignore = sum_wrapped;
     EXPECT_TRUE(was_called);
   }

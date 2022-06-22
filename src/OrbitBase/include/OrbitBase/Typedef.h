@@ -18,20 +18,21 @@ using EnableIfUConvertibleToT = std::enable_if_t<std::is_convertible_v<U, T>>;
 template <typename Tag, typename T>
 class Typedef {
  public:
-  const T* operator->() const { return &value_; }
-  T* operator->() { return &value_; }
+  [[nodiscard]] constexpr const T* operator->() const { return &value_; }
+  [[nodiscard]] constexpr T* operator->() { return &value_; }
 
-  const T& operator*() const& { return value_; }
-  T&& operator*() && { return std::move(value_); }
-  T& operator*() & { return value_; }
+  [[nodiscard]] constexpr const T& operator*() const& { return value_; }
+  [[nodiscard]] constexpr T&& operator*() && { return std::move(value_); }
+  [[nodiscard]] constexpr const T&& operator*() const&& { return std::move(value_); }
+  [[nodiscard]] constexpr T& operator*() & { return value_; }
 
   template <typename U, typename = EnableIfUConvertibleToT<T, U>>
-  explicit Typedef(U&& value) : value_(std::forward<U>(value)) {}
+  constexpr explicit Typedef(U&& value) : value_(std::forward<U>(value)) {}
 
   template <typename... Args>
-  explicit Typedef(std::in_place_t, Args&&... args) : value_(T(std::forward<T>(args)...)) {}
+  constexpr explicit Typedef(std::in_place_t, Args&&... args) : value_(T(std::forward<T>(args)...)) {}
 
-  Typedef(Typedef&& other) = default;
+  constexpr Typedef(Typedef&& other) = default;
 
  private:
   T value_;
@@ -46,7 +47,7 @@ class Typedef<Tag, void> {};
 template <typename Tag, typename Action, typename... Args,
           typename Return = std::invoke_result_t<Action, Args...>,
           typename = std::enable_if_t<!std::is_void_v<Return>>>
-[[nodiscard]] Typedef<Tag, Return> Call(Action&& action, const Typedef<Tag, Args>&... args) {
+[[nodiscard]] Typedef<Tag, Return> Apply(Action&& action, const Typedef<Tag, Args>&... args) {
   return Typedef<Tag, Return>(std::invoke(std::forward<Action>(action), (*args)...));
 }
 
@@ -54,7 +55,7 @@ template <typename Tag, typename Action, typename... Args,
 template <typename Tag, typename Action, typename... Args,
           typename Return = std::invoke_result_t<Action, Args...>,
           typename = std::enable_if_t<std::is_void_v<Return>>>
-Typedef<Tag, void> Call(Action&& action, const Typedef<Tag, Args>&... args) {
+Typedef<Tag, void> Apply(Action&& action, const Typedef<Tag, Args>&... args) {
   std::invoke(std::forward<Action>(action), (*args)...);
   return Typedef<Tag, void>();
 }
