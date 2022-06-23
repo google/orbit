@@ -90,6 +90,8 @@ class ProcessData final {
   [[nodiscard]] std::vector<std::string> FindModuleBuildIdsByPath(
       const std::string& module_path) const;
 
+  [[nodiscard]] std::vector<ModuleInMemory> FindModulesByFilename(const std::string& filename) const;
+
   [[nodiscard]] bool IsModuleLoadedByProcess(const std::string& module_path) const {
     return !FindModuleBuildIdsByPath(module_path).empty();
   }
