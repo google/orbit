@@ -73,7 +73,7 @@ constexpr pid_t kProcessId = 123;
 //     12be:       48 83 c4 10 c3              add    $0x10,%rsp
 
 TEST(LibunwindstackUnwinder, DetectsFunctionWithFramePointerSet) {
-  auto unwinder = LibunwindstackUnwinder::Create({});
+  auto unwinder = LibunwindstackUnwinder::Create();
 
   auto maps = CreateFakeMapsEntry("target_fp");
 
@@ -85,7 +85,7 @@ TEST(LibunwindstackUnwinder, DetectsFunctionWithFramePointerSet) {
 }
 
 TEST(LibunwindstackUnwinder, DetectsLeafFunction) {
-  auto unwinder = LibunwindstackUnwinder::Create({});
+  auto unwinder = LibunwindstackUnwinder::Create();
 
   auto maps = CreateFakeMapsEntry("target_fp");
 
@@ -97,7 +97,7 @@ TEST(LibunwindstackUnwinder, DetectsLeafFunction) {
 }
 
 TEST(LibunwindstackUnwinder, DetectsFunctionWithoutFramePointer) {
-  auto unwinder = LibunwindstackUnwinder::Create({});
+  auto unwinder = LibunwindstackUnwinder::Create();
 
   auto maps = CreateFakeMapsEntry("target_no_fp");
 
@@ -109,7 +109,7 @@ TEST(LibunwindstackUnwinder, DetectsFunctionWithoutFramePointer) {
 }
 
 TEST(LibunwindstackUnwinder, DetectsFramePointerNotSetAtPushRbp) {
-  auto unwinder = LibunwindstackUnwinder::Create({});
+  auto unwinder = LibunwindstackUnwinder::Create();
 
   auto maps = CreateFakeMapsEntry("target_fp");
 
@@ -121,7 +121,7 @@ TEST(LibunwindstackUnwinder, DetectsFramePointerNotSetAtPushRbp) {
 }
 
 TEST(LibunwindstackUnwinder, DetectsFramePointerNotSetAtMovRspToRbp) {
-  auto unwinder = LibunwindstackUnwinder::Create({});
+  auto unwinder = LibunwindstackUnwinder::Create();
 
   auto maps = CreateFakeMapsEntry("target_fp");
 
@@ -133,7 +133,7 @@ TEST(LibunwindstackUnwinder, DetectsFramePointerNotSetAtMovRspToRbp) {
 }
 
 TEST(LibunwindstackUnwinder, DetectsFramePointerSetAtLeave) {
-  auto unwinder = LibunwindstackUnwinder::Create({});
+  auto unwinder = LibunwindstackUnwinder::Create();
 
   auto maps = CreateFakeMapsEntry("target_fp");
 
@@ -145,7 +145,7 @@ TEST(LibunwindstackUnwinder, DetectsFramePointerSetAtLeave) {
 }
 
 TEST(LibunwindstackUnwinder, DetectsFramePointerNotSetAtRet) {
-  auto unwinder = LibunwindstackUnwinder::Create({});
+  auto unwinder = LibunwindstackUnwinder::Create();
 
   auto maps = CreateFakeMapsEntry("target_fp");
 
@@ -157,7 +157,7 @@ TEST(LibunwindstackUnwinder, DetectsFramePointerNotSetAtRet) {
 }
 
 TEST(LibunwindstackUnwinder, FramePointerDetectionWorksWithCaching) {
-  auto unwinder = LibunwindstackUnwinder::Create({});
+  auto unwinder = LibunwindstackUnwinder::Create();
 
   auto maps = CreateFakeMapsEntry("target_fp");
 

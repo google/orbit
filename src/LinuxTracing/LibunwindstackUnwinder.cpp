@@ -120,7 +120,8 @@ LibunwindstackResult LibunwindstackUnwinderImpl::Unwind(
 
   unwindstack::Unwinder unwinder{max_frames, maps, &regs, memory};
   // Careful: regs are modified. Use regs.Clone() if you need to reuse regs later.
-  unwinder.Unwind(nullptr, nullptr, absolute_address_to_size_of_functions_to_stop_at_);
+  unwinder.Unwind(/*initial_map_names_to_skip=*/nullptr, /*map_suffixes_to_ignore=*/nullptr,
+                  absolute_address_to_size_of_functions_to_stop_at_);
 
 #ifndef NDEBUG
   if (unwinder.LastErrorCode() != 0) {

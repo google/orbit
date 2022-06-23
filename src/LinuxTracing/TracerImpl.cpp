@@ -105,9 +105,13 @@ TracerImpl::TracerImpl(
         instrumented_function.record_arguments(), instrumented_function.record_return_value());
   }
 
-  absolute_address_to_size_of_functions_to_stop_at_.insert(
-      capture_options.absolute_address_to_size_of_functions_to_stop_at().begin(),
-      capture_options.absolute_address_to_size_of_functions_to_stop_at().end());
+  for (const orbit_grpc_protos::FunctionToStopUnwindingAt& function_to_stop_unwinding_at :
+       capture_options.functions_to_stop_unwinding_at()) {
+    auto [unused_it, inserted] =
+        absolute_address_to_size_of_functions_to_stop_unwinding_at_.insert_or_assign(
+            function_to_stop_unwinding_at.absolute_address(), function_to_stop_unwinding_at.size());
+    ORBIT_CHECK(inserted);
+  }
 
   for (const orbit_grpc_protos::TracepointInfo& instrumented_tracepoint :
        capture_options.instrumented_tracepoint()) {
@@ -175,14 +179,15 @@ static void CloseFileDescriptors(const absl::flat_hash_map<int32_t, int>& fds_pe
 void TracerImpl::InitUprobesEventVisitor() {
   ORBIT_SCOPE_FUNCTION;
   maps_ = LibunwindstackMaps::ParseMaps(ReadMaps(target_pid_));
-  unwinder_ = LibunwindstackUnwinder::Create(&absolute_address_to_size_of_functions_to_stop_at_);
+  unwinder_ =
+      LibunwindstackUnwinder::Create(&absolute_address_to_size_of_functions_to_stop_unwinding_at_);
   return_address_manager_.emplace(user_space_instrumentation_addresses_.get());
   leaf_function_call_manager_ = std::make_unique<LeafFunctionCallManager>(stack_dump_size_);
   uprobes_unwinding_visitor_ = std::make_unique<UprobesUnwindingVisitor>(
       listener_, &function_call_manager_, &return_address_manager_.value(), maps_.get(),
       unwinder_.get(), leaf_function_call_manager_.get(),
       user_space_instrumentation_addresses_.get(),
-      &absolute_address_to_size_of_functions_to_stop_at_);
+      &absolute_address_to_size_of_functions_to_stop_unwinding_at_);
   uprobes_unwinding_visitor_->SetUnwindErrorsAndDiscardedSamplesCounters(
       &stats_.unwind_error_count, &stats_.samples_in_uretprobes_count);
   event_processor_.AddVisitor(uprobes_unwinding_visitor_.get());

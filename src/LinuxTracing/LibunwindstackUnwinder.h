@@ -62,7 +62,8 @@ class LibunwindstackUnwinder {
                                                  unwindstack::Maps* maps) = 0;
 
   static std::unique_ptr<LibunwindstackUnwinder> Create(
-      const std::map<uint64_t, uint64_t>* absolute_address_to_size_of_functions_to_stop_at);
+      const std::map<uint64_t, uint64_t>* absolute_address_to_size_of_functions_to_stop_at =
+          nullptr);
   static std::string LibunwindstackErrorString(unwindstack::ErrorCode error_code);
 
  protected:
