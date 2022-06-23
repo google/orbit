@@ -67,6 +67,10 @@ class StackAndProcessMemory : public unwindstack::Memory {
 
 class LibunwindstackUnwinderImpl : public LibunwindstackUnwinder {
  public:
+  LibunwindstackUnwinderImpl(
+      const std::map<uint64_t, uint64_t>* absolute_address_to_size_of_functions_to_stop_at)
+      : absolute_address_to_size_of_functions_to_stop_at_{
+            absolute_address_to_size_of_functions_to_stop_at} {}
   LibunwindstackResult Unwind(pid_t pid, unwindstack::Maps* maps,
                               const std::array<uint64_t, PERF_REG_X86_64_MAX>& perf_regs,
                               const void* stack_dump, uint64_t stack_dump_size,
@@ -83,6 +87,8 @@ class LibunwindstackUnwinderImpl : public LibunwindstackUnwinder {
       debug_frame_loc_regs_cache_;  // Single row indexed by pc_end.
   std::map<uint64_t, unwindstack::DwarfLocations>
       eh_frame_loc_regs_cache_;  // Single row indexed by pc_end.
+
+  const std::map<uint64_t, uint64_t>* absolute_address_to_size_of_functions_to_stop_at_;
 };
 
 const std::array<size_t, unwindstack::X86_64_REG_LAST>
@@ -114,7 +120,8 @@ LibunwindstackResult LibunwindstackUnwinderImpl::Unwind(
 
   unwindstack::Unwinder unwinder{max_frames, maps, &regs, memory};
   // Careful: regs are modified. Use regs.Clone() if you need to reuse regs later.
-  unwinder.Unwind();
+  unwinder.Unwind(/*initial_map_names_to_skip=*/nullptr, /*map_suffixes_to_ignore=*/nullptr,
+                  absolute_address_to_size_of_functions_to_stop_at_);
 
 #ifndef NDEBUG
   if (unwinder.LastErrorCode() != 0) {
@@ -222,8 +229,10 @@ std::optional<bool> LibunwindstackUnwinderImpl::HasFramePointerSet(uint64_t inst
 }
 }  // namespace
 
-std::unique_ptr<LibunwindstackUnwinder> LibunwindstackUnwinder::Create() {
-  return std::make_unique<LibunwindstackUnwinderImpl>();
+std::unique_ptr<LibunwindstackUnwinder> LibunwindstackUnwinder::Create(
+    const std::map<uint64_t, uint64_t>* absolute_address_to_size_of_functions_to_stop_at) {
+  return std::make_unique<LibunwindstackUnwinderImpl>(
+      absolute_address_to_size_of_functions_to_stop_at);
 }
 
 std::string LibunwindstackUnwinder::LibunwindstackErrorString(unwindstack::ErrorCode error_code) {

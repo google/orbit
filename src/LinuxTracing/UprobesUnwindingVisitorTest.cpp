@@ -1692,7 +1692,8 @@ class UprobesUnwindingVisitorMmapTest : public ::testing::Test {
                                    &maps_,
                                    &unwinder_,
                                    &leaf_function_call_manager_,
-                                   /*user_space_instrumentation_addresses=*/nullptr};
+                                   /*user_space_instrumentation_addresses=*/nullptr,
+                                   /*absolute_address_to_size_of_functions_to_stop_at=*/nullptr};
 
  private:
   UprobesFunctionCallManager function_call_manager_;
