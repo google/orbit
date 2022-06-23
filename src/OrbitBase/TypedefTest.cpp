@@ -61,8 +61,8 @@ TEST(TypedefTest, CanInstantiate) {
   Wrapper<int> wrapper_of_literal(1);
   EXPECT_EQ(*wrapper_of_literal, 1);
 
-  Wrapper<std::string> wrapper_of_string_literal("foo");
-  EXPECT_EQ(*wrapper_of_string_literal, "foo");
+  Wrapper<std::string> wrapper_of_string("foo");
+  EXPECT_EQ(*wrapper_of_string, "foo");
 
   Wrapper<std::unique_ptr<int>> wrapper_of_unique_ptr(std::make_unique<int>(kConstInt));
   EXPECT_EQ(**wrapper_of_unique_ptr, kConstInt);
@@ -184,6 +184,14 @@ TEST(TypedefTest, CallIsCorrect) {
     Wrapper<int> first(kFirst);
     Wrapper<int> second(kSecond);
     const Wrapper<int> sum_wrapped = Apply(add, std::move(first), std::move(second));
+    EXPECT_EQ(*sum_wrapped, kSum);
+  }
+
+  {
+    auto add = [](const int& i, int&& j) { return i + j; };
+
+    Wrapper<int> second(kSecond);
+    const Wrapper<int> sum_wrapped = Apply(add, kFirstWrapped, std::move(second));
     EXPECT_EQ(*sum_wrapped, kSum);
   }
 

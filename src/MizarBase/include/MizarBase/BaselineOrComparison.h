@@ -5,8 +5,6 @@
 #ifndef MIZAR_BASE_BASELINE_OR_COMPARISON_H_
 #define MIZAR_BASE_BASELINE_OR_COMPARISON_H_
 
-#include <functional>
-#include <type_traits>
 #include <utility>
 
 #include "OrbitBase/Typedef.h"
@@ -23,12 +21,12 @@ template <typename T>
 using Comparison = orbit_base::Typedef<ComparisonTag, T>;
 
 template <typename T, typename... Args>
-Baseline<T> MakeBaseline(Args&&... args) {
+[[nodiscard]] Baseline<T> MakeBaseline(Args&&... args) {
   return Baseline<T>(T(std::forward<Args>(args)...));
 }
 
 template <typename T, typename... Args>
-Comparison<T> MakeComparison(Args&&... args) {
+[[nodiscard]] Comparison<T> MakeComparison(Args&&... args) {
   return Comparison<T>(T(std::forward<Args>(args)...));
 }
 
