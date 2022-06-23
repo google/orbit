@@ -134,8 +134,8 @@ bool& GetIsInPayload() {
 
 }  // namespace
 
-void StartNewCapture() {
-  current_capture_start_timestamp_ns = CaptureTimestampNs();
+void StartNewCapture(uint64_t capture_start_timestamp_ns) {
+  current_capture_start_timestamp_ns = capture_start_timestamp_ns;
 
   // If the library has just been injected, initialize the
   // LockFreeUserSpaceInstrumentationEventProducer and establish the connection to OrbitService now
