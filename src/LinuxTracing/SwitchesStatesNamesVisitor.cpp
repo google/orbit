@@ -178,9 +178,9 @@ void SwitchesStatesNamesVisitor::Visit(uint64_t event_timestamp,
     return;
   }
 
-  std::optional<ThreadStateSlice> state_slice =
-      state_manager_.OnSchedWakeup(event_timestamp, event_data.woken_tid,
-                                   event_data.was_unblocked_by_tid, event_data.was_unblocked_by_pid);
+  std::optional<ThreadStateSlice> state_slice = state_manager_.OnSchedWakeup(
+      event_timestamp, event_data.woken_tid, event_data.was_unblocked_by_tid,
+      event_data.was_unblocked_by_pid);
   if (state_slice.has_value()) {
     listener_->OnThreadStateSlice(std::move(state_slice.value()));
     if (thread_state_counter_ != nullptr) {

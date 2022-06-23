@@ -180,7 +180,8 @@ std::string ThreadStateBar::GetThreadStateSliceTooltip(PrimitiveAssembler& primi
       GetThreadStateName(thread_state_slice->thread_state()),
       GetThreadStateDescription(thread_state_slice->thread_state()));
 
-  if (thread_state_slice->wakeup_tid() != orbit_base::kInvalidThreadId && thread_state_slice->wakeup_reason() != ThreadStateSliceInfo::WakeupReason::kNotApplicable) {
+  if (thread_state_slice->wakeup_tid() != orbit_base::kInvalidThreadId &&
+      thread_state_slice->wakeup_reason() != ThreadStateSliceInfo::WakeupReason::kNotApplicable) {
     std::string reason = GetWakeupReason(thread_state_slice->wakeup_reason());
     std::string thread_name = capture_data_->GetThreadName(thread_state_slice->wakeup_tid());
     std::string process_name = capture_data_->GetThreadName(thread_state_slice->wakeup_pid());
@@ -190,8 +191,8 @@ std::string ThreadStateBar::GetThreadStateSliceTooltip(PrimitiveAssembler& primi
         "<b>Was %s By Process:</b> %s [%d]"
         "<br/>"
         "<b>Was %s By Thread:</b> %s [%d]",
-        reason, process_name, thread_state_slice->wakeup_pid(), reason,
-        thread_name, thread_state_slice->wakeup_tid());
+        reason, process_name, thread_state_slice->wakeup_pid(), reason, thread_name,
+        thread_state_slice->wakeup_tid());
   }
 
   uint64_t begin_ns = thread_state_slice->begin_timestamp_ns();
