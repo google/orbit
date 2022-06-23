@@ -119,7 +119,15 @@ const std::vector<std::vector<SFID>> kCallstacks = {
 const std::vector<uint64_t> kFrameTrackActiveTimes = {300, 100, 200};
 
 constexpr double kStatistic = 1.234;
-constexpr double kPvalue = 0.123456;
+constexpr std::array<double, kSfidCount> kPvalues = {0.01, 0.02, 0.05};
+const std::array<double, kSfidCount> kCorrectedPvalues = [] {
+  std::array<double, kSfidCount> result{};
+  std::transform(std::begin(kPvalues), std::end(kPvalues), std::begin(result),
+                 [](const double pvalue) { return pvalue * 2; });
+  return result;
+}();
+const absl::flat_hash_map<SFID, double> kSfidToPvalue = MakeMap(kSfids, kPvalues);
+const absl::flat_hash_map<SFID, double> kSfidToCorrectedPvalue = MakeMap(kSfids, kCorrectedPvalues);
 
 namespace {
 class MockPairedData {
@@ -154,17 +162,31 @@ class MockFunctionTimeComparator {
       const Comparison<SamplingCounts>& /*comparison_counts*/,
       const Comparison<orbit_client_data::ScopeStats>& /*comparison_frame_stats*/) {}
 
-  [[nodiscard]] ComparisonResult Compare(SFID /*sfid*/) const { return {kStatistic, kPvalue}; };
+  [[nodiscard]] ComparisonResult Compare(SFID sfid) const {
+    return {kStatistic, kSfidToPvalue.at(sfid)};
+  };
 };
 
 }  // namespace
+
+// It's not even a correction in statistical sense. Good only for mocking.
+[[nodiscard]] static absl::flat_hash_map<SFID, double> MockCorrection(
+    const absl::flat_hash_map<SFID, double>& pvalues) {
+  absl::flat_hash_map<SFID, double> result;
+  std::transform(std::begin(pvalues), std::end(pvalues), std::inserter(result, std::begin(result)),
+                 [](const auto& key_to_pvalue) {
+                   const SFID sfid = key_to_pvalue.first;
+                   return std::make_pair(sfid, kSfidToCorrectedPvalue.at(sfid));
+                 });
+  return result;
+}
 
 TEST(BaselineAndComparisonTest, MakeSamplingWithFrameTrackReportIsCorrect) {
   auto full = MakeBaseline<MockPairedData>(kCallstacks, kFrameTrackActiveTimes);
   auto empty =
       MakeComparison<MockPairedData>(std::vector<std::vector<SFID>>{}, std::vector<uint64_t>{});
 
-  BaselineAndComparisonTmpl<MockPairedData, MockFunctionTimeComparator> bac(
+  BaselineAndComparisonTmpl<MockPairedData, MockFunctionTimeComparator, MockCorrection> bac(
       std::move(full), std::move(empty), {kSfidToName});
   const SamplingWithFrameTrackComparisonReport report = bac.MakeSamplingWithFrameTrackReport(
       MakeBaseline<orbit_mizar_data::HalfOfSamplingWithFrameTrackReportConfig>(
@@ -187,10 +209,12 @@ TEST(BaselineAndComparisonTest, MakeSamplingWithFrameTrackReportIsCorrect) {
     EXPECT_EQ(report.GetSamplingCounts<Comparison>()->GetExclusiveCount(sfid), 0);
     EXPECT_EQ(report.GetSamplingCounts<Comparison>()->GetInclusiveCount(sfid), 0);
 
-    ComparisonResult comparision_result = report.GetComparisonResult(sfid);
+    CorrectedComparisonResult comparision_result = report.GetComparisonResult(sfid);
     constexpr double kTolerance = 1e-6;
     EXPECT_THAT(comparision_result.statistic, DoubleNear(kStatistic, kTolerance));
-    EXPECT_THAT(comparision_result.pvalue, DoubleNear(kPvalue, kTolerance));
+
+    EXPECT_THAT(comparision_result.corrected_pvalue,
+                DoubleNear(kSfidToCorrectedPvalue.at(sfid), kTolerance));
   }
 
   constexpr uint64_t kExpectedFullActiveFrameTime = 200;

@@ -28,6 +28,11 @@ struct ComparisonResult {
   double pvalue{};
 };
 
+struct CorrectedComparisonResult : public ComparisonResult {
+  // result of multiplicity correction (a term from Statistics) for the particular comparison.
+  double corrected_pvalue{};
+};
+
 // The struct represents the part of configuration relevant to one of the two captures under
 // comparison.
 struct HalfOfSamplingWithFrameTrackReportConfig {
@@ -95,12 +100,12 @@ class SamplingWithFrameTrackComparisonReport {
       Baseline<orbit_client_data::ScopeStats> baseline_frame_track_stats,
       Comparison<SamplingCounts> comparison_sampling_counts,
       Comparison<orbit_client_data::ScopeStats> comparison_frame_track_stats,
-      absl::flat_hash_map<SFID, ComparisonResult> fid_to_comparison_results)
+      absl::flat_hash_map<SFID, CorrectedComparisonResult> fid_to_corrected_comparison_results)
       : baseline_sampling_counts_(std::move(baseline_sampling_counts)),
         baseline_frame_track_stats_(std::move(baseline_frame_track_stats)),
         comparison_sampling_counts_(std::move(comparison_sampling_counts)),
         comparison_frame_track_stats_(std::move(comparison_frame_track_stats)),
-        fid_to_comparison_results_(std::move(fid_to_comparison_results)) {}
+        fid_to_corrected_comparison_results_(std::move(fid_to_corrected_comparison_results)) {}
 
   // TODO(b/236714217) de-template the getter
   template <template <typename> typename Wrapper>
@@ -123,8 +128,8 @@ class SamplingWithFrameTrackComparisonReport {
     }
   }
 
-  [[nodiscard]] const ComparisonResult& GetComparisonResult(SFID sfid) const {
-    return fid_to_comparison_results_.at(sfid);
+  [[nodiscard]] const CorrectedComparisonResult& GetComparisonResult(SFID sfid) const {
+    return fid_to_corrected_comparison_results_.at(sfid);
   }
 
  private:
@@ -134,7 +139,7 @@ class SamplingWithFrameTrackComparisonReport {
   Comparison<SamplingCounts> comparison_sampling_counts_;
   Comparison<orbit_client_data::ScopeStats> comparison_frame_track_stats_;
 
-  absl::flat_hash_map<SFID, ComparisonResult> fid_to_comparison_results_;
+  absl::flat_hash_map<SFID, CorrectedComparisonResult> fid_to_corrected_comparison_results_;
 };
 
 }  // namespace orbit_mizar_data
