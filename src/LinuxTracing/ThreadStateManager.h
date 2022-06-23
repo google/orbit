@@ -52,7 +52,7 @@ class ThreadStateManager {
   void OnNewTask(uint64_t timestamp_ns, pid_t tid, pid_t was_created_by_tid,
                  pid_t was_created_by_pid);
   [[nodiscard]] std::optional<orbit_grpc_protos::ThreadStateSlice> OnSchedWakeup(
-      uint64_t timestamp_ns, pid_t tid, pid_t was_blocked_by_tid, pid_t was_blocked_by_pid);
+      uint64_t timestamp_ns, pid_t tid, pid_t was_unblocked_by_tid, pid_t was_unblocked_by_pid);
   [[nodiscard]] std::optional<orbit_grpc_protos::ThreadStateSlice> OnSchedSwitchIn(
       uint64_t timestamp_ns, pid_t tid);
   [[nodiscard]] std::optional<orbit_grpc_protos::ThreadStateSlice> OnSchedSwitchOut(
@@ -66,7 +66,7 @@ class ThreadStateManager {
               pid_t wakeup_tid = orbit_base::kInvalidThreadId,
               pid_t wakeup_pid = orbit_base::kInvalidProcessId,
               orbit_grpc_protos::ThreadStateSlice::WakeupReason wakeup_reason = orbit_grpc_protos::
-                  ThreadStateSlice::WakeupReason::ThreadStateSlice_WakeupReason_kNotApplicable)
+                  ThreadStateSlice::kNotApplicable)
         : state{state},
           begin_timestamp_ns{begin_timestamp_ns},
           wakeup_tid{wakeup_tid},
@@ -74,14 +74,13 @@ class ThreadStateManager {
           wakeup_reason{wakeup_reason} {}
     orbit_grpc_protos::ThreadStateSlice::ThreadState state;
     uint64_t begin_timestamp_ns;
-    // The next two fields are optional. We use them to transfer info between interruptible sleep
-    // state (gray) and runnable state (blue), so we can know which tid and pid caused the thread to
-    // turn into a runnable state.
+    // The next two fields are optional. We use them to indicate which tid and pid caused the 
+    // thread to transition from a non-runnable to a runnable state.
     pid_t wakeup_tid = orbit_base::kInvalidThreadId;
     pid_t wakeup_pid = orbit_base::kInvalidProcessId;
-    // the following field explains the relation between this thread and the thread that woke it up.
+    // The following field explains the relation between this thread and the thread that woke it up.
     orbit_grpc_protos::ThreadStateSlice::WakeupReason wakeup_reason = orbit_grpc_protos::
-        ThreadStateSlice::WakeupReason::ThreadStateSlice_WakeupReason_kNotApplicable;
+        ThreadStateSlice::kNotApplicable;
   };
 
   absl::flat_hash_map<pid_t, OpenState> tid_open_states_;

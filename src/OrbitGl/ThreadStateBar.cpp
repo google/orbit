@@ -101,11 +101,9 @@ static Color GetThreadStateColor(ThreadStateSlice::ThreadState state) {
     case ThreadStateSliceInfo::WakeupReason::kNotApplicable:
       return "Not Applicable";
     case ThreadStateSliceInfo::WakeupReason::kUnblocked:
-      return "Blocked";
+      return "Unblocked";
     case ThreadStateSliceInfo::WakeupReason::kCreated:
       return "Created";
-    default:
-      return "Not Applicable";
   }
 }
 
@@ -186,6 +184,7 @@ std::string ThreadStateBar::GetThreadStateSliceTooltip(PrimitiveAssembler& primi
     std::string reason = GetWakeupReason(thread_state_slice->wakeup_reason());
     std::string thread_name = capture_data_->GetThreadName(thread_state_slice->wakeup_tid());
     std::string process_name = capture_data_->GetThreadName(thread_state_slice->wakeup_pid());
+
     tooltip += absl::StrFormat(
         "<br/>"
         "<b>Was %s By Process:</b> %s [%d]"

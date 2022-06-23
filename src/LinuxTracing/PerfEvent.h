@@ -203,8 +203,8 @@ using SchedSwitchPerfEvent = TypedPerfEvent<SchedSwitchPerfEventData>;
 
 struct SchedWakeupPerfEventData {
   pid_t woken_tid;
-  pid_t was_blocked_by_tid;
-  pid_t was_blocked_by_pid;
+  pid_t was_unblocked_by_tid;
+  pid_t was_unblocked_by_pid;
 };
 using SchedWakeupPerfEvent = TypedPerfEvent<SchedWakeupPerfEventData>;
 
