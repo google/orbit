@@ -13,7 +13,7 @@
 #include "OrbitBase/Typedef.h"
 
 namespace {
-struct TestTag {};
+struct MyTypeTag {};
 
 struct Integer {
   [[nodiscard]] Integer Add(const Integer& other) const { return {value + other.value}; }
@@ -42,32 +42,33 @@ struct D {
 static int Add(int i, int j) { return i + j; }
 
 namespace orbit_base {
+
 template <typename T>
-using Wrapper = Typedef<TestTag, T>;
+using MyType = Typedef<MyTypeTag, T>;
 
 TEST(TypedefTest, CanInstantiate) {
   const int kConstInt = 1;
-  Wrapper<int> wrapper_of_const(kConstInt);
+  MyType<int> wrapper_of_const(kConstInt);
   EXPECT_EQ(*wrapper_of_const, kConstInt);
 
   constexpr int kConstexprInt = 1;
-  Wrapper<int> wrapper_of_constexpr(kConstexprInt);
+  MyType<int> wrapper_of_constexpr(kConstexprInt);
   EXPECT_EQ(*wrapper_of_constexpr, kConstexprInt);
 
   int non_const = 1;
-  Wrapper<int> wrapper_of_non_const(non_const);
+  MyType<int> wrapper_of_non_const(non_const);
   EXPECT_EQ(*wrapper_of_non_const, non_const);
 
-  Wrapper<int> wrapper_of_literal(1);
+  MyType<int> wrapper_of_literal(1);
   EXPECT_EQ(*wrapper_of_literal, 1);
 
-  Wrapper<std::string> wrapper_of_string("foo");
+  MyType<std::string> wrapper_of_string("foo");
   EXPECT_EQ(*wrapper_of_string, "foo");
 
-  Wrapper<std::unique_ptr<int>> wrapper_of_unique_ptr(std::make_unique<int>(kConstInt));
+  MyType<std::unique_ptr<int>> wrapper_of_unique_ptr(std::make_unique<int>(kConstInt));
   EXPECT_EQ(**wrapper_of_unique_ptr, kConstInt);
 
-  Wrapper<std::mutex> wrapper_of_mutex(std::in_place);  // test it compiles
+  MyType<std::mutex> wrapper_of_mutex(std::in_place);  // test it compiles
   std::ignore = wrapper_of_mutex;
 }
 
@@ -75,11 +76,11 @@ TEST(TypedefTest, ImplicitConversionIsCorrect) {
   const int kValue = 1;
 
   {
-    const Wrapper<B> wrapped_b(B{{kValue}});
+    const MyType<B> wrapped_b(B{{kValue}});
 
     bool is_called = false;
     int value_called_on{};
-    auto take_const_ref = [&is_called, &value_called_on](const Wrapper<A>& a) {
+    auto take_const_ref = [&is_called, &value_called_on](const MyType<A>& a) {
       is_called = true;
       value_called_on = a->value;
     };
@@ -90,11 +91,11 @@ TEST(TypedefTest, ImplicitConversionIsCorrect) {
   }
 
   {
-    Wrapper<B> wrapped_b(B{{kValue}});
+    MyType<B> wrapped_b(B{{kValue}});
 
     bool is_called = false;
     int value_called_on{};
-    auto take_rvalue_ref = [&is_called, &value_called_on](Wrapper<A>&& a) {
+    auto take_rvalue_ref = [&is_called, &value_called_on](MyType<A>&& a) {
       is_called = true;
       value_called_on = a->value;
     };
@@ -105,14 +106,14 @@ TEST(TypedefTest, ImplicitConversionIsCorrect) {
   }
 
   {
-    Wrapper<A> wrapped_a(A{kValue});
-    Wrapper<C> wrapped_c(wrapped_a);
+    MyType<A> wrapped_a(A{kValue});
+    MyType<C> wrapped_c(wrapped_a);
     EXPECT_EQ(wrapped_c->value, kValue);
   }
 
   {
-    Wrapper<A> wrapped_a(A{kValue});
-    Wrapper<D> wrapped_c(std::move(wrapped_a));
+    MyType<A> wrapped_a(A{kValue});
+    MyType<D> wrapped_c(std::move(wrapped_a));
     EXPECT_EQ(wrapped_c->value, kValue);
   }
 }
@@ -121,29 +122,29 @@ TEST(TypedefTest, AssignmentIsCorrect) {
   const int kValue = 1;
   const int kValueOther = 1;
   {
-    Wrapper<A> wrapped_a(A{kValue});
-    Wrapper<A> wrapped_a_other(A{kValueOther});
+    MyType<A> wrapped_a(A{kValue});
+    MyType<A> wrapped_a_other(A{kValueOther});
     wrapped_a_other = wrapped_a;
     EXPECT_EQ(wrapped_a_other->value, kValueOther);
   }
 
   {
-    Wrapper<A> wrapped_a(A{kValue});
-    Wrapper<A> wrapped_a_other(A{kValueOther});
+    MyType<A> wrapped_a(A{kValue});
+    MyType<A> wrapped_a_other(A{kValueOther});
     wrapped_a_other = std::move(wrapped_a);
     EXPECT_EQ(wrapped_a_other->value, kValueOther);
   }
 
   {
-    Wrapper<B> wrapped_b(B{{kValue}});
-    Wrapper<A> wrapped_a_other(A{kValueOther});
+    MyType<B> wrapped_b(B{{kValue}});
+    MyType<A> wrapped_a_other(A{kValueOther});
     wrapped_a_other = wrapped_b;
     EXPECT_EQ(wrapped_a_other->value, kValueOther);
   }
 
   {
-    Wrapper<B> wrapped_b(B{{kValue}});
-    Wrapper<A> wrapped_a_other(A{kValueOther});
+    MyType<B> wrapped_b(B{{kValue}});
+    MyType<A> wrapped_a_other(A{kValueOther});
     wrapped_a_other = std::move(wrapped_b);
     EXPECT_EQ(wrapped_a_other->value, kValueOther);
   }
@@ -154,12 +155,12 @@ TEST(TypedefTest, CallIsCorrect) {
   const int kSecond = 2;
   const int kSum = kFirst + kSecond;
 
-  const Wrapper<int> kFirstWrapped(kFirst);
-  const Wrapper<int> kSecondWrapped(kSecond);
+  const MyType<int> kFirstWrapped(kFirst);
+  const MyType<int> kSecondWrapped(kSecond);
 
   {
     auto add = [](int i, int j) { return i + j; };
-    const Wrapper<int> sum_wrapped = Apply(add, kFirstWrapped, kSecondWrapped);
+    const MyType<int> sum_wrapped = Apply(add, kFirstWrapped, kSecondWrapped);
     EXPECT_EQ(*sum_wrapped, kSum);
   }
 
@@ -170,9 +171,9 @@ TEST(TypedefTest, CallIsCorrect) {
       return sum;
     };
 
-    Wrapper<int> first(kFirst);
-    Wrapper<int> second(kSecond);
-    const Wrapper<int> sum_wrapped = Apply(add, first, second);
+    MyType<int> first(kFirst);
+    MyType<int> second(kSecond);
+    const MyType<int> sum_wrapped = Apply(add, first, second);
     EXPECT_EQ(*sum_wrapped, kSum);
     EXPECT_EQ(*first, kSecond);
     EXPECT_EQ(*second, kSecond);
@@ -181,36 +182,36 @@ TEST(TypedefTest, CallIsCorrect) {
   {
     auto add = [](int&& i, int&& j) { return i + j; };
 
-    Wrapper<int> first(kFirst);
-    Wrapper<int> second(kSecond);
-    const Wrapper<int> sum_wrapped = Apply(add, std::move(first), std::move(second));
+    MyType<int> first(kFirst);
+    MyType<int> second(kSecond);
+    const MyType<int> sum_wrapped = Apply(add, std::move(first), std::move(second));
     EXPECT_EQ(*sum_wrapped, kSum);
   }
 
   {
     auto add = [](const int& i, int&& j) { return i + j; };
 
-    Wrapper<int> second(kSecond);
-    const Wrapper<int> sum_wrapped = Apply(add, kFirstWrapped, std::move(second));
+    MyType<int> second(kSecond);
+    const MyType<int> sum_wrapped = Apply(add, kFirstWrapped, std::move(second));
     EXPECT_EQ(*sum_wrapped, kSum);
   }
 
   {
     auto add = [](const std::unique_ptr<int>& i, const std::unique_ptr<int>& j) { return *i + *j; };
-    Wrapper<std::unique_ptr<int>> first(std::make_unique<int>(kFirst));
-    Wrapper<std::unique_ptr<int>> second(std::make_unique<int>(kSecond));
-    const Wrapper<int> sum_wrapped = Apply(add, first, second);
+    MyType<std::unique_ptr<int>> first(std::make_unique<int>(kFirst));
+    MyType<std::unique_ptr<int>> second(std::make_unique<int>(kSecond));
+    const MyType<int> sum_wrapped = Apply(add, first, second);
     EXPECT_EQ(*sum_wrapped, kSum);
   }
 
   {
     auto add = [](const int& i, const int& j) { return i + j; };
-    const Wrapper<int> sum_wrapped = Apply(add, kFirstWrapped, kSecondWrapped);
+    const MyType<int> sum_wrapped = Apply(add, kFirstWrapped, kSecondWrapped);
     EXPECT_EQ(*sum_wrapped, kSum);
   }
 
   {
-    const Wrapper<int> sum_wrapped = Apply(Add, kFirstWrapped, kSecondWrapped);
+    const MyType<int> sum_wrapped = Apply(Add, kFirstWrapped, kSecondWrapped);
     EXPECT_EQ(*sum_wrapped, kSum);
   }
 
@@ -221,16 +222,16 @@ TEST(TypedefTest, CallIsCorrect) {
       was_called = true;
       was_called_with = i;
     };
-    const Wrapper<void> void_wrapped = Apply(returns_void, kFirstWrapped);
+    const MyType<void> void_wrapped = Apply(returns_void, kFirstWrapped);
     std::ignore = void_wrapped;
     EXPECT_TRUE(was_called);
     EXPECT_EQ(was_called_with, kFirst);
   }
 
   {
-    Wrapper<Integer> first(Integer{kFirst});
-    Wrapper<Integer> second(Integer{kSecond});
-    Wrapper<Integer> sum_wrapped = Apply(&Integer::Add, first, second);
+    MyType<Integer> first(Integer{kFirst});
+    MyType<Integer> second(Integer{kSecond});
+    MyType<Integer> sum_wrapped = Apply(&Integer::Add, first, second);
     EXPECT_EQ(sum_wrapped->value, kSum);
   }
 }

@@ -15,37 +15,19 @@ template <typename T, typename U>
 using EnableIfUConvertibleToT = std::enable_if_t<std::is_convertible_v<U, T>>;
 
 template <typename T, typename U>
-using EnableIfUIsNotConvertibleToT = std::enable_if_t<!std::is_convertible_v<U, T>>;
+using EnableIfUNotConvertibleToT = std::enable_if_t<!std::is_convertible_v<U, T>>;
 
 // Strong typedef.
-// It is parameterized by two types. `T`, which represents the type of the stored value and `Tag_`,
+// It is parameterized by two types. `T`, which represents the type of the stored value, and `Tag_`,
 // which allows to distinguish between different Typedefs. First, the user is expected to define a
-// tag. Like `struct TestTag {};`
+// tag. Like `struct MyTypeTag {};`
 // Also, a templated alias can come in handy
 // ```
 // template <typename T>
-// using Wrapper = Typedef<TestTag, T>;
+// using MyType = Typedef<MyTypeTag, T>;
+// MyType<int> wrapped(1);
 // ```
-// Now we can instantiate the typedefs
-// ```
-// const Wrapper<int> kFirstWrapped(1);
-// const Wrapper<int> kSecondWrapped(2);
-// ```
-// and define a callable (not necessarily a lambda)
-// `auto add = [](int i, int j) { return i + j; };`
-// Finally, we can use `Apply` function to apply `add` to the values stored in `kFirstWrapped` and
-// `kSecondWrapped`. The returned value of the add will be wrapped in a typedef with the same
-// `Tag_`.
-// `const Wrapper<int> sum_wrapped = Apply(add, kFirstWrapped, kSecondWrapped);`
-// Naturally, had we supplied the arguments wrapped in Typedefs of different `Tag_`, the code
-// wouldn't compile.
-// ```
-// struct OtherTag {};
-// using OtherWrapper = Typedef<OtherTag, T>;
-// const OtherWrapper<int> kWrong(2);
-// Apply(add, kFirstWrapped, kWrong); // ERROR!!!
-// ```
-// See TypedefTest.cpp for more examples.
+// See TypedefTest.cpp for examples.
 template <typename Tag_, typename T>
 class Typedef {
  public:
@@ -74,10 +56,10 @@ class Typedef {
   template <typename U, typename = EnableIfUConvertibleToT<T, U>>
   constexpr Typedef(Typedef<Tag_, U>&& other) : value_(std::move(*other)) {}
 
-  template <typename U, typename = EnableIfUIsNotConvertibleToT<T, U>, typename = void>
+  template <typename U, typename = EnableIfUNotConvertibleToT<T, U>, typename = void>
   constexpr explicit Typedef(const Typedef<Tag_, U>& other) : value_(*other) {}
 
-  template <typename U, typename = EnableIfUIsNotConvertibleToT<T, U>, typename = void>
+  template <typename U, typename = EnableIfUNotConvertibleToT<T, U>, typename = void>
   constexpr explicit Typedef(Typedef<Tag_, U>&& other) : value_(std::move(*other)) {}
 
   constexpr Typedef& operator=(Typedef const&) = default;
@@ -102,9 +84,26 @@ class Typedef {
 template <typename Tag>
 class Typedef<Tag, void> {};
 
-// `action` is a callable. `args` are its args wrapped in `Typedef`s  with the same `Tag`. The args
-// are unwrapped, `action` is invoked on them. The returned value is wrapped in a `Typedef` with the
-// same `Tag` and returned.
+// Say, we have a pair of typedefs.
+// ```
+// const MyType<int> kFirstWrapped(1);
+// const MyType<int> kSecondWrapped(2);
+// ```
+// and also a callable (not necessarily a lambda)
+// `auto add = [](int i, int j) { return i + j; };`
+// Finally, we can use `Apply` function to apply `add` to the values stored in `kFirstWrapped` and
+// `kSecondWrapped`. The returned value of the add will be wrapped in a typedef with the same
+// `Tag_`.
+// `const MyType<int> sum_wrapped = Apply(add, kFirstWrapped, kSecondWrapped);`
+// Naturally, had we supplied the arguments wrapped in Typedefs of different `Tag_`, the code
+// wouldn't compile.
+// ```
+// struct OtherTag {};
+// using MyOtherType = Typedef<OtherTag, T>;
+// const MyOtherType<int> kWrong(2);
+// Apply(add, kFirstWrapped, kWrong); // ERROR!!!
+// ```
+// See TypedefTest.cpp for more examples.
 template <typename Action, typename Arg, typename... Args>
 auto Apply(Action&& action, Arg&& arg, Args&&... args) {
   using Tag = typename std::decay_t<Arg>::Tag;
