@@ -131,7 +131,7 @@ std::shared_ptr<CallstackInfo> CallstackData::GetCallstackPtr(uint64_t callstack
   return nullptr;
 }
 
-static inline bool IsPcInFunctionsToStopAt(
+static inline bool IsPcInFunctionsToStopUnwindingAt(
     const std::map<uint64_t, uint64_t>& absolute_address_to_size_of_functions_to_stop_unwinding_at,
     uint64_t pc) {
   auto function_it = absolute_address_to_size_of_functions_to_stop_unwinding_at.upper_bound(pc);
@@ -165,13 +165,13 @@ void CallstackData::UpdateCallstackTypeBasedOnMajorityStart(
       if (callstack.type() != CallstackType::kComplete) {
         continue;
       }
-      ++count_for_this_thread;
 
       const auto& frames = callstack.frames();
       ORBIT_CHECK(!frames.empty());
       uint64_t outer_frame = *frames.rbegin();
-      if (!IsPcInFunctionsToStopAt(absolute_address_to_size_of_functions_to_stop_unwinding_at,
-                                   outer_frame)) {
+      if (!IsPcInFunctionsToStopUnwindingAt(
+              absolute_address_to_size_of_functions_to_stop_unwinding_at, outer_frame)) {
+        ++count_for_this_thread;
         ++count_by_outer_frame[outer_frame];
       }
     }
@@ -216,8 +216,8 @@ void CallstackData::UpdateCallstackTypeBasedOnMajorityStart(
       ORBIT_CHECK(!frames.empty());
       uint64_t outermost_frame = *frames.rbegin();
       if (outermost_frame != majority_outer_frame &&
-          !IsPcInFunctionsToStopAt(absolute_address_to_size_of_functions_to_stop_unwinding_at,
-                                   outermost_frame)) {
+          !IsPcInFunctionsToStopUnwindingAt(
+              absolute_address_to_size_of_functions_to_stop_unwinding_at, outermost_frame)) {
         callstack_ids_to_filter.insert(event.callstack_id());
       }
     }

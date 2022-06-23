@@ -184,13 +184,6 @@ TEST(CallstackData, FilterCallstackEventsBasedOnMajorityStartExcludesFunctionToS
   CallstackEvent event6{time6, cs2_id, kTid};
   callstack_data.AddCallstackEvent(event6);
 
-  const uint64_t time7 = 742;
-  CallstackEvent event7{time7, cs1_id, kTid};
-  callstack_data.AddCallstackEvent(event7);
-
-  const uint64_t time8 = 842;
-  CallstackEvent event8{time8, cs1_id, kTid};
-  callstack_data.AddCallstackEvent(event8);
 
   callstack_data.UpdateCallstackTypeBasedOnMajorityStart({{kFunctionToStopUnwindingAtAddress, 10}});
 
@@ -201,11 +194,11 @@ TEST(CallstackData, FilterCallstackEventsBasedOnMajorityStartExcludesFunctionToS
   EXPECT_EQ(callstack_data.GetCallstack(function_to_stop_unwinding_at_cs_id)->type(),
             CallstackType::kComplete);
 
-  EXPECT_THAT(callstack_data.GetCallstackEventsOfTidInTimeRange(
-                  kTid, 0, std::numeric_limits<uint64_t>::max()),
-              testing::Pointwise(CallstackEventEq(),
-                                 std::vector<CallstackEvent>{event1, event2, event3, event4, event5,
-                                                             event6, event7, event8}));
+  EXPECT_THAT(
+      callstack_data.GetCallstackEventsOfTidInTimeRange(kTid, 0,
+                                                        std::numeric_limits<uint64_t>::max()),
+      testing::Pointwise(CallstackEventEq(), std::vector<CallstackEvent>{event1, event2, event3,
+                                                                         event4, event5, event6}));
 }
 
 }  // namespace orbit_client_data
