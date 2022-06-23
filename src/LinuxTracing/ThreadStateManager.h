@@ -81,7 +81,7 @@ class ThreadStateManager {
     pid_t wakeup_pid = orbit_base::kInvalidProcessId;
     // the following field explains the relation between this thread and the thread that woke it up.
     orbit_grpc_protos::ThreadStateSlice::WakeupReason wakeup_reason = orbit_grpc_protos::
-        ThreadStateSlice_WakeupReason::ThreadStateSlice_WakeupReason_kNotApplicable;
+        ThreadStateSlice::WakeupReason::ThreadStateSlice_WakeupReason_kNotApplicable;
   };
 
   absl::flat_hash_map<pid_t, OpenState> tid_open_states_;
