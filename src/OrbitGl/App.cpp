@@ -3151,7 +3151,6 @@ SymbolLoadingState OrbitApp::GetSymbolLoadingStateForModule(const ModuleData* mo
   if (modules_with_symbol_loading_error_.contains(module_id)) {
     return SymbolLoadingState::kError;
   }
-  // TODO(b/202140068) add missing error and disabled case
 
   return SymbolLoadingState::kUnknown;
 }
