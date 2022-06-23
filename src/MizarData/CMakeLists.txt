@@ -9,7 +9,6 @@ add_library(MizarData STATIC)
 target_sources(MizarData PUBLIC
          include/MizarData/ActiveFunctionTimePerFrameComparator.h
          include/MizarData/BaselineAndComparison.h
-         include/MizarData/BaselineOrComparison.h
          include/MizarData/MizarData.h
          include/MizarData/MizarDataProvider.h
          include/MizarData/MizarPairedData.h
@@ -26,7 +25,8 @@ target_sources(MizarData PRIVATE
 
 target_link_libraries(
         MizarData
-        PUBLIC  CaptureClient
+        PUBLIC CaptureClient
+                MizarBase
                 OrbitPaths
                 Statistics
                 Symbols

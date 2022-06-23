@@ -50,6 +50,8 @@ target_sources(OrbitBase PRIVATE
         include/OrbitBase/ThreadConstants.h
         include/OrbitBase/ThreadPool.h
         include/OrbitBase/ThreadUtils.h
+        include/OrbitBase/Typedef.h
+        include/OrbitBase/TypedefUtils.h
         include/OrbitBase/UniqueResource.h
         include/OrbitBase/VoidToMonostate.h
         include/OrbitBase/WhenAll.h
@@ -94,7 +96,6 @@ target_link_libraries(OrbitBase PUBLIC
         CONAN_PKG::outcome
         std::filesystem)
 
-
 add_executable(OrbitBaseTests)
 
 target_sources(OrbitBaseTests PRIVATE
@@ -122,6 +123,7 @@ target_sources(OrbitBaseTests PRIVATE
         StopTokenTest.cpp
         TaskGroupTest.cpp
         TemporaryFileTest.cpp
+        TypedefTest.cpp
         ThreadUtilsTest.cpp
         UniqueResourceTest.cpp
         WhenAllTest.cpp

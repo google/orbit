@@ -11,8 +11,8 @@
 #include <type_traits>
 #include <utility>
 
+#include "MizarBase/BaselineOrComparison.h"
 #include "MizarData/ActiveFunctionTimePerFrameComparator.h"
-#include "MizarData/BaselineOrComparison.h"
 #include "MizarData/SampledFunctionId.h"
 #include "MizarData/SamplingWithFrameTrackComparisonReport.h"
 
@@ -21,6 +21,12 @@ namespace orbit_mizar_data {
 using testing::DoubleNear;
 using testing::IsNan;
 using testing::Return;
+
+template <typename T>
+using Baseline = ::orbit_mizar_base::Baseline<T>;
+
+template <typename T>
+using Comparison = ::orbit_mizar_base::Comparison<T>;
 
 namespace {
 class MockCounts {
