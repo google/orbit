@@ -41,9 +41,9 @@ class ActiveFunctionTimePerFrameComparatorTmpl {
         comparison_frame_stats_(comparison_frame_stats) {}
 
   [[nodiscard]] ComparisonResult Compare(SFID sfid) const {
-    const Baseline<orbit_statistics::MeanAndVariance> baseline_active_time =
-        Apply(ActiveFunctionTime, baseline_counts_, baseline_frame_stats_, Baseline<SFID>(sfid));
-    const Comparison<orbit_statistics::MeanAndVariance> comparison_active_time = Apply(
+    const Baseline<orbit_statistics::MeanAndVariance> baseline_active_time = LiftAndApply(
+        ActiveFunctionTime, baseline_counts_, baseline_frame_stats_, Baseline<SFID>(sfid));
+    const Comparison<orbit_statistics::MeanAndVariance> comparison_active_time = LiftAndApply(
         ActiveFunctionTime, comparison_counts_, comparison_frame_stats_, Comparison<SFID>(sfid));
     const orbit_statistics::MeanAndVariance non_normalized_statistic =
         NonNormalizedStatistic(baseline_active_time, comparison_active_time);

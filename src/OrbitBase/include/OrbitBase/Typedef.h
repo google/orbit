@@ -6,16 +6,11 @@
 #define ORBIT_BASE_TYPEDEF_H_
 
 #include <functional>
-#include <type_traits>
 #include <utility>
 
+#include "OrbitBase/TypedefUtils.h"
+
 namespace orbit_base {
-
-template <typename T, typename U>
-using EnableIfUConvertibleToT = std::enable_if_t<std::is_convertible_v<U, T>>;
-
-template <typename T, typename U>
-using EnableIfUNotConvertibleToT = std::enable_if_t<!std::is_convertible_v<U, T>>;
 
 // Strong typedef.
 // It is parameterized by two types. `T`, which represents the type of the stored value, and `Tag_`,
@@ -27,6 +22,7 @@ using EnableIfUNotConvertibleToT = std::enable_if_t<!std::is_convertible_v<U, T>
 // using MyType = Typedef<MyTypeTag, T>;
 // MyType<int> wrapped(1);
 // ```
+// One can access the underlying value with `*` and `->` operators.
 // See TypedefTest.cpp for examples.
 template <typename Tag_, typename T>
 class Typedef {
@@ -41,7 +37,7 @@ class Typedef {
   [[nodiscard]] constexpr const T&& operator*() const&& { return std::move(value_); }
   [[nodiscard]] constexpr T& operator*() & { return value_; }
 
-  template <typename U, typename = EnableIfUConvertibleToT<T, U>>
+  template <typename U, typename = orbit_base_internal::EnableIfUConvertibleToT<T, U>>
   constexpr explicit Typedef(U&& value) : value_(std::forward<U>(value)) {}
 
   template <typename... Args>
@@ -50,28 +46,30 @@ class Typedef {
 
   constexpr Typedef(Typedef&& other) = default;
 
-  template <typename U, typename = EnableIfUConvertibleToT<T, U>>
+  template <typename U, typename = orbit_base_internal::EnableIfUConvertibleToT<T, U>>
   constexpr Typedef(const Typedef<Tag_, U>& other) : value_(*other) {}
 
-  template <typename U, typename = EnableIfUConvertibleToT<T, U>>
+  template <typename U, typename = orbit_base_internal::EnableIfUConvertibleToT<T, U>>
   constexpr Typedef(Typedef<Tag_, U>&& other) : value_(std::move(*other)) {}
 
-  template <typename U, typename = EnableIfUNotConvertibleToT<T, U>, typename = void>
+  template <typename U, typename = orbit_base_internal::EnableIfUNotConvertibleToT<T, U>,
+            typename = void>
   constexpr explicit Typedef(const Typedef<Tag_, U>& other) : value_(*other) {}
 
-  template <typename U, typename = EnableIfUNotConvertibleToT<T, U>, typename = void>
+  template <typename U, typename = orbit_base_internal::EnableIfUNotConvertibleToT<T, U>,
+            typename = void>
   constexpr explicit Typedef(Typedef<Tag_, U>&& other) : value_(std::move(*other)) {}
 
   constexpr Typedef& operator=(Typedef const&) = default;
   constexpr Typedef& operator=(Typedef&&) = default;
 
-  template <typename U, typename = EnableIfUConvertibleToT<T, U>>
+  template <typename U, typename = orbit_base_internal::EnableIfUConvertibleToT<T, U>>
   constexpr Typedef& operator=(const Typedef<Tag_, U>& other) {
     value_ = *other;
     return *this;
   }
 
-  template <typename U, typename = EnableIfUConvertibleToT<T, U>>
+  template <typename U, typename = orbit_base_internal::EnableIfUConvertibleToT<T, U>>
   constexpr Typedef& operator=(Typedef<Tag_, U>&& other) {
     value_ = std::move(*other);
     return *this;
@@ -105,7 +103,7 @@ class Typedef<Tag, void> {};
 // ```
 // See TypedefTest.cpp for more examples.
 template <typename Action, typename Arg, typename... Args>
-auto Apply(Action&& action, Arg&& arg, Args&&... args) {
+auto LiftAndApply(Action&& action, Arg&& arg, Args&&... args) {
   using Tag = typename std::decay_t<Arg>::Tag;
   static_assert((std::is_same_v<Tag, typename std::decay_t<Args>::Tag> && ...),
                 "Typedef tags don't match.");

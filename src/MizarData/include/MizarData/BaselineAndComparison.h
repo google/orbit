@@ -44,14 +44,14 @@ class BaselineAndComparisonTmpl {
       Baseline<HalfOfSamplingWithFrameTrackReportConfig> baseline_config,
       Comparison<HalfOfSamplingWithFrameTrackReportConfig> comparison_config) const {
     Baseline<SamplingCounts> baseline_sampling_counts =
-        Apply(MakeCounts, baseline_, baseline_config);
+        LiftAndApply(MakeCounts, baseline_, baseline_config);
     Baseline<orbit_client_data::ScopeStats> baseline_frame_stats =
-        Apply(MakeFrameTrackStats, baseline_, baseline_config);
+        LiftAndApply(MakeFrameTrackStats, baseline_, baseline_config);
 
     Comparison<SamplingCounts> comparison_sampling_counts =
-        Apply(MakeCounts, comparison_, comparison_config);
+        LiftAndApply(MakeCounts, comparison_, comparison_config);
     Comparison<orbit_client_data::ScopeStats> comparison_frame_stats =
-        Apply(MakeFrameTrackStats, comparison_, comparison_config);
+        LiftAndApply(MakeFrameTrackStats, comparison_, comparison_config);
 
     FunctionTimeComparator comparator(baseline_sampling_counts, baseline_frame_stats,
                                       comparison_sampling_counts, comparison_frame_stats);

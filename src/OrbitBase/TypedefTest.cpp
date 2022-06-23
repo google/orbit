@@ -160,7 +160,7 @@ TEST(TypedefTest, CallIsCorrect) {
 
   {
     auto add = [](int i, int j) { return i + j; };
-    const MyType<int> sum_wrapped = Apply(add, kFirstWrapped, kSecondWrapped);
+    const MyType<int> sum_wrapped = LiftAndApply(add, kFirstWrapped, kSecondWrapped);
     EXPECT_EQ(*sum_wrapped, kSum);
   }
 
@@ -173,7 +173,7 @@ TEST(TypedefTest, CallIsCorrect) {
 
     MyType<int> first(kFirst);
     MyType<int> second(kSecond);
-    const MyType<int> sum_wrapped = Apply(add, first, second);
+    const MyType<int> sum_wrapped = LiftAndApply(add, first, second);
     EXPECT_EQ(*sum_wrapped, kSum);
     EXPECT_EQ(*first, kSecond);
     EXPECT_EQ(*second, kSecond);
@@ -184,7 +184,7 @@ TEST(TypedefTest, CallIsCorrect) {
 
     MyType<int> first(kFirst);
     MyType<int> second(kSecond);
-    const MyType<int> sum_wrapped = Apply(add, std::move(first), std::move(second));
+    const MyType<int> sum_wrapped = LiftAndApply(add, std::move(first), std::move(second));
     EXPECT_EQ(*sum_wrapped, kSum);
   }
 
@@ -192,7 +192,7 @@ TEST(TypedefTest, CallIsCorrect) {
     auto add = [](const int& i, int&& j) { return i + j; };
 
     MyType<int> second(kSecond);
-    const MyType<int> sum_wrapped = Apply(add, kFirstWrapped, std::move(second));
+    const MyType<int> sum_wrapped = LiftAndApply(add, kFirstWrapped, std::move(second));
     EXPECT_EQ(*sum_wrapped, kSum);
   }
 
@@ -200,18 +200,18 @@ TEST(TypedefTest, CallIsCorrect) {
     auto add = [](const std::unique_ptr<int>& i, const std::unique_ptr<int>& j) { return *i + *j; };
     MyType<std::unique_ptr<int>> first(std::make_unique<int>(kFirst));
     MyType<std::unique_ptr<int>> second(std::make_unique<int>(kSecond));
-    const MyType<int> sum_wrapped = Apply(add, first, second);
+    const MyType<int> sum_wrapped = LiftAndApply(add, first, second);
     EXPECT_EQ(*sum_wrapped, kSum);
   }
 
   {
     auto add = [](const int& i, const int& j) { return i + j; };
-    const MyType<int> sum_wrapped = Apply(add, kFirstWrapped, kSecondWrapped);
+    const MyType<int> sum_wrapped = LiftAndApply(add, kFirstWrapped, kSecondWrapped);
     EXPECT_EQ(*sum_wrapped, kSum);
   }
 
   {
-    const MyType<int> sum_wrapped = Apply(Add, kFirstWrapped, kSecondWrapped);
+    const MyType<int> sum_wrapped = LiftAndApply(Add, kFirstWrapped, kSecondWrapped);
     EXPECT_EQ(*sum_wrapped, kSum);
   }
 
@@ -222,7 +222,7 @@ TEST(TypedefTest, CallIsCorrect) {
       was_called = true;
       was_called_with = i;
     };
-    const MyType<void> void_wrapped = Apply(returns_void, kFirstWrapped);
+    const MyType<void> void_wrapped = LiftAndApply(returns_void, kFirstWrapped);
     std::ignore = void_wrapped;
     EXPECT_TRUE(was_called);
     EXPECT_EQ(was_called_with, kFirst);
@@ -231,7 +231,7 @@ TEST(TypedefTest, CallIsCorrect) {
   {
     MyType<Integer> first(Integer{kFirst});
     MyType<Integer> second(Integer{kSecond});
-    MyType<Integer> sum_wrapped = Apply(&Integer::Add, first, second);
+    MyType<Integer> sum_wrapped = LiftAndApply(&Integer::Add, first, second);
     EXPECT_EQ(sum_wrapped->value, kSum);
   }
 }
