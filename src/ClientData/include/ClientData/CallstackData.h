@@ -19,6 +19,7 @@
 #include "ClientData/CallstackEvent.h"
 #include "ClientData/CallstackInfo.h"
 #include "ClientProtos/capture_data.pb.h"
+#include "ModuleManager.h"
 #include "OrbitBase/Logging.h"
 
 namespace orbit_client_data {
@@ -116,7 +117,9 @@ class CallstackData {
   // update the type of all the kComplete callstacks that have the outermost frame not matching the
   // majority outermost frame. This is a way to filter unwinding errors that were not reported as
   // such.
-  void UpdateCallstackTypeBasedOnMajorityStart();
+  void UpdateCallstackTypeBasedOnMajorityStart(
+      const std::map<uint64_t, uint64_t>&
+          absolute_address_to_size_of_functions_to_stop_unwinding_at);
 
  private:
   [[nodiscard]] std::shared_ptr<CallstackInfo> GetCallstackPtr(uint64_t callstack_id) const;
