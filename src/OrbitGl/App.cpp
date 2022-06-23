@@ -168,6 +168,8 @@ using UnwindingMethod = orbit_grpc_protos::CaptureOptions::UnwindingMethod;
 namespace {
 
 constexpr const char* kLibOrbitVulkanLayerSoFileName = "libOrbitVulkanLayer.so";
+constexpr const char* kNtdllSo = "ntdll.so";
+constexpr const char* kWineSyscallDispatcher = "__wine_syscall_dispatcher";
 constexpr std::string_view kGgpVlkModulePathSubstring = "ggpvlk.so";
 
 orbit_data_views::PresetLoadState GetPresetLoadStateForProcess(const PresetFile& preset,
@@ -1435,6 +1437,7 @@ void OrbitApp::StartCapture() {
 
   absl::flat_hash_map<uint64_t, FunctionInfo> selected_functions_map;
   absl::flat_hash_set<uint64_t> frame_track_function_ids;
+  bool record_user_stack_on_wine_syscall_dispatcher = false;
   // non-zero since 0 is reserved for invalid ids.
   uint64_t function_id = 1;
   for (const auto& function : selected_functions) {
@@ -1442,6 +1445,32 @@ void OrbitApp::StartCapture() {
       frame_track_function_ids.insert(function_id);
     }
     selected_functions_map.insert_or_assign(function_id++, function);
+  }
+
+  std::map<uint64_t, uint64_t> absolute_address_to_size_of_functions_to_stop_unwinding_at;
+  if (!record_user_stack_on_wine_syscall_dispatcher) {
+    std::vector<orbit_client_data::ModuleInMemory> ntdll_modules =
+        process_->FindModulesByFilename(kNtdllSo);
+    for (const auto& module_in_memory : ntdll_modules) {
+      const ModuleData* module_data = module_manager_->GetModuleByPathAndBuildId(
+          module_in_memory.file_path(), module_in_memory.build_id());
+
+      const FunctionInfo* wine_syscall_dispatcher_function =
+          module_data->FindFunctionFromPrettyName(kWineSyscallDispatcher);
+      if (wine_syscall_dispatcher_function == nullptr) {
+        continue;
+      }
+      uint64_t function_absolute_start_address =
+          orbit_object_utils::SymbolVirtualAddressToAbsoluteAddress(
+              wine_syscall_dispatcher_function->address(), module_in_memory.start(),
+              module_data->load_bias(), module_data->executable_segment_offset());
+
+      auto [unused_it, inserted] =
+          absolute_address_to_size_of_functions_to_stop_unwinding_at.insert_or_assign(
+              function_absolute_start_address, wine_syscall_dispatcher_function->size());
+      ORBIT_CHECK(inserted);
+      break;
+    }
   }
 
   ClientCaptureOptions options;
@@ -1461,6 +1490,8 @@ void OrbitApp::StartCapture() {
   options.collect_memory_info = data_manager_->collect_memory_info();
   options.memory_sampling_period_ms = data_manager_->memory_sampling_period_ms();
   options.selected_functions = std::move(selected_functions_map);
+  options.absolute_address_to_size_of_functions_to_stop_unwinding_at =
+      std::move(absolute_address_to_size_of_functions_to_stop_unwinding_at);
   options.process_id = process->pid();
   options.record_return_values = absl::GetFlag(FLAGS_show_return_values);
   options.record_arguments = false;
@@ -2383,7 +2414,8 @@ Future<std::vector<ErrorMessageOr<CanceledOr<void>>>> OrbitApp::LoadAllSymbols()
   const ProcessData& process = GetConnectedOrLoadedProcess();
 
   std::vector<const ModuleData*> sorted_module_list = SortModuleListWithPrioritizationList(
-      module_manager_->GetAllModuleData(), {kGgpVlkModulePathSubstring, process.full_path()});
+      module_manager_->GetAllModuleData(),
+      {kGgpVlkModulePathSubstring, kNtdllSo, process.full_path()});
 
   std::vector<Future<ErrorMessageOr<CanceledOr<void>>>> loading_futures;
 
