@@ -11,7 +11,7 @@ from test_cases.bottom_up_tab import VerifyBottomUpContentForTriangleExe
 from test_cases.connection_window import FilterAndSelectFirstProcess, ConnectToStadiaInstance
 from test_cases.capture_window import Capture
 from test_cases.sampling_tab import VerifySamplingContentForTriangleExe
-from test_cases.symbols_tab import LoadSymbols
+from test_cases.symbols_tab import WaitForLoadingSymbolsAndCheckModule
 from test_cases.top_down_tab import VerifyTopDownContentForTriangleExe
 """Verify mixed (DWARF and PE/COFF) callstack unwinding by inspecting the "Sampling", "Top-Down", "Bottom-Up" tabs.
 
@@ -37,10 +37,10 @@ def main(argv):
     test_cases = [
         ConnectToStadiaInstance(),
         FilterAndSelectFirstProcess(process_filter="triangle.exe"),
-        LoadSymbols(module_search_string="ntdll.dll"),
-        LoadSymbols(module_search_string="kernel32.dll"),
-        LoadSymbols(module_search_string="d3d11.dll"),
-        LoadSymbols(module_search_string="triangle.exe"),
+        WaitForLoadingSymbolsAndCheckModule(module_search_string="ntdll.dll"),
+        WaitForLoadingSymbolsAndCheckModule(module_search_string="kernel32.dll"),
+        WaitForLoadingSymbolsAndCheckModule(module_search_string="d3d11.dll"),
+        WaitForLoadingSymbolsAndCheckModule(module_search_string="triangle.exe"),
         Capture(),
         VerifySamplingContentForTriangleExe(),
         VerifyTopDownContentForTriangleExe(),

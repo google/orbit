@@ -8,7 +8,7 @@ from absl import app
 
 from core.orbit_e2e import E2ETestSuite
 from test_cases.connection_window import FilterAndSelectFirstProcess, ConnectToStadiaInstance
-from test_cases.symbols_tab import LoadSymbols
+from test_cases.symbols_tab import WaitForLoadingSymbolsAndCheckModule
 from test_cases.symbols_tab import VerifySymbolsLoaded
 """Load symbols for PE/COFF modules.
 
@@ -29,9 +29,9 @@ def main(argv):
     test_cases = [
         ConnectToStadiaInstance(),
         FilterAndSelectFirstProcess(process_filter='triangle'),
-        LoadSymbols(module_search_string="triangle.exe"),
+        WaitForLoadingSymbolsAndCheckModule(module_search_string="triangle.exe"),
         VerifySymbolsLoaded(symbol_search_string="wWinMain"),
-        LoadSymbols(module_search_string="d3d11.dll"),
+        WaitForLoadingSymbolsAndCheckModule(module_search_string="d3d11.dll"),
         VerifySymbolsLoaded(symbol_search_string="Present")
     ]
     suite = E2ETestSuite(test_name="Load Symbols PE/COFF", test_cases=test_cases)

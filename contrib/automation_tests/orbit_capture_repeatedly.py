@@ -9,7 +9,7 @@ from absl import app
 from core.orbit_e2e import E2ETestSuite
 from test_cases.connection_window import FilterAndSelectFirstProcess, ConnectToStadiaInstance
 from test_cases.capture_window import Capture, CaptureRepeatedly
-from test_cases.symbols_tab import LoadSymbols, FilterAndEnableFrameTrackForFunction
+from test_cases.symbols_tab import WaitForLoadingSymbolsAndCheckModule, FilterAndEnableFrameTrackForFunction
 """Repeatedly take very short captures using pywinauto.
 
 Before this script is run there needs to be a gamelet reserved and
@@ -32,9 +32,9 @@ def main(argv):
     test_cases = [
         ConnectToStadiaInstance(),
         FilterAndSelectFirstProcess(process_filter='hello_'),
-        LoadSymbols(module_search_string="hello_ggp"),
+        WaitForLoadingSymbolsAndCheckModule(module_search_string="hello_ggp"),
         FilterAndEnableFrameTrackForFunction(function_search_string='DrawFrame'),
-        LoadSymbols(module_search_string="libvulkan.so.1"),
+        WaitForLoadingSymbolsAndCheckModule(module_search_string="libvulkan.so.1"),
         FilterAndEnableFrameTrackForFunction(function_search_string='vkQueuePresentKHR'),
         Capture(length_in_seconds=1),
         CaptureRepeatedly(number_of_f5_presses=200)

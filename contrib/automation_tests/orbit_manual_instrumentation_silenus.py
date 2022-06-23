@@ -9,7 +9,7 @@ from absl import app
 from core.orbit_e2e import E2ETestSuite
 from test_cases.connection_window import FilterAndSelectFirstProcess, ConnectToStadiaInstance
 from test_cases.capture_window import Capture, CheckTimers, CollapseTrack, VerifyTracksExist
-from test_cases.symbols_tab import LoadSymbols
+from test_cases.symbols_tab import WaitForLoadingSymbolsAndCheckModule
 """Test Orbit's manual instrumentation on Silenus.
 
 Before this script is run there needs to be a gamelet reserved and the
@@ -31,7 +31,7 @@ def main(argv):
     test_cases = [
         ConnectToStadiaInstance(),
         FilterAndSelectFirstProcess(process_filter="triangle.exe"),
-        LoadSymbols(module_search_string="triangle.exe"),
+        WaitForLoadingSymbolsAndCheckModule(module_search_string="triangle.exe"),
         Capture(manual_instrumentation=True),
         VerifyTracksExist(track_names=[
             "Frame time, ms (double)", "Frame time, ms (float)", "Frame time, us (int)",
