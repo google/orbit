@@ -494,7 +494,7 @@ Future<void> OrbitApp::OnCaptureComplete() {
 
         FireRefreshCallbacks();
 
-        if (IsDevMode()) {
+        if (absl::GetFlag(FLAGS_auto_symbol_loading)) {
           std::ignore = LoadAllSymbols();
         }
       });
@@ -507,7 +507,7 @@ Future<void> OrbitApp::OnCaptureCancelled() {
     capture_failed_callback_();
 
     ClearCapture();
-    if (IsDevMode()) {
+    if (absl::GetFlag(FLAGS_auto_symbol_loading)) {
       std::ignore = LoadAllSymbols();
     }
   });
@@ -522,7 +522,7 @@ Future<void> OrbitApp::OnCaptureFailed(ErrorMessage error_message) {
 
         ClearCapture();
         SendErrorToUi("Error in capture", error_message.message());
-        if (IsDevMode()) {
+        if (absl::GetFlag(FLAGS_auto_symbol_loading)) {
           std::ignore = LoadAllSymbols();
         }
       });
@@ -1418,7 +1418,7 @@ void OrbitApp::StartCapture() {
     return;
   }
 
-  if (IsDevMode()) {
+  if (absl::GetFlag(FLAGS_auto_symbol_loading)) {
     RequestSymbolDownloadStop(module_manager_->GetAllModuleData(), false);
   }
 
@@ -2361,7 +2361,7 @@ orbit_base::Future<ErrorMessageOr<void>> OrbitApp::UpdateProcessAndModuleList() 
                      })
       .ThenIfSuccess(main_thread_executor_,
                      [this]() {
-                       if (IsDevMode()) {
+                       if (absl::GetFlag(FLAGS_auto_symbol_loading)) {
                          std::ignore = LoadAllSymbols();
                        }
                      })
@@ -2723,8 +2723,8 @@ orbit_data_views::DataView* OrbitApp::GetOrCreateDataView(DataViewType type) {
 
     case DataViewType::kModules:
       if (!modules_data_view_) {
-        modules_data_view_ =
-            DataView::CreateAndInit<ModulesDataView>(this, metrics_uploader_, IsDevMode());
+        modules_data_view_ = DataView::CreateAndInit<ModulesDataView>(
+            this, metrics_uploader_, absl::GetFlag(FLAGS_auto_symbol_loading));
         panels_.push_back(modules_data_view_.get());
       }
       return modules_data_view_.get();

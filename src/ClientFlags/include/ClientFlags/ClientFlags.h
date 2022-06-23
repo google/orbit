@@ -65,4 +65,7 @@ ABSL_DECLARE_FLAG(bool, iso_timestamps);
 // Enables to use symbol files without a build id, or with a mismatching build ID
 ABSL_DECLARE_FLAG(bool, enable_unsafe_symbols);
 
+// Enables automatic symbol loading
+ABSL_DECLARE_FLAG(bool, auto_symbol_loading);
+
 #endif  // CLIENT_FLAGS_CLIENT_FLAGS_H_
