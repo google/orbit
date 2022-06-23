@@ -568,6 +568,7 @@ void CaptureEventProcessorForListener::ProcessThreadNamesSnapshot(
         ThreadStateSlice_WakeupReason_ThreadStateSlice_WakeupReason_INT_MAX_SENTINEL_DO_NOT_USE_:
       ORBIT_UNREACHABLE();
   }
+  ORBIT_UNREACHABLE();
 }
 
 void CaptureEventProcessorForListener::ProcessThreadStateSlice(

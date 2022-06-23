@@ -105,6 +105,7 @@ static Color GetThreadStateColor(ThreadStateSlice::ThreadState state) {
     case ThreadStateSliceInfo::WakeupReason::kCreated:
       return "Created";
   }
+  ORBIT_UNREACHABLE();
 }
 
 static std::string GetThreadStateName(ThreadStateSlice::ThreadState state) {
