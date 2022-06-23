@@ -184,7 +184,6 @@ TEST(CallstackData, FilterCallstackEventsBasedOnMajorityStartExcludesFunctionToS
   CallstackEvent event6{time6, cs2_id, kTid};
   callstack_data.AddCallstackEvent(event6);
 
-
   callstack_data.UpdateCallstackTypeBasedOnMajorityStart({{kFunctionToStopUnwindingAtAddress, 10}});
 
   EXPECT_EQ(callstack_data.GetCallstack(cs1_id)->type(), CallstackType::kComplete);
