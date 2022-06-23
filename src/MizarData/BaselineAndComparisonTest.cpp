@@ -172,20 +172,20 @@ TEST(BaselineAndComparisonTest, MakeSamplingWithFrameTrackReportIsCorrect) {
       MakeComparison<orbit_mizar_data::HalfOfSamplingWithFrameTrackReportConfig>(
           absl::flat_hash_set<uint32_t>{orbit_base::kAllProcessThreadsTid}, 0, 1, 1));
 
-  EXPECT_EQ(report.GetSamplingCounts<Baseline>()->GetTotalCallstacks(), kCallstacks.size());
+  EXPECT_EQ(report.GetBaselineSamplingCounts()->GetTotalCallstacks(), kCallstacks.size());
 
-  EXPECT_EQ(report.GetSamplingCounts<Baseline>()->GetExclusiveCount(kSfidFirst), 0);
-  EXPECT_EQ(report.GetSamplingCounts<Baseline>()->GetExclusiveCount(kSfidSecond), 1);
-  EXPECT_EQ(report.GetSamplingCounts<Baseline>()->GetExclusiveCount(kSfidThird), 1);
+  EXPECT_EQ(report.GetBaselineSamplingCounts()->GetExclusiveCount(kSfidFirst), 0);
+  EXPECT_EQ(report.GetBaselineSamplingCounts()->GetExclusiveCount(kSfidSecond), 1);
+  EXPECT_EQ(report.GetBaselineSamplingCounts()->GetExclusiveCount(kSfidThird), 1);
 
-  EXPECT_EQ(report.GetSamplingCounts<Baseline>()->GetInclusiveCount(kSfidFirst), 1);
-  EXPECT_EQ(report.GetSamplingCounts<Baseline>()->GetInclusiveCount(kSfidSecond), 2);
-  EXPECT_EQ(report.GetSamplingCounts<Baseline>()->GetInclusiveCount(kSfidThird), 1);
+  EXPECT_EQ(report.GetBaselineSamplingCounts()->GetInclusiveCount(kSfidFirst), 1);
+  EXPECT_EQ(report.GetBaselineSamplingCounts()->GetInclusiveCount(kSfidSecond), 2);
+  EXPECT_EQ(report.GetBaselineSamplingCounts()->GetInclusiveCount(kSfidThird), 1);
 
-  EXPECT_EQ(report.GetSamplingCounts<Comparison>()->GetTotalCallstacks(), 0);
+  EXPECT_EQ(report.GetComparisonSamplingCounts()->GetTotalCallstacks(), 0);
   for (const SFID sfid : kSfids) {
-    EXPECT_EQ(report.GetSamplingCounts<Comparison>()->GetExclusiveCount(sfid), 0);
-    EXPECT_EQ(report.GetSamplingCounts<Comparison>()->GetInclusiveCount(sfid), 0);
+    EXPECT_EQ(report.GetComparisonSamplingCounts()->GetExclusiveCount(sfid), 0);
+    EXPECT_EQ(report.GetComparisonSamplingCounts()->GetInclusiveCount(sfid), 0);
 
     ComparisonResult comparision_result = report.GetComparisonResult(sfid);
     constexpr double kTolerance = 1e-6;
@@ -194,17 +194,17 @@ TEST(BaselineAndComparisonTest, MakeSamplingWithFrameTrackReportIsCorrect) {
   }
 
   constexpr uint64_t kExpectedFullActiveFrameTime = 200;
-  EXPECT_EQ(report.GetFrameTrackStats<Baseline>()->ComputeAverageTimeNs(),
+  EXPECT_EQ(report.GetBaselineFrameTrackStats()->ComputeAverageTimeNs(),
             kExpectedFullActiveFrameTime);
-  EXPECT_EQ(report.GetFrameTrackStats<Comparison>()->ComputeAverageTimeNs(), 0);
+  EXPECT_EQ(report.GetComparisonFrameTrackStats()->ComputeAverageTimeNs(), 0);
 
   constexpr double kExpectedFullActiveFrameTimeVariance = 6666.66666;
-  EXPECT_THAT(report.GetFrameTrackStats<Baseline>()->variance_ns(),
+  EXPECT_THAT(report.GetBaselineFrameTrackStats()->variance_ns(),
               DoubleNear(kExpectedFullActiveFrameTimeVariance, 1e-3));
-  EXPECT_THAT(report.GetFrameTrackStats<Comparison>()->variance_ns(), DoubleNear(0, 1e-3));
+  EXPECT_THAT(report.GetComparisonFrameTrackStats()->variance_ns(), DoubleNear(0, 1e-3));
 
-  EXPECT_EQ(report.GetFrameTrackStats<Baseline>()->count(), kFrameTrackActiveTimes.size());
-  EXPECT_EQ(report.GetFrameTrackStats<Comparison>()->count(), 0);
+  EXPECT_EQ(report.GetBaselineFrameTrackStats()->count(), kFrameTrackActiveTimes.size());
+  EXPECT_EQ(report.GetComparisonFrameTrackStats()->count(), 0);
 }
 
 }  // namespace orbit_mizar_data

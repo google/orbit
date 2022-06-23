@@ -102,25 +102,19 @@ class SamplingWithFrameTrackComparisonReport {
         comparison_frame_track_stats_(std::move(comparison_frame_track_stats)),
         fid_to_comparison_results_(std::move(fid_to_comparison_results)) {}
 
-  // TODO(b/236714217) de-template the getter
-  template <template <typename> typename Wrapper>
-  const Wrapper<SamplingCounts>& GetSamplingCounts() const {
-    if constexpr (std::is_same_v<Wrapper<SamplingCounts>, Baseline<SamplingCounts>>) {
-      return baseline_sampling_counts_;
-    } else {
-      return comparison_sampling_counts_;
-    }
+  [[nodiscard]] const Baseline<SamplingCounts>& GetBaselineSamplingCounts() const {
+    return baseline_sampling_counts_;
+  }
+  [[nodiscard]] const Comparison<SamplingCounts>& GetComparisonSamplingCounts() const {
+    return comparison_sampling_counts_;
   }
 
-  // TODO(b/236714217) de-template the getter
-  template <template <typename> typename Wrapper>
-  const Wrapper<orbit_client_data::ScopeStats>& GetFrameTrackStats() const {
-    if constexpr (std::is_same_v<Wrapper<orbit_client_data::ScopeStats>,
-                                 Baseline<orbit_client_data::ScopeStats>>) {
-      return baseline_frame_track_stats_;
-    } else {
-      return comparison_frame_track_stats_;
-    }
+  [[nodiscard]] const Baseline<orbit_client_data::ScopeStats>& GetBaselineFrameTrackStats() const {
+    return baseline_frame_track_stats_;
+  }
+  [[nodiscard]] const Comparison<orbit_client_data::ScopeStats>& GetComparisonFrameTrackStats()
+      const {
+    return comparison_frame_track_stats_;
   }
 
   [[nodiscard]] const ComparisonResult& GetComparisonResult(SFID sfid) const {
