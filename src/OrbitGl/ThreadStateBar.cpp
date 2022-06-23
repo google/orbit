@@ -99,11 +99,11 @@ static Color GetThreadStateColor(ThreadStateSlice::ThreadState state) {
 [[nodiscard]] static std::string GetWakeupReason(ThreadStateSliceInfo::WakeupReason reason) {
   switch (reason) {
     case ThreadStateSliceInfo::WakeupReason::kNotApplicable:
-      return "Not Applicable";
+      return "not applicable";
     case ThreadStateSliceInfo::WakeupReason::kUnblocked:
-      return "Unblocked";
+      return "unblocked";
     case ThreadStateSliceInfo::WakeupReason::kCreated:
-      return "Created";
+      return "created";
   }
   ORBIT_UNREACHABLE();
 }
@@ -189,9 +189,10 @@ std::string ThreadStateBar::GetThreadStateSliceTooltip(PrimitiveAssembler& primi
 
     tooltip += absl::StrFormat(
         "<br/>"
-        "<b>Was %s By Process:</b> %s [%d]"
         "<br/>"
-        "<b>Was %s By Thread:</b> %s [%d]",
+        "<b>Was %s by process:</b> %s [%d]"
+        "<br/>"
+        "<b>Was %s by thread:</b> %s [%d]",
         reason, process_name, thread_state_slice->wakeup_pid(), reason, thread_name,
         thread_state_slice->wakeup_tid());
   }
