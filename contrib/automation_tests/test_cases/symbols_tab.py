@@ -186,7 +186,7 @@ class LoadAllSymbolsAndVerifyCache(E2ETestCase):
     def _gather_module_states(self) -> List[Module]:
         result = []
         for i in range(0, self._modules_dataview.get_row_count()):
-            is_loaded = self._modules_dataview.get_item_at(i, 0).texts()[0] == "*"
+            is_loaded = self._modules_dataview.get_item_at(i, 0).texts()[0] == "Loaded"
             name = self._modules_dataview.get_item_at(i, 1).texts()[0]
             path = self._modules_dataview.get_item_at(i, 2).texts()[0]
             result.append(Module(name, path, is_loaded))
@@ -280,14 +280,14 @@ class LoadSymbols(E2ETestCase):
 
         self.find_context_menu_item('Load Symbols').click_input()
 
-        logging.info('Waiting for * to indicate loaded modules')
+        logging.info('Waiting for loading modules')
 
-        # The Loading column which should get filled with the "*" is the first column (0)
+        # The Loading column which should get filled with the "Loaded" is the first column (0)
         if expect_fail:
             wait_for_condition(
                 lambda: _find_and_close_error_dialog(self.suite.top_window()) is not None)
         else:
-            wait_for_condition(lambda: modules_dataview.get_item_at(0, 0).texts()[0] == "*", 100)
+            wait_for_condition(lambda: modules_dataview.get_item_at(0, 0).texts()[0] == "Loaded", 100)
 
         VerifySymbolsLoaded(symbol_search_string=module_search_string,
                             expect_loaded=not expect_fail).execute(self.suite)
@@ -309,7 +309,7 @@ class VerifyModuleLoaded(E2ETestCase):
         modules_dataview.filter.set_edit_text('')
         send_keys(module_search_string)
         wait_for_condition(lambda: modules_dataview.get_row_count() > 0)
-        self.expect_true('*' in modules_dataview.get_item_at(0, 0).texts()[0], 'Module is loaded.')
+        self.expect_true('Loaded' in modules_dataview.get_item_at(0, 0).texts()[0], 'Module is loaded.')
 
 
 class VerifySymbolsLoaded(E2ETestCase):
