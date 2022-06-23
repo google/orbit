@@ -107,8 +107,8 @@ class LoadAllSymbolsAndVerifyCache(E2ETestCase):
                                         expected_duration_difference_ratio)
 
         modules = self._gather_module_states()
+        self._verify_at_least_one_module_is_loaded(modules)
         self._verify_all_modules_are_cached(modules)
-        self._verify_all_errors_were_raised(modules, modules_loading_result.errors)
         logging.info("Done. Loading time: {time:.2f}s, module errors: {errors}".format(
             time=modules_loading_result.time, errors=modules_loading_result.errors))
 
@@ -119,6 +119,10 @@ class LoadAllSymbolsAndVerifyCache(E2ETestCase):
         send_keys("^a")
         self._modules_dataview.get_item_at(0, 0).click_input('right')
         self.find_context_menu_item('Load Symbols').click_input()
+
+    def _verify_at_least_one_module_is_loaded(self, modules: List[Module]):
+        loaded_modules = [module for module in modules if module.is_loaded]
+        self.expect_true(len(loaded_modules) != 0, "At least one loaded module.")
 
     def _verify_all_modules_are_cached(self, modules: List[Module]):
         loaded_modules = [module for module in modules if module.is_loaded]
@@ -141,15 +145,6 @@ class LoadAllSymbolsAndVerifyCache(E2ETestCase):
             0, len(module_set),
             'All successfully loaded modules are cached. Modules not found in cache: {}'.format(
                 [module.name for module in module_set]))
-
-    def _verify_all_errors_were_raised(self, all_modules: List[Module], errors: List[str]):
-        modules_not_loaded = set([module.path for module in all_modules if not module.is_loaded])
-        error_set = set(errors)
-        for module in modules_not_loaded:
-            self.expect_true(module in error_set,
-                             'Error has been raised for module {}'.format(module))
-            error_set.remove(module)
-        self.expect_eq(0, len(error_set), 'All errors raised resulted in non-loadable modules')
 
     def _wait_for_loading_and_collect_errors(self) -> ModulesLoadingResult:
         assume_loading_complete = 0
