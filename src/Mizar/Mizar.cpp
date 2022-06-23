@@ -98,22 +98,22 @@ int main(int argc, char** argv) {
               kFrameTrackScopeId));
 
   for (const auto& [sfid, name] : bac.sfid_to_name()) {
-    const uint64_t baseline_cnt = report.GetSamplingCounts<Baseline>()->GetExclusiveCount(sfid);
-    const uint64_t comparison_cnt = report.GetSamplingCounts<Comparison>()->GetExclusiveCount(sfid);
+    const uint64_t baseline_cnt = report.GetBaselineSamplingCounts()->GetExclusiveCount(sfid);
+    const uint64_t comparison_cnt = report.GetComparisonSamplingCounts()->GetExclusiveCount(sfid);
     const double pvalue = report.GetComparisonResult(sfid).pvalue;
     if (pvalue < 0.05) {
       ORBIT_LOG("%s %.2f %s %u %u", name, pvalue, static_cast<std::string>(sfid), baseline_cnt,
                 comparison_cnt);
     }
   }
-  ORBIT_LOG("Callstack count %u vs %u ", report.GetSamplingCounts<Baseline>()->GetTotalCallstacks(),
-            report.GetSamplingCounts<Comparison>()->GetTotalCallstacks());
+  ORBIT_LOG("Callstack count %u vs %u ", report.GetBaselineSamplingCounts()->GetTotalCallstacks(),
+            report.GetComparisonSamplingCounts()->GetTotalCallstacks());
   ORBIT_LOG("Total number of common names %u  ", bac.sfid_to_name().size());
   ORBIT_LOG("Baseline mean frametime %u ns, stddev %u",
-            report.GetFrameTrackStats<Baseline>()->ComputeAverageTimeNs(),
-            report.GetFrameTrackStats<Baseline>()->ComputeStdDevNs());
+            report.GetBaselineFrameTrackStats()->ComputeAverageTimeNs(),
+            report.GetBaselineFrameTrackStats()->ComputeStdDevNs());
   ORBIT_LOG("Comparison mean frametime %u ns, stddev %u",
-            report.GetFrameTrackStats<Comparison>()->ComputeAverageTimeNs(),
-            report.GetFrameTrackStats<Comparison>()->ComputeStdDevNs());
+            report.GetComparisonFrameTrackStats()->ComputeAverageTimeNs(),
+            report.GetComparisonFrameTrackStats()->ComputeStdDevNs());
   return 0;
 }
