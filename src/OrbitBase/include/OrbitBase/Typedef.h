@@ -44,6 +44,7 @@ class Typedef {
   constexpr explicit Typedef(std::in_place_t, Args&&... args)
       : value_(T(std::forward<T>(args)...)) {}
 
+  constexpr Typedef(const Typedef& other) = default;
   constexpr Typedef(Typedef&& other) = default;
 
   template <typename U, typename = orbit_base_internal::EnableIfUConvertibleToT<T, U>>
