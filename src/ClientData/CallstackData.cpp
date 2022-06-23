@@ -131,7 +131,7 @@ std::shared_ptr<CallstackInfo> CallstackData::GetCallstackPtr(uint64_t callstack
   return nullptr;
 }
 
-static inline bool IsPcInFunctionsToStopUnwindingAt(
+static bool IsPcInFunctionsToStopUnwindingAt(
     const std::map<uint64_t, uint64_t>& absolute_address_to_size_of_functions_to_stop_unwinding_at,
     uint64_t pc) {
   auto function_it = absolute_address_to_size_of_functions_to_stop_unwinding_at.upper_bound(pc);
