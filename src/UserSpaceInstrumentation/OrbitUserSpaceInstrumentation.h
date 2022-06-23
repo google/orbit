@@ -7,8 +7,9 @@
 
 #include <cstdint>
 
-// Needs to be called when the capture starts.
-extern "C" void StartNewCapture();
+// Needs to be called when a capture starts. `capture_start_timestamp_ns` should be a current
+// timestamp as obtained from orbit_base::CaptureTimestampNs.
+extern "C" void StartNewCapture(uint64_t capture_start_timestamp_ns);
 
 // Payload called on entry of an instrumented function. Needs to record the return address of the
 // function (in order to have it available in `ExitPayload`) and the stack pointer (i.e., the

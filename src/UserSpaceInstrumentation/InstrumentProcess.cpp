@@ -23,6 +23,7 @@
 #include "OrbitBase/File.h"
 #include "OrbitBase/GetProcessIds.h"
 #include "OrbitBase/Logging.h"
+#include "OrbitBase/Profiling.h"
 #include "OrbitBase/ThreadUtils.h"
 #include "OrbitBase/UniqueResource.h"
 #include "ReadSeccompModeOfThread.h"
@@ -268,7 +269,7 @@ ErrorMessageOr<std::unique_ptr<InstrumentedProcess>> InstrumentedProcess::Create
 
 ErrorMessageOr<InstrumentationManager::InstrumentationResult>
 InstrumentedProcess::InstrumentFunctions(const CaptureOptions& capture_options) {
-  OUTCOME_TRY(auto&& already_attached_tids, AttachAndStopProcess(pid_));
+  OUTCOME_TRY(AttachAndStopProcess(pid_));
   orbit_base::unique_resource detach_on_exit{pid_, [](int32_t pid) {
                                                if (DetachAndContinueProcess(pid).has_error()) {
                                                  ORBIT_ERROR("Detaching from %i", pid);
@@ -292,10 +293,8 @@ InstrumentedProcess::InstrumentFunctions(const CaptureOptions& capture_options) 
   orbit_base::unique_resource close_on_exit{
       &capstone_handle, [](csh* capstone_handle) { cs_close(capstone_handle); }};
 
-  OUTCOME_TRY(ExecuteInProcess(pid_, absl::bit_cast<void*>(start_new_capture_function_address_)));
-  // StartNewFunction could (and will) spawn new threads. Stop those too, as the assumption here is
-  // that the target process is completely stopped.
-  OUTCOME_TRY(AttachAndStopNewThreadsOfProcess(pid_, std::move(already_attached_tids)));
+  OUTCOME_TRY(ExecuteInProcess(pid_, absl::bit_cast<void*>(start_new_capture_function_address_),
+                               orbit_base::CaptureTimestampNs()));
 
   OUTCOME_TRY(EnsureTrampolinesWritable());
 
