@@ -2074,6 +2074,7 @@ void OrbitApp::AddSymbols(const std::filesystem::path& module_file_path,
               module_data->file_path());
   }
 
+  FireRefreshCallbacks(DataViewType::kModules);
   UpdateAfterSymbolLoadingThrottled();
 }
 
