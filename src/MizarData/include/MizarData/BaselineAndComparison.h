@@ -129,7 +129,7 @@ class BaselineAndComparisonTmpl {
 
 using BaselineAndComparison =
     BaselineAndComparisonTmpl<MizarPairedData, ActiveFunctionTimePerFrameComparator,
-                              orbit_statistics::HolmBonferroniCorrection<SFID>>;
+                              orbit_statistics::HolmBonferroniCorrection<orbit_mizar_base::SFID>>;
 
 BaselineAndComparison CreateBaselineAndComparison(std::unique_ptr<MizarDataProvider> baseline,
                                                   std::unique_ptr<MizarDataProvider> comparison);
