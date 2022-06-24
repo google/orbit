@@ -11,6 +11,7 @@ target_sources(Statistics PUBLIC
                 include/Statistics/DataSet.h
                 include/Statistics/Gaussian.h
                 include/Statistics/Histogram.h
+                include/Statistics/MultiplicityCorrection.h
                 include/Statistics/StatisticsUtils.h)
 
 target_include_directories(Statistics PUBLIC
@@ -30,6 +31,7 @@ add_executable(StatisticsTests)
 target_sources(StatisticsTests PRIVATE
           GaussianTest.cpp
           HistogramTest.cpp
+          MultiplicityCorrectionTest.cpp
           StatisticsUtilTest.cpp
           WilsonBinomialConfidenceIntervalEstimatorTest.cpp)
 
