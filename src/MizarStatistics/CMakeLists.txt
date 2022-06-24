@@ -22,7 +22,6 @@ target_sources(MizarStatisticsTests PRIVATE
 
 target_link_libraries(MizarStatisticsTests PRIVATE GrpcProtos
   MizarStatistics
-  OrbitBase
   GTest::GTest
   GTest::Main)
 
