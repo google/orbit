@@ -11,31 +11,16 @@
 #include <string>
 #include <utility>
 
+#include "OrbitBase/Typedef.h"
+
 namespace orbit_mizar_data {
+
+struct SampledFunctionIdTag {};
 
 // The class represents a sampled function id. These ids are the same for the same function across
 // all the captures.
 // TODO (b/236358265) rename to `SampledFunctionId`.
-class SFID {
- public:
-  constexpr explicit SFID(uint64_t id) : id_(id) {}
-
-  [[nodiscard]] friend bool operator==(const SFID& lhs, const SFID& rhs) {
-    return lhs.id_ == rhs.id_;
-  }
-  [[nodiscard]] friend bool operator!=(const SFID& lhs, const SFID& rhs) { return !(lhs == rhs); }
-
-  template <typename H>
-  friend H AbslHashValue(H h, const SFID& c) {
-    return H::combine(std::move(h), c.id_);
-  }
-
-  // For debug purposes
-  [[nodiscard]] explicit operator std::string() const { return std::to_string(id_); }
-
- private:
-  uint64_t id_;
-};
+using SFID = orbit_base::Typedef<SampledFunctionIdTag, uint64_t>;
 
 // Making sure we do not waste memory on the abstraction
 static_assert(sizeof(SFID) == sizeof(uint64_t));

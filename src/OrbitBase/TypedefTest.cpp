@@ -2,6 +2,7 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
+#include <absl/hash/hash_testing.h>
 #include <gtest/gtest.h>
 
 #include <memory>
@@ -51,6 +52,9 @@ TEST(TypedefTest, CanInstantiate) {
   MyType<int> wrapper_of_const(kConstInt);
   EXPECT_EQ(*wrapper_of_const, kConstInt);
 
+  MyType<int> copy_of_wrapper(wrapper_of_const);
+  EXPECT_EQ(*copy_of_wrapper, kConstInt);
+
   constexpr int kConstexprInt = 1;
   MyType<int> wrapper_of_constexpr(kConstexprInt);
   EXPECT_EQ(*wrapper_of_constexpr, kConstexprInt);
@@ -77,10 +81,31 @@ TEST(TypedefTest, ImplicitConversionIsCorrect) {
 
   {
     const MyType<B> wrapped_b(B{{kValue}});
+    const MyType<A> wrapped_a(wrapped_b);
+    EXPECT_EQ(wrapped_a->value, kValue);
+  }
+
+  {
+    const MyType<B> wrapped_b(B{{kValue}});
 
     bool is_called = false;
     int value_called_on{};
     auto take_const_ref = [&is_called, &value_called_on](const MyType<A>& a) {
+      is_called = true;
+      value_called_on = a->value;
+    };
+
+    take_const_ref(wrapped_b);
+    EXPECT_TRUE(is_called);
+    EXPECT_EQ(value_called_on, kValue);
+  }
+
+  {
+    const MyType<B> wrapped_b(B{{kValue}});
+
+    bool is_called = false;
+    int value_called_on{};
+    auto take_const_ref = [&is_called, &value_called_on](const MyType<A> a) {
       is_called = true;
       value_called_on = a->value;
     };
@@ -234,6 +259,28 @@ TEST(TypedefTest, CallIsCorrect) {
     MyType<Integer> sum_wrapped = LiftAndApply(&Integer::Add, first, second);
     EXPECT_EQ(sum_wrapped->value, kSum);
   }
+}
+
+TEST(Typedef, HashIsCorrect) {
+  EXPECT_TRUE(absl::VerifyTypeImplementsAbslHashCorrectly(
+      {MyType<int>(1), MyType<int>(0), MyType<int>(-1), MyType<int>(10)}));
+
+  EXPECT_TRUE(absl::VerifyTypeImplementsAbslHashCorrectly(
+      {MyType<std::string>("A"), MyType<std::string>("B"), MyType<std::string>(""),
+       MyType<std::string>("ABB")}));
+}
+
+TEST(Typedef, ComparisonIsCorrect) {
+  constexpr int kLesser = 1;
+  constexpr int kGreater = 2;
+  EXPECT_EQ(MyType<int>(kLesser), MyType<int>(kLesser));
+  EXPECT_NE(MyType<int>(kLesser), MyType<int>(kGreater));
+  EXPECT_GE(MyType<int>(kLesser), MyType<int>(kLesser));
+  EXPECT_GE(MyType<int>(kGreater), MyType<int>(kLesser));
+  EXPECT_LE(MyType<int>(kLesser), MyType<int>(kLesser));
+  EXPECT_LE(MyType<int>(kLesser), MyType<int>(kGreater));
+  EXPECT_LT(MyType<int>(kLesser), MyType<int>(kGreater));
+  EXPECT_GT(MyType<int>(kGreater), MyType<int>(kLesser));
 }
 
 }  // namespace orbit_base

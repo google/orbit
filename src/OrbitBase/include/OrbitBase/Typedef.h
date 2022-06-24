@@ -23,6 +23,14 @@ namespace orbit_base {
 // MyType<int> wrapped(1);
 // ```
 // One can access the underlying value with `*` and `->` operators.
+//
+// If `AbslHashValue` is implemented for `T`, it's also implemented for `Typedef<Tag, T>`.
+//
+// If `==` is implemented for `T` and `U`, operators `==` and `!=` are also implemented for
+// `Typedef<Tag, T>` and `Typedef<Tag, U>`.
+//
+// If `<` is implemented for `T` and 'U', operators '<', '>', '<=', '>=' are also
+// implemented for `Typedef<Tag, T>` and `Typedef<Tag, U>`. See TypedefTest.cpp for examples.
 // See TypedefTest.cpp for examples.
 template <typename Tag_, typename T>
 class Typedef {
@@ -44,6 +52,7 @@ class Typedef {
   constexpr explicit Typedef(std::in_place_t, Args&&... args)
       : value_(T(std::forward<T>(args)...)) {}
 
+  constexpr Typedef(const Typedef& other) = default;
   constexpr Typedef(Typedef&& other) = default;
 
   template <typename U, typename = orbit_base_internal::EnableIfUConvertibleToT<T, U>>
@@ -73,6 +82,36 @@ class Typedef {
   constexpr Typedef& operator=(Typedef<Tag_, U>&& other) {
     value_ = std::move(*other);
     return *this;
+  }
+
+  template <typename H>
+  friend H AbslHashValue(H h, const Typedef& wrapped) {
+    return H::combine(std::move(h), *wrapped);
+  }
+
+  template <typename U>
+  [[nodiscard]] friend bool operator==(const Typedef& lhs, const Typedef<Tag, U>& rhs) {
+    return *lhs == *rhs;
+  }
+  template <typename U>
+  [[nodiscard]] friend bool operator!=(const Typedef& lhs, const Typedef<Tag, U>& rhs) {
+    return !(lhs == rhs);
+  }
+  template <typename U>
+  [[nodiscard]] friend bool operator<(const Typedef& lhs, const Typedef<Tag, U>& rhs) {
+    return *lhs < *rhs;
+  }
+  template <typename U>
+  [[nodiscard]] friend bool operator>=(const Typedef& lhs, const Typedef<Tag, U>& rhs) {
+    return !(lhs < rhs);
+  }
+  template <typename U>
+  [[nodiscard]] friend bool operator>(const Typedef& lhs, const Typedef<Tag, U>& rhs) {
+    return (lhs >= rhs) && (lhs != rhs);
+  }
+  template <typename U>
+  [[nodiscard]] friend bool operator<=(const Typedef& lhs, const Typedef<Tag, U>& rhs) {
+    return !(lhs > rhs);
   }
 
  private:
