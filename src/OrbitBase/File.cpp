@@ -167,7 +167,17 @@ ErrorMessageOr<size_t> ReadFullyAtOffset(const unique_fd& fd, void* buffer, size
 
 ErrorMessageOr<bool> FileExists(const std::filesystem::path& path) {
   std::error_code error;
+
+#ifdef _WIN32
+  // Make sure we handle UTF-8 encoding. Without this transformation, "std::filesystem::exists" does
+  // not return a correct result for paths created using the "std::filesystem::path" constructors.
+  // Note that this seems to work correctly on Linux.
+  std::filesystem::path utf8_path = std::filesystem::u8path(path.string());
+  bool result = std::filesystem::exists(utf8_path, error);
+#else
   bool result = std::filesystem::exists(path, error);
+#endif
+
   if (error) {
     return ErrorMessage{error.message()};
   }

@@ -1,4 +1,4 @@
-// Copyright (c) 2021 The Orbit Authors. All rights reserved.
+﻿// Copyright (c) 2021 The Orbit Authors. All rights reserved.
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
@@ -422,6 +422,24 @@ TEST(File, GetFileDateModified) {
   auto file_time_or_error = GetFileDateModified(tmp_file.file_path());
   ASSERT_THAT(file_time_or_error, HasNoError());
   EXPECT_LE(file_time_or_error.value() - now, absl::Seconds(1));
+}
+
+TEST(File, UnicodeFileExists) {
+  constexpr const char* kUnicodeFileName = "UnicodeFileName🚀.txt";
+  std::filesystem::path file_path = orbit_test::GetTestdataDir() / kUnicodeFileName;
+  auto file_exists = FileExists(file_path);
+  ASSERT_THAT(file_exists, HasNoError());
+  EXPECT_TRUE(file_exists.value());
+
+#ifdef _WIN32
+  // Using "std::filesystem::exists" directly returns the wrong result if we don't convert the path
+  // to UTF-8. If the test below fails, it means "std::filesystem::exists" now behaves as expected
+  // and we should change our implementation of "FileExists" accordingly.
+  std::error_code error;
+  bool result = std::filesystem::exists(file_path, error);
+  ASSERT_FALSE(error);
+  EXPECT_FALSE(result);
+#endif
 }
 
 }  // namespace orbit_base
