@@ -562,7 +562,7 @@ void CaptureEventProcessorForListener::ProcessThreadNamesSnapshot(
     case orbit_grpc_protos::ThreadStateSlice::kCreated:
       return ThreadStateSliceInfo::WakeupReason::kCreated;
     default:
-      ORBIT_UNREACHABLE();
+      return ThreadStateSliceInfo::WakeupReason::kNotApplicable;
   }
 }
 
