@@ -18,8 +18,10 @@
 #include "ClientData/CallstackData.h"
 #include "ClientData/CallstackInfo.h"
 #include "ClientData/CaptureData.h"
+#include "MizarBase/SampledFunctionId.h"
 #include "MizarData/BaselineAndComparison.h"
 
+using ::orbit_mizar_base::SFID;
 using ::testing::ElementsAre;
 using ::testing::Return;
 using ::testing::ReturnRef;

@@ -13,7 +13,7 @@
 
 #include "ClientData/ScopeStats.h"
 #include "MizarBase/BaselineOrComparison.h"
-#include "MizarData/SampledFunctionId.h"
+#include "MizarBase/SampledFunctionId.h"
 #include "OrbitBase/Logging.h"
 
 namespace orbit_mizar_data {
@@ -51,6 +51,8 @@ struct InclusiveAndExclusive {
 };
 
 class SamplingCounts {
+  using SFID = ::orbit_mizar_base::SFID;
+
  public:
   explicit SamplingCounts(absl::flat_hash_map<SFID, InclusiveAndExclusive> counts,
                           uint64_t total_callstacks)
@@ -89,6 +91,7 @@ class SamplingWithFrameTrackComparisonReport {
   using Baseline = ::orbit_mizar_base::Baseline<T>;
   template <typename T>
   using Comparison = ::orbit_mizar_base::Comparison<T>;
+  using SFID = ::orbit_mizar_base::SFID;
 
   explicit SamplingWithFrameTrackComparisonReport(
       Baseline<SamplingCounts> baseline_sampling_counts,

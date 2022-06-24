@@ -17,9 +17,11 @@
 
 #include "BaselineAndComparisonHelper.h"
 #include "MizarBase/BaselineOrComparison.h"
+#include "MizarBase/SampledFunctionId.h"
 #include "MizarData/BaselineAndComparison.h"
 #include "OrbitBase/ThreadConstants.h"
 
+using ::orbit_mizar_base::SFID;
 using ::testing::DoubleNear;
 using ::testing::UnorderedElementsAreArray;
 
