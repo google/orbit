@@ -73,7 +73,7 @@ class BaselineAndComparisonTmpl {
       const FunctionTimeComparator& comparator) const {
     absl::flat_hash_map<SFID, ComparisonResult> results;
     absl::flat_hash_map<SFID, double> pvalues;
-    for (const auto& [sfid, _] : sfid_to_name_) {
+    for (const auto& [sfid, unused_name] : sfid_to_name_) {
       ComparisonResult result = comparator.Compare(sfid);
       results.try_emplace(sfid, result);
       pvalues.try_emplace(sfid, result.pvalue);
