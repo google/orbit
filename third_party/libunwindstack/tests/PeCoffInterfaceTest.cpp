@@ -312,7 +312,7 @@ TYPED_TEST(PeCoffInterfaceTest, debug_frame_section_parsed_correctly) {
   ASSERT_EQ(dwarf_fde2, nullptr);
 }
 
-TYPED_TEST(PeCoffInterfaceTest, gets_correct_relative_pc) {
+TYPED_TEST(PeCoffInterfaceTest, gets_correct_relative_pc_given_map_offset) {
   this->GetFake()->Init();
   TypeParam coff(this->GetMemory());
   int64_t load_bias;
@@ -325,7 +325,8 @@ TYPED_TEST(PeCoffInterfaceTest, gets_correct_relative_pc) {
                                         PeCoffFake<TypeParam>::kLoadBiasFake +
                                         PeCoffFake<TypeParam>::kTextSectionMemoryOffset;
   EXPECT_EQ(expected_relative_pc,
-            coff.GetRelPc(kAbsolutePc, kMapStart, PeCoffFake<TypeParam>::kTextSectionFileOffset));
+            coff.GetRelPcWithMapOffset(kAbsolutePc, kMapStart,
+                                       PeCoffFake<TypeParam>::kTextSectionFileOffset));
 }
 
 TYPED_TEST(PeCoffInterfaceTest, gets_zero_as_relative_pc_if_map_offset_outside_of_any_section) {
@@ -337,12 +338,29 @@ TYPED_TEST(PeCoffInterfaceTest, gets_zero_as_relative_pc_if_map_offset_outside_o
   constexpr uint64_t kMapOffset1 = 0;
   constexpr uint64_t kMapStart1 = 0x2000 + kMapOffset1;
   constexpr uint64_t kAbsolutePc1 = kMapStart1 + 0x200;
-  EXPECT_EQ(0, coff.GetRelPc(kAbsolutePc1, kMapStart1, kMapOffset1));
+  EXPECT_EQ(0, coff.GetRelPcWithMapOffset(kAbsolutePc1, kMapStart1, kMapOffset1));
 
   constexpr uint64_t kMapOffset2 = 0x100000;
   constexpr uint64_t kMapStart2 = 0x2000 + kMapOffset2;
   constexpr uint64_t kAbsolutePc2 = kMapStart2 + 0x200;
-  EXPECT_EQ(0, coff.GetRelPc(kAbsolutePc2, kMapStart2, kMapOffset2));
+  EXPECT_EQ(0, coff.GetRelPcWithMapOffset(kAbsolutePc2, kMapStart2, kMapOffset2));
+}
+
+TYPED_TEST(PeCoffInterfaceTest, gets_correct_relative_pc_given_map_rva) {
+  this->GetFake()->Init();
+  TypeParam coff(this->GetMemory());
+  int64_t load_bias;
+  ASSERT_TRUE(coff.Init(&load_bias));
+
+  constexpr uint64_t kAbsolutePc = 0x2200;
+  constexpr uint64_t kMapStart = 0x2000;
+  ASSERT_TRUE(kAbsolutePc - kMapStart < PeCoffFake<TypeParam>::kTextSectionMemorySize);
+  const uint64_t expected_relative_pc = kAbsolutePc - kMapStart +
+                                        PeCoffFake<TypeParam>::kLoadBiasFake +
+                                        PeCoffFake<TypeParam>::kTextSectionMemoryOffset;
+  EXPECT_EQ(expected_relative_pc,
+            coff.GetRelPcWithMapRva(kAbsolutePc, kMapStart,
+                                    PeCoffFake<TypeParam>::kTextSectionMemoryOffset));
 }
 
 TYPED_TEST(PeCoffInterfaceTest, gets_correct_text_range) {
