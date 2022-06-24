@@ -2,6 +2,7 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
+#include <absl/hash/hash_testing.h>
 #include <gtest/gtest.h>
 
 #include <memory>
@@ -258,6 +259,28 @@ TEST(TypedefTest, CallIsCorrect) {
     MyType<Integer> sum_wrapped = LiftAndApply(&Integer::Add, first, second);
     EXPECT_EQ(sum_wrapped->value, kSum);
   }
+}
+
+TEST(Typedef, HashIsCorrect) {
+  EXPECT_TRUE(absl::VerifyTypeImplementsAbslHashCorrectly(
+      {MyType<int>(1), MyType<int>(0), MyType<int>(-1), MyType<int>(10)}));
+
+  EXPECT_TRUE(absl::VerifyTypeImplementsAbslHashCorrectly(
+      {MyType<std::string>("A"), MyType<std::string>("B"), MyType<std::string>(""),
+       MyType<std::string>("ABB")}));
+}
+
+TEST(Typedef, ComparisonIsCorrect) {
+  constexpr int kLesser = 1;
+  constexpr int kGreater = 2;
+  EXPECT_EQ(MyType<int>(kLesser), MyType<int>(kLesser));
+  EXPECT_NE(MyType<int>(kLesser), MyType<int>(kGreater));
+  EXPECT_GE(MyType<int>(kLesser), MyType<int>(kLesser));
+  EXPECT_GE(MyType<int>(kGreater), MyType<int>(kLesser));
+  EXPECT_LE(MyType<int>(kLesser), MyType<int>(kLesser));
+  EXPECT_LE(MyType<int>(kLesser), MyType<int>(kGreater));
+  EXPECT_LT(MyType<int>(kLesser), MyType<int>(kGreater));
+  EXPECT_GT(MyType<int>(kGreater), MyType<int>(kLesser));
 }
 
 }  // namespace orbit_base
