@@ -126,11 +126,11 @@ struct FuzzingException {};
 #define ORBIT_INTERNAL_PLATFORM_ABORT() \
   throw orbit_base::FuzzingException {}
 #elif defined(_WIN32)
-#define ORBIT_INTERNAL_PLATFORM_LOG(message)          \
-  do {                                                \
-    fprintf(stderr, "%s", message);                   \
-    orbit_base_internal::OutputDebugStringA(message); \
-    orbit_base_internal::LogToFile(message);          \
+#define ORBIT_INTERNAL_PLATFORM_LOG(message)        \
+  do {                                              \
+    fprintf(stderr, "%s", message);                 \
+    orbit_base_internal::OutputToDebugger(message); \
+    orbit_base_internal::LogToFile(message);        \
   } while (0)
 #define ORBIT_INTERNAL_PLATFORM_ABORT() \
   do {                                  \
@@ -168,7 +168,7 @@ void LogToFile(const std::string& message);
 
 #ifdef _WIN32
 // Add one indirection so that we can #include <Windows.h> in the .cpp instead of in this header.
-void OutputDebugStringA(const char* str);
+void OutputToDebugger(const char* str);
 #endif
 
 }  // namespace orbit_base_internal
