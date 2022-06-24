@@ -50,14 +50,13 @@ constexpr const char* kDeprecationNote =
 namespace orbit_symbols {
 
 std::vector<fs::path> ReadSymbolsFile(const fs::path& file_name) {
-  std::error_code error;
-  bool file_exists = fs::exists(file_name, error);
-  if (error) {
-    ORBIT_ERROR("Unable to stat \"%s\":%s", file_name.string(), error.message());
+  ErrorMessageOr<bool> exists_or_error = orbit_base::FileExists(file_name);
+  if (exists_or_error.has_error()) {
+    ORBIT_ERROR("Unable to stat \"%s\":%s", file_name.string(), exists_or_error.error().message());
     return {};
   }
 
-  if (!file_exists) {
+  if (!exists_or_error.value()) {
     ErrorMessageOr<void> result = orbit_base::WriteStringToFile(
         file_name,
         "//-------------------\n"
@@ -100,6 +99,7 @@ std::vector<fs::path> ReadSymbolsFile(const fs::path& file_name) {
     }
 
     const fs::path dir = line;
+    std::error_code error;
     bool is_directory = fs::is_directory(dir, error);
     if (error) {
       ORBIT_ERROR("Unable to stat \"%s\": %s (skipping)", dir.string(), error.message());
@@ -210,13 +210,14 @@ ErrorMessageOr<fs::path> SymbolHelper::FindSymbolsFileLocally(
   ORBIT_LOG("Trying to find symbols for module: \"%s\"", module_path.string());
   for (const auto& symbols_path : search_paths) {
     std::error_code error;
-    bool exists = fs::exists(symbols_path, error);
-    if (error) {
-      ORBIT_ERROR("Unable to stat \"%s\": %s", symbols_path.string(), error.message());
+    ErrorMessageOr<bool> exists_or_error = orbit_base::FileExists(symbols_path);
+    if (exists_or_error.has_error()) {
+      ORBIT_ERROR("Unable to stat \"%s\": %s", symbols_path.string(),
+                  exists_or_error.error().message());
       continue;
     }
 
-    if (!exists) continue;
+    if (!exists_or_error.value()) continue;
 
     const auto verification_result = VerifySymbolsFile(symbols_path, build_id);
     if (verification_result.has_error()) {
@@ -278,13 +279,14 @@ fs::path SymbolHelper::GenerateCachedFileName(const fs::path& file_path) const {
 [[nodiscard]] bool SymbolHelper::IsMatchingDebugInfoFile(
     const std::filesystem::path& debuginfo_file_path, uint32_t checksum) {
   std::error_code error;
-  bool exists = fs::exists(debuginfo_file_path, error);
-  if (error) {
-    ORBIT_ERROR("Unable to stat \"%s\": %s", debuginfo_file_path.string(), error.message());
+  ErrorMessageOr<bool> exists_or_error = orbit_base::FileExists(debuginfo_file_path);
+  if (exists_or_error.has_error()) {
+    ORBIT_ERROR("Unable to stat \"%s\": %s", debuginfo_file_path.string(),
+                exists_or_error.error().message());
     return false;
   }
 
-  if (!exists) return false;
+  if (!exists_or_error.value()) return false;
 
   const auto checksum_or_error = ElfFile::CalculateDebuglinkChecksum(debuginfo_file_path);
   if (checksum_or_error.has_error()) {
