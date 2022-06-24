@@ -12,6 +12,7 @@
 #include <grpcpp/channel.h>
 
 #include <atomic>
+#include <chrono>
 #include <cstdint>
 #include <filesystem>
 #include <functional>
@@ -82,6 +83,7 @@
 #include "OrbitBase/StopToken.h"
 #include "OrbitBase/ThreadPool.h"
 #include "OrbitPaths/Paths.h"
+#include "QtUtils/Throttle.h"
 #include "SamplingReport.h"
 #include "ScopedStatus.h"
 #include "Statistics/BinomialConfidenceInterval.h"
@@ -362,6 +364,7 @@ class OrbitApp final : public DataViewFactory,
   void RefreshUIAfterModuleReload();
 
   void UpdateAfterSymbolLoading();
+  void UpdateAfterSymbolLoadingThrottled();
   void UpdateAfterCaptureCleared();
 
   orbit_base::Future<ErrorMessageOr<void>> LoadPresetModule(
@@ -707,6 +710,9 @@ class OrbitApp final : public DataViewFactory,
   const orbit_statistics::WilsonBinomialConfidenceIntervalEstimator confidence_interval_estimator_;
 
   std::optional<orbit_statistics::HistogramSelectionRange> histogram_selection_range_;
+
+  static constexpr std::chrono::milliseconds kMaxPostProcessingInterval{1000};
+  orbit_qt_utils::Throttle update_after_symbol_loading_throttle_{kMaxPostProcessingInterval};
 };
 
 #endif  // ORBIT_GL_APP_H_

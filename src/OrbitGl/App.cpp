@@ -332,6 +332,9 @@ OrbitApp::OrbitApp(orbit_gl::MainWindowInterface* main_window,
   data_manager_ = std::make_unique<orbit_client_data::DataManager>(main_thread_id_);
   module_manager_ = std::make_unique<orbit_client_data::ModuleManager>();
   manual_instrumentation_manager_ = std::make_unique<ManualInstrumentationManager>();
+
+  QObject::connect(&update_after_symbol_loading_throttle_, &orbit_qt_utils::Throttle::Triggered,
+                   [this]() { UpdateAfterSymbolLoading(); });
 }
 
 OrbitApp::~OrbitApp() { AbortCapture(); }
@@ -2071,8 +2074,8 @@ void OrbitApp::AddSymbols(const std::filesystem::path& module_file_path,
               module_data->file_path());
   }
 
-  UpdateAfterSymbolLoading();
-  FireRefreshCallbacks();
+  FireRefreshCallbacks(DataViewType::kModules);
+  UpdateAfterSymbolLoadingThrottled();
 }
 
 orbit_base::Future<ErrorMessageOr<void>> OrbitApp::LoadSymbols(
@@ -2691,7 +2694,10 @@ void OrbitApp::UpdateAfterSymbolLoading() {
   SetSelectionBottomUpView(capture_data.selection_post_processed_sampling_data(), capture_data);
   selection_report_->UpdateReport(&capture_data.selection_callstack_data(),
                                   &capture_data.selection_post_processed_sampling_data());
+  FireRefreshCallbacks();
 }
+
+void OrbitApp::UpdateAfterSymbolLoadingThrottled() { update_after_symbol_loading_throttle_.Fire(); }
 
 void OrbitApp::UpdateAfterCaptureCleared() {
   PostProcessedSamplingData empty_post_processed_sampling_data;
