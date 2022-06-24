@@ -160,7 +160,7 @@ void EntryPayload(uint64_t return_address, uint64_t function_id, uint64_t stack_
   }
   is_in_payload = true;
 
-  thread_local const pid_t tid = orbit_base::GetCurrentProcessIdNative();
+  thread_local const pid_t tid = orbit_base::GetCurrentThreadIdNative();
 
   if (tid == orbit_threads[0] || tid == orbit_threads[1] || tid == orbit_threads[2] ||
       tid == orbit_threads[3] || tid == orbit_threads[4] || tid == orbit_threads[5]) {
