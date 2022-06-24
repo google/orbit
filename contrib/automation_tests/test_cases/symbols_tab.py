@@ -208,7 +208,8 @@ class WaitForLoadingSymbolsAndVerifyCache(E2ETestCase):
 
 class WaitForLoadingSymbolsAndCheckModule(E2ETestCase):
     """
-    Wait for automatically loading all symbol files and checks if some specific module was loaded.
+    Waits for automatically loading all symbol files and checks if the specified module was loaded
+    successfully.
     """
     def _execute(self, module_search_string: str):
         WaitForLoadingSymbolsAndVerifyCache()
