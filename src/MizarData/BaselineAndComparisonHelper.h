@@ -11,14 +11,14 @@
 
 #include <string>
 
-#include "MizarData/SampledFunctionId.h"
+#include "MizarBase/SampledFunctionId.h"
 
 namespace orbit_mizar_data {
 
 struct AddressToIdAndIdToName {
-  absl::flat_hash_map<uint64_t, SFID> baseline_address_to_sfid;
-  absl::flat_hash_map<uint64_t, SFID> comparison_address_to_sfid;
-  absl::flat_hash_map<SFID, std::string> sfid_to_name;
+  absl::flat_hash_map<uint64_t, orbit_mizar_base::SFID> baseline_address_to_sfid;
+  absl::flat_hash_map<uint64_t, orbit_mizar_base::SFID> comparison_address_to_sfid;
+  absl::flat_hash_map<orbit_mizar_base::SFID, std::string> sfid_to_name;
 };
 
 [[nodiscard]] AddressToIdAndIdToName AssignSampledFunctionIds(

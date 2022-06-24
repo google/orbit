@@ -19,9 +19,9 @@
 
 #include "ClientData/CallstackData.h"
 #include "ClientProtos/capture_data.pb.h"
+#include "MizarBase/SampledFunctionId.h"
 #include "MizarData/MizarDataProvider.h"
 #include "MizarData/NonWrappingAddition.h"
-#include "MizarData/SampledFunctionId.h"
 #include "OrbitBase/ThreadConstants.h"
 
 namespace orbit_mizar_data {
@@ -31,6 +31,8 @@ namespace orbit_mizar_data {
 // the other capture. Also, it is aware of the sampled function ids assigned to the functions.
 template <typename Data>
 class MizarPairedDataTmpl {
+  using SFID = ::orbit_mizar_base::SFID;
+
  public:
   MizarPairedDataTmpl(std::unique_ptr<Data> data,
                       absl::flat_hash_map<uint64_t, SFID> address_to_sfid)

@@ -7,7 +7,8 @@ cmake_minimum_required(VERSION 3.15)
 add_library(MizarBase INTERFACE)
 
 target_sources(MizarBase INTERFACE
-  include/MizarBase/BaselineOrComparison.h)
+  include/MizarBase/BaselineOrComparison.h
+  include/MizarBase/SampledFunctionId.h)
 
 target_include_directories(MizarBase INTERFACE ${CMAKE_CURRENT_LIST_DIR}/include)
 

@@ -2,8 +2,8 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#ifndef MIZAR_DATA_SAMPLED_FUNCTION_ID_H_
-#define MIZAR_DATA_SAMPLED_FUNCTION_ID_H_
+#ifndef MIZAR_BASE_SAMPLED_FUNCTION_ID_H_
+#define MIZAR_BASE_SAMPLED_FUNCTION_ID_H_
 
 #include <absl/strings/str_format.h>
 #include <stdint.h>
@@ -13,7 +13,7 @@
 
 #include "OrbitBase/Typedef.h"
 
-namespace orbit_mizar_data {
+namespace orbit_mizar_base {
 
 struct SampledFunctionIdTag {};
 
@@ -25,6 +25,6 @@ using SFID = orbit_base::Typedef<SampledFunctionIdTag, uint64_t>;
 // Making sure we do not waste memory on the abstraction
 static_assert(sizeof(SFID) == sizeof(uint64_t));
 
-}  // namespace orbit_mizar_data
+}  // namespace orbit_mizar_base
 
-#endif  // MIZAR_DATA_SAMPLED_FUNCTION_ID_H_
+#endif  // MIZAR_BASE_SAMPLED_FUNCTION_ID_H_

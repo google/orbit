@@ -11,10 +11,10 @@
 #include <string>
 
 #include "MizarBase/BaselineOrComparison.h"
+#include "MizarBase/SampledFunctionId.h"
 #include "MizarData/ActiveFunctionTimePerFrameComparator.h"
 #include "MizarData/MizarPairedData.h"
 #include "MizarData/NonWrappingAddition.h"
-#include "MizarData/SampledFunctionId.h"
 #include "MizarData/SamplingWithFrameTrackComparisonReport.h"
 
 namespace orbit_mizar_data {
@@ -28,6 +28,7 @@ class BaselineAndComparisonTmpl {
   using Baseline = ::orbit_mizar_base::Baseline<T>;
   template <typename T>
   using Comparison = ::orbit_mizar_base::Comparison<T>;
+  using SFID = ::orbit_mizar_base::SFID;
 
  public:
   BaselineAndComparisonTmpl(Baseline<PairedData> baseline, Comparison<PairedData> comparison,
