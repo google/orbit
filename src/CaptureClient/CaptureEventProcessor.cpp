@@ -561,14 +561,9 @@ void CaptureEventProcessorForListener::ProcessThreadNamesSnapshot(
       return ThreadStateSliceInfo::WakeupReason::kUnblocked;
     case orbit_grpc_protos::ThreadStateSlice::kCreated:
       return ThreadStateSliceInfo::WakeupReason::kCreated;
-    case orbit_grpc_protos::
-        ThreadStateSlice_WakeupReason_ThreadStateSlice_WakeupReason_INT_MIN_SENTINEL_DO_NOT_USE_:
-      ORBIT_UNREACHABLE();
-    case orbit_grpc_protos::
-        ThreadStateSlice_WakeupReason_ThreadStateSlice_WakeupReason_INT_MAX_SENTINEL_DO_NOT_USE_:
+    default:
       ORBIT_UNREACHABLE();
   }
-  ORBIT_UNREACHABLE();
 }
 
 void CaptureEventProcessorForListener::ProcessThreadStateSlice(
