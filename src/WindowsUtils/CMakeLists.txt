@@ -1,4 +1,4 @@
-# Copyright (c) 2021 The Orbit Authors. All rights reserved.
+﻿# Copyright (c) 2021 The Orbit Authors. All rights reserved.
 # Use of this source code is governed by a BSD-style license that can be
 # found in the LICENSE file.
 
@@ -61,6 +61,9 @@ target_link_libraries(WindowsUtils PUBLIC
         CONAN_PKG::abseil)
 
 add_executable(WindowsUtilsTests)
+
+# Intentionally insert a Unicode character in the executable name to test for Unicode support.
+set_target_properties(WindowsUtilsTests PROPERTIES OUTPUT_NAME "WindowsUtilsTests🚀")
 
 target_sources(WindowsUtilsTests PRIVATE
         BusyLoopLauncherTest.cpp

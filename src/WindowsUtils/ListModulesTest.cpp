@@ -1,4 +1,4 @@
-// Copyright (c) 2021 The Orbit Authors. All rights reserved.
+﻿// Copyright (c) 2021 The Orbit Authors. All rights reserved.
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
@@ -23,9 +23,9 @@
 
 namespace orbit_windows_utils {
 
-static std::string GetCurrentModuleName() {
+static std::string GetCurrentModuleFullPath() {
   HMODULE module_handle = NULL;
-  GetModuleHandleEx(GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS, (LPCTSTR)GetCurrentModuleName,
+  GetModuleHandleEx(GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS, (LPCTSTR)GetCurrentModuleFullPath,
                     &module_handle);
   ORBIT_CHECK(module_handle);
   wchar_t module_name[MAX_PATH] = {0};
@@ -38,10 +38,13 @@ TEST(ListModules, ContainsCurrentModule) {
   std::vector<Module> modules = ListModules(pid);
   EXPECT_NE(modules.size(), 0);
 
-  std::string this_module_name = GetCurrentModuleName();
+  std::string this_module_full_path = GetCurrentModuleFullPath();
+
   bool found_this_module = false;
   for (const Module& module : modules) {
-    if (module.full_path == this_module_name) {
+    if (module.full_path == this_module_full_path) {
+      constexpr const char* kModuleName = "WindowsUtilsTests🚀.exe";
+      ASSERT_TRUE(module.full_path.find(kModuleName) != std::string::npos);
       found_this_module = true;
       break;
     }
