@@ -167,6 +167,18 @@ std::vector<uint64_t> ProcessData::GetModuleBaseAddresses(const std::string& mod
   return result;
 }
 
+std::vector<ModuleInMemory> ProcessData::FindModulesByFilename(const std::string& filename) const {
+  absl::MutexLock lock(&mutex_);
+  std::vector<ModuleInMemory> result;
+  for (const auto& [unused_start_address, module_in_memory] : start_address_to_module_in_memory_) {
+    const std::string& file_path = module_in_memory.file_path();
+    if (std::filesystem::path(file_path).filename().string() == filename) {
+      result.push_back(module_in_memory);
+    }
+  }
+  return result;
+}
+
 std::map<uint64_t, ModuleInMemory> ProcessData::GetMemoryMapCopy() const {
   absl::MutexLock lock(&mutex_);
   return start_address_to_module_in_memory_;
