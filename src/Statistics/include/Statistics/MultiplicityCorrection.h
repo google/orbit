@@ -20,9 +20,10 @@ namespace orbit_statistics {
 // `pvalue < alpha`, thus controlling the probability of false-alarm -- it will be around alpha.
 // Now, consider a case where a series of statistical tests takes place (e.g. 1000 of them). And we
 // don't want to see `~1000*alpha` false alarms. We rather wish to keep the probability of _any_
-// number of false-alarm under alpha. Multiplicity correction yields corrected pvalues. One can
-// compare the corrected pvalues against alpha in the same manner as it is done for pvalues. The
-// chance of _at least one_ false alarm will be around alpha.
+// positive number of false-alarms under alpha. That is, we wish to control Family-wise error rate.
+// Multiplicity correction yields corrected pvalues. One can compare the corrected pvalues against
+// alpha in the same manner as it is done for pvalues. The chance of _at least one_ false alarm will
+// be around alpha.
 
 // The simplest correction known in the literature. Very easy to reason about. Shouldn't be used
 // but for testing or for lack of a better alternative.
