@@ -177,7 +177,7 @@ std::string ThreadStateBar::GetThreadStateSliceTooltip(PrimitiveAssembler& primi
       "<b>%s</b><br/>"
       "<i>Thread state</i><br/>"
       "<br/>"
-      "%s",
+      "%s<br/>",
       GetThreadStateName(thread_state_slice->thread_state()),
       GetThreadStateDescription(thread_state_slice->thread_state()));
 
@@ -188,7 +188,6 @@ std::string ThreadStateBar::GetThreadStateSliceTooltip(PrimitiveAssembler& primi
     std::string process_name = capture_data_->GetThreadName(thread_state_slice->wakeup_pid());
 
     tooltip += absl::StrFormat(
-        "<br/>"
         "<br/>"
         "<b>Was %s by process:</b> %s [%d]"
         "<br/>"
