@@ -10,6 +10,7 @@
 
 #include <string>
 #include <utility>
+
 #include "OrbitBase/Typedef.h"
 
 namespace orbit_mizar_data {
