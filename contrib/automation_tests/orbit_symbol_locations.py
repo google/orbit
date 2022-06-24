@@ -10,7 +10,7 @@ from absl import app
 
 from core.orbit_e2e import E2ETestSuite
 from test_cases.connection_window import FilterAndSelectFirstProcess, ConnectToStadiaInstance
-from test_cases.symbols_tab import ClearSymbolCache, LoadSymbols
+from test_cases.symbols_tab import ClearSymbolCache, LoadSymbols, WaitForLoadingSymbolsAndCheckModule
 from test_cases.symbol_locations import AddSymbolLocation, ClearAllSymbolLocations, AddSymbolFile
 from test_cases.main_window import EndSession
 """
@@ -59,14 +59,14 @@ def main(argv):
         AddSymbolLocation(location=stale_path),
         LoadSymbols(module_search_string="no_symbols_elf", expect_fail=True),
         AddSymbolLocation(location=working_path),
-        LoadSymbols(module_search_string="no_symbols_elf"),
+        WaitForLoadingSymbolsAndCheckModule(module_search_string="no_symbols_elf"),
         ClearAllSymbolLocations(),
         EndSession(),
         FilterAndSelectFirstProcess(process_filter='no_symbols_elf'),
         AddSymbolFile(location=stale_file),
         LoadSymbols(module_search_string="no_symbols_elf", expect_fail=True),
         AddSymbolFile(location=working_file),
-        LoadSymbols(module_search_string="no_symbols_elf"),
+        WaitForLoadingSymbolsAndCheckModule(module_search_string="no_symbols_elf"),
         ClearAllSymbolLocations()
     ]
     suite = E2ETestSuite(test_name="Custom symbol locations", test_cases=test_cases)

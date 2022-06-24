@@ -9,7 +9,7 @@ from absl import app
 from core.orbit_e2e import E2ETestSuite, E2ETestCase
 from test_cases.connection_window import FilterAndSelectFirstProcess, ConnectToStadiaInstance
 from test_cases.capture_window import Capture
-from test_cases.symbols_tab import LoadSymbols, FilterAndHookMultipleFunctions
+from test_cases.symbols_tab import WaitForLoadingSymbolsAndCheckModule, FilterAndHookMultipleFunctions
 from test_cases.live_tab import VerifyOneFunctionWasHit
 """Instrument function from libggp.
 
@@ -43,7 +43,7 @@ def main(argv):
     test_cases = [
         ConnectToStadiaInstance(),
         FilterAndSelectFirstProcess(process_filter='hello_'),
-        LoadSymbols(module_search_string="libggp"),
+        WaitForLoadingSymbolsAndCheckModule(module_search_string="libggp"),
         FilterAndHookMultipleFunctions(function_search_string='GgpIssueFrameToken_v'),
         Capture(),
         VerifyOneFunctionWasHit(function_name_contains='GgpIssueFrameToken_v',

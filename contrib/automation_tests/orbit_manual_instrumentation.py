@@ -9,7 +9,7 @@ from absl import app
 from core.orbit_e2e import E2ETestSuite
 from test_cases.connection_window import FilterAndSelectFirstProcess, ConnectToStadiaInstance
 from test_cases.capture_window import Capture, CheckTimers, VerifyTracksDoNotExist, VerifyTracksExist, ToggleCollapsedStateOfAllTracks, FilterTracks
-from test_cases.symbols_tab import LoadSymbols
+from test_cases.symbols_tab import WaitForLoadingSymbolsAndCheckModule
 from test_cases.live_tab import VerifyScopeTypeAndHitCount
 """Test Orbit's manual instrumentation.
 
@@ -47,7 +47,7 @@ def main(argv):
     test_cases = [
         ConnectToStadiaInstance(),
         FilterAndSelectFirstProcess(process_filter="OrbitTest"),
-        LoadSymbols(module_search_string="OrbitTest"),
+        WaitForLoadingSymbolsAndCheckModule(module_search_string="OrbitTest"),
         # Take a capture without manual instrumentation and assert that no tracks show up.
         Capture(manual_instrumentation=False),
         VerifyTracksDoNotExist(track_names=tracks),

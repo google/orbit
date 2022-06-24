@@ -9,7 +9,7 @@ from absl import app
 from core.orbit_e2e import E2ETestSuite
 from test_cases.connection_window import FilterAndSelectFirstProcess, ConnectToStadiaInstance
 from test_cases.capture_window import Capture, CheckTimers, ExpandTrack
-from test_cases.symbols_tab import LoadSymbols, FilterAndHookFunction
+from test_cases.symbols_tab import WaitForLoadingSymbolsAndCheckModule, FilterAndHookFunction
 from test_cases.live_tab import VerifyScopeTypeAndHitCount
 """Instrument a single function in Orbit using pywinauto.
 
@@ -32,7 +32,7 @@ def main(argv):
     test_cases = [
         ConnectToStadiaInstance(),
         FilterAndSelectFirstProcess(process_filter='hello_'),
-        LoadSymbols(module_search_string="hello_ggp"),
+        WaitForLoadingSymbolsAndCheckModule(module_search_string="hello_ggp"),
         Capture(),
         CheckTimers(track_name_filter='Scheduler'),
         ExpandTrack(expected_name="gfx"),

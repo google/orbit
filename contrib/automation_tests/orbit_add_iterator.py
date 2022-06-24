@@ -24,7 +24,7 @@ from absl import app
 
 from core.orbit_e2e import E2ETestSuite
 from test_cases.connection_window import FilterAndSelectFirstProcess, ConnectToStadiaInstance
-from test_cases.symbols_tab import LoadSymbols, FilterAndHookFunction
+from test_cases.symbols_tab import WaitForLoadingSymbolsAndCheckModule, FilterAndHookFunction
 from test_cases.capture_window import Capture
 from test_cases.live_tab import AddIterator
 
@@ -33,7 +33,7 @@ def main(argv):
     test_cases = [
         ConnectToStadiaInstance(),
         FilterAndSelectFirstProcess(process_filter="hello_ggp"),
-        LoadSymbols(module_search_string="hello_ggp"),
+        WaitForLoadingSymbolsAndCheckModule(module_search_string="hello_ggp"),
         FilterAndHookFunction(function_search_string='DrawFrame'),
         Capture(),
         AddIterator(function_name="DrawFrame")

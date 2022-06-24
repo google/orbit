@@ -10,7 +10,7 @@ from absl import flags
 from core.orbit_e2e import E2ETestSuite
 from test_cases.connection_window import FilterAndSelectFirstProcess
 from test_cases.connection_window import ConnectToStadiaInstance
-from test_cases.symbols_tab import LoadSymbols
+from test_cases.symbols_tab import WaitForLoadingSymbolsAndCheckModule
 from test_cases.symbols_tab import ShowSourceCode
 """Show source code for a single function in Orbit using pywinauto.
 
@@ -39,7 +39,7 @@ def main(argv):
     test_cases = [
         ConnectToStadiaInstance(),
         FilterAndSelectFirstProcess(process_filter="hello_ggp_c"),
-        LoadSymbols(module_search_string="hello_ggp_c"),
+        WaitForLoadingSymbolsAndCheckModule(module_search_string="hello_ggp_c"),
         ShowSourceCode(function_search_string="DrawFrame"),
     ]
     suite = E2ETestSuite(test_name="Show Source Code", test_cases=test_cases)
