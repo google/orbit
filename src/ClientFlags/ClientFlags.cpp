@@ -77,4 +77,9 @@ ABSL_FLAG(bool, clear_settings, false,
 ABSL_FLAG(bool, iso_timestamps, true, "Show timestamps using ISO-8601 format.");
 
 ABSL_FLAG(bool, enable_unsafe_symbols, false,
-          "Enable the possibility to use symbol files that do not have a matching build ID");
+          "Enable the possibility to use symbol files that do not have a matching build ID.");
+
+ABSL_FLAG(
+    bool, auto_symbol_loading, true,
+    "Enable automatic symbol loading. This is turned on by default. If Orbit becomes unresponsive, "
+    "try turning automatic symbol loading off (--auto_symbol_loading=false)");

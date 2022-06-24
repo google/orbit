@@ -12,15 +12,16 @@
 #include <utility>
 
 #include "MizarBase/BaselineOrComparison.h"
+#include "MizarBase/SampledFunctionId.h"
 #include "MizarData/ActiveFunctionTimePerFrameComparator.h"
-#include "MizarData/SampledFunctionId.h"
 #include "MizarData/SamplingWithFrameTrackComparisonReport.h"
 
 namespace orbit_mizar_data {
 
-using testing::DoubleNear;
-using testing::IsNan;
-using testing::Return;
+using ::orbit_mizar_base::SFID;
+using ::testing::DoubleNear;
+using ::testing::IsNan;
+using ::testing::Return;
 
 template <typename T>
 using Baseline = ::orbit_mizar_base::Baseline<T>;

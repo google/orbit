@@ -10,7 +10,7 @@ from core.orbit_e2e import E2ETestSuite
 from test_cases.connection_window import FilterAndSelectFirstProcess, ConnectToStadiaInstance
 from test_cases.capture_window import Capture
 from test_cases.bottom_up_tab import VerifyHelloGgpBottomUpContents
-from test_cases.symbols_tab import LoadSymbols
+from test_cases.symbols_tab import WaitForLoadingSymbolsAndCheckModule
 """Inspect the bottom-up view in Orbit using pywinauto.
 
 Before this script is run there needs to be a gamelet reserved and
@@ -34,8 +34,8 @@ def main(argv):
     test_cases = [
         ConnectToStadiaInstance(),
         FilterAndSelectFirstProcess(process_filter='hello_ggp'),
-        LoadSymbols(module_search_string='libc-2.24'),
-        LoadSymbols(module_search_string='libdrm.so.2'),
+        WaitForLoadingSymbolsAndCheckModule(module_search_string='libc-2.24'),
+        WaitForLoadingSymbolsAndCheckModule(module_search_string='libdrm.so.2'),
         Capture(frame_pointer_unwinding=False),
         VerifyHelloGgpBottomUpContents(),
         Capture(frame_pointer_unwinding=True, sampling_period_ms=0.1),

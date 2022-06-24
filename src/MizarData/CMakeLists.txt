@@ -12,8 +12,7 @@ target_sources(MizarData PUBLIC
          include/MizarData/MizarData.h
          include/MizarData/MizarDataProvider.h
          include/MizarData/MizarPairedData.h
-         include/MizarData/NonWrappingAddition.h
-         include/MizarData/SampledFunctionId.h)
+         include/MizarData/NonWrappingAddition.h)
 
 target_include_directories(MizarData PUBLIC ${CMAKE_CURRENT_LIST_DIR}/include)
 

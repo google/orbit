@@ -8,8 +8,7 @@ from absl import app
 
 from core.orbit_e2e import E2ETestSuite
 from test_cases.connection_window import FilterAndSelectFirstProcess, ConnectToStadiaInstance
-from test_cases.symbols_tab import LoadAllSymbolsAndVerifyCache, ClearSymbolCache, LoadSymbols, \
-    ForceAndVerifySymbolUpdate
+from test_cases.symbols_tab import WaitForLoadingSymbolsAndVerifyCache, ClearSymbolCache, VerifyModuleLoaded
 from test_cases.main_window import EndSession
 """
 Test symbol loading with and without local caching.
@@ -38,20 +37,15 @@ This automation script covers a basic workflow:
 
 def main(argv):
     test_cases = [
+        ClearSymbolCache(),
         ConnectToStadiaInstance(),
         FilterAndSelectFirstProcess(process_filter='hello_ggp'),
-        ClearSymbolCache(),
-        LoadAllSymbolsAndVerifyCache(),
+        WaitForLoadingSymbolsAndVerifyCache(),
+        VerifyModuleLoaded(module_search_string="libggp"),
         EndSession(),
         FilterAndSelectFirstProcess(process_filter='hello_ggp'),
-        LoadAllSymbolsAndVerifyCache(expected_duration_difference_ratio=0.99),
-        EndSession(),
-        FilterAndSelectFirstProcess(process_filter='hello_ggp'),
-        LoadSymbols(module_search_string="libggp"),
-        EndSession(),
-        FilterAndSelectFirstProcess(process_filter='hello_ggp'),
-        ForceAndVerifySymbolUpdate(full_module_path="/user/local/cloudcast/lib/libggp.so",
-                                   replace_with_module="/mnt/developer/hello_ggp_standalone")
+        WaitForLoadingSymbolsAndVerifyCache(expected_duration_difference_ratio=0.99),
+        EndSession()
     ]
     suite = E2ETestSuite(test_name="Symbol loading and caching", test_cases=test_cases)
     suite.execute()

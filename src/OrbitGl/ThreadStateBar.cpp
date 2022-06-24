@@ -7,6 +7,7 @@
 #include <absl/strings/str_format.h>
 
 #include <memory>
+#include <string>
 #include <utility>
 
 #include "App.h"
@@ -95,6 +96,18 @@ static Color GetThreadStateColor(ThreadStateSlice::ThreadState state) {
   }
 }
 
+[[nodiscard]] static std::string GetWakeupReason(ThreadStateSliceInfo::WakeupReason reason) {
+  switch (reason) {
+    case ThreadStateSliceInfo::WakeupReason::kNotApplicable:
+      ORBIT_UNREACHABLE();
+    case ThreadStateSliceInfo::WakeupReason::kUnblocked:
+      return "unblocked";
+    case ThreadStateSliceInfo::WakeupReason::kCreated:
+      return "created";
+  }
+  ORBIT_UNREACHABLE();
+}
+
 static std::string GetThreadStateName(ThreadStateSlice::ThreadState state) {
   switch (state) {
     case ThreadStateSlice::kRunning:
@@ -159,19 +172,39 @@ std::string ThreadStateBar::GetThreadStateSliceTooltip(PrimitiveAssembler& primi
 
   const auto* thread_state_slice =
       static_cast<const ThreadStateSliceInfo*>(user_data->custom_data_);
-  uint64_t begin_ns = thread_state_slice->begin_timestamp_ns();
-  uint64_t end_ns = thread_state_slice->end_timestamp_ns();
 
-  return absl::StrFormat(
+  std::string tooltip = absl::StrFormat(
       "<b>%s</b><br/>"
       "<i>Thread state</i><br/>"
       "<br/>"
-      "%s"
+      "%s",
+      GetThreadStateName(thread_state_slice->thread_state()),
+      GetThreadStateDescription(thread_state_slice->thread_state()));
+
+  if (thread_state_slice->wakeup_tid() != orbit_base::kInvalidThreadId &&
+      thread_state_slice->wakeup_reason() != ThreadStateSliceInfo::WakeupReason::kNotApplicable) {
+    std::string reason = GetWakeupReason(thread_state_slice->wakeup_reason());
+    std::string thread_name = capture_data_->GetThreadName(thread_state_slice->wakeup_tid());
+    std::string process_name = capture_data_->GetThreadName(thread_state_slice->wakeup_pid());
+
+    tooltip += absl::StrFormat(
+        "<br/>"
+        "<br/>"
+        "<b>Was %s by process:</b> %s [%d]"
+        "<br/>"
+        "<b>Was %s by thread:</b> %s [%d]",
+        reason, process_name, thread_state_slice->wakeup_pid(), reason, thread_name,
+        thread_state_slice->wakeup_tid());
+  }
+
+  uint64_t begin_ns = thread_state_slice->begin_timestamp_ns();
+  uint64_t end_ns = thread_state_slice->end_timestamp_ns();
+  tooltip += absl::StrFormat(
       "<br/>"
       "<b>Time:</b> %s",
-      GetThreadStateName(thread_state_slice->thread_state()),
-      GetThreadStateDescription(thread_state_slice->thread_state()),
       orbit_display_formats::GetDisplayTime(TicksToDuration(begin_ns, end_ns)));
+
+  return tooltip;
 }
 
 void ThreadStateBar::DoUpdatePrimitives(PrimitiveAssembler& primitive_assembler,

@@ -76,11 +76,11 @@ class ClearSymbolCache(E2ETestCase):
         self.expect_true(not os.listdir(CACHE_LOCATION), 'Cache is empty')
 
 
-class LoadAllSymbolsAndVerifyCache(E2ETestCase):
+class WaitForLoadingSymbolsAndVerifyCache(E2ETestCase):
     """
-    Loads all symbol files at once and checks if all of them exist in the cache. In addition, this test measures the
-    total duration of symbol loading (estimated), and can fail if the duration differs from the previous run by
-    a limit defined by `expected_duration_difference`.
+    Wait for automatically loading all symbol files and checks if all of them exist in the cache. In addition, this test
+    measures the total duration of symbol loading (estimated), and can fail if the duration differs from the previous
+    run by a limit defined by `expected_duration_difference`.
     """
 
     def __init__(self, **kwargs):
@@ -99,7 +99,6 @@ class LoadAllSymbolsAndVerifyCache(E2ETestCase):
         """
         _show_symbols_and_functions_tabs(self.suite.top_window())
         self._modules_dataview = DataViewPanel(self.find_control("Group", "ModulesDataView"))
-        self._load_all_modules()
 
         modules_loading_result = self._wait_for_loading_and_collect_errors()
 
@@ -111,14 +110,6 @@ class LoadAllSymbolsAndVerifyCache(E2ETestCase):
         self._verify_all_modules_are_cached(modules)
         logging.info("Done. Loading time: {time:.2f}s, module errors: {errors}".format(
             time=modules_loading_result.time, errors=modules_loading_result.errors))
-
-    def _load_all_modules(self):
-        logging.info("Loading all modules")
-        self._modules_dataview.get_item_at(0, 0).click_input()
-        # Select all
-        send_keys("^a")
-        self._modules_dataview.get_item_at(0, 0).click_input('right')
-        self.find_context_menu_item('Load Symbols').click_input()
 
     def _verify_at_least_one_module_is_loaded(self, modules: List[Module]):
         loaded_modules = [module for module in modules if module.is_loaded]
@@ -215,34 +206,14 @@ class LoadAllSymbolsAndVerifyCache(E2ETestCase):
                     "Last run duration: {last:.2f}s, current run duration: {cur:.2f}s".format(
                         expected=expected_duration, last=last_duration, cur=current_duration))
 
-
-class ForceAndVerifySymbolUpdate(E2ETestCase):
+class WaitForLoadingSymbolsAndCheckModule(E2ETestCase):
     """
-    Replace a symbol file in the cache with another file from the cache. This is used to "invalidate" symbols files
-    and verify that they are downloaded again. Then, load symbols for the replaced file and confirm that the cached
-    file has changed.
+    Waits for automatically loading all symbol files and checks if the specified module was loaded
+    successfully.
     """
-
-    def __execute(self, full_module_path: str, replace_with_module: str):
-        """
-        :param full_module_path: Path to the module on the gamelet
-        :param replace_with_module: Path to another module that is used as a replacement.
-
-        Both modules need to exist in the local cache.
-        """
-        dst_module = os.path.join(CACHE_LOCATION, full_module_path.replace("/", "_"))
-        src_module = os.path.join(CACHE_LOCATION, replace_with_module.replace("/", "_"))
-        old_size = os.stat(dst_module).st_size
-
-        os.unlink(os.path.join(CACHE_LOCATION, dst_module))
-        os.rename(os.path.join(CACHE_LOCATION, src_module), dst_module)
-        assert (os.stat(dst_module).st_size != old_size)
-
-        LoadSymbols(module_search_string=full_module_path).execute(self.suite)
-        self.expect_true(
-            os.stat(dst_module).st_size != old_size,
-            "Module %s has changed in cache after loading symbols" % full_module_path)
-
+    def _execute(self, module_search_string: str):
+        WaitForLoadingSymbolsAndVerifyCache()
+        VerifyModuleLoaded(module_search_string=module_search_string).execute(self.suite)
 
 class LoadSymbols(E2ETestCase):
     """
@@ -378,7 +349,7 @@ class FilterAndEnableFrameTrackForFunction(E2ETestCase):
         functions_dataview.filter.set_focus()
         functions_dataview.filter.set_edit_text('')
         send_keys(function_search_string)
-        wait_for_condition(lambda: functions_dataview.get_row_count() == 1)
+        wait_for_condition(lambda: functions_dataview.get_row_count() >= 1)
         functions_dataview.get_item_at(0, 0).click_input('right')
 
         self.find_context_menu_item('Enable frame track(s)').click_input()

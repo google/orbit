@@ -425,7 +425,8 @@ void SymbolLocationsDialog::DisableAddFolder() {
 }
 
 void SymbolLocationsDialog::SetUpInfoLabel() {
-  QString label_text = absl::GetFlag(FLAGS_devmode) ? kNewInfoLabelTemplate : kOldInfoLabelTemplate;
+  QString label_text =
+      absl::GetFlag(FLAGS_auto_symbol_loading) ? kNewInfoLabelTemplate : kOldInfoLabelTemplate;
   if (allow_unsafe_symbols_) {
     label_text = label_text.arg(kInfoLabelArgumentWithBuildIdOverride);
   } else {

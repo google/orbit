@@ -10,7 +10,11 @@
 
 #include <string>
 
+#include "MizarBase/SampledFunctionId.h"
+
 namespace orbit_mizar_data {
+
+using SFID = ::orbit_mizar_base::SFID;
 
 template <typename K, typename V>
 [[nodiscard]] static absl::flat_hash_set<V> ValueSet(const absl::flat_hash_map<K, V>& map) {
