@@ -1477,7 +1477,7 @@ void OrbitMainWindow::ExecuteSymbolLocationsDialog(
 
 void OrbitMainWindow::on_actionSymbolLocationsDialog_triggered() {
   ExecuteSymbolLocationsDialog(std::nullopt);
-  if (app_->IsDevMode()) {
+  if (absl::GetFlag(FLAGS_auto_symbol_loading)) {
     std::ignore = app_->LoadAllSymbols();
   }
 }
