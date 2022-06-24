@@ -2,7 +2,6 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#include <gmock/gmock-matchers.h>
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
 
@@ -13,10 +12,7 @@
 
 #include "MizarBase/BaselineOrComparison.h"
 #include "MizarBase/SampledFunctionId.h"
-#include "MizarData/ActiveFunctionTimePerFrameComparator.h"
-#include "MizarData/SamplingWithFrameTrackComparisonReport.h"
-
-namespace orbit_mizar_data {
+#include "MizarStatistics/ActiveFunctionTimePerFrameComparator.h"
 
 using ::orbit_mizar_base::SFID;
 using ::testing::DoubleNear;
@@ -44,6 +40,8 @@ class MockFrameTrackStats {
 };
 
 }  // namespace
+
+namespace orbit_mizar_statistics {
 
 constexpr uint64_t kTotalCallstacksBaseline = 100;
 constexpr uint64_t kTotalCallstacksComparison = 200;
@@ -143,4 +141,4 @@ TEST_F(ActiveFunctionTimePerFrameComparatorTest, ComparatorIsCorrectWithZeroRate
   EXPECT_THAT(result.pvalue, DoubleNear(1.0, kTolerance));
 }
 
-}  // namespace orbit_mizar_data
+}  // namespace orbit_mizar_statistics

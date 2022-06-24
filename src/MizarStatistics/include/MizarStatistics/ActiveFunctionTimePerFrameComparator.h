@@ -2,20 +2,28 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#ifndef MIZAR_DATA_ACTIVE_FUNCTION_TIME_PER_FRAME_COMPARATOR_H_
-#define MIZAR_DATA_ACTIVE_FUNCTION_TIME_PER_FRAME_COMPARATOR_H_
+#ifndef MIZAR_STATISTICS_ACTIVE_FUNCTION_TIME_PER_FRAME_COMPARATOR_H_
+#define MIZAR_STATISTICS_ACTIVE_FUNCTION_TIME_PER_FRAME_COMPARATOR_H_
 
 #include <utility>
 
-#include "ClientData/ScopeStats.h"
 #include "MizarBase/BaselineOrComparison.h"
-#include "MizarData/SamplingWithFrameTrackComparisonReport.h"
+#include "MizarBase/SampledFunctionId.h"
 #include "Statistics/Gaussian.h"
 #include "Statistics/StatisticsUtils.h"
 
-namespace orbit_mizar_data {
+namespace orbit_mizar_statistics {
 
-// TODO(b/236130122) it should be moved to a new library
+// Whatever is usually referred to as "Statistical Test" we call "Comparison" in the project to save
+// confusion with Unit tests.
+struct ComparisonResult {
+  double statistic{};
+
+  // The term from Statistics. TL;DR: The smaller it is, the less we believe in the assumption under
+  // test (e.g. no difference in active function time).
+  double pvalue{};
+};
+
 // Implements the statistical hypothesis testing procedure aimed to test the equality of total
 // CPU-time of the sampled functions given the sampled rates and the frame track stats.
 // Under the assumption of equality the distribution of the statistic is approximated with normal
@@ -87,9 +95,6 @@ class ActiveFunctionTimePerFrameComparatorTmpl {
   const Comparison<FrameTrackStats>& comparison_frame_stats_;
 };
 
-using ActiveFunctionTimePerFrameComparator =
-    ActiveFunctionTimePerFrameComparatorTmpl<SamplingCounts, orbit_client_data::ScopeStats>;
+}  // namespace orbit_mizar_statistics
 
-}  // namespace orbit_mizar_data
-
-#endif  // MIZAR_DATA_ACTIVE_FUNCTION_TIME_PER_FRAME_COMPARATOR_H_
+#endif  // MIZAR_STATISTICS_ACTIVE_FUNCTION_TIME_PER_FRAME_COMPARATOR_H_

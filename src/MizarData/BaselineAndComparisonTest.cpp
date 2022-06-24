@@ -19,6 +19,7 @@
 #include "MizarBase/BaselineOrComparison.h"
 #include "MizarBase/SampledFunctionId.h"
 #include "MizarData/BaselineAndComparison.h"
+#include "MizarStatistics/ActiveFunctionTimePerFrameComparator.h"
 #include "OrbitBase/ThreadConstants.h"
 
 using ::orbit_mizar_base::SFID;
@@ -164,7 +165,7 @@ class MockFunctionTimeComparator {
       const Comparison<SamplingCounts>& /*comparison_counts*/,
       const Comparison<orbit_client_data::ScopeStats>& /*comparison_frame_stats*/) {}
 
-  [[nodiscard]] ComparisonResult Compare(SFID sfid) const {
+  [[nodiscard]] orbit_mizar_statistics::ComparisonResult Compare(SFID sfid) const {
     return {kStatistic, kSfidToPvalue.at(sfid)};
   };
 };
