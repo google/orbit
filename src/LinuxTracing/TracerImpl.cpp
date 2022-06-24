@@ -1168,6 +1168,8 @@ uint64_t TracerImpl::ProcessSampleEventAndReturnTimestamp(const perf_event_heade
                 // are NOT the pid and tid of the new process/thread, but the ones of the
                 // process/thread that created this one.
                 .new_tid = ring_buffer_record.data.pid,
+                .was_created_by_tid = static_cast<pid_t>(ring_buffer_record.sample_id.tid),
+                .was_created_by_pid = static_cast<pid_t>(ring_buffer_record.sample_id.pid),
             },
     };
     memcpy(event.data.comm, ring_buffer_record.data.comm, 16);

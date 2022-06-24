@@ -550,6 +550,15 @@ message ThreadStateSlice {
 
   uint64 duration_ns = 6;
   uint64 end_timestamp_ns = 5;
+
+  uint32 wakeup_tid = 7;
+  uint32 wakeup_pid = 8;
+  enum WakeupReason {
+    kNotApplicable = 0;
+    kUnblocked = 1;
+    kCreated = 2;
+  }
+  WakeupReason wakeup_reason = 9;
 }
 
 message AddressInfo {

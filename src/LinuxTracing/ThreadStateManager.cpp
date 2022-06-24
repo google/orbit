@@ -6,10 +6,12 @@
 
 #include <absl/container/flat_hash_map.h>
 #include <absl/meta/type_traits.h>
+#include <sys/types.h>
 
 #include <type_traits>
 #include <utility>
 
+#include "GrpcProtos/capture.pb.h"
 #include "OrbitBase/Logging.h"
 
 namespace orbit_linux_tracing {
@@ -31,7 +33,8 @@ void ThreadStateManager::OnInitialState(uint64_t timestamp_ns, pid_t tid,
   tid_open_states_.emplace(tid, OpenState{state, timestamp_ns});
 }
 
-void ThreadStateManager::OnNewTask(uint64_t timestamp_ns, pid_t tid) {
+void ThreadStateManager::OnNewTask(uint64_t timestamp_ns, pid_t tid, pid_t was_created_by_tid,
+                                   pid_t was_created_by_pid) {
   static constexpr ThreadStateSlice::ThreadState kNewState = ThreadStateSlice::kRunnable;
 
   if (auto open_state_it = tid_open_states_.find(tid);
@@ -40,24 +43,31 @@ void ThreadStateManager::OnNewTask(uint64_t timestamp_ns, pid_t tid) {
     ORBIT_ERROR("Processed task:task_newtask but thread %d was already known", tid);
     return;
   }
-  tid_open_states_.insert_or_assign(tid, OpenState{kNewState, timestamp_ns});
+  tid_open_states_.insert_or_assign(
+      tid, OpenState{kNewState, timestamp_ns, was_created_by_tid, was_created_by_pid,
+                     orbit_grpc_protos::ThreadStateSlice::kCreated});
 }
 
-std::optional<ThreadStateSlice> ThreadStateManager::OnSchedWakeup(uint64_t timestamp_ns,
-                                                                  pid_t tid) {
+std::optional<ThreadStateSlice> ThreadStateManager::OnSchedWakeup(uint64_t timestamp_ns, pid_t tid,
+                                                                  pid_t was_unblocked_by_tid,
+                                                                  pid_t was_unblocked_by_pid) {
   static constexpr ThreadStateSlice::ThreadState kNewState = ThreadStateSlice::kRunnable;
 
   auto open_state_it = tid_open_states_.find(tid);
   if (open_state_it == tid_open_states_.end()) {
     ORBIT_ERROR("Processed sched:sched_wakeup but previous state of thread %d is unknown", tid);
-    tid_open_states_.insert_or_assign(tid, OpenState{kNewState, timestamp_ns});
+    tid_open_states_.insert_or_assign(
+        tid, OpenState{kNewState, timestamp_ns, was_unblocked_by_tid, was_unblocked_by_pid,
+                       orbit_grpc_protos::ThreadStateSlice::kUnblocked});
     return std::nullopt;
   }
 
   const OpenState& open_state = open_state_it->second;
   if (timestamp_ns < open_state.begin_timestamp_ns) {
     // As noted above, overwrite the thread state retrieved at the beginning.
-    tid_open_states_.insert_or_assign(tid, OpenState{kNewState, timestamp_ns});
+    tid_open_states_.insert_or_assign(
+        tid, OpenState{kNewState, timestamp_ns, was_unblocked_by_tid, was_unblocked_by_pid,
+                       orbit_grpc_protos::ThreadStateSlice::kUnblocked});
     return std::nullopt;
   }
 
@@ -78,7 +88,12 @@ std::optional<ThreadStateSlice> ThreadStateManager::OnSchedWakeup(uint64_t times
   slice.set_thread_state(open_state.state);
   slice.set_duration_ns(timestamp_ns - open_state.begin_timestamp_ns);
   slice.set_end_timestamp_ns(timestamp_ns);
-  tid_open_states_.insert_or_assign(tid, OpenState{kNewState, timestamp_ns});
+  slice.set_wakeup_tid(open_state.wakeup_tid);
+  slice.set_wakeup_pid(open_state.wakeup_pid);
+  slice.set_wakeup_reason(open_state.wakeup_reason);
+  tid_open_states_.insert_or_assign(
+      tid, OpenState{kNewState, timestamp_ns, was_unblocked_by_tid, was_unblocked_by_pid,
+                     orbit_grpc_protos::ThreadStateSlice::kUnblocked});
   return slice;
 }
 
@@ -113,6 +128,9 @@ std::optional<ThreadStateSlice> ThreadStateManager::OnSchedSwitchIn(uint64_t tim
   slice.set_thread_state(open_state.state);
   slice.set_duration_ns(timestamp_ns - open_state.begin_timestamp_ns);
   slice.set_end_timestamp_ns(timestamp_ns);
+  slice.set_wakeup_tid(open_state.wakeup_tid);
+  slice.set_wakeup_pid(open_state.wakeup_pid);
+  slice.set_wakeup_reason(open_state.wakeup_reason);
   tid_open_states_.insert_or_assign(tid, OpenState{kNewState, timestamp_ns});
   return slice;
 }
@@ -155,6 +173,9 @@ std::optional<ThreadStateSlice> ThreadStateManager::OnSchedSwitchOut(
   slice.set_thread_state(adjusted_open_state_state);
   slice.set_duration_ns(timestamp_ns - open_state.begin_timestamp_ns);
   slice.set_end_timestamp_ns(timestamp_ns);
+  slice.set_wakeup_tid(open_state.wakeup_tid);
+  slice.set_wakeup_pid(open_state.wakeup_pid);
+  slice.set_wakeup_reason(open_state.wakeup_reason);
 
   // Note: If the thread exits but the new_state is kZombie instead of kDead,
   // the switch to kDead will never be reported.
@@ -170,6 +191,9 @@ std::vector<ThreadStateSlice> ThreadStateManager::OnCaptureFinished(uint64_t tim
     slice.set_thread_state(open_state.state);
     slice.set_duration_ns(timestamp_ns - open_state.begin_timestamp_ns);
     slice.set_end_timestamp_ns(timestamp_ns);
+    slice.set_wakeup_tid(open_state.wakeup_tid);
+    slice.set_wakeup_pid(open_state.wakeup_pid);
+    slice.set_wakeup_reason(open_state.wakeup_reason);
     slices.emplace_back(std::move(slice));
   }
   return slices;
