@@ -216,23 +216,20 @@ TEST(ProcessData, FindModulesByFilename) {
   module_info_2.set_address_start(kStartAddress2);
   module_info_2.set_address_end(kEndAddress2);
 
-  constexpr const char* kFilePath3 = kFilePath2;
-  constexpr const char* kBuildId3 = "kBuildId2";
+  constexpr const char* kBuildId3 = "kBuildId3";
   constexpr uint64_t kStartAddress3 = 200;
   constexpr uint64_t kEndAddress3 = 210;
   ModuleInfo module_info_3;
-  module_info_3.set_file_path(kFilePath3);
+  module_info_3.set_file_path(kFilePath2);
   module_info_3.set_build_id(kBuildId3);
   module_info_3.set_address_start(kStartAddress3);
   module_info_3.set_address_end(kEndAddress3);
 
-  constexpr const char* kFilePath4 = kFilePath2;
-  constexpr const char* kBuildId4 = kBuildId2;
   constexpr uint64_t kStartAddress4 = 300;
   constexpr uint64_t kEndAddress4 = 310;
   ModuleInfo module_info_4;
-  module_info_4.set_file_path(kFilePath4);
-  module_info_4.set_build_id(kBuildId4);
+  module_info_4.set_file_path(kFilePath2);
+  module_info_4.set_build_id(kBuildId2);
   module_info_4.set_address_start(kStartAddress4);
   module_info_4.set_address_end(kEndAddress4);
 
@@ -252,12 +249,12 @@ TEST(ProcessData, FindModulesByFilename) {
                                          Property(&ModuleInMemory::build_id, kBuildId2),
                                          Property(&ModuleInMemory::start, kStartAddress2),
                                          Property(&ModuleInMemory::end, kEndAddress2)),
-                                   AllOf(Property(&ModuleInMemory::file_path, kFilePath3),
+                                   AllOf(Property(&ModuleInMemory::file_path, kFilePath2),
                                          Property(&ModuleInMemory::build_id, kBuildId3),
                                          Property(&ModuleInMemory::start, kStartAddress3),
                                          Property(&ModuleInMemory::end, kEndAddress3)),
-                                   AllOf(Property(&ModuleInMemory::file_path, kFilePath4),
-                                         Property(&ModuleInMemory::build_id, kBuildId4),
+                                   AllOf(Property(&ModuleInMemory::file_path, kFilePath2),
+                                         Property(&ModuleInMemory::build_id, kBuildId2),
                                          Property(&ModuleInMemory::start, kStartAddress4),
                                          Property(&ModuleInMemory::end, kEndAddress4))));
 }
