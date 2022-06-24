@@ -5,6 +5,8 @@
 #ifndef ORBIT_BASE_TYPEDEF_H_
 #define ORBIT_BASE_TYPEDEF_H_
 
+#include <absl/hash/hash.h>
+
 #include <functional>
 #include <utility>
 

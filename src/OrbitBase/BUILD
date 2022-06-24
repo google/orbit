@@ -34,6 +34,7 @@ orbit_cc_test(
         ":OrbitBase",
         "//src/TestUtils",
         "@com_github_ned14_outcome//outcome",
+        "@com_google_absl//absl/hash:hash_testing_no_google3",
         "@com_google_absl//absl/strings",
         "@com_google_absl//absl/strings:str_format",
         "@com_google_absl//absl/synchronization",
