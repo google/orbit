@@ -102,8 +102,7 @@ int main(int argc, char** argv) {
     const uint64_t comparison_cnt = report.GetComparisonSamplingCounts()->GetExclusiveCount(sfid);
     const double pvalue = report.GetComparisonResult(sfid).pvalue;
     if (pvalue < 0.05) {
-      ORBIT_LOG("%s %.2f %u %u %u", name, pvalue, *sfid, baseline_cnt,
-                comparison_cnt);
+      ORBIT_LOG("%s %.2f %u %u %u", name, pvalue, *sfid, baseline_cnt, comparison_cnt);
     }
   }
   ORBIT_LOG("Callstack count %u vs %u ", report.GetBaselineSamplingCounts()->GetTotalCallstacks(),
