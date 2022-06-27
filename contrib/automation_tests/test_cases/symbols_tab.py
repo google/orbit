@@ -151,8 +151,12 @@ class WaitForLoadingSymbolsAndVerifyCache(E2ETestCase):
         all_modules_finalized = False
 
         start_time = time.time()
+        TIMEOUT_IN_MINUTES = 10
 
         while not all_modules_finalized:
+            if time.time() - start_time > TIMEOUT_IN_MINUTES * 60:
+                raise TimeoutError("Maximum wait time for module loading exceeded")
+
             try:
                 modules = self._gather_module_states()
             # This may raise an exception if the table is updated while gathering module states
@@ -162,6 +166,7 @@ class WaitForLoadingSymbolsAndVerifyCache(E2ETestCase):
             for module in modules:
                 if module.state not in MODULE_FINAL_STATES:
                     all_modules_finalized = False
+                    break
 
         total_time = time.time() - start_time
         logging.info("Symbol loading has completed. Total time: {time:.2f} seconds".format(
