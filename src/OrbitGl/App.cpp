@@ -1416,7 +1416,7 @@ static std::unique_ptr<CaptureEventProcessor> CreateCaptureEventProcessor(
 }
 
 static void FindAndAddFunctionToStopUnwindingAt(
-    const std::basic_string<char>& function_name, const std::basic_string<char>& module_name,
+    const std::string& function_name, const std::string& module_name,
     const orbit_client_data::ModuleManager& module_manager, const ProcessData& process,
     std::map<uint64_t, uint64_t>* absolute_address_to_size_of_functions_to_stop_unwinding_at) {
   std::vector<orbit_client_data::ModuleInMemory> modules =
@@ -1439,7 +1439,6 @@ static void FindAndAddFunctionToStopUnwindingAt(
         absolute_address_to_size_of_functions_to_stop_unwinding_at->insert_or_assign(
             function_absolute_start_address, function_to_stop_unwinding_at->size());
     ORBIT_CHECK(inserted);
-    break;
   }
 }
 
@@ -1479,7 +1478,7 @@ void OrbitApp::StartCapture() {
   // (see go/unwinding_wine_syscall_dispatcher). Unless we mitigate this situation somehow
   // differently, we at least want to report "complete" callstacks for the "Windows kernel" part
   // (until `__wine_syscall_dispatcher`). To do so, we look for the absolute address of this
-  // function and sent in to the service as a function to stop unwinding at. The unwinder will
+  // function and send it to the service as a function to stop unwinding at. The unwinder will
   // stop on those functions and report the callstacks as "complete".
   // Note: This requires symbols being loaded. We prioritize loading of the `ntdll.so` and rely on
   // auto-symbol loading.
