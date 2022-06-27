@@ -259,7 +259,7 @@ void CaptureData::UpdateTimerDurations() {
   }
   
   std::vector<ThreadStateSliceInfo> &thread_state_bar = thread_state_slices_[thread_id];
-  auto slice = std::lower_bound(thread_state_bar.begin(), thread_state_bar.end(), timestamp, // compare based on beginning timestamps
+  auto slice = std::lower_bound(thread_state_bar.begin(), thread_state_bar.end(), timestamp, // compare based on ending timestamps
     [](const ThreadStateSliceInfo &a, const uint64_t &b) -> bool
     {
       return a.end_timestamp_ns() < b; 
