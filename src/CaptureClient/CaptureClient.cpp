@@ -131,6 +131,14 @@ std::vector<ApiFunction> FindApiFunctions(const orbit_client_data::ModuleManager
     instrumented_tracepoint->set_name(tracepoint.name());
   }
 
+  for (auto [absolute_address, size] :
+       options.absolute_address_to_size_of_functions_to_stop_unwinding_at) {
+    orbit_grpc_protos::FunctionToStopUnwindingAt* function_to_stop_unwinding_at =
+        capture_options.add_functions_to_stop_unwinding_at();
+    function_to_stop_unwinding_at->set_absolute_address(absolute_address);
+    function_to_stop_unwinding_at->set_size(size);
+  }
+
   capture_options.set_enable_api(options.enable_api);
   capture_options.set_enable_introspection(options.enable_introspection);
   ORBIT_CHECK(options.dynamic_instrumentation_method == CaptureOptions::kKernelUprobes ||
