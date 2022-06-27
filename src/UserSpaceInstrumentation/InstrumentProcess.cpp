@@ -125,16 +125,16 @@ ErrorMessageOr<MachineCode> MachineCodeForCloneCall(pid_t pid, void* library_han
               DlsymInTracee(pid, library_handle, kInitializeInstrumentationFunctionName));
   MachineCode code;
   code.AppendBytes({0x48, 0xbf})
-      .AppendImmediate64(kCloneFlags)  // mov kCloneFlags, rdi
+      .AppendImmediate64(kCloneFlags)  // mov rdi, kCloneFlags
       .AppendBytes({0x48, 0xbe})
-      .AppendImmediate64(top_of_stack)  // mov top_of_stack, rsi
+      .AppendImmediate64(top_of_stack)  // mov rsi, top_of_stack
       .AppendBytes({0x48, 0xba})
-      .AppendImmediate64(0x0)  // mov parent_tid, rdx
+      .AppendImmediate64(0x0)  // mov rdx, parent_tid
       .AppendBytes({0x49, 0xba})
-      .AppendImmediate64(0x0)  // mov child_tid, r10
+      .AppendImmediate64(0x0)  // mov r10, child_tid
       .AppendBytes({0x49, 0xb8})
-      .AppendImmediate64(0x0)           // mov tls, r8
-      .AppendBytes({0x48, 0xc7, 0xc0})  // mov kSyscallNumberClone, rax
+      .AppendImmediate64(0x0)           // mov r8, tls
+      .AppendBytes({0x48, 0xc7, 0xc0})  // mov rax, kSyscallNumberClone
       .AppendImmediate32(kSyscallNumberClone)
       .AppendBytes({0x0f, 0x05})                          // syscall (clone)
       .AppendBytes({0x48, 0x85, 0xc0})                    // testq	rax, rax
@@ -142,10 +142,10 @@ ErrorMessageOr<MachineCode> MachineCodeForCloneCall(pid_t pid, void* library_han
       .AppendBytes({0xcc})                                // int3
       .AppendBytes({0x48, 0xb8})
       .AppendImmediate64(absl::bit_cast<uint64_t>(
-          initialize_instrumentation_function_address))  // mov initialize_instrumentation, rax
+          initialize_instrumentation_function_address))  // mov rax, initialize_instrumentation
       .AppendBytes({0xff, 0xd0})                         // call rax
-      .AppendBytes({0x48, 0xc7, 0xc7, 0x00, 0x00, 0x00, 0x00})  // mov 0x0, rdi
-      .AppendBytes({0x48, 0xc7, 0xc0})                          // mov kSyscallNumberExit, rax
+      .AppendBytes({0x48, 0xc7, 0xc7, 0x00, 0x00, 0x00, 0x00})  // mov rdi, 0x0
+      .AppendBytes({0x48, 0xc7, 0xc0})                          // mov rax, kSyscallNumberExit
       .AppendImmediate32(kSyscallNumberExit)
       .AppendBytes({0x0f, 0x05});  // syscall (exit)
   return code;
@@ -168,7 +168,7 @@ ErrorMessageOr<void> WaitForThreadToExit(pid_t pid, pid_t tid) {
   return outcome::success();
 }
 
-// These are the names of the threads that we will be spawned when
+// These are the names of the threads that will be spawned when
 // liborbituserspaceinstrumentation.so is injected into the target process.
 std::multiset<std::string> GetExpectedOrbitThreadNames() {
   static const std::multiset<std::string> kThreadNames{"default-executo", "resolver-execut",
