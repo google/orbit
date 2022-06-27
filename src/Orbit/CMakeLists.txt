@@ -33,6 +33,9 @@ if(WIN32)
                       "${CMAKE_CURRENT_SOURCE_DIR}/Orbit.rc.in" Orbit)
   target_sources(Orbit PRIVATE ${CMAKE_CURRENT_BINARY_DIR}/Orbit.rc)
 
+  # Use UTF-8 as the process code page.
+  target_sources(Orbit PRIVATE ${CMAKE_SOURCE_DIR}/src/WindowsManifest/utf8.manifest)
+
   # We have to wait for the OrbitQtTests to be finished building because
   # as part of this target also windeployqt is called which is also needed
   # by the Orbit target.

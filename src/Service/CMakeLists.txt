@@ -37,7 +37,16 @@ target_link_libraries(OrbitServiceLib PUBLIC
 endif()
 
 project(OrbitService)
-add_executable(OrbitService main.cpp)
+
+add_executable(OrbitService)
+
+target_sources(OrbitService PRIVATE main.cpp)
+
+if(WIN32)
+# Use UTF-8 as the process code page.
+target_sources(OrbitService PRIVATE ${CMAKE_SOURCE_DIR}/src/WindowsManifest/utf8.manifest)
+endif()
+
 target_link_libraries(OrbitService PRIVATE OrbitServiceLib)
 
 strip_symbols(OrbitService)

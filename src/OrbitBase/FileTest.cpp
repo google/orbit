@@ -14,6 +14,10 @@
 #include "Test/Path.h"
 #include "TestUtils/TestUtils.h"
 
+#ifdef _WIN32
+#include "OrbitBase/OsVersionWindows.h"
+#endif
+
 using orbit_test_utils::HasError;
 using orbit_test_utils::HasNoError;
 using orbit_test_utils::HasValue;
@@ -422,6 +426,27 @@ TEST(File, GetFileDateModified) {
   auto file_time_or_error = GetFileDateModified(tmp_file.file_path());
   ASSERT_THAT(file_time_or_error, HasNoError());
   EXPECT_LE(file_time_or_error.value() - now, absl::Seconds(1));
+}
+
+TEST(File, UnicodeFileExists) {
+  constexpr const char* kUnicodeFileName = "UnicodeFileName🚀.txt";
+  std::filesystem::path file_path = orbit_test::GetTestdataDir() / kUnicodeFileName;
+
+  // Call "FileExists" with a path containing a Unicode character.
+  auto file_exists = FileExists(file_path);
+  ASSERT_THAT(file_exists, HasNoError());
+  EXPECT_TRUE(file_exists.value())
+      << "Could not find unicode file path " << file_path.u8string()
+#ifdef _WIN32
+      << " Windows version is: " << orbit_base::GetWindowsVersionAsString().value()
+#endif
+      ;
+
+  // Call "FileExists" with "file_path.string()" which should be a valid UTF-8 string.
+  std::string unicode_file_path_as_string = file_path.string();
+  file_exists = FileExists(unicode_file_path_as_string);
+  ASSERT_THAT(file_exists, HasNoError());
+  EXPECT_TRUE(file_exists.value());
 }
 
 }  // namespace orbit_base

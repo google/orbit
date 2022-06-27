@@ -34,6 +34,11 @@ function(register_test TEST_TARGET)
         $<TARGET_FILE_DIR:${TEST_TARGET}>/testdata/${TEST_TARGET})
     target_link_libraries(${TEST_TARGET} PRIVATE OrbitBase)
   endif()
+
+  if(WIN32)
+  # Use UTF-8 as the process code page.
+  target_sources(${TEST_TARGET} PRIVATE ${CMAKE_SOURCE_DIR}/src/WindowsManifest/utf8.manifest)
+  endif()
 endfunction()
 
 if(NOT TARGET GTest::GTest)
