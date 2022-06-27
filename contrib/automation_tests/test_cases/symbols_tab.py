@@ -7,7 +7,6 @@ found in the LICENSE file.
 import enum
 import logging
 import os
-import re
 import time
 from collections import namedtuple
 from typing import List
@@ -22,8 +21,18 @@ from core.orbit_e2e import E2ETestCase, wait_for_condition, find_control
 from test_cases.capture_window import Capture
 from test_cases.live_tab import VerifyScopeTypeAndHitCount
 
-Module = namedtuple("Module", ["name", "path", "is_loaded"])
+Module = namedtuple("Module", ["name", "path", "state"])
 CACHE_LOCATION = "{appdata}\\OrbitProfiler\\cache\\".format(appdata=os.getenv('APPDATA'))
+
+
+MODULE_STATE_DISABLED = "Disabled"
+MODULE_STATE_DOWNLOADING = "Downloading..."
+MODULE_STATE_ERROR = "Error"
+MODULE_STATE_LOADING = "Loading..."
+MODULE_STATE_LOADED = "Loaded"
+
+
+MODULE_FINAL_STATES = [MODULE_STATE_DISABLED, MODULE_STATE_ERROR, MODULE_STATE_LOADED]
 
 
 def _show_symbols_and_functions_tabs(top_window):
@@ -100,23 +109,23 @@ class WaitForLoadingSymbolsAndVerifyCache(E2ETestCase):
         _show_symbols_and_functions_tabs(self.suite.top_window())
         self._modules_dataview = DataViewPanel(self.find_control("Group", "ModulesDataView"))
 
-        modules_loading_result = self._wait_for_loading_and_collect_errors()
+        loading_time = self._wait_for_loading_and_measure_time()
 
-        self._check_and_update_duration("load_all_modules_duration", modules_loading_result.time,
+        self._check_and_update_duration("load_all_modules_duration", loading_time,
                                         expected_duration_difference_ratio)
 
         modules = self._gather_module_states()
         self._verify_at_least_one_module_is_loaded(modules)
         self._verify_all_modules_are_cached(modules)
         logging.info("Done. Loading time: {time:.2f}s, module errors: {errors}".format(
-            time=modules_loading_result.time, errors=modules_loading_result.errors))
+            time=loading_time, errors=[module.name for module in modules if module.state == MODULE_STATE_ERROR]))
 
     def _verify_at_least_one_module_is_loaded(self, modules: List[Module]):
-        loaded_modules = [module for module in modules if module.is_loaded]
+        loaded_modules = [module for module in modules if module.state == MODULE_STATE_LOADED]
         self.expect_true(len(loaded_modules) != 0, "At least one loaded module.")
 
     def _verify_all_modules_are_cached(self, modules: List[Module]):
-        loaded_modules = [module for module in modules if module.is_loaded]
+        loaded_modules = [module for module in modules if module.state == MODULE_STATE_LOADED]
         module_set = set(loaded_modules)
         logging.info(
             'Verifying cache. Found {total} modules in total, {loaded} of which are loaded'.format(
@@ -137,45 +146,41 @@ class WaitForLoadingSymbolsAndVerifyCache(E2ETestCase):
             'All successfully loaded modules are cached. Modules not found in cache: {}'.format(
                 [module.name for module in module_set]))
 
-    def _wait_for_loading_and_collect_errors(self) -> ModulesLoadingResult:
-        assume_loading_complete = 0
-        num_assumptions_to_be_safe = 5
-        error_modules = set()
-        total_time = 0
+    def _wait_for_loading_and_measure_time(self) -> float:
+        logging.info('Waiting for all modules to be loaded...')
+        all_modules_finalized = False
 
-        while assume_loading_complete < num_assumptions_to_be_safe:
-            start_time = time.time()
+        start_time = time.time()
+        TIMEOUT_IN_MINUTES = 10
 
-            time.sleep(1)
+        while not all_modules_finalized:
+            if time.time() - start_time > TIMEOUT_IN_MINUTES * 60:
+                raise TimeoutError("Maximum wait time for module loading exceeded")
 
-            # Since there is no "loading completed" feedback, give orbit some time to update the status message or
-            # show an error dialog. Then check if any of those is visible.
-            # If not, try a few more times to make sure we didn't just accidentally query the UI while the status
-            # message was being updated.
-            error_module = _find_and_close_error_dialog(self.suite.top_window())
-            status_message = self.find_control('StatusBar', recurse=False).texts()[0]
-            if "Copying debug info file" not in status_message and "Loading symbols" not in status_message:
-                status_message = None
+            try:
+                modules = self._gather_module_states()
+            # This may raise an exception if the table is updated while gathering module states
+            except:
+                continue
+            all_modules_finalized = True
+            for module in modules:
+                if module.state not in MODULE_FINAL_STATES:
+                    all_modules_finalized = False
+                    break
 
-            if error_module is not None:
-                error_modules.add(error_module)
-
-            if not error_module and not status_message:
-                assume_loading_complete += 1
-            else:
-                total_time += time.time() - start_time
-                assume_loading_complete = 0
-        logging.info("Assuming symbol loading has completed. Total time: {time:.2f} seconds".format(
+        total_time = time.time() - start_time
+        logging.info("Symbol loading has completed. Total time: {time:.2f} seconds".format(
             time=total_time))
-        return ModulesLoadingResult(total_time, error_modules)
+
+        return total_time
 
     def _gather_module_states(self) -> List[Module]:
         result = []
         for i in range(0, self._modules_dataview.get_row_count()):
-            is_loaded = self._modules_dataview.get_item_at(i, 0).texts()[0] == "Loaded"
+            state = self._modules_dataview.get_item_at(i, 0).texts()[0]
             name = self._modules_dataview.get_item_at(i, 1).texts()[0]
             path = self._modules_dataview.get_item_at(i, 2).texts()[0]
-            result.append(Module(name, path, is_loaded))
+            result.append(Module(name, path, state))
 
         return result
 
@@ -206,14 +211,16 @@ class WaitForLoadingSymbolsAndVerifyCache(E2ETestCase):
                     "Last run duration: {last:.2f}s, current run duration: {cur:.2f}s".format(
                         expected=expected_duration, last=last_duration, cur=current_duration))
 
+
 class WaitForLoadingSymbolsAndCheckModule(E2ETestCase):
     """
     Waits for automatically loading all symbol files and checks if the specified module was loaded
     successfully.
     """
     def _execute(self, module_search_string: str):
-        WaitForLoadingSymbolsAndVerifyCache()
+        WaitForLoadingSymbolsAndVerifyCache().execute(self.suite)
         VerifyModuleLoaded(module_search_string=module_search_string).execute(self.suite)
+
 
 class LoadSymbols(E2ETestCase):
     """
@@ -253,7 +260,7 @@ class LoadSymbols(E2ETestCase):
             wait_for_condition(
                 lambda: _find_and_close_error_dialog(self.suite.top_window()) is not None)
         else:
-            wait_for_condition(lambda: modules_dataview.get_item_at(0, 0).texts()[0] == "Loaded", 100)
+            wait_for_condition(lambda: modules_dataview.get_item_at(0, 0).texts()[0] == MODULE_STATE_LOADED, 100)
 
         VerifySymbolsLoaded(symbol_search_string=module_search_string,
                             expect_loaded=not expect_fail).execute(self.suite)
@@ -275,7 +282,7 @@ class VerifyModuleLoaded(E2ETestCase):
         modules_dataview.filter.set_edit_text('')
         send_keys(module_search_string)
         wait_for_condition(lambda: modules_dataview.get_row_count() > 0)
-        self.expect_true('Loaded' in modules_dataview.get_item_at(0, 0).texts()[0], 'Module is loaded.')
+        self.expect_true(MODULE_STATE_LOADED in modules_dataview.get_item_at(0, 0).texts()[0], 'Module is loaded.')
 
 
 class VerifySymbolsLoaded(E2ETestCase):
