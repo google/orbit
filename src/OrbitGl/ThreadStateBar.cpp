@@ -5,7 +5,6 @@
 #include "ThreadStateBar.h"
 
 #include <absl/strings/str_format.h>
-#include <absl/time/time.h>
 
 #include <memory>
 #include <string>
@@ -16,14 +15,12 @@
 #include "ClientData/CaptureData.h"
 #include "ClientData/ThreadStateSliceInfo.h"
 #include "ClientProtos/capture_data.pb.h"
-#include "CoreMath.h"
 #include "DisplayFormats/DisplayFormats.h"
 #include "Geometry.h"
 #include "GlCanvas.h"
 #include "GlUtils.h"
 #include "GrpcProtos/capture.pb.h"
 #include "OrbitBase/Logging.h"
-#include "PickingManager.h"
 #include "PrimitiveAssembler.h"
 #include "Viewport.h"
 
