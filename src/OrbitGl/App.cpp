@@ -1415,6 +1415,34 @@ static std::unique_ptr<CaptureEventProcessor> CreateCaptureEventProcessor(
   return CaptureEventProcessor::CreateCompositeProcessor(std::move(event_processors));
 }
 
+static void FindAndAddFunctionToStopUnwindingAt(
+    const std::basic_string<char>& function_name, const std::basic_string<char>& module_name,
+    const orbit_client_data::ModuleManager& module_manager, const ProcessData& process,
+    std::map<uint64_t, uint64_t>* absolute_address_to_size_of_functions_to_stop_unwinding_at) {
+  std::vector<orbit_client_data::ModuleInMemory> modules =
+      process.FindModulesByFilename(module_name);
+  for (const auto& module_in_memory : modules) {
+    const ModuleData* module_data = module_manager.GetModuleByPathAndBuildId(
+        module_in_memory.file_path(), module_in_memory.build_id());
+
+    const FunctionInfo* function_to_stop_unwinding_at =
+        module_data->FindFunctionFromPrettyName(function_name);
+    if (function_to_stop_unwinding_at == nullptr) {
+      continue;
+    }
+    uint64_t function_absolute_start_address =
+        orbit_object_utils::SymbolVirtualAddressToAbsoluteAddress(
+            function_to_stop_unwinding_at->address(), module_in_memory.start(),
+            module_data->load_bias(), module_data->executable_segment_offset());
+
+    auto [unused_it, inserted] =
+        absolute_address_to_size_of_functions_to_stop_unwinding_at->insert_or_assign(
+            function_absolute_start_address, function_to_stop_unwinding_at->size());
+    ORBIT_CHECK(inserted);
+    break;
+  }
+}
+
 void OrbitApp::StartCapture() {
   const ProcessData* process = GetTargetProcess();
   if (process == nullptr) {
@@ -1447,30 +1475,19 @@ void OrbitApp::StartCapture() {
     selected_functions_map.insert_or_assign(function_id++, function);
   }
 
+  // With newer Wine/Proton versions, unwinding will fail after `__wine_syscall_dispatcher`
+  // (see go/unwinding_wine_syscall_dispatcher). Unless we mitigate this situation somehow
+  // differently, we at least want to report "complete" callstacks for the "Windows kernel" part
+  // (until `__wine_syscall_dispatcher`). To do so, we look for the absolute address of this
+  // function and sent in to the service as a function to stop unwinding at. The unwinder will
+  // stop on those functions and report the callstacks as "complete".
+  // Note: This requires symbols being loaded. We prioritize loading of the `ntdll.so` and rely on
+  // auto-symbol loading.
   std::map<uint64_t, uint64_t> absolute_address_to_size_of_functions_to_stop_unwinding_at;
   if (!record_user_stack_on_wine_syscall_dispatcher) {
-    std::vector<orbit_client_data::ModuleInMemory> ntdll_modules =
-        process_->FindModulesByFilename(kNtdllSo);
-    for (const auto& module_in_memory : ntdll_modules) {
-      const ModuleData* module_data = module_manager_->GetModuleByPathAndBuildId(
-          module_in_memory.file_path(), module_in_memory.build_id());
-
-      const FunctionInfo* wine_syscall_dispatcher_function =
-          module_data->FindFunctionFromPrettyName(kWineSyscallDispatcher);
-      if (wine_syscall_dispatcher_function == nullptr) {
-        continue;
-      }
-      uint64_t function_absolute_start_address =
-          orbit_object_utils::SymbolVirtualAddressToAbsoluteAddress(
-              wine_syscall_dispatcher_function->address(), module_in_memory.start(),
-              module_data->load_bias(), module_data->executable_segment_offset());
-
-      auto [unused_it, inserted] =
-          absolute_address_to_size_of_functions_to_stop_unwinding_at.insert_or_assign(
-              function_absolute_start_address, wine_syscall_dispatcher_function->size());
-      ORBIT_CHECK(inserted);
-      break;
-    }
+    FindAndAddFunctionToStopUnwindingAt(
+        kWineSyscallDispatcher, kNtdllSo, *module_manager_, *process_,
+        &absolute_address_to_size_of_functions_to_stop_unwinding_at);
   }
 
   ClientCaptureOptions options;
