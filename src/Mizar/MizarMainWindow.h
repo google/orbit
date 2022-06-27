@@ -6,6 +6,7 @@
 #define MIZAR_MIZAR_MAIN_WINDOW_H_
 
 #include <QMainWindow>
+#include <memory>
 
 namespace Ui {
 class MainWindow;
@@ -20,7 +21,7 @@ class MizarMainWindow : public QMainWindow {
   void Setup();
 
  private:
-  [[maybe_unused]] std::unique_ptr<Ui::MainWindow> ui_;
+  std::unique_ptr<Ui::MainWindow> ui_;
 };
 
 }  // namespace orbit_mizar

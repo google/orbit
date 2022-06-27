@@ -8,6 +8,7 @@
 #include <qstringliteral.h>
 
 #include <QWidget>
+#include <memory>
 
 #include "MizarBase/BaselineOrComparison.h"
 #include "SamplingWithFrameTrackInputWidget.h"
