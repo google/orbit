@@ -50,25 +50,26 @@ constexpr std::array<uint64_t, kTimersForSecondId> kSortedDurationsForSecondId =
 
 constexpr uint64_t kLargeInteger = 10'000'000'000'000'000;
 
-const ThreadStateSliceInfo kSlice1 = ThreadStateSliceInfo(1000, 
-  orbit_grpc_protos::ThreadStateSlice::kInterruptibleSleep, 50, 100, orbit_base::kInvalidThreadId,
-  orbit_base::kInvalidProcessId, ThreadStateSliceInfo::WakeupReason::kNotApplicable);
-const ThreadStateSliceInfo kSlice2 = ThreadStateSliceInfo(1000, 
-  orbit_grpc_protos::ThreadStateSlice::kRunnable, 101, 150, 4200,
-  420, ThreadStateSliceInfo::WakeupReason::kUnblocked);
-const ThreadStateSliceInfo kSlice3 = ThreadStateSliceInfo(1000, 
-  orbit_grpc_protos::ThreadStateSlice::kRunning, 151, 200, orbit_base::kInvalidThreadId,
-  orbit_base::kInvalidProcessId, ThreadStateSliceInfo::WakeupReason::kNotApplicable);
-const ThreadStateSliceInfo kSlice4 = ThreadStateSliceInfo(2000, 
-  orbit_grpc_protos::ThreadStateSlice::kInterruptibleSleep, 50, 100, orbit_base::kInvalidThreadId,
-  orbit_base::kInvalidProcessId, ThreadStateSliceInfo::WakeupReason::kNotApplicable);
-const ThreadStateSliceInfo kSlice5 = ThreadStateSliceInfo(2000, 
-  orbit_grpc_protos::ThreadStateSlice::kRunnable, 101, 150, 4200,
-  420, ThreadStateSliceInfo::WakeupReason::kUnblocked);
-const ThreadStateSliceInfo kSlice6 = ThreadStateSliceInfo(2000, 
-  orbit_grpc_protos::ThreadStateSlice::kRunning, 151, 200, orbit_base::kInvalidThreadId,
-  orbit_base::kInvalidProcessId, ThreadStateSliceInfo::WakeupReason::kNotApplicable);
-
+const ThreadStateSliceInfo kSlice1 =
+    ThreadStateSliceInfo(1000, orbit_grpc_protos::ThreadStateSlice::kInterruptibleSleep, 50, 100,
+                         orbit_base::kInvalidThreadId, orbit_base::kInvalidProcessId,
+                         ThreadStateSliceInfo::WakeupReason::kNotApplicable);
+const ThreadStateSliceInfo kSlice2 =
+    ThreadStateSliceInfo(1000, orbit_grpc_protos::ThreadStateSlice::kRunnable, 101, 150, 4200, 420,
+                         ThreadStateSliceInfo::WakeupReason::kUnblocked);
+const ThreadStateSliceInfo kSlice3 = ThreadStateSliceInfo(
+    1000, orbit_grpc_protos::ThreadStateSlice::kRunning, 151, 200, orbit_base::kInvalidThreadId,
+    orbit_base::kInvalidProcessId, ThreadStateSliceInfo::WakeupReason::kNotApplicable);
+const ThreadStateSliceInfo kSlice4 =
+    ThreadStateSliceInfo(2000, orbit_grpc_protos::ThreadStateSlice::kInterruptibleSleep, 50, 100,
+                         orbit_base::kInvalidThreadId, orbit_base::kInvalidProcessId,
+                         ThreadStateSliceInfo::WakeupReason::kNotApplicable);
+const ThreadStateSliceInfo kSlice5 =
+    ThreadStateSliceInfo(2000, orbit_grpc_protos::ThreadStateSlice::kRunnable, 101, 150, 4200, 420,
+                         ThreadStateSliceInfo::WakeupReason::kUnblocked);
+const ThreadStateSliceInfo kSlice6 = ThreadStateSliceInfo(
+    2000, orbit_grpc_protos::ThreadStateSlice::kRunning, 151, 200, orbit_base::kInvalidThreadId,
+    orbit_base::kInvalidProcessId, ThreadStateSliceInfo::WakeupReason::kNotApplicable);
 
 static const std::array<uint64_t, kTimerCount> kDurations = [] {
   std::array<uint64_t, kTimerCount> result;
