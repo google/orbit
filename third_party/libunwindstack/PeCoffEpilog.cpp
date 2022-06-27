@@ -45,11 +45,11 @@ class PeCoffEpilogImpl : public PeCoffEpilog {
   // can be retrieved using GetLastError() and registers 'regs' are not updated.
   bool DetectAndHandleEpilog(uint64_t function_start_address, uint64_t function_end_address,
                              uint64_t current_offset_from_start_of_function, Memory* process_memory,
-                             Regs* regs) override;
+                             Regs* regs, bool* in_epilog) override;
 
  private:
   bool DetectAndHandleEpilog(const std::vector<uint8_t>& machine_code, Memory* process_memory,
-                             Regs* regs);
+                             Regs* regs, bool* in_epilog);
 
   // The validation methods below check if the instructions satisfy the requirements imposed by the
   // epilog specification, as outlined on
@@ -310,7 +310,7 @@ bool PeCoffEpilogImpl::HandleJumpInstruction(Memory* process_memory,
 // in an epilog. Since we are detecting and handling the epilog at the same time, we must make sure
 // that registers are not changed if we detect later that we are indeed not in an epilog.
 bool PeCoffEpilogImpl::DetectAndHandleEpilog(const std::vector<uint8_t>& machine_code,
-                                             Memory* process_memory, Regs* regs) {
+                                             Memory* process_memory, Regs* regs, bool* in_epilog) {
   CHECK(process_memory != nullptr);
   // These values are all updated by capstone as we go through the machine code for disassembling.
   uint64_t current_offset = 0;
@@ -339,24 +339,29 @@ bool PeCoffEpilogImpl::DetectAndHandleEpilog(const std::vector<uint8_t>& machine
     // case we are actually at the start of the epilog.
     if (is_first_iteration && capstone_instruction_->id == X86_INS_LEA) {
       if (!ValidateLeaInstruction()) {
-        return false;
+        *in_epilog = false;
+        return true;
       }
       HandleLeaInstruction(updated_regs);
     } else if (is_first_iteration && capstone_instruction_->id == X86_INS_ADD) {
       if (!ValidateAddInstruction()) {
-        return false;
+        *in_epilog = false;
+        return true;
       }
       HandleAddInstruction(updated_regs);
     } else if (capstone_instruction_->id == X86_INS_POP) {
       if (!ValidatePopInstruction()) {
-        return false;
+        *in_epilog = false;
+        return true;
       }
       if (!HandleEightByteRegisterPopInstruction(process_memory, updated_regs)) {
+        CHECK(last_error_.code != ERROR_NONE);
         return false;
       }
     } else if (capstone_instruction_->id == X86_INS_RET ||
                capstone_instruction_->id == X86_INS_RETF) {
       if (!HandleReturnInstruction(process_memory, updated_regs)) {
+        CHECK(last_error_.code != ERROR_NONE);
         return false;
       }
 
@@ -365,22 +370,26 @@ bool PeCoffEpilogImpl::DetectAndHandleEpilog(const std::vector<uint8_t>& machine
       break;
     } else if (capstone_instruction_->id == X86_INS_JMP) {
       if (!ValidateJumpInstruction()) {
-        return false;
+        *in_epilog = false;
+        return true;
       }
       if (!HandleJumpInstruction(process_memory, updated_regs)) {
+        CHECK(last_error_.code != ERROR_NONE);
         return false;
       }
       // This is the last instruction of the epilog.
       have_seen_ret_or_jmp = true;
       break;
     } else {
-      return false;
+      *in_epilog = false;
+      return true;
     }
 
     is_first_iteration = false;
   }
   if (!have_seen_ret_or_jmp) {
-    return false;
+    *in_epilog = false;
+    return true;
   }
 
   // If we get here, then we indeed were in the epilog and must update all proper registers to the
@@ -389,13 +398,14 @@ bool PeCoffEpilogImpl::DetectAndHandleEpilog(const std::vector<uint8_t>& machine
   for (uint16_t reg = 0; reg < X86_64_REG_LAST; ++reg) {
     (*current_regs)[reg] = (*updated_regs)[reg];
   }
+  *in_epilog = true;
   return true;
 }
 
 bool PeCoffEpilogImpl::DetectAndHandleEpilog(uint64_t function_start_address,
                                              uint64_t function_end_address,
                                              uint64_t current_offset_from_start_of_function,
-                                             Memory* process_memory, Regs* regs) {
+                                             Memory* process_memory, Regs* regs, bool* in_epilog) {
   last_error_ = {ERROR_NONE, 0};
 
   if (function_start_address + current_offset_from_start_of_function >= function_end_address) {
@@ -427,7 +437,7 @@ bool PeCoffEpilogImpl::DetectAndHandleEpilog(uint64_t function_start_address,
     return false;
   }
 
-  return DetectAndHandleEpilog(code, process_memory, regs);
+  return DetectAndHandleEpilog(code, process_memory, regs, in_epilog);
 }
 
 }  // namespace unwindstack

@@ -29,21 +29,23 @@ namespace unwindstack {
 // Helper class for epilog detection and handling used for X86_64 unwinding for PE/COFF modules.
 class PeCoffEpilog {
  public:
-  virtual ~PeCoffEpilog() {}
+  virtual ~PeCoffEpilog() = default;
 
   // Needs to be called before one can use DetectAndHandleEpilog.
   virtual bool Init() = 0;
 
   // Detects if the instructions from 'current_offset_from_start_of_function' onwards represent
-  // a function epilog. Returns true if an epilog was detected. The registers are updated to reflect
-  // the actions from executing the epilog (which effectively unwinds the current callframe).
-  // Returns false if no epilog was found *or* if an error occurred. In the latter case, the error
-  // can be retrieved using GetLastError() and registers 'regs' are not updated.
-  // TODO(b/235952532): Change the interface to only use the bool return value to indicate whether
-  //  an error occurred. Use a bool* parameter to return whether an epilog was detected.
+  // a function epilog. The registers are updated to reflect the actions from executing the epilog
+  // (which effectively unwinds the current callframe).
+  // Returns true if no error occurred while detecting if the instructions represent an epilog, and
+  // no error occurred while possibly updating the registers. In this case, the 'in_epilog' output
+  // boolean will contain whether an epilog was detected.
+  // Returns false if an error occurred while trying to detect if the instructions represent an
+  // epilog, or while trying to update the registers. In this case, registers 'regs' and 'in_epilog'
+  // are not updated, and the error can be retrieved using 'GetLastError()'.
   virtual bool DetectAndHandleEpilog(uint64_t function_start_address, uint64_t function_end_address,
                                      uint64_t current_offset_from_start_of_function,
-                                     Memory* process_memory, Regs* regs) = 0;
+                                     Memory* process_memory, Regs* regs, bool* in_epilog) = 0;
 
   ErrorData GetLastError() const { return last_error_; }
 
