@@ -31,6 +31,13 @@ class ThreadStateSliceInfo {
         begin_timestamp_ns_{begin_timestamp_ns},
         end_timestamp_ns_{end_timestamp_ns} {}
 
+  friend bool operator==(const ThreadStateSliceInfo& lhs, const ThreadStateSliceInfo& rhs) {
+    return std::tie(lhs.tid_, lhs.thread_state_, lhs.begin_timestamp_ns_, lhs.end_timestamp_ns_, lhs.wakeup_tid_,
+     lhs.wakeup_pid_, lhs.wakeup_reason_) == std::tie(rhs.tid_, rhs.thread_state_, rhs.begin_timestamp_ns_, rhs.end_timestamp_ns_,
+      rhs.wakeup_tid_, rhs.wakeup_pid_, rhs.wakeup_reason_);
+  }
+  friend bool operator!=(const ThreadStateSliceInfo& lhs, const ThreadStateSliceInfo& rhs) { return !(lhs == rhs); }
+
   [[nodiscard]] uint32_t tid() const { return tid_; }
   [[nodiscard]] uint32_t wakeup_tid() const { return wakeup_tid_; }
   [[nodiscard]] uint32_t wakeup_pid() const { return wakeup_pid_; }

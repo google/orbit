@@ -11,6 +11,7 @@
 #include <cstdint>
 #include <iterator>
 #include <memory>
+#include <optional>
 #include <vector>
 
 #include "ClientData/ModuleData.h"
@@ -249,6 +250,27 @@ void CaptureData::UpdateTimerDurations() {
                  return scope_id_provider_->ProvideId(*timer) == scope_id;
                });
   return result;
+}
+
+[[nodiscard]] std::optional<ThreadStateSliceInfo> CaptureData::FindThreadStateSliceInfoFromTimestamp(int64_t thread_id, uint64_t timestamp){
+  absl::MutexLock lock{&thread_state_slices_mutex_};
+  if(thread_state_slices_.count(thread_id) == 0u){
+    return std::nullopt;
+  }
+  
+  std::vector<ThreadStateSliceInfo> &thread_state_bar = thread_state_slices_[thread_id];
+  auto slice = std::lower_bound(thread_state_bar.begin(), thread_state_bar.end(), timestamp, // compare based on beginning timestamps
+    [](const ThreadStateSliceInfo &a, const uint64_t &b) -> bool
+    {
+      return a.end_timestamp_ns() < b; 
+    }
+  );
+
+  if(slice == thread_state_bar.end() || timestamp < (*slice).begin_timestamp_ns()){
+    return std::nullopt;
+  }
+
+  return (*slice);
 }
 
 }  // namespace orbit_client_data

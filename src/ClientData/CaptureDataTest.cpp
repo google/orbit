@@ -19,11 +19,15 @@
 #include "ClientData/ScopeIdConstants.h"
 #include "ClientData/ScopeIdProvider.h"
 #include "ClientData/ScopeStats.h"
+#include "ClientData/ThreadStateSliceInfo.h"
 #include "ClientProtos/capture_data.pb.h"
 #include "GrpcProtos/capture.pb.h"
 #include "OrbitBase/Logging.h"
 #include "OrbitBase/ReadFileToString.h"
+#include "OrbitBase/ThreadConstants.h"
 #include "Test/Path.h"
+
+using testing::Optional;
 
 namespace orbit_client_data {
 
@@ -45,6 +49,26 @@ constexpr std::array<uint64_t, kTimersForFirstId> kSortedDurationsForFirstId = {
 constexpr std::array<uint64_t, kTimersForSecondId> kSortedDurationsForSecondId = {400, 500};
 
 constexpr uint64_t kLargeInteger = 10'000'000'000'000'000;
+
+const ThreadStateSliceInfo kSlice1 = ThreadStateSliceInfo(1000, 
+  orbit_grpc_protos::ThreadStateSlice::kInterruptibleSleep, 50, 100, orbit_base::kInvalidThreadId,
+  orbit_base::kInvalidProcessId, ThreadStateSliceInfo::WakeupReason::kNotApplicable);
+const ThreadStateSliceInfo kSlice2 = ThreadStateSliceInfo(1000, 
+  orbit_grpc_protos::ThreadStateSlice::kRunnable, 101, 150, 4200,
+  420, ThreadStateSliceInfo::WakeupReason::kUnblocked);
+const ThreadStateSliceInfo kSlice3 = ThreadStateSliceInfo(1000, 
+  orbit_grpc_protos::ThreadStateSlice::kRunning, 151, 200, orbit_base::kInvalidThreadId,
+  orbit_base::kInvalidProcessId, ThreadStateSliceInfo::WakeupReason::kNotApplicable);
+const ThreadStateSliceInfo kSlice4 = ThreadStateSliceInfo(2000, 
+  orbit_grpc_protos::ThreadStateSlice::kInterruptibleSleep, 50, 100, orbit_base::kInvalidThreadId,
+  orbit_base::kInvalidProcessId, ThreadStateSliceInfo::WakeupReason::kNotApplicable);
+const ThreadStateSliceInfo kSlice5 = ThreadStateSliceInfo(2000, 
+  orbit_grpc_protos::ThreadStateSlice::kRunnable, 101, 150, 4200,
+  420, ThreadStateSliceInfo::WakeupReason::kUnblocked);
+const ThreadStateSliceInfo kSlice6 = ThreadStateSliceInfo(2000, 
+  orbit_grpc_protos::ThreadStateSlice::kRunning, 151, 200, orbit_base::kInvalidThreadId,
+  orbit_base::kInvalidProcessId, ThreadStateSliceInfo::WakeupReason::kNotApplicable);
+
 
 static const std::array<uint64_t, kTimerCount> kDurations = [] {
   std::array<uint64_t, kTimerCount> result;
@@ -216,6 +240,34 @@ TEST_F(CaptureDataTest, UpdateTimerDurationsIsCorrect) {
                                            std::end(kSortedDurationsForSecondId)));
 
   EXPECT_THAT(capture_data_.GetSortedTimerDurationsForScopeId(kInvalidScopeId), testing::IsNull());
+}
+
+TEST_F(CaptureDataTest, FindThreadStateSliceInfoFromTimestamp) {
+  capture_data_.AddThreadStateSlice(kSlice1);
+  capture_data_.AddThreadStateSlice(kSlice2);
+  capture_data_.AddThreadStateSlice(kSlice3);
+  capture_data_.AddThreadStateSlice(kSlice4);
+  capture_data_.AddThreadStateSlice(kSlice5);
+  capture_data_.AddThreadStateSlice(kSlice6);
+
+  EXPECT_THAT(capture_data_.FindThreadStateSliceInfoFromTimestamp(1000, 75), Optional(kSlice1));
+  EXPECT_THAT(capture_data_.FindThreadStateSliceInfoFromTimestamp(1000, 50), Optional(kSlice1));
+  EXPECT_THAT(capture_data_.FindThreadStateSliceInfoFromTimestamp(1000, 100), Optional(kSlice1));
+  EXPECT_THAT(capture_data_.FindThreadStateSliceInfoFromTimestamp(1000, 101), Optional(kSlice2));
+  EXPECT_THAT(capture_data_.FindThreadStateSliceInfoFromTimestamp(1000, 130), Optional(kSlice2));
+  EXPECT_THAT(capture_data_.FindThreadStateSliceInfoFromTimestamp(1000, 150), Optional(kSlice2));
+  EXPECT_THAT(capture_data_.FindThreadStateSliceInfoFromTimestamp(1000, 200), Optional(kSlice3));
+  EXPECT_THAT(capture_data_.FindThreadStateSliceInfoFromTimestamp(2000, 75), Optional(kSlice4));
+  EXPECT_THAT(capture_data_.FindThreadStateSliceInfoFromTimestamp(2000, 101), Optional(kSlice5));
+  EXPECT_THAT(capture_data_.FindThreadStateSliceInfoFromTimestamp(2000, 200), Optional(kSlice6));
+
+  EXPECT_EQ(capture_data_.FindThreadStateSliceInfoFromTimestamp(3000, 75), std::nullopt);
+  EXPECT_EQ(capture_data_.FindThreadStateSliceInfoFromTimestamp(3000, 101), std::nullopt);
+  EXPECT_EQ(capture_data_.FindThreadStateSliceInfoFromTimestamp(3000, 200), std::nullopt);
+  EXPECT_EQ(capture_data_.FindThreadStateSliceInfoFromTimestamp(2000, 30), std::nullopt);
+  EXPECT_EQ(capture_data_.FindThreadStateSliceInfoFromTimestamp(2000, 201), std::nullopt);
+  EXPECT_EQ(capture_data_.FindThreadStateSliceInfoFromTimestamp(2000, 49), std::nullopt);
+  EXPECT_EQ(capture_data_.FindThreadStateSliceInfoFromTimestamp(2000, 300), std::nullopt);
 }
 
 }  // namespace orbit_client_data
