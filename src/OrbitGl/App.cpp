@@ -168,8 +168,8 @@ using UnwindingMethod = orbit_grpc_protos::CaptureOptions::UnwindingMethod;
 namespace {
 
 constexpr const char* kLibOrbitVulkanLayerSoFileName = "libOrbitVulkanLayer.so";
-constexpr const char* kNtdllSo = "ntdll.so";
-constexpr const char* kWineSyscallDispatcher = "__wine_syscall_dispatcher";
+constexpr const char* kNtdllSoFileName = "ntdll.so";
+constexpr const char* kWineSyscallDispatcherFunctionName = "__wine_syscall_dispatcher";
 constexpr std::string_view kGgpVlkModulePathSubstring = "ggpvlk.so";
 
 orbit_data_views::PresetLoadState GetPresetLoadStateForProcess(const PresetFile& preset,
@@ -1485,7 +1485,7 @@ void OrbitApp::StartCapture() {
   std::map<uint64_t, uint64_t> absolute_address_to_size_of_functions_to_stop_unwinding_at;
   if (!record_user_stack_on_wine_syscall_dispatcher) {
     FindAndAddFunctionToStopUnwindingAt(
-        kWineSyscallDispatcher, kNtdllSo, *module_manager_, *process_,
+        kWineSyscallDispatcherFunctionName, kNtdllSoFileName, *module_manager_, *process_,
         &absolute_address_to_size_of_functions_to_stop_unwinding_at);
   }
 
@@ -2431,7 +2431,7 @@ Future<std::vector<ErrorMessageOr<CanceledOr<void>>>> OrbitApp::LoadAllSymbols()
 
   std::vector<const ModuleData*> sorted_module_list = SortModuleListWithPrioritizationList(
       module_manager_->GetAllModuleData(),
-      {kGgpVlkModulePathSubstring, kNtdllSo, process.full_path()});
+      {kGgpVlkModulePathSubstring, kNtdllSoFileName, process.full_path()});
 
   std::vector<Future<ErrorMessageOr<CanceledOr<void>>>> loading_futures;
 
