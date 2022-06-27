@@ -20,7 +20,7 @@ class MizarMainWindow : public QMainWindow {
   void Setup();
 
  private:
-  std::unique_ptr<Ui::MainWindow> ui_;
+  [[maybe_unused]] std::unique_ptr<Ui::MainWindow> ui_;
 };
 
 }  // namespace orbit_mizar
