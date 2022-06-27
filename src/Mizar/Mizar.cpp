@@ -6,6 +6,8 @@
 #include <absl/flags/flag.h>
 #include <absl/flags/parse.h>
 
+#include <QApplication>
+#include <QMainWindow>
 #include <iostream>
 #include <memory>
 #include <optional>
@@ -16,7 +18,7 @@
 #include "MizarBase/BaselineOrComparison.h"
 #include "MizarData/BaselineAndComparison.h"
 #include "MizarData/MizarData.h"
-#include "MizarData/SamplingWithFrameTrackComparisonReport.h"
+#include "MizarMainWindow.h"
 #include "OrbitBase/Logging.h"
 
 template <typename T>
@@ -59,7 +61,7 @@ int main(int argc, char** argv) {
   const std::filesystem::path baseline_path =
       ExpandPathHomeFolder(absl::GetFlag(FLAGS_baseline_path));
   const std::filesystem::path comparison_path =
-      ExpandPathHomeFolder(absl::GetFlag(FLAGS_comparison_path).substr(1));
+      ExpandPathHomeFolder(absl::GetFlag(FLAGS_comparison_path));
   const uint32_t baseline_tid = absl::GetFlag(FLAGS_baseline_tid);
   const uint32_t comparison_tid = absl::GetFlag(FLAGS_comparison_tid);
 
@@ -85,6 +87,13 @@ int main(int argc, char** argv) {
   orbit_mizar_data::BaselineAndComparison bac =
       CreateBaselineAndComparison(std::move(baseline), std::move(comparison));
 
+  QApplication app(argc, argv);
+  QApplication::setOrganizationName("The Orbit Authors");
+  QApplication::setApplicationName("Mizar comparison tool");
+
+  orbit_mizar::MizarMainWindow main_window;
+  main_window.Setup();
+  main_window.show();
   constexpr uint64_t kDuration = std::numeric_limits<uint64_t>::max();
   constexpr uint64_t kFrameTrackScopeId = 1;
 
@@ -114,5 +123,5 @@ int main(int argc, char** argv) {
   ORBIT_LOG("Comparison mean frametime %u ns, stddev %u",
             report.GetComparisonFrameTrackStats()->ComputeAverageTimeNs(),
             report.GetComparisonFrameTrackStats()->ComputeStdDevNs());
-  return 0;
+  return QApplication::exec();
 }
