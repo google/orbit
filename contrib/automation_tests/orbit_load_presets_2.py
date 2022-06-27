@@ -8,7 +8,8 @@ from absl import app
 
 from core.orbit_e2e import E2ETestSuite
 from test_cases.connection_window import FilterAndSelectFirstProcess, ConnectToStadiaInstance
-from test_cases.symbols_tab import FilterAndHookFunction, SavePreset, UnhookAllFunctions, LoadPreset, VerifyFunctionHooked, VerifyPresetStatus, PresetStatus, VerifyModuleLoaded
+from test_cases.symbols_tab import FilterAndHookFunction, SavePreset, UnhookAllFunctions, LoadPreset, \
+    VerifyFunctionHooked, VerifyPresetStatus, PresetStatus, WaitForLoadingSymbolsAndVerifyCache
 from test_cases.capture_window import Capture
 from test_cases.live_tab import VerifyScopeTypeAndHitCount
 from test_cases.main_window import EndSession
@@ -37,6 +38,7 @@ def main(argv):
     test_cases = [
         ConnectToStadiaInstance(),
         FilterAndSelectFirstProcess(process_filter="hello_ggp"),
+        WaitForLoadingSymbolsAndVerifyCache(),
         # Load presets and verify the respective functions get hooked.
         LoadPreset(preset_name='draw_frame_in_hello_ggp_1_68'),
         VerifyFunctionHooked(function_search_string='DrawFrame'),
@@ -79,10 +81,9 @@ def main(argv):
         VerifyPresetStatus(preset_name='partially_loadable',
                            expected_status=PresetStatus.PARTIALLY_LOADABLE),
         VerifyPresetStatus(preset_name='not_loadable', expected_status=PresetStatus.NOT_LOADABLE),
-        # Load a partially loadable preset and check that the symbols for the module get loaded.
+        # Load a partially loadable preset
         LoadPreset(preset_name='partially_loadable'),
         VerifyFunctionHooked(function_search_string='__GI___clock_gettime'),
-        VerifyModuleLoaded(module_search_string="libc-"),
     ]
     suite = E2ETestSuite(test_name="Load Preset", test_cases=test_cases)
     suite.execute()
