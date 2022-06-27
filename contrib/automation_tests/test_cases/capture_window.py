@@ -29,7 +29,7 @@ class CaptureWindowE2ETestCaseBase(E2ETestCase):
 
     def execute(self, suite: E2ETestSuite):
         self._time_graph = self.find_control('Image', name='TimeGraph', parent=suite.top_window())
-        self._track_container = self._time_graph.children()[1]
+        self._track_container = self.find_control('Pane', name='TrackContainer', parent=self._time_graph)
         super().execute(suite=suite)
 
     def _find_tracks(self, name_filter: str = None, recursive: bool = False):
@@ -429,14 +429,18 @@ class CaptureE2ETestCaseBase(E2ETestCase):
         logging.info('Starting to capture')
         toggle_capture_button.click_input()
 
+    def _verify_existence_of_timeline(self):
+        logging.info("Verifying existence of the timeline...")
+        timeline = self.find_control('Pane', name='Timeline')
+        self.expect_true(len(timeline.children()) == 0, 'Timeline exists and has no children')
+
     def _verify_existence_of_tracks(self):
         logging.info("Verifying existence of at least one track...")
-        time_graph = self.find_control('Image', name='TimeGraph')
-        track_container = time_graph.children()[1]
-        self.expect_true(len(track_container.children()),
-                         'Track container exists and has at least one child')
+        track_container = self.find_control('Pane', name='TrackContainer')
+        self.expect_true(len(track_container.children()), 'Track container exists and has at least one child')
 
     def _verify_capture(self):
+        self._verify_existence_of_timeline()
         self._verify_existence_of_tracks()
 
 
