@@ -14,7 +14,7 @@
    <string>Mizar</string>
   </property>
   <widget class="QWidget" name="central_widget_">
-   <layout class="QVBoxLayout" name="verticalLayout">
+   <layout class="QVBoxLayout" name="vertical_layout_">
     <item>
      <widget class="QTabWidget" name="tab_widget_">
       <property name="currentIndex">
