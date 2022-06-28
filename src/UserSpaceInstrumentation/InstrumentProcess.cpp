@@ -435,7 +435,7 @@ ErrorMessageOr<std::unique_ptr<InstrumentedProcess>> InstrumentedProcess::Create
 
 ErrorMessageOr<InstrumentationManager::InstrumentationResult>
 InstrumentedProcess::InstrumentFunctions(const CaptureOptions& capture_options) {
-  ORBIT_LOG("Instrument functions in process %d.", pid_);
+  ORBIT_LOG("Instrumenting functions in process %d", pid_);
   OUTCOME_TRY(AttachAndStopProcess(pid_));
   orbit_base::unique_resource detach_on_exit{pid_, [](int32_t pid) {
                                                if (DetachAndContinueProcess(pid).has_error()) {
