@@ -24,13 +24,9 @@
        <attribute name="title">
         <string>Sampling with Frame Track</string>
        </attribute>
-       <layout class="QVBoxLayout" name="verticalLayout_2">
+       <layout class="QVBoxLayout" name="sampling_with_frame_track_vertical_layout_">
         <item>
-         <layout class="QHBoxLayout" name="layout">
-          <item>
-           <widget class="orbit_mizar_widgets::SamplingWithFrameTrackWidget" name="sampling_with_frame_track_widget_" native="true"/>
-          </item>
-         </layout>
+         <widget class="orbit_mizar_widgets::SamplingWithFrameTrackWidget" name="sampling_with_frame_track_widget_" native="true"/>
         </item>
        </layout>
       </widget>
@@ -43,7 +39,7 @@
     </item>
    </layout>
   </widget>
-  <widget class="QStatusBar" name="statusbar"/>
+  <widget class="QStatusBar" name="status_bar_"/>
  </widget>
  <customwidgets>
   <customwidget>
