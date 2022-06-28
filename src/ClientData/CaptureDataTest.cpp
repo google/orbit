@@ -262,9 +262,9 @@ TEST_F(CaptureDataTest, UpdateTimerDurationsIsCorrect) {
 
 TEST_F(CaptureDataTest, FindThreadStateSliceInfoFromTimestamp) {
   EXPECT_EQ(
-    capture_data_.FindThreadStateSliceInfoFromTimestamp(kFirstTid, kSlice3.begin_timestamp_ns()),
-    std::nullopt);
-    
+      capture_data_.FindThreadStateSliceInfoFromTimestamp(kFirstTid, kSlice3.begin_timestamp_ns()),
+      std::nullopt);
+
   capture_data_.AddThreadStateSlice(kSlice1);
   capture_data_.AddThreadStateSlice(kSlice2);
   capture_data_.AddThreadStateSlice(kSlice3);
