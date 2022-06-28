@@ -336,6 +336,7 @@ ErrorMessageOr<std::unique_ptr<InstrumentedProcess>> InstrumentedProcess::Create
   std::unique_ptr<InstrumentedProcess> process(new InstrumentedProcess());
   const pid_t pid = orbit_base::ToNativeProcessId(capture_options.pid());
   process->pid_ = pid;
+  ORBIT_LOG("Starting to instrument process with pid %d", pid);
   OUTCOME_TRY(AttachAndStopProcess(pid));
   orbit_base::unique_resource detach_on_exit_1{pid, [](int32_t pid) {
                                                  if (DetachAndContinueProcess(pid).has_error()) {
@@ -356,6 +357,7 @@ ErrorMessageOr<std::unique_ptr<InstrumentedProcess>> InstrumentedProcess::Create
   const std::filesystem::path library_path = library_path_or_error.value();
   ORBIT_CHECK(library_path.is_absolute());
   process->injected_library_path_ = std::filesystem::canonical(library_path);
+  ORBIT_LOG("Injecting library \"%s\" into process %d", process->injected_library_path_, pid);
 
   auto library_handle_or_error = DlopenInTracee(pid, library_path, RTLD_NOW);
   if (library_handle_or_error.has_error()) {
@@ -365,6 +367,7 @@ ErrorMessageOr<std::unique_ptr<InstrumentedProcess>> InstrumentedProcess::Create
   void* library_handle = library_handle_or_error.value();
 
   // Get function pointers into the injected library.
+  ORBIT_LOG("Resolving function pointers in injected library");
   constexpr const char* kStartNewCaptureFunctionName = "StartNewCapture";
   constexpr const char* kEntryPayloadFunctionName = "EntryPayload";
   constexpr const char* kExitPayloadFunctionName = "ExitPayload";
@@ -395,6 +398,7 @@ ErrorMessageOr<std::unique_ptr<InstrumentedProcess>> InstrumentedProcess::Create
                                                          tids_as_vector.end());
 
   // Call initialization code in a new thread.
+  ORBIT_LOG("Initializing instrumentation library and setting up communication to OrbitService");
   constexpr uint64_t kStackSize = 8ULL * 1024ULL * 1024ULL;
   OUTCOME_TRY(auto&& thread_stack_memory, MemoryInTracee::Create(pid, 0, kStackSize));
   const uint64_t top_of_stack = thread_stack_memory->GetAddress() + kStackSize;
@@ -409,6 +413,7 @@ ErrorMessageOr<std::unique_ptr<InstrumentedProcess>> InstrumentedProcess::Create
   if (DetachAndContinueProcess(pid).has_error()) {
     return ErrorMessage(absl::StrFormat("Unable to detach from process %i", pid));
   }
+  ORBIT_LOG("Waiting for initialization to complete");
   OUTCOME_TRY(WaitForThreadToExit(pid, init_thread_tid));
   OUTCOME_TRY(auto&& orbit_threads, GetNewOrbitThreads(pid, tids_before_injection));
 
@@ -423,11 +428,14 @@ ErrorMessageOr<std::unique_ptr<InstrumentedProcess>> InstrumentedProcess::Create
   OUTCOME_TRY(thread_stack_memory->Free());
   OUTCOME_TRY(code_memory->Free());
 
+  ORBIT_LOG("Initialization of instrumentation library done");
+
   return process;
 }
 
 ErrorMessageOr<InstrumentationManager::InstrumentationResult>
 InstrumentedProcess::InstrumentFunctions(const CaptureOptions& capture_options) {
+  ORBIT_LOG("Instrumenting functions in process %d", pid_);
   OUTCOME_TRY(AttachAndStopProcess(pid_));
   orbit_base::unique_resource detach_on_exit{pid_, [](int32_t pid) {
                                                if (DetachAndContinueProcess(pid).has_error()) {
@@ -452,11 +460,14 @@ InstrumentedProcess::InstrumentFunctions(const CaptureOptions& capture_options) 
   orbit_base::unique_resource close_on_exit{
       &capstone_handle, [](csh* capstone_handle) { cs_close(capstone_handle); }};
 
-  OUTCOME_TRY(ExecuteInProcess(pid_, absl::bit_cast<void*>(start_new_capture_function_address_),
-                               orbit_base::CaptureTimestampNs()));
+  const uint64_t now = orbit_base::CaptureTimestampNs();
+  ORBIT_LOG("Calling StartNewCapture at timestamp %d", now);
+  OUTCOME_TRY(
+      ExecuteInProcess(pid_, absl::bit_cast<void*>(start_new_capture_function_address_), now));
 
   OUTCOME_TRY(EnsureTrampolinesWritable());
 
+  ORBIT_LOG("Trying to instrument %d functions", capture_options.instrumented_functions().size());
   InstrumentationManager::InstrumentationResult result;
   for (const auto& function : capture_options.instrumented_functions()) {
     const uint64_t function_id = function.function_id();
@@ -550,6 +561,7 @@ InstrumentedProcess::InstrumentFunctions(const CaptureOptions& capture_options) 
       }
     }
   }
+  ORBIT_LOG("Successfully instrumented %d functions", result.instrumented_function_ids.size());
 
   result.entry_trampoline_address_ranges = GetEntryTrampolineAddressRanges();
   result.return_trampoline_address_range = AddressRange{
