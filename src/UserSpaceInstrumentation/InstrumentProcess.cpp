@@ -367,7 +367,7 @@ ErrorMessageOr<std::unique_ptr<InstrumentedProcess>> InstrumentedProcess::Create
   void* library_handle = library_handle_or_error.value();
 
   // Get function pointers into the injected library.
-  ORBIT_LOG("Resolve function pointers in injected library.");
+  ORBIT_LOG("Resolving function pointers in injected library");
   constexpr const char* kStartNewCaptureFunctionName = "StartNewCapture";
   constexpr const char* kEntryPayloadFunctionName = "EntryPayload";
   constexpr const char* kExitPayloadFunctionName = "ExitPayload";
