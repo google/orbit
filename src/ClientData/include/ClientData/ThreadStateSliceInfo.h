@@ -21,15 +21,15 @@ class ThreadStateSliceInfo {
   explicit ThreadStateSliceInfo(uint32_t tid,
                                 orbit_grpc_protos::ThreadStateSlice::ThreadState thread_state,
                                 uint64_t begin_timestamp_ns, uint64_t end_timestamp_ns,
-                                uint32_t wakeup_tid, uint32_t wakeup_pid,
-                                WakeupReason wakeup_reason)
+                                WakeupReason wakeup_reason, uint32_t wakeup_tid,
+                                uint32_t wakeup_pid)
       : tid_{tid},
-        wakeup_tid_(wakeup_tid),
-        wakeup_pid_{wakeup_pid},
-        wakeup_reason_{wakeup_reason},
         thread_state_{thread_state},
         begin_timestamp_ns_{begin_timestamp_ns},
-        end_timestamp_ns_{end_timestamp_ns} {}
+        end_timestamp_ns_{end_timestamp_ns},
+        wakeup_reason_{wakeup_reason},
+        wakeup_tid_(wakeup_tid),
+        wakeup_pid_{wakeup_pid} {}
 
   [[nodiscard]] friend bool operator==(const ThreadStateSliceInfo& lhs,
                                        const ThreadStateSliceInfo& rhs) {
@@ -56,12 +56,12 @@ class ThreadStateSliceInfo {
  private:
   // pid is absent as we don't yet get that information from the service.
   uint32_t tid_;
-  uint32_t wakeup_tid_;
-  uint32_t wakeup_pid_;
-  WakeupReason wakeup_reason_;
   orbit_grpc_protos::ThreadStateSlice::ThreadState thread_state_;
   uint64_t begin_timestamp_ns_;
   uint64_t end_timestamp_ns_;
+  WakeupReason wakeup_reason_;
+  uint32_t wakeup_tid_;
+  uint32_t wakeup_pid_;
 };
 
 }  // namespace orbit_client_data

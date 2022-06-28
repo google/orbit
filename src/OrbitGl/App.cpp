@@ -168,6 +168,8 @@ using UnwindingMethod = orbit_grpc_protos::CaptureOptions::UnwindingMethod;
 namespace {
 
 constexpr const char* kLibOrbitVulkanLayerSoFileName = "libOrbitVulkanLayer.so";
+constexpr const char* kNtdllSoFileName = "ntdll.so";
+constexpr const char* kWineSyscallDispatcherFunctionName = "__wine_syscall_dispatcher";
 constexpr std::string_view kGgpVlkModulePathSubstring = "ggpvlk.so";
 
 orbit_data_views::PresetLoadState GetPresetLoadStateForProcess(const PresetFile& preset,
@@ -332,9 +334,15 @@ OrbitApp::OrbitApp(orbit_gl::MainWindowInterface* main_window,
   data_manager_ = std::make_unique<orbit_client_data::DataManager>(main_thread_id_);
   module_manager_ = std::make_unique<orbit_client_data::ModuleManager>();
   manual_instrumentation_manager_ = std::make_unique<ManualInstrumentationManager>();
+
+  QObject::connect(&update_after_symbol_loading_throttle_, &orbit_qt_utils::Throttle::Triggered,
+                   [this]() { UpdateAfterSymbolLoading(); });
 }
 
-OrbitApp::~OrbitApp() { AbortCapture(); }
+OrbitApp::~OrbitApp() {
+  AbortCapture();
+  RequestSymbolDownloadStop(module_manager_->GetAllModuleData(), false);
+}
 
 void OrbitApp::OnCaptureFinished(const CaptureFinished& capture_finished) {
   ORBIT_LOG("CaptureFinished received: status=%s, error_message=\"%s\"",
@@ -1410,6 +1418,33 @@ static std::unique_ptr<CaptureEventProcessor> CreateCaptureEventProcessor(
   return CaptureEventProcessor::CreateCompositeProcessor(std::move(event_processors));
 }
 
+static void FindAndAddFunctionToStopUnwindingAt(
+    const std::string& function_name, const std::string& module_name,
+    const orbit_client_data::ModuleManager& module_manager, const ProcessData& process,
+    std::map<uint64_t, uint64_t>* absolute_address_to_size_of_functions_to_stop_unwinding_at) {
+  std::vector<orbit_client_data::ModuleInMemory> modules =
+      process.FindModulesByFilename(module_name);
+  for (const auto& module_in_memory : modules) {
+    const ModuleData* module_data = module_manager.GetModuleByPathAndBuildId(
+        module_in_memory.file_path(), module_in_memory.build_id());
+
+    const FunctionInfo* function_to_stop_unwinding_at =
+        module_data->FindFunctionFromPrettyName(function_name);
+    if (function_to_stop_unwinding_at == nullptr) {
+      continue;
+    }
+    uint64_t function_absolute_start_address =
+        orbit_object_utils::SymbolVirtualAddressToAbsoluteAddress(
+            function_to_stop_unwinding_at->address(), module_in_memory.start(),
+            module_data->load_bias(), module_data->executable_segment_offset());
+
+    auto [unused_it, inserted] =
+        absolute_address_to_size_of_functions_to_stop_unwinding_at->insert_or_assign(
+            function_absolute_start_address, function_to_stop_unwinding_at->size());
+    ORBIT_CHECK(inserted);
+  }
+}
+
 void OrbitApp::StartCapture() {
   const ProcessData* process = GetTargetProcess();
   if (process == nullptr) {
@@ -1432,6 +1467,7 @@ void OrbitApp::StartCapture() {
 
   absl::flat_hash_map<uint64_t, FunctionInfo> selected_functions_map;
   absl::flat_hash_set<uint64_t> frame_track_function_ids;
+  bool record_user_stack_on_wine_syscall_dispatcher = false;
   // non-zero since 0 is reserved for invalid ids.
   uint64_t function_id = 1;
   for (const auto& function : selected_functions) {
@@ -1439,6 +1475,21 @@ void OrbitApp::StartCapture() {
       frame_track_function_ids.insert(function_id);
     }
     selected_functions_map.insert_or_assign(function_id++, function);
+  }
+
+  // With newer Wine/Proton versions, unwinding will fail after `__wine_syscall_dispatcher`
+  // (see go/unwinding_wine_syscall_dispatcher). Unless we mitigate this situation somehow
+  // differently, we at least want to report "complete" callstacks for the "Windows kernel" part
+  // (until `__wine_syscall_dispatcher`). To do so, we look for the absolute address of this
+  // function and send it to the service as a function to stop unwinding at. The unwinder will
+  // stop on those functions and report the callstacks as "complete".
+  // Note: This requires symbols being loaded. We prioritize loading of the `ntdll.so` and rely on
+  // auto-symbol loading.
+  std::map<uint64_t, uint64_t> absolute_address_to_size_of_functions_to_stop_unwinding_at;
+  if (!record_user_stack_on_wine_syscall_dispatcher) {
+    FindAndAddFunctionToStopUnwindingAt(
+        kWineSyscallDispatcherFunctionName, kNtdllSoFileName, *module_manager_, *process_,
+        &absolute_address_to_size_of_functions_to_stop_unwinding_at);
   }
 
   ClientCaptureOptions options;
@@ -1458,6 +1509,8 @@ void OrbitApp::StartCapture() {
   options.collect_memory_info = data_manager_->collect_memory_info();
   options.memory_sampling_period_ms = data_manager_->memory_sampling_period_ms();
   options.selected_functions = std::move(selected_functions_map);
+  options.absolute_address_to_size_of_functions_to_stop_unwinding_at =
+      std::move(absolute_address_to_size_of_functions_to_stop_unwinding_at);
   options.process_id = process->pid();
   options.record_return_values = absl::GetFlag(FLAGS_show_return_values);
   options.record_arguments = false;
@@ -2071,8 +2124,8 @@ void OrbitApp::AddSymbols(const std::filesystem::path& module_file_path,
               module_data->file_path());
   }
 
-  UpdateAfterSymbolLoading();
-  FireRefreshCallbacks();
+  FireRefreshCallbacks(DataViewType::kModules);
+  UpdateAfterSymbolLoadingThrottled();
 }
 
 orbit_base::Future<ErrorMessageOr<void>> OrbitApp::LoadSymbols(
@@ -2380,7 +2433,8 @@ Future<std::vector<ErrorMessageOr<CanceledOr<void>>>> OrbitApp::LoadAllSymbols()
   const ProcessData& process = GetConnectedOrLoadedProcess();
 
   std::vector<const ModuleData*> sorted_module_list = SortModuleListWithPrioritizationList(
-      module_manager_->GetAllModuleData(), {kGgpVlkModulePathSubstring, process.full_path()});
+      module_manager_->GetAllModuleData(),
+      {kGgpVlkModulePathSubstring, kNtdllSoFileName, process.full_path()});
 
   std::vector<Future<ErrorMessageOr<CanceledOr<void>>>> loading_futures;
 
@@ -2691,7 +2745,10 @@ void OrbitApp::UpdateAfterSymbolLoading() {
   SetSelectionBottomUpView(capture_data.selection_post_processed_sampling_data(), capture_data);
   selection_report_->UpdateReport(&capture_data.selection_callstack_data(),
                                   &capture_data.selection_post_processed_sampling_data());
+  FireRefreshCallbacks();
 }
+
+void OrbitApp::UpdateAfterSymbolLoadingThrottled() { update_after_symbol_loading_throttle_.Fire(); }
 
 void OrbitApp::UpdateAfterCaptureCleared() {
   PostProcessedSamplingData empty_post_processed_sampling_data;

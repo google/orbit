@@ -207,12 +207,11 @@ Memory* MapInfo::GetFileMemory() {
 // mapping that corresponds to the beginning of the file, which contains the headers (because the
 // offset in the file is zero and the address chosen for this mapping should always be a multiple of
 // the page size). Therefore, let's consider the file of the last file mapping that precedes this
-// anonymous mapping. If this file is a PE, and an executable file mapping for the .text section of
-// this PE is not present, and finally the address and the size of this anonymous mapping are
-// compatible with the address range where the .text section would be loaded based on the header for
-// the section (in particular, VirtualAddress and VirtualSize), then we can be quite sure that this
-// anonymous mapping indeed contains the .text section of that PE. Note that we assume that a PE
-// only has one .text section and one executable mapping.
+// anonymous mapping. If this file is a PE, and the address range of this anonymous mapping is fully
+// contained in the address range that we expect contains the PE (based on the start address of the
+// file mapping that contains the headers and based on the PE's SizeOfImage), then we can be
+// confident that this anonymous mapping also belongs to the PE. Note how this considers the case we
+// observed of PEs with multiple executable sections.
 //
 // This method is the counterpart of GetFileMemory for anonymous executable mappings and contains
 // the detection mechanism described.
@@ -254,29 +253,25 @@ Memory* MapInfo::GetFileMemoryFromAnonExecMapIfPeCoffTextSection() {
          (map_info_it->name().empty() || map_info_it->name().c_str()[0] == '[' ||
           map_info_it->name() == prev_name)) {
     if (map_info_it->name() == prev_name) {
-      if ((map_info_it->flags() & PROT_EXEC) != 0) {
-        // There is already an executable mapping for this name.
-        return nullptr;
-      }
       first_map_info_with_prev_name = map_info_it;
     }
-
     map_info_it = map_info_it->prev_map();
   }
-  // The first iteration of this loop either assigned map_info_it to this or returned.
+  // The first iteration of the previous loop assigned map_info_it to this.
   CHECK(first_map_info_with_prev_name != nullptr);
-
-  if (first_map_info_with_prev_name->start() < first_map_info_with_prev_name->offset()) {
-    // base_address would be the result of an underflow. Even if this could theoretically happen, it
-    // is unexpected, so simply fail in this case.
-    return nullptr;
-  }
 
   Log::Info("Trying if anonymous executable map at %#lx-%#lx belongs to \"%s\"", start(), end(),
             prev_name.c_str());
   const std::string error_message = android::base::StringPrintf(
       "No, anonymous executable map at %#lx-%#lx does NOT belong to \"%s\"", start(), end(),
       prev_name.c_str());
+
+  if (first_map_info_with_prev_name->offset() != 0) {
+    // We expect the first mapping for this PE to have offset zero, as the headers are also mapped
+    // into memory, and they are at the beginning of the file.
+    Log::Info("%s: a map with offset 0 for this file was not found", error_message.c_str());
+    return nullptr;
+  }
 
   auto file_memory = std::make_unique<MemoryFileAtOffset>();
   // Always use zero as offset because the headers of a PE should always be right at the beginning
@@ -296,40 +291,20 @@ Memory* MapInfo::GetFileMemoryFromAnonExecMapIfPeCoffTextSection() {
     return nullptr;
   }
 
-  // The address at which the first byte of the PE is mapped.
-  uint64_t base_address =
-      first_map_info_with_prev_name->start() - first_map_info_with_prev_name->offset();
+  // The address range at which the PE is supposed to be mapped.
+  const uint64_t base_address = first_map_info_with_prev_name->start();
+  const uint64_t end_address = base_address + pe.GetSizeOfImage();
 
-  uint64_t image_base_plus_text_virtual_address{};  // Image base + offset in memory.
-  uint64_t text_virtual_size{};                     // Size in memory.
-  if (!pe.GetTextRange(&image_base_plus_text_virtual_address, &text_virtual_size)) {
-    Log::Info("%s: could not get the expected address range of the .text section",
-              error_message.c_str());
-    return nullptr;
-  }
-  const uint64_t text_virtual_address =
-      image_base_plus_text_virtual_address - pe.GetLoadBias();  // Offset in memory.
+  constexpr uint64_t kPageSize = 0x1000;
+  // end_address is generally already aligned as SizeOfImage must be a multiple of SectionAlignment,
+  // which by default is a multiple of the page size, but let's enforce it.
+  const uint64_t end_address_aligned_up = (end_address + (kPageSize - 1)) & ~(kPageSize - 1);
 
-  // The address range at which the text section of the PE is supposed to be mapped.
-  const uint64_t expected_text_start = text_virtual_address + base_address;
-  const uint64_t expected_text_end = expected_text_start + text_virtual_size;
-
-  // This map can correspond to the text section of the PE only if it contains the address range at
-  // which the text section should be mapped.
-  // We don't require the end address of this map to be equal to the end of the address range at
-  // which the text section should be mapped, because there is no requirement on the size of the
-  // text section (VirtualSize) in relationship to the page size.
-  // We also don't require the start address of this map to be equal to the start of the address
-  // range at which the text section should be mapped. The equality holds in most cases, because the
-  // address at which sections are loaded into memory (VirtualAddress) must be a multiple of
-  // SectionAlignment, which by default is equal to the page size. However, by PE specification this
-  // is only a default, not a strict requirement.
-  if (start() > expected_text_start || end() < expected_text_end) {
-    // This map doesn't fully contain the address range at which the text section of the PE is
-    // supposed to be mapped.
-    Log::Info(
-        "%s: map does not contain the expected address range of the .text section (%#lx-%#lx)",
-        error_message.c_str(), expected_text_start, expected_text_end);
+  // We validate that the executable map is fully contained in the address range at which the PE is
+  // supposed to be mapped.
+  if (end() > end_address_aligned_up) {
+    Log::Info("%s: map is not contained in the absolute address range %#lx-%#lx of the PE",
+              error_message.c_str(), base_address, end_address_aligned_up);
     return nullptr;
   }
 
@@ -340,17 +315,19 @@ Memory* MapInfo::GetFileMemoryFromAnonExecMapIfPeCoffTextSection() {
     return nullptr;
   }
 
-  // Compute the offset that this mapping would have if it was a file mapping (it's not a multiple
-  // of the page size, otherwise Wine would have created a file mapping to begin with).
-  const uint64_t text_pointer_to_raw_data = pe.GetTextOffsetInFile();
-  const uint64_t offset = text_pointer_to_raw_data - (expected_text_start - start());
+  // Compute the RVA of the start of this map.
+  const uint64_t map_start_rva = start() - base_address;
 
-  Log::Info("Guessing that anonymous executable map at %#lx-%#lx belongs to \"%s\" at offset %#lx",
-            start(), end(), prev_name.c_str(), offset);
+  Log::Info("Guessing that anonymous executable map at %#lx-%#lx belongs to \"%s\" with RVA %#lx",
+            start(), end(), prev_name.c_str(), map_start_rva);
 
   // Set some ObjectFields, like GetFileMemory does.
   set_memory_backed_object(false);
-  set_object_offset(offset);
+  // If the section is not mapped from the start of the map, the first address of the map could
+  // correspond to no actual offset in the file (and the beginning of the map would be padded with
+  // zeros). Therefore, we set zero here, and we use object_rva instead.
+  set_object_offset(0);
+  set_object_rva(map_start_rva);
   // Again, assume that the headers of the PE are always at the beginning of the file (offset zero
   // in the file) and hence are mapped with offset zero.
   set_object_start_offset(0);

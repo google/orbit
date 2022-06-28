@@ -134,6 +134,10 @@ void OpenUseAndCloseLibrary(pid_t pid) {
 }  // namespace
 
 TEST(InjectLibraryInTraceeTest, OpenUseAndCloseLibraryInUserCode) {
+  /* copybara:insert(b/237251106 injecting the library into the target process triggers some
+                     initilization code that check fails.)
+  GTEST_SKIP();
+  */
   pid_t pid = fork();
   ORBIT_CHECK(pid != -1);
   if (pid == 0) {
@@ -154,6 +158,10 @@ TEST(InjectLibraryInTraceeTest, OpenUseAndCloseLibraryInUserCode) {
 }
 
 TEST(InjectLibraryInTraceeTest, OpenUseAndCloseLibraryInSyscall) {
+  /* copybara:insert(b/237251106 injecting the library into the target process triggers some
+                     initilization code that check fails.)
+  GTEST_SKIP();
+  */
   pid_t pid = fork();
   ORBIT_CHECK(pid != -1);
   if (pid == 0) {
@@ -173,6 +181,10 @@ TEST(InjectLibraryInTraceeTest, OpenUseAndCloseLibraryInSyscall) {
 }
 
 TEST(InjectLibraryInTraceeTest, NonExistingLibrary) {
+  /* copybara:insert(b/237251106 injecting the library into the target process triggers some
+                     initilization code that check fails.)
+  GTEST_SKIP();
+  */
   pid_t pid = fork();
   ORBIT_CHECK(pid != -1);
   if (pid == 0) {

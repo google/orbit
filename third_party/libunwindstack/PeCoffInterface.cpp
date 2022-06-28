@@ -521,13 +521,19 @@ bool PeCoffInterfaceImpl<uint32_t>::InitNativeUnwinder() {
 }
 
 template <typename AddressType>
-uint64_t PeCoffInterfaceImpl<AddressType>::GetRelPc(uint64_t pc, uint64_t map_start,
-                                                    uint64_t map_object_offset) {
+uint64_t PeCoffInterfaceImpl<AddressType>::GetRelPcWithMapOffset(uint64_t pc, uint64_t map_start,
+                                                                 uint64_t map_object_offset) {
   uint64_t map_rva;
   if (!MapFromFileOffsetToRva(map_object_offset, &map_rva)) {
     return 0;
   }
   return pc - map_start + optional_header_.image_base + map_rva;
+}
+
+template <typename AddressType>
+uint64_t PeCoffInterfaceImpl<AddressType>::GetRelPcWithMapRva(uint64_t pc, uint64_t map_start,
+                                                              uint64_t map_object_rva) {
+  return pc - map_start + optional_header_.image_base + map_object_rva;
 }
 
 template <typename AddressType>

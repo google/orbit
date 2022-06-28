@@ -551,14 +551,16 @@ message ThreadStateSlice {
   uint64 duration_ns = 6;
   uint64 end_timestamp_ns = 5;
 
-  uint32 wakeup_tid = 7;
-  uint32 wakeup_pid = 8;
   enum WakeupReason {
     kNotApplicable = 0;
     kUnblocked = 1;
     kCreated = 2;
   }
   WakeupReason wakeup_reason = 9;
+  // These two fields are only relevant when wakeup_reason != kNotApplicable.
+  // Otherwise, they should be 0 to minimize bandwidth usage.
+  uint32 wakeup_tid = 7;
+  uint32 wakeup_pid = 8;
 }
 
 message AddressInfo {

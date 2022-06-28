@@ -87,6 +87,11 @@ class MapInfo {
     // start of the elf. This is not equal to offset when the linker splits
     // shared libraries into a read-only and read-execute map.
     uint64_t object_start_offset_ = 0;
+    // The Relative Virtual Address of the beginning of this mapping. In other words, the offset in
+    // memory of the beginning of this mapping relative to the address in memory where the beginning
+    // of the file is mapped (base address). Only applies to anonymous executable mappings that
+    // belong to PEs as the alternative to object_offset_, which is not available for such mappings.
+    uint64_t object_rva_ = 0;
 
     std::atomic_uint64_t load_bias_;
 
@@ -161,6 +166,9 @@ class MapInfo {
   inline void set_object_start_offset(uint64_t value) {
     GetObjectFields().object_start_offset_ = value;
   }
+
+  inline uint64_t object_rva() { return GetObjectFields().object_rva_; }
+  inline void set_object_rva(uint64_t value) { GetObjectFields().object_rva_ = value; }
 
   inline std::atomic_uint64_t& load_bias() { return GetObjectFields().load_bias_; }
   inline void set_load_bias(uint64_t value) { GetObjectFields().load_bias_ = value; }

@@ -23,7 +23,10 @@ using orbit_grpc_protos::ProcessInfo;
 using orbit_test_utils::HasError;
 using orbit_test_utils::HasNoError;
 
+using testing::AllOf;
 using testing::ElementsAre;
+using testing::Property;
+using testing::UnorderedElementsAre;
 
 namespace orbit_client_data {
 
@@ -188,6 +191,72 @@ TEST(ProcessData, FindModuleBuildIdsByPath) {
   EXPECT_THAT(process.FindModuleBuildIdsByPath(kFilePath3), ElementsAre(kBuildId2, kBuildId3));
   EXPECT_FALSE(process.IsModuleLoadedByProcess("not/loaded/module"));
   EXPECT_TRUE(process.FindModuleBuildIdsByPath("not/loaded/module").empty());
+}
+
+TEST(ProcessData, FindModulesByFilename) {
+  constexpr const char* kFileName1 = "file1";
+  constexpr const char* kFilePath1 = "path/to/file1";
+  constexpr const char* kBuildId1 = "buildid1";
+  constexpr uint64_t kStartAddress1 = 0;
+  constexpr uint64_t kEndAddress1 = 10;
+  ModuleInfo module_info_1;
+  module_info_1.set_file_path(kFilePath1);
+  module_info_1.set_build_id(kBuildId1);
+  module_info_1.set_address_start(kStartAddress1);
+  module_info_1.set_address_end(kEndAddress1);
+
+  constexpr const char* kFileName2 = "file2";
+  constexpr const char* kFilePath2 = "path/to/file2";
+  constexpr const char* kBuildId2 = "buildid2";
+  constexpr uint64_t kStartAddress2 = 100;
+  constexpr uint64_t kEndAddress2 = 110;
+  ModuleInfo module_info_2;
+  module_info_2.set_file_path(kFilePath2);
+  module_info_2.set_build_id(kBuildId2);
+  module_info_2.set_address_start(kStartAddress2);
+  module_info_2.set_address_end(kEndAddress2);
+
+  constexpr const char* kBuildId3 = "kBuildId3";
+  constexpr uint64_t kStartAddress3 = 200;
+  constexpr uint64_t kEndAddress3 = 210;
+  ModuleInfo module_info_3;
+  module_info_3.set_file_path(kFilePath2);
+  module_info_3.set_build_id(kBuildId3);
+  module_info_3.set_address_start(kStartAddress3);
+  module_info_3.set_address_end(kEndAddress3);
+
+  constexpr uint64_t kStartAddress4 = 300;
+  constexpr uint64_t kEndAddress4 = 310;
+  ModuleInfo module_info_4;
+  module_info_4.set_file_path(kFilePath2);
+  module_info_4.set_build_id(kBuildId2);
+  module_info_4.set_address_start(kStartAddress4);
+  module_info_4.set_address_end(kEndAddress4);
+
+  std::vector<ModuleInfo> module_infos{module_info_1, module_info_2, module_info_3, module_info_4};
+
+  ProcessData process(ProcessInfo{});
+  process.UpdateModuleInfos(module_infos);
+
+  EXPECT_THAT(process.FindModulesByFilename(kFileName1),
+              UnorderedElementsAre(AllOf(Property(&ModuleInMemory::file_path, kFilePath1),
+                                         Property(&ModuleInMemory::build_id, kBuildId1),
+                                         Property(&ModuleInMemory::start, kStartAddress1),
+                                         Property(&ModuleInMemory::end, kEndAddress1))));
+
+  EXPECT_THAT(process.FindModulesByFilename(kFileName2),
+              UnorderedElementsAre(AllOf(Property(&ModuleInMemory::file_path, kFilePath2),
+                                         Property(&ModuleInMemory::build_id, kBuildId2),
+                                         Property(&ModuleInMemory::start, kStartAddress2),
+                                         Property(&ModuleInMemory::end, kEndAddress2)),
+                                   AllOf(Property(&ModuleInMemory::file_path, kFilePath2),
+                                         Property(&ModuleInMemory::build_id, kBuildId3),
+                                         Property(&ModuleInMemory::start, kStartAddress3),
+                                         Property(&ModuleInMemory::end, kEndAddress3)),
+                                   AllOf(Property(&ModuleInMemory::file_path, kFilePath2),
+                                         Property(&ModuleInMemory::build_id, kBuildId2),
+                                         Property(&ModuleInMemory::start, kStartAddress4),
+                                         Property(&ModuleInMemory::end, kEndAddress4))));
 }
 
 TEST(ProcessData, IsModuleLoadedByProcess) {

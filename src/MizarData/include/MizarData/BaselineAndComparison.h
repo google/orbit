@@ -8,21 +8,24 @@
 #include <absl/container/flat_hash_map.h>
 #include <stdint.h>
 
+#include <algorithm>
+#include <iterator>
 #include <string>
 
 #include "MizarBase/BaselineOrComparison.h"
 #include "MizarBase/SampledFunctionId.h"
-#include "MizarData/ActiveFunctionTimePerFrameComparator.h"
 #include "MizarData/MizarPairedData.h"
 #include "MizarData/NonWrappingAddition.h"
 #include "MizarData/SamplingWithFrameTrackComparisonReport.h"
+#include "MizarStatistics/ActiveFunctionTimePerFrameComparator.h"
+#include "Statistics/MultiplicityCorrection.h"
 
 namespace orbit_mizar_data {
 
 // The class owns the data from two capture files via owning two instances of
 // `PairedData`. Also owns the map from sampled function ids to the
 // corresponding function names.
-template <typename PairedData, typename FunctionTimeComparator>
+template <typename PairedData, typename FunctionTimeComparator, auto MultiplicityCorrection>
 class BaselineAndComparisonTmpl {
   template <typename T>
   using Baseline = ::orbit_mizar_base::Baseline<T>;
@@ -57,18 +60,36 @@ class BaselineAndComparisonTmpl {
     FunctionTimeComparator comparator(baseline_sampling_counts, baseline_frame_stats,
                                       comparison_sampling_counts, comparison_frame_stats);
 
-    absl::flat_hash_map<SFID, ComparisonResult> sfid_to_comparison_result;
-    for (const auto& [sfid, unused_name] : sfid_to_name_) {
-      sfid_to_comparison_result.try_emplace(sfid, comparator.Compare(sfid));
-    }
+    absl::flat_hash_map<SFID, CorrectedComparisonResult> sfid_to_corrected_comparison_result =
+        MakeComparisons(comparator);
 
     return SamplingWithFrameTrackComparisonReport(
         std::move(baseline_sampling_counts), std::move(baseline_frame_stats),
         std::move(comparison_sampling_counts), std::move(comparison_frame_stats),
-        std::move(sfid_to_comparison_result));
+        std::move(sfid_to_corrected_comparison_result));
   }
 
  private:
+  [[nodiscard]] absl::flat_hash_map<SFID, CorrectedComparisonResult> MakeComparisons(
+      const FunctionTimeComparator& comparator) const {
+    absl::flat_hash_map<SFID, orbit_mizar_statistics::ComparisonResult> results;
+    absl::flat_hash_map<SFID, double> pvalues;
+    for (const auto& [sfid, unused_name] : sfid_to_name_) {
+      orbit_mizar_statistics::ComparisonResult result = comparator.Compare(sfid);
+      results.try_emplace(sfid, result);
+      pvalues.try_emplace(sfid, result.pvalue);
+    }
+
+    const absl::flat_hash_map<SFID, double> corrected_pvalues = MultiplicityCorrection(pvalues);
+
+    absl::flat_hash_map<SFID, CorrectedComparisonResult> corrected;
+
+    for (const auto& [sfid, result] : results) {
+      corrected.try_emplace(sfid, CorrectedComparisonResult{result, corrected_pvalues.at(sfid)});
+    }
+    return corrected;
+  }
+
   [[nodiscard]] static orbit_client_data::ScopeStats MakeFrameTrackStats(
       const PairedData& data, const HalfOfSamplingWithFrameTrackReportConfig& config) {
     const std::vector<uint64_t> active_invocation_times = data.ActiveInvocationTimes(
@@ -106,8 +127,13 @@ class BaselineAndComparisonTmpl {
   absl::flat_hash_map<SFID, std::string> sfid_to_name_;
 };
 
+using ActiveFunctionTimePerFrameComparator =
+    orbit_mizar_statistics::ActiveFunctionTimePerFrameComparatorTmpl<SamplingCounts,
+                                                                     orbit_client_data::ScopeStats>;
+
 using BaselineAndComparison =
-    BaselineAndComparisonTmpl<MizarPairedData, ActiveFunctionTimePerFrameComparator>;
+    BaselineAndComparisonTmpl<MizarPairedData, ActiveFunctionTimePerFrameComparator,
+                              orbit_statistics::HolmBonferroniCorrection<orbit_mizar_base::SFID>>;
 
 BaselineAndComparison CreateBaselineAndComparison(std::unique_ptr<MizarDataProvider> baseline,
                                                   std::unique_ptr<MizarDataProvider> comparison);

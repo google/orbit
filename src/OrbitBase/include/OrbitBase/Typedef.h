@@ -8,6 +8,7 @@
 #include <absl/hash/hash.h>
 
 #include <functional>
+#include <type_traits>
 #include <utility>
 
 #include "OrbitBase/TypedefUtils.h"
@@ -24,7 +25,11 @@ namespace orbit_base {
 // using MyType = Typedef<MyTypeTag, T>;
 // MyType<int> wrapped(1);
 // ```
-// One can access the underlying value with `*` and `->` operators.
+// One can access the underlying value with `*` and `->` operators. If `T` is non-`const`, the
+// `const` and non-`const` overloads are provided. If `T` is const, only `const` overloads are
+// provided.
+//
+// Assignment operators are provided independently of whether `T` is `const` or not.
 //
 // If `AbslHashValue` is implemented for `T`, it's also implemented for `Typedef<Tag, T>`.
 //
@@ -38,14 +43,23 @@ template <typename Tag_, typename T>
 class Typedef {
  public:
   using Tag = Tag_;
+  using Value = std::remove_const_t<T>;
 
   [[nodiscard]] constexpr const T* operator->() const { return &value_; }
-  [[nodiscard]] constexpr T* operator->() { return &value_; }
+
+  template <typename = orbit_base_internal::EnableIfNonConst<T>>
+  [[nodiscard]] constexpr T* operator->() {
+    return &value_;
+  }
 
   [[nodiscard]] constexpr const T& operator*() const& { return value_; }
   [[nodiscard]] constexpr T&& operator*() && { return std::move(value_); }
   [[nodiscard]] constexpr const T&& operator*() const&& { return std::move(value_); }
-  [[nodiscard]] constexpr T& operator*() & { return value_; }
+
+  template <typename = orbit_base_internal::EnableIfNonConst<T>>
+  [[nodiscard]] constexpr T& operator*() & {
+    return value_;
+  }
 
   template <typename U, typename = orbit_base_internal::EnableIfUConvertibleToT<T, U>>
   constexpr explicit Typedef(U&& value) : value_(std::forward<U>(value)) {}
@@ -117,7 +131,7 @@ class Typedef {
   }
 
  private:
-  T value_;
+  Value value_;
 };
 
 template <typename Tag>

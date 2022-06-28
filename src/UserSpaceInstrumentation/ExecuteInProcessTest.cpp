@@ -29,7 +29,7 @@ namespace {
 
 class ExecuteInProcessTest : public testing::Test {
  protected:
-  ExecuteInProcessTest() {
+  void StartAndAttach() {
     pid_ = fork();
     ORBIT_CHECK(pid_ != -1);
     if (pid_ == 0) {
@@ -54,7 +54,7 @@ class ExecuteInProcessTest : public testing::Test {
     library_handle_ = library_handle_or_error.value();
   }
 
-  ~ExecuteInProcessTest() override {
+  void DetachAndStop() {
     // Cleanup, detach and end child.
     ORBIT_CHECK(!DlcloseInTracee(pid_, library_handle_).has_error());
     ORBIT_CHECK(!DetachAndContinueProcess(pid_).has_error());
@@ -69,6 +69,12 @@ class ExecuteInProcessTest : public testing::Test {
 }  // namespace
 
 TEST_F(ExecuteInProcessTest, ExecuteInProcess) {
+  /* copybara:insert(b/237251106 injecting the library into the target process triggers some
+                     initilization code that check fails.)
+  GTEST_SKIP();
+  */
+  StartAndAttach();
+
   auto result_or_error = ExecuteInProcess(pid_, library_handle_, "TrivialFunction");
   ASSERT_THAT(result_or_error, HasNoError());
   EXPECT_EQ(42, result_or_error.value());
@@ -88,15 +94,25 @@ TEST_F(ExecuteInProcessTest, ExecuteInProcess) {
   result_or_error = ExecuteInProcess(pid_, function_address_or_error.value(), 2, 4, 6, 8, 10, 12);
   ASSERT_THAT(result_or_error, HasValue());
   EXPECT_EQ(42, result_or_error.value());
+
+  DetachAndStop();
 }
 
 TEST_F(ExecuteInProcessTest, ExecuteInProcessWithMicrosoftCallingConvention) {
+  /* copybara:insert(b/237251106 injecting the library into the target process triggers some
+                     initilization code that check fails.)
+  GTEST_SKIP();
+  */
+  StartAndAttach();
+
   auto function_address_or_error = DlsymInTracee(pid_, library_handle_, "TrivialSumWithMsAbi");
   ASSERT_TRUE(function_address_or_error.has_value());
   auto result_or_error = ExecuteInProcessWithMicrosoftCallingConvention(
       pid_, function_address_or_error.value(), 2, 4, 6, 8);
   ASSERT_THAT(result_or_error, HasValue());
   EXPECT_EQ(20, result_or_error.value());
+
+  DetachAndStop();
 }
 
 }  // namespace orbit_user_space_instrumentation

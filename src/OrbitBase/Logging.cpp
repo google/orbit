@@ -17,6 +17,7 @@
 
 #include "LoggingUtils.h"
 #include "OrbitBase/SafeStrerror.h"
+#include "OrbitBase/StringConversion.h"
 #include "OrbitBase/ThreadUtils.h"
 #include "OrbitBase/UniqueResource.h"
 
@@ -102,7 +103,10 @@ void LogToFile(const std::string& message) {
 }
 
 #ifdef _WIN32
-void OutputDebugStringA(const char* str) { ::OutputDebugStringA(str); }
+void OutputToDebugger(const char* str) {
+  std::wstring str_w = orbit_base::ToStdWString(str);
+  ::OutputDebugStringW(str_w.c_str());
+}
 #endif
 
 }  // namespace orbit_base_internal

@@ -15,6 +15,9 @@ using EnableIfUConvertibleToT = std::enable_if_t<std::is_convertible_v<U, T>>;
 template <typename T, typename U>
 using EnableIfUNotConvertibleToT = std::enable_if_t<!std::is_convertible_v<U, T>>;
 
+template <typename T>
+using EnableIfNonConst = std::enable_if<!std::is_const_v<T>>;
+
 }  // namespace orbit_base_internal
 
 #endif  // ORBIT_BASE_TYPEDEF_UTILS_H_

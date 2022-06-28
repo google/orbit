@@ -516,6 +516,7 @@ TYPED_TEST(MapInfoCreateMemoryForPeTest, correctly_initializes_memory_for_pe) {
     EXPECT_NE(memory, nullptr);
     EXPECT_EQ(map_info->object_offset(), 0);
     EXPECT_EQ(map_info->object_start_offset(), 0);
+    EXPECT_EQ(map_info->object_rva(), 0);
     EXPECT_FALSE(map_info->memory_backed_object());
   }
   {
@@ -524,6 +525,7 @@ TYPED_TEST(MapInfoCreateMemoryForPeTest, correctly_initializes_memory_for_pe) {
     EXPECT_NE(memory, nullptr);
     EXPECT_EQ(map_info->object_offset(), 0x1000);
     EXPECT_EQ(map_info->object_start_offset(), 0);
+    EXPECT_EQ(map_info->object_rva(), 0);
     EXPECT_FALSE(map_info->memory_backed_object());
   }
 }

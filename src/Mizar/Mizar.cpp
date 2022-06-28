@@ -100,7 +100,7 @@ int main(int argc, char** argv) {
   for (const auto& [sfid, name] : bac.sfid_to_name()) {
     const uint64_t baseline_cnt = report.GetBaselineSamplingCounts()->GetExclusiveCount(sfid);
     const uint64_t comparison_cnt = report.GetComparisonSamplingCounts()->GetExclusiveCount(sfid);
-    const double pvalue = report.GetComparisonResult(sfid).pvalue;
+    const double pvalue = report.GetComparisonResult(sfid).corrected_pvalue;
     if (pvalue < 0.05) {
       ORBIT_LOG("%s %.2f %u %u %u", name, pvalue, *sfid, baseline_cnt, comparison_cnt);
     }

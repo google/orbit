@@ -14,18 +14,14 @@
 #include "ClientData/ScopeStats.h"
 #include "MizarBase/BaselineOrComparison.h"
 #include "MizarBase/SampledFunctionId.h"
+#include "MizarStatistics/ActiveFunctionTimePerFrameComparator.h"
 #include "OrbitBase/Logging.h"
 
 namespace orbit_mizar_data {
 
-// Whatever is usually referred to as "Statistical Test" we call "Comparison" in the project to save
-// confusion with Unit tests.
-struct ComparisonResult {
-  double statistic{};
-
-  // The term from Statistics. TL;DR: The smaller it is, the less we believe in the assumption under
-  // test (e.g. no difference in active function time).
-  double pvalue{};
+struct CorrectedComparisonResult : public orbit_mizar_statistics::ComparisonResult {
+  // result of multiplicity correction (a term from Statistics) for the particular comparison.
+  double corrected_pvalue{};
 };
 
 // The struct represents the part of configuration relevant to one of the two captures under
@@ -98,12 +94,12 @@ class SamplingWithFrameTrackComparisonReport {
       Baseline<orbit_client_data::ScopeStats> baseline_frame_track_stats,
       Comparison<SamplingCounts> comparison_sampling_counts,
       Comparison<orbit_client_data::ScopeStats> comparison_frame_track_stats,
-      absl::flat_hash_map<SFID, ComparisonResult> fid_to_comparison_results)
+      absl::flat_hash_map<SFID, CorrectedComparisonResult> fid_to_corrected_comparison_results)
       : baseline_sampling_counts_(std::move(baseline_sampling_counts)),
         baseline_frame_track_stats_(std::move(baseline_frame_track_stats)),
         comparison_sampling_counts_(std::move(comparison_sampling_counts)),
         comparison_frame_track_stats_(std::move(comparison_frame_track_stats)),
-        fid_to_comparison_results_(std::move(fid_to_comparison_results)) {}
+        fid_to_corrected_comparison_results_(std::move(fid_to_corrected_comparison_results)) {}
 
   [[nodiscard]] const Baseline<SamplingCounts>& GetBaselineSamplingCounts() const {
     return baseline_sampling_counts_;
@@ -120,8 +116,8 @@ class SamplingWithFrameTrackComparisonReport {
     return comparison_frame_track_stats_;
   }
 
-  [[nodiscard]] const ComparisonResult& GetComparisonResult(SFID sfid) const {
-    return fid_to_comparison_results_.at(sfid);
+  [[nodiscard]] const CorrectedComparisonResult& GetComparisonResult(SFID sfid) const {
+    return fid_to_corrected_comparison_results_.at(sfid);
   }
 
  private:
@@ -131,7 +127,7 @@ class SamplingWithFrameTrackComparisonReport {
   Comparison<SamplingCounts> comparison_sampling_counts_;
   Comparison<orbit_client_data::ScopeStats> comparison_frame_track_stats_;
 
-  absl::flat_hash_map<SFID, ComparisonResult> fid_to_comparison_results_;
+  absl::flat_hash_map<SFID, CorrectedComparisonResult> fid_to_corrected_comparison_results_;
 };
 
 }  // namespace orbit_mizar_data

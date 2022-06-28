@@ -10,6 +10,7 @@ from core.orbit_e2e import E2ETestSuite
 from test_cases.bottom_up_tab import VerifyBottomUpContentForLoadedCapture
 from test_cases.capture_window import FilterTracks, SelectAllCallstacksFromTrack, ZoomOut
 from test_cases.connection_window import LoadCapture
+from test_cases.symbols_tab import ClearSymbolCache
 from test_cases.top_down_tab import SelectAllCallstackFromTopDownTab, VerifyTopDownContentForLoadedCapture
 """Verify top-down and bottom-up view of a known capture.
 
@@ -37,6 +38,10 @@ This automation script covers a basic workflow:
 
 def main(argv):
     test_cases = [
+        # Symbols are loaded automatically only if already in the cache. Loading some symbols can cause slightly
+        # different function names and a slightly different structure of the trees. So let's prevent that as we need a
+        # consistent behavior.
+        ClearSymbolCache(),
         LoadCapture(capture_file_path="testdata\\OrbitTest_1-72.orbit"),
         VerifyTopDownContentForLoadedCapture(selection_tab=False),
         VerifyBottomUpContentForLoadedCapture(selection_tab=False),
