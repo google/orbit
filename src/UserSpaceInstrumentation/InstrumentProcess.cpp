@@ -398,7 +398,7 @@ ErrorMessageOr<std::unique_ptr<InstrumentedProcess>> InstrumentedProcess::Create
                                                          tids_as_vector.end());
 
   // Call initialization code in a new thread.
-  ORBIT_LOG("Initialize instrumentation library and set up communication to OrbitService.");
+  ORBIT_LOG("Initializing instrumentation library and setting up communication to OrbitService");
   constexpr uint64_t kStackSize = 8ULL * 1024ULL * 1024ULL;
   OUTCOME_TRY(auto&& thread_stack_memory, MemoryInTracee::Create(pid, 0, kStackSize));
   const uint64_t top_of_stack = thread_stack_memory->GetAddress() + kStackSize;
