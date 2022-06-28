@@ -265,14 +265,10 @@ CaptureData::FindThreadStateSliceInfoFromTimestamp(int64_t thread_id, uint64_t t
           thread_state_bar.begin(), thread_state_bar.end(), timestamp,
           [](uint64_t a,
              const ThreadStateSliceInfo& b) -> bool {  // compare based on beginning timestamps
-            return a < b.begin_timestamp_ns();
+            return a < b.end_timestamp_ns();
           });
 
-  if (slice == thread_state_bar.begin()) {
-    return std::nullopt;
-  }
-  slice--;
-  if (timestamp < slice->begin_timestamp_ns() || timestamp >= slice->end_timestamp_ns()) {
+  if (slice == thread_state_bar.end() || timestamp < slice->begin_timestamp_ns()) {
     return std::nullopt;
   }
 

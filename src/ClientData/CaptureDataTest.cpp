@@ -52,7 +52,7 @@ constexpr uint64_t kLargeInteger = 10'000'000'000'000'000;
 
 constexpr uint64_t kFirstTid = 1000;
 constexpr uint64_t kSecondTid = 2000;
-constexpr uint64_t kNonExistingTid = 3000;
+constexpr uint64_t kNonExistingTid = 404;
 constexpr uint64_t kStTimestamp1 = 50;
 constexpr uint64_t kEnTimestamp1 = 100;
 constexpr uint64_t kStTimestamp2 = 100;
@@ -79,14 +79,7 @@ const ThreadStateSliceInfo kSlice4{
     kSecondTid,       orbit_grpc_protos::ThreadStateSlice::kInterruptibleSleep, kStTimestamp1,
     kEnTimestamp1,    ThreadStateSliceInfo::WakeupReason::kNotApplicable,       kInvalidPidAndTid,
     kInvalidPidAndTid};
-const ThreadStateSliceInfo kSlice5{
-    kSecondTid,    orbit_grpc_protos::ThreadStateSlice::kRunnable, kStTimestamp2,
-    kEnTimestamp2, ThreadStateSliceInfo::WakeupReason::kUnblocked, kWakeupTid,
-    kWakeupPid};
-const ThreadStateSliceInfo kSlice6{
-    kSecondTid,       orbit_grpc_protos::ThreadStateSlice::kRunning,      kStTimestamp3,
-    kEnTimestamp3,    ThreadStateSliceInfo::WakeupReason::kNotApplicable, kInvalidPidAndTid,
-    kInvalidPidAndTid};
+
 
 static const std::array<uint64_t, kTimerCount> kDurations = [] {
   std::array<uint64_t, kTimerCount> result;
@@ -269,21 +262,14 @@ TEST_F(CaptureDataTest, FindThreadStateSliceInfoFromTimestamp) {
   capture_data_.AddThreadStateSlice(kSlice2);
   capture_data_.AddThreadStateSlice(kSlice3);
   capture_data_.AddThreadStateSlice(kSlice4);
-  capture_data_.AddThreadStateSlice(kSlice5);
-  capture_data_.AddThreadStateSlice(kSlice6);
 
   constexpr uint64_t kMidSlice1Timestamp = 75;
   constexpr uint64_t kMidSlice2Timestamp = 101;
   constexpr uint64_t kMidSlice3Timestamp = 199;
   constexpr uint64_t kMidSlice4Timestamp = 75;
-  constexpr uint64_t kMidSlice5Timestamp = 101;
-  constexpr uint64_t kMidSlice6Timestamp = 199;
 
   constexpr uint64_t kInvalidTimestamp1 = 200;
-  constexpr uint64_t kInvalidTimestamp2 = 30;
-  constexpr uint64_t kInvalidTimestamp3 = 201;
-  constexpr uint64_t kInvalidTimestamp4 = 49;
-  constexpr uint64_t kInvalidTimestamp5 = 300;
+  constexpr uint64_t kInvalidTimestamp2 = 49;
 
   EXPECT_THAT(
       capture_data_.FindThreadStateSliceInfoFromTimestamp(kFirstTid, kSlice1.begin_timestamp_ns()),
@@ -312,16 +298,9 @@ TEST_F(CaptureDataTest, FindThreadStateSliceInfoFromTimestamp) {
               Optional(kSlice3));
   EXPECT_THAT(capture_data_.FindThreadStateSliceInfoFromTimestamp(kSecondTid, kMidSlice4Timestamp),
               Optional(kSlice4));
-  EXPECT_THAT(capture_data_.FindThreadStateSliceInfoFromTimestamp(kSecondTid, kMidSlice5Timestamp),
-              Optional(kSlice5));
-  EXPECT_THAT(capture_data_.FindThreadStateSliceInfoFromTimestamp(kSecondTid, kMidSlice6Timestamp),
-              Optional(kSlice6));
 
   EXPECT_EQ(
       capture_data_.FindThreadStateSliceInfoFromTimestamp(kNonExistingTid, kMidSlice1Timestamp),
-      std::nullopt);
-  EXPECT_EQ(
-      capture_data_.FindThreadStateSliceInfoFromTimestamp(kNonExistingTid, kMidSlice2Timestamp),
       std::nullopt);
   EXPECT_EQ(
       capture_data_.FindThreadStateSliceInfoFromTimestamp(kNonExistingTid, kInvalidTimestamp1),
@@ -329,13 +308,9 @@ TEST_F(CaptureDataTest, FindThreadStateSliceInfoFromTimestamp) {
   EXPECT_EQ(
       capture_data_.FindThreadStateSliceInfoFromTimestamp(kNonExistingTid, kInvalidTimestamp2),
       std::nullopt);
+  EXPECT_EQ(capture_data_.FindThreadStateSliceInfoFromTimestamp(kSecondTid, kInvalidTimestamp1),
+            std::nullopt);
   EXPECT_EQ(capture_data_.FindThreadStateSliceInfoFromTimestamp(kSecondTid, kInvalidTimestamp2),
-            std::nullopt);
-  EXPECT_EQ(capture_data_.FindThreadStateSliceInfoFromTimestamp(kSecondTid, kInvalidTimestamp3),
-            std::nullopt);
-  EXPECT_EQ(capture_data_.FindThreadStateSliceInfoFromTimestamp(kSecondTid, kInvalidTimestamp4),
-            std::nullopt);
-  EXPECT_EQ(capture_data_.FindThreadStateSliceInfoFromTimestamp(kSecondTid, kInvalidTimestamp5),
             std::nullopt);
 }
 
