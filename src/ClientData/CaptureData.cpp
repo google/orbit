@@ -263,9 +263,9 @@ CaptureData::FindThreadStateSliceInfoFromTimestamp(int64_t thread_id, uint64_t t
   auto slice =
       std::upper_bound(  // This should return the slice directly in front of the slice that we want
           thread_state_bar.begin(), thread_state_bar.end(), timestamp,
-          [](uint64_t b,
-             const ThreadStateSliceInfo& a) -> bool {  // compare based on beginning timestamps
-            return b < a.begin_timestamp_ns();
+          [](uint64_t a,
+             const ThreadStateSliceInfo& b) -> bool {  // compare based on beginning timestamps
+            return a < b.begin_timestamp_ns();
           });
 
   if (slice == thread_state_bar.begin()) {
