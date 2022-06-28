@@ -14,10 +14,10 @@
 
 #include "MizarBase/BaselineOrComparison.h"
 #include "MizarBase/SampledFunctionId.h"
-#include "MizarData/ActiveFunctionTimePerFrameComparator.h"
 #include "MizarData/MizarPairedData.h"
 #include "MizarData/NonWrappingAddition.h"
 #include "MizarData/SamplingWithFrameTrackComparisonReport.h"
+#include "MizarStatistics/ActiveFunctionTimePerFrameComparator.h"
 #include "Statistics/MultiplicityCorrection.h"
 
 namespace orbit_mizar_data {
@@ -72,10 +72,10 @@ class BaselineAndComparisonTmpl {
  private:
   [[nodiscard]] absl::flat_hash_map<SFID, CorrectedComparisonResult> MakeComparisons(
       const FunctionTimeComparator& comparator) const {
-    absl::flat_hash_map<SFID, ComparisonResult> results;
+    absl::flat_hash_map<SFID, orbit_mizar_statistics::ComparisonResult> results;
     absl::flat_hash_map<SFID, double> pvalues;
     for (const auto& [sfid, unused_name] : sfid_to_name_) {
-      ComparisonResult result = comparator.Compare(sfid);
+      orbit_mizar_statistics::ComparisonResult result = comparator.Compare(sfid);
       results.try_emplace(sfid, result);
       pvalues.try_emplace(sfid, result.pvalue);
     }
@@ -126,6 +126,10 @@ class BaselineAndComparisonTmpl {
   Comparison<PairedData> comparison_;
   absl::flat_hash_map<SFID, std::string> sfid_to_name_;
 };
+
+using ActiveFunctionTimePerFrameComparator =
+    orbit_mizar_statistics::ActiveFunctionTimePerFrameComparatorTmpl<SamplingCounts,
+                                                                     orbit_client_data::ScopeStats>;
 
 using BaselineAndComparison =
     BaselineAndComparisonTmpl<MizarPairedData, ActiveFunctionTimePerFrameComparator,
