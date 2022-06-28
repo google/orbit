@@ -4,9 +4,6 @@
 
 #include "OrbitUserSpaceInstrumentation.h"
 
-#include <sys/types.h>
-
-#include <cstdint>
 #include <stack>
 #include <variant>
 
@@ -36,6 +33,8 @@ std::stack<OpenFunctionCall>& GetOpenFunctionCallStack() {
 }
 
 uint64_t current_capture_start_timestamp_ns = 0;
+
+pid_t orbit_threads[] = {-1, -1, -1, -1, -1, -1};
 
 // Don't use the orbit_grpc_protos::FunctionEntry and orbit_grpc_protos::FunctionExit protos
 // directly. While in memory those protos are basically plain structs as their fields are all
@@ -134,18 +133,21 @@ bool& GetIsInPayload() {
 
 }  // namespace
 
+// Initialize the LockFreeUserSpaceInstrumentationEventProducer and establish the connection to
+// OrbitService.
+void InitializeInstrumentation() { GetCaptureEventProducer(); }
+
+void SetOrbitThreads(pid_t tid_0, pid_t tid_1, pid_t tid_2, pid_t tid_3, pid_t tid_4, pid_t tid_5) {
+  orbit_threads[0] = tid_0;
+  orbit_threads[1] = tid_1;
+  orbit_threads[2] = tid_2;
+  orbit_threads[3] = tid_3;
+  orbit_threads[4] = tid_4;
+  orbit_threads[5] = tid_5;
+}
+
 void StartNewCapture(uint64_t capture_start_timestamp_ns) {
   current_capture_start_timestamp_ns = capture_start_timestamp_ns;
-
-  // If the library has just been injected, initialize the
-  // LockFreeUserSpaceInstrumentationEventProducer and establish the connection to OrbitService now
-  // instead of waiting for the first call to EntryPayload. As it takes a bit to
-  // establish the connection, GetCaptureEventProducer().IsCapturing() would otherwise always be
-  // false in the first call to EntryPayload, which would cause the first function call to be missed
-  // even if the time between StartNewCapture() and the first function call is large.
-  // TODO(b/205939288): The fix involving calling GetCaptureEventProducer() here was removed because
-  //  of b/209560448 (we could have interrupted a malloc, which is not re-entrant, so we need to
-  //  avoid any memory allocation). Re-add the call once we have a solution to allow re-entrancy.
 }
 
 void EntryPayload(uint64_t return_address, uint64_t function_id, uint64_t stack_pointer,
@@ -158,16 +160,24 @@ void EntryPayload(uint64_t return_address, uint64_t function_id, uint64_t stack_
   }
   is_in_payload = true;
 
+  thread_local const pid_t tid = orbit_base::GetCurrentThreadIdNative();
+
+  if (tid == orbit_threads[0] || tid == orbit_threads[1] || tid == orbit_threads[2] ||
+      tid == orbit_threads[3] || tid == orbit_threads[4] || tid == orbit_threads[5]) {
+    is_in_payload = false;
+    return;
+  }
+
   const uint64_t timestamp_on_entry_ns = CaptureTimestampNs();
 
   std::stack<OpenFunctionCall>& open_function_call_stack = GetOpenFunctionCallStack();
   open_function_call_stack.emplace(return_address, timestamp_on_entry_ns);
 
   if (GetCaptureEventProducer().IsCapturing()) {
-    static uint32_t pid = orbit_base::GetCurrentProcessId();
-    thread_local uint32_t tid = orbit_base::GetCurrentThreadId();
+    static const uint32_t pid = orbit_base::GetCurrentProcessId();
     GetCaptureEventProducer().EnqueueIntermediateEvent(
-        FunctionEntry{pid, tid, function_id, stack_pointer, return_address, timestamp_on_entry_ns});
+        FunctionEntry{pid, orbit_base::FromNativeThreadId(tid), function_id, stack_pointer,
+                      return_address, timestamp_on_entry_ns});
   }
 
   // Overwrite return address so that we end up returning to the exit trampoline.
