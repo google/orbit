@@ -262,7 +262,7 @@ class CaptureData {
   }
 
   [[nodiscard]] std::optional<ThreadStateSliceInfo> FindThreadStateSliceInfoFromTimestamp(
-      int64_t thread_id, uint64_t timestamp);
+      int64_t thread_id, uint64_t timestamp) const;
 
  private:
   void UpdateTimerDurations();

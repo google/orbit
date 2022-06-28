@@ -253,24 +253,30 @@ void CaptureData::UpdateTimerDurations() {
 }
 
 [[nodiscard]] std::optional<ThreadStateSliceInfo>
-CaptureData::FindThreadStateSliceInfoFromTimestamp(int64_t thread_id, uint64_t timestamp) {
+CaptureData::FindThreadStateSliceInfoFromTimestamp(int64_t thread_id, uint64_t timestamp) const {
   absl::MutexLock lock{&thread_state_slices_mutex_};
-  if (thread_state_slices_.count(thread_id) == 0u) {
+  if (!thread_state_slices_.contains(thread_id)) {
     return std::nullopt;
   }
 
-  std::vector<ThreadStateSliceInfo>& thread_state_bar = thread_state_slices_[thread_id];
-  auto slice = std::lower_bound(thread_state_bar.begin(), thread_state_bar.end(),
-                                timestamp,  // compare based on ending timestamps
-                                [](const ThreadStateSliceInfo& a, const uint64_t& b) -> bool {
-                                  return a.end_timestamp_ns() < b;
-                                });
+  const std::vector<ThreadStateSliceInfo>& thread_state_bar = thread_state_slices_.at(thread_id);
+  auto slice =
+      std::upper_bound(  // This should return the slice directly in front of the slice that we want
+          thread_state_bar.begin(), thread_state_bar.end(), timestamp,
+          [](uint64_t b,
+             const ThreadStateSliceInfo& a) -> bool {  // compare based on beginning timestamps
+            return b < a.begin_timestamp_ns();
+          });
 
-  if (slice == thread_state_bar.end() || timestamp < (*slice).begin_timestamp_ns()) {
+  if (slice == thread_state_bar.begin()) {
+    return std::nullopt;
+  }
+  slice--;
+  if (timestamp < slice->begin_timestamp_ns() || timestamp >= slice->end_timestamp_ns()) {
     return std::nullopt;
   }
 
-  return (*slice);
+  return *slice;
 }
 
 }  // namespace orbit_client_data
