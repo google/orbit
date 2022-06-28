@@ -181,8 +181,7 @@ std::string ThreadStateBar::GetThreadStateSliceTooltip(PrimitiveAssembler& primi
       GetThreadStateName(thread_state_slice->thread_state()),
       GetThreadStateDescription(thread_state_slice->thread_state()));
 
-  if (thread_state_slice->wakeup_tid() != orbit_base::kInvalidThreadId &&
-      thread_state_slice->wakeup_reason() != ThreadStateSliceInfo::WakeupReason::kNotApplicable) {
+  if (thread_state_slice->wakeup_reason() != ThreadStateSliceInfo::WakeupReason::kNotApplicable) {
     std::string reason = GetWakeupReason(thread_state_slice->wakeup_reason());
     std::string thread_name = capture_data_->GetThreadName(thread_state_slice->wakeup_tid());
     std::string process_name = capture_data_->GetThreadName(thread_state_slice->wakeup_pid());

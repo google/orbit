@@ -62,25 +62,30 @@ class ThreadStateManager {
 
  private:
   struct OpenState {
-    OpenState(orbit_grpc_protos::ThreadStateSlice::ThreadState state, uint64_t begin_timestamp_ns,
-              pid_t wakeup_tid = orbit_base::kInvalidThreadId,
-              pid_t wakeup_pid = orbit_base::kInvalidProcessId,
-              orbit_grpc_protos::ThreadStateSlice::WakeupReason wakeup_reason =
-                  orbit_grpc_protos::ThreadStateSlice::kNotApplicable)
+    OpenState(orbit_grpc_protos::ThreadStateSlice::ThreadState state, uint64_t begin_timestamp_ns)
         : state{state},
           begin_timestamp_ns{begin_timestamp_ns},
+          wakeup_reason{orbit_grpc_protos::ThreadStateSlice::kNotApplicable},
+          wakeup_tid{0},
+          wakeup_pid{0} {}
+    OpenState(orbit_grpc_protos::ThreadStateSlice::ThreadState state, uint64_t begin_timestamp_ns,
+              orbit_grpc_protos::ThreadStateSlice::WakeupReason wakeup_reason, pid_t wakeup_tid,
+              pid_t wakeup_pid)
+        : state{state},
+          begin_timestamp_ns{begin_timestamp_ns},
+          wakeup_reason{wakeup_reason},
           wakeup_tid{wakeup_tid},
-          wakeup_pid{wakeup_pid},
-          wakeup_reason{wakeup_reason} {}
+          wakeup_pid{wakeup_pid} {}
     orbit_grpc_protos::ThreadStateSlice::ThreadState state;
     uint64_t begin_timestamp_ns;
-    // The next two fields are optional. We use them to indicate which tid and pid caused the
-    // thread to transition from a non-runnable to a runnable state.
-    pid_t wakeup_tid = orbit_base::kInvalidThreadId;
-    pid_t wakeup_pid = orbit_base::kInvalidProcessId;
-    // The following field explains the relation between this thread and the thread that woke it up.
-    orbit_grpc_protos::ThreadStateSlice::WakeupReason wakeup_reason =
-        orbit_grpc_protos::ThreadStateSlice::kNotApplicable;
+    // The following field explains the relation between this thread and the thread that woke it up
+    // (identified by wakeup_tid and wakeup_pid below).
+    orbit_grpc_protos::ThreadStateSlice::WakeupReason wakeup_reason;
+    // The next two fields are optional, and only meaningful when wakeup_reason != kNotApplicable.
+    // We use them to indicate which tid and pid caused the thread to transition from a non-runnable
+    // to the runnable state.
+    pid_t wakeup_tid;
+    pid_t wakeup_pid;
   };
 
   absl::flat_hash_map<pid_t, OpenState> tid_open_states_;
