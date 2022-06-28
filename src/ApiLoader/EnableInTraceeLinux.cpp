@@ -80,7 +80,9 @@ ErrorMessageOr<void> SetApiEnabledInTracee(const CaptureOptions& capture_options
 
   // Load liborbit.so and find api table initialization function.
   OUTCOME_TRY(auto&& liborbit_path, GetLibOrbitPath());
+  ORBIT_LOG("Injecting library \"%s\" into process %d", liborbit_path, pid);
   OUTCOME_TRY(auto&& handle, DlopenInTracee(pid, liborbit_path, RTLD_NOW));
+  ORBIT_LOG("Resolving function pointers in injected library");
   constexpr const char* kSetEnabledFunction = "orbit_api_set_enabled";
   OUTCOME_TRY(auto&& orbit_api_set_enabled_function,
               DlsymInTracee(pid, handle, kSetEnabledFunction));
@@ -101,9 +103,11 @@ ErrorMessageOr<void> SetApiEnabledInTracee(const CaptureOptions& capture_options
     uint64_t function_table_address = 0;
     if (absl::StartsWith(api_function.name(), kOrbitApiGetFunctionTableAddressPrefix)) {
       // The target is a native Linux binary.
+      ORBIT_LOG("Getting function table address from native Linux binary");
       OUTCOME_TRY(function_table_address, ExecuteInProcess(pid, api_function_address));
     } else if (absl::StartsWith(api_function.name(), kOrbitApiGetFunctionTableAddressWinPrefix)) {
       // The target is a Windows binary running on Wine.
+      ORBIT_LOG("Getting function table address from wine binary");
       OUTCOME_TRY(function_table_address,
                   ExecuteInProcessWithMicrosoftCallingConvention(pid, api_function_address));
     } else {
@@ -113,10 +117,12 @@ ErrorMessageOr<void> SetApiEnabledInTracee(const CaptureOptions& capture_options
     // Call "orbit_api_set_enabled" in tracee.
     if (absl::StartsWith(api_function.name(), kOrbitApiGetFunctionTableAddressPrefix)) {
       // Again, Linux binary.
+      ORBIT_LOG("%s orbit api in native Linux binary", enabled ? "Enabling" : "Disabling");
       OUTCOME_TRY(ExecuteInProcess(pid, orbit_api_set_enabled_function, function_table_address,
                                    api_function.api_version(), enabled ? 1 : 0));
     } else if (absl::StartsWith(api_function.name(), kOrbitApiGetFunctionTableAddressWinPrefix)) {
       // Windows binary running on Wine.
+      ORBIT_LOG("%s orbit api in wine binary", enabled ? "Enabling" : "Disabling");
       OUTCOME_TRY(ExecuteInProcess(pid, orbit_api_set_enabled_wine_function, function_table_address,
                                    api_function.api_version(), enabled ? 1 : 0));
     } else {
