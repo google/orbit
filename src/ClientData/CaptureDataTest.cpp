@@ -80,7 +80,6 @@ const ThreadStateSliceInfo kSlice4{
     kEnTimestamp1,    ThreadStateSliceInfo::WakeupReason::kNotApplicable,       kInvalidPidAndTid,
     kInvalidPidAndTid};
 
-
 static const std::array<uint64_t, kTimerCount> kDurations = [] {
   std::array<uint64_t, kTimerCount> result;
   std::copy(std::begin(kDurationsForFirstId), std::end(kDurationsForFirstId), std::begin(result));
