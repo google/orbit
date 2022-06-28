@@ -339,7 +339,10 @@ OrbitApp::OrbitApp(orbit_gl::MainWindowInterface* main_window,
                    [this]() { UpdateAfterSymbolLoading(); });
 }
 
-OrbitApp::~OrbitApp() { AbortCapture(); }
+OrbitApp::~OrbitApp() {
+  AbortCapture();
+  RequestSymbolDownloadStop(module_manager_->GetAllModuleData(), false);
+}
 
 void OrbitApp::OnCaptureFinished(const CaptureFinished& capture_finished) {
   ORBIT_LOG("CaptureFinished received: status=%s, error_message=\"%s\"",
