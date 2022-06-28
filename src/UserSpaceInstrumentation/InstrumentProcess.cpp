@@ -428,7 +428,7 @@ ErrorMessageOr<std::unique_ptr<InstrumentedProcess>> InstrumentedProcess::Create
   OUTCOME_TRY(thread_stack_memory->Free());
   OUTCOME_TRY(code_memory->Free());
 
-  ORBIT_LOG("Initialization of instrumentation library done.");
+  ORBIT_LOG("Initialization of instrumentation library done");
 
   return process;
 }
