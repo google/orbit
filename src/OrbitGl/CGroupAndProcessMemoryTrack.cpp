@@ -114,7 +114,7 @@ std::string CGroupAndProcessMemoryTrack::GetLegendTooltips(size_t legend_index) 
 std::string CGroupAndProcessMemoryTrack::GetValueUpperBoundTooltip() const {
   // The developer instances have all of the same cgroup limits as the production instances, except
   // the game cgroup limit. More detailed information can be found in go/gamelet-ram-budget.
-  const std::string kGameCGroupName = "game";
+  std::string_view kGameCGroupName = "user.slice/user-1000.slice/game";
   constexpr float kGameCGroupLimitGB = 7;
 
   if (cgroup_name_ != kGameCGroupName) return "";
