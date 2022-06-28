@@ -561,7 +561,7 @@ InstrumentedProcess::InstrumentFunctions(const CaptureOptions& capture_options) 
       }
     }
   }
-  ORBIT_LOG("Successfully instrumented %d functions.", result.instrumented_function_ids.size());
+  ORBIT_LOG("Successfully instrumented %d functions", result.instrumented_function_ids.size());
 
   result.entry_trampoline_address_ranges = GetEntryTrampolineAddressRanges();
   result.return_trampoline_address_range = AddressRange{
