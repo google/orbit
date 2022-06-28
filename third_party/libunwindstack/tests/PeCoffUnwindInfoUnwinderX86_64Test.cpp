@@ -36,25 +36,19 @@ namespace unwindstack {
 
 class MockPeCoffRuntimeFunctions : public PeCoffRuntimeFunctions {
  public:
-  MockPeCoffRuntimeFunctions() = default;
-
   MOCK_METHOD(bool, Init, (uint64_t, uint64_t), (override));
   MOCK_METHOD(bool, FindRuntimeFunction, (uint64_t, RuntimeFunction*), (const, override));
 };
 
 class MockPeCoffUnwindInfos : public PeCoffUnwindInfos {
  public:
-  MockPeCoffUnwindInfos() = default;
-
   MOCK_METHOD(bool, GetUnwindInfo, (uint64_t, UnwindInfo*), (override));
 };
 
 class MockPeCoffEpilog : public PeCoffEpilog {
  public:
-  MockPeCoffEpilog() = default;
-
   MOCK_METHOD(bool, Init, (), (override));
-  MOCK_METHOD(bool, DetectAndHandleEpilog, (uint64_t, uint64_t, uint64_t, Memory*, Regs*),
+  MOCK_METHOD(bool, DetectAndHandleEpilog, (uint64_t, uint64_t, uint64_t, Memory*, Regs*, bool*),
               (override));
 
   void FailWithError(ErrorCode error_code) { last_error_.code = error_code; }
@@ -62,8 +56,6 @@ class MockPeCoffEpilog : public PeCoffEpilog {
 
 class MockPeCoffUnwindInfoEvaluator : public PeCoffUnwindInfoEvaluator {
  public:
-  MockPeCoffUnwindInfoEvaluator() = default;
-
   MOCK_METHOD(bool, Eval, (Memory*, Regs*, const UnwindInfo&, PeCoffUnwindInfos*, uint64_t),
               (override));
 };
@@ -162,7 +154,8 @@ TEST(PeCoffUnwindInfoUnwinderX86_64Test,
   });
 
   std::unique_ptr<MockPeCoffEpilog> epilog = std::make_unique<MockPeCoffEpilog>();
-  EXPECT_CALL(*epilog, DetectAndHandleEpilog).WillOnce(testing::Return(true));
+  EXPECT_CALL(*epilog, DetectAndHandleEpilog)
+      .WillOnce(testing::DoAll(testing::SetArgPointee<5>(true), testing::Return(true)));
 
   std::unique_ptr<MockPeCoffUnwindInfoEvaluator> unwind_info_evaluator =
       std::make_unique<MockPeCoffUnwindInfoEvaluator>();
@@ -209,9 +202,7 @@ TEST(PeCoffUnwindInfoUnwinderX86_64Test, step_fails_if_error_occurs_in_epilog_de
 
   std::unique_ptr<MockPeCoffEpilog> epilog = std::make_unique<MockPeCoffEpilog>();
   epilog->FailWithError(ERROR_MEMORY_INVALID);
-
-  EXPECT_CALL(*epilog, DetectAndHandleEpilog)
-      .WillOnce([](uint64_t, uint64_t, uint64_t, Memory*, Regs*) { return false; });
+  EXPECT_CALL(*epilog, DetectAndHandleEpilog).WillOnce(testing::Return(false));
 
   std::unique_ptr<MockPeCoffUnwindInfoEvaluator> unwind_info_evaluator =
       std::make_unique<MockPeCoffUnwindInfoEvaluator>();
@@ -309,7 +300,8 @@ TEST(PeCoffUnwindInfoUnwinderX86_64Test, step_succeeds_if_eval_succeeds_outside_
   });
 
   std::unique_ptr<MockPeCoffEpilog> epilog = std::make_unique<MockPeCoffEpilog>();
-  EXPECT_CALL(*epilog, DetectAndHandleEpilog).WillOnce(testing::Return(false));
+  EXPECT_CALL(*epilog, DetectAndHandleEpilog)
+      .WillOnce(testing::DoAll(testing::SetArgPointee<5>(false), testing::Return(true)));
 
   std::unique_ptr<MockPeCoffUnwindInfoEvaluator> unwind_info_evaluator =
       std::make_unique<MockPeCoffUnwindInfoEvaluator>();
