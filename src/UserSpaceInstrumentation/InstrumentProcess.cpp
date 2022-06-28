@@ -461,7 +461,7 @@ InstrumentedProcess::InstrumentFunctions(const CaptureOptions& capture_options) 
       &capstone_handle, [](csh* capstone_handle) { cs_close(capstone_handle); }};
 
   const uint64_t now = orbit_base::CaptureTimestampNs();
-  ORBIT_LOG("Call StartNewCapture at timestamp %d.", now);
+  ORBIT_LOG("Calling StartNewCapture at timestamp %d", now);
   OUTCOME_TRY(
       ExecuteInProcess(pid_, absl::bit_cast<void*>(start_new_capture_function_address_), now));
 
