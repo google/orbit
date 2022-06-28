@@ -413,7 +413,7 @@ ErrorMessageOr<std::unique_ptr<InstrumentedProcess>> InstrumentedProcess::Create
   if (DetachAndContinueProcess(pid).has_error()) {
     return ErrorMessage(absl::StrFormat("Unable to detach from process %i", pid));
   }
-  ORBIT_LOG("Waiting for initilization to complete.");
+  ORBIT_LOG("Waiting for initialization to complete");
   OUTCOME_TRY(WaitForThreadToExit(pid, init_thread_tid));
   OUTCOME_TRY(auto&& orbit_threads, GetNewOrbitThreads(pid, tids_before_injection));
 
