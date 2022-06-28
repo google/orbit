@@ -66,15 +66,15 @@ bool PeCoffUnwindInfoUnwinderX86_64::Step(uint64_t pc, uint64_t pc_adjustment, R
   // sequence of the unwind codes.
   uint64_t current_offset_from_start = pc_rva - function_at_pc.start_address;
   if (current_offset_from_start > unwind_info.prolog_size) {
-    bool in_epilog;
+    bool is_in_epilog;
     // If 'DetectAndHandleEpilog' fails with an error, we have to return here.
     if (!epilog_->DetectAndHandleEpilog(function_at_pc.start_address, function_at_pc.end_address,
                                         current_offset_from_start, process_memory, regs,
-                                        &in_epilog)) {
+                                        &is_in_epilog)) {
       last_error_ = epilog_->GetLastError();
       return false;
     }
-    if (in_epilog) {
+    if (is_in_epilog) {
       *finished = (regs->pc() == 0);
       return true;
     }

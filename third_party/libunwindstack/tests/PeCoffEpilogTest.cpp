@@ -235,9 +235,9 @@ TEST_F(PeCoffEpilogTest, aborts_on_process_memory_nullptr) {
   constexpr uint64_t kFunctionStartAddress = kTextSectionVmaddr;
   constexpr uint64_t kFunctionEndAddress = kTextSectionVmaddr + 1;
   SetMemoryInFakeFile(kTextSectionFileOffset, {0x0});
-  bool in_epilog;
+  bool is_in_epilog;
   ASSERT_DEATH(pe_coff_epilog_->DetectAndHandleEpilog(kFunctionStartAddress, kFunctionEndAddress, 0,
-                                                      nullptr, &regs, &in_epilog),
+                                                      nullptr, &regs, &is_in_epilog),
                "");
 }
 
@@ -247,10 +247,11 @@ TEST_F(PeCoffEpilogTest, aborts_on_regs_nullptr) {
   constexpr uint64_t kFunctionStartAddress = kTextSectionVmaddr;
   constexpr uint64_t kFunctionEndAddress = kTextSectionVmaddr + 1;
   SetMemoryInFakeFile(kTextSectionFileOffset, {0x0});
-  bool in_epilog;
-  ASSERT_DEATH(pe_coff_epilog_->DetectAndHandleEpilog(kFunctionStartAddress, kFunctionEndAddress, 0,
-                                                      process_mem_fake_.get(), nullptr, &in_epilog),
-               "");
+  bool is_in_epilog;
+  ASSERT_DEATH(
+      pe_coff_epilog_->DetectAndHandleEpilog(kFunctionStartAddress, kFunctionEndAddress, 0,
+                                             process_mem_fake_.get(), nullptr, &is_in_epilog),
+      "");
 }
 
 TEST_F(PeCoffEpilogTest, fails_if_file_memory_cannot_be_read) {
@@ -262,10 +263,10 @@ TEST_F(PeCoffEpilogTest, fails_if_file_memory_cannot_be_read) {
   // error).
   constexpr uint64_t kFunctionEndAddressFakeValue = kFunctionStartAddress + 1;
 
-  bool in_epilog;
+  bool is_in_epilog;
   EXPECT_FALSE(pe_coff_epilog_->DetectAndHandleEpilog(
       kFunctionStartAddress, kFunctionEndAddressFakeValue, kCurrentOffsetFromStartOfFunction,
-      process_mem_fake_.get(), &regs, &in_epilog));
+      process_mem_fake_.get(), &regs, &is_in_epilog));
   EXPECT_EQ(pe_coff_epilog_->GetLastError().code, ERROR_MEMORY_INVALID);
 }
 
@@ -276,10 +277,10 @@ TEST_F(PeCoffEpilogTest, fails_if_end_address_is_smaller_than_start_address) {
   CHECK(kFunctionStartAddress > 0);
   constexpr uint64_t kFunctionEndAddressFakeValue = kFunctionStartAddress - 1;
 
-  bool in_epilog;
+  bool is_in_epilog;
   EXPECT_FALSE(pe_coff_epilog_->DetectAndHandleEpilog(
       kFunctionStartAddress, kFunctionEndAddressFakeValue, kCurrentOffsetFromStartOfFunction,
-      process_mem_fake_.get(), &regs, &in_epilog));
+      process_mem_fake_.get(), &regs, &is_in_epilog));
   EXPECT_EQ(pe_coff_epilog_->GetLastError().code, ERROR_INVALID_COFF);
 }
 
@@ -290,10 +291,10 @@ TEST_F(PeCoffEpilogTest, fails_if_function_start_smaller_than_text_section_start
   constexpr uint64_t kFunctionStartAddress = kTextSectionVmaddr - 1;
   constexpr uint64_t kFunctionEndAddress = kFunctionStartAddress + 1;
 
-  bool in_epilog;
-  EXPECT_FALSE(pe_coff_epilog_->DetectAndHandleEpilog(kFunctionStartAddress, kFunctionEndAddress,
-                                                      kCurrentOffsetFromStartOfFunction,
-                                                      process_mem_fake_.get(), &regs, &in_epilog));
+  bool is_in_epilog;
+  EXPECT_FALSE(pe_coff_epilog_->DetectAndHandleEpilog(
+      kFunctionStartAddress, kFunctionEndAddress, kCurrentOffsetFromStartOfFunction,
+      process_mem_fake_.get(), &regs, &is_in_epilog));
   EXPECT_EQ(pe_coff_epilog_->GetLastError().code, ERROR_INVALID_COFF);
 }
 
@@ -304,10 +305,10 @@ TEST_F(PeCoffEpilogTest, fails_if_function_start_larger_than_text_section_end) {
   constexpr uint64_t kFunctionStartAddress = kTextSectionVmaddr + kTextSectionSize;
   constexpr uint64_t kFunctionEndAddress = kFunctionStartAddress + 1;
 
-  bool in_epilog;
-  EXPECT_FALSE(pe_coff_epilog_->DetectAndHandleEpilog(kFunctionStartAddress, kFunctionEndAddress,
-                                                      kCurrentOffsetFromStartOfFunction,
-                                                      process_mem_fake_.get(), &regs, &in_epilog));
+  bool is_in_epilog;
+  EXPECT_FALSE(pe_coff_epilog_->DetectAndHandleEpilog(
+      kFunctionStartAddress, kFunctionEndAddress, kCurrentOffsetFromStartOfFunction,
+      process_mem_fake_.get(), &regs, &is_in_epilog));
   EXPECT_EQ(pe_coff_epilog_->GetLastError().code, ERROR_INVALID_COFF);
 }
 
@@ -321,10 +322,10 @@ TEST_F(PeCoffEpilogTest, fails_if_disassembling_fails) {
   RegsX86_64 regs;
   regs.set_sp(0);
 
-  bool in_epilog;
-  EXPECT_FALSE(pe_coff_epilog_->DetectAndHandleEpilog(kFunctionStartAddress, function_end_address,
-                                                      kCurrentOffsetFromStartOfFunction,
-                                                      process_mem_fake_.get(), &regs, &in_epilog));
+  bool is_in_epilog;
+  EXPECT_FALSE(pe_coff_epilog_->DetectAndHandleEpilog(
+      kFunctionStartAddress, function_end_address, kCurrentOffsetFromStartOfFunction,
+      process_mem_fake_.get(), &regs, &is_in_epilog));
   EXPECT_EQ(pe_coff_epilog_->GetLastError().code, ERROR_UNSUPPORTED);
 }
 
@@ -337,10 +338,10 @@ TEST_F(PeCoffEpilogTest, fails_if_memory_at_return_address_is_invalid) {
   RegsX86_64 regs;
   regs.set_sp(0);
 
-  bool in_epilog;
-  EXPECT_FALSE(pe_coff_epilog_->DetectAndHandleEpilog(kFunctionStartAddress, function_end_address,
-                                                      kCurrentOffsetFromStartOfFunction,
-                                                      process_mem_fake_.get(), &regs, &in_epilog));
+  bool is_in_epilog;
+  EXPECT_FALSE(pe_coff_epilog_->DetectAndHandleEpilog(
+      kFunctionStartAddress, function_end_address, kCurrentOffsetFromStartOfFunction,
+      process_mem_fake_.get(), &regs, &is_in_epilog));
   EXPECT_EQ(pe_coff_epilog_->GetLastError().code, ERROR_MEMORY_INVALID);
   EXPECT_EQ(pe_coff_epilog_->GetLastError().address, 0);
 }
@@ -361,11 +362,11 @@ TEST_F(PeCoffEpilogTest, detects_epilog_add_with_small_value_and_ret_only) {
   RegsX86_64 regs;
   regs.set_sp(0);
 
-  bool in_epilog;
-  EXPECT_TRUE(pe_coff_epilog_->DetectAndHandleEpilog(kFunctionStartAddress, function_end_address,
-                                                     kCurrentOffsetFromStartOfFunction,
-                                                     process_mem_fake_.get(), &regs, &in_epilog));
-  EXPECT_TRUE(in_epilog);
+  bool is_in_epilog;
+  EXPECT_TRUE(pe_coff_epilog_->DetectAndHandleEpilog(
+      kFunctionStartAddress, function_end_address, kCurrentOffsetFromStartOfFunction,
+      process_mem_fake_.get(), &regs, &is_in_epilog));
+  EXPECT_TRUE(is_in_epilog);
   EXPECT_EQ(pe_coff_epilog_->GetLastError().code, ERROR_NONE);
 
   EXPECT_EQ(regs.pc(), options.return_address);
@@ -388,11 +389,11 @@ TEST_F(PeCoffEpilogTest, detects_epilog_add_with_large_value_and_ret_only) {
   RegsX86_64 regs;
   regs.set_sp(0);
 
-  bool in_epilog;
-  EXPECT_TRUE(pe_coff_epilog_->DetectAndHandleEpilog(kFunctionStartAddress, function_end_address,
-                                                     kCurrentOffsetFromStartOfFunction,
-                                                     process_mem_fake_.get(), &regs, &in_epilog));
-  EXPECT_TRUE(in_epilog);
+  bool is_in_epilog;
+  EXPECT_TRUE(pe_coff_epilog_->DetectAndHandleEpilog(
+      kFunctionStartAddress, function_end_address, kCurrentOffsetFromStartOfFunction,
+      process_mem_fake_.get(), &regs, &is_in_epilog));
+  EXPECT_TRUE(is_in_epilog);
   EXPECT_EQ(pe_coff_epilog_->GetLastError().code, ERROR_NONE);
 
   EXPECT_EQ(regs.pc(), options.return_address);
@@ -408,11 +409,11 @@ TEST_F(PeCoffEpilogTest, detects_non_epilog_missing_ret_instruction) {
   RegsX86_64 regs;
   regs.set_sp(0);
 
-  bool in_epilog;
-  EXPECT_TRUE(pe_coff_epilog_->DetectAndHandleEpilog(kFunctionStartAddress, function_end_address,
-                                                     kCurrentOffsetFromStartOfFunction,
-                                                     process_mem_fake_.get(), &regs, &in_epilog));
-  EXPECT_FALSE(in_epilog);
+  bool is_in_epilog;
+  EXPECT_TRUE(pe_coff_epilog_->DetectAndHandleEpilog(
+      kFunctionStartAddress, function_end_address, kCurrentOffsetFromStartOfFunction,
+      process_mem_fake_.get(), &regs, &is_in_epilog));
+  EXPECT_FALSE(is_in_epilog);
   EXPECT_EQ(pe_coff_epilog_->GetLastError().code, ERROR_NONE);
 }
 
@@ -425,11 +426,11 @@ TEST_F(PeCoffEpilogTest, detects_non_epilog_add_instruction_not_rsp) {
   RegsX86_64 regs;
   regs.set_sp(0);
 
-  bool in_epilog;
-  EXPECT_TRUE(pe_coff_epilog_->DetectAndHandleEpilog(kFunctionStartAddress, function_end_address,
-                                                     kCurrentOffsetFromStartOfFunction,
-                                                     process_mem_fake_.get(), &regs, &in_epilog));
-  EXPECT_FALSE(in_epilog);
+  bool is_in_epilog;
+  EXPECT_TRUE(pe_coff_epilog_->DetectAndHandleEpilog(
+      kFunctionStartAddress, function_end_address, kCurrentOffsetFromStartOfFunction,
+      process_mem_fake_.get(), &regs, &is_in_epilog));
+  EXPECT_FALSE(is_in_epilog);
   EXPECT_EQ(pe_coff_epilog_->GetLastError().code, ERROR_NONE);
 }
 
@@ -442,11 +443,11 @@ TEST_F(PeCoffEpilogTest, detects_non_epilog_add_instruction_not_immediate_added_
   RegsX86_64 regs;
   regs.set_sp(0);
 
-  bool in_epilog;
-  EXPECT_TRUE(pe_coff_epilog_->DetectAndHandleEpilog(kFunctionStartAddress, function_end_address,
-                                                     kCurrentOffsetFromStartOfFunction,
-                                                     process_mem_fake_.get(), &regs, &in_epilog));
-  EXPECT_FALSE(in_epilog);
+  bool is_in_epilog;
+  EXPECT_TRUE(pe_coff_epilog_->DetectAndHandleEpilog(
+      kFunctionStartAddress, function_end_address, kCurrentOffsetFromStartOfFunction,
+      process_mem_fake_.get(), &regs, &is_in_epilog));
+  EXPECT_FALSE(is_in_epilog);
   EXPECT_EQ(pe_coff_epilog_->GetLastError().code, ERROR_NONE);
 }
 
@@ -459,11 +460,11 @@ TEST_F(PeCoffEpilogTest, detects_non_epilog_add_instruction_destination_not_regi
   RegsX86_64 regs;
   regs.set_sp(0);
 
-  bool in_epilog;
-  EXPECT_TRUE(pe_coff_epilog_->DetectAndHandleEpilog(kFunctionStartAddress, function_end_address,
-                                                     kCurrentOffsetFromStartOfFunction,
-                                                     process_mem_fake_.get(), &regs, &in_epilog));
-  EXPECT_FALSE(in_epilog);
+  bool is_in_epilog;
+  EXPECT_TRUE(pe_coff_epilog_->DetectAndHandleEpilog(
+      kFunctionStartAddress, function_end_address, kCurrentOffsetFromStartOfFunction,
+      process_mem_fake_.get(), &regs, &is_in_epilog));
+  EXPECT_FALSE(is_in_epilog);
   EXPECT_EQ(pe_coff_epilog_->GetLastError().code, ERROR_NONE);
 }
 
@@ -477,11 +478,11 @@ TEST_F(PeCoffEpilogTest, detects_non_epilog_add_instruction_immediate_negative) 
   RegsX86_64 regs;
   regs.set_sp(0);
 
-  bool in_epilog;
-  EXPECT_TRUE(pe_coff_epilog_->DetectAndHandleEpilog(kFunctionStartAddress, function_end_address,
-                                                     kCurrentOffsetFromStartOfFunction,
-                                                     process_mem_fake_.get(), &regs, &in_epilog));
-  EXPECT_FALSE(in_epilog);
+  bool is_in_epilog;
+  EXPECT_TRUE(pe_coff_epilog_->DetectAndHandleEpilog(
+      kFunctionStartAddress, function_end_address, kCurrentOffsetFromStartOfFunction,
+      process_mem_fake_.get(), &regs, &is_in_epilog));
+  EXPECT_FALSE(is_in_epilog);
   EXPECT_EQ(pe_coff_epilog_->GetLastError().code, ERROR_NONE);
 }
 
@@ -504,11 +505,11 @@ TEST_F(PeCoffEpilogTest, detects_epilog_lea_with_small_displacement_and_ret_only
   regs.set_sp(0);
   regs[X86_64Reg::X86_64_REG_RBP] = options.frame_pointer_register_value;
 
-  bool in_epilog;
-  EXPECT_TRUE(pe_coff_epilog_->DetectAndHandleEpilog(kFunctionStartAddress, function_end_address,
-                                                     kCurrentOffsetFromStartOfFunction,
-                                                     process_mem_fake_.get(), &regs, &in_epilog));
-  EXPECT_TRUE(in_epilog);
+  bool is_in_epilog;
+  EXPECT_TRUE(pe_coff_epilog_->DetectAndHandleEpilog(
+      kFunctionStartAddress, function_end_address, kCurrentOffsetFromStartOfFunction,
+      process_mem_fake_.get(), &regs, &is_in_epilog));
+  EXPECT_TRUE(is_in_epilog);
   EXPECT_EQ(pe_coff_epilog_->GetLastError().code, ERROR_NONE);
 
   EXPECT_EQ(regs.pc(), options.return_address);
@@ -534,11 +535,11 @@ TEST_F(PeCoffEpilogTest, detects_epilog_lea_with_large_displacement_and_ret_only
   regs.set_sp(0);
   regs[X86_64Reg::X86_64_REG_RBP] = options.frame_pointer_register_value;
 
-  bool in_epilog;
-  EXPECT_TRUE(pe_coff_epilog_->DetectAndHandleEpilog(kFunctionStartAddress, function_end_address,
-                                                     kCurrentOffsetFromStartOfFunction,
-                                                     process_mem_fake_.get(), &regs, &in_epilog));
-  EXPECT_TRUE(in_epilog);
+  bool is_in_epilog;
+  EXPECT_TRUE(pe_coff_epilog_->DetectAndHandleEpilog(
+      kFunctionStartAddress, function_end_address, kCurrentOffsetFromStartOfFunction,
+      process_mem_fake_.get(), &regs, &is_in_epilog));
+  EXPECT_TRUE(is_in_epilog);
   EXPECT_EQ(pe_coff_epilog_->GetLastError().code, ERROR_NONE);
 
   EXPECT_EQ(regs.pc(), options.return_address);
@@ -554,11 +555,11 @@ TEST_F(PeCoffEpilogTest, detects_non_epilog_instruction_lea_destination_is_not_r
   RegsX86_64 regs;
   regs.set_sp(0);
 
-  bool in_epilog;
-  EXPECT_TRUE(pe_coff_epilog_->DetectAndHandleEpilog(kFunctionStartAddress, function_end_address,
-                                                     kCurrentOffsetFromStartOfFunction,
-                                                     process_mem_fake_.get(), &regs, &in_epilog));
-  EXPECT_FALSE(in_epilog);
+  bool is_in_epilog;
+  EXPECT_TRUE(pe_coff_epilog_->DetectAndHandleEpilog(
+      kFunctionStartAddress, function_end_address, kCurrentOffsetFromStartOfFunction,
+      process_mem_fake_.get(), &regs, &is_in_epilog));
+  EXPECT_FALSE(is_in_epilog);
   EXPECT_EQ(pe_coff_epilog_->GetLastError().code, ERROR_NONE);
 }
 
@@ -572,11 +573,11 @@ TEST_F(PeCoffEpilogTest, detects_non_epilog_instruction_lea_second_operand_is_no
   RegsX86_64 regs;
   regs.set_sp(0);
 
-  bool in_epilog;
-  EXPECT_TRUE(pe_coff_epilog_->DetectAndHandleEpilog(kFunctionStartAddress, function_end_address,
-                                                     kCurrentOffsetFromStartOfFunction,
-                                                     process_mem_fake_.get(), &regs, &in_epilog));
-  EXPECT_FALSE(in_epilog);
+  bool is_in_epilog;
+  EXPECT_TRUE(pe_coff_epilog_->DetectAndHandleEpilog(
+      kFunctionStartAddress, function_end_address, kCurrentOffsetFromStartOfFunction,
+      process_mem_fake_.get(), &regs, &is_in_epilog));
+  EXPECT_FALSE(is_in_epilog);
   EXPECT_EQ(pe_coff_epilog_->GetLastError().code, ERROR_NONE);
 }
 
@@ -599,11 +600,11 @@ TEST_F(PeCoffEpilogTest, detects_epilog_pop_instructions_and_ret_only) {
   regs[X86_64Reg::X86_64_REG_RBX] = 0;
   regs[X86_64Reg::X86_64_REG_R11] = 0;
 
-  bool in_epilog;
-  EXPECT_TRUE(pe_coff_epilog_->DetectAndHandleEpilog(kFunctionStartAddress, function_end_address,
-                                                     kCurrentOffsetFromStartOfFunction,
-                                                     process_mem_fake_.get(), &regs, &in_epilog));
-  EXPECT_TRUE(in_epilog);
+  bool is_in_epilog;
+  EXPECT_TRUE(pe_coff_epilog_->DetectAndHandleEpilog(
+      kFunctionStartAddress, function_end_address, kCurrentOffsetFromStartOfFunction,
+      process_mem_fake_.get(), &regs, &is_in_epilog));
+  EXPECT_TRUE(is_in_epilog);
   EXPECT_EQ(pe_coff_epilog_->GetLastError().code, ERROR_NONE);
 
   EXPECT_EQ(regs.pc(), options.return_address);
@@ -623,11 +624,11 @@ TEST_F(PeCoffEpilogTest, detects_non_epilog_pop_to_memory) {
   RegsX86_64 regs;
   regs.set_sp(0);
 
-  bool in_epilog;
-  EXPECT_TRUE(pe_coff_epilog_->DetectAndHandleEpilog(kFunctionStartAddress, function_end_address,
-                                                     kCurrentOffsetFromStartOfFunction,
-                                                     process_mem_fake_.get(), &regs, &in_epilog));
-  EXPECT_FALSE(in_epilog);
+  bool is_in_epilog;
+  EXPECT_TRUE(pe_coff_epilog_->DetectAndHandleEpilog(
+      kFunctionStartAddress, function_end_address, kCurrentOffsetFromStartOfFunction,
+      process_mem_fake_.get(), &regs, &is_in_epilog));
+  EXPECT_FALSE(is_in_epilog);
   EXPECT_EQ(pe_coff_epilog_->GetLastError().code, ERROR_NONE);
 }
 
@@ -640,11 +641,11 @@ TEST_F(PeCoffEpilogTest, detects_non_epilog_pop_to_two_byte_register) {
   RegsX86_64 regs;
   regs.set_sp(0);
 
-  bool in_epilog;
-  EXPECT_TRUE(pe_coff_epilog_->DetectAndHandleEpilog(kFunctionStartAddress, function_end_address,
-                                                     kCurrentOffsetFromStartOfFunction,
-                                                     process_mem_fake_.get(), &regs, &in_epilog));
-  EXPECT_FALSE(in_epilog);
+  bool is_in_epilog;
+  EXPECT_TRUE(pe_coff_epilog_->DetectAndHandleEpilog(
+      kFunctionStartAddress, function_end_address, kCurrentOffsetFromStartOfFunction,
+      process_mem_fake_.get(), &regs, &is_in_epilog));
+  EXPECT_FALSE(is_in_epilog);
   EXPECT_EQ(pe_coff_epilog_->GetLastError().code, ERROR_NONE);
 }
 
@@ -665,10 +666,10 @@ TEST_F(PeCoffEpilogTest, fails_if_invalid_memory_on_register_store_location) {
   // This is where RSI is stored, clear it so that we run into the error case.
   process_mem_fake_->ClearMemory(0, sizeof(uint64_t));
 
-  bool in_epilog;
-  EXPECT_FALSE(pe_coff_epilog_->DetectAndHandleEpilog(kFunctionStartAddress, function_end_address,
-                                                      kCurrentOffsetFromStartOfFunction,
-                                                      process_mem_fake_.get(), &regs, &in_epilog));
+  bool is_in_epilog;
+  EXPECT_FALSE(pe_coff_epilog_->DetectAndHandleEpilog(
+      kFunctionStartAddress, function_end_address, kCurrentOffsetFromStartOfFunction,
+      process_mem_fake_.get(), &regs, &is_in_epilog));
   EXPECT_EQ(pe_coff_epilog_->GetLastError().code, ERROR_MEMORY_INVALID);
 }
 
@@ -685,11 +686,11 @@ TEST_F(PeCoffEpilogTest, detects_epilog_near_return) {
   RegsX86_64 regs;
   regs.set_sp(0);
 
-  bool in_epilog;
-  EXPECT_TRUE(pe_coff_epilog_->DetectAndHandleEpilog(kFunctionStartAddress, function_end_address,
-                                                     kCurrentOffsetFromStartOfFunction,
-                                                     process_mem_fake_.get(), &regs, &in_epilog));
-  EXPECT_TRUE(in_epilog);
+  bool is_in_epilog;
+  EXPECT_TRUE(pe_coff_epilog_->DetectAndHandleEpilog(
+      kFunctionStartAddress, function_end_address, kCurrentOffsetFromStartOfFunction,
+      process_mem_fake_.get(), &regs, &is_in_epilog));
+  EXPECT_TRUE(is_in_epilog);
   EXPECT_EQ(pe_coff_epilog_->GetLastError().code, ERROR_NONE);
 }
 
@@ -706,11 +707,11 @@ TEST_F(PeCoffEpilogTest, detects_epilog_near_return_with_immediate) {
   RegsX86_64 regs;
   regs.set_sp(0);
 
-  bool in_epilog;
-  EXPECT_TRUE(pe_coff_epilog_->DetectAndHandleEpilog(kFunctionStartAddress, function_end_address,
-                                                     kCurrentOffsetFromStartOfFunction,
-                                                     process_mem_fake_.get(), &regs, &in_epilog));
-  EXPECT_TRUE(in_epilog);
+  bool is_in_epilog;
+  EXPECT_TRUE(pe_coff_epilog_->DetectAndHandleEpilog(
+      kFunctionStartAddress, function_end_address, kCurrentOffsetFromStartOfFunction,
+      process_mem_fake_.get(), &regs, &is_in_epilog));
+  EXPECT_TRUE(is_in_epilog);
   EXPECT_EQ(pe_coff_epilog_->GetLastError().code, ERROR_NONE);
 }
 
@@ -727,11 +728,11 @@ TEST_F(PeCoffEpilogTest, detects_epilog_far_return) {
   RegsX86_64 regs;
   regs.set_sp(0);
 
-  bool in_epilog;
-  EXPECT_TRUE(pe_coff_epilog_->DetectAndHandleEpilog(kFunctionStartAddress, function_end_address,
-                                                     kCurrentOffsetFromStartOfFunction,
-                                                     process_mem_fake_.get(), &regs, &in_epilog));
-  EXPECT_TRUE(in_epilog);
+  bool is_in_epilog;
+  EXPECT_TRUE(pe_coff_epilog_->DetectAndHandleEpilog(
+      kFunctionStartAddress, function_end_address, kCurrentOffsetFromStartOfFunction,
+      process_mem_fake_.get(), &regs, &is_in_epilog));
+  EXPECT_TRUE(is_in_epilog);
   EXPECT_EQ(pe_coff_epilog_->GetLastError().code, ERROR_NONE);
 }
 
@@ -748,11 +749,11 @@ TEST_F(PeCoffEpilogTest, detects_epilog_far_return_with_immediate) {
   RegsX86_64 regs;
   regs.set_sp(0);
 
-  bool in_epilog;
-  EXPECT_TRUE(pe_coff_epilog_->DetectAndHandleEpilog(kFunctionStartAddress, function_end_address,
-                                                     kCurrentOffsetFromStartOfFunction,
-                                                     process_mem_fake_.get(), &regs, &in_epilog));
-  EXPECT_TRUE(in_epilog);
+  bool is_in_epilog;
+  EXPECT_TRUE(pe_coff_epilog_->DetectAndHandleEpilog(
+      kFunctionStartAddress, function_end_address, kCurrentOffsetFromStartOfFunction,
+      process_mem_fake_.get(), &regs, &is_in_epilog));
+  EXPECT_TRUE(is_in_epilog);
   EXPECT_EQ(pe_coff_epilog_->GetLastError().code, ERROR_NONE);
 }
 
@@ -770,11 +771,11 @@ TEST_F(PeCoffEpilogTest, detects_epilog_jmp_ff) {
   RegsX86_64 regs;
   regs.set_sp(0);
 
-  bool in_epilog;
-  EXPECT_TRUE(pe_coff_epilog_->DetectAndHandleEpilog(kFunctionStartAddress, function_end_address,
-                                                     kCurrentOffsetFromStartOfFunction,
-                                                     process_mem_fake_.get(), &regs, &in_epilog));
-  EXPECT_TRUE(in_epilog);
+  bool is_in_epilog;
+  EXPECT_TRUE(pe_coff_epilog_->DetectAndHandleEpilog(
+      kFunctionStartAddress, function_end_address, kCurrentOffsetFromStartOfFunction,
+      process_mem_fake_.get(), &regs, &is_in_epilog));
+  EXPECT_TRUE(is_in_epilog);
   EXPECT_EQ(pe_coff_epilog_->GetLastError().code, ERROR_NONE);
 }
 
@@ -792,11 +793,11 @@ TEST_F(PeCoffEpilogTest, detects_epilog_jmp_with_rex_prefix) {
   RegsX86_64 regs;
   regs.set_sp(0);
 
-  bool in_epilog;
-  EXPECT_TRUE(pe_coff_epilog_->DetectAndHandleEpilog(kFunctionStartAddress, function_end_address,
-                                                     kCurrentOffsetFromStartOfFunction,
-                                                     process_mem_fake_.get(), &regs, &in_epilog));
-  EXPECT_TRUE(in_epilog);
+  bool is_in_epilog;
+  EXPECT_TRUE(pe_coff_epilog_->DetectAndHandleEpilog(
+      kFunctionStartAddress, function_end_address, kCurrentOffsetFromStartOfFunction,
+      process_mem_fake_.get(), &regs, &is_in_epilog));
+  EXPECT_TRUE(is_in_epilog);
   EXPECT_EQ(pe_coff_epilog_->GetLastError().code, ERROR_NONE);
 }
 
@@ -815,11 +816,11 @@ TEST_F(PeCoffEpilogTest, detects_non_epilog_jmp_wrong_modrm_byte) {
   RegsX86_64 regs;
   regs.set_sp(0);
 
-  bool in_epilog;
-  EXPECT_TRUE(pe_coff_epilog_->DetectAndHandleEpilog(kFunctionStartAddress, function_end_address,
-                                                     kCurrentOffsetFromStartOfFunction,
-                                                     process_mem_fake_.get(), &regs, &in_epilog));
-  EXPECT_FALSE(in_epilog);
+  bool is_in_epilog;
+  EXPECT_TRUE(pe_coff_epilog_->DetectAndHandleEpilog(
+      kFunctionStartAddress, function_end_address, kCurrentOffsetFromStartOfFunction,
+      process_mem_fake_.get(), &regs, &is_in_epilog));
+  EXPECT_FALSE(is_in_epilog);
   EXPECT_EQ(pe_coff_epilog_->GetLastError().code, ERROR_NONE);
 }
 
