@@ -13,7 +13,7 @@
   <property name="windowTitle">
    <string>Form</string>
   </property>
-  <layout class="QGridLayout" name="grid_layout_">
+  <layout class="QGridLayout" name="gridLayout">
    <item row="0" column="0">
     <layout class="QVBoxLayout" name="main_layout_">
      <item>
@@ -38,7 +38,7 @@
         </widget>
        </item>
        <item>
-        <widget class="QLabel" name="from_ms_label_">
+        <widget class="QLabel" name="label_2">
          <property name="maximumSize">
           <size>
            <width>70</width>
@@ -67,7 +67,7 @@
         </widget>
        </item>
        <item>
-        <widget class="QLabel" name="frame_track_label_">
+        <widget class="QLabel" name="label_3">
          <property name="maximumSize">
           <size>
            <width>150</width>
@@ -92,7 +92,7 @@
       </layout>
      </item>
      <item>
-      <widget class="QListView" name="comparison_thread_list_">
+      <widget class="QListView" name="thread_list_">
        <property name="sizePolicy">
         <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
          <horstretch>0</horstretch>
