@@ -2,8 +2,8 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#ifndef MIZAR_SAMPLING_WITH_FRAME_TRACK_INPUT_WIDGET_H_
-#define MIZAR_SAMPLING_WITH_FRAME_TRACK_INPUT_WIDGET_H_
+#ifndef MIZAR_WIDGETS_SAMPLING_WITH_FRAME_TRACK_INPUT_WIDGET_H_
+#define MIZAR_WIDGETS_SAMPLING_WITH_FRAME_TRACK_INPUT_WIDGET_H_
 
 #include <QWidget>
 #include <memory>
@@ -15,7 +15,7 @@ namespace Ui {
 class SamplingWithFrameTrackInputWidget;
 }
 
-namespace orbit_mizar {
+namespace orbit_mizar_widgets {
 
 class SamplingWithFrameTrackInputWidget : public QWidget {
  public:
@@ -29,6 +29,6 @@ class SamplingWithFrameTrackInputWidget : public QWidget {
   std::unique_ptr<Ui::SamplingWithFrameTrackInputWidget> ui_;
 };
 
-}  // namespace orbit_mizar
+}  // namespace orbit_mizar_widgets
 
-#endif  // MIZAR_SAMPLING_WITH_FRAME_TRACK_INPUT_WIDGET_H_
+#endif  // MIZAR_WIDGETS_SAMPLING_WITH_FRAME_TRACK_INPUT_WIDGET_H_

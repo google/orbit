@@ -2,7 +2,7 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#include "SamplingWithFrameTrackWidget.h"
+#include "MizarWidgets/SamplingWithFrameTrackWidget.h"
 
 #include <QWidget>
 #include <memory>
@@ -11,7 +11,7 @@
 #include "OrbitBase/Typedef.h"
 #include "ui_SamplingWithFrameTrackWidget.h"
 
-namespace orbit_mizar {
+namespace orbit_mizar_widgets {
 
 template <typename T>
 using Baseline = ::orbit_mizar_base::Baseline<T>;
@@ -50,4 +50,4 @@ const Baseline<QString> SamplingWithFrameTrackWidget::kBaselineTitle =
 const Comparison<QString> SamplingWithFrameTrackWidget::kComparisonTitle =
     Comparison<QString>(QStringLiteral("Comparison"));
 
-}  // namespace orbit_mizar
+}  // namespace orbit_mizar_widgets

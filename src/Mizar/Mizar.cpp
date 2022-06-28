@@ -18,7 +18,7 @@
 #include "MizarBase/BaselineOrComparison.h"
 #include "MizarData/BaselineAndComparison.h"
 #include "MizarData/MizarData.h"
-#include "MizarMainWindow.h"
+#include "MizarWidgets/MizarMainWindow.h"
 #include "OrbitBase/Logging.h"
 
 template <typename T>
@@ -91,7 +91,7 @@ int main(int argc, char** argv) {
   QApplication::setOrganizationName("The Orbit Authors");
   QApplication::setApplicationName("Mizar comparison tool");
 
-  orbit_mizar::MizarMainWindow main_window;
+  orbit_mizar_widgets::MizarMainWindow main_window;
   main_window.show();
   constexpr uint64_t kDuration = std::numeric_limits<uint64_t>::max();
   constexpr uint64_t kFrameTrackScopeId = 1;

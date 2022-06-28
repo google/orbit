@@ -28,7 +28,7 @@
         <item>
          <layout class="QHBoxLayout" name="layout">
           <item>
-           <widget class="orbit_mizar::SamplingWithFrameTrackWidget" name="sampling_with_frame_track_widget_" native="true"/>
+           <widget class="orbit_mizar_widgets::SamplingWithFrameTrackWidget" name="sampling_with_frame_track_widget_" native="true"/>
           </item>
          </layout>
         </item>
@@ -47,9 +47,9 @@
  </widget>
  <customwidgets>
   <customwidget>
-   <class>orbit_mizar::SamplingWithFrameTrackWidget</class>
+   <class>orbit_mizar_widgets::SamplingWithFrameTrackWidget</class>
    <extends>QWidget</extends>
-   <header>SamplingWithFrameTrackWidget.h</header>
+   <header>MizarWidgets/SamplingWithFrameTrackWidget.h</header>
    <container>1</container>
   </customwidget>
  </customwidgets>

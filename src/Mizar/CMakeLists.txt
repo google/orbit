@@ -11,20 +11,12 @@ add_executable(Mizar)
 target_sources(
         Mizar
         PRIVATE Mizar.cpp
-        MizarMainWindow.h
-        MizarMainWindow.cpp
-        MizarMainWindow.ui
-        SamplingWithFrameTrackInputWidget.h
-        SamplingWithFrameTrackInputWidget.cpp
-        SamplingWithFrameTrackInputWidget.ui
-        SamplingWithFrameTrackWidget.h
-        SamplingWithFrameTrackWidget.cpp
-        SamplingWithFrameTrackWidget.ui)
+)
 
 target_include_directories(Mizar PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 
 target_link_libraries(Mizar
-PRIVATE QtUtils
+        PRIVATE QtUtils
         Qt5::Widgets
         Qt5::Core
         CaptureClient
@@ -32,9 +24,7 @@ PRIVATE QtUtils
         ClientData
         MizarBase
         MizarData
+        MizarWidgets
         OrbitBase
         Threads::Threads
 )
-
-set_target_properties(Mizar PROPERTIES AUTOMOC ON)
-set_target_properties(Mizar PROPERTIES AUTOUIC ON)

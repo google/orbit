@@ -2,8 +2,8 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#ifndef MIZAR_MIZAR_MAIN_WINDOW_H_
-#define MIZAR_MIZAR_MAIN_WINDOW_H_
+#ifndef MIZAR_WIDGETS_MIZAR_MAIN_WINDOW_H_
+#define MIZAR_WIDGETS_MIZAR_MAIN_WINDOW_H_
 
 #include <QMainWindow>
 #include <memory>
@@ -12,7 +12,7 @@ namespace Ui {
 class MainWindow;
 }
 
-namespace orbit_mizar {
+namespace orbit_mizar_widgets {
 
 class MizarMainWindow : public QMainWindow {
  public:
@@ -23,6 +23,6 @@ class MizarMainWindow : public QMainWindow {
   std::unique_ptr<Ui::MainWindow> ui_;
 };
 
-}  // namespace orbit_mizar
+}  // namespace orbit_mizar_widgets
 
-#endif  // MIZAR_MIZAR_MAIN_WINDOW_H_
+#endif  // MIZAR_WIDGETS_MIZAR_MAIN_WINDOW_H_

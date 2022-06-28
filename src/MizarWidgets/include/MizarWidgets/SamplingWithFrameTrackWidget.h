@@ -2,8 +2,8 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#ifndef MIZAR_SAMPLING_WITH_FRAME_TRACK_WIDGET_H_
-#define MIZAR_SAMPLING_WITH_FRAME_TRACK_WIDGET_H_
+#ifndef MIZAR_WIDGETS_SAMPLING_WITH_FRAME_TRACK_WIDGET_H_
+#define MIZAR_WIDGETS_SAMPLING_WITH_FRAME_TRACK_WIDGET_H_
 
 #include <QStringLiteral>
 #include <QWidget>
@@ -16,7 +16,7 @@ namespace Ui {
 class SamplingWithFrameTrackWidget;
 }
 
-namespace orbit_mizar {
+namespace orbit_mizar_widgets {
 
 class SamplingWithFrameTrackWidget : public QWidget {
   template <typename T>
@@ -38,6 +38,6 @@ class SamplingWithFrameTrackWidget : public QWidget {
   static const Comparison<QString> kComparisonTitle;
 };
 
-}  // namespace orbit_mizar
+}  // namespace orbit_mizar_widgets
 
-#endif  // MIZAR_SAMPLING_WITH_FRAME_TRACK_WIDGET_H_
+#endif  // MIZAR_WIDGETS_SAMPLING_WITH_FRAME_TRACK_WIDGET_H_

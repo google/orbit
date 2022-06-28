@@ -17,10 +17,10 @@
    <item>
     <layout class="QHBoxLayout" name="input_layout_">
      <item>
-      <widget class="orbit_mizar::SamplingWithFrameTrackInputWidget" name="baseline_input_" native="true"/>
+      <widget class="orbit_mizar_widgets::SamplingWithFrameTrackInputWidget" name="baseline_input_" native="true"/>
      </item>
      <item>
-      <widget class="orbit_mizar::SamplingWithFrameTrackInputWidget" name="comparison_input_" native="true"/>
+      <widget class="orbit_mizar_widgets::SamplingWithFrameTrackInputWidget" name="comparison_input_" native="true"/>
      </item>
     </layout>
    </item>
@@ -88,9 +88,9 @@
  </widget>
  <customwidgets>
   <customwidget>
-   <class>orbit_mizar::SamplingWithFrameTrackInputWidget</class>
+   <class>orbit_mizar_widgets::SamplingWithFrameTrackInputWidget</class>
    <extends>QWidget</extends>
-   <header>SamplingWithFrameTrackInputWidget.h</header>
+   <header>MizarWidgets/SamplingWithFrameTrackInputWidget.h</header>
    <container>1</container>
   </customwidget>
  </customwidgets>

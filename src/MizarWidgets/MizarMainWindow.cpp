@@ -2,13 +2,13 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#include "MizarMainWindow.h"
+#include "MizarWidgets/MizarMainWindow.h"
 
 #include <memory>
 
-#include "Mizar/ui_MizarMainWindow.h"
+#include "ui_MizarMainWindow.h"
 
-namespace orbit_mizar {
+namespace orbit_mizar_widgets {
 
 MizarMainWindow::MizarMainWindow() {
   ui_ = std::make_unique<Ui::MainWindow>();
@@ -17,4 +17,4 @@ MizarMainWindow::MizarMainWindow() {
 
 MizarMainWindow::~MizarMainWindow() = default;
 
-}  // namespace orbit_mizar
+}  // namespace orbit_mizar_widgets
