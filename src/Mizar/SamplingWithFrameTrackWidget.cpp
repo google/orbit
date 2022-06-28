@@ -25,10 +25,10 @@ SamplingWithFrameTrackWidget::SamplingWithFrameTrackWidget(QWidget* parent)
     : QWidget(parent), ui_(std::make_unique<Ui::SamplingWithFrameTrackWidget>()) {
   ui_->setupUi(this);
 
-  LiftAndApply(&SamplingWithFrameTrackInputWidget::Init, GetBaselineInput(),
+  LiftAndApply(&SamplingWithFrameTrackInputWidget::Init<>, GetBaselineInput(),
                Baseline<orbit_mizar_data::MizarPairedData*>(nullptr /*not implemented yet*/),
                kBaselineTitle);
-  LiftAndApply(&SamplingWithFrameTrackInputWidget::Init, GetComparisonInput(),
+  LiftAndApply(&SamplingWithFrameTrackInputWidget::Init<>, GetComparisonInput(),
                Comparison<orbit_mizar_data::MizarPairedData*>(nullptr /*not implemented yet*/),
                kComparisonTitle);
 }

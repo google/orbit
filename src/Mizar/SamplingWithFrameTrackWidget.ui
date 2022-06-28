@@ -15,7 +15,7 @@
   </property>
   <layout class="QVBoxLayout" name="verticalLayout">
    <item>
-    <layout class="QHBoxLayout" name="horizontalLayout">
+    <layout class="QHBoxLayout" name="input_layout_">
      <item>
       <widget class="orbit_mizar::SamplingWithFrameTrackInputWidget" name="baseline_input_" native="true"/>
      </item>
@@ -25,7 +25,7 @@
     </layout>
    </item>
    <item>
-    <layout class="QHBoxLayout" name="horizontalLayout_3">
+    <layout class="QHBoxLayout" name="multiplicity_correction_layout_">
      <item>
       <widget class="QCheckBox" name="multiplicity_correction_">
        <property name="maximumSize">

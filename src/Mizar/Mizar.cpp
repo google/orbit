@@ -92,7 +92,6 @@ int main(int argc, char** argv) {
   QApplication::setApplicationName("Mizar comparison tool");
 
   orbit_mizar::MizarMainWindow main_window;
-  main_window.Setup();
   main_window.show();
   constexpr uint64_t kDuration = std::numeric_limits<uint64_t>::max();
   constexpr uint64_t kFrameTrackScopeId = 1;

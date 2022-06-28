@@ -22,13 +22,12 @@ target_sources(
         SamplingWithFrameTrackWidget.ui)
 
 target_include_directories(Mizar PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
-target_include_directories(Mizar PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include)
 
 target_link_libraries(Mizar
-        PUBLIC QtUtils
+PRIVATE QtUtils
         Qt5::Widgets
         Qt5::Core
-        PRIVATE CaptureClient
+        CaptureClient
         CaptureFile
         ClientData
         MizarBase

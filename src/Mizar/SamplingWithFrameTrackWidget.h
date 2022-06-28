@@ -5,8 +5,7 @@
 #ifndef MIZAR_SAMPLING_WITH_FRAME_TRACK_WIDGET_H_
 #define MIZAR_SAMPLING_WITH_FRAME_TRACK_WIDGET_H_
 
-#include <qstringliteral.h>
-
+#include <QStringLiteral>
 #include <QWidget>
 #include <memory>
 

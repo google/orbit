@@ -18,7 +18,6 @@ class MizarMainWindow : public QMainWindow {
  public:
   MizarMainWindow();
   ~MizarMainWindow() override;
-  void Setup();
 
  private:
   std::unique_ptr<Ui::MainWindow> ui_;

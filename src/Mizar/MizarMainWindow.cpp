@@ -9,12 +9,12 @@
 #include "Mizar/ui_MizarMainWindow.h"
 
 namespace orbit_mizar {
-MizarMainWindow::MizarMainWindow() = default;
-MizarMainWindow::~MizarMainWindow() = default;
 
-void MizarMainWindow::Setup() {
+MizarMainWindow::MizarMainWindow() {
   ui_ = std::make_unique<Ui::MainWindow>();
   ui_->setupUi(this);
 }
+
+MizarMainWindow::~MizarMainWindow() = default;
 
 }  // namespace orbit_mizar

@@ -11,24 +11,19 @@
 #include "ui_SamplingWithFrameTrackInputWidget.h"
 
 namespace orbit_mizar {
-
-template <typename PairedData>
-SamplingWithFrameTrackInputWidgetTmpl<PairedData>::SamplingWithFrameTrackInputWidgetTmpl(
-    QWidget* parent)
+SamplingWithFrameTrackInputWidget::SamplingWithFrameTrackInputWidget(QWidget* parent)
     : QWidget(parent), ui_(std::make_unique<Ui::SamplingWithFrameTrackInputWidget>()) {
   ui_->setupUi(this);
 }
 
 template <typename PairedData>
-void SamplingWithFrameTrackInputWidgetTmpl<PairedData>::Init(const PairedData* /*data*/,
-                                                             const QString& name) {
+void SamplingWithFrameTrackInputWidget::Init(const PairedData* /*data*/, const QString& name) {
   ui_->title_->setText(name);
 }
 
-template <typename PairedData>
-SamplingWithFrameTrackInputWidgetTmpl<PairedData>::~SamplingWithFrameTrackInputWidgetTmpl() =
-    default;
+SamplingWithFrameTrackInputWidget::~SamplingWithFrameTrackInputWidget() = default;
 
-template class SamplingWithFrameTrackInputWidgetTmpl<orbit_mizar_data::MizarPairedData>;
+template void SamplingWithFrameTrackInputWidget::Init<>(
+    const orbit_mizar_data::MizarPairedData* data, const QString& name);
 
 }  // namespace orbit_mizar

@@ -17,20 +17,17 @@ class SamplingWithFrameTrackInputWidget;
 
 namespace orbit_mizar {
 
-template <typename PairedData>
-class SamplingWithFrameTrackInputWidgetTmpl : public QWidget {
+class SamplingWithFrameTrackInputWidget : public QWidget {
  public:
-  explicit SamplingWithFrameTrackInputWidgetTmpl(QWidget* parent);
-  ~SamplingWithFrameTrackInputWidgetTmpl() override;
+  explicit SamplingWithFrameTrackInputWidget(QWidget* parent);
+  ~SamplingWithFrameTrackInputWidget() override;
 
+  template <typename PairedData = orbit_mizar_data::MizarPairedData>
   void Init(const PairedData* data, const QString& name);
 
  private:
   std::unique_ptr<Ui::SamplingWithFrameTrackInputWidget> ui_;
 };
-
-using SamplingWithFrameTrackInputWidget =
-    SamplingWithFrameTrackInputWidgetTmpl<orbit_mizar_data::MizarPairedData>;
 
 }  // namespace orbit_mizar
 
