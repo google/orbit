@@ -7,7 +7,6 @@
 #include <absl/strings/string_view.h>
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
-#include <sys/types.h>
 
 #include <algorithm>
 #include <cstdint>
@@ -60,8 +59,8 @@ constexpr uint64_t kStTimestamp2 = 100;
 constexpr uint64_t kEnTimestamp2 = 150;
 constexpr uint64_t kStTimestamp3 = 150;
 constexpr uint64_t kEnTimestamp3 = 200;
-constexpr pid_t kWakeupTid = 4200;
-constexpr pid_t kWakeupPid = 420;
+constexpr uint32_t kWakeupTid = 4200;
+constexpr uint32_t kWakeupPid = 420;
 
 const ThreadStateSliceInfo kSlice1{kFirstTid,
                                    orbit_grpc_protos::ThreadStateSlice::kInterruptibleSleep,
