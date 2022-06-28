@@ -467,7 +467,7 @@ InstrumentedProcess::InstrumentFunctions(const CaptureOptions& capture_options) 
 
   OUTCOME_TRY(EnsureTrampolinesWritable());
 
-  ORBIT_LOG("Trying to instrument %d functions.", capture_options.instrumented_functions().size());
+  ORBIT_LOG("Trying to instrument %d functions", capture_options.instrumented_functions().size());
   InstrumentationManager::InstrumentationResult result;
   for (const auto& function : capture_options.instrumented_functions()) {
     const uint64_t function_id = function.function_id();
