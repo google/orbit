@@ -357,7 +357,7 @@ ErrorMessageOr<std::unique_ptr<InstrumentedProcess>> InstrumentedProcess::Create
   const std::filesystem::path library_path = library_path_or_error.value();
   ORBIT_CHECK(library_path.is_absolute());
   process->injected_library_path_ = std::filesystem::canonical(library_path);
-  ORBIT_LOG("Inject library \"%s\" into process %d", process->injected_library_path_, pid);
+  ORBIT_LOG("Injecting library \"%s\" into process %d", process->injected_library_path_, pid);
 
   auto library_handle_or_error = DlopenInTracee(pid, library_path, RTLD_NOW);
   if (library_handle_or_error.has_error()) {
