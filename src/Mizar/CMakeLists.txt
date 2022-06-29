@@ -4,22 +4,27 @@
 
 cmake_minimum_required(VERSION 3.15)
 
-project(Mizar CXX) 
+project(Mizar CXX)
 
 add_executable(Mizar)
 
 target_sources(
-  Mizar
-  PRIVATE Mizar.cpp)
+        Mizar
+        PRIVATE Mizar.cpp
+)
 
-target_include_directories(Mizar PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}) 
+target_include_directories(Mizar PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 
-target_link_libraries(Mizar 
-PRIVATE CaptureClient
+target_link_libraries(Mizar
+        PRIVATE QtUtils
+        Qt5::Widgets
+        Qt5::Core
+        CaptureClient
         CaptureFile
         ClientData
         MizarBase
         MizarData
+        MizarWidgets
         OrbitBase
         Threads::Threads
 )

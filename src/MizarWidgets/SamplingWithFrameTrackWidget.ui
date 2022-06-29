@@ -1,0 +1,99 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>SamplingWithFrameTrackWidget</class>
+ <widget class="QWidget" name="SamplingWithFrameTrackWidget">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>823</width>
+    <height>456</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>Form</string>
+  </property>
+  <layout class="QVBoxLayout" name="vertical_layout_">
+   <item>
+    <layout class="QHBoxLayout" name="input_layout_">
+     <item>
+      <widget class="orbit_mizar_widgets::SamplingWithFrameTrackInputWidget" name="baseline_input_" native="true"/>
+     </item>
+     <item>
+      <widget class="orbit_mizar_widgets::SamplingWithFrameTrackInputWidget" name="comparison_input_" native="true"/>
+     </item>
+    </layout>
+   </item>
+   <item>
+    <layout class="QHBoxLayout" name="multiplicity_correction_layout_">
+     <item>
+      <widget class="QCheckBox" name="multiplicity_correction_">
+       <property name="maximumSize">
+        <size>
+         <width>16777215</width>
+         <height>30</height>
+        </size>
+       </property>
+       <property name="text">
+        <string>Multiplicity Correction</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QLabel" name="significance_level_label_">
+       <property name="maximumSize">
+        <size>
+         <width>350</width>
+         <height>30</height>
+        </size>
+       </property>
+       <property name="text">
+        <string>Porbability of false-alarm for at least one function:</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QComboBox" name="significance_level_">
+       <property name="maximumSize">
+        <size>
+         <width>100</width>
+         <height>16777215</height>
+        </size>
+       </property>
+       <property name="currentText">
+        <string>0.05</string>
+       </property>
+       <item>
+        <property name="text">
+         <string>0.05</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>0.01</string>
+        </property>
+       </item>
+      </widget>
+     </item>
+    </layout>
+   </item>
+   <item>
+    <widget class="QPushButton" name="update_button_">
+     <property name="text">
+      <string>Update</string>
+     </property>
+    </widget>
+   </item>
+  </layout>
+ </widget>
+ <customwidgets>
+  <customwidget>
+   <class>orbit_mizar_widgets::SamplingWithFrameTrackInputWidget</class>
+   <extends>QWidget</extends>
+   <header>MizarWidgets/SamplingWithFrameTrackInputWidget.h</header>
+   <container>1</container>
+  </customwidget>
+ </customwidgets>
+ <resources/>
+ <connections/>
+</ui>

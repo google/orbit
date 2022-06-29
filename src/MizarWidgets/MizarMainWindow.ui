@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>MainWindow</class>
+ <widget class="QMainWindow" name="MainWindow">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>986</width>
+    <height>449</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>Mizar</string>
+  </property>
+  <widget class="QWidget" name="central_widget_">
+   <layout class="QVBoxLayout" name="vertical_layout_">
+    <item>
+     <widget class="QTabWidget" name="tab_widget_">
+      <property name="currentIndex">
+       <number>0</number>
+      </property>
+      <widget class="QWidget" name="sampling_with_frametrack_tab_">
+       <attribute name="title">
+        <string>Sampling with Frame Track</string>
+       </attribute>
+       <layout class="QVBoxLayout" name="sampling_with_frame_track_vertical_layout_">
+        <item>
+         <widget class="orbit_mizar_widgets::SamplingWithFrameTrackWidget" name="sampling_with_frame_track_widget_" native="true"/>
+        </item>
+       </layout>
+      </widget>
+      <widget class="QWidget" name="tab_2">
+       <attribute name="title">
+        <string>Not implemented yet</string>
+       </attribute>
+      </widget>
+     </widget>
+    </item>
+   </layout>
+  </widget>
+  <widget class="QStatusBar" name="status_bar_"/>
+ </widget>
+ <customwidgets>
+  <customwidget>
+   <class>orbit_mizar_widgets::SamplingWithFrameTrackWidget</class>
+   <extends>QWidget</extends>
+   <header>MizarWidgets/SamplingWithFrameTrackWidget.h</header>
+   <container>1</container>
+  </customwidget>
+ </customwidgets>
+ <resources/>
+ <connections/>
+</ui>
