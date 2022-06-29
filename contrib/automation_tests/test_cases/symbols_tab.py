@@ -493,7 +493,11 @@ class VerifyFunctionHooked(E2ETestCase):
         functions_dataview.filter.set_focus()
         functions_dataview.filter.set_edit_text('')
         send_keys(function_search_string)
+        # Sleep because the data_views are not optimized and could take a few ms to show the
+        # information. TODO(http://b/191204014): Erase the sleep after data views refactor.
+        time.sleep(0.1)
         row = functions_dataview.find_first_item_row(function_search_string, 1)
+        self.expect_true(row is not None, ('Function "%s" not found.', function_search_string))
         if expect_hooked:
             self.expect_true(
                 selected_function_string in functions_dataview.get_item_at(row, 0).texts()[0],
