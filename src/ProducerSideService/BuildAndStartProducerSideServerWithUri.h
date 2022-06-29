@@ -10,7 +10,7 @@
 
 namespace orbit_producer_side_service {
 
-ErrorMessageOr<std::unique_ptr<ProducerSideServer>> BuildAndStartProducerSideServerWithUri(
+inline ErrorMessageOr<std::unique_ptr<ProducerSideServer>> BuildAndStartProducerSideServerWithUri(
     const std::string& uri) {
   auto producer_side_server = std::make_unique<ProducerSideServer>();
   ORBIT_LOG("Starting producer-side server at %s", uri);
