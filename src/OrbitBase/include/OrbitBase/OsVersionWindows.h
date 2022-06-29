@@ -2,8 +2,8 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#ifndef ORBIT_BASE_WINDOWS_VERSION_H_
-#define ORBIT_BASE_WINDOWS_VERSION_H_
+#ifndef ORBIT_BASE_OS_VERSION_WINDOWS_H_
+#define ORBIT_BASE_OS_VERSION_WINDOWS_H_
 
 #include <stdint.h>
 
@@ -26,4 +26,4 @@ struct WindowsVersion {
 
 }  // namespace orbit_base
 
-#endif  // ORBIT_BASE_WINDOWS_VERSION_H_
+#endif  // ORBIT_BASE_OS_VERSION_WINDOWS_H_

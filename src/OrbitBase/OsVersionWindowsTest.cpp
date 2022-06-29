@@ -2,9 +2,11 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
+#ifdef _WIN32
+
 #include <gtest/gtest.h>
 
-#include "OrbitBase/WindowsVersion.h"
+#include "OrbitBase/OsVersionWindows.h"
 #include "TestUtils/TestUtils.h"
 
 TEST(WindowsVersion, GetWindowsVersion) {
@@ -15,3 +17,5 @@ TEST(WindowsVersion, GetWindowsVersionAsString) {
   auto result = orbit_base::GetWindowsVersionAsString();
   ASSERT_TRUE(result.has_value());
 }
+
+#endif  // _WIN32
