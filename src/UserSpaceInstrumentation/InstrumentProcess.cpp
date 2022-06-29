@@ -83,6 +83,9 @@ bool ProcessWithPidExists(pid_t pid) {
 // We need to initialize some thread local memory when entering the payload functions. This leads to
 // a situation where instrumenting the functions below would lead to a recursive call into the
 // instrumentation. We just skip these and leave instrumenting them to the kernel/uprobe fallback.
+// Blocking __GI_memcpy has a different reason: There is some code in libc that that jumps to
+// __GI_memcpy+0x3. If __GI_memcpy is instrumented this location gets overwritten and we end up
+// jumping to the middle of an instruction.
 bool IsBlocklisted(std::string_view function_name) {
   static const absl::flat_hash_set<std::string> kBlocklist{"__GI___libc_malloc",
                                                            "__GI___libc_free",
@@ -105,7 +108,8 @@ bool IsBlocklisted(std::string_view function_name) {
                                                            "__pthread_enable_asynccancel",
                                                            "__errno_location",
                                                            "__memalign",
-                                                           "_mid_memalign"};
+                                                           "_mid_memalign",
+                                                           "__GI_memcpy"};
   return kBlocklist.contains(function_name);
 }
 
