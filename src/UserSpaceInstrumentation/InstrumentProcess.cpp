@@ -52,11 +52,11 @@ using orbit_grpc_protos::ModuleInfo;
 // the initial value here.
 const std::filesystem::path initial_current_path = std::filesystem::current_path();
 */
+constexpr const char* kLibName = "liborbituserspaceinstrumentation.so";
 
 ErrorMessageOr<std::filesystem::path> GetLibraryPath() {
   // When packaged, liborbituserspaceinstrumentation.so is found alongside OrbitService. In
   // development, it is found in "../lib", relative to OrbitService.
-  constexpr const char* kLibName = "liborbituserspaceinstrumentation.so";
   const std::filesystem::path exe_dir = orbit_base::GetExecutableDir();
   std::vector<std::filesystem::path> potential_paths = {exe_dir / kLibName,
                                                         exe_dir / ".." / "lib" / kLibName};
@@ -78,6 +78,17 @@ bool ProcessWithPidExists(pid_t pid) {
   ORBIT_FAIL_IF(result.has_error(), "Accessing \"%s\" failed: %s", pid_dirname,
                 result.error().message());
   return result.value();
+}
+
+// Returns true if liborbituserspaceinstrumentation.so is present in target process.
+ErrorMessageOr<bool> AlreadyInjected(pid_t pid) {
+  OUTCOME_TRY(auto&& modules, orbit_object_utils::ReadModules(pid));
+  for (const ModuleInfo& module : modules) {
+    if (module.name() == kLibName) {
+      return true;
+    }
+  }
+  return false;
 }
 
 // We need to initialize some thread local memory when entering the payload functions. This leads to
@@ -363,6 +374,11 @@ ErrorMessageOr<std::unique_ptr<InstrumentedProcess>> InstrumentedProcess::Create
   process->injected_library_path_ = std::filesystem::canonical(library_path);
   ORBIT_LOG("Injecting library \"%s\" into process %d", process->injected_library_path_, pid);
 
+  // If we already injected the library in a previous run of OrbitService we merely need to retrieve
+  // some function pointers and create a new return trampoline so we can exit early below (skipping
+  // the initialization of the library that has already been done).
+  OUTCOME_TRY(const bool already_injected, AlreadyInjected(pid));
+
   auto library_handle_or_error = DlopenInTracee(pid, library_path, RTLD_NOW);
   if (library_handle_or_error.has_error()) {
     return ErrorMessage(absl::StrFormat("Unable to open library in tracee: %s",
@@ -394,6 +410,13 @@ ErrorMessageOr<std::unique_ptr<InstrumentedProcess>> InstrumentedProcess::Create
   auto result = CreateReturnTrampoline(pid, process->exit_payload_function_address_,
                                        process->return_trampoline_address_);
   OUTCOME_TRY(return_trampoline_memory->EnsureMemoryExecutable());
+
+  if (already_injected) {
+    ORBIT_LOG(
+        "Skipping initialization of instrumentation library since it was already present in the "
+        "target process");
+    return process;
+  }
 
   // Keep track of the threads in the target process before we initialize the user space
   // instrumentation library.
