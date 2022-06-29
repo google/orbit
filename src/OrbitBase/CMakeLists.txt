@@ -76,12 +76,14 @@ target_sources(OrbitBase PRIVATE
 if (WIN32)
 target_sources(OrbitBase PRIVATE
         include/OrbitBase/GetLastError.h
-        include/OrbitBase/GetProcAddress.h)
+        include/OrbitBase/GetProcAddress.h
+        include/OrbitBase/OsVersionWindows.h)
 
 target_sources(OrbitBase PRIVATE
         ExecutablePathWindows.cpp
         GetLastErrorWindows.cpp
         GetProcAddressWindows.cpp
+        OsVersionWindows.cpp
         ThreadUtilsWindows.cpp)
 else()
 target_sources(OrbitBase PRIVATE
@@ -133,7 +135,8 @@ target_sources(OrbitBaseTests PRIVATE
 
 if (WIN32)
 target_sources(OrbitBaseTests PRIVATE
-        GetProcAddressTest.cpp)
+        GetProcAddressTest.cpp
+        OsVersionWindowsTest.cpp)
 else()
 target_sources(OrbitBaseTests PRIVATE
         ExecutablePathLinuxTest.cpp
