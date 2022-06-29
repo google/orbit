@@ -107,7 +107,7 @@ ErrorMessageOr<void> SetApiEnabledInTracee(const CaptureOptions& capture_options
       OUTCOME_TRY(function_table_address, ExecuteInProcess(pid, api_function_address));
     } else if (absl::StartsWith(api_function.name(), kOrbitApiGetFunctionTableAddressWinPrefix)) {
       // The target is a Windows binary running on Wine.
-      ORBIT_LOG("Getting function table address from wine binary");
+      ORBIT_LOG("Getting function table address from Wine binary");
       OUTCOME_TRY(function_table_address,
                   ExecuteInProcessWithMicrosoftCallingConvention(pid, api_function_address));
     } else {
