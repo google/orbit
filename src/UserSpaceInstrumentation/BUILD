@@ -33,12 +33,14 @@ orbit_cc_library(
     ],
 )
 
-cc_library(
-    name = "OrbitUserSpaceInstrumentation",
+cc_binary(
+    name = "libOrbitUserSpaceInstrumentation.so",
     srcs = [
         "OrbitUserSpaceInstrumentation.cpp",
         "OrbitUserSpaceInstrumentation.h",
     ],
+    linkshared = 1,
+    linkstatic = 1,
     deps = [
         ":UserSpaceInstrumentation",
         "//src/CaptureEventProducer",
@@ -47,54 +49,20 @@ cc_library(
     ],
 )
 
-cc_library(
-    name = "UserSpaceInstrumentationTestLib",
+cc_binary(
+    name = "libUserSpaceInstrumentationTestLib.so",
     srcs = [
         "UserSpaceInstrumentationTestLib.cpp",
         "UserSpaceInstrumentationTestLib.h",
     ],
+    linkshared = 1,
+    linkstatic = 1,
     deps = [
         ":UserSpaceInstrumentation",
         "//src/CaptureEventProducer",
         "//src/OrbitBase",
         "//src/ProducerSideChannel",
     ],
-)
-
-genrule(
-    name = "UserSpaceInstrumentationTestLibRuntimeDependency",
-    srcs = [
-        ":UserSpaceInstrumentationTestLib",
-    ],
-    outs = [
-        "libUserSpaceInstrumentationTestLib.so",
-    ],
-    cmd = """
-    for file in $(execpaths :UserSpaceInstrumentationTestLib); do
-      if [[ $$file == *.so ]]; then
-        cp "$$file" "$@"
-        break
-      fi
-    done
-  """,
-)
-
-genrule(
-    name = "OrbitUserSpaceInstrumentationRuntimeDependency",
-    srcs = [
-        ":OrbitUserSpaceInstrumentation",
-    ],
-    outs = [
-        "libOrbitUserSpaceInstrumentation.so",
-    ],
-    cmd = """
-    for file in $(execpaths :OrbitUserSpaceInstrumentation); do
-      if [[ $$file == *.so ]]; then
-        cp "$$file" "$@"
-        break
-      fi
-    done
-  """,
 )
 
 orbit_cc_test(
@@ -105,8 +73,8 @@ orbit_cc_test(
         "//conditions:default": [],
     }),
     data = [
-        ":OrbitUserSpaceInstrumentationRuntimeDependency",
-        ":UserSpaceInstrumentationTestLibRuntimeDependency",
+        ":libUserSpaceInstrumentationTestLib.so",
+        ":libOrbitUserSpaceInstrumentation.so",
     ],
     # TrampolineTest requires AVX and is added selectively depending on the target architecture.
     exclude = ["TrampolineTest.cpp"],

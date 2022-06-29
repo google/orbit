@@ -545,6 +545,10 @@ TEST_F(RelocateInstructionTest, TrivialTranslation) {
 class InstrumentFunctionTest : public testing::Test {
  protected:
   void SetUp() override {
+    /* copybara:insert(b/237251106 injecting the library into the target process triggers some
+                       initilization code that check fails.)
+    GTEST_SKIP();
+    */
     // Init Capstone disassembler.
     cs_err error_code = cs_open(CS_ARCH_X86, CS_MODE_64, &capstone_handle_);
     ORBIT_CHECK(error_code == CS_ERR_OK);

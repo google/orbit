@@ -7,7 +7,6 @@ cmake_minimum_required(VERSION 3.15)
 add_library(MizarData STATIC)
 
 target_sources(MizarData PUBLIC
-         include/MizarData/ActiveFunctionTimePerFrameComparator.h
          include/MizarData/BaselineAndComparison.h
          include/MizarData/MizarData.h
          include/MizarData/MizarDataProvider.h
@@ -26,6 +25,7 @@ target_link_libraries(
         MizarData
         PUBLIC CaptureClient
                 MizarBase
+                MizarStatistics
                 OrbitPaths
                 Statistics
                 Symbols
@@ -37,7 +37,6 @@ target_link_libraries(
 add_executable(MizarDataTests)
 
 target_sources(MizarDataTests PRIVATE
-                ActiveFunctionTimePerFrameComparatorTest.cpp
                 BaselineAndComparisonTest.cpp
                 MizarDataTest.cpp
                 MizarPairedDataTest.cpp)

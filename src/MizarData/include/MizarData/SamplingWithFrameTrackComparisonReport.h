@@ -14,21 +14,12 @@
 #include "ClientData/ScopeStats.h"
 #include "MizarBase/BaselineOrComparison.h"
 #include "MizarBase/SampledFunctionId.h"
+#include "MizarStatistics/ActiveFunctionTimePerFrameComparator.h"
 #include "OrbitBase/Logging.h"
 
 namespace orbit_mizar_data {
 
-// Whatever is usually referred to as "Statistical Test" we call "Comparison" in the project to save
-// confusion with Unit tests.
-struct ComparisonResult {
-  double statistic{};
-
-  // The term from Statistics. TL;DR: The smaller it is, the less we believe in the assumption under
-  // test (e.g. no difference in active function time).
-  double pvalue{};
-};
-
-struct CorrectedComparisonResult : public ComparisonResult {
+struct CorrectedComparisonResult : public orbit_mizar_statistics::ComparisonResult {
   // result of multiplicity correction (a term from Statistics) for the particular comparison.
   double corrected_pvalue{};
 };

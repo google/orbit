@@ -39,6 +39,45 @@ def _show_symbols_and_functions_tabs(top_window):
     logging.info("Showing symbols tab")
     find_control(top_window, "TabItem", "Symbols").click_input()
 
+def _wait_for_loading_and_measure_time(top_window) -> float:
+    logging.info('Waiting for all modules to be loaded...')
+    all_modules_finalized = False
+
+    start_time = time.time()
+    TIMEOUT_IN_MINUTES = 10
+
+    while not all_modules_finalized:
+        if time.time() - start_time > TIMEOUT_IN_MINUTES * 60:
+            raise TimeoutError("Maximum wait time for module loading exceeded")
+
+        try:
+            modules = _gather_module_states(top_window)
+        # This may raise an exception if the table is updated while gathering module states
+        except:
+            continue
+        all_modules_finalized = True
+        for module in modules:
+            if module.state not in MODULE_FINAL_STATES:
+                all_modules_finalized = False
+                break
+
+    total_time = time.time() - start_time
+    logging.info("Symbol loading has completed. Total time: {time:.2f} seconds".format(
+        time=total_time))
+
+    return total_time
+
+
+def _gather_module_states(top_window) -> List[Module]:
+    result = []
+    modules_dataview = DataViewPanel(find_control(top_window, "Group", "ModulesDataView"))
+    for i in range(0, modules_dataview.get_row_count()):
+        state = modules_dataview.get_item_at(i, 0).texts()[0]
+        name = modules_dataview.get_item_at(i, 1).texts()[0]
+        path = modules_dataview.get_item_at(i, 2).texts()[0]
+        result.append(Module(name, path, state))
+
+    return result
 
 def _find_and_close_error_dialog(top_window) -> str or None:
     window = find_control(top_window,
@@ -94,7 +133,6 @@ class WaitForLoadingSymbolsAndVerifyCache(E2ETestCase):
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
-        self._modules_dataview = None
 
     def _execute(self, expected_duration_difference_ratio: float = None):
         """
@@ -107,14 +145,13 @@ class WaitForLoadingSymbolsAndVerifyCache(E2ETestCase):
             Violating those conditions will result in test failure.
         """
         _show_symbols_and_functions_tabs(self.suite.top_window())
-        self._modules_dataview = DataViewPanel(self.find_control("Group", "ModulesDataView"))
 
-        loading_time = self._wait_for_loading_and_measure_time()
+        loading_time = _wait_for_loading_and_measure_time(self.suite.top_window())
 
         self._check_and_update_duration("load_all_modules_duration", loading_time,
                                         expected_duration_difference_ratio)
 
-        modules = self._gather_module_states()
+        modules = _gather_module_states(self.suite.top_window())
         self._verify_at_least_one_module_is_loaded(modules)
         self._verify_all_modules_are_cached(modules)
         logging.info("Done. Loading time: {time:.2f}s, module errors: {errors}".format(
@@ -146,43 +183,6 @@ class WaitForLoadingSymbolsAndVerifyCache(E2ETestCase):
             'All successfully loaded modules are cached. Modules not found in cache: {}'.format(
                 [module.name for module in module_set]))
 
-    def _wait_for_loading_and_measure_time(self) -> float:
-        logging.info('Waiting for all modules to be loaded...')
-        all_modules_finalized = False
-
-        start_time = time.time()
-        TIMEOUT_IN_MINUTES = 10
-
-        while not all_modules_finalized:
-            if time.time() - start_time > TIMEOUT_IN_MINUTES * 60:
-                raise TimeoutError("Maximum wait time for module loading exceeded")
-
-            try:
-                modules = self._gather_module_states()
-            # This may raise an exception if the table is updated while gathering module states
-            except:
-                continue
-            all_modules_finalized = True
-            for module in modules:
-                if module.state not in MODULE_FINAL_STATES:
-                    all_modules_finalized = False
-                    break
-
-        total_time = time.time() - start_time
-        logging.info("Symbol loading has completed. Total time: {time:.2f} seconds".format(
-            time=total_time))
-
-        return total_time
-
-    def _gather_module_states(self) -> List[Module]:
-        result = []
-        for i in range(0, self._modules_dataview.get_row_count()):
-            state = self._modules_dataview.get_item_at(i, 0).texts()[0]
-            name = self._modules_dataview.get_item_at(i, 1).texts()[0]
-            path = self._modules_dataview.get_item_at(i, 2).texts()[0]
-            result.append(Module(name, path, state))
-
-        return result
 
     def _check_and_update_duration(self, storage_key: str, current_duration: float,
                                    expected_difference_ratio: float):
@@ -218,7 +218,7 @@ class WaitForLoadingSymbolsAndCheckModule(E2ETestCase):
     successfully.
     """
     def _execute(self, module_search_string: str):
-        WaitForLoadingSymbolsAndVerifyCache().execute(self.suite)
+        _wait_for_loading_and_measure_time(self.suite.top_window())
         VerifyModuleLoaded(module_search_string=module_search_string).execute(self.suite)
 
 

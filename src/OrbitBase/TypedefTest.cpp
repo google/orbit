@@ -47,6 +47,9 @@ namespace orbit_base {
 template <typename T>
 using MyType = Typedef<MyTypeTag, T>;
 
+template <typename T>
+using MyConstType = Typedef<MyTypeTag, const T>;
+
 TEST(TypedefTest, CanInstantiate) {
   const int kConstInt = 1;
   MyType<int> wrapper_of_const(kConstInt);
@@ -71,6 +74,18 @@ TEST(TypedefTest, CanInstantiate) {
 
   MyType<std::unique_ptr<int>> wrapper_of_unique_ptr(std::make_unique<int>(kConstInt));
   EXPECT_EQ(**wrapper_of_unique_ptr, kConstInt);
+
+  {
+    MyConstType<int> const_wrapper(kConstInt);
+    MyType<int> from_const(const_wrapper);
+    EXPECT_EQ(*from_const, kConstInt);
+  }
+
+  {
+    MyType<int> non_const(kConstInt);
+    MyConstType<int> from_non_const(non_const);
+    EXPECT_EQ(*from_non_const, kConstInt);
+  }
 
   MyType<std::mutex> wrapper_of_mutex(std::in_place);  // test it compiles
   std::ignore = wrapper_of_mutex;
@@ -145,33 +160,54 @@ TEST(TypedefTest, ImplicitConversionIsCorrect) {
 
 TEST(TypedefTest, AssignmentIsCorrect) {
   const int kValue = 1;
-  const int kValueOther = 1;
+  const int kValueOther = 2;
   {
     MyType<A> wrapped_a(A{kValue});
     MyType<A> wrapped_a_other(A{kValueOther});
     wrapped_a_other = wrapped_a;
-    EXPECT_EQ(wrapped_a_other->value, kValueOther);
+    EXPECT_EQ(wrapped_a_other->value, kValue);
   }
 
   {
     MyType<A> wrapped_a(A{kValue});
     MyType<A> wrapped_a_other(A{kValueOther});
     wrapped_a_other = std::move(wrapped_a);
-    EXPECT_EQ(wrapped_a_other->value, kValueOther);
+    EXPECT_EQ(wrapped_a_other->value, kValue);
   }
 
   {
     MyType<B> wrapped_b(B{{kValue}});
     MyType<A> wrapped_a_other(A{kValueOther});
     wrapped_a_other = wrapped_b;
-    EXPECT_EQ(wrapped_a_other->value, kValueOther);
+    EXPECT_EQ(wrapped_a_other->value, kValue);
   }
 
   {
     MyType<B> wrapped_b(B{{kValue}});
     MyType<A> wrapped_a_other(A{kValueOther});
     wrapped_a_other = std::move(wrapped_b);
-    EXPECT_EQ(wrapped_a_other->value, kValueOther);
+    EXPECT_EQ(wrapped_a_other->value, kValue);
+  }
+
+  {
+    MyConstType<int> wrapped_a(kValue);
+    MyConstType<int> wrapped_b(kValueOther);
+    wrapped_b = wrapped_a;
+    EXPECT_EQ(*wrapped_b, kValue);
+  }
+
+  {
+    MyType<int> wrapped_a(kValue);
+    MyConstType<int> wrapped_b(kValueOther);
+    wrapped_b = wrapped_a;
+    EXPECT_EQ(*wrapped_b, kValue);
+  }
+
+  {
+    MyConstType<int> wrapped_a(kValue);
+    MyType<int> wrapped_b(kValueOther);
+    wrapped_b = wrapped_a;
+    EXPECT_EQ(*wrapped_b, kValue);
   }
 }
 

@@ -19,6 +19,7 @@ struct ClientCaptureOptions {
 
   absl::flat_hash_map<uint64_t, orbit_client_data::FunctionInfo> selected_functions;
   orbit_client_data::TracepointInfoSet selected_tracepoints;
+  std::map<uint64_t, uint64_t> absolute_address_to_size_of_functions_to_stop_unwinding_at;
 
   orbit_grpc_protos::CaptureOptions::DynamicInstrumentationMethod dynamic_instrumentation_method =
       orbit_grpc_protos::CaptureOptions::CaptureOptions::kDynamicInstrumentationMethodUnspecified;

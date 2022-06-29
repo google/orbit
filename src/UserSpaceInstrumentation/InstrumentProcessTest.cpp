@@ -172,6 +172,10 @@ static void VerifyTrampolineAddressRangesAndLibraryPath(
 }
 
 TEST(InstrumentProcessTest, Instrument) {
+  /* copybara:insert(b/237251106 injecting the library into the target process triggers some
+                     initilization code that check fails.)
+  GTEST_SKIP();
+  */
   InstrumentationManager* instrumentation_manager = GetInstrumentationManager();
 
   const pid_t pid_process_1 = fork();
@@ -281,6 +285,10 @@ extern "C" __attribute__((optnone)) _Complex long double ReturnComplexLongDouble
 // can't do it in a way that is correct and also has minimal overhead. But we assume that the
 // ExitPayload doesn't change the content. This test verifies it.
 TEST(InstrumentProcessTest, ExitPayloadDoesNotUseX87Fpu) {
+  /* copybara:insert(b/237251106 injecting the library into the target process triggers some
+                     initilization code that check fails.)
+  GTEST_SKIP();
+  */
   InstrumentationManager* instrumentation_manager = GetInstrumentationManager();
 
   const pid_t pid = fork();

@@ -20,7 +20,7 @@ struct SampledFunctionIdTag {};
 // The class represents a sampled function id. These ids are the same for the same function across
 // all the captures.
 // TODO (b/236358265) rename to `SampledFunctionId`.
-using SFID = orbit_base::Typedef<SampledFunctionIdTag, uint64_t>;
+using SFID = orbit_base::Typedef<SampledFunctionIdTag, const uint64_t>;
 
 // Making sure we do not waste memory on the abstraction
 static_assert(sizeof(SFID) == sizeof(uint64_t));
