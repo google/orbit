@@ -10,10 +10,7 @@
 
 namespace orbit_mizar_widgets {
 
-MizarMainWindow::MizarMainWindow() {
-  ui_ = std::make_unique<Ui::MainWindow>();
-  ui_->setupUi(this);
-}
+MizarMainWindow::MizarMainWindow() : ui_(std::make_unique<Ui::MainWindow>()) { ui_->setupUi(this); }
 
 MizarMainWindow::~MizarMainWindow() = default;
 
