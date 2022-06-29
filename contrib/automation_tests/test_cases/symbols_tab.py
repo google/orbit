@@ -493,6 +493,7 @@ class VerifyFunctionHooked(E2ETestCase):
         functions_dataview.filter.set_focus()
         functions_dataview.filter.set_edit_text('')
         send_keys(function_search_string)
+        wait_for_condition(lambda: functions_dataview.find_first_item_row(function_search_string, 1) is not None)
         row = functions_dataview.find_first_item_row(function_search_string, 1)
         if expect_hooked:
             self.expect_true(
