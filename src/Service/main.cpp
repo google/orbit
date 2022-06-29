@@ -28,6 +28,10 @@
 
 ABSL_FLAG(uint64_t, grpc_port, 44765, "gRPC server port");
 
+ABSL_FLAG(bool, producer_side_server, true,
+          "Start the producer-side server: set it to false if you need to start a second instance "
+          "of OrbitService");
+
 ABSL_FLAG(bool, devmode, false, "Enable developer mode");
 
 namespace {
@@ -94,11 +98,12 @@ int main(int argc, char** argv) {
 
   InstallSigintHandler();
 
-  uint16_t grpc_port = absl::GetFlag(FLAGS_grpc_port);
-  bool dev_mode = absl::GetFlag(FLAGS_devmode);
+  const uint16_t grpc_port = absl::GetFlag(FLAGS_grpc_port);
+  const bool start_producer_side_server = absl::GetFlag(FLAGS_producer_side_server);
+  const bool dev_mode = absl::GetFlag(FLAGS_devmode);
 
   exit_requested = false;
-  orbit_service::OrbitService service{grpc_port, dev_mode};
+  orbit_service::OrbitService service{grpc_port, start_producer_side_server, dev_mode};
   auto result = service.Run(&exit_requested);
 
   if (!result.has_error()) return 0;

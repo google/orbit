@@ -139,10 +139,12 @@ ErrorMessageOr<void> OrbitService::Run(std::atomic<bool>* exit_requested) {
   OUTCOME_TRY(std::unique_ptr<OrbitGrpcServer> grpc_server,
               CreateGrpcServer(grpc_port_, dev_mode_));
 
-  OUTCOME_TRY(std::unique_ptr<ProducerSideServer> producer_side_server,
-              orbit_producer_side_service::BuildAndStartProducerSideServer());
-
-  grpc_server->AddCaptureStartStopListener(producer_side_server.get());
+  std::unique_ptr<ProducerSideServer> producer_side_server;
+  if (start_producer_side_server_) {
+    OUTCOME_TRY(producer_side_server,
+                orbit_producer_side_service::BuildAndStartProducerSideServer());
+    grpc_server->AddCaptureStartStopListener(producer_side_server.get());
+  }
 
   // The client is looking for the "READY" keyword to learn whether the service finish its start up
   // and is ready to accept a connection. Check out the ServiceDeployManager on how the detection
@@ -183,8 +185,10 @@ ErrorMessageOr<void> OrbitService::Run(std::atomic<bool>* exit_requested) {
     std::this_thread::sleep_for(std::chrono::milliseconds{200});
   }
 
-  producer_side_server->ShutdownAndWait();
-  grpc_server->RemoveCaptureStartStopListener(producer_side_server.get());
+  if (start_producer_side_server_) {
+    producer_side_server->ShutdownAndWait();
+    grpc_server->RemoveCaptureStartStopListener(producer_side_server.get());
+  }
 
   grpc_server->Shutdown();
   grpc_server->Wait();
