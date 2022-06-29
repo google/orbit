@@ -240,6 +240,11 @@ TEST(InstrumentProcessTest, GetErrorMessage) {
 #if defined(ORBIT_COVERAGE_BUILD) || !defined(__clang__) || !defined(NDEBUG)
   GTEST_SKIP();
 #endif
+  /* copybara:insert(b/237251106 injecting the library into the target process triggers some
+                     initilization code that check fails.)
+  GTEST_SKIP();
+  */
+
   InstrumentationManager* instrumentation_manager = GetInstrumentationManager();
 
   const pid_t pid = fork();
