@@ -13,6 +13,7 @@
 #include <iterator>
 #include <memory>
 
+#include "MizarData/SamplingWithFrameTrackComparisonReport.h"
 #include "ui_SamplingWithFrameTrackInputWidget.h"
 
 namespace orbit_mizar_widgets {
@@ -27,6 +28,13 @@ QLabel* SamplingWithFrameTrackInputWidgetBase::GetTitle() const { return ui_->ti
 
 QListWidget* SamplingWithFrameTrackInputWidgetBase::GetThreadList() const {
   return ui_->thread_list_;
+}
+
+orbit_mizar_data::HalfOfSamplingWithFrameTrackReportConfig
+SamplingWithFrameTrackInputWidgetBase::MakeConfig() const {
+  return orbit_mizar_data::HalfOfSamplingWithFrameTrackReportConfig{
+      selected_tids_, 0 /*not implemented yet*/, 0 /*not implemented yet*/,
+      0 /*not implemented yet*/};
 }
 
 void SamplingWithFrameTrackInputWidgetBase::OnThreadSelectionChanged() {

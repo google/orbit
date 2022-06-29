@@ -31,14 +31,10 @@ class SamplingWithFrameTrackInputWidgetBase : public QWidget {
  public:
   ~SamplingWithFrameTrackInputWidgetBase() override;
 
+  [[nodiscard]] orbit_mizar_data::HalfOfSamplingWithFrameTrackReportConfig MakeConfig() const;
+
  public slots:
   void OnThreadSelectionChanged();
-
-  [[nodiscard]] orbit_mizar_data::HalfOfSamplingWithFrameTrackReportConfig MakeConfig() const {
-    return orbit_mizar_data::HalfOfSamplingWithFrameTrackReportConfig{
-        selected_tids_, 0 /*not implemented yet*/, 0 /*not implemented yet*/,
-        0 /*not implemented yet*/};
-  }
 
  protected:
   explicit SamplingWithFrameTrackInputWidgetBase(QWidget* parent);
