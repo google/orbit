@@ -117,7 +117,7 @@ ErrorMessageOr<void> SetApiEnabledInTracee(const CaptureOptions& capture_options
     // Call "orbit_api_set_enabled" in tracee.
     if (absl::StartsWith(api_function.name(), kOrbitApiGetFunctionTableAddressPrefix)) {
       // Again, Linux binary.
-      ORBIT_LOG("%s orbit api in native Linux binary", enabled ? "Enabling" : "Disabling");
+      ORBIT_LOG("%s Orbit API in native Linux binary", enabled ? "Enabling" : "Disabling");
       OUTCOME_TRY(ExecuteInProcess(pid, orbit_api_set_enabled_function, function_table_address,
                                    api_function.api_version(), enabled ? 1 : 0));
     } else if (absl::StartsWith(api_function.name(), kOrbitApiGetFunctionTableAddressWinPrefix)) {
