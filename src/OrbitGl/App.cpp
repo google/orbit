@@ -336,7 +336,10 @@ OrbitApp::OrbitApp(orbit_gl::MainWindowInterface* main_window,
   manual_instrumentation_manager_ = std::make_unique<ManualInstrumentationManager>();
 
   QObject::connect(&update_after_symbol_loading_throttle_, &orbit_qt_utils::Throttle::Triggered,
-                   [this]() { UpdateAfterSymbolLoading(); });
+                   [this]() {
+                     UpdateAfterSymbolLoading();
+                     FireRefreshCallbacks();
+                   });
 }
 
 OrbitApp::~OrbitApp() {
@@ -2745,7 +2748,6 @@ void OrbitApp::UpdateAfterSymbolLoading() {
   SetSelectionBottomUpView(capture_data.selection_post_processed_sampling_data(), capture_data);
   selection_report_->UpdateReport(&capture_data.selection_callstack_data(),
                                   &capture_data.selection_post_processed_sampling_data());
-  FireRefreshCallbacks();
 }
 
 void OrbitApp::UpdateAfterSymbolLoadingThrottled() { update_after_symbol_loading_throttle_.Fire(); }
