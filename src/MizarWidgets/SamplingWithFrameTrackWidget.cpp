@@ -7,7 +7,7 @@
 #include <QWidget>
 #include <memory>
 
-#include "MizarData/MizarPairedData.h"
+#include "MizarData/BaselineAndComparison.h"
 #include "OrbitBase/Typedef.h"
 #include "ui_SamplingWithFrameTrackWidget.h"
 
@@ -24,13 +24,14 @@ using orbit_base::LiftAndApply;
 SamplingWithFrameTrackWidget::SamplingWithFrameTrackWidget(QWidget* parent)
     : QWidget(parent), ui_(std::make_unique<Ui::SamplingWithFrameTrackWidget>()) {
   ui_->setupUi(this);
+}
 
-  LiftAndApply(&SamplingWithFrameTrackInputWidget::Init<>, GetBaselineInput(),
-               Baseline<orbit_mizar_data::MizarPairedData*>(nullptr /*not implemented yet*/),
-               kBaselineTitle);
-  LiftAndApply(&SamplingWithFrameTrackInputWidget::Init<>, GetComparisonInput(),
-               Comparison<orbit_mizar_data::MizarPairedData*>(nullptr /*not implemented yet*/),
-               kComparisonTitle);
+void SamplingWithFrameTrackWidget::Init(
+    const orbit_mizar_data::BaselineAndComparison* baseline_and_comparison) {
+  LiftAndApply(&SamplingWithFrameTrackInputWidget::Init, GetBaselineInput(),
+               baseline_and_comparison->GetBaselineData(), kBaselineTitle);
+  LiftAndApply(&SamplingWithFrameTrackInputWidget::Init, GetComparisonInput(),
+               baseline_and_comparison->GetComparisonData(), kComparisonTitle);
 }
 
 SamplingWithFrameTrackWidget::~SamplingWithFrameTrackWidget() = default;

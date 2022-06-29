@@ -3,9 +3,6 @@
 // found in the LICENSE file.
 
 #include <absl/container/flat_hash_map.h>
-#include <gmock/gmock-actions.h>
-#include <gmock/gmock-matchers.h>
-#include <gmock/gmock-spec-builders.h>
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
 
@@ -19,13 +16,14 @@
 #include "ClientData/CallstackInfo.h"
 #include "ClientData/CaptureData.h"
 #include "MizarBase/SampledFunctionId.h"
-#include "MizarData/BaselineAndComparison.h"
+#include "MizarData/MizarPairedData.h"
 
 using ::orbit_mizar_base::SFID;
 using ::testing::ElementsAre;
 using ::testing::Return;
 using ::testing::ReturnRef;
 using ::testing::UnorderedElementsAre;
+using ::testing::UnorderedElementsAreArray;
 
 namespace {
 
@@ -34,6 +32,7 @@ class MockCaptureData {
   MOCK_METHOD(const orbit_client_data::CallstackData&, GetCallstackData, (), (const));
   MOCK_METHOD(std::vector<const TimerInfo*>, GetTimersForScope, (uint64_t, uint64_t, uint64_t),
               (const));
+  MOCK_METHOD((const absl::flat_hash_map<uint32_t, std::string>&), thread_names, (), (const));
 };
 
 class MockMizarData {
@@ -70,8 +69,20 @@ constexpr uint64_t kRelativeTime2 = 15;
 constexpr uint64_t kRelativeTime3 = 20;
 constexpr uint64_t kRelativeTime4 = 30;
 constexpr uint64_t kRelativeTime5 = 40;
-constexpr uint64_t kTID = 0x3AD1;
-constexpr uint64_t kAnotherTID = 0x3AD2;
+constexpr uint64_t kRelativeTimeTooLate = 1000;
+constexpr uint32_t kTID = 0x3AD1;
+constexpr uint32_t kAnotherTID = 0x3AD2;
+constexpr uint32_t kNamelessTID = 0x3AD3;
+const std::string kThreadName = "thread";
+const std::string kOtherThreadName = "other thread";
+const absl::flat_hash_map<uint32_t, std::string> kThreadNames = {{kTID, kThreadName},
+                                                                 {kAnotherTID, kOtherThreadName}};
+
+const absl::flat_hash_map<uint32_t, std::string> kSampledTidToName = [] {
+  auto result = kThreadNames;
+  result[kNamelessTID] = "";
+  return result;
+}();
 
 const absl::flat_hash_map<uint64_t, SFID> kAddressToId = {
     {kAddressFood, SFID(1)}, {kAddressCall, SFID(2)}, {kAddressBefore, SFID(3)}};
@@ -88,8 +99,14 @@ const std::unique_ptr<orbit_client_data::CallstackData> kCallstackData = [] {
   callstack_data->AddCallstackEvent(
       {kCaptureStart + kRelativeTime4, kAnotherCompleteCallstackId, kAnotherTID});
 
+  callstack_data->AddCallstackEvent(
+      {kCaptureStart + kRelativeTimeTooLate, kAnotherCompleteCallstackId, kNamelessTID});
+
   return callstack_data;
 }();
+
+const absl::flat_hash_map<uint32_t, uint64_t> kTidToCallstackCount = {
+    {kTID, 3}, {kAnotherTID, 1}, {kNamelessTID, 1}};
 
 [[nodiscard]] static std::vector<SFID> SFIDsForCallstacks(const std::vector<uint64_t>& addresses) {
   std::vector<uint64_t> good_addresses;
@@ -146,6 +163,7 @@ class MizarPairedDataTest : public ::testing::Test {
         data_(std::make_unique<MockMizarData>()) {
     EXPECT_CALL(*capture_data_, GetCallstackData).WillRepeatedly(ReturnRef(*kCallstackData));
     EXPECT_CALL(*capture_data_, GetTimersForScope).WillRepeatedly(Return(kTimerPtrs));
+    EXPECT_CALL(*capture_data_, thread_names).WillRepeatedly(ReturnRef(kThreadNames));
     EXPECT_CALL(*data_, GetCaptureData).WillRepeatedly(ReturnRef(*capture_data_));
     EXPECT_CALL(*data_, GetCaptureStartTimestampNs).WillRepeatedly(Return(kCaptureStart));
     EXPECT_CALL(*data_, GetNominalSamplingPeriodNs).WillRepeatedly(Return(kSamplingPeriod));
@@ -193,6 +211,17 @@ TEST_F(MizarPairedDataTest, ActiveInvocationTimesIsCorrect) {
       {kTID, kAnotherTID}, 1, 0, std::numeric_limits<uint64_t>::max());
   EXPECT_THAT(actual_active_invocation_times,
               ElementsAre(kSamplingPeriod * 2, kSamplingPeriod * 2));
+}
+
+TEST_F(MizarPairedDataTest, TidToNamesIsCorrect) {
+  MizarPairedDataTmpl<MockMizarData> mizar_paired_data(std::move(data_), kAddressToId);
+  EXPECT_THAT(mizar_paired_data.TidToNames(), UnorderedElementsAreArray(kSampledTidToName));
+}
+
+TEST_F(MizarPairedDataTest, TidToCallstackCountsIsCorrect) {
+  MizarPairedDataTmpl<MockMizarData> mizar_paired_data(std::move(data_), kAddressToId);
+  EXPECT_THAT(mizar_paired_data.TidToCallstackSampleCounts(),
+              UnorderedElementsAreArray(kTidToCallstackCount));
 }
 
 }  // namespace orbit_mizar_data

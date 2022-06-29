@@ -18,6 +18,7 @@
 #include <vector>
 
 #include "ClientData/CallstackData.h"
+#include "ClientData/CallstackEvent.h"
 #include "ClientProtos/capture_data.pb.h"
 #include "MizarBase/SampledFunctionId.h"
 #include "MizarData/MizarDataProvider.h"
@@ -36,7 +37,9 @@ class MizarPairedDataTmpl {
  public:
   MizarPairedDataTmpl(std::unique_ptr<Data> data,
                       absl::flat_hash_map<uint64_t, SFID> address_to_sfid)
-      : data_(std::move(data)), address_to_sfid_(std::move(address_to_sfid)) {}
+      : data_(std::move(data)), address_to_sfid_(std::move(address_to_sfid)) {
+    SetThreadNamesAndCallstackCounts();
+  }
 
   // The function estimates how much of CPU-time has been actually spent by the threads in `tids`
   // during each of the frames. scope-id is used as a frame-track. This time does not include the
@@ -69,6 +72,14 @@ class MizarPairedDataTmpl {
     return result;
   }
 
+  [[nodiscard]] const absl::flat_hash_map<uint32_t, std::string>& TidToNames() const {
+    return tid_to_names_;
+  }
+
+  [[nodiscard]] const absl::flat_hash_map<uint32_t, uint64_t>& TidToCallstackSampleCounts() const {
+    return tid_to_callstack_samples_counts_;
+  }
+
   // Action is a void callable that takes a single argument of type
   // `const std::vector<uint64_t>` representing a callstack sample, each element of the vector is a
   // sampled function id.
@@ -95,6 +106,24 @@ class MizarPairedDataTmpl {
   }
 
  private:
+  void SetThreadNamesAndCallstackCounts() {
+    const auto& capture_data = data_->GetCaptureData();
+    const absl::flat_hash_map<uint32_t, std::string>& thread_names = capture_data.thread_names();
+    capture_data.GetCallstackData().ForEachCallstackEventInTimeRange(
+        0, std::numeric_limits<uint64_t>::max(),
+        [this, &thread_names](const orbit_client_data::CallstackEvent& event) {
+          const uint32_t tid = event.thread_id();
+          tid_to_callstack_samples_counts_[tid]++;
+
+          if (tid_to_names_.contains(tid)) return;
+
+          const auto tid_to_name = thread_names.find(tid);
+          const std::string thread_name =
+              (tid_to_name != thread_names.end()) ? tid_to_name->second : "";
+          tid_to_names_.try_emplace(tid, thread_name);
+        });
+  }
+
   template <typename Action>
   void ForEachCallstackEventOfTidInTimeRange(uint32_t tid, uint64_t min_timestamp_ns,
                                              uint64_t max_timestamp_ns,
@@ -146,6 +175,8 @@ class MizarPairedDataTmpl {
 
   std::unique_ptr<Data> data_;
   absl::flat_hash_map<uint64_t, SFID> address_to_sfid_;
+  absl::flat_hash_map<uint32_t, std::string> tid_to_names_;
+  absl::flat_hash_map<uint32_t, uint64_t> tid_to_callstack_samples_counts_;
 };
 
 using MizarPairedData = MizarPairedDataTmpl<MizarDataProvider>;

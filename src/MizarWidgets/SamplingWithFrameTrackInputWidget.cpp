@@ -4,26 +4,42 @@
 
 #include "MizarWidgets/SamplingWithFrameTrackInputWidget.h"
 
+#include <absl/strings/str_format.h>
+
+#include <QListWidget>
+#include <QObject>
 #include <QWidget>
+#include <algorithm>
+#include <iterator>
 #include <memory>
 
-#include "MizarData/MizarPairedData.h"
 #include "ui_SamplingWithFrameTrackInputWidget.h"
 
 namespace orbit_mizar_widgets {
-SamplingWithFrameTrackInputWidget::SamplingWithFrameTrackInputWidget(QWidget* parent)
+SamplingWithFrameTrackInputWidgetBase::SamplingWithFrameTrackInputWidgetBase(QWidget* parent)
     : QWidget(parent), ui_(std::make_unique<Ui::SamplingWithFrameTrackInputWidget>()) {
   ui_->setupUi(this);
+  QObject::connect(GetThreadList(), &QListWidget::itemSelectionChanged, this,
+                   &SamplingWithFrameTrackInputWidgetBase::OnThreadSelectionChanged);
 }
 
-template <typename PairedData>
-void SamplingWithFrameTrackInputWidget::Init(const PairedData* /*data*/, const QString& name) {
-  ui_->title_->setText(name);
+QLabel* SamplingWithFrameTrackInputWidgetBase::GetTitle() const { return ui_->title_; }
+
+QListWidget* SamplingWithFrameTrackInputWidgetBase::GetThreadList() const {
+  return ui_->thread_list_;
 }
 
-SamplingWithFrameTrackInputWidget::~SamplingWithFrameTrackInputWidget() = default;
+void SamplingWithFrameTrackInputWidgetBase::OnThreadSelectionChanged() {
+  selected_tids_.clear();
+  const QList<QListWidgetItem*> selected_items = GetThreadList()->selectedItems();
+  std::transform(
+      std::begin(selected_items), std::end(selected_items),
+      std::inserter(selected_tids_, std::begin(selected_tids_)),
+      [this](const QListWidgetItem* item) { return tid_list_widget_items_to_tids_.at(item); });
+}
 
-template void SamplingWithFrameTrackInputWidget::Init<>(
-    const orbit_mizar_data::MizarPairedData* data, const QString& name);
+SamplingWithFrameTrackInputWidgetBase::~SamplingWithFrameTrackInputWidgetBase() {
+  disconnect(GetThreadList(), nullptr, nullptr, nullptr);
+}
 
 }  // namespace orbit_mizar_widgets
