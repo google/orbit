@@ -15,7 +15,6 @@
 
 #include "ClientData/CallstackData.h"
 #include "ClientData/CallstackInfo.h"
-#include "ClientData/CaptureData.h"
 #include "ClientData/ScopeInfo.h"
 #include "MizarBase/SampledFunctionId.h"
 #include "MizarData/MizarPairedData.h"
@@ -37,7 +36,7 @@ class MockCaptureData {
               (const));
   MOCK_METHOD((const absl::flat_hash_map<uint32_t, std::string>&), thread_names, (), (const));
   MOCK_METHOD(std::vector<uint64_t>, GetAllProvidedScopeIds, (), (const));
-  MOCK_METHOD(const orbit_client_data::ScopeInfo&, GetScopeInfo, (uint64_t scope_id), (const));
+  MOCK_METHOD(orbit_client_data::ScopeInfo, GetScopeInfo, (uint64_t scope_id), (const));
 };
 
 class MockMizarData {
