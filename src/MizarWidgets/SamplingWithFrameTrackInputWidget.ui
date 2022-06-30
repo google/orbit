@@ -80,7 +80,7 @@
         </widget>
        </item>
        <item>
-        <widget class="QComboBox" name="frame_track_">
+        <widget class="QComboBox" name="frame_track_list_">
          <property name="minimumSize">
           <size>
            <width>150</width>

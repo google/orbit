@@ -7,6 +7,7 @@
 #include <gtest/gtest.h>
 
 #include <algorithm>
+#include <array>
 #include <cstdint>
 #include <iterator>
 #include <memory>
@@ -15,11 +16,13 @@
 #include "ClientData/CallstackData.h"
 #include "ClientData/CallstackInfo.h"
 #include "ClientData/CaptureData.h"
+#include "ClientData/ScopeInfo.h"
 #include "MizarBase/SampledFunctionId.h"
 #include "MizarData/MizarPairedData.h"
 
 using ::orbit_mizar_base::SFID;
 using ::testing::ElementsAre;
+using ::testing::Invoke;
 using ::testing::Return;
 using ::testing::ReturnRef;
 using ::testing::UnorderedElementsAre;
@@ -33,6 +36,8 @@ class MockCaptureData {
   MOCK_METHOD(std::vector<const TimerInfo*>, GetTimersForScope, (uint64_t, uint64_t, uint64_t),
               (const));
   MOCK_METHOD((const absl::flat_hash_map<uint32_t, std::string>&), thread_names, (), (const));
+  MOCK_METHOD(std::vector<uint64_t>, GetAllProvidedScopeIds, (), (const));
+  MOCK_METHOD(const orbit_client_data::ScopeInfo&, GetScopeInfo, (uint64_t scope_id), (const));
 };
 
 class MockMizarData {
@@ -45,7 +50,6 @@ class MockMizarData {
 }  // namespace
 
 namespace orbit_mizar_data {
-
 constexpr uint64_t kAddressFood = 0xF00D;
 constexpr uint64_t kAddressBad = 0xBAD;
 constexpr uint64_t kAddressCall = 0xCA11;
@@ -156,6 +160,38 @@ const std::vector<const orbit_client_protos::TimerInfo*> kTimerPtrs = [] {
 
 constexpr uint64_t kSamplingPeriod = 10;
 
+template <typename Container, typename AnotherContainer>
+auto MakeMap(const Container& keys, const AnotherContainer& values) {
+  using K = typename Container::value_type;
+  using V = typename AnotherContainer::value_type;
+  using std::begin;
+  using std::end;
+
+  absl::flat_hash_map<K, V> result;
+  std::transform(begin(keys), end(keys), begin(values), std::inserter(result, std::begin(result)),
+                 [](const K& k, const V& v) { return std::make_pair(k, v); });
+  return result;
+}
+
+const std::vector<uint64_t> kScopeIds = {1, 2, 10, 30};
+const std::vector<orbit_client_data::ScopeInfo> kScopeInfos = {
+    {"Foo", orbit_client_data::ScopeType::kDynamicallyInstrumentedFunction},
+    {"Bar", orbit_client_data::ScopeType::kDynamicallyInstrumentedFunction},
+    {"Manual Sync Foo", orbit_client_data::ScopeType::kApiScope},
+    {"Manual Async Foo", orbit_client_data::ScopeType::kApiScopeAsync}};
+const absl::flat_hash_map<uint64_t, orbit_client_data::ScopeInfo> kScopeIdToInfo =
+    MakeMap(kScopeIds, kScopeInfos);
+const absl::flat_hash_map<uint64_t, orbit_client_data::ScopeInfo> kFrameTracks = [] {
+  absl::flat_hash_map<uint64_t, orbit_client_data::ScopeInfo> result;
+  std::copy_if(std::begin(kScopeIdToInfo), std::end(kScopeIdToInfo),
+               std::inserter(result, std::begin(result)), [](const auto& id_to_info) {
+                 const orbit_client_data::ScopeType type = id_to_info.second.GetType();
+                 return type == orbit_client_data::ScopeType::kDynamicallyInstrumentedFunction ||
+                        type == orbit_client_data::ScopeType::kApiScope;
+               });
+  return result;
+}();
+
 class MizarPairedDataTest : public ::testing::Test {
  public:
   MizarPairedDataTest()
@@ -164,6 +200,10 @@ class MizarPairedDataTest : public ::testing::Test {
     EXPECT_CALL(*capture_data_, GetCallstackData).WillRepeatedly(ReturnRef(*kCallstackData));
     EXPECT_CALL(*capture_data_, GetTimersForScope).WillRepeatedly(Return(kTimerPtrs));
     EXPECT_CALL(*capture_data_, thread_names).WillRepeatedly(ReturnRef(kThreadNames));
+    EXPECT_CALL(*capture_data_, GetAllProvidedScopeIds).WillRepeatedly(Return(kScopeIds));
+    EXPECT_CALL(*capture_data_, GetScopeInfo).WillRepeatedly(Invoke([](const uint64_t id) {
+      return kScopeIdToInfo.at(id);
+    }));
     EXPECT_CALL(*data_, GetCaptureData).WillRepeatedly(ReturnRef(*capture_data_));
     EXPECT_CALL(*data_, GetCaptureStartTimestampNs).WillRepeatedly(Return(kCaptureStart));
     EXPECT_CALL(*data_, GetNominalSamplingPeriodNs).WillRepeatedly(Return(kSamplingPeriod));
@@ -222,6 +262,11 @@ TEST_F(MizarPairedDataTest, TidToCallstackCountsIsCorrect) {
   MizarPairedDataTmpl<MockMizarData> mizar_paired_data(std::move(data_), kAddressToId);
   EXPECT_THAT(mizar_paired_data.TidToCallstackSampleCounts(),
               UnorderedElementsAreArray(kTidToCallstackCount));
+}
+
+TEST_F(MizarPairedDataTest, GetFrameTracksIsCorrect) {
+  MizarPairedDataTmpl<MockMizarData> mizar_paired_data(std::move(data_), kAddressToId);
+  EXPECT_THAT(mizar_paired_data.GetFrameTracks(), UnorderedElementsAreArray(kFrameTracks));
 }
 
 }  // namespace orbit_mizar_data

@@ -19,6 +19,7 @@
 
 #include "ClientData/CallstackData.h"
 #include "ClientData/CallstackEvent.h"
+#include "ClientData/ScopeInfo.h"
 #include "ClientProtos/capture_data.pb.h"
 #include "MizarBase/SampledFunctionId.h"
 #include "MizarData/MizarDataProvider.h"
@@ -52,8 +53,8 @@ class MizarPairedDataTmpl {
     const auto [min_timestamp_ns, max_timestamp_ns] =
         RelativeToAbsoluteTimestampRange(min_relative_timestamp_ns, max_relative_timestamp_ns);
     const std::vector<const orbit_client_protos::TimerInfo*> timers =
-        data_->GetCaptureData().GetTimersForScope(frame_track_scope_id, min_timestamp_ns,
-                                                  max_timestamp_ns);
+        GetCaptureData().GetTimersForScope(frame_track_scope_id, min_timestamp_ns,
+                                           max_timestamp_ns);
     if (timers.size() < 2) return {};
 
     // TODO(b/235572160) Estimate the actual sampling period and use it instead
@@ -80,6 +81,19 @@ class MizarPairedDataTmpl {
     return tid_to_callstack_samples_counts_;
   }
 
+  [[nodiscard]] absl::flat_hash_map<uint64_t, orbit_client_data::ScopeInfo> GetFrameTracks() const {
+    const std::vector<uint64_t> scope_ids = GetCaptureData().GetAllProvidedScopeIds();
+    absl::flat_hash_map<uint64_t, orbit_client_data::ScopeInfo> result;
+    for (const uint64_t scope_id : scope_ids) {
+      const orbit_client_data::ScopeInfo scope_info = GetCaptureData().GetScopeInfo(scope_id);
+      if (scope_info.GetType() == orbit_client_data::ScopeType::kDynamicallyInstrumentedFunction ||
+          scope_info.GetType() == orbit_client_data::ScopeType::kApiScope) {
+        result.try_emplace(scope_id, scope_info);
+      }
+    }
+    return result;
+  }
+
   // Action is a void callable that takes a single argument of type
   // `const std::vector<uint64_t>` representing a callstack sample, each element of the vector is a
   // sampled function id.
@@ -88,13 +102,10 @@ class MizarPairedDataTmpl {
   template <typename Action>
   void ForEachCallstackEvent(uint32_t tid, uint64_t min_relative_timestamp_ns,
                              uint64_t max_relative_timestamp_ns, Action&& action) const {
-    const orbit_client_data::CallstackData& callstack_data =
-        data_->GetCaptureData().GetCallstackData();
-
     auto action_on_callstack_events =
-        [this, &callstack_data, &action](const orbit_client_data::CallstackEvent& event) -> void {
+        [this, &action](const orbit_client_data::CallstackEvent& event) -> void {
       const orbit_client_data::CallstackInfo* callstack =
-          callstack_data.GetCallstack(event.callstack_id());
+          GetCallstackData().GetCallstack(event.callstack_id());
       const std::vector<SFID> sfids = CallstackWithSFIDs(callstack);
       std::invoke(std::forward<Action>(action), sfids);
     };
@@ -107,9 +118,9 @@ class MizarPairedDataTmpl {
 
  private:
   void SetThreadNamesAndCallstackCounts() {
-    const auto& capture_data = data_->GetCaptureData();
-    const absl::flat_hash_map<uint32_t, std::string>& thread_names = capture_data.thread_names();
-    capture_data.GetCallstackData().ForEachCallstackEventInTimeRange(
+    const absl::flat_hash_map<uint32_t, std::string>& thread_names =
+        GetCaptureData().thread_names();
+    GetCallstackData().ForEachCallstackEventInTimeRange(
         0, std::numeric_limits<uint64_t>::max(),
         [this, &thread_names](const orbit_client_data::CallstackEvent& event) {
           const uint32_t tid = event.thread_id();
@@ -127,14 +138,12 @@ class MizarPairedDataTmpl {
   void ForEachCallstackEventOfTidInTimeRange(uint32_t tid, uint64_t min_timestamp_ns,
                                              uint64_t max_timestamp_ns,
                                              Action&& action_on_callstack_events) const {
-    const orbit_client_data::CallstackData& callstack_data =
-        data_->GetCaptureData().GetCallstackData();
     if (tid == orbit_base::kAllProcessThreadsTid) {
-      callstack_data.ForEachCallstackEventInTimeRange(min_timestamp_ns, max_timestamp_ns,
-                                                      action_on_callstack_events);
+      GetCallstackData().ForEachCallstackEventInTimeRange(min_timestamp_ns, max_timestamp_ns,
+                                                          action_on_callstack_events);
     } else {
-      callstack_data.ForEachCallstackEventOfTidInTimeRange(tid, min_timestamp_ns, max_timestamp_ns,
-                                                           action_on_callstack_events);
+      GetCallstackData().ForEachCallstackEventOfTidInTimeRange(
+          tid, min_timestamp_ns, max_timestamp_ns, action_on_callstack_events);
     }
   }
 
@@ -170,6 +179,12 @@ class MizarPairedDataTmpl {
       }
     }
     return result;
+  }
+
+  [[nodiscard]] const auto& GetCaptureData() const { return data_->GetCaptureData(); }
+
+  [[nodiscard]] const orbit_client_data::CallstackData& GetCallstackData() const {
+    return GetCaptureData().GetCallstackData();
   }
 
   std::unique_ptr<Data> data_;

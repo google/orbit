@@ -7,8 +7,10 @@
 
 #include <absl/container/flat_hash_map.h>
 #include <absl/container/flat_hash_set.h>
+#include <absl/strings/str_format.h>
 #include <stdint.h>
 
+#include <QComboBox>
 #include <QLabel>
 #include <QListWidget>
 #include <QObject>
@@ -18,6 +20,7 @@
 #include <string_view>
 #include <vector>
 
+#include "ClientData/ScopeInfo.h"
 #include "MizarData/MizarPairedData.h"
 #include "MizarData/SamplingWithFrameTrackComparisonReport.h"
 
@@ -36,20 +39,23 @@ class SamplingWithFrameTrackInputWidgetBase : public QWidget {
 
  public slots:
   void OnThreadSelectionChanged();
+  void OnFrameTrackSelectionChanged(int index);
 
  private:
   std::unique_ptr<Ui::SamplingWithFrameTrackInputWidget> ui_;
 
  protected:
-  static constexpr uint32_t kTidRole = Qt::UserRole + 1;
+  enum UserRoles { kTidRole = Qt::UserRole + 1, kScopeIdRole = kTidRole + 1 };
 
   explicit SamplingWithFrameTrackInputWidgetBase(QWidget* parent = nullptr);
 
   [[nodiscard]] QLabel* GetTitle() const;
   [[nodiscard]] QListWidget* GetThreadList() const;
+  [[nodiscard]] QComboBox* GetFrameTrackList() const;
 
  private:
   absl::flat_hash_set<uint32_t> selected_tids_;
+  uint64_t frame_track_scope_id_ = 0;
 };
 
 template <typename PairedData>
@@ -63,6 +69,7 @@ class SamplingWithFrameTrackInputWidgetTmpl : public SamplingWithFrameTrackInput
   void Init(const PairedData& data, const QString& name) {
     InitTitle(name);
     InitThreadList(data);
+    InitFrameTrackList(data);
   }
 
  private:
@@ -85,6 +92,30 @@ class SamplingWithFrameTrackInputWidgetTmpl : public SamplingWithFrameTrackInput
       item->setData(kTidRole, tid);
       list->addItem(item.release());
     }
+  }
+
+  void InitFrameTrackList(const PairedData& data) {
+    const absl::flat_hash_map<uint64_t, orbit_client_data::ScopeInfo> scope_id_to_info =
+        data.GetFrameTracks();
+    std::vector<std::pair<uint64_t, orbit_client_data::ScopeInfo>> scope_id_to_info_sorted(
+        std::begin(scope_id_to_info), std::end(scope_id_to_info));
+    std::sort(std::begin(scope_id_to_info_sorted), std::end(scope_id_to_info_sorted),
+              [](const auto& a, const auto& b) { return a.second.GetName() < b.second.GetName(); });
+
+    for (size_t i = 0; i < scope_id_to_info_sorted.size(); ++i) {
+      const auto& [scope_id, scope_info] = scope_id_to_info_sorted[i];
+      GetFrameTrackList()->insertItem(i, MakeFrameTrackString(scope_info));
+      GetFrameTrackList()->setItemData(i, QVariant::fromValue(scope_id), kScopeIdRole);
+    }
+    OnFrameTrackSelectionChanged(0);
+  }
+
+  [[nodiscard]] QString MakeFrameTrackString(const orbit_client_data::ScopeInfo& scope_info) const {
+    const std::string type_string =
+        scope_info.GetType() == orbit_client_data::ScopeType::kDynamicallyInstrumentedFunction
+            ? " D"
+            : "MS";
+    return QString::fromStdString(absl::StrFormat("[%s] %s", type_string, scope_info.GetName()));
   }
 };
 

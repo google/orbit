@@ -2,19 +2,25 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
+#include <absl/container/flat_hash_map.h>
 #include <absl/strings/str_format.h>
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
-#include <qlistwidget.h>
-#include <qstringliteral.h>
 
 #include <QApplication>
+#include <QComboBox>
+#include <QListWidget>
+#include <QStringLiteral>
 #include <QTest>
+#include <array>
 #include <string>
 
+#include "ClientData/ScopeInfo.h"
 #include "MizarWidgets/SamplingWithFrameTrackInputWidget.h"
 
+using testing::ElementsAreArray;
 using testing::NotNull;
+using testing::Return;
 using testing::ReturnRef;
 using testing::UnorderedElementsAreArray;
 
@@ -24,6 +30,8 @@ class MockPairedData {
   MOCK_METHOD((const absl::flat_hash_map<uint32_t, std::string>&), TidToNames, (), (const));
   MOCK_METHOD((const absl::flat_hash_map<uint32_t, std::uint64_t>&), TidToCallstackSampleCounts, (),
               (const));
+  MOCK_METHOD((const absl::flat_hash_map<uint64_t, orbit_client_data::ScopeInfo>), GetFrameTracks,
+              (), (const));
 };
 }  // namespace
 
@@ -51,6 +59,44 @@ const std::vector<std::string> kThreadNamesSorted = {
     MakeThreadListItemString(kOtherThreadName, kOtherTid)};
 const QString kInputName = QStringLiteral("InputName");
 
+template <typename Container, typename AnotherContainer>
+auto MakeMap(const Container& keys, const AnotherContainer& values) {
+  using K = typename Container::value_type;
+  using V = typename AnotherContainer::value_type;
+  using std::begin;
+  using std::end;
+
+  absl::flat_hash_map<K, V> result;
+  std::transform(begin(keys), end(keys), begin(values), std::inserter(result, std::begin(result)),
+                 [](const K& k, const V& v) { return std::make_pair(k, v); });
+  return result;
+}
+
+constexpr size_t kFrameTracksCount = 3;
+constexpr std::array<uint64_t, kFrameTracksCount> kScopeIds = {1, 2, 10};
+constexpr std::array<std::string_view, kFrameTracksCount> kFrameTrackNames = {"Foo", "Boo",
+                                                                              "Manual"};
+constexpr std::array<orbit_client_data::ScopeType, kFrameTracksCount> kScopeInfoTypes = {
+    orbit_client_data::ScopeType::kDynamicallyInstrumentedFunction,
+    orbit_client_data::ScopeType::kDynamicallyInstrumentedFunction,
+    orbit_client_data::ScopeType::kApiScope};
+const absl::flat_hash_map<orbit_client_data::ScopeType, std::string> kScopeTypeToString = {
+    {orbit_client_data::ScopeType::kDynamicallyInstrumentedFunction, "[ D]"},
+    {orbit_client_data::ScopeType::kApiScope, "[MS]"}};
+const std::vector<std::string> kExpectedFrameTrackListContent = {"[ D] Boo", "[ D] Foo",
+                                                                 "[MS] Manual"};
+constexpr std::array<uint64_t, kFrameTracksCount> kScopeIdsInExpectedOrder = {2, 1, 10};
+const std::vector<orbit_client_data::ScopeInfo> kScopeInfos = [] {
+  std::vector<orbit_client_data::ScopeInfo> result;
+  for (size_t i = 0; i < kFrameTracksCount; ++i) {
+    result.emplace_back(std::string(kFrameTrackNames[i]), kScopeInfoTypes[i]);
+  }
+  return result;
+}();
+
+const absl::flat_hash_map<uint64_t, orbit_client_data::ScopeInfo> kFrameTracks =
+    MakeMap(kScopeIds, kScopeInfos);
+
 constexpr const char* kOrgName = "The Orbit Authors";
 
 class SamplingWithFrameTrackInputWidgetTest : public ::testing::Test {
@@ -62,6 +108,7 @@ class SamplingWithFrameTrackInputWidgetTest : public ::testing::Test {
 
     EXPECT_CALL(data_, TidToNames).WillRepeatedly(ReturnRef(kTidToName));
     EXPECT_CALL(data_, TidToCallstackSampleCounts).WillRepeatedly(ReturnRef(kTidToCount));
+    EXPECT_CALL(data_, GetFrameTracks).WillRepeatedly(Return(kFrameTracks));
 
     widget_->Init(data_, kInputName);
 
@@ -69,6 +116,9 @@ class SamplingWithFrameTrackInputWidgetTest : public ::testing::Test {
     EXPECT_THAT(title_, NotNull());
 
     thread_list_ = widget_->findChild<QListWidget*>("thread_list_");
+    EXPECT_THAT(thread_list_, NotNull());
+
+    frame_track_list_ = widget_->findChild<QComboBox*>("frame_track_list_");
     EXPECT_THAT(thread_list_, NotNull());
   }
 
@@ -83,10 +133,15 @@ class SamplingWithFrameTrackInputWidgetTest : public ::testing::Test {
     EXPECT_THAT(widget_->MakeConfig().tids, UnorderedElementsAreArray(tids));
   }
 
+  void ExpectSelectedFrameTrackIdIs(uint32_t scope_id) const {
+    EXPECT_EQ(widget_->MakeConfig().frame_track_scope_id, scope_id);
+  }
+
   MockPairedData data_;
   std::unique_ptr<SamplingWithFrameTrackInputWidgetTmpl<MockPairedData>> widget_;
   QLabel* title_;
   QListWidget* thread_list_;
+  QComboBox* frame_track_list_;
 };
 
 TEST_F(SamplingWithFrameTrackInputWidgetTest, InitIsCorrect) {
@@ -110,6 +165,23 @@ TEST_F(SamplingWithFrameTrackInputWidgetTest, OnThreadSelectionChangedIsCorrect)
   ClearThreadListSelection();
   SelectThreadListRow(1);
   ExpectSelectedTidsAre({kOtherTid});
+}
+
+TEST_F(SamplingWithFrameTrackInputWidgetTest, OnFrameTrackSelectionChangedIsCorrect) {
+  std::vector<std::string> frame_track_list_content;
+  for (int i = 0; i < frame_track_list_->count(); ++i) {
+    frame_track_list_content.push_back(frame_track_list_->itemText(i).toStdString());
+  }
+  EXPECT_THAT(frame_track_list_content, ElementsAreArray(frame_track_list_content));
+
+  frame_track_list_->setCurrentIndex(0);
+  ExpectSelectedFrameTrackIdIs(kScopeIdsInExpectedOrder[0]);
+
+  frame_track_list_->setCurrentIndex(2);
+  ExpectSelectedFrameTrackIdIs(kScopeIdsInExpectedOrder[2]);
+
+  frame_track_list_->setCurrentIndex(1);
+  ExpectSelectedFrameTrackIdIs(kScopeIdsInExpectedOrder[1]);
 }
 
 }  // namespace orbit_mizar_widgets
