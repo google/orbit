@@ -19,11 +19,15 @@
 #include "ClientData/ScopeIdConstants.h"
 #include "ClientData/ScopeIdProvider.h"
 #include "ClientData/ScopeStats.h"
+#include "ClientData/ThreadStateSliceInfo.h"
 #include "ClientProtos/capture_data.pb.h"
 #include "GrpcProtos/capture.pb.h"
 #include "OrbitBase/Logging.h"
 #include "OrbitBase/ReadFileToString.h"
+#include "OrbitBase/ThreadConstants.h"
 #include "Test/Path.h"
+
+using testing::Optional;
 
 namespace orbit_client_data {
 
@@ -45,6 +49,36 @@ constexpr std::array<uint64_t, kTimersForFirstId> kSortedDurationsForFirstId = {
 constexpr std::array<uint64_t, kTimersForSecondId> kSortedDurationsForSecondId = {400, 500};
 
 constexpr uint64_t kLargeInteger = 10'000'000'000'000'000;
+
+constexpr uint64_t kFirstTid = 1000;
+constexpr uint64_t kSecondTid = 2000;
+constexpr uint64_t kNonExistingTid = 404;
+constexpr uint64_t kStTimestamp1 = 50;
+constexpr uint64_t kEnTimestamp1 = 100;
+constexpr uint64_t kStTimestamp2 = 100;
+constexpr uint64_t kEnTimestamp2 = 150;
+constexpr uint64_t kStTimestamp3 = 150;
+constexpr uint64_t kEnTimestamp3 = 200;
+constexpr uint32_t kWakeupTid = 4200;
+constexpr uint32_t kWakeupPid = 420;
+constexpr uint32_t kInvalidPidAndTid = 0;
+
+const ThreadStateSliceInfo kSlice1{
+    kFirstTid,        orbit_grpc_protos::ThreadStateSlice::kInterruptibleSleep, kStTimestamp1,
+    kEnTimestamp1,    ThreadStateSliceInfo::WakeupReason::kNotApplicable,       kInvalidPidAndTid,
+    kInvalidPidAndTid};
+const ThreadStateSliceInfo kSlice2{
+    kFirstTid,     orbit_grpc_protos::ThreadStateSlice::kRunnable, kStTimestamp2,
+    kEnTimestamp2, ThreadStateSliceInfo::WakeupReason::kUnblocked, kWakeupTid,
+    kWakeupPid};
+const ThreadStateSliceInfo kSlice3{
+    kFirstTid,        orbit_grpc_protos::ThreadStateSlice::kRunning,      kStTimestamp3,
+    kEnTimestamp3,    ThreadStateSliceInfo::WakeupReason::kNotApplicable, kInvalidPidAndTid,
+    kInvalidPidAndTid};
+const ThreadStateSliceInfo kSlice4{
+    kSecondTid,       orbit_grpc_protos::ThreadStateSlice::kInterruptibleSleep, kStTimestamp1,
+    kEnTimestamp1,    ThreadStateSliceInfo::WakeupReason::kNotApplicable,       kInvalidPidAndTid,
+    kInvalidPidAndTid};
 
 static const std::array<uint64_t, kTimerCount> kDurations = [] {
   std::array<uint64_t, kTimerCount> result;
@@ -216,6 +250,67 @@ TEST_F(CaptureDataTest, UpdateTimerDurationsIsCorrect) {
                                            std::end(kSortedDurationsForSecondId)));
 
   EXPECT_THAT(capture_data_.GetSortedTimerDurationsForScopeId(kInvalidScopeId), testing::IsNull());
+}
+
+TEST_F(CaptureDataTest, FindThreadStateSliceInfoFromTimestamp) {
+  EXPECT_EQ(
+      capture_data_.FindThreadStateSliceInfoFromTimestamp(kFirstTid, kSlice3.begin_timestamp_ns()),
+      std::nullopt);
+
+  capture_data_.AddThreadStateSlice(kSlice1);
+  capture_data_.AddThreadStateSlice(kSlice2);
+  capture_data_.AddThreadStateSlice(kSlice3);
+  capture_data_.AddThreadStateSlice(kSlice4);
+
+  constexpr uint64_t kMidSlice1Timestamp = 75;
+  constexpr uint64_t kMidSlice2Timestamp = 101;
+  constexpr uint64_t kMidSlice3Timestamp = 199;
+  constexpr uint64_t kMidSlice4Timestamp = 75;
+
+  constexpr uint64_t kInvalidTimestamp1 = 200;
+  constexpr uint64_t kInvalidTimestamp2 = 49;
+
+  EXPECT_THAT(
+      capture_data_.FindThreadStateSliceInfoFromTimestamp(kFirstTid, kSlice1.begin_timestamp_ns()),
+      Optional(kSlice1));
+  EXPECT_THAT(
+      capture_data_.FindThreadStateSliceInfoFromTimestamp(kFirstTid, kSlice1.end_timestamp_ns()),
+      Optional(kSlice2));
+  EXPECT_THAT(
+      capture_data_.FindThreadStateSliceInfoFromTimestamp(kFirstTid, kSlice2.begin_timestamp_ns()),
+      Optional(kSlice2));
+  EXPECT_THAT(
+      capture_data_.FindThreadStateSliceInfoFromTimestamp(kFirstTid, kSlice2.end_timestamp_ns()),
+      Optional(kSlice3));
+  EXPECT_THAT(
+      capture_data_.FindThreadStateSliceInfoFromTimestamp(kFirstTid, kSlice3.begin_timestamp_ns()),
+      Optional(kSlice3));
+  EXPECT_EQ(
+      capture_data_.FindThreadStateSliceInfoFromTimestamp(kFirstTid, kSlice3.end_timestamp_ns()),
+      std::nullopt);
+
+  EXPECT_THAT(capture_data_.FindThreadStateSliceInfoFromTimestamp(kFirstTid, kMidSlice1Timestamp),
+              Optional(kSlice1));
+  EXPECT_THAT(capture_data_.FindThreadStateSliceInfoFromTimestamp(kFirstTid, kMidSlice2Timestamp),
+              Optional(kSlice2));
+  EXPECT_THAT(capture_data_.FindThreadStateSliceInfoFromTimestamp(kFirstTid, kMidSlice3Timestamp),
+              Optional(kSlice3));
+  EXPECT_THAT(capture_data_.FindThreadStateSliceInfoFromTimestamp(kSecondTid, kMidSlice4Timestamp),
+              Optional(kSlice4));
+
+  EXPECT_EQ(
+      capture_data_.FindThreadStateSliceInfoFromTimestamp(kNonExistingTid, kMidSlice1Timestamp),
+      std::nullopt);
+  EXPECT_EQ(
+      capture_data_.FindThreadStateSliceInfoFromTimestamp(kNonExistingTid, kInvalidTimestamp1),
+      std::nullopt);
+  EXPECT_EQ(
+      capture_data_.FindThreadStateSliceInfoFromTimestamp(kNonExistingTid, kInvalidTimestamp2),
+      std::nullopt);
+  EXPECT_EQ(capture_data_.FindThreadStateSliceInfoFromTimestamp(kSecondTid, kInvalidTimestamp1),
+            std::nullopt);
+  EXPECT_EQ(capture_data_.FindThreadStateSliceInfoFromTimestamp(kSecondTid, kInvalidTimestamp2),
+            std::nullopt);
 }
 
 }  // namespace orbit_client_data
