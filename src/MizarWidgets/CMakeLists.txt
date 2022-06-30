@@ -29,3 +29,23 @@ target_link_libraries(MizarWidgets
 
 set_target_properties(MizarWidgets PROPERTIES AUTOMOC ON)
 set_target_properties(MizarWidgets PROPERTIES AUTOUIC ON)
+
+add_executable(MizarWidgetsTests)
+
+target_sources(MizarWidgetsTests PRIVATE
+  SamplingWithFrameTrackInputWidgetTest.cpp
+)
+
+target_link_libraries(MizarWidgetsTests PRIVATE
+  MizarWidgets
+  GTest::QtGuiMain
+  Qt5::Test
+)
+
+if(WIN32 AND "$ENV{QT_QPA_PLATFORM}" STREQUAL "offscreen")
+  register_test(MizarWidgetsTests PROPERTIES DISABLED TRUE)
+endif()
+
+if(NOT WIN32)
+  register_test(MizarWidgetsTests PROPERTIES ENVIRONMENT QT_QPA_PLATFORM=offscreen)
+endif()

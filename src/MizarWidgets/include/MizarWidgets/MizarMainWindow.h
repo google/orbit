@@ -8,6 +8,8 @@
 #include <QMainWindow>
 #include <memory>
 
+#include "MizarData/BaselineAndComparison.h"
+
 namespace Ui {
 class MainWindow;
 }
@@ -16,7 +18,8 @@ namespace orbit_mizar_widgets {
 
 class MizarMainWindow : public QMainWindow {
  public:
-  MizarMainWindow();
+  explicit MizarMainWindow(const orbit_mizar_data::BaselineAndComparison* baseline_and_comparison,
+                           QWidget* parent = nullptr);
   ~MizarMainWindow() override;
 
  private:
