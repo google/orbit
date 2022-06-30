@@ -263,6 +263,13 @@ TYPED_TEST(PeCoffTest, zero_size_of_image_for_invalid) {
   EXPECT_EQ(coff.GetSizeOfImage(), 0);
 }
 
+TYPED_TEST(PeCoffTest, step_fails_for_invalid) {
+  PeCoff coff(new MemoryFake);
+  EXPECT_FALSE(coff.Init());
+  EXPECT_FALSE(coff.valid());
+  EXPECT_FALSE(coff.Step(0x2000, 0, nullptr, nullptr, nullptr, nullptr));
+}
+
 TYPED_TEST(PeCoffTest, step_if_signal_handler_returns_false) {
   this->GetFake()->Init();
   FakePeCoff coff(this->ReleaseMemory());
@@ -273,6 +280,7 @@ TYPED_TEST(PeCoffTest, step_if_signal_handler_returns_false) {
 TYPED_TEST(PeCoffTest, step_succeeds_when_interface_step_succeeds) {
   this->GetFake()->Init();
   FakePeCoff coff(this->ReleaseMemory());
+  EXPECT_TRUE(coff.Init());
   MockPeCoffInterface* mock_interface = new MockPeCoffInterface;
   EXPECT_CALL(*mock_interface, Step(0x2000, 0, nullptr, nullptr, nullptr, nullptr))
       .WillOnce(::testing::Return(true));
@@ -283,6 +291,7 @@ TYPED_TEST(PeCoffTest, step_succeeds_when_interface_step_succeeds) {
 TYPED_TEST(PeCoffTest, steps_fails_when_interface_step_fails) {
   this->GetFake()->Init();
   FakePeCoff coff(this->ReleaseMemory());
+  EXPECT_TRUE(coff.Init());
   MockPeCoffInterface* mock_interface = new MockPeCoffInterface;
   EXPECT_CALL(*mock_interface, Step(0x2000, 0, nullptr, nullptr, nullptr, nullptr))
       .WillOnce(::testing::Return(false));
