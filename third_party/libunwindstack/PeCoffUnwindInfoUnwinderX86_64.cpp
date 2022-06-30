@@ -64,8 +64,18 @@ bool PeCoffUnwindInfoUnwinderX86_64::Step(uint64_t pc, uint64_t pc_adjustment, R
   // epilog of the function. If yes, the registers, including SP and PC, are already adjusted by
   // 'DetectAndHandleEpilog' and we can return here. If no, then we must unwind using the entire
   // sequence of the unwind codes.
+  //
+  // An important optimization is that we only have to detect whether we are in an epilog when
+  // unwinding the innermost frame. For other frames, we know that the non-adjusted PC is on a call
+  // instruction, i.e., if the adjusted PC is in an epilog, it can only be on the first instruction
+  // of that epilog: when this is the case, no instruction of that epilog has been executed, so
+  // unwinding by handling all the instructions of the epilog is equivalent to processing the entire
+  // sequence of UNWIND_CODEs. So we simply always do the latter whether we are already at the
+  // beginning of an epilog or not.
+  // Conveniently, we know we are unwinding the innermost frame if and only if pc_adjustment == 0
+  // (the value is 1 for all other frames).
   uint64_t current_offset_from_start = pc_rva - function_at_pc.start_address;
-  if (current_offset_from_start > unwind_info.prolog_size) {
+  if (pc_adjustment == 0 && current_offset_from_start > unwind_info.prolog_size) {
     bool is_in_epilog;
     // If 'DetectAndHandleEpilog' fails with an error, we have to return here.
     if (!epilog_->DetectAndHandleEpilog(function_at_pc.start_address, function_at_pc.end_address,
