@@ -36,6 +36,9 @@ class SamplingWithFrameTrackInputWidgetBase : public QWidget {
  public slots:
   void OnThreadSelectionChanged();
 
+ private:
+  std::unique_ptr<Ui::SamplingWithFrameTrackInputWidget> ui_;
+
  protected:
   explicit SamplingWithFrameTrackInputWidgetBase(QWidget* parent);
 
@@ -46,7 +49,6 @@ class SamplingWithFrameTrackInputWidgetBase : public QWidget {
 
  private:
   absl::flat_hash_set<uint32_t> selected_tids_;
-  std::unique_ptr<Ui::SamplingWithFrameTrackInputWidget> ui_;
 };
 
 template <typename PairedData>

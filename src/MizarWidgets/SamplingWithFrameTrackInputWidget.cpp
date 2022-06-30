@@ -46,8 +46,6 @@ void SamplingWithFrameTrackInputWidgetBase::OnThreadSelectionChanged() {
       [this](const QListWidgetItem* item) { return tid_list_widget_items_to_tids_.at(item); });
 }
 
-SamplingWithFrameTrackInputWidgetBase::~SamplingWithFrameTrackInputWidgetBase() {
-  disconnect(GetThreadList(), nullptr, nullptr, nullptr);
-}
+SamplingWithFrameTrackInputWidgetBase::~SamplingWithFrameTrackInputWidgetBase() = default;
 
 }  // namespace orbit_mizar_widgets
