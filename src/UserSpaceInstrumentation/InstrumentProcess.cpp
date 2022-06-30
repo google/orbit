@@ -374,9 +374,14 @@ ErrorMessageOr<std::unique_ptr<InstrumentedProcess>> InstrumentedProcess::Create
   process->injected_library_path_ = std::filesystem::canonical(library_path);
   ORBIT_LOG("Injecting library \"%s\" into process %d", process->injected_library_path_, pid);
 
-  // If we already injected the library in a previous run of OrbitService we merely need to retrieve
-  // some function pointers and create a new return trampoline so we can exit early below (skipping
-  // the initialization of the library that has already been done).
+  // If we already injected the library in a previous run of OrbitService we need to skip some of
+  // the initialization below. However, we need to call dlopen again on the library. This will not
+  // load the library again but merely return the handle to the existing one. We also need to
+  // retrieve some function pointers from that library and create a new return trampoline for this
+  // run of OrbitService.
+  // The initialization part that we will skip is responsible for setting up the communication with
+  // OrbitService and identifying the threads created in that process. All of that already happened
+  // in the previous run.
   OUTCOME_TRY(const bool already_injected, AlreadyInjected(pid));
 
   auto library_handle_or_error = DlopenInTracee(pid, library_path, RTLD_NOW);
