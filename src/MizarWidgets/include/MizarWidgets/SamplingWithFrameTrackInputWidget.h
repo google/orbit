@@ -71,8 +71,8 @@ class SamplingWithFrameTrackInputWidgetTmpl : public SamplingWithFrameTrackInput
     QListWidget* list = GetThreadList();
     list->setSelectionMode(QAbstractItemView::ExtendedSelection);
 
-    absl::flat_hash_map<uint32_t, std::string> tid_to_name = data.TidToNames();
-    absl::flat_hash_map<uint32_t, uint64_t> counts = data.TidToCallstackSampleCounts();
+    const absl::flat_hash_map<uint32_t, std::string>& tid_to_name = data.TidToNames();
+    const absl::flat_hash_map<uint32_t, uint64_t>& counts = data.TidToCallstackSampleCounts();
 
     std::vector<std::pair<uint32_t, uint64_t>> counts_sorted(std::begin(counts), std::end(counts));
 
