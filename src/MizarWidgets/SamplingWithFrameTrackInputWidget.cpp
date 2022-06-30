@@ -43,7 +43,7 @@ void SamplingWithFrameTrackInputWidgetBase::OnThreadSelectionChanged() {
   std::transform(
       std::begin(selected_items), std::end(selected_items),
       std::inserter(selected_tids_, std::begin(selected_tids_)),
-      [this](const QListWidgetItem* item) { return tid_list_widget_items_to_tids_.at(item); });
+      [](const QListWidgetItem* item) { return item->data(kTidRole).value<uint32_t>(); });
 }
 
 SamplingWithFrameTrackInputWidgetBase::~SamplingWithFrameTrackInputWidgetBase() = default;

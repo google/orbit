@@ -27,7 +27,7 @@ class SamplingWithFrameTrackWidget : public QWidget {
   using Comparison = ::orbit_mizar_base::Comparison<T>;
 
  public:
-  explicit SamplingWithFrameTrackWidget(QWidget* parent);
+  explicit SamplingWithFrameTrackWidget(QWidget* parent = nullptr);
   ~SamplingWithFrameTrackWidget() override;
 
   void Init(const orbit_mizar_data::BaselineAndComparison* baseline_and_comparison);

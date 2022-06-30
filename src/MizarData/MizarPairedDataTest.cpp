@@ -73,10 +73,10 @@ constexpr uint64_t kRelativeTimeTooLate = 1000;
 constexpr uint32_t kTID = 0x3AD1;
 constexpr uint32_t kAnotherTID = 0x3AD2;
 constexpr uint32_t kNamelessTID = 0x3AD3;
-const std::string kThreadName = "thread";
-const std::string kOtherThreadName = "other thread";
-const absl::flat_hash_map<uint32_t, std::string> kThreadNames = {{kTID, kThreadName},
-                                                                 {kAnotherTID, kOtherThreadName}};
+const std::string_view kThreadName = "thread";
+const std::string_view kOtherThreadName = "other thread";
+const absl::flat_hash_map<uint32_t, std::string> kThreadNames = {
+    {kTID, std::string(kThreadName)}, {kAnotherTID, std::string(kOtherThreadName)}};
 
 const absl::flat_hash_map<uint32_t, std::string> kSampledTidToName = [] {
   auto result = kThreadNames;

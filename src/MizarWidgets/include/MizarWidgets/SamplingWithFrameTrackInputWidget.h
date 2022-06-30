@@ -13,6 +13,7 @@
 #include <QListWidget>
 #include <QObject>
 #include <QWidget>
+#include <Qt>
 #include <memory>
 #include <string_view>
 #include <vector>
@@ -40,12 +41,12 @@ class SamplingWithFrameTrackInputWidgetBase : public QWidget {
   std::unique_ptr<Ui::SamplingWithFrameTrackInputWidget> ui_;
 
  protected:
-  explicit SamplingWithFrameTrackInputWidgetBase(QWidget* parent);
+  static constexpr uint32_t kTidRole = Qt::UserRole + 1;
+
+  explicit SamplingWithFrameTrackInputWidgetBase(QWidget* parent = nullptr);
 
   [[nodiscard]] QLabel* GetTitle() const;
   [[nodiscard]] QListWidget* GetThreadList() const;
-
-  absl::node_hash_map<std::unique_ptr<QListWidgetItem>, uint32_t> tid_list_widget_items_to_tids_;
 
  private:
   absl::flat_hash_set<uint32_t> selected_tids_;
@@ -78,12 +79,11 @@ class SamplingWithFrameTrackInputWidgetTmpl : public SamplingWithFrameTrackInput
 
     std::sort(std::begin(counts_sorted), std::end(counts_sorted),
               [](const auto& a, const auto& b) { return a.second > b.second; });
-
     for (const auto& [tid, unused_count] : counts_sorted) {
       auto item = std::make_unique<QListWidgetItem>(
           QString::fromStdString(absl::StrFormat("[%u] %s", tid, tid_to_name.at(tid))));
-      list->addItem(item.get());
-      tid_list_widget_items_to_tids_.try_emplace(std::move(item), tid);
+      item->setData(kTidRole, tid);
+      list->addItem(item.release());
     }
   }
 };

@@ -18,10 +18,9 @@ namespace orbit_mizar_widgets {
 
 class MizarMainWindow : public QMainWindow {
  public:
-  MizarMainWindow();
+  explicit MizarMainWindow(const orbit_mizar_data::BaselineAndComparison* baseline_and_comparison,
+                           QWidget* parent = nullptr);
   ~MizarMainWindow() override;
-
-  void Init(const orbit_mizar_data::BaselineAndComparison* baseline_and_comparison);
 
  private:
   std::unique_ptr<Ui::MainWindow> ui_;

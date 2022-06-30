@@ -69,8 +69,8 @@ class BaselineAndComparisonTmpl {
         std::move(sfid_to_corrected_comparison_result));
   }
 
-  const Baseline<PairedData>& GetBaselineData() const { return baseline_; }
-  const Comparison<PairedData>& GetComparisonData() const { return comparison_; }
+  [[nodiscard]] const Baseline<PairedData>& GetBaselineData() const { return baseline_; }
+  [[nodiscard]] const Comparison<PairedData>& GetComparisonData() const { return comparison_; }
 
  private:
   [[nodiscard]] absl::flat_hash_map<SFID, CorrectedComparisonResult> MakeComparisons(

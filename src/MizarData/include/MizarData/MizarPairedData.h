@@ -118,9 +118,8 @@ class MizarPairedDataTmpl {
           if (tid_to_names_.contains(tid)) return;
 
           const auto tid_to_name = thread_names.find(tid);
-          const std::string thread_name =
-              (tid_to_name != thread_names.end()) ? tid_to_name->second : "";
-          tid_to_names_.try_emplace(tid, thread_name);
+          std::string thread_name = (tid_to_name != thread_names.end()) ? tid_to_name->second : "";
+          tid_to_names_.try_emplace(tid, std::move(thread_name));
         });
   }
 

@@ -4,15 +4,17 @@
 
 #include "MizarWidgets/MizarMainWindow.h"
 
+#include <QMainWindow>
 #include <memory>
 
 #include "ui_MizarMainWindow.h"
 
 namespace orbit_mizar_widgets {
 
-MizarMainWindow::MizarMainWindow() : ui_(std::make_unique<Ui::MainWindow>()) { ui_->setupUi(this); }
-
-void MizarMainWindow::Init(const orbit_mizar_data::BaselineAndComparison* baseline_and_comparison) {
+MizarMainWindow::MizarMainWindow(
+    const orbit_mizar_data::BaselineAndComparison* baseline_and_comparison, QWidget* parent)
+    : QMainWindow(parent), ui_(std::make_unique<Ui::MainWindow>()) {
+  ui_->setupUi(this);
   ui_->sampling_with_frame_track_widget_->Init(baseline_and_comparison);
 }
 
