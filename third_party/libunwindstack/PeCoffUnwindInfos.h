@@ -68,9 +68,9 @@ struct UnwindInfo {
 
 class PeCoffUnwindInfos {
  public:
-  virtual ~PeCoffUnwindInfos() {}
+  virtual ~PeCoffUnwindInfos() = default;
 
-  virtual bool GetUnwindInfo(uint64_t unwind_info_rva, UnwindInfo* unwind_info) = 0;
+  virtual bool GetUnwindInfo(uint64_t unwind_info_rva, UnwindInfo** unwind_info) = 0;
   ErrorData GetLastError() const { return last_error_; }
 
  protected:
