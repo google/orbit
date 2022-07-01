@@ -464,8 +464,10 @@ class OrbitApp final : public DataViewFactory,
   [[nodiscard]] orbit_client_data::ThreadID selected_thread_id() const;
   void set_selected_thread_id(orbit_client_data::ThreadID thread_id);
 
-  [[nodiscard]] std::optional<orbit_client_data::ThreadStateSliceInfo> selected_thread_state_slice() const;
-  void set_selected_thread_state_slice(std::optional<orbit_client_data::ThreadStateSliceInfo> thread_state_slice);
+  [[nodiscard]] std::optional<orbit_client_data::ThreadStateSliceInfo> selected_thread_state_slice()
+      const;
+  void set_selected_thread_state_slice(
+      std::optional<orbit_client_data::ThreadStateSliceInfo> thread_state_slice);
 
   [[nodiscard]] const orbit_client_protos::TimerInfo* selected_timer() const;
   void SelectTimer(const orbit_client_protos::TimerInfo* timer_info);

@@ -16,13 +16,13 @@
 #include "ApiInterface/Orbit.h"
 #include "ClientData/FunctionInfo.h"
 #include "ClientData/ScopeIdConstants.h"
+#include "ClientData/ThreadStateSliceInfo.h"
 #include "ClientData/TracepointCustom.h"
 #include "ClientData/UserDefinedCaptureData.h"
 #include "ClientProtos/capture_data.pb.h"
 #include "GrpcProtos/capture.pb.h"
 #include "GrpcProtos/tracepoint.pb.h"
 #include "OrbitBase/ThreadConstants.h"
-#include "ClientData/ThreadStateSliceInfo.h"
 
 namespace orbit_client_data {
 
@@ -40,7 +40,8 @@ class DataManager final {
   void set_highlighted_scope_id(uint64_t highlighted_function_id);
   void set_highlighted_group_id(uint64_t highlighted_group_id);
   void set_selected_thread_id(uint32_t thread_id);
-  void set_selected_thread_state_slice(std::optional<orbit_client_data::ThreadStateSliceInfo> selected_thread_state_slice);
+  void set_selected_thread_state_slice(
+      std::optional<orbit_client_data::ThreadStateSliceInfo> selected_thread_state_slice);
   void set_selected_timer(const orbit_client_protos::TimerInfo* timer_info);
 
   [[nodiscard]] bool IsFunctionSelected(const FunctionInfo& function) const;
@@ -49,7 +50,8 @@ class DataManager final {
   [[nodiscard]] uint64_t highlighted_scope_id() const;
   [[nodiscard]] uint64_t highlighted_group_id() const;
   [[nodiscard]] uint32_t selected_thread_id() const;
-  [[nodiscard]] std::optional<orbit_client_data::ThreadStateSliceInfo> selected_thread_state_slice() const;
+  [[nodiscard]] std::optional<orbit_client_data::ThreadStateSliceInfo> selected_thread_state_slice()
+      const;
   [[nodiscard]] const orbit_client_protos::TimerInfo* selected_timer() const;
 
   void SelectTracepoint(const orbit_grpc_protos::TracepointInfo& info);
