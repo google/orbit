@@ -202,12 +202,12 @@ static void ExpandRecursivelyWithThreshold(QTreeView* tree_view, const QModelInd
 
 void CallTreeWidget::SetTopDownView(std::unique_ptr<CallTreeView> top_down_view) {
   // Expand recursively if CallTreeView contains information for a single thread.
-  bool should_expand = top_down_view->thread_count() == 1;
+  bool should_expand = IsSliderEnabled() && top_down_view->thread_count() == 1;
 
   SetCallTreeView(std::move(top_down_view),
                   std::make_unique<HideValuesForTopDownProxyModel>(nullptr));
 
-  if (should_expand && IsSliderEnabled()) {
+  if (should_expand) {
     float expansion_threshold = 100.f - ui_->horizontalSlider->value();
     ExpandRecursivelyWithThreshold(
         ui_->callTreeTreeView, ui_->callTreeTreeView->model()->index(0, 0), expansion_threshold);
