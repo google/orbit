@@ -43,6 +43,7 @@ constexpr std::array<uint64_t, kFunctionNum> kComparisonFunctionAddresses = {0x0
 const std::array<std::string, kFunctionNum> kBaselineFunctionNames = {"foo()", "bar()", "biz()"};
 const std::array<std::string, kFunctionNum> kComparisonFunctionNames = {"foo()", "bar()", "fiz()"};
 
+// TODO(b/237743774) move to TestUtils
 template <typename Container>
 [[nodiscard]] static auto Commons(const Container& a, const Container& b) {
   using E = typename Container::value_type;
@@ -60,7 +61,7 @@ const std::vector<std::string> kCommonFunctionNames =
     Commons(kBaselineFunctionNames, kComparisonFunctionNames);
 
 template <typename Container, typename AnotherContainer>
-auto MakeMap(const Container& keys, const AnotherContainer& values) {
+static auto MakeMap(const Container& keys, const AnotherContainer& values) {
   using K = typename Container::value_type;
   using V = typename AnotherContainer::value_type;
   using std::begin;
