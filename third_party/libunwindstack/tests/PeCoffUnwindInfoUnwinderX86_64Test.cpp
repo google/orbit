@@ -58,6 +58,8 @@ class MockPeCoffUnwindInfoEvaluator : public PeCoffUnwindInfoEvaluator {
  public:
   MOCK_METHOD(bool, Eval, (Memory*, Regs*, const UnwindInfo&, PeCoffUnwindInfos*, uint64_t),
               (override));
+
+  void FailWithError(ErrorCode error_code) { last_error_.code = error_code; }
 };
 
 class TestPeCoffUnwindInfoUnwinderX86_64 : public PeCoffUnwindInfoUnwinderX86_64 {
@@ -323,6 +325,104 @@ TEST(PeCoffUnwindInfoUnwinderX86_64Test, step_succeeds_if_eval_succeeds_outside_
   bool is_signal_frame = false;
 
   EXPECT_TRUE(test_unwinder.Step(kPc, 0, &regs, &process_memory, &finished, &is_signal_frame));
+  EXPECT_TRUE(finished);
+  EXPECT_FALSE(is_signal_frame);
+}
+
+TEST(PeCoffUnwindInfoUnwinderX86_64Test, step_fails_if_eval_fails_inside_of_prolog) {
+  TestPeCoffUnwindInfoUnwinderX86_64 test_unwinder;
+
+  constexpr uint64_t kFunctionStartAddress = 0x100;
+  constexpr uint64_t kFunctionEndAddress = 0x200;
+  constexpr uint64_t kPc = kFunctionStartAddress + 0x10;
+
+  std::unique_ptr<MockPeCoffRuntimeFunctions> runtime_functions =
+      std::make_unique<MockPeCoffRuntimeFunctions>();
+  EXPECT_CALL(*runtime_functions, FindRuntimeFunction)
+      .WillOnce([](uint64_t, RuntimeFunction* runtime_function) {
+        RuntimeFunction function{kFunctionStartAddress, kFunctionEndAddress, 0};
+        *runtime_function = function;
+        return true;
+      });
+
+  std::unique_ptr<MockPeCoffUnwindInfos> unwind_infos = std::make_unique<MockPeCoffUnwindInfos>();
+  EXPECT_CALL(*unwind_infos, GetUnwindInfo).WillOnce([](uint64_t, UnwindInfo* unwind_info_result) {
+    UnwindInfo info;
+    info.prolog_size = 0x20;
+    *unwind_info_result = info;
+    return true;
+  });
+
+  std::unique_ptr<MockPeCoffEpilog> epilog = std::make_unique<MockPeCoffEpilog>();
+  EXPECT_CALL(*epilog, DetectAndHandleEpilog).Times(0);
+
+  std::unique_ptr<MockPeCoffUnwindInfoEvaluator> unwind_info_evaluator =
+      std::make_unique<MockPeCoffUnwindInfoEvaluator>();
+  unwind_info_evaluator->FailWithError(ERROR_MEMORY_INVALID);
+  EXPECT_CALL(*unwind_info_evaluator, Eval).WillOnce(testing::Return(false));
+
+  test_unwinder.SetFakeRuntimeFuntions(std::move(runtime_functions));
+  test_unwinder.SetFakeUnwindInfos(std::move(unwind_infos));
+  test_unwinder.SetFakeEpilog(std::move(epilog));
+  test_unwinder.SetFakeUnwindInfoEvaluator(std::move(unwind_info_evaluator));
+
+  RegsX86_64 regs;
+  MemoryFake process_memory;
+  bool finished = false;
+  bool is_signal_frame = false;
+
+  EXPECT_FALSE(test_unwinder.Step(kPc, 0, &regs, &process_memory, &finished, &is_signal_frame));
+  EXPECT_EQ(test_unwinder.GetLastError().code, ERROR_MEMORY_INVALID);
+}
+
+TEST(PeCoffUnwindInfoUnwinderX86_64Test,
+     step_skips_epilog_detection_even_outside_of_prolog_for_non_zero_pc_adjustment) {
+  TestPeCoffUnwindInfoUnwinderX86_64 test_unwinder;
+
+  constexpr uint64_t kFunctionStartAddress = 0x100;
+  constexpr uint64_t kFunctionEndAddress = 0x200;
+  constexpr uint64_t kPc = kFunctionStartAddress + 0x10;
+
+  std::unique_ptr<MockPeCoffRuntimeFunctions> runtime_functions =
+      std::make_unique<MockPeCoffRuntimeFunctions>();
+  EXPECT_CALL(*runtime_functions, FindRuntimeFunction)
+      .WillOnce([](uint64_t, RuntimeFunction* runtime_function) {
+        RuntimeFunction function{kFunctionStartAddress, kFunctionEndAddress, 0};
+        *runtime_function = function;
+        return true;
+      });
+
+  std::unique_ptr<MockPeCoffUnwindInfos> unwind_infos = std::make_unique<MockPeCoffUnwindInfos>();
+  EXPECT_CALL(*unwind_infos, GetUnwindInfo).WillOnce([](uint64_t, UnwindInfo* unwind_info_result) {
+    UnwindInfo info;
+    info.prolog_size = 0x8;
+    *unwind_info_result = info;
+    return true;
+  });
+
+  std::unique_ptr<MockPeCoffEpilog> epilog = std::make_unique<MockPeCoffEpilog>();
+  EXPECT_CALL(*epilog, DetectAndHandleEpilog).Times(0);
+
+  std::unique_ptr<MockPeCoffUnwindInfoEvaluator> unwind_info_evaluator =
+      std::make_unique<MockPeCoffUnwindInfoEvaluator>();
+  EXPECT_CALL(*unwind_info_evaluator, Eval).WillOnce(testing::Return(true));
+
+  test_unwinder.SetFakeRuntimeFuntions(std::move(runtime_functions));
+  test_unwinder.SetFakeUnwindInfos(std::move(unwind_infos));
+  test_unwinder.SetFakeEpilog(std::move(epilog));
+  test_unwinder.SetFakeUnwindInfoEvaluator(std::move(unwind_info_evaluator));
+
+  RegsX86_64 regs;
+
+  // We need to make sure memory can be read when reading the return address, otherwise the step
+  // will fail. Since we are mocking everything, the registers are not updated correctly and it
+  // doesn't really make sense to test for a specific location of the stack pointer.
+  MemoryFakeAlwaysReadZero process_memory;
+
+  bool finished = false;
+  bool is_signal_frame = false;
+
+  EXPECT_TRUE(test_unwinder.Step(kPc, 1, &regs, &process_memory, &finished, &is_signal_frame));
   EXPECT_TRUE(finished);
   EXPECT_FALSE(is_signal_frame);
 }
