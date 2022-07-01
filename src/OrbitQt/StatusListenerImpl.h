@@ -21,7 +21,7 @@ class StatusListenerImpl : public StatusListener {
   void ClearStatus(uint64_t status_id) override;
   void UpdateStatus(uint64_t status_id, std::string message) override;
 
-  static std::unique_ptr<StatusListener> Create(QStatusBar* status_bar);
+  static std::shared_ptr<StatusListener> Create(QStatusBar* status_bar);
 
  private:
   explicit StatusListenerImpl(QStatusBar* status_bar) : next_id_{0}, status_bar_(status_bar) {}

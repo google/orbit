@@ -263,7 +263,7 @@ class OrbitMainWindow final : public QMainWindow, public orbit_gl::MainWindowInt
   QIcon icon_keyboard_arrow_right_;
 
   // Status listener
-  std::unique_ptr<StatusListener> status_listener_;
+  std::shared_ptr<StatusListener> status_listener_;
 
   struct TabWidgetLayout {
     std::vector<std::pair<QWidget*, QString>> tabs_and_titles;
