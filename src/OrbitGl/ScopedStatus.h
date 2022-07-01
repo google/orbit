@@ -45,6 +45,7 @@ class ScopedStatus final {
     data_->main_thread_id = std::this_thread::get_id();
 
     std::shared_ptr<StatusListener> status_listener = data_->status_listener.lock();
+    if (status_listener == nullptr) return;
     data_->status_id = status_listener->AddStatus(status_message);
   }
 
