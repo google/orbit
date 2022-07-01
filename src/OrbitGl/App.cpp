@@ -2649,6 +2649,13 @@ void OrbitApp::set_selected_thread_id(ThreadID thread_id) {
   return data_manager_->set_selected_thread_id(thread_id);
 }
 
+std::optional<orbit_client_data::ThreadStateSliceInfo> OrbitApp::selected_thread_state_slice() const { return data_manager_->selected_thread_state_slice(); }
+
+void OrbitApp::set_selected_thread_state_slice(std::optional<orbit_client_data::ThreadStateSliceInfo> thread_state_slice) {
+  RequestUpdatePrimitives();
+  return data_manager_->set_selected_thread_state_slice(thread_state_slice);
+}
+
 const orbit_client_protos::TimerInfo* OrbitApp::selected_timer() const {
   return data_manager_->selected_timer();
 }
