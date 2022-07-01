@@ -42,6 +42,7 @@
 #include "ClientData/CaptureData.h"
 #include "ClientData/ModuleAndFunctionLookup.h"
 #include "ClientData/ModuleData.h"
+#include "ClientFlags/ClientFlags.h"
 #include "CustomSignalsTreeView.h"
 #include "DataViews/FunctionsDataView.h"
 #include "MetricsUploader/orbit_log_event.pb.h"
@@ -58,6 +59,8 @@ using orbit_metrics_uploader::OrbitLogEvent;
   float value = index.data(Qt::EditRole).toFloat(&is_float);
   return is_float ? std::optional<float>(value) : std::optional<float>(std::nullopt);
 }
+
+[[nodiscard]] static bool IsSliderEnabled() { return absl::GetFlag(FLAGS_devmode); }
 
 CallTreeWidget::CallTreeWidget(QWidget* parent)
     : QWidget{parent}, ui_{std::make_unique<Ui::CallTreeWidget>()} {
@@ -77,8 +80,13 @@ CallTreeWidget::CallTreeWidget(QWidget* parent)
           &CallTreeWidget::OnSearchLineEditTextEdited);
   connect(search_typing_finished_timer_, &QTimer::timeout, this,
           &CallTreeWidget::OnSearchTypingFinishedTimerTimout);
-  connect(ui_->horizontalSlider, &QSlider::valueChanged, this,
-          &CallTreeWidget::OnSliderValueChanged);
+
+  if (IsSliderEnabled()) {
+    connect(ui_->horizontalSlider, &QSlider::valueChanged, this,
+            &CallTreeWidget::OnSliderValueChanged);
+  } else {
+    ui_->horizontalSlider->setVisible(false);
+  }
 }
 
 void CallTreeWidget::SetCallTreeView(std::unique_ptr<CallTreeView> call_tree_view,
@@ -199,7 +207,7 @@ void CallTreeWidget::SetTopDownView(std::unique_ptr<CallTreeView> top_down_view)
   SetCallTreeView(std::move(top_down_view),
                   std::make_unique<HideValuesForTopDownProxyModel>(nullptr));
 
-  if (should_expand) {
+  if (should_expand && IsSliderEnabled()) {
     float expansion_threshold = 100.f - ui_->horizontalSlider->value();
     ExpandRecursivelyWithThreshold(
         ui_->callTreeTreeView, ui_->callTreeTreeView->model()->index(0, 0), expansion_threshold);
