@@ -41,7 +41,6 @@ class ScopedStatus final {
     data_ = std::make_unique<Data>();
     data_->executor = std::move(executor);
     data_->status_listener = status_listener;
-    data_->main_thread_id = std::this_thread::get_id();
     data_->status_id = status_listener->AddStatus(status_message);
   }
 
@@ -55,38 +54,32 @@ class ScopedStatus final {
       return *this;
     }
 
-    reset();
+    Reset();
     data_ = std::move(that.data_);
     return *this;
   }
 
-  ~ScopedStatus() { reset(); }
+  ~ScopedStatus() { Reset(); }
 
   void UpdateMessage(const std::string& message) {
     ORBIT_CHECK(data_ != nullptr);
-    if (std::this_thread::get_id() == data_->main_thread_id) {
-      data_->status_listener->UpdateStatus(data_->status_id, message);
-    } else {
-      TrySchedule(data_->executor,
-                  [status_id = data_->status_id, status_listener = data_->status_listener,
-                   message] { status_listener->UpdateStatus(status_id, message); });
-    }
+    TrySchedule(data_->executor,
+                [status_id = data_->status_id, status_listener = data_->status_listener, message] {
+                  status_listener->UpdateStatus(status_id, message);
+                });
   }
 
  private:
-  void reset() {
-    if (!data_) {
-      return;
-    }
+  void Reset() {
+    if (data_ == nullptr) return;
 
-    if (std::this_thread::get_id() == data_->main_thread_id) {
-      data_->status_listener->ClearStatus(data_->status_id);
-    } else {
-      TrySchedule(data_->executor,
-                  [status_listener = data_->status_listener, status_id = data_->status_id] {
-                    status_listener->ClearStatus(status_id);
-                  });
-    }
+    // We always do the ClearStatus asynchronously to avoid lifetime issues.
+    // Since we require that `data_->executor` gets destroyed before `status_listener`,
+    // this should never have a lifetime issue.
+    TrySchedule(data_->executor,
+                [status_listener = data_->status_listener, status_id = data_->status_id] {
+                  status_listener->ClearStatus(status_id);
+                });
 
     data_.reset();
   }
@@ -96,7 +89,6 @@ class ScopedStatus final {
   struct Data {
     std::weak_ptr<orbit_base::Executor> executor;
     StatusListener* status_listener = nullptr;
-    std::thread::id main_thread_id;
     uint64_t status_id = 0;
   };
 

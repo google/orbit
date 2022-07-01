@@ -13,6 +13,7 @@
 
 #include "OrbitBase/Action.h"
 #include "OrbitBase/Executor.h"
+#include "OrbitBase/SimpleExecutor.h"
 #include "ScopedStatus.h"
 #include "StatusListener.h"
 
@@ -25,35 +26,29 @@ class MockStatusListener : public StatusListener {
   MOCK_METHOD(void, ClearStatus, (uint64_t status_id), (override));
 };
 
-class MockExecutor : public orbit_base::Executor {
- public:
-  MOCK_METHOD(void, ScheduleImpl, (std::unique_ptr<Action> action), (override));
-};
-
 }  // namespace
 
 using ::testing::_;
 
 TEST(ScopedStatus, Smoke) {
   MockStatusListener status_listener{};
-  auto executor = std::make_shared<MockExecutor>();
+  auto executor = orbit_base::SimpleExecutor::Create();
   EXPECT_CALL(status_listener, AddStatus("Initial message")).Times(1);
   EXPECT_CALL(status_listener, UpdateStatus(_, "Updated message")).Times(1);
   EXPECT_CALL(status_listener, ClearStatus).Times(1);
-  EXPECT_CALL(*executor, ScheduleImpl).Times(0);
 
   {
     ScopedStatus status(executor, &status_listener, "Initial message");
     status.UpdateMessage("Updated message");
   }
+  executor->ExecuteScheduledTasks();
 }
 
 TEST(ScopedStatus, UpdateInAnotherThread) {
   MockStatusListener status_listener{};
-  auto executor = std::make_shared<MockExecutor>();
+  auto executor = orbit_base::SimpleExecutor::Create();
   EXPECT_CALL(status_listener, AddStatus("Initial message")).Times(1);
   EXPECT_CALL(status_listener, ClearStatus).Times(1);
-  EXPECT_CALL(*executor, ScheduleImpl).Times(1);
 
   {
     ScopedStatus status(executor, &status_listener, "Initial message");
@@ -61,14 +56,14 @@ TEST(ScopedStatus, UpdateInAnotherThread) {
 
     thread.join();
   }
+  executor->ExecuteScheduledTasks();
 }
 
 TEST(ScopedStatus, DestroyInAnotherThread) {
   MockStatusListener status_listener{};
-  auto executor = std::make_shared<MockExecutor>();
+  auto executor = orbit_base::SimpleExecutor::Create();
   EXPECT_CALL(status_listener, AddStatus("Initial message")).Times(1);
   EXPECT_CALL(status_listener, UpdateStatus(_, "Updated message")).Times(1);
-  EXPECT_CALL(*executor, ScheduleImpl).Times(1);
 
   {
     ScopedStatus status(executor, &status_listener, "Initial message");
@@ -76,14 +71,15 @@ TEST(ScopedStatus, DestroyInAnotherThread) {
     std::thread thread([status = std::move(status)]() {
       // Do nothing
     });
-
     thread.join();
   }
+
+  executor->ExecuteScheduledTasks();
 }
 
 TEST(ScopedStatus, MoveAssignment) {
   MockStatusListener status_listener{};
-  auto executor = std::make_shared<MockExecutor>();
+  auto executor = orbit_base::SimpleExecutor::Create();
   EXPECT_CALL(status_listener, AddStatus("Initial message 1")).Times(1);
   EXPECT_CALL(status_listener, AddStatus("Initial message 2")).Times(1);
   EXPECT_CALL(status_listener, UpdateStatus(_, "Updated message")).Times(1);
@@ -95,11 +91,13 @@ TEST(ScopedStatus, MoveAssignment) {
     status1.UpdateMessage("Updated message");
     status1 = std::move(status2);
   }
+
+  executor->ExecuteScheduledTasks();
 }
 
 TEST(ScopedStatus, SelfMoveAssign) {
   MockStatusListener status_listener{};
-  auto executor = std::make_shared<MockExecutor>();
+  auto executor = orbit_base::SimpleExecutor::Create();
   EXPECT_CALL(status_listener, AddStatus("Initial message")).Times(1);
   EXPECT_CALL(status_listener, UpdateStatus(_, "Updated message")).Times(1);
   EXPECT_CALL(status_listener, ClearStatus).Times(1);
@@ -112,6 +110,7 @@ TEST(ScopedStatus, SelfMoveAssign) {
     status1 = std::move(status1);
 #pragma GCC diagnostic pop
   }
+  executor->ExecuteScheduledTasks();
 }
 
 TEST(ScopedStatus, Unitialized) { ScopedStatus status{}; }
