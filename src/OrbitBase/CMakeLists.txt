@@ -41,6 +41,7 @@ target_sources(OrbitBase PRIVATE
         include/OrbitBase/SafeStrerror.h
         include/OrbitBase/SharedState.h
         include/OrbitBase/SimpleExecutor.h
+        include/OrbitBase/Sort.h
         include/OrbitBase/StringConversion.h
         include/OrbitBase/StopSource.h
         include/OrbitBase/StopState.h
@@ -120,6 +121,7 @@ target_sources(OrbitBaseTests PRIVATE
         ReadFileToStringTest.cpp
         ResultTest.cpp
         SimpleExecutorTest.cpp
+        SortTest.cpp
         StringConversionTest.cpp
         StopSourceTest.cpp
         StopTokenTest.cpp
