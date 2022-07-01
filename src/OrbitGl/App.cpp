@@ -446,7 +446,6 @@ void OrbitApp::OnCaptureStarted(const orbit_grpc_protos::CaptureStarted& capture
               capture_version.major_version, capture_version.minor_version);
           main_window_->AppendToCaptureLog(MainWindowInterface::CaptureLogSeverity::kSevereWarning,
                                            absl::ZeroDuration(), warning_message);
-          SendWarningToUi("Capture", warning_message);
         }
         absl::MutexLock lock(&mutex);
         initialization_complete = true;
