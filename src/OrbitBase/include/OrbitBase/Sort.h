@@ -8,13 +8,15 @@
 #include <algorithm>
 #include <functional>
 #include <type_traits>
+#include <utility>
 
 namespace orbit_base_internal {
 
 template <typename Comparator, typename Projection>
-static auto MakeComparator(Comparator comparator, Projection projection) {
-  return [comparator, projection](const auto& a, const auto& b) {
-    return comparator(projection(a), projection(b));
+static auto MakeComparator(Comparator&& comparator, Projection&& projection) {
+  return [comparator = std::forward<Comparator>(comparator),
+          projection = std::forward<Projection>(projection)](const auto& a, const auto& b) {
+    return std::invoke(comparator, std::invoke(projection, a), std::invoke(projection, b));
   };
 }
 
@@ -26,7 +28,8 @@ template <typename RandomIt, typename Projection, typename Comparator = std::les
           typename = std::enable_if<
               std::is_invocable_v<Projection, typename std::iterator_traits<RandomIt>::value_type>>>
 void sort(RandomIt first, RandomIt last, Projection projection = {}, Comparator comparator = {}) {
-  std::sort(first, last, orbit_base_internal::MakeComparator(comparator, projection));
+  std::sort(first, last,
+            orbit_base_internal::MakeComparator(std::move(comparator), std::move(projection)));
 }
 
 template <typename RandomIt, typename Projection, typename Comparator = std::less<>,
@@ -34,7 +37,9 @@ template <typename RandomIt, typename Projection, typename Comparator = std::les
               std::is_invocable_v<Projection, typename std::iterator_traits<RandomIt>::value_type>>>
 void stable_sort(RandomIt first, RandomIt last, Projection projection = {},
                  Comparator comparator = {}) {
-  std::sort(first, last, orbit_base_internal::MakeComparator(comparator, projection));
+  std::stable_sort(
+      first, last,
+      orbit_base_internal::MakeComparator(std::move(comparator), std::move(projection)));
 }
 
 }  // namespace orbit_base
