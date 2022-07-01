@@ -25,6 +25,7 @@ namespace orbit_base {
 
 template <typename ExecutionPolicy, typename RandomIt, typename Projection,
           typename Comparator = std::less<>,
+          typename = std::enable_if<std::is_execution_policy_v<std::decay_t<ExecutionPolicy>>>,
           typename = std::enable_if<
               std::is_invocable_v<Projection, typename std::iterator_traits<RandomIt>::value_type>>>
 void sort(ExecutionPolicy&& policy, RandomIt first, RandomIt last, Projection projection = {},
@@ -42,6 +43,7 @@ void sort(RandomIt first, RandomIt last, Projection projection = {}, Comparator 
 
 template <typename ExecutionPolicy, typename RandomIt, typename Projection,
           typename Comparator = std::less<>,
+          typename = std::enable_if<std::is_execution_policy_v<std::decay_t<ExecutionPolicy>>>,
           typename = std::enable_if<
               std::is_invocable_v<Projection, typename std::iterator_traits<RandomIt>::value_type>>>
 void stable_sort(ExecutionPolicy&& policy, RandomIt first, RandomIt last,
