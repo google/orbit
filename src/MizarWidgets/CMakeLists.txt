@@ -40,6 +40,7 @@ target_link_libraries(MizarWidgetsTests PRIVATE
   MizarWidgets
   GTest::QtGuiMain
   Qt5::Test
+  TestUtils
 )
 
 if(WIN32 AND "$ENV{QT_QPA_PLATFORM}" STREQUAL "offscreen")
