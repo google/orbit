@@ -14,16 +14,12 @@
 #include "MizarBase/SampledFunctionId.h"
 #include "MizarStatistics/ActiveFunctionTimePerFrameComparator.h"
 
+using ::orbit_mizar_base::Baseline;
+using ::orbit_mizar_base::Comparison;
 using ::orbit_mizar_base::SFID;
 using ::testing::DoubleNear;
 using ::testing::IsNan;
 using ::testing::Return;
-
-template <typename T>
-using Baseline = ::orbit_mizar_base::Baseline<T>;
-
-template <typename T>
-using Comparison = ::orbit_mizar_base::Comparison<T>;
 
 namespace {
 class MockCounts {

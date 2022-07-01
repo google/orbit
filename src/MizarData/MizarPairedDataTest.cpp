@@ -11,6 +11,7 @@
 #include <cstdint>
 #include <iterator>
 #include <memory>
+#include <utility>
 #include <vector>
 
 #include "ClientData/CallstackData.h"
@@ -20,6 +21,7 @@
 #include "MizarData/MizarPairedData.h"
 
 using ::orbit_mizar_base::SFID;
+using ::orbit_mizar_base::TID;
 using ::testing::ElementsAre;
 using ::testing::Invoke;
 using ::testing::Return;
@@ -81,9 +83,13 @@ const std::string_view kOtherThreadName = "other thread";
 const absl::flat_hash_map<uint32_t, std::string> kThreadNames = {
     {kTID, std::string(kThreadName)}, {kAnotherTID, std::string(kOtherThreadName)}};
 
-const absl::flat_hash_map<uint32_t, std::string> kSampledTidToName = [] {
-  auto result = kThreadNames;
-  result[kNamelessTID] = "";
+const absl::flat_hash_map<TID, std::string> kSampledTidToName = [] {
+  absl::flat_hash_map<TID, std::string> result;
+  std::transform(std::begin(kThreadNames), std::end(kThreadNames),
+                 std::inserter(result, std::begin(result)), [](const auto& tid_to_name) {
+                   return std::make_pair(TID(tid_to_name.first), tid_to_name.second);
+                 });
+  result[TID(kNamelessTID)] = "";
   return result;
 }();
 
@@ -108,8 +114,8 @@ const std::unique_ptr<orbit_client_data::CallstackData> kCallstackData = [] {
   return callstack_data;
 }();
 
-const absl::flat_hash_map<uint32_t, uint64_t> kTidToCallstackCount = {
-    {kTID, 3}, {kAnotherTID, 1}, {kNamelessTID, 1}};
+const absl::flat_hash_map<TID, uint64_t> kTidToCallstackCount = {
+    {TID(kTID), 3}, {TID(kAnotherTID), 1}, {TID(kNamelessTID), 1}};
 
 [[nodiscard]] static std::vector<SFID> SFIDsForCallstacks(const std::vector<uint64_t>& addresses) {
   std::vector<uint64_t> good_addresses;
@@ -222,7 +228,7 @@ TEST_F(MizarPairedDataTest, ForeachCallstackIsCorrect) {
 
   // All threads, all timestamps
   actual_ids_fed_to_action.clear();
-  mizar_paired_data.ForEachCallstackEvent(orbit_base::kAllProcessThreadsTid, 0, kRelativeTime5,
+  mizar_paired_data.ForEachCallstackEvent(TID(orbit_base::kAllProcessThreadsTid), 0, kRelativeTime5,
                                           action);
   EXPECT_THAT(actual_ids_fed_to_action,
               UnorderedElementsAre(kCompleteCallstackIds, kCompleteCallstackIds,
@@ -230,14 +236,14 @@ TEST_F(MizarPairedDataTest, ForeachCallstackIsCorrect) {
 
   // One thread, all timestamps
   actual_ids_fed_to_action.clear();
-  mizar_paired_data.ForEachCallstackEvent(kTID, 0, kRelativeTime5, action);
+  mizar_paired_data.ForEachCallstackEvent(TID(kTID), 0, kRelativeTime5, action);
   EXPECT_THAT(
       actual_ids_fed_to_action,
       UnorderedElementsAre(kCompleteCallstackIds, kCompleteCallstackIds, kInCompleteCallstackIds));
 
   // All threads, some timestamps
   actual_ids_fed_to_action.clear();
-  mizar_paired_data.ForEachCallstackEvent(orbit_base::kAllProcessThreadsTid, kRelativeTime1,
+  mizar_paired_data.ForEachCallstackEvent(TID(orbit_base::kAllProcessThreadsTid), kRelativeTime1,
                                           kRelativeTime5, action);
   EXPECT_THAT(actual_ids_fed_to_action,
               UnorderedElementsAre(kCompleteCallstackIds, kInCompleteCallstackIds,
@@ -247,7 +253,7 @@ TEST_F(MizarPairedDataTest, ForeachCallstackIsCorrect) {
 TEST_F(MizarPairedDataTest, ActiveInvocationTimesIsCorrect) {
   MizarPairedDataTmpl<MockMizarData> mizar_paired_data(std::move(data_), kAddressToId);
   std::vector<uint64_t> actual_active_invocation_times = mizar_paired_data.ActiveInvocationTimes(
-      {kTID, kAnotherTID}, 1, 0, std::numeric_limits<uint64_t>::max());
+      {TID(kTID), TID(kAnotherTID)}, 1, 0, std::numeric_limits<uint64_t>::max());
   EXPECT_THAT(actual_active_invocation_times,
               ElementsAre(kSamplingPeriod * 2, kSamplingPeriod * 2));
 }

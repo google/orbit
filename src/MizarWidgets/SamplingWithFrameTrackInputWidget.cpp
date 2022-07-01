@@ -47,10 +47,9 @@ SamplingWithFrameTrackInputWidgetBase::MakeConfig() const {
 void SamplingWithFrameTrackInputWidgetBase::OnThreadSelectionChanged() {
   selected_tids_.clear();
   const QList<QListWidgetItem*> selected_items = GetThreadList()->selectedItems();
-  std::transform(
-      std::begin(selected_items), std::end(selected_items),
-      std::inserter(selected_tids_, std::begin(selected_tids_)),
-      [](const QListWidgetItem* item) { return item->data(kTidRole).value<uint32_t>(); });
+  std::transform(std::begin(selected_items), std::end(selected_items),
+                 std::inserter(selected_tids_, std::begin(selected_tids_)),
+                 [](const QListWidgetItem* item) { return item->data(kTidRole).value<TID>(); });
 }
 
 void SamplingWithFrameTrackInputWidgetBase::OnFrameTrackSelectionChanged(int index) {

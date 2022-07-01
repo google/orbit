@@ -13,13 +13,9 @@
 
 namespace orbit_mizar_widgets {
 
-template <typename T>
-using Baseline = ::orbit_mizar_base::Baseline<T>;
-
-template <typename T>
-using Comparison = ::orbit_mizar_base::Comparison<T>;
-
 using orbit_base::LiftAndApply;
+using ::orbit_mizar_base::Baseline;
+using ::orbit_mizar_base::Comparison;
 
 SamplingWithFrameTrackWidget::SamplingWithFrameTrackWidget(QWidget* parent)
     : QWidget(parent), ui_(std::make_unique<Ui::SamplingWithFrameTrackWidget>()) {

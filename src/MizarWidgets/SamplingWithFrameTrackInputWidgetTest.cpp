@@ -16,8 +16,10 @@
 #include <string>
 
 #include "ClientData/ScopeInfo.h"
+#include "MizarBase/ThreadId.h"
 #include "MizarWidgets/SamplingWithFrameTrackInputWidget.h"
 
+using orbit_mizar_base::TID;
 using testing::ElementsAreArray;
 using testing::NotNull;
 using testing::Return;
@@ -27,8 +29,8 @@ using testing::UnorderedElementsAreArray;
 namespace {
 class MockPairedData {
  public:
-  MOCK_METHOD((const absl::flat_hash_map<uint32_t, std::string>&), TidToNames, (), (const));
-  MOCK_METHOD((const absl::flat_hash_map<uint32_t, std::uint64_t>&), TidToCallstackSampleCounts, (),
+  MOCK_METHOD((const absl::flat_hash_map<TID, std::string>&), TidToNames, (), (const));
+  MOCK_METHOD((const absl::flat_hash_map<TID, std::uint64_t>&), TidToCallstackSampleCounts, (),
               (const));
   MOCK_METHOD((const absl::flat_hash_map<uint64_t, orbit_client_data::ScopeInfo>), GetFrameTracks,
               (), (const));
@@ -37,21 +39,21 @@ class MockPairedData {
 
 namespace orbit_mizar_widgets {
 
-constexpr uint32_t kTid = 0x3EAD1;
-constexpr uint32_t kOtherTid = 0x3EAD2;
+constexpr TID kTid(0x3EAD1);
+constexpr TID kOtherTid(0x3EAD2);
 const std::string kThreadName = "Thread";
 const std::string kOtherThreadName = "Other Thread";
 constexpr uint64_t kThreadSamplesCount = 5;
 constexpr uint64_t kOtherThreadSamplesCount = 2;
-const absl::flat_hash_map<uint32_t, std::string> kTidToName = {{kTid, kThreadName},
-                                                               {kOtherTid, kOtherThreadName}};
+const absl::flat_hash_map<TID, std::string> kTidToName = {{kTid, kThreadName},
+                                                          {kOtherTid, kOtherThreadName}};
 
-const absl::flat_hash_map<uint32_t, uint64_t> kTidToCount = {{kTid, kThreadSamplesCount},
-                                                             {kOtherTid, kOtherThreadSamplesCount}};
+const absl::flat_hash_map<TID, uint64_t> kTidToCount = {{kTid, kThreadSamplesCount},
+                                                        {kOtherTid, kOtherThreadSamplesCount}};
 constexpr size_t kThreadCount = 2;
 
-static std::string MakeThreadListItemString(std::string_view name, uint32_t tid) {
-  return absl::StrFormat("[%u] %s", tid, name);
+static std::string MakeThreadListItemString(std::string_view name, TID tid) {
+  return absl::StrFormat("[%u] %s", *tid, name);
 }
 
 const std::vector<std::string> kThreadNamesSorted = {
@@ -129,7 +131,7 @@ class SamplingWithFrameTrackInputWidgetTest : public ::testing::Test {
 
   void ClearThreadListSelection() const { thread_list_->selectionModel()->clearSelection(); }
 
-  void ExpectSelectedTidsAre(std::initializer_list<uint32_t> tids) const {
+  void ExpectSelectedTidsAre(std::initializer_list<TID> tids) const {
     EXPECT_THAT(widget_->MakeConfig().tids, UnorderedElementsAreArray(tids));
   }
 

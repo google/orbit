@@ -16,19 +16,17 @@
 #include "CaptureClient/LoadCapture.h"
 #include "CaptureFile/CaptureFile.h"
 #include "MizarBase/BaselineOrComparison.h"
+#include "MizarBase/ThreadId.h"
 #include "MizarData/BaselineAndComparison.h"
 #include "MizarData/MizarData.h"
 #include "MizarWidgets/MizarMainWindow.h"
 #include "OrbitBase/Logging.h"
 
-template <typename T>
-using Baseline = ::orbit_mizar_base::Baseline<T>;
-
-template <typename T>
-using Comparison = ::orbit_mizar_base::Comparison<T>;
-
+using ::orbit_mizar_base::Baseline;
+using ::orbit_mizar_base::Comparison;
 using ::orbit_mizar_base::MakeBaseline;
 using ::orbit_mizar_base::MakeComparison;
+using ::orbit_mizar_base::TID;
 
 [[nodiscard]] static ErrorMessageOr<void> LoadCapture(orbit_mizar_data::MizarData* data,
                                                       std::filesystem::path path) {
@@ -62,8 +60,8 @@ int main(int argc, char** argv) {
       ExpandPathHomeFolder(absl::GetFlag(FLAGS_baseline_path));
   const std::filesystem::path comparison_path =
       ExpandPathHomeFolder(absl::GetFlag(FLAGS_comparison_path));
-  const uint32_t baseline_tid = absl::GetFlag(FLAGS_baseline_tid);
-  const uint32_t comparison_tid = absl::GetFlag(FLAGS_comparison_tid);
+  const TID baseline_tid{absl::GetFlag(FLAGS_baseline_tid)};
+  const TID comparison_tid{absl::GetFlag(FLAGS_comparison_tid)};
 
   constexpr uint64_t kNsInMs = 1'000'000;
   const uint64_t baseline_start_ns = absl::GetFlag(FLAGS_baseline_start_ms) * kNsInMs;
@@ -99,10 +97,10 @@ int main(int argc, char** argv) {
   const orbit_mizar_data::SamplingWithFrameTrackComparisonReport report =
       bac.MakeSamplingWithFrameTrackReport(
           MakeBaseline<orbit_mizar_data::HalfOfSamplingWithFrameTrackReportConfig>(
-              absl::flat_hash_set<uint32_t>{baseline_tid}, baseline_start_ns, kDuration,
+              absl::flat_hash_set<TID>{baseline_tid}, baseline_start_ns, kDuration,
               kFrameTrackScopeId),
           MakeComparison<orbit_mizar_data::HalfOfSamplingWithFrameTrackReportConfig>(
-              absl::flat_hash_set<uint32_t>{comparison_tid}, comparison_start_ns, kDuration,
+              absl::flat_hash_set<TID>{comparison_tid}, comparison_start_ns, kDuration,
               kFrameTrackScopeId));
 
   for (const auto& [sfid, name] : bac.sfid_to_name()) {

@@ -8,7 +8,8 @@ add_library(MizarBase INTERFACE)
 
 target_sources(MizarBase INTERFACE
   include/MizarBase/BaselineOrComparison.h
-  include/MizarBase/SampledFunctionId.h)
+  include/MizarBase/SampledFunctionId.h
+  include/MizarBase/ThreadId.h)
 
 target_include_directories(MizarBase INTERFACE ${CMAKE_CURRENT_LIST_DIR}/include)
 

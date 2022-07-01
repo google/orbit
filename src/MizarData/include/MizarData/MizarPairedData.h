@@ -22,6 +22,7 @@
 #include "ClientData/ScopeInfo.h"
 #include "ClientProtos/capture_data.pb.h"
 #include "MizarBase/SampledFunctionId.h"
+#include "MizarBase/ThreadId.h"
 #include "MizarData/MizarDataProvider.h"
 #include "MizarData/NonWrappingAddition.h"
 #include "OrbitBase/ThreadConstants.h"
@@ -34,6 +35,7 @@ namespace orbit_mizar_data {
 template <typename Data>
 class MizarPairedDataTmpl {
   using SFID = ::orbit_mizar_base::SFID;
+  using TID = ::orbit_mizar_base::TID;
 
  public:
   MizarPairedDataTmpl(std::unique_ptr<Data> data,
@@ -48,7 +50,7 @@ class MizarPairedDataTmpl {
   // obtained via counting how many callstack samples have been obtained during each frame and then
   // multiplying the counter by the sampling period.
   [[nodiscard]] std::vector<uint64_t> ActiveInvocationTimes(
-      const absl::flat_hash_set<uint32_t>& tids, uint64_t frame_track_scope_id,
+      const absl::flat_hash_set<TID>& tids, uint64_t frame_track_scope_id,
       uint64_t min_relative_timestamp_ns, uint64_t max_relative_timestamp_ns) const {
     const auto [min_timestamp_ns, max_timestamp_ns] =
         RelativeToAbsoluteTimestampRange(min_relative_timestamp_ns, max_relative_timestamp_ns);
@@ -63,8 +65,7 @@ class MizarPairedDataTmpl {
     std::vector<uint64_t> result;
     for (size_t i = 0; i + 1 < timers.size(); ++i) {
       const uint64_t callstack_count = std::transform_reduce(
-          std::begin(tids), std::end(tids), 0, std::plus<>(),
-          [this, i, &timers](const uint64_t tid) {
+          std::begin(tids), std::end(tids), 0, std::plus<>(), [this, i, &timers](const TID tid) {
             return CallstackSamplesCount(tid, timers[i]->start(), timers[i + 1]->start());
           });
 
@@ -73,11 +74,11 @@ class MizarPairedDataTmpl {
     return result;
   }
 
-  [[nodiscard]] const absl::flat_hash_map<uint32_t, std::string>& TidToNames() const {
+  [[nodiscard]] const absl::flat_hash_map<TID, std::string>& TidToNames() const {
     return tid_to_names_;
   }
 
-  [[nodiscard]] const absl::flat_hash_map<uint32_t, uint64_t>& TidToCallstackSampleCounts() const {
+  [[nodiscard]] const absl::flat_hash_map<TID, uint64_t>& TidToCallstackSampleCounts() const {
     return tid_to_callstack_samples_counts_;
   }
 
@@ -100,7 +101,7 @@ class MizarPairedDataTmpl {
   // `min_relative_timestamp_ns` and `max_relative_timestamp_ns` are the nanoseconds elapsed since
   // capture start.
   template <typename Action>
-  void ForEachCallstackEvent(uint32_t tid, uint64_t min_relative_timestamp_ns,
+  void ForEachCallstackEvent(TID tid, uint64_t min_relative_timestamp_ns,
                              uint64_t max_relative_timestamp_ns, Action&& action) const {
     auto action_on_callstack_events =
         [this, &action](const orbit_client_data::CallstackEvent& event) -> void {
@@ -123,31 +124,31 @@ class MizarPairedDataTmpl {
     GetCallstackData().ForEachCallstackEventInTimeRange(
         0, std::numeric_limits<uint64_t>::max(),
         [this, &thread_names](const orbit_client_data::CallstackEvent& event) {
-          const uint32_t tid = event.thread_id();
+          const TID tid = TID(event.thread_id());
           tid_to_callstack_samples_counts_[tid]++;
 
           if (tid_to_names_.contains(tid)) return;
 
-          const auto tid_to_name = thread_names.find(tid);
+          const auto tid_to_name = thread_names.find(*tid);
           std::string thread_name = (tid_to_name != thread_names.end()) ? tid_to_name->second : "";
           tid_to_names_.try_emplace(tid, std::move(thread_name));
         });
   }
 
   template <typename Action>
-  void ForEachCallstackEventOfTidInTimeRange(uint32_t tid, uint64_t min_timestamp_ns,
+  void ForEachCallstackEventOfTidInTimeRange(TID tid, uint64_t min_timestamp_ns,
                                              uint64_t max_timestamp_ns,
                                              Action&& action_on_callstack_events) const {
-    if (tid == orbit_base::kAllProcessThreadsTid) {
+    if (*tid == orbit_base::kAllProcessThreadsTid) {
       GetCallstackData().ForEachCallstackEventInTimeRange(min_timestamp_ns, max_timestamp_ns,
                                                           action_on_callstack_events);
     } else {
       GetCallstackData().ForEachCallstackEventOfTidInTimeRange(
-          tid, min_timestamp_ns, max_timestamp_ns, action_on_callstack_events);
+          *tid, min_timestamp_ns, max_timestamp_ns, action_on_callstack_events);
     }
   }
 
-  [[nodiscard]] uint64_t CallstackSamplesCount(uint32_t tid, uint64_t min_timestamp_ns,
+  [[nodiscard]] uint64_t CallstackSamplesCount(TID tid, uint64_t min_timestamp_ns,
                                                uint64_t max_timestamp_ns) const {
     uint64_t count = 0;
     ForEachCallstackEventOfTidInTimeRange(tid, min_timestamp_ns, max_timestamp_ns,
@@ -189,8 +190,8 @@ class MizarPairedDataTmpl {
 
   std::unique_ptr<Data> data_;
   absl::flat_hash_map<uint64_t, SFID> address_to_sfid_;
-  absl::flat_hash_map<uint32_t, std::string> tid_to_names_;
-  absl::flat_hash_map<uint32_t, uint64_t> tid_to_callstack_samples_counts_;
+  absl::flat_hash_map<TID, std::string> tid_to_names_;
+  absl::flat_hash_map<TID, uint64_t> tid_to_callstack_samples_counts_;
 };
 
 using MizarPairedData = MizarPairedDataTmpl<MizarDataProvider>;
