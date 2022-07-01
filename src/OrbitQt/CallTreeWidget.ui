@@ -2,31 +2,41 @@
 <ui version="4.0">
  <class>CallTreeWidget</class>
  <widget class="QWidget" name="CallTreeWidget">
-  <layout class="QGridLayout">
-   <property name="leftMargin">
-    <number>0</number>
-   </property>
-   <property name="topMargin">
-    <number>0</number>
-   </property>
-   <property name="rightMargin">
-    <number>0</number>
-   </property>
-   <property name="bottomMargin">
-    <number>0</number>
-   </property>
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>256</width>
+    <height>220</height>
+   </rect>
+  </property>
+  <layout class="QGridLayout" name="gridLayout">
    <item row="0" column="0">
-    <widget class="QLineEdit" name="searchLineEdit">
-     <property name="accessibleName">
-      <string>filter</string>
-     </property>
-     <property name="placeholderText">
-      <string>Search (invalidates the expanded/collapsed state of all nodes in the tree)</string>
-     </property>
-     <property name="clearButtonEnabled">
-      <bool>true</bool>
-     </property>
-    </widget>
+    <layout class="QHBoxLayout" name="horizontalLayout_2" stretch="8,2">
+     <item>
+      <widget class="QLineEdit" name="searchLineEdit">
+       <property name="accessibleName">
+        <string>filter</string>
+       </property>
+       <property name="placeholderText">
+        <string>Search (invalidates the expanded/collapsed state of all nodes in the tree)</string>
+       </property>
+       <property name="clearButtonEnabled">
+        <bool>true</bool>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QSlider" name="horizontalSlider">
+       <property name="maximum">
+        <number>100</number>
+       </property>
+       <property name="orientation">
+        <enum>Qt::Horizontal</enum>
+       </property>
+      </widget>
+     </item>
+    </layout>
    </item>
    <item row="1" column="0">
     <widget class="CustomSignalsTreeView" name="callTreeTreeView">
