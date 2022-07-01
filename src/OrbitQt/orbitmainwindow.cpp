@@ -271,7 +271,7 @@ void OrbitMainWindow::SetupMainWindow() {
 
   status_listener_ = StatusListenerImpl::Create(statusBar());
 
-  app_->SetStatusListener(status_listener_.get());
+  app_->SetStatusListener(status_listener_);
 
   app_->SetCaptureStartedCallback([this](const std::optional<std::filesystem::path>& file_path) {
     // Only set it if this is not empty, we do not want to reset the label when loading from legacy

@@ -18,6 +18,11 @@
  *
  * uint64_t status_id = listener->AddStatus("");
  */
+
+#include <stdint.h>
+
+#include <string>
+
 class StatusListener {
  public:
   virtual ~StatusListener() = default;
