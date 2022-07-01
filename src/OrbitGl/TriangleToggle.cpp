@@ -36,9 +36,10 @@ void TriangleToggle::DoDraw(PrimitiveAssembler& primitive_assembler, TextRendere
   // Draw triangle.
   const Vec2 midpoint = GetPos() + Vec2(GetWidth() / 2, GetHeight() / 2);
   const float triangle_side_length = std::min(GetWidth(), GetHeight());
-  const float triangle_height = triangle_side_length * sqrtf(3.f) * 0.5f;
+  const float kCos30 = sqrtf(3.f) / 2;
+  const float triangle_height = triangle_side_length * kCos30;
 
-  const float half_triangle_height = std::ceilf(triangle_height / 2);
+  const float half_triangle_height = ceilf(triangle_height / 2);
   const float half_triangle_side_length = triangle_side_length / 2;
 
   if (!picking) {
