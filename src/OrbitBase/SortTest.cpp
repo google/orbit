@@ -19,7 +19,7 @@ struct Struct {
   }
 };
 
-auto projection = [](const Struct& s) -> int { return s.value; };
+constexpr auto projection = [](const Struct& s) -> int { return s.value; };
 }  // namespace
 
 namespace orbit_base {
