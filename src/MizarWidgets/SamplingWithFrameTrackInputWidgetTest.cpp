@@ -60,7 +60,7 @@ const std::vector<std::string> kThreadNamesSorted = {
 const QString kInputName = QStringLiteral("InputName");
 
 template <typename Container, typename AnotherContainer>
-auto MakeMap(const Container& keys, const AnotherContainer& values) {
+static auto MakeMap(const Container& keys, const AnotherContainer& values) {
   using K = typename Container::value_type;
   using V = typename AnotherContainer::value_type;
   using std::begin;

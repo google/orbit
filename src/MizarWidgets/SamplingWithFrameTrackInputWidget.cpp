@@ -5,6 +5,7 @@
 #include "MizarWidgets/SamplingWithFrameTrackInputWidget.h"
 
 #include <absl/strings/str_format.h>
+#include <qcombobox.h>
 
 #include <QComboBox>
 #include <QListWidget>
@@ -23,8 +24,8 @@ SamplingWithFrameTrackInputWidgetBase::SamplingWithFrameTrackInputWidgetBase(QWi
   ui_->setupUi(this);
   QObject::connect(GetThreadList(), &QListWidget::itemSelectionChanged, this,
                    &SamplingWithFrameTrackInputWidgetBase::OnThreadSelectionChanged);
-  QObject::connect(GetFrameTrackList(), SIGNAL(currentIndexChanged(int)), this,
-                   SLOT(OnFrameTrackSelectionChanged(int)));
+  QObject::connect(GetFrameTrackList(), qOverload<int>(&QComboBox::currentIndexChanged), this,
+                   &SamplingWithFrameTrackInputWidgetBase::OnFrameTrackSelectionChanged);
 }
 
 QLabel* SamplingWithFrameTrackInputWidgetBase::GetTitle() const { return ui_->title_; }

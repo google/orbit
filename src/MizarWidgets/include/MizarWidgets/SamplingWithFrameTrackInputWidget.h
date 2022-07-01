@@ -45,7 +45,7 @@ class SamplingWithFrameTrackInputWidgetBase : public QWidget {
   std::unique_ptr<Ui::SamplingWithFrameTrackInputWidget> ui_;
 
  protected:
-  enum UserRoles { kTidRole = Qt::UserRole + 1, kScopeIdRole = kTidRole + 1 };
+  enum UserRoles { kTidRole = Qt::UserRole + 1, kScopeIdRole };
 
   explicit SamplingWithFrameTrackInputWidgetBase(QWidget* parent = nullptr);
 
@@ -110,8 +110,9 @@ class SamplingWithFrameTrackInputWidgetTmpl : public SamplingWithFrameTrackInput
     OnFrameTrackSelectionChanged(0);
   }
 
-  [[nodiscard]] QString MakeFrameTrackString(const orbit_client_data::ScopeInfo& scope_info) const {
-    const std::string type_string =
+  [[nodiscard]] static QString MakeFrameTrackString(
+      const orbit_client_data::ScopeInfo& scope_info) {
+    const std::string_view type_string =
         scope_info.GetType() == orbit_client_data::ScopeType::kDynamicallyInstrumentedFunction
             ? " D"
             : "MS";

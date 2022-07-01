@@ -160,7 +160,7 @@ const std::vector<const orbit_client_protos::TimerInfo*> kTimerPtrs = [] {
 constexpr uint64_t kSamplingPeriod = 10;
 
 template <typename Container, typename AnotherContainer>
-auto MakeMap(const Container& keys, const AnotherContainer& values) {
+static auto MakeMap(const Container& keys, const AnotherContainer& values) {
   using K = typename Container::value_type;
   using V = typename AnotherContainer::value_type;
   using std::begin;

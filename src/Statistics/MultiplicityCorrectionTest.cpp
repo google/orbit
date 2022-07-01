@@ -21,7 +21,7 @@ constexpr size_t kTestsNum = 4;
 constexpr std::array<double, kTestsNum> kPvalues = {0.1, 0.2, 0.3, 0.02};
 
 template <typename Container, typename AnotherContainer>
-auto MakeMap(const Container& keys, const AnotherContainer& values) {
+static auto MakeMap(const Container& keys, const AnotherContainer& values) {
   using K = typename Container::value_type;
   using V = typename AnotherContainer::value_type;
   using std::begin;
