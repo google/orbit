@@ -14,11 +14,11 @@
 #include <cstdint>
 #include <functional>
 #include <iterator>
+#include <optional>
 #include <ostream>
 #include <string_view>
 #include <tuple>
 
-#include "AccessibleTimeGraph.h"
 #include "App.h"
 #include "CaptureViewElement.h"
 #include "ClientData/CallstackData.h"
@@ -168,6 +168,7 @@ void CaptureWindow::LeftUp() {
   if (!click_was_drag_ && background_clicked_) {
     app_->SelectTimer(nullptr);
     app_->set_selected_thread_id(orbit_base::kAllProcessThreadsTid);
+    app_->set_selected_thread_state_slice(std::nullopt);
     RequestUpdatePrimitives();
   }
 
