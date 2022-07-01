@@ -23,6 +23,7 @@
 #include "ClientData/ScopeInfo.h"
 #include "MizarData/MizarPairedData.h"
 #include "MizarData/SamplingWithFrameTrackComparisonReport.h"
+#include "OrbitBase/Sort.h"
 
 namespace Ui {
 class SamplingWithFrameTrackInputWidget;
@@ -84,8 +85,8 @@ class SamplingWithFrameTrackInputWidgetTmpl : public SamplingWithFrameTrackInput
 
     std::vector<std::pair<uint32_t, uint64_t>> counts_sorted(std::begin(counts), std::end(counts));
 
-    std::sort(std::begin(counts_sorted), std::end(counts_sorted),
-              [](const auto& a, const auto& b) { return a.second > b.second; });
+    orbit_base::sort(std::begin(counts_sorted), std::end(counts_sorted),
+                     &std::pair<uint32_t, uint64_t>::second, std::greater<>{});
     for (const auto& [tid, unused_count] : counts_sorted) {
       auto item = std::make_unique<QListWidgetItem>(
           QString::fromStdString(absl::StrFormat("[%u] %s", tid, tid_to_name.at(tid))));
@@ -99,8 +100,8 @@ class SamplingWithFrameTrackInputWidgetTmpl : public SamplingWithFrameTrackInput
         data.GetFrameTracks();
     std::vector<std::pair<uint64_t, orbit_client_data::ScopeInfo>> scope_id_to_info_sorted(
         std::begin(scope_id_to_info), std::end(scope_id_to_info));
-    std::sort(std::begin(scope_id_to_info_sorted), std::end(scope_id_to_info_sorted),
-              [](const auto& a, const auto& b) { return a.second.GetName() < b.second.GetName(); });
+    orbit_base::sort(std::begin(scope_id_to_info_sorted), std::end(scope_id_to_info_sorted),
+                     [](const auto& a) { return a.second.GetName(); });
 
     for (size_t i = 0; i < scope_id_to_info_sorted.size(); ++i) {
       const auto& [scope_id, scope_info] = scope_id_to_info_sorted[i];
