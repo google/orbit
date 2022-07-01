@@ -965,4 +965,34 @@ TEST_F(PeCoffEpilogTest, error_is_reset_for_every_invocation) {
   }
 }
 
+TEST_F(PeCoffEpilogTest, cache_of_addresses_not_in_epilog_can_prevent_failure) {
+  {
+    // No ret instruction.
+    std::vector<uint8_t> machine_code{0x48, 0x83, 0xc4, 0x28};  // add sp, 0x28
+    SetMemoryInFakeFile(kTextSectionFileOffset, machine_code);
+    const uint64_t function_end_address = kFunctionStartAddress + machine_code.size();
+
+    RegsX86_64 regs;
+    bool in_epilog;
+    EXPECT_TRUE(pe_coff_epilog_->DetectAndHandleEpilog(kFunctionStartAddress, function_end_address,
+                                                       kCurrentOffsetFromStartOfFunction,
+                                                       process_mem_fake_.get(), &regs, &in_epilog));
+    EXPECT_FALSE(in_epilog);
+    EXPECT_EQ(pe_coff_epilog_->GetLastError().code, ERROR_NONE);
+  }
+
+  {
+    // Cannot read memory.
+    file_mem_fake_->Clear();
+    RegsX86_64 regs;
+    constexpr uint64_t kFunctionEndAddressFakeValue = kFunctionStartAddress + 1;
+    bool in_epilog;
+    EXPECT_TRUE(pe_coff_epilog_->DetectAndHandleEpilog(
+        kFunctionStartAddress, kFunctionEndAddressFakeValue, kCurrentOffsetFromStartOfFunction,
+        process_mem_fake_.get(), &regs, &in_epilog));
+    EXPECT_FALSE(in_epilog);
+    EXPECT_EQ(pe_coff_epilog_->GetLastError().code, ERROR_NONE);
+  }
+}
+
 }  // namespace unwindstack
