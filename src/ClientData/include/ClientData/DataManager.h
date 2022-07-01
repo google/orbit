@@ -120,6 +120,7 @@ class DataManager final {
 
   uint32_t selected_thread_id_ = orbit_base::kInvalidThreadId;
   const orbit_client_protos::TimerInfo* selected_timer_ = nullptr;
+  std::optional<orbit_client_data::ThreadStateSliceInfo> selected_thread_state_slice_{std::nullopt};
 
   // DataManager needs a copy of this so that we can persist user choices like frame tracks between
   // captures.
@@ -139,8 +140,6 @@ class DataManager final {
   bool collect_memory_info_ = false;
   uint64_t memory_sampling_period_ms_ = 10;
   uint64_t memory_warning_threshold_kb_ = 8ULL * 1024 * 1024;
-
-  std::optional<orbit_client_data::ThreadStateSliceInfo> selected_thread_state_slice_{std::nullopt};
 };
 
 }  // namespace orbit_client_data

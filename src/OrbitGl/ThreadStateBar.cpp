@@ -269,9 +269,9 @@ void ThreadStateBar::OnPick(int x, int y) {
   ThreadBar::OnPick(x, y);
   app_->set_selected_thread_id(GetThreadId());
 
-  Vec2i screen_cords = Vec2i(x, y);
-  float clicked_x = viewport_->ScreenToWorld(screen_cords)[0];
-  uint64_t clicked_timestamp = timeline_info_->GetTickFromWorld(clicked_x);
+  Vec2i screen_clicked_cords = Vec2i(x, y);
+  float clicked_world_x = viewport_->ScreenToWorld(screen_clicked_cords)[0];
+  uint64_t clicked_timestamp = timeline_info_->GetTickFromWorld(clicked_world_x);
   std::optional<ThreadStateSliceInfo> clicked_slice =
       capture_data_->FindThreadStateSliceInfoFromTimestamp(GetThreadId(), clicked_timestamp);
   app_->set_selected_thread_state_slice(clicked_slice);
