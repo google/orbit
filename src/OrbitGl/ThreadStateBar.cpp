@@ -269,12 +269,12 @@ void ThreadStateBar::OnPick(int x, int y) {
   ThreadBar::OnPick(x, y);
   app_->set_selected_thread_id(GetThreadId());
 
-  Vec2i screen_clicked_cords = Vec2i(x, y);
-  float clicked_world_x = viewport_->ScreenToWorld(screen_clicked_cords)[0];
-  uint64_t clicked_timestamp = timeline_info_->GetTickFromWorld(clicked_world_x);
-  std::optional<ThreadStateSliceInfo> clicked_slice =
-      capture_data_->FindThreadStateSliceInfoFromTimestamp(GetThreadId(), clicked_timestamp);
-  app_->set_selected_thread_state_slice(clicked_slice);
+  Vec2i screen_click_pos = Vec2i(x, y);
+  float world_click_pos_x = viewport_->ScreenToWorld(screen_click_pos)[0];
+  uint64_t click_timestamp = timeline_info_->GetTickFromWorld(world_click_pos_x);
+  std::optional<ThreadStateSliceInfo> click_slice =
+      capture_data_->FindThreadStateSliceInfoFromTimestamp(GetThreadId(), click_timestamp);
+  app_->set_selected_thread_state_slice(click_slice);
 }
 
 }  // namespace orbit_gl
