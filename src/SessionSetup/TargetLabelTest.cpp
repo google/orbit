@@ -6,7 +6,9 @@
 
 #include <memory>
 
+#include "ClientData/ProcessData.h"
 #include "GrpcProtos/process.pb.h"
+#include "OrbitGgp/Instance.h"
 #include "SessionSetup/TargetLabel.h"
 
 namespace orbit_session_setup {
@@ -36,17 +38,45 @@ TEST(TargetLabel, ChangeToFileTarget) {
   EXPECT_EQ(label.GetFilePath().value(), path);
 }
 
+const char* kProcessName = "test process";
+const char* kInstanceName = "test instance";
+const double kCpuUsage = 50.1;
+const char* kCpuUsageDisplay = "50";
+
+void ChangeToFakeStadiaTarget(TargetLabel& label) {
+  orbit_client_data::ProcessData process;
+  orbit_grpc_protos::ProcessInfo process_info;
+  process_info.set_name(kProcessName);
+  process_info.set_full_path("/mnt/developer/test_process");
+  process_info.set_cpu_usage(kCpuUsage);
+  process.SetProcessInfo(process_info);
+
+  auto maybe_instance = orbit_ggp::Instance::CreateFromJson(QString{
+
+      "{"
+      "displayName: \"%1\", "
+      "id: \"edge/test/instance\""
+      "ipAddress: \"127.0.0.1\""
+      "state: \"IN_USE\""
+      "owner: \"unit@test\""
+      "lastUpdated: \"2022-07-04T13:22:04Z\""
+      "pool: \"unit-test-pool\""
+      "}"}
+                                                                .arg(kInstanceName)
+                                                                .toUtf8());
+
+  assert(maybe_instance.has_value());
+  label.ChangeToStadiaTarget(process, maybe_instance.value());
+}
+
 TEST(TargetLabel, ChangeToStadiaTarget) {
   TargetLabel label{};
   const QColor initial_color = label.GetTargetColor();
 
-  const QString process_name = "test process";
-  const double cpu_usage = 50.1;
-  const QString instance_name = "test instance";
+  ChangeToFakeStadiaTarget(label);
 
-  label.ChangeToStadiaTarget(process_name, cpu_usage, instance_name);
-
-  EXPECT_EQ(label.GetTargetText(), "test process (50%) @ test instance");
+  EXPECT_EQ(label.GetTargetText(),
+            QString{"%1 (%2) @ %3"}.arg(kProcessName, kCpuUsageDisplay, kInstanceName));
   EXPECT_TRUE(label.GetFileText().isEmpty());
   EXPECT_TRUE(label.GetToolTip().isEmpty());
   EXPECT_NE(label.GetTargetColor(), initial_color);
@@ -198,7 +228,7 @@ TEST(TargetLabel, SetFile) {
   const double cpu_usage = 50.1;
   const QString instance_name = "test instance";
 
-  label.ChangeToStadiaTarget(process_name, cpu_usage, instance_name);
+  ChangeToFakeStadiaTarget(label);
 
   EXPECT_EQ(label.GetTargetText(), "test process (50%) @ test instance");
   EXPECT_TRUE(label.GetFileText().isEmpty());
@@ -249,7 +279,7 @@ TEST(TargetLabel, DifferentColors) {
   label.ChangeToFileTarget("test/path");
   const QColor file_color = label.GetTargetColor();
 
-  label.ChangeToStadiaTarget("test process", 0, "test instance");
+  ChangeToFakeStadiaTarget(label);
   const QColor stadia_color = label.GetTargetColor();
 
   label.ChangeToLocalTarget("test process", 0);
