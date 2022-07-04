@@ -47,7 +47,7 @@ class TrackManager {
                         orbit_client_data::CaptureData* capture_data);
 
   [[nodiscard]] std::vector<Track*> GetAllTracks() const;
-  [[nodiscard]] std::vector<Track*> GetVisibleTracks() const { return visible_tracks_; }
+  [[nodiscard]] const std::vector<Track*>& GetVisibleTracks() const { return visible_tracks_; }
   [[nodiscard]] std::vector<FrameTrack*> GetFrameTracks() const;
 
   void RequestTrackSorting() { sorting_invalidated_ = true; };
@@ -63,6 +63,7 @@ class TrackManager {
   Track* GetOrCreateTrackFromTimerInfo(const orbit_client_protos::TimerInfo& timer_info);
   SchedulerTrack* GetOrCreateSchedulerTrack();
   ThreadTrack* GetOrCreateThreadTrack(uint32_t tid);
+  std::optional<ThreadTrack*> GetThreadTrack(uint32_t tid);
   GpuTrack* GetOrCreateGpuTrack(uint64_t timeline_hash);
   VariableTrack* GetOrCreateVariableTrack(const std::string& name);
   AsyncTrack* GetOrCreateAsyncTrack(const std::string& name);
