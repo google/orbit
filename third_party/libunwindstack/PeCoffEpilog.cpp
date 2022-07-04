@@ -18,6 +18,7 @@
 
 #include <map>
 #include <memory>
+#include <unordered_set>
 #include <vector>
 
 #include <capstone/capstone.h>
@@ -73,6 +74,12 @@ class PeCoffEpilogImpl : public PeCoffEpilog {
   bool capstone_initialized_ = false;
   csh capstone_handle_ = 0;
   cs_insn* capstone_instruction_ = nullptr;
+
+  // Cache of RVAs for which we have already successfully detected that we are *not* in an epilog
+  // (and hence for which we do not have to update the registers).
+  // Note that the performance benefits of this cache should be re-evaluated if/when we stop using
+  // capstone in favor of a completely custom detection of legal epilog instructions.
+  std::unordered_set<uint64_t> addresses_not_in_epilog_;
 };
 
 std::unique_ptr<PeCoffEpilog> CreatePeCoffEpilog(Memory* object_file_memory,
@@ -410,12 +417,17 @@ bool PeCoffEpilogImpl::DetectAndHandleEpilog(uint64_t function_start_address,
                                              bool* is_in_epilog) {
   last_error_ = {ERROR_NONE, 0};
 
+  const uint64_t current_address = function_start_address + current_offset_from_start_of_function;
+
+  if (addresses_not_in_epilog_.count(current_address) > 0) {
+    *is_in_epilog = false;
+    return true;
+  }
+
   if (function_start_address + current_offset_from_start_of_function >= function_end_address) {
     last_error_.code = ERROR_INVALID_COFF;
     return false;
   }
-
-  const uint64_t current_address = function_start_address + current_offset_from_start_of_function;
 
   uint64_t start_offset{};
   if (!MapFromRvaToFileOffset(current_address, &start_offset)) {
@@ -439,7 +451,11 @@ bool PeCoffEpilogImpl::DetectAndHandleEpilog(uint64_t function_start_address,
     return false;
   }
 
-  return DetectAndHandleEpilog(code, process_memory, regs, is_in_epilog);
+  bool detection_succeeded = DetectAndHandleEpilog(code, process_memory, regs, is_in_epilog);
+  if (detection_succeeded && !*is_in_epilog) {
+    addresses_not_in_epilog_.insert(current_address);
+  }
+  return detection_succeeded;
 }
 
 }  // namespace unwindstack
