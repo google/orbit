@@ -36,7 +36,7 @@ class MockPeCoffUnwindInfos : public PeCoffUnwindInfos {
  public:
   MockPeCoffUnwindInfos() {}
 
-  MOCK_METHOD(bool, GetUnwindInfo, (uint64_t, UnwindInfo*), (override));
+  MOCK_METHOD(bool, GetUnwindInfo, (uint64_t, UnwindInfo**), (override));
 };
 
 class PeCoffUnwindInfoEvaluatorTest : public ::testing::Test {
@@ -1078,8 +1078,8 @@ TEST_F(PeCoffUnwindInfoEvaluatorTest, succeeds_with_correct_chained_info) {
   constexpr uint32_t kChainedInfoVmAddress = 0x3000;
 
   EXPECT_CALL(mock_unwind_infos_, GetUnwindInfo(kChainedInfoVmAddress, testing::_))
-      .WillOnce([chained_info](uint64_t, UnwindInfo* unwind_info_result) {
-        *unwind_info_result = chained_info;
+      .WillOnce([&chained_info](uint64_t, UnwindInfo** unwind_info_result) {
+        *unwind_info_result = &chained_info;
         return true;
       });
 
@@ -1116,8 +1116,8 @@ TEST_F(PeCoffUnwindInfoEvaluatorTest, succeeds_with_correct_chained_info) {
   // Also validate that we skip the inner unwind info successfully if code offset is before the
   // unwind op. The chained info still must be executed in its entirety.
   EXPECT_CALL(mock_unwind_infos_, GetUnwindInfo(kChainedInfoVmAddress, testing::_))
-      .WillOnce([chained_info](uint64_t, UnwindInfo* unwind_info_result) {
-        *unwind_info_result = chained_info;
+      .WillOnce([&chained_info](uint64_t, UnwindInfo** unwind_info_result) {
+        *unwind_info_result = &chained_info;
         return true;
       });
 
@@ -1130,7 +1130,7 @@ TEST_F(PeCoffUnwindInfoEvaluatorTest, succeeds_with_correct_chained_info) {
 TEST_F(PeCoffUnwindInfoEvaluatorTest, fails_when_getting_chained_info_fails) {
   constexpr uint32_t kChainedInfoVmAddress = 0x3000;
   EXPECT_CALL(mock_unwind_infos_, GetUnwindInfo(kChainedInfoVmAddress, testing::_))
-      .WillOnce([](uint64_t, UnwindInfo*) { return false; });
+      .WillOnce([](uint64_t, UnwindInfo**) { return false; });
 
   UnwindInfo unwind_info;
   StackFrameOptions options;

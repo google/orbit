@@ -102,11 +102,11 @@ TEST_F(PeCoffUnwindInfosTest, get_unwind_info_succeeds_on_well_formed_data_no_ch
   std::unique_ptr<PeCoffUnwindInfos> unwind_infos(
       CreatePeCoffUnwindInfos(GetMemoryFake(), kSections));
 
-  UnwindInfo unwind_info;
+  UnwindInfo* unwind_info;
   EXPECT_TRUE(unwind_infos->GetUnwindInfo(kVmAddress, &unwind_info));
   EXPECT_EQ(ERROR_NONE, unwind_infos->GetLastError().code);
 
-  EXPECT_EQ(2, unwind_info.num_codes);
+  EXPECT_EQ(2, unwind_info->num_codes);
 }
 
 TEST_F(PeCoffUnwindInfosTest, get_unwind_info_succeeds_multiple_times) {
@@ -124,18 +124,18 @@ TEST_F(PeCoffUnwindInfosTest, get_unwind_info_succeeds_multiple_times) {
   std::unique_ptr<PeCoffUnwindInfos> unwind_infos(
       CreatePeCoffUnwindInfos(GetMemoryFake(), kSections));
 
-  UnwindInfo unwind_info;
+  UnwindInfo* unwind_info;
   EXPECT_TRUE(unwind_infos->GetUnwindInfo(kVmAddress, &unwind_info));
 
   // This should read from the cache, though we don't verify that here. The returned
   // data should be the same, though.
-  UnwindInfo unwind_info2;
+  UnwindInfo* unwind_info2;
   EXPECT_TRUE(unwind_infos->GetUnwindInfo(kVmAddress, &unwind_info2));
 
-  EXPECT_EQ(unwind_info.version_and_flags, unwind_info2.version_and_flags);
-  EXPECT_EQ(unwind_info.prolog_size, unwind_info2.prolog_size);
-  EXPECT_EQ(unwind_info.num_codes, unwind_info2.num_codes);
-  EXPECT_EQ(unwind_info.frame_register_and_offset, unwind_info2.frame_register_and_offset);
+  EXPECT_EQ(unwind_info->version_and_flags, unwind_info2->version_and_flags);
+  EXPECT_EQ(unwind_info->prolog_size, unwind_info2->prolog_size);
+  EXPECT_EQ(unwind_info->num_codes, unwind_info2->num_codes);
+  EXPECT_EQ(unwind_info->frame_register_and_offset, unwind_info2->frame_register_and_offset);
 }
 
 TEST_F(PeCoffUnwindInfosTest,
@@ -150,11 +150,11 @@ TEST_F(PeCoffUnwindInfosTest,
   std::unique_ptr<PeCoffUnwindInfos> unwind_infos(
       CreatePeCoffUnwindInfos(GetMemoryFake(), kSections));
 
-  UnwindInfo unwind_info;
+  UnwindInfo* unwind_info;
   EXPECT_TRUE(unwind_infos->GetUnwindInfo(kVmAddress, &unwind_info));
   EXPECT_EQ(ERROR_NONE, unwind_infos->GetLastError().code);
 
-  EXPECT_EQ(2, unwind_info.num_codes);
+  EXPECT_EQ(2, unwind_info->num_codes);
 }
 
 TEST_F(PeCoffUnwindInfosTest,
@@ -173,11 +173,11 @@ TEST_F(PeCoffUnwindInfosTest,
   std::unique_ptr<PeCoffUnwindInfos> unwind_infos(
       CreatePeCoffUnwindInfos(GetMemoryFake(), kSections));
 
-  UnwindInfo unwind_info;
+  UnwindInfo* unwind_info;
   EXPECT_TRUE(unwind_infos->GetUnwindInfo(kVmAddress, &unwind_info));
   EXPECT_EQ(ERROR_NONE, unwind_infos->GetLastError().code);
 
-  EXPECT_EQ(3, unwind_info.num_codes);
+  EXPECT_EQ(3, unwind_info->num_codes);
 }
 
 TEST_F(PeCoffUnwindInfosTest, get_unwind_info_succeeds_with_exception_handler_data) {
@@ -190,11 +190,11 @@ TEST_F(PeCoffUnwindInfosTest, get_unwind_info_succeeds_with_exception_handler_da
   std::unique_ptr<PeCoffUnwindInfos> unwind_infos(
       CreatePeCoffUnwindInfos(GetMemoryFake(), kSections));
 
-  UnwindInfo unwind_info;
+  UnwindInfo* unwind_info;
   EXPECT_TRUE(unwind_infos->GetUnwindInfo(kVmAddress, &unwind_info));
   EXPECT_EQ(ERROR_NONE, unwind_infos->GetLastError().code);
 
-  EXPECT_EQ(2, unwind_info.num_codes);
+  EXPECT_EQ(2, unwind_info->num_codes);
 }
 
 TEST_F(PeCoffUnwindInfosTest, get_unwind_info_succeeds_on_version_2) {
@@ -209,11 +209,11 @@ TEST_F(PeCoffUnwindInfosTest, get_unwind_info_succeeds_on_version_2) {
   std::unique_ptr<PeCoffUnwindInfos> unwind_infos(
       CreatePeCoffUnwindInfos(GetMemoryFake(), kSections));
 
-  UnwindInfo unwind_info;
+  UnwindInfo* unwind_info;
   EXPECT_TRUE(unwind_infos->GetUnwindInfo(kVmAddress, &unwind_info));
   EXPECT_EQ(ERROR_NONE, unwind_infos->GetLastError().code);
 
-  EXPECT_EQ(2, unwind_info.num_codes);
+  EXPECT_EQ(2, unwind_info->num_codes);
 }
 
 TEST_F(PeCoffUnwindInfosTest, get_unwind_info_fails_on_bad_version) {
@@ -229,7 +229,7 @@ TEST_F(PeCoffUnwindInfosTest, get_unwind_info_fails_on_bad_version) {
     std::unique_ptr<PeCoffUnwindInfos> unwind_infos(
         CreatePeCoffUnwindInfos(GetMemoryFake(), kSections));
 
-    UnwindInfo unwind_info;
+    UnwindInfo* unwind_info;
     EXPECT_FALSE(unwind_infos->GetUnwindInfo(kVmAddress, &unwind_info));
     EXPECT_EQ(ERROR_INVALID_COFF, unwind_infos->GetLastError().code);
   }
@@ -240,7 +240,7 @@ TEST_F(PeCoffUnwindInfosTest, get_unwind_info_fails_on_bad_memory) {
   std::unique_ptr<PeCoffUnwindInfos> unwind_infos(
       CreatePeCoffUnwindInfos(GetMemoryFake(), kSections));
 
-  UnwindInfo unwind_info;
+  UnwindInfo* unwind_info;
   EXPECT_FALSE(unwind_infos->GetUnwindInfo(kVmAddress, &unwind_info));
   EXPECT_EQ(ERROR_MEMORY_INVALID, unwind_infos->GetLastError().code);
 
@@ -263,7 +263,7 @@ TEST_F(PeCoffUnwindInfosTest, get_unwind_info_fails_on_incomplete_op_codes_memor
   std::unique_ptr<PeCoffUnwindInfos> unwind_infos(
       CreatePeCoffUnwindInfos(GetMemoryFake(), kSections));
 
-  UnwindInfo unwind_info;
+  UnwindInfo* unwind_info;
   EXPECT_FALSE(unwind_infos->GetUnwindInfo(kVmAddress, &unwind_info));
   EXPECT_EQ(ERROR_MEMORY_INVALID, unwind_infos->GetLastError().code);
   EXPECT_EQ(expected_error_address, unwind_infos->GetLastError().address);
@@ -282,7 +282,7 @@ TEST_F(PeCoffUnwindInfosTest, get_unwind_info_fails_on_incomplete_chained_info) 
   std::unique_ptr<PeCoffUnwindInfos> unwind_infos(
       CreatePeCoffUnwindInfos(GetMemoryFake(), kSections));
 
-  UnwindInfo unwind_info;
+  UnwindInfo* unwind_info;
   EXPECT_FALSE(unwind_infos->GetUnwindInfo(kVmAddress, &unwind_info));
   EXPECT_EQ(ERROR_MEMORY_INVALID, unwind_infos->GetLastError().code);
   EXPECT_EQ(expected_error_address, unwind_infos->GetLastError().address);

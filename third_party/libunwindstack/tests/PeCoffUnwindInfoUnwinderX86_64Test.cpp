@@ -42,7 +42,7 @@ class MockPeCoffRuntimeFunctions : public PeCoffRuntimeFunctions {
 
 class MockPeCoffUnwindInfos : public PeCoffUnwindInfos {
  public:
-  MOCK_METHOD(bool, GetUnwindInfo, (uint64_t, UnwindInfo*), (override));
+  MOCK_METHOD(bool, GetUnwindInfo, (uint64_t, UnwindInfo**), (override));
 };
 
 class MockPeCoffEpilog : public PeCoffEpilog {
@@ -148,12 +148,13 @@ TEST(PeCoffUnwindInfoUnwinderX86_64Test,
       });
 
   std::unique_ptr<MockPeCoffUnwindInfos> unwind_infos = std::make_unique<MockPeCoffUnwindInfos>();
-  EXPECT_CALL(*unwind_infos, GetUnwindInfo).WillOnce([](uint64_t, UnwindInfo* unwind_info) {
-    UnwindInfo info;
-    info.prolog_size = 0x16;
-    *unwind_info = info;
-    return true;
-  });
+  UnwindInfo unwind_info_to_return;
+  unwind_info_to_return.prolog_size = 0x16;
+  EXPECT_CALL(*unwind_infos, GetUnwindInfo)
+      .WillOnce([&unwind_info_to_return](uint64_t, UnwindInfo** unwind_info) {
+        *unwind_info = &unwind_info_to_return;
+        return true;
+      });
 
   std::unique_ptr<MockPeCoffEpilog> epilog = std::make_unique<MockPeCoffEpilog>();
   EXPECT_CALL(*epilog, DetectAndHandleEpilog)
@@ -195,12 +196,13 @@ TEST(PeCoffUnwindInfoUnwinderX86_64Test, step_fails_if_error_occurs_in_epilog_de
       });
 
   std::unique_ptr<MockPeCoffUnwindInfos> unwind_infos = std::make_unique<MockPeCoffUnwindInfos>();
-  EXPECT_CALL(*unwind_infos, GetUnwindInfo).WillOnce([](uint64_t, UnwindInfo* unwind_info) {
-    UnwindInfo info;
-    info.prolog_size = 0x16;
-    *unwind_info = info;
-    return true;
-  });
+  UnwindInfo unwind_info_to_return;
+  unwind_info_to_return.prolog_size = 0x16;
+  EXPECT_CALL(*unwind_infos, GetUnwindInfo)
+      .WillOnce([&unwind_info_to_return](uint64_t, UnwindInfo** unwind_info) {
+        *unwind_info = &unwind_info_to_return;
+        return true;
+      });
 
   std::unique_ptr<MockPeCoffEpilog> epilog = std::make_unique<MockPeCoffEpilog>();
   epilog->FailWithError(ERROR_MEMORY_INVALID);
@@ -243,12 +245,13 @@ TEST(PeCoffUnwindInfoUnwinderX86_64Test, step_succeeds_if_eval_succeeds_inside_o
       });
 
   std::unique_ptr<MockPeCoffUnwindInfos> unwind_infos = std::make_unique<MockPeCoffUnwindInfos>();
-  EXPECT_CALL(*unwind_infos, GetUnwindInfo).WillOnce([](uint64_t, UnwindInfo* unwind_info_result) {
-    UnwindInfo info;
-    info.prolog_size = 0x20;
-    *unwind_info_result = info;
-    return true;
-  });
+  UnwindInfo unwind_info_to_return;
+  unwind_info_to_return.prolog_size = 0x20;
+  EXPECT_CALL(*unwind_infos, GetUnwindInfo)
+      .WillOnce([&unwind_info_to_return](uint64_t, UnwindInfo** unwind_info) {
+        *unwind_info = &unwind_info_to_return;
+        return true;
+      });
 
   std::unique_ptr<MockPeCoffEpilog> epilog = std::make_unique<MockPeCoffEpilog>();
   EXPECT_CALL(*epilog, DetectAndHandleEpilog).Times(0);
@@ -294,12 +297,13 @@ TEST(PeCoffUnwindInfoUnwinderX86_64Test, step_succeeds_if_eval_succeeds_outside_
       });
 
   std::unique_ptr<MockPeCoffUnwindInfos> unwind_infos = std::make_unique<MockPeCoffUnwindInfos>();
-  EXPECT_CALL(*unwind_infos, GetUnwindInfo).WillOnce([](uint64_t, UnwindInfo* unwind_info_result) {
-    UnwindInfo info;
-    info.prolog_size = 0x8;
-    *unwind_info_result = info;
-    return true;
-  });
+  UnwindInfo unwind_info_to_return;
+  unwind_info_to_return.prolog_size = 0x8;
+  EXPECT_CALL(*unwind_infos, GetUnwindInfo)
+      .WillOnce([&unwind_info_to_return](uint64_t, UnwindInfo** unwind_info) {
+        *unwind_info = &unwind_info_to_return;
+        return true;
+      });
 
   std::unique_ptr<MockPeCoffEpilog> epilog = std::make_unique<MockPeCoffEpilog>();
   EXPECT_CALL(*epilog, DetectAndHandleEpilog)
@@ -346,12 +350,13 @@ TEST(PeCoffUnwindInfoUnwinderX86_64Test, step_fails_if_eval_fails_inside_of_prol
       });
 
   std::unique_ptr<MockPeCoffUnwindInfos> unwind_infos = std::make_unique<MockPeCoffUnwindInfos>();
-  EXPECT_CALL(*unwind_infos, GetUnwindInfo).WillOnce([](uint64_t, UnwindInfo* unwind_info_result) {
-    UnwindInfo info;
-    info.prolog_size = 0x20;
-    *unwind_info_result = info;
-    return true;
-  });
+  UnwindInfo unwind_info_to_return;
+  unwind_info_to_return.prolog_size = 0x20;
+  EXPECT_CALL(*unwind_infos, GetUnwindInfo)
+      .WillOnce([&unwind_info_to_return](uint64_t, UnwindInfo** unwind_info) {
+        *unwind_info = &unwind_info_to_return;
+        return true;
+      });
 
   std::unique_ptr<MockPeCoffEpilog> epilog = std::make_unique<MockPeCoffEpilog>();
   EXPECT_CALL(*epilog, DetectAndHandleEpilog).Times(0);
@@ -393,12 +398,13 @@ TEST(PeCoffUnwindInfoUnwinderX86_64Test,
       });
 
   std::unique_ptr<MockPeCoffUnwindInfos> unwind_infos = std::make_unique<MockPeCoffUnwindInfos>();
-  EXPECT_CALL(*unwind_infos, GetUnwindInfo).WillOnce([](uint64_t, UnwindInfo* unwind_info_result) {
-    UnwindInfo info;
-    info.prolog_size = 0x8;
-    *unwind_info_result = info;
-    return true;
-  });
+  UnwindInfo unwind_info_to_return;
+  unwind_info_to_return.prolog_size = 0x8;
+  EXPECT_CALL(*unwind_infos, GetUnwindInfo)
+      .WillOnce([&unwind_info_to_return](uint64_t, UnwindInfo** unwind_info) {
+        *unwind_info = &unwind_info_to_return;
+        return true;
+      });
 
   std::unique_ptr<MockPeCoffEpilog> epilog = std::make_unique<MockPeCoffEpilog>();
   EXPECT_CALL(*epilog, DetectAndHandleEpilog).Times(0);
@@ -444,12 +450,13 @@ TEST(PeCoffUnwindInfoUnwinderX86_64Test, step_fails_after_eval_if_return_address
       });
 
   std::unique_ptr<MockPeCoffUnwindInfos> unwind_infos = std::make_unique<MockPeCoffUnwindInfos>();
-  EXPECT_CALL(*unwind_infos, GetUnwindInfo).WillOnce([](uint64_t, UnwindInfo* unwind_info_result) {
-    UnwindInfo info;
-    info.prolog_size = 0x20;
-    *unwind_info_result = info;
-    return true;
-  });
+  UnwindInfo unwind_info_to_return;
+  unwind_info_to_return.prolog_size = 0x20;
+  EXPECT_CALL(*unwind_infos, GetUnwindInfo)
+      .WillOnce([&unwind_info_to_return](uint64_t, UnwindInfo** unwind_info) {
+        *unwind_info = &unwind_info_to_return;
+        return true;
+      });
 
   std::unique_ptr<MockPeCoffEpilog> epilog = std::make_unique<MockPeCoffEpilog>();
   EXPECT_CALL(*epilog, DetectAndHandleEpilog).Times(0);
