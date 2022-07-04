@@ -11,27 +11,17 @@
 #include <vector>
 
 #include "Statistics/MultiplicityCorrection.h"
+#include "TestUtils/ContainerHelpers.h"
 
 namespace orbit_statistics {
 
 using testing::DoubleNear;
 using testing::SizeIs;
 
+using orbit_test_utils::MakeMap;
+
 constexpr size_t kTestsNum = 4;
 constexpr std::array<double, kTestsNum> kPvalues = {0.1, 0.2, 0.3, 0.02};
-
-template <typename Container, typename AnotherContainer>
-static auto MakeMap(const Container& keys, const AnotherContainer& values) {
-  using K = typename Container::value_type;
-  using V = typename AnotherContainer::value_type;
-  using std::begin;
-  using std::end;
-
-  absl::flat_hash_map<K, V> result;
-  std::transform(begin(keys), end(keys), begin(values), std::inserter(result, std::begin(result)),
-                 [](const K& k, const V& v) { return std::make_pair(k, v); });
-  return result;
-}
 
 static void ExpectCorrectedPvaluesEq(const absl::flat_hash_map<int, double>& actual,
                                      const absl::flat_hash_map<int, double>& expected) {

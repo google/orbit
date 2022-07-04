@@ -17,12 +17,15 @@
 
 #include "ClientData/ScopeInfo.h"
 #include "MizarWidgets/SamplingWithFrameTrackInputWidget.h"
+#include "TestUtils/ContainerHelpers.h"
 
 using testing::ElementsAreArray;
 using testing::NotNull;
 using testing::Return;
 using testing::ReturnRef;
 using testing::UnorderedElementsAreArray;
+
+using orbit_test_utils::MakeMap;
 
 namespace {
 class MockPairedData {
@@ -58,19 +61,6 @@ const std::vector<std::string> kThreadNamesSorted = {
     MakeThreadListItemString(kThreadName, kTid),
     MakeThreadListItemString(kOtherThreadName, kOtherTid)};
 const QString kInputName = QStringLiteral("InputName");
-
-template <typename Container, typename AnotherContainer>
-static auto MakeMap(const Container& keys, const AnotherContainer& values) {
-  using K = typename Container::value_type;
-  using V = typename AnotherContainer::value_type;
-  using std::begin;
-  using std::end;
-
-  absl::flat_hash_map<K, V> result;
-  std::transform(begin(keys), end(keys), begin(values), std::inserter(result, std::begin(result)),
-                 [](const K& k, const V& v) { return std::make_pair(k, v); });
-  return result;
-}
 
 constexpr size_t kFrameTracksCount = 3;
 constexpr std::array<uint64_t, kFrameTracksCount> kScopeIds = {1, 2, 10};
