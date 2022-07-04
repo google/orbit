@@ -166,7 +166,7 @@ TEST(PrimitiveAssembler, ComplexShapes) {
 
   primitive_assembler_tester.StartNewFrame();
 
-  // Draw arrow point up
+  // Draw arrow pointing up
   primitive_assembler_tester.AddVerticalArrow(kBottomRight, kArrowSize, 0, kFakeColor,
                                               PrimitiveAssembler::ArrowDirection::kUp,
                                               kArrowHeadSize);
