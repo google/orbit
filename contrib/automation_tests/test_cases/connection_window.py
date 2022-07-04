@@ -9,11 +9,12 @@ import os
 import tempfile
 import shutil
 
-from typing import List, Iterable
+from typing import Iterable
 from pywinauto.application import Application
 from pywinauto.keyboard import send_keys
 
 from core.orbit_e2e import E2ETestCase, OrbitE2EError, wait_for_condition
+from core.common_controls import get_tooltip
 
 
 def _wait_for_main_window(application: Application, timeout=30):
@@ -338,14 +339,13 @@ class WaitForConnectionToTargetInstanceAndProcess(E2ETestCase):
     Waits for the main window to appear and checks the contents of the target label.
     """
 
-    def _execute(self, expected_instance: str, expected_process: str):
+    def _execute(self, expected_instance_id: str, expected_process_path: str):
         _wait_for_main_window(self.suite.application, timeout=120)
         # As there is a new top window (Orbit main window), we need to update the top window.
         self.suite.top_window(True)
 
-        # Check the target label
-        target_widget = self.find_control('Group', 'Target')
-        stadia_target = self.find_control('Group', 'Stadia target', parent=target_widget)
-        label = stadia_target.descendants(control_type='Text')[-1]
-        self.expect_true(label.texts()[0].startswith(expected_process), 'Found expected instance')
-        self.expect_true(label.texts()[0].endswith(expected_instance), 'Found expected process')
+        # Check the target label: The full process path and instance should be in the tooltip
+        stadia_target = self.find_control('Group', 'Stadia target')
+        tooltip = get_tooltip(self.suite.application, stadia_target)
+        self.expect_true(expected_process_path in tooltip, 'Found expected process')
+        self.expect_true(expected_instance_id in tooltip, 'Found expected instance')
