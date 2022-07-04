@@ -8,6 +8,9 @@
 #include <math.h>
 #include <stddef.h>
 
+#include <array>
+
+#include "CoreMath.h"
 #include "Geometry.h"
 
 namespace orbit_gl {
@@ -239,6 +242,29 @@ void PrimitiveAssembler::AddCircle(const Vec2& position, float radius, float z, 
     AddTriangle(triangle, z, color);
     prev_point = new_point;
   }
+}
+
+void PrimitiveAssembler::AddVerticalArrow(float x, float start_y, float end_y, float z, uint width,
+                                          float head_length_ratio, float head_width_ratio,
+                                          Color color) {
+  float min_y = std::min(start_y, end_y);
+  float max_y = std::max(start_y, end_y);
+
+  float head_length = std::abs(start_y - end_y) * head_length_ratio;
+  if (max_y == end_y) {
+    head_length = -head_length;
+  }
+  float head_width = width * head_width_ratio;
+  Triangle arrow_head(Vec2(x, end_y), Vec2(x - head_width, end_y + head_length),
+                      Vec2(x + head_width, end_y + head_length));
+  AddTriangle(arrow_head, z, color);
+
+  min_y = std::min(start_y, end_y + head_length);
+  max_y = std::max(start_y, end_y + head_length);
+  std::array<Vec2, 4> box_vertices{Vec2(x - width, min_y), Vec2(x - width, max_y),
+                                   Vec2(x + width, max_y), Vec2(x + width, min_y)};
+  Quad arrow_body(box_vertices);
+  AddBox(arrow_body, z, color);
 }
 
 void PrimitiveAssembler::AddQuadBorder(const Quad& quad, float z, const Color& color,
