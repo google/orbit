@@ -16,6 +16,7 @@
 
 #include <algorithm>
 #include <cstdint>
+#include <optional>
 #include <string_view>
 #include <tuple>
 #include <utility>
@@ -24,11 +25,9 @@
 #include "ClientData/CallstackData.h"
 #include "ClientData/CaptureData.h"
 #include "ClientFlags/ClientFlags.h"
-#include "GlCanvas.h"
 #include "OrbitBase/Append.h"
 #include "OrbitBase/Logging.h"
 #include "OrbitBase/ThreadConstants.h"
-#include "TimeGraph.h"
 #include "TimeGraphLayout.h"
 #include "TrackContainer.h"
 #include "Viewport.h"
@@ -462,6 +461,15 @@ ThreadTrack* TrackManager::GetOrCreateThreadTrack(uint32_t tid) {
     AddTrack(track);
   }
   return track.get();
+}
+
+std::optional<ThreadTrack*> TrackManager::GetThreadTrack(uint32_t tid) const {
+  std::lock_guard<std::recursive_mutex> lock(mutex_);
+  if (!thread_tracks_.contains(tid)) {
+    return std::nullopt;
+  }
+  auto track = thread_tracks_.find(tid);
+  return track->second.get();
 }
 
 GpuTrack* TrackManager::GetOrCreateGpuTrack(uint64_t timeline_hash) {

@@ -8,11 +8,13 @@
 #include <qcombobox.h>
 
 #include <QComboBox>
+#include <QLineEdit>
 #include <QListWidget>
 #include <QObject>
 #include <QWidget>
 #include <algorithm>
 #include <iterator>
+#include <limits>
 #include <memory>
 
 #include "MizarData/SamplingWithFrameTrackComparisonReport.h"
@@ -26,6 +28,8 @@ SamplingWithFrameTrackInputWidgetBase::SamplingWithFrameTrackInputWidgetBase(QWi
                    &SamplingWithFrameTrackInputWidgetBase::OnThreadSelectionChanged);
   QObject::connect(GetFrameTrackList(), qOverload<int>(&QComboBox::currentIndexChanged), this,
                    &SamplingWithFrameTrackInputWidgetBase::OnFrameTrackSelectionChanged);
+  QObject::connect(GetStartMs(), &QLineEdit::textChanged, this,
+                   &SamplingWithFrameTrackInputWidgetBase::OnStartMsChanged);
 }
 
 QLabel* SamplingWithFrameTrackInputWidgetBase::GetTitle() const { return ui_->title_; }
@@ -38,10 +42,13 @@ QComboBox* SamplingWithFrameTrackInputWidgetBase::GetFrameTrackList() const {
   return ui_->frame_track_list_;
 }
 
+QLineEdit* SamplingWithFrameTrackInputWidgetBase::GetStartMs() const { return ui_->start_ms_; }
+
 orbit_mizar_data::HalfOfSamplingWithFrameTrackReportConfig
 SamplingWithFrameTrackInputWidgetBase::MakeConfig() const {
   return orbit_mizar_data::HalfOfSamplingWithFrameTrackReportConfig{
-      selected_tids_, 0 /*not implemented yet*/, 0 /*not implemented yet*/, frame_track_scope_id_};
+      selected_tids_, start_relative_time_ns_, std::numeric_limits<uint64_t>::max(),
+      frame_track_scope_id_};
 }
 
 void SamplingWithFrameTrackInputWidgetBase::OnThreadSelectionChanged() {
@@ -54,6 +61,19 @@ void SamplingWithFrameTrackInputWidgetBase::OnThreadSelectionChanged() {
 
 void SamplingWithFrameTrackInputWidgetBase::OnFrameTrackSelectionChanged(int index) {
   frame_track_scope_id_ = GetFrameTrackList()->itemData(index, kScopeIdRole).value<uint64_t>();
+}
+
+void SamplingWithFrameTrackInputWidgetBase::OnStartMsChanged(const QString& time_ms) {
+  if (time_ms.isEmpty()) {
+    start_relative_time_ns_ = 0;
+    return;
+  }
+  bool ok;
+  constexpr uint64_t kNsInMs = 1000;
+  start_relative_time_ns_ = static_cast<uint64_t>(time_ms.toInt(&ok)) * kNsInMs;
+  if (!ok) {
+    start_relative_time_ns_ = std::numeric_limits<uint64_t>::max();
+  }
 }
 
 SamplingWithFrameTrackInputWidgetBase::~SamplingWithFrameTrackInputWidgetBase() = default;

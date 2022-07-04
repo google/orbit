@@ -9,10 +9,12 @@
 
 #include <QApplication>
 #include <QComboBox>
+#include <QLineEdit>
 #include <QListWidget>
 #include <QStringLiteral>
 #include <QTest>
 #include <array>
+#include <limits>
 #include <string>
 
 #include "ClientData/ScopeInfo.h"
@@ -112,6 +114,9 @@ class SamplingWithFrameTrackInputWidgetTest : public ::testing::Test {
 
     frame_track_list_ = widget_->findChild<QComboBox*>("frame_track_list_");
     EXPECT_THAT(thread_list_, NotNull());
+
+    start_ms_ = widget_->findChild<QLineEdit*>("start_ms_");
+    EXPECT_THAT(start_ms_, NotNull());
   }
 
   void SelectThreadListRow(int row) const {
@@ -129,11 +134,16 @@ class SamplingWithFrameTrackInputWidgetTest : public ::testing::Test {
     EXPECT_EQ(widget_->MakeConfig().frame_track_scope_id, scope_id);
   }
 
+  void ExpectRelativeStartNsIs(uint64_t start_relative_ns_) const {
+    EXPECT_EQ(widget_->MakeConfig().start_relative_ns, start_relative_ns_);
+  }
+
   MockPairedData data_;
   std::unique_ptr<SamplingWithFrameTrackInputWidgetTmpl<MockPairedData>> widget_;
   QLabel* title_;
   QListWidget* thread_list_;
   QComboBox* frame_track_list_;
+  QLineEdit* start_ms_;
 };
 
 TEST_F(SamplingWithFrameTrackInputWidgetTest, InitIsCorrect) {
@@ -174,6 +184,26 @@ TEST_F(SamplingWithFrameTrackInputWidgetTest, OnFrameTrackSelectionChangedIsCorr
 
   frame_track_list_->setCurrentIndex(1);
   ExpectSelectedFrameTrackIdIs(kScopeIdsInExpectedOrder[1]);
+}
+
+TEST_F(SamplingWithFrameTrackInputWidgetTest, OnStartMsChangedIsCorrect) {
+  start_ms_->setText("");
+  ExpectRelativeStartNsIs(0);
+
+  start_ms_->setText("123");
+  ExpectRelativeStartNsIs(123000);
+
+  start_ms_->setText("0123");
+  ExpectRelativeStartNsIs(123000);
+
+  start_ms_->setText("99999999999999999999999999");
+  ExpectRelativeStartNsIs(static_cast<uint64_t>(std::numeric_limits<uint64_t>::max()));
+
+  start_ms_->setText("-0");
+  ExpectRelativeStartNsIs(0);
+
+  start_ms_->setText("-0");
+  ExpectRelativeStartNsIs(0);
 }
 
 }  // namespace orbit_mizar_widgets

@@ -12,10 +12,12 @@
 
 #include <QComboBox>
 #include <QLabel>
+#include <QLineEdit>
 #include <QListWidget>
 #include <QObject>
 #include <QWidget>
 #include <Qt>
+#include <limits>
 #include <memory>
 #include <string_view>
 #include <vector>
@@ -45,6 +47,7 @@ class SamplingWithFrameTrackInputWidgetBase : public QWidget {
  public slots:
   void OnThreadSelectionChanged();
   void OnFrameTrackSelectionChanged(int index);
+  void OnStartMsChanged(const QString& time_ms);
 
  private:
   std::unique_ptr<Ui::SamplingWithFrameTrackInputWidget> ui_;
@@ -57,10 +60,14 @@ class SamplingWithFrameTrackInputWidgetBase : public QWidget {
   [[nodiscard]] QLabel* GetTitle() const;
   [[nodiscard]] QListWidget* GetThreadList() const;
   [[nodiscard]] QComboBox* GetFrameTrackList() const;
+  [[nodiscard]] QLineEdit* GetStartMs() const;
 
  private:
   absl::flat_hash_set<TID> selected_tids_;
   uint64_t frame_track_scope_id_ = 0;
+
+  // std::numeric_limits<uint64_t>::max() corresponds to malformed input
+  uint64_t start_relative_time_ns_ = 0;
 };
 
 template <typename PairedData>
@@ -77,6 +84,7 @@ class SamplingWithFrameTrackInputWidgetTmpl : public SamplingWithFrameTrackInput
     InitTitle(name);
     InitThreadList(data);
     InitFrameTrackList(data);
+    InitStartMs();
   }
 
  private:
@@ -115,6 +123,11 @@ class SamplingWithFrameTrackInputWidgetTmpl : public SamplingWithFrameTrackInput
       GetFrameTrackList()->setItemData(i, QVariant::fromValue(scope_id), kScopeIdRole);
     }
     OnFrameTrackSelectionChanged(0);
+  }
+
+  void InitStartMs() {
+    GetStartMs()->setValidator(new QIntValidator(0, std::numeric_limits<int>::max(), this));
+    GetStartMs()->setText("0");
   }
 
   [[nodiscard]] static QString MakeFrameTrackString(
