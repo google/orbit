@@ -98,6 +98,10 @@ class PrimitiveAssembler {
 
   void AddCircle(const Vec2& position, float radius, float z, Color color);
 
+  enum class ArrowDirection { kUp, kDown };
+  void AddVerticalArrow(Vec2 starting_pos, Vec2 size, float z, Color color,
+                        ArrowDirection arrow_direction, Vec2 head_size = Vec2{7, 7});
+
   void StartNewFrame();
 
   [[nodiscard]] PickingManager* GetPickingManager() const { return picking_manager_; }

@@ -12,22 +12,20 @@
 #include <stddef.h>
 
 #include <algorithm>
+#include <optional>
 #include <utility>
 
 #include "AccessibleCaptureViewElement.h"
 #include "App.h"
-#include "ClientFlags/ClientFlags.h"
+#include "CoreMath.h"
 #include "DisplayFormats/DisplayFormats.h"
 #include "Geometry.h"
 #include "GlCanvas.h"
 #include "GlUtils.h"
-#include "GrpcProtos/Constants.h"
-#include "Introspection/Introspection.h"
 #include "OrbitBase/Append.h"
 #include "OrbitBase/Logging.h"
 #include "PickingManager.h"
 #include "TrackManager.h"
-#include "VariableTrack.h"
 
 namespace orbit_gl {
 
@@ -43,7 +41,8 @@ TrackContainer::TrackContainer(CaptureViewElement* parent, TimelineInfoInterface
       track_manager_{std::make_unique<TrackManager>(this, timeline_info, viewport, layout, app,
                                                     module_manager, capture_data)},
       capture_data_{capture_data},
-      timeline_info_(timeline_info) {
+      timeline_info_(timeline_info),
+      app_{app} {
   track_manager_->GetOrCreateSchedulerTrack();
 }
 
@@ -370,11 +369,59 @@ void TrackContainer::SetIteratorOverlayData(
   RequestUpdate(RequestUpdateScope::kDraw);
 }
 
+void TrackContainer::DrawThreadDependency(PrimitiveAssembler& primitive_assembler,
+                                          PickingMode picking_mode) {
+  std::optional<orbit_client_data::ThreadStateSliceInfo> thread_state_slice =
+      app_->selected_thread_state_slice();
+  if (!thread_state_slice.has_value() || picking_mode != PickingMode::kNone) {
+    return;
+  }
+
+  orbit_client_data::ThreadID start_arrow_thread = thread_state_slice->wakeup_tid();
+  orbit_client_data::ThreadID end_arrow_thread = thread_state_slice->tid();
+
+  std::optional<ThreadTrack*> temp_start_arrow_track =
+      track_manager_->GetThreadTrack(start_arrow_thread);
+  std::optional<ThreadTrack*> temp_end_arrow_track =
+      track_manager_->GetThreadTrack(end_arrow_thread);
+
+  if (!temp_end_arrow_track.has_value() || !temp_start_arrow_track.has_value()) {
+    return;
+  }
+
+  ThreadTrack* start_arrow_track = temp_start_arrow_track.value();
+  ThreadTrack* end_arrow_track = temp_end_arrow_track.value();
+
+  const std::vector<Track*>& threads = track_manager_->GetVisibleTracks();
+
+  if (std::find(threads.begin(), threads.end(), start_arrow_track) == threads.end() ||
+      std::find(threads.begin(), threads.end(), end_arrow_track) == threads.end()) {
+    return;
+  }
+
+  int transparency = (picking_mode == PickingMode::kHover) ? 128 : 255;
+  const Color kRedArrow(255, 0, 0, transparency);
+  const int kOffsetFromThreadTrack = 33;
+  float x = timeline_info_->GetWorldFromTick(thread_state_slice->begin_timestamp_ns());
+  float y_start = track_manager_->GetOrCreateThreadTrack(start_arrow_thread)->GetPos()[1] +
+                  kOffsetFromThreadTrack;
+  float y_end = track_manager_->GetOrCreateThreadTrack(end_arrow_thread)->GetPos()[1] +
+                kOffsetFromThreadTrack;
+  Vec2 pos{x, y_start};
+  Vec2 size{3, std::abs(y_end - y_start)};
+  PrimitiveAssembler::ArrowDirection arrow_direction =
+      y_start < y_end ? PrimitiveAssembler::ArrowDirection::kDown
+                      : PrimitiveAssembler::ArrowDirection::kUp;
+  primitive_assembler.AddVerticalArrow(pos, size, IntrospectionWindow::kZValueOverlay, kRedArrow,
+                                       arrow_direction);
+}
+
 void TrackContainer::DoDraw(PrimitiveAssembler& primitive_assembler, TextRenderer& text_renderer,
                             const DrawContext& draw_context) {
   CaptureViewElement::DoDraw(primitive_assembler, text_renderer, draw_context);
 
   DrawIncompleteDataIntervals(primitive_assembler, draw_context.picking_mode);
+  DrawThreadDependency(primitive_assembler, draw_context.picking_mode);
   DrawOverlay(primitive_assembler, text_renderer, draw_context.picking_mode);
 }
 
