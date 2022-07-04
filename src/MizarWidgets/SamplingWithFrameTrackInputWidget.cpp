@@ -73,7 +73,7 @@ void SamplingWithFrameTrackInputWidgetBase::OnStartMsChanged(const QString& time
   constexpr uint64_t kNsInMs = 1000;
   start_relative_time_ns_ = static_cast<uint64_t>(time_ms.toInt(&ok)) * kNsInMs;
   if (!ok) {
-    start_relative_time_ns_ = std::numeric_limits<int>::max() * kNsInMs;
+    start_relative_time_ns_ = std::numeric_limits<uint64_t>::max();
   }
 }
 

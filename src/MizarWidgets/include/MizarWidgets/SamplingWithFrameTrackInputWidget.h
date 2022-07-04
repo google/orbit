@@ -60,6 +60,8 @@ class SamplingWithFrameTrackInputWidgetBase : public QWidget {
  private:
   absl::flat_hash_set<uint32_t> selected_tids_;
   uint64_t frame_track_scope_id_ = 0;
+
+  // std::numeric_limits<uint64_t>::max() corresponds to malformed input
   uint64_t start_relative_time_ns_ = 0;
 };
 

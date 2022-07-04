@@ -124,7 +124,7 @@ class SamplingWithFrameTrackInputWidgetTest : public ::testing::Test {
     EXPECT_THAT(thread_list_, NotNull());
 
     start_ms_ = widget_->findChild<QLineEdit*>("start_ms_");
-    EXPECT_THAT(thread_list_, NotNull());
+    EXPECT_THAT(start_ms_, NotNull());
   }
 
   void SelectThreadListRow(int row) const {
@@ -205,7 +205,7 @@ TEST_F(SamplingWithFrameTrackInputWidgetTest, OnStartMsChangedIsCorrect) {
   ExpectRelativeStartNsIs(123000);
 
   start_ms_->setText("99999999999999999999999999");
-  ExpectRelativeStartNsIs(static_cast<uint64_t>(std::numeric_limits<int>::max()) * 1000);
+  ExpectRelativeStartNsIs(static_cast<uint64_t>(std::numeric_limits<uint64_t>::max()));
 
   start_ms_->setText("-0");
   ExpectRelativeStartNsIs(0);
