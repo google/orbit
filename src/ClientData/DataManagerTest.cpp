@@ -4,12 +4,12 @@
 
 #include <gtest/gtest.h>
 
+#include <optional>
 #include <thread>
 #include <vector>
 
 #include "ClientData/DataManager.h"
 #include "GrpcProtos/capture.pb.h"
-#include "OrbitBase/ThreadUtils.h"
 
 namespace orbit_client_data {
 
@@ -34,6 +34,8 @@ TEST(DataManager, CanOnlyBeUsedFromTheMainThread) {
   CallMethodOnDifferentThreadAndExpectDeath(data_manager, &DataManager::set_highlighted_group_id,
                                             0);
   CallMethodOnDifferentThreadAndExpectDeath(data_manager, &DataManager::set_selected_thread_id, 0);
+  CallMethodOnDifferentThreadAndExpectDeath(
+      data_manager, &DataManager::set_selected_thread_state_slice, std::nullopt);
   CallMethodOnDifferentThreadAndExpectDeath(data_manager, &DataManager::set_selected_timer,
                                             nullptr);
   CallMethodOnDifferentThreadAndExpectDeath(data_manager, &DataManager::SelectTracepoint,
