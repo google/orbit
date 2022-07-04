@@ -506,7 +506,6 @@ void OrbitMainWindow::SetupTargetLabel() {
 
   QObject::connect(target_label_, &TargetLabel::SizeChanged, this, [this]() {
     target_label_->adjustSize();
-    target_widget_->adjustSize();
     UpdateTargetLabelPosition();
   });
 }
@@ -1625,6 +1624,12 @@ void OrbitMainWindow::SetTarget(const orbit_session_setup::FileTarget& target) {
 }
 
 void OrbitMainWindow::UpdateTargetLabelPosition() {
+  const int kMenuWidth = 300;
+  const int kMaxLabelWidth = width() - kMenuWidth;
+
+  target_widget_->setMaximumWidth(kMaxLabelWidth);
+  target_widget_->adjustSize();
+
   int target_widget_width = target_widget_->width();
   target_widget_->move(width() - target_widget_width, 0);
 }
