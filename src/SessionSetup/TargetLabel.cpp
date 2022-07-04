@@ -128,7 +128,7 @@ void TargetLabel::ChangeToStadiaTarget(const orbit_client_data::ProcessData& pro
       QString{"Connection active.<br/><br/>"
               "Instance: %1 (%2)<br/>"
               "Process: %3 (%4)"}
-          .arg(instance.display_name, instance.id, QString::fromStdString(process.name()),
+          .arg(instance.display_name, instance.id, process_,
                QString::fromStdString(process.full_path())));
   setAccessibleName("Stadia target");
 }
