@@ -335,11 +335,14 @@ OrbitApp::OrbitApp(orbit_gl::MainWindowInterface* main_window,
   module_manager_ = std::make_unique<orbit_client_data::ModuleManager>();
   manual_instrumentation_manager_ = std::make_unique<ManualInstrumentationManager>();
 
-  QObject::connect(&update_after_symbol_loading_throttle_, &orbit_qt_utils::Throttle::Triggered,
-                   [this]() {
-                     UpdateAfterSymbolLoading();
-                     FireRefreshCallbacks();
-                   });
+  QObject::connect(
+      &update_after_symbol_loading_throttle_, &orbit_qt_utils::Throttle::Triggered,
+      &update_after_symbol_loading_throttle_,
+      [this]() {
+        UpdateAfterSymbolLoading();
+        FireRefreshCallbacks();
+      },
+      Qt::QueuedConnection);
 }
 
 OrbitApp::~OrbitApp() {
