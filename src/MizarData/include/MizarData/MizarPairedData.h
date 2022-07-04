@@ -124,7 +124,7 @@ class MizarPairedDataTmpl {
     GetCallstackData().ForEachCallstackEventInTimeRange(
         0, std::numeric_limits<uint64_t>::max(),
         [this, &thread_names](const orbit_client_data::CallstackEvent& event) {
-          const TID tid = TID(event.thread_id());
+          const TID tid{event.thread_id()};
           tid_to_callstack_samples_counts_[tid]++;
 
           if (tid_to_names_.contains(tid)) return;
