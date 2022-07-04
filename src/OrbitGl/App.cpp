@@ -2883,8 +2883,10 @@ void OrbitApp::EnableFrameTrack(const FunctionInfo& function) {
 }
 
 void OrbitApp::DisableFrameTrack(const FunctionInfo& function) {
-  data_manager_->DisableFrameTrack(function);
-  metrics_uploader_->SendLogEvent(OrbitLogEvent::ORBIT_FRAME_TRACK_DISABLED);
+  if (data_manager_->IsFrameTrackEnabled(function)) {
+    data_manager_->DisableFrameTrack(function);
+    metrics_uploader_->SendLogEvent(OrbitLogEvent::ORBIT_FRAME_TRACK_DISABLED);
+  }
 }
 
 void OrbitApp::AddFrameTrack(const FunctionInfo& function) {
@@ -2959,8 +2961,8 @@ void OrbitApp::RemoveFrameTrack(uint64_t instrumented_function_id) {
     GetMutableCaptureData().DisableFrameTrack(instrumented_function_id);
     GetMutableTimeGraph()->GetTrackContainer()->RemoveFrameTrack(instrumented_function_id);
     TrySaveUserDefinedCaptureInfo();
+    metrics_uploader_->SendLogEvent(OrbitLogEvent::ORBIT_FRAME_TRACK_REMOVED);
   }
-  metrics_uploader_->SendLogEvent(OrbitLogEvent::ORBIT_FRAME_TRACK_REMOVED);
 }
 
 bool OrbitApp::IsFrameTrackEnabled(const FunctionInfo& function) const {
