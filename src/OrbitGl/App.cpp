@@ -441,10 +441,10 @@ void OrbitApp::OnCaptureStarted(const orbit_grpc_protos::CaptureStarted& capture
         orbit_version::Version current_version = orbit_version::GetVersion();
         if (capture_version > current_version) {
           std::string warning_message = absl::Substitute(
-              "The capture was taken with Orbit version $0.$1, which is higher than the "
-              "current version. Please open the capture using Orbit v$0.$1 or above.",
+              "The capture was taken with Orbit version $0.$1, which is higher than the current "
+              "version. Please use Orbit v$0.$1 or above to ensure all features are supported.",
               capture_version.major_version, capture_version.minor_version);
-          main_window_->AppendToCaptureLog(MainWindowInterface::CaptureLogSeverity::kSevereWarning,
+          main_window_->AppendToCaptureLog(MainWindowInterface::CaptureLogSeverity::kWarning,
                                            absl::ZeroDuration(), warning_message);
         }
         absl::MutexLock lock(&mutex);
