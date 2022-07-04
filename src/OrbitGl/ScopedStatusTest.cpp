@@ -35,28 +35,28 @@ class MockExecutor : public orbit_base::Executor {
 using ::testing::_;
 
 TEST(ScopedStatus, Smoke) {
-  MockStatusListener status_listener{};
+  auto status_listener = std::make_shared<MockStatusListener>();
   auto executor = std::make_shared<MockExecutor>();
-  EXPECT_CALL(status_listener, AddStatus("Initial message")).Times(1);
-  EXPECT_CALL(status_listener, UpdateStatus(_, "Updated message")).Times(1);
-  EXPECT_CALL(status_listener, ClearStatus).Times(1);
+  EXPECT_CALL(*status_listener, AddStatus("Initial message")).Times(1);
+  EXPECT_CALL(*status_listener, UpdateStatus(_, "Updated message")).Times(1);
+  EXPECT_CALL(*status_listener, ClearStatus).Times(1);
   EXPECT_CALL(*executor, ScheduleImpl).Times(0);
 
   {
-    ScopedStatus status(executor, &status_listener, "Initial message");
+    ScopedStatus status(executor, status_listener, "Initial message");
     status.UpdateMessage("Updated message");
   }
 }
 
 TEST(ScopedStatus, UpdateInAnotherThread) {
-  MockStatusListener status_listener{};
+  auto status_listener = std::make_shared<MockStatusListener>();
   auto executor = std::make_shared<MockExecutor>();
-  EXPECT_CALL(status_listener, AddStatus("Initial message")).Times(1);
-  EXPECT_CALL(status_listener, ClearStatus).Times(1);
+  EXPECT_CALL(*status_listener, AddStatus("Initial message")).Times(1);
+  EXPECT_CALL(*status_listener, ClearStatus).Times(1);
   EXPECT_CALL(*executor, ScheduleImpl).Times(1);
 
   {
-    ScopedStatus status(executor, &status_listener, "Initial message");
+    ScopedStatus status(executor, status_listener, "Initial message");
     std::thread thread([&status] { status.UpdateMessage("Updated message"); });
 
     thread.join();
@@ -64,14 +64,14 @@ TEST(ScopedStatus, UpdateInAnotherThread) {
 }
 
 TEST(ScopedStatus, DestroyInAnotherThread) {
-  MockStatusListener status_listener{};
+  auto status_listener = std::make_shared<MockStatusListener>();
   auto executor = std::make_shared<MockExecutor>();
-  EXPECT_CALL(status_listener, AddStatus("Initial message")).Times(1);
-  EXPECT_CALL(status_listener, UpdateStatus(_, "Updated message")).Times(1);
+  EXPECT_CALL(*status_listener, AddStatus("Initial message")).Times(1);
+  EXPECT_CALL(*status_listener, UpdateStatus(_, "Updated message")).Times(1);
   EXPECT_CALL(*executor, ScheduleImpl).Times(1);
 
   {
-    ScopedStatus status(executor, &status_listener, "Initial message");
+    ScopedStatus status(executor, status_listener, "Initial message");
     status.UpdateMessage("Updated message");
     std::thread thread([status = std::move(status)]() {
       // Do nothing
@@ -82,30 +82,30 @@ TEST(ScopedStatus, DestroyInAnotherThread) {
 }
 
 TEST(ScopedStatus, MoveAssignment) {
-  MockStatusListener status_listener{};
+  auto status_listener = std::make_shared<MockStatusListener>();
   auto executor = std::make_shared<MockExecutor>();
-  EXPECT_CALL(status_listener, AddStatus("Initial message 1")).Times(1);
-  EXPECT_CALL(status_listener, AddStatus("Initial message 2")).Times(1);
-  EXPECT_CALL(status_listener, UpdateStatus(_, "Updated message")).Times(1);
-  EXPECT_CALL(status_listener, ClearStatus).Times(2);
+  EXPECT_CALL(*status_listener, AddStatus("Initial message 1")).Times(1);
+  EXPECT_CALL(*status_listener, AddStatus("Initial message 2")).Times(1);
+  EXPECT_CALL(*status_listener, UpdateStatus(_, "Updated message")).Times(1);
+  EXPECT_CALL(*status_listener, ClearStatus).Times(2);
 
   {
-    ScopedStatus status1(executor, &status_listener, "Initial message 1");
-    ScopedStatus status2(executor, &status_listener, "Initial message 2");
+    ScopedStatus status1(executor, status_listener, "Initial message 1");
+    ScopedStatus status2(executor, status_listener, "Initial message 2");
     status1.UpdateMessage("Updated message");
     status1 = std::move(status2);
   }
 }
 
 TEST(ScopedStatus, SelfMoveAssign) {
-  MockStatusListener status_listener{};
+  auto status_listener = std::make_shared<MockStatusListener>();
   auto executor = std::make_shared<MockExecutor>();
-  EXPECT_CALL(status_listener, AddStatus("Initial message")).Times(1);
-  EXPECT_CALL(status_listener, UpdateStatus(_, "Updated message")).Times(1);
-  EXPECT_CALL(status_listener, ClearStatus).Times(1);
+  EXPECT_CALL(*status_listener, AddStatus("Initial message")).Times(1);
+  EXPECT_CALL(*status_listener, UpdateStatus(_, "Updated message")).Times(1);
+  EXPECT_CALL(*status_listener, ClearStatus).Times(1);
 
   {
-    ScopedStatus status1(executor, &status_listener, "Initial message");
+    ScopedStatus status1(executor, status_listener, "Initial message");
     status1.UpdateMessage("Updated message");
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wself-move"

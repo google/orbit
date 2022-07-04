@@ -2852,7 +2852,6 @@ bool OrbitApp::IsLoadingCapture() const {
 
 ScopedStatus OrbitApp::CreateScopedStatus(const std::string& initial_message) {
   ORBIT_CHECK(std::this_thread::get_id() == main_thread_id_);
-  ORBIT_CHECK(status_listener_ != nullptr);
   return ScopedStatus{GetMainThreadExecutor()->weak_from_this(), status_listener_, initial_message};
 }
 
