@@ -23,14 +23,13 @@
 
 using ::orbit_mizar_base::SFID;
 using ::orbit_mizar_base::TID;
+using orbit_test_utils::MakeMap;
 using ::testing::ElementsAre;
 using ::testing::Invoke;
 using ::testing::Return;
 using ::testing::ReturnRef;
 using ::testing::UnorderedElementsAre;
 using ::testing::UnorderedElementsAreArray;
-
-using orbit_test_utils::MakeMap;
 
 namespace {
 

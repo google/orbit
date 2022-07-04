@@ -92,7 +92,7 @@ class SamplingWithFrameTrackInputWidgetTmpl : public SamplingWithFrameTrackInput
     std::vector<std::pair<TID, uint64_t>> counts_sorted(std::begin(counts), std::end(counts));
 
     orbit_base::sort(std::begin(counts_sorted), std::end(counts_sorted),
-                     &std::pair<uint32_t, uint64_t>::second, std::greater<>{});
+                     &std::pair<TID, uint64_t>::second, std::greater<>{});
     for (const auto& [tid, unused_count] : counts_sorted) {
       auto item = std::make_unique<QListWidgetItem>(
           QString::fromStdString(absl::StrFormat("[%u] %s", *tid, tid_to_name.at(tid))));
