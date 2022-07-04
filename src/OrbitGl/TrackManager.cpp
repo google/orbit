@@ -463,13 +463,13 @@ ThreadTrack* TrackManager::GetOrCreateThreadTrack(uint32_t tid) {
   return track.get();
 }
 
-std::optional<ThreadTrack*> TrackManager::GetThreadTrack(uint32_t tid) {
+std::optional<ThreadTrack*> TrackManager::GetThreadTrack(uint32_t tid) const {
   std::lock_guard<std::recursive_mutex> lock(mutex_);
-  std::shared_ptr<ThreadTrack> track = thread_tracks_[tid];
-  if (track == nullptr) {
+  if (!thread_tracks_.contains(tid)) {
     return std::nullopt;
   }
-  return track.get();
+  auto track = thread_tracks_.find(tid);
+  return track->second.get();
 }
 
 GpuTrack* TrackManager::GetOrCreateGpuTrack(uint64_t timeline_hash) {

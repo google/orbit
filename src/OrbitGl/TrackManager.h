@@ -63,7 +63,7 @@ class TrackManager {
   Track* GetOrCreateTrackFromTimerInfo(const orbit_client_protos::TimerInfo& timer_info);
   SchedulerTrack* GetOrCreateSchedulerTrack();
   ThreadTrack* GetOrCreateThreadTrack(uint32_t tid);
-  std::optional<ThreadTrack*> GetThreadTrack(uint32_t tid);
+  [[nodiscard]] std::optional<ThreadTrack*> GetThreadTrack(uint32_t tid) const;
   GpuTrack* GetOrCreateGpuTrack(uint64_t timeline_hash);
   VariableTrack* GetOrCreateVariableTrack(const std::string& name);
   AsyncTrack* GetOrCreateAsyncTrack(const std::string& name);
