@@ -53,7 +53,7 @@ bool PeCoffUnwindInfoUnwinderX86_64::Step(uint64_t pc, uint64_t pc_adjustment, R
     return true;
   }
 
-  UnwindInfo unwind_info;
+  UnwindInfo* unwind_info;
   if (!unwind_infos_->GetUnwindInfo(function_at_pc.unwind_info_offset, &unwind_info)) {
     last_error_ = unwind_infos_->GetLastError();
     return false;
@@ -75,7 +75,7 @@ bool PeCoffUnwindInfoUnwinderX86_64::Step(uint64_t pc, uint64_t pc_adjustment, R
   // Conveniently, we know we are unwinding the innermost frame if and only if pc_adjustment == 0
   // (the value is 1 for all other frames).
   uint64_t current_offset_from_start = pc_rva - function_at_pc.start_address;
-  if (pc_adjustment == 0 && current_offset_from_start > unwind_info.prolog_size) {
+  if (pc_adjustment == 0 && current_offset_from_start > unwind_info->prolog_size) {
     bool is_in_epilog;
     // If 'DetectAndHandleEpilog' fails with an error, we have to return here.
     if (!epilog_->DetectAndHandleEpilog(function_at_pc.start_address, function_at_pc.end_address,
@@ -90,7 +90,7 @@ bool PeCoffUnwindInfoUnwinderX86_64::Step(uint64_t pc, uint64_t pc_adjustment, R
     }
   }
 
-  if (!unwind_info_evaluator_->Eval(process_memory, regs, unwind_info, unwind_infos_.get(),
+  if (!unwind_info_evaluator_->Eval(process_memory, regs, *unwind_info, unwind_infos_.get(),
                                     current_offset_from_start)) {
     last_error_ = unwind_info_evaluator_->GetLastError();
     return false;

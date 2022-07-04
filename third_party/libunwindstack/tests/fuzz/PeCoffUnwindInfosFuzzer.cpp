@@ -39,7 +39,7 @@ void FuzzPeCoffUnwindInfos(const uint8_t* data, size_t size) {
       unwindstack::Section{"all_addresses", kUint32Max, 0, kUint32Max, 0, 0}};
   std::unique_ptr<unwindstack::PeCoffUnwindInfos> pe_coff_unwind_infos(
       CreatePeCoffUnwindInfos(memory.get(), sections));
-  unwindstack::UnwindInfo info;
+  unwindstack::UnwindInfo* info;
   // Try all possible offsets to increase coverage. This will also test the parser
   // running over the end of the memory.
   for (size_t offset = 0; offset < size; ++offset) {

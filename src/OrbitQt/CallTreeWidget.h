@@ -23,6 +23,7 @@
 #include <QWidget>
 #include <Qt>
 #include <memory>
+#include <optional>
 #include <string>
 #include <string_view>
 #include <vector>
@@ -67,6 +68,7 @@ class CallTreeWidget : public QWidget {
   void OnCustomContextMenuRequested(const QPoint& point);
   void OnSearchLineEditTextEdited(const QString& text);
   void OnSearchTypingFinishedTimerTimout();
+  void OnSliderValueChanged(int value);
 
  private:
   static const QString kActionExpandRecursively;

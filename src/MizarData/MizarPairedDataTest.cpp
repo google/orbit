@@ -19,6 +19,7 @@
 #include "ClientData/ScopeInfo.h"
 #include "MizarBase/SampledFunctionId.h"
 #include "MizarData/MizarPairedData.h"
+#include "TestUtils/ContainerHelpers.h"
 
 using ::orbit_mizar_base::SFID;
 using ::orbit_mizar_base::TID;
@@ -28,6 +29,8 @@ using ::testing::Return;
 using ::testing::ReturnRef;
 using ::testing::UnorderedElementsAre;
 using ::testing::UnorderedElementsAreArray;
+
+using orbit_test_utils::MakeMap;
 
 namespace {
 
@@ -165,19 +168,6 @@ const std::vector<const orbit_client_protos::TimerInfo*> kTimerPtrs = [] {
 }();
 
 constexpr uint64_t kSamplingPeriod = 10;
-
-template <typename Container, typename AnotherContainer>
-static auto MakeMap(const Container& keys, const AnotherContainer& values) {
-  using K = typename Container::value_type;
-  using V = typename AnotherContainer::value_type;
-  using std::begin;
-  using std::end;
-
-  absl::flat_hash_map<K, V> result;
-  std::transform(begin(keys), end(keys), begin(values), std::inserter(result, std::begin(result)),
-                 [](const K& k, const V& v) { return std::make_pair(k, v); });
-  return result;
-}
 
 const std::vector<uint64_t> kScopeIds = {1, 2, 10, 30};
 const std::vector<orbit_client_data::ScopeInfo> kScopeInfos = {

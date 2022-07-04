@@ -36,6 +36,8 @@ class CallTreeNode {
            unwind_error_type_children_.size() + (unwind_errors_child_ != nullptr ? 1 : 0);
   }
 
+  [[nodiscard]] uint64_t thread_count() const { return thread_children_.size(); }
+
   [[nodiscard]] const std::vector<const CallTreeNode*>& children() const;
 
   [[nodiscard]] CallTreeThread* GetThreadOrNull(uint32_t thread_id);

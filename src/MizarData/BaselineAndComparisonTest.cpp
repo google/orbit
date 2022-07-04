@@ -21,6 +21,7 @@
 #include "MizarData/BaselineAndComparison.h"
 #include "MizarStatistics/ActiveFunctionTimePerFrameComparator.h"
 #include "OrbitBase/ThreadConstants.h"
+#include "TestUtils/ContainerHelpers.h"
 
 using ::orbit_mizar_base::Baseline;
 using ::orbit_mizar_base::Comparison;
@@ -31,6 +32,9 @@ using ::orbit_mizar_base::TID;
 using ::testing::DoubleNear;
 using ::testing::UnorderedElementsAreArray;
 
+using orbit_test_utils::Commons;
+using orbit_test_utils::MakeMap;
+
 namespace orbit_mizar_data {
 
 constexpr size_t kFunctionNum = 3;
@@ -39,35 +43,8 @@ constexpr std::array<uint64_t, kFunctionNum> kComparisonFunctionAddresses = {0x0
 const std::array<std::string, kFunctionNum> kBaselineFunctionNames = {"foo()", "bar()", "biz()"};
 const std::array<std::string, kFunctionNum> kComparisonFunctionNames = {"foo()", "bar()", "fiz()"};
 
-// TODO(b/237743774) move to TestUtils
-template <typename Container>
-[[nodiscard]] static auto Commons(const Container& a, const Container& b) {
-  using E = typename Container::value_type;
-  using std::begin;
-  using std::end;
-
-  absl::flat_hash_set<E> a_set(begin(a), end(a));
-  std::vector<E> result;
-  std::copy_if(begin(b), end(b), std::back_inserter(result),
-               [&a_set](const E& element) { return a_set.contains(element); });
-  return result;
-}
-
 const std::vector<std::string> kCommonFunctionNames =
     Commons(kBaselineFunctionNames, kComparisonFunctionNames);
-
-template <typename Container, typename AnotherContainer>
-static auto MakeMap(const Container& keys, const AnotherContainer& values) {
-  using K = typename Container::value_type;
-  using V = typename AnotherContainer::value_type;
-  using std::begin;
-  using std::end;
-
-  absl::flat_hash_map<K, V> result;
-  std::transform(begin(keys), end(keys), begin(values), std::inserter(result, std::begin(result)),
-                 [](const K& k, const V& v) { return std::make_pair(k, v); });
-  return result;
-}
 
 const absl::flat_hash_map<uint64_t, std::string> kBaselineAddressToName =
     MakeMap(kBaselineFunctionAddresses, kBaselineFunctionNames);

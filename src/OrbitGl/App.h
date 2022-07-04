@@ -314,7 +314,9 @@ class OrbitApp final : public DataViewFactory,
     clipboard_callback_ = std::move(callback);
   }
 
-  void SetStatusListener(StatusListener* listener) { status_listener_ = listener; }
+  void SetStatusListener(std::weak_ptr<StatusListener> listener) {
+    status_listener_ = std::move(listener);
+  }
 
   void SendDisassemblyToUi(const orbit_client_data::FunctionInfo& function_info,
                            std::string disassembly, orbit_code_report::DisassemblyReport report);
@@ -463,6 +465,11 @@ class OrbitApp final : public DataViewFactory,
 
   [[nodiscard]] orbit_client_data::ThreadID selected_thread_id() const;
   void set_selected_thread_id(orbit_client_data::ThreadID thread_id);
+
+  [[nodiscard]] std::optional<orbit_client_data::ThreadStateSliceInfo> selected_thread_state_slice()
+      const;
+  void set_selected_thread_state_slice(
+      std::optional<orbit_client_data::ThreadStateSliceInfo> thread_state_slice);
 
   [[nodiscard]] const orbit_client_protos::TimerInfo* selected_timer() const;
   void SelectTimer(const orbit_client_protos::TimerInfo* timer_info);
@@ -689,7 +696,7 @@ class OrbitApp final : public DataViewFactory,
 
   const orbit_symbols::SymbolHelper symbol_helper_{orbit_paths::CreateOrGetCacheDir()};
 
-  StatusListener* status_listener_ = nullptr;
+  std::weak_ptr<StatusListener> status_listener_;
 
   orbit_client_data::ProcessData* process_ = nullptr;
 

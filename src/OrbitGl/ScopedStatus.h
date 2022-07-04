@@ -37,11 +37,15 @@ class ScopedStatus final {
  public:
   ScopedStatus() = default;
   explicit ScopedStatus(std::weak_ptr<orbit_base::Executor> executor,
-                        StatusListener* status_listener, const std::string& status_message) {
+                        std::weak_ptr<StatusListener> maybe_status_listener,
+                        const std::string& status_message) {
     data_ = std::make_unique<Data>();
     data_->executor = std::move(executor);
-    data_->status_listener = status_listener;
+    data_->status_listener = std::move(maybe_status_listener);
     data_->main_thread_id = std::this_thread::get_id();
+
+    std::shared_ptr<StatusListener> status_listener = data_->status_listener.lock();
+    if (status_listener == nullptr) return;
     data_->status_id = status_listener->AddStatus(status_message);
   }
 
@@ -65,11 +69,16 @@ class ScopedStatus final {
   void UpdateMessage(const std::string& message) {
     ORBIT_CHECK(data_ != nullptr);
     if (std::this_thread::get_id() == data_->main_thread_id) {
-      data_->status_listener->UpdateStatus(data_->status_id, message);
+      std::shared_ptr<StatusListener> status_listener = data_->status_listener.lock();
+      if (status_listener == nullptr) return;
+      status_listener->UpdateStatus(data_->status_id, message);
     } else {
-      TrySchedule(data_->executor,
-                  [status_id = data_->status_id, status_listener = data_->status_listener,
-                   message] { status_listener->UpdateStatus(status_id, message); });
+      TrySchedule(data_->executor, [status_id = data_->status_id,
+                                    maybe_status_listener = data_->status_listener, message] {
+        std::shared_ptr<StatusListener> status_listener = maybe_status_listener.lock();
+        if (status_listener == nullptr) return;
+        status_listener->UpdateStatus(status_id, message);
+      });
     }
   }
 
@@ -80,10 +89,14 @@ class ScopedStatus final {
     }
 
     if (std::this_thread::get_id() == data_->main_thread_id) {
-      data_->status_listener->ClearStatus(data_->status_id);
+      std::shared_ptr<StatusListener> status_listener = data_->status_listener.lock();
+      if (status_listener == nullptr) return;
+      status_listener->ClearStatus(data_->status_id);
     } else {
       TrySchedule(data_->executor,
-                  [status_listener = data_->status_listener, status_id = data_->status_id] {
+                  [maybe_status_listener = data_->status_listener, status_id = data_->status_id] {
+                    auto status_listener = maybe_status_listener.lock();
+                    if (status_listener == nullptr) return;
                     status_listener->ClearStatus(status_id);
                   });
     }
@@ -95,7 +108,7 @@ class ScopedStatus final {
   // stored in easily movable form.
   struct Data {
     std::weak_ptr<orbit_base::Executor> executor;
-    StatusListener* status_listener = nullptr;
+    std::weak_ptr<StatusListener> status_listener;
     std::thread::id main_thread_id;
     uint64_t status_id = 0;
   };

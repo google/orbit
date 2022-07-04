@@ -12,6 +12,8 @@
 #include <utility>
 #include <vector>
 
+#include "OrbitBase/Sort.h"
+
 namespace orbit_statistics {
 
 // Here we implement multiplicity correction methods (a term from statistics).
@@ -44,8 +46,8 @@ template <typename K>
 [[nodiscard]] absl::flat_hash_map<K, double> HolmBonferroniCorrection(
     const absl::flat_hash_map<K, double>& pvalues) {
   std::vector<std::pair<K, double>> corrected_pvalues(std::begin(pvalues), std::end(pvalues));
-  std::sort(std::begin(corrected_pvalues), std::end(corrected_pvalues),
-            [](const auto& a, const auto& b) { return a.second < b.second; });
+  orbit_base::sort(std::begin(corrected_pvalues), std::end(corrected_pvalues),
+                   &std::pair<K, double>::second);
 
   size_t correcting_multiplier = pvalues.size();
   double max_corrected_pvalue = 0.0;

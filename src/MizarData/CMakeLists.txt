@@ -44,5 +44,6 @@ target_sources(MizarDataTests PRIVATE
 target_link_libraries(MizarDataTests PRIVATE GrpcProtos
                                                 MizarData
                                                 GTest::GTest
-                                                GTest::Main)
+                                                GTest::Main
+                                                TestUtils)
 register_test(MizarDataTests)

@@ -34,31 +34,30 @@ void TriangleToggle::DoDraw(PrimitiveAssembler& primitive_assembler, TextRendere
   Color color = is_collapsible_ ? kWhite : kGrey;
 
   // Draw triangle.
-  static float half_sqrt_three = 0.5f * sqrtf(3.f);
-  float half_triangle_base_width = 0.5f * GetWidth();
-  float half_triangle_height = half_sqrt_three * 0.5f * GetHeight();
+  const Vec2 midpoint = GetPos() + Vec2(GetWidth() / 2, GetHeight() / 2);
+  const float triangle_side_length = std::min(GetWidth(), GetHeight());
+  const float kCos30 = sqrtf(3.f) / 2;
+  const float triangle_height = triangle_side_length * kCos30;
 
-  const Vec2 pos = GetPos();
+  const float half_triangle_height = ceilf(triangle_height / 2);
+  const float half_triangle_side_length = triangle_side_length / 2;
+
   if (!picking) {
-    Vec2 position(pos[0], pos[1]);
-
     Triangle triangle;
     if (is_collapsed_) {
-      triangle = Triangle(position + Vec2(-half_triangle_height, half_triangle_base_width),
-                          position + Vec2(-half_triangle_height, -half_triangle_base_width),
-                          position + Vec2(half_triangle_base_width, 0.f));
+      triangle = Triangle(midpoint + Vec2(-half_triangle_height, half_triangle_side_length),
+                          midpoint + Vec2(-half_triangle_height, -half_triangle_side_length),
+                          midpoint + Vec2(half_triangle_height, 0.f));
     } else {
-      triangle = Triangle(position + Vec2(half_triangle_base_width, -half_triangle_height),
-                          position + Vec2(-half_triangle_base_width, -half_triangle_height),
-                          position + Vec2(0.f, half_triangle_base_width));
+      triangle = Triangle(midpoint + Vec2(half_triangle_side_length, -half_triangle_height),
+                          midpoint + Vec2(-half_triangle_side_length, -half_triangle_height),
+                          midpoint + Vec2(0.f, half_triangle_height));
     }
     primitive_assembler.AddTriangle(triangle, z, color, shared_from_this());
   } else {
     // When picking, draw a big square for easier picking.
-    float original_width = 2 * half_triangle_base_width;
-    float large_width = 2 * original_width;
-    Quad box = MakeBox(Vec2(pos[0] - original_width, pos[1] - original_width),
-                       Vec2(large_width, large_width));
+    Quad box = MakeBox(midpoint - Vec2(half_triangle_side_length, half_triangle_side_length),
+                       Vec2(triangle_side_length, triangle_side_length));
     primitive_assembler.AddBox(box, z, color, shared_from_this());
   }
 }

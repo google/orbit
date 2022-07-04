@@ -19,6 +19,7 @@
 #include <memory>
 #include <unordered_map>
 #include <utility>
+#include "Check.h"
 
 namespace unwindstack {
 
@@ -27,7 +28,7 @@ class PeCoffUnwindInfosImpl : public PeCoffUnwindInfos {
   explicit PeCoffUnwindInfosImpl(Memory* memory, std::vector<Section> sections)
       : pe_coff_memory_(memory), sections_(std::move(sections)) {}
 
-  bool GetUnwindInfo(uint64_t unwind_info_file_offset, UnwindInfo* unwind_info) override;
+  bool GetUnwindInfo(uint64_t unwind_info_rva, UnwindInfo** unwind_info) override;
 
  private:
   bool MapFromRVAToFileOffset(uint64_t rva, uint64_t* file_offset);
@@ -56,10 +57,10 @@ bool PeCoffUnwindInfosImpl::MapFromRVAToFileOffset(uint64_t rva, uint64_t* file_
   return false;
 }
 
-bool PeCoffUnwindInfosImpl::GetUnwindInfo(uint64_t unwind_info_rva, UnwindInfo* unwind_info) {
+bool PeCoffUnwindInfosImpl::GetUnwindInfo(uint64_t unwind_info_rva, UnwindInfo** unwind_info) {
   const auto& it = unwind_info_rva_to_unwind_info_.find(unwind_info_rva);
   if (it != unwind_info_rva_to_unwind_info_.end()) {
-    *unwind_info = it->second;
+    *unwind_info = &it->second;
     return true;
   }
 
@@ -74,8 +75,10 @@ bool PeCoffUnwindInfosImpl::GetUnwindInfo(uint64_t unwind_info_rva, UnwindInfo* 
     return false;
   }
 
-  unwind_info_rva_to_unwind_info_[unwind_info_rva] = new_unwind_info;
-  *unwind_info = new_unwind_info;
+  const auto& [new_it, inserted] =
+      unwind_info_rva_to_unwind_info_.emplace(unwind_info_rva, std::move(new_unwind_info));
+  CHECK(inserted);
+  *unwind_info = &new_it->second;
   return true;
 }
 

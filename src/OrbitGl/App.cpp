@@ -452,12 +452,11 @@ void OrbitApp::OnCaptureStarted(const orbit_grpc_protos::CaptureStarted& capture
         orbit_version::Version current_version = orbit_version::GetVersion();
         if (capture_version > current_version) {
           std::string warning_message = absl::Substitute(
-              "The capture was taken with Orbit version $0.$1, which is higher than the "
-              "current version. Please open the capture using Orbit v$0.$1 or above.",
+              "The capture was taken with Orbit version $0.$1, which is higher than the current "
+              "version. Please use Orbit v$0.$1 or above to ensure all features are supported.",
               capture_version.major_version, capture_version.minor_version);
-          main_window_->AppendToCaptureLog(MainWindowInterface::CaptureLogSeverity::kSevereWarning,
+          main_window_->AppendToCaptureLog(MainWindowInterface::CaptureLogSeverity::kWarning,
                                            absl::ZeroDuration(), warning_message);
-          SendWarningToUi("Capture", warning_message);
         }
         absl::MutexLock lock(&mutex);
         initialization_complete = true;
@@ -2649,6 +2648,17 @@ void OrbitApp::set_selected_thread_id(ThreadID thread_id) {
   return data_manager_->set_selected_thread_id(thread_id);
 }
 
+std::optional<orbit_client_data::ThreadStateSliceInfo> OrbitApp::selected_thread_state_slice()
+    const {
+  return data_manager_->selected_thread_state_slice();
+}
+
+void OrbitApp::set_selected_thread_state_slice(
+    std::optional<orbit_client_data::ThreadStateSliceInfo> thread_state_slice) {
+  RequestUpdatePrimitives();
+  data_manager_->set_selected_thread_state_slice(thread_state_slice);
+}
+
 const orbit_client_protos::TimerInfo* OrbitApp::selected_timer() const {
   return data_manager_->selected_timer();
 }
@@ -2852,7 +2862,6 @@ bool OrbitApp::IsLoadingCapture() const {
 
 ScopedStatus OrbitApp::CreateScopedStatus(const std::string& initial_message) {
   ORBIT_CHECK(std::this_thread::get_id() == main_thread_id_);
-  ORBIT_CHECK(status_listener_ != nullptr);
   return ScopedStatus{GetMainThreadExecutor()->weak_from_this(), status_listener_, initial_message};
 }
 

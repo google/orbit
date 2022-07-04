@@ -50,8 +50,8 @@ void StatusListenerImpl::UpdateStatus(uint64_t status_id, std::string message) {
   status_messages_.insert_or_assign(status_id, std::move(message));
 }
 
-std::unique_ptr<StatusListener> StatusListenerImpl::Create(QStatusBar* status_bar) {
-  return std::unique_ptr<StatusListener>(new StatusListenerImpl(status_bar));
+std::shared_ptr<StatusListener> StatusListenerImpl::Create(QStatusBar* status_bar) {
+  return std::shared_ptr<StatusListener>(new StatusListenerImpl(status_bar));
 }
 
 uint64_t StatusListenerImpl::GetNextId() {
