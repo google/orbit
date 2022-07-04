@@ -225,7 +225,8 @@ void PrimitiveAssembler::AddShadedTrapezium(const Quad& trapezium, float z, cons
   batcher_->AddTriangle(triangle_2, z, colors_2, picking_color, std::move(user_data));
 }
 
-void PrimitiveAssembler::AddCircle(const Vec2& position, float radius, float z, Color color) {
+void PrimitiveAssembler::AddCircle(const Vec2& position, float radius, float z,
+                                   const Color& color) {
   std::vector<Vec2> circle_points_scaled_by_radius;
   for (auto& point : circle_points) {
     circle_points_scaled_by_radius.emplace_back(radius * point);
@@ -244,38 +245,34 @@ void PrimitiveAssembler::AddCircle(const Vec2& position, float radius, float z, 
   }
 }
 
-void PrimitiveAssembler::AddVerticalArrow(Vec2 starting_pos, Vec2 size, float z, Color color,
-                                          ArrowDirection arrow_direction, Vec2 head_size) {
-  // The arrow is divided into two parts, the body and the head. The body is a rectangle.
-  // starting point is the point in the middle of the side of the body where the body and the head
-  // don't meet. size[0] is half the width of the body and size[1] is the length of the whole arrow.
-  // size should only have positive numbers, indication whether the arrow is point up or down is
-  // used with arrow_direction. head_size[0] is half the width of the triangle and head_size[1]
-  // is the length of the triangle.
-  // length of body = size[1] - head_size[1]
-  size[1] *= (arrow_direction == ArrowDirection::kUp ? -1 : 1);
-  float end_y = starting_pos[1] + size[1];
+void PrimitiveAssembler::AddVerticalArrow(Vec2 starting_pos, Vec2 arrow_body_size,
+                                          Vec2 arrow_head_size, float z, const Color& color,
+                                          ArrowDirection arrow_direction) {
+  float body_head_meeting_y =
+      starting_pos[1] +
+      (arrow_direction == ArrowDirection::kUp ? -arrow_body_size[1] : arrow_body_size[1]);
 
-  float head_width = head_size[0];
-  float head_length = head_size[1];
-  // add or subtract head_length from the tip of the arrow depending on whether the arrow is
-  // pointing up or down
-  float head_arrow_start_y =
-      end_y + (head_length * (arrow_direction == ArrowDirection::kDown ? -1 : 1));
+  float head_half_width = arrow_head_size[0] / 2;
+  float head_length = arrow_head_size[1];
+  float tip_of_head_y =
+      body_head_meeting_y + (head_length * (arrow_direction == ArrowDirection::kUp ? -1 : 1));
+
   Triangle arrow_head{
-      Vec2(starting_pos[0], end_y),
-      Vec2(starting_pos[0] - head_width, head_arrow_start_y),
-      Vec2(starting_pos[0] + head_width, head_arrow_start_y),
+      Vec2(starting_pos[0], tip_of_head_y),
+      Vec2(starting_pos[0] - head_half_width, body_head_meeting_y),
+      Vec2(starting_pos[0] + head_half_width, body_head_meeting_y),
   };
   AddTriangle(arrow_head, z, color);
 
-  float arrow_body_min_y = std::min(starting_pos[1], head_arrow_start_y);
-  float arrow_body_max_y = std::max(starting_pos[1], head_arrow_start_y);
+  float arrow_body_min_y = std::min(starting_pos[1], body_head_meeting_y);
+  float arrow_body_max_y = std::max(starting_pos[1], body_head_meeting_y);
+  float body_half_width = arrow_body_size[0] / 2;
+
   std::array<Vec2, 4> box_vertices{
-      Vec2(starting_pos[0] - size[0], arrow_body_max_y),
-      Vec2(starting_pos[0] - size[0], arrow_body_min_y),
-      Vec2(starting_pos[0] + size[0], arrow_body_min_y),
-      Vec2(starting_pos[0] + size[0], arrow_body_max_y),
+      Vec2(starting_pos[0] - body_half_width, arrow_body_max_y),
+      Vec2(starting_pos[0] - body_half_width, arrow_body_min_y),
+      Vec2(starting_pos[0] + body_half_width, arrow_body_min_y),
+      Vec2(starting_pos[0] + body_half_width, arrow_body_max_y),
   };
   Quad arrow_body(box_vertices);
   AddBox(arrow_body, z, color);

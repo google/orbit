@@ -4,6 +4,7 @@
 
 #include <gtest/gtest.h>
 
+#include "CoreMath.h"
 #include "MockBatcher.h"
 #include "PickingManagerTest.h"
 #include "PrimitiveAssembler.h"
@@ -18,8 +19,9 @@ const Vec2 kTopRight{5, 0};
 const Vec2 kBottomRight{5, 5};
 const Vec2 kBottomLeft{0, 5};
 const Vec2 kBoxSize{5, 5};
-const Vec2 kArrowSize{2, 4};
-const Vec2 kArrowHeadSize{3, 2};
+const Vec2 kArrowStartingPos{5, 5};
+const Vec2 kArrowBodySize{2, 4};
+const Vec2 kArrowHeadSize{4, 2};
 
 class PrimitiveAssemblerTester : public PrimitiveAssembler {
  public:
@@ -154,28 +156,31 @@ TEST(PrimitiveAssembler, ComplexShapes) {
 
   primitive_assembler_tester.StartNewFrame();
 
-  // Draw arrow pointing down
-  primitive_assembler_tester.AddVerticalArrow(kBottomRight, kArrowSize, 0, kFakeColor,
-                                              PrimitiveAssembler::ArrowDirection::kDown,
-                                              kArrowHeadSize);
+  // AddVerticalArrow (arrow pointing down) -> 1 box and 1 Triangle
+  primitive_assembler_tester.AddVerticalArrow(kArrowStartingPos, kArrowBodySize, kArrowHeadSize, 0,
+                                              kFakeColor,
+                                              PrimitiveAssembler::ArrowDirection::kDown);
+  float arrow_width1 = std::max(kArrowHeadSize[0], kArrowBodySize[0]);
+  float arrow_height1 = kArrowHeadSize[1] + kArrowBodySize[1];
   EXPECT_EQ(primitive_assembler_tester.GetNumTriangles(), 1);
   EXPECT_EQ(primitive_assembler_tester.GetNumLines(), 0);
   EXPECT_EQ(primitive_assembler_tester.GetNumBoxes(), 1);
   EXPECT_TRUE(primitive_assembler_tester.IsEverythingInsideRectangle(
-      kBottomRight - Vec2{kArrowHeadSize[0], 0}, Vec2{2 * kArrowHeadSize[0], kArrowSize[1]}));
+      kArrowStartingPos - Vec2{arrow_width1 / 2, 0}, Vec2{arrow_width1, arrow_height1}));
 
   primitive_assembler_tester.StartNewFrame();
 
-  // Draw arrow pointing up
-  primitive_assembler_tester.AddVerticalArrow(kBottomRight, kArrowSize, 0, kFakeColor,
-                                              PrimitiveAssembler::ArrowDirection::kUp,
-                                              kArrowHeadSize);
+  // AddVerticalArrow (arrow pointing up) -> 1 box and 1 Triangle
+  primitive_assembler_tester.AddVerticalArrow(kArrowStartingPos, kArrowBodySize, kArrowHeadSize, 0,
+                                              kFakeColor, PrimitiveAssembler::ArrowDirection::kUp);
+  float arrow_width2 = std::max(kArrowHeadSize[0], kArrowBodySize[0]);
+  float arrow_height2 = kArrowHeadSize[1] + kArrowBodySize[1];
   EXPECT_EQ(primitive_assembler_tester.GetNumTriangles(), 1);
   EXPECT_EQ(primitive_assembler_tester.GetNumLines(), 0);
   EXPECT_EQ(primitive_assembler_tester.GetNumBoxes(), 1);
   EXPECT_TRUE(primitive_assembler_tester.IsEverythingInsideRectangle(
-      kBottomRight - Vec2{kArrowHeadSize[0], kArrowSize[1]},
-      Vec2{2 * kArrowHeadSize[0], kArrowSize[1]}));
+      kArrowStartingPos - Vec2{arrow_width2 / 2, arrow_height2},
+      Vec2{arrow_width2, arrow_height2}));
 }
 
 }  // namespace orbit_gl
