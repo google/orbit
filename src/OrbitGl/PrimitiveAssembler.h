@@ -98,7 +98,7 @@ class PrimitiveAssembler {
 
   void AddCircle(const Vec2& position, float radius, float z, Color color);
 
-  void AddVerticalArrow(float x, float y_start, float y_end, float z, uint width,
+  void AddVerticalArrow(float x, float y_start, float y_end, float z, uint32_t width,
                         float head_length_ratio, float head_width_ratio, Color color);
 
   void StartNewFrame();

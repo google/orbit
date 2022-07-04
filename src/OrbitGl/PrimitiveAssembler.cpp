@@ -244,9 +244,9 @@ void PrimitiveAssembler::AddCircle(const Vec2& position, float radius, float z, 
   }
 }
 
-void PrimitiveAssembler::AddVerticalArrow(float x, float start_y, float end_y, float z, uint width,
-                                          float head_length_ratio, float head_width_ratio,
-                                          Color color) {
+void PrimitiveAssembler::AddVerticalArrow(float x, float start_y, float end_y, float z,
+                                          uint32_t width, float head_length_ratio,
+                                          float head_width_ratio, Color color) {
   float min_y = std::min(start_y, end_y);
   float max_y = std::max(start_y, end_y);
 
