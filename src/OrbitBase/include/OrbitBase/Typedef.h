@@ -68,6 +68,8 @@ class Typedef {
   constexpr explicit Typedef(std::in_place_t, Args&&... args)
       : value_(T(std::forward<T>(args)...)) {}
 
+  constexpr Typedef() = default;
+
   constexpr Typedef(const Typedef& other) = default;
   constexpr Typedef(Typedef&& other) = default;
 

@@ -16,6 +16,7 @@ orbit_cc_library(
     testonly = True,
     deps = [
         "//src/OrbitBase",
+        "@com_google_absl//absl/container:flat_hash_map",
     ],
 )
 
@@ -24,5 +25,6 @@ orbit_cc_test(
     deps = [
         ":TestUtils",
         "//src/OrbitBase",
+        "@com_google_absl//absl/container:flat_hash_map",
     ],
 )

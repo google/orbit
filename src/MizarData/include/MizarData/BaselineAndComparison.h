@@ -32,6 +32,7 @@ class BaselineAndComparisonTmpl {
   template <typename T>
   using Comparison = ::orbit_mizar_base::Comparison<T>;
   using SFID = ::orbit_mizar_base::SFID;
+  using TID = ::orbit_mizar_base::TID;
 
  public:
   BaselineAndComparisonTmpl(Baseline<PairedData> baseline, Comparison<PairedData> comparison,
@@ -109,7 +110,7 @@ class BaselineAndComparisonTmpl {
       const PairedData& data, const HalfOfSamplingWithFrameTrackReportConfig& config) {
     uint64_t total_callstacks = 0;
     absl::flat_hash_map<SFID, InclusiveAndExclusive> counts;
-    for (const uint32_t tid : config.tids) {
+    for (const TID tid : config.tids) {
       data.ForEachCallstackEvent(tid, config.start_relative_ns,
                                  NonWrappingAddition(config.start_relative_ns, config.duration_ns),
                                  [&total_callstacks, &counts](const std::vector<SFID>& callstack) {

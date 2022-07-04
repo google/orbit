@@ -31,10 +31,14 @@ namespace Ui {
 class SamplingWithFrameTrackInputWidget;
 }
 
+Q_DECLARE_METATYPE(::orbit_mizar_base::TID);
+
 namespace orbit_mizar_widgets {
 
 class SamplingWithFrameTrackInputWidgetBase : public QWidget {
   Q_OBJECT
+  using TID = ::orbit_mizar_base::TID;
+
  public:
   ~SamplingWithFrameTrackInputWidgetBase() override;
 
@@ -59,7 +63,7 @@ class SamplingWithFrameTrackInputWidgetBase : public QWidget {
   [[nodiscard]] QLineEdit* GetStartMs() const;
 
  private:
-  absl::flat_hash_set<uint32_t> selected_tids_;
+  absl::flat_hash_set<TID> selected_tids_;
   uint64_t frame_track_scope_id_ = 0;
 
   // std::numeric_limits<uint64_t>::max() corresponds to malformed input
@@ -68,6 +72,8 @@ class SamplingWithFrameTrackInputWidgetBase : public QWidget {
 
 template <typename PairedData>
 class SamplingWithFrameTrackInputWidgetTmpl : public SamplingWithFrameTrackInputWidgetBase {
+  using TID = ::orbit_mizar_base::TID;
+
  public:
   SamplingWithFrameTrackInputWidgetTmpl() = delete;
   explicit SamplingWithFrameTrackInputWidgetTmpl(QWidget* parent)
@@ -88,17 +94,17 @@ class SamplingWithFrameTrackInputWidgetTmpl : public SamplingWithFrameTrackInput
     QListWidget* list = GetThreadList();
     list->setSelectionMode(QAbstractItemView::ExtendedSelection);
 
-    const absl::flat_hash_map<uint32_t, std::string>& tid_to_name = data.TidToNames();
-    const absl::flat_hash_map<uint32_t, uint64_t>& counts = data.TidToCallstackSampleCounts();
+    const absl::flat_hash_map<TID, std::string>& tid_to_name = data.TidToNames();
+    const absl::flat_hash_map<TID, uint64_t>& counts = data.TidToCallstackSampleCounts();
 
-    std::vector<std::pair<uint32_t, uint64_t>> counts_sorted(std::begin(counts), std::end(counts));
+    std::vector<std::pair<TID, uint64_t>> counts_sorted(std::begin(counts), std::end(counts));
 
     orbit_base::sort(std::begin(counts_sorted), std::end(counts_sorted),
-                     &std::pair<uint32_t, uint64_t>::second, std::greater<>{});
+                     &std::pair<TID, uint64_t>::second, std::greater<>{});
     for (const auto& [tid, unused_count] : counts_sorted) {
       auto item = std::make_unique<QListWidgetItem>(
-          QString::fromStdString(absl::StrFormat("[%u] %s", tid, tid_to_name.at(tid))));
-      item->setData(kTidRole, tid);
+          QString::fromStdString(absl::StrFormat("[%u] %s", *tid, tid_to_name.at(tid))));
+      item->setData(kTidRole, QVariant::fromValue(tid));
       list->addItem(item.release());
     }
   }
