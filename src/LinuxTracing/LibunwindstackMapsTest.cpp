@@ -67,9 +67,10 @@ TEST(LibunwindstackMaps, AddAndSortNotOverlappingAnyExistingMap) {
 
   libunwindstack_maps->AddAndSort(0x107000, 0x200000, 0x7000, PROT_READ | PROT_WRITE,
                                   "/path/to/newfile");
+  libunwindstack_maps->AddAndSort(0x210000, 0x211000, 0, PROT_READ, "");
   unwindstack::Maps* maps = libunwindstack_maps->Get();
   ASSERT_NE(maps, nullptr);
-  ASSERT_EQ(maps->Total(), 4);
+  ASSERT_EQ(maps->Total(), 5);
 
   EXPECT_THAT(maps->Get(0).get(), MapInfoEq(0x101000, 0x104000, 0x1000, PROT_READ, "/path/to/file",
                                             nullptr, maps->Get(1)));
@@ -78,7 +79,9 @@ TEST(LibunwindstackMaps, AddAndSortNotOverlappingAnyExistingMap) {
   EXPECT_THAT(maps->Get(2).get(), MapInfoEq(0x107000, 0x200000, 0x7000, PROT_READ | PROT_WRITE,
                                             "/path/to/newfile", maps->Get(1), maps->Get(3)));
   EXPECT_THAT(maps->Get(3).get(), MapInfoEq(0x200000, 0x210000, 0, PROT_READ | PROT_WRITE,
-                                            "[stack]", maps->Get(2), nullptr));
+                                            "[stack]", maps->Get(2), maps->Get(4)));
+  EXPECT_THAT(maps->Get(4).get(),
+              MapInfoEq(0x210000, 0x211000, 0, PROT_READ, "", maps->Get(3), nullptr));
 }
 
 TEST(LibunwindstackMaps, AddAndSortOverlappingEntireExistingMap) {
@@ -88,14 +91,15 @@ TEST(LibunwindstackMaps, AddAndSortOverlappingEntireExistingMap) {
 
   libunwindstack_maps->AddAndSort(0x101000, 0x200000, 0x7000, PROT_READ | PROT_WRITE,
                                   "/path/to/newfile");
+  libunwindstack_maps->AddAndSort(0x200000, 0x211000, 0, PROT_READ, "");
   unwindstack::Maps* maps = libunwindstack_maps->Get();
   ASSERT_NE(maps, nullptr);
   ASSERT_EQ(maps->Total(), 2);
 
   EXPECT_THAT(maps->Get(0).get(), MapInfoEq(0x101000, 0x200000, 0x7000, PROT_READ | PROT_WRITE,
                                             "/path/to/newfile", nullptr, maps->Get(1)));
-  EXPECT_THAT(maps->Get(1).get(), MapInfoEq(0x200000, 0x210000, 0, PROT_READ | PROT_WRITE,
-                                            "[stack]", maps->Get(0), nullptr));
+  EXPECT_THAT(maps->Get(1).get(),
+              MapInfoEq(0x200000, 0x211000, 0, PROT_READ, "", maps->Get(0), nullptr));
 }
 
 TEST(LibunwindstackMaps, AddAndSortOverlappingFirstPartOfExistingMap) {
@@ -129,9 +133,10 @@ TEST(LibunwindstackMaps, AddAndSortOverlappingLastPartOfExistingMap) {
 
   libunwindstack_maps->AddAndSort(0x103000, 0x104000, 0x7000, PROT_READ | PROT_WRITE,
                                   "/path/to/newfile");
+  libunwindstack_maps->AddAndSort(0x201000, 0x211000, 0, PROT_READ, "");
   unwindstack::Maps* maps = libunwindstack_maps->Get();
   ASSERT_NE(maps, nullptr);
-  ASSERT_EQ(maps->Total(), 4);
+  ASSERT_EQ(maps->Total(), 5);
 
   EXPECT_THAT(maps->Get(0).get(), MapInfoEq(0x101000, 0x103000, 0x1000, PROT_READ, "/path/to/file",
                                             nullptr, maps->Get(1)));
@@ -139,8 +144,10 @@ TEST(LibunwindstackMaps, AddAndSortOverlappingLastPartOfExistingMap) {
                                             "/path/to/newfile", maps->Get(0), maps->Get(2)));
   EXPECT_THAT(maps->Get(2).get(), MapInfoEq(0x104000, 0x107000, 0, PROT_READ | PROT_EXEC, "",
                                             maps->Get(1), maps->Get(3)));
-  EXPECT_THAT(maps->Get(3).get(), MapInfoEq(0x200000, 0x210000, 0, PROT_READ | PROT_WRITE,
-                                            "[stack]", maps->Get(2), nullptr));
+  EXPECT_THAT(maps->Get(3).get(), MapInfoEq(0x200000, 0x201000, 0, PROT_READ | PROT_WRITE,
+                                            "[stack]", maps->Get(2), maps->Get(4)));
+  EXPECT_THAT(maps->Get(4).get(),
+              MapInfoEq(0x201000, 0x211000, 0, PROT_READ, "", maps->Get(3), nullptr));
 }
 
 TEST(LibunwindstackMaps, AddAndSortOverlappingMultipleExistingMaps) {
@@ -160,6 +167,18 @@ TEST(LibunwindstackMaps, AddAndSortOverlappingMultipleExistingMaps) {
                                             "/path/to/newfile", maps->Get(0), maps->Get(2)));
   EXPECT_THAT(maps->Get(2).get(), MapInfoEq(0x202000, 0x210000, 0, PROT_READ | PROT_WRITE,
                                             "[stack]", maps->Get(1), nullptr));
+
+  libunwindstack_maps->AddAndSort(0x106000, 0x212000, 0, PROT_READ, "");
+  maps = libunwindstack_maps->Get();
+  ASSERT_NE(maps, nullptr);
+  ASSERT_EQ(maps->Total(), 3);
+
+  EXPECT_THAT(maps->Get(0).get(), MapInfoEq(0x101000, 0x103000, 0x1000, PROT_READ, "/path/to/file",
+                                            nullptr, maps->Get(1)));
+  EXPECT_THAT(maps->Get(1).get(), MapInfoEq(0x103000, 0x106000, 0x7000, PROT_READ | PROT_WRITE,
+                                            "/path/to/newfile", maps->Get(0), maps->Get(2)));
+  EXPECT_THAT(maps->Get(2).get(),
+              MapInfoEq(0x106000, 0x212000, 0, PROT_READ, "", maps->Get(1), nullptr));
 }
 
 TEST(LibunwindstackMaps, AddAndSortOverlappingMiddlePartOfExistingMap) {
@@ -188,6 +207,20 @@ TEST(LibunwindstackMaps, AddAndSortOverlappingMiddlePartOfExistingMap) {
               MapInfoEq(0x201000, 0x202000, 0, PROT_READ, "", maps->Get(4), maps->Get(6)));
   EXPECT_THAT(maps->Get(6).get(), MapInfoEq(0x202000, 0x210000, 0, PROT_READ | PROT_WRITE,
                                             "[stack]", maps->Get(5), nullptr));
+}
+
+TEST(LibunwindstackMaps, AddAndSortIntoEmpty) {
+  std::unique_ptr<LibunwindstackMaps> libunwindstack_maps = LibunwindstackMaps::ParseMaps("");
+  ASSERT_NE(libunwindstack_maps, nullptr);
+
+  libunwindstack_maps->AddAndSort(0x107000, 0x200000, 0x7000, PROT_READ | PROT_WRITE,
+                                  "/path/to/newfile");
+  unwindstack::Maps* maps = libunwindstack_maps->Get();
+  ASSERT_NE(maps, nullptr);
+  ASSERT_EQ(maps->Total(), 1);
+
+  EXPECT_THAT(maps->Get(0).get(), MapInfoEq(0x107000, 0x200000, 0x7000, PROT_READ | PROT_WRITE,
+                                            "/path/to/newfile", nullptr, nullptr));
 }
 
 }  // namespace orbit_linux_tracing
