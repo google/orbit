@@ -18,6 +18,8 @@ const Vec2 kTopRight{5, 0};
 const Vec2 kBottomRight{5, 5};
 const Vec2 kBottomLeft{0, 5};
 const Vec2 kBoxSize{5, 5};
+const Vec2 kArrowSize{2, 4};
+const Vec2 kArrowHeadSize{3, 2};
 
 class PrimitiveAssemblerTester : public PrimitiveAssembler {
  public:
@@ -149,6 +151,31 @@ TEST(PrimitiveAssembler, ComplexShapes) {
   EXPECT_TRUE(primitive_assembler_tester.IsEverythingInsideRectangle(
       kBottomRight - Vec2{kRoundedRadius, kRoundedRadius},
       {kRoundedRadius * 2.f, kRoundedRadius * 2.f}));
+
+  primitive_assembler_tester.StartNewFrame();
+
+  // Draw arrow pointing down
+  primitive_assembler_tester.AddVerticalArrow(kBottomRight, kArrowSize, 0, kFakeColor,
+                                              PrimitiveAssembler::ArrowDirection::kDown,
+                                              kArrowHeadSize);
+  EXPECT_EQ(primitive_assembler_tester.GetNumTriangles(), 1);
+  EXPECT_EQ(primitive_assembler_tester.GetNumLines(), 0);
+  EXPECT_EQ(primitive_assembler_tester.GetNumBoxes(), 1);
+  EXPECT_TRUE(primitive_assembler_tester.IsEverythingInsideRectangle(
+      kBottomRight - Vec2{kArrowHeadSize[0], 0}, Vec2{2 * kArrowHeadSize[0], kArrowSize[1]}));
+
+  primitive_assembler_tester.StartNewFrame();
+
+  // Draw arrow point up
+  primitive_assembler_tester.AddVerticalArrow(kBottomRight, kArrowSize, 0, kFakeColor,
+                                              PrimitiveAssembler::ArrowDirection::kUp,
+                                              kArrowHeadSize);
+  EXPECT_EQ(primitive_assembler_tester.GetNumTriangles(), 1);
+  EXPECT_EQ(primitive_assembler_tester.GetNumLines(), 0);
+  EXPECT_EQ(primitive_assembler_tester.GetNumBoxes(), 1);
+  EXPECT_TRUE(primitive_assembler_tester.IsEverythingInsideRectangle(
+      kBottomRight - Vec2{kArrowHeadSize[0], kArrowSize[1]},
+      Vec2{2 * kArrowHeadSize[0], kArrowSize[1]}));
 }
 
 }  // namespace orbit_gl
