@@ -2657,7 +2657,7 @@ std::optional<orbit_client_data::ThreadStateSliceInfo> OrbitApp::selected_thread
 void OrbitApp::set_selected_thread_state_slice(
     std::optional<orbit_client_data::ThreadStateSliceInfo> thread_state_slice) {
   RequestUpdatePrimitives();
-  return data_manager_->set_selected_thread_state_slice(thread_state_slice);
+  data_manager_->set_selected_thread_state_slice(thread_state_slice);
 }
 
 const orbit_client_protos::TimerInfo* OrbitApp::selected_timer() const {

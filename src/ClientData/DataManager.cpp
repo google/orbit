@@ -57,7 +57,7 @@ void DataManager::set_selected_thread_id(uint32_t thread_id) {
 void DataManager::set_selected_thread_state_slice(
     std::optional<orbit_client_data::ThreadStateSliceInfo> selected_thread_state_slice) {
   ORBIT_CHECK(std::this_thread::get_id() == main_thread_id_);
-  selected_thread_state_slice_ = selected_thread_state_slice;
+  selected_thread_state_slice_ = std::move(selected_thread_state_slice);
 }
 
 void DataManager::set_selected_timer(const orbit_client_protos::TimerInfo* timer_info) {
