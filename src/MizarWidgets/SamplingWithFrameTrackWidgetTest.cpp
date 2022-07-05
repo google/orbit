@@ -4,11 +4,12 @@
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
-#include <qnamespace.h>
 
 #include <QApplication>
 #include <QCheckBox>
 #include <QLabel>
+#include <QTest>
+#include <Qt>
 #include <memory>
 
 #include "MizarWidgets/SamplingWithFrameTrackWidget.h"
@@ -17,8 +18,6 @@ using ::testing::NotNull;
 
 namespace orbit_mizar_widgets {
 
-constexpr const char* kOrgName = "The Orbit Authors";
-
 constexpr std::string_view kMultiplicityCorrectionEnabledLabel =
     "Probability of false-alarm for at least one function:";
 constexpr std::string_view kMultiplicityCorrectionDisabledLabel =
@@ -26,19 +25,18 @@ constexpr std::string_view kMultiplicityCorrectionDisabledLabel =
 
 class SamplingWithFrameTrackWidgetTest : public ::testing::Test {
  public:
-  SamplingWithFrameTrackWidgetTest() : widget_(std::make_unique<SamplingWithFrameTrackWidget>()) {
-    QApplication::setOrganizationName(kOrgName);
-    QApplication::setApplicationName("SamplingWithFrameTrackInputWidgetTest.InitIsCorrect");
+  SamplingWithFrameTrackWidgetTest() : widget_(std::make_unique<SamplingWithFrameTrackWidget>()) {}
 
+  void SetUp() override {
     multiplicity_correction_ = widget_->findChild<QCheckBox*>("multiplicity_correction_");
-    EXPECT_THAT(multiplicity_correction_, NotNull());
+    ASSERT_THAT(multiplicity_correction_, NotNull());
 
     significance_level_label_ = widget_->findChild<QLabel*>("significance_level_label_");
-    EXPECT_THAT(significance_level_label_, NotNull());
+    ASSERT_THAT(significance_level_label_, NotNull());
   }
 
   void ClickMultiplicityCorrectionCheckBox() const {
-    multiplicity_correction_->setChecked(!multiplicity_correction_->isChecked());
+    QTest::mouseClick(multiplicity_correction_, Qt::MouseButton::LeftButton);
   }
 
   void ExpectMultiplicityCorrectionEnabledIsCorrectlyShown() const {
@@ -52,8 +50,8 @@ class SamplingWithFrameTrackWidgetTest : public ::testing::Test {
               kMultiplicityCorrectionDisabledLabel);
   }
 
-  QCheckBox* multiplicity_correction_;
-  QLabel* significance_level_label_;
+  QCheckBox* multiplicity_correction_{};
+  QLabel* significance_level_label_{};
   std::unique_ptr<SamplingWithFrameTrackWidget> widget_;
 };
 

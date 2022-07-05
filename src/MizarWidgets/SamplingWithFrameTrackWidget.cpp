@@ -6,7 +6,6 @@
 
 #include <QObject>
 #include <QWidget>
-#include <Qt>
 #include <memory>
 
 #include "MizarData/BaselineAndComparison.h"
@@ -25,7 +24,7 @@ SamplingWithFrameTrackWidget::SamplingWithFrameTrackWidget(QWidget* parent)
 
   OnMultiplicityCorrectionCheckBoxClicked(Qt::CheckState::Checked);
 
-  QObject::connect(ui_->multiplicity_correction_, &QCheckBox::stateChanged, this,
+  QObject::connect(ui_->multiplicity_correction_, &QCheckBox::clicked, this,
                    &SamplingWithFrameTrackWidget::OnMultiplicityCorrectionCheckBoxClicked);
   QObject::connect(ui_->significance_level_, qOverload<int>(&QComboBox::currentIndexChanged), this,
                    &SamplingWithFrameTrackWidget::OnSignificanceLevelSelected);
@@ -57,8 +56,8 @@ void SamplingWithFrameTrackWidget::OnSignificanceLevelSelected(int index) {
       (index == kIndexOfFivePercent) ? kDefaultSignificanceLevel : kAlternativeSignificanceLevel;
 }
 
-void SamplingWithFrameTrackWidget::OnMultiplicityCorrectionCheckBoxClicked(int state) {
-  is_multiplicity_correction_enabled_ = (state == Qt::CheckState::Checked);
+void SamplingWithFrameTrackWidget::OnMultiplicityCorrectionCheckBoxClicked(bool checked) {
+  is_multiplicity_correction_enabled_ = checked;
 
   const QString text = is_multiplicity_correction_enabled_ ? kMultiplicityCorrectionEnabledLabel
                                                            : kMultiplicityCorrectionDisabledLabel;

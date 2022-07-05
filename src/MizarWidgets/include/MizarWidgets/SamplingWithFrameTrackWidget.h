@@ -36,7 +36,7 @@ class SamplingWithFrameTrackWidget : public QWidget {
   void Init(const orbit_mizar_data::BaselineAndComparison* baseline_and_comparison);
 
  public slots:
-  void OnMultiplicityCorrectionCheckBoxClicked(int state);
+  void OnMultiplicityCorrectionCheckBoxClicked(bool checked);
 
  private:
   [[nodiscard]] Baseline<SamplingWithFrameTrackInputWidget*> GetBaselineInput() const;
