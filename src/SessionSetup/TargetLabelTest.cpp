@@ -224,13 +224,10 @@ TEST(TargetLabel, SetFile) {
   TargetLabel label{};
   const QColor initial_color = label.GetTargetColor();
 
-  const QString process_name = "test process";
-  const double cpu_usage = 50.1;
-  const QString instance_name = "test instance";
-
   ChangeToFakeStadiaTarget(label);
 
-  EXPECT_EQ(label.GetTargetText(), "test process (50%) @ test instance");
+  EXPECT_EQ(label.GetTargetText(),
+            QString{"%1 (%2) @ %3"}.arg(kProcessName, kCpuUsageDisplay, kInstanceName));
   EXPECT_TRUE(label.GetFileText().isEmpty());
   EXPECT_TRUE(label.GetToolTip().isEmpty());
   EXPECT_NE(label.GetTargetColor(), initial_color);
@@ -241,7 +238,8 @@ TEST(TargetLabel, SetFile) {
   const std::filesystem::path path{"/some/file"};
   label.SetFile(path);
 
-  EXPECT_EQ(label.GetTargetText(), "test process (50%) @ test instance");
+  EXPECT_EQ(label.GetTargetText(),
+            QString{"%1 (%2) @ %3"}.arg(kProcessName, kCpuUsageDisplay, kInstanceName));
   EXPECT_EQ(label.GetFileText(), "file");
   EXPECT_TRUE(label.GetToolTip().isEmpty());
   EXPECT_NE(label.GetTargetColor(), initial_color);
