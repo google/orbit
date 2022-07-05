@@ -285,8 +285,6 @@ ErrorMessageOr<ModuleSymbols> CoffFileImpl::LoadDebugSymbols() {
   }
 
   ModuleSymbols module_symbols;
-  module_symbols.set_load_bias(GetLoadBias());
-  module_symbols.set_symbols_file_path(file_path_.string());
   for (SymbolInfo& symbol_info : symbol_infos) {
     *module_symbols.add_symbol_infos() = std::move(symbol_info);
   }

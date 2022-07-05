@@ -26,7 +26,7 @@ static ErrorMessageOr<AddressRange> FindFunctionAbsoluteAddressInModule(
   for (const auto& sym : syms.symbol_infos()) {
     if (sym.demangled_name() == function_name) {
       const uint64_t address = orbit_object_utils::SymbolVirtualAddressToAbsoluteAddress(
-          sym.address(), module_address_range.start, syms.load_bias(),
+          sym.address(), module_address_range.start, elf_file->GetLoadBias(),
           elf_file->GetExecutableSegmentOffset());
       const uint64_t size = sym.size();
       return AddressRange{address, address + size};

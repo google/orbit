@@ -33,7 +33,7 @@ TEST(FramePointerValidator, GetFpoFunctions) {
 
   const auto symbols_result = elf_file.value()->LoadDebugSymbols();
   ASSERT_FALSE(symbols_result.has_error()) << symbols_result.error().message();
-  uint64_t load_bias = symbols_result.value().load_bias();
+  uint64_t load_bias = elf_file.value()->GetLoadBias();
   const std::vector<SymbolInfo> symbol_infos(symbols_result.value().symbol_infos().begin(),
                                              symbols_result.value().symbol_infos().end());
 

@@ -140,8 +140,6 @@ PdbFileLlvm::PdbFileLlvm(std::filesystem::path file_path, const ObjectFileInfo& 
 
 [[nodiscard]] ErrorMessageOr<orbit_grpc_protos::ModuleSymbols> PdbFileLlvm::LoadDebugSymbols() {
   ModuleSymbols module_symbols;
-  module_symbols.set_load_bias(object_file_info_.load_bias);
-  module_symbols.set_symbols_file_path(file_path_.string());
 
   auto* native_session = dynamic_cast<llvm::pdb::NativeSession*>(session_.get());
   ORBIT_CHECK(native_session != nullptr);
