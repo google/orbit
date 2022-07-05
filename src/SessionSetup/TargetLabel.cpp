@@ -124,7 +124,7 @@ void TargetLabel::ChangeToStadiaTarget(const orbit_client_data::ProcessData& pro
   ui_->targetLabel->setVisible(true);
   ui_->fileLabel->setVisible(false);
 
-  ui_->targetLabel->setToolTip(
+  setToolTip(
       QString{"Connection active.<br/><br/>"
               "Instance: %1 (%2)<br/>"
               "Process: %3 (%4)"}

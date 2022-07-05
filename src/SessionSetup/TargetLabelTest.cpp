@@ -41,9 +41,9 @@ TEST(TargetLabel, ChangeToFileTarget) {
 const char* kProcessName = "test process";
 const char* kInstanceName = "test instance";
 const double kCpuUsage = 50.1;
-const char* kCpuUsageDisplay = "50";
+const char* kCpuUsageDisplay = "50%";
 
-void ChangeToFakeStadiaTarget(TargetLabel& label) {
+static void ChangeToFakeStadiaTarget(TargetLabel& label) {
   orbit_client_data::ProcessData process;
   orbit_grpc_protos::ProcessInfo process_info;
   process_info.set_name(kProcessName);
@@ -53,18 +53,18 @@ void ChangeToFakeStadiaTarget(TargetLabel& label) {
 
   auto maybe_instance =
       orbit_ggp::Instance::CreateFromJson(QString{"{"
-                                                  "displayName: \"%1\", "
-                                                  "id: \"edge/test/instance\", "
-                                                  "ipAddress: \"127.0.0.1\", "
-                                                  "state: \"IN_USE\", "
-                                                  "owner: \"unit@test\", "
-                                                  "lastUpdated: \"2022-07-04T13:22:04Z\", "
-                                                  "pool: \"unit-test-pool\""
+                                                  "\"displayName\": \"%1\", "
+                                                  "\"id\": \"edge/test/instance\", "
+                                                  "\"ipAddress\": \"127.0.0.1\", "
+                                                  "\"state\": \"IN_USE\", "
+                                                  "\"owner\": \"unit@test\", "
+                                                  "\"lastUpdated\": \"2022-07-04T13:22:04Z\", "
+                                                  "\"pool\": \"unit-test-pool\""
                                                   "}"}
                                               .arg(kInstanceName)
                                               .toUtf8());
 
-  assert(maybe_instance.has_value());
+  ASSERT_TRUE(maybe_instance.has_value());
   label.ChangeToStadiaTarget(process, maybe_instance.value());
 }
 
@@ -77,7 +77,8 @@ TEST(TargetLabel, ChangeToStadiaTarget) {
   EXPECT_EQ(label.GetTargetText(),
             QString{"%1 (%2) @ %3"}.arg(kProcessName, kCpuUsageDisplay, kInstanceName));
   EXPECT_TRUE(label.GetFileText().isEmpty());
-  EXPECT_TRUE(label.GetToolTip().isEmpty());
+  EXPECT_TRUE(label.GetToolTip().contains(kProcessName));
+  EXPECT_TRUE(label.GetToolTip().contains(kInstanceName));
   EXPECT_NE(label.GetTargetColor(), initial_color);
   ASSERT_TRUE(label.GetIconType().has_value());
   EXPECT_EQ(label.GetIconType().value(), TargetLabel::IconType::kGreenConnectedIcon);
@@ -228,7 +229,8 @@ TEST(TargetLabel, SetFile) {
   EXPECT_EQ(label.GetTargetText(),
             QString{"%1 (%2) @ %3"}.arg(kProcessName, kCpuUsageDisplay, kInstanceName));
   EXPECT_TRUE(label.GetFileText().isEmpty());
-  EXPECT_TRUE(label.GetToolTip().isEmpty());
+  EXPECT_TRUE(label.GetToolTip().contains(kProcessName));
+  EXPECT_TRUE(label.GetToolTip().contains(kInstanceName));
   EXPECT_NE(label.GetTargetColor(), initial_color);
   ASSERT_TRUE(label.GetIconType().has_value());
   EXPECT_EQ(label.GetIconType().value(), TargetLabel::IconType::kGreenConnectedIcon);
@@ -240,7 +242,8 @@ TEST(TargetLabel, SetFile) {
   EXPECT_EQ(label.GetTargetText(),
             QString{"%1 (%2) @ %3"}.arg(kProcessName, kCpuUsageDisplay, kInstanceName));
   EXPECT_EQ(label.GetFileText(), "file");
-  EXPECT_TRUE(label.GetToolTip().isEmpty());
+  EXPECT_TRUE(label.GetToolTip().contains(kProcessName));
+  EXPECT_TRUE(label.GetToolTip().contains(kInstanceName));
   EXPECT_NE(label.GetTargetColor(), initial_color);
   ASSERT_TRUE(label.GetIconType().has_value());
   EXPECT_EQ(label.GetIconType().value(), TargetLabel::IconType::kGreenConnectedIcon);
