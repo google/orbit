@@ -10,6 +10,7 @@
 #include "GrpcProtos/process.pb.h"
 #include "OrbitGgp/Instance.h"
 #include "SessionSetup/TargetLabel.h"
+#include "TestUtils/TestUtils.h"
 
 namespace orbit_session_setup {
 
@@ -64,7 +65,7 @@ static void ChangeToFakeStadiaTarget(TargetLabel& label) {
                                               .arg(kInstanceName)
                                               .toUtf8());
 
-  ASSERT_TRUE(maybe_instance.has_value());
+  ASSERT_THAT(maybe_instance, orbit_test_utils::HasValue());
   label.ChangeToStadiaTarget(process, maybe_instance.value());
 }
 
