@@ -51,9 +51,7 @@ class ModuleData final {
   // returns true if update was successful or no update was needed and false if module
   // cannot be updated because it was loaded.
   [[nodiscard]] bool UpdateIfChangedAndNotLoaded(orbit_grpc_protos::ModuleInfo info);
-  // offset here is the absolute address minus the address this module was loaded at by
-  // the process (module base address)
-  [[nodiscard]] const FunctionInfo* FindFunctionByOffset(uint64_t offset, bool is_exact) const;
+
   [[nodiscard]] const FunctionInfo* FindFunctionByElfAddress(uint64_t elf_address,
                                                              bool is_exact) const;
   void AddSymbols(const orbit_grpc_protos::ModuleSymbols& module_symbols);

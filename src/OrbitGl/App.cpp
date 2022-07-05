@@ -2652,9 +2652,10 @@ void OrbitApp::DeselectFunction(const orbit_client_data::FunctionInfo& func) {
       module_in_memory, absolute_address);
   if (module == nullptr) return false;
 
-  const uint64_t offset = orbit_object_utils::SymbolAbsoluteAddressToOffset(
-      absolute_address, module_in_memory.start(), module->executable_segment_offset());
-  const FunctionInfo* function = module->FindFunctionByOffset(offset, false);
+  const uint64_t virtual_address = orbit_object_utils::SymbolAbsoluteAddressToVirtualAddress(
+      absolute_address, module_in_memory.start(), module->load_bias(),
+      module->executable_segment_offset());
+  const FunctionInfo* function = module->FindFunctionByElfAddress(virtual_address, false);
   if (function == nullptr) return false;
 
   return data_manager_->IsFunctionSelected(*function);

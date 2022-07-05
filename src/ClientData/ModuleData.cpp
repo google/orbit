@@ -121,11 +121,6 @@ bool ModuleData::UpdateIfChangedAndNotLoaded(orbit_grpc_protos::ModuleInfo info)
   return true;
 }
 
-const FunctionInfo* ModuleData::FindFunctionByOffset(uint64_t offset, bool is_exact) const {
-  uint64_t elf_address = offset + load_bias();
-  return FindFunctionByElfAddress(elf_address, is_exact);
-}
-
 const FunctionInfo* ModuleData::FindFunctionByElfAddress(uint64_t elf_address,
                                                          bool is_exact) const {
   absl::MutexLock lock(&mutex_);

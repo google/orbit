@@ -18,7 +18,9 @@ uint64_t FunctionInfo::GetPrettyNameHash() const {
   return XXH64(pretty_name_.data(), pretty_name_.size(), 0xBADDCAFEDEAD10CC);
 }
 
-uint64_t FunctionInfo::FileOffset(uint64_t load_bias) const { return address() - load_bias; }
+uint64_t FunctionInfo::ComputeFileOffset(const ModuleData& module) const {
+  return module.ConvertFromVirtualAddressToOffsetInFile(address());
+}
 
 std::optional<uint64_t> FunctionInfo::GetAbsoluteAddress(const ProcessData& process,
                                                          const ModuleData& module) const {

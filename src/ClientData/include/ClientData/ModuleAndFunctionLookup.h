@@ -22,7 +22,9 @@ const std::string kUnknownFunctionOrModuleName{"???"};
     const ModuleManager& module_manager, const CaptureData& capture_data,
     uint64_t absolute_address);
 
-[[nodiscard]] const FunctionInfo* FindFunctionByModulePathBuildIdAndOffset(
+// Prefer FindFunctionByModulePathBuildIdAndVirtualAddress, which doesn't need to convert from
+// offset in file to virtual address.
+[[nodiscard, deprecated]] const FunctionInfo* FindFunctionByModulePathBuildIdAndOffset(
     const ModuleManager& module_manager, const std::string& module_path,
     const std::string& build_id, uint64_t offset);
 

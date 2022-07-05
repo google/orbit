@@ -493,10 +493,21 @@ void LiveFunctionsDataView::OnDataChanged() {
       instrumented_functions = app_->GetCaptureData().instrumented_functions();
   for (const auto& [function_id, instrumented_function] : instrumented_functions) {
     const ModuleManager* module_manager = app_->GetModuleManager();
-    const FunctionInfo* function_info_from_capture_data =
-        orbit_client_data::FindFunctionByModulePathBuildIdAndOffset(
-            *module_manager, instrumented_function.file_path(),
-            instrumented_function.file_build_id(), instrumented_function.file_offset());
+    const FunctionInfo* function_info_from_capture_data;
+
+    // InstrumentedFunction::function_virtual_address() was added in 1.82: if this is not available,
+    // we need to keep using file_offset() to preserve compatibility with older captures.
+    if (instrumented_function.function_virtual_address() == 0) {
+      function_info_from_capture_data = orbit_client_data::FindFunctionByModulePathBuildIdAndOffset(
+          *module_manager, instrumented_function.file_path(), instrumented_function.file_build_id(),
+          instrumented_function.file_offset());
+    } else {
+      function_info_from_capture_data =
+          orbit_client_data::FindFunctionByModulePathBuildIdAndVirtualAddress(
+              *module_manager, instrumented_function.file_path(),
+              instrumented_function.file_build_id(),
+              instrumented_function.function_virtual_address());
+    }
 
     // This could happen because module has not yet been updated, it also
     // happens when loading capture. In which case we will try to construct
@@ -575,11 +586,20 @@ std::optional<FunctionInfo> LiveFunctionsDataView::CreateFunctionInfoFromInstrum
           .GetName();
 
   // size is unknown
-  FunctionInfo result{instrumented_function.file_path(), instrumented_function.file_build_id(),
-                      module_data->load_bias() + instrumented_function.file_offset(), /*size=*/0,
-                      function_name};
-
-  return result;
+  if (instrumented_function.function_virtual_address() == 0) {
+    // InstrumentedFunction::function_virtual_address() was added in 1.82: if this is not available,
+    // we need to keep using file_offset() to preserve compatibility with older captures.
+    // But note that ModuleData::ConvertFromOffsetInFileToVirtualAddress will use the ELF-specific
+    // computation of the virtual address as ModuleInfo::object_segments() was also added in 1.82.
+    return FunctionInfo{
+        instrumented_function.file_path(), instrumented_function.file_build_id(),
+        module_data->ConvertFromOffsetInFileToVirtualAddress(instrumented_function.file_offset()),
+        /*size=*/0, function_name};
+  } else {
+    return FunctionInfo{instrumented_function.file_path(), instrumented_function.file_build_id(),
+                        instrumented_function.function_virtual_address(), /*size=*/0,
+                        function_name};
+  }
 }
 
 [[nodiscard]] const orbit_client_data::ScopeInfo& LiveFunctionsDataView::GetScopeInfo(

@@ -36,6 +36,7 @@ void AddPuppetOuterAndInnerFunctionToCaptureOptions(
       instrumented_function.set_file_path(executable_path);
       instrumented_function.set_file_offset(symbol.address() - module_info.load_bias());
       instrumented_function.set_function_id(outer_function_id);
+      instrumented_function.set_function_virtual_address(symbol.address());
       instrumented_function.set_function_size(symbol.size());
       instrumented_function.set_function_name(symbol.demangled_name());
       instrumented_function.set_record_return_value(true);
@@ -49,6 +50,7 @@ void AddPuppetOuterAndInnerFunctionToCaptureOptions(
       instrumented_function.set_file_path(executable_path);
       instrumented_function.set_file_offset(symbol.address() - module_info.load_bias());
       instrumented_function.set_function_id(inner_function_id);
+      instrumented_function.set_function_virtual_address(symbol.address());
       instrumented_function.set_function_size(symbol.size());
       instrumented_function.set_function_name(symbol.demangled_name());
       instrumented_function.set_record_arguments(true);
