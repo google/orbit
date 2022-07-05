@@ -91,33 +91,29 @@ const std::vector<orbit_client_data::ScopeInfo> kScopeInfos = [] {
 const absl::flat_hash_map<uint64_t, orbit_client_data::ScopeInfo> kFrameTracks =
     MakeMap(kScopeIds, kScopeInfos);
 
-constexpr const char* kOrgName = "The Orbit Authors";
-
 class SamplingWithFrameTrackInputWidgetTest : public ::testing::Test {
  public:
   SamplingWithFrameTrackInputWidgetTest()
       : widget_(std::make_unique<SamplingWithFrameTrackInputWidgetTmpl<MockPairedData>>(nullptr)) {
-    QApplication::setOrganizationName(kOrgName);
-    QApplication::setApplicationName("SamplingWithFrameTrackInputWidgetTest.InitIsCorrect");
-
     EXPECT_CALL(data_, TidToNames).WillRepeatedly(ReturnRef(kTidToName));
     EXPECT_CALL(data_, TidToCallstackSampleCounts).WillRepeatedly(ReturnRef(kTidToCount));
     EXPECT_CALL(data_, GetFrameTracks).WillRepeatedly(Return(kFrameTracks));
 
     widget_->Init(data_, kInputName);
+  }
 
-    // TODO(b/238058915) use ASSERT_THAT
+  void SetUp() override {
     title_ = widget_->findChild<QLabel*>("title_");
-    EXPECT_THAT(title_, NotNull());
+    ASSERT_THAT(title_, NotNull());
 
     thread_list_ = widget_->findChild<QListWidget*>("thread_list_");
-    EXPECT_THAT(thread_list_, NotNull());
+    ASSERT_THAT(thread_list_, NotNull());
 
     frame_track_list_ = widget_->findChild<QComboBox*>("frame_track_list_");
-    EXPECT_THAT(thread_list_, NotNull());
+    ASSERT_THAT(thread_list_, NotNull());
 
     start_ms_ = widget_->findChild<QLineEdit*>("start_ms_");
-    EXPECT_THAT(start_ms_, NotNull());
+    ASSERT_THAT(start_ms_, NotNull());
   }
 
   void SelectThreadListRow(int row) const {
@@ -141,10 +137,10 @@ class SamplingWithFrameTrackInputWidgetTest : public ::testing::Test {
 
   MockPairedData data_;
   std::unique_ptr<SamplingWithFrameTrackInputWidgetTmpl<MockPairedData>> widget_;
-  QLabel* title_;
-  QListWidget* thread_list_;
-  QComboBox* frame_track_list_;
-  QLineEdit* start_ms_;
+  QLabel* title_{};
+  QListWidget* thread_list_{};
+  QComboBox* frame_track_list_{};
+  QLineEdit* start_ms_{};
 };
 
 TEST_F(SamplingWithFrameTrackInputWidgetTest, InitIsCorrect) {
