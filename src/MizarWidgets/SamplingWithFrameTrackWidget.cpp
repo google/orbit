@@ -8,7 +8,10 @@
 #include <QWidget>
 #include <memory>
 
+#include "MizarBase/BaselineOrComparison.h"
 #include "MizarData/BaselineAndComparison.h"
+#include "MizarData/SamplingWithFrameTrackComparisonReport.h"
+#include "MizarWidgets/SamplingWithFrameTrackReportConfigValidator.h"
 #include "OrbitBase/Typedef.h"
 #include "ui_SamplingWithFrameTrackWidget.h"
 
@@ -28,6 +31,8 @@ SamplingWithFrameTrackWidget::SamplingWithFrameTrackWidget(QWidget* parent)
                    &SamplingWithFrameTrackWidget::OnMultiplicityCorrectionCheckBoxClicked);
   QObject::connect(ui_->significance_level_, qOverload<int>(&QComboBox::currentIndexChanged), this,
                    &SamplingWithFrameTrackWidget::OnSignificanceLevelSelected);
+  QObject::connect(ui_->update_button_, &QPushButton::clicked, this,
+                   &SamplingWithFrameTrackWidget::OnUpdateButtonClicked);
 }
 
 void SamplingWithFrameTrackWidget::Init(
@@ -36,6 +41,7 @@ void SamplingWithFrameTrackWidget::Init(
                baseline_and_comparison->GetBaselineData(), kBaselineTitle);
   LiftAndApply(&SamplingWithFrameTrackInputWidget::Init, GetComparisonInput(),
                baseline_and_comparison->GetComparisonData(), kComparisonTitle);
+  baseline_and_comparison_ = baseline_and_comparison;
 }
 
 SamplingWithFrameTrackWidget::~SamplingWithFrameTrackWidget() = default;
@@ -62,6 +68,16 @@ void SamplingWithFrameTrackWidget::OnMultiplicityCorrectionCheckBoxClicked(bool 
   const QString text = is_multiplicity_correction_enabled_ ? kMultiplicityCorrectionEnabledLabel
                                                            : kMultiplicityCorrectionDisabledLabel;
   ui_->significance_level_label_->setText(text);
+}
+
+void SamplingWithFrameTrackWidget::OnUpdateButtonClicked() {
+  Baseline<orbit_mizar_data::HalfOfSamplingWithFrameTrackReportConfig> baseline_config =
+      LiftAndApply(&SamplingWithFrameTrackInputWidget::MakeConfig, GetBaselineInput());
+
+  Comparison<orbit_mizar_data::HalfOfSamplingWithFrameTrackReportConfig> comparison_config =
+      LiftAndApply(&SamplingWithFrameTrackInputWidget::MakeConfig, GetComparisonInput());
+
+  std::ignore = kValidator.Validate(baseline_and_comparison_, baseline_config, comparison_config);
 }
 
 }  // namespace orbit_mizar_widgets

@@ -9,7 +9,8 @@ add_library(MizarWidgets STATIC)
 target_sources(MizarWidgets PUBLIC
   include/MizarWidgets/MizarMainWindow.h
   include/MizarWidgets/SamplingWithFrameTrackInputWidget.h
-  include/MizarWidgets/SamplingWithFrameTrackWidget.h)
+  include/MizarWidgets/SamplingWithFrameTrackWidget.h
+  include/MizarWidgets/SamplingWithFrameTrackReportConfigValidator.h)
 
 target_include_directories(MizarWidgets PUBLIC ${CMAKE_CURRENT_LIST_DIR}/include)
 
@@ -35,11 +36,13 @@ add_executable(MizarWidgetsTests)
 target_sources(MizarWidgetsTests PRIVATE
   SamplingWithFrameTrackInputWidgetTest.cpp
   SamplingWithFrameTrackWidgetTest.cpp
+  SamplingWithFrameTrackReportConfigValidatorTest.cpp
 )
 
 target_link_libraries(MizarWidgetsTests PRIVATE
-  MizarWidgets
+  CONAN_PKG::abseil
   GTest::QtGuiMain
+  MizarWidgets
   Qt5::Test
   TestUtils
 )
