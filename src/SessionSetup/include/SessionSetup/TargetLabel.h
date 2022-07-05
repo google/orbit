@@ -33,8 +33,6 @@ class TargetLabel : public QWidget {
   void ChangeToStadiaTarget(const StadiaTarget& stadia_target);
   void ChangeToStadiaTarget(const orbit_client_data::ProcessData& process,
                             const orbit_ggp::Instance& instance);
-  void ChangeToStadiaTarget(const QString& process_name, double cpu_usage,
-                            const QString& instance_name);
   void ChangeToLocalTarget(const LocalTarget& local_target);
   void ChangeToLocalTarget(const orbit_client_data::ProcessData& process);
   void ChangeToLocalTarget(const QString& process_name, double cpu_usage);

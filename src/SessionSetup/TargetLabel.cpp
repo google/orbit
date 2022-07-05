@@ -117,18 +117,19 @@ void TargetLabel::ChangeToStadiaTarget(const StadiaTarget& stadia_target) {
 
 void TargetLabel::ChangeToStadiaTarget(const orbit_client_data::ProcessData& process,
                                        const orbit_ggp::Instance& instance) {
-  ChangeToStadiaTarget(QString::fromStdString(process.name()), process.cpu_usage(),
-                       instance.display_name);
-}
-
-void TargetLabel::ChangeToStadiaTarget(const QString& process_name, double cpu_usage,
-                                       const QString& instance_name) {
   Clear();
-  process_ = process_name;
-  machine_ = instance_name;
-  SetProcessCpuUsageInPercent(cpu_usage);
+  process_ = QString::fromStdString(process.name());
+  machine_ = instance.display_name;
+  SetProcessCpuUsageInPercent(process.cpu_usage());
   ui_->targetLabel->setVisible(true);
   ui_->fileLabel->setVisible(false);
+
+  setToolTip(
+      QString{"Connection active.<br/><br/>"
+              "Instance: %1 (%2)<br/>"
+              "Process: %3 (%4)"}
+          .arg(instance.display_name, instance.id, process_,
+               QString::fromStdString(process.full_path())));
   setAccessibleName("Stadia target");
 }
 
@@ -156,7 +157,6 @@ bool TargetLabel::SetProcessCpuUsageInPercent(double cpu_usage) {
   ui_->targetLabel->setText(
       QString{"%1 (%2%) @ %3"}.arg(process_).arg(cpu_usage, 0, 'f', 0).arg(machine_));
   SetColor(kGreenColor);
-  setToolTip({});
   SetIcon(IconType::kGreenConnectedIcon);
   emit SizeChanged();
   return true;
