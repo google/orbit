@@ -4,6 +4,7 @@
 
 #include "MizarWidgets/SamplingWithFrameTrackWidget.h"
 
+#include <QObject>
 #include <QWidget>
 #include <memory>
 
@@ -20,6 +21,13 @@ using ::orbit_mizar_base::Comparison;
 SamplingWithFrameTrackWidget::SamplingWithFrameTrackWidget(QWidget* parent)
     : QWidget(parent), ui_(std::make_unique<Ui::SamplingWithFrameTrackWidget>()) {
   ui_->setupUi(this);
+
+  OnMultiplicityCorrectionCheckBoxClicked(/*checked = */ true);
+
+  QObject::connect(ui_->multiplicity_correction_, &QCheckBox::clicked, this,
+                   &SamplingWithFrameTrackWidget::OnMultiplicityCorrectionCheckBoxClicked);
+  QObject::connect(ui_->significance_level_, qOverload<int>(&QComboBox::currentIndexChanged), this,
+                   &SamplingWithFrameTrackWidget::OnSignificanceLevelSelected);
 }
 
 void SamplingWithFrameTrackWidget::Init(
@@ -32,19 +40,28 @@ void SamplingWithFrameTrackWidget::Init(
 
 SamplingWithFrameTrackWidget::~SamplingWithFrameTrackWidget() = default;
 
-[[nodiscard]] Baseline<SamplingWithFrameTrackInputWidget*>
-SamplingWithFrameTrackWidget::GetBaselineInput() const {
+Baseline<SamplingWithFrameTrackInputWidget*> SamplingWithFrameTrackWidget::GetBaselineInput()
+    const {
   return Baseline<SamplingWithFrameTrackInputWidget*>(ui_->baseline_input_);
 }
 
-[[nodiscard]] Comparison<SamplingWithFrameTrackInputWidget*>
-SamplingWithFrameTrackWidget::GetComparisonInput() const {
+Comparison<SamplingWithFrameTrackInputWidget*> SamplingWithFrameTrackWidget::GetComparisonInput()
+    const {
   return Comparison<SamplingWithFrameTrackInputWidget*>(ui_->comparison_input_);
 }
 
-const Baseline<QString> SamplingWithFrameTrackWidget::kBaselineTitle =
-    Baseline<QString>(QStringLiteral("Baseline"));
-const Comparison<QString> SamplingWithFrameTrackWidget::kComparisonTitle =
-    Comparison<QString>(QStringLiteral("Comparison"));
+void SamplingWithFrameTrackWidget::OnSignificanceLevelSelected(int index) {
+  constexpr int kIndexOfFivePercent = 0;
+  significance_level_ =
+      (index == kIndexOfFivePercent) ? kDefaultSignificanceLevel : kAlternativeSignificanceLevel;
+}
+
+void SamplingWithFrameTrackWidget::OnMultiplicityCorrectionCheckBoxClicked(bool checked) {
+  is_multiplicity_correction_enabled_ = checked;
+
+  const QString text = is_multiplicity_correction_enabled_ ? kMultiplicityCorrectionEnabledLabel
+                                                           : kMultiplicityCorrectionDisabledLabel;
+  ui_->significance_level_label_->setText(text);
+}
 
 }  // namespace orbit_mizar_widgets

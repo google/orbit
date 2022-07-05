@@ -106,6 +106,7 @@ class SamplingWithFrameTrackInputWidgetTest : public ::testing::Test {
 
     widget_->Init(data_, kInputName);
 
+    // TODO(b/238058915) use ASSERT_THAT
     title_ = widget_->findChild<QLabel*>("title_");
     EXPECT_THAT(title_, NotNull());
 

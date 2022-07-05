@@ -34,6 +34,7 @@ add_executable(MizarWidgetsTests)
 
 target_sources(MizarWidgetsTests PRIVATE
   SamplingWithFrameTrackInputWidgetTest.cpp
+  SamplingWithFrameTrackWidgetTest.cpp
 )
 
 target_link_libraries(MizarWidgetsTests PRIVATE

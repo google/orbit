@@ -37,6 +37,9 @@
        <property name="text">
         <string>Multiplicity Correction</string>
        </property>
+       <property name="checked">
+        <bool>true</bool>
+       </property>
       </widget>
      </item>
      <item>
@@ -46,9 +49,6 @@
          <width>350</width>
          <height>30</height>
         </size>
-       </property>
-       <property name="text">
-        <string>Porbability of false-alarm for at least one function:</string>
        </property>
       </widget>
      </item>
