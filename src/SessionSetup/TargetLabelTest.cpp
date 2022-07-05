@@ -51,19 +51,18 @@ void ChangeToFakeStadiaTarget(TargetLabel& label) {
   process_info.set_cpu_usage(kCpuUsage);
   process.SetProcessInfo(process_info);
 
-  auto maybe_instance = orbit_ggp::Instance::CreateFromJson(QString{
-
-      "{"
-      "displayName: \"%1\", "
-      "id: \"edge/test/instance\""
-      "ipAddress: \"127.0.0.1\""
-      "state: \"IN_USE\""
-      "owner: \"unit@test\""
-      "lastUpdated: \"2022-07-04T13:22:04Z\""
-      "pool: \"unit-test-pool\""
-      "}"}
-                                                                .arg(kInstanceName)
-                                                                .toUtf8());
+  auto maybe_instance =
+      orbit_ggp::Instance::CreateFromJson(QString{"{"
+                                                  "displayName: \"%1\", "
+                                                  "id: \"edge/test/instance\", "
+                                                  "ipAddress: \"127.0.0.1\", "
+                                                  "state: \"IN_USE\", "
+                                                  "owner: \"unit@test\", "
+                                                  "lastUpdated: \"2022-07-04T13:22:04Z\", "
+                                                  "pool: \"unit-test-pool\""
+                                                  "}"}
+                                              .arg(kInstanceName)
+                                              .toUtf8());
 
   assert(maybe_instance.has_value());
   label.ChangeToStadiaTarget(process, maybe_instance.value());
