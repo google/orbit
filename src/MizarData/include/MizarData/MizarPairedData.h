@@ -65,7 +65,8 @@ class MizarPairedDataTmpl {
     std::vector<uint64_t> result;
     for (size_t i = 0; i + 1 < timers.size(); ++i) {
       const uint64_t callstack_count = std::transform_reduce(
-          std::begin(tids), std::end(tids), 0, std::plus<>(), [this, i, &timers](const TID tid) {
+          std::begin(tids), std::end(tids), uint64_t{0}, std::plus<>(),
+          [this, i, &timers](const TID tid) {
             return CallstackSamplesCount(tid, timers[i]->start(), timers[i + 1]->start());
           });
 
