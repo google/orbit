@@ -12,7 +12,6 @@
 #include "CoreMath.h"
 #include "Geometry.h"
 #include "GlCanvas.h"
-#include "OrbitBase/ThreadUtils.h"
 #include "TextRenderer.h"
 #include "TimeGraphLayout.h"
 #include "TrackRenderHelper.h"

@@ -96,7 +96,25 @@ class PrimitiveAssembler {
   void AddQuadBorder(const Quad& quad, float z, const Color& color,
                      std::unique_ptr<orbit_gl::PickingUserData> user_data);
 
-  void AddCircle(const Vec2& position, float radius, float z, Color color);
+  void AddCircle(const Vec2& position, float radius, float z, const Color& color);
+
+  enum class ArrowDirection { kUp, kDown };
+  //
+  //   ⸢¯¯¯¯¯⸣ = arrow_body_size[0]
+  //   ⎡¯¯X¯¯⎤     ⎤
+  //   |     |     |
+  //   |     |     |  = arrow_body_size[1]
+  //   |     |     ⎦
+  //  \¯¯¯¯¯¯¯/  ⎤
+  //   \     /   |
+  //    \   /    | = arrow_head_size[1]
+  //     \ /     ⎦
+  //      ˅
+  //  ⸤________⸥ = arrow_head_size[0]
+  //
+  // x is starting_pos
+  void AddVerticalArrow(Vec2 starting_pos, Vec2 arrow_body_size, Vec2 arrow_head_size, float z,
+                        const Color& color, ArrowDirection arrow_direction);
 
   void StartNewFrame();
 

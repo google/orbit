@@ -8,6 +8,9 @@
 #include <math.h>
 #include <stddef.h>
 
+#include <array>
+
+#include "CoreMath.h"
 #include "Geometry.h"
 
 namespace orbit_gl {
@@ -222,7 +225,8 @@ void PrimitiveAssembler::AddShadedTrapezium(const Quad& trapezium, float z, cons
   batcher_->AddTriangle(triangle_2, z, colors_2, picking_color, std::move(user_data));
 }
 
-void PrimitiveAssembler::AddCircle(const Vec2& position, float radius, float z, Color color) {
+void PrimitiveAssembler::AddCircle(const Vec2& position, float radius, float z,
+                                   const Color& color) {
   std::vector<Vec2> circle_points_scaled_by_radius;
   for (auto& point : circle_points) {
     circle_points_scaled_by_radius.emplace_back(radius * point);
@@ -239,6 +243,39 @@ void PrimitiveAssembler::AddCircle(const Vec2& position, float radius, float z, 
     AddTriangle(triangle, z, color);
     prev_point = new_point;
   }
+}
+
+void PrimitiveAssembler::AddVerticalArrow(Vec2 starting_pos, Vec2 arrow_body_size,
+                                          Vec2 arrow_head_size, float z, const Color& color,
+                                          ArrowDirection arrow_direction) {
+  float body_head_meeting_y =
+      starting_pos[1] +
+      (arrow_direction == ArrowDirection::kUp ? -arrow_body_size[1] : arrow_body_size[1]);
+
+  float head_half_width = arrow_head_size[0] / 2;
+  float head_length = arrow_head_size[1];
+  float tip_of_head_y =
+      body_head_meeting_y + (head_length * (arrow_direction == ArrowDirection::kUp ? -1 : 1));
+
+  Triangle arrow_head{
+      Vec2(starting_pos[0], tip_of_head_y),
+      Vec2(starting_pos[0] - head_half_width, body_head_meeting_y),
+      Vec2(starting_pos[0] + head_half_width, body_head_meeting_y),
+  };
+  AddTriangle(arrow_head, z, color);
+
+  float arrow_body_min_y = std::min(starting_pos[1], body_head_meeting_y);
+  float arrow_body_max_y = std::max(starting_pos[1], body_head_meeting_y);
+  float body_half_width = arrow_body_size[0] / 2;
+
+  std::array<Vec2, 4> box_vertices{
+      Vec2(starting_pos[0] - body_half_width, arrow_body_max_y),
+      Vec2(starting_pos[0] - body_half_width, arrow_body_min_y),
+      Vec2(starting_pos[0] + body_half_width, arrow_body_min_y),
+      Vec2(starting_pos[0] + body_half_width, arrow_body_max_y),
+  };
+  Quad arrow_body(box_vertices);
+  AddBox(arrow_body, z, color);
 }
 
 void PrimitiveAssembler::AddQuadBorder(const Quad& quad, float z, const Color& color,
