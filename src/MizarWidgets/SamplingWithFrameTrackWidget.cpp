@@ -22,7 +22,7 @@ SamplingWithFrameTrackWidget::SamplingWithFrameTrackWidget(QWidget* parent)
     : QWidget(parent), ui_(std::make_unique<Ui::SamplingWithFrameTrackWidget>()) {
   ui_->setupUi(this);
 
-  OnMultiplicityCorrectionCheckBoxClicked(Qt::CheckState::Checked);
+  OnMultiplicityCorrectionCheckBoxClicked(/*checked = */ true);
 
   QObject::connect(ui_->multiplicity_correction_, &QCheckBox::clicked, this,
                    &SamplingWithFrameTrackWidget::OnMultiplicityCorrectionCheckBoxClicked);
