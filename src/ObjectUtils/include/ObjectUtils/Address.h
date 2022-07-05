@@ -17,6 +17,10 @@ static constexpr uint64_t kPageSize = 0x1000;
     uint64_t symbol_address, uint64_t module_base_address, uint64_t module_load_bias,
     uint64_t module_executable_section_offset);
 
+[[nodiscard]] uint64_t SymbolAbsoluteAddressToVirtualAddress(
+    uint64_t absolute_address, uint64_t module_base_address, uint64_t module_load_bias,
+    uint64_t module_executable_section_offset);
+
 [[nodiscard]] uint64_t SymbolOffsetToAbsoluteAddress(uint64_t symbol_address,
                                                      uint64_t module_base_address,
                                                      uint64_t module_executable_section_offset);
