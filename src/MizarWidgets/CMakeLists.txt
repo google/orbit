@@ -40,11 +40,11 @@ target_sources(MizarWidgetsTests PRIVATE
 )
 
 target_link_libraries(MizarWidgetsTests PRIVATE
+  MizarWidgets
+  TestUtils
   CONAN_PKG::abseil
   GTest::QtGuiMain
-  MizarWidgets
   Qt5::Test
-  TestUtils
 )
 
 if(WIN32 AND "$ENV{QT_QPA_PLATFORM}" STREQUAL "offscreen")

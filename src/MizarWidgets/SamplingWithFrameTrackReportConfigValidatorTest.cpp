@@ -6,9 +6,10 @@
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
 
+#include <QString>
+
 #include "MizarBase/BaselineOrComparison.h"
 #include "MizarWidgets/SamplingWithFrameTrackReportConfigValidator.h"
-#include "QString"
 
 using ::orbit_mizar_base::Baseline;
 using ::orbit_mizar_base::Comparison;
@@ -21,7 +22,7 @@ namespace {
 
 class MockPairedData {
  public:
-  MOCK_METHOD(uint64_t, CaptureDuration, (), (const));
+  MOCK_METHOD(uint64_t, CaptureDurationNs, (), (const));
 };
 
 class MockBaselineAndComparison {
@@ -51,13 +52,14 @@ TEST(SamplingWithFrameTrackReportConfigValidator, IsCorrect) {
   Comparison<MockPairedData> comparison_data;
   MockBaselineAndComparison bac;
 
-  EXPECT_CALL(*baseline_data, CaptureDuration).WillRepeatedly(Return(kBaselineCaptureDuration));
-  EXPECT_CALL(*comparison_data, CaptureDuration).WillRepeatedly(Return(kComparisonCaptureDuration));
+  EXPECT_CALL(*baseline_data, CaptureDurationNs).WillRepeatedly(Return(kBaselineCaptureDuration));
+  EXPECT_CALL(*comparison_data, CaptureDurationNs)
+      .WillRepeatedly(Return(kComparisonCaptureDuration));
 
   EXPECT_CALL(bac, GetBaselineData).WillRepeatedly(ReturnRef(baseline_data));
   EXPECT_CALL(bac, GetComparisonData).WillRepeatedly(ReturnRef(comparison_data));
 
-  SamplingWithFrameTrackReportConfigValidatorTmpl<MockBaselineAndComparison, MockPairedData,
+  const SamplingWithFrameTrackReportConfigValidatorTmpl<MockBaselineAndComparison, MockPairedData,
                                                   MockErrorReporter>
       validator{kBaselineTitle, kComparisonTitle};
 

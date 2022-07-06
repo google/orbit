@@ -266,7 +266,7 @@ TEST_F(MizarPairedDataTest, GetFrameTracksIsCorrect) {
 
 TEST_F(MizarPairedDataTest, CaptureDurationIsCorrect) {
   MizarPairedDataTmpl<MockMizarData> mizar_paired_data(std::move(data_), kAddressToId);
-  EXPECT_EQ(mizar_paired_data.CaptureDuration(), kRelativeTimeTooLate);
+  EXPECT_EQ(mizar_paired_data.CaptureDurationNs(), kRelativeTimeTooLate);
 }
 
 }  // namespace orbit_mizar_data

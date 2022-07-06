@@ -118,7 +118,7 @@ class MizarPairedDataTmpl {
                                           action_on_callstack_events);
   }
 
-  [[nodiscard]] uint64_t CaptureDuration() const {
+  [[nodiscard]] uint64_t CaptureDurationNs() const {
     return GetCallstackData().max_time() - data_->GetCaptureStartTimestampNs();
   }
 

@@ -5,7 +5,6 @@
 #ifndef MIZAR_WIDGETS_SAMPLING_WITH_FRAME_TRACK_WIDGET_H_
 #define MIZAR_WIDGETS_SAMPLING_WITH_FRAME_TRACK_WIDGET_H_
 
-#include <QMessageBox>
 #include <QObject>
 #include <QStringLiteral>
 #include <QWidget>

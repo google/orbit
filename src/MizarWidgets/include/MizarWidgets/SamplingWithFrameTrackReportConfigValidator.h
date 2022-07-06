@@ -18,8 +18,10 @@
 
 namespace orbit_mizar_widgets {
 
-// Checks if the  pair of `HalfOfSamplingWithFrameTrackReportConfig` is malformed. If so, reports an
-// error
+// Implements `Validate` method that checks if a pair of `HalfOfSamplingWithFrameTrackReportConfig`
+// is malformed. That is, it checks if at least one thread is chosen for each of the configs and if
+// the `start_relative_ns` does not exceed the total duration capture. If the input is malformed an
+// error is reported using `ReportError` function.
 template <typename BaselineAndComparison, typename PairedData, auto ReportError>
 class SamplingWithFrameTrackReportConfigValidatorTmpl {
   template <typename T>
@@ -38,15 +40,16 @@ class SamplingWithFrameTrackReportConfigValidatorTmpl {
   [[nodiscard]] bool Validate(const BaselineAndComparison* baseline_and_comparison,
                               const Baseline<HalfConfig>& baseline_config,
                               const Comparison<HalfConfig>& comparison_config) const {
-    const auto validator =
+    const auto validate_and_report_function =
         absl::bind_front(&SamplingWithFrameTrackReportConfigValidatorTmpl::ValidateAndReport, this);
 
-    const Baseline<bool> baseline_ok = LiftAndApply(
-        validator, baseline_config, baseline_and_comparison->GetBaselineData(), baseline_title_);
+    const Baseline<bool> baseline_ok =
+        LiftAndApply(validate_and_report_function, baseline_config,
+                     baseline_and_comparison->GetBaselineData(), baseline_title_);
 
     const Comparison<bool> comparison_ok =
-        LiftAndApply(validator, comparison_config, baseline_and_comparison->GetComparisonData(),
-                     comparison_title_);
+        LiftAndApply(validate_and_report_function, comparison_config,
+                     baseline_and_comparison->GetComparisonData(), comparison_title_);
 
     return *baseline_ok && *comparison_ok;
   }
@@ -66,7 +69,7 @@ class SamplingWithFrameTrackReportConfigValidatorTmpl {
     if (config.tids.empty()) {
       return ErrorMessage{"No threads selected"};
     }
-    if (config.start_relative_ns > data.CaptureDuration()) {
+    if (config.start_relative_ns > data.CaptureDurationNs()) {
       return ErrorMessage{"Start > capture duration"};
     }
     return outcome::success();
