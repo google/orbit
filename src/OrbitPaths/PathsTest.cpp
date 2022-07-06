@@ -14,7 +14,8 @@ namespace orbit_paths {
 
 TEST(Path, AllAutoCreatedDirsExist) {
   auto test_fns = {CreateOrGetOrbitAppDataDir, CreateOrGetDumpDir,    CreateOrGetPresetDir,
-                   CreateOrGetCacheDir,        CreateOrGetCaptureDir, CreateOrGetLogDir};
+                   CreateOrGetCacheDir,        CreateOrGetCaptureDir, CreateOrGetLogDir,
+                   CreateOrGetOrbitUserDataDir};
 
   for (auto fn : test_fns) {
     std::filesystem::path path = fn();
