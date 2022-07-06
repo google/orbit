@@ -9,6 +9,7 @@
 
 #include <filesystem>
 
+#include "GrpcProtos/module.pb.h"
 #include "ObjectUtils/CoffFile.h"
 #include "OrbitBase/GetLastError.h"
 #include "OrbitBase/Logging.h"
@@ -52,11 +53,14 @@ std::vector<Module> ListModules(uint32_t pid) {
     std::string build_id;
     std::string module_path = orbit_base::ToStdString(module_entry.szExePath);
     auto coff_file_or_error = orbit_object_utils::CreateCoffFile(module_path);
+    std::vector<orbit_grpc_protos::ModuleInfo::ObjectSegment> sections;
     if (coff_file_or_error.has_value()) {
       build_id = coff_file_or_error.value()->GetBuildId();
+      sections = coff_file_or_error.value()->GetObjectSegments();
     } else {
-      ORBIT_ERROR("Could not create Coff file for module \"%s\", build-id will be empty",
-                  module_path);
+      ORBIT_ERROR(
+          "Could not create Coff file for module \"%s\", build-id and sections will be empty",
+          module_path);
     }
 
     Module& module = modules.emplace_back();
@@ -66,6 +70,7 @@ std::vector<Module> ListModules(uint32_t pid) {
     module.address_start = absl::bit_cast<uint64_t>(module_entry.modBaseAddr);
     module.address_end = module.address_start + module_entry.modBaseSize;
     module.build_id = build_id;
+    module.sections = std::move(sections);
 
   } while (Module32Next(module_snap_handle, &module_entry));
 

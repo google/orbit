@@ -22,11 +22,10 @@
 #include "absl/strings/str_format.h"
 
 using orbit_grpc_protos::SymbolInfo;
-using orbit_object_utils::CreateElfFile;
-using orbit_object_utils::CreateElfFileFromBuffer;
-using orbit_object_utils::ElfFile;
 using orbit_test_utils::HasError;
 using orbit_test_utils::HasNoError;
+
+namespace orbit_object_utils {
 
 TEST(ElfFile, LoadDebugSymbols) {
   std::filesystem::path file_path =
@@ -110,6 +109,68 @@ TEST(ElfFile, LoadBiasAndExecutableSegmentOffsetAndImageSize) {
     EXPECT_EQ(elf_file_static.value()->GetLoadBias(), 0x400000);
     EXPECT_EQ(elf_file_static.value()->GetExecutableSegmentOffset(), 0x1000);
     EXPECT_EQ(elf_file_static.value()->GetImageSize(), 0xaaaa0);
+  }
+}
+
+TEST(ElfFile, ObjectSegments) {
+  {
+    const std::filesystem::path test_elf_file_dynamic =
+        orbit_test::GetTestdataDir() / "hello_world_elf";
+    auto elf_file_dynamic = CreateElfFile(test_elf_file_dynamic);
+    ASSERT_THAT(elf_file_dynamic, HasNoError());
+    const std::vector<orbit_grpc_protos::ModuleInfo::ObjectSegment> segments =
+        elf_file_dynamic.value()->GetObjectSegments();
+    ASSERT_EQ(segments.size(), 4);
+
+    EXPECT_EQ(segments[0].offset_in_file(), 0);
+    EXPECT_EQ(segments[0].size_in_file(), 0x568);
+    EXPECT_EQ(segments[0].address(), 0);
+    EXPECT_EQ(segments[0].size_in_memory(), 0x568);
+
+    EXPECT_EQ(segments[1].offset_in_file(), 0x1000);
+    EXPECT_EQ(segments[1].size_in_file(), 0x1cd);
+    EXPECT_EQ(segments[1].address(), 0x1000);
+    EXPECT_EQ(segments[1].size_in_memory(), 0x1cd);
+
+    EXPECT_EQ(segments[2].offset_in_file(), 0x2000);
+    EXPECT_EQ(segments[2].size_in_file(), 0x160);
+    EXPECT_EQ(segments[2].address(), 0x2000);
+    EXPECT_EQ(segments[2].size_in_memory(), 0x160);
+
+    EXPECT_EQ(segments[3].offset_in_file(), 0x2de8);
+    EXPECT_EQ(segments[3].size_in_file(), 0x248);
+    EXPECT_EQ(segments[3].address(), 0x3de8);
+    EXPECT_EQ(segments[3].size_in_memory(), 0x250);
+  }
+
+  {
+    const std::filesystem::path test_elf_file_static =
+        orbit_test::GetTestdataDir() / "hello_world_static_elf";
+    auto elf_file_static = CreateElfFile(test_elf_file_static);
+    ASSERT_THAT(elf_file_static, HasNoError());
+    const std::vector<orbit_grpc_protos::ModuleInfo::ObjectSegment> segments =
+        elf_file_static.value()->GetObjectSegments();
+    ASSERT_EQ(segments.size(), 4);
+
+    EXPECT_EQ(segments[0].offset_in_file(), 0);
+    EXPECT_EQ(segments[0].size_in_file(), 0x4a8);
+    EXPECT_EQ(segments[0].address(), 0x400000);
+    EXPECT_EQ(segments[0].size_in_memory(), 0x4a8);
+
+    EXPECT_EQ(segments[1].offset_in_file(), 0x1000);
+    EXPECT_EQ(segments[1].size_in_file(), 0x7b4e1);
+    EXPECT_EQ(segments[1].address(), 0x401000);
+    EXPECT_EQ(segments[1].size_in_memory(), 0x7b4e1);
+
+    EXPECT_EQ(segments[2].offset_in_file(), 0x7d000);
+    EXPECT_EQ(segments[2].size_in_file(), 0x257f0);
+    EXPECT_EQ(segments[2].address(), 0x47d000);
+    EXPECT_EQ(segments[2].size_in_memory(), 0x257f0);
+
+    EXPECT_EQ(segments[3].offset_in_file(), 0xa3060);
+    EXPECT_EQ(segments[3].size_in_file(), 0x5270);
+    EXPECT_EQ(segments[3].address(), 0x4a4060);
+    EXPECT_EQ(segments[3].size_in_memory(), 0x6a40);
   }
 }
 
@@ -411,3 +472,5 @@ TEST(ElfFile, GetLocationOfFunctionNoSubroutine) {
   EXPECT_EQ(std::filesystem::path{function_location.value().source_file()}.filename().string(),
             "auth_none.c");
 }
+
+}  // namespace orbit_object_utils

@@ -8,6 +8,7 @@
 #include "ClientData/PostProcessedSamplingData.h"
 #include "ClientProtos/capture_data.pb.h"
 #include "CodeReport/SourceCodeReport.h"
+#include "GrpcProtos/module.pb.h"
 #include "GrpcProtos/symbol.pb.h"
 #include "ObjectUtils/ObjectFile.h"
 
@@ -19,6 +20,8 @@ class MockElfFile : public orbit_object_utils::ElfFile {
   MOCK_METHOD(uint64_t, GetLoadBias, (), (const, override));
   MOCK_METHOD(uint64_t, GetExecutableSegmentOffset, (), (const, override));
   MOCK_METHOD(uint64_t, GetImageSize, (), (const, override));
+  MOCK_METHOD(const std::vector<orbit_grpc_protos::ModuleInfo::ObjectSegment>&, GetObjectSegments,
+              (), (const, override));
 
   MOCK_METHOD(bool, HasDynsym, (), (const, override));
   MOCK_METHOD(bool, HasDebugInfo, (), (const, override));

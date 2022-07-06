@@ -12,6 +12,7 @@
 #include <memory>
 #include <string>
 
+#include "GrpcProtos/module.pb.h"
 #include "GrpcProtos/symbol.pb.h"
 #include "ObjectUtils/SymbolsFile.h"
 #include "OrbitBase/Result.h"
@@ -57,6 +58,12 @@ class ObjectFile : public SymbolsFile {
   // As such, it includes possible gaps--in other words, it can be larger than the sum of the sizes
   // of all sections (for PEs) or loadable segments (for ELF files).
   [[nodiscard]] virtual uint64_t GetImageSize() const = 0;
+
+  // The memory segments in which the object file is loaded when creating the process image.
+  // For ELF files, this corresponds to the loadable segments from the program headers.
+  // For PEs, it corresponds to the sections from the section table.
+  [[nodiscard]] virtual const std::vector<orbit_grpc_protos::ModuleInfo::ObjectSegment>&
+  GetObjectSegments() const = 0;
 
   [[nodiscard]] virtual bool IsElf() const = 0;
   [[nodiscard]] virtual bool IsCoff() const = 0;

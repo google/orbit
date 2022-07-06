@@ -7,9 +7,10 @@ syntax = "proto3";
 package orbit_grpc_protos;
 
 message ModuleInfo {
+  // NextId: 12
+
   // General purpose name of the module, can be used as a pretty name in the UI.
   // If you need the ELF specific soname, use the field "soname" below.
-  // NextId: 11
   string name = 1;
   string file_path = 2;
   uint64 file_size = 3;
@@ -21,6 +22,14 @@ message ModuleInfo {
   uint64 load_bias = 7;
   uint64 executable_segment_offset = 8;
   string soname = 9;
+
+  message ObjectSegment {
+    uint64 offset_in_file = 1;
+    uint64 size_in_file = 2;
+    uint64 address = 3;
+    uint64 size_in_memory = 4;
+  }
+  repeated ObjectSegment object_segments = 11;
 
   enum ObjectFileType {
     kUnknown = 0;

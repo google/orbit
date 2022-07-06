@@ -68,6 +68,10 @@ ErrorMessageOr<ModuleInfo> CreateModule(const std::filesystem::path& module_path
   module_info.set_build_id(object_file_or_error.value()->GetBuildId());
   module_info.set_executable_segment_offset(
       object_file_or_error.value()->GetExecutableSegmentOffset());
+  for (const orbit_grpc_protos::ModuleInfo::ObjectSegment& segment :
+       object_file_or_error.value()->GetObjectSegments()) {
+    *module_info.add_object_segments() = segment;
+  }
 
   if (object_file_or_error.value()->IsElf()) {
     auto* elf_file = dynamic_cast<ElfFile*>((object_file_or_error.value().get()));

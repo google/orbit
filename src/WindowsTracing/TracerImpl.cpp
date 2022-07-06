@@ -63,6 +63,9 @@ void TracerImpl::SendModulesSnapshot() {
     module_info->set_address_end(module.address_end);
     module_info->set_build_id(module.build_id);
     module_info->set_object_file_type(ModuleInfo::kCoffFile);
+    for (const ModuleInfo::ObjectSegment& section : module.sections) {
+      *module_info->add_object_segments() = section;
+    }
   }
 
   listener_->OnModulesSnapshot(std::move(modules_snapshot));
