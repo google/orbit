@@ -114,7 +114,17 @@ ErrorMessageOr<std::filesystem::path> CreateOrGetCacheDirSafe() {
 
 std::filesystem::path GetPresetDirPriorTo1_66() { return CreateOrGetOrbitAppDataDir() / "presets"; }
 
+ErrorMessageOr<std::filesystem::path> GetPresetDirPriorTo1_66Safe() {
+  OUTCOME_TRY(std::filesystem::path app_data_dir, CreateOrGetOrbitAppDataDirSafe());
+  return app_data_dir / "presets";
+}
+
 std::filesystem::path GetCaptureDirPriorTo1_66() { return CreateOrGetOrbitAppDataDir() / "output"; }
+
+ErrorMessageOr<std::filesystem::path> GetCaptureDirPriorTo1_66Safe() {
+  OUTCOME_TRY(std::filesystem::path app_data_dir, CreateOrGetOrbitAppDataDirSafe());
+  return app_data_dir / "output";
+}
 
 std::filesystem::path CreateOrGetPresetDir() {
   std::filesystem::path preset_dir = CreateOrGetOrbitUserDataDir() / kPresetsFolderName;
