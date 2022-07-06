@@ -5,6 +5,7 @@
 #ifndef LINUX_TRACING_PERF_EVENT_READERS_H_
 #define LINUX_TRACING_PERF_EVENT_READERS_H_
 
+#include <absl/container/flat_hash_map.h>
 #include <linux/perf_event.h>
 #include <stdint.h>
 #include <sys/types.h>
@@ -33,6 +34,9 @@ uint64_t ReadThrottleUnthrottleRecordTime(PerfEventRingBuffer* ring_buffer);
 
 MmapPerfEvent ConsumeMmapPerfEvent(PerfEventRingBuffer* ring_buffer,
                                    const perf_event_header& header);
+
+UprobesWithStackPerfEvent ConsumeUprobeWithStackPerfEvent(PerfEventRingBuffer* ring_buffer,
+                                                          const perf_event_header& header);
 
 StackSamplePerfEvent ConsumeStackSamplePerfEvent(PerfEventRingBuffer* ring_buffer,
                                                  const perf_event_header& header);

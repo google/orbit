@@ -157,7 +157,7 @@ StackSamplePerfEvent ConsumeStackSamplePerfEvent(PerfEventRingBuffer* ring_buffe
   //    u64 regs[weight(mask)]; /* if PERF_SAMPLE_REGS_USER */
   //    u64 size;               /* if PERF_SAMPLE_STACK_USER */
   //    char data[size];        /* if PERF_SAMPLE_STACK_USER */
-  //    u64 dyn_size;           /* if PERF_SAMPLE_STACK_USER && size != 0 */
+  //    u64 size;           /* if PERF_SAMPLE_STACK_USER && size != 0 */
   //  };
   // Unfortunately, the value of `size` is not constant, so we need to compute the offsets by hand,
   // rather than relying on a struct.
@@ -213,7 +213,7 @@ CallchainSamplePerfEvent ConsumeCallchainSamplePerfEvent(PerfEventRingBuffer* ri
   //    u64 regs[weight(mask)]; /* if PERF_SAMPLE_REGS_USER */
   //    u64 size;               /* if PERF_SAMPLE_STACK_USER */
   //    char data[size];        /* if PERF_SAMPLE_STACK_USER */
-  //    u64 dyn_size;           /* if PERF_SAMPLE_STACK_USER && size != 0 */
+  //    u64 size;           /* if PERF_SAMPLE_STACK_USER && size != 0 */
   //  };
   // Unfortunately, the number of `ips` is dynamic, so we need to compute the offsets by hand,
   // rather than relying on a struct.
@@ -259,6 +259,61 @@ CallchainSamplePerfEvent ConsumeCallchainSamplePerfEvent(PerfEventRingBuffer* ri
                                sizeof(perf_event_sample_regs_user_all));
   ring_buffer->ReadRawAtOffset(event.data.data.get(), offset_of_data, dyn_size);
 
+  ring_buffer->SkipRecord(header);
+  return event;
+}
+
+UprobesWithStackPerfEvent ConsumeUprobeWithStackPerfEvent(PerfEventRingBuffer* ring_buffer,
+                                                          const perf_event_header& header) {
+  // We expect the following layout of the perf event:
+  //  struct {
+  //    struct perf_event_header header;
+  //    u64 sample_id;          /* if PERF_SAMPLE_IDENTIFIER */
+  //    u32 pid, tid;           /* if PERF_SAMPLE_TID */
+  //    u64 time;               /* if PERF_SAMPLE_TIME */
+  //    u64 stream_id;          /* if PERF_SAMPLE_STREAM_ID */
+  //    u32 cpu, res;           /* if PERF_SAMPLE_CPU */
+  //    u64 abi;                /* if PERF_SAMPLE_REGS_USER */
+  //    u64 regs[weight(mask)]; /* if PERF_SAMPLE_REGS_USER */
+  //    u64 size;               /* if PERF_SAMPLE_STACK_USER */
+  //    char data[size];        /* if PERF_SAMPLE_STACK_USER */
+  //    u64 size;           /* if PERF_SAMPLE_STACK_USER && size != 0 */
+  //  };
+  // Unfortunately, the value of `size` is not constant, so we need to compute the offsets by hand,
+  // rather than relying on a struct.
+
+  size_t offset_of_size = offsetof(perf_event_sp_stack_user_sample_fixed, regs) +
+                          sizeof(perf_event_sample_regs_user_sp);
+  size_t offset_of_data = offset_of_size + sizeof(uint64_t);
+
+  uint64_t size = 0;
+  ring_buffer->ReadValueAtOffset(&size, offset_of_size);
+
+  size_t offset_of_dyn_size = offset_of_data + (size * sizeof(char));
+
+  uint64_t dyn_size = 0;
+  ring_buffer->ReadValueAtOffset(&dyn_size, offset_of_dyn_size);
+
+  perf_event_sample_id_tid_time_streamid_cpu sample_id;
+  ring_buffer->ReadValueAtOffset(&sample_id,
+                                 offsetof(perf_event_sp_stack_user_sample_fixed, sample_id));
+
+  perf_event_sample_regs_user_sp regs;
+  ring_buffer->ReadValueAtOffset(&regs, offsetof(perf_event_sp_stack_user_sample_fixed, regs));
+
+  UprobesWithStackPerfEvent event{
+      .timestamp = sample_id.time,
+      .ordered_stream = PerfEventOrderedStream::FileDescriptor(ring_buffer->GetFileDescriptor()),
+      .data =
+          {
+              .pid = static_cast<pid_t>(sample_id.pid),
+              .tid = static_cast<pid_t>(sample_id.tid),
+              .regs = regs,
+              .dyn_size = dyn_size,
+              .data = make_unique_for_overwrite<char[]>(dyn_size),
+          },
+  };
+  ring_buffer->ReadRawAtOffset(event.data.data.get(), offset_of_data, dyn_size);
   ring_buffer->SkipRecord(header);
   return event;
 }

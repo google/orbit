@@ -119,6 +119,16 @@ struct UprobesPerfEventData {
 };
 using UprobesPerfEvent = TypedPerfEvent<UprobesPerfEventData>;
 
+struct UprobesWithStackPerfEventData {
+  pid_t pid;
+  pid_t tid;
+  perf_event_sample_regs_user_sp regs;
+
+  uint64_t dyn_size;
+  mutable std::unique_ptr<char[]> data;
+};
+using UprobesWithStackPerfEvent = TypedPerfEvent<UprobesWithStackPerfEventData>;
+
 struct UprobesWithArgumentsPerfEventData {
   pid_t pid;
   pid_t tid;
@@ -262,12 +272,13 @@ struct PerfEvent {
   PerfEventOrderedStream ordered_stream = PerfEventOrderedStream::kNone;
   std::variant<ForkPerfEventData, ExitPerfEventData, LostPerfEventData, DiscardedPerfEventData,
                StackSamplePerfEventData, CallchainSamplePerfEventData, UprobesPerfEventData,
-               UprobesWithArgumentsPerfEventData, UretprobesPerfEventData,
-               UretprobesWithReturnValuePerfEventData, UserSpaceFunctionEntryPerfEventData,
-               UserSpaceFunctionExitPerfEventData, MmapPerfEventData,
-               GenericTracepointPerfEventData, TaskNewtaskPerfEventData, TaskRenamePerfEventData,
-               SchedSwitchPerfEventData, SchedWakeupPerfEventData, AmdgpuCsIoctlPerfEventData,
-               AmdgpuSchedRunJobPerfEventData, DmaFenceSignaledPerfEventData>
+               UprobesWithArgumentsPerfEventData, UprobesWithStackPerfEventData,
+               UretprobesPerfEventData, UretprobesWithReturnValuePerfEventData,
+               UserSpaceFunctionEntryPerfEventData, UserSpaceFunctionExitPerfEventData,
+               MmapPerfEventData, GenericTracepointPerfEventData, TaskNewtaskPerfEventData,
+               TaskRenamePerfEventData, SchedSwitchPerfEventData, SchedWakeupPerfEventData,
+               AmdgpuCsIoctlPerfEventData, AmdgpuSchedRunJobPerfEventData,
+               DmaFenceSignaledPerfEventData>
       data;
 
   void Accept(PerfEventVisitor* visitor) const;
