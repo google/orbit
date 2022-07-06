@@ -82,6 +82,7 @@ void SamplingWithFrameTrackWidget::OnUpdateButtonClicked() {
       kConfigValidator.Validate(baseline_and_comparison_, baseline_config, comparison_config);
   if (validation_result.has_error()) {
     emit ReportError(validation_result.error().message());
+    return;
   }
 }
 
