@@ -6,6 +6,7 @@
 
 #include <absl/strings/str_format.h>
 
+#include <array>
 #include <memory>
 #include <optional>
 #include <string>
@@ -17,6 +18,7 @@
 #include "ClientData/CaptureData.h"
 #include "ClientData/ThreadStateSliceInfo.h"
 #include "ClientProtos/capture_data.pb.h"
+#include "CoreMath.h"
 #include "DisplayFormats/DisplayFormats.h"
 #include "Geometry.h"
 #include "GlCanvas.h"
@@ -236,6 +238,22 @@ void ThreadStateBar::DoUpdatePrimitives(PrimitiveAssembler& primitive_assembler,
 
         const Vec2 pos{x0, GetPos()[1]};
         const Vec2 size{width, GetHeight()};
+
+        if (slice == app_->selected_thread_state_slice()) {
+          const Color kWhiteBorder = Color(255, 255, 255, 255);
+          float left_x = timeline_info_->GetWorldFromTick(slice.begin_timestamp_ns());
+          float right_x = timeline_info_->GetWorldFromTick(slice.end_timestamp_ns());
+          float top_y = GetPos()[1];
+          float bottom_y = GetPos()[1] + GetHeight();
+          std::array<Vec2, 4> border_points{
+              Vec2{left_x, top_y},
+              Vec2{right_x, top_y},
+              Vec2{right_x, bottom_y},
+              Vec2{left_x, bottom_y},
+          };
+          Quad border{border_points};
+          primitive_assembler.AddQuadBorder(border, GlCanvas::kZValueTimeBar, kWhiteBorder);
+        }
 
         const Color color = GetThreadStateColor(slice.thread_state());
 
