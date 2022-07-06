@@ -129,6 +129,19 @@ struct UprobesWithArgumentsPerfEventData {
 };
 using UprobesWithArgumentsPerfEvent = TypedPerfEvent<UprobesWithArgumentsPerfEventData>;
 
+struct UprobesWithStackPerfEventData {
+  pid_t pid;
+  pid_t tid;
+  perf_event_sample_regs_user_sp regs;
+
+  uint64_t dyn_size;
+  // This mutablility allows moving the data out of this class in the UprobesUnwindingVisitor even
+  // if we only have a const reference there. This requires the explicit knowledge that there is
+  // only one visitor being applied to this event.
+  mutable std::unique_ptr<char[]> data;
+};
+using UprobesWithStackPerfEvent = TypedPerfEvent<UprobesWithStackPerfEventData>;
+
 struct UretprobesPerfEventData {
   pid_t pid;
   pid_t tid;
@@ -262,12 +275,13 @@ struct PerfEvent {
   PerfEventOrderedStream ordered_stream = PerfEventOrderedStream::kNone;
   std::variant<ForkPerfEventData, ExitPerfEventData, LostPerfEventData, DiscardedPerfEventData,
                StackSamplePerfEventData, CallchainSamplePerfEventData, UprobesPerfEventData,
-               UprobesWithArgumentsPerfEventData, UretprobesPerfEventData,
-               UretprobesWithReturnValuePerfEventData, UserSpaceFunctionEntryPerfEventData,
-               UserSpaceFunctionExitPerfEventData, MmapPerfEventData,
-               GenericTracepointPerfEventData, TaskNewtaskPerfEventData, TaskRenamePerfEventData,
-               SchedSwitchPerfEventData, SchedWakeupPerfEventData, AmdgpuCsIoctlPerfEventData,
-               AmdgpuSchedRunJobPerfEventData, DmaFenceSignaledPerfEventData>
+               UprobesWithArgumentsPerfEventData, UprobesWithStackPerfEventData,
+               UretprobesPerfEventData, UretprobesWithReturnValuePerfEventData,
+               UserSpaceFunctionEntryPerfEventData, UserSpaceFunctionExitPerfEventData,
+               MmapPerfEventData, GenericTracepointPerfEventData, TaskNewtaskPerfEventData,
+               TaskRenamePerfEventData, SchedSwitchPerfEventData, SchedWakeupPerfEventData,
+               AmdgpuCsIoctlPerfEventData, AmdgpuSchedRunJobPerfEventData,
+               DmaFenceSignaledPerfEventData>
       data;
 
   void Accept(PerfEventVisitor* visitor) const;

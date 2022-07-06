@@ -34,6 +34,9 @@ uint64_t ReadThrottleUnthrottleRecordTime(PerfEventRingBuffer* ring_buffer);
 MmapPerfEvent ConsumeMmapPerfEvent(PerfEventRingBuffer* ring_buffer,
                                    const perf_event_header& header);
 
+UprobesWithStackPerfEvent ConsumeUprobeWithStackPerfEvent(PerfEventRingBuffer* ring_buffer,
+                                                          const perf_event_header& header);
+
 StackSamplePerfEvent ConsumeStackSamplePerfEvent(PerfEventRingBuffer* ring_buffer,
                                                  const perf_event_header& header);
 
