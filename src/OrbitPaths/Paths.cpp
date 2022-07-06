@@ -8,6 +8,7 @@
 #include <absl/strings/str_format.h>
 
 #include <filesystem>
+#include <optional>
 #include <string>
 
 #include "OrbitBase/Result.h"
@@ -30,6 +31,7 @@ constexpr std::string_view kCapturesFolderName{"captures"};
 constexpr std::string_view kPresetsFolderName{"presets"};
 constexpr std::string_view kCacheFolderName{"cache"};
 constexpr std::string_view kDumpsFolderName{"dumps"};
+constexpr std::string_view kLogsFolderName{"logs"};
 
 namespace orbit_paths {
 
@@ -199,14 +201,25 @@ ErrorMessageOr<std::filesystem::path> CreateOrGetOrbitUserDataDirSafe() {
   return path;
 }
 
-std::filesystem::path CreateOrGetLogDir() {
+static std::optional<std::filesystem::path> GetFlagLogDir() {
   std::filesystem::path logs_dir;
   if (!absl::GetFlag(FLAGS_log_dir).empty()) {
-    logs_dir = absl::GetFlag(FLAGS_log_dir);
-  } else {
-    logs_dir = CreateOrGetOrbitAppDataDir() / "logs";
+    return std::filesystem::path{absl::GetFlag(FLAGS_log_dir)};
   }
+  return std::nullopt;
+}
+
+std::filesystem::path CreateOrGetLogDir() {
+  std::filesystem::path logs_dir =
+      GetFlagLogDir().value_or(CreateOrGetOrbitAppDataDir() / kLogsFolderName);
   CreateDirectoryOrDie(logs_dir);
+  return logs_dir;
+}
+
+ErrorMessageOr<std::filesystem::path> CreateOrGetLogDirSafe() {
+  OUTCOME_TRY(std::filesystem::path app_data_dir, CreateOrGetOrbitAppDataDirSafe());
+  std::filesystem::path logs_dir = GetFlagLogDir().value_or(app_data_dir / kLogsFolderName);
+  OUTCOME_TRY(CreateDirectoryIfNecessary(logs_dir));
   return logs_dir;
 }
 
