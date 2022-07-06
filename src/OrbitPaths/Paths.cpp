@@ -29,6 +29,7 @@ constexpr std::string_view kOrbitFolderName{"Orbit"};
 constexpr std::string_view kCapturesFolderName{"captures"};
 constexpr std::string_view kPresetsFolderName{"presets"};
 constexpr std::string_view kCacheFolderName{"cache"};
+constexpr std::string_view kDumpsFolderName{"dumps"};
 
 namespace orbit_paths {
 
@@ -124,9 +125,16 @@ ErrorMessageOr<std::filesystem::path> CreateOrGetCaptureDirSafe() {
 }
 
 std::filesystem::path CreateOrGetDumpDir() {
-  std::filesystem::path capture_dir = CreateOrGetOrbitAppDataDir() / "dumps";
-  CreateDirectoryOrDie(capture_dir);
-  return capture_dir;
+  std::filesystem::path dumps_dir = CreateOrGetOrbitAppDataDir() / kDumpsFolderName;
+  CreateDirectoryOrDie(dumps_dir);
+  return dumps_dir;
+}
+
+ErrorMessageOr<std::filesystem::path> CreateOrGetDumpDirSafe() {
+  OUTCOME_TRY(std::filesystem::path app_data_dir, CreateOrGetOrbitAppDataDirSafe());
+  std::filesystem::path dumps_dir = app_data_dir / kDumpsFolderName;
+  OUTCOME_TRY(CreateDirectoryIfNecessary(dumps_dir));
+  return dumps_dir;
 }
 
 static std::filesystem::path GetOrbitAppDataDir() {
