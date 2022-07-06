@@ -45,7 +45,7 @@ TEST(Path, AllAutoCreatedDirsExist) {
 }
 
 TEST(Paths, AllDirsOfFilesExistUnsafe) {
-  auto test_fns = {GetLogFilePathUnsafe, GetSymbolsFilePathUnsafe};
+  auto test_fns = {GetLogFilePathUnsafe};
 
   for (auto fn : test_fns) {
     std::filesystem::path path = fn().parent_path();

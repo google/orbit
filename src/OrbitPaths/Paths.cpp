@@ -80,21 +80,11 @@ static void CreateDirectoryOrDie(const std::filesystem::path& directory) {
   }
 }
 
-static std::filesystem::path CreateAndGetConfigPathUnsafe() {
-  std::filesystem::path config_dir = CreateOrGetOrbitAppDataDirUnsafe() / kConfigFolderName;
-  CreateDirectoryOrDie(config_dir);
-  return config_dir;
-}
-
 static ErrorMessageOr<std::filesystem::path> CreateAndGetConfigPath() {
   OUTCOME_TRY(std::filesystem::path app_data_dir, CreateOrGetOrbitAppDataDir());
   std::filesystem::path config_dir = app_data_dir / kConfigFolderName;
   OUTCOME_TRY(CreateDirectoryIfItDoesNotExist(config_dir));
   return config_dir;
-}
-
-std::filesystem::path GetSymbolsFilePathUnsafe() {
-  return CreateAndGetConfigPathUnsafe() / kSymbolPathsFileName;
 }
 
 ErrorMessageOr<std::filesystem::path> GetSymbolsFilePath() {
