@@ -85,8 +85,6 @@ std::filesystem::path CreateOrGetCacheDir() {
   return cache_dir;
 }
 
-ErrorMessageOr<std::filesystem::path> CreateOrGetCacheDirSafe() {}
-
 std::filesystem::path GetPresetDirPriorTo1_66() { return CreateOrGetOrbitAppDataDir() / "presets"; }
 
 std::filesystem::path GetCaptureDirPriorTo1_66() { return CreateOrGetOrbitAppDataDir() / "output"; }
@@ -123,13 +121,24 @@ std::filesystem::path CreateOrGetDumpDir() {
   return capture_dir;
 }
 
-std::filesystem::path CreateOrGetOrbitAppDataDir() {
+static std::filesystem::path GetOrbitAppDataDir() {
 #ifdef _WIN32
   std::filesystem::path path = std::filesystem::path(GetEnvVar("APPDATA")) / "OrbitProfiler";
 #else
   std::filesystem::path path = std::filesystem::path(GetEnvVar("HOME")) / ".orbitprofiler";
 #endif
+  return path;
+}
+
+std::filesystem::path CreateOrGetOrbitAppDataDir() {
+  std::filesystem::path path = GetOrbitAppDataDir();
   CreateDirectoryOrDie(path);
+  return path;
+}
+
+ErrorMessageOr<std::filesystem::path> CreateOrGetOrbitAppDataDirSafe() {
+  std::filesystem::path path = GetOrbitAppDataDir();
+  OUTCOME_TRY(CreateDirectoryIfNecessary(path));
   return path;
 }
 

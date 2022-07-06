@@ -22,7 +22,10 @@ ErrorMessageOr<std::filesystem::path> CreateOrGetPresetDirSafe();
 [[nodiscard, deprecated]] std::filesystem::path CreateOrGetCaptureDir();
 ErrorMessageOr<std::filesystem::path> CreateOrGetCaptureDirSafe();
 [[nodiscard]] std::filesystem::path CreateOrGetDumpDir();
-[[nodiscard]] std::filesystem::path CreateOrGetOrbitAppDataDir();
+
+// TODO(b/238986370) Replace deprecated and unsafe function with safe alternative.
+[[nodiscard, deprecated]] std::filesystem::path CreateOrGetOrbitAppDataDir();
+ErrorMessageOr<std::filesystem::path> CreateOrGetOrbitAppDataDirSafe();
 
 // TODO(b/238985362) Replace deprecated and unsafe function with safe alternative.
 [[nodiscard, deprecated]] std::filesystem::path CreateOrGetOrbitUserDataDir();
