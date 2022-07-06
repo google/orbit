@@ -77,7 +77,8 @@ void SamplingWithFrameTrackWidget::OnUpdateButtonClicked() {
   Comparison<orbit_mizar_data::HalfOfSamplingWithFrameTrackReportConfig> comparison_config =
       LiftAndApply(&SamplingWithFrameTrackInputWidget::MakeConfig, GetComparisonInput());
 
-  std::ignore = kValidator.Validate(baseline_and_comparison_, baseline_config, comparison_config);
+  std::ignore =
+      kConfigValidator.Validate(baseline_and_comparison_, baseline_config, comparison_config);
 }
 
 }  // namespace orbit_mizar_widgets

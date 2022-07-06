@@ -63,8 +63,8 @@ class SamplingWithFrameTrackWidget : public QWidget {
   static const inline QString kMultiplicityCorrectionDisabledLabel =
       QStringLiteral("Probability of false-alarm for an individual function:");
 
-  static const inline SamplingWithFrameTrackReportConfigValidator kValidator{kBaselineTitle,
-                                                                             kComparisonTitle};
+  static const inline SamplingWithFrameTrackReportConfigValidator kConfigValidator{
+      kBaselineTitle, kComparisonTitle};
 };
 
 }  // namespace orbit_mizar_widgets

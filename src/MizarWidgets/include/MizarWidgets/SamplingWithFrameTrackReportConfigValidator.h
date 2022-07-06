@@ -18,6 +18,8 @@
 
 namespace orbit_mizar_widgets {
 
+// Checks if the  pair of `HalfOfSamplingWithFrameTrackReportConfig` is malformed. If so, reports an
+// error
 template <typename BaselineAndComparison, typename PairedData, auto ReportError>
 class SamplingWithFrameTrackReportConfigValidatorTmpl {
   template <typename T>
@@ -36,13 +38,13 @@ class SamplingWithFrameTrackReportConfigValidatorTmpl {
   [[nodiscard]] bool Validate(const BaselineAndComparison* baseline_and_comparison,
                               const Baseline<HalfConfig>& baseline_config,
                               const Comparison<HalfConfig>& comparison_config) const {
-    auto validator =
+    const auto validator =
         absl::bind_front(&SamplingWithFrameTrackReportConfigValidatorTmpl::ValidateAndReport, this);
 
-    Baseline<bool> baseline_ok = LiftAndApply(
+    const Baseline<bool> baseline_ok = LiftAndApply(
         validator, baseline_config, baseline_and_comparison->GetBaselineData(), baseline_title_);
 
-    Comparison<bool> comparison_ok =
+    const Comparison<bool> comparison_ok =
         LiftAndApply(validator, comparison_config, baseline_and_comparison->GetComparisonData(),
                      comparison_title_);
 
