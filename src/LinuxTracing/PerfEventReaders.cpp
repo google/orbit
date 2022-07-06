@@ -157,7 +157,7 @@ StackSamplePerfEvent ConsumeStackSamplePerfEvent(PerfEventRingBuffer* ring_buffe
   //    u64 regs[weight(mask)]; /* if PERF_SAMPLE_REGS_USER */
   //    u64 size;               /* if PERF_SAMPLE_STACK_USER */
   //    char data[size];        /* if PERF_SAMPLE_STACK_USER */
-  //    u64 size;           /* if PERF_SAMPLE_STACK_USER && size != 0 */
+  //    u64 dyn_size;           /* if PERF_SAMPLE_STACK_USER && size != 0 */
   //  };
   // Unfortunately, the value of `size` is not constant, so we need to compute the offsets by hand,
   // rather than relying on a struct.
@@ -213,7 +213,7 @@ CallchainSamplePerfEvent ConsumeCallchainSamplePerfEvent(PerfEventRingBuffer* ri
   //    u64 regs[weight(mask)]; /* if PERF_SAMPLE_REGS_USER */
   //    u64 size;               /* if PERF_SAMPLE_STACK_USER */
   //    char data[size];        /* if PERF_SAMPLE_STACK_USER */
-  //    u64 size;           /* if PERF_SAMPLE_STACK_USER && size != 0 */
+  //    u64 dyn_size;           /* if PERF_SAMPLE_STACK_USER && size != 0 */
   //  };
   // Unfortunately, the number of `ips` is dynamic, so we need to compute the offsets by hand,
   // rather than relying on a struct.
