@@ -89,6 +89,10 @@ static constexpr uint64_t SAMPLE_REGS_USER_AX = (1lu << PERF_REG_X86_AX);
 static constexpr uint64_t SAMPLE_REGS_USER_SP_IP =
     (1lu << PERF_REG_X86_SP) | (1lu << PERF_REG_X86_IP);
 
+// This must be in sync with struct perf_event_sample_regs_user_sp
+// in PerfEventRecords.h.
+static constexpr uint64_t SAMPLE_REGS_USER_SP = (1lu << PERF_REG_X86_SP);
+
 // This must be in sync with struct perf_event_sample_regs_user_sp_ip_arguments
 // in PerfEventRecords.h.
 static constexpr uint64_t SAMPLE_REGS_USER_SP_IP_ARGUMENTS =
@@ -125,6 +129,9 @@ int callchain_sample_event_open(uint64_t period_ns, pid_t pid, int32_t cpu,
 // perf_event_open for uprobes and uretprobes.
 int uprobes_retaddr_event_open(const char* module, uint64_t function_offset, pid_t pid,
                                int32_t cpu);
+
+int uprobes_with_stack_and_sp_event_open(const char* module, uint64_t function_offset, pid_t pid,
+                                         int32_t cpu, uint16_t stack_dump_size);
 
 int uprobes_retaddr_args_event_open(const char* module, uint64_t function_offset, pid_t pid,
                                     int32_t cpu);
