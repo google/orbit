@@ -28,6 +28,7 @@ ABSL_FLAG(std::string, log_dir, "", "Set directory for the log.");
 constexpr std::string_view kOrbitFolderName{"Orbit"};
 constexpr std::string_view kCapturesFolderName{"captures"};
 constexpr std::string_view kPresetsFolderName{"presets"};
+constexpr std::string_view kCacheFolderName{"cache"};
 
 namespace orbit_paths {
 
@@ -80,8 +81,15 @@ static std::filesystem::path CreateAndGetConfigPath() {
 std::filesystem::path GetSymbolsFilePath() { return CreateAndGetConfigPath() / "SymbolPaths.txt"; }
 
 std::filesystem::path CreateOrGetCacheDir() {
-  std::filesystem::path cache_dir = CreateOrGetOrbitAppDataDir() / "cache";
+  std::filesystem::path cache_dir = CreateOrGetOrbitAppDataDir() / kCacheFolderName;
   CreateDirectoryOrDie(cache_dir);
+  return cache_dir;
+}
+
+ErrorMessageOr<std::filesystem::path> CreateOrGetCacheDirSafe() {
+  OUTCOME_TRY(std::filesystem::path app_data_dir, CreateOrGetOrbitAppDataDirSafe());
+  std::filesystem::path cache_dir = app_data_dir / kCacheFolderName;
+  OUTCOME_TRY(CreateDirectoryIfNecessary(cache_dir));
   return cache_dir;
 }
 
