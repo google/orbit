@@ -44,7 +44,7 @@ TEST(Path, AllAutoCreatedDirsExistSafe) {
 }
 
 TEST(Paths, AllDirsOfFilesExist) {
-  auto test_fns = {GetLogFilePath};
+  auto test_fns = {GetLogFilePath, GetSymbolsFilePath};
 
   for (auto fn : test_fns) {
     std::filesystem::path path = fn().parent_path();
@@ -54,7 +54,7 @@ TEST(Paths, AllDirsOfFilesExist) {
 }
 
 TEST(Paths, AllDirsOfFilesExistSafe) {
-  auto test_fns = {GetLogFilePathSafe};
+  auto test_fns = {GetLogFilePathSafe, GetSymbolsFilePathSafe};
 
   for (auto fn : test_fns) {
     ErrorMessageOr<std::filesystem::path> path_or_error = fn();

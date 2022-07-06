@@ -32,6 +32,8 @@ constexpr std::string_view kPresetsFolderName{"presets"};
 constexpr std::string_view kCacheFolderName{"cache"};
 constexpr std::string_view kDumpsFolderName{"dumps"};
 constexpr std::string_view kLogsFolderName{"logs"};
+constexpr std::string_view kConfigFolderName{"config"};
+constexpr std::string_view kSymbolPathsFileName{"SymbolPaths.txt"};
 
 namespace orbit_paths {
 
@@ -76,12 +78,26 @@ static void CreateDirectoryOrDie(const std::filesystem::path& directory) {
 }
 
 static std::filesystem::path CreateAndGetConfigPath() {
-  std::filesystem::path config_dir = CreateOrGetOrbitAppDataDir() / "config";
+  std::filesystem::path config_dir = CreateOrGetOrbitAppDataDir() / kConfigFolderName;
   CreateDirectoryOrDie(config_dir);
   return config_dir;
 }
 
-std::filesystem::path GetSymbolsFilePath() { return CreateAndGetConfigPath() / "SymbolPaths.txt"; }
+static ErrorMessageOr<std::filesystem::path> CreateAndGetConfigPathSafe() {
+  OUTCOME_TRY(std::filesystem::path app_data_dir, CreateOrGetOrbitAppDataDirSafe());
+  std::filesystem::path config_dir = app_data_dir / kConfigFolderName;
+  OUTCOME_TRY(CreateDirectoryIfNecessary(config_dir));
+  return config_dir;
+}
+
+std::filesystem::path GetSymbolsFilePath() {
+  return CreateAndGetConfigPath() / kSymbolPathsFileName;
+}
+
+ErrorMessageOr<std::filesystem::path> GetSymbolsFilePathSafe() {
+  OUTCOME_TRY(std::filesystem::path config_dir, CreateAndGetConfigPathSafe());
+  return config_dir / kSymbolPathsFileName;
+}
 
 std::filesystem::path CreateOrGetCacheDir() {
   std::filesystem::path cache_dir = CreateOrGetOrbitAppDataDir() / kCacheFolderName;
