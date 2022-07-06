@@ -9,9 +9,11 @@
 #include <QStringLiteral>
 #include <QWidget>
 #include <memory>
+#include <string_view>
 
 #include "MizarBase/BaselineOrComparison.h"
 #include "MizarData/BaselineAndComparison.h"
+#include "MizarWidgets/MizarMainWindow.h"
 #include "MizarWidgets/SamplingWithFrameTrackReportConfigValidator.h"
 #include "SamplingWithFrameTrackInputWidget.h"
 
@@ -39,6 +41,9 @@ class SamplingWithFrameTrackWidget : public QWidget {
  public slots:
   void OnMultiplicityCorrectionCheckBoxClicked(bool checked);
   void OnUpdateButtonClicked();
+
+ signals:
+  void ReportError(std::string_view message);
 
  private:
   [[nodiscard]] Baseline<SamplingWithFrameTrackInputWidget*> GetBaselineInput() const;

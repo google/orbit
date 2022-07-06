@@ -5,9 +5,8 @@
 #ifndef MIZAR_WIDGETS_SAMPLING_WITH_FRAME_TRACK_REPORT_CONFIG_VALIDATOR_
 #define MIZAR_WIDGETS_SAMPLING_WITH_FRAME_TRACK_REPORT_CONFIG_VALIDATOR_
 
-#include <absl/functional/bind_front.h>
-
 #include <QMessageBox>
+#include <QObject>
 #include <QString>
 
 #include "MizarBase/BaselineOrComparison.h"
@@ -20,9 +19,8 @@ namespace orbit_mizar_widgets {
 
 // Implements `Validate` method that checks if a pair of `HalfOfSamplingWithFrameTrackReportConfig`
 // is malformed. That is, it checks if at least one thread is chosen for each of the configs and if
-// the `start_relative_ns` does not exceed the total duration capture. If the input is malformed an
-// error is reported using `ReportError` function.
-template <typename BaselineAndComparison, typename PairedData, auto ReportError>
+// the `start_relative_ns` does not exceed the total duration capture.
+template <typename BaselineAndComparison, typename PairedData>
 class SamplingWithFrameTrackReportConfigValidatorTmpl {
   template <typename T>
   using Baseline = ::orbit_mizar_base::Baseline<T>;
@@ -30,47 +28,35 @@ class SamplingWithFrameTrackReportConfigValidatorTmpl {
   template <typename T>
   using Comparison = ::orbit_mizar_base::Comparison<T>;
 
-  using HalfConfig = orbit_mizar_data::HalfOfSamplingWithFrameTrackReportConfig;
+  using HalfConfig = ::orbit_mizar_data::HalfOfSamplingWithFrameTrackReportConfig;
 
  public:
   explicit SamplingWithFrameTrackReportConfigValidatorTmpl(
       const Baseline<QString>& baseline_title, const Comparison<QString>& comparison_title)
       : baseline_title_(baseline_title), comparison_title_(comparison_title) {}
 
-  [[nodiscard]] bool Validate(const BaselineAndComparison* baseline_and_comparison,
-                              const Baseline<HalfConfig>& baseline_config,
-                              const Comparison<HalfConfig>& comparison_config) const {
-    const auto validate_and_report_function =
-        absl::bind_front(&SamplingWithFrameTrackReportConfigValidatorTmpl::ValidateAndReport, this);
+  [[nodiscard]] ErrorMessageOr<void> Validate(
+      const BaselineAndComparison* baseline_and_comparison,
+      const Baseline<HalfConfig>& baseline_config,
+      const Comparison<HalfConfig>& comparison_config) const {
+    OUTCOME_TRY(*LiftAndApply(&ValidateConfig, baseline_config,
+                              baseline_and_comparison->GetBaselineData(), baseline_title_));
 
-    const Baseline<bool> baseline_ok =
-        LiftAndApply(validate_and_report_function, baseline_config,
-                     baseline_and_comparison->GetBaselineData(), baseline_title_);
+    OUTCOME_TRY(*LiftAndApply(&ValidateConfig, comparison_config,
+                              baseline_and_comparison->GetComparisonData(), comparison_title_));
 
-    const Comparison<bool> comparison_ok =
-        LiftAndApply(validate_and_report_function, comparison_config,
-                     baseline_and_comparison->GetComparisonData(), comparison_title_);
-
-    return *baseline_ok && *comparison_ok;
+    return outcome::success();
   }
 
  private:
-  bool ValidateAndReport(const HalfConfig& config, const PairedData& data,
-                         const QString& title) const {
-    ErrorMessageOr<void> validation_result = ValidateConfig(config, data);
-    if (validation_result.has_error()) {
-      ReportError(title + ": " + QString::fromStdString(validation_result.error().message()));
-      return false;
-    }
-    return true;
-  }
-
-  static ErrorMessageOr<void> ValidateConfig(const HalfConfig& config, const PairedData& data) {
+  static ErrorMessageOr<void> ValidateConfig(const HalfConfig& config, const PairedData& data,
+                                             const QString& title) {
+    const std::string title_std_string = title.toStdString();
     if (config.tids.empty()) {
-      return ErrorMessage{"No threads selected"};
+      return ErrorMessage{title_std_string + ": No threads selected"};
     }
     if (config.start_relative_ns > data.CaptureDurationNs()) {
-      return ErrorMessage{"Start > capture duration"};
+      return ErrorMessage{title_std_string + ": Start > capture duration"};
     }
     return outcome::success();
   }
@@ -80,12 +66,9 @@ class SamplingWithFrameTrackReportConfigValidatorTmpl {
   const Comparison<QString>& comparison_title_;
 };
 
-inline void QtErrorReporter(const QString& message) {
-  QMessageBox::critical(nullptr, "Invalid input", message);
-}
-
-using SamplingWithFrameTrackReportConfigValidator = SamplingWithFrameTrackReportConfigValidatorTmpl<
-    orbit_mizar_data::BaselineAndComparison, orbit_mizar_data::MizarPairedData, QtErrorReporter>;
+using SamplingWithFrameTrackReportConfigValidator =
+    SamplingWithFrameTrackReportConfigValidatorTmpl<orbit_mizar_data::BaselineAndComparison,
+                                                    orbit_mizar_data::MizarPairedData>;
 
 }  // namespace orbit_mizar_widgets
 

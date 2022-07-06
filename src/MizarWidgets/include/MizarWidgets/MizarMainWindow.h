@@ -7,6 +7,7 @@
 
 #include <QMainWindow>
 #include <memory>
+#include <string_view>
 
 #include "MizarData/BaselineAndComparison.h"
 

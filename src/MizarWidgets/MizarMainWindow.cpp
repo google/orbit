@@ -5,7 +5,9 @@
 #include "MizarWidgets/MizarMainWindow.h"
 
 #include <QMainWindow>
+#include <QObject>
 #include <memory>
+#include <string>
 
 #include "ui_MizarMainWindow.h"
 
@@ -16,6 +18,12 @@ MizarMainWindow::MizarMainWindow(
     : QMainWindow(parent), ui_(std::make_unique<Ui::MainWindow>()) {
   ui_->setupUi(this);
   ui_->sampling_with_frame_track_widget_->Init(baseline_and_comparison);
+
+  QObject::connect(
+      ui_->sampling_with_frame_track_widget_, &SamplingWithFrameTrackWidget::ReportError, this,
+      [this](std::string_view message) {
+        QMessageBox::critical(this, "Invalid input", QString::fromStdString(std::string(message)));
+      });
 }
 
 MizarMainWindow::~MizarMainWindow() = default;

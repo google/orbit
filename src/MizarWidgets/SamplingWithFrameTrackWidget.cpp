@@ -12,6 +12,7 @@
 #include "MizarData/BaselineAndComparison.h"
 #include "MizarData/SamplingWithFrameTrackComparisonReport.h"
 #include "MizarWidgets/SamplingWithFrameTrackReportConfigValidator.h"
+#include "OrbitBase/Result.h"
 #include "OrbitBase/Typedef.h"
 #include "ui_SamplingWithFrameTrackWidget.h"
 
@@ -77,8 +78,11 @@ void SamplingWithFrameTrackWidget::OnUpdateButtonClicked() {
   Comparison<orbit_mizar_data::HalfOfSamplingWithFrameTrackReportConfig> comparison_config =
       LiftAndApply(&SamplingWithFrameTrackInputWidget::MakeConfig, GetComparisonInput());
 
-  std::ignore =
+  ErrorMessageOr<void> validation_result =
       kConfigValidator.Validate(baseline_and_comparison_, baseline_config, comparison_config);
+  if (validation_result.has_error()) {
+    emit ReportError(validation_result.error().message());
+  }
 }
 
 }  // namespace orbit_mizar_widgets
