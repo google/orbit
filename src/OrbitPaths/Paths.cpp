@@ -26,6 +26,7 @@
 ABSL_FLAG(std::string, log_dir, "", "Set directory for the log.");
 
 constexpr std::string_view kOrbitFolderName{"Orbit"};
+constexpr std::string_view kCapturesFolderName{"captures"};
 
 namespace orbit_paths {
 
@@ -94,8 +95,15 @@ std::filesystem::path CreateOrGetPresetDir() {
 }
 
 std::filesystem::path CreateOrGetCaptureDir() {
-  std::filesystem::path capture_dir = CreateOrGetOrbitUserDataDir() / "captures";
+  std::filesystem::path capture_dir = CreateOrGetOrbitUserDataDir() / kCapturesFolderName;
   CreateDirectoryOrDie(capture_dir);
+  return capture_dir;
+}
+
+ErrorMessageOr<std::filesystem::path> CreateOrGetCaptureDirSafe() {
+  OUTCOME_TRY(std::filesystem::path user_data_dir, CreateOrGetOrbitUserDataDirSafe());
+  std::filesystem::path capture_dir = user_data_dir / kCapturesFolderName;
+  OUTCOME_TRY(CreateDirectoryIfNecessary(capture_dir));
   return capture_dir;
 }
 

@@ -14,7 +14,10 @@ namespace orbit_paths {
 [[nodiscard]] std::filesystem::path GetSymbolsFilePath();
 [[nodiscard]] std::filesystem::path CreateOrGetCacheDir();
 [[nodiscard]] std::filesystem::path CreateOrGetPresetDir();
-[[nodiscard]] std::filesystem::path CreateOrGetCaptureDir();
+
+// TODO(b/239014904) Replace deprecated and unsafe function with safe alternative.
+[[nodiscard, deprecated]] std::filesystem::path CreateOrGetCaptureDir();
+ErrorMessageOr<std::filesystem::path> CreateOrGetCaptureDirSafe();
 [[nodiscard]] std::filesystem::path CreateOrGetDumpDir();
 [[nodiscard]] std::filesystem::path CreateOrGetOrbitAppDataDir();
 
