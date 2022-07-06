@@ -43,7 +43,7 @@ class SamplingWithFrameTrackWidget : public QWidget {
   void OnUpdateButtonClicked();
 
  signals:
-  void ReportError(std::string_view message);
+  void ReportError(const std::string& message);
 
  private:
   [[nodiscard]] Baseline<SamplingWithFrameTrackInputWidget*> GetBaselineInput() const;

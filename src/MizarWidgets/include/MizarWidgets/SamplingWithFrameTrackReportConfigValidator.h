@@ -5,10 +5,6 @@
 #ifndef MIZAR_WIDGETS_SAMPLING_WITH_FRAME_TRACK_REPORT_CONFIG_VALIDATOR_
 #define MIZAR_WIDGETS_SAMPLING_WITH_FRAME_TRACK_REPORT_CONFIG_VALIDATOR_
 
-#include <QMessageBox>
-#include <QObject>
-#include <QString>
-
 #include "MizarBase/BaselineOrComparison.h"
 #include "MizarData/BaselineAndComparison.h"
 #include "MizarData/MizarPairedData.h"
