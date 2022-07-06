@@ -5,7 +5,6 @@
 #ifndef LINUX_TRACING_PERF_EVENT_READERS_H_
 #define LINUX_TRACING_PERF_EVENT_READERS_H_
 
-#include <absl/container/flat_hash_map.h>
 #include <linux/perf_event.h>
 #include <stdint.h>
 #include <sys/types.h>

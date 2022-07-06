@@ -119,16 +119,6 @@ struct UprobesPerfEventData {
 };
 using UprobesPerfEvent = TypedPerfEvent<UprobesPerfEventData>;
 
-struct UprobesWithStackPerfEventData {
-  pid_t pid;
-  pid_t tid;
-  perf_event_sample_regs_user_sp regs;
-
-  uint64_t dyn_size;
-  mutable std::unique_ptr<char[]> data;
-};
-using UprobesWithStackPerfEvent = TypedPerfEvent<UprobesWithStackPerfEventData>;
-
 struct UprobesWithArgumentsPerfEventData {
   pid_t pid;
   pid_t tid;
@@ -138,6 +128,19 @@ struct UprobesWithArgumentsPerfEventData {
   perf_event_sample_regs_user_sp_ip_arguments regs;
 };
 using UprobesWithArgumentsPerfEvent = TypedPerfEvent<UprobesWithArgumentsPerfEventData>;
+
+struct UprobesWithStackPerfEventData {
+  pid_t pid;
+  pid_t tid;
+  perf_event_sample_regs_user_sp regs;
+
+  uint64_t dyn_size;
+  // This mutablility allows moving the data out of this class in the UprobesUnwindingVisitor even
+  // if we only have a const reference there. This requires the explicit knowledge that there is
+  // only one visitor being applied to this event.
+  mutable std::unique_ptr<char[]> data;
+};
+using UprobesWithStackPerfEvent = TypedPerfEvent<UprobesWithStackPerfEventData>;
 
 struct UretprobesPerfEventData {
   pid_t pid;
