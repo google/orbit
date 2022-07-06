@@ -93,7 +93,7 @@ TEST(ElfFile, LoadSymbolsFromDynsym) {
   EXPECT_EQ(symbol_info.size(), 591);
 }
 
-TEST(ElfFile, LoadBiasAndExecutableSegmentOffsetAndSizeAndImageSize) {
+TEST(ElfFile, LoadBiasAndExecutableSegmentOffsetAndImageSize) {
   {
     const std::filesystem::path test_elf_file_dynamic =
         orbit_test::GetTestdataDir() / "hello_world_elf";
@@ -101,7 +101,6 @@ TEST(ElfFile, LoadBiasAndExecutableSegmentOffsetAndSizeAndImageSize) {
     ASSERT_THAT(elf_file_dynamic, HasNoError());
     EXPECT_EQ(elf_file_dynamic.value()->GetLoadBias(), 0x0);
     EXPECT_EQ(elf_file_dynamic.value()->GetExecutableSegmentOffset(), 0x1000);
-    EXPECT_EQ(elf_file_dynamic.value()->GetExecutableSegmentSize(), 0x1cd);
     EXPECT_EQ(elf_file_dynamic.value()->GetImageSize(), 0x4038);
   }
 
@@ -112,7 +111,6 @@ TEST(ElfFile, LoadBiasAndExecutableSegmentOffsetAndSizeAndImageSize) {
     ASSERT_THAT(elf_file_static, HasNoError());
     EXPECT_EQ(elf_file_static.value()->GetLoadBias(), 0x400000);
     EXPECT_EQ(elf_file_static.value()->GetExecutableSegmentOffset(), 0x1000);
-    EXPECT_EQ(elf_file_static.value()->GetExecutableSegmentSize(), 0x7b4e1);
     EXPECT_EQ(elf_file_static.value()->GetImageSize(), 0xaaaa0);
   }
 }

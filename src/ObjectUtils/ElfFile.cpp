@@ -65,7 +65,6 @@ class ElfFileImpl : public ElfFile {
   [[nodiscard]] ErrorMessageOr<ModuleSymbols> LoadSymbolsFromDynsym() override;
   [[nodiscard]] uint64_t GetLoadBias() const override;
   [[nodiscard]] uint64_t GetExecutableSegmentOffset() const override;
-  [[nodiscard]] uint64_t GetExecutableSegmentSize() const override;
   [[nodiscard]] uint64_t GetImageSize() const override;
   [[nodiscard]] bool HasDebugSymbols() const override;
   [[nodiscard]] bool HasDynsym() const override;
@@ -621,11 +620,6 @@ std::optional<GnuDebugLinkInfo> ElfFileImpl<ElfT>::GetGnuDebugLinkInfo() const {
 template <typename ElfT>
 uint64_t ElfFileImpl<ElfT>::GetExecutableSegmentOffset() const {
   return executable_segment_offset_;
-}
-
-template <typename ElfT>
-uint64_t ElfFileImpl<ElfT>::GetExecutableSegmentSize() const {
-  return executable_segment_size_;
 }
 
 template <typename ElfT>
