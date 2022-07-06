@@ -27,6 +27,7 @@ ABSL_FLAG(std::string, log_dir, "", "Set directory for the log.");
 
 constexpr std::string_view kOrbitFolderName{"Orbit"};
 constexpr std::string_view kCapturesFolderName{"captures"};
+constexpr std::string_view kPresetsFolderName{"presets"};
 
 namespace orbit_paths {
 
@@ -84,13 +85,22 @@ std::filesystem::path CreateOrGetCacheDir() {
   return cache_dir;
 }
 
+ErrorMessageOr<std::filesystem::path> CreateOrGetCacheDirSafe() {}
+
 std::filesystem::path GetPresetDirPriorTo1_66() { return CreateOrGetOrbitAppDataDir() / "presets"; }
 
 std::filesystem::path GetCaptureDirPriorTo1_66() { return CreateOrGetOrbitAppDataDir() / "output"; }
 
 std::filesystem::path CreateOrGetPresetDir() {
-  std::filesystem::path preset_dir = CreateOrGetOrbitUserDataDir() / "presets";
+  std::filesystem::path preset_dir = CreateOrGetOrbitUserDataDir() / kPresetsFolderName;
   CreateDirectoryOrDie(preset_dir);
+  return preset_dir;
+}
+
+ErrorMessageOr<std::filesystem::path> CreateOrGetPresetDirSafe() {
+  OUTCOME_TRY(std::filesystem::path user_data_dir, CreateOrGetOrbitUserDataDirSafe());
+  std::filesystem::path preset_dir = user_data_dir / kPresetsFolderName;
+  OUTCOME_TRY(CreateDirectoryIfNecessary(preset_dir));
   return preset_dir;
 }
 

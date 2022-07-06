@@ -28,7 +28,8 @@ TEST(Path, AllAutoCreatedDirsExist) {
 }
 
 TEST(Path, AllAutoCreatedDirsExistSafe) {
-  auto test_fns = {CreateOrGetOrbitUserDataDirSafe, CreateOrGetCaptureDirSafe};
+  auto test_fns = {CreateOrGetOrbitUserDataDirSafe, CreateOrGetCaptureDirSafe,
+                   CreateOrGetPresetDirSafe};
 
   for (auto fn : test_fns) {
     ErrorMessageOr<std::filesystem::path> path_or_error = fn();
