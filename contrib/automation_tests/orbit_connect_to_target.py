@@ -14,7 +14,7 @@ Verifies existence and contents of the ConnectToTargetDialog, and takes a short
 capture once the main window appears.
 
 IMPORTANT: Unlike other scripts, this script expects a single unnamed parameter
-that specifies the ID or label of the instance Orbit is expected to connect to.
+that specifies the ID of the instance Orbit is expected to connect to.
 This is required because the script cannot know the instance name before it is 
 reserved by our E2E test infrastructure.
 
@@ -39,8 +39,8 @@ def main(argv):
                            "the expected instance ID or label.")
 
     test_cases = [
-        WaitForConnectionToTargetInstanceAndProcess(expected_instance=argv[1],
-                                                    expected_process="hello_ggp_stand"),
+        WaitForConnectionToTargetInstanceAndProcess(expected_instance_id=argv[1],
+                                                    expected_process_path="/mnt/developer/hello_ggp_standalone"),
         Capture(),
         VerifyTracksExist(track_names=["hello_ggp_stand"])
     ]

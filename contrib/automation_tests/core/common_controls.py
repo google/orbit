@@ -4,8 +4,13 @@ Use of this source code is governed by a BSD-style license that can be
 found in the LICENSE file.
 """
 
+import time
+from math import floor
+
+from pywinauto import Application
 from pywinauto.base_wrapper import BaseWrapper
 from pywinauto.controls.uiawrapper import UIAWrapper, UIAElementInfo
+from pywinauto import mouse
 
 from core.orbit_e2e import find_control
 
@@ -96,3 +101,23 @@ class DataViewPanel:
 
     def find_first_item_row(self, text: str, column: int, partial_match=False) -> int:
         return self._table_obj.find_first_item_row(text, column, partial_match)
+
+
+def get_tooltip(app: Application, control: BaseWrapper) -> str:
+    old_window_handle = app.top_window().handle
+
+    rectangle = control.rectangle()
+    position = (rectangle.left + floor((rectangle.right - rectangle.left) / 2),
+                rectangle.top + floor((rectangle.bottom - rectangle.top) / 2))
+
+    control.set_focus()
+    mouse.move(position)
+    mouse.move((position[0] + 1, position[1]))
+    time.sleep(2)
+
+    tooltip = app.top_window()
+    # If the top window didn't change, the control does not have a tooltip
+    if old_window_handle != tooltip.handle:
+        return tooltip.texts()[0] if tooltip.texts() else ""
+    else:
+        return ""
