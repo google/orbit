@@ -5,9 +5,12 @@
 #include "OrbitPaths/Paths.h"
 
 #include <absl/flags/flag.h>
+#include <absl/strings/str_format.h>
 
 #include <filesystem>
 #include <string>
+
+#include "OrbitBase/Result.h"
 
 #ifdef _WIN32
 // clang-format off
@@ -21,6 +24,8 @@
 #include "OrbitBase/Logging.h"
 
 ABSL_FLAG(std::string, log_dir, "", "Set directory for the log.");
+
+constexpr std::string_view kOrbitFolderName{"Orbit"};
 
 namespace orbit_paths {
 
@@ -40,6 +45,20 @@ static std::string GetEnvVar(const char* variable_name) {
 #endif
 
   return var;
+}
+
+// Attempts to create a directory if it doesn't exist. Returns success if the creation was
+// successful or it already existed. If an error occurs its logged and returned.
+static ErrorMessageOr<void> CreateDirectoryIfNecessary(const std::filesystem::path& directory) {
+  ErrorMessageOr<bool> created_or_error = orbit_base::CreateDirectories(directory);
+  if (created_or_error.has_error()) {
+    std::string error_message =
+        absl::StrFormat("Unable to create directory %s: %s", directory.string(),
+                        created_or_error.error().message());
+    ORBIT_ERROR("%s", error_message);
+    return ErrorMessage(error_message);
+  }
+  return outcome::success();
 }
 
 static void CreateDirectoryOrDie(const std::filesystem::path& directory) {
@@ -126,8 +145,14 @@ static std::filesystem::path GetDocumentsPath() {
 }
 
 std::filesystem::path CreateOrGetOrbitUserDataDir() {
-  std::filesystem::path path = GetDocumentsPath() / "Orbit";
+  std::filesystem::path path = GetDocumentsPath() / kOrbitFolderName;
   CreateDirectoryOrDie(path);
+  return path;
+}
+
+ErrorMessageOr<std::filesystem::path> CreateOrGetOrbitUserDataDirSafe() {
+  std::filesystem::path path = GetDocumentsPath() / kOrbitFolderName;
+  OUTCOME_TRY(CreateDirectoryIfNecessary(path));
   return path;
 }
 

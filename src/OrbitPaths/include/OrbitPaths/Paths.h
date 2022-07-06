@@ -7,6 +7,8 @@
 
 #include <filesystem>
 
+#include "OrbitBase/Result.h"
+
 namespace orbit_paths {
 
 [[nodiscard]] std::filesystem::path GetSymbolsFilePath();
@@ -15,7 +17,10 @@ namespace orbit_paths {
 [[nodiscard]] std::filesystem::path CreateOrGetCaptureDir();
 [[nodiscard]] std::filesystem::path CreateOrGetDumpDir();
 [[nodiscard]] std::filesystem::path CreateOrGetOrbitAppDataDir();
-[[nodiscard]] std::filesystem::path CreateOrGetOrbitUserDataDir();
+
+// TODO(b/238985362) Replace deprecated and unsafe function with safe alternative.
+[[nodiscard, deprecated]] std::filesystem::path CreateOrGetOrbitUserDataDir();
+ErrorMessageOr<std::filesystem::path> CreateOrGetOrbitUserDataDirSafe();
 [[nodiscard]] std::filesystem::path CreateOrGetLogDir();
 [[nodiscard]] std::filesystem::path GetLogFilePath();
 

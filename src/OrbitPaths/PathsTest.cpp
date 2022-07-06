@@ -2,13 +2,16 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
+#include <gmock/gmock-matchers.h>
 #include <gtest/gtest.h>
 
 #include <filesystem>
 #include <string>
 
 #include "OrbitBase/Logging.h"
+#include "OrbitBase/Result.h"
 #include "OrbitPaths/Paths.h"
+#include "TestUtils/TestUtils.h"
 
 namespace orbit_paths {
 
@@ -21,6 +24,16 @@ TEST(Path, AllAutoCreatedDirsExist) {
     std::filesystem::path path = fn();
     ORBIT_LOG("Testing existence of \"%s\"", path.string());
     EXPECT_TRUE(std::filesystem::is_directory(path));
+  }
+}
+
+TEST(Path, AllAutoCreatedDirsExistSafe) {
+  auto test_fns = {CreateOrGetOrbitUserDataDirSafe};
+
+  for (auto fn : test_fns) {
+    ErrorMessageOr<std::filesystem::path> path_or_error = fn();
+    ASSERT_THAT(path_or_error, orbit_test_utils::HasValue());
+    EXPECT_TRUE(std::filesystem::is_directory(path_or_error.value()));
   }
 }
 
