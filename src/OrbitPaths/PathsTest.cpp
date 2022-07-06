@@ -53,4 +53,14 @@ TEST(Paths, AllDirsOfFilesExist) {
   }
 }
 
+TEST(Paths, AllDirsOfFilesExistSafe) {
+  auto test_fns = {GetLogFilePathSafe};
+
+  for (auto fn : test_fns) {
+    ErrorMessageOr<std::filesystem::path> path_or_error = fn();
+    ASSERT_THAT(path_or_error, orbit_test_utils::HasValue());
+    EXPECT_TRUE(std::filesystem::is_directory(path_or_error.value().parent_path()));
+  }
+}
+
 }  // namespace orbit_paths

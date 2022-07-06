@@ -227,4 +227,9 @@ std::filesystem::path GetLogFilePath() {
   return CreateOrGetLogDir() / orbit_base::GetLogFileName();
 }
 
+ErrorMessageOr<std::filesystem::path> GetLogFilePathSafe() {
+  OUTCOME_TRY(std::filesystem::path log_dir, CreateOrGetLogDirSafe());
+  return log_dir / orbit_base::GetLogFileName();
+}
+
 }  // namespace orbit_paths

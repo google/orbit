@@ -40,7 +40,10 @@ ErrorMessageOr<std::filesystem::path> CreateOrGetOrbitUserDataDirSafe();
 // TODO(b/238986342) Replace deprecated and unsafe function with safe alternative.
 [[nodiscard, deprecated]] std::filesystem::path CreateOrGetLogDir();
 ErrorMessageOr<std::filesystem::path> CreateOrGetLogDirSafe();
-[[nodiscard]] std::filesystem::path GetLogFilePath();
+
+// TODO(b/238986108) Replace deprecated and unsafe function with safe alternative.
+[[nodiscard, deprecated]] std::filesystem::path GetLogFilePath();
+ErrorMessageOr<std::filesystem::path> GetLogFilePathSafe();
 
 [[nodiscard]] std::filesystem::path GetPresetDirPriorTo1_66();
 [[nodiscard]] std::filesystem::path GetCaptureDirPriorTo1_66();
