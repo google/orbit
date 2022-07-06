@@ -118,6 +118,10 @@ class MizarPairedDataTmpl {
                                           action_on_callstack_events);
   }
 
+  [[nodiscard]] uint64_t CaptureDurationNs() const {
+    return GetCallstackData().max_time() - data_->GetCaptureStartTimestampNs();
+  }
+
  private:
   void SetThreadNamesAndCallstackCounts() {
     const absl::flat_hash_map<uint32_t, std::string>& thread_names =

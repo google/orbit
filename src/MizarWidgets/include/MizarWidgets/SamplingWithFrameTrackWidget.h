@@ -9,9 +9,12 @@
 #include <QStringLiteral>
 #include <QWidget>
 #include <memory>
+#include <string_view>
 
 #include "MizarBase/BaselineOrComparison.h"
 #include "MizarData/BaselineAndComparison.h"
+#include "MizarWidgets/MizarMainWindow.h"
+#include "MizarWidgets/SamplingWithFrameTrackReportConfigValidator.h"
 #include "SamplingWithFrameTrackInputWidget.h"
 
 namespace Ui {
@@ -37,6 +40,10 @@ class SamplingWithFrameTrackWidget : public QWidget {
 
  public slots:
   void OnMultiplicityCorrectionCheckBoxClicked(bool checked);
+  void OnUpdateButtonClicked();
+
+ signals:
+  void ReportError(const std::string& message);
 
  private:
   [[nodiscard]] Baseline<SamplingWithFrameTrackInputWidget*> GetBaselineInput() const;
@@ -44,6 +51,7 @@ class SamplingWithFrameTrackWidget : public QWidget {
   [[nodiscard]] bool IsMultiplicityCorrectionEnabled() const;
   void OnSignificanceLevelSelected(int index);
 
+  const orbit_mizar_data::BaselineAndComparison* baseline_and_comparison_;
   bool is_multiplicity_correction_enabled_ = true;
   double significance_level_ = kDefaultSignificanceLevel;
   std::unique_ptr<Ui::SamplingWithFrameTrackWidget> ui_;
@@ -58,6 +66,9 @@ class SamplingWithFrameTrackWidget : public QWidget {
       QStringLiteral("Probability of false-alarm for at least one function:");
   static const inline QString kMultiplicityCorrectionDisabledLabel =
       QStringLiteral("Probability of false-alarm for an individual function:");
+
+  static const inline SamplingWithFrameTrackReportConfigValidator kConfigValidator{
+      kBaselineTitle, kComparisonTitle};
 };
 
 }  // namespace orbit_mizar_widgets
