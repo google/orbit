@@ -32,6 +32,8 @@ class SamplingWithFrameTrackWidget : public QWidget {
   template <typename T>
   using Comparison = ::orbit_mizar_base::Comparison<T>;
 
+  using Report = ::orbit_mizar_data::SamplingWithFrameTrackComparisonReport;
+
  public:
   explicit SamplingWithFrameTrackWidget(QWidget* parent = nullptr);
   ~SamplingWithFrameTrackWidget() override;

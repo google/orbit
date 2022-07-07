@@ -67,7 +67,7 @@ class BaselineAndComparisonTmpl {
     return SamplingWithFrameTrackComparisonReport(
         std::move(baseline_sampling_counts), std::move(baseline_frame_stats),
         std::move(comparison_sampling_counts), std::move(comparison_frame_stats),
-        std::move(sfid_to_corrected_comparison_result));
+        std::move(sfid_to_corrected_comparison_result), &sfid_to_name_);
   }
 
   [[nodiscard]] const Baseline<PairedData>& GetBaselineData() const { return baseline_; }

@@ -84,6 +84,10 @@ void SamplingWithFrameTrackWidget::OnUpdateButtonClicked() {
     emit ReportError(validation_result.error().message());
     return;
   }
+
+  Report report = baseline_and_comparison_->MakeSamplingWithFrameTrackReport(baseline_config,
+                                                                             comparison_config);
+  ui_->output_->UpdateReport(std::move(report));
 }
 
 }  // namespace orbit_mizar_widgets
