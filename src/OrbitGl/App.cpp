@@ -1840,7 +1840,7 @@ orbit_base::Future<void> OrbitApp::LoadSymbolsManually(
 
     // Explicitely do not handle the result.
     Future<void> future = RetrieveModuleAndLoadSymbolsAndHandleError(module).Then(
-        &immediate_executor, [](const SymbolLoadingAndErrorHandlingResult& /*result*/) -> void {});
+        &immediate_executor, [](const SymbolLoadingAndErrorHandlingResult & /*result*/) -> void {});
     futures.emplace_back(std::move(future));
   }
   orbit_client_symbols::QSettingsBasedStorageManager storage_manager;
