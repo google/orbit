@@ -97,7 +97,7 @@ TEST(DataManager, CanOnlyBeUsedFromTheMainThread) {
                                             &DataManager::memory_warning_threshold_kb);
   CallMethodOnDifferentThreadAndExpectDeath(data_manager,
                                             &DataManager::set_wine_syscall_handling_method,
-                                            WineSyscallHandlingMethod::NoSpecialHandling);
+                                            WineSyscallHandlingMethod::kNoSpecialHandling);
   CallMethodOnDifferentThreadAndExpectDeath(data_manager,
                                             &DataManager::wine_syscall_handling_method);
 }

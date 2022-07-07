@@ -1486,16 +1486,16 @@ void OrbitApp::StartCapture() {
       data_manager_->wine_syscall_handling_method();
 
   // With newer Wine/Proton versions, unwinding will fail after `__wine_syscall_dispatcher`
-  // (see go/unwinding_wine_syscall_dispatcher). The main reason for failing is, that the "syscall"
-  // implementation of Wine operates on a different stack that the "Windows user-space" stack. Our
+  // (see go/unwinding_wine_syscall_dispatcher). The main reason for failing is that the "syscall"
+  // implementation of Wine operates on a different stack than the "Windows user-space" stack. Our
   // unwinder will only have offline memory for the syscall stack. We can mitigate this by
   // collecting the stack data on every call to `__wine_syscall_dispatcher` and keeping the most
   // recent stack copy per thread in memory for unwinding.
   // Note: This requires symbols being loaded. We prioritize loading of the `ntdll.so` and rely on
   // auto-symbol loading.
-  absl::flat_hash_map<uint64_t, FunctionInfo> functions_to_record_stack_on;
+  absl::flat_hash_map<uint64_t, FunctionInfo> functions_to_record_additional_stack_on;
   if (wine_syscall_handling_method ==
-          orbit_client_data::WineSyscallHandlingMethod::RecordUserStack &&
+          orbit_client_data::WineSyscallHandlingMethod::kRecordUserStack &&
       data_manager_->unwinding_method() == CaptureOptions::kDwarf) {
     for (const auto& module_data : module_manager_->GetModulesByFilename(kNtdllSoFileName)) {
       const FunctionInfo* function_to_record_stack =
@@ -1516,7 +1516,8 @@ void OrbitApp::StartCapture() {
   // Note: This requires symbols being loaded. We prioritize loading of the `ntdll.so` and rely on
   // auto-symbol loading.
   std::map<uint64_t, uint64_t> absolute_address_to_size_of_functions_to_stop_unwinding_at;
-  if (wine_syscall_handling_method == orbit_client_data::WineSyscallHandlingMethod::StopUnwinding &&
+  if (wine_syscall_handling_method ==
+          orbit_client_data::WineSyscallHandlingMethod::kStopUnwinding &&
       data_manager_->unwinding_method() == CaptureOptions::kDwarf) {
     FindAndAddFunctionToStopUnwindingAt(
         kWineSyscallDispatcherFunctionName, kNtdllSoFileName, *module_manager_, *process_,
@@ -1540,7 +1541,8 @@ void OrbitApp::StartCapture() {
   options.collect_memory_info = data_manager_->collect_memory_info();
   options.memory_sampling_period_ms = data_manager_->memory_sampling_period_ms();
   options.selected_functions = std::move(selected_functions_map);
-  options.functions_to_record_stack_on = std::move(functions_to_record_stack_on);
+  options.functions_to_record_additional_stack_on =
+      std::move(functions_to_record_additional_stack_on);
   options.absolute_address_to_size_of_functions_to_stop_unwinding_at =
       std::move(absolute_address_to_size_of_functions_to_stop_unwinding_at);
   options.process_id = process->pid();
