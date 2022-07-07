@@ -409,10 +409,10 @@ void TrackContainer::DrawThreadDependency(PrimitiveAssembler& primitive_assemble
       start_arrow_track->GetThreadStateBarPos()[1] + kOffsetToGetCenterOfEndingThreadStateBar;
   float y_end =
       end_arrow_track->GetThreadStateBarPos()[1] + kOffsetToGetCenterOfStartingThreadStateBar;
-  float whole_length = std::abs(y_end - y_start);
-  float body_length = whole_length - layout_->GetThreadDependencyArrowHeadHeight();
+  float whole_height = std::abs(y_end - y_start);
+  float body_height = whole_height - layout_->GetThreadDependencyArrowHeadHeight();
   Vec2 arrow_start_pos{x, y_start};
-  Vec2 arrow_body_size{layout_->GetThreadDependencyArrowBodyWidth(), body_length};
+  Vec2 arrow_body_size{layout_->GetThreadDependencyArrowBodyWidth(), body_height};
   Vec2 arrow_head_size{layout_->GetThreadDependencyArrowHeadWidth(),
                        layout_->GetThreadDependencyArrowHeadHeight()};
   PrimitiveAssembler::ArrowDirection arrow_direction =
