@@ -1010,6 +1010,7 @@ uint64_t TracerImpl::ProcessMmapEventAndReturnTimestamp(const perf_event_header&
   }
 
   DeferEvent(std::move(event));
+  ++stats_.mmap_count;
 
   return timestamp_ns;
 }
@@ -1500,6 +1501,7 @@ void TracerImpl::PrintStatsIfTimerElapsed() {
             stats_.uprobes_with_stack_count);
   ORBIT_LOG("  gpu events: %.0f/s (%lu)", stats_.gpu_events_count / actual_window_s,
             stats_.gpu_events_count);
+  ORBIT_LOG("  mmap events: %.0f/s (%lu)", stats_.mmap_count / actual_window_s, stats_.mmap_count);
 
   if (stats_.lost_count_per_buffer.empty()) {
     ORBIT_LOG("  lost: %.0f/s (%lu)", stats_.lost_count / actual_window_s, stats_.lost_count);

@@ -208,6 +208,7 @@ class TracerImpl : public Tracer {
       uprobes_count = 0;
       uprobes_with_stack_count = 0;
       gpu_events_count = 0;
+      mmap_count = 0;
       lost_count = 0;
       lost_count_per_buffer.clear();
       discarded_out_of_order_count = 0;
@@ -222,6 +223,7 @@ class TracerImpl : public Tracer {
     uint64_t uprobes_count = 0;
     uint64_t uprobes_with_stack_count = 0;
     uint64_t gpu_events_count = 0;
+    uint64_t mmap_count = 0;
     uint64_t lost_count = 0;
     absl::flat_hash_map<PerfEventRingBuffer*, uint64_t> lost_count_per_buffer{};
     std::atomic<uint64_t> discarded_out_of_order_count = 0;
