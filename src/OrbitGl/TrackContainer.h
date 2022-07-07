@@ -79,7 +79,7 @@ class TrackContainer final : public CaptureViewElement {
  private:
   void DrawOverlay(PrimitiveAssembler& primitive_assembler, TextRenderer& text_renderer,
                    PickingMode picking_mode);
-  void DrawThreadDependency(PrimitiveAssembler& primitive_assembler, PickingMode picking_mode);
+  void DrawThreadDependencyArrow(PrimitiveAssembler& primitive_assembler, PickingMode picking_mode);
   void DrawIteratorBox(PrimitiveAssembler& primitive_assembler, TextRenderer& text_renderer,
                        Vec2 pos, Vec2 size, const Color& color, const std::string& label,
                        const std::string& time, float text_box_y);

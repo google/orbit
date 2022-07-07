@@ -54,8 +54,6 @@ class ThreadTrack final : public TimerTrack {
   [[nodiscard]] uint64_t GetMaxTime() const override {
     return thread_track_data_provider_->GetMaxTime(thread_id_);
   }
-  [[nodiscard]] Vec2 GetThreadStateBarPos() const { return thread_state_bar_->GetPos(); }
-  [[nodiscard]] float GetThreadStateBarHeight() const { return thread_state_bar_->GetHeight(); }
   [[nodiscard]] std::string GetTooltip() const override;
 
   [[nodiscard]] const orbit_client_protos::TimerInfo* GetLeft(
@@ -79,6 +77,9 @@ class ThreadTrack final : public TimerTrack {
   }
 
   [[nodiscard]] bool IsCollapsible() const override { return GetDepth() > 1; }
+
+  [[nodiscard]] Vec2 GetThreadStateBarPos() const { return thread_state_bar_->GetPos(); }
+  [[nodiscard]] float GetThreadStateBarHeight() const { return thread_state_bar_->GetHeight(); }
 
   [[nodiscard]] std::vector<CaptureViewElement*> GetAllChildren() const override;
 
