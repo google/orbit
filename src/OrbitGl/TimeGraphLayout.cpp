@@ -45,6 +45,9 @@ TimeGraphLayout::TimeGraphLayout() {
   scale_ = 1.f;
   time_bar_height_ = 30.f;
   font_size_ = 14;
+  thread_dependency_arrow_head_width_ = 16;
+  thread_dependency_arrow_head_height_ = 15;
+  thread_dependency_arrow_body_width_ = 4;
 };
 
 #define FLOAT_SLIDER(x) FLOAT_SLIDER_MIN_MAX(x, 0, 100.f)
@@ -74,6 +77,9 @@ bool TimeGraphLayout::DrawProperties() {
   FLOAT_SLIDER(track_tab_offset_);
   FLOAT_SLIDER(track_indent_offset_);
   FLOAT_SLIDER(collapse_button_size_);
+  FLOAT_SLIDER(thread_dependency_arrow_head_width_);
+  FLOAT_SLIDER(thread_dependency_arrow_head_height_);
+  FLOAT_SLIDER(thread_dependency_arrow_body_width_);
   FLOAT_SLIDER(collapse_button_decrease_per_indentation_);
 
   FLOAT_SLIDER(collapse_button_offset_);

@@ -12,8 +12,6 @@
 #include <vector>
 
 #include "CaptureViewElement.h"
-#include "ClientData/CaptureData.h"
-#include "ClientData/TimerChain.h"
 #include "TimeGraphLayout.h"
 #include "Track.h"
 #include "TrackManager.h"
@@ -81,6 +79,7 @@ class TrackContainer final : public CaptureViewElement {
  private:
   void DrawOverlay(PrimitiveAssembler& primitive_assembler, TextRenderer& text_renderer,
                    PickingMode picking_mode);
+  void DrawThreadDependency(PrimitiveAssembler& primitive_assembler, PickingMode picking_mode);
   void DrawIteratorBox(PrimitiveAssembler& primitive_assembler, TextRenderer& text_renderer,
                        Vec2 pos, Vec2 size, const Color& color, const std::string& label,
                        const std::string& time, float text_box_y);
@@ -99,6 +98,8 @@ class TrackContainer final : public CaptureViewElement {
   const orbit_client_data::CaptureData* capture_data_ = nullptr;
 
   const TimelineInfoInterface* timeline_info_;
+
+  OrbitApp* app_ = nullptr;
 };
 
 }  // namespace orbit_gl
