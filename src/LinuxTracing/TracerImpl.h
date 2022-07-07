@@ -68,8 +68,12 @@ class TracerImpl : public Tracer {
   void ProcessOneRecord(PerfEventRingBuffer* ring_buffer);
   void InitUprobesEventVisitor();
   bool OpenUserSpaceProbes(const std::vector<int32_t>& cpus);
+  bool OpenUprobesToRecordAdditionalStackOn(const std::vector<int32_t>& cpus);
   bool OpenUprobes(const orbit_linux_tracing::Function& function, const std::vector<int32_t>& cpus,
                    absl::flat_hash_map<int32_t, int>* fds_per_cpu);
+  bool OpenUprobesWithStack(const orbit_grpc_protos::FunctionToRecordAdditionalStackOn& function,
+                            const std::vector<int32_t>& cpus,
+                            absl::flat_hash_map<int32_t, int>* fds_per_cpu);
   bool OpenUretprobes(const orbit_linux_tracing::Function& function,
                       const std::vector<int32_t>& cpus,
                       absl::flat_hash_map<int32_t, int>* fds_per_cpu);
@@ -81,8 +85,6 @@ class TracerImpl : public Tracer {
 
   void AddUretprobesFileDescriptors(const absl::flat_hash_map<int32_t, int>& uretprobes_fds_per_cpu,
                                     const orbit_linux_tracing::Function& function);
-  void OpenUserSpaceProbesRingBuffers(
-      const absl::flat_hash_map<int32_t, std::vector<int>>& uprobes_uretpobres_fds_per_cpu);
 
   bool OpenThreadNameTracepoints(const std::vector<int32_t>& cpus);
   void InitSwitchesStatesNamesVisitor();
@@ -132,6 +134,7 @@ class TracerImpl : public Tracer {
   static constexpr uint64_t CONTEXT_SWITCHES_AND_THREAD_STATE_RING_BUFFER_SIZE_KB = 2 * 1024;
   static constexpr uint64_t GPU_TRACING_RING_BUFFER_SIZE_KB = 256;
   static constexpr uint64_t INSTRUMENTED_TRACEPOINTS_RING_BUFFER_SIZE_KB = 8 * 1024;
+  static constexpr uint64_t UPROBES_WITH_STACK_RING_BUFFER_SIZE_KB = 64 * 1024;
 
   static constexpr uint32_t IDLE_TIME_ON_EMPTY_RING_BUFFERS_US = 5000;
   static constexpr uint32_t IDLE_TIME_ON_EMPTY_DEFERRED_EVENTS_US = 5000;
@@ -143,6 +146,8 @@ class TracerImpl : public Tracer {
   uint16_t stack_dump_size_;
   orbit_grpc_protos::CaptureOptions::UnwindingMethod unwinding_method_;
   std::vector<Function> instrumented_functions_;
+  std::vector<orbit_grpc_protos::FunctionToRecordAdditionalStackOn>
+      functions_to_record_additional_stack_on_;
   std::map<uint64_t, uint64_t> absolute_address_to_size_of_functions_to_stop_unwinding_at_;
   bool trace_thread_state_;
   bool trace_gpu_driver_;
@@ -162,6 +167,7 @@ class TracerImpl : public Tracer {
   absl::flat_hash_map<uint64_t, uint64_t> uprobes_uretprobes_ids_to_function_id_;
   absl::flat_hash_set<uint64_t> uprobes_ids_;
   absl::flat_hash_set<uint64_t> uprobes_with_args_ids_;
+  absl::flat_hash_set<uint64_t> uprobes_with_stack_ids_;
   absl::flat_hash_set<uint64_t> uretprobes_ids_;
   absl::flat_hash_set<uint64_t> uretprobes_with_retval_ids_;
   absl::flat_hash_set<uint64_t> stack_sampling_ids_;
@@ -200,6 +206,7 @@ class TracerImpl : public Tracer {
       sched_switch_count = 0;
       sample_count = 0;
       uprobes_count = 0;
+      uprobes_with_stack_count = 0;
       gpu_events_count = 0;
       lost_count = 0;
       lost_count_per_buffer.clear();
@@ -213,6 +220,7 @@ class TracerImpl : public Tracer {
     uint64_t sched_switch_count = 0;
     uint64_t sample_count = 0;
     uint64_t uprobes_count = 0;
+    uint64_t uprobes_with_stack_count = 0;
     uint64_t gpu_events_count = 0;
     uint64_t lost_count = 0;
     absl::flat_hash_map<PerfEventRingBuffer*, uint64_t> lost_count_per_buffer{};
