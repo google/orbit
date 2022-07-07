@@ -1503,7 +1503,8 @@ void OrbitApp::StartCapture() {
       if (function_to_record_stack == nullptr) {
         continue;
       }
-      functions_to_record_stack_on.insert_or_assign(function_id++, *function_to_record_stack);
+      functions_to_record_additional_stack_on.insert_or_assign(function_id++,
+                                                               *function_to_record_stack);
     }
   }
 
