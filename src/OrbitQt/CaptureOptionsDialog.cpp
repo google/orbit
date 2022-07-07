@@ -18,6 +18,7 @@
 
 namespace orbit_qt {
 
+using orbit_client_data::WineSyscallHandlingMethod;
 using orbit_grpc_protos::CaptureOptions;
 
 using DynamicInstrumentationMethod =
@@ -33,6 +34,9 @@ CaptureOptionsDialog::CaptureOptionsDialog(QWidget* parent)
   QObject::connect(ui_->framePointerUnwindingRadioButton, qOverload<bool>(&QRadioButton::toggled),
                    ui_->maxCopyRawStackSizeWidget,
                    [this](bool checked) { ui_->maxCopyRawStackSizeWidget->setEnabled(checked); });
+  QObject::connect(ui_->dwarfUnwindingRadioButton, qOverload<bool>(&QRadioButton::toggled),
+                   ui_->wineGroupBox,
+                   [this](bool checked) { ui_->wineGroupBox->setEnabled(checked); });
   QObject::connect(ui_->collectMemoryInfoCheckBox, qOverload<bool>(&QCheckBox::toggled), this,
                    [this](bool checked) {
                      ui_->memorySamplingPeriodMsLabel->setEnabled(checked);
@@ -74,6 +78,7 @@ CaptureOptionsDialog::CaptureOptionsDialog(QWidget* parent)
     ui_->samplingCheckBox->hide();
     ui_->schedulerCheckBox->hide();
     ui_->devModeGroupBox->hide();
+    ui_->wineNoneRadioButton->hide();
   }
 }
 
@@ -178,6 +183,39 @@ DynamicInstrumentationMethod CaptureOptionsDialog::GetDynamicInstrumentationMeth
   if (ui_->userSpaceRadioButton->isChecked()) {
     ORBIT_CHECK(!ui_->uprobesRadioButton->isChecked());
     return CaptureOptions::kUserSpaceInstrumentation;
+  }
+  ORBIT_UNREACHABLE();
+}
+
+void CaptureOptionsDialog::SetWineSyscallHandlingMethod(
+    orbit_client_data::WineSyscallHandlingMethod method) {
+  switch (method) {
+    case WineSyscallHandlingMethod::kNoSpecialHandling:
+      ui_->wineNoneRadioButton->setChecked(true);
+      break;
+    case WineSyscallHandlingMethod::kStopUnwinding:
+      ui_->wineStopRadioButton->setChecked(true);
+      break;
+    case WineSyscallHandlingMethod::kRecordUserStack:
+      ui_->wineRecordRadioButton->setChecked(true);
+      break;
+    default:
+      ORBIT_UNREACHABLE();
+  }
+}
+
+WineSyscallHandlingMethod CaptureOptionsDialog::GetWineSyscallHandlingMethod() const {
+  if (ui_->wineNoneRadioButton->isChecked()) {
+    ORBIT_CHECK(!ui_->wineStopRadioButton->isChecked() && !ui_->wineRecordRadioButton->isChecked());
+    return WineSyscallHandlingMethod::kNoSpecialHandling;
+  }
+  if (ui_->wineStopRadioButton->isChecked()) {
+    ORBIT_CHECK(!ui_->wineNoneRadioButton->isChecked() && !ui_->wineRecordRadioButton->isChecked());
+    return WineSyscallHandlingMethod::kStopUnwinding;
+  }
+  if (ui_->wineRecordRadioButton->isChecked()) {
+    ORBIT_CHECK(!ui_->wineNoneRadioButton->isChecked() && !ui_->wineStopRadioButton->isChecked());
+    return WineSyscallHandlingMethod::kRecordUserStack;
   }
   ORBIT_UNREACHABLE();
 }

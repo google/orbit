@@ -226,6 +226,7 @@ class OrbitMainWindow final : public QMainWindow, public orbit_gl::MainWindowInt
   static const QString kMaxLocalMarkerDepthPerCommandBufferSettingsKey;
   static const QString kMainWindowGeometrySettingKey;
   static const QString kMainWindowStateSettingKey;
+  static const QString kWineSyscallHandlingMethodSettingKey;
 
   void LoadCaptureOptionsIntoApp();
 
