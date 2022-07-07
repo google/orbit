@@ -18,6 +18,8 @@ struct ClientCaptureOptions {
   uint32_t process_id = 0;
 
   absl::flat_hash_map<uint64_t, orbit_client_data::FunctionInfo> selected_functions;
+  absl::flat_hash_map<uint64_t, orbit_client_data::FunctionInfo>
+      functions_to_record_additional_stack_on;
   orbit_client_data::TracepointInfoSet selected_tracepoints;
   std::map<uint64_t, uint64_t> absolute_address_to_size_of_functions_to_stop_unwinding_at;
 

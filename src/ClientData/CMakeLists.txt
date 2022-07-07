@@ -46,7 +46,8 @@ target_sources(ClientData PUBLIC
         include/ClientData/TracepointData.h
         include/ClientData/TracepointEventInfo.h
         include/ClientData/TracepointInfo.h
-        include/ClientData/UserDefinedCaptureData.h)
+        include/ClientData/UserDefinedCaptureData.h
+        include/ClientData/WineSyscallHandlingMethod.h)
 
 target_sources(ClientData PRIVATE
         CallstackData.cpp

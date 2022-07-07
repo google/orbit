@@ -95,6 +95,11 @@ TEST(DataManager, CanOnlyBeUsedFromTheMainThread) {
                                             &DataManager::set_memory_warning_threshold_kb, 0);
   CallMethodOnDifferentThreadAndExpectDeath(data_manager,
                                             &DataManager::memory_warning_threshold_kb);
+  CallMethodOnDifferentThreadAndExpectDeath(data_manager,
+                                            &DataManager::set_wine_syscall_handling_method,
+                                            WineSyscallHandlingMethod::kNoSpecialHandling);
+  CallMethodOnDifferentThreadAndExpectDeath(data_manager,
+                                            &DataManager::wine_syscall_handling_method);
 }
 
 }  // namespace orbit_client_data

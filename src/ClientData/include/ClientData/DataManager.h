@@ -19,6 +19,7 @@
 #include "ClientData/ThreadStateSliceInfo.h"
 #include "ClientData/TracepointCustom.h"
 #include "ClientData/UserDefinedCaptureData.h"
+#include "ClientData/WineSyscallHandlingMethod.h"
 #include "ClientProtos/capture_data.pb.h"
 #include "GrpcProtos/capture.pb.h"
 #include "GrpcProtos/tracepoint.pb.h"
@@ -96,6 +97,9 @@ class DataManager final {
   void set_unwinding_method(orbit_grpc_protos::CaptureOptions::UnwindingMethod method);
   [[nodiscard]] orbit_grpc_protos::CaptureOptions::UnwindingMethod unwinding_method() const;
 
+  void set_wine_syscall_handling_method(WineSyscallHandlingMethod method);
+  [[nodiscard]] WineSyscallHandlingMethod wine_syscall_handling_method() const;
+
   void set_max_local_marker_depth_per_command_buffer(
       uint64_t max_local_marker_depth_per_command_buffer);
   [[nodiscard]] uint64_t max_local_marker_depth_per_command_buffer() const;
@@ -132,6 +136,7 @@ class DataManager final {
   bool enable_api_ = false;
   bool enable_introspection_ = false;
   orbit_grpc_protos::CaptureOptions::DynamicInstrumentationMethod dynamic_instrumentation_method_{};
+  WineSyscallHandlingMethod wine_syscall_handling_method_{};
   uint64_t max_local_marker_depth_per_command_buffer_ = std::numeric_limits<uint64_t>::max();
   double samples_per_second_ = 0;
   uint16_t stack_dump_size_ = 0;

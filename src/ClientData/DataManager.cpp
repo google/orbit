@@ -215,6 +215,16 @@ DataManager::dynamic_instrumentation_method() const {
   return dynamic_instrumentation_method_;
 }
 
+void DataManager::set_wine_syscall_handling_method(WineSyscallHandlingMethod method) {
+  ORBIT_CHECK(std::this_thread::get_id() == main_thread_id_);
+  wine_syscall_handling_method_ = method;
+}
+
+WineSyscallHandlingMethod DataManager::wine_syscall_handling_method() const {
+  ORBIT_CHECK(std::this_thread::get_id() == main_thread_id_);
+  return wine_syscall_handling_method_;
+}
+
 void DataManager::set_samples_per_second(double samples_per_second) {
   ORBIT_CHECK(std::this_thread::get_id() == main_thread_id_);
   samples_per_second_ = samples_per_second;

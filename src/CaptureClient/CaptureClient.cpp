@@ -125,6 +125,17 @@ std::vector<ApiFunction> FindApiFunctions(const orbit_client_data::ModuleManager
     instrumented_function->set_record_return_value(options.record_return_values);
   }
 
+  for (const auto& [function_id, function] : options.functions_to_record_additional_stack_on) {
+    orbit_grpc_protos::FunctionToRecordAdditionalStackOn* function_to_record_stack_on =
+        capture_options.add_functions_to_record_additional_stack_on();
+
+    function_to_record_stack_on->set_file_path(function.module_path());
+    const ModuleData* module = module_manager.GetModuleByPathAndBuildId(function.module_path(),
+                                                                        function.module_build_id());
+    ORBIT_CHECK(module != nullptr);
+    function_to_record_stack_on->set_file_offset(function.FileOffset(module->load_bias()));
+  }
+
   for (const auto& tracepoint : options.selected_tracepoints) {
     TracepointInfo* instrumented_tracepoint = capture_options.add_instrumented_tracepoint();
     instrumented_tracepoint->set_category(tracepoint.category());
