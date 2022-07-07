@@ -246,7 +246,7 @@ void PrimitiveAssembler::AddCircle(const Vec2& position, float radius, float z,
 }
 
 void PrimitiveAssembler::AddVerticalArrow(Vec2 starting_pos, Vec2 arrow_body_size,
-                                          Vec2 arrow_head_size, float z, const Color& color,
+                                          Vec2 arrow_head_size, float z, const Color& arrow_color,
                                           ArrowDirection arrow_direction) {
   float body_head_meeting_y =
       starting_pos[1] +
@@ -262,7 +262,7 @@ void PrimitiveAssembler::AddVerticalArrow(Vec2 starting_pos, Vec2 arrow_body_siz
       Vec2(starting_pos[0] - head_half_width, body_head_meeting_y),
       Vec2(starting_pos[0] + head_half_width, body_head_meeting_y),
   };
-  AddTriangle(arrow_head, z, color);
+  AddTriangle(arrow_head, z, arrow_color);
 
   float arrow_body_min_y = std::min(starting_pos[1], body_head_meeting_y);
   float arrow_body_max_y = std::max(starting_pos[1], body_head_meeting_y);
@@ -275,7 +275,7 @@ void PrimitiveAssembler::AddVerticalArrow(Vec2 starting_pos, Vec2 arrow_body_siz
       Vec2(starting_pos[0] + body_half_width, arrow_body_max_y),
   };
   Quad arrow_body(box_vertices);
-  AddBox(arrow_body, z, color);
+  AddBox(arrow_body, z, arrow_color);
 }
 
 void PrimitiveAssembler::AddQuadBorder(const Quad& quad, float z, const Color& color,
@@ -287,6 +287,13 @@ void PrimitiveAssembler::AddQuadBorder(const Quad& quad, float z, const Color& c
   AddLine(quad.vertices[2], quad.vertices[3], z, color,
           std::make_unique<PickingUserData>(*user_data));
   AddLine(quad.vertices[3], quad.vertices[0], z, color, std::move(user_data));
+}
+
+void PrimitiveAssembler::AddQuadBorder(const Quad& quad, float z, const Color& color) {
+  AddLine(quad.vertices[0], quad.vertices[1], z, color);
+  AddLine(quad.vertices[1], quad.vertices[2], z, color);
+  AddLine(quad.vertices[2], quad.vertices[3], z, color);
+  AddLine(quad.vertices[3], quad.vertices[0], z, color);
 }
 
 void PrimitiveAssembler::GetBoxGradientColors(const Color& color, std::array<Color, 4>* colors,
