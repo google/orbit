@@ -188,10 +188,10 @@ TEST_F(SamplingWithFrameTrackInputWidgetTest, OnStartMsChangedIsCorrect) {
   ExpectRelativeStartNsIs(0);
 
   start_ms_->setText("123");
-  ExpectRelativeStartNsIs(123000);
+  ExpectRelativeStartNsIs(123'000'000);
 
   start_ms_->setText("0123");
-  ExpectRelativeStartNsIs(123000);
+  ExpectRelativeStartNsIs(123'000'000);
 
   start_ms_->setText("99999999999999999999999999");
   ExpectRelativeStartNsIs(static_cast<uint64_t>(std::numeric_limits<uint64_t>::max()));
