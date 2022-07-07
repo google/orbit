@@ -105,9 +105,10 @@ TracerImpl::TracerImpl(
         instrumented_function.record_arguments(), instrumented_function.record_return_value());
   }
 
-  functions_to_record_stack_on_.insert(functions_to_record_stack_on_.end(),
-                                       capture_options.functions_to_record_stack_on().begin(),
-                                       capture_options.functions_to_record_stack_on().end());
+  functions_to_record_additional_stack_on_.insert(
+      functions_to_record_additional_stack_on_.end(),
+      capture_options.functions_to_record_additional_stack_on().begin(),
+      capture_options.functions_to_record_additional_stack_on().end());
 
   for (const orbit_grpc_protos::FunctionToStopUnwindingAt& function_to_stop_unwinding_at :
        capture_options.functions_to_stop_unwinding_at()) {
@@ -187,9 +188,7 @@ static void OpenRingBuffersOrRedirectOnExisting(
     std::string_view buffer_name_prefix) {
   ORBIT_SCOPE_FUNCTION;
   // Redirect all events on the same cpu to a single ring buffer.
-  for (const auto& cpu_and_fd : fds_per_cpu) {
-    int32_t cpu = cpu_and_fd.first;
-    int fd = cpu_and_fd.second;
+  for (const auto& [cpu, fd] : fds_per_cpu) {
     if (ring_buffer_fds_per_cpu->contains(cpu)) {
       // Redirect to the already opened ring buffer.
       int ring_bugger_fd = ring_buffer_fds_per_cpu->at(cpu);
@@ -333,18 +332,18 @@ bool TracerImpl::OpenUserSpaceProbes(const std::vector<int32_t>& cpus) {
   return !uprobes_event_open_errors;
 }
 
-bool TracerImpl::OpenUprobesToRecordStackOn(
-    const orbit_grpc_protos::FunctionToRecordStackOn& function, const std::vector<int32_t>& cpus,
-    absl::flat_hash_map<int32_t, int>* fds_per_cpu) {
+bool TracerImpl::OpenUprobesWithStack(
+    const orbit_grpc_protos::FunctionToRecordAdditionalStackOn& function,
+    const std::vector<int32_t>& cpus, absl::flat_hash_map<int32_t, int>* fds_per_cpu) {
   ORBIT_SCOPE_FUNCTION;
   const char* module = function.file_path().c_str();
   const uint64_t offset = function.file_offset();
   for (int32_t cpu : cpus) {
-    int fd;
-    fd = uprobes_with_stack_and_sp_event_open(module, offset, /*pid=*/-1, cpu, stack_dump_size_);
+    int fd =
+        uprobes_with_stack_and_sp_event_open(module, offset, /*pid=*/-1, cpu, stack_dump_size_);
     if (fd < 0) {
-      ORBIT_ERROR("Opening uprobe %s+%#x on cpu %d", function.file_path(), function.file_offset(),
-                  cpu);
+      ORBIT_ERROR("Opening uprobe %s+%#x with stack on cpu %d", function.file_path(),
+                  function.file_offset(), cpu);
       return false;
     }
     (*fds_per_cpu)[cpu] = fd;
@@ -352,14 +351,14 @@ bool TracerImpl::OpenUprobesToRecordStackOn(
   return true;
 }
 
-bool TracerImpl::OpenFunctionsToRecordStack(const std::vector<int32_t>& cpus) {
+bool TracerImpl::OpenUprobesToRecordAdditionalStackOn(const std::vector<int32_t>& cpus) {
   ORBIT_SCOPE_FUNCTION;
   bool uprobes_event_open_errors = false;
   absl::flat_hash_map<int32_t, int> fds_per_cpu_for_redirection{};
 
-  for (const auto& function : functions_to_record_stack_on_) {
+  for (const auto& function : functions_to_record_additional_stack_on_) {
     absl::flat_hash_map<int32_t, int> uprobes_fds_per_cpu;
-    bool success = OpenUprobesToRecordStackOn(function, cpus, &uprobes_fds_per_cpu);
+    bool success = OpenUprobesWithStack(function, cpus, &uprobes_fds_per_cpu);
     if (!success) {
       CloseFileDescriptors(uprobes_fds_per_cpu);
       uprobes_event_open_errors = true;
@@ -368,12 +367,12 @@ bool TracerImpl::OpenFunctionsToRecordStack(const std::vector<int32_t>& cpus) {
 
     for (const auto [cpu, fd] : uprobes_fds_per_cpu) {
       uint64_t stream_id = perf_event_get_id(fd);
-      uprobes_of_functions_to_record_stack_ids_.insert(stream_id);
+      uprobes_with_stack_ids_.insert(stream_id);
       tracing_fds_.push_back(fd);
     }
-    OpenRingBuffersOrRedirectOnExisting(
-        uprobes_fds_per_cpu, &fds_per_cpu_for_redirection, &ring_buffers_,
-        FUNCTIONS_TO_RECORD_STACK_ON_RING_BUFFER_SIZE_KB, "functions_to_record_stack_on");
+    OpenRingBuffersOrRedirectOnExisting(uprobes_fds_per_cpu, &fds_per_cpu_for_redirection,
+                                        &ring_buffers_, UPROBES_WITH_STACK_RING_BUFFER_SIZE_KB,
+                                        "uprobes_with_stack");
   }
 
   return !uprobes_event_open_errors;
@@ -707,9 +706,9 @@ void TracerImpl::Startup() {
       perf_event_open_errors = true;
     }
   }
-  if (!functions_to_record_stack_on_.empty()) {
-    if (bool opened = OpenFunctionsToRecordStack(cpuset_cpus); !opened) {
-      perf_event_open_error_details.emplace_back("functions to record stack on");
+  if (!functions_to_record_additional_stack_on_.empty()) {
+    if (bool opened = OpenUprobesToRecordAdditionalStackOn(cpuset_cpus); !opened) {
+      perf_event_open_error_details.emplace_back("uprobes to record additional stack on");
       perf_event_open_errors = true;
     }
   }
@@ -1028,7 +1027,7 @@ uint64_t TracerImpl::ProcessSampleEventAndReturnTimestamp(const perf_event_heade
   uint64_t stream_id = ReadSampleRecordStreamId(ring_buffer);
   bool is_uprobe = uprobes_ids_.contains(stream_id);
   bool is_uprobe_with_args = uprobes_with_args_ids_.contains(stream_id);
-  bool is_uprobe_with_stack = uprobes_of_functions_to_record_stack_ids_.contains(stream_id);
+  bool is_uprobe_with_stack = uprobes_with_stack_ids_.contains(stream_id);
   bool is_uretprobe = uretprobes_ids_.contains(stream_id);
   bool is_uretprobe_with_retval = uretprobes_with_retval_ids_.contains(stream_id);
   bool is_stack_sample = stack_sampling_ids_.contains(stream_id);
@@ -1082,7 +1081,7 @@ uint64_t TracerImpl::ProcessSampleEventAndReturnTimestamp(const perf_event_heade
   } else if (is_uprobe_with_stack) {
     pid_t pid = ReadSampleRecordPid(ring_buffer);
     const size_t size_of_uprobe_sample = sizeof(perf_event_sp_stack_user_sample_fixed) +
-                                         2 * sizeof(uint64_t) /*size and size*/ +
+                                         2 * sizeof(uint64_t) /*size and dyn_size*/ +
                                          stack_dump_size_ /*data*/;
     if (header.size != size_of_uprobe_sample) {
       ring_buffer->SkipRecord(header);
@@ -1095,7 +1094,7 @@ uint64_t TracerImpl::ProcessSampleEventAndReturnTimestamp(const perf_event_heade
 
     UprobesWithStackPerfEvent event = ConsumeUprobeWithStackPerfEvent(ring_buffer, header);
     DeferEvent(std::move(event));
-    ++stats_.uprobes_count;
+    ++stats_.uprobes_with_stack_count;
   } else if (is_uprobe_with_args) {
     ORBIT_CHECK(header.size == sizeof(perf_event_sp_ip_arguments_8bytes_sample));
     perf_event_sp_ip_arguments_8bytes_sample ring_buffer_record;
@@ -1497,6 +1496,8 @@ void TracerImpl::PrintStatsIfTimerElapsed() {
   ORBIT_LOG("  samples: %.0f/s (%lu)", stats_.sample_count / actual_window_s, stats_.sample_count);
   ORBIT_LOG("  u(ret)probes: %.0f/s (%lu)", stats_.uprobes_count / actual_window_s,
             stats_.uprobes_count);
+  ORBIT_LOG("  uprobes with stack: %.0f/s (%lu)", stats_.uprobes_with_stack_count / actual_window_s,
+            stats_.uprobes_with_stack_count);
   ORBIT_LOG("  gpu events: %.0f/s (%lu)", stats_.gpu_events_count / actual_window_s,
             stats_.gpu_events_count);
 

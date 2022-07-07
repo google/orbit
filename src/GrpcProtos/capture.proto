@@ -44,7 +44,7 @@ message FunctionToStopUnwindingAt {
   uint64 size = 2;
 }
 
-message FunctionToRecordStackOn {
+message FunctionToRecordAdditionalStackOn {
   string file_path = 1;
   uint64 file_offset = 2;
 }
@@ -75,10 +75,12 @@ message CaptureOptions {
 
   repeated InstrumentedFunction instrumented_functions = 5;
   repeated FunctionToStopUnwindingAt functions_to_stop_unwinding_at = 19;
-  // Those are functions that get instrumented for the sake of recording
-  // additional stack data to complement unwinding of stack samples operating
-  // on a different stack.
-  repeated FunctionToRecordStackOn functions_to_record_stack_on = 20;
+  // These are functions that we expect to change the stack on which the callees
+  // will operate. We instrument such functions in order to record the stack
+  // before the stack switch. This way, we can unwind past them in callstacks
+  // that contain them.
+  repeated FunctionToRecordAdditionalStackOn
+      functions_to_record_additional_stack_on = 20;
 
   bool trace_thread_state = 8;
 
