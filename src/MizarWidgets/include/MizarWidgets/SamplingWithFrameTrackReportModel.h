@@ -15,6 +15,7 @@
 #include <vector>
 
 #include "MizarData/SamplingWithFrameTrackComparisonReport.h"
+#include "OrbitBase/Logging.h"
 #include "OrbitBase/Typedef.h"
 
 namespace orbit_mizar_widgets {
@@ -99,6 +100,8 @@ class SamplingWithFrameTrackReportModelTmpl : public QAbstractTableModel {
       case Column::kIsSignificant:
       case Column::kSlowdownPerFrame:
         return "Not Yet";
+      default:
+        ORBIT_UNREACHABLE();
     }
   }
   [[nodiscard]] Baseline<double> BaselineExclusiveRate(SFID sfid) const {
