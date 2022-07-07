@@ -1495,7 +1495,8 @@ void OrbitApp::StartCapture() {
   // auto-symbol loading.
   absl::flat_hash_map<uint64_t, FunctionInfo> functions_to_record_stack_on;
   if (wine_syscall_handling_method ==
-      orbit_client_data::WineSyscallHandlingMethod::RecordUserStack) {
+          orbit_client_data::WineSyscallHandlingMethod::RecordUserStack &&
+      data_manager_->unwinding_method() == CaptureOptions::kDwarf) {
     for (const auto& module_data : module_manager_->GetModulesByFilename(kNtdllSoFileName)) {
       const FunctionInfo* function_to_record_stack =
           module_data->FindFunctionFromPrettyName(kWineSyscallDispatcherFunctionName);
@@ -1515,7 +1516,8 @@ void OrbitApp::StartCapture() {
   // Note: This requires symbols being loaded. We prioritize loading of the `ntdll.so` and rely on
   // auto-symbol loading.
   std::map<uint64_t, uint64_t> absolute_address_to_size_of_functions_to_stop_unwinding_at;
-  if (wine_syscall_handling_method == orbit_client_data::WineSyscallHandlingMethod::StopUnwinding) {
+  if (wine_syscall_handling_method == orbit_client_data::WineSyscallHandlingMethod::StopUnwinding &&
+      data_manager_->unwinding_method() == CaptureOptions::kDwarf) {
     FindAndAddFunctionToStopUnwindingAt(
         kWineSyscallDispatcherFunctionName, kNtdllSoFileName, *module_manager_, *process_,
         &absolute_address_to_size_of_functions_to_stop_unwinding_at);
@@ -1836,7 +1838,7 @@ orbit_base::Future<void> OrbitApp::LoadSymbolsManually(
 
     // Explicitely do not handle the result.
     Future<void> future = RetrieveModuleAndLoadSymbolsAndHandleError(module).Then(
-        &immediate_executor, [](const SymbolLoadingAndErrorHandlingResult & /*result*/) -> void {});
+        &immediate_executor, [](const SymbolLoadingAndErrorHandlingResult& /*result*/) -> void {});
     futures.emplace_back(std::move(future));
   }
   orbit_client_symbols::QSettingsBasedStorageManager storage_manager;
