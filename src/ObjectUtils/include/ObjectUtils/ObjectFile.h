@@ -50,9 +50,6 @@ class ObjectFile : public SymbolsFile {
   // in the file, while for COFF there is generally a difference.
   [[nodiscard]] virtual uint64_t GetExecutableSegmentOffset() const = 0;
 
-  // This is the size of the text segment *when loaded into memory*.
-  [[nodiscard]] virtual uint64_t GetExecutableSegmentSize() const = 0;
-
   // Size of the whole object *when loaded into memory*. This reflects SizeOfImage of PEs, and is
   // supposed to (approximately--alignment can apply) represent the size of the address range
   // between the address at which the first byte of the object is mapped and the address at which
