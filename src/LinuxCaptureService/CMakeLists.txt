@@ -16,6 +16,8 @@ target_sources(LinuxCaptureService PUBLIC
         include/LinuxCaptureService/LinuxCaptureServiceBase.h)
 
 target_sources(LinuxCaptureService PRIVATE
+        ExtractSignalFromMinidump.cpp
+        ExtractSignalFromMinidump.h
         LinuxCaptureService.cpp
         LinuxCaptureServiceBase.cpp
         MemoryInfoHandler.cpp
@@ -42,11 +44,13 @@ target_link_libraries(LinuxCaptureService PUBLIC
 add_executable(LinuxCaptureServiceTests)
 
 target_sources(LinuxCaptureServiceTests PRIVATE
+        ExtractSignalFromMinidumpTest.cpp
         MemoryWatchdogTest.cpp
         UserSpaceInstrumentationAddressesImplTest.cpp)
 
 target_link_libraries(LinuxCaptureServiceTests PRIVATE
         LinuxCaptureService
-        GTest::Main)
+        GTest::Main
+        TestUtils)
 
 register_test(LinuxCaptureServiceTests)
