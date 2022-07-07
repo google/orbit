@@ -400,8 +400,9 @@ void TrackContainer::DrawThreadDependencyArrow(PrimitiveAssembler& primitive_ass
   }
 
   const Color kArrowColor(255, 255, 255, 255);
-  const float start_arrow_thread_state_half_height = end_arrow_track->GetThreadStateBarHeight() / 2;
-  const float end_arrow_thread_state_half_height = start_arrow_track->GetThreadStateBarHeight() / 2;
+  const float start_arrow_thread_state_half_height =
+      start_arrow_track->GetThreadStateBarHeight() / 2;
+  const float end_arrow_thread_state_half_height = end_arrow_track->GetThreadStateBarHeight() / 2;
   float x = timeline_info_->GetWorldFromTick(thread_state_slice->begin_timestamp_ns());
   float start_arrow_y =
       start_arrow_track->GetThreadStateBarPos()[1] + start_arrow_thread_state_half_height;
