@@ -1472,7 +1472,7 @@ void OrbitApp::StartCapture() {
 
   absl::flat_hash_map<uint64_t, FunctionInfo> selected_functions_map;
   absl::flat_hash_set<uint64_t> frame_track_function_ids;
-  bool record_user_stack_on_wine_syscall_dispatcher = false;
+
   // non-zero since 0 is reserved for invalid ids.
   uint64_t function_id = 1;
   for (const auto& function : selected_functions) {
@@ -1482,16 +1482,40 @@ void OrbitApp::StartCapture() {
     selected_functions_map.insert_or_assign(function_id++, function);
   }
 
+  orbit_client_data::WineSyscallHandlingMethod wine_syscall_handling_method =
+      data_manager_->wine_syscall_handling_method();
+
   // With newer Wine/Proton versions, unwinding will fail after `__wine_syscall_dispatcher`
-  // (see go/unwinding_wine_syscall_dispatcher). Unless we mitigate this situation somehow
-  // differently, we at least want to report "complete" callstacks for the "Windows kernel" part
-  // (until `__wine_syscall_dispatcher`). To do so, we look for the absolute address of this
-  // function and send it to the service as a function to stop unwinding at. The unwinder will
-  // stop on those functions and report the callstacks as "complete".
+  // (see go/unwinding_wine_syscall_dispatcher). The main reason for failing is, that the "syscall"
+  // implementation of Wine operates on a different stack that the "Windows user-space" stack. Our
+  // unwinder will only have offline memory for the syscall stack. We can mitigate this by
+  // collecting the stack data on every call to `__wine_syscall_dispatcher` and keeping the most
+  // recent stack copy per thread in memory for unwinding.
+  // Note: This requires symbols being loaded. We prioritize loading of the `ntdll.so` and rely on
+  // auto-symbol loading.
+  absl::flat_hash_map<uint64_t, FunctionInfo> functions_to_record_stack_on;
+  if (wine_syscall_handling_method ==
+      orbit_client_data::WineSyscallHandlingMethod::RecordUserStack) {
+    for (const auto& module_data : module_manager_->GetModulesByFilename(kNtdllSoFileName)) {
+      const FunctionInfo* function_to_record_stack =
+          module_data->FindFunctionFromPrettyName(kWineSyscallDispatcherFunctionName);
+      if (function_to_record_stack == nullptr) {
+        continue;
+      }
+      functions_to_record_stack_on.insert_or_assign(function_id++, *function_to_record_stack);
+    }
+  }
+
+  // With newer Wine/Proton versions, unwinding will fail after `__wine_syscall_dispatcher`
+  // (see go/unwinding_wine_syscall_dispatcher). Unless we mitigate this situation as above, we at
+  // least want to report "complete" callstacks for the "Windows kernel" part (until
+  // `__wine_syscall_dispatcher`). To do so, we look for the absolute address of this function and
+  // send it to the service as a function to stop unwinding at. The unwinder will stop on those
+  // functions and report the callstacks as "complete".
   // Note: This requires symbols being loaded. We prioritize loading of the `ntdll.so` and rely on
   // auto-symbol loading.
   std::map<uint64_t, uint64_t> absolute_address_to_size_of_functions_to_stop_unwinding_at;
-  if (!record_user_stack_on_wine_syscall_dispatcher) {
+  if (wine_syscall_handling_method == orbit_client_data::WineSyscallHandlingMethod::StopUnwinding) {
     FindAndAddFunctionToStopUnwindingAt(
         kWineSyscallDispatcherFunctionName, kNtdllSoFileName, *module_manager_, *process_,
         &absolute_address_to_size_of_functions_to_stop_unwinding_at);
@@ -1514,6 +1538,7 @@ void OrbitApp::StartCapture() {
   options.collect_memory_info = data_manager_->collect_memory_info();
   options.memory_sampling_period_ms = data_manager_->memory_sampling_period_ms();
   options.selected_functions = std::move(selected_functions_map);
+  options.functions_to_record_stack_on = std::move(functions_to_record_stack_on);
   options.absolute_address_to_size_of_functions_to_stop_unwinding_at =
       std::move(absolute_address_to_size_of_functions_to_stop_unwinding_at);
   options.process_id = process->pid();
@@ -2567,6 +2592,10 @@ void OrbitApp::SetEnableIntrospection(bool enable_introspection) {
 
 void OrbitApp::SetDynamicInstrumentationMethod(DynamicInstrumentationMethod method) {
   data_manager_->set_dynamic_instrumentation_method(method);
+}
+
+void OrbitApp::SetWineSyscallHandlingMethod(orbit_client_data::WineSyscallHandlingMethod method) {
+  data_manager_->set_wine_syscall_handling_method(method);
 }
 
 void OrbitApp::SetSamplesPerSecond(double samples_per_second) {

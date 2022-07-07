@@ -44,6 +44,7 @@
 #include "ClientData/ProcessData.h"
 #include "ClientData/TracepointCustom.h"
 #include "ClientData/UserDefinedCaptureData.h"
+#include "ClientData/WineSyscallHandlingMethod.h"
 #include "ClientProtos/capture_data.pb.h"
 #include "ClientProtos/preset.pb.h"
 #include "ClientServices/CrashManager.h"
@@ -426,6 +427,7 @@ class OrbitApp final : public DataViewFactory,
   void SetEnableIntrospection(bool enable_introspection);
   void SetDynamicInstrumentationMethod(
       orbit_grpc_protos::CaptureOptions::DynamicInstrumentationMethod method);
+  void SetWineSyscallHandlingMethod(orbit_client_data::WineSyscallHandlingMethod method);
   void SetSamplesPerSecond(double samples_per_second);
   void SetStackDumpSize(uint16_t stack_dump_size);
   void SetUnwindingMethod(orbit_grpc_protos::CaptureOptions::UnwindingMethod unwinding_method);
