@@ -75,6 +75,9 @@ message CaptureOptions {
 
   repeated InstrumentedFunction instrumented_functions = 5;
   repeated FunctionToStopUnwindingAt functions_to_stop_unwinding_at = 19;
+  // Those are functions that get instrumented for the sake of recording
+  // additional stack data to complement unwinding of stack samples operating
+  // on a different stack.
   repeated FunctionToRecordStackOn functions_to_record_stack_on = 20;
 
   bool trace_thread_state = 8;
