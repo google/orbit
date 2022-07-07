@@ -91,6 +91,17 @@ const FunctionInfo* FindFunctionByModulePathBuildIdAndOffset(const ModuleManager
   return module_data->FindFunctionByElfAddress(address, /*is_exact=*/true);
 }
 
+const FunctionInfo* FindFunctionByModulePathBuildIdAndVirtualAddress(
+    const ModuleManager& module_manager, const std::string& module_path,
+    const std::string& build_id, uint64_t virtual_address) {
+  const ModuleData* module_data = module_manager.GetModuleByPathAndBuildId(module_path, build_id);
+  if (module_data == nullptr) {
+    return nullptr;
+  }
+
+  return module_data->FindFunctionByElfAddress(virtual_address, /*is_exact=*/true);
+}
+
 const std::string& GetModulePathByAddress(const ModuleManager& module_manager,
                                           const CaptureData& capture_data,
                                           uint64_t absolute_address) {

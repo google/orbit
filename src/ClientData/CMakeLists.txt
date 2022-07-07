@@ -88,6 +88,7 @@ target_sources(ClientDataTests PRIVATE
         DataManagerTest.cpp
         ScopeIdProviderTest.cpp
         FunctionInfoTest.cpp
+        ModuleAndFunctionLookupTest.cpp
         ModuleDataTest.cpp
         ModuleManagerTest.cpp
         ProcessDataTest.cpp
