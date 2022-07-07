@@ -373,8 +373,6 @@ ErrorMessageOr<ModuleSymbols> ElfFileImpl<ElfT>::LoadDebugSymbols() {
   }
 
   ModuleSymbols module_symbols;
-  module_symbols.set_load_bias(load_bias_);
-  module_symbols.set_symbols_file_path(file_path_.string());
 
   for (const llvm::object::ELFSymbolRef& symbol_ref : object_file_->symbols()) {
     auto symbol_or_error = CreateSymbolInfo(symbol_ref);
@@ -398,8 +396,6 @@ ErrorMessageOr<ModuleSymbols> ElfFileImpl<ElfT>::LoadSymbolsFromDynsym() {
   }
 
   ModuleSymbols module_symbols;
-  module_symbols.set_load_bias(load_bias_);
-  module_symbols.set_symbols_file_path(file_path_.string());
 
   for (const llvm::object::ELFSymbolRef& symbol_ref : object_file_->getDynamicSymbolIterators()) {
     auto symbol_or_error = CreateSymbolInfo(symbol_ref);

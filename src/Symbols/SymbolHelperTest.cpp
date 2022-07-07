@@ -307,7 +307,6 @@ TEST(SymbolHelper, LoadSymbolsFromFile) {
     ASSERT_THAT(result, HasValue());
     const ModuleSymbols& symbols = result.value();
 
-    EXPECT_EQ(symbols.symbols_file_path(), file_path);
     EXPECT_FALSE(symbols.symbol_infos().empty());
   }
 
@@ -320,7 +319,6 @@ TEST(SymbolHelper, LoadSymbolsFromFile) {
     ASSERT_THAT(result, HasValue());
     const ModuleSymbols& symbols = result.value();
 
-    EXPECT_EQ(symbols.symbols_file_path(), file_path);
     EXPECT_FALSE(symbols.symbol_infos().empty());
   }
 

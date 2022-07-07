@@ -31,8 +31,6 @@ TEST(CoffFile, LoadDebugSymbols) {
   const auto symbols_result = coff_file->LoadDebugSymbols();
   ASSERT_THAT(symbols_result, HasNoError());
 
-  EXPECT_EQ(symbols_result.value().symbols_file_path(), file_path);
-
   std::vector<SymbolInfo> symbol_infos(symbols_result.value().symbol_infos().begin(),
                                        symbols_result.value().symbol_infos().end());
   EXPECT_EQ(symbol_infos.size(), 52);

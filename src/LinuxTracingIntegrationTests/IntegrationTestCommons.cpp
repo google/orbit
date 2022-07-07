@@ -22,6 +22,7 @@ void AddPuppetOuterAndInnerFunctionToCaptureOptions(
     uint64_t inner_function_id) {
   // Find the offset in the ELF file of the "outer" function and the "inner" function and add those
   // functions to the CaptureOptions to be instrumented.
+  const orbit_grpc_protos::ModuleInfo& module_info = GetExecutableBinaryModuleInfo(pid);
   const orbit_grpc_protos::ModuleSymbols& module_symbols = GetExecutableBinaryModuleSymbols(pid);
   const std::filesystem::path& executable_path = GetExecutableBinaryPath(pid);
 
@@ -33,7 +34,7 @@ void AddPuppetOuterAndInnerFunctionToCaptureOptions(
       outer_function_symbol_found = true;
       orbit_grpc_protos::InstrumentedFunction instrumented_function;
       instrumented_function.set_file_path(executable_path);
-      instrumented_function.set_file_offset(symbol.address() - module_symbols.load_bias());
+      instrumented_function.set_file_offset(symbol.address() - module_info.load_bias());
       instrumented_function.set_function_id(outer_function_id);
       instrumented_function.set_function_size(symbol.size());
       instrumented_function.set_function_name(symbol.demangled_name());
@@ -46,7 +47,7 @@ void AddPuppetOuterAndInnerFunctionToCaptureOptions(
       inner_function_symbol_found = true;
       orbit_grpc_protos::InstrumentedFunction instrumented_function;
       instrumented_function.set_file_path(executable_path);
-      instrumented_function.set_file_offset(symbol.address() - module_symbols.load_bias());
+      instrumented_function.set_file_offset(symbol.address() - module_info.load_bias());
       instrumented_function.set_function_id(inner_function_id);
       instrumented_function.set_function_size(symbol.size());
       instrumented_function.set_function_name(symbol.demangled_name());

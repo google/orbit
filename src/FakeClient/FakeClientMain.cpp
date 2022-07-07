@@ -225,8 +225,6 @@ void ManipulateModuleManagerToAddFunctionFromFunctionPrefixInSymtabIfExists(
   symbol_info.set_size(symbol->size());
 
   orbit_grpc_protos::ModuleSymbols module_symbols;
-  module_symbols.set_load_bias(load_bias);
-  module_symbols.set_symbols_file_path(file_path);
   module_symbols.mutable_symbol_infos()->Add(std::move(symbol_info));
 
   module_manager->GetMutableModuleByPathAndBuildId(file_path, build_id)->AddSymbols(module_symbols);

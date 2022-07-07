@@ -176,8 +176,6 @@ std::unique_ptr<CaptureData> GenerateTestCaptureData(
     symbol_info.set_size(kSizes[i]);
 
     orbit_grpc_protos::ModuleSymbols module_symbols;
-    module_symbols.set_load_bias(kLoadBiases[i]);
-    module_symbols.set_symbols_file_path(kModulePaths[i]);
     module_symbols.mutable_symbol_infos()->Add(std::move(symbol_info));
 
     orbit_client_data::ModuleData* module_data =
