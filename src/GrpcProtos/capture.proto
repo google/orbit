@@ -44,7 +44,12 @@ message FunctionToStopUnwindingAt {
   uint64 size = 2;
 }
 
-// NextId: 20
+message FunctionToRecordStackOn {
+  string file_path = 1;
+  uint64 file_offset = 2;
+}
+
+// NextId: 21
 message CaptureOptions {
   reserved 17;
 
@@ -70,6 +75,7 @@ message CaptureOptions {
 
   repeated InstrumentedFunction instrumented_functions = 5;
   repeated FunctionToStopUnwindingAt functions_to_stop_unwinding_at = 19;
+  repeated FunctionToRecordStackOn functions_to_record_stack_on = 20;
 
   bool trace_thread_state = 8;
 
