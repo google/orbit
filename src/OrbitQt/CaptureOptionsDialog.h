@@ -12,6 +12,7 @@
 #include <QWidget>
 #include <memory>
 
+#include "ClientData/WineSyscallHandlingMethod.h"
 #include "GrpcProtos/capture.pb.h"
 #include "OrbitBase/Logging.h"
 #include "ui_CaptureOptionsDialog.h"
@@ -69,6 +70,9 @@ class CaptureOptionsDialog : public QDialog {
   void SetEnableIntrospection(bool enable_introspection);
   [[nodiscard]] bool GetEnableIntrospection() const;
 
+  void SetWineSyscallHandlingMethod(orbit_client_data::WineSyscallHandlingMethod method);
+  [[nodiscard]] orbit_client_data::WineSyscallHandlingMethod GetWineSyscallHandlingMethod() const;
+
   void SetLimitLocalMarkerDepthPerCommandBuffer(bool limit_local_marker_depth_per_command_buffer);
   [[nodiscard]] bool GetLimitLocalMarkerDepthPerCommandBuffer() const;
   void SetMaxLocalMarkerDepthPerCommandBuffer(uint64_t local_marker_depth_per_command_buffer);
@@ -89,6 +93,9 @@ class CaptureOptionsDialog : public QDialog {
   static constexpr orbit_grpc_protos::CaptureOptions::DynamicInstrumentationMethod
       kDynamicInstrumentationMethodDefaultValue = orbit_grpc_protos::CaptureOptions::kKernelUprobes;
   static constexpr uint64_t kLocalMarkerDepthDefaultValue = 0;
+  static constexpr orbit_client_data::WineSyscallHandlingMethod
+      kWineSyscallHandlingMethodDefaultValue =
+          orbit_client_data::WineSyscallHandlingMethod::kStopUnwinding;
 
   // Max to pass to perf_event_open without getting an error is (1u << 16u) - 8,
   // because the kernel stores this in a short and because of alignment reasons.

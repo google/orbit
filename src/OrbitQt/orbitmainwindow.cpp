@@ -151,6 +151,8 @@ using DynamicInstrumentationMethod =
     orbit_grpc_protos::CaptureOptions::DynamicInstrumentationMethod;
 using UnwindingMethod = orbit_grpc_protos::CaptureOptions::UnwindingMethod;
 
+using orbit_client_data::WineSyscallHandlingMethod;
+
 using orbit_metrics_uploader::OrbitLogEvent;
 using orbit_metrics_uploader::ScopedMetric;
 
@@ -1097,6 +1099,8 @@ const QString OrbitMainWindow::kMaxLocalMarkerDepthPerCommandBufferSettingsKey{
     "MaxLocalMarkerDepthPerCommandBuffer"};
 const QString OrbitMainWindow::kMainWindowGeometrySettingKey{"MainWindowGeometry"};
 const QString OrbitMainWindow::kMainWindowStateSettingKey{"MainWindowState"};
+const QString OrbitMainWindow::kWineSyscallHandlingMethodSettingKey{
+    "WineSyscallHandlingMethodSetting"};
 
 void OrbitMainWindow::LoadCaptureOptionsIntoApp() {
   QSettings settings;
@@ -1161,6 +1165,14 @@ void OrbitMainWindow::LoadCaptureOptionsIntoApp() {
         orbit_qt::CaptureOptionsDialog::kDynamicInstrumentationMethodDefaultValue;
   }
   app_->SetDynamicInstrumentationMethod(instrumentation_method);
+
+  WineSyscallHandlingMethod wine_syscall_handling_method = static_cast<WineSyscallHandlingMethod>(
+      settings
+          .value(kWineSyscallHandlingMethodSettingKey,
+                 static_cast<int>(
+                     orbit_qt::CaptureOptionsDialog::kWineSyscallHandlingMethodDefaultValue))
+          .toInt());
+  app_->SetWineSyscallHandlingMethod(wine_syscall_handling_method);
 
   bool collect_memory_info = settings.value(kCollectMemoryInfoSettingKey, false).toBool();
   app_->SetCollectMemoryInfo(collect_memory_info);
@@ -1237,6 +1249,20 @@ void OrbitMainWindow::on_actionCaptureOptions_triggered() {
         orbit_qt::CaptureOptionsDialog::kDynamicInstrumentationMethodDefaultValue;
   }
   dialog.SetDynamicInstrumentationMethod(instrumentation_method);
+
+  WineSyscallHandlingMethod wine_syscall_handling_method = static_cast<WineSyscallHandlingMethod>(
+      settings
+          .value(kWineSyscallHandlingMethodSettingKey,
+                 static_cast<int>(
+                     orbit_qt::CaptureOptionsDialog::kWineSyscallHandlingMethodDefaultValue))
+          .toInt());
+  if (!app_->IsDevMode() && wine_syscall_handling_method ==
+                                orbit_client_data::WineSyscallHandlingMethod::kNoSpecialHandling) {
+    wine_syscall_handling_method =
+        orbit_qt::CaptureOptionsDialog::kWineSyscallHandlingMethodDefaultValue;
+  }
+  dialog.SetWineSyscallHandlingMethod(wine_syscall_handling_method);
+
   dialog.SetCollectMemoryInfo(settings.value(kCollectMemoryInfoSettingKey, false).toBool());
   dialog.SetMemorySamplingPeriodMs(
       settings
@@ -1276,6 +1302,8 @@ void OrbitMainWindow::on_actionCaptureOptions_triggered() {
   settings.setValue(kEnableIntrospectionSettingKey, dialog.GetEnableIntrospection());
   settings.setValue(kDynamicInstrumentationMethodSettingKey,
                     static_cast<int>(dialog.GetDynamicInstrumentationMethod()));
+  settings.setValue(kWineSyscallHandlingMethodSettingKey,
+                    static_cast<int>(dialog.GetWineSyscallHandlingMethod()));
   settings.setValue(kCollectMemoryInfoSettingKey, dialog.GetCollectMemoryInfo());
   settings.setValue(kMemorySamplingPeriodMsSettingKey,
                     QString::number(dialog.GetMemorySamplingPeriodMs()));
