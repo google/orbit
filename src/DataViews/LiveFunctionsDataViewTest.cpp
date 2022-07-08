@@ -78,13 +78,13 @@ namespace {
 
 constexpr size_t kNumFunctions = 3;
 constexpr std::array<uint64_t, kNumFunctions> kFunctionIds{11, 22, 33};
-const std::array<ScopeId, kNumFunctions> kScopeId = [] {
+const std::array<ScopeId, kNumFunctions> kScopeIds = [] {
   std::array<ScopeId, kNumFunctions> result;
   std::transform(std::begin(kFunctionIds), std::end(kFunctionIds), std::begin(result),
                  [](uint64_t scope_id) { return ScopeId(scope_id); });
   return result;
 }();
-constexpr uint64_t kNonDynamicallyInstrumentedFunctionId = 123456;
+constexpr ScopeId kNonDynamicallyInstrumentedFunctionId{123456};
 const std::array<std::string, kNumFunctions> kPrettyNames{"void foo()", "main(int, char**)",
                                                           "ffind(int)"};
 const std::array<std::string, kNumFunctions> kModulePaths{
@@ -211,7 +211,7 @@ std::unique_ptr<CaptureData> GenerateTestCaptureData(
     stats.set_min_ns(kMinNs[i]);
     stats.set_max_ns(kMaxNs[i]);
     stats.set_variance_ns(kStdDevNs[i] * kStdDevNs[i]);
-    capture_data->AddScopeStats(kFunctionIds[i], std::move(stats));
+    capture_data->AddScopeStats(kScopeIds[i], std::move(stats));
   }
 
   for (const TimerInfo* timer_info : kTimerPointers) {
@@ -239,7 +239,7 @@ class LiveFunctionsDataViewTest : public testing::Test {
     view_.Init();
     for (size_t i = 0; i < kNumFunctions; i++) {
       FunctionInfo function{kModulePaths[i], kBuildIds[i], kAddresses[i], 0, kPrettyNames[i]};
-      functions_.insert_or_assign(kFunctionIds[i], std::move(function));
+      functions_.insert_or_assign(kScopeIds[i], std::move(function));
     }
   }
 
@@ -247,7 +247,7 @@ class LiveFunctionsDataViewTest : public testing::Test {
     std::set index_set(indices.begin(), indices.end());
     for (size_t index : index_set) {
       ORBIT_CHECK(index < kNumFunctions);
-      view_.AddFunction(kFunctionIds[index], functions_.at(kFunctionIds[index]));
+      view_.AddFunction(kScopeIds[index], functions_.at(kFunctionIds[index]));
     }
   }
 
@@ -258,7 +258,7 @@ class LiveFunctionsDataViewTest : public testing::Test {
   orbit_data_views::LiveFunctionsDataView view_;
 
   orbit_client_data::ModuleManager module_manager_;
-  absl::flat_hash_map<uint64_t, FunctionInfo> functions_;
+  absl::flat_hash_map<ScopeId, FunctionInfo> functions_;
   std::unique_ptr<CaptureData> capture_data_;
 };
 
@@ -552,7 +552,7 @@ TEST_F(LiveFunctionsDataViewTest, ContextMenuActionsAreInvoked) {
 
     EXPECT_CALL(app_, JumpToTimerAndZoom)
         .Times(1)
-        .WillOnce([](uint64_t /*scope_id*/, JumpToTimerMode selection_mode) {
+        .WillOnce([](ScopeId /*scope_id*/, JumpToTimerMode selection_mode) {
           EXPECT_EQ(selection_mode, JumpToTimerMode::kFirst);
         });
     view_.OnContextMenu(std::string{kMenuActionJumpToFirst}, jump_to_first_index, {0});
@@ -565,7 +565,7 @@ TEST_F(LiveFunctionsDataViewTest, ContextMenuActionsAreInvoked) {
 
     EXPECT_CALL(app_, JumpToTimerAndZoom)
         .Times(1)
-        .WillOnce([](uint64_t /*scope_id*/, JumpToTimerMode selection_mode) {
+        .WillOnce([](ScopeId /*scope_id*/, JumpToTimerMode selection_mode) {
           EXPECT_EQ(selection_mode, JumpToTimerMode::kLast);
         });
     view_.OnContextMenu(std::string{kMenuActionJumpToLast}, jump_to_last_index, {0});
@@ -578,7 +578,7 @@ TEST_F(LiveFunctionsDataViewTest, ContextMenuActionsAreInvoked) {
 
     EXPECT_CALL(app_, JumpToTimerAndZoom)
         .Times(1)
-        .WillOnce([](uint64_t /*scope_id*/, JumpToTimerMode selection_mode) {
+        .WillOnce([](ScopeId /*scope_id*/, JumpToTimerMode selection_mode) {
           EXPECT_EQ(selection_mode, JumpToTimerMode::kMin);
         });
     view_.OnContextMenu(std::string{kMenuActionJumpToMin}, jump_to_min_index, {0});
@@ -591,7 +591,7 @@ TEST_F(LiveFunctionsDataViewTest, ContextMenuActionsAreInvoked) {
 
     EXPECT_CALL(app_, JumpToTimerAndZoom)
         .Times(1)
-        .WillOnce([](uint64_t /*scope_id*/, JumpToTimerMode selection_mode) {
+        .WillOnce([](ScopeId /*scope_id*/, JumpToTimerMode selection_mode) {
           EXPECT_EQ(selection_mode, JumpToTimerMode::kMax);
         });
     view_.OnContextMenu(std::string{kMenuActionJumpToMax}, jump_to_max_index, {0});
@@ -604,8 +604,8 @@ TEST_F(LiveFunctionsDataViewTest, ContextMenuActionsAreInvoked) {
 
     EXPECT_CALL(live_functions_, AddIterator)
         .Times(1)
-        .WillOnce([&](uint64_t instrumented_function_id, const FunctionInfo* function) {
-          EXPECT_EQ(instrumented_function_id, kFunctionIds[0]);
+        .WillOnce([&](ScopeId instrumented_function_id, const FunctionInfo* function) {
+          EXPECT_EQ(instrumented_function_id, kScopeIds[0]);
           EXPECT_EQ(function->pretty_name(), kPrettyNames[0]);
         });
     view_.OnContextMenu(std::string{kMenuActionAddIterator}, add_iterators_index, {0});
@@ -685,9 +685,8 @@ TEST_F(LiveFunctionsDataViewTest, FilteringShowsRightResults) {
   {
     EXPECT_CALL(app_, SetVisibleScopeIds)
         .Times(1)
-        .WillOnce([&](absl::flat_hash_set<uint64_t> visible_function_ids) {
-          EXPECT_THAT(visible_function_ids,
-                      testing::UnorderedElementsAre(kFunctionIds[1], kFunctionIds[2]));
+        .WillOnce([&](absl::flat_hash_set<ScopeId> visible_scope_ids) {
+          EXPECT_THAT(visible_scope_ids, testing::UnorderedElementsAre(kScopeIds[1], kScopeIds[2]));
         });
     view_.OnFilter("int");
     EXPECT_EQ(view_.GetNumElements(), 2);
@@ -699,8 +698,8 @@ TEST_F(LiveFunctionsDataViewTest, FilteringShowsRightResults) {
   {
     EXPECT_CALL(app_, SetVisibleScopeIds)
         .Times(1)
-        .WillOnce([&](absl::flat_hash_set<uint64_t> visible_function_ids) {
-          EXPECT_THAT(visible_function_ids, testing::UnorderedElementsAre(kFunctionIds[1]));
+        .WillOnce([&](absl::flat_hash_set<ScopeId> visible_scope_ids) {
+          EXPECT_THAT(visible_scope_ids, testing::UnorderedElementsAre(kScopeIds[1]));
         });
 
     view_.OnFilter("int main");
@@ -712,8 +711,8 @@ TEST_F(LiveFunctionsDataViewTest, FilteringShowsRightResults) {
   {
     EXPECT_CALL(app_, SetVisibleScopeIds)
         .Times(1)
-        .WillOnce([](absl::flat_hash_set<uint64_t> visible_function_ids) {
-          EXPECT_TRUE(visible_function_ids.empty());
+        .WillOnce([](absl::flat_hash_set<ScopeId> visible_scope_ids) {
+          EXPECT_TRUE(visible_scope_ids.empty());
         });
     view_.OnFilter("int module");
     EXPECT_EQ(view_.GetNumElements(), 0);
@@ -731,33 +730,27 @@ TEST_F(LiveFunctionsDataViewTest, UpdateHighlightedFunctionsOnSelect) {
 
   // Single selection will hightlight the selected function
   {
-    EXPECT_CALL(app_, SetHighlightedScopeId)
-        .Times(1)
-        .WillOnce([&](uint64_t highlighted_function_id) {
-          EXPECT_EQ(highlighted_function_id, kFunctionIds[2]);
-        });
+    EXPECT_CALL(app_, SetHighlightedScopeId).Times(1).WillOnce([&](ScopeId highlighted_scope_id) {
+      EXPECT_EQ(highlighted_scope_id, kScopeIds[2]);
+    });
 
     view_.OnSelect({2});
   }
 
   // Multiple selection will hightlight the first selected function
   {
-    EXPECT_CALL(app_, SetHighlightedScopeId)
-        .Times(1)
-        .WillOnce([&](uint64_t highlighted_function_id) {
-          EXPECT_EQ(highlighted_function_id, kFunctionIds[1]);
-        });
+    EXPECT_CALL(app_, SetHighlightedScopeId).Times(1).WillOnce([&](ScopeId highlighted_scope_id) {
+      EXPECT_EQ(highlighted_scope_id, kScopeIds[1]);
+    });
 
     view_.OnSelect({1, 2});
   }
 
   // Empty selection will clear the function highlighting
   {
-    EXPECT_CALL(app_, SetHighlightedScopeId)
-        .Times(1)
-        .WillOnce([&](uint64_t highlighted_function_id) {
-          EXPECT_EQ(highlighted_function_id, orbit_grpc_protos::kInvalidFunctionId);
-        });
+    EXPECT_CALL(app_, SetHighlightedScopeId).Times(1).WillOnce([&](ScopeId highlighted_scope_id) {
+      EXPECT_EQ(highlighted_scope_id, orbit_client_data::kInvalidScopeId);
+    });
 
     view_.OnSelect({});
   }
@@ -878,12 +871,12 @@ TEST_F(LiveFunctionsDataViewTest, HistogramIsProperlyUpdated) {
   view_.OnDataChanged();
   AddFunctionsByIndices({0});
 
-  EXPECT_CALL(app_, ShowHistogram(testing::Pointee(kDurations), kPrettyNames[0], kFunctionIds[0]))
+  EXPECT_CALL(app_, ShowHistogram(testing::Pointee(kDurations), kPrettyNames[0], kScopeIds[0]))
       .Times(3);
 
   view_.OnRefresh({0}, RefreshMode::kOnFilter);
   view_.OnRefresh({0}, RefreshMode::kOther);
-  view_.UpdateHistogramWithScopeIds({kFunctionIds[0]});
+  view_.UpdateHistogramWithScopeIds({kScopeIds[0]});
 }
 
 TEST_F(LiveFunctionsDataViewTest,
