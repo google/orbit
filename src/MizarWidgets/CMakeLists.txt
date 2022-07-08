@@ -9,6 +9,7 @@ add_library(MizarWidgets STATIC)
 target_sources(MizarWidgets PUBLIC
   include/MizarWidgets/MizarMainWindow.h
   include/MizarWidgets/SamplingWithFrameTrackInputWidget.h
+  include/MizarWidgets/SamplingWithFrameTrackOutputWidget.h
   include/MizarWidgets/SamplingWithFrameTrackWidget.h
   include/MizarWidgets/SamplingWithFrameTrackReportConfigValidator.h)
 
@@ -19,11 +20,14 @@ target_sources(MizarWidgets PRIVATE
   MizarMainWindow.cpp
   SamplingWithFrameTrackInputWidget.ui
   SamplingWithFrameTrackInputWidget.cpp
+  SamplingWithFrameTrackOutputWidget.ui
+  SamplingWithFrameTrackOutputWidget.cpp
   SamplingWithFrameTrackWidget.ui
   SamplingWithFrameTrackWidget.cpp)
 
 target_link_libraries(MizarWidgets
   PUBLIC MizarData
+  MizarModels
   QtUtils
   Qt5::Widgets
   Qt5::Core)
