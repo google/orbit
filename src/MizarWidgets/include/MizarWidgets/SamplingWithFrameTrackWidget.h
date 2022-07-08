@@ -52,8 +52,6 @@ class SamplingWithFrameTrackWidget : public QWidget {
   void OnSignificanceLevelSelected(int index);
 
   const orbit_mizar_data::BaselineAndComparison* baseline_and_comparison_;
-  bool is_multiplicity_correction_enabled_ = true;
-  double significance_level_ = kDefaultSignificanceLevel;
   std::unique_ptr<Ui::SamplingWithFrameTrackWidget> ui_;
 
   static constexpr inline double kDefaultSignificanceLevel = 0.05;

@@ -20,8 +20,12 @@ SamplingWithFrameTrackOutputWidget::SamplingWithFrameTrackOutputWidget(QWidget* 
   ui_->setupUi(this);
 }
 
+SamplingWithFrameTrackOutputWidget::~SamplingWithFrameTrackOutputWidget() = default;
+
 void SamplingWithFrameTrackOutputWidget::UpdateReport(Report report) {
-  auto model = std::make_unique<SamplingWithFrameTrackReportModel>(std::move(report), this);
+  auto model = std::make_unique<SamplingWithFrameTrackReportModel>(
+      std::move(report), is_multiplicity_correction_enabled_, confidence_level_, this);
+  model_ = model.get();
 
   ui_->report_->setModel(model.release());
   ResizeReportColumns(width());
@@ -35,6 +39,20 @@ void SamplingWithFrameTrackOutputWidget::ResizeReportColumns(int width) const {
   ui_->report_->horizontalHeader()->setMaximumSectionSize(width / 3);
   ui_->report_->resizeColumnsToContents();
   ui_->report_->horizontalHeader()->setMaximumSectionSize(width);
+}
+
+void SamplingWithFrameTrackOutputWidget::SetMultiplicityCorrectionEnabled(bool checked) {
+  is_multiplicity_correction_enabled_ = checked;
+  if (model_ != nullptr) {
+    model_->SetMultiplicityCorrectionEnabled(is_multiplicity_correction_enabled_);
+  }
+}
+
+void SamplingWithFrameTrackOutputWidget::OnSignificanceLevelChanged(double significance_level) {
+  confidence_level_ = significance_level;
+  if (model_ != nullptr) {
+    model_->SetSignificanceLevel(significance_level);
+  }
 }
 
 }  // namespace orbit_mizar_widgets

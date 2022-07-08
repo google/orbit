@@ -31,10 +31,16 @@ SamplingWithFrameTrackWidget::SamplingWithFrameTrackWidget(QWidget* parent)
 
   QObject::connect(ui_->multiplicity_correction_, &QCheckBox::clicked, this,
                    &SamplingWithFrameTrackWidget::OnMultiplicityCorrectionCheckBoxClicked);
+  QObject::connect(ui_->multiplicity_correction_, &QCheckBox::clicked, ui_->output_,
+                   &SamplingWithFrameTrackOutputWidget::SetMultiplicityCorrectionEnabled);
+
   QObject::connect(ui_->significance_level_, qOverload<int>(&QComboBox::currentIndexChanged), this,
                    &SamplingWithFrameTrackWidget::OnSignificanceLevelSelected);
   QObject::connect(ui_->update_button_, &QPushButton::clicked, this,
                    &SamplingWithFrameTrackWidget::OnUpdateButtonClicked);
+
+  ui_->output_->SetMultiplicityCorrectionEnabled(true);
+  ui_->output_->OnSignificanceLevelChanged(kDefaultSignificanceLevel);
 }
 
 void SamplingWithFrameTrackWidget::Init(
@@ -60,15 +66,14 @@ Comparison<SamplingWithFrameTrackInputWidget*> SamplingWithFrameTrackWidget::Get
 
 void SamplingWithFrameTrackWidget::OnSignificanceLevelSelected(int index) {
   constexpr int kIndexOfFivePercent = 0;
-  significance_level_ =
+  const double significance_level =
       (index == kIndexOfFivePercent) ? kDefaultSignificanceLevel : kAlternativeSignificanceLevel;
+  ui_->output_->OnSignificanceLevelChanged(significance_level);
 }
 
 void SamplingWithFrameTrackWidget::OnMultiplicityCorrectionCheckBoxClicked(bool checked) {
-  is_multiplicity_correction_enabled_ = checked;
-
-  const QString text = is_multiplicity_correction_enabled_ ? kMultiplicityCorrectionEnabledLabel
-                                                           : kMultiplicityCorrectionDisabledLabel;
+  const QString text =
+      checked ? kMultiplicityCorrectionEnabledLabel : kMultiplicityCorrectionDisabledLabel;
   ui_->significance_level_label_->setText(text);
 }
 

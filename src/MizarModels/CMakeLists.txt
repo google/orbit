@@ -25,6 +25,7 @@ target_link_libraries(MizarModelsTests PRIVATE
   MizarModels
   TestUtils
   GTest::Main
+  Qt5::Test
 )
 
 register_test(MizarModelsTests)
