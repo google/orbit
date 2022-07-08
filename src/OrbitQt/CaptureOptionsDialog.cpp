@@ -199,8 +199,6 @@ void CaptureOptionsDialog::SetWineSyscallHandlingMethod(
     case WineSyscallHandlingMethod::kRecordUserStack:
       ui_->wineRecordRadioButton->setChecked(true);
       break;
-    default:
-      ORBIT_UNREACHABLE();
   }
 }
 
