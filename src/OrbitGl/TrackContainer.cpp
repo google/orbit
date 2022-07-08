@@ -409,15 +409,15 @@ void TrackContainer::DrawThreadDependencyArrow(PrimitiveAssembler& primitive_ass
   float end_arrow_y =
       end_arrow_track->GetThreadStateBarPos()[1] + end_arrow_thread_state_half_height;
   float arrow_total_height = std::abs(end_arrow_y - start_arrow_y);
-  float body_height = arrow_total_height - layout_->GetThreadDependencyArrowHeadHeight();
+  float arrow_body_height = arrow_total_height - layout_->GetThreadDependencyArrowHeadHeight();
   PrimitiveAssembler::ArrowDirection arrow_direction =
       start_arrow_y < end_arrow_y ? PrimitiveAssembler::ArrowDirection::kDown
                                   : PrimitiveAssembler::ArrowDirection::kUp;
   primitive_assembler.AddVerticalArrow(
-      Vec2{x, start_arrow_y}, Vec2{layout_->GetThreadDependencyArrowBodyWidth(), body_height},
+      Vec2{x, start_arrow_y}, Vec2{layout_->GetThreadDependencyArrowBodyWidth(), arrow_body_height},
       Vec2{layout_->GetThreadDependencyArrowHeadWidth(),
            layout_->GetThreadDependencyArrowHeadHeight()},
-      IntrospectionWindow::kZValueOverlay, kArrowColor, arrow_direction);
+      GlCanvas::kZValueOverlay, kArrowColor, arrow_direction);
 }
 
 void TrackContainer::DoDraw(PrimitiveAssembler& primitive_assembler, TextRenderer& text_renderer,
