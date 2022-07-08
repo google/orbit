@@ -37,12 +37,21 @@ class ThreadStateBar final : public ThreadBar {
 
   [[nodiscard]] bool IsEmpty() const override;
 
+  [[nodiscard]] EventResult OnMouseMove(const Vec2& mouse_pos) override;
+  [[nodiscard]] EventResult OnMouseLeave() override;
+
+  void HighlightThreadStateSlice(PrimitiveAssembler& primitive_assembler,
+                                 const orbit_client_data::ThreadStateSliceInfo& slice,
+                                 const Color& outline_color) const;
+
  protected:
   void DoDraw(PrimitiveAssembler& primitive_assembler, TextRenderer& text_renderer,
               const DrawContext& draw_context) override;
 
   void DoUpdatePrimitives(PrimitiveAssembler& primitive_assembler, TextRenderer& text_renderer,
                           uint64_t min_tick, uint64_t max_tick, PickingMode picking_mode) override;
+  [[nodiscard]] std::optional<orbit_client_data::ThreadStateSliceInfo> FindSliceFromScreenCords(
+      float x, float y) const;
 
  private:
   std::string GetThreadStateSliceTooltip(PrimitiveAssembler& primitive_assembler,

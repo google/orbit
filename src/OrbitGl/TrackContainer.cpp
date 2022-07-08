@@ -369,10 +369,9 @@ void TrackContainer::SetIteratorOverlayData(
   RequestUpdate(RequestUpdateScope::kDraw);
 }
 
-void TrackContainer::DrawThreadDependencyArrow(PrimitiveAssembler& primitive_assembler,
-                                               PickingMode picking_mode) {
-  std::optional<orbit_client_data::ThreadStateSliceInfo> thread_state_slice =
-      app_->selected_thread_state_slice();
+void TrackContainer::DrawThreadDependencyArrow(
+    std::optional<orbit_client_data::ThreadStateSliceInfo> thread_state_slice,
+    const Color& arrow_color, PrimitiveAssembler& primitive_assembler, PickingMode picking_mode) {
   if (!thread_state_slice.has_value() || picking_mode != PickingMode::kNone) {
     return;
   }
@@ -399,7 +398,6 @@ void TrackContainer::DrawThreadDependencyArrow(PrimitiveAssembler& primitive_ass
     return;
   }
 
-  const Color kArrowColor(255, 255, 255, 255);
   const float start_arrow_thread_state_half_height =
       start_arrow_track->GetThreadStateBarHeight() / 2;
   const float end_arrow_thread_state_half_height = end_arrow_track->GetThreadStateBarHeight() / 2;
@@ -417,7 +415,17 @@ void TrackContainer::DrawThreadDependencyArrow(PrimitiveAssembler& primitive_ass
       Vec2{x, start_arrow_y}, Vec2{layout_->GetThreadDependencyArrowBodyWidth(), arrow_body_height},
       Vec2{layout_->GetThreadDependencyArrowHeadWidth(),
            layout_->GetThreadDependencyArrowHeadHeight()},
-      GlCanvas::kZValueOverlay, kArrowColor, arrow_direction);
+      GlCanvas::kZValueOverlay, arrow_color, arrow_direction);
+}
+
+void TrackContainer::DrawThreadDependency(PrimitiveAssembler& primitive_assembler,
+                                          PickingMode picking_mode) {
+  const Color kSelectedSliceArrowColor{255, 255, 255, 255};
+  DrawThreadDependencyArrow(app_->selected_thread_state_slice(), kSelectedSliceArrowColor,
+                            primitive_assembler, picking_mode);
+  const Color kHoveredSliceArrowColor{255, 255, 255, 64};
+  DrawThreadDependencyArrow(app_->hovered_thread_state_slice(), kHoveredSliceArrowColor,
+                            primitive_assembler, picking_mode);
 }
 
 void TrackContainer::DoDraw(PrimitiveAssembler& primitive_assembler, TextRenderer& text_renderer,
@@ -425,7 +433,7 @@ void TrackContainer::DoDraw(PrimitiveAssembler& primitive_assembler, TextRendere
   CaptureViewElement::DoDraw(primitive_assembler, text_renderer, draw_context);
 
   DrawIncompleteDataIntervals(primitive_assembler, draw_context.picking_mode);
-  DrawThreadDependencyArrow(primitive_assembler, draw_context.picking_mode);
+  DrawThreadDependency(primitive_assembler, draw_context.picking_mode);
   DrawOverlay(primitive_assembler, text_renderer, draw_context.picking_mode);
 }
 

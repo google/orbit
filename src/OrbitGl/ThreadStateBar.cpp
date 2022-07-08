@@ -13,6 +13,7 @@
 #include <utility>
 
 #include "App.h"
+#include "AsyncTrack.h"
 #include "CaptureViewElement.h"
 #include "ClientData/CallstackType.h"
 #include "ClientData/CaptureData.h"
@@ -26,8 +27,10 @@
 #include "GrpcProtos/capture.pb.h"
 #include "OrbitBase/Logging.h"
 #include "PrimitiveAssembler.h"
+#include "ThreadBar.h"
 #include "Viewport.h"
 
+using EventResult = AsyncTrack::EventResult;
 using orbit_client_data::ThreadID;
 using orbit_client_data::ThreadStateSliceInfo;
 using orbit_grpc_protos::ThreadStateSlice;
@@ -209,6 +212,23 @@ std::string ThreadStateBar::GetThreadStateSliceTooltip(PrimitiveAssembler& primi
   return tooltip;
 }
 
+void ThreadStateBar::HighlightThreadStateSlice(PrimitiveAssembler& primitive_assembler,
+                                               const ThreadStateSliceInfo& slice,
+                                               const Color& outline_color) const {
+  float left_x = timeline_info_->GetWorldFromTick(slice.begin_timestamp_ns());
+  float right_x = timeline_info_->GetWorldFromTick(slice.end_timestamp_ns());
+  float top_y = GetPos()[1];
+  float bottom_y = GetPos()[1] + GetHeight();
+  std::array<Vec2, 4> outline_points{
+      Vec2{left_x, top_y},
+      Vec2{right_x, top_y},
+      Vec2{right_x, bottom_y},
+      Vec2{left_x, bottom_y},
+  };
+  Quad outline{outline_points};
+  primitive_assembler.AddQuadBorder(outline, GlCanvas::kZValueTimeBar, outline_color);
+}
+
 void ThreadStateBar::DoUpdatePrimitives(PrimitiveAssembler& primitive_assembler,
                                         TextRenderer& text_renderer, uint64_t min_tick,
                                         uint64_t max_tick, PickingMode picking_mode) {
@@ -239,20 +259,15 @@ void ThreadStateBar::DoUpdatePrimitives(PrimitiveAssembler& primitive_assembler,
         const Vec2 pos{x0, GetPos()[1]};
         const Vec2 size{width, GetHeight()};
 
+        if (slice == app_->hovered_thread_state_slice() &&
+            slice != app_->selected_thread_state_slice()) {
+          const Color kOutlineColor = Color(255, 255, 255, 64);
+          HighlightThreadStateSlice(primitive_assembler, slice, kOutlineColor);
+        }
+
         if (slice == app_->selected_thread_state_slice()) {
           const Color kOutlineColor = Color(255, 255, 255, 255);
-          float left_x = timeline_info_->GetWorldFromTick(slice.begin_timestamp_ns());
-          float right_x = timeline_info_->GetWorldFromTick(slice.end_timestamp_ns());
-          float top_y = GetPos()[1];
-          float bottom_y = GetPos()[1] + GetHeight();
-          std::array<Vec2, 4> outline_points{
-              Vec2{left_x, top_y},
-              Vec2{right_x, top_y},
-              Vec2{right_x, bottom_y},
-              Vec2{left_x, bottom_y},
-          };
-          Quad outline{outline_points};
-          primitive_assembler.AddQuadBorder(outline, GlCanvas::kZValueTimeBar, kOutlineColor);
+          HighlightThreadStateSlice(primitive_assembler, slice, kOutlineColor);
         }
 
         const Color color = GetThreadStateColor(slice.thread_state());
@@ -283,16 +298,36 @@ void ThreadStateBar::DoUpdatePrimitives(PrimitiveAssembler& primitive_assembler,
       });
 }
 
+std::optional<ThreadStateSliceInfo> ThreadStateBar::FindSliceFromScreenCords(float x,
+                                                                             float y) const {
+  Vec2i screen_pos = Vec2i(static_cast<int>(x), static_cast<int>(y));
+  float world_pos_x = viewport_->ScreenToWorld(screen_pos)[0];
+  uint64_t timestamp = timeline_info_->GetTickFromWorld(world_pos_x);
+  std::optional<ThreadStateSliceInfo> slice =
+      capture_data_->FindThreadStateSliceInfoFromTimestamp(GetThreadId(), timestamp);
+  return slice;
+}
+
 void ThreadStateBar::OnPick(int x, int y) {
   ThreadBar::OnPick(x, y);
   app_->set_selected_thread_id(GetThreadId());
 
-  Vec2i screen_click_pos = Vec2i(x, y);
-  float world_click_pos_x = viewport_->ScreenToWorld(screen_click_pos)[0];
-  uint64_t click_timestamp = timeline_info_->GetTickFromWorld(world_click_pos_x);
-  std::optional<ThreadStateSliceInfo> click_slice =
-      capture_data_->FindThreadStateSliceInfoFromTimestamp(GetThreadId(), click_timestamp);
-  app_->set_selected_thread_state_slice(click_slice);
+  std::optional<ThreadStateSliceInfo> clicked_slice = FindSliceFromScreenCords(x, y);
+  app_->set_selected_thread_state_slice(clicked_slice);
+}
+
+EventResult ThreadStateBar::OnMouseMove(const Vec2& mouse_pos) {
+  EventResult event_result = CaptureViewElement::OnMouseMove(mouse_pos);
+  std::optional<ThreadStateSliceInfo> hovered_slice =
+      FindSliceFromScreenCords(mouse_pos[0], mouse_pos[1]);
+  app_->set_hovered_thread_state_slice(hovered_slice);
+  return event_result;
+}
+
+EventResult ThreadStateBar::OnMouseLeave() {
+  EventResult event_result = CaptureViewElement::OnMouseLeave();
+  app_->set_hovered_thread_state_slice(std::nullopt);
+  return event_result;
 }
 
 }  // namespace orbit_gl

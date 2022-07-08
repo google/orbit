@@ -36,6 +36,8 @@ TEST(DataManager, CanOnlyBeUsedFromTheMainThread) {
   CallMethodOnDifferentThreadAndExpectDeath(data_manager, &DataManager::set_selected_thread_id, 0);
   CallMethodOnDifferentThreadAndExpectDeath(
       data_manager, &DataManager::set_selected_thread_state_slice, std::nullopt);
+  CallMethodOnDifferentThreadAndExpectDeath(
+      data_manager, &DataManager::set_hovered_thread_state_slice, std::nullopt);
   CallMethodOnDifferentThreadAndExpectDeath(data_manager, &DataManager::set_selected_timer,
                                             nullptr);
   CallMethodOnDifferentThreadAndExpectDeath(data_manager, &DataManager::SelectTracepoint,
