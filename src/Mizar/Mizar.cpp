@@ -15,6 +15,7 @@
 
 #include "CaptureClient/LoadCapture.h"
 #include "CaptureFile/CaptureFile.h"
+#include "ClientData/ScopeIdProvider.h"
 #include "MizarBase/BaselineOrComparison.h"
 #include "MizarBase/ThreadId.h"
 #include "MizarData/BaselineAndComparison.h"
@@ -22,6 +23,7 @@
 #include "MizarWidgets/MizarMainWindow.h"
 #include "OrbitBase/Logging.h"
 
+using ::orbit_client_data::ScopeId;
 using ::orbit_mizar_base::Baseline;
 using ::orbit_mizar_base::Comparison;
 using ::orbit_mizar_base::MakeBaseline;
@@ -92,7 +94,7 @@ int main(int argc, char** argv) {
   orbit_mizar_widgets::MizarMainWindow main_window(&bac);
   main_window.show();
   constexpr uint64_t kDuration = std::numeric_limits<uint64_t>::max();
-  constexpr uint64_t kFrameTrackScopeId = 1;
+  constexpr ScopeId kFrameTrackScopeId{1};
 
   const orbit_mizar_data::SamplingWithFrameTrackComparisonReport report =
       bac.MakeSamplingWithFrameTrackReport(

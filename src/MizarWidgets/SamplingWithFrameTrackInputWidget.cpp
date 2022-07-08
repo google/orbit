@@ -60,7 +60,7 @@ void SamplingWithFrameTrackInputWidgetBase::OnThreadSelectionChanged() {
 }
 
 void SamplingWithFrameTrackInputWidgetBase::OnFrameTrackSelectionChanged(int index) {
-  frame_track_scope_id_ = GetFrameTrackList()->itemData(index, kScopeIdRole).value<uint64_t>();
+  frame_track_scope_id_ = GetFrameTrackList()->itemData(index, kScopeIdRole).value<ScopeId>();
 }
 
 void SamplingWithFrameTrackInputWidgetBase::OnStartMsChanged(const QString& time_ms) {

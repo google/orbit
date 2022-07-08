@@ -444,7 +444,8 @@ void LiveFunctionsDataView::DoFilter() {
     ORBIT_CHECK(scope_id_to_function_info_.empty());
     return;
   }
-  std::vector<uint64_t> indices;
+
+  indices_.clear();
 
   const std::vector<std::string> tokens = absl::StrSplit(absl::AsciiStrToLower(filter_), ' ');
 
@@ -466,8 +467,6 @@ void LiveFunctionsDataView::DoFilter() {
       AddToIndices(scope_id);
     }
   }
-
-  indices_ = std::move(indices);
 
   // Filter drawn textboxes
   absl::flat_hash_set<ScopeId> visible_scope_ids;

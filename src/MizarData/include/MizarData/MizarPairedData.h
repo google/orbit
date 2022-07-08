@@ -19,6 +19,7 @@
 
 #include "ClientData/CallstackData.h"
 #include "ClientData/CallstackEvent.h"
+#include "ClientData/ScopeIdProvider.h"
 #include "ClientData/ScopeInfo.h"
 #include "ClientProtos/capture_data.pb.h"
 #include "MizarBase/SampledFunctionId.h"
@@ -36,6 +37,7 @@ template <typename Data>
 class MizarPairedDataTmpl {
   using SFID = ::orbit_mizar_base::SFID;
   using TID = ::orbit_mizar_base::TID;
+  using ScopeId = orbit_client_data::ScopeId;
 
  public:
   MizarPairedDataTmpl(std::unique_ptr<Data> data,
@@ -50,7 +52,7 @@ class MizarPairedDataTmpl {
   // obtained via counting how many callstack samples have been obtained during each frame and then
   // multiplying the counter by the sampling period.
   [[nodiscard]] std::vector<uint64_t> ActiveInvocationTimes(
-      const absl::flat_hash_set<TID>& tids, uint64_t frame_track_scope_id,
+      const absl::flat_hash_set<TID>& tids, ScopeId frame_track_scope_id,
       uint64_t min_relative_timestamp_ns, uint64_t max_relative_timestamp_ns) const {
     const auto [min_timestamp_ns, max_timestamp_ns] =
         RelativeToAbsoluteTimestampRange(min_relative_timestamp_ns, max_relative_timestamp_ns);
@@ -83,10 +85,10 @@ class MizarPairedDataTmpl {
     return tid_to_callstack_samples_counts_;
   }
 
-  [[nodiscard]] absl::flat_hash_map<uint64_t, orbit_client_data::ScopeInfo> GetFrameTracks() const {
-    const std::vector<uint64_t> scope_ids = GetCaptureData().GetAllProvidedScopeIds();
-    absl::flat_hash_map<uint64_t, orbit_client_data::ScopeInfo> result;
-    for (const uint64_t scope_id : scope_ids) {
+  [[nodiscard]] absl::flat_hash_map<ScopeId, orbit_client_data::ScopeInfo> GetFrameTracks() const {
+    const std::vector<ScopeId> scope_ids = GetCaptureData().GetAllProvidedScopeIds();
+    absl::flat_hash_map<ScopeId, orbit_client_data::ScopeInfo> result;
+    for (const ScopeId scope_id : scope_ids) {
       const orbit_client_data::ScopeInfo scope_info = GetCaptureData().GetScopeInfo(scope_id);
       if (scope_info.GetType() == orbit_client_data::ScopeType::kDynamicallyInstrumentedFunction ||
           scope_info.GetType() == orbit_client_data::ScopeType::kApiScope) {

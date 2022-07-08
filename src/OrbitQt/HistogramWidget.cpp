@@ -32,10 +32,13 @@
 #include <vector>
 
 #include "ApiInterface/Orbit.h"
+#include "ClientData/ScopeIdProvider.h"
 #include "DisplayFormats/DisplayFormats.h"
 #include "Introspection/Introspection.h"
 #include "OrbitBase/Logging.h"
 #include "Statistics/Histogram.h"
+
+using ::orbit_client_data::ScopeId;
 
 namespace orbit_qt {
 
@@ -399,7 +402,7 @@ constexpr uint32_t kSeed = 31;
 }
 
 void HistogramWidget::UpdateData(const std::vector<uint64_t>* data, std::string scope_name,
-                                 uint64_t scope_id) {
+                                 ScopeId scope_id) {
   ORBIT_SCOPE_FUNCTION;
   if (scope_data_.has_value() && scope_data_->id == scope_id) return;
 

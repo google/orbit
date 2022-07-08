@@ -247,7 +247,7 @@ class LiveFunctionsDataViewTest : public testing::Test {
     std::set index_set(indices.begin(), indices.end());
     for (size_t index : index_set) {
       ORBIT_CHECK(index < kNumFunctions);
-      view_.AddFunction(kScopeIds[index], functions_.at(kFunctionIds[index]));
+      view_.AddFunction(kScopeIds[index], functions_.at(kScopeIds[index]));
     }
   }
 
