@@ -53,6 +53,15 @@ class TimeGraphLayout {
   float GetSpaceBetweenThreadPanes() const { return space_between_thread_panes_ * scale_; }
   float GetSpaceBetweenSubtracks() const { return space_between_subtracks_ * scale_; }
   float GetGenericFixedSpacerWidth() const { return generic_fixed_spacer_width_; }
+  float GetThreadDependencyArrowHeadWidth() const {
+    return thread_dependency_arrow_head_width_ * scale_;
+  }
+  float GetThreadDependencyArrowHeadHeight() const {
+    return thread_dependency_arrow_head_height_ * scale_;
+  }
+  float GetThreadDependencyArrowBodyWidth() const {
+    return thread_dependency_arrow_body_width_ * scale_;
+  }
   float GetScale() const { return scale_; }
   void SetScale(float value) { scale_ = std::clamp(value, kMinScale, kMaxScale); }
   void SetDrawProperties(bool value) { draw_properties_ = value; }
@@ -89,6 +98,9 @@ class TimeGraphLayout {
   float min_button_size_;
   float button_width_;
   float button_height_;
+  float thread_dependency_arrow_head_width_;
+  float thread_dependency_arrow_head_height_;
+  float thread_dependency_arrow_body_width_;
 
   uint32_t font_size_;
 
