@@ -15,7 +15,6 @@
 #include "ClientData/ScopeIdProvider.h"
 #include "ClientData/ThreadTrackDataProvider.h"
 #include "ClientProtos/capture_data.pb.h"
-#include "Containers/ScopeTree.h"
 #include "CoreMath.h"
 #include "PickingManager.h"
 #include "ThreadStateBar.h"
@@ -81,6 +80,9 @@ class ThreadTrack final : public TimerTrack {
   }
 
   [[nodiscard]] bool IsCollapsible() const override { return GetDepth() > 1; }
+
+  [[nodiscard]] Vec2 GetThreadStateBarPos() const { return thread_state_bar_->GetPos(); }
+  [[nodiscard]] float GetThreadStateBarHeight() const { return thread_state_bar_->GetHeight(); }
 
   [[nodiscard]] std::vector<CaptureViewElement*> GetAllChildren() const override;
 

@@ -9,6 +9,7 @@
 #include <absl/container/flat_hash_set.h>
 #include <stdint.h>
 
+#include <string>
 #include <utility>
 
 #include "ClientData/ScopeIdProvider.h"
@@ -87,7 +88,8 @@ class SamplingCounts {
 
 // The data class that contains the data we report as results of comparison of the sampling data
 // with frame track
-class SamplingWithFrameTrackComparisonReport {
+template <typename Counts, typename FrameTrackStats>
+class SamplingWithFrameTrackComparisonReportTmpl {
  public:
   template <typename T>
   using Baseline = ::orbit_mizar_base::Baseline<T>;
@@ -95,30 +97,31 @@ class SamplingWithFrameTrackComparisonReport {
   using Comparison = ::orbit_mizar_base::Comparison<T>;
   using SFID = ::orbit_mizar_base::SFID;
 
-  explicit SamplingWithFrameTrackComparisonReport(
-      Baseline<SamplingCounts> baseline_sampling_counts,
-      Baseline<orbit_client_data::ScopeStats> baseline_frame_track_stats,
-      Comparison<SamplingCounts> comparison_sampling_counts,
-      Comparison<orbit_client_data::ScopeStats> comparison_frame_track_stats,
-      absl::flat_hash_map<SFID, CorrectedComparisonResult> fid_to_corrected_comparison_results)
+  explicit SamplingWithFrameTrackComparisonReportTmpl(
+      Baseline<Counts> baseline_sampling_counts,
+      Baseline<FrameTrackStats> baseline_frame_track_stats,
+      Comparison<Counts> comparison_sampling_counts,
+      Comparison<FrameTrackStats> comparison_frame_track_stats,
+      absl::flat_hash_map<SFID, CorrectedComparisonResult> fid_to_corrected_comparison_results,
+      const absl::flat_hash_map<SFID, std::string>* sfid_to_names)
       : baseline_sampling_counts_(std::move(baseline_sampling_counts)),
         baseline_frame_track_stats_(std::move(baseline_frame_track_stats)),
         comparison_sampling_counts_(std::move(comparison_sampling_counts)),
         comparison_frame_track_stats_(std::move(comparison_frame_track_stats)),
-        fid_to_corrected_comparison_results_(std::move(fid_to_corrected_comparison_results)) {}
+        fid_to_corrected_comparison_results_(std::move(fid_to_corrected_comparison_results)),
+        sfid_to_names_(sfid_to_names) {}
 
-  [[nodiscard]] const Baseline<SamplingCounts>& GetBaselineSamplingCounts() const {
+  [[nodiscard]] const Baseline<Counts>& GetBaselineSamplingCounts() const {
     return baseline_sampling_counts_;
   }
-  [[nodiscard]] const Comparison<SamplingCounts>& GetComparisonSamplingCounts() const {
+  [[nodiscard]] const Comparison<Counts>& GetComparisonSamplingCounts() const {
     return comparison_sampling_counts_;
   }
 
-  [[nodiscard]] const Baseline<orbit_client_data::ScopeStats>& GetBaselineFrameTrackStats() const {
+  [[nodiscard]] const Baseline<FrameTrackStats>& GetBaselineFrameTrackStats() const {
     return baseline_frame_track_stats_;
   }
-  [[nodiscard]] const Comparison<orbit_client_data::ScopeStats>& GetComparisonFrameTrackStats()
-      const {
+  [[nodiscard]] const Comparison<FrameTrackStats>& GetComparisonFrameTrackStats() const {
     return comparison_frame_track_stats_;
   }
 
@@ -126,15 +129,25 @@ class SamplingWithFrameTrackComparisonReport {
     return fid_to_corrected_comparison_results_.at(sfid);
   }
 
- private:
-  Baseline<SamplingCounts> baseline_sampling_counts_;
-  Baseline<orbit_client_data::ScopeStats> baseline_frame_track_stats_;
+  [[nodiscard]] const absl::flat_hash_map<SFID, std::string>& GetSfidToNames() const {
+    return *sfid_to_names_;
+  }
 
-  Comparison<SamplingCounts> comparison_sampling_counts_;
-  Comparison<orbit_client_data::ScopeStats> comparison_frame_track_stats_;
+ private:
+  Baseline<Counts> baseline_sampling_counts_;
+  Baseline<FrameTrackStats> baseline_frame_track_stats_;
+
+  Comparison<Counts> comparison_sampling_counts_;
+  Comparison<FrameTrackStats> comparison_frame_track_stats_;
 
   absl::flat_hash_map<SFID, CorrectedComparisonResult> fid_to_corrected_comparison_results_;
+
+  const absl::flat_hash_map<SFID, std::string>* sfid_to_names_;
 };
+
+// The production code should rely on this alias, changes to RHS are not planned
+using SamplingWithFrameTrackComparisonReport =
+    SamplingWithFrameTrackComparisonReportTmpl<SamplingCounts, orbit_client_data::ScopeStats>;
 
 }  // namespace orbit_mizar_data
 

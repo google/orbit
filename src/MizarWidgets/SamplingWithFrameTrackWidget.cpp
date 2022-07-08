@@ -18,9 +18,10 @@
 
 namespace orbit_mizar_widgets {
 
-using orbit_base::LiftAndApply;
+using ::orbit_base::LiftAndApply;
 using ::orbit_mizar_base::Baseline;
 using ::orbit_mizar_base::Comparison;
+using Report = ::orbit_mizar_data::SamplingWithFrameTrackComparisonReport;
 
 SamplingWithFrameTrackWidget::SamplingWithFrameTrackWidget(QWidget* parent)
     : QWidget(parent), ui_(std::make_unique<Ui::SamplingWithFrameTrackWidget>()) {
@@ -84,6 +85,10 @@ void SamplingWithFrameTrackWidget::OnUpdateButtonClicked() {
     emit ReportError(validation_result.error().message());
     return;
   }
+
+  Report report = baseline_and_comparison_->MakeSamplingWithFrameTrackReport(baseline_config,
+                                                                             comparison_config);
+  ui_->output_->UpdateReport(std::move(report));
 }
 
 }  // namespace orbit_mizar_widgets

@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>823</width>
-    <height>456</height>
+    <width>865</width>
+    <height>537</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -84,6 +84,9 @@
      </property>
     </widget>
    </item>
+   <item>
+    <widget class="orbit_mizar_widgets::SamplingWithFrameTrackOutputWidget" name="output_" native="true"/>
+   </item>
   </layout>
  </widget>
  <customwidgets>
@@ -91,6 +94,12 @@
    <class>orbit_mizar_widgets::SamplingWithFrameTrackInputWidget</class>
    <extends>QWidget</extends>
    <header>MizarWidgets/SamplingWithFrameTrackInputWidget.h</header>
+   <container>1</container>
+  </customwidget>
+  <customwidget>
+   <class>orbit_mizar_widgets::SamplingWithFrameTrackOutputWidget</class>
+   <extends>QWidget</extends>
+   <header>MizarWidgets/SamplingWithFrameTrackOutputWidget.h</header>
    <container>1</container>
   </customwidget>
  </customwidgets>
