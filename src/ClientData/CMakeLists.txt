@@ -29,6 +29,7 @@ target_sources(ClientData PUBLIC
         include/ClientData/PostProcessedSamplingData.h
         include/ClientData/ProcessData.h
         include/ClientData/ScopeIdConstants.h
+        include/ClientData/ScopeId.h
         include/ClientData/ScopeIdProvider.h
         include/ClientData/ScopeInfo.h
         include/ClientData/ScopeStats.h
@@ -76,11 +77,11 @@ target_link_libraries(ClientData PUBLIC
         Containers
         ClientProtos
         GrpcProtos
+
         # TODO(b/191248550): Remove ObjectUtils once GetAbsoluteAddress is removed
         ObjectUtils
         OrbitBase
         xxHash::xxHash)
-
 
 add_executable(ClientDataTests)
 target_sources(ClientDataTests PRIVATE

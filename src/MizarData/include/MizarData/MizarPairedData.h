@@ -19,7 +19,7 @@
 
 #include "ClientData/CallstackData.h"
 #include "ClientData/CallstackEvent.h"
-#include "ClientData/ScopeIdProvider.h"
+#include "ClientData/ScopeId.h"
 #include "ClientData/ScopeInfo.h"
 #include "ClientProtos/capture_data.pb.h"
 #include "MizarBase/SampledFunctionId.h"

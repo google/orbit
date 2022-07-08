@@ -22,7 +22,7 @@
 #include <string_view>
 #include <vector>
 
-#include "ClientData/ScopeIdProvider.h"
+#include "ClientData/ScopeId.h"
 #include "ClientData/ScopeInfo.h"
 #include "MizarData/MizarPairedData.h"
 #include "MizarData/SamplingWithFrameTrackComparisonReport.h"

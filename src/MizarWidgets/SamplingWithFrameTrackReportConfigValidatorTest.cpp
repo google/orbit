@@ -8,7 +8,7 @@
 
 #include <QString>
 
-#include "ClientData/ScopeIdProvider.h"
+#include "ClientData/ScopeId.h"
 #include "MizarBase/BaselineOrComparison.h"
 #include "MizarWidgets/SamplingWithFrameTrackReportConfigValidator.h"
 #include "TestUtils/TestUtils.h"

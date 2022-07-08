@@ -7,7 +7,7 @@
 
 #include <cstdint>
 
-#include "ClientData/ScopeIdProvider.h"
+#include "ClientData/ScopeId.h"
 
 namespace orbit_client_data {
 

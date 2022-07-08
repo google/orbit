@@ -12,7 +12,7 @@
 #include <string>
 
 #include "CallstackThreadBar.h"
-#include "ClientData/ScopeIdProvider.h"
+#include "ClientData/ScopeId.h"
 #include "ClientData/ThreadTrackDataProvider.h"
 #include "ClientProtos/capture_data.pb.h"
 #include "CoreMath.h"

@@ -15,7 +15,7 @@
 
 #include "CaptureClient/LoadCapture.h"
 #include "CaptureFile/CaptureFile.h"
-#include "ClientData/ScopeIdProvider.h"
+#include "ClientData/ScopeId.h"
 #include "MizarBase/BaselineOrComparison.h"
 #include "MizarBase/ThreadId.h"
 #include "MizarData/BaselineAndComparison.h"

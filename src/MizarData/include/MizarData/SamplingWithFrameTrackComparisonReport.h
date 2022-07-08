@@ -12,7 +12,7 @@
 #include <string>
 #include <utility>
 
-#include "ClientData/ScopeIdProvider.h"
+#include "ClientData/ScopeId.h"
 #include "ClientData/ScopeStats.h"
 #include "MizarBase/BaselineOrComparison.h"
 #include "MizarBase/SampledFunctionId.h"

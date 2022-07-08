@@ -16,7 +16,7 @@
 
 #include "ClientData/CallstackData.h"
 #include "ClientData/CallstackInfo.h"
-#include "ClientData/ScopeIdProvider.h"
+#include "ClientData/ScopeId.h"
 #include "ClientData/ScopeInfo.h"
 #include "MizarBase/SampledFunctionId.h"
 #include "MizarData/MizarPairedData.h"

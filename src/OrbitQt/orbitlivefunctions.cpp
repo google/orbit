@@ -18,7 +18,7 @@
 #include <utility>
 
 #include "App.h"
-#include "ClientData/ScopeIdProvider.h"
+#include "ClientData/ScopeId.h"
 #include "DataViews/DataView.h"
 #include "DataViews/LiveFunctionsDataView.h"
 #include "HistogramWidget.h"

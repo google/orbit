@@ -32,7 +32,7 @@
 #include <vector>
 
 #include "ApiInterface/Orbit.h"
-#include "ClientData/ScopeIdProvider.h"
+#include "ClientData/ScopeId.h"
 #include "DisplayFormats/DisplayFormats.h"
 #include "Introspection/Introspection.h"
 #include "OrbitBase/Logging.h"

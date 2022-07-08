@@ -15,7 +15,7 @@
 #include <optional>
 
 #include "ClientData/FunctionInfo.h"
-#include "ClientData/ScopeIdProvider.h"
+#include "ClientData/ScopeId.h"
 #include "LiveFunctionsController.h"
 #include "Statistics/Histogram.h"
 #include "absl/container/flat_hash_map.h"

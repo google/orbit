@@ -16,7 +16,7 @@
 #include "CallstackThreadBar.h"
 #include "CaptureViewElement.h"
 #include "ClientData/CallstackType.h"
-#include "ClientData/ScopeIdProvider.h"
+#include "ClientData/ScopeId.h"
 #include "ClientData/TimerChain.h"
 #include "ClientProtos/capture_data.pb.h"
 #include "Containers/BlockChain.h"

@@ -12,7 +12,7 @@
 #include <vector>
 
 #include "CaptureViewElement.h"
-#include "ClientData/ScopeIdProvider.h"
+#include "ClientData/ScopeId.h"
 #include "TimeGraphLayout.h"
 #include "Track.h"
 #include "TrackManager.h"

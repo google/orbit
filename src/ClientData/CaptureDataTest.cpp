@@ -16,8 +16,8 @@
 #include <vector>
 
 #include "ClientData/CaptureData.h"
+#include "ClientData/ScopeId.h"
 #include "ClientData/ScopeIdConstants.h"
-#include "ClientData/ScopeIdProvider.h"
 #include "ClientData/ScopeStats.h"
 #include "ClientData/ThreadStateSliceInfo.h"
 #include "ClientProtos/capture_data.pb.h"

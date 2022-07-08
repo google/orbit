@@ -34,7 +34,7 @@
 #include "CallTreeView.h"
 #include "ClientData/FunctionInfo.h"
 #include "ClientData/ModuleData.h"
-#include "ClientData/ScopeIdProvider.h"
+#include "ClientData/ScopeId.h"
 #include "ClientProtos/capture_data.pb.h"
 #include "ClientServices/ProcessManager.h"
 #include "DataViews/DataView.h"

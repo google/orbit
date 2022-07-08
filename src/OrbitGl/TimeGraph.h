@@ -14,7 +14,7 @@
 #include "CaptureViewElement.h"
 #include "ClientData/ApiTrackValue.h"
 #include "ClientData/CaptureData.h"
-#include "ClientData/ScopeIdProvider.h"
+#include "ClientData/ScopeId.h"
 #include "ClientProtos/capture_data.pb.h"
 #include "CoreMath.h"
 #include "GlSlider.h"

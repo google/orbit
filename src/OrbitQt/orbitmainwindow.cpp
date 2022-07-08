@@ -73,7 +73,7 @@
 #include "CaptureOptionsDialog.h"
 #include "ClientData/CaptureData.h"
 #include "ClientData/ProcessData.h"
-#include "ClientData/ScopeIdProvider.h"
+#include "ClientData/ScopeId.h"
 #include "ClientFlags/ClientFlags.h"
 #include "ClientModel/CaptureSerializer.h"
 #include "ClientProtos/capture_data.pb.h"

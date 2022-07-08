@@ -15,7 +15,7 @@
 #include "ClientData/FunctionInfo.h"
 #include "ClientData/ModuleData.h"
 #include "ClientData/ProcessData.h"
-#include "ClientData/ScopeIdProvider.h"
+#include "ClientData/ScopeId.h"
 #include "ClientProtos/capture_data.pb.h"
 #include "DataViews/AppInterface.h"
 #include "DataViews/PresetLoadState.h"

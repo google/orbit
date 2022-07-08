@@ -8,7 +8,7 @@
 #include <stdint.h>
 
 #include "ClientData/FunctionInfo.h"
-#include "ClientData/ScopeIdProvider.h"
+#include "ClientData/ScopeId.h"
 
 namespace orbit_data_views {
 

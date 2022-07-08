@@ -9,17 +9,12 @@
 
 #include <cstdint>
 
+#include "ClientData/ScopeId.h"
 #include "ClientData/ScopeInfo.h"
 #include "ClientData/TimerTrackDataIdManager.h"
 #include "GrpcProtos/capture.pb.h"
-#include "OrbitBase/Typedef.h"
 
 namespace orbit_client_data {
-
-struct ScopeIdTag {};
-
-using ScopeId = orbit_base::Typedef<ScopeIdTag, const uint64_t>;
-static_assert(sizeof(ScopeId) == sizeof(uint64_t), "orbit_base::Typedef is not zero-cost");
 
 // The interface defines a map from `TimerInfo` to ids. When called twice on identical `TimerInfo`
 // instances, it returns the same ids. This is used to allow for aggregation of manual

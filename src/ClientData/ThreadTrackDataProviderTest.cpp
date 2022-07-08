@@ -10,8 +10,7 @@
 #include <cstdint>
 #include <iterator>
 
-#include "ClientData/ScopeIdConstants.h"
-#include "ClientData/ScopeIdProvider.h"
+#include "ClientData/ScopeId.h"
 #include "ClientData/ThreadTrackDataProvider.h"
 
 namespace orbit_client_data {

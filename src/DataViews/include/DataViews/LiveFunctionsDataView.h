@@ -15,7 +15,7 @@
 #include <vector>
 
 #include "ClientData/FunctionInfo.h"
-#include "ClientData/ScopeIdProvider.h"
+#include "ClientData/ScopeId.h"
 #include "DataViews/AppInterface.h"
 #include "DataViews/CompareAscendingOrDescending.h"
 #include "DataViews/DataView.h"

@@ -16,7 +16,7 @@
 #include <vector>
 
 #include "BaselineAndComparisonHelper.h"
-#include "ClientData/ScopeIdProvider.h"
+#include "ClientData/ScopeId.h"
 #include "MizarBase/BaselineOrComparison.h"
 #include "MizarBase/SampledFunctionId.h"
 #include "MizarData/BaselineAndComparison.h"

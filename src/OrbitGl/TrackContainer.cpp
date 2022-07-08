@@ -17,7 +17,7 @@
 
 #include "AccessibleCaptureViewElement.h"
 #include "App.h"
-#include "ClientData/ScopeIdProvider.h"
+#include "ClientData/ScopeId.h"
 #include "ClientFlags/ClientFlags.h"
 #include "CoreMath.h"
 #include "DisplayFormats/DisplayFormats.h"

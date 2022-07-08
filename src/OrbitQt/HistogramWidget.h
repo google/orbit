@@ -18,7 +18,7 @@
 #include <vector>
 
 #include "App.h"
-#include "ClientData/ScopeIdProvider.h"
+#include "ClientData/ScopeId.h"
 #include "Statistics/Histogram.h"
 
 namespace orbit_qt {

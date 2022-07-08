@@ -17,7 +17,7 @@
 #include <limits>
 #include <string>
 
-#include "ClientData/ScopeIdProvider.h"
+#include "ClientData/ScopeId.h"
 #include "ClientData/ScopeInfo.h"
 #include "MizarBase/ThreadId.h"
 #include "MizarWidgets/SamplingWithFrameTrackInputWidget.h"

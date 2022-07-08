@@ -5,7 +5,7 @@
 #ifndef THREAD_TRACK_DATA_PROVIDER_H_
 #define THREAD_TRACK_DATA_PROVIDER_H_
 
-#include "ClientData/ScopeIdProvider.h"
+#include "ClientData/ScopeId.h"
 #include "ClientData/ThreadTrackDataManager.h"
 #include "ClientData/TimerData.h"
 
