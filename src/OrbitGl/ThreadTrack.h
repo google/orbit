@@ -12,6 +12,7 @@
 #include <string>
 
 #include "CallstackThreadBar.h"
+#include "ClientData/ScopeIdProvider.h"
 #include "ClientData/ThreadTrackDataProvider.h"
 #include "ClientProtos/capture_data.pb.h"
 #include "Containers/ScopeTree.h"
@@ -26,6 +27,8 @@
 class OrbitApp;
 
 class ThreadTrack final : public TimerTrack {
+  using ScopeId = orbit_client_data::ScopeId;
+
  public:
   enum class ScopeTreeUpdateType { kAlways, kOnCaptureComplete, kNever };
   explicit ThreadTrack(CaptureViewElement* parent,

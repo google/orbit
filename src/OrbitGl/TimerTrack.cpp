@@ -28,6 +28,7 @@
 #include "absl/flags/flag.h"
 #include "absl/strings/str_format.h"
 
+using orbit_client_data::ScopeId;
 using orbit_client_data::TimerChain;
 using orbit_client_data::TimerData;
 using orbit_client_protos::TimerInfo;
@@ -187,7 +188,7 @@ bool TimerTrack::DrawTimer(TextRenderer& text_renderer, const TimerInfo* prev_ti
     }
   }
 
-  uint64_t scope_id = app_->GetCaptureData().ProvideScopeId(*current_timer_info);
+  ScopeId scope_id = app_->GetCaptureData().ProvideScopeId(*current_timer_info);
   uint64_t group_id = current_timer_info->group_id();
 
   bool is_selected = current_timer_info == draw_data.selected_timer;
@@ -380,7 +381,7 @@ internal::DrawData TimerTrack::GetDrawData(
     uint64_t min_tick, uint64_t max_tick, float track_pos_x, float track_width,
     PrimitiveAssembler* primitive_assembler, const orbit_gl::TimelineInfoInterface* timeline_info,
     const orbit_gl::Viewport* viewport, bool is_collapsed,
-    const orbit_client_protos::TimerInfo* selected_timer, uint64_t highlighted_scope_id,
+    const orbit_client_protos::TimerInfo* selected_timer, ScopeId highlighted_scope_id,
     uint64_t highlighted_group_id,
     std::optional<orbit_statistics::HistogramSelectionRange> histogram_selection_range) {
   internal::DrawData draw_data{};

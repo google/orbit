@@ -132,10 +132,10 @@ class CaptureData {
       uint32_t thread_id, uint64_t min_timestamp, uint64_t max_timestamp,
       const std::function<void(const ThreadStateSliceInfo&)>& action) const;
 
-  [[nodiscard]] const ScopeStats& GetScopeStatsOrDefault(uint64_t scope_id) const;
+  [[nodiscard]] const ScopeStats& GetScopeStatsOrDefault(ScopeId scope_id) const;
 
   void UpdateScopeStats(const TimerInfo& timer_info);
-  void AddScopeStats(uint64_t scope_id, ScopeStats stats);
+  void AddScopeStats(ScopeId scope_id, ScopeStats stats);
 
   void OnCaptureComplete();
 
@@ -239,13 +239,14 @@ class CaptureData {
     return thread_track_data_provider_.get();
   }
 
-  [[nodiscard]] uint64_t ProvideScopeId(const orbit_client_protos::TimerInfo& timer_info) const;
-  [[nodiscard]] std::vector<uint64_t> GetAllProvidedScopeIds() const;
-  [[nodiscard]] const ScopeInfo& GetScopeInfo(uint64_t scope_id) const;
-  [[nodiscard]] uint64_t FunctionIdToScopeId(uint64_t function_id) const;
+  [[nodiscard]] ScopeId ProvideScopeId(const orbit_client_protos::TimerInfo& timer_info) const;
+  [[nodiscard]] std::vector<ScopeId> GetAllProvidedScopeIds() const;
+  [[nodiscard]] const ScopeInfo& GetScopeInfo(ScopeId scope_id) const;
+  [[nodiscard]] ScopeId FunctionIdToScopeId(uint64_t function_id) const;
+  [[nodiscard]] uint64_t ScopeIdToFunctionId(ScopeId scope_id) const;
 
   [[nodiscard]] const std::vector<uint64_t>* GetSortedTimerDurationsForScopeId(
-      uint64_t scope_id) const;
+      ScopeId scope_id) const;
 
   // Returns all the timers corresponding to scopes with non-invalid ids
   [[nodiscard]] std::vector<const TimerInfo*> GetAllScopeTimers(
@@ -254,7 +255,7 @@ class CaptureData {
       uint64_t max_tick = std::numeric_limits<uint64_t>::max()) const;
 
   [[nodiscard]] std::vector<const TimerInfo*> GetTimersForScope(
-      uint64_t scope_id, uint64_t min_tick = std::numeric_limits<uint64_t>::min(),
+      ScopeId scope_id, uint64_t min_tick = std::numeric_limits<uint64_t>::min(),
       uint64_t max_tick = std::numeric_limits<uint64_t>::max()) const;
 
   [[nodiscard]] const orbit_grpc_protos::CaptureStarted& GetCaptureStarted() const {
@@ -285,7 +286,7 @@ class CaptureData {
 
   absl::flat_hash_map<uint64_t, LinuxAddressInfo> address_infos_;
 
-  absl::flat_hash_map<uint64_t, ScopeStats> scope_stats_;
+  absl::flat_hash_map<ScopeId, ScopeStats> scope_stats_;
 
   absl::flat_hash_map<uint32_t, std::string> thread_names_;
 
@@ -308,7 +309,7 @@ class CaptureData {
   TimerDataManager timer_data_manager_;
   std::unique_ptr<ThreadTrackDataProvider> thread_track_data_provider_;
 
-  absl::flat_hash_map<uint64_t, std::vector<uint64_t>> scope_id_to_timer_durations_;
+  absl::flat_hash_map<ScopeId, std::vector<uint64_t>> scope_id_to_timer_durations_;
 };
 
 }  // namespace orbit_client_data

@@ -37,8 +37,8 @@ class DataManager final {
   void SelectFunction(const FunctionInfo& function);
   void DeselectFunction(const FunctionInfo& function);
   void ClearSelectedFunctions();
-  void set_visible_scope_ids(absl::flat_hash_set<uint64_t> visible_scope_ids);
-  void set_highlighted_scope_id(uint64_t highlighted_function_id);
+  void set_visible_scope_ids(absl::flat_hash_set<ScopeId> visible_scope_ids);
+  void set_highlighted_scope_id(ScopeId highlighted_function_id);
   void set_highlighted_group_id(uint64_t highlighted_group_id);
   void set_selected_thread_id(uint32_t thread_id);
   void set_selected_thread_state_slice(
@@ -47,8 +47,8 @@ class DataManager final {
 
   [[nodiscard]] bool IsFunctionSelected(const FunctionInfo& function) const;
   [[nodiscard]] std::vector<FunctionInfo> GetSelectedFunctions() const;
-  [[nodiscard]] bool IsScopeVisible(uint64_t scope_id) const;
-  [[nodiscard]] uint64_t highlighted_scope_id() const;
+  [[nodiscard]] bool IsScopeVisible(ScopeId scope_id) const;
+  [[nodiscard]] ScopeId highlighted_scope_id() const;
   [[nodiscard]] uint64_t highlighted_group_id() const;
   [[nodiscard]] uint32_t selected_thread_id() const;
   [[nodiscard]] std::optional<orbit_client_data::ThreadStateSliceInfo> selected_thread_state_slice()
@@ -116,8 +116,8 @@ class DataManager final {
  private:
   const std::thread::id main_thread_id_;
   absl::flat_hash_set<FunctionInfo> selected_functions_;
-  absl::flat_hash_set<uint64_t> visible_scope_ids_;
-  uint64_t highlighted_scope_id_ = kInvalidScopeId;
+  absl::flat_hash_set<ScopeId> visible_scope_ids_;
+  ScopeId highlighted_scope_id_ = kInvalidScopeId;
   uint64_t highlighted_group_id_ = kOrbitDefaultGroupId;
 
   TracepointInfoSet selected_tracepoints_;

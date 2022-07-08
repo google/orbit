@@ -9,13 +9,13 @@
 #include <gmock/gmock.h>
 #include <stdint.h>
 
-#include <cstdint>
 #include <string>
 
 #include "ClientData/CaptureData.h"
 #include "ClientData/FunctionInfo.h"
 #include "ClientData/ModuleData.h"
 #include "ClientData/ProcessData.h"
+#include "ClientData/ScopeIdProvider.h"
 #include "ClientProtos/capture_data.pb.h"
 #include "DataViews/AppInterface.h"
 #include "DataViews/PresetLoadState.h"
@@ -27,6 +27,8 @@ namespace orbit_data_views {
 
 // This is a mock of AppInterface which can be shared between all data view tests.
 class MockAppInterface : public AppInterface {
+  using ScopeId = orbit_client_data::ScopeId;
+
  public:
   MOCK_METHOD(void, SetClipboard, (const std::string&), (override));
   MOCK_METHOD(std::string, GetSaveFile, (const std::string& extension), (const, override));
@@ -44,13 +46,12 @@ class MockAppInterface : public AppInterface {
   MOCK_METHOD(bool, IsFunctionSelected, (const orbit_client_data::SampledFunction&),
               (const, override));
 
-  MOCK_METHOD(uint64_t, GetHighlightedScopeId, (), (const, override));
-  MOCK_METHOD(void, SetHighlightedScopeId, (uint64_t highlighted_function_id), (override));
-  MOCK_METHOD(void, SetVisibleScopeIds, (absl::flat_hash_set<uint64_t> visible_functions),
-              (override));
+  MOCK_METHOD(ScopeId, GetHighlightedScopeId, (), (const, override));
+  MOCK_METHOD(void, SetHighlightedScopeId, (ScopeId highlighted_scope_id), (override));
+  MOCK_METHOD(void, SetVisibleScopeIds, (absl::flat_hash_set<ScopeId> visible_scopes), (override));
   MOCK_METHOD(void, DeselectTimer, (), (override));
   MOCK_METHOD(bool, IsCapturing, (), (const, override));
-  MOCK_METHOD(void, JumpToTimerAndZoom, (uint64_t function_id, JumpToTimerMode selection_mode),
+  MOCK_METHOD(void, JumpToTimerAndZoom, (ScopeId scope_id, JumpToTimerMode selection_mode),
               (override));
   MOCK_METHOD(std::vector<const orbit_client_data::TimerChain*>, GetAllThreadTimerChains, (),
               (const, override));
@@ -103,7 +104,7 @@ class MockAppInterface : public AppInterface {
 
   MOCK_METHOD(void, ShowHistogram,
               (const std::vector<uint64_t>* data, const std::string& function_name,
-               uint64_t function_id),
+               ScopeId scope_id),
               (override));
 
   MOCK_METHOD(uint64_t, ProvideScopeId, (const orbit_client_protos::TimerInfo& timer_info),

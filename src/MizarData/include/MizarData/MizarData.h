@@ -29,6 +29,8 @@ namespace orbit_mizar_data {
 // Also owns a map from the function absolute addresses to their names.
 class MizarData : public orbit_capture_client::AbstractCaptureListener<MizarData>,
                   public MizarDataProvider {
+  using ScopeId = orbit_client_data::ScopeId;
+
  public:
   MizarData() = default;
   MizarData(MizarData&) = delete;

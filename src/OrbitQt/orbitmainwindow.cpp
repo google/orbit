@@ -73,6 +73,7 @@
 #include "CaptureOptionsDialog.h"
 #include "ClientData/CaptureData.h"
 #include "ClientData/ProcessData.h"
+#include "ClientData/ScopeIdProvider.h"
 #include "ClientFlags/ClientFlags.h"
 #include "ClientModel/CaptureSerializer.h"
 #include "ClientProtos/capture_data.pb.h"
@@ -133,6 +134,7 @@
 
 using orbit_capture_client::CaptureClient;
 using orbit_capture_client::CaptureListener;
+using orbit_client_data::ScopeId;
 
 using orbit_grpc_protos::CaptureOptions;
 using orbit_grpc_protos::CrashOrbitServiceRequest_CrashType;
@@ -1356,7 +1358,7 @@ void OrbitMainWindow::OnTimerSelectionChanged(const orbit_client_protos::TimerIn
   bool is_live_function_data_view_initialized = live_functions_data_view != nullptr;
   if (timer_info) {
     ORBIT_CHECK(is_live_function_data_view_initialized);
-    const uint64_t scope_id = app_->GetCaptureData().ProvideScopeId(*timer_info);
+    const ScopeId scope_id = app_->GetCaptureData().ProvideScopeId(*timer_info);
     selected_row = live_functions_data_view->GetRowFromScopeId(scope_id);
     live_functions_data_view->UpdateSelectedFunctionId();
     live_functions_data_view->UpdateHistogramWithScopeIds({scope_id});
@@ -1721,7 +1723,7 @@ void OrbitMainWindow::ShowWarningWithDontShowAgainCheckboxIfNeeded(
 }
 
 void OrbitMainWindow::ShowHistogram(const std::vector<uint64_t>* data,
-                                    const std::string& scope_name, uint64_t scope_id) {
+                                    const std::string& scope_name, ScopeId scope_id) {
   ui->liveFunctions->ShowHistogram(data, scope_name, scope_id);
 }
 

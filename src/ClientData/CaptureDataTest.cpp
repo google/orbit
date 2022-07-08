@@ -36,12 +36,12 @@ namespace {
 constexpr size_t kTimersForFirstId = 3;
 constexpr size_t kTimersForSecondId = 2;
 constexpr size_t kTimerCount = kTimersForFirstId + kTimersForSecondId;
-constexpr uint64_t kFirstId = 1;
-constexpr uint64_t kSecondId = 2;
+constexpr ScopeId kFirstId{1};
+constexpr ScopeId kSecondId{2};
 const std::string kFirstName = "foo()";
 const std::string kSecondName = "bar()";
-constexpr std::array<uint64_t, kTimerCount> kTimerIds = {kFirstId, kFirstId, kFirstId, kSecondId,
-                                                         kSecondId};
+constexpr std::array<ScopeId, kTimerCount> kTimerIds = {kFirstId, kFirstId, kFirstId, kSecondId,
+                                                        kSecondId};
 constexpr std::array<uint64_t, kTimerCount> kStarts = {10, 20, 30, 40, 50};
 constexpr std::array<uint64_t, kTimersForFirstId> kDurationsForFirstId = {300, 100, 200};
 constexpr std::array<uint64_t, kTimersForSecondId> kDurationsForSecondId = {500, 400};
@@ -90,7 +90,7 @@ static const std::array<uint64_t, kTimerCount> kDurations = [] {
 static const std::array<TimerInfo, kTimerCount> kTimerInfos = [] {
   std::array<TimerInfo, kTimerCount> result;
   for (size_t i = 0; i < kTimerCount; ++i) {
-    result[i].set_function_id(kTimerIds[i]);
+    result[i].set_function_id(*kTimerIds[i]);
     result[i].set_start(kStarts[i]);
     result[i].set_end(kStarts[i] + kDurations[i]);
   }
@@ -142,8 +142,8 @@ void AddInstrumentedFunction(orbit_grpc_protos::CaptureOptions& capture_options,
 
 [[nodiscard]] orbit_grpc_protos::CaptureStarted CreateCaptureStarted() {
   orbit_grpc_protos::CaptureStarted capture_started;
-  AddInstrumentedFunction(*capture_started.mutable_capture_options(), kFirstId, kFirstName);
-  AddInstrumentedFunction(*capture_started.mutable_capture_options(), kSecondId, kSecondName);
+  AddInstrumentedFunction(*capture_started.mutable_capture_options(), *kFirstId, kFirstName);
+  AddInstrumentedFunction(*capture_started.mutable_capture_options(), *kSecondId, kSecondName);
   return capture_started;
 }
 
@@ -201,7 +201,7 @@ const auto [kScimitarVariance, kScimitarTimers] = [] {
                  [](const std::string_view line) {
                    const uint64_t duration = std::stoull(std::string(line));
                    TimerInfo timer;
-                   timer.set_function_id(kFirstId);
+                   timer.set_function_id(*kFirstId);
                    timer.set_start(0);
                    timer.set_end(duration);
                    return timer;

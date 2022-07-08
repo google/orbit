@@ -13,6 +13,7 @@
 
 #include "ClientData/FunctionInfo.h"
 #include "ClientData/ModuleData.h"
+#include "ClientData/ScopeIdProvider.h"
 #include "ClientProtos/capture_data.pb.h"
 #include "CodeReport/CodeReport.h"
 #include "CodeReport/DisassemblyReport.h"
@@ -30,6 +31,8 @@ namespace orbit_gl {
 // OrbitMainWindow and Mocks can derive from this and offer a fixed interface
 // to OrbitApp.
 class MainWindowInterface {
+  using ScopeId = orbit_client_data::ScopeId;
+
  public:
   virtual void ShowTooltip(std::string_view message) = 0;
   virtual void ShowWarningWithDontShowAgainCheckboxIfNeeded(
@@ -49,7 +52,7 @@ class MainWindowInterface {
                                   std::string_view message) = 0;
 
   virtual void ShowHistogram(const std::vector<uint64_t>* data, const std::string& scope_name,
-                             uint64_t scope_id) = 0;
+                             ScopeId scope_id) = 0;
 
   enum class SymbolErrorHandlingResult { kReloadRequired, kSymbolLoadingCancelled };
   virtual SymbolErrorHandlingResult HandleSymbolError(

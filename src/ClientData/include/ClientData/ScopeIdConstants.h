@@ -6,11 +6,14 @@
 #define CLIENT_DATA_CONSTANTS_H_
 
 #include <cstdint>
+
+#include "ClientData/ScopeIdProvider.h"
+
 namespace orbit_client_data {
 
 // We use this constant to identify scopes where we don't have a corresponding Id (see
 // ScopeIdProvider).
-constexpr uint64_t kInvalidScopeId = 0;
+constexpr ScopeId kInvalidScopeId{0};
 
 }  // namespace orbit_client_data
 

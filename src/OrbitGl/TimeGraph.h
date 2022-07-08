@@ -14,6 +14,7 @@
 #include "CaptureViewElement.h"
 #include "ClientData/ApiTrackValue.h"
 #include "ClientData/CaptureData.h"
+#include "ClientData/ScopeIdProvider.h"
 #include "ClientProtos/capture_data.pb.h"
 #include "CoreMath.h"
 #include "GlSlider.h"
@@ -31,6 +32,8 @@
 class OrbitApp;
 
 class TimeGraph : public orbit_gl::CaptureViewElement, public orbit_gl::TimelineInfoInterface {
+  using ScopeId = orbit_client_data::ScopeId;
+
  public:
   explicit TimeGraph(AccessibleInterfaceProvider* parent, OrbitApp* app,
                      orbit_gl::Viewport* viewport, orbit_client_data::CaptureData* capture_data,
@@ -102,16 +105,16 @@ class TimeGraph : public orbit_gl::CaptureViewElement, public orbit_gl::Timeline
   void JumpToNeighborTimer(const orbit_client_protos::TimerInfo* from, JumpDirection jump_direction,
                            JumpScope jump_scope);
   [[nodiscard]] const orbit_client_protos::TimerInfo* FindPreviousScopeTimer(
-      uint64_t scope_id, uint64_t current_time,
+      ScopeId scope_id, uint64_t current_time,
       std::optional<uint32_t> thread_id = std::nullopt) const;
   [[nodiscard]] const orbit_client_protos::TimerInfo* FindNextScopeTimer(
-      uint64_t scope_id, uint64_t current_time,
+      ScopeId scope_id, uint64_t current_time,
       std::optional<uint32_t> thread_id = std::nullopt) const;
   [[nodiscard]] std::vector<const orbit_client_data::TimerChain*> GetAllThreadTrackTimerChains()
       const;
   [[nodiscard]] std::pair<const orbit_client_protos::TimerInfo*,
                           const orbit_client_protos::TimerInfo*>
-  GetMinMaxTimerForScope(uint64_t scope_id) const;
+  GetMinMaxTimerForScope(ScopeId scope_id) const;
 
   void SelectAndZoom(const orbit_client_protos::TimerInfo* timer_info);
   [[nodiscard]] double GetCaptureTimeSpanUs() const;
@@ -193,14 +196,14 @@ class TimeGraph : public orbit_gl::CaptureViewElement, public orbit_gl::Timeline
 
   void DrawMarginsBetweenChildren(orbit_gl::PrimitiveAssembler& primitive_assembler) const;
 
-  [[nodiscard]] const TimerInfo* FindNextThreadTrackTimer(uint64_t scope_id, uint64_t current_time,
+  [[nodiscard]] const TimerInfo* FindNextThreadTrackTimer(ScopeId scope_id, uint64_t current_time,
                                                           std::optional<uint32_t> thread_id) const;
 
   [[nodiscard]] const TimerInfo* FindPreviousThreadTrackTimer(
-      uint64_t scope_id, uint64_t current_time, std::optional<uint32_t> thread_id) const;
+      ScopeId scope_id, uint64_t current_time, std::optional<uint32_t> thread_id) const;
 
   std::pair<const TimerInfo*, const TimerInfo*> GetMinMaxTimerForThreadTrackScope(
-      uint64_t scope_id) const;
+      ScopeId scope_id) const;
 
   AccessibleInterfaceProvider* accessible_parent_;
   orbit_gl::OpenGlTextRenderer text_renderer_static_;

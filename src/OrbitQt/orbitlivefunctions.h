@@ -15,6 +15,7 @@
 #include <optional>
 
 #include "ClientData/FunctionInfo.h"
+#include "ClientData/ScopeIdProvider.h"
 #include "LiveFunctionsController.h"
 #include "Statistics/Histogram.h"
 #include "absl/container/flat_hash_map.h"
@@ -48,7 +49,7 @@ class OrbitLiveFunctions : public QWidget {
     return live_functions_ ? &live_functions_.value() : nullptr;
   }
   void ShowHistogram(const std::vector<uint64_t>* data, const std::string& scope_name,
-                     uint64_t scope_id);
+                     orbit_client_data::ScopeId scope_id);
 
  signals:
   void SignalSelectionRangeChange(std::optional<orbit_statistics::HistogramSelectionRange>) const;

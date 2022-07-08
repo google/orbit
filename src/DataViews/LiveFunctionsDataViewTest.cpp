@@ -17,6 +17,7 @@
 
 #include "ClientData/CaptureData.h"
 #include "ClientData/ScopeIdConstants.h"
+#include "ClientData/ScopeIdProvider.h"
 #include "ClientData/ScopeStats.h"
 #include "ClientData/TimerChain.h"
 #include "ClientProtos/capture_data.pb.h"
@@ -37,6 +38,7 @@ using JumpToTimerMode = orbit_data_views::AppInterface::JumpToTimerMode;
 using orbit_client_data::CaptureData;
 using orbit_client_data::FunctionInfo;
 using orbit_client_data::ModuleData;
+using orbit_client_data::ScopeId;
 using orbit_client_data::ScopeStats;
 
 using orbit_client_protos::TimerInfo;
@@ -75,7 +77,13 @@ using ::testing::Return;
 namespace {
 
 constexpr size_t kNumFunctions = 3;
-const std::array<uint64_t, kNumFunctions> kFunctionIds{11, 22, 33};
+constexpr std::array<uint64_t, kNumFunctions> kFunctionIds{11, 22, 33};
+const std::array<ScopeId, kNumFunctions> kScopeId = [] {
+  std::array<ScopeId, kNumFunctions> result;
+  std::transform(std::begin(kFunctionIds), std::end(kFunctionIds), std::begin(result),
+                 [](uint64_t scope_id) { return ScopeId(scope_id); });
+  return result;
+}();
 constexpr uint64_t kNonDynamicallyInstrumentedFunctionId = 123456;
 const std::array<std::string, kNumFunctions> kPrettyNames{"void foo()", "main(int, char**)",
                                                           "ffind(int)"};
@@ -217,7 +225,7 @@ std::unique_ptr<CaptureData> GenerateTestCaptureData(
 
 class MockLiveFunctionsInterface : public orbit_data_views::LiveFunctionsInterface {
  public:
-  MOCK_METHOD(void, AddIterator, (uint64_t instrumented_function_id, const FunctionInfo* function));
+  MOCK_METHOD(void, AddIterator, (ScopeId scope_id, const FunctionInfo* function));
 };
 
 class LiveFunctionsDataViewTest : public testing::Test {

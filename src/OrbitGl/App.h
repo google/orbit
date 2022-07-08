@@ -96,6 +96,8 @@ class OrbitApp final : public DataViewFactory,
                        public orbit_capture_client::AbstractCaptureListener<OrbitApp>,
                        public orbit_data_views::AppInterface,
                        public orbit_capture_client::CaptureControlInterface {
+  using ScopeId = orbit_client_data::ScopeId;
+
  public:
   explicit OrbitApp(orbit_gl::MainWindowInterface* main_window,
                     orbit_base::MainThreadExecutor* main_thread_executor,
@@ -459,11 +461,11 @@ class OrbitApp final : public DataViewFactory,
   [[nodiscard]] const orbit_grpc_protos::InstrumentedFunction* GetInstrumentedFunction(
       uint64_t function_id) const;
 
-  void SetVisibleScopeIds(absl::flat_hash_set<uint64_t> visible_scope_ids) override;
-  [[nodiscard]] bool IsScopeVisible(uint64_t scope_id);
+  void SetVisibleScopeIds(absl::flat_hash_set<ScopeId> visible_scope_ids) override;
+  [[nodiscard]] bool IsScopeVisible(ScopeId scope_id) const;
 
-  [[nodiscard]] uint64_t GetHighlightedScopeId() const override;
-  void SetHighlightedScopeId(uint64_t highlighted_scope_id) override;
+  [[nodiscard]] ScopeId GetHighlightedScopeId() const override;
+  void SetHighlightedScopeId(ScopeId highlighted_scope_id) override;
 
   [[nodiscard]] orbit_client_data::ThreadID selected_thread_id() const;
   void set_selected_thread_id(orbit_client_data::ThreadID thread_id);
@@ -477,7 +479,7 @@ class OrbitApp final : public DataViewFactory,
   void SelectTimer(const orbit_client_protos::TimerInfo* timer_info);
   void DeselectTimer() override;
 
-  [[nodiscard]] uint64_t GetScopeIdToHighlight() const;
+  [[nodiscard]] ScopeId GetScopeIdToHighlight() const;
   [[nodiscard]] uint64_t GetGroupIdToHighlight() const;
 
   // origin_is_multiple_threads defines if the selection is specific to a single thread,
@@ -512,7 +514,7 @@ class OrbitApp final : public DataViewFactory,
 
   [[nodiscard]] bool HasFrameTrackInCaptureData(uint64_t instrumented_function_id) const override;
 
-  void JumpToTimerAndZoom(uint64_t scope_id, JumpToTimerMode selection_mode) override;
+  void JumpToTimerAndZoom(ScopeId scope_id, JumpToTimerMode selection_mode) override;
   [[nodiscard]] std::vector<const orbit_client_data::TimerChain*> GetAllThreadTimerChains()
       const override;
 
@@ -595,7 +597,7 @@ class OrbitApp final : public DataViewFactory,
   void CaptureMetricProcessTimer(const orbit_client_protos::TimerInfo& timer);
 
   void ShowHistogram(const std::vector<uint64_t>* data, const std::string& scope_name,
-                     uint64_t scope_id) override;
+                     ScopeId scope_id) override;
 
   void RequestSymbolDownloadStop(absl::Span<const orbit_client_data::ModuleData* const> modules,
                                  bool show_dialog);

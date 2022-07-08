@@ -41,13 +41,13 @@ const std::vector<std::string> kNames{"A", "B", "C", "D", "A", "B", "B"};
 }
 
 static void AssertNameToIdIsBijective(const std::vector<orbit_client_protos::TimerInfo>& timers,
-                                      const std::vector<uint64_t>& ids) {
-  absl::flat_hash_map<std::string, uint64_t> name_to_id;
+                                      const std::vector<ScopeId>& ids) {
+  absl::flat_hash_map<std::string, ScopeId> name_to_id;
   for (size_t i = 0; i < timers.size(); ++i) {
     name_to_id[timers[i].api_scope_name()] = ids[i];
   }
 
-  absl::flat_hash_set<uint64_t> ids_set(std::begin(ids), std::end(ids));
+  absl::flat_hash_set<ScopeId> ids_set(std::begin(ids), std::end(ids));
   ASSERT_EQ(ids_set.size(), name_to_id.size());
 
   for (size_t i = 0; i < timers.size(); ++i) {
@@ -55,9 +55,9 @@ static void AssertNameToIdIsBijective(const std::vector<orbit_client_protos::Tim
   }
 }
 
-static std::vector<uint64_t> GetIds(ScopeIdProvider* id_provider,
-                                    const std::vector<orbit_client_protos::TimerInfo>& timers) {
-  std::vector<uint64_t> ids;
+static std::vector<ScopeId> GetIds(ScopeIdProvider* id_provider,
+                                   const std::vector<orbit_client_protos::TimerInfo>& timers) {
+  std::vector<ScopeId> ids;
   std::transform(std::begin(timers), std::end(timers), std::back_inserter(ids),
                  [id_provider](const TimerInfo& timer) { return id_provider->ProvideId(timer); });
   return ids;
@@ -67,7 +67,7 @@ static void TestProvideId(std::vector<orbit_client_protos::TimerInfo>& timer_inf
   orbit_grpc_protos::CaptureOptions capture_options;
   auto id_provider = NameEqualityScopeIdProvider::Create(capture_options);
 
-  const std::vector<uint64_t> ids = GetIds(id_provider.get(), timer_infos);
+  const std::vector<ScopeId> ids = GetIds(id_provider.get(), timer_infos);
   AssertNameToIdIsBijective(timer_infos, ids);
   for (size_t i = 0; i < timer_infos.size(); ++i) {
     EXPECT_EQ(id_provider->GetScopeInfo(ids[i]).GetName(), timer_infos[i].api_scope_name());
@@ -115,12 +115,12 @@ TEST(NameEqualityScopeIdProviderTest, CreateIsCorrect) {
   auto id_provider = NameEqualityScopeIdProvider::Create(capture_options);
   TimerInfo timer_info = MakeTimerInfo("A", TimerInfo::kApiScope);
 
-  ASSERT_EQ(id_provider->ProvideId(timer_info),
+  ASSERT_EQ(*id_provider->ProvideId(timer_info),
             *std::max_element(std::begin(kFunctionIds), std::end(kFunctionIds)) + 1);
 
   for (size_t i = 0; i < kFunctionCount; ++i) {
     const ScopeInfo expected{kFunctionNames[i], ScopeType::kDynamicallyInstrumentedFunction};
-    EXPECT_EQ(id_provider->GetScopeInfo(kFunctionIds[i]), expected);
+    EXPECT_EQ(id_provider->GetScopeInfo(ScopeId(kFunctionIds[i])), expected);
   }
 }
 

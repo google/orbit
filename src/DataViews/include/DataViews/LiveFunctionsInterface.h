@@ -8,6 +8,7 @@
 #include <stdint.h>
 
 #include "ClientData/FunctionInfo.h"
+#include "ClientData/ScopeIdProvider.h"
 
 namespace orbit_data_views {
 
@@ -15,7 +16,7 @@ class LiveFunctionsInterface {
  public:
   virtual ~LiveFunctionsInterface() = default;
 
-  virtual void AddIterator(uint64_t instrumented_function_id,
+  virtual void AddIterator(orbit_client_data::ScopeId instrumented_function_scope_id,
                            const orbit_client_data::FunctionInfo* function) = 0;
 };
 

@@ -14,10 +14,12 @@
 
 #include "App.h"
 #include "ClientData/CaptureData.h"
+#include "ClientData/ScopeIdProvider.h"
 #include "ClientProtos/capture_data.pb.h"
 #include "TimeGraph.h"
 
 using orbit_client_data::FunctionInfo;
+using orbit_client_data::ScopeId;
 using orbit_client_protos::TimerInfo;
 
 namespace {
@@ -51,8 +53,8 @@ const orbit_client_protos::TimerInfo* ClosestTo(uint64_t point,
   return timer_b;
 }
 
-const orbit_client_protos::TimerInfo* SnapToClosestStart(TimeGraph* time_graph,
-                                                         uint64_t function_id) {
+static const orbit_client_protos::TimerInfo* SnapToClosestStart(TimeGraph* time_graph,
+                                                                ScopeId scope_id) {
   double min_us = time_graph->GetMinTimeUs();
   double max_us = time_graph->GetMaxTimeUs();
   double center_us = 0.5 * max_us + 0.5 * min_us;
@@ -63,12 +65,12 @@ const orbit_client_protos::TimerInfo* SnapToClosestStart(TimeGraph* time_graph,
   // included in the timerange that we search). Note that FindNextFunctionCall
   // uses the end marker of the timer as a timestamp.
   const orbit_client_protos::TimerInfo* timer_info =
-      time_graph->FindNextScopeTimer(function_id, center - 1);
+      time_graph->FindNextScopeTimer(scope_id, center - 1);
 
   // If we cannot find a next function call, then the closest one is the first
   // call we find before center.
   if (!timer_info) {
-    return time_graph->FindPreviousScopeTimer(function_id, center);
+    return time_graph->FindPreviousScopeTimer(scope_id, center);
   }
 
   // We have to consider the case where center falls to the right of the start
@@ -77,7 +79,7 @@ const orbit_client_protos::TimerInfo* SnapToClosestStart(TimeGraph* time_graph,
   // using the start marker to measure the distance.
   if (timer_info->start() <= center) {
     const orbit_client_protos::TimerInfo* next_timer_info =
-        time_graph->FindNextScopeTimer(function_id, timer_info->end());
+        time_graph->FindNextScopeTimer(scope_id, timer_info->end());
     if (!next_timer_info) {
       return timer_info;
     }
@@ -88,7 +90,7 @@ const orbit_client_protos::TimerInfo* SnapToClosestStart(TimeGraph* time_graph,
   // The center is to the left of 'box', so the closest box is either 'box' or
   // the next box to the left of the center.
   const orbit_client_protos::TimerInfo* previous_timer_info =
-      time_graph->FindPreviousScopeTimer(function_id, timer_info->start());
+      time_graph->FindPreviousScopeTimer(scope_id, timer_info->start());
 
   if (!previous_timer_info) {
     return timer_info;
@@ -114,19 +116,19 @@ void LiveFunctionsController::Move() {
                                                           min_max.first, min_max.second, 0.5);
   }
   app_->GetMutableTimeGraph()->GetTrackContainer()->SetIteratorOverlayData(
-      current_timer_infos_, iterator_id_to_function_id_);
+      current_timer_infos_, iterator_id_to_scope_id_);
 }
 
 bool LiveFunctionsController::OnAllNextButton() {
   absl::flat_hash_map<uint64_t, const orbit_client_protos::TimerInfo*> next_timer_infos;
   uint64_t id_with_min_timestamp = 0;
   uint64_t min_timestamp = std::numeric_limits<uint64_t>::max();
-  for (auto it : iterator_id_to_function_id_) {
-    uint64_t function_id = it.second;
+  for (auto it : iterator_id_to_scope_id_) {
+    ScopeId scope_id = it.second;
     const orbit_client_protos::TimerInfo* current_timer_info =
         current_timer_infos_.find(it.first)->second;
     const orbit_client_protos::TimerInfo* timer_info =
-        app_->GetMutableTimeGraph()->FindNextScopeTimer(function_id, current_timer_info->end());
+        app_->GetMutableTimeGraph()->FindNextScopeTimer(scope_id, current_timer_info->end());
     if (timer_info == nullptr) {
       return false;
     }
@@ -148,12 +150,13 @@ bool LiveFunctionsController::OnAllPreviousButton() {
   absl::flat_hash_map<uint64_t, const orbit_client_protos::TimerInfo*> next_timer_infos;
   uint64_t id_with_min_timestamp = 0;
   uint64_t min_timestamp = std::numeric_limits<uint64_t>::max();
-  for (auto it : iterator_id_to_function_id_) {
-    uint64_t function_id = it.second;
+  for (auto it : iterator_id_to_scope_id_) {
+    ScopeId function_scope_id = it.second;
     const orbit_client_protos::TimerInfo* current_timer_info =
         current_timer_infos_.find(it.first)->second;
     const orbit_client_protos::TimerInfo* timer_info =
-        app_->GetMutableTimeGraph()->FindPreviousScopeTimer(function_id, current_timer_info->end());
+        app_->GetMutableTimeGraph()->FindPreviousScopeTimer(function_scope_id,
+                                                            current_timer_info->end());
     if (timer_info == nullptr) {
       return false;
     }
@@ -173,7 +176,7 @@ bool LiveFunctionsController::OnAllPreviousButton() {
 
 void LiveFunctionsController::OnNextButton(uint64_t id) {
   const orbit_client_protos::TimerInfo* timer_info =
-      app_->GetMutableTimeGraph()->FindNextScopeTimer(iterator_id_to_function_id_[id],
+      app_->GetMutableTimeGraph()->FindNextScopeTimer(iterator_id_to_scope_id_[id],
                                                       current_timer_infos_[id]->end());
   // If text_box is nullptr, then we have reached the right end of the timeline.
   if (timer_info != nullptr) {
@@ -184,7 +187,7 @@ void LiveFunctionsController::OnNextButton(uint64_t id) {
 }
 void LiveFunctionsController::OnPreviousButton(uint64_t id) {
   const orbit_client_protos::TimerInfo* timer_info =
-      app_->GetMutableTimeGraph()->FindPreviousScopeTimer(iterator_id_to_function_id_[id],
+      app_->GetMutableTimeGraph()->FindPreviousScopeTimer(iterator_id_to_scope_id_[id],
                                                           current_timer_infos_[id]->end());
   // If text_box is nullptr, then we have reached the left end of the timeline.
   if (timer_info != nullptr) {
@@ -196,7 +199,7 @@ void LiveFunctionsController::OnPreviousButton(uint64_t id) {
 
 void LiveFunctionsController::OnDeleteButton(uint64_t id) {
   current_timer_infos_.erase(id);
-  iterator_id_to_function_id_.erase(id);
+  iterator_id_to_scope_id_.erase(id);
   metrics_uploader_->SendLogEvent(orbit_metrics_uploader::OrbitLogEvent::ORBIT_ITERATOR_REMOVE);
 
   // If we erase the iterator that was last used by the user, then
@@ -209,17 +212,19 @@ void LiveFunctionsController::OnDeleteButton(uint64_t id) {
   Move();
 }
 
-void LiveFunctionsController::AddIterator(uint64_t function_id, const FunctionInfo* function) {
+void LiveFunctionsController::AddIterator(ScopeId instrumented_function_scope_id,
+                                          const FunctionInfo* function) {
   uint64_t iterator_id = next_iterator_id_++;
   const orbit_client_protos::TimerInfo* timer_info = app_->selected_timer();
   // If no box is currently selected or the selected box is a different
   // function, we search for the closest box to the current center of the
   // screen.
-  if (!timer_info || timer_info->function_id() != function_id) {
-    timer_info = SnapToClosestStart(app_->GetMutableTimeGraph(), function_id);
+  if (!timer_info ||
+      FunctionIdToScopeId(timer_info->function_id()) != instrumented_function_scope_id) {
+    timer_info = SnapToClosestStart(app_->GetMutableTimeGraph(), instrumented_function_scope_id);
   }
 
-  iterator_id_to_function_id_.insert(std::make_pair(iterator_id, function_id));
+  iterator_id_to_scope_id_.insert(std::make_pair(iterator_id, instrumented_function_scope_id));
   current_timer_infos_.insert(std::make_pair(iterator_id, timer_info));
   id_to_select_ = iterator_id;
   if (add_iterator_callback_) {
@@ -246,11 +251,17 @@ uint64_t LiveFunctionsController::GetCaptureMax() const {
 }
 
 void LiveFunctionsController::Reset() {
-  iterator_id_to_function_id_.clear();
+  iterator_id_to_scope_id_.clear();
   current_timer_infos_.clear();
   TimeGraph* time_graph = app_->GetMutableTimeGraph();
   if (time_graph != nullptr) {
     app_->GetMutableTimeGraph()->GetTrackContainer()->SetIteratorOverlayData({}, {});
   }
   id_to_select_ = orbit_grpc_protos::kInvalidFunctionId;
+}
+
+ScopeId LiveFunctionsController::FunctionIdToScopeId(uint64_t function_id) const {
+  ORBIT_CHECK(app_ != nullptr);
+  ORBIT_CHECK(app_->HasCaptureData());
+  return app_->GetCaptureData().FunctionIdToScopeId(function_id);
 }

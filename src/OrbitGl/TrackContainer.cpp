@@ -16,6 +16,7 @@
 
 #include "AccessibleCaptureViewElement.h"
 #include "App.h"
+#include "ClientData/ScopeIdProvider.h"
 #include "ClientFlags/ClientFlags.h"
 #include "DisplayFormats/DisplayFormats.h"
 #include "Geometry.h"
@@ -33,6 +34,7 @@ namespace orbit_gl {
 
 using orbit_client_data::CaptureData;
 using orbit_client_data::ModuleManager;
+using orbit_client_data::ScopeId;
 using orbit_client_protos::TimerInfo;
 using orbit_grpc_protos::InstrumentedFunction;
 
@@ -223,14 +225,16 @@ void TrackContainer::DrawOverlay(PrimitiveAssembler& primitive_assembler,
 
     uint64_t id_a = timers[k - 1].first;
     uint64_t id_b = timers[k].first;
-    ORBIT_CHECK(iterator_id_to_function_id_.find(id_a) != iterator_id_to_function_id_.end());
-    ORBIT_CHECK(iterator_id_to_function_id_.find(id_b) != iterator_id_to_function_id_.end());
-    uint64_t function_a_id = iterator_id_to_function_id_.at(id_a);
-    uint64_t function_b_id = iterator_id_to_function_id_.at(id_b);
-    const InstrumentedFunction* function_a =
-        capture_data_->GetInstrumentedFunctionById(function_a_id);
-    const InstrumentedFunction* function_b =
-        capture_data_->GetInstrumentedFunctionById(function_b_id);
+    ORBIT_CHECK(iterator_id_to_function_scope_id_.find(id_a) !=
+                iterator_id_to_function_scope_id_.end());
+    ORBIT_CHECK(iterator_id_to_function_scope_id_.find(id_b) !=
+                iterator_id_to_function_scope_id_.end());
+    ScopeId function_a_id = iterator_id_to_function_scope_id_.at(id_a);
+    ScopeId function_b_id = iterator_id_to_function_scope_id_.at(id_b);
+    const InstrumentedFunction* function_a = capture_data_->GetInstrumentedFunctionById(
+        capture_data_->ScopeIdToFunctionId(function_a_id));
+    const InstrumentedFunction* function_b = capture_data_->GetInstrumentedFunctionById(
+        capture_data_->ScopeIdToFunctionId(function_b_id));
     ORBIT_CHECK(function_a != nullptr);
     ORBIT_CHECK(function_b != nullptr);
     const std::string& label = GetLabelBetweenIterators(*function_a, *function_b);
@@ -364,9 +368,9 @@ const TimerInfo* TrackContainer::FindDown(const TimerInfo& from) {
 
 void TrackContainer::SetIteratorOverlayData(
     const absl::flat_hash_map<uint64_t, const orbit_client_protos::TimerInfo*>& iterator_timer_info,
-    const absl::flat_hash_map<uint64_t, uint64_t>& iterator_id_to_function_id) {
+    const absl::flat_hash_map<uint64_t, ScopeId>& iterator_id_to_function_id) {
   iterator_timer_info_ = iterator_timer_info;
-  iterator_id_to_function_id_ = iterator_id_to_function_id;
+  iterator_id_to_function_scope_id_ = iterator_id_to_function_id;
   RequestUpdate(RequestUpdateScope::kDraw);
 }
 
