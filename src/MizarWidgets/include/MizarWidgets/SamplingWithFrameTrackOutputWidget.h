@@ -15,6 +15,8 @@ class SamplingWithFrameTrackOutputWidget;
 
 namespace orbit_mizar_widgets {
 
+// The widget handles visualization of the comparison report based on sampling data with frame
+// track.
 class SamplingWithFrameTrackOutputWidget : public QWidget {
   using Report = ::orbit_mizar_data::SamplingWithFrameTrackComparisonReport;
 

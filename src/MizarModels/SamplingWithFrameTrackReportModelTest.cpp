@@ -6,8 +6,8 @@
 #include <absl/container/flat_hash_set.h>
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
-#include <qnamespace.h>
 
+#include <Qt>
 #include <cstdint>
 #include <type_traits>
 #include <utility>
@@ -15,7 +15,7 @@
 
 #include "MizarBase/BaselineOrComparison.h"
 #include "MizarData/SamplingWithFrameTrackComparisonReport.h"
-#include "MizarWidgets/SamplingWithFrameTrackReportModel.h"
+#include "MizarModels/SamplingWithFrameTrackReportModel.h"
 #include "TestUtils/ContainerHelpers.h"
 
 using ::orbit_mizar_base::Baseline;
@@ -97,7 +97,7 @@ class SamplingWithFrameTrackReportModelTest : public ::testing::Test {
   Comparison<MockFrameTrackStats> comparison_frame_track_stats_ =
       MakeComparison<MockFrameTrackStats>(kComparisonFrameTime);
 
-  QString DisplayedString(int row, Column column) {
+  [[nodiscard]] QString DisplayedString(int row, Column column) const {
     const QModelIndex index = model_.index(row, static_cast<int>(column));
     return model_.data(index, Qt::DisplayRole).toString();
   }
@@ -112,7 +112,7 @@ class SamplingWithFrameTrackReportModelTest : public ::testing::Test {
   Model model_{report_};
 };
 
-double ExpectDoubleAndParse(const QString& str) {
+static double ExpectDoubleAndParse(const QString& str) {
   bool ok;
   double result = str.toDouble(&ok);
   EXPECT_TRUE(ok);

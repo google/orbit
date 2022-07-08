@@ -10,7 +10,6 @@ target_sources(MizarWidgets PUBLIC
   include/MizarWidgets/MizarMainWindow.h
   include/MizarWidgets/SamplingWithFrameTrackInputWidget.h
   include/MizarWidgets/SamplingWithFrameTrackOutputWidget.h
-  include/MizarWidgets/SamplingWithFrameTrackReportModel.h
   include/MizarWidgets/SamplingWithFrameTrackWidget.h
   include/MizarWidgets/SamplingWithFrameTrackReportConfigValidator.h)
 
@@ -28,6 +27,7 @@ target_sources(MizarWidgets PRIVATE
 
 target_link_libraries(MizarWidgets
   PUBLIC MizarData
+  MizarModels
   QtUtils
   Qt5::Widgets
   Qt5::Core)
@@ -39,7 +39,6 @@ add_executable(MizarWidgetsTests)
 
 target_sources(MizarWidgetsTests PRIVATE
   SamplingWithFrameTrackInputWidgetTest.cpp
-  SamplingWithFrameTrackReportModelTest.cpp
   SamplingWithFrameTrackWidgetTest.cpp
   SamplingWithFrameTrackReportConfigValidatorTest.cpp
 )

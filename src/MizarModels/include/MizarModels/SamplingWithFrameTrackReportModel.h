@@ -20,6 +20,9 @@
 
 namespace orbit_mizar_widgets {
 
+// The class implements the model for the instance of `QTableView` owned by
+// `SamplingWithFrameTrackOutputWidget`. It represents the results of comparison based on sampling
+// data with frame track.
 template <typename Report, typename Counts, typename FrameTrackStats>
 class SamplingWithFrameTrackReportModelTmpl : public QAbstractTableModel {
   template <typename T>
@@ -59,12 +62,12 @@ class SamplingWithFrameTrackReportModelTmpl : public QAbstractTableModel {
     return kColumnsCount;
   };
   [[nodiscard]] QVariant data(const QModelIndex& index, int role) const override {
-    if (role != Qt::DisplayRole) return {};
+    if (index.model() != this || role != Qt::DisplayRole) return {};
     return QString::fromStdString(MakeDisplayedString(index));
   }
 
   [[nodiscard]] QVariant headerData(int section, Qt::Orientation orientation,
-                                    int role) const override {
+                                    int role = Qt::DisplayRole) const override {
     static const absl::flat_hash_map<Column, QString> kColumnNames = {
         {Column::kFunctionName, "Function"},
         {Column::kBaselineExclusivePercent, "Baseline, %"},

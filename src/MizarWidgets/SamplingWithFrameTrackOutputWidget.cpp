@@ -10,7 +10,7 @@
 #include <limits>
 #include <memory>
 
-#include "MizarWidgets/SamplingWithFrameTrackReportModel.h"
+#include "MizarModels/SamplingWithFrameTrackReportModel.h"
 #include "ui_SamplingWithFrameTrackOutputWidget.h"
 
 namespace orbit_mizar_widgets {

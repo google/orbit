@@ -18,9 +18,10 @@
 
 namespace orbit_mizar_widgets {
 
-using orbit_base::LiftAndApply;
+using ::orbit_base::LiftAndApply;
 using ::orbit_mizar_base::Baseline;
 using ::orbit_mizar_base::Comparison;
+using Report = ::orbit_mizar_data::SamplingWithFrameTrackComparisonReport;
 
 SamplingWithFrameTrackWidget::SamplingWithFrameTrackWidget(QWidget* parent)
     : QWidget(parent), ui_(std::make_unique<Ui::SamplingWithFrameTrackWidget>()) {

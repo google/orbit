@@ -143,6 +143,7 @@ class SamplingWithFrameTrackComparisonReportTmpl {
   const absl::flat_hash_map<SFID, std::string>* sfid_to_names_;
 };
 
+// The production code should rely on this alias, changes to RHS are not planned
 using SamplingWithFrameTrackComparisonReport =
     SamplingWithFrameTrackComparisonReportTmpl<SamplingCounts, orbit_client_data::ScopeStats>;
 
