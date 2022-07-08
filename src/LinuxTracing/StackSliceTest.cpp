@@ -21,6 +21,7 @@ TEST(StackSlice, CanBeConstructed) {
 
   EXPECT_EQ(stack_slice.GetStartAddress(), kStartAddress);
   EXPECT_EQ(stack_slice.GetSize(), kSize);
+  EXPECT_EQ(stack_slice.GetEndAddress(), kStartAddress + kSize);
   EXPECT_EQ(stack_slice.GetData()[0], kVal1);
   EXPECT_EQ(stack_slice.GetData()[1], kVal2);
   EXPECT_EQ(stack_slice.GetData()[2], kVal3);

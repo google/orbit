@@ -19,6 +19,7 @@ class StackSlice {
       : start_address_{start_address}, size_{size}, data_{std::move(data)} {}
 
   [[nodiscard]] uint64_t GetStartAddress() const { return start_address_; }
+  [[nodiscard]] uint64_t GetEndAddress() const { return start_address_ + size_; }
   [[nodiscard]] uint64_t GetSize() const { return size_; }
   [[nodiscard]] const char* GetData() const { return data_.get(); }
 
