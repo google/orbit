@@ -40,5 +40,6 @@ orbit_cc_test(
     name = "LinuxCaptureServiceTest",
     deps = [
         ":LinuxCaptureService",
+        "//src/TestUtils",
     ],
 )
