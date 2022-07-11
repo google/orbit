@@ -96,7 +96,7 @@ class UprobesUnwindingVisitor : public PerfEventVisitor {
   void Visit(uint64_t event_timestamp, const MmapPerfEventData& event_data) override;
 
  private:
-  // This struct holds a copy of some stack data from collected from the target process.
+  // This struct holds a copy of some stack data collected from the target process.
   struct StackSlice {
     uint64_t start_address_;
     uint64_t size_;
