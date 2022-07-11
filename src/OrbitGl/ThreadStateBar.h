@@ -50,8 +50,8 @@ class ThreadStateBar final : public ThreadBar {
 
   void DoUpdatePrimitives(PrimitiveAssembler& primitive_assembler, TextRenderer& text_renderer,
                           uint64_t min_tick, uint64_t max_tick, PickingMode picking_mode) override;
-  [[nodiscard]] std::optional<orbit_client_data::ThreadStateSliceInfo> FindSliceFromScreenCoords(
-      float x, float y) const;
+  [[nodiscard]] std::optional<orbit_client_data::ThreadStateSliceInfo> FindSliceFromWorldCoords(
+      const Vec2& pos) const;
 
  private:
   std::string GetThreadStateSliceTooltip(PrimitiveAssembler& primitive_assembler,

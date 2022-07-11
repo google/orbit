@@ -370,8 +370,9 @@ void TrackContainer::SetIteratorOverlayData(
 }
 
 void TrackContainer::DrawThreadDependencyArrow(
+    PrimitiveAssembler& primitive_assembler,
     orbit_client_data::ThreadStateSliceInfo thread_state_slice, const Color& arrow_color,
-    PrimitiveAssembler& primitive_assembler, PickingMode picking_mode) {
+    PickingMode picking_mode) {
   if (picking_mode != PickingMode::kNone) {
     return;
   }
@@ -415,20 +416,20 @@ void TrackContainer::DrawThreadDependencyArrow(
       Vec2{x, start_arrow_y}, Vec2{layout_->GetThreadDependencyArrowBodyWidth(), arrow_body_height},
       Vec2{layout_->GetThreadDependencyArrowHeadWidth(),
            layout_->GetThreadDependencyArrowHeadHeight()},
-      GlCanvas::kZValueOverlay, arrow_color, arrow_direction);
+      GlCanvas::kZValueThreadDependency, arrow_color, arrow_direction);
 }
 
 void TrackContainer::DrawThreadDependency(PrimitiveAssembler& primitive_assembler,
                                           PickingMode picking_mode) {
   if (app_->selected_thread_state_slice() != std::nullopt) {
     const Color kSelectedSliceArrowColor{255, 255, 255, 255};
-    DrawThreadDependencyArrow(app_->selected_thread_state_slice().value(), kSelectedSliceArrowColor,
-                              primitive_assembler, picking_mode);
+    DrawThreadDependencyArrow(primitive_assembler, app_->selected_thread_state_slice().value(),
+                              kSelectedSliceArrowColor, picking_mode);
   }
   if (app_->hovered_thread_state_slice() != std::nullopt) {
     const Color kHoveredSliceArrowColor{255, 255, 255, 64};
-    DrawThreadDependencyArrow(app_->hovered_thread_state_slice().value(), kHoveredSliceArrowColor,
-                              primitive_assembler, picking_mode);
+    DrawThreadDependencyArrow(primitive_assembler, app_->hovered_thread_state_slice().value(),
+                              kHoveredSliceArrowColor, picking_mode);
   }
 }
 
