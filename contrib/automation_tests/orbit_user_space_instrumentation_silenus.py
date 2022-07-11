@@ -34,7 +34,7 @@ def main(argv):
         ConnectToStadiaInstance(),
         FilterAndSelectFirstProcess(process_filter="triangle.exe"),
         WaitForLoadingSymbolsAndCheckModule(module_search_string="triangle.exe"),
-        FilterAndHookFunction(function_search_string="Render"),
+        FilterAndHookFunction(function_search_string="Render{ }triangle.exe"),
         Capture(user_space_instrumentation=True),
         CheckTimers(track_name_filter="triangle.exe", require_all=False),
         VerifyScopeTypeAndHitCount(scope_name="Render",
