@@ -416,7 +416,7 @@ void TrackContainer::DrawThreadDependencyArrow(
       Vec2{x, start_arrow_y}, Vec2{layout_->GetThreadDependencyArrowBodyWidth(), arrow_body_height},
       Vec2{layout_->GetThreadDependencyArrowHeadWidth(),
            layout_->GetThreadDependencyArrowHeadHeight()},
-      GlCanvas::kZValueThreadDependency, arrow_color, arrow_direction);
+      GlCanvas::kZValueOverlay, arrow_color, arrow_direction);
 }
 
 void TrackContainer::DrawThreadDependency(PrimitiveAssembler& primitive_assembler,

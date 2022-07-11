@@ -97,7 +97,6 @@ class GlCanvas : public orbit_gl::AccessibleInterfaceProvider {
   [[nodiscard]] orbit_gl::Viewport& GetViewport() { return viewport_; }
 
   static float kZValueTrack;
-  static float kZValueThreadDependency;
   static float kZValueIncompleteDataOverlayPicking;
   static float kZValueEventBar;
   static float kZValueBox;
