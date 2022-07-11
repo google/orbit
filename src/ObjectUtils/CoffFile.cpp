@@ -16,6 +16,7 @@
 
 #include <system_error>
 
+#include "GrpcProtos/module.pb.h"
 #include "GrpcProtos/symbol.pb.h"
 #include "Introspection/Introspection.h"
 #include "ObjectUtils/WindowsBuildIdUtils.h"
@@ -42,6 +43,8 @@ class CoffFileImpl : public CoffFile {
   [[nodiscard]] std::string GetBuildId() const override;
   [[nodiscard]] uint64_t GetExecutableSegmentOffset() const override;
   [[nodiscard]] uint64_t GetImageSize() const override;
+  [[nodiscard]] const std::vector<orbit_grpc_protos::ModuleInfo::ObjectSegment>& GetObjectSegments()
+      const override;
   [[nodiscard]] bool IsElf() const override;
   [[nodiscard]] bool IsCoff() const override;
   [[nodiscard]] ErrorMessageOr<PdbDebugInfo> GetDebugPdbInfo() const override;
@@ -60,6 +63,7 @@ class CoffFileImpl : public CoffFile {
   llvm::object::OwningBinary<llvm::object::ObjectFile> owning_binary_;
   llvm::object::COFFObjectFile* object_file_;
   bool has_debug_info_;
+  std::vector<orbit_grpc_protos::ModuleInfo::ObjectSegment> sections_;
 };
 
 CoffFileImpl::CoffFileImpl(std::filesystem::path file_path,
@@ -68,6 +72,16 @@ CoffFileImpl::CoffFileImpl(std::filesystem::path file_path,
       owning_binary_(std::move(owning_binary)),
       has_debug_info_(false) {
   object_file_ = llvm::dyn_cast<llvm::object::COFFObjectFile>(owning_binary_.getBinary());
+
+  for (const llvm::object::SectionRef& section_ref : object_file_->sections()) {
+    const llvm::object::coff_section* coff_section = object_file_->getCOFFSection(section_ref);
+    orbit_grpc_protos::ModuleInfo::ObjectSegment& object_segment = sections_.emplace_back();
+    object_segment.set_offset_in_file(coff_section->PointerToRawData);
+    object_segment.set_size_in_file(coff_section->SizeOfRawData);
+    object_segment.set_address(object_file_->getImageBase() + coff_section->VirtualAddress);
+    object_segment.set_size_in_memory(coff_section->VirtualSize);
+  }
+
   const auto dwarf_context = llvm::DWARFContext::create(*owning_binary_.getBinary());
   if (object_file_->getSymbolTable() != 0 || dwarf_context != nullptr) {
     has_debug_info_ = true;
@@ -314,6 +328,11 @@ uint64_t CoffFileImpl::GetExecutableSegmentOffset() const {
 
 uint64_t CoffFileImpl::GetImageSize() const {
   return object_file_->getPE32PlusHeader()->SizeOfImage;
+}
+
+const std::vector<orbit_grpc_protos::ModuleInfo::ObjectSegment>&
+orbit_object_utils::CoffFileImpl::GetObjectSegments() const {
+  return sections_;
 }
 
 bool CoffFileImpl::IsElf() const { return false; }

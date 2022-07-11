@@ -8,6 +8,8 @@
 #include <string>
 #include <vector>
 
+#include "GrpcProtos/module.pb.h"
+
 namespace orbit_windows_utils {
 
 struct Module {
@@ -17,6 +19,7 @@ struct Module {
   uint64_t address_start = 0;
   uint64_t address_end = 0;
   std::string build_id;
+  std::vector<orbit_grpc_protos::ModuleInfo::ObjectSegment> sections;
 };
 
 // List all modules of the process identified by "pid".

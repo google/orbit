@@ -17,6 +17,54 @@ using orbit_grpc_protos::ModuleInfo;
 
 namespace orbit_client_data {
 
+std::vector<orbit_grpc_protos::ModuleInfo::ObjectSegment> ModuleData::GetObjectSegments() const {
+  absl::MutexLock lock(&mutex_);
+  return {module_info_.object_segments().begin(), module_info_.object_segments().end()};
+}
+
+uint64_t ModuleData::ConvertFromVirtualAddressToOffsetInFile(uint64_t virtual_address) const {
+  absl::MutexLock lock(&mutex_);
+
+  if (object_file_type() == orbit_grpc_protos::ModuleInfo::kElfFile) {
+    // For ELF files, we define the load bias as the difference between the executable loadable
+    // segment's address and its offset. So note how, for the executable loadable segment (which we
+    // assume functions belong to), this computation and the generic one below are equivalent:
+    // load_bias = executable_loadable_segment_address - executable_loadable_segment_offset
+    // function_address - load_bias = function_address - executable_loadable_segment_address +
+    //                                executable_loadable_segment_offset
+    return virtual_address - load_bias();
+  }
+
+  for (const orbit_grpc_protos::ModuleInfo::ObjectSegment& segment :
+       module_info_.object_segments()) {
+    if (segment.address() <= virtual_address &&
+        virtual_address < segment.address() + segment.size_in_memory()) {
+      return virtual_address - segment.address() + segment.offset_in_file();
+    }
+  }
+
+  // Fall back to the ELF-specific computation if we didn't find a containing segment.
+  return virtual_address - load_bias();
+}
+
+uint64_t ModuleData::ConvertFromOffsetInFileToVirtualAddress(uint64_t offset_in_file) const {
+  absl::MutexLock lock(&mutex_);
+
+  if (object_file_type() == orbit_grpc_protos::ModuleInfo::kElfFile) {
+    return offset_in_file + load_bias();
+  }
+
+  for (const orbit_grpc_protos::ModuleInfo::ObjectSegment& segment :
+       module_info_.object_segments()) {
+    if (segment.offset_in_file() <= offset_in_file &&
+        offset_in_file < segment.offset_in_file() + segment.size_in_file()) {
+      return offset_in_file - segment.offset_in_file() + segment.address();
+    }
+  }
+
+  return offset_in_file + load_bias();
+}
+
 bool ModuleData::is_loaded() const {
   absl::MutexLock lock(&mutex_);
   return is_loaded_;

@@ -24,6 +24,11 @@ TEST(ModuleData, Constructor) {
   uint64_t file_size = 1000;
   std::string build_id = "test build id";
   uint64_t load_bias = 4000;
+  ModuleInfo::ObjectSegment object_segment;
+  object_segment.set_offset_in_file(0x200);
+  object_segment.set_size_in_file(0x2FFF);
+  object_segment.set_address(0x1000);
+  object_segment.set_size_in_memory(0x3000);
   ModuleInfo::ObjectFileType object_file_type = ModuleInfo::kElfFile;
 
   ModuleInfo module_info{};
@@ -32,6 +37,7 @@ TEST(ModuleData, Constructor) {
   module_info.set_file_size(file_size);
   module_info.set_build_id(build_id);
   module_info.set_load_bias(load_bias);
+  *module_info.add_object_segments() = object_segment;
   module_info.set_object_file_type(object_file_type);
 
   ModuleData module{module_info};
@@ -42,8 +48,58 @@ TEST(ModuleData, Constructor) {
   EXPECT_EQ(module.build_id(), build_id);
   EXPECT_EQ(module.load_bias(), load_bias);
   EXPECT_EQ(module.object_file_type(), object_file_type);
+  ASSERT_EQ(module.GetObjectSegments().size(), 1);
+  EXPECT_EQ(module.GetObjectSegments()[0].offset_in_file(), object_segment.offset_in_file());
+  EXPECT_EQ(module.GetObjectSegments()[0].size_in_file(), object_segment.size_in_file());
+  EXPECT_EQ(module.GetObjectSegments()[0].address(), object_segment.address());
+  EXPECT_EQ(module.GetObjectSegments()[0].size_in_memory(), object_segment.size_in_memory());
   EXPECT_FALSE(module.is_loaded());
   EXPECT_TRUE(module.GetFunctions().empty());
+}
+
+TEST(ModuleData, ConvertFromVirtualAddressToOffsetInFileAndViceVersaElf) {
+  ModuleInfo::ObjectSegment object_segment;
+  object_segment.set_offset_in_file(0x1000);
+  object_segment.set_size_in_file(0x2FFF);
+  object_segment.set_address(0x101000);
+  object_segment.set_size_in_memory(0x3000);
+
+  ModuleInfo module_info{};
+  module_info.set_load_bias(0x100000);
+  *module_info.add_object_segments() = object_segment;
+  module_info.set_object_file_type(ModuleInfo::kElfFile);
+
+  ModuleData module{module_info};
+  EXPECT_EQ(module.ConvertFromVirtualAddressToOffsetInFile(0x101100), 0x1100);
+  EXPECT_EQ(module.ConvertFromOffsetInFileToVirtualAddress(0x1100), 0x101100);
+}
+
+TEST(ModuleData, ConvertFromVirtualAddressToOffsetInFileAndViceVersaPe) {
+  ModuleInfo::ObjectSegment object_segment;
+  object_segment.set_offset_in_file(0x200);
+  object_segment.set_size_in_file(0x2FFF);
+  object_segment.set_address(0x101000);
+  object_segment.set_size_in_memory(0x3000);
+
+  ModuleInfo module_info{};
+  module_info.set_load_bias(0x100000);
+  *module_info.add_object_segments() = object_segment;
+  module_info.set_object_file_type(ModuleInfo::kCoffFile);
+
+  ModuleData module{module_info};
+  EXPECT_EQ(module.ConvertFromVirtualAddressToOffsetInFile(0x101100), 0x300);
+  EXPECT_EQ(module.ConvertFromOffsetInFileToVirtualAddress(0x300), 0x101100);
+}
+
+TEST(ModuleData, ConvertFromVirtualAddressToOffsetInFileAndViceVersaPeNoSections) {
+  // PE/COFF file with no section information, fall back to ELF computation.
+  ModuleInfo module_info{};
+  module_info.set_load_bias(0x100000);
+  module_info.set_object_file_type(ModuleInfo::kCoffFile);
+
+  ModuleData module{module_info};
+  EXPECT_EQ(module.ConvertFromVirtualAddressToOffsetInFile(0x100300), 0x300);
+  EXPECT_EQ(module.ConvertFromOffsetInFileToVirtualAddress(0x300), 0x100300);
 }
 
 TEST(ModuleData, LoadSymbols) {

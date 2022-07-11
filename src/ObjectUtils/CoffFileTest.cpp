@@ -16,10 +16,10 @@
 #include "absl/strings/ascii.h"
 
 using orbit_grpc_protos::SymbolInfo;
-using orbit_object_utils::CoffFile;
-using orbit_object_utils::CreateCoffFile;
 using orbit_test_utils::HasError;
 using orbit_test_utils::HasNoError;
+
+namespace orbit_object_utils {
 
 TEST(CoffFile, LoadDebugSymbols) {
   std::filesystem::path file_path = orbit_test::GetTestdataDir() / "libtest.dll";
@@ -154,3 +154,54 @@ TEST(CoffFile, GetLoadBiasAndExecutableSegmentOffsetAndImageSize) {
     EXPECT_EQ(coff_file.GetImageSize(), 0x20000);
   }
 }
+
+TEST(CoffFile, ObjectSegments) {
+  std::filesystem::path file_path = orbit_test::GetTestdataDir() / "dllmain.dll";
+  auto coff_file_or_error = CreateCoffFile(file_path);
+  ASSERT_THAT(coff_file_or_error, HasNoError());
+  const std::vector<orbit_grpc_protos::ModuleInfo::ObjectSegment>& segments =
+      coff_file_or_error.value()->GetObjectSegments();
+  ASSERT_EQ(segments.size(), 8);
+
+  EXPECT_EQ(segments[0].offset_in_file(), 0x400);
+  EXPECT_EQ(segments[0].size_in_file(), 0xCEA00);
+  EXPECT_EQ(segments[0].address(), 0x180001000);
+  EXPECT_EQ(segments[0].size_in_memory(), 0xCE9E4);
+
+  EXPECT_EQ(segments[1].offset_in_file(), 0xCEE00);
+  EXPECT_EQ(segments[1].size_in_file(), 0x27A00);
+  EXPECT_EQ(segments[1].address(), 0x1800D0000);
+  EXPECT_EQ(segments[1].size_in_memory(), 0x2797D);
+
+  EXPECT_EQ(segments[2].offset_in_file(), 0xF6800);
+  EXPECT_EQ(segments[2].size_in_file(), 0x2800);
+  EXPECT_EQ(segments[2].address(), 0x1800F8000);
+  EXPECT_EQ(segments[2].size_in_memory(), 0x5269);
+
+  EXPECT_EQ(segments[3].offset_in_file(), 0xF9000);
+  EXPECT_EQ(segments[3].size_in_file(), 0x9000);
+  EXPECT_EQ(segments[3].address(), 0x1800FE000);
+  EXPECT_EQ(segments[3].size_in_memory(), 0x8F4C);
+
+  EXPECT_EQ(segments[4].offset_in_file(), 0x102000);
+  EXPECT_EQ(segments[4].size_in_file(), 0x1200);
+  EXPECT_EQ(segments[4].address(), 0x180107000);
+  EXPECT_EQ(segments[4].size_in_memory(), 0x1041);
+
+  EXPECT_EQ(segments[5].offset_in_file(), 0x103200);
+  EXPECT_EQ(segments[5].size_in_file(), 0x200);
+  EXPECT_EQ(segments[5].address(), 0x180109000);
+  EXPECT_EQ(segments[5].size_in_memory(), 0x151);
+
+  EXPECT_EQ(segments[6].offset_in_file(), 0x103400);
+  EXPECT_EQ(segments[6].size_in_file(), 0x400);
+  EXPECT_EQ(segments[6].address(), 0x18010A000);
+  EXPECT_EQ(segments[6].size_in_memory(), 0x222);
+
+  EXPECT_EQ(segments[7].offset_in_file(), 0x103800);
+  EXPECT_EQ(segments[7].size_in_file(), 0x1C00);
+  EXPECT_EQ(segments[7].address(), 0x18010B000);
+  EXPECT_EQ(segments[7].size_in_memory(), 0x1A78);
+}
+
+}  // namespace orbit_object_utils

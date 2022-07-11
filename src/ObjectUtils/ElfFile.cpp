@@ -37,6 +37,7 @@
 #include <utility>
 #include <vector>
 
+#include "GrpcProtos/module.pb.h"
 #include "GrpcProtos/symbol.pb.h"
 #include "Introspection/Introspection.h"
 #include "OrbitBase/File.h"
@@ -66,6 +67,8 @@ class ElfFileImpl : public ElfFile {
   [[nodiscard]] uint64_t GetLoadBias() const override;
   [[nodiscard]] uint64_t GetExecutableSegmentOffset() const override;
   [[nodiscard]] uint64_t GetImageSize() const override;
+  [[nodiscard]] const std::vector<orbit_grpc_protos::ModuleInfo::ObjectSegment>& GetObjectSegments()
+      const override;
   [[nodiscard]] bool HasDebugSymbols() const override;
   [[nodiscard]] bool HasDynsym() const override;
   [[nodiscard]] bool HasDebugInfo() const override;
@@ -104,6 +107,7 @@ class ElfFileImpl : public ElfFile {
   uint64_t executable_segment_offset_;
   uint64_t executable_segment_size_;
   uint64_t image_size_;
+  std::vector<orbit_grpc_protos::ModuleInfo::ObjectSegment> loadable_segments_;
 };
 
 template <typename ElfT>
@@ -430,14 +434,23 @@ ErrorMessageOr<void> ElfFileImpl<ElfT>::InitProgramHeaders() {
     return ErrorMessage(std::move(error));
   }
 
-  // Compute image_size_ as the difference between the end address of the last loadable segment
-  // and the start address of the first loadable segment. This is as defined by
-  // ObjectFile::GetImageSize and follows SizeOfImage of PEs; however, it can be changed if needed.
   std::optional<uint64_t> first_loadable_segment_vaddr;
   for (const typename ElfT::Phdr& phdr : range.get()) {
     if (phdr.p_type != llvm::ELF::PT_LOAD) {
       continue;
     }
+
+    orbit_grpc_protos::ModuleInfo::ObjectSegment& object_segment =
+        loadable_segments_.emplace_back();
+    object_segment.set_offset_in_file(phdr.p_offset);
+    object_segment.set_size_in_file(phdr.p_filesz);
+    object_segment.set_address(phdr.p_vaddr);
+    object_segment.set_size_in_memory(phdr.p_memsz);
+
+    // Compute image_size_ as the difference between the end address of the last loadable segment
+    // and the start address of the first loadable segment. This is as defined by
+    // ObjectFile::GetImageSize and follows SizeOfImage of PEs; however, it can be changed if
+    // needed.
     if (!first_loadable_segment_vaddr.has_value()) {
       first_loadable_segment_vaddr = phdr.p_vaddr;
     }
@@ -621,6 +634,12 @@ uint64_t ElfFileImpl<ElfT>::GetExecutableSegmentOffset() const {
 template <typename ElfT>
 uint64_t ElfFileImpl<ElfT>::GetImageSize() const {
   return image_size_;
+}
+
+template <typename ElfT>
+const std::vector<orbit_grpc_protos::ModuleInfo::ObjectSegment>&
+ElfFileImpl<ElfT>::GetObjectSegments() const {
+  return loadable_segments_;
 }
 }  // namespace
 

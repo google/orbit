@@ -65,10 +65,31 @@ constexpr const char* kTargetFpBuildId = "d7e2447f79faa88528dd0d130ac7cc5f168ca0
 constexpr uint64_t kTargetFpLoadBias = 0;
 constexpr uint64_t kTargetFpExecutableSegmentOffset = 0x1000;
 
+static void VerifyObjectSegmentsForTargetFp(
+    const google::protobuf::RepeatedPtrField<orbit_grpc_protos::ModuleInfo::ObjectSegment>&
+        segments) {
+  ASSERT_EQ(segments.size(), 4);
+  // Simple sanity check, don't verify every single segment.
+  EXPECT_EQ(segments[0].offset_in_file(), 0);
+  EXPECT_EQ(segments[0].size_in_file(), 0xa48);
+  EXPECT_EQ(segments[0].address(), 0);
+  EXPECT_EQ(segments[0].size_in_memory(), 0xa48);
+}
+
 constexpr uint64_t kLibtestDllFileSize = 96441;
 constexpr const char* kLibtestDllBuildId = "";
 constexpr uint64_t kLibtestDllImageBase = 0x62640000;
 constexpr uint64_t kLibtestDllBaseOfCode = 0x1000;
+
+static void VerifyObjectSegmentsForLibtestDll(
+    const google::protobuf::RepeatedPtrField<orbit_grpc_protos::ModuleInfo::ObjectSegment>&
+        segments) {
+  ASSERT_EQ(segments.size(), 19);
+  EXPECT_EQ(segments[0].offset_in_file(), 0x600);
+  EXPECT_EQ(segments[0].size_in_file(), 0x1400);
+  EXPECT_EQ(segments[0].address(), kLibtestDllImageBase + 0x1000);
+  EXPECT_EQ(segments[0].size_in_memory(), 0x1338);
+}
 
 }  // namespace
 
@@ -149,6 +170,7 @@ TEST_F(UprobesUnwindingVisitorMmapTest,
   EXPECT_EQ(actual_module_update.module().soname(), "");
   EXPECT_EQ(actual_module_update.module().object_file_type(),
             orbit_grpc_protos::ModuleInfo::kElfFile);
+  VerifyObjectSegmentsForTargetFp(actual_module_update.module().object_segments());
 
   // 55bf53c24000-55bf53c25000 r--p 00003000 fe:00 60425802    /path/to/target_fp
   // File-backed non-executable mapping.
@@ -246,6 +268,7 @@ TEST_F(UprobesUnwindingVisitorMmapTest,
   EXPECT_EQ(actual_module_update.module().soname(), "");
   EXPECT_EQ(actual_module_update.module().object_file_type(),
             orbit_grpc_protos::ModuleInfo::kElfFile);
+  VerifyObjectSegmentsForTargetFp(actual_module_update.module().object_segments());
 
   // 56224057e000-56224057f000 r--p 00000000 fe:00 60425802    /path/to/target_fp
   // 56224057f000-562240580000 r-xp 00001000 fe:00 60425802    /path/to/target_fp
@@ -283,6 +306,7 @@ TEST_F(UprobesUnwindingVisitorMmapTest,
   EXPECT_EQ(actual_module_update.module().soname(), "");
   EXPECT_EQ(actual_module_update.module().object_file_type(),
             orbit_grpc_protos::ModuleInfo::kElfFile);
+  VerifyObjectSegmentsForTargetFp(actual_module_update.module().object_segments());
 
   // 56224057e000-56224057f000 r--p 00000000 fe:00 60425802    /path/to/target_fp
   // 56224057f000-562240580000 r-xp 00001000 fe:00 60425802    /path/to/target_fp
@@ -379,6 +403,7 @@ TEST_F(UprobesUnwindingVisitorMmapTest,
   EXPECT_EQ(actual_module_update.module().soname(), "");
   EXPECT_EQ(actual_module_update.module().object_file_type(),
             orbit_grpc_protos::ModuleInfo::kCoffFile);
+  VerifyObjectSegmentsForLibtestDll(actual_module_update.module().object_segments());
 }
 
 TEST_F(UprobesUnwindingVisitorMmapTest,
@@ -433,6 +458,7 @@ TEST_F(UprobesUnwindingVisitorMmapTest,
   EXPECT_EQ(actual_module_update.module().soname(), "");
   EXPECT_EQ(actual_module_update.module().object_file_type(),
             orbit_grpc_protos::ModuleInfo::kCoffFile);
+  VerifyObjectSegmentsForLibtestDll(actual_module_update.module().object_segments());
 
   // 100000-101000 r--p 00000000 01:02 42    /path/to/libtest.dll
   // 101000-102000 r-xp 00000000 00:00 0
@@ -468,6 +494,7 @@ TEST_F(UprobesUnwindingVisitorMmapTest,
   EXPECT_EQ(actual_module_update.module().soname(), "");
   EXPECT_EQ(actual_module_update.module().object_file_type(),
             orbit_grpc_protos::ModuleInfo::kCoffFile);
+  VerifyObjectSegmentsForLibtestDll(actual_module_update.module().object_segments());
 
   // 100000-101000 r--p 00000000 01:02 42    /path/to/libtest.dll
   // 101000-102000 r-xp 00000000 00:00 0
@@ -523,6 +550,7 @@ TEST_F(UprobesUnwindingVisitorMmapTest,
   EXPECT_EQ(actual_module_update.module().soname(), "");
   EXPECT_EQ(actual_module_update.module().object_file_type(),
             orbit_grpc_protos::ModuleInfo::kCoffFile);
+  VerifyObjectSegmentsForLibtestDll(actual_module_update.module().object_segments());
 }
 
 // This test simulates the sequence of PERF_RECORD_MMAPs caused by Wine's virtual_map_image
@@ -592,6 +620,7 @@ TEST_F(UprobesUnwindingVisitorMmapTest, VisitMmapPerfEventSendsModuleUpdatesForP
   EXPECT_EQ(actual_module_update.module().soname(), "");
   EXPECT_EQ(actual_module_update.module().object_file_type(),
             orbit_grpc_protos::ModuleInfo::kCoffFile);
+  VerifyObjectSegmentsForLibtestDll(actual_module_update.module().object_segments());
 
   // The following PERF_RECORD_MMAP(s) are caused by:
   // map_image_into_view's /* map all the sections */
@@ -759,6 +788,7 @@ TEST_F(UprobesUnwindingVisitorMmapTest, VisitMmapPerfEventSendsModuleUpdatesForP
   EXPECT_EQ(actual_module_update.module().soname(), "");
   EXPECT_EQ(actual_module_update.module().object_file_type(),
             orbit_grpc_protos::ModuleInfo::kCoffFile);
+  VerifyObjectSegmentsForLibtestDll(actual_module_update.module().object_segments());
 
   // 100000-101000 r--p 00000000 01:02 42    /path/to/libtest.dll
   // 101000-103000 r-xp 00000000 00:00 0
