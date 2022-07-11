@@ -42,6 +42,7 @@
 #include "ClientData/ModuleManager.h"
 #include "ClientData/PostProcessedSamplingData.h"
 #include "ClientData/ProcessData.h"
+#include "ClientData/ThreadStateSliceInfo.h"
 #include "ClientData/TracepointCustom.h"
 #include "ClientData/UserDefinedCaptureData.h"
 #include "ClientData/WineSyscallHandlingMethod.h"
@@ -471,6 +472,11 @@ class OrbitApp final : public DataViewFactory,
   [[nodiscard]] std::optional<orbit_client_data::ThreadStateSliceInfo> selected_thread_state_slice()
       const;
   void set_selected_thread_state_slice(
+      std::optional<orbit_client_data::ThreadStateSliceInfo> thread_state_slice);
+
+  [[nodiscard]] std::optional<orbit_client_data::ThreadStateSliceInfo> hovered_thread_state_slice()
+      const;
+  void set_hovered_thread_state_slice(
       std::optional<orbit_client_data::ThreadStateSliceInfo> thread_state_slice);
 
   [[nodiscard]] const orbit_client_protos::TimerInfo* selected_timer() const;

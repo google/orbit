@@ -55,9 +55,15 @@ void DataManager::set_selected_thread_id(uint32_t thread_id) {
 }
 
 void DataManager::set_selected_thread_state_slice(
-    std::optional<orbit_client_data::ThreadStateSliceInfo> selected_thread_state_slice) {
+    std::optional<ThreadStateSliceInfo> selected_thread_state_slice) {
   ORBIT_CHECK(std::this_thread::get_id() == main_thread_id_);
   selected_thread_state_slice_ = selected_thread_state_slice;
+}
+
+void DataManager::set_hovered_thread_state_slice(
+    std::optional<ThreadStateSliceInfo> hovered_thread_state_slice) {
+  ORBIT_CHECK(std::this_thread::get_id() == main_thread_id_);
+  hovered_thread_state_slice_ = hovered_thread_state_slice;
 }
 
 void DataManager::set_selected_timer(const orbit_client_protos::TimerInfo* timer_info) {
@@ -95,10 +101,14 @@ uint32_t DataManager::selected_thread_id() const {
   return selected_thread_id_;
 }
 
-std::optional<orbit_client_data::ThreadStateSliceInfo> DataManager::selected_thread_state_slice()
-    const {
+std::optional<ThreadStateSliceInfo> DataManager::selected_thread_state_slice() const {
   ORBIT_CHECK(std::this_thread::get_id() == main_thread_id_);
   return selected_thread_state_slice_;
+}
+
+std::optional<ThreadStateSliceInfo> DataManager::hovered_thread_state_slice() const {
+  ORBIT_CHECK(std::this_thread::get_id() == main_thread_id_);
+  return hovered_thread_state_slice_;
 }
 
 const orbit_client_protos::TimerInfo* DataManager::selected_timer() const {
