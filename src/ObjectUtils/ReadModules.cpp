@@ -1,37 +1,34 @@
-// Copyright (c) 2020 The Orbit Authors. All rights reserved.
+// Copyright (c) 2022 The Orbit Authors. All rights reserved.
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#include "ObjectUtils/LinuxMap.h"
+#include "ObjectUtils/ReadModules.h"
 
 #include <absl/strings/match.h>
 #include <absl/strings/str_format.h>
 #include <absl/strings/str_split.h>
+#include <stdint.h>
+#include <sys/mman.h>
+#include <unistd.h>
 
 #include <algorithm>
-#include <cstdint>
 #include <filesystem>
-#include <map>
 #include <memory>
 #include <string>
-#include <system_error>
-#include <type_traits>
 #include <utility>
+#include <vector>
 
-#include "ObjectUtils/CoffFile.h"
 #include "ObjectUtils/ElfFile.h"
 #include "ObjectUtils/ObjectFile.h"
+#include "ObjectUtils/ReadMaps.h"
 #include "OrbitBase/Align.h"
 #include "OrbitBase/Logging.h"
 #include "OrbitBase/ReadFileToString.h"
 #include "OrbitBase/Result.h"
 
-namespace orbit_object_utils {
-
 using orbit_grpc_protos::ModuleInfo;
-using orbit_object_utils::CreateObjectFile;
-using orbit_object_utils::ElfFile;
-using orbit_object_utils::ObjectFile;
+
+namespace orbit_object_utils {
 
 ErrorMessageOr<ModuleInfo> CreateModule(const std::filesystem::path& module_path,
                                         uint64_t start_address, uint64_t end_address) {
@@ -86,10 +83,9 @@ ErrorMessageOr<ModuleInfo> CreateModule(const std::filesystem::path& module_path
   return module_info;
 }
 
-ErrorMessageOr<std::vector<ModuleInfo>> ReadModules(int32_t pid) {
-  std::filesystem::path proc_maps_path{absl::StrFormat("/proc/%i/maps", pid)};
-  OUTCOME_TRY(auto&& proc_maps_data, orbit_base::ReadFileToString(proc_maps_path));
-  return ParseMaps(proc_maps_data);
+ErrorMessageOr<std::vector<ModuleInfo>> ReadModules(pid_t pid) {
+  OUTCOME_TRY(auto&& maps, ReadMaps(pid));
+  return ParseMapsIntoModules(maps);
 }
 
 namespace {
@@ -134,9 +130,9 @@ namespace {
 // expect contains the PE (based on the start address of the file mapping that contains the headers
 // and based on the PE's SizeOfImage), we can be confident that this mapping also belongs to the PE.
 //
-// This class contains logic to help ParseMaps with keeping track of the executable maps of a
-// module, and with detecting anonymous executable maps that belong to a PE. The intended usage is
-// as follows:
+// This class contains logic to help ParseMapsIntoModules with keeping track of the executable maps
+// of a module, and with detecting anonymous executable maps that belong to a PE. The intended usage
+// is as follows:
 // - Create a new instance of this class when a new file is encountered while parsing
 //   `/proc/[pid]/maps`;
 // - Call `AddExecFileMap` when encountering an executable file mapping for the file this instance
@@ -262,47 +258,32 @@ class FileMappedIntoMemory {
 };
 }  // namespace
 
-ErrorMessageOr<std::vector<ModuleInfo>> ParseMaps(std::string_view proc_maps_data) {
-  const std::vector<std::string> proc_maps = absl::StrSplit(proc_maps_data, '\n');
-
+std::vector<ModuleInfo> ParseMapsIntoModules(const std::vector<LinuxMemoryMapping>& maps) {
   std::vector<ModuleInfo> result;
 
   std::optional<FileMappedIntoMemory> last_file_mapped_into_memory;
 
-  for (const std::string& line : proc_maps) {
-    // The number of spaces from the inode to the path is variable, and the path can contain spaces,
-    // so we need to limit the number of splits and remove leading spaces from the path separately.
-    std::vector<std::string> tokens = absl::StrSplit(line, absl::MaxSplits(' ', 5));
-    if (tokens.size() < 5) continue;
+  for (const LinuxMemoryMapping& map : maps) {
+    const uint64_t start = map.start_address();
+    const uint64_t end = map.end_address();
+    const uint64_t perms = map.perms();
+    const uint64_t offset = map.offset();
+    const uint64_t inode = map.inode();
+    const std::string& pathname = map.pathname();
 
-    if (tokens.size() == 6) {
-      absl::StripLeadingAsciiWhitespace(&tokens[5]);
-      if (tokens[5].empty()) {
-        tokens.pop_back();
-      }
-    }
-
-    const std::string& inode = tokens[4];
     // If inode equals 0, then the memory is not backed by a file.
     // If a map not backed by a file has a name, it's a special one like [stack], [heap], etc.
-    if (inode == "0" && tokens.size() == 6) continue;
-
-    const std::vector<std::string> addresses = absl::StrSplit(tokens[0], '-');
-    if (addresses.size() != 2) continue;
-
-    const uint64_t start = std::stoull(addresses[0], nullptr, 16);
-    const uint64_t end = std::stoull(addresses[1], nullptr, 16);
-    const uint64_t offset = std::stoull(tokens[2], nullptr, 16);
+    if (inode == 0 && !pathname.empty()) continue;
 
     std::string module_path;
-    if (inode != "0") {          // The mapping is file-backed.
-      if (tokens.size() != 6) {  // Unexpected: the mapping is file-backed but no path is present.
-        ORBIT_ERROR("Map at %#x-%#x has inode %s (not 0) but no path", start, end, inode);
+    if (inode != 0) {          // The mapping is file-backed.
+      if (pathname.empty()) {  // Unexpected: the mapping is file-backed but no path is present.
+        ORBIT_ERROR("Map at %#x-%#x has inode %u (not 0) but no path", start, end, inode);
         last_file_mapped_into_memory.reset();
         continue;
       }
 
-      module_path = tokens[5];
+      module_path = pathname;
       // Keep track of the last file we encountered. Only create a new FileMappedIntoMemory if this
       // file mapping is backed by a different file than the previous file mapping.
       if (!last_file_mapped_into_memory.has_value()) {
@@ -316,7 +297,7 @@ ErrorMessageOr<std::vector<ModuleInfo>> ParseMaps(std::string_view proc_maps_dat
       }
     }
 
-    const bool is_executable = tokens[1].size() == 4 && tokens[1][2] == 'x';
+    const bool is_executable = (perms & PROT_EXEC) != 0;
     // Never create modules from non-executable mappings.
     if (!is_executable) continue;
 

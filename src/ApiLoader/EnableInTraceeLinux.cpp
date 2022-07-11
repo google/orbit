@@ -14,7 +14,7 @@
 
 #include "ApiUtils/GetFunctionTableAddressPrefix.h"
 #include "ObjectUtils/Address.h"
-#include "ObjectUtils/LinuxMap.h"
+#include "ObjectUtils/ReadModules.h"
 #include "OrbitBase/ExecutablePath.h"
 #include "OrbitBase/Logging.h"
 #include "OrbitBase/ThreadUtils.h"

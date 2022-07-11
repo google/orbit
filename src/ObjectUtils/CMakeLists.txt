@@ -12,8 +12,10 @@ target_sources(
   PUBLIC include/ObjectUtils/Address.h
          include/ObjectUtils/CoffFile.h
          include/ObjectUtils/ElfFile.h
+         include/ObjectUtils/ObjectFile.h
          include/ObjectUtils/PdbFile.h
-         include/ObjectUtils/LinuxMap.h
+         include/ObjectUtils/ReadMaps.h
+         include/ObjectUtils/ReadModules.h
          include/ObjectUtils/SymbolsFile.h
          include/ObjectUtils/WindowsBuildIdUtils.h)
 
@@ -31,7 +33,9 @@ target_sources(
         WindowsBuildIdUtils.cpp)
 
 if (NOT WIN32)
-target_sources(ObjectUtils PRIVATE LinuxMap.cpp)
+target_sources(ObjectUtils PRIVATE
+        ReadMaps.cpp
+        ReadModules.cpp)
 else()
 target_sources(
   ObjectUtils
@@ -74,7 +78,9 @@ target_sources(ObjectUtilsTests PRIVATE
 )
 
 if (NOT WIN32)
-target_sources(ObjectUtilsTests PRIVATE LinuxMapTest.cpp)
+target_sources(ObjectUtilsTests PRIVATE
+        ReadMapsTest.cpp
+        ReadModulesTest.cpp)
 else()
 target_sources(ObjectUtilsTests PRIVATE PdbFileDiaTest.cpp)
 endif()
