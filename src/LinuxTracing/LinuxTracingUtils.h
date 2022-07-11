@@ -9,7 +9,10 @@
 
 #include <ctime>
 #include <optional>
+#include <vector>
 
+#include "GrpcProtos/capture.pb.h"
+#include "ModuleUtils/ReadLinuxMaps.h"
 #include "OrbitBase/Logging.h"
 #include "OrbitBase/Profiling.h"
 
@@ -61,10 +64,20 @@ bool SetMaxOpenFilesSoftLimit(uint64_t soft_limit);
 #endif
 
 inline size_t GetPageSize() {
-  // POSIX guarantees the result to be greater or equal than 1.
-  // So we can safely cast here.
+  // POSIX guarantees the result to be greater or equal than 1. So we can safely cast here.
   return static_cast<size_t>(sysconf(_SC_PAGESIZE));
 }
+
+// Determines whether a function can be instrumented with uprobes given the content of
+// /proc/[pid]/maps and the list of modules loaded by the process. Remember that uprobes requires
+// the function to be loaded with a file mapping.
+// Returns an std::map (so that the order by function id is preserved) from function id to a message
+// describing the issue for that function.
+[[nodiscard]] std::map<uint64_t, std::string> FindFunctionsThatUprobesCannotInstrumentWithMessages(
+    const std::vector<orbit_module_utils::LinuxMemoryMapping>& maps,
+    const std::vector<orbit_grpc_protos::ModuleInfo>& modules,
+    const std::vector<orbit_grpc_protos::InstrumentedFunction>& functions);
+
 }  // namespace orbit_linux_tracing
 
 #endif  // LINUX_TRACING_LINUX_TRACING_UTILS_H_
