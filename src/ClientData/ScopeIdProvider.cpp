@@ -13,7 +13,7 @@
 #include <string>
 #include <vector>
 
-#include "ClientData/ScopeIdConstants.h"
+#include "ClientData/ScopeId.h"
 #include "ClientData/ScopeInfo.h"
 #include "GrpcProtos/Constants.h"
 #include "OrbitBase/Logging.h"

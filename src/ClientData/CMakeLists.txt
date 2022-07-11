@@ -28,7 +28,6 @@ target_sources(ClientData PUBLIC
         include/ClientData/ModuleManager.h
         include/ClientData/PostProcessedSamplingData.h
         include/ClientData/ProcessData.h
-        include/ClientData/ScopeIdConstants.h
         include/ClientData/ScopeId.h
         include/ClientData/ScopeIdProvider.h
         include/ClientData/ScopeInfo.h
@@ -77,7 +76,6 @@ target_link_libraries(ClientData PUBLIC
         Containers
         ClientProtos
         GrpcProtos
-
         # TODO(b/191248550): Remove ObjectUtils once GetAbsoluteAddress is removed
         ObjectUtils
         OrbitBase

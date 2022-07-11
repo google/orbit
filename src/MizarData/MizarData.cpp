@@ -15,7 +15,7 @@
 #include "ClientData/ModuleAndFunctionLookup.h"
 #include "ClientData/ModuleData.h"
 #include "ClientData/ModuleManager.h"
-#include "ClientData/ScopeIdConstants.h"
+#include "ClientData/ScopeId.h"
 #include "ClientData/ScopeInfo.h"
 #include "ClientData/ThreadTrackDataProvider.h"
 #include "ClientSymbols/QSettingsBasedStorageManager.h"

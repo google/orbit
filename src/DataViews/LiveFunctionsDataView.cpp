@@ -30,7 +30,7 @@
 #include "ClientData/CaptureData.h"
 #include "ClientData/FunctionInfo.h"
 #include "ClientData/ModuleAndFunctionLookup.h"
-#include "ClientData/ScopeIdConstants.h"
+#include "ClientData/ScopeId.h"
 #include "ClientData/ScopeInfo.h"
 #include "ClientData/ScopeStats.h"
 #include "ClientProtos/capture_data.pb.h"
@@ -531,6 +531,7 @@ void LiveFunctionsDataView::OnTimer() {
 
   const std::vector<ScopeId> missing_scope_ids = FetchMissingScopeIds();
 
+  indices_.reserve(indices_.size() + missing_scope_ids.size());
   for (ScopeId scope_id : missing_scope_ids) {
     AddToIndices(scope_id);
   }

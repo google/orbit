@@ -44,7 +44,7 @@
 #include "ClientData/ModuleManager.h"
 #include "ClientData/PostProcessedSamplingData.h"
 #include "ClientData/ProcessData.h"
-#include "ClientData/ScopeIdConstants.h"
+#include "ClientData/ScopeId.h"
 #include "ClientData/ScopeStats.h"
 #include "ClientData/TimerChain.h"
 #include "ClientData/UserDefinedCaptureData.h"

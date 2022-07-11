@@ -15,7 +15,7 @@
 #include <vector>
 
 #include "ClientData/ModuleData.h"
-#include "ClientData/ScopeIdConstants.h"
+#include "ClientData/ScopeId.h"
 #include "ClientData/ScopeInfo.h"
 #include "ObjectUtils/Address.h"
 #include "OrbitBase/Result.h"

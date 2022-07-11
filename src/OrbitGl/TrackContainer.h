@@ -57,7 +57,7 @@ class TrackContainer final : public CaptureViewElement {
   void SetIteratorOverlayData(
       const absl::flat_hash_map<uint64_t, const orbit_client_protos::TimerInfo*>&
           iterator_timer_info,
-      const absl::flat_hash_map<uint64_t, ScopeId>& iterator_id_to_scope_function_id);
+      const absl::flat_hash_map<uint64_t, ScopeId>& iterator_id_to_scope_function_scope_id);
   void UpdateVerticalScrollUsingRatio(float ratio);
   [[nodiscard]] float GetVerticalScrollingOffset() const { return vertical_scrolling_offset_; }
   void SetVerticalScrollingOffset(float value);

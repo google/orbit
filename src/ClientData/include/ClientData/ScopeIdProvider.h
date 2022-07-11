@@ -16,10 +16,8 @@
 
 namespace orbit_client_data {
 
-// The interface defines a map from `TimerInfo` to ids. When called twice on identical `TimerInfo`
-// instances, it returns the same ids. This is used to allow for aggregation of manual
-// instrumentation events in the same function as we aggregate the events for hooked functions (see
-// go/stadia-orbit-manual-instrumentation-aggregation).
+// The interface defines a map from `TimerInfo` to ScopeId. When called twice on identical
+// `TimerInfo` instances, it returns the same ScopeId.
 class ScopeIdProvider {
  public:
   virtual ~ScopeIdProvider() = default;

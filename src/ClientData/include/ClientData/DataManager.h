@@ -15,7 +15,7 @@
 
 #include "ApiInterface/Orbit.h"
 #include "ClientData/FunctionInfo.h"
-#include "ClientData/ScopeIdConstants.h"
+#include "ClientData/ScopeId.h"
 #include "ClientData/ThreadStateSliceInfo.h"
 #include "ClientData/TracepointCustom.h"
 #include "ClientData/UserDefinedCaptureData.h"
