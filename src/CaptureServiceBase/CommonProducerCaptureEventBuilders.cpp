@@ -142,7 +142,8 @@ ProducerCaptureEvent CreateWarningInstrumentingWithUserSpaceInstrumentationEvent
       event.mutable_warning_instrumenting_with_user_space_instrumentation_event();
   warning_event->set_timestamp_ns(timestamp_ns);
   for (auto const& [id, error_message] : function_ids_to_error_messages) {
-    auto function = warning_event->add_functions_that_failed_to_instrument();
+    orbit_grpc_protos::FunctionThatFailedToBeInstrumented* function =
+        warning_event->add_functions_that_failed_to_instrument();
     function->set_function_id(id);
     function->set_error_message(error_message);
   }

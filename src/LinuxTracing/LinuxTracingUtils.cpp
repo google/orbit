@@ -2,6 +2,9 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
+#include "LinuxTracingUtils.h"
+
+#include <absl/container/flat_hash_map.h>
 #include <absl/strings/numbers.h>
 #include <absl/strings/str_format.h>
 #include <absl/strings/str_split.h>
@@ -211,6 +214,65 @@ bool SetMaxOpenFilesSoftLimit(uint64_t soft_limit) {
     return false;
   }
   return true;
+}
+
+std::map<uint64_t, std::string> FindFunctionsThatUprobesCannotInstrumentWithMessages(
+    const std::vector<orbit_object_utils::LinuxMemoryMapping>& maps,
+    const std::vector<orbit_grpc_protos::InstrumentedFunction>& functions) {
+  struct FileOffsetRange {
+    uint64_t start_offset;
+    uint64_t end_offset;
+  };
+  absl::flat_hash_map<std::string, std::vector<FileOffsetRange>>
+      modules_to_mapped_file_offset_ranges;
+  for (const orbit_object_utils::LinuxMemoryMapping& map : maps) {
+    if (map.inode() == 0 || map.pathname().empty()) continue;
+    modules_to_mapped_file_offset_ranges[map.pathname()].emplace_back(
+        FileOffsetRange{.start_offset = map.offset(),
+                        .end_offset = map.end_address() - map.start_address() + map.offset()});
+  }
+
+  std::map<uint64_t, std::string> function_ids_to_error_messages;
+  for (const orbit_grpc_protos::InstrumentedFunction& function : functions) {
+    auto module_to_mapped_file_offset_ranges_it =
+        modules_to_mapped_file_offset_ranges.find(function.file_path());
+    if (module_to_mapped_file_offset_ranges_it == modules_to_mapped_file_offset_ranges.end()) {
+      std::string message = absl::StrFormat(
+          "Function \"%s\" belongs to module \"%s\", which is not loaded by the process. If the "
+          "module gets loaded during the capture, the function will get instrumented "
+          "automatically.",
+          function.function_name(), function.file_path());
+      function_ids_to_error_messages.emplace(function.function_id(), std::move(message));
+      continue;
+    }
+
+    const std::vector<FileOffsetRange>& file_offset_ranges =
+        module_to_mapped_file_offset_ranges_it->second;
+    if (std::any_of(file_offset_ranges.begin(), file_offset_ranges.end(),
+                    [offset = function.file_offset()](const FileOffsetRange& file_offset_range) {
+                      return file_offset_range.start_offset <= offset &&
+                             offset < file_offset_range.end_offset;
+                    })) {
+      continue;
+    }
+
+    std::string message = absl::StrFormat(
+        "Function \"%s\" belongs to module \"%s\" at file offset %#x, which does not correspond to "
+        "any file mapping. If the module is a PE, Wine might have loaded its text section into an "
+        "anonymous mapping instead.",
+        function.function_name(), function.file_path(), function.file_offset());
+    function_ids_to_error_messages.emplace(function.function_id(), std::move(message));
+  }
+
+  if (!function_ids_to_error_messages.empty()) {
+    std::string log_message = "Uprobes likely failed to instrument some functions:\n";
+    for (const auto& [unused_function_id, message] : function_ids_to_error_messages) {
+      log_message.append("* ").append(message).push_back('\n');
+    }
+    ORBIT_ERROR("%s", log_message);
+  }
+
+  return function_ids_to_error_messages;
 }
 
 }  // namespace orbit_linux_tracing
