@@ -51,7 +51,6 @@ target_sources(LinuxTracing PRIVATE
         PerfEventRingBuffer.cpp
         PerfEventRingBuffer.h
         PerfEventVisitor.h
-        StackSlice.h
         SwitchesStatesNamesVisitor.cpp
         SwitchesStatesNamesVisitor.h
         ThreadStateManager.cpp
@@ -85,7 +84,6 @@ target_sources(LinuxTracingTests PRIVATE
         MockTracerListener.h
         PerfEventProcessorTest.cpp
         PerfEventQueueTest.cpp
-        StackSliceTest.cpp
         SwitchesStatesNamesVisitorTest.cpp
         ThreadStateManagerTest.cpp
         UprobesFunctionCallManagerTest.cpp

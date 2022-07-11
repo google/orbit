@@ -96,6 +96,13 @@ class UprobesUnwindingVisitor : public PerfEventVisitor {
   void Visit(uint64_t event_timestamp, const MmapPerfEventData& event_data) override;
 
  private:
+  // This struct holds a copy of some stack data from collected from the target process.
+  struct StackSlice {
+    uint64_t start_address_;
+    uint64_t size_;
+    std::unique_ptr<char[]> data_;
+  };
+
   void OnUprobes(uint64_t timestamp_ns, pid_t tid, uint32_t cpu, uint64_t sp, uint64_t ip,
                  uint64_t return_address,
                  std::optional<perf_event_sample_regs_user_sp_ip_arguments> registers,

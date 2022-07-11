@@ -24,6 +24,24 @@
 
 namespace orbit_linux_tracing {
 
+// This class is a "view" of a stack slice (some copy of process memory). It contains a bare pointer
+// to the data field of actual stack slice.
+class StackSliceView {
+ public:
+  StackSliceView(uint64_t start_address, uint64_t size, const char* data)
+      : start_address_{start_address}, size_{size}, data_{data} {}
+
+  [[nodiscard]] uint64_t GetStartAddress() const { return start_address_; }
+  [[nodiscard]] uint64_t GetEndAddress() const { return start_address_ + size_; }
+  [[nodiscard]] uint64_t GetSize() const { return size_; }
+  [[nodiscard]] const char* GetData() const { return data_; }
+
+ private:
+  uint64_t start_address_;
+  uint64_t size_;
+  const char* data_;
+};
+
 class LibunwindstackResult {
  public:
   explicit LibunwindstackResult(
