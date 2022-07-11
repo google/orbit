@@ -31,7 +31,7 @@
 #include "LibunwindstackUnwinder.h"
 #include "LinuxTracing/TracerListener.h"
 #include "LinuxTracingUtils.h"
-#include "ObjectUtils/LinuxMap.h"
+#include "ObjectUtils/ReadModules.h"
 #include "OrbitBase/GetProcessIds.h"
 #include "OrbitBase/Logging.h"
 #include "OrbitBase/ThreadUtils.h"

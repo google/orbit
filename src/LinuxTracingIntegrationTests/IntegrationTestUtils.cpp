@@ -9,7 +9,7 @@
 #include "GrpcProtos/module.pb.h"
 #include "GrpcProtos/symbol.pb.h"
 #include "ObjectUtils/ElfFile.h"
-#include "ObjectUtils/LinuxMap.h"
+#include "ObjectUtils/ReadModules.h"
 #include "OrbitBase/ExecutablePath.h"
 #include "OrbitBase/ThreadUtils.h"
 

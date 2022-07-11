@@ -1,4 +1,4 @@
-// Copyright (c) 2020 The Orbit Authors. All rights reserved.
+// Copyright (c) 2022 The Orbit Authors. All rights reserved.
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
@@ -9,13 +9,12 @@
 #include <unistd.h>
 
 #include <filesystem>
-#include <memory>
-#include <string>
 #include <string_view>
 #include <vector>
 
 #include "GrpcProtos/module.pb.h"
-#include "ObjectUtils/LinuxMap.h"
+#include "ObjectUtils/ReadMaps.h"
+#include "ObjectUtils/ReadModules.h"
 #include "OrbitBase/File.h"
 #include "OrbitBase/ReadFileToString.h"
 #include "OrbitBase/Result.h"
@@ -53,7 +52,7 @@ static void VerifyObjectSegmentsForLibTestDll(
   EXPECT_EQ(segments[0].size_in_memory(), 0x1338);
 }
 
-TEST(LinuxMap, CreateModuleElf) {
+TEST(ReadModules, CreateModuleElf) {
   const std::filesystem::path hello_world_path = orbit_test::GetTestdataDir() / "hello_world_elf";
 
   constexpr uint64_t kStartAddress = 23;
@@ -72,7 +71,7 @@ TEST(LinuxMap, CreateModuleElf) {
   VerifyObjectSegmentsForHelloWorldElf(result.value().object_segments());
 }
 
-TEST(LinuxMap, CreateModuleInDev) {
+TEST(ReadModules, CreateModuleInDev) {
   const std::filesystem::path dev_zero_path = "/dev/zero";
 
   constexpr uint64_t kStartAddress = 23;
@@ -83,7 +82,7 @@ TEST(LinuxMap, CreateModuleInDev) {
             "The module \"/dev/zero\" is a character or block device (is in /dev/)");
 }
 
-TEST(LinuxMap, CreateModuleCoff) {
+TEST(ReadModules, CreateModuleCoff) {
   const std::filesystem::path dll_path = orbit_test::GetTestdataDir() / "libtest.dll";
 
   constexpr uint64_t kStartAddress = 23;
@@ -104,7 +103,7 @@ TEST(LinuxMap, CreateModuleCoff) {
   VerifyObjectSegmentsForLibTestDll(result.value().object_segments());
 }
 
-TEST(LinuxMap, CreateModuleWithSoname) {
+TEST(ReadModules, CreateModuleWithSoname) {
   const std::filesystem::path hello_world_path = orbit_test::GetTestdataDir() / "libtest-1.0.so";
 
   constexpr uint64_t kStartAddress = 23;
@@ -127,7 +126,7 @@ TEST(LinuxMap, CreateModuleWithSoname) {
   EXPECT_EQ(result.value().object_segments()[0].size_in_memory(), 0x4e0);
 }
 
-TEST(LinuxMap, CreateModuleNotAnObject) {
+TEST(ReadModules, CreateModuleNotAnObject) {
   const std::filesystem::path text_file = orbit_test::GetTestdataDir() / "textfile.txt";
 
   constexpr uint64_t kStartAddress = 23;
@@ -138,7 +137,7 @@ TEST(LinuxMap, CreateModuleNotAnObject) {
               testing::HasSubstr("The file was not recognized as a valid object file"));
 }
 
-TEST(LinuxMap, CreateModuleFileDoesNotExist) {
+TEST(ReadModules, CreateModuleFileDoesNotExist) {
   const std::filesystem::path file_path = "/not/a/valid/file/path";
 
   constexpr uint64_t kStartAddress = 23;
@@ -148,41 +147,40 @@ TEST(LinuxMap, CreateModuleFileDoesNotExist) {
   EXPECT_EQ(result.error().message(), "The module file \"/not/a/valid/file/path\" does not exist");
 }
 
-TEST(LinuxMap, ReadModules) {
+TEST(ReadModules, ReadModules) {
   const auto result = ReadModules(getpid());
   EXPECT_THAT(result, HasNoError());
+  EXPECT_GT(result.value().size(), 0);
 }
 
-TEST(LinuxMap, ParseMapsEmptyData) {
-  const auto result = ParseMaps(std::string_view{""});
-  ASSERT_THAT(result, HasNoError());
-  EXPECT_TRUE(result.value().empty());
+TEST(ReadModules, ParseMapsIntoModulesEmptyData) {
+  const auto result = ParseMapsIntoModules(ReadMaps(""));
+  EXPECT_EQ(result.size(), 0);
 }
 
-TEST(LinuxMap, ParseMaps1) {
+TEST(ReadModules, ParseMapsIntoModules1) {
   const std::filesystem::path test_path = orbit_test::GetTestdataDir();
   const std::filesystem::path hello_world_path = test_path / "hello_world_elf";
   const std::filesystem::path text_file = test_path / "textfile.txt";
 
   // Only testing the correct size of the result. The entry with /dev/zero is ignored due to the
   // path starting with /dev/. The last entry has a valid path, but the executable flag is not set.
-  const std::string data{absl::StrFormat(
+  const std::string proc_pid_maps_content{absl::StrFormat(
       "7f687428f000-7f6874290000 r-xp 00009000 fe:01 661216                     /path/to/nothing\n"
       "7f6874290000-7f6874297000 r-xp 00000000 fe:01 661214                     %s\n"
       "7f6874290000-7f6874297000 r-xp 00000000 fe:01 661214                     /dev/zero\n"
       "7f6874290001-7f6874297002 r-dp 00000000 fe:01 661214                     %s\n",
       hello_world_path, text_file)};
-  const auto result = ParseMaps(data);
-  ASSERT_THAT(result, HasNoError());
-  EXPECT_EQ(result.value().size(), 1);
+  const auto result = ParseMapsIntoModules(ReadMaps(proc_pid_maps_content));
+  EXPECT_EQ(result.size(), 1);
 }
 
-TEST(LinuxMap, ParseMaps2) {
+TEST(ReadModules, ParseMapsIntoModules2) {
   const std::filesystem::path test_path = orbit_test::GetTestdataDir();
   const std::filesystem::path hello_world_path = test_path / "hello_world_elf";
   const std::filesystem::path no_symbols_path = test_path / "no_symbols_elf";
 
-  const std::string data{absl::StrFormat(
+  const std::string proc_pid_maps_content{absl::StrFormat(
       "7f6874285000-7f6874288000 r--p 00000000 fe:01 661216                     %1$s\n"
       "7f6874288000-7f687428c000 r-xp 00003000 fe:01 661216                     %1$s\n"
       "7f687428c000-7f687428e000 r--p 00007000 fe:01 661216                     %1$s\n"
@@ -191,12 +189,11 @@ TEST(LinuxMap, ParseMaps2) {
       "800000000000-800000001000 r-xp 00009000 fe:01 661216                     %2$s\n",
       hello_world_path, no_symbols_path)};
 
-  const auto result = ParseMaps(data);
-  ASSERT_THAT(result, HasNoError());
-  ASSERT_EQ(result.value().size(), 2);
+  const auto result = ParseMapsIntoModules(ReadMaps(proc_pid_maps_content));
+  ASSERT_EQ(result.size(), 2);
 
-  const ModuleInfo& hello_module_info = result.value()[0];
-  const ModuleInfo& no_symbols_module_info = result.value()[1];
+  const ModuleInfo& hello_module_info = result[0];
+  const ModuleInfo& no_symbols_module_info = result[1];
 
   EXPECT_EQ(hello_module_info.name(), "hello_world_elf");
   EXPECT_EQ(hello_module_info.file_path(), hello_world_path);
@@ -223,7 +220,7 @@ TEST(LinuxMap, ParseMaps2) {
   EXPECT_EQ(no_symbols_module_info.object_segments()[0].size_in_memory(), 0xa40);
 }
 
-TEST(LinuxMap, ParseMapsWithSpacesInPath) {
+TEST(ReadModules, ParseMapsIntoModulesWithSpacesInPath) {
   const std::filesystem::path test_path = orbit_test::GetTestdataDir();
   ErrorMessageOr<std::string> elf_contents_or_error =
       orbit_base::ReadFileToString(test_path / "hello_world_elf");
@@ -237,14 +234,13 @@ TEST(LinuxMap, ParseMapsWithSpacesInPath) {
 
   ASSERT_THAT(orbit_base::WriteFully(hello_world_elf_temporary.fd(), elf_contents), HasNoError());
 
-  const std::string data{absl::StrFormat(
+  const std::string proc_pid_maps_content{absl::StrFormat(
       "7f6874290000-7f6874297000 r-xp 00000000 fe:01 661214                     %s\n",
       hello_world_elf_temporary.file_path())};
-  const auto result = ParseMaps(data);
-  ASSERT_THAT(result, HasNoError());
-  ASSERT_EQ(result.value().size(), 1);
+  const auto result = ParseMapsIntoModules(ReadMaps(proc_pid_maps_content));
+  ASSERT_EQ(result.size(), 1);
 
-  const ModuleInfo& hello_module_info = result.value()[0];
+  const ModuleInfo& hello_module_info = result[0];
   EXPECT_EQ(hello_module_info.name(), hello_world_elf_temporary.file_path().filename().string());
   EXPECT_EQ(hello_module_info.file_path(), hello_world_elf_temporary.file_path());
   EXPECT_EQ(hello_module_info.file_size(), kHelloWorldElfFileSize);
@@ -256,22 +252,21 @@ TEST(LinuxMap, ParseMapsWithSpacesInPath) {
   VerifyObjectSegmentsForHelloWorldElf(hello_module_info.object_segments());
 }
 
-TEST(LinuxMap, ParseMapsElfWithMultipleExecutableMaps) {
+TEST(ReadModules, ParseMapsIntoModulesElfWithMultipleExecutableMaps) {
   const std::filesystem::path test_path = orbit_test::GetTestdataDir();
   const std::filesystem::path hello_world_path = test_path / "hello_world_elf";
 
-  const std::string data{
+  const std::string proc_pid_maps_content{
       absl::StrFormat("100000-101000 r--p 00000000 01:02 42    %1$s\n"
                       "101000-102000 r-xp 00000000 01:02 42    %1$s\n"
                       "102000-103000 r--p 00000000 01:02 42    %1$s\n"
                       "103000-104000 rw-p 00000000 00:00 0 \n"
                       "104000-105000 r-xp 00000000 01:02 42    %1$s\n",
                       hello_world_path)};
-  const auto result = ParseMaps(data);
-  ASSERT_THAT(result, HasNoError());
-  ASSERT_EQ(result.value().size(), 1);
+  const auto result = ParseMapsIntoModules(ReadMaps(proc_pid_maps_content));
+  ASSERT_EQ(result.size(), 1);
 
-  const ModuleInfo& hello_module_info = result.value()[0];
+  const ModuleInfo& hello_module_info = result[0];
   EXPECT_EQ(hello_module_info.name(), "hello_world_elf");
   EXPECT_EQ(hello_module_info.file_path(), hello_world_path);
   EXPECT_EQ(hello_module_info.file_size(), kHelloWorldElfFileSize);
@@ -283,19 +278,18 @@ TEST(LinuxMap, ParseMapsElfWithMultipleExecutableMaps) {
   VerifyObjectSegmentsForHelloWorldElf(hello_module_info.object_segments());
 }
 
-TEST(LinuxMap, ParseMapsPeTextMappedNotAnonymously) {
+TEST(ReadModules, ParseMapsIntoModulesPeTextMappedNotAnonymously) {
   const std::filesystem::path test_path = orbit_test::GetTestdataDir();
   const std::filesystem::path libtest_path = test_path / "libtest.dll";  // SizeOfImage = 0x20000
 
-  const std::string data{
+  const std::string proc_pid_maps_content{
       absl::StrFormat("100000-101000 r--p 00000000 01:02 42    %1$s\n"
                       "101000-103000 r-xp 00001000 01:02 42    %1$s\n",
                       libtest_path)};
-  const auto result = ParseMaps(data);
-  ASSERT_THAT(result, HasNoError());
-  ASSERT_EQ(result.value().size(), 1);
+  const auto result = ParseMapsIntoModules(ReadMaps(proc_pid_maps_content));
+  ASSERT_EQ(result.size(), 1);
 
-  const orbit_grpc_protos::ModuleInfo& libtest_module_info = result.value()[0];
+  const orbit_grpc_protos::ModuleInfo& libtest_module_info = result[0];
   EXPECT_EQ(libtest_module_info.name(), "libtest.dll");
   EXPECT_EQ(libtest_module_info.file_path(), libtest_path);
   EXPECT_EQ(libtest_module_info.file_size(), kLibTestDllFileSize);
@@ -309,22 +303,21 @@ TEST(LinuxMap, ParseMapsPeTextMappedNotAnonymously) {
   VerifyObjectSegmentsForLibTestDll(libtest_module_info.object_segments());
 }
 
-TEST(LinuxMap, ParseMapsPeTextMappedNotAnonymouslyWithMultipleExecutableMaps) {
+TEST(ReadModules, ParseMapsIntoModulesPeTextMappedNotAnonymouslyWithMultipleExecutableMaps) {
   const std::filesystem::path test_path = orbit_test::GetTestdataDir();
   const std::filesystem::path libtest_path = test_path / "libtest.dll";
 
-  const std::string data{
+  const std::string proc_pid_maps_content{
       absl::StrFormat("100000-101000 r--p 00000000 01:02 42    %1$s\n"
                       "101000-102000 r-xp 00000000 01:02 42    %1$s\n"
                       "102000-103000 r--p 00000000 01:02 42    %1$s\n"
                       "103000-104000 rw-p 00000000 00:00 0 \n"
                       "104000-105000 r-xp 00000000 01:02 42    %1$s\n",
                       libtest_path)};
-  const auto result = ParseMaps(data);
-  ASSERT_THAT(result, HasNoError());
-  ASSERT_EQ(result.value().size(), 1);
+  const auto result = ParseMapsIntoModules(ReadMaps(proc_pid_maps_content));
+  ASSERT_EQ(result.size(), 1);
 
-  const orbit_grpc_protos::ModuleInfo& libtest_module_info = result.value()[0];
+  const orbit_grpc_protos::ModuleInfo& libtest_module_info = result[0];
   EXPECT_EQ(libtest_module_info.name(), "libtest.dll");
   EXPECT_EQ(libtest_module_info.file_path(), libtest_path);
   EXPECT_EQ(libtest_module_info.file_size(), kLibTestDllFileSize);
@@ -338,19 +331,18 @@ TEST(LinuxMap, ParseMapsPeTextMappedNotAnonymouslyWithMultipleExecutableMaps) {
   VerifyObjectSegmentsForLibTestDll(libtest_module_info.object_segments());
 }
 
-TEST(LinuxMap, ParseMapsPeTextMappedAnonymously) {
+TEST(ReadModules, ParseMapsIntoModulesPeTextMappedAnonymously) {
   const std::filesystem::path test_path = orbit_test::GetTestdataDir();
   const std::filesystem::path libtest_path = test_path / "libtest.dll";
 
-  const std::string data{
+  const std::string proc_pid_maps_content{
       absl::StrFormat("100000-101000 r--p 00000000 01:02 42    %1$s\n"
                       "101000-103000 r-xp 00000000 00:00 0 \n",
                       libtest_path)};
-  const auto result = ParseMaps(data);
-  ASSERT_THAT(result, HasNoError());
-  ASSERT_EQ(result.value().size(), 1);
+  const auto result = ParseMapsIntoModules(ReadMaps(proc_pid_maps_content));
+  ASSERT_EQ(result.size(), 1);
 
-  const orbit_grpc_protos::ModuleInfo& libtest_module_info = result.value()[0];
+  const orbit_grpc_protos::ModuleInfo& libtest_module_info = result[0];
   EXPECT_EQ(libtest_module_info.name(), "libtest.dll");
   EXPECT_EQ(libtest_module_info.file_path(), libtest_path);
   EXPECT_EQ(libtest_module_info.file_size(), kLibTestDllFileSize);
@@ -364,11 +356,11 @@ TEST(LinuxMap, ParseMapsPeTextMappedAnonymously) {
   VerifyObjectSegmentsForLibTestDll(libtest_module_info.object_segments());
 }
 
-TEST(LinuxMap, ParseMapsPeTextMappedAnonymouslyWithMultipleExecutableMaps) {
+TEST(ReadModules, ParseMapsIntoModulesPeTextMappedAnonymouslyWithMultipleExecutableMaps) {
   const std::filesystem::path test_path = orbit_test::GetTestdataDir();
   const std::filesystem::path libtest_path = test_path / "libtest.dll";
 
-  const std::string data{
+  const std::string proc_pid_maps_content{
       absl::StrFormat("100000-101000 r--p 00000000 01:02 42    %1$s\n"
                       "101000-102000 r-xp 00000000 00:00 0 \n"
                       "102000-103000 r--p 00000000 00:00 0 \n"
@@ -376,11 +368,10 @@ TEST(LinuxMap, ParseMapsPeTextMappedAnonymouslyWithMultipleExecutableMaps) {
                       "104000-105000 r-xp 00000000 00:00 0 \n"
                       "105000-121000 r-xp 00000000 00:00 0 \n",  // Beyond SizeOfImage.
                       libtest_path)};
-  const auto result = ParseMaps(data);
-  ASSERT_THAT(result, HasNoError());
-  ASSERT_EQ(result.value().size(), 1);
+  const auto result = ParseMapsIntoModules(ReadMaps(proc_pid_maps_content));
+  ASSERT_EQ(result.size(), 1);
 
-  const orbit_grpc_protos::ModuleInfo& libtest_module_info = result.value()[0];
+  const orbit_grpc_protos::ModuleInfo& libtest_module_info = result[0];
   EXPECT_EQ(libtest_module_info.name(), "libtest.dll");
   EXPECT_EQ(libtest_module_info.file_path(), libtest_path);
   EXPECT_EQ(libtest_module_info.file_size(), kLibTestDllFileSize);
@@ -394,11 +385,11 @@ TEST(LinuxMap, ParseMapsPeTextMappedAnonymouslyWithMultipleExecutableMaps) {
   VerifyObjectSegmentsForLibTestDll(libtest_module_info.object_segments());
 }
 
-TEST(LinuxMap, ParseMapsPeTextMappedAnonymouslyInMoreComplexExample) {
+TEST(ReadModules, ParseMapsIntoModulesPeTextMappedAnonymouslyInMoreComplexExample) {
   const std::filesystem::path test_path = orbit_test::GetTestdataDir();
   const std::filesystem::path libtest_path = test_path / "libtest.dll";
 
-  const std::string data{
+  const std::string proc_pid_maps_content{
       absl::StrFormat("10000-11000 r--p 00000000 00:00 0    [stack]\n"
                       "100000-101000 r--p 00000000 01:02 42    %1$s\n"  // The headers.
                       "101000-102000 rw-p 00000000 00:00 0 \n"
@@ -411,11 +402,10 @@ TEST(LinuxMap, ParseMapsPeTextMappedAnonymouslyInMoreComplexExample) {
                       "108000-109000 r-xp 00000000 00:00 0 \n"  // An executable map.
                       "109000-10A000 r-xp 00000000 01:02 42    /path/to/nothing\n",
                       libtest_path)};
-  const auto result = ParseMaps(data);
-  ASSERT_THAT(result, HasNoError());
-  ASSERT_EQ(result.value().size(), 1);
+  const auto result = ParseMapsIntoModules(ReadMaps(proc_pid_maps_content));
+  ASSERT_EQ(result.size(), 1);
 
-  const orbit_grpc_protos::ModuleInfo& libtest_module_info = result.value()[0];
+  const orbit_grpc_protos::ModuleInfo& libtest_module_info = result[0];
   EXPECT_EQ(libtest_module_info.name(), "libtest.dll");
   EXPECT_EQ(libtest_module_info.file_path(), libtest_path);
   EXPECT_EQ(libtest_module_info.file_size(), kLibTestDllFileSize);
@@ -429,56 +419,52 @@ TEST(LinuxMap, ParseMapsPeTextMappedAnonymouslyInMoreComplexExample) {
   VerifyObjectSegmentsForLibTestDll(libtest_module_info.object_segments());
 }
 
-TEST(LinuxMap, ParseMapsPeTextMappedAnonymouslyAndFirstMapWithOffset) {
+TEST(ReadModules, ParseMapsIntoModulesPeTextMappedAnonymouslyAndFirstMapWithOffset) {
   const std::filesystem::path test_path = orbit_test::GetTestdataDir();
   const std::filesystem::path libtest_path = test_path / "libtest.dll";
 
-  const std::string data{
+  const std::string proc_pid_maps_content{
       absl::StrFormat("101000-102000 r--p 00001000 01:02 42    %s\n"
                       "102000-103000 r-xp 00000000 00:00 0 \n",
                       libtest_path)};
-  const auto result = ParseMaps(data);
-  ASSERT_THAT(result, HasNoError());
-  ASSERT_EQ(result.value().size(), 0);
+  const auto result = ParseMapsIntoModules(ReadMaps(proc_pid_maps_content));
+  ASSERT_EQ(result.size(), 0);
 }
 
-TEST(LinuxMap, ParseMapsPeTextMappedWithWrongName) {
+TEST(ReadModules, ParseMapsIntoModulesPeTextMappedWithWrongName) {
   const std::filesystem::path test_path = orbit_test::GetTestdataDir();
   const std::filesystem::path libtest_path = test_path / "libtest.dll";
 
-  const std::string data{
+  const std::string proc_pid_maps_content{
       absl::StrFormat("100000-101000 r--p 00000000 01:02 42    %s\n"
                       "101000-103000 r-xp 00000000 00:00 42    /wrong/path\n",
                       libtest_path)};
-  const auto result = ParseMaps(data);
-  ASSERT_THAT(result, HasNoError());
-  EXPECT_EQ(result.value().size(), 0);
+  const auto result = ParseMapsIntoModules(ReadMaps(proc_pid_maps_content));
+  EXPECT_EQ(result.size(), 0);
 }
 
-TEST(LinuxMap, ParseMapsPeNoExecutableMap) {
+TEST(ReadModules, ParseMapsIntoModulesPeNoExecutableMap) {
   const std::filesystem::path test_path = orbit_test::GetTestdataDir();
   const std::filesystem::path libtest_path = test_path / "libtest.dll";
 
-  const std::string data{
+  const std::string proc_pid_maps_content{
       absl::StrFormat("100000-101000 r--p 00000000 01:02 42    %s\n"
                       "101000-103000 r--p 00000000 00:00 0 \n",
                       libtest_path)};
-  const auto result = ParseMaps(data);
-  ASSERT_THAT(result, HasNoError());
-  EXPECT_EQ(result.value().size(), 0);
+  const auto result = ParseMapsIntoModules(ReadMaps(proc_pid_maps_content));
+  EXPECT_EQ(result.size(), 0);
 }
 
-TEST(LinuxMap, ParseMapsPeTextMappedAnonymouslyWithEndBeyondSizeOfImage) {
+TEST(ReadModules, ParseMapsIntoModulesPeTextMappedAnonymouslyWithEndBeyondSizeOfImage) {
   const std::filesystem::path test_path = orbit_test::GetTestdataDir();
   const std::filesystem::path libtest_path = test_path / "libtest.dll";
 
-  const std::string data{
+  const std::string proc_pid_maps_content{
       absl::StrFormat("100000-101000 r--p 00000000 01:02 42    %s\n"
                       "101000-121000 r-xp 00000000 00:00 0 \n",  // Beyond SizeOfImage.
                       libtest_path)};
-  const auto result = ParseMaps(data);
-  ASSERT_THAT(result, HasNoError());
-  EXPECT_EQ(result.value().size(), 0);
+  const auto result = ParseMapsIntoModules(ReadMaps(proc_pid_maps_content));
+  EXPECT_EQ(result.size(), 0);
 }
 
 }  // namespace orbit_object_utils

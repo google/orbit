@@ -14,7 +14,7 @@
 #include <vector>
 
 #include "GrpcProtos/process.pb.h"
-#include "ObjectUtils/LinuxMap.h"
+#include "ObjectUtils/ReadModules.h"
 #include "OrbitBase/Logging.h"
 #include "OrbitBase/ThreadUtils.h"
 #include "ProcessServiceUtils.h"

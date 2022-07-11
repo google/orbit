@@ -22,7 +22,7 @@
 #include "GrpcProtos/capture.pb.h"
 #include "GrpcProtos/module.pb.h"
 #include "LeafFunctionCallManager.h"
-#include "ObjectUtils/LinuxMap.h"
+#include "ObjectUtils/ReadModules.h"
 #include "OrbitBase/Logging.h"
 #include "OrbitBase/Result.h"
 
@@ -568,12 +568,13 @@ FindExecutableAddressRangeForSameFileFromFirstMapInfo(
 // each new executable file mapping we would send a ModuleUpdateEvent with the address range and
 // file for that mapping.
 //
-// But just like for orbit_object_utils::ParseMaps, things are more complicated. We observed that in
-// some cases a single loadable segment of an ELF file or a single executable section of a PE can be
-// loaded into memory with multiple adjacent file mappings. In addition, some PEs can have multiple
-// executable sections. And finally, the executable sections (and all other sections) of a PE can
-// have an offset in the file that doesn't fulfill the requirements of mmap for file mappings, in
-// which case Wine has to create an anonymous mapping and copy the section into it.
+// But just like for orbit_object_utils::ParseMapsIntoModules, things are more complicated. We
+// observed that in some cases a single loadable segment of an ELF file or a single executable
+// section of a PE can be loaded into memory with multiple adjacent file mappings. In addition, some
+// PEs can have multiple executable sections. And finally, the executable sections (and all other
+// sections) of a PE can have an offset in the file that doesn't fulfill the requirements of mmap
+// for file mappings, in which case Wine has to create an anonymous mapping and copy the section
+// into it.
 //
 // In all these cases, we want to create a ModuleUpdateEvent with an address range that includes
 // all the executable mappings of the module. To find them, we proceed as follows:
@@ -585,7 +586,7 @@ FindExecutableAddressRangeForSameFileFromFirstMapInfo(
 //   module; if the module is a PE, we also have to consider anonymous mappings and detect whether
 //   they actually belong to the PE.
 //
-// Note that, just like in orbit_object_utils::ParseMaps:
+// Note that, just like in orbit_object_utils::ParseMapsIntoModules:
 // - The ModuleInfo in the ModuleUpdateEvent will carry executable_segment_offset with the
 //   assumption that the value of ObjectFile::GetExecutableSegmentOffset correspond to the *first*
 //   executable mapping.
