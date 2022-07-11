@@ -133,6 +133,10 @@ bool& GetIsInPayload() {
 
 }  // namespace
 
+// NOTE: All symbols defined here have private linker visibility by default. Symbols that
+// need to be visible to the tracee must be marked with `[[gnu::visibility("default")]]`. Check
+// out the CMakeLists.txt file for more information.
+
 // Initialize the LockFreeUserSpaceInstrumentationEventProducer and establish the connection to
 // OrbitService.
 [[gnu::visibility("default")]] void InitializeInstrumentation() { GetCaptureEventProducer(); }

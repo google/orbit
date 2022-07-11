@@ -59,6 +59,8 @@ add_library(OrbitUserSpaceInstrumentation SHARED)
 # The linker flags mark all symbols coming from libraries as private and ensure that they will be hidden in the shared library.
 # The visibility properties ensure that symbols coming from this module's source files are considered private unless
 # explicitly marked visible in the source code file.
+# This avoids functions and types that we don't want to explicitly expose leaking into the target process and avoids
+# them potentially being used outside of this library.
 set_target_properties(OrbitUserSpaceInstrumentation PROPERTIES OUTPUT_NAME "orbituserspaceinstrumentation"
                                                                LINK_FLAGS "-Wl,--exclude-libs,ALL"
                                                                C_VISIBILITY_PRESET hidden
