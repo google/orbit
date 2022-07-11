@@ -22,7 +22,6 @@ target_sources(LinuxTracing PUBLIC
 target_sources(LinuxTracing PRIVATE
         ContextSwitchManager.cpp
         ContextSwitchManager.h
-        Function.h
         GpuTracepointVisitor.h
         GpuTracepointVisitor.cpp
         KernelTracepoints.h

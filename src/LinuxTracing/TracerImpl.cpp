@@ -22,7 +22,7 @@
 #include <utility>
 
 #include "ApiInterface/Orbit.h"
-#include "Function.h"
+#include "GrpcProtos/capture.pb.h"
 #include "GrpcProtos/module.pb.h"
 #include "GrpcProtos/tracepoint.pb.h"
 #include "Introspection/Introspection.h"
@@ -95,15 +95,9 @@ TracerImpl::TracerImpl(
     sampling_period_ns_ = ComputeSamplingPeriodNs(capture_options.samples_per_second());
   }
 
-  instrumented_functions_.reserve(capture_options.instrumented_functions_size());
-
-  for (const InstrumentedFunction& instrumented_function :
-       capture_options.instrumented_functions()) {
-    uint64_t function_id = instrumented_function.function_id();
-    instrumented_functions_.emplace_back(
-        function_id, instrumented_function.file_path(), instrumented_function.file_offset(),
-        instrumented_function.record_arguments(), instrumented_function.record_return_value());
-  }
+  instrumented_functions_.insert(instrumented_functions_.end(),
+                                 capture_options.instrumented_functions().begin(),
+                                 capture_options.instrumented_functions().end());
 
   functions_to_record_additional_stack_on_.insert(
       functions_to_record_additional_stack_on_.end(),
@@ -220,7 +214,7 @@ void TracerImpl::InitUprobesEventVisitor() {
   event_processor_.AddVisitor(uprobes_unwinding_visitor_.get());
 }
 
-bool TracerImpl::OpenUprobes(const orbit_linux_tracing::Function& function,
+bool TracerImpl::OpenUprobes(const orbit_grpc_protos::InstrumentedFunction& function,
                              const std::vector<int32_t>& cpus,
                              absl::flat_hash_map<int32_t, int>* fds_per_cpu) {
   ORBIT_SCOPE_FUNCTION;
@@ -243,7 +237,7 @@ bool TracerImpl::OpenUprobes(const orbit_linux_tracing::Function& function,
   return true;
 }
 
-bool TracerImpl::OpenUretprobes(const orbit_linux_tracing::Function& function,
+bool TracerImpl::OpenUretprobes(const orbit_grpc_protos::InstrumentedFunction& function,
                                 const std::vector<int32_t>& cpus,
                                 absl::flat_hash_map<int32_t, int>* fds_per_cpu) {
   ORBIT_SCOPE_FUNCTION;
@@ -268,7 +262,7 @@ bool TracerImpl::OpenUretprobes(const orbit_linux_tracing::Function& function,
 
 void TracerImpl::AddUprobesFileDescriptors(
     const absl::flat_hash_map<int32_t, int>& uprobes_fds_per_cpu,
-    const orbit_linux_tracing::Function& function) {
+    const orbit_grpc_protos::InstrumentedFunction& function) {
   ORBIT_SCOPE_FUNCTION;
   for (const auto [cpu, fd] : uprobes_fds_per_cpu) {
     uint64_t stream_id = perf_event_get_id(fd);
@@ -284,7 +278,7 @@ void TracerImpl::AddUprobesFileDescriptors(
 
 void TracerImpl::AddUretprobesFileDescriptors(
     const absl::flat_hash_map<int32_t, int>& uretprobes_fds_per_cpu,
-    const orbit_linux_tracing::Function& function) {
+    const orbit_grpc_protos::InstrumentedFunction& function) {
   ORBIT_SCOPE_FUNCTION;
   for (const auto [cpu, fd] : uretprobes_fds_per_cpu) {
     uint64_t stream_id = perf_event_get_id(fd);
