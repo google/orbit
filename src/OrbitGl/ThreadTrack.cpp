@@ -18,7 +18,7 @@
 #include "App.h"
 #include "ClientData/CaptureData.h"
 #include "ClientData/ModuleAndFunctionLookup.h"
-#include "ClientData/ScopeIdConstants.h"
+#include "ClientData/ScopeId.h"
 #include "ClientData/TimerChain.h"
 #include "ClientProtos/capture_data.pb.h"
 #include "DisplayFormats/DisplayFormats.h"
@@ -35,6 +35,7 @@
 #include "Viewport.h"
 
 using orbit_client_data::CaptureData;
+using orbit_client_data::ScopeId;
 using orbit_client_data::TimerChain;
 
 using orbit_gl::PickingUserData;
@@ -212,9 +213,9 @@ float ThreadTrack::GetDefaultBoxHeight() const {
 }
 
 Color ThreadTrack::GetTimerColor(const TimerInfo& timer_info, const internal::DrawData& draw_data) {
-  const uint64_t scope_id = app_->HasCaptureData()
-                                ? app_->GetCaptureData().ProvideScopeId(timer_info)
-                                : orbit_client_data::kInvalidScopeId;
+  const ScopeId scope_id = app_->HasCaptureData()
+                               ? app_->GetCaptureData().ProvideScopeId(timer_info)
+                               : orbit_client_data::kInvalidScopeId;
   const uint64_t group_id = timer_info.group_id();
   const bool is_selected = &timer_info == draw_data.selected_timer;
   const bool is_scope_id_highlighted =

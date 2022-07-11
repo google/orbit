@@ -22,6 +22,7 @@
 #include <string_view>
 #include <vector>
 
+#include "ClientData/ScopeId.h"
 #include "ClientData/ScopeInfo.h"
 #include "MizarData/MizarPairedData.h"
 #include "MizarData/SamplingWithFrameTrackComparisonReport.h"
@@ -32,12 +33,14 @@ class SamplingWithFrameTrackInputWidget;
 }
 
 Q_DECLARE_METATYPE(::orbit_mizar_base::TID);
+Q_DECLARE_METATYPE(::orbit_client_data::ScopeId);
 
 namespace orbit_mizar_widgets {
 
 class SamplingWithFrameTrackInputWidgetBase : public QWidget {
   Q_OBJECT
   using TID = ::orbit_mizar_base::TID;
+  using ScopeId = ::orbit_client_data::ScopeId;
 
  public:
   ~SamplingWithFrameTrackInputWidgetBase() override;
@@ -64,7 +67,7 @@ class SamplingWithFrameTrackInputWidgetBase : public QWidget {
 
  private:
   absl::flat_hash_set<TID> selected_tids_;
-  uint64_t frame_track_scope_id_ = 0;
+  ScopeId frame_track_scope_id_{0};
 
   // std::numeric_limits<uint64_t>::max() corresponds to malformed input
   uint64_t start_relative_time_ns_ = 0;
@@ -73,6 +76,7 @@ class SamplingWithFrameTrackInputWidgetBase : public QWidget {
 template <typename PairedData>
 class SamplingWithFrameTrackInputWidgetTmpl : public SamplingWithFrameTrackInputWidgetBase {
   using TID = ::orbit_mizar_base::TID;
+  using ScopeId = ::orbit_client_data::ScopeId;
 
  public:
   SamplingWithFrameTrackInputWidgetTmpl() = delete;
@@ -110,9 +114,9 @@ class SamplingWithFrameTrackInputWidgetTmpl : public SamplingWithFrameTrackInput
   }
 
   void InitFrameTrackList(const PairedData& data) {
-    const absl::flat_hash_map<uint64_t, orbit_client_data::ScopeInfo> scope_id_to_info =
+    const absl::flat_hash_map<ScopeId, orbit_client_data::ScopeInfo> scope_id_to_info =
         data.GetFrameTracks();
-    std::vector<std::pair<uint64_t, orbit_client_data::ScopeInfo>> scope_id_to_info_sorted(
+    std::vector<std::pair<ScopeId, orbit_client_data::ScopeInfo>> scope_id_to_info_sorted(
         std::begin(scope_id_to_info), std::end(scope_id_to_info));
     orbit_base::sort(std::begin(scope_id_to_info_sorted), std::end(scope_id_to_info_sorted),
                      [](const auto& a) { return a.second.GetName(); });

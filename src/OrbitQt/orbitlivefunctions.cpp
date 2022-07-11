@@ -18,6 +18,7 @@
 #include <utility>
 
 #include "App.h"
+#include "ClientData/ScopeId.h"
 #include "DataViews/DataView.h"
 #include "DataViews/LiveFunctionsDataView.h"
 #include "HistogramWidget.h"
@@ -169,6 +170,7 @@ void OrbitLiveFunctions::OnRowSelected(std::optional<int> row) {
 }
 
 void OrbitLiveFunctions::ShowHistogram(const std::vector<uint64_t>* data,
-                                       const std::string& scope_name, uint64_t scope_id) {
+                                       const std::string& scope_name,
+                                       orbit_client_data::ScopeId scope_id) {
   ui->histogram_widget_->UpdateData(data, scope_name, scope_id);
 }

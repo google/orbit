@@ -34,12 +34,12 @@ void DataManager::ClearSelectedFunctions() {
   selected_functions_.clear();
 }
 
-void DataManager::set_visible_scope_ids(absl::flat_hash_set<uint64_t> visible_scope_ids) {
+void DataManager::set_visible_scope_ids(absl::flat_hash_set<ScopeId> visible_scope_ids) {
   ORBIT_CHECK(std::this_thread::get_id() == main_thread_id_);
   visible_scope_ids_ = std::move(visible_scope_ids);
 }
 
-void DataManager::set_highlighted_scope_id(uint64_t highlighted_scope_id) {
+void DataManager::set_highlighted_scope_id(ScopeId highlighted_scope_id) {
   ORBIT_CHECK(std::this_thread::get_id() == main_thread_id_);
   highlighted_scope_id_ = highlighted_scope_id;
 }
@@ -81,12 +81,12 @@ std::vector<FunctionInfo> DataManager::GetSelectedFunctions() const {
   return {selected_functions_.begin(), selected_functions_.end()};
 }
 
-bool DataManager::IsScopeVisible(uint64_t scope_id) const {
+bool DataManager::IsScopeVisible(ScopeId scope_id) const {
   ORBIT_CHECK(std::this_thread::get_id() == main_thread_id_);
   return visible_scope_ids_.contains(scope_id);
 }
 
-uint64_t DataManager::highlighted_scope_id() const {
+ScopeId DataManager::highlighted_scope_id() const {
   ORBIT_CHECK(std::this_thread::get_id() == main_thread_id_);
   return highlighted_scope_id_;
 }

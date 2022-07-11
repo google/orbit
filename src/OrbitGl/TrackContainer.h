@@ -12,6 +12,7 @@
 #include <vector>
 
 #include "CaptureViewElement.h"
+#include "ClientData/ScopeId.h"
 #include "TimeGraphLayout.h"
 #include "Track.h"
 #include "TrackManager.h"
@@ -22,6 +23,8 @@ namespace orbit_gl {
 
 // Represent the space where Tracks will be drawn.
 class TrackContainer final : public CaptureViewElement {
+  using ScopeId = orbit_client_data::ScopeId;
+
  public:
   explicit TrackContainer(CaptureViewElement* parent, TimelineInfoInterface* timeline_info,
                           Viewport* viewport, TimeGraphLayout* layout, OrbitApp* app,
@@ -54,7 +57,7 @@ class TrackContainer final : public CaptureViewElement {
   void SetIteratorOverlayData(
       const absl::flat_hash_map<uint64_t, const orbit_client_protos::TimerInfo*>&
           iterator_timer_info,
-      const absl::flat_hash_map<uint64_t, uint64_t>& iterator_id_to_function_id);
+      const absl::flat_hash_map<uint64_t, ScopeId>& iterator_id_to_scope_function_scope_id);
   void UpdateVerticalScrollUsingRatio(float ratio);
   [[nodiscard]] float GetVerticalScrollingOffset() const { return vertical_scrolling_offset_; }
   void SetVerticalScrollingOffset(float value);
@@ -91,7 +94,7 @@ class TrackContainer final : public CaptureViewElement {
 
   // First member is id.
   absl::flat_hash_map<uint64_t, const orbit_client_protos::TimerInfo*> iterator_timer_info_;
-  absl::flat_hash_map<uint64_t, uint64_t> iterator_id_to_function_id_;
+  absl::flat_hash_map<uint64_t, ScopeId> iterator_id_to_function_scope_id_;
 
   float vertical_scrolling_offset_ = 0;
   float height_ = 0;

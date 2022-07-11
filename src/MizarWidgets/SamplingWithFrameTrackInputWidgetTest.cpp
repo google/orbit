@@ -17,19 +17,20 @@
 #include <limits>
 #include <string>
 
+#include "ClientData/ScopeId.h"
 #include "ClientData/ScopeInfo.h"
 #include "MizarBase/ThreadId.h"
 #include "MizarWidgets/SamplingWithFrameTrackInputWidget.h"
 #include "TestUtils/ContainerHelpers.h"
 
-using orbit_mizar_base::TID;
-using testing::ElementsAreArray;
-using testing::NotNull;
-using testing::Return;
-using testing::ReturnRef;
-using testing::UnorderedElementsAreArray;
-
-using orbit_test_utils::MakeMap;
+using ::orbit_client_data::ScopeId;
+using ::orbit_mizar_base::TID;
+using ::orbit_test_utils::MakeMap;
+using ::testing::ElementsAreArray;
+using ::testing::NotNull;
+using ::testing::Return;
+using ::testing::ReturnRef;
+using ::testing::UnorderedElementsAreArray;
 
 namespace {
 class MockPairedData {
@@ -37,7 +38,7 @@ class MockPairedData {
   MOCK_METHOD((const absl::flat_hash_map<TID, std::string>&), TidToNames, (), (const));
   MOCK_METHOD((const absl::flat_hash_map<TID, std::uint64_t>&), TidToCallstackSampleCounts, (),
               (const));
-  MOCK_METHOD((const absl::flat_hash_map<uint64_t, orbit_client_data::ScopeInfo>), GetFrameTracks,
+  MOCK_METHOD((const absl::flat_hash_map<ScopeId, orbit_client_data::ScopeInfo>), GetFrameTracks,
               (), (const));
 };
 }  // namespace
@@ -67,7 +68,7 @@ const std::vector<std::string> kThreadNamesSorted = {
 const QString kInputName = QStringLiteral("InputName");
 
 constexpr size_t kFrameTracksCount = 3;
-constexpr std::array<uint64_t, kFrameTracksCount> kScopeIds = {1, 2, 10};
+constexpr std::array<ScopeId, kFrameTracksCount> kScopeIds = {ScopeId(1), ScopeId(2), ScopeId(10)};
 constexpr std::array<std::string_view, kFrameTracksCount> kFrameTrackNames = {"Foo", "Boo",
                                                                               "Manual"};
 constexpr std::array<orbit_client_data::ScopeType, kFrameTracksCount> kScopeInfoTypes = {
@@ -79,7 +80,8 @@ const absl::flat_hash_map<orbit_client_data::ScopeType, std::string> kScopeTypeT
     {orbit_client_data::ScopeType::kApiScope, "[MS]"}};
 const std::vector<std::string> kExpectedFrameTrackListContent = {"[ D] Boo", "[ D] Foo",
                                                                  "[MS] Manual"};
-constexpr std::array<uint64_t, kFrameTracksCount> kScopeIdsInExpectedOrder = {2, 1, 10};
+constexpr std::array<ScopeId, kFrameTracksCount> kScopeIdsInExpectedOrder = {ScopeId(2), ScopeId(1),
+                                                                             ScopeId(10)};
 const std::vector<orbit_client_data::ScopeInfo> kScopeInfos = [] {
   std::vector<orbit_client_data::ScopeInfo> result;
   for (size_t i = 0; i < kFrameTracksCount; ++i) {
@@ -88,7 +90,7 @@ const std::vector<orbit_client_data::ScopeInfo> kScopeInfos = [] {
   return result;
 }();
 
-const absl::flat_hash_map<uint64_t, orbit_client_data::ScopeInfo> kFrameTracks =
+const absl::flat_hash_map<ScopeId, orbit_client_data::ScopeInfo> kFrameTracks =
     MakeMap(kScopeIds, kScopeInfos);
 
 class SamplingWithFrameTrackInputWidgetTest : public ::testing::Test {
@@ -127,7 +129,7 @@ class SamplingWithFrameTrackInputWidgetTest : public ::testing::Test {
     EXPECT_THAT(widget_->MakeConfig().tids, UnorderedElementsAreArray(tids));
   }
 
-  void ExpectSelectedFrameTrackIdIs(uint32_t scope_id) const {
+  void ExpectSelectedFrameTrackIdIs(ScopeId scope_id) const {
     EXPECT_EQ(widget_->MakeConfig().frame_track_scope_id, scope_id);
   }
 

@@ -28,9 +28,9 @@ TEST(DataManager, CanOnlyBeUsedFromTheMainThread) {
   CallMethodOnDifferentThreadAndExpectDeath(data_manager, &DataManager::SelectFunction, function);
   CallMethodOnDifferentThreadAndExpectDeath(data_manager, &DataManager::ClearSelectedFunctions);
   CallMethodOnDifferentThreadAndExpectDeath(data_manager, &DataManager::set_visible_scope_ids,
-                                            absl::flat_hash_set<uint64_t>{});
+                                            absl::flat_hash_set<ScopeId>{});
   CallMethodOnDifferentThreadAndExpectDeath(data_manager, &DataManager::set_highlighted_scope_id,
-                                            0);
+                                            ScopeId(0));
   CallMethodOnDifferentThreadAndExpectDeath(data_manager, &DataManager::set_highlighted_group_id,
                                             0);
   CallMethodOnDifferentThreadAndExpectDeath(data_manager, &DataManager::set_selected_thread_id, 0);

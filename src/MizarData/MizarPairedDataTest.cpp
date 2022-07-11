@@ -16,11 +16,13 @@
 
 #include "ClientData/CallstackData.h"
 #include "ClientData/CallstackInfo.h"
+#include "ClientData/ScopeId.h"
 #include "ClientData/ScopeInfo.h"
 #include "MizarBase/SampledFunctionId.h"
 #include "MizarData/MizarPairedData.h"
 #include "TestUtils/ContainerHelpers.h"
 
+using ::orbit_client_data::ScopeId;
 using ::orbit_mizar_base::SFID;
 using ::orbit_mizar_base::TID;
 using orbit_test_utils::MakeMap;
@@ -36,11 +38,11 @@ namespace {
 class MockCaptureData {
  public:
   MOCK_METHOD(const orbit_client_data::CallstackData&, GetCallstackData, (), (const));
-  MOCK_METHOD(std::vector<const TimerInfo*>, GetTimersForScope, (uint64_t, uint64_t, uint64_t),
+  MOCK_METHOD(std::vector<const TimerInfo*>, GetTimersForScope, (ScopeId, uint64_t, uint64_t),
               (const));
   MOCK_METHOD((const absl::flat_hash_map<uint32_t, std::string>&), thread_names, (), (const));
-  MOCK_METHOD(std::vector<uint64_t>, GetAllProvidedScopeIds, (), (const));
-  MOCK_METHOD(orbit_client_data::ScopeInfo, GetScopeInfo, (uint64_t scope_id), (const));
+  MOCK_METHOD(std::vector<ScopeId>, GetAllProvidedScopeIds, (), (const));
+  MOCK_METHOD(orbit_client_data::ScopeInfo, GetScopeInfo, (ScopeId scope_id), (const));
 };
 
 class MockMizarData {
@@ -168,16 +170,16 @@ const std::vector<const orbit_client_protos::TimerInfo*> kTimerPtrs = [] {
 
 constexpr uint64_t kSamplingPeriod = 10;
 
-const std::vector<uint64_t> kScopeIds = {1, 2, 10, 30};
+const std::vector<ScopeId> kScopeIds = {ScopeId(1), ScopeId(2), ScopeId(10), ScopeId(30)};
 const std::vector<orbit_client_data::ScopeInfo> kScopeInfos = {
     {"Foo", orbit_client_data::ScopeType::kDynamicallyInstrumentedFunction},
     {"Bar", orbit_client_data::ScopeType::kDynamicallyInstrumentedFunction},
     {"Manual Sync Foo", orbit_client_data::ScopeType::kApiScope},
     {"Manual Async Foo", orbit_client_data::ScopeType::kApiScopeAsync}};
-const absl::flat_hash_map<uint64_t, orbit_client_data::ScopeInfo> kScopeIdToInfo =
+const absl::flat_hash_map<ScopeId, orbit_client_data::ScopeInfo> kScopeIdToInfo =
     MakeMap(kScopeIds, kScopeInfos);
-const absl::flat_hash_map<uint64_t, orbit_client_data::ScopeInfo> kFrameTracks = [] {
-  absl::flat_hash_map<uint64_t, orbit_client_data::ScopeInfo> result;
+const absl::flat_hash_map<ScopeId, orbit_client_data::ScopeInfo> kFrameTracks = [] {
+  absl::flat_hash_map<ScopeId, orbit_client_data::ScopeInfo> result;
   std::copy_if(std::begin(kScopeIdToInfo), std::end(kScopeIdToInfo),
                std::inserter(result, std::begin(result)), [](const auto& id_to_info) {
                  const orbit_client_data::ScopeType type = id_to_info.second.GetType();
@@ -196,7 +198,7 @@ class MizarPairedDataTest : public ::testing::Test {
     EXPECT_CALL(*capture_data_, GetTimersForScope).WillRepeatedly(Return(kTimerPtrs));
     EXPECT_CALL(*capture_data_, thread_names).WillRepeatedly(ReturnRef(kThreadNames));
     EXPECT_CALL(*capture_data_, GetAllProvidedScopeIds).WillRepeatedly(Return(kScopeIds));
-    EXPECT_CALL(*capture_data_, GetScopeInfo).WillRepeatedly(Invoke([](const uint64_t id) {
+    EXPECT_CALL(*capture_data_, GetScopeInfo).WillRepeatedly(Invoke([](const ScopeId id) {
       return kScopeIdToInfo.at(id);
     }));
     EXPECT_CALL(*data_, GetCaptureData).WillRepeatedly(ReturnRef(*capture_data_));
@@ -243,7 +245,7 @@ TEST_F(MizarPairedDataTest, ForeachCallstackIsCorrect) {
 TEST_F(MizarPairedDataTest, ActiveInvocationTimesIsCorrect) {
   MizarPairedDataTmpl<MockMizarData> mizar_paired_data(std::move(data_), kAddressToId);
   std::vector<uint64_t> actual_active_invocation_times = mizar_paired_data.ActiveInvocationTimes(
-      {kTID, kAnotherTID}, 1, 0, std::numeric_limits<uint64_t>::max());
+      {kTID, kAnotherTID}, ScopeId(1), 0, std::numeric_limits<uint64_t>::max());
   EXPECT_THAT(actual_active_invocation_times,
               ElementsAre(kSamplingPeriod * 2, kSamplingPeriod * 2));
 }

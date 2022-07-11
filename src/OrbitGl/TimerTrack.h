@@ -16,6 +16,7 @@
 #include "CallstackThreadBar.h"
 #include "CaptureViewElement.h"
 #include "ClientData/CallstackType.h"
+#include "ClientData/ScopeId.h"
 #include "ClientData/TimerChain.h"
 #include "ClientProtos/capture_data.pb.h"
 #include "Containers/BlockChain.h"
@@ -34,7 +35,7 @@ namespace internal {
 struct DrawData {
   uint64_t min_tick;
   uint64_t max_tick;
-  uint64_t highlighted_scope_id;
+  orbit_client_data::ScopeId highlighted_scope_id;
   uint64_t highlighted_group_id;
   double ns_per_pixel;
   uint64_t min_timegraph_tick;
@@ -51,6 +52,8 @@ struct DrawData {
 }  // namespace internal
 
 class TimerTrack : public Track {
+  using ScopeId = orbit_client_data::ScopeId;
+
  public:
   explicit TimerTrack(CaptureViewElement* parent,
                       const orbit_gl::TimelineInfoInterface* timeline_info,
@@ -143,7 +146,7 @@ class TimerTrack : public Track {
       orbit_gl::PrimitiveAssembler* primitive_assembler,
       const orbit_gl::TimelineInfoInterface* timeline_info, const orbit_gl::Viewport* viewport,
       bool is_collapsed, const orbit_client_protos::TimerInfo* selected_timer,
-      uint64_t highlighted_function_id, uint64_t highlighted_group_id,
+      ScopeId highlighted_scope_id, uint64_t highlighted_group_id,
       std::optional<orbit_statistics::HistogramSelectionRange> histogram_selection_range);
 
   [[nodiscard]] virtual std::string GetBoxTooltip(

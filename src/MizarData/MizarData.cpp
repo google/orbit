@@ -15,7 +15,7 @@
 #include "ClientData/ModuleAndFunctionLookup.h"
 #include "ClientData/ModuleData.h"
 #include "ClientData/ModuleManager.h"
-#include "ClientData/ScopeIdConstants.h"
+#include "ClientData/ScopeId.h"
 #include "ClientData/ScopeInfo.h"
 #include "ClientData/ThreadTrackDataProvider.h"
 #include "ClientSymbols/QSettingsBasedStorageManager.h"
@@ -50,7 +50,7 @@ void MizarData::OnCaptureStarted(const orbit_grpc_protos::CaptureStarted& captur
 }
 
 void MizarData::OnTimer(const orbit_client_protos::TimerInfo& timer_info) {
-  const uint64_t scope_id = GetCaptureData().ProvideScopeId(timer_info);
+  const ScopeId scope_id = GetCaptureData().ProvideScopeId(timer_info);
   if (scope_id == orbit_client_data::kInvalidScopeId) return;
 
   const orbit_client_data::ScopeType scope_type = GetCaptureData().GetScopeInfo(scope_id).GetType();

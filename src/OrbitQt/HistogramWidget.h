@@ -18,6 +18,7 @@
 #include <vector>
 
 #include "App.h"
+#include "ClientData/ScopeId.h"
 #include "Statistics/Histogram.h"
 
 namespace orbit_qt {
@@ -38,12 +39,13 @@ struct BarData {
 // If the histogram is empty, draws a textual suggestion to select a function.
 class HistogramWidget : public QWidget {
   Q_OBJECT
+  using ScopeId = orbit_client_data::ScopeId;
 
  public:
   using QWidget::QWidget;
 
   void UpdateData(const std::vector<uint64_t>* data, std::string function_name,
-                  uint64_t function_id);
+                  ScopeId function_id);
 
   [[nodiscard]] QString GetTitle() const;
 
@@ -76,12 +78,12 @@ class HistogramWidget : public QWidget {
   [[nodiscard]] bool IsOverHistogram(const QPoint& pos) const;
 
   struct ScopeData {
-    ScopeData(const std::vector<uint64_t>* data, std::string name, uint64_t id)
+    ScopeData(const std::vector<uint64_t>* data, std::string name, ScopeId id)
         : data(data), name(std::move(name)), id(id) {}
 
     const std::vector<uint64_t>* data;
     std::string name;
-    uint64_t id;
+    ScopeId id;
   };
 
   std::optional<ScopeData> scope_data_;

@@ -502,7 +502,7 @@ static void UpdateNextTimerAndGoalTime(const TimerInfo** next_timer, uint64_t& g
   }
 }
 
-const TimerInfo* TimeGraph::FindPreviousScopeTimer(uint64_t scope_id, uint64_t current_time,
+const TimerInfo* TimeGraph::FindPreviousScopeTimer(ScopeId scope_id, uint64_t current_time,
                                                    std::optional<uint32_t> thread_id) const {
   const orbit_client_data::ScopeType type = capture_data_->GetScopeInfo(scope_id).GetType();
   if (type == orbit_client_data::ScopeType::kInvalid) return nullptr;
@@ -529,7 +529,7 @@ const TimerInfo* TimeGraph::FindPreviousScopeTimer(uint64_t scope_id, uint64_t c
   return previous_timer;
 }
 
-const TimerInfo* TimeGraph::FindNextScopeTimer(uint64_t scope_id, uint64_t current_time,
+const TimerInfo* TimeGraph::FindNextScopeTimer(ScopeId scope_id, uint64_t current_time,
                                                std::optional<uint32_t> thread_id) const {
   const orbit_client_data::ScopeType type = capture_data_->GetScopeInfo(scope_id).GetType();
   if (type == orbit_client_data::ScopeType::kInvalid) return nullptr;
@@ -552,7 +552,7 @@ const TimerInfo* TimeGraph::FindNextScopeTimer(uint64_t scope_id, uint64_t curre
   return next_timer;
 }
 
-const TimerInfo* TimeGraph::FindNextThreadTrackTimer(uint64_t scope_id, uint64_t current_time,
+const TimerInfo* TimeGraph::FindNextThreadTrackTimer(ScopeId scope_id, uint64_t current_time,
                                                      std::optional<uint32_t> thread_id) const {
   const TimerInfo* next_timer = nullptr;
   uint64_t goal_time = std::numeric_limits<uint64_t>::max();
@@ -573,7 +573,7 @@ const TimerInfo* TimeGraph::FindNextThreadTrackTimer(uint64_t scope_id, uint64_t
   return next_timer;
 }
 
-const TimerInfo* TimeGraph::FindPreviousThreadTrackTimer(uint64_t scope_id, uint64_t current_time,
+const TimerInfo* TimeGraph::FindPreviousThreadTrackTimer(ScopeId scope_id, uint64_t current_time,
                                                          std::optional<uint32_t> thread_id) const {
   const TimerInfo* previous_timer = nullptr;
   uint64_t goal_time = std::numeric_limits<uint64_t>::lowest();
@@ -610,7 +610,7 @@ static void UpdateMinMaxTimers(const TimerInfo** min_timer, const TimerInfo** ma
 }
 
 std::pair<const TimerInfo*, const TimerInfo*> TimeGraph::GetMinMaxTimerForThreadTrackScope(
-    uint64_t scope_id) const {
+    ScopeId scope_id) const {
   const TimerInfo* min_timer = nullptr;
   const TimerInfo* max_timer = nullptr;
   std::vector<const TimerChain*> chains = GetAllThreadTrackTimerChains();
@@ -627,7 +627,7 @@ std::pair<const TimerInfo*, const TimerInfo*> TimeGraph::GetMinMaxTimerForThread
 }
 
 std::pair<const TimerInfo*, const TimerInfo*> TimeGraph::GetMinMaxTimerForScope(
-    uint64_t scope_id) const {
+    ScopeId scope_id) const {
   const orbit_client_data::ScopeType type = capture_data_->GetScopeInfo(scope_id).GetType();
   if (type == orbit_client_data::ScopeType::kInvalid) return {nullptr, nullptr};
 

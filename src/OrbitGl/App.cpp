@@ -44,7 +44,7 @@
 #include "ClientData/ModuleManager.h"
 #include "ClientData/PostProcessedSamplingData.h"
 #include "ClientData/ProcessData.h"
-#include "ClientData/ScopeIdConstants.h"
+#include "ClientData/ScopeId.h"
 #include "ClientData/ScopeStats.h"
 #include "ClientData/TimerChain.h"
 #include "ClientData/UserDefinedCaptureData.h"
@@ -159,6 +159,7 @@ using orbit_metrics_uploader::ScopedMetric;
 
 using orbit_preset_file::PresetFile;
 
+using orbit_client_data::ScopeId;
 using orbit_data_views::DataViewType;
 
 using DynamicInstrumentationMethod =
@@ -2664,16 +2665,18 @@ const InstrumentedFunction* OrbitApp::GetInstrumentedFunction(uint64_t function_
   return HasCaptureData() ? GetCaptureData().GetInstrumentedFunctionById(function_id) : nullptr;
 }
 
-void OrbitApp::SetVisibleScopeIds(absl::flat_hash_set<uint64_t> visible_scope_ids) {
+void OrbitApp::SetVisibleScopeIds(absl::flat_hash_set<ScopeId> visible_scope_ids) {
   data_manager_->set_visible_scope_ids(std::move(visible_scope_ids));
   RequestUpdatePrimitives();
 }
 
-bool OrbitApp::IsScopeVisible(uint64_t scope_id) { return data_manager_->IsScopeVisible(scope_id); }
+bool OrbitApp::IsScopeVisible(ScopeId scope_id) const {
+  return data_manager_->IsScopeVisible(scope_id);
+}
 
-uint64_t OrbitApp::GetHighlightedScopeId() const { return data_manager_->highlighted_scope_id(); }
+ScopeId OrbitApp::GetHighlightedScopeId() const { return data_manager_->highlighted_scope_id(); }
 
-void OrbitApp::SetHighlightedScopeId(uint64_t highlighted_scope_id) {
+void OrbitApp::SetHighlightedScopeId(ScopeId highlighted_scope_id) {
   data_manager_->set_highlighted_scope_id(highlighted_scope_id);
   RequestUpdatePrimitives();
 }
@@ -2711,8 +2714,8 @@ const orbit_client_protos::TimerInfo* OrbitApp::selected_timer() const {
 
 void OrbitApp::SelectTimer(const orbit_client_protos::TimerInfo* timer_info) {
   data_manager_->set_selected_timer(timer_info);
-  const uint64_t scope_id = timer_info != nullptr ? GetCaptureData().ProvideScopeId(*timer_info)
-                                                  : orbit_client_data::kInvalidScopeId;
+  const ScopeId scope_id = timer_info != nullptr ? GetCaptureData().ProvideScopeId(*timer_info)
+                                                 : orbit_client_data::kInvalidScopeId;
   data_manager_->set_highlighted_scope_id(scope_id);
 
   const uint64_t group_id = timer_info != nullptr ? timer_info->group_id() : kOrbitDefaultGroupId;
@@ -2728,7 +2731,7 @@ void OrbitApp::DeselectTimer() {
   RequestUpdatePrimitives();
 }
 
-uint64_t OrbitApp::GetScopeIdToHighlight() const {
+ScopeId OrbitApp::GetScopeIdToHighlight() const {
   const orbit_client_protos::TimerInfo* timer_info = selected_timer();
 
   if (timer_info == nullptr) return GetHighlightedScopeId();
@@ -2957,7 +2960,9 @@ void OrbitApp::AddFrameTrack(uint64_t instrumented_function_id) {
   // track actually has hits in the capture data. Otherwise we can end up in inconsistent
   // states where "empty" frame tracks exist in the capture data (which would also be
   // serialized).
-  const ScopeStats& stats = GetCaptureData().GetScopeStatsOrDefault(instrumented_function_id);
+  const CaptureData& capture_data = GetCaptureData();
+  const ScopeStats& stats = capture_data.GetScopeStatsOrDefault(
+      capture_data.FunctionIdToScopeId(instrumented_function_id));
   if (stats.count() > 1) {
     frame_track_online_processor_.AddFrameTrack(instrumented_function_id);
     GetMutableCaptureData().EnableFrameTrack(instrumented_function_id);
@@ -3019,7 +3024,7 @@ bool OrbitApp::HasFrameTrackInCaptureData(uint64_t instrumented_function_id) con
   return GetTimeGraph()->GetTrackContainer()->HasFrameTrack(instrumented_function_id);
 }
 
-void OrbitApp::JumpToTimerAndZoom(uint64_t scope_id, JumpToTimerMode selection_mode) {
+void OrbitApp::JumpToTimerAndZoom(ScopeId scope_id, JumpToTimerMode selection_mode) {
   switch (selection_mode) {
     case JumpToTimerMode::kFirst: {
       const auto* first_timer = GetMutableTimeGraph()->FindNextScopeTimer(
@@ -3063,7 +3068,9 @@ void OrbitApp::RefreshFrameTracks() {
 
 void OrbitApp::AddFrameTrackTimers(uint64_t instrumented_function_id) {
   ORBIT_CHECK(HasCaptureData());
-  const ScopeStats& stats = GetCaptureData().GetScopeStatsOrDefault(instrumented_function_id);
+  const CaptureData& capture_data = GetCaptureData();
+  const ScopeStats& stats = capture_data.GetScopeStatsOrDefault(
+      capture_data.FunctionIdToScopeId(instrumented_function_id));
   if (stats.count() == 0) {
     return;
   }
@@ -3237,7 +3244,7 @@ OrbitApp::GetConfidenceIntervalEstimator() const {
 }
 
 void OrbitApp::ShowHistogram(const std::vector<uint64_t>* data, const std::string& scope_name,
-                             uint64_t scope_id) {
+                             ScopeId scope_id) {
   main_window_->ShowHistogram(data, scope_name, scope_id);
 }
 

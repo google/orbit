@@ -29,6 +29,8 @@
 namespace orbit_data_views {
 
 class AppInterface : public orbit_client_data::CaptureDataHolder {
+  using ScopeId = orbit_client_data::ScopeId;
+
  public:
   AppInterface() = default;
   virtual ~AppInterface() = default;
@@ -52,10 +54,10 @@ class AppInterface : public orbit_client_data::CaptureDataHolder {
 
   // Functions needed by LiveFunctionsDataView
   enum class JumpToTimerMode { kFirst, kLast, kMin, kMax };
-  virtual void JumpToTimerAndZoom(uint64_t scope_id, JumpToTimerMode selection_mode) = 0;
-  [[nodiscard]] virtual uint64_t GetHighlightedScopeId() const = 0;
-  virtual void SetHighlightedScopeId(uint64_t highlighted_function_id) = 0;
-  virtual void SetVisibleScopeIds(absl::flat_hash_set<uint64_t> visible_scope_ids) = 0;
+  virtual void JumpToTimerAndZoom(ScopeId scope_id, JumpToTimerMode selection_mode) = 0;
+  [[nodiscard]] virtual ScopeId GetHighlightedScopeId() const = 0;
+  virtual void SetHighlightedScopeId(ScopeId highlighted_scope_id) = 0;
+  virtual void SetVisibleScopeIds(absl::flat_hash_set<ScopeId> visible_scope_ids) = 0;
   virtual void DeselectTimer() = 0;
   [[nodiscard]] virtual bool IsCapturing() const = 0;
   [[nodiscard]] virtual std::vector<const orbit_client_data::TimerChain*> GetAllThreadTimerChains()
@@ -110,7 +112,7 @@ class AppInterface : public orbit_client_data::CaptureDataHolder {
   virtual void ShowSourceCode(const orbit_client_data::FunctionInfo& function) = 0;
 
   virtual void ShowHistogram(const std::vector<uint64_t>* data, const std::string& scope_name,
-                             uint64_t scope_id) = 0;
+                             ScopeId scope_id) = 0;
 
   [[nodiscard]] virtual const orbit_statistics::BinomialConfidenceIntervalEstimator&
   GetConfidenceIntervalEstimator() const = 0;

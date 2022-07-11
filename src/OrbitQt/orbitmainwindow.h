@@ -34,6 +34,7 @@
 #include "CallTreeView.h"
 #include "ClientData/FunctionInfo.h"
 #include "ClientData/ModuleData.h"
+#include "ClientData/ScopeId.h"
 #include "ClientProtos/capture_data.pb.h"
 #include "ClientServices/ProcessManager.h"
 #include "DataViews/DataView.h"
@@ -58,6 +59,7 @@ class OrbitMainWindow;
 
 class OrbitMainWindow final : public QMainWindow, public orbit_gl::MainWindowInterface {
   Q_OBJECT
+  using ScopeId = orbit_client_data::ScopeId;
 
  public:
   static constexpr int kQuitOrbitReturnCode = 0;
@@ -121,7 +123,7 @@ class OrbitMainWindow final : public QMainWindow, public orbit_gl::MainWindowInt
       std::string_view dont_show_again_setting_key) override;
 
   void ShowHistogram(const std::vector<uint64_t>* data, const std::string& function_name,
-                     uint64_t function_id) override;
+                     ScopeId function_id) override;
 
   orbit_base::Future<ErrorMessageOr<orbit_base::CanceledOr<void>>> DownloadFileFromInstance(
       std::filesystem::path path_on_instance, std::filesystem::path local_path,

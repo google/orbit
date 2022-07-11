@@ -30,7 +30,7 @@
 #include "ClientData/CaptureData.h"
 #include "ClientData/FunctionInfo.h"
 #include "ClientData/ModuleAndFunctionLookup.h"
-#include "ClientData/ScopeIdConstants.h"
+#include "ClientData/ScopeId.h"
 #include "ClientData/ScopeInfo.h"
 #include "ClientData/ScopeStats.h"
 #include "ClientProtos/capture_data.pb.h"
@@ -52,6 +52,7 @@ using orbit_client_data::CaptureData;
 using orbit_client_data::FunctionInfo;
 using orbit_client_data::ModuleData;
 using orbit_client_data::ModuleManager;
+using orbit_client_data::ScopeId;
 using orbit_client_data::ScopeStats;
 
 using orbit_client_protos::TimerInfo;
@@ -110,7 +111,7 @@ std::string LiveFunctionsDataView::GetValue(int row, int column) {
     return "";
   }
 
-  const uint64_t scope_id = GetScopeId(row);
+  const ScopeId scope_id = GetScopeId(row);
   const ScopeStats& stats = app_->GetCaptureData().GetScopeStatsOrDefault(scope_id);
   const orbit_client_data::ScopeInfo& scope_info = GetScopeInfo(scope_id);
 
@@ -157,7 +158,7 @@ std::vector<int> LiveFunctionsDataView::GetVisibleSelectedIndices() {
 void LiveFunctionsDataView::UpdateHighlightedFunctionId(const std::vector<int>& rows) {
   app_->DeselectTimer();
   if (rows.empty()) {
-    app_->SetHighlightedScopeId(orbit_grpc_protos::kInvalidFunctionId);
+    app_->SetHighlightedScopeId(orbit_client_data::kInvalidScopeId);
   } else {
     app_->SetHighlightedScopeId(GetScopeId(rows[0]));
   }
@@ -169,15 +170,15 @@ void LiveFunctionsDataView::UpdateSelectedFunctionId() {
 
 void LiveFunctionsDataView::UpdateHistogramWithIndices(
     const std::vector<int>& visible_selected_indices) {
-  std::vector<uint64_t> scope_ids;
+  std::vector<ScopeId> scope_ids;
   std::transform(std::begin(visible_selected_indices), std::end(visible_selected_indices),
                  std::back_inserter(scope_ids),
-                 [this](const int index) { return indices_[index]; });
+                 [this](const int index) { return GetScopeId(index); });
 
   UpdateHistogramWithScopeIds(scope_ids);
 }
 
-void LiveFunctionsDataView::UpdateHistogramWithScopeIds(const std::vector<uint64_t>& scope_ids) {
+void LiveFunctionsDataView::UpdateHistogramWithScopeIds(const std::vector<ScopeId>& scope_ids) {
   const std::vector<uint64_t>* timer_durations =
       (app_->HasCaptureData() && !scope_ids.empty())
           ? app_->GetCaptureData().GetSortedTimerDurationsForScopeId(scope_ids[0])
@@ -188,7 +189,7 @@ void LiveFunctionsDataView::UpdateHistogramWithScopeIds(const std::vector<uint64
     return;
   }
 
-  const uint64_t scope_id = scope_ids[0];
+  const ScopeId scope_id = scope_ids[0];
   const std::string& scope_name = GetScopeInfo(scope_id).GetName();
   app_->ShowHistogram(timer_durations, scope_name, scope_id);
 }
@@ -201,7 +202,7 @@ void LiveFunctionsDataView::OnSelect(const std::vector<int>& rows) {
 }
 
 #define ORBIT_STAT_SORT(Member)                                                                    \
-  [&](uint64_t a, uint64_t b) {                                                                    \
+  [&](ScopeId a, ScopeId b) {                                                                      \
     const ScopeStats& stats_a = app_->GetCaptureData().GetScopeStatsOrDefault(a);                  \
     const ScopeStats& stats_b = app_->GetCaptureData().GetScopeStatsOrDefault(b);                  \
     return orbit_data_views_internal::CompareAscendingOrDescending(stats_a.Member, stats_b.Member, \
@@ -214,30 +215,31 @@ void LiveFunctionsDataView::DoSort() {
     return;
   }
   bool ascending = sorting_orders_[sorting_column_] == SortingOrder::kAscending;
-  std::function<bool(uint64_t a, uint64_t b)> sorter = nullptr;
+  std::function<bool(ScopeId a, ScopeId b)> sorter = nullptr;
 
   switch (sorting_column_) {
     case kColumnType: {
       // We order by type first, then by whether the function is selected, then by whether a frame
       // track is enabled
       sorter = MakeSorter(
-          [this](uint64_t id) -> std::tuple<orbit_client_data::ScopeType, bool, bool> {
+          [this](ScopeId id) -> std::tuple<orbit_client_data::ScopeType, bool, bool> {
             bool is_selected = false;
-            bool is_frametrack_enabled = false;
+            bool is_frame_track_enabled = false;
             const auto it = scope_id_to_function_info_.find(id);
             if (it != scope_id_to_function_info_.end()) {
               is_selected = app_->IsFunctionSelected(it->second);
-              is_frametrack_enabled = FunctionsDataView::ShouldShowFrameTrackIcon(app_, it->second);
+              is_frame_track_enabled =
+                  FunctionsDataView::ShouldShowFrameTrackIcon(app_, it->second);
             }
             const orbit_client_data::ScopeType type = GetScopeInfo(id).GetType();
-            return std::make_tuple(type, is_selected, is_frametrack_enabled);
+            return std::make_tuple(type, is_selected, is_frame_track_enabled);
           },
           ascending);
       break;
     }
     case kColumnName:
       sorter = MakeSorter(
-          [this](uint64_t id) { return absl::AsciiStrToLower(GetScopeInfo(id).GetName()); },
+          [this](ScopeId id) { return absl::AsciiStrToLower(GetScopeInfo(id).GetName()); },
           ascending);
       break;
     case kColumnCount:
@@ -275,7 +277,7 @@ void LiveFunctionsDataView::DoSort() {
   }
 
   if (sorter) {
-    std::stable_sort(indices_.begin(), indices_.end(), sorter);
+    std::stable_sort(indices_.begin(), indices_.end(), MakeIndexSorter(sorter));
   }
 }
 
@@ -290,7 +292,7 @@ DataView::ActionStatus LiveFunctionsDataView::GetActionStatus(
       return ActionStatus::kVisibleButDisabled;
     }
 
-    uint64_t scope_id = GetScopeId(selected_indices[0]);
+    ScopeId scope_id = GetScopeId(selected_indices[0]);
     const ScopeStats& stats = capture_data.GetScopeStatsOrDefault(scope_id);
     if (stats.count() == 0) return ActionStatus::kVisibleButDisabled;
 
@@ -299,42 +301,44 @@ DataView::ActionStatus LiveFunctionsDataView::GetActionStatus(
 
   bool is_capture_connected = app_->IsCaptureConnected(capture_data);
 
-  std::function<bool(uint64_t, const FunctionInfo&)> is_visible_action_enabled;
+  std::function<bool(ScopeId, const FunctionInfo&)> is_visible_action_enabled;
   if (action == kMenuActionDisassembly || action == kMenuActionSourceCode) {
-    is_visible_action_enabled = [is_capture_connected](uint64_t /*scope_id*/,
+    is_visible_action_enabled = [is_capture_connected](ScopeId /*scope_id*/,
                                                        const FunctionInfo& /*function_info*/) {
       return is_capture_connected;
     };
 
   } else if (action == kMenuActionSelect) {
-    is_visible_action_enabled = [this, is_capture_connected](uint64_t /*scope_id*/,
+    is_visible_action_enabled = [this, is_capture_connected](ScopeId /*scope_id*/,
                                                              const FunctionInfo& function_info) {
       return is_capture_connected && !app_->IsFunctionSelected(function_info) &&
              function_info.IsFunctionSelectable();
     };
 
   } else if (action == kMenuActionUnselect) {
-    is_visible_action_enabled = [this, is_capture_connected](uint64_t /*scope_id*/,
+    is_visible_action_enabled = [this, is_capture_connected](ScopeId /*scope_id*/,
                                                              const FunctionInfo& function_info) {
       return is_capture_connected && app_->IsFunctionSelected(function_info);
     };
 
   } else if (action == kMenuActionEnableFrameTrack) {
     is_visible_action_enabled = [this, &is_capture_connected, &capture_data](
-                                    uint64_t scope_id, const FunctionInfo& function_info) {
-      return is_capture_connected ? !app_->IsFrameTrackEnabled(function_info)
-                                  : !capture_data.IsFrameTrackEnabled(scope_id);
+                                    ScopeId scope_id, const FunctionInfo& function_info) {
+      return is_capture_connected
+                 ? !app_->IsFrameTrackEnabled(function_info)
+                 : !capture_data.IsFrameTrackEnabled(capture_data.ScopeIdToFunctionId(scope_id));
     };
 
   } else if (action == kMenuActionDisableFrameTrack) {
     is_visible_action_enabled = [this, &is_capture_connected, &capture_data](
-                                    uint64_t scope_id, const FunctionInfo& function_info) {
-      return is_capture_connected ? app_->IsFrameTrackEnabled(function_info)
-                                  : capture_data.IsFrameTrackEnabled(scope_id);
+                                    ScopeId scope_id, const FunctionInfo& function_info) {
+      return is_capture_connected
+                 ? app_->IsFrameTrackEnabled(function_info)
+                 : capture_data.IsFrameTrackEnabled(capture_data.ScopeIdToFunctionId(scope_id));
     };
 
   } else if (action == kMenuActionAddIterator) {
-    is_visible_action_enabled = [&capture_data](uint64_t scope_id,
+    is_visible_action_enabled = [&capture_data](ScopeId scope_id,
                                                 const FunctionInfo& /*function_info*/) {
       const ScopeStats& stats = capture_data.GetScopeStatsOrDefault(scope_id);
       // We need at least one function call to a function so that adding iterators makes sense.
@@ -350,7 +354,7 @@ DataView::ActionStatus LiveFunctionsDataView::GetActionStatus(
                   [this, &is_visible_action_enabled](const int index) {
                     const FunctionInfo* function_info = GetFunctionInfoFromRow(index);
                     if (function_info == nullptr) return false;
-                    const uint64_t scope_id = GetScopeId(index);
+                    const ScopeId scope_id = GetScopeId(index);
                     return is_visible_action_enabled(scope_id, *function_info);
                   });
 
@@ -359,7 +363,7 @@ DataView::ActionStatus LiveFunctionsDataView::GetActionStatus(
 
 void LiveFunctionsDataView::OnIteratorRequested(const std::vector<int>& selection) {
   for (int i : selection) {
-    uint64_t scope_id = GetScopeId(i);
+    ScopeId scope_id = GetScopeId(i);
     const FunctionInfo* instrumented_function = GetFunctionInfoFromRow(i);
     if (instrumented_function == nullptr) continue;
 
@@ -397,7 +401,7 @@ void LiveFunctionsDataView::OnJumpToRequested(const std::string& action,
 
   OUTCOME_TRY(WriteLineToCsv(fd, kNames));
 
-  absl::flat_hash_set<uint64_t> selected_scope_ids;
+  absl::flat_hash_set<ScopeId> selected_scope_ids;
   std::transform(std::begin(selection), std::end(selection),
                  std::inserter(selected_scope_ids, std::begin(selected_scope_ids)),
                  [this](int row) { return GetScopeId(row); });
@@ -406,7 +410,7 @@ void LiveFunctionsDataView::OnJumpToRequested(const std::string& action,
 
   for (const TimerInfo* timer :
        capture_data.GetAllScopeTimers(orbit_client_data::kAllValidScopeTypes)) {
-    const uint64_t scope_id = capture_data.ProvideScopeId(*timer);
+    const ScopeId scope_id = capture_data.ProvideScopeId(*timer);
     if (!selected_scope_ids.contains(scope_id)) continue;
 
     std::string line;
@@ -440,13 +444,14 @@ void LiveFunctionsDataView::DoFilter() {
     ORBIT_CHECK(scope_id_to_function_info_.empty());
     return;
   }
-  std::vector<uint64_t> indices;
+
+  indices_.clear();
 
   const std::vector<std::string> tokens = absl::StrSplit(absl::AsciiStrToLower(filter_), ' ');
 
-  const std::vector<uint64_t> scope_ids = app_->GetCaptureData().GetAllProvidedScopeIds();
+  const std::vector<ScopeId> scope_ids = app_->GetCaptureData().GetAllProvidedScopeIds();
 
-  for (const uint64_t scope_id : scope_ids) {
+  for (const ScopeId scope_id : scope_ids) {
     const std::string name = absl::AsciiStrToLower(GetScopeInfo(scope_id).GetName());
 
     bool match = true;
@@ -459,24 +464,22 @@ void LiveFunctionsDataView::DoFilter() {
     }
 
     if (match) {
-      indices.push_back(scope_id);
+      AddToIndices(scope_id);
     }
   }
 
-  indices_ = std::move(indices);
-
   // Filter drawn textboxes
-  absl::flat_hash_set<uint64_t> visible_scope_ids;
+  absl::flat_hash_set<ScopeId> visible_scope_ids;
   for (size_t i = 0; i < indices_.size(); ++i) {
     visible_scope_ids.insert(GetScopeId(i));
   }
   app_->SetVisibleScopeIds(std::move(visible_scope_ids));
 }
 
-void LiveFunctionsDataView::AddFunction(uint64_t scope_id,
+void LiveFunctionsDataView::AddFunction(ScopeId scope_id,
                                         orbit_client_data::FunctionInfo function_info) {
   scope_id_to_function_info_.insert_or_assign(scope_id, std::move(function_info));
-  indices_.push_back(scope_id);
+  AddToIndices(scope_id);
 }
 
 void LiveFunctionsDataView::OnDataChanged() {
@@ -511,13 +514,13 @@ void LiveFunctionsDataView::OnDataChanged() {
     if (!function_info.has_value()) {
       return;
     }
-    const uint64_t scope_id = app_->GetCaptureData().FunctionIdToScopeId(function_id);
+    const ScopeId scope_id = app_->GetCaptureData().FunctionIdToScopeId(function_id);
     AddFunction(scope_id, std::move(*function_info));
   }
 
-  std::vector<uint64_t> all_scope_ids = app_->GetCaptureData().GetAllProvidedScopeIds();
-  for (uint64_t scope_id : all_scope_ids) {
-    if (!scope_id_to_function_info_.contains(scope_id)) indices_.push_back(scope_id);
+  std::vector<ScopeId> all_scope_ids = app_->GetCaptureData().GetAllProvidedScopeIds();
+  for (ScopeId scope_id : all_scope_ids) {
+    if (!scope_id_to_function_info_.contains(scope_id)) AddToIndices(scope_id);
   }
 
   DataView::OnDataChanged();
@@ -526,8 +529,12 @@ void LiveFunctionsDataView::OnDataChanged() {
 void LiveFunctionsDataView::OnTimer() {
   if (!app_->IsCapturing()) return;
 
-  const std::vector<uint64_t> missing_scope_ids = FetchMissingScopeIds();
-  indices_.insert(std::end(indices_), std::begin(missing_scope_ids), std::end(missing_scope_ids));
+  const std::vector<ScopeId> missing_scope_ids = FetchMissingScopeIds();
+
+  indices_.reserve(indices_.size() + missing_scope_ids.size());
+  for (ScopeId scope_id : missing_scope_ids) {
+    AddToIndices(scope_id);
+  }
 
   OnSort(sorting_column_, {});
 }
@@ -542,20 +549,20 @@ void LiveFunctionsDataView::OnRefresh(const std::vector<int>& visible_selected_i
   }
 }
 
-uint64_t LiveFunctionsDataView::GetScopeId(uint32_t row) const {
+ScopeId LiveFunctionsDataView::GetScopeId(uint32_t row) const {
   ORBIT_CHECK(row < indices_.size());
-  return indices_[row];
+  return ScopeId(indices_[row]);
 }
 
 const FunctionInfo* LiveFunctionsDataView::GetFunctionInfoFromRow(int row) {
   ORBIT_CHECK(static_cast<unsigned int>(row) < indices_.size());
-  const auto it = scope_id_to_function_info_.find(indices_[row]);
+  const auto it = scope_id_to_function_info_.find(GetScopeId(row));
   return it == scope_id_to_function_info_.end() ? nullptr : &it->second;
 }
 
-std::optional<int> LiveFunctionsDataView::GetRowFromScopeId(uint64_t scope_id) {
+std::optional<int> LiveFunctionsDataView::GetRowFromScopeId(ScopeId scope_id) {
   for (size_t function_row = 0; function_row < indices_.size(); function_row++) {
-    if (indices_[function_row] == scope_id) {
+    if (GetScopeId(function_row) == scope_id) {
       return function_row;
     }
   }
@@ -583,7 +590,7 @@ std::optional<FunctionInfo> LiveFunctionsDataView::CreateFunctionInfoFromInstrum
 }
 
 [[nodiscard]] const orbit_client_data::ScopeInfo& LiveFunctionsDataView::GetScopeInfo(
-    uint64_t scope_id) const {
+    ScopeId scope_id) const {
   ORBIT_CHECK(app_ != nullptr && app_->HasCaptureData());
   return app_->GetCaptureData().GetScopeInfo(scope_id);
 }
@@ -598,14 +605,14 @@ std::string LiveFunctionsDataView::GetToolTip(int /*row*/, int column) {
          "F — Frame track enabled";
 }
 
-[[nodiscard]] std::vector<uint64_t> LiveFunctionsDataView::FetchMissingScopeIds() const {
+[[nodiscard]] std::vector<ScopeId> LiveFunctionsDataView::FetchMissingScopeIds() const {
   if (!app_->HasCaptureData()) return {};
 
-  std::vector<uint64_t> all_scope_ids = app_->GetCaptureData().GetAllProvidedScopeIds();
+  std::vector<ScopeId> all_scope_ids = app_->GetCaptureData().GetAllProvidedScopeIds();
   absl::flat_hash_set<uint64_t> known_scope_ids(std::begin(indices_), std::end(indices_));
   const auto last = std::remove_if(
       std::begin(all_scope_ids), std::end(all_scope_ids),
-      [&known_scope_ids](uint64_t scope_id) { return known_scope_ids.contains(scope_id); });
+      [&known_scope_ids](ScopeId scope_id) { return known_scope_ids.contains(*scope_id); });
   all_scope_ids.erase(last, std::end(all_scope_ids));
   return all_scope_ids;
 }

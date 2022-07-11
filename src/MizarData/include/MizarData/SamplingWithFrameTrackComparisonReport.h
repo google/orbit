@@ -12,6 +12,7 @@
 #include <string>
 #include <utility>
 
+#include "ClientData/ScopeId.h"
 #include "ClientData/ScopeStats.h"
 #include "MizarBase/BaselineOrComparison.h"
 #include "MizarBase/SampledFunctionId.h"
@@ -30,11 +31,12 @@ struct CorrectedComparisonResult : public orbit_mizar_statistics::ComparisonResu
 // comparison.
 class HalfOfSamplingWithFrameTrackReportConfig {
   using TID = ::orbit_mizar_base::TID;
+  using ScopeId = ::orbit_client_data::ScopeId;
 
  public:
   explicit HalfOfSamplingWithFrameTrackReportConfig(absl::flat_hash_set<TID> tids,
                                                     uint64_t start_ns, uint64_t duration_ns,
-                                                    uint64_t frame_track_scope_id)
+                                                    ScopeId frame_track_scope_id)
       : tids(std::move(tids)),
         start_relative_ns(start_ns),
         duration_ns(duration_ns),
@@ -43,7 +45,7 @@ class HalfOfSamplingWithFrameTrackReportConfig {
   absl::flat_hash_set<TID> tids{};
   uint64_t start_relative_ns{};  // nanoseconds elapsed since capture start
   uint64_t duration_ns{};
-  uint64_t frame_track_scope_id{};
+  ScopeId frame_track_scope_id{};
 };
 
 struct InclusiveAndExclusive {

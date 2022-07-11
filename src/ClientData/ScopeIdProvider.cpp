@@ -13,7 +13,7 @@
 #include <string>
 #include <vector>
 
-#include "ClientData/ScopeIdConstants.h"
+#include "ClientData/ScopeId.h"
 #include "ClientData/ScopeInfo.h"
 #include "GrpcProtos/Constants.h"
 #include "OrbitBase/Logging.h"
@@ -31,11 +31,11 @@ std::unique_ptr<NameEqualityScopeIdProvider> NameEqualityScopeIdProvider::Create
                 [](const auto& a, const auto& b) { return a.function_id() < b.function_id(); })
                 ->function_id();
 
-  absl::flat_hash_map<uint64_t, const ScopeInfo> scope_id_to_info;
-  absl::flat_hash_map<const ScopeInfo, uint64_t> scope_info_to_id;
+  absl::flat_hash_map<ScopeId, const ScopeInfo> scope_id_to_info;
+  absl::flat_hash_map<const ScopeInfo, ScopeId> scope_info_to_id;
 
   for (const auto& instrumented_function : instrumented_functions) {
-    const uint64_t scope_id = instrumented_function.function_id();
+    const ScopeId scope_id{instrumented_function.function_id()};
     const ScopeInfo scope_info(instrumented_function.function_name(),
                                ScopeType::kDynamicallyInstrumentedFunction);
     scope_id_to_info.emplace(scope_id, scope_info);
@@ -46,8 +46,8 @@ std::unique_ptr<NameEqualityScopeIdProvider> NameEqualityScopeIdProvider::Create
       max_id + 1, std::move(scope_info_to_id), std::move(scope_id_to_info)));
 }
 
-uint64_t NameEqualityScopeIdProvider::FunctionIdToScopeId(uint64_t function_id) const {
-  return function_id;
+ScopeId NameEqualityScopeIdProvider::FunctionIdToScopeId(uint64_t function_id) const {
+  return ScopeId(function_id);
 }
 
 [[nodiscard]] static ScopeType ScopeTypeFromTimerInfo(const TimerInfo& timer) {
@@ -65,7 +65,7 @@ uint64_t NameEqualityScopeIdProvider::FunctionIdToScopeId(uint64_t function_id) 
   }
 }
 
-uint64_t NameEqualityScopeIdProvider::ProvideId(const TimerInfo& timer_info) {
+ScopeId NameEqualityScopeIdProvider::ProvideId(const TimerInfo& timer_info) {
   const ScopeType scope_type = ScopeTypeFromTimerInfo(timer_info);
 
   if (scope_type == ScopeType::kInvalid) return orbit_client_data::kInvalidScopeId;
@@ -82,7 +82,7 @@ uint64_t NameEqualityScopeIdProvider::ProvideId(const TimerInfo& timer_info) {
   if (it != scope_info_to_id_.end()) {
     return it->second;
   }
-  const uint64_t id = next_id_;
+  const ScopeId id{next_id_};
   next_id_++;
 
   scope_info_to_id_.emplace(scope_info, id);
@@ -90,17 +90,22 @@ uint64_t NameEqualityScopeIdProvider::ProvideId(const TimerInfo& timer_info) {
   return id;
 }
 
-[[nodiscard]] std::vector<uint64_t> NameEqualityScopeIdProvider::GetAllProvidedScopeIds() const {
-  std::vector<uint64_t> ids;
+[[nodiscard]] std::vector<ScopeId> NameEqualityScopeIdProvider::GetAllProvidedScopeIds() const {
+  std::vector<ScopeId> ids;
   std::transform(std::begin(scope_id_to_info_), std::end(scope_id_to_info_),
                  std::back_inserter(ids), [](const auto& entry) { return entry.first; });
   return ids;
 }
 
-const ScopeInfo& NameEqualityScopeIdProvider::GetScopeInfo(uint64_t scope_id) const {
+const ScopeInfo& NameEqualityScopeIdProvider::GetScopeInfo(ScopeId scope_id) const {
   const auto it = scope_id_to_info_.find(scope_id);
   ORBIT_CHECK(it != scope_id_to_info_.end());
   return it->second;
+}
+
+uint64_t NameEqualityScopeIdProvider::ScopeIdToFunctionId(ScopeId scope_id) const {
+  if (*scope_id <= max_instrumented_function_id) return *scope_id;
+  return orbit_grpc_protos::kInvalidFunctionId;
 }
 
 }  // namespace orbit_client_data

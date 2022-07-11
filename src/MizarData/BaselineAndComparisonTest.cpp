@@ -16,6 +16,7 @@
 #include <vector>
 
 #include "BaselineAndComparisonHelper.h"
+#include "ClientData/ScopeId.h"
 #include "MizarBase/BaselineOrComparison.h"
 #include "MizarBase/SampledFunctionId.h"
 #include "MizarData/BaselineAndComparison.h"
@@ -23,17 +24,17 @@
 #include "OrbitBase/ThreadConstants.h"
 #include "TestUtils/ContainerHelpers.h"
 
+using ::orbit_client_data::ScopeId;
 using ::orbit_mizar_base::Baseline;
 using ::orbit_mizar_base::Comparison;
 using ::orbit_mizar_base::MakeBaseline;
 using ::orbit_mizar_base::MakeComparison;
 using ::orbit_mizar_base::SFID;
 using ::orbit_mizar_base::TID;
+using ::orbit_test_utils::Commons;
+using ::orbit_test_utils::MakeMap;
 using ::testing::DoubleNear;
 using ::testing::UnorderedElementsAreArray;
-
-using orbit_test_utils::Commons;
-using orbit_test_utils::MakeMap;
 
 namespace orbit_mizar_data {
 
@@ -121,7 +122,7 @@ class MockPairedData {
   }
 
   [[nodiscard]] std::vector<uint64_t> ActiveInvocationTimes(
-      const absl::flat_hash_set<TID>& /*tids*/, uint64_t /*frame_track_scope_id*/,
+      const absl::flat_hash_set<TID>& /*tids*/, orbit_client_data::ScopeId /*frame_track_scope_id*/,
       uint64_t /*min_relative_timestamp_ns*/, uint64_t /*max_relative_timestamp_ns*/) const {
     return frame_track_active_times_;
   };
@@ -167,9 +168,9 @@ TEST(BaselineAndComparisonTest, MakeSamplingWithFrameTrackReportIsCorrect) {
       std::move(full), std::move(empty), {kSfidToName});
   const SamplingWithFrameTrackComparisonReport report = bac.MakeSamplingWithFrameTrackReport(
       MakeBaseline<orbit_mizar_data::HalfOfSamplingWithFrameTrackReportConfig>(
-          absl::flat_hash_set<TID>{TID(orbit_base::kAllProcessThreadsTid)}, 0, 1, 1),
+          absl::flat_hash_set<TID>{TID(orbit_base::kAllProcessThreadsTid)}, 0, 1, ScopeId(1)),
       MakeComparison<orbit_mizar_data::HalfOfSamplingWithFrameTrackReportConfig>(
-          absl::flat_hash_set<TID>{TID(orbit_base::kAllProcessThreadsTid)}, 0, 1, 1));
+          absl::flat_hash_set<TID>{TID(orbit_base::kAllProcessThreadsTid)}, 0, 1, ScopeId(1)));
 
   EXPECT_EQ(report.GetBaselineSamplingCounts()->GetTotalCallstacks(), kCallstacks.size());
 
