@@ -256,7 +256,7 @@ class VerifyTopDownContentForLoadedCapture(E2ETestCase):
 
 class VerifyTopDownContentForTriangleExe(E2ETestCase):
     """
-    Verify that the two outermost functions are `RtlUserThreadStart` (Windows) and `clone` (Linux) from the
+    Verify that the two outermost functions are `RtlUserThreadStart` (Windows) and `*clone` (Linux) from the
     "(all threads)" node of the top-down view.
     Verify the start function and some of its callees for the "triangle.exe" and "dxvk-submit" threads.
     """
@@ -292,9 +292,9 @@ class VerifyTopDownContentForTriangleExe(E2ETestCase):
         self.expect_eq(
             tree_view_table.get_item_at(1, 0).window_text(), "RtlUserThreadStart",
             "The most common outermost function is 'RtlUserThreadStart'")
-        self.expect_eq(
-            tree_view_table.get_item_at(2, 0).window_text(), "clone",
-            "The second most common outermost function is 'clone'")
+        self.expect_true(
+            tree_view_table.get_item_at(2, 0).window_text().endswith("clone"),
+            "The second most common outermost function is '*clone'")
         logging.info("Verified the outermost functions from the top-down view")
 
     def _verify_triangle_exe_thread(self, tree_view_table: Table):
