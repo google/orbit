@@ -93,9 +93,6 @@
 #include "StringManager/StringManager.h"
 #include "Symbols/SymbolHelper.h"
 
-using ThreadStateSliceInfo = orbit_client_data::ThreadStateSliceInfo;
-using ThreadID = orbit_client_data::ThreadID;
-
 class OrbitApp final : public DataViewFactory,
                        public orbit_capture_client::AbstractCaptureListener<OrbitApp>,
                        public orbit_data_views::AppInterface,
@@ -469,14 +466,18 @@ class OrbitApp final : public DataViewFactory,
   [[nodiscard]] uint64_t GetHighlightedScopeId() const override;
   void SetHighlightedScopeId(uint64_t highlighted_scope_id) override;
 
-  [[nodiscard]] ThreadID selected_thread_id() const;
-  void set_selected_thread_id(ThreadID thread_id);
+  [[nodiscard]] orbit_client_data::ThreadID selected_thread_id() const;
+  void set_selected_thread_id(orbit_client_data::ThreadID thread_id);
 
-  [[nodiscard]] std::optional<ThreadStateSliceInfo> selected_thread_state_slice() const;
-  void set_selected_thread_state_slice(std::optional<ThreadStateSliceInfo> thread_state_slice);
+  [[nodiscard]] std::optional<orbit_client_data::ThreadStateSliceInfo> selected_thread_state_slice()
+      const;
+  void set_selected_thread_state_slice(
+      std::optional<orbit_client_data::ThreadStateSliceInfo> thread_state_slice);
 
-  [[nodiscard]] std::optional<ThreadStateSliceInfo> hovered_thread_state_slice() const;
-  void set_hovered_thread_state_slice(std::optional<ThreadStateSliceInfo> thread_state_slice);
+  [[nodiscard]] std::optional<orbit_client_data::ThreadStateSliceInfo> hovered_thread_state_slice()
+      const;
+  void set_hovered_thread_state_slice(
+      std::optional<orbit_client_data::ThreadStateSliceInfo> thread_state_slice);
 
   [[nodiscard]] const orbit_client_protos::TimerInfo* selected_timer() const;
   void SelectTimer(const orbit_client_protos::TimerInfo* timer_info);

@@ -40,9 +40,9 @@ class ThreadStateBar final : public ThreadBar {
   [[nodiscard]] EventResult OnMouseMove(const Vec2& mouse_pos) override;
   [[nodiscard]] EventResult OnMouseLeave() override;
 
-  void HighlightThreadStateSlice(PrimitiveAssembler& primitive_assembler,
-                                 const orbit_client_data::ThreadStateSliceInfo& slice,
-                                 const Color& outline_color) const;
+  void DrawThreadStateSliceOutline(PrimitiveAssembler& primitive_assembler,
+                                   const orbit_client_data::ThreadStateSliceInfo& slice,
+                                   const Color& outline_color) const;
 
  protected:
   void DoDraw(PrimitiveAssembler& primitive_assembler, TextRenderer& text_renderer,
@@ -50,7 +50,7 @@ class ThreadStateBar final : public ThreadBar {
 
   void DoUpdatePrimitives(PrimitiveAssembler& primitive_assembler, TextRenderer& text_renderer,
                           uint64_t min_tick, uint64_t max_tick, PickingMode picking_mode) override;
-  [[nodiscard]] std::optional<orbit_client_data::ThreadStateSliceInfo> FindSliceFromScreenCords(
+  [[nodiscard]] std::optional<orbit_client_data::ThreadStateSliceInfo> FindSliceFromScreenCoords(
       float x, float y) const;
 
  private:
