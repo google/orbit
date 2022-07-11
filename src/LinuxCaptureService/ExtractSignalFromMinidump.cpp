@@ -8,6 +8,7 @@
 
 #include "OrbitBase/Logging.h"
 #include "OrbitBase/ReadFileToString.h"
+#include "OrbitBase/Result.h"
 
 namespace orbit_linux_capture_service {
 
@@ -86,6 +87,11 @@ ErrorMessageOr<int32_t> ParseMinidumpForTerminationSignal(const std::string& con
 ErrorMessageOr<int> ExtractSignalFromMinidump(const std::filesystem::path& path) {
   OUTCOME_TRY(std::string content, orbit_base::ReadFileToString(path));
   OUTCOME_TRY(int result, ParseMinidumpForTerminationSignal(content));
+  constexpr int kMinValidSignal = 1;
+  constexpr int kMaxValidSignal = 31;
+  if (result < kMinValidSignal || result > kMaxValidSignal) {
+    return ErrorMessage("Found invalid signal in core file.");
+  }
   return result;
 }
 
