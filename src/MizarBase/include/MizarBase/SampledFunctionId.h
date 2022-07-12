@@ -22,8 +22,7 @@ struct SampledFunctionIdTag {};
 // TODO (b/236358265) rename to `SampledFunctionId`.
 using SFID = orbit_base::Typedef<SampledFunctionIdTag, const uint64_t>;
 
-// Making sure we do not waste memory on the abstraction
-static_assert(sizeof(SFID) == sizeof(uint64_t));
+static_assert(orbit_base::kHasZeroMemoryOverheadV<SFID>);
 
 }  // namespace orbit_mizar_base
 

@@ -15,8 +15,7 @@ struct TIDTag {};
 
 using TID = orbit_base::Typedef<TIDTag, const uint32_t>;
 
-// Making sure we do not waste memory on the abstraction
-static_assert(sizeof(TID) == sizeof(uint32_t));
+static_assert(orbit_base::kHasZeroMemoryOverheadV<TID>);
 
 }  // namespace orbit_mizar_base
 
