@@ -6,6 +6,7 @@
 #define MIZAR_WIDGETS_SAMPLING_WITH_FRAME_TRACK_REPORT_MODEL_H_
 
 #include <absl/container/flat_hash_map.h>
+#include <stdint.h>
 
 #include <QAbstractItemModel>
 #include <QVariant>
@@ -46,8 +47,14 @@ class SamplingWithFrameTrackReportModelTmpl : public QAbstractTableModel {
 
   static constexpr int kColumnsCount = 9;
 
-  explicit SamplingWithFrameTrackReportModelTmpl(Report report, QObject* parent = nullptr)
-      : QAbstractTableModel(parent), report_(std::move(report)) {
+  explicit SamplingWithFrameTrackReportModelTmpl(Report report,
+                                                 bool is_multiplicity_correction_enabled,
+                                                 double significance_level,
+                                                 QObject* parent = nullptr)
+      : QAbstractTableModel(parent),
+        report_(std::move(report)),
+        is_multiplicity_correction_enabled_(is_multiplicity_correction_enabled),
+        significance_level_(significance_level) {
     for (const auto& [sfid, unused_name] : report_.GetSfidToNames()) {
       if (*BaselineExclusiveCount(sfid) > 0 || *ComparisonExclusiveCount(sfid) > 0) {
         sfids_.push_back(sfid);
@@ -55,7 +62,17 @@ class SamplingWithFrameTrackReportModelTmpl : public QAbstractTableModel {
     }
   }
 
-  [[nodiscard]] int rowCount(const QModelIndex& /*parent*/) const override {
+  void SetMultiplicityCorrectionEnabled(bool is_enabled) {
+    is_multiplicity_correction_enabled_ = is_enabled;
+    EmitDataChanged(Column::kPvalue);
+  }
+
+  void SetSignificanceLevel(double significance_level) {
+    significance_level_ = significance_level;
+    EmitDataChanged(Column::kIsSignificant);
+  }
+
+  [[nodiscard]] int rowCount(const QModelIndex& /*parent*/ = {}) const override {
     return static_cast<int>(sfids_.size());
   };
   [[nodiscard]] int columnCount(const QModelIndex& /*parent*/) const override {
@@ -87,6 +104,11 @@ class SamplingWithFrameTrackReportModelTmpl : public QAbstractTableModel {
   }
 
  private:
+  void EmitDataChanged(Column column) {
+    const int column_int = static_cast<int>(column);
+    emit dataChanged(index(0, column_int), index(rowCount() - 1, column_int));
+  }
+
   [[nodiscard]] std::string MakeDisplayedString(const QModelIndex& index) const {
     const SFID sfid = sfids_[index.row()];
     const auto column = static_cast<Column>(index.column());
@@ -97,10 +119,11 @@ class SamplingWithFrameTrackReportModelTmpl : public QAbstractTableModel {
       case Column::kBaselineExclusiveTimePerFrame:
       case Column::kComparisonExclusivePercent:
       case Column::kComparisonExclusiveTimePerFrame:
-        return absl::StrFormat("%.3f", (MakeNumericEntry(sfid, column)));
       case Column::kPvalue:
-      case Column::kSlowdownPercent:
+        return absl::StrFormat("%.3f", MakeNumericEntry(sfid, column));
       case Column::kIsSignificant:
+        return GetPvalue(sfid) < significance_level_ ? "Yes" : "No";
+      case Column::kSlowdownPercent:
       case Column::kSlowdownPerFrame:
         return "Not Yet";
       default:
@@ -140,6 +163,11 @@ class SamplingWithFrameTrackReportModelTmpl : public QAbstractTableModel {
                         report_.GetComparisonFrameTrackStats());
   }
 
+  [[nodiscard]] double GetPvalue(SFID sfid) const {
+    const orbit_mizar_data::CorrectedComparisonResult& result = report_.GetComparisonResult(sfid);
+    return is_multiplicity_correction_enabled_ ? result.corrected_pvalue : result.pvalue;
+  }
+
   [[nodiscard]] double MakeNumericEntry(SFID sfid, Column column) const {
     switch (column) {
       case Column::kBaselineExclusivePercent:
@@ -151,6 +179,7 @@ class SamplingWithFrameTrackReportModelTmpl : public QAbstractTableModel {
       case Column::kComparisonExclusiveTimePerFrame:
         return *ComparisonExclusiveTimePerFrame(sfid);
       case Column::kPvalue:
+        return GetPvalue(sfid);
       case Column::kSlowdownPercent:
       case Column::kSlowdownPerFrame:
         return 0;  // Not implemented yet
@@ -161,6 +190,8 @@ class SamplingWithFrameTrackReportModelTmpl : public QAbstractTableModel {
 
   Report report_;
   std::vector<SFID> sfids_;
+  bool is_multiplicity_correction_enabled_;
+  double significance_level_;
 };
 
 using SamplingWithFrameTrackReportModel =

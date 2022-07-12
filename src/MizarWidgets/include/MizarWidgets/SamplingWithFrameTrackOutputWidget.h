@@ -8,6 +8,7 @@
 #include <QWidget>
 
 #include "MizarData/SamplingWithFrameTrackComparisonReport.h"
+#include "MizarModels/SamplingWithFrameTrackReportModel.h"
 
 namespace Ui {
 class SamplingWithFrameTrackOutputWidget;
@@ -18,11 +19,17 @@ namespace orbit_mizar_widgets {
 // The widget handles visualization of the comparison report based on sampling data with frame
 // track.
 class SamplingWithFrameTrackOutputWidget : public QWidget {
+  Q_OBJECT
   using Report = ::orbit_mizar_data::SamplingWithFrameTrackComparisonReport;
 
  public:
   explicit SamplingWithFrameTrackOutputWidget(QWidget* parent = nullptr);
+  ~SamplingWithFrameTrackOutputWidget();
   void UpdateReport(Report report);
+
+ public slots:
+  void SetMultiplicityCorrectionEnabled(bool checked);
+  void OnSignificanceLevelChanged(double significance_level);
 
  protected:
   void resizeEvent(QResizeEvent* event) override;
@@ -30,6 +37,9 @@ class SamplingWithFrameTrackOutputWidget : public QWidget {
  private:
   void ResizeReportColumns(int width) const;
 
+  SamplingWithFrameTrackReportModel* model_{};
+  bool is_multiplicity_correction_enabled_ = true;
+  double confidence_level_ = 0.05;
   std::unique_ptr<Ui::SamplingWithFrameTrackOutputWidget> ui_;
 };
 
