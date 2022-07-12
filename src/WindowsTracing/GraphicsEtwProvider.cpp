@@ -39,7 +39,7 @@ GraphicsEtwProvider::GraphicsEtwProvider(uint32_t pid, krabs::user_trace* trace,
       dxg_krnl_win7_present_provider_(Microsoft_Windows_DxgKrnl::Win7::PRESENTHISTORY_GUID),
       nt_process_provider_(NT_Process::GUID),
       win_event_meta_data_provider_(Microsoft_Windows_EventMetadata::GUID),
-      win2k_provider_(Microsoft_Windows_Win32k::GUID) {
+      win_32_k_provider_(Microsoft_Windows_Win32k::GUID) {
   // Setup callbacks.
   dxgi_provider_.add_on_event_callback(
       [this](const auto& record, const auto& context) { OnDXGIEvent(record, context); });
@@ -57,8 +57,8 @@ GraphicsEtwProvider::GraphicsEtwProvider(uint32_t pid, krabs::user_trace* trace,
       [this](const auto& record, const auto& context) { OnNtProcessEvent(record, context); });
   win_event_meta_data_provider_.add_on_event_callback(
       [this](const auto& record, const auto& context) { OnWindowsEventMetadata(record, context); });
-  win2k_provider_.add_on_event_callback(
-      [this](const auto& record, const auto& context) { OnWin2kEvent(record, context); });
+  win_32_k_provider_.add_on_event_callback(
+      [this](const auto& record, const auto& context) { OnWin32KEvent(record, context); });
 
   // Enable providers.
   trace->enable(dxgi_provider_);
@@ -69,7 +69,7 @@ GraphicsEtwProvider::GraphicsEtwProvider(uint32_t pid, krabs::user_trace* trace,
   trace->enable(dxg_krnl_win7_present_provider_);
   trace->enable(nt_process_provider_);
   trace->enable(win_event_meta_data_provider_);
-  trace->enable(win2k_provider_);
+  trace->enable(win_32_k_provider_);
 }
 
 static orbit_grpc_protos::PresentEvent::Source GrpcSourceFromPresentSource(
@@ -136,6 +136,34 @@ void GraphicsEtwProvider::OnDXGIEvent(const EVENT_RECORD& record,
 void GraphicsEtwProvider::OnD3D9Event(const EVENT_RECORD& record,
                                       const krabs::trace_context& context) {
   if (!ShouldProcessEvent(record, stats_.d3d9_event_count)) return;
+
+  krabs::schema schema(record, context.schema_locator);
+  krabs::parser parser(schema);
+
+  switch (record.EventHeader.EventDescriptor.Id) {
+    case Microsoft_Windows_D3D9::Present_Start::Id: {
+      auto swap_chain = parser.parse<uint64_t>(L"pSwapchain");
+      auto flags = parser.parse<uint32_t>(L"Flags");
+
+      uint32_t dxgi_present_flags = 0;
+      if (flags & D3DPRESENT_DONOTFLIP) dxgi_present_flags |= DXGI_PRESENT_DO_NOT_SEQUENCE;
+      if (flags & D3DPRESENT_DONOTWAIT) dxgi_present_flags |= DXGI_PRESENT_DO_NOT_WAIT;
+      if (flags & D3DPRESENT_FLIPRESTART) dxgi_present_flags |= DXGI_PRESENT_RESTART;
+
+      int32_t sync_interval = -1;
+      if (flags & D3DPRESENT_FORCEIMMEDIATE) {
+        sync_interval = 0;
+      }
+
+      OnPresentStart(PresentSource::kD3d9, record.EventHeader, swap_chain, flags, sync_interval);
+      break;
+    }
+    case Microsoft_Windows_D3D9::Present_Stop::Id:
+      OnPresentStop(PresentSource::kD3d9, record.EventHeader, parser.parse<uint32_t>(L"Result"));
+      break;
+    default:
+      break;
+  }
 }
 
 void GraphicsEtwProvider::OnDwmCoreEvent(const EVENT_RECORD& record,
@@ -168,9 +196,9 @@ void GraphicsEtwProvider::OnWindowsEventMetadata(const EVENT_RECORD& record,
   if (!ShouldProcessEvent(record, stats_.win_metadata_event_count)) return;
 }
 
-void GraphicsEtwProvider::OnWin2kEvent(const EVENT_RECORD& record,
-                                       const krabs::trace_context& context) {
-  if (!ShouldProcessEvent(record, stats_.win_2k_event_count)) return;
+void GraphicsEtwProvider::OnWin32KEvent(const EVENT_RECORD& record,
+                                        const krabs::trace_context& context) {
+  if (!ShouldProcessEvent(record, stats_.win_32_k_event_count)) return;
 }
 
 bool GraphicsEtwProvider::ShouldProcessEvent(const EVENT_RECORD& record,
@@ -201,7 +229,7 @@ void GraphicsEtwProvider::Stats::Log() {
   LOG_COUNTER(dxg_kernel_win_7_pres_event_count);
   LOG_COUNTER(nt_process_event_count);
   LOG_COUNTER(win_metadata_event_count);
-  LOG_COUNTER(win_2k_event_count);
+  LOG_COUNTER(win_32_k_event_count);
 }
 
 void GraphicsEtwProvider::OutputStats() {

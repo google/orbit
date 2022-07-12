@@ -11,23 +11,23 @@ namespace orbit_gl {
 using orbit_grpc_protos::PresentEvent;
 
 TEST(PresentEventManager, OutOfOrderEventsFails) {
-  PresentEventManager present_event_manager();
+  PresentEventManager present_event_manager;
   constexpr PresentEvent::Source kSource = orbit_grpc_protos::PresentEvent::kDxgi;
-  present_event_manager.ExchangeLastTimeStampForSource(source, 1);
-  EXPECT_DEATH(present_event_manager.ExchangeLastTimeStampForSource(source, 0), "");
+  present_event_manager.ExchangeLastTimeStampForSource(kSource, 1);
+  EXPECT_DEATH(present_event_manager.ExchangeLastTimeStampForSource(kSource, 0), "");
 }
 
 TEST(PresentEventManager, ExchangeReturnValues) {
-  PresentEventManager present_event_manager();
+  PresentEventManager present_event_manager;
   constexpr PresentEvent::Source kSource = orbit_grpc_protos::PresentEvent::kDxgi;
-  std::optional<uint64_t> result = present_event_manager.ExchangeLastTimeStampForSource(source, 0);
+  std::optional<uint64_t> result = present_event_manager.ExchangeLastTimeStampForSource(kSource, 0);
   ASSERT_FALSE(result.has_value());
 
-  result = present_event_manager.ExchangeLastTimeStampForSource(source, 1);
+  result = present_event_manager.ExchangeLastTimeStampForSource(kSource, 1);
   ASSERT_TRUE(result.has_value());
   ASSERT_EQ(result.value(), 0);
 
-  result = present_event_manager.ExchangeLastTimeStampForSource(source, 2);
+  result = present_event_manager.ExchangeLastTimeStampForSource(kSource, 2);
   ASSERT_TRUE(result.has_value());
   ASSERT_EQ(result.value(), 1);
 }

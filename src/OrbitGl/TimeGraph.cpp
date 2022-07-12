@@ -369,21 +369,20 @@ void TimeGraph::ProcessPresentEvent(const orbit_grpc_protos::PresentEvent& prese
   // We need a valid time interval to output frame information.
   if (!last_timestamp_ns.has_value()) return;
 
-  TrackManager* track_manager = GetTrackManager();
-
   // Display frame time value expressed in milliseconds.
+  TrackManager* track_manager = GetTrackManager();
   uint64_t dt_ns = event_timestamp_ns - last_timestamp_ns.value();
   const double dt_ms = static_cast<double>(dt_ns) * 0.000'001;
   const char* frame_time_track_name =
       present_event_manager_.GetFrameTimeTrackNameFromSource(source);
   VariableTrack* frame_time_track = track_manager->GetOrCreateVariableTrack(frame_time_track_name);
-  frame_time_track->AddValue(event_timestamp_ns, dt_ms);
+  frame_time_track->AddValue(last_timestamp_ns.value(), dt_ms);
 
   // Display fps value.
   double fps = dt_ms > 0 ? 1'000.0 / dt_ms : 0.0;
   const char* fps_time_track_name = present_event_manager_.GetFpsTrackNameFromSource(source);
   VariableTrack* fps_track = track_manager->GetOrCreateVariableTrack(fps_time_track_name);
-  fps_track->AddValue(event_timestamp_ns, fps);
+  fps_track->AddValue(last_timestamp_ns.value(), fps);
 }
 
 void TimeGraph::ProcessSystemMemoryTrackingTimer(const TimerInfo& timer_info) {

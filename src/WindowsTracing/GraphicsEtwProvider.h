@@ -41,10 +41,11 @@ class GraphicsEtwProvider {
   // Microsoft_Windows_EventMetadata::GUID
   void OnWindowsEventMetadata(const EVENT_RECORD& record, const krabs::trace_context& context);
   // Microsoft_Windows_Win32k::GUID
-  void OnWin2kEvent(const EVENT_RECORD& record, const krabs::trace_context& context);
+  void OnWin32KEvent(const EVENT_RECORD& record, const krabs::trace_context& context);
 
-  void OnPresentStart(PresentSource present_source, const EVENT_HEADER& header, uint64_t swap_chain_address,
-                      uint32_t dxgi_present_flags, int32_t sync_interval);
+  void OnPresentStart(PresentSource present_source, const EVENT_HEADER& header,
+                      uint64_t swap_chain_address, uint32_t dxgi_present_flags,
+                      int32_t sync_interval);
   void OnPresentStop(PresentSource present_source, const EVENT_HEADER& hdr, uint32_t result);
 
   struct EventCount {
@@ -63,7 +64,7 @@ class GraphicsEtwProvider {
     EventCount dxg_kernel_win_7_pres_event_count;
     EventCount nt_process_event_count;
     EventCount win_metadata_event_count;
-    EventCount win_2k_event_count;
+    EventCount win_32_k_event_count;
     void Log();
   };
 
@@ -81,7 +82,7 @@ class GraphicsEtwProvider {
   krabs::provider<> dxg_krnl_win7_present_provider_;
   krabs::provider<> nt_process_provider_;
   krabs::provider<> win_event_meta_data_provider_;
-  krabs::provider<> win2k_provider_;
+  krabs::provider<> win_32_k_provider_;
 };
 
 }  // namespace orbit_windows_tracing
