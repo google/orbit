@@ -6,6 +6,7 @@
 #define MIZAR_WIDGETS_SAMPLING_WITH_FRAME_TRACK_REPORT_MODEL_H_
 
 #include <absl/container/flat_hash_map.h>
+#include <llvm/Support/Format.h>
 #include <stdint.h>
 
 #include <QAbstractItemModel>
@@ -42,7 +43,7 @@ class SamplingWithFrameTrackReportModelTmpl : public QAbstractTableModel {
     kPvalue,
     kIsSignificant,
     kSlowdownPercent,
-    kSlowdownPerFrame
+    kPercentOfSlowdown
   };
 
   static constexpr int kColumnsCount = 9;
@@ -94,7 +95,7 @@ class SamplingWithFrameTrackReportModelTmpl : public QAbstractTableModel {
         {Column::kPvalue, "P-value"},
         {Column::kIsSignificant, "Significant?"},
         {Column::kSlowdownPercent, "Slowdown, %"},
-        {Column::kSlowdownPerFrame, "Slowdown (per frame), us"}};
+        {Column::kPercentOfSlowdown, "Slowdown (per frame), us"}};
 
     if (orientation == Qt::Vertical || role != Qt::DisplayRole) {
       return {};
@@ -120,12 +121,11 @@ class SamplingWithFrameTrackReportModelTmpl : public QAbstractTableModel {
       case Column::kComparisonExclusivePercent:
       case Column::kComparisonExclusiveTimePerFrame:
       case Column::kPvalue:
+      case Column::kSlowdownPercent:
+      case Column::kPercentOfSlowdown:
         return absl::StrFormat("%.3f", MakeNumericEntry(sfid, column));
       case Column::kIsSignificant:
         return GetPvalue(sfid) < significance_level_ ? "Yes" : "No";
-      case Column::kSlowdownPercent:
-      case Column::kSlowdownPerFrame:
-        return "Not Yet";
       default:
         ORBIT_UNREACHABLE();
     }
@@ -148,17 +148,22 @@ class SamplingWithFrameTrackReportModelTmpl : public QAbstractTableModel {
                         Comparison<SFID>(sfid));
   }
 
+  inline static constexpr uint64_t kNsInUs = 1'000;
+
   [[nodiscard]] static double TimePerFrameUs(double rate,
                                              const FrameTrackStats& frame_track_stats) {
-    constexpr uint kNsInUs = 1'000;
     return rate * frame_track_stats.ComputeAverageTimeNs() / kNsInUs;
   }
 
-  [[nodiscard]] Baseline<double> BaselineExclusiveTimePerFrame(SFID sfid) const {
+  [[nodiscard]] static double AverageFrameTime(const FrameTrackStats& stats) {
+    return static_cast<double>(stats.ComputeAverageTimeNs() / kNsInUs);
+  }
+
+  [[nodiscard]] Baseline<double> BaselineExclusiveTimePerFrameUs(SFID sfid) const {
     return LiftAndApply(&TimePerFrameUs, BaselineExclusiveRate(sfid),
                         report_.GetBaselineFrameTrackStats());
   }
-  [[nodiscard]] Comparison<double> ComparisonExclusiveTimePerFrame(SFID sfid) const {
+  [[nodiscard]] Comparison<double> ComparisonExclusiveTimePerFrameUs(SFID sfid) const {
     return LiftAndApply(&TimePerFrameUs, ComparisonExclusiveRate(sfid),
                         report_.GetComparisonFrameTrackStats());
   }
@@ -168,21 +173,47 @@ class SamplingWithFrameTrackReportModelTmpl : public QAbstractTableModel {
     return is_multiplicity_correction_enabled_ ? result.corrected_pvalue : result.pvalue;
   }
 
+  [[nodiscard]] static double Slowdown(Baseline<double> baseline_time,
+                                       Comparison<double> comparison_time) {
+    return *comparison_time - *baseline_time;
+  }
+
+  [[nodiscard]] double SlowdownPercent(SFID sfid) const {
+    const Baseline<double> baseline_time = BaselineExclusiveTimePerFrameUs(sfid);
+    const Comparison<double> comparison_time = ComparisonExclusiveTimePerFrameUs(sfid);
+    return Slowdown(baseline_time, comparison_time) / *baseline_time * 100;
+  }
+
+  [[nodiscard]] double PercentOfFrameSlowdown(SFID sfid) const {
+    const double function_slowdown_per_frame =
+        Slowdown(BaselineExclusiveTimePerFrameUs(sfid), ComparisonExclusiveTimePerFrameUs(sfid));
+
+    const Baseline<double> baseline_frame_time =
+        orbit_base::LiftAndApply(&AverageFrameTime, report_.GetBaselineFrameTrackStats());
+    const Comparison<double> comparison_frame_time =
+        orbit_base::LiftAndApply(&AverageFrameTime, report_.GetComparisonFrameTrackStats());
+
+    const double frame_slowdown = Slowdown(baseline_frame_time, comparison_frame_time);
+
+    return function_slowdown_per_frame / frame_slowdown * 100;
+  }
+
   [[nodiscard]] double MakeNumericEntry(SFID sfid, Column column) const {
     switch (column) {
       case Column::kBaselineExclusivePercent:
         return *BaselineExclusiveRate(sfid) * 100;
       case Column::kBaselineExclusiveTimePerFrame:
-        return *BaselineExclusiveTimePerFrame(sfid);
+        return *BaselineExclusiveTimePerFrameUs(sfid);
       case Column::kComparisonExclusivePercent:
         return *ComparisonExclusiveRate(sfid) * 100;
       case Column::kComparisonExclusiveTimePerFrame:
-        return *ComparisonExclusiveTimePerFrame(sfid);
+        return *ComparisonExclusiveTimePerFrameUs(sfid);
       case Column::kPvalue:
         return GetPvalue(sfid);
       case Column::kSlowdownPercent:
-      case Column::kSlowdownPerFrame:
-        return 0;  // Not implemented yet
+        return SlowdownPercent(sfid);
+      case Column::kPercentOfSlowdown:
+        return PercentOfFrameSlowdown(sfid);
       default:
         ORBIT_UNREACHABLE();
     }
