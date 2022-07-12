@@ -177,13 +177,9 @@ auto LiftAndApply(Action&& action, Arg&& arg, Args&&... args) {
 }
 
 template <typename TypedefType>
-struct HasZeroMemoryOverhead
-    : std::integral_constant<bool, sizeof(TypedefType) == sizeof(typename TypedefType::Value) &&
-                                       std::alignment_of_v<TypedefType> ==
-                                           std::alignment_of_v<typename TypedefType::Value>> {};
-
-template <typename TypedefType>
-inline constexpr bool kHasZeroMemoryOverheadV = HasZeroMemoryOverhead<TypedefType>::value;
+inline constexpr bool kHasZeroMemoryOverheadV =
+    sizeof(TypedefType) == sizeof(typename TypedefType::Value) &&
+    std::alignment_of_v<TypedefType> == std::alignment_of_v<typename TypedefType::Value>;
 
 }  // namespace orbit_base
 
