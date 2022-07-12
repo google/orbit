@@ -78,6 +78,7 @@ TimeGraph::TimeGraph(AccessibleInterfaceProvider* parent, OrbitApp* app,
 
   track_container_ = std::make_unique<orbit_gl::TrackContainer>(this, this, viewport, &layout_,
                                                                 app_, module_manager, capture_data);
+
   timeline_ui_ = std::make_unique<orbit_gl::TimelineUi>(
       /*parent=*/this, /*timeline_info_interface=*/this, viewport, &layout_);
 
@@ -360,15 +361,29 @@ void TimeGraph::ProcessApiTrackValueEvent(const orbit_client_data::ApiTrackValue
 }
 
 void TimeGraph::ProcessPresentEvent(const orbit_grpc_protos::PresentEvent& present_event) {
-  VariableTrack* track = GetTrackManager()->GetOrCreateVariableTrack("Frame Time [ms]");
-  uint64_t timestamp_ns = present_event.begin_timestamp_ns();
-  uint64_t dt = last_present_event_ == 0 ? 0 : timestamp_ns - last_present_event_;
-  last_present_event_ = timestamp_ns;
-  track->AddValue(timestamp_ns, dt*0.000'001);
+  const uint64_t event_timestamp_ns = present_event.begin_timestamp_ns();
+  const orbit_grpc_protos::PresentEvent::Source source = present_event.source();
+  std::optional<uint64_t> last_timestamp_ns =
+      present_event_manager_.ExchangeLastTimeStampForSource(source, event_timestamp_ns);
 
-  double fps = dt > 0 ? 1'000'000'000.0 / static_cast<double>(dt) : 0.0;
-  VariableTrack* fps_track = GetTrackManager()->GetOrCreateVariableTrack("FPS");
-  fps_track->AddValue(timestamp_ns, fps);
+  // We need a valid time interval to output frame information.
+  if (!last_timestamp_ns.has_value()) return;
+
+  TrackManager* track_manager = GetTrackManager();
+
+  // Display frame time value expressed in milliseconds.
+  uint64_t dt_ns = event_timestamp_ns - last_timestamp_ns.value();
+  const double dt_ms = static_cast<double>(dt_ns) * 0.000'001;
+  const char* frame_time_track_name =
+      present_event_manager_.GetFrameTimeTrackNameFromSource(source);
+  VariableTrack* frame_time_track = track_manager->GetOrCreateVariableTrack(frame_time_track_name);
+  frame_time_track->AddValue(event_timestamp_ns, dt_ms);
+
+  // Display fps value.
+  double fps = dt_ms > 0 ? 1'000.0 / dt_ms : 0.0;
+  const char* fps_time_track_name = present_event_manager_.GetFpsTrackNameFromSource(source);
+  VariableTrack* fps_track = track_manager->GetOrCreateVariableTrack(fps_time_track_name);
+  fps_track->AddValue(event_timestamp_ns, fps);
 }
 
 void TimeGraph::ProcessSystemMemoryTrackingTimer(const TimerInfo& timer_info) {

@@ -57,6 +57,7 @@ target_sources(
          PageFaultsTrack.h
          PickingManager.h
          PrimitiveAssembler.h
+         PresentEventManager.h
          SamplingReport.h
          SchedulerTrack.h
          SchedulingStats.h
@@ -129,6 +130,7 @@ target_sources(
           OpenGlTextRenderer.cpp
           PageFaultsTrack.cpp
           PickingManager.cpp
+          PresentEventManager.cpp
           PrimitiveAssembler.cpp
           SamplingReport.cpp
           SchedulerTrack.cpp
@@ -220,6 +222,7 @@ target_sources(OrbitGlTests PRIVATE
                OpenGlBatcherTest.cpp
                PageFaultsTrackTest.cpp
                PickingManagerTest.cpp
+               PresentEventManagerTest.cpp
                PrimitiveAssemblerTest.cpp
                ScopedStatusTest.cpp
                SimpleTimingsTest.cpp
