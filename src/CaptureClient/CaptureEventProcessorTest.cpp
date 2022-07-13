@@ -59,6 +59,7 @@ using orbit_grpc_protos::LostPerfRecordsEvent;
 using orbit_grpc_protos::MemoryUsageEvent;
 using orbit_grpc_protos::ModuleInfo;
 using orbit_grpc_protos::OutOfOrderEventsDiscardedEvent;
+using orbit_grpc_protos::PresentEvent;
 using orbit_grpc_protos::ProcessMemoryUsage;
 using orbit_grpc_protos::SchedulingSlice;
 using orbit_grpc_protos::SystemMemoryUsage;
@@ -99,6 +100,7 @@ class MockCaptureListener : public CaptureListener {
               (override));
   MOCK_METHOD(void, OnModulesSnapshot,
               (uint64_t /*timestamp_ns*/, std::vector<ModuleInfo> /*module_infos*/), (override));
+  MOCK_METHOD(void, OnPresentEvent, (const PresentEvent&), (override));
   MOCK_METHOD(void, OnApiStringEvent, (const ApiStringEvent&), (override));
   MOCK_METHOD(void, OnApiTrackValue, (const ApiTrackValue&), (override));
   MOCK_METHOD(void, OnWarningEvent, (orbit_grpc_protos::WarningEvent /*warning_event*/),

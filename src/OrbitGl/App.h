@@ -173,6 +173,7 @@ class OrbitApp final : public DataViewFactory,
   void OnModuleUpdate(uint64_t timestamp_ns, orbit_grpc_protos::ModuleInfo module_info) override;
   void OnModulesSnapshot(uint64_t timestamp_ns,
                          std::vector<orbit_grpc_protos::ModuleInfo> module_infos) override;
+  void OnPresentEvent(const orbit_grpc_protos::PresentEvent& present_event) override;
   void OnApiStringEvent(const orbit_client_data::ApiStringEvent& api_string_event) override;
   void OnApiTrackValue(const orbit_client_data::ApiTrackValue& api_track_value) override;
   void OnWarningEvent(orbit_grpc_protos::WarningEvent warning_event) override;

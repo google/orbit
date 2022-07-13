@@ -402,6 +402,8 @@ void VerifyOrderOfAllEvents(const std::vector<orbit_grpc_protos::ProducerCapture
         EXPECT_GE(event.module_update_event().timestamp_ns(), previous_event_timestamp_ns);
         previous_event_timestamp_ns = event.module_update_event().timestamp_ns();
         break;
+      case orbit_grpc_protos::ProducerCaptureEvent::kPresentEvent:
+        ORBIT_UNREACHABLE();
       case orbit_grpc_protos::ProducerCaptureEvent::kOutOfOrderEventsDiscardedEvent:
         EXPECT_GE(event.out_of_order_events_discarded_event().end_timestamp_ns(),
                   previous_event_timestamp_ns);
