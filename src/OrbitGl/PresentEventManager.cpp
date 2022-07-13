@@ -36,7 +36,7 @@ std::optional<uint64_t> PresentEventManager::ExchangeLastTimeStampForSource(
     PresentEvent::Source source, uint64_t new_timestamp_ns) {
   absl::MutexLock lock(&mutex_);
   auto it = last_timestamp_ns_by_type_.find(source);
-  if(it != last_timestamp_ns_by_type_.end()) {
+  if (it != last_timestamp_ns_by_type_.end()) {
     uint64_t last_timestamp_ns = it->second;
     ORBIT_CHECK(new_timestamp_ns >= last_timestamp_ns);
     it->second = new_timestamp_ns;

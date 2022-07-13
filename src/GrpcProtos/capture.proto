@@ -521,11 +521,11 @@ message PresentEvent {
   uint32 pid = 1;
   uint32 tid = 2;
 
-  // Unlike other events, we choose the (start_timestamp_ns, duration_ns) pair as some
-  // present "start" events don't have a corresponding "stop".
+  // Unlike other events, we choose the (start_timestamp_ns, duration_ns) pair
+  // as some present "start" events don't have a corresponding "stop".
   uint64 begin_timestamp_ns = 3;
   uint64 duration_ns = 4;
-  
+
   enum Source {
     kUnknown = 0;
     kDxgi = 1;
