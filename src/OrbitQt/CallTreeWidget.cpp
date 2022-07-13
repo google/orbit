@@ -47,6 +47,7 @@
 #include "DataViews/FunctionsDataView.h"
 #include "MetricsUploader/orbit_log_event.pb.h"
 #include "OrbitBase/Logging.h"
+#include "OrbitBase/Sort.h"
 
 using orbit_client_data::CaptureData;
 using orbit_client_data::FunctionInfo;
@@ -364,13 +365,9 @@ static std::string BuildStringFromIndices(QTreeView* tree_view, const QModelInde
     items.emplace_back(std::move(item));
   }
 
-  std::sort(items.begin(), items.end(),
-            [](const ItemWithAncestorRows& lhs, const ItemWithAncestorRows& rhs) {
-              if (lhs.ancestor_rows == rhs.ancestor_rows) {
-                return lhs.column < rhs.column;
-              }
-              return lhs.ancestor_rows < rhs.ancestor_rows;
-            });
+  orbit_base::sort(items.begin(), items.end(), [](const ItemWithAncestorRows& row) {
+    return std::make_pair(row.ancestor_rows, row.column);
+  });
 
   constexpr char kFieldSeparator = '\t';
   constexpr char kLineSeparator = '\n';
