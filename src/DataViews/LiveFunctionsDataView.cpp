@@ -583,7 +583,7 @@ std::optional<FunctionInfo> LiveFunctionsDataView::CreateFunctionInfoFromInstrum
   std::optional<ScopeId> scope_id =
       app_->GetCaptureData().FunctionIdToScopeId(instrumented_function.function_id());
   ORBIT_CHECK(scope_id.has_value());
-  
+
   const std::string& function_name = GetScopeInfo(scope_id.value()).GetName();
 
   // size is unknown
