@@ -128,11 +128,11 @@ MATCHER_P(SortedCallstackReportEq, that, "") {
 
   std::vector<CallstackCount> lhs_resorted_callstacks_counts = lhs.callstack_counts;
   orbit_base::sort(lhs_resorted_callstacks_counts.begin(), lhs_resorted_callstacks_counts.end(),
-                   callstack_count_projector);
+                   callstack_count_projector, std::greater<>{});
 
   std::vector<CallstackCount> rhs_resorted_callstacks_counts = rhs.callstack_counts;
   orbit_base::sort(rhs_resorted_callstacks_counts.begin(), rhs_resorted_callstacks_counts.end(),
-                   callstack_count_projector);
+                   callstack_count_projector, std::greater<>{});
 
   auto callstack_count_equal = [](const CallstackCount& lhs, const CallstackCount& rhs) {
     return lhs.count == rhs.count && lhs.callstack_id == rhs.callstack_id;
