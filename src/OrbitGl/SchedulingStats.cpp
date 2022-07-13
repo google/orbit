@@ -8,6 +8,7 @@
 
 #include "CaptureWindow.h"
 #include "ClientProtos/capture_data.pb.h"
+#include "OrbitBase/Sort.h"
 
 using orbit_client_protos::TimerInfo;
 
@@ -47,13 +48,15 @@ SchedulingStats::SchedulingStats(const std::vector<const TimerInfo*>& scheduling
   }
 
   // Sort process stats by time on core.
-  std::sort(process_stats_sorted_by_time_on_core_.begin(),
-            process_stats_sorted_by_time_on_core_.end(), ProcessStatsTimeSorter());
+  orbit_base::sort(process_stats_sorted_by_time_on_core_.begin(),
+                   process_stats_sorted_by_time_on_core_.end(), &ProcessStats::time_on_core_ns,
+                   std::greater<>{});
 
   // Sort thread stats by time on core.
   for (ProcessStats* process_stats : process_stats_sorted_by_time_on_core_) {
-    std::sort(process_stats->thread_stats_sorted_by_time_on_core.begin(),
-              process_stats->thread_stats_sorted_by_time_on_core.end(), ThreadStatsTimeSorter());
+    orbit_base::sort(process_stats->thread_stats_sorted_by_time_on_core.begin(),
+                     process_stats->thread_stats_sorted_by_time_on_core.end(),
+                     &ThreadStats::time_on_core_ns, std::greater<>{});
   }
 }
 
