@@ -27,7 +27,6 @@ struct Instance {
 
   static ErrorMessageOr<QVector<Instance>> GetListFromJson(const QByteArray& json);
   static ErrorMessageOr<Instance> CreateFromJson(const QByteArray& json);
-  static bool CmpById(const Instance& lhs, const Instance& rhs);
 
   friend bool operator==(const Instance& lhs, const Instance& rhs) {
     return std::tie(lhs.display_name, lhs.id, lhs.ip_address, lhs.last_updated, lhs.owner, lhs.pool,
