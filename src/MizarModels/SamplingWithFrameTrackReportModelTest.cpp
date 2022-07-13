@@ -182,12 +182,12 @@ TEST_F(SamplingWithFrameTrackReportModelTest, DisplayedDataIsCorrect) {
     const uint64_t expected_baseline_count = kSfidToBaselineCounts.at(sfid);
     const uint64_t expected_comparison_count = kSfidToComparisonCounts.at(sfid);
 
-    constexpr double kNsInUs = 1'000;
-
     const QString baseline_exclusive_percent =
         DisplayedString(row, Column::kBaselineExclusivePercent);
     ExpectNumericDisplayEq(baseline_exclusive_percent,
                            static_cast<double>(expected_baseline_count) / kCallstacksCount * 100);
+
+    constexpr double kNsInUs = 1'000;
 
     const QString baseline_exclusive_per_frame =
         DisplayedString(row, Column::kBaselineExclusiveTimePerFrame);

@@ -6,7 +6,6 @@
 #define MIZAR_WIDGETS_SAMPLING_WITH_FRAME_TRACK_REPORT_MODEL_H_
 
 #include <absl/container/flat_hash_map.h>
-#include <llvm/Support/Format.h>
 #include <stdint.h>
 
 #include <QAbstractItemModel>
@@ -195,7 +194,7 @@ class SamplingWithFrameTrackReportModelTmpl : public QAbstractTableModel {
 
     const double frame_slowdown = Slowdown(baseline_frame_time, comparison_frame_time);
 
-    return function_slowdown_per_frame / frame_slowdown * 100;
+    return function_slowdown_per_frame / std::abs(frame_slowdown) * 100;
   }
 
   [[nodiscard]] double MakeNumericEntry(SFID sfid, Column column) const {
