@@ -191,19 +191,33 @@ TEST_F(SamplingWithFrameTrackReportModelTest, DisplayedDataIsCorrect) {
 
     const QString baseline_exclusive_per_frame =
         DisplayedString(row, Column::kBaselineExclusiveTimePerFrame);
-    ExpectNumericDisplayEq(baseline_exclusive_per_frame,
-                           static_cast<double>(expected_baseline_count) / kCallstacksCount *
-                               kBaselineFrameTime / kNsInUs);
+    const double expected_baseline_time_per_frame = static_cast<double>(expected_baseline_count) /
+                                                    kCallstacksCount * kBaselineFrameTime / kNsInUs;
+    ExpectNumericDisplayEq(baseline_exclusive_per_frame, expected_baseline_time_per_frame);
 
     const QString comparison_exclusive_percent =
         DisplayedString(row, Column::kComparisonExclusivePercent);
     ExpectNumericDisplayEq(comparison_exclusive_percent,
                            static_cast<double>(expected_comparison_count) / kCallstacksCount * 100);
+
     const QString comparison_exclusive_per_frame =
         DisplayedString(row, Column::kComparisonExclusiveTimePerFrame);
-    ExpectNumericDisplayEq(comparison_exclusive_per_frame,
-                           static_cast<double>(expected_comparison_count) / kCallstacksCount *
-                               kComparisonFrameTime / kNsInUs);
+    const double expected_comparison_time_per_frame =
+        static_cast<double>(expected_comparison_count) / kCallstacksCount * kComparisonFrameTime /
+        kNsInUs;
+    ExpectNumericDisplayEq(comparison_exclusive_per_frame, expected_comparison_time_per_frame);
+
+    const QString slowdown_percent = DisplayedString(row, Column::kSlowdownPercent);
+    const double expected_slowdown =
+        expected_comparison_time_per_frame - expected_baseline_time_per_frame;
+    const double expected_slowdown_percent =
+        expected_slowdown / expected_baseline_time_per_frame * 100;
+    ExpectNumericDisplayEq(slowdown_percent, expected_slowdown_percent);
+
+    const QString percent_of_slowdown = DisplayedString(row, Column::kPercentOfSlowdown);
+    const double frame_time_slowdown = (kComparisonFrameTime - kBaselineFrameTime) / kNsInUs;
+    const double expected_percent_of_slowdown = expected_slowdown / frame_time_slowdown * 100;
+    ExpectNumericDisplayEq(percent_of_slowdown, expected_percent_of_slowdown);
   }
 
   EXPECT_EQ(observed_sfids.size(), kExpectedReportSize);
