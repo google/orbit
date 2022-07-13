@@ -8,6 +8,7 @@
 #include <absl/container/flat_hash_map.h>
 
 #include <cstdint>
+#include <optional>
 
 #include "ClientData/ScopeId.h"
 #include "ClientData/ScopeInfo.h"
@@ -22,10 +23,10 @@ class ScopeIdProvider {
  public:
   virtual ~ScopeIdProvider() = default;
 
-  [[nodiscard]] virtual ScopeId FunctionIdToScopeId(uint64_t function_id) const = 0;
+  [[nodiscard]] virtual std::optional<ScopeId> FunctionIdToScopeId(uint64_t function_id) const = 0;
   [[nodiscard]] virtual uint64_t ScopeIdToFunctionId(ScopeId scope_id) const = 0;
 
-  [[nodiscard]] virtual ScopeId ProvideId(const TimerInfo& timer_info) = 0;
+  [[nodiscard]] virtual std::optional<ScopeId> ProvideId(const TimerInfo& timer_info) = 0;
 
   [[nodiscard]] virtual std::vector<ScopeId> GetAllProvidedScopeIds() const = 0;
 
@@ -43,10 +44,10 @@ class NameEqualityScopeIdProvider : public ScopeIdProvider {
   [[nodiscard]] static std::unique_ptr<NameEqualityScopeIdProvider> Create(
       const ::orbit_grpc_protos::CaptureOptions& capture_options);
 
-  [[nodiscard]] ScopeId FunctionIdToScopeId(uint64_t function_id) const override;
+  [[nodiscard]] std::optional<ScopeId> FunctionIdToScopeId(uint64_t function_id) const override;
   [[nodiscard]] uint64_t ScopeIdToFunctionId(ScopeId scope_id) const override;
 
-  [[nodiscard]] ScopeId ProvideId(const TimerInfo& timer_info) override;
+  [[nodiscard]] std::optional<ScopeId> ProvideId(const TimerInfo& timer_info) override;
 
   [[nodiscard]] std::vector<ScopeId> GetAllProvidedScopeIds() const override;
 

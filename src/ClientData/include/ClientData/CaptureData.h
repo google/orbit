@@ -239,10 +239,11 @@ class CaptureData {
     return thread_track_data_provider_.get();
   }
 
-  [[nodiscard]] ScopeId ProvideScopeId(const orbit_client_protos::TimerInfo& timer_info) const;
+  [[nodiscard]] std::optional<ScopeId> ProvideScopeId(
+      const orbit_client_protos::TimerInfo& timer_info) const;
   [[nodiscard]] std::vector<ScopeId> GetAllProvidedScopeIds() const;
   [[nodiscard]] const ScopeInfo& GetScopeInfo(ScopeId scope_id) const;
-  [[nodiscard]] ScopeId FunctionIdToScopeId(uint64_t function_id) const;
+  [[nodiscard]] std::optional<ScopeId> FunctionIdToScopeId(uint64_t function_id) const;
   [[nodiscard]] uint64_t ScopeIdToFunctionId(ScopeId scope_id) const;
 
   [[nodiscard]] const std::vector<uint64_t>* GetSortedTimerDurationsForScopeId(

@@ -39,7 +39,7 @@ void DataManager::set_visible_scope_ids(absl::flat_hash_set<ScopeId> visible_sco
   visible_scope_ids_ = std::move(visible_scope_ids);
 }
 
-void DataManager::set_highlighted_scope_id(ScopeId highlighted_scope_id) {
+void DataManager::set_highlighted_scope_id(std::optional<ScopeId> highlighted_scope_id) {
   ORBIT_CHECK(std::this_thread::get_id() == main_thread_id_);
   highlighted_scope_id_ = highlighted_scope_id;
 }
@@ -86,7 +86,7 @@ bool DataManager::IsScopeVisible(ScopeId scope_id) const {
   return visible_scope_ids_.contains(scope_id);
 }
 
-ScopeId DataManager::highlighted_scope_id() const {
+std::optional<ScopeId> DataManager::highlighted_scope_id() const {
   ORBIT_CHECK(std::this_thread::get_id() == main_thread_id_);
   return highlighted_scope_id_;
 }

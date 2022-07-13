@@ -53,7 +53,7 @@ class LiveFunctionsController : public orbit_data_views::LiveFunctionsInterface 
  private:
   void Move();
 
-  [[nodiscard]] ScopeId FunctionIdToScopeId(uint64_t function_id) const;
+  [[nodiscard]] std::optional<ScopeId> FunctionIdToScopeId(uint64_t function_id) const;
 
   orbit_data_views::LiveFunctionsDataView live_functions_data_view_;
 

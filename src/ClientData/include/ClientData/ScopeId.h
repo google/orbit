@@ -19,10 +19,6 @@ using ScopeId = orbit_base::Typedef<ScopeIdTag, const uint64_t>;
 
 static_assert(orbit_base::kHasZeroMemoryOverheadV<ScopeId>);
 
-// We use this constant to identify scopes where we don't have a corresponding Id (see
-// ScopeIdProvider).
-constexpr ScopeId kInvalidScopeId{0};
-
 }  // namespace orbit_client_data
 
 #endif  // ORBIT_CLIENT_DATA_API_SCOPE_ID_H_

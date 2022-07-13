@@ -216,11 +216,11 @@ void LiveFunctionsController::AddIterator(ScopeId instrumented_function_scope_id
                                           const FunctionInfo* function) {
   uint64_t iterator_id = next_iterator_id_++;
   const orbit_client_protos::TimerInfo* timer_info = app_->selected_timer();
+  const std::optional<ScopeId> scope_id = FunctionIdToScopeId(timer_info->function_id());
   // If no box is currently selected or the selected box is a different
   // function, we search for the closest box to the current center of the
   // screen.
-  if (!timer_info ||
-      FunctionIdToScopeId(timer_info->function_id()) != instrumented_function_scope_id) {
+  if (!timer_info || scope_id != instrumented_function_scope_id) {
     timer_info = SnapToClosestStart(app_->GetMutableTimeGraph(), instrumented_function_scope_id);
   }
 
@@ -260,7 +260,7 @@ void LiveFunctionsController::Reset() {
   id_to_select_ = orbit_grpc_protos::kInvalidFunctionId;
 }
 
-ScopeId LiveFunctionsController::FunctionIdToScopeId(uint64_t function_id) const {
+std::optional<ScopeId> LiveFunctionsController::FunctionIdToScopeId(uint64_t function_id) const {
   ORBIT_CHECK(app_ != nullptr);
   ORBIT_CHECK(app_->HasCaptureData());
   return app_->GetCaptureData().FunctionIdToScopeId(function_id);

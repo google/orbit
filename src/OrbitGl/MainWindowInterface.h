@@ -52,7 +52,7 @@ class MainWindowInterface {
                                   std::string_view message) = 0;
 
   virtual void ShowHistogram(const std::vector<uint64_t>* data, const std::string& scope_name,
-                             ScopeId scope_id) = 0;
+                             std::optional<ScopeId> scope_id) = 0;
 
   enum class SymbolErrorHandlingResult { kReloadRequired, kSymbolLoadingCancelled };
   virtual SymbolErrorHandlingResult HandleSymbolError(

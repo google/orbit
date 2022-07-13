@@ -45,7 +45,7 @@ class HistogramWidget : public QWidget {
   using QWidget::QWidget;
 
   void UpdateData(const std::vector<uint64_t>* data, std::string function_name,
-                  ScopeId function_id);
+                  std::optional<ScopeId> scope_id);
 
   [[nodiscard]] QString GetTitle() const;
 

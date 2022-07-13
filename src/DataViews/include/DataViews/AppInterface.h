@@ -55,8 +55,8 @@ class AppInterface : public orbit_client_data::CaptureDataHolder {
   // Functions needed by LiveFunctionsDataView
   enum class JumpToTimerMode { kFirst, kLast, kMin, kMax };
   virtual void JumpToTimerAndZoom(ScopeId scope_id, JumpToTimerMode selection_mode) = 0;
-  [[nodiscard]] virtual ScopeId GetHighlightedScopeId() const = 0;
-  virtual void SetHighlightedScopeId(ScopeId highlighted_scope_id) = 0;
+  [[nodiscard]] virtual std::optional<ScopeId> GetHighlightedScopeId() const = 0;
+  virtual void SetHighlightedScopeId(std::optional<ScopeId> highlighted_scope_id) = 0;
   virtual void SetVisibleScopeIds(absl::flat_hash_set<ScopeId> visible_scope_ids) = 0;
   virtual void DeselectTimer() = 0;
   [[nodiscard]] virtual bool IsCapturing() const = 0;
@@ -112,7 +112,7 @@ class AppInterface : public orbit_client_data::CaptureDataHolder {
   virtual void ShowSourceCode(const orbit_client_data::FunctionInfo& function) = 0;
 
   virtual void ShowHistogram(const std::vector<uint64_t>* data, const std::string& scope_name,
-                             ScopeId scope_id) = 0;
+                             std::optional<ScopeId> scope_id) = 0;
 
   [[nodiscard]] virtual const orbit_statistics::BinomialConfidenceIntervalEstimator&
   GetConfidenceIntervalEstimator() const = 0;

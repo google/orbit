@@ -178,7 +178,8 @@ std::string ThreadTrack::GetBoxTooltip(const PrimitiveAssembler& primitive_assem
 
 bool ThreadTrack::IsTimerActive(const TimerInfo& timer_info) const {
   if (!app_->HasCaptureData()) return TimerTrack::IsTimerActive(timer_info);
-  return app_->IsScopeVisible(app_->GetCaptureData().ProvideScopeId(timer_info));
+  const std::optional<ScopeId> scope_id = app_->GetCaptureData().ProvideScopeId(timer_info);
+  return scope_id.has_value() ? app_->IsScopeVisible(scope_id.value()) : false;
 }
 
 bool ThreadTrack::IsTrackSelected() const {
@@ -213,13 +214,12 @@ float ThreadTrack::GetDefaultBoxHeight() const {
 }
 
 Color ThreadTrack::GetTimerColor(const TimerInfo& timer_info, const internal::DrawData& draw_data) {
-  const ScopeId scope_id = app_->HasCaptureData()
-                               ? app_->GetCaptureData().ProvideScopeId(timer_info)
-                               : orbit_client_data::kInvalidScopeId;
+  const std::optional<ScopeId> scope_id =
+      app_->HasCaptureData() ? app_->GetCaptureData().ProvideScopeId(timer_info) : std::nullopt;
   const uint64_t group_id = timer_info.group_id();
   const bool is_selected = &timer_info == draw_data.selected_timer;
   const bool is_scope_id_highlighted =
-      scope_id != orbit_client_data::kInvalidScopeId && scope_id == draw_data.highlighted_scope_id;
+      scope_id.has_value() && scope_id.value() == draw_data.highlighted_scope_id;
   const bool is_group_id_highlighted =
       group_id != kOrbitDefaultGroupId && group_id == draw_data.highlighted_group_id;
   const bool is_highlighted = !is_selected && (is_scope_id_highlighted || is_group_id_highlighted);

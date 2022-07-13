@@ -37,6 +37,7 @@ constexpr size_t kTimersForSecondId = 2;
 constexpr size_t kTimerCount = kTimersForFirstId + kTimersForSecondId;
 constexpr ScopeId kFirstId{1};
 constexpr ScopeId kSecondId{2};
+constexpr ScopeId kUnobservedId{123};
 const std::string kFirstName = "foo()";
 const std::string kSecondName = "bar()";
 constexpr std::array<ScopeId, kTimerCount> kTimerIds = {kFirstId, kFirstId, kFirstId, kSecondId,
@@ -248,7 +249,7 @@ TEST_F(CaptureDataTest, UpdateTimerDurationsIsCorrect) {
   EXPECT_EQ(*durations_second, std::vector(std::begin(kSortedDurationsForSecondId),
                                            std::end(kSortedDurationsForSecondId)));
 
-  EXPECT_THAT(capture_data_.GetSortedTimerDurationsForScopeId(kInvalidScopeId), testing::IsNull());
+  EXPECT_THAT(capture_data_.GetSortedTimerDurationsForScopeId(kUnobservedId), testing::IsNull());
 }
 
 TEST_F(CaptureDataTest, FindThreadStateSliceInfoFromTimestamp) {

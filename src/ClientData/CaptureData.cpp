@@ -87,10 +87,10 @@ const ScopeStats& CaptureData::GetScopeStatsOrDefault(ScopeId scope_id) const {
 }
 
 void CaptureData::UpdateScopeStats(const TimerInfo& timer_info) {
-  const ScopeId scope_id = ProvideScopeId(timer_info);
-  if (scope_id == kInvalidScopeId) return;
+  const std::optional<ScopeId> scope_id = ProvideScopeId(timer_info);
+  if (!scope_id.has_value()) return;
 
-  ScopeStats& stats = scope_stats_[scope_id];
+  ScopeStats& stats = scope_stats_[scope_id.value()];
   const uint64_t elapsed_nanos = timer_info.end() - timer_info.start();
   stats.UpdateStats(elapsed_nanos);
 }
@@ -168,7 +168,8 @@ bool CaptureData::IsFrameTrackEnabled(uint64_t instrumented_function_id) const {
   return frame_track_function_ids_.contains(instrumented_function_id);
 }
 
-ScopeId CaptureData::ProvideScopeId(const orbit_client_protos::TimerInfo& timer_info) const {
+std::optional<ScopeId> CaptureData::ProvideScopeId(
+    const orbit_client_protos::TimerInfo& timer_info) const {
   ORBIT_CHECK(scope_id_provider_);
   return scope_id_provider_->ProvideId(timer_info);
 }
@@ -182,7 +183,7 @@ const ScopeInfo& CaptureData::GetScopeInfo(ScopeId scope_id) const {
   return scope_id_provider_->GetScopeInfo(scope_id);
 }
 
-ScopeId CaptureData::FunctionIdToScopeId(uint64_t function_id) const {
+std::optional<ScopeId> CaptureData::FunctionIdToScopeId(uint64_t function_id) const {
   ORBIT_CHECK(scope_id_provider_);
   return scope_id_provider_->FunctionIdToScopeId(function_id);
 }
@@ -213,7 +214,7 @@ const std::vector<uint64_t>* CaptureData::GetSortedTimerDurationsForScopeId(
           GetThreadTrackDataProvider()->GetTimers(thread_id, min_tick, max_tick);
       std::copy_if(std::begin(thread_track_timers), std::end(thread_track_timers),
                    std::back_inserter(result), [this, &types](const TimerInfo* timer) {
-                     return types.contains(GetScopeInfo(ProvideScopeId(*timer)).GetType());
+                     return types.contains(GetScopeInfo(ProvideScopeId(*timer).value()).GetType());
                    });
     }
   }
@@ -233,10 +234,10 @@ void CaptureData::UpdateTimerDurations() {
   scope_id_to_timer_durations_.clear();
 
   for (const TimerInfo* timer : GetAllScopeTimers(kAllValidScopeTypes)) {
-    const ScopeId scope_id = ProvideScopeId(*timer);
+    const std::optional<ScopeId> scope_id = ProvideScopeId(*timer);
 
-    if (scope_id != orbit_client_data::kInvalidScopeId) {
-      scope_id_to_timer_durations_[scope_id].push_back(timer->end() - timer->start());
+    if (scope_id.has_value()) {
+      scope_id_to_timer_durations_[scope_id.value()].push_back(timer->end() - timer->start());
     }
   }
 

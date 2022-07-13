@@ -50,10 +50,11 @@ void MizarData::OnCaptureStarted(const orbit_grpc_protos::CaptureStarted& captur
 }
 
 void MizarData::OnTimer(const orbit_client_protos::TimerInfo& timer_info) {
-  const ScopeId scope_id = GetCaptureData().ProvideScopeId(timer_info);
-  if (scope_id == orbit_client_data::kInvalidScopeId) return;
+  const std::optional<ScopeId> scope_id = GetCaptureData().ProvideScopeId(timer_info);
+  if (!scope_id.has_value()) return;
 
-  const orbit_client_data::ScopeType scope_type = GetCaptureData().GetScopeInfo(scope_id).GetType();
+  const orbit_client_data::ScopeType scope_type =
+      GetCaptureData().GetScopeInfo(scope_id.value()).GetType();
   if (scope_type == orbit_client_data::ScopeType::kDynamicallyInstrumentedFunction ||
       scope_type == orbit_client_data::ScopeType::kApiScope) {
     GetMutableCaptureData().GetThreadTrackDataProvider()->AddTimer(timer_info);

@@ -10,6 +10,7 @@
 #include <algorithm>
 #include <cstdint>
 #include <memory>
+#include <optional>
 #include <string>
 #include <vector>
 
@@ -46,7 +47,9 @@ std::unique_ptr<NameEqualityScopeIdProvider> NameEqualityScopeIdProvider::Create
       max_id + 1, std::move(scope_info_to_id), std::move(scope_id_to_info)));
 }
 
-ScopeId NameEqualityScopeIdProvider::FunctionIdToScopeId(uint64_t function_id) const {
+std::optional<ScopeId> NameEqualityScopeIdProvider::FunctionIdToScopeId(
+    uint64_t function_id) const {
+  if (function_id == orbit_grpc_protos::kInvalidFunctionId) return std::nullopt;
   return ScopeId(function_id);
 }
 
@@ -65,10 +68,10 @@ ScopeId NameEqualityScopeIdProvider::FunctionIdToScopeId(uint64_t function_id) c
   }
 }
 
-ScopeId NameEqualityScopeIdProvider::ProvideId(const TimerInfo& timer_info) {
+std::optional<ScopeId> NameEqualityScopeIdProvider::ProvideId(const TimerInfo& timer_info) {
   const ScopeType scope_type = ScopeTypeFromTimerInfo(timer_info);
 
-  if (scope_type == ScopeType::kInvalid) return orbit_client_data::kInvalidScopeId;
+  if (scope_type == ScopeType::kInvalid) return std::nullopt;
 
   if (scope_type == ScopeType::kDynamicallyInstrumentedFunction) {
     return FunctionIdToScopeId(timer_info.function_id());

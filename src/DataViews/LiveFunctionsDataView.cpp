@@ -150,7 +150,8 @@ std::string LiveFunctionsDataView::GetValue(int row, int column) {
 }
 
 std::vector<int> LiveFunctionsDataView::GetVisibleSelectedIndices() {
-  std::optional<int> visible_selected_index = GetRowFromScopeId(selected_scope_id_);
+  if (!selected_scope_id_.has_value()) return {};
+  std::optional<int> visible_selected_index = GetRowFromScopeId(selected_scope_id_.value());
   if (!visible_selected_index.has_value()) return {};
   return {visible_selected_index.value()};
 }
@@ -158,7 +159,7 @@ std::vector<int> LiveFunctionsDataView::GetVisibleSelectedIndices() {
 void LiveFunctionsDataView::UpdateHighlightedFunctionId(const std::vector<int>& rows) {
   app_->DeselectTimer();
   if (rows.empty()) {
-    app_->SetHighlightedScopeId(orbit_client_data::kInvalidScopeId);
+    app_->SetHighlightedScopeId(std::nullopt);
   } else {
     app_->SetHighlightedScopeId(GetScopeId(rows[0]));
   }
@@ -185,7 +186,7 @@ void LiveFunctionsDataView::UpdateHistogramWithScopeIds(const std::vector<ScopeI
           : nullptr;
 
   if (timer_durations == nullptr) {
-    app_->ShowHistogram(nullptr, "", orbit_client_data::kInvalidScopeId);
+    app_->ShowHistogram(nullptr, "", std::nullopt);
     return;
   }
 
@@ -410,11 +411,12 @@ void LiveFunctionsDataView::OnJumpToRequested(const std::string& action,
 
   for (const TimerInfo* timer :
        capture_data.GetAllScopeTimers(orbit_client_data::kAllValidScopeTypes)) {
-    const ScopeId scope_id = capture_data.ProvideScopeId(*timer);
-    if (!selected_scope_ids.contains(scope_id)) continue;
+    const std::optional<ScopeId> scope_id = capture_data.ProvideScopeId(*timer);
+    ORBIT_CHECK(scope_id.has_value());
+    if (!selected_scope_ids.contains(scope_id.value())) continue;
 
     std::string line;
-    line.append(FormatValueForCsv(capture_data.GetScopeInfo(scope_id).GetName()));
+    line.append(FormatValueForCsv(capture_data.GetScopeInfo(scope_id.value()).GetName()));
     line.append(kFieldSeparator);
     line.append(FormatValueForCsv(absl::StrFormat(
         "%s [%lu]", capture_data.GetThreadName(timer->thread_id()), timer->thread_id())));
@@ -514,8 +516,9 @@ void LiveFunctionsDataView::OnDataChanged() {
     if (!function_info.has_value()) {
       return;
     }
-    const ScopeId scope_id = app_->GetCaptureData().FunctionIdToScopeId(function_id);
-    AddFunction(scope_id, std::move(*function_info));
+    const std::optional<ScopeId> scope_id = app_->GetCaptureData().FunctionIdToScopeId(function_id);
+    ORBIT_CHECK(scope_id.has_value());
+    AddFunction(scope_id.value(), std::move(*function_info));
   }
 
   std::vector<ScopeId> all_scope_ids = app_->GetCaptureData().GetAllProvidedScopeIds();
@@ -577,9 +580,11 @@ std::optional<FunctionInfo> LiveFunctionsDataView::CreateFunctionInfoFromInstrum
     return std::nullopt;
   }
 
-  const std::string& function_name =
-      GetScopeInfo(app_->GetCaptureData().FunctionIdToScopeId(instrumented_function.function_id()))
-          .GetName();
+  std::optional<ScopeId> scope_id =
+      app_->GetCaptureData().FunctionIdToScopeId(instrumented_function.function_id());
+  ORBIT_CHECK(scope_id.has_value());
+  
+  const std::string& function_name = GetScopeInfo(scope_id.value()).GetName();
 
   // size is unknown
   FunctionInfo result{instrumented_function.file_path(), instrumented_function.file_build_id(),
