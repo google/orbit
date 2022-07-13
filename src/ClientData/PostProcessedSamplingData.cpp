@@ -10,6 +10,7 @@
 #include <algorithm>
 
 #include "OrbitBase/Logging.h"
+#include "OrbitBase/Sort.h"
 #include "OrbitBase/ThreadConstants.h"
 
 namespace orbit_client_data {
@@ -36,19 +37,16 @@ std::vector<const ThreadSampleData*> PostProcessedSamplingData::GetSortedThreadS
   for (const auto& [unused_tid, thread_sample_data] : thread_id_to_sample_data_) {
     sorted_thread_sample_data.emplace_back(&thread_sample_data);
   }
-
-  std::sort(sorted_thread_sample_data.begin(), sorted_thread_sample_data.end(),
-            [](const ThreadSampleData* lhs, const ThreadSampleData* rhs) {
-              // Make sure the ThreadSampleData associated with "all threads" is first even if we
-              // only have one thread.
-              uint32_t lhs_samples_count = (lhs->thread_id == orbit_base::kAllProcessThreadsTid)
-                                               ? std::numeric_limits<uint32_t>::max()
-                                               : lhs->samples_count;
-              uint32_t rhs_samples_count = (rhs->thread_id == orbit_base::kAllProcessThreadsTid)
-                                               ? std::numeric_limits<uint32_t>::max()
-                                               : rhs->samples_count;
-              return lhs_samples_count > rhs_samples_count;
-            });
+  orbit_base::sort(
+      std::begin(sorted_thread_sample_data), std::end(sorted_thread_sample_data),
+      [](const ThreadSampleData* lhs) {
+        // Make sure the ThreadSampleData associated with "all threads" is first even
+        // if we only have one thread.
+        return (lhs->thread_id == orbit_base::kAllProcessThreadsTid)
+                   ? std::numeric_limits<uint32_t>::max()
+                   : lhs->samples_count;
+      },
+      std::greater<>{});
   return sorted_thread_sample_data;
 }
 
