@@ -4,6 +4,8 @@
 
 #include "MizarWidgets/SamplingWithFrameTrackOutputWidget.h"
 
+#include <qsortfilterproxymodel.h>
+
 #include <QResizeEvent>
 #include <QSortFilterProxyModel>
 #include <QWidget>
@@ -27,7 +29,12 @@ void SamplingWithFrameTrackOutputWidget::UpdateReport(Report report) {
       std::move(report), is_multiplicity_correction_enabled_, confidence_level_, this);
   model_ = model.get();
 
-  ui_->report_->setModel(model.release());
+  auto proxy_model = std::make_unique<QSortFilterProxyModel>(this);
+  proxy_model->setSourceModel(model.release());
+  proxy_model->setSortRole(SamplingWithFrameTrackReportModel::kSortRole);
+
+  ui_->report_->setModel(proxy_model.release());
+  ui_->report_->setSortingEnabled(true);
   ResizeReportColumns(width());
 }
 

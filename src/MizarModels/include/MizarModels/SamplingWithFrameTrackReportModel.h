@@ -47,6 +47,8 @@ class SamplingWithFrameTrackReportModelTmpl : public QAbstractTableModel {
 
   static constexpr int kColumnsCount = 9;
 
+  static constexpr int kSortRole = Qt::UserRole + 1;
+
   explicit SamplingWithFrameTrackReportModelTmpl(Report report,
                                                  bool is_multiplicity_correction_enabled,
                                                  double significance_level,
@@ -79,8 +81,15 @@ class SamplingWithFrameTrackReportModelTmpl : public QAbstractTableModel {
     return kColumnsCount;
   };
   [[nodiscard]] QVariant data(const QModelIndex& index, int role) const override {
-    if (index.model() != this || role != Qt::DisplayRole) return {};
-    return QString::fromStdString(MakeDisplayedString(index));
+    if (index.model() != this) return {};
+    switch (role) {
+      case Qt::DisplayRole:
+        return QString::fromStdString(MakeDisplayedString(index));
+      case kSortRole:
+        return MakeSortValue(index);
+      default:
+        return {};
+    }
   }
 
   [[nodiscard]] QVariant headerData(int section, Qt::Orientation orientation,
@@ -104,17 +113,22 @@ class SamplingWithFrameTrackReportModelTmpl : public QAbstractTableModel {
   }
 
  private:
+  struct Index {
+    SFID sfid;
+    Column column;
+  };
+
   void EmitDataChanged(Column column) {
     const int column_int = static_cast<int>(column);
     emit dataChanged(index(0, column_int), index(rowCount() - 1, column_int));
   }
 
-  [[nodiscard]] std::string MakeDisplayedString(const QModelIndex& index) const {
-    const SFID sfid = sfids_[index.row()];
-    const auto column = static_cast<Column>(index.column());
-    switch (column) {
-      case Column::kFunctionName:
-        return report_.GetSfidToNames().at(sfid);
+  [[nodiscard]] Index MakeIndex(const QModelIndex& index) const {
+    return {sfids_[index.row()], static_cast<Column>(index.column())};
+  }
+
+  [[nodiscard]] bool IsNumeric(const Index& index) const {
+    switch (index.column) {
       case Column::kBaselineExclusivePercent:
       case Column::kBaselineExclusiveTimePerFrame:
       case Column::kComparisonExclusivePercent:
@@ -122,13 +136,38 @@ class SamplingWithFrameTrackReportModelTmpl : public QAbstractTableModel {
       case Column::kPvalue:
       case Column::kSlowdownPercent:
       case Column::kPercentOfSlowdown:
-        return absl::StrFormat("%.3f", MakeNumericEntry(sfid, column));
+        return true;
+      default:
+        return false;
+    }
+  }
+
+  [[nodiscard]] QVariant MakeSortValue(const QModelIndex& model_index) const {
+    const Index index = MakeIndex(model_index);
+
+    if (IsNumeric(index)) return MakeNumericEntry(index);
+    return QString::fromStdString(MakeStringEntry(index)).toLower();
+  }
+
+  [[nodiscard]] std::string MakeDisplayedString(const QModelIndex& model_index) const {
+    const Index index = MakeIndex(model_index);
+
+    if (IsNumeric(index)) return absl::StrFormat("%.3f", MakeNumericEntry(index));
+    return MakeStringEntry(index);
+  }
+
+  [[nodiscard]] std::string MakeStringEntry(const Index& index) const {
+    const auto [sfid, column] = index;
+    switch (column) {
+      case Column::kFunctionName:
+        return report_.GetSfidToNames().at(sfid);
       case Column::kIsSignificant:
         return GetPvalue(sfid) < significance_level_ ? "Yes" : "No";
       default:
         ORBIT_UNREACHABLE();
     }
   }
+
   [[nodiscard]] Baseline<double> BaselineExclusiveRate(SFID sfid) const {
     return LiftAndApply(&Counts::GetExclusiveRate, report_.GetBaselineSamplingCounts(),
                         Baseline<SFID>(sfid));
@@ -197,7 +236,8 @@ class SamplingWithFrameTrackReportModelTmpl : public QAbstractTableModel {
     return function_slowdown_per_frame / std::abs(frame_slowdown) * 100;
   }
 
-  [[nodiscard]] double MakeNumericEntry(SFID sfid, Column column) const {
+  [[nodiscard]] double MakeNumericEntry(const Index& index) const {
+    const auto [sfid, column] = index;
     switch (column) {
       case Column::kBaselineExclusivePercent:
         return *BaselineExclusiveRate(sfid) * 100;

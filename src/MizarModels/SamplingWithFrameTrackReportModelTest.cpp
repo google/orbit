@@ -4,8 +4,11 @@
 
 #include <absl/container/flat_hash_map.h>
 #include <absl/container/flat_hash_set.h>
+#include <absl/strings/ascii.h>
+#include <gmock/gmock-matchers.h>
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
+#include <qvariant.h>
 
 #include <QSignalSpy>
 #include <Qt>
@@ -27,9 +30,9 @@ using Counts = ::orbit_mizar_data::SamplingCounts;
 using ::orbit_mizar_base::MakeBaseline;
 using ::orbit_mizar_base::MakeComparison;
 using ::orbit_test_utils::MakeMap;
+using ::testing::Contains;
 using ::testing::DoubleNear;
-using ::testing::Invoke;
-using ::testing::Return;
+using ::testing::StrCaseEq;
 
 namespace {
 class MockCounts {
@@ -120,8 +123,15 @@ class SamplingWithFrameTrackReportModelTest : public ::testing::Test {
       MakeComparison<MockFrameTrackStats>(kComparisonFrameTime);
 
   [[nodiscard]] QString DisplayedString(int row, Column column) const {
-    const QModelIndex index = model_.index(row, static_cast<int>(column));
-    return model_.data(index, Qt::DisplayRole).toString();
+    return model_.data(MakeIndex(row, column), Qt::DisplayRole).toString();
+  }
+
+  [[nodiscard]] QVariant SortValue(int row, Column column) const {
+    return model_.data(MakeIndex(row, column), Model::kSortRole);
+  }
+
+  [[nodiscard]] QModelIndex MakeIndex(int row, Column column) const {
+    return model_.index(row, static_cast<int>(column));
   }
 
   void ExpectDataChangeIsCorrectlyEmitted(
@@ -144,21 +154,35 @@ class SamplingWithFrameTrackReportModelTest : public ::testing::Test {
     for (int row = 0; row < model_.rowCount(); ++row) {
       const QString name = DisplayedString(row, Column::kFunctionName);
 
-      ASSERT_THAT(kFunctionNames, testing::Contains(name.toStdString()));
+      ASSERT_THAT(kFunctionNames, Contains(name.toStdString()));
       const SFID sfid = kNameToSfid.at(name.toStdString());
 
       const orbit_mizar_data::CorrectedComparisonResult& comparison_result =
           kSfidToComparisonResult.at(sfid);
 
-      const QString pvalue = DisplayedString(row, Column::kPvalue);
       const double expected_pvalue = is_multiplicity_correction_enabled
                                          ? comparison_result.corrected_pvalue
                                          : comparison_result.pvalue;
-      const bool expected_is_significant = expected_pvalue < significance_level;
-      ExpectNumericDisplayEq(pvalue, expected_pvalue);
+      ExpectNumericDisplayAndSortValuesAreCorrect(row, Column::kPvalue, expected_pvalue);
+      const std::string expected_is_significant =
+          expected_pvalue < significance_level ? "Yes" : "No";
       EXPECT_EQ(DisplayedString(row, Column::kIsSignificant).toStdString(),
-                expected_is_significant ? "Yes" : "No");
+                expected_is_significant);
+
+      QVariant pvalue_sort_value = SortValue(row, Column::kIsSignificant);
+      EXPECT_EQ(pvalue_sort_value.type(), QMetaType::QString);
+      EXPECT_THAT(pvalue_sort_value.value<QString>().toStdString(),
+                  StrCaseEq(expected_is_significant));
     }
+  }
+
+  void ExpectNumericDisplayAndSortValuesAreCorrect(const int row, const Column column,
+                                                   double expected) const {
+    const QString displayed = DisplayedString(row, column);
+    ExpectNumericDisplayEq(displayed, expected);
+    const QVariant sort_value = SortValue(row, column);
+    EXPECT_EQ(sort_value.type(), QMetaType::Double);
+    EXPECT_THAT(sort_value.value<double>(), DoubleNear(expected, kTolerance));
   }
 
   Report report_{baseline_counts_,        baseline_frame_track_stats_,
@@ -176,48 +200,49 @@ TEST_F(SamplingWithFrameTrackReportModelTest, DisplayedDataIsCorrect) {
   for (int row = 0; row < model_.rowCount(); ++row) {
     const QString name = DisplayedString(row, Column::kFunctionName);
 
-    ASSERT_THAT(kFunctionNames, testing::Contains(name.toStdString()));
+    ASSERT_THAT(kFunctionNames, Contains(name.toStdString()));
+
+    EXPECT_EQ(name.toLower(), SortValue(row, Column::kFunctionName));
+
     const SFID sfid = kNameToSfid.at(name.toStdString());
     observed_sfids.insert(sfid);
     const uint64_t expected_baseline_count = kSfidToBaselineCounts.at(sfid);
     const uint64_t expected_comparison_count = kSfidToComparisonCounts.at(sfid);
 
-    const QString baseline_exclusive_percent =
-        DisplayedString(row, Column::kBaselineExclusivePercent);
-    ExpectNumericDisplayEq(baseline_exclusive_percent,
-                           static_cast<double>(expected_baseline_count) / kCallstacksCount * 100);
+    const double expected_baseline_exclusive_percent =
+        static_cast<double>(expected_baseline_count) / kCallstacksCount * 100;
+    ExpectNumericDisplayAndSortValuesAreCorrect(row, Column::kBaselineExclusivePercent,
+                                                expected_baseline_exclusive_percent);
 
     constexpr double kNsInUs = 1'000;
 
-    const QString baseline_exclusive_per_frame =
-        DisplayedString(row, Column::kBaselineExclusiveTimePerFrame);
     const double expected_baseline_time_per_frame = static_cast<double>(expected_baseline_count) /
                                                     kCallstacksCount * kBaselineFrameTime / kNsInUs;
-    ExpectNumericDisplayEq(baseline_exclusive_per_frame, expected_baseline_time_per_frame);
+    ExpectNumericDisplayAndSortValuesAreCorrect(row, Column::kBaselineExclusiveTimePerFrame,
+                                                expected_baseline_time_per_frame);
 
-    const QString comparison_exclusive_percent =
-        DisplayedString(row, Column::kComparisonExclusivePercent);
-    ExpectNumericDisplayEq(comparison_exclusive_percent,
-                           static_cast<double>(expected_comparison_count) / kCallstacksCount * 100);
+    const double expected_comparison_exclusive_percent =
+        static_cast<double>(expected_comparison_count) / kCallstacksCount * 100;
+    ExpectNumericDisplayAndSortValuesAreCorrect(row, Column::kComparisonExclusivePercent,
+                                                expected_comparison_exclusive_percent);
 
-    const QString comparison_exclusive_per_frame =
-        DisplayedString(row, Column::kComparisonExclusiveTimePerFrame);
     const double expected_comparison_time_per_frame =
         static_cast<double>(expected_comparison_count) / kCallstacksCount * kComparisonFrameTime /
         kNsInUs;
-    ExpectNumericDisplayEq(comparison_exclusive_per_frame, expected_comparison_time_per_frame);
+    ExpectNumericDisplayAndSortValuesAreCorrect(row, Column::kComparisonExclusiveTimePerFrame,
+                                                expected_comparison_time_per_frame);
 
-    const QString slowdown_percent = DisplayedString(row, Column::kSlowdownPercent);
     const double expected_slowdown =
         expected_comparison_time_per_frame - expected_baseline_time_per_frame;
     const double expected_slowdown_percent =
         expected_slowdown / expected_baseline_time_per_frame * 100;
-    ExpectNumericDisplayEq(slowdown_percent, expected_slowdown_percent);
+    ExpectNumericDisplayAndSortValuesAreCorrect(row, Column::kSlowdownPercent,
+                                                expected_slowdown_percent);
 
-    const QString percent_of_slowdown = DisplayedString(row, Column::kPercentOfSlowdown);
     const double frame_time_slowdown = (kComparisonFrameTime - kBaselineFrameTime) / kNsInUs;
     const double expected_percent_of_slowdown = expected_slowdown / frame_time_slowdown * 100;
-    ExpectNumericDisplayEq(percent_of_slowdown, expected_percent_of_slowdown);
+    ExpectNumericDisplayAndSortValuesAreCorrect(row, Column::kPercentOfSlowdown,
+                                                expected_percent_of_slowdown);
   }
 
   EXPECT_EQ(observed_sfids.size(), kExpectedReportSize);
