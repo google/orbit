@@ -6,7 +6,6 @@
 #define MIZAR_WIDGETS_SAMPLING_WITH_FRAME_TRACK_REPORT_MODEL_H_
 
 #include <absl/container/flat_hash_map.h>
-#include <qnamespace.h>
 #include <stdint.h>
 
 #include <QAbstractItemModel>
