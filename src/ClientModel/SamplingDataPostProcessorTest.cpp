@@ -16,6 +16,7 @@
 #include "ClientData/ModuleManager.h"
 #include "ClientModel/SamplingDataPostProcessor.h"
 #include "ClientProtos/capture_data.pb.h"
+#include "OrbitBase/Sort.h"
 #include "OrbitBase/ThreadConstants.h"
 
 using orbit_client_data::CallstackCount;
@@ -77,19 +78,18 @@ MATCHER_P(SampledFunctionEq, that, "") {
 bool CallstackIdToCallstackEventPairsAreEqual(
     const std::pair<uint64_t, std::vector<CallstackEvent>>& lhs,
     const std::pair<uint64_t, std::vector<CallstackEvent>>& rhs) {
-  auto callstack_events_less = [](const CallstackEvent& lhs, const CallstackEvent& rhs) {
-    return std::make_tuple(lhs.timestamp_ns(), lhs.callstack_id(), lhs.thread_id()) <
-           std::make_tuple(rhs.timestamp_ns(), rhs.callstack_id(), rhs.thread_id());
+  auto callstack_events_projector = [](const CallstackEvent& event) {
+    return std::make_tuple(event.timestamp_ns(), event.callstack_id(), event.thread_id());
   };
-  auto callstack_events_equal = [](const CallstackEvent& lhs, const CallstackEvent& rhs) {
-    return std::make_tuple(lhs.timestamp_ns(), lhs.callstack_id(), lhs.thread_id()) ==
-           std::make_tuple(rhs.timestamp_ns(), rhs.callstack_id(), rhs.thread_id());
+  auto callstack_events_equal = [&callstack_events_projector](const CallstackEvent& lhs,
+                                                              const CallstackEvent& rhs) {
+    return callstack_events_projector(lhs) == callstack_events_projector(rhs);
   };
 
   std::vector<CallstackEvent> lhs_events = lhs.second;
-  std::sort(lhs_events.begin(), lhs_events.end(), callstack_events_less);
+  orbit_base::sort(lhs_events.begin(), lhs_events.end(), callstack_events_projector);
   std::vector<CallstackEvent> rhs_events = rhs.second;
-  std::sort(rhs_events.begin(), rhs_events.end(), callstack_events_less);
+  orbit_base::sort(rhs_events.begin(), rhs_events.end(), callstack_events_projector);
   return lhs.first == rhs.first &&
          std::equal(lhs_events.begin(), lhs_events.end(), rhs_events.begin(), rhs_events.end(),
                     callstack_events_equal);
@@ -122,18 +122,17 @@ MATCHER_P(SortedCallstackReportEq, that, "") {
   // descending order), hence the order is not unique. Sort again considering
   // `CallstackCount::callstack_id`, too, to facilitate the comparison of `SortedCallstackReport`s
   // for equality.
-  auto callstack_count_less = [](const CallstackCount& lhs, const CallstackCount& rhs) {
-    if (lhs.count != rhs.count) return lhs.count > rhs.count;
-    return lhs.callstack_id < rhs.callstack_id;
+  auto callstack_count_projector = [](const CallstackCount& callstack_count) {
+    return std::make_pair(callstack_count.count, callstack_count.callstack_id);
   };
 
   std::vector<CallstackCount> lhs_resorted_callstacks_counts = lhs.callstack_counts;
-  std::sort(lhs_resorted_callstacks_counts.begin(), lhs_resorted_callstacks_counts.end(),
-            callstack_count_less);
+  orbit_base::sort(lhs_resorted_callstacks_counts.begin(), lhs_resorted_callstacks_counts.end(),
+                   callstack_count_projector);
 
   std::vector<CallstackCount> rhs_resorted_callstacks_counts = rhs.callstack_counts;
-  std::sort(rhs_resorted_callstacks_counts.begin(), rhs_resorted_callstacks_counts.end(),
-            callstack_count_less);
+  orbit_base::sort(rhs_resorted_callstacks_counts.begin(), rhs_resorted_callstacks_counts.end(),
+                   callstack_count_projector);
 
   auto callstack_count_equal = [](const CallstackCount& lhs, const CallstackCount& rhs) {
     return lhs.count == rhs.count && lhs.callstack_id == rhs.callstack_id;
