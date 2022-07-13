@@ -26,6 +26,7 @@
 #include "GlUtils.h"
 #include "OrbitBase/Append.h"
 #include "OrbitBase/Logging.h"
+#include "OrbitBase/Sort.h"
 #include "PickingManager.h"
 #include "TrackManager.h"
 
@@ -182,11 +183,10 @@ void TrackContainer::DrawOverlay(PrimitiveAssembler& primitive_assembler,
   std::copy(iterator_timer_info_.begin(), iterator_timer_info_.end(), timers.begin());
 
   // Sort timers by start time.
-  std::sort(timers.begin(), timers.end(),
-            [](const std::pair<uint64_t, const TimerInfo*>& timer_a,
-               const std::pair<uint64_t, const TimerInfo*>& timer_b) -> bool {
-              return timer_a.second->start() < timer_b.second->start();
-            });
+  orbit_base::sort(timers.begin(), timers.end(),
+                   [](const std::pair<uint64_t, const TimerInfo*>& timer_a) -> uint64_t {
+                     return timer_a.second->start();
+                   });
 
   // We will need the world x coordinates for the timers multiple times, so
   // we avoid recomputing them and just cache them here.
