@@ -45,18 +45,6 @@ class SchedulingStats {
     std::string process_name;
   };
 
-  struct ProcessStatsTimeSorter {
-    bool operator()(const ProcessStats* a, const ProcessStats* b) const {
-      return a->time_on_core_ns > b->time_on_core_ns;
-    }
-  };
-
-  struct ThreadStatsTimeSorter {
-    bool operator()(const ThreadStats* a, const ThreadStats* b) const {
-      return a->time_on_core_ns > b->time_on_core_ns;
-    }
-  };
-
   double GetTimeRangeMs() const { return time_range_ms_; }
   uint64_t GetTimeOnCoreNs() const { return time_on_core_ns_; }
   const std::map<int32_t, uint64_t>& GetTimeOnCoreNsByCore() const {
