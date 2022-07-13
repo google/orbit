@@ -4,8 +4,6 @@
 
 #include "MizarWidgets/SamplingWithFrameTrackOutputWidget.h"
 
-#include <qsortfilterproxymodel.h>
-
 #include <QResizeEvent>
 #include <QSortFilterProxyModel>
 #include <QWidget>

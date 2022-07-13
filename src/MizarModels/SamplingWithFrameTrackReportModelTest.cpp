@@ -4,13 +4,11 @@
 
 #include <absl/container/flat_hash_map.h>
 #include <absl/container/flat_hash_set.h>
-#include <absl/strings/ascii.h>
-#include <gmock/gmock-matchers.h>
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
-#include <qvariant.h>
 
 #include <QSignalSpy>
+#include <QVariant>
 #include <Qt>
 #include <cstdint>
 #include <type_traits>
