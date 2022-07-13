@@ -6,6 +6,7 @@
 #define MIZAR_WIDGETS_SAMPLING_WITH_FRAME_TRACK_REPORT_MODEL_H_
 
 #include <absl/container/flat_hash_map.h>
+#include <qnamespace.h>
 #include <stdint.h>
 
 #include <QAbstractItemModel>
@@ -127,7 +128,7 @@ class SamplingWithFrameTrackReportModelTmpl : public QAbstractTableModel {
     return {sfids_[index.row()], static_cast<Column>(index.column())};
   }
 
-  [[nodiscard]] bool IsNumeric(const Index& index) const {
+  [[nodiscard]] bool IsNumeric(const Index& index, int role) const {
     switch (index.column) {
       case Column::kBaselineExclusivePercent:
       case Column::kBaselineExclusiveTimePerFrame:
@@ -137,6 +138,8 @@ class SamplingWithFrameTrackReportModelTmpl : public QAbstractTableModel {
       case Column::kSlowdownPercent:
       case Column::kPercentOfSlowdown:
         return true;
+      case Column::kIsSignificant:
+        return role != Qt::DisplayRole;
       default:
         return false;
     }
@@ -145,14 +148,14 @@ class SamplingWithFrameTrackReportModelTmpl : public QAbstractTableModel {
   [[nodiscard]] QVariant MakeSortValue(const QModelIndex& model_index) const {
     const Index index = MakeIndex(model_index);
 
-    if (IsNumeric(index)) return MakeNumericEntry(index);
-    return QString::fromStdString(MakeStringEntry(index)).toLower();
+    if (IsNumeric(index, kSortRole)) return MakeNumericEntry(index);
+    return QString::fromStdString(MakeStringEntry(index));
   }
 
   [[nodiscard]] std::string MakeDisplayedString(const QModelIndex& model_index) const {
     const Index index = MakeIndex(model_index);
 
-    if (IsNumeric(index)) return absl::StrFormat("%.3f", MakeNumericEntry(index));
+    if (IsNumeric(index, Qt::DisplayRole)) return absl::StrFormat("%.3f", MakeNumericEntry(index));
     return MakeStringEntry(index);
   }
 
@@ -248,6 +251,7 @@ class SamplingWithFrameTrackReportModelTmpl : public QAbstractTableModel {
       case Column::kComparisonExclusiveTimePerFrame:
         return *ComparisonExclusiveTimePerFrameUs(sfid);
       case Column::kPvalue:
+      case Column::kIsSignificant:
         return GetPvalue(sfid);
       case Column::kSlowdownPercent:
         return SlowdownPercent(sfid);

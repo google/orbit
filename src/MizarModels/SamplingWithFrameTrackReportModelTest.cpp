@@ -162,15 +162,15 @@ class SamplingWithFrameTrackReportModelTest : public ::testing::Test {
                                          ? comparison_result.corrected_pvalue
                                          : comparison_result.pvalue;
       ExpectNumericDisplayAndSortValuesAreCorrect(row, Column::kPvalue, expected_pvalue);
+
       const std::string expected_is_significant =
           expected_pvalue < significance_level ? "Yes" : "No";
       EXPECT_EQ(DisplayedString(row, Column::kIsSignificant).toStdString(),
                 expected_is_significant);
 
-      QVariant pvalue_sort_value = SortValue(row, Column::kIsSignificant);
-      EXPECT_EQ(pvalue_sort_value.type(), QMetaType::QString);
-      EXPECT_THAT(pvalue_sort_value.value<QString>().toStdString(),
-                  StrCaseEq(expected_is_significant));
+      const QVariant is_significant_sort_value = SortValue(row, Column::kIsSignificant);
+      EXPECT_EQ(is_significant_sort_value.type(), QMetaType::Double);
+      EXPECT_THAT(is_significant_sort_value.value<double>(), expected_pvalue);
     }
   }
 

@@ -30,6 +30,7 @@ void SamplingWithFrameTrackOutputWidget::UpdateReport(Report report) {
   auto proxy_model = std::make_unique<QSortFilterProxyModel>(this);
   proxy_model->setSourceModel(model.release());
   proxy_model->setSortRole(SamplingWithFrameTrackReportModel::kSortRole);
+  proxy_model->setSortCaseSensitivity(Qt::CaseSensitivity::CaseInsensitive);
 
   ui_->report_->setModel(proxy_model.release());
   ui_->report_->setSortingEnabled(true);
