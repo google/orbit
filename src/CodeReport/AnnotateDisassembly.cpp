@@ -7,6 +7,8 @@
 #include <absl/strings/str_split.h>
 #include <stdint.h>
 
+#include "OrbitBase/Sort.h"
+
 namespace orbit_code_report {
 
 static std::vector<std::string_view> SplitIntoLines(std::string_view source_file_contents) {
@@ -54,11 +56,8 @@ static std::vector<std::string_view> SplitIntoLines(std::string_view source_file
     annotating_lines.emplace_back(std::move(annotating_line));
   }
 
-  const auto by_disassembly_line_number = [](const AnnotatingLine& lhs, const AnnotatingLine& rhs) {
-    return lhs.reference_line < rhs.reference_line;
-  };
-
-  std::sort(annotating_lines.begin(), annotating_lines.end(), by_disassembly_line_number);
+  orbit_base::sort(annotating_lines.begin(), annotating_lines.end(),
+                   &AnnotatingLine::reference_line);
 
   return annotating_lines;
 }
