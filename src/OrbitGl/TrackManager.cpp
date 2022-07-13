@@ -27,6 +27,7 @@
 #include "ClientFlags/ClientFlags.h"
 #include "OrbitBase/Append.h"
 #include "OrbitBase/Logging.h"
+#include "OrbitBase/Sort.h"
 #include "OrbitBase/ThreadConstants.h"
 #include "TimeGraphLayout.h"
 #include "TrackContainer.h"
@@ -235,11 +236,12 @@ std::vector<ThreadTrack*> TrackManager::GetSortedThreadTracks() {
 
   // Tracks with instrumented timers appear first, ordered by descending order of timers.
   // The remaining tracks appear after, ordered by descending order of callstack events.
-  std::sort(sorted_tracks.begin(), sorted_tracks.end(),
-            [&num_events_by_track](ThreadTrack* a, ThreadTrack* b) {
-              return std::make_tuple(a->GetNumberOfTimers(), num_events_by_track[a]) >
-                     std::make_tuple(b->GetNumberOfTimers(), num_events_by_track[b]);
-            });
+  orbit_base::sort(
+      sorted_tracks.begin(), sorted_tracks.end(),
+      [&num_events_by_track](ThreadTrack* track) {
+        return std::make_tuple(track->GetNumberOfTimers(), num_events_by_track[track]);
+      },
+      std::greater<>{});
 
   return sorted_tracks;
 }
