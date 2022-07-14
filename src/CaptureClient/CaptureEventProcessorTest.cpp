@@ -158,6 +158,30 @@ TEST(CaptureEventProcessor, CanHandleSchedulingSlices) {
   EXPECT_EQ(actual_timer.type(), TimerInfo::kCoreActivity);
 }
 
+TEST(CaptureEventProcessor, CanHandlePresentEvent) {
+  MockCaptureListener listener;
+  auto event_processor =
+      CaptureEventProcessor::CreateForCaptureListener(&listener, std::filesystem::path{}, {});
+
+  ClientCaptureEvent event;
+  PresentEvent* present_event = event.mutable_present_event();
+  present_event->set_pid(42);
+  present_event->set_tid(24);
+  present_event->set_begin_timestamp_ns(100);
+  present_event->set_duration_ns(97);
+  present_event->set_source(PresentEvent::kD3d9);
+
+  PresentEvent actual_present_event;
+  EXPECT_CALL(listener, OnPresentEvent).Times(1).WillOnce(SaveArg<0>(&actual_present_event));
+  event_processor->ProcessEvent(event);
+
+  EXPECT_EQ(actual_present_event.pid(), present_event->pid());
+  EXPECT_EQ(actual_present_event.tid(), present_event->tid());
+  EXPECT_EQ(actual_present_event.begin_timestamp_ns(), present_event->begin_timestamp_ns());
+  EXPECT_EQ(actual_present_event.duration_ns(), present_event->duration_ns());
+  EXPECT_EQ(actual_present_event.source(), present_event->source());
+}
+
 static InternedCallstack* AddAndInitializeInternedCallstack(ClientCaptureEvent& event) {
   InternedCallstack* interned_callstack = event.mutable_interned_callstack();
   interned_callstack->set_key(1);
