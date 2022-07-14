@@ -366,7 +366,7 @@ static std::string BuildStringFromIndices(QTreeView* tree_view, const QModelInde
   }
 
   orbit_base::sort(items.begin(), items.end(), [](const ItemWithAncestorRows& row) {
-    return std::make_pair(row.ancestor_rows, row.column);
+    return std::tie(row.ancestor_rows, row.column);
   });
 
   constexpr char kFieldSeparator = '\t';
