@@ -14,8 +14,7 @@
  * limitations under the License.
  */
 
-#ifndef _LIBUNWINDSTACK_ELF_INTERFACE_H
-#define _LIBUNWINDSTACK_ELF_INTERFACE_H
+#pragma once
 
 #include <elf.h>
 #include <stdint.h>
@@ -225,5 +224,3 @@ using ElfInterface32 = ElfInterfaceImpl<ElfTypes32>;
 using ElfInterface64 = ElfInterfaceImpl<ElfTypes64>;
 
 }  // namespace unwindstack
-
-#endif  // _LIBUNWINDSTACK_ELF_INTERFACE_H

@@ -14,8 +14,7 @@
  * limitations under the License.
  */
 
-#ifndef _LIBUNWINDSTACK_PE_COFF_H
-#define _LIBUNWINDSTACK_PE_COFF_H
+#pragma once
 
 #include <string>
 
@@ -90,5 +89,3 @@ class PeCoff : public Object {
 };
 
 }  // namespace unwindstack
-
-#endif  // _LIBUNWINDSTACK_OBJECT_H

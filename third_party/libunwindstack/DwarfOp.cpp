@@ -1817,13 +1817,12 @@ template <typename AddressType>
 bool DwarfOp<AddressType>::op_bra() {
   // Requires one stack element.
   AddressType top = StackPop();
-  int16_t offset = static_cast<int16_t>(OperandAt(0));
-  uint64_t cur_offset;
-  if (top != 0) {
-    cur_offset = memory_->cur_offset() + offset;
-  } else {
-    cur_offset = memory_->cur_offset() - offset;
+  if (top == 0) {
+    return true;
   }
+
+  int16_t offset = static_cast<int16_t>(OperandAt(0));
+  uint64_t cur_offset = memory_->cur_offset() + offset;
   memory_->set_cur_offset(cur_offset);
   return true;
 }

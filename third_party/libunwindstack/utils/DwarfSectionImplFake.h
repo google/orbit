@@ -14,8 +14,7 @@
  * limitations under the License.
  */
 
-#ifndef _LIBUNWINDSTACK_UTILS_DWARF_SECTION_IMPL_FAKE_H
-#define _LIBUNWINDSTACK_UTILS_DWARF_SECTION_IMPL_FAKE_H
+#pragma once
 
 #include <unwindstack/DwarfSection.h>
 #include <unwindstack/Memory.h>
@@ -47,5 +46,3 @@ class DwarfSectionImplFake : public DwarfSectionImpl<TypeParam> {
 };
 
 }  // namespace unwindstack
-
-#endif  // _LIBUNWINDSTACK_UTILS_DWARF_SECTION_IMPL_FAKE_H

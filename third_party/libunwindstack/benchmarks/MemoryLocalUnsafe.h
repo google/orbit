@@ -14,8 +14,7 @@
  * limitations under the License.
  */
 
-#ifndef _LIBUNWINDSTACK_BENCHMARKS_MEMORY_LOCAL_UNSAFE_H
-#define _LIBUNWINDSTACK_BENCHMARKS_MEMORY_LOCAL_UNSAFE_H
+#pragma once
 
 #include <cstddef>
 #include <cstring>
@@ -39,5 +38,3 @@ class MemoryLocalUnsafe : public Memory {
 };
 
 }  // namespace unwindstack
-
-#endif  // _LIBUNWINDSTACK_BENCHMARKS_MEMORY_LOCAL_UNSAFE_H

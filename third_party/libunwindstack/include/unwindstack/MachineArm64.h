@@ -14,8 +14,7 @@
  * limitations under the License.
  */
 
-#ifndef _LIBUNWINDSTACK_MACHINE_ARM64_H
-#define _LIBUNWINDSTACK_MACHINE_ARM64_H
+#pragma once
 
 #include <stdint.h>
 
@@ -70,5 +69,3 @@ enum Arm64Reg : uint16_t {
 };
 
 }  // namespace unwindstack
-
-#endif  // _LIBUNWINDSTACK_MACHINE_ARM64_H

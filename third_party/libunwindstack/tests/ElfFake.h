@@ -14,8 +14,7 @@
  * limitations under the License.
  */
 
-#ifndef _LIBUNWINDSTACK_TESTS_ELF_FAKE_H
-#define _LIBUNWINDSTACK_TESTS_ELF_FAKE_H
+#pragma once
 
 #include <stdint.h>
 
@@ -152,5 +151,3 @@ class ElfInterfaceArmFake : public ElfInterfaceArm {
 };
 
 }  // namespace unwindstack
-
-#endif  // _LIBUNWINDSTACK_TESTS_ELF_FAKE_H

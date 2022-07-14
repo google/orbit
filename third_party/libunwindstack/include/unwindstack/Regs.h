@@ -14,8 +14,7 @@
  * limitations under the License.
  */
 
-#ifndef _LIBUNWINDSTACK_REGS_H
-#define _LIBUNWINDSTACK_REGS_H
+#pragma once
 
 #include <stdint.h>
 #include <unistd.h>
@@ -124,5 +123,3 @@ class RegsImpl : public Regs {
 uint64_t GetPcAdjustment(uint64_t rel_pc, Object* object, ArchEnum arch);
 
 }  // namespace unwindstack
-
-#endif  // _LIBUNWINDSTACK_REGS_H

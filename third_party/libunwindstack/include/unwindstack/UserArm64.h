@@ -26,8 +26,7 @@
  * SUCH DAMAGE.
  */
 
-#ifndef _LIBUNWINDSTACK_USER_ARM64_H
-#define _LIBUNWINDSTACK_USER_ARM64_H
+#pragma once
 
 namespace unwindstack {
 
@@ -39,5 +38,3 @@ struct arm64_user_regs {
 };
 
 }  // namespace unwindstack
-
-#endif  // _LIBUNWINDSTACK_USER_ARM64_H

@@ -14,8 +14,7 @@
  * limitations under the License.
  */
 
-#ifndef _LIBUNWINDSTACK_MEMORY_REMOTE_H
-#define _LIBUNWINDSTACK_MEMORY_REMOTE_H
+#pragma once
 
 #include <stdint.h>
 #include <sys/types.h>
@@ -42,5 +41,3 @@ class MemoryRemote : public Memory {
 };
 
 }  // namespace unwindstack
-
-#endif  // _LIBUNWINDSTACK_MEMORY_REMOTE_H

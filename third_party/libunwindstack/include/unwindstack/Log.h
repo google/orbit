@@ -14,8 +14,7 @@
  * limitations under the License.
  */
 
-#ifndef _LIBUNWINDSTACK_LOG_H
-#define _LIBUNWINDSTACK_LOG_H
+#pragma once
 
 #include <stdarg.h>
 #include <stdint.h>
@@ -36,5 +35,3 @@ void AsyncSafe(const char* format, ...) __printflike(1, 2);
 }  // namespace Log
 
 }  // namespace unwindstack
-
-#endif  // _LIBUNWINDSTACK_LOG_H

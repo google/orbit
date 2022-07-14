@@ -14,8 +14,7 @@
  * limitations under the License.
  */
 
-#ifndef _LIBUNWINDSTACK_UTILS_MEMORY_FAKE_H
-#define _LIBUNWINDSTACK_UTILS_MEMORY_FAKE_H
+#pragma once
 
 #include <stdint.h>
 #include <string.h>
@@ -79,5 +78,3 @@ class MemoryFakeAlwaysReadZero : public Memory {
 };
 
 }  // namespace unwindstack
-
-#endif  // _LIBUNWINDSTACK_UTILS_MEMORY_FAKE_H

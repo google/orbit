@@ -14,8 +14,7 @@
  * limitations under the License.
  */
 
-#ifndef _LIBUNWINDSTACK_MEMORY_RANGE_H
-#define _LIBUNWINDSTACK_MEMORY_RANGE_H
+#pragma once
 
 #include <stdint.h>
 
@@ -62,5 +61,3 @@ class MemoryRanges : public Memory {
 };
 
 }  // namespace unwindstack
-
-#endif  // _LIBUNWINDSTACK_MEMORY_RANGE_H

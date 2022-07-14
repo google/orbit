@@ -14,8 +14,7 @@
  * limitations under the License.
  */
 
-#ifndef _LIBUNWINDSTACK_TESTS_LOG_FAKE_H
-#define _LIBUNWINDSTACK_TESTS_LOG_FAKE_H
+#pragma once
 
 #include <string>
 
@@ -26,5 +25,3 @@ std::string GetFakeLogBuf();
 std::string GetFakeLogPrint();
 
 }  // namespace unwindstack
-
-#endif  // _LIBUNWINDSTACK_TESTS_LOG_FAKE_H

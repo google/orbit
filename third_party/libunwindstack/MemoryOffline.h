@@ -14,8 +14,7 @@
  * limitations under the License.
  */
 
-#ifndef _LIBUNWINDSTACK_MEMORY_OFFLINE_H
-#define _LIBUNWINDSTACK_MEMORY_OFFLINE_H
+#pragma once
 
 #include <stdint.h>
 
@@ -58,5 +57,3 @@ class MemoryOfflineParts : public Memory {
 };
 
 }  // namespace unwindstack
-
-#endif  // _LIBUNWINDSTACK_MEMORY_OFFLINE_H

@@ -14,8 +14,7 @@
  * limitations under the License.
  */
 
-#ifndef _LIBUNWINDSTACK_PE_COFF_INTERFACE_H
-#define _LIBUNWINDSTACK_PE_COFF_INTERFACE_H
+#pragma once
 
 #include <array>
 #include <optional>
@@ -243,5 +242,3 @@ using PeCoffInterface32 = PeCoffInterfaceImpl<uint32_t>;
 using PeCoffInterface64 = PeCoffInterfaceImpl<uint64_t>;
 
 }  // namespace unwindstack
-
-#endif  // _LIBUNWINDSTACK_PE_COFF_INTERFACE_H

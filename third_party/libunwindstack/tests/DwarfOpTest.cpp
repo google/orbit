@@ -1298,7 +1298,7 @@ TYPED_TEST_P(DwarfOpTest, op_bra) {
   ASSERT_TRUE(this->op_->Decode());
   ASSERT_EQ(0x28, this->op_->cur_op());
   ASSERT_EQ(0U, this->op_->StackSize());
-  ASSERT_EQ(offset - 5, this->mem_->cur_offset());
+  ASSERT_EQ(offset, this->mem_->cur_offset());
 
   // Push on a non-zero value with a negative branch.
   this->mem_->set_cur_offset(offset);
@@ -1320,7 +1320,7 @@ TYPED_TEST_P(DwarfOpTest, op_bra) {
   ASSERT_TRUE(this->op_->Decode());
   ASSERT_EQ(0x28, this->op_->cur_op());
   ASSERT_EQ(0U, this->op_->StackSize());
-  ASSERT_EQ(offset + 16, this->mem_->cur_offset());
+  ASSERT_EQ(offset, this->mem_->cur_offset());
 }
 
 TYPED_TEST_P(DwarfOpTest, compare_opcode_stack_error) {

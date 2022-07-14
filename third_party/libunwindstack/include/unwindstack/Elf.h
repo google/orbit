@@ -14,8 +14,7 @@
  * limitations under the License.
  */
 
-#ifndef _LIBUNWINDSTACK_ELF_H
-#define _LIBUNWINDSTACK_ELF_H
+#pragma once
 
 #include <stddef.h>
 
@@ -110,5 +109,3 @@ class Elf : public Object {
 };
 
 }  // namespace unwindstack
-
-#endif  // _LIBUNWINDSTACK_ELF_H

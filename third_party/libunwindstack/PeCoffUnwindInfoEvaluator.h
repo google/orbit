@@ -14,8 +14,7 @@
  * limitations under the License.
  */
 
-#ifndef _LIBUNWINDSTACK_PE_COFF_UNWIND_INFO_EVALUATOR_H
-#define _LIBUNWINDSTACK_PE_COFF_UNWIND_INFO_EVALUATOR_H
+#pragma once
 
 #include <memory>
 
@@ -61,5 +60,3 @@ class PeCoffUnwindInfoEvaluator {
 std::unique_ptr<PeCoffUnwindInfoEvaluator> CreatePeCoffUnwindInfoEvaluator();
 
 }  // namespace unwindstack
-
-#endif  // _LIBUNWINDSTACK_PE_COFF_UNWIND_INFO_EVALUATOR_H

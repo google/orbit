@@ -14,8 +14,7 @@
  * limitations under the License.
  */
 
-#ifndef _LIBUNWINDSTACK_GLOBAL_DEBUG_INTERFACE_H
-#define _LIBUNWINDSTACK_GLOBAL_DEBUG_INTERFACE_H
+#pragma once
 
 #include <stdint.h>
 #include <memory>
@@ -41,5 +40,3 @@ class GlobalDebugInterface {
 };
 
 }  // namespace unwindstack
-
-#endif  // _LIBUNWINDSTACK_GLOBAL_DEBUG_INTERFACE_H

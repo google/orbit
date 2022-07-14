@@ -14,8 +14,7 @@
  * limitations under the License.
  */
 
-#ifndef _LIBUNWINDSTACK_PE_COFF_FAKE_H
-#define _LIBUNWINDSTACK_PE_COFF_FAKE_H
+#pragma once
 
 #include <MemoryBuffer.h>
 #include "utils/MemoryFake.h"
@@ -125,5 +124,3 @@ class PeCoffFake {
 };
 
 }  // namespace unwindstack
-
-#endif  // _LIBUNWINDSTACK_PE_COFF_FAKE_H

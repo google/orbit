@@ -14,8 +14,7 @@
  * limitations under the License.
  */
 
-#ifndef _LIBUNWINDSTACK_PE_COFF_UNWIND_INFO_UNWINDER_X86_64_H
-#define _LIBUNWINDSTACK_PE_COFF_UNWIND_INFO_UNWINDER_X86_64_H
+#pragma once
 
 #include <memory>
 
@@ -67,5 +66,3 @@ class PeCoffUnwindInfoUnwinderX86_64 : public PeCoffNativeUnwinder {
 };
 
 }  // namespace unwindstack
-
-#endif  // _LIBUNWINDSTACK_PE_COFF_UNWIND_INFO_UNWINDER_X86_64_H

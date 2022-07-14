@@ -14,8 +14,7 @@
  * limitations under the License.
  */
 
-#ifndef _LIBUNWINDSTACK_SYMBOLS_H
-#define _LIBUNWINDSTACK_SYMBOLS_H
+#pragma once
 
 #include <stdint.h>
 
@@ -75,5 +74,3 @@ class Symbols {
 };
 
 }  // namespace unwindstack
-
-#endif  // _LIBUNWINDSTACK_SYMBOLS_H
