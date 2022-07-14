@@ -80,7 +80,7 @@ TEST(NameEqualityScopeIdProviderTest, FunctionIdToScopeIdReturnsNullOptForInvali
   auto id_provider = NameEqualityScopeIdProvider::Create(orbit_grpc_protos::CaptureOptions{});
   const std::optional<ScopeId> scope_id =
       id_provider->FunctionIdToScopeId(orbit_grpc_protos::kInvalidFunctionId);
-  EXPECT_TRUE(!scope_id.has_value());
+  EXPECT_FALSE(scope_id.has_value());
 }
 
 TEST(NameEqualityScopeIdProviderTest, ProvideIdReturnsNullOptForTimeOfInvalidType) {
@@ -88,7 +88,7 @@ TEST(NameEqualityScopeIdProviderTest, ProvideIdReturnsNullOptForTimeOfInvalidTyp
   const TimerInfo timer = MakeTimerInfo("invalid", TimerInfo::kCoreActivity);
 
   const std::optional<ScopeId> scope_id = id_provider->ProvideId(timer);
-  EXPECT_TRUE(!scope_id.has_value());
+  EXPECT_FALSE(scope_id.has_value());
 }
 
 TEST(NameEqualityScopeIdProviderTest, ProvideIdIsCorrectForApiScope) {

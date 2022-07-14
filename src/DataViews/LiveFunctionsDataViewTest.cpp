@@ -853,15 +853,13 @@ TEST_F(LiveFunctionsDataViewTest, ColumnSortingShowsRightResults) {
 }
 
 TEST_F(LiveFunctionsDataViewTest, OnDataChangeResetsHistogram) {
-  std::optional<ScopeId> nullopt = std::nullopt;
-  EXPECT_CALL(app_, ShowHistogram(nullptr, "", nullopt)).Times(1);
+  EXPECT_CALL(app_, ShowHistogram(nullptr, "", std::optional<ScopeId>{})).Times(1);
 
   view_.OnDataChanged();
 }
 
 TEST_F(LiveFunctionsDataViewTest, OnRefreshWithNoIndicesResetsHistogram) {
-  std::optional<ScopeId> nullopt = std::nullopt;
-  EXPECT_CALL(app_, ShowHistogram(nullptr, "", nullopt)).Times(2);
+  EXPECT_CALL(app_, ShowHistogram(nullptr, "", std::optional<ScopeId>{})).Times(2);
 
   view_.OnRefresh({}, RefreshMode::kOnFilter);
   view_.OnRefresh({}, RefreshMode::kOther);
@@ -889,8 +887,7 @@ TEST_F(LiveFunctionsDataViewTest, HistogramIsProperlyUpdated) {
 
 TEST_F(LiveFunctionsDataViewTest,
        RemoveHistogramWhenUpdatedWithIdOfNonDynamicallyInstrumentedFunction) {
-  std::optional<ScopeId> nullopt = std::nullopt;
-  EXPECT_CALL(app_, ShowHistogram(nullptr, "", nullopt)).Times(1);
+  EXPECT_CALL(app_, ShowHistogram(nullptr, "", std::optional<ScopeId>{})).Times(1);
 
   view_.UpdateHistogramWithScopeIds({kNonDynamicallyInstrumentedFunctionId});
 }

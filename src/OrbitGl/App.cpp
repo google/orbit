@@ -2954,6 +2954,7 @@ void OrbitApp::AddFrameTrack(const FunctionInfo& function) {
 }
 
 void OrbitApp::AddFrameTrack(uint64_t instrumented_function_id) {
+  ORBIT_CHECK(instrumented_function_id != orbit_grpc_protos::kInvalidFunctionId);
   ORBIT_CHECK(std::this_thread::get_id() == main_thread_id_);
   if (!HasCaptureData()) return;
 
