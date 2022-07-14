@@ -143,7 +143,7 @@ void RetrieveInstancesWidget::OnInitialLoadingReturnedSuccess(
   std::sort(projects.begin(), projects.end(),
             [](const Project& p1, const Project& p2) { return p1.display_name < p2.display_name; });
 
-  for (const Project& project : initial_load_result.projects) {
+  for (const Project& project : projects) {
     QString text = project.display_name;
     if (project == initial_load_result.default_project) {
       text.append(" (default)");
