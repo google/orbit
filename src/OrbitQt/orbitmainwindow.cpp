@@ -1372,9 +1372,13 @@ void OrbitMainWindow::OnTimerSelectionChanged(const orbit_client_protos::TimerIn
 }
 
 void OrbitMainWindow::on_actionOpen_Capture_triggered() {
-  QString file = QFileDialog::getOpenFileName(
-      this, "Open capture...",
-      QString::fromStdString(orbit_paths::CreateOrGetCaptureDirUnsafe().string()), "*.orbit");
+  QString capture_dir;
+  ErrorMessageOr<std::filesystem::path> capture_dir_or_error = orbit_paths::CreateOrGetCaptureDir();
+  if (capture_dir_or_error.has_value()) {
+    capture_dir = QString::fromStdString(capture_dir_or_error.value().string());
+  }
+
+  QString file = QFileDialog::getOpenFileName(this, "Open capture...", capture_dir, "*.orbit");
   if (file.isEmpty()) {
     return;
   }
