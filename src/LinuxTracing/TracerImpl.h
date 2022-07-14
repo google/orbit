@@ -20,7 +20,6 @@
 #include <optional>
 #include <vector>
 
-#include "Function.h"
 #include "GpuTracepointVisitor.h"
 #include "GrpcProtos/capture.pb.h"
 #include "GrpcProtos/tracepoint.pb.h"
@@ -69,22 +68,23 @@ class TracerImpl : public Tracer {
   void InitUprobesEventVisitor();
   bool OpenUserSpaceProbes(const std::vector<int32_t>& cpus);
   bool OpenUprobesToRecordAdditionalStackOn(const std::vector<int32_t>& cpus);
-  bool OpenUprobes(const orbit_linux_tracing::Function& function, const std::vector<int32_t>& cpus,
+  bool OpenUprobes(const orbit_grpc_protos::InstrumentedFunction& function,
+                   const std::vector<int32_t>& cpus,
                    absl::flat_hash_map<int32_t, int>* fds_per_cpu);
   bool OpenUprobesWithStack(const orbit_grpc_protos::FunctionToRecordAdditionalStackOn& function,
                             const std::vector<int32_t>& cpus,
                             absl::flat_hash_map<int32_t, int>* fds_per_cpu);
-  bool OpenUretprobes(const orbit_linux_tracing::Function& function,
+  bool OpenUretprobes(const orbit_grpc_protos::InstrumentedFunction& function,
                       const std::vector<int32_t>& cpus,
                       absl::flat_hash_map<int32_t, int>* fds_per_cpu);
   bool OpenMmapTask(const std::vector<int32_t>& cpus);
   bool OpenSampling(const std::vector<int32_t>& cpus);
 
   void AddUprobesFileDescriptors(const absl::flat_hash_map<int32_t, int>& uprobes_fds_per_cpu,
-                                 const orbit_linux_tracing::Function& function);
+                                 const orbit_grpc_protos::InstrumentedFunction& function);
 
   void AddUretprobesFileDescriptors(const absl::flat_hash_map<int32_t, int>& uretprobes_fds_per_cpu,
-                                    const orbit_linux_tracing::Function& function);
+                                    const orbit_grpc_protos::InstrumentedFunction& function);
 
   bool OpenThreadNameTracepoints(const std::vector<int32_t>& cpus);
   void InitSwitchesStatesNamesVisitor();
@@ -145,7 +145,7 @@ class TracerImpl : public Tracer {
   std::optional<uint64_t> sampling_period_ns_;
   uint16_t stack_dump_size_;
   orbit_grpc_protos::CaptureOptions::UnwindingMethod unwinding_method_;
-  std::vector<Function> instrumented_functions_;
+  std::vector<orbit_grpc_protos::InstrumentedFunction> instrumented_functions_;
   std::vector<orbit_grpc_protos::FunctionToRecordAdditionalStackOn>
       functions_to_record_additional_stack_on_;
   std::map<uint64_t, uint64_t> absolute_address_to_size_of_functions_to_stop_unwinding_at_;
