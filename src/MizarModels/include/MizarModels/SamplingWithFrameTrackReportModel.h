@@ -47,8 +47,6 @@ class SamplingWithFrameTrackReportModelTmpl : public QAbstractTableModel {
 
   static constexpr int kColumnsCount = 9;
 
-  static constexpr int kSortRole = Qt::UserRole + 1;
-
   explicit SamplingWithFrameTrackReportModelTmpl(Report report,
                                                  bool is_multiplicity_correction_enabled,
                                                  double significance_level,
@@ -85,7 +83,7 @@ class SamplingWithFrameTrackReportModelTmpl : public QAbstractTableModel {
     switch (role) {
       case Qt::DisplayRole:
         return QString::fromStdString(MakeDisplayedString(index));
-      case kSortRole:
+      case Qt::EditRole:
         return MakeSortValue(index);
       default:
         return {};
@@ -147,7 +145,7 @@ class SamplingWithFrameTrackReportModelTmpl : public QAbstractTableModel {
   [[nodiscard]] QVariant MakeSortValue(const QModelIndex& model_index) const {
     const Index index = MakeIndex(model_index);
 
-    if (IsNumeric(index, kSortRole)) return MakeNumericEntry(index);
+    if (IsNumeric(index, Qt::EditRole)) return MakeNumericEntry(index);
     return QString::fromStdString(MakeStringEntry(index));
   }
 

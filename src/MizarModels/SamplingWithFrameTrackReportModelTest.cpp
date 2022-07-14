@@ -125,7 +125,7 @@ class SamplingWithFrameTrackReportModelTest : public ::testing::Test {
   }
 
   [[nodiscard]] QVariant SortValue(int row, Column column) const {
-    return model_.data(MakeIndex(row, column), Model::kSortRole);
+    return model_.data(MakeIndex(row, column), Qt::EditRole);
   }
 
   [[nodiscard]] QModelIndex MakeIndex(int row, Column column) const {
