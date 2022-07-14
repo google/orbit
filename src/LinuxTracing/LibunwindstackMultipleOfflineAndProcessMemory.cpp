@@ -11,26 +11,27 @@ size_t LibunwindstackMultipleOfflineAndProcessMemory::Read(uint64_t addr, void* 
   const uint64_t addr_start = addr;
   const uint64_t addr_end = addr + size;
 
-  bool found_overlap = false;
+  bool found_partial_intersection = false;
 
   // If the requested address range is entirely in the stack sample's address range, read from the
   // stack buffer.
-  for (LibunwindstackOfflineMemory& stack_slice : stack_memory_slices_) {
-    if (addr_start >= stack_slice.start_address() && addr_end <= stack_slice.end_address()) {
-      return stack_slice.Read(addr, dst, size);
+  for (LibunwindstackOfflineMemory& stack_memory : stack_memories_) {
+    if (addr_start >= stack_memory.start_address() && addr_end <= stack_memory.end_address()) {
+      return stack_memory.Read(addr, dst, size);
     }
 
-    // If the requested address range is overlapping with the stack slice, something went wrong.
-    // However, there could be another stack slice that entirely contains the requested address
-    // range later, so don't give up already.
-    if (addr_start >= stack_slice.start_address() || addr_end <= stack_slice.end_address()) {
-      found_overlap = true;
+    // If the requested address range is partially intersecting with the stack slice, something went
+    // wrong. However, there could be another stack slice that entirely contains the requested
+    // address range later, so don't give up already.
+    if (addr_end > stack_memory.start_address() && addr_start < stack_memory.end_address()) {
+      found_partial_intersection = true;
     }
   }
 
-  // The requested address range is overlapping with at least one stack slice, but we don't have
-  // the offline memory for the complete range. Something went wrong, so don't read any data.
-  if (found_overlap) {
+  // The requested address range is partially intersecting with at least one stack slice, but we
+  // don't have the offline memory for the complete range. Something went wrong, so don't read any
+  // data.
+  if (found_partial_intersection) {
     return 0;
   }
 
