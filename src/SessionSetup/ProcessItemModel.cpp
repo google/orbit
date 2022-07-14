@@ -10,6 +10,7 @@
 
 #include "GrpcProtos/process.pb.h"
 #include "OrbitBase/Logging.h"
+#include "OrbitBase/Sort.h"
 #include "google/protobuf/util/message_differencer.h"
 
 namespace orbit_session_setup {
@@ -121,8 +122,7 @@ int ProcessItemModel::rowCount(const QModelIndex& parent) const {
 }
 
 void ProcessItemModel::SetProcesses(std::vector<ProcessInfo> new_processes) {
-  std::sort(new_processes.begin(), new_processes.end(),
-            [](const ProcessInfo& lhs, const ProcessInfo& rhs) { return lhs.pid() < rhs.pid(); });
+  orbit_base::sort(new_processes.begin(), new_processes.end(), &ProcessInfo::pid);
 
   auto old_iter = processes_.begin();
   auto new_iter = new_processes.begin();
