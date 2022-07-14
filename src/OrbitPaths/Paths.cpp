@@ -57,8 +57,9 @@ static std::string GetEnvVar(const char* variable_name) {
 }
 
 // Attempts to create a directory if it doesn't exist. Returns success if the creation was
-// successful or it already existed. If an error occurs its logged and returned.
-static ErrorMessageOr<void> CreateDirectoryIfNecessary(const std::filesystem::path& directory) {
+// successful or it already existed. If an error occurs its logged and returned. The difference to
+// orbit_base::CreateDirectories is the return type and logging.
+static ErrorMessageOr<void> CreateDirectory(const std::filesystem::path& directory) {
   ErrorMessageOr<bool> created_or_error = orbit_base::CreateDirectories(directory);
   if (created_or_error.has_error()) {
     std::string error_message =
@@ -87,7 +88,7 @@ static std::filesystem::path CreateAndGetConfigPath() {
 static ErrorMessageOr<std::filesystem::path> CreateAndGetConfigPathSafe() {
   OUTCOME_TRY(std::filesystem::path app_data_dir, CreateOrGetOrbitAppDataDirSafe());
   std::filesystem::path config_dir = app_data_dir / kConfigFolderName;
-  OUTCOME_TRY(CreateDirectoryIfNecessary(config_dir));
+  OUTCOME_TRY(CreateDirectory(config_dir));
   return config_dir;
 }
 
@@ -109,7 +110,7 @@ std::filesystem::path CreateOrGetCacheDir() {
 ErrorMessageOr<std::filesystem::path> CreateOrGetCacheDirSafe() {
   OUTCOME_TRY(std::filesystem::path app_data_dir, CreateOrGetOrbitAppDataDirSafe());
   std::filesystem::path cache_dir = app_data_dir / kCacheFolderName;
-  OUTCOME_TRY(CreateDirectoryIfNecessary(cache_dir));
+  OUTCOME_TRY(CreateDirectory(cache_dir));
   return cache_dir;
 }
 
@@ -140,7 +141,7 @@ std::filesystem::path CreateOrGetPresetDir() {
 ErrorMessageOr<std::filesystem::path> CreateOrGetPresetDirSafe() {
   OUTCOME_TRY(std::filesystem::path user_data_dir, CreateOrGetOrbitUserDataDirSafe());
   std::filesystem::path preset_dir = user_data_dir / kPresetsFolderName;
-  OUTCOME_TRY(CreateDirectoryIfNecessary(preset_dir));
+  OUTCOME_TRY(CreateDirectory(preset_dir));
   return preset_dir;
 }
 
@@ -153,7 +154,7 @@ std::filesystem::path CreateOrGetCaptureDir() {
 ErrorMessageOr<std::filesystem::path> CreateOrGetCaptureDirSafe() {
   OUTCOME_TRY(std::filesystem::path user_data_dir, CreateOrGetOrbitUserDataDirSafe());
   std::filesystem::path capture_dir = user_data_dir / kCapturesFolderName;
-  OUTCOME_TRY(CreateDirectoryIfNecessary(capture_dir));
+  OUTCOME_TRY(CreateDirectory(capture_dir));
   return capture_dir;
 }
 
@@ -166,7 +167,7 @@ std::filesystem::path CreateOrGetDumpDir() {
 ErrorMessageOr<std::filesystem::path> CreateOrGetDumpDirSafe() {
   OUTCOME_TRY(std::filesystem::path app_data_dir, CreateOrGetOrbitAppDataDirSafe());
   std::filesystem::path dumps_dir = app_data_dir / kDumpsFolderName;
-  OUTCOME_TRY(CreateDirectoryIfNecessary(dumps_dir));
+  OUTCOME_TRY(CreateDirectory(dumps_dir));
   return dumps_dir;
 }
 
@@ -187,7 +188,7 @@ std::filesystem::path CreateOrGetOrbitAppDataDir() {
 
 ErrorMessageOr<std::filesystem::path> CreateOrGetOrbitAppDataDirSafe() {
   std::filesystem::path path = GetOrbitAppDataDir();
-  OUTCOME_TRY(CreateDirectoryIfNecessary(path));
+  OUTCOME_TRY(CreateDirectory(path));
   return path;
 }
 
@@ -228,7 +229,7 @@ std::filesystem::path CreateOrGetOrbitUserDataDir() {
 
 ErrorMessageOr<std::filesystem::path> CreateOrGetOrbitUserDataDirSafe() {
   std::filesystem::path path = GetDocumentsPath() / kOrbitFolderName;
-  OUTCOME_TRY(CreateDirectoryIfNecessary(path));
+  OUTCOME_TRY(CreateDirectory(path));
   return path;
 }
 
@@ -250,7 +251,7 @@ std::filesystem::path CreateOrGetLogDir() {
 ErrorMessageOr<std::filesystem::path> CreateOrGetLogDirSafe() {
   OUTCOME_TRY(std::filesystem::path app_data_dir, CreateOrGetOrbitAppDataDirSafe());
   std::filesystem::path logs_dir = GetFlagLogDir().value_or(app_data_dir / kLogsFolderName);
-  OUTCOME_TRY(CreateDirectoryIfNecessary(logs_dir));
+  OUTCOME_TRY(CreateDirectory(logs_dir));
   return logs_dir;
 }
 
