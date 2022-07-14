@@ -134,8 +134,9 @@ MATCHER_P(SortedCallstackReportEq, that, "") {
   orbit_base::sort(rhs_resorted_callstacks_counts.begin(), rhs_resorted_callstacks_counts.end(),
                    callstack_count_projector, std::greater<>{});
 
-  auto callstack_count_equal = [](const CallstackCount& lhs, const CallstackCount& rhs) {
-    return lhs.count == rhs.count && lhs.callstack_id == rhs.callstack_id;
+  auto callstack_count_equal = [&callstack_count_projector](const CallstackCount& lhs,
+                                                            const CallstackCount& rhs) {
+    return callstack_count_projector(lhs) == callstack_count_projector(rhs);
   };
 
   return lhs.total_callstack_count == rhs.total_callstack_count &&
