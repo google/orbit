@@ -133,11 +133,16 @@ bool& GetIsInPayload() {
 
 }  // namespace
 
+// NOTE: All symbols defined here have private linker visibility by default. Symbols that
+// need to be visible to the tracee must be marked with `[[gnu::visibility("default")]]`. Check
+// out the CMakeLists.txt file for more information.
+
 // Initialize the LockFreeUserSpaceInstrumentationEventProducer and establish the connection to
 // OrbitService.
-void InitializeInstrumentation() { GetCaptureEventProducer(); }
+[[gnu::visibility("default")]] void InitializeInstrumentation() { GetCaptureEventProducer(); }
 
-void SetOrbitThreads(pid_t tid_0, pid_t tid_1, pid_t tid_2, pid_t tid_3, pid_t tid_4, pid_t tid_5) {
+[[gnu::visibility("default")]] void SetOrbitThreads(pid_t tid_0, pid_t tid_1, pid_t tid_2,
+                                                    pid_t tid_3, pid_t tid_4, pid_t tid_5) {
   orbit_threads[0] = tid_0;
   orbit_threads[1] = tid_1;
   orbit_threads[2] = tid_2;
@@ -146,12 +151,13 @@ void SetOrbitThreads(pid_t tid_0, pid_t tid_1, pid_t tid_2, pid_t tid_3, pid_t t
   orbit_threads[5] = tid_5;
 }
 
-void StartNewCapture(uint64_t capture_start_timestamp_ns) {
+[[gnu::visibility("default")]] void StartNewCapture(uint64_t capture_start_timestamp_ns) {
   current_capture_start_timestamp_ns = capture_start_timestamp_ns;
 }
 
-void EntryPayload(uint64_t return_address, uint64_t function_id, uint64_t stack_pointer,
-                  uint64_t return_trampoline_address) {
+[[gnu::visibility("default")]] void EntryPayload(uint64_t return_address, uint64_t function_id,
+                                                 uint64_t stack_pointer,
+                                                 uint64_t return_trampoline_address) {
   bool& is_in_payload = GetIsInPayload();
   // If something in the callgraph below `EntryPayload` or `ExitPayload` was instrumented we need to
   // break the cycle here otherwise we would crash in an infinite recursion.
@@ -186,7 +192,7 @@ void EntryPayload(uint64_t return_address, uint64_t function_id, uint64_t stack_
   is_in_payload = false;
 }
 
-uint64_t ExitPayload() {
+[[gnu::visibility("default")]] uint64_t ExitPayload() {
   bool& is_in_payload = GetIsInPayload();
   is_in_payload = true;
 

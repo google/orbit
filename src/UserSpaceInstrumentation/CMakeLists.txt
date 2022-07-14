@@ -56,7 +56,16 @@ target_link_libraries(UserSpaceInstrumentation PUBLIC
 # executed on function entry/exit of an instrumented function.
 add_library(OrbitUserSpaceInstrumentation SHARED)
 
-set_target_properties(OrbitUserSpaceInstrumentation PROPERTIES OUTPUT_NAME "orbituserspaceinstrumentation")
+# The linker flags mark all symbols coming from libraries as private and ensure that they will be hidden in the shared library.
+# The visibility properties ensure that symbols coming from this module's source files are considered private unless
+# explicitly marked visible in the source code file.
+# This prevents functions and types that we don't want to explicitly expose from leaking into the target process and from
+# potentially being used outside of this library.
+set_target_properties(OrbitUserSpaceInstrumentation PROPERTIES OUTPUT_NAME "orbituserspaceinstrumentation"
+                                                               LINK_FLAGS "-Wl,--exclude-libs,ALL"
+                                                               C_VISIBILITY_PRESET hidden
+                                                               CXX_VISIBILITY_PRESET hidden
+                                                               VISIBILITY_INLINES_HIDDEN 1)
 
 target_include_directories(OrbitUserSpaceInstrumentation PRIVATE
         ${CMAKE_CURRENT_LIST_DIR})
