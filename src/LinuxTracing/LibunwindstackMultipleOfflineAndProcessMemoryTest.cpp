@@ -119,7 +119,8 @@ TEST(LibunwindstackMultipleOfflineAndProcessMemory,
   EXPECT_EQ(destination[2], 0x11);
 }
 
-TEST(LibunwindstackMultipleOfflineAndProcessMemory, ReadFromCompleteMemoryEvenIfOverlapsWithOtherStackSlice) {
+TEST(LibunwindstackMultipleOfflineAndProcessMemory,
+     ReadFromCompleteMemoryEvenIfOverlapsWithOtherStackSlice) {
   constexpr uint64_t kStartAddress1 = 0xADD8E55;
   std::vector<char> bytes1{0x01, 0x10, 0x20, 0x30, 0x40};
   StackSliceView stack_slice1(kStartAddress1, bytes1.size(), bytes1.data());

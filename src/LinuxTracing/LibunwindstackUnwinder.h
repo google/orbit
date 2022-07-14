@@ -20,8 +20,8 @@
 #include <utility>
 #include <vector>
 
-#include "OrbitBase/Result.h"
 #include "LibunwindstackMultipleOfflineAndProcessMemory.h"
+#include "OrbitBase/Result.h"
 
 namespace orbit_linux_tracing {
 
