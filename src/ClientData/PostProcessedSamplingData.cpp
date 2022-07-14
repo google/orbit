@@ -39,12 +39,12 @@ std::vector<const ThreadSampleData*> PostProcessedSamplingData::GetSortedThreadS
   }
   orbit_base::sort(
       std::begin(sorted_thread_sample_data), std::end(sorted_thread_sample_data),
-      [](const ThreadSampleData* lhs) {
+      [](const ThreadSampleData* thread_sample_data) {
         // Make sure the ThreadSampleData associated with "all threads" is first even
         // if we only have one thread.
-        return (lhs->thread_id == orbit_base::kAllProcessThreadsTid)
+        return (thread_sample_data->thread_id == orbit_base::kAllProcessThreadsTid)
                    ? std::numeric_limits<uint32_t>::max()
-                   : lhs->samples_count;
+                   : thread_sample_data->samples_count;
       },
       std::greater<>{});
   return sorted_thread_sample_data;
