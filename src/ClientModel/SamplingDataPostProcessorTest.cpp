@@ -120,8 +120,8 @@ MATCHER_P(SortedCallstackReportEq, that, "") {
 
   // `SortedCallstackReport::callstacks_counts` is sorted only by `CallstackCount::count` (in
   // descending order), hence the order is not unique. Sort again considering
-  // `CallstackCount::callstack_id`, too, to facilitate the comparison of `SortedCallstackReport`s
-  // for equality.
+  // `CallstackCount::callstack_id`, too  (also descending, it doesn't matter which way), to
+  // facilitate the comparison of `SortedCallstackReport`s for equality.
   auto callstack_count_projector = [](const CallstackCount& callstack_count) {
     return std::make_pair(callstack_count.count, callstack_count.callstack_id);
   };
