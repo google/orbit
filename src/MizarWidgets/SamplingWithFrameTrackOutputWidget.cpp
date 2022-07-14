@@ -23,11 +23,16 @@ SamplingWithFrameTrackOutputWidget::SamplingWithFrameTrackOutputWidget(QWidget* 
 SamplingWithFrameTrackOutputWidget::~SamplingWithFrameTrackOutputWidget() = default;
 
 void SamplingWithFrameTrackOutputWidget::UpdateReport(Report report) {
-  auto model = std::make_unique<SamplingWithFrameTrackReportModel>(
+  model_ = new SamplingWithFrameTrackReportModel(  // NOLINT
       std::move(report), is_multiplicity_correction_enabled_, confidence_level_, this);
-  model_ = model.get();
 
-  ui_->report_->setModel(model.release());
+  auto* proxy_model = new QSortFilterProxyModel(this);  // NOLINT
+  proxy_model->setSourceModel(model_);
+  proxy_model->setSortRole(Qt::EditRole);
+  proxy_model->setSortCaseSensitivity(Qt::CaseSensitivity::CaseInsensitive);
+
+  ui_->report_->setModel(proxy_model);
+  ui_->report_->setSortingEnabled(true);
   ResizeReportColumns(width());
 }
 
