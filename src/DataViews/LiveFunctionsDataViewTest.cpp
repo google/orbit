@@ -729,27 +729,33 @@ TEST_F(LiveFunctionsDataViewTest, UpdateHighlightedFunctionsOnSelect) {
 
   // Single selection will hightlight the selected function
   {
-    EXPECT_CALL(app_, SetHighlightedScopeId).Times(1).WillOnce([&](ScopeId highlighted_scope_id) {
-      EXPECT_EQ(highlighted_scope_id, kScopeIds[2]);
-    });
+    EXPECT_CALL(app_, SetHighlightedScopeId)
+        .Times(1)
+        .WillOnce([&](std::optional<ScopeId> highlighted_scope_id) {
+          EXPECT_EQ(highlighted_scope_id, kScopeIds[2]);
+        });
 
     view_.OnSelect({2});
   }
 
   // Multiple selection will hightlight the first selected function
   {
-    EXPECT_CALL(app_, SetHighlightedScopeId).Times(1).WillOnce([&](ScopeId highlighted_scope_id) {
-      EXPECT_EQ(highlighted_scope_id, kScopeIds[1]);
-    });
+    EXPECT_CALL(app_, SetHighlightedScopeId)
+        .Times(1)
+        .WillOnce([&](std::optional<ScopeId> highlighted_scope_id) {
+          EXPECT_EQ(highlighted_scope_id, kScopeIds[1]);
+        });
 
     view_.OnSelect({1, 2});
   }
 
   // Empty selection will clear the function highlighting
   {
-    EXPECT_CALL(app_, SetHighlightedScopeId).Times(1).WillOnce([&](ScopeId highlighted_scope_id) {
-      EXPECT_EQ(highlighted_scope_id, orbit_client_data::kInvalidScopeId);
-    });
+    EXPECT_CALL(app_, SetHighlightedScopeId)
+        .Times(1)
+        .WillOnce([&](std::optional<ScopeId> highlighted_scope_id) {
+          EXPECT_EQ(highlighted_scope_id, std::nullopt);
+        });
 
     view_.OnSelect({});
   }
@@ -847,13 +853,13 @@ TEST_F(LiveFunctionsDataViewTest, ColumnSortingShowsRightResults) {
 }
 
 TEST_F(LiveFunctionsDataViewTest, OnDataChangeResetsHistogram) {
-  EXPECT_CALL(app_, ShowHistogram(nullptr, "", orbit_client_data::kInvalidScopeId)).Times(1);
+  EXPECT_CALL(app_, ShowHistogram(nullptr, "", std::optional<ScopeId>{})).Times(1);
 
   view_.OnDataChanged();
 }
 
 TEST_F(LiveFunctionsDataViewTest, OnRefreshWithNoIndicesResetsHistogram) {
-  EXPECT_CALL(app_, ShowHistogram(nullptr, "", orbit_client_data::kInvalidScopeId)).Times(2);
+  EXPECT_CALL(app_, ShowHistogram(nullptr, "", std::optional<ScopeId>{})).Times(2);
 
   view_.OnRefresh({}, RefreshMode::kOnFilter);
   view_.OnRefresh({}, RefreshMode::kOther);
@@ -870,7 +876,8 @@ TEST_F(LiveFunctionsDataViewTest, HistogramIsProperlyUpdated) {
   view_.OnDataChanged();
   AddFunctionsByIndices({0});
 
-  EXPECT_CALL(app_, ShowHistogram(testing::Pointee(kDurations), kPrettyNames[0], kScopeIds[0]))
+  EXPECT_CALL(app_, ShowHistogram(testing::Pointee(kDurations), kPrettyNames[0],
+                                  std::optional<ScopeId>(kScopeIds[0])))
       .Times(3);
 
   view_.OnRefresh({0}, RefreshMode::kOnFilter);
@@ -880,7 +887,7 @@ TEST_F(LiveFunctionsDataViewTest, HistogramIsProperlyUpdated) {
 
 TEST_F(LiveFunctionsDataViewTest,
        RemoveHistogramWhenUpdatedWithIdOfNonDynamicallyInstrumentedFunction) {
-  EXPECT_CALL(app_, ShowHistogram(nullptr, "", orbit_client_data::kInvalidScopeId)).Times(1);
+  EXPECT_CALL(app_, ShowHistogram(nullptr, "", std::optional<ScopeId>{})).Times(1);
 
   view_.UpdateHistogramWithScopeIds({kNonDynamicallyInstrumentedFunctionId});
 }

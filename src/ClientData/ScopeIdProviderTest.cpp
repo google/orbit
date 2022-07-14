@@ -4,6 +4,7 @@
 
 #include <absl/container/flat_hash_set.h>
 #include <absl/flags/flag.h>
+#include <gmock/gmock-matchers.h>
 #include <gtest/gtest.h>
 
 #include <algorithm>
@@ -58,8 +59,9 @@ static void AssertNameToIdIsBijective(const std::vector<orbit_client_protos::Tim
 static std::vector<ScopeId> GetIds(ScopeIdProvider* id_provider,
                                    const std::vector<orbit_client_protos::TimerInfo>& timers) {
   std::vector<ScopeId> ids;
-  std::transform(std::begin(timers), std::end(timers), std::back_inserter(ids),
-                 [id_provider](const TimerInfo& timer) { return id_provider->ProvideId(timer); });
+  std::transform(
+      std::begin(timers), std::end(timers), std::back_inserter(ids),
+      [id_provider](const TimerInfo& timer) { return id_provider->ProvideId(timer).value(); });
   return ids;
 }
 
@@ -72,6 +74,21 @@ static void TestProvideId(std::vector<orbit_client_protos::TimerInfo>& timer_inf
   for (size_t i = 0; i < timer_infos.size(); ++i) {
     EXPECT_EQ(id_provider->GetScopeInfo(ids[i]).GetName(), timer_infos[i].api_scope_name());
   }
+}
+
+TEST(NameEqualityScopeIdProviderTest, FunctionIdToScopeIdReturnsNullOptForInvalidFunctionId) {
+  auto id_provider = NameEqualityScopeIdProvider::Create(orbit_grpc_protos::CaptureOptions{});
+  const std::optional<ScopeId> scope_id =
+      id_provider->FunctionIdToScopeId(orbit_grpc_protos::kInvalidFunctionId);
+  EXPECT_FALSE(scope_id.has_value());
+}
+
+TEST(NameEqualityScopeIdProviderTest, ProvideIdReturnsNullOptForTimeOfInvalidType) {
+  auto id_provider = NameEqualityScopeIdProvider::Create(orbit_grpc_protos::CaptureOptions{});
+  const TimerInfo timer = MakeTimerInfo("invalid", TimerInfo::kCoreActivity);
+
+  const std::optional<ScopeId> scope_id = id_provider->ProvideId(timer);
+  EXPECT_FALSE(scope_id.has_value());
 }
 
 TEST(NameEqualityScopeIdProviderTest, ProvideIdIsCorrectForApiScope) {
@@ -115,7 +132,7 @@ TEST(NameEqualityScopeIdProviderTest, CreateIsCorrect) {
   auto id_provider = NameEqualityScopeIdProvider::Create(capture_options);
   TimerInfo timer_info = MakeTimerInfo("A", TimerInfo::kApiScope);
 
-  ASSERT_EQ(*id_provider->ProvideId(timer_info),
+  ASSERT_EQ(*id_provider->ProvideId(timer_info).value(),
             *std::max_element(std::begin(kFunctionIds), std::end(kFunctionIds)) + 1);
 
   for (size_t i = 0; i < kFunctionCount; ++i) {

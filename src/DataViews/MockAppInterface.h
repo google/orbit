@@ -46,8 +46,9 @@ class MockAppInterface : public AppInterface {
   MOCK_METHOD(bool, IsFunctionSelected, (const orbit_client_data::SampledFunction&),
               (const, override));
 
-  MOCK_METHOD(ScopeId, GetHighlightedScopeId, (), (const, override));
-  MOCK_METHOD(void, SetHighlightedScopeId, (ScopeId highlighted_scope_id), (override));
+  MOCK_METHOD(std::optional<ScopeId>, GetHighlightedScopeId, (), (const, override));
+  MOCK_METHOD(void, SetHighlightedScopeId, (std::optional<ScopeId> highlighted_scope_id),
+              (override));
   MOCK_METHOD(void, SetVisibleScopeIds, (absl::flat_hash_set<ScopeId> visible_scopes), (override));
   MOCK_METHOD(void, DeselectTimer, (), (override));
   MOCK_METHOD(bool, IsCapturing, (), (const, override));
@@ -104,7 +105,7 @@ class MockAppInterface : public AppInterface {
 
   MOCK_METHOD(void, ShowHistogram,
               (const std::vector<uint64_t>* data, const std::string& function_name,
-               ScopeId scope_id),
+               std::optional<ScopeId> scope_id),
               (override));
 
   MOCK_METHOD(uint64_t, ProvideScopeId, (const orbit_client_protos::TimerInfo& timer_info),

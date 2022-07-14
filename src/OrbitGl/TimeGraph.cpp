@@ -782,7 +782,8 @@ void TimeGraph::JumpToNeighborTimer(const TimerInfo* from, JumpDirection jump_di
     jump_scope = JumpScope::kSameDepth;
   }
   const TimerInfo* goal = nullptr;
-  auto scope_id = capture_data_->ProvideScopeId(*from);
+  const std::optional<ScopeId> scope_id = capture_data_->ProvideScopeId(*from);
+  if (!scope_id.has_value()) return;
   auto current_time = from->end();
   auto thread_id = from->thread_id();
   if (jump_direction == JumpDirection::kPrevious) {
@@ -791,10 +792,10 @@ void TimeGraph::JumpToNeighborTimer(const TimerInfo* from, JumpDirection jump_di
         goal = track_container_->FindPrevious(*from);
         break;
       case JumpScope::kSameFunction:
-        goal = FindPreviousScopeTimer(scope_id, current_time);
+        goal = FindPreviousScopeTimer(scope_id.value(), current_time);
         break;
       case JumpScope::kSameThreadSameFunction:
-        goal = FindPreviousScopeTimer(scope_id, current_time, thread_id);
+        goal = FindPreviousScopeTimer(scope_id.value(), current_time, thread_id);
         break;
       default:
         // Other choices are not implemented.
@@ -807,10 +808,10 @@ void TimeGraph::JumpToNeighborTimer(const TimerInfo* from, JumpDirection jump_di
         goal = track_container_->FindNext(*from);
         break;
       case JumpScope::kSameFunction:
-        goal = FindNextScopeTimer(scope_id, current_time);
+        goal = FindNextScopeTimer(scope_id.value(), current_time);
         break;
       case JumpScope::kSameThreadSameFunction:
-        goal = FindNextScopeTimer(scope_id, current_time, thread_id);
+        goal = FindNextScopeTimer(scope_id.value(), current_time, thread_id);
         break;
       default:
         ORBIT_UNREACHABLE();

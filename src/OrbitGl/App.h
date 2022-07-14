@@ -465,8 +465,8 @@ class OrbitApp final : public DataViewFactory,
   void SetVisibleScopeIds(absl::flat_hash_set<ScopeId> visible_scope_ids) override;
   [[nodiscard]] bool IsScopeVisible(ScopeId scope_id) const;
 
-  [[nodiscard]] ScopeId GetHighlightedScopeId() const override;
-  void SetHighlightedScopeId(ScopeId highlighted_scope_id) override;
+  [[nodiscard]] std::optional<ScopeId> GetHighlightedScopeId() const override;
+  void SetHighlightedScopeId(std::optional<ScopeId> highlighted_scope_id) override;
 
   [[nodiscard]] orbit_client_data::ThreadID selected_thread_id() const;
   void set_selected_thread_id(orbit_client_data::ThreadID thread_id);
@@ -485,7 +485,7 @@ class OrbitApp final : public DataViewFactory,
   void SelectTimer(const orbit_client_protos::TimerInfo* timer_info);
   void DeselectTimer() override;
 
-  [[nodiscard]] ScopeId GetScopeIdToHighlight() const;
+  [[nodiscard]] std::optional<ScopeId> GetScopeIdToHighlight() const;
   [[nodiscard]] uint64_t GetGroupIdToHighlight() const;
 
   // origin_is_multiple_threads defines if the selection is specific to a single thread,
@@ -603,7 +603,7 @@ class OrbitApp final : public DataViewFactory,
   void CaptureMetricProcessTimer(const orbit_client_protos::TimerInfo& timer);
 
   void ShowHistogram(const std::vector<uint64_t>* data, const std::string& scope_name,
-                     ScopeId scope_id) override;
+                     std::optional<ScopeId> scope_id) override;
 
   void RequestSymbolDownloadStop(absl::Span<const orbit_client_data::ModuleData* const> modules,
                                  bool show_dialog);

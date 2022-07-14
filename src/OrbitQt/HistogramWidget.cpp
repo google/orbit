@@ -402,7 +402,7 @@ constexpr uint32_t kSeed = 31;
 }
 
 void HistogramWidget::UpdateData(const std::vector<uint64_t>* data, std::string scope_name,
-                                 ScopeId scope_id) {
+                                 std::optional<ScopeId> scope_id) {
   ORBIT_SCOPE_FUNCTION;
   if (scope_data_.has_value() && scope_data_->id == scope_id) return;
 
@@ -410,11 +410,15 @@ void HistogramWidget::UpdateData(const std::vector<uint64_t>* data, std::string 
   ranges_stack_ = {};
   EmitSignalSelectionRangeChange();
 
-  scope_data_.emplace(data, std::move(scope_name), scope_id);
+  if (scope_id.has_value()) {
+    scope_data_.emplace(data, std::move(scope_name), scope_id.value());
+  } else {
+    scope_data_ = std::nullopt;
+  }
 
-  if (data != nullptr) {
+  if (scope_data_.has_value() && data != nullptr) {
     std::optional<orbit_statistics::Histogram> histogram =
-        orbit_statistics::BuildHistogram(*scope_data_->data);
+        orbit_statistics::BuildHistogram(*scope_data_.value().data);
     if (histogram) {
       histogram_stack_.push(std::move(*histogram));
     }

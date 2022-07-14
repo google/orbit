@@ -12,6 +12,7 @@
 #include <algorithm>
 #include <limits>
 #include <memory>
+#include <optional>
 #include <utility>
 
 #include "ApiInterface/Orbit.h"
@@ -188,12 +189,12 @@ bool TimerTrack::DrawTimer(TextRenderer& text_renderer, const TimerInfo* prev_ti
     }
   }
 
-  ScopeId scope_id = app_->GetCaptureData().ProvideScopeId(*current_timer_info);
+  std::optional<ScopeId> scope_id = app_->GetCaptureData().ProvideScopeId(*current_timer_info);
   uint64_t group_id = current_timer_info->group_id();
 
   bool is_selected = current_timer_info == draw_data.selected_timer;
   bool is_scope_id_highlighted =
-      scope_id != orbit_client_data::kInvalidScopeId && scope_id == draw_data.highlighted_scope_id;
+      scope_id.has_value() && scope_id.value() == draw_data.highlighted_scope_id;
   bool is_group_id_highlighted =
       group_id != kOrbitDefaultGroupId && group_id == draw_data.highlighted_group_id;
   bool is_highlighted = !is_selected && (is_scope_id_highlighted || is_group_id_highlighted);
@@ -381,8 +382,8 @@ internal::DrawData TimerTrack::GetDrawData(
     uint64_t min_tick, uint64_t max_tick, float track_pos_x, float track_width,
     PrimitiveAssembler* primitive_assembler, const orbit_gl::TimelineInfoInterface* timeline_info,
     const orbit_gl::Viewport* viewport, bool is_collapsed,
-    const orbit_client_protos::TimerInfo* selected_timer, ScopeId highlighted_scope_id,
-    uint64_t highlighted_group_id,
+    const orbit_client_protos::TimerInfo* selected_timer,
+    std::optional<ScopeId> highlighted_scope_id, uint64_t highlighted_group_id,
     std::optional<orbit_statistics::HistogramSelectionRange> histogram_selection_range) {
   internal::DrawData draw_data{};
   draw_data.min_tick = min_tick;

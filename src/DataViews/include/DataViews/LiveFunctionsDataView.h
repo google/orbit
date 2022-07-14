@@ -76,7 +76,7 @@ class LiveFunctionsDataView : public DataView {
   // load/finalization this may be optimized via populating it function-wise on user's demand
 
   LiveFunctionsInterface* live_functions_;
-  ScopeId selected_scope_id_;
+  std::optional<ScopeId> selected_scope_id_;
 
   enum ColumnIndex {
     kColumnType,
