@@ -39,6 +39,7 @@ class FunctionInfo {
 
   [[nodiscard]] const std::string& module_path() const { return module_path_; }
   [[nodiscard]] const std::string& module_build_id() const { return module_build_id_; }
+  // The virtual address as specified in the object file.
   [[nodiscard]] uint64_t address() const { return address_; }
   [[nodiscard]] uint64_t size() const { return size_; }
   [[nodiscard]] const std::string& pretty_name() const { return pretty_name_; }

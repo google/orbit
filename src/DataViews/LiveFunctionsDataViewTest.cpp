@@ -182,7 +182,7 @@ std::unique_ptr<CaptureData> GenerateTestCaptureData(
         module_manager->GetMutableModuleByPathAndBuildId(kModulePaths[i], kBuildIds[i]);
     module_data->AddSymbols(module_symbols);
 
-    const FunctionInfo& function = *module_data->FindFunctionByElfAddress(kAddresses[i], true);
+    const FunctionInfo& function = *module_data->FindFunctionByVirtualAddress(kAddresses[i], true);
     InstrumentedFunction* instrumented_function =
         capture_started.mutable_capture_options()->add_instrumented_functions();
     instrumented_function->set_file_path(function.module_path());

@@ -222,8 +222,8 @@ TEST_F(CallstackDataViewTest, ColumnValuesAreCorrect) {
 
   // Test the case that both ProcessData::FindModuleByAddress and
   // ModuleManager::GetModuleByModuleInMemoryAndAbsoluteAddress have finding but
-  // ModuleData::FindFunctionByElfAddress has no finding. In this case, frame.module is not nullptr
-  // but frame.function is nullptr.
+  // ModuleData::FindFunctionByVirtualAddress has no finding. In this case, frame.module is not
+  // nullptr but frame.function is nullptr.
   {
     constexpr uint64_t kNoFindingInModuleData = 0x3200;
     SetCallstackFromFrames({kNoFindingInModuleData});
@@ -238,7 +238,7 @@ TEST_F(CallstackDataViewTest, ColumnValuesAreCorrect) {
 
   // Test the case that ProcessData::FindModuleByAddress,
   // ModuleManager::GetModuleByModuleInMemoryAndAbsoluteAddress, and
-  // ModuleData::FindFunctionByElfAddress all have findings. In this case, both frame.module and
+  // ModuleData::FindFunctionByVirtualAddress all have findings. In this case, both frame.module and
   // frame.function are not nullptr.
   {
     constexpr uint64_t kAllHaveFindings = 0x3140;

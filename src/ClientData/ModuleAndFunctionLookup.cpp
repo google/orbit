@@ -25,7 +25,7 @@ FindFunctionAbsoluteAddressByInstructionAbsoluteAddressUsingModulesInMemory(
   const uint64_t virtual_address = orbit_object_utils::SymbolAbsoluteAddressToVirtualAddress(
       absolute_address, module_base_address, module->load_bias(),
       module->executable_segment_offset());
-  const auto* function_info = module->FindFunctionByElfAddress(virtual_address, false);
+  const auto* function_info = module->FindFunctionByVirtualAddress(virtual_address, false);
   if (function_info == nullptr) return std::nullopt;
 
   return orbit_object_utils::SymbolVirtualAddressToAbsoluteAddress(
@@ -87,9 +87,9 @@ const FunctionInfo* FindFunctionByModulePathBuildIdAndOffset(const ModuleManager
     return nullptr;
   }
 
-  uint64_t address = module_data->ConvertFromOffsetInFileToVirtualAddress(offset);
+  uint64_t virtual_address = module_data->ConvertFromOffsetInFileToVirtualAddress(offset);
 
-  return module_data->FindFunctionByElfAddress(address, /*is_exact=*/true);
+  return module_data->FindFunctionByVirtualAddress(virtual_address, /*is_exact=*/true);
 }
 
 const FunctionInfo* FindFunctionByModulePathBuildIdAndVirtualAddress(
@@ -100,7 +100,7 @@ const FunctionInfo* FindFunctionByModulePathBuildIdAndVirtualAddress(
     return nullptr;
   }
 
-  return module_data->FindFunctionByElfAddress(virtual_address, /*is_exact=*/true);
+  return module_data->FindFunctionByVirtualAddress(virtual_address, /*is_exact=*/true);
 }
 
 const std::string& GetModulePathByAddress(const ModuleManager& module_manager,
@@ -158,7 +158,7 @@ const FunctionInfo* FindFunctionByAddress(const ProcessData& process,
   const uint64_t virtual_address = orbit_object_utils::SymbolAbsoluteAddressToVirtualAddress(
       absolute_address, module_base_address, module->load_bias(),
       module->executable_segment_offset());
-  return module->FindFunctionByElfAddress(virtual_address, is_exact);
+  return module->FindFunctionByVirtualAddress(virtual_address, is_exact);
 }
 
 [[nodiscard]] const ModuleData* FindModuleByAddress(const ProcessData& process,

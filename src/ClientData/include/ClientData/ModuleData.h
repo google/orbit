@@ -52,8 +52,8 @@ class ModuleData final {
   // cannot be updated because it was loaded.
   [[nodiscard]] bool UpdateIfChangedAndNotLoaded(orbit_grpc_protos::ModuleInfo info);
 
-  [[nodiscard]] const FunctionInfo* FindFunctionByElfAddress(uint64_t elf_address,
-                                                             bool is_exact) const;
+  [[nodiscard]] const FunctionInfo* FindFunctionByVirtualAddress(uint64_t virtual_address,
+                                                                 bool is_exact) const;
   void AddSymbols(const orbit_grpc_protos::ModuleSymbols& module_symbols);
   [[nodiscard]] const FunctionInfo* FindFunctionFromHash(uint64_t hash) const;
   [[nodiscard]] const FunctionInfo* FindFunctionFromPrettyName(std::string_view pretty_name) const;
