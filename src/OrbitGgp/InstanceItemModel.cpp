@@ -12,13 +12,14 @@
 #include <utility>
 
 #include "OrbitBase/Logging.h"
+#include "OrbitBase/Sort.h"
 #include "OrbitGgp/Instance.h"
 
 namespace orbit_ggp {
 
 InstanceItemModel::InstanceItemModel(QVector<Instance> instances, QObject* parent)
     : QAbstractItemModel(parent), instances_(std::move(instances)) {
-  std::sort(instances_.begin(), instances_.end(), &Instance::CmpById);
+  orbit_base::sort(instances_.begin(), instances_.end(), &Instance::id);
 }
 
 int InstanceItemModel::columnCount(const QModelIndex& parent) const {
@@ -106,7 +107,7 @@ int InstanceItemModel::rowCount(const QModelIndex& parent) const {
 }
 
 void InstanceItemModel::SetInstances(QVector<Instance> new_instances) {
-  std::sort(new_instances.begin(), new_instances.end(), &Instance::CmpById);
+  orbit_base::sort(new_instances.begin(), new_instances.end(), &Instance::id);
 
   QVector<Instance>& old_instances(instances_);
 

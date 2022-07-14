@@ -162,29 +162,6 @@ TEST(InstanceTests, CreateFromJson) {
   }
 }
 
-TEST(InstanceTests, CmpById) {
-  Instance test_instance_0;
-  Instance test_instance_1;
-
-  // Empty id
-  EXPECT_FALSE(Instance::CmpById(test_instance_0, test_instance_1));
-
-  // Same id
-  test_instance_0.id = QString{"id"};
-  test_instance_1.id = QString{"id"};
-  EXPECT_FALSE(Instance::CmpById(test_instance_0, test_instance_1));
-
-  // first < second
-  test_instance_0.id = QString{"id a"};
-  test_instance_1.id = QString{"id b"};
-  EXPECT_TRUE(Instance::CmpById(test_instance_0, test_instance_1));
-
-  // first > second
-  test_instance_0.id = QString{"id b"};
-  test_instance_1.id = QString{"id a"};
-  EXPECT_FALSE(Instance::CmpById(test_instance_0, test_instance_1));
-}
-
 TEST(InstanceTests, EqualToOperator) {
   Instance test_instance_0;
   Instance test_instance_1;

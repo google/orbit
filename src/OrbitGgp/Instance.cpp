@@ -82,6 +82,4 @@ ErrorMessageOr<Instance> Instance::CreateFromJson(const QByteArray& json) {
   return GetInstanceFromJson(doc.object());
 }
 
-bool Instance::CmpById(const Instance& lhs, const Instance& rhs) { return lhs.id < rhs.id; }
-
 }  // namespace orbit_ggp
