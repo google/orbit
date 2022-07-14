@@ -14,8 +14,7 @@
  * limitations under the License.
  */
 
-#ifndef _LIBUNWINDSTACK_PE_COFF_UNWIND_INFOS_H
-#define _LIBUNWINDSTACK_PE_COFF_UNWIND_INFOS_H
+#pragma once
 
 #include <string.h>
 #include <memory>
@@ -81,5 +80,3 @@ std::unique_ptr<PeCoffUnwindInfos> CreatePeCoffUnwindInfos(Memory* object_file_m
                                                            std::vector<Section> sections);
 
 }  // namespace unwindstack
-
-#endif  // _LIBUNWINDSTACK_PE_COFF_UNWIND_INFOS_H

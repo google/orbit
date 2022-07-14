@@ -14,8 +14,7 @@
  * limitations under the License.
  */
 
-#ifndef _LIBUNWINDSTACK_PE_COFF_EPILOG_H
-#define _LIBUNWINDSTACK_PE_COFF_EPILOG_H
+#pragma once
 
 #include <memory>
 
@@ -57,5 +56,3 @@ std::unique_ptr<PeCoffEpilog> CreatePeCoffEpilog(Memory* object_file_memory,
                                                  std::vector<Section> sections);
 
 }  // namespace unwindstack
-
-#endif  // _LIBUNWINDSTACK_PE_COFF_EPILOG_H

@@ -14,8 +14,7 @@
  * limitations under the License.
  */
 
-#ifndef _LIBUNWINDSTACK_PE_COFF_RUNTIME_FUNCTIONS_H
-#define _LIBUNWINDSTACK_PE_COFF_RUNTIME_FUNCTIONS_H
+#pragma once
 
 #include <memory>
 #include <vector>
@@ -49,5 +48,3 @@ class PeCoffRuntimeFunctions {
 std::unique_ptr<PeCoffRuntimeFunctions> CreatePeCoffRuntimeFunctions(Memory* object_file_memory);
 
 }  // namespace unwindstack
-
-#endif  // _LIBUNWINDSTACK_PE_COFF_RUNTIME_FUNCTIONS_H

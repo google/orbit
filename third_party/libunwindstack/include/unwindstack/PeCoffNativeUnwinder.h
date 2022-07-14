@@ -14,8 +14,7 @@
  * limitations under the License.
  */
 
-#ifndef _LIBUNWINDSTACK_PE_COFF_NATIVE_UNWINDER_H
-#define _LIBUNWINDSTACK_PE_COFF_NATIVE_UNWINDER_H
+#pragma once
 
 #include <unwindstack/Error.h>
 #include <unwindstack/Memory.h>
@@ -38,5 +37,3 @@ class PeCoffNativeUnwinder {
 };
 
 }  // namespace unwindstack
-
-#endif  // _LIBUNWINDSTACK_PE_COFF_NATIVE_UNWINDER_H

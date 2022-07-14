@@ -14,8 +14,7 @@
  * limitations under the License.
  */
 
-#ifndef _LIBUNWINDSTACK_OBJECT_H
-#define _LIBUNWINDSTACK_OBJECT_H
+#pragma once
 
 #include <string>
 
@@ -89,5 +88,3 @@ class Object {
 };
 
 }  // namespace unwindstack
-
-#endif  // _LIBUNWINDSTACK_OBJECT_H
