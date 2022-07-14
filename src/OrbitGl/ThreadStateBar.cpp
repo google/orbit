@@ -226,7 +226,7 @@ void ThreadStateBar::DrawThreadStateSliceOutline(PrimitiveAssembler& primitive_a
       Vec2{left_x, bottom_y},
   };
   Quad outline{outline_points};
-  primitive_assembler.AddQuadBorder(outline, GlCanvas::kZValueBoxBorder, outline_color);
+  primitive_assembler.AddQuadBorder(outline, GlCanvas::kZValueOverlay, outline_color);
 }
 
 void ThreadStateBar::DoUpdatePrimitives(PrimitiveAssembler& primitive_assembler,
