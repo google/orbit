@@ -4,6 +4,8 @@
 
 #include "MizarWidgets/SamplingWithFrameTrackOutputWidget.h"
 
+#include <QLineEdit>
+#include <QObject>
 #include <QResizeEvent>
 #include <QSortFilterProxyModel>
 #include <QWidget>
@@ -30,6 +32,12 @@ void SamplingWithFrameTrackOutputWidget::UpdateReport(Report report) {
   proxy_model->setSourceModel(model_);
   proxy_model->setSortRole(Qt::EditRole);
   proxy_model->setSortCaseSensitivity(Qt::CaseSensitivity::CaseInsensitive);
+  proxy_model->setFilterCaseSensitivity(Qt::CaseSensitivity::CaseInsensitive);
+  proxy_model->setFilterKeyColumn(
+      static_cast<int>(SamplingWithFrameTrackReportModel::Column::kFunctionName));
+
+  QObject::connect(ui_->filter_line_, &QLineEdit::textChanged, proxy_model,
+                   &QSortFilterProxyModel::setFilterFixedString);
 
   ui_->report_->setModel(proxy_model);
   ui_->report_->setSortingEnabled(true);
