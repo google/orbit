@@ -29,6 +29,8 @@ target_sources(LinuxTracing PRIVATE
         LeafFunctionCallManager.cpp
         LibunwindstackMaps.cpp
         LibunwindstackMaps.h
+        LibunwindstackMultipleOfflineAndProcessMemory.cpp
+        LibunwindstackMultipleOfflineAndProcessMemory.h
         LibunwindstackUnwinder.cpp
         LibunwindstackUnwinder.h
         LinuxTracingUtils.h
@@ -77,6 +79,7 @@ target_sources(LinuxTracingTests PRIVATE
         GpuTracepointVisitorTest.cpp
         LeafFunctionCallManagerTest.cpp
         LibunwindstackMapsTest.cpp
+        LibunwindstackMultipleOfflineAndProcessMemoryTest.cpp
         LibunwindstackUnwinderTest.cpp
         LinuxTracingUtilsTest.cpp
         LostAndDiscardedEventVisitorTest.cpp
