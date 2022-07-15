@@ -52,7 +52,7 @@ class LibunwindstackUnwinder {
 
   virtual LibunwindstackResult Unwind(pid_t pid, unwindstack::Maps* maps,
                                       const std::array<uint64_t, PERF_REG_X86_64_MAX>& perf_regs,
-                                      std::vector<StackSliceView> stack_slices,
+                                      const std::vector<StackSliceView>& stack_slices,
                                       bool offline_memory_only = false,
                                       size_t max_frames = kDefaultMaxFrames) = 0;
 

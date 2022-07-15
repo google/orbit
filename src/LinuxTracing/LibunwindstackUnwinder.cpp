@@ -27,7 +27,7 @@ class LibunwindstackUnwinderImpl : public LibunwindstackUnwinder {
             absolute_address_to_size_of_functions_to_stop_at} {}
   LibunwindstackResult Unwind(pid_t pid, unwindstack::Maps* maps,
                               const std::array<uint64_t, PERF_REG_X86_64_MAX>& perf_regs,
-                              std::vector<StackSliceView> stack_slices,
+                              const std::vector<StackSliceView>& stack_slices,
                               bool offline_memory_only = false,
                               size_t max_frames = kDefaultMaxFrames) override;
 
@@ -55,7 +55,7 @@ const std::array<size_t, unwindstack::X86_64_REG_LAST>
 
 LibunwindstackResult LibunwindstackUnwinderImpl::Unwind(
     pid_t pid, unwindstack::Maps* maps, const std::array<uint64_t, PERF_REG_X86_64_MAX>& perf_regs,
-    std::vector<StackSliceView> stack_slices, bool offline_memory_only, size_t max_frames) {
+    const std::vector<StackSliceView>& stack_slices, bool offline_memory_only, size_t max_frames) {
   unwindstack::RegsX86_64 regs{};
   for (size_t perf_reg = 0; perf_reg < unwindstack::X86_64_REG_LAST; ++perf_reg) {
     regs[perf_reg] = perf_regs.at(kUnwindstackRegsToPerfRegs[perf_reg]);

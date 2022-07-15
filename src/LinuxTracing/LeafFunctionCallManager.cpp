@@ -83,7 +83,7 @@ Callstack::CallstackType LeafFunctionCallManager::PatchCallerOfLeafFunction(
   std::vector<StackSliceView> stack_slices{stack_slice};
   const LibunwindstackResult& libunwindstack_result =
       unwinder->Unwind(event_data->pid, current_maps->Get(), event_data->GetRegisters(),
-                       std::move(stack_slices), true, /*max_frames=*/1);
+                       stack_slices, true, /*max_frames=*/1);
 
   // If unwinding a single frame yields a success, we are in the outer-most frame, i.e. we don't
   // have a caller to patch in.
