@@ -44,7 +44,7 @@ TEST(Path, AllAutoCreatedDirsExist) {
   }
 }
 
-TEST(Paths, AllDirsOfFilesExist) {
+TEST(Paths, AllDirsOfFilesExistUnsafe) {
   auto test_fns = {GetLogFilePathUnsafe, GetSymbolsFilePathUnsafe};
 
   for (auto fn : test_fns) {
@@ -54,7 +54,7 @@ TEST(Paths, AllDirsOfFilesExist) {
   }
 }
 
-TEST(Paths, AllDirsOfFilesExistSafe) {
+TEST(Paths, AllDirsOfFilesExist) {
   auto test_fns = {GetLogFilePath, GetSymbolsFilePath};
 
   for (auto fn : test_fns) {
