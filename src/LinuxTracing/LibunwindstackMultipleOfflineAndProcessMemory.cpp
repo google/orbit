@@ -44,7 +44,7 @@ size_t LibunwindstackMultipleOfflineAndProcessMemory::Read(uint64_t addr, void* 
   return 0;
 }
 
-std::vector<LibunwindstackOfflineMemory>
+std::vector<LibunwindstackMultipleOfflineAndProcessMemory::LibunwindstackOfflineMemory>
 LibunwindstackMultipleOfflineAndProcessMemory::CreateOfflineStackMemories(
     const std::vector<StackSliceView>& stack_slices) {
   std::vector<LibunwindstackOfflineMemory> stack_memories{};
