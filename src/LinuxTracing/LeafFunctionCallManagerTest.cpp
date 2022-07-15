@@ -30,11 +30,16 @@
 
 using ::testing::_;
 using ::testing::AllOf;
+using ::testing::DoAll;
 using ::testing::ElementsAre;
 using ::testing::ElementsAreArray;
+using ::testing::Eq;
 using ::testing::Ge;
 using ::testing::Lt;
+using ::testing::NotNull;
+using ::testing::Property;
 using ::testing::Return;
+using ::testing::SaveArg;
 
 using orbit_grpc_protos::Callstack;
 
@@ -54,7 +59,7 @@ class MockLibunwindstackUnwinder : public LibunwindstackUnwinder {
  public:
   MOCK_METHOD(LibunwindstackResult, Unwind,
               (pid_t, unwindstack::Maps*, (const std::array<uint64_t, PERF_REG_X86_64_MAX>&),
-               const void*, uint64_t, bool, size_t),
+               std::vector<StackSliceView>, bool, size_t),
               (override));
   MOCK_METHOD(std::optional<bool>, HasFramePointerSet, (uint64_t, pid_t, unwindstack::Maps*),
               (override));
@@ -185,15 +190,24 @@ TEST_F(LeafFunctionCallManagerTest, PatchCallerOfLeafFunctionReturnsErrorOnTooSm
   libunwindstack_regs[unwindstack::X86_64_REG_RSP] = event_data.regs->sp;
   libunwindstack_regs.set_pc(event_data.regs->ip);
 
-  // We expect `kStackDumpSize` here as size, as we do not want libunwindstack
-  // to read out of bounds.
-  EXPECT_CALL(unwinder_, Unwind(event_data.pid, &fake_maps, _, _, kStackDumpSize, _, 1))
+  std::vector<StackSliceView> actual_stack_slices;
+  EXPECT_CALL(unwinder_, Unwind(event_data.pid, &fake_maps, _, _, _, 1))
       .Times(1)
-      .WillOnce(Return(LibunwindstackResult{
-          {kFrame1}, libunwindstack_regs, unwindstack::ErrorCode::ERROR_INVALID_MAP}));
+      .WillOnce(
+          DoAll(SaveArg<3>(&actual_stack_slices),
+                Return(LibunwindstackResult{
+                    {kFrame1}, libunwindstack_regs, unwindstack::ErrorCode::ERROR_INVALID_MAP})));
 
   EXPECT_EQ(Callstack::kStackTopForDwarfUnwindingTooSmall,
             leaf_function_call_manager_.PatchCallerOfLeafFunction(&event_data, &maps_, &unwinder_));
+
+  // We expect `kStackDumpSize` here as size, as we do not want libunwindstack
+  // to read out of bounds.
+  EXPECT_THAT(actual_stack_slices,
+              ElementsAre(AllOf(Property("start_address", &StackSliceView::start_address,
+                                         Eq(event_data.regs->sp)),
+                                Property("size", &StackSliceView::size, Eq(kStackDumpSize)),
+                                Property("data", &StackSliceView::data, NotNull()))));
   EXPECT_THAT(event_data.CopyOfIpsAsVector(), ElementsAreArray(callchain));
 }
 
@@ -224,17 +238,25 @@ TEST_F(
   libunwindstack_regs[unwindstack::X86_64_REG_RSP] = kStackDumpSize;
   libunwindstack_regs.set_pc(kTargetAddress2 + 1);
 
-  // We expect `kStackDumpSize` here as size, as we do not want libunwindstack
-  // to read out of bounds.
-  EXPECT_CALL(unwinder_, Unwind(event_data.pid, &fake_maps, _, _, kStackDumpSize, _, 1))
+  std::vector<StackSliceView> actual_stack_slices;
+  EXPECT_CALL(unwinder_, Unwind(event_data.pid, &fake_maps, _, _, _, 1))
       .Times(1)
-      .WillOnce(Return(LibunwindstackResult{
-          {kFrame1}, libunwindstack_regs, unwindstack::ErrorCode::ERROR_INVALID_MAP}));
+      .WillOnce(
+          DoAll(SaveArg<3>(&actual_stack_slices),
+                Return(LibunwindstackResult{
+                    {kFrame1}, libunwindstack_regs, unwindstack::ErrorCode::ERROR_INVALID_MAP})));
 
   EXPECT_CALL(maps_, Find(_)).WillRepeatedly(Return(kTargetMapInfo));
 
   EXPECT_EQ(Callstack::kComplete,
             leaf_function_call_manager_.PatchCallerOfLeafFunction(&event_data, &maps_, &unwinder_));
+  // We expect `kStackDumpSize` here as size, as we do not want libunwindstack
+  // to read out of bounds.
+  EXPECT_THAT(actual_stack_slices,
+              ElementsAre(AllOf(Property("start_address", &StackSliceView::start_address,
+                                         Eq(event_data.regs->sp)),
+                                Property("size", &StackSliceView::size, Eq(kStackDumpSize)),
+                                Property("data", &StackSliceView::data, NotNull()))));
   EXPECT_THAT(
       event_data.CopyOfIpsAsVector(),
       ElementsAre(kKernelAddress, kTargetAddress1, kTargetAddress2 + 1, kTargetAddress3 + 1));
@@ -317,16 +339,25 @@ TEST_F(LeafFunctionCallManagerTest, PatchCallerOfLeafFunctionReturnsErrorOnUnwin
   libunwindstack_regs[unwindstack::X86_64_REG_RSP] = 20;
   libunwindstack_regs.set_pc(kNonExecutableMapsStart);
 
-  // Usually, we should get at least the instruction pointer as frame, even on unwinding errors.
-  // However, we should also support empty callstacks and treat them as unwinding error.
-  EXPECT_CALL(unwinder_, Unwind(event_data.pid, &fake_maps, _, _,
-                                event_data.regs->bp - event_data.regs->sp + 16, _, 1))
+  std::vector<StackSliceView> actual_stack_slices;
+  EXPECT_CALL(unwinder_, Unwind(event_data.pid, &fake_maps, _, _, _, 1))
       .Times(1)
-      .WillOnce(Return(LibunwindstackResult{
-          {}, libunwindstack_regs, unwindstack::ErrorCode::ERROR_INVALID_MAP}));
+      .WillOnce(DoAll(SaveArg<3>(&actual_stack_slices),
+                      Return(LibunwindstackResult{
+                          {}, libunwindstack_regs, unwindstack::ErrorCode::ERROR_INVALID_MAP})));
 
   EXPECT_EQ(Callstack::kStackTopDwarfUnwindingError,
             leaf_function_call_manager_.PatchCallerOfLeafFunction(&event_data, &maps_, &unwinder_));
+
+  // Usually, we should get at least the instruction pointer as frame, even on unwinding errors.
+  // However, we should also support empty callstacks and treat them as unwinding error.
+  EXPECT_THAT(actual_stack_slices,
+              ElementsAre(AllOf(Property("start_address", &StackSliceView::start_address,
+                                         Eq(event_data.regs->sp)),
+                                Property("size", &StackSliceView::size,
+                                         Eq(event_data.regs->bp - event_data.regs->sp + 16)),
+                                Property("data", &StackSliceView::data, NotNull()))));
+
   EXPECT_THAT(event_data.CopyOfIpsAsVector(), ElementsAreArray(callchain));
 
   ::testing::Mock::VerifyAndClearExpectations(&unwinder_);
@@ -343,11 +374,13 @@ TEST_F(LeafFunctionCallManagerTest, PatchCallerOfLeafFunctionReturnsErrorOnUnwin
   libunwindstack_regs[unwindstack::X86_64_REG_RSP] = 20;
   libunwindstack_regs.set_pc(kNonExecutableMapsStart);
 
-  EXPECT_CALL(unwinder_, Unwind(event_data.pid, &fake_maps, _, _,
-                                event_data.regs->bp - event_data.regs->sp + 16, _, 1))
+  actual_stack_slices.clear();
+  EXPECT_CALL(unwinder_, Unwind(event_data.pid, &fake_maps, _, _, _, 1))
       .Times(1)
-      .WillOnce(Return(LibunwindstackResult{
-          {kFrame1}, libunwindstack_regs, unwindstack::ErrorCode::ERROR_INVALID_MAP}));
+      .WillOnce(
+          DoAll(SaveArg<3>(&actual_stack_slices),
+                Return(LibunwindstackResult{
+                    {kFrame1}, libunwindstack_regs, unwindstack::ErrorCode::ERROR_INVALID_MAP})));
 
   EXPECT_CALL(maps_, Find(kNonExecutableMapsStart))
       .Times(1)
@@ -355,6 +388,12 @@ TEST_F(LeafFunctionCallManagerTest, PatchCallerOfLeafFunctionReturnsErrorOnUnwin
 
   EXPECT_EQ(Callstack::kStackTopDwarfUnwindingError,
             leaf_function_call_manager_.PatchCallerOfLeafFunction(&event_data, &maps_, &unwinder_));
+  EXPECT_THAT(actual_stack_slices,
+              ElementsAre(AllOf(Property("start_address", &StackSliceView::start_address,
+                                         Eq(event_data.regs->sp)),
+                                Property("size", &StackSliceView::size,
+                                         Eq(event_data.regs->bp - event_data.regs->sp + 16)),
+                                Property("data", &StackSliceView::data, NotNull()))));
   EXPECT_THAT(event_data.CopyOfIpsAsVector(), ElementsAreArray(callchain));
 }
 
@@ -400,14 +439,23 @@ TEST_F(LeafFunctionCallManagerTest, PatchCallerOfLeafFunctionReturnsErrorOnNoFra
   libunwindstack_regs[unwindstack::X86_64_REG_RSP] = 20;
   libunwindstack_regs.set_pc(kTargetAddress2);
 
-  EXPECT_CALL(unwinder_, Unwind(event_data.pid, &fake_maps, _, _,
-                                event_data.regs->bp - event_data.regs->sp + 16, _, 1))
+  std::vector<StackSliceView> actual_stack_slices;
+  EXPECT_CALL(unwinder_, Unwind(event_data.pid, &fake_maps, _, _, _, 1))
       .Times(1)
-      .WillOnce(Return(LibunwindstackResult{
-          {kFrame1}, libunwindstack_regs, unwindstack::ErrorCode::ERROR_INVALID_MAP}));
+      .WillOnce(
+          DoAll(SaveArg<3>(&actual_stack_slices),
+                Return(LibunwindstackResult{
+                    {kFrame1}, libunwindstack_regs, unwindstack::ErrorCode::ERROR_INVALID_MAP})));
 
   EXPECT_EQ(Callstack::kFramePointerUnwindingError,
             leaf_function_call_manager_.PatchCallerOfLeafFunction(&event_data, &maps_, &unwinder_));
+
+  EXPECT_THAT(actual_stack_slices,
+              ElementsAre(AllOf(Property("start_address", &StackSliceView::start_address,
+                                         Eq(event_data.regs->sp)),
+                                Property("size", &StackSliceView::size,
+                                         Eq(event_data.regs->bp - event_data.regs->sp + 16)),
+                                Property("data", &StackSliceView::data, NotNull()))));
   EXPECT_THAT(event_data.CopyOfIpsAsVector(), ElementsAreArray(callchain));
 }
 
@@ -438,14 +486,24 @@ TEST_F(LeafFunctionCallManagerTest,
   libunwindstack_regs[unwindstack::X86_64_REG_RSP] = 20;
   libunwindstack_regs.set_pc(kTargetAddress2);
 
-  EXPECT_CALL(unwinder_, Unwind(event_data.pid, &fake_maps, _, _,
-                                event_data.regs->bp - event_data.regs->sp + 16, _, 1))
+  std::vector<StackSliceView> actual_stack_slices;
+  EXPECT_CALL(unwinder_, Unwind(event_data.pid, &fake_maps, _, _, _, 1))
       .Times(1)
-      .WillOnce(Return(LibunwindstackResult{
-          {kFrame1}, libunwindstack_regs, unwindstack::ErrorCode::ERROR_INVALID_MAP}));
+      .WillOnce(
+          DoAll(SaveArg<3>(&actual_stack_slices),
+                Return(LibunwindstackResult{
+                    {kFrame1}, libunwindstack_regs, unwindstack::ErrorCode::ERROR_INVALID_MAP})));
 
   EXPECT_EQ(Callstack::kComplete,
             leaf_function_call_manager_.PatchCallerOfLeafFunction(&event_data, &maps_, &unwinder_));
+
+  EXPECT_THAT(actual_stack_slices,
+              ElementsAre(AllOf(Property("start_address", &StackSliceView::start_address,
+                                         Eq(event_data.regs->sp)),
+                                Property("size", &StackSliceView::size,
+                                         Eq(event_data.regs->bp - event_data.regs->sp + 16)),
+                                Property("data", &StackSliceView::data, NotNull()))));
+
   EXPECT_THAT(event_data.CopyOfIpsAsVector(), ElementsAreArray(callchain));
 }
 
@@ -473,16 +531,26 @@ TEST_F(LeafFunctionCallManagerTest,
   libunwindstack_regs[unwindstack::X86_64_REG_RSP] = 20;
   libunwindstack_regs.set_pc(kTargetAddress2 + 1);
 
-  EXPECT_CALL(unwinder_, Unwind(event_data.pid, &fake_maps, _, _,
-                                event_data.regs->bp - event_data.regs->sp + 16, _, 1))
+  std::vector<StackSliceView> actual_stack_slices;
+  EXPECT_CALL(unwinder_, Unwind(event_data.pid, &fake_maps, _, _, _, 1))
       .Times(1)
-      .WillOnce(Return(LibunwindstackResult{
-          {kFrame1}, libunwindstack_regs, unwindstack::ErrorCode::ERROR_INVALID_MAP}));
+      .WillOnce(
+          DoAll(SaveArg<3>(&actual_stack_slices),
+                Return(LibunwindstackResult{
+                    {kFrame1}, libunwindstack_regs, unwindstack::ErrorCode::ERROR_INVALID_MAP})));
 
   EXPECT_CALL(maps_, Find(_)).WillRepeatedly(Return(kTargetMapInfo));
 
   EXPECT_EQ(Callstack::kComplete,
             leaf_function_call_manager_.PatchCallerOfLeafFunction(&event_data, &maps_, &unwinder_));
+
+  EXPECT_THAT(actual_stack_slices,
+              ElementsAre(AllOf(Property("start_address", &StackSliceView::start_address,
+                                         Eq(event_data.regs->sp)),
+                                Property("size", &StackSliceView::size,
+                                         Eq(event_data.regs->bp - event_data.regs->sp + 16)),
+                                Property("data", &StackSliceView::data, NotNull()))));
+
   EXPECT_THAT(
       event_data.CopyOfIpsAsVector(),
       ElementsAre(kKernelAddress, kTargetAddress1, kTargetAddress2 + 1, kTargetAddress3 + 1));

@@ -78,9 +78,12 @@ Callstack::CallstackType LeafFunctionCallManager::PatchCallerOfLeafFunction(
   // include the previous frame pointer and the return address) for unwinding. If $rbp does not
   // change from unwinding, we need to patch in the pc after unwinding.
   const uint64_t stack_size = rbp - rsp + 16;
-  const LibunwindstackResult& libunwindstack_result = unwinder->Unwind(
-      event_data->pid, current_maps->Get(), event_data->GetRegisters(), event_data->GetStackData(),
-      std::min<uint64_t>(stack_size, stack_dump_size_), true, /*max_frames=*/1);
+  StackSliceView stack_slice{event_data->regs->sp, std::min<uint64_t>(stack_size, stack_dump_size_),
+                             event_data->data.get()};
+  std::vector<StackSliceView> stack_slices{stack_slice};
+  const LibunwindstackResult& libunwindstack_result =
+      unwinder->Unwind(event_data->pid, current_maps->Get(), event_data->GetRegisters(),
+                       std::move(stack_slices), true, /*max_frames=*/1);
 
   // If unwinding a single frame yields a success, we are in the outer-most frame, i.e. we don't
   // have a caller to patch in.
