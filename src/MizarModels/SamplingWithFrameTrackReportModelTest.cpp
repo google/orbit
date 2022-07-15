@@ -22,6 +22,7 @@
 
 using ::orbit_mizar_base::Baseline;
 using ::orbit_mizar_base::Comparison;
+using ::testing::StrNe;
 using Report = ::orbit_mizar_data::SamplingWithFrameTrackComparisonReport;
 using SFID = ::orbit_mizar_base::SFID;
 using Counts = ::orbit_mizar_data::SamplingCounts;
@@ -30,7 +31,6 @@ using ::orbit_mizar_base::MakeComparison;
 using ::orbit_test_utils::MakeMap;
 using ::testing::Contains;
 using ::testing::DoubleNear;
-using ::testing::StrCaseEq;
 
 namespace {
 class MockCounts {
@@ -128,6 +128,10 @@ class SamplingWithFrameTrackReportModelTest : public ::testing::Test {
     return model_.data(MakeIndex(row, column), Qt::EditRole);
   }
 
+  [[nodiscard]] QVariant ToolTipValue(int row, Column column) const {
+    return model_.data(MakeIndex(row, column), Qt::ToolTipRole);
+  }
+
   [[nodiscard]] QModelIndex MakeIndex(int row, Column column) const {
     return model_.index(row, static_cast<int>(column));
   }
@@ -161,7 +165,8 @@ class SamplingWithFrameTrackReportModelTest : public ::testing::Test {
       const double expected_pvalue = is_multiplicity_correction_enabled
                                          ? comparison_result.corrected_pvalue
                                          : comparison_result.pvalue;
-      ExpectNumericDisplayAndSortValuesAreCorrect(row, Column::kPvalue, expected_pvalue);
+      ExpectNumericDisplayAndSortValuesAreCorrectAndAToolTipIsPresent(row, Column::kPvalue,
+                                                                      expected_pvalue);
 
       const std::string expected_is_significant =
           expected_pvalue < significance_level ? "Yes" : "No";
@@ -174,20 +179,29 @@ class SamplingWithFrameTrackReportModelTest : public ::testing::Test {
     }
   }
 
-  void ExpectNumericDisplayAndSortValuesAreCorrect(const int row, const Column column,
-                                                   double expected) const {
+  void ExpectNumericDisplayAndSortValuesAreCorrectAndAToolTipIsPresent(const int row,
+                                                                       const Column column,
+                                                                       double expected) const {
     const QString displayed = DisplayedString(row, column);
     ExpectNumericDisplayEq(displayed, expected);
     const QVariant sort_value = SortValue(row, column);
     EXPECT_EQ(sort_value.type(), QMetaType::Double);
     EXPECT_THAT(sort_value.value<double>(), DoubleNear(expected, kTolerance));
+    const QVariant tool_tip_value = ToolTipValue(row, column);
+    EXPECT_EQ(tool_tip_value.type(), QMetaType::QString);
+    EXPECT_THAT(tool_tip_value.value<QString>().toStdString(), StrNe(""));
   }
 
   Report report_{baseline_counts_,        baseline_frame_track_stats_,
                  comparison_counts_,      comparison_frame_track_stats_,
                  kSfidToComparisonResult, &kSfidToName};
 
-  Model model_{report_, true, 0.05};
+  static const inline Baseline<QString> kBaselineTitle =
+      Baseline<QString>(QStringLiteral("Baseline"));
+  static const inline Comparison<QString> kComparisonTitle =
+      Comparison<QString>(QStringLiteral("Comparison"));
+
+  Model model_{report_, kBaselineTitle, kComparisonTitle, true, 0.05};
 };
 
 TEST_F(SamplingWithFrameTrackReportModelTest, DisplayedDataIsCorrect) {
@@ -209,38 +223,38 @@ TEST_F(SamplingWithFrameTrackReportModelTest, DisplayedDataIsCorrect) {
 
     const double expected_baseline_exclusive_percent =
         static_cast<double>(expected_baseline_count) / kCallstacksCount * 100;
-    ExpectNumericDisplayAndSortValuesAreCorrect(row, Column::kBaselineExclusivePercent,
-                                                expected_baseline_exclusive_percent);
+    ExpectNumericDisplayAndSortValuesAreCorrectAndAToolTipIsPresent(
+        row, Column::kBaselineExclusivePercent, expected_baseline_exclusive_percent);
 
     constexpr double kNsInUs = 1'000;
 
     const double expected_baseline_time_per_frame = static_cast<double>(expected_baseline_count) /
                                                     kCallstacksCount * kBaselineFrameTime / kNsInUs;
-    ExpectNumericDisplayAndSortValuesAreCorrect(row, Column::kBaselineExclusiveTimePerFrame,
-                                                expected_baseline_time_per_frame);
+    ExpectNumericDisplayAndSortValuesAreCorrectAndAToolTipIsPresent(
+        row, Column::kBaselineExclusiveTimePerFrame, expected_baseline_time_per_frame);
 
     const double expected_comparison_exclusive_percent =
         static_cast<double>(expected_comparison_count) / kCallstacksCount * 100;
-    ExpectNumericDisplayAndSortValuesAreCorrect(row, Column::kComparisonExclusivePercent,
-                                                expected_comparison_exclusive_percent);
+    ExpectNumericDisplayAndSortValuesAreCorrectAndAToolTipIsPresent(
+        row, Column::kComparisonExclusivePercent, expected_comparison_exclusive_percent);
 
     const double expected_comparison_time_per_frame =
         static_cast<double>(expected_comparison_count) / kCallstacksCount * kComparisonFrameTime /
         kNsInUs;
-    ExpectNumericDisplayAndSortValuesAreCorrect(row, Column::kComparisonExclusiveTimePerFrame,
-                                                expected_comparison_time_per_frame);
+    ExpectNumericDisplayAndSortValuesAreCorrectAndAToolTipIsPresent(
+        row, Column::kComparisonExclusiveTimePerFrame, expected_comparison_time_per_frame);
 
     const double expected_slowdown =
         expected_comparison_time_per_frame - expected_baseline_time_per_frame;
     const double expected_slowdown_percent =
         expected_slowdown / expected_baseline_time_per_frame * 100;
-    ExpectNumericDisplayAndSortValuesAreCorrect(row, Column::kSlowdownPercent,
-                                                expected_slowdown_percent);
+    ExpectNumericDisplayAndSortValuesAreCorrectAndAToolTipIsPresent(row, Column::kSlowdownPercent,
+                                                                    expected_slowdown_percent);
 
     const double frame_time_slowdown = (kComparisonFrameTime - kBaselineFrameTime) / kNsInUs;
     const double expected_percent_of_slowdown = expected_slowdown / frame_time_slowdown * 100;
-    ExpectNumericDisplayAndSortValuesAreCorrect(row, Column::kPercentOfSlowdown,
-                                                expected_percent_of_slowdown);
+    ExpectNumericDisplayAndSortValuesAreCorrectAndAToolTipIsPresent(row, Column::kPercentOfSlowdown,
+                                                                    expected_percent_of_slowdown);
   }
 
   EXPECT_EQ(observed_sfids.size(), kExpectedReportSize);

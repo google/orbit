@@ -15,6 +15,11 @@
 
 namespace orbit_mizar_widgets {
 
+template <typename T>
+using Baseline = ::orbit_mizar_base::Baseline<T>;
+template <typename T>
+using Comparison = ::orbit_mizar_base::Comparison<T>;
+
 SamplingWithFrameTrackOutputWidget::SamplingWithFrameTrackOutputWidget(QWidget* parent)
     : QWidget(parent), ui_(std::make_unique<Ui::SamplingWithFrameTrackOutputWidget>()) {
   ui_->setupUi(this);
@@ -22,9 +27,12 @@ SamplingWithFrameTrackOutputWidget::SamplingWithFrameTrackOutputWidget(QWidget* 
 
 SamplingWithFrameTrackOutputWidget::~SamplingWithFrameTrackOutputWidget() = default;
 
-void SamplingWithFrameTrackOutputWidget::UpdateReport(Report report) {
+void SamplingWithFrameTrackOutputWidget::UpdateReport(Report report,
+                                                      const Baseline<QString>& baseline_title,
+                                                      const Comparison<QString>& comparison_title) {
   model_ = new SamplingWithFrameTrackReportModel(  // NOLINT
-      std::move(report), is_multiplicity_correction_enabled_, confidence_level_, this);
+      std::move(report), baseline_title, comparison_title, is_multiplicity_correction_enabled_,
+      confidence_level_, this);
 
   auto* proxy_model = new QSortFilterProxyModel(this);  // NOLINT
   proxy_model->setSourceModel(model_);
