@@ -121,29 +121,24 @@ bool ModuleData::UpdateIfChangedAndNotLoaded(orbit_grpc_protos::ModuleInfo info)
   return true;
 }
 
-const FunctionInfo* ModuleData::FindFunctionByOffset(uint64_t offset, bool is_exact) const {
-  uint64_t elf_address = offset + load_bias();
-  return FindFunctionByElfAddress(elf_address, is_exact);
-}
-
-const FunctionInfo* ModuleData::FindFunctionByElfAddress(uint64_t elf_address,
-                                                         bool is_exact) const {
+const FunctionInfo* ModuleData::FindFunctionByVirtualAddress(uint64_t virtual_address,
+                                                             bool is_exact) const {
   absl::MutexLock lock(&mutex_);
   if (functions_.empty()) return nullptr;
 
   if (is_exact) {
-    auto it = functions_.find(elf_address);
+    auto it = functions_.find(virtual_address);
     return (it != functions_.end()) ? it->second.get() : nullptr;
   }
 
-  auto it = functions_.upper_bound(elf_address);
+  auto it = functions_.upper_bound(virtual_address);
   if (it == functions_.begin()) return nullptr;
 
   --it;
   FunctionInfo* function = it->second.get();
-  ORBIT_CHECK(function->address() <= elf_address);
+  ORBIT_CHECK(function->address() <= virtual_address);
 
-  if (function->address() + function->size() < elf_address) return nullptr;
+  if (function->address() + function->size() < virtual_address) return nullptr;
 
   return function;
 }

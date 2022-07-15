@@ -268,7 +268,8 @@ TEST_F(FunctionsDataViewTest, FrameTrackSelectionAppearsInFirstColumnWhenACaptur
       capture_started.mutable_capture_options()->add_instrumented_functions();
   instrumented_function->set_file_path(functions_[0].module_path());
   instrumented_function->set_file_build_id(functions_[0].module_build_id());
-  instrumented_function->set_file_offset(functions_[0].FileOffset(module_data->load_bias()));
+  instrumented_function->set_file_offset(functions_[0].ComputeFileOffset(*module_data));
+  instrumented_function->set_function_virtual_address(functions_[0].address());
 
   EXPECT_CALL(app_, IsFunctionSelected(testing::A<const FunctionInfo&>()))
       .Times(testing::AnyNumber())

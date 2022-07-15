@@ -189,13 +189,14 @@ std::unique_ptr<CaptureData> GenerateTestCaptureData(
         module_manager->GetMutableModuleByPathAndBuildId(kModulePaths[i], kBuildIds[i]);
     module_data->AddSymbols(module_symbols);
 
-    const FunctionInfo& function = *module_data->FindFunctionByElfAddress(kAddresses[i], true);
+    const FunctionInfo& function = *module_data->FindFunctionByVirtualAddress(kAddresses[i], true);
     InstrumentedFunction* instrumented_function =
         capture_started.mutable_capture_options()->add_instrumented_functions();
     instrumented_function->set_file_path(function.module_path());
     instrumented_function->set_file_build_id(function.module_build_id());
-    instrumented_function->set_file_offset(function.FileOffset(module_data->load_bias()));
+    instrumented_function->set_file_offset(function.ComputeFileOffset(*module_data));
     instrumented_function->set_function_id(kFunctionIds[i]);
+    instrumented_function->set_function_virtual_address(function.address());
     instrumented_function->set_function_name(kPrettyNames[i]);
   }
 

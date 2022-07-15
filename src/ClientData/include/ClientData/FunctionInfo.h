@@ -39,15 +39,18 @@ class FunctionInfo {
 
   [[nodiscard]] const std::string& module_path() const { return module_path_; }
   [[nodiscard]] const std::string& module_build_id() const { return module_build_id_; }
+  // The virtual address as specified in the object file.
   [[nodiscard]] uint64_t address() const { return address_; }
   [[nodiscard]] uint64_t size() const { return size_; }
   [[nodiscard]] const std::string& pretty_name() const { return pretty_name_; }
 
   [[nodiscard]] uint64_t GetPrettyNameHash() const;
 
-  // Calculates and returns the absolute address of the function in the module file, i.e.
-  // "address - load bias".
-  [[nodiscard]] uint64_t FileOffset(uint64_t load_bias) const;
+  // Calculates and returns the offset of the function in the module file. For ELF files, this is
+  // simply "address - load bias", by definition of load bias. For PEs, this is more complicated, as
+  // it requires to find the section whose virtual address range contains the address of the
+  // function.
+  [[nodiscard]] uint64_t ComputeFileOffset(const ModuleData& module) const;
 
   // This function should not be used, since it could return incomplete or invalid
   // result in the case when one module is mapped two or more times. Try to find another way

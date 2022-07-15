@@ -116,9 +116,10 @@ std::vector<ApiFunction> FindApiFunctions(const orbit_client_data::ModuleManager
     const ModuleData* module = module_manager.GetModuleByPathAndBuildId(function.module_path(),
                                                                         function.module_build_id());
     ORBIT_CHECK(module != nullptr);
-    instrumented_function->set_file_offset(function.FileOffset(module->load_bias()));
+    instrumented_function->set_file_offset(function.ComputeFileOffset(*module));
     instrumented_function->set_file_build_id(function.module_build_id());
     instrumented_function->set_function_id(function_id);
+    instrumented_function->set_function_virtual_address(function.address());
     instrumented_function->set_function_size(function.size());
     instrumented_function->set_function_name(function.pretty_name());
     instrumented_function->set_record_arguments(options.record_arguments);
@@ -133,7 +134,7 @@ std::vector<ApiFunction> FindApiFunctions(const orbit_client_data::ModuleManager
     const ModuleData* module = module_manager.GetModuleByPathAndBuildId(function.module_path(),
                                                                         function.module_build_id());
     ORBIT_CHECK(module != nullptr);
-    function_to_record_stack_on->set_file_offset(function.FileOffset(module->load_bias()));
+    function_to_record_stack_on->set_file_offset(function.ComputeFileOffset(*module));
   }
 
   for (const auto& tracepoint : options.selected_tracepoints) {

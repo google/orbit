@@ -1523,6 +1523,7 @@ TEST(ProducerEventProcessor, CaptureStartedSmoke) {
     InstrumentedFunction* instrumented_function = capture_options->add_instrumented_functions();
     instrumented_function->set_function_name("void foo()");
     instrumented_function->set_function_id(kFunctionId1);
+    instrumented_function->set_function_virtual_address(223433);
     instrumented_function->set_file_offset(123433);
     instrumented_function->set_file_path("path");
     instrumented_function->set_file_build_id(kBuildId2);
@@ -1556,6 +1557,7 @@ TEST(ProducerEventProcessor, CaptureStartedSmoke) {
       capture_started.capture_options().instrumented_functions(0);
   EXPECT_EQ(instrumented_function.function_name(), "void foo()");
   EXPECT_EQ(instrumented_function.function_id(), kFunctionId1);
+  EXPECT_EQ(instrumented_function.function_virtual_address(), 223433);
   EXPECT_EQ(instrumented_function.file_offset(), 123433);
   EXPECT_EQ(instrumented_function.file_path(), "path");
   EXPECT_EQ(instrumented_function.file_build_id(), kBuildId2);
