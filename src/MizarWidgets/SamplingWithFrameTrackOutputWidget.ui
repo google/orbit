@@ -17,7 +17,7 @@
    <item>
     <widget class="QLineEdit" name="filter_line_">
      <property name="placeholderText">
-      <string>Filter by functions name</string>
+      <string>Filter by function name</string>
      </property>
     </widget>
    </item>
