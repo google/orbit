@@ -6,17 +6,11 @@
 #include <gtest/gtest.h>
 
 #include "LibunwindstackMultipleOfflineAndProcessMemory.h"
+#include "OrbitBase/ThreadUtils.h"
 
 using ::testing::Invoke;
 
 namespace orbit_linux_tracing {
-
-namespace {
-class MockProcessMemory : public unwindstack::Memory {
- public:
-  MOCK_METHOD(size_t, Read, (uint64_t, void*, size_t), (override));
-};
-}  // namespace
 
 TEST(LibunwindstackMultipleOfflineAndProcessMemory, ReadFromOneStackSlice) {
   constexpr uint64_t kStartAddress = 0xADD8E55;
@@ -123,8 +117,8 @@ TEST(LibunwindstackMultipleOfflineAndProcessMemory,
   std::vector<char> bytes1{0x01, 0x10, 0x20, 0x30, 0x40};
   StackSliceView stack_slice1(kStartAddress1, bytes1.size(), bytes1.data());
 
-  constexpr uint64_t kStartAddress2 = kStartAddress1 + 2;
-  std::vector<char> bytes2{0x20, 0x30, 0x40, 0x50, 0x60, 0x70, 0x77};
+  constexpr uint64_t kStartAddress2 = kStartAddress1 - 2;
+  std::vector<char> bytes2{0x0a, 0x0b, 0x0c, 0x0d, 0x0f, 0x10, 0x01};
   StackSliceView stack_slice2(kStartAddress2, bytes2.size(), bytes2.data());
 
   std::shared_ptr<unwindstack::Memory> sut =
@@ -135,12 +129,12 @@ TEST(LibunwindstackMultipleOfflineAndProcessMemory,
   size_t read_count = sut->Read(kStartAddress2, destination.data(), 3);
 
   ASSERT_EQ(read_count, 3);
-  EXPECT_EQ(destination[0], 0x20);
-  EXPECT_EQ(destination[1], 0x30);
-  EXPECT_EQ(destination[2], 0x40);
+  EXPECT_EQ(destination[0], 0x0a);
+  EXPECT_EQ(destination[1], 0x0b);
+  EXPECT_EQ(destination[2], 0x0c);
 }
 
-TEST(LibunwindstackMultipleOfflineAndProcessMemory, ReadFromProcess) {
+TEST(LibunwindstackMultipleOfflineAndProcessMemory, ReadFromTestProcess) {
   constexpr uint64_t kStartAddress1 = 0xADD8E55;
   std::vector<char> bytes1{0x01, 0x10, 0x20, 0x30, 0x40};
   StackSliceView stack_slice1(kStartAddress1, bytes1.size(), bytes1.data());
@@ -150,33 +144,27 @@ TEST(LibunwindstackMultipleOfflineAndProcessMemory, ReadFromProcess) {
   StackSliceView stack_slice2(kStartAddress2, bytes2.size(), bytes2.data());
 
   std::vector<StackSliceView> stack_slices{stack_slice1, stack_slice2};
-  std::vector<LibunwindstackOfflineMemory> stack_memory_slices{};
-  stack_memory_slices.reserve(stack_slices.size());
+  std::vector<LibunwindstackOfflineMemory> stack_memories{};
+  stack_memories.reserve(stack_slices.size());
   for (const StackSliceView& stack_slice_view : stack_slices) {
-    stack_memory_slices.emplace_back(stack_slice_view);
+    stack_memories.emplace_back(stack_slice_view);
   }
 
-  std::shared_ptr<MockProcessMemory> process_memory_mock = std::make_shared<MockProcessMemory>();
-  LibunwindstackMultipleOfflineAndProcessMemory sut{process_memory_mock,
-                                                    std::move(stack_memory_slices)};
+  std::vector<char> bytes3{0x09, 0x08, 0x07, 0x06, 0x05};
+
+  uint32_t pid = orbit_base::GetCurrentProcessId();
+  std::shared_ptr<unwindstack::Memory> sut =
+      LibunwindstackMultipleOfflineAndProcessMemory::CreateWithProcessMemory(
+          pid, {stack_slice1, stack_slice2});
 
   std::array<char, 3> destination{};
-  EXPECT_CALL(*process_memory_mock, Read(0xFE, destination.data(), 3))
-      .Times(1)
-      .WillOnce(Invoke([](uint64_t /*addr*/, void* dst, size_t /*size*/) -> size_t {
-        auto destination = absl::bit_cast<char*>(dst);
-        destination[0] = 0x11;
-        destination[1] = 0x22;
-        destination[2] = 0x33;
-        return 3;
-      }));
 
-  size_t read_count = sut.Read(0xFE, destination.data(), 3);
+  size_t read_count = sut->Read(absl::bit_cast<uint64_t>(bytes3.data()), destination.data(), 3);
 
   ASSERT_EQ(read_count, 3);
-  EXPECT_EQ(destination[0], 0x11);
-  EXPECT_EQ(destination[1], 0x22);
-  EXPECT_EQ(destination[2], 0x33);
+  EXPECT_EQ(destination[0], 0x09);
+  EXPECT_EQ(destination[1], 0x08);
+  EXPECT_EQ(destination[2], 0x07);
 }
 
 }  // namespace orbit_linux_tracing

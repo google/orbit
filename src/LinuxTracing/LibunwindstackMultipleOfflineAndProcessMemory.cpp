@@ -22,7 +22,7 @@ size_t LibunwindstackMultipleOfflineAndProcessMemory::Read(uint64_t addr, void* 
 
     // If the requested address range is partially intersecting with the stack slice, something went
     // wrong. However, there could be another stack slice that entirely contains the requested
-    // address range later, so don't give up already.
+    // address range later, so don't give up yet.
     if (addr_end > stack_memory.start_address() && addr_start < stack_memory.end_address()) {
       found_partial_intersection = true;
     }
@@ -35,7 +35,7 @@ size_t LibunwindstackMultipleOfflineAndProcessMemory::Read(uint64_t addr, void* 
     return 0;
   }
 
-  // If the requested range is entirely disjoint from the stack slices' address range read from
+  // If the requested range is entirely disjoint from the stack slices' address range, read from
   // the memory of the process.
   if (process_memory_ != nullptr) {
     return process_memory_->Read(addr, dst, size);
@@ -45,13 +45,31 @@ size_t LibunwindstackMultipleOfflineAndProcessMemory::Read(uint64_t addr, void* 
 }
 
 std::vector<LibunwindstackOfflineMemory>
-LibunwindstackMultipleOfflineAndProcessMemory::CreateOfflineMemorySlices(
+LibunwindstackMultipleOfflineAndProcessMemory::CreateOfflineStackMemories(
     const std::vector<StackSliceView>& stack_slices) {
-  std::vector<LibunwindstackOfflineMemory> stack_memory_slices{};
-  stack_memory_slices.reserve(stack_slices.size());
+  std::vector<LibunwindstackOfflineMemory> stack_memories{};
+  stack_memories.reserve(stack_slices.size());
   for (const StackSliceView& stack_slice_view : stack_slices) {
-    stack_memory_slices.emplace_back(stack_slice_view);
+    stack_memories.emplace_back(stack_slice_view);
   }
-  return stack_memory_slices;
+  return stack_memories;
+}
+
+std::shared_ptr<unwindstack::Memory>
+LibunwindstackMultipleOfflineAndProcessMemory::CreateWithProcessMemory(
+    pid_t pid, const std::vector<StackSliceView>& stack_slices) {
+  std::vector<LibunwindstackOfflineMemory> stack_memories =
+      CreateOfflineStackMemories(stack_slices);
+  return std::shared_ptr<LibunwindstackMultipleOfflineAndProcessMemory>(
+      new LibunwindstackMultipleOfflineAndProcessMemory(
+          unwindstack::Memory::CreateProcessMemoryCached(pid), std::move(stack_memories)));
+}
+std::shared_ptr<unwindstack::Memory>
+LibunwindstackMultipleOfflineAndProcessMemory::CreateWithoutProcessMemory(
+    const std::vector<StackSliceView>& stack_slices) {
+  std::vector<LibunwindstackOfflineMemory> stack_memories =
+      CreateOfflineStackMemories(stack_slices);
+  return std::shared_ptr<LibunwindstackMultipleOfflineAndProcessMemory>(
+      new LibunwindstackMultipleOfflineAndProcessMemory(nullptr, std::move(stack_memories)));
 }
 }  // namespace orbit_linux_tracing

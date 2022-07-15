@@ -62,8 +62,7 @@ class LibunwindstackOfflineMemory : public unwindstack::Memory {
 // class will go through the stack slices and if one slice fully contains the requested address
 // range it will read from this stack slice. When requesting an address range outside of any of the
 // stack samples, the class falls back to reading from the memory of the process online, as
-// `unwindstack::Memory::CreateProcessMemory`
-// would.
+// `unwindstack::Memory::CreateProcessMemory` would.
 // If the process memory is not specified, the fallback to reading process memory will not be done.
 // Having multiple stack slices allows unwinding callstacks that have multiple stacks involved, such
 // as in the case of Wine system calls.
@@ -72,31 +71,20 @@ class LibunwindstackMultipleOfflineAndProcessMemory : public unwindstack::Memory
  public:
   size_t Read(uint64_t addr, void* dst, size_t size) override;
 
-  // Note: Public for testing. Please use the factory methods.
+  static std::shared_ptr<Memory> CreateWithProcessMemory(
+      pid_t pid, const std::vector<StackSliceView>& stack_slices);
+
+  static std::shared_ptr<Memory> CreateWithoutProcessMemory(
+      const std::vector<StackSliceView>& stack_slices);
+
+ private:
   LibunwindstackMultipleOfflineAndProcessMemory(
       std::shared_ptr<Memory> process_memory,
       std::vector<LibunwindstackOfflineMemory> stack_memories)
       : process_memory_{std::move(process_memory)},
         stack_memories_{std::move(std::move(stack_memories))} {}
 
-  static std::shared_ptr<Memory> CreateWithProcessMemory(
-      pid_t pid, const std::vector<StackSliceView>& stack_slices) {
-    std::vector<LibunwindstackOfflineMemory> stack_memories =
-        CreateOfflineMemorySlices(stack_slices);
-    return std::make_shared<LibunwindstackMultipleOfflineAndProcessMemory>(
-        unwindstack::Memory::CreateProcessMemoryCached(pid), std::move(stack_memories));
-  }
-
-  static std::shared_ptr<Memory> CreateWithoutProcessMemory(
-      const std::vector<StackSliceView>& stack_slices) {
-    std::vector<LibunwindstackOfflineMemory> stack_memories =
-        CreateOfflineMemorySlices(stack_slices);
-    return std::make_shared<LibunwindstackMultipleOfflineAndProcessMemory>(
-        nullptr, std::move(stack_memories));
-  }
-
- private:
-  static std::vector<LibunwindstackOfflineMemory> CreateOfflineMemorySlices(
+  static std::vector<LibunwindstackOfflineMemory> CreateOfflineStackMemories(
       const std::vector<StackSliceView>& stack_slices);
 
   std::shared_ptr<Memory> process_memory_;
