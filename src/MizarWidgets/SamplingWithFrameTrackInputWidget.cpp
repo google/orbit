@@ -5,7 +5,6 @@
 #include "MizarWidgets/SamplingWithFrameTrackInputWidget.h"
 
 #include <absl/strings/str_format.h>
-#include <qcombobox.h>
 
 #include <QComboBox>
 #include <QLineEdit>
@@ -26,7 +25,7 @@ SamplingWithFrameTrackInputWidgetBase::SamplingWithFrameTrackInputWidgetBase(QWi
   ui_->setupUi(this);
   ui_->start_ms_->setToolTip(
       QStringLiteral("Time in milliseconds since the capture started.\n"
-                     "Only the portion after this timepoint will be analyzed."));
+                     "Only the portion after this time will be analyzed."));
   ui_->thread_list_->setToolTip(
       "Only the sampling data from the selected threads will be analyzed.\n"
       "Multiple selection is allowed.");
