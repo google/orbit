@@ -25,8 +25,8 @@ SamplingWithFrameTrackInputWidgetBase::SamplingWithFrameTrackInputWidgetBase(QWi
     : QWidget(parent), ui_(std::make_unique<Ui::SamplingWithFrameTrackInputWidget>()) {
   ui_->setupUi(this);
   ui_->start_ms_->setToolTip(
-      QStringLiteral("Time in milliseconds since the capture start.\n"
-                     "Only the portion after that point will be analyzed."));
+      QStringLiteral("Time in milliseconds since the capture started.\n"
+                     "Only the portion after this timepoint will be analyzed."));
   ui_->thread_list_->setToolTip(
       "Only the sampling data from the selected threads will be analyzed.\n"
       "Multiple selection is allowed.");
