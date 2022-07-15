@@ -125,6 +125,37 @@ const InstrumentedFunction* CaptureData::GetInstrumentedFunctionById(uint64_t fu
   return &instrumented_functions_it->second;
 }
 
+// InstrumentedFunction::function_virtual_address() was added in 1.82: if this is not available,
+// we need to compute it from file_offset() to preserve compatibility with older captures.
+// But note that ModuleData::ConvertFromOffsetInFileToVirtualAddress will use the ELF-specific
+// computation of the virtual address as ModuleInfo::object_segments() was also added in 1.82:
+// this is fine as that is the computation we were always using before 1.82.
+void CaptureData::ComputeVirtualAddressOfInstrumentedFunctionsIfNecessary(
+    const ModuleManager& module_manager) {
+  uint64_t updated_function_count = 0;
+  for (auto& [unused_function_id, instrumented_function] : instrumented_functions_) {
+    if (instrumented_function.function_virtual_address() != 0) {
+      continue;
+    }
+
+    const ModuleData* const module_data = module_manager.GetModuleByPathAndBuildId(
+        instrumented_function.file_path(), instrumented_function.file_build_id());
+    if (module_data == nullptr) {
+      continue;
+    }
+
+    const uint64_t virtual_address =
+        module_data->ConvertFromOffsetInFileToVirtualAddress(instrumented_function.file_offset());
+    instrumented_function.set_function_virtual_address(virtual_address);
+    ++updated_function_count;
+  }
+
+  if (updated_function_count > 0) {
+    ORBIT_LOG("Set virtual address from offset for %u InstrumentedFunctions",
+              updated_function_count);
+  }
+}
+
 const LinuxAddressInfo* CaptureData::GetAddressInfo(uint64_t absolute_address) const {
   auto address_info_it = address_infos_.find(absolute_address);
   if (address_info_it == address_infos_.end()) {

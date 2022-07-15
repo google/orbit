@@ -78,20 +78,6 @@ std::optional<uint64_t> FindFunctionAbsoluteAddressByInstructionAbsoluteAddress(
                                                                                  absolute_address);
 }
 
-const FunctionInfo* FindFunctionByModulePathBuildIdAndOffset(const ModuleManager& module_manager,
-                                                             const std::string& module_path,
-                                                             const std::string& build_id,
-                                                             uint64_t offset) {
-  const ModuleData* module_data = module_manager.GetModuleByPathAndBuildId(module_path, build_id);
-  if (module_data == nullptr) {
-    return nullptr;
-  }
-
-  uint64_t virtual_address = module_data->ConvertFromOffsetInFileToVirtualAddress(offset);
-
-  return module_data->FindFunctionByVirtualAddress(virtual_address, /*is_exact=*/true);
-}
-
 const FunctionInfo* FindFunctionByModulePathBuildIdAndVirtualAddress(
     const ModuleManager& module_manager, const std::string& module_path,
     const std::string& build_id, uint64_t virtual_address) {
@@ -170,25 +156,14 @@ const FunctionInfo* FindFunctionByAddress(const ProcessData& process,
                                                                     absolute_address);
 }
 
-std::optional<uint64_t> FindInstrumentedFunctionIdSlow(const ModuleManager& module_manager,
-                                                       const CaptureData& capture_data,
-                                                       const FunctionInfo& function) {
-  const ModuleData* module =
-      module_manager.GetModuleByPathAndBuildId(function.module_path(), function.module_build_id());
+std::optional<uint64_t> FindInstrumentedFunctionIdSlow(const CaptureData& capture_data,
+                                                       const FunctionInfo& function_info) {
   for (const auto& [function_id, candidate_function] : capture_data.instrumented_functions()) {
-    if (candidate_function.file_path() == function.module_path()) {
-      // InstrumentedFunction::function_virtual_address() was added in 1.82: when not available, we
-      // need to keep using file_offset() to preserve compatibility with older captures.
-      if (candidate_function.function_virtual_address() == 0 &&
-          candidate_function.file_offset() == function.ComputeFileOffset(*module)) {
-        return function_id;
-      }
-      if (candidate_function.function_virtual_address() == function.address()) {
-        return function_id;
-      }
+    if (candidate_function.file_path() == function_info.module_path() &&
+        candidate_function.function_virtual_address() == function_info.address()) {
+      return function_id;
     }
   }
-
   return std::nullopt;
 }
 
