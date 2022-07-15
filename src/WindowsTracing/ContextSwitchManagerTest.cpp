@@ -21,6 +21,7 @@ class MockTracerListener : public orbit_windows_tracing::TracerListener {
   MOCK_METHOD(void, OnModulesSnapshot, (orbit_grpc_protos::ModulesSnapshot), (override));
   MOCK_METHOD(void, OnModuleUpdate, (orbit_grpc_protos::ModuleUpdateEvent), (override));
   MOCK_METHOD(void, OnThreadNamesSnapshot, (orbit_grpc_protos::ThreadNamesSnapshot), (override));
+  MOCK_METHOD(void, OnPresentEvent, (orbit_grpc_protos::PresentEvent present_event), (override));
 };
 
 TEST(ContextSwitch, ListenerIsCalled) {

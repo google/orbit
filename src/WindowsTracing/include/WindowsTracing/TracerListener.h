@@ -20,6 +20,7 @@ class TracerListener {
   virtual void OnModulesSnapshot(orbit_grpc_protos::ModulesSnapshot modules_snapshot) = 0;
   virtual void OnThreadNamesSnapshot(
       orbit_grpc_protos::ThreadNamesSnapshot thread_names_snapshot) = 0;
+  virtual void OnPresentEvent(orbit_grpc_protos::PresentEvent present_event) = 0;
 };
 
 }  // namespace orbit_windows_tracing

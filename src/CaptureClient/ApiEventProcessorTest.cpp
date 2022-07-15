@@ -61,6 +61,7 @@ class MockCaptureListener : public CaptureListener {
               (uint64_t /*timestamp_ns*/,
                std::vector<orbit_grpc_protos::ModuleInfo> /*module_infos*/),
               (override));
+  MOCK_METHOD(void, OnPresentEvent, (const orbit_grpc_protos::PresentEvent&), (override));
   MOCK_METHOD(void, OnApiStringEvent, (const orbit_client_data::ApiStringEvent&), (override));
   MOCK_METHOD(void, OnApiTrackValue, (const orbit_client_data::ApiTrackValue&), (override));
   MOCK_METHOD(void, OnWarningEvent, (orbit_grpc_protos::WarningEvent /*warning_event*/),
