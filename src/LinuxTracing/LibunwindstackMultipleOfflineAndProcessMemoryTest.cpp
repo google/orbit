@@ -8,8 +8,6 @@
 #include "LibunwindstackMultipleOfflineAndProcessMemory.h"
 #include "OrbitBase/ThreadUtils.h"
 
-using ::testing::Invoke;
-
 namespace orbit_linux_tracing {
 
 TEST(LibunwindstackMultipleOfflineAndProcessMemory, ReadFromOneStackSlice) {
@@ -142,13 +140,6 @@ TEST(LibunwindstackMultipleOfflineAndProcessMemory, ReadFromTestProcess) {
   constexpr uint64_t kStartAddress2 = 0xABCDEF;
   std::vector<char> bytes2{0x11, 0x12, 0x13, 0x14, 0x15, 0x16, 0x17};
   StackSliceView stack_slice2(kStartAddress2, bytes2.size(), bytes2.data());
-
-  std::vector<StackSliceView> stack_slices{stack_slice1, stack_slice2};
-  std::vector<LibunwindstackOfflineMemory> stack_memories{};
-  stack_memories.reserve(stack_slices.size());
-  for (const StackSliceView& stack_slice_view : stack_slices) {
-    stack_memories.emplace_back(stack_slice_view);
-  }
 
   std::vector<char> bytes3{0x09, 0x08, 0x07, 0x06, 0x05};
 

@@ -64,6 +64,7 @@ LibunwindstackMultipleOfflineAndProcessMemory::CreateWithProcessMemory(
       new LibunwindstackMultipleOfflineAndProcessMemory(
           unwindstack::Memory::CreateProcessMemoryCached(pid), std::move(stack_memories)));
 }
+
 std::shared_ptr<unwindstack::Memory>
 LibunwindstackMultipleOfflineAndProcessMemory::CreateWithoutProcessMemory(
     const std::vector<StackSliceView>& stack_slices) {
