@@ -47,6 +47,7 @@ using orbit_grpc_protos::MemoryUsageEvent;
 using orbit_grpc_protos::ModulesSnapshot;
 using orbit_grpc_protos::ModuleUpdateEvent;
 using orbit_grpc_protos::OutOfOrderEventsDiscardedEvent;
+using orbit_grpc_protos::PresentEvent;
 using orbit_grpc_protos::ProducerCaptureEvent;
 using orbit_grpc_protos::SchedulingSlice;
 using orbit_grpc_protos::ThreadName;
@@ -140,6 +141,7 @@ class ProducerEventProcessorImpl : public ProducerEventProcessor {
   void ProcessModuleUpdateEventAndTransferOwnership(ModuleUpdateEvent* module_update_event);
   void ProcessOutOfOrderEventsDiscardedEventAndTransferOwnership(
       OutOfOrderEventsDiscardedEvent* out_of_order_events_discarded_event);
+  void ProcessPresentEventAndTransferOwnership(PresentEvent* present_event);
   void ProcessSchedulingSliceAndTransferOwnership(SchedulingSlice* scheduling_slice);
   void ProcessThreadNameAndTransferOwnership(ThreadName* thread_name);
   void ProcessThreadNamesSnapshotAndTransferOwnership(ThreadNamesSnapshot* thread_names_snapshot);
@@ -502,6 +504,13 @@ void ProducerEventProcessorImpl::ProcessOutOfOrderEventsDiscardedEventAndTransfe
   client_capture_event_collector_->AddEvent(std::move(event));
 }
 
+void ProducerEventProcessorImpl::ProcessPresentEventAndTransferOwnership(
+    PresentEvent* present_event) {
+  ClientCaptureEvent event;
+  event.set_allocated_present_event(present_event);
+  client_capture_event_collector_->AddEvent(std::move(event));
+}
+
 void ProducerEventProcessorImpl::ProcessSchedulingSliceAndTransferOwnership(
     SchedulingSlice* scheduling_slice) {
   ClientCaptureEvent event;
@@ -652,6 +661,9 @@ void ProducerEventProcessorImpl::ProcessEvent(uint64_t producer_id, ProducerCapt
     case ProducerCaptureEvent::kOutOfOrderEventsDiscardedEvent:
       ProcessOutOfOrderEventsDiscardedEventAndTransferOwnership(
           event.release_out_of_order_events_discarded_event());
+      break;
+    case ProducerCaptureEvent::kPresentEvent:
+      ProcessPresentEventAndTransferOwnership(event.release_present_event());
       break;
     case ProducerCaptureEvent::kSchedulingSlice:
       ProcessSchedulingSliceAndTransferOwnership(event.release_scheduling_slice());

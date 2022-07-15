@@ -71,9 +71,8 @@ bool FunctionsDataView::ShouldShowFrameTrackIcon(AppInterface* app, const Functi
   }
 
   const CaptureData& capture_data = app->GetCaptureData();
-  const ModuleManager* module_manager = app->GetModuleManager();
   std::optional<uint64_t> instrumented_function_id =
-      orbit_client_data::FindInstrumentedFunctionIdSlow(*module_manager, capture_data, function);
+      orbit_client_data::FindInstrumentedFunctionIdSlow(capture_data, function);
 
   return instrumented_function_id &&
          app->HasFrameTrackInCaptureData(instrumented_function_id.value());

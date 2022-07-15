@@ -472,6 +472,8 @@ void OrbitApp::OnCaptureStarted(const orbit_grpc_protos::CaptureStarted& capture
 Future<void> OrbitApp::OnCaptureComplete() {
   GetMutableCaptureData().OnCaptureComplete();
 
+  GetMutableCaptureData().ComputeVirtualAddressOfInstrumentedFunctionsIfNecessary(*module_manager_);
+
   GetMutableCaptureData().FilterBrokenCallstacks();
   PostProcessedSamplingData post_processed_sampling_data =
       orbit_client_model::CreatePostProcessedSamplingData(GetCaptureData().GetCallstackData(),
@@ -606,6 +608,8 @@ void OrbitApp::OnModulesSnapshot(uint64_t /*timestamp_ns*/, std::vector<ModuleIn
   GetMutableCaptureData().mutable_process()->UpdateModuleInfos(module_infos);
   main_thread_executor_->Schedule([this]() { FireRefreshCallbacks(DataViewType::kLiveFunctions); });
 }
+
+void OrbitApp::OnPresentEvent(const orbit_grpc_protos::PresentEvent& /*present_event*/) {}
 
 void OrbitApp::OnWarningEvent(orbit_grpc_protos::WarningEvent warning_event) {
   main_thread_executor_->Schedule([this, warning_event = std::move(warning_event)]() {
@@ -1840,7 +1844,7 @@ orbit_base::Future<void> OrbitApp::LoadSymbolsManually(
   for (const auto& module : modules_set) {
     download_disabled_modules_.erase(module->file_path());
 
-    // Explicitely do not handle the result.
+    // Explicitly do not handle the result.
     Future<void> future = RetrieveModuleAndLoadSymbolsAndHandleError(module).Then(
         &immediate_executor, [](const SymbolLoadingAndErrorHandlingResult & /*result*/) -> void {});
     futures.emplace_back(std::move(future));
@@ -2653,9 +2657,10 @@ void OrbitApp::DeselectFunction(const orbit_client_data::FunctionInfo& func) {
       module_in_memory, absolute_address);
   if (module == nullptr) return false;
 
-  const uint64_t offset = orbit_object_utils::SymbolAbsoluteAddressToOffset(
-      absolute_address, module_in_memory.start(), module->executable_segment_offset());
-  const FunctionInfo* function = module->FindFunctionByOffset(offset, false);
+  const uint64_t virtual_address = orbit_object_utils::SymbolAbsoluteAddressToVirtualAddress(
+      absolute_address, module_in_memory.start(), module->load_bias(),
+      module->executable_segment_offset());
+  const FunctionInfo* function = module->FindFunctionByVirtualAddress(virtual_address, false);
   if (function == nullptr) return false;
 
   return data_manager_->IsFunctionSelected(*function);
@@ -2944,8 +2949,7 @@ void OrbitApp::AddFrameTrack(const FunctionInfo& function) {
   if (!HasCaptureData()) return;
 
   std::optional<uint64_t> instrumented_function_id =
-      orbit_client_data::FindInstrumentedFunctionIdSlow(*module_manager_, GetCaptureData(),
-                                                        function);
+      orbit_client_data::FindInstrumentedFunctionIdSlow(GetCaptureData(), function);
   // If the function is not instrumented - ignore it. This happens when user
   // enables frame tracks for a not instrumented function from the function list.
   if (!instrumented_function_id) return;
@@ -2997,8 +3001,7 @@ void OrbitApp::RemoveFrameTrack(const FunctionInfo& function) {
   if (!HasCaptureData()) return;
 
   std::optional<uint64_t> instrumented_function_id =
-      orbit_client_data::FindInstrumentedFunctionIdSlow(*module_manager_, GetCaptureData(),
-                                                        function);
+      orbit_client_data::FindInstrumentedFunctionIdSlow(GetCaptureData(), function);
   // If the function is not instrumented - ignore it. This happens when user
   // enables frame tracks for a not instrumented function from the function list.
   if (!instrumented_function_id) return;

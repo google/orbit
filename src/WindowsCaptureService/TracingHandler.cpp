@@ -70,4 +70,10 @@ void TracingHandler::OnModulesSnapshot(orbit_grpc_protos::ModulesSnapshot module
   producer_event_processor_->ProcessEvent(kWindowsTracingProducerId, std::move(event));
 }
 
+void TracingHandler::OnPresentEvent(orbit_grpc_protos::PresentEvent present_event) {
+  ProducerCaptureEvent event;
+  *event.mutable_present_event() = std::move(present_event);
+  producer_event_processor_->ProcessEvent(kWindowsTracingProducerId, std::move(event));
+}
+
 }  // namespace orbit_windows_capture_service

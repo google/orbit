@@ -59,6 +59,7 @@ using orbit_grpc_protos::LostPerfRecordsEvent;
 using orbit_grpc_protos::MemoryUsageEvent;
 using orbit_grpc_protos::ModuleInfo;
 using orbit_grpc_protos::OutOfOrderEventsDiscardedEvent;
+using orbit_grpc_protos::PresentEvent;
 using orbit_grpc_protos::ProcessMemoryUsage;
 using orbit_grpc_protos::SchedulingSlice;
 using orbit_grpc_protos::SystemMemoryUsage;
@@ -99,6 +100,7 @@ class MockCaptureListener : public CaptureListener {
               (override));
   MOCK_METHOD(void, OnModulesSnapshot,
               (uint64_t /*timestamp_ns*/, std::vector<ModuleInfo> /*module_infos*/), (override));
+  MOCK_METHOD(void, OnPresentEvent, (const PresentEvent&), (override));
   MOCK_METHOD(void, OnApiStringEvent, (const ApiStringEvent&), (override));
   MOCK_METHOD(void, OnApiTrackValue, (const ApiTrackValue&), (override));
   MOCK_METHOD(void, OnWarningEvent, (orbit_grpc_protos::WarningEvent /*warning_event*/),
@@ -154,6 +156,30 @@ TEST(CaptureEventProcessor, CanHandleSchedulingSlices) {
   EXPECT_EQ(actual_timer.thread_id(), scheduling_slice->tid());
   EXPECT_EQ(actual_timer.processor(), scheduling_slice->core());
   EXPECT_EQ(actual_timer.type(), TimerInfo::kCoreActivity);
+}
+
+TEST(CaptureEventProcessor, CanHandlePresentEvent) {
+  MockCaptureListener listener;
+  auto event_processor =
+      CaptureEventProcessor::CreateForCaptureListener(&listener, std::filesystem::path{}, {});
+
+  ClientCaptureEvent event;
+  PresentEvent* present_event = event.mutable_present_event();
+  present_event->set_pid(42);
+  present_event->set_tid(24);
+  present_event->set_begin_timestamp_ns(100);
+  present_event->set_duration_ns(97);
+  present_event->set_source(PresentEvent::kD3d9);
+
+  PresentEvent actual_present_event;
+  EXPECT_CALL(listener, OnPresentEvent).Times(1).WillOnce(SaveArg<0>(&actual_present_event));
+  event_processor->ProcessEvent(event);
+
+  EXPECT_EQ(actual_present_event.pid(), present_event->pid());
+  EXPECT_EQ(actual_present_event.tid(), present_event->tid());
+  EXPECT_EQ(actual_present_event.begin_timestamp_ns(), present_event->begin_timestamp_ns());
+  EXPECT_EQ(actual_present_event.duration_ns(), present_event->duration_ns());
+  EXPECT_EQ(actual_present_event.source(), present_event->source());
 }
 
 static InternedCallstack* AddAndInitializeInternedCallstack(ClientCaptureEvent& event) {

@@ -498,10 +498,13 @@ void LiveFunctionsDataView::OnDataChanged() {
       instrumented_functions = app_->GetCaptureData().instrumented_functions();
   for (const auto& [function_id, instrumented_function] : instrumented_functions) {
     const ModuleManager* module_manager = app_->GetModuleManager();
-    const FunctionInfo* function_info_from_capture_data =
-        orbit_client_data::FindFunctionByModulePathBuildIdAndOffset(
+    const FunctionInfo* function_info_from_capture_data;
+
+    function_info_from_capture_data =
+        orbit_client_data::FindFunctionByModulePathBuildIdAndVirtualAddress(
             *module_manager, instrumented_function.file_path(),
-            instrumented_function.file_build_id(), instrumented_function.file_offset());
+            instrumented_function.file_build_id(),
+            instrumented_function.function_virtual_address());
 
     // This could happen because module has not yet been updated, it also
     // happens when loading capture. In which case we will try to construct
@@ -587,11 +590,8 @@ std::optional<FunctionInfo> LiveFunctionsDataView::CreateFunctionInfoFromInstrum
   const std::string& function_name = GetScopeInfo(scope_id.value()).GetName();
 
   // size is unknown
-  FunctionInfo result{instrumented_function.file_path(), instrumented_function.file_build_id(),
-                      module_data->load_bias() + instrumented_function.file_offset(), /*size=*/0,
-                      function_name};
-
-  return result;
+  return FunctionInfo{instrumented_function.file_path(), instrumented_function.file_build_id(),
+                      instrumented_function.function_virtual_address(), /*size=*/0, function_name};
 }
 
 [[nodiscard]] const orbit_client_data::ScopeInfo& LiveFunctionsDataView::GetScopeInfo(

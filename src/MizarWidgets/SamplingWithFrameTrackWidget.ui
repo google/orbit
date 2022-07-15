@@ -17,10 +17,24 @@
    <item>
     <layout class="QHBoxLayout" name="input_layout_">
      <item>
-      <widget class="orbit_mizar_widgets::SamplingWithFrameTrackInputWidget" name="baseline_input_" native="true"/>
+      <widget class="orbit_mizar_widgets::SamplingWithFrameTrackInputWidget" name="baseline_input_" native="true">
+       <property name="maximumSize">
+        <size>
+         <width>16777215</width>
+         <height>250</height>
+        </size>
+       </property>
+      </widget>
      </item>
      <item>
-      <widget class="orbit_mizar_widgets::SamplingWithFrameTrackInputWidget" name="comparison_input_" native="true"/>
+      <widget class="orbit_mizar_widgets::SamplingWithFrameTrackInputWidget" name="comparison_input_" native="true">
+       <property name="maximumSize">
+        <size>
+         <width>16777215</width>
+         <height>250</height>
+        </size>
+       </property>
+      </widget>
      </item>
     </layout>
    </item>

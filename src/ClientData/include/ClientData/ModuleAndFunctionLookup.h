@@ -22,10 +22,6 @@ const std::string kUnknownFunctionOrModuleName{"???"};
     const ModuleManager& module_manager, const CaptureData& capture_data,
     uint64_t absolute_address);
 
-[[nodiscard]] const FunctionInfo* FindFunctionByModulePathBuildIdAndOffset(
-    const ModuleManager& module_manager, const std::string& module_path,
-    const std::string& build_id, uint64_t offset);
-
 [[nodiscard]] const FunctionInfo* FindFunctionByModulePathBuildIdAndVirtualAddress(
     const ModuleManager& module_manager, const std::string& module_path,
     const std::string& build_id, uint64_t virtual_address);
@@ -46,8 +42,7 @@ FindModulePathAndBuildIdByAddress(const ModuleManager& module_manager,
     const ProcessData& process, const ModuleManager& module_manager, uint64_t absolute_address);
 
 [[nodiscard]] std::optional<uint64_t> FindInstrumentedFunctionIdSlow(
-    const ModuleManager& module_manager, const CaptureData& capture_data,
-    const FunctionInfo& function);
+    const CaptureData& capture_data, const FunctionInfo& function_info);
 
 }  // namespace orbit_client_data
 

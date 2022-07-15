@@ -159,6 +159,7 @@ class IntrospectionCaptureListener : public orbit_capture_client::CaptureListene
                          std::vector<orbit_grpc_protos::ModuleInfo> /*module_infos*/) override {
     ORBIT_UNREACHABLE();
   }
+  void OnPresentEvent(const orbit_grpc_protos::PresentEvent&) override { ORBIT_UNREACHABLE(); }
   void OnWarningEvent(orbit_grpc_protos::WarningEvent /*warning_event*/) override {
     ORBIT_UNREACHABLE();
   }

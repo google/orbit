@@ -84,6 +84,8 @@ class CaptureData {
   [[nodiscard]] const orbit_grpc_protos::InstrumentedFunction* GetInstrumentedFunctionById(
       uint64_t function_id) const;
 
+  void ComputeVirtualAddressOfInstrumentedFunctionsIfNecessary(const ModuleManager& module_manager);
+
   [[nodiscard]] uint32_t process_id() const;
 
   [[nodiscard]] std::string process_name() const;

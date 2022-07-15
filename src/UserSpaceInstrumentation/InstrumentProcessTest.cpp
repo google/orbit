@@ -47,7 +47,7 @@ void AddFunctionToCaptureOptions(orbit_grpc_protos::CaptureOptions* capture_opti
   orbit_grpc_protos::InstrumentedFunction* my_function =
       capture_options->add_instrumented_functions();
   my_function->set_function_id(function_id);
-  my_function->set_file_offset(range.start);
+  my_function->set_function_virtual_address(range.start);
   my_function->set_function_size(range.end - range.start);
   my_function->set_function_name(std::string{function_name});
   my_function->set_file_path(module_file_path);

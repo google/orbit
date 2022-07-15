@@ -78,6 +78,7 @@ class MizarData : public orbit_capture_client::AbstractCaptureListener<MizarData
                          std::vector<orbit_grpc_protos::ModuleInfo> module_infos) override {
     UpdateModules(module_infos);
   }
+  void OnPresentEvent(const orbit_grpc_protos::PresentEvent&) override {}
   void OnThreadStateSlice(orbit_client_data::ThreadStateSliceInfo /*thread_state_slice*/) override {
   }
   void OnApiStringEvent(const orbit_client_data::ApiStringEvent& /*unused*/) override {}

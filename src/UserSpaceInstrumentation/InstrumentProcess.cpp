@@ -522,8 +522,9 @@ InstrumentedProcess::InstrumentFunctions(const CaptureOptions& capture_options) 
     // address to instrument for each of them.
     OUTCOME_TRY(auto&& modules, ModulesFromModulePath(function.file_path()));
     for (const auto& module : modules) {
-      const uint64_t function_address = orbit_object_utils::SymbolOffsetToAbsoluteAddress(
-          function.file_offset(), module.address_start(), module.executable_segment_offset());
+      const uint64_t function_address = orbit_object_utils::SymbolVirtualAddressToAbsoluteAddress(
+          function.function_virtual_address(), module.address_start(), module.load_bias(),
+          module.executable_segment_offset());
       if (!trampoline_map_.contains(function_address)) {
         const AddressRange module_address_range(module.address_start(), module.address_end());
         auto trampoline_address_or_error = GetTrampolineMemory(module_address_range);

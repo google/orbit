@@ -22,9 +22,10 @@ FindFunctionAbsoluteAddressByInstructionAbsoluteAddressUsingModulesInMemory(
       module_in_memory, absolute_address);
   if (module == nullptr) return std::nullopt;
 
-  const uint64_t offset = orbit_object_utils::SymbolAbsoluteAddressToOffset(
-      absolute_address, module_base_address, module->executable_segment_offset());
-  const auto* function_info = module->FindFunctionByOffset(offset, false);
+  const uint64_t virtual_address = orbit_object_utils::SymbolAbsoluteAddressToVirtualAddress(
+      absolute_address, module_base_address, module->load_bias(),
+      module->executable_segment_offset());
+  const auto* function_info = module->FindFunctionByVirtualAddress(virtual_address, false);
   if (function_info == nullptr) return std::nullopt;
 
   return orbit_object_utils::SymbolVirtualAddressToAbsoluteAddress(
@@ -77,20 +78,6 @@ std::optional<uint64_t> FindFunctionAbsoluteAddressByInstructionAbsoluteAddress(
                                                                                  absolute_address);
 }
 
-const FunctionInfo* FindFunctionByModulePathBuildIdAndOffset(const ModuleManager& module_manager,
-                                                             const std::string& module_path,
-                                                             const std::string& build_id,
-                                                             uint64_t offset) {
-  const ModuleData* module_data = module_manager.GetModuleByPathAndBuildId(module_path, build_id);
-  if (module_data == nullptr) {
-    return nullptr;
-  }
-
-  uint64_t address = module_data->load_bias() + offset;
-
-  return module_data->FindFunctionByElfAddress(address, /*is_exact=*/true);
-}
-
 const FunctionInfo* FindFunctionByModulePathBuildIdAndVirtualAddress(
     const ModuleManager& module_manager, const std::string& module_path,
     const std::string& build_id, uint64_t virtual_address) {
@@ -99,7 +86,7 @@ const FunctionInfo* FindFunctionByModulePathBuildIdAndVirtualAddress(
     return nullptr;
   }
 
-  return module_data->FindFunctionByElfAddress(virtual_address, /*is_exact=*/true);
+  return module_data->FindFunctionByVirtualAddress(virtual_address, /*is_exact=*/true);
 }
 
 const std::string& GetModulePathByAddress(const ModuleManager& module_manager,
@@ -154,9 +141,10 @@ const FunctionInfo* FindFunctionByAddress(const ProcessData& process,
       module_in_memory, absolute_address);
   if (module == nullptr) return nullptr;
 
-  const uint64_t offset = orbit_object_utils::SymbolAbsoluteAddressToOffset(
-      absolute_address, module_base_address, module->executable_segment_offset());
-  return module->FindFunctionByOffset(offset, is_exact);
+  const uint64_t virtual_address = orbit_object_utils::SymbolAbsoluteAddressToVirtualAddress(
+      absolute_address, module_base_address, module->load_bias(),
+      module->executable_segment_offset());
+  return module->FindFunctionByVirtualAddress(virtual_address, is_exact);
 }
 
 [[nodiscard]] const ModuleData* FindModuleByAddress(const ProcessData& process,
@@ -168,19 +156,14 @@ const FunctionInfo* FindFunctionByAddress(const ProcessData& process,
                                                                     absolute_address);
 }
 
-std::optional<uint64_t> FindInstrumentedFunctionIdSlow(const ModuleManager& module_manager,
-                                                       const CaptureData& capture_data,
-                                                       const FunctionInfo& function) {
-  const ModuleData* module =
-      module_manager.GetModuleByPathAndBuildId(function.module_path(), function.module_build_id());
-  for (const auto& it : capture_data.instrumented_functions()) {
-    const auto& target_function = it.second;
-    if (target_function.file_path() == function.module_path() &&
-        target_function.file_offset() == function.FileOffset(module->load_bias())) {
-      return it.first;
+std::optional<uint64_t> FindInstrumentedFunctionIdSlow(const CaptureData& capture_data,
+                                                       const FunctionInfo& function_info) {
+  for (const auto& [function_id, candidate_function] : capture_data.instrumented_functions()) {
+    if (candidate_function.file_path() == function_info.module_path() &&
+        candidate_function.function_virtual_address() == function_info.address()) {
+      return function_id;
     }
   }
-
   return std::nullopt;
 }
 

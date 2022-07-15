@@ -19,6 +19,7 @@ message InstrumentedFunction {
   string file_build_id = 6;
   uint64 file_offset = 2;
   uint64 function_id = 3;
+  uint64 function_virtual_address = 10;
   uint64 function_size = 7;
   string function_name = 5;
 
@@ -517,6 +518,23 @@ message GpuDebugMarker {
   Color color = 5;
 }
 
+message PresentEvent {
+  uint32 pid = 1;
+  uint32 tid = 2;
+
+  // Unlike other events, we choose the (start_timestamp_ns, duration_ns) pair
+  // as some present "start" events don't have a corresponding "stop".
+  uint64 begin_timestamp_ns = 3;
+  uint64 duration_ns = 4;
+
+  enum Source {
+    kUnknown = 0;
+    kDxgi = 1;
+    kD3d9 = 2;
+  }
+  Source source = 5;
+}
+
 message Color {
   // Color ranges are [0.f, 1.f] for the following fields.
   float red = 1;
@@ -749,7 +767,7 @@ message ClientCaptureEvent {
     // use them for high frequency events. For the rest please assign
     // numbers starting with 16.
     //
-    // Next high-frequency ID: 12
+    // Next high-frequency ID: 13
     // Next lower-frequency ID: 49
     // Please keep these alphabetically ordered.
 
@@ -788,6 +806,7 @@ message ClientCaptureEvent {
     ModulesSnapshot modules_snapshot = 25;
     ModuleUpdateEvent module_update_event = 21;
     OutOfOrderEventsDiscardedEvent out_of_order_events_discarded_event = 37;
+    PresentEvent present_event = 12;
     SchedulingSlice scheduling_slice = 6;
     ThreadName thread_name = 22;
     ThreadNamesSnapshot thread_names_snapshot = 26;
@@ -807,7 +826,7 @@ message ProducerCaptureEvent {
     // use them for high frequency events. For the rest please assign
     // numbers starting with 16.
     //
-    // Next high-frequency ID: 15
+    // Next high-frequency ID: No high-frequency index left.
     // Next lower-frequency ID: 48
     //
     // Please keep these alphabetically ordered.
@@ -850,6 +869,7 @@ message ProducerCaptureEvent {
     ModulesSnapshot modules_snapshot = 25;
     ModuleUpdateEvent module_update_event = 20;
     OutOfOrderEventsDiscardedEvent out_of_order_events_discarded_event = 35;
+    PresentEvent present_event = 15;
     SchedulingSlice scheduling_slice = 8;
     ThreadName thread_name = 21;
     ThreadNamesSnapshot thread_names_snapshot = 24;

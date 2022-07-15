@@ -52,6 +52,7 @@ class CaptureListener {
   virtual void OnModuleUpdate(uint64_t timestamp_ns, orbit_grpc_protos::ModuleInfo module_info) = 0;
   virtual void OnModulesSnapshot(uint64_t timestamp_ns,
                                  std::vector<orbit_grpc_protos::ModuleInfo> module_infos) = 0;
+  virtual void OnPresentEvent(const orbit_grpc_protos::PresentEvent& present_event) = 0;
   virtual void OnThreadStateSlice(orbit_client_data::ThreadStateSliceInfo thread_state_slice) = 0;
   virtual void OnAddressInfo(orbit_client_data::LinuxAddressInfo address_info) = 0;
   virtual void OnUniqueTracepointInfo(uint64_t tracepoint_id,
