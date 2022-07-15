@@ -15,10 +15,11 @@
 
 namespace orbit_paths {
 
-TEST(Path, AllAutoCreatedDirsExist) {
-  auto test_fns = {CreateOrGetOrbitAppDataDir, CreateOrGetDumpDir,    CreateOrGetPresetDir,
-                   CreateOrGetCacheDir,        CreateOrGetCaptureDir, CreateOrGetLogDir,
-                   CreateOrGetOrbitUserDataDir};
+TEST(Path, AllAutoCreatedDirsExistUnsafe) {
+  auto test_fns = {CreateOrGetOrbitAppDataDirUnsafe, CreateOrGetDumpDirUnsafe,
+                   CreateOrGetPresetDirUnsafe,       CreateOrGetCacheDirUnsafe,
+                   CreateOrGetCaptureDirUnsafe,      CreateOrGetLogDirUnsafe,
+                   CreateOrGetOrbitUserDataDirUnsafe};
 
   for (auto fn : test_fns) {
     std::filesystem::path path = fn();
@@ -27,14 +28,14 @@ TEST(Path, AllAutoCreatedDirsExist) {
   }
 }
 
-TEST(Path, AllAutoCreatedDirsExistSafe) {
-  auto test_fns = {CreateOrGetOrbitUserDataDirSafe,
-                   CreateOrGetCaptureDirSafe,
-                   CreateOrGetPresetDirSafe,
-                   CreateOrGetOrbitAppDataDirSafe,
-                   CreateOrGetCacheDirSafe,
-                   CreateOrGetDumpDirSafe,
-                   CreateOrGetLogDirSafe};
+TEST(Path, AllAutoCreatedDirsExist) {
+  auto test_fns = {CreateOrGetOrbitUserDataDir,
+                   CreateOrGetCaptureDir,
+                   CreateOrGetPresetDir,
+                   CreateOrGetOrbitAppDataDir,
+                   CreateOrGetCacheDir,
+                   CreateOrGetDumpDir,
+                   CreateOrGetLogDir};
 
   for (auto fn : test_fns) {
     ErrorMessageOr<std::filesystem::path> path_or_error = fn();
@@ -44,7 +45,7 @@ TEST(Path, AllAutoCreatedDirsExistSafe) {
 }
 
 TEST(Paths, AllDirsOfFilesExist) {
-  auto test_fns = {GetLogFilePath, GetSymbolsFilePath};
+  auto test_fns = {GetLogFilePathUnsafe, GetSymbolsFilePathUnsafe};
 
   for (auto fn : test_fns) {
     std::filesystem::path path = fn().parent_path();
@@ -54,7 +55,7 @@ TEST(Paths, AllDirsOfFilesExist) {
 }
 
 TEST(Paths, AllDirsOfFilesExistSafe) {
-  auto test_fns = {GetLogFilePathSafe, GetSymbolsFilePathSafe};
+  auto test_fns = {GetLogFilePath, GetSymbolsFilePath};
 
   for (auto fn : test_fns) {
     ErrorMessageOr<std::filesystem::path> path_or_error = fn();

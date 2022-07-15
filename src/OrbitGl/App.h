@@ -704,7 +704,7 @@ class OrbitApp final : public DataViewFactory,
   std::unique_ptr<orbit_client_services::CrashManager> crash_manager_;
   std::unique_ptr<ManualInstrumentationManager> manual_instrumentation_manager_;
 
-  const orbit_symbols::SymbolHelper symbol_helper_{orbit_paths::CreateOrGetCacheDir()};
+  const orbit_symbols::SymbolHelper symbol_helper_{orbit_paths::CreateOrGetCacheDirUnsafe()};
 
   std::weak_ptr<StatusListener> status_listener_;
 

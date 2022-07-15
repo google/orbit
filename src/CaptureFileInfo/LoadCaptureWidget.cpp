@@ -30,7 +30,7 @@ LoadCaptureWidget::LoadCaptureWidget(QWidget* parent)
   Manager manager;
 
   if (manager.GetCaptureFileInfos().empty()) {
-    (void)manager.FillFromDirectory(orbit_paths::CreateOrGetCaptureDir());
+    (void)manager.FillFromDirectory(orbit_paths::CreateOrGetCaptureDirUnsafe());
   }
 
   item_model_.SetCaptureFileInfos(manager.GetCaptureFileInfos());
@@ -117,9 +117,9 @@ void LoadCaptureWidget::showEvent(QShowEvent* event) {
 }
 
 void LoadCaptureWidget::SelectViaFilePicker() {
-  QFileDialog file_picker(this, "Open Capture...",
-                          QString::fromStdString(orbit_paths::CreateOrGetCaptureDir().string()),
-                          "*.orbit");
+  QFileDialog file_picker(
+      this, "Open Capture...",
+      QString::fromStdString(orbit_paths::CreateOrGetCaptureDirUnsafe().string()), "*.orbit");
   file_picker.setFileMode(QFileDialog::ExistingFile);
   file_picker.setLabelText(QFileDialog::Accept, "Start Session");
 

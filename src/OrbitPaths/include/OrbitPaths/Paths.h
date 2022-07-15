@@ -12,48 +12,48 @@
 namespace orbit_paths {
 
 // TODO(b/238986831) Replace deprecated and unsafe function with safe alternative.
-[[nodiscard, deprecated]] std::filesystem::path GetSymbolsFilePath();
-ErrorMessageOr<std::filesystem::path> GetSymbolsFilePathSafe();
+[[nodiscard, deprecated]] std::filesystem::path GetSymbolsFilePathUnsafe();
+ErrorMessageOr<std::filesystem::path> GetSymbolsFilePath();
 
 // TODO(b/238986334) Replace deprecated and unsafe function with safe alternative.
-[[nodiscard, deprecated]] std::filesystem::path CreateOrGetCacheDir();
-ErrorMessageOr<std::filesystem::path> CreateOrGetCacheDirSafe();
+[[nodiscard, deprecated]] std::filesystem::path CreateOrGetCacheDirUnsafe();
+ErrorMessageOr<std::filesystem::path> CreateOrGetCacheDir();
 
 // TODO(b/238986330) Replace deprecated and unsafe function with safe alternative.
-[[nodiscard, deprecated]] std::filesystem::path CreateOrGetPresetDir();
-ErrorMessageOr<std::filesystem::path> CreateOrGetPresetDirSafe();
+[[nodiscard, deprecated]] std::filesystem::path CreateOrGetPresetDirUnsafe();
+ErrorMessageOr<std::filesystem::path> CreateOrGetPresetDir();
 
 // TODO(b/239014904) Replace deprecated and unsafe function with safe alternative.
-[[nodiscard, deprecated]] std::filesystem::path CreateOrGetCaptureDir();
-ErrorMessageOr<std::filesystem::path> CreateOrGetCaptureDirSafe();
+[[nodiscard, deprecated]] std::filesystem::path CreateOrGetCaptureDirUnsafe();
+ErrorMessageOr<std::filesystem::path> CreateOrGetCaptureDir();
 
 // TODO(b/238986372) Replace deprecated and unsafe function with safe alternative.
-[[nodiscard, deprecated]] std::filesystem::path CreateOrGetDumpDir();
-ErrorMessageOr<std::filesystem::path> CreateOrGetDumpDirSafe();
+[[nodiscard, deprecated]] std::filesystem::path CreateOrGetDumpDirUnsafe();
+ErrorMessageOr<std::filesystem::path> CreateOrGetDumpDir();
 
 // TODO(b/238986370) Replace deprecated and unsafe function with safe alternative.
-[[nodiscard, deprecated]] std::filesystem::path CreateOrGetOrbitAppDataDir();
-ErrorMessageOr<std::filesystem::path> CreateOrGetOrbitAppDataDirSafe();
+[[nodiscard, deprecated]] std::filesystem::path CreateOrGetOrbitAppDataDirUnsafe();
+ErrorMessageOr<std::filesystem::path> CreateOrGetOrbitAppDataDir();
 
 // TODO(b/238985362) Replace deprecated and unsafe function with safe alternative.
-[[nodiscard, deprecated]] std::filesystem::path CreateOrGetOrbitUserDataDir();
-ErrorMessageOr<std::filesystem::path> CreateOrGetOrbitUserDataDirSafe();
+[[nodiscard, deprecated]] std::filesystem::path CreateOrGetOrbitUserDataDirUnsafe();
+ErrorMessageOr<std::filesystem::path> CreateOrGetOrbitUserDataDir();
 
 // TODO(b/238986342) Replace deprecated and unsafe function with safe alternative.
-[[nodiscard, deprecated]] std::filesystem::path CreateOrGetLogDir();
-ErrorMessageOr<std::filesystem::path> CreateOrGetLogDirSafe();
+[[nodiscard, deprecated]] std::filesystem::path CreateOrGetLogDirUnsafe();
+ErrorMessageOr<std::filesystem::path> CreateOrGetLogDir();
 
 // TODO(b/238986108) Replace deprecated and unsafe function with safe alternative.
-[[nodiscard, deprecated]] std::filesystem::path GetLogFilePath();
-ErrorMessageOr<std::filesystem::path> GetLogFilePathSafe();
+[[nodiscard, deprecated]] std::filesystem::path GetLogFilePathUnsafe();
+ErrorMessageOr<std::filesystem::path> GetLogFilePath();
 
 // TODO(b/238986346) Replace deprecated and unsafe function with safe alternative.
-[[nodiscard, deprecated]] std::filesystem::path GetPresetDirPriorTo1_66();
-ErrorMessageOr<std::filesystem::path> GetPresetDirPriorTo1_66Safe();
+[[nodiscard, deprecated]] std::filesystem::path GetPresetDirPriorTo1_66Unsafe();
+ErrorMessageOr<std::filesystem::path> GetPresetDirPriorTo1_66();
 
 // TODO(b/238986348) Replace deprecated and unsafe function with safe alternative.
-[[nodiscard, deprecated]] std::filesystem::path GetCaptureDirPriorTo1_66();
-ErrorMessageOr<std::filesystem::path> GetCaptureDirPriorTo1_66Safe();
+[[nodiscard, deprecated]] std::filesystem::path GetCaptureDirPriorTo1_66Unsafe();
+ErrorMessageOr<std::filesystem::path> GetCaptureDirPriorTo1_66();
 
 }  // namespace orbit_paths
 

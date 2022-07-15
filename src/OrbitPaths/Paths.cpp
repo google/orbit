@@ -26,7 +26,7 @@
 
 ABSL_FLAG(std::string, log_dir, "", "Set directory for the log.");
 
-constexpr std::string_view kOrbitFolderName{"Orbit"};
+constexpr std::string_view kOrbitFolderInDocumentsName{"Orbit"};
 constexpr std::string_view kCapturesFolderName{"captures"};
 constexpr std::string_view kPresetsFolderName{"presets"};
 constexpr std::string_view kCacheFolderName{"cache"};
@@ -59,7 +59,8 @@ static std::string GetEnvVar(const char* variable_name) {
 // Attempts to create a directory if it doesn't exist. Returns success if the creation was
 // successful or it already existed. If an error occurs its logged and returned. The difference to
 // orbit_base::CreateDirectories is the return type and logging.
-static ErrorMessageOr<void> CreateDirectory(const std::filesystem::path& directory) {
+static ErrorMessageOr<void> CreateDirectoryIfItDoesNotExist(
+    const std::filesystem::path& directory) {
   ErrorMessageOr<bool> created_or_error = orbit_base::CreateDirectories(directory);
   if (created_or_error.has_error()) {
     std::string error_message =
@@ -80,94 +81,94 @@ static void CreateDirectoryOrDie(const std::filesystem::path& directory) {
 }
 
 static std::filesystem::path CreateAndGetConfigPath() {
-  std::filesystem::path config_dir = CreateOrGetOrbitAppDataDir() / kConfigFolderName;
+  std::filesystem::path config_dir = CreateOrGetOrbitAppDataDirUnsafe() / kConfigFolderName;
   CreateDirectoryOrDie(config_dir);
   return config_dir;
 }
 
 static ErrorMessageOr<std::filesystem::path> CreateAndGetConfigPathSafe() {
-  OUTCOME_TRY(std::filesystem::path app_data_dir, CreateOrGetOrbitAppDataDirSafe());
+  OUTCOME_TRY(std::filesystem::path app_data_dir, CreateOrGetOrbitAppDataDir());
   std::filesystem::path config_dir = app_data_dir / kConfigFolderName;
-  OUTCOME_TRY(CreateDirectory(config_dir));
+  OUTCOME_TRY(CreateDirectoryIfItDoesNotExist(config_dir));
   return config_dir;
 }
 
-std::filesystem::path GetSymbolsFilePath() {
+std::filesystem::path GetSymbolsFilePathUnsafe() {
   return CreateAndGetConfigPath() / kSymbolPathsFileName;
 }
 
-ErrorMessageOr<std::filesystem::path> GetSymbolsFilePathSafe() {
+ErrorMessageOr<std::filesystem::path> GetSymbolsFilePath() {
   OUTCOME_TRY(std::filesystem::path config_dir, CreateAndGetConfigPathSafe());
   return config_dir / kSymbolPathsFileName;
 }
 
-std::filesystem::path CreateOrGetCacheDir() {
-  std::filesystem::path cache_dir = CreateOrGetOrbitAppDataDir() / kCacheFolderName;
+std::filesystem::path CreateOrGetCacheDirUnsafe() {
+  std::filesystem::path cache_dir = CreateOrGetOrbitAppDataDirUnsafe() / kCacheFolderName;
   CreateDirectoryOrDie(cache_dir);
   return cache_dir;
 }
 
-ErrorMessageOr<std::filesystem::path> CreateOrGetCacheDirSafe() {
-  OUTCOME_TRY(std::filesystem::path app_data_dir, CreateOrGetOrbitAppDataDirSafe());
+ErrorMessageOr<std::filesystem::path> CreateOrGetCacheDir() {
+  OUTCOME_TRY(std::filesystem::path app_data_dir, CreateOrGetOrbitAppDataDir());
   std::filesystem::path cache_dir = app_data_dir / kCacheFolderName;
-  OUTCOME_TRY(CreateDirectory(cache_dir));
+  OUTCOME_TRY(CreateDirectoryIfItDoesNotExist(cache_dir));
   return cache_dir;
 }
 
-std::filesystem::path GetPresetDirPriorTo1_66() {
-  return CreateOrGetOrbitAppDataDir() / kPresetsFolderName;
+std::filesystem::path GetPresetDirPriorTo1_66Unsafe() {
+  return CreateOrGetOrbitAppDataDirUnsafe() / kPresetsFolderName;
 }
 
-ErrorMessageOr<std::filesystem::path> GetPresetDirPriorTo1_66Safe() {
-  OUTCOME_TRY(std::filesystem::path app_data_dir, CreateOrGetOrbitAppDataDirSafe());
+ErrorMessageOr<std::filesystem::path> GetPresetDirPriorTo1_66() {
+  OUTCOME_TRY(std::filesystem::path app_data_dir, CreateOrGetOrbitAppDataDir());
   return app_data_dir / kPresetsFolderName;
 }
 
-std::filesystem::path GetCaptureDirPriorTo1_66() {
-  return CreateOrGetOrbitAppDataDir() / kOutputFolderName;
+std::filesystem::path GetCaptureDirPriorTo1_66Unsafe() {
+  return CreateOrGetOrbitAppDataDirUnsafe() / kOutputFolderName;
 }
 
-ErrorMessageOr<std::filesystem::path> GetCaptureDirPriorTo1_66Safe() {
-  OUTCOME_TRY(std::filesystem::path app_data_dir, CreateOrGetOrbitAppDataDirSafe());
+ErrorMessageOr<std::filesystem::path> GetCaptureDirPriorTo1_66() {
+  OUTCOME_TRY(std::filesystem::path app_data_dir, CreateOrGetOrbitAppDataDir());
   return app_data_dir / kOutputFolderName;
 }
 
-std::filesystem::path CreateOrGetPresetDir() {
-  std::filesystem::path preset_dir = CreateOrGetOrbitUserDataDir() / kPresetsFolderName;
+std::filesystem::path CreateOrGetPresetDirUnsafe() {
+  std::filesystem::path preset_dir = CreateOrGetOrbitUserDataDirUnsafe() / kPresetsFolderName;
   CreateDirectoryOrDie(preset_dir);
   return preset_dir;
 }
 
-ErrorMessageOr<std::filesystem::path> CreateOrGetPresetDirSafe() {
-  OUTCOME_TRY(std::filesystem::path user_data_dir, CreateOrGetOrbitUserDataDirSafe());
+ErrorMessageOr<std::filesystem::path> CreateOrGetPresetDir() {
+  OUTCOME_TRY(std::filesystem::path user_data_dir, CreateOrGetOrbitUserDataDir());
   std::filesystem::path preset_dir = user_data_dir / kPresetsFolderName;
-  OUTCOME_TRY(CreateDirectory(preset_dir));
+  OUTCOME_TRY(CreateDirectoryIfItDoesNotExist(preset_dir));
   return preset_dir;
 }
 
-std::filesystem::path CreateOrGetCaptureDir() {
-  std::filesystem::path capture_dir = CreateOrGetOrbitUserDataDir() / kCapturesFolderName;
+std::filesystem::path CreateOrGetCaptureDirUnsafe() {
+  std::filesystem::path capture_dir = CreateOrGetOrbitUserDataDirUnsafe() / kCapturesFolderName;
   CreateDirectoryOrDie(capture_dir);
   return capture_dir;
 }
 
-ErrorMessageOr<std::filesystem::path> CreateOrGetCaptureDirSafe() {
-  OUTCOME_TRY(std::filesystem::path user_data_dir, CreateOrGetOrbitUserDataDirSafe());
+ErrorMessageOr<std::filesystem::path> CreateOrGetCaptureDir() {
+  OUTCOME_TRY(std::filesystem::path user_data_dir, CreateOrGetOrbitUserDataDir());
   std::filesystem::path capture_dir = user_data_dir / kCapturesFolderName;
-  OUTCOME_TRY(CreateDirectory(capture_dir));
+  OUTCOME_TRY(CreateDirectoryIfItDoesNotExist(capture_dir));
   return capture_dir;
 }
 
-std::filesystem::path CreateOrGetDumpDir() {
-  std::filesystem::path dumps_dir = CreateOrGetOrbitAppDataDir() / kDumpsFolderName;
+std::filesystem::path CreateOrGetDumpDirUnsafe() {
+  std::filesystem::path dumps_dir = CreateOrGetOrbitAppDataDirUnsafe() / kDumpsFolderName;
   CreateDirectoryOrDie(dumps_dir);
   return dumps_dir;
 }
 
-ErrorMessageOr<std::filesystem::path> CreateOrGetDumpDirSafe() {
-  OUTCOME_TRY(std::filesystem::path app_data_dir, CreateOrGetOrbitAppDataDirSafe());
+ErrorMessageOr<std::filesystem::path> CreateOrGetDumpDir() {
+  OUTCOME_TRY(std::filesystem::path app_data_dir, CreateOrGetOrbitAppDataDir());
   std::filesystem::path dumps_dir = app_data_dir / kDumpsFolderName;
-  OUTCOME_TRY(CreateDirectory(dumps_dir));
+  OUTCOME_TRY(CreateDirectoryIfItDoesNotExist(dumps_dir));
   return dumps_dir;
 }
 
@@ -180,15 +181,15 @@ static std::filesystem::path GetOrbitAppDataDir() {
   return path;
 }
 
-std::filesystem::path CreateOrGetOrbitAppDataDir() {
+std::filesystem::path CreateOrGetOrbitAppDataDirUnsafe() {
   std::filesystem::path path = GetOrbitAppDataDir();
   CreateDirectoryOrDie(path);
   return path;
 }
 
-ErrorMessageOr<std::filesystem::path> CreateOrGetOrbitAppDataDirSafe() {
+ErrorMessageOr<std::filesystem::path> CreateOrGetOrbitAppDataDir() {
   std::filesystem::path path = GetOrbitAppDataDir();
-  OUTCOME_TRY(CreateDirectory(path));
+  OUTCOME_TRY(CreateDirectoryIfItDoesNotExist(path));
   return path;
 }
 
@@ -221,19 +222,19 @@ static std::filesystem::path GetDocumentsPath() {
 #endif
 }
 
-std::filesystem::path CreateOrGetOrbitUserDataDir() {
-  std::filesystem::path path = GetDocumentsPath() / kOrbitFolderName;
+std::filesystem::path CreateOrGetOrbitUserDataDirUnsafe() {
+  std::filesystem::path path = GetDocumentsPath() / kOrbitFolderInDocumentsName;
   CreateDirectoryOrDie(path);
   return path;
 }
 
-ErrorMessageOr<std::filesystem::path> CreateOrGetOrbitUserDataDirSafe() {
-  std::filesystem::path path = GetDocumentsPath() / kOrbitFolderName;
-  OUTCOME_TRY(CreateDirectory(path));
+ErrorMessageOr<std::filesystem::path> CreateOrGetOrbitUserDataDir() {
+  std::filesystem::path path = GetDocumentsPath() / kOrbitFolderInDocumentsName;
+  OUTCOME_TRY(CreateDirectoryIfItDoesNotExist(path));
   return path;
 }
 
-static std::optional<std::filesystem::path> GetFlagLogDir() {
+static std::optional<std::filesystem::path> GetLogDirFromFlag() {
   std::filesystem::path logs_dir;
   if (!absl::GetFlag(FLAGS_log_dir).empty()) {
     return std::filesystem::path{absl::GetFlag(FLAGS_log_dir)};
@@ -241,26 +242,26 @@ static std::optional<std::filesystem::path> GetFlagLogDir() {
   return std::nullopt;
 }
 
-std::filesystem::path CreateOrGetLogDir() {
+std::filesystem::path CreateOrGetLogDirUnsafe() {
   std::filesystem::path logs_dir =
-      GetFlagLogDir().value_or(CreateOrGetOrbitAppDataDir() / kLogsFolderName);
+      GetLogDirFromFlag().value_or(CreateOrGetOrbitAppDataDirUnsafe() / kLogsFolderName);
   CreateDirectoryOrDie(logs_dir);
   return logs_dir;
 }
 
-ErrorMessageOr<std::filesystem::path> CreateOrGetLogDirSafe() {
-  OUTCOME_TRY(std::filesystem::path app_data_dir, CreateOrGetOrbitAppDataDirSafe());
-  std::filesystem::path logs_dir = GetFlagLogDir().value_or(app_data_dir / kLogsFolderName);
-  OUTCOME_TRY(CreateDirectory(logs_dir));
+ErrorMessageOr<std::filesystem::path> CreateOrGetLogDir() {
+  OUTCOME_TRY(std::filesystem::path app_data_dir, CreateOrGetOrbitAppDataDir());
+  std::filesystem::path logs_dir = GetLogDirFromFlag().value_or(app_data_dir / kLogsFolderName);
+  OUTCOME_TRY(CreateDirectoryIfItDoesNotExist(logs_dir));
   return logs_dir;
 }
 
-std::filesystem::path GetLogFilePath() {
-  return CreateOrGetLogDir() / orbit_base::GetLogFileName();
+std::filesystem::path GetLogFilePathUnsafe() {
+  return CreateOrGetLogDirUnsafe() / orbit_base::GetLogFileName();
 }
 
-ErrorMessageOr<std::filesystem::path> GetLogFilePathSafe() {
-  OUTCOME_TRY(std::filesystem::path log_dir, CreateOrGetLogDirSafe());
+ErrorMessageOr<std::filesystem::path> GetLogFilePath() {
+  OUTCOME_TRY(std::filesystem::path log_dir, CreateOrGetLogDir());
   return log_dir / orbit_base::GetLogFileName();
 }
 
