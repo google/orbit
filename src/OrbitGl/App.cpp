@@ -472,6 +472,8 @@ void OrbitApp::OnCaptureStarted(const orbit_grpc_protos::CaptureStarted& capture
 Future<void> OrbitApp::OnCaptureComplete() {
   GetMutableCaptureData().OnCaptureComplete();
 
+  GetMutableCaptureData().ComputeVirtualAddressOfInstrumentedFunctionsIfNecessary(*module_manager_);
+
   GetMutableCaptureData().FilterBrokenCallstacks();
   PostProcessedSamplingData post_processed_sampling_data =
       orbit_client_model::CreatePostProcessedSamplingData(GetCaptureData().GetCallstackData(),
@@ -1842,7 +1844,7 @@ orbit_base::Future<void> OrbitApp::LoadSymbolsManually(
   for (const auto& module : modules_set) {
     download_disabled_modules_.erase(module->file_path());
 
-    // Explicitely do not handle the result.
+    // Explicitly do not handle the result.
     Future<void> future = RetrieveModuleAndLoadSymbolsAndHandleError(module).Then(
         &immediate_executor, [](const SymbolLoadingAndErrorHandlingResult & /*result*/) -> void {});
     futures.emplace_back(std::move(future));
@@ -2947,8 +2949,7 @@ void OrbitApp::AddFrameTrack(const FunctionInfo& function) {
   if (!HasCaptureData()) return;
 
   std::optional<uint64_t> instrumented_function_id =
-      orbit_client_data::FindInstrumentedFunctionIdSlow(*module_manager_, GetCaptureData(),
-                                                        function);
+      orbit_client_data::FindInstrumentedFunctionIdSlow(GetCaptureData(), function);
   // If the function is not instrumented - ignore it. This happens when user
   // enables frame tracks for a not instrumented function from the function list.
   if (!instrumented_function_id) return;
@@ -3000,8 +3001,7 @@ void OrbitApp::RemoveFrameTrack(const FunctionInfo& function) {
   if (!HasCaptureData()) return;
 
   std::optional<uint64_t> instrumented_function_id =
-      orbit_client_data::FindInstrumentedFunctionIdSlow(*module_manager_, GetCaptureData(),
-                                                        function);
+      orbit_client_data::FindInstrumentedFunctionIdSlow(GetCaptureData(), function);
   // If the function is not instrumented - ignore it. This happens when user
   // enables frame tracks for a not instrumented function from the function list.
   if (!instrumented_function_id) return;
