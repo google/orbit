@@ -554,6 +554,11 @@ class OrbitApp final : public DataViewFactory,
   // no particular order.
   orbit_base::Future<std::vector<ErrorMessageOr<orbit_base::CanceledOr<void>>>> LoadAllSymbols();
 
+  // Automatically add a default Frame Track. It will choose the function
+  // yeti::internal::vulkan::(anonymous namespace)::QueuePresentKHR from the module `ggpvlk.so` if
+  // available.
+  orbit_base::Future<ErrorMessageOr<void>> AddDefaultFrameTrack();
+
  private:
   void UpdateModulesAbortCaptureIfModuleWithoutBuildIdNeedsReload(
       absl::Span<const orbit_grpc_protos::ModuleInfo> module_infos);
