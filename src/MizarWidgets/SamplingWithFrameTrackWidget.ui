@@ -34,6 +34,9 @@
          <height>30</height>
         </size>
        </property>
+       <property name="toolTip">
+        <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-style:italic;&quot;&gt;False alarm &lt;/span&gt;is an event of reporting statistically significant difference in the absence of such. In our case, an event of the tool reporting that the runtime of a function significantly differs between the captures by mistake, not due to the presence of real difference. &lt;/p&gt;&lt;p&gt;&lt;br/&gt;&lt;/p&gt;&lt;p&gt;When the multiplicity correction is &lt;span style=&quot; font-style:italic;&quot;&gt;off, &lt;/span&gt;we control the probability of false alarm &lt;span style=&quot; font-style:italic;&quot;&gt;for each function&lt;/span&gt; is controlled. &lt;/p&gt;&lt;p&gt;When the multiplicity correction is &lt;span style=&quot; font-style:italic;&quot;&gt;on&lt;/span&gt;, the probability of at least one false alarm is controlled. &lt;/p&gt;&lt;p&gt;&lt;br/&gt;&lt;/p&gt;&lt;p&gt;The probability can be chosen in the drop down list to the right.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+       </property>
        <property name="text">
         <string>Multiplicity Correction</string>
        </property>

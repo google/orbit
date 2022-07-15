@@ -19,10 +19,10 @@ namespace orbit_statistics {
 // Here we implement multiplicity correction methods (a term from statistics).
 // TL;DR. An individual statistical test yields a single pvalue. That pvalue can be compared against
 // the user-defined significance level alpha (e.g. alpha=0.05), and raise an alarm if
-// `pvalue < alpha`, thus controlling the probability of false-alarm -- it will be around alpha.
+// `pvalue < alpha`, thus controlling the probability of false alarm -- it will be around alpha.
 // Now, consider a case where a series of statistical tests takes place (e.g. 1000 of them). And we
 // don't want to see `~1000*alpha` false alarms. We rather wish to keep the probability of _any_
-// positive number of false-alarms under alpha. That is, we wish to control Family-wise error rate.
+// positive number of false alarms under alpha. That is, we wish to control Family-wise error rate.
 // Multiplicity correction yields corrected pvalues. One can compare the corrected pvalues against
 // alpha in the same manner as it is done for pvalues. The chance of _at least one_ false alarm will
 // be around alpha.

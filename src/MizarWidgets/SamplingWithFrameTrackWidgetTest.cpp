@@ -19,9 +19,9 @@ using ::testing::NotNull;
 namespace orbit_mizar_widgets {
 
 constexpr std::string_view kMultiplicityCorrectionEnabledLabel =
-    "Probability of false-alarm for at least one function:";
+    "Probability of false alarm for at least one function:";
 constexpr std::string_view kMultiplicityCorrectionDisabledLabel =
-    "Probability of false-alarm for an individual function:";
+    "Probability of false alarm for an individual function:";
 
 class SamplingWithFrameTrackWidgetTest : public ::testing::Test {
  public:

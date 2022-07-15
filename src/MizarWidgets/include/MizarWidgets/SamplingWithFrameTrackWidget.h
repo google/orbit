@@ -61,9 +61,9 @@ class SamplingWithFrameTrackWidget : public QWidget {
   static const inline Comparison<QString> kComparisonTitle =
       Comparison<QString>(QStringLiteral("Comparison"));
   static const inline QString kMultiplicityCorrectionEnabledLabel =
-      QStringLiteral("Probability of false-alarm for at least one function:");
+      QStringLiteral("Probability of false alarm for at least one function:");
   static const inline QString kMultiplicityCorrectionDisabledLabel =
-      QStringLiteral("Probability of false-alarm for an individual function:");
+      QStringLiteral("Probability of false alarm for an individual function:");
 
   static const inline SamplingWithFrameTrackReportConfigValidator kConfigValidator{
       kBaselineTitle, kComparisonTitle};
