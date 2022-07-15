@@ -2,19 +2,24 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
+#include <gmock/gmock-matchers.h>
 #include <gtest/gtest.h>
 
 #include <filesystem>
 #include <string>
 
 #include "OrbitBase/Logging.h"
+#include "OrbitBase/Result.h"
 #include "OrbitPaths/Paths.h"
+#include "TestUtils/TestUtils.h"
 
 namespace orbit_paths {
 
-TEST(Path, AllAutoCreatedDirsExist) {
-  auto test_fns = {CreateOrGetOrbitAppDataDir, CreateOrGetDumpDir,    CreateOrGetPresetDir,
-                   CreateOrGetCacheDir,        CreateOrGetCaptureDir, CreateOrGetLogDir};
+TEST(Path, AllAutoCreatedDirsExistUnsafe) {
+  auto test_fns = {CreateOrGetOrbitAppDataDirUnsafe, CreateOrGetDumpDirUnsafe,
+                   CreateOrGetPresetDirUnsafe,       CreateOrGetCacheDirUnsafe,
+                   CreateOrGetCaptureDirUnsafe,      CreateOrGetLogDirUnsafe,
+                   CreateOrGetOrbitUserDataDirUnsafe};
 
   for (auto fn : test_fns) {
     std::filesystem::path path = fn();
@@ -23,13 +28,39 @@ TEST(Path, AllAutoCreatedDirsExist) {
   }
 }
 
-TEST(Paths, AllDirsOfFilesExist) {
-  auto test_fns = {GetLogFilePath};
+TEST(Path, AllAutoCreatedDirsExist) {
+  auto test_fns = {CreateOrGetOrbitUserDataDir,
+                   CreateOrGetCaptureDir,
+                   CreateOrGetPresetDir,
+                   CreateOrGetOrbitAppDataDir,
+                   CreateOrGetCacheDir,
+                   CreateOrGetDumpDir,
+                   CreateOrGetLogDir};
+
+  for (auto fn : test_fns) {
+    ErrorMessageOr<std::filesystem::path> path_or_error = fn();
+    ASSERT_THAT(path_or_error, orbit_test_utils::HasValue());
+    EXPECT_TRUE(std::filesystem::is_directory(path_or_error.value()));
+  }
+}
+
+TEST(Paths, AllDirsOfFilesExistUnsafe) {
+  auto test_fns = {GetLogFilePathUnsafe, GetSymbolsFilePathUnsafe};
 
   for (auto fn : test_fns) {
     std::filesystem::path path = fn().parent_path();
     ORBIT_LOG("Testing existence of \"%s\"", path.string());
     EXPECT_TRUE(std::filesystem::is_directory(path));
+  }
+}
+
+TEST(Paths, AllDirsOfFilesExist) {
+  auto test_fns = {GetLogFilePath, GetSymbolsFilePath};
+
+  for (auto fn : test_fns) {
+    ErrorMessageOr<std::filesystem::path> path_or_error = fn();
+    ASSERT_THAT(path_or_error, orbit_test_utils::HasValue());
+    EXPECT_TRUE(std::filesystem::is_directory(path_or_error.value().parent_path()));
   }
 }
 

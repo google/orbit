@@ -46,8 +46,8 @@ void TryMoveSavedDataLocationIfNeeded() {
     return;
   }
 
-  if (IsDirectoryEmpty(orbit_paths::GetPresetDirPriorTo1_66()) &&
-      IsDirectoryEmpty(orbit_paths::GetCaptureDirPriorTo1_66())) {
+  if (IsDirectoryEmpty(orbit_paths::GetPresetDirPriorTo1_66Unsafe()) &&
+      IsDirectoryEmpty(orbit_paths::GetCaptureDirPriorTo1_66Unsafe())) {
     return;
   }
 

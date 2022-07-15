@@ -210,11 +210,11 @@ OrbitMainWindow::OrbitMainWindow(TargetConfiguration target_configuration,
   // SymbolPaths.txt deprecation code
   // If file does not exist, do nothing. (It means the user never used an older Orbit version or
   // manually deleted the file)
-  if (!std::filesystem::is_regular_file(orbit_paths::GetSymbolsFilePath())) return;
+  if (!std::filesystem::is_regular_file(orbit_paths::GetSymbolsFilePathUnsafe())) return;
 
   // If it exists, check if it starts with deprecation note.
   ErrorMessageOr<bool> symbol_paths_file_has_depr_note =
-      orbit_symbols::FileStartsWithDeprecationNote(orbit_paths::GetSymbolsFilePath());
+      orbit_symbols::FileStartsWithDeprecationNote(orbit_paths::GetSymbolsFilePathUnsafe());
   if (symbol_paths_file_has_depr_note.has_error()) {
     ORBIT_ERROR("Unable to check SymbolPaths.txt file for depreciation note, error: %s",
                 symbol_paths_file_has_depr_note.error().message());
@@ -234,7 +234,7 @@ OrbitMainWindow::OrbitMainWindow(TargetConfiguration target_configuration,
   absl::flat_hash_set<std::string> already_seen_paths;
   std::vector<std::filesystem::path> dirs_to_save;
 
-  for (const auto& dir : orbit_symbols::ReadSymbolsFile(orbit_paths::GetSymbolsFilePath())) {
+  for (const auto& dir : orbit_symbols::ReadSymbolsFile(orbit_paths::GetSymbolsFilePathUnsafe())) {
     if (!already_seen_paths.contains(dir.string())) {
       already_seen_paths.insert(dir.string());
       dirs_to_save.push_back(dir);
@@ -252,7 +252,7 @@ OrbitMainWindow::OrbitMainWindow(TargetConfiguration target_configuration,
   client_symbols_storage_manager.SavePaths(dirs_to_save);
 
   ErrorMessageOr<void> add_depr_note_result =
-      orbit_symbols::AddDeprecationNoteToFile(orbit_paths::GetSymbolsFilePath());
+      orbit_symbols::AddDeprecationNoteToFile(orbit_paths::GetSymbolsFilePathUnsafe());
   if (add_depr_note_result.has_error()) {
     ORBIT_ERROR("Unable to add deprecation note to SymbolPaths.txt, error: %s",
                 add_depr_note_result.error().message());
@@ -947,7 +947,7 @@ void OrbitMainWindow::on_actionReport_Bug_triggered() {
 }
 
 void OrbitMainWindow::on_actionOpenUserDataDirectory_triggered() {
-  std::string user_data_dir = orbit_paths::CreateOrGetOrbitUserDataDir().string();
+  std::string user_data_dir = orbit_paths::CreateOrGetOrbitUserDataDirUnsafe().string();
   QUrl user_data_url = QUrl::fromLocalFile(QString::fromStdString(user_data_dir));
   if (!QDesktopServices::openUrl(user_data_url)) {
     QMessageBox::critical(this, "Error opening directory",
@@ -956,7 +956,7 @@ void OrbitMainWindow::on_actionOpenUserDataDirectory_triggered() {
 }
 
 void OrbitMainWindow::on_actionOpenAppDataDirectory_triggered() {
-  std::string app_data_dir = orbit_paths::CreateOrGetOrbitAppDataDir().string();
+  std::string app_data_dir = orbit_paths::CreateOrGetOrbitAppDataDirUnsafe().string();
   QUrl app_data_url = QUrl::fromLocalFile(QString::fromStdString(app_data_dir));
   if (!QDesktopServices::openUrl(app_data_url)) {
     QMessageBox::critical(this, "Error opening directory",
@@ -1041,7 +1041,7 @@ void OrbitMainWindow::OnFilterTracksTextChanged(const QString& text) {
 void OrbitMainWindow::on_actionOpen_Preset_triggered() {
   QStringList list = QFileDialog::getOpenFileNames(
       this, "Select a file to open...",
-      QString::fromStdString(orbit_paths::CreateOrGetPresetDir().string()), "*.opr");
+      QString::fromStdString(orbit_paths::CreateOrGetPresetDirUnsafe().string()), "*.opr");
   for (const auto& file : list) {
     ErrorMessageOr<void> result = app_->OnLoadPreset(file.toStdString());
     if (result.has_error()) {
@@ -1057,7 +1057,7 @@ void OrbitMainWindow::on_actionOpen_Preset_triggered() {
 void OrbitMainWindow::on_actionSave_Preset_As_triggered() {
   QString file = QFileDialog::getSaveFileName(
       this, "Specify a file to save...",
-      QString::fromStdString(orbit_paths::CreateOrGetPresetDir().string()), "*.opr");
+      QString::fromStdString(orbit_paths::CreateOrGetPresetDirUnsafe().string()), "*.opr");
   if (file.isEmpty()) {
     return;
   }
@@ -1374,7 +1374,7 @@ void OrbitMainWindow::OnTimerSelectionChanged(const orbit_client_protos::TimerIn
 void OrbitMainWindow::on_actionOpen_Capture_triggered() {
   QString file = QFileDialog::getOpenFileName(
       this, "Open capture...",
-      QString::fromStdString(orbit_paths::CreateOrGetCaptureDir().string()), "*.orbit");
+      QString::fromStdString(orbit_paths::CreateOrGetCaptureDirUnsafe().string()), "*.orbit");
   if (file.isEmpty()) {
     return;
   }

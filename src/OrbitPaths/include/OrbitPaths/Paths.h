@@ -7,20 +7,53 @@
 
 #include <filesystem>
 
+#include "OrbitBase/Result.h"
+
 namespace orbit_paths {
 
-[[nodiscard]] std::filesystem::path GetSymbolsFilePath();
-[[nodiscard]] std::filesystem::path CreateOrGetCacheDir();
-[[nodiscard]] std::filesystem::path CreateOrGetPresetDir();
-[[nodiscard]] std::filesystem::path CreateOrGetCaptureDir();
-[[nodiscard]] std::filesystem::path CreateOrGetDumpDir();
-[[nodiscard]] std::filesystem::path CreateOrGetOrbitAppDataDir();
-[[nodiscard]] std::filesystem::path CreateOrGetOrbitUserDataDir();
-[[nodiscard]] std::filesystem::path CreateOrGetLogDir();
-[[nodiscard]] std::filesystem::path GetLogFilePath();
+// TODO(b/238986831) Replace deprecated and unsafe function with safe alternative.
+[[nodiscard, deprecated]] std::filesystem::path GetSymbolsFilePathUnsafe();
+ErrorMessageOr<std::filesystem::path> GetSymbolsFilePath();
 
-[[nodiscard]] std::filesystem::path GetPresetDirPriorTo1_66();
-[[nodiscard]] std::filesystem::path GetCaptureDirPriorTo1_66();
+// TODO(b/238986334) Replace deprecated and unsafe function with safe alternative.
+[[nodiscard, deprecated]] std::filesystem::path CreateOrGetCacheDirUnsafe();
+ErrorMessageOr<std::filesystem::path> CreateOrGetCacheDir();
+
+// TODO(b/238986330) Replace deprecated and unsafe function with safe alternative.
+[[nodiscard, deprecated]] std::filesystem::path CreateOrGetPresetDirUnsafe();
+ErrorMessageOr<std::filesystem::path> CreateOrGetPresetDir();
+
+// TODO(b/239014904) Replace deprecated and unsafe function with safe alternative.
+[[nodiscard, deprecated]] std::filesystem::path CreateOrGetCaptureDirUnsafe();
+ErrorMessageOr<std::filesystem::path> CreateOrGetCaptureDir();
+
+// TODO(b/238986372) Replace deprecated and unsafe function with safe alternative.
+[[nodiscard, deprecated]] std::filesystem::path CreateOrGetDumpDirUnsafe();
+ErrorMessageOr<std::filesystem::path> CreateOrGetDumpDir();
+
+// TODO(b/238986370) Replace deprecated and unsafe function with safe alternative.
+[[nodiscard, deprecated]] std::filesystem::path CreateOrGetOrbitAppDataDirUnsafe();
+ErrorMessageOr<std::filesystem::path> CreateOrGetOrbitAppDataDir();
+
+// TODO(b/238985362) Replace deprecated and unsafe function with safe alternative.
+[[nodiscard, deprecated]] std::filesystem::path CreateOrGetOrbitUserDataDirUnsafe();
+ErrorMessageOr<std::filesystem::path> CreateOrGetOrbitUserDataDir();
+
+// TODO(b/238986342) Replace deprecated and unsafe function with safe alternative.
+[[nodiscard, deprecated]] std::filesystem::path CreateOrGetLogDirUnsafe();
+ErrorMessageOr<std::filesystem::path> CreateOrGetLogDir();
+
+// TODO(b/238986108) Replace deprecated and unsafe function with safe alternative.
+[[nodiscard, deprecated]] std::filesystem::path GetLogFilePathUnsafe();
+ErrorMessageOr<std::filesystem::path> GetLogFilePath();
+
+// TODO(b/238986346) Replace deprecated and unsafe function with safe alternative.
+[[nodiscard, deprecated]] std::filesystem::path GetPresetDirPriorTo1_66Unsafe();
+ErrorMessageOr<std::filesystem::path> GetPresetDirPriorTo1_66();
+
+// TODO(b/238986348) Replace deprecated and unsafe function with safe alternative.
+[[nodiscard, deprecated]] std::filesystem::path GetCaptureDirPriorTo1_66Unsafe();
+ErrorMessageOr<std::filesystem::path> GetCaptureDirPriorTo1_66();
 
 }  // namespace orbit_paths
 

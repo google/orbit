@@ -235,12 +235,12 @@ int main(int argc, char* argv[]) {
   // Skip program name in positional_args[0].
   std::vector<std::string> capture_file_paths(positional_args.begin() + 1, positional_args.end());
 
-  std::filesystem::path log_file{orbit_paths::GetLogFilePath()};
+  std::filesystem::path log_file{orbit_paths::GetLogFilePathUnsafe()};
   orbit_base::InitLogFile(log_file);
   ORBIT_LOG("You are running Orbit Profiler version %s", orbit_version::GetVersionString());
   LogCommandLine(argc, argv);
   ErrorMessageOr<void> remove_old_log_result =
-      orbit_base::TryRemoveOldLogFiles(orbit_paths::CreateOrGetLogDir());
+      orbit_base::TryRemoveOldLogFiles(orbit_paths::CreateOrGetLogDirUnsafe());
   if (remove_old_log_result.has_error()) {
     ORBIT_LOG("Warning: Unable to remove some old log files:\n%s",
               remove_old_log_result.error().message());
@@ -272,7 +272,7 @@ int main(int argc, char* argv[]) {
 
   auto crash_handler = std::make_unique<orbit_base::CrashHandler>();
 #ifdef ORBIT_CRASH_HANDLING
-  const std::string dump_path = orbit_paths::CreateOrGetDumpDir().string();
+  const std::string dump_path = orbit_paths::CreateOrGetDumpDirUnsafe().string();
 #ifdef _WIN32
   const char* handler_name = "crashpad_handler.exe";
 #else
