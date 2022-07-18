@@ -31,6 +31,7 @@
 #include "OrbitSsh/Credentials.h"
 #include "OrbitSshQt/Session.h"
 #include "OrbitSshQt/SftpChannel.h"
+#include "OrbitSshQt/SftpCopyToLocalOperation.h"
 #include "OrbitSshQt/SftpCopyToRemoteOperation.h"
 #include "OrbitSshQt/Task.h"
 #include "OrbitSshQt/Tunnel.h"
@@ -94,6 +95,7 @@ class ServiceDeployManager : public QObject {
           deployment_config);
   ErrorMessageOr<uint16_t> StartTunnel(std::optional<orbit_ssh_qt::Tunnel>* tunnel, uint16_t port);
   ErrorMessageOr<std::unique_ptr<orbit_ssh_qt::SftpChannel>> StartSftpChannel();
+  ErrorMessageOr<void> ShutdownSftpOperations();
   ErrorMessageOr<void> ShutdownSftpChannel(orbit_ssh_qt::SftpChannel* sftp_channel);
   ErrorMessageOr<void> ShutdownTunnel(orbit_ssh_qt::Tunnel* tunnel);
   ErrorMessageOr<void> ShutdownTask(orbit_ssh_qt::Task* task);
@@ -103,9 +105,9 @@ class ServiceDeployManager : public QObject {
       orbit_ssh_qt::SftpCopyToRemoteOperation::FileMode dest_mode);
 
   // TODO(http://b/209807583): With our current integration of libssh2 we can only ever have one
-  // copy operation at the same time, so we have a bool indicating an ongoing operation and a queue
+  // copy operation at the same time, so we have a pointer to an ongoing operation and a queue
   // with waiting operations. Since this all happens in one thread, no synchronization is needed.
-  bool copy_file_operation_in_progress_ = false;
+  orbit_ssh_qt::SftpCopyToLocalOperation* copy_to_local_operation_ = nullptr;
   std::deque<orbit_base::AnyInvocable<void()>> waiting_copy_operations_;
 
   void CopyFileToLocalImpl(

@@ -55,6 +55,8 @@ class SftpCopyToLocalOperation
 
   void CopyFileToLocal(std::filesystem::path source, std::filesystem::path destination);
 
+  void Stop();
+
  signals:
   void started();
   void stopped();

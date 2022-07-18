@@ -130,6 +130,7 @@ struct UprobesWithArgumentsPerfEventData {
 using UprobesWithArgumentsPerfEvent = TypedPerfEvent<UprobesWithArgumentsPerfEventData>;
 
 struct UprobesWithStackPerfEventData {
+  uint64_t stream_id;
   pid_t pid;
   pid_t tid;
   perf_event_sample_regs_user_sp regs;

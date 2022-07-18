@@ -43,10 +43,6 @@ using ::orbit_mizar_base::TID;
 
 ABSL_FLAG(std::string, baseline_path, "", "The path to the baseline capture file");
 ABSL_FLAG(std::string, comparison_path, "", "The path to the comparison capture file");
-ABSL_FLAG(uint32_t, baseline_tid, 0, "Frame track TID for baseline");
-ABSL_FLAG(uint32_t, comparison_tid, 0, "The path to the comparison capture file");
-ABSL_FLAG(uint64_t, baseline_start_ms, 0, "Start time in ms for baseline");
-ABSL_FLAG(uint64_t, comparison_start_ms, 0, "Start time in ms for comparison");
 
 static std::string ExpandPathHomeFolder(const std::string& path) {
   const std::string kHomeForderEnvVariable = "HOME";
@@ -62,12 +58,6 @@ int main(int argc, char** argv) {
       ExpandPathHomeFolder(absl::GetFlag(FLAGS_baseline_path));
   const std::filesystem::path comparison_path =
       ExpandPathHomeFolder(absl::GetFlag(FLAGS_comparison_path));
-  const TID baseline_tid{absl::GetFlag(FLAGS_baseline_tid)};
-  const TID comparison_tid{absl::GetFlag(FLAGS_comparison_tid)};
-
-  constexpr uint64_t kNsInMs = 1'000'000;
-  const uint64_t baseline_start_ns = absl::GetFlag(FLAGS_baseline_start_ms) * kNsInMs;
-  const uint64_t comparison_start_ns = absl::GetFlag(FLAGS_comparison_start_ms) * kNsInMs;
 
   auto baseline = std::make_unique<orbit_mizar_data::MizarData>();
   auto comparison = std::make_unique<orbit_mizar_data::MizarData>();
@@ -93,34 +83,5 @@ int main(int argc, char** argv) {
 
   orbit_mizar_widgets::MizarMainWindow main_window(&bac);
   main_window.show();
-  constexpr uint64_t kDuration = std::numeric_limits<uint64_t>::max();
-  constexpr ScopeId kFrameTrackScopeId{1};
-
-  const orbit_mizar_data::SamplingWithFrameTrackComparisonReport report =
-      bac.MakeSamplingWithFrameTrackReport(
-          MakeBaseline<orbit_mizar_data::HalfOfSamplingWithFrameTrackReportConfig>(
-              absl::flat_hash_set<TID>{baseline_tid}, baseline_start_ns, kDuration,
-              kFrameTrackScopeId),
-          MakeComparison<orbit_mizar_data::HalfOfSamplingWithFrameTrackReportConfig>(
-              absl::flat_hash_set<TID>{comparison_tid}, comparison_start_ns, kDuration,
-              kFrameTrackScopeId));
-
-  for (const auto& [sfid, name] : bac.sfid_to_name()) {
-    const uint64_t baseline_cnt = report.GetBaselineSamplingCounts()->GetExclusiveCount(sfid);
-    const uint64_t comparison_cnt = report.GetComparisonSamplingCounts()->GetExclusiveCount(sfid);
-    const double pvalue = report.GetComparisonResult(sfid).corrected_pvalue;
-    if (pvalue < 0.05) {
-      ORBIT_LOG("%s %.2f %u %u %u", name, pvalue, *sfid, baseline_cnt, comparison_cnt);
-    }
-  }
-  ORBIT_LOG("Callstack count %u vs %u ", report.GetBaselineSamplingCounts()->GetTotalCallstacks(),
-            report.GetComparisonSamplingCounts()->GetTotalCallstacks());
-  ORBIT_LOG("Total number of common names %u  ", bac.sfid_to_name().size());
-  ORBIT_LOG("Baseline mean frametime %u ns, stddev %u",
-            report.GetBaselineFrameTrackStats()->ComputeAverageTimeNs(),
-            report.GetBaselineFrameTrackStats()->ComputeStdDevNs());
-  ORBIT_LOG("Comparison mean frametime %u ns, stddev %u",
-            report.GetComparisonFrameTrackStats()->ComputeAverageTimeNs(),
-            report.GetComparisonFrameTrackStats()->ComputeStdDevNs());
   return QApplication::exec();
 }
