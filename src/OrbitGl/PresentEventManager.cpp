@@ -18,7 +18,7 @@ static std::vector<std::string> TrackNames(std::string_view suffix) {
 
 const std::string& PresentEventManager::GetFpsTrackNameFromSource(PresentEvent::Source source) {
   static std::vector<std::string> track_names = TrackNames(" FPS");
-  ORBIT_CHECK(source < track_names.size());
+  ORBIT_CHECK(static_cast<size_t>(source) < track_names.size());
   ORBIT_CHECK(!track_names[source].empty());
   return track_names[source];
 }
@@ -26,7 +26,7 @@ const std::string& PresentEventManager::GetFpsTrackNameFromSource(PresentEvent::
 const std::string& PresentEventManager::GetFrameTimeTrackNameFromSource(
     PresentEvent::Source source) {
   static std::vector<std::string> track_names = TrackNames(" Frame Time [ms]");
-  ORBIT_CHECK(source < track_names.size());
+  ORBIT_CHECK(static_cast<size_t>(source) < track_names.size());
   ORBIT_CHECK(!track_names[source].empty());
   return track_names[source];
 }
