@@ -12,6 +12,7 @@
 #include "MizarData/BaselineAndComparison.h"
 #include "MizarData/SamplingWithFrameTrackComparisonReport.h"
 #include "MizarWidgets/SamplingWithFrameTrackReportConfigValidator.h"
+#include "MizarWidgets/Titles.h"
 #include "OrbitBase/Result.h"
 #include "OrbitBase/Typedef.h"
 #include "ui_SamplingWithFrameTrackWidget.h"
@@ -46,9 +47,9 @@ SamplingWithFrameTrackWidget::SamplingWithFrameTrackWidget(QWidget* parent)
 void SamplingWithFrameTrackWidget::Init(
     const orbit_mizar_data::BaselineAndComparison* baseline_and_comparison) {
   LiftAndApply(&SamplingWithFrameTrackInputWidget::Init, GetBaselineInput(),
-               baseline_and_comparison->GetBaselineData(), kBaselineTitle);
+               baseline_and_comparison->GetBaselineData(), orbit_mizar_base::kBaselineTitle);
   LiftAndApply(&SamplingWithFrameTrackInputWidget::Init, GetComparisonInput(),
-               baseline_and_comparison->GetComparisonData(), kComparisonTitle);
+               baseline_and_comparison->GetComparisonData(), orbit_mizar_base::kComparisonTitle);
   baseline_and_comparison_ = baseline_and_comparison;
 }
 

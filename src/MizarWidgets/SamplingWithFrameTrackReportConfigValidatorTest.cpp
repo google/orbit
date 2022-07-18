@@ -11,6 +11,7 @@
 #include "ClientData/ScopeId.h"
 #include "MizarBase/BaselineOrComparison.h"
 #include "MizarWidgets/SamplingWithFrameTrackReportConfigValidator.h"
+#include "MizarWidgets/Titles.h"
 #include "TestUtils/TestUtils.h"
 
 using ::orbit_client_data::ScopeId;
@@ -42,10 +43,6 @@ namespace orbit_mizar_widgets {
 
 constexpr uint64_t kBaselineCaptureDuration = 123456;
 constexpr uint64_t kComparisonCaptureDuration = 234567;
-const QString kBaselineTitleStr = "Baseline";
-const QString kComparisonTitleStr = "Comparison";
-const Baseline<QString> kBaselineTitle{kBaselineTitleStr};
-const Comparison<QString> kComparisonTitle{kComparisonTitleStr};
 
 using HalfConfig = orbit_mizar_data::HalfOfSamplingWithFrameTrackReportConfig;
 
@@ -62,7 +59,7 @@ TEST(SamplingWithFrameTrackReportConfigValidator, IsCorrect) {
   EXPECT_CALL(bac, GetComparisonData).WillRepeatedly(ReturnRef(comparison_data));
 
   const SamplingWithFrameTrackReportConfigValidatorTmpl<MockBaselineAndComparison, MockPairedData>
-      validator{kBaselineTitle, kComparisonTitle};
+      validator{orbit_mizar_base::kBaselineTitle, orbit_mizar_base::kComparisonTitle};
 
   EXPECT_THAT(validator.Validate(&bac,
                                  orbit_mizar_base::MakeBaseline<HalfConfig>(
