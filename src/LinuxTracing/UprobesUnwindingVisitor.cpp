@@ -226,6 +226,14 @@ void UprobesUnwindingVisitor::Visit(uint64_t event_timestamp,
                                    event_data.data.get()};
   std::vector<StackSliceView> stack_slices{event_stack_slice};
 
+  const auto& stream_id_to_user_stack = thread_id_stream_id_to_stack_slices_.find(event_data.tid);
+  if (stream_id_to_user_stack != thread_id_stream_id_to_stack_slices_.end()) {
+    for (const auto& [unused_stream_id, user_stack_slice] : stream_id_to_user_stack->second) {
+      stack_slices.emplace_back(user_stack_slice.start_address_, user_stack_slice.size_,
+                                user_stack_slice.data_.get());
+    }
+  }
+
   LibunwindstackResult libunwindstack_result = unwinder_->Unwind(
       event_data.pid, current_maps_->Get(), event_data.GetRegisters(), stack_slices);
 
@@ -428,6 +436,16 @@ void UprobesUnwindingVisitor::Visit(uint64_t event_timestamp,
   OnUprobes(event_timestamp, event_data.tid, event_data.cpu, event_data.sp, event_data.ip,
             event_data.return_address,
             /*registers=*/std::nullopt, event_data.function_id);
+}
+
+void UprobesUnwindingVisitor::Visit(uint64_t /*event_timestamp*/,
+                                    const UprobesWithStackPerfEventData& event_data) {
+  StackSlice stack_slice{.start_address_ = event_data.regs.sp,
+                         .size_ = event_data.dyn_size,
+                         .data_ = std::move(event_data.data)};
+  absl::flat_hash_map<uint64_t, StackSlice>& stream_id_to_stack =
+      thread_id_stream_id_to_stack_slices_[event_data.tid];
+  stream_id_to_stack.insert_or_assign(event_data.stream_id, std::move(stack_slice));
 }
 
 void UprobesUnwindingVisitor::Visit(uint64_t event_timestamp,

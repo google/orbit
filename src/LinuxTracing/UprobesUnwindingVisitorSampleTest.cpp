@@ -972,6 +972,411 @@ TEST_F(UprobesUnwindingVisitorSampleTest,
   EXPECT_EQ(discarded_samples_in_uretprobes_counter, 0);
 }
 
+TEST_F(UprobesUnwindingVisitorSampleTest, VisitStackSampleWillMakeUseOfUserSpaceStack) {
+  StackSamplePerfEvent event = BuildFakeStackSamplePerfEvent();
+
+  EXPECT_CALL(return_address_manager_, PatchSample).Times(1).WillOnce(Return());
+  EXPECT_CALL(maps_, Get).Times(1).WillOnce(Return(nullptr));
+
+  std::vector<unwindstack::FrameData> libunwindstack_callstack{kFrame1, kFrame2, kFrame3};
+
+  std::vector<StackSliceView> actual_stack_slices{};
+  EXPECT_CALL(unwinder_, Unwind(event.data.pid, nullptr, _, _, _, _))
+      .Times(1)
+      .WillOnce(DoAll(SaveArg<3>(&actual_stack_slices),
+                      Return(LibunwindstackResult{
+                          libunwindstack_callstack, {}, unwindstack::ErrorCode::ERROR_NONE})));
+
+  orbit_grpc_protos::FullCallstackSample actual_callstack_sample;
+  EXPECT_CALL(listener_, OnCallstackSample).Times(1).WillOnce(SaveArg<0>(&actual_callstack_sample));
+
+  std::vector<orbit_grpc_protos::FullAddressInfo> actual_address_infos;
+  auto save_address_info =
+      [&actual_address_infos](orbit_grpc_protos::FullAddressInfo actual_address_info) {
+        actual_address_infos.push_back(std::move(actual_address_info));
+      };
+  EXPECT_CALL(listener_, OnAddressInfo).Times(3).WillRepeatedly(Invoke(save_address_info));
+
+  std::atomic<uint64_t> unwinding_errors = 0;
+  std::atomic<uint64_t> discarded_samples_in_uretprobes_counter = 0;
+  visitor_.SetUnwindErrorsAndDiscardedSamplesCounters(&unwinding_errors,
+                                                      &discarded_samples_in_uretprobes_counter);
+
+  constexpr uint64_t kUserStackSize = 1024;
+  constexpr uint64_t kUserStackPointer = 16;
+  UprobesWithStackPerfEvent user_stack_event{
+      .timestamp = 10,
+      .data =
+          {
+              .stream_id = 1,
+              .pid = event.data.pid,
+              .tid = event.data.tid,
+              .regs =
+                  {
+                      .abi = 10,
+                      .sp = kUserStackPointer,
+                  },
+              .dyn_size = kUserStackSize,
+              .data = std::make_unique<char[]>(kUserStackSize),
+          },
+  };
+  PerfEvent{std::move(user_stack_event)}.Accept(&visitor_);
+
+  uint64_t dyn_size = event.data.dyn_size;
+  uint64_t sp = event.data.regs->sp;
+  PerfEvent{std::move(event)}.Accept(&visitor_);
+
+  EXPECT_THAT(actual_stack_slices,
+              ElementsAre(AllOf(Property(&StackSliceView::start_address, Eq(sp)),
+                                Property(&StackSliceView::size, Eq(dyn_size)),
+                                Property(&StackSliceView::data, NotNull())),
+                          AllOf(Property(&StackSliceView::start_address, Eq(kUserStackPointer)),
+                                Property(&StackSliceView::size, Eq(kUserStackSize)),
+                                Property(&StackSliceView::data, NotNull()))));
+
+  EXPECT_THAT(actual_callstack_sample.callstack().pcs(),
+              ElementsAre(kTargetAddress1, kTargetAddress2, kTargetAddress3));
+  EXPECT_EQ(actual_callstack_sample.callstack().type(), orbit_grpc_protos::Callstack::kComplete);
+  EXPECT_THAT(
+      actual_address_infos,
+      UnorderedElementsAre(
+          AllOf(Property(&orbit_grpc_protos::FullAddressInfo::absolute_address, kTargetAddress1),
+                Property(&orbit_grpc_protos::FullAddressInfo::function_name, kFunctionName1),
+                Property(&orbit_grpc_protos::FullAddressInfo::offset_in_function, 0),
+                Property(&orbit_grpc_protos::FullAddressInfo::module_name, kTargetName)),
+          AllOf(Property(&orbit_grpc_protos::FullAddressInfo::absolute_address, kTargetAddress2),
+                Property(&orbit_grpc_protos::FullAddressInfo::function_name, kFunctionName2),
+                Property(&orbit_grpc_protos::FullAddressInfo::offset_in_function, 0),
+                Property(&orbit_grpc_protos::FullAddressInfo::module_name, kTargetName)),
+          AllOf(Property(&orbit_grpc_protos::FullAddressInfo::absolute_address, kTargetAddress3),
+                Property(&orbit_grpc_protos::FullAddressInfo::function_name, kFunctionName3),
+                Property(&orbit_grpc_protos::FullAddressInfo::offset_in_function, 0),
+                Property(&orbit_grpc_protos::FullAddressInfo::module_name, kTargetName))));
+
+  EXPECT_EQ(unwinding_errors, 0);
+  EXPECT_EQ(discarded_samples_in_uretprobes_counter, 0);
+}
+
+TEST_F(UprobesUnwindingVisitorSampleTest, VisitStackSampleWillMakeUseOfLatestUserSpaceCallstack) {
+  StackSamplePerfEvent event = BuildFakeStackSamplePerfEvent();
+
+  EXPECT_CALL(return_address_manager_, PatchSample).Times(1).WillOnce(Return());
+  EXPECT_CALL(maps_, Get).Times(1).WillOnce(Return(nullptr));
+
+  std::vector<unwindstack::FrameData> libunwindstack_callstack{kFrame1, kFrame2, kFrame3};
+
+  std::vector<StackSliceView> actual_stack_slices{};
+  EXPECT_CALL(unwinder_, Unwind(event.data.pid, nullptr, _, _, _, _))
+      .Times(1)
+      .WillOnce(DoAll(SaveArg<3>(&actual_stack_slices),
+                      Return(LibunwindstackResult{
+                          libunwindstack_callstack, {}, unwindstack::ErrorCode::ERROR_NONE})));
+
+  orbit_grpc_protos::FullCallstackSample actual_callstack_sample;
+  EXPECT_CALL(listener_, OnCallstackSample).Times(1).WillOnce(SaveArg<0>(&actual_callstack_sample));
+
+  std::vector<orbit_grpc_protos::FullAddressInfo> actual_address_infos;
+  auto save_address_info =
+      [&actual_address_infos](orbit_grpc_protos::FullAddressInfo actual_address_info) {
+        actual_address_infos.push_back(std::move(actual_address_info));
+      };
+  EXPECT_CALL(listener_, OnAddressInfo).Times(3).WillRepeatedly(Invoke(save_address_info));
+
+  std::atomic<uint64_t> unwinding_errors = 0;
+  std::atomic<uint64_t> discarded_samples_in_uretprobes_counter = 0;
+  visitor_.SetUnwindErrorsAndDiscardedSamplesCounters(&unwinding_errors,
+                                                      &discarded_samples_in_uretprobes_counter);
+
+  constexpr uint64_t kUserStackSizeOld = 512;
+  constexpr uint64_t kUserStackPointerOld = 24;
+  UprobesWithStackPerfEvent user_stack_event_old{
+      .timestamp = 12,
+      .data =
+          {
+              .stream_id = 1,
+              .pid = event.data.pid,
+              .tid = event.data.tid,
+              .regs =
+                  {
+                      .abi = 10,
+                      .sp = kUserStackPointerOld,
+                  },
+              .dyn_size = kUserStackSizeOld,
+              .data = std::make_unique<char[]>(kUserStackSizeOld),
+          },
+  };
+  PerfEvent{std::move(user_stack_event_old)}.Accept(&visitor_);
+
+  constexpr uint64_t kUserStackSizeNew = 1024;
+  constexpr uint64_t kUserStackPointerNew = 16;
+  UprobesWithStackPerfEvent user_stack_event_new{
+      .timestamp = 13,
+      .data =
+          {
+              .stream_id = 1,
+              .pid = event.data.pid,
+              .tid = event.data.tid,
+              .regs =
+                  {
+                      .abi = 10,
+                      .sp = kUserStackPointerNew,
+                  },
+              .dyn_size = kUserStackSizeNew,
+              .data = std::make_unique<char[]>(kUserStackSizeNew),
+          },
+  };
+  PerfEvent{std::move(user_stack_event_new)}.Accept(&visitor_);
+
+  uint64_t dyn_size = event.data.dyn_size;
+  uint64_t sp = event.data.regs->sp;
+  PerfEvent{std::move(event)}.Accept(&visitor_);
+
+  EXPECT_THAT(actual_stack_slices,
+              ElementsAre(AllOf(Property(&StackSliceView::start_address, Eq(sp)),
+                                Property(&StackSliceView::size, Eq(dyn_size)),
+                                Property(&StackSliceView::data, NotNull())),
+                          AllOf(Property(&StackSliceView::start_address, Eq(kUserStackPointerNew)),
+                                Property(&StackSliceView::size, Eq(kUserStackSizeNew)),
+                                Property(&StackSliceView::data, NotNull()))));
+
+  EXPECT_THAT(actual_callstack_sample.callstack().pcs(),
+              ElementsAre(kTargetAddress1, kTargetAddress2, kTargetAddress3));
+  EXPECT_EQ(actual_callstack_sample.callstack().type(), orbit_grpc_protos::Callstack::kComplete);
+  EXPECT_THAT(
+      actual_address_infos,
+      UnorderedElementsAre(
+          AllOf(Property(&orbit_grpc_protos::FullAddressInfo::absolute_address, kTargetAddress1),
+                Property(&orbit_grpc_protos::FullAddressInfo::function_name, kFunctionName1),
+                Property(&orbit_grpc_protos::FullAddressInfo::offset_in_function, 0),
+                Property(&orbit_grpc_protos::FullAddressInfo::module_name, kTargetName)),
+          AllOf(Property(&orbit_grpc_protos::FullAddressInfo::absolute_address, kTargetAddress2),
+                Property(&orbit_grpc_protos::FullAddressInfo::function_name, kFunctionName2),
+                Property(&orbit_grpc_protos::FullAddressInfo::offset_in_function, 0),
+                Property(&orbit_grpc_protos::FullAddressInfo::module_name, kTargetName)),
+          AllOf(Property(&orbit_grpc_protos::FullAddressInfo::absolute_address, kTargetAddress3),
+                Property(&orbit_grpc_protos::FullAddressInfo::function_name, kFunctionName3),
+                Property(&orbit_grpc_protos::FullAddressInfo::offset_in_function, 0),
+                Property(&orbit_grpc_protos::FullAddressInfo::module_name, kTargetName))));
+
+  EXPECT_EQ(unwinding_errors, 0);
+  EXPECT_EQ(discarded_samples_in_uretprobes_counter, 0);
+}
+
+TEST_F(UprobesUnwindingVisitorSampleTest,
+       VisitStackSampleWillMakeUseUserSpaceCallstackOnlyFromSameThread) {
+  StackSamplePerfEvent event = BuildFakeStackSamplePerfEvent();
+
+  EXPECT_CALL(return_address_manager_, PatchSample).Times(1).WillOnce(Return());
+  EXPECT_CALL(maps_, Get).Times(1).WillOnce(Return(nullptr));
+
+  std::vector<unwindstack::FrameData> libunwindstack_callstack{kFrame1, kFrame2, kFrame3};
+
+  std::vector<StackSliceView> actual_stack_slices{};
+  EXPECT_CALL(unwinder_, Unwind(event.data.pid, nullptr, _, _, _, _))
+      .Times(1)
+      .WillOnce(DoAll(SaveArg<3>(&actual_stack_slices),
+                      Return(LibunwindstackResult{
+                          libunwindstack_callstack, {}, unwindstack::ErrorCode::ERROR_NONE})));
+
+  orbit_grpc_protos::FullCallstackSample actual_callstack_sample;
+  EXPECT_CALL(listener_, OnCallstackSample).Times(1).WillOnce(SaveArg<0>(&actual_callstack_sample));
+
+  std::vector<orbit_grpc_protos::FullAddressInfo> actual_address_infos;
+  auto save_address_info =
+      [&actual_address_infos](orbit_grpc_protos::FullAddressInfo actual_address_info) {
+        actual_address_infos.push_back(std::move(actual_address_info));
+      };
+  EXPECT_CALL(listener_, OnAddressInfo).Times(3).WillRepeatedly(Invoke(save_address_info));
+
+  std::atomic<uint64_t> unwinding_errors = 0;
+  std::atomic<uint64_t> discarded_samples_in_uretprobes_counter = 0;
+  visitor_.SetUnwindErrorsAndDiscardedSamplesCounters(&unwinding_errors,
+                                                      &discarded_samples_in_uretprobes_counter);
+
+  constexpr uint64_t kUserStackSizeSameThread = 512;
+  constexpr uint64_t kUserStackPointerSameThread = 24;
+  UprobesWithStackPerfEvent user_stack_event_same_thread{
+      .timestamp = 12,
+      .data =
+          {
+              .stream_id = 1,
+              .pid = event.data.pid,
+              .tid = event.data.tid,
+              .regs =
+                  {
+                      .abi = 10,
+                      .sp = kUserStackPointerSameThread,
+                  },
+              .dyn_size = kUserStackSizeSameThread,
+              .data = std::make_unique<char[]>(kUserStackSizeSameThread),
+          },
+  };
+  PerfEvent{std::move(user_stack_event_same_thread)}.Accept(&visitor_);
+
+  constexpr uint64_t kUserStackSizeOtherThread = 1024;
+  constexpr uint64_t kUserStackPointerOtherThread = 16;
+  UprobesWithStackPerfEvent user_stack_event_other_thread{
+      .timestamp = 13,
+      .data =
+          {
+              .stream_id = 1,
+              .pid = event.data.pid,
+              .tid = event.data.tid + 1,
+              .regs =
+                  {
+                      .abi = 10,
+                      .sp = kUserStackPointerOtherThread,
+                  },
+              .dyn_size = kUserStackSizeOtherThread,
+              .data = std::make_unique<char[]>(kUserStackSizeOtherThread),
+          },
+  };
+  PerfEvent{std::move(user_stack_event_other_thread)}.Accept(&visitor_);
+
+  uint64_t dyn_size = event.data.dyn_size;
+  uint64_t sp = event.data.regs->sp;
+  PerfEvent{std::move(event)}.Accept(&visitor_);
+
+  EXPECT_THAT(
+      actual_stack_slices,
+      ElementsAre(AllOf(Property(&StackSliceView::start_address, Eq(sp)),
+                        Property(&StackSliceView::size, Eq(dyn_size)),
+                        Property(&StackSliceView::data, NotNull())),
+                  AllOf(Property(&StackSliceView::start_address, Eq(kUserStackPointerSameThread)),
+                        Property(&StackSliceView::size, Eq(kUserStackSizeSameThread)),
+                        Property(&StackSliceView::data, NotNull()))));
+
+  EXPECT_THAT(actual_callstack_sample.callstack().pcs(),
+              ElementsAre(kTargetAddress1, kTargetAddress2, kTargetAddress3));
+  EXPECT_EQ(actual_callstack_sample.callstack().type(), orbit_grpc_protos::Callstack::kComplete);
+  EXPECT_THAT(
+      actual_address_infos,
+      UnorderedElementsAre(
+          AllOf(Property(&orbit_grpc_protos::FullAddressInfo::absolute_address, kTargetAddress1),
+                Property(&orbit_grpc_protos::FullAddressInfo::function_name, kFunctionName1),
+                Property(&orbit_grpc_protos::FullAddressInfo::offset_in_function, 0),
+                Property(&orbit_grpc_protos::FullAddressInfo::module_name, kTargetName)),
+          AllOf(Property(&orbit_grpc_protos::FullAddressInfo::absolute_address, kTargetAddress2),
+                Property(&orbit_grpc_protos::FullAddressInfo::function_name, kFunctionName2),
+                Property(&orbit_grpc_protos::FullAddressInfo::offset_in_function, 0),
+                Property(&orbit_grpc_protos::FullAddressInfo::module_name, kTargetName)),
+          AllOf(Property(&orbit_grpc_protos::FullAddressInfo::absolute_address, kTargetAddress3),
+                Property(&orbit_grpc_protos::FullAddressInfo::function_name, kFunctionName3),
+                Property(&orbit_grpc_protos::FullAddressInfo::offset_in_function, 0),
+                Property(&orbit_grpc_protos::FullAddressInfo::module_name, kTargetName))));
+
+  EXPECT_EQ(unwinding_errors, 0);
+  EXPECT_EQ(discarded_samples_in_uretprobes_counter, 0);
+}
+
+TEST_F(UprobesUnwindingVisitorSampleTest, VisitStackSampleUsesUserStackMemoryFromAllStreamIds) {
+  StackSamplePerfEvent event = BuildFakeStackSamplePerfEvent();
+
+  EXPECT_CALL(return_address_manager_, PatchSample).Times(1).WillOnce(Return());
+  EXPECT_CALL(maps_, Get).Times(1).WillOnce(Return(nullptr));
+
+  std::vector<unwindstack::FrameData> libunwindstack_callstack{kFrame1, kFrame2, kFrame3};
+
+  std::vector<StackSliceView> actual_stack_slices{};
+  EXPECT_CALL(unwinder_, Unwind(event.data.pid, nullptr, _, _, _, _))
+      .Times(1)
+      .WillOnce(DoAll(SaveArg<3>(&actual_stack_slices),
+                      Return(LibunwindstackResult{
+                          libunwindstack_callstack, {}, unwindstack::ErrorCode::ERROR_NONE})));
+
+  orbit_grpc_protos::FullCallstackSample actual_callstack_sample;
+  EXPECT_CALL(listener_, OnCallstackSample).Times(1).WillOnce(SaveArg<0>(&actual_callstack_sample));
+
+  std::vector<orbit_grpc_protos::FullAddressInfo> actual_address_infos;
+  auto save_address_info =
+      [&actual_address_infos](orbit_grpc_protos::FullAddressInfo actual_address_info) {
+        actual_address_infos.push_back(std::move(actual_address_info));
+      };
+  EXPECT_CALL(listener_, OnAddressInfo).Times(3).WillRepeatedly(Invoke(save_address_info));
+
+  std::atomic<uint64_t> unwinding_errors = 0;
+  std::atomic<uint64_t> discarded_samples_in_uretprobes_counter = 0;
+  visitor_.SetUnwindErrorsAndDiscardedSamplesCounters(&unwinding_errors,
+                                                      &discarded_samples_in_uretprobes_counter);
+
+  constexpr uint64_t kUserStackSize1 = 512;
+  constexpr uint64_t kUserStackPointer1 = 24;
+  UprobesWithStackPerfEvent user_stack_event1{
+      .timestamp = 12,
+      .data =
+          {
+              .stream_id = 1,
+              .pid = event.data.pid,
+              .tid = event.data.tid,
+              .regs =
+                  {
+                      .abi = 10,
+                      .sp = kUserStackPointer1,
+                  },
+              .dyn_size = kUserStackSize1,
+              .data = std::make_unique<char[]>(kUserStackSize1),
+          },
+  };
+  PerfEvent{std::move(user_stack_event1)}.Accept(&visitor_);
+
+  constexpr uint64_t kUserStackSize2 = 1024;
+  constexpr uint64_t kUserStackPointer2 = 16;
+  UprobesWithStackPerfEvent user_stack_event2{
+      .timestamp = 13,
+      .data =
+          {
+              .stream_id = 2,
+              .pid = event.data.pid,
+              .tid = event.data.tid,
+              .regs =
+                  {
+                      .abi = 10,
+                      .sp = kUserStackPointer2,
+                  },
+              .dyn_size = kUserStackSize2,
+              .data = std::make_unique<char[]>(kUserStackSize2),
+          },
+  };
+  PerfEvent{std::move(user_stack_event2)}.Accept(&visitor_);
+
+  uint64_t dyn_size = event.data.dyn_size;
+  uint64_t sp = event.data.regs->sp;
+  PerfEvent{std::move(event)}.Accept(&visitor_);
+
+  EXPECT_THAT(actual_stack_slices,
+              ElementsAre(AllOf(Property(&StackSliceView::start_address, Eq(sp)),
+                                Property(&StackSliceView::size, Eq(dyn_size)),
+                                Property(&StackSliceView::data, NotNull())),
+                          AllOf(Property(&StackSliceView::start_address, Eq(kUserStackPointer1)),
+                                Property(&StackSliceView::size, Eq(kUserStackSize1)),
+                                Property(&StackSliceView::data, NotNull())),
+                          AllOf(Property(&StackSliceView::start_address, Eq(kUserStackPointer2)),
+                                Property(&StackSliceView::size, Eq(kUserStackSize2)),
+                                Property(&StackSliceView::data, NotNull()))));
+
+  EXPECT_THAT(actual_callstack_sample.callstack().pcs(),
+              ElementsAre(kTargetAddress1, kTargetAddress2, kTargetAddress3));
+  EXPECT_EQ(actual_callstack_sample.callstack().type(), orbit_grpc_protos::Callstack::kComplete);
+  EXPECT_THAT(
+      actual_address_infos,
+      UnorderedElementsAre(
+          AllOf(Property(&orbit_grpc_protos::FullAddressInfo::absolute_address, kTargetAddress1),
+                Property(&orbit_grpc_protos::FullAddressInfo::function_name, kFunctionName1),
+                Property(&orbit_grpc_protos::FullAddressInfo::offset_in_function, 0),
+                Property(&orbit_grpc_protos::FullAddressInfo::module_name, kTargetName)),
+          AllOf(Property(&orbit_grpc_protos::FullAddressInfo::absolute_address, kTargetAddress2),
+                Property(&orbit_grpc_protos::FullAddressInfo::function_name, kFunctionName2),
+                Property(&orbit_grpc_protos::FullAddressInfo::offset_in_function, 0),
+                Property(&orbit_grpc_protos::FullAddressInfo::module_name, kTargetName)),
+          AllOf(Property(&orbit_grpc_protos::FullAddressInfo::absolute_address, kTargetAddress3),
+                Property(&orbit_grpc_protos::FullAddressInfo::function_name, kFunctionName3),
+                Property(&orbit_grpc_protos::FullAddressInfo::offset_in_function, 0),
+                Property(&orbit_grpc_protos::FullAddressInfo::module_name, kTargetName))));
+
+  EXPECT_EQ(unwinding_errors, 0);
+  EXPECT_EQ(discarded_samples_in_uretprobes_counter, 0);
+}
+
 //------------------------------------//
 // Visit CallchainSamplePerfEventData //
 //------------------------------------//

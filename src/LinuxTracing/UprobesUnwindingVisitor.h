@@ -71,8 +71,8 @@ class UprobesUnwindingVisitor : public PerfEventVisitor {
   UprobesUnwindingVisitor(const UprobesUnwindingVisitor&) = delete;
   UprobesUnwindingVisitor& operator=(const UprobesUnwindingVisitor&) = delete;
 
-  UprobesUnwindingVisitor(UprobesUnwindingVisitor&&) = default;
-  UprobesUnwindingVisitor& operator=(UprobesUnwindingVisitor&&) = default;
+  UprobesUnwindingVisitor(UprobesUnwindingVisitor&&) = delete;
+  UprobesUnwindingVisitor& operator=(UprobesUnwindingVisitor&&) = delete;
 
   void SetUnwindErrorsAndDiscardedSamplesCounters(
       std::atomic<uint64_t>* unwind_error_counter,
@@ -84,6 +84,7 @@ class UprobesUnwindingVisitor : public PerfEventVisitor {
   void Visit(uint64_t event_timestamp, const StackSamplePerfEventData& event_data) override;
   void Visit(uint64_t event_timestamp, const CallchainSamplePerfEventData& event_data) override;
   void Visit(uint64_t event_timestamp, const UprobesPerfEventData& event_data) override;
+  void Visit(uint64_t event_timestamp, const UprobesWithStackPerfEventData& event_data) override;
   void Visit(uint64_t event_timestamp,
              const UprobesWithArgumentsPerfEventData& event_data) override;
   void Visit(uint64_t event_timestamp, const UretprobesPerfEventData& event_data) override;
@@ -134,6 +135,9 @@ class UprobesUnwindingVisitor : public PerfEventVisitor {
   absl::flat_hash_map<pid_t, std::vector<std::tuple<uint64_t, uint64_t, uint32_t>>>
       uprobe_sps_ips_cpus_per_thread_{};
   absl::flat_hash_set<uint64_t> known_linux_address_infos_{};
+
+  absl::flat_hash_map<pid_t, absl::flat_hash_map<uint64_t, StackSlice>>
+      thread_id_stream_id_to_stack_slices_{};
 };
 
 }  // namespace orbit_linux_tracing
