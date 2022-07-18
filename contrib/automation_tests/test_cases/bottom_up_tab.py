@@ -81,6 +81,10 @@ class VerifyBottomUpContentForLoadedCapture(E2ETestCase):
             logging.info("Switched to 'Bottom-Up (selection)' tab")
             return self.find_control('Group', 'selectionBottomUpTab')
 
+    def _collapse_tree(self, tree_view_table: Table):
+        tree_view_table.get_item_at(0, 0).click_input(button='right')
+        self.find_context_menu_item("Collapse all").click_input()
+
     HIDDEN_COLUMNS = {2}
 
     def _verify_columns(self, tree_view_table):
@@ -124,7 +128,7 @@ class VerifyBottomUpContentForLoadedCapture(E2ETestCase):
     def _verify_rows_when_node_recursively_expanded(self, tree_view_table):
         logging.info("Recursively expanding a node of the bottom-up view")
         tree_view_table.get_item_at(0, 0).click_input(button='right')
-        self.find_context_menu_item('Expand recursively').click_input()
+        self.find_context_menu_item('Expand recursively\tALT+Click').click_input()
 
         expected_first_leaf_descendant_count = 50
         self._verify_row_count(tree_view_table,
@@ -205,8 +209,11 @@ class VerifyBottomUpContentForLoadedCapture(E2ETestCase):
         self._verify_columns(tree_view_table)
         self._verify_rows_when_tree_collapsed(tree_view_table)
         self._verify_rows_when_node_expanded(tree_view_table)
+        self._collapse_tree(tree_view_table)
         self._verify_rows_when_node_recursively_expanded(tree_view_table)
+        self._collapse_tree(tree_view_table)
         self._verify_rows_when_tree_expanded(tree_view_table)
+        self._collapse_tree(tree_view_table)
         self._verify_rows_on_search(tab, tree_view_table)
 
 

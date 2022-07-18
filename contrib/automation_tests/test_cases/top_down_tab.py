@@ -110,6 +110,10 @@ class VerifyTopDownContentForLoadedCapture(E2ETestCase):
             logging.info("Switched to 'Top-Down (selection)' tab")
             return self.find_control('Group', 'selectionTopDownTab')
 
+    def _collapse_tree(self, tree_view_table: Table):
+        tree_view_table.get_item_at(0, 0).click_input(button='right')
+        self.find_context_menu_item("Collapse all").click_input()
+
     def _verify_columns(self, tree_view_table):
         self.expect_eq(tree_view_table.get_column_count(), 6, "Top-down view has 6 columns")
 
@@ -167,7 +171,7 @@ class VerifyTopDownContentForLoadedCapture(E2ETestCase):
     def _verify_rows_when_thread_recursively_expanded(self, tree_view_table):
         logging.info("Recursively expanding a thread of the top-down view")
         tree_view_table.get_item_at(1, 0).click_input(button='right')
-        self.find_context_menu_item('Expand recursively').click_input()
+        self.find_context_menu_item('Expand recursively\tALT+Click').click_input()
         expected_first_thread_descendant_count = 20
         self._verify_row_count(tree_view_table,
                                self.EXPECTED_THREAD_COUNT + expected_first_thread_descendant_count)
@@ -249,8 +253,11 @@ class VerifyTopDownContentForLoadedCapture(E2ETestCase):
         self._verify_columns(tree_view_table)
         self._verify_rows_when_tree_collapsed(tree_view_table)
         self._verify_rows_when_thread_and_errors_expanded(tree_view_table)
+        self._collapse_tree(tree_view_table)
         self._verify_rows_when_thread_recursively_expanded(tree_view_table)
+        self._collapse_tree(tree_view_table)
         self._verify_rows_when_tree_expanded(tree_view_table)
+        self._collapse_tree(tree_view_table)
         self._verify_rows_on_search(tab, tree_view_table)
 
 
