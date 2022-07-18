@@ -35,6 +35,11 @@ def main(argv):
         Capture(),
         ToggleTrackTypeVisibility(track_type="Scheduler"),
         VerifyTracksDoNotExist(track_names="Scheduler"),
+
+        # There should be just one auto-loaded FrameTrack.
+        VerifyTracksExist(track_names="Frame track*"),
+        ToggleTrackTypeVisibility(track_type="Frame Tracks"),
+        VerifyTracksDoNotExist(track_names="Frame track*"),
         VerifyTracksExist(track_names="hello_ggp_stand*", allow_duplicates=True),
         ToggleTrackTypeVisibility(track_type="Threads"),
         VerifyTracksDoNotExist(track_names="hello_ggp_stand*"),

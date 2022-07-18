@@ -37,7 +37,9 @@ def main(argv):
         FilterAndHookFunction(function_search_string='DrawFrame'),
         Capture(),
         AddFrameTrack(function_name="DrawFrame"),
-        VerifyTracksExist(track_names="Frame track*"),  # Verify there's exactly one frame track
+        # TODO(b/239148938): After allowing users to set auto-frame-track to false:
+        #  Instead of allowing duplicates, set auto-frame track to false while capturing.
+        VerifyTracksExist(track_names="Frame track*", allow_duplicates=True),
         CheckTimers(track_name_filter='Frame track*')  # Verify the frame track has timers
     ]
     suite = E2ETestSuite(test_name="Add Frame Track", test_cases=test_cases)

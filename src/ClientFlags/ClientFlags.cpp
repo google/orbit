@@ -84,4 +84,4 @@ ABSL_FLAG(
     "Enable automatic symbol loading. This is turned on by default. If Orbit becomes unresponsive, "
     "try turning automatic symbol loading off (--auto_symbol_loading=false)");
 
-ABSL_FLAG(bool, auto_frame_track, false, "Automatically add the default Frame Track.");
+ABSL_FLAG(bool, auto_frame_track, true, "Automatically add the default Frame Track.");
