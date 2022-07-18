@@ -767,8 +767,8 @@ message ClientCaptureEvent {
     // use them for high frequency events. For the rest please assign
     // numbers starting with 16.
     //
-    // Next high-frequency ID: 13
-    // Next lower-frequency ID: 49
+    // Next high-frequency ID: 12
+    // Next lower-frequency ID: 50
     // Please keep these alphabetically ordered.
 
     // Even though AddressInfo is a high-frequency event
@@ -806,7 +806,7 @@ message ClientCaptureEvent {
     ModulesSnapshot modules_snapshot = 25;
     ModuleUpdateEvent module_update_event = 21;
     OutOfOrderEventsDiscardedEvent out_of_order_events_discarded_event = 37;
-    PresentEvent present_event = 12;
+    PresentEvent present_event = 49;
     SchedulingSlice scheduling_slice = 6;
     ThreadName thread_name = 22;
     ThreadNamesSnapshot thread_names_snapshot = 26;
@@ -826,8 +826,8 @@ message ProducerCaptureEvent {
     // use them for high frequency events. For the rest please assign
     // numbers starting with 16.
     //
-    // Next high-frequency ID: No high-frequency index left.
-    // Next lower-frequency ID: 48
+    // Next high-frequency ID: 15.
+    // Next lower-frequency ID: 49
     //
     // Please keep these alphabetically ordered.
     ApiEvent api_event = 10;
@@ -869,7 +869,7 @@ message ProducerCaptureEvent {
     ModulesSnapshot modules_snapshot = 25;
     ModuleUpdateEvent module_update_event = 20;
     OutOfOrderEventsDiscardedEvent out_of_order_events_discarded_event = 35;
-    PresentEvent present_event = 15;
+    PresentEvent present_event = 48;
     SchedulingSlice scheduling_slice = 8;
     ThreadName thread_name = 21;
     ThreadNamesSnapshot thread_names_snapshot = 24;
