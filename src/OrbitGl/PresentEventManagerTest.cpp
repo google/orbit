@@ -21,15 +21,15 @@ TEST(PresentEventManager, ExchangeReturnValues) {
   PresentEventManager present_event_manager;
   constexpr PresentEvent::Source kSource = orbit_grpc_protos::PresentEvent::kDxgi;
   std::optional<uint64_t> result = present_event_manager.ExchangeLastTimeStampForSource(kSource, 0);
-  ASSERT_FALSE(result.has_value());
+  EXPECT_FALSE(result.has_value());
 
   result = present_event_manager.ExchangeLastTimeStampForSource(kSource, 1);
-  ASSERT_TRUE(result.has_value());
-  ASSERT_EQ(result.value(), 0);
+  EXPECT_TRUE(result.has_value());
+  EXPECT_EQ(result.value(), 0);
 
   result = present_event_manager.ExchangeLastTimeStampForSource(kSource, 2);
-  ASSERT_TRUE(result.has_value());
-  ASSERT_EQ(result.value(), 1);
+  EXPECT_TRUE(result.has_value());
+  EXPECT_EQ(result.value(), 1);
 }
 
 }  // namespace orbit_gl
