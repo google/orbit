@@ -8,7 +8,7 @@
 
 namespace orbit_client_data {
 
-// With newer Wine/Proton versions, unwinding will fail after `__wine_syscall_dispatcher`
+// With newer Wine versions, unwinding will fail after `__wine_syscall_dispatcher`
 // (see go/unwinding_wine_syscall_dispatcher). The main reason for failing is that the "syscall"
 // implementation of Wine operates on a different stack than the "Windows user-space" stack.
 // We see two conceptual mitigations for those unwinding errors:

@@ -1490,7 +1490,7 @@ void OrbitApp::StartCapture() {
   orbit_client_data::WineSyscallHandlingMethod wine_syscall_handling_method =
       data_manager_->wine_syscall_handling_method();
 
-  // With newer Wine/Proton versions, unwinding will fail after `__wine_syscall_dispatcher`
+  // With newer Wine versions, unwinding will fail after `__wine_syscall_dispatcher`
   // (see go/unwinding_wine_syscall_dispatcher). The main reason for failing is that the "syscall"
   // implementation of Wine operates on a different stack than the "Windows user-space" stack. Our
   // unwinder will only have offline memory for the syscall stack. We can mitigate this by
@@ -1513,7 +1513,7 @@ void OrbitApp::StartCapture() {
     }
   }
 
-  // With newer Wine/Proton versions, unwinding will fail after `__wine_syscall_dispatcher`
+  // With newer Wine versions, unwinding will fail after `__wine_syscall_dispatcher`
   // (see go/unwinding_wine_syscall_dispatcher). Unless we mitigate this situation as above, we at
   // least want to report "complete" callstacks for the "Windows kernel" part (until
   // `__wine_syscall_dispatcher`). To do so, we look for the absolute address of this function and

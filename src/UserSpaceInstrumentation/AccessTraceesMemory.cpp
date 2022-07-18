@@ -58,7 +58,7 @@ using orbit_base::ReadFileToString;
   OUTCOME_TRY(auto&& maps, ReadFileToString(absl::StrFormat("/proc/%d/maps", pid)));
   const std::vector<std::string> lines = absl::StrSplit(maps, '\n', absl::SkipEmpty());
   // We pick the executable memory region with the highest address. This is to work around
-  // http://b/214052981, which sees Proton use a seccomp filter to trap all syscalls coming from low
+  // http://b/214052981, which sees Wine use a seccomp filter to trap all syscalls coming from low
   // addresses, i.e., where it has loaded Windows DLLs and the game's .exe.
   for (auto line_it = lines.rbegin(); line_it != lines.rend(); ++line_it) {
     const std::string& line = *line_it;
