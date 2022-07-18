@@ -973,7 +973,7 @@ TEST_F(UprobesUnwindingVisitorSampleTest,
   EXPECT_EQ(discarded_samples_in_uretprobes_counter, 0);
 }
 
-TEST_F(UprobesUnwindingVisitorSampleTest, VisitStackSampleWillMakeUseOfUserSpaceStack) {
+TEST_F(UprobesUnwindingVisitorSampleTest, VisitStackSampleUsesUserSpaceStack) {
   StackSamplePerfEvent event = BuildFakeStackSamplePerfEvent();
 
   EXPECT_CALL(return_address_manager_, PatchSample).Times(1).WillOnce(Return());
@@ -1021,7 +1021,7 @@ TEST_F(UprobesUnwindingVisitorSampleTest, VisitStackSampleWillMakeUseOfUserSpace
               .data = std::make_unique<char[]>(kUserStackSize),
           },
   };
-  char* kUserStackData = user_stack_event.data.data.get();
+  char* user_stack_data = user_stack_event.data.data.get();
   PerfEvent{std::move(user_stack_event)}.Accept(&visitor_);
 
   uint64_t dyn_size = event.data.dyn_size;
@@ -1035,7 +1035,7 @@ TEST_F(UprobesUnwindingVisitorSampleTest, VisitStackSampleWillMakeUseOfUserSpace
                                 Property(&StackSliceView::data, Eq(stack_data))),
                           AllOf(Property(&StackSliceView::start_address, Eq(kUserStackPointer)),
                                 Property(&StackSliceView::size, Eq(kUserStackSize)),
-                                Property(&StackSliceView::data, Eq(kUserStackData)))));
+                                Property(&StackSliceView::data, Eq(user_stack_data)))));
 
   EXPECT_THAT(actual_callstack_sample.callstack().pcs(),
               ElementsAre(kTargetAddress1, kTargetAddress2, kTargetAddress3));
@@ -1060,7 +1060,7 @@ TEST_F(UprobesUnwindingVisitorSampleTest, VisitStackSampleWillMakeUseOfUserSpace
   EXPECT_EQ(discarded_samples_in_uretprobes_counter, 0);
 }
 
-TEST_F(UprobesUnwindingVisitorSampleTest, VisitStackSampleWillMakeUseOfLatestUserSpaceCallstack) {
+TEST_F(UprobesUnwindingVisitorSampleTest, VisitStackSampleUsesLatestUserSpaceCallstack) {
   StackSamplePerfEvent event = BuildFakeStackSamplePerfEvent();
 
   EXPECT_CALL(return_address_manager_, PatchSample).Times(1).WillOnce(Return());
@@ -1128,7 +1128,7 @@ TEST_F(UprobesUnwindingVisitorSampleTest, VisitStackSampleWillMakeUseOfLatestUse
               .data = std::make_unique<char[]>(kUserStackSizeNew),
           },
   };
-  char* kUserStackData = user_stack_event_new.data.data.get();
+  char* user_stack_data = user_stack_event_new.data.data.get();
   PerfEvent{std::move(user_stack_event_new)}.Accept(&visitor_);
 
   uint64_t dyn_size = event.data.dyn_size;
@@ -1142,7 +1142,7 @@ TEST_F(UprobesUnwindingVisitorSampleTest, VisitStackSampleWillMakeUseOfLatestUse
                                 Property(&StackSliceView::data, Eq(stack_data))),
                           AllOf(Property(&StackSliceView::start_address, Eq(kUserStackPointerNew)),
                                 Property(&StackSliceView::size, Eq(kUserStackSizeNew)),
-                                Property(&StackSliceView::data, Eq(kUserStackData)))));
+                                Property(&StackSliceView::data, Eq(user_stack_data)))));
 
   EXPECT_THAT(actual_callstack_sample.callstack().pcs(),
               ElementsAre(kTargetAddress1, kTargetAddress2, kTargetAddress3));
@@ -1168,7 +1168,7 @@ TEST_F(UprobesUnwindingVisitorSampleTest, VisitStackSampleWillMakeUseOfLatestUse
 }
 
 TEST_F(UprobesUnwindingVisitorSampleTest,
-       VisitStackSampleWillMakeUseUserSpaceCallstackOnlyFromSameThread) {
+       VisitStackSampleUsesUserSpaceCallstackOnlyFromSameThread) {
   StackSamplePerfEvent event = BuildFakeStackSamplePerfEvent();
 
   EXPECT_CALL(return_address_manager_, PatchSample).Times(1).WillOnce(Return());
@@ -1216,7 +1216,7 @@ TEST_F(UprobesUnwindingVisitorSampleTest,
               .data = std::make_unique<char[]>(kUserStackSizeSameThread),
           },
   };
-  char* kUserStackData = user_stack_event_same_thread.data.data.get();
+  char* user_stack_data = user_stack_event_same_thread.data.data.get();
   PerfEvent{std::move(user_stack_event_same_thread)}.Accept(&visitor_);
 
   constexpr uint64_t kUserStackSizeOtherThread = 1024;
@@ -1251,7 +1251,7 @@ TEST_F(UprobesUnwindingVisitorSampleTest,
                         Property(&StackSliceView::data, Eq(stack_data))),
                   AllOf(Property(&StackSliceView::start_address, Eq(kUserStackPointerSameThread)),
                         Property(&StackSliceView::size, Eq(kUserStackSizeSameThread)),
-                        Property(&StackSliceView::data, Eq(kUserStackData)))));
+                        Property(&StackSliceView::data, Eq(user_stack_data)))));
 
   EXPECT_THAT(actual_callstack_sample.callstack().pcs(),
               ElementsAre(kTargetAddress1, kTargetAddress2, kTargetAddress3));
@@ -1324,7 +1324,7 @@ TEST_F(UprobesUnwindingVisitorSampleTest, VisitStackSampleUsesUserStackMemoryFro
               .data = std::make_unique<char[]>(kUserStackSize1),
           },
   };
-  char* kUserStackData1 = user_stack_event1.data.data.get();
+  char* user_stack_data1 = user_stack_event1.data.data.get();
   PerfEvent{std::move(user_stack_event1)}.Accept(&visitor_);
 
   constexpr uint64_t kUserStackSize2 = 1024;
@@ -1345,7 +1345,7 @@ TEST_F(UprobesUnwindingVisitorSampleTest, VisitStackSampleUsesUserStackMemoryFro
               .data = std::make_unique<char[]>(kUserStackSize2),
           },
   };
-  char* kUserStackData2 = user_stack_event2.data.data.get();
+  char* user_stack_data2 = user_stack_event2.data.data.get();
   PerfEvent{std::move(user_stack_event2)}.Accept(&visitor_);
 
   uint64_t dyn_size = event.data.dyn_size;
@@ -1362,10 +1362,10 @@ TEST_F(UprobesUnwindingVisitorSampleTest, VisitStackSampleUsesUserStackMemoryFro
                                  Property(&StackSliceView::data, Eq(stack_data))),
                            AllOf(Property(&StackSliceView::start_address, Eq(kUserStackPointer1)),
                                  Property(&StackSliceView::size, Eq(kUserStackSize1)),
-                                 Property(&StackSliceView::data, Eq(kUserStackData1))),
+                                 Property(&StackSliceView::data, Eq(user_stack_data1))),
                            AllOf(Property(&StackSliceView::start_address, Eq(kUserStackPointer2)),
                                  Property(&StackSliceView::size, Eq(kUserStackSize2)),
-                                 Property(&StackSliceView::data, Eq(kUserStackData2)))));
+                                 Property(&StackSliceView::data, Eq(user_stack_data2)))));
   EXPECT_THAT(actual_stack_slices[0], AllOf(Property(&StackSliceView::start_address, Eq(sp)),
                                             Property(&StackSliceView::size, Eq(dyn_size)),
                                             Property(&StackSliceView::data, Eq(stack_data))));
