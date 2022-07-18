@@ -1343,16 +1343,22 @@ TEST_F(UprobesUnwindingVisitorSampleTest, VisitStackSampleUsesUserStackMemoryFro
   uint64_t sp = event.data.regs->sp;
   PerfEvent{std::move(event)}.Accept(&visitor_);
 
-  EXPECT_THAT(actual_stack_slices,
-              ElementsAre(AllOf(Property(&StackSliceView::start_address, Eq(sp)),
-                                Property(&StackSliceView::size, Eq(dyn_size)),
-                                Property(&StackSliceView::data, NotNull())),
-                          AllOf(Property(&StackSliceView::start_address, Eq(kUserStackPointer1)),
-                                Property(&StackSliceView::size, Eq(kUserStackSize1)),
-                                Property(&StackSliceView::data, NotNull())),
-                          AllOf(Property(&StackSliceView::start_address, Eq(kUserStackPointer2)),
-                                Property(&StackSliceView::size, Eq(kUserStackSize2)),
-                                Property(&StackSliceView::data, NotNull()))));
+  // We don't guarantee an order for the stack slices of different stream ids. However, the first
+  // element must be the stack slice from the sample.
+  ASSERT_THAT(
+      actual_stack_slices,
+      UnorderedElementsAre(AllOf(Property(&StackSliceView::start_address, Eq(sp)),
+                                 Property(&StackSliceView::size, Eq(dyn_size)),
+                                 Property(&StackSliceView::data, NotNull())),
+                           AllOf(Property(&StackSliceView::start_address, Eq(kUserStackPointer1)),
+                                 Property(&StackSliceView::size, Eq(kUserStackSize1)),
+                                 Property(&StackSliceView::data, NotNull())),
+                           AllOf(Property(&StackSliceView::start_address, Eq(kUserStackPointer2)),
+                                 Property(&StackSliceView::size, Eq(kUserStackSize2)),
+                                 Property(&StackSliceView::data, NotNull()))));
+  EXPECT_THAT(actual_stack_slices[0], AllOf(Property(&StackSliceView::start_address, Eq(sp)),
+                                            Property(&StackSliceView::size, Eq(dyn_size)),
+                                            Property(&StackSliceView::data, NotNull())));
 
   EXPECT_THAT(actual_callstack_sample.callstack().pcs(),
               ElementsAre(kTargetAddress1, kTargetAddress2, kTargetAddress3));
