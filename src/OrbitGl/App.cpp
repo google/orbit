@@ -2499,12 +2499,13 @@ Future<ErrorMessageOr<void>> OrbitApp::AddDefaultFrameTrack() {
   std::vector<std::filesystem::path> auto_preset_paths = {stadia_default_preset_path};
 
   // Each preset in auto_preset_paths contains a FrameTrack that users might be interested in
-  // loading by default. Orbit will try to load automatically the first loadable preset from the
-  // list. If no presets could be loaded, Orbit will just log an error.
+  // loading by default. Orbit will try to load automatically just the first loadable preset from
+  // the list as we don't want Orbit to automatically add more than one FrameTrack. If no presets
+  // could be loaded, Orbit will log an error.
   for (std::filesystem::path preset_path : auto_preset_paths) {
     const ErrorMessageOr<PresetFile> preset = ReadPresetFromFile(preset_path);
     // Errors on reading a preset from a file won't be shown, Orbit simply will try the next preset
-    // from the list until someone is loadable.
+    // from the list until one of them is loadable.
     if (preset.has_value() &&
         GetPresetLoadState(preset.value()).state == orbit_data_views::PresetLoadState::kLoadable) {
       orbit_base::ImmediateExecutor immediate_executor{};
@@ -2518,7 +2519,9 @@ Future<ErrorMessageOr<void>> OrbitApp::AddDefaultFrameTrack() {
     }
   }
   std::string error_message =
-      "It was not possible to add a frame track automatically, because its module can't be loaded.";
+      "It was not possible to add a frame track automatically, because none of the presets "
+      "available for auto-loading could be loaded. The reason might be that you are not profiling "
+      "a Stadia-game running with Vulkan.";
   ORBIT_ERROR("%s", error_message);
   return ErrorMessage(error_message);
 }
