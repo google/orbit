@@ -24,26 +24,25 @@ QStringList ExtractCommandLineFlags(const std::vector<std::string>& command_line
   return command_line_flags;
 }
 
-// TODO(b/239181650): Add unit tests for this.
 QStringList RemoveFlagsNotPassedToMainWindow(const QStringList& flags) {
   QStringList result;
   const std::array kDoNotPassTheseFlags{absl::GetFlagReflectionHandle(FLAGS_target_instance).Name(),
                                         absl::GetFlagReflectionHandle(FLAGS_target_process).Name(),
                                         absl::GetFlagReflectionHandle(FLAGS_target_uri).Name()};
 
-  for (auto flag = flags.begin(); flag != flags.end(); ++flag) {
+  for (const auto& flag : flags) {
     bool ignore_this_flag = false;
 
     for (auto ignore_flag : kDoNotPassTheseFlags) {
       const QString flag_cmd_format =
           QString("-%1=").arg(QString::fromStdString(std::string{ignore_flag}));
-      if (flag->contains(flag_cmd_format)) {
+      if (flag.contains(flag_cmd_format)) {
         ignore_this_flag = true;
       }
     }
 
     if (!ignore_this_flag) {
-      result.push_back(*flag);
+      result.push_back(flag);
     }
   }
 

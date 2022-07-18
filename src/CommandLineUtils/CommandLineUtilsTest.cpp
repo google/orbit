@@ -11,7 +11,12 @@
 namespace orbit_command_line_utils {
 
 TEST(CommandLineUtils, RemoveFlagsNotPassedToMainWindow) {
-  QStringList params{"--some_bool", "-b", "--connection_target=1234@target", "--some_flag"};
+  QStringList params{"--some_bool",
+                     "-b",
+                     "--target_uri=orbitprofiler://instance?game_binary",
+                     "--some_flag",
+                     "--target_process=1483",
+                     "--target_instance=johndoe-3"};
   QStringList expected{"--some_bool", "-b", "--some_flag"};
   QStringList result = RemoveFlagsNotPassedToMainWindow(params);
   EXPECT_EQ(expected, result);
