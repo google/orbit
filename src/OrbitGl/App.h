@@ -556,7 +556,7 @@ class OrbitApp final : public DataViewFactory,
 
   // Automatically add a default Frame Track. It will choose only one frame track from an internal
   // list of auto-loadable presets.
-  orbit_base::Future<ErrorMessageOr<void>> AddDefaultFrameTrack();
+  orbit_base::Future<void> AddDefaultFrameTrackOrLogError();
 
  private:
   void UpdateModulesAbortCaptureIfModuleWithoutBuildIdNeedsReload(

@@ -2484,13 +2484,13 @@ Future<std::vector<ErrorMessageOr<CanceledOr<void>>>> OrbitApp::LoadAllSymbols()
   }
   if (absl::GetFlag(FLAGS_auto_frame_track)) {
     // Orbit will try to add the default frame track while loading all symbols.
-    std::ignore = AddDefaultFrameTrack();
+    std::ignore = AddDefaultFrameTrackOrLogError();
   }
 
   return orbit_base::WhenAll(absl::MakeConstSpan(loading_futures));
 }
 
-Future<ErrorMessageOr<void>> OrbitApp::AddDefaultFrameTrack() {
+Future<void> OrbitApp::AddDefaultFrameTrackOrLogError() {
   const std::filesystem::path default_auto_preset_folder_path =
       orbit_base::GetExecutableDir() / "autopresets";
   const std::filesystem::path stadia_default_preset_path =
@@ -2509,13 +2509,17 @@ Future<ErrorMessageOr<void>> OrbitApp::AddDefaultFrameTrack() {
     if (preset.has_value() &&
         GetPresetLoadState(preset.value()).state == orbit_data_views::PresetLoadState::kLoadable) {
       orbit_base::ImmediateExecutor immediate_executor{};
-      return LoadPreset(preset.value())
-          .Then(&immediate_executor, [](ErrorMessageOr<void> result) -> ErrorMessageOr<void> {
-            if (result.has_value()) {
-              ORBIT_LOG("The default frame track was automatically added.");
-            }
-            return result;
-          });
+      LoadPreset(preset.value()).Then(&immediate_executor, [](ErrorMessageOr<void> result) {
+        if (result.has_error()) {
+          ORBIT_ERROR(
+              "It was not possible to add a frame track automatically. The desired preset couldn't "
+              "be loaded: %s",
+              result.error().message());
+        } else {
+          ORBIT_LOG("The default frame track was automatically added.");
+        }
+      });
+      return {};
     }
   }
   std::string error_message =
@@ -2523,7 +2527,7 @@ Future<ErrorMessageOr<void>> OrbitApp::AddDefaultFrameTrack() {
       "available for auto-loading could be loaded. The reason might be that you are not profiling "
       "a Stadia-game running with Vulkan.";
   ORBIT_ERROR("%s", error_message);
-  return ErrorMessage(error_message);
+  return {};
 }
 
 void OrbitApp::RefreshUIAfterModuleReload() {
