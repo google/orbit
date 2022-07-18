@@ -218,28 +218,26 @@ TEST_F(MizarPairedDataTest, ForeachCallstackIsCorrect) {
     actual_ids_fed_to_action.push_back(ids);
   };
 
-  // All threads, all timestamps
-  actual_ids_fed_to_action.clear();
-  mizar_paired_data.ForEachCallstackEvent(TID(orbit_base::kAllProcessThreadsTid), 0, kRelativeTime5,
-                                          action);
-  EXPECT_THAT(actual_ids_fed_to_action,
-              UnorderedElementsAre(kCompleteCallstackIds, kCompleteCallstackIds,
-                                   kInCompleteCallstackIds, kAnotherCompleteCallstackIds));
-
-  // One thread, all timestamps
+  // all timestamps
   actual_ids_fed_to_action.clear();
   mizar_paired_data.ForEachCallstackEvent(kTID, 0, kRelativeTime5, action);
   EXPECT_THAT(
       actual_ids_fed_to_action,
       UnorderedElementsAre(kCompleteCallstackIds, kCompleteCallstackIds, kInCompleteCallstackIds));
 
-  // All threads, some timestamps
   actual_ids_fed_to_action.clear();
-  mizar_paired_data.ForEachCallstackEvent(TID(orbit_base::kAllProcessThreadsTid), kRelativeTime1,
-                                          kRelativeTime5, action);
+  mizar_paired_data.ForEachCallstackEvent(kAnotherTID, 0, kRelativeTime5, action);
+  EXPECT_THAT(actual_ids_fed_to_action, UnorderedElementsAre(kAnotherCompleteCallstackIds));
+
+  //  some timestamps
+  actual_ids_fed_to_action.clear();
+  mizar_paired_data.ForEachCallstackEvent(kTID, kRelativeTime1, kRelativeTime5, action);
   EXPECT_THAT(actual_ids_fed_to_action,
-              UnorderedElementsAre(kCompleteCallstackIds, kInCompleteCallstackIds,
-                                   kAnotherCompleteCallstackIds));
+              UnorderedElementsAre(kCompleteCallstackIds, kInCompleteCallstackIds));
+
+  actual_ids_fed_to_action.clear();
+  mizar_paired_data.ForEachCallstackEvent(kAnotherTID, kRelativeTime1, kRelativeTime5, action);
+  EXPECT_THAT(actual_ids_fed_to_action, UnorderedElementsAre(kAnotherCompleteCallstackIds));
 }
 
 TEST_F(MizarPairedDataTest, ActiveInvocationTimesIsCorrect) {
