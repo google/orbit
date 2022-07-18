@@ -12,6 +12,7 @@
 #include <thread>
 
 #include "ContextSwitchManager.h"
+#include "GraphicsEtwProvider.h"
 #include "OrbitBase/ThreadConstants.h"
 #include "WindowsTracing/TracerListener.h"
 #include "WindowsUtils/ListModules.h"
@@ -29,7 +30,8 @@ class KrabsTracer {
     kContextSwitch = 1 << 2,
     kStackWalk = 1 << 3,
     kImageLoad = 1 << 4,
-    kAll = kThread | kContextSwitch | kStackWalk | kImageLoad,
+    kGraphics = 1 << 5,
+    kAll = kThread | kContextSwitch | kStackWalk | kImageLoad | kGraphics
   };
 
   KrabsTracer(uint32_t pid, double sampling_frequency_hz, TracerListener* listener);
@@ -40,7 +42,6 @@ class KrabsTracer {
   void Start();
   void Stop();
 
-  krabs::kernel_trace& GetTrace() { return trace_; }
   [[nodiscard]] bool IsProviderEnabled(ProviderFlags provider) const;
   [[nodiscard]] std::vector<orbit_windows_utils::Module> GetLoadedModules() const;
 
@@ -49,7 +50,10 @@ class KrabsTracer {
   void EnableProviders();
   void SetIsSystemProfilePrivilegeEnabled(bool value);
   void SetupStackTracing();
-  void Run();
+  void KernelTraceThread();
+  void UserTraceThread();
+  void StopKernelTrace();
+  void StopUserTrace();
   void OnThreadEvent(const EVENT_RECORD& record, const krabs::trace_context& context);
   void OnStackWalkEvent(const EVENT_RECORD& record, const krabs::trace_context& context);
   void OnImageLoadEvent(const EVENT_RECORD& record, const krabs::trace_context& context);
@@ -69,14 +73,17 @@ class KrabsTracer {
   ProviderFlags providers_ = ProviderFlags::kAll;
 
   std::unique_ptr<ContextSwitchManager> context_switch_manager_;
-  std::unique_ptr<std::thread> trace_thread_;
+  std::unique_ptr<std::thread> kernel_trace_thread_;
+  std::unique_ptr<std::thread> user_trace_thread_;
   Stats stats_;
 
-  krabs::kernel_trace trace_;
+  krabs::user_trace user_trace_;
+  krabs::kernel_trace kernel_trace_;
   krabs::kernel::thread_provider thread_provider_;
   krabs::kernel::context_switch_provider context_switch_provider_;
   krabs::kernel_provider stack_walk_provider_;
   krabs::kernel::image_load_provider image_load_provider_;
+  std::unique_ptr<GraphicsEtwProvider> graphics_etw_provider_;
   EVENT_TRACE_LOGFILE log_file_ = {0};
 
   mutable absl::Mutex modules_mutex_;

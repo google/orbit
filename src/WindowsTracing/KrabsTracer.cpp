@@ -39,7 +39,7 @@ KrabsTracer::KrabsTracer(uint32_t pid, double sampling_frequency_hz, TracerListe
       sampling_frequency_hz_(sampling_frequency_hz),
       listener_(listener),
       providers_(providers),
-      trace_(KERNEL_LOGGER_NAME),
+      kernel_trace_(KERNEL_LOGGER_NAME),
       stack_walk_provider_(EVENT_TRACE_FLAG_PROFILE, krabs::guids::stack_walk) {
   path_converter_ = orbit_windows_utils::PathConverter::Create();
   SetTraceProperties();
@@ -54,7 +54,7 @@ void KrabsTracer::SetTraceProperties() {
   properties.MaximumBuffers = 48;
   properties.FlushTimer = 1;
   properties.LogFileMode = EVENT_TRACE_REAL_TIME_MODE;
-  trace_.set_trace_properties(&properties);
+  kernel_trace_.set_trace_properties(&properties);
 }
 
 bool KrabsTracer::IsProviderEnabled(ProviderFlags provider) const {
@@ -65,25 +65,30 @@ void KrabsTracer::EnableProviders() {
   if (IsProviderEnabled(ProviderFlags::kThread)) {
     thread_provider_.add_on_event_callback(
         [this](const auto& record, const auto& context) { OnThreadEvent(record, context); });
-    trace_.enable(thread_provider_);
+    kernel_trace_.enable(thread_provider_);
   }
 
   if (IsProviderEnabled(ProviderFlags::kContextSwitch)) {
     context_switch_provider_.add_on_event_callback(
         [this](const auto& record, const auto& context) { OnThreadEvent(record, context); });
-    trace_.enable(context_switch_provider_);
+    kernel_trace_.enable(context_switch_provider_);
   }
 
   if (IsProviderEnabled(ProviderFlags::kStackWalk)) {
     stack_walk_provider_.add_on_event_callback(
         [this](const auto& record, const auto& context) { OnStackWalkEvent(record, context); });
-    trace_.enable(stack_walk_provider_);
+    kernel_trace_.enable(stack_walk_provider_);
   }
 
   if (IsProviderEnabled(ProviderFlags::kImageLoad)) {
     image_load_provider_.add_on_event_callback(
         [this](const auto& record, const auto& context) { OnImageLoadEvent(record, context); });
-    trace_.enable(image_load_provider_);
+    kernel_trace_.enable(image_load_provider_);
+  }
+
+  if (IsProviderEnabled(ProviderFlags::kGraphics)) {
+    graphics_etw_provider_ =
+        std::make_unique<GraphicsEtwProvider>(target_pid_, &user_trace_, listener_);
   }
 }
 
@@ -103,38 +108,58 @@ void KrabsTracer::SetupStackTracing() {
                                      (void*)&interval, sizeof(TRACE_PROFILE_INTERVAL));
   ORBIT_CHECK(status == ERROR_SUCCESS);
 
-  // Initialize ETW stack tracing. Note that this must be executed after trace_.open() as
+  // Initialize ETW stack tracing. Note that this must be executed after kernel_trace_.open() as
   // set_trace_information needs a valid session handle.
   CLASSIC_EVENT_ID event_id = {0};
   event_id.EventGuid = krabs::guids::perf_info;
   event_id.Type = kSampledProfileEventSampleProfile;
-  trace_.set_trace_information(TraceStackTracingInfo, &event_id, sizeof(CLASSIC_EVENT_ID));
+  kernel_trace_.set_trace_information(TraceStackTracingInfo, &event_id, sizeof(CLASSIC_EVENT_ID));
 }
 
 void KrabsTracer::Start() {
-  ORBIT_CHECK(trace_thread_ == nullptr);
+  ORBIT_CHECK(kernel_trace_thread_ == nullptr);
+  ORBIT_CHECK(user_trace_thread_ == nullptr);
   context_switch_manager_ = std::make_unique<ContextSwitchManager>(listener_);
   SetIsSystemProfilePrivilegeEnabled(true);
-  log_file_ = trace_.open();
+  log_file_ = kernel_trace_.open();
   if (IsProviderEnabled(ProviderFlags::kStackWalk)) {
     SetupStackTracing();
   }
-  trace_thread_ = std::make_unique<std::thread>(&KrabsTracer::Run, this);
+  kernel_trace_thread_ = std::make_unique<std::thread>(&KrabsTracer::KernelTraceThread, this);
+  user_trace_thread_ = std::make_unique<std::thread>(&KrabsTracer::UserTraceThread, this);
 }
 
 void KrabsTracer::Stop() {
-  ORBIT_CHECK(trace_thread_ != nullptr && trace_thread_->joinable());
-  trace_.stop();
-  trace_thread_->join();
-  trace_thread_ = nullptr;
+  StopKernelTrace();
+  StopUserTrace();
+
   OutputStats();
   SetIsSystemProfilePrivilegeEnabled(false);
   context_switch_manager_ = nullptr;
 }
 
-void KrabsTracer::Run() {
-  orbit_base::SetCurrentThreadName("KrabsTracer::Run");
-  trace_.process();
+void KrabsTracer::KernelTraceThread() {
+  orbit_base::SetCurrentThreadName("KrabsTracer::KernelTraceThread");
+  kernel_trace_.process();
+}
+
+void KrabsTracer::UserTraceThread() {
+  orbit_base::SetCurrentThreadName("KrabsTracer::UserTraceThread");
+  user_trace_.start();
+}
+
+void KrabsTracer::StopKernelTrace() {
+  ORBIT_CHECK(kernel_trace_thread_ != nullptr && kernel_trace_thread_->joinable());
+  kernel_trace_.stop();
+  kernel_trace_thread_->join();
+  kernel_trace_thread_ = nullptr;
+}
+
+void KrabsTracer::StopUserTrace() {
+  ORBIT_CHECK(user_trace_thread_ != nullptr && user_trace_thread_->joinable());
+  user_trace_.stop();
+  user_trace_thread_->join();
+  user_trace_thread_ = nullptr;
 }
 
 void KrabsTracer::OnThreadEvent(const EVENT_RECORD& record, const krabs::trace_context& context) {
@@ -257,7 +282,7 @@ std::vector<orbit_windows_utils::Module> KrabsTracer::GetLoadedModules() const {
 }
 
 void KrabsTracer::OutputStats() {
-  krabs::trace_stats trace_stats = trace_.query_stats();
+  krabs::trace_stats trace_stats = kernel_trace_.query_stats();
   ORBIT_LOG("--- ETW stats ---");
   ORBIT_LOG("Number of buffers: %u", trace_stats.buffersCount);
   ORBIT_LOG("Free buffers: %u", trace_stats.buffersFree);
@@ -270,6 +295,9 @@ void KrabsTracer::OutputStats() {
   ORBIT_LOG("Number of stack events: %u", stats_.num_stack_events);
   ORBIT_LOG("Number of stack events for target pid: %u", stats_.num_stack_events_for_target_pid);
   context_switch_manager_->OutputStats();
+  if (graphics_etw_provider_ != nullptr) {
+    graphics_etw_provider_->OutputStats();
+  }
 }
 
 }  // namespace orbit_windows_tracing
