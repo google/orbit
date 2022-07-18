@@ -14,6 +14,7 @@
 
 #include "CaptureFileInfo/Manager.h"
 #include "OrbitBase/Logging.h"
+#include "OrbitBase/Result.h"
 #include "OrbitPaths/Paths.h"
 #include "ui_LoadCaptureWidget.h"
 
@@ -30,7 +31,10 @@ LoadCaptureWidget::LoadCaptureWidget(QWidget* parent)
   Manager manager;
 
   if (manager.GetCaptureFileInfos().empty()) {
-    (void)manager.FillFromDirectory(orbit_paths::CreateOrGetCaptureDirUnsafe());
+    ErrorMessageOr<std::filesystem::path> capture_dir = orbit_paths::CreateOrGetCaptureDir();
+    if (capture_dir.has_value()) {
+      std::ignore = manager.FillFromDirectory(capture_dir.value());
+    }
   }
 
   item_model_.SetCaptureFileInfos(manager.GetCaptureFileInfos());
@@ -117,9 +121,13 @@ void LoadCaptureWidget::showEvent(QShowEvent* event) {
 }
 
 void LoadCaptureWidget::SelectViaFilePicker() {
-  QFileDialog file_picker(
-      this, "Open Capture...",
-      QString::fromStdString(orbit_paths::CreateOrGetCaptureDirUnsafe().string()), "*.orbit");
+  QString capture_dir;
+  ErrorMessageOr<std::filesystem::path> capture_dir_or_error = orbit_paths::CreateOrGetCaptureDir();
+  if (capture_dir_or_error.has_value()) {
+    capture_dir = QString::fromStdString(capture_dir_or_error.value().string());
+  }
+
+  QFileDialog file_picker(this, "Open Capture...", capture_dir, "*.orbit");
   file_picker.setFileMode(QFileDialog::ExistingFile);
   file_picker.setLabelText(QFileDialog::Accept, "Start Session");
 
