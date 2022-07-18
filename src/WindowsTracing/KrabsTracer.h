@@ -52,6 +52,8 @@ class KrabsTracer {
   void SetupStackTracing();
   void KernelTraceThread();
   void UserTraceThread();
+  void StopKernelTrace();
+  void StopUserTrace();
   void OnThreadEvent(const EVENT_RECORD& record, const krabs::trace_context& context);
   void OnStackWalkEvent(const EVENT_RECORD& record, const krabs::trace_context& context);
   void OnImageLoadEvent(const EVENT_RECORD& record, const krabs::trace_context& context);

@@ -130,15 +130,8 @@ void KrabsTracer::Start() {
 }
 
 void KrabsTracer::Stop() {
-  ORBIT_CHECK(kernel_trace_thread_ != nullptr && kernel_trace_thread_->joinable());
-  kernel_trace_.stop();
-  kernel_trace_thread_->join();
-  kernel_trace_thread_ = nullptr;
-
-  ORBIT_CHECK(user_trace_thread_ != nullptr && user_trace_thread_->joinable());
-  user_trace_.stop();
-  user_trace_thread_->join();
-  user_trace_thread_ = nullptr;
+  StopKernelTrace();
+  StopUserTrace();
 
   OutputStats();
   SetIsSystemProfilePrivilegeEnabled(false);
@@ -153,6 +146,20 @@ void KrabsTracer::KernelTraceThread() {
 void KrabsTracer::UserTraceThread() {
   orbit_base::SetCurrentThreadName("KrabsTracer::UserTraceThread");
   user_trace_.start();
+}
+
+void KrabsTracer::StopKernelTrace() {
+  ORBIT_CHECK(kernel_trace_thread_ != nullptr && kernel_trace_thread_->joinable());
+  kernel_trace_.stop();
+  kernel_trace_thread_->join();
+  kernel_trace_thread_ = nullptr;
+}
+
+void KrabsTracer::StopUserTrace() {
+  ORBIT_CHECK(user_trace_thread_ != nullptr && user_trace_thread_->joinable());
+  user_trace_.stop();
+  user_trace_thread_->join();
+  user_trace_thread_ = nullptr;
 }
 
 void KrabsTracer::OnThreadEvent(const EVENT_RECORD& record, const krabs::trace_context& context) {
@@ -288,7 +295,7 @@ void KrabsTracer::OutputStats() {
   ORBIT_LOG("Number of stack events: %u", stats_.num_stack_events);
   ORBIT_LOG("Number of stack events for target pid: %u", stats_.num_stack_events_for_target_pid);
   context_switch_manager_->OutputStats();
-  if (graphics_etw_provider_) {
+  if (graphics_etw_provider_ != nullptr) {
     graphics_etw_provider_->OutputStats();
   }
 }

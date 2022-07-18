@@ -9,6 +9,8 @@
 #include <stdint.h>
 // clang-format on
 
+#include <absl/functional/bind_front.h>
+
 #include <PresentData/ETW/Microsoft_Windows_D3D9.h>
 #include <PresentData/ETW/Microsoft_Windows_DXGI.h>
 #include <PresentData/ETW/Microsoft_Windows_Dwm_Core.h>
@@ -27,34 +29,32 @@
 
 namespace orbit_windows_tracing {
 
-using namespace std::placeholders;
-
 GraphicsEtwProvider::GraphicsEtwProvider(uint32_t pid, krabs::user_trace* trace,
                                          TracerListener* listener)
     : target_pid_(pid), trace_(trace), listener_(listener) {
   EnableProvider("Dxgi", Microsoft_Windows_DXGI::GUID,
-                 std::bind(&GraphicsEtwProvider::OnDXGIEvent, this, _1, _2));
+                 absl::bind_front(&GraphicsEtwProvider::OnDXGIEvent, this));
   EnableProvider("D3d9", Microsoft_Windows_D3D9::GUID,
-                 std::bind(&GraphicsEtwProvider::OnD3d9Event, this, _1, _2));
+                 absl::bind_front(&GraphicsEtwProvider::OnD3d9Event, this));
   EnableProvider("DwmCore", Microsoft_Windows_Dwm_Core::GUID,
-                 std::bind(&GraphicsEtwProvider::OnDwmCoreEvent, this, _1, _2));
+                 absl::bind_front(&GraphicsEtwProvider::OnDwmCoreEvent, this));
   EnableProvider("DwmCoreWin7", Microsoft_Windows_Dwm_Core::GUID,
-                 std::bind(&GraphicsEtwProvider::OnDwmCoreWin7Event, this, _1, _2));
+                 absl::bind_front(&GraphicsEtwProvider::OnDwmCoreWin7Event, this));
   EnableProvider("DxgKrnl", Microsoft_Windows_DxgKrnl::GUID,
-                 std::bind(&GraphicsEtwProvider::OnDxgKrnlEvent, this, _1, _2));
+                 absl::bind_front(&GraphicsEtwProvider::OnDxgKrnlEvent, this));
   EnableProvider("DxgKrnlWin7Pres", Microsoft_Windows_DxgKrnl::Win7::PRESENTHISTORY_GUID,
-                 std::bind(&GraphicsEtwProvider::OnDxgKrnlWin7PresEvent, this, _1, _2));
+                 absl::bind_front(&GraphicsEtwProvider::OnDxgKrnlWin7PresEvent, this));
   EnableProvider("NtProcess", NT_Process::GUID,
-                 std::bind(&GraphicsEtwProvider::OnNtProcessEvent, this, _1, _2));
+                 absl::bind_front(&GraphicsEtwProvider::OnNtProcessEvent, this));
   EnableProvider("WindowsEventMetadata", Microsoft_Windows_EventMetadata::GUID,
-                 std::bind(&GraphicsEtwProvider::OnWindowsEventMetadata, this, _1, _2));
+                 absl::bind_front(&GraphicsEtwProvider::OnWindowsEventMetadata, this));
   EnableProvider("Win32K", Microsoft_Windows_Win32k::GUID,
-                 std::bind(&GraphicsEtwProvider::OnWin32KEvent, this, _1, _2));
+                 absl::bind_front(&GraphicsEtwProvider::OnWin32KEvent, this));
 }
 
 void GraphicsEtwProvider::EnableProvider(std::string_view name, GUID guid,
                                          krabs::provider_event_callback callback) {
-  ORBIT_CHECK(name_to_provider_.count(name) == 0);
+  ORBIT_CHECK(!name_to_provider_.contains(name));
   name_to_provider_[name] = std::make_unique<Provider>(name, guid, target_pid_, trace_, callback);
 }
 
@@ -151,8 +151,7 @@ GraphicsEtwProvider::Provider::Provider(std::string_view name, GUID guid, uint32
                                         krabs::user_trace* trace,
                                         krabs::provider_event_callback callback)
     : name_(name), krabs_provider_(guid), target_pid_(target_pid), callback_(callback) {
-  krabs_provider_.add_on_event_callback(
-      std::bind(&Provider::OnEvent, this, std::placeholders::_1, std::placeholders::_2));
+  krabs_provider_.add_on_event_callback(absl::bind_front(&Provider::OnEvent, this));
   trace->enable(krabs_provider_);
 }
 
