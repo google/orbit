@@ -364,7 +364,7 @@ void ServiceDeployManager::CopyFileToLocalImpl(
     std::filesystem::path destination, orbit_base::StopToken stop_token) {
   ORBIT_CHECK(QThread::currentThread() == thread());
 
-  if (copy_file_operation_in_progress_ != nullptr) {
+  if (copy_to_local_operation_ != nullptr) {
     waiting_copy_operations_.emplace_back(
         [this, promise = std::move(promise), source = std::move(source),
          destination = std::move(destination), stop_token = std::move(stop_token)]() mutable {
