@@ -9,9 +9,11 @@ add_library(MizarBase INTERFACE)
 target_sources(MizarBase INTERFACE
   include/MizarBase/BaselineOrComparison.h
   include/MizarBase/SampledFunctionId.h
+  include/MizarBase/Titles.h
   include/MizarBase/ThreadId.h)
 
 target_include_directories(MizarBase INTERFACE ${CMAKE_CURRENT_LIST_DIR}/include)
 
 target_link_libraries(MizarBase
-INTERFACE OrbitBase)
+  INTERFACE OrbitBase
+  Qt5::Core)

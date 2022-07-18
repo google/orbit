@@ -12,10 +12,10 @@
 #include <string_view>
 
 #include "MizarBase/BaselineOrComparison.h"
+#include "MizarBase/Titles.h"
 #include "MizarData/BaselineAndComparison.h"
 #include "MizarWidgets/MizarMainWindow.h"
 #include "MizarWidgets/SamplingWithFrameTrackReportConfigValidator.h"
-#include "MizarWidgets/Titles.h"
 #include "SamplingWithFrameTrackInputWidget.h"
 
 namespace Ui {
@@ -63,8 +63,7 @@ class SamplingWithFrameTrackWidget : public QWidget {
   static const inline QString kMultiplicityCorrectionDisabledLabel =
       QStringLiteral("Probability of false alarm for an individual function:");
 
-  static const inline SamplingWithFrameTrackReportConfigValidator kConfigValidator{
-      orbit_mizar_base::kBaselineTitle, orbit_mizar_base::kComparisonTitle};
+  static const inline SamplingWithFrameTrackReportConfigValidator kConfigValidator{};
 };
 
 }  // namespace orbit_mizar_widgets

@@ -196,12 +196,7 @@ class SamplingWithFrameTrackReportModelTest : public ::testing::Test {
                  comparison_counts_,      comparison_frame_track_stats_,
                  kSfidToComparisonResult, &kSfidToName};
 
-  static const inline Baseline<QString> kBaselineTitle =
-      Baseline<QString>(QStringLiteral("Baseline"));
-  static const inline Comparison<QString> kComparisonTitle =
-      Comparison<QString>(QStringLiteral("Comparison"));
-
-  Model model_{report_, kBaselineTitle, kComparisonTitle, true, 0.05};
+  Model model_{report_, true, 0.05};
 };
 
 TEST_F(SamplingWithFrameTrackReportModelTest, DisplayedDataIsCorrect) {

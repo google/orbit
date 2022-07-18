@@ -9,10 +9,10 @@
 #include <memory>
 
 #include "MizarBase/BaselineOrComparison.h"
+#include "MizarBase/Titles.h"
 #include "MizarData/BaselineAndComparison.h"
 #include "MizarData/SamplingWithFrameTrackComparisonReport.h"
 #include "MizarWidgets/SamplingWithFrameTrackReportConfigValidator.h"
-#include "MizarWidgets/Titles.h"
 #include "OrbitBase/Result.h"
 #include "OrbitBase/Typedef.h"
 #include "ui_SamplingWithFrameTrackWidget.h"
@@ -94,7 +94,7 @@ void SamplingWithFrameTrackWidget::OnUpdateButtonClicked() {
 
   Report report = baseline_and_comparison_->MakeSamplingWithFrameTrackReport(baseline_config,
                                                                              comparison_config);
-  ui_->output_->UpdateReport(std::move(report), kBaselineTitle, kComparisonTitle);
+  ui_->output_->UpdateReport(std::move(report));
 }
 
 }  // namespace orbit_mizar_widgets

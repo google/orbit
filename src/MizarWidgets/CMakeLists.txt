@@ -11,8 +11,7 @@ target_sources(MizarWidgets PUBLIC
   include/MizarWidgets/SamplingWithFrameTrackInputWidget.h
   include/MizarWidgets/SamplingWithFrameTrackOutputWidget.h
   include/MizarWidgets/SamplingWithFrameTrackWidget.h
-  include/MizarWidgets/SamplingWithFrameTrackReportConfigValidator.h
-  include/MizarWidgets/Titles.h)
+  include/MizarWidgets/SamplingWithFrameTrackReportConfigValidator.h)
 
 target_include_directories(MizarWidgets PUBLIC ${CMAKE_CURRENT_LIST_DIR}/include)
 

@@ -10,8 +10,8 @@
 
 #include "ClientData/ScopeId.h"
 #include "MizarBase/BaselineOrComparison.h"
+#include "MizarBase/Titles.h"
 #include "MizarWidgets/SamplingWithFrameTrackReportConfigValidator.h"
-#include "MizarWidgets/Titles.h"
 #include "TestUtils/TestUtils.h"
 
 using ::orbit_client_data::ScopeId;
@@ -59,7 +59,7 @@ TEST(SamplingWithFrameTrackReportConfigValidator, IsCorrect) {
   EXPECT_CALL(bac, GetComparisonData).WillRepeatedly(ReturnRef(comparison_data));
 
   const SamplingWithFrameTrackReportConfigValidatorTmpl<MockBaselineAndComparison, MockPairedData>
-      validator{orbit_mizar_base::kBaselineTitle, orbit_mizar_base::kComparisonTitle};
+      validator{};
 
   EXPECT_THAT(validator.Validate(&bac,
                                  orbit_mizar_base::MakeBaseline<HalfConfig>(

@@ -29,8 +29,7 @@ class SamplingWithFrameTrackOutputWidget : public QWidget {
  public:
   explicit SamplingWithFrameTrackOutputWidget(QWidget* parent = nullptr);
   ~SamplingWithFrameTrackOutputWidget();
-  void UpdateReport(Report report, const Baseline<QString>& baseline_title,
-                    const Comparison<QString>& comparison_title);
+  void UpdateReport(Report report);
 
  public slots:
   void SetMultiplicityCorrectionEnabled(bool checked);
