@@ -39,6 +39,34 @@ void SftpCopyToLocalOperation::CopyFileToLocal(std::filesystem::path source,
   OnEvent();
 }
 
+void SftpCopyToLocalOperation::Stop() {
+  switch (CurrentState()) {
+    case State::kInitial:
+    case State::kOpenRemoteFile: {
+      SetState(State::kCloseEventConnections);
+      break;
+    }
+    case State::kOpenLocalFile: {
+      SetState(State::kCloseRemoteFile);
+      break;
+    }
+    case State::kStarted:
+      SetState(State::kCloseAndDeletePartialFile);
+      break;
+    case State::kShutdown:
+    case State::kCloseAndDeletePartialFile:
+    case State::kCloseLocalFile:
+    case State::kCloseRemoteFile:
+    case State::kCloseEventConnections:
+    case State::kDone:
+      break;
+    case State::kError:
+      ORBIT_UNREACHABLE();
+  }
+
+  OnEvent();
+}
+
 outcome::result<void> SftpCopyToLocalOperation::shutdown() {
   switch (CurrentState()) {
     case State::kInitial:

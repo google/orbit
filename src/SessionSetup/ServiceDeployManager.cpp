@@ -281,6 +281,29 @@ ErrorMessageOr<void> ServiceDeployManager::CopyFileToRemote(
   return outcome::success();
 }
 
+ErrorMessageOr<void> ServiceDeployManager::ShutdownSftpOperations() {
+  ORBIT_SCOPED_TIMED_LOG("ServiceDeployManager::ShutdownSftpOperations");
+  ORBIT_CHECK(QThread::currentThread() == thread());
+  ORBIT_CHECK(copy_to_local_operation_ != nullptr);
+
+  waiting_copy_operations_.clear();
+
+  orbit_qt_utils::EventLoop loop{};
+  auto quit_handler = ConnectQuitHandler(&loop, copy_to_local_operation_,
+                                         &orbit_ssh_qt::SftpCopyToLocalOperation::stopped);
+  auto error_handler = ConnectErrorHandler(&loop, copy_to_local_operation_,
+                                           &orbit_ssh_qt::SftpCopyToLocalOperation::errorOccurred);
+  auto cancel_handler = ConnectCancelHandler(&loop, this);
+
+  copy_to_local_operation_->Stop();
+  OUTCOME_TRY(loop.exec());
+
+  delete copy_to_local_operation_;
+  copy_to_local_operation_ = nullptr;
+
+  return outcome::success();
+}
+
 ErrorMessageOr<void> ServiceDeployManager::ShutdownSftpChannel(
     orbit_ssh_qt::SftpChannel* sftp_channel) {
   ORBIT_SCOPED_TIMED_LOG("ServiceDeployManager::ShutdownSftpChannel");
@@ -341,7 +364,7 @@ void ServiceDeployManager::CopyFileToLocalImpl(
     std::filesystem::path destination, orbit_base::StopToken stop_token) {
   ORBIT_CHECK(QThread::currentThread() == thread());
 
-  if (copy_file_operation_in_progress_) {
+  if (copy_to_local_operation_ != nullptr) {
     waiting_copy_operations_.emplace_back(
         [this, promise = std::move(promise), source = std::move(source),
          destination = std::move(destination), stop_token = std::move(stop_token)]() mutable {
@@ -350,32 +373,27 @@ void ServiceDeployManager::CopyFileToLocalImpl(
     return;
   }
 
-  copy_file_operation_in_progress_ = true;
-
   ORBIT_LOG("Copying remote \"%s\" to local \"%s\"", source.string(), destination.string());
 
   // NOLINTNEXTLINE - Unfortunately we have to fall back to a raw `new` here.
-  auto operation = new orbit_ssh_qt::SftpCopyToLocalOperation{&session_.value(),
-                                                              sftp_channel_.get(), stop_token};
-
-  // Making operation a child of the ServiceDeployManager ensures it will be deleted at the latest
-  // when ServiceDeployManager gets deleted. That's important when the copy procedure gets aborted
-  // and both callbacks below won't be executed.
-  operation->setParent(this);
+  copy_to_local_operation_ = new orbit_ssh_qt::SftpCopyToLocalOperation{
+      &session_.value(), sftp_channel_.get(), stop_token};
+  // copy_to_local_operation_ will get deleted either in finish_handler (via delete later) or in
+  // ShutdownSftpOperations().
 
   // The finish handler handles both the error and the success case and will be triggered
   // from the ::stopped and ::errorOccured signals (see below).
   // By having a single handler we don't need to worry about sharing resources that are not supposed
   // to be shared like the promise.
-  auto finish_handler = [this, promise = std::move(promise), source, destination, operation,
+  auto finish_handler = [this, promise = std::move(promise), source, destination,
                          stop_token = std::move(stop_token)](ErrorMessageOr<void> result) mutable {
     if (promise.HasResult()) return;
 
-    operation->deleteLater();  // We can't just call `delete operation;` here because that also
-                               // triggers the deletion of this closure object. Instead we queue a
-                               // job on the event queue for deleting it later.
-
-    copy_file_operation_in_progress_ = false;
+    // We can't just call `delete copy_to_local_operation_;` here because that also triggers the
+    // deletion of this closure object. Instead we queue a job on the event queue for deleting it
+    // later.
+    copy_to_local_operation_->deleteLater();
+    copy_to_local_operation_ = nullptr;
 
     if (!waiting_copy_operations_.empty()) {
       // This calls the copy operation from the event loop in the background thread
@@ -402,19 +420,19 @@ void ServiceDeployManager::CopyFileToLocalImpl(
   // Since we need to call the finish handler from two different slots and it's not copyable,
   // we first have to move the handler into a shared_ptr which we can share between the two slots.
   // This will also take care of lifetime management since the finish handler closure will get
-  // deleted when the `operation` object gets deleted.
+  // deleted when the `copy_to_local_operation_` object gets deleted.
   auto shared_finish_handler =
       std::make_shared<decltype(finish_handler)>(std::move(finish_handler));
 
-  QObject::connect(operation, &orbit_ssh_qt::SftpCopyToLocalOperation::stopped,
+  QObject::connect(copy_to_local_operation_, &orbit_ssh_qt::SftpCopyToLocalOperation::stopped,
                    [shared_finish_handler]() { (*shared_finish_handler)(outcome::success()); });
 
-  QObject::connect(operation, &orbit_ssh_qt::SftpCopyToLocalOperation::errorOccurred,
+  QObject::connect(copy_to_local_operation_, &orbit_ssh_qt::SftpCopyToLocalOperation::errorOccurred,
                    [shared_finish_handler](std::error_code error_code) {
                      (*shared_finish_handler)(ErrorMessage{error_code.message()});
                    });
 
-  operation->CopyFileToLocal(std::move(source), std::move(destination));
+  copy_to_local_operation_->CopyFileToLocal(std::move(source), std::move(destination));
 }
 
 ErrorMessageOr<void> ServiceDeployManager::CopyOrbitServiceExecutable(
@@ -791,6 +809,13 @@ void ServiceDeployManager::Shutdown() {
   QMetaObject::invokeMethod(
       this,
       [this]() {
+        if (copy_to_local_operation_ != nullptr) {
+          ErrorMessageOr<void> shutdown_result = ShutdownSftpOperations();
+          if (shutdown_result.has_error()) {
+            ORBIT_ERROR("Unable to shut down ongoing copy to local operation: %s",
+                        shutdown_result.error().message());
+          }
+        }
         if (sftp_channel_ != nullptr) {
           ErrorMessageOr<void> shutdown_result = ShutdownSftpChannel(sftp_channel_.get());
           if (shutdown_result.has_error()) {
