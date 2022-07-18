@@ -208,13 +208,21 @@ OrbitMainWindow::OrbitMainWindow(TargetConfiguration target_configuration,
   metrics_uploader_->SendLogEvent(OrbitLogEvent::ORBIT_MAIN_WINDOW_OPEN);
 
   // SymbolPaths.txt deprecation code
+
+  ErrorMessageOr<std::filesystem::path> symbols_file_path_or_error =
+      orbit_paths::GetSymbolsFilePath();
+  // If this results in an error, we stop here, because this is legacy functionality anyways.
+  if (symbols_file_path_or_error.has_error()) return;
+
+  const std::filesystem::path& symbols_file_path{symbols_file_path_or_error.value()};
+
   // If file does not exist, do nothing. (It means the user never used an older Orbit version or
   // manually deleted the file)
-  if (!std::filesystem::is_regular_file(orbit_paths::GetSymbolsFilePathUnsafe())) return;
+  if (!std::filesystem::is_regular_file(symbols_file_path)) return;
 
   // If it exists, check if it starts with deprecation note.
   ErrorMessageOr<bool> symbol_paths_file_has_depr_note =
-      orbit_symbols::FileStartsWithDeprecationNote(orbit_paths::GetSymbolsFilePathUnsafe());
+      orbit_symbols::FileStartsWithDeprecationNote(symbols_file_path);
   if (symbol_paths_file_has_depr_note.has_error()) {
     ORBIT_ERROR("Unable to check SymbolPaths.txt file for depreciation note, error: %s",
                 symbol_paths_file_has_depr_note.error().message());
@@ -234,7 +242,7 @@ OrbitMainWindow::OrbitMainWindow(TargetConfiguration target_configuration,
   absl::flat_hash_set<std::string> already_seen_paths;
   std::vector<std::filesystem::path> dirs_to_save;
 
-  for (const auto& dir : orbit_symbols::ReadSymbolsFile(orbit_paths::GetSymbolsFilePathUnsafe())) {
+  for (const auto& dir : orbit_symbols::ReadSymbolsFile(symbols_file_path)) {
     if (!already_seen_paths.contains(dir.string())) {
       already_seen_paths.insert(dir.string());
       dirs_to_save.push_back(dir);
@@ -252,7 +260,7 @@ OrbitMainWindow::OrbitMainWindow(TargetConfiguration target_configuration,
   client_symbols_storage_manager.SavePaths(dirs_to_save);
 
   ErrorMessageOr<void> add_depr_note_result =
-      orbit_symbols::AddDeprecationNoteToFile(orbit_paths::GetSymbolsFilePathUnsafe());
+      orbit_symbols::AddDeprecationNoteToFile(symbols_file_path);
   if (add_depr_note_result.has_error()) {
     ORBIT_ERROR("Unable to add deprecation note to SymbolPaths.txt, error: %s",
                 add_depr_note_result.error().message());

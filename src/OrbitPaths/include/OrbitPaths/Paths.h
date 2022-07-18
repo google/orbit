@@ -11,8 +11,6 @@
 
 namespace orbit_paths {
 
-// TODO(b/238986831) Replace deprecated and unsafe function with safe alternative.
-[[nodiscard, deprecated]] std::filesystem::path GetSymbolsFilePathUnsafe();
 ErrorMessageOr<std::filesystem::path> GetSymbolsFilePath();
 
 // TODO(b/238986334) Replace deprecated and unsafe function with safe alternative.
