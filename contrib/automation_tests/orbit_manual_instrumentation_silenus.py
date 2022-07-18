@@ -8,7 +8,7 @@ from absl import app
 
 from core.orbit_e2e import E2ETestSuite
 from test_cases.connection_window import FilterAndSelectFirstProcess, ConnectToStadiaInstance
-from test_cases.capture_window import Capture, CheckTimers, CollapseTrack, VerifyTracksExist
+from test_cases.capture_window import Capture, CheckTimers, FilterTracks, VerifyTracksExist
 from test_cases.symbols_tab import WaitForLoadingSymbolsAndCheckModule
 """Test Orbit's manual instrumentation on Silenus.
 
@@ -39,8 +39,10 @@ def main(argv):
             "Render (async)"
         ]),
         VerifyTracksExist(track_names="triangle.exe", allow_duplicates=True),
+        FilterTracks(filter_string="Render"),
         CheckTimers(track_name_filter="Render (async)"),
-        # There are multiple tracks with the name of the process, and we can't rename threads on Windows,
+        FilterTracks(filter_string="triangle.exe"),
+        # There can be multiple tracks with the name of the process, and we can't rename threads on Windows,
         # hence `require_all=False`.
         CheckTimers(track_name_filter="triangle.exe", require_all=False),
     ]

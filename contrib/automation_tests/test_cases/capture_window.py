@@ -549,6 +549,8 @@ class CheckThreadStates(CaptureWindowE2ETestCaseBase):
                                  'Track {} has a no thread state pane'.format(track.name))
 
 
+# TODO(b/239396452): Consider filtering the tracks before looking for matching ones in order to avoid failures related
+#  to a track being too far down and hence off-screen.
 class CheckTimers(CaptureWindowE2ETestCaseBase):
 
     def _check_all_tracks(self, tracks, expect_exists):
