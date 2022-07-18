@@ -94,9 +94,6 @@ ErrorMessageOr<bool> AlreadyInjected(pid_t pid) {
 // We need to initialize some thread local memory when entering the payload functions. This leads to
 // a situation where instrumenting the functions below would lead to a recursive call into the
 // instrumentation. We just skip these and leave instrumenting them to the kernel/uprobe fallback.
-// Blocking __GI_memcpy has a different reason: There is some code in libc that that jumps to
-// __GI_memcpy+0x3. If __GI_memcpy is instrumented this location gets overwritten and we end up
-// jumping to the middle of an instruction.
 bool IsBlocklisted(std::string_view function_name) {
   static const absl::flat_hash_set<std::string> kBlocklist{
       "__GI___libc_malloc",
@@ -121,8 +118,11 @@ bool IsBlocklisted(std::string_view function_name) {
       "__errno_location",
       "__memalign",
       "_mid_memalign",
+      // There is some code in libc that that jumps to _GI_memcpy+0x3. If __GI_memcpy is
+      // instrumented this location gets overwritten and we end up jumping to the middle of an
+      // instruction.
       "__GI_memcpy",
-      // Attaching a return probe fail, as the wine syscall dispatcher does not return properly.
+      // Attaching a return probe will fail, as __wine_syscall_dispatcher does not return properly.
       "__wine_syscall_dispatcher",
   };
   return kBlocklist.contains(function_name);
