@@ -293,6 +293,7 @@ ErrorMessageOr<void> ServiceDeployManager::ShutdownSftpOperations() {
                                          &orbit_ssh_qt::SftpCopyToLocalOperation::stopped);
   auto error_handler = ConnectErrorHandler(&loop, copy_to_local_operation_,
                                            &orbit_ssh_qt::SftpCopyToLocalOperation::errorOccurred);
+  auto cancel_handler = ConnectCancelHandler(&loop, this);
 
   copy_to_local_operation_->Stop();
   OUTCOME_TRY(loop.exec());
@@ -363,7 +364,7 @@ void ServiceDeployManager::CopyFileToLocalImpl(
     std::filesystem::path destination, orbit_base::StopToken stop_token) {
   ORBIT_CHECK(QThread::currentThread() == thread());
 
-  if (copy_file_operation_in_progress_) {
+  if (copy_file_operation_in_progress_ != nullptr) {
     waiting_copy_operations_.emplace_back(
         [this, promise = std::move(promise), source = std::move(source),
          destination = std::move(destination), stop_token = std::move(stop_token)]() mutable {
@@ -371,8 +372,6 @@ void ServiceDeployManager::CopyFileToLocalImpl(
         });
     return;
   }
-
-  copy_file_operation_in_progress_ = true;
 
   ORBIT_LOG("Copying remote \"%s\" to local \"%s\"", source.string(), destination.string());
 
