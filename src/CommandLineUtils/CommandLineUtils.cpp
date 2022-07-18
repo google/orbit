@@ -6,6 +6,9 @@
 
 #include <absl/container/flat_hash_set.h>
 
+#include "ClientFlags/ClientFlags.h"
+#include "absl/flags/flag.h"
+
 namespace orbit_command_line_utils {
 
 QStringList ExtractCommandLineFlags(const std::vector<std::string>& command_line_args,
@@ -23,12 +26,24 @@ QStringList ExtractCommandLineFlags(const std::vector<std::string>& command_line
 
 QStringList RemoveFlagsNotPassedToMainWindow(const QStringList& flags) {
   QStringList result;
-  for (auto flag = flags.begin(); flag != flags.end(); ++flag) {
-    if (flag->startsWith("--connection_target=")) {
-      continue;
+  const std::array kDoNotPassTheseFlags{absl::GetFlagReflectionHandle(FLAGS_target_instance).Name(),
+                                        absl::GetFlagReflectionHandle(FLAGS_target_process).Name(),
+                                        absl::GetFlagReflectionHandle(FLAGS_target_uri).Name()};
+
+  for (const auto& flag : flags) {
+    bool ignore_this_flag = false;
+
+    for (auto ignore_flag : kDoNotPassTheseFlags) {
+      const QString flag_cmd_format =
+          QString("-%1=").arg(QString::fromStdString(std::string{ignore_flag}));
+      if (flag.contains(flag_cmd_format)) {
+        ignore_this_flag = true;
+      }
     }
 
-    result.push_back(*flag);
+    if (!ignore_this_flag) {
+      result.push_back(flag);
+    }
   }
 
   return result;
