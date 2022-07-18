@@ -10,8 +10,7 @@
 
 #include <optional>
 
-#include "ClientProtos/capture_data.pb.h"
-#include "TrackManager.h"
+#include "GrpcProtos/capture.pb.h"
 #include "absl/container/flat_hash_map.h"
 
 namespace orbit_gl {

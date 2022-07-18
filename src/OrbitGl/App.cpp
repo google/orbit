@@ -610,7 +610,9 @@ void OrbitApp::OnModulesSnapshot(uint64_t /*timestamp_ns*/, std::vector<ModuleIn
   main_thread_executor_->Schedule([this]() { FireRefreshCallbacks(DataViewType::kLiveFunctions); });
 }
 
-void OrbitApp::OnPresentEvent(const orbit_grpc_protos::PresentEvent& /*present_event*/) {}
+void OrbitApp::OnPresentEvent(const orbit_grpc_protos::PresentEvent& present_event) {
+  GetMutableTimeGraph()->ProcessPresentEvent(present_event);
+}
 
 void OrbitApp::OnWarningEvent(orbit_grpc_protos::WarningEvent warning_event) {
   main_thread_executor_->Schedule([this, warning_event = std::move(warning_event)]() {
