@@ -71,8 +71,8 @@ class UprobesUnwindingVisitor : public PerfEventVisitor {
   UprobesUnwindingVisitor(const UprobesUnwindingVisitor&) = delete;
   UprobesUnwindingVisitor& operator=(const UprobesUnwindingVisitor&) = delete;
 
-  UprobesUnwindingVisitor(UprobesUnwindingVisitor&&) = delete;
-  UprobesUnwindingVisitor& operator=(UprobesUnwindingVisitor&&) = delete;
+  UprobesUnwindingVisitor(UprobesUnwindingVisitor&&) = default;
+  UprobesUnwindingVisitor& operator=(UprobesUnwindingVisitor&&) = default;
 
   void SetUnwindErrorsAndDiscardedSamplesCounters(
       std::atomic<uint64_t>* unwind_error_counter,
@@ -99,9 +99,9 @@ class UprobesUnwindingVisitor : public PerfEventVisitor {
  private:
   // This struct holds a copy of some stack data collected from the target process.
   struct StackSlice {
-    uint64_t start_address_;
-    uint64_t size_;
-    std::unique_ptr<char[]> data_;
+    uint64_t start_address;
+    uint64_t size;
+    std::unique_ptr<char[]> data;
   };
 
   void OnUprobes(uint64_t timestamp_ns, pid_t tid, uint32_t cpu, uint64_t sp, uint64_t ip,
