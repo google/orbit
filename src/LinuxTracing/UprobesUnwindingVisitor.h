@@ -84,6 +84,7 @@ class UprobesUnwindingVisitor : public PerfEventVisitor {
   void Visit(uint64_t event_timestamp, const StackSamplePerfEventData& event_data) override;
   void Visit(uint64_t event_timestamp, const CallchainSamplePerfEventData& event_data) override;
   void Visit(uint64_t event_timestamp, const UprobesPerfEventData& event_data) override;
+  void Visit(uint64_t event_timestamp, const UprobesWithStackPerfEventData& event_data) override;
   void Visit(uint64_t event_timestamp,
              const UprobesWithArgumentsPerfEventData& event_data) override;
   void Visit(uint64_t event_timestamp, const UretprobesPerfEventData& event_data) override;
@@ -98,9 +99,9 @@ class UprobesUnwindingVisitor : public PerfEventVisitor {
  private:
   // This struct holds a copy of some stack data collected from the target process.
   struct StackSlice {
-    uint64_t start_address_;
-    uint64_t size_;
-    std::unique_ptr<char[]> data_;
+    uint64_t start_address;
+    uint64_t size;
+    std::unique_ptr<char[]> data;
   };
 
   void OnUprobes(uint64_t timestamp_ns, pid_t tid, uint32_t cpu, uint64_t sp, uint64_t ip,
@@ -134,6 +135,9 @@ class UprobesUnwindingVisitor : public PerfEventVisitor {
   absl::flat_hash_map<pid_t, std::vector<std::tuple<uint64_t, uint64_t, uint32_t>>>
       uprobe_sps_ips_cpus_per_thread_{};
   absl::flat_hash_set<uint64_t> known_linux_address_infos_{};
+
+  absl::flat_hash_map<pid_t, absl::flat_hash_map<uint64_t, StackSlice>>
+      thread_id_stream_id_to_stack_slices_{};
 };
 
 }  // namespace orbit_linux_tracing

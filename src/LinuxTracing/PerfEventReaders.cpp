@@ -306,6 +306,7 @@ UprobesWithStackPerfEvent ConsumeUprobeWithStackPerfEvent(PerfEventRingBuffer* r
       .ordered_stream = PerfEventOrderedStream::FileDescriptor(ring_buffer->GetFileDescriptor()),
       .data =
           {
+              .stream_id = sample_id.stream_id,
               .pid = static_cast<pid_t>(sample_id.pid),
               .tid = static_cast<pid_t>(sample_id.tid),
               .regs = regs,
