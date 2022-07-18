@@ -146,13 +146,8 @@ class MizarPairedDataTmpl {
   void ForEachCallstackEventOfTidInTimeRange(TID tid, uint64_t min_timestamp_ns,
                                              uint64_t max_timestamp_ns,
                                              Action&& action_on_callstack_events) const {
-    if (*tid == orbit_base::kAllProcessThreadsTid) {
-      GetCallstackData().ForEachCallstackEventInTimeRange(min_timestamp_ns, max_timestamp_ns,
-                                                          action_on_callstack_events);
-    } else {
-      GetCallstackData().ForEachCallstackEventOfTidInTimeRange(
-          *tid, min_timestamp_ns, max_timestamp_ns, action_on_callstack_events);
-    }
+    GetCallstackData().ForEachCallstackEventOfTidInTimeRange(
+        *tid, min_timestamp_ns, max_timestamp_ns, action_on_callstack_events);
   }
 
   [[nodiscard]] uint64_t CallstackSamplesCount(TID tid, uint64_t min_timestamp_ns,
