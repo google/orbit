@@ -93,7 +93,7 @@ void SamplingWithFrameTrackWidget::OnUpdateButtonClicked() {
 
   Report report = baseline_and_comparison_->MakeSamplingWithFrameTrackReport(baseline_config,
                                                                              comparison_config);
-  ui_->output_->UpdateReport(std::move(report));
+  ui_->output_->UpdateReport(std::move(report), kBaselineTitle, kComparisonTitle);
 }
 
 }  // namespace orbit_mizar_widgets

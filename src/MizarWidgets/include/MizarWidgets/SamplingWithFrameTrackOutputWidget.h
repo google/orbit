@@ -21,11 +21,16 @@ namespace orbit_mizar_widgets {
 class SamplingWithFrameTrackOutputWidget : public QWidget {
   Q_OBJECT
   using Report = ::orbit_mizar_data::SamplingWithFrameTrackComparisonReport;
+  template <typename T>
+  using Baseline = ::orbit_mizar_base::Baseline<T>;
+  template <typename T>
+  using Comparison = ::orbit_mizar_base::Comparison<T>;
 
  public:
   explicit SamplingWithFrameTrackOutputWidget(QWidget* parent = nullptr);
   ~SamplingWithFrameTrackOutputWidget();
-  void UpdateReport(Report report);
+  void UpdateReport(Report report, const Baseline<QString>& baseline_title,
+                    const Comparison<QString>& comparison_title);
 
  public slots:
   void SetMultiplicityCorrectionEnabled(bool checked);

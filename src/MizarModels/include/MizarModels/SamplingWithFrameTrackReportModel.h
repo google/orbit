@@ -6,6 +6,7 @@
 #define MIZAR_WIDGETS_SAMPLING_WITH_FRAME_TRACK_REPORT_MODEL_H_
 
 #include <absl/container/flat_hash_map.h>
+#include <absl/strings/str_format.h>
 #include <stdint.h>
 
 #include <QAbstractItemModel>
@@ -48,11 +49,15 @@ class SamplingWithFrameTrackReportModelTmpl : public QAbstractTableModel {
   static constexpr int kColumnsCount = 9;
 
   explicit SamplingWithFrameTrackReportModelTmpl(Report report,
+                                                 const Baseline<QString>& baseline_title,
+                                                 const Comparison<QString>& comparison_title,
                                                  bool is_multiplicity_correction_enabled,
                                                  double significance_level,
                                                  QObject* parent = nullptr)
       : QAbstractTableModel(parent),
         report_(std::move(report)),
+        baseline_title_(baseline_title),
+        comparison_title_(comparison_title),
         is_multiplicity_correction_enabled_(is_multiplicity_correction_enabled),
         significance_level_(significance_level) {
     for (const auto& [sfid, unused_name] : report_.GetSfidToNames()) {
@@ -85,6 +90,8 @@ class SamplingWithFrameTrackReportModelTmpl : public QAbstractTableModel {
         return QString::fromStdString(MakeDisplayedString(index));
       case Qt::EditRole:
         return MakeSortValue(index);
+      case Qt::ToolTipRole:
+        return MakeTooltip(index);
       default:
         return {};
     }
@@ -139,6 +146,93 @@ class SamplingWithFrameTrackReportModelTmpl : public QAbstractTableModel {
         return role != Qt::DisplayRole;
       default:
         return false;
+    }
+  }
+
+  [[nodiscard]] static QString MakeTooltipForSamplingColumns(const QString& title,
+                                                             const std::string* function_name,
+                                                             uint64_t count, double rate) {
+    return QString::fromStdString(
+        absl::StrFormat("The function \"%s\"\n"
+                        "was encountered %u times (inclusive count) "
+                        "in the %s capture.\n"
+                        "This makes up for %.3f%% of the samples.",
+                        *function_name, count, title.toStdString(), rate * 100));
+  }
+
+  [[nodiscard]] static QString MakeTooltipForTimePerFrameColumns(const QString& title,
+                                                                 const std::string* function_name,
+                                                                 double time) {
+    return QString::fromStdString(
+        absl::StrFormat("In the %s capture %.3f microseconds of CPU\n"
+                        "time were spent to compute the\n"
+                        "function \"%s\".\n"
+                        "Note. This time also includes the time spent to compute\n"
+                        "the functions it called that are not present in both captures.",
+                        title.toStdString(), time, *function_name));
+  }
+
+  [[nodiscard]] static QString MakeTooltipForSlowdownColumn(
+      const std::string* function_name, double slowdown_percent,
+      const Baseline<QString>& baseline_title, const Comparison<QString>& comparison_title) {
+    return QString::fromStdString(
+        absl::StrFormat("The function \"%s\" is  %.3f%%\n"
+                        "slower in %s capture that it was in %s capture.\n"
+                        "Negative percentage represent a speed-up.",
+                        *function_name, slowdown_percent, comparison_title->toStdString(),
+                        baseline_title->toStdString()));
+  }
+
+  [[nodiscard]] static QString MakeTooltipForPercentOfSlowdownColumn(
+      const std::string* function_name, double percent_of_slowdown,
+      const Baseline<QString>& baseline_title, const Comparison<QString>& comparison_title) {
+    return QString::fromStdString(
+        absl::StrFormat("The slowdown of function \"%s\" constitutes  %.3f%%\n"
+                        "of the total frametime slowdown in %s capture compared to %s capture.\n"
+                        "Negative percentage represent a speed-up.",
+                        *function_name, percent_of_slowdown, comparison_title->toStdString(),
+                        baseline_title->toStdString()));
+  }
+
+  [[nodiscard]] QVariant MakeTooltip(const QModelIndex& model_index) const {
+    const auto& [sfid, column] = MakeIndex(model_index);
+    const std::string* function_name = &report_.GetSfidToNames().at(sfid);
+
+    switch (column) {
+      case Column::kFunctionName:
+        return QString::fromStdString(*function_name);
+      case Column::kBaselineExclusivePercent:
+        return *LiftAndApply(&MakeTooltipForSamplingColumns, baseline_title_,
+                             Baseline<const std::string*>(function_name),
+                             BaselineExclusiveCount(sfid), BaselineExclusiveRate(sfid));
+      case Column::kComparisonExclusivePercent:
+        return *LiftAndApply(&MakeTooltipForSamplingColumns, comparison_title_,
+                             Comparison<const std::string*>(function_name),
+                             ComparisonExclusiveCount(sfid), ComparisonExclusiveRate(sfid));
+      case Column::kBaselineExclusiveTimePerFrame:
+        return *LiftAndApply(&MakeTooltipForTimePerFrameColumns, baseline_title_,
+                             Baseline<const std::string*>(function_name),
+                             BaselineExclusiveTimePerFrameUs(sfid));
+      case Column::kComparisonExclusiveTimePerFrame:
+        return *LiftAndApply(&MakeTooltipForTimePerFrameColumns, comparison_title_,
+                             Comparison<const std::string*>(function_name),
+                             ComparisonExclusiveTimePerFrameUs(sfid));
+      case Column::kPvalue:
+        return "P-value is a term from statistics.\n"
+               "The lower it is, the less we \"believe\"\n"
+               "that the function runtime does not differ\n"
+               "between the captures.";
+      case Column::kIsSignificant:
+        return "The difference is deemed significant if\n"
+               "p-value is less then false-alarm probability";
+      case Column::kSlowdownPercent:
+        return MakeTooltipForSlowdownColumn(function_name, SlowdownPercent(sfid), baseline_title_,
+                                            comparison_title_);
+      case Column::kPercentOfSlowdown:
+        return MakeTooltipForPercentOfSlowdownColumn(function_name, PercentOfFrameSlowdown(sfid),
+                                                     baseline_title_, comparison_title_);
+      default:
+        return {};
     }
   }
 
@@ -260,6 +354,8 @@ class SamplingWithFrameTrackReportModelTmpl : public QAbstractTableModel {
   }
 
   Report report_;
+  const Baseline<QString>& baseline_title_;
+  const Comparison<QString>& comparison_title_;
   std::vector<SFID> sfids_;
   bool is_multiplicity_correction_enabled_;
   double significance_level_;
