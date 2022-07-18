@@ -33,7 +33,7 @@ LoadCaptureWidget::LoadCaptureWidget(QWidget* parent)
   if (manager.GetCaptureFileInfos().empty()) {
     ErrorMessageOr<std::filesystem::path> capture_dir = orbit_paths::CreateOrGetCaptureDir();
     if (capture_dir.has_value()) {
-      (void)manager.FillFromDirectory(capture_dir.value());
+      std::ignore = manager.FillFromDirectory(capture_dir.value());
     }
   }
 
