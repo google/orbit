@@ -222,9 +222,12 @@ void UprobesUnwindingVisitor::Visit(uint64_t event_timestamp,
   return_address_manager_->PatchSample(event_data.tid, event_data.GetRegisters()[PERF_REG_X86_SP],
                                        event_data.GetMutableStackData(), event_data.GetStackSize());
 
-  LibunwindstackResult libunwindstack_result =
-      unwinder_->Unwind(event_data.pid, current_maps_->Get(), event_data.GetRegisters(),
-                        event_data.GetStackData(), event_data.GetStackSize());
+  StackSliceView event_stack_slice{event_data.regs->sp, event_data.GetStackSize(),
+                                   event_data.data.get()};
+  std::vector<StackSliceView> stack_slices{event_stack_slice};
+
+  LibunwindstackResult libunwindstack_result = unwinder_->Unwind(
+      event_data.pid, current_maps_->Get(), event_data.GetRegisters(), stack_slices);
 
   if (libunwindstack_result.frames().empty()) {
     // Even with unwinding errors this is not expected because we should at least get the program

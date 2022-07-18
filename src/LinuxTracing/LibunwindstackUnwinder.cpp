@@ -10,60 +10,14 @@
 #include <unwindstack/RegsX86_64.h>
 
 #include <array>
-#include <cstdint>
 #include <map>
 
+#include "LibunwindstackMultipleOfflineAndProcessMemory.h"
 #include "OrbitBase/Logging.h"  // IWYU pragma: keep
 
 namespace orbit_linux_tracing {
 
 namespace {
-
-// This custom implementation of `unwindstack::Memory` carries a stack sample as
-// `CreateOfflineMemory` would, but when requesting an address range outside of the stack sample it
-// falls back to reading from the memory of the process online, as `CreateProcessMemory` would.
-// This allows to unwind callstacks that involve virtual modules, such as vDSO.
-class StackAndProcessMemory : public unwindstack::Memory {
- public:
-  size_t Read(uint64_t addr, void* dst, size_t size) override {
-    const uint64_t addr_start = addr;
-    const uint64_t addr_end = addr + size;
-
-    // If the requested address range is entirely in the stack sample's address range, read from the
-    // stack buffer.
-    if (addr_start >= stack_start_ && addr_end <= stack_end_) {
-      return stack_memory_->Read(addr, dst, size);
-    }
-
-    // If the requested address range is entirely disjoint from the stack sample's address range,
-    // read from the memory of the process.
-    if (addr_end <= stack_start_ || addr_start >= stack_end_) {
-      return process_memory_->Read(addr, dst, size);
-    }
-
-    // Otherwise, something is probably wrong with the address range requested. Don't read anything.
-    return 0;
-  }
-
-  static std::shared_ptr<Memory> Create(pid_t pid, const uint8_t* stack_data, uint64_t stack_start,
-                                        uint64_t stack_end) {
-    return std::shared_ptr<StackAndProcessMemory>(
-        new StackAndProcessMemory(pid, stack_data, stack_start, stack_end));
-  }
-
- private:
-  StackAndProcessMemory(pid_t pid, const uint8_t* stack_data, uint64_t stack_start,
-                        uint64_t stack_end)
-      : process_memory_{unwindstack::Memory::CreateProcessMemoryCached(pid)},
-        stack_memory_{unwindstack::Memory::CreateOfflineMemory(stack_data, stack_start, stack_end)},
-        stack_start_{stack_start},
-        stack_end_{stack_end} {}
-
-  std::shared_ptr<Memory> process_memory_;
-  std::shared_ptr<Memory> stack_memory_;
-  uint64_t stack_start_;
-  uint64_t stack_end_;
-};
 
 class LibunwindstackUnwinderImpl : public LibunwindstackUnwinder {
  public:
@@ -73,7 +27,7 @@ class LibunwindstackUnwinderImpl : public LibunwindstackUnwinder {
             absolute_address_to_size_of_functions_to_stop_at} {}
   LibunwindstackResult Unwind(pid_t pid, unwindstack::Maps* maps,
                               const std::array<uint64_t, PERF_REG_X86_64_MAX>& perf_regs,
-                              const void* stack_dump, uint64_t stack_dump_size,
+                              const std::vector<StackSliceView>& stack_slices,
                               bool offline_memory_only = false,
                               size_t max_frames = kDefaultMaxFrames) override;
 
@@ -101,7 +55,7 @@ const std::array<size_t, unwindstack::X86_64_REG_LAST>
 
 LibunwindstackResult LibunwindstackUnwinderImpl::Unwind(
     pid_t pid, unwindstack::Maps* maps, const std::array<uint64_t, PERF_REG_X86_64_MAX>& perf_regs,
-    const void* stack_dump, uint64_t stack_dump_size, bool offline_memory_only, size_t max_frames) {
+    const std::vector<StackSliceView>& stack_slices, bool offline_memory_only, size_t max_frames) {
   unwindstack::RegsX86_64 regs{};
   for (size_t perf_reg = 0; perf_reg < unwindstack::X86_64_REG_LAST; ++perf_reg) {
     regs[perf_reg] = perf_regs.at(kUnwindstackRegsToPerfRegs[perf_reg]);
@@ -109,13 +63,11 @@ LibunwindstackResult LibunwindstackUnwinderImpl::Unwind(
 
   std::shared_ptr<unwindstack::Memory> memory = nullptr;
   if (offline_memory_only) {
-    memory = unwindstack::Memory::CreateOfflineMemory(
-        static_cast<const uint8_t*>(stack_dump), regs[unwindstack::X86_64_REG_RSP],
-        regs[unwindstack::X86_64_REG_RSP] + stack_dump_size);
+    memory =
+        LibunwindstackMultipleOfflineAndProcessMemory::CreateWithoutProcessMemory(stack_slices);
   } else {
-    memory = StackAndProcessMemory::Create(pid, static_cast<const uint8_t*>(stack_dump),
-                                           regs[unwindstack::X86_64_REG_RSP],
-                                           regs[unwindstack::X86_64_REG_RSP] + stack_dump_size);
+    memory =
+        LibunwindstackMultipleOfflineAndProcessMemory::CreateWithProcessMemory(pid, stack_slices);
   }
 
   unwindstack::Unwinder unwinder{max_frames, maps, &regs, memory};

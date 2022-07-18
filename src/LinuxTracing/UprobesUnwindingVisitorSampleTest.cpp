@@ -31,10 +31,14 @@
 
 using ::testing::_;
 using ::testing::AllOf;
+using ::testing::DoAll;
 using ::testing::ElementsAre;
+using ::testing::Eq;
+using ::testing::Field;
 using ::testing::Ge;
 using ::testing::Invoke;
 using ::testing::Lt;
+using ::testing::NotNull;
 using ::testing::Property;
 using ::testing::Return;
 using ::testing::SaveArg;
@@ -245,10 +249,12 @@ TEST_F(UprobesUnwindingVisitorSampleTest,
 
   std::vector<unwindstack::FrameData> libunwindstack_callstack{kFrame1, kFrame2, kFrame3};
 
-  EXPECT_CALL(unwinder_, Unwind(event.data.pid, nullptr, _, _, event.data.dyn_size, _, _))
+  std::vector<StackSliceView> actual_stack_slices{};
+  EXPECT_CALL(unwinder_, Unwind(event.data.pid, nullptr, _, _, _, _))
       .Times(1)
-      .WillOnce(Return(
-          LibunwindstackResult{libunwindstack_callstack, {}, unwindstack::ErrorCode::ERROR_NONE}));
+      .WillOnce(DoAll(SaveArg<3>(&actual_stack_slices),
+                      Return(LibunwindstackResult{
+                          libunwindstack_callstack, {}, unwindstack::ErrorCode::ERROR_NONE})));
 
   orbit_grpc_protos::FullCallstackSample actual_callstack_sample;
   EXPECT_CALL(listener_, OnCallstackSample).Times(1).WillOnce(SaveArg<0>(&actual_callstack_sample));
@@ -265,7 +271,14 @@ TEST_F(UprobesUnwindingVisitorSampleTest,
   visitor_.SetUnwindErrorsAndDiscardedSamplesCounters(&unwinding_errors,
                                                       &discarded_samples_in_uretprobes_counter);
 
+  uint64_t dyn_size = event.data.dyn_size;
+  uint64_t sp = event.data.regs->sp;
   PerfEvent{std::move(event)}.Accept(&visitor_);
+
+  EXPECT_THAT(actual_stack_slices,
+              ElementsAre(AllOf(Property(&StackSliceView::start_address, Eq(sp)),
+                                Property(&StackSliceView::size, Eq(dyn_size)),
+                                Property(&StackSliceView::data, NotNull()))));
 
   EXPECT_THAT(actual_callstack_sample.callstack().pcs(),
               ElementsAre(kTargetAddress1, kTargetAddress2, kTargetAddress3));
@@ -299,7 +312,7 @@ TEST_F(UprobesUnwindingVisitorSampleTest, VisitTwoValidStackSamplesSendsAddressI
 
   std::vector<unwindstack::FrameData> libunwindstack_callstack{kFrame1, kFrame2, kFrame3};
 
-  EXPECT_CALL(unwinder_, Unwind(event1.data.pid, nullptr, _, _, event1.data.dyn_size, _, _))
+  EXPECT_CALL(unwinder_, Unwind(event1.data.pid, nullptr, _, _, _, _))
       .Times(2)
       .WillRepeatedly(Return(
           LibunwindstackResult{libunwindstack_callstack, {}, unwindstack::ErrorCode::ERROR_NONE}));
@@ -372,7 +385,7 @@ TEST_F(
   std::vector<unwindstack::FrameData> libunwindstack_callstack{
       frame_1_no_map_info, frame_2_no_map_info, frame_3_no_map_info};
 
-  EXPECT_CALL(unwinder_, Unwind(event.data.pid, nullptr, _, _, event.data.dyn_size, _, _))
+  EXPECT_CALL(unwinder_, Unwind(event.data.pid, nullptr, _, _, _, _))
       .Times(1)
       .WillOnce(Return(
           LibunwindstackResult{libunwindstack_callstack, {}, unwindstack::ErrorCode::ERROR_NONE}));
@@ -425,7 +438,7 @@ TEST_F(UprobesUnwindingVisitorSampleTest, VisitEmptyStackSampleWithoutUprobesDoe
 
   std::vector<unwindstack::FrameData> empty_callstack;
 
-  EXPECT_CALL(unwinder_, Unwind(event.data.pid, nullptr, _, _, event.data.dyn_size, _, _))
+  EXPECT_CALL(unwinder_, Unwind(event.data.pid, nullptr, _, _, _, _))
       .Times(1)
       .WillOnce(Return(
           LibunwindstackResult{empty_callstack, {}, unwindstack::ErrorCode::ERROR_MEMORY_INVALID}));
@@ -454,7 +467,7 @@ TEST_F(UprobesUnwindingVisitorSampleTest,
 
   std::vector<unwindstack::FrameData> libunwindstack_callstack{kFrame1, kFrame2};
 
-  EXPECT_CALL(unwinder_, Unwind(event.data.pid, nullptr, _, _, event.data.dyn_size, _, _))
+  EXPECT_CALL(unwinder_, Unwind(event.data.pid, nullptr, _, _, _, _))
       .Times(1)
       .WillOnce(Return(LibunwindstackResult{
           libunwindstack_callstack, {}, unwindstack::ErrorCode::ERROR_MEMORY_INVALID}));
@@ -505,7 +518,7 @@ TEST_F(UprobesUnwindingVisitorSampleTest,
 
   std::vector<unwindstack::FrameData> incomplete_callstack{kFrame1};
 
-  EXPECT_CALL(unwinder_, Unwind(event.data.pid, nullptr, _, _, event.data.dyn_size, _, _))
+  EXPECT_CALL(unwinder_, Unwind(event.data.pid, nullptr, _, _, _, _))
       .Times(1)
       .WillOnce(Return(
           LibunwindstackResult{incomplete_callstack, {}, unwindstack::ErrorCode::ERROR_NONE}));
@@ -552,7 +565,7 @@ TEST_F(UprobesUnwindingVisitorSampleTest,
 
   std::vector<unwindstack::FrameData> callstack{kFrame1};
 
-  EXPECT_CALL(unwinder_, Unwind(event.data.pid, nullptr, _, _, event.data.dyn_size, _, _))
+  EXPECT_CALL(unwinder_, Unwind(event.data.pid, nullptr, _, _, _, _))
       .Times(1)
       .WillOnce(Return(LibunwindstackResult{callstack, {}, unwindstack::ErrorCode::ERROR_NONE}));
 
@@ -597,7 +610,7 @@ TEST_F(UprobesUnwindingVisitorSampleTest,
 
   std::vector<unwindstack::FrameData> callstack{kFrame1};
 
-  EXPECT_CALL(unwinder_, Unwind(event.data.pid, nullptr, _, _, event.data.dyn_size, _, _))
+  EXPECT_CALL(unwinder_, Unwind(event.data.pid, nullptr, _, _, _, _))
       .Times(1)
       .WillOnce(Return(LibunwindstackResult{callstack, {}, unwindstack::ErrorCode::ERROR_NONE}));
 
@@ -640,7 +653,7 @@ TEST_F(UprobesUnwindingVisitorSampleTest, VisitStackSampleWithinUprobeSendsInUpr
 
   std::vector<unwindstack::FrameData> callstack{kUprobesFrame2, kFrame2};
 
-  EXPECT_CALL(unwinder_, Unwind(event.data.pid, nullptr, _, _, event.data.dyn_size, _, _))
+  EXPECT_CALL(unwinder_, Unwind(event.data.pid, nullptr, _, _, _, _))
       .Times(1)
       .WillOnce(Return(LibunwindstackResult{callstack, {}, unwindstack::ErrorCode::ERROR_NONE}));
 
@@ -691,7 +704,7 @@ TEST_F(
 
   std::vector<unwindstack::FrameData> callstack{kEntryTrampolineFrame, kFrame2};
 
-  EXPECT_CALL(unwinder_, Unwind(event.data.pid, nullptr, _, _, event.data.dyn_size, _, _))
+  EXPECT_CALL(unwinder_, Unwind(event.data.pid, nullptr, _, _, _, _))
       .Times(1)
       .WillOnce(Return(LibunwindstackResult{callstack, {}, unwindstack::ErrorCode::ERROR_NONE}));
 
@@ -745,7 +758,7 @@ TEST_F(
   std::vector<unwindstack::FrameData> callstack{kFrame1, kUserSpaceLibraryFrame, kFrame3,
                                                 kEntryTrampolineFrame};
 
-  EXPECT_CALL(unwinder_, Unwind(event.data.pid, nullptr, _, _, event.data.dyn_size, _, _))
+  EXPECT_CALL(unwinder_, Unwind(event.data.pid, nullptr, _, _, _, _))
       .Times(1)
       .WillOnce(Return(LibunwindstackResult{callstack, {}, unwindstack::ErrorCode::ERROR_NONE}));
 
@@ -811,7 +824,7 @@ TEST_F(
 
   std::vector<unwindstack::FrameData> callstack{kFrame1, kUserSpaceLibraryFrame, kFrame3};
 
-  EXPECT_CALL(unwinder_, Unwind(event.data.pid, nullptr, _, _, event.data.dyn_size, _, _))
+  EXPECT_CALL(unwinder_, Unwind(event.data.pid, nullptr, _, _, _, _))
       .Times(1)
       .WillOnce(Return(LibunwindstackResult{callstack, {}, unwindstack::ErrorCode::ERROR_NONE}));
 
@@ -866,7 +879,7 @@ TEST_F(UprobesUnwindingVisitorSampleTest,
 
   std::vector<unwindstack::FrameData> callstack{kFrame1, kUprobesFrame1};
 
-  EXPECT_CALL(unwinder_, Unwind(event.data.pid, nullptr, _, _, event.data.dyn_size, _, _))
+  EXPECT_CALL(unwinder_, Unwind(event.data.pid, nullptr, _, _, _, _))
       .Times(1)
       .WillOnce(Return(LibunwindstackResult{callstack, {}, unwindstack::ErrorCode::ERROR_NONE}));
 
@@ -916,7 +929,7 @@ TEST_F(UprobesUnwindingVisitorSampleTest,
 
   std::vector<unwindstack::FrameData> callstack{kFrame1, kReturnTrampolineFrame};
 
-  EXPECT_CALL(unwinder_, Unwind(event.data.pid, nullptr, _, _, event.data.dyn_size, _, _))
+  EXPECT_CALL(unwinder_, Unwind(event.data.pid, nullptr, _, _, _, _))
       .Times(1)
       .WillOnce(Return(LibunwindstackResult{callstack, {}, unwindstack::ErrorCode::ERROR_NONE}));
 
