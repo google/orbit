@@ -29,6 +29,8 @@
 
 namespace orbit_windows_tracing {
 
+using orbit_grpc_protos::PresentEvent;
+
 GraphicsEtwProvider::GraphicsEtwProvider(uint32_t pid, krabs::user_trace* trace,
                                          TracerListener* listener)
     : target_pid_(pid), trace_(trace), listener_(listener) {
@@ -58,12 +60,24 @@ void GraphicsEtwProvider::EnableProvider(std::string_view name, GUID guid,
   name_to_provider_[name] = std::make_unique<Provider>(name, guid, target_pid_, trace_, callback);
 }
 
+void GraphicsEtwProvider::OnPresentStart(orbit_grpc_protos::PresentEvent::Source present_source,
+                                         uint32_t present_flags, const EVENT_HEADER& header) {
+  // PRESENT_TEST is used to check if the application is running in fullscreen, ignore.
+  if (present_flags & DXGI_PRESENT_TEST) {
+    return;
+  }
+
+  uint64_t timestamp_ns = orbit_base::PerformanceCounterToNs(header.TimeStamp.QuadPart);
+  orbit_grpc_protos::PresentEvent present_event;
+  present_event.set_pid(header.ProcessId);
+  present_event.set_tid(header.ThreadId);
+  present_event.set_begin_timestamp_ns(timestamp_ns);
+  present_event.set_source(present_source);
+  listener_->OnPresentEvent(std::move(present_event));
+}
+
 // The "On[]Event" methods below are based on Intel's PresentMon project, see:
 // https://github.com/GameTechDev/PresentMon/blob/main/PresentData/PresentMonTraceConsumer.cpp.
-//
-// The OnPresentStart/OnPresentStop methods will be added once
-// https://github.com/google/orbit/pull/3934 is merged, see
-// https://github.com/google/orbit/pull/3790 for reference implementation.
 
 void GraphicsEtwProvider::OnDXGIEvent(const EVENT_RECORD& record,
                                       const krabs::trace_context& context) {
@@ -72,16 +86,8 @@ void GraphicsEtwProvider::OnDXGIEvent(const EVENT_RECORD& record,
 
   switch (record.EventHeader.EventDescriptor.Id) {
     case Microsoft_Windows_DXGI::Present_Start::Id:
-    case Microsoft_Windows_DXGI::PresentMultiplaneOverlay_Start::Id: {
-      auto swap_chain = parser.parse<uint64_t>(L"pIDXGISwapChain");
-      auto flags = parser.parse<uint32_t>(L"Flags");
-      auto sync_interval = parser.parse<uint32_t>(L"SyncInterval");
-      // OnPresentStart(PresentSource::kDxgi, record.EventHeader, swap_chain, flags, sync_interval);
-      break;
-    }
-    case Microsoft_Windows_DXGI::Present_Stop::Id:
-    case Microsoft_Windows_DXGI::PresentMultiplaneOverlay_Stop::Id:
-      // OnPresentStop(PresentSource::kDxgi, record.EventHeader, parser.parse<uint32_t>(L"Result"));
+    case Microsoft_Windows_DXGI::PresentMultiplaneOverlay_Start::Id:
+      OnPresentStart(PresentEvent::kDxgi, parser.parse<uint32_t>(L"Flags"), record.EventHeader);
       break;
     default:
       break;
@@ -94,25 +100,8 @@ void GraphicsEtwProvider::OnD3d9Event(const EVENT_RECORD& record,
   krabs::parser parser(schema);
 
   switch (record.EventHeader.EventDescriptor.Id) {
-    case Microsoft_Windows_D3D9::Present_Start::Id: {
-      auto swap_chain = parser.parse<uint64_t>(L"pSwapchain");
-      auto flags = parser.parse<uint32_t>(L"Flags");
-
-      uint32_t dxgi_present_flags = 0;
-      if (flags & D3DPRESENT_DONOTFLIP) dxgi_present_flags |= DXGI_PRESENT_DO_NOT_SEQUENCE;
-      if (flags & D3DPRESENT_DONOTWAIT) dxgi_present_flags |= DXGI_PRESENT_DO_NOT_WAIT;
-      if (flags & D3DPRESENT_FLIPRESTART) dxgi_present_flags |= DXGI_PRESENT_RESTART;
-
-      int32_t sync_interval = -1;
-      if (flags & D3DPRESENT_FORCEIMMEDIATE) {
-        sync_interval = 0;
-      }
-
-      // OnPresentStart(PresentSource::kD3d9, record.EventHeader, swap_chain, flags, sync_interval);
-      break;
-    }
-    case Microsoft_Windows_D3D9::Present_Stop::Id:
-      // OnPresentStop(PresentSource::kD3d9, record.EventHeader, parser.parse<uint32_t>(L"Result"));
+    case Microsoft_Windows_D3D9::Present_Start::Id:
+      OnPresentStart(PresentEvent::kD3d9, parser.parse<uint32_t>(L"Flags"), record.EventHeader);
       break;
     default:
       break;

@@ -36,6 +36,9 @@ class GraphicsEtwProvider {
   void OnWindowsEventMetadata(const EVENT_RECORD& record, const krabs::trace_context& context);
   void OnWin32KEvent(const EVENT_RECORD& record, const krabs::trace_context& context);
 
+  void OnPresentStart(orbit_grpc_protos::PresentEvent::Source present_source,
+                      uint32_t present_flags, const EVENT_HEADER& header);
+
   // Wrapper around a krabs::provider that provides event filtering and maintains stats.
   class Provider {
    public:
