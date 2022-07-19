@@ -101,8 +101,7 @@ target_link_libraries(
           SourcePathsMappingUI
           Qt5::Widgets
           Qt5::Core
-          SyntaxHighlighter
-          qtpropertybrowser::qtpropertybrowser)
+          SyntaxHighlighter)
 
 set_target_properties(OrbitQt PROPERTIES AUTOMOC ON)
 set_target_properties(OrbitQt PROPERTIES AUTOUIC ON)
