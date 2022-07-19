@@ -98,29 +98,33 @@ ErrorMessageOr<bool> AlreadyInjected(pid_t pid) {
 // __GI_memcpy+0x3. If __GI_memcpy is instrumented this location gets overwritten and we end up
 // jumping to the middle of an instruction.
 bool IsBlocklisted(std::string_view function_name) {
-  static const absl::flat_hash_set<std::string> kBlocklist{"__GI___libc_malloc",
-                                                           "__GI___libc_free",
-                                                           "get_free_list",
-                                                           "malloc_consolidate",
-                                                           "sysmalloc",
-                                                           "_int_malloc",
-                                                           "__libc_enable_asynccancel",
-                                                           "__GI___ctype_init",
-                                                           "__GI___mprotect",
-                                                           "__munmap",
-                                                           "new_heap",
-                                                           "__get_nprocs",
-                                                           "__get_nprocs_conf",
-                                                           "__strtoul",
-                                                           "arena_get2.part.3",
-                                                           "next_line",
-                                                           "__GI___libc_alloca_cutoff",
-                                                           "start_thread",
-                                                           "__pthread_enable_asynccancel",
-                                                           "__errno_location",
-                                                           "__memalign",
-                                                           "_mid_memalign",
-                                                           "__GI_memcpy"};
+  static const absl::flat_hash_set<std::string> kBlocklist{
+      "__GI___libc_malloc",
+      "__GI___libc_free",
+      "get_free_list",
+      "malloc_consolidate",
+      "sysmalloc",
+      "_int_malloc",
+      "__libc_enable_asynccancel",
+      "__GI___ctype_init",
+      "__GI___mprotect",
+      "__munmap",
+      "new_heap",
+      "__get_nprocs",
+      "__get_nprocs_conf",
+      "__strtoul",
+      "arena_get2.part.3",
+      "next_line",
+      "__GI___libc_alloca_cutoff",
+      "start_thread",
+      "__pthread_enable_asynccancel",
+      "__errno_location",
+      "__memalign",
+      "_mid_memalign",
+      "__GI_memcpy",
+      // Attaching a return probe fail, as the wine syscall dispatcher does not return properly.
+      "__wine_syscall_dispatcher",
+  };
   return kBlocklist.contains(function_name);
 }
 
