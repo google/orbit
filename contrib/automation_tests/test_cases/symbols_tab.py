@@ -24,13 +24,11 @@ from test_cases.live_tab import VerifyScopeTypeAndHitCount
 Module = namedtuple("Module", ["name", "path", "state"])
 CACHE_LOCATION = "{appdata}\\OrbitProfiler\\cache\\".format(appdata=os.getenv('APPDATA'))
 
-
 MODULE_STATE_DISABLED = "Disabled"
 MODULE_STATE_DOWNLOADING = "Downloading..."
 MODULE_STATE_ERROR = "Error"
 MODULE_STATE_LOADING = "Loading..."
 MODULE_STATE_LOADED = "Loaded"
-
 
 MODULE_FINAL_STATES = [MODULE_STATE_DISABLED, MODULE_STATE_ERROR, MODULE_STATE_LOADED]
 
@@ -38,6 +36,7 @@ MODULE_FINAL_STATES = [MODULE_STATE_DISABLED, MODULE_STATE_ERROR, MODULE_STATE_L
 def _show_symbols_and_functions_tabs(top_window):
     logging.info("Showing symbols tab")
     find_control(top_window, "TabItem", "Symbols").click_input()
+
 
 def _wait_for_loading_and_measure_time(top_window) -> float:
     logging.info('Waiting for all modules to be loaded...')
@@ -62,8 +61,8 @@ def _wait_for_loading_and_measure_time(top_window) -> float:
                 break
 
     total_time = time.time() - start_time
-    logging.info("Symbol loading has completed. Total time: {time:.2f} seconds".format(
-        time=total_time))
+    logging.info(
+        "Symbol loading has completed. Total time: {time:.2f} seconds".format(time=total_time))
 
     return total_time
 
@@ -78,6 +77,7 @@ def _gather_module_states(top_window) -> List[Module]:
         result.append(Module(name, path, state))
 
     return result
+
 
 def _find_and_close_error_dialog(top_window) -> str or None:
     window = find_control(top_window,
@@ -155,7 +155,8 @@ class WaitForLoadingSymbolsAndVerifyCache(E2ETestCase):
         self._verify_at_least_one_module_is_loaded(modules)
         self._verify_all_modules_are_cached(modules)
         logging.info("Done. Loading time: {time:.2f}s, module errors: {errors}".format(
-            time=loading_time, errors=[module.name for module in modules if module.state == MODULE_STATE_ERROR]))
+            time=loading_time,
+            errors=[module.name for module in modules if module.state == MODULE_STATE_ERROR]))
 
     def _verify_at_least_one_module_is_loaded(self, modules: List[Module]):
         loaded_modules = [module for module in modules if module.state == MODULE_STATE_LOADED]
@@ -182,7 +183,6 @@ class WaitForLoadingSymbolsAndVerifyCache(E2ETestCase):
             0, len(module_set),
             'All successfully loaded modules are cached. Modules not found in cache: {}'.format(
                 [module.name for module in module_set]))
-
 
     def _check_and_update_duration(self, storage_key: str, current_duration: float,
                                    expected_difference_ratio: float):
@@ -217,6 +217,7 @@ class WaitForLoadingSymbolsAndCheckModule(E2ETestCase):
     Waits for automatically loading all symbol files and checks if the specified module was loaded
     successfully.
     """
+
     def _execute(self, module_search_string: str):
         _wait_for_loading_and_measure_time(self.suite.top_window())
         VerifyModuleLoaded(module_search_string=module_search_string).execute(self.suite)
@@ -260,7 +261,8 @@ class LoadSymbols(E2ETestCase):
             wait_for_condition(
                 lambda: _find_and_close_error_dialog(self.suite.top_window()) is not None)
         else:
-            wait_for_condition(lambda: modules_dataview.get_item_at(0, 0).texts()[0] == MODULE_STATE_LOADED, 100)
+            wait_for_condition(
+                lambda: modules_dataview.get_item_at(0, 0).texts()[0] == MODULE_STATE_LOADED, 100)
 
         VerifySymbolsLoaded(symbol_search_string=module_search_string,
                             expect_loaded=not expect_fail).execute(self.suite)
@@ -282,7 +284,8 @@ class VerifyModuleLoaded(E2ETestCase):
         modules_dataview.filter.set_edit_text('')
         send_keys(module_search_string)
         wait_for_condition(lambda: modules_dataview.get_row_count() > 0)
-        self.expect_true(MODULE_STATE_LOADED in modules_dataview.get_item_at(0, 0).texts()[0], 'Module is loaded.')
+        self.expect_true(MODULE_STATE_LOADED in modules_dataview.get_item_at(0, 0).texts()[0],
+                         'Module is loaded.')
 
 
 class VerifySymbolsLoaded(E2ETestCase):
@@ -300,11 +303,13 @@ class VerifySymbolsLoaded(E2ETestCase):
         if expect_loaded:
             logging.info('Verifying at least one symbol with substring %s has been loaded',
                          symbol_search_string)
-            self.expect_true(functions_dataview.get_row_count() > 1, "Found expected symbol(s)")
+            wait_for_condition(lambda: functions_dataview.get_row_count() > 0)
+            logging.info("Found expected symbol(s)")
         else:
             logging.info('Verifying no symbols with substring %s has been loaded',
                          symbol_search_string)
-            self.expect_true(functions_dataview.get_row_count() == 0, "Found no symbols")
+            wait_for_condition(lambda: functions_dataview.get_row_count() == 0)
+            logging.info("Found no symbols")
 
 
 selected_function_string: str = 'H'
@@ -493,7 +498,8 @@ class VerifyFunctionHooked(E2ETestCase):
         functions_dataview.filter.set_focus()
         functions_dataview.filter.set_edit_text('')
         send_keys(function_search_string)
-        wait_for_condition(lambda: functions_dataview.find_first_item_row(function_search_string, 1) is not None)
+        wait_for_condition(
+            lambda: functions_dataview.find_first_item_row(function_search_string, 1) is not None)
         row = functions_dataview.find_first_item_row(function_search_string, 1)
         if expect_hooked:
             self.expect_true(
