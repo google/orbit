@@ -21,6 +21,7 @@ target_link_libraries(OrbitFakeClient PRIVATE
         ClientData
         ClientProtos
         GrpcProtos
+        ModuleUtils
         ObjectUtils
         OrbitBase)
 

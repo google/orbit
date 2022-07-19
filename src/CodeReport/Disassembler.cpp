@@ -12,7 +12,6 @@
 #include <algorithm>
 
 #include "ClientData/ModuleAndFunctionLookup.h"
-#include "ModuleUtils/VirtualAndAbsoluteAddresses.h"
 
 namespace orbit_code_report {
 namespace {

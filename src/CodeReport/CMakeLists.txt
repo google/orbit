@@ -11,6 +11,7 @@ target_include_directories(CodeReport PUBLIC include/)
 target_link_libraries(CodeReport PUBLIC OrbitBase
                                         ClientData
                                         GrpcProtos
+                                        ModuleUtils
                                         ObjectUtils
                                         CONAN_PKG::abseil
                                         CONAN_PKG::capstone)
