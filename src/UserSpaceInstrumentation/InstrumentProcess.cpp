@@ -23,7 +23,7 @@
 #include "ExecuteMachineCode.h"
 #include "MachineCode.h"
 #include "ObjectUtils/Address.h"
-#include "ObjectUtils/LinuxMap.h"
+#include "ObjectUtils/ReadModules.h"
 #include "OrbitBase/ExecutablePath.h"
 #include "OrbitBase/File.h"
 #include "OrbitBase/GetProcessIds.h"

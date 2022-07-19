@@ -31,7 +31,7 @@
 #include "MachineCode.h"
 #include "ObjectUtils/Address.h"
 #include "ObjectUtils/ElfFile.h"
-#include "ObjectUtils/LinuxMap.h"
+#include "ObjectUtils/ReadModules.h"
 #include "OrbitBase/ExecutablePath.h"
 #include "OrbitBase/Logging.h"
 #include "TestUtils.h"

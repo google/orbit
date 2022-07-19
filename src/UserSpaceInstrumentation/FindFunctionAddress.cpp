@@ -10,7 +10,7 @@
 
 #include "ObjectUtils/Address.h"
 #include "ObjectUtils/ElfFile.h"
-#include "ObjectUtils/LinuxMap.h"
+#include "ObjectUtils/ReadModules.h"
 
 namespace orbit_user_space_instrumentation {
 
