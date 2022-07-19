@@ -16,10 +16,11 @@ def main(argv):
         ConnectToStadiaInstance(),
         FilterAndSelectFirstProcess(process_filter="hello_ggp"),
         Capture(),
-        # "sdma0" is not present on the DevKits, instead there is "vce0", so this tests for "sdma0 or vce0"
+        # We check for either "sdma0" or "vce0", to exist. Both are connected to the encoding of video frames.
         VerifyTracksExist(track_names=[
             "Scheduler", ("*sdma0*", "*vce0*"), "gfx", "All Threads", "hello_ggp_stand"
-        ]),
+        ],
+                          allow_duplicates=True),
         SelectTrack(track_index=0, expect_failure=True),  # Scheduler track cannot be selected
         SelectTrack(track_index=4),
         # TODO(b/233028574): SelectTrack doesn't release the clicked track properly and can't be followed
