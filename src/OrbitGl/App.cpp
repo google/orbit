@@ -2509,17 +2509,17 @@ Future<void> OrbitApp::AddDefaultFrameTrackOrLogError() {
     if (preset.has_value() &&
         GetPresetLoadState(preset.value()).state == orbit_data_views::PresetLoadState::kLoadable) {
       orbit_base::ImmediateExecutor immediate_executor{};
-      LoadPreset(preset.value()).Then(&immediate_executor, [](ErrorMessageOr<void> result) {
-        if (result.has_error()) {
-          ORBIT_ERROR(
-              "It was not possible to add a frame track automatically. The desired preset couldn't "
-              "be loaded: %s",
-              result.error().message());
-        } else {
-          ORBIT_LOG("The default frame track was automatically added.");
-        }
-      });
-      return {};
+      return LoadPreset(preset.value())
+          .Then(&immediate_executor, [](ErrorMessageOr<void> result) -> void {
+            if (result.has_error()) {
+              ORBIT_ERROR(
+                  "It was not possible to add a frame track automatically. The desired preset "
+                  "couldn't be loaded: %s",
+                  result.error().message());
+            } else {
+              ORBIT_LOG("The default frame track was automatically added.");
+            }
+          });
     }
   }
   std::string error_message =
