@@ -23,7 +23,6 @@
 #include "OpenGlTextRenderer.h"
 #include "OrbitAccessibility/AccessibleInterface.h"
 #include "PickingManager.h"
-#include "PresentEventManager.h"
 #include "TimeGraphLayout.h"
 #include "TimelineInfoInterface.h"
 #include "TimelineUi.h"
@@ -51,7 +50,6 @@ class TimeGraph : public orbit_gl::CaptureViewElement, public orbit_gl::Timeline
                     const orbit_grpc_protos::InstrumentedFunction* function);
   void ProcessApiStringEvent(const orbit_client_data::ApiStringEvent& string_event);
   void ProcessApiTrackValueEvent(const orbit_client_data::ApiTrackValue& track_event);
-  void ProcessPresentEvent(const orbit_grpc_protos::PresentEvent& present_event);
 
   [[nodiscard]] const orbit_client_data::CaptureData* GetCaptureData() const {
     return capture_data_;
@@ -228,7 +226,6 @@ class TimeGraph : public orbit_gl::CaptureViewElement, public orbit_gl::Timeline
   std::shared_ptr<orbit_gl::Button> minus_button_;
 
   ManualInstrumentationManager* manual_instrumentation_manager_;
-  orbit_gl::PresentEventManager present_event_manager_;
   orbit_client_data::ThreadTrackDataProvider* thread_track_data_provider_ = nullptr;
   const orbit_client_data::CaptureData* capture_data_ = nullptr;
 
