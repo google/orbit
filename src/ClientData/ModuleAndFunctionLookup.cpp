@@ -6,7 +6,7 @@
 
 #include "ClientData/CaptureData.h"
 #include "ClientData/LinuxAddressInfo.h"
-#include "ObjectUtils/Address.h"
+#include "ModuleUtils/VirtualAndAbsoluteAddresses.h"
 
 namespace orbit_client_data {
 namespace {
@@ -22,13 +22,13 @@ FindFunctionAbsoluteAddressByInstructionAbsoluteAddressUsingModulesInMemory(
       module_in_memory, absolute_address);
   if (module == nullptr) return std::nullopt;
 
-  const uint64_t virtual_address = orbit_object_utils::SymbolAbsoluteAddressToVirtualAddress(
+  const uint64_t virtual_address = orbit_module_utils::SymbolVirtualAddressToAbsoluteAddress(
       absolute_address, module_base_address, module->load_bias(),
       module->executable_segment_offset());
   const auto* function_info = module->FindFunctionByVirtualAddress(virtual_address, false);
   if (function_info == nullptr) return std::nullopt;
 
-  return orbit_object_utils::SymbolVirtualAddressToAbsoluteAddress(
+  return orbit_module_utils::SymbolVirtualAddressToAbsoluteAddress(
       function_info->address(), module_base_address, module->load_bias(),
       module->executable_segment_offset());
 }
@@ -141,7 +141,7 @@ const FunctionInfo* FindFunctionByAddress(const ProcessData& process,
       module_in_memory, absolute_address);
   if (module == nullptr) return nullptr;
 
-  const uint64_t virtual_address = orbit_object_utils::SymbolAbsoluteAddressToVirtualAddress(
+  const uint64_t virtual_address = orbit_module_utils::SymbolVirtualAddressToAbsoluteAddress(
       absolute_address, module_base_address, module->load_bias(),
       module->executable_segment_offset());
   return module->FindFunctionByVirtualAddress(virtual_address, is_exact);

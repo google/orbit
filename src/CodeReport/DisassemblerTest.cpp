@@ -2,11 +2,11 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#include <ObjectUtils/Address.h>
 #include <gtest/gtest.h>
 
 #include "AssemblyTestLiterals.h"
 #include "CodeReport/Disassembler.h"
+#include "ModuleUtils/VirtualAndAbsoluteAddresses.h"
 
 using orbit_code_report::kFibonacciAbsoluteAddress;
 using orbit_code_report::kFibonacciAssembly;
@@ -43,7 +43,7 @@ TEST(Disassembler, DisassembleWithSymbols) {
   orbit_code_report::Disassembler disassembler{};
 
   orbit_grpc_protos::ModuleInfo module_info;
-  constexpr uint64_t kOffset = kFibonacciAbsoluteAddress % orbit_object_utils::kPageSize;
+  constexpr uint64_t kOffset = kFibonacciAbsoluteAddress % orbit_module_utils::kPageSize;
   module_info.set_address_start(kFibonacciAbsoluteAddress - kOffset);
   module_info.set_address_end(kFibonacciAbsoluteAddress + kFibonacciAssembly.size());
   constexpr const char* kBuildId = "build_id";

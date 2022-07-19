@@ -17,7 +17,7 @@
 #include "ClientData/ModuleData.h"
 #include "ClientData/ScopeId.h"
 #include "ClientData/ScopeInfo.h"
-#include "ObjectUtils/Address.h"
+#include "ModuleUtils/VirtualAndAbsoluteAddresses.h"
 #include "OrbitBase/Result.h"
 
 using orbit_grpc_protos::CaptureStarted;

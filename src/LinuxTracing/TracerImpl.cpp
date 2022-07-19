@@ -31,7 +31,7 @@
 #include "LibunwindstackUnwinder.h"
 #include "LinuxTracing/TracerListener.h"
 #include "LinuxTracingUtils.h"
-#include "ObjectUtils/ReadModules.h"
+#include "ModuleUtils/ReadLinuxModules.h"
 #include "OrbitBase/GetProcessIds.h"
 #include "OrbitBase/Logging.h"
 #include "OrbitBase/ThreadUtils.h"
@@ -772,7 +772,7 @@ void TracerImpl::Startup() {
   ModulesSnapshot modules_snapshot;
   modules_snapshot.set_pid(target_pid_);
   modules_snapshot.set_timestamp_ns(effective_capture_start_timestamp_ns_);
-  auto modules_or_error = orbit_object_utils::ReadModules(target_pid_);
+  auto modules_or_error = orbit_module_utils::ReadModules(target_pid_);
   if (modules_or_error.has_value()) {
     const std::vector<ModuleInfo>& modules = modules_or_error.value();
     *modules_snapshot.mutable_modules() = {modules.begin(), modules.end()};

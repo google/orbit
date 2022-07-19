@@ -2,11 +2,10 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#include "ObjectUtils/ReadModules.h"
+#include "ModuleUtils/ReadLinuxModules.h"
 
 #include <absl/strings/match.h>
 #include <absl/strings/str_format.h>
-#include <absl/strings/str_split.h>
 #include <stdint.h>
 #include <sys/mman.h>
 #include <unistd.h>
@@ -18,17 +17,18 @@
 #include <utility>
 #include <vector>
 
+#include "ModuleUtils/ReadLinuxMaps.h"
 #include "ObjectUtils/ElfFile.h"
 #include "ObjectUtils/ObjectFile.h"
-#include "ObjectUtils/ReadMaps.h"
 #include "OrbitBase/Align.h"
 #include "OrbitBase/Logging.h"
-#include "OrbitBase/ReadFileToString.h"
 #include "OrbitBase/Result.h"
 
 using orbit_grpc_protos::ModuleInfo;
+using orbit_object_utils::CreateObjectFile;
+using orbit_object_utils::ObjectFile;
 
-namespace orbit_object_utils {
+namespace orbit_module_utils {
 
 ErrorMessageOr<ModuleInfo> CreateModule(const std::filesystem::path& module_path,
                                         uint64_t start_address, uint64_t end_address) {
@@ -71,7 +71,8 @@ ErrorMessageOr<ModuleInfo> CreateModule(const std::filesystem::path& module_path
   }
 
   if (object_file_or_error.value()->IsElf()) {
-    auto* elf_file = dynamic_cast<ElfFile*>((object_file_or_error.value().get()));
+    auto* elf_file =
+        dynamic_cast<orbit_object_utils::ElfFile*>((object_file_or_error.value().get()));
     ORBIT_CHECK(elf_file != nullptr);
     module_info.set_soname(elf_file->GetSoname());
     module_info.set_object_file_type(ModuleInfo::kElfFile);
@@ -319,4 +320,4 @@ std::vector<ModuleInfo> ParseMapsIntoModules(const std::vector<LinuxMemoryMappin
   return result;
 }
 
-}  // namespace orbit_object_utils
+}  // namespace orbit_module_utils

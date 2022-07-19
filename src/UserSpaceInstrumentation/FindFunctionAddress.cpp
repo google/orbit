@@ -8,15 +8,15 @@
 
 #include <string>
 
-#include "ObjectUtils/Address.h"
+#include "ModuleUtils/ReadLinuxModules.h"
+#include "ModuleUtils/VirtualAndAbsoluteAddresses.h"
 #include "ObjectUtils/ElfFile.h"
-#include "ObjectUtils/ReadModules.h"
 
 namespace orbit_user_space_instrumentation {
 
 ErrorMessageOr<uint64_t> FindFunctionAddress(pid_t pid, std::string_view module_soname,
                                              std::string_view function_name) {
-  auto modules = orbit_object_utils::ReadModules(pid);
+  auto modules = orbit_module_utils::ReadModules(pid);
   if (modules.has_error()) {
     return modules.error();
   }
@@ -43,7 +43,7 @@ ErrorMessageOr<uint64_t> FindFunctionAddress(pid_t pid, std::string_view module_
 
   for (const orbit_grpc_protos::SymbolInfo& symbol : symbols.value().symbol_infos()) {
     if (symbol.demangled_name() == function_name) {
-      return orbit_object_utils::SymbolVirtualAddressToAbsoluteAddress(
+      return orbit_module_utils::SymbolVirtualAddressToAbsoluteAddress(
           symbol.address(), module_base_address, elf_file->GetLoadBias(),
           elf_file->GetExecutableSegmentOffset());
     }

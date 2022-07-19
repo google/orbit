@@ -2,8 +2,8 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#ifndef OBJECT_UTILS_READ_MAPS_H_
-#define OBJECT_UTILS_READ_MAPS_H_
+#ifndef MODULE_UTILS_READ_LINUX_MAPS_H_
+#define MODULE_UTILS_READ_LINUX_MAPS_H_
 
 #ifdef __linux
 
@@ -19,7 +19,7 @@
 #include "GrpcProtos/module.pb.h"
 #include "OrbitBase/Result.h"
 
-namespace orbit_object_utils {
+namespace orbit_module_utils {
 
 // Represents an entry in /proc/[pid]/maps.
 class LinuxMemoryMapping {
@@ -53,8 +53,8 @@ ErrorMessageOr<std::vector<LinuxMemoryMapping>> ReadMaps(pid_t pid);
 
 [[nodiscard]] std::vector<LinuxMemoryMapping> ReadMaps(std::string_view proc_pid_maps_content);
 
-}  // namespace orbit_object_utils
+}  // namespace orbit_module_utils
 
 #endif  // __linux
 
-#endif  // OBJECT_UTILS_READ_MAPS_H_
+#endif  // MODULE_UTILS_READ_LINUX_MAPS_H_

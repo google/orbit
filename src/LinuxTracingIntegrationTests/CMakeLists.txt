@@ -34,6 +34,7 @@ target_sources(IntegrationTestCommons PRIVATE
 target_link_libraries(IntegrationTestCommons PUBLIC
         ApiInterface
         GrpcProtos
+        ModuleUtils
         ObjectUtils
         OrbitBase
         OffscreenRenderingVulkanTutorialLib

@@ -29,9 +29,9 @@
 #include "AllocateInTracee.h"
 #include "GetTestLibLibraryPath.h"
 #include "MachineCode.h"
-#include "ObjectUtils/Address.h"
+#include "ModuleUtils/ReadLinuxModules.h"
+#include "ModuleUtils/VirtualAndAbsoluteAddresses.h"
 #include "ObjectUtils/ElfFile.h"
-#include "ObjectUtils/ReadModules.h"
 #include "OrbitBase/ExecutablePath.h"
 #include "OrbitBase/Logging.h"
 #include "TestUtils.h"
@@ -288,7 +288,7 @@ TEST(TrampolineTest, AllocateMemoryForTrampolines) {
 
   // Find the address range of the code for `DoubleAndIncrement`. For the purpose of this test we
   // just take the entire address space taken up by `UserSpaceInstrumentationTests`.
-  auto modules_or_error = orbit_object_utils::ReadModules(pid);
+  auto modules_or_error = orbit_module_utils::ReadModules(pid);
   ORBIT_CHECK(!modules_or_error.has_error());
 
   auto& modules = modules_or_error.value();

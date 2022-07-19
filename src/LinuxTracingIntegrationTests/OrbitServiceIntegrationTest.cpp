@@ -23,7 +23,7 @@
 #include "IntegrationTestCommons.h"
 #include "IntegrationTestPuppet.h"
 #include "IntegrationTestUtils.h"
-#include "ObjectUtils/Address.h"
+#include "ModuleUtils/VirtualAndAbsoluteAddresses.h"
 #include "OrbitBase/ExecutablePath.h"
 #include "OrbitBase/ThreadUtils.h"
 #include "OrbitService.h"
@@ -324,7 +324,7 @@ static void AddOrbitApiToCaptureOptions(orbit_grpc_protos::CaptureOptions* captu
       "%s%u", orbit_api_utils::kOrbitApiGetFunctionTableAddressPrefix, kOrbitApiVersion);
   for (const orbit_grpc_protos::SymbolInfo& symbol_info : module_symbols.symbol_infos()) {
     if (symbol_info.demangled_name() == api_function_name) {
-      uint64_t absolute_address = orbit_object_utils::SymbolVirtualAddressToAbsoluteAddress(
+      uint64_t absolute_address = orbit_module_utils::SymbolVirtualAddressToAbsoluteAddress(
           symbol_info.address(), module_info.address_start(), module_info.load_bias(),
           module_info.executable_segment_offset());
 
@@ -347,7 +347,7 @@ static std::pair<uint64_t, uint64_t> GetUseOrbitApiFunctionVirtualAddressRange(p
   for (const orbit_grpc_protos::SymbolInfo& symbol : module_symbols.symbol_infos()) {
     if (absl::StrContains(symbol.demangled_name(), PuppetConstants::kUseOrbitApiFunctionName)) {
       const uint64_t virtual_address_start =
-          orbit_object_utils::SymbolVirtualAddressToAbsoluteAddress(
+          orbit_module_utils::SymbolVirtualAddressToAbsoluteAddress(
               symbol.address(), module_info.address_start(), module_info.load_bias(),
               module_info.executable_segment_offset());
       const uint64_t virtual_address_end = virtual_address_start + symbol.size() - 1;

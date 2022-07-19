@@ -22,7 +22,7 @@
 #include "GrpcProtos/capture.pb.h"
 #include "GrpcProtos/module.pb.h"
 #include "LeafFunctionCallManager.h"
-#include "ObjectUtils/ReadModules.h"
+#include "ModuleUtils/ReadLinuxModules.h"
 #include "OrbitBase/Logging.h"
 #include "OrbitBase/Result.h"
 
@@ -695,7 +695,7 @@ void UprobesUnwindingVisitor::Visit(uint64_t event_timestamp, const MmapPerfEven
   }
 
   ErrorMessageOr<orbit_grpc_protos::ModuleInfo> module_info_or_error =
-      orbit_object_utils::CreateModule(module_path, min_exec_map_start, max_exec_map_end);
+      orbit_module_utils::CreateModule(module_path, min_exec_map_start, max_exec_map_end);
   if (module_info_or_error.has_error()) {
     ORBIT_ERROR("Unable to create module: %s", module_info_or_error.error().message());
     return;

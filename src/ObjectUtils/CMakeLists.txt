@@ -9,20 +9,16 @@ add_library(ObjectUtils STATIC)
 
 target_sources(
   ObjectUtils
-  PUBLIC include/ObjectUtils/Address.h
-         include/ObjectUtils/CoffFile.h
+  PUBLIC include/ObjectUtils/CoffFile.h
          include/ObjectUtils/ElfFile.h
          include/ObjectUtils/ObjectFile.h
          include/ObjectUtils/PdbFile.h
-         include/ObjectUtils/ReadMaps.h
-         include/ObjectUtils/ReadModules.h
          include/ObjectUtils/SymbolsFile.h
          include/ObjectUtils/WindowsBuildIdUtils.h)
 
 target_sources(
   ObjectUtils
   PRIVATE
-        Address.cpp
         CoffFile.cpp
         ElfFile.cpp
         PdbFile.cpp
@@ -32,11 +28,7 @@ target_sources(
         SymbolsFile.cpp
         WindowsBuildIdUtils.cpp)
 
-if (NOT WIN32)
-target_sources(ObjectUtils PRIVATE
-        ReadMaps.cpp
-        ReadModules.cpp)
-else()
+if (WIN32)
 target_sources(
   ObjectUtils
   PRIVATE PdbFileDia.h
@@ -67,22 +59,17 @@ endif()
 add_executable(ObjectUtilsTests)
 
 target_sources(ObjectUtilsTests PRIVATE
-        AddressTest.cpp
         CoffFileTest.cpp
         ElfFileTest.cpp
         ObjectFileTest.cpp
         PdbFileTest.h
         PdbFileLlvmTest.cpp
         SymbolsFileTest.cpp
-        WindowsBuildIdUtilsTest.cpp
-)
+        WindowsBuildIdUtilsTest.cpp)
 
-if (NOT WIN32)
+if (WIN32)
 target_sources(ObjectUtilsTests PRIVATE
-        ReadMapsTest.cpp
-        ReadModulesTest.cpp)
-else()
-target_sources(ObjectUtilsTests PRIVATE PdbFileDiaTest.cpp)
+        PdbFileDiaTest.cpp)
 endif()
 
 target_link_libraries(

@@ -22,8 +22,8 @@
 #include "AllocateInTracee.h"
 #include "ExecuteMachineCode.h"
 #include "MachineCode.h"
-#include "ObjectUtils/Address.h"
-#include "ObjectUtils/ReadModules.h"
+#include "ModuleUtils/ReadLinuxModules.h"
+#include "ModuleUtils/VirtualAndAbsoluteAddresses.h"
 #include "OrbitBase/ExecutablePath.h"
 #include "OrbitBase/File.h"
 #include "OrbitBase/GetProcessIds.h"
@@ -82,7 +82,7 @@ bool ProcessWithPidExists(pid_t pid) {
 
 // Returns true if liborbituserspaceinstrumentation.so is present in target process.
 ErrorMessageOr<bool> AlreadyInjected(pid_t pid) {
-  OUTCOME_TRY(auto&& modules, orbit_object_utils::ReadModules(pid));
+  OUTCOME_TRY(auto&& modules, orbit_module_utils::ReadModules(pid));
   for (const ModuleInfo& module : modules) {
     if (module.name() == kLibName) {
       return true;
@@ -522,7 +522,7 @@ InstrumentedProcess::InstrumentFunctions(const CaptureOptions& capture_options) 
     // address to instrument for each of them.
     OUTCOME_TRY(auto&& modules, ModulesFromModulePath(function.file_path()));
     for (const auto& module : modules) {
-      const uint64_t function_address = orbit_object_utils::SymbolVirtualAddressToAbsoluteAddress(
+      const uint64_t function_address = orbit_module_utils::SymbolVirtualAddressToAbsoluteAddress(
           function.function_virtual_address(), module.address_start(), module.load_bias(),
           module.executable_segment_offset());
       if (!trampoline_map_.contains(function_address)) {
@@ -662,7 +662,7 @@ ErrorMessageOr<std::vector<ModuleInfo>> InstrumentedProcess::ModulesFromModulePa
     std::string path) {
   if (!modules_from_path_.contains(path)) {
     std::vector<ModuleInfo> result;
-    OUTCOME_TRY(auto&& modules, orbit_object_utils::ReadModules(pid_));
+    OUTCOME_TRY(auto&& modules, orbit_module_utils::ReadModules(pid_));
     for (const ModuleInfo& module : modules) {
       if (module.file_path() == path) {
         result.push_back(module);

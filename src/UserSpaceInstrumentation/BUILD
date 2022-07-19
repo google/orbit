@@ -6,7 +6,7 @@ load("//:orbit.bzl", "orbit_cc_library", "orbit_cc_test")
 
 package(default_visibility = [
     "//:__subpackages__",
-    "//:users",  
+    "//:users",
 ])
 
 licenses(["notice"])
@@ -20,6 +20,7 @@ orbit_cc_library(
     deps = [
         "//net/grpc:grpc++",
         "//src/CaptureEventProducer",
+        "//src/ModuleUtils",
         "//src/ObjectUtils",
         "//src/OrbitBase",
         "//src/ProducerSideChannel",
@@ -73,14 +74,15 @@ orbit_cc_test(
         "//conditions:default": [],
     }),
     data = [
-        ":libUserSpaceInstrumentationTestLib.so",
         ":libOrbitUserSpaceInstrumentation.so",
+        ":libUserSpaceInstrumentationTestLib.so",
     ],
     # TrampolineTest requires AVX and is added selectively depending on the target architecture.
     exclude = ["TrampolineTest.cpp"],
     deps = [
         ":UserSpaceInstrumentation",
         "//src/GrpcProtos:capture_cc_proto",
+        "//src/ModuleUtils",
         "//src/ObjectUtils",
         "//src/OrbitBase",
         "//src/TestUtils",

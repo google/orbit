@@ -24,7 +24,7 @@
 #include "IntegrationTestUtils.h"
 #include "LinuxTracing/Tracer.h"
 #include "LinuxTracing/TracerListener.h"
-#include "ObjectUtils/Address.h"
+#include "ModuleUtils/VirtualAndAbsoluteAddresses.h"
 #include "ObjectUtils/ElfFile.h"
 #include "OrbitBase/Logging.h"
 #include "OrbitBase/ReadFileToString.h"
@@ -580,7 +580,7 @@ GetOuterAndInnerFunctionVirtualAddressRanges(pid_t pid) {
       ORBIT_CHECK(outer_function_virtual_address_start == 0 &&
                   outer_function_virtual_address_end == 0);
       outer_function_virtual_address_start =
-          orbit_object_utils::SymbolVirtualAddressToAbsoluteAddress(
+          orbit_module_utils::SymbolVirtualAddressToAbsoluteAddress(
               symbol.address(), module_info.address_start(), module_info.load_bias(),
               module_info.executable_segment_offset());
       outer_function_virtual_address_end = outer_function_virtual_address_start + symbol.size() - 1;
@@ -590,7 +590,7 @@ GetOuterAndInnerFunctionVirtualAddressRanges(pid_t pid) {
       ORBIT_CHECK(inner_function_virtual_address_start == 0 &&
                   inner_function_virtual_address_end == 0);
       inner_function_virtual_address_start =
-          orbit_object_utils::SymbolVirtualAddressToAbsoluteAddress(
+          orbit_module_utils::SymbolVirtualAddressToAbsoluteAddress(
               symbol.address(), module_info.address_start(), module_info.load_bias(),
               module_info.executable_segment_offset());
       inner_function_virtual_address_end = inner_function_virtual_address_start + symbol.size() - 1;

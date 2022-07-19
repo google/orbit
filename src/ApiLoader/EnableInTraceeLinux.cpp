@@ -13,7 +13,7 @@
 #include <functional>
 
 #include "ApiUtils/GetFunctionTableAddressPrefix.h"
-#include "ObjectUtils/Address.h"
+#include "ModuleUtils/VirtualAndAbsoluteAddresses.h"
 #include "OrbitBase/ExecutablePath.h"
 #include "OrbitBase/Logging.h"
 #include "OrbitBase/ThreadUtils.h"

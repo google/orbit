@@ -2,8 +2,8 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#ifndef OBJECT_UTILS_READ_MODULES_H_
-#define OBJECT_UTILS_READ_MODULES_H_
+#ifndef MODULE_UTILS_READ_LINUX_MODULES_H_
+#define MODULE_UTILS_READ_LINUX_MODULES_H_
 
 #ifdef __linux
 
@@ -14,10 +14,10 @@
 #include <vector>
 
 #include "GrpcProtos/module.pb.h"
-#include "ObjectUtils/ReadMaps.h"
 #include "OrbitBase/Result.h"
+#include "ReadLinuxMaps.h"
 
-namespace orbit_object_utils {
+namespace orbit_module_utils {
 
 ErrorMessageOr<orbit_grpc_protos::ModuleInfo> CreateModule(const std::filesystem::path& module_path,
                                                            uint64_t start_address,
@@ -28,8 +28,8 @@ ErrorMessageOr<std::vector<orbit_grpc_protos::ModuleInfo>> ReadModules(pid_t pid
 [[nodiscard]] std::vector<orbit_grpc_protos::ModuleInfo> ParseMapsIntoModules(
     const std::vector<LinuxMemoryMapping>& maps);
 
-}  // namespace orbit_object_utils
+}  // namespace orbit_module_utils
 
 #endif  // __linux
 
-#endif  // OBJECT_UTILS_READ_MODULES_H_
+#endif  // MODULE_UTILS_READ_LINUX_MODULES_H_

@@ -4,7 +4,6 @@
 
 #include "CodeReport/Disassembler.h"
 
-#include <ObjectUtils/Address.h>
 #include <absl/strings/numbers.h>
 #include <absl/strings/str_format.h>
 #include <absl/strings/str_replace.h>
@@ -13,6 +12,7 @@
 #include <algorithm>
 
 #include "ClientData/ModuleAndFunctionLookup.h"
+#include "ModuleUtils/VirtualAndAbsoluteAddresses.h"
 
 namespace orbit_code_report {
 namespace {
