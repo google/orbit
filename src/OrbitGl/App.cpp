@@ -684,6 +684,10 @@ void OrbitApp::OnWarningInstrumentingWithUprobesEvent(
          warning_instrumenting_with_uprobes_event.functions_that_failed_to_instrument()) {
       absl::StrAppend(&message, "* ", function.error_message(), "\n");
     }
+    absl::StrAppend(&message,
+                    "\nConsider choosing the method \"Orbit\" for dynamic instrumentation in the "
+                    "Capture Options dialog.\n");
+
     main_window_->AppendToCaptureLog(
         MainWindowInterface::CaptureLogSeverity::kWarning,
         GetCaptureTimeAt(warning_instrumenting_with_uprobes_event.timestamp_ns()), message);
@@ -729,7 +733,7 @@ void OrbitApp::OnErrorEnablingUserSpaceInstrumentationEvent(
 void OrbitApp::OnWarningInstrumentingWithUserSpaceInstrumentationEvent(
     orbit_grpc_protos::WarningInstrumentingWithUserSpaceInstrumentationEvent warning_event) {
   main_thread_executor_->Schedule([this, warning_event = std::move(warning_event)]() {
-    std::string message = "Failed to instrument some functions with the Orbit method:\n";
+    std::string message = "Failed to instrument some functions with the \"Orbit\" method:\n";
     for (const auto& function : warning_event.functions_that_failed_to_instrument()) {
       absl::StrAppend(&message, "* ", function.error_message(), "\n");
     }
