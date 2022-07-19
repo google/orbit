@@ -1,0 +1,8 @@
+# ORBIT preset file
+modules {
+  key: "/usr/local/cloudcast/lib/ggpvlk.so"
+  value {
+    function_names: "yeti::internal::vulkan::(anonymous namespace)::QueuePresentKHR(VkQueue_T*, VkPresentInfoKHR const*)"
+    frame_track_function_names: "yeti::internal::vulkan::(anonymous namespace)::QueuePresentKHR(VkQueue_T*, VkPresentInfoKHR const*)"
+  }
+}

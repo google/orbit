@@ -272,6 +272,7 @@ chmod -v 4775 /opt/developer/tools/OrbitService
             self.run("dpkg --contents {}.deb".format(basedir))
             shutil.rmtree(basedir)
 
+        self.copy("*", src="bin/autopresets", dst="bin/autopresets", symlinks=True)
         self.copy("*", src="bin/fonts", dst="bin/fonts", symlinks=True)
         self.copy("*", src="bin/shaders", dst="bin/shaders", symlinks=True)
         self.copy("*.pdb", src="bin/", dst="bin")
