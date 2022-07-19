@@ -172,6 +172,11 @@ class IntrospectionCaptureListener : public orbit_capture_client::CaptureListene
       override {
     ORBIT_UNREACHABLE();
   }
+  void OnWarningInstrumentingWithUprobesEvent(
+      orbit_grpc_protos::WarningInstrumentingWithUprobesEvent
+      /*warning_instrumenting_with_uprobes_event*/) override {
+    ORBIT_UNREACHABLE();
+  }
   void OnErrorEnablingOrbitApiEvent(
       orbit_grpc_protos::ErrorEnablingOrbitApiEvent /*error_enabling_orbit_api_event*/) override {
     ORBIT_UNREACHABLE();

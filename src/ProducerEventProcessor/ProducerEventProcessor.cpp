@@ -55,6 +55,7 @@ using orbit_grpc_protos::ThreadNamesSnapshot;
 using orbit_grpc_protos::ThreadStateSlice;
 using orbit_grpc_protos::TracepointEvent;
 using orbit_grpc_protos::WarningEvent;
+using orbit_grpc_protos::WarningInstrumentingWithUprobesEvent;
 using orbit_grpc_protos::WarningInstrumentingWithUserSpaceInstrumentationEvent;
 
 namespace orbit_producer_event_processor {
@@ -147,6 +148,8 @@ class ProducerEventProcessorImpl : public ProducerEventProcessor {
   void ProcessThreadNamesSnapshotAndTransferOwnership(ThreadNamesSnapshot* thread_names_snapshot);
   void ProcessThreadStateSliceAndTransferOwnership(ThreadStateSlice* thread_state_slice);
   void ProcessWarningEventAndTransferOwnership(WarningEvent* warning_event);
+  void ProcessWarningInstrumentingWithUprobesEventAndTransferOwnership(
+      WarningInstrumentingWithUprobesEvent* warning_event);
   void ProcessWarningInstrumentingWithUserSpaceInstrumentationEventAndTransferOwnership(
       WarningInstrumentingWithUserSpaceInstrumentationEvent* warning_event);
 
@@ -545,6 +548,13 @@ void ProducerEventProcessorImpl::ProcessWarningEventAndTransferOwnership(
   client_capture_event_collector_->AddEvent(std::move(event));
 }
 
+void ProducerEventProcessorImpl::ProcessWarningInstrumentingWithUprobesEventAndTransferOwnership(
+    WarningInstrumentingWithUprobesEvent* warning_event) {
+  ClientCaptureEvent event;
+  event.set_allocated_warning_instrumenting_with_uprobes_event(warning_event);
+  client_capture_event_collector_->AddEvent(std::move(event));
+}
+
 void ProducerEventProcessorImpl::
     ProcessWarningInstrumentingWithUserSpaceInstrumentationEventAndTransferOwnership(
         WarningInstrumentingWithUserSpaceInstrumentationEvent* warning_event) {
@@ -679,6 +689,10 @@ void ProducerEventProcessorImpl::ProcessEvent(uint64_t producer_id, ProducerCapt
       break;
     case ProducerCaptureEvent::kWarningEvent:
       ProcessWarningEventAndTransferOwnership(event.release_warning_event());
+      break;
+    case ProducerCaptureEvent::kWarningInstrumentingWithUprobesEvent:
+      ProcessWarningInstrumentingWithUprobesEventAndTransferOwnership(
+          event.release_warning_instrumenting_with_uprobes_event());
       break;
     case ProducerCaptureEvent::kWarningInstrumentingWithUserSpaceInstrumentationEvent:
       ProcessWarningInstrumentingWithUserSpaceInstrumentationEventAndTransferOwnership(

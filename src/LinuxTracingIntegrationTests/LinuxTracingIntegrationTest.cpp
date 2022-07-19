@@ -197,6 +197,18 @@ class BufferTracerListener : public orbit_linux_tracing::TracerListener {
     }
   }
 
+  void OnWarningInstrumentingWithUprobesEvent(
+      orbit_grpc_protos::WarningInstrumentingWithUprobesEvent
+          warning_instrumenting_with_uprobes_event) override {
+    orbit_grpc_protos::ProducerCaptureEvent event;
+    *event.mutable_warning_instrumenting_with_uprobes_event() =
+        std::move(warning_instrumenting_with_uprobes_event);
+    {
+      absl::MutexLock lock{&events_mutex_};
+      events_.emplace_back(std::move(event));
+    }
+  }
+
   [[nodiscard]] std::vector<orbit_grpc_protos::ProducerCaptureEvent> GetAndClearEvents() {
     absl::MutexLock lock{&events_mutex_};
     std::vector<orbit_grpc_protos::ProducerCaptureEvent> events = std::move(events_);
@@ -428,6 +440,12 @@ void VerifyOrderOfAllEvents(const std::vector<orbit_grpc_protos::ProducerCapture
         break;
       case orbit_grpc_protos::ProducerCaptureEvent::kWarningEvent:
         ORBIT_UNREACHABLE();
+      case orbit_grpc_protos::ProducerCaptureEvent::kWarningInstrumentingWithUprobesEvent:
+        EXPECT_GE(event.warning_instrumenting_with_uprobes_event().timestamp_ns(),
+                  previous_event_timestamp_ns);
+        previous_event_timestamp_ns =
+            event.warning_instrumenting_with_uprobes_event().timestamp_ns();
+        break;
       case orbit_grpc_protos::ProducerCaptureEvent::
           kWarningInstrumentingWithUserSpaceInstrumentationEvent:
         ORBIT_UNREACHABLE();
@@ -457,6 +475,13 @@ void VerifyErrorsWithPerfEventOpenEvent(
   EXPECT_EQ(errors_with_perf_event_open_event_found, !IsRunningAsRoot());
 }
 
+void VerifyNoWarningInstrumentingWithUprobesEvents(
+    const std::vector<orbit_grpc_protos::ProducerCaptureEvent>& events) {
+  for (const orbit_grpc_protos::ProducerCaptureEvent& event : events) {
+    EXPECT_FALSE(event.has_warning_instrumenting_with_uprobes_event());
+  }
+}
+
 TEST(LinuxTracingIntegrationTest, SchedulingSlices) {
   if (!CheckIsRunningAsRoot()) {
     GTEST_SKIP();
@@ -469,6 +494,8 @@ TEST(LinuxTracingIntegrationTest, SchedulingSlices) {
   VerifyOrderOfAllEvents(events);
 
   VerifyNoLostOrDiscardedEvents(events);
+
+  VerifyNoWarningInstrumentingWithUprobesEvents(events);
 
   uint64_t scheduling_slice_count = 0;
   uint64_t last_out_timestamp_ns = 0;
@@ -532,6 +559,8 @@ TEST(LinuxTracingIntegrationTest, FunctionCalls) {
   VerifyOrderOfAllEvents(events);
 
   VerifyNoLostOrDiscardedEvents(events);
+
+  VerifyNoWarningInstrumentingWithUprobesEvents(events);
 
   VerifyFunctionCallsOfOuterAndInnerFunction(events, fixture.GetPuppetPid(), kOuterFunctionId,
                                              kInnerFunctionId);
@@ -745,6 +774,8 @@ TEST(LinuxTracingIntegrationTest, CallstackSamplesAndAddressInfos) {
 
   VerifyErrorsWithPerfEventOpenEvent(events);
 
+  VerifyNoWarningInstrumentingWithUprobesEvents(events);
+
   absl::flat_hash_set<uint64_t> address_infos_received =
       VerifyAndGetAddressInfosWithOuterAndInnerFunction(events, executable_path,
                                                         outer_function_virtual_address_range,
@@ -779,6 +810,8 @@ TEST(LinuxTracingIntegrationTest, CallstackSamplesTogetherWithFunctionCalls) {
   VerifyOrderOfAllEvents(events);
 
   VerifyNoLostOrDiscardedEvents(events);
+
+  VerifyNoWarningInstrumentingWithUprobesEvents(events);
 
   VerifyFunctionCallsOfOuterAndInnerFunction(events, fixture.GetPuppetPid(), kOuterFunctionId,
                                              kInnerFunctionId);
@@ -822,6 +855,8 @@ TEST(LinuxTracingIntegrationTest, CallstackSamplesWithFramePointers) {
 
   VerifyErrorsWithPerfEventOpenEvent(events);
 
+  VerifyNoWarningInstrumentingWithUprobesEvents(events);
+
   // AddressInfos are not sent when unwinding with frame pointers as they are produced by
   // libunwindstack.
   VerifyNoAddressInfos(events);
@@ -856,6 +891,8 @@ TEST(LinuxTracingIntegrationTest, CallstackSamplesWithFramePointersTogetherWithF
 
   VerifyNoLostOrDiscardedEvents(events);
 
+  VerifyNoWarningInstrumentingWithUprobesEvents(events);
+
   VerifyFunctionCallsOfOuterAndInnerFunction(events, fixture.GetPuppetPid(), kOuterFunctionId,
                                              kInnerFunctionId);
 
@@ -878,6 +915,8 @@ TEST(LinuxTracingIntegrationTest, ThreadStateSlices) {
   VerifyOrderOfAllEvents(events);
 
   VerifyNoLostOrDiscardedEvents(events);
+
+  VerifyNoWarningInstrumentingWithUprobesEvents(events);
 
   uint64_t running_slice_count = 0;
   uint64_t runnable_slice_count = 0;
@@ -947,6 +986,8 @@ TEST(LinuxTracingIntegrationTest, ThreadNames) {
 
   VerifyNoLostOrDiscardedEvents(events);
 
+  VerifyNoWarningInstrumentingWithUprobesEvents(events);
+
   std::vector<std::string> changed_thread_names;
   std::vector<std::string> initial_thread_names;
   for (const auto& event : events) {
@@ -999,6 +1040,8 @@ TEST(LinuxTracingIntegrationTest, ModuleUpdateOnDlopen) {
 
   VerifyErrorsWithPerfEventOpenEvent(events);
 
+  VerifyNoWarningInstrumentingWithUprobesEvents(events);
+
   bool module_update_found = false;
   for (const auto& event : events) {
     if (event.event_case() != orbit_grpc_protos::ProducerCaptureEvent::kModuleUpdateEvent) {
@@ -1037,6 +1080,8 @@ TEST(LinuxTracingIntegrationTest, GpuJobs) {
   VerifyOrderOfAllEvents(events);
 
   VerifyNoLostOrDiscardedEvents(events);
+
+  VerifyNoWarningInstrumentingWithUprobesEvents(events);
 
   bool another_process_used_gpu = false;
   for (const auto& event : events) {
