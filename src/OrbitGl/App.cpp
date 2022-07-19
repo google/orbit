@@ -677,9 +677,22 @@ void OrbitApp::OnErrorsWithPerfEventOpenEvent(
 
 void OrbitApp::OnWarningInstrumentingWithUprobesEvent(
     orbit_grpc_protos::WarningInstrumentingWithUprobesEvent
-    /*warning_instrumenting_with_uprobes_event*/) {
-  // TODO(b/232072696): Display WarningInstrumentingWithUprobesEvent in the Capture Log.
-  ORBIT_UNREACHABLE();
+        warning_instrumenting_with_uprobes_event) {
+  main_thread_executor_->Schedule([this, warning_instrumenting_with_uprobes_event = std::move(
+                                             warning_instrumenting_with_uprobes_event)]() {
+    std::string message = "Uprobes likely failed to instrument some functions:\n";
+    for (const auto& function :
+         warning_instrumenting_with_uprobes_event.functions_that_failed_to_instrument()) {
+      absl::StrAppend(&message, "* ", function.error_message(), "\n");
+    }
+    absl::StrAppend(&message,
+                    "\nConsider choosing the method \"Orbit\" for dynamic instrumentation in the "
+                    "Capture Options dialog.\n");
+
+    main_window_->AppendToCaptureLog(
+        MainWindowInterface::CaptureLogSeverity::kWarning,
+        GetCaptureTimeAt(warning_instrumenting_with_uprobes_event.timestamp_ns()), message);
+  });
 }
 
 void OrbitApp::OnErrorEnablingOrbitApiEvent(
@@ -721,13 +734,13 @@ void OrbitApp::OnErrorEnablingUserSpaceInstrumentationEvent(
 void OrbitApp::OnWarningInstrumentingWithUserSpaceInstrumentationEvent(
     orbit_grpc_protos::WarningInstrumentingWithUserSpaceInstrumentationEvent warning_event) {
   main_thread_executor_->Schedule([this, warning_event = std::move(warning_event)]() {
-    std::string message = "Failed to instrument some functions:\n";
+    std::string message = "Failed to instrument some functions with the \"Orbit\" method:\n";
     for (const auto& function : warning_event.functions_that_failed_to_instrument()) {
-      message = absl::StrCat(message, function.error_message(), "\n");
+      absl::StrAppend(&message, "* ", function.error_message(), "\n");
     }
-    message = absl::StrCat(message,
-                           "\nThe functions above will be instrumented using the slower kernel "
-                           "(uprobes) functionality.\n");
+    absl::StrAppend(&message,
+                    "\nThe functions above will be instrumented using the slower kernel (uprobes) "
+                    "functionality.\n");
 
     main_window_->AppendToCaptureLog(MainWindowInterface::CaptureLogSeverity::kWarning,
                                      GetCaptureTimeAt(warning_event.timestamp_ns()), message);
