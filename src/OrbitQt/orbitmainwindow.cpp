@@ -1366,11 +1366,15 @@ void OrbitMainWindow::OnTimerSelectionChanged(const orbit_client_protos::TimerIn
   bool is_live_function_data_view_initialized = live_functions_data_view != nullptr;
   if (timer_info) {
     ORBIT_CHECK(is_live_function_data_view_initialized);
-    const std::optional<ScopeId> scope_id = app_->GetCaptureData().ProvideScopeId(*timer_info);
-    ORBIT_CHECK(scope_id.has_value());
-    selected_row = live_functions_data_view->GetRowFromScopeId(scope_id.value());
-    live_functions_data_view->UpdateSelectedFunctionId();
-    live_functions_data_view->UpdateHistogramWithScopeIds({scope_id.value()});
+
+    if (const std::optional<ScopeId> scope_id = app_->GetCaptureData().ProvideScopeId(*timer_info);
+        scope_id.has_value()) {
+      selected_row = live_functions_data_view->GetRowFromScopeId(scope_id.value());
+      live_functions_data_view->UpdateSelectedFunctionId();
+      live_functions_data_view->UpdateHistogramWithScopeIds({scope_id.value()});
+    } else {
+      live_functions_data_view->UpdateHistogramWithScopeIds({});
+    }
   } else {
     if (is_live_function_data_view_initialized) {
       live_functions_data_view->UpdateHistogramWithScopeIds({});
