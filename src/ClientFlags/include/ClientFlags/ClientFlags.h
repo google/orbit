@@ -68,4 +68,6 @@ ABSL_DECLARE_FLAG(bool, enable_unsafe_symbols);
 // Enables automatic symbol loading
 ABSL_DECLARE_FLAG(bool, auto_symbol_loading);
 
+ABSL_DECLARE_FLAG(bool, auto_frame_track);
+
 #endif  // CLIENT_FLAGS_CLIENT_FLAGS_H_

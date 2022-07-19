@@ -557,6 +557,10 @@ class OrbitApp final : public DataViewFactory,
   // no particular order.
   orbit_base::Future<std::vector<ErrorMessageOr<orbit_base::CanceledOr<void>>>> LoadAllSymbols();
 
+  // Automatically add a default Frame Track. It will choose only one frame track from an internal
+  // list of auto-loadable presets.
+  orbit_base::Future<void> AddDefaultFrameTrackOrLogError();
+
  private:
   void UpdateModulesAbortCaptureIfModuleWithoutBuildIdNeedsReload(
       absl::Span<const orbit_grpc_protos::ModuleInfo> module_infos);

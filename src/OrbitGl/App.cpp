@@ -80,6 +80,7 @@
 #include "ObjectUtils/Address.h"
 #include "ObjectUtils/ElfFile.h"
 #include "OrbitBase/CanceledOr.h"
+#include "OrbitBase/ExecutablePath.h"
 #include "OrbitBase/File.h"
 #include "OrbitBase/Future.h"
 #include "OrbitBase/FutureHelpers.h"
@@ -2490,8 +2491,52 @@ Future<std::vector<ErrorMessageOr<CanceledOr<void>>>> OrbitApp::LoadAllSymbols()
 
     loading_futures.push_back(RetrieveModuleAndLoadSymbols(module));
   }
+  if (absl::GetFlag(FLAGS_auto_frame_track)) {
+    // Orbit will try to add the default frame track while loading all symbols.
+    std::ignore = AddDefaultFrameTrackOrLogError();
+  }
 
   return orbit_base::WhenAll(absl::MakeConstSpan(loading_futures));
+}
+
+Future<void> OrbitApp::AddDefaultFrameTrackOrLogError() {
+  const std::filesystem::path default_auto_preset_folder_path =
+      orbit_base::GetExecutableDir() / "autopresets";
+  const std::filesystem::path stadia_default_preset_path =
+      default_auto_preset_folder_path / "stadia-default-frame-track.opr";
+
+  std::vector<std::filesystem::path> auto_preset_paths = {stadia_default_preset_path};
+
+  // Each preset in auto_preset_paths contains a FrameTrack that users might be interested in
+  // loading by default. Orbit will try to load automatically just the first loadable preset from
+  // the list as we don't want Orbit to automatically add more than one FrameTrack. If no presets
+  // could be loaded, Orbit will log an error.
+  for (std::filesystem::path preset_path : auto_preset_paths) {
+    const ErrorMessageOr<PresetFile> preset = ReadPresetFromFile(preset_path);
+    // Errors on reading a preset from a file won't be shown, Orbit simply will try the next preset
+    // from the list until one of them is loadable.
+    if (preset.has_value() &&
+        GetPresetLoadState(preset.value()).state == orbit_data_views::PresetLoadState::kLoadable) {
+      orbit_base::ImmediateExecutor immediate_executor{};
+      return LoadPreset(preset.value())
+          .Then(&immediate_executor, [](ErrorMessageOr<void> result) -> void {
+            if (result.has_error()) {
+              ORBIT_ERROR(
+                  "It was not possible to add a frame track automatically. The desired preset "
+                  "couldn't be loaded: %s",
+                  result.error().message());
+            } else {
+              ORBIT_LOG("The default frame track was automatically added.");
+            }
+          });
+    }
+  }
+  std::string error_message =
+      "It was not possible to add a frame track automatically, because none of the presets "
+      "available for auto-loading could be loaded. The reason might be that you are not profiling "
+      "a Stadia-game running with Vulkan.";
+  ORBIT_ERROR("%s", error_message);
+  return {};
 }
 
 void OrbitApp::RefreshUIAfterModuleReload() {
