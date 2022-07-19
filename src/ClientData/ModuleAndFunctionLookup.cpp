@@ -22,7 +22,7 @@ FindFunctionAbsoluteAddressByInstructionAbsoluteAddressUsingModulesInMemory(
       module_in_memory, absolute_address);
   if (module == nullptr) return std::nullopt;
 
-  const uint64_t virtual_address = orbit_module_utils::SymbolVirtualAddressToAbsoluteAddress(
+  const uint64_t virtual_address = orbit_module_utils::SymbolAbsoluteAddressToVirtualAddress(
       absolute_address, module_base_address, module->load_bias(),
       module->executable_segment_offset());
   const auto* function_info = module->FindFunctionByVirtualAddress(virtual_address, false);
@@ -141,7 +141,7 @@ const FunctionInfo* FindFunctionByAddress(const ProcessData& process,
       module_in_memory, absolute_address);
   if (module == nullptr) return nullptr;
 
-  const uint64_t virtual_address = orbit_module_utils::SymbolVirtualAddressToAbsoluteAddress(
+  const uint64_t virtual_address = orbit_module_utils::SymbolAbsoluteAddressToVirtualAddress(
       absolute_address, module_base_address, module->load_bias(),
       module->executable_segment_offset());
   return module->FindFunctionByVirtualAddress(virtual_address, is_exact);

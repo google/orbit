@@ -2709,7 +2709,7 @@ void OrbitApp::DeselectFunction(const orbit_client_data::FunctionInfo& func) {
       module_in_memory, absolute_address);
   if (module == nullptr) return false;
 
-  const uint64_t virtual_address = orbit_module_utils::SymbolVirtualAddressToAbsoluteAddress(
+  const uint64_t virtual_address = orbit_module_utils::SymbolAbsoluteAddressToVirtualAddress(
       absolute_address, module_in_memory.start(), module->load_bias(),
       module->executable_segment_offset());
   const FunctionInfo* function = module->FindFunctionByVirtualAddress(virtual_address, false);
