@@ -38,7 +38,9 @@ def main(argv):
         ExpandTrack(expected_name="gfx"),
         CheckTimers(track_name_filter='gfx_submissions', recursive=True),
         CheckTimers(track_name_filter="All Threads", expect_exists=False),
-        CheckTimers(track_name_filter="hello_ggp_stand", expect_exists=False),
+        # TODO(b/239148938): After allowing users to set auto-frame-track to false:
+        #  Set auto-frame track to false while capturing and don't expect timers in hello_ggp.
+        CheckTimers(track_name_filter="hello_ggp_stand"),
         FilterAndHookFunction(function_search_string='DrawFrame'),
         Capture(),
         VerifyScopeTypeAndHitCount(scope_name='DrawFrame',
