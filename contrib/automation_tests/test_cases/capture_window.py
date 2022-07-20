@@ -383,7 +383,8 @@ class CaptureE2ETestCaseBase(E2ETestCase):
         if ',' in current_sampling_period_ms_str:
             sampling_period_ms_str = sampling_period_ms_str.replace('.', ',')
 
-        # Select all
+        # Select all, type in new sampling period. There seemed to be a timing issue that's why the sleep was added.
+        time.sleep(0.5)
         send_keys("^a")
         send_keys(sampling_period_ms_str)
 
