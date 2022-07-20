@@ -23,7 +23,11 @@ static void Wait(std::chrono::milliseconds interval) {
   timer.setSingleShot(true);
   QEventLoop loop{};
   QObject::connect(&timer, &QTimer::timeout, &loop, &QEventLoop::quit);
-  timer.start(interval);
+
+  // QTimer only guarantees an accuracy of 1 millisecond, which means the timer could
+  // potentially time out 1 millisecond earlier than the requested delay. By waiting
+  // 1 millisecond longer we avoid potential test failures.
+  timer.start(interval + std::chrono::milliseconds{1});
   loop.exec();
 }
 
@@ -111,9 +115,7 @@ TEST(Throttle, ThirdSlightlyDelayedFireGetsConsumed) {
   throttle.Fire();
   throttle.Fire();
 
-  // We wait half the interval and call again. This call will be consumed by the throttle and
-  // combined with the previous delayed trigger.
-  Wait(kStandardDelay / 2);
+  // We call processEvents here to ensure that it does NOT call MockReceiver::Execute.
   QCoreApplication::processEvents();
   throttle.Fire();
 
