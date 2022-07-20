@@ -18,8 +18,15 @@ class MainWindow;
 namespace orbit_mizar_widgets {
 
 class MizarMainWindow : public QMainWindow {
+  template <typename T>
+  using Baseline = ::orbit_mizar_base::Baseline<T>;
+  template <typename T>
+  using Comparison = ::orbit_mizar_base::Comparison<T>;
+
  public:
   explicit MizarMainWindow(const orbit_mizar_data::BaselineAndComparison* baseline_and_comparison,
+                           const Baseline<QString>& baseline_file_name,
+                           const Comparison<QString>& comparison_file_name,
                            QWidget* parent = nullptr);
   ~MizarMainWindow() override;
 
