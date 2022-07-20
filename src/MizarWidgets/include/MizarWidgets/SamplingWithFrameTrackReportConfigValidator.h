@@ -36,11 +36,11 @@ class SamplingWithFrameTrackReportConfigValidatorTmpl {
       const Comparison<HalfConfig>& comparison_config) const {
     OUTCOME_TRY(*LiftAndApply(&ValidateConfig, baseline_config,
                               baseline_and_comparison->GetBaselineData(),
-                              orbit_mizar_base::kBaselineTitle));
+                              orbit_mizar_base::BaselineTitle()));
 
     OUTCOME_TRY(*LiftAndApply(&ValidateConfig, comparison_config,
                               baseline_and_comparison->GetComparisonData(),
-                              orbit_mizar_base::kComparisonTitle));
+                              orbit_mizar_base::ComparisonTitle()));
 
     return outcome::success();
   }

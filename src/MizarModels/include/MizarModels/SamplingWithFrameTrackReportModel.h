@@ -175,8 +175,8 @@ class SamplingWithFrameTrackReportModelTmpl : public QAbstractTableModel {
         "The function \"%s\" is  %.3f%%\n"
         "slower in %s capture that it was in %s capture.\n"
         "Negative percentage represent a speed-up.",
-        *function_name, slowdown_percent, orbit_mizar_base::kBaselineTitle->toStdString(),
-        orbit_mizar_base::kComparisonTitle->toStdString()));
+        *function_name, slowdown_percent, orbit_mizar_base::BaselineTitle()->toStdString(),
+        orbit_mizar_base::ComparisonTitle()->toStdString()));
   }
 
   [[nodiscard]] static QString MakeTooltipForPercentOfSlowdownColumn(
@@ -185,8 +185,8 @@ class SamplingWithFrameTrackReportModelTmpl : public QAbstractTableModel {
         "The slowdown of function \"%s\" constitutes  %.3f%%\n"
         "of the total frametime slowdown in %s capture compared to %s capture.\n"
         "Negative percentage represent a speed-up.",
-        *function_name, percent_of_slowdown, orbit_mizar_base::kBaselineTitle->toStdString(),
-        orbit_mizar_base::kComparisonTitle->toStdString()));
+        *function_name, percent_of_slowdown, orbit_mizar_base::BaselineTitle()->toStdString(),
+        orbit_mizar_base::ComparisonTitle()->toStdString()));
   }
 
   [[nodiscard]] QVariant MakeTooltip(const QModelIndex& model_index) const {
@@ -197,21 +197,21 @@ class SamplingWithFrameTrackReportModelTmpl : public QAbstractTableModel {
       case Column::kFunctionName:
         return QString::fromStdString(*function_name);
       case Column::kBaselineExclusivePercent:
-        return *LiftAndApply(&MakeTooltipForSamplingColumns, orbit_mizar_base::kBaselineTitle,
+        return *LiftAndApply(&MakeTooltipForSamplingColumns, orbit_mizar_base::BaselineTitle(),
                              Baseline<const std::string*>(function_name),
                              BaselineExclusiveCount(sfid), BaselineExclusiveRate(sfid));
       case Column::kComparisonExclusivePercent:
-        return *LiftAndApply(&MakeTooltipForSamplingColumns, orbit_mizar_base::kComparisonTitle,
+        return *LiftAndApply(&MakeTooltipForSamplingColumns, orbit_mizar_base::ComparisonTitle(),
                              Comparison<const std::string*>(function_name),
                              ComparisonExclusiveCount(sfid), ComparisonExclusiveRate(sfid));
       case Column::kBaselineExclusiveTimePerFrame:
-        return *LiftAndApply(&MakeTooltipForTimePerFrameColumns, orbit_mizar_base::kBaselineTitle,
+        return *LiftAndApply(&MakeTooltipForTimePerFrameColumns, orbit_mizar_base::BaselineTitle(),
                              Baseline<const std::string*>(function_name),
                              BaselineExclusiveTimePerFrameUs(sfid));
       case Column::kComparisonExclusiveTimePerFrame:
-        return *LiftAndApply(&MakeTooltipForTimePerFrameColumns, orbit_mizar_base::kComparisonTitle,
-                             Comparison<const std::string*>(function_name),
-                             ComparisonExclusiveTimePerFrameUs(sfid));
+        return *LiftAndApply(
+            &MakeTooltipForTimePerFrameColumns, orbit_mizar_base::ComparisonTitle(),
+            Comparison<const std::string*>(function_name), ComparisonExclusiveTimePerFrameUs(sfid));
       case Column::kPvalue:
         return "P-value is a term from statistics.\n"
                "The lower it is, the less we \"believe\"\n"

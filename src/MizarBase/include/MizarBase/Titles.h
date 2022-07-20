@@ -11,10 +11,14 @@
 
 namespace orbit_mizar_base {
 
-static const orbit_mizar_base::Baseline<QString> kBaselineTitle =
-    orbit_mizar_base::Baseline<QString>(QStringLiteral("Baseline"));
-static const orbit_mizar_base::Comparison<QString> kComparisonTitle =
-    orbit_mizar_base::Comparison<QString>(QStringLiteral("Comparison"));
+[[nodiscard]] inline const orbit_mizar_base::Baseline<QString>& BaselineTitle() {
+  static orbit_mizar_base::Baseline<QString> kTitle(QStringLiteral("Baseline"));
+  return kTitle;
+}
+[[nodiscard]] inline const orbit_mizar_base::Comparison<QString>& ComparisonTitle() {
+  static orbit_mizar_base::Comparison<QString> kTitle(QStringLiteral("Comparison"));
+  return kTitle;
+}
 
 }  // namespace orbit_mizar_base
 
