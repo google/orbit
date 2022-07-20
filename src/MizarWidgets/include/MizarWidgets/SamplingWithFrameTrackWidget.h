@@ -12,6 +12,7 @@
 #include <string_view>
 
 #include "MizarBase/BaselineOrComparison.h"
+#include "MizarBase/Titles.h"
 #include "MizarData/BaselineAndComparison.h"
 #include "MizarWidgets/MizarMainWindow.h"
 #include "MizarWidgets/SamplingWithFrameTrackReportConfigValidator.h"
@@ -56,17 +57,13 @@ class SamplingWithFrameTrackWidget : public QWidget {
 
   static constexpr inline double kDefaultSignificanceLevel = 0.05;
   static constexpr inline double kAlternativeSignificanceLevel = 0.01;
-  static const inline Baseline<QString> kBaselineTitle =
-      Baseline<QString>(QStringLiteral("Baseline"));
-  static const inline Comparison<QString> kComparisonTitle =
-      Comparison<QString>(QStringLiteral("Comparison"));
+
   static const inline QString kMultiplicityCorrectionEnabledLabel =
       QStringLiteral("Probability of false alarm for at least one function:");
   static const inline QString kMultiplicityCorrectionDisabledLabel =
       QStringLiteral("Probability of false alarm for an individual function:");
 
-  static const inline SamplingWithFrameTrackReportConfigValidator kConfigValidator{
-      kBaselineTitle, kComparisonTitle};
+  static const inline SamplingWithFrameTrackReportConfigValidator kConfigValidator{};
 };
 
 }  // namespace orbit_mizar_widgets

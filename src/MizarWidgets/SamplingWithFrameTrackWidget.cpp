@@ -9,6 +9,7 @@
 #include <memory>
 
 #include "MizarBase/BaselineOrComparison.h"
+#include "MizarBase/Titles.h"
 #include "MizarData/BaselineAndComparison.h"
 #include "MizarData/SamplingWithFrameTrackComparisonReport.h"
 #include "MizarWidgets/SamplingWithFrameTrackReportConfigValidator.h"
@@ -46,9 +47,9 @@ SamplingWithFrameTrackWidget::SamplingWithFrameTrackWidget(QWidget* parent)
 void SamplingWithFrameTrackWidget::Init(
     const orbit_mizar_data::BaselineAndComparison* baseline_and_comparison) {
   LiftAndApply(&SamplingWithFrameTrackInputWidget::Init, GetBaselineInput(),
-               baseline_and_comparison->GetBaselineData(), kBaselineTitle);
+               baseline_and_comparison->GetBaselineData(), orbit_mizar_base::BaselineTitle());
   LiftAndApply(&SamplingWithFrameTrackInputWidget::Init, GetComparisonInput(),
-               baseline_and_comparison->GetComparisonData(), kComparisonTitle);
+               baseline_and_comparison->GetComparisonData(), orbit_mizar_base::ComparisonTitle());
   baseline_and_comparison_ = baseline_and_comparison;
 }
 
@@ -93,7 +94,7 @@ void SamplingWithFrameTrackWidget::OnUpdateButtonClicked() {
 
   Report report = baseline_and_comparison_->MakeSamplingWithFrameTrackReport(baseline_config,
                                                                              comparison_config);
-  ui_->output_->UpdateReport(std::move(report), kBaselineTitle, kComparisonTitle);
+  ui_->output_->UpdateReport(std::move(report));
 }
 
 }  // namespace orbit_mizar_widgets

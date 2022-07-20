@@ -5,7 +5,10 @@
 #ifndef MIZAR_WIDGETS_SAMPLING_WITH_FRAME_TRACK_REPORT_CONFIG_VALIDATOR_
 #define MIZAR_WIDGETS_SAMPLING_WITH_FRAME_TRACK_REPORT_CONFIG_VALIDATOR_
 
+#include <QString>
+
 #include "MizarBase/BaselineOrComparison.h"
+#include "MizarBase/Titles.h"
 #include "MizarData/BaselineAndComparison.h"
 #include "MizarData/MizarPairedData.h"
 #include "MizarData/SamplingWithFrameTrackComparisonReport.h"
@@ -27,19 +30,17 @@ class SamplingWithFrameTrackReportConfigValidatorTmpl {
   using HalfConfig = ::orbit_mizar_data::HalfOfSamplingWithFrameTrackReportConfig;
 
  public:
-  explicit SamplingWithFrameTrackReportConfigValidatorTmpl(
-      const Baseline<QString>& baseline_title, const Comparison<QString>& comparison_title)
-      : baseline_title_(baseline_title), comparison_title_(comparison_title) {}
-
   [[nodiscard]] ErrorMessageOr<void> Validate(
       const BaselineAndComparison* baseline_and_comparison,
       const Baseline<HalfConfig>& baseline_config,
       const Comparison<HalfConfig>& comparison_config) const {
     OUTCOME_TRY(*LiftAndApply(&ValidateConfig, baseline_config,
-                              baseline_and_comparison->GetBaselineData(), baseline_title_));
+                              baseline_and_comparison->GetBaselineData(),
+                              orbit_mizar_base::BaselineTitle()));
 
     OUTCOME_TRY(*LiftAndApply(&ValidateConfig, comparison_config,
-                              baseline_and_comparison->GetComparisonData(), comparison_title_));
+                              baseline_and_comparison->GetComparisonData(),
+                              orbit_mizar_base::ComparisonTitle()));
 
     return outcome::success();
   }
@@ -56,10 +57,6 @@ class SamplingWithFrameTrackReportConfigValidatorTmpl {
     }
     return outcome::success();
   }
-
-  const BaselineAndComparison* baseline_and_comparison_;
-  const Baseline<QString>& baseline_title_;
-  const Comparison<QString>& comparison_title_;
 };
 
 using SamplingWithFrameTrackReportConfigValidator =

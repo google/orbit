@@ -29,12 +29,9 @@ SamplingWithFrameTrackOutputWidget::SamplingWithFrameTrackOutputWidget(QWidget* 
 
 SamplingWithFrameTrackOutputWidget::~SamplingWithFrameTrackOutputWidget() = default;
 
-void SamplingWithFrameTrackOutputWidget::UpdateReport(Report report,
-                                                      const Baseline<QString>& baseline_title,
-                                                      const Comparison<QString>& comparison_title) {
+void SamplingWithFrameTrackOutputWidget::UpdateReport(Report report) {
   model_ = new SamplingWithFrameTrackReportModel(  // NOLINT
-      std::move(report), baseline_title, comparison_title, is_multiplicity_correction_enabled_,
-      confidence_level_, this);
+      std::move(report), is_multiplicity_correction_enabled_, confidence_level_, this);
 
   auto* proxy_model = new QSortFilterProxyModel(this);  // NOLINT
   proxy_model->setSourceModel(model_);
