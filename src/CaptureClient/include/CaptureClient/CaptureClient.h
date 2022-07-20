@@ -44,6 +44,7 @@ class CaptureClient {
       orbit_base::ThreadPool* thread_pool,
       std::unique_ptr<CaptureEventProcessor> capture_event_processor,
       const orbit_client_data::ModuleManager& module_manager,
+      const orbit_client_data::ProcessData& process,
       const ClientCaptureOptions& capture_client_options);
 
   // Returns true if stop was initiated and false otherwise.

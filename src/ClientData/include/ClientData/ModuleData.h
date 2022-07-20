@@ -39,7 +39,6 @@ class ModuleData final {
   [[nodiscard]] uint64_t executable_segment_offset() const {
     return module_info_.executable_segment_offset();
   }
-  [[nodiscard]] uint64_t address_start() const { return module_info_.address_start(); }
   [[nodiscard]] std::vector<orbit_grpc_protos::ModuleInfo::ObjectSegment> GetObjectSegments() const;
   [[nodiscard]] uint64_t ConvertFromVirtualAddressToOffsetInFile(uint64_t virtual_address) const;
   [[nodiscard]] uint64_t ConvertFromOffsetInFileToVirtualAddress(uint64_t offset_in_file) const;

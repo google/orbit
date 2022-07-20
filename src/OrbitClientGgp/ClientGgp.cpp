@@ -123,8 +123,8 @@ ErrorMessageOr<void> ClientGgp::RequestStartCapture(orbit_base::ThreadPool* thre
                                             ORBIT_ERROR("%s", error.message());
                                           }));
 
-  Future<ErrorMessageOr<CaptureListener::CaptureOutcome>> result =
-      capture_client_->Capture(thread_pool, std::move(event_processor), module_manager_, options);
+  Future<ErrorMessageOr<CaptureListener::CaptureOutcome>> result = capture_client_->Capture(
+      thread_pool, std::move(event_processor), module_manager_, *target_process_, options);
 
   orbit_base::ImmediateExecutor executor;
 
