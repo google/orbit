@@ -6,12 +6,31 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>256</width>
-    <height>220</height>
+    <width>691</width>
+    <height>656</height>
    </rect>
   </property>
   <layout class="QGridLayout" name="gridLayout">
-   <item row="0" column="0">
+   <item row="3" column="0">
+    <widget class="CustomSignalsTreeView" name="callTreeTreeView">
+     <property name="contextMenuPolicy">
+      <enum>Qt::CustomContextMenu</enum>
+     </property>
+     <property name="layoutDirection">
+      <enum>Qt::LeftToRight</enum>
+     </property>
+     <property name="alternatingRowColors">
+      <bool>true</bool>
+     </property>
+     <property name="selectionMode">
+      <enum>QAbstractItemView::ExtendedSelection</enum>
+     </property>
+     <property name="sortingEnabled">
+      <bool>true</bool>
+     </property>
+    </widget>
+   </item>
+   <item row="1" column="0">
     <layout class="QHBoxLayout" name="horizontalLayout_2" stretch="8,2">
      <item>
       <widget class="QLineEdit" name="searchLineEdit">
@@ -38,20 +57,33 @@
      </item>
     </layout>
    </item>
-   <item row="1" column="0">
-    <widget class="CustomSignalsTreeView" name="callTreeTreeView">
-     <property name="contextMenuPolicy">
-      <enum>Qt::CustomContextMenu</enum>
+   <item row="0" column="0">
+    <widget class="QWidget" name="noticeWidget" native="true">
+     <property name="styleSheet">
+      <string notr="true">.QWidget{ border-radius: 5px; border: 1px solid palette(text) ; background: rgba(0,255,0, 10%);}</string>
      </property>
-     <property name="alternatingRowColors">
-      <bool>true</bool>
-     </property>
-     <property name="selectionMode">
-      <enum>QAbstractItemView::ExtendedSelection</enum>
-     </property>
-     <property name="sortingEnabled">
-      <bool>true</bool>
-     </property>
+     <layout class="QGridLayout" name="gridLayout_4">
+      <item row="0" column="1">
+       <widget class="QPushButton" name="noticeButton">
+        <property name="sizePolicy">
+         <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+          <horstretch>0</horstretch>
+          <verstretch>0</verstretch>
+         </sizepolicy>
+        </property>
+        <property name="text">
+         <string>Leave Inspection</string>
+        </property>
+       </widget>
+      </item>
+      <item row="0" column="0">
+       <widget class="QLabel" name="noticeLabel">
+        <property name="text">
+         <string>You are currently in an inspection, limiting the tree to specific callstacks.</string>
+        </property>
+       </widget>
+      </item>
+     </layout>
     </widget>
    </item>
   </layout>

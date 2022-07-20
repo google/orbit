@@ -57,6 +57,8 @@ class CallTreeWidget : public QWidget {
   void SetTopDownView(std::unique_ptr<CallTreeView> top_down_view);
   void SetBottomUpView(std::unique_ptr<CallTreeView> bottom_up_view);
   void ClearCallTreeView();
+  void SetInspection(std::unique_ptr<CallTreeView> call_tree_view);
+  void ClearInspection();
 
  protected:
   void resizeEvent(QResizeEvent* event) override;
@@ -69,6 +71,7 @@ class CallTreeWidget : public QWidget {
   void OnSearchLineEditTextEdited(const QString& text);
   void OnSearchTypingFinishedTimerTimout();
   void OnSliderValueChanged(int value);
+  void OnLeaveButtonClicked();
 
  private:
   static const QString kActionExpandRecursively;
@@ -139,6 +142,7 @@ class CallTreeWidget : public QWidget {
   OrbitApp* app_ = nullptr;
   orbit_metrics_uploader::MetricsUploader* metrics_uploader_ = nullptr;
   std::unique_ptr<CallTreeViewItemModel> model_;
+  std::unique_ptr<CallTreeViewItemModel> inspection_model_;
   std::unique_ptr<QIdentityProxyModel> hide_values_proxy_model_;
   std::unique_ptr<HighlightCustomFilterSortFilterProxyModel> search_proxy_model_;
   std::unique_ptr<HookedIdentityProxyModel> hooked_proxy_model_;

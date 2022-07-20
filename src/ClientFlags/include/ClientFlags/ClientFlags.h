@@ -70,4 +70,7 @@ ABSL_DECLARE_FLAG(bool, auto_symbol_loading);
 
 ABSL_DECLARE_FLAG(bool, auto_frame_track);
 
+// Enables time range selection feature.
+ABSL_DECLARE_FLAG(bool, time_range_selection);
+
 #endif  // CLIENT_FLAGS_CLIENT_FLAGS_H_

@@ -132,6 +132,11 @@ class OrbitMainWindow final : public QMainWindow, public orbit_gl::MainWindowInt
   orbit_base::CanceledOr<void> DisplayStopDownloadDialog(
       const orbit_client_data::ModuleData* module) override;
 
+  void SetTopDownInspection(std::unique_ptr<CallTreeView> top_down_view) override;
+  void SetBottomUpInspection(std::unique_ptr<CallTreeView> bottom_up_view) override;
+
+  void ClearInspection() override;
+
  protected:
   void closeEvent(QCloseEvent* event) override;
   void resizeEvent(QResizeEvent* event) override;

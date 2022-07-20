@@ -2819,8 +2819,8 @@ uint64_t OrbitApp::GetGroupIdToHighlight() const {
   return selected_group_id;
 }
 
-void OrbitApp::SelectCallstackEvents(const std::vector<CallstackEvent>& selected_callstack_events,
-                                     bool origin_is_multiple_threads) {
+void OrbitApp::SetCaptureDataSelectionFields(
+    const std::vector<CallstackEvent>& selected_callstack_events, bool origin_is_multiple_threads) {
   const CallstackData& callstack_data = GetCaptureData().GetCallstackData();
   std::unique_ptr<CallstackData> selection_callstack_data = std::make_unique<CallstackData>();
   for (const CallstackEvent& event : selected_callstack_events) {
@@ -2829,21 +2829,49 @@ void OrbitApp::SelectCallstackEvents(const std::vector<CallstackEvent>& selected
   GetMutableCaptureData().set_selection_callstack_data(std::move(selection_callstack_data));
 
   // Generate selection report.
-  bool generate_summary = origin_is_multiple_threads;
   PostProcessedSamplingData selection_post_processed_sampling_data =
       orbit_client_model::CreatePostProcessedSamplingData(
           GetCaptureData().selection_callstack_data(), GetCaptureData(), *module_manager_,
-          generate_summary);
+          /*generate_summary*/ origin_is_multiple_threads);
   GetMutableCaptureData().set_selection_post_processed_sampling_data(
       std::move(selection_post_processed_sampling_data));
+}
 
+void OrbitApp::SelectCallstackEvents(const std::vector<CallstackEvent>& selected_callstack_events,
+                                     bool origin_is_multiple_threads) {
+  ClearInspection();
+  SetCaptureDataSelectionFields(selected_callstack_events, origin_is_multiple_threads);
   SetSelectionTopDownView(GetCaptureData().selection_post_processed_sampling_data(),
                           GetCaptureData());
   SetSelectionBottomUpView(GetCaptureData().selection_post_processed_sampling_data(),
                            GetCaptureData());
-
   SetSelectionReport(&GetCaptureData().selection_callstack_data(),
-                     &GetCaptureData().selection_post_processed_sampling_data(), generate_summary);
+                     &GetCaptureData().selection_post_processed_sampling_data(),
+                     /*has_summary*/ origin_is_multiple_threads);
+}
+
+void OrbitApp::InspectCallstackEvents(const std::vector<CallstackEvent>& selected_callstack_events,
+                                      bool origin_is_multiple_threads) {
+  if (absl::GetFlag(FLAGS_time_range_selection)) {
+    SetCaptureDataSelectionFields(selected_callstack_events, origin_is_multiple_threads);
+    main_window_->SetTopDownInspection(CallTreeView::CreateTopDownViewFromPostProcessedSamplingData(
+        GetCaptureData().selection_post_processed_sampling_data(), *module_manager_,
+        GetCaptureData()));
+    main_window_->SetBottomUpInspection(
+        CallTreeView::CreateBottomUpViewFromPostProcessedSamplingData(
+            GetCaptureData().selection_post_processed_sampling_data(), *module_manager_,
+            GetCaptureData()));
+    FireRefreshCallbacks();
+  } else {
+    SelectCallstackEvents(selected_callstack_events, origin_is_multiple_threads);
+  }
+}
+
+void OrbitApp::ClearInspection() {
+  SetCaptureDataSelectionFields(std::vector<CallstackEvent>(),
+                                /*origin_is_multiple_threads*/ false);
+  main_window_->ClearInspection();
+  FireRefreshCallbacks();
 }
 
 void OrbitApp::UpdateAfterSymbolLoading() {

@@ -32,6 +32,7 @@
 #include <QTreeView>
 #include <algorithm>
 #include <list>
+#include <memory>
 #include <optional>
 #include <set>
 #include <utility>
@@ -69,7 +70,9 @@ CallTreeWidget::CallTreeWidget(QWidget* parent)
   ui_->callTreeTreeView->setItemDelegateForColumn(
       CallTreeViewItemModel::kInclusive, new ProgressBarItemDelegate{ui_->callTreeTreeView});
   search_typing_finished_timer_->setSingleShot(true);
+  ui_->noticeWidget->hide();
 
+  connect(ui_->noticeButton, &QPushButton::clicked, this, &CallTreeWidget::OnLeaveButtonClicked);
   connect(ui_->callTreeTreeView, &QTreeView::expanded, this, &CallTreeWidget::OnRowExpanded);
   connect(ui_->callTreeTreeView, &CustomSignalsTreeView::copyKeySequencePressed, this,
           &CallTreeWidget::OnCopyKeySequencePressed);
@@ -112,6 +115,20 @@ void CallTreeWidget::SetCallTreeView(std::unique_ptr<CallTreeView> call_tree_vie
   OnSearchLineEditTextEdited(ui_->searchLineEdit->text());
 
   ResizeColumnsIfNecessary();
+}
+
+void CallTreeWidget::SetInspection(std::unique_ptr<CallTreeView> call_tree_view) {
+  ui_->noticeWidget->show();
+  inspection_model_ = std::make_unique<CallTreeViewItemModel>(std::move(call_tree_view));
+  hide_values_proxy_model_->setSourceModel(inspection_model_.get());
+  OnSearchTypingFinishedTimerTimout();
+}
+
+void CallTreeWidget::ClearInspection() {
+  ui_->noticeWidget->hide();
+  inspection_model_.reset();
+  hide_values_proxy_model_->setSourceModel(model_.get());
+  OnSearchTypingFinishedTimerTimout();
 }
 
 void CallTreeWidget::ClearCallTreeView() {
@@ -302,6 +319,8 @@ void CallTreeWidget::ResizeThreadOrFunctionColumnToShowAllVisibleNodes() {
         ui_->callTreeTreeView->model()->index(i, 0));
   }
 }
+
+void CallTreeWidget::OnLeaveButtonClicked() { app_->ClearInspection(); }
 
 void CallTreeWidget::OnRowExpanded(const QModelIndex& index) {
   if (resize_thread_or_function_column_on_row_expanded_) {
@@ -718,7 +737,7 @@ void CallTreeWidget::OnCustomContextMenuRequested(const QPoint& point) {
                         const orbit_client_data::CallstackEvent& callstack_event) -> bool {
                       return callstack_event.thread_id() != first_callstack_event.thread_id();
                     });
-    app_->SelectCallstackEvents(
+    app_->InspectCallstackEvents(
         // This copies the content of the absl::flat_hash_set into a std::vector. We consider this
         // fine in order to keep OrbitApp::SelectCallstackEvents as simple as it is now.
         {selected_callstack_events.begin(), selected_callstack_events.end()},

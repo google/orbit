@@ -8,9 +8,11 @@
 #include <stdint.h>
 
 #include <filesystem>
+#include <memory>
 #include <optional>
 #include <string_view>
 
+#include "CallTreeView.h"
 #include "ClientData/FunctionInfo.h"
 #include "ClientData/ModuleData.h"
 #include "ClientData/ScopeId.h"
@@ -21,6 +23,7 @@
 #include "OrbitBase/CanceledOr.h"
 #include "OrbitBase/Future.h"
 #include "OrbitBase/StopToken.h"
+#include "SamplingReport.h"
 #include "Statistics/Histogram.h"
 
 namespace orbit_gl {
@@ -67,6 +70,10 @@ class MainWindowInterface {
       const orbit_client_data::ModuleData* module) = 0;
 
   virtual ~MainWindowInterface() = default;
+
+  virtual void SetTopDownInspection(std::unique_ptr<CallTreeView> top_down_view) = 0;
+  virtual void SetBottomUpInspection(std::unique_ptr<CallTreeView> bottom_up_view) = 0;
+  virtual void ClearInspection() = 0;
 };
 
 }  // namespace orbit_gl
