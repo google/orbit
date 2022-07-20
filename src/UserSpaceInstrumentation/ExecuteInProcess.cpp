@@ -60,11 +60,12 @@ ErrorMessageOr<uint64_t> ExecuteInProcess(pid_t pid, void* function_address, uin
   return return_value;
 }
 
-ErrorMessageOr<uint64_t> ExecuteInProcess(pid_t pid, void* library_handle,
-                                          std::string_view function, uint64_t param_0,
-                                          uint64_t param_1, uint64_t param_2, uint64_t param_3,
-                                          uint64_t param_4, uint64_t param_5) {
-  OUTCOME_TRY(auto&& function_address, DlsymInTracee(pid, library_handle, function));
+ErrorMessageOr<uint64_t> ExecuteInProcess(pid_t pid,
+                                          const std::vector<orbit_grpc_protos::ModuleInfo>& modules,
+                                          void* library_handle, std::string_view function,
+                                          uint64_t param_0, uint64_t param_1, uint64_t param_2,
+                                          uint64_t param_3, uint64_t param_4, uint64_t param_5) {
+  OUTCOME_TRY(auto&& function_address, DlsymInTracee(pid, modules, library_handle, function));
   return ExecuteInProcess(pid, function_address, param_0, param_1, param_2, param_3, param_4,
                           param_5);
 }
