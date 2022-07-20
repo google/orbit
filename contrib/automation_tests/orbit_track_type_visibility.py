@@ -36,7 +36,7 @@ def main(argv):
         ToggleTrackTypeVisibility(track_type="Scheduler"),
         VerifyTracksDoNotExist(track_names="Scheduler"),
 
-        # There should be just one auto-loaded FrameTrack.
+        # There should be exactly one auto loaded frame track.
         VerifyTracksExist(track_names="Frame track*"),
         ToggleTrackTypeVisibility(track_type="Frame Tracks"),
         VerifyTracksDoNotExist(track_names="Frame track*"),
