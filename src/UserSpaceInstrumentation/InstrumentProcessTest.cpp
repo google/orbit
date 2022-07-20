@@ -18,8 +18,8 @@
 
 #include "FindFunctionAddress.h"
 #include "GrpcProtos/capture.pb.h"
+#include "ModuleUtils/ReadLinuxModules.h"
 #include "ObjectUtils/ElfFile.h"
-#include "ObjectUtils/ReadModules.h"
 #include "OrbitBase/ExecutablePath.h"
 #include "OrbitBase/GetProcessIds.h"
 #include "OrbitBase/Logging.h"

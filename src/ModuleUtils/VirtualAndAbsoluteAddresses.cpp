@@ -2,7 +2,7 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#include "ObjectUtils/Address.h"
+#include "ModuleUtils/VirtualAndAbsoluteAddresses.h"
 
 #include <absl/strings/str_format.h>
 
@@ -14,7 +14,7 @@
 #include "OrbitBase/Align.h"
 #include "OrbitBase/Logging.h"
 
-namespace orbit_object_utils {
+namespace orbit_module_utils {
 
 uint64_t SymbolVirtualAddressToAbsoluteAddress(uint64_t symbol_address,
                                                uint64_t module_base_address,
@@ -38,4 +38,4 @@ uint64_t SymbolAbsoluteAddressToVirtualAddress(uint64_t absolute_address,
          orbit_base::AlignDown<kPageSize>(module_executable_section_offset);
 }
 
-}  // namespace orbit_object_utils
+}  // namespace orbit_module_utils

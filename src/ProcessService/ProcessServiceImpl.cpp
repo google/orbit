@@ -14,7 +14,7 @@
 #include <vector>
 
 #include "GrpcProtos/process.pb.h"
-#include "ObjectUtils/ReadModules.h"
+#include "ModuleUtils/ReadLinuxModules.h"
 #include "OrbitBase/Logging.h"
 #include "OrbitBase/ThreadUtils.h"
 #include "ProcessServiceUtils.h"
@@ -65,7 +65,7 @@ Status ProcessServiceImpl::GetModuleList(ServerContext* /*context*/,
   pid_t pid = orbit_base::ToNativeProcessId(request->process_id());
   ORBIT_LOG("Sending modules for process %d", pid);
 
-  const auto module_infos = orbit_object_utils::ReadModules(pid);
+  const auto module_infos = orbit_module_utils::ReadModules(pid);
   if (module_infos.has_error()) {
     return Status(StatusCode::NOT_FOUND, module_infos.error().message());
   }

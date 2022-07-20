@@ -68,6 +68,7 @@ target_link_libraries(LinuxTracing PUBLIC
         GrpcProtos
         Introspection
         libunwindstack
+        ModuleUtils
         ObjectUtils
         OrbitBase
         CONAN_PKG::abseil)

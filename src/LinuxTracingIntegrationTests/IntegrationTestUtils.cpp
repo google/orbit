@@ -8,8 +8,8 @@
 
 #include "GrpcProtos/module.pb.h"
 #include "GrpcProtos/symbol.pb.h"
+#include "ModuleUtils/ReadLinuxModules.h"
 #include "ObjectUtils/ElfFile.h"
-#include "ObjectUtils/ReadModules.h"
 #include "OrbitBase/ExecutablePath.h"
 #include "OrbitBase/ThreadUtils.h"
 
@@ -52,7 +52,7 @@ orbit_grpc_protos::ModuleSymbols GetExecutableBinaryModuleSymbols(pid_t pid) {
 }
 
 orbit_grpc_protos::ModuleInfo GetExecutableBinaryModuleInfo(pid_t pid) {
-  auto error_or_module_infos = orbit_object_utils::ReadModules(pid);
+  auto error_or_module_infos = orbit_module_utils::ReadModules(pid);
   ORBIT_CHECK(error_or_module_infos.has_value());
   const std::vector<orbit_grpc_protos::ModuleInfo>& module_infos = error_or_module_infos.value();
 

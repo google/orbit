@@ -26,6 +26,7 @@ target_sources(ProcessService PRIVATE
 
 target_link_libraries(ProcessService PUBLIC
         GrpcProtos
+        ModuleUtils
         ObjectUtils
         OrbitBase
         Symbols)

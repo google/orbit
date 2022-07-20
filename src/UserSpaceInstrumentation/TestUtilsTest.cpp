@@ -14,7 +14,6 @@
 #include "AccessTraceesMemory.h"
 #include "FindFunctionAddress.h"
 #include "ObjectUtils/ElfFile.h"
-#include "ObjectUtils/ReadModules.h"
 #include "OrbitBase/ExecutablePath.h"
 #include "OrbitBase/Logging.h"
 #include "TestUtils.h"

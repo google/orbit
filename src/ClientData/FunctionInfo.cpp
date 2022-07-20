@@ -10,7 +10,7 @@
 
 #include "ClientData/ModuleData.h"
 #include "ClientData/ProcessData.h"
-#include "ObjectUtils/Address.h"
+#include "ModuleUtils/VirtualAndAbsoluteAddresses.h"
 
 namespace orbit_client_data {
 
@@ -43,7 +43,7 @@ std::optional<uint64_t> FunctionInfo::GetAbsoluteAddress(const ProcessData& proc
 
   ORBIT_CHECK(!page_aligned_base_addresses.empty());
 
-  return orbit_object_utils::SymbolVirtualAddressToAbsoluteAddress(
+  return orbit_module_utils::SymbolVirtualAddressToAbsoluteAddress(
       address(), page_aligned_base_addresses.at(0), module.load_bias(),
       module.executable_segment_offset());
 }

@@ -77,7 +77,7 @@
 #include "MetricsUploader/MetricsUploader.h"
 #include "MetricsUploader/ScopedMetric.h"
 #include "MetricsUploader/orbit_log_event.pb.h"
-#include "ObjectUtils/Address.h"
+#include "ModuleUtils/VirtualAndAbsoluteAddresses.h"
 #include "ObjectUtils/ElfFile.h"
 #include "OrbitBase/CanceledOr.h"
 #include "OrbitBase/ExecutablePath.h"
@@ -1465,7 +1465,7 @@ static void FindAndAddFunctionToStopUnwindingAt(
       continue;
     }
     uint64_t function_absolute_start_address =
-        orbit_object_utils::SymbolVirtualAddressToAbsoluteAddress(
+        orbit_module_utils::SymbolVirtualAddressToAbsoluteAddress(
             function_to_stop_unwinding_at->address(), module_in_memory.start(),
             module_data->load_bias(), module_data->executable_segment_offset());
 
@@ -2722,7 +2722,7 @@ void OrbitApp::DeselectFunction(const orbit_client_data::FunctionInfo& func) {
       module_in_memory, absolute_address);
   if (module == nullptr) return false;
 
-  const uint64_t virtual_address = orbit_object_utils::SymbolAbsoluteAddressToVirtualAddress(
+  const uint64_t virtual_address = orbit_module_utils::SymbolAbsoluteAddressToVirtualAddress(
       absolute_address, module_in_memory.start(), module->load_bias(),
       module->executable_segment_offset());
   const FunctionInfo* function = module->FindFunctionByVirtualAddress(virtual_address, false);

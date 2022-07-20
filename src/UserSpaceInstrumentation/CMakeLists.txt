@@ -47,6 +47,7 @@ target_sources(UserSpaceInstrumentation PRIVATE
 
 target_link_libraries(UserSpaceInstrumentation PUBLIC
         GrpcProtos
+        ModuleUtils
         ObjectUtils
         OrbitBase
         CONAN_PKG::abseil

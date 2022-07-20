@@ -22,7 +22,7 @@
 #include "ClientData/ModuleData.h"
 #include "GrpcProtos/tracepoint.pb.h"
 #include "Introspection/Introspection.h"
-#include "ObjectUtils/Address.h"
+#include "ModuleUtils/VirtualAndAbsoluteAddresses.h"
 #include "OrbitBase/Future.h"
 #include "OrbitBase/Logging.h"
 #include "OrbitBase/Result.h"
@@ -73,7 +73,7 @@ std::vector<ApiFunction> FindApiFunctions(const orbit_client_data::ModuleManager
         }
         if (function_info == nullptr) continue;
 
-        const uint64_t absolute_address = orbit_object_utils::SymbolVirtualAddressToAbsoluteAddress(
+        const uint64_t absolute_address = orbit_module_utils::SymbolVirtualAddressToAbsoluteAddress(
             function_info->address(), module_data->address_start(), module_data->load_bias(),
             module_data->executable_segment_offset());
 

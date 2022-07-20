@@ -2,7 +2,7 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#include "ObjectUtils/ReadMaps.h"
+#include "ModuleUtils/ReadLinuxMaps.h"
 
 #include <absl/strings/numbers.h>
 #include <absl/strings/str_format.h>
@@ -16,7 +16,7 @@
 #include "OrbitBase/Logging.h"
 #include "OrbitBase/ReadFileToString.h"
 
-namespace orbit_object_utils {
+namespace orbit_module_utils {
 
 ErrorMessageOr<std::vector<LinuxMemoryMapping>> ReadMaps(pid_t pid) {
   const std::filesystem::path proc_pid_maps_path{absl::StrFormat("/proc/%i/maps", pid)};
@@ -63,4 +63,4 @@ std::vector<LinuxMemoryMapping> ReadMaps(std::string_view proc_pid_maps_content)
   return result;
 }
 
-}  // namespace orbit_object_utils
+}  // namespace orbit_module_utils

@@ -29,8 +29,8 @@
 #include "GraphicsCaptureEventProcessor.h"
 #include "GrpcProtos/Constants.h"
 #include "GrpcProtos/capture.pb.h"
+#include "ModuleUtils/ReadLinuxModules.h"
 #include "ObjectUtils/ElfFile.h"
-#include "ObjectUtils/ReadModules.h"
 #include "OrbitBase/File.h"
 #include "OrbitBase/Logging.h"
 #include "OrbitBase/ReadFileToString.h"
@@ -375,7 +375,7 @@ int main(int argc, char* argv[]) {
 
   if (options.enable_api) {
     ErrorMessageOr<std::vector<orbit_grpc_protos::ModuleInfo>> modules_or_error =
-        orbit_object_utils::ReadModules(options.process_id);
+        orbit_module_utils::ReadModules(options.process_id);
     ORBIT_FAIL_IF(modules_or_error.has_error(), "%s", modules_or_error.error().message());
     for (const orbit_grpc_protos::ModuleInfo& module : modules_or_error.value()) {
       ManipulateModuleManagerToAddFunctionFromFunctionPrefixInSymtabIfExists(
@@ -396,7 +396,7 @@ int main(int argc, char* argv[]) {
         "VkPresentInfoKHR const*)"};
 
     ErrorMessageOr<std::vector<orbit_grpc_protos::ModuleInfo>> modules_or_error =
-        orbit_object_utils::ReadModules(options.process_id);
+        orbit_module_utils::ReadModules(options.process_id);
     ORBIT_FAIL_IF(modules_or_error.has_error(), "%s", modules_or_error.error().message());
     std::string libvulkan_file_path;
     for (const orbit_grpc_protos::ModuleInfo& module : modules_or_error.value()) {

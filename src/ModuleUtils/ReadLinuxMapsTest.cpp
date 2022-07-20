@@ -9,21 +9,21 @@
 
 #include <vector>
 
-#include "ObjectUtils/ReadMaps.h"
+#include "ModuleUtils/ReadLinuxMaps.h"
 #include "OrbitBase/Result.h"
 #include "TestUtils/TestUtils.h"
 
 using orbit_test_utils::HasNoError;
 
-namespace orbit_object_utils {
+namespace orbit_module_utils {
 
-TEST(ReadMaps, ReadMapsFromPid) {
+TEST(ReadLinuxMaps, ReadMapsFromPid) {
   const ErrorMessageOr<std::vector<LinuxMemoryMapping>> maps = ReadMaps(getpid());
   EXPECT_THAT(maps, HasNoError());
   EXPECT_GT(maps.value().size(), 0);
 }
 
-TEST(ReadMaps, ReadMapsFromProcPidMapsContent) {
+TEST(ReadLinuxMaps, ReadMapsFromProcPidMapsContent) {
   constexpr const char* kProcPidMapsContent{
       "00400000-00452000 r-xp 00000000 08:02 173521      /usr/bin/dbus-daemon\n"
       "00e03000-00e24000 rw-p 00000000 00:00 0           [heap]\n"
@@ -57,7 +57,7 @@ TEST(ReadMaps, ReadMapsFromProcPidMapsContent) {
   EXPECT_EQ(maps[3].pathname(), "");
 }
 
-TEST(ReadMaps, ReadMapsFromInvalidProcPidMapsContent) {
+TEST(ReadLinuxMaps, ReadMapsFromInvalidProcPidMapsContent) {
   std::vector<LinuxMemoryMapping> maps;
 
   maps = ReadMaps("");
@@ -79,4 +79,4 @@ TEST(ReadMaps, ReadMapsFromInvalidProcPidMapsContent) {
   EXPECT_EQ(maps.size(), 0);
 }
 
-}  // namespace orbit_object_utils
+}  // namespace orbit_module_utils

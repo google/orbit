@@ -76,6 +76,7 @@ target_link_libraries(ClientData PUBLIC
         Containers
         ClientProtos
         GrpcProtos
+        ModuleUtils
         # TODO(b/191248550): Remove ObjectUtils once GetAbsoluteAddress is removed
         ObjectUtils
         OrbitBase

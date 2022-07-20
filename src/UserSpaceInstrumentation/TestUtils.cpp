@@ -9,9 +9,9 @@
 
 #include <string>
 
-#include "ObjectUtils/Address.h"
+#include "ModuleUtils/ReadLinuxModules.h"
+#include "ModuleUtils/VirtualAndAbsoluteAddresses.h"
 #include "ObjectUtils/ElfFile.h"
-#include "ObjectUtils/ReadModules.h"
 #include "OrbitBase/ExecutablePath.h"
 #include "OrbitBase/Logging.h"
 #include "OrbitBase/UniqueResource.h"
@@ -25,7 +25,7 @@ static ErrorMessageOr<AddressRange> FindFunctionAbsoluteAddressInModule(
   OUTCOME_TRY(auto&& syms, elf_file->LoadDebugSymbols());
   for (const auto& sym : syms.symbol_infos()) {
     if (sym.demangled_name() == function_name) {
-      const uint64_t address = orbit_object_utils::SymbolVirtualAddressToAbsoluteAddress(
+      const uint64_t address = orbit_module_utils::SymbolVirtualAddressToAbsoluteAddress(
           sym.address(), module_address_range.start, elf_file->GetLoadBias(),
           elf_file->GetExecutableSegmentOffset());
       const uint64_t size = sym.size();
@@ -37,7 +37,7 @@ static ErrorMessageOr<AddressRange> FindFunctionAbsoluteAddressInModule(
 }
 
 AddressRange GetFunctionAbsoluteAddressRangeOrDie(std::string_view function_name) {
-  auto modules_or_error = orbit_object_utils::ReadModules(getpid());
+  auto modules_or_error = orbit_module_utils::ReadModules(getpid());
   ORBIT_CHECK(!modules_or_error.has_error());
   auto& modules = modules_or_error.value();
 
@@ -78,7 +78,7 @@ static ErrorMessageOr<AddressRange> FindFunctionRelativeAddressInModule(
 }
 
 FunctionLocation FindFunctionOrDie(std::string_view function_name) {
-  auto modules_or_error = orbit_object_utils::ReadModules(getpid());
+  auto modules_or_error = orbit_module_utils::ReadModules(getpid());
   ORBIT_CHECK(!modules_or_error.has_error());
   auto& modules = modules_or_error.value();
 

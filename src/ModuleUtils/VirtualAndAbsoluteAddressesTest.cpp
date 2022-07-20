@@ -8,11 +8,11 @@
 #include <string>
 #include <vector>
 
-#include "ObjectUtils/Address.h"
+#include "ModuleUtils/VirtualAndAbsoluteAddresses.h"
 
-namespace orbit_object_utils {
+namespace orbit_module_utils {
 
-TEST(Address, SymbolVirtualAddressToAbsoluteAddress) {
+TEST(VirtualAndAbsoluteAddresses, SymbolVirtualAddressToAbsoluteAddress) {
   EXPECT_EQ(SymbolVirtualAddressToAbsoluteAddress(0x10, 0x1000, 0, 0), 0x1010);
   EXPECT_EQ(SymbolVirtualAddressToAbsoluteAddress(0x1010, 0x2000, 0x1000, 0), 0x2010);
   EXPECT_EQ(SymbolVirtualAddressToAbsoluteAddress(0x100, 0x1000, 0, 0xFF), 0x1100);
@@ -27,7 +27,7 @@ TEST(Address, SymbolVirtualAddressToAbsoluteAddress) {
                "Check failed");
 }
 
-TEST(Address, SymbolAbsoluteAddressToVirtualAddress) {
+TEST(VirtualAndAbsoluteAddresses, SymbolAbsoluteAddressToVirtualAddress) {
   EXPECT_EQ(SymbolAbsoluteAddressToVirtualAddress(0x1010, 0x1000, 0, 0), 0x10);
   EXPECT_EQ(SymbolAbsoluteAddressToVirtualAddress(0x2010, 0x2000, 0x1000, 0), 0x1010);
   EXPECT_EQ(SymbolAbsoluteAddressToVirtualAddress(0x1100, 0x1000, 0, 0xFF), 0x100);
@@ -45,4 +45,4 @@ TEST(Address, SymbolAbsoluteAddressToVirtualAddress) {
                "Check failed");
 }
 
-}  // namespace orbit_object_utils
+}  // namespace orbit_module_utils

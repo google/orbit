@@ -14,7 +14,7 @@
 
 #include "ClientData/ModuleData.h"
 #include "ClientProtos/capture_data.pb.h"
-#include "ObjectUtils/Address.h"
+#include "ModuleUtils/VirtualAndAbsoluteAddresses.h"
 #include "OrbitBase/Logging.h"
 #include "absl/synchronization/mutex.h"
 
@@ -76,7 +76,7 @@ const ModuleData* ModuleManager::GetModuleByModuleInMemoryAndAbsoluteAddress(
   // The valid absolute address should be >=
   // module_base_address + (executable_segment_offset % kPageSize)
   if (absolute_address < module_in_memory.start() + (it->second.executable_segment_offset() %
-                                                     orbit_object_utils::kPageSize)) {
+                                                     orbit_module_utils::kPageSize)) {
     return nullptr;
   }
 
@@ -93,7 +93,7 @@ ModuleData* ModuleManager::GetMutableModuleByModuleInMemoryAndAbsoluteAddress(
   // The valid absolute address should be >=
   // module_base_address + (executable_segment_offset % kPageSize)
   if (absolute_address < module_in_memory.start() + (it->second.executable_segment_offset() %
-                                                     orbit_object_utils::kPageSize)) {
+                                                     orbit_module_utils::kPageSize)) {
     return nullptr;
   }
 

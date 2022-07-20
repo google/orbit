@@ -13,8 +13,8 @@
 #include <vector>
 
 #include "GrpcProtos/module.pb.h"
-#include "ObjectUtils/ReadMaps.h"
-#include "ObjectUtils/ReadModules.h"
+#include "ModuleUtils/ReadLinuxMaps.h"
+#include "ModuleUtils/ReadLinuxModules.h"
 #include "OrbitBase/File.h"
 #include "OrbitBase/ReadFileToString.h"
 #include "OrbitBase/Result.h"
@@ -25,7 +25,7 @@
 using orbit_grpc_protos::ModuleInfo;
 using orbit_test_utils::HasNoError;
 
-namespace orbit_object_utils {
+namespace orbit_module_utils {
 
 constexpr uint64_t kHelloWorldElfFileSize = 16616;
 constexpr const char* kHelloWorldElfBuildId = "d12d54bc5b72ccce54a408bdeda65e2530740ac8";
@@ -52,7 +52,7 @@ static void VerifyObjectSegmentsForLibTestDll(
   EXPECT_EQ(segments[0].size_in_memory(), 0x1338);
 }
 
-TEST(ReadModules, CreateModuleElf) {
+TEST(ReadLinuxModules, CreateModuleElf) {
   const std::filesystem::path hello_world_path = orbit_test::GetTestdataDir() / "hello_world_elf";
 
   constexpr uint64_t kStartAddress = 23;
@@ -71,7 +71,7 @@ TEST(ReadModules, CreateModuleElf) {
   VerifyObjectSegmentsForHelloWorldElf(result.value().object_segments());
 }
 
-TEST(ReadModules, CreateModuleInDev) {
+TEST(ReadLinuxModules, CreateModuleInDev) {
   const std::filesystem::path dev_zero_path = "/dev/zero";
 
   constexpr uint64_t kStartAddress = 23;
@@ -82,7 +82,7 @@ TEST(ReadModules, CreateModuleInDev) {
             "The module \"/dev/zero\" is a character or block device (is in /dev/)");
 }
 
-TEST(ReadModules, CreateModuleCoff) {
+TEST(ReadLinuxModules, CreateModuleCoff) {
   const std::filesystem::path dll_path = orbit_test::GetTestdataDir() / "libtest.dll";
 
   constexpr uint64_t kStartAddress = 23;
@@ -103,16 +103,16 @@ TEST(ReadModules, CreateModuleCoff) {
   VerifyObjectSegmentsForLibTestDll(result.value().object_segments());
 }
 
-TEST(ReadModules, CreateModuleWithSoname) {
-  const std::filesystem::path hello_world_path = orbit_test::GetTestdataDir() / "libtest-1.0.so";
+TEST(ReadLinuxModules, CreateModuleWithSoname) {
+  const std::filesystem::path libtest_path = orbit_test::GetTestdataDir() / "libtest-1.0.so";
 
   constexpr uint64_t kStartAddress = 23;
   constexpr uint64_t kEndAddress = 8004;
-  auto result = CreateModule(hello_world_path, kStartAddress, kEndAddress);
+  auto result = CreateModule(libtest_path, kStartAddress, kEndAddress);
   ASSERT_THAT(result, HasNoError());
 
   EXPECT_EQ(result.value().name(), "libtest.so");
-  EXPECT_EQ(result.value().file_path(), hello_world_path);
+  EXPECT_EQ(result.value().file_path(), libtest_path);
   EXPECT_EQ(result.value().file_size(), 16128);
   EXPECT_EQ(result.value().address_start(), kStartAddress);
   EXPECT_EQ(result.value().address_end(), kEndAddress);
@@ -126,7 +126,7 @@ TEST(ReadModules, CreateModuleWithSoname) {
   EXPECT_EQ(result.value().object_segments()[0].size_in_memory(), 0x4e0);
 }
 
-TEST(ReadModules, CreateModuleNotAnObject) {
+TEST(ReadLinuxModules, CreateModuleNotAnObject) {
   const std::filesystem::path text_file = orbit_test::GetTestdataDir() / "textfile.txt";
 
   constexpr uint64_t kStartAddress = 23;
@@ -137,7 +137,7 @@ TEST(ReadModules, CreateModuleNotAnObject) {
               testing::HasSubstr("The file was not recognized as a valid object file"));
 }
 
-TEST(ReadModules, CreateModuleFileDoesNotExist) {
+TEST(ReadLinuxModules, CreateModuleFileDoesNotExist) {
   const std::filesystem::path file_path = "/not/a/valid/file/path";
 
   constexpr uint64_t kStartAddress = 23;
@@ -147,18 +147,18 @@ TEST(ReadModules, CreateModuleFileDoesNotExist) {
   EXPECT_EQ(result.error().message(), "The module file \"/not/a/valid/file/path\" does not exist");
 }
 
-TEST(ReadModules, ReadModules) {
+TEST(ReadLinuxModules, ReadModules) {
   const auto result = ReadModules(getpid());
   EXPECT_THAT(result, HasNoError());
   EXPECT_GT(result.value().size(), 0);
 }
 
-TEST(ReadModules, ParseMapsIntoModulesEmptyData) {
+TEST(ReadLinuxModules, ParseMapsIntoModulesEmptyData) {
   const auto result = ParseMapsIntoModules(ReadMaps(""));
   EXPECT_EQ(result.size(), 0);
 }
 
-TEST(ReadModules, ParseMapsIntoModules1) {
+TEST(ReadLinuxModules, ParseMapsIntoModules1) {
   const std::filesystem::path test_path = orbit_test::GetTestdataDir();
   const std::filesystem::path hello_world_path = test_path / "hello_world_elf";
   const std::filesystem::path text_file = test_path / "textfile.txt";
@@ -175,7 +175,7 @@ TEST(ReadModules, ParseMapsIntoModules1) {
   EXPECT_EQ(result.size(), 1);
 }
 
-TEST(ReadModules, ParseMapsIntoModules2) {
+TEST(ReadLinuxModules, ParseMapsIntoModules2) {
   const std::filesystem::path test_path = orbit_test::GetTestdataDir();
   const std::filesystem::path hello_world_path = test_path / "hello_world_elf";
   const std::filesystem::path no_symbols_path = test_path / "no_symbols_elf";
@@ -220,7 +220,7 @@ TEST(ReadModules, ParseMapsIntoModules2) {
   EXPECT_EQ(no_symbols_module_info.object_segments()[0].size_in_memory(), 0xa40);
 }
 
-TEST(ReadModules, ParseMapsIntoModulesWithSpacesInPath) {
+TEST(ReadLinuxModules, ParseMapsIntoModulesWithSpacesInPath) {
   const std::filesystem::path test_path = orbit_test::GetTestdataDir();
   ErrorMessageOr<std::string> elf_contents_or_error =
       orbit_base::ReadFileToString(test_path / "hello_world_elf");
@@ -252,7 +252,7 @@ TEST(ReadModules, ParseMapsIntoModulesWithSpacesInPath) {
   VerifyObjectSegmentsForHelloWorldElf(hello_module_info.object_segments());
 }
 
-TEST(ReadModules, ParseMapsIntoModulesElfWithMultipleExecutableMaps) {
+TEST(ReadLinuxModules, ParseMapsIntoModulesElfWithMultipleExecutableMaps) {
   const std::filesystem::path test_path = orbit_test::GetTestdataDir();
   const std::filesystem::path hello_world_path = test_path / "hello_world_elf";
 
@@ -278,7 +278,7 @@ TEST(ReadModules, ParseMapsIntoModulesElfWithMultipleExecutableMaps) {
   VerifyObjectSegmentsForHelloWorldElf(hello_module_info.object_segments());
 }
 
-TEST(ReadModules, ParseMapsIntoModulesPeTextMappedNotAnonymously) {
+TEST(ReadLinuxModules, ParseMapsIntoModulesPeTextMappedNotAnonymously) {
   const std::filesystem::path test_path = orbit_test::GetTestdataDir();
   const std::filesystem::path libtest_path = test_path / "libtest.dll";  // SizeOfImage = 0x20000
 
@@ -303,7 +303,7 @@ TEST(ReadModules, ParseMapsIntoModulesPeTextMappedNotAnonymously) {
   VerifyObjectSegmentsForLibTestDll(libtest_module_info.object_segments());
 }
 
-TEST(ReadModules, ParseMapsIntoModulesPeTextMappedNotAnonymouslyWithMultipleExecutableMaps) {
+TEST(ReadLinuxModules, ParseMapsIntoModulesPeTextMappedNotAnonymouslyWithMultipleExecutableMaps) {
   const std::filesystem::path test_path = orbit_test::GetTestdataDir();
   const std::filesystem::path libtest_path = test_path / "libtest.dll";
 
@@ -331,7 +331,7 @@ TEST(ReadModules, ParseMapsIntoModulesPeTextMappedNotAnonymouslyWithMultipleExec
   VerifyObjectSegmentsForLibTestDll(libtest_module_info.object_segments());
 }
 
-TEST(ReadModules, ParseMapsIntoModulesPeTextMappedAnonymously) {
+TEST(ReadLinuxModules, ParseMapsIntoModulesPeTextMappedAnonymously) {
   const std::filesystem::path test_path = orbit_test::GetTestdataDir();
   const std::filesystem::path libtest_path = test_path / "libtest.dll";
 
@@ -356,7 +356,7 @@ TEST(ReadModules, ParseMapsIntoModulesPeTextMappedAnonymously) {
   VerifyObjectSegmentsForLibTestDll(libtest_module_info.object_segments());
 }
 
-TEST(ReadModules, ParseMapsIntoModulesPeTextMappedAnonymouslyWithMultipleExecutableMaps) {
+TEST(ReadLinuxModules, ParseMapsIntoModulesPeTextMappedAnonymouslyWithMultipleExecutableMaps) {
   const std::filesystem::path test_path = orbit_test::GetTestdataDir();
   const std::filesystem::path libtest_path = test_path / "libtest.dll";
 
@@ -385,7 +385,7 @@ TEST(ReadModules, ParseMapsIntoModulesPeTextMappedAnonymouslyWithMultipleExecuta
   VerifyObjectSegmentsForLibTestDll(libtest_module_info.object_segments());
 }
 
-TEST(ReadModules, ParseMapsIntoModulesPeTextMappedAnonymouslyInMoreComplexExample) {
+TEST(ReadLinuxModules, ParseMapsIntoModulesPeTextMappedAnonymouslyInMoreComplexExample) {
   const std::filesystem::path test_path = orbit_test::GetTestdataDir();
   const std::filesystem::path libtest_path = test_path / "libtest.dll";
 
@@ -419,7 +419,7 @@ TEST(ReadModules, ParseMapsIntoModulesPeTextMappedAnonymouslyInMoreComplexExampl
   VerifyObjectSegmentsForLibTestDll(libtest_module_info.object_segments());
 }
 
-TEST(ReadModules, ParseMapsIntoModulesPeTextMappedAnonymouslyAndFirstMapWithOffset) {
+TEST(ReadLinuxModules, ParseMapsIntoModulesPeTextMappedAnonymouslyAndFirstMapWithOffset) {
   const std::filesystem::path test_path = orbit_test::GetTestdataDir();
   const std::filesystem::path libtest_path = test_path / "libtest.dll";
 
@@ -431,7 +431,7 @@ TEST(ReadModules, ParseMapsIntoModulesPeTextMappedAnonymouslyAndFirstMapWithOffs
   ASSERT_EQ(result.size(), 0);
 }
 
-TEST(ReadModules, ParseMapsIntoModulesPeTextMappedWithWrongName) {
+TEST(ReadLinuxModules, ParseMapsIntoModulesPeTextMappedWithWrongName) {
   const std::filesystem::path test_path = orbit_test::GetTestdataDir();
   const std::filesystem::path libtest_path = test_path / "libtest.dll";
 
@@ -443,7 +443,7 @@ TEST(ReadModules, ParseMapsIntoModulesPeTextMappedWithWrongName) {
   EXPECT_EQ(result.size(), 0);
 }
 
-TEST(ReadModules, ParseMapsIntoModulesPeNoExecutableMap) {
+TEST(ReadLinuxModules, ParseMapsIntoModulesPeNoExecutableMap) {
   const std::filesystem::path test_path = orbit_test::GetTestdataDir();
   const std::filesystem::path libtest_path = test_path / "libtest.dll";
 
@@ -455,7 +455,7 @@ TEST(ReadModules, ParseMapsIntoModulesPeNoExecutableMap) {
   EXPECT_EQ(result.size(), 0);
 }
 
-TEST(ReadModules, ParseMapsIntoModulesPeTextMappedAnonymouslyWithEndBeyondSizeOfImage) {
+TEST(ReadLinuxModules, ParseMapsIntoModulesPeTextMappedAnonymouslyWithEndBeyondSizeOfImage) {
   const std::filesystem::path test_path = orbit_test::GetTestdataDir();
   const std::filesystem::path libtest_path = test_path / "libtest.dll";
 
@@ -467,4 +467,4 @@ TEST(ReadModules, ParseMapsIntoModulesPeTextMappedAnonymouslyWithEndBeyondSizeOf
   EXPECT_EQ(result.size(), 0);
 }
 
-}  // namespace orbit_object_utils
+}  // namespace orbit_module_utils
