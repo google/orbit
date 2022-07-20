@@ -51,7 +51,7 @@ static std::string ExpandPathHomeFolder(const std::string& path) {
 }
 
 [[nodiscard]] static QString MakeFileName(const std::filesystem::path& path) {
-  return QString::fromStdString(path.filename());
+  return QString::fromStdString(path.filename().string());
 }
 
 int main(int argc, char** argv) {
