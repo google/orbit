@@ -17,7 +17,7 @@ def main(argv):
         FilterAndSelectFirstProcess(process_filter="hello_ggp"),
         Capture(),
         VerifyTracksExist(track_names=["Scheduler", "gfx", "All Threads", "hello_ggp_stand"]),
-        # We check for either "sdma0" or "vce0", to exist. Both are connected to the encoding of video frames.
+        # We check for "sdma0" or "vce0" or both to exist. Both are connected to the encoding of video frames.
         VerifyTracksExist(track_names=[("*sdma0*", "*vce0*")], allow_duplicates=True),
         SelectTrack(track_index=0, expect_failure=True),  # Scheduler track cannot be selected
         SelectTrack(track_index=4),
