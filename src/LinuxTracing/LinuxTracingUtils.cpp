@@ -222,9 +222,10 @@ bool SetMaxOpenFilesSoftLimit(uint64_t soft_limit) {
   return true;
 }
 
-// Check for the existence of a file mapping containing the absolute address of the function. We
-// have to consider the possibility that the module may be mapped multiple times, and hence that the
-// function may have multiple absolute addresses.
+// Check for the existence of a file mapping containing the absolute address of the function.
+// We have to consider the possibility that the module may be mapped multiple times, and hence that
+// the function may have multiple absolute addresses: we want a file mapping containing the absolute
+// address of the function for each occurrence of the module.
 //
 // Note: A more naive solution would be to look for a map containing the file offset for the
 // function, hence not involving absolute addresses and modules at all. For misaligned PEs, this can
@@ -241,24 +242,27 @@ bool SetMaxOpenFilesSoftLimit(uint64_t soft_limit) {
 // the file from 0x400 to 0x1000 (i.e., with RVAs from 0x1000 to 0x1c00). But those functions are
 // mapped again in the anonymous map, and that's where they actually have their absolute address,
 // i.e., where they actually get executed.
-static bool FunctionIsInFileMapping(const std::vector<LinuxMemoryMapping>& file_path_maps,
-                                    const std::vector<ModuleInfo>& file_path_modules,
-                                    const InstrumentedFunction& function) {
+static bool FunctionIsAlwaysInFileMapping(const std::vector<LinuxMemoryMapping>& file_path_maps,
+                                          const std::vector<ModuleInfo>& file_path_modules,
+                                          const InstrumentedFunction& function) {
   for (const ModuleInfo& module : file_path_modules) {
     ORBIT_CHECK(module.file_path() == function.file_path());
     const uint64_t function_absolute_address =
         orbit_module_utils::SymbolVirtualAddressToAbsoluteAddress(
             function.function_virtual_address(), module.address_start(), module.load_bias(),
             module.executable_segment_offset());
-    for (const LinuxMemoryMapping& map : file_path_maps) {
-      ORBIT_CHECK(map.pathname() == function.file_path());
-      if (map.start_address() <= function_absolute_address &&
-          function_absolute_address < map.end_address()) {
-        return true;
-      }
+    const std::string& function_file_path = function.file_path();
+    if (!std::any_of(
+            file_path_maps.begin(), file_path_maps.end(),
+            [&function_absolute_address, &function_file_path](const LinuxMemoryMapping& map) {
+              ORBIT_CHECK(map.pathname() == function_file_path);
+              return map.start_address() <= function_absolute_address &&
+                     function_absolute_address < map.end_address();
+            })) {
+      return false;
     }
   }
-  return false;
+  return true;
 }
 
 std::map<uint64_t, std::string> FindFunctionsThatUprobesCannotInstrumentWithMessages(
@@ -279,10 +283,11 @@ std::map<uint64_t, std::string> FindFunctionsThatUprobesCannotInstrumentWithMess
       "Function \"%s\" belongs to module \"%s\", which is not loaded by the process. If the module "
       "gets loaded during the capture, the function will get instrumented automatically.";
   constexpr const char* kFunctionInAnonymousMapMessageFormatGeneric =
-      "Function \"%s\" belonging to module \"%s\" is not loaded into any file mapping.";
+      "Function \"%s\" belonging to module \"%s\" is not (always) loaded into a file mapping.";
   constexpr const char* kFunctionInAnonymousMapMessageFormatForPe =
-      "Function \"%s\" belonging to module \"%s\" is not loaded into any file mapping. The module "
-      "is a PE, so Wine might have loaded its text section into an anonymous mapping instead.";
+      "Function \"%s\" belonging to module \"%s\" is not (always) loaded into a file mapping. The "
+      "module is a PE, so Wine might have loaded its text section into an anonymous mapping "
+      "instead.";
 
   std::map<uint64_t, std::string> function_ids_to_error_messages;
   for (const InstrumentedFunction& function : functions) {
@@ -308,7 +313,7 @@ std::map<uint64_t, std::string> FindFunctionsThatUprobesCannotInstrumentWithMess
     const std::vector<LinuxMemoryMapping>& file_path_maps = file_path_maps_it->second;
     const std::vector<ModuleInfo>& file_path_modules = file_path_modules_it->second;
 
-    if (FunctionIsInFileMapping(file_path_maps, file_path_modules, function)) {
+    if (FunctionIsAlwaysInFileMapping(file_path_maps, file_path_modules, function)) {
       // This function is mapped into at least one file mapping.
       continue;
     }

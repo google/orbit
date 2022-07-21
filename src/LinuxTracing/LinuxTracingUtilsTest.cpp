@@ -246,30 +246,6 @@ TEST(FindFunctionsThatUprobesCannotInstrumentWithMessages, ModuleInMapsAndFuncti
   EXPECT_EQ(function_ids_to_error_messages.size(), 0);
 }
 
-TEST(FindFunctionsThatUprobesCannotInstrumentWithMessages,
-     ModuleInMapsTwiceAndFunctionInOnlyOneFileMap) {
-  constexpr const char* kProcPidMapsContent{
-      "140000000-140001000 r--p 00000000 103:07 6946834        /path/to/pe.exe\n"
-      "140001000-140004000 r-xp 00000000 00:00 0 \n"
-      "150000000-150001000 r--p 00000000 103:07 6946834        /path/to/pe.exe\n"
-      "150001000-150004000 r-xp 00000000 103:07 6946834        /path/to/pe.exe\n"
-      "7f3a06c57000-7f3a06c83000 r--p 00000000 103:0a 42623    /path/to/elf\n"
-      "7f3a06c83000-7f3a06cb5000 r-xp 0002b000 103:0a 42623    /path/to/elf\n"};
-  const std::vector<ModuleInfo> modules{
-      MakeModuleInfo("/path/to/pe.exe", 0x140001000, 0x140000000, 0x1000, ModuleInfo::kCoffFile),
-      MakeModuleInfo("/path/to/pe.exe", 0x150001000, 0x140000000, 0x1000, ModuleInfo::kCoffFile),
-      MakeModuleInfo("/path/to/elf", 0x00007f3a06c83000, 0x1000, 0x2b060, ModuleInfo::kElfFile),
-  };
-  const std::vector<InstrumentedFunction> instrumented_functions{
-      MakeInstrumentedFunction(1, "/path/to/pe.exe", "foo()", 0x1400027e0, 0x1be0),
-      MakeInstrumentedFunction(2, "/path/to/elf", "bar()", 0x56290, 0x55290)};
-  const std::map<uint64_t, std::string> function_ids_to_error_messages =
-      FindFunctionsThatUprobesCannotInstrumentWithMessages(
-          orbit_module_utils::ReadMaps(kProcPidMapsContent), modules, instrumented_functions);
-
-  EXPECT_EQ(function_ids_to_error_messages.size(), 0);
-}
-
 TEST(FindFunctionsThatUprobesCannotInstrumentWithMessages, ModuleInMapsButFunctionNotInFileMapPe) {
   constexpr const char* kProcPidMapsContent{
       "140000000-140001000 r--p 00000000 103:07 6946834        /path/to/pe.exe\n"
@@ -292,7 +268,7 @@ TEST(FindFunctionsThatUprobesCannotInstrumentWithMessages, ModuleInMapsButFuncti
   EXPECT_EQ(function_id, 1);
   EXPECT_TRUE(absl::StartsWith(error_message,
                                "Function \"foo()\" belonging to module \"/path/to/pe.exe\" is not "
-                               "loaded into any file mapping. The module is a PE,"));
+                               "(always) loaded into a file mapping. The module is a PE,"));
 }
 
 TEST(FindFunctionsThatUprobesCannotInstrumentWithMessages, ModuleInMapsButFunctionNotInFileMapElf) {
@@ -315,9 +291,40 @@ TEST(FindFunctionsThatUprobesCannotInstrumentWithMessages, ModuleInMapsButFuncti
   ASSERT_EQ(function_ids_to_error_messages.size(), 1);
   const auto& [function_id, error_message] = *function_ids_to_error_messages.begin();
   EXPECT_EQ(function_id, 2);
-  EXPECT_EQ(error_message,
-            "Function \"high_address()\" belonging to module \"/path/to/elf\" is not loaded into "
-            "any file mapping.");
+  EXPECT_EQ(
+      error_message,
+      "Function \"high_address()\" belonging to module \"/path/to/elf\" is not (always) loaded into "
+      "a file mapping.");
+}
+
+TEST(FindFunctionsThatUprobesCannotInstrumentWithMessages,
+     ModuleInMapsTwiceButFunctionInOnlyOneFileMap) {
+  constexpr const char* kProcPidMapsContent{
+      "140000000-140001000 r--p 00000000 103:07 6946834        /path/to/pe.exe\n"
+      "140001000-140004000 r-xp 00000000 103:07 6946834        /path/to/pe.exe\n"
+      "150000000-150001000 r--p 00000000 103:07 6946834        /path/to/pe.exe\n"
+      "150001000-150004000 r-xp 00000000 00:00 0 \n"
+      "150000000-150001000 r--p 00000000 103:07 6946834        /path/to/pe.exe\n"
+      "7f3a06c57000-7f3a06c83000 r--p 00000000 103:0a 42623    /path/to/elf\n"
+      "7f3a06c83000-7f3a06cb5000 r-xp 0002b000 103:0a 42623    /path/to/elf\n"};
+  const std::vector<ModuleInfo> modules{
+      MakeModuleInfo("/path/to/pe.exe", 0x140001000, 0x140000000, 0x1000, ModuleInfo::kCoffFile),
+      MakeModuleInfo("/path/to/pe.exe", 0x150001000, 0x140000000, 0x1000, ModuleInfo::kCoffFile),
+      MakeModuleInfo("/path/to/elf", 0x00007f3a06c83000, 0x1000, 0x2b060, ModuleInfo::kElfFile),
+  };
+  const std::vector<InstrumentedFunction> instrumented_functions{
+      MakeInstrumentedFunction(1, "/path/to/pe.exe", "foo()", 0x1400027e0, 0x1be0),
+      MakeInstrumentedFunction(2, "/path/to/elf", "bar()", 0x56290, 0x55290)};
+  const std::map<uint64_t, std::string> function_ids_to_error_messages =
+      FindFunctionsThatUprobesCannotInstrumentWithMessages(
+          orbit_module_utils::ReadMaps(kProcPidMapsContent), modules, instrumented_functions);
+
+  ASSERT_EQ(function_ids_to_error_messages.size(), 1);
+  const auto& [function_id, error_message] = *function_ids_to_error_messages.begin();
+  EXPECT_EQ(function_id, 1);
+  EXPECT_TRUE(absl::StartsWith(error_message,
+                               "Function \"foo()\" belonging to module \"/path/to/pe.exe\" is not "
+                               "(always) loaded into a file mapping. The module is a PE,"));
 }
 
 TEST(FindFunctionsThatUprobesCannotInstrumentWithMessages,
@@ -346,7 +353,7 @@ TEST(FindFunctionsThatUprobesCannotInstrumentWithMessages,
   EXPECT_EQ(function_id, 1);
   EXPECT_TRUE(absl::StartsWith(error_message,
                                "Function \"foo()\" belonging to module \"/path/to/pe.exe\" is not "
-                               "loaded into any file mapping. The module is a PE,"));
+                               "(always) loaded into a file mapping. The module is a PE,"));
 }
 
 TEST(FindFunctionsThatUprobesCannotInstrumentWithMessages,
@@ -373,7 +380,7 @@ TEST(FindFunctionsThatUprobesCannotInstrumentWithMessages,
   EXPECT_TRUE(
       absl::StartsWith(error_message,
                        "Function \"mapped_twice()\" belonging to module \"/path/to/pe.exe\" is not "
-                       "loaded into any file mapping. The module is a PE,"));
+                       "(always) loaded into a file mapping. The module is a PE,"));
 }
 
 TEST(FindFunctionsThatUprobesCannotInstrumentWithMessages, ModuleNotInMaps) {
