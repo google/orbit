@@ -106,6 +106,9 @@ class DataManager final {
       uint64_t max_local_marker_depth_per_command_buffer);
   [[nodiscard]] uint64_t max_local_marker_depth_per_command_buffer() const;
 
+  void set_enable_auto_frame_track(bool enable_auto_frame_track);
+  [[nodiscard]] bool enable_auto_frame_track() const;
+
   void set_collect_memory_info(bool collect_memory_info);
   [[nodiscard]] bool collect_memory_info() const;
 
@@ -145,6 +148,7 @@ class DataManager final {
   uint16_t stack_dump_size_ = 0;
   orbit_grpc_protos::CaptureOptions::UnwindingMethod unwinding_method_{};
 
+  bool enable_auto_frame_track_ = false;
   bool collect_memory_info_ = false;
   uint64_t memory_sampling_period_ms_ = 10;
   uint64_t memory_warning_threshold_kb_ = 8ULL * 1024 * 1024;

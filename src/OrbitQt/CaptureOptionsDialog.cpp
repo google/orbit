@@ -68,6 +68,11 @@ CaptureOptionsDialog::CaptureOptionsDialog(QWidget* parent)
   ui_->memorySamplingPeriodMsLineEdit->setValidator(new UInt64Validator(
       1, std::numeric_limits<uint64_t>::max(), ui_->memorySamplingPeriodMsLineEdit));
   ui_->memoryWarningThresholdKbLineEdit->setValidator(&uint64_validator_);
+
+  if (!absl::GetFlag(FLAGS_auto_frame_track)) {
+    ui_->autoFrameTrackGroupBox->hide();
+  }
+
   if (!absl::GetFlag(FLAGS_enable_warning_threshold)) {
     ui_->memoryWarningThresholdKbLabel->hide();
     ui_->memoryWarningThresholdKbLineEdit->hide();
@@ -252,6 +257,14 @@ void CaptureOptionsDialog::ResetLocalMarkerDepthLineEdit() {
   if (ui_->localMarkerDepthLineEdit->text().isEmpty()) {
     ui_->localMarkerDepthLineEdit->setText(QString::number(kLocalMarkerDepthDefaultValue));
   }
+}
+
+void CaptureOptionsDialog::SetEnableAutoFrameTrack(bool enable_auto_frame_track) {
+  ui_->autoFrameTrackCheckBox->setChecked(enable_auto_frame_track);
+}
+
+bool CaptureOptionsDialog::GetEnableAutoFrameTrack() const {
+  return ui_->autoFrameTrackCheckBox->isChecked();
 }
 
 void CaptureOptionsDialog::SetCollectMemoryInfo(bool collect_memory_info) {

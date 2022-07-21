@@ -218,6 +218,7 @@ class OrbitMainWindow final : public QMainWindow, public orbit_gl::MainWindowInt
   static const QString kCollectSchedulerInfoSettingKey;
   static const QString kCollectThreadStatesSettingKey;
   static const QString kTraceGpuSubmissionsSettingKey;
+  static const QString kEnableAutoFrameTrack;
   static const QString kCollectMemoryInfoSettingKey;
   static const QString kEnableApiSettingKey;
   static const QString kEnableIntrospectionSettingKey;

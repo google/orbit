@@ -406,6 +406,28 @@ p, li { white-space: pre-wrap; }
         </widget>
        </item>
        <item>
+        <widget class="QGroupBox" name="autoFrameTrackGroupBox">
+         <property name="title">
+          <string>Auto FrameTrack</string>
+         </property>
+         <layout class="QVBoxLayout" name="verticalLayout_9">
+          <item>
+           <widget class="QCheckBox" name="autoFrameTrackCheckBox">
+            <property name="toolTip">
+             <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;A frame track will be added when enabling this option at the start of every session.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+            </property>
+            <property name="accessibleName">
+             <string>AutoFrameTrackCheckBox</string>
+            </property>
+            <property name="text">
+             <string>Automatically add the default frame track</string>
+            </property>
+           </widget>
+          </item>
+         </layout>
+        </widget>
+       </item>
+       <item>
         <widget class="QGroupBox" name="memoryTracingGroupBox">
          <property name="title">
           <string>Memory tracing</string>

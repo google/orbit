@@ -1096,6 +1096,7 @@ const QString OrbitMainWindow::kMaxCopyRawStackSizeSettingKey{"MaxCopyRawStackSi
 const QString OrbitMainWindow::kCollectSchedulerInfoSettingKey{"CollectSchedulerInfo"};
 const QString OrbitMainWindow::kCollectThreadStatesSettingKey{"CollectThreadStates"};
 const QString OrbitMainWindow::kTraceGpuSubmissionsSettingKey{"TraceGpuSubmissions"};
+const QString OrbitMainWindow::kEnableAutoFrameTrack{"EnableAutoFrameTrack"};
 const QString OrbitMainWindow::kCollectMemoryInfoSettingKey{"CollectMemoryInfo"};
 const QString OrbitMainWindow::kEnableApiSettingKey{"EnableApi"};
 const QString OrbitMainWindow::kEnableIntrospectionSettingKey{"EnableIntrospection"};
@@ -1183,6 +1184,11 @@ void OrbitMainWindow::LoadCaptureOptionsIntoApp() {
                      orbit_qt::CaptureOptionsDialog::kWineSyscallHandlingMethodDefaultValue))
           .toInt());
   app_->SetWineSyscallHandlingMethod(wine_syscall_handling_method);
+
+  bool default_state_auto_frame_track = absl::GetFlag(FLAGS_auto_frame_track);
+  bool enable_auto_frame_track =
+      settings.value(kEnableAutoFrameTrack, default_state_auto_frame_track).toBool();
+  app_->SetEnableAutoFrameTrack(enable_auto_frame_track);
 
   bool collect_memory_info = settings.value(kCollectMemoryInfoSettingKey, false).toBool();
   app_->SetCollectMemoryInfo(collect_memory_info);
@@ -1273,6 +1279,9 @@ void OrbitMainWindow::on_actionCaptureOptions_triggered() {
   }
   dialog.SetWineSyscallHandlingMethod(wine_syscall_handling_method);
 
+  bool default_state_auto_frame_track = absl::GetFlag(FLAGS_auto_frame_track);
+  dialog.SetEnableAutoFrameTrack(
+      settings.value(kEnableAutoFrameTrack, default_state_auto_frame_track).toBool());
   dialog.SetCollectMemoryInfo(settings.value(kCollectMemoryInfoSettingKey, false).toBool());
   dialog.SetMemorySamplingPeriodMs(
       settings
@@ -1314,6 +1323,7 @@ void OrbitMainWindow::on_actionCaptureOptions_triggered() {
                     static_cast<int>(dialog.GetDynamicInstrumentationMethod()));
   settings.setValue(kWineSyscallHandlingMethodSettingKey,
                     static_cast<int>(dialog.GetWineSyscallHandlingMethod()));
+  settings.setValue(kEnableAutoFrameTrack, dialog.GetEnableAutoFrameTrack());
   settings.setValue(kCollectMemoryInfoSettingKey, dialog.GetCollectMemoryInfo());
   settings.setValue(kMemorySamplingPeriodMsSettingKey,
                     QString::number(dialog.GetMemorySamplingPeriodMs()));

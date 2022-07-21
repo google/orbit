@@ -275,6 +275,16 @@ uint64_t DataManager::max_local_marker_depth_per_command_buffer() const {
   return max_local_marker_depth_per_command_buffer_;
 }
 
+void DataManager::set_enable_auto_frame_track(bool enable_auto_frame_track) {
+  ORBIT_CHECK(std::this_thread::get_id() == main_thread_id_);
+  enable_auto_frame_track_ = enable_auto_frame_track;
+}
+
+bool DataManager::enable_auto_frame_track() const {
+  ORBIT_CHECK(std::this_thread::get_id() == main_thread_id_);
+  return enable_auto_frame_track_;
+}
+
 void DataManager::set_collect_memory_info(bool collect_memory_info) {
   ORBIT_CHECK(std::this_thread::get_id() == main_thread_id_);
   collect_memory_info_ = collect_memory_info;
