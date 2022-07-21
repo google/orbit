@@ -29,7 +29,9 @@ class CaptureWindowE2ETestCaseBase(E2ETestCase):
 
     def execute(self, suite: E2ETestSuite):
         self._time_graph = self.find_control('Image', name='TimeGraph', parent=suite.top_window())
-        self._track_container = self.find_control('Pane', name='TrackContainer', parent=self._time_graph)
+        self._track_container = self.find_control('Pane',
+                                                  name='TrackContainer',
+                                                  parent=self._time_graph)
         super().execute(suite=suite)
 
     def _find_tracks(self, name_filter: str = None, recursive: bool = False):
@@ -312,6 +314,17 @@ class CaptureE2ETestCaseBase(E2ETestCase):
         logging.info('Showing capture window')
         self.find_control("TabItem", "Capture").click_input()
 
+    def _show_capture_options_dialog(self):
+        logging.info('Opening "Capture Options" dialog')
+        capture_tab = self.find_control('Group', 'CaptureTab')
+        capture_options_button = self.find_control('Button', 'Capture Options', parent=capture_tab)
+        capture_options_button.click_input()
+
+    def _close_capture_options_dialog(self):
+        logging.info('Saving "Capture Options"')
+        self.find_control('Button', 'OK',
+                          parent=self.find_control('Window', 'Capture Options')).click_input()
+
     def _set_collect_thread_states_capture_option(self, collect_thread_states: bool,
                                                   capture_options_dialog):
         collect_thread_states_checkbox = self.find_control('CheckBox',
@@ -320,6 +333,15 @@ class CaptureE2ETestCaseBase(E2ETestCase):
         if collect_thread_states_checkbox.get_toggle_state() != collect_thread_states:
             logging.info('Toggling "Collect thread states" checkbox')
             collect_thread_states_checkbox.click_input()
+
+    def _set_enable_auto_frame_track_capture_option(self, enable_auto_frame_track: bool,
+                                                    capture_options_dialog):
+        enable_auto_frame_track_checkbox = self.find_control('CheckBox',
+                                                             'AutoFrameTrackCheckBox',
+                                                             parent=capture_options_dialog)
+        if enable_auto_frame_track_checkbox.get_toggle_state() != enable_auto_frame_track:
+            logging.info('Toggling "Auto Frame Track" checkbox')
+            enable_auto_frame_track_checkbox.click_input()
 
     def _set_collect_system_memory_usage_capture_option(self, collect_system_memory_usage,
                                                         capture_options_dialog):
@@ -437,7 +459,8 @@ class CaptureE2ETestCaseBase(E2ETestCase):
     def _verify_existence_of_tracks(self):
         logging.info("Verifying existence of at least one track...")
         track_container = self.find_control('Pane', name='TrackContainer')
-        self.expect_true(len(track_container.children()), 'Track container exists and has at least one child')
+        self.expect_true(len(track_container.children()),
+                         'Track container exists and has at least one child')
 
     def _verify_capture(self):
         self._verify_existence_of_timeline()
@@ -639,6 +662,16 @@ class SelectAllCallstacksFromTrack(CaptureWindowE2ETestCaseBase):
             self.find_control('TabItem', 'Bottom-Up (selection)').is_enabled(),
             "'Bottom-Up (selection)' tab is enabled")
         logging.info("Verified that '(selection)' tabs are enabled")
+
+
+class SetEnableAutoFrameTrack(CaptureE2ETestCaseBase):
+
+    def _execute(self, enable_auto_frame_track: bool):
+        self._show_capture_options_dialog()
+        capture_options_dialog = self.find_control('Window', 'Capture Options')
+        self._set_enable_auto_frame_track_capture_option(enable_auto_frame_track,
+                                                         capture_options_dialog)
+        self._close_capture_options_dialog()
 
 
 class SetAndCheckMemorySamplingPeriod(E2ETestCase):

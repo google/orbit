@@ -8,7 +8,8 @@ from absl import app
 
 from core.orbit_e2e import E2ETestSuite
 from test_cases.connection_window import FilterAndSelectFirstProcess, ConnectToStadiaInstance
-from test_cases.capture_window import Capture, VerifyTracksExist, ToggleTrackTypeVisibility, VerifyTracksDoNotExist
+from test_cases.capture_window import Capture, SetEnableAutoFrameTrack, VerifyTracksExist, ToggleTrackTypeVisibility, VerifyTracksDoNotExist
+from test_cases.main_window import EndSession
 """Toggle track type visibility in Orbit using pywinauto.
 
 Before this script is run there needs to be a gamelet reserved and
@@ -32,6 +33,11 @@ def main(argv):
     test_cases = [
         ConnectToStadiaInstance(),
         FilterAndSelectFirstProcess(process_filter='hello_ggp'),
+        # Setting enable auto frame track to true.
+        SetEnableAutoFrameTrack(enable_auto_frame_track=True),
+        # Ending and opening a new session. The auto frame track will appear.
+        EndSession(),
+        FilterAndSelectFirstProcess(process_filter="hello_ggp"),
         Capture(),
         ToggleTrackTypeVisibility(track_type="Scheduler"),
         VerifyTracksDoNotExist(track_names="Scheduler"),

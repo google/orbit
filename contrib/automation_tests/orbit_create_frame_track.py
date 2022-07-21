@@ -8,7 +8,8 @@ from absl import app
 
 from core.orbit_e2e import E2ETestSuite
 from test_cases.connection_window import FilterAndSelectFirstProcess, ConnectToStadiaInstance
-from test_cases.capture_window import Capture, FilterTracks, CheckTimers, VerifyTracksExist
+from test_cases.capture_window import Capture, FilterTracks, CheckTimers, SetEnableAutoFrameTrack, VerifyTracksExist
+from test_cases.main_window import EndSession
 from test_cases.symbols_tab import WaitForLoadingSymbolsAndCheckModule, FilterAndHookFunction
 from test_cases.live_tab import AddFrameTrack
 """Create a frame track in Orbit using pywinauto.
@@ -34,12 +35,15 @@ def main(argv):
         ConnectToStadiaInstance(),
         FilterAndSelectFirstProcess(process_filter="hello_ggp"),
         WaitForLoadingSymbolsAndCheckModule(module_search_string="hello_ggp"),
+        # Setting enable auto frame track to false to only have the created Frame Track.
+        SetEnableAutoFrameTrack(enable_auto_frame_track=False),
+        # Ending and opening a new session. The auto frame track won't appear.
+        EndSession(),
+        FilterAndSelectFirstProcess(process_filter="hello_ggp"),
         FilterAndHookFunction(function_search_string='DrawFrame'),
         Capture(),
         AddFrameTrack(function_name="DrawFrame"),
-        # TODO(b/239148938): After allowing users to set auto-frame-track to false:
-        #  Instead of allowing duplicates, set auto-frame track to false while capturing.
-        VerifyTracksExist(track_names="Frame track*", allow_duplicates=True),
+        VerifyTracksExist(track_names="Frame track*"),
         CheckTimers(track_name_filter='Frame track*')  # Verify the frame track has timers
     ]
     suite = E2ETestSuite(test_name="Add Frame Track", test_cases=test_cases)

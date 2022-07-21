@@ -7,13 +7,19 @@ found in the LICENSE file.
 from absl import app
 
 from core.orbit_e2e import E2ETestSuite
-from test_cases.capture_window import SelectTrack, DeselectTrack, MoveTrack, FilterTracks, VerifyTracksExist, Capture
+from test_cases.capture_window import SelectTrack, DeselectTrack, MoveTrack, FilterTracks, SetEnableAutoFrameTrack, VerifyTracksExist, Capture
 from test_cases.connection_window import FilterAndSelectFirstProcess, ConnectToStadiaInstance
+from test_cases.main_window import EndSession
 
 
 def main(argv):
     test_cases = [
         ConnectToStadiaInstance(),
+        FilterAndSelectFirstProcess(process_filter="hello_ggp"),
+        # Setting enable auto frame track to true.
+        SetEnableAutoFrameTrack(enable_auto_frame_track=True),
+        # Ending and opening a new session. The auto frame track will appear.
+        EndSession(),
         FilterAndSelectFirstProcess(process_filter="hello_ggp"),
         Capture(),
         VerifyTracksExist(
