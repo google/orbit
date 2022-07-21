@@ -223,8 +223,8 @@ bool SetMaxOpenFilesSoftLimit(uint64_t soft_limit) {
 }
 
 // Check for the existence of a file mapping containing the absolute address of the function. We
-// have to consider the possibility that the module be mapped multiple times, and hence that the
-// function have multiple absolute addresses.
+// have to consider the possibility that the module may be mapped multiple times, and hence that the
+// function may have multiple absolute addresses.
 //
 // Note: A more naive solution would be to look for a map containing the file offset for the
 // function, hence not involving absolute addresses and modules at all. For misaligned PEs, this can
