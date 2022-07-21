@@ -247,6 +247,28 @@ ErrorMessageOr<void> SetOrbitThreadsInTarget(pid_t pid, const std::vector<Module
   return outcome::success();
 }
 
+// Given the path of a module in the process, get all loaded instances of that module (usually there
+// will only be one, but a module can be loaded more than once).
+ErrorMessageOr<std::vector<ModuleInfo>> ModulesFromModulePath(
+    const std::vector<ModuleInfo>& modules, const std::string& path,
+    absl::flat_hash_map<std::string, std::vector<ModuleInfo>>* cache_of_modules_from_path) {
+  ORBIT_CHECK(cache_of_modules_from_path != nullptr);
+  auto cached_modules_from_path_it = cache_of_modules_from_path->find(path);
+  if (cached_modules_from_path_it == cache_of_modules_from_path->end()) {
+    std::vector<ModuleInfo> result;
+    for (const ModuleInfo& module : modules) {
+      if (module.file_path() == path) {
+        result.push_back(module);
+      }
+    }
+    if (result.empty()) {
+      return ErrorMessage(absl::StrFormat("Unable to find module for path \"%s\"", path));
+    }
+    cached_modules_from_path_it = cache_of_modules_from_path->emplace(path, result).first;
+  }
+  return cached_modules_from_path_it->second;
+}
+
 }  // namespace
 
 // Holds all the data necessary to keep track of a process we instrument.
@@ -294,9 +316,6 @@ class InstrumentedProcess {
   [[nodiscard]] ErrorMessageOr<void> EnsureTrampolinesWritable();
   [[nodiscard]] ErrorMessageOr<void> EnsureTrampolinesExecutable();
 
-  [[nodiscard]] ErrorMessageOr<std::vector<ModuleInfo>> ModulesFromModulePath(
-      const std::vector<ModuleInfo>& modules, std::string path);
-
   // Returns a vector of the address ranges dedicated to all entry trampolines for this process. The
   // number of address ranges is usually very small as kTrampolinesPerChunk is high.
   [[nodiscard]] std::vector<AddressRange> GetEntryTrampolineAddressRanges();
@@ -338,10 +357,6 @@ class InstrumentedProcess {
   };
   using TrampolineMemoryChunks = std::vector<TrampolineMemoryChunk>;
   absl::flat_hash_map<AddressRange, TrampolineMemoryChunks> trampolines_for_modules_;
-
-  // Map path of a module in the process to all loaded instances of that module (usually there will
-  // only be one, but a module can be loaded more than once).
-  absl::flat_hash_map<std::string, std::vector<ModuleInfo>> modules_from_path_;
 
   // When instrumenting a function we record the address here. This is used when we uninstrument: we
   // look up the original bytes in `trampoline_map_` above.
@@ -507,6 +522,7 @@ InstrumentedProcess::InstrumentFunctions(const CaptureOptions& capture_options,
 
   ORBIT_LOG("Trying to instrument %d functions", capture_options.instrumented_functions().size());
   InstrumentationManager::InstrumentationResult result;
+  absl::flat_hash_map<std::string, std::vector<ModuleInfo>> cache_of_modules_from_path;
   for (const auto& function : capture_options.instrumented_functions()) {
     const uint64_t function_id = function.function_id();
     if (IsBlocklisted(function.function_name())) {
@@ -526,7 +542,8 @@ InstrumentedProcess::InstrumentFunctions(const CaptureOptions& capture_options,
     }
     // Get all modules with the right path (usually one, but might be more) and get a function
     // address to instrument for each of them.
-    OUTCOME_TRY(auto&& function_modules, ModulesFromModulePath(modules, function.file_path()));
+    OUTCOME_TRY(auto&& function_modules,
+                ModulesFromModulePath(modules, function.file_path(), &cache_of_modules_from_path));
     for (const auto& module : function_modules) {
       const uint64_t function_address = orbit_module_utils::SymbolVirtualAddressToAbsoluteAddress(
           function.function_virtual_address(), module.address_start(), module.load_bias(),
@@ -662,23 +679,6 @@ ErrorMessageOr<void> InstrumentedProcess::ReleaseMostRecentlyAllocatedTrampoline
   }
   trampolines_for_modules_.find(address_range)->second.back().first_available--;
   return outcome::success();
-}
-
-ErrorMessageOr<std::vector<ModuleInfo>> InstrumentedProcess::ModulesFromModulePath(
-    const std::vector<ModuleInfo>& modules, std::string path) {
-  if (!modules_from_path_.contains(path)) {
-    std::vector<ModuleInfo> result;
-    for (const ModuleInfo& module : modules) {
-      if (module.file_path() == path) {
-        result.push_back(module);
-      }
-    }
-    if (result.empty()) {
-      return ErrorMessage(absl::StrFormat("Unable to find module for path \"%s\"", path));
-    }
-    modules_from_path_.emplace(path, result);
-  }
-  return modules_from_path_.find(path)->second;
 }
 
 ErrorMessageOr<void> InstrumentedProcess::EnsureTrampolinesWritable() {
