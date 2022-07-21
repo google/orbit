@@ -164,7 +164,7 @@ static void ExpandRecursively(QTreeView* tree_view, const QModelIndex& index) {
     return;
   }
   for (int i = 0; i < index.model()->rowCount(index); ++i) {
-    const QModelIndex& child = index.child(i, 0);
+    const QModelIndex child = index.model()->index(i, 0, index);
     ExpandRecursively(tree_view, child);
   }
   if (!tree_view->isExpanded(index)) {
@@ -177,7 +177,7 @@ static void CollapseRecursively(QTreeView* tree_view, const QModelIndex& index) 
     return;
   }
   for (int i = 0; i < index.model()->rowCount(index); ++i) {
-    const QModelIndex& child = index.child(i, 0);
+    const QModelIndex child = index.model()->index(i, 0, index);
     CollapseRecursively(tree_view, child);
   }
   if (tree_view->isExpanded(index)) {
@@ -193,7 +193,7 @@ static void ExpandRecursivelyWithThreshold(QTreeView* tree_view, const QModelInd
     return;
   }
   for (int i = 0; i < index.model()->rowCount(index); ++i) {
-    const QModelIndex& child = index.child(i, 0);
+    const QModelIndex child = index.model()->index(i, 0, index);
     std::optional<float> inclusive_percent = FloatFromIndex(index.sibling(index.row(), 1));
     if (inclusive_percent.has_value() && inclusive_percent.value() > expansion_threshold) {
       if (!tree_view->isExpanded(index)) {
@@ -287,7 +287,7 @@ static int ComputeHeightOfSubtreeOfVisibleNodes(QTreeView* tree_view, const QMod
 
   int depth_difference = 0;
   for (int i = 0; i < index.model()->rowCount(index); ++i) {
-    const QModelIndex& child = index.child(i, 0);
+    const QModelIndex child = index.model()->index(i, 0, index);
     depth_difference =
         std::max(depth_difference, 1 + ComputeHeightOfSubtreeOfVisibleNodes(tree_view, child));
   }
@@ -505,7 +505,7 @@ static void CollapseChildrenRecursively(QTreeView* tree_view, const QModelIndex&
     return;
   }
   for (int i = 0; i < index.model()->rowCount(index); ++i) {
-    const QModelIndex& child = index.child(i, 0);
+    const QModelIndex child = index.model()->index(i, 0, index);
     CollapseRecursively(tree_view, child);
   }
 }
@@ -576,7 +576,7 @@ static void GetCallstackEventsUnderSelectionRecursively(
   }
 
   for (int i = 0; i < index.model()->rowCount(index); ++i) {
-    const QModelIndex& child = index.child(i, 0);
+    const QModelIndex child = index.model()->index(i, 0, index);
     if (!indices_already_visited->contains(child)) {
       GetCallstackEventsUnderSelectionRecursively(child, callstack_events, indices_already_visited);
     }
@@ -786,7 +786,7 @@ static bool ExpandCollapseRecursivelyBasedOnDescendantsRole(QTreeView* tree_view
   bool matches = index.data(role).toBool();
   bool descendant_matches = false;
   for (int i = 0; i < index.model()->rowCount(index); ++i) {
-    const QModelIndex& child = index.child(i, 0);
+    const QModelIndex child = index.model()->index(i, 0, index);
     descendant_matches |= ExpandCollapseRecursivelyBasedOnDescendantsRole(tree_view, child, role);
   }
   if (descendant_matches && !tree_view->isExpanded(index)) {
@@ -799,7 +799,7 @@ static bool ExpandCollapseRecursivelyBasedOnDescendantsRole(QTreeView* tree_view
 
 static void ExpandCollapseBasedOnRole(QTreeView* tree_view, int role) {
   for (int i = 0; i < tree_view->model()->rowCount(); ++i) {
-    const QModelIndex& child = tree_view->model()->index(i, 0);
+    const QModelIndex child = tree_view->model()->index(i, 0);
     ExpandCollapseRecursivelyBasedOnDescendantsRole(tree_view, child, role);
   }
 }
