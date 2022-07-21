@@ -291,10 +291,9 @@ TEST(FindFunctionsThatUprobesCannotInstrumentWithMessages, ModuleInMapsButFuncti
   ASSERT_EQ(function_ids_to_error_messages.size(), 1);
   const auto& [function_id, error_message] = *function_ids_to_error_messages.begin();
   EXPECT_EQ(function_id, 2);
-  EXPECT_EQ(
-      error_message,
-      "Function \"high_address()\" belonging to module \"/path/to/elf\" is not (always) loaded into "
-      "a file mapping.");
+  EXPECT_EQ(error_message,
+            "Function \"high_address()\" belonging to module \"/path/to/elf\" is not (always) "
+            "loaded into a file mapping.");
 }
 
 TEST(FindFunctionsThatUprobesCannotInstrumentWithMessages,
