@@ -51,6 +51,10 @@ void CaptureMetric::SetCaptureCompleteData(const CaptureCompleteData& complete_d
   capture_data_.set_number_of_callstack_samples(complete_data.number_of_callstack_samples);
   capture_data_.set_number_of_unwinding_errors(complete_data.number_of_unwinding_errors);
   file_path_ = complete_data.file_path;
+  capture_data_.set_target_process_state_after_capture(
+      complete_data.target_process_state_after_capture);
+  capture_data_.set_target_process_termination_signal(
+      complete_data.target_process_termination_signal);
 }
 
 bool CaptureMetric::SendCaptureFailed() {

@@ -50,6 +50,7 @@ using orbit_grpc_protos::OutOfOrderEventsDiscardedEvent;
 using orbit_grpc_protos::PresentEvent;
 using orbit_grpc_protos::ProducerCaptureEvent;
 using orbit_grpc_protos::SchedulingSlice;
+using orbit_grpc_protos::TargetProcessStateAfterCapture;
 using orbit_grpc_protos::ThreadName;
 using orbit_grpc_protos::ThreadNamesSnapshot;
 using orbit_grpc_protos::ThreadStateSlice;
@@ -144,6 +145,8 @@ class ProducerEventProcessorImpl : public ProducerEventProcessor {
       OutOfOrderEventsDiscardedEvent* out_of_order_events_discarded_event);
   void ProcessPresentEventAndTransferOwnership(PresentEvent* present_event);
   void ProcessSchedulingSliceAndTransferOwnership(SchedulingSlice* scheduling_slice);
+  void ProcessTargetProcessStateAfterCaptureAndTransferOwnership(
+      TargetProcessStateAfterCapture* process_state);
   void ProcessThreadNameAndTransferOwnership(ThreadName* thread_name);
   void ProcessThreadNamesSnapshotAndTransferOwnership(ThreadNamesSnapshot* thread_names_snapshot);
   void ProcessThreadStateSliceAndTransferOwnership(ThreadStateSlice* thread_state_slice);
@@ -527,6 +530,13 @@ void ProducerEventProcessorImpl::ProcessThreadNameAndTransferOwnership(ThreadNam
   client_capture_event_collector_->AddEvent(std::move(event));
 }
 
+void ProducerEventProcessorImpl::ProcessTargetProcessStateAfterCaptureAndTransferOwnership(
+    TargetProcessStateAfterCapture* process_state) {
+  ClientCaptureEvent event;
+  event.set_allocated_target_process_state_after_capture(process_state);
+  client_capture_event_collector_->AddEvent(std::move(event));
+}
+
 void ProducerEventProcessorImpl::ProcessThreadNamesSnapshotAndTransferOwnership(
     ThreadNamesSnapshot* thread_names_snapshot) {
   ClientCaptureEvent event;
@@ -677,6 +687,10 @@ void ProducerEventProcessorImpl::ProcessEvent(uint64_t producer_id, ProducerCapt
       break;
     case ProducerCaptureEvent::kSchedulingSlice:
       ProcessSchedulingSliceAndTransferOwnership(event.release_scheduling_slice());
+      break;
+    case ProducerCaptureEvent::kTargetProcessStateAfterCapture:
+      ProcessTargetProcessStateAfterCaptureAndTransferOwnership(
+          event.release_target_process_state_after_capture());
       break;
     case ProducerCaptureEvent::kThreadName:
       ProcessThreadNameAndTransferOwnership(event.release_thread_name());

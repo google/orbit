@@ -7,6 +7,7 @@
 #include "App.h"
 #include "ClientData/CallstackEvent.h"
 #include "ClientProtos/capture_data.pb.h"
+#include "GrpcProtos/capture.pb.h"
 #include "OrbitBase/Logging.h"
 
 using orbit_client_data::CaptureData;
@@ -132,6 +133,10 @@ class IntrospectionCaptureListener : public orbit_capture_client::CaptureListene
     ORBIT_UNREACHABLE();
   }
   void OnCallstackEvent(orbit_client_data::CallstackEvent /*callstack_event*/) override {
+    ORBIT_UNREACHABLE();
+  }
+  void OnTargetProcessStateAfterCapture(
+      orbit_grpc_protos::TargetProcessStateAfterCapture /*process_state*/) override {
     ORBIT_UNREACHABLE();
   }
   void OnThreadName(uint32_t /*thread_id*/, std::string /*thread_name*/) override {

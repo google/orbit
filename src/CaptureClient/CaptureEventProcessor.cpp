@@ -44,6 +44,7 @@ using orbit_grpc_protos::GpuQueueSubmission;
 using orbit_grpc_protos::InternedCallstack;
 using orbit_grpc_protos::InternedString;
 using orbit_grpc_protos::SchedulingSlice;
+using orbit_grpc_protos::TargetProcessStateAfterCapture;
 using orbit_grpc_protos::ThreadName;
 using orbit_grpc_protos::ThreadStateSlice;
 
@@ -73,6 +74,8 @@ class CaptureEventProcessorForListener : public CaptureEventProcessor {
   void ProcessModulesSnapshot(const orbit_grpc_protos::ModulesSnapshot& modules_snapshot);
   void ProcessPresentEvent(const orbit_grpc_protos::PresentEvent& present_event);
   void ProcessGpuJob(const orbit_grpc_protos::GpuJob& gpu_job);
+  void ProcessTargetProcessStateAfterCapture(
+      const orbit_grpc_protos::TargetProcessStateAfterCapture& process_state);
   void ProcessThreadName(const orbit_grpc_protos::ThreadName& thread_name);
   void ProcessThreadNamesSnapshot(
       const orbit_grpc_protos::ThreadNamesSnapshot& thread_names_snapshot);
@@ -154,6 +157,9 @@ void CaptureEventProcessorForListener::ProcessEvent(const ClientCaptureEvent& ev
       break;
     case ClientCaptureEvent::kGpuJob:
       ProcessGpuJob(event.gpu_job());
+      break;
+    case ClientCaptureEvent::kTargetProcessStateAfterCapture:
+      ProcessTargetProcessStateAfterCapture(event.target_process_state_after_capture());
       break;
     case ClientCaptureEvent::kThreadName:
       ProcessThreadName(event.thread_name());
@@ -551,6 +557,11 @@ void CaptureEventProcessorForListener::ExtractAndProcessPageFaultsTrackingTimer(
   *timer.mutable_registers() = {encoded_values.begin(), encoded_values.end()};
 
   capture_listener_->OnTimer(timer);
+}
+
+void CaptureEventProcessorForListener::ProcessTargetProcessStateAfterCapture(
+    const TargetProcessStateAfterCapture& process_state) {
+  capture_listener_->OnTargetProcessStateAfterCapture(process_state);
 }
 
 void CaptureEventProcessorForListener::ProcessThreadName(const ThreadName& thread_name) {

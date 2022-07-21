@@ -5,6 +5,7 @@
 #include "LinuxCaptureService/LinuxCaptureServiceBase.h"
 
 #include <absl/container/flat_hash_set.h>
+#include <absl/strings/match.h>
 #include <absl/strings/str_format.h>
 #include <absl/synchronization/mutex.h>
 #include <absl/time/time.h>
@@ -12,6 +13,8 @@
 
 #include <algorithm>
 #include <optional>
+#include <regex>
+#include <string>
 #include <thread>
 #include <utility>
 #include <vector>
@@ -20,15 +23,18 @@
 #include "ApiUtils/Event.h"
 #include "CaptureServiceBase/CommonProducerCaptureEventBuilders.h"
 #include "CaptureServiceBase/StopCaptureRequestWaiter.h"
+#include "ExtractSignalFromMinidump.h"
 #include "GrpcProtos/Constants.h"
 #include "GrpcProtos/capture.pb.h"
 #include "Introspection/Introspection.h"
 #include "MemoryInfoHandler.h"
 #include "MemoryWatchdog.h"
 #include "OrbitBase/ExecutablePath.h"
+#include "OrbitBase/File.h"
 #include "OrbitBase/Logging.h"
 #include "OrbitBase/MakeUniqueForOverwrite.h"
 #include "OrbitBase/Profiling.h"
+#include "OrbitBase/Result.h"
 #include "OrbitVersion/OrbitVersion.h"
 #include "ProducerEventProcessor/ProducerEventProcessor.h"
 #include "TracingHandler.h"
@@ -38,6 +44,7 @@ using orbit_grpc_protos::CaptureOptions;
 using orbit_grpc_protos::CaptureRequest;
 using orbit_grpc_protos::CaptureResponse;
 using orbit_grpc_protos::ProducerCaptureEvent;
+using orbit_grpc_protos::TargetProcessStateAfterCapture;
 
 using orbit_producer_event_processor::ClientCaptureEventCollector;
 using orbit_producer_event_processor::ProducerEventProcessor;
@@ -47,6 +54,8 @@ using orbit_capture_service_base::CaptureStartStopListener;
 using orbit_capture_service_base::StopCaptureRequestWaiter;
 
 namespace orbit_linux_capture_service {
+
+namespace {
 
 // Remove the functions with ids in `filter_function_ids` from instrumented_functions in
 // `capture_options`.
@@ -115,8 +124,6 @@ static void StopInternalProducersAndCaptureStartStopListenersInParallel(
   }
 }
 
-namespace {
-
 // This class hijacks FunctionEntry and FunctionExit events before they reach the
 // ProducerEventProcessor, and sends them to LinuxTracing instead, so that they can be processed
 // like u(ret)probes. All the other events are forwarded to the ProducerEventProcessor normally.
@@ -148,6 +155,68 @@ class ProducerEventProcessorHijackingFunctionEntryExitForLinuxTracing
   ProducerEventProcessor* producer_event_processor_;
   TracingHandler* tracing_handler_;
 };
+
+orbit_grpc_protos::ProducerCaptureEvent CreateTargetProcessStateAfterCaptureEvent(pid_t pid) {
+  ProducerCaptureEvent event;
+  TargetProcessStateAfterCapture* target_process_state =
+      event.mutable_target_process_state_after_capture();
+  target_process_state->set_process_state(
+      TargetProcessStateAfterCapture::kProcessStateInternalError);
+  target_process_state->set_termination_signal(
+      TargetProcessStateAfterCapture::kTerminationSignalInternalError);
+
+  const std::string pid_dir_name = absl::StrFormat("/proc/%i", pid);
+  auto exists_or_error = orbit_base::FileExists(pid_dir_name);
+  if (exists_or_error.has_error()) {
+    ORBIT_ERROR("Unable to check for existence of \"%s\": %s", pid_dir_name,
+                exists_or_error.error().message());
+    // We can't read the process state, so we return an error state.
+    return event;
+  }
+
+  if (exists_or_error.value()) {
+    // Process is still running.
+    target_process_state->set_process_state(TargetProcessStateAfterCapture::kRunning);
+    target_process_state->set_termination_signal(
+        TargetProcessStateAfterCapture::kTerminationSignalUnspecified);
+    return event;
+  }
+
+  // Check wether we find a minidump. Otherwise we assume the process ended gracefully.
+  const std::string kCoreDirectory = "/usr/local/cloudcast/core";
+  auto error_or_core_files = orbit_base::ListFilesInDirectory(kCoreDirectory);
+  if (error_or_core_files.has_error()) {
+    // We can't access the directory with the core files; we return an error state.
+    return event;
+  }
+  const std::vector<std::filesystem::path> core_files = std::move(error_or_core_files.value());
+  // Matches zero or more characters ('.*') followed by a literal dot ('\.') followed by the pid of
+  // the process ('%i') followed by another literal dot  ('\.') followed by one or more numbers
+  // ('[0-9]+') which is the number of seconds since the epoch finally followed by the format ending
+  // ('.core.dmp').
+  const std::regex check_if_minidump_file(absl::StrFormat(R"(.*\.%i\.[0-9]+\.core\.dmp)", pid));
+  for (const std::filesystem::path& path : core_files) {
+    if (regex_match(path.string(), check_if_minidump_file)) {
+      target_process_state->set_process_state(TargetProcessStateAfterCapture::kCrashed);
+      ErrorMessageOr<int> signal_or_error = ExtractSignalFromMinidump(path);
+      if (signal_or_error.has_error()) {
+        ORBIT_ERROR("Error extracting termination signal from minidump: %s",
+                    signal_or_error.error().message());
+        return event;
+      }
+      const int signal = signal_or_error.value();
+      target_process_state->set_termination_signal(
+          static_cast<orbit_grpc_protos::TargetProcessStateAfterCapture_TerminationSignal>(signal));
+      return event;
+    }
+  }
+
+  // We did not find any core files for this process. So we assume a clean exit.
+  target_process_state->set_process_state(TargetProcessStateAfterCapture::kEnded);
+  target_process_state->set_termination_signal(
+      TargetProcessStateAfterCapture::kTerminationSignalUnspecified);
+  return event;
+}
 
 }  // namespace
 
@@ -358,6 +427,12 @@ void LinuxCaptureServiceBase::DoCapture(
 
   // The destructor of IntrospectionListener takes care of actually disabling introspection.
   introspection_listener.reset();
+
+  // Check wether target process is still running and send that information.
+  auto target_process_state_after_capture = CreateTargetProcessStateAfterCaptureEvent(
+      orbit_base::ToNativeProcessId(capture_options.pid()));
+  producer_event_processor_->ProcessEvent(orbit_grpc_protos::kRootProducerId,
+                                          std::move(target_process_state_after_capture));
 
   FinalizeEventProcessing(stop_capture_reason);
 

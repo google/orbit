@@ -48,6 +48,8 @@ class CaptureListener {
   virtual void OnUniqueCallstack(uint64_t callstack_id,
                                  orbit_client_data::CallstackInfo callstack) = 0;
   virtual void OnCallstackEvent(orbit_client_data::CallstackEvent callstack_event) = 0;
+  virtual void OnTargetProcessStateAfterCapture(
+      orbit_grpc_protos::TargetProcessStateAfterCapture process_state) = 0;
   virtual void OnThreadName(uint32_t thread_id, std::string thread_name) = 0;
   virtual void OnModuleUpdate(uint64_t timestamp_ns, orbit_grpc_protos::ModuleInfo module_info) = 0;
   virtual void OnModulesSnapshot(uint64_t timestamp_ns,

@@ -7,6 +7,7 @@
 
 #include "CaptureClient/CaptureListener.h"
 #include "ClientData/CaptureData.h"
+#include "GrpcProtos/capture.pb.h"
 
 namespace orbit_capture_client {
 
@@ -44,6 +45,11 @@ class AbstractCaptureListener : public CaptureListener {
 
   void OnCallstackEvent(orbit_client_data::CallstackEvent callstack_event) override {
     GetMutableCaptureDataFromDerived().AddCallstackEvent(callstack_event);
+  }
+
+  void OnTargetProcessStateAfterCapture(
+      orbit_grpc_protos::TargetProcessStateAfterCapture process_state) override {
+    GetMutableCaptureDataFromDerived().SetTargetProcessStateAfterCapture(process_state);
   }
 
   void OnThreadName(uint32_t thread_id, std::string thread_name) override {

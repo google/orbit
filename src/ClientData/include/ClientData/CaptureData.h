@@ -104,6 +104,16 @@ class CaptureData {
 
   static const std::string kUnknownFunctionOrModuleName;
 
+  [[nodiscard]] orbit_grpc_protos::TargetProcessStateAfterCapture
+  GetTargetProcessStateAfterCapture() const {
+    return target_process_state_after_capture_;
+  }
+
+  void SetTargetProcessStateAfterCapture(
+      const orbit_grpc_protos::TargetProcessStateAfterCapture& process_state) {
+    target_process_state_after_capture_ = process_state;
+  }
+
   [[nodiscard]] const absl::flat_hash_map<uint32_t, std::string>& thread_names() const {
     return thread_names_;
   }
@@ -290,6 +300,8 @@ class CaptureData {
   absl::flat_hash_map<uint64_t, LinuxAddressInfo> address_infos_;
 
   absl::flat_hash_map<ScopeId, ScopeStats> scope_stats_;
+
+  orbit_grpc_protos::TargetProcessStateAfterCapture target_process_state_after_capture_;
 
   absl::flat_hash_map<uint32_t, std::string> thread_names_;
 

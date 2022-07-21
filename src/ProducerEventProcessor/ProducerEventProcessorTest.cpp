@@ -59,6 +59,7 @@ using orbit_grpc_protos::ProcessMemoryUsage;
 using orbit_grpc_protos::ProducerCaptureEvent;
 using orbit_grpc_protos::SchedulingSlice;
 using orbit_grpc_protos::SystemMemoryUsage;
+using orbit_grpc_protos::TargetProcessStateAfterCapture;
 using orbit_grpc_protos::ThreadName;
 using orbit_grpc_protos::ThreadNamesSnapshot;
 using orbit_grpc_protos::ThreadStateSlice;
@@ -1296,6 +1297,29 @@ TEST(ProducerEventProcessor, GpuQueueSubmissionSmoke) {
     EXPECT_EQ(debug_marker.color().green(), kGreen2);
     EXPECT_EQ(debug_marker.color().blue(), kBlue2);
   }
+}
+
+TEST(ProducerEventProcessor, TargetProcessStateAfterCapture) {
+  MockClientCaptureEventCollector collector;
+  auto producer_event_processor = ProducerEventProcessor::Create(&collector);
+
+  ProducerCaptureEvent producer_thread_name;
+  producer_thread_name.mutable_target_process_state_after_capture()->set_process_state(
+      TargetProcessStateAfterCapture::kCrashed);
+  constexpr auto kSomeSignal = TargetProcessStateAfterCapture::kSigIll;
+  producer_thread_name.mutable_target_process_state_after_capture()->set_termination_signal(
+      kSomeSignal);
+
+  ClientCaptureEvent event;
+
+  EXPECT_CALL(collector, AddEvent).Times(1).WillOnce(SaveArg<0>(&event));
+
+  producer_event_processor->ProcessEvent(1, std::move(producer_thread_name));
+
+  ASSERT_EQ(ClientCaptureEvent::kTargetProcessStateAfterCapture, event.event_case());
+  EXPECT_EQ(TargetProcessStateAfterCapture::kCrashed,
+            event.target_process_state_after_capture().process_state());
+  EXPECT_EQ(kSomeSignal, event.target_process_state_after_capture().termination_signal());
 }
 
 TEST(ProducerEventProcessor, ThreadNameSmoke) {

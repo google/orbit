@@ -40,8 +40,10 @@ const CaptureCompleteData kTestCompleteData{
     109 /*number_of_manual_tracked_value_timers*/,
     110 /*number_of_callstack_samples*/,
     111 /*number_of_unwinding_errors*/,
-    std::filesystem::path{"/test/path"} /*file_path*/
-};
+    std::filesystem::path{"/test/path"} /*file_path*/,
+    OrbitCaptureData_TargetProcessStateAfterCapture_TARGET_PROCESS_STATE_AFTER_CAPTURE_CRASHED /*target_process_state_after_capture*/
+    ,
+    OrbitCaptureData_TargetProcessTerminationSignal_TARGET_PROCESS_TERMINATION_SIGNAL_SIGILL /*target_process_termination_signal*/};
 
 bool HasSameCaptureStartData(const OrbitCaptureData& capture_data,
                              const CaptureStartData& start_data) {

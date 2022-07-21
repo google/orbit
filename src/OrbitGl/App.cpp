@@ -509,6 +509,13 @@ Future<void> OrbitApp::OnCaptureComplete() {
               all_threads_sample_data->unwinding_errors_count;
         }
 
+        metrics_capture_complete_data_.target_process_state_after_capture =
+            static_cast<orbit_metrics_uploader::OrbitCaptureData_TargetProcessStateAfterCapture>(
+                GetCaptureData().GetTargetProcessStateAfterCapture().process_state());
+        metrics_capture_complete_data_.target_process_termination_signal =
+            static_cast<orbit_metrics_uploader::OrbitCaptureData_TargetProcessTerminationSignal>(
+                GetCaptureData().GetTargetProcessStateAfterCapture().termination_signal());
+
         FireRefreshCallbacks();
 
         if (absl::GetFlag(FLAGS_auto_symbol_loading)) {
@@ -1867,7 +1874,7 @@ orbit_base::Future<void> OrbitApp::LoadSymbolsManually(
 
     // Explicitly do not handle the result.
     Future<void> future = RetrieveModuleAndLoadSymbolsAndHandleError(module).Then(
-        &immediate_executor, [](const SymbolLoadingAndErrorHandlingResult & /*result*/) -> void {});
+        &immediate_executor, [](const SymbolLoadingAndErrorHandlingResult& /*result*/) -> void {});
     futures.emplace_back(std::move(future));
   }
   orbit_client_symbols::QSettingsBasedStorageManager storage_manager;

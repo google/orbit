@@ -764,6 +764,55 @@ message OutOfOrderEventsDiscardedEvent {
   uint64 end_timestamp_ns = 2;
 }
 
+message TargetProcessStateAfterCapture {
+  enum ProcessState {
+    kProcessStateUnknown = 0; 
+    kProcessStateInternalError = 1;
+    kRunning = 2;
+    kEnded = 3;
+    kCrashed = 4;
+  };
+  ProcessState process_state = 1;
+
+  enum TerminationSignal {
+    kTerminationSignalUnknown = 0;
+    kSigHup = 1;
+    kSigInt = 2;
+    kSigQuit = 3;
+    kSigIll = 4;
+    kSigTrap = 5;
+    kSigAbrt = 6;
+    kSigBus = 7;
+    kSigFpe = 8;
+    kSigKill = 9;
+    kSigUsr1 = 10;
+    kSigSegv = 11;
+    kSigUsr2 = 12;
+    kSigPipe = 13;
+    kSigAlrm = 14;
+    kSigTerm = 15;
+    kSigStkflt = 16;
+    kSigChld = 17;
+    kSigCont = 18;
+    kSigStop = 19;
+    kSigStp = 20;
+    kSigTtin = 21;
+    kSigTtou = 22;
+    kSigUrg = 23;
+    kSigXcpu = 24;
+    kSigXfsz = 25;
+    kSigVtalrm = 26;
+    kSigProf = 27;
+    kSigWinch = 28;
+    kSigIo = 29;
+    kSigPwr = 30;
+    kSigSys = 31;
+    kTerminationSignalUnspecified = 32;
+    kTerminationSignalInternalError = 33;
+  };
+  TerminationSignal termination_signal = 2;
+}
+
 message ClientCaptureEvent {
   reserved 20, 23, 28, 29, 30;
 
@@ -774,7 +823,7 @@ message ClientCaptureEvent {
     // numbers starting with 16.
     //
     // Next high-frequency ID: 12
-    // Next lower-frequency ID: 51
+    // Next lower-frequency ID: 52
     // Please keep these alphabetically ordered.
 
     // Even though AddressInfo is a high-frequency event
@@ -814,6 +863,7 @@ message ClientCaptureEvent {
     OutOfOrderEventsDiscardedEvent out_of_order_events_discarded_event = 37;
     PresentEvent present_event = 49;
     SchedulingSlice scheduling_slice = 6;
+    TargetProcessStateAfterCapture target_process_state_after_capture = 51;
     ThreadName thread_name = 22;
     ThreadNamesSnapshot thread_names_snapshot = 26;
     ThreadStateSlice thread_state_slice = 7;
@@ -835,7 +885,7 @@ message ProducerCaptureEvent {
     // numbers starting with 16.
     //
     // Next high-frequency ID: 15.
-    // Next lower-frequency ID: 50
+    // Next lower-frequency ID: 51
     //
     // Please keep these alphabetically ordered.
     ApiEvent api_event = 10;
@@ -879,6 +929,7 @@ message ProducerCaptureEvent {
     OutOfOrderEventsDiscardedEvent out_of_order_events_discarded_event = 35;
     PresentEvent present_event = 48;
     SchedulingSlice scheduling_slice = 8;
+    TargetProcessStateAfterCapture target_process_state_after_capture = 50;
     ThreadName thread_name = 21;
     ThreadNamesSnapshot thread_names_snapshot = 24;
     ThreadStateSlice thread_state_slice = 9;

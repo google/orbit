@@ -426,6 +426,12 @@ void VerifyOrderOfAllEvents(const std::vector<orbit_grpc_protos::ProducerCapture
         EXPECT_GE(event.scheduling_slice().out_timestamp_ns(), previous_event_timestamp_ns);
         previous_event_timestamp_ns = event.scheduling_slice().out_timestamp_ns();
         break;
+      case orbit_grpc_protos::ProducerCaptureEvent::kTargetProcessStateAfterCapture:
+        EXPECT_EQ(orbit_grpc_protos::TargetProcessStateAfterCapture::kRunning,
+                  event.target_process_state_after_capture().process_state());
+        EXPECT_EQ(orbit_grpc_protos::TargetProcessStateAfterCapture::kTerminationSignalUnspecified,
+                  event.target_process_state_after_capture().termination_signal());
+        break;
       case orbit_grpc_protos::ProducerCaptureEvent::kThreadName:
         EXPECT_GE(event.thread_name().timestamp_ns(), previous_event_timestamp_ns);
         previous_event_timestamp_ns = event.thread_name().timestamp_ns();

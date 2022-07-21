@@ -63,6 +63,7 @@ using orbit_grpc_protos::PresentEvent;
 using orbit_grpc_protos::ProcessMemoryUsage;
 using orbit_grpc_protos::SchedulingSlice;
 using orbit_grpc_protos::SystemMemoryUsage;
+using orbit_grpc_protos::TargetProcessStateAfterCapture;
 using orbit_grpc_protos::ThreadName;
 using orbit_grpc_protos::ThreadStateSlice;
 using orbit_grpc_protos::TracepointEvent;
@@ -88,6 +89,8 @@ class MockCaptureListener : public CaptureListener {
   MOCK_METHOD(void, OnUniqueCallstack, (uint64_t /*callstack_id*/, CallstackInfo /*callstack*/),
               (override));
   MOCK_METHOD(void, OnCallstackEvent, (CallstackEvent), (override));
+  MOCK_METHOD(void, OnTargetProcessStateAfterCapture,
+              (orbit_grpc_protos::TargetProcessStateAfterCapture /*process_state*/), (override));
   MOCK_METHOD(void, OnThreadName, (uint32_t /*thread_id*/, std::string /*thread_name*/),
               (override));
   MOCK_METHOD(void, OnThreadStateSlice, (ThreadStateSliceInfo), (override));
@@ -385,6 +388,29 @@ TEST(CaptureEventProcessor, CanHandleFunctionCalls) {
     EXPECT_EQ(actual_timer.registers(i), function_call->registers(i));
   }
   EXPECT_EQ(actual_timer.type(), TimerInfo::kNone);
+}
+
+TEST(CaptureEventProcessor, CanHandleTargetProcessStateAfterCapture) {
+  MockCaptureListener listener;
+  auto event_processor =
+      CaptureEventProcessor::CreateForCaptureListener(&listener, std::filesystem::path{}, {});
+
+  ClientCaptureEvent event;
+  TargetProcessStateAfterCapture* process_state =
+      event.mutable_target_process_state_after_capture();
+  process_state->set_process_state(TargetProcessStateAfterCapture::kCrashed);
+  constexpr auto kSomeSignal = TargetProcessStateAfterCapture::kSigIll;
+  process_state->set_termination_signal(kSomeSignal);
+
+  TargetProcessStateAfterCapture actual_process_state;
+  EXPECT_CALL(listener, OnTargetProcessStateAfterCapture)
+      .Times(1)
+      .WillOnce(SaveArg<0>(&actual_process_state));
+
+  event_processor->ProcessEvent(event);
+
+  EXPECT_EQ(process_state->process_state(), actual_process_state.process_state());
+  EXPECT_EQ(process_state->termination_signal(), actual_process_state.termination_signal());
 }
 
 TEST(CaptureEventProcessor, CanHandleThreadNames) {
