@@ -33,6 +33,17 @@ add_library(OrbitVulkanLayer SHARED)
 target_sources(OrbitVulkanLayer PRIVATE
         EntryPoints.cpp)
 
+# The linker flags mark all symbols coming from libraries as private and ensure that they will be hidden in the shared library.
+# The visibility properties ensure that symbols coming from this module's source files are considered private unless
+# explicitly marked visible in the source code file.
+# This prevents functions and types that we don't want to explicitly expose from leaking into the target process and from
+# potentially being used outside of this library.
+# Functions that may not be hidden, have to be marked with the `VK_LAYER_EXPORT` macro.
+set_target_properties(OrbitVulkanLayer PROPERTIES LINK_FLAGS "-Wl,--exclude-libs,ALL"
+                                                  C_VISIBILITY_PRESET hidden
+                                                  CXX_VISIBILITY_PRESET hidden
+                                                  VISIBILITY_INLINES_HIDDEN 1)
+
 add_custom_command(TARGET OrbitVulkanLayer POST_BUILD COMMAND ${CMAKE_COMMAND}
                    -E copy ${CMAKE_CURRENT_SOURCE_DIR}/resources/VkLayer_Orbit_implicit.json
                    $<TARGET_FILE_DIR:OrbitVulkanLayer>/VkLayer_Orbit_implicit.json)
