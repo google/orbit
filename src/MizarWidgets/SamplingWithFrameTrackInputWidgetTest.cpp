@@ -66,6 +66,7 @@ const std::vector<std::string> kThreadNamesSorted = {
     MakeThreadListItemString(kThreadName, kTid),
     MakeThreadListItemString(kOtherThreadName, kOtherTid)};
 const QString kInputName = QStringLiteral("InputName");
+const QString kFileName = QStringLiteral("FileName");
 
 constexpr size_t kFrameTracksCount = 3;
 constexpr std::array<ScopeId, kFrameTracksCount> kScopeIds = {ScopeId(1), ScopeId(2), ScopeId(10)};
@@ -101,11 +102,14 @@ class SamplingWithFrameTrackInputWidgetTest : public ::testing::Test {
     EXPECT_CALL(data_, TidToCallstackSampleCounts).WillRepeatedly(ReturnRef(kTidToCount));
     EXPECT_CALL(data_, GetFrameTracks).WillRepeatedly(Return(kFrameTracks));
 
-    widget_->Init(data_, kInputName);
+    widget_->Init(data_, kInputName, kFileName);
   }
 
   void SetUp() override {
     title_ = widget_->findChild<QLabel*>("title_");
+    ASSERT_THAT(title_, NotNull());
+
+    file_name_ = widget_->findChild<QLabel*>("file_name");
     ASSERT_THAT(title_, NotNull());
 
     thread_list_ = widget_->findChild<QListWidget*>("thread_list_");
@@ -140,6 +144,7 @@ class SamplingWithFrameTrackInputWidgetTest : public ::testing::Test {
   MockPairedData data_;
   std::unique_ptr<SamplingWithFrameTrackInputWidgetTmpl<MockPairedData>> widget_;
   QLabel* title_{};
+  QLabel* file_name_{};
   QListWidget* thread_list_{};
   QComboBox* frame_track_list_{};
   QLineEdit* start_ms_{};

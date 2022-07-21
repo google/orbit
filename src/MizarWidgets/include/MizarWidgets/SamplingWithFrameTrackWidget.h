@@ -37,7 +37,9 @@ class SamplingWithFrameTrackWidget : public QWidget {
   explicit SamplingWithFrameTrackWidget(QWidget* parent = nullptr);
   ~SamplingWithFrameTrackWidget() override;
 
-  void Init(const orbit_mizar_data::BaselineAndComparison* baseline_and_comparison);
+  void Init(const orbit_mizar_data::BaselineAndComparison* baseline_and_comparison,
+            const Baseline<QString>& baseline_file_name,
+            const Comparison<QString>& comparison_file_name);
 
  public slots:
   void OnMultiplicityCorrectionCheckBoxClicked(bool checked);

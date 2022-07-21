@@ -39,6 +39,8 @@ SamplingWithFrameTrackInputWidgetBase::SamplingWithFrameTrackInputWidgetBase(QWi
 
 QLabel* SamplingWithFrameTrackInputWidgetBase::GetTitle() const { return ui_->title_; }
 
+QLabel* SamplingWithFrameTrackInputWidgetBase::GetFileName() const { return ui_->file_name_; };
+
 QListWidget* SamplingWithFrameTrackInputWidgetBase::GetThreadList() const {
   return ui_->thread_list_;
 }

@@ -61,6 +61,7 @@ class SamplingWithFrameTrackInputWidgetBase : public QWidget {
   explicit SamplingWithFrameTrackInputWidgetBase(QWidget* parent = nullptr);
 
   [[nodiscard]] QLabel* GetTitle() const;
+  [[nodiscard]] QLabel* GetFileName() const;
   [[nodiscard]] QListWidget* GetThreadList() const;
   [[nodiscard]] QComboBox* GetFrameTrackList() const;
   [[nodiscard]] QLineEdit* GetStartMs() const;
@@ -84,15 +85,18 @@ class SamplingWithFrameTrackInputWidgetTmpl : public SamplingWithFrameTrackInput
       : SamplingWithFrameTrackInputWidgetBase(parent) {}
   ~SamplingWithFrameTrackInputWidgetTmpl() override = default;
 
-  void Init(const PairedData& data, const QString& name) {
-    InitTitle(name);
+  void Init(const PairedData& data, const QString& title, const QString& file_name) {
+    InitTitle(title);
+    InitFileName(file_name);
     InitThreadList(data);
     InitFrameTrackList(data);
     InitStartMs();
   }
 
  private:
-  void InitTitle(const QString& name) { GetTitle()->setText(name); }
+  void InitTitle(const QString& title) { GetTitle()->setText(title); }
+
+  void InitFileName(const QString& file_name) { GetFileName()->setText(file_name); }
 
   void InitThreadList(const PairedData& data) {
     QListWidget* list = GetThreadList();

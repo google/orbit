@@ -15,10 +15,13 @@
 namespace orbit_mizar_widgets {
 
 MizarMainWindow::MizarMainWindow(
-    const orbit_mizar_data::BaselineAndComparison* baseline_and_comparison, QWidget* parent)
+    const orbit_mizar_data::BaselineAndComparison* baseline_and_comparison,
+    const Baseline<QString>& baseline_file_name, const Comparison<QString>& comparison_file_name,
+    QWidget* parent)
     : QMainWindow(parent), ui_(std::make_unique<Ui::MainWindow>()) {
   ui_->setupUi(this);
-  ui_->sampling_with_frame_track_widget_->Init(baseline_and_comparison);
+  ui_->sampling_with_frame_track_widget_->Init(baseline_and_comparison, baseline_file_name,
+                                               comparison_file_name);
 
   QObject::connect(ui_->sampling_with_frame_track_widget_,
                    &SamplingWithFrameTrackWidget::ReportError, this,

@@ -50,6 +50,10 @@ static std::string ExpandPathHomeFolder(const std::string& path) {
   return path;
 }
 
+[[nodiscard]] static QString MakeFileName(const std::filesystem::path& path) {
+  return QString::fromStdString(path.filename().string());
+}
+
 int main(int argc, char** argv) {
   // The main in its current state is used to testing/experimenting and serves no other purpose
   absl::ParseCommandLine(argc, argv);
@@ -81,7 +85,9 @@ int main(int argc, char** argv) {
   QApplication::setOrganizationName("The Orbit Authors");
   QApplication::setApplicationName("Mizar comparison tool");
 
-  orbit_mizar_widgets::MizarMainWindow main_window(&bac);
+  orbit_mizar_widgets::MizarMainWindow main_window(
+      &bac, Baseline<QString>(MakeFileName(baseline_path)),
+      Comparison<QString>(MakeFileName(comparison_path)));
   main_window.show();
   return QApplication::exec();
 }
