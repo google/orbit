@@ -222,10 +222,9 @@ bool SetMaxOpenFilesSoftLimit(uint64_t soft_limit) {
   return true;
 }
 
-// Check for the existence of a file mapping containing the absolute address of the function.
-// We have to consider the possibility that the module may be mapped multiple times, and hence that
-// the function may have multiple absolute addresses: we want a file mapping containing the absolute
-// address of the function for each occurrence of the module.
+// Check that all mappings containing the absolute addresses of the function are file mappings.
+// Plural, because we have to consider the possibility that the module may be mapped multiple times,
+// and hence that the function may have multiple absolute addresses.
 //
 // Note: A more naive solution would be to look for a map containing the file offset for the
 // function, hence not involving absolute addresses and modules at all. For misaligned PEs, this can
@@ -314,7 +313,7 @@ std::map<uint64_t, std::string> FindFunctionsThatUprobesCannotInstrumentWithMess
     const std::vector<ModuleInfo>& file_path_modules = file_path_modules_it->second;
 
     if (FunctionIsAlwaysInFileMapping(file_path_maps, file_path_modules, function)) {
-      // This function is mapped into at least one file mapping.
+      // This function is mapped into a file mapping (for each time its module is loaded).
       continue;
     }
 
