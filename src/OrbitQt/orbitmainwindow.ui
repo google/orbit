@@ -362,6 +362,9 @@ QPushButton:disabled {
          </property>
          <item>
           <widget class="QTextEdit" name="captureLogTextEdit">
+           <property name="accessibleName">
+            <string>CaptureLogTextEdit</string>
+           </property>
            <property name="tabStopDistance">
             <double>100.000000000000000</double>
            </property>
