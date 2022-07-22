@@ -31,6 +31,7 @@
 #include "LibunwindstackUnwinder.h"
 #include "LinuxTracing/TracerListener.h"
 #include "LinuxTracingUtils.h"
+#include "ModuleUtils/ReadLinuxMaps.h"
 #include "ModuleUtils/ReadLinuxModules.h"
 #include "OrbitBase/GetProcessIds.h"
 #include "OrbitBase/Logging.h"
@@ -38,8 +39,6 @@
 #include "PerfEventOpen.h"
 #include "PerfEventReaders.h"
 #include "PerfEventRecords.h"
-
-namespace orbit_linux_tracing {
 
 using orbit_base::GetAllPids;
 using orbit_base::GetTidsOfProcess;
@@ -49,6 +48,9 @@ using orbit_grpc_protos::ModuleInfo;
 using orbit_grpc_protos::ModulesSnapshot;
 using orbit_grpc_protos::ThreadName;
 using orbit_grpc_protos::ThreadNamesSnapshot;
+using orbit_grpc_protos::WarningInstrumentingWithUprobesEvent;
+
+namespace orbit_linux_tracing {
 
 static std::optional<uint64_t> ComputeSamplingPeriodNs(double sampling_frequency) {
   double period_ns_dbl = 1'000'000'000 / sampling_frequency;
@@ -634,6 +636,20 @@ void TracerImpl::InitLostAndDiscardedEventVisitor() {
   event_processor_.AddVisitor(lost_and_discarded_event_visitor_.get());
 }
 
+static WarningInstrumentingWithUprobesEvent CreateWarningInstrumentingWithUprobesEvent(
+    uint64_t timestamp_ns, std::map<uint64_t, std::string> function_ids_to_messages) {
+  ORBIT_CHECK(!function_ids_to_messages.empty());
+  WarningInstrumentingWithUprobesEvent event;
+  event.set_timestamp_ns(timestamp_ns);
+  for (auto& [function_id, error_message] : function_ids_to_messages) {
+    orbit_grpc_protos::FunctionThatFailedToBeInstrumented* function_that_failed_to_be_instrumented =
+        event.add_functions_that_failed_to_instrument();
+    function_that_failed_to_be_instrumented->set_function_id(function_id);
+    function_that_failed_to_be_instrumented->set_error_message(std::move(error_message));
+  }
+  return event;
+}
+
 static std::vector<ThreadName> RetrieveInitialThreadNamesSystemWide(uint64_t initial_timestamp_ns) {
   std::vector<ThreadName> thread_names;
   for (pid_t pid : GetAllPids()) {
@@ -694,10 +710,12 @@ void TracerImpl::Startup() {
     perf_event_open_errors = true;
   }
 
+  bool uprobes_errors = false;
   if (!instrumented_functions_.empty()) {
     if (bool opened = OpenUserSpaceProbes(cpuset_cpus); !opened) {
       perf_event_open_error_details.emplace_back("u(ret)probes");
       perf_event_open_errors = true;
+      uprobes_errors = true;
     }
   }
   if (!functions_to_record_additional_stack_on_.empty()) {
@@ -772,14 +790,28 @@ void TracerImpl::Startup() {
   ModulesSnapshot modules_snapshot;
   modules_snapshot.set_pid(target_pid_);
   modules_snapshot.set_timestamp_ns(effective_capture_start_timestamp_ns_);
-  auto modules_or_error = orbit_module_utils::ReadModules(target_pid_);
-  if (modules_or_error.has_value()) {
-    const std::vector<ModuleInfo>& modules = modules_or_error.value();
+  auto maps_or_error = orbit_module_utils::ReadMaps(target_pid_);
+  if (maps_or_error.has_value()) {
+    std::vector<ModuleInfo> modules =
+        orbit_module_utils::ParseMapsIntoModules(maps_or_error.value());
     *modules_snapshot.mutable_modules() = {modules.begin(), modules.end()};
     listener_->OnModulesSnapshot(std::move(modules_snapshot));
+
+    // Never send a WarningInstrumentingWithUprobesEvent if there was a more severe issue with
+    // opening some uprobes.
+    if (!uprobes_errors) {
+      std::map<uint64_t, std::string> function_ids_to_error_messages =
+          FindFunctionsThatUprobesCannotInstrumentWithMessages(maps_or_error.value(), modules,
+                                                               instrumented_functions_);
+      if (!function_ids_to_error_messages.empty()) {
+        listener_->OnWarningInstrumentingWithUprobesEvent(
+            CreateWarningInstrumentingWithUprobesEvent(effective_capture_start_timestamp_ns_,
+                                                       std::move(function_ids_to_error_messages)));
+      }
+    }
   } else {
-    ORBIT_ERROR("Unable to load modules for %d: %s", target_pid_,
-                modules_or_error.error().message());
+    ORBIT_ERROR("Unable to read maps of process %d: %s", target_pid_,
+                maps_or_error.error().message());
   }
 
   // Get the initial thread names to notify the listener_.

@@ -2,6 +2,9 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
+#include "LinuxTracingUtils.h"
+
+#include <absl/container/flat_hash_map.h>
 #include <absl/strings/numbers.h>
 #include <absl/strings/str_format.h>
 #include <absl/strings/str_split.h>
@@ -22,14 +25,20 @@
 #include <thread>
 #include <vector>
 
+#include "ModuleUtils/ReadLinuxMaps.h"
+#include "ModuleUtils/VirtualAndAbsoluteAddresses.h"
 #include "OrbitBase/ExecuteCommand.h"
 #include "OrbitBase/Logging.h"
 #include "OrbitBase/ReadFileToString.h"
 #include "OrbitBase/SafeStrerror.h"
 
-namespace orbit_linux_tracing {
-
 namespace fs = std::filesystem;
+
+using orbit_grpc_protos::InstrumentedFunction;
+using orbit_grpc_protos::ModuleInfo;
+using orbit_module_utils::LinuxMemoryMapping;
+
+namespace orbit_linux_tracing {
 
 std::string ReadMaps(pid_t pid) {
   std::string maps_filename = absl::StrFormat("/proc/%d/maps", pid);
@@ -211,6 +220,127 @@ bool SetMaxOpenFilesSoftLimit(uint64_t soft_limit) {
     return false;
   }
   return true;
+}
+
+// Check that all mappings containing the absolute addresses of the function are file mappings.
+// Plural, because we have to consider the possibility that the module may be mapped multiple times,
+// and hence that the function may have multiple absolute addresses.
+//
+// Note: A more naive solution would be to look for a map containing the file offset for the
+// function, hence not involving absolute addresses and modules at all. For misaligned PEs, this can
+// cause false negatives, because a function can be mapped twice, in a file mapping and in an
+// anonymous (executable) mapping, but with the actual absolute address of the function being in the
+// anonymous (executable) mapping.
+//
+// Example: Consider a PE with one section, the .text section, at offset in the file 0x400 and
+// relative virtual address 0x1000.
+// The maps could look like this:
+// 140000000-140001000 r--p 00000000 103:07 6946834    /path/to/pe.exe
+// 140001000-140004000 r-xp 00000000 00:00 0
+// The first map corresponds to the headers, however, it also covers all functions with offsets in
+// the file from 0x400 to 0x1000 (i.e., with RVAs from 0x1000 to 0x1c00). But those functions are
+// mapped again in the anonymous map, and that's where they actually have their absolute address,
+// i.e., where they actually get executed.
+static bool FunctionIsAlwaysInFileMapping(const std::vector<LinuxMemoryMapping>& file_path_maps,
+                                          const std::vector<ModuleInfo>& file_path_modules,
+                                          const InstrumentedFunction& function) {
+  for (const ModuleInfo& module : file_path_modules) {
+    ORBIT_CHECK(module.file_path() == function.file_path());
+    const uint64_t function_absolute_address =
+        orbit_module_utils::SymbolVirtualAddressToAbsoluteAddress(
+            function.function_virtual_address(), module.address_start(), module.load_bias(),
+            module.executable_segment_offset());
+    const std::string& function_file_path = function.file_path();
+    if (!std::any_of(
+            file_path_maps.begin(), file_path_maps.end(),
+            [&function_absolute_address, &function_file_path](const LinuxMemoryMapping& map) {
+              ORBIT_CHECK(map.pathname() == function_file_path);
+              return map.start_address() <= function_absolute_address &&
+                     function_absolute_address < map.end_address();
+            })) {
+      return false;
+    }
+  }
+  return true;
+}
+
+std::map<uint64_t, std::string> FindFunctionsThatUprobesCannotInstrumentWithMessages(
+    const std::vector<LinuxMemoryMapping>& maps, const std::vector<ModuleInfo>& modules,
+    const std::vector<InstrumentedFunction>& functions) {
+  absl::flat_hash_map<std::string, std::vector<LinuxMemoryMapping>> file_paths_to_maps;
+  for (const LinuxMemoryMapping& map : maps) {
+    if (map.inode() == 0 || map.pathname().empty()) continue;
+    file_paths_to_maps[map.pathname()].emplace_back(map);
+  }
+
+  absl::flat_hash_map<std::string, std::vector<ModuleInfo>> file_paths_to_modules;
+  for (const ModuleInfo& module : modules) {
+    file_paths_to_modules[module.file_path()].emplace_back(module);
+  }
+
+  constexpr const char* kModuleNotLoadedMessageFormat =
+      "Function \"%s\" belongs to module \"%s\", which is not loaded by the process. If the module "
+      "gets loaded during the capture, the function will get instrumented automatically.";
+  constexpr const char* kFunctionInAnonymousMapMessageFormatGeneric =
+      "Function \"%s\" belonging to module \"%s\" is not (always) loaded into a file mapping.";
+  constexpr const char* kFunctionInAnonymousMapMessageFormatForPe =
+      "Function \"%s\" belonging to module \"%s\" is not (always) loaded into a file mapping. The "
+      "module is a PE, so Wine might have loaded its text section into an anonymous mapping "
+      "instead.";
+
+  std::map<uint64_t, std::string> function_ids_to_error_messages;
+  for (const InstrumentedFunction& function : functions) {
+    auto file_path_modules_it = file_paths_to_modules.find(function.file_path());
+    if (file_path_modules_it == file_paths_to_modules.end()) {
+      // The module of this function is not loaded by the process.
+      std::string message = absl::StrFormat(kModuleNotLoadedMessageFormat, function.function_name(),
+                                            function.file_path());
+      function_ids_to_error_messages.emplace(function.function_id(), std::move(message));
+      continue;
+    }
+
+    auto file_path_maps_it = file_paths_to_maps.find(function.file_path());
+    if (file_path_maps_it == file_paths_to_maps.end()) {
+      // The module of this function is not in the maps. Note: this is generally unexpected if the
+      // condition above was false, i.e., if we detected that the module is loaded by the process.
+      std::string message = absl::StrFormat(kModuleNotLoadedMessageFormat, function.function_name(),
+                                            function.file_path());
+      function_ids_to_error_messages.emplace(function.function_id(), std::move(message));
+      continue;
+    }
+
+    const std::vector<LinuxMemoryMapping>& file_path_maps = file_path_maps_it->second;
+    const std::vector<ModuleInfo>& file_path_modules = file_path_modules_it->second;
+
+    if (FunctionIsAlwaysInFileMapping(file_path_maps, file_path_modules, function)) {
+      // This function is mapped into a file mapping (for each time its module is loaded).
+      continue;
+    }
+
+    // The module of this function is loaded by the process, but the address of the function itself
+    // doesn't appear in any file mapping.
+    const bool module_is_pe = std::any_of(
+        file_path_modules.begin(), file_path_modules.end(), [](const ModuleInfo& module) {
+          return module.object_file_type() == ModuleInfo::kCoffFile;
+        });
+    // When the module is a PE, the message will contain a note regarding Wine.
+    std::string message = module_is_pe
+                              ? absl::StrFormat(kFunctionInAnonymousMapMessageFormatForPe,
+                                                function.function_name(), function.file_path())
+                              : absl::StrFormat(kFunctionInAnonymousMapMessageFormatGeneric,
+                                                function.function_name(), function.file_path());
+    function_ids_to_error_messages.emplace(function.function_id(), std::move(message));
+  }
+
+  if (!function_ids_to_error_messages.empty()) {
+    std::string log_message = "Uprobes likely failed to instrument some functions:\n";
+    for (const auto& [unused_function_id, message] : function_ids_to_error_messages) {
+      log_message.append("* ").append(message).push_back('\n');
+    }
+    ORBIT_ERROR("%s", log_message);
+  }
+
+  return function_ids_to_error_messages;
 }
 
 }  // namespace orbit_linux_tracing
