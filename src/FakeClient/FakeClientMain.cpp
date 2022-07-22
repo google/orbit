@@ -432,9 +432,8 @@ int main(int argc, char* argv[]) {
       ORBIT_UNREACHABLE();
   }
 
-  auto capture_outcome_future =
-      capture_client.Capture(thread_pool.get(), std::move(capture_event_processor), module_manager,
-                             process_datagi, options);
+  auto capture_outcome_future = capture_client.Capture(
+      thread_pool.get(), std::move(capture_event_processor), module_manager, process_data, options);
   ORBIT_LOG("Asked to start capture");
 
   absl::Time start_time = absl::Now();
