@@ -190,7 +190,7 @@ TEST(FindFunctionsThatUprobesCannotInstrumentWithMessages, NoModules) {
       MakeInstrumentedFunction(2, "/path/to/elf", "bar()", 0x56290, 0x55290)};
   const std::map<uint64_t, std::string> function_ids_to_error_messages =
       FindFunctionsThatUprobesCannotInstrumentWithMessages(
-          orbit_module_utils::ReadMaps(kProcPidMapsContent), {}, instrumented_functions);
+          orbit_module_utils::ParseMaps(kProcPidMapsContent), {}, instrumented_functions);
 
   EXPECT_EQ(function_ids_to_error_messages.size(), 2);
 
@@ -221,7 +221,7 @@ TEST(FindFunctionsThatUprobesCannotInstrumentWithMessages, NoFunctionsToInstrume
   };
   const std::map<uint64_t, std::string> function_ids_to_error_messages =
       FindFunctionsThatUprobesCannotInstrumentWithMessages(
-          orbit_module_utils::ReadMaps(kProcPidMapsContent), modules, {});
+          orbit_module_utils::ParseMaps(kProcPidMapsContent), modules, {});
 
   EXPECT_EQ(function_ids_to_error_messages.size(), 0);
 }
@@ -241,7 +241,7 @@ TEST(FindFunctionsThatUprobesCannotInstrumentWithMessages, ModuleInMapsAndFuncti
       MakeInstrumentedFunction(2, "/path/to/elf", "bar()", 0x56290, 0x55290)};
   const std::map<uint64_t, std::string> function_ids_to_error_messages =
       FindFunctionsThatUprobesCannotInstrumentWithMessages(
-          orbit_module_utils::ReadMaps(kProcPidMapsContent), modules, instrumented_functions);
+          orbit_module_utils::ParseMaps(kProcPidMapsContent), modules, instrumented_functions);
 
   EXPECT_EQ(function_ids_to_error_messages.size(), 0);
 }
@@ -261,7 +261,7 @@ TEST(FindFunctionsThatUprobesCannotInstrumentWithMessages, ModuleInMapsButFuncti
       MakeInstrumentedFunction(2, "/path/to/elf", "bar()", 0x56290, 0x55290)};
   const std::map<uint64_t, std::string> function_ids_to_error_messages =
       FindFunctionsThatUprobesCannotInstrumentWithMessages(
-          orbit_module_utils::ReadMaps(kProcPidMapsContent), modules, instrumented_functions);
+          orbit_module_utils::ParseMaps(kProcPidMapsContent), modules, instrumented_functions);
 
   ASSERT_EQ(function_ids_to_error_messages.size(), 1);
   const auto& [function_id, error_message] = *function_ids_to_error_messages.begin();
@@ -286,7 +286,7 @@ TEST(FindFunctionsThatUprobesCannotInstrumentWithMessages, ModuleInMapsButFuncti
       MakeInstrumentedFunction(2, "/path/to/elf", "high_address()", 0x101000, 0x100000)};
   const std::map<uint64_t, std::string> function_ids_to_error_messages =
       FindFunctionsThatUprobesCannotInstrumentWithMessages(
-          orbit_module_utils::ReadMaps(kProcPidMapsContent), modules, instrumented_functions);
+          orbit_module_utils::ParseMaps(kProcPidMapsContent), modules, instrumented_functions);
 
   ASSERT_EQ(function_ids_to_error_messages.size(), 1);
   const auto& [function_id, error_message] = *function_ids_to_error_messages.begin();
@@ -316,7 +316,7 @@ TEST(FindFunctionsThatUprobesCannotInstrumentWithMessages,
       MakeInstrumentedFunction(2, "/path/to/elf", "bar()", 0x56290, 0x55290)};
   const std::map<uint64_t, std::string> function_ids_to_error_messages =
       FindFunctionsThatUprobesCannotInstrumentWithMessages(
-          orbit_module_utils::ReadMaps(kProcPidMapsContent), modules, instrumented_functions);
+          orbit_module_utils::ParseMaps(kProcPidMapsContent), modules, instrumented_functions);
 
   ASSERT_EQ(function_ids_to_error_messages.size(), 1);
   const auto& [function_id, error_message] = *function_ids_to_error_messages.begin();
@@ -345,7 +345,7 @@ TEST(FindFunctionsThatUprobesCannotInstrumentWithMessages,
       MakeInstrumentedFunction(2, "/path/to/elf", "bar()", 0x56290, 0x55290)};
   const std::map<uint64_t, std::string> function_ids_to_error_messages =
       FindFunctionsThatUprobesCannotInstrumentWithMessages(
-          orbit_module_utils::ReadMaps(kProcPidMapsContent), modules, instrumented_functions);
+          orbit_module_utils::ParseMaps(kProcPidMapsContent), modules, instrumented_functions);
 
   ASSERT_EQ(function_ids_to_error_messages.size(), 1);
   const auto& [function_id, error_message] = *function_ids_to_error_messages.begin();
@@ -371,7 +371,7 @@ TEST(FindFunctionsThatUprobesCannotInstrumentWithMessages,
       MakeInstrumentedFunction(2, "/path/to/elf", "bar()", 0x56290, 0x55290)};
   const std::map<uint64_t, std::string> function_ids_to_error_messages =
       FindFunctionsThatUprobesCannotInstrumentWithMessages(
-          orbit_module_utils::ReadMaps(kProcPidMapsContent), modules, instrumented_functions);
+          orbit_module_utils::ParseMaps(kProcPidMapsContent), modules, instrumented_functions);
 
   ASSERT_EQ(function_ids_to_error_messages.size(), 1);
   const auto& [function_id, error_message] = *function_ids_to_error_messages.begin();
@@ -395,7 +395,7 @@ TEST(FindFunctionsThatUprobesCannotInstrumentWithMessages, ModuleNotInMaps) {
       MakeInstrumentedFunction(2, "/path/to/elf", "bar()", 0x56290, 0x55290)};
   const std::map<uint64_t, std::string> function_ids_to_error_messages =
       FindFunctionsThatUprobesCannotInstrumentWithMessages(
-          orbit_module_utils::ReadMaps(kProcPidMapsContent), modules, instrumented_functions);
+          orbit_module_utils::ParseMaps(kProcPidMapsContent), modules, instrumented_functions);
 
   ASSERT_EQ(function_ids_to_error_messages.size(), 1);
   const auto& [function_id, error_message] = *function_ids_to_error_messages.begin();

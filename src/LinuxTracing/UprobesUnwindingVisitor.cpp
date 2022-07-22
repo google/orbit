@@ -589,7 +589,7 @@ FindExecutableAddressRangeForSameFileFromFirstMapInfo(
 // each new executable file mapping we would send a ModuleUpdateEvent with the address range and
 // file for that mapping.
 //
-// But just like for orbit_object_utils::ParseMapsIntoModules, things are more complicated. We
+// But just like for orbit_object_utils::ReadModulesFromMaps, things are more complicated. We
 // observed that in some cases a single loadable segment of an ELF file or a single executable
 // section of a PE can be loaded into memory with multiple adjacent file mappings. In addition, some
 // PEs can have multiple executable sections. And finally, the executable sections (and all other
@@ -607,7 +607,7 @@ FindExecutableAddressRangeForSameFileFromFirstMapInfo(
 //   module; if the module is a PE, we also have to consider anonymous mappings and detect whether
 //   they actually belong to the PE.
 //
-// Note that, just like in orbit_object_utils::ParseMapsIntoModules:
+// Note that, just like in orbit_object_utils::ReadModulesFromMaps:
 // - The ModuleInfo in the ModuleUpdateEvent will carry executable_segment_offset with the
 //   assumption that the value of ObjectFile::GetExecutableSegmentOffset correspond to the *first*
 //   executable mapping.

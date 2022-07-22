@@ -49,9 +49,11 @@ class LinuxMemoryMapping {
   std::string pathname_;
 };
 
-ErrorMessageOr<std::vector<LinuxMemoryMapping>> ReadMaps(pid_t pid);
+ErrorMessageOr<std::string> ReadMaps(pid_t pid);
 
-[[nodiscard]] std::vector<LinuxMemoryMapping> ReadMaps(std::string_view proc_pid_maps_content);
+[[nodiscard]] std::vector<LinuxMemoryMapping> ParseMaps(std::string_view proc_pid_maps_content);
+
+ErrorMessageOr<std::vector<LinuxMemoryMapping>> ReadAndParseMaps(pid_t pid);
 
 }  // namespace orbit_module_utils
 

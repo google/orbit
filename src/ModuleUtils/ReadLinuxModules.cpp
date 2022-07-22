@@ -85,8 +85,8 @@ ErrorMessageOr<ModuleInfo> CreateModule(const std::filesystem::path& module_path
 }
 
 ErrorMessageOr<std::vector<ModuleInfo>> ReadModules(pid_t pid) {
-  OUTCOME_TRY(auto&& maps, ReadMaps(pid));
-  return ParseMapsIntoModules(maps);
+  OUTCOME_TRY(auto&& maps, ReadAndParseMaps(pid));
+  return ReadModulesFromMaps(maps);
 }
 
 namespace {
@@ -131,7 +131,7 @@ namespace {
 // expect contains the PE (based on the start address of the file mapping that contains the headers
 // and based on the PE's SizeOfImage), we can be confident that this mapping also belongs to the PE.
 //
-// This class contains logic to help ParseMapsIntoModules with keeping track of the executable maps
+// This class contains logic to help ReadModulesFromMaps with keeping track of the executable maps
 // of a module, and with detecting anonymous executable maps that belong to a PE. The intended usage
 // is as follows:
 // - Create a new instance of this class when a new file is encountered while parsing
@@ -259,7 +259,7 @@ class FileMappedIntoMemory {
 };
 }  // namespace
 
-std::vector<ModuleInfo> ParseMapsIntoModules(const std::vector<LinuxMemoryMapping>& maps) {
+std::vector<ModuleInfo> ReadModulesFromMaps(const std::vector<LinuxMemoryMapping>& maps) {
   std::vector<ModuleInfo> result;
 
   std::optional<FileMappedIntoMemory> last_file_mapped_into_memory;
