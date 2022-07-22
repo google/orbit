@@ -8,22 +8,17 @@
 
 #include <string>
 
-#include "ModuleUtils/ReadLinuxModules.h"
 #include "ModuleUtils/VirtualAndAbsoluteAddresses.h"
 #include "ObjectUtils/ElfFile.h"
 
 namespace orbit_user_space_instrumentation {
 
-ErrorMessageOr<uint64_t> FindFunctionAddress(pid_t pid, std::string_view module_soname,
-                                             std::string_view function_name) {
-  auto modules = orbit_module_utils::ReadModules(pid);
-  if (modules.has_error()) {
-    return modules.error();
-  }
-
+ErrorMessageOr<uint64_t> FindFunctionAddress(
+    const std::vector<orbit_grpc_protos::ModuleInfo>& modules, std::string_view module_soname,
+    std::string_view function_name) {
   std::string module_file_path;
   uint64_t module_base_address = 0;
-  for (const orbit_grpc_protos::ModuleInfo& module : modules.value()) {
+  for (const orbit_grpc_protos::ModuleInfo& module : modules) {
     if (module.soname() == module_soname) {
       module_file_path = module.file_path();
       module_base_address = module.address_start();
@@ -31,7 +26,7 @@ ErrorMessageOr<uint64_t> FindFunctionAddress(pid_t pid, std::string_view module_
   }
   if (module_file_path.empty()) {
     return ErrorMessage(
-        absl::StrFormat("There is no module \"%s\" in process %d.", module_soname, pid));
+        absl::StrFormat("There is no module \"%s\" in the target process", module_soname));
   }
 
   OUTCOME_TRY(auto&& elf_file, orbit_object_utils::CreateElfFile(module_file_path));

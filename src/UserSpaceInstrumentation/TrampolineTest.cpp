@@ -585,22 +585,26 @@ class InstrumentFunctionTest : public testing::Test {
     ORBIT_CHECK(AttachAndStopProcess(pid_).has_value());
 
     auto library_path_or_error = GetTestLibLibraryPath();
-    ASSERT_THAT(library_path_or_error, HasNoError());
+    ORBIT_CHECK(library_path_or_error.has_value());
     std::filesystem::path library_path = std::move(library_path_or_error.value());
 
+    auto modules_or_error = orbit_module_utils::ReadModules(pid_);
+    ORBIT_CHECK(modules_or_error.has_value());
+    const std::vector<orbit_grpc_protos::ModuleInfo>& modules = modules_or_error.value();
+
     // Inject the payload for the instrumentation.
-    auto library_handle_or_error = DlopenInTracee(pid_, library_path, RTLD_NOW);
+    auto library_handle_or_error = DlopenInTracee(pid_, modules, library_path, RTLD_NOW);
     ORBIT_CHECK(library_handle_or_error.has_value());
     void* library_handle = library_handle_or_error.value();
 
     auto entry_payload_function_address_or_error =
-        DlsymInTracee(pid_, library_handle, entry_payload_function_name);
+        DlsymInTracee(pid_, modules, library_handle, entry_payload_function_name);
     ORBIT_CHECK(entry_payload_function_address_or_error.has_value());
     entry_payload_function_address_ =
         absl::bit_cast<uint64_t>(entry_payload_function_address_or_error.value());
 
     auto exit_payload_function_address_or_error =
-        DlsymInTracee(pid_, library_handle, exit_payload_function_name);
+        DlsymInTracee(pid_, modules, library_handle, exit_payload_function_name);
     ORBIT_CHECK(exit_payload_function_address_or_error.has_value());
     exit_payload_function_address_ =
         absl::bit_cast<uint64_t>(exit_payload_function_address_or_error.value());

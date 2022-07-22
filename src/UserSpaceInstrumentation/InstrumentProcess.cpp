@@ -81,8 +81,7 @@ bool ProcessWithPidExists(pid_t pid) {
 }
 
 // Returns true if liborbituserspaceinstrumentation.so is present in target process.
-ErrorMessageOr<bool> AlreadyInjected(pid_t pid) {
-  OUTCOME_TRY(auto&& modules, orbit_module_utils::ReadModules(pid));
+ErrorMessageOr<bool> AlreadyInjected(const std::vector<ModuleInfo>& modules) {
   for (const ModuleInfo& module : modules) {
     if (module.name() == kLibName) {
       return true;
@@ -133,15 +132,16 @@ bool IsBlocklisted(std::string_view function_name) {
 // Note that calling the result of the clone call a "thread" is a bit of a misnomer: We
 // do not create a new data structure for thread local storage but use the one of the thread we
 // halted.
-ErrorMessageOr<MachineCode> MachineCodeForCloneCall(pid_t pid, void* library_handle,
-                                                    uint64_t top_of_stack) {
+ErrorMessageOr<MachineCode> MachineCodeForCloneCall(pid_t pid,
+                                                    const std::vector<ModuleInfo>& modules,
+                                                    void* library_handle, uint64_t top_of_stack) {
   constexpr uint64_t kCloneFlags =
       CLONE_FILES | CLONE_FS | CLONE_IO | CLONE_SIGHAND | CLONE_SYSVSEM | CLONE_THREAD | CLONE_VM;
   constexpr uint32_t kSyscallNumberClone = 0x38;
   constexpr uint32_t kSyscallNumberExit = 0x3c;
   constexpr const char* kInitializeInstrumentationFunctionName = "InitializeInstrumentation";
   OUTCOME_TRY(void* initialize_instrumentation_function_address,
-              DlsymInTracee(pid, library_handle, kInitializeInstrumentationFunctionName));
+              DlsymInTracee(pid, modules, library_handle, kInitializeInstrumentationFunctionName));
   MachineCode code;
   code.AppendBytes({0x48, 0xbf})
       .AppendImmediate64(kCloneFlags)  // mov rdi, kCloneFlags
@@ -234,16 +234,39 @@ ErrorMessageOr<std::vector<pid_t>> GetNewOrbitThreads(
   return orbit_threads;
 }
 
-ErrorMessageOr<void> SetOrbitThreadsInTarget(pid_t pid, void* library_handle,
+ErrorMessageOr<void> SetOrbitThreadsInTarget(pid_t pid, const std::vector<ModuleInfo>& modules,
+                                             void* library_handle,
                                              const std::vector<pid_t>& orbit_threads) {
   ORBIT_CHECK(orbit_threads.size() == GetExpectedOrbitThreadNames().size());
   constexpr const char* kSetOrbitThreadsFunctionName = "SetOrbitThreads";
   OUTCOME_TRY(void* set_orbit_threads_function_address,
-              DlsymInTracee(pid, library_handle, kSetOrbitThreadsFunctionName));
+              DlsymInTracee(pid, modules, library_handle, kSetOrbitThreadsFunctionName));
   OUTCOME_TRY(ExecuteInProcess(pid, set_orbit_threads_function_address, orbit_threads[0],
                                orbit_threads[1], orbit_threads[2], orbit_threads[3],
                                orbit_threads[4], orbit_threads[5]));
   return outcome::success();
+}
+
+// Given the path of a module in the process, get all loaded instances of that module (usually there
+// will only be one, but a module can be loaded more than once).
+ErrorMessageOr<std::vector<ModuleInfo>> ModulesFromModulePath(
+    const std::vector<ModuleInfo>& modules, const std::string& path,
+    absl::flat_hash_map<std::string, std::vector<ModuleInfo>>* cache_of_modules_from_path) {
+  ORBIT_CHECK(cache_of_modules_from_path != nullptr);
+  auto cached_modules_from_path_it = cache_of_modules_from_path->find(path);
+  if (cached_modules_from_path_it == cache_of_modules_from_path->end()) {
+    std::vector<ModuleInfo> result;
+    for (const ModuleInfo& module : modules) {
+      if (module.file_path() == path) {
+        result.push_back(module);
+      }
+    }
+    if (result.empty()) {
+      return ErrorMessage(absl::StrFormat("Unable to find module for path \"%s\"", path));
+    }
+    cached_modules_from_path_it = cache_of_modules_from_path->emplace(path, result).first;
+  }
+  return cached_modules_from_path_it->second;
 }
 
 }  // namespace
@@ -262,14 +285,14 @@ class InstrumentedProcess {
   ~InstrumentedProcess() = default;
 
   [[nodiscard]] static ErrorMessageOr<std::unique_ptr<InstrumentedProcess>> Create(
-      const CaptureOptions& capture_options);
+      pid_t pid, const std::vector<ModuleInfo>& modules);
 
   // Instruments the functions capture_options.instrumented_functions. Returns a set of
   // function_id's of successfully instrumented functions, a map of function_id's to errors for
   // functions that couldn't be instrumented, the address ranges dedicated to trampolines, and the
   // map name of the injected library.
   [[nodiscard]] ErrorMessageOr<InstrumentationManager::InstrumentationResult> InstrumentFunctions(
-      const CaptureOptions& capture_options);
+      const CaptureOptions& capture_options, const std::vector<ModuleInfo>& modules);
 
   // Removes the instrumentation for all functions in capture_options.instrumented_functions that
   // have been instrumented previously.
@@ -292,8 +315,6 @@ class InstrumentedProcess {
 
   [[nodiscard]] ErrorMessageOr<void> EnsureTrampolinesWritable();
   [[nodiscard]] ErrorMessageOr<void> EnsureTrampolinesExecutable();
-
-  [[nodiscard]] ErrorMessageOr<std::vector<ModuleInfo>> ModulesFromModulePath(std::string path);
 
   // Returns a vector of the address ranges dedicated to all entry trampolines for this process. The
   // number of address ranges is usually very small as kTrampolinesPerChunk is high.
@@ -337,10 +358,6 @@ class InstrumentedProcess {
   using TrampolineMemoryChunks = std::vector<TrampolineMemoryChunk>;
   absl::flat_hash_map<AddressRange, TrampolineMemoryChunks> trampolines_for_modules_;
 
-  // Map path of a module in the process to all loaded instances of that module (usually there will
-  // only be one, but a module can be loaded more than once).
-  absl::flat_hash_map<std::string, std::vector<ModuleInfo>> modules_from_path_;
-
   // When instrumenting a function we record the address here. This is used when we uninstrument: we
   // look up the original bytes in `trampoline_map_` above.
   absl::flat_hash_set<uint64_t> addresses_of_instrumented_functions_;
@@ -351,9 +368,8 @@ class InstrumentedProcess {
 };
 
 ErrorMessageOr<std::unique_ptr<InstrumentedProcess>> InstrumentedProcess::Create(
-    const CaptureOptions& capture_options) {
+    pid_t pid, const std::vector<ModuleInfo>& modules) {
   std::unique_ptr<InstrumentedProcess> process(new InstrumentedProcess());
-  const pid_t pid = orbit_base::ToNativeProcessId(capture_options.pid());
   process->pid_ = pid;
   ORBIT_LOG("Starting to instrument process with pid %d", pid);
   OUTCOME_TRY(AttachAndStopProcess(pid));
@@ -386,9 +402,9 @@ ErrorMessageOr<std::unique_ptr<InstrumentedProcess>> InstrumentedProcess::Create
   // The initialization part that we will skip is responsible for setting up the communication with
   // OrbitService and identifying the threads created in that process. All of that already happened
   // in the previous run.
-  OUTCOME_TRY(const bool already_injected, AlreadyInjected(pid));
+  OUTCOME_TRY(const bool already_injected, AlreadyInjected(modules));
 
-  auto library_handle_or_error = DlopenInTracee(pid, library_path, RTLD_NOW);
+  auto library_handle_or_error = DlopenInTracee(pid, modules, library_path, RTLD_NOW);
   if (library_handle_or_error.has_error()) {
     return ErrorMessage(absl::StrFormat("Unable to open library in tracee: %s",
                                         library_handle_or_error.error().message()));
@@ -401,15 +417,15 @@ ErrorMessageOr<std::unique_ptr<InstrumentedProcess>> InstrumentedProcess::Create
   constexpr const char* kEntryPayloadFunctionName = "EntryPayload";
   constexpr const char* kExitPayloadFunctionName = "ExitPayload";
   OUTCOME_TRY(void* start_new_capture_function_address,
-              DlsymInTracee(pid, library_handle, kStartNewCaptureFunctionName));
+              DlsymInTracee(pid, modules, library_handle, kStartNewCaptureFunctionName));
   process->start_new_capture_function_address_ =
       absl::bit_cast<uint64_t>(start_new_capture_function_address);
   OUTCOME_TRY(void* entry_payload_function_address,
-              DlsymInTracee(pid, library_handle, kEntryPayloadFunctionName));
+              DlsymInTracee(pid, modules, library_handle, kEntryPayloadFunctionName));
   process->entry_payload_function_address_ =
       absl::bit_cast<uint64_t>(entry_payload_function_address);
   OUTCOME_TRY(void* exit_payload_function_address,
-              DlsymInTracee(pid, library_handle, kExitPayloadFunctionName));
+              DlsymInTracee(pid, modules, library_handle, kExitPayloadFunctionName));
   process->exit_payload_function_address_ = absl::bit_cast<uint64_t>(exit_payload_function_address);
 
   // Get memory, create the return trampoline and make it executable.
@@ -438,7 +454,7 @@ ErrorMessageOr<std::unique_ptr<InstrumentedProcess>> InstrumentedProcess::Create
   constexpr uint64_t kStackSize = 8ULL * 1024ULL * 1024ULL;
   OUTCOME_TRY(auto&& thread_stack_memory, MemoryInTracee::Create(pid, 0, kStackSize));
   const uint64_t top_of_stack = thread_stack_memory->GetAddress() + kStackSize;
-  OUTCOME_TRY(auto&& code, MachineCodeForCloneCall(pid, library_handle, top_of_stack));
+  OUTCOME_TRY(auto&& code, MachineCodeForCloneCall(pid, modules, library_handle, top_of_stack));
   const uint64_t code_size = code.GetResultAsVector().size();
   OUTCOME_TRY(auto&& code_memory, MemoryInTracee::Create(pid, 0, code_size));
   OUTCOME_TRY(auto&& init_thread_tid, ExecuteMachineCode(*code_memory, code));
@@ -460,7 +476,7 @@ ErrorMessageOr<std::unique_ptr<InstrumentedProcess>> InstrumentedProcess::Create
                                                    ORBIT_ERROR("Detaching from %i", pid);
                                                  }
                                                }};
-  OUTCOME_TRY(SetOrbitThreadsInTarget(pid, library_handle, orbit_threads));
+  OUTCOME_TRY(SetOrbitThreadsInTarget(pid, modules, library_handle, orbit_threads));
   OUTCOME_TRY(thread_stack_memory->Free());
   OUTCOME_TRY(code_memory->Free());
 
@@ -470,7 +486,8 @@ ErrorMessageOr<std::unique_ptr<InstrumentedProcess>> InstrumentedProcess::Create
 }
 
 ErrorMessageOr<InstrumentationManager::InstrumentationResult>
-InstrumentedProcess::InstrumentFunctions(const CaptureOptions& capture_options) {
+InstrumentedProcess::InstrumentFunctions(const CaptureOptions& capture_options,
+                                         const std::vector<ModuleInfo>& modules) {
   ORBIT_LOG("Instrumenting functions in process %d", pid_);
   OUTCOME_TRY(AttachAndStopProcess(pid_));
   orbit_base::unique_resource detach_on_exit{pid_, [](int32_t pid) {
@@ -505,6 +522,7 @@ InstrumentedProcess::InstrumentFunctions(const CaptureOptions& capture_options) 
 
   ORBIT_LOG("Trying to instrument %d functions", capture_options.instrumented_functions().size());
   InstrumentationManager::InstrumentationResult result;
+  absl::flat_hash_map<std::string, std::vector<ModuleInfo>> cache_of_modules_from_path;
   for (const auto& function : capture_options.instrumented_functions()) {
     const uint64_t function_id = function.function_id();
     if (IsBlocklisted(function.function_name())) {
@@ -524,8 +542,9 @@ InstrumentedProcess::InstrumentFunctions(const CaptureOptions& capture_options) 
     }
     // Get all modules with the right path (usually one, but might be more) and get a function
     // address to instrument for each of them.
-    OUTCOME_TRY(auto&& modules, ModulesFromModulePath(function.file_path()));
-    for (const auto& module : modules) {
+    OUTCOME_TRY(auto&& function_modules,
+                ModulesFromModulePath(modules, function.file_path(), &cache_of_modules_from_path));
+    for (const auto& module : function_modules) {
       const uint64_t function_address = orbit_module_utils::SymbolVirtualAddressToAbsoluteAddress(
           function.function_virtual_address(), module.address_start(), module.load_bias(),
           module.executable_segment_offset());
@@ -662,24 +681,6 @@ ErrorMessageOr<void> InstrumentedProcess::ReleaseMostRecentlyAllocatedTrampoline
   return outcome::success();
 }
 
-ErrorMessageOr<std::vector<ModuleInfo>> InstrumentedProcess::ModulesFromModulePath(
-    std::string path) {
-  if (!modules_from_path_.contains(path)) {
-    std::vector<ModuleInfo> result;
-    OUTCOME_TRY(auto&& modules, orbit_module_utils::ReadModules(pid_));
-    for (const ModuleInfo& module : modules) {
-      if (module.file_path() == path) {
-        result.push_back(module);
-      }
-    }
-    if (result.empty()) {
-      return ErrorMessage(absl::StrFormat("Unable to find module for path \"%s\"", path));
-    }
-    modules_from_path_.emplace(path, result);
-  }
-  return modules_from_path_.find(path)->second;
-}
-
 ErrorMessageOr<void> InstrumentedProcess::EnsureTrampolinesWritable() {
   for (auto& trampoline_for_module : trampolines_for_modules_) {
     for (auto& memory_chunk : trampoline_for_module.second) {
@@ -730,12 +731,18 @@ ErrorMessageOr<InstrumentationManager::InstrumentationResult>
 InstrumentationManager::InstrumentProcess(const CaptureOptions& capture_options) {
   const pid_t pid = orbit_base::ToNativeProcessId(capture_options.pid());
 
+  OUTCOME_TRY(auto&& exists, orbit_base::FileExists(absl::StrFormat("/proc/%d", pid)));
+  if (!exists) {
+    return ErrorMessage(absl::StrFormat("There is no process with pid %d.", pid));
+  }
+
   // If the user tries to instrument this instance of OrbitService we can't use user space
   // instrumentation: We would need to attach to / stop our own process.
   if (pid == getpid()) {
     return ErrorMessage("The target process is OrbitService itself.");
   }
 
+  OUTCOME_TRY(auto&& modules, orbit_module_utils::ReadModules(pid));
   if (!process_map_.contains(pid)) {
     // Delete entries belonging to processes that are not running anymore.
     auto it = process_map_.begin();
@@ -747,7 +754,7 @@ InstrumentationManager::InstrumentProcess(const CaptureOptions& capture_options)
       }
     }
 
-    auto process_or_error = InstrumentedProcess::Create(capture_options);
+    auto process_or_error = InstrumentedProcess::Create(pid, modules);
     if (process_or_error.has_error()) {
       return ErrorMessage(absl::StrFormat("Unable to initialize process %d: %s", pid,
                                           process_or_error.error().message()));
@@ -755,7 +762,7 @@ InstrumentationManager::InstrumentProcess(const CaptureOptions& capture_options)
     process_map_.emplace(pid, std::move(process_or_error.value()));
   }
   OUTCOME_TRY(auto&& instrumentation_result,
-              process_map_[pid]->InstrumentFunctions(capture_options));
+              process_map_[pid]->InstrumentFunctions(capture_options, modules));
 
   return std::move(instrumentation_result);
 }

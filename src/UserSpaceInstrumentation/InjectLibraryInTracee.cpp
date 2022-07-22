@@ -53,12 +53,13 @@ constexpr FunctionLocatorView kDlcloseFallbackInLibc{kLibcSoname, "__libc_dlclos
 // FindFunctionAddress, does but accepts a list of module and function names and returns
 // the address of the first found function.
 ErrorMessageOr<uint64_t> FindFunctionAddressWithFallback(
-    pid_t pid, absl::Span<const FunctionLocatorView> function_locators) {
+    const std::vector<orbit_grpc_protos::ModuleInfo>& modules,
+    absl::Span<const FunctionLocatorView> function_locators) {
   std::string error_message;
 
   for (const auto& function_locator : function_locators) {
     ErrorMessageOr<uint64_t> address_or_error =
-        FindFunctionAddress(pid, function_locator.module_name, function_locator.function_name);
+        FindFunctionAddress(modules, function_locator.module_name, function_locator.function_name);
     if (address_or_error.has_value()) {
       return address_or_error.value();
     }
@@ -81,8 +82,9 @@ ErrorMessageOr<uint64_t> FindFunctionAddressWithFallback(
 
 }  // namespace
 
-[[nodiscard]] ErrorMessageOr<void*> DlopenInTracee(pid_t pid, const std::filesystem::path& path,
-                                                   uint32_t flag) {
+[[nodiscard]] ErrorMessageOr<void*> DlopenInTracee(
+    pid_t pid, const std::vector<orbit_grpc_protos::ModuleInfo>& modules,
+    const std::filesystem::path& path, uint32_t flag) {
   // Make sure file exists.
   auto file_exists_or_error = orbit_base::FileExists(path);
   if (file_exists_or_error.has_error()) {
@@ -94,9 +96,9 @@ ErrorMessageOr<uint64_t> FindFunctionAddressWithFallback(
   }
 
   // Figure out address of dlopen.
-  OUTCOME_TRY(
-      auto&& dlopen_address,
-      FindFunctionAddressWithFallback(pid, {kDlopenInLibdl, kDlopenInLibc, kDlopenFallbackInLibc}));
+  OUTCOME_TRY(auto&& dlopen_address,
+              FindFunctionAddressWithFallback(
+                  modules, {kDlopenInLibdl, kDlopenInLibc, kDlopenFallbackInLibc}));
 
   // Allocate small memory area in the tracee. This is used for the code and the path name.
   const uint64_t path_length = path.string().length() + 1;  // Include terminating zero.
@@ -144,11 +146,13 @@ ErrorMessageOr<uint64_t> FindFunctionAddressWithFallback(
   return absl::bit_cast<void*>(return_value);
 }
 
-[[nodiscard]] ErrorMessageOr<void*> DlsymInTracee(pid_t pid, void* handle,
-                                                  std::string_view symbol) {
+[[nodiscard]] ErrorMessageOr<void*> DlsymInTracee(
+    pid_t pid, const std::vector<orbit_grpc_protos::ModuleInfo>& modules, void* handle,
+    std::string_view symbol) {
   // Figure out address of dlsym.
-  OUTCOME_TRY(auto&& dlsym_address, FindFunctionAddressWithFallback(
-                                        pid, {kDlsymInLibdl, kDlsymInLibc, kDlsymFallbackInLibc}));
+  OUTCOME_TRY(auto&& dlsym_address,
+              FindFunctionAddressWithFallback(modules,
+                                              {kDlsymInLibdl, kDlsymInLibc, kDlsymFallbackInLibc}));
 
   // Allocate small memory area in the tracee. This is used for the code and the symbol name.
   const size_t symbol_name_length = symbol.length() + 1;  // include terminating zero
@@ -196,11 +200,12 @@ ErrorMessageOr<uint64_t> FindFunctionAddressWithFallback(
   return absl::bit_cast<void*>(return_value);
 }
 
-[[nodiscard]] ErrorMessageOr<void> DlcloseInTracee(pid_t pid, void* handle) {
+[[nodiscard]] ErrorMessageOr<void> DlcloseInTracee(
+    pid_t pid, const std::vector<orbit_grpc_protos::ModuleInfo>& modules, void* handle) {
   // Figure out address of dlclose.
   OUTCOME_TRY(auto&& dlclose_address,
               FindFunctionAddressWithFallback(
-                  pid, {kDlcloseInLibdl, kDlcloseInLibc, kDlcloseFallbackInLibc}));
+                  modules, {kDlcloseInLibdl, kDlcloseInLibc, kDlcloseFallbackInLibc}));
 
   // Allocate small memory area in the tracee.
   auto code_memory_or_error = AutomaticMemoryInTracee::Create(pid, 0, kCodeScratchPadSize);

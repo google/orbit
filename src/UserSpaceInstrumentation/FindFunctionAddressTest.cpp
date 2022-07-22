@@ -9,8 +9,10 @@
 #include <sys/wait.h>
 
 #include "FindFunctionAddress.h"
+#include "ModuleUtils/ReadLinuxModules.h"
 #include "OrbitBase/Logging.h"
 #include "OrbitBase/Result.h"
+#include "TestUtils/TestUtils.h"
 #include "UserSpaceInstrumentation/Attach.h"
 
 namespace orbit_user_space_instrumentation {
@@ -31,23 +33,22 @@ TEST(FindFunctionAddressTest, FindFunctionAddress) {
   // Stop the child process using our tooling.
   ORBIT_CHECK(AttachAndStopProcess(pid).has_value());
 
-  auto function_address_or_error = FindFunctionAddress(pid, "libc.so.6", "printf");
+  auto modules_or_error = orbit_module_utils::ReadModules(pid);
+  ASSERT_THAT(modules_or_error, orbit_test_utils::HasNoError());
+  const std::vector<orbit_grpc_protos::ModuleInfo>& modules = modules_or_error.value();
+
+  auto function_address_or_error = FindFunctionAddress(modules, "libc.so.6", "printf");
   ASSERT_TRUE(function_address_or_error.has_value()) << function_address_or_error.error().message();
 
-  function_address_or_error = FindFunctionAddress(pid, "libc.so.6", "NOT_A_SYMBOL");
+  function_address_or_error = FindFunctionAddress(modules, "libc.so.6", "NOT_A_SYMBOL");
   ASSERT_TRUE(function_address_or_error.has_error());
   EXPECT_TRUE(absl::StrContains(function_address_or_error.error().message(),
                                 "Unable to locate function symbol"));
 
-  function_address_or_error = FindFunctionAddress(pid, "NOT_A_LIB-", "printf");
+  function_address_or_error = FindFunctionAddress(modules, "NOT_A_LIB-", "printf");
   ASSERT_TRUE(function_address_or_error.has_error());
   EXPECT_TRUE(absl::StrContains(function_address_or_error.error().message(),
-                                "There is no module \"NOT_A_LIB-\" in process"));
-
-  function_address_or_error = FindFunctionAddress(-1, "libc.so.6", "printf");
-  ASSERT_TRUE(function_address_or_error.has_error());
-  EXPECT_TRUE(
-      absl::StrContains(function_address_or_error.error().message(), "Unable to open file"));
+                                "There is no module \"NOT_A_LIB-\" in the target process"));
 
   // Detach and end child.
   ORBIT_CHECK(!DetachAndContinueProcess(pid).has_error());

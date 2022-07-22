@@ -24,6 +24,7 @@
 #include "ExecuteMachineCode.h"
 #include "GetTestLibLibraryPath.h"
 #include "MachineCode.h"
+#include "ModuleUtils/ReadLinuxModules.h"
 #include "OrbitBase/ExecutablePath.h"
 #include "OrbitBase/Logging.h"
 #include "OrbitBase/ReadFileToString.h"
@@ -88,7 +89,11 @@ void OpenUseAndCloseLibrary(pid_t pid) {
   EXPECT_THAT(IsInodeInMapsFile(inode_of_library.value(), pid),
               orbit_test_utils::HasValue(Eq(false)));
 
-  auto library_handle_or_error = DlopenInTracee(pid, library_path, RTLD_NOW);
+  auto modules_or_error = orbit_module_utils::ReadModules(pid);
+  ASSERT_THAT(modules_or_error, orbit_test_utils::HasNoError());
+  const std::vector<orbit_grpc_protos::ModuleInfo>& modules = modules_or_error.value();
+
+  auto library_handle_or_error = DlopenInTracee(pid, modules, library_path, RTLD_NOW);
   ASSERT_TRUE(library_handle_or_error.has_value());
 
   // Tracee now does have the dynamic lib loaded.
@@ -96,7 +101,8 @@ void OpenUseAndCloseLibrary(pid_t pid) {
               orbit_test_utils::HasValue(Eq(true)));
 
   // Look up symbol for "TrivialFunction" in the dynamic lib.
-  auto dlsym_or_error = DlsymInTracee(pid, library_handle_or_error.value(), "TrivialFunction");
+  auto dlsym_or_error =
+      DlsymInTracee(pid, modules, library_handle_or_error.value(), "TrivialFunction");
   ASSERT_TRUE(dlsym_or_error.has_value());
   const uint64_t function_address = absl::bit_cast<uint64_t>(dlsym_or_error.value());
 
@@ -121,7 +127,7 @@ void OpenUseAndCloseLibrary(pid_t pid) {
   }
 
   // Close the library.
-  auto result_dlclose = DlcloseInTracee(pid, library_handle_or_error.value());
+  auto result_dlclose = DlcloseInTracee(pid, modules, library_handle_or_error.value());
   ASSERT_THAT(result_dlclose, HasNoError());
 
   // Now, again, the lib is absent from the tracee.
@@ -199,9 +205,13 @@ TEST(InjectLibraryInTraceeTest, NonExistingLibrary) {
   // Stop the child process using our tooling.
   ORBIT_CHECK(!AttachAndStopProcess(pid).has_error());
 
+  auto modules_or_error = orbit_module_utils::ReadModules(pid);
+  ASSERT_THAT(modules_or_error, orbit_test_utils::HasNoError());
+  const std::vector<orbit_grpc_protos::ModuleInfo>& modules = modules_or_error.value();
+
   // Try to load non existing dynamic lib into tracee.
   const std::string kNonExistingLibName = "libNotFound.so";
-  auto library_handle_or_error = DlopenInTracee(pid, kNonExistingLibName, RTLD_NOW);
+  auto library_handle_or_error = DlopenInTracee(pid, modules, kNonExistingLibName, RTLD_NOW);
   ASSERT_THAT(library_handle_or_error, HasError("Library does not exist at"));
 
   // Continue child process.

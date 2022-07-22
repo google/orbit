@@ -11,7 +11,9 @@
 #include <cstdint>
 #include <filesystem>
 #include <string_view>
+#include <vector>
 
+#include "GrpcProtos/module.pb.h"
 #include "OrbitBase/Result.h"
 
 namespace orbit_user_space_instrumentation {
@@ -19,10 +21,14 @@ namespace orbit_user_space_instrumentation {
 // Open, use, and close dynamic library in the tracee. The functions here resemble the respective
 // functions offered by libdl as documented e.g. here: https://linux.die.net/man/3/dlopen. We rely
 // on either libdl or libc being loaded into the tracee.
-[[nodiscard]] ErrorMessageOr<void*> DlopenInTracee(pid_t pid, const std::filesystem::path& path,
-                                                   uint32_t flag);
-[[nodiscard]] ErrorMessageOr<void*> DlsymInTracee(pid_t pid, void* handle, std::string_view symbol);
-[[nodiscard]] ErrorMessageOr<void> DlcloseInTracee(pid_t pid, void* handle);
+[[nodiscard]] ErrorMessageOr<void*> DlopenInTracee(
+    pid_t pid, const std::vector<orbit_grpc_protos::ModuleInfo>& modules,
+    const std::filesystem::path& path, uint32_t flag);
+[[nodiscard]] ErrorMessageOr<void*> DlsymInTracee(
+    pid_t pid, const std::vector<orbit_grpc_protos::ModuleInfo>& modules, void* handle,
+    std::string_view symbol);
+[[nodiscard]] ErrorMessageOr<void> DlcloseInTracee(
+    pid_t pid, const std::vector<orbit_grpc_protos::ModuleInfo>& modules, void* handle);
 
 }  // namespace orbit_user_space_instrumentation
 

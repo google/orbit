@@ -13,6 +13,7 @@
 #include <functional>
 
 #include "ApiUtils/GetFunctionTableAddressPrefix.h"
+#include "ModuleUtils/ReadLinuxModules.h"
 #include "ModuleUtils/VirtualAndAbsoluteAddresses.h"
 #include "OrbitBase/ExecutablePath.h"
 #include "OrbitBase/Logging.h"
@@ -27,7 +28,6 @@ using orbit_api_utils::kOrbitApiGetFunctionTableAddressPrefix;
 using orbit_api_utils::kOrbitApiGetFunctionTableAddressWinPrefix;
 using orbit_grpc_protos::ApiFunction;
 using orbit_grpc_protos::CaptureOptions;
-using orbit_grpc_protos::ModuleInfo;
 using orbit_user_space_instrumentation::AnyThreadIsInStrictSeccompMode;
 using orbit_user_space_instrumentation::AttachAndStopNewThreadsOfProcess;
 using orbit_user_space_instrumentation::AttachAndStopProcess;
@@ -80,14 +80,15 @@ ErrorMessageOr<void> SetApiEnabledInTracee(const CaptureOptions& capture_options
   // Load liborbit.so and find api table initialization function.
   OUTCOME_TRY(auto&& liborbit_path, GetLibOrbitPath());
   ORBIT_LOG("Injecting library \"%s\" into process %d", liborbit_path, pid);
-  OUTCOME_TRY(auto&& handle, DlopenInTracee(pid, liborbit_path, RTLD_NOW));
+  OUTCOME_TRY(auto&& modules, orbit_module_utils::ReadModules(pid));
+  OUTCOME_TRY(auto&& handle, DlopenInTracee(pid, modules, liborbit_path, RTLD_NOW));
   ORBIT_LOG("Resolving function pointers in injected library");
   constexpr const char* kSetEnabledFunction = "orbit_api_set_enabled";
   OUTCOME_TRY(auto&& orbit_api_set_enabled_function,
-              DlsymInTracee(pid, handle, kSetEnabledFunction));
+              DlsymInTracee(pid, modules, handle, kSetEnabledFunction));
   constexpr const char* kSetEnabledWineFunction = "orbit_api_set_enabled_wine";
   OUTCOME_TRY(auto&& orbit_api_set_enabled_wine_function,
-              DlsymInTracee(pid, handle, kSetEnabledWineFunction));
+              DlsymInTracee(pid, modules, handle, kSetEnabledWineFunction));
 
   // Initialize all api function tables.
   for (const ApiFunction& api_function : capture_options.api_functions()) {

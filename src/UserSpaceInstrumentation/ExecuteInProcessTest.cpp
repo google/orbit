@@ -12,6 +12,7 @@
 #include <string>
 
 #include "GetTestLibLibraryPath.h"
+#include "ModuleUtils/ReadLinuxModules.h"
 #include "OrbitBase/ExecutablePath.h"
 #include "OrbitBase/Logging.h"
 #include "OrbitBase/Result.h"
@@ -49,14 +50,19 @@ class ExecuteInProcessTest : public testing::Test {
     std::filesystem::path library_path = std::move(library_path_or_error.value());
 
     // Load dynamic lib into tracee.
-    auto library_handle_or_error = DlopenInTracee(pid_, library_path, RTLD_NOW);
+    auto modules_or_error = orbit_module_utils::ReadModules(pid_);
+    ORBIT_CHECK(modules_or_error.has_value());
+    auto library_handle_or_error =
+        DlopenInTracee(pid_, modules_or_error.value(), library_path, RTLD_NOW);
     ORBIT_CHECK(library_handle_or_error.has_value());
     library_handle_ = library_handle_or_error.value();
   }
 
   void DetachAndStop() {
     // Cleanup, detach and end child.
-    ORBIT_CHECK(!DlcloseInTracee(pid_, library_handle_).has_error());
+    auto modules_or_error = orbit_module_utils::ReadModules(pid_);
+    ORBIT_CHECK(modules_or_error.has_value());
+    ORBIT_CHECK(!DlcloseInTracee(pid_, modules_or_error.value(), library_handle_).has_error());
     ORBIT_CHECK(!DetachAndContinueProcess(pid_).has_error());
     kill(pid_, SIGKILL);
     waitpid(pid_, nullptr, 0);
@@ -75,21 +81,26 @@ TEST_F(ExecuteInProcessTest, ExecuteInProcess) {
   */
   StartAndAttach();
 
-  auto result_or_error = ExecuteInProcess(pid_, library_handle_, "TrivialFunction");
+  auto modules_or_error = orbit_module_utils::ReadModules(pid_);
+  ASSERT_THAT(modules_or_error, orbit_test_utils::HasNoError());
+  const std::vector<orbit_grpc_protos::ModuleInfo>& modules = modules_or_error.value();
+
+  auto result_or_error = ExecuteInProcess(pid_, modules, library_handle_, "TrivialFunction");
   ASSERT_THAT(result_or_error, HasNoError());
   EXPECT_EQ(42, result_or_error.value());
 
-  result_or_error = ExecuteInProcess(pid_, library_handle_, "TrivialSum", 2, 4, 6, 8, 10, 12);
+  result_or_error =
+      ExecuteInProcess(pid_, modules, library_handle_, "TrivialSum", 2, 4, 6, 8, 10, 12);
   ASSERT_THAT(result_or_error, HasNoError());
   EXPECT_EQ(42, result_or_error.value());
 
-  auto function_address_or_error = DlsymInTracee(pid_, library_handle_, "TrivialFunction");
+  auto function_address_or_error = DlsymInTracee(pid_, modules, library_handle_, "TrivialFunction");
   ASSERT_THAT(result_or_error, HasValue());
   result_or_error = ExecuteInProcess(pid_, function_address_or_error.value());
   ASSERT_THAT(result_or_error, HasValue());
   EXPECT_EQ(42, result_or_error.value());
 
-  function_address_or_error = DlsymInTracee(pid_, library_handle_, "TrivialSum");
+  function_address_or_error = DlsymInTracee(pid_, modules, library_handle_, "TrivialSum");
   ASSERT_TRUE(function_address_or_error.has_value());
   result_or_error = ExecuteInProcess(pid_, function_address_or_error.value(), 2, 4, 6, 8, 10, 12);
   ASSERT_THAT(result_or_error, HasValue());
@@ -105,7 +116,12 @@ TEST_F(ExecuteInProcessTest, ExecuteInProcessWithMicrosoftCallingConvention) {
   */
   StartAndAttach();
 
-  auto function_address_or_error = DlsymInTracee(pid_, library_handle_, "TrivialSumWithMsAbi");
+  auto modules_or_error = orbit_module_utils::ReadModules(pid_);
+  ASSERT_THAT(modules_or_error, orbit_test_utils::HasNoError());
+  const std::vector<orbit_grpc_protos::ModuleInfo>& modules = modules_or_error.value();
+
+  auto function_address_or_error =
+      DlsymInTracee(pid_, modules, library_handle_, "TrivialSumWithMsAbi");
   ASSERT_TRUE(function_address_or_error.has_value());
   auto result_or_error = ExecuteInProcessWithMicrosoftCallingConvention(
       pid_, function_address_or_error.value(), 2, 4, 6, 8);

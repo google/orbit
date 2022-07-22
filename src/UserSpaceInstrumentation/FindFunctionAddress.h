@@ -9,7 +9,9 @@
 
 #include <cstdint>
 #include <string_view>
+#include <vector>
 
+#include "GrpcProtos/module.pb.h"
 #include "OrbitBase/Result.h"
 
 namespace orbit_user_space_instrumentation {
@@ -19,9 +21,9 @@ namespace orbit_user_space_instrumentation {
 // The function name has to match the symbol name exactly. The module name needs match the soname
 // (compare https://tldp.org/HOWTO/Program-Library-HOWTO/shared-libraries.html) of the module
 // exactly.
-[[nodiscard]] ErrorMessageOr<uint64_t> FindFunctionAddress(pid_t pid,
-                                                           std::string_view module_soname,
-                                                           std::string_view function_name);
+[[nodiscard]] ErrorMessageOr<uint64_t> FindFunctionAddress(
+    const std::vector<orbit_grpc_protos::ModuleInfo>& modules, std::string_view module_soname,
+    std::string_view function_name);
 
 }  // namespace orbit_user_space_instrumentation
 
