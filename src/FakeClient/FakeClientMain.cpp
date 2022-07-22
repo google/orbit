@@ -366,6 +366,14 @@ int main(int argc, char* argv[]) {
       orbit_base::ThreadPool::Create(1, 1, absl::Seconds(1));
 
   orbit_client_data::ModuleManager module_manager;
+  orbit_client_data::ProcessData process_data;
+  orbit_grpc_protos::ProcessInfo process_info;
+  process_info.set_pid(options.process_id);
+  process_data.SetProcessInfo(process_info);
+  ErrorMessageOr<std::vector<orbit_grpc_protos::ModuleInfo>> modules_or_error =
+      orbit_module_utils::ReadModules(options.process_id);
+  ORBIT_FAIL_IF(modules_or_error.has_error(), "%s", modules_or_error.error().message());
+  process_data.UpdateModuleInfos(modules_or_error.value());
   if (instrument_function) {
     constexpr uint64_t kInstrumentedFunctionId = 1;
     ManipulateModuleManagerAndSelectedFunctionsToAddInstrumentedFunctionFromOffset(
@@ -374,9 +382,6 @@ int main(int argc, char* argv[]) {
   }
 
   if (options.enable_api) {
-    ErrorMessageOr<std::vector<orbit_grpc_protos::ModuleInfo>> modules_or_error =
-        orbit_module_utils::ReadModules(options.process_id);
-    ORBIT_FAIL_IF(modules_or_error.has_error(), "%s", modules_or_error.error().message());
     for (const orbit_grpc_protos::ModuleInfo& module : modules_or_error.value()) {
       ManipulateModuleManagerToAddFunctionFromFunctionPrefixInSymtabIfExists(
           &module_manager, module.file_path(),
@@ -395,9 +400,6 @@ int main(int argc, char* argv[]) {
         "yeti::internal::vulkan::(anonymous namespace)::QueuePresentKHR(VkQueue_T*, "
         "VkPresentInfoKHR const*)"};
 
-    ErrorMessageOr<std::vector<orbit_grpc_protos::ModuleInfo>> modules_or_error =
-        orbit_module_utils::ReadModules(options.process_id);
-    ORBIT_FAIL_IF(modules_or_error.has_error(), "%s", modules_or_error.error().message());
     std::string libvulkan_file_path;
     for (const orbit_grpc_protos::ModuleInfo& module : modules_or_error.value()) {
       if (module.soname() == kGgpvlkModuleName) {
@@ -431,7 +433,7 @@ int main(int argc, char* argv[]) {
   }
 
   auto capture_outcome_future = capture_client.Capture(
-      thread_pool.get(), std::move(capture_event_processor), module_manager, options);
+      thread_pool.get(), std::move(capture_event_processor), module_manager, process_data, options);
   ORBIT_LOG("Asked to start capture");
 
   absl::Time start_time = absl::Now();

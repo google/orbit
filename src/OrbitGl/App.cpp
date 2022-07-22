@@ -1618,7 +1618,7 @@ void OrbitApp::StartCapture() {
       });
 
   Future<ErrorMessageOr<CaptureOutcome>> capture_result = capture_client_->Capture(
-      thread_pool_.get(), std::move(capture_event_processor), *module_manager_, options);
+      thread_pool_.get(), std::move(capture_event_processor), *module_manager_, *process_, options);
 
   // TODO(b/187250643): Refactor this to be more readable and maybe remove parts that are not needed
   // here (capture cancelled)
