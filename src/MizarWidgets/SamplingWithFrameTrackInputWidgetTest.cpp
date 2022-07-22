@@ -87,7 +87,8 @@ constexpr std::array<FrameTrackId, kFrameTracksCount> kScopeIdsInExpectedOrder =
 const std::vector<FrameTrackInfo> kFrameTrackInfos = [] {
   std::vector<FrameTrackInfo> result;
   for (size_t i = 0; i < kScopeFrameTracksCount; ++i) {
-    orbit_client_data::ScopeInfo info(std::string(kFrameTrackNames[i]), kScopeInfoTypes[i]);
+    const std::string_view name_view = kFrameTrackNames[i];
+    orbit_client_data::ScopeInfo info(std::string(name_view), kScopeInfoTypes[i]);
     result.emplace_back(info);
   }
   result.emplace_back(PresentEvent::kD3d9);
