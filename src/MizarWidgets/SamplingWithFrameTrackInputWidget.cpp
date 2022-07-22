@@ -53,7 +53,7 @@ orbit_mizar_data::HalfOfSamplingWithFrameTrackReportConfig
 SamplingWithFrameTrackInputWidgetBase::MakeConfig() const {
   return orbit_mizar_data::HalfOfSamplingWithFrameTrackReportConfig{
       selected_tids_, start_relative_time_ns_, std::numeric_limits<uint64_t>::max(),
-      frame_track_scope_id_};
+      frame_track_id_};
 }
 
 void SamplingWithFrameTrackInputWidgetBase::OnThreadSelectionChanged() {
@@ -65,7 +65,7 @@ void SamplingWithFrameTrackInputWidgetBase::OnThreadSelectionChanged() {
 }
 
 void SamplingWithFrameTrackInputWidgetBase::OnFrameTrackSelectionChanged(int index) {
-  frame_track_scope_id_ = GetFrameTrackList()->itemData(index, kScopeIdRole).value<ScopeId>();
+  frame_track_id_ = GetFrameTrackList()->itemData(index, kFrameTrackIdRole).value<FrameTrackId>();
 }
 
 void SamplingWithFrameTrackInputWidgetBase::OnStartMsChanged(const QString& time_ms) {

@@ -28,6 +28,10 @@ class MizarDataProvider : public orbit_client_data::CaptureDataHolder {
 
   virtual ~MizarDataProvider() = default;
 
+  [[nodiscard]] virtual const absl::flat_hash_map<orbit_grpc_protos::PresentEvent::Source,
+                                                  std::vector<orbit_grpc_protos::PresentEvent>>&
+  source_to_present_events() const = 0;
+
   [[nodiscard]] virtual std::optional<std::string> GetFunctionNameFromAddress(
       uint64_t address) const = 0;
   [[nodiscard]] virtual absl::flat_hash_map<uint64_t, std::string> AllAddressToName() const = 0;

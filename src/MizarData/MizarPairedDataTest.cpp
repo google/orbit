@@ -19,10 +19,12 @@
 #include "ClientData/ScopeId.h"
 #include "ClientData/ScopeInfo.h"
 #include "MizarBase/SampledFunctionId.h"
+#include "MizarData/FrameTrack.h"
 #include "MizarData/MizarPairedData.h"
 #include "TestUtils/ContainerHelpers.h"
 
 using ::orbit_client_data::ScopeId;
+using ::orbit_grpc_protos::PresentEvent;
 using ::orbit_mizar_base::SFID;
 using ::orbit_mizar_base::TID;
 using orbit_test_utils::MakeMap;
@@ -50,6 +52,8 @@ class MockMizarData {
   MOCK_METHOD(const MockCaptureData&, GetCaptureData, (), (const));
   MOCK_METHOD(uint64_t, GetCaptureStartTimestampNs, (), (const));
   MOCK_METHOD(uint64_t, GetNominalSamplingPeriodNs, (), (const));
+  MOCK_METHOD((absl::flat_hash_map<PresentEvent::Source, std::vector<PresentEvent>>),
+              source_to_present_events, (), (const));
 };
 
 }  // namespace
@@ -138,35 +142,25 @@ const std::vector<SFID> kInCompleteCallstackIds =
 const std::vector<SFID> kAnotherCompleteCallstackIds =
     SFIDsForCallstacks(kAnotherCompleteCallstack.frames());
 
-constexpr size_t kInvocationsCount = 3;
-constexpr std::array<uint64_t, kInvocationsCount> kStarts = {
-    kCaptureStart, kCaptureStart + kRelativeTime2, kCaptureStart + kRelativeTime5};
-const std::array<uint64_t, kInvocationsCount> kEnds = [] {
-  std::array<uint64_t, kInvocationsCount> result{};
-  std::transform(std::begin(kStarts), std::end(kStarts), std::begin(result),
-                 [](const uint64_t start) { return start + 1; });
-  return result;
-}();
+namespace {
 
-const std::array<orbit_client_protos::TimerInfo, kInvocationsCount> kTimers = [] {
-  std::array<orbit_client_protos::TimerInfo, kInvocationsCount> result;
-  std::transform(std::begin(kStarts), std::end(kStarts), std::begin(kEnds), std::begin(result),
-                 [](const uint64_t start, const uint64_t end) {
-                   orbit_client_protos::TimerInfo timer;
-                   timer.set_start(start);
-                   timer.set_end(end);
-                   timer.set_thread_id(*kTID);
-                   return timer;
-                 });
-  return result;
-}();
+const std::vector<FrameStartNs> kStarts = {FrameStartNs(kCaptureStart),
+                                           FrameStartNs(kCaptureStart + kRelativeTime2),
+                                           FrameStartNs(kCaptureStart + kRelativeTime5)};
 
-const std::vector<const orbit_client_protos::TimerInfo*> kTimerPtrs = [] {
-  std::vector<const orbit_client_protos::TimerInfo*> result;
-  std::transform(std::begin(kTimers), std::end(kTimers), std::back_inserter(result),
-                 [](const TimerInfo& timer) { return &timer; });
-  return result;
-}();
+class MockFrameTrackManager {
+ public:
+  static inline const MockMizarData* passed_data{};
+
+  explicit MockFrameTrackManager(const MockMizarData* data) { passed_data = data; }
+
+  [[nodiscard]] std::vector<FrameStartNs> GetFrameStarts(FrameTrackId, FrameStartNs,
+                                                         FrameStartNs) const {
+    return kStarts;
+  }
+};
+
+}  // namespace
 
 constexpr uint64_t kSamplingPeriod = 10;
 
@@ -195,7 +189,6 @@ class MizarPairedDataTest : public ::testing::Test {
       : capture_data_(std::make_unique<MockCaptureData>()),
         data_(std::make_unique<MockMizarData>()) {
     EXPECT_CALL(*capture_data_, GetCallstackData).WillRepeatedly(ReturnRef(*kCallstackData));
-    EXPECT_CALL(*capture_data_, GetTimersForScope).WillRepeatedly(Return(kTimerPtrs));
     EXPECT_CALL(*capture_data_, thread_names).WillRepeatedly(ReturnRef(kThreadNames));
     EXPECT_CALL(*capture_data_, GetAllProvidedScopeIds).WillRepeatedly(Return(kScopeIds));
     EXPECT_CALL(*capture_data_, GetScopeInfo).WillRepeatedly(Invoke([](const ScopeId id) {
@@ -211,8 +204,17 @@ class MizarPairedDataTest : public ::testing::Test {
   std::unique_ptr<MockMizarData> data_;
 };
 
+TEST_F(MizarPairedDataTest, FrameTrackManagerIsProperlyInitialized) {
+  const MockCaptureData* capture_data_ptr = &data_->GetCaptureData();
+  MizarPairedDataTmpl<MockMizarData, MockFrameTrackManager> mizar_paired_data(std::move(data_),
+                                                                              kAddressToId);
+
+  EXPECT_EQ(&MockFrameTrackManager::passed_data->GetCaptureData(), capture_data_ptr);
+}
+
 TEST_F(MizarPairedDataTest, ForeachCallstackIsCorrect) {
-  MizarPairedDataTmpl<MockMizarData> mizar_paired_data(std::move(data_), kAddressToId);
+  MizarPairedDataTmpl<MockMizarData, MockFrameTrackManager> mizar_paired_data(std::move(data_),
+                                                                              kAddressToId);
   std::vector<std::vector<SFID>> actual_ids_fed_to_action;
   auto action = [&actual_ids_fed_to_action](const std::vector<SFID> ids) {
     actual_ids_fed_to_action.push_back(ids);
@@ -241,31 +243,30 @@ TEST_F(MizarPairedDataTest, ForeachCallstackIsCorrect) {
 }
 
 TEST_F(MizarPairedDataTest, ActiveInvocationTimesIsCorrect) {
-  MizarPairedDataTmpl<MockMizarData> mizar_paired_data(std::move(data_), kAddressToId);
+  MizarPairedDataTmpl<MockMizarData, MockFrameTrackManager> mizar_paired_data(std::move(data_),
+                                                                              kAddressToId);
   std::vector<uint64_t> actual_active_invocation_times = mizar_paired_data.ActiveInvocationTimes(
-      {kTID, kAnotherTID}, ScopeId(1), 0, std::numeric_limits<uint64_t>::max());
+      {kTID, kAnotherTID}, FrameTrackId(ScopeId(1)), 0, std::numeric_limits<uint64_t>::max());
   EXPECT_THAT(actual_active_invocation_times,
               ElementsAre(kSamplingPeriod * 2, kSamplingPeriod * 2));
 }
 
 TEST_F(MizarPairedDataTest, TidToNamesIsCorrect) {
-  MizarPairedDataTmpl<MockMizarData> mizar_paired_data(std::move(data_), kAddressToId);
+  MizarPairedDataTmpl<MockMizarData, MockFrameTrackManager> mizar_paired_data(std::move(data_),
+                                                                              kAddressToId);
   EXPECT_THAT(mizar_paired_data.TidToNames(), UnorderedElementsAreArray(kSampledTidToName));
 }
 
 TEST_F(MizarPairedDataTest, TidToCallstackCountsIsCorrect) {
-  MizarPairedDataTmpl<MockMizarData> mizar_paired_data(std::move(data_), kAddressToId);
+  MizarPairedDataTmpl<MockMizarData, MockFrameTrackManager> mizar_paired_data(std::move(data_),
+                                                                              kAddressToId);
   EXPECT_THAT(mizar_paired_data.TidToCallstackSampleCounts(),
               UnorderedElementsAreArray(kTidToCallstackCount));
 }
 
-TEST_F(MizarPairedDataTest, GetFrameTracksIsCorrect) {
-  MizarPairedDataTmpl<MockMizarData> mizar_paired_data(std::move(data_), kAddressToId);
-  EXPECT_THAT(mizar_paired_data.GetFrameTracks(), UnorderedElementsAreArray(kFrameTracks));
-}
-
 TEST_F(MizarPairedDataTest, CaptureDurationIsCorrect) {
-  MizarPairedDataTmpl<MockMizarData> mizar_paired_data(std::move(data_), kAddressToId);
+  MizarPairedDataTmpl<MockMizarData, MockFrameTrackManager> mizar_paired_data(std::move(data_),
+                                                                              kAddressToId);
   EXPECT_EQ(mizar_paired_data.CaptureDurationNs(), kRelativeTimeTooLate);
 }
 
