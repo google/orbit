@@ -12,7 +12,7 @@ namespace orbit_ggp {
 using orbit_test_utils::HasError;
 using orbit_test_utils::HasValue;
 
-TEST(OrbitGgpProject, GetDefaultAccountFromJson) {
+TEST(OrbitGgpAccountTest, GetDefaultAccountFromJson) {
   {  // invalid json
     const auto json = QString("json").toUtf8();
     EXPECT_THAT(Account::GetDefaultAccountFromJson(json), HasError("Unable to parse JSON"));

@@ -16,7 +16,8 @@ target_sources(OrbitGgp PUBLIC
           include/OrbitGgp/Instance.h
           include/OrbitGgp/InstanceItemModel.h
           include/OrbitGgp/Project.h
-          include/OrbitGgp/SshInfo.h)
+          include/OrbitGgp/SshInfo.h          
+          include/OrbitGgp/SymbolDownloadInfo.h)
 
 target_sources(OrbitGgp PRIVATE
           Account.cpp
@@ -25,7 +26,8 @@ target_sources(OrbitGgp PRIVATE
           Instance.cpp
           InstanceItemModel.cpp
           Project.cpp
-          SshInfo.cpp)
+          SshInfo.cpp
+          SymbolDownloadInfo.cpp)
 
 target_link_libraries(
   OrbitGgp
@@ -54,6 +56,7 @@ target_sources(OrbitGgpTests PRIVATE
           InstanceItemModelTests.cpp
           ProjectTest.cpp
           SshInfoTests.cpp
+          SymbolDownloadInfoTest.cpp
 )
 
 target_link_libraries(OrbitGgpTests PRIVATE 
