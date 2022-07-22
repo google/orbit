@@ -53,14 +53,14 @@ namespace {
 // information, such as the memory location where Orbit should write function pointers to enable
 // the Api after having injected liborbit.so.
 std::vector<ApiFunction> FindApiFunctions(const orbit_client_data::ModuleManager& module_manager,
-                                          const orbit_client_data::ProcessData& process) {
+                                          const orbit_client_data::ProcessData& process_data) {
   // We have a different function name for each supported platform.
   static const std::vector<std::string> kOrbitApiGetFunctionTableAddressPrefixes{
       orbit_api_utils::kOrbitApiGetFunctionTableAddressPrefix,
       orbit_api_utils::kOrbitApiGetFunctionTableAddressWinPrefix};
   std::vector<ApiFunction> api_functions;
   std::map<uint64_t, orbit_client_data::ModuleInMemory> modules_in_memory_map =
-      process.GetMemoryMapCopy();
+      process_data.GetMemoryMapCopy();
   for (const auto& [unused_start_address, module_in_memory] : modules_in_memory_map) {
     const ModuleData* module_data = module_manager.GetModuleByPathAndBuildId(
         module_in_memory.file_path(), module_in_memory.build_id());
@@ -101,7 +101,7 @@ std::vector<ApiFunction> FindApiFunctions(const orbit_client_data::ModuleManager
 
 [[nodiscard]] orbit_grpc_protos::CaptureOptions ToGrpcCaptureOptions(
     const ClientCaptureOptions& options, const orbit_client_data::ModuleManager& module_manager,
-    const orbit_client_data::ProcessData& process) {
+    const orbit_client_data::ProcessData& process_data) {
   CaptureOptions capture_options;
   capture_options.set_trace_context_switches(options.collect_scheduling_info);
   capture_options.set_pid(options.process_id);
@@ -166,7 +166,7 @@ std::vector<ApiFunction> FindApiFunctions(const orbit_client_data::ModuleManager
               options.dynamic_instrumentation_method == CaptureOptions::kUserSpaceInstrumentation);
   capture_options.set_dynamic_instrumentation_method(options.dynamic_instrumentation_method);
 
-  auto api_functions = FindApiFunctions(module_manager, process);
+  auto api_functions = FindApiFunctions(module_manager, process_data);
   *(capture_options.mutable_api_functions()) = {api_functions.begin(), api_functions.end()};
 
   return capture_options;
@@ -178,7 +178,8 @@ orbit_base::Future<ErrorMessageOr<CaptureListener::CaptureOutcome>> CaptureClien
     orbit_base::ThreadPool* thread_pool,
     std::unique_ptr<CaptureEventProcessor> capture_event_processor,
     const orbit_client_data::ModuleManager& module_manager,
-    const orbit_client_data::ProcessData& process, const ClientCaptureOptions& capture_options) {
+    const orbit_client_data::ProcessData& process_data,
+    const ClientCaptureOptions& capture_options) {
   absl::MutexLock lock(&state_mutex_);
   if (state_ != State::kStopped) {
     return {
@@ -189,11 +190,11 @@ orbit_base::Future<ErrorMessageOr<CaptureListener::CaptureOutcome>> CaptureClien
   state_ = State::kStarting;
   ORBIT_LOG("State is now kStarting");
 
-  return thread_pool->Schedule(
-      [this, capture_event_processor = std::move(capture_event_processor),
-       grpc_capture_options = ToGrpcCaptureOptions(capture_options, module_manager, process)]() {
-        return CaptureSync(grpc_capture_options, capture_event_processor.get());
-      });
+  return thread_pool->Schedule([this, capture_event_processor = std::move(capture_event_processor),
+                                grpc_capture_options = ToGrpcCaptureOptions(
+                                    capture_options, module_manager, process_data)]() {
+    return CaptureSync(grpc_capture_options, capture_event_processor.get());
+  });
 }
 
 ErrorMessageOr<CaptureListener::CaptureOutcome> CaptureClient::CaptureSync(
