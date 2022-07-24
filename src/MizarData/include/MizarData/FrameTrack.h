@@ -39,10 +39,10 @@ auto Visit(ActionOnFirst&& action_on_scope_info, ActionOnSecond&& action_on_etw_
       [&action_on_scope_info, &action_on_etw_source](const auto& info) {
         using InfoT = std::decay_t<decltype(info)>;
         if constexpr (std::is_same_v<InfoT, First>) {
-          return std::invoke(action_on_scope_info, info);
+          return std::invoke(std::forward<ActionOnFirst>(action_on_scope_info), info);
         }
         if constexpr (std::is_same_v<InfoT, Second>) {
-          return std::invoke(action_on_etw_source, info);
+          return std::invoke(std::forward<ActionOnSecond>(action_on_etw_source), info);
         }
       },
       *std::forward<Host>(host));
