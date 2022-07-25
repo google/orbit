@@ -1897,13 +1897,13 @@ void OrbitMainWindow::AppendToCaptureLog(CaptureLogSeverity severity, absl::Dura
             severity_name);
 }
 
-void OrbitMainWindow::SetInspection(std::unique_ptr<CallTreeView> top_down_view,
-                                    std::unique_ptr<CallTreeView> bottom_up_view) {
+void OrbitMainWindow::SetCallTreeInspection(std::unique_ptr<CallTreeView> top_down_view,
+                                            std::unique_ptr<CallTreeView> bottom_up_view) {
   ui->topDownWidget->SetInspection(std::move(top_down_view));
   ui->bottomUpWidget->SetInspection(std::move(bottom_up_view));
 }
 
-void OrbitMainWindow::ClearInspection() {
+void OrbitMainWindow::ClearCallTreeInspection() {
   ui->topDownWidget->ClearInspection();
   ui->bottomUpWidget->ClearInspection();
 }

@@ -119,20 +119,6 @@ void CallTreeWidget::SetCallTreeView(std::unique_ptr<CallTreeView> call_tree_vie
   ResizeColumnsIfNecessary();
 }
 
-void CallTreeWidget::SetInspection(std::unique_ptr<CallTreeView> call_tree_view) {
-  ui_->inspectionNoticeWidget->show();
-  inspection_model_ = std::make_unique<CallTreeViewItemModel>(std::move(call_tree_view));
-  hide_values_proxy_model_->setSourceModel(inspection_model_.get());
-  OnSearchTypingFinishedTimerTimout();
-}
-
-void CallTreeWidget::ClearInspection() {
-  ui_->inspectionNoticeWidget->hide();
-  inspection_model_.reset();
-  hide_values_proxy_model_->setSourceModel(model_.get());
-  OnSearchTypingFinishedTimerTimout();
-}
-
 void CallTreeWidget::ClearCallTreeView() {
   hooked_proxy_model_.reset();
   search_proxy_model_.reset();
@@ -239,6 +225,22 @@ void CallTreeWidget::SetBottomUpView(std::unique_ptr<CallTreeView> bottom_up_vie
                   std::make_unique<HideValuesForBottomUpProxyModel>(nullptr));
   // Don't show the "Exclusive" column for the bottom-up tree, it provides no useful information.
   ui_->callTreeTreeView->hideColumn(CallTreeViewItemModel::kExclusive);
+}
+
+void CallTreeWidget::SetInspection(std::unique_ptr<CallTreeView> call_tree_view) {
+  ORBIT_CHECK(hide_values_proxy_model_ != nullptr);
+  ui_->inspectionNoticeWidget->show();
+  inspection_model_ = std::make_unique<CallTreeViewItemModel>(std::move(call_tree_view));
+  hide_values_proxy_model_->setSourceModel(inspection_model_.get());
+  OnSearchTypingFinishedTimerTimout();
+}
+
+void CallTreeWidget::ClearInspection() {
+  ORBIT_CHECK(hide_values_proxy_model_ != nullptr);
+  ui_->inspectionNoticeWidget->hide();
+  inspection_model_.reset();
+  hide_values_proxy_model_->setSourceModel(model_.get());
+  OnSearchTypingFinishedTimerTimout();
 }
 
 void CallTreeWidget::resizeEvent(QResizeEvent* /*event*/) {
