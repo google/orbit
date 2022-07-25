@@ -238,6 +238,10 @@ message OrbitCaptureData {
   }
   TargetProcessStateAfterCapture target_process_state_after_capture = 29;
 
+  // In case the process crashed this will contain a termination signal.
+  // The default is TARGET_PROCESS_TERMINATION_SIGNAL_UNKNOWN. If no termination
+  // signal was found (e.g. when the process was still running) the result will
+  // be TARGET_PROCESS_TERMINATION_SIGNAL_UNSPECIFIED.
   enum TargetProcessTerminationSignal {
     TARGET_PROCESS_TERMINATION_SIGNAL_UNKNOWN = 0;
     TARGET_PROCESS_TERMINATION_SIGNAL_SIGHUP = 1;

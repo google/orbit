@@ -59,7 +59,7 @@ namespace {
 
 // Remove the functions with ids in `filter_function_ids` from instrumented_functions in
 // `capture_options`.
-static void FilterOutInstrumentedFunctionsFromCaptureOptions(
+void FilterOutInstrumentedFunctionsFromCaptureOptions(
     const absl::flat_hash_set<uint64_t>& filter_function_ids, CaptureOptions& capture_options) {
   // Move the entries that need to be deleted to the end of the repeated field and remove them with
   // one single call to `DeleteSubrange`. This avoids quadratic complexity.
@@ -77,7 +77,7 @@ static void FilterOutInstrumentedFunctionsFromCaptureOptions(
       first_to_delete, capture_options.instrumented_functions_size() - first_to_delete);
 }
 
-[[nodiscard]] static std::unique_ptr<orbit_introspection::IntrospectionListener>
+[[nodiscard]] std::unique_ptr<orbit_introspection::IntrospectionListener>
 CreateIntrospectionListener(ProducerEventProcessor* producer_event_processor) {
   return std::make_unique<orbit_introspection::IntrospectionListener>(
       [producer_event_processor](const orbit_api::ApiEventVariant& api_event_variant) {
@@ -97,7 +97,7 @@ CreateIntrospectionListener(ProducerEventProcessor* producer_event_processor) {
 // CaptureStartStopListener::OnCaptureStopRequested is also to be assumed blocking,
 // for example until all CaptureEvents from external producers have been received.
 // Hence why these methods need to be called in parallel on different threads.
-static void StopInternalProducersAndCaptureStartStopListenersInParallel(
+void StopInternalProducersAndCaptureStartStopListenersInParallel(
     TracingHandler* tracing_handler, MemoryInfoHandler* memory_info_handler,
     absl::flat_hash_set<CaptureStartStopListener*>* capture_start_stop_listeners) {
   std::vector<std::thread> stop_threads;
@@ -156,7 +156,24 @@ class ProducerEventProcessorHijackingFunctionEntryExitForLinuxTracing
   TracingHandler* tracing_handler_;
 };
 
-orbit_grpc_protos::ProducerCaptureEvent CreateTargetProcessStateAfterCaptureEvent(pid_t pid) {
+absl::flat_hash_set<std::string> FileNamesOfAllMinidumps() {
+  absl::flat_hash_set<std::string> result;
+  const std::string kCoreDirectory = "/usr/local/cloudcast/core";
+  auto error_or_core_files = orbit_base::ListFilesInDirectory(kCoreDirectory);
+  if (!error_or_core_files.has_error()) {
+    const std::regex check_if_minidump_file(absl::StrFormat(R"(.*\.core\.dmp)"));
+    for (const std::filesystem::path& path : error_or_core_files.value()) {
+      if (regex_match(path.string(), check_if_minidump_file)) {
+        result.insert(path.string());
+        ORBIT_LOG("%s", path.string());
+      }
+    }
+  }
+  return result;
+}
+
+orbit_grpc_protos::ProducerCaptureEvent CreateTargetProcessStateAfterCaptureEvent(
+    pid_t pid, const absl::flat_hash_set<std::string>& old_core_files) {
   ProducerCaptureEvent event;
   TargetProcessStateAfterCapture* target_process_state =
       event.mutable_target_process_state_after_capture();
@@ -182,20 +199,23 @@ orbit_grpc_protos::ProducerCaptureEvent CreateTargetProcessStateAfterCaptureEven
     return event;
   }
 
-  // Check wether we find a minidump. Otherwise we assume the process ended gracefully.
+  // Check whether we find a minidump. Otherwise we assume the process ended gracefully.
   const std::string kCoreDirectory = "/usr/local/cloudcast/core";
   auto error_or_core_files = orbit_base::ListFilesInDirectory(kCoreDirectory);
   if (error_or_core_files.has_error()) {
     // We can't access the directory with the core files; we return an error state.
     return event;
   }
-  const std::vector<std::filesystem::path> core_files = std::move(error_or_core_files.value());
-  // Matches zero or more characters ('.*') followed by a literal dot ('\.') followed by the pid of
-  // the process ('%i') followed by another literal dot  ('\.') followed by one or more numbers
-  // ('[0-9]+') which is the number of seconds since the epoch finally followed by the format ending
-  // ('.core.dmp').
+  const std::vector<std::filesystem::path>& core_files = error_or_core_files.value();
+  // Matches zero or more characters ('.*'), followed by a literal dot ('\.'), followed by the pid
+  // of the process ('%i'), followed by another literal dot ('\.'), followed by one or more numbers
+  // ('[0-9]+') which is the number of seconds since the epoch finally, followed by the format
+  // ending ('.core.dmp').
   const std::regex check_if_minidump_file(absl::StrFormat(R"(.*\.%i\.[0-9]+\.core\.dmp)", pid));
   for (const std::filesystem::path& path : core_files) {
+    if (old_core_files.contains(path.string())) {
+      continue;
+    }
     if (regex_match(path.string(), check_if_minidump_file)) {
       target_process_state->set_process_state(TargetProcessStateAfterCapture::kCrashed);
       ErrorMessageOr<int> signal_or_error = ExtractSignalFromMinidump(path);
@@ -297,6 +317,8 @@ void LinuxCaptureServiceBase::DoCapture(
   if (wait_for_stop_capture_request_thread_.joinable()) {
     wait_for_stop_capture_request_thread_.join();
   }
+
+  const absl::flat_hash_set<std::string> old_core_files = FileNamesOfAllMinidumps();
 
   TracingHandler tracing_handler{producer_event_processor_.get()};
   ProducerEventProcessorHijackingFunctionEntryExitForLinuxTracing function_entry_exit_hijacker{
@@ -428,9 +450,9 @@ void LinuxCaptureServiceBase::DoCapture(
   // The destructor of IntrospectionListener takes care of actually disabling introspection.
   introspection_listener.reset();
 
-  // Check wether target process is still running and send that information.
+  // Check whether the target process is still running and send that information.
   auto target_process_state_after_capture = CreateTargetProcessStateAfterCaptureEvent(
-      orbit_base::ToNativeProcessId(capture_options.pid()));
+      orbit_base::ToNativeProcessId(capture_options.pid()), old_core_files);
   producer_event_processor_->ProcessEvent(orbit_grpc_protos::kRootProducerId,
                                           std::move(target_process_state_after_capture));
 
