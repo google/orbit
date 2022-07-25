@@ -16,6 +16,8 @@
 
 #include "PeCoffRuntimeFunctions.h"
 
+#include <unwindstack/Log.h>
+
 #include <memory>
 
 namespace unwindstack {
@@ -46,6 +48,17 @@ bool PeCoffRuntimeFunctionsImpl::Init(uint64_t pdata_begin, uint64_t pdata_end) 
   const uint64_t pdata_size = pdata_end - pdata_begin;
   if (pdata_size % sizeof(RuntimeFunction) != 0) {
     last_error_.code = ERROR_INVALID_COFF;
+    return false;
+  }
+
+  // pdata_begin and pdata_end are read from the file itself and should she considered
+  // untrusted data. We verify whether the end falls within the file. If it does, then
+  // the begin also falls within the file.
+  uint8_t last_byte_of_pdata_section;
+  pe_coff_memory_.set_cur_offset(pdata_end - 1);
+  if (!pe_coff_memory_.GetFully(&last_byte_of_pdata_section, 1)) {
+    last_error_.code = ERROR_INVALID_COFF;
+    Log::Error("Bounds for pdata section are incorrect.");
     return false;
   }
 

@@ -136,7 +136,6 @@ class PeCoffMemory {
 
   uint64_t cur_offset() { return cur_offset_; }
   void set_cur_offset(uint64_t cur_offset) { cur_offset_ = cur_offset; }
-
  private:
   Memory* memory_;
   uint64_t cur_offset_;
