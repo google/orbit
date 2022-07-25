@@ -50,6 +50,11 @@ using MyType = Typedef<MyTypeTag, T>;
 template <typename T>
 using MyConstType = Typedef<MyTypeTag, const T>;
 
+TEST(TypedefTest, DefaultConstructorInitializesPrimitives) {
+  MyType<int> wrapped;
+  EXPECT_EQ(*wrapped, 0);
+}
+
 TEST(TypedefTest, CanInstantiate) {
   const int kConstInt = 1;
   MyType<int> wrapper_of_const(kConstInt);
