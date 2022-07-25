@@ -7,6 +7,7 @@
 #include <absl/container/flat_hash_set.h>
 #include <absl/flags/declare.h>
 #include <absl/flags/flag.h>
+#include <absl/flags/internal/flag.h>
 #include <absl/strings/match.h>
 #include <math.h>
 #include <stdint.h>
@@ -70,9 +71,10 @@ CallTreeWidget::CallTreeWidget(QWidget* parent)
   ui_->callTreeTreeView->setItemDelegateForColumn(
       CallTreeViewItemModel::kInclusive, new ProgressBarItemDelegate{ui_->callTreeTreeView});
   search_typing_finished_timer_->setSingleShot(true);
-  ui_->noticeWidget->hide();
+  ui_->inspectionNoticeWidget->hide();
 
-  connect(ui_->noticeButton, &QPushButton::clicked, this, &CallTreeWidget::OnLeaveButtonClicked);
+  connect(ui_->noticeButton, &QPushButton::clicked, this,
+          &CallTreeWidget::OnLeaveInspectionButtonClicked);
   connect(ui_->callTreeTreeView, &QTreeView::expanded, this, &CallTreeWidget::OnRowExpanded);
   connect(ui_->callTreeTreeView, &CustomSignalsTreeView::copyKeySequencePressed, this,
           &CallTreeWidget::OnCopyKeySequencePressed);
@@ -118,14 +120,14 @@ void CallTreeWidget::SetCallTreeView(std::unique_ptr<CallTreeView> call_tree_vie
 }
 
 void CallTreeWidget::SetInspection(std::unique_ptr<CallTreeView> call_tree_view) {
-  ui_->noticeWidget->show();
+  ui_->inspectionNoticeWidget->show();
   inspection_model_ = std::make_unique<CallTreeViewItemModel>(std::move(call_tree_view));
   hide_values_proxy_model_->setSourceModel(inspection_model_.get());
   OnSearchTypingFinishedTimerTimout();
 }
 
 void CallTreeWidget::ClearInspection() {
-  ui_->noticeWidget->hide();
+  ui_->inspectionNoticeWidget->hide();
   inspection_model_.reset();
   hide_values_proxy_model_->setSourceModel(model_.get());
   OnSearchTypingFinishedTimerTimout();
@@ -320,7 +322,7 @@ void CallTreeWidget::ResizeThreadOrFunctionColumnToShowAllVisibleNodes() {
   }
 }
 
-void CallTreeWidget::OnLeaveButtonClicked() { app_->ClearInspection(); }
+void CallTreeWidget::OnLeaveInspectionButtonClicked() { app_->ClearInspection(); }
 
 void CallTreeWidget::OnRowExpanded(const QModelIndex& index) {
   if (resize_thread_or_function_column_on_row_expanded_) {
@@ -478,6 +480,7 @@ const QString CallTreeWidget::kActionSelect = QStringLiteral("&Hook");
 const QString CallTreeWidget::kActionDeselect = QStringLiteral("&Unhook");
 const QString CallTreeWidget::kActionDisassembly = QStringLiteral("Go to &Disassembly");
 const QString CallTreeWidget::kActionSourceCode = QStringLiteral("Go to &Source Code");
+const QString CallTreeWidget::kActionInspectCallstacks = QStringLiteral("Inspect these callstacks");
 const QString CallTreeWidget::kActionSelectCallstacks = QStringLiteral("Select these callstacks");
 const QString CallTreeWidget::kActionCopySelection = QStringLiteral("Copy Selection");
 
@@ -676,7 +679,11 @@ void CallTreeWidget::OnCustomContextMenuRequested(const QPoint& point) {
   menu.addAction(kActionDeselect)->setEnabled(enable_deselect);
   menu.addAction(kActionDisassembly)->setEnabled(enable_disassembly);
   menu.addAction(kActionSourceCode)->setEnabled(enable_source_code);
-  menu.addAction(kActionSelectCallstacks)->setEnabled(enable_select_callstacks);
+  if (absl::GetFlag(FLAGS_time_range_selection)) {
+    menu.addAction(kActionInspectCallstacks)->setEnabled(enable_select_callstacks);
+  } else {
+    menu.addAction(kActionSelectCallstacks)->setEnabled(enable_select_callstacks);
+  }
   menu.addSeparator();
   menu.addAction(kActionCopySelection)->setEnabled(enable_copy);
 
@@ -727,7 +734,7 @@ void CallTreeWidget::OnCustomContextMenuRequested(const QPoint& point) {
     for (const FunctionInfo* function : functions) {
       app_->ShowSourceCode(*function);
     }
-  } else if (action->text() == kActionSelectCallstacks) {
+  } else if (action->text() == kActionInspectCallstacks) {
     absl::flat_hash_set<orbit_client_data::CallstackEvent> selected_callstack_events =
         GetCallstackEventsUnderSelection(selected_tree_indices);
     ORBIT_CHECK(!selected_callstack_events.empty());
@@ -738,6 +745,21 @@ void CallTreeWidget::OnCustomContextMenuRequested(const QPoint& point) {
                       return callstack_event.thread_id() != first_callstack_event.thread_id();
                     });
     app_->InspectCallstackEvents(
+        // This copies the content of the absl::flat_hash_set into a std::vector. We consider this
+        // fine in order to keep OrbitApp::InspectCallstackEvents as simple as it is now.
+        {selected_callstack_events.begin(), selected_callstack_events.end()},
+        origin_is_multiple_threads);
+  } else if (action->text() == kActionSelectCallstacks) {
+    absl::flat_hash_set<orbit_client_data::CallstackEvent> selected_callstack_events =
+        GetCallstackEventsUnderSelection(selected_tree_indices);
+    ORBIT_CHECK(!selected_callstack_events.empty());
+    bool origin_is_multiple_threads =
+        std::any_of(selected_callstack_events.begin(), selected_callstack_events.end(),
+                    [first_callstack_event = *selected_callstack_events.begin()](
+                        const orbit_client_data::CallstackEvent& callstack_event) -> bool {
+                      return callstack_event.thread_id() != first_callstack_event.thread_id();
+                    });
+    app_->SelectCallstackEvents(
         // This copies the content of the absl::flat_hash_set into a std::vector. We consider this
         // fine in order to keep OrbitApp::SelectCallstackEvents as simple as it is now.
         {selected_callstack_events.begin(), selected_callstack_events.end()},

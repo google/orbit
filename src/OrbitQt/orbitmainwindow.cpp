@@ -7,8 +7,6 @@
 #include <absl/container/flat_hash_set.h>
 #include <absl/flags/declare.h>
 #include <absl/flags/internal/flag.h>
-#include <qgridlayout.h>
-#include <qnamespace.h>
 
 #include <QAbstractButton>
 #include <QAction>
@@ -1899,10 +1897,9 @@ void OrbitMainWindow::AppendToCaptureLog(CaptureLogSeverity severity, absl::Dura
             severity_name);
 }
 
-void OrbitMainWindow::SetTopDownInspection(std::unique_ptr<CallTreeView> top_down_view) {
+void OrbitMainWindow::SetInspection(std::unique_ptr<CallTreeView> top_down_view,
+                                    std::unique_ptr<CallTreeView> bottom_up_view) {
   ui->topDownWidget->SetInspection(std::move(top_down_view));
-}
-void OrbitMainWindow::SetBottomUpInspection(std::unique_ptr<CallTreeView> bottom_up_view) {
   ui->bottomUpWidget->SetInspection(std::move(bottom_up_view));
 }
 

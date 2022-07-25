@@ -2852,19 +2852,14 @@ void OrbitApp::SelectCallstackEvents(const std::vector<CallstackEvent>& selected
 
 void OrbitApp::InspectCallstackEvents(const std::vector<CallstackEvent>& selected_callstack_events,
                                       bool origin_is_multiple_threads) {
-  if (absl::GetFlag(FLAGS_time_range_selection)) {
-    SetCaptureDataSelectionFields(selected_callstack_events, origin_is_multiple_threads);
-    main_window_->SetTopDownInspection(CallTreeView::CreateTopDownViewFromPostProcessedSamplingData(
-        GetCaptureData().selection_post_processed_sampling_data(), *module_manager_,
-        GetCaptureData()));
-    main_window_->SetBottomUpInspection(
-        CallTreeView::CreateBottomUpViewFromPostProcessedSamplingData(
-            GetCaptureData().selection_post_processed_sampling_data(), *module_manager_,
-            GetCaptureData()));
-    FireRefreshCallbacks();
-  } else {
-    SelectCallstackEvents(selected_callstack_events, origin_is_multiple_threads);
-  }
+  SetCaptureDataSelectionFields(selected_callstack_events, origin_is_multiple_threads);
+  main_window_->SetInspection(CallTreeView::CreateTopDownViewFromPostProcessedSamplingData(
+                                  GetCaptureData().selection_post_processed_sampling_data(),
+                                  *module_manager_, GetCaptureData()),
+                              CallTreeView::CreateBottomUpViewFromPostProcessedSamplingData(
+                                  GetCaptureData().selection_post_processed_sampling_data(),
+                                  *module_manager_, GetCaptureData()));
+  FireRefreshCallbacks();
 }
 
 void OrbitApp::ClearInspection() {

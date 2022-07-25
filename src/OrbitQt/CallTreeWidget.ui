@@ -58,7 +58,7 @@
     </layout>
    </item>
    <item row="0" column="0">
-    <widget class="QWidget" name="noticeWidget" native="true">
+    <widget class="QWidget" name="inspectionNoticeWidget" native="true">
      <property name="styleSheet">
       <string notr="true">.QWidget{ border-radius: 5px; border: 1px solid palette(text) ; background: rgba(0,255,0, 10%);}</string>
      </property>

@@ -71,8 +71,8 @@ class MainWindowInterface {
 
   virtual ~MainWindowInterface() = default;
 
-  virtual void SetTopDownInspection(std::unique_ptr<CallTreeView> top_down_view) = 0;
-  virtual void SetBottomUpInspection(std::unique_ptr<CallTreeView> bottom_up_view) = 0;
+  virtual void SetInspection(std::unique_ptr<CallTreeView> top_down_view,
+                             std::unique_ptr<CallTreeView> bottom_up_view) = 0;
   virtual void ClearInspection() = 0;
 };
 

@@ -71,7 +71,7 @@ class CallTreeWidget : public QWidget {
   void OnSearchLineEditTextEdited(const QString& text);
   void OnSearchTypingFinishedTimerTimout();
   void OnSliderValueChanged(int value);
-  void OnLeaveButtonClicked();
+  void OnLeaveInspectionButtonClicked();
 
  private:
   static const QString kActionExpandRecursively;
@@ -84,6 +84,7 @@ class CallTreeWidget : public QWidget {
   static const QString kActionDeselect;
   static const QString kActionDisassembly;
   static const QString kActionSourceCode;
+  static const QString kActionInspectCallstacks;
   static const QString kActionSelectCallstacks;
   static const QString kActionCopySelection;
 

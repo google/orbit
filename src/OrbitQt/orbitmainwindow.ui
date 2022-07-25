@@ -270,13 +270,6 @@ QPushButton:disabled {
             </property>
            </widget>
           </item>
-          <item row="1" column="0">
-           <widget class="OrbitSamplingReport" name="inspectionReport" native="true">
-            <property name="visible">
-              <bool>false</bool>
-            </property>
-           </widget>
-          </item>
          </layout>
         </widget>
         <widget class="QWidget" name="topDownTab">
