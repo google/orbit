@@ -349,7 +349,9 @@ Memory* MapInfo::CreateMemory(const std::shared_ptr<Memory>& process_memory) {
 
   if (!name().empty() && IsPotentiallyPeCoffFile(name())) {
     Memory* memory = GetFileMemory();
-    // Return even if this is a nullptr: for PEs we only support creating the memory from file.
+    // Return even if this is a nullptr: for MapInfo instances with a filename of a PE/COFF file,
+    // we only support creating the memory from file. Anonymously mapped sections of a PE/COFF
+    // file are handled below.
     return memory;
   }
 
