@@ -553,6 +553,7 @@ void OrbitMainWindow::SetupStatusBarLogButton() {
   }();
 
   capture_log_button_ = new QPushButton("Capture Log", statusBar());  // NOLINT
+  capture_log_button_->setAccessibleName("CaptureLogButton");
   capture_log_button_->setEnabled(false);
   capture_log_button_->setCheckable(true);
   capture_log_button_->setIcon(icon);
