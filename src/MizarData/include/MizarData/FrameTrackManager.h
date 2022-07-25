@@ -5,6 +5,7 @@
 #ifndef MIZAR_DATA_MIZAR_FRAME_TRACK_MANAGER_H_
 #define MIZAR_DATA_MIZAR_FRAME_TRACK_MANAGER_H_
 
+#include <absl/algorithm/container.h>
 #include <absl/functional/bind_front.h>
 
 #include "ClientData/CaptureData.h"
@@ -56,8 +57,9 @@ class FrameTrackManagerTmpl {
         GetCaptureData().GetTimersForScope(scope_id, *min_start, *max_start);
 
     std::vector<FrameStartNs> result;
-    std::transform(std::begin(timers), std::end(timers), std::back_inserter(result),
-                   [](const TimerInfo* timer) { return FrameStartNs(timer->start()); });
+    result.reserve(timers.size());
+    absl::c_transform(timers, std::back_inserter(result),
+                      [](const TimerInfo* timer) { return FrameStartNs(timer->start()); });
     return result;
   }
 

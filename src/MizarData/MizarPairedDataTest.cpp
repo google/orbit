@@ -150,9 +150,9 @@ const std::vector<FrameStartNs> kStarts = {FrameStartNs(kCaptureStart),
 
 class MockFrameTrackManager {
  public:
-  static inline const MockMizarData* passed_data{};
+  static inline const MockMizarData* passed_data_{};
 
-  explicit MockFrameTrackManager(const MockMizarData* data) { passed_data = data; }
+  explicit MockFrameTrackManager(const MockMizarData* data) { passed_data_ = data; }
 
   [[nodiscard]] std::vector<FrameStartNs> GetFrameStarts(FrameTrackId, FrameStartNs,
                                                          FrameStartNs) const {
@@ -209,7 +209,7 @@ TEST_F(MizarPairedDataTest, FrameTrackManagerIsProperlyInitialized) {
   MizarPairedDataTmpl<MockMizarData, MockFrameTrackManager> mizar_paired_data(std::move(data_),
                                                                               kAddressToId);
 
-  EXPECT_EQ(&MockFrameTrackManager::passed_data->GetCaptureData(), capture_data_ptr);
+  EXPECT_EQ(&MockFrameTrackManager::passed_data_->GetCaptureData(), capture_data_ptr);
 }
 
 TEST_F(MizarPairedDataTest, ForeachCallstackIsCorrect) {
