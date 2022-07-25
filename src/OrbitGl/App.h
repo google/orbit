@@ -497,6 +497,10 @@ class OrbitApp final : public DataViewFactory,
   void SelectCallstackEvents(
       const std::vector<orbit_client_data::CallstackEvent>& selected_callstack_events,
       bool origin_is_multiple_threads);
+  void InspectCallstackEvents(
+      const std::vector<orbit_client_data::CallstackEvent>& selected_callstack_events,
+      bool origin_is_multiple_threads);
+  void ClearInspection();
 
   void SelectTracepoint(const orbit_grpc_protos::TracepointInfo& info) override;
   void DeselectTracepoint(const orbit_grpc_protos::TracepointInfo& tracepoint) override;
@@ -615,6 +619,10 @@ class OrbitApp final : public DataViewFactory,
 
   void RequestSymbolDownloadStop(absl::Span<const orbit_client_data::ModuleData* const> modules,
                                  bool show_dialog);
+  // Sets CaptureData's selection_callstack_data and selection_post_processed_sampling_data.
+  void SetCaptureDataSelectionFields(
+      const std::vector<orbit_client_data::CallstackEvent>& selected_callstack_events,
+      bool origin_is_multiple_threads);
 
   std::atomic<bool> capture_loading_cancellation_requested_ = false;
   std::atomic<orbit_client_data::CaptureData::DataSource> data_source_{

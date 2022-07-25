@@ -6,6 +6,7 @@
 
 #include <absl/container/flat_hash_set.h>
 #include <absl/flags/declare.h>
+#include <absl/flags/internal/flag.h>
 
 #include <QAbstractButton>
 #include <QAction>
@@ -1894,6 +1895,17 @@ void OrbitMainWindow::AppendToCaptureLog(CaptureLogSeverity severity, absl::Dura
       QString::fromStdString(absl::StrFormat("%s\t%s", pretty_time, message)));
   ORBIT_LOG("\"%s  %s\" with severity %s added to the capture log", pretty_time, message,
             severity_name);
+}
+
+void OrbitMainWindow::SetCallTreeInspection(std::unique_ptr<CallTreeView> top_down_view,
+                                            std::unique_ptr<CallTreeView> bottom_up_view) {
+  ui->topDownWidget->SetInspection(std::move(top_down_view));
+  ui->bottomUpWidget->SetInspection(std::move(bottom_up_view));
+}
+
+void OrbitMainWindow::ClearCallTreeInspection() {
+  ui->topDownWidget->ClearInspection();
+  ui->bottomUpWidget->ClearInspection();
 }
 
 orbit_gl::MainWindowInterface::SymbolErrorHandlingResult OrbitMainWindow::HandleSymbolError(

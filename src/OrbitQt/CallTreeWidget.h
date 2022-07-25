@@ -57,6 +57,9 @@ class CallTreeWidget : public QWidget {
   void SetTopDownView(std::unique_ptr<CallTreeView> top_down_view);
   void SetBottomUpView(std::unique_ptr<CallTreeView> bottom_up_view);
   void ClearCallTreeView();
+  // These methods can only be called after SetTopDownView or SetBottomUpView.
+  void SetInspection(std::unique_ptr<CallTreeView> call_tree_view);
+  void ClearInspection();
 
  protected:
   void resizeEvent(QResizeEvent* event) override;
@@ -69,6 +72,7 @@ class CallTreeWidget : public QWidget {
   void OnSearchLineEditTextEdited(const QString& text);
   void OnSearchTypingFinishedTimerTimout();
   void OnSliderValueChanged(int value);
+  void OnLeaveInspectionButtonClicked();
 
  private:
   static const QString kActionExpandRecursively;
@@ -81,6 +85,7 @@ class CallTreeWidget : public QWidget {
   static const QString kActionDeselect;
   static const QString kActionDisassembly;
   static const QString kActionSourceCode;
+  static const QString kActionInspectCallstacks;
   static const QString kActionSelectCallstacks;
   static const QString kActionCopySelection;
 
@@ -138,10 +143,11 @@ class CallTreeWidget : public QWidget {
   QTimer* search_typing_finished_timer_ = new QTimer{this};
   OrbitApp* app_ = nullptr;
   orbit_metrics_uploader::MetricsUploader* metrics_uploader_ = nullptr;
-  std::unique_ptr<CallTreeViewItemModel> model_;
-  std::unique_ptr<QIdentityProxyModel> hide_values_proxy_model_;
-  std::unique_ptr<HighlightCustomFilterSortFilterProxyModel> search_proxy_model_;
-  std::unique_ptr<HookedIdentityProxyModel> hooked_proxy_model_;
+  std::unique_ptr<CallTreeViewItemModel> model_ = nullptr;
+  std::unique_ptr<CallTreeViewItemModel> inspection_model_ = nullptr;
+  std::unique_ptr<QIdentityProxyModel> hide_values_proxy_model_ = nullptr;
+  std::unique_ptr<HighlightCustomFilterSortFilterProxyModel> search_proxy_model_ = nullptr;
+  std::unique_ptr<HookedIdentityProxyModel> hooked_proxy_model_ = nullptr;
 
   enum class ColumnResizingState {
     kInitial = 0,        // CallTreeWidget hasn't got its first size set yet

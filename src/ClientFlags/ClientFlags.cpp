@@ -85,3 +85,5 @@ ABSL_FLAG(
     "try turning automatic symbol loading off (--auto_symbol_loading=false)");
 
 ABSL_FLAG(bool, auto_frame_track, true, "Automatically add the default Frame Track.");
+
+ABSL_FLAG(bool, time_range_selection, false, "Enable time range selection feature.");
