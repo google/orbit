@@ -45,8 +45,8 @@ def main(argv):
         CheckTimers(track_name_filter="dxvk-submit"),
         VerifyScopeTypeAndHitCount(scope_name="dxvk::vk::Presenter::presentImage",
                                    scope_type="D",
-                                   min_hits=1000,
-                                   max_hits=15000),
+                                   min_hits=700,
+                                   max_hits=70000),
         VerifyScopeTypeAndHitCount(scope_name="Render", scope_type="D", min_hits=0, max_hits=0),
         VerifyCaptureLogContains(expected_content=[
             "Uprobes likely failed to instrument some functions:",
