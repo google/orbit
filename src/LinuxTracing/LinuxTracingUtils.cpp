@@ -40,16 +40,6 @@ using orbit_module_utils::LinuxMemoryMapping;
 
 namespace orbit_linux_tracing {
 
-std::string ReadMaps(pid_t pid) {
-  std::string maps_filename = absl::StrFormat("/proc/%d/maps", pid);
-  ErrorMessageOr<std::string> maps_content_or_error = orbit_base::ReadFileToString(maps_filename);
-  if (maps_content_or_error.has_error()) {
-    return {};
-  }
-
-  return maps_content_or_error.value();
-}
-
 std::optional<char> GetThreadState(pid_t tid) {
   fs::path stat{fs::path{"/proc"} / std::to_string(tid) / "stat"};
   if (!fs::exists(stat)) {

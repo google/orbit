@@ -17,19 +17,19 @@ using orbit_test_utils::HasNoError;
 
 namespace orbit_module_utils {
 
-TEST(ReadLinuxMaps, ReadMapsFromPid) {
-  const ErrorMessageOr<std::vector<LinuxMemoryMapping>> maps = ReadMaps(getpid());
-  EXPECT_THAT(maps, HasNoError());
-  EXPECT_GT(maps.value().size(), 0);
+TEST(ReadLinuxMaps, ReadMaps) {
+  const ErrorMessageOr<std::string> proc_pid_maps_content = ReadMaps(getpid());
+  EXPECT_THAT(proc_pid_maps_content, HasNoError());
+  EXPECT_GT(proc_pid_maps_content.value().size(), 0);
 }
 
-TEST(ReadLinuxMaps, ReadMapsFromProcPidMapsContent) {
+TEST(ReadLinuxMaps, ParseMaps) {
   constexpr const char* kProcPidMapsContent{
       "00400000-00452000 r-xp 00000000 08:02 173521      /usr/bin/dbus-daemon\n"
       "00e03000-00e24000 rw-p 00000000 00:00 0           [heap]\n"
       "35b1800000-35b1820000 r-xp 00000000 08:02 135522  /path with spaces\n"
       "35b1a21000-35b1a22000 rw-p 00000000 00:00 0       \n"};
-  std::vector<LinuxMemoryMapping> maps = ReadMaps(kProcPidMapsContent);
+  std::vector<LinuxMemoryMapping> maps = ParseMaps(kProcPidMapsContent);
   ASSERT_EQ(maps.size(), 4);
 
   EXPECT_EQ(maps[0].start_address(), 0x400000);
@@ -57,26 +57,32 @@ TEST(ReadLinuxMaps, ReadMapsFromProcPidMapsContent) {
   EXPECT_EQ(maps[3].pathname(), "");
 }
 
-TEST(ReadLinuxMaps, ReadMapsFromInvalidProcPidMapsContent) {
+TEST(ReadLinuxMaps, ParseMapsFromInvalidProcPidMapsContent) {
   std::vector<LinuxMemoryMapping> maps;
 
-  maps = ReadMaps("");
+  maps = ParseMaps("");
   EXPECT_EQ(maps.size(), 0);
 
-  maps = ReadMaps("\n\n");
+  maps = ParseMaps("\n\n");
   EXPECT_EQ(maps.size(), 0);
 
   // Missing inode.
-  maps = ReadMaps("00400000-00452000 r-xp 00000000 08:02");
+  maps = ParseMaps("00400000-00452000 r-xp 00000000 08:02");
   EXPECT_EQ(maps.size(), 0);
 
   // Unexpected protection format.
-  maps = ReadMaps("00400000-00452000 r-x 00000000 08:02 173521      /usr/bin/dbus-daemon");
+  maps = ParseMaps("00400000-00452000 r-x 00000000 08:02 173521      /usr/bin/dbus-daemon");
   EXPECT_EQ(maps.size(), 0);
 
   // Non-numeric inode.
-  maps = ReadMaps("00400000-00452000 r-xp 00000000 08:02 173521a      /usr/bin/dbus-daemon\n");
+  maps = ParseMaps("00400000-00452000 r-xp 00000000 08:02 173521a      /usr/bin/dbus-daemon\n");
   EXPECT_EQ(maps.size(), 0);
+}
+
+TEST(ReadLinuxMaps, ReadAndParseMaps) {
+  const ErrorMessageOr<std::vector<LinuxMemoryMapping>> maps = ReadAndParseMaps(getpid());
+  EXPECT_THAT(maps, HasNoError());
+  EXPECT_GT(maps.value().size(), 0);
 }
 
 }  // namespace orbit_module_utils

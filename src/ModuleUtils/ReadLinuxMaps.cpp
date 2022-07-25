@@ -18,13 +18,13 @@
 
 namespace orbit_module_utils {
 
-ErrorMessageOr<std::vector<LinuxMemoryMapping>> ReadMaps(pid_t pid) {
+ErrorMessageOr<std::string> ReadMaps(pid_t pid) {
   const std::filesystem::path proc_pid_maps_path{absl::StrFormat("/proc/%i/maps", pid)};
   OUTCOME_TRY(auto&& proc_pid_maps_content, orbit_base::ReadFileToString(proc_pid_maps_path));
-  return ReadMaps(proc_pid_maps_content);
+  return std::move(proc_pid_maps_content);
 }
 
-std::vector<LinuxMemoryMapping> ReadMaps(std::string_view proc_pid_maps_content) {
+std::vector<LinuxMemoryMapping> ParseMaps(std::string_view proc_pid_maps_content) {
   const std::vector<std::string> proc_pid_maps_lines = absl::StrSplit(proc_pid_maps_content, '\n');
   std::vector<LinuxMemoryMapping> result;
 
@@ -61,6 +61,11 @@ std::vector<LinuxMemoryMapping> ReadMaps(std::string_view proc_pid_maps_content)
   }
 
   return result;
+}
+
+ErrorMessageOr<std::vector<LinuxMemoryMapping>> ReadAndParseMaps(pid_t pid) {
+  OUTCOME_TRY(auto&& proc_pid_maps_content, ReadMaps(pid));
+  return ParseMaps(proc_pid_maps_content);
 }
 
 }  // namespace orbit_module_utils

@@ -153,12 +153,12 @@ TEST(ReadLinuxModules, ReadModules) {
   EXPECT_GT(result.value().size(), 0);
 }
 
-TEST(ReadLinuxModules, ParseMapsIntoModulesEmptyData) {
-  const auto result = ParseMapsIntoModules(ReadMaps(""));
+TEST(ReadLinuxModules, ReadModulesFromMapsEmptyData) {
+  const auto result = ReadModulesFromMaps(ParseMaps(""));
   EXPECT_EQ(result.size(), 0);
 }
 
-TEST(ReadLinuxModules, ParseMapsIntoModules1) {
+TEST(ReadLinuxModules, ReadModulesFromMaps1) {
   const std::filesystem::path test_path = orbit_test::GetTestdataDir();
   const std::filesystem::path hello_world_path = test_path / "hello_world_elf";
   const std::filesystem::path text_file = test_path / "textfile.txt";
@@ -171,11 +171,11 @@ TEST(ReadLinuxModules, ParseMapsIntoModules1) {
       "7f6874290000-7f6874297000 r-xp 00000000 fe:01 661214                     /dev/zero\n"
       "7f6874290001-7f6874297002 r-dp 00000000 fe:01 661214                     %s\n",
       hello_world_path, text_file)};
-  const auto result = ParseMapsIntoModules(ReadMaps(proc_pid_maps_content));
+  const auto result = ReadModulesFromMaps(ParseMaps(proc_pid_maps_content));
   EXPECT_EQ(result.size(), 1);
 }
 
-TEST(ReadLinuxModules, ParseMapsIntoModules2) {
+TEST(ReadLinuxModules, ReadModulesFromMaps2) {
   const std::filesystem::path test_path = orbit_test::GetTestdataDir();
   const std::filesystem::path hello_world_path = test_path / "hello_world_elf";
   const std::filesystem::path no_symbols_path = test_path / "no_symbols_elf";
@@ -189,7 +189,7 @@ TEST(ReadLinuxModules, ParseMapsIntoModules2) {
       "800000000000-800000001000 r-xp 00009000 fe:01 661216                     %2$s\n",
       hello_world_path, no_symbols_path)};
 
-  const auto result = ParseMapsIntoModules(ReadMaps(proc_pid_maps_content));
+  const auto result = ReadModulesFromMaps(ParseMaps(proc_pid_maps_content));
   ASSERT_EQ(result.size(), 2);
 
   const ModuleInfo& hello_module_info = result[0];
@@ -220,7 +220,7 @@ TEST(ReadLinuxModules, ParseMapsIntoModules2) {
   EXPECT_EQ(no_symbols_module_info.object_segments()[0].size_in_memory(), 0xa40);
 }
 
-TEST(ReadLinuxModules, ParseMapsIntoModulesWithSpacesInPath) {
+TEST(ReadLinuxModules, ReadModulesFromMapsWithSpacesInPath) {
   const std::filesystem::path test_path = orbit_test::GetTestdataDir();
   ErrorMessageOr<std::string> elf_contents_or_error =
       orbit_base::ReadFileToString(test_path / "hello_world_elf");
@@ -237,7 +237,7 @@ TEST(ReadLinuxModules, ParseMapsIntoModulesWithSpacesInPath) {
   const std::string proc_pid_maps_content{absl::StrFormat(
       "7f6874290000-7f6874297000 r-xp 00000000 fe:01 661214                     %s\n",
       hello_world_elf_temporary.file_path())};
-  const auto result = ParseMapsIntoModules(ReadMaps(proc_pid_maps_content));
+  const auto result = ReadModulesFromMaps(ParseMaps(proc_pid_maps_content));
   ASSERT_EQ(result.size(), 1);
 
   const ModuleInfo& hello_module_info = result[0];
@@ -252,7 +252,7 @@ TEST(ReadLinuxModules, ParseMapsIntoModulesWithSpacesInPath) {
   VerifyObjectSegmentsForHelloWorldElf(hello_module_info.object_segments());
 }
 
-TEST(ReadLinuxModules, ParseMapsIntoModulesElfWithMultipleExecutableMaps) {
+TEST(ReadLinuxModules, ReadModulesFromMapsElfWithMultipleExecutableMaps) {
   const std::filesystem::path test_path = orbit_test::GetTestdataDir();
   const std::filesystem::path hello_world_path = test_path / "hello_world_elf";
 
@@ -263,7 +263,7 @@ TEST(ReadLinuxModules, ParseMapsIntoModulesElfWithMultipleExecutableMaps) {
                       "103000-104000 rw-p 00000000 00:00 0 \n"
                       "104000-105000 r-xp 00000000 01:02 42    %1$s\n",
                       hello_world_path)};
-  const auto result = ParseMapsIntoModules(ReadMaps(proc_pid_maps_content));
+  const auto result = ReadModulesFromMaps(ParseMaps(proc_pid_maps_content));
   ASSERT_EQ(result.size(), 1);
 
   const ModuleInfo& hello_module_info = result[0];
@@ -278,7 +278,7 @@ TEST(ReadLinuxModules, ParseMapsIntoModulesElfWithMultipleExecutableMaps) {
   VerifyObjectSegmentsForHelloWorldElf(hello_module_info.object_segments());
 }
 
-TEST(ReadLinuxModules, ParseMapsIntoModulesPeTextMappedNotAnonymously) {
+TEST(ReadLinuxModules, ReadModulesFromMapsPeTextMappedNotAnonymously) {
   const std::filesystem::path test_path = orbit_test::GetTestdataDir();
   const std::filesystem::path libtest_path = test_path / "libtest.dll";  // SizeOfImage = 0x20000
 
@@ -286,7 +286,7 @@ TEST(ReadLinuxModules, ParseMapsIntoModulesPeTextMappedNotAnonymously) {
       absl::StrFormat("100000-101000 r--p 00000000 01:02 42    %1$s\n"
                       "101000-103000 r-xp 00001000 01:02 42    %1$s\n",
                       libtest_path)};
-  const auto result = ParseMapsIntoModules(ReadMaps(proc_pid_maps_content));
+  const auto result = ReadModulesFromMaps(ParseMaps(proc_pid_maps_content));
   ASSERT_EQ(result.size(), 1);
 
   const orbit_grpc_protos::ModuleInfo& libtest_module_info = result[0];
@@ -303,7 +303,7 @@ TEST(ReadLinuxModules, ParseMapsIntoModulesPeTextMappedNotAnonymously) {
   VerifyObjectSegmentsForLibTestDll(libtest_module_info.object_segments());
 }
 
-TEST(ReadLinuxModules, ParseMapsIntoModulesPeTextMappedNotAnonymouslyWithMultipleExecutableMaps) {
+TEST(ReadLinuxModules, ReadModulesFromMapsPeTextMappedNotAnonymouslyWithMultipleExecutableMaps) {
   const std::filesystem::path test_path = orbit_test::GetTestdataDir();
   const std::filesystem::path libtest_path = test_path / "libtest.dll";
 
@@ -314,7 +314,7 @@ TEST(ReadLinuxModules, ParseMapsIntoModulesPeTextMappedNotAnonymouslyWithMultipl
                       "103000-104000 rw-p 00000000 00:00 0 \n"
                       "104000-105000 r-xp 00000000 01:02 42    %1$s\n",
                       libtest_path)};
-  const auto result = ParseMapsIntoModules(ReadMaps(proc_pid_maps_content));
+  const auto result = ReadModulesFromMaps(ParseMaps(proc_pid_maps_content));
   ASSERT_EQ(result.size(), 1);
 
   const orbit_grpc_protos::ModuleInfo& libtest_module_info = result[0];
@@ -331,7 +331,7 @@ TEST(ReadLinuxModules, ParseMapsIntoModulesPeTextMappedNotAnonymouslyWithMultipl
   VerifyObjectSegmentsForLibTestDll(libtest_module_info.object_segments());
 }
 
-TEST(ReadLinuxModules, ParseMapsIntoModulesPeTextMappedAnonymously) {
+TEST(ReadLinuxModules, ReadModulesFromMapsPeTextMappedAnonymously) {
   const std::filesystem::path test_path = orbit_test::GetTestdataDir();
   const std::filesystem::path libtest_path = test_path / "libtest.dll";
 
@@ -339,7 +339,7 @@ TEST(ReadLinuxModules, ParseMapsIntoModulesPeTextMappedAnonymously) {
       absl::StrFormat("100000-101000 r--p 00000000 01:02 42    %1$s\n"
                       "101000-103000 r-xp 00000000 00:00 0 \n",
                       libtest_path)};
-  const auto result = ParseMapsIntoModules(ReadMaps(proc_pid_maps_content));
+  const auto result = ReadModulesFromMaps(ParseMaps(proc_pid_maps_content));
   ASSERT_EQ(result.size(), 1);
 
   const orbit_grpc_protos::ModuleInfo& libtest_module_info = result[0];
@@ -356,7 +356,7 @@ TEST(ReadLinuxModules, ParseMapsIntoModulesPeTextMappedAnonymously) {
   VerifyObjectSegmentsForLibTestDll(libtest_module_info.object_segments());
 }
 
-TEST(ReadLinuxModules, ParseMapsIntoModulesPeTextMappedAnonymouslyWithMultipleExecutableMaps) {
+TEST(ReadLinuxModules, ReadModulesFromMapsPeTextMappedAnonymouslyWithMultipleExecutableMaps) {
   const std::filesystem::path test_path = orbit_test::GetTestdataDir();
   const std::filesystem::path libtest_path = test_path / "libtest.dll";
 
@@ -368,7 +368,7 @@ TEST(ReadLinuxModules, ParseMapsIntoModulesPeTextMappedAnonymouslyWithMultipleEx
                       "104000-105000 r-xp 00000000 00:00 0 \n"
                       "105000-121000 r-xp 00000000 00:00 0 \n",  // Beyond SizeOfImage.
                       libtest_path)};
-  const auto result = ParseMapsIntoModules(ReadMaps(proc_pid_maps_content));
+  const auto result = ReadModulesFromMaps(ParseMaps(proc_pid_maps_content));
   ASSERT_EQ(result.size(), 1);
 
   const orbit_grpc_protos::ModuleInfo& libtest_module_info = result[0];
@@ -385,7 +385,7 @@ TEST(ReadLinuxModules, ParseMapsIntoModulesPeTextMappedAnonymouslyWithMultipleEx
   VerifyObjectSegmentsForLibTestDll(libtest_module_info.object_segments());
 }
 
-TEST(ReadLinuxModules, ParseMapsIntoModulesPeTextMappedAnonymouslyInMoreComplexExample) {
+TEST(ReadLinuxModules, ReadModulesFromMapsPeTextMappedAnonymouslyInMoreComplexExample) {
   const std::filesystem::path test_path = orbit_test::GetTestdataDir();
   const std::filesystem::path libtest_path = test_path / "libtest.dll";
 
@@ -402,7 +402,7 @@ TEST(ReadLinuxModules, ParseMapsIntoModulesPeTextMappedAnonymouslyInMoreComplexE
                       "108000-109000 r-xp 00000000 00:00 0 \n"  // An executable map.
                       "109000-10A000 r-xp 00000000 01:02 42    /path/to/nothing\n",
                       libtest_path)};
-  const auto result = ParseMapsIntoModules(ReadMaps(proc_pid_maps_content));
+  const auto result = ReadModulesFromMaps(ParseMaps(proc_pid_maps_content));
   ASSERT_EQ(result.size(), 1);
 
   const orbit_grpc_protos::ModuleInfo& libtest_module_info = result[0];
@@ -419,7 +419,7 @@ TEST(ReadLinuxModules, ParseMapsIntoModulesPeTextMappedAnonymouslyInMoreComplexE
   VerifyObjectSegmentsForLibTestDll(libtest_module_info.object_segments());
 }
 
-TEST(ReadLinuxModules, ParseMapsIntoModulesPeTextMappedAnonymouslyAndFirstMapWithOffset) {
+TEST(ReadLinuxModules, ReadModulesFromMapsPeTextMappedAnonymouslyAndFirstMapWithOffset) {
   const std::filesystem::path test_path = orbit_test::GetTestdataDir();
   const std::filesystem::path libtest_path = test_path / "libtest.dll";
 
@@ -427,11 +427,11 @@ TEST(ReadLinuxModules, ParseMapsIntoModulesPeTextMappedAnonymouslyAndFirstMapWit
       absl::StrFormat("101000-102000 r--p 00001000 01:02 42    %s\n"
                       "102000-103000 r-xp 00000000 00:00 0 \n",
                       libtest_path)};
-  const auto result = ParseMapsIntoModules(ReadMaps(proc_pid_maps_content));
+  const auto result = ReadModulesFromMaps(ParseMaps(proc_pid_maps_content));
   ASSERT_EQ(result.size(), 0);
 }
 
-TEST(ReadLinuxModules, ParseMapsIntoModulesPeTextMappedWithWrongName) {
+TEST(ReadLinuxModules, ReadModulesFromMapsPeTextMappedWithWrongName) {
   const std::filesystem::path test_path = orbit_test::GetTestdataDir();
   const std::filesystem::path libtest_path = test_path / "libtest.dll";
 
@@ -439,11 +439,11 @@ TEST(ReadLinuxModules, ParseMapsIntoModulesPeTextMappedWithWrongName) {
       absl::StrFormat("100000-101000 r--p 00000000 01:02 42    %s\n"
                       "101000-103000 r-xp 00000000 00:00 42    /wrong/path\n",
                       libtest_path)};
-  const auto result = ParseMapsIntoModules(ReadMaps(proc_pid_maps_content));
+  const auto result = ReadModulesFromMaps(ParseMaps(proc_pid_maps_content));
   EXPECT_EQ(result.size(), 0);
 }
 
-TEST(ReadLinuxModules, ParseMapsIntoModulesPeNoExecutableMap) {
+TEST(ReadLinuxModules, ReadModulesFromMapsPeNoExecutableMap) {
   const std::filesystem::path test_path = orbit_test::GetTestdataDir();
   const std::filesystem::path libtest_path = test_path / "libtest.dll";
 
@@ -451,11 +451,11 @@ TEST(ReadLinuxModules, ParseMapsIntoModulesPeNoExecutableMap) {
       absl::StrFormat("100000-101000 r--p 00000000 01:02 42    %s\n"
                       "101000-103000 r--p 00000000 00:00 0 \n",
                       libtest_path)};
-  const auto result = ParseMapsIntoModules(ReadMaps(proc_pid_maps_content));
+  const auto result = ReadModulesFromMaps(ParseMaps(proc_pid_maps_content));
   EXPECT_EQ(result.size(), 0);
 }
 
-TEST(ReadLinuxModules, ParseMapsIntoModulesPeTextMappedAnonymouslyWithEndBeyondSizeOfImage) {
+TEST(ReadLinuxModules, ReadModulesFromMapsPeTextMappedAnonymouslyWithEndBeyondSizeOfImage) {
   const std::filesystem::path test_path = orbit_test::GetTestdataDir();
   const std::filesystem::path libtest_path = test_path / "libtest.dll";
 
@@ -463,7 +463,7 @@ TEST(ReadLinuxModules, ParseMapsIntoModulesPeTextMappedAnonymouslyWithEndBeyondS
       absl::StrFormat("100000-101000 r--p 00000000 01:02 42    %s\n"
                       "101000-121000 r-xp 00000000 00:00 0 \n",  // Beyond SizeOfImage.
                       libtest_path)};
-  const auto result = ParseMapsIntoModules(ReadMaps(proc_pid_maps_content));
+  const auto result = ReadModulesFromMaps(ParseMaps(proc_pid_maps_content));
   EXPECT_EQ(result.size(), 0);
 }
 

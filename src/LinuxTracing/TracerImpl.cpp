@@ -201,7 +201,12 @@ static void OpenRingBuffersOrRedirectOnExisting(
 
 void TracerImpl::InitUprobesEventVisitor() {
   ORBIT_SCOPE_FUNCTION;
-  maps_ = LibunwindstackMaps::ParseMaps(ReadMaps(target_pid_));
+  ErrorMessageOr<std::string> maps = orbit_module_utils::ReadMaps(target_pid_);
+  if (maps.has_error()) {
+    ORBIT_ERROR("%s", maps.error().message());
+  }
+  maps_ = LibunwindstackMaps::ParseMaps(maps.has_value() ? maps.value() : "");
+
   unwinder_ =
       LibunwindstackUnwinder::Create(&absolute_address_to_size_of_functions_to_stop_unwinding_at_);
   return_address_manager_.emplace(user_space_instrumentation_addresses_.get());
@@ -790,10 +795,10 @@ void TracerImpl::Startup() {
   ModulesSnapshot modules_snapshot;
   modules_snapshot.set_pid(target_pid_);
   modules_snapshot.set_timestamp_ns(effective_capture_start_timestamp_ns_);
-  auto maps_or_error = orbit_module_utils::ReadMaps(target_pid_);
+  auto maps_or_error = orbit_module_utils::ReadAndParseMaps(target_pid_);
   if (maps_or_error.has_value()) {
     std::vector<ModuleInfo> modules =
-        orbit_module_utils::ParseMapsIntoModules(maps_or_error.value());
+        orbit_module_utils::ReadModulesFromMaps(maps_or_error.value());
     *modules_snapshot.mutable_modules() = {modules.begin(), modules.end()};
     listener_->OnModulesSnapshot(std::move(modules_snapshot));
 
