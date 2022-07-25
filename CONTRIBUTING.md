@@ -23,8 +23,8 @@ use GitHub pull requests for this purpose. Consult
 information on using pull requests.
 
 We use Github's automatic reviewer assigment. Please assign your review to the
-[google/orbit](https://github.com/orgs/google/teams/orbit) team as well to one
-additional reviewer.
+[google/orbit](https://github.com/orgs/google/teams/orbit) team as well to at
+least one additional reviewer.
 
 ## Community Guidelines
 
