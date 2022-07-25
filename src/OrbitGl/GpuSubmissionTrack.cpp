@@ -12,6 +12,7 @@
 #include "ClientData/TimerChain.h"
 #include "ClientProtos/capture_data.pb.h"
 #include "DisplayFormats/DisplayFormats.h"
+#include "GetThreadColor.h"
 #include "GlUtils.h"
 #include "OrbitBase/Logging.h"
 #include "OrbitBase/ThreadConstants.h"
@@ -100,7 +101,7 @@ Color GpuSubmissionTrack::GetTimerColor(const TimerInfo& timer_info, bool is_sel
 
   // We color code the timeslices for GPU activity using the color
   // of the CPU thread track that submitted the job.
-  Color color = TimeGraph::GetThreadColor(timer_info.thread_id());
+  Color color = orbit_gl::GetThreadColor(timer_info.thread_id());
 
   // We disambiguate the different types of GPU activity based on the
   // string that is displayed on their timeslice.

@@ -22,6 +22,7 @@
 #include "ClientData/TimerChain.h"
 #include "ClientProtos/capture_data.pb.h"
 #include "DisplayFormats/DisplayFormats.h"
+#include "GetThreadColor.h"
 #include "GlUtils.h"
 #include "Introspection/Introspection.h"
 #include "OrbitBase/Logging.h"
@@ -56,15 +57,15 @@ ThreadTrack::ThreadTrack(CaptureViewElement* parent,
                  nullptr),
       thread_id_{thread_id},
       thread_track_data_provider_{thread_track_data_provider} {
-  Color color = TimeGraph::GetThreadColor(thread_id);
+  Color color = orbit_gl::GetThreadColor(thread_id);
   thread_state_bar_ = std::make_shared<orbit_gl::ThreadStateBar>(
-      this, app_, timeline_info_, viewport, layout, module_manager, capture_data, thread_id, color);
+      this, app_, timeline_info_, viewport, layout, module_manager, capture_data, thread_id);
 
   event_bar_ = std::make_shared<orbit_gl::CallstackThreadBar>(
-      this, app_, timeline_info_, viewport, layout, module_manager, capture_data, thread_id, color);
+      this, app_, timeline_info_, viewport, layout, module_manager, capture_data, thread_id);
 
   tracepoint_bar_ = std::make_shared<orbit_gl::TracepointThreadBar>(
-      this, app_, timeline_info_, viewport, layout, module_manager, capture_data, thread_id, color);
+      this, app_, timeline_info_, viewport, layout, module_manager, capture_data, thread_id);
 }
 
 std::string ThreadTrack::GetName() const {
@@ -246,7 +247,7 @@ Color ThreadTrack::GetTimerColor(const TimerInfo& timer_info, bool is_selected, 
   if (user_color.has_value()) {
     color = user_color.value();
   } else {
-    color = TimeGraph::GetThreadColor(timer_info.thread_id());
+    color = orbit_gl::GetThreadColor(timer_info.thread_id());
   }
 
   constexpr uint8_t kOddAlpha = 210;

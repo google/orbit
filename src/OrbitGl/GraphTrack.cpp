@@ -14,6 +14,7 @@
 #include <numeric>
 
 #include "Geometry.h"
+#include "GetThreadColor.h"
 #include "GlCanvas.h"
 #include "OrbitBase/ThreadConstants.h"
 #include "TextRenderer.h"
@@ -107,7 +108,7 @@ void GraphTrack<Dimension>::DoUpdatePrimitives(PrimitiveAssembler& primitive_ass
 template <size_t Dimension>
 Color GraphTrack<Dimension>::GetColor(size_t index) const {
   if (series_colors_.has_value()) return series_colors_.value()[index];
-  return TimeGraph::GetColor(index);
+  return orbit_gl::GetThreadColor(index);
 }
 
 template <size_t Dimension>

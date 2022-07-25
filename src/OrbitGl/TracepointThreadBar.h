@@ -22,7 +22,7 @@ class TracepointThreadBar : public ThreadBar {
                                orbit_gl::Viewport* viewport, TimeGraphLayout* layout,
                                const orbit_client_data::ModuleManager* module_manager,
                                const orbit_client_data::CaptureData* capture_data,
-                               uint32_t thread_id, const Color& color);
+                               uint32_t thread_id);
 
   [[nodiscard]] float GetHeight() const override {
     return layout_->GetEventTrackHeightFromTid(GetThreadId());

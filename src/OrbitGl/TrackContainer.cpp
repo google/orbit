@@ -22,6 +22,7 @@
 #include "CoreMath.h"
 #include "DisplayFormats/DisplayFormats.h"
 #include "Geometry.h"
+#include "GetThreadColor.h"
 #include "GlCanvas.h"
 #include "GlUtils.h"
 #include "OrbitBase/Append.h"
@@ -213,7 +214,7 @@ void TrackContainer::DrawOverlay(PrimitiveAssembler& primitive_assembler,
     x_coords.push_back(pos[0]);
 
     primitive_assembler.AddVerticalLine(pos, height, GlCanvas::kZValueOverlay,
-                                        TimeGraph::GetThreadColor(timer_info->thread_id()));
+                                        orbit_gl::GetThreadColor(timer_info->thread_id()));
   }
 
   // Draw timers with timings between iterators.

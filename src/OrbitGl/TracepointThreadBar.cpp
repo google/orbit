@@ -17,6 +17,7 @@
 #include "ClientServices/TracepointServiceClient.h"
 #include "CoreMath.h"
 #include "Geometry.h"
+#include "GetThreadColor.h"
 #include "GlCanvas.h"
 #include "GrpcProtos/tracepoint.pb.h"
 #include "OrbitBase/Logging.h"
@@ -32,9 +33,9 @@ TracepointThreadBar::TracepointThreadBar(CaptureViewElement* parent, OrbitApp* a
                                          orbit_gl::Viewport* viewport, TimeGraphLayout* layout,
                                          const orbit_client_data::ModuleManager* module_manager,
                                          const orbit_client_data::CaptureData* capture_data,
-                                         uint32_t thread_id, const Color& color)
+                                         uint32_t thread_id)
     : ThreadBar(parent, app, timeline_info, viewport, layout, module_manager, capture_data,
-                thread_id, "Tracepoints", color) {}
+                thread_id, "Tracepoints") {}
 
 void TracepointThreadBar::DoDraw(PrimitiveAssembler& primitive_assembler,
                                  TextRenderer& text_renderer, const DrawContext& draw_context) {
@@ -47,7 +48,7 @@ void TracepointThreadBar::DoDraw(PrimitiveAssembler& primitive_assembler,
   float event_bar_z = draw_context.picking_mode == PickingMode::kClick
                           ? GlCanvas::kZValueEventBarPicking
                           : GlCanvas::kZValueEventBar;
-  Color color = GetColor();
+  Color color = orbit_gl::GetThreadColor(GetThreadId());
   Quad box = MakeBox(GetPos(), Vec2(GetWidth(), -GetHeight()));
   primitive_assembler.AddBox(box, event_bar_z, color, shared_from_this());
 }

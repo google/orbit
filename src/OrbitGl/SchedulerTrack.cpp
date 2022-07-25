@@ -11,6 +11,7 @@
 #include "App.h"
 #include "ClientData/CaptureData.h"
 #include "ClientProtos/capture_data.pb.h"
+#include "GetThreadColor.h"
 #include "OrbitBase/Logging.h"
 #include "OrbitBase/ThreadConstants.h"
 #include "PrimitiveAssembler.h"
@@ -84,7 +85,7 @@ Color SchedulerTrack::GetTimerColor(const TimerInfo& timer_info, bool is_selecte
     bool is_same_pid = selected_timer && timer_info.process_id() == selected_timer->process_id();
     return is_same_pid ? kSamePidColor : kInactiveColor;
   }
-  return TimeGraph::GetThreadColor(timer_info.thread_id());
+  return orbit_gl::GetThreadColor(timer_info.thread_id());
 }
 
 float SchedulerTrack::GetYFromTimer(const TimerInfo& timer_info) const {

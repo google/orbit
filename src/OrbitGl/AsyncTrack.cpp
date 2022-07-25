@@ -15,6 +15,7 @@
 #include "ClientData/ModuleAndFunctionLookup.h"
 #include "ClientProtos/capture_data.pb.h"
 #include "DisplayFormats/DisplayFormats.h"
+#include "GetThreadColor.h"
 #include "GlCanvas.h"
 #include "GlUtils.h"
 #include "Introspection/Introspection.h"
@@ -149,7 +150,7 @@ Color AsyncTrack::GetTimerColor(const TimerInfo& timer_info, bool is_selected, b
   uint64_t event_id = timer_info.api_async_scope_id();
   ;
   std::string name = app_->GetManualInstrumentationManager()->GetString(event_id);
-  Color color = TimeGraph::GetColor(name);
+  Color color = orbit_gl::GetThreadColor(name);
 
   constexpr uint8_t kOddAlpha = 210;
   if ((timer_info.depth() & 0x1) == 0u) {

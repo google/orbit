@@ -21,6 +21,7 @@
 #include "ClientData/ModuleAndFunctionLookup.h"
 #include "ClientProtos/capture_data.pb.h"
 #include "Geometry.h"
+#include "GetThreadColor.h"
 #include "GlCanvas.h"
 #include "OrbitBase/Logging.h"
 #include "OrbitBase/ThreadConstants.h"
@@ -43,10 +44,9 @@ CallstackThreadBar::CallstackThreadBar(CaptureViewElement* parent, OrbitApp* app
                                        const orbit_gl::TimelineInfoInterface* timeline_info,
                                        orbit_gl::Viewport* viewport, TimeGraphLayout* layout,
                                        const orbit_client_data::ModuleManager* module_manager,
-                                       const CaptureData* capture_data, ThreadID thread_id,
-                                       const Color& color)
+                                       const CaptureData* capture_data, ThreadID thread_id)
     : ThreadBar(parent, app, timeline_info, viewport, layout, module_manager, capture_data,
-                thread_id, "Callstacks", color) {}
+                thread_id, "Callstacks") {}
 
 std::string CallstackThreadBar::GetTooltip() const {
   return "Left-click and drag to select samples";
@@ -67,7 +67,7 @@ void CallstackThreadBar::DoDraw(PrimitiveAssembler& primitive_assembler,
   float event_bar_z = draw_context.picking_mode == PickingMode::kClick
                           ? GlCanvas::kZValueEventBarPicking
                           : GlCanvas::kZValueEventBar;
-  Color color = GetColor();
+  Color color = orbit_gl::GetThreadColor(GetThreadId());
   const Vec2 pos = GetPos();
   Quad box = MakeBox(pos, Vec2(GetWidth(), GetHeight()));
   primitive_assembler.AddBox(box, event_bar_z, color, shared_from_this());
