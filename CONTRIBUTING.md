@@ -22,6 +22,10 @@ use GitHub pull requests for this purpose. Consult
 [GitHub Help](https://help.github.com/articles/about-pull-requests/) for more
 information on using pull requests.
 
+We use Github's automatic reviewer assigment. Please assign your review to the
+[google/orbit](https://github.com/orgs/google/teams/orbit) team as well to one
+additional reviewer.
+
 ## Community Guidelines
 
 This project follows [Google's Open Source Community
