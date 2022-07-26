@@ -121,7 +121,7 @@ class SamplingWithFrameTrackInputWidgetTmpl : public SamplingWithFrameTrackInput
   }
 
   [[nodiscard]] std::string MakeDisplayedName(const FrameTrackInfo& info) const {
-    return visit(&SamplingWithFrameTrackInputWidgetTmpl::MakeFrameTrackString,
+    return Visit(&SamplingWithFrameTrackInputWidgetTmpl::MakeFrameTrackString,
                  &SamplingWithFrameTrackInputWidgetTmpl::PresentEventSourceName, info);
   }
 

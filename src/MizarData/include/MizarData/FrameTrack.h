@@ -32,7 +32,7 @@ using FrameTrackInfo =
 // The function allows for more convenient calls to `std::visit`.
 template <typename Tag, typename First, typename Second, typename ActionOnFirst,
           typename ActionOnSecond>
-auto visit(ActionOnFirst&& action_on_scope_info, ActionOnSecond&& action_on_etw_source,
+auto Visit(ActionOnFirst&& action_on_scope_info, ActionOnSecond&& action_on_etw_source,
            const orbit_base::Typedef<Tag, std::variant<First, Second>>& host) {
   return std::visit(
       [&action_on_scope_info, &action_on_etw_source](const auto& info) {
