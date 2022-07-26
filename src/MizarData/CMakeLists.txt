@@ -8,6 +8,7 @@ add_library(MizarData STATIC)
 
 target_sources(MizarData PUBLIC
          include/MizarData/BaselineAndComparison.h
+         include/MizarData/GetCallstackSamplingIntervals.h
          include/MizarData/FrameTrack.h
          include/MizarData/FrameTrackManager.h
          include/MizarData/MizarData.h
@@ -21,6 +22,7 @@ target_sources(MizarData PRIVATE
                 BaselineAndComparison.cpp
                 BaselineAndComparisonHelper.h
                 BaselineAndComparisonHelper.cpp
+                GetCallstackSamplingIntervals.cpp
                 MizarData.cpp)
 
 target_link_libraries(
@@ -40,6 +42,7 @@ add_executable(MizarDataTests)
 
 target_sources(MizarDataTests PRIVATE
                 BaselineAndComparisonTest.cpp
+                GetCallstackSamplingIntervalsTest.cpp
                 FrameTrackManagerTest.cpp
                 MizarDataTest.cpp
                 MizarPairedDataTest.cpp)
