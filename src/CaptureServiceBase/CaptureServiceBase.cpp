@@ -10,6 +10,7 @@
 #include "GrpcProtos/Constants.h"
 #include "OrbitBase/Logging.h"
 
+using orbit_grpc_protos::CaptureFinished;
 using orbit_grpc_protos::CaptureOptions;
 using orbit_grpc_protos::ProducerCaptureEvent;
 
@@ -70,8 +71,8 @@ void CaptureServiceBase::StartEventProcessing(const CaptureOptions& capture_opti
 
 void CaptureServiceBase::FinalizeEventProcessing(
     StopCaptureReason stop_capture_reason,
-    orbit_grpc_protos::CaptureFinished::ProcessState target_process_state_after_capture,
-    orbit_grpc_protos::CaptureFinished::TerminationSignal target_process_termination_signal) {
+    CaptureFinished::ProcessState target_process_state_after_capture,
+    CaptureFinished::TerminationSignal target_process_termination_signal) {
   ProducerCaptureEvent capture_finished;
   switch (stop_capture_reason) {
     case StopCaptureReason::kClientStop:

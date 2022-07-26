@@ -83,8 +83,8 @@ ProducerCaptureEvent CreateCaptureStartedEvent(const CaptureOptions& capture_opt
 }
 
 ProducerCaptureEvent CreateSuccessfulCaptureFinishedEvent(
-    orbit_grpc_protos::CaptureFinished::ProcessState target_process_state_after_capture,
-    orbit_grpc_protos::CaptureFinished::TerminationSignal target_process_termination_signal) {
+    CaptureFinished::ProcessState target_process_state_after_capture,
+    CaptureFinished::TerminationSignal target_process_termination_signal) {
   ProducerCaptureEvent event;
   CaptureFinished* capture_finished = event.mutable_capture_finished();
   capture_finished->set_status(CaptureFinished::kSuccessful);
