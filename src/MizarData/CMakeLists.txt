@@ -40,6 +40,7 @@ add_executable(MizarDataTests)
 
 target_sources(MizarDataTests PRIVATE
                 BaselineAndComparisonTest.cpp
+                FrameTrackManagerTest.cpp
                 MizarDataTest.cpp
                 MizarPairedDataTest.cpp)
 
