@@ -128,7 +128,7 @@ class TimeGraph : public orbit_gl::CaptureViewElement, public orbit_gl::Timeline
   [[nodiscard]] const TimeGraphLayout& GetLayout() const { return layout_; }
   [[nodiscard]] TimeGraphLayout& GetLayout() { return layout_; }
 
-  [[nodiscard]] static Color GetColor(uint64_t id) {
+  [[nodiscard]] static Color GetColor(uint32_t id) {
     constexpr unsigned char kAlpha = 255;
     static std::vector<Color> colors{
         Color(231, 68, 53, kAlpha),    // red

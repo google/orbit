@@ -67,6 +67,7 @@ target_sources(
          TextRenderer.h
          TextRendererInterface.h
          ThreadBar.h
+         ThreadColor.h
          ThreadStateBar.h
          ThreadTrack.h
          TimeGraph.h
@@ -142,6 +143,7 @@ target_sources(
           TimerInfosIterator.cpp
           TimerTrack.cpp
           ThreadBar.cpp
+          ThreadColor.cpp
           ThreadStateBar.cpp
           ThreadTrack.cpp
           TracepointThreadBar.cpp

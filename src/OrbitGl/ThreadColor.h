@@ -8,14 +8,6 @@
 
 namespace orbit_gl {
 
-[[nodiscard]] inline Color GetThreadColor(uint64_t id);
-
-[[nodiscard]] inline Color GetThreadColor(int64_t id) {
-  return GetThreadColor(static_cast<uint64_t>(id));
-}
-
-[[nodiscard]] inline Color GetThreadColor(uint32_t id) {
-  return GetThreadColor(static_cast<uint64_t>(id));
-}
+[[nodiscard]] inline Color GetThreadColor(uint32_t id);
 
 }  // namespace orbit_gl

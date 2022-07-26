@@ -16,7 +16,7 @@ const Color kGreenThread{87, 166, 74, 255};
 const Color kBeigeThread{215, 171, 105, 255};
 const Color kOrangeThread{248, 101, 22, 255};
 
-[[nodiscard]] inline Color GetThreadColor(uint64_t id) {
+[[nodiscard]] inline Color GetThreadColor(uint32_t id) {
   static std::vector<Color> colors{
       kRedThread, kBlueThread, kPurpleThread, kGreenThread, kBeigeThread, kOrangeThread,
   };
