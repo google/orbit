@@ -14,4 +14,8 @@ namespace orbit_gl {
   return GetThreadColor(static_cast<uint64_t>(id));
 }
 
+[[nodiscard]] inline Color GetThreadColor(uint32_t id) {
+  return GetThreadColor(static_cast<uint64_t>(id));
+}
+
 }  // namespace orbit_gl
