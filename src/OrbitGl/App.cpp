@@ -155,6 +155,7 @@ using orbit_grpc_protos::ModuleInfo;
 using orbit_grpc_protos::TracepointInfo;
 
 using orbit_metrics_uploader::CaptureMetric;
+using orbit_metrics_uploader::OrbitCaptureData;
 using orbit_metrics_uploader::OrbitLogEvent;
 using orbit_metrics_uploader::ScopedMetric;
 
@@ -385,6 +386,13 @@ void OrbitApp::OnCaptureFinished(const CaptureFinished& capture_finished) {
         break;
     }
 
+    metrics_capture_complete_data_.target_process_state_after_capture =
+        static_cast<OrbitCaptureData::TargetProcessStateAfterCapture>(
+            capture_finished.target_process_state_after_capture());
+    metrics_capture_complete_data_.target_process_termination_signal =
+        static_cast<OrbitCaptureData::TargetProcessTerminationSignal>(
+            capture_finished.target_process_termination_signal());
+
     ORBIT_CHECK(HasCaptureData());
     if (GetCaptureData().file_path().has_value()) {
       capture_file_info_manager_.AddOrTouchCaptureFile(GetCaptureData().file_path().value(),
@@ -508,13 +516,6 @@ Future<void> OrbitApp::OnCaptureComplete() {
           metrics_capture_complete_data_.number_of_unwinding_errors =
               all_threads_sample_data->unwinding_errors_count;
         }
-
-        metrics_capture_complete_data_.target_process_state_after_capture =
-            static_cast<orbit_metrics_uploader::OrbitCaptureData_TargetProcessStateAfterCapture>(
-                GetCaptureData().GetTargetProcessStateAfterCapture().process_state());
-        metrics_capture_complete_data_.target_process_termination_signal =
-            static_cast<orbit_metrics_uploader::OrbitCaptureData_TargetProcessTerminationSignal>(
-                GetCaptureData().GetTargetProcessStateAfterCapture().termination_signal());
 
         FireRefreshCallbacks();
 

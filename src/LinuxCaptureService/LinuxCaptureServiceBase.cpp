@@ -26,6 +26,7 @@
 #include "ExtractSignalFromMinidump.h"
 #include "GrpcProtos/Constants.h"
 #include "GrpcProtos/capture.pb.h"
+#include "GrpcProtos/services.pb.h"
 #include "Introspection/Introspection.h"
 #include "MemoryInfoHandler.h"
 #include "MemoryWatchdog.h"
@@ -40,11 +41,11 @@
 #include "TracingHandler.h"
 #include "UserSpaceInstrumentationAddressesImpl.h"
 
+using orbit_grpc_protos::CaptureFinished;
 using orbit_grpc_protos::CaptureOptions;
 using orbit_grpc_protos::CaptureRequest;
 using orbit_grpc_protos::CaptureResponse;
 using orbit_grpc_protos::ProducerCaptureEvent;
-using orbit_grpc_protos::TargetProcessStateAfterCapture;
 
 using orbit_producer_event_processor::ClientCaptureEventCollector;
 using orbit_producer_event_processor::ProducerEventProcessor;
@@ -165,22 +166,22 @@ absl::flat_hash_set<std::string> FileNamesOfAllMinidumps() {
     for (const std::filesystem::path& path : error_or_core_files.value()) {
       if (regex_match(path.string(), check_if_minidump_file)) {
         result.insert(path.string());
-        ORBIT_LOG("%s", path.string());
       }
     }
   }
   return result;
 }
 
-orbit_grpc_protos::ProducerCaptureEvent CreateTargetProcessStateAfterCaptureEvent(
+struct TargetProcessStateAfterCapture {
+  CaptureFinished::ProcessState process_state;
+  CaptureFinished::TerminationSignal termination_signal;
+};
+
+TargetProcessStateAfterCapture GetTargetProcessStateAfterCapture(
     pid_t pid, const absl::flat_hash_set<std::string>& old_core_files) {
-  ProducerCaptureEvent event;
-  TargetProcessStateAfterCapture* target_process_state =
-      event.mutable_target_process_state_after_capture();
-  target_process_state->set_process_state(
-      TargetProcessStateAfterCapture::kProcessStateInternalError);
-  target_process_state->set_termination_signal(
-      TargetProcessStateAfterCapture::kTerminationSignalInternalError);
+  TargetProcessStateAfterCapture result;
+  result.process_state = CaptureFinished::kProcessStateInternalError;
+  result.termination_signal = CaptureFinished::kTerminationSignalInternalError;
 
   const std::string pid_dir_name = absl::StrFormat("/proc/%i", pid);
   auto exists_or_error = orbit_base::FileExists(pid_dir_name);
@@ -188,15 +189,14 @@ orbit_grpc_protos::ProducerCaptureEvent CreateTargetProcessStateAfterCaptureEven
     ORBIT_ERROR("Unable to check for existence of \"%s\": %s", pid_dir_name,
                 exists_or_error.error().message());
     // We can't read the process state, so we return an error state.
-    return event;
+    return result;
   }
 
   if (exists_or_error.value()) {
     // Process is still running.
-    target_process_state->set_process_state(TargetProcessStateAfterCapture::kRunning);
-    target_process_state->set_termination_signal(
-        TargetProcessStateAfterCapture::kTerminationSignalUnspecified);
-    return event;
+    result.process_state = CaptureFinished::kRunning;
+    result.termination_signal = CaptureFinished::kTerminationSignalUnspecified;
+    return result;
   }
 
   // Check whether we find a minidump. Otherwise we assume the process ended gracefully.
@@ -204,7 +204,7 @@ orbit_grpc_protos::ProducerCaptureEvent CreateTargetProcessStateAfterCaptureEven
   auto error_or_core_files = orbit_base::ListFilesInDirectory(kCoreDirectory);
   if (error_or_core_files.has_error()) {
     // We can't access the directory with the core files; we return an error state.
-    return event;
+    return result;
   }
   const std::vector<std::filesystem::path>& core_files = error_or_core_files.value();
   // Matches zero or more characters ('.*'), followed by a literal dot ('\.'), followed by the pid
@@ -217,25 +217,23 @@ orbit_grpc_protos::ProducerCaptureEvent CreateTargetProcessStateAfterCaptureEven
       continue;
     }
     if (regex_match(path.string(), check_if_minidump_file)) {
-      target_process_state->set_process_state(TargetProcessStateAfterCapture::kCrashed);
+      result.process_state = CaptureFinished::kCrashed;
       ErrorMessageOr<int> signal_or_error = ExtractSignalFromMinidump(path);
       if (signal_or_error.has_error()) {
         ORBIT_ERROR("Error extracting termination signal from minidump: %s",
                     signal_or_error.error().message());
-        return event;
+        return result;
       }
       const int signal = signal_or_error.value();
-      target_process_state->set_termination_signal(
-          static_cast<orbit_grpc_protos::TargetProcessStateAfterCapture_TerminationSignal>(signal));
-      return event;
+      result.termination_signal = static_cast<CaptureFinished::TerminationSignal>(signal);
+      return result;
     }
   }
 
   // We did not find any core files for this process. So we assume a clean exit.
-  target_process_state->set_process_state(TargetProcessStateAfterCapture::kEnded);
-  target_process_state->set_termination_signal(
-      TargetProcessStateAfterCapture::kTerminationSignalUnspecified);
-  return event;
+  result.process_state = CaptureFinished::kEnded;
+  result.termination_signal = CaptureFinished::kTerminationSignalUnspecified;
+  return result;
 }
 
 }  // namespace
@@ -451,12 +449,11 @@ void LinuxCaptureServiceBase::DoCapture(
   introspection_listener.reset();
 
   // Check whether the target process is still running and send that information.
-  auto target_process_state_after_capture = CreateTargetProcessStateAfterCaptureEvent(
+  auto target_process_state = GetTargetProcessStateAfterCapture(
       orbit_base::ToNativeProcessId(capture_options.pid()), old_core_files);
-  producer_event_processor_->ProcessEvent(orbit_grpc_protos::kRootProducerId,
-                                          std::move(target_process_state_after_capture));
 
-  FinalizeEventProcessing(stop_capture_reason);
+  FinalizeEventProcessing(stop_capture_reason, target_process_state.process_state,
+                          target_process_state.termination_signal);
 
   TerminateCapture();
 }

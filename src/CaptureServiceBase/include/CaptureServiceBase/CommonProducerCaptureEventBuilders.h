@@ -20,7 +20,9 @@ namespace orbit_capture_service_base {
     const orbit_grpc_protos::CaptureOptions& capture_options, absl::Time capture_start_time,
     uint64_t capture_start_timestamp_ns);
 
-[[nodiscard]] orbit_grpc_protos::ProducerCaptureEvent CreateSuccessfulCaptureFinishedEvent();
+[[nodiscard]] orbit_grpc_protos::ProducerCaptureEvent CreateSuccessfulCaptureFinishedEvent(
+    orbit_grpc_protos::CaptureFinished::ProcessState target_process_state_after_capture,
+    orbit_grpc_protos::CaptureFinished::TerminationSignal target_process_termination_signal);
 
 [[nodiscard]] orbit_grpc_protos::ProducerCaptureEvent
 CreateInterruptedByServiceCaptureFinishedEvent(std::string message);

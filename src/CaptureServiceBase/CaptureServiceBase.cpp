@@ -68,12 +68,16 @@ void CaptureServiceBase::StartEventProcessing(const CaptureOptions& capture_opti
       CreateClockResolutionEvent(capture_start_timestamp_ns_, clock_resolution_ns_));
 }
 
-void CaptureServiceBase::FinalizeEventProcessing(StopCaptureReason stop_capture_reason) {
+void CaptureServiceBase::FinalizeEventProcessing(
+    StopCaptureReason stop_capture_reason,
+    orbit_grpc_protos::CaptureFinished::ProcessState target_process_state_after_capture,
+    orbit_grpc_protos::CaptureFinished::TerminationSignal target_process_termination_signal) {
   ProducerCaptureEvent capture_finished;
   switch (stop_capture_reason) {
     case StopCaptureReason::kClientStop:
     case StopCaptureReason::kGuestOrcStop:
-      capture_finished = CreateSuccessfulCaptureFinishedEvent();
+      capture_finished = CreateSuccessfulCaptureFinishedEvent(target_process_state_after_capture,
+                                                              target_process_termination_signal);
       break;
     case StopCaptureReason::kMemoryWatchdog:
       capture_finished =
