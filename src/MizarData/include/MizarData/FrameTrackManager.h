@@ -43,7 +43,7 @@ class FrameTrackManagerTmpl {
 
   [[nodiscard]] std::vector<FrameStartNs> GetFrameStarts(FrameTrackId id, FrameStartNs min_start,
                                                          FrameStartNs max_start) const {
-    return Visit(
+    return visit(
         absl::bind_front(&FrameTrackManagerTmpl::GetScopeFrameStarts, this, min_start, max_start),
         absl::bind_front(&FrameTrackManagerTmpl::GetEtwFrameStarts, this, min_start, max_start),
         id);

@@ -30,11 +30,10 @@ using FrameTrackInfo =
                                                         orbit_grpc_protos::PresentEvent::Source>>;
 
 // The function allows for more convenient calls to `std::visit`.
-// `Host` is a `Typedef` wrapping an `std::variant<First, Second>`.
-template <typename First, typename Second, typename Host, typename ActionOnFirst,
+template <typename Tag, typename First, typename Second, typename ActionOnFirst,
           typename ActionOnSecond>
-auto Visit(ActionOnFirst&& action_on_scope_info, ActionOnSecond&& action_on_etw_source,
-           Host&& host) {
+auto visit(ActionOnFirst&& action_on_scope_info, ActionOnSecond&& action_on_etw_source,
+           const orbit_base::Typedef<Tag, std::variant<First, Second>>& host) {
   return std::visit(
       [&action_on_scope_info, &action_on_etw_source](const auto& info) {
         using InfoT = std::decay_t<decltype(info)>;
@@ -45,23 +44,7 @@ auto Visit(ActionOnFirst&& action_on_scope_info, ActionOnSecond&& action_on_etw_
           return std::invoke(std::forward<ActionOnSecond>(action_on_etw_source), info);
         }
       },
-      *std::forward<Host>(host));
-}
-
-template <typename ActionOnScopeInfo, typename ActionOnEtwSource>
-auto Visit(ActionOnScopeInfo&& action_on_scope_info, ActionOnEtwSource&& action_on_etw_source,
-           const FrameTrackInfo& info) {
-  return Visit<orbit_client_data::ScopeInfo, orbit_grpc_protos::PresentEvent::Source>(
-      std::forward<ActionOnScopeInfo>(action_on_scope_info),
-      std::forward<ActionOnEtwSource>(action_on_etw_source), info);
-}
-
-template <typename ActionOnScopeId, typename ActionOnEtwSource>
-auto Visit(ActionOnScopeId&& action_on_scope_id, ActionOnEtwSource&& action_on_etw_source,
-           const FrameTrackId& id) {
-  return Visit<orbit_client_data::ScopeId, orbit_grpc_protos::PresentEvent::Source>(
-      std::forward<ActionOnScopeId>(action_on_scope_id),
-      std::forward<ActionOnEtwSource>(action_on_etw_source), id);
+      *host);
 }
 
 }  // namespace orbit_mizar_data
