@@ -4,9 +4,11 @@
 
 #include <chrono>
 #include <iostream>
+#include <map>
 #include <string>
 #include <string_view>
 #include <thread>
+#include <vector>
 
 int GgpVersion(int argc, char* argv[]) {
   if (argc != 2) {
@@ -212,11 +214,66 @@ int GgpAuth(int argc, char* argv[]) {
   return 0;
 }
 
+int GgpCrashReport(int argc, char* argv[]) {
+  if (argc < 7) {
+    std::cout << "Wrong amount of arguments" << std::endl;
+    return 1;
+  }
+  if (std::string_view{argv[1]} != "crash-report" ||
+      std::string_view{argv[2]} != "download-symbols" || std::string_view{argv[3]} != "-s" ||
+      std::string_view{argv[4]} != "--show-url") {
+    std::cout << "Arguments are wrong" << std::endl;
+    return 1;
+  }
+
+  const std::map<std::string, std::string> kValidKeyToSymbolDownloadInfo = {
+      {"build_id_0/symbol_filename_0", R"(
+  {
+   "downloadUrl": "valid_url_for_symbol_0",
+   "fileId": "symbolFiles/build_id_0/symbol_filename_0"
+  })"},
+      {"build_id_1/symbol_filename_1", R"(
+  {
+   "downloadUrl": "valid_url_for_symbol_1",
+   "fileId": "symbolFiles/build_id_1/symbol_filename_1"
+  })"}};
+
+  std::vector<std::string> symbols_to_output;
+  for (auto i = 5; i < argc;) {
+    if (std::string_view{argv[i]} != "--module") {
+      std::cout << "Arguments are wrong" << i << std::endl;
+      return 1;
+    }
+    if (++i >= argc || std::string_view{argv[i]} == "--module") {
+      std::cout << "Flag --module needs an argument" << std::endl;
+      return 1;
+    }
+    std::string key = argv[i];
+    if (kValidKeyToSymbolDownloadInfo.find(key) != kValidKeyToSymbolDownloadInfo.end()) {
+      symbols_to_output.push_back(kValidKeyToSymbolDownloadInfo.at(key));
+    }
+    ++i;
+  }
+
+  std::string output = R"(
+{
+ "symbols": [)";
+  for (auto it = symbols_to_output.begin(); it != symbols_to_output.end();) {
+    output += *it++;
+    if (it != symbols_to_output.end()) output += ",";
+  }
+  output += R"(
+ ]
+})";
+  std::cout << output;
+  return 0;
+}
+
 int main(int argc, char* argv[]) {
   // This sleep is here for 2 reasons:
   // 1. The ggp cli which this program is mocking, does have quite a bit of delay, hence having a
   // delay in this mock program, mimics the behaviour of the real ggp cli more closely
-  // 2. To test the timeout functionaliy in OrbitGgp::Client
+  // 2. To test the timeout functionally in OrbitGgp::Client
   std::this_thread::sleep_for(std::chrono::milliseconds{50});
 
   if (argc <= 1) {
@@ -246,6 +303,10 @@ int main(int argc, char* argv[]) {
 
   if (std::string_view{argv[1]} == "auth") {
     return GgpAuth(argc, argv);
+  }
+
+  if (std::string_view{argv[1]} == "crash-report") {
+    return GgpCrashReport(argc, argv);
   }
 
   std::cout << "arguments are formatted wrong" << std::endl;

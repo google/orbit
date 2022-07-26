@@ -496,4 +496,86 @@ TEST_F(OrbitGgpClientTest, GetAccountAsyncWorking) {
   EXPECT_TRUE(future_is_resolved);
 }
 
+TEST_F(OrbitGgpClientTest, GetSymbolDownloadInfosAsyncWorking) {
+  auto client = CreateClient(QString::fromStdString(mock_ggp_working_.string()));
+  ASSERT_THAT(client, HasValue());
+
+  bool future_is_resolved = false;
+
+  std::vector<std::pair<std::string, std::string>> module_names_and_build_ids = {
+      {"symbol_filename_0", "build_id_0"}, {"symbol_filename_2", "build_id_2"}};
+  auto future = client.value()->GetSymbolDownloadInfoAsync(module_names_and_build_ids);
+  future.Then(
+      main_thread_executor_.get(),
+      [&future_is_resolved](const ErrorMessageOr<std::vector<SymbolDownloadInfo>>& symbols) {
+        EXPECT_FALSE(future_is_resolved);
+        future_is_resolved = true;
+        ASSERT_THAT(symbols, HasValue());
+        EXPECT_EQ(symbols.value().size(), 1);
+        EXPECT_EQ(symbols.value()[0].file_id, "symbolFiles/build_id_0/symbol_filename_0");
+        QCoreApplication::exit();
+      });
+
+  QCoreApplication::exec();
+
+  EXPECT_TRUE(future_is_resolved);
+}
+
+TEST_F(OrbitGgpClientTest, GetSymbolDownloadInfoAsyncTimeout) {
+  // mock_ggp_working_ has a 50ms sleep, hence waiting for only 5ms should result in a timeout
+  auto client = CreateClient(QString::fromStdString(mock_ggp_working_.string()),
+                             std::chrono::milliseconds{5});
+  ASSERT_THAT(client, HasValue());
+
+  bool future_is_resolved = false;
+
+  std::vector<std::pair<std::string, std::string>> module_names_and_build_ids = {
+      {"symbol_filename_0", "build_id_0"}};
+  auto future = client.value()->GetSymbolDownloadInfoAsync(module_names_and_build_ids);
+  future.Then(
+      main_thread_executor_.get(),
+      [&future_is_resolved](const ErrorMessageOr<std::vector<SymbolDownloadInfo>>& symbols) {
+        EXPECT_FALSE(future_is_resolved);
+        future_is_resolved = true;
+        EXPECT_THAT(symbols, HasError("OrbitMockGgpWorking crash-report download-symbols -s "
+                                      "--show-url --module build_id_0/symbol_filename_0"));
+        EXPECT_THAT(symbols, HasError("timed out after 5ms"));
+        QCoreApplication::exit();
+      });
+
+  QCoreApplication::exec();
+
+  EXPECT_TRUE(future_is_resolved);
+}
+
+TEST_F(OrbitGgpClientTest, GetSymbolDownloadInfoAsyncClientGetsDestroyed) {
+  bool future_is_resolved = false;
+
+  Future<ErrorMessageOr<std::vector<SymbolDownloadInfo>>> future =
+      Future<ErrorMessageOr<std::vector<SymbolDownloadInfo>>>{ErrorMessage{"Empty Error Message"}};
+  {
+    ErrorMessageOr<std::unique_ptr<Client>> client =
+        CreateClient(QString::fromStdString(mock_ggp_working_.string()));
+    ASSERT_THAT(client, HasValue());
+
+    std::vector<std::pair<std::string, std::string>> module_names_and_build_ids = {
+        {"symbol_filename_0", "build_id_0"}};
+    future = client.value()->GetSymbolDownloadInfoAsync(module_names_and_build_ids);
+    future.Then(
+        main_thread_executor_.get(),
+        [&future_is_resolved](const ErrorMessageOr<std::vector<SymbolDownloadInfo>>& symbols) {
+          EXPECT_FALSE(future_is_resolved);
+          future_is_resolved = true;
+          EXPECT_THAT(symbols, HasError("OrbitMockGgpWorking crash-report download-symbols -s "
+                                        "--show-url --module build_id_0/symbol_filename_0"));
+          EXPECT_THAT(symbols, HasError("killed because the parent object was destroyed"));
+          QCoreApplication::exit();
+        });
+  }
+
+  QCoreApplication::exec();
+
+  EXPECT_TRUE(future_is_resolved);
+}
+
 }  // namespace orbit_ggp

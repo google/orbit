@@ -16,6 +16,7 @@
 #include "OrbitBase/Result.h"
 #include "OrbitGgp/Client.h"
 #include "OrbitGgp/Project.h"
+#include "OrbitGgp/SymbolDownloadInfo.h"
 #include "QtUtils/MainThreadExecutorImpl.h"
 #include "SessionSetup/RetrieveInstances.h"
 #include "TestUtils/TestUtils.h"
@@ -50,6 +51,9 @@ class MockGgpClient : public orbit_ggp::Client {
   MOCK_METHOD(Future<ErrorMessageOr<Instance>>, DescribeInstanceAsync,
               (const QString& /*instance_id*/), (override));
   MOCK_METHOD(Future<ErrorMessageOr<orbit_ggp::Account>>, GetDefaultAccountAsync, (), (override));
+  MOCK_METHOD(Future<ErrorMessageOr<std::vector<orbit_ggp::SymbolDownloadInfo>>>,
+              GetSymbolDownloadInfoAsync,
+              ((const std::vector<std::pair<std::string, std::string>>&)), (override));
 };
 
 namespace {

@@ -74,6 +74,8 @@ class ClientImpl : public Client, public QObject {
   Future<ErrorMessageOr<Project>> GetDefaultProjectAsync() override;
   Future<ErrorMessageOr<Instance>> DescribeInstanceAsync(const QString& instance_id) override;
   Future<ErrorMessageOr<Account>> GetDefaultAccountAsync() override;
+  Future<ErrorMessageOr<std::vector<SymbolDownloadInfo>>> GetSymbolDownloadInfoAsync(
+      const std::vector<std::pair<std::string, std::string>>& module_names_and_build_ids) override;
 
  private:
   const QString ggp_program_;
@@ -208,6 +210,25 @@ Future<ErrorMessageOr<Account>> ClientImpl::GetDefaultAccountAsync() {
       .ThenIfSuccess(&executor, [](const QByteArray& json) -> ErrorMessageOr<Account> {
         return Account::GetDefaultAccountFromJson(json);
       });
+}
+
+Future<ErrorMessageOr<std::vector<SymbolDownloadInfo>>> ClientImpl::GetSymbolDownloadInfoAsync(
+    const std::vector<std::pair<std::string, std::string>>& module_names_and_build_ids) {
+  QStringList arguments{"crash-report", "download-symbols", "-s", "--show-url"};
+
+  for (const auto& module_name_and_build_id : module_names_and_build_ids) {
+    arguments << "--module"
+              << QString("%1/%2")
+                     .arg(QString::fromStdString(module_name_and_build_id.second))
+                     .arg(QString::fromStdString(module_name_and_build_id.first));
+  }
+
+  orbit_base::ImmediateExecutor executor;
+  return orbit_qt_utils::ExecuteProcess(ggp_program_, arguments, this, absl::FromChrono(timeout_))
+      .ThenIfSuccess(&executor,
+                     [](const QByteArray& json) -> ErrorMessageOr<std::vector<SymbolDownloadInfo>> {
+                       return SymbolDownloadInfo::GetListFromJson(json);
+                     });
 }
 
 std::chrono::milliseconds GetClientDefaultTimeoutInMs() {
