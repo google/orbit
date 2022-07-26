@@ -28,6 +28,7 @@ namespace orbit_ggp {
 using orbit_base::Future;
 using orbit_test_utils::HasError;
 using orbit_test_utils::HasValue;
+using SymbolDownloadQuery = orbit_ggp::Client::SymbolDownloadQuery;
 
 namespace {
 
@@ -502,9 +503,9 @@ TEST_F(OrbitGgpClientTest, GetSymbolDownloadInfosAsyncWorking) {
 
   bool future_is_resolved = false;
 
-  std::vector<std::pair<std::string, std::string>> module_names_and_build_ids = {
-      {"symbol_filename_0", "build_id_0"}, {"symbol_filename_2", "build_id_2"}};
-  auto future = client.value()->GetSymbolDownloadInfoAsync(module_names_and_build_ids);
+  std::vector<SymbolDownloadQuery> symbol_download_queries = {{"symbol_filename_0", "build_id_0"},
+                                                              {"symbol_filename_2", "build_id_2"}};
+  auto future = client.value()->GetSymbolDownloadInfoAsync(symbol_download_queries);
   future.Then(
       main_thread_executor_.get(),
       [&future_is_resolved](const ErrorMessageOr<std::vector<SymbolDownloadInfo>>& symbols) {
@@ -529,9 +530,8 @@ TEST_F(OrbitGgpClientTest, GetSymbolDownloadInfoAsyncTimeout) {
 
   bool future_is_resolved = false;
 
-  std::vector<std::pair<std::string, std::string>> module_names_and_build_ids = {
-      {"symbol_filename_0", "build_id_0"}};
-  auto future = client.value()->GetSymbolDownloadInfoAsync(module_names_and_build_ids);
+  std::vector<SymbolDownloadQuery> symbol_download_queries = {{"symbol_filename_0", "build_id_0"}};
+  auto future = client.value()->GetSymbolDownloadInfoAsync(symbol_download_queries);
   future.Then(
       main_thread_executor_.get(),
       [&future_is_resolved](const ErrorMessageOr<std::vector<SymbolDownloadInfo>>& symbols) {
@@ -558,9 +558,9 @@ TEST_F(OrbitGgpClientTest, GetSymbolDownloadInfoAsyncClientGetsDestroyed) {
         CreateClient(QString::fromStdString(mock_ggp_working_.string()));
     ASSERT_THAT(client, HasValue());
 
-    std::vector<std::pair<std::string, std::string>> module_names_and_build_ids = {
+    std::vector<SymbolDownloadQuery> symbol_download_queries = {
         {"symbol_filename_0", "build_id_0"}};
-    future = client.value()->GetSymbolDownloadInfoAsync(module_names_and_build_ids);
+    future = client.value()->GetSymbolDownloadInfoAsync(symbol_download_queries);
     future.Then(
         main_thread_executor_.get(),
         [&future_is_resolved](const ErrorMessageOr<std::vector<SymbolDownloadInfo>>& symbols) {

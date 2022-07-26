@@ -52,8 +52,8 @@ class MockGgpClient : public orbit_ggp::Client {
               (const QString& /*instance_id*/), (override));
   MOCK_METHOD(Future<ErrorMessageOr<orbit_ggp::Account>>, GetDefaultAccountAsync, (), (override));
   MOCK_METHOD(Future<ErrorMessageOr<std::vector<orbit_ggp::SymbolDownloadInfo>>>,
-              GetSymbolDownloadInfoAsync,
-              ((const std::vector<std::pair<std::string, std::string>>&)), (override));
+              GetSymbolDownloadInfoAsync, ((const std::vector<Client::SymbolDownloadQuery>&)),
+              (override));
 };
 
 namespace {

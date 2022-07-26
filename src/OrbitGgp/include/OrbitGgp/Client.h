@@ -51,9 +51,13 @@ class Client {
   [[nodiscard]] virtual orbit_base::Future<ErrorMessageOr<Instance>> DescribeInstanceAsync(
       const QString& instance_id) = 0;
   [[nodiscard]] virtual orbit_base::Future<ErrorMessageOr<Account>> GetDefaultAccountAsync() = 0;
+
+  struct SymbolDownloadQuery {
+    std::string module_name;
+    std::string build_id;
+  };
   [[nodiscard]] virtual orbit_base::Future<ErrorMessageOr<std::vector<SymbolDownloadInfo>>>
-  GetSymbolDownloadInfoAsync(
-      const std::vector<std::pair<std::string, std::string>>& module_names_and_build_ids) = 0;
+  GetSymbolDownloadInfoAsync(const std::vector<SymbolDownloadQuery>& symbol_download_queries) = 0;
 };
 
 [[nodiscard]] std::chrono::milliseconds GetClientDefaultTimeoutInMs();

@@ -75,7 +75,7 @@ class ClientImpl : public Client, public QObject {
   Future<ErrorMessageOr<Instance>> DescribeInstanceAsync(const QString& instance_id) override;
   Future<ErrorMessageOr<Account>> GetDefaultAccountAsync() override;
   Future<ErrorMessageOr<std::vector<SymbolDownloadInfo>>> GetSymbolDownloadInfoAsync(
-      const std::vector<std::pair<std::string, std::string>>& module_names_and_build_ids) override;
+      const std::vector<SymbolDownloadQuery>& symbol_download_queries) override;
 
  private:
   const QString ggp_program_;
@@ -213,14 +213,14 @@ Future<ErrorMessageOr<Account>> ClientImpl::GetDefaultAccountAsync() {
 }
 
 Future<ErrorMessageOr<std::vector<SymbolDownloadInfo>>> ClientImpl::GetSymbolDownloadInfoAsync(
-    const std::vector<std::pair<std::string, std::string>>& module_names_and_build_ids) {
+    const std::vector<SymbolDownloadQuery>& symbol_download_queries) {
   QStringList arguments{"crash-report", "download-symbols", "-s", "--show-url"};
 
-  for (const auto& module_name_and_build_id : module_names_and_build_ids) {
-    arguments << "--module"
-              << QString("%1/%2")
-                     .arg(QString::fromStdString(module_name_and_build_id.second))
-                     .arg(QString::fromStdString(module_name_and_build_id.first));
+  for (const auto& query : symbol_download_queries) {
+    arguments.push_back("--module");
+    arguments.push_back(QString("%1/%2")
+                            .arg(QString::fromStdString(query.build_id))
+                            .arg(QString::fromStdString(query.module_name)));
   }
 
   orbit_base::ImmediateExecutor executor;
