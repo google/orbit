@@ -248,11 +248,10 @@ int GgpCrashReport(int argc, char* argv[]) {
       std::cout << "Flag --module needs an argument" << std::endl;
       return 1;
     }
-    std::string key = argv[i];
+    std::string key = argv[i++];
     if (kValidKeyToSymbolDownloadInfo.find(key) != kValidKeyToSymbolDownloadInfo.end()) {
       symbols_to_output.push_back(kValidKeyToSymbolDownloadInfo.at(key));
     }
-    ++i;
   }
 
   std::string output = R"(
