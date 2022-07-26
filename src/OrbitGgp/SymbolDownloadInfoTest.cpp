@@ -4,8 +4,8 @@
 
 #include <gtest/gtest.h>
 
+#include <QByteArray>
 #include <QString>
-#include <QVector>
 
 #include "OrbitBase/Result.h"
 #include "OrbitGgp/SymbolDownloadInfo.h"
@@ -14,18 +14,18 @@
 namespace orbit_ggp {
 
 TEST(OrbitGgpSymbolDownloadInfoTest, GetListFromJsonError) {
-  std::vector<QString> test_cases = {// Empty json
-                                     QString("{}"),
-                                     // Invalid json
-                                     QString("json"),
-                                     // One empty json object
-                                     QString(R"(
+  std::vector<QByteArray> test_cases = {// Empty json
+                                        QByteArray("{}"),
+                                        // Invalid json
+                                        QByteArray("json"),
+                                        // One empty json object
+                                        QByteArray(R"(
 {
  "symbols": [{}]
 } 
 )"),
-                                     // One partial (invalid) element
-                                     QString(R"(
+                                        // One partial (invalid) element
+                                        QByteArray(R"(
 {
  "symbols": [
   {
@@ -34,8 +34,8 @@ TEST(OrbitGgpSymbolDownloadInfoTest, GetListFromJsonError) {
  ]
 } 
 )"),
-                                     // One valid and one invalid element
-                                     QString(R"(
+                                        // One valid and one invalid element
+                                        QByteArray(R"(
 {
  "symbols": [
   {
@@ -50,15 +50,15 @@ TEST(OrbitGgpSymbolDownloadInfoTest, GetListFromJsonError) {
 }       
 )")};
 
-  for (const QString& json : test_cases) {
-    EXPECT_THAT(SymbolDownloadInfo::GetListFromJson(json.toUtf8()),
+  for (const auto& json : test_cases) {
+    EXPECT_THAT(SymbolDownloadInfo::GetListFromJson(json),
                 orbit_test_utils::HasError("Unable to parse JSON"));
   }
 }
 
 TEST(OrbitGgpSymbolDownloadInfoTest, GetListFromJsonSuccess) {
   // Two valid elements
-  const auto json = QString(R"(
+  const auto json = QByteArray(R"(
 {
  "symbols": [
   {
@@ -73,14 +73,42 @@ TEST(OrbitGgpSymbolDownloadInfoTest, GetListFromJsonSuccess) {
 }
 )");
 
-  const auto result = SymbolDownloadInfo::GetListFromJson(json.toUtf8());
+  const auto result = SymbolDownloadInfo::GetListFromJson(json);
   ASSERT_THAT(result, orbit_test_utils::HasNoError());
-  const QVector<SymbolDownloadInfo>& symbols{result.value()};
+  const std::vector<SymbolDownloadInfo>& symbols{result.value()};
   ASSERT_EQ(symbols.size(), 2);
   EXPECT_EQ(symbols[0].file_id, "symbolFiles/build_id_0/symbol_filename_0");
   EXPECT_EQ(symbols[0].url, "valid_url_for_symbol_0");
   EXPECT_EQ(symbols[1].file_id, "symbolFiles/build_id_1/symbol_filename_1");
   EXPECT_EQ(symbols[1].url, "valid_url_for_symbol_1");
+}
+
+TEST(OrbitGgpSymbolDownloadInfoTest, EqualToOperator) {
+  SymbolDownloadInfo symbol_0;
+  SymbolDownloadInfo symbol_1;
+  EXPECT_TRUE(symbol_0 == symbol_1);
+
+  symbol_0.file_id = "a_symbol_filename";
+  symbol_0.url = "valid_url_for_symbol";
+  EXPECT_FALSE(symbol_0 == symbol_1);
+
+  symbol_1.file_id = "a_symbol_filename";
+  symbol_1.url = "valid_url_for_symbol";
+  EXPECT_TRUE(symbol_0 == symbol_1);
+}
+
+TEST(OrbitGgpSymbolDownloadInfoTest, NotEqualToOperator) {
+  SymbolDownloadInfo symbol_0;
+  SymbolDownloadInfo symbol_1;
+  EXPECT_FALSE(symbol_0 != symbol_1);
+
+  symbol_0.file_id = "a_symbol_filename";
+  symbol_0.url = "valid_url_for_symbol";
+  EXPECT_TRUE(symbol_0 != symbol_1);
+
+  symbol_1.file_id = "a_symbol_filename";
+  symbol_1.url = "valid_url_for_symbol";
+  EXPECT_FALSE(symbol_0 != symbol_1);
 }
 
 }  // namespace orbit_ggp

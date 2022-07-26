@@ -26,7 +26,7 @@ ErrorMessageOr<SymbolDownloadInfo> CreateFromJson(const QJsonObject& obj) {
 }
 }  // namespace
 
-ErrorMessageOr<QVector<SymbolDownloadInfo>> SymbolDownloadInfo::GetListFromJson(
+ErrorMessageOr<std::vector<SymbolDownloadInfo>> SymbolDownloadInfo::GetListFromJson(
     const QByteArray& json) {
   const QJsonDocument doc = QJsonDocument::fromJson(json);
   if (!doc.isObject()) return ErrorMessage{"Unable to parse JSON: Object expected."};
@@ -40,7 +40,7 @@ ErrorMessageOr<QVector<SymbolDownloadInfo>> SymbolDownloadInfo::GetListFromJson(
   if (!symbols_value.isArray()) return ErrorMessage{"Unable to parse JSON: Array expected."};
 
   const QJsonArray symbols_arr = symbols_value.toArray();
-  QVector<SymbolDownloadInfo> list;
+  std::vector<SymbolDownloadInfo> list;
   for (const QJsonValue& symbol_value : symbols_arr) {
     if (!symbol_value.isObject()) return ErrorMessage{"Unable to parse JSON: Object expected."};
 

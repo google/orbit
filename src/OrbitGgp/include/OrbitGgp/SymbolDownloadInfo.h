@@ -7,7 +7,7 @@
 
 #include <QByteArray>
 #include <QString>
-#include <QVector>
+#include <vector>
 
 #include "OrbitBase/Result.h"
 
@@ -17,7 +17,18 @@ struct SymbolDownloadInfo {
   QString file_id;
   QString url;
 
-  static ErrorMessageOr<QVector<SymbolDownloadInfo>> GetListFromJson(const QByteArray& json);
+  [[nodiscard]] static ErrorMessageOr<std::vector<SymbolDownloadInfo>> GetListFromJson(
+      const QByteArray& json);
+
+  [[nodiscard]] friend bool operator==(const SymbolDownloadInfo& lhs,
+                                       const SymbolDownloadInfo& rhs) {
+    return (lhs.file_id == rhs.file_id) && (lhs.url == rhs.url);
+  }
+
+  [[nodiscard]] friend bool operator!=(const SymbolDownloadInfo& lhs,
+                                       const SymbolDownloadInfo& rhs) {
+    return !(lhs == rhs);
+  }
 };
 
 }  // namespace orbit_ggp
