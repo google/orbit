@@ -386,6 +386,12 @@ void OrbitApp::OnCaptureFinished(const CaptureFinished& capture_finished) {
         break;
     }
 
+    if (capture_finished.target_process_state_after_capture() == CaptureFinished::kCrashed) {
+      main_window_->AppendToCaptureLog(
+          MainWindowInterface::CaptureLogSeverity::kWarning, GetCaptureTime(),
+          absl::StrFormat("The target process crashed during the capture with signal %d.",
+                          capture_finished.target_process_termination_signal()));
+    }
     metrics_capture_complete_data_.target_process_state_after_capture =
         static_cast<OrbitCaptureData::TargetProcessStateAfterCapture>(
             capture_finished.target_process_state_after_capture());

@@ -157,12 +157,12 @@ class ProducerEventProcessorHijackingFunctionEntryExitForLinuxTracing
   TracingHandler* tracing_handler_;
 };
 
-absl::flat_hash_set<std::string> FileNamesOfAllMinidumps() {
+absl::flat_hash_set<std::string> ListFileNamesOfAllMinidumps() {
   absl::flat_hash_set<std::string> result;
   const std::string kCoreDirectory = "/usr/local/cloudcast/core";
   auto error_or_core_files = orbit_base::ListFilesInDirectory(kCoreDirectory);
   if (!error_or_core_files.has_error()) {
-    const std::regex check_if_minidump_file(absl::StrFormat(R"(.*\.core\.dmp)"));
+    const std::regex check_if_minidump_file(absl::StrFormat(R"(.*\.[0-9]+\.core\.dmp)"));
     for (const std::filesystem::path& path : error_or_core_files.value()) {
       if (regex_match(path.string(), check_if_minidump_file)) {
         result.insert(path.string());
@@ -213,6 +213,9 @@ TargetProcessStateAfterCapture GetTargetProcessStateAfterCapture(
   // ending ('.core.dmp').
   const std::regex check_if_minidump_file(absl::StrFormat(R"(.*\.%i\.[0-9]+\.core\.dmp)", pid));
   for (const std::filesystem::path& path : core_files) {
+    // Disregard the core file if it already existed at the start of the capture. We are only
+    // interested in crashes from the current run. This protects against collisions; the pid of the
+    // process might roll over and therefore not be unique.
     if (old_core_files.contains(path.string())) {
       continue;
     }
@@ -316,7 +319,7 @@ void LinuxCaptureServiceBase::DoCapture(
     wait_for_stop_capture_request_thread_.join();
   }
 
-  const absl::flat_hash_set<std::string> old_core_files = FileNamesOfAllMinidumps();
+  const absl::flat_hash_set<std::string> old_core_files = ListFileNamesOfAllMinidumps();
 
   TracingHandler tracing_handler{producer_event_processor_.get()};
   ProducerEventProcessorHijackingFunctionEntryExitForLinuxTracing function_entry_exit_hijacker{
