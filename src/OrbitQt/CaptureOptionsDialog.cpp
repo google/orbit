@@ -59,6 +59,8 @@ CaptureOptionsDialog::CaptureOptionsDialog(QWidget* parent)
   ui_->maxCopyRawStackSizeSpinBox->setValue(kMaxCopyRawStackSizeDefaultValue);
   ui_->maxCopyRawStackSizeWidget->setEnabled(ui_->framePointerUnwindingRadioButton->isChecked());
 
+  ui_->wineGroupBox->setEnabled(ui_->dwarfUnwindingRadioButton->isChecked());
+
   ui_->localMarkerDepthLineEdit->setValidator(&uint64_validator_);
 
   ui_->memorySamplingPeriodMsLabel->setEnabled(ui_->collectMemoryInfoCheckBox->isChecked());

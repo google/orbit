@@ -171,22 +171,22 @@ class SamplingWithFrameTrackReportModelTmpl : public QAbstractTableModel {
 
   [[nodiscard]] static QString MakeTooltipForSlowdownColumn(const std::string* function_name,
                                                             double slowdown_percent) {
-    return QString::fromStdString(absl::StrFormat(
-        "The function \"%s\" is  %.3f%%\n"
-        "slower in %s capture that it was in %s capture.\n"
-        "Negative percentage represent a speed-up.",
-        *function_name, slowdown_percent, orbit_mizar_base::BaselineTitle()->toStdString(),
-        orbit_mizar_base::ComparisonTitle()->toStdString()));
+    return QString::fromStdString(
+        absl::StrFormat("The function \"%s\" is  %.3f%%\n"
+                        "slower in %s capture that it was in %s capture.\n"
+                        "Negative percentage represent a speed-up.",
+                        *function_name, slowdown_percent, *orbit_mizar_base::kBaselineTitle,
+                        *orbit_mizar_base::kComparisonTitle));
   }
 
   [[nodiscard]] static QString MakeTooltipForPercentOfSlowdownColumn(
       const std::string* function_name, double percent_of_slowdown) {
-    return QString::fromStdString(absl::StrFormat(
-        "The slowdown of function \"%s\" constitutes  %.3f%%\n"
-        "of the total frametime slowdown in %s capture compared to %s capture.\n"
-        "Negative percentage represent a speed-up.",
-        *function_name, percent_of_slowdown, orbit_mizar_base::BaselineTitle()->toStdString(),
-        orbit_mizar_base::ComparisonTitle()->toStdString()));
+    return QString::fromStdString(
+        absl::StrFormat("The slowdown of function \"%s\" constitutes  %.3f%%\n"
+                        "of the total frametime slowdown in %s capture compared to %s capture.\n"
+                        "Negative percentage represent a speed-up.",
+                        *function_name, percent_of_slowdown, *orbit_mizar_base::kBaselineTitle,
+                        *orbit_mizar_base::kComparisonTitle));
   }
 
   [[nodiscard]] QVariant MakeTooltip(const QModelIndex& model_index) const {
@@ -197,20 +197,20 @@ class SamplingWithFrameTrackReportModelTmpl : public QAbstractTableModel {
       case Column::kFunctionName:
         return QString::fromStdString(*function_name);
       case Column::kBaselineExclusivePercent:
-        return *LiftAndApply(&MakeTooltipForSamplingColumns, orbit_mizar_base::BaselineTitle(),
+        return *LiftAndApply(&MakeTooltipForSamplingColumns, orbit_mizar_base::QBaselineTitle(),
                              Baseline<const std::string*>(function_name),
                              BaselineExclusiveCount(sfid), BaselineExclusiveRate(sfid));
       case Column::kComparisonExclusivePercent:
-        return *LiftAndApply(&MakeTooltipForSamplingColumns, orbit_mizar_base::ComparisonTitle(),
+        return *LiftAndApply(&MakeTooltipForSamplingColumns, orbit_mizar_base::QComparisonTitle(),
                              Comparison<const std::string*>(function_name),
                              ComparisonExclusiveCount(sfid), ComparisonExclusiveRate(sfid));
       case Column::kBaselineExclusiveTimePerFrame:
-        return *LiftAndApply(&MakeTooltipForTimePerFrameColumns, orbit_mizar_base::BaselineTitle(),
+        return *LiftAndApply(&MakeTooltipForTimePerFrameColumns, orbit_mizar_base::QBaselineTitle(),
                              Baseline<const std::string*>(function_name),
                              BaselineExclusiveTimePerFrameUs(sfid));
       case Column::kComparisonExclusiveTimePerFrame:
         return *LiftAndApply(
-            &MakeTooltipForTimePerFrameColumns, orbit_mizar_base::ComparisonTitle(),
+            &MakeTooltipForTimePerFrameColumns, orbit_mizar_base::QComparisonTitle(),
             Comparison<const std::string*>(function_name), ComparisonExclusiveTimePerFrameUs(sfid));
       case Column::kPvalue:
         return "P-value is a term from statistics.\n"

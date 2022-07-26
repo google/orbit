@@ -4,16 +4,18 @@
 
 cmake_minimum_required(VERSION 3.15)
 
-add_library(MizarBase INTERFACE)
+add_library(MizarBase STATIC)
 
-target_sources(MizarBase INTERFACE
+target_sources(MizarBase PUBLIC
   include/MizarBase/BaselineOrComparison.h
   include/MizarBase/SampledFunctionId.h
   include/MizarBase/Titles.h
   include/MizarBase/ThreadId.h)
 
-target_include_directories(MizarBase INTERFACE ${CMAKE_CURRENT_LIST_DIR}/include)
+target_include_directories(MizarBase PUBLIC ${CMAKE_CURRENT_LIST_DIR}/include)
+
+target_sources(MizarBase PRIVATE Titles.cpp)
 
 target_link_libraries(MizarBase
-  INTERFACE OrbitBase
+  PUBLIC OrbitBase
   Qt5::Core)

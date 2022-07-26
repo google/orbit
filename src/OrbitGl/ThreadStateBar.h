@@ -29,7 +29,7 @@ class ThreadStateBar final : public ThreadBar {
                           orbit_gl::Viewport* viewport, TimeGraphLayout* layout,
                           const orbit_client_data::ModuleManager* module_manager,
                           const orbit_client_data::CaptureData* capture_data,
-                          orbit_client_data::ThreadID thread_id, const Color& color);
+                          orbit_client_data::ThreadID thread_id);
 
   [[nodiscard]] float GetHeight() const override { return layout_->GetThreadStateTrackHeight(); }
 

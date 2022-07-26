@@ -22,6 +22,7 @@
 #include "OrbitBase/Logging.h"
 #include "PrimitiveAssembler.h"
 #include "TextRenderer.h"
+#include "ThreadColor.h"
 #include "TimeGraphLayout.h"
 #include "TriangleToggle.h"
 #include "Viewport.h"
