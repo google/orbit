@@ -706,6 +706,9 @@ class OrbitApp final : public DataViewFactory,
   // ONLY access this from the main thread.
   absl::flat_hash_set<std::string> download_disabled_modules_;
 
+  // A boolean information about if the default Frame Track was added in the current session.
+  bool default_frame_track_was_added_ = false;
+
   orbit_string_manager::StringManager string_manager_;
   std::shared_ptr<grpc::Channel> grpc_channel_;
 
