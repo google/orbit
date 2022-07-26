@@ -2513,6 +2513,11 @@ Future<std::vector<ErrorMessageOr<CanceledOr<void>>>> OrbitApp::LoadAllSymbols()
 }
 
 Future<void> OrbitApp::AddDefaultFrameTrackOrLogError() {
+  // The default frame track should be only added once (to give the possibility to the users of
+  // manually removing an undesired default FrameTrack in the current session). As the FrameTrack
+  // was already added before, we won't log an error in this case.
+  if (default_frame_track_was_added_) return {};
+
   const std::filesystem::path default_auto_preset_folder_path =
       orbit_base::GetExecutableDir() / "autopresets";
   const std::filesystem::path stadia_default_preset_path =
@@ -2532,7 +2537,7 @@ Future<void> OrbitApp::AddDefaultFrameTrackOrLogError() {
         GetPresetLoadState(preset.value()).state == orbit_data_views::PresetLoadState::kLoadable) {
       orbit_base::ImmediateExecutor immediate_executor{};
       return LoadPreset(preset.value())
-          .Then(&immediate_executor, [](ErrorMessageOr<void> result) -> void {
+          .Then(&immediate_executor, [this](ErrorMessageOr<void> result) -> void {
             if (result.has_error()) {
               ORBIT_ERROR(
                   "It was not possible to add a frame track automatically. The desired preset "
@@ -2540,6 +2545,7 @@ Future<void> OrbitApp::AddDefaultFrameTrackOrLogError() {
                   result.error().message());
             } else {
               ORBIT_LOG("The default frame track was automatically added.");
+              default_frame_track_was_added_ = true;
             }
           });
     }
