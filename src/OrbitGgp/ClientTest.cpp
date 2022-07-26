@@ -28,6 +28,9 @@ namespace orbit_ggp {
 using orbit_base::Future;
 using orbit_test_utils::HasError;
 using orbit_test_utils::HasValue;
+using SymbolDownloadQuery = orbit_ggp::Client::SymbolDownloadQuery;
+using testing::ElementsAre;
+using testing::FieldsAre;
 
 namespace {
 
@@ -63,43 +66,30 @@ TEST_F(OrbitGgpClientTest, GetInstancesAsyncWorking) {
   auto client = CreateClient(QString::fromStdString(mock_ggp_working_.string()));
   ASSERT_THAT(client, HasValue());
 
-  bool future_is_resolved = false;
-
   auto future =
       client.value()->GetInstancesAsync(Client::InstanceListScope::kOnlyOwnInstances, std::nullopt);
-  future.Then(main_thread_executor_.get(),
-              [&future_is_resolved](ErrorMessageOr<QVector<Instance>> instances) {
-                EXPECT_FALSE(future_is_resolved);
-                future_is_resolved = true;
-                ASSERT_THAT(instances, HasValue());
-                EXPECT_EQ(instances.value().size(), 2);
-                QCoreApplication::exit();
-              });
+  future.Then(main_thread_executor_.get(), [](const ErrorMessageOr<QVector<Instance>>& instances) {
+    ASSERT_THAT(instances, HasValue());
+    EXPECT_EQ(instances.value().size(), 2);
+    QCoreApplication::exit();
+  });
 
   QCoreApplication::exec();
-
-  EXPECT_TRUE(future_is_resolved);
 }
 
 TEST_F(OrbitGgpClientTest, GetInstancesAsyncWorkingAllReserved) {
   auto client = CreateClient(QString::fromStdString(mock_ggp_working_.string()));
   ASSERT_THAT(client, HasValue());
 
-  bool future_is_resolved = false;
   auto future = client.value()->GetInstancesAsync(Client::InstanceListScope::kAllReservedInstances,
                                                   std::nullopt);
-  future.Then(main_thread_executor_.get(),
-              [&future_is_resolved](ErrorMessageOr<QVector<Instance>> instances) {
-                EXPECT_FALSE(future_is_resolved);
-                future_is_resolved = true;
-                ASSERT_THAT(instances, HasValue());
-                EXPECT_EQ(instances.value().size(), 2);
-                QCoreApplication::exit();
-              });
+  future.Then(main_thread_executor_.get(), [](const ErrorMessageOr<QVector<Instance>>& instances) {
+    ASSERT_THAT(instances, HasValue());
+    EXPECT_EQ(instances.value().size(), 2);
+    QCoreApplication::exit();
+  });
 
   QCoreApplication::exec();
-
-  EXPECT_TRUE(future_is_resolved);
 }
 
 TEST_F(OrbitGgpClientTest, GetInstancesAsyncWorkingWithProject) {
@@ -107,23 +97,15 @@ TEST_F(OrbitGgpClientTest, GetInstancesAsyncWorkingWithProject) {
   ASSERT_THAT(client, HasValue());
 
   Project project{"display name", "project/test/id"};
-
-  bool future_is_resolved = false;
-
   auto future =
       client.value()->GetInstancesAsync(Client::InstanceListScope::kOnlyOwnInstances, project);
-  future.Then(main_thread_executor_.get(),
-              [&future_is_resolved](ErrorMessageOr<QVector<Instance>> instances) {
-                EXPECT_FALSE(future_is_resolved);
-                future_is_resolved = true;
-                ASSERT_THAT(instances, HasValue());
-                EXPECT_EQ(instances.value().size(), 2);
-                QCoreApplication::exit();
-              });
+  future.Then(main_thread_executor_.get(), [](const ErrorMessageOr<QVector<Instance>>& instances) {
+    ASSERT_THAT(instances, HasValue());
+    EXPECT_EQ(instances.value().size(), 2);
+    QCoreApplication::exit();
+  });
 
   QCoreApplication::exec();
-
-  EXPECT_TRUE(future_is_resolved);
 }
 
 TEST_F(OrbitGgpClientTest, GetInstancesAsyncWorkingAllReservedWithProject) {
@@ -131,23 +113,15 @@ TEST_F(OrbitGgpClientTest, GetInstancesAsyncWorkingAllReservedWithProject) {
   ASSERT_THAT(client, HasValue());
 
   Project project{"display name", "project/test/id"};
-
-  bool future_is_resolved = false;
-
   auto future =
       client.value()->GetInstancesAsync(Client::InstanceListScope::kAllReservedInstances, project);
-  future.Then(main_thread_executor_.get(),
-              [&future_is_resolved](ErrorMessageOr<QVector<Instance>> instances) {
-                EXPECT_FALSE(future_is_resolved);
-                future_is_resolved = true;
-                ASSERT_THAT(instances, HasValue());
-                EXPECT_EQ(instances.value().size(), 2);
-                QCoreApplication::exit();
-              });
+  future.Then(main_thread_executor_.get(), [](const ErrorMessageOr<QVector<Instance>>& instances) {
+    ASSERT_THAT(instances, HasValue());
+    EXPECT_EQ(instances.value().size(), 2);
+    QCoreApplication::exit();
+  });
 
   QCoreApplication::exec();
-
-  EXPECT_TRUE(future_is_resolved);
 }
 
 TEST_F(OrbitGgpClientTest, GetInstancesAsyncTimeout) {
@@ -156,26 +130,18 @@ TEST_F(OrbitGgpClientTest, GetInstancesAsyncTimeout) {
                              std::chrono::milliseconds{5});
   ASSERT_THAT(client, HasValue());
 
-  bool future_is_resolved = false;
   auto future =
       client.value()->GetInstancesAsync(Client::InstanceListScope::kOnlyOwnInstances, std::nullopt);
-  future.Then(main_thread_executor_.get(),
-              [&future_is_resolved](const ErrorMessageOr<QVector<Instance>>& instances) {
-                EXPECT_FALSE(future_is_resolved);
-                future_is_resolved = true;
-                EXPECT_THAT(instances, HasError("OrbitMockGgpWorking instance list -s"));
-                EXPECT_THAT(instances, HasError("timed out after 5ms"));
-                QCoreApplication::exit();
-              });
+  future.Then(main_thread_executor_.get(), [](const ErrorMessageOr<QVector<Instance>>& instances) {
+    EXPECT_THAT(instances, HasError("OrbitMockGgpWorking instance list -s"));
+    EXPECT_THAT(instances, HasError("timed out after 5ms"));
+    QCoreApplication::exit();
+  });
 
   QCoreApplication::exec();
-
-  EXPECT_TRUE(future_is_resolved);
 }
 
 TEST_F(OrbitGgpClientTest, GetInstancesAsyncClientGetsDestroyed) {
-  bool future_is_resolved = false;
-
   Future<ErrorMessageOr<QVector<Instance>>> future =
       Future<ErrorMessageOr<QVector<Instance>>>{ErrorMessage{"Empty Error Message"}};
   {
@@ -185,19 +151,14 @@ TEST_F(OrbitGgpClientTest, GetInstancesAsyncClientGetsDestroyed) {
 
     future = client.value()->GetInstancesAsync(Client::InstanceListScope::kOnlyOwnInstances,
                                                std::nullopt);
-
     future.Then(main_thread_executor_.get(),
-                [&future_is_resolved](const ErrorMessageOr<QVector<Instance>>& instances_result) {
-                  EXPECT_FALSE(future_is_resolved);
-                  future_is_resolved = true;
+                [](const ErrorMessageOr<QVector<Instance>>& instances_result) {
                   EXPECT_THAT(instances_result, HasError("orbit_ggp::Client no longer exists"));
                   QCoreApplication::exit();
                 });
   }
 
   QCoreApplication::exec();
-
-  EXPECT_TRUE(future_is_resolved);
 }
 
 TEST_F(OrbitGgpClientTest, GetSshInfoAsyncWorking) {
@@ -205,19 +166,13 @@ TEST_F(OrbitGgpClientTest, GetSshInfoAsyncWorking) {
   ASSERT_THAT(client, HasValue());
 
   QString test_instance_id = "instance/test/id";
-
-  bool future_is_resolved = false;
   auto future = client.value()->GetSshInfoAsync(test_instance_id, std::nullopt);
-  future.Then(main_thread_executor_.get(),
-              [&future_is_resolved](const ErrorMessageOr<SshInfo>& ssh_info) {
-                EXPECT_FALSE(future_is_resolved);
-                future_is_resolved = true;
-                EXPECT_THAT(ssh_info, HasValue());
-                QCoreApplication::exit();
-              });
-  QCoreApplication::exec();
+  future.Then(main_thread_executor_.get(), [](const ErrorMessageOr<SshInfo>& ssh_info) {
+    EXPECT_THAT(ssh_info, HasValue());
+    QCoreApplication::exit();
+  });
 
-  EXPECT_TRUE(future_is_resolved);
+  QCoreApplication::exec();
 }
 
 TEST_F(OrbitGgpClientTest, GetSshInfoAsyncWorkingWithProject) {
@@ -225,50 +180,34 @@ TEST_F(OrbitGgpClientTest, GetSshInfoAsyncWorkingWithProject) {
   ASSERT_THAT(client, HasValue());
 
   QString test_instance_id = "instance/test/id";
-
   Project project{"display name", "project/test/id"};
-
-  bool future_is_resolved = false;
   auto future = client.value()->GetSshInfoAsync(test_instance_id, project);
-  future.Then(main_thread_executor_.get(),
-              [&future_is_resolved](const ErrorMessageOr<SshInfo>& ssh_info) {
-                EXPECT_FALSE(future_is_resolved);
-                future_is_resolved = true;
-                EXPECT_THAT(ssh_info, HasValue());
-                QCoreApplication::exit();
-              });
-  QCoreApplication::exec();
+  future.Then(main_thread_executor_.get(), [](const ErrorMessageOr<SshInfo>& ssh_info) {
+    EXPECT_THAT(ssh_info, HasValue());
+    QCoreApplication::exit();
+  });
 
-  EXPECT_TRUE(future_is_resolved);
+  QCoreApplication::exec();
 }
 
 TEST_F(OrbitGgpClientTest, GetSshInfoAsyncTimeout) {
-  QString test_instance_id = "instance/test/id";
-
   // mock_ggp_working_ has a 50ms sleep, hence waiting for only 5ms should result in a timeout
   auto client = CreateClient(QString::fromStdString(mock_ggp_working_.string()),
                              std::chrono::milliseconds{5});
   ASSERT_THAT(client, HasValue());
 
-  bool future_is_resolved = false;
+  QString test_instance_id = "instance/test/id";
   auto future = client.value()->GetSshInfoAsync(test_instance_id, std::nullopt);
-  future.Then(main_thread_executor_.get(), [&future_is_resolved](
-                                               const ErrorMessageOr<SshInfo>& ssh_info) {
-    EXPECT_FALSE(future_is_resolved);
-    future_is_resolved = true;
+  future.Then(main_thread_executor_.get(), [](const ErrorMessageOr<SshInfo>& ssh_info) {
     EXPECT_THAT(ssh_info, HasError("OrbitMockGgpWorking ssh init -s --instance instance/test/id"));
     EXPECT_THAT(ssh_info, HasError("timed out after 5ms"));
     QCoreApplication::exit();
   });
 
   QCoreApplication::exec();
-
-  EXPECT_TRUE(future_is_resolved);
 }
 
 TEST_F(OrbitGgpClientTest, GetSshInfoAsyncClientGetsDestroyed) {
-  bool future_is_resolved = false;
-
   Future<ErrorMessageOr<SshInfo>> future =
       Future<ErrorMessageOr<SshInfo>>{ErrorMessage{"Empty Error Message"}};
   {
@@ -277,42 +216,28 @@ TEST_F(OrbitGgpClientTest, GetSshInfoAsyncClientGetsDestroyed) {
     ASSERT_THAT(client, HasValue());
 
     QString test_instance_id = "instance/test/id";
-
     future = client.value()->GetSshInfoAsync(test_instance_id, std::nullopt);
-
-    future.Then(main_thread_executor_.get(),
-                [&future_is_resolved](const ErrorMessageOr<SshInfo>& ssh_info_result) {
-                  EXPECT_FALSE(future_is_resolved);
-                  future_is_resolved = true;
-                  EXPECT_THAT(ssh_info_result, HasError("orbit_ggp::Client no longer exists"));
-                  QCoreApplication::exit();
-                });
+    future.Then(main_thread_executor_.get(), [](const ErrorMessageOr<SshInfo>& ssh_info_result) {
+      EXPECT_THAT(ssh_info_result, HasError("orbit_ggp::Client no longer exists"));
+      QCoreApplication::exit();
+    });
   }
 
   QCoreApplication::exec();
-
-  EXPECT_TRUE(future_is_resolved);
 }
 
 TEST_F(OrbitGgpClientTest, GetProjectsAsyncWorking) {
   auto client = CreateClient(QString::fromStdString(mock_ggp_working_.string()));
   ASSERT_THAT(client, HasValue());
 
-  bool future_is_resolved = false;
-
   auto future = client.value()->GetProjectsAsync();
-  future.Then(main_thread_executor_.get(),
-              [&future_is_resolved](ErrorMessageOr<QVector<Project>> project) {
-                EXPECT_FALSE(future_is_resolved);
-                future_is_resolved = true;
-                ASSERT_THAT(project, HasValue());
-                EXPECT_EQ(project.value().size(), 2);
-                QCoreApplication::exit();
-              });
+  future.Then(main_thread_executor_.get(), [](const ErrorMessageOr<QVector<Project>>& project) {
+    ASSERT_THAT(project, HasValue());
+    EXPECT_EQ(project.value().size(), 2);
+    QCoreApplication::exit();
+  });
 
   QCoreApplication::exec();
-
-  EXPECT_TRUE(future_is_resolved);
 }
 
 TEST_F(OrbitGgpClientTest, GetProjectsAsyncTimeout) {
@@ -321,26 +246,17 @@ TEST_F(OrbitGgpClientTest, GetProjectsAsyncTimeout) {
                              std::chrono::milliseconds{5});
   ASSERT_THAT(client, HasValue());
 
-  bool future_is_resolved = false;
-
   auto future = client.value()->GetProjectsAsync();
-  future.Then(main_thread_executor_.get(),
-              [&future_is_resolved](const ErrorMessageOr<QVector<Project>>& projects) {
-                EXPECT_FALSE(future_is_resolved);
-                future_is_resolved = true;
-                EXPECT_THAT(projects, HasError("OrbitMockGgpWorking project list -s"));
-                EXPECT_THAT(projects, HasError("timed out after 5ms"));
-                QCoreApplication::exit();
-              });
+  future.Then(main_thread_executor_.get(), [](const ErrorMessageOr<QVector<Project>>& projects) {
+    EXPECT_THAT(projects, HasError("OrbitMockGgpWorking project list -s"));
+    EXPECT_THAT(projects, HasError("timed out after 5ms"));
+    QCoreApplication::exit();
+  });
 
   QCoreApplication::exec();
-
-  EXPECT_TRUE(future_is_resolved);
 }
 
 TEST_F(OrbitGgpClientTest, GetProjectsAsyncClientGetsDestroyed) {
-  bool future_is_resolved = false;
-
   Future<ErrorMessageOr<QVector<Project>>> future =
       Future<ErrorMessageOr<QVector<Project>>>{ErrorMessage{"Empty Error Message"}};
   {
@@ -349,41 +265,27 @@ TEST_F(OrbitGgpClientTest, GetProjectsAsyncClientGetsDestroyed) {
     ASSERT_THAT(client, HasValue());
 
     future = client.value()->GetProjectsAsync();
-
-    future.Then(main_thread_executor_.get(),
-                [&future_is_resolved](const ErrorMessageOr<QVector<Project>>& projects_result) {
-                  EXPECT_FALSE(future_is_resolved);
-                  future_is_resolved = true;
-                  EXPECT_THAT(projects_result,
-                              HasError("killed because the parent object was destroyed"));
-                  QCoreApplication::exit();
-                });
+    future.Then(
+        main_thread_executor_.get(), [](const ErrorMessageOr<QVector<Project>>& projects_result) {
+          EXPECT_THAT(projects_result, HasError("killed because the parent object was destroyed"));
+          QCoreApplication::exit();
+        });
   }
 
   QCoreApplication::exec();
-
-  EXPECT_TRUE(future_is_resolved);
 }
 
 TEST_F(OrbitGgpClientTest, GetDefaultProjectAsyncWorking) {
   auto client = CreateClient(QString::fromStdString(mock_ggp_working_.string()));
   ASSERT_THAT(client, HasValue());
 
-  bool future_is_resolved = false;
-
   auto future = client.value()->GetDefaultProjectAsync();
-  future.Then(main_thread_executor_.get(), [&future_is_resolved](ErrorMessageOr<Project> project) {
-    EXPECT_FALSE(future_is_resolved);
-    future_is_resolved = true;
-    ASSERT_THAT(project, HasValue());
-    EXPECT_EQ(project.value().display_name, "Test Project");
-    EXPECT_EQ(project.value().id, "Test Project id");
+  future.Then(main_thread_executor_.get(), [](ErrorMessageOr<Project> project) {
+    EXPECT_THAT(project, HasValue(FieldsAre("Test Project", "Test Project id")));
     QCoreApplication::exit();
   });
 
   QCoreApplication::exec();
-
-  EXPECT_TRUE(future_is_resolved);
 }
 
 TEST_F(OrbitGgpClientTest, GetDefaultProjectAsyncTimeout) {
@@ -392,26 +294,17 @@ TEST_F(OrbitGgpClientTest, GetDefaultProjectAsyncTimeout) {
                              std::chrono::milliseconds{5});
   ASSERT_THAT(client, HasValue());
 
-  bool future_is_resolved = false;
-
   auto future = client.value()->GetDefaultProjectAsync();
-  future.Then(main_thread_executor_.get(),
-              [&future_is_resolved](const ErrorMessageOr<Project>& project) {
-                EXPECT_FALSE(future_is_resolved);
-                future_is_resolved = true;
-                EXPECT_THAT(project, HasError("OrbitMockGgpWorking config describe -s"));
-                EXPECT_THAT(project, HasError("timed out after 5ms"));
-                QCoreApplication::exit();
-              });
+  future.Then(main_thread_executor_.get(), [](const ErrorMessageOr<Project>& project) {
+    EXPECT_THAT(project, HasError("OrbitMockGgpWorking config describe -s"));
+    EXPECT_THAT(project, HasError("timed out after 5ms"));
+    QCoreApplication::exit();
+  });
 
   QCoreApplication::exec();
-
-  EXPECT_TRUE(future_is_resolved);
 }
 
 TEST_F(OrbitGgpClientTest, GetDefaultProjectAsyncClientGetsDestroyed) {
-  bool future_is_resolved = false;
-
   Future<ErrorMessageOr<Project>> future =
       Future<ErrorMessageOr<Project>>{ErrorMessage{"Empty Error Message"}};
   {
@@ -420,80 +313,117 @@ TEST_F(OrbitGgpClientTest, GetDefaultProjectAsyncClientGetsDestroyed) {
     ASSERT_THAT(client, HasValue());
 
     future = client.value()->GetDefaultProjectAsync();
-
-    future.Then(main_thread_executor_.get(),
-                [&future_is_resolved](const ErrorMessageOr<Project>& project) {
-                  EXPECT_FALSE(future_is_resolved);
-                  future_is_resolved = true;
-                  EXPECT_THAT(project, HasError("killed because the parent object was destroyed"));
-                  QCoreApplication::exit();
-                });
+    future.Then(main_thread_executor_.get(), [](const ErrorMessageOr<Project>& project) {
+      EXPECT_THAT(project, HasError("killed because the parent object was destroyed"));
+      QCoreApplication::exit();
+    });
   }
 
   QCoreApplication::exec();
-
-  EXPECT_TRUE(future_is_resolved);
 }
 
 TEST_F(OrbitGgpClientTest, DescribeInstanceAsyncWorking) {
   auto client = CreateClient(QString::fromStdString(mock_ggp_working_.string()));
   ASSERT_THAT(client, HasValue());
 
-  bool future_is_resolved = false;
-
   auto future = client.value()->DescribeInstanceAsync("id/of/instance1");
-  future.Then(main_thread_executor_.get(),
-              [&future_is_resolved](ErrorMessageOr<Instance> instance) {
-                EXPECT_FALSE(future_is_resolved);
-                future_is_resolved = true;
-                ASSERT_THAT(instance, HasValue());
-                EXPECT_EQ("id/of/instance1", instance.value().id);
-                QCoreApplication::exit();
-              });
+  future.Then(main_thread_executor_.get(), [](const ErrorMessageOr<Instance>& instance) {
+    ASSERT_THAT(instance, HasValue());
+    EXPECT_EQ("id/of/instance1", instance.value().id);
+    QCoreApplication::exit();
+  });
 
   QCoreApplication::exec();
-
-  EXPECT_TRUE(future_is_resolved);
 }
 
 TEST_F(OrbitGgpClientTest, DescribeInstanceAsyncWorkingForInvalidInstance) {
   auto client = CreateClient(QString::fromStdString(mock_ggp_working_.string()));
   ASSERT_THAT(client, HasValue());
 
-  bool future_is_resolved = false;
-
   auto future = client.value()->DescribeInstanceAsync("unknown/instance");
-  future.Then(main_thread_executor_.get(),
-              [&future_is_resolved](ErrorMessageOr<Instance> instance) {
-                EXPECT_FALSE(future_is_resolved);
-                future_is_resolved = true;
-                ASSERT_THAT(instance, HasError("Unable to parse JSON"));
-                QCoreApplication::exit();
-              });
+  future.Then(main_thread_executor_.get(), [](const ErrorMessageOr<Instance>& instance) {
+    ASSERT_THAT(instance, HasError("Unable to parse JSON"));
+    QCoreApplication::exit();
+  });
 
   QCoreApplication::exec();
-
-  EXPECT_TRUE(future_is_resolved);
 }
 
 TEST_F(OrbitGgpClientTest, GetAccountAsyncWorking) {
   auto client = CreateClient(QString::fromStdString(mock_ggp_working_.string()));
   ASSERT_THAT(client, HasValue());
 
-  bool future_is_resolved = false;
-
   client.value()->GetDefaultAccountAsync().Then(
-      main_thread_executor_.get(), [&future_is_resolved](ErrorMessageOr<Account> account) {
-        EXPECT_FALSE(future_is_resolved);
-        future_is_resolved = true;
+      main_thread_executor_.get(), [](ErrorMessageOr<Account> account) {
         ASSERT_THAT(account, HasValue());
         EXPECT_EQ(account.value().email, "username@email.com");
         QCoreApplication::exit();
       });
 
   QCoreApplication::exec();
+}
 
-  EXPECT_TRUE(future_is_resolved);
+TEST_F(OrbitGgpClientTest, GetSymbolDownloadInfosAsyncWorking) {
+  auto client = CreateClient(QString::fromStdString(mock_ggp_working_.string()));
+  ASSERT_THAT(client, HasValue());
+
+  std::vector<SymbolDownloadQuery> symbol_download_queries = {{"symbol_filename_0", "build_id_0"},
+                                                              {"symbol_filename_2", "build_id_2"}};
+  auto future = client.value()->GetSymbolDownloadInfoAsync(symbol_download_queries);
+  future.Then(main_thread_executor_.get(),
+              [](const ErrorMessageOr<std::vector<SymbolDownloadInfo>>& symbols) {
+                EXPECT_THAT(
+                    symbols,
+                    HasValue(ElementsAre(FieldsAre("symbolFiles/build_id_0/symbol_filename_0",
+                                                   "valid_url_for_symbol_0"))));
+                QCoreApplication::exit();
+              });
+
+  QCoreApplication::exec();
+}
+
+TEST_F(OrbitGgpClientTest, GetSymbolDownloadInfoAsyncTimeout) {
+  // mock_ggp_working_ has a 50ms sleep, hence waiting for only 5ms should result in a timeout
+  auto client = CreateClient(QString::fromStdString(mock_ggp_working_.string()),
+                             std::chrono::milliseconds{5});
+  ASSERT_THAT(client, HasValue());
+
+  std::vector<SymbolDownloadQuery> symbol_download_queries = {{"symbol_filename_0", "build_id_0"}};
+  auto future = client.value()->GetSymbolDownloadInfoAsync(symbol_download_queries);
+  future.Then(main_thread_executor_.get(),
+              [](const ErrorMessageOr<std::vector<SymbolDownloadInfo>>& symbols) {
+                EXPECT_THAT(symbols,
+                            HasError("OrbitMockGgpWorking crash-report download-symbols -s "
+                                     "--show-url --module build_id_0/symbol_filename_0"));
+                EXPECT_THAT(symbols, HasError("timed out after 5ms"));
+                QCoreApplication::exit();
+              });
+
+  QCoreApplication::exec();
+}
+
+TEST_F(OrbitGgpClientTest, GetSymbolDownloadInfoAsyncClientGetsDestroyed) {
+  Future<ErrorMessageOr<std::vector<SymbolDownloadInfo>>> future =
+      Future<ErrorMessageOr<std::vector<SymbolDownloadInfo>>>{ErrorMessage{"Empty Error Message"}};
+  {
+    ErrorMessageOr<std::unique_ptr<Client>> client =
+        CreateClient(QString::fromStdString(mock_ggp_working_.string()));
+    ASSERT_THAT(client, HasValue());
+
+    std::vector<SymbolDownloadQuery> symbol_download_queries = {
+        {"symbol_filename_0", "build_id_0"}};
+    future = client.value()->GetSymbolDownloadInfoAsync(symbol_download_queries);
+    future.Then(main_thread_executor_.get(),
+                [](const ErrorMessageOr<std::vector<SymbolDownloadInfo>>& symbols) {
+                  EXPECT_THAT(symbols,
+                              HasError("OrbitMockGgpWorking crash-report download-symbols -s "
+                                       "--show-url --module build_id_0/symbol_filename_0"));
+                  EXPECT_THAT(symbols, HasError("killed because the parent object was destroyed"));
+                  QCoreApplication::exit();
+                });
+  }
+
+  QCoreApplication::exec();
 }
 
 }  // namespace orbit_ggp
