@@ -666,6 +666,11 @@ class SelectAllCallstacksFromTrack(CaptureWindowE2ETestCaseBase):
 
 
 class SetEnableAutoFrameTrack(CaptureE2ETestCaseBase):
+    """
+    Set the auto frame track setting option. This is a public method and not a parameter in Capture()
+    because since the already added FrameTrack won't be removed from the current session, the E2E
+    tests will need to end and start a new session before taking the capture.
+    """
 
     def _execute(self, enable_auto_frame_track: bool):
         self._show_capture_options_dialog()
