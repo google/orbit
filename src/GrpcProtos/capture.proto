@@ -821,7 +821,7 @@ message ClientCaptureEvent {
     // numbers starting with 16.
     //
     // Next high-frequency ID: 12
-    // Next lower-frequency ID: 52
+    // Next lower-frequency ID: 51
     // Please keep these alphabetically ordered.
 
     // Even though AddressInfo is a high-frequency event
@@ -882,7 +882,7 @@ message ProducerCaptureEvent {
     // numbers starting with 16.
     //
     // Next high-frequency ID: 15.
-    // Next lower-frequency ID: 51
+    // Next lower-frequency ID: 50
     //
     // Please keep these alphabetically ordered.
     ApiEvent api_event = 10;
