@@ -15,6 +15,7 @@
 #include <memory>
 #include <numeric>
 #include <utility>
+#include <variant>
 #include <vector>
 
 #include "ClientData/CallstackData.h"
@@ -22,8 +23,11 @@
 #include "ClientData/ScopeId.h"
 #include "ClientData/ScopeInfo.h"
 #include "ClientProtos/capture_data.pb.h"
+#include "GrpcProtos/capture.pb.h"
 #include "MizarBase/SampledFunctionId.h"
 #include "MizarBase/ThreadId.h"
+#include "MizarData/FrameTrack.h"
+#include "MizarData/FrameTrackManager.h"
 #include "MizarData/MizarDataProvider.h"
 #include "MizarData/NonWrappingAddition.h"
 #include "OrbitBase/ThreadConstants.h"
@@ -33,16 +37,18 @@ namespace orbit_mizar_data {
 // This class represents the data loaded from a capture that has been made aware of its counterpart
 // it will be compared against. In particular, it is aware of the functions that has been sampled in
 // the other capture. Also, it is aware of the sampled function ids assigned to the functions.
-template <typename Data>
+template <typename Data, typename FrameTracks>
 class MizarPairedDataTmpl {
   using SFID = ::orbit_mizar_base::SFID;
   using TID = ::orbit_mizar_base::TID;
-  using ScopeId = orbit_client_data::ScopeId;
+  using ScopeId = ::orbit_client_data::ScopeId;
 
  public:
   MizarPairedDataTmpl(std::unique_ptr<Data> data,
                       absl::flat_hash_map<uint64_t, SFID> address_to_sfid)
-      : data_(std::move(data)), address_to_sfid_(std::move(address_to_sfid)) {
+      : data_(std::move(data)),
+        address_to_sfid_(std::move(address_to_sfid)),
+        frame_tracks_(data_.get()) {
     SetThreadNamesAndCallstackCounts();
   }
 
@@ -52,24 +58,23 @@ class MizarPairedDataTmpl {
   // obtained via counting how many callstack samples have been obtained during each frame and then
   // multiplying the counter by the sampling period.
   [[nodiscard]] std::vector<uint64_t> ActiveInvocationTimes(
-      const absl::flat_hash_set<TID>& tids, ScopeId frame_track_scope_id,
+      const absl::flat_hash_set<TID>& tids, FrameTrackId frame_track_id,
       uint64_t min_relative_timestamp_ns, uint64_t max_relative_timestamp_ns) const {
     const auto [min_timestamp_ns, max_timestamp_ns] =
         RelativeToAbsoluteTimestampRange(min_relative_timestamp_ns, max_relative_timestamp_ns);
-    const std::vector<const orbit_client_protos::TimerInfo*> timers =
-        GetCaptureData().GetTimersForScope(frame_track_scope_id, min_timestamp_ns,
-                                           max_timestamp_ns);
-    if (timers.size() < 2) return {};
+    const std::vector<FrameStartNs> frame_starts = GetFrameStarts(
+        frame_track_id, FrameStartNs(min_timestamp_ns), FrameStartNs(max_timestamp_ns));
+    if (frame_starts.size() < 2) return {};
 
     // TODO(b/235572160) Estimate the actual sampling period and use it instead
     const uint64_t sampling_period = data_->GetNominalSamplingPeriodNs();
 
     std::vector<uint64_t> result;
-    for (size_t i = 0; i + 1 < timers.size(); ++i) {
+    for (size_t i = 0; i + 1 < frame_starts.size(); ++i) {
       const uint64_t callstack_count = std::transform_reduce(
           std::begin(tids), std::end(tids), uint64_t{0}, std::plus<>(),
-          [this, i, &timers](const TID tid) {
-            return CallstackSamplesCount(tid, timers[i]->start(), timers[i + 1]->start());
+          [this, i, &frame_starts](const TID tid) {
+            return CallstackSamplesCount(tid, *frame_starts[i], *frame_starts[i + 1]);
           });
 
       result.push_back(sampling_period * callstack_count);
@@ -85,17 +90,13 @@ class MizarPairedDataTmpl {
     return tid_to_callstack_samples_counts_;
   }
 
-  [[nodiscard]] absl::flat_hash_map<ScopeId, orbit_client_data::ScopeInfo> GetFrameTracks() const {
-    const std::vector<ScopeId> scope_ids = GetCaptureData().GetAllProvidedScopeIds();
-    absl::flat_hash_map<ScopeId, orbit_client_data::ScopeInfo> result;
-    for (const ScopeId scope_id : scope_ids) {
-      const orbit_client_data::ScopeInfo scope_info = GetCaptureData().GetScopeInfo(scope_id);
-      if (scope_info.GetType() == orbit_client_data::ScopeType::kDynamicallyInstrumentedFunction ||
-          scope_info.GetType() == orbit_client_data::ScopeType::kApiScope) {
-        result.try_emplace(scope_id, scope_info);
-      }
-    }
-    return result;
+  [[nodiscard]] absl::flat_hash_map<FrameTrackId, FrameTrackInfo> GetFrameTracks() const {
+    return frame_tracks_.GetFrameTracks();
+  }
+
+  [[nodiscard]] std::vector<FrameStartNs> GetFrameStarts(FrameTrackId id, FrameStartNs min_start,
+                                                         FrameStartNs max_start) const {
+    return frame_tracks_.GetFrameStarts(id, min_start, max_start);
   }
 
   // Action is a void callable that takes a single argument of type
@@ -192,11 +193,12 @@ class MizarPairedDataTmpl {
 
   std::unique_ptr<Data> data_;
   absl::flat_hash_map<uint64_t, SFID> address_to_sfid_;
+  FrameTracks frame_tracks_;
   absl::flat_hash_map<TID, std::string> tid_to_names_;
   absl::flat_hash_map<TID, uint64_t> tid_to_callstack_samples_counts_;
 };
 
-using MizarPairedData = MizarPairedDataTmpl<MizarDataProvider>;
+using MizarPairedData = MizarPairedDataTmpl<MizarDataProvider, FrameTrackManager>;
 
 }  // namespace orbit_mizar_data
 

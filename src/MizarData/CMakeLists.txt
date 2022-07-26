@@ -8,6 +8,8 @@ add_library(MizarData STATIC)
 
 target_sources(MizarData PUBLIC
          include/MizarData/BaselineAndComparison.h
+         include/MizarData/FrameTrack.h
+         include/MizarData/FrameTrackManager.h
          include/MizarData/MizarData.h
          include/MizarData/MizarDataProvider.h
          include/MizarData/MizarPairedData.h

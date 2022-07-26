@@ -17,6 +17,7 @@
 #include "ClientData/CaptureData.h"
 #include "ClientData/ModuleData.h"
 #include "ClientData/ModuleManager.h"
+#include "ClientProtos/capture_data.pb.h"
 #include "GrpcProtos/module.pb.h"
 #include "MizarDataProvider.h"
 #include "OrbitBase/Logging.h"
@@ -30,6 +31,7 @@ namespace orbit_mizar_data {
 class MizarData : public orbit_capture_client::AbstractCaptureListener<MizarData>,
                   public MizarDataProvider {
   using ScopeId = orbit_client_data::ScopeId;
+  using PresentEvent = orbit_grpc_protos::PresentEvent;
 
  public:
   MizarData() = default;
@@ -40,6 +42,11 @@ class MizarData : public orbit_capture_client::AbstractCaptureListener<MizarData
   MizarData& operator=(MizarData&& other) = delete;
 
   virtual ~MizarData() = default;
+
+  [[nodiscard]] const absl::flat_hash_map<PresentEvent::Source, std::vector<PresentEvent>>&
+  source_to_present_events() const override {
+    return source_to_present_events_;
+  }
 
   [[nodiscard]] absl::flat_hash_map<uint64_t, std::string> AllAddressToName() const override;
 
@@ -78,7 +85,9 @@ class MizarData : public orbit_capture_client::AbstractCaptureListener<MizarData
                          std::vector<orbit_grpc_protos::ModuleInfo> module_infos) override {
     UpdateModules(module_infos);
   }
-  void OnPresentEvent(const orbit_grpc_protos::PresentEvent&) override {}
+  void OnPresentEvent(const PresentEvent& event) override {
+    source_to_present_events_[event.source()].push_back(event);
+  }
   void OnThreadStateSlice(orbit_client_data::ThreadStateSliceInfo /*thread_state_slice*/) override {
   }
   void OnApiStringEvent(const orbit_client_data::ApiStringEvent& /*unused*/) override {}
@@ -113,6 +122,7 @@ class MizarData : public orbit_capture_client::AbstractCaptureListener<MizarData
 
   std::unique_ptr<orbit_client_data::ModuleManager> module_manager_;
   orbit_symbols::SymbolHelper symbol_helper_{orbit_paths::CreateOrGetCacheDirUnsafe()};
+  absl::flat_hash_map<PresentEvent::Source, std::vector<PresentEvent>> source_to_present_events_;
 };
 
 }  // namespace orbit_mizar_data
