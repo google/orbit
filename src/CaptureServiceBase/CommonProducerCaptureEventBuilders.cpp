@@ -82,14 +82,10 @@ ProducerCaptureEvent CreateCaptureStartedEvent(const CaptureOptions& capture_opt
   return event;
 }
 
-ProducerCaptureEvent CreateSuccessfulCaptureFinishedEvent(
-    CaptureFinished::ProcessState target_process_state_after_capture,
-    CaptureFinished::TerminationSignal target_process_termination_signal) {
+ProducerCaptureEvent CreateSuccessfulCaptureFinishedEvent() {
   ProducerCaptureEvent event;
   CaptureFinished* capture_finished = event.mutable_capture_finished();
   capture_finished->set_status(CaptureFinished::kSuccessful);
-  capture_finished->set_target_process_state_after_capture(target_process_state_after_capture);
-  capture_finished->set_target_process_termination_signal(target_process_termination_signal);
   return event;
 }
 

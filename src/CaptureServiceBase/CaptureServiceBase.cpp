@@ -77,8 +77,7 @@ void CaptureServiceBase::FinalizeEventProcessing(
   switch (stop_capture_reason) {
     case StopCaptureReason::kClientStop:
     case StopCaptureReason::kGuestOrcStop:
-      capture_finished = CreateSuccessfulCaptureFinishedEvent(target_process_state_after_capture,
-                                                              target_process_termination_signal);
+      capture_finished = CreateSuccessfulCaptureFinishedEvent();
       break;
     case StopCaptureReason::kMemoryWatchdog:
       capture_finished =
@@ -92,6 +91,12 @@ void CaptureServiceBase::FinalizeEventProcessing(
       capture_finished = CreateFailedCaptureFinishedEvent("Connection with GuestOrc failed.");
       break;
   }
+
+  capture_finished.mutable_capture_finished()->set_target_process_state_after_capture(
+      target_process_state_after_capture);
+  capture_finished.mutable_capture_finished()->set_target_process_termination_signal(
+      target_process_termination_signal);
+
   producer_event_processor_->ProcessEvent(orbit_grpc_protos::kRootProducerId,
                                           std::move(capture_finished));
 
