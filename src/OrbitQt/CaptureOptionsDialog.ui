@@ -414,13 +414,13 @@ p, li { white-space: pre-wrap; }
           <item>
            <widget class="QCheckBox" name="autoFrameTrackCheckBox">
             <property name="toolTip">
-             <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;A frame track will be added when enabling this option at the start of every session.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+             <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;A frame track will be added when enabling this option at the start of every session. Disabling this option will not remove any existing frame track for the current session.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
             </property>
             <property name="accessibleName">
              <string>AutoFrameTrackCheckBox</string>
             </property>
             <property name="text">
-             <string>Automatically add the default frame track</string>
+             <string>Automatically add a render frame track by default ⓘ</string>
             </property>
            </widget>
           </item>
