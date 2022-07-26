@@ -8,7 +8,8 @@ from absl import app
 
 from core.orbit_e2e import E2ETestSuite
 from test_cases.connection_window import FilterAndSelectFirstProcess, ConnectToStadiaInstance
-from test_cases.capture_window import Capture, CheckTimers, ExpandTrack
+from test_cases.capture_window import Capture, CheckTimers, ExpandTrack, SetEnableAutoFrameTrack
+from test_cases.main_window import EndSession
 from test_cases.symbols_tab import WaitForLoadingSymbolsAndCheckModule, FilterAndHookFunction
 from test_cases.live_tab import VerifyScopeTypeAndHitCount
 """Instrument a single function in Orbit using pywinauto.
@@ -33,14 +34,17 @@ def main(argv):
         ConnectToStadiaInstance(),
         FilterAndSelectFirstProcess(process_filter='hello_'),
         WaitForLoadingSymbolsAndCheckModule(module_search_string="hello_ggp"),
+        # Setting enable auto frame track to false, so there is no hooked functions.
+        SetEnableAutoFrameTrack(enable_auto_frame_track=False),
+        # Ending and opening a new session. New session won't have default frame track neither hooked function.
+        EndSession(),
+        FilterAndSelectFirstProcess(process_filter="hello_ggp"),
         Capture(),
         CheckTimers(track_name_filter='Scheduler'),
         ExpandTrack(expected_name="gfx"),
         CheckTimers(track_name_filter='gfx_submissions', recursive=True),
         CheckTimers(track_name_filter="All Threads", expect_exists=False),
-        # TODO(b/239148938): After allowing users to set auto-frame-track to false:
-        #  Set auto-frame track to false while capturing and don't expect timers in hello_ggp.
-        CheckTimers(track_name_filter="hello_ggp_stand"),
+        CheckTimers(track_name_filter="hello_ggp_stand", expect_exists=False),
         FilterAndHookFunction(function_search_string='DrawFrame'),
         Capture(),
         VerifyScopeTypeAndHitCount(scope_name='DrawFrame',
