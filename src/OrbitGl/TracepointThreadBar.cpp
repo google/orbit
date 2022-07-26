@@ -17,12 +17,12 @@
 #include "ClientServices/TracepointServiceClient.h"
 #include "CoreMath.h"
 #include "Geometry.h"
-#include "GetThreadColor.h"
 #include "GlCanvas.h"
 #include "GrpcProtos/tracepoint.pb.h"
 #include "OrbitBase/Logging.h"
 #include "OrbitBase/ThreadConstants.h"
 #include "PrimitiveAssembler.h"
+#include "ThreadColor.h"
 #include "TimeGraphLayout.h"
 #include "Viewport.h"
 

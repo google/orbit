@@ -22,13 +22,13 @@
 #include "CoreMath.h"
 #include "DisplayFormats/DisplayFormats.h"
 #include "Geometry.h"
-#include "GetThreadColor.h"
 #include "GlCanvas.h"
 #include "GlUtils.h"
 #include "OrbitBase/Append.h"
 #include "OrbitBase/Logging.h"
 #include "OrbitBase/Sort.h"
 #include "PickingManager.h"
+#include "ThreadColor.h"
 #include "TrackManager.h"
 
 namespace orbit_gl {

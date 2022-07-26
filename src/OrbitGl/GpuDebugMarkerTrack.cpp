@@ -13,11 +13,11 @@
 #include "ClientData/TimerChain.h"
 #include "ClientProtos/capture_data.pb.h"
 #include "DisplayFormats/DisplayFormats.h"
-#include "GetThreadColor.h"
 #include "GlUtils.h"
 #include "OrbitBase/Logging.h"
 #include "OrbitBase/ThreadConstants.h"
 #include "PrimitiveAssembler.h"
+#include "ThreadColor.h"
 #include "TimeGraphLayout.h"
 #include "TriangleToggle.h"
 #include "absl/strings/str_format.h"
@@ -72,7 +72,7 @@ Color GpuDebugMarkerTrack::GetTimerColor(const TimerInfo& timer_info, bool is_se
                  static_cast<uint8_t>(timer_info.color().alpha()));
   }
   std::string marker_text = string_manager_->Get(timer_info.user_data_key()).value_or("");
-  return orbit_gl::GetThreadColor(marker_text);
+  return TimeGraph::GetColor(marker_text);
 }
 
 std::string GpuDebugMarkerTrack::GetTimesliceText(const TimerInfo& timer_info) const {

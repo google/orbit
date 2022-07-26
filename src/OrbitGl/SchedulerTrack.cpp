@@ -11,10 +11,10 @@
 #include "App.h"
 #include "ClientData/CaptureData.h"
 #include "ClientProtos/capture_data.pb.h"
-#include "GetThreadColor.h"
 #include "OrbitBase/Logging.h"
 #include "OrbitBase/ThreadConstants.h"
 #include "PrimitiveAssembler.h"
+#include "ThreadColor.h"
 #include "TimeGraphLayout.h"
 #include "Viewport.h"
 

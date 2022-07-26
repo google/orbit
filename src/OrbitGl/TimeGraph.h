@@ -128,6 +128,23 @@ class TimeGraph : public orbit_gl::CaptureViewElement, public orbit_gl::Timeline
   [[nodiscard]] const TimeGraphLayout& GetLayout() const { return layout_; }
   [[nodiscard]] TimeGraphLayout& GetLayout() { return layout_; }
 
+  [[nodiscard]] static Color GetColor(uint64_t id) {
+    constexpr unsigned char kAlpha = 255;
+    static std::vector<Color> colors{
+        Color(231, 68, 53, kAlpha),    // red
+        Color(43, 145, 175, kAlpha),   // blue
+        Color(185, 117, 181, kAlpha),  // purple
+        Color(87, 166, 74, kAlpha),    // green
+        Color(215, 171, 105, kAlpha),  // beige
+        Color(248, 101, 22, kAlpha)    // orange
+    };
+    return colors[id % colors.size()];
+  }
+
+  [[nodiscard]] static Color GetColor(const std::string& str) {
+    return GetColor(std::hash<std::string>{}(str));
+  }
+
   [[nodiscard]] uint64_t GetCaptureMin() const { return capture_min_timestamp_; }
   [[nodiscard]] uint64_t GetCaptureMax() const { return capture_max_timestamp_; }
 
