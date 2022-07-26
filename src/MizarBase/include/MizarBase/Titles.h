@@ -6,19 +6,18 @@
 #define MIZAR_BASE_TITLES_H_
 
 #include <QString>
+#include <string_view>
 
 #include "MizarBase/BaselineOrComparison.h"
 
 namespace orbit_mizar_base {
 
-[[nodiscard]] inline const orbit_mizar_base::Baseline<QString>& BaselineTitle() {
-  static orbit_mizar_base::Baseline<QString> kTitle(QStringLiteral("Baseline"));
-  return kTitle;
-}
-[[nodiscard]] inline const orbit_mizar_base::Comparison<QString>& ComparisonTitle() {
-  static orbit_mizar_base::Comparison<QString> kTitle(QStringLiteral("Comparison"));
-  return kTitle;
-}
+constexpr orbit_mizar_base::Baseline<std::string_view> kBaselineTitle("Baseline");
+constexpr orbit_mizar_base::Comparison<std::string_view> kComparisonTitle("Comparison");
+
+[[nodiscard]] orbit_mizar_base::Baseline<QString> QBaselineTitle();
+
+[[nodiscard]] orbit_mizar_base::Comparison<QString> QComparisonTitle();
 
 }  // namespace orbit_mizar_base
 

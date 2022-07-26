@@ -48,10 +48,10 @@ void SamplingWithFrameTrackWidget::Init(
     const orbit_mizar_data::BaselineAndComparison* baseline_and_comparison,
     const Baseline<QString>& baseline_file_name, const Comparison<QString>& comparison_file_name) {
   LiftAndApply(&SamplingWithFrameTrackInputWidget::Init, GetBaselineInput(),
-               baseline_and_comparison->GetBaselineData(), orbit_mizar_base::BaselineTitle(),
+               baseline_and_comparison->GetBaselineData(), orbit_mizar_base::QBaselineTitle(),
                baseline_file_name);
   LiftAndApply(&SamplingWithFrameTrackInputWidget::Init, GetComparisonInput(),
-               baseline_and_comparison->GetComparisonData(), orbit_mizar_base::ComparisonTitle(),
+               baseline_and_comparison->GetComparisonData(), orbit_mizar_base::QComparisonTitle(),
                comparison_file_name);
   baseline_and_comparison_ = baseline_and_comparison;
 }
