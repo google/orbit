@@ -695,7 +695,7 @@ message CaptureFinished {
   string error_message = 2;
 
   enum ProcessState {
-    kProcessStateUnknown = 0; 
+    kProcessStateUnknown = 0;
     kProcessStateInternalError = 1;
     kRunning = 2;
     kEnded = 3;
@@ -739,7 +739,7 @@ message CaptureFinished {
     kTerminationSignalUnspecified = 32;
     kTerminationSignalInternalError = 33;
   };
-  TerminationSignal target_process_termination_signal = 4;  
+  TerminationSignal target_process_termination_signal = 4;
 }
 
 message CaptureStarted {

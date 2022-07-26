@@ -229,7 +229,7 @@ message OrbitCaptureData {
   int64 number_of_unwinding_errors = 28;
 
   // State of the target process after the capture.
-  enum TargetProcessStateAfterCapture { 
+  enum TargetProcessStateAfterCapture {
     TARGET_PROCESS_STATE_AFTER_CAPTURE_UNKNOWN = 0;
     TARGET_PROCESS_STATE_AFTER_CAPTURE_INTERNAL_ERROR = 1;
     TARGET_PROCESS_STATE_AFTER_CAPTURE_RUNNING = 2;
