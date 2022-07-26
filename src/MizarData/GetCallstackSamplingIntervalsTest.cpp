@@ -18,9 +18,9 @@ namespace orbit_mizar_data {
 
 using ::orbit_client_data::CallstackData;
 using ::orbit_mizar_base::TID;
-using ::testing::UnorderedElementsAreArray;
 using ::testing::IsEmpty;
 using ::testing::IsSupersetOf;
+using ::testing::UnorderedElementsAreArray;
 
 constexpr TID kFirstTID(1);
 constexpr TID kSecondTID(2);
