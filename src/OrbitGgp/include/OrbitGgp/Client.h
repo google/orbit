@@ -13,12 +13,14 @@
 #include <functional>
 #include <optional>
 #include <string>
+#include <vector>
 
 #include "Account.h"
 #include "Instance.h"
 #include "OrbitBase/Future.h"
 #include "OrbitBase/Result.h"
 #include "OrbitGgp/Project.h"
+#include "OrbitGgp/SymbolDownloadInfo.h"
 #include "SshInfo.h"
 
 namespace orbit_ggp {
@@ -28,7 +30,7 @@ constexpr const char* kDefaultGgpProgram{"ggp"};
 class Client {
  public:
   /*
-    InstancesListScope decribes the scope of the instance list command.
+    InstancesListScope describes the scope of the instance list command.
     - kOnlyOwnInstances means only the users owned instances are returned;
     - kAllReservedInstances means all reserved instances.
   */
@@ -49,11 +51,18 @@ class Client {
   [[nodiscard]] virtual orbit_base::Future<ErrorMessageOr<Instance>> DescribeInstanceAsync(
       const QString& instance_id) = 0;
   [[nodiscard]] virtual orbit_base::Future<ErrorMessageOr<Account>> GetDefaultAccountAsync() = 0;
+
+  struct SymbolDownloadQuery {
+    std::string module_name;
+    std::string build_id;
+  };
+  [[nodiscard]] virtual orbit_base::Future<ErrorMessageOr<std::vector<SymbolDownloadInfo>>>
+  GetSymbolDownloadInfoAsync(const std::vector<SymbolDownloadQuery>& symbol_download_queries) = 0;
 };
 
 [[nodiscard]] std::chrono::milliseconds GetClientDefaultTimeoutInMs();
 ErrorMessageOr<std::unique_ptr<Client>> CreateClient(
-    QString ggp_programm = kDefaultGgpProgram,
+    QString ggp_program = kDefaultGgpProgram,
     std::chrono::milliseconds timeout = GetClientDefaultTimeoutInMs());
 
 }  // namespace orbit_ggp
