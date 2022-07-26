@@ -32,16 +32,16 @@ using FrameTrackInfo =
 // The function allows for more convenient calls to `std::visit`.
 template <typename Tag, typename First, typename Second, typename ActionOnFirst,
           typename ActionOnSecond>
-auto Visit(ActionOnFirst&& action_on_scope_info, ActionOnSecond&& action_on_etw_source,
+auto Visit(ActionOnFirst&& action_on_first, ActionOnSecond&& action_on_second,
            const orbit_base::Typedef<Tag, std::variant<First, Second>>& host) {
   return std::visit(
-      [&action_on_scope_info, &action_on_etw_source](const auto& info) {
-        using InfoT = std::decay_t<decltype(info)>;
-        if constexpr (std::is_same_v<InfoT, First>) {
-          return std::invoke(std::forward<ActionOnFirst>(action_on_scope_info), info);
+      [&action_on_first, &action_on_second](const auto& alternative) {
+        using Alternative = std::decay_t<decltype(alternative)>;
+        if constexpr (std::is_same_v<Alternative, First>) {
+          return std::invoke(std::forward<ActionOnFirst>(action_on_first), alternative);
         }
-        if constexpr (std::is_same_v<InfoT, Second>) {
-          return std::invoke(std::forward<ActionOnSecond>(action_on_etw_source), info);
+        if constexpr (std::is_same_v<Alternative, Second>) {
+          return std::invoke(std::forward<ActionOnSecond>(action_on_second), alternative);
         }
       },
       *host);
