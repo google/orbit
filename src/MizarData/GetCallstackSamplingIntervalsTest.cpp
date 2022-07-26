@@ -72,18 +72,18 @@ class GetCallstackSamplingIntervalsTest : public ::testing::Test {
   std::unique_ptr<CallstackData> callstack_data_ = std::make_unique<CallstackData>();
 };
 
-TEST_F(GetCallstackSamplingIntervalsTest, IsCorrectForNoEvents) {
+TEST_F(GetCallstackSamplingIntervalsTest, ReturnsEmptyForNoEvents) {
   ExpectEmptyVectorReturnedForAllTids();
 }
 
-TEST_F(GetCallstackSamplingIntervalsTest, IsCorrectForSingleEventPerThread) {
+TEST_F(GetCallstackSamplingIntervalsTest, ReturnsEmptyForNoEventsSingleEventPerThread) {
   PopulateCallstackData({0}, kFirstTID);
   PopulateCallstackData({0}, kSecondTID);
 
   ExpectEmptyVectorReturnedForAllTids();
 }
 
-TEST_F(GetCallstackSamplingIntervalsTest, IsCorrectForSingleEventInOneThreadAndMultipleInTheOther) {
+TEST_F(GetCallstackSamplingIntervalsTest, SingleEventInOneThreadAndMultipleInTheOther) {
   PopulateCallstackData({0}, kFirstTID);
   PopulateCallstackData(kSecondThreadTimestamps, kSecondTID);
 
@@ -95,7 +95,7 @@ TEST_F(GetCallstackSamplingIntervalsTest, IsCorrectForSingleEventInOneThreadAndM
   EXPECT_THAT(GetActualIntervals({}), IsEmpty());
 }
 
-TEST_F(GetCallstackSamplingIntervalsTest, IsCorrectForMultipleEventsPerThread) {
+TEST_F(GetCallstackSamplingIntervalsTest, MultipleEventsPerThread) {
   PopulateCallstackData(kFirstThreadTimestamps, kFirstTID);
   PopulateCallstackData(kSecondThreadTimestamps, kSecondTID);
 
