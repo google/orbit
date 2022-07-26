@@ -78,6 +78,8 @@ class CaptureOptionsDialog : public QDialog {
   void SetMaxLocalMarkerDepthPerCommandBuffer(uint64_t local_marker_depth_per_command_buffer);
   [[nodiscard]] uint64_t GetMaxLocalMarkerDepthPerCommandBuffer() const;
 
+  void SetEnableAutoFrameTrack(bool enable_auto_frame_track);
+  [[nodiscard]] bool GetEnableAutoFrameTrack() const;
   void SetCollectMemoryInfo(bool collect_memory_info);
   [[nodiscard]] bool GetCollectMemoryInfo() const;
   void SetMemorySamplingPeriodMs(uint64_t memory_sampling_period_ms);
