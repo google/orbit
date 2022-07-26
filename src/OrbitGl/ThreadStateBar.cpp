@@ -42,9 +42,9 @@ ThreadStateBar::ThreadStateBar(CaptureViewElement* parent, OrbitApp* app,
                                orbit_gl::Viewport* viewport, TimeGraphLayout* layout,
                                const orbit_client_data::ModuleManager* module_manager,
                                const orbit_client_data::CaptureData* capture_data,
-                               ThreadID thread_id, const Color& color)
+                               ThreadID thread_id)
     : ThreadBar(parent, app, timeline_info, viewport, layout, module_manager, capture_data,
-                thread_id, "ThreadState", color) {}
+                thread_id, "ThreadState") {}
 
 bool ThreadStateBar::IsEmpty() const {
   return capture_data_ == nullptr || !capture_data_->HasThreadStatesForThread(GetThreadId());

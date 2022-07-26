@@ -28,6 +28,7 @@
 #include "OrbitBase/Logging.h"
 #include "OrbitBase/Sort.h"
 #include "PickingManager.h"
+#include "ThreadColor.h"
 #include "TrackManager.h"
 
 namespace orbit_gl {
@@ -213,7 +214,7 @@ void TrackContainer::DrawOverlay(PrimitiveAssembler& primitive_assembler,
     x_coords.push_back(pos[0]);
 
     primitive_assembler.AddVerticalLine(pos, height, GlCanvas::kZValueOverlay,
-                                        TimeGraph::GetThreadColor(timer_info->thread_id()));
+                                        orbit_gl::GetThreadColor(timer_info->thread_id()));
   }
 
   // Draw timers with timings between iterators.
