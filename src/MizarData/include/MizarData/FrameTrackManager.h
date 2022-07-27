@@ -12,6 +12,7 @@
 #include "MizarData/FrameTrack.h"
 #include "MizarData/MizarData.h"
 #include "MizarData/MizarDataProvider.h"
+#include "OrbitBase/Overloaded.h"
 
 namespace orbit_mizar_data {
 
@@ -19,7 +20,7 @@ template <typename Data>
 class FrameTrackManagerTmpl {
   using ScopeId = ::orbit_client_data::ScopeId;
   using ScopeType = ::orbit_client_data::ScopeType;
-  using PresentEvent = orbit_grpc_protos::PresentEvent;
+  using PresentEvent = ::orbit_grpc_protos::PresentEvent;
 
  public:
   explicit FrameTrackManagerTmpl(const Data* data) : data_(data) {}
@@ -43,10 +44,13 @@ class FrameTrackManagerTmpl {
 
   [[nodiscard]] std::vector<FrameStartNs> GetFrameStarts(FrameTrackId id, FrameStartNs min_start,
                                                          FrameStartNs max_start) const {
-    return Visit(
-        absl::bind_front(&FrameTrackManagerTmpl::GetScopeFrameStarts, this, min_start, max_start),
-        absl::bind_front(&FrameTrackManagerTmpl::GetEtwFrameStarts, this, min_start, max_start),
-        id);
+    return std::visit(
+        orbit_base::overloaded{
+            absl::bind_front(&FrameTrackManagerTmpl::GetScopeFrameStarts, this, min_start,
+                             max_start),
+            absl::bind_front(&FrameTrackManagerTmpl::GetEtwFrameStarts, this, min_start, max_start),
+        },
+        *id);
   }
 
  private:

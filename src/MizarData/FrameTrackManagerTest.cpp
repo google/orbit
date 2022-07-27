@@ -126,8 +126,10 @@ static std::pair<std::vector<ScopeInfo>, std::vector<PresentEvent::Source>> Deco
   std::vector<PresentEvent::Source> etw_sources;
 
   for (const auto& [unused_id, info] : id_to_infos) {
-    Visit([&scope_id_infos](const ScopeInfo& info) { scope_id_infos.push_back(info); },
-          [&etw_sources](PresentEvent::Source source) { etw_sources.push_back(source); }, info);
+    std::visit(orbit_base::overloaded{
+                   [&scope_id_infos](const ScopeInfo& info) { scope_id_infos.push_back(info); },
+                   [&etw_sources](PresentEvent::Source source) { etw_sources.push_back(source); }},
+               *info);
   }
 
   return {scope_id_infos, etw_sources};
@@ -157,19 +159,21 @@ class ExpectFrameTracksHasFrameStartsForScopes : public ::testing::Test {
   void ExpectGetFrameTracksReturnsExpectedValueForEachFrameTrack(FrameStartNs min_start,
                                                                  FrameStartNs max_start) {
     for (const auto& [id, info] : frame_track_manager_.GetFrameTracks()) {
-      const std::vector<FrameStartNs> expected_frame_starts = Visit(
-          [](const ScopeInfo& info) { return kScopeInfoToFrameStarts.at(info); },
-          [min_start, max_start](PresentEvent::Source source) {
-            std::vector<FrameStartNs> filtered_time_list;
-            const std::vector<FrameStartNs> all_frame_starts = kEtwSourceToFrameStart.at(source);
-            std::copy_if(std::begin(all_frame_starts), std::end(all_frame_starts),
-                         std::back_inserter(filtered_time_list),
-                         [min_start, max_start](FrameStartNs start) {
-                           return min_start <= start && start <= max_start;
-                         });
-            return filtered_time_list;
-          },
-          info);
+      const std::vector<FrameStartNs> expected_frame_starts =
+          std::visit(orbit_base::overloaded{
+                         [](const ScopeInfo& info) { return kScopeInfoToFrameStarts.at(info); },
+                         [min_start, max_start](PresentEvent::Source source) {
+                           std::vector<FrameStartNs> filtered_time_list;
+                           const std::vector<FrameStartNs> all_frame_starts =
+                               kEtwSourceToFrameStart.at(source);
+                           std::copy_if(std::begin(all_frame_starts), std::end(all_frame_starts),
+                                        std::back_inserter(filtered_time_list),
+                                        [min_start, max_start](FrameStartNs start) {
+                                          return min_start <= start && start <= max_start;
+                                        });
+                           return filtered_time_list;
+                         }},
+                     *info);
 
       const std::vector<FrameStartNs> actual_frame_starts =
           frame_track_manager_.GetFrameStarts(id, min_start, max_start);
