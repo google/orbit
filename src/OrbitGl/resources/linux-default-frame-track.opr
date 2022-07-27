@@ -1,0 +1,8 @@
+# ORBIT preset file
+modules {
+  key: "/usr/local/cloudcast/lib/libvulkan.so.1"
+  value {
+    function_names: "vkQueuePresentKHR"
+    frame_track_function_names: "vkQueuePresentKHR"
+  }
+}

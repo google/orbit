@@ -2536,8 +2536,11 @@ Future<void> OrbitApp::AddDefaultFrameTrackOrLogError() {
       orbit_base::GetExecutableDir() / "autopresets";
   const std::filesystem::path stadia_default_preset_path =
       default_auto_preset_folder_path / "stadia-default-frame-track.opr";
+  const std::filesystem::path linux_default_preset_path =
+      default_auto_preset_folder_path / "linux-default-frame-track.opr";
 
-  std::vector<std::filesystem::path> auto_preset_paths = {stadia_default_preset_path};
+  std::vector<std::filesystem::path> auto_preset_paths = {stadia_default_preset_path,
+                                                          linux_default_preset_path};
 
   // Each preset in auto_preset_paths contains a FrameTrack that users might be interested in
   // loading by default. Orbit will try to load automatically just the first loadable preset from

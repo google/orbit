@@ -188,8 +188,8 @@ target_link_libraries(
          gte::gte)
 
 add_custom_command(TARGET OrbitGl POST_BUILD COMMAND ${CMAKE_COMMAND}
-                   -E copy ${CMAKE_CURRENT_SOURCE_DIR}/resources/stadia-default-frame-track.opr
-                   ${CMAKE_BINARY_DIR}/bin/autopresets/stadia-default-frame-track.opr)
+                   -E copy_directory ${CMAKE_CURRENT_SOURCE_DIR}/resources
+                   ${CMAKE_BINARY_DIR}/bin/autopresets)
 
 if(TARGET OpenGL::GLX AND TARGET OpenGL::OpenGL)
   target_link_libraries(OrbitGl PUBLIC OpenGL::GLX)
