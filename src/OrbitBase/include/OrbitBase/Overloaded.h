@@ -32,10 +32,10 @@ class FunctionPtrWithParen {
 template <typename T, typename = std::void_t<>>
 struct HasOperatorParen : std::false_type {};
 
-template <class T>
+template <typename T>
 struct HasOperatorParen<T, std::void_t<decltype(&T::operator())>> : std::true_type {};
 
-template <class T>
+template <typename T>
 inline constexpr bool kHasParenV = HasOperatorParen<T>::value;
 
 // If `T` has `operator()` defined, is `T`. Otherwise it is `FunctionPtrWrapper<T>`
@@ -48,12 +48,12 @@ namespace orbit_base {
 
 // Extended `overloaded` trick from https://en.cppreference.com/w/cpp/utility/variant/visit
 // Also handles function pointers.
-template <class... Ts>
+template <typename... Ts>
 struct overloaded : orbit_base_internal::WithParen<Ts>... {
   using orbit_base_internal::WithParen<Ts>::operator()...;
 };
 
-template <class... Ts>
+template <typename... Ts>
 overloaded(Ts...)->overloaded<Ts...>;
 
 }  // namespace orbit_base
