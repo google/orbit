@@ -7,6 +7,7 @@
 
 #include <filesystem>
 #include <memory>
+#include <thread>
 #include <vector>
 
 #include "GrpcProtos/symbol.pb.h"
@@ -33,9 +34,9 @@ TEST(CoffFile, LoadDebugSymbols) {
 
   std::vector<SymbolInfo> symbol_infos(symbols_result.value().symbol_infos().begin(),
                                        symbols_result.value().symbol_infos().end());
-  EXPECT_EQ(symbol_infos.size(), 52);
+  EXPECT_EQ(symbol_infos.size(), 53);
 
-  // From the DWARF debug info (but also in the COFF symbol table).
+  // Size from the corresponding RUNTIME_FUNCTION.
   SymbolInfo& symbol_info = symbol_infos[0];
   EXPECT_EQ(symbol_info.demangled_name(), "pre_c_init");
   uint64_t expected_address =
@@ -49,18 +50,18 @@ TEST(CoffFile, LoadDebugSymbols) {
   EXPECT_EQ(symbol_info.address(), expected_address);
   EXPECT_EQ(symbol_info.size(), 0x1b);
 
-  // Only from the COFF symbol table.
-  symbol_info = symbol_infos[36];
-  EXPECT_EQ(symbol_info.demangled_name(), "puts");
-  expected_address = 0x10a8 + coff_file->GetExecutableSegmentOffset() + coff_file->GetLoadBias();
-  EXPECT_EQ(symbol_info.address(), expected_address);
-  EXPECT_EQ(symbol_info.size(), 0x8);  // One six-byte jump plus two bytes of padding.
-
   symbol_info = symbol_infos.back();
   EXPECT_EQ(symbol_info.demangled_name(), "register_frame_ctor");
   expected_address = 0x1300 + coff_file->GetExecutableSegmentOffset() + coff_file->GetLoadBias();
   EXPECT_EQ(symbol_info.address(), expected_address);
-  EXPECT_EQ(symbol_info.size(), 0);  // Size of the last function cannot be deduced.
+  EXPECT_EQ(symbol_info.size(), 0x5);
+
+  // Size deduced as the distance from this function's address and the next function's address.
+  symbol_info = symbol_infos[34];
+  EXPECT_EQ(symbol_info.demangled_name(), "vfprintf");
+  expected_address = 0x1090 + coff_file->GetExecutableSegmentOffset() + coff_file->GetLoadBias();
+  EXPECT_EQ(symbol_info.address(), expected_address);
+  EXPECT_EQ(symbol_info.size(), 0x8);  // One six-byte jump plus two bytes of padding.
 }
 
 TEST(CoffFile, HasDebugSymbols) {

@@ -36,10 +36,8 @@ class SymbolsFile {
   [[nodiscard]] virtual const std::filesystem::path& GetFilePath() const = 0;
 
   static constexpr uint64_t kUnknownSymbolSize = std::numeric_limits<uint64_t>::max();
-
   [[nodiscard]] static bool SymbolInfoLessByAddress(const orbit_grpc_protos::SymbolInfo& lhs,
                                                     const orbit_grpc_protos::SymbolInfo& rhs);
-
   static void DeduceDebugSymbolMissingSizesAsDistanceFromNextSymbol(
       std::vector<orbit_grpc_protos::SymbolInfo>* symbol_infos);
 };
