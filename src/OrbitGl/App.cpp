@@ -2568,6 +2568,8 @@ Future<void> OrbitApp::AddDefaultFrameTrackOrLogError() {
               }
             });
       }
+      return {};
+    }
   }
   std::string error_message =
       "It was not possible to add a frame track automatically, because none of the presets "
