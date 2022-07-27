@@ -2549,8 +2549,19 @@ Future<void> OrbitApp::AddDefaultFrameTrackOrLogError() {
     // from the list until one of them is loadable.
     if (preset.has_value() &&
         GetPresetLoadState(preset.value()).state == orbit_data_views::PresetLoadState::kLoadable) {
+      std::vector<std::filesystem::path> preset_module_paths = preset.value().GetModulePaths();
       orbit_base::ImmediateExecutor immediate_executor{};
-      return LoadPreset(preset.value())
+      // Shipped preset files will have only one module. If the user modify internally the preset
+      // files, some errors from LoadPreset might appear.
+      if (preset_module_paths.size() != 1) {
+        ORBIT_ERROR(
+            "The auto loaded preset has %d modules and is supposed to have only one. The behavior "
+            "could be unexpected.",
+            preset_module_paths.size());
+        return LoadPreset(preset.value())
+            .Then(&immediate_executor, [](ErrorMessageOr<void> /*result*/) -> void {});
+      }
+      LoadPresetModule(preset_module_paths[0], preset.value())
           .Then(&immediate_executor, [this](ErrorMessageOr<void> result) -> void {
             if (result.has_error()) {
               ORBIT_ERROR(
