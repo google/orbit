@@ -2551,29 +2551,23 @@ Future<void> OrbitApp::AddDefaultFrameTrackOrLogError() {
         GetPresetLoadState(preset.value()).state == orbit_data_views::PresetLoadState::kLoadable) {
       std::vector<std::filesystem::path> preset_module_paths = preset.value().GetModulePaths();
       orbit_base::ImmediateExecutor immediate_executor{};
-      // Shipped preset files will have only one module. If the user modify internally the preset
-      // files, some errors from LoadPreset might appear.
-      if (preset_module_paths.size() != 1) {
-        ORBIT_ERROR(
-            "The auto loaded preset has %d modules and is supposed to have only one. The behavior "
-            "could be unexpected.",
-            preset_module_paths.size());
-        return LoadPreset(preset.value())
-            .Then(&immediate_executor, [](ErrorMessageOr<void> /*result*/) -> void {});
+      // Shipped preset files will have only one module. We are not officially supporting users to
+      // change the files, but if the user modify internally the preset files, we will load all the
+      // modules. In this case multiple messages might appear in the log file.
+      for (std::filesystem::path module_path : preset_module_paths) {
+        LoadPresetModule(module_path, preset.value())
+            .Then(&immediate_executor, [this](ErrorMessageOr<void> result) -> void {
+              if (result.has_error()) {
+                ORBIT_ERROR(
+                    "It was not possible to add a frame track automatically. The desired preset "
+                    "couldn't be loaded: %s",
+                    result.error().message());
+              } else {
+                ORBIT_LOG("The default frame track was automatically added.");
+                default_frame_track_was_added_ = true;
+              }
+            });
       }
-      LoadPresetModule(preset_module_paths[0], preset.value())
-          .Then(&immediate_executor, [this](ErrorMessageOr<void> result) -> void {
-            if (result.has_error()) {
-              ORBIT_ERROR(
-                  "It was not possible to add a frame track automatically. The desired preset "
-                  "couldn't be loaded: %s",
-                  result.error().message());
-            } else {
-              ORBIT_LOG("The default frame track was automatically added.");
-              default_frame_track_was_added_ = true;
-            }
-          });
-    }
   }
   std::string error_message =
       "It was not possible to add a frame track automatically, because none of the presets "
