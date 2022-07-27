@@ -728,13 +728,17 @@ void CallTreeWidget::OnCustomContextMenuRequested(const QPoint& point) {
     }
   } else if (action->text() == kActionDisassembly) {
     metrics_uploader_->SendLogEvent(OrbitLogEvent::ORBIT_DISASSEMBLY_REQUESTED);
+    int i = 0;
     for (const FunctionInfo* function : functions) {
       app_->Disassemble(app_->GetCaptureData().process_id(), *function);
+      if (++i > 9) break;
     }
   } else if (action->text() == kActionSourceCode) {
     metrics_uploader_->SendLogEvent(OrbitLogEvent::ORBIT_SOURCE_CODE_REQUESTED);
+    int i = 0;
     for (const FunctionInfo* function : functions) {
       app_->ShowSourceCode(*function);
+      if (++i > 9) break;
     }
   } else if (action->text() == kActionInspectCallstacks) {
     absl::flat_hash_set<orbit_client_data::CallstackEvent> selected_callstack_events =
