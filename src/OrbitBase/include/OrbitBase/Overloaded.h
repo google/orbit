@@ -5,8 +5,7 @@
 #ifndef ORBIT_BASE_OVERLOADED_H_
 #define ORBIT_BASE_OVERLOADED_H_
 
-#include <functional>
-#include <iostream>
+#include <functional> 
 #include <type_traits>
 #include <utility>
 
@@ -38,7 +37,7 @@ struct HasOperatorParen<T, std::void_t<decltype(&T::operator())>> : std::true_ty
 template <typename T>
 inline constexpr bool kHasOperatorParenV = HasOperatorParen<T>::value;
 
-// If `T` has `operator()` defined, is `T`. Otherwise it is `FunctionPtrWrapper<T>`
+// `T` if `operator()` is defined, otherwise `FunctionPtrWrapper<T>`
 template <typename T>
 using WithParen = std::conditional_t<kHasOperatorParenV<T>, T, FunctionPtrWithParen<T>>;
 
