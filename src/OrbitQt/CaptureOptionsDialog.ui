@@ -342,7 +342,7 @@ p, li { white-space: pre-wrap; }
        <item>
         <widget class="QGroupBox" name="dynamicInstrumentationGroupBox">
          <property name="toolTip">
-          <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Method &lt;span style=&quot; font-weight:600;&quot;&gt;Orbit&lt;/span&gt; has lower overhead but is still experimental.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+          <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Method &lt;span style=&quot; font-weight:600;&quot;&gt;Orbit&lt;/span&gt; has lower overhead. In some rare cases method &lt;span style=&quot; font-weight:600;&quot;&gt;Kernel (uprobes)&lt;/span&gt;  might be more stable.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
          </property>
          <property name="title">
           <string>Dynamic instrumentation</string>
@@ -363,23 +363,23 @@ p, li { white-space: pre-wrap; }
           <property name="bottomMargin">
            <number>9</number>
           </property>
-          <item>
+           <item>
+             <widget class="QRadioButton" name="userSpaceRadioButton">
+               <property name="accessibleName">
+                 <string>UserSpaceInstrumentationRadioButton</string>
+               </property>
+               <property name="text">
+                 <string>Orbit</string>
+               </property>
+             </widget>
+           </item>
+           <item>
            <widget class="QRadioButton" name="uprobesRadioButton">
             <property name="accessibleName">
              <string>UprobesRadioButton</string>
             </property>
             <property name="text">
              <string>Kernel (uprobes)</string>
-            </property>
-           </widget>
-          </item>
-          <item>
-           <widget class="QRadioButton" name="userSpaceRadioButton">
-            <property name="accessibleName">
-             <string>UserSpaceInstrumentationRadioButton</string>
-            </property>
-            <property name="text">
-             <string>Orbit | experimental ⓘ</string>
             </property>
            </widget>
           </item>
