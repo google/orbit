@@ -39,7 +39,12 @@ class CaptureServiceBase {
 
  protected:
   void StartEventProcessing(const orbit_grpc_protos::CaptureOptions& capture_options);
-  void FinalizeEventProcessing(StopCaptureReason stop_capture_reason);
+  void FinalizeEventProcessing(
+      StopCaptureReason stop_capture_reason,
+      orbit_grpc_protos::CaptureFinished::ProcessState target_process_state_after_capture =
+          orbit_grpc_protos::CaptureFinished::kProcessStateUnknown,
+      orbit_grpc_protos::CaptureFinished::TerminationSignal target_process_termination_signal =
+          orbit_grpc_protos::CaptureFinished::kTerminationSignalUnknown);
 
   orbit_producer_event_processor::ClientCaptureEventCollector* client_capture_event_collector_;
   std::unique_ptr<orbit_producer_event_processor::ProducerEventProcessor> producer_event_processor_;

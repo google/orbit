@@ -5,6 +5,7 @@
 #include "LinuxCaptureService/LinuxCaptureServiceBase.h"
 
 #include <absl/container/flat_hash_set.h>
+#include <absl/strings/match.h>
 #include <absl/strings/str_format.h>
 #include <absl/synchronization/mutex.h>
 #include <absl/time/time.h>
@@ -12,6 +13,8 @@
 
 #include <algorithm>
 #include <optional>
+#include <regex>
+#include <string>
 #include <thread>
 #include <utility>
 #include <vector>
@@ -20,20 +23,24 @@
 #include "ApiUtils/Event.h"
 #include "CaptureServiceBase/CommonProducerCaptureEventBuilders.h"
 #include "CaptureServiceBase/StopCaptureRequestWaiter.h"
+#include "ExtractSignalFromMinidump.h"
 #include "GrpcProtos/Constants.h"
 #include "GrpcProtos/capture.pb.h"
 #include "Introspection/Introspection.h"
 #include "MemoryInfoHandler.h"
 #include "MemoryWatchdog.h"
 #include "OrbitBase/ExecutablePath.h"
+#include "OrbitBase/File.h"
 #include "OrbitBase/Logging.h"
 #include "OrbitBase/MakeUniqueForOverwrite.h"
 #include "OrbitBase/Profiling.h"
+#include "OrbitBase/Result.h"
 #include "OrbitVersion/OrbitVersion.h"
 #include "ProducerEventProcessor/ProducerEventProcessor.h"
 #include "TracingHandler.h"
 #include "UserSpaceInstrumentationAddressesImpl.h"
 
+using orbit_grpc_protos::CaptureFinished;
 using orbit_grpc_protos::CaptureOptions;
 using orbit_grpc_protos::CaptureRequest;
 using orbit_grpc_protos::CaptureResponse;
@@ -48,9 +55,11 @@ using orbit_capture_service_base::StopCaptureRequestWaiter;
 
 namespace orbit_linux_capture_service {
 
+namespace {
+
 // Remove the functions with ids in `filter_function_ids` from instrumented_functions in
 // `capture_options`.
-static void FilterOutInstrumentedFunctionsFromCaptureOptions(
+void FilterOutInstrumentedFunctionsFromCaptureOptions(
     const absl::flat_hash_set<uint64_t>& filter_function_ids, CaptureOptions& capture_options) {
   // Move the entries that need to be deleted to the end of the repeated field and remove them with
   // one single call to `DeleteSubrange`. This avoids quadratic complexity.
@@ -68,7 +77,7 @@ static void FilterOutInstrumentedFunctionsFromCaptureOptions(
       first_to_delete, capture_options.instrumented_functions_size() - first_to_delete);
 }
 
-[[nodiscard]] static std::unique_ptr<orbit_introspection::IntrospectionListener>
+[[nodiscard]] std::unique_ptr<orbit_introspection::IntrospectionListener>
 CreateIntrospectionListener(ProducerEventProcessor* producer_event_processor) {
   return std::make_unique<orbit_introspection::IntrospectionListener>(
       [producer_event_processor](const orbit_api::ApiEventVariant& api_event_variant) {
@@ -88,7 +97,7 @@ CreateIntrospectionListener(ProducerEventProcessor* producer_event_processor) {
 // CaptureStartStopListener::OnCaptureStopRequested is also to be assumed blocking,
 // for example until all CaptureEvents from external producers have been received.
 // Hence why these methods need to be called in parallel on different threads.
-static void StopInternalProducersAndCaptureStartStopListenersInParallel(
+void StopInternalProducersAndCaptureStartStopListenersInParallel(
     TracingHandler* tracing_handler, MemoryInfoHandler* memory_info_handler,
     absl::flat_hash_set<CaptureStartStopListener*>* capture_start_stop_listeners) {
   std::vector<std::thread> stop_threads;
@@ -114,8 +123,6 @@ static void StopInternalProducersAndCaptureStartStopListenersInParallel(
     stop_thread.join();
   }
 }
-
-namespace {
 
 // This class hijacks FunctionEntry and FunctionExit events before they reach the
 // ProducerEventProcessor, and sends them to LinuxTracing instead, so that they can be processed
@@ -148,6 +155,88 @@ class ProducerEventProcessorHijackingFunctionEntryExitForLinuxTracing
   ProducerEventProcessor* producer_event_processor_;
   TracingHandler* tracing_handler_;
 };
+
+absl::flat_hash_set<std::string> ListFileNamesOfAllMinidumps() {
+  absl::flat_hash_set<std::string> result;
+  const std::string kCoreDirectory = "/usr/local/cloudcast/core";
+  auto error_or_core_files = orbit_base::ListFilesInDirectory(kCoreDirectory);
+  if (!error_or_core_files.has_error()) {
+    const std::regex check_if_minidump_file(absl::StrFormat(R"(.*\.[0-9]+\.core\.dmp)"));
+    for (const std::filesystem::path& path : error_or_core_files.value()) {
+      if (regex_match(path.string(), check_if_minidump_file)) {
+        result.insert(path.string());
+      }
+    }
+  }
+  return result;
+}
+
+struct TargetProcessStateAfterCapture {
+  CaptureFinished::ProcessState process_state;
+  CaptureFinished::TerminationSignal termination_signal;
+};
+
+TargetProcessStateAfterCapture GetTargetProcessStateAfterCapture(
+    pid_t pid, const absl::flat_hash_set<std::string>& old_core_files) {
+  TargetProcessStateAfterCapture result;
+  result.process_state = CaptureFinished::kProcessStateInternalError;
+  result.termination_signal = CaptureFinished::kTerminationSignalInternalError;
+
+  const std::string pid_dir_name = absl::StrFormat("/proc/%i", pid);
+  auto exists_or_error = orbit_base::FileExists(pid_dir_name);
+  if (exists_or_error.has_error()) {
+    ORBIT_ERROR("Unable to check for existence of \"%s\": %s", pid_dir_name,
+                exists_or_error.error().message());
+    // We can't read the process state, so we return an error state.
+    return result;
+  }
+
+  if (exists_or_error.value()) {
+    // Process is still running.
+    result.process_state = CaptureFinished::kRunning;
+    result.termination_signal = CaptureFinished::kTerminationSignalUnspecified;
+    return result;
+  }
+
+  // Check whether we find a minidump. Otherwise we assume the process ended gracefully.
+  const std::string kCoreDirectory = "/usr/local/cloudcast/core";
+  auto error_or_core_files = orbit_base::ListFilesInDirectory(kCoreDirectory);
+  if (error_or_core_files.has_error()) {
+    // We can't access the directory with the core files; we return an error state.
+    return result;
+  }
+  const std::vector<std::filesystem::path>& core_files = error_or_core_files.value();
+  // Matches zero or more characters ('.*'), followed by a literal dot ('\.'), followed by the pid
+  // of the process ('%i'), followed by another literal dot ('\.'), followed by one or more numbers
+  // ('[0-9]+') which is the number of seconds since the epoch finally, followed by the format
+  // ending ('.core.dmp').
+  const std::regex check_if_minidump_file(absl::StrFormat(R"(.*\.%i\.[0-9]+\.core\.dmp)", pid));
+  for (const std::filesystem::path& path : core_files) {
+    // Disregard the core file if it already existed at the start of the capture. We are only
+    // interested in crashes from the current run. This protects against collisions; the pid of the
+    // process might roll over and therefore not be unique.
+    if (old_core_files.contains(path.string())) {
+      continue;
+    }
+    if (regex_match(path.string(), check_if_minidump_file)) {
+      result.process_state = CaptureFinished::kCrashed;
+      ErrorMessageOr<int> signal_or_error = ExtractSignalFromMinidump(path);
+      if (signal_or_error.has_error()) {
+        ORBIT_ERROR("Error extracting termination signal from minidump: %s",
+                    signal_or_error.error().message());
+        return result;
+      }
+      const int signal = signal_or_error.value();
+      result.termination_signal = static_cast<CaptureFinished::TerminationSignal>(signal);
+      return result;
+    }
+  }
+
+  // We did not find any core files for this process. So we assume a clean exit.
+  result.process_state = CaptureFinished::kEnded;
+  result.termination_signal = CaptureFinished::kTerminationSignalUnspecified;
+  return result;
+}
 
 }  // namespace
 
@@ -228,6 +317,8 @@ void LinuxCaptureServiceBase::DoCapture(
   if (wait_for_stop_capture_request_thread_.joinable()) {
     wait_for_stop_capture_request_thread_.join();
   }
+
+  const absl::flat_hash_set<std::string> old_core_files = ListFileNamesOfAllMinidumps();
 
   TracingHandler tracing_handler{producer_event_processor_.get()};
   ProducerEventProcessorHijackingFunctionEntryExitForLinuxTracing function_entry_exit_hijacker{
@@ -359,7 +450,12 @@ void LinuxCaptureServiceBase::DoCapture(
   // The destructor of IntrospectionListener takes care of actually disabling introspection.
   introspection_listener.reset();
 
-  FinalizeEventProcessing(stop_capture_reason);
+  // Check whether the target process is still running and send that information.
+  auto target_process_state = GetTargetProcessStateAfterCapture(
+      orbit_base::ToNativeProcessId(capture_options.pid()), old_core_files);
+
+  FinalizeEventProcessing(stop_capture_reason, target_process_state.process_state,
+                          target_process_state.termination_signal);
 
   TerminateCapture();
 }

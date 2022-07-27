@@ -155,6 +155,7 @@ using orbit_grpc_protos::ModuleInfo;
 using orbit_grpc_protos::TracepointInfo;
 
 using orbit_metrics_uploader::CaptureMetric;
+using orbit_metrics_uploader::OrbitCaptureData;
 using orbit_metrics_uploader::OrbitLogEvent;
 using orbit_metrics_uploader::ScopedMetric;
 
@@ -384,6 +385,19 @@ void OrbitApp::OnCaptureFinished(const CaptureFinished& capture_finished) {
         ORBIT_UNREACHABLE();
         break;
     }
+
+    if (capture_finished.target_process_state_after_capture() == CaptureFinished::kCrashed) {
+      main_window_->AppendToCaptureLog(
+          MainWindowInterface::CaptureLogSeverity::kWarning, GetCaptureTime(),
+          absl::StrFormat("The target process crashed during the capture with signal %d.",
+                          capture_finished.target_process_termination_signal()));
+    }
+    metrics_capture_complete_data_.target_process_state_after_capture =
+        static_cast<OrbitCaptureData::TargetProcessStateAfterCapture>(
+            capture_finished.target_process_state_after_capture());
+    metrics_capture_complete_data_.target_process_termination_signal =
+        static_cast<OrbitCaptureData::TargetProcessTerminationSignal>(
+            capture_finished.target_process_termination_signal());
 
     ORBIT_CHECK(HasCaptureData());
     if (GetCaptureData().file_path().has_value()) {

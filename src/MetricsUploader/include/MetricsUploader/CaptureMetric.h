@@ -49,6 +49,10 @@ struct CaptureCompleteData {
   int64_t number_of_callstack_samples = 0;
   int64_t number_of_unwinding_errors = 0;
   std::filesystem::path file_path;
+  OrbitCaptureData::TargetProcessStateAfterCapture target_process_state_after_capture =
+      OrbitCaptureData::TARGET_PROCESS_STATE_AFTER_CAPTURE_UNKNOWN;
+  OrbitCaptureData::TargetProcessTerminationSignal target_process_termination_signal =
+      OrbitCaptureData::TARGET_PROCESS_TERMINATION_SIGNAL_UNKNOWN;
 };
 
 class CaptureMetric {
