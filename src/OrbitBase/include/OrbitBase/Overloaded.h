@@ -18,9 +18,10 @@ class FunctionPtrWithParen {
  public:
   FunctionPtrWithParen(FunctionPtr t) : function_ptr_(t) {}  // NOLINT(google-explicit-constructor)
 
-  template <typename In>
-  auto operator()(In&& in) const -> decltype(std::invoke(std::declval<FunctionPtr>(), in)) {
-    return std::invoke(function_ptr_, std::forward<In>(in));
+  template <typename... In>
+  auto operator()(In&&... in) const
+      -> decltype(std::invoke(std::declval<FunctionPtr>(), std::forward<In>(in)...)) {
+    return std::invoke(function_ptr_, std::forward<In>(in)...);
   }
 
  private:
@@ -29,13 +30,13 @@ class FunctionPtrWithParen {
 
 // Compile-time check if `operator()` is defined for `T`
 template <typename T, typename = std::void_t<>>
-struct HasParen : std::false_type {};
+struct HasOperatorParen : std::false_type {};
 
 template <class T>
-struct HasParen<T, std::void_t<decltype(&T::operator())>> : std::true_type {};
+struct HasOperatorParen<T, std::void_t<decltype(&T::operator())>> : std::true_type {};
 
 template <class T>
-inline constexpr bool kHasParenV = HasParen<T>::value;
+inline constexpr bool kHasParenV = HasOperatorParen<T>::value;
 
 // If `T` has `operator()` defined, is `T`. Otherwise it is `FunctionPtrWrapper<T>`
 template <typename T>
