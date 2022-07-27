@@ -5,7 +5,7 @@
 #ifndef ORBIT_BASE_OVERLOADED_H_
 #define ORBIT_BASE_OVERLOADED_H_
 
-#include <functional> 
+#include <functional>
 #include <type_traits>
 #include <utility>
 
