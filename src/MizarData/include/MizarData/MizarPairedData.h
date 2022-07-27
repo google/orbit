@@ -39,7 +39,7 @@ namespace orbit_mizar_data {
 // This class represents the data loaded from a capture that has been made aware of its counterpart
 // it will be compared against. In particular, it is aware of the functions that has been sampled in
 // the other capture. Also, it is aware of the sampled function ids assigned to the functions.
-template <typename Data, typename FrameTracks>
+template <typename Data, typename FrameTracks, auto EstimateSamplingPeriodNs>
 class MizarPairedDataTmpl {
   using SFID = ::orbit_mizar_base::SFID;
   using TID = ::orbit_mizar_base::TID;
@@ -68,8 +68,11 @@ class MizarPairedDataTmpl {
         frame_track_id, FrameStartNs(min_timestamp_ns), FrameStartNs(max_timestamp_ns));
     if (frame_starts.size() < 2) return {};
 
-    // TODO(b/235572160) Estimate the actual sampling period and use it instead
-    const uint64_t sampling_period = data_->GetNominalSamplingPeriodNs();
+    const uint64_t sampling_period =
+        EstimateSamplingPeriodNs(tids, min_timestamp_ns, max_timestamp_ns, *data_);
+
+    ORBIT_LOG("Estimated sampling period %uns. Nominal sampling period %uns", sampling_period,
+              data_->GetNominalSamplingPeriodNs());
 
     std::vector<uint64_t> result;
     for (size_t i = 0; i + 1 < frame_starts.size(); ++i) {
@@ -200,18 +203,45 @@ class MizarPairedDataTmpl {
   absl::flat_hash_map<TID, uint64_t> tid_to_callstack_samples_counts_;
 };
 
-template <typename Data>
+template <typename Data, auto GetSamplingIntervalsNs>
 uint64_t RobustSamplingPeriodEstimate(const absl::flat_hash_set<orbit_mizar_base::TID>& tids,
                                       uint64_t min_timestamp, uint64_t max_timestamp,
-                                      const orbit_client_data::CallstackData& callstack_data) {
-  std::vector<uint64_t> intervals =
-      GetSamplingIntervalsNs(tids, min_timestamp, max_timestamp, callstack_data);
+                                      const Data& data) {
+  std::vector<uint64_t> intervals = GetSamplingIntervalsNs(
+      tids, min_timestamp, max_timestamp, data.GetCaptureData().GetCallstackData());
   absl::c_sort(intervals);
 
-  constexpr double kOutlierPercentage = 0.025;
+  constexpr double kOutlierRate = 0.025;
+  const size_t cutoff_index = static_cast<size_t>((1 - kOutlierRate) * intervals.size());
+
+  if (cutoff_index + 1 > intervals.size()) {
+    return data.GetNominalSamplingPeriodNs();
+  }
+  const uint64_t cutoff = intervals[cutoff_index];
+
+  struct TotalAndCount {
+    uint64_t total{};
+    size_t count{};
+
+    // round(total / count)
+    uint64_t ComputeAverage() { return (total + (count / 2)) / count; }
+  };
+
+  return absl::c_accumulate(
+             intervals, TotalAndCount{},
+             [cutoff](const TotalAndCount& total_and_count, uint64_t interval) -> TotalAndCount {
+               if (interval <= cutoff) {
+                 const auto [total, count] = total_and_count;
+                 return {total + interval, count + 1};
+               }
+               return total_and_count;
+             })
+      .ComputeAverage();
 }
 
-using MizarPairedData = MizarPairedDataTmpl<MizarDataProvider, FrameTrackManager>;
+using MizarPairedData =
+    MizarPairedDataTmpl<MizarDataProvider, FrameTrackManager,
+                        RobustSamplingPeriodEstimate<MizarDataProvider, GetSamplingIntervalsNs>>;
 
 }  // namespace orbit_mizar_data
 
