@@ -5,6 +5,7 @@
 #ifndef MIZAR_DATA_MIZAR_PAIRED_DATA_H_
 #define MIZAR_DATA_MIZAR_PAIRED_DATA_H_
 
+#include <absl/algorithm/container.h>
 #include <absl/container/flat_hash_map.h>
 #include <absl/container/flat_hash_set.h>
 
@@ -28,6 +29,7 @@
 #include "MizarBase/ThreadId.h"
 #include "MizarData/FrameTrack.h"
 #include "MizarData/FrameTrackManager.h"
+#include "MizarData/GetCallstackSamplingIntervals.h"
 #include "MizarData/MizarDataProvider.h"
 #include "MizarData/NonWrappingAddition.h"
 #include "OrbitBase/ThreadConstants.h"
@@ -197,6 +199,17 @@ class MizarPairedDataTmpl {
   absl::flat_hash_map<TID, std::string> tid_to_names_;
   absl::flat_hash_map<TID, uint64_t> tid_to_callstack_samples_counts_;
 };
+
+template <typename Data>
+uint64_t RobustSamplingPeriodEstimate(const absl::flat_hash_set<orbit_mizar_base::TID>& tids,
+                                      uint64_t min_timestamp, uint64_t max_timestamp,
+                                      const orbit_client_data::CallstackData& callstack_data) {
+  std::vector<uint64_t> intervals =
+      GetSamplingIntervalsNs(tids, min_timestamp, max_timestamp, callstack_data);
+  absl::c_sort(intervals);
+
+  constexpr double kOutlierPercentage = 0.025;
+}
 
 using MizarPairedData = MizarPairedDataTmpl<MizarDataProvider, FrameTrackManager>;
 
