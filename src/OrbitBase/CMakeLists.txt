@@ -34,6 +34,7 @@ target_sources(OrbitBase PRIVATE
         include/OrbitBase/MainThreadExecutor.h
         include/OrbitBase/MakeUniqueForOverwrite.h
         include/OrbitBase/GetProcessIds.h
+        include/OrbitBase/Overloaded.h
         include/OrbitBase/Profiling.h
         include/OrbitBase/Promise.h
         include/OrbitBase/PromiseHelpers.h
@@ -115,6 +116,7 @@ target_sources(OrbitBaseTests PRIVATE
         FutureHelpersTest.cpp
         ImmediateExecutorTest.cpp
         LoggingUtilsTest.cpp
+        OverloadedTest.cpp
         ProfilingTest.cpp
         PromiseTest.cpp
         PromiseHelpersTest.cpp
