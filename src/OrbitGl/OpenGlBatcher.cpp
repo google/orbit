@@ -11,9 +11,19 @@
 
 namespace orbit_gl {
 
+orbit_gl_internal::PrimitiveBuffers* OpenGlBatcher::GetOrCreatePrimitiveBuffersForLayer(
+    float layer) {
+  auto it = primitive_buffers_by_layer_.find(layer);
+  if (it != primitive_buffers_by_layer_.end()) return it->second.get();
+  auto primitive_buffer = std::make_unique<orbit_gl_internal::PrimitiveBuffers>();
+  orbit_gl_internal::PrimitiveBuffers* result = primitive_buffer.get();
+  primitive_buffers_by_layer_.emplace(layer, std::move(primitive_buffer));
+  return result;
+}
+
 void OpenGlBatcher::ResetElements() {
   for (auto& [unused_layer, buffer] : primitive_buffers_by_layer_) {
-    buffer.Reset();
+    buffer->Reset();
   }
   user_data_.clear();
   ORBIT_CHECK(translations_.IsEmpty());
@@ -38,7 +48,7 @@ void OpenGlBatcher::AddLine(Vec2 from, Vec2 to, float z, const Color& color,
   // TODO(b/195386885) This is a hack to address the issue that some horizontal lines in the graph
   // tracks are missing. We need a better solution for this issue.
   MoveLineToPixelCenterIfHorizontal(line);
-  auto& buffer = primitive_buffers_by_layer_[layer_z_value];
+  auto& buffer = *GetOrCreatePrimitiveBuffersForLayer(layer_z_value);
 
   buffer.line_buffer.lines_.emplace_back(line);
   buffer.line_buffer.colors_.push_back_n(color, 2);
@@ -56,7 +66,7 @@ void OpenGlBatcher::AddBox(const Quad& box, float z, const std::array<Color, 4>&
     layer_z_value = layered_vec2.z;
   }
 
-  auto& buffer = primitive_buffers_by_layer_[layer_z_value];
+  auto& buffer = *GetOrCreatePrimitiveBuffersForLayer(layer_z_value);
   buffer.box_buffer.boxes_.emplace_back(rounded_box);
   buffer.box_buffer.colors_.push_back(colors);
   buffer.box_buffer.picking_colors_.push_back_n(picking_color, 4);
@@ -73,7 +83,7 @@ void OpenGlBatcher::AddTriangle(const Triangle& triangle, float z,
     vertex = layered_vec2.xy;
     layer_z_value = layered_vec2.z;
   }
-  auto& buffer = primitive_buffers_by_layer_[layer_z_value];
+  auto& buffer = *GetOrCreatePrimitiveBuffersForLayer(layer_z_value);
   buffer.triangle_buffer.triangles_.emplace_back(rounded_tri);
   buffer.triangle_buffer.colors_.push_back(colors);
   buffer.triangle_buffer.picking_colors_.push_back_n(picking_color, 3);
@@ -114,7 +124,7 @@ void OpenGlBatcher::DrawLayer(float layer, bool picking) const {
 }
 
 void OpenGlBatcher::DrawBoxBuffer(float layer, bool picking) const {
-  auto& box_buffer = primitive_buffers_by_layer_.at(layer).box_buffer;
+  auto& box_buffer = primitive_buffers_by_layer_.at(layer)->box_buffer;
   const orbit_containers::Block<Quad, orbit_gl_internal::BoxBuffer::NUM_BOXES_PER_BLOCK>*
       box_block = box_buffer.boxes_.root();
   const orbit_containers::Block<Color, orbit_gl_internal::BoxBuffer::NUM_BOXES_PER_BLOCK * 4>*
@@ -135,7 +145,7 @@ void OpenGlBatcher::DrawBoxBuffer(float layer, bool picking) const {
 }
 
 void OpenGlBatcher::DrawLineBuffer(float layer, bool picking) const {
-  auto& line_buffer = primitive_buffers_by_layer_.at(layer).line_buffer;
+  auto& line_buffer = primitive_buffers_by_layer_.at(layer)->line_buffer;
   const orbit_containers::Block<Line, orbit_gl_internal::LineBuffer::NUM_LINES_PER_BLOCK>*
       line_block = line_buffer.lines_.root();
   const orbit_containers::Block<Color, orbit_gl_internal::LineBuffer::NUM_LINES_PER_BLOCK * 2>*
@@ -155,7 +165,7 @@ void OpenGlBatcher::DrawLineBuffer(float layer, bool picking) const {
 }
 
 void OpenGlBatcher::DrawTriangleBuffer(float layer, bool picking) const {
-  auto& triangle_buffer = primitive_buffers_by_layer_.at(layer).triangle_buffer;
+  auto& triangle_buffer = primitive_buffers_by_layer_.at(layer)->triangle_buffer;
   const orbit_containers::Block<
       Triangle, orbit_gl_internal::TriangleBuffer::NUM_TRIANGLES_PER_BLOCK>* triangle_block =
       triangle_buffer.triangles_.root();

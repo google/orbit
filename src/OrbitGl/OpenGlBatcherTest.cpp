@@ -53,7 +53,7 @@ class FakeOpenGlBatcher : public OpenGlBatcher {
   // buffers. Only a single color per element will be appended
   // (start point for line, first vertex for triangle and box)
   void DrawLayer(float layer, bool picking = false) const override {
-    auto& buffer = primitive_buffers_by_layer_.at(layer);
+    auto& buffer = *primitive_buffers_by_layer_.at(layer).get();
     if (picking) {
       for (auto it = buffer.line_buffer.picking_colors_.begin();
            it != buffer.line_buffer.picking_colors_.end();) {
@@ -100,7 +100,7 @@ class FakeOpenGlBatcher : public OpenGlBatcher {
   }
 
   const orbit_gl_internal::PrimitiveBuffers& GetInternalBuffers(float layer) const {
-    return primitive_buffers_by_layer_.at(layer);
+    return *primitive_buffers_by_layer_.at(layer).get();
   }
 
  private:

@@ -5,6 +5,8 @@
 #ifndef ORBIT_GL_OPEN_GL_BATCHER_H_
 #define ORBIT_GL_OPEN_GL_BATCHER_H_
 
+#include <absl/container/flat_hash_map.h>
+
 #include <algorithm>
 #include <array>
 #include <iterator>
@@ -98,7 +100,11 @@ class OpenGlBatcher : public Batcher {
   [[nodiscard]] const PickingUserData* GetUserData(PickingId id) const override;
 
  protected:
-  std::unordered_map<float, orbit_gl_internal::PrimitiveBuffers> primitive_buffers_by_layer_;
+  [[nodiscard]] orbit_gl_internal::PrimitiveBuffers* GetOrCreatePrimitiveBuffersForLayer(
+      float layer);
+
+  absl::flat_hash_map<float, std::unique_ptr<orbit_gl_internal::PrimitiveBuffers>>
+      primitive_buffers_by_layer_;
   std::vector<std::unique_ptr<PickingUserData>> user_data_;
 
  private:
