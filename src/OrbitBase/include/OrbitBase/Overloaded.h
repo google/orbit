@@ -36,11 +36,11 @@ template <typename T>
 struct HasOperatorParen<T, std::void_t<decltype(&T::operator())>> : std::true_type {};
 
 template <typename T>
-inline constexpr bool kHasParenV = HasOperatorParen<T>::value;
+inline constexpr bool kHasOperatorParenV = HasOperatorParen<T>::value;
 
 // If `T` has `operator()` defined, is `T`. Otherwise it is `FunctionPtrWrapper<T>`
 template <typename T>
-using WithParen = std::conditional_t<kHasParenV<T>, T, FunctionPtrWithParen<T>>;
+using WithParen = std::conditional_t<kHasOperatorParenV<T>, T, FunctionPtrWithParen<T>>;
 
 }  // namespace orbit_base_internal
 
@@ -54,7 +54,7 @@ struct overloaded : orbit_base_internal::WithParen<Ts>... {
 };
 
 template <typename... Ts>
-overloaded(Ts...)->overloaded<Ts...>;
+overloaded(Ts...) -> overloaded<Ts...>;
 
 }  // namespace orbit_base
 
