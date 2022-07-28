@@ -58,6 +58,19 @@ TEST_F(PeCoffRuntimeFunctionsTest, init_succeeds_on_well_formed_data) {
   EXPECT_TRUE(runtime_functions->Init(0x5000, 0x5000 + 3 * 3 * sizeof(uint32_t)));
 }
 
+TEST_F(PeCoffRuntimeFunctionsTest, init_fails_due_to_large_pdata_end_value) {
+  uint64_t offset = 0x5000;
+  offset = SetRuntimeFunctionAtOffset(offset, 0x100, 0x200, 0x6000);
+  offset = SetRuntimeFunctionAtOffset(offset, 0x200, 0x300, 0x6100);
+  offset = SetRuntimeFunctionAtOffset(offset, 0x300, 0x400, 0x6100);
+
+  std::unique_ptr<PeCoffRuntimeFunctions> runtime_functions =
+      CreatePeCoffRuntimeFunctions(GetMemoryFake());
+  // This should fail as the bound of 0x6000 for pdata_end is too large.
+  EXPECT_FALSE(runtime_functions->Init(0x5000, 0x6000));
+  EXPECT_EQ(ERROR_INVALID_COFF, runtime_functions->GetLastError().code);
+}
+
 TEST_F(PeCoffRuntimeFunctionsTest, init_fails_due_to_bad_section_bounds) {
   std::unique_ptr<PeCoffRuntimeFunctions> runtime_functions(
       CreatePeCoffRuntimeFunctions(GetMemoryFake()));
@@ -73,12 +86,16 @@ TEST_F(PeCoffRuntimeFunctionsTest, init_fails_due_to_incongruent_section_bounds)
 }
 
 TEST_F(PeCoffRuntimeFunctionsTest, init_fails_due_to_bad_memory) {
-  GetMemoryFake()->SetData32(0x5000, 0x100);
+  constexpr uint64_t kOffset = 0x5000;
+  SetRuntimeFunctionAtOffset(kOffset, 0x100, 0x200, 0x6000);
+  // Clear the first byte so that reading the memory fails.
+  GetMemoryFake()->ClearMemory(kOffset, 1);
+
   std::unique_ptr<PeCoffRuntimeFunctions> runtime_functions(
       CreatePeCoffRuntimeFunctions(GetMemoryFake()));
-  EXPECT_FALSE(runtime_functions->Init(0x5000, 0x5000 + 3 * sizeof(uint32_t)));
+  EXPECT_FALSE(runtime_functions->Init(kOffset, kOffset + 3 * sizeof(uint32_t)));
   EXPECT_EQ(ERROR_MEMORY_INVALID, runtime_functions->GetLastError().code);
-  EXPECT_EQ(0x5000, runtime_functions->GetLastError().address);
+  EXPECT_EQ(kOffset, runtime_functions->GetLastError().address);
 }
 
 TEST_F(PeCoffRuntimeFunctionsTest, find_function_at_the_start) {
