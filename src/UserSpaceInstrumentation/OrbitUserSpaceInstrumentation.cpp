@@ -8,6 +8,7 @@
 #include <variant>
 
 #include "CaptureEventProducer/LockFreeBufferCaptureEventProducer.h"
+#include "OrbitBase/Overloaded.h"
 #include "OrbitBase/Profiling.h"
 #include "OrbitBase/ThreadUtils.h"
 #include "ProducerSideChannel/ProducerSideChannel.h"
@@ -89,30 +90,27 @@ class LockFreeUserSpaceInstrumentationEventProducer
         google::protobuf::Arena::CreateMessage<orbit_grpc_protos::ProducerCaptureEvent>(arena);
 
     std::visit(
-        [capture_event](auto&& raw_event) {
-          using DecayedEventType = std::decay_t<decltype(raw_event)>;
-          if constexpr (std::is_same_v<DecayedEventType, FunctionEntry>) {
-            orbit_grpc_protos::FunctionEntry* function_entry =
-                capture_event->mutable_function_entry();
-            function_entry->set_pid(raw_event.pid);
-            function_entry->set_tid(raw_event.tid);
-            function_entry->set_function_id(raw_event.function_id);
-            function_entry->set_stack_pointer(raw_event.stack_pointer);
-            function_entry->set_return_address(raw_event.return_address);
-            function_entry->set_timestamp_ns(raw_event.timestamp_ns);
-          } else if constexpr (std::is_same_v<DecayedEventType, FunctionExit>) {
-            orbit_grpc_protos::FunctionExit* function_exit = capture_event->mutable_function_exit();
-            function_exit->set_pid(raw_event.pid);
-            function_exit->set_tid(raw_event.tid);
-            function_exit->set_timestamp_ns(raw_event.timestamp_ns);
-          } else {
-            static_assert(always_false_v<DecayedEventType>, "Non-exhaustive visitor");
-          }
-        },
+        orbit_base::overloaded{[capture_event](const FunctionEntry& raw_event) -> void {
+                                 orbit_grpc_protos::FunctionEntry* function_entry =
+                                     capture_event->mutable_function_entry();
+                                 function_entry->set_pid(raw_event.pid);
+                                 function_entry->set_tid(raw_event.tid);
+                                 function_entry->set_function_id(raw_event.function_id);
+                                 function_entry->set_stack_pointer(raw_event.stack_pointer);
+                                 function_entry->set_return_address(raw_event.return_address);
+                                 function_entry->set_timestamp_ns(raw_event.timestamp_ns);
+                               },
+                               [capture_event](const FunctionExit& raw_event) -> void {
+                                 orbit_grpc_protos::FunctionExit* function_exit =
+                                     capture_event->mutable_function_exit();
+                                 function_exit->set_pid(raw_event.pid);
+                                 function_exit->set_tid(raw_event.tid);
+                                 function_exit->set_timestamp_ns(raw_event.timestamp_ns);
+                               }},
         raw_event);
 
     return capture_event;
-  }
+  }  // namespace
 
  private:
   template <class>
@@ -124,8 +122,8 @@ LockFreeUserSpaceInstrumentationEventProducer& GetCaptureEventProducer() {
   return producer;
 }
 
-// Provide a thread local bool to keep track of whether the current thread is inside the payload we
-// injected. If that is the case we avoid further instrumentation.
+// Provide a thread local bool to keep track of whether the current thread is inside the payload
+// we injected. If that is the case we avoid further instrumentation.
 bool& GetIsInPayload() {
   thread_local bool is_in_payload = false;
   return is_in_payload;
@@ -159,8 +157,8 @@ bool& GetIsInPayload() {
                                                  uint64_t stack_pointer,
                                                  uint64_t return_trampoline_address) {
   bool& is_in_payload = GetIsInPayload();
-  // If something in the callgraph below `EntryPayload` or `ExitPayload` was instrumented we need to
-  // break the cycle here otherwise we would crash in an infinite recursion.
+  // If something in the callgraph below `EntryPayload` or `ExitPayload` was instrumented we
+  // need to break the cycle here otherwise we would crash in an infinite recursion.
   if (is_in_payload) {
     return;
   }
@@ -201,8 +199,8 @@ bool& GetIsInPayload() {
   OpenFunctionCall current_function_call = open_function_call_stack.top();
   open_function_call_stack.pop();
 
-  // Skip emitting an event if we are not capturing or if the function call doesn't fully belong to
-  // this capture.
+  // Skip emitting an event if we are not capturing or if the function call doesn't fully belong
+  // to this capture.
   if (GetCaptureEventProducer().IsCapturing() &&
       current_capture_start_timestamp_ns < current_function_call.timestamp_on_entry_ns) {
     static uint32_t pid = orbit_base::GetCurrentProcessId();
