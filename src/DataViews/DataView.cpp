@@ -294,27 +294,27 @@ void DataView::OnDisassemblyRequested(const std::vector<int>& selection) {
   const ProcessData* process_data = app_->GetTargetProcess();
   const uint32_t pid =
       process_data == nullptr ? app_->GetCaptureData().process_id() : process_data->pid();
+  constexpr int kMaxNumberOfWindowsToOpen = 10; 
   int j = 0;
   for (int i : selection) {
     const FunctionInfo* function = GetFunctionInfoFromRow(i);
     if (function != nullptr) {
       app_->Disassemble(pid, *function);
-      j++;
+      if (++j >= kMaxNumberOfWindowsToOpen) break;
     }
-    if (j > 9) break;
   }
 }
 
 void DataView::OnSourceCodeRequested(const std::vector<int>& selection) {
   metrics_uploader_->SendLogEvent(OrbitLogEvent::ORBIT_SOURCE_CODE_REQUESTED);
+  constexpr int kMaxNumberOfWindowsToOpen = 10; 
   int j = 0;
   for (int i : selection) {
     const FunctionInfo* function = GetFunctionInfoFromRow(i);
     if (function != nullptr) {
       app_->ShowSourceCode(*function);
-      j++;
+      if (++j >= kMaxNumberOfWindowsToOpen) break;
     }
-    if (j > 9) break;
   }
 }
 
