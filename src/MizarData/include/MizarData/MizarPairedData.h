@@ -219,24 +219,15 @@ uint64_t RobustSamplingPeriodEstimate(const absl::flat_hash_set<orbit_mizar_base
   }
   const uint64_t cutoff = intervals[cutoff_index];
 
-  struct TotalAndCount {
-    uint64_t total{};
-    size_t count{};
+  uint64_t total = 0;
+  size_t count = 0;
 
-    // round(total / count)
-    uint64_t ComputeAverage() { return (total + (count / 2)) / count; }
-  };
-
-  return absl::c_accumulate(
-             intervals, TotalAndCount{},
-             [cutoff](const TotalAndCount& total_and_count, uint64_t interval) -> TotalAndCount {
-               if (interval <= cutoff) {
-                 const auto [total, count] = total_and_count;
-                 return {total + interval, count + 1};
-               }
-               return total_and_count;
-             })
-      .ComputeAverage();
+  for (uint64_t interval : intervals) {
+    if (interval > cutoff) continue;
+    total += interval;
+    ++count;
+  }
+  return (total + (count / 2)) / count;  // round(total / count)
 }
 
 using MizarPairedData =
