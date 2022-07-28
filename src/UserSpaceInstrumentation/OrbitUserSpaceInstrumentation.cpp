@@ -8,6 +8,7 @@
 #include <variant>
 
 #include "CaptureEventProducer/LockFreeBufferCaptureEventProducer.h"
+#include "OrbitBase/Overloaded.h"
 #include "OrbitBase/Profiling.h"
 #include "OrbitBase/ThreadUtils.h"
 #include "ProducerSideChannel/ProducerSideChannel.h"
@@ -89,26 +90,23 @@ class LockFreeUserSpaceInstrumentationEventProducer
         google::protobuf::Arena::CreateMessage<orbit_grpc_protos::ProducerCaptureEvent>(arena);
 
     std::visit(
-        [capture_event](auto&& raw_event) {
-          using DecayedEventType = std::decay_t<decltype(raw_event)>;
-          if constexpr (std::is_same_v<DecayedEventType, FunctionEntry>) {
-            orbit_grpc_protos::FunctionEntry* function_entry =
-                capture_event->mutable_function_entry();
-            function_entry->set_pid(raw_event.pid);
-            function_entry->set_tid(raw_event.tid);
-            function_entry->set_function_id(raw_event.function_id);
-            function_entry->set_stack_pointer(raw_event.stack_pointer);
-            function_entry->set_return_address(raw_event.return_address);
-            function_entry->set_timestamp_ns(raw_event.timestamp_ns);
-          } else if constexpr (std::is_same_v<DecayedEventType, FunctionExit>) {
-            orbit_grpc_protos::FunctionExit* function_exit = capture_event->mutable_function_exit();
-            function_exit->set_pid(raw_event.pid);
-            function_exit->set_tid(raw_event.tid);
-            function_exit->set_timestamp_ns(raw_event.timestamp_ns);
-          } else {
-            static_assert(always_false_v<DecayedEventType>, "Non-exhaustive visitor");
-          }
-        },
+        orbit_base::overloaded{[capture_event](const FunctionEntry& raw_event) -> void {
+                                 orbit_grpc_protos::FunctionEntry* function_entry =
+                                     capture_event->mutable_function_entry();
+                                 function_entry->set_pid(raw_event.pid);
+                                 function_entry->set_tid(raw_event.tid);
+                                 function_entry->set_function_id(raw_event.function_id);
+                                 function_entry->set_stack_pointer(raw_event.stack_pointer);
+                                 function_entry->set_return_address(raw_event.return_address);
+                                 function_entry->set_timestamp_ns(raw_event.timestamp_ns);
+                               },
+                               [capture_event](const FunctionExit& raw_event) -> void {
+                                 orbit_grpc_protos::FunctionExit* function_exit =
+                                     capture_event->mutable_function_exit();
+                                 function_exit->set_pid(raw_event.pid);
+                                 function_exit->set_tid(raw_event.tid);
+                                 function_exit->set_timestamp_ns(raw_event.timestamp_ns);
+                               }},
         raw_event);
 
     return capture_event;
