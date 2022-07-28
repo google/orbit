@@ -2712,7 +2712,7 @@ void OrbitApp::SetMaxLocalMarkerDepthPerCommandBuffer(
 }
 
 void OrbitApp::SetEnableAutoFrameTrack(bool enable_auto_frame_track) {
-  // if the option is true, Orbit will try to add the default frame track as soon as possible. This
+  // If the option is true, Orbit will try to add the default frame track as soon as possible. This
   // might fail because a user can start a capture before the needed symbols are downloaded, so we
   // are additionaly saving the state for the future.
   if (enable_auto_frame_track) {
