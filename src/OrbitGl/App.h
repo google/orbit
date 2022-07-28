@@ -377,6 +377,7 @@ class OrbitApp final : public DataViewFactory,
   void UpdateAfterSymbolLoadingThrottled();
   void UpdateAfterCaptureCleared();
 
+  // Load the functions and add frame tracks from a particular module of a preset file.
   orbit_base::Future<ErrorMessageOr<void>> LoadPresetModule(
       const std::filesystem::path& module_path, const orbit_preset_file::PresetFile& preset_file);
   orbit_base::Future<ErrorMessageOr<void>> LoadPreset(
