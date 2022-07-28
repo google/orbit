@@ -204,17 +204,24 @@ class MizarPairedDataTest : public ::testing::Test {
   std::unique_ptr<MockMizarData> data_;
 };
 
+[[nodiscard]] static uint64_t EstimateSamplingPeriodNsAsNominalMock(
+    const absl::flat_hash_set<orbit_mizar_base::TID>&, uint64_t, uint64_t,
+    const MockMizarData& data) {
+  return data.GetNominalSamplingPeriodNs();
+}
+
+using MizarPairedDataTmplMocked = MizarPairedDataTmpl<MockMizarData, MockFrameTrackManager,
+                                                      EstimateSamplingPeriodNsAsNominalMock>;
+
 TEST_F(MizarPairedDataTest, FrameTrackManagerIsProperlyInitialized) {
   const MockCaptureData* capture_data_ptr = &data_->GetCaptureData();
-  MizarPairedDataTmpl<MockMizarData, MockFrameTrackManager> mizar_paired_data(std::move(data_),
-                                                                              kAddressToId);
+  MizarPairedDataTmplMocked mizar_paired_data(std::move(data_), kAddressToId);
 
   EXPECT_EQ(&MockFrameTrackManager::passed_data_->GetCaptureData(), capture_data_ptr);
 }
 
 TEST_F(MizarPairedDataTest, ForeachCallstackIsCorrect) {
-  MizarPairedDataTmpl<MockMizarData, MockFrameTrackManager> mizar_paired_data(std::move(data_),
-                                                                              kAddressToId);
+  MizarPairedDataTmplMocked mizar_paired_data(std::move(data_), kAddressToId);
   std::vector<std::vector<SFID>> actual_ids_fed_to_action;
   auto action = [&actual_ids_fed_to_action](const std::vector<SFID> ids) {
     actual_ids_fed_to_action.push_back(ids);
@@ -243,8 +250,7 @@ TEST_F(MizarPairedDataTest, ForeachCallstackIsCorrect) {
 }
 
 TEST_F(MizarPairedDataTest, ActiveInvocationTimesIsCorrect) {
-  MizarPairedDataTmpl<MockMizarData, MockFrameTrackManager> mizar_paired_data(std::move(data_),
-                                                                              kAddressToId);
+  MizarPairedDataTmplMocked mizar_paired_data(std::move(data_), kAddressToId);
   std::vector<uint64_t> actual_active_invocation_times = mizar_paired_data.ActiveInvocationTimes(
       {kTID, kAnotherTID}, FrameTrackId(ScopeId(1)), 0, std::numeric_limits<uint64_t>::max());
   EXPECT_THAT(actual_active_invocation_times,
@@ -252,22 +258,70 @@ TEST_F(MizarPairedDataTest, ActiveInvocationTimesIsCorrect) {
 }
 
 TEST_F(MizarPairedDataTest, TidToNamesIsCorrect) {
-  MizarPairedDataTmpl<MockMizarData, MockFrameTrackManager> mizar_paired_data(std::move(data_),
-                                                                              kAddressToId);
+  MizarPairedDataTmplMocked mizar_paired_data(std::move(data_), kAddressToId);
   EXPECT_THAT(mizar_paired_data.TidToNames(), UnorderedElementsAreArray(kSampledTidToName));
 }
 
 TEST_F(MizarPairedDataTest, TidToCallstackCountsIsCorrect) {
-  MizarPairedDataTmpl<MockMizarData, MockFrameTrackManager> mizar_paired_data(std::move(data_),
-                                                                              kAddressToId);
+  MizarPairedDataTmplMocked mizar_paired_data(std::move(data_), kAddressToId);
   EXPECT_THAT(mizar_paired_data.TidToCallstackSampleCounts(),
               UnorderedElementsAreArray(kTidToCallstackCount));
 }
 
 TEST_F(MizarPairedDataTest, CaptureDurationIsCorrect) {
-  MizarPairedDataTmpl<MockMizarData, MockFrameTrackManager> mizar_paired_data(std::move(data_),
-                                                                              kAddressToId);
+  MizarPairedDataTmplMocked mizar_paired_data(std::move(data_), kAddressToId);
   EXPECT_EQ(mizar_paired_data.CaptureDurationNs(), kRelativeTimeTooLate);
+}
+
+static std::vector<uint64_t> NoIntervalsMock(const absl::flat_hash_set<orbit_mizar_base::TID>&,
+                                             uint64_t, uint64_t,
+                                             const orbit_client_data::CallstackData&) {
+  return {};
+};
+
+TEST_F(MizarPairedDataTest, RobustSamplingPeriodEstimateOnEmptyFallsBackToNominal) {
+  uint64_t actual_estimate = RobustSamplingPeriodEstimate<MockMizarData, NoIntervalsMock>(
+      absl::flat_hash_set<orbit_mizar_base::TID>{},
+      /*min_timestamp=*/0, /*max_timestamp=*/0, *data_);
+  EXPECT_EQ(actual_estimate, kSamplingPeriod);
+}
+
+constexpr uint64_t kExpectedMean = 10000;
+
+static std::vector<uint64_t> AllEqualIntervalsMock(
+    const absl::flat_hash_set<orbit_mizar_base::TID>&, uint64_t, uint64_t,
+    const orbit_client_data::CallstackData&) {
+  return std::vector<uint64_t>(1000, kExpectedMean);
+};
+
+TEST_F(MizarPairedDataTest, RobustSamplingPeriodEstimateOnAllEqual) {
+  uint64_t actual_estimate = RobustSamplingPeriodEstimate<MockMizarData, AllEqualIntervalsMock>(
+      absl::flat_hash_set<orbit_mizar_base::TID>{},
+      /*min_timestamp=*/0, /*max_timestamp=*/0, *data_);
+  EXPECT_EQ(actual_estimate, kExpectedMean);
+}
+
+static std::vector<uint64_t> DistinctWithOutliersMock(
+    const absl::flat_hash_set<orbit_mizar_base::TID>&, uint64_t, uint64_t,
+    const orbit_client_data::CallstackData&) {
+  constexpr size_t kOutlierCount = 40;
+  std::vector<uint64_t> result(kOutlierCount, 1e9);
+
+  constexpr size_t kNotOutlierCount = 2000;  // so the outlier rate under kOutlierRate
+  for (size_t i = 0; i < kNotOutlierCount / 2; ++i) {
+    result.push_back(kExpectedMean - i);
+    result.push_back(kExpectedMean + i);
+  }
+
+  return result;
+};
+
+TEST_F(MizarPairedDataTest, RobustSamplingPeriodEstimateWithOutliers) {
+  double actual_estimate = RobustSamplingPeriodEstimate<MockMizarData, DistinctWithOutliersMock>(
+      absl::flat_hash_set<orbit_mizar_base::TID>{},
+      /*min_timestamp=*/0, /*max_timestamp=*/0, *data_);
+  constexpr double kTolerance = 10;
+  EXPECT_THAT(actual_estimate, testing::DoubleNear(static_cast<double>(kExpectedMean), kTolerance));
 }
 
 }  // namespace orbit_mizar_data
