@@ -110,7 +110,7 @@ class LockFreeUserSpaceInstrumentationEventProducer
         raw_event);
 
     return capture_event;
-  }  // namespace
+  }
 
  private:
   template <class>
@@ -122,8 +122,8 @@ LockFreeUserSpaceInstrumentationEventProducer& GetCaptureEventProducer() {
   return producer;
 }
 
-// Provide a thread local bool to keep track of whether the current thread is inside the payload
-// we injected. If that is the case we avoid further instrumentation.
+// Provide a thread local bool to keep track of whether the current thread is inside the payload we
+// injected. If that is the case we avoid further instrumentation.
 bool& GetIsInPayload() {
   thread_local bool is_in_payload = false;
   return is_in_payload;
@@ -157,8 +157,8 @@ bool& GetIsInPayload() {
                                                  uint64_t stack_pointer,
                                                  uint64_t return_trampoline_address) {
   bool& is_in_payload = GetIsInPayload();
-  // If something in the callgraph below `EntryPayload` or `ExitPayload` was instrumented we
-  // need to break the cycle here otherwise we would crash in an infinite recursion.
+  // If something in the callgraph below `EntryPayload` or `ExitPayload` was instrumented we need to
+  // break the cycle here otherwise we would crash in an infinite recursion.
   if (is_in_payload) {
     return;
   }
@@ -199,8 +199,8 @@ bool& GetIsInPayload() {
   OpenFunctionCall current_function_call = open_function_call_stack.top();
   open_function_call_stack.pop();
 
-  // Skip emitting an event if we are not capturing or if the function call doesn't fully belong
-  // to this capture.
+  // Skip emitting an event if we are not capturing or if the function call doesn't fully belong to
+  // this capture.
   if (GetCaptureEventProducer().IsCapturing() &&
       current_capture_start_timestamp_ns < current_function_call.timestamp_on_entry_ns) {
     static uint32_t pid = orbit_base::GetCurrentProcessId();
