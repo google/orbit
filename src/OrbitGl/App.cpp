@@ -2711,6 +2711,16 @@ void OrbitApp::SetMaxLocalMarkerDepthPerCommandBuffer(
       max_local_marker_depth_per_command_buffer);
 }
 
+void OrbitApp::SetEnableAutoFrameTrack(bool enable_auto_frame_track) {
+  // if the option is true, Orbit will try to add the default frame track as soon as possible. This
+  // might fail because a user can start a capture before the needed symbols are downloaded, so we
+  // are additionaly saving the state for the future.
+  if (enable_auto_frame_track) {
+    std::ignore = AddDefaultFrameTrackOrLogError();
+  }
+  data_manager_->set_enable_auto_frame_track(enable_auto_frame_track);
+}
+
 void OrbitApp::SelectFunction(const orbit_client_data::FunctionInfo& func) {
   ORBIT_LOG("Selected %s (address_=%#x, loaded_module_path_=%s)", func.pretty_name(),
             func.address(), func.module_path());
