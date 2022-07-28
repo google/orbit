@@ -728,7 +728,7 @@ void CallTreeWidget::OnCustomContextMenuRequested(const QPoint& point) {
     }
   } else if (action->text() == kActionDisassembly) {
     metrics_uploader_->SendLogEvent(OrbitLogEvent::ORBIT_DISASSEMBLY_REQUESTED);
-    constexpr int kMaxNumberOfWindowsToOpen = 10; 
+    constexpr int kMaxNumberOfWindowsToOpen = 10;
     int i = 0;
     for (const FunctionInfo* function : functions) {
       app_->Disassemble(app_->GetCaptureData().process_id(), *function);
