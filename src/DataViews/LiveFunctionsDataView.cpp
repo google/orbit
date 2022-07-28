@@ -517,7 +517,7 @@ void LiveFunctionsDataView::OnDataChanged() {
     }
 
     if (!function_info.has_value()) {
-      return;
+      continue;
     }
     const std::optional<ScopeId> scope_id = app_->GetCaptureData().FunctionIdToScopeId(function_id);
     ORBIT_CHECK(scope_id.has_value());
