@@ -214,7 +214,7 @@ StackSamplePerfEvent BuildFakeStackSamplePerfEvent() {
               .tid = 11,
               .regs = std::make_unique<perf_event_sample_regs_user_all>(),
               .dyn_size = kStackSize,
-              .data = std::make_unique<char[]>(kStackSize),
+              .data = std::make_unique<uint8_t[]>(kStackSize),
           },
   };
 }
@@ -228,7 +228,7 @@ CallchainSamplePerfEvent BuildFakeCallchainSamplePerfEvent(const std::vector<uin
               .pid = 10,
               .tid = 11,
               .regs = std::make_unique<perf_event_sample_regs_user_all>(),
-              .data = std::make_unique<char[]>(kStackSize),
+              .data = std::make_unique<uint8_t[]>(kStackSize),
           },
   };
   event.data.SetIps(callchain);
@@ -1018,15 +1018,15 @@ TEST_F(UprobesUnwindingVisitorSampleTest, VisitStackSampleUsesUserSpaceStack) {
                       .sp = kUserStackPointer,
                   },
               .dyn_size = kUserStackSize,
-              .data = std::make_unique<char[]>(kUserStackSize),
+              .data = std::make_unique<uint8_t[]>(kUserStackSize),
           },
   };
-  char* user_stack_data = user_stack_event.data.data.get();
+  uint8_t* user_stack_data = user_stack_event.data.data.get();
   PerfEvent{std::move(user_stack_event)}.Accept(&visitor_);
 
   uint64_t dyn_size = event.data.dyn_size;
   uint64_t sp = event.data.regs->sp;
-  char* stack_data = event.data.data.get();
+  uint8_t* stack_data = event.data.data.get();
   PerfEvent{std::move(event)}.Accept(&visitor_);
 
   EXPECT_THAT(actual_stack_slices,
@@ -1105,7 +1105,7 @@ TEST_F(UprobesUnwindingVisitorSampleTest, VisitStackSampleUsesLatestUserSpaceCal
                       .sp = kUserStackPointerOld,
                   },
               .dyn_size = kUserStackSizeOld,
-              .data = std::make_unique<char[]>(kUserStackSizeOld),
+              .data = std::make_unique<uint8_t[]>(kUserStackSizeOld),
           },
   };
   PerfEvent{std::move(user_stack_event_old)}.Accept(&visitor_);
@@ -1125,15 +1125,15 @@ TEST_F(UprobesUnwindingVisitorSampleTest, VisitStackSampleUsesLatestUserSpaceCal
                       .sp = kUserStackPointerNew,
                   },
               .dyn_size = kUserStackSizeNew,
-              .data = std::make_unique<char[]>(kUserStackSizeNew),
+              .data = std::make_unique<uint8_t[]>(kUserStackSizeNew),
           },
   };
-  char* user_stack_data = user_stack_event_new.data.data.get();
+  uint8_t* user_stack_data = user_stack_event_new.data.data.get();
   PerfEvent{std::move(user_stack_event_new)}.Accept(&visitor_);
 
   uint64_t dyn_size = event.data.dyn_size;
   uint64_t sp = event.data.regs->sp;
-  char* stack_data = event.data.data.get();
+  uint8_t* stack_data = event.data.data.get();
   PerfEvent{std::move(event)}.Accept(&visitor_);
 
   EXPECT_THAT(actual_stack_slices,
@@ -1213,10 +1213,10 @@ TEST_F(UprobesUnwindingVisitorSampleTest,
                       .sp = kUserStackPointerSameThread,
                   },
               .dyn_size = kUserStackSizeSameThread,
-              .data = std::make_unique<char[]>(kUserStackSizeSameThread),
+              .data = std::make_unique<uint8_t[]>(kUserStackSizeSameThread),
           },
   };
-  char* user_stack_data = user_stack_event_same_thread.data.data.get();
+  uint8_t* user_stack_data = user_stack_event_same_thread.data.data.get();
   PerfEvent{std::move(user_stack_event_same_thread)}.Accept(&visitor_);
 
   constexpr uint64_t kUserStackSizeOtherThread = 1024;
@@ -1234,14 +1234,14 @@ TEST_F(UprobesUnwindingVisitorSampleTest,
                       .sp = kUserStackPointerOtherThread,
                   },
               .dyn_size = kUserStackSizeOtherThread,
-              .data = std::make_unique<char[]>(kUserStackSizeOtherThread),
+              .data = std::make_unique<uint8_t[]>(kUserStackSizeOtherThread),
           },
   };
   PerfEvent{std::move(user_stack_event_other_thread)}.Accept(&visitor_);
 
   uint64_t dyn_size = event.data.dyn_size;
   uint64_t sp = event.data.regs->sp;
-  char* stack_data = event.data.data.get();
+  uint8_t* stack_data = event.data.data.get();
   PerfEvent{std::move(event)}.Accept(&visitor_);
 
   EXPECT_THAT(
@@ -1321,10 +1321,10 @@ TEST_F(UprobesUnwindingVisitorSampleTest, VisitStackSampleUsesUserStackMemoryFro
                       .sp = kUserStackPointer1,
                   },
               .dyn_size = kUserStackSize1,
-              .data = std::make_unique<char[]>(kUserStackSize1),
+              .data = std::make_unique<uint8_t[]>(kUserStackSize1),
           },
   };
-  char* user_stack_data1 = user_stack_event1.data.data.get();
+  uint8_t* user_stack_data1 = user_stack_event1.data.data.get();
   PerfEvent{std::move(user_stack_event1)}.Accept(&visitor_);
 
   constexpr uint64_t kUserStackSize2 = 1024;
@@ -1342,15 +1342,15 @@ TEST_F(UprobesUnwindingVisitorSampleTest, VisitStackSampleUsesUserStackMemoryFro
                       .sp = kUserStackPointer2,
                   },
               .dyn_size = kUserStackSize2,
-              .data = std::make_unique<char[]>(kUserStackSize2),
+              .data = std::make_unique<uint8_t[]>(kUserStackSize2),
           },
   };
-  char* user_stack_data2 = user_stack_event2.data.data.get();
+  uint8_t* user_stack_data2 = user_stack_event2.data.data.get();
   PerfEvent{std::move(user_stack_event2)}.Accept(&visitor_);
 
   uint64_t dyn_size = event.data.dyn_size;
   uint64_t sp = event.data.regs->sp;
-  char* stack_data = event.data.data.get();
+  uint8_t* stack_data = event.data.data.get();
   PerfEvent{std::move(event)}.Accept(&visitor_);
 
   // We don't guarantee an order for the stack slices of different stream ids. However, the first

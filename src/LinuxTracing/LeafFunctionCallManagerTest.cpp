@@ -153,7 +153,7 @@ CallchainSamplePerfEventData BuildFakeCallchainSamplePerfEventData(
       .pid = 10,
       .tid = 11,
       .regs = make_unique_for_overwrite<perf_event_sample_regs_user_all>(),
-      .data = make_unique_for_overwrite<char[]>(13)};
+      .data = make_unique_for_overwrite<uint8_t[]>(13)};
   event_data.SetIps(callchain);
   if (callchain.size() > 1) {
     // Set the first non-kernel address as IP.
