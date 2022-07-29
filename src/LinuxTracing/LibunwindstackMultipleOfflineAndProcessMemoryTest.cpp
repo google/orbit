@@ -12,13 +12,13 @@ namespace orbit_linux_tracing {
 
 TEST(LibunwindstackMultipleOfflineAndProcessMemory, ReadFromOneStackSlice) {
   constexpr uint64_t kStartAddress = 0xADD8E55;
-  std::vector<char> bytes{0x01, 0x10, 0x20, 0x30, 0x40};
+  std::vector<uint8_t> bytes{0x01, 0x10, 0x20, 0x30, 0x40};
   StackSliceView stack_slice(kStartAddress, bytes.size(), bytes.data());
 
   std::shared_ptr<unwindstack::Memory> sut =
       LibunwindstackMultipleOfflineAndProcessMemory::CreateWithoutProcessMemory({stack_slice});
 
-  std::array<char, 3> destination{};
+  std::array<uint8_t, 3> destination{};
   size_t read_count = sut->Read(kStartAddress + 2, destination.data(), 3);
 
   ASSERT_EQ(read_count, 3);
@@ -29,18 +29,18 @@ TEST(LibunwindstackMultipleOfflineAndProcessMemory, ReadFromOneStackSlice) {
 
 TEST(LibunwindstackMultipleOfflineAndProcessMemory, ReadFromFirstMatchingStackSlice) {
   constexpr uint64_t kStartAddress1 = 0xADD8E55;
-  std::vector<char> bytes1{0x01, 0x10, 0x20, 0x30, 0x40};
+  std::vector<uint8_t> bytes1{0x01, 0x10, 0x20, 0x30, 0x40};
   StackSliceView stack_slice1(kStartAddress1, bytes1.size(), bytes1.data());
 
   constexpr uint64_t kStartAddress2 = 0xABCDEF;
-  std::vector<char> bytes2{0x11, 0x12, 0x13, 0x14, 0x15, 0x16, 0x17};
+  std::vector<uint8_t> bytes2{0x11, 0x12, 0x13, 0x14, 0x15, 0x16, 0x17};
   StackSliceView stack_slice2(kStartAddress2, bytes2.size(), bytes2.data());
 
   std::shared_ptr<unwindstack::Memory> sut =
       LibunwindstackMultipleOfflineAndProcessMemory::CreateWithoutProcessMemory(
           {stack_slice1, stack_slice2});
 
-  std::array<char, 3> destination{};
+  std::array<uint8_t, 3> destination{};
   size_t read_count = sut->Read(kStartAddress1 + 2, destination.data(), 3);
 
   ASSERT_EQ(read_count, 3);
@@ -51,18 +51,18 @@ TEST(LibunwindstackMultipleOfflineAndProcessMemory, ReadFromFirstMatchingStackSl
 
 TEST(LibunwindstackMultipleOfflineAndProcessMemory, ReadFromSecondStackSlice) {
   constexpr uint64_t kStartAddress1 = 0xADD8E55;
-  std::vector<char> bytes1{0x01, 0x10, 0x20, 0x30, 0x40};
+  std::vector<uint8_t> bytes1{0x01, 0x10, 0x20, 0x30, 0x40};
   StackSliceView stack_slice1(kStartAddress1, bytes1.size(), bytes1.data());
 
   constexpr uint64_t kStartAddress2 = 0xABCDEF;
-  std::vector<char> bytes2{0x11, 0x12, 0x13, 0x14, 0x15, 0x16, 0x17};
+  std::vector<uint8_t> bytes2{0x11, 0x12, 0x13, 0x14, 0x15, 0x16, 0x17};
   StackSliceView stack_slice2(kStartAddress2, bytes2.size(), bytes2.data());
 
   std::shared_ptr<unwindstack::Memory> sut =
       LibunwindstackMultipleOfflineAndProcessMemory::CreateWithoutProcessMemory(
           {stack_slice1, stack_slice2});
 
-  std::array<char, 3> destination{};
+  std::array<uint8_t, 3> destination{};
   size_t read_count = sut->Read(kStartAddress2 + 2, destination.data(), 3);
 
   ASSERT_EQ(read_count, 3);
@@ -74,13 +74,13 @@ TEST(LibunwindstackMultipleOfflineAndProcessMemory, ReadFromSecondStackSlice) {
 TEST(LibunwindstackMultipleOfflineAndProcessMemory,
      RequestingToReadWithPartialIntersectionReturnsZero) {
   constexpr uint64_t kStartAddress = 0xADD8E55;
-  std::vector<char> bytes{0x01, 0x10, 0x20, 0x30, 0x40};
+  std::vector<uint8_t> bytes{0x01, 0x10, 0x20, 0x30, 0x40};
   StackSliceView stack_slice(kStartAddress, bytes.size(), bytes.data());
 
   std::shared_ptr<unwindstack::Memory> sut =
       LibunwindstackMultipleOfflineAndProcessMemory::CreateWithoutProcessMemory({stack_slice});
 
-  std::array<char, 3> destination{};
+  std::array<uint8_t, 3> destination{};
   destination.fill(0x11);
   size_t read_count = sut->Read(kStartAddress - 1, destination.data(), 3);
 
@@ -93,13 +93,13 @@ TEST(LibunwindstackMultipleOfflineAndProcessMemory,
 TEST(LibunwindstackMultipleOfflineAndProcessMemory,
      RequestingToReadUnknownMemoryWithoutProcessReturnsZero) {
   constexpr uint64_t kStartAddress = 0xADD8E55;
-  std::vector<char> bytes{0x01, 0x10, 0x20, 0x30, 0x40};
+  std::vector<uint8_t> bytes{0x01, 0x10, 0x20, 0x30, 0x40};
   StackSliceView stack_slice(kStartAddress, bytes.size(), bytes.data());
 
   std::shared_ptr<unwindstack::Memory> sut =
       LibunwindstackMultipleOfflineAndProcessMemory::CreateWithoutProcessMemory({stack_slice});
 
-  std::array<char, 3> destination{};
+  std::array<uint8_t, 3> destination{};
   destination.fill(0x11);
   size_t read_count = sut->Read(0xFE, destination.data(), 3);
 
@@ -112,18 +112,18 @@ TEST(LibunwindstackMultipleOfflineAndProcessMemory,
 TEST(LibunwindstackMultipleOfflineAndProcessMemory,
      ReadFromCompleteMemoryEvenIfPartiallyIntersectsWithOtherStackSlice) {
   constexpr uint64_t kStartAddress1 = 0xADD8E55;
-  std::vector<char> bytes1{0x01, 0x10, 0x20, 0x30, 0x40};
+  std::vector<uint8_t> bytes1{0x01, 0x10, 0x20, 0x30, 0x40};
   StackSliceView stack_slice1(kStartAddress1, bytes1.size(), bytes1.data());
 
   constexpr uint64_t kStartAddress2 = kStartAddress1 - 2;
-  std::vector<char> bytes2{0x0a, 0x0b, 0x0c, 0x0d, 0x0f, 0x10, 0x01};
+  std::vector<uint8_t> bytes2{0x0a, 0x0b, 0x0c, 0x0d, 0x0f, 0x10, 0x01};
   StackSliceView stack_slice2(kStartAddress2, bytes2.size(), bytes2.data());
 
   std::shared_ptr<unwindstack::Memory> sut =
       LibunwindstackMultipleOfflineAndProcessMemory::CreateWithoutProcessMemory(
           {stack_slice1, stack_slice2});
 
-  std::array<char, 3> destination{};
+  std::array<uint8_t, 3> destination{};
   size_t read_count = sut->Read(kStartAddress2, destination.data(), 3);
 
   ASSERT_EQ(read_count, 3);
@@ -134,11 +134,11 @@ TEST(LibunwindstackMultipleOfflineAndProcessMemory,
 
 TEST(LibunwindstackMultipleOfflineAndProcessMemory, ReadFromTestProcess) {
   constexpr uint64_t kStartAddress1 = 0xADD8E55;
-  std::vector<char> bytes1{0x01, 0x10, 0x20, 0x30, 0x40};
+  std::vector<uint8_t> bytes1{0x01, 0x10, 0x20, 0x30, 0x40};
   StackSliceView stack_slice1(kStartAddress1, bytes1.size(), bytes1.data());
 
   constexpr uint64_t kStartAddress2 = 0xABCDEF;
-  std::vector<char> bytes2{0x11, 0x12, 0x13, 0x14, 0x15, 0x16, 0x17};
+  std::vector<uint8_t> bytes2{0x11, 0x12, 0x13, 0x14, 0x15, 0x16, 0x17};
   StackSliceView stack_slice2(kStartAddress2, bytes2.size(), bytes2.data());
 
   std::vector<char> bytes3{0x09, 0x08, 0x07, 0x06, 0x05};

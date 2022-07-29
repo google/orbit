@@ -20,18 +20,18 @@ namespace orbit_linux_tracing {
 // to the array that actually owns the stack data.
 class StackSliceView {
  public:
-  StackSliceView(uint64_t start_address, uint64_t size, const char* data)
+  StackSliceView(uint64_t start_address, uint64_t size, const uint8_t* data)
       : start_address_{start_address}, size_{size}, data_{data} {}
 
   [[nodiscard]] uint64_t start_address() const { return start_address_; }
   [[nodiscard]] uint64_t end_address() const { return start_address_ + size_; }
   [[nodiscard]] uint64_t size() const { return size_; }
-  [[nodiscard]] const char* data() const { return data_; }
+  [[nodiscard]] const uint8_t* data() const { return data_; }
 
  private:
   uint64_t start_address_;
   uint64_t size_;
-  const char* data_;
+  const uint8_t* data_;
 };
 
 // This custom implementation of `unwindstack::Memory` carries multiple stack slices, each same as

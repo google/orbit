@@ -66,18 +66,18 @@ struct StackSamplePerfEventData {
   [[nodiscard]] std::array<uint64_t, PERF_REG_X86_64_MAX> GetRegisters() const {
     return perf_event_sample_regs_user_all_to_register_array(*regs);
   }
-  [[nodiscard]] const char* GetStackData() const { return data.get(); }
+  [[nodiscard]] const uint8_t* GetStackData() const { return data.get(); }
   // Handing out this non const pointer makes the stack data mutable even if the
   // StackSamplePerfEvent is const.  This mutablility is needed in
   // UprobesReturnAddressManager::PatchSample.
-  [[nodiscard]] char* GetMutableStackData() const { return data.get(); }
+  [[nodiscard]] uint8_t* GetMutableStackData() const { return data.get(); }
   [[nodiscard]] uint64_t GetStackSize() const { return dyn_size; }
 
   pid_t pid;
   pid_t tid;
   std::unique_ptr<perf_event_sample_regs_user_all> regs;
   uint64_t dyn_size;
-  std::unique_ptr<char[]> data;
+  std::unique_ptr<uint8_t[]> data;
 };
 using StackSamplePerfEvent = TypedPerfEvent<StackSamplePerfEventData>;
 
@@ -87,7 +87,7 @@ struct CallchainSamplePerfEventData {
   [[nodiscard]] std::array<uint64_t, PERF_REG_X86_64_MAX> GetRegisters() const {
     return perf_event_sample_regs_user_all_to_register_array(*regs);
   }
-  [[nodiscard]] const char* GetStackData() const { return data.get(); }
+  [[nodiscard]] const uint8_t* GetStackData() const { return data.get(); }
   void SetIps(const std::vector<uint64_t>& new_ips) const {
     ips_size = new_ips.size();
     ips = make_unique_for_overwrite<uint64_t[]>(ips_size);
@@ -104,7 +104,7 @@ struct CallchainSamplePerfEventData {
   mutable uint64_t ips_size;
   mutable std::unique_ptr<uint64_t[]> ips;
   std::unique_ptr<perf_event_sample_regs_user_all> regs;
-  std::unique_ptr<char[]> data;
+  std::unique_ptr<uint8_t[]> data;
 };
 using CallchainSamplePerfEvent = TypedPerfEvent<CallchainSamplePerfEventData>;
 
@@ -139,7 +139,7 @@ struct UprobesWithStackPerfEventData {
   // This mutablility allows moving the data out of this class in the UprobesUnwindingVisitor even
   // if we only have a const reference there. This requires the explicit knowledge that there is
   // only one visitor being applied to this event.
-  mutable std::unique_ptr<char[]> data;
+  mutable std::unique_ptr<uint8_t[]> data;
 };
 using UprobesWithStackPerfEvent = TypedPerfEvent<UprobesWithStackPerfEventData>;
 

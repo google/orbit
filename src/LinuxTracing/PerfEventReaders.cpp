@@ -186,7 +186,7 @@ StackSamplePerfEvent ConsumeStackSamplePerfEvent(PerfEventRingBuffer* ring_buffe
               .tid = static_cast<pid_t>(sample_id.tid),
               .regs = make_unique_for_overwrite<perf_event_sample_regs_user_all>(),
               .dyn_size = dyn_size,
-              .data = make_unique_for_overwrite<char[]>(dyn_size),
+              .data = make_unique_for_overwrite<uint8_t[]>(dyn_size),
           },
   };
 
@@ -250,7 +250,7 @@ CallchainSamplePerfEvent ConsumeCallchainSamplePerfEvent(PerfEventRingBuffer* ri
               .ips_size = nr,
               .ips = make_unique_for_overwrite<uint64_t[]>(nr),
               .regs = make_unique_for_overwrite<perf_event_sample_regs_user_all>(),
-              .data = make_unique_for_overwrite<char[]>(dyn_size),
+              .data = make_unique_for_overwrite<uint8_t[]>(dyn_size),
           },
   };
 
@@ -311,7 +311,7 @@ UprobesWithStackPerfEvent ConsumeUprobeWithStackPerfEvent(PerfEventRingBuffer* r
               .tid = static_cast<pid_t>(sample_id.tid),
               .regs = regs,
               .dyn_size = dyn_size,
-              .data = make_unique_for_overwrite<char[]>(dyn_size),
+              .data = make_unique_for_overwrite<uint8_t[]>(dyn_size),
           },
   };
   ring_buffer->ReadRawAtOffset(event.data.data.get(), offset_of_data, dyn_size);

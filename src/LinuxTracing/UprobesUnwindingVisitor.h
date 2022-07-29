@@ -101,7 +101,7 @@ class UprobesUnwindingVisitor : public PerfEventVisitor {
   struct StackSlice {
     uint64_t start_address;
     uint64_t size;
-    std::unique_ptr<char[]> data;
+    std::unique_ptr<uint8_t[]> data;
   };
 
   void OnUprobes(uint64_t timestamp_ns, pid_t tid, uint32_t cpu, uint64_t sp, uint64_t ip,
