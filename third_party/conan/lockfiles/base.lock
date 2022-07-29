@@ -182,7 +182,7 @@
     "context": "host"
    },
    "24": {
-    "ref": "pcre2/10.33#54adea8f4f46f14720b65849988c274a",
+    "ref": "pcre2/10.40#9f1e019ce147fc9aceb5a51474b22dd9",
     "requires": [
      "4",
      "20"
@@ -261,7 +261,7 @@
     "context": "host"
    },
    "37": {
-    "ref": "libjpeg/9d#9c2c46fd74c85f5e6058e14abcf985e4",
+    "ref": "libjpeg/9d#e7774d7567ca33273567b2d26f9b9947",
     "context": "host"
    },
    "38": {
