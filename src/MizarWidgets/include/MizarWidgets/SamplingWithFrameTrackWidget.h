@@ -5,6 +5,8 @@
 #ifndef MIZAR_WIDGETS_SAMPLING_WITH_FRAME_TRACK_WIDGET_H_
 #define MIZAR_WIDGETS_SAMPLING_WITH_FRAME_TRACK_WIDGET_H_
 
+#include <absl/strings/str_format.h>
+
 #include <QObject>
 #include <QStringLiteral>
 #include <QWidget>
@@ -14,6 +16,7 @@
 #include "MizarBase/BaselineOrComparison.h"
 #include "MizarBase/Titles.h"
 #include "MizarData/BaselineAndComparison.h"
+#include "MizarData/MizarPairedData.h"
 #include "MizarWidgets/MizarMainWindow.h"
 #include "MizarWidgets/SamplingWithFrameTrackReportConfigValidator.h"
 #include "SamplingWithFrameTrackInputWidget.h"
@@ -46,12 +49,14 @@ class SamplingWithFrameTrackWidget : public QWidget {
   void OnUpdateButtonClicked();
 
  signals:
-  void ReportError(const std::string& message);
+  void ReportError(const std::string& message) const;
 
  private:
   [[nodiscard]] Baseline<SamplingWithFrameTrackInputWidget*> GetBaselineInput() const;
   [[nodiscard]] Comparison<SamplingWithFrameTrackInputWidget*> GetComparisonInput() const;
   [[nodiscard]] bool IsMultiplicityCorrectionEnabled() const;
+  [[nodiscard]] bool IsDataValid(const orbit_mizar_data::MizarPairedData& data,
+                                 std::string_view data_title) const;
   void OnSignificanceLevelSelected(int index);
 
   const orbit_mizar_data::BaselineAndComparison* baseline_and_comparison_;
