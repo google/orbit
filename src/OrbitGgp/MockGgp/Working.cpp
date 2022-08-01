@@ -20,7 +20,7 @@ int GgpVersion(int argc, char* argv[]) {
     return 1;
   }
 
-  std::cout << "12345.1.67.0 Mon 12 Dec 2012 12:12:12 PM UTC" << std::endl;
+  std::cout << "SDK Version:  25157.1.74.0" << std::endl;
   return 0;
 }
 
