@@ -284,8 +284,8 @@ class VerifyModuleLoaded(E2ETestCase):
         modules_dataview.filter.set_edit_text('')
         send_keys(module_search_string)
         wait_for_condition(lambda: modules_dataview.get_row_count() > 0)
-        self.expect_true(MODULE_STATE_LOADED in modules_dataview.get_item_at(0, 0).texts()[0],
-                         'Module is loaded.')
+        wait_for_condition(
+            lambda: MODULE_STATE_LOADED in modules_dataview.get_item_at(0, 0).texts()[0])
 
 
 class VerifySymbolsLoaded(E2ETestCase):
