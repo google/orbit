@@ -25,6 +25,7 @@ target_sources(ClientData PUBLIC
         include/ClientData/LinuxAddressInfo.h
         include/ClientData/ModuleAndFunctionLookup.h
         include/ClientData/ModuleData.h
+        include/ClientData/ModuleIdentifier.h
         include/ClientData/ModuleManager.h
         include/ClientData/PostProcessedSamplingData.h
         include/ClientData/ProcessData.h
@@ -91,6 +92,7 @@ target_sources(ClientDataTests PRIVATE
         FunctionInfoTest.cpp
         ModuleAndFunctionLookupTest.cpp
         ModuleDataTest.cpp
+        ModuleIdentifierTest.cpp
         ModuleManagerTest.cpp
         ProcessDataTest.cpp
         ScopeInfoTest.cpp
