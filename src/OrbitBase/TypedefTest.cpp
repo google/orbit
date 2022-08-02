@@ -5,6 +5,7 @@
 #include <absl/hash/hash_testing.h>
 #include <gtest/gtest.h>
 
+#include <chrono>
 #include <memory>
 #include <mutex>
 #include <tuple>
@@ -322,6 +323,38 @@ TEST(Typedef, ComparisonIsCorrect) {
   EXPECT_LE(MyType<int>(kLesser), MyType<int>(kGreater));
   EXPECT_LT(MyType<int>(kLesser), MyType<int>(kGreater));
   EXPECT_GT(MyType<int>(kGreater), MyType<int>(kLesser));
+}
+
+struct WrapperWithPlusTag : PlusTag {};
+
+template <typename T>
+struct WrapperWithPlus : Typedef<WrapperWithPlusTag, T> {
+  using Typedef<WrapperWithPlusTag, T>::Typedef;
+};
+
+TEST(Typedef, WrapperWithPlusHasPlus) {
+  constexpr int kAValue = 1;
+  constexpr int kBValue = 2;
+  WrapperWithPlus<int> a(kAValue);
+  WrapperWithPlus<int> b(kBValue);
+  EXPECT_EQ(*(a + b), kAValue + kBValue);
+}
+
+TEST(Typedef, WrapperWithPlusHasPlusAndPromotes) {
+  constexpr int kInt = 1;
+  constexpr float kFloat = 0.5;
+  WrapperWithPlus<int> a(kInt);
+  WrapperWithPlus<float> b(kFloat);
+  WrapperWithPlus<float> result = a + b;
+  EXPECT_EQ(*result, kInt + kFloat);
+}
+
+TEST(Typedef, WrapperWithPlusHasPlusAndConvertsArgument) {
+  constexpr std::chrono::nanoseconds kNanos(1000);
+  constexpr std::chrono::microseconds kMicros(1);
+  WrapperWithPlus<std::chrono::nanoseconds> a(kNanos);
+  WrapperWithPlus<std::chrono::microseconds> b(kMicros);
+  EXPECT_EQ(*(a + b), kNanos + kMicros);
 }
 
 }  // namespace orbit_base
