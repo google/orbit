@@ -125,7 +125,7 @@ class Executor : public std::enable_shared_from_this<Executor> {
       if (executor == nullptr) return;
 
       // If the future returns a non-success ErrorMessageOr-type, we will short-circuit and won't
-      // call the continutation. But we still have to schedule an action, that destroys the
+      // call the continuation. But we still have to schedule an action, that destroys the
       // continuation in the executor's context (think main thread). The continuation's destructor
       // might do things that need synchronization and can't happen in a different context (like a
       // thread pool), i.e. when the continuation owns a ScopedStatus.
