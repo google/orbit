@@ -6,7 +6,6 @@
 
 #include <absl/container/flat_hash_map.h>
 #include <absl/container/flat_hash_set.h>
-#include <llvm/Demangle/Demangle.h>
 
 #include <string>
 #include <utility>
@@ -22,6 +21,11 @@
 #include "GrpcProtos/Constants.h"
 #include "GrpcProtos/capture.pb.h"
 #include "OrbitBase/Logging.h"
+#include "OrbitBase/WarningSuppression.h"
+
+ORBIT_LLVM_INCLUDE_BEGIN
+#include <llvm/Demangle/Demangle.h>
+ORBIT_LLVM_INCLUDE_END
 
 namespace orbit_capture_client {
 

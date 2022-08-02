@@ -56,6 +56,7 @@ target_sources(OrbitBase PRIVATE
         include/OrbitBase/TypedefUtils.h
         include/OrbitBase/UniqueResource.h
         include/OrbitBase/VoidToMonostate.h
+        include/OrbitBase/WarningSuppression.h
         include/OrbitBase/WhenAll.h
         include/OrbitBase/WhenAny.h
         include/OrbitBase/WriteStringToFile.h)

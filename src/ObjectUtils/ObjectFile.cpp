@@ -5,8 +5,6 @@
 #include "ObjectUtils/ObjectFile.h"
 
 #include <absl/strings/str_format.h>
-#include <llvm/Object/Binary.h>
-#include <llvm/Object/ObjectFile.h>
 
 #include <filesystem>
 #include <memory>
@@ -17,6 +15,12 @@
 #include "ObjectUtils/CoffFile.h"
 #include "ObjectUtils/ElfFile.h"
 #include "OrbitBase/Result.h"
+#include "OrbitBase/WarningSuppression.h"
+
+ORBIT_LLVM_INCLUDE_BEGIN
+#include <llvm/Object/Binary.h>
+#include <llvm/Object/ObjectFile.h>
+ORBIT_LLVM_INCLUDE_END
 
 namespace orbit_object_utils {
 

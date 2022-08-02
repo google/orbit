@@ -5,9 +5,6 @@
 #ifndef OBJECT_UTILS_COFF_FILE_H_
 #define OBJECT_UTILS_COFF_FILE_H_
 
-#include <llvm/Object/Binary.h>
-#include <llvm/Object/ObjectFile.h>
-
 #include <array>
 #include <filesystem>
 #include <memory>
@@ -16,6 +13,12 @@
 #include "GrpcProtos/symbol.pb.h"
 #include "ObjectUtils/ObjectFile.h"
 #include "OrbitBase/Result.h"
+#include "OrbitBase/WarningSuppression.h"
+
+ORBIT_LLVM_INCLUDE_BEGIN
+#include <llvm/Object/Binary.h>
+#include <llvm/Object/ObjectFile.h>
+ORBIT_LLVM_INCLUDE_END
 
 namespace orbit_object_utils {
 

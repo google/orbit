@@ -5,6 +5,16 @@
 #ifndef OBJECT_UTILS_PDB_FILE_LLVM_H_
 #define OBJECT_UTILS_PDB_FILE_LLVM_H_
 
+#include <array>
+#include <filesystem>
+
+#include "GrpcProtos/symbol.pb.h"
+#include "ObjectUtils/PdbFile.h"
+#include "ObjectUtils/WindowsBuildIdUtils.h"
+#include "OrbitBase/Result.h"
+#include "OrbitBase/WarningSuppression.h"
+
+ORBIT_LLVM_INCLUDE_BEGIN
 #include <llvm/DebugInfo/CodeView/CVSymbolVisitor.h>
 #include <llvm/DebugInfo/CodeView/CodeView.h>
 #include <llvm/DebugInfo/CodeView/GUID.h>
@@ -20,14 +30,7 @@
 #include <llvm/DebugInfo/PDB/PDBSymbolExe.h>
 #include <llvm/DebugInfo/PDB/PDBTypes.h>
 #include <llvm/Demangle/Demangle.h>
-
-#include <array>
-#include <filesystem>
-
-#include "GrpcProtos/symbol.pb.h"
-#include "ObjectUtils/PdbFile.h"
-#include "ObjectUtils/WindowsBuildIdUtils.h"
-#include "OrbitBase/Result.h"
+ORBIT_LLVM_INCLUDE_END
 
 namespace orbit_object_utils {
 

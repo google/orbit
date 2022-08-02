@@ -7,6 +7,22 @@
 #include <absl/base/casts.h>
 #include <absl/strings/str_cat.h>
 #include <absl/strings/str_format.h>
+
+#include <cstdint>
+#include <type_traits>
+#include <utility>
+#include <vector>
+
+#include "GrpcProtos/module.pb.h"
+#include "GrpcProtos/symbol.pb.h"
+#include "Introspection/Introspection.h"
+#include "OrbitBase/File.h"
+#include "OrbitBase/Logging.h"
+#include "OrbitBase/ReadFileToString.h"
+#include "OrbitBase/Result.h"
+#include "OrbitBase/WarningSuppression.h"
+
+ORBIT_LLVM_INCLUDE_BEGIN
 #include <llvm/ADT/ArrayRef.h>
 #include <llvm/ADT/StringRef.h>
 #include <llvm/ADT/Twine.h>
@@ -31,19 +47,7 @@
 #include <llvm/Support/Error.h>
 #include <llvm/Support/MathExtras.h>
 #include <llvm/Support/MemoryBuffer.h>
-
-#include <cstdint>
-#include <type_traits>
-#include <utility>
-#include <vector>
-
-#include "GrpcProtos/module.pb.h"
-#include "GrpcProtos/symbol.pb.h"
-#include "Introspection/Introspection.h"
-#include "OrbitBase/File.h"
-#include "OrbitBase/Logging.h"
-#include "OrbitBase/ReadFileToString.h"
-#include "OrbitBase/Result.h"
+ORBIT_LLVM_INCLUDE_END
 
 namespace orbit_object_utils {
 

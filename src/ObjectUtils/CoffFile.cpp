@@ -6,13 +6,6 @@
 
 #include <absl/strings/str_cat.h>
 #include <absl/strings/str_format.h>
-#include <llvm/DebugInfo/DWARF/DWARFContext.h>
-#include <llvm/Demangle/Demangle.h>
-#include <llvm/Object/Binary.h>
-#include <llvm/Object/COFF.h>
-#include <llvm/Object/CVDebugRecord.h>
-#include <llvm/Object/ObjectFile.h>
-#include <llvm/Support/Error.h>
 
 #include <system_error>
 
@@ -22,6 +15,17 @@
 #include "ObjectUtils/WindowsBuildIdUtils.h"
 #include "OrbitBase/Logging.h"
 #include "OrbitBase/Result.h"
+#include "OrbitBase/WarningSuppression.h"
+
+ORBIT_LLVM_INCLUDE_BEGIN
+#include <llvm/DebugInfo/DWARF/DWARFContext.h>
+#include <llvm/Demangle/Demangle.h>
+#include <llvm/Object/Binary.h>
+#include <llvm/Object/COFF.h>
+#include <llvm/Object/CVDebugRecord.h>
+#include <llvm/Object/ObjectFile.h>
+#include <llvm/Support/Error.h>
+ORBIT_LLVM_INCLUDE_END
 
 namespace orbit_object_utils {
 

@@ -17,8 +17,12 @@
 #include "GrpcProtos/symbol.pb.h"
 #include "ObjectFile.h"
 #include "OrbitBase/Result.h"
+#include "OrbitBase/WarningSuppression.h"
+
+ORBIT_LLVM_INCLUDE_BEGIN
 #include "llvm/Object/Binary.h"
 #include "llvm/Object/ObjectFile.h"
+ORBIT_LLVM_INCLUDE_END
 
 namespace orbit_object_utils {
 

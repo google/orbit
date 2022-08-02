@@ -6,8 +6,6 @@
 #define SYMBOLS_SYMBOL_HELPER_H_
 
 #include <absl/types/span.h>
-#include <llvm/Object/Binary.h>
-#include <llvm/Object/ObjectFile.h>
 
 #include <filesystem>
 #include <string>
@@ -20,6 +18,12 @@
 #include "Introspection/Introspection.h"
 #include "ObjectUtils/SymbolsFile.h"
 #include "OrbitBase/Result.h"
+#include "OrbitBase/WarningSuppression.h"
+
+ORBIT_LLVM_INCLUDE_BEGIN
+#include <llvm/Object/Binary.h>
+#include <llvm/Object/ObjectFile.h>
+ORBIT_LLVM_INCLUDE_END
 
 namespace orbit_symbols {
 

@@ -6,7 +6,6 @@
 
 #include <absl/memory/memory.h>
 #include <diacreate.h>
-#include <llvm/Demangle/Demangle.h>
 #include <winerror.h>
 
 #include "Introspection/Introspection.h"
@@ -14,6 +13,11 @@
 #include "OrbitBase/ExecutablePath.h"
 #include "OrbitBase/Logging.h"
 #include "OrbitBase/StringConversion.h"
+#include "OrbitBase/WarningSuppression.h"
+
+ORBIT_LLVM_INCLUDE_BEGIN
+#include <llvm/Demangle/Demangle.h>
+ORBIT_LLVM_INCLUDE_END
 
 using orbit_grpc_protos::ModuleSymbols;
 using orbit_grpc_protos::SymbolInfo;

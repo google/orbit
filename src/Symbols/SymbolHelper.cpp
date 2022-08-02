@@ -11,8 +11,6 @@
 #include <absl/strings/str_replace.h>
 #include <absl/strings/str_split.h>
 #include <absl/types/span.h>
-#include <llvm/Object/Binary.h>
-#include <llvm/Object/ObjectFile.h>
 
 #include <algorithm>
 #include <filesystem>
@@ -30,8 +28,14 @@
 #include "OrbitBase/Logging.h"
 #include "OrbitBase/ReadFileToString.h"
 #include "OrbitBase/Result.h"
+#include "OrbitBase/WarningSuppression.h"
 #include "OrbitBase/WriteStringToFile.h"
 #include "Symbols/SymbolUtils.h"
+
+ORBIT_LLVM_INCLUDE_BEGIN
+#include <llvm/Object/Binary.h>
+#include <llvm/Object/ObjectFile.h>
+ORBIT_LLVM_INCLUDE_END
 
 using orbit_grpc_protos::ModuleSymbols;
 

@@ -6,10 +6,6 @@
 
 #include <absl/memory/memory.h>
 #include <absl/strings/str_cat.h>
-#include <llvm/DebugInfo/CodeView/LazyRandomTypeCollection.h>
-#include <llvm/DebugInfo/CodeView/TypeDeserializer.h>
-#include <llvm/DebugInfo/CodeView/TypeRecord.h>
-#include <llvm/DebugInfo/PDB/Native/TpiStream.h>
 
 #include <memory>
 
@@ -17,6 +13,14 @@
 #include "ObjectUtils/CoffFile.h"
 #include "OrbitBase/Logging.h"
 #include "OrbitBase/Result.h"
+#include "OrbitBase/WarningSuppression.h"
+
+ORBIT_LLVM_INCLUDE_BEGIN
+#include <llvm/DebugInfo/CodeView/LazyRandomTypeCollection.h>
+#include <llvm/DebugInfo/CodeView/TypeDeserializer.h>
+#include <llvm/DebugInfo/CodeView/TypeRecord.h>
+#include <llvm/DebugInfo/PDB/Native/TpiStream.h>
+ORBIT_LLVM_INCLUDE_END
 
 using orbit_grpc_protos::ModuleSymbols;
 using orbit_grpc_protos::SymbolInfo;

@@ -12,7 +12,6 @@
 #include <absl/strings/str_join.h>
 #include <absl/strings/str_split.h>
 #include <absl/time/time.h>
-#include <llvm/Demangle/Demangle.h>
 #include <stddef.h>
 
 #include <algorithm>
@@ -46,7 +45,12 @@
 #include "OrbitBase/Logging.h"
 #include "OrbitBase/Result.h"
 #include "OrbitBase/ThreadUtils.h"
+#include "OrbitBase/WarningSuppression.h"
 #include "Statistics/Histogram.h"
+
+ORBIT_LLVM_INCLUDE_BEGIN
+#include <llvm/Demangle/Demangle.h>
+ORBIT_LLVM_INCLUDE_END
 
 using orbit_client_data::CaptureData;
 using orbit_client_data::FunctionInfo;
@@ -569,7 +573,7 @@ const FunctionInfo* LiveFunctionsDataView::GetFunctionInfoFromRow(int row) {
 std::optional<int> LiveFunctionsDataView::GetRowFromScopeId(ScopeId scope_id) {
   for (size_t function_row = 0; function_row < indices_.size(); function_row++) {
     if (GetScopeId(function_row) == scope_id) {
-      return function_row;
+      return static_cast<int>(function_row);
     }
   }
   return std::nullopt;
