@@ -1786,8 +1786,6 @@ void OrbitApp::SendErrorToUi(const std::string& title, const std::string& text,
 orbit_base::Future<ErrorMessageOr<CanceledOr<std::filesystem::path>>>
 OrbitApp::RetrieveModuleFromRemote(const std::string& module_file_path) {
   ORBIT_SCOPE_FUNCTION;
-  ScopedStatus scoped_status = CreateScopedStatus(absl::StrFormat(
-      "Searching for symbols on remote instance for module \"%s\"...", module_file_path));
 
   const auto it = symbol_files_currently_downloading_.find(module_file_path);
   if (it != symbol_files_currently_downloading_.end()) {
@@ -1805,9 +1803,8 @@ OrbitApp::RetrieveModuleFromRemote(const std::string& module_file_path) {
 
   orbit_base::StopSource stop_source;
 
-  auto download_file = [this, module_file_path, scoped_status = std::move(scoped_status),
-                        stop_token =
-                            stop_source.GetStopToken()](ErrorMessageOr<std::string> result) mutable
+  auto download_file = [this, module_file_path, stop_token = stop_source.GetStopToken()](
+                           ErrorMessageOr<std::string> result) mutable
       -> orbit_base::Future<ErrorMessageOr<CanceledOr<std::filesystem::path>>> {
     if (result.has_error()) return {result.error()};
 
@@ -1818,9 +1815,6 @@ OrbitApp::RetrieveModuleFromRemote(const std::string& module_file_path) {
     const std::filesystem::path local_debug_file_path =
         symbol_helper_.GenerateCachedFileName(module_file_path);
 
-    scoped_status.UpdateMessage(
-        absl::StrFormat(R"(Copying debug info file for "%s" from remote: "%s"...)",
-                        module_file_path, debug_file_path));
     const std::chrono::time_point<std::chrono::steady_clock> copy_begin =
         std::chrono::steady_clock::now();
     ORBIT_LOG("Copying \"%s\" started", debug_file_path);
@@ -1831,7 +1825,7 @@ OrbitApp::RetrieveModuleFromRemote(const std::string& module_file_path) {
     orbit_base::ImmediateExecutor immediate_executor{};
     return copy_result.Then(
         &immediate_executor,
-        [debug_file_path, local_debug_file_path, scoped_status = std::move(scoped_status),
+        [debug_file_path, local_debug_file_path,
          copy_begin](ErrorMessageOr<CanceledOr<void>> sftp_result)
             -> ErrorMessageOr<CanceledOr<std::filesystem::path>> {
           if (sftp_result.has_error()) {
@@ -2174,13 +2168,9 @@ static ErrorMessageOr<std::filesystem::path> FindModuleLocallyImpl(
 Future<ErrorMessageOr<std::filesystem::path>> OrbitApp::FindModuleLocally(
     const ModuleData* module_data) {
   ORBIT_SCOPE_FUNCTION;
-  auto scoped_status = CreateScopedStatus(absl::StrFormat(
-      "Searching for symbols on local machine for module: \"%s\"...", module_data->file_path()));
-  return thread_pool_->Schedule(
-      [this, module_data,
-       scoped_status = std::move(scoped_status)]() -> ErrorMessageOr<std::filesystem::path> {
-        return FindModuleLocallyImpl(symbol_helper_, *module_data);
-      });
+  return thread_pool_->Schedule([this, module_data]() -> ErrorMessageOr<std::filesystem::path> {
+    return FindModuleLocallyImpl(symbol_helper_, *module_data);
+  });
 }
 
 void OrbitApp::AddSymbols(const std::filesystem::path& module_file_path,
@@ -2208,9 +2198,6 @@ orbit_base::Future<ErrorMessageOr<void>> OrbitApp::LoadSymbols(
     const std::string& module_build_id) {
   ORBIT_SCOPE_FUNCTION;
 
-  auto scoped_status = CreateScopedStatus(absl::StrFormat(
-      R"(Loading symbols for "%s" from file "%s"...)", module_file_path, symbols_path.string()));
-
   auto load_symbols_from_file =
       thread_pool_->Schedule([this, symbols_path, module_file_path, module_build_id]() {
         const ModuleData* module_data =
@@ -2221,18 +2208,15 @@ orbit_base::Future<ErrorMessageOr<void>> OrbitApp::LoadSymbols(
       });
 
   auto add_symbols =
-      [this, module_file_path, module_build_id, scoped_status = std::move(scoped_status)](
+      [this, module_file_path, module_build_id](
           const ErrorMessageOr<orbit_grpc_protos::ModuleSymbols>& symbols_result) mutable
       -> ErrorMessageOr<void> {
     if (symbols_result.has_error()) return symbols_result.error();
 
     AddSymbols(module_file_path, module_build_id, symbols_result.value());
 
-    std::string message =
-        absl::StrFormat(R"(Successfully loaded %d symbols for "%s")",
-                        symbols_result.value().symbol_infos_size(), module_file_path);
-    scoped_status.UpdateMessage(message);
-    ORBIT_LOG("%s", message);
+    ORBIT_LOG("Successfully loaded %d symbols for \"%s\"",
+              symbols_result.value().symbol_infos_size(), module_file_path);
     return outcome::success();
   };
 
