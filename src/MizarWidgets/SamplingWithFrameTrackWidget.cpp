@@ -4,8 +4,6 @@
 
 #include "MizarWidgets/SamplingWithFrameTrackWidget.h"
 
-#include <absl/functional/bind_front.h>
-
 #include <QObject>
 #include <QWidget>
 #include <memory>
