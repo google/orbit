@@ -221,6 +221,13 @@ static void LogCommandLine(int argc, char* argv[]) {
 }
 
 int main(int argc, char* argv[]) {
+#ifdef _WIN32
+  if (AttachConsole(ATTACH_PARENT_PROCESS)) {
+    freopen("CONOUT$", "w", stdout);
+    freopen("CONOUT$", "w", stderr);
+  }
+#endif
+
   absl::SetProgramUsageMessage("CPU Profiler");
   absl::SetFlagsUsageConfig(absl::FlagsUsageConfig{{}, {}, {}, &orbit_version::GetBuildReport, {}});
   std::vector<char*> positional_args = absl::ParseCommandLine(argc, argv);
