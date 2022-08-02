@@ -9,6 +9,7 @@
 #include <absl/synchronization/mutex.h>
 #include <absl/time/time.h>
 
+#include "CaptureServiceBase/CaptureServiceBase.h"
 #include "CaptureServiceBase/StopCaptureRequestWaiter.h"
 #include "GrpcProtos/capture.pb.h"
 
@@ -37,7 +38,8 @@ class CloudCollectorStartStopCaptureRequestWaiter : public StopCaptureRequestWai
   orbit_grpc_protos::CaptureOptions capture_options_ ABSL_GUARDED_BY(mutex_);
   bool start_requested_ ABSL_GUARDED_BY(mutex_) = false;
 
-  CaptureServiceBase::StopCaptureReason stop_capture_reason_ ABSL_GUARDED_BY(mutex_);
+  CaptureServiceBase::StopCaptureReason stop_capture_reason_ ABSL_GUARDED_BY(mutex_) =
+      CaptureServiceBase::StopCaptureReason::kUnknown;
   bool stop_requested_ ABSL_GUARDED_BY(mutex_) = false;
 
   std::optional<absl::Duration> max_capture_duration_;

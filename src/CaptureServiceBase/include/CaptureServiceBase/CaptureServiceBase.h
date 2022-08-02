@@ -26,6 +26,7 @@ class CaptureServiceBase {
 
   enum class CaptureInitializationResult { kSuccess, kAlreadyInProgress };
   enum class StopCaptureReason {
+    kUnknown,
     kClientStop,
     kMemoryWatchdog,
     kExceededMaxDurationLimit,

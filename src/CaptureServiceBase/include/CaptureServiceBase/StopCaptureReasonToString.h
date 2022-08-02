@@ -12,9 +12,11 @@
 
 namespace orbit_capture_service_base {
 
-[[nodiscard]] std::string StopCaptureReasonToString(
+[[nodiscard]] inline std::string StopCaptureReasonToString(
     CaptureServiceBase::StopCaptureReason stop_capture_reason) {
   switch (stop_capture_reason) {
+    case CaptureServiceBase::StopCaptureReason::kUnknown:
+      return "unknown";
     case CaptureServiceBase::StopCaptureReason::kClientStop:
       return "client_stop";
     case CaptureServiceBase::StopCaptureReason::kMemoryWatchdog:

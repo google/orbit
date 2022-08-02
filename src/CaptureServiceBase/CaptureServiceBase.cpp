@@ -75,6 +75,9 @@ void CaptureServiceBase::FinalizeEventProcessing(
     CaptureFinished::TerminationSignal target_process_termination_signal) {
   ProducerCaptureEvent capture_finished;
   switch (stop_capture_reason) {
+    case StopCaptureReason::kUnknown:
+      capture_finished = CreateFailedCaptureFinishedEvent("Capture stopped due to unknown reason.");
+      break;
     case StopCaptureReason::kClientStop:
     case StopCaptureReason::kGuestOrcStop:
       capture_finished = CreateSuccessfulCaptureFinishedEvent();
