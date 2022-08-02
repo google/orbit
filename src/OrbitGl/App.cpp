@@ -3025,11 +3025,6 @@ bool OrbitApp::IsLoadingCapture() const {
   return data_source_ == orbit_client_data::CaptureData::DataSource::kLoadedCapture;
 }
 
-ScopedStatus OrbitApp::CreateScopedStatus(const std::string& initial_message) {
-  ORBIT_CHECK(std::this_thread::get_id() == main_thread_id_);
-  return ScopedStatus{GetMainThreadExecutor()->weak_from_this(), status_listener_, initial_message};
-}
-
 void OrbitApp::SelectTracepoint(const TracepointInfo& tracepoint) {
   data_manager_->SelectTracepoint(tracepoint);
 }

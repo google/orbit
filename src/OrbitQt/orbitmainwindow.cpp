@@ -117,7 +117,6 @@
 #include "SourcePathsMapping/Mapping.h"
 #include "SourcePathsMapping/MappingManager.h"
 #include "SourcePathsMappingUI/AskUserForFile.h"
-#include "StatusListenerImpl.h"
 #include "Symbols/SymbolHelper.h"
 #include "SyntaxHighlighter/Cpp.h"
 #include "SyntaxHighlighter/X86Assembly.h"
@@ -281,10 +280,6 @@ void OrbitMainWindow::SetupMainWindow() {
   RestoreMainWindowGeometry();
 
   ui->splitter_2->setSizes({5000, 5000});
-
-  status_listener_ = StatusListenerImpl::Create(statusBar());
-
-  app_->SetStatusListener(status_listener_);
 
   app_->SetCaptureStartedCallback([this](const std::optional<std::filesystem::path>& file_path) {
     // Only set it if this is not empty, we do not want to reset the label when loading from legacy

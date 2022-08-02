@@ -87,9 +87,7 @@
 #include "OrbitPaths/Paths.h"
 #include "QtUtils/Throttle.h"
 #include "SamplingReport.h"
-#include "ScopedStatus.h"
 #include "Statistics/BinomialConfidenceInterval.h"
-#include "StatusListener.h"
 #include "StringManager/StringManager.h"
 #include "Symbols/SymbolHelper.h"
 
@@ -320,10 +318,6 @@ class OrbitApp final : public DataViewFactory,
   using ClipboardCallback = std::function<void(const std::string&)>;
   void SetClipboardCallback(ClipboardCallback callback) {
     clipboard_callback_ = std::move(callback);
-  }
-
-  void SetStatusListener(std::weak_ptr<StatusListener> listener) {
-    status_listener_ = std::move(listener);
   }
 
   void SendDisassemblyToUi(const orbit_client_data::FunctionInfo& function_info,
@@ -598,7 +592,6 @@ class OrbitApp final : public DataViewFactory,
       const std::filesystem::path& filename);
 
   ErrorMessageOr<void> SavePreset(const std::string& filename);
-  [[nodiscard]] ScopedStatus CreateScopedStatus(const std::string& initial_message);
 
   void AddFrameTrack(uint64_t instrumented_function_id);
   void RemoveFrameTrack(uint64_t instrumented_function_id);
@@ -729,8 +722,6 @@ class OrbitApp final : public DataViewFactory,
   std::unique_ptr<ManualInstrumentationManager> manual_instrumentation_manager_;
 
   const orbit_symbols::SymbolHelper symbol_helper_{orbit_paths::CreateOrGetCacheDirUnsafe()};
-
-  std::weak_ptr<StatusListener> status_listener_;
 
   orbit_client_data::ProcessData* process_ = nullptr;
 
