@@ -139,7 +139,7 @@ class Typedef {
 template <typename Tag>
 class Typedef<Tag, void> {};
 
-// When the `Tag` is inherits from the struct, the `Typedef<Tag, T>` supports `operator+`
+// When the `Tag` inherits from the struct, the `Typedef<Tag, T>` supports `operator+`
 struct PlusTag {};
 
 template <typename First, typename Second, typename FirstDecayed = std::decay_t<First>,
@@ -151,6 +151,19 @@ auto operator+(First&& lhs, Second&& rhs) {
   return Typedef<Tag, decltype(*std::forward<First>(lhs) + *std::forward<Second>(rhs))>(
       *std::forward<First>(lhs) + *std::forward<Second>(rhs));
 };
+
+// When the `Tag` inherits from the struct, the `Typedef<Tag, T>` supports multiplication by
+// `Scalar` via `operator*`
+template <typename Scalar>
+struct TimesScalar {};
+
+template <typename Vector, typename Scalar, typename VectorDecayed = std::decay_t<Vector>,
+          typename ScalarDecayed = std::decay_t<Scalar>, typename Tag = typename VectorDecayed::Tag,
+          typename = std::enable_if_t<std::is_base_of_v<TimesScalar<Scalar>, Tag>>>
+auto operator*(Vector&& vector, Scalar&& scalar) {
+  return Typedef<Tag, decltype(*std::forward<Vector>(vector) * std::forward<Scalar>(scalar))>(
+      *std::forward<Vector>(vector) * std::forward<Scalar>(scalar));
+}
 
 // Say, we have a pair of typedefs.
 // ```
