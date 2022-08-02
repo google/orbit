@@ -52,7 +52,7 @@ void CloudCollectorStartStopCaptureRequestWaiter::StopCapture(
     CaptureServiceBase::StopCaptureReason stop_capture_reason) {
   absl::MutexLock lock(&mutex_);
   ORBIT_LOG("Stop capture requested");
-  stop_capture_reason_ = std::move(stop_capture_reason);
+  stop_capture_reason_ = stop_capture_reason;
   stop_requested_ = true;
 }
 
