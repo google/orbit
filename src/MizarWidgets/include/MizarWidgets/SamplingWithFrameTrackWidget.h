@@ -55,9 +55,10 @@ class SamplingWithFrameTrackWidget : public QWidget {
   [[nodiscard]] Baseline<SamplingWithFrameTrackInputWidget*> GetBaselineInput() const;
   [[nodiscard]] Comparison<SamplingWithFrameTrackInputWidget*> GetComparisonInput() const;
   [[nodiscard]] bool IsMultiplicityCorrectionEnabled() const;
-  [[nodiscard]] bool IsDataValid(const orbit_mizar_data::MizarPairedData& data,
-                                 std::string_view data_title) const;
   void OnSignificanceLevelSelected(int index);
+  [[nodiscard]] static ErrorMessageOr<void> IsDataValid(
+      const orbit_mizar_data::MizarPairedData& data, std::string_view data_title);
+  void ProcessDataValidationOutcome(const ErrorMessageOr<void>& outcome) const;
 
   const orbit_mizar_data::BaselineAndComparison* baseline_and_comparison_;
   std::unique_ptr<Ui::SamplingWithFrameTrackWidget> ui_;

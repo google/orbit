@@ -51,14 +51,14 @@ SamplingWithFrameTrackWidget::SamplingWithFrameTrackWidget(QWidget* parent)
 void SamplingWithFrameTrackWidget::Init(
     const orbit_mizar_data::BaselineAndComparison* baseline_and_comparison,
     const Baseline<QString>& baseline_file_name, const Comparison<QString>& comparison_file_name) {
-  const auto validator = absl::bind_front(&SamplingWithFrameTrackWidget::IsDataValid, this);
-  Baseline<bool> is_baseline_valid =
-      LiftAndApply(validator, baseline_and_comparison->GetBaselineData(), kBaselineTitle);
-  Comparison<bool> is_comparison_valid =
-      LiftAndApply(validator, baseline_and_comparison->GetComparisonData(), kComparisonTitle);
-  if (!(*is_baseline_valid && *is_comparison_valid)) {
-    ui_->update_button_->setEnabled(false);
-  }
+  Baseline<ErrorMessageOr<void>> baseline_validation_outcome =
+      LiftAndApply(&SamplingWithFrameTrackWidget::IsDataValid,
+                   baseline_and_comparison->GetBaselineData(), kBaselineTitle);
+  Comparison<ErrorMessageOr<void>> comparison_validation_outcome =
+      LiftAndApply(&SamplingWithFrameTrackWidget::IsDataValid,
+                   baseline_and_comparison->GetComparisonData(), kComparisonTitle);
+  ProcessDataValidationOutcome(*baseline_validation_outcome);
+  ProcessDataValidationOutcome(*comparison_validation_outcome);
 
   LiftAndApply(&SamplingWithFrameTrackInputWidget::Init, GetBaselineInput(),
                baseline_and_comparison->GetBaselineData(), orbit_mizar_base::QBaselineTitle(),
@@ -113,19 +113,27 @@ void SamplingWithFrameTrackWidget::OnUpdateButtonClicked() {
   ui_->output_->UpdateReport(std::move(report));
 }
 
-bool SamplingWithFrameTrackWidget::IsDataValid(const orbit_mizar_data::MizarPairedData& data,
-                                               std::string_view data_title) const {
+ErrorMessageOr<void> SamplingWithFrameTrackWidget::IsDataValid(
+    const orbit_mizar_data::MizarPairedData& data, std::string_view data_title) {
   const bool is_valid = !data.GetFrameTracks().empty();
   if (!is_valid) {
-    emit ReportError(absl::StrCat(data_title,
-                                  " has no frame tracks.\n"
-                                  "Sampling with comparison is not possible."
-                                  "A frame track may be either:\n"
-                                  "ETW events,\n"
-                                  "Dynamically instrumented function or\n"
-                                  "Manually (synchronous) instrumented scope"));
+    return ErrorMessage(absl::StrCat(data_title,
+                                     " has no frame tracks.\n"
+                                     "Sampling with comparison is not possible."
+                                     "A frame track may be either:\n"
+                                     "ETW events,\n"
+                                     "Dynamically instrumented function or\n"
+                                     "Manually (synchronous) instrumented scope"));
   }
-  return is_valid;
+  return outcome::success();
+}
+
+void SamplingWithFrameTrackWidget::ProcessDataValidationOutcome(
+    const ErrorMessageOr<void>& outcome) const {
+  if (outcome.has_error()) {
+    emit ReportError(outcome.error().message());
+    ui_->update_button_->setEnabled(false);
+  }
 }
 
 }  // namespace orbit_mizar_widgets
