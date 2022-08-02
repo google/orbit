@@ -130,18 +130,18 @@ std::string PresetsDataView::GetToolTip(int row, int /*column*/) {
 
 void PresetsDataView::DoSort() {
   bool ascending = sorting_orders_[sorting_column_] == SortingOrder::kAscending;
-  std::function<bool(int, int)> sorter = nullptr;
+  std::function<bool(uint64_t, uint64_t)> sorter = nullptr;
 
   switch (sorting_column_) {
     case kColumnLoadState:
-      sorter = [&](int a, int b) {
+      sorter = [&](uint64_t a, uint64_t b) {
         return orbit_data_views_internal::CompareAscendingOrDescending(
             app_->GetPresetLoadState(presets_[a]).state,
             app_->GetPresetLoadState(presets_[b]).state, ascending);
       };
       break;
     case kColumnPresetName:
-      sorter = [&](int a, int b) {
+      sorter = [&](uint64_t a, uint64_t b) {
         return orbit_data_views_internal::CompareAscendingOrDescending(
             presets_[a].file_path(), presets_[b].file_path(), ascending);
       };
@@ -255,8 +255,8 @@ void PresetsDataView::OnDataChanged() {
     indices_[i] = i;
     std::vector<ModuleView> modules;
     for (const auto& module_path : presets_[i].GetModulePaths()) {
-      modules.emplace_back(module_path.filename().string(),
-                           presets_[i].GetNumberOfFunctionsForModule(module_path));
+      size_t num_functions = presets_[i].GetNumberOfFunctionsForModule(module_path);
+      modules.emplace_back(module_path.filename().string(), num_functions);
     }
     modules_[i] = std::move(modules);
   }

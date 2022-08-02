@@ -52,14 +52,14 @@ std::string TracepointsDataView::GetValue(int row, int col) {
 }
 
 #define ORBIT_PROC_SORT(Member)                                     \
-  [&](int a, int b) {                                               \
+  [&](uint64_t a, uint64_t b) {                                     \
     return orbit_data_views_internal::CompareAscendingOrDescending( \
         tracepoints_[a].Member, tracepoints_[b].Member, ascending); \
   }
 
 void TracepointsDataView::DoSort() {
   bool ascending = sorting_orders_[sorting_column_] == SortingOrder::kAscending;
-  std::function<bool(int a, int b)> sorter = nullptr;
+  std::function<bool(uint64_t a, uint64_t b)> sorter = nullptr;
 
   switch (sorting_column_) {
     case kColumnName:

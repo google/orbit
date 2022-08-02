@@ -32,7 +32,7 @@ std::optional<uint32_t> DisassemblyReport::GetNumSamplesAtLine(size_t line) cons
     next_address = address + 1;
   }
   if (!thread_sample_data_.has_value()) {
-    return 0.0;
+    return 0;
   }
   uint32_t count = 0;
   while (address < next_address) {

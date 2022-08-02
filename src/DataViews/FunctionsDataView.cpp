@@ -116,13 +116,13 @@ std::string FunctionsDataView::GetValue(int row, int column) {
 }
 
 #define ORBIT_FUNC_SORT(Member)                                     \
-  [&](int a, int b) {                                               \
+  [&](uint64_t a, uint64_t b) {                                     \
     return orbit_data_views_internal::CompareAscendingOrDescending( \
         functions_[a]->Member, functions_[b]->Member, ascending);   \
   }
 
 #define ORBIT_CUSTOM_FUNC_SORT(Func)                                \
-  [&](int a, int b) {                                               \
+  [&](uint64_t a, uint64_t b) {                                     \
     return orbit_data_views_internal::CompareAscendingOrDescending( \
         Func(*functions_[a]), Func(*functions_[b]), ascending);     \
   }
@@ -136,7 +136,7 @@ void FunctionsDataView::DoSort() {
   // timeout should be rolled back from 25 seconds to 10 seconds in
   // OrbitService.h
   bool ascending = sorting_orders_[sorting_column_] == SortingOrder::kAscending;
-  std::function<bool(int a, int b)> sorter = nullptr;
+  std::function<bool(uint64_t a, uint64_t b)> sorter = nullptr;
 
   switch (sorting_column_) {
     case kColumnSelected:

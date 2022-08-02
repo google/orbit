@@ -51,10 +51,10 @@ class PresetsDataView : public DataView {
 
  protected:
   struct ModuleView {
-    ModuleView(std::string name, uint32_t count)
+    ModuleView(std::string name, uint64_t count)
         : module_name(std::move(name)), function_count(count){};
     std::string module_name;
-    uint32_t function_count;
+    uint64_t function_count;
   };
 
   [[nodiscard]] ActionStatus GetActionStatus(std::string_view action, int clicked_index,

@@ -95,8 +95,10 @@ TEST(TemporaryFile, MoveAssign) {
   EXPECT_EQ(tmp_file1.fd().get(), fd_value_copy2);
 }
 
+#ifdef __GNUC__
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wself-move"
+#endif  // __GNUC__
 TEST(TemporaryFile, SelfMove) {
   auto tmp_file_or_error = TemporaryFile::Create();
   ASSERT_TRUE(tmp_file_or_error.has_value());
@@ -114,7 +116,9 @@ TEST(TemporaryFile, SelfMove) {
   EXPECT_TRUE(std::filesystem::exists(file_path_copy, error));
   EXPECT_FALSE(error) << error.message();
 }
+#ifdef __GNUC__
 #pragma GCC diagnostic pop
+#endif  // __GNUC__
 
 TEST(TemporaryFile, Cleanup) {
   std::filesystem::path file_path_copy;

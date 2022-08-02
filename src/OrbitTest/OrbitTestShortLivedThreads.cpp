@@ -56,7 +56,7 @@ int main(int argc, char* argv[]) {
   while (true) {
     // Spawn as many threads as there are missing.
     while (num_threads > ts.size()) {
-      ts.emplace_back(std::thread(Worker, ttl_ms * dis(gen)));
+      ts.emplace_back(std::thread(Worker, static_cast<int>(ttl_ms * dis(gen))));
     }
     // Join the finished threads.
     for (auto& t : ts) {
