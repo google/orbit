@@ -382,7 +382,7 @@ TEST(Typedef, WrapperWithPlusHasPlusForMoveOnlyType) {
 }
 
 template <typename Scalar>
-struct WrapperWithTimesScalarTag : TimesScalar<Scalar> {};
+struct WrapperWithTimesScalarTag : TimesScalarTag<Scalar> {};
 
 template <typename T, typename Scalar>
 using WrapperWithTimesScalar = Typedef<WrapperWithTimesScalarTag<Scalar>, T>;

@@ -155,11 +155,11 @@ auto operator+(First&& lhs, Second&& rhs) {
 // When the `Tag` inherits from the struct, the `Typedef<Tag, T>` supports multiplication by
 // `Scalar` via `operator*`
 template <typename Scalar>
-struct TimesScalar {};
+struct TimesScalarTag {};
 
 template <typename Vector, typename Scalar, typename VectorDecayed = std::decay_t<Vector>,
           typename ScalarDecayed = std::decay_t<Scalar>, typename Tag = typename VectorDecayed::Tag,
-          typename = std::enable_if_t<std::is_base_of_v<TimesScalar<Scalar>, Tag>>>
+          typename = std::enable_if_t<std::is_base_of_v<TimesScalarTag<Scalar>, Tag>>>
 auto operator*(Vector&& vector, Scalar&& scalar) {
   return Typedef<Tag, decltype(*std::forward<Vector>(vector) * std::forward<Scalar>(scalar))>(
       *std::forward<Vector>(vector) * std::forward<Scalar>(scalar));
