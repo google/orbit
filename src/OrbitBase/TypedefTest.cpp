@@ -328,9 +328,7 @@ TEST(Typedef, ComparisonIsCorrect) {
 struct WrapperWithPlusTag : PlusTag {};
 
 template <typename T>
-struct WrapperWithPlus : Typedef<WrapperWithPlusTag, T> {
-  using Typedef<WrapperWithPlusTag, T>::Typedef;
-};
+using WrapperWithPlus = Typedef<WrapperWithPlusTag, T>;
 
 TEST(Typedef, WrapperWithPlusHasPlus) {
   constexpr int kAValue = 1;

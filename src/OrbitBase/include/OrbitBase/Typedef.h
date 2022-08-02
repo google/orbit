@@ -148,8 +148,7 @@ template <typename First, typename Second, typename FirstDecayed = std::decay_t<
               std::is_same_v<typename FirstDecayed::Tag, typename SecondDecayed::Tag>>,
           typename = std::enable_if_t<std::is_base_of_v<PlusTag, Tag>>>
 auto operator+(First&& lhs, Second&& rhs) {
-  const auto result = *lhs + *rhs;
-  return Typedef<Tag, decltype(result)>(result);
+  return Typedef<Tag, decltype(*lhs + *rhs)>(*lhs + *rhs);
 };
 
 // Say, we have a pair of typedefs.
