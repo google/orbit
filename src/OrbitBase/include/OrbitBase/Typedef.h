@@ -66,7 +66,7 @@ class Typedef {
 
   template <typename... Args>
   constexpr explicit Typedef(std::in_place_t, Args&&... args)
-      : value_(T(std::forward<T>(args)...)) {}
+      : value_(T(std::forward<Args>(args)...)) {}
 
   constexpr Typedef() : value_{} {}
 
@@ -138,6 +138,19 @@ class Typedef {
 
 template <typename Tag>
 class Typedef<Tag, void> {};
+
+// When the `Tag` is inherits from the struct, the `Typedef<Tag, T>` supports `operator+`
+struct PlusTag {};
+
+template <typename First, typename Second, typename FirstDecayed = std::decay_t<First>,
+          typename SecondDecayed = std::decay_t<Second>, typename Tag = typename FirstDecayed::Tag,
+          typename = std::enable_if_t<
+              std::is_same_v<typename FirstDecayed::Tag, typename SecondDecayed::Tag>>,
+          typename = std::enable_if_t<std::is_base_of_v<PlusTag, Tag>>>
+auto operator+(First&& lhs, Second&& rhs) {
+  return Typedef<Tag, decltype(*std::forward<First>(lhs) + *std::forward<Second>(rhs))>(
+      *std::forward<First>(lhs) + *std::forward<Second>(rhs));
+};
 
 // Say, we have a pair of typedefs.
 // ```
