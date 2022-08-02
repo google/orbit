@@ -330,9 +330,10 @@ struct WrapperWithPlusTag : PlusTag {};
 template <typename T>
 using WrapperWithPlus = Typedef<WrapperWithPlusTag, T>;
 
+constexpr int kAValue = 1;
+constexpr int kBValue = 2;
+
 TEST(Typedef, WrapperWithPlusHasPlus) {
-  constexpr int kAValue = 1;
-  constexpr int kBValue = 2;
   WrapperWithPlus<int> a(kAValue);
   WrapperWithPlus<int> b(kBValue);
   EXPECT_EQ(*(a + b), kAValue + kBValue);
@@ -355,4 +356,24 @@ TEST(Typedef, WrapperWithPlusHasPlusAndConvertsArgument) {
   EXPECT_EQ(*(a + b), kNanos + kMicros);
 }
 
+struct MoveOnlyInt {
+  explicit MoveOnlyInt(int i) : value(i) {}
+
+  MoveOnlyInt(const MoveOnlyInt&) = delete;
+  MoveOnlyInt& operator=(const MoveOnlyInt&) = delete;
+  MoveOnlyInt(MoveOnlyInt&&) = default;
+
+  [[nodiscard]] friend MoveOnlyInt operator+(const MoveOnlyInt& a, const MoveOnlyInt& b) {
+    return MoveOnlyInt(a.value + b.value);
+  }
+
+  int value;
+};
+
+TEST(Typedef, WrapperWithPlusHasPlusForMoveOnlyType) {
+  WrapperWithPlus<MoveOnlyInt> a_wrapped(std::in_place, kAValue);
+  WrapperWithPlus<MoveOnlyInt> b_wrapped(std::in_place, kBValue);
+
+  EXPECT_EQ((std::move(a_wrapped) + std::move(b_wrapped))->value, kAValue + kBValue);
+}
 }  // namespace orbit_base
