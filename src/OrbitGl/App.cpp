@@ -2491,17 +2491,17 @@ Future<std::vector<ErrorMessageOr<CanceledOr<void>>>> OrbitApp::LoadAllSymbols()
   }
   if (GetEnableAutoFrameTrack()) {
     // Orbit will try to add the default frame track while loading all symbols.
-    std::ignore = AddDefaultFrameTrackOrLogError();
+    AddDefaultFrameTrackOrLogError();
   }
 
   return orbit_base::WhenAll(absl::MakeConstSpan(loading_futures));
 }
 
-Future<void> OrbitApp::AddDefaultFrameTrackOrLogError() {
+void OrbitApp::AddDefaultFrameTrackOrLogError() {
   // The default frame track should be only added once (to give the possibility to the users of
   // manually removing an undesired default FrameTrack in the current session). As the FrameTrack
   // was already added before, we won't log an error in this case.
-  if (default_frame_track_was_added_) return {};
+  if (default_frame_track_was_added_) return;
 
   const std::filesystem::path default_auto_preset_folder_path =
       orbit_base::GetExecutableDir() / "autopresets";
@@ -2539,7 +2539,7 @@ Future<void> OrbitApp::AddDefaultFrameTrackOrLogError() {
               }
             });
       }
-      return {};
+      return;
     }
   }
   std::string error_message =
@@ -2547,7 +2547,6 @@ Future<void> OrbitApp::AddDefaultFrameTrackOrLogError() {
       "available for auto-loading could be loaded. The reason might be that you are not profiling "
       "a Stadia-game running with Vulkan.";
   ORBIT_ERROR("%s", error_message);
-  return {};
 }
 
 void OrbitApp::RefreshUIAfterModuleReload() {
@@ -2692,7 +2691,7 @@ void OrbitApp::SetEnableAutoFrameTrack(bool enable_auto_frame_track) {
   // might fail because a user can start a capture before the needed symbols are downloaded, so we
   // are additionaly saving the state for the future.
   if (enable_auto_frame_track) {
-    std::ignore = AddDefaultFrameTrackOrLogError();
+    AddDefaultFrameTrackOrLogError();
   }
   data_manager_->set_enable_auto_frame_track(enable_auto_frame_track);
 }
