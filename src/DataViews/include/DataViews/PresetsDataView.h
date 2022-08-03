@@ -54,7 +54,7 @@ class PresetsDataView : public DataView {
     ModuleView(std::string name, uint64_t count)
         : module_name(std::move(name)), function_count(count){};
     std::string module_name;
-    uint64_t function_count;
+    size_t function_count;
   };
 
   [[nodiscard]] ActionStatus GetActionStatus(std::string_view action, int clicked_index,

@@ -224,7 +224,7 @@ class DataView {
   int sorting_column_ = 0;
   std::string filter_;
   int update_period_ms_;
-  absl::flat_hash_set<uint64_t> selected_indices_;
+  absl::flat_hash_set<int> selected_indices_;
   DataViewType type_;
 
   AppInterface* app_ = nullptr;
