@@ -30,13 +30,13 @@ template <typename Container, typename AnotherContainer>
   return result;
 }
 
-// A helper function that takes two collection (possibly, of different type) that store the elements
-// of the same type. An `std::vector` containing the elements present in both collections is
-// returned.
+// A helper function that takes two collection (possibly, of different type) s. t. the elements of
+// `b` are convertible to the type of elements of `a`. An `std::vector` containing the elements
+// present in both collections (up to the said conversion) is returned.
 template <typename Container, typename AnotherContainer,
           typename E = typename std::decay_t<Container>::value_type,
           typename OtherE = typename std::decay_t<AnotherContainer>::value_type,
-          typename = std::enable_if<std::is_same_v<E, OtherE>>>
+          typename = std::enable_if_t<std::is_convertible_v<OtherE, E>>>
 [[nodiscard]] static std::vector<E> Commons(Container&& a, AnotherContainer&& b) {
   using std::begin;
   using std::end;
