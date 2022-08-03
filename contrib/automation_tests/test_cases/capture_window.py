@@ -331,7 +331,7 @@ class CaptureE2ETestCaseBase(E2ETestCase):
                                                            'CollectThreadStatesCheckBox',
                                                            parent=capture_options_dialog)
         if collect_thread_states_checkbox.get_toggle_state() != collect_thread_states:
-            logging.info('Toggling "Collect thread states" checkbox')
+            logging.info('Toggling "Collect thread states" checkbox to {}.', collect_thread_states)
             collect_thread_states_checkbox.click_input()
 
     def _set_enable_auto_frame_track_capture_option(self, enable_auto_frame_track: bool,
@@ -340,16 +340,18 @@ class CaptureE2ETestCaseBase(E2ETestCase):
                                                              'AutoFrameTrackCheckBox',
                                                              parent=capture_options_dialog)
         if enable_auto_frame_track_checkbox.get_toggle_state() != enable_auto_frame_track:
-            logging.info('Toggling "Auto Frame Track" checkbox')
+            logging.info('Toggling "Auto Frame Track" checkbox to {}.', enable_auto_frame_track)
             enable_auto_frame_track_checkbox.click_input()
 
-    def _set_collect_system_memory_usage_capture_option(self, collect_system_memory_usage,
+    def _set_collect_system_memory_usage_capture_option(self, collect_system_memory_usage: bool,
                                                         capture_options_dialog):
         collect_system_memory_usage_checkbox = self.find_control('CheckBox',
                                                                  'CollectMemoryInfoCheckBox',
                                                                  parent=capture_options_dialog)
         if collect_system_memory_usage_checkbox.get_toggle_state() != collect_system_memory_usage:
-            logging.info('Toggling "Collect memory usage and page faults information" checkbox')
+            logging.info(
+                'Toggling "Collect memory usage and page faults information" checkbox to {}.',
+                collect_system_memory_usage)
             collect_system_memory_usage_checkbox.click_input()
 
     def _set_dynamic_instrumentation_method_capture_option(self, user_space_instrumentation: bool,
@@ -373,7 +375,8 @@ class CaptureE2ETestCaseBase(E2ETestCase):
                                                             'ApiCheckBox',
                                                             parent=capture_options_dialog)
         if manual_instrumentation_checkbox.get_toggle_state() != manual_instrumentation:
-            logging.info('Toggling "Enable Orbit Api in target" checkbox')
+            logging.info('Toggling "Enable Orbit Api in target" checkbox to {}.',
+                         manual_instrumentation)
             manual_instrumentation_checkbox.click_input()
 
     def _set_unwinding_method_capture_option(self, frame_pointer_unwinding: bool,
@@ -418,11 +421,7 @@ class CaptureE2ETestCaseBase(E2ETestCase):
     def _set_capture_options(self, collect_thread_states: bool, collect_system_memory_usage: bool,
                              user_space_instrumentation: bool, manual_instrumentation: bool,
                              frame_pointer_unwinding: bool, sampling_period_ms: float):
-        capture_tab = self.find_control('Group', "CaptureTab")
-
-        logging.info('Opening "Capture Options" dialog')
-        capture_options_button = self.find_control('Button', 'Capture Options', parent=capture_tab)
-        capture_options_button.click_input()
+        self._show_capture_options_dialog()
 
         capture_options_dialog = self.find_control('Window', 'Capture Options')
 
@@ -437,8 +436,7 @@ class CaptureE2ETestCaseBase(E2ETestCase):
         self._set_unwinding_method_capture_option(frame_pointer_unwinding, capture_options_dialog)
         self._set_sampling_period_ms_capture_option(sampling_period_ms, capture_options_dialog)
 
-        logging.info('Saving "Capture Options"')
-        self.find_control('Button', 'OK', parent=capture_options_dialog).click_input()
+        self._close_capture_options_dialog()
 
     def _set_up_and_start_capture(self, collect_thread_states: bool,
                                   collect_system_memory_usage: bool,
@@ -680,32 +678,12 @@ class SetEnableAutoFrameTrack(CaptureE2ETestCaseBase):
         self._close_capture_options_dialog()
 
 
-class SetAndCheckMemorySamplingPeriod(E2ETestCase):
-    # TODO(http://b/186098691): Move the capture options dialog utilities to a common base class.
-
-    def _show_capture_options_dialog(self):
-        logging.info('Opening "Capture Options" dialog')
-        capture_tab = self.find_control('Group', 'CaptureTab')
-        capture_options_button = self.find_control('Button', 'Capture Options', parent=capture_tab)
-        capture_options_button.click_input()
-
-    def _enable_collect_system_memory_usage(self):
-        logging.info('Selecting "Collect memory usage and page faults information" checkbox')
-        collect_system_memory_usage_checkbox = self.find_control('CheckBox',
-                                                                 'CollectMemoryInfoCheckBox',
-                                                                 parent=self.find_control(
-                                                                     'Window', 'Capture Options'))
-        if not collect_system_memory_usage_checkbox.get_toggle_state():
-            collect_system_memory_usage_checkbox.click_input()
-
-    def _close_capture_options_dialog(self):
-        logging.info('Saving "Capture Options"')
-        self.find_control('Button', 'OK',
-                          parent=self.find_control('Window', 'Capture Options')).click_input()
+class SetAndCheckMemorySamplingPeriod(CaptureE2ETestCaseBase):
 
     def _execute(self, memory_sampling_period: str):
         self._show_capture_options_dialog()
-        self._enable_collect_system_memory_usage()
+        capture_options_dialog = self.find_control('Window', 'Capture Options')
+        self._set_collect_system_memory_usage_capture_option(True, capture_options_dialog)
         memory_sampling_period_edit = self.find_control('Edit', 'MemorySamplingPeriodEdit')
 
         DEFAULT_SAMPLING_PERIOD = "10"
