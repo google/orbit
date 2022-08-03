@@ -20,19 +20,39 @@
    <string>Form</string>
   </property>
   <layout class="QGridLayout" name="gridLayout">
-   <property name="leftMargin">
-    <number>0</number>
-   </property>
-   <property name="topMargin">
-    <number>0</number>
-   </property>
-   <property name="rightMargin">
-    <number>0</number>
-   </property>
-   <property name="bottomMargin">
-    <number>0</number>
-   </property>
    <item row="0" column="1">
+    <widget class="QWidget" name="inspectionNoticeWidget" native="true">
+     <property name="visible">
+      <bool>false</bool>
+     </property>
+     <property name="styleSheet">
+      <string notr="true">.QWidget{ border-radius: 5px; border: 1px solid palette(text) ; background: rgba(0,255,0, 10%);}</string>
+     </property>
+     <layout class="QGridLayout" name="inspectionNoticeLayout">
+      <item row="0" column="1">
+       <widget class="QPushButton" name="inspectionNoticeButton">
+        <property name="sizePolicy">
+         <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+          <horstretch>0</horstretch>
+          <verstretch>0</verstretch>
+         </sizepolicy>
+        </property>
+        <property name="text">
+         <string>Leave Inspection</string>
+        </property>
+       </widget>
+      </item>
+      <item row="0" column="0">
+       <widget class="QLabel" name="inspectionNoticeLabel">
+        <property name="text">
+         <string>You are currently in an inspection, limiting the tree to specific callstacks.</string>
+        </property>
+       </widget>
+      </item>
+     </layout>
+    </widget>
+   </item>
+   <item row="1" column="1">
     <widget class="QSplitter" name="splitter">
      <property name="orientation">
       <enum>Qt::Vertical</enum>

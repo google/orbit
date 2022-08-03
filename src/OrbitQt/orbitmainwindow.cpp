@@ -851,6 +851,8 @@ void OrbitMainWindow::UpdatePanel(DataViewType type) {
       ui->samplingReport->RefreshTabs();
       ui->selectionReport->RefreshCallstackView();
       ui->selectionReport->RefreshTabs();
+      ui->inspectionReport->RefreshCallstackView();
+      ui->inspectionReport->RefreshTabs();
       break;
     default:
       break;
@@ -1903,15 +1905,28 @@ void OrbitMainWindow::AppendToCaptureLog(CaptureLogSeverity severity, absl::Dura
             severity_name);
 }
 
-void OrbitMainWindow::SetCallTreeInspection(std::unique_ptr<CallTreeView> top_down_view,
-                                            std::unique_ptr<CallTreeView> bottom_up_view) {
+void OrbitMainWindow::SetCallstackInspection(std::unique_ptr<CallTreeView> top_down_view,
+                                             std::unique_ptr<CallTreeView> bottom_up_view,
+                                             orbit_data_views::DataView* callstack_data_view,
+                                             const std::shared_ptr<class SamplingReport>& report) {
   ui->topDownWidget->SetInspection(std::move(top_down_view));
   ui->bottomUpWidget->SetInspection(std::move(bottom_up_view));
+
+  ui->samplingReport->hide();
+  ui->inspectionReport->SetInspection(callstack_data_view, report);
+  connect(ui->inspectionReport, &OrbitSamplingReport::leaveCallstackInspectionTriggered, this,
+          &OrbitMainWindow::LeaveCallstackInspectionTriggered);
+  ui->inspectionReport->show();
 }
 
-void OrbitMainWindow::ClearCallTreeInspection() {
+void OrbitMainWindow::LeaveCallstackInspectionTriggered() { app_->ClearInspection(); }
+
+void OrbitMainWindow::ClearCallstackInspection() {
   ui->topDownWidget->ClearInspection();
   ui->bottomUpWidget->ClearInspection();
+  ui->inspectionReport->hide();
+  ui->inspectionReport->Deinitialize();
+  ui->samplingReport->show();
 }
 
 orbit_gl::MainWindowInterface::SymbolErrorHandlingResult OrbitMainWindow::HandleSymbolError(

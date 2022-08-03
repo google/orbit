@@ -2860,7 +2860,7 @@ void OrbitApp::SetCaptureDataSelectionFields(
 
 void OrbitApp::SelectCallstackEvents(const std::vector<CallstackEvent>& selected_callstack_events,
                                      bool origin_is_multiple_threads) {
-  ClearInspection();
+  main_window_->ClearCallstackInspection();
   SetCaptureDataSelectionFields(selected_callstack_events, origin_is_multiple_threads);
   SetSelectionTopDownView(GetCaptureData().selection_post_processed_sampling_data(),
                           GetCaptureData());
@@ -2874,19 +2874,25 @@ void OrbitApp::SelectCallstackEvents(const std::vector<CallstackEvent>& selected
 void OrbitApp::InspectCallstackEvents(const std::vector<CallstackEvent>& selected_callstack_events,
                                       bool origin_is_multiple_threads) {
   SetCaptureDataSelectionFields(selected_callstack_events, origin_is_multiple_threads);
-  main_window_->SetCallTreeInspection(CallTreeView::CreateTopDownViewFromPostProcessedSamplingData(
-                                          GetCaptureData().selection_post_processed_sampling_data(),
-                                          *module_manager_, GetCaptureData()),
-                                      CallTreeView::CreateBottomUpViewFromPostProcessedSamplingData(
-                                          GetCaptureData().selection_post_processed_sampling_data(),
-                                          *module_manager_, GetCaptureData()));
+  auto report = std::make_shared<SamplingReport>(
+      this, &GetCaptureData().selection_callstack_data(),
+      &GetCaptureData().selection_post_processed_sampling_data(), metrics_uploader_,
+      /*generate_summary*/ origin_is_multiple_threads);
+  main_window_->SetCallstackInspection(
+      CallTreeView::CreateTopDownViewFromPostProcessedSamplingData(
+          GetCaptureData().selection_post_processed_sampling_data(), *module_manager_,
+          GetCaptureData()),
+      CallTreeView::CreateBottomUpViewFromPostProcessedSamplingData(
+          GetCaptureData().selection_post_processed_sampling_data(), *module_manager_,
+          GetCaptureData()),
+      GetOrCreateSelectionCallstackDataView(), report);
   FireRefreshCallbacks();
 }
 
 void OrbitApp::ClearInspection() {
   SetCaptureDataSelectionFields(std::vector<CallstackEvent>(),
                                 /*origin_is_multiple_threads*/ false);
-  main_window_->ClearCallTreeInspection();
+  main_window_->ClearCallstackInspection();
   FireRefreshCallbacks();
 }
 

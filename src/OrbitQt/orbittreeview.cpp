@@ -5,8 +5,8 @@
 #include "orbittreeview.h"
 
 #include <glad/glad.h>
+#include <qevent.h>
 #include <qitemselectionmodel.h>
-#include <stddef.h>
 
 #include <QAbstractItemView>
 #include <QAction>
@@ -24,12 +24,11 @@
 #include <QScrollBar>
 #include <QSize>
 #include <algorithm>
+#include <cstddef>
 #include <set>
 #include <utility>
 
 #include "DataViews/DataView.h"
-#include "DataViews/DataViewType.h"
-#include "orbitglwidget.h"
 
 OrbitTreeView::OrbitTreeView(QWidget* parent) : QTreeView(parent) {
   header()->setSortIndicatorShown(true);
@@ -95,6 +94,9 @@ void OrbitTreeView::Initialize(orbit_data_views::DataView* data_view, SelectionT
     const QFont fixed_font = QFontDatabase::systemFont(QFontDatabase::FixedFont);
     setFont(fixed_font);
   }
+  // Manually trigger a resize event on Initialization.
+  QResizeEvent event = QResizeEvent(size(), QSize{-1, -1});
+  resizeEvent(&event);
 }
 
 void OrbitTreeView::Deinitialize() {
