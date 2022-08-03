@@ -26,6 +26,7 @@ class CloudCollectorStartStopCaptureRequestWaiter : public StopCaptureRequestWai
   // latter case, it will return an error message.
   [[nodiscard]] ErrorMessageOr<orbit_grpc_protos::CaptureOptions> WaitForStartCaptureRequest();
   void StartCapture(orbit_grpc_protos::CaptureOptions capture_options);
+  [[nodiscard]] bool IsStartRequested() const;
 
   // WaitForStopCaptureRequest is blocked until StopCapture is called.
   [[nodiscard]] CaptureServiceBase::StopCaptureReason WaitForStopCaptureRequest() override;

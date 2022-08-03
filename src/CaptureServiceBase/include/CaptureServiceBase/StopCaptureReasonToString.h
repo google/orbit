@@ -27,6 +27,8 @@ namespace orbit_capture_service_base {
       return "guestorc_stop";
     case CaptureServiceBase::StopCaptureReason::kGuestOrcConnectionFailure:
       return "guestorc_connection_failure";
+    case CaptureServiceBase::StopCaptureReason::kUploadFailure:
+      return "upload_failure";
   }
 
   ORBIT_UNREACHABLE();

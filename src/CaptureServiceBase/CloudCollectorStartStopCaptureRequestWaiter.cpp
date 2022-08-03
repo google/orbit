@@ -33,6 +33,11 @@ void CloudCollectorStartStopCaptureRequestWaiter::StartCapture(CaptureOptions ca
   start_requested_ = true;
 }
 
+bool CloudCollectorStartStopCaptureRequestWaiter::IsStartRequested() const {
+  absl::MutexLock lock(&mutex_);
+  return start_requested_;
+}
+
 CaptureServiceBase::StopCaptureReason
 CloudCollectorStartStopCaptureRequestWaiter::WaitForStopCaptureRequest() {
   absl::MutexLock lock(&mutex_);

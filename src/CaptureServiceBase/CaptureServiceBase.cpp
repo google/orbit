@@ -93,6 +93,9 @@ void CaptureServiceBase::FinalizeEventProcessing(
     case StopCaptureReason::kGuestOrcConnectionFailure:
       capture_finished = CreateFailedCaptureFinishedEvent("Connection with GuestOrc failed.");
       break;
+    case StopCaptureReason::kUploadFailure:
+      capture_finished = CreateFailedCaptureFinishedEvent("Upload failed early.");
+      break;
   }
 
   capture_finished.mutable_capture_finished()->set_target_process_state_after_capture(
