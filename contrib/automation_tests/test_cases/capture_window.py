@@ -331,7 +331,7 @@ class CaptureE2ETestCaseBase(E2ETestCase):
                                                            'CollectThreadStatesCheckBox',
                                                            parent=capture_options_dialog)
         if collect_thread_states_checkbox.get_toggle_state() != collect_thread_states:
-            logging.info('Setting "Collect thread states" checkbox to {}.', collect_thread_states)
+            logging.info('Toggling "Collect thread states" checkbox to {}.', collect_thread_states)
             collect_thread_states_checkbox.click_input()
 
     def _set_enable_auto_frame_track_capture_option(self, enable_auto_frame_track: bool,
@@ -340,7 +340,7 @@ class CaptureE2ETestCaseBase(E2ETestCase):
                                                              'AutoFrameTrackCheckBox',
                                                              parent=capture_options_dialog)
         if enable_auto_frame_track_checkbox.get_toggle_state() != enable_auto_frame_track:
-            logging.info('Setting "Auto Frame Track" checkbox to {}.', enable_auto_frame_track)
+            logging.info('Toggling "Auto Frame Track" checkbox to {}.', enable_auto_frame_track)
             enable_auto_frame_track_checkbox.click_input()
 
     def _set_collect_system_memory_usage_capture_option(self, collect_system_memory_usage: bool,
