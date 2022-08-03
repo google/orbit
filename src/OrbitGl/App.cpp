@@ -2554,7 +2554,7 @@ void OrbitApp::RefreshUIAfterModuleReload() {
   modules_data_view_->UpdateModules(GetTargetProcess());
 
   functions_data_view_->ClearFunctions();
-auto module_ids = GetTargetProcess()->GetUniqueModuleIdentifiers();
+  auto module_ids = GetTargetProcess()->GetUniqueModuleIdentifiers();
   for (const ModuleIdentifier& module_id : module_ids) {
     ModuleData* module = GetMutableModuleByModuleIdentifier(module_id);
     if (module->is_loaded()) {
