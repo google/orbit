@@ -11,6 +11,7 @@
 namespace orbit_client_data {
 
 struct ModuleIdentifier {
+  // TODO (b/241203463) Consider changing the type to std::filesystem::path
   std::string file_path;
   std::string build_id;
 
